@@ -86,6 +86,17 @@ type alertDeliverer struct {
 	Interval  time.Duration
 	Batch     int
 	Claimant  string
+
+	// heldReported is which rows this executor has already said are held, keyed
+	// by the lease it saw. It is written only from Run's own goroutine (cycle →
+	// deliverOne), so it carries no lock.
+	//
+	// It exists because "held" is worth saying once and worthless said forty
+	// times: a stuck row is re-listed every cycle, and at a 2s interval under an
+	// 81s lease one abandoned row would write ~40 identical lines before the
+	// lease even expires. That is not observation, it is a log storm that buries
+	// the line an operator needs (a098 R21).
+	heldReported map[int64]time.Time
 }
 
 // Run cycles until ctx ends.
@@ -132,6 +143,10 @@ func (d *alertDeliverer) Run(ctx context.Context) error {
 // returning early there is how a flush once abandoned every remaining critical
 // alert because the first row had settled underneath it.
 func (d *alertDeliverer) cycle(ctx context.Context) error {
+	// An episode nobody can still be in is not worth remembering. Dropping the
+	// lapsed ones here is what keeps the map bounded by *currently contended*
+	// rows rather than by every row this engine has ever seen contended.
+	d.forgetLapsedHeld(d.Clock.Now())
 	pending, err := d.Journal.PendingAlerts(ctx, d.batch())
 	if err != nil {
 		return fmt.Errorf("listing the critical alert backlog: %w", err)
@@ -157,18 +172,27 @@ func (d *alertDeliverer) deliverOne(ctx context.Context, alert journal.Alert) {
 	}
 	switch claim.Disposition {
 	case journal.ClaimAcquired:
-		// fall through
+		// The row is ours now, so whatever episode of contention it was in is
+		// over. Forgetting here is what makes the next one reportable.
+		d.forgetHeld(alert.ID)
 	case journal.ClaimHeldElsewhere:
 		// Another sender holds a live lease. Skipping is right — but not
 		// silently: a row that is held every cycle is not contention, it is a
 		// sender that stopped without settling, and the ledger only reopens it
 		// when the lease expires.
-		d.logf(obs.EventAlertClaimHeld, nil, "an alert is held by another sender",
-			"alert_id", alert.ID, "claimed_by", claim.ClaimedBy,
-			"claim_expires_at", claim.ExpiresAt.UTC().Format(time.RFC3339))
+		//
+		// Once per lease, though. Saying it every cycle would report the same
+		// fact ~40 times before that lease expires, and forty copies of one line
+		// is how the *next* line stops being read (R21).
+		if d.reportHeld(alert.ID, claim.ExpiresAt) {
+			d.logf(obs.EventAlertClaimHeld, nil, "an alert is held by another sender",
+				"alert_id", alert.ID, "claimed_by", claim.ClaimedBy,
+				"claim_expires_at", claim.ExpiresAt.UTC().Format(time.RFC3339))
+		}
 		return
 	default:
 		// Settled between the listing and here. Normal.
+		d.forgetHeld(alert.ID)
 		return
 	}
 	if claim.Stole {
@@ -227,6 +251,40 @@ func (d *alertDeliverer) release(ctx context.Context, id int64, token string) {
 	defer cancel()
 	if _, err := d.Journal.ReleaseAlertClaim(relCtx, id, token); err != nil {
 		d.logf(obs.EventAlertUndelivered, err, "releasing an alert lease failed", "alert_id", id)
+	}
+}
+
+// reportHeld says whether this held row is worth a line, and remembers that it
+// answered yes.
+//
+// The episode is keyed by the *lease*, not by the row. A second sender taking
+// the row after the first one's lease lapsed is a new fact about a different
+// sender, and collapsing the two would hide the handover.
+func (d *alertDeliverer) reportHeld(id int64, expires time.Time) bool {
+	if d.heldReported == nil {
+		d.heldReported = make(map[int64]time.Time)
+	}
+	if seen, ok := d.heldReported[id]; ok && seen.Equal(expires) {
+		return false
+	}
+	d.heldReported[id] = expires
+	return true
+}
+
+func (d *alertDeliverer) forgetHeld(id int64) {
+	delete(d.heldReported, id)
+}
+
+// forgetLapsedHeld drops episodes whose lease has already run out.
+//
+// It bounds the map by what is contended *now*. Without it a long-running engine
+// keeps one entry per row it ever found held, including rows that were settled
+// by somebody else and will never be listed again.
+func (d *alertDeliverer) forgetLapsedHeld(now time.Time) {
+	for id, expires := range d.heldReported {
+		if !expires.After(now) {
+			delete(d.heldReported, id)
+		}
 	}
 }
 
