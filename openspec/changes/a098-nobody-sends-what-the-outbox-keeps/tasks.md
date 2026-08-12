@@ -463,6 +463,34 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > **이것이 「통과는 증거가 아니다」의 정확한 형태다** — 첫 판도 초록이었고,
       > 초록만 봤으면 회귀 핀이 하나 있다고 적었을 것이다. 있는 것은 **문장**이었다.
 
+      **진행 — R9·R17 + R5의 엔진 절반 완료 (2026-08-12).**
+      `internal/app/engine/a098_the_operator_reads_and_acknowledges_test.go` · GREEN 은 **4.4a**
+      (`alertops.go` — `PendingAlert` 투영 · `AlertOperations.Pending`·`Acknowledge`).
+
+      | # | 종류 | 관측 |
+      |---|---|---|
+      | **R9** | RED — 시점 | 표면이 없어 **build failed**(`undefined: AlertOperations`). 4.4a 뒤 통과 |
+      | **R5**(엔진 절반) | RED — 시점 | 같은 build failure. **CLI 절반은 4.4b** — 아래 ⛔ |
+      | **R17** | RED — 시점 | 같은 build failure. 래치는 **손으로 안 걸었다** — 실행자를 실제로 죽여서 얻는다 |
+
+      **뮤테이션 셋을 걸었고 셋이 각자 다른 테스트를 죽였다.**
+
+      | # | 뮤테이션 | 죽은 테스트 |
+      |---|---|---|
+      | **N** | 투영이 `row.Body`를 싣는다 (= `journal.Alert`를 그대로 내보내는 형태) | **R9만** — 값 검사와 **칸 이름** 검사 둘 다 |
+      | **O** | 원장을 안 거치고 `gate.Clear`만 한다 | **R5 · R17의 보호 단언 · 빈 이름 거절** 셋 |
+      | **P** | 승인이 `Blocks()`를 순회하며 **전부** 푼다 | **R17만** |
+      | (원복) | 역편집 셋 · `grep -c MUTATION` = 0 · 심볼 수 대조(`notifier.Acknowledge` 1 · `gate.Clear` 0 · `row.Body` 0) | 461건 재통과 |
+
+      > **N이 테스트를 고쳤다.** 첫 판은 금지 칸을 **문자열 포함**으로 봤는데,
+      > 그 검사는 심어 둔 body 값이 `"account"`를 담고 있다는 이유로도 걸렸다 —
+      > **값에 걸린 것을 칸에 걸린 것으로 읽고 있었다.** JSON 을 풀어 **키를 열거**하는
+      > 검사로 바꿨고, 같은 뮤테이션이 여전히 잡히는 것을 확인했다.
+      >
+      > **O가 R17의 보호 단언을 정당화했다.** R17은 *"remaining이 0이 아니면 공허하게
+      > 통과한다"*를 먼저 단언하는데, O 아래에서 **정확히 그 줄이 걸렸다** — 그 줄이
+      > 없었으면 「승인이 아예 안 된 상태」가 R17의 초록으로 보고됐다.
+
 - [x] 3.2 루프 주기를 **측정해서** 정한다. a092의 값을 인용하지 않는다 (2026-08-12)
 
       **잰 것** — `internal/app/engine/a098_cycle_cost_bench_test.go`.
@@ -912,6 +940,42 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       >
       > 핀은 「되살아나는 것」을 잡고, **AST 는 「되살릴 자리가 없는 것」을 잡는다.**
 - [ ] 4.4 **운영자 표면 — `tossctl` 하위 명령 둘** (사용자 결정 4, 2026-08-11 · design D7).
+      **둘로 나눠 짓는다 — 4.4a(의미) 착지, 4.4b(전송·CLI) 미완료.**
+
+      | | 무엇 | 상태 |
+      |---|---|---|
+      | **4.4a** | 엔진 안의 의미 — `PendingAlert` 투영 · `AlertOperations.Pending`·`Acknowledge` (`internal/app/engine/alertops.go`) | **완료 2026-08-12** — R9·R17·R5(엔진 절반) |
+      | **4.4b** | 엔진 소유 Unix 소켓 + `tossctl` 하위 명령 둘 | **미완료** — R5(CLI 절반)·R6 |
+
+      > **⛔ 나눈 이유는 편의가 아니다.** R5가 이름으로 지목한 위험은
+      > *"CLI가 고정 문자열을 넣어 `AcknowledgeAlert`의 검사를 통과하면서 audit trail만
+      > 죽는 것"*이고, **그 위험은 CLI에만 있다.** 4.4a는 그 위험을 **줄일 수 없고**
+      > 그래서 R5를 다 진다고 적지 않는다. 4.4a가 지는 것은 *"이름이 원장에 실제로
+      > 들어간다"*이고, 4.4b가 지는 것은 *"그 이름을 사람이 정한다"*다.
+      >
+      > **4.4a는 `Acknowledge`에 운영자 이름을 만들어 주지 않는다** — 인자로만 받는다.
+      > 기본값을 여기 두면 4.4b가 그것을 쓰게 되고, 그때 R5는 통과하면서 거짓이 된다.
+
+      > **⛔ 표면을 어디에 얹을지 — 기존 소켓 둘을 실제로 읽고 골랐다.**
+      >
+      > | 후보 | 무엇인가 | 판정 |
+      > |---|---|---|
+      > | `PositionPolicyCommandServer` (`position_policy_transport.go:75`) | **loopback TCP** + bearer + 0700 descriptor. a079가 라우트 셋을 여기 얹었다 | **안 쓴다** — design D7.1이 고른 것은 **파일시스템 권한**이 접근 제어인 Unix 소켓이다 |
+      > | `PositionPolicyRuntimeServer` (`position_policy_runtime_transport_unix.go`) | **Unix 소켓** — D7.1이 선례로 지목한 그것 | **얹지 않는다 — 아래** |
+      >
+      > **선례이지만 올라탈 수는 없다.** 그 서버의 자기 설명이 금지한다(`:25-27`):
+      > *"Its Unix socket exports **one authenticated GET** and possession of its client
+      > **cannot express Preview, Apply, or reconciliation mutation**."*
+      > 승인은 mutation 이다. **`httpapi`를 배제한 것과 똑같은 형태의 근거이고**
+      > (4라운드 A-P9), 같은 규율을 여기에도 적용해야 일관된다.
+      >
+      > 그러므로 **4.4b는 알림 전용 Unix 소켓을 새로 연다** — 그 파일을 모델로.
+
+      > **⚠ 새 패키지는 안 만든다.** 선례(`exitquarantine`+`positionpolicyrpc`)가
+      > 도메인 타입을 별도 패키지에 두는 이유는 **소비자가 둘**(콘솔·CLI)이기 때문이다.
+      > 여기 소비자는 `tossctl` 하나이고, 그것은 이미 `internal/app/engine`을 import 한다
+      > — 타입은 거기 두고 dial 하는 client 는 `cmd/tossctl`에 둔다. 두 번째 소비자가
+      > 생기면 그때 뽑는다.
 
       | 명령 | 무엇 | 배선 |
       |---|---|---|
