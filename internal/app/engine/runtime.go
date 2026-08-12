@@ -323,10 +323,9 @@ func (r *Runtime) Run(ctx context.Context) error {
 		wg.Add(1)
 		go func(aux AuxiliaryExecutor) {
 			defer wg.Done()
-			// ⛔ 이 반환값을 아직 아무도 안 본다 (a098 4.2 가 그 자리다). 그래서
-			// 배달 실행자는 **아직 프로덕션 조립에 등록되지 않는다** — 감독 밖에
-			// 두면서 아무도 안 보면 「감독 밖」이 곧 「아무도 안 본다」가 된다.
-			_ = aux.Run(loopCtx)
+			// loopCtx, not ctx: runAuxiliary judges the stop against what it is
+			// handed, and the two differ when a supervised loop fails.
+			r.runAuxiliary(loopCtx, aux)
 		}(aux)
 	}
 

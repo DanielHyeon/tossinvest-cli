@@ -363,6 +363,18 @@ func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, l
 		return nil, err
 	}
 
+	// The critical-alert outbox needs somebody to drain it. Before this, a row
+	// written while the transport was down stayed PENDING until the same
+	// condition happened to be observed again — the alert was durable and
+	// undelivered, which is a record rather than an alert (a098).
+	//
+	// It is Auxiliary, not a supervised loop: a delivery fault must not stop the
+	// loop that places a stop-loss.
+	alertDelivery, err := ectx.AlertDeliverer(clk)
+	if err != nil {
+		return nil, err
+	}
+
 	return engine.NewRuntime(engine.RuntimeOptions{
 		AccountRef: ectx.AccountRef,
 		Alerts:     ectx.Notifier,
@@ -397,6 +409,7 @@ func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, l
 			},
 			strategyEntry.SupervisedLoop(),
 		},
+		Auxiliary: []engine.AuxiliaryExecutor{alertDelivery},
 	})
 }
 

@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/runtime.go",
-  "source_sha256": "306276bd31062ceab5042373c11f9a668d39511e22a0e1b63af3d77a2d055766",
+  "source_sha256": "a80916efecb93578947ceae10f9e1ee4f8315affdb63913573e59da0f7da237c",
   "package": "engine",
   "function": "Run",
   "receiver": "Runtime",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 380,
+    "line": 379,
     "column": 2
   },
   "branches": [
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 352,
+        "line": 351,
         "column": 2
       }
     }
@@ -66,14 +66,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 356,
+        "line": 355,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 379,
+        "line": 378,
         "column": 2
       }
     }
@@ -176,15 +176,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 329,
-        "column": 8
+        "line": 328,
+        "column": 4
       },
-      "text": "aux.Run"
+      "text": "r.runAuxiliary"
     },
     {
       "kind": "call",
       "at": {
-        "line": 333,
+        "line": 332,
         "column": 16
       },
       "text": "make"
@@ -192,7 +192,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 335,
+        "line": 334,
         "column": 2
       },
       "text": "supervisorWG.Add"
@@ -200,14 +200,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 336,
+        "line": 335,
         "column": 5
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 337,
+        "line": 336,
         "column": 9
       },
       "text": "supervisorWG.Done"
@@ -215,7 +215,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 338,
+        "line": 337,
         "column": 3
       },
       "text": "r.superviseHealth"
@@ -223,7 +223,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 346,
+        "line": 345,
         "column": 2
       },
       "text": "cancel"
@@ -231,7 +231,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 347,
+        "line": 346,
         "column": 2
       },
       "text": "close"
@@ -239,7 +239,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 348,
+        "line": 347,
         "column": 2
       },
       "text": "wg.Wait"
@@ -247,7 +247,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 349,
+        "line": 348,
         "column": 2
       },
       "text": "supervisorWG.Wait"
@@ -255,7 +255,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 350,
+        "line": 349,
         "column": 13
       },
       "text": "drain"
@@ -263,7 +263,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 352,
+        "line": 351,
         "column": 5
       },
       "text": "r.gracefulStop"
@@ -271,7 +271,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 353,
+        "line": 352,
         "column": 3
       },
       "text": "r.log"
@@ -279,7 +279,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 363,
+        "line": 362,
         "column": 13
       },
       "text": "fmt.Errorf"
@@ -287,7 +287,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 363,
+        "line": 362,
         "column": 73
       },
       "text": "describe"
@@ -295,7 +295,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 364,
+        "line": 363,
         "column": 2
       },
       "text": "r.alert"
@@ -303,7 +303,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 366,
+        "line": 365,
         "column": 10
       },
       "text": "string"
@@ -311,7 +311,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 374,
+        "line": 373,
         "column": 22
       },
       "text": "describe"
@@ -319,7 +319,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 375,
+        "line": 374,
         "column": 22
       },
       "text": "strings.Join"
@@ -327,7 +327,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 375,
+        "line": 374,
         "column": 35
       },
       "text": "namesOf"
@@ -335,7 +335,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 378,
+        "line": 377,
         "column": 2
       },
       "text": "r.log"
@@ -343,7 +343,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 378,
+        "line": 377,
         "column": 78
       },
       "text": "describe"
@@ -372,37 +372,30 @@
       }
     },
     {
-      "kind": "=",
-      "at": {
-        "line": 329,
-        "column": 4
-      }
-    },
-    {
       "kind": ":=",
       "at": {
-        "line": 333,
+        "line": 332,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 345,
+        "line": 344,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 350,
+        "line": 349,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 363,
+        "line": 362,
         "column": 2
       }
     }
@@ -425,7 +418,7 @@
     {
       "kind": "go",
       "at": {
-        "line": 336,
+        "line": 335,
         "column": 2
       }
     }
@@ -458,7 +451,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 337,
+        "line": 336,
         "column": 3
       },
       "text": "supervisorWG.Done"

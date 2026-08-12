@@ -93,10 +93,17 @@ type alertDeliverer struct {
 // It cycles first and waits afterwards, so an engine starting with a backlog
 // begins draining it immediately rather than one interval later.
 //
-// A cancelled context is a clean stop and returns nil: this executor is stopped
-// by the runtime shutting down, and reporting that as a failure would make every
-// ordinary stop look like the sender dying — which is the one thing that latches
-// the entry gate (task 4.2).
+// A cancelled context is a clean stop and is reported *as a cancellation*:
+// ctx.Err(), never nil.
+//
+// ⛔ The first draft returned nil here, reasoning that "a clean stop is not a
+// failure". Under the runtime that reads this, the reasoning inverts: the
+// runtime judges a stop with Runtime.gracefulStop, which requires the error to
+// be the context's (runtime.go). A nil return has no context in it, so every
+// ordinary shutdown would be classified as the sender dying — and that is the
+// one thing that latches the entry gate. The judgement is deliberately the same
+// predicate the supervised loops get (design D8.3), so the convention is the
+// return's to match, not the predicate's.
 //
 // A cycle that fails does not stop the loop. The backlog is exactly what should
 // outlive a transient ledger or transport fault, and a loop that exits on the
@@ -105,12 +112,15 @@ func (d *alertDeliverer) Run(ctx context.Context) error {
 	for {
 		if err := d.cycle(ctx); err != nil {
 			if ctx.Err() != nil {
-				return nil
+				return ctx.Err()
 			}
 			d.logf(obs.EventAlertUndelivered, err, "a delivery cycle failed")
 		}
+		// Both clocks return ctx.Err() when the wait is cancelled (clock.go,
+		// fake.go), so this is the cancellation travelling out unchanged rather
+		// than a second judgement about what happened.
 		if err := d.Clock.Sleep(ctx, d.interval()); err != nil {
-			return nil
+			return err
 		}
 	}
 }

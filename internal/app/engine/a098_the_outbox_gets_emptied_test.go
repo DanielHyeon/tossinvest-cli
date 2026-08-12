@@ -11,6 +11,7 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -232,8 +233,12 @@ func TestTheDelivererReturnsPromptlyOnCancellation(t *testing.T) {
 	cancel()
 	select {
 	case err := <-done:
-		if err != nil {
-			t.Errorf("Run returned %v on cancellation; a clean stop is not a failure", err)
+		// ⛔ 첫 판은 여기서 nil 을 요구했다. 런타임의 판정(`gracefulStop`)이
+		// **컨텍스트의 오류**를 요구하므로 nil 은 정상 종료를 죽음으로 만든다 —
+		// 규약을 반환 쪽이 맞췄다(4.2). 그 성질은
+		// `TestTheDelivererReportsCancellationAsCancellation` 이 단독으로 진다.
+		if !errors.Is(err, context.Canceled) {
+			t.Errorf("Run returned %v on cancellation, want context.Canceled", err)
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("Run did not return within 2s of cancellation — the cycle wait is not cancellable")

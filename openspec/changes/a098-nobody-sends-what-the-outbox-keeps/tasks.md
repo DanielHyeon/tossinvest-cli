@@ -721,7 +721,56 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > **하나만 여기로 건너왔다.**
       >
       > 정지하지 못하는 엔진은 사람이 손절 배선을 고치러 들어갈 수 없다.
-- [ ] 4.2 **`OnStop`이 죽음을 관측한다** (design D8.3). 결정 9-2가 *"죽음을 관측할 주체를
+- [x] 4.2 **`OnStop`이 죽음을 관측한다** (design D8.3).
+      **완료 2026-08-12** — `auxiliary.go`의 `runAuxiliary`·`runAuxiliaryBody`,
+      그리고 **프로덕션 등록**(`Context.AlertDeliverer` + `cmd/tossctl/engine.go`).
+      `Runtime.Run` 은 **분기 5 · 이탈 3 그대로다** — 판정·`recover`·`OnStop` 을
+      전부 새 파일의 함수 둘에 뒀기 때문이다. 인라인이었으면 분기가 **8**이 되고,
+      그러면 *"정지 정책을 안 건드렸다"* 를 분기 수로 말할 수 없다.
+
+      > ## ✅ 이제 **정말로** 돈다 — 4.0·4.1 의 ⛔ 를 닫는다
+      >
+      > `cmd/tossctl/engine.go` 가 `ectx.AlertDeliverer(clk)` 를 만들어
+      > `RuntimeOptions.Auxiliary` 에 넘긴다. 그 한 줄이 없으면 a098 은 **자기가
+      > 고치려는 결함을 한 단계 위에서 반복한다** — `Notifier.Flush` 가 프로덕션
+      > 호출자 0 이라 안 도는 것과 정확히 같은 모양이다.
+      > **뮤테이션 L 이 그 상태를 실제로 만들었고**(실행자를 만들고 안 넘긴다),
+      > `TestProductionRuntimeStartsExactlyOneAlertDeliverer` 가 `auxiliary names=[]` 로 잡았다.
+      >
+      > **그 등록이 기존 함수 `engineRuntime` 을 편집했고**, `check_analysis` 가
+      > *"missing evidence for modified function"* 로 그것을 잡았다 —
+      > §5.2 의 표에 없던 자리다. 번들을 만들었다(`cmd-tossctl--engineruntime`,
+      > 분기 5→6 · 이탈 7→8). **계획이 아니라 검사가 먼저 알아챘다.**
+
+      > ## ⛔ 4.0 의 반환 규약을 고쳤다 — nil 이 정상 종료를 **죽음으로** 만든다
+      >
+      > 4.0 의 `alertDeliverer.Run` 은 취소에서 `nil` 을 반환하고 주석은
+      > *"a clean stop is not a failure"* 였다. **런타임의 판정과 안 맞는다**:
+      > `gracefulStop` 은 `err != nil && errors.Is(err, ctx.Err())` 를 요구하므로
+      > nil 반환은 **모든 SIGTERM 을 발송자 사망으로 분류**하고, 다음 기동이 아무
+      > 이유 없이 운영자 승인을 기다리게 된다.
+      >
+      > 판정을 새로 만들지 않기로 한 이상(D8.3) **규약은 반환 쪽이 맞춘다** —
+      > 이제 `ctx.Err()` 를 반환한다. 두 시계 다 취소에서 `ctx.Err()` 를 돌려주므로
+      > (`clock.go:54-65`·`fake.go:44-60`) 그것은 **판정을 하나 더 만드는 것이 아니라
+      > 취소가 그대로 지나가는 것**이다. 4.0 의 단언도 함께 고쳤다.
+
+      **뮤테이션 다섯이 각자 다른 자리에서 잡았다.**
+
+      | | 뮤테이션 | 무엇이 죽었나 |
+      |---|---|---|
+      | G | `recover` 경계 삭제 | **테스트 바이너리가 통째로 죽는다** — R15 가 예고한 그 형태(B-P6) |
+      | H(거친) | `runAuxiliary(ctx, …)` — 실행자까지 부모 ctx 로 | **테스트가 행**(120s 타임아웃). `wg.Wait()` 이 안 돌아온다 — **같은 실수의 두 번째 얼굴** |
+      | **H'(정밀)** | 실행자는 `loopCtx`, **판정만** 부모 ctx | **R13② 하나만** FAIL — A-P2 를 고립시켰다 |
+      | I | 정상 종료 판정 생략 | R13 ①②가 FAIL |
+      | K | 두 사유를 한 코드로 | R3 · R15 · detail 테스트가 FAIL |
+      | L | 프로덕션 등록 삭제 | `TestProductionRuntimeStartsExactlyOneAlertDeliverer` |
+
+      **H 의 거친 형태가 안 쓸모없었다.** 판정과 실행 ctx 를 같이 바꾸면 게이트가
+      아니라 **종료가** 깨진다 — 부모로 도는 실행자는 감독 루프 실패 때 안 깨어나고,
+      그 goroutine 이 `wg` 에 있으므로 엔진이 못 죽는다. 정밀 뮤테이션만 했으면
+      그 결합을 못 봤다.
+ 결정 9-2가 *"죽음을 관측할 주체를
       따로 만들어야 한다"*를 대가로 지목했고, 답은 **실행자 자신의 goroutine 안 `defer`**다 —
       감시 루프를 새로 만들지 않는다.
 
@@ -740,8 +789,19 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > **`recover`가 없으면 R2가 패닉 경로에서 거짓이다.** 배달 실행자의 패닉은
       > 프로세스를 죽이고, 그것은 **손절 루프까지 죽인다**(불변식 4).
       > 남는 잔재(집힌 채 버려진 임차)는 a099의 만료가 지운다.
-- [ ] 4.3 정지 시 `EntryGate.Block`을 **직접** 부른다.
-      `EscalateOperatingMode`에 기대지 않는다 (design D2의 인용)
+- [x] 4.3 정지 시 `EntryGate.Block`을 **직접** 부른다.
+      `EscalateOperatingMode`에 기대지 않는다 (design D2의 인용).
+      **완료 2026-08-12** — `blockEntryOnDeliveryStop`(`auxiliary.go`).
+
+      - **사유는 `ReasonAlertSenderDown` 하나다** (4.3.3). 뮤테이션 K 로 `ReasonAlertUndelivered`
+        를 쓰게 하면 R3·R15·detail 테스트 셋이 FAIL 한다 — 합치면 운영자가 밀린 행을
+        전부 승인하는 순간 「보낼 주체 없음」까지 풀린다
+      - **`EscalateOperatingMode` 를 한 번도 안 부른다** (R18, 결정 11-1). 세 테스트가
+        호출 수 0 을 **단언**한다 — 없는 것을 「안 적음」이 아니라 **재서** 적는다
+      - **detail 에 알림 내용이 안 들어간다**(불변식 8). `TestTheStopDetailNamesNoAlertContent`
+        가 종목코드·계좌번호·이벤트 키 셋을 넣은 오류로 부르고 셋 다 안 새는 것을 본다 —
+        원장 행은 제목·본문·payload·계좌를 들고 오고 게이트 detail 은 게이트 상태가
+        읽히는 **모든** 자리에서 함께 읽힌다
 - [x] **4.3.3 그 `Block`은 자기 사유 코드를 쓴다** (4판 신설 — 사용자 결정 8-1 · design D8.2).
       **오늘 없던 여섯 번째 차단 트리거이고, 그 사실을 숨기지 않는다.**
       **넷 다 채웠다 (2026-08-12) — 문자열은 `critical_alert_sender_down`.**
@@ -927,7 +987,7 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       | `internal/risk` | **비어 있어야 한다** | — |
       | `internal/execgw` | **⛔ 비어 있지 않다** — 파일 셋 (`reason.go`·`failclosed.go`·`retry.go`) + golden 하나 | 4.3.3 (사용자 결정 8-1). **3판의 "execgw 전부 안 건드린다"는 철회했다** |
       | `internal/app/engine` | 비어 있지 않다 | 4.0·4.1·4.2·**4.6** (`gateway.go` — `buildGateway` 한 갈래 + 신설 leaf) |
-      | `cmd/tossctl` | 비어 있지 않다 | 4.4의 운영자 표면 (design D7) |
+      | `cmd/tossctl` | 비어 있지 않다 | 4.4의 운영자 표면 (design D7) · **⛔ 4.2 도 여기 온다** — `engineRuntime` 이 `RuntimeOptions` 를 만드는 유일한 자리이므로 **프로덕션 등록 한 줄**이 여기다(+13/-0). 이 표는 그것을 안 적고 있었고 `check_analysis` 가 잡았다 → 번들 `cmd-tossctl--engineruntime` |
 
       **`internal/execgw`의 프로덕션 diff는 위 네 파일을 넘으면 안 된다.** 특히
       `checkAccountEntryLocked`(`retry.go:537`)와 `EntryGate.Block`/`Clear`
