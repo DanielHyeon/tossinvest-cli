@@ -1416,14 +1416,29 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
 
 ## 5. VERIFY
 
-- [ ] 5.1 `go test ./...` — **반드시 `-timeout 30m`을 붙인다** (`Makefile:35`와 같게).
+- [x] 5.1 `go test ./...` — **반드시 `-timeout 30m`을 붙인다** (`Makefile:35`와 같게). — **2026-08-13**
+
+      `go test ./... -count=1 -timeout 30m` → **8237 통과 · 99 패키지 · exit 0.**
+      경고대로 `-timeout 30m`을 붙여서 돌렸다.
+
+      > **⛔ 이 자리에서 `make lint`가 **빨갛다**는 것을 같이 적어 둔다 — a098이 만든 것이
+      > **아니다.** `internal/journal/alert_claim.go`와 `internal/obs/log.go`의 정렬
+      > 드리프트이고, 병합 `5bb3b8f9`가 들여왔다. **a098에 묶으면 §5.2가 깨진다** —
+      > 그 두 패키지의 diff는 **비어 있어야** 하기 때문이다. 별도 커밋으로 남긴다.
+      >
+      > `tools/gate.sh`는 lint를 안 돌리므로 §6.3을 막지는 않는다 — **확인했고 추측이 아니다.**
+      >
+      > **그리고 이것을 하마터면 「해소됨」으로 적을 뻔했다.** 맨손 `gofmt -l … 2>/dev/null`이
+      > 빈 출력을 냈는데, 그 이유는 위반이 없어서가 아니라 **`gofmt`이 PATH에 없어서**였다.
+      > Makefile은 `$(shell go env GOROOT)/bin/gofmt`(`Makefile:3`)로 절대 경로를 쓴다.
+      > **빈 출력은 「위반 0」과 「검사 0」을 구분하지 못한다.**
 
       > **⛔ 5라운드 B-P1이 여기서 걸렸다.** `-timeout` 없이 부른
       > `go test ./internal/journal/... -count=1`이 **기본값 10분에 걸려 실패**했다.
       > 직렬 재측정은 **593.257초** — 기본값 600초에 **7초** 남았다(4라운드에는 305.9초였다).
       > **a099가 이 패키지에 v31 마이그레이션과 열 넷과 새 테스트를 더한다.**
       > `make`는 30분이라 안 깨지지만 **임시 실행은 이제 뒤집힌다.**
-- [ ] 5.2 **`internal/obs`·`internal/journal`·`internal/risk`의 diff가 비어 있음을 확인**
+- [x] 5.2 **`internal/obs`·`internal/journal`·`internal/risk`의 diff가 비어 있음을 확인**
       — D3의 Pre-Edit 선언이 지는 계약.
 
       | 패키지 | diff | 왜 |
@@ -1472,7 +1487,40 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > 4.3.3 시점 실측: `reason.go`(+상수 1) · `failclosed.go`(+리터럴 1) ·
       > `retry.go`(+`latchOrder` 1) · `reason_codes.golden`(+1줄) · 새 테스트 1.
       > `checkAccountEntryLocked`·`Block`·`Clear` **본문 0줄** — `git diff`로 확인한다
-- [ ] 5.2b **`AllReasonCodes()`의 길이가 정확히 하나 늘었음을 잰다** (29 → 30).
+
+      **실측 — 2026-08-13, `git diff e6c4636a HEAD`.** (base는 `base-commit.txt`)
+
+      | 표가 요구한 것 | 실측 |
+      |---|---|
+      | `internal/obs` 비어 있음 | **0 파일** ✓ |
+      | `internal/journal` 비어 있음 | **0 파일** ✓ |
+      | `internal/risk` 비어 있음 | **0 파일** ✓ |
+      | `internal/execgw` 다섯 파일을 안 넘음 | **정확히 다섯** — `reason.go`(+18) · `failclosed.go`(+1) · `retry.go`(+12) · `testdata/reason_codes.golden`(+1) · `a098_sender_down_reason_test.go`(+100) ✓ |
+      | `retry.go`의 세 함수 본문 0줄 | ✓ — 유일한 hunk 가 `@@ -593,6 +593,18 @@ var latchOrder = []ReasonCode{`. **변수 안이고 함수 안이 아니다** |
+      | `cmd/tossctl` 기존 함수 **셋** | ✓ — hunk 헤더 넷이 함수 **셋**을 가리킨다: `newEngineCmd`(115) · `runEngineRun`(267) · `engineRuntime`(363·397) |
+      | `cmd/tossctl` 새 파일 **넷** | ✓ — `engine_alerts.go` · `engine_alerts_client{,_unix,_other}.go` |
+      | `newEngineCmd`는 **인자 하나** | ✓ — `newEngineAlertsCmd(root)` 하나. 트리 전체의 **삭제 1줄이 여기**이고, `cmd.AddCommand(…)` 한 줄이 두 줄로 접힌 것이다 |
+      | `internal/positionpolicyrpc` 새 파일 하나 | ✓ — `private_endpoint.go`(+137), 기존 함수 0줄 |
+
+      > **⛔ 트리 전체를 세었지 표에 적힌 패키지만 센 것이 아니다.**
+      > `openspec`·`docs`·에이전트 설정을 뺀 diff 는 **33 파일 · +5597 · -1**이고,
+      > 그 33이 위 표의 여섯 패키지 안에 전부 들어간다. **표 밖의 프로덕션 편집은 0이다** —
+      > 「선언한 패키지가 깨끗한가」만 보면 **선언 안 한 패키지의 편집이 안 보인다.**
+- [x] 5.2b **`AllReasonCodes()`의 길이가 정확히 하나 늘었음을 잰다** (29 → 30). — **2026-08-13**
+
+      | 무엇 | 어떻게 잰다 | 값 |
+      |---|---|---:|
+      | HEAD 길이 | 임시 테스트가 **함수를 불러** `len(AllReasonCodes())` | **30** |
+      | HEAD 중복 | 같은 테스트가 집합 크기 대조 | **unique=30 · dups=0** |
+      | base 길이 | `git show e6c4636a:internal/execgw/failclosed.go` 의 리터럴 항목 수 | **29** |
+      | delta | `git diff` — `failclosed.go` **+1** (`ReasonAlertSenderDown`) · golden **+1** (`critical_alert_sender_down`) | **+1** |
+
+      > **⛔ 길이를 「읽어서」 세지 않았다.** 리터럴을 눈으로 세면 빈 줄·주석·묶음이
+      > 세는 사람을 돕는 쪽으로 틀린다. HEAD 는 **함수를 실행해서** 재고, base 는
+      > 그 커밋의 파일에서 재고, 둘의 차를 `git diff` 가 따로 확인한다 — **세 경로가
+      > 같은 답을 낼 때만 「하나 늘었다」이다.** (임시 테스트는 재고 지웠다.)
+
+      > **⚠ 그리고 이 측정은 여전히 「열거가 완결됐다」를 증명하지 않는다** — 아래 그대로.
       golden 대조만으로는 부족하다 — 상수를 `reason.go`에만 선언하고 열거에 안 넣으면
       **golden이 안 깨진다**(`internal-execgw--allreasoncodes` 번들이 그 함정을 적는다).
 
@@ -1482,7 +1530,7 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > 지금도 거짓이다. **5.2b는 「새 코드가 등록됐다」만 증명하고 「열거가 완결됐다」는
       > 증명하지 않는다.** 남은 16개는 a098의 범위가 아니다 —
       > **「안 하는 것」 표에 이름을 붙여 둔다**
-- [ ] 5.2c **`LoopNames()`가 오늘과 같은 넷을 낸다** (R12의 GREEN) —
+- [x] 5.2c **`LoopNames()`가 오늘과 같은 넷을 낸다** (R12의 GREEN) —
       `reconcile`·`exit`·`filldetect`·`strategy-entry`.
       기존 핀 `TestProductionRuntimeIncludesOneDormantStrategyEntryOuterLoop`
       (`cmd/tossctl/engine_strategy_entry_dormant_test.go:50`)이 **안 깨져야 한다.**
@@ -1501,6 +1549,25 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > **핀의 이빨은 이미 확인했다** — §3.1의 R14·R12 블록, 뮤테이션 **MM**
       > (배달 실행자를 `Loops`로 옮기면 핀이 `alert-delivery`를 이름으로 잡는다).
       > 여기서는 **HEAD에서 한 번 더** 잰다 — 그 사이의 커밋이 등록을 옮겼을 수 있다
+
+      **실측 — 2026-08-13, HEAD에서 세 핀 전부 통과.**
+
+      | 핀 | 무엇을 진다 |
+      |---|---|
+      | `TestProductionRuntimeIncludesOneDormantStrategyEntryOuterLoop` | `LoopNames()` **정확히 넷** (`reflect.DeepEqual`) |
+      | `TestTheAlertDelivererIsNotASupervisedLoop` | 같은 넷 **+ `alert-delivery`가 그 안에 없다** |
+      | `TestProductionRuntimeStartsExactlyOneAlertDeliverer` | `AuxiliaryNames()` == `["alert-delivery"]` — **집합 동일성** |
+
+      **정본과 코드가 같은 넷을 적는가** (결정 10-1): 스펙 델타
+      `specs/engine-safety/spec.md:90`이 *"reconcile·exit·체결 감지·`strategy-entry`
+      **넷과 정확히 같다**"*라고 적고, 핀의 `want`는
+      `{"reconcile", "exit", "filldetect", engine.StrategyEntryLoopName}`이며
+      `StrategyEntryLoopName = "strategy-entry"`(`strategy_entry_supervisor.go:25`)다.
+      **넷이 이름별로 일치한다.**
+
+      > **⛔ 위 핀 셋은 서로를 대신하지 못한다.** 감독 집합만 보면 실행자를 **둘** 등록해도
+      > 초록이고, 보조 집합만 보면 **양쪽에 다** 등록해도 초록이다 — 그 구현에서 알림 결함이
+      > 엔진을 내린다. 셋째 핀의 마지막 루프가 그 교차를 따로 진다.
 - [x] 5.3 exit 사이클 체류 무변화 실측 (R4의 GREEN 값) — **2026-08-13**
 
       **기준선 6.11 ms · 갇힌 발송자 옆 6.34 ms** (i9-12900H).
