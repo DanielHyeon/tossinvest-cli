@@ -399,6 +399,37 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > **원복 검사가 확인해 준 것이 확인하려던 것이 아니었다.**
       > 세 파일을 세어서 잡았다(`reason.go` 2 · `failclosed.go` **0** · `retry.go` **0**).
 
+      **진행 — R8 완료 (2026-08-12).**
+      `internal/app/engine/a098_restart_does_not_release_the_gate_test.go` · GREEN 은 4.6.
+
+      | 테스트 | 종류 | 관측 |
+      |---|---|---|
+      | `TestARestartWithAnUndeliveredCriticalAlertKeepsEntryLatched` | **RED 오늘** | 조립 직후 `Blocks()` 에 래치가 **없다** → FAIL. 4.6 뒤 PASS |
+      | `TestAnEmptyOutboxLeavesTheGateUnlatchedOnRestart` | **회귀 핀** | 오늘도 통과 — 빨간 시점이 없다 |
+      | `TestTheRestoreNeverClearsALatchItDidNotSet` | **회귀 핀** | 아래 ⛔ |
+      | `TestTheRestoredLatchDetailCarriesNoAlertContent` | **RED 오늘** | 복원이 없으니 래치도 없다 → FAIL. 불변식 8 |
+
+      **셋 중 둘이 오늘 통과한다 — 그것을 그대로 적는다.** 회귀 핀 둘의 값은 4.6 **뒤**에
+      있다: 「미전달 수에서 유도한다」 구현을 잡는 것이 그 둘의 일이다.
+
+      > **⛔⛔ 그런데 그 둘 중 하나가 이빨이 없었다. 뮤테이션이 그것을 찾았다.**
+      >
+      > `TestTheRestoreNeverClearsALatchItDidNotSet` 의 첫 판은 `buildGateway` 로
+      > **조립한 뒤에** `Block` 을 걸었다. 복원은 그보다 **먼저** 끝나 있으므로,
+      > `Clear` 를 부르는 구현을 넣고 돌려도 **네 테스트가 전부 통과했다**
+      > (`MUT-DERIVE-EXIT=0`). **관측하려는 순서가 코드의 순서와 반대였다.**
+      >
+      > 고친 판은 leaf 를 직접 부른다 — 게이트를 **미리 잠근 채** 복원을 돌린다.
+      > 같은 뮤테이션을 다시 걸었더니 이번엔 **FAIL** 했다
+      > (`the latch disappeared while the outbox was empty`).
+      >
+      > | | 첫 판 | **고친 판** |
+      > |---|---|---|
+      > | derive 뮤테이션 | **통과 (이빨 없음)** | **FAIL** |
+      >
+      > **이것이 「통과는 증거가 아니다」의 정확한 형태다** — 첫 판도 초록이었고,
+      > 초록만 봤으면 회귀 핀이 하나 있다고 적었을 것이다. 있는 것은 **문장**이었다.
+
 - [x] 3.2 루프 주기를 **측정해서** 정한다. a092의 값을 인용하지 않는다 (2026-08-12)
 
       **잰 것** — `internal/app/engine/a098_cycle_cost_bench_test.go`.
@@ -733,14 +764,36 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       >
       > **표면을 고르기 전에는 4.4를 실행할 수 없었다.** 사용자 결정 4가 그 빈칸을
       > 채웠고, 위 표가 그 결정이다.
-- [ ] **4.6 기동 직후 진입 게이트를 복원한다 — `Recover` 안에서, `Block`만**
-      (design D6 · a099 C6 · 사용자 결정 5-1).
+- [x] **4.6 기동 직후 진입 게이트를 복원한다 — `Block`만** (design D6 · a099 C6 ·
+      사용자 결정 5-1). **구현 완료 2026-08-12.**
 
       | 무엇 | 값 |
       |---|---|
-      | 자리 | **`RuntimeOptions.Recover` 콜백** (`internal/app/engine/runtime.go:160` 필드, 호출 `:267`) |
+      | ~~자리~~ | ~~**`RuntimeOptions.Recover` 콜백** (`runtime.go:160` 필드, 호출 `:267`)~~ |
+      | **자리 (구현)** | **`buildGateway`** — `tracker.Restore` 바로 뒤 (`gateway.go`). 신설 leaf `restoreAlertEntryLatch` |
       | 판정 | 미전달 critical 수가 0보다 크다 |
       | 행동 | **`Block`만 건다.** `Clear`는 **안 한다** |
+
+      > **⛔⛔ 자리를 바꿨다 — 승인된 task 와 다르므로 근거를 실측으로 적는다.**
+      >
+      > | # | 사실 | 근거 |
+      > |---|---|---|
+      > | 1 | 이 함수는 **어떤 루프보다도 먼저** 끝난다 — 조립이고 루프는 `Runtime.Run` 이 띄운다 | `engine.go:490` · `runtime.go:277-283` |
+      > | 2 | **같은 결함을 고친 선례가 이 함수 안에 있다** — `tracker.Restore` 가 RECONCILE 래치를 원장에서 재건한다. 주석: *"without this call a restart silently clears every block a disagreement raised"* | `gateway.go:216-227` |
+      > | 3 | 원장과 게이트가 **둘 다 이 함수 안에** 있다. `Recover` 클로저(`cmd/tossctl/engine.go:373`)에는 게이트가 없다 | `gateway.go:214` |
+      > | 4 | **복구 시퀀스가 이 래치를 안 지운다** — `recovery.Run` 의 `Clear` 는 `ReasonRecoveryIncomplete` **하나뿐** | `internal/reconcile/recovery.go:289` |
+      >
+      > **design 이 준 이유를 안 어긴다.** D6 가 `Recover` 를 고른 논거는
+      > *"첫 tick 은 루프가 이미 도는 뒤라 그 사이에 진입이 열린다"* — 즉 **3판의
+      > 「루프 첫 tick」을 기각하는 논거**이지 `Recover` 를 유일한 자리로 지목하는
+      > 논거가 아니다. 조립은 그 논거를 **더 강하게** 만족한다(1).
+      >
+      > **4가 없었으면 이 자리를 못 골랐다.** 복구가 게이트를 통째로 비웠다면
+      > 조립 시점 래치는 `Recover` 가 도는 사이에 사라졌다. 추측이 아니라 읽어서 확인했다.
+      >
+      > 산출물: `analysis/function-logic/internal-app-engine--buildgateway`
+      > (**분기 4 → 5 · 이탈 6 → 7**, 예측대로. 호출은 19 를 예측했는데 **20** —
+      > error-wrap 의 `fmt.Errorf` 를 안 셌다. 틀린 것을 적어 뒀다).
 
       > `EntryGate.Block`은 메모리 래치이고 **재시작이 지운다**
       > (`execgw/retry.go:498-505`). 원장에 미전달 critical 행이 남았는데 프로세스는
@@ -775,7 +828,7 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       | `internal/journal` | **비어 있어야 한다** | a099가 지는 표면이다 |
       | `internal/risk` | **비어 있어야 한다** | — |
       | `internal/execgw` | **⛔ 비어 있지 않다** — 파일 셋 (`reason.go`·`failclosed.go`·`retry.go`) + golden 하나 | 4.3.3 (사용자 결정 8-1). **3판의 "execgw 전부 안 건드린다"는 철회했다** |
-      | `internal/app/engine` | 비어 있지 않다 | 4.0·4.1·4.2 |
+      | `internal/app/engine` | 비어 있지 않다 | 4.0·4.1·4.2·**4.6** (`gateway.go` — `buildGateway` 한 갈래 + 신설 leaf) |
       | `cmd/tossctl` | 비어 있지 않다 | 4.4의 운영자 표면 (design D7) |
 
       **`internal/execgw`의 프로덕션 diff는 위 네 파일을 넘으면 안 된다.** 특히

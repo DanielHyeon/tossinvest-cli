@@ -132,6 +132,41 @@ var ErrExitApplierUnbound = errors.New(
 		"the first take-profit a position proposes would stay outstanding forever and suppress every " +
 		"proposal after it")
 
+// restoreAlertEntryLatch rebuilds the undelivered-alert block from the ledger.
+//
+// EntryGate.Block writes to a map behind a mutex and nothing else
+// (execgw/retry.go:498-505). The rows it was blocking for are in the ledger, and
+// they survive the process that latched. So a restart with critical alerts still
+// undelivered used to come up with an open gate: the alert had reached nobody,
+// and restarting was the way around the block that said so.
+//
+// It only ever latches. Deriving the latch from the count — clearing it when the
+// backlog empties — would be less conservative than the approved requirement,
+// which asks for a manual confirmation after delivery recovers
+// (openspec/specs/engine-safety/spec.md:147-152). Recovering delivery is not the
+// same fact as somebody having read the alert, and only Notifier.Acknowledge
+// stands for the second one.
+//
+// A read failure refuses the startup rather than continuing, matching the
+// RECONCILE restore beside it: not knowing whether alerts are outstanding is not
+// a reason to open the gate.
+func restoreAlertEntryLatch(ctx context.Context, j *journal.Journal, gate *execgw.EntryGate) error {
+	undelivered, err := j.UndeliveredCount(ctx)
+	if err != nil {
+		return fmt.Errorf("counting undelivered critical alerts: %w", err)
+	}
+	if undelivered <= 0 {
+		return nil
+	}
+	// The count and nothing else. The rows carry the alert body, the payload and
+	// the account they concern, and a gate detail is read wherever the gate's
+	// status is (안전 불변식 8).
+	gate.Block(execgw.ReasonAlertUndelivered, fmt.Sprintf(
+		"%d critical alert(s) recorded before this start have not been delivered; "+
+			"an operator has to acknowledge them", undelivered))
+	return nil
+}
+
 // bindApplyHooks connects the position projection to the fill transaction.
 //
 // Both writes have to be one commit (design D7's 원자 apply hook): a fill the
@@ -225,6 +260,14 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 	}
 	if err := tracker.Restore(ctx); err != nil {
 		return engineWiring{}, fmt.Errorf("engine: restoring the RECONCILE projection: %w", err)
+	}
+
+	// The same restore, for the other latch the ledger outlives. A critical alert
+	// that never reached anybody is still unreached after a restart, but the latch
+	// that said so lived in the old process's memory (execgw/retry.go:498-505), so
+	// without this the restart is the way around the block.
+	if err := restoreAlertEntryLatch(ctx, in.journal, entry); err != nil {
+		return engineWiring{}, fmt.Errorf("engine: restoring the alert entry latch: %w", err)
 	}
 	entry.SetAuthorityRefresh(func() error {
 		return tracker.Refresh(context.Background())
