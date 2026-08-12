@@ -283,6 +283,107 @@ func TestTheRuntimeRefusesAMisWiredAuxiliaryExecutor(t *testing.T) {
 	}
 }
 
+// TestADeadAuxiliaryExecutorIsNotRestarted is 4.3.2 — 승인된 델타의 다섯째 조항
+// (`specs/engine-safety/spec.md:238`: *"죽은 실행자는 **자동으로 되살아나지 않는다**"*).
+//
+// # 회귀 핀이다 — 빨간 시점이 없다. 그것을 그대로 적는다
+//
+// 오늘 `runAuxiliary`는 `Run`을 한 번 부르고 끝나므로 이 성질은 **이미 참**이다.
+// 그래서 이 테스트의 값은 통과에 없고 **뮤테이션에 있다**(기억: 통과는 증거가 아니다).
+// tasks §4.3.2가 실제로 건 둘과, **이 핀이 못 잡는 형태**를 함께 적는다.
+//
+// # 되살리면 무엇이 깨지는가
+//
+// `OnStop`이 게이트를 *"아무도 outbox를 배수하지 않는다"*로 잠근다. 되살아난
+// 실행자는 **그 래치가 걸린 채 배수한다** — 래치가 말하는 사실과 프로세스의 사실이
+// 어긋나고, 운영자는 없는 이유로 재시작을 한다.
+//
+// 그리고 되살리는 구현은 옛 goroutine 이 아직 원장 쓰기 안에 있어도 새것을 띄울 수
+// 있다. 둘이면 같은 행을 두 번 집는다. **a099의 임차가 그 두 번째를 막지만,
+// 막아 주는 것이 있다는 사실이 만들어도 된다는 뜻은 아니다** — a096이 지운 이중
+// 발송의 전제가 그렇게 돌아온다.
+func TestADeadAuxiliaryExecutorIsNotRestarted(t *testing.T) {
+	var mu sync.Mutex
+	starts, stops := 0, 0
+	firstStop := make(chan struct{})
+	observerStopped := make(chan struct{})
+	// release 는 되살아난 실행자를 붙잡아 두는 자리다. 통과 경로에서는 아무도
+	// 안 기다리고, Cleanup 이 닫으므로 실패해도 goroutine 이 영구히 남지 않는다.
+	release := make(chan struct{})
+	t.Cleanup(func() { close(release) })
+	dead := errors.New("the delivery executor stopped")
+
+	rt, err := engine.NewRuntime(engine.RuntimeOptions{
+		AccountRef: runtimeAccount,
+		Alerts:     &recordingAlerts{},
+		Loops:      []engine.SupervisedLoop{a098SurvivingLoop("exit", observerStopped)},
+		Auxiliary: []engine.AuxiliaryExecutor{{
+			Name: "alert-delivery",
+			Run: func(context.Context) error {
+				mu.Lock()
+				starts++
+				n := starts
+				mu.Unlock()
+				if n > 1 {
+					// 세는 것만으로는 못 잡는 형태를 하나 더 잡는다: 되살아난 것이
+					// 원장 쓰기 한가운데면 `wg.Wait()`가 안 풀리고 **엔진이 못 죽는다.**
+					// 그 경우 아래 마지막 단언이 "Run 이 안 돌아왔다"로 잡는다.
+					<-release
+				}
+				return dead
+			},
+			OnStop: func(context.Context, error) {
+				mu.Lock()
+				stops++
+				n := stops
+				mu.Unlock()
+				if n == 1 {
+					close(firstStop)
+				}
+			},
+		}},
+	})
+	if err != nil {
+		t.Fatalf("NewRuntime: %v", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { done <- rt.Run(ctx) }()
+
+	select {
+	case <-firstStop:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the auxiliary executor never stopped — 핀이 잴 사건이 안 일어났다")
+	}
+
+	// 300ms 는 상한이 아니라 **관측 창**이다. 지연 없는 재기동은 이 안에서 수를
+	// 폭발시키고, 짧은 backoff 도 여러 번 돈다. 창보다 긴 backoff 는 못 잡는다 —
+	// tasks §4.3.2가 그것을 이름으로 적는다.
+	time.Sleep(300 * time.Millisecond)
+
+	mu.Lock()
+	gotStarts, gotStops := starts, stops
+	mu.Unlock()
+	if gotStarts != 1 {
+		t.Errorf("the executor ran %d times, want 1 — 죽은 실행자가 되살아났다", gotStarts)
+	}
+	if gotStops != 1 {
+		t.Errorf("OnStop fired %d times, want 1 — 정지가 여러 번 관측됐다", gotStops)
+	}
+
+	cancel()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Errorf("Run returned %v on cancellation, want nil", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("Run did not return within 2s of cancellation; 되살아난 실행자가 배수를 막고 있다")
+	}
+}
+
 // a098 컴파일 시점 확인: 보조 실행자 슬라이스가 여러 개를 담고 전부 기동된다.
 func TestEveryAuxiliaryExecutorIsStarted(t *testing.T) {
 	var mu sync.Mutex

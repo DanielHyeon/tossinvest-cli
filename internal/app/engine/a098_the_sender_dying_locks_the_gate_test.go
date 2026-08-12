@@ -290,7 +290,6 @@ func TestTheStopDetailNamesNoAlertContent(t *testing.T) {
 	}
 }
 
-
 // TestTheDelivererReportsCancellationAsCancellation is the convention this file
 // depends on, asserted at its source.
 //

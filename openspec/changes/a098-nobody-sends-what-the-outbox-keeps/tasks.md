@@ -870,9 +870,47 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > **a098은 그것을 안 진다** — 사용자 결정 12-2. 인계는 a099 §7.5이고,
       > a092가 자기 조항을 정리하기 전에는 **두 델타가 서로 반대를 적고 있는 상태**다.
       > 그 사실을 숨기지 않는다.
-- [ ] **4.3.2 죽은 실행자를 자동으로 되살리지 않는다** (19판 4차 신설 — B-P5).
+- [x] **4.3.2 죽은 실행자를 자동으로 되살리지 않는다** (19판 4차 신설 — B-P5). **2026-08-12**
       a092 spec의 다섯째 조항이다. **자동 재시작은 배달 실행자를 둘로 만들 수 있고**,
       둘이면 같은 행을 두 번 집는다 — a096이 막은 이중 발송의 전제가 되살아난다.
+
+      **프로덕션 코드는 0줄이다.** `runAuxiliary`는 `runAuxiliaryBody`를 한 번 부르고
+      끝나므로 성질이 이미 참이다 — **회귀 핀이고, 빨간 시점이 없다. 그대로 적는다.**
+      핀은 `TestADeadAuxiliaryExecutorIsNotRestarted`
+      (`a098_the_runtime_starts_what_it_does_not_supervise_test.go:288`).
+
+      **그래서 통과로 끝내지 않았다 — 재기동 뮤테이션 넷을 실제로 걸었다** (기억: 통과는 증거가 아니다).
+
+      | # | 뮤테이션 | 수 단언 | 배수 단언 | 결과 |
+      |---|---|---|---|---|
+      | **M1** | 지연 없는 `for` 재기동 | **FAIL** (`ran 2 times`) | **FAIL** | 잡힘 |
+      | **M2** | `time.Sleep(100ms)` backoff | **FAIL** | **FAIL** | 잡힘 |
+      | **M2′** | `time.Sleep(2s)` — **관측 창(300ms)보다 긴** backoff | 통과 | **FAIL** | 잡힘 |
+      | **M2″** | **취소 가능한** 2s backoff (`select`+`ctx.Done`) | 통과 | 통과 | **⛔ 안 잡힘** |
+      | (원복) | 역편집 셋 · `grep -c MUTATION` = **0** · `git diff --stat` **빈 출력** | — | — | 461건 재통과 |
+
+      > **M2′가 두 번째 단언의 값을 실측으로 보여 준다.** 창보다 긴 backoff 는 수로는
+      > 안 보이는데, **취소를 안 보는 backoff 는 `wg.Wait()`를 붙잡아 엔진의 정지를
+      > 늦춘다.** 그래서 *"Run 이 2s 안에 반환한다"*가 수와 **독립으로** 이빨을 가진다.
+      >
+      > **⛔ M2″는 안 잡힌다 — 이름으로 적는다.** 취소 가능하고 관측 창보다 긴 backoff 는
+      > 이 핀의 사각이다. 창을 늘리면 테스트가 그만큼 느려지고, **어떤 창을 골라도
+      > 그보다 긴 backoff 는 남는다** — 창으로 닫히는 구멍이 아니다.
+      > 그 자리를 실제로 지는 것은 `runAuxiliary`의 **AST**다 — 재기동은 반복문 없이는
+      > 못 쓰고, 그 함수에는 반복문이 **없다.** 손으로 읽지 않고 **재서** 적는다:
+      >
+      > ```text
+      > go run ./tools/logic-map --file internal/app/engine/alertdelivery.go --func alertDeliverer.Run
+      >   → [(B1,for) (B2,if) (B3,if) (B4,if)]      ← 추출기는 반복문을 실제로 센다
+      > go run ./tools/logic-map --file internal/app/engine/auxiliary.go   --func Runtime.runAuxiliary
+      >   → [(B1,if) (B2,if)]                        ← 반복문 0
+      > ```
+      >
+      > **대조군을 함께 적는 이유**: `runAuxiliary`만 재면 *"추출기가 `for`를 애초에
+      > 안 세는 것"*과 구별되지 않는다. 같은 추출기가 옆 함수에서 `for`를 내는 것을
+      > 봐야 「0」이 측정이 된다.
+      >
+      > 핀은 「되살아나는 것」을 잡고, **AST 는 「되살릴 자리가 없는 것」을 잡는다.**
 - [ ] 4.4 **운영자 표면 — `tossctl` 하위 명령 둘** (사용자 결정 4, 2026-08-11 · design D7).
 
       | 명령 | 무엇 | 배선 |
@@ -962,10 +1000,55 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > *"모든 루프보다 먼저, 완주해야 한다"*고 `runtime.go:155-160`이 적는다.
       > 그리고 「유도」는 **푸는 쪽까지 포함**해서 승인된 정본
       > `openspec/specs/engine-safety/spec.md:147-152`보다 덜 보수적이다 — 3라운드 A-P1.
-- [ ] **4.7 임차 기간을 살아 있는 설정에서 계산해 주입한다** (design D6 · a099 C4).
-      `bound`를 `Notifier.Attempts`·`RetryDelay`·`Ntfy.Timeout`·`BusyTimeout`에서
+- [x] **4.7 임차 기간을 살아 있는 설정에서 계산해 주입한다** (design D6 · a099 C4)
+      → **`not-applicable` — 안 만든다. 침묵하지 않고 근거를 잰다 (2026-08-12).**
+
+      원래 요구: `bound`를 `Notifier.Attempts`·`RetryDelay`·`Ntfy.Timeout`·`BusyTimeout`에서
       계산하고 `Journal.Options.AlertLease`로 넘긴다.
-      **a099는 기본값에 대한 단언까지만 진다**(a099 R20) — 살아 있는 주입이 여기다
+      *"a099는 기본값에 대한 단언까지만 진다(a099 R20) — 살아 있는 주입이 여기다."*
+
+      **① 네 입력 중 프로덕션에서 움직이는 것이 하나도 없다 — 구성 자리를 다 세서 확인했다.**
+
+      | 입력 | 프로덕션 구성 자리 | 무엇을 세팅하나 | 값 |
+      |---|---|---|---:|
+      | `Attempts`·`RetryDelay` | `newNotifier` (`internal/app/engine/exitwiring.go:71-81`) | Log·Publisher·Journal·Gate·AccountRef·Clock — **둘 다 없다** | 3 · 2s |
+      | `Ntfy.Timeout` | `internal/app/engine/notifications.go:101` · `cmd/tossctl/notificationsettings.go:151` (**프로덕션 두 자리 전부**) | BaseURL·Topic·Token — **없다** | 10s |
+      | `BusyTimeout` | `journal.Options{…}` (`internal/app/engine/engine.go:638`) | Path·Clock·FSProber — **없다** | 5s |
+
+      그러므로 `AlertDeliveryBound(살아 있는 설정) ≡ DefaultAlertDeliveryBound()` =
+      `3×(10+5) + 2×2 + 5` = **54s**이고, **주입이 쓸 값이 이미 그 값이다.**
+      「살아 있는 설정에서 계산한다」가 **계산할 것이 없는 계산**이 된다 (YAGNI).
+
+      **② 이 task 의 관측 짝은 7판이 이미 지웠다.** R10(*"임차 기간이 살아 있는 설정에서
+      계산된다"*)이 6라운드 P10 판정으로 삭제됐고 근거가 여기와 같다. **관측이 없는 구현만
+      남아 있었다** — 4.8이 세는 스물셋 어디에도 4.7을 보는 R 이 없다.
+
+      **③ 「살아 있는」 쪽도 a099가 이미 진다.** `Notifier.checkAlertLease`
+      (`internal/obs/notifier.go:692-707`)가 **런타임에** `Journal.AlertLease()`와
+      `AlertDeliveryBound(n.Attempts, 0, n.RetryDelay, 0)`를 비교하고, 짧으면
+      `EventAlertLeaseTooShort`를 남긴다. 정적 단언(a099 R20)뿐이라는 전제가 **거짓**이다.
+
+      > ## ⛔ ④ 그리고 시키는 대로 만들면 **임차가 짧아진다 — 안전하지 않은 방향이다**
+      >
+      > 4.7의 문장은 `bound`를 `AlertLease`로 **그대로 넘기라**고 적는다. 그러면
+      > 임차가 **81s → 54s**가 된다. `alert_lease.go:29-34`가 그 대가를 적는다 —
+      > *"a lease shorter than this lets a sender lose its row while it is still working
+      > through a budget this code told it to spend, and then two senders publish while
+      > nothing anywhere has gone wrong."*
+      >
+      > **더 나쁜 형태도 있다.** a098이 만든 배달 실행자는 그 54s 를 안 쓴다 —
+      > `deliverOne`은 claim 하나당 publish **한 번**이고 재시도가 없다
+      > (`alertdelivery.go:191-203`). 실행자의 실제 보유 상한은
+      > `1×(10+5) + 5` = **20s**다. 「살아 있는 값에서 유도한다」를 **실행자 기준으로**
+      > 읽으면 임차가 20s 대가 되고, 그때 **동기 발송 경로(54s 예산)가 자기 행을 잃는다.**
+      >
+      > **즉 4.7은 안 만들어서 보수적인 게 아니라, 만들면 덜 보수적이 된다.**
+      > 되살리려면 「어느 발송자의 예산인가」부터 정해야 하고, 그것은 이 change 의
+      > 결정 어디에도 없다.
+
+      **되살릴 조건을 적어 둔다** — 위 네 입력 중 **하나라도 운영 설정에 노출되는 순간**
+      이 task 가 다시 산다. 그때 필요한 것은 주입이 아니라 **`checkAlertLease`가 실제로
+      울리는지**이고, 그 경보는 이미 있다.
 - [ ] 4.8 R1~R23 + R4b — R10 제외 (**스물셋**)이 GREEN
 
 ## 5. VERIFY
