@@ -57,6 +57,13 @@
 - [x] 4.7 PM 동기화(`STORY-TOS-a101`) — story 파일, `_registry.yaml`, `FEAT-TOS-004`의
   역링크. 역링크를 빠뜨리면 `generate_master_tracker.py`가 `feature reverse link missing`으로
   거부한다.
+- [x] 4.9 **`make gate`를 끝까지 돌리고 결과를 기록했다 — 통과가 아니다.** 9단계 중 8단계가
+  통과하고 **7/9 `make test`만 실패**한다. 실패 4건은 전부 a099의 RED 핀
+  (`a099_claim_excludes_the_second_sender_test.go`, 커밋 `7f3cbb03`)이고 a101이 만든 것이
+  아니다. **`7f3cbb03` 이후 이 브랜치에서는 어느 change로도 게이트가 통과하지 않는다** —
+  a100 7.5가 열려 있는 이유도 같고, 그 사실이 어디에도 적혀 있지 않았다.
+  닫는 조건은 a099의 GREEN이다. 상세는 review.md 「게이트 최종 결과」.
+  도중에 두 가지를 고쳤다: CodeGraph 지문 재sync, PM 트래커 재생성(`fc501c81`).
 
 ## 5. 배포와 운영
 

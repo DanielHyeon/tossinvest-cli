@@ -134,3 +134,41 @@ day"*. 부팅 경로에서 `PrepareSpawn`을 뺐다.
 5. **부팅 경로가 `PrepareSpawn`을 안 넘긴다는 사실은 측정되지 않는다.** 두 closure의 차이가
    `runConsole`(0.0%) 안에 있다. `bootSurvey`는 seam을 인자로 받으므로 **언제 부르는지만
    알고 무엇을 넘겼는지는 모른다.**
+6. **게이트 7/9(`make test`)가 이 change 밖의 이유로 빨갛다.** 아래 「게이트 최종 결과」를
+   볼 것. a101이 만든 실패가 아니지만, **a101은 게이트를 통과한 change가 아니다.**
+
+## 게이트 최종 결과 (2026-08-12, HEAD `fc501c81`)
+
+`make gate CHANGE=a101-the-soak-outlives-a-deploy`를 끝까지 돌렸다. 9단계 중 **8단계가
+통과하고 7/9만 실패한다.**
+
+| 단계 | 결과 |
+|---|---|
+| 1 tasks.md · 2 미완료 0건 · 3 짝 선언 · 4 리뷰 기록 | OK |
+| 5 Function Logic Map | `evidence complete or diff-proven exempt` |
+| 6 `make sdd-check` | OK (CodeGraph hard-evidence가 worktree와 일치) |
+| **7 `make test`** | **FAIL — 4건** |
+| 8 `make vet` · 9 `make validate` | OK / 86 passed, 0 failed |
+
+**실패 4건은 전부 a099의 RED 핀이다.**
+
+| 패키지 | 테스트 |
+|---|---|
+| `internal/journal` | `TestTwoSendersReachingOnePendingRowLeaveWithOneRightToSend` |
+| `internal/obs` | `TestTheSenderThatLosesTheClaimDoesNotPublish` |
+| `internal/obs` | `TestExclusionHoldsBetweenSendersWithDifferentMutexes` |
+| `internal/obs` | `TestFlushDoesNotPublishARowAnotherSenderHolds` |
+
+둘 다 `a099_claim_excludes_the_second_sender_test.go`이고 커밋 `7f3cbb03`이 넣었다. a099는
+tasks 41건이 미완(§4 구현 전체)이므로 **RED가 의도대로 빨갛다.** 실패 메시지 자체가 그렇게
+말한다 — *"the second sender lost nothing, because today there is nothing to lose"*.
+
+⇒ **이 상태는 a100·a101만의 문제가 아니라 브랜치 전체의 조건이다.** `7f3cbb03` 이후 이
+브랜치에서 `make gate`는 **어느 change로도** 통과할 수 없다. a100의 tasks 7.5도 같은 이유로
+아직 열려 있고, 그 사실이 어디에도 적혀 있지 않았다 — 여기서 처음 적는다.
+
+a101 자신의 패키지는 HEAD에서 전부 초록이다:
+`cmd/tossctl` 39.8s ok · `internal/config` ok · `internal/console` ok · `internal/audit` ok.
+
+**닫는 조건은 a099의 GREEN이다.** a099는 `deploy-pair.txt`로 a098과 묶여 있으므로 배포 단위도
+그때 함께 정해진다.

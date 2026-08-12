@@ -329,6 +329,11 @@
 - [ ] 7.4 `openspec validate --all --strict`
 - [ ] 7.5 `make sdd-sync` → `make sdd-check` → `make gate CHANGE=a100-wire-fill-to-broker-protection`
   (병행 세션이 커밋을 쌓았으면 base 재고정 후 연속 실행)
+  **선행 조건 하나가 이 change 밖에 있다.** 게이트 7/9 `make test`는 `7f3cbb03` 이후
+  이 브랜치에서 항상 빨갛다 — a099의 RED 핀 4건(`internal/journal` 1 · `internal/obs` 3)이
+  구현 없이 커밋돼 있기 때문이다. **a100이 무엇을 하든 a099가 GREEN이 되기 전에는
+  이 단계가 통과하지 않는다.** 2026-08-12 a101 게이트에서 확인했고 상세는
+  `a101-the-soak-outlives-a-deploy/review.md` 「게이트 최종 결과」에 있다.
 - [ ] 7.6 gstack 독립 리뷰(구현 후). High-risk이므로 adversarial Eng voice가 필수다.
   proposal-freeze 리뷰는 2026-08-11에 완료했고 기록은 `review.md`다.
 - [ ] 7.7 배포 전 main과 `SchemaVersion` 대조(2.5).
