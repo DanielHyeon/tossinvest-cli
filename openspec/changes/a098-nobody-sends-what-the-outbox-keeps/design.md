@@ -1,6 +1,7 @@
 # a098 design
 
-base: `285c7619110d2f8c53a1d9ddfbadd16ad0e9e53e`
+base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` — **a099 착지 뒤 재고정**
+(2026-08-12, 사유는 tasks 머리말)
 
 ## D1 — 왜 루프인가, 왜 exit 사이클 안이 아닌가
 
