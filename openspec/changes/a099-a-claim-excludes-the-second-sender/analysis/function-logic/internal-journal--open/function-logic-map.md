@@ -83,15 +83,20 @@ if lease <= 0 { lease = DefaultAlertLease }`. **분기가 14 → 15가 된다.**
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **B7 바로 뒤에 분기 하나와 `Journal` 필드 하나.**
-  B1~B14의 기존 조건과 여덟 이탈의 의미는 안 바꾼다. 편집 후 AST의 branches가
-  **15**이고 새로 는 하나가 `:14x`의 lease 기본값이면 다른 제어 흐름은 무변화다.
+- **Safe edit boundary**: **`BusyTimeout` 기본값 바로 뒤에 분기 하나와 `Journal`
+  필드 하나.** §5.6 실측: 편집 후 분기는 **15**(전 14)이고 는 하나가 `:163`의
+  lease 기본값이다. 다른 열넷의 조건과 여덟 이탈의 의미는 그대로다 —
+  **다른 제어 흐름 무변화가 그 열거로 확인된다.**
+  새 분기의 ID는 `B9`다(소스 순서). 이후 ID가 하나씩 밀렸을 뿐 분기 자체는 안 바뀌었다.
 - **High-risk impact**: **yes** — 원장 개방 경로(불변식 5). 이 함수가 실패하면
-  엔진이 안 뜬다. **다만 a099의 편집은 오류 경로를 하나도 안 더한다** — 값 채우기뿐이다.
+  엔진이 안 뜬다. **다만 a099의 편집은 오류 경로를 하나도 안 더했다** — 값 채우기뿐이다.
 - **덮이지 않은 것을 이름으로 적는다**:
-  - **B7의 「기본값이 쓰인다」쪽을 직접 단언하는 테스트가 없다.**
-    `openTestJournalWithBusy`(`durability_test.go:902`)는 **주입하는 쪽**만 덮는다.
-    a099는 lease에 대해 그 구멍을 **R20으로 메운다** — `DefaultAlertLease > bound`.
+  - **`BusyTimeout`의 「기본값이 쓰인다」쪽을 직접 단언하는 테스트가 없다.**
+    `openTestJournalWithBusy`(`durability_test.go`)는 **주입하는 쪽**만 덮는다.
+    a099는 lease에 대해 그 구멍을 **B9 + `TestOpenFillsTheDefaultLease`로 메웠다.**
     `BusyTimeout` 쪽 구멍은 a099 밖이다 — **`not-applicable`**.
-  - **B2·B5·B8·B9에 테스트가 없다.** 경로 해결·mkdir·sql.Open·Ping 실패.
+  - **B2·B5·B8·B10에 테스트가 없다.** 경로 해결·mkdir·sql.Open·Ping 실패.
     a099가 안 건드리므로 **`not-applicable`**이지만 이름은 적어 둔다.
+  - **`DefaultBusyTimeout`이 이 change에서 export되었다.** `obs`의 지연 상한 유도가
+    그 값을 읽어야 하고, 함수 안에 숨은 숫자는 유도가 **복사**해야 하는 숫자다.
+    복사한 숫자는 언젠가 안 맞는다.

@@ -1,16 +1,16 @@
 {
   "file": "internal/journal/outbox.go",
-  "source_sha256": "7341691c3cb6910ecceab7b428faae30d512835c050ae75a02cf13caa96f096b",
+  "source_sha256": "01446b6e0639ed506410d12d00960e1c163869a4235f74e733b224496076975d",
   "package": "journal",
   "function": "UndeliveredCount",
   "receiver": "Journal",
   "signature": "Journal.UndeliveredCount(params=1, results=2)",
   "start": {
-    "line": 408,
+    "line": 524,
     "column": 1
   },
   "end": {
-    "line": 415,
+    "line": 531,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 410,
+        "line": 526,
         "column": 2
       }
     }
@@ -27,14 +27,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 412,
+        "line": 528,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 414,
+        "line": 530,
         "column": 2
       }
     }
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 526,
         "column": 12
       },
       "text": "Scan"
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 526,
         "column": 12
       },
       "text": "j.db.QueryRowContext"
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 412,
+        "line": 528,
         "column": 13
       },
       "text": "fmt.Errorf"
@@ -69,7 +69,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 410,
+        "line": 526,
         "column": 5
       }
     }

@@ -1,45 +1,44 @@
 # Branch Test Map: `Journal.EnqueueAlert`
 
+`ast.json`의 열거가 정본이다: 분기 4 · 이탈 5.
 **GREEN 칸은 실측해서 채운다.**
-`ast.json`의 열거가 정본이다: **분기 0** · 이탈 1.
-
-**a099는 이 함수의 본문에 분기를 만들지 않는다.** 아래 항목은 위임 계약을 고정한다.
-
-**분기가 없으므로 행은 유일한 이탈 `:121`(happy path) 하나다.**
-아래 표의 `B1`은 AST의 분기가 아니라 **그 happy path를 가리키는 이름**이다
-(`check_analysis`가 분기 없는 함수에 요구하는 형식).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | 기록만 하는 호출이 **발송 권한을 잡지 않는다** | **a099 R16** | **planned RED — 미관측** | 미관측 |
-| 〃 이탈 `:121` | 같은 `event_key`를 두 번 기록하면 같은 id | `internal/journal/outbox_test.go` (기존) | — | **yes (기존)** |
+| B1 | `:133` `alertKey`가 거절한다 — 키 없음 / 타입 없음 | `TestEnqueueAlertRequiresAKeyAndAType` `outbox_test.go:62` | no (기존 통과) | **yes** |
+| B2 | `:137` `BeginTx`가 실패한다 | 없음 — 드라이버 오류 주입 없음 | no | **no (기존부터 없다)** |
+| B3 | `:147` `recordAlertTx`가 실패한다 | 없음 | no | **no (기존부터 없다)** |
+| B4 | `:150` `Commit`이 실패한다 | 없음 | no | **no (기존부터 없다)** |
 
-## R16의 RED 조건 — 무엇이 실패해야 하는가
+이탈 `:153`(정상)은 분기가 아니므로 위 표의 행이 아니다. 아래에 따로 적는다.
 
-R16은 **오늘 실행하면 통과한다**(임차 자체가 없으므로). 그러므로 R16을 *"오늘 빨간불"*로
-적으면 거짓이다. **R16이 RED가 되는 시점은 §4.1(schemaV31)과 §4.3(claim)이 들어간 직후,
-D13을 아직 구현하지 않은 상태다.**
+## 정상 이탈 `:153` — a099가 실제로 관측한 것
 
-| 시점 | R16 |
-|---|---|
-| 오늘 (a099 전) | **통과 — born-GREEN** |
-| §4.1 + §4.3 직후, D13 전 | **실패해야 한다** ← 이것이 진짜 RED 순간이다 |
-| §4 전체 후 | 통과 |
+| Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|
+| 같은 `event_key`를 두 번 넣으면 행 하나 | `TestEnqueueAlertIsIdempotentOnTheEventKey` `outbox_test.go:30` | no (기존 통과) | **yes** |
+| **기록 직후 곧바로 청구 가능하다 — D13** | `TestARecordedAlertCanBeClaimedImmediately` `a099_lease_lifecycle_test.go:305` | **yes — §4.7 되돌림 관측**: `EnqueueAlert`를 `ClaimAlertForDelivery` 위임으로 되돌리면 `ClaimHeldElsewhere`가 나온다 | **yes** |
+| 경합 시험의 배치가 이 경로를 쓴다 | `TestTwoSendersReachingOnePendingRowLeaveWithOneRightToSend` `a099_claim_excludes_the_second_sender_test.go:41` | yes (구현 전 두 발송자 모두 발송) | **yes** |
 
-**tasks §3에 이 순서를 적지 않으면 R16은 관측 불가능한 RED다.**
-이것을 여기 적는 이유는 1라운드 A-P12·B-P8이 잡은 것과 같은 실패를 반복하지 않기 위해서다.
+## RED — 시점 관측의 이탈을 여기에도 적는다
 
-## 이 함수에 테스트를 새로 쓰지 않는 것
+§3.2에 적은 대로, §4를 **한 번에 구현한 뒤** 각 task가 더하는 것 하나만 되돌려
+그 자리에서 실패를 재현했다. 계획은 진행하며 그 자리에서 보는 것이었다.
+**되돌릴 자리를 내가 골랐으므로 「그 자리에서 본 것」과 같지 않다.**
+그 판정은 리뷰의 몫이다.
 
-- **`replay.go:551`의 오류 무시.** a099 밖이다.
-  **`not-applicable`: 이 change는 그 경로의 오류 처리를 근거로 쓰지 않는다.**
+## 이 함수에 **테스트를 새로 쓰지 않는 분기**
+
+- **B2 · B3 · B4** — 드라이버·커밋 실패 경로. a099가 조건도 반환도 안 바꾼다.
+  **`not-applicable`: 이 change는 세 분기를 근거로 아무것도 주장하지 않는다.**
+  덮여 있지 않다는 사실은 a099가 만든 것이 아니다.
 
 ## 덮이지 않은 것을 이름으로 적는다
 
-- 이 함수의 **유일한 프로덕션 호출자가 반환 둘을 다 버린다**(`_, _ =`).
-  그러므로 어떤 프로덕션 테스트도 이 함수의 반환을 통해 회귀를 잡을 수 없다.
-  **회귀를 잡는 자리는 `ClaimAlertForDelivery`의 계약 테스트다.**
-- 위 표의 Test 칸이 지목하는 기존 테스트는 실측했다:
-  `internal/journal/outbox_test.go` · `a096_claim_for_delivery_test.go` ·
-  `a097_rearm_is_a_new_episode_test.go`가 `EnqueueAlert`를 호출한다.
-  **1라운드에서 없는 파일을 인용한 실패를 반복하지 않기 위해 `grep`으로 확인했다.**
+- **B1의 두 갈래를 한 테스트가 본다.** `TestEnqueueAlertRequiresAKeyAndAType`는
+  키 없음과 타입 없음을 둘 다 `t.Error`로 검사하지만, **어느 쪽이 실패했는지는
+  `alertKey` 안의 분기**다. 그 분기는 이 번들의 것이 아니다.
+- **`recordAlertTx`의 내부 분기는 이 표에 없다.** `EnqueueAlert`의 AST는 그 호출을
+  한 줄로 본다. 재무장·dedup·`owed` 판정의 분기 지도는 `recordAlertTx` 쪽이고,
+  a099는 그 함수의 제어 흐름을 안 바꿨다 — 바꾼 것은 재무장 UPDATE의 SET 절이다
+  (`alertClaimCleared` 추가).

@@ -9,6 +9,38 @@
 *"두 경로가 같은 행을 동시에 정산해도 하나만 성공한다"* — 이 여기 UPDATE의
 `WHERE` 절에 있다.
 
+> ## ⛔ 2026-08-12 — a099가 이 문서의 절반을 무효화했다 (a099 §7.1)
+>
+> **아래 본문은 a092의 base commit 시점 코드를 기술한다.** 좌표도 AST도 그 시점의
+> 것이고 **일부러 안 고쳤다** — 고치면 a092 자신의 `check_analysis`가 깨지고,
+> 그때 남는 것은 「최신처럼 보이는 문서」다.
+>
+> **a099(`757550f1`)가 실제로 바꾼 것:**
+>
+> | 이 문서의 진술 | a099 이후 |
+> |---|---|
+> | `MarkAlertDelivered(ctx, id)` | **`MarkAlertDelivered(ctx, id, token) (SettleResult, error)`** |
+> | 0행이면 `ErrAlertNotFound` **오류** | **네 결과 중 하나** — `SettleApplied`·`SettleLeaseLost`·`SettleAlreadySettled`·`SettleNotFound` |
+> | `WHERE id = ? AND state = ?` | **`… AND claim_token = ?`가 붙는다** |
+> | `attempts + 1`만 쓴다 | **임차 열 넷도 같이 비운다** |
+>
+> **그리고 이 문서의 핵심 주장 하나가 틀렸다.**
+>
+> *"두 경로가 같은 행을 정산하려 해도 하나만 성공한다"*는 참이지만,
+> **그것이 「하나만 보낸다」를 뜻하지 않는다.** 이 CAS는 **publish가 끝난 뒤에 돈다** —
+> `claimAndDeliver` → `deliver` → `Publish` 성공 → 이 함수. 두 번째 발송자의 푸시는
+> 이 UPDATE가 실패하기 **전에** 이미 운영자 전화기에 도착해 있다.
+> 2026-08-08의 `no such alert` 줄이 정확히 그 자리였다.
+>
+> **그러므로 「배제의 근거가 Go 뮤텍스에서 SQL 술어로 옮겨간다」는 이 함수만으로는
+> 성립하지 않았다.** 성립시킨 것은 a099가 만든 **취득 시점의 임차**이고,
+> 그 술어는 이 함수가 아니라 `alert_claim.go`의 `acquireAlertClaimTx`에 있다.
+> 증거는 `openspec/changes/a099-…/analysis/function-logic/internal-journal--acquirealertclaimtx/`.
+>
+> **a092가 이 문서에서 인용해야 하는 것은 이제 그쪽이다.**
+> 아래 「Safety conclusion」의 마지막 세 항목이 특히 그렇다 — `R17-3`이 재려던
+> 「이동이 실제로 성립하는가」는 **a099 뒤에** 참이고, a099 없이는 거짓이다.
+
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |

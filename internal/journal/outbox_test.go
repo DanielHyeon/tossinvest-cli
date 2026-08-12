@@ -229,6 +229,36 @@ func TestSettlingWithoutAClaimIsRefused(t *testing.T) {
 	}
 }
 
+// TestClaimingWithoutANameIsRefused guards the other end of the same exclusion.
+//
+// A lease has to say who holds it: the holder's name is what an operator reads
+// in engine.alert_claim_held when a send is suppressed, and what a steal names
+// as the sender it displaced. An anonymous claim would take the row and leave
+// nothing to name, so the refusal happens before the transaction opens — this
+// journal's transactions take the write lock up front, and waiting for it only
+// to reject the input would be a real wait.
+func TestClaimingWithoutANameIsRefused(t *testing.T) {
+	j, _ := outboxJournal(t)
+	ctx := context.Background()
+	alert := Alert{EventKey: "a", Type: "order.in_doubt", Severity: "critical"}
+
+	if _, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind, ""); err == nil {
+		t.Error("an unnamed claimant took the lease — nothing would name the holder")
+	}
+	if _, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind, "   "); err == nil {
+		t.Error("a blank claimant took the lease — the name is trimmed before it is stored")
+	}
+	// And the refusal wrote nothing: no row was even recorded, because the guard
+	// sits ahead of the recording half.
+	pending, err := j.PendingAlerts(ctx, 0)
+	if err != nil {
+		t.Fatalf("PendingAlerts: %v", err)
+	}
+	if len(pending) != 0 {
+		t.Errorf("rows = %d, want 0 — a refused claim must not record the alert either", len(pending))
+	}
+}
+
 // TestOutboxSurvivesTheV2Migration is the §0.6 test: a journal written by an
 // older build migrates forward and gains every table the current one adds.
 func TestOutboxSurvivesTheV2Migration(t *testing.T) {

@@ -1,40 +1,24 @@
 {
   "file": "internal/journal/outbox.go",
-  "source_sha256": "7341691c3cb6910ecceab7b428faae30d512835c050ae75a02cf13caa96f096b",
+  "source_sha256": "01446b6e0639ed506410d12d00960e1c163869a4235f74e733b224496076975d",
   "package": "journal",
   "function": "MarkAlertDelivered",
   "receiver": "Journal",
-  "signature": "Journal.MarkAlertDelivered(params=2, results=1)",
+  "signature": "Journal.MarkAlertDelivered(params=3, results=2)",
   "start": {
-    "line": 337,
+    "line": 449,
     "column": 1
   },
   "end": {
-    "line": 348,
+    "line": 457,
     "column": 2
   },
-  "branches": [
-    {
-      "id": "B1",
-      "kind": "if",
-      "at": {
-        "line": 344,
-        "column": 2
-      }
-    }
-  ],
+  "branches": null,
   "returns": [
     {
       "kind": "return",
       "at": {
-        "line": 345,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 347,
+        "line": 451,
         "column": 2
       }
     }
@@ -43,7 +27,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 338,
+        "line": 450,
         "column": 9
       },
       "text": "RFC3339"
@@ -51,7 +35,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 338,
+        "line": 450,
         "column": 17
       },
       "text": "j.clk.Now"
@@ -59,40 +43,17 @@
     {
       "kind": "call",
       "at": {
-        "line": 339,
-        "column": 14
-      },
-      "text": "j.db.ExecContext"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 345,
-        "column": 10
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 347,
+        "line": 451,
         "column": 9
       },
-      "text": "requireOneRow"
+      "text": "j.settleUnderClaim"
     }
   ],
   "assignments": [
     {
       "kind": ":=",
       "at": {
-        "line": 338,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 339,
+        "line": 450,
         "column": 2
       }
     }

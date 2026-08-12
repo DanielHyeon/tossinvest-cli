@@ -1,16 +1,16 @@
 {
   "file": "internal/journal/outbox.go",
-  "source_sha256": "7341691c3cb6910ecceab7b428faae30d512835c050ae75a02cf13caa96f096b",
+  "source_sha256": "01446b6e0639ed506410d12d00960e1c163869a4235f74e733b224496076975d",
   "package": "journal",
   "function": "ClaimAlertForDelivery",
   "receiver": "Journal",
-  "signature": "Journal.ClaimAlertForDelivery(params=3, results=3)",
+  "signature": "Journal.ClaimAlertForDelivery(params=4, results=2)",
   "start": {
-    "line": 169,
+    "line": 231,
     "column": 1
   },
   "end": {
-    "line": 261,
+    "line": 267,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 173,
+        "line": 235,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 176,
+        "line": 238,
         "column": 2
       }
     },
@@ -34,23 +34,23 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 183,
+        "line": 242,
         "column": 2
       }
     },
     {
       "id": "B4",
-      "kind": "switch",
+      "kind": "if",
       "at": {
-        "line": 194,
+        "line": 248,
         "column": 2
       }
     },
     {
       "id": "B5",
-      "kind": "case",
+      "kind": "if",
       "at": {
-        "line": 195,
+        "line": 251,
         "column": 2
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 197,
+        "line": 252,
         "column": 3
       }
     },
@@ -66,39 +66,15 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 229,
-        "column": 4
+        "line": 260,
+        "column": 2
       }
     },
     {
       "id": "B8",
-      "kind": "case",
-      "at": {
-        "line": 241,
-        "column": 2
-      }
-    },
-    {
-      "id": "B9",
       "kind": "if",
       "at": {
-        "line": 249,
-        "column": 2
-      }
-    },
-    {
-      "id": "B10",
-      "kind": "if",
-      "at": {
-        "line": 253,
-        "column": 2
-      }
-    },
-    {
-      "id": "B11",
-      "kind": "if",
-      "at": {
-        "line": 256,
+        "line": 263,
         "column": 2
       }
     }
@@ -107,57 +83,36 @@
     {
       "kind": "return",
       "at": {
-        "line": 174,
+        "line": 236,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 177,
+        "line": 239,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 184,
+        "line": 243,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 237,
-        "column": 5
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 240,
+        "line": 249,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 242,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 250,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 254,
-        "column": 3
+        "line": 253,
+        "column": 4
       }
     },
     {
@@ -170,7 +125,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 260,
+        "line": 261,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 264,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 266,
         "column": 2
       }
     }
@@ -179,23 +148,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 172,
-        "column": 9
+        "line": 234,
+        "column": 14
       },
-      "text": "strings.TrimSpace"
+      "text": "alertKey"
     },
     {
       "kind": "call",
       "at": {
-        "line": 174,
-        "column": 20
-      },
-      "text": "errors.New"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 176,
+        "line": 238,
         "column": 5
       },
       "text": "strings.TrimSpace"
@@ -203,31 +164,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 177,
-        "column": 20
+        "line": 239,
+        "column": 25
       },
       "text": "errors.New"
     },
     {
       "kind": "call",
       "at": {
-        "line": 179,
-        "column": 11
-      },
-      "text": "j.clk.Now"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 180,
-        "column": 9
-      },
-      "text": "RFC3339"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 182,
+        "line": 241,
         "column": 13
       },
       "text": "j.db.BeginTx"
@@ -235,80 +180,8 @@
     {
       "kind": "call",
       "at": {
-        "line": 184,
-        "column": 20
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 186,
-        "column": 8
-      },
-      "text": "tx.Rollback"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 191,
-        "column": 8
-      },
-      "text": "Scan"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 191,
-        "column": 8
-      },
-      "text": "tx.QueryRowContext"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 196,
-        "column": 18
-      },
-      "text": "claimOwed"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 229,
-        "column": 18
-      },
-      "text": "tx.ExecContext"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 237,
-        "column": 22
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 240,
-        "column": 26
-      },
-      "text": "tx.Commit"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 241,
-        "column": 8
-      },
-      "text": "errors.Is"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 242,
-        "column": 20
+        "line": 243,
+        "column": 25
       },
       "text": "fmt.Errorf"
     },
@@ -316,17 +189,17 @@
       "kind": "call",
       "at": {
         "line": 245,
-        "column": 14
+        "column": 8
       },
-      "text": "tx.ExecContext"
+      "text": "tx.Rollback"
     },
     {
       "kind": "call",
       "at": {
-        "line": 250,
-        "column": 20
+        "line": 247,
+        "column": 19
       },
-      "text": "fmt.Errorf"
+      "text": "j.recordAlertTx"
     },
     {
       "kind": "call",
@@ -334,20 +207,36 @@
         "line": 252,
         "column": 13
       },
-      "text": "res.LastInsertId"
+      "text": "tx.Commit"
     },
     {
       "kind": "call",
       "at": {
-        "line": 254,
-        "column": 20
+        "line": 253,
+        "column": 26
       },
       "text": "fmt.Errorf"
     },
     {
       "kind": "call",
       "at": {
-        "line": 256,
+        "line": 259,
+        "column": 14
+      },
+      "text": "acquireAlertClaimTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 57
+      },
+      "text": "j.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
         "column": 12
       },
       "text": "tx.Commit"
@@ -355,8 +244,8 @@
     {
       "kind": "call",
       "at": {
-        "line": 257,
-        "column": 20
+        "line": 264,
+        "column": 25
       },
       "text": "fmt.Errorf"
     }
@@ -365,56 +254,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 172,
+        "line": 234,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 179,
+        "line": 241,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 180,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 182,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 191,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 196,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 229,
-        "column": 7
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 245,
+        "line": 247,
         "column": 2
       }
     },
@@ -422,13 +276,20 @@
       "kind": ":=",
       "at": {
         "line": 252,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 259,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 256,
+        "line": 263,
         "column": 5
       }
     }
@@ -438,7 +299,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 186,
+        "line": 245,
         "column": 2
       },
       "text": "tx.Rollback"

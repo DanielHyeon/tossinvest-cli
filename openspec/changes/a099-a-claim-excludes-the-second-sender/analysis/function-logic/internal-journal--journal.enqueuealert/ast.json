@@ -1,24 +1,85 @@
 {
   "file": "internal/journal/outbox.go",
-  "source_sha256": "7341691c3cb6910ecceab7b428faae30d512835c050ae75a02cf13caa96f096b",
+  "source_sha256": "01446b6e0639ed506410d12d00960e1c163869a4235f74e733b224496076975d",
   "package": "journal",
   "function": "EnqueueAlert",
   "receiver": "Journal",
   "signature": "Journal.EnqueueAlert(params=2, results=2)",
   "start": {
-    "line": 115,
+    "line": 131,
     "column": 1
   },
   "end": {
-    "line": 122,
+    "line": 154,
     "column": 2
   },
-  "branches": null,
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 133,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 147,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    }
+  ],
   "returns": [
     {
       "kind": "return",
       "at": {
-        "line": 121,
+        "line": 134,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 138,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 148,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 151,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 153,
         "column": 2
       }
     }
@@ -27,21 +88,99 @@
     {
       "kind": "call",
       "at": {
-        "line": 120,
+        "line": 132,
+        "column": 14
+      },
+      "text": "alertKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 13
+      },
+      "text": "j.db.BeginTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 13
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 8
+      },
+      "text": "tx.Rollback"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
         "column": 16
       },
-      "text": "j.ClaimAlertForDelivery"
+      "text": "j.recordAlertTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 12
+      },
+      "text": "tx.Commit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 13
+      },
+      "text": "fmt.Errorf"
     }
   ],
   "assignments": [
     {
       "kind": ":=",
       "at": {
-        "line": 120,
+        "line": 132,
         "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 136,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 150,
+        "column": 5
       }
     }
   ],
   "go_statements": null,
-  "defers": null
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 140,
+        "column": 2
+      },
+      "text": "tx.Rollback"
+    }
+  ]
 }

@@ -61,6 +61,25 @@ a099의 1라운드 리뷰가 C의 결함을 정확히 짚었다(A-P2). `Flush`�
 | `MarkAlertAttemptFailed(ctx, id, token, cause)` | 시도 기록 (**임차 유지**) | 같음 |
 | `ReleaseAlertClaim(ctx, id, token)` | **포기할 때만** | 같음 |
 
+> **✅ 이 표는 이제 계획이 아니라 착지한 API다 (a099 `757550f1`, 2026-08-12).**
+> a099 §7.2가 대조했고 네 시그니처가 위와 정확히 같다:
+>
+> ```go
+> func (j *Journal) ClaimAlertByID(ctx context.Context, id int64, claimant string) (ClaimResult, error)          // alert_claim.go:285
+> func (j *Journal) MarkAlertDelivered(ctx context.Context, id int64, token string) (SettleResult, error)        // outbox.go:449
+> func (j *Journal) MarkAlertAttemptFailed(ctx context.Context, id int64, token, cause string) (SettleResult, error) // outbox.go:467
+> func (j *Journal) ReleaseAlertClaim(ctx context.Context, id int64, token string) (SettleResult, error)         // alert_claim.go:375
+> ```
+>
+> **`ClaimAlertByID`가 lease를 안 받는 것이 코드에 남았다.** doc comment `:282-284`가
+> 이유를 적는다 — *"letting a caller pass one is how a second sender ends up judging
+> somebody else's claim by its own clock"*. 기간은 `journal.Options.AlertLease`로
+> **인스턴스에** 주입한다(`journal.go:65`), 그것이 D6의 4.7이 하는 일이다.
+>
+> **`Notifier.Flush`도 이제 이 API를 쓴다** (a099 §4.11). a098의 루프가 `Flush`를
+> 안 부르는 것은 그대로지만, **같은 원장 임차 위에서 도는 두 발송자**라는 구도는
+> 이미 코드에 있고 `internal/obs`의 테스트가 그것을 관측한다.
+
 > **⚠⚠ 2판은 「어느 쪽이든 끝나면 해제한다」라고 적었다. 틀렸다.**
 > a099 design D3·C5가 셋을 가른다 — 성공 정산은 `MarkAlertDelivered`가 **함께** 풀고,
 > **publish 성공 + 정산 실패는 안 푼다**(풀면 다음 주기가 다시 보내 2026-08-08의
@@ -182,6 +201,20 @@ a099 2라운드 리뷰가 A-P10 = B-P6으로 잡은 것이다. **a099를 혼자 
 | **기동 직후 진입 게이트 복원** | **`RuntimeOptions.Recover` 콜백 안에서** 원장을 읽고 **`Block`만** 건다 (a099 C6) | **4.6 신설** |
 | **살아 있는 설정에서 임차 기간 주입** | `bound`를 계산해 `Journal.Options.AlertLease`로 넘긴다 (a099 C4) | **4.7 신설** |
 | **운영자 승인 표면** | `tossctl` 하위 명령 (D7) | 4.4 |
+
+> **✅ 인계 대조 완료 (2026-08-12, a099 §7.4).** a099가 착지하면서 이 표의 넷을
+> a098의 `tasks.md`에서 하나씩 찾았다: 4.0(루프) · 4.4(`tossctl` 표면) ·
+> 4.6(기동 복원) · 4.7(임차 기간 주입). **넷 다 자리가 있고 미완료다.**
+>
+> **넷 중 하나라도 빠진 채 a098이 gate를 통과하면 배포 단위가 깨진다** —
+> a099는 그 넷 없이 배포되면 오늘보다 나쁘고, `deploy-pair.txt`가 둘을 묶고 있으므로
+> a098의 gate가 곧 a099의 배포 조건이다.
+>
+> **a099가 실제로 넘긴 API는 D1.2의 표에 착지 시그니처로 적혀 있다.**
+> `Journal.Options.AlertLease`(`journal.go:65`)와 `DefaultAlertLease`(81초,
+> `alert_claim.go:34`)가 4.7이 덮어써야 할 기본값이고,
+> `obs.AlertDeliveryBound`(`alert_lease.go:39`)가 그 계산을 이미 코드로 갖고 있다 —
+> **4.7은 그 함수를 부르면 되고 숫자를 다시 유도하면 안 된다.**
 
 > **기동 복원이 왜 a098인가.** `EntryGate.Block`은 **메모리 래치**이고 재시작이 지운다
 > (`execgw/retry.go:498-505`). 원장에는 미전달 행이 남아 있는데 프로세스는 그것을

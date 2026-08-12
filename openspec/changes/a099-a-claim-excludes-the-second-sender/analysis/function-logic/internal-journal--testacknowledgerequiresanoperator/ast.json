@@ -1,0 +1,101 @@
+{
+  "file": "internal/journal/outbox_test.go",
+  "source_sha256": "469237d2726cf8e0d317888c7a10dc44cd849fd557f91ebfa345473ca214ed5a",
+  "package": "journal",
+  "function": "TestAcknowledgeRequiresAnOperator",
+  "signature": "TestAcknowledgeRequiresAnOperator(params=1, results=0)",
+  "start": {
+    "line": 140,
+    "column": 1
+  },
+  "end": {
+    "line": 148,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 145,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 10
+      },
+      "text": "outboxJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 11
+      },
+      "text": "j.EnqueueAlert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 12
+      },
+      "text": "j.AcknowledgeAlert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 141,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 142,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 143,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 145,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

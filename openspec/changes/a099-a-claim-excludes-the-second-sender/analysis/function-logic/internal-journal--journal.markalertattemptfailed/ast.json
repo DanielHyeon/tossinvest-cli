@@ -1,40 +1,24 @@
 {
   "file": "internal/journal/outbox.go",
-  "source_sha256": "7341691c3cb6910ecceab7b428faae30d512835c050ae75a02cf13caa96f096b",
+  "source_sha256": "01446b6e0639ed506410d12d00960e1c163869a4235f74e733b224496076975d",
   "package": "journal",
   "function": "MarkAlertAttemptFailed",
   "receiver": "Journal",
-  "signature": "Journal.MarkAlertAttemptFailed(params=3, results=1)",
+  "signature": "Journal.MarkAlertAttemptFailed(params=4, results=2)",
   "start": {
-    "line": 352,
+    "line": 467,
     "column": 1
   },
   "end": {
-    "line": 363,
+    "line": 474,
     "column": 2
   },
-  "branches": [
-    {
-      "id": "B1",
-      "kind": "if",
-      "at": {
-        "line": 359,
-        "column": 2
-      }
-    }
-  ],
+  "branches": null,
   "returns": [
     {
       "kind": "return",
       "at": {
-        "line": 360,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 362,
+        "line": 469,
         "column": 2
       }
     }
@@ -43,7 +27,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 353,
+        "line": 468,
         "column": 9
       },
       "text": "RFC3339"
@@ -51,7 +35,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 353,
+        "line": 468,
         "column": 17
       },
       "text": "j.clk.Now"
@@ -59,40 +43,17 @@
     {
       "kind": "call",
       "at": {
-        "line": 354,
-        "column": 14
-      },
-      "text": "j.db.ExecContext"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 360,
-        "column": 10
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 362,
+        "line": 469,
         "column": 9
       },
-      "text": "requireOneRow"
+      "text": "j.settleUnderClaim"
     }
   ],
   "assignments": [
     {
       "kind": ":=",
       "at": {
-        "line": 353,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 354,
+        "line": 468,
         "column": 2
       }
     }
