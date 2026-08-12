@@ -59,7 +59,7 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       > 0.1은 면제 대상이 아니었다. 그래서 순환이었고, 푸는 방향은 하나뿐이다:
       > **a099가 gate 없이 착지 → a098 구현 → 그때 a099의 gate가 초록 → 합동 배포.**
       > a099를 혼자 배포하지 않는 제약은 그대로다(0.0 · a099 §6.6).
-- [ ] 0.2 **a099 4라운드가 넘긴 요건 — 이 루프가 없으면 알림이 무기한 안 나간다.**
+- [x] 0.2 **a099 4라운드가 넘긴 요건 — 이 루프가 없으면 알림이 무기한 안 나간다.**
       (a099 review §11.3 · design D14.4, 2026-08-12. codex 교차 모델이 지목했다.)
 
       **만료는 수동이다.** `alert_claim.go`의 만료 술어는 *다음 claim 이 일어날 때만*
@@ -94,6 +94,20 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       >
       > *"§3 이 관측한다"*는 **§3 에 행이 있을 때만 참**이다. 그 문장이 스스로를
       > 참으로 만들지 않는다 — 두 줄이 열흘 가까이 주인 없이 있었다.
+
+      **완료 — 2026-08-13. 셋 다 착지했고, 셋 다 뮤테이션이 지켰다.**
+
+      | 0.2 의 요구 | 지는 R | 구현 | 뮤테이션 |
+      |---|---|---|---|
+      | ① PENDING 을 주기적으로 훑는다 | R1 | `alertDeliverer.Run`→`cycle`→`PendingAlerts` | — (R1 은 배달 자체) |
+      | ② 만료된 임차를 실제로 집는다 | **R20** | `ClaimAlertByID` 가 `Stole=true` 로 준다 | §3.1 R22·R23·R20 블록 |
+      | ③ held 를 조용히 안 넘긴다 | **R21** | `reportHeld` — **임차 단위** 억제 | **EE**(억제 제거) · **FF**(id 로만 억제) |
+
+      > **⛔ ③ 이 「로그를 한 줄 쓴다」로 끝나지 않는 이유.**
+      > 2초 주기·81초 임차면 한 행이 임차 하나 동안 **~40줄**을 쓴다. 그것은 관측이
+      > 아니라 **다음 줄을 안 읽히게 만드는 것**이다. 그래서 억제 단위가 행이 아니라
+      > **임차**다 — 임차가 바뀌면 그것은 **다른 발송자**에 대한 새 사실이고, `FF`
+      > (id 로만 억제)가 그 구분을 지우면 인수인계가 영원히 안 보인다.
 
 ## 1. 증거 (완료)
 
@@ -826,13 +840,24 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
       **`Notifier.Flush`를 부르지 않는다.** `internal/obs`는 한 줄도 안 건드린다 —
       `obs.Publisher` 인터페이스와 a099의 journal API만 쓴다.
       `gateway.go:85`의 `publisher obs.Publisher`와 `in.journal`이 이미 그 자리에 있다
-- [ ] 4.0b 한 주기 배치 크기를 §3이 잰 값으로 정한다 — **`batch = 10` · 주기 `2 s`** (3.2).
+- [x] 4.0b 한 주기 배치 크기를 §3이 잰 값으로 정한다 — **`batch = 10` · 주기 `2 s`** (3.2).
       **잠금을 쥔 채 여러 publish를 하지 않는다** — 그것이 안 D를 고른 이유다.
 
       - **이 값이 `PendingAlerts` B1의 참 갈래를 처음 켠다.** 오늘 호출 열일곱이 전부
         `0`이고 커버리지 count도 `0`이다 — **R22가 그 갈래를 고정하고 R23이 루프 쪽을 진다**
       - **주기 대기는 취소 가능해야 한다**(R7). 그리고 최악에서 한 주기가 100 s 까지
         늘 수 있으므로 **배치 도중에도** 취소에 반응해야 한다(3.2의 마지막 표)
+
+      **완료 — 2026-08-13.** `alertDeliveryBatch = 10` · `alertDeliveryInterval = 2s`
+      (`alertdelivery.go:63·74`), 둘 다 doc 에 **재현 명령**을 달았다 —
+      값이 아니라 **재는 법**이 근거이기 때문이다.
+
+      | 요구 | 어디서 | 지는 것 |
+      |---|---|---|
+      | `batch = 10` 이 `PendingAlerts` B1 참 갈래를 켠다 | `cycle` 의 `PendingAlerts(ctx, d.batch())` | **R22**(갈래) · **R23**(루프) |
+      | 잠금을 쥔 채 여러 publish 를 하지 않는다 | `deliverOne` — publish 가 어느 트랜잭션·뮤텍스 밖 | **R4b** (뮤테이션 **NN**: `Flush` 기반이면 1000행 뒤 **11.1 s**) |
+      | 주기 대기가 취소 가능 | `d.Clock.Sleep(ctx, …)` | **R7** |
+      | **배치 도중에도** 취소에 반응 | `cycle` 의 행 사이 `ctx.Err()` 검사 | **R7** · R14 |
 - [x] 4.1 배달 실행자를 **`RuntimeOptions.Auxiliary`에 등록한다 — `Loops`가 아니다**
       (사용자 결정 9-2 · design D8.3).
       **런타임 배관 완료 2026-08-12** — `internal/app/engine/auxiliary.go`(신설) +
@@ -1581,12 +1606,79 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
 
 ## 6. Gate
 
-- [ ] 6.1 `make sdd-sync`
-- [ ] 6.2 `make sdd-check`
+- [x] 6.1 `make sdd-sync` — **2026-08-13. 단, 절반은 실패했고 그 절반은 advisory다.**
+
+      | 무엇 | 결과 |
+      |---|---|
+      | `codegraph sync .` (**hard evidence**) | **Already up to date** |
+      | `codegraphcontext update .` (advisory) | **300초 timeout — 실패** |
+      | GBrain (advisory) | busy (`gbrain serve` pid 보유) — 이전 freshness 유지 |
+      | `make` 종료 코드 | **1** |
+
+      > **⛔ 「exit 1인데 통과로 적는다」를 근거 없이 하지 않는다.**
+      > `.claude/CLAUDE.md`가 *"CodeGraphContext, GBrain … 은 advisory이며 현재
+      > HEAD·OpenSpec·테스트를 대체하지 않는다"*고, 그리고 완료 gate를 막는 것은
+      > **CodeGraph worktree fingerprint**라고 적는다. 그 fingerprint는 6.2가
+      > 독립으로 되짚는다 — *"CodeGraph hard-evidence index matches the worktree"*.
+      > **advisory 둘이 stale인 것은 6.2가 WARN으로 내보내고 exit 0을 낸다.**
+      > 즉 여기서 통과라고 적는 근거는 「timeout이 사소해서」가 아니라
+      > **「막는 축이 따로 있고 그 축이 초록인 것을 따로 쟀기 때문」**이다.
+
+- [x] 6.2 `make sdd-check` — **2026-08-13, exit 0.**
+
+      ```text
+      [index-freshness] WARN: codegraphcontext advisory index is missing or stale
+      [index-freshness] WARN: gbrain advisory index is missing or stale
+      [index-freshness] CodeGraph hard-evidence index matches the worktree
+      ```
+
+      `check_agent_config_sync` 동기 · `memory_index` valid · PM tracker current ·
+      `sdd-test` 통과.
 - [ ] 6.3 `make gate CHANGE=a098-nobody-sends-what-the-outbox-keeps`
 - [ ] 6.4 독립 리뷰
-- [ ] 6.5 **a092의 D0.10 표와 non-goal이 a098을 가리키는지 재확인** —
+- [x] 6.5 **a092의 D0.10 표와 non-goal이 a098을 가리키는지 재확인** —
       두 change가 같은 일을 청구하면 그것이 16라운드 B-8이 잡은 형태다
+
+      **실측 — 2026-08-13. 네 확인, 답 넷.**
+
+      | # | 확인 | 답 |
+      |---|---|---|
+      | **0** | D0.10 표가 a098을 가리키는가 (`a092/design.md:577-583`) | ✓ **두 줄** — 「배달 루프 신설」·「backlog 재시도」가 **19판** 열에서 **a098**. 「`internal/obs` 함수 편집」은 a092 그대로 |
+      | **1** | 다섯째 조항(`ENTRY_BLOCKED` 승격)이 a092 쪽에서 **누구 것인가** | **「아무도」가 아니다 — a092의 것이다.** 결정 12-2가 그렇게 정했고, a099 §7.5가 **`a092/review.md §21`에 네 자리를 옮겨 적었다**(2026-08-12) |
+      | **2** | `ADOPTED_MS`에서 `alertFlushInterval`이 **빠졌는가** | ❌ **안 빠졌다** — `a092/tools/check_values.py:150`에 `"alertFlushInterval": 2000.0` 그대로. **a092 10.4.5가 아직 열려 있다** |
+      | **3** | 22 = 22 조항 대칭을 기계가 보는가 | ❌ **아직 아니다** — `a092 10.4.4`가 그 검사를 만드는 task이고 **열려 있다**. 19판 4차가 이 Scenario **한 건만 손으로** 고쳤고 *"나머지 21건은 안 봤다"*고 스스로 적는다 |
+
+      > **⛔ 1번의 답이 「a092의 것」인 것과 「해결됐다」는 다르다.**
+      > `a092/review.md §21`의 네 줄 중 **셋이 「반대」다** — 미배정이 아니라
+      > **a092의 델타와 a098의 델타가 서로 반대를 적고 있는 상태**다.
+      > 둘 다 archive되면 정본에 **모순된 SHALL 둘**이 남는다.
+      >
+      > | a092가 적는 것 | a098이 적는 것 |
+      > |---|---|
+      > | 루프를 **하나 더한다** | 결정 9-2 — **안 더한다** (보조 실행자) |
+      > | 실행자는 **감독 아래** 있어야 한다 | 결정 9-2 — **감독 밖** |
+      > | 정지 → 래치 + **운영 모드 승격** | 결정 11-1 — **승격 없음** |
+      > | 래치 사유 `ALERT_UNDELIVERED` | 결정 8-1 — **자기 사유 코드** |
+      >
+      > **a098은 이 넷을 고치지 않는다.** 남의 change의 델타를 고치면 그 change의
+      > base-commit·리뷰 기록과 어긋난다 — `stacked-changes-break-the-gate`의 형태다.
+      > a092는 a098보다 **뒤에 착지**하므로 그때 자기 델타를 정합하게 고칠 수 있고,
+      > **고치기 전에 a092의 gate를 통과시키면 안 된다.**
+
+      > **⛔ 그리고 D0.10의 경계 문장은 이제 낡았다 — a098이 그렇게 안 지었다.**
+      > D0.10은 경계를 *"**a098은 `Flush`를 얼마나 자주 부르는가를 정하고**, a092는
+      > 한 번 부를 때 무엇이 일어나는가를 바꾼다"*라고 적는다. **a098은 `Flush`를
+      > 안 부른다** — design D1.1이 그 모양을 물리치고 자기 배달 경로를 지었다
+      > (`alertdelivery.go` 헤더의 「Why it does not call Flush」).
+      >
+      > **그렇다고 겹침이 생긴 것은 아니다.** 그 문장이 지키려던 성질은
+      > *"두 change가 같은 줄을 청구하지 않는다"*이고, 그것은 **§5.2가 실측했다** —
+      > `internal/obs` diff **0 파일**. 성질은 살아 있고 **설명이 틀렸다.**
+      >
+      > **그리고 그 틀린 설명이 무해하지 않다는 것을 R4b가 실측으로 보였다.**
+      > `Flush` 기반 실행자(뮤테이션 NN)는 밀린 행 1000개 뒤에서 정지 알림을
+      > **11.1초** 밀어낸다. D0.10의 문장을 그대로 읽고 구현하면 그 모양이 나온다.
+      > **인계 대상이다 — a092가 자기 델타를 고칠 때 이 문장도 같이 본다.**
 
       **19판 3차가 이 확인에 세 가지를 더했다.**
 
