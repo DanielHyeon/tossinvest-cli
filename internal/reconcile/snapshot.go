@@ -229,6 +229,19 @@ var ErrPartialSnapshot = errors.New("reconcile: snapshot discarded after a parti
 // "Or none" is the contract: every error path returns the zero Snapshot. A caller
 // cannot accidentally compare against three-quarters of an account, because
 // three-quarters of an account is not a value this function can produce.
+//
+// # Why the cause is wrapped and not printed
+//
+// Every failure below wraps two things with %w: ErrPartialSnapshot, which says
+// what happened to the snapshot, and the cause, which says what the broker said.
+// The second one used to be printed with %v, and that difference cost a restart:
+// a boot-time 429 arrived here as prose, so the recovery upstream could not tell
+// "the broker is throttling us for a few seconds" from "the account cannot be
+// read", and it treated the throttle as permanent (2026-08-13 02:03:30.545Z).
+//
+// Wrapping only widens what errors.Is can answer — the ErrPartialSnapshot
+// judgement every existing consumer makes is unchanged (a102 D1b).
+
 func (c *Collector) Collect(ctx context.Context) (Snapshot, error) {
 	if err := c.validate(); err != nil {
 		return Snapshot{}, err
@@ -245,12 +258,12 @@ func (c *Collector) Collect(ctx context.Context) (Snapshot, error) {
 	//    order past page one look external.
 	raws, err := execgw.ScanOrders(ctx, c.Orders, execgw.OrderQuery{Status: "OPEN"}, maxPages)
 	if err != nil {
-		return Snapshot{}, fmt.Errorf("%w: walking the open-order list: %v", ErrPartialSnapshot, err)
+		return Snapshot{}, fmt.Errorf("%w: walking the open-order list: %w", ErrPartialSnapshot, err)
 	}
 	for _, raw := range raws {
 		order, perr := parseBrokerOrder(raw)
 		if perr != nil {
-			return Snapshot{}, fmt.Errorf("%w: %v", ErrPartialSnapshot, perr)
+			return Snapshot{}, fmt.Errorf("%w: %w", ErrPartialSnapshot, perr)
 		}
 		snap.OpenOrders = append(snap.OpenOrders, order)
 	}
@@ -260,7 +273,7 @@ func (c *Collector) Collect(ctx context.Context) (Snapshot, error) {
 	//    budget and preserves the evidence the adoption record stores.
 	holdings, err := c.holdings(ctx)
 	if err != nil {
-		return Snapshot{}, fmt.Errorf("%w: sweeping the holdings: %v", ErrPartialSnapshot, err)
+		return Snapshot{}, fmt.Errorf("%w: sweeping the holdings: %w", ErrPartialSnapshot, err)
 	}
 	snap.Holdings = holdings
 
@@ -268,7 +281,7 @@ func (c *Collector) Collect(ctx context.Context) (Snapshot, error) {
 	for _, currency := range c.Currencies {
 		bp, err := c.Balance.BuyingPower(ctx, currency)
 		if err != nil {
-			return Snapshot{}, fmt.Errorf("%w: reading the %s buying power: %v",
+			return Snapshot{}, fmt.Errorf("%w: reading the %s buying power: %w",
 				ErrPartialSnapshot, currency, err)
 		}
 		snap.Balances = append(snap.Balances, Balance{

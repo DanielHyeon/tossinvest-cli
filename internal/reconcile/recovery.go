@@ -57,6 +57,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
 // Stabilisation tunes how the recovery snapshot is corroborated.
@@ -70,6 +71,14 @@ type Stabilisation struct {
 	// MaxAttempts bounds how many snapshots are taken before giving up. An
 	// account that never settles is not a reason to trade on the last reading.
 	MaxAttempts int
+	// RateLimitBackoff is the wait after the broker refuses a read with a rate
+	// limit. Zero takes DefaultRateLimitBackoff. See ratelimit.go for why a
+	// refusal is waited out rather than counted as an attempt.
+	RateLimitBackoff time.Duration
+	// MaxRateLimitWait bounds the total time one recovery spends waiting out
+	// rate limits. Zero takes DefaultMaxRateLimitWait. Spending it fails the
+	// recovery closed, exactly as an account that will not settle does.
+	MaxRateLimitWait time.Duration
 }
 
 func (s Stabilisation) withDefaults() Stabilisation {
@@ -81,6 +90,15 @@ func (s Stabilisation) withDefaults() Stabilisation {
 	}
 	if s.MaxAttempts <= 0 {
 		s.MaxAttempts = 5
+	}
+	// <= 0 rather than == 0 for the same reason as the three above: a negative
+	// backoff would make clock.Sleep return immediately and turn the retry into
+	// a spin against the broker that is already throttling us.
+	if s.RateLimitBackoff <= 0 {
+		s.RateLimitBackoff = DefaultRateLimitBackoff
+	}
+	if s.MaxRateLimitWait <= 0 {
+		s.MaxRateLimitWait = DefaultMaxRateLimitWait
 	}
 	return s
 }
@@ -181,8 +199,16 @@ type Report struct {
 
 	// Snapshot is the stabilised account reading.
 	Snapshot Snapshot
-	// SnapshotsTaken is how many readings it took to stabilise.
+	// SnapshotsTaken is how many readings it took to stabilise. A read the
+	// broker refused with a rate limit is not one of them — no reading happened.
 	SnapshotsTaken int
+	// RateLimitWaits is how many times the account read was refused with a rate
+	// limit and waited out.
+	RateLimitWaits int
+	// RateLimitWaited is the total time this recovery spent waiting out rate
+	// limits. It is the number an operator can act on: how long the engine held
+	// the entry gate shut with nothing to read.
+	RateLimitWaited time.Duration
 	// Local is the reconstructed local belief.
 	Local LocalState
 	// Diff is the comparison of the two.
@@ -264,8 +290,10 @@ func (r *Recovery) Run(ctx context.Context) (Report, error) {
 	// 3. Read the account, and keep reading until it stops moving. A single
 	//    reading taken while a fill is settling would reconstruct a position that
 	//    is already wrong.
-	snap, taken, err := r.stableSnapshot(ctx)
-	report.SnapshotsTaken = taken
+	snap, progress, err := r.stableSnapshot(ctx)
+	report.SnapshotsTaken = progress.Taken
+	report.RateLimitWaits = progress.RateLimitWaits
+	report.RateLimitWaited = progress.RateLimitWaited
 	if err != nil {
 		return report, err
 	}
@@ -330,32 +358,45 @@ func (r *Recovery) replay(ctx context.Context, report *Report, attemptID string)
 }
 
 // stableSnapshot collects until the account stops changing.
-func (r *Recovery) stableSnapshot(ctx context.Context) (Snapshot, int, error) {
+//
+// The attempt counter advances on readings, not on tries. A broker that refuses
+// with a rate limit produced no reading, so it is waited out and asked again
+// without spending an attempt (a102 D3 — see ratelimit.go for why). Every other
+// failure ends the sequence immediately, exactly as before.
+func (r *Recovery) stableSnapshot(ctx context.Context) (Snapshot, snapshotProgress, error) {
 	clk := r.clock()
 	stabiliser := &Stabiliser{MinInterval: r.stab.Interval, Required: r.stab.Required}
 
-	var taken int
-	for attempt := 1; attempt <= r.stab.MaxAttempts; attempt++ {
+	var progress snapshotProgress
+	for attempt := 1; attempt <= r.stab.MaxAttempts; {
 		snap, err := r.opts.Collector.Collect(ctx)
 		if err != nil {
-			return Snapshot{}, taken, fmt.Errorf("%w: %v", ErrRecoveryIncomplete, err)
+			if !errors.Is(err, official.ErrRateLimited) {
+				return Snapshot{}, progress, fmt.Errorf("%w: %v", ErrRecoveryIncomplete, err)
+			}
+			if werr := r.waitOutRateLimit(ctx, clk, &progress); werr != nil {
+				return Snapshot{}, progress, werr
+			}
+			// Deliberately no attempt++: the account was never read.
+			continue
 		}
-		taken++
+		attempt++
+		progress.Taken++
 		if result := stabiliser.Offer(snap); result.Stable {
-			return snap, taken, nil
+			return snap, progress, nil
 		}
-		if attempt == r.stab.MaxAttempts {
+		if attempt > r.stab.MaxAttempts {
 			break
 		}
 		if err := clk.Sleep(ctx, r.stab.Interval); err != nil {
-			return Snapshot{}, taken, fmt.Errorf("%w: %v", ErrRecoveryIncomplete, err)
+			return Snapshot{}, progress, fmt.Errorf("%w: %v", ErrRecoveryIncomplete, err)
 		}
 	}
 	// An account that will not settle is not a reason to trade on the last
 	// reading; the gate stays shut and an operator looks.
-	return Snapshot{}, taken, fmt.Errorf(
+	return Snapshot{}, progress, fmt.Errorf(
 		"%w: the account did not produce %d agreeing snapshots in %d readings",
-		ErrRecoveryIncomplete, r.stab.Required, taken)
+		ErrRecoveryIncomplete, r.stab.Required, progress.Taken)
 }
 
 func (r *Recovery) blockedSymbol(ctx context.Context, rec journal.AttemptRecord) (journal.BlockedSymbol, error) {

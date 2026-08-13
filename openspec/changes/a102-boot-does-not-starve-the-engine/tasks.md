@@ -14,32 +14,43 @@ Teammate는 여기·design.md에 없는 결정이 필요해지면 **멈추고 Ma
 
 ## 1. T1 — 겹1: recovery가 rate limit에 죽지 않는다 (High-risk: internal/reconcile)
 
-- [ ] 1.1 FLM/BTM **편집 전** 작성 — `Collector.Collect`(AST 있음 8/6/17),
+- [x] 1.1 FLM/BTM **편집 전** 작성 — `Collector.Collect`(AST 있음 8/6/17),
   `Recovery.stableSnapshot`(AST 있음 5/4/7), 편집하게 되는 다른 기존 함수 전부
   (`Stabilisation.withDefaults` 포함 예상). `function-logic-map.md`와
   `branch-test-map.md`, 형식은 a098의 것을 따른다.
-- [ ] 1.2 [T] RED — D1b: `%v` wrap 때문에 `errors.Is(…, official.ErrRateLimited)`가
+  → 편집 전 4종(AST+커버리지 측정): `collector.collect` · `recovery.stablesnapshot` ·
+  `stabilisation.withdefaults`(AST 신규 생성 3/1/0) · `recovery.run`(3단계 호출부를
+  편집하므로 대상). GREEN 뒤 같은 도구로 **재측정**해 좌표·수를 2판으로 갱신했다.
+- [x] 1.2 [T] RED — D1b: `%v` wrap 때문에 `errors.Is(…, official.ErrRateLimited)`가
   Collect 오류에서 끊긴다는 실패 테스트. 429를 내는 fake broker로
   Collect 오류를 받아 `errors.Is` 가 false임을 먼저 보인다.
-- [ ] 1.3 GREEN — snapshot.go 4곳(248·253·263·271)의 원인 wrap을 `%w`로.
+  → `a102_rate_limit_identity_test.go`, RED 6건 실패 실측.
+- [x] 1.3 GREEN — snapshot.go 4곳(248·253·263·271)의 원인 wrap을 `%w`로.
   `ErrPartialSnapshot` 소비자 무회귀 테스트 포함.
-- [ ] 1.4 [T] RED — stableSnapshot: 429 두 번 뒤 안정 스냅샷이 오는 fake에서
+  → 현재 좌표 `:261`·`:266`·`:276`·`:284`. 무회귀는
+  `TestCollectStillReportsAPartialSnapshot` + 기존 4지점.
+- [x] 1.4 [T] RED — stableSnapshot: 429 두 번 뒤 안정 스냅샷이 오는 fake에서
   (a) recovery가 완주하고 (b) attempt·taken이 429에 소모되지 않고
   (c) 대기 각 15s이며 (d) `Report.RateLimitWaits/RateLimitWaited`가 실측을
   담는다는 테스트. 지금 구현에서는 (a)부터 실패한다.
-- [ ] 1.5 GREEN — D3 구현: `Stabilisation.RateLimitBackoff/MaxRateLimitWait`
+  → `a102_recovery_rate_limit_test.go`, RED는 컴파일 실패 11건.
+- [x] 1.5 GREEN — D3 구현: `Stabilisation.RateLimitBackoff/MaxRateLimitWait`
   (zero-default 15s/5m, `withDefaults`), 429는 attempt 미소모 + 백오프,
   예산 소진 시 `ErrRecoveryIncomplete`(rate limit과 대기 시간 명시).
-- [ ] 1.6 [T] 경계 고정 — (a) 429 아닌 오류는 오늘처럼 즉시 실패 (b) 예산 소진
+  → `internal/reconcile/ratelimit.go`(신규) + `recovery.go`.
+- [x] 1.6 [T] 경계 고정 — (a) 429 아닌 오류는 오늘처럼 즉시 실패 (b) 예산 소진
   경로 (c) 백오프 중 ctx 취소가 즉시 통과 (불변식 4).
-- [ ] 1.7 [T] 뮤테이션 정산 — design §검증계약 (a)(b)(c)를 실행해 각각 어느
+- [x] 1.7 [T] 뮤테이션 정산 — design §검증계약 (a)(b)(c)를 실행해 각각 어느
   테스트가 죽는지 기록하고 원복을 심볼로 확인한다 (통과는 증거가 아니다).
-- [ ] 1.8 `go test ./internal/reconcile` + `make lint` rc=0. 결과를 branch-test-map에
+  → (a)(b)(c) + 자발 (d)(e), 총 8회 가함. **(c)의 네 자리 중 `:266`은 살아남았고**
+  그 이유를 `collector.collect/branch-test-map.md`에 적었다.
+- [x] 1.8 `go test ./internal/reconcile` + `make lint` rc=0. 결과를 branch-test-map에
   기록.
+  → 143건 통과 · coverage 86.6% · `make lint` rc=0 (gofmt 실재 확인).
 
 ## 2. T1 — 산출물 정리
 
-- [ ] 2.1 tasks 체크 + 커밋 (제목에 [a102 §1], RED/GREEN/뮤테이션 증거를 본문에)
+- [x] 2.1 tasks 체크 + 커밋 (제목에 [a102 §1], RED/GREEN/뮤테이션 증거를 본문에)
 
 ## 3. T2 — 겹2: 서베이가 엔진의 준비 신호를 기다린다 (T1 커밋 위에서)
 
