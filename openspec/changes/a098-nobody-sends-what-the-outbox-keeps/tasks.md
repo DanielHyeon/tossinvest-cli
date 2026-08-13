@@ -1634,7 +1634,50 @@ base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` (`base-commit.txt`)
 
       `check_agent_config_sync` 동기 · `memory_index` valid · PM tracker current ·
       `sdd-test` 통과.
-- [ ] 6.3 `make gate CHANGE=a098-nobody-sends-what-the-outbox-keeps`
+- [x] 6.3 `make gate CHANGE=a098-nobody-sends-what-the-outbox-keeps` — **2026-08-13, 9/9 통과**
+
+      | 단계 | 결과 |
+      |---|---|
+      | 1 tasks.md 존재 | OK |
+      | 2 미완료 체크박스 | **0건** |
+      | 3 짝 change (a099) | 완료 + 구성원 일치 — 미완료 1줄은 `make gate CHANGE=a099-…` 로 허용 면제 하나 |
+      | 4 `review.md` | OK (§6.4가 만들었다) |
+      | 5 Function Logic Map | `evidence complete or diff-proven exempt` |
+      | 6 `make sdd-check` | OK — **아래 ⛔ 참고** |
+      | 7 `make test` | OK |
+      | 8 `make vet` | OK |
+      | 9 `make validate` | OK |
+
+      > **⛔ 6단계는 두 번 실패했고 원인이 서로 달랐다. 둘 다 「이 줄을 체크한 것」이
+      > 일으켰다.**
+      >
+      > | 회차 | 실패 문구 | 원인 |
+      > |---|---|---|
+      > | 1 | `CodeGraph hard-evidence index is missing or stale` | fingerprint 는 `git ls-files --cached --others` 의 **내용 sha256**(`check_index_freshness.py:20-42`). sync 를 먼저 하고 6.3 을 체크해서 그 사이에 worktree 가 바뀌었다 |
+      > | 2 | `generated tracker stale: 00-master-tracker.md · 01-active-change-map.md` | 체크박스가 다 차서 a098 이 `in_progress` → `implemented` 로 넘어갔는데 생성물이 옛 상태를 적고 있었다 |
+      >
+      > 1회차 뒤 「재sync 하면 된다」로 끝냈으면 2회차를 못 봤을 것이다 —
+      > **한 번 고친 원인을 두 번째 실패의 원인으로 재사용하지 않는다.**
+      > 2회차 로그의 그 자리는 오히려 `CodeGraph … matches the worktree` 였다.
+      >
+      > gate 2단계가 「미완료 0건」을 요구하므로 이 줄의 체크는 gate 보다 **먼저**여야
+      > 하고, 그 체크가 fingerprint 와 PM 생성물을 **동시에** 깬다. 순서 역전은
+      > 실수가 아니라 **게이트 구조가 강제하는 순서**다. 그래서 순서는
+      > **마지막 편집 → `tools/pm/generate_master_tracker.py` → `make sdd-sync`
+      > → `make gate`** 이고, sync 뒤로는 아무것도 안 건드린다.
+
+      > **⛔ 통과한 실행의 로그는 6단계에서 잘려 있었다.** rtk 가 `make gate` 의
+      > 출력을 필터해서 파일 안에 `... (216 lines truncated)` 를 **문자열로** 남겼고,
+      > 7·8·9 단계와 `GATE PASS` 줄이 거기 없었다. 남은 증거는 `exit=0` 하나뿐이었다.
+      > `set -eu` + `fail()` 이라 exit 0 은 실제로 PASS 를 뜻하지만,
+      > **「9/9 통과」를 잘린 로그로 적지 않는다** — `rtk proxy make gate …` 로 다시
+      > 돌려 아홉 줄과 `GATE PASS` 를 눈으로 본 뒤에 적었다.
+      > `missing-tool-reports-clean` 과 같은 부류다: 화면에 없는 것과 일어나지 않은
+      > 것은 다르고, 필터는 그 둘을 똑같이 보이게 한다.
+
+      advisory 둘(codegraphcontext timeout · GBrain busy)은 이번에도 stale 이고
+      이번에도 막지 않는다 — 6.1·6.2 가 적은 그 근거 그대로, 막는 축은 CodeGraph
+      hard-evidence fingerprint 하나다.
 - [x] 6.4 독립 리뷰 — **2026-08-13. 두 보이스 BLOCK, 뮤테이션 넷으로 정산.**
       전문은 `review.md`.
 

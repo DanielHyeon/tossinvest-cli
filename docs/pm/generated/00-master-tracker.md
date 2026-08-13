@@ -89,7 +89,7 @@
     - STORY-TOS-a095 — A stop must know what it covers [in_progress] → `a095-a-stop-must-know-what-it-covers`
     - STORY-TOS-a096 — One condition is one alert [implemented] → `a096-one-condition-is-one-alert`
     - STORY-TOS-a097 — A re-armed alert is a new episode [implemented] → `a097-a-re-armed-alert-is-a-new-episode`
-    - STORY-TOS-a098 — Nobody sends what the outbox keeps [in_progress] → `a098-nobody-sends-what-the-outbox-keeps`
+    - STORY-TOS-a098 — Nobody sends what the outbox keeps [implemented] → `a098-nobody-sends-what-the-outbox-keeps`
     - STORY-TOS-a099 — A claim excludes the second sender [in_progress] → `a099-a-claim-excludes-the-second-sender`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
