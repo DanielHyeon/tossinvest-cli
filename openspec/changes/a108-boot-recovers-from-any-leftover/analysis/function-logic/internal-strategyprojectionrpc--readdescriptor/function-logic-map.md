@@ -1,6 +1,6 @@
 # Function Logic Map: `readDescriptor`
 
-- Source: `internal/strategyprojectionrpc/transport.go` (159-183)
+- Source: `internal/strategyprojectionrpc/transport.go` (160-184)
 - AST evidence: `ast.json` — revision `current`. AST 분기 5
 - Risk scan: `risk-pattern-report.md`
 
@@ -62,3 +62,9 @@ Fix 라운드가 이 함수를 **둘로 갈랐다**(design D1-2). 앞부분 — 
   것이 아니다.
 - High-risk impact: no (조회 전용) — 다만 회수가 이 함수를 다시 부르게 만드는 편집은
   A1 F2를 되살린다. 뮤테이션 M16이 그 회귀를 잰다.
+
+## gstack Fix 라운드 (2026-08-14) — 이 함수는 편집하지 않았다
+
+분기·return 불변(5·6). 파일 해시가 움직인 것은 같은 파일의
+`openVerifiedDescriptor` 주석에서 잘못된 상호 참조(「아래 reclaimStaleControlDirectory」
+— 그 함수는 다른 파일에 있다)를 고쳤기 때문이다.

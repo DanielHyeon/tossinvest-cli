@@ -1,6 +1,6 @@
 # Branch Test Map: `httpAPIReader.Snapshot`
 
-- Source: `cmd/tossctl/httpapi_reader.go` (450-513)
+- Source: `cmd/tossctl/httpapi_reader.go` (450-520)
 - 이 change 가 편집한 분기는 **B8·B9·B10** 이다(Fix 라운드 6.8②, design D4-2).
   기준 판은 분기 9개·return 9개였고(AST 실측: 편집 전 소스로 재추출), 편집이 return
   하나를 없애고 `else` 가지 하나를 만들어 분기 10개·return 8개가 됐다.

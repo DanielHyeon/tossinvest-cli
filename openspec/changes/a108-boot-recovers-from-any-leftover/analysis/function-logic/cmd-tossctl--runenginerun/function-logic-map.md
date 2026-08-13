@@ -1,8 +1,8 @@
 # Function Logic Map: `runEngineRun`
 
-- Source: `cmd/tossctl/engine.go` (183-324)
+- Source: `cmd/tossctl/engine.go` (183-328)
 - AST evidence: `ast.json` — AST branches 20 · returns 13 · defers 9
-  (source_sha256 `ea35f850ccf5a05d468e9c0556186d84ed2318be81137bfecd6998c281fddfed`,
+  (source_sha256 `8111c1c9e20f501b6221e231836fb02d7d03d127b3592892175c1beb38788381`,
   **Fix 라운드 6.7 편집 후 재생성**)
 - Risk scan: `risk-pattern-report.md`
 - 편집 대상: **B18** (겹2). 기준(base) 판은 분기 19개·return 14개였고, 그 14번째가
@@ -67,7 +67,7 @@
 | `engineRuntimeFactory` (seam) | 7단계 루프 집합 | 실패는 return (B13) | AST · engine_runtime_branch_test.go |
 | `engine.StartPositionPolicy{Command,Runtime}Server` | 콘솔 정책 제어 | 실패는 return | AST |
 | **`engineStrategyProjectionStart` (seam)** | **조회 전용 export** | **실패는 강등 (a108 D3-2)** | AST · a108 T2 테스트 |
-| `ectx.Notifier.Notify` | 강등의 obs 기록 | **Normal 등급** — 반환 오류는 critical 경로 전용이라 여기서는 발생하지 않는다(obs/notifier.go:130-139) | `reportStrategyProjectionDegraded` |
+| `ectx.Notifier.Notify` | 강등의 obs 기록 | **Normal 등급** — 반환 오류는 critical 경로 전용이라 여기서는 발생하지 않는다(`obs.Notifier.notifyCritical`). **gstack 라운드부터 goroutine 에서 돈다** — 발행 한 번이 최대 `obs.DefaultPublishTimeout`(10s)이고 이 줄은 `rt.Run` 앞이다 | `reportStrategyProjectionDegraded` |
 | `engine.StartAlertControlServer` | a098 운영자 승인 경로 | 실패는 return | AST |
 | `rt.Run(runCtx)` | 루프 감독 | 첫 정지가 전부를 내린다 | AST · internal/app/engine |
 
@@ -78,8 +78,8 @@
   닫을 것이 없다.
 - **`reportStrategyProjectionDegraded` 는 영속 상태를 하나도 만들지 않는다** (6.7 이후).
   stderr 한 줄과 obs 로그 한 줄이 전부다. 원 D3 은 여기에 durable critical outbox 행을
-  뒀는데, 그 행이 `UndeliveredCount`(Type 무필터, outbox.go:532-540)에 잡혀
-  `restoreAlertEntryLatch`(gateway.go:153-168)로 **다음 부팅의 진입 게이트를 잠갔다**.
+  뒀는데, 그 행이 `UndeliveredCount`(Type 무필터, `Journal.UndeliveredCount`)에 잡혀
+  `restoreAlertEntryLatch`(`restoreAlertEntryLatch`)로 **다음 부팅의 진입 게이트를 잠갔다**.
   publisher 미설정 배포에서는 영구 PENDING 이므로 해제 수단이 운영자 ack 뿐이었다.
 - 그래서 이 분기의 부작용 목록은 「없음」이 계약이다. 뮤테이션으로도 그것을 잰다:
   행을 하나라도 쓰면 `TestTheDegradedBootWritesNoUndeliveredOutboxRow` 가 죽는다.
@@ -94,3 +94,22 @@
   선후는 테스트로 고정돼 있다.
 - High-risk impact: **yes.** 엔진 기동 경로다. 다만 변경 방향은 「기동을 더 자주 성공시키는」
   쪽이고, 그것이 보호 루프를 세우는 방향이다. 반대 방향(주문·손절 즉시성)에는 닿지 않는다.
+
+## gstack Fix 라운드가 이 함수에서 바꾼 것 (2026-08-14)
+
+세 가지이고 **판정은 하나도 없다.**
+
+1. **B17 의 `defer strategyRuntime.Close()` 에 불변식 주석을 붙였다.** 이 Close 는
+   journal flock 을 쥔 채로 돈다 — defer 는 LIFO 이고 1단계의 `lock.Release()` 가 가장
+   먼저 등록됐으므로 가장 나중에 돈다. 회수 함수가 flock 을 자기 방어로 인용하는
+   근거가 이 순서이고, 그 근거가 두 파일에 흩어져 있어서 한쪽에 적었다.
+2. **`token, terr :=` 를 원래 if-스코프로 되돌렸다.** 함수 스코프로 끌어올린 것은
+   철회된 proc-instance dedup 기계(D3-2 가 지웠다)의 흉터였다. 분기·return 수 불변.
+3. 하드코딩 line-range 인용을 심볼 인용으로 바꿨다. 줄 번호는 편집마다 썩고, 썩은
+   좌표는 다음 독자를 **다른 코드**로 데려간다.
+
+강등 보고 자체의 실행 자리는 `reportStrategyProjectionDegraded`(이 change 가 만든
+함수) 안에서 바뀌었다 — 동기 `Notify` → detached goroutine. 그 함수는 base 에 없던
+것이라 자기 FLM 을 요구하지 않지만, 이 함수의 **시간** 계약이 그것으로 바뀐다:
+7단계에서 `rt.Run` 까지의 지연이 알림 transport 의 속도와 무관해졌다.
+뮤테이션 M13(동기 복원)·M14(보고 삭제)·M15(부모 ctx 상속)가 셋 다 죽는다.

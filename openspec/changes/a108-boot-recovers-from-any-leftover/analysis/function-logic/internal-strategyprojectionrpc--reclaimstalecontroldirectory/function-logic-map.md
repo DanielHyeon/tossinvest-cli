@@ -1,7 +1,7 @@
 # Function Logic Map: `reclaimStaleControlDirectory`
 
-- Source: `internal/strategyprojectionrpc/transport_unix.go` (206-282)
-- AST evidence: `ast.json` — revision `current`. AST 분기 16
+- Source: `internal/strategyprojectionrpc/transport_unix.go` (243-330)
+- AST evidence: `ast.json` — revision `current`. AST 분기 17
 - Risk scan: `risk-pattern-report.md`
 
 이 change의 중심 함수다. 첫 라운드가 회수의 **커버리지**를 넓혔고(D1·D2), Fix 라운드가

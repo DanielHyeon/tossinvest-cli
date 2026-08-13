@@ -1,6 +1,6 @@
 # Branch Test Map: `Dial`
 
-- Source: `internal/strategyprojectionrpc/transport_unix.go` (334-356) — revision `current`
+- Source: `internal/strategyprojectionrpc/transport_unix.go` (402-424) — revision `current`
 - 첫 라운드는 이 함수를 바꾸지 않았다. Fix 라운드가 connect probe를 넣었다(D4-2).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |

@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyprojectionrpc/transport_unix.go",
-  "source_sha256": "af21b88fb2b3e685dc75f58bac9bcd63646904ae06a698cfadbf987e12823f92",
+  "source_sha256": "4c67d4b92b8c5ae3d8c8cba28d17cf88353c220ca910811beaf60d3848d518de",
   "package": "strategyprojectionrpc",
   "function": "writeDescriptor",
   "signature": "writeDescriptor(params=2, results=1)",
   "start": {
-    "line": 398,
+    "line": 466,
     "column": 1
   },
   "end": {
-    "line": 453,
+    "line": 528,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 400,
+        "line": 468,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 404,
+        "line": 476,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 411,
+        "line": 480,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 416,
+        "line": 486,
         "column": 2
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 420,
+        "line": 491,
         "column": 2
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 424,
+        "line": 495,
         "column": 2
       }
     },
@@ -65,7 +65,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 428,
+        "line": 499,
         "column": 2
       }
     },
@@ -73,7 +73,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 433,
+        "line": 503,
         "column": 2
       }
     },
@@ -81,7 +81,7 @@
       "id": "B9",
       "kind": "if",
       "at": {
-        "line": 436,
+        "line": 508,
         "column": 2
       }
     },
@@ -89,7 +89,7 @@
       "id": "B10",
       "kind": "if",
       "at": {
-        "line": 440,
+        "line": 511,
         "column": 2
       }
     },
@@ -97,7 +97,7 @@
       "id": "B11",
       "kind": "if",
       "at": {
-        "line": 445,
+        "line": 515,
         "column": 2
       }
     },
@@ -105,7 +105,15 @@
       "id": "B12",
       "kind": "if",
       "at": {
-        "line": 448,
+        "line": 520,
+        "column": 2
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 523,
         "column": 2
       }
     }
@@ -114,91 +122,98 @@
     {
       "kind": "return",
       "at": {
-        "line": 401,
+        "line": 469,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 405,
+        "line": 477,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 413,
+        "line": 481,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 418,
+        "line": 488,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 422,
+        "line": 493,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 426,
+        "line": 497,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 429,
+        "line": 501,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 434,
+        "line": 504,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 437,
+        "line": 509,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 441,
+        "line": 512,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 446,
+        "line": 516,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 450,
+        "line": 521,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 452,
+        "line": 525,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 527,
         "column": 2
       }
     }
@@ -207,7 +222,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 399,
+        "line": 467,
         "column": 15
       },
       "text": "json.Marshal"
@@ -215,38 +230,38 @@
     {
       "kind": "call",
       "at": {
-        "line": 403,
-        "column": 17
+        "line": 475,
+        "column": 21
       },
-      "text": "os.CreateTemp"
+      "text": "stagingPath"
     },
     {
       "kind": "call",
       "at": {
-        "line": 403,
-        "column": 31
+        "line": 475,
+        "column": 33
       },
       "text": "filepath.Dir"
     },
     {
       "kind": "call",
       "at": {
-        "line": 407,
-        "column": 16
+        "line": 479,
+        "column": 17
       },
-      "text": "staged.Name"
+      "text": "os.OpenFile"
     },
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 485,
         "column": 8
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 485,
         "column": 21
       },
       "text": "os.Remove"
@@ -254,7 +269,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 411,
+        "line": 486,
         "column": 12
       },
       "text": "staged.Chmod"
@@ -262,7 +277,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 412,
+        "line": 487,
         "column": 7
       },
       "text": "staged.Close"
@@ -270,7 +285,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 415,
+        "line": 490,
         "column": 21
       },
       "text": "staged.Stat"
@@ -278,7 +293,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 417,
+        "line": 492,
         "column": 7
       },
       "text": "staged.Close"
@@ -286,7 +301,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 420,
+        "line": 495,
         "column": 15
       },
       "text": "staged.Write"
@@ -294,7 +309,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 421,
+        "line": 496,
         "column": 7
       },
       "text": "staged.Close"
@@ -302,7 +317,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 424,
+        "line": 499,
         "column": 12
       },
       "text": "staged.Sync"
@@ -310,7 +325,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 425,
+        "line": 500,
         "column": 7
       },
       "text": "staged.Close"
@@ -318,7 +333,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 428,
+        "line": 503,
         "column": 12
       },
       "text": "staged.Close"
@@ -326,7 +341,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 432,
+        "line": 507,
         "column": 17
       },
       "text": "os.Lstat"
@@ -334,7 +349,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 433,
+        "line": 508,
         "column": 20
       },
       "text": "os.SameFile"
@@ -342,7 +357,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 434,
+        "line": 509,
         "column": 10
       },
       "text": "errors.New"
@@ -350,7 +365,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 436,
+        "line": 511,
         "column": 12
       },
       "text": "os.Rename"
@@ -358,7 +373,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 439,
+        "line": 514,
         "column": 20
       },
       "text": "os.Lstat"
@@ -366,7 +381,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 440,
+        "line": 515,
         "column": 20
       },
       "text": "os.SameFile"
@@ -374,7 +389,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 441,
+        "line": 516,
         "column": 10
       },
       "text": "errors.New"
@@ -382,7 +397,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 444,
+        "line": 519,
         "column": 20
       },
       "text": "os.Open"
@@ -390,7 +405,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 444,
+        "line": 519,
         "column": 28
       },
       "text": "filepath.Dir"
@@ -398,7 +413,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 448,
+        "line": 523,
         "column": 12
       },
       "text": "directory.Sync"
@@ -406,7 +421,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 449,
+        "line": 524,
         "column": 7
       },
       "text": "directory.Close"
@@ -414,7 +429,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 452,
+        "line": 527,
         "column": 9
       },
       "text": "directory.Close"
@@ -424,133 +439,133 @@
     {
       "kind": ":=",
       "at": {
-        "line": 399,
+        "line": 467,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 403,
+        "line": 475,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 407,
+        "line": 479,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 410,
+        "line": 485,
         "column": 17
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 411,
+        "line": 486,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 412,
+        "line": 487,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 415,
+        "line": 490,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 417,
+        "line": 492,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 420,
+        "line": 495,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 421,
+        "line": 496,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 424,
+        "line": 499,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 425,
+        "line": 500,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 428,
+        "line": 503,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 432,
+        "line": 507,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 436,
+        "line": 511,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 439,
+        "line": 514,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 444,
+        "line": 519,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 448,
+        "line": 523,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 449,
+        "line": 524,
         "column": 3
       }
     }
@@ -560,7 +575,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 410,
+        "line": 485,
         "column": 2
       }
     }

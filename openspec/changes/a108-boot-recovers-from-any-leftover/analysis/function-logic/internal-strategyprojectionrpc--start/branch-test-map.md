@@ -1,6 +1,6 @@
 # Branch Test Map: `Start`
 
-- Source: `internal/strategyprojectionrpc/transport_unix.go` (48-128) — revision `current`
+- Source: `internal/strategyprojectionrpc/transport_unix.go` (79-162) — revision `current`
 - Fix 라운드가 이 함수를 편집했다(socket 발행을 `listenPrivateSocket`으로). 첫 라운드의
   "무변경" 선언은 철회됐다 — 근거는 `function-logic-map.md`.
 

@@ -1,6 +1,6 @@
 # Function Logic Map: `Server.Close`
 
-- Source: `internal/strategyprojectionrpc/transport_unix.go` (358-386)
+- Source: `internal/strategyprojectionrpc/transport_unix.go` (426-454)
 - AST evidence: `ast.json` — revision `current`. AST 분기 5
 - Risk scan: `risk-pattern-report.md`
 
@@ -82,3 +82,10 @@ S1과, descriptor 제거가 socket보다 먼저인 순서에서 오는 S2는 그
 - Safe edit boundary: 제거 순서와 listener 소유권. 순서를 바꾸면 D1 표의 행이 바뀌고,
   소유권을 goroutine에 돌려주면 A1 F5가 되살아난다.
 - High-risk impact: yes (기동·종료 경로).
+
+## gstack Fix 라운드 (2026-08-14) — 이 함수는 편집하지 않았다
+
+분기·return 불변(5·2). 파일 해시가 움직인 것은 같은 파일의 다른 함수들 때문이다.
+호출자 쪽에 불변식 하나가 명문화됐다: 이 `Close` 는 **journal flock 을 쥔 채로**
+돈다(`runEngineRun` 의 defer LIFO). 회수 함수가 「probe 와 제거 사이의 경합은 flock 이
+막는다」고 인용하는 근거가 그 순서이고, 이제 그 순서가 주석으로 적혀 있다.

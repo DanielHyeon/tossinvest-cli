@@ -1,6 +1,6 @@
 # Branch Test Map: `runEngineRun`
 
-- Source: `cmd/tossctl/engine.go` (183-324)
+- Source: `cmd/tossctl/engine.go` (183-328)
 - 이 change 가 편집한 분기는 **B17·B18** 이다. 나머지 행은 기존 고정을 그대로 옮긴 것이며
   RED/GREEN 열은 **이 change 에서 관측했는가**를 뜻한다 — 기존 분기는 `no/no` 가 정상이다.
 

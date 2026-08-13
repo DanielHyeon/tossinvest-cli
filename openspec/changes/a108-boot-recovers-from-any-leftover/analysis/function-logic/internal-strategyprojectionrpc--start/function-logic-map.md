@@ -1,6 +1,6 @@
 # Function Logic Map: `Start`
 
-- Source: `internal/strategyprojectionrpc/transport_unix.go` (48-128)
+- Source: `internal/strategyprojectionrpc/transport_unix.go` (79-162)
 - AST evidence: `ast.json` — revision `current`. AST 분기 14
 - Risk scan: `risk-pattern-report.md`
 
@@ -78,3 +78,19 @@ Pre-Edit 선언 T1-3의 철회는 `pre-edit-gate.md`의 T1-fix 절에 기록했�
   것은 회수의 생존 판정 전제이므로 바꾸면 design D2를 다시 봐야 한다.
 - High-risk impact: yes — 엔진 기동 7단계. 실패는 강등(엔진은 계속 돈다, design D3)
   이지만 이 함수가 잘못 성공하면 회수가 남의 socket을 지울 수 있다.
+
+## gstack Fix 라운드가 이 함수에서 바꾼 것 (2026-08-14)
+
+분기 수는 14 로 불변이다. 바뀐 것은 **실패 정리의 범위**와 그것을 부르는 이름이다.
+
+- `cleanupListener` 가 `discardPublication(controlDir, descriptorPath, socketPath)` 를
+  부른다. 예전에는 socket 과 디렉터리만 치웠는데, `writeDescriptor` 의 rename 이
+  성공한 **뒤에** 실패하는 줄이 있다(발행 확인의 SameFile, 디렉터리 sync). 그 경로의
+  descriptor 는 이미 최종 이름을 갖고 있으므로, 치우지 않으면 당회 부팅 내내 S1 잔재가
+  남고 디렉터리 제거도 ENOTEMPTY 로 실패한다.
+- socket 임시 이름의 종류 상수가 `stagingSocketKind` 가 됐다(길이 계약 — 아래 참조).
+
+그 인터리빙(rename 성공 후 실패)은 seam 을 새로 뚫지 않고 결정적으로 만들 수 없어서,
+핀은 정리의 **커버리지**를 잰다: `TestDiscardingAFailedPublicationLeavesNothingBehind`
+가 세 산출물을 놓고 부른 뒤 디렉터리가 사라졌는지 본다(하나라도 빠지면 남는다).
+뮤테이션 M29 가 그 행을 지키고, 사유는 `mutation-ledger-t1.md` §C 에 적었다.

@@ -1,7 +1,7 @@
 # Function Logic Map: `writeDescriptor`
 
-- Source: `internal/strategyprojectionrpc/transport_unix.go` (398-453)
-- AST evidence: `ast.json` — revision `current`. AST 분기 12
+- Source: `internal/strategyprojectionrpc/transport_unix.go` (466-528)
+- AST evidence: `ast.json` — revision `current`. AST 분기 13
 - Risk scan: `risk-pattern-report.md`
 
 Fix 라운드가 이 함수를 다시 썼다(design D1-2). 예전 본문은 세 줄이었다 — 최종 이름에

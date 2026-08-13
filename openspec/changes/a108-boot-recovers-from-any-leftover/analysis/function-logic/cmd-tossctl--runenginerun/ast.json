@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/engine.go",
-  "source_sha256": "ea35f850ccf5a05d468e9c0556186d84ed2318be81137bfecd6998c281fddfed",
+  "source_sha256": "8111c1c9e20f501b6221e231836fb02d7d03d127b3592892175c1beb38788381",
   "package": "main",
   "function": "runEngineRun",
   "signature": "runEngineRun(params=2, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 324,
+    "line": 328,
     "column": 2
   },
   "branches": [
@@ -89,7 +89,7 @@
       "id": "B10",
       "kind": "if",
       "at": {
-        "line": 247,
+        "line": 246,
         "column": 2
       }
     },
@@ -97,7 +97,7 @@
       "id": "B11",
       "kind": "if",
       "at": {
-        "line": 250,
+        "line": 249,
         "column": 2
       }
     },
@@ -105,7 +105,7 @@
       "id": "B12",
       "kind": "else",
       "at": {
-        "line": 254,
+        "line": 253,
         "column": 9
       }
     },
@@ -113,7 +113,7 @@
       "id": "B13",
       "kind": "if",
       "at": {
-        "line": 266,
+        "line": 265,
         "column": 2
       }
     },
@@ -121,7 +121,7 @@
       "id": "B14",
       "kind": "if",
       "at": {
-        "line": 270,
+        "line": 269,
         "column": 2
       }
     },
@@ -129,7 +129,7 @@
       "id": "B15",
       "kind": "if",
       "at": {
-        "line": 274,
+        "line": 273,
         "column": 2
       }
     },
@@ -137,7 +137,7 @@
       "id": "B16",
       "kind": "if",
       "at": {
-        "line": 279,
+        "line": 278,
         "column": 2
       }
     },
@@ -145,7 +145,7 @@
       "id": "B17",
       "kind": "if",
       "at": {
-        "line": 294,
+        "line": 293,
         "column": 2
       }
     },
@@ -153,7 +153,7 @@
       "id": "B18",
       "kind": "if",
       "at": {
-        "line": 299,
+        "line": 303,
         "column": 2
       }
     },
@@ -161,7 +161,7 @@
       "id": "B19",
       "kind": "if",
       "at": {
-        "line": 306,
+        "line": 310,
         "column": 2
       }
     },
@@ -169,7 +169,7 @@
       "id": "B20",
       "kind": "if",
       "at": {
-        "line": 310,
+        "line": 314,
         "column": 2
       }
     }
@@ -220,35 +220,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 267,
+        "line": 266,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 271,
+        "line": 270,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 275,
+        "line": 274,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 280,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 307,
+        "line": 279,
         "column": 3
       }
     },
@@ -262,7 +255,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 323,
+        "line": 315,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 327,
         "column": 2
       }
     }
@@ -487,7 +487,7 @@
       "kind": "call",
       "at": {
         "line": 246,
-        "column": 17
+        "column": 20
       },
       "text": "engineProcInstance"
     },
@@ -495,14 +495,14 @@
       "kind": "call",
       "at": {
         "line": 246,
-        "column": 36
+        "column": 39
       },
       "text": "os.Getpid"
     },
     {
       "kind": "call",
       "at": {
-        "line": 248,
+        "line": 247,
         "column": 3
       },
       "text": "marker.Identify"
@@ -510,7 +510,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 253,
+        "line": 252,
         "column": 3
       },
       "text": "fmt.Fprintf"
@@ -518,7 +518,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 255,
+        "line": 254,
         "column": 3
       },
       "text": "fmt.Fprintf"
@@ -526,7 +526,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 265,
+        "line": 264,
         "column": 13
       },
       "text": "engineRuntimeFactory"
@@ -534,7 +534,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 265,
+        "line": 264,
         "column": 67
       },
       "text": "marker.Ready"
@@ -542,7 +542,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 265,
+        "line": 264,
         "column": 80
       },
       "text": "clk.Now"
@@ -550,7 +550,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 269,
+        "line": 268,
         "column": 25
       },
       "text": "engine.NewPositionPolicyCommandService"
@@ -558,7 +558,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 273,
+        "line": 272,
         "column": 24
       },
       "text": "engine.StartPositionPolicyCommandServer"
@@ -566,7 +566,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 277,
+        "line": 276,
         "column": 8
       },
       "text": "policyControl.Close"
@@ -574,7 +574,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 278,
+        "line": 277,
         "column": 24
       },
       "text": "engine.StartPositionPolicyRuntimeServer"
@@ -582,7 +582,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 282,
+        "line": 281,
         "column": 8
       },
       "text": "policyRuntime.Close"
@@ -590,7 +590,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 293,
+        "line": 292,
         "column": 30
       },
       "text": "engineStrategyProjectionStart"
@@ -598,7 +598,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 293,
+        "line": 292,
         "column": 65
       },
       "text": "ectx.StrategyRuntimeProjection"
@@ -606,7 +606,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 297,
+        "line": 301,
         "column": 9
       },
       "text": "strategyRuntime.Close"
@@ -614,7 +614,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 300,
+        "line": 304,
         "column": 3
       },
       "text": "reportStrategyProjectionDegraded"
@@ -622,7 +622,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 305,
+        "line": 309,
         "column": 19
       },
       "text": "ectx.AlertOperations"
@@ -630,7 +630,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 309,
+        "line": 313,
         "column": 23
       },
       "text": "engine.StartAlertControlServer"
@@ -638,7 +638,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 313,
+        "line": 317,
         "column": 8
       },
       "text": "alertControl.Close"
@@ -646,7 +646,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 314,
+        "line": 318,
         "column": 2
       },
       "text": "fmt.Fprintf"
@@ -654,7 +654,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 315,
+        "line": 319,
         "column": 3
       },
       "text": "ectx.Automation.MaskedAccount"
@@ -662,7 +662,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 315,
+        "line": 319,
         "column": 36
       },
       "text": "strings.Join"
@@ -670,7 +670,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 315,
+        "line": 319,
         "column": 49
       },
       "text": "rt.LoopNames"
@@ -678,7 +678,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 316,
+        "line": 320,
         "column": 2
       },
       "text": "fmt.Fprintf"
@@ -686,7 +686,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 318,
+        "line": 322,
         "column": 20
       },
       "text": "context.WithCancel"
@@ -694,7 +694,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 319,
+        "line": 323,
         "column": 8
       },
       "text": "cancel"
@@ -702,7 +702,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 320,
+        "line": 324,
         "column": 18
       },
       "text": "watchStopSignals"
@@ -710,7 +710,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 321,
+        "line": 325,
         "column": 8
       },
       "text": "stopWatching"
@@ -718,7 +718,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 323,
+        "line": 327,
         "column": 9
       },
       "text": "rt.Run"
@@ -827,48 +827,41 @@
       "kind": ":=",
       "at": {
         "line": 246,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 264,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 265,
+        "line": 268,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 269,
+        "line": 272,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 273,
+        "line": 277,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 278,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 293,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 305,
+        "line": 292,
         "column": 2
       }
     },
@@ -882,14 +875,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 318,
+        "line": 313,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 320,
+        "line": 322,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 324,
         "column": 2
       }
     }
@@ -922,7 +922,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 277,
+        "line": 276,
         "column": 2
       },
       "text": "policyControl.Close"
@@ -930,7 +930,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 282,
+        "line": 281,
         "column": 2
       },
       "text": "policyRuntime.Close"
@@ -938,7 +938,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 297,
+        "line": 301,
         "column": 3
       },
       "text": "strategyRuntime.Close"
@@ -946,7 +946,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 313,
+        "line": 317,
         "column": 2
       },
       "text": "alertControl.Close"
@@ -954,7 +954,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 319,
+        "line": 323,
         "column": 2
       },
       "text": "cancel"
@@ -962,7 +962,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 321,
+        "line": 325,
         "column": 2
       },
       "text": "stopWatching"

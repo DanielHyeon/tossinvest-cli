@@ -1,6 +1,6 @@
 # Function Logic Map: `Dial`
 
-- Source: `internal/strategyprojectionrpc/transport_unix.go` (334-356)
+- Source: `internal/strategyprojectionrpc/transport_unix.go` (402-424)
 - AST evidence: `ast.json` — revision `current`. AST 분기 3
 - Risk scan: `risk-pattern-report.md`
 
@@ -60,3 +60,11 @@ socket 파일이 그대로 남고(design D1의 S3, **전원 단절의 기본 모
   금지다. 느슨해지면 잘못된 socket에 토큰을 보내게 된다.
 - High-risk impact: no (조회 전용 클라이언트) — 다만 실패의 **처리 방식**은 High-risk다.
   probe 추가는 실패를 **더 이르게** 만들 뿐 더 치명적으로 만들지 않는다.
+
+## gstack Fix 라운드 (2026-08-14) — 이 함수는 편집하지 않았다
+
+분기·return 불변(3·5). 다만 `Dial` 이 부르는 `projectionSocketAccepts` 에 절이 하나
+늘었다: **owner 쓰기 비트가 없는 socket 은 사망으로 읽는다.** `Dial` 은 그 앞에서
+이미 정확-0600 을 요구하므로(이 함수의 B2) 그 절에 도달하는 입력이 없다 — 즉 이
+함수의 동작은 바뀌지 않는다. 새 절이 실제로 작동하는 곳은 회수
+(`reclaimStaleControlDirectory`)이며, 거기서는 perm 검사가 `perm&0o077 == 0` 로 넓다.

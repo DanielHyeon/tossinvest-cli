@@ -1,6 +1,6 @@
 # Branch Test Map: `readDescriptor`
 
-- Source: `internal/strategyprojectionrpc/transport.go` (159-183) — revision `current`
+- Source: `internal/strategyprojectionrpc/transport.go` (160-184) — revision `current`
 - Fix 라운드가 형식 검사를 `openVerifiedDescriptor`로 떼어 냈다(design D1-2).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |

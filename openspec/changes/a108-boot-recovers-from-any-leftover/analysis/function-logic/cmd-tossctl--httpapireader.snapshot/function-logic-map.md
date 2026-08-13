@@ -1,8 +1,8 @@
 # Function Logic Map: `httpAPIReader.Snapshot`
 
-- Source: `cmd/tossctl/httpapi_reader.go` (450-513)
+- Source: `cmd/tossctl/httpapi_reader.go` (450-520)
 - AST evidence: `ast.json` — AST branches 10 · returns 8 · defers 0
-  (source_sha256 `7abe45c66b68edbcb716f97feacbd2330bd2dbbde9c3e053ba66f7c67200397b`,
+  (source_sha256 `574a0686ae0ca0e282bff3ecef592f5ceb82d4856a5b9112474117e5e9c5fcf8`,
   **Fix 라운드 6.8② 편집 후 생성**)
 - Risk scan: `risk-pattern-report.md`
 - 편집 대상: **B8·B9·B10** (겹3 Fix, design D4-2). 기준(base) 판은 분기 9개·return 9개였고,
@@ -86,3 +86,14 @@
   사이징에 닿지 않는다. 변경 방향은 「화면이 더 자주 보이는」 쪽이며, 화면이
   **거짓으로** 보이는 방향은 아니다: 실패는 지워지지 않고 `RUNTIME_UNAVAILABLE`
   이라는 이름으로 스냅샷 안에 그대로 실린다.
+
+## gstack Fix 라운드가 더한 것 (2026-08-14) — 값의 뜻을 부팅이 지킨다
+
+이 함수의 두 값 구분(nil → `NOT_CONFIGURED` · 못 읽는 reader → `RUNTIME_UNAVAILABLE`)
+은 **부팅이 같은 구분을 지킬 때만** 참이다. gstack 리뷰가 그 절반이 없다는 것을 찾았다:
+dial 실패가 reader 자리를 nil 로 남기고 있었고, 그러면 엔진 장애가 「이 배포는 전략
+화면을 안 쓴다」와 **같은 화면**으로 그려진다.
+
+코드 변경은 이 함수 밖이다(`strategyRuntimeReaderFor` 가 항상-에러 sentinel 을 꽂는다).
+여기서 바뀐 것은 주석 하나 — 도착하는 nil 이 무엇을 뜻하는지, 그리고 그 뜻을 누가
+지키는지를 적었다. 뮤테이션 M16(sentinel → nil)·M18(부재까지 sentinel)이 양방향을 잰다.

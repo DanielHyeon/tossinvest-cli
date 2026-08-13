@@ -1,6 +1,6 @@
 # Branch Test Map: `Server.Close`
 
-- Source: `internal/strategyprojectionrpc/transport_unix.go` (358-386) — revision `current`
+- Source: `internal/strategyprojectionrpc/transport_unix.go` (426-454) — revision `current`
 - 첫 라운드는 이 함수를 바꾸지 않았다. Fix 라운드가 listener 소유권을 옮겼다(D2-2).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
