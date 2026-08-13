@@ -379,12 +379,15 @@ func TestDescriptorPublicationIsAtomic(t *testing.T) {
 // 아래는 gstack 7패스 리뷰가 Fix-First 로 판정한 넷이다. 전부 **발행이 만든** 모양이고,
 // 앞의 Fix 라운드와 같은 병의 나머지다: 회수는 전체적인데 발행이 그렇지 않다.
 
-// sunPathMax는 unix socket 경로가 가질 수 있는 최대 길이다.
+// sunPathMax는 unix socket 경로가 가질 수 있는 이식 가능한 최대 길이다.
 //
-// 커널의 `sun_path`는 108바이트이고 마지막 한 자리는 NUL 이 쓴다(실측: 107은 bind
-// 되고 108은 `invalid argument`). bind 하는 이름은 **임시 이름**이므로, 임시 이름이
-// 최종 이름보다 길면 최종 경로가 멀쩡한 배포에서도 발행만 실패한다.
-const sunPathMax = 107
+// Linux 의 `sun_path`는 108바이트, darwin 은 104바이트이고 마지막 한 자리는 NUL 이
+// 쓴다(Linux 실측: 107은 bind 되고 108은 `invalid argument`). 이 테스트는 두 플랫폼
+// 모두에서 돌므로 **더 좁은 쪽의 경계(103)**를 쓴다 — 재는 성질은 절대 한도값이 아니라
+// 「최종 경로가 bind 되는 곳이면 임시 이름도 bind 된다」이고, 그 성질은 어느 경계에서
+// 재도 같다. bind 하는 이름은 **임시 이름**이므로, 임시 이름이 최종 이름보다 길면
+// 최종 경로가 멀쩡한 배포에서도 발행만 실패한다.
+const sunPathMax = 103
 
 // TestStagingNamesAreNeverLongerThanTheNamesTheyBecome는 그 관계를 이름 길이로 고정한다.
 //
