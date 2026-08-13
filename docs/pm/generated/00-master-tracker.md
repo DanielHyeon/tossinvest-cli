@@ -43,6 +43,7 @@
     - STORY-TOS-a100 — Holdings leave a stop at the broker [in_progress] → `a100-wire-fill-to-broker-protection`
     - STORY-TOS-a102 — Boot does not starve the engine [implemented] → `a102-boot-does-not-starve-the-engine`
     - STORY-TOS-a107 — Retire the second protection core [in_progress] → `a107-retire-the-second-protection-core`
+    - STORY-TOS-a108 — Boot recovers from any leftover [in_progress] → `a108-boot-recovers-from-any-leftover`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [implemented] → `console-click-approval`

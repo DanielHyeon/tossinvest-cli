@@ -1,0 +1,33 @@
+{
+  "id": "STORY-TOS-a108",
+  "title": "Boot recovers from any leftover",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a108-boot-recovers-from-any-leftover",
+    "path": "openspec/changes/a108-boot-recovers-from-any-leftover"
+  },
+  "found_by": {
+    "date": "2026-08-13",
+    "how": "Host reboot at 23:35:19 KST during the US session. The shutdown left .strategy-runtime-read/ holding only endpoint.json (graceful Shutdown unlinked the unix socket, the process was killed before Close removed the descriptor and directory). reclaimStaleControlDirectory requires both files (transport_unix.go:139), so every engine autostart attempt exited 1 forever, and httpapi crash-looped because a present-but-undialable descriptor is fatal while an absent one degrades. Protection loops were down for the whole window until a manual removal of the leftover directory.",
+    "record": "openspec/changes/a108-boot-recovers-from-any-leftover/proposal.md"
+  },
+  "prior_art": {
+    "note": "a102 erased the same asymmetry in the rate-limit dimension: the process holding stop-losses gave up first while a read-only surface won. Here the engine dies for the sake of a read-only export socket. a102 D4b-2 also measured that recreated container PID namespaces reuse PIDs near-deterministically, which condemns the current processAlive(descriptor.PID) liveness check independently of this incident.",
+    "why_not_a_reversal": "a102 fixed recovery-vs-survey starvation; it never touched endpoint leftover reclamation. The three sibling endpoints (policy command, policy runtime, alert control) are tolerant by design and passed this reboot's leftovers; only strategyprojectionrpc refuses partial states forever."
+  },
+  "acceptance": [
+    "Reclaim handles every state its own lifecycle can produce (empty dir, descriptor-only, socket-only, both) with owner-death verification, and refuses foreign or unverifiable states exactly as before",
+    "Liveness is judged by socket connect probe, not kill-0 on a reusable PID; a descriptor PID pointing at an unrelated live process no longer blocks reclamation",
+    "Engine boot survives strategy projection Start failure: loops run, an unresolved critical alert is raised, journal flock remains the sole singleton authority",
+    "httpapi treats present-but-undialable descriptor the same as absent: degraded start, no crash loop",
+    "Crash-shape regression pins exist for all four engine endpoints, with a mutation ledger proving each pin kills its reverted judgement",
+    "make gate CHANGE=a108-boot-recovers-from-any-leftover passes"
+  ],
+  "measured": null,
+  "deviations": [],
+  "limits": [
+    "Why the host rebooted is an operations question outside this change.",
+    "httpapi does not lazily re-dial a projection that appears later; parity with the existing absent-descriptor behavior is kept and container restart remains the reconnect path."
+  ]
+}
