@@ -104,3 +104,5 @@
 | STORY-TOS-a102 | 6 |
 | STORY-TOS-a103 | 7 |
 | STORY-TOS-a107 | 5 |
+| STORY-TOS-a108 | 6 |
+| STORY-TOS-a109 | 6 |

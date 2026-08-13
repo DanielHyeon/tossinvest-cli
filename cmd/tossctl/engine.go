@@ -279,11 +279,30 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 		return err
 	}
 	defer policyRuntime.Close()
-	strategyRuntime, err := strategyprojectionrpc.Start(dir, ectx.StrategyRuntimeProjection())
-	if err != nil {
-		return err
+	// a108 D3 — 조회 전용 endpoint 하나가 손절을 든 프로세스를 죽이지 않는다.
+	//
+	// 2026-08-13 23:35 사고: 재부팅 잔재로 이 Start가 실패했고, 여기서 `return err`
+	// 한 줄이 엔진을 exit 1 시켰다. autostart가 1분마다 다시 세웠지만 디스크 상태는
+	// 그대로였으므로 영구 기동 루프가 됐고, 보호 루프 셋이 US 장중에 전부 정지했다.
+	//
+	// 강등이 안전한 이유는 하나다: **엔진 싱글턴을 강제하는 것은 부팅 1단계의
+	// journal flock이지 이 디렉터리가 아니다.** projection은 콘솔·httpapi가 화면을
+	// 그리려고 읽는 `strategyprojection.Reader` 내보내기일 뿐 루프의 입력이 아니므로,
+	// 강등으로 잃는 것은 화면이지 판정이 아니다.
+	strategyRuntime, projErr := engineStrategyProjectionStart(dir, ectx.StrategyRuntimeProjection())
+	if strategyRuntime != nil {
+		// nil 수신자에도 안전한 Close이지만, 강등 경로가 Close를 부를 이유는 없다.
+		// 조건을 여기 두면 그 판단이 이 파일 안에 남는다.
+		//
+		// 불변식: 이 Close는 **journal flock을 쥔 채로** 돈다. defer는 LIFO이고
+		// 1단계의 `lock.Release()`가 가장 먼저 등록됐으므로 가장 나중에 돈다 —
+		// 그래서 이 프로세스의 잔재 제거와 다음 엔진의 회수·발행이 겹칠 수 없다
+		// (회수 함수가 flock을 자기 방어로 인용하는 근거가 이 순서다).
+		defer strategyRuntime.Close()
 	}
-	defer strategyRuntime.Close()
+	if projErr != nil {
+		reportStrategyProjectionDegraded(ctx, ectx, errOut, dir, projErr)
+	}
 	// a098 4.4 — 밀린 critical 알림의 운영자 표면. 승인은 이 프로세스 안에서
 	// 일어나야 한다: 진입 게이트는 여기 메모리에 있고, 다른 프로세스가 원장만
 	// 고치면 운영자가 승인해도 진입은 재시작까지 막힌 채다 (design D7.1).
@@ -307,6 +326,94 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 
 	return rt.Run(runCtx)
 }
+
+// engineStrategyProjectionDegradedEvent 는 강등이 남기는 obs 이벤트 타입이다.
+//
+// # 이 이름이 obs 등급표에 없는 것이 **설계다** — a108 D3-2
+//
+// 다음 세 가지를 하지 마라. 셋 다 같은 사고로 이어진다.
+//
+//  1. 이 이름을 `internal/obs`의 `criticalEvents` 등급표에 올리지 마라.
+//  2. severity 를 critical 로 올리지 마라.
+//  3. 이 보고를 원장 outbox(`Journal.EnqueueAlert`)에 싣지 마라.
+//
+// 이유는 하나다. outbox 의 **미전달 행은 다음 부팅의 진입 게이트를 잠근다.**
+// `Journal.UndeliveredCount`는 Type 을 가리지 않고 PENDING 행을 세고
+// (`internal/journal` 의 `Journal.UndeliveredCount`), `restoreAlertEntryLatch`가 그 수가 0보다
+// 크면 `execgw.ReasonAlertUndelivered`로 latch 한다
+// (`internal/app/engine` 의 `restoreAlertEntryLatch`). 해제는 운영자 ack 뿐이다. 알림
+// publisher 가 설정되지 않은 배포에서 그 행은 **영원히** PENDING 이므로, 결과는
+// 「화면 하나를 잃었다는 보고가 실계좌의 신규 진입을 영구 차단한다」가 된다.
+//
+// obs 교리가 정확히 그것을 금지한다: "measurement failures are never critical …
+// 화면의 오탈자가 실계좌 매매를 멈출 수 있어서는 안 된다"
+// (`internal/obs` 의 `criticalEvents` 등급표 위 measurement 절). projection 은
+// 콘솔·httpapi 가 읽는 조회 전용
+// export 이므로 정확히 그 부류다.
+//
+// (원 D3 은 반대를 요구했고 `internal/execgw`의 park 알림을 선례로 들었다. 그것은
+// 선례가 아니었다 — 그 이벤트는 등급표에 **등재돼 있고** entry.Block 이 **의도된**
+// 판정이다. A2 적대 리뷰가 오독을 잡아 D3-2 로 결정을 반전시켰다.)
+//
+// 등급표 미등재 → `obs.SeverityOf`가 Normal 을 준다 → `Notify`는 로그 한 줄과
+// best-effort 발행만 하고 원장에 닿지 않는다(`obs.Notifier.publishBestEffort`).
+// 나중에 Notifier 에 Publisher 가 붙어도 Normal 인 것이 **의도**다.
+const engineStrategyProjectionDegradedEvent obs.EventType = "engine.strategy_projection_unavailable"
+
+// reportStrategyProjectionDegraded 는 강등을 두 곳에 남긴다: 기동 stderr 한 줄과
+// obs Normal 이벤트 로그.
+//
+// 세 번째 표면은 이 함수 밖에 이미 있다 — 콘솔·httpapi 의 전략 화면이 dormant 로
+// 뜨고 그 자체가 「지금 화면이 없다」는 상시 표시다. 그래서 「stderr 한 줄은 1회
+// 유실형」이라는 원 D3 의 걱정은 durable outbox 행 없이도 답이 된다.
+func reportStrategyProjectionDegraded(ctx context.Context, ectx *engine.Context, errOut io.Writer,
+	dir string, cause error) {
+	control := strategyprojectionrpc.ControlDirectory(dir)
+	detail := fmt.Sprintf("전략 projection endpoint를 열지 못했다 (%s): %v", control, cause)
+	fmt.Fprintf(errOut, "note: %s\n"+
+		"      엔진은 보호 루프를 그대로 돌린다 — 잃은 것은 콘솔·httpapi의 전략 화면이다.\n", detail)
+	if ectx == nil || ectx.Notifier == nil {
+		return
+	}
+	// # 보고는 부팅을 기다리게 하지 않는다
+	//
+	// `Notify`는 Publisher 가 붙어 있으면 **그 자리에서** 발행한다
+	// (`obs.Notifier.publishBestEffort`). ntfy publisher 는 네트워크이고 한 번의
+	// 발행 상한이 `obs.DefaultPublishTimeout`(10s)다. 이 줄은 `rt.Run` **앞**이므로
+	// 그 10초는 손절 루프가 시작되지 않는 10초가 된다 — 화면 하나를 잃었다는 보고가
+	// 보호의 시작을 늦추면 안 된다. 그래서 stderr 한 줄만 동기로 남기고 발행은 떼어
+	// 보낸다.
+	//
+	// ctx 를 부모에서 떼어 내는(`WithoutCancel`) 이유는 유실 방지다. 이 goroutine 이
+	// 상속할 것은 값이지 취소가 아니다 — 부모 ctx 는 SIGTERM 에서 끊기는데, 그때
+	// 취소하면 「종료하면서 남기는 마지막 말」이 늘 사라진다.
+	//
+	// 원장을 건드리지 않으므로 `ectx.Close()` 와 겹쳐도 안전하다: 이 이벤트는 obs
+	// 등급표에 없어서 Normal 이고(`engineStrategyProjectionDegradedEvent` 의 주석),
+	// Normal 경로는 로그 한 줄과 best-effort 발행뿐이라 journal handle 에 닿지 않는다.
+	// 반환값을 버리는 것이 안전한 이유도 같다 — `Notify`는 **critical** 이벤트를
+	// durable 하게 만들지 못했을 때만 오류를 돌려준다(`obs.Notifier.notifyCritical`).
+	detached := context.WithoutCancel(ctx)
+	go func() {
+		_ = ectx.Notifier.Notify(detached, obs.Event{
+			Type:   engineStrategyProjectionDegradedEvent,
+			Title:  "STRATEGY_PROJECTION_UNAVAILABLE",
+			Body:   detail,
+			Fields: map[string]any{obs.FieldScope: control},
+		})
+	}()
+}
+
+// engineStrategyProjectionStart is 부팅 7단계가 여는 **조회 전용** projection
+// endpoint다. 콘솔과 httpapi가 전략 화면을 그리려고 읽는 unix socket 하나이고,
+// 엔진 루프의 입력은 아니다.
+//
+// engineAssemble·engineRuntimeFactory와 같은 package 변수 seam인 이유도 같다:
+// 이 지점의 **실패**를 재려면 실패를 주입할 수 있어야 하는데, 실패를 디스크
+// 잔재로 만들면 테스트가 internal/strategyprojectionrpc의 회수 규칙에 묶인다.
+// 그러면 회수 규칙을 고칠 때마다 이쪽 테스트가 같이 부서진다 — 재는 것이
+// "잔재가 어떻게 생겼는가"가 아니라 "실패했을 때 엔진이 죽는가"인데도.
+var engineStrategyProjectionStart = strategyprojectionrpc.Start
 
 // engineAssemble builds the engine profile.
 //

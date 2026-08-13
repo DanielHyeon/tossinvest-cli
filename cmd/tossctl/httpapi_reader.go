@@ -476,11 +476,32 @@ func (r *httpAPIReader) Snapshot(ctx context.Context) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	// a108 D4-2 — 전략 화면 하나가 집계 스냅샷 전체를 죽이지 않는다.
+	//
+	// 여기서 오류를 그대로 올리면 위의 여섯 조회(engine·positions·orders·candidates·
+	// performance·settings)가 **전부 성공했는데도** 화면이 통째로 빈다. 전략 projection
+	// 은 엔진 재시작이나 잔재 회수 중에 몇 초씩 사라질 수 있는 표면이고, 그때 운영자가
+	// 포지션조차 못 보는 것이 이 change 가 지우는 비대칭이다.
+	//
+	// 두 실패를 한 값으로 접지 않는다 — 콘솔이 이미 그렇게 판정한다
+	// (`internal/console` 의 `buildMultiMarketStrategyRuntimePage`):
+	//   reader 가 **없다**  → dormant(NOT_CONFIGURED): 전략 화면을 안 쓰는 배포다.
+	//   reader 는 있는데 **못 읽는다** → unavailable(RUNTIME_UNAVAILABLE): 엔진이 없다.
+	// 접으면 운영자는 「기능을 안 켰다」와 「엔진이 죽었다」를 구별할 수 없다.
+	//
+	// 이 구분이 값으로 성립하려면 **부팅도 같은 구분을 지켜야 한다.** 여기서 nil 이
+	// 「안 쓰는 배포」를 뜻하므로, 붙지 못한 endpoint 를 nil 로 접어 넘기면 이 함수가
+	// 아무리 정확해도 화면은 틀린 값을 그린다. 그래서 dial 실패는 nil 이 아니라
+	// 항상-실패 sentinel 로 온다(`strategyRuntimeReaderFor` 의
+	// `unavailableStrategyRuntime`) — 여기 도착하는 nil 은 **정말로 reader 가 없는
+	// 배포**뿐이다: 엔진 디렉터리를 정하지 못했거나 descriptor 가 아예 없는 경우.
 	strategyRuntime := strategyprojection.DormantSnapshot(r.clockNow())
 	if r.strategyRuntime != nil {
-		strategyRuntime, err = r.strategyRuntime.Read(ctx)
-		if err != nil {
-			return nil, err
+		value, readErr := r.strategyRuntime.Read(ctx)
+		if readErr != nil {
+			strategyRuntime = strategyprojection.UnavailableSnapshot(r.clockNow())
+		} else {
+			strategyRuntime = value
 		}
 	}
 	return json.Marshal(struct {
