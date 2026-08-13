@@ -8,10 +8,7 @@
 
 ### Requirement: strategy projection의 부재와 실패는 같은 강등이다
 
-httpapi는 strategy projection endpoint의 부재(descriptor 없음)와 연결 실패(descriptor는
-있으나 dial 불가)를 동일하게 처리해야 한다(SHALL): 전략 표면 없이 기동하고 나머지 API를
-제공한다. 잔재·죽은 endpoint가 httpapi를 재시작 루프에 빠뜨려서는 안 된다(SHALL NOT).
-descriptor의 존재 자체를 조사할 수 없는 환경 오류(권한 등)는 기동 거부로 남는다(SHALL).
+httpapi는 strategy projection endpoint의 부재(descriptor 없음)와 연결 실패(descriptor는 있으나 dial 불가)를 동일하게 처리해야 한다(SHALL): 전략 표면 없이 기동하고 나머지 API를 제공한다. 잔재·죽은 endpoint가 httpapi를 재시작 루프에 빠뜨려서는 안 된다(SHALL NOT). descriptor의 존재 자체를 조사할 수 없는 환경 오류(권한 등)는 기동 거부로 남는다(SHALL).
 
 #### Scenario: 반쪽 잔재 위의 httpapi 기동
 

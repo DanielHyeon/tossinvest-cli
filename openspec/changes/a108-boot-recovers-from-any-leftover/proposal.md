@@ -1,11 +1,13 @@
 # a108 — 부팅은 어떤 잔재에서도 회복한다
 
-## Why — 2026-08-13 23:35 KST 사고
+## Why
+
+**2026-08-13 23:35 KST 사고.**
 
 US 정규장 중 호스트가 재부팅됐고(`uptime -s` 2026-08-13 23:35:19), 그 뒤 **엔진이 영구
 기동 루프에 빠졌다.** 매 시도가 같은 줄에서 죽는다:
 
-```
+```text
 Error: strategy projection runtime: stale endpoint is incomplete
 ```
 
@@ -49,7 +51,9 @@ descriptor만)·position policy runtime·alert control은 `ErrExist`를 허용�
 `PreparePrivateSocket`이 낡은 socket을 치운다. **오늘 재부팅 잔재를 실제로 통과했다**
 (엔진이 그 단계들을 지나 :282에서 죽었다). 거부-영원 회수는 strategyprojectionrpc 하나뿐이다.
 
-## What Changes — 세 겹
+## What Changes
+
+세 겹이다.
 
 - **겹1 (회수의 전체성)**: `reclaimStaleControlDirectory`가 자기 수명주기가 만들 수 있는
   **모든** 부분 상태(descriptor만/socket만/빈 디렉터리/둘 다)를 검증 후 회수한다. 생존
