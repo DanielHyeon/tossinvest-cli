@@ -1,0 +1,44 @@
+{
+  "id": "STORY-TOS-a103",
+  "title": "The rollback pin is made, not remembered",
+  "feature": "FEAT-TOS-007",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a103-the-rollback-pin-is-made-not-remembered",
+    "path": "openspec/changes/a103-the-rollback-pin-is-made-not-remembered"
+  },
+  "found_by": {
+    "date": "2026-08-13",
+    "how": "Verifying the a098/a099 deploy at 11:03 KST. The new image 66553dba92d8 carried only tossos:local, so the next build would have taken that name and left the schema-31 image unreachable. docker tag appears exactly once in the whole repository, in a fenced block at docs/operations.md:276; no Makefile, script, or tool performs it.",
+    "record": "openspec/changes/a103-the-rollback-pin-is-made-not-remembered/proposal.md"
+  },
+  "prior_art": {
+    "note": "c1411dc7 (2026-08-12 09:03) added the operations.md section that warns about exactly this, written right after images 86c6e4d2 and e3cc6244 were both lost the same way. It failed 26 hours later.",
+    "why_not_a_reversal": "That commit's explanation of the mechanism is correct and is kept. What changes is where the step lives: a line that sits between two executed commands and is executed by nobody is a line that gets skipped, and writing it down a second time is repeating an experiment whose result is already in."
+  },
+  "acceptance": [
+    "Build and tag are one command — make image CHANGE=<id> — with no step in between for a person to remember",
+    "Before building, a previous image that would lose its only name refuses the build and says how to name it",
+    "After building, the new image is tagged tossos:<change>-<commit> automatically and the tag is read back and compared before success is reported",
+    "A docker that cannot be read is refused, not treated as 'nothing to lose'",
+    "A pin name that is already in use is refused, because docker tag moves a name rather than creating one",
+    "CHANGE reaches the validator as data, not as part of a shell command line",
+    "docs/operations.md points at the one command, and marks the bare docker compose build as first-install-only"
+  ],
+  "measured": {
+    "date": "2026-08-13",
+    "unit_tests": "18/18 in tools/deploy/test_image_pin.py, wired into make sdd-test and compileall so the judgement is actually reached by an automatic run",
+    "end_to_end": "7 scenarios executed against a stubbed docker on PATH, never the real daemon: daemon down (refuse), previous image tagged (pass, tag verified), previous image local-only (refuse), pin name taken (refuse), tag fails after build (rc=2, no success line), first build (pass), CHANGE carrying a shell escape (refuse, no file created)",
+    "mutation": "Two mutations of the first implementation each failed a distinct test; baseline restored and confirmed by md5"
+  },
+  "deviations": [
+    "The first implementation shipped to review with four critical defects and the independent review found all four. The post-build block chained with ';' so a failed docker tag still printed success and exited 0; the guard folded every docker error into 'no previous image'; a re-run at the same commit moved the pin off the previous image, a loss mode the change itself introduced; and CHANGE was interpolated into the recipe so a quote escaped the shell before the validator saw it. All four are fixed and each has a test.",
+    "The review also found that tools/deploy was in no test target, so the change's own stated reason for putting the judgement in Python did not hold until make sdd-test and compileall were extended."
+  ],
+  "limits": [
+    "This does not stop someone typing docker compose build by hand. It removes the reason to and marks the setup block as first-install-only, but the unguarded command still exists.",
+    "The refusal message asks the operator for the previous change id and commit, which the image does not carry — the Dockerfile stamps no revision label. Naming a stale pin from memory is still possible.",
+    "The pin is read back from the mutable tossos:local name after the build, so a concurrent build moving that tag between the two reads would pin the wrong image. There is no lock.",
+    "internal/deployguard and the digest-pinned release path are untouched: they produce plan values and run no Docker commands."
+  ]
+}
