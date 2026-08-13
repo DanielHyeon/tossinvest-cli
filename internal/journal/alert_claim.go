@@ -378,6 +378,7 @@ func (j *Journal) ReleaseAlertClaim(ctx context.Context, id int64, token string)
 		  WHERE id = ? AND state = ? AND claim_token = ?`,
 		[]any{id, AlertPending, token})
 }
+
 // AlertLease is the delivery-claim duration this instance issues.
 //
 // It is readable because the safety property it carries is not this package's to
