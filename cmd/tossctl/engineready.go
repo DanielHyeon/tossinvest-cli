@@ -29,6 +29,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -136,6 +137,57 @@ const (
 	engineLookAbsent
 )
 
+// engineProcInstance answers "which run of this pid is this?".
+//
+// boot_id changes when the machine reboots; starttime is the tick count at which
+// *this* run of the pid began and is fixed for its life. Together they are an
+// opaque identity compared for exact equality — no clock conversion, no skew
+// arithmetic, nothing to get wrong at a boundary.
+//
+// It is a package variable so tests can drive the comparison without forging
+// /proc, and so the read stays on this side of the line: internal/enginelock
+// carries the token and never learns what it means.
+//
+// Errors are answers here, not failures. A kernel without /proc, a process that
+// exited between the enumeration and this read, a permission refusal — each
+// returns an error, and the caller reads that as "cannot tell", which is not
+// ready.
+var engineProcInstance = func(pid int) (string, error) {
+	boot, err := os.ReadFile("/proc/sys/kernel/random/boot_id")
+	if err != nil {
+		return "", fmt.Errorf("engine: reading the boot id: %w", err)
+	}
+	stat, err := os.ReadFile(fmt.Sprintf("/proc/%d/stat", pid))
+	if err != nil {
+		return "", fmt.Errorf("engine: reading pid %d's stat: %w", pid, err)
+	}
+	started, err := procStartTicks(string(stat))
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(boot)) + ":" + started, nil
+}
+
+// procStartTicks pulls field 22 out of a /proc/<pid>/stat line.
+//
+// It cuts at the last ')' rather than splitting the whole line, because field 2
+// is the executable name in parentheses and an executable may legally be called
+// `hello ) world`. After that cut the remaining fields start at 3, so starttime
+// is index 19.
+func procStartTicks(stat string) (string, error) {
+	close := strings.LastIndex(stat, ")")
+	if close < 0 {
+		return "", fmt.Errorf("engine: /proc stat has no comm field")
+	}
+	fields := strings.Fields(stat[close+1:])
+	const startTimeIndex = 19 // field 22, counting from field 3
+	if len(fields) <= startTimeIndex {
+		return "", fmt.Errorf("engine: /proc stat has %d fields after comm, want more than %d",
+			len(fields), startTimeIndex)
+	}
+	return fields[startTimeIndex], nil
+}
+
 // readEngineSignal decides what one look at the engine means.
 //
 // The process list is the authority on liveness and the marker is the authority
@@ -147,24 +199,51 @@ const (
 //     reason ("A failed enumeration is not 'nothing is running'").
 //   - no engine process: absent, whatever the file says. A marker with ready_at
 //     and no process behind it is exactly the ghost a container recreate leaves.
-//   - ready_at present and the marker's pid is one of the live engines: ready.
+//   - ready_at present, the marker's pid is one of the live engines, AND that
+//     pid's process instance is the one that wrote the marker: ready.
 //   - anything else: not yet. That covers the boot window (process up, marker not
 //     written or not ready) and the corpse marker (process up, but a different
 //     one) — in both, the live engine is about to write its own marker.
-func readEngineSignal(status enginelock.Status, pids []int, findErr error) engineLook {
+//
+// # Why the pid alone is not enough
+//
+// A container recreate keeps the journal volume, so the predecessor's marker is
+// still fresh — refresh is one minute and staleness is five — and it carries
+// ready_at and PID P. The recreated PID namespace hands out PIDs
+// near-deterministically, so the replacement engine can be handed P again. From
+// the moment it is visible to pgrep until it writes its own marker at boot step
+// 6, `pid ∈ live ∧ ready_at ≠ nil` is true about a process that never ran that
+// recovery. That is our own deploy flow, not a contrived race (gstack review P1,
+// three models converging).
+//
+// The token closes it by identity rather than by timing: a reused pid has a
+// different starttime and a rebooted host a different boot_id. A marker with no
+// token — written by a build older than this one, or on a kernel with no /proc —
+// is "cannot tell", and cannot tell is not ready.
+func readEngineSignal(
+	status enginelock.Status,
+	pids []int,
+	findErr error,
+	instance func(int) (string, error),
+) engineLook {
 	if findErr != nil {
 		return engineLookNotYet
 	}
 	if len(pids) == 0 {
 		return engineLookAbsent
 	}
-	if !status.Ready() {
+	if !status.Ready() || strings.TrimSpace(status.Marker.ProcInstance) == "" || instance == nil {
 		return engineLookNotYet
 	}
 	for _, pid := range pids {
-		if pid == status.Marker.PID {
-			return engineLookReady
+		if pid != status.Marker.PID {
+			continue
 		}
+		token, err := instance(pid)
+		if err != nil || token != status.Marker.ProcInstance {
+			return engineLookNotYet
+		}
+		return engineLookReady
 	}
 	return engineLookNotYet
 }
@@ -187,7 +266,7 @@ func consoleEngineReadiness(dir, markerPath string, now func() time.Time) func()
 			at = now()
 		}
 		pids, findErr := engineFindProcesses(dir)
-		return readEngineSignal(enginelock.Read(markerPath, at), pids, findErr)
+		return readEngineSignal(enginelock.Read(markerPath, at), pids, findErr, engineProcInstance)
 	}
 }
 
@@ -210,17 +289,29 @@ const (
 
 // engineReadyCap is how long the boot survey waits for the ready signal.
 //
-// 120s covers the measured restart recovery (~50s: the survey cycle either side
-// of it ran 01:35:02 → 01:35:52 on 2026-08-13) with room for a rate-limit
-// backoff or two on top. It is deliberately shorter than the recovery's own
-// rate-limit budget (reconcile.DefaultMaxRateLimitWait, 5m): the cap is the
-// limit on *quiet waiting*, not on the recovery, and a survey that starts after
-// it is a contention the recovery's backoff now survives.
+// It is derived, not chosen: one constant governs both halves of this change, so
+// the survey never gives up quiet waiting while the engine's own rate-limit
+// budget is still running. That is the waiting form of the rule §1 already
+// states about backoff — the side holding protection does not get abandoned by
+// the side that is only reading.
 //
-// It is a constant and not a setting. Nothing in the incident this fixes turns on
-// tuning it, and a knob here would be a second place where the two halves of this
-// change could be made to disagree.
-const engineReadyCap = 2 * time.Minute
+// The first version picked 120s from the measured recovery (~50s: the survey
+// cycles either side of it ran 01:35:02 → 01:35:52 on 2026-08-13). Three review
+// passes converged on why that is too tight: the same measurement puts a single
+// account read at ~24s (2363 orders over 26 pages is the real account), so an
+// ordinary five-read morning is ~128s with no throttling at all. A cap that
+// trips on an ordinary morning is a cap that fails open exactly when fills are
+// landing and reads multiply — and failing open means the survey goes at the
+// budget the recovery is still spending.
+//
+// At five minutes, exceeding it no longer means "a busy open"; it means an
+// engine that is alive and has not said it is ready for longer than its own
+// recovery is allowed to wait. A dead engine still costs nothing, because
+// absence is checked every round rather than once.
+//
+// It is a constant and not a setting. A knob here would be a second place where
+// the two halves of this change could be made to disagree.
+const engineReadyCap = reconcile.DefaultMaxRateLimitWait
 
 // engineReadyPoll is how often the marker is re-read while waiting.
 //
@@ -257,7 +348,15 @@ func awaitEngineReady(
 		// (enginelock.Read is lenient about both).
 		return engineReadyNoEngine
 	}
-	if ctx != nil && ctx.Err() != nil {
+	if ctx == nil {
+		// Not defensive bookkeeping: clk.Sleep hands the context to a select on
+		// ctx.Done(), and the system clock dereferences it unconditionally. A nil
+		// here would panic inside the detached boot goroutine, which takes the
+		// whole console down — the one cost the survey may never impose (a102,
+		// gstack review; recoverThenReady normalises the same way).
+		ctx = context.Background()
+	}
+	if ctx.Err() != nil {
 		return engineReadyAbandoned
 	}
 	deadline := clk.Now().Add(limit)
@@ -278,16 +377,20 @@ func awaitEngineReady(
 }
 
 // engineReadyNote is what the operator reads about the wait. Every verdict has a
-// sentence: a survey that started 120 seconds late without saying why is the
-// silent cap the spec forbids.
-func engineReadyNote(verdict engineReadyVerdict) string {
+// sentence: a survey that started minutes late without saying why is the silent
+// cap the spec forbids.
+//
+// limit is the bound the wait actually ran under rather than the package
+// constant, so a caller that waits differently cannot make the note say a number
+// nobody waited.
+func engineReadyNote(verdict engineReadyVerdict, limit time.Duration) string {
 	switch verdict {
 	case engineReadyConfirmed:
 		return "엔진 준비 확인 후"
 	case engineReadyNoEngine:
 		return "살아 있는 엔진이 없어 대기 없이"
 	case engineReadyCapExceeded:
-		return fmt.Sprintf("엔진 준비 신호가 %s 안에 오지 않아 상한 초과 후", engineReadyCap)
+		return fmt.Sprintf("엔진 준비 신호가 %s 안에 오지 않아 상한 초과 후", limit)
 	case engineReadyAbandoned:
 		// The only verdict that stands alone: no start note follows it, so it is a
 		// finished sentence rather than the prefix the other three are.
@@ -325,8 +428,9 @@ func soakStartAfterEngineReady(
 ) func() (string, error) {
 	return func() (string, error) {
 		verdict := awaitEngineReady(ctx, observe, clk, engineReadyCap, engineReadyPoll)
+		note := engineReadyNote(verdict, engineReadyCap)
 		if verdict == engineReadyAbandoned {
-			return engineReadyNote(verdict), nil
+			return note, nil
 		}
 		if start == nil {
 			// runConfiguredSoakAutostart already answers "this build has no soak
@@ -336,11 +440,11 @@ func soakStartAfterEngineReady(
 			// which is the one thing the survey may never cost (a101).
 			return "", errSoakBootNoStartWiring
 		}
-		note, err := start()
-		if strings.TrimSpace(note) == "" {
-			return engineReadyNote(verdict), err
+		started, err := start()
+		if strings.TrimSpace(started) == "" {
+			return note, err
 		}
-		return engineReadyNote(verdict) + " " + note, err
+		return note + " " + started, err
 	}
 }
 

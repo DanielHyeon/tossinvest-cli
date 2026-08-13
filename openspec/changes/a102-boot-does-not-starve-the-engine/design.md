@@ -115,6 +115,27 @@ refresh가 마커를 부활시키는 갈래(결정적 재현 — 편집 전에�
 - `Release`는 뮤텍스 아래에서 live 플래그를 끄고, refresh는 그것을 확인해
   쓰기를 건너뛴다 (부활 차단).
 
+**D4b-2 (gstack 리뷰 P1 정정 — Codex 2패스·Claude 적대 3모델 수렴) — PID는
+인스턴스가 아니다.** 컨테이너 recreate는 D4b의 PID 등식을 뚫는다: journal
+볼륨은 살아남으므로 전임자의 마커가 신선한 채(`refresh` 1분 주기 < StaleAfter
+5분) `ready_at`+PID P를 담고 있고, **재생성된 PID namespace는 PID 배정이
+사실상 결정적**이라 교체 엔진이 같은 P를 받을 수 있다. 교체 엔진이 pgrep에
+보이는 시점부터 step 6 `Hold`가 마커를 덮어쓰기 전까지 몇 초 동안
+`pid==P ∧ ready_at≠nil`이 성립해 서베이가 교체 엔진의 복구 예산을 때린다 —
+바로 우리 배포 flow의 시나리오다. 따라서:
+
+- 마커에 **프로세스 인스턴스 토큰**을 추가한다: `/proc/sys/kernel/random/boot_id`와
+  `/proc/<pid>/stat`의 starttime ticks를 합친 opaque 문자열
+  (`json:"proc_instance,omitempty"`). 시계 환산·스큐 산술 없이 **정확 일치**로
+  비교한다 — PID 재사용은 starttime이 다르고, 재부팅은 boot_id가 다르다.
+- 토큰 계산은 cmd 쪽 seam이다(enginelock은 OS 열거 무지를 유지한다 — D4b와
+  같은 선). 엔진은 `Hold`에 자기 토큰을 넘겨 마커에 싣고, 콘솔은 산 후보 pid의
+  토큰을 읽어 마커의 것과 비교한다.
+- ready 판정은 이제 세 가지 전부다: `ReadyAt != nil` ∧ 마커 PID가 산 집합에
+  있음 ∧ **그 pid의 인스턴스 토큰이 마커의 것과 일치**.
+- 토큰 부재(구 마커·비Linux dev)·읽기 실패 → not-yet (보수 방향: 상한까지
+  기다린 뒤 시작 — "모름을 준비됨으로 읽지 않는다").
+
 ### D5 — 마킹은 cmd의 Recover 클로저에서 한다
 
 런타임은 `opts.Recover`를 루프 시작 전에 부른다(`internal/app/engine/runtime.go:289-294`).
@@ -158,6 +179,24 @@ awaitEngineReady(ctx, observe func() enginelock.Status, clk, cap, poll) verdict
 준비 지연을 초 단위로 감지하면 충분.
 
 새 상수는 설정 노브가 아니다(YAGNI) — 근거 주석을 단 상수로 둔다.
+
+**D6-2 (gstack 리뷰 3패스 수렴 정정) — cap은 겹1의 예산에서 유도한다.**
+120s는 *측정된* 2회 판독(~50s) 기준인데, 그 측정의 판독당 비용(~24s — 2363건
+주문·26페이지가 실제 운영 계좌다)으로 5회 판독 아침을 계산하면 스로틀 **없이도**
+~128s다. 체결이 착지 중인 개장 계좌가 바로 판독 수가 늘어나는 계좌이고, 상한
+초과는 fail-open이라 서베이가 복구가 아직 쓰는 예산을 때린다 — 상한이 평범한
+아침에 걸리면 겹2의 목적이 그 꼬리에서 무너진다 (Claude 적대 F1, performance,
+security 독립 수렴). 따라서:
+
+- `engineReadyCap = reconcile.DefaultMaxRateLimitWait` (5m) — 상수 하나가 양쪽
+  절반을 지배한다. 서베이는 엔진의 429 예산이 소진되기 전에는 조용한 대기를
+  포기하지 않는다: "보호를 든 쪽보다 조회만 하는 쪽이 먼저 포기하지 않는다"의
+  대기 버전이다.
+- 엔진이 죽으면 absent가 **매 회** 확인되므로 큰 상한이 서베이를 불필요하게
+  미루지 않는다 (D6의 기존 규칙 그대로). 이제 cap 초과는 평범한 아침이 아니라
+  "살아는 있는데 5분 넘게 준비를 말하지 않는 엔진"만을 뜻하고, 노트의 문장도
+  그만큼 무거워진다.
+- poll 2s는 유지 — 근거 불변.
 
 ### D7 — 대기는 goroutine이고 기존 함수는 안 바꾼다
 
@@ -209,7 +248,13 @@ goroutine의 시작 경로와 버튼의 restartSoak 경로를 직렬화한다. �
   서베이 기동과 무관해진다. probe 주석의 거짓 전제는 그대로 남지만, 그 주석을
   고치는 것은 별도 change다.
 - 자동시작 supervisor화 — 이 change는 죽지 않게 하는 쪽이다.
-- `Recovery.Run`의 replay/observation 경로 429 — 관측된 실패 없음, not-applicable.
+- `Recovery.Run`의 replay/resolution 경로 429 — 관측된 실패 없음, not-applicable.
+  **gstack 리뷰가 정밀화** (Claude 적대 F3): 두 호출부(`recovery.go`의 replay·
+  resolution wrap)가 `%v`라 429 정체가 지워지고, step 2는 in-doubt attempt가
+  있을 때만 돌므로 **dirty-crash 재시작**에서는 a102의 인내가 닿지 않는다 —
+  실패 양식은 오늘과 같은 fail-closed다. 여기에 백오프를 넣는 것은 조회 재시도가
+  아니라 **취소·인수 의미론이 걸린 경로의 재시도 설계**라 별도 change가 필요하다.
+  후속 후보로 등록한다.
 - **취소가 `Runtime.Run` 밖으로 나가는 계약** (A2 F9 후반) — recovery가 nil을
   돌려준 채 ctx가 이미 취소돼 있으면 `rt.Run`이 `context.Canceled`를 반환해
   "nil = 정상 배수" 주석과 어긋난다. 고치려면 `internal/app/engine` 편집이
@@ -222,7 +267,28 @@ goroutine의 시작 경로와 버튼의 restartSoak 경로를 직렬화한다. �
   (기다리는 청산이 옳은가 자체가 설계 질문이다), 관측된 실패 사례도 아직 없다.
   후속 change 후보로 등록하며, 침묵한 생략이 아니라 **선언된 생략**이다.
 
-## 배포 주의 (A1 F14)
+### gstack 리뷰(§5.3)가 추가한 선언된 생략
+
+- **429 재시도의 전체 재수집** (performance·Codex 수렴) — 스로틀된 Collect
+  재시도는 1페이지부터 다시 걷는다(26페이지 계좌에서 최악 ~546 페이지 요청/예산).
+  15s 간격이 요청 속도를 묶지만, cursor 재개는 `execgw.ScanOrders` 계약 변경이라
+  별도 change다.
+- **대기 중 관측·대시보드의 Ready 표기** (Claude 적대 F6, Codex 7·8) — obs 한
+  줄은 복구가 끝난 뒤에 남고, `Status.Ready()`를 그리는 화면이 없다. 5분 창을
+  실시간으로 보려면 콘솔 템플릿 변경이 필요하다 — 후속 후보.
+- **취소 중 부분 백오프의 미계상** (Claude 적대 F9) — 첫 백오프 중 취소면
+  `RateLimitWaits=0`이라 observer가 침묵한다. 운영자 주도 종료 경로의 관측
+  정밀도 문제이고 보호 경로가 아니다 — 기록만 한다.
+- **pgrep 실행의 무제한 대기** (Codex 6) — `exec.Command(...).Output()`에
+  context·timeout이 없어 procfs가 멈춘 host에서는 관측 goroutine이 멈춘다.
+  콘솔 화면은 안 막히고(분리 goroutine) 서베이만 안 뜬다. pgrep seam은 a102
+  이전부터 있던 표면이라(다른 소비자 셋 공유) 일괄 timeout 도입은 별도 change다.
+- **spawn 게이트의 프로세스-로컬성** (Codex 5) — 겹치는 콘솔 둘은 여전히 이중
+  spawn이 가능하다. a102 이전에도 같은 check-then-act가 게이트 없이 있었고,
+  D7b는 비동기화가 **새로 연** 프로세스 내 창만 닫았다. 교차 프로세스 배타는
+  soakproc의 flock 도입이라 별도 change다.
+- **콘솔 stderr 콜백의 미조인 goroutine** (Claude 적대 F11) — 운영은
+  `os.Stderr`라 무해하고, cobra의 버퍼 writer는 테스트에서만 쓰인다. 기록만.
 
 **겹1을 겹2 없이 운영에 올리지 않는다.** 겹1 단독이면: marker는 recovery보다
 먼저 생기므로 대기 5분 내내 "Running·신선"이고, T2 이전의 콘솔은 그것만 보고

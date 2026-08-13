@@ -63,6 +63,16 @@ func TestTheReadySignalReachesTheMarkerThroughTheRuntimeSeam(t *testing.T) {
 	if afterRecovery.Marker.PID != os.Getpid() {
 		t.Errorf("the ready marker names pid %d, want this process", afterRecovery.Marker.PID)
 	}
+	// a102 §3.9c(D4b-2) — pid 없이는 어느 실행이 그 복구를 했는지 말할 수 없다. 컨테이너
+	// recreate가 교체 엔진에 같은 pid를 물려주면 전임자의 ready_at이 그 pid로 참이 된다.
+	selfToken, terr := engineProcInstance(os.Getpid())
+	if terr != nil {
+		t.Skipf("this kernel has no /proc: %v", terr)
+	}
+	if afterRecovery.Marker.ProcInstance != selfToken {
+		t.Errorf("the ready marker's proc_instance = %q, want this run's %q",
+			afterRecovery.Marker.ProcInstance, selfToken)
+	}
 	if status := enginelock.Read(markerPath, time.Now()); status.Ready() {
 		t.Error("the ready marker survived the command returning")
 	}

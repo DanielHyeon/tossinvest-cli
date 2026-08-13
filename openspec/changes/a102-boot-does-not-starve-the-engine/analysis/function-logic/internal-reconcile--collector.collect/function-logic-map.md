@@ -1,6 +1,6 @@
 # Function Logic Map: `Collector.Collect`
 
-- Source: `internal/reconcile/snapshot.go` (245-295)
+- Source: `internal/reconcile/snapshot.go` (256-306)
 - AST evidence: `ast.json` — AST 기준 branches **8** / returns 6 / calls 17 / defers 0 / go_statements 0
 - Risk scan: `risk-pattern-report.md` (매치 없음)
 - source SHA-256: `9cb72654892fda5456759435653fc5bf01f9f616e6a4dd7d2dbf87f916497c90`
@@ -11,7 +11,7 @@
 
 | | 1판 (편집 전) | **2판 (편집 후, 이 문서)** |
 |---|---|---|
-| 위치 | `snapshot.go:232-282` | **`:245-295`** (주석 13줄만큼 밀렸다) |
+| 위치 | `snapshot.go:232-282` | **`:256-306`** (§1의 주석 13줄 + §3.9c의 %w 파급 주석 11줄만큼 밀렸다) |
 | 분기 | 8 | **8** (동일) |
 | 이탈 | 6 | **6** (동일) |
 | 호출 | 17 | **17** (동일) |

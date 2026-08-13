@@ -1,9 +1,9 @@
 # Function Logic Map: `runEngineRun`
 
-- Source: `cmd/tossctl/engine.go` (183-301)
-- AST evidence: `ast.json` — AST 기준 branches **18** / returns 14 / calls 53 / defers 9
+- Source: `cmd/tossctl/engine.go` (183-309)
+- AST evidence: `ast.json` — AST 기준 branches **19** / returns 14 / calls 56 / defers 9
 - Risk scan: `risk-pattern-report.md` (매치 없음)
-- source SHA-256: `8ad1cc88b9e0a0181c0a1c50a1fbcbdad4a6f85a6786e316c527ba5565274110`
+- source SHA-256: `ee527a6a917ab5342bdc4e853d6a8d015a9b56534c1971096220f2288a520d3f`
 - 작성 사유: a102 §3(D4·D5) — 6단계의 `enginelock.Hold` 반환이 핸들로 바뀌고, 7단계의
   `engineRuntimeFactory` 호출이 ready seam을 하나 더 넘긴다. **기존 함수의 내부를 편집하므로
   편집 전에 만든다.** 주문·손절 루프의 기동 경로이므로 High-risk다.
@@ -11,8 +11,12 @@
 > **두 판을 병기한다.** 1판(편집 전)은 `:183-296` · 분기 18 · 이탈 14 · 호출 51 ·
 > SHA `f13e36b35e08…` · 블록 37개 중 21개 실행(526건 통과)였고, 2판(GREEN 후, 이 문서)은
 > `:183-301` · 분기 **18**(그대로) · 이탈 14(그대로) · 호출 **53** · SHA `8ad1cc88b9e0…` ·
-> 블록 **39개 중 22개 실행**(550건 통과)다. **분기와 이탈이 하나도 늘지 않았다** —
-> 늘어난 것은 호출 둘(`marker.Release`·`marker.Ready`)뿐이다.
+> 블록 **39개 중 22개 실행**(550건 통과)였다.
+>
+> **3판(§3.9c, 이 문서)** `:183-309` · 분기 **19** · 이탈 14 · 호출 **56** ·
+> SHA `ee527a6a917a…` · 블록 **41개 중 25개 실행**(572건 통과). 늘어난 분기 하나는
+> 6단계에 붙은 `engineProcInstance` 호출의 오류 검사(B10)다 — 토큰을 못 구하면 마커에
+> 아무것도 싣지 않고, 콘솔은 그것을 "모름"으로 읽어 기다린다.
 > a098의 FLM은 다른 base다 — 이것이 a102의 재기준이다.
 
 ## 이 함수가 하는 일
@@ -57,17 +61,18 @@ a102가 닿는 것은 **6과 7의 경계**다: 6이 만든 핸들의 `Ready`를 
 | B7 | `:219` | `!ectx.Automation.Verified` | — | `:220` `errEngineGateOff` |
 | B8 | `:229` | `engineVerifyLockPath` 성공 | — | — |
 | B9 | `:230` | verify runlock 신선 | stderr 한 줄 | `:233` `errVerifyInProgress` |
-| B10 | `:241` | `merr != nil` (마커 못 씀) | stderr note | **return 없음** |
-| B11 | `:245` | else | stdout `active marker …` | — |
-| B12 | `:257` | `engineRuntimeFactory` 오류 | — | `:258` |
-| B13 | `:261` | `NewPositionPolicyCommandService` 오류 | — | `:262` |
-| B14 | `:265` | `StartPositionPolicyCommandServer` 오류 | — | `:266` |
-| B15 | `:270` | `StartPositionPolicyRuntimeServer` 오류 | — | `:271` |
-| B16 | `:275` | `strategyprojectionrpc.Start` 오류 | — | `:276` |
-| B17 | `:283` | `ectx.AlertOperations` 오류 | — | `:284` |
-| B18 | `:287` | `StartAlertControlServer` 오류 | — | `:288` |
+| B10 | `:246` | `engineProcInstance(os.Getpid())` 성공 | `marker.Identify(token)` | **return 없음** — 못 구하면 아무것도 안 싣는다 |
+| B11 | `:249` | `merr != nil` (마커 못 씀) | stderr note | **return 없음** |
+| B12 | `:253` | else | stdout `active marker …` | — |
+| B13 | `:265` | `engineRuntimeFactory` 오류 | — | `:266` |
+| B14 | `:269` | `NewPositionPolicyCommandService` 오류 | — | `:270` |
+| B15 | `:273` | `StartPositionPolicyCommandServer` 오류 | — | `:274` |
+| B16 | `:278` | `StartPositionPolicyRuntimeServer` 오류 | — | `:279` |
+| B17 | `:283` | `strategyprojectionrpc.Start` 오류 | — | `:284` |
+| B18 | `:291` | `ectx.AlertOperations` 오류 | — | `:292` |
+| B19 | `:295` | `StartAlertControlServer` 오류 | — | `:296` |
 
-정상 이탈: `:300` `return rt.Run(runCtx)`.
+정상 이탈: `:308` `return rt.Run(runCtx)`.
 
 ## Calls and live bindings
 
@@ -77,9 +82,10 @@ a102가 닿는 것은 **6과 7의 경계**다: 6이 만든 핸들의 `Ready`를 
 | `engineAssemble` `:206` | 프로필 조립 (seam 변수) | 인터록 미충족은 절 열거 후 거절 | `engine.go:303` |
 | `runlock.Fresh` `:230` | 검증 진행 확인 | 파일 mtime | ast.json |
 | **`enginelock.Hold(ctx, markerPath, clk.Now())` `:239`** | **6단계 마커** | 오류는 거절이 아니다 | ast.json · **a102 D4의 편집 지점** |
-| **`engineRuntimeFactory(ctx, ectx, clk, logger, ready)` `:256`** | **7단계 루프 조립** (seam 변수) | 오류는 즉시 return | `engine.go:354` · **a102 D5의 편집 지점** |
-| `watchStopSignals(cancel, out)` `:297` | 2회 시그널 규율 | — | ast.json |
-| `rt.Run(runCtx)` `:300` | 감독 실행 | 이 함수의 최종 return | ast.json |
+| **`engineProcInstance(os.Getpid())` `:246`** | **6단계 — 이 실행의 인스턴스 토큰** | 오류면 아무것도 싣지 않는다(콘솔이 기다린다) | ast.json · **a102 D4b-2** |
+| **`engineRuntimeFactory(ctx, ectx, clk, logger, ready)` `:264`** | **7단계 루프 조립** (seam 변수) | 오류는 즉시 return | `engine.go:366` · **a102 D5의 편집 지점** |
+| `watchStopSignals(cancel, out)` `:305` | 2회 시그널 규율 | — | ast.json |
+| `rt.Run(runCtx)` `:308` | 감독 실행 | 이 함수의 최종 return | ast.json |
 
 live binding — `defer` 9개가 역순 해제를 만든다: lock → ectx.Close → **marker.Release** →
 policyControl → policyRuntime → strategyRuntime → alertControl → cancel → stopWatching.
@@ -95,12 +101,12 @@ policyControl → policyRuntime → strategyRuntime → alertControl → cancel 
 
 ## Safety conclusion
 
-- Safe edit boundary: `:239-240`(핸들 수신 + `defer marker.Release()`)과 `:256`(ready seam
-  인자 추가) **두 줄**. **실제로 그 두 줄이었다.**
+- Safe edit boundary: `:239-240`(핸들 수신 + `defer marker.Release()`), `:264`(ready seam
+  인자 추가), 그리고 §3.9c가 더한 `:246-248`(인스턴스 토큰). **1~5단계의 거절은 불변이다.**
   1~5단계의 조건·순서·문구는 불변이다. **거절의 개수와 순서가 바뀌면 안 된다.**
 - High-risk impact: **yes** — 손절을 두는 루프의 기동 경로다. 다만 a102의 방향은 보수적이다:
   ready 신호는 **추가 정보**일 뿐이고, 그것을 못 써도 오늘과 같은 엔진이 뜬다.
-- 물려받은 공백: B1·B2·B10·B13~B18의 본문이 편집 전·후 모두 count=0이다(`branch-test-map.md`).
+- 물려받은 공백: B1·B2·B11·B14~B19의 본문이 편집 전·후 모두 count=0이다(`branch-test-map.md`).
   **B10이 특히 문제다** — a102가 그 줄 바로 위를 편집하는데 그 분기는 미측정이다.
   a102는 B10을 새로 메우지 않는다(마커 쓰기 실패를 만드는 것은 이 change의 범위가 아니다).
   대신 **핸들의 no-op 계약을 `internal/enginelock` 쪽에서** 고정한다 — 실패한 Hold의

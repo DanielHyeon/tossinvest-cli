@@ -1,31 +1,33 @@
 # Branch Test Map: `write`
 
-Source: `internal/enginelock/enginelock.go` (340-382). AST 기준 branches **8** / returns 9.
+Source: `internal/enginelock/enginelock.go` (405-447). AST 기준 branches **8** / returns 9.
 
 ## 커버리지는 주장이 아니라 측정값이다
 
 `go test ./internal/enginelock -count=1 -covermode=set -coverprofile` (24건 통과 · `write`
-**53.6%** statements · 블록 17개 중 9개 실행).
+**60.7%** statements · 블록 17개 중 11개 실행).
 
 | Branch | 위치 | 본문 실행 | 근거 블록 | 지는 테스트 |
 |---|---|---|---|---|
-| B1 | `:342` `MkdirAll` 오류 | **yes** | `342.48,344.3` count=**1** | `TestAFailedHoldPublishesNothing` |
-| B2 | `:347` 직렬화 오류 | **no** | `347.16,349.3` count=**0** | 없음 — `Marker`는 언제나 직렬화된다 |
-| B3 | `:352` `CreateTemp` 오류 | **no** | `352.16,354.3` count=**0** | 없음 |
-| B4 | `:356` 임시 파일 쓰기 오류 | **no** | `356.57,360.3` count=**0** | 없음 |
-| B5 | `:361` `Close` 오류 | **no** | `361.36,364.3` count=**0** | 없음 |
-| B6 | `:365` `Chmod` 오류 | **no** | `365.48,368.3` count=**0** | 없음 |
-| B7 | `:373` `Chtimes` 오류 | **no** | `373.51,376.3` count=**0** | 없음 |
-| B8 | `:377` `Rename` 오류 | **no** | `377.48,380.3` count=**0** | 없음 |
+| B1 | `:407` `MkdirAll` 오류 | **yes** | `407.48,409.3` count=**1** | `TestAFailedHoldPublishesNothing` |
+| B2 | `:412` 직렬화 오류 | **no** | `412.16,414.3` count=**0** | 없음 — `Marker`는 언제나 직렬화된다 |
+| B3 | `:417` `CreateTemp` 오류 | **no** | `417.16,419.3` count=**0** | 없음 |
+| B4 | `:421` 임시 파일 쓰기 오류 | **no** | `421.57,425.3` count=**0** | 없음 |
+| B5 | `:426` `Close` 오류 | **no** | `426.36,429.3` count=**0** | 없음 |
+| B6 | `:430` `Chmod` 오류 | **no** | `430.48,433.3` count=**0** | 없음 |
+| B7 | `:438` `Chtimes` 오류 | **no** | `438.51,441.3` count=**0** | 없음 |
+| B8 | `:442` `Rename` 오류 | **yes** | `442.48,445.3` count=**1** ← §3.9c | 없음 |
 
-정상 경로(`:381` `return nil`)는 `340.55,342.48`·`345.2,347.16`·`351.2,352.16`·
-`355.2,356.57`·`361.2`·`365.2`·`373.2`·`377.2`·`381.2`가 전부 count=1이다 —
+정상 경로(`:446` `return nil`)는 `405.55,407.48`·`410.2,412.16`·`416.2,417.16`·
+`420.2,421.57`·`426.2`·`430.2`·`438.2`·`442.2`·`446.2`가 전부 count=1이다 —
 **교체의 여덟 단계가 순서대로 실행된다.**
 
-> ⚠ **여덟 실패 분기는 전부 미측정이다.** 만들려면 파일시스템을 중간에 고장 내야 하고,
+> ⚠ **여덟 실패 분기 중 여섯이 미측정이다** (§3.9c에서 B8이 측정으로 넘어왔다). 만들려면 파일시스템을 중간에 고장 내야 하고,
 > 이 change는 그 주입 지점을 만들지 않는다(YAGNI: 노브 하나가 마커 쓰기 경로에 생긴다).
-> B1만 예외로 잡히는데, `MkdirAll`은 경로 상위가 파일일 때 실패하고 그것은 파일로 만들 수
-> 있기 때문이다. **침묵하지 않고 이름을 붙여 남긴다.**
+> B1은 `MkdirAll`이 경로 상위가 파일일 때 실패하므로 잡히고, **B8은 §3.9c가 잡았다** —
+> `rename`은 대상이 비어 있지 않은 디렉터리면 실패하고, 그것이 이 함수가 만드는 유일한
+> 도달 가능한 교체 실패다(`TestAFailedReplacementLeavesNoStagingFile`).
+> 나머지 여섯(B2~B7)은 그대로다. **침묵하지 않고 이름을 붙여 남긴다.**
 >
 > 대신 **성공 경로가 가진 성질**은 전부 측정으로 고정했다 — 그것이 A2 F3이 요구한 것이다.
 
@@ -36,20 +38,24 @@ Source: `internal/enginelock/enginelock.go` (340-382). AST 기준 branches **8**
 | 독자가 반쪽 파일을 보지 않는다 | `TestTheMarkerIsNeverReadHalfWritten` | 편집 전 **torn=30761 / 52239 reads**, 편집 후 **0** |
 | 갱신이 `ready_at`을 잃지 않는다 | `TestRefreshPreservesTheReadySignal` · 같은 위 테스트의 `lost-ready` | 편집 후 0 |
 | 파일 모드가 0600이다 | `TestTheMarkerFileKeepsItsMode` | 실측 0600 |
-| 임시 파일이 남지 않는다 | `TestAFailedWriteLeavesNoDebris` | `.engine-run-*` 0건 |
+| 임시 파일이 남지 않는다 (성공 경로) | `TestAFailedWriteLeavesNoDebris` | `.engine-run-*` 0건 |
+| **교체가 실패해도 임시 파일이 남지 않는다** | `TestAFailedReplacementLeavesNoStagingFile` (§3.9c) | rename 실패 후 `.engine-run-*` 0건 |
 | mtime이 주입된 시계의 것이다 | `TestAHeldMarkerReadsAsRunning` · `TestAStaleMarkerIsNotARunningEngine` (기존) | 무회귀 |
 
 ## 뮤테이션 정산
 
 | 뮤테이션 | 가한 것 | 죽은 테스트 | 원복 |
 |---|---|---|---|
-| **(l)** | 원자 교체 앞에 `os.WriteFile`+`Chtimes`를 되돌려 넣는다 (편집 전 형태) | `TestTheMarkerIsNeverReadHalfWritten` | sha `9399c1d68e1d` 동일 |
-| **(d)** | `refresh`가 쓰기 직전 `ReadyAt = nil` | `TestRefreshPreservesTheReadySignal` · `TestTheMarkerIsNeverReadHalfWritten` | sha `9399c1d68e1d` 동일 |
+| **(l)** | 원자 교체 앞에 `os.WriteFile`+`Chtimes`를 되돌려 넣는다 (편집 전 형태) | `TestTheMarkerIsNeverReadHalfWritten` | sha `e615b0c66ce3` 동일 |
+| **(d)** | `refresh`가 쓰기 직전 `ReadyAt = nil` | `TestRefreshPreservesTheReadySignal` · `TestTheMarkerIsNeverReadHalfWritten` | sha `e615b0c66ce3` 동일 |
+| **(T4)** §3.9c | `refresh`의 write를 뮤텍스 밖으로 (§3.9 이전 형태) | `TestReadyAndRefreshRacingDoNotLoseTheSignal` | sha `e615b0c66ce3` 동일 |
+| **(T5)** §3.9c | `Ready`의 `!h.live` 가드 제거 | `TestReadyAfterReleaseDoesNotResurrectTheMarker` | sha `e615b0c66ce3` 동일 |
+| **(T6)** §3.9c | rename 실패 경로의 `os.Remove(staged)` 제거 | `TestAFailedReplacementLeavesNoStagingFile` | sha `e615b0c66ce3` 동일 |
 
 ## 산출물 근거
 
 - 분기·이탈 열거: `ast.json` (branches 8, returns 9) — `go run ./tools/logic-map`
 - 커버리지: `go test ./internal/enginelock -count=1 -covermode=set -coverprofile` exit 0 ·
-  **24건 통과** · `-race` 포함 통과
+  **27건 통과** · `-race` 포함 통과
 - 호출자 전수: `rg -n 'write\(' internal/enginelock/enginelock.go` → `Hold`(첫 쓰기) ·
-  `(*Held).Ready` · `(*Held).refresh` — **뒤의 둘은 `h.mu`를 잡은 채 부른다**
+  `(*Held).Ready` · `(*Held).refresh` · `(*Held).Identify`(§3.9c) — **뒤의 셋은 `h.mu`를 잡은 채 부른다**

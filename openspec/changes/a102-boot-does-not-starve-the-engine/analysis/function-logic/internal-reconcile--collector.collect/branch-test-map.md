@@ -1,10 +1,10 @@
 # Branch Test Map: `Collector.Collect`
 
-Source: `internal/reconcile/snapshot.go` (245-295). AST 기준 branches **8** / returns 6.
+Source: `internal/reconcile/snapshot.go` (256-306). AST 기준 branches **8** / returns 6.
 
 ## 커버리지는 주장이 아니라 측정값이다
 
-편집 전(`:232-282`, 130건 통과)과 편집 후(`:245-295`, 143건 통과 · 86.6%)를 같은 명령
+편집 전(`:232-282`, 130건 통과)과 편집 후(`:256-306`, 147건 통과 · 86.6%)를 같은 명령
 `go test ./internal/reconcile/ -count=1 -coverprofile`으로 재고 블록 카운트를 잘라 읽었다.
 
 | Branch | 위치 | 조건 평가 | 본문 실행 | 근거 블록 (편집 후) |

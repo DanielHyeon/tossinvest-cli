@@ -1,9 +1,9 @@
 # Function Logic Map: `write`
 
-- Source: `internal/enginelock/enginelock.go` (340-382)
+- Source: `internal/enginelock/enginelock.go` (405-447)
 - AST evidence: `ast.json` — AST 기준 branches **8** / returns 9 / calls 26
 - Risk scan: `risk-pattern-report.md` (매치 없음)
-- source SHA-256: `9399c1d68e1dfad16f6b1334f9875897e8025a88b94beb370354ffb11f318f8d`
+- source SHA-256: `e615b0c66ce3ecb71540cb96f5bcf81ed0240530af5c1aac430a577e0c582b38`
 - 작성 사유: a102 §3.9(D4c, A2 F3) — 파일 교체를 `os.WriteFile`에서 tmp+rename으로 바꾼다.
   **기존 함수의 내부를 편집하므로 편집 전에 만든다.** 마커는 콘솔·서베이·자동시작이 읽는
   신호이고 a102 이후로는 "보호가 서 있다"까지 담으므로 High-risk다.
@@ -12,12 +12,12 @@
 
 | | 1판 (편집 전, `6cd643ca`) | **2판 (이 문서)** |
 |---|---|---|
-| 위치 | `:305-324` | **`:340-382`** |
+| 위치 | `:305-324` | **`:405-447`** |
 | 분기 | 3 | **8** |
 | 이탈 | 4 | **9** |
 | 호출 | 8 | **26** |
 | 교체 방식 | `os.WriteFile`(O_TRUNC) → `os.Chtimes` | **tmp 생성 → 쓰기 → chmod → chtimes → rename** |
-| source SHA-256 | `b4ee6b24394a…` | **`9399c1d68e1d…`** |
+| source SHA-256 | `b4ee6b24394a…` | **`e615b0c66ce3…`** |
 
 분기가 다섯 늘어난 것은 전부 **원자 교체의 실패 경로**다. 각 단계가 실패하면 임시 파일을
 지우고 오류를 돌려준다 — 저널 디렉터리에 쓰레기를 남기지 않기 위해서다.
@@ -51,34 +51,34 @@ reader는 파싱 실패를 "running, build unknown"으로 강등하는데(패키
 
 | Branch | 위치 | Condition | Mutation/side effect | Return/이탈 |
 |---|---|---|---|---|
-| B1 | `:342` | `os.MkdirAll(dir)` 오류 | 없음 | `:343` |
-| B2 | `:347` | `json.MarshalIndent` 오류 | 없음 | `:348` |
-| B3 | `:352` | `os.CreateTemp` 오류 | 없음 | `:353` |
-| B4 | `:356` | 임시 파일 쓰기 오류 | `Close` + **`Remove`** | `:359` |
-| B5 | `:361` | `Close` 오류 | **`Remove`** | `:363` |
-| B6 | `:365` | `Chmod` 오류 | **`Remove`** | `:367` |
-| B7 | `:373` | `Chtimes` 오류 | **`Remove`** | `:375` |
-| B8 | `:377` | `Rename` 오류 | **`Remove`** | `:379` |
+| B1 | `:407` | `os.MkdirAll(dir)` 오류 | 없음 | `:408` |
+| B2 | `:412` | `json.MarshalIndent` 오류 | 없음 | `:413` |
+| B3 | `:417` | `os.CreateTemp` 오류 | 없음 | `:418` |
+| B4 | `:421` | 임시 파일 쓰기 오류 | `Close` + **`Remove`** | `:424` |
+| B5 | `:426` | `Close` 오류 | **`Remove`** | `:428` |
+| B6 | `:430` | `Chmod` 오류 | **`Remove`** | `:432` |
+| B7 | `:438` | `Chtimes` 오류 | **`Remove`** | `:440` |
+| B8 | `:442` | `Rename` 오류 | **`Remove`** | `:444` |
 
-정상 이탈: `:381` `return nil`.
+정상 이탈: `:446` `return nil`.
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `filepath.Dir(path)` `:341` | 임시 파일을 같은 디렉터리에 | — | ast.json |
-| `os.MkdirAll` `:342` | 첫 실행의 저널 디렉터리 | B1 | ast.json |
-| `json.MarshalIndent` `:347` | 사람이 `cat`으로 읽는 형식 | B2 | ast.json |
-| `os.CreateTemp` `:352` | 원자 교체의 준비 (0600으로 생성) | B3 | ast.json |
-| `tmp.Write` `:356` | 본문 | B4 — 지우고 반환 | ast.json |
-| `tmp.Close` `:361` | flush | B5 | ast.json |
-| `os.Chmod` `:365` | 0600 **명시** (umask와 무관하게) | B6 | ast.json |
-| `os.Chtimes` `:373` | **rename 전에** mtime 고정 | B7 | ast.json |
-| `os.Rename` `:377` | **원자 교체** | B8 | ast.json |
+| `filepath.Dir(path)` `:406` | 임시 파일을 같은 디렉터리에 | — | ast.json |
+| `os.MkdirAll` `:407` | 첫 실행의 저널 디렉터리 | B1 | ast.json |
+| `json.MarshalIndent` `:412` | 사람이 `cat`으로 읽는 형식 | B2 | ast.json |
+| `os.CreateTemp` `:417` | 원자 교체의 준비 (0600으로 생성) | B3 | ast.json |
+| `tmp.Write` `:421` | 본문 | B4 — 지우고 반환 | ast.json |
+| `tmp.Close` `:426` | flush | B5 | ast.json |
+| `os.Chmod` `:430` | 0600 **명시** (umask와 무관하게) | B6 | ast.json |
+| `os.Chtimes` `:438` | **rename 전에** mtime 고정 | B7 | ast.json |
+| `os.Rename` `:442` | **원자 교체** | B8 | ast.json |
 | `os.Remove` (실패 경로 5회) | 쓰레기 제거 | 반환값은 무시한다 — 이미 오류를 들고 나간다 | ast.json |
 
-live binding — 호출자는 셋이고 전부 이 패키지 안이다: `Hold`(`:301`, 첫 쓰기) ·
-`(*Held).Ready`(`:264`) · `(*Held).refresh`(`:284`). **뒤의 둘은 `h.mu`를 잡은 채 부른다**
+live binding — 호출자는 셋이고 전부 이 패키지 안이다: `Hold`(`:366`, 첫 쓰기) ·
+`(*Held).Ready`(`:325`) · `(*Held).refresh`(`:349`) · `(*Held).Identify`(`:296`). **뒤의 둘은 `h.mu`를 잡은 채 부른다**
 — A2 F3의 나머지 절반(뮤텍스가 메모리만 덮고 파일은 안 덮던 것)이 그 이동으로 닫힌다.
 
 ## State mutations and fallbacks
@@ -95,7 +95,7 @@ live binding — 호출자는 셋이고 전부 이 패키지 안이다: `Hold`(`
 - High-risk impact: **yes** — 이 파일이 "엔진이 살아 있다"와 "보호가 서 있다"를 동시에 말한다.
   방향은 보수적이다: 실패하면 **마커가 갱신되지 않을 뿐**이고, 그것은 StaleAfter로 늙어
   "엔진 없음"이 된다 — 서베이는 그때 오늘의 동작(즉시 시작)으로 돌아간다.
-- 남은 공백: 여덟 분기의 **본문은 전부 count=0**이다(`branch-test-map.md`). 실패 경로를
+- 남은 공백: 여덟 분기 중 **여섯의 본문이 count=0**이다(§3.9c가 B8을 잡았다)(`branch-test-map.md`). 실패 경로를
   만들려면 파일시스템을 고장 내야 하고, 이 change는 그 주입 지점을 만들지 않는다.
   **침묵하지 않고 이름을 붙여 남긴다** — 대신 성공 경로의 *성질*(원자성·모드·쓰레기 없음)은
   전부 측정으로 고정했다.

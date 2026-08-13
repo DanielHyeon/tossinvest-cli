@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -298,6 +299,106 @@ func TestReleaseWinsAgainstConcurrentRefreshes(t *testing.T) {
 
 	if _, statErr := os.Stat(path); !errors.Is(statErr, os.ErrNotExist) {
 		t.Fatal("concurrent refreshes brought the marker back after Release")
+	}
+}
+
+// TestReadyAndRefreshRacingDoNotLoseTheSignal is the gap the gstack review's
+// testing pass called critical.
+//
+// 커밋된 두 동시성 테스트는 **둘 다 refresh보다 먼저 `Ready`를 부른다.** 그래서 D4c가 옮긴
+// "write를 뮤텍스 안에서"를 되돌려도 스위트가 초록이었다 — 고정되지 않은 불변식이다.
+// 여기서는 둘을 같은 순간에 걸고, 매 시행마다 **디스크의** ready_at 생존을 본다.
+func TestReadyAndRefreshRacingDoNotLoseTheSignal(t *testing.T) {
+	const trials = 200
+	for i := 0; i < trials; i++ {
+		path := MarkerPath(t.TempDir())
+		held, err := Hold(context.Background(), path, a102Now)
+		if err != nil {
+			t.Fatalf("trial %d Hold: %v", i, err)
+		}
+
+		readyAt := a102Now.Add(50 * time.Second)
+		start := make(chan struct{})
+		var wg sync.WaitGroup
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			<-start
+			held.Ready(readyAt)
+		}()
+		go func() {
+			defer wg.Done()
+			<-start
+			_ = held.refresh(a102Now.Add(RefreshEvery))
+		}()
+		close(start)
+		wg.Wait()
+
+		got := readMarkerFile(t, path)
+		if got.ReadyAt == nil {
+			t.Fatalf("trial %d: a concurrent refresh erased the ready signal from disk", i)
+		}
+		if !got.ReadyAt.Equal(readyAt) {
+			t.Fatalf("trial %d: ready_at = %s, want %s", i, got.ReadyAt, readyAt)
+		}
+		if status := Read(path, a102Now.Add(RefreshEvery+time.Second)); status.Marker.ReadyAt == nil {
+			t.Fatalf("trial %d: the reader lost the ready signal", i)
+		}
+		held.Release()
+	}
+}
+
+// TestReadyAfterReleaseDoesNotResurrectTheMarker. `Release` 뒤의 `Ready`는 정지한
+// 엔진이 "보호가 서 있다"를 다시 남기는 것이다 — refresh 쪽은 §3.9에서 막았고, 이쪽은
+// 같은 `!h.live` 가드가 지는데 고정하는 테스트가 없었다.
+func TestReadyAfterReleaseDoesNotResurrectTheMarker(t *testing.T) {
+	path := MarkerPath(t.TempDir())
+	held, err := Hold(context.Background(), path, a102Now)
+	if err != nil {
+		t.Fatalf("Hold: %v", err)
+	}
+	held.Release()
+	held.Ready(a102Now.Add(50 * time.Second))
+	held.Identify("boot-a:900")
+
+	if _, statErr := os.Stat(path); !errors.Is(statErr, os.ErrNotExist) {
+		body, _ := os.ReadFile(path)
+		t.Fatalf("Ready after Release recreated the marker: %v\n%s", statErr, body)
+	}
+	if status := Read(path, a102Now.Add(time.Second)); status.Ready() {
+		t.Fatal("a stopped engine reads as ready")
+	}
+}
+
+// TestAFailedReplacementLeavesNoStagingFile is the cleanup half of the atomic
+// write, and it is the half nothing reached: every os.Remove(staged) in write is
+// on a failure path, and the suite only ever walked the success path.
+//
+// rename은 대상이 **비어 있지 않은 디렉터리**면 실패한다. 그것이 이 함수가 만드는 유일한
+// 도달 가능한 실패다.
+func TestAFailedReplacementLeavesNoStagingFile(t *testing.T) {
+	dir := t.TempDir()
+	path := MarkerPath(dir)
+	if err := os.MkdirAll(filepath.Join(path, "occupied"), 0o700); err != nil {
+		t.Fatalf("blocking the marker path: %v", err)
+	}
+
+	err := write(path, Marker{PID: 4242}, a102Now)
+	if err == nil {
+		t.Fatal("writing over a non-empty directory reported success")
+	}
+	if !strings.Contains(err.Error(), path) {
+		t.Errorf("err = %v, want it to name the marker it could not publish", err)
+	}
+
+	entries, rerr := os.ReadDir(dir)
+	if rerr != nil {
+		t.Fatalf("ReadDir: %v", rerr)
+	}
+	for _, e := range entries {
+		if strings.HasPrefix(e.Name(), ".engine-run-") {
+			t.Errorf("a staging file survived a failed replacement: %s", e.Name())
+		}
 	}
 }
 

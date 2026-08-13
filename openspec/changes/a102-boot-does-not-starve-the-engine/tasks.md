@@ -171,15 +171,59 @@ Teammate는 여기·design.md에 없는 결정이 필요해지면 **멈추고 Ma
   **588건 통과**(enginelock 24 + tossctl 564) · `-race` 통과 · 무회귀 1442건 ·
   `make lint` rc=0 · `check_analysis` rc=0.
 
+- [x] 3.9c [T] **gstack /review 반영 (FIX-FIRST — Manager 발주)** —
+  코드 4: ① D4b-2: 프로세스 인스턴스 토큰(boot_id+starttime ticks, 정확 일치;
+  부재·실패는 not-yet) — PID 재사용 P1 (Codex 2패스+Claude 적대 3모델 수렴)
+  ② D6-2: `engineReadyCap = reconcile.DefaultMaxRateLimitWait` 유도 + 주석·
+  테스트 산술(60→150회) ③ `awaitEngineReady` nil ctx를 `context.Background()`로
+  정규화 + 테스트 (security·testing·Claude 적대 3패스 수렴 — clk.Sleep 역참조
+  패닉이 콘솔을 죽인다) ④ `engineReadyNote(verdict, limit)` — 실제 대기한
+  한도를 문장에 (maintainability+Claude 적대).
+  테스트 5: ⑤ Ready↔refresh **동시** 경주 반복 시행 회귀 테스트 (testing
+  CRITICAL — 커밋된 두 동시성 테스트 모두 refresh 전에 Ready를 불러 D4c의
+  뮤텍스 안 write를 되돌려도 초록) ⑥ Release 후 Ready가 마커를 부활시키지
+  않음 ⑦ rename 실패 시 staging 파일 무잔재 (6곳 cleanup 전부 현재 도달 불가)
+  ⑧ recoverThenReady nil ctx/nil ready 표 테스트 ⑨ spawnOneSurvey·
+  guardedSoakRestart nil start 직접 단언.
+  문서 3: ⑩ enginelock 패키지 doc·markerNote·Marker doc — pre-a102 파급
+  서술("잘못 그린 상태 줄뿐")을 ready_at 이후로 갱신 ⑪ engineRuntime doc
+  주석을 godoc 규약으로(심볼명 선두, ready 설명은 뒤로) ⑫ snapshot.go 주석에
+  %w 확장이 429 밖(ErrAuth 등)도 노출함을 명기 (Claude 적대 F7 — 잠재).
+  → ① `Marker.ProcInstance`(`proc_instance,omitempty`) + `(*Held).Identify(token)` +
+  cmd의 `engineProcInstance`(boot_id + `/proc/<pid>/stat` field 22, **정확 일치**) +
+  `procStartTicks`(마지막 `)`에서 자른다 — comm에 괄호가 들어갈 수 있다). ready 판정 셋:
+  `ReadyAt≠nil ∧ pid∈산 집합 ∧ 토큰 일치`. 토큰 부재·읽기 실패·reader 없음 → not-yet.
+  RED→GREEN: `TestAReusedPIDIsNotTheSameEngine`(같은 pid·다른 인스턴스 → not-yet).
+  enginelock에 프로세스 열거는 넣지 않았다.
+  ② `engineReadyCap = reconcile.DefaultMaxRateLimitWait`(5m). 산술 테스트는 상수에서
+  유도하므로 60→**150회**로 자동 갱신됐고, `TestTheCapIsTheRecoverysOwnBudget`이 유도 자체와
+  "absent는 매 회 확인"을 함께 고정한다.
+  ③ `awaitEngineReady` 진입부 `ctx = context.Background()` +
+  `TestANilContextDoesNotTakeTheConsoleDownWithIt`(패닉을 `recover()`로 잡아 이름 있는 실패로).
+  ④ `engineReadyNote(verdict, limit)` + `TestTheCapNoteNamesTheLimitThatWasActuallyUsed`.
+  ⑤ `TestReadyAndRefreshRacingDoNotLoseTheSignal` — 200회 시행, 두 goroutine 동시 출발,
+  매회 디스크의 ready_at 생존 단언(`-race` 포함). ⑥ `TestReadyAfterReleaseDoesNotResurrectTheMarker`.
+  ⑦ `TestAFailedReplacementLeavesNoStagingFile` — 마커 경로에 비어 있지 않은 디렉터리를 놓아
+  rename을 실패시킨다(`write`의 B8이 미측정에서 측정으로: 53.6%→**60.7%**).
+  ⑧ `TestRecoverThenReadyToleratesTheNilsItsCallersCanSupply`(표 2행).
+  ⑨ `TestASpawnWithNothingToSpawnSaysSoRatherThanPanicking` — 게이트가 잠긴 채 남지 않는 것까지.
+  ⑩ 패키지 doc에 "a102 이후 마커가 rate 예산 스케줄링을 좌우한다" 절 + `markerNote`에
+  ready_at/proc_instance 손대면 어떻게 되는지 + `Marker` doc의 개수 서술을 역할 서술로.
+  ⑪ `engineRuntime` doc을 godoc 규약으로(심볼명 선두). ⑫ `Collect` doc에 %w 확장이
+  `ErrAuth`·`ErrIPNotAllowed`·`ErrServer`·`*APIError`도 노출함을 명기(현 소비자 없음).
+  **뮤테이션 29건 전부 사멸**(신규 T1~T9 포함; 좌표가 바뀐 N2·n은 재앵커 후 재사멸).
+  **601건 통과**(enginelock 27 + tossctl 574) · `-race` 통과 · 무회귀 1442건 ·
+  `make lint` rc=0 · `check_analysis` rc=0.
+
 ## 4. T2 — 산출물 정리
 
 - [x] 4.1 tasks 체크 + 커밋 (제목에 [a102 §3])
 
 ## 5. 리뷰 (Manager가 발주)
 
-- [ ] 5.1 A1: T1 커밋 적대 리뷰 → 지적은 T1이 고치고 재커밋, 왕복 기록을
-  review.md에
-- [ ] 5.2 A2: T2 커밋 적대 리뷰 → 동일
+- [x] 5.1 A1: T1 커밋 적대 리뷰 → 지적은 T1이 고치고 재커밋 (831cbc08),
+  왕복 기록을 review.md에
+- [x] 5.2 A2: T2 커밋 적대 리뷰 → 동일 (9daa052c·9e184687, 재검증 MERGE-OK)
 - [ ] 5.3 gstack /review (브랜치 전체) → Fix-First 정산 → review.md 종합
 
 ## 6. Manager 완료 검증

@@ -16,6 +16,8 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"os/exec"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -143,6 +145,50 @@ func TestACancelledRecoveryNeverPublishesReady(t *testing.T) {
 	if ready != 0 {
 		t.Fatalf("ready called %d times on a cancelled recovery, want 0", ready)
 	}
+}
+
+// TestRecoverThenReadyToleratesTheNilsItsCallersCanSupply.
+//
+// 두 nil은 서로 다른 자리에서 온다. ctx는 `Runtime.Run`이 주는 것이고, 그 계약이 nil을
+// 금지하지 않는다 — nil이면 `ctx.Err()`에서 부팅 중에 패닉한다. ready는 테스트 배선이
+// nil로 넘긴다(`engineRuntime(…, nil)`), 그것이 성공 경로를 깨면 안 된다.
+func TestRecoverThenReadyToleratesTheNilsItsCallersCanSupply(t *testing.T) {
+	t.Run("nil ctx, ready 있음", func(t *testing.T) {
+		ready := 0
+		var seen context.Context
+		recover := recoverThenReady(
+			func(ctx context.Context) (reconcile.Report, error) {
+				seen = ctx
+				return reconcile.Report{}, nil
+			},
+			func() { ready++ },
+			nil,
+		)
+		//nolint:staticcheck // nil ctx 는 이 함수가 정규화해야 하는 입력이다.
+		if err := recover(nil); err != nil {
+			t.Fatalf("err = %v, want nil", err)
+		}
+		if seen == nil {
+			t.Fatal("the recovery was handed the nil context through")
+		}
+		if seen.Err() != nil {
+			t.Fatalf("the substituted context is already done: %v", seen.Err())
+		}
+		if ready != 1 {
+			t.Fatalf("ready called %d times, want 1", ready)
+		}
+	})
+
+	t.Run("실 ctx, nil ready", func(t *testing.T) {
+		recover := recoverThenReady(
+			func(context.Context) (reconcile.Report, error) { return reconcile.Report{}, nil },
+			nil,
+			nil,
+		)
+		if err := recover(context.Background()); err != nil {
+			t.Fatalf("err = %v, want nil — a build with no ready seam still recovers", err)
+		}
+	})
 }
 
 // --- D5b (A1 F1): the wait is not silent ----------------------------------------
@@ -302,7 +348,7 @@ func TestTheWaitStopsAtTheCap(t *testing.T) {
 
 	if verdict != engineReadyCapExceeded {
 		t.Fatalf("verdict = %v after %d waits, want cap-exceeded (%q)",
-			verdict, len(clk.waits), engineReadyNote(engineReadyCapExceeded))
+			verdict, len(clk.waits), engineReadyNote(engineReadyCapExceeded, engineReadyCap))
 	}
 	wantPolls := int(engineReadyCap / engineReadyPoll)
 	if len(clk.waits) != wantPolls {
@@ -355,6 +401,44 @@ func TestAnAlreadyClosedConsoleStartsNothing(t *testing.T) {
 	}
 }
 
+// TestANilContextDoesNotTakeTheConsoleDownWithIt.
+//
+// `Runtime`이 아니라 콘솔의 goroutine이 이 함수를 부른다. ctx가 nil이면 `clk.Sleep`이
+// `<-ctx.Done()`을 무조건 역참조하고, 그 패닉은 분리된 goroutine에서 일어나 **콘솔 프로세스
+// 전체**를 죽인다 — 서베이가 결코 물려서는 안 되는 유일한 대가다. `recoverThenReady`가
+// 이미 하는 정규화를 여기서도 한다.
+func TestANilContextDoesNotTakeTheConsoleDownWithIt(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("a nil context panicked inside the wait: %v", r)
+		}
+	}()
+	clk := newA102Clock()
+	marks := &observations{script: []engineLook{engineLookNotYet, engineLookReady}}
+
+	//nolint:staticcheck // nil ctx 는 이 함수가 정규화해야 하는 입력이다.
+	if verdict := awaitEngineReady(nil, marks.observe, clk,
+		engineReadyCap, engineReadyPoll); verdict != engineReadyConfirmed {
+		t.Fatalf("verdict = %v, want confirmed", verdict)
+	}
+	if len(clk.waits) != 1 {
+		t.Errorf("waited %v, want one poll", clk.waits)
+	}
+}
+
+// TestTheCapNoteNamesTheLimitThatWasActuallyUsed. 문장이 패키지 상수를 읽으면, 다른
+// 한도로 기다린 호출자의 노트가 아무도 기다리지 않은 숫자를 말한다.
+func TestTheCapNoteNamesTheLimitThatWasActuallyUsed(t *testing.T) {
+	other := 37 * time.Second
+	note := engineReadyNote(engineReadyCapExceeded, other)
+	if !strings.Contains(note, other.String()) {
+		t.Fatalf("note = %q, want it to name %s", note, other)
+	}
+	if strings.Contains(note, engineReadyCap.String()) {
+		t.Errorf("note = %q, want the actual limit rather than the package constant", note)
+	}
+}
+
 // TestWithoutAMarkerReaderThereIsNothingToWaitFor. 콘솔이 엔진 디렉터리를 못 풀면
 // `engineMarkerPath`가 빈 문자열이다(console.go:282 else). 그 경우는 "엔진 없음"이다.
 func TestWithoutAMarkerReaderThereIsNothingToWaitFor(t *testing.T) {
@@ -365,23 +449,37 @@ func TestWithoutAMarkerReaderThereIsNothingToWaitFor(t *testing.T) {
 	}
 }
 
-// TestTheCapAndPollAreTheMeasuredNumbers. 120s는 실측 복구 ~50s
-// (2026-08-13 01:35:02→01:35:52)에 429 여유를 더한 값이고, 겹1의 5분 예산보다 **짧아야**
-// 한다 — 상한은 조용한 대기의 끝일 뿐, 그 뒤의 경합은 겹1이 생존시킨다.
-func TestTheCapAndPollAreTheMeasuredNumbers(t *testing.T) {
-	if engineReadyCap != 2*time.Minute {
-		t.Errorf("cap = %s, want 120s", engineReadyCap)
+// TestTheCapIsTheRecoverysOwnBudget is D6-2.
+//
+// 첫 판의 120s는 *실측* 2회 판독(~50s)에서 골랐는데, 같은 실측의 판독당 비용(~24s —
+// 2363건 주문·26페이지가 실제 운영 계좌다)으로 5회 판독 아침을 계산하면 스로틀 **없이도**
+// ~128s다. 상한 초과는 fail-open이므로, 평범한 아침에 걸리는 상한은 서베이를 복구가 아직
+// 쓰는 예산으로 밀어 넣는다 — 겹2의 목적이 바로 그 꼬리에서 무너진다.
+//
+// 그래서 상수 하나가 양쪽 절반을 지배한다: 서베이는 엔진의 429 예산이 소진되기 전에는
+// 조용한 대기를 포기하지 않는다.
+func TestTheCapIsTheRecoverysOwnBudget(t *testing.T) {
+	if engineReadyCap != reconcile.DefaultMaxRateLimitWait {
+		t.Errorf("cap = %s, want the recovery's rate-limit budget %s",
+			engineReadyCap, reconcile.DefaultMaxRateLimitWait)
 	}
 	if engineReadyPoll != 2*time.Second {
 		t.Errorf("poll = %s, want 2s", engineReadyPoll)
 	}
-	if engineReadyCap >= reconcile.DefaultMaxRateLimitWait {
-		t.Errorf("cap %s is not shorter than the recovery's rate-limit budget %s",
-			engineReadyCap, reconcile.DefaultMaxRateLimitWait)
-	}
 	if engineReadyPoll >= enginelock.RefreshEvery {
 		t.Errorf("poll %s is not finer than the marker refresh %s",
 			engineReadyPoll, enginelock.RefreshEvery)
+	}
+	// 큰 상한이 안전한 이유는 죽은 엔진을 매 회 확인하기 때문이다 — 그 규칙이 사라지면
+	// 이 값은 서베이를 5분 미루는 값이 된다.
+	clk := newA102Clock()
+	marks := &observations{script: []engineLook{engineLookAbsent}}
+	if verdict := awaitEngineReady(context.Background(), marks.observe, clk,
+		engineReadyCap, engineReadyPoll); verdict != engineReadyNoEngine {
+		t.Fatalf("verdict = %v, want no-engine without waiting", verdict)
+	}
+	if len(clk.waits) != 0 {
+		t.Fatalf("waited %v for an engine that is not there", clk.waits)
 	}
 }
 
@@ -394,7 +492,7 @@ func TestEveryVerdictSaysWhichOneItWas(t *testing.T) {
 	for _, verdict := range []engineReadyVerdict{
 		engineReadyConfirmed, engineReadyNoEngine, engineReadyCapExceeded, engineReadyAbandoned,
 	} {
-		note := engineReadyNote(verdict)
+		note := engineReadyNote(verdict, engineReadyCap)
 		if strings.TrimSpace(note) == "" {
 			t.Fatalf("verdict %v produced no note", verdict)
 		}
@@ -403,12 +501,12 @@ func TestEveryVerdictSaysWhichOneItWas(t *testing.T) {
 		}
 		seen[note] = true
 	}
-	if !strings.Contains(engineReadyNote(engineReadyCapExceeded), engineReadyCap.String()) {
+	if !strings.Contains(engineReadyNote(engineReadyCapExceeded, engineReadyCap), engineReadyCap.String()) {
 		t.Errorf("the cap-exceeded note does not say how long it waited: %q",
-			engineReadyNote(engineReadyCapExceeded))
+			engineReadyNote(engineReadyCapExceeded, engineReadyCap))
 	}
 	// 새 verdict가 생겼는데 문장을 안 붙이면 그것이 조용한 대기가 된다.
-	if strings.TrimSpace(engineReadyNote(engineReadyVerdict(99))) == "" {
+	if strings.TrimSpace(engineReadyNote(engineReadyVerdict(99), engineReadyCap)) == "" {
 		t.Error("an unknown verdict says nothing at all")
 	}
 }
@@ -425,8 +523,8 @@ func TestASilentStartStillLeavesTheVerdict(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err = %v, want nil", err)
 	}
-	if note != engineReadyNote(engineReadyCapExceeded) {
-		t.Fatalf("note = %q, want the bare verdict %q", note, engineReadyNote(engineReadyCapExceeded))
+	if note != engineReadyNote(engineReadyCapExceeded, engineReadyCap) {
+		t.Fatalf("note = %q, want the bare verdict %q", note, engineReadyNote(engineReadyCapExceeded, engineReadyCap))
 	}
 }
 
@@ -455,7 +553,7 @@ func TestTheSurveyStartsAfterTheSignalAndSaysSo(t *testing.T) {
 	if err != nil || started != 1 {
 		t.Fatalf("started=%d err=%v, want exactly one start", started, err)
 	}
-	for _, want := range []string{engineReadyNote(engineReadyConfirmed), "새로 시작했다"} {
+	for _, want := range []string{engineReadyNote(engineReadyConfirmed, engineReadyCap), "새로 시작했다"} {
 		if !strings.Contains(note, want) {
 			t.Errorf("note=%q, missing %q", note, want)
 		}
@@ -477,7 +575,7 @@ func TestTheSurveyStartsAnywayAfterTheCapAndSaysSo(t *testing.T) {
 	if started != 1 {
 		t.Fatalf("started=%d, want 1 — the attestation clock has to keep running", started)
 	}
-	if !strings.Contains(note, engineReadyNote(engineReadyCapExceeded)) {
+	if !strings.Contains(note, engineReadyNote(engineReadyCapExceeded, engineReadyCap)) {
 		t.Errorf("note=%q, want the cap named — a silent cap is forbidden", note)
 	}
 }
@@ -497,7 +595,7 @@ func TestNoEngineMeansTodaysBehaviour(t *testing.T) {
 	if len(clk.waits) != 0 {
 		t.Errorf("waited %v before starting, want none", clk.waits)
 	}
-	if !strings.Contains(note, engineReadyNote(engineReadyNoEngine)) {
+	if !strings.Contains(note, engineReadyNote(engineReadyNoEngine, engineReadyCap)) {
 		t.Errorf("note=%q, want the reason named", note)
 	}
 }
@@ -558,6 +656,131 @@ func TestAFailedStartKeepsItsOwnWords(t *testing.T) {
 
 // --- D4b: the signal has to belong to a process that is still alive --------------
 
+// 마커의 토큰과 살아 있는 프로세스의 토큰이 같은 경우(정상 기동)와 다른 경우(pid 재사용).
+const (
+	engineInstanceA = "boot-a:900"
+	engineInstanceB = "boot-a:1731"
+)
+
+func fixedInstance(token string) func(int) (string, error) {
+	return func(int) (string, error) { return token, nil }
+}
+
+func failingInstance(err error) func(int) (string, error) {
+	return func(int) (string, error) { return "", err }
+}
+
+func readyMarkerOf(pid int, instance string, at time.Time) enginelock.Status {
+	stamp := at.UTC()
+	return enginelock.Status{
+		Running: true,
+		Marker:  enginelock.Marker{PID: pid, ReadyAt: &stamp, ProcInstance: instance},
+	}
+}
+
+// TestAReusedPIDIsNotTheSameEngine is the gstack review's P1, and it is our own
+// deploy flow rather than a contrived race.
+//
+// 컨테이너 recreate는 journal 볼륨을 살려 두므로 전임자의 마커가 신선한 채(refresh 1분 <
+// StaleAfter 5분) ready_at과 PID P를 담고 있다. 재생성된 PID namespace는 배정이 사실상
+// 결정적이라 **교체 엔진이 같은 P를 받을 수 있다.** 그 순간부터 step 6의 Hold가 마커를
+// 덮어쓰기 전까지 `pid ∈ 산 집합 ∧ ready_at ≠ nil`이 참인데, 그 참은 그 복구를 한 적
+// 없는 프로세스에 대한 것이다.
+func TestAReusedPIDIsNotTheSameEngine(t *testing.T) {
+	at := time.Date(2026, 8, 13, 2, 3, 29, 0, time.UTC)
+	predecessor := readyMarkerOf(4242, engineInstanceA, at)
+
+	// 같은 pid, 다른 인스턴스 — 교체 엔진이다. 아직 준비되지 않았다.
+	if got := readEngineSignal(predecessor, []int{4242}, nil,
+		fixedInstance(engineInstanceB)); got != engineLookNotYet {
+		t.Fatalf("look = %v, want not-yet — a recycled pid was read as the engine that recovered", got)
+	}
+	// 같은 pid, 같은 인스턴스 — 그 마커를 쓴 바로 그 프로세스다.
+	if got := readEngineSignal(predecessor, []int{4242}, nil,
+		fixedInstance(engineInstanceA)); got != engineLookReady {
+		t.Fatalf("look = %v, want ready — the live engine's own signal was ignored", got)
+	}
+}
+
+// TestAnUnreadableOrMissingInstanceIsNotReadiness. 토큰이 없거나(구 마커·/proc 없는
+// 커널) 읽을 수 없으면 "모름"이고, 모름은 준비됨이 아니다 — 상한까지 기다린 뒤 시작한다.
+func TestAnUnreadableOrMissingInstanceIsNotReadiness(t *testing.T) {
+	at := time.Date(2026, 8, 13, 2, 3, 29, 0, time.UTC)
+
+	tokenless := readyMarkerOf(4242, "", at)
+	if got := readEngineSignal(tokenless, []int{4242}, nil,
+		fixedInstance(engineInstanceA)); got != engineLookNotYet {
+		t.Errorf("look = %v, want not-yet for a marker with no proc_instance", got)
+	}
+	blank := readyMarkerOf(4242, "   ", at)
+	if got := readEngineSignal(blank, []int{4242}, nil,
+		fixedInstance("   ")); got != engineLookNotYet {
+		t.Errorf("look = %v, want not-yet for a blank proc_instance", got)
+	}
+	live := readyMarkerOf(4242, engineInstanceA, at)
+	if got := readEngineSignal(live, []int{4242}, nil,
+		failingInstance(errors.New("no /proc"))); got != engineLookNotYet {
+		t.Errorf("look = %v, want not-yet when the instance cannot be read", got)
+	}
+	if got := readEngineSignal(live, []int{4242}, nil, nil); got != engineLookNotYet {
+		t.Errorf("look = %v, want not-yet with no instance reader at all", got)
+	}
+}
+
+// TestTheInstanceTokenSeparatesRunsOfThisProcess is the token itself, measured
+// against the only process this test may read: its own, and a child it spawned.
+func TestTheInstanceTokenSeparatesRunsOfThisProcess(t *testing.T) {
+	self, err := engineProcInstance(os.Getpid())
+	if err != nil {
+		t.Skipf("this kernel has no /proc: %v", err)
+	}
+	if self == "" || !strings.Contains(self, ":") {
+		t.Fatalf("token = %q, want boot id and start ticks joined", self)
+	}
+	again, err := engineProcInstance(os.Getpid())
+	if err != nil || again != self {
+		t.Fatalf("token moved for one live process: %q then %q (%v)", self, again, err)
+	}
+
+	child := exec.Command("/bin/sh", "-c", "sleep 30")
+	if err := child.Start(); err != nil {
+		t.Skipf("cannot spawn a child here: %v", err)
+	}
+	t.Cleanup(func() { _ = child.Process.Kill(); _ = child.Wait() })
+	other, err := engineProcInstance(child.Process.Pid)
+	if err != nil {
+		t.Fatalf("reading the child's instance: %v", err)
+	}
+	if other == self {
+		t.Fatal("two different processes produced the same instance token")
+	}
+	if boot, _, ok := strings.Cut(self, ":"); !ok || !strings.HasPrefix(other, boot+":") {
+		t.Errorf("the two tokens do not share a boot id: %q vs %q", self, other)
+	}
+}
+
+// TestAProcStatWithAParenthesisInItsNameStillParses. field 2는 괄호 안의 실행 파일
+// 이름이고, 이름에 괄호가 들어갈 수 있다. 마지막 ')'에서 자르지 않으면 엉뚱한 필드를 읽는다.
+func TestAProcStatWithAParenthesisInItsNameStillParses(t *testing.T) {
+	tail := ""
+	for i := 3; i <= 22; i++ {
+		tail += " " + strconv.Itoa(i*100)
+	}
+	got, err := procStartTicks("4242 (weird ) name)" + tail)
+	if err != nil {
+		t.Fatalf("procStartTicks: %v", err)
+	}
+	if got != "2200" {
+		t.Fatalf("starttime = %q, want field 22 (2200)", got)
+	}
+	if _, err := procStartTicks("4242 (short) 1 2 3"); err == nil {
+		t.Error("a truncated stat line was accepted")
+	}
+	if _, err := procStartTicks("nothing here"); err == nil {
+		t.Error("a stat line with no comm field was accepted")
+	}
+}
+
 // TestACorpsesReadyMarkerIsNotAReadyEngine is A2 F1, the finding that made this
 // round FIX-FIRST.
 //
@@ -569,19 +792,19 @@ func TestACorpsesReadyMarkerIsNotAReadyEngine(t *testing.T) {
 	stamp := time.Date(2026, 8, 13, 2, 3, 29, 0, time.UTC)
 	corpse := enginelock.Status{
 		Running: true,
-		Marker:  enginelock.Marker{PID: 4242, ReadyAt: &stamp},
+		Marker:  enginelock.Marker{PID: 4242, ReadyAt: &stamp, ProcInstance: engineInstanceA},
 	}
 
 	// 대체 엔진(pid 5150)이 살아 있고, 디스크의 ready_at은 죽은 4242의 것이다.
-	if got := readEngineSignal(corpse, []int{5150}, nil); got != engineLookNotYet {
+	if got := readEngineSignal(corpse, []int{5150}, nil, fixedInstance(engineInstanceA)); got != engineLookNotYet {
 		t.Fatalf("look = %v, want not-yet — a dead engine's ready_at was read as protection", got)
 	}
 	// 같은 마커라도 그 pid가 살아 있으면 준비다.
-	if got := readEngineSignal(corpse, []int{4242}, nil); got != engineLookReady {
+	if got := readEngineSignal(corpse, []int{4242}, nil, fixedInstance(engineInstanceA)); got != engineLookReady {
 		t.Fatalf("look = %v, want ready — the live engine's own signal was ignored", got)
 	}
 	// 살아 있는 엔진이 하나도 없으면 유령 마커는 기다릴 이유가 아니다 (오늘의 동작).
-	if got := readEngineSignal(corpse, nil, nil); got != engineLookAbsent {
+	if got := readEngineSignal(corpse, nil, nil, fixedInstance(engineInstanceA)); got != engineLookAbsent {
 		t.Fatalf("look = %v, want absent — a ghost marker made the survey wait", got)
 	}
 }
@@ -596,7 +819,7 @@ func TestAnEngineWithNoSignalYetIsWorthWaitingFor(t *testing.T) {
 		{"마커 없음", enginelock.Status{}},
 		{"마커는 있으나 신호 없음", enginelock.Status{Running: true, Marker: enginelock.Marker{PID: 5150}}},
 	} {
-		if got := readEngineSignal(tc.status, []int{5150}, nil); got != engineLookNotYet {
+		if got := readEngineSignal(tc.status, []int{5150}, nil, fixedInstance(engineInstanceA)); got != engineLookNotYet {
 			t.Errorf("%s: look = %v, want not-yet", tc.name, got)
 		}
 	}
@@ -607,13 +830,13 @@ func TestAnEngineWithNoSignalYetIsWorthWaitingFor(t *testing.T) {
 // 기다린 뒤 시작하므로 대가는 유한하다.
 func TestAFailedEnumerationIsNeitherAbsenceNorReadiness(t *testing.T) {
 	stamp := time.Date(2026, 8, 13, 2, 3, 29, 0, time.UTC)
-	live := enginelock.Status{Running: true, Marker: enginelock.Marker{PID: 4242, ReadyAt: &stamp}}
+	live := readyMarkerOf(4242, engineInstanceA, stamp)
 	broken := errors.New("pgrep unavailable")
 
-	if got := readEngineSignal(live, []int{4242}, broken); got != engineLookNotYet {
+	if got := readEngineSignal(live, []int{4242}, broken, fixedInstance(engineInstanceA)); got != engineLookNotYet {
 		t.Errorf("look = %v, want not-yet when the process list could not be read", got)
 	}
-	if got := readEngineSignal(enginelock.Status{}, nil, broken); got != engineLookNotYet {
+	if got := readEngineSignal(enginelock.Status{}, nil, broken, fixedInstance(engineInstanceA)); got != engineLookNotYet {
 		t.Errorf("look = %v, want not-yet; an unreadable process table is not an absence", got)
 	}
 }
@@ -645,9 +868,25 @@ func TestTheConsoleReadinessSeamCombinesTheMarkerAndTheProcessList(t *testing.T)
 		t.Fatalf("look = %v, want not-yet before the engine says it is ready", got)
 	}
 	held.Ready(at.Add(50 * time.Second))
+	// ready_at만으로는 아직 아니다 — 어느 실행이 썼는지 마커가 말하지 않는다.
+	if got := observe(); got != engineLookNotYet {
+		t.Fatalf("look = %v, want not-yet while the marker carries no proc_instance", got)
+	}
+	selfToken, terr := engineProcInstance(os.Getpid())
+	if terr != nil {
+		t.Skipf("this kernel has no /proc: %v", terr)
+	}
+	held.Identify(selfToken)
 	if got := observe(); got != engineLookReady {
 		t.Fatalf("look = %v, want ready once the live engine published the signal", got)
 	}
+	// 같은 pid를 물려받은 다른 실행은 준비가 아니다 (D4b-2).
+	previousInstance := engineProcInstance
+	engineProcInstance = fixedInstance(selfToken + "-reused")
+	if got := observe(); got != engineLookNotYet {
+		t.Fatalf("look = %v, want not-yet — a recycled pid was read as ready", got)
+	}
+	engineProcInstance = previousInstance
 	pids = []int{os.Getpid() + 1}
 	if got := observe(); got != engineLookNotYet {
 		t.Fatalf("look = %v, want not-yet — the marker belongs to a pid that is gone", got)
@@ -763,6 +1002,30 @@ func TestTheBootPathAndTheButtonCannotSpawnAtTheSameTime(t *testing.T) {
 	}
 }
 
+// TestASpawnWithNothingToSpawnSaysSoRatherThanPanicking. 두 진입점 다 goroutine이나
+// HTTP 핸들러 안에서 불린다 — 그곳의 nil 역참조는 콘솔 프로세스를 죽인다. 심층방어 가드는
+// 유지하되, 유지한다면 테스트가 그것을 밟아야 한다.
+func TestASpawnWithNothingToSpawnSaysSoRatherThanPanicking(t *testing.T) {
+	if _, err := spawnOneSurvey(nil); !errors.Is(err, errSoakBootNoStartWiring) {
+		t.Fatalf("spawnOneSurvey(nil) err = %v, want errSoakBootNoStartWiring", err)
+	}
+	note, err := guardedSoakRestart(nil, nil)
+	if !errors.Is(err, errSoakBootNoStartWiring) {
+		t.Fatalf("guardedSoakRestart(nil, nil) err = %v, want errSoakBootNoStartWiring", err)
+	}
+	if strings.TrimSpace(note) != "" {
+		t.Errorf("note = %q, want empty — nothing was started to describe", note)
+	}
+	// 게이트는 잠긴 채 남지 않는다.
+	done := make(chan struct{})
+	go func() { defer close(done); _, _ = spawnOneSurvey(func() (string, error) { return "ok", nil }) }()
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("the spawn gate stayed locked after a refused spawn")
+	}
+}
+
 // TestTheButtonStillRecordsTheApproval. 게이트를 끼우면서 a101의 계약을 잃으면 안 된다.
 func TestTheButtonStillRecordsTheApproval(t *testing.T) {
 	saved := []bool{}
@@ -844,7 +1107,7 @@ func TestTheBootSurveyReportsItsNote(t *testing.T) {
 
 	select {
 	case note := <-notes:
-		for _, want := range []string{engineReadyNote(engineReadyNoEngine), "새로 시작했다"} {
+		for _, want := range []string{engineReadyNote(engineReadyNoEngine, engineReadyCap), "새로 시작했다"} {
 			if !strings.Contains(note, want) {
 				t.Errorf("note = %q, missing %q", note, want)
 			}

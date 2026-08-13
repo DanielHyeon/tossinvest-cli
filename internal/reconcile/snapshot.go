@@ -241,6 +241,17 @@ var ErrPartialSnapshot = errors.New("reconcile: snapshot discarded after a parti
 //
 // Wrapping only widens what errors.Is can answer — the ErrPartialSnapshot
 // judgement every existing consumer makes is unchanged (a102 D1b).
+//
+// It widens it for more than the rate limit, and that is worth naming because
+// nothing reads it yet. The broker's other sentinels now reach every caller of
+// this function too: official.ErrAuth, official.ErrIPNotAllowed,
+// official.ErrServer and *official.APIError all survive the wrap. Today the only
+// consumer that discriminates is the restart recovery, and it asks about
+// ErrRateLimited alone; everything else still sees ErrPartialSnapshot and stops.
+// A future caller that wants to tell "our credentials are wrong" from "the
+// broker is briefly unwell" can do it here without another wrapping change —
+// and one that starts asking should decide deliberately, because these are not
+// all retryable in the same direction (a102, gstack review F7).
 
 func (c *Collector) Collect(ctx context.Context) (Snapshot, error) {
 	if err := c.validate(); err != nil {

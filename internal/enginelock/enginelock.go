@@ -9,7 +9,9 @@
 //	marker   the advisory signal. A file whose modification time says "an engine
 //	         was alive within the last five minutes", refreshed every minute,
 //	         removed on a clean stop. The console reads it to draw the engine's
-//	         status and the autostart script reads it before spawning anything.
+//	         status, the autostart script reads it before spawning anything, and
+//	         since a102 the console's boot survey reads it to decide whether the
+//	         account is already reconciled.
 //
 // # Why both, and why they are not the same thing
 //
@@ -42,9 +44,22 @@
 // One minute refresh, five minutes stale — internal/runlock's, reused rather than
 // re-chosen, and Fresh is literally runlock.Fresh. Four missed refreshes before a
 // live engine is mistaken for a dead one, and a crashed engine's marker is
-// believed for at most five minutes. The consequence of either mistake is a
-// misdrawn status line or a refused autostart, never a second writer: the flock
-// is what closes that.
+// believed for at most five minutes.
+//
+// # What a wrong marker costs, after a102
+//
+// It used to be a misdrawn status line or a refused autostart, never a second
+// writer — the flock closes that, and it still does. ReadyAt changed the other
+// half. The console's boot survey now decides *when to spend the account's rate
+// budget* from this file: a marker that says ready sends a read-only survey at
+// the broker while the engine's restart recovery may still be reading, and that
+// contention is what killed an engine one second into its life on 2026-08-13.
+//
+// So the failure directions are no longer symmetric, and the reader is written
+// for that. Absence, staleness, an unparseable body, a missing ProcInstance and
+// an unreadable process table all mean "not ready", which costs a bounded wait
+// and then starts the survey anyway. Only a fresh marker whose PID *and* process
+// instance both match a live engine is read as protection standing.
 package enginelock
 
 import (
@@ -149,11 +164,14 @@ func Acquire(dir string) (*Lock, error) {
 
 // Marker is what a running engine publishes about itself.
 //
-// It is JSON because the console renders three of these fields and a human reads
-// the fourth; internal/runlock's marker is prose because nothing parses it. The
-// reader is deliberately lenient — an unparseable marker is a running engine with
-// an unknown build, not an error — so a format change can never turn into a
-// dashboard that refuses to draw.
+// It is JSON because things parse it — the console renders some of these fields,
+// the boot survey decides on others, and a human reads the note; internal/runlock's
+// marker is prose because nothing parses it. The reader is deliberately lenient —
+// an unparseable marker is a running engine with an unknown build, not an error —
+// so a format change can never turn into a dashboard that refuses to draw. That
+// leniency has a cost after a102 and it is paid in the safe direction: a body the
+// reader cannot parse loses ReadyAt too, which reads as "not ready" and delays a
+// survey rather than racing a recovery.
 type Marker struct {
 	PID         int            `json:"pid"`
 	StartedAt   time.Time      `json:"started_at"`
@@ -172,13 +190,35 @@ type Marker struct {
 	//
 	// 없는 필드는 nil이다. a102 이전 빌드가 쓴 마커도 그대로 읽히고 "준비 안 됨"이 된다.
 	ReadyAt *time.Time `json:"ready_at,omitempty"`
+	// ProcInstance identifies *which run* of PID wrote this marker. It is an
+	// opaque string this package neither builds nor interprets — the caller
+	// supplies it through [Held.Identify], because deciding what identifies a
+	// process instance is operating-system knowledge and this package has none
+	// (the same line MarkerFileName's reader draws).
+	//
+	// It exists because PID is not an instance. A container recreate keeps the
+	// journal volume, so a predecessor's marker stays fresh for StaleAfter with
+	// its ready_at and its PID; the recreated PID namespace hands out PIDs
+	// near-deterministically, so the replacement engine can be given the very
+	// same number. Between the moment that replacement becomes visible and the
+	// moment it writes its own marker, "the marker's PID is alive" is true about
+	// the wrong process — and what it certifies is that the account is
+	// protected (a102, gstack review P1).
+	//
+	// Absent means "cannot tell", which reads as not ready.
+	ProcInstance string `json:"proc_instance,omitempty"`
 }
 
 // markerNote is written into every marker so somebody who finds the file with
 // `cat` knows what it is and what deleting it does.
 const markerNote = "advisory only. The exclusion is the flock on engine.lock; this file exists so the " +
 	"console can draw the engine's status and the autostart script can check before spawning. " +
-	"A stale one (older than 5m) is ignored."
+	"A stale one (older than 5m) is ignored. " +
+	"ready_at is written only after the engine finishes its restart recovery, and the console's " +
+	"boot survey waits for it before spending the account's rate budget: clear it or edit it and " +
+	"the survey stops waiting (an invented one) or waits out its whole cap and starts anyway " +
+	"(a removed one). proc_instance says which run of this pid wrote the file; delete the file " +
+	"rather than hand-editing either field."
 
 // Held is a marker this process is publishing.
 //
@@ -261,6 +301,31 @@ func (h *Held) Ready(now time.Time) {
 	// A ready signal that could not be written costs the console a wait it did
 	// not need, never a refused start — the same asymmetry the first write has.
 	_ = write(h.path, h.marker, now)
+}
+
+// Identify records which run of this PID owns the marker.
+//
+// The token is opaque here and is built by the caller, which is the only side
+// that may know what an operating system considers a process instance. It is a
+// separate call rather than an argument to Hold so that Hold's contract — and
+// its eight callers — stay as they are, and because the value is only ever
+// consulted alongside ReadyAt, which no marker carries until the recovery
+// finishes two boot steps later.
+//
+// Calling it on an inert handle does nothing, and an empty token is ignored: a
+// build that cannot compute one leaves the field out, and a reader treats the
+// absence as "cannot tell" rather than as agreement.
+func (h *Held) Identify(token string) {
+	if h == nil || strings.TrimSpace(token) == "" {
+		return
+	}
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if !h.live || h.marker.ProcInstance == token {
+		return
+	}
+	h.marker.ProcInstance = token
+	_ = write(h.path, h.marker, h.marker.RefreshedAt)
 }
 
 // refresh rewrites the marker at at, from what the holder currently knows.

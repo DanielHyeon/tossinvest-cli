@@ -1,9 +1,9 @@
 # Function Logic Map: `Hold`
 
-- Source: `internal/enginelock/enginelock.go` (296-324)
+- Source: `internal/enginelock/enginelock.go` (361-389)
 - AST evidence: `ast.json` — AST 기준 branches **3** / returns 4 / calls 12 / defers 1 / go 1
 - Risk scan: `risk-pattern-report.md` (매치 없음)
-- source SHA-256: `9399c1d68e1dfad16f6b1334f9875897e8025a88b94beb370354ffb11f318f8d`
+- source SHA-256: `e615b0c66ce3ecb71540cb96f5bcf81ed0240530af5c1aac430a577e0c582b38`
 - 작성 사유: a102 §3(D4) — 반환을 핸들로 바꾸고 `ReadyAt`을 도입한다. **기존 함수의 내부를
   편집하므로 편집 전에 만들었다.** 엔진 수명주기 신호이므로 High-risk다.
 
@@ -11,14 +11,14 @@
 
 | | 1판 (편집 전) | 2판 (`6cd643ca`) | **3판 (§3.9, 이 문서)** |
 |---|---|---|---|
-| 위치 | `:178-216` | `:277-303` | **`:296-324`** |
+| 위치 | `:178-216` | `:277-303` | **`:361-389`** |
 | 시그니처 | `(release func(), err error)` | `(*Held, error)` | **그대로** |
 | AST 분기 | 4 | 3 | **3** |
 | 이탈 | 5 | 4 | **4** |
 | 호출 | 14 | 10 | **12** |
-| source SHA-256 | `d65deddfd1e6…` | `8c784e84d88e…` | **`9399c1d68e1d…`** |
-| `Hold` 커버리지 | 80.0% | 86.7% | **88.2%** |
-| 패키지 통과 | 11건 | 19건 | **24건** |
+| source SHA-256 | `d65deddfd1e6…` | `8c784e84d88e…` | **`e615b0c66ce3…`** |
+| `Hold` 커버리지 | 80.0% | 86.7% | **88.2%** → §3.9c **88.2%** |
+| 패키지 통과 | 11건 | 19건 | **27건** |
 
 **3판이 바꾼 것은 두 줄이다** — `h.live = true`를 `h.mu` 아래로 옮겼다(A2 F3·F4).
 분기·이탈은 그대로이고 호출이 둘 늘었다(`Lock`/`Unlock`). 몸통의 판정은 불변이다.
@@ -56,24 +56,24 @@
 
 | Branch | 위치 | Condition | Mutation/side effect | Return/이탈 |
 |---|---|---|---|---|
-| B1 | `:301` | `write(path, m, now) != nil` | `h.live`가 false로 남는다 | `:302` `return h, werr` — **inert 핸들** |
-| B2 | `:311` | `for {}` — refresh 루프 | — | 루프 자체는 이탈이 없다 |
-| B3 | `:312` | `select` 3-way: `<-h.done` / `<-ctx.Done()` / `at := <-ticker.C` | 셋째 갈래만 `h.refresh(at)` | `:314`·`:316` goroutine return |
+| B1 | `:366` | `write(path, m, now) != nil` | `h.live`가 false로 남는다 | `:302` `return h, werr` — **inert 핸들** |
+| B2 | `:376` | `for {}` — refresh 루프 | — | 루프 자체는 이탈이 없다 |
+| B3 | `:377` | `select` 3-way: `<-h.done` / `<-ctx.Done()` / `at := <-ticker.C` | 셋째 갈래만 `h.refresh(at)` | `:314`·`:316` goroutine return |
 
-Return 4개: `:302`(B1) · `:314`·`:316`(refresh goroutine) · `:323`(정상 `return h, nil`).
+Return 4개: `:367`(B1) · `:379`·`:381`(refresh goroutine) · `:388`(정상 `return h, nil`).
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `os.Getpid` `:297` | 마커의 pid | — | ast.json |
-| `now.UTC` `:297` | StartedAt 정규화 | — | ast.json |
-| `binstamp.Self` `:298` | 실행 파일 지문 | **오류를 버린다** | ast.json |
-| `make(chan struct{})` `:300` | stop 신호 | — | ast.json |
-| `write` `:301` | 첫 마커 (**원자 교체** — §3.9 D4c) | 오류는 호출자에게 (거절은 아니다) | ast.json |
-| `time.NewTicker(RefreshEvery)` `:309` | 1분 갱신 | `defer ticker.Stop()` `:289` | ast.json |
-| `ctx.Done` `:315` | 종료 관측 | — | ast.json |
-| **`h.refresh(at)` `:318`** | **갱신 쓰기** | 실패는 침묵 — 다음 tick이 다시 쓴다 | ast.json · **D4의 핵심** |
+| `os.Getpid` `:362` | 마커의 pid | — | ast.json |
+| `now.UTC` `:362` | StartedAt 정규화 | — | ast.json |
+| `binstamp.Self` `:363` | 실행 파일 지문 | **오류를 버린다** | ast.json |
+| `make(chan struct{})` `:365` | stop 신호 | — | ast.json |
+| `write` `:366` | 첫 마커 (**원자 교체** — §3.9 D4c) | 오류는 호출자에게 (거절은 아니다) | ast.json |
+| `time.NewTicker(RefreshEvery)` `:374` | 1분 갱신 | `defer ticker.Stop()` `:289` | ast.json |
+| `ctx.Done` `:380` | 종료 관측 | — | ast.json |
+| **`h.refresh(at)` `:383`** | **갱신 쓰기** | 실패는 침묵 — 다음 tick이 다시 쓴다 | ast.json · **D4의 핵심** |
 
 live binding — 프로덕션 호출자는 **하나**다: `cmd/tossctl/engine.go:239`
 (`rg -n 'enginelock.Hold' --glob '!*_test.go'` → 1건). 테스트 호출자 8건은

@@ -1,6 +1,6 @@
 # Branch Test Map: `engineRuntime`
 
-Source: `cmd/tossctl/engine.go` (372-459). AST 기준 branches **6** / returns 7.
+Source: `cmd/tossctl/engine.go` (384-471). AST 기준 branches **6** / returns 7.
 
 ## 커버리지는 주장이 아니라 측정값이다
 
@@ -11,18 +11,19 @@ Source: `cmd/tossctl/engine.go` (372-459). AST 기준 branches **6** / returns 7
 |---|---|---|---|---|
 | 1판 (편집 전) | 526건 | `:347-430` | 14개 중 **10개** 실행 | `f13e36b35e08…` |
 | 2판 (`6cd643ca`) | 550건 | `:356-443` | 13개 중 10개 실행 | `8ad1cc88b9e0…` |
-| **3판 (§3.9b)** | **564건** | **`:372-459`** | **13개 중 10개** 실행 | `bc5748c552dd…` |
+| 3판 (§3.9b) | 564건 | `:372-459` | 13개 중 10개 실행 | `bc5748c552dd…` |
+| **4판 (§3.9c)** | **572건** | **`:384-471`** | **13개 중 10개** 실행 | `ee527a6a917a…` |
 
 블록이 하나 줄었다 — `Recover` 클로저 본문(1판 `401.44,404.4` count=**0**)이 사라졌다.
 
 | Branch | 위치 | 본문 실행 | 근거 블록 (편집 전) | 지는 테스트 (편집 전) |
 |---|---|---|---|---|
-| B1 | `:375` 체결 감지기 오류 | **no** | `375.16,377.3` count=**0** | 없음 |
-| B2 | `:384` 대사 드라이버 오류 | yes | `384.16,386.3` count=**1** | `TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess` |
-| B3 | `:395` exit 관측자 오류 | yes | `395.16,397.3` count=**1** | 같음 |
-| B4 | `:400` 복구 조립 오류 | yes | `400.16,402.3` count=**1** | 같음 |
-| B5 | `:404` 전략 진입 supervisor 오류 | **no** | `404.16,406.3` count=**0** | 없음 |
-| B6 | `:416` 알림 배출기 오류 | **no** | `416.16,418.3` count=**0** | 없음 |
+| B1 | `:387` 체결 감지기 오류 | **no** | `387.16,389.3` count=**0** | 없음 |
+| B2 | `:396` 대사 드라이버 오류 | yes | `396.16,398.3` count=**1** | `TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess` |
+| B3 | `:407` exit 관측자 오류 | yes | `407.16,409.3` count=**1** | 같음 |
+| B4 | `:412` 복구 조립 오류 | yes | `412.16,414.3` count=**1** | 같음 |
+| B5 | `:416` 전략 진입 supervisor 오류 | **no** | `416.16,418.3` count=**0** | 없음 |
+| B6 | `:428` 알림 배출기 오류 | **no** | `428.16,430.3` count=**0** | 없음 |
 
 **`Recover` 클로저 본문은 편집 전 별도 블록이었고 count=0이었다** — `401.44,404.4` count=**0**.
 즉 `recovery.Run`을 부르고 Report를 버리는 그 두 줄을 실행하는 테스트가 하나도 없었다.
@@ -52,8 +53,8 @@ Source: `cmd/tossctl/engine.go` (372-459). AST 기준 branches **6** / returns 7
 |---|---|---|---|
 | **(e)** | 실패한 복구에도 `ready()`를 부른다 | `TestAFailedRecoveryNeverPublishesReady` | sha `fc5488ccafe2` 동일 |
 | (j) 자체 | `observe(report)`를 성공 경로 뒤로 옮긴다 (실패 경로 무음) | `TestTheRateLimitedWaitIsReportedOnBothPaths` | sha `fc5488ccafe2` 동일 |
-| **N5** (A2) | `engineRuntimeFactory(…, nil)` — 배선은 남고 seam만 사라진다 | `TestTheReadySignalReachesTheMarkerThroughTheRuntimeSeam` | sha `bc5748c552dd` 동일 |
-| **N5b** (A2 잔여, §3.9b) | **이 함수 본문에서** `ready = nil` 재대입 | `TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess` — 조립된 `Recover`가 실행되고 ready가 run ctx를 취소하지 못해 런타임이 진짜 루프를 띄운다. **실패는 그 루프의 패닉으로 나타난다**(typed-nil 브로커) | sha `bc5748c552dd` 동일 |
+| **N5** (A2) | `engineRuntimeFactory(…, nil)` — 배선은 남고 seam만 사라진다 | `TestTheReadySignalReachesTheMarkerThroughTheRuntimeSeam` | sha `ee527a6a917a` 동일 |
+| **N5b** (A2 잔여, §3.9b) | **이 함수 본문에서** `ready = nil` 재대입 | `TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess` — 조립된 `Recover`가 실행되고 ready가 run ctx를 취소하지 못해 런타임이 진짜 루프를 띄운다. **실패는 그 루프의 패닉으로 나타난다**(typed-nil 브로커) | sha `ee527a6a917a` 동일 |
 
 > ⚠ **N5b의 실패 양식은 패닉이다.** ready가 run 컨텍스트를 취소하는 유일한 주체이므로,
 > 그것이 사라지면 런타임이 살아 있는 컨텍스트로 루프를 시작하고 typed-nil official client에
@@ -67,7 +68,7 @@ Source: `cmd/tossctl/engine.go` (372-459). AST 기준 branches **6** / returns 7
 
 - 분기·이탈 열거: `ast.json` (branches 6, returns 8) — `go run ./tools/logic-map`
 - 커버리지: `go test ./cmd/tossctl -count=1 -covermode=set -coverprofile` exit 0 ·
-  526건(1판) → 550건(2판) → **564건**(3판)
+  526건(1판) → 550건(2판) → 564건(3판) → **572건**(4판)
 - Report 소비자 전수: `rg -n 'RateLimitWaits|RateLimitWaited' --glob '!*_test.go'` →
   편집 전 `internal/reconcile/{recovery,ratelimit}.go` 뿐(**cmd 쪽 0건**, A1 F1) →
   편집 후 **`cmd/tossctl/engineready.go` 추가**.

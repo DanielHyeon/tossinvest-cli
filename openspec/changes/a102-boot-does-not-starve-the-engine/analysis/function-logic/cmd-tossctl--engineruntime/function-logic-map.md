@@ -1,9 +1,9 @@
 # Function Logic Map: `engineRuntime`
 
-- Source: `cmd/tossctl/engine.go` (372-459)
+- Source: `cmd/tossctl/engine.go` (384-471)
 - AST evidence: `ast.json` — AST 기준 branches **6** / returns 7 / calls 12
 - Risk scan: `risk-pattern-report.md` (매치 없음)
-- source SHA-256: `bc5748c552dd83556c3e81144177780d73633207b8516808799dfbeff17224ed`
+- source SHA-256: `ee527a6a917ab5342bdc4e853d6a8d015a9b56534c1971096220f2288a520d3f`
 - 작성 사유: a102 §3(D5·D5b) — `Recover` 클로저가 편집 전 `recovery.Run`의 Report를 버렸다
   (1판 `:402`). D5는 그 클로저를 `recoverThenReady`로 교체하고, D5b는 버려지던 Report를 소비한다.
   **기존 함수의 내부를 편집하므로 편집 전에 만든다.** 루프 집합 조립이므로 High-risk다.
@@ -11,8 +11,8 @@
 > **세 판을 병기한다.** 1판(편집 전) `:347-430` · 분기 6 · 이탈 **8** · 호출 11 ·
 > SHA `f13e36b35e08…` · 블록 14개 중 10개 실행. 2판(`6cd643ca`) `:356-443` · 분기 6 ·
 > 이탈 **7** · 호출 12 · SHA `8ad1cc88b9e0…` · 블록 13개 중 10개 실행.
-> **3판(§3.9b, 이 문서)** `:372-459` · 분기 **6**(그대로) · 이탈 **7**(그대로) ·
-> 호출 **13** · SHA `bc5748c552dd…` · 블록 **13개 중 10개 실행**.
+> **3판(§3.9b, 이 문서)** `:384-471` · 분기 **6**(그대로) · 이탈 **7**(그대로) ·
+> 호출 **13** · SHA `ee527a6a917a…` · 블록 **13개 중 10개 실행**.
 >
 > **3판이 호출을 하나 늘렸다** — `recovery.Run`을 `engineRecoverySequence(recovery)` seam으로
 > 감쌌다. 그 seam이 있어야 `engine_runtime_branch_test.go`가 조립된 `Recover` 옵션을 **실제로
@@ -37,7 +37,7 @@ all-or-nothing supervisor(`engine.NewRuntime`)에 넘긴다. `Recover`·`Loops`�
 | `ectx` | non-nil | `engineAssemble` | 각 `ectx.*` 생성자가 오류를 돌려준다 |
 | `clk` | non-nil | `clock.System()` | — |
 | `logger` | **nil 가능** | `runEngineRun`이 만든 것 / 테스트는 nil | `obs.Logger`의 메서드가 nil 수신자를 견딘다(`log.go:191`) |
-| `recovery` (`:399`) | non-nil | `ectx.Recovery(reconcile.Options{Clock: clk})` | B4가 즉시 return |
+| `recovery` (`:411`) | non-nil | `ectx.Recovery(reconcile.Options{Clock: clk})` | B4가 즉시 return |
 
 > **관통 불변식**: 이 함수는 **아무것도 실행하지 않는다.** 조립뿐이고, 실행은
 > `engine.Runtime`이 한다(`internal/app/engine/runtime.go:289-294`가 `opts.Recover`를
@@ -48,14 +48,14 @@ all-or-nothing supervisor(`engine.NewRuntime`)에 넘긴다. `Recover`·`Loops`�
 
 | Branch | 위치 | Condition | Mutation/side effect | Return/이탈 |
 |---|---|---|---|---|
-| B1 | `:375` | `engineFillDetector` 오류 | — | `:376` |
-| B2 | `:384` | `ectx.ReconcileDriver` 오류 | — | `:385` |
-| B3 | `:395` | `ectx.ExitObserver` 오류 | — | `:396` |
-| B4 | `:400` | `ectx.Recovery` 오류 | — | `:401` |
-| B5 | `:404` | `NewRefreshingPairedStrategyEntrySupervisor` 오류 | — | `:405` |
-| B6 | `:416` | `ectx.AlertDeliverer` 오류 | — | `:417` |
+| B1 | `:387` | `engineFillDetector` 오류 | — | `:388` |
+| B2 | `:396` | `ectx.ReconcileDriver` 오류 | — | `:397` |
+| B3 | `:407` | `ectx.ExitObserver` 오류 | — | `:408` |
+| B4 | `:412` | `ectx.Recovery` 오류 | — | `:413` |
+| B5 | `:416` | `NewRefreshingPairedStrategyEntrySupervisor` 오류 | — | `:417` |
+| B6 | `:428` | `ectx.AlertDeliverer` 오류 | — | `:429` |
 
-정상 이탈: `:420` `return engine.NewRuntime(...)`. 1판의 여덟 번째 return(`Recover` 클로저
+정상 이탈: `:432` `return engine.NewRuntime(...)`. 1판의 여덟 번째 return(`Recover` 클로저
 안의 `:403` `return rerr`)은 **없어졌다** — 그 클로저가 `recoverThenReady(...)` 호출로
 바뀌었기 때문이다.
 
@@ -63,13 +63,13 @@ all-or-nothing supervisor(`engine.NewRuntime`)에 넘긴다. `Recover`·`Loops`�
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `engineFillDetector` `:374` | 체결 감지기 | 조립 시점 검증 | ast.json |
-| `ectx.ReconcileDriver` `:379` | 대사 루프 | — | ast.json |
-| `ectx.ExitObserver` `:388` | exit 관측 루프 | — | ast.json |
-| `ectx.Recovery` `:399` | **재시작 복구** | `reconcile.Options{Clock: clk}` | ast.json |
-| `ectx.AlertDeliverer` `:415` | 알림 outbox 배출 (Auxiliary) | 전달 실패가 루프를 세우지 않는다 | ast.json |
-| `engine.NewRuntime` `:420` | supervisor 조립 | 이 함수의 최종 return | ast.json |
-| **`recoverThenReady(engineRecoverySequence(recovery), ready, engineRecoveryObserver(logger))` `:433`** | **재시작 복구 배선** | `recovery.Run`을 **부르지 않는다** — 감싼 클로저를 만들 뿐이다 | ast.json |
+| `engineFillDetector` `:386` | 체결 감지기 | 조립 시점 검증 | ast.json |
+| `ectx.ReconcileDriver` `:391` | 대사 루프 | — | ast.json |
+| `ectx.ExitObserver` `:400` | exit 관측 루프 | — | ast.json |
+| `ectx.Recovery` `:411` | **재시작 복구** | `reconcile.Options{Clock: clk}` | ast.json |
+| `ectx.AlertDeliverer` `:427` | 알림 outbox 배출 (Auxiliary) | 전달 실패가 루프를 세우지 않는다 | ast.json |
+| `engine.NewRuntime` `:432` | supervisor 조립 | 이 함수의 최종 return | ast.json |
+| **`recoverThenReady(engineRecoverySequence(recovery), ready, engineRecoveryObserver(logger))` `:445`** | **재시작 복구 배선** | `recovery.Run`을 **부르지 않는다** — 감싼 클로저를 만들 뿐이다 | ast.json |
 
 live binding — 1판 `:402`의 `_, rerr := recovery.Run(ctx)`가 **A1 F1이 지적한 자리**였다.
 §1이 최대 5분의 429 대기를 만들었는데 그 대기의 관측치를 받을 소비자가 이 프로세스에 없었다.
@@ -86,7 +86,7 @@ live binding — 1판 `:402`의 `_, rerr := recovery.Run(ctx)`가 **A1 F1이 지
 
 ## Safety conclusion
 
-- Safe edit boundary: **`Recover:` 필드 하나**(1판 `:401-404` → 2·3판 `:433` 한 줄)와
+- Safe edit boundary: **`Recover:` 필드 하나**(1판 `:401-404` → 2·3판 `:445` 한 줄)와
   **시그니처의 인자 하나**(`ready func()`), 그리고 3판의 **호출 seam 하나**
   (`engineRecoverySequence`). 6개 분기의 조건·순서·오류 문구는 불변이고,
   `Loops`·`Auxiliary`의 내용도 불변이다. **실제로 그 셋이었다.**

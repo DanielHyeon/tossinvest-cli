@@ -238,6 +238,14 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	markerPath := enginelock.MarkerPath(dir)
 	marker, merr := enginelock.Hold(ctx, markerPath, clk.Now())
 	defer marker.Release()
+	// Which run of this pid wrote the marker. The console compares it before it
+	// believes a ready signal, because a container recreate can hand the
+	// replacement engine the predecessor's pid while the predecessor's marker is
+	// still fresh (a102 D4b-2). A build that cannot compute one says nothing, and
+	// the console then waits instead of trusting.
+	if token, terr := engineProcInstance(os.Getpid()); terr == nil {
+		marker.Identify(token)
+	}
 	if merr != nil {
 		// Not a refusal. The exclusion is already held; what a missing marker
 		// costs is a status line the console cannot draw.
@@ -365,10 +373,14 @@ var engineRecoverySequence = func(r *reconcile.Recovery) func(context.Context) (
 	return r.Run
 }
 
-// ready is what the runtime's Recover step calls after it finishes, and it is a
+// engineRuntime assembles the loop set and hands it to the supervisor, refusing
+// at the first constructor that cannot be built.
+//
+// ready is what the runtime's Recover step calls after it finishes. It is a
 // parameter because the marker it writes into belongs to step 6 of the boot
-// sequence while the moment it records belongs to step 7 (a102 D5). Tests pass
-// nil; recoverThenReady tolerates that.
+// sequence while the moment it records belongs to step 7 (a102 D5), and the
+// runtime offers no way to swap Recover once it is assembled. Tests pass nil;
+// recoverThenReady tolerates that.
 func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, logger *obs.Logger,
 	ready func()) (*engine.Runtime, error) {
 	detector, err := engineFillDetector(ectx, clk, nil)
