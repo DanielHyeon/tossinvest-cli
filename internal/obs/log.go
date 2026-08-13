@@ -27,7 +27,7 @@ import (
 
 // Field names. Stable contract; append, never rename.
 const (
-	FieldEvent      = "event"
+	FieldEvent = "event"
 	// FieldTriggerEvent names the condition that *caused* this line, when that is
 	// a different event from the line itself — an alert-delivery line caused by an
 	// exit.proposal_refused, say.
@@ -41,24 +41,24 @@ const (
 	// were added (a099 4라운드).
 	FieldTriggerEvent = "trigger_event"
 	FieldSubject      = "subject"
-	FieldSeverity   = "severity"
-	FieldAccount    = "account"
-	FieldSymbol     = "symbol"
-	FieldMarket     = "market"
-	FieldSide       = "side"
-	FieldQuantity   = "quantity"
-	FieldPrice      = "price"
-	FieldIntentID   = "intent_id"
-	FieldAttemptID  = "attempt_id"
-	FieldOrderID    = "order_id"
-	FieldFromState  = "from_state"
-	FieldToState    = "to_state"
-	FieldReason     = "reason"
-	FieldDetail     = "detail"
-	FieldError      = "error"
-	FieldDurationMS = "duration_ms"
-	FieldCount      = "count"
-	FieldScope      = "scope"
+	FieldSeverity     = "severity"
+	FieldAccount      = "account"
+	FieldSymbol       = "symbol"
+	FieldMarket       = "market"
+	FieldSide         = "side"
+	FieldQuantity     = "quantity"
+	FieldPrice        = "price"
+	FieldIntentID     = "intent_id"
+	FieldAttemptID    = "attempt_id"
+	FieldOrderID      = "order_id"
+	FieldFromState    = "from_state"
+	FieldToState      = "to_state"
+	FieldReason       = "reason"
+	FieldDetail       = "detail"
+	FieldError        = "error"
+	FieldDurationMS   = "duration_ms"
+	FieldCount        = "count"
+	FieldScope        = "scope"
 	// FieldActor names who caused a change: AUTO or OPERATOR. Appended for the
 	// operating-mode transition (add-core-domain task 3.3), where the whole
 	// approval asymmetry hangs on which of the two it was — an automatic
