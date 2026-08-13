@@ -1,0 +1,87 @@
+{
+  "file": "cmd/tossctl/engine_test.go",
+  "source_sha256": "3e6f2d0f2333d769e7f7fe9d250535bb6305ae819e1bdda8976676ca02f5e7e5",
+  "package": "main",
+  "function": "TestTheRestartRecoveryRunsBeforeTheLoops",
+  "signature": "TestTheRestartRecoveryRunsBeforeTheLoops(params=1, results=0)",
+  "start": {
+    "line": 396,
+    "column": 1
+  },
+  "end": {
+    "line": 412,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 398,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 409,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 397,
+        "column": 9
+      },
+      "text": "readSource"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 398,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 397,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

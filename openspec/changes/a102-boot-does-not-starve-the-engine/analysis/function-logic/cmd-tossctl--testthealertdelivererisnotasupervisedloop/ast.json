@@ -1,0 +1,157 @@
+{
+  "file": "cmd/tossctl/a098_the_engine_registers_a_sender_test.go",
+  "source_sha256": "1c98ccabbefe6d5b492b2d635155c048d9d15a27c983cd2b8b9a1dcea497ebaa",
+  "package": "main",
+  "function": "TestTheAlertDelivererIsNotASupervisedLoop",
+  "signature": "TestTheAlertDelivererIsNotASupervisedLoop(params=1, results=0)",
+  "start": {
+    "line": 35,
+    "column": 1
+  },
+  "end": {
+    "line": 49,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 45,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 18
+      },
+      "text": "engineRuntime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 32
+      },
+      "text": "t.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 45
+      },
+      "text": "runtimeBranchContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 69
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 12
+      },
+      "text": "runtime.LoopNames"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 34
+      },
+      "text": "reflect.DeepEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 23
+      },
+      "text": "runtime.LoopNames"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 41,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

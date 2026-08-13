@@ -107,11 +107,11 @@ func TestTheLockSitsInTheJournalDirectory(t *testing.T) {
 func TestAHeldMarkerReadsAsRunning(t *testing.T) {
 	path := enginelock.MarkerPath(t.TempDir())
 
-	release, err := enginelock.Hold(context.Background(), path, lockNow)
+	held, err := enginelock.Hold(context.Background(), path, lockNow)
 	if err != nil {
 		t.Fatalf("Hold: %v", err)
 	}
-	defer release()
+	defer held.Release()
 
 	status := enginelock.Read(path, lockNow.Add(time.Second))
 	if !status.Running {
@@ -133,11 +133,11 @@ func TestAHeldMarkerReadsAsRunning(t *testing.T) {
 // which is why the window can be minutes at all.
 func TestAStaleMarkerIsNotARunningEngine(t *testing.T) {
 	path := enginelock.MarkerPath(t.TempDir())
-	release, err := enginelock.Hold(context.Background(), path, lockNow)
+	held, err := enginelock.Hold(context.Background(), path, lockNow)
 	if err != nil {
 		t.Fatalf("Hold: %v", err)
 	}
-	defer release()
+	defer held.Release()
 
 	if status := enginelock.Read(path, lockNow.Add(enginelock.StaleAfter-time.Second)); !status.Running {
 		t.Error("a marker inside the staleness window does not read as running")
@@ -168,12 +168,12 @@ func TestTheMarkerNumbersAreRunlocksPrecedent(t *testing.T) {
 // "running".
 func TestReleasingRemovesTheMarker(t *testing.T) {
 	path := enginelock.MarkerPath(t.TempDir())
-	release, err := enginelock.Hold(context.Background(), path, lockNow)
+	held, err := enginelock.Hold(context.Background(), path, lockNow)
 	if err != nil {
 		t.Fatalf("Hold: %v", err)
 	}
-	release()
-	release() // idempotent
+	held.Release()
+	held.Release() // idempotent
 
 	if status := enginelock.Read(path, lockNow); status.Running {
 		t.Error("the marker survived a clean stop")

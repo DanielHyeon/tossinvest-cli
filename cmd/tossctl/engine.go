@@ -236,8 +236,16 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 
 	// --- 6. the advisory marker ----------------------------------------------
 	markerPath := enginelock.MarkerPath(dir)
-	releaseMarker, merr := enginelock.Hold(ctx, markerPath, clk.Now())
-	defer releaseMarker()
+	marker, merr := enginelock.Hold(ctx, markerPath, clk.Now())
+	defer marker.Release()
+	// Which run of this pid wrote the marker. The console compares it before it
+	// believes a ready signal, because a container recreate can hand the
+	// replacement engine the predecessor's pid while the predecessor's marker is
+	// still fresh (a102 D4b-2). A build that cannot compute one says nothing, and
+	// the console then waits instead of trusting.
+	if token, terr := engineProcInstance(os.Getpid()); terr == nil {
+		marker.Identify(token)
+	}
 	if merr != nil {
 		// Not a refusal. The exclusion is already held; what a missing marker
 		// costs is a status line the console cannot draw.
@@ -248,7 +256,12 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	}
 
 	// --- 7. the loops --------------------------------------------------------
-	rt, err := engineRuntimeFactory(ctx, ectx, clk, logger)
+	//
+	// The ready seam is handed down rather than published here because the thing
+	// it announces happens inside the runtime: Recover runs before the first loop
+	// starts, and only a Recover that finished may say the account is reconciled
+	// (a102 D5). Step 6 owns the marker, step 7 owns the moment.
+	rt, err := engineRuntimeFactory(ctx, ectx, clk, logger, func() { marker.Ready(clk.Now()) })
 	if err != nil {
 		return err
 	}
@@ -344,7 +357,32 @@ func engineVerifyLockPath(root *rootOptions) (string, error) {
 // no detector to defer to.
 var engineRuntimeFactory = engineRuntime
 
-func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, logger *obs.Logger) (*engine.Runtime, error) {
+// engineRecoverySequence is the restart recovery the Recover option runs.
+//
+// It is a package variable for the same reason engineAssemble and
+// engineRuntimeFactory above are, and the file comment on those says it: this
+// package's own tests have to be able to drive the whole discipline without a
+// broker. Here it buys one specific thing — a test can assemble the *real*
+// engineRuntime and then run the Recover option it produced, which is the only
+// way to observe that the ready seam survived the assembly.
+//
+// Without it that step was guarded by a source string, and a102's A2 review
+// showed what that is worth: `ready = nil` inserted between the parameter and
+// its use left every test green (mutation N5).
+var engineRecoverySequence = func(r *reconcile.Recovery) func(context.Context) (reconcile.Report, error) {
+	return r.Run
+}
+
+// engineRuntime assembles the loop set and hands it to the supervisor, refusing
+// at the first constructor that cannot be built.
+//
+// ready is what the runtime's Recover step calls after it finishes. It is a
+// parameter because the marker it writes into belongs to step 6 of the boot
+// sequence while the moment it records belongs to step 7 (a102 D5), and the
+// runtime offers no way to swap Recover once it is assembled. Tests pass nil;
+// recoverThenReady tolerates that.
+func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, logger *obs.Logger,
+	ready func()) (*engine.Runtime, error) {
 	detector, err := engineFillDetector(ectx, clk, nil)
 	if err != nil {
 		return nil, err
@@ -398,10 +436,13 @@ func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, l
 		Announcer:  ectx.Notifier,
 		Log:        logger,
 		Clock:      clk,
-		Recover: func(ctx context.Context) error {
-			_, rerr := recovery.Run(ctx)
-			return rerr
-		},
+		// The recovery's report used to be discarded here, which made §1's
+		// rate-limit budget — up to five minutes with the entry gate shut —
+		// a silent window (a102 A1 F1). Both consumers live in engineready.go
+		// so that this stays a call rather than a judgement: the Recover
+		// closure is measured at count=0 (this change's
+		// cmd-tossctl--engineruntime/branch-test-map.md).
+		Recover: recoverThenReady(engineRecoverySequence(recovery), ready, engineRecoveryObserver(logger)),
 		Loops: []engine.SupervisedLoop{
 			{
 				Name:    "reconcile",

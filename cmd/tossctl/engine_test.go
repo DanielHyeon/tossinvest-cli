@@ -58,9 +58,25 @@ func stubAssembly(t *testing.T, ectx *engine.Context, err error) func() bool {
 // against a hand-built Context.
 func stubRuntime(t *testing.T, build func(*engine.Context) (*engine.Runtime, error)) {
 	t.Helper()
-	previous := engineRuntimeFactory
-	engineRuntimeFactory = func(_ context.Context, ectx *engine.Context, _ clock.Clock, _ *obs.Logger) (*engine.Runtime, error) {
+	stubRuntimeWithReady(t, func(ectx *engine.Context, _ func()) (*engine.Runtime, error) {
 		return build(ectx)
+	})
+}
+
+// stubRuntimeWithReady is stubRuntime for tests that care about the ready seam.
+//
+// It exists because discarding that argument here is what let A2's mutations N1
+// (empty the ready closure) and N5 (pass nil for it) survive: every unit test of
+// recoverThenReady stayed green while the production wiring published nothing.
+// The factory is the only place the seam crosses from step 6 to step 7, so it is
+// the only place a test can watch it cross.
+func stubRuntimeWithReady(t *testing.T,
+	build func(*engine.Context, func()) (*engine.Runtime, error)) {
+	t.Helper()
+	previous := engineRuntimeFactory
+	engineRuntimeFactory = func(_ context.Context, ectx *engine.Context, _ clock.Clock, _ *obs.Logger,
+		ready func()) (*engine.Runtime, error) {
+		return build(ectx, ready)
 	}
 	t.Cleanup(func() { engineRuntimeFactory = previous })
 }
@@ -382,7 +398,15 @@ func TestTheRestartRecoveryRunsBeforeTheLoops(t *testing.T) {
 	if !strings.Contains(src, "ectx.Recovery(") {
 		t.Fatal("the runtime is assembled without the restart recovery")
 	}
-	if !strings.Contains(src, "Recover: func(ctx context.Context) error {") {
+	// a102 §3(D5) — the closure moved into recoverThenReady, which is the same
+	// hook with two things bolted to the outcome: the ready signal on success and
+	// the rate-limit report on every path.
+	//
+	// §3.9b — what this string can promise is only that the hook is wired. That
+	// the *ready seam* survives the assembly is asserted by running the assembled
+	// option (engine_runtime_branch_test.go), because A2 showed a source check
+	// cannot tell a live seam from `ready = nil` inserted above it.
+	if !strings.Contains(src, "Recover: recoverThenReady(engineRecoverySequence(recovery), ready,") {
 		t.Error("the recovery is not handed to the runtime's Recover hook, so nothing runs it first")
 	}
 }

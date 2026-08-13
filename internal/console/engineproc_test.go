@@ -67,11 +67,11 @@ func newEngineHarness(t *testing.T, tweak ...func(*Options)) *engineHarness {
 // holdEngineMarker writes a marker as a live engine would.
 func holdEngineMarker(t *testing.T, path string, at time.Time) {
 	t.Helper()
-	release, err := enginelock.Hold(context.Background(), path, at)
+	held, err := enginelock.Hold(context.Background(), path, at)
 	if err != nil {
 		t.Fatalf("enginelock.Hold: %v", err)
 	}
-	t.Cleanup(release)
+	t.Cleanup(held.Release)
 }
 
 // --- the status line ------------------------------------------------------------

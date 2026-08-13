@@ -79,7 +79,7 @@ func TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess(t *t
 		t.Run(tc.name, func(t *testing.T) {
 			value := runtimeBranchContext()
 			tc.mutate(value)
-			runtime, err := engineRuntime(context.Background(), value, clk, nil)
+			runtime, err := engineRuntime(context.Background(), value, clk, nil, nil)
 			if runtime != nil || !errors.Is(err, tc.want) {
 				t.Fatalf("runtime=%v err=%v want=%v", runtime, err, tc.want)
 			}
@@ -87,7 +87,7 @@ func TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess(t *t
 	}
 
 	value := runtimeBranchContext()
-	runtime, err := engineRuntime(context.Background(), value, clk, nil)
+	runtime, err := engineRuntime(context.Background(), value, clk, nil, nil)
 	if err != nil || runtime == nil {
 		t.Fatalf("success runtime=%v err=%v", runtime, err)
 	}
@@ -96,6 +96,38 @@ func TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess(t *t
 	// TestTheLoopSetIsTheSpecifiedThree regression.
 	if refusal := value.Entry.CheckEntry(); refusal == nil || refusal.Reason != execgw.ReasonRecoveryIncomplete {
 		t.Fatalf("recovery did not fail closed at construction: %+v", refusal)
+	}
+
+	// a102 §3.9b — the ready seam has to survive this function's body, not just
+	// its signature. A2's last surviving mutation put `ready = nil` between the
+	// parameter and its use at the Recover option, and the only thing guarding
+	// that was a source string in TestTheRestartRecoveryRunsBeforeTheLoops.
+	// Running the assembled RuntimeOptions.Recover is the only way to see it.
+	//
+	// The recovery sequence is stubbed because the real one reads the account and
+	// this Context's official client is a typed nil — invoking it panics
+	// (measured). ready cancels the run context, so Recover completes and every
+	// loop the runtime then starts returns on that cancellation at once: Run comes
+	// back nil having touched no journal and placed no order.
+	previousSequence := engineRecoverySequence
+	engineRecoverySequence = func(*reconcile.Recovery) func(context.Context) (reconcile.Report, error) {
+		return func(context.Context) (reconcile.Report, error) { return reconcile.Report{}, nil }
+	}
+	t.Cleanup(func() { engineRecoverySequence = previousSequence })
+
+	runCtx, cancelRun := context.WithCancel(context.Background())
+	defer cancelRun()
+	readyCalls := 0
+	wired, err := engineRuntime(context.Background(), runtimeBranchContext(), clk, nil,
+		func() { readyCalls++; cancelRun() })
+	if err != nil || wired == nil {
+		t.Fatalf("wired runtime=%v err=%v", wired, err)
+	}
+	if rerr := wired.Run(runCtx); rerr != nil {
+		t.Fatalf("Run after a completed recovery returned %v", rerr)
+	}
+	if readyCalls != 1 {
+		t.Fatalf("ready called %d times, want exactly 1 — the assembly dropped the ready seam", readyCalls)
 	}
 }
 

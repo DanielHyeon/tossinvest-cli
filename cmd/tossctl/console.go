@@ -375,9 +375,16 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 			func() (string, error) { return restartSoak(root, soakRecord) },
 		)
 	}
-	if note := runConfiguredSoakAutostart(soakBootLoad, bootSurveyIfAbsent); note != "" {
-		fmt.Fprintln(cmd.ErrOrStderr(), note)
-	}
+	// a102 §3(D7) — 그 순서를 시간이 아니라 **신호**에 묶는다. a101의 순서가 준 것은
+	// engineStartProbe만큼(3초)의 머리 시작뿐이었고, 26페이지 주문 순회는 3초로 끝나지
+	// 않는다: 2026-08-13 02:03:29.561Z, 서베이가 probe 만료 2ms 뒤 같은 rate 예산을
+	// 때렸고 엔진의 재시작 복구가 429로 죽었다.
+	//
+	// 판정도 배선도 전부 engineready.go에 있다 — 관측 seam, 시계, 상한·간격까지.
+	// 여기 남는 것은 호출 하나뿐이다(a101 규율: runConsole은 0.0%다). ctx는 위에서
+	// signal.NotifyContext가 만든 것이므로 콘솔이 내려가면 대기는 시작을 포기한다.
+	startSoakAutostartAsync(ctx, engineDir, engineMarkerPath, soakBootLoad, bootSurveyIfAbsent,
+		func(note string) { fmt.Fprintln(cmd.ErrOrStderr(), note) })
 
 	// The console receives only an authenticated loopback client. The running
 	// engine owns the server and its already-open journal; this process cannot
@@ -493,12 +500,15 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 			// Pressing this is the operator saying "this profile runs the survey".
 			// Persisting that is what makes the next container replacement bring it
 			// back instead of silently dropping it (a101).
-			note, err := startSurvey()
+			//
+			// It goes through the same spawn gate the boot path takes (a102 D7b):
+			// since the boot wait became asynchronous the two can be live at the
+			// same time, and both are check-then-act over one record.
 			var save func(bool) error
 			if soakBoot != nil {
 				save = soakBoot.Save
 			}
-			return rememberSoakApproval(save, note, err)
+			return guardedSoakRestart(startSurvey, save)
 		},
 		CheckOpenAPI: func(ctx context.Context) console.OpenAPICredentialCheck {
 			return toConsoleOpenAPICredentialCheck(openAPISeam.Check(ctx))

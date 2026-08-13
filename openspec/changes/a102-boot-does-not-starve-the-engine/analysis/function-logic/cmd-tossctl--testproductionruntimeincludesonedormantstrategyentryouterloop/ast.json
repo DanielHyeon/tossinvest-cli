@@ -1,0 +1,125 @@
+{
+  "file": "cmd/tossctl/engine_strategy_entry_dormant_test.go",
+  "source_sha256": "201502f87b3b7ff160a82fa6ba4163df7e506b576266621a5ae692623d48a159",
+  "package": "main",
+  "function": "TestProductionRuntimeIncludesOneDormantStrategyEntryOuterLoop",
+  "signature": "TestProductionRuntimeIncludesOneDormantStrategyEntryOuterLoop(params=1, results=0)",
+  "start": {
+    "line": 50,
+    "column": 1
+  },
+  "end": {
+    "line": 59,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 56,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 18
+      },
+      "text": "engineRuntime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 32
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 54
+      },
+      "text": "runtimeBranchContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 78
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 12
+      },
+      "text": "runtime.LoopNames"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 34
+      },
+      "text": "reflect.DeepEqual"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 56,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
