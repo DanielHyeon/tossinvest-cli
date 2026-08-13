@@ -1,0 +1,260 @@
+{
+  "file": "cmd/tossctl/engine.go",
+  "source_sha256": "8ad1cc88b9e0a0181c0a1c50a1fbcbdad4a6f85a6786e316c527ba5565274110",
+  "package": "main",
+  "function": "engineRuntime",
+  "signature": "engineRuntime(params=5, results=2)",
+  "start": {
+    "line": 356,
+    "column": 1
+  },
+  "end": {
+    "line": 443,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 359,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 368,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 379,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 384,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 388,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 400,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 360,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 369,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 380,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 385,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 389,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 401,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 404,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 358,
+        "column": 19
+      },
+      "text": "engineFillDetector"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 363,
+        "column": 17
+      },
+      "text": "ectx.ReconcileDriver"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 364,
+        "column": 18
+      },
+      "text": "ectx.SnapshotCollector"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 372,
+        "column": 19
+      },
+      "text": "ectx.ExitObserver"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 14
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 383,
+        "column": 19
+      },
+      "text": "ectx.Recovery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 24
+      },
+      "text": "ectx.NewRefreshingPairedStrategyEntrySupervisor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 24
+      },
+      "text": "ectx.AlertDeliverer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 404,
+        "column": 9
+      },
+      "text": "engine.NewRuntime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 12
+      },
+      "text": "recoverThenReady"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 50
+      },
+      "text": "engineRecoveryObserver"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 439,
+        "column": 4
+      },
+      "text": "strategyEntry.SupervisedLoop"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 358,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 363,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 372,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 383,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 387,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 399,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

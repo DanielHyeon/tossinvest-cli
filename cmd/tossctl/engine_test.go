@@ -59,7 +59,8 @@ func stubAssembly(t *testing.T, ectx *engine.Context, err error) func() bool {
 func stubRuntime(t *testing.T, build func(*engine.Context) (*engine.Runtime, error)) {
 	t.Helper()
 	previous := engineRuntimeFactory
-	engineRuntimeFactory = func(_ context.Context, ectx *engine.Context, _ clock.Clock, _ *obs.Logger) (*engine.Runtime, error) {
+	engineRuntimeFactory = func(_ context.Context, ectx *engine.Context, _ clock.Clock, _ *obs.Logger,
+		_ func()) (*engine.Runtime, error) {
 		return build(ectx)
 	}
 	t.Cleanup(func() { engineRuntimeFactory = previous })
@@ -382,7 +383,10 @@ func TestTheRestartRecoveryRunsBeforeTheLoops(t *testing.T) {
 	if !strings.Contains(src, "ectx.Recovery(") {
 		t.Fatal("the runtime is assembled without the restart recovery")
 	}
-	if !strings.Contains(src, "Recover: func(ctx context.Context) error {") {
+	// a102 §3(D5) — the closure moved into recoverThenReady, which is the same
+	// hook with two things bolted to the outcome: the ready signal on success and
+	// the rate-limit report on every path. The wiring is still what this asserts.
+	if !strings.Contains(src, "Recover: recoverThenReady(recovery.Run, ready,") {
 		t.Error("the recovery is not handed to the runtime's Recover hook, so nothing runs it first")
 	}
 }

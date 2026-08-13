@@ -79,7 +79,7 @@ func TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess(t *t
 		t.Run(tc.name, func(t *testing.T) {
 			value := runtimeBranchContext()
 			tc.mutate(value)
-			runtime, err := engineRuntime(context.Background(), value, clk, nil)
+			runtime, err := engineRuntime(context.Background(), value, clk, nil, nil)
 			if runtime != nil || !errors.Is(err, tc.want) {
 				t.Fatalf("runtime=%v err=%v want=%v", runtime, err, tc.want)
 			}
@@ -87,7 +87,7 @@ func TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess(t *t
 	}
 
 	value := runtimeBranchContext()
-	runtime, err := engineRuntime(context.Background(), value, clk, nil)
+	runtime, err := engineRuntime(context.Background(), value, clk, nil, nil)
 	if err != nil || runtime == nil {
 		t.Fatalf("success runtime=%v err=%v", runtime, err)
 	}

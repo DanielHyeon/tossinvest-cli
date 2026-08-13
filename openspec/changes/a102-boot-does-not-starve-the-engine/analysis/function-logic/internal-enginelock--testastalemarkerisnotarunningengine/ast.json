@@ -1,0 +1,181 @@
+{
+  "file": "internal/enginelock/enginelock_test.go",
+  "source_sha256": "d460165ffc609568b4ff940dd12227409e2a20e802f9297ebdc1fa5b01945c1d",
+  "package": "enginelock_test",
+  "function": "TestAStaleMarkerIsNotARunningEngine",
+  "signature": "TestAStaleMarkerIsNotARunningEngine(params=1, results=0)",
+  "start": {
+    "line": 134,
+    "column": 1
+  },
+  "end": {
+    "line": 148,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 142,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 145,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 10
+      },
+      "text": "enginelock.MarkerPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 32
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 15
+      },
+      "text": "enginelock.Hold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 31
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 8
+      },
+      "text": "held.Release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 15
+      },
+      "text": "enginelock.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 37
+      },
+      "text": "lockNow.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 15
+      },
+      "text": "enginelock.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 37
+      },
+      "text": "lockNow.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 136,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 142,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 145,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 140,
+        "column": 2
+      },
+      "text": "held.Release"
+    }
+  ]
+}

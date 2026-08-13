@@ -18,7 +18,7 @@ import (
 //
 // 집합 동일성으로 본다 — 부분 일치는 둘째가 늘어도 초록이다.
 func TestProductionRuntimeStartsExactlyOneAlertDeliverer(t *testing.T) {
-	runtime, err := engineRuntime(t.Context(), runtimeBranchContext(), clock.NewFake(runtimeBranchNow), nil)
+	runtime, err := engineRuntime(t.Context(), runtimeBranchContext(), clock.NewFake(runtimeBranchNow), nil, nil)
 	if err != nil {
 		t.Fatalf("engineRuntime: %v", err)
 	}
@@ -33,7 +33,7 @@ func TestProductionRuntimeStartsExactlyOneAlertDeliverer(t *testing.T) {
 // both places would pass the test above while making an alert fault stop the
 // engine (engine-safety Scenario 「프로덕션 감독 루프 집합은 넷이다」의 마지막 조항).
 func TestTheAlertDelivererIsNotASupervisedLoop(t *testing.T) {
-	runtime, err := engineRuntime(t.Context(), runtimeBranchContext(), clock.NewFake(runtimeBranchNow), nil)
+	runtime, err := engineRuntime(t.Context(), runtimeBranchContext(), clock.NewFake(runtimeBranchNow), nil, nil)
 	if err != nil {
 		t.Fatalf("engineRuntime: %v", err)
 	}

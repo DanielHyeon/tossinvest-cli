@@ -91,6 +91,16 @@ const (
 	EventReconcilePermanent EventType = "reconcile.mismatch_permanent"
 	// EventRecoveryComplete is the restart recovery sequence finishing.
 	EventRecoveryComplete EventType = "reconcile.recovery_complete"
+	// EventRecoveryRateLimited is a restart recovery that had to wait out the
+	// broker's rate limit before it could read the account (openspec change
+	// a102). `count` is how many waits and `duration_ms` is their total.
+	//
+	// It is its own event because what it measures is the window in which the
+	// engine was up and the account was not yet reconciled — the operator's
+	// "how long was there no protection" question. Folding it into
+	// EventRecoveryComplete would make it uncountable on the path that matters
+	// most, which is the recovery that then failed.
+	EventRecoveryRateLimited EventType = "reconcile.recovery_rate_limited"
 
 	// --- flatten ------------------------------------------------------------
 

@@ -53,6 +53,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/binstamp"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/console"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
@@ -375,9 +376,24 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 			func() (string, error) { return restartSoak(root, soakRecord) },
 		)
 	}
-	if note := runConfiguredSoakAutostart(soakBootLoad, bootSurveyIfAbsent); note != "" {
-		fmt.Fprintln(cmd.ErrOrStderr(), note)
+	// a102 §3(D7) — 그 순서를 시간이 아니라 **신호**에 묶는다. a101의 순서가 준 것은
+	// engineStartProbe만큼(3초)의 머리 시작뿐이었고, 26페이지 주문 순회는 3초로 끝나지
+	// 않는다: 2026-08-13 02:03:29.561Z, 서베이가 probe 만료 2ms 뒤 같은 rate 예산을
+	// 때렸고 엔진의 재시작 복구가 429로 죽었다.
+	//
+	// goroutine인 이유는 spec의 SHALL NOT이다 — 이 대기(최대 120초)는 운영자 콘솔
+	// 화면을 지연시켜서는 안 된다. ctx는 위에서 signal.NotifyContext가 만든 것이므로
+	// 콘솔이 내려가면 대기는 서베이 시작을 포기한다. 판정은 전부 engineready.go에 있고
+	// 여기 남는 것은 호출과 출력뿐이다(a101 규율: runConsole은 0.0%다).
+	engineReadiness := func() enginelock.Status {
+		return enginelock.Read(engineMarkerPath, time.Now())
 	}
+	go func() {
+		start := soakStartAfterEngineReady(ctx, engineReadiness, clock.System(), bootSurveyIfAbsent)
+		if note := runConfiguredSoakAutostart(soakBootLoad, start); note != "" {
+			fmt.Fprintln(cmd.ErrOrStderr(), note)
+		}
+	}()
 
 	// The console receives only an authenticated loopback client. The running
 	// engine owns the server and its already-open journal; this process cannot

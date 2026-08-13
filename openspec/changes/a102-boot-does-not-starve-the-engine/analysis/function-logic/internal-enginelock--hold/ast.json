@@ -1,0 +1,229 @@
+{
+  "file": "internal/enginelock/enginelock.go",
+  "source_sha256": "8c784e84d88e3ef2a20143712b91267a3f7f15ed9ea4e6963903d6f2fb8f3f65",
+  "package": "enginelock",
+  "function": "Hold",
+  "signature": "Hold(params=3, results=2)",
+  "start": {
+    "line": 277,
+    "column": 1
+  },
+  "end": {
+    "line": 303,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 282,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "for",
+      "at": {
+        "line": 290,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "select",
+      "at": {
+        "line": 291,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 283,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 293,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 295,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 302,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 19
+      },
+      "text": "os.Getpid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 43
+      },
+      "text": "now.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 16
+      },
+      "text": "binstamp.Self"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 42
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 13
+      },
+      "text": "write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 5
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 13
+      },
+      "text": "time.NewTicker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 9
+      },
+      "text": "ticker.Stop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 294,
+        "column": 11
+      },
+      "text": "ctx.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
+        "column": 9
+      },
+      "text": "h.refresh"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 278,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 279,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 281,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 282,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 285,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 288,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 296,
+        "column": 9
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 297,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 287,
+        "column": 2
+      }
+    }
+  ],
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 289,
+        "column": 3
+      },
+      "text": "ticker.Stop"
+    }
+  ]
+}

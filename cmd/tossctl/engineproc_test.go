@@ -173,11 +173,11 @@ func TestARefusedStartReportsTheEnginesOwnLog(t *testing.T) {
 // A marker is a file. A file is not a running engine.
 func TestAGhostMarkerDoesNotRefuseAStart(t *testing.T) {
 	dir := t.TempDir()
-	release, err := enginelock.Hold(context.Background(), enginelock.MarkerPath(dir), time.Now())
+	held, err := enginelock.Hold(context.Background(), enginelock.MarkerPath(dir), time.Now())
 	if err != nil {
 		t.Fatalf("enginelock.Hold: %v", err)
 	}
-	t.Cleanup(release)
+	t.Cleanup(held.Release)
 
 	// The marker is fresh and names a PID; pgrep sees nothing, which is what a
 	// recreated container looks like from inside.
@@ -199,11 +199,11 @@ func TestAGhostMarkerDoesNotRefuseAStart(t *testing.T) {
 // failure carries neither.
 func TestAFreshMarkerWithALiveProcessStillRefuses(t *testing.T) {
 	dir := t.TempDir()
-	release, err := enginelock.Hold(context.Background(), enginelock.MarkerPath(dir), time.Now())
+	held, err := enginelock.Hold(context.Background(), enginelock.MarkerPath(dir), time.Now())
 	if err != nil {
 		t.Fatalf("enginelock.Hold: %v", err)
 	}
-	t.Cleanup(release)
+	t.Cleanup(held.Release)
 
 	f := &engineFakes{found: []int{4242}}
 	f.install(t)
@@ -232,11 +232,11 @@ func TestAFreshMarkerWithALiveProcessStillRefuses(t *testing.T) {
 // remaining guard.
 func TestEnumerationFailureKeepsTheRefusal(t *testing.T) {
 	dir := t.TempDir()
-	release, err := enginelock.Hold(context.Background(), enginelock.MarkerPath(dir), time.Now())
+	held, err := enginelock.Hold(context.Background(), enginelock.MarkerPath(dir), time.Now())
 	if err != nil {
 		t.Fatalf("enginelock.Hold: %v", err)
 	}
-	t.Cleanup(release)
+	t.Cleanup(held.Release)
 
 	f := &engineFakes{findErr: errors.New("pgrep unavailable")}
 	f.install(t)
@@ -321,12 +321,12 @@ func functionBody(t *testing.T, source, signature string) string {
 // most; the exclusion is the flock and it is gone with the process.
 func TestAStaleMarkerDoesNotBlockAStart(t *testing.T) {
 	dir := t.TempDir()
-	release, err := enginelock.Hold(context.Background(), enginelock.MarkerPath(dir),
+	held, err := enginelock.Hold(context.Background(), enginelock.MarkerPath(dir),
 		time.Now().Add(-2*enginelock.StaleAfter))
 	if err != nil {
 		t.Fatalf("enginelock.Hold: %v", err)
 	}
-	t.Cleanup(release)
+	t.Cleanup(held.Release)
 
 	f := &engineFakes{}
 	f.install(t)

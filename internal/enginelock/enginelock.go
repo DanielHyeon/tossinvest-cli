@@ -160,6 +160,18 @@ type Marker struct {
 	RefreshedAt time.Time      `json:"refreshed_at"`
 	Binary      binstamp.Stamp `json:"binary,omitempty"`
 	Note        string         `json:"note,omitempty"`
+	// ReadyAt is when this engine finished its restart recovery, and it is a
+	// pointer because absence is the answer "not ready yet" (openspec change
+	// a102).
+	//
+	// It is not StartedAt and it is not the file's existence: both of those
+	// happen *before* recovery runs — the marker is written at boot step 6 and
+	// the recovery is step 7 — so an autostart survey that starts on either one
+	// spends the same account's rate budget the recovery is spending. The whole
+	// point of a separate field is that only a finished recovery may write it.
+	//
+	// 없는 필드는 nil이다. a102 이전 빌드가 쓴 마커도 그대로 읽히고 "준비 안 됨"이 된다.
+	ReadyAt *time.Time `json:"ready_at,omitempty"`
 }
 
 // markerNote is written into every marker so somebody who finds the file with
@@ -168,51 +180,126 @@ const markerNote = "advisory only. The exclusion is the flock on engine.lock; th
 	"console can draw the engine's status and the autostart script can check before spawning. " +
 	"A stale one (older than 5m) is ignored."
 
-// Hold writes the marker and keeps it fresh until ctx ends or the returned
-// release is called.
+// Held is a marker this process is publishing.
 //
-// The release is always non-nil so a caller can defer it without checking the
-// error first: a marker that could not be written is a status line the console
-// cannot draw, which is worth mentioning and is not worth refusing a start over.
-// The exclusion has already been taken by then.
-func Hold(ctx context.Context, path string, now time.Time) (release func(), err error) {
+// It replaces the bare release function Hold used to return because the marker
+// grew a second thing a caller can say about itself — [Held.Ready] — and a
+// second return value would have left the two able to disagree about which
+// marker they meant (openspec change a102).
+//
+// A Held whose first write failed is inert: Release removes nothing and Ready
+// publishes nothing. That is the same contract the old no-op release carried,
+// and it matters — the engine does not refuse to start over a marker it could
+// not write (cmd/tossctl/engine.go step 6), so an inert handle is a state the
+// production caller reaches and then keeps using.
+type Held struct {
+	path string
+
+	// mu guards marker, because Ready and the refresh goroutine both touch it.
+	// Before a102 nothing mutated the marker after Hold returned, so the
+	// goroutine could simply capture it by value.
+	mu     sync.Mutex
+	marker Marker
+	live   bool
+
+	done chan struct{}
+	once sync.Once
+}
+
+// Release drops the marker. It is safe to call more than once, and safe on an
+// inert handle.
+func (h *Held) Release() {
+	if h == nil || !h.live {
+		return
+	}
+	h.once.Do(func() {
+		close(h.done)
+		if rerr := os.Remove(h.path); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
+			// A marker that could not be removed goes stale on its own within
+			// StaleAfter, which is the whole reason freshness is a timestamp
+			// rather than existence.
+			return
+		}
+	})
+}
+
+// Ready publishes "this engine has finished its restart recovery".
+//
+// It is idempotent and keeps the first instant: the signal means the moment
+// protection came up, and a later call moving it would turn that into "the last
+// time somebody said so". Calling it on an inert handle does nothing.
+func (h *Held) Ready(now time.Time) {
+	if h == nil || !h.live {
+		return
+	}
+	h.mu.Lock()
+	if h.marker.ReadyAt != nil {
+		h.mu.Unlock()
+		return
+	}
+	at := now.UTC()
+	h.marker.ReadyAt = &at
+	current := h.marker
+	h.mu.Unlock()
+
+	// A ready signal that could not be written costs the console a wait it did
+	// not need, never a refused start — the same asymmetry the first write has.
+	_ = write(h.path, current, now)
+}
+
+// refresh rewrites the marker at at, from what the holder currently knows.
+//
+// It is the ticker goroutine's body, named so a test can drive it: RefreshEvery
+// is one minute and is a spec number, so the alternative was to make the period
+// injectable and let a test move a number the spec fixed.
+//
+// Reading the marker from guarded state rather than from a captured copy is the
+// whole reason this exists: a refresh built from the value captured at Hold time
+// would rewrite the file without ready_at, and a ready engine would become
+// unready one minute later.
+func (h *Held) refresh(at time.Time) error {
+	if h == nil || !h.live {
+		return nil
+	}
+	h.mu.Lock()
+	current := h.marker
+	h.mu.Unlock()
+	return write(h.path, current, at)
+}
+
+// Hold writes the marker and keeps it fresh until ctx ends or the returned
+// handle is released.
+//
+// The handle is always non-nil so a caller can defer Release without checking
+// the error first: a marker that could not be written is a status line the
+// console cannot draw, which is worth mentioning and is not worth refusing a
+// start over. The exclusion has already been taken by then.
+func Hold(ctx context.Context, path string, now time.Time) (*Held, error) {
 	m := Marker{PID: os.Getpid(), StartedAt: now.UTC(), Note: markerNote}
 	m.Binary, _ = binstamp.Self()
 
+	h := &Held{path: path, marker: m, done: make(chan struct{})}
 	if werr := write(path, m, now); werr != nil {
-		return func() {}, werr
+		return h, werr
 	}
-
-	done := make(chan struct{})
-	var once sync.Once
-	stop := func() {
-		once.Do(func() {
-			close(done)
-			if rerr := os.Remove(path); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
-				// A marker that could not be removed goes stale on its own within
-				// StaleAfter, which is the whole reason freshness is a timestamp
-				// rather than existence.
-				return
-			}
-		})
-	}
+	h.live = true
 
 	go func() {
 		ticker := time.NewTicker(RefreshEvery)
 		defer ticker.Stop()
 		for {
 			select {
-			case <-done:
+			case <-h.done:
 				return
 			case <-ctx.Done():
 				return
 			case at := <-ticker.C:
-				_ = write(path, m, at)
+				_ = h.refresh(at)
 			}
 		}
 	}()
 
-	return stop, nil
+	return h, nil
 }
 
 func write(path string, m Marker, at time.Time) error {
@@ -249,6 +336,18 @@ type Status struct {
 	// could not look", never as "the build moved on".
 	Marker Marker
 }
+
+// Ready reports a live engine that has finished its restart recovery.
+//
+// Both halves are required and neither is redundant. Running without ReadyAt is
+// the boot window this signal exists to name — the engine holds the lock and the
+// marker but the account is not yet reconciled. ReadyAt without Running is a
+// crashed engine's last word, believed for at most StaleAfter, and reading it as
+// "ready" would tell the survey a dead engine is protecting the account.
+//
+// It is one method rather than two conditions at the call sites so that
+// "the engine is ready" has a single definition (openspec change a102).
+func (s Status) Ready() bool { return s.Running && s.Marker.ReadyAt != nil }
 
 // Stale reports that the running engine was started from a different executable
 // than the one installed now.

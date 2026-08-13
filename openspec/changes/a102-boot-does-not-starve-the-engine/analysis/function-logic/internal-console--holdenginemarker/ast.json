@@ -1,0 +1,79 @@
+{
+  "file": "internal/console/engineproc_test.go",
+  "source_sha256": "bea466d1c23a836bce431418cd5a3a9dcce6fa4971bc3afc519e24ca52479df4",
+  "package": "console",
+  "function": "holdEngineMarker",
+  "signature": "holdEngineMarker(params=3, results=0)",
+  "start": {
+    "line": 68,
+    "column": 1
+  },
+  "end": {
+    "line": 75,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 15
+      },
+      "text": "enginelock.Hold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 31
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 2
+      },
+      "text": "t.Cleanup"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

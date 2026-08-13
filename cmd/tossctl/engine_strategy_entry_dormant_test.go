@@ -48,7 +48,7 @@ func TestProductionStrategyEntryAssemblyIsPairedDormantAndInert(t *testing.T) {
 }
 
 func TestProductionRuntimeIncludesOneDormantStrategyEntryOuterLoop(t *testing.T) {
-	runtime, err := engineRuntime(context.Background(), runtimeBranchContext(), clock.NewFake(runtimeBranchNow), nil)
+	runtime, err := engineRuntime(context.Background(), runtimeBranchContext(), clock.NewFake(runtimeBranchNow), nil, nil)
 	if err != nil {
 		t.Fatalf("engineRuntime: %v", err)
 	}
