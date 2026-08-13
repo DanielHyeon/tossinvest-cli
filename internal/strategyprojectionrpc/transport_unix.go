@@ -315,7 +315,7 @@ func reclaimStaleControlDirectory(engineDir string) error {
 	// 근거가 없다(A1 F6).
 	//
 	// probe와 제거 **사이**에 새 주인이 들어오는 경합의 방어는 이 함수가 아니다.
-	// 부팅 1단계의 journal flock이 엔진을 하나로 강제하므로(cmd/tossctl/engine.go:14
+	// 부팅 1단계의 journal flock이 엔진을 하나로 강제하므로(cmd/tossctl 의 `runEngineRun`,
 	// "flock on the journal directory FIRST"), 같은 디렉터리에 회수와 발행을 동시에
 	// 하는 두 번째 엔진은 존재할 수 없다. 이 함수의 원자성이 아니라 그 잠금이 방어다.
 	for _, path := range append(staged, DescriptorPath(engineDir), socketPath) {
