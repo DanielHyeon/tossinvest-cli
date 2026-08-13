@@ -115,3 +115,36 @@ Pre-Edit Gate (Fix 라운드):
 `internal/app/engine/`의 policy command·policy runtime·alert control transport는
 **production 코드를 편집하지 않는다.** crash-shape 핀(새 _test.go 파일)만 추가하고,
 핀이 결함을 드러내면 거기서 멈추고 Manager에 보고한다(tasks 2.5 문구 그대로).
+
+---
+
+## T1-5. gstack Fix 라운드 (2026-08-14) — 발행 이름 길이 · 생존 절 · staging 모양
+
+gstack 7패스 리뷰(스페셜리스트 4 · 적대 3)가 Fix-First 로 판정한 B1~B5 다.
+
+```text
+Pre-Edit Gate (gstack-fix):
+- change id / task id: a108 / gstack Fix-First B1~B5 (design D1-2·D2)
+- 대상 심볼(패키지.함수):
+    internal/strategyprojectionrpc.stagingPath        (임시 이름 길이 — B1)
+    internal/strategyprojectionrpc.writeDescriptor    (os.CreateTemp → stagingPath, B1)
+    internal/strategyprojectionrpc.projectionSocketAccepts (owner-write 절 추가 — B2)
+    internal/strategyprojectionrpc.reclaimStaleControlDirectory (staging 모양 검증 — B3)
+    internal/strategyprojectionrpc.Start              (실패 정리에 descriptor 추가 — B4)
+- 기존 동작 파악 근거:
+    FLM 재생성분 (start · reclaimstalecontroldirectory · writedescriptor) — AST 열거.
+    gstack 리뷰의 실측: sun_path 108 상한과 임시 이름 22자 · EACCES probe 오판 ·
+      staging 디렉터리의 ENOTEMPTY wedge · rename 후행 실패의 descriptor 잔존.
+- upstream 상속 테스트 영향: no
+- 실패 테스트 선행 작성: yes — a108_publication_is_total_test.go 에 5건을 먼저 넣고
+    현재 코드에서 실패를 관측한 뒤 GREEN 으로 간다(관측 결과는 mutation-ledger-t1.md §C).
+- 안전 불변식 §0 위반 여부 검토: **조건부 통과.** 완화는 하나, 나머지는 검사 추가다.
+    (1) B2① 「owner 쓰기 비트 없음 = 사망」은 **판정을 하나 늘리는** 완화다. 안전한
+        근거는 발행 수명주기다: 최종 이름을 가진 socket 은 반드시 chmod 0600 을 지난
+        뒤 rename 된 것이고(listenPrivateSocket), 구버전이 남긴 pre-chmod 잔재도 umask
+        가 정한 0700 이라 owner 쓰기는 서 있다. 즉 owner 쓰기가 없는 socket 은 **우리가
+        발행한 산 endpoint 일 수 없다.** 그리고 이 절에 도달하려면 이미 우리 uid 소유 ·
+        0700 디렉터리 · 비symlink · nlink 1 을 전부 통과해야 한다.
+    (2) B3 는 **거부를 늘리는** 방향이다(모양이 낯설면 아무것도 건드리지 않는다).
+    (3) B1·B4 는 판정이 아니라 이름 길이와 실패 정리 범위다. 회수·거부 규칙 불변.
+```

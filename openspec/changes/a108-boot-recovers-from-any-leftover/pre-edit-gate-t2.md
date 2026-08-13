@@ -179,3 +179,37 @@ dormant 전략 화면(상시 표면)이다. ③ 이 「1회 유실형」걱정�
 - `strategyprojection.Validate` 를 집계 스냅샷에서 부르는 것(콘솔은 부른다):
   6.8② 의 편집 범위를 「Read **오류** 흡수」로 좁힌 결과다. 성공했지만 형식이 깨진
   스냅샷의 처리는 이 change 이전과 같다 — 선언된 생략.
+
+---
+
+## T2-3. gstack Fix 라운드 (2026-08-14) — 보고가 부팅을 붙잡지 않는다 · 강등의 신호값
+
+gstack 7패스 리뷰가 Fix-First 로 판정한 A1~A6 이다. A1 은 3소스, A2 는 3소스 수렴.
+
+```text
+Pre-Edit Gate (gstack-fix):
+- change id / task id: a108 / gstack Fix-First A1~A6 (design D3-2·D4-2)
+- 대상 심볼(패키지.함수):
+    cmd/tossctl.reportStrategyProjectionDegraded (Notify 를 goroutine 으로 — A1)
+    cmd/tossctl.runEngineRun                     (token if-스코프 복원 · 불변식 주석 — A4·A5)
+    cmd/tossctl.runHTTPAPI                       (dial 실패 sentinel · 경고 — A2·A3)
+    cmd/tossctl.openHTTPAPIResources             (engineJournalDir 실패 경고 — A3)
+    cmd/tossctl.httpAPIReader.Snapshot           (주석 확장 — A2)
+- 기존 동작 파악 근거:
+    FLM 재생성분 (runenginerun · runhttpapi · httpapireader.snapshot) + 신규
+      (openhttpapiresources) — AST 열거.
+    gstack 실측: `Notify` 는 Publisher 가 붙어 있으면 그 자리에서 발행하고
+      (`obs.Notifier.publishBestEffort`), 한 번의 발행 상한이 `obs.DefaultPublishTimeout`
+      (10s)이다. 그 줄은 `rt.Run` **앞**이다.
+- upstream 상속 테스트 영향: no
+- 실패 테스트 선행 작성: yes — 영원히 블록하는 Publisher 를 꽂은 부팅이 기한 안에
+    루프에 도달하는지 보는 핀과, dial 실패 부팅의 reader 가 unavailable 을 렌더하는지
+    보는 핀을 먼저 넣고 현재 코드에서 실패를 관측한다.
+- 안전 불변식 §0 위반 여부 검토: **통과.**
+    (1) A1 은 보고를 **지우지 않는다.** 옮기는 것은 실행 자리뿐이고, 같은 핀이
+        「Notifier 에 실제로 닿았다」를 함께 잰다. detached context 를 쓰는 이유도
+        유실 방지다 — 부모 ctx 가 SIGTERM 에서 끊길 때 마지막 보고가 사라지지 않는다.
+    (2) A2 는 강등을 **더 정직한 값**으로 만든다(NOT_CONFIGURED → RUNTIME_UNAVAILABLE).
+        조회 전용 데몬의 화면 값이고 주문·손절 경로에 닿지 않는다.
+    (3) A3 는 경고를 **더한다.** A4·A5·A6 은 스코프·주석·테스트 창이다.
+```
