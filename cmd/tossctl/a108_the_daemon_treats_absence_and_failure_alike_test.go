@@ -168,31 +168,125 @@ func TestAnAbsentDescriptorAndADeadOneBootTheSame(t *testing.T) {
 	}
 }
 
-// TestAnUninspectableDescriptorIsStillFatal 은 강등의 상한이다.
+// TestAnUninspectableDescriptorDegradesLikeTheConsole 은 **뒤집힌 핀**이다 (A2 F4, D4-2).
 //
-// descriptor 가 없는 것과 **조사할 수 없는 것**은 다르다. 후자는 잔재가 아니라 환경
-// 이상이고, 강등으로 삼키면 잘못 배치된 데몬이 조용히 반쪽으로 뜬다.
+// 원 D4 는 여기를 fatal 로 유지했다: 「조사할 수 없는 것」은 잔재가 아니라 환경 이상이니
+// 삼키면 안 된다는 논지였고, 이 테스트의 옛 이름이 `...IsStillFatal` 이었다.
+// A2 가 반증했다 — control 디렉터리 자리에 파일이 놓이거나 볼륨이 잘못 마운트되면
+// `os.Stat` 은 ENOTDIR 로 실패하고, 그러면 이 조회 전용 데몬은 **다시 `Restarting (1)`
+// 로 돈다.** a108 이 지우려던 바로 그 모양이다. 「환경 이상은 크게 실패해야 한다」는
+// 원칙과 「조회 데몬은 crash loop 를 돌면 안 된다」는 사고 교훈이 부딪히면, 이 데몬에
+// 관해서는 후자가 이긴다. 조사 불가능은 **경고 한 줄로 말하고** 전략 화면 없이 뜬다.
+//
+// 이것이 콘솔의 판정과 같다(`console.go:419-421`) — 두 소비자가 같은 디스크 상태를
+// 다르게 읽던 갈림이 이 change 로 닫힌다.
 //
 // control 디렉터리 자리에 **일반 파일**을 두면 그 아래 경로의 `os.Stat` 은 ENOTDIR 로
 // 실패한다 — NotExist 가 아니다. root 로 돌려도 결과가 같은 형태라 권한 fixture 보다
 // 안정적이다.
-func TestAnUninspectableDescriptorIsStillFatal(t *testing.T) {
+func TestAnUninspectableDescriptorDegradesLikeTheConsole(t *testing.T) {
 	dir := a108HTTPAPIDir(t)
 	if err := os.WriteFile(strategyprojectionrpc.ControlDirectory(dir), []byte("not a directory"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	// fixture 가 실제로 비-NotExist 오류를 만드는지 먼저 확인한다. 이것을 안 보면
-	// 「그냥 없어서 통과」한 테스트를 fatal 의 증거로 쓰게 된다.
+	// 「그냥 없어서 통과」한 기동을 강등의 증거로 쓰게 된다.
 	if _, statErr := os.Stat(strategyprojectionrpc.DescriptorPath(dir)); statErr == nil || os.IsNotExist(statErr) {
 		t.Fatalf("fixture 가 조사 불가능 상태를 못 만들었다: %v", statErr)
 	}
 
-	_, _, err := a108RunHTTPAPI(t, dir)
-	if err == nil {
-		t.Fatal("조사할 수 없는 descriptor 로 데몬이 떴다 — 강등이 환경 이상까지 삼켰다")
+	out, errOut, err := a108RunHTTPAPI(t, dir)
+	if err != nil {
+		t.Fatalf("httpapi = %v — 조사 불가능한 descriptor 가 조회 데몬을 재시작 루프에 넣었다\n%s",
+			err, errOut)
 	}
-	if !strings.Contains(err.Error(), "inspect strategy runtime projection") {
-		t.Errorf("거절이 사유를 안 말한다: %v", err)
+	if !strings.Contains(out, "httpapi private endpoint") {
+		t.Errorf("데몬이 endpoint 를 알리지 않았다 — 뜬 것이 맞는지 알 수 없다:\n%s", out)
+	}
+	if !strings.Contains(errOut, "strategy runtime endpoint") {
+		t.Errorf("강등이 사유를 말하지 않았다 — 잘못 배치된 데몬이 조용히 반쪽으로 떴다:\n%s", errOut)
+	}
+}
+
+// a108DeadSocketLeftover 는 **S3** 다: descriptor 와 socket **파일**이 둘 다 남았고
+// 주인은 죽었다.
+//
+// 이것이 전원 단절의 기본 모양이다. graceful shutdown 만이 socket 을 unlink 하므로,
+// 호스트가 그냥 꺼지면 두 파일이 그대로 남는다 (a108HalfLeftover 는 unlink 가 끝난
+// 뒤 죽은, 더 좁은 경우다).
+//
+// listener 를 열고 perm 을 맞춘 뒤 **unlink 없이** 닫는다 — `SetUnlinkOnClose(false)`
+// 가 그 일을 한다. 닫힌 뒤에는 그 경로로 connect 하면 ECONNREFUSED 다.
+func a108DeadSocketLeftover(t *testing.T, dir string) {
+	t.Helper()
+	control := strategyprojectionrpc.ControlDirectory(dir)
+	if err := os.Mkdir(control, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	socketPath := strategyprojectionrpc.SocketPath(dir)
+	listener, err := net.Listen("unix", socketPath)
+	if err != nil {
+		t.Fatalf("S3 fixture listen: %v", err)
+	}
+	unixListener, ok := listener.(*net.UnixListener)
+	if !ok {
+		t.Fatalf("S3 fixture: unix listener 가 아니다 (%T)", listener)
+	}
+	unixListener.SetUnlinkOnClose(false)
+	if err := os.Chmod(socketPath, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := unixListener.Close(); err != nil {
+		t.Fatalf("S3 fixture close: %v", err)
+	}
+	body, err := json.Marshal(strategyprojectionrpc.Descriptor{
+		SchemaVersion: "tossos.strategy-runtime-unix/v1",
+		Socket:        strategyprojectionrpc.SocketFileName,
+		Token:         strings.Repeat("a", 64),
+		PID:           16,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(strategyprojectionrpc.DescriptorPath(dir), body, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// fixture 가 진짜 S3 인지 본다: socket 파일이 있고, 아무도 안 받는다.
+	info, err := os.Lstat(socketPath)
+	if err != nil || info.Mode()&os.ModeSocket == 0 {
+		t.Fatalf("S3 fixture 가 socket 을 안 남겼다 (mode=%v err=%v)", info, err)
+	}
+	conn, dialErr := net.DialTimeout("unix", socketPath, time.Second)
+	if dialErr == nil {
+		_ = conn.Close()
+		t.Fatal("S3 fixture 의 socket 이 아직 연결을 받는다 — 주인이 살아 있다")
+	}
+}
+
+// TestASocketFileWithNoOwnerDegradesTheDaemon 은 D4-2 의 S3 요구다.
+//
+// ⚠️ **이 테스트는 T1-fix 의 `Dial` connect probe 가 병합되기 전까지 RED 다.**
+// 지금 `Dial` 은 descriptor 를 읽고 socket 의 `Lstat`·모드·perm 만 보고 lazy client 를
+// 돌려준다(`internal/strategyprojectionrpc/transport_unix.go:216-230`). S3 에서 그 검사는
+// **전부 통과**하므로 데몬은 「붙었다」고 믿고 뜨고, 강등 경고를 찍지 않는다.
+// A2 가 실측한 그대로다(review.md §2 F3). 회수와 같은 원시 — 실제 connect — 를
+// `Dial` 이 하게 되면 이 테스트는 손대지 않고 GREEN 이 된다.
+//
+// RED 로 커밋하는 것이 의도다: 이 실패가 T1-fix 병합의 검증이 된다.
+func TestASocketFileWithNoOwnerDegradesTheDaemon(t *testing.T) {
+	dir := a108HTTPAPIDir(t)
+	a108DeadSocketLeftover(t, dir)
+
+	out, errOut, err := a108RunHTTPAPI(t, dir)
+	if err != nil {
+		t.Fatalf("httpapi = %v — 주인 없는 socket 파일이 조회 데몬을 죽였다\n%s", err, errOut)
+	}
+	if !strings.Contains(out, "httpapi private endpoint") {
+		t.Errorf("데몬이 endpoint 를 알리지 않았다:\n%s", out)
+	}
+	if !strings.Contains(errOut, "strategy runtime projection") {
+		t.Errorf("S3 에서 강등이 발동하지 않았다 — Dial 이 연결하지 않고 성공을 보고했다. "+
+			"T1-fix 의 connect probe 가 병합되면 GREEN 이 된다:\n%s", errOut)
 	}
 }
 

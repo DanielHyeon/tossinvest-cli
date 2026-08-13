@@ -171,89 +171,119 @@ func TestAFailedStrategyProjectionDoesNotStopTheEngine(t *testing.T) {
 	}
 }
 
-// TestTheDegradedBootLeavesADurableCriticalAlert 는 「1회 유실형이 아니다」다.
+// TestTheDegradedBootWritesNoUndeliveredOutboxRow 은 D3-2 의 첫 핀이다.
 //
-// stderr 한 줄은 프로세스가 죽으면 같이 사라지고 아무도 안 본다. 강등은 원장 outbox 에
-// critical 행을 남겨야 하며, 그 행은 a098 의 전달 루프가 실제로 보낼 때까지 PENDING 으로
-// 남는다 — 그것이 「미해소 유지」다.
+// # 이 테스트는 원래 정반대를 요구했다
 //
-// 원장을 **엔진이 도는 동안** 읽는다. 명령이 돌아오면 `ectx.Close` 가 원장을 닫는다.
-func TestTheDegradedBootLeavesADurableCriticalAlert(t *testing.T) {
+// 원 D3 은 강등이 **durable critical outbox 행**을 남길 것을 요구했고
+// (`TestTheDegradedBootLeavesADurableCriticalAlert`), A2 적대 리뷰가 그것을 뒤집었다:
+// `Journal.UndeliveredCount` 는 Type 무필터로 PENDING 행을 세고
+// (`internal/journal/outbox.go:532-540`), 다음 부팅의 `restoreAlertEntryLatch` 가
+// 그 수가 0 보다 크면 진입 게이트를 `ReasonAlertUndelivered` 로 latch 한다
+// (`internal/app/engine/gateway.go:153-168`). 해제는 운영자 ack 뿐이다.
+// publisher 가 설정되지 않은 배포에서 그 행은 영원히 PENDING 이므로,
+// **화면 하나를 잃었다는 보고가 실계좌의 신규 진입을 영구 차단**한다.
+// obs 교리가 정확히 그것을 금지한다(`internal/obs/event.go:266-278`).
+//
+// # 이 harness 가 이 계약에 맞는 이유
+//
+// `a108Engine` 의 Notifier 는 **Publisher 가 nil 이고 전달 루프도 없다.** 그러니
+// 어떤 행이든 enqueue 되면 PENDING 으로 **남는다** — 0 이 나왔다면 그것은 「이미
+// 전달돼서」가 아니라 「애초에 쓰지 않아서」다. (A2 F2 가 지적한 함정의 반대편:
+// 전달 루프 없는 harness 에서 PENDING 을 보고 「미해소 유지」라 부른 것이 원죄였다.)
+func TestTheDegradedBootWritesNoUndeliveredOutboxRow(t *testing.T) {
 	dir := a108EngineDir(t)
 	ectx, j := a108Engine(t, dir)
 	stubAssembly(t, ectx, nil)
 	a108StubProjection(t, a108Incident)
 
-	var pending []journal.Alert
-	var listErr error
+	var undelivered int
+	var countErr error
+	var blocks map[execgw.ReasonCode]string
 	stubRuntimeWithReady(t, func(*engine.Context, func()) (*engine.Runtime, error) {
 		return a108Loops(t, func() {
-			pending, listErr = j.PendingAlerts(context.Background(), 0)
+			undelivered, countErr = j.UndeliveredCount(context.Background())
+			blocks = ectx.Entry.Blocks()
 		}), nil
 	})
 
-	if _, _, err := runCLI(t, "--config-dir", dir, "engine", "run"); !errors.Is(err, errA108LoopsReached) {
-		t.Fatalf("engine run = %v", err)
+	if _, errOut, err := runCLI(t, "--config-dir", dir, "engine", "run"); !errors.Is(err, errA108LoopsReached) {
+		t.Fatalf("engine run = %v\n%s", err, errOut)
 	}
-	if listErr != nil {
-		t.Fatalf("PendingAlerts: %v", listErr)
+	if countErr != nil {
+		t.Fatalf("UndeliveredCount: %v", countErr)
 	}
-	if len(pending) != 1 {
-		t.Fatalf("밀린 critical 알림 %d건, want 1 — 강등이 조용하면 이 change 는 회복이 아니라 은폐다",
-			len(pending))
+	if undelivered != 0 {
+		t.Errorf("강등 기동이 미전달 outbox 행 %d개를 남겼다, want 0 — "+
+			"다음 부팅의 restoreAlertEntryLatch 가 그것으로 진입을 잠근다", undelivered)
 	}
-	row := pending[0]
-	if row.Severity != string(obs.SeverityCritical) {
-		t.Errorf("알림 severity = %q, want %q", row.Severity, obs.SeverityCritical)
-	}
-	if !strings.Contains(row.Body, a108Incident.Error()) {
-		t.Errorf("알림 본문이 사유를 안 담았다: %q", row.Body)
-	}
-	if strings.TrimSpace(row.Type) == "" || strings.TrimSpace(row.EventKey) == "" {
-		t.Errorf("알림에 type/event_key 가 없다: %+v", row)
+	if detail, latched := blocks[execgw.ReasonAlertUndelivered]; latched {
+		t.Errorf("강등이 이 프로세스의 진입 게이트를 잠갔다 (%q) — "+
+			"보고가 critical rail 을 탔다는 뜻이다", detail)
 	}
 }
 
-// TestEachDegradedRunEarnsItsOwnAlertAndOnlyOne 은 알림 event key 의 설계를 고정한다.
+// TestASecondDegradedBootLeavesTheNextBootsEntryGateUnlatched 는 D3-2 의 둘째 핀이고,
+// A2 가 이름을 붙여 요구한 **다음-부팅 측정**이다.
 //
-// `EnqueueAlert` 는 event key 로 접고 **이미 DELIVERED 된 행을 다시 세우지 않는다**
-// (remindAfter=0, journal/outbox.go:142-145). key 가 디렉터리 하나로 고정이면 오늘
-// 강등을 한 번 알린 뒤 다음 주의 강등 기동은 조용히 접힌다 — 「미해소 유지」의 반대다.
+// 사고 당일의 실제 모양은 한 번의 강등이 아니라 autostart 가 1분마다 세우는 **반복**
+// 기동이었다. 그래서 재는 것도 반복이다: 같은 journal 로 두 번 강등 기동한 뒤,
+// 세 번째 부팅이 읽을 원장 상태가 여전히 「잠글 것이 없다」여야 한다.
 //
-// 그래서 key 는 마커가 쓰는 것과 같은 **실행 토큰**으로 갈린다. 두 성질을 같이 잰다:
-// 다른 실행은 각자 알림을 얻고, 같은 실행은 여전히 한 번만 얻는다. 하나만 재면
-// 「항상 접는다」와 「항상 새로 쓴다」 중 하나가 살아남는다.
-func TestEachDegradedRunEarnsItsOwnAlertAndOnlyOne(t *testing.T) {
+// # 무엇을 재고 무엇을 재지 않는지 (정직하게)
+//
+// `restoreAlertEntryLatch` 자체는 `internal/app/engine` 소유이고 그 동작
+// (0보다 크면 latch, 0이면 통과)은 a098 테스트가 진다. 여기서 재는 것은 **그 함수에
+// 들어가는 값**이다 — 그 함수의 입력은 `Journal.UndeliveredCount` 하나뿐이므로
+// (gateway.go:154-160), 그 값이 0 이면 다음 부팅은 이 사유로 잠길 수 없다.
+// 원장은 **다시 열어서** 읽는다: 그것이 다음 부팅이 실제로 하는 일이다.
+func TestASecondDegradedBootLeavesTheNextBootsEntryGateUnlatched(t *testing.T) {
 	dir := a108EngineDir(t)
-	previousInstance := engineProcInstance
-	t.Cleanup(func() { engineProcInstance = previousInstance })
 
-	boot := func(instance string) []journal.Alert {
+	degradedBoot := func() {
 		t.Helper()
-		engineProcInstance = func(int) (string, error) { return instance, nil }
-		ectx, j := a108Engine(t, dir)
+		ectx, _ := a108Engine(t, dir)
 		stubAssembly(t, ectx, nil)
 		a108StubProjection(t, a108Incident)
-		var rows []journal.Alert
 		stubRuntimeWithReady(t, func(*engine.Context, func()) (*engine.Runtime, error) {
-			return a108Loops(t, func() { rows, _ = j.PendingAlerts(context.Background(), 0) }), nil
+			return a108Loops(t, nil), nil
 		})
-		if _, _, err := runCLI(t, "--config-dir", dir, "engine", "run"); !errors.Is(err, errA108LoopsReached) {
-			t.Fatalf("engine run = %v", err)
+		if _, errOut, err := runCLI(t, "--config-dir", dir, "engine", "run"); !errors.Is(err, errA108LoopsReached) {
+			t.Fatalf("engine run = %v\n%s", err, errOut)
 		}
-		return rows
 	}
+	degradedBoot()
+	degradedBoot()
 
-	if got := boot("a108-run-A"); len(got) != 1 {
-		t.Fatalf("첫 강등 기동 뒤 밀린 알림 %d건, want 1", len(got))
+	// 다음 부팅의 2단계: 같은 경로의 원장을 연다.
+	next, err := journal.Open(context.Background(), journal.Options{
+		Path:     filepath.Join(dir, journal.DBFileName),
+		FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
+	})
+	if err != nil {
+		t.Fatalf("다음 부팅의 journal.Open: %v", err)
 	}
-	if got := boot("a108-run-A"); len(got) != 1 {
-		t.Errorf("같은 실행 토큰이 알림을 %d건으로 늘렸다, want 1 — 한 조건이 pager storm 이 된다",
-			len(got))
+	defer func() { _ = next.Close() }()
+
+	undelivered, err := next.UndeliveredCount(context.Background())
+	if err != nil {
+		t.Fatalf("UndeliveredCount: %v", err)
 	}
-	if got := boot("a108-run-B"); len(got) != 2 {
-		t.Errorf("다른 실행의 강등 뒤 밀린 알림 %d건, want 2 — "+
-			"두 번째 강등 기동이 조용히 접혔다", len(got))
+	if undelivered != 0 {
+		t.Fatalf("강등 기동 두 번 뒤 미전달 알림 %d건 — 다음 부팅의 진입 게이트가 "+
+			"%s 로 잠긴다(해제는 운영자 ack 뿐)", undelivered, execgw.ReasonAlertUndelivered)
+	}
+	// 대조: 이 harness 에서 outbox 행은 실제로 남는다. 위 0 이 「원장이 안 세는 것」이
+	// 아니라 「강등이 안 쓰는 것」임을 같은 handle 로 보인다.
+	if _, err := next.EnqueueAlert(context.Background(), journal.Alert{
+		EventKey: "a108-control", Type: "a108.control", Severity: string(obs.SeverityCritical),
+		Title: "CONTROL", Body: "이 행은 이 테스트가 직접 넣었다",
+	}); err != nil {
+		t.Fatalf("대조군 EnqueueAlert: %v", err)
+	}
+	if got, err := next.UndeliveredCount(context.Background()); err != nil || got != 1 {
+		t.Fatalf("대조군 뒤 미전달 = %d (err=%v), want 1 — "+
+			"이 harness 는 PENDING 행을 실제로 센다", got, err)
 	}
 }
 
@@ -267,12 +297,12 @@ func TestASucceedingProjectionIsStillServedAndClosed(t *testing.T) {
 	stubAssembly(t, ectx, nil)
 
 	var duringRun bool
-	var pending []journal.Alert
+	var undelivered int
 	stubRuntimeWithReady(t, func(*engine.Context, func()) (*engine.Runtime, error) {
 		return a108Loops(t, func() {
 			_, statErr := os.Stat(strategyprojectionrpc.DescriptorPath(dir))
 			duringRun = statErr == nil
-			pending, _ = j.PendingAlerts(context.Background(), 0)
+			undelivered, _ = j.UndeliveredCount(context.Background())
 		}), nil
 	})
 
@@ -282,8 +312,8 @@ func TestASucceedingProjectionIsStillServedAndClosed(t *testing.T) {
 	if !duringRun {
 		t.Error("정상 경로에서 projection descriptor 가 없다 — 강등이 성공까지 삼켰다")
 	}
-	if len(pending) != 0 {
-		t.Errorf("정상 기동이 critical 알림 %d건을 남겼다", len(pending))
+	if undelivered != 0 {
+		t.Errorf("정상 기동이 미전달 알림 %d건을 남겼다", undelivered)
 	}
 	if _, err := os.Stat(strategyprojectionrpc.ControlDirectory(dir)); !os.IsNotExist(err) {
 		t.Errorf("명령이 돌아온 뒤에도 control 디렉터리가 남았다 (stat err = %v) — "+
@@ -328,11 +358,23 @@ func TestTheDegradedBootStillHoldsTheJournalFlock(t *testing.T) {
 	}
 }
 
-// TestTheDegradedBootPublishesReadyOnlyAfterRecovery 는 3.2 ② 다.
+// TestTheDegradedBootLeavesReadyToTheRuntimeSeam 은 3.2 ② 이고, **이름이 재는 것보다
+// 컸던 테스트**다 (A2 F6 — 정직화).
 //
-// a102 D5: ready 는 Recover 가 **끝난 뒤에만** 발행된다. 강등이 그 시점을 앞당기면
-// 콘솔과 서베이가 「대사 끝났다」를 거짓으로 읽는다.
-func TestTheDegradedBootPublishesReadyOnlyAfterRecovery(t *testing.T) {
+// 옛 이름은 `TestTheDegradedBootPublishesReadyOnlyAfterRecovery` 였다. 그런데 이
+// harness 는 `engineRuntimeFactory` 를 스텁으로 갈아끼우므로 진짜 `recoverThenReady`
+// 를 실행하지 않는다 — `ready()` 를 부르는 것은 테스트 자신이다. 즉 여기서 실제로
+// 측정되는 것은 두 가지뿐이다:
+//
+//  1. **`runEngineRun` 자신은 ready 를 발행하지 않는다** — 강등 처리가 마커를 건드리면
+//     Recover 안에서 읽은 `beforeRecovery` 가 이미 ready 로 나온다.
+//  2. **강등 기동도 ready seam 을 runtime 에 넘긴다** (nil 이 아니다) — 강등이 seam 을
+//     끊으면 진짜 runtime 은 영원히 ready 를 못 쓴다.
+//
+// 「Recover 가 끝난 뒤에만 발행된다」는 순서 자체는 `recoverThenReady` 의 성질이고
+// `TestRecoveryPublishesReadyOnlyWhenItFinished` (a102_engine_ready_test.go:94) 와
+// 그 이웃들이 소유한다. 이 파일은 그것을 **다시 증명하지 않는다.**
+func TestTheDegradedBootLeavesReadyToTheRuntimeSeam(t *testing.T) {
 	dir := a108EngineDir(t)
 	ectx, _ := a108Engine(t, dir)
 	stubAssembly(t, ectx, nil)
@@ -362,10 +404,10 @@ func TestTheDegradedBootPublishesReadyOnlyAfterRecovery(t *testing.T) {
 		t.Error("강등 기동이 활성 마커를 안 남겼다 — 콘솔의 엔진 상태가 빈다")
 	}
 	if beforeRecovery.Ready() {
-		t.Error("복구 전에 이미 ready 였다 — 강등이 신호 시점을 앞당겼다")
+		t.Error("runEngineRun 이 스스로 ready 를 발행했다 — seam 을 우회한 경로가 생겼다")
 	}
 	if !afterRecovery.Ready() {
-		t.Fatal("복구 뒤에도 ready 가 아니다 — 강등이 ready seam 을 끊었다")
+		t.Fatal("테스트가 부른 seam 이 마커에 닿지 않았다 — 강등이 seam 을 끊었다")
 	}
 }
 
