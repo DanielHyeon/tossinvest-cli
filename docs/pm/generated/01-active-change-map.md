@@ -103,3 +103,4 @@
 | `a101-the-soak-outlives-a-deploy` | STORY-TOS-a101 | implemented |
 | `a102-boot-does-not-starve-the-engine` | STORY-TOS-a102 | implemented |
 | `a103-the-rollback-pin-is-made-not-remembered` | STORY-TOS-a103 | implemented |
+| `a107-retire-the-second-protection-core` | STORY-TOS-a107 | in_progress |
