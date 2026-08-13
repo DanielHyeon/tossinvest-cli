@@ -336,25 +336,35 @@ const a108BootDeadline = 3 * time.Second
 // 번의 발행이 상한까지 간다. 여기서는 그 상한을 「영원히」로 놓아 동기/비동기의
 // 차이만 남긴다.
 type a108BlockingPublisher struct {
-	entered     chan struct{}
-	release     chan struct{}
-	returned    chan struct{}
-	enteredOnce sync.Once
-	returnOnce  sync.Once
-	releaseOnce sync.Once
+	entered   chan struct{}
+	release   chan struct{}
+	returned  chan struct{}
+	cancelled chan struct{}
+
+	enteredOnce   sync.Once
+	returnOnce    sync.Once
+	releaseOnce   sync.Once
+	cancelledOnce sync.Once
 }
 
 func newA108BlockingPublisher() *a108BlockingPublisher {
 	return &a108BlockingPublisher{
-		entered:  make(chan struct{}),
-		release:  make(chan struct{}),
-		returned: make(chan struct{}),
+		entered:   make(chan struct{}),
+		release:   make(chan struct{}),
+		returned:  make(chan struct{}),
+		cancelled: make(chan struct{}),
 	}
 }
 
-func (p *a108BlockingPublisher) Publish(context.Context, obs.Notification) error {
+// Publish 는 놓아 줄 때까지 기다리되, **건네받은 ctx 가 끊기면 그것도 기록한다.**
+// 그 기록이 「보고가 부모 ctx 에 매달려 있는가」를 재는 눈이다.
+func (p *a108BlockingPublisher) Publish(ctx context.Context, _ obs.Notification) error {
 	p.enteredOnce.Do(func() { close(p.entered) })
-	<-p.release
+	select {
+	case <-p.release:
+	case <-ctx.Done():
+		p.cancelledOnce.Do(func() { close(p.cancelled) })
+	}
 	p.returnOnce.Do(func() { close(p.returned) })
 	return nil
 }
@@ -368,10 +378,12 @@ func (p *a108BlockingPublisher) Release() { p.releaseOnce.Do(func() { close(p.re
 // `obs.DefaultPublishTimeout`(10s) 걸리고 — 그 10초는 **손절 루프가 시작되지 않는
 // 10초**다. 화면 하나를 잃었다는 보고가 보호의 시작을 늦추면 안 된다.
 //
-// 두 가지를 같이 잰다. 늦지 않는 것만 재면 「보고를 지웠다」가 통과하기 때문이다:
+// 셋을 같이 잰다. 늦지 않는 것만 재면 「보고를 지웠다」가 통과하고, 닿는 것만 재면
+// 「부모 ctx 에 매달아 뒀다」가 통과한다:
 //
 //	① 부팅이 기한 안에 루프까지 간다      (보고가 붙잡지 않는다)
 //	② 보고가 실제로 Notifier 에 닿았다    (조용해진 것이 아니다)
+//	③ 종료 신호가 그 보고를 끊지 않는다   (마지막 말이 늘 유실되지 않는다)
 func TestTheDegradedBootDoesNotWaitForTheNotifier(t *testing.T) {
 	dir := a108EngineDir(t)
 	ectx, _ := a108Engine(t, dir)
@@ -385,6 +397,11 @@ func TestTheDegradedBootDoesNotWaitForTheNotifier(t *testing.T) {
 
 	// 명령은 별도 goroutine 이다 — 동기 구현에서는 돌아오지 않기 때문이다. t 는
 	// 여기서 쓰지 않는다(다른 goroutine 의 t.Fatal 은 규칙 위반이다).
+	//
+	// ctx 를 테스트가 쥐는 이유는 ③ 때문이다: 이것이 SIGTERM 이 끊는 그 ctx 이고,
+	// 강등 보고가 그것을 상속하면 종료할 때 보고가 함께 죽는다.
+	bootCtx, cancelBoot := context.WithCancel(context.Background())
+	defer cancelBoot()
 	booted := make(chan error, 1)
 	finished := make(chan struct{})
 	go func() {
@@ -394,7 +411,7 @@ func TestTheDegradedBootDoesNotWaitForTheNotifier(t *testing.T) {
 		cmd.SetOut(&out)
 		cmd.SetErr(&errOut)
 		cmd.SetArgs([]string{"--config-dir", dir, "engine", "run"})
-		booted <- cmd.ExecuteContext(context.Background())
+		booted <- cmd.ExecuteContext(bootCtx)
 	}()
 	// seam 복원(t.Cleanup 은 LIFO)보다 **먼저** 이 goroutine 을 끝낸다. 실패로 빠져도
 	// 붙잡힌 명령이 seam 을 읽는 중에 복원이 일어나지 않는다.
@@ -421,7 +438,17 @@ func TestTheDegradedBootDoesNotWaitForTheNotifier(t *testing.T) {
 		t.Fatalf("느린 알림 publisher 하나가 부팅을 %s 넘게 붙잡았다 — 손절 루프는 "+
 			"rt.Run 안에서 시작하고, 이 보고는 그 앞에 있다", a108BootDeadline)
 	}
-	// 보고는 부모 ctx 에 매달려 있지 않다: 명령이 돌아온 뒤에 놓아 줘도 전달된다.
+	// ③ 종료가 도착한다. 보고는 그것을 상속하지 않았으므로 계속 살아 있어야 한다.
+	// 취소는 파생 ctx 의 Done 을 **즉시** 닫으므로, 이 창 안에 아무 일도 없는 것이
+	// 「상속하지 않았다」의 증거다.
+	cancelBoot()
+	select {
+	case <-publisher.cancelled:
+		t.Fatal("종료 신호가 강등 보고를 끊었다 — 그러면 「종료하면서 남기는 마지막 말」이 " +
+			"늘 유실된다. 이 goroutine 이 상속할 것은 값이지 취소가 아니다")
+	case <-time.After(200 * time.Millisecond):
+	}
+	// 그리고 놓아 주면 정상적으로 끝난다.
 	publisher.Release()
 	select {
 	case <-publisher.returned:
