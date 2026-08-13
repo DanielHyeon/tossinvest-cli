@@ -292,6 +292,18 @@ func TestCloseToleratesLeftoverAlreadyRemoved(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// 먼저 이 endpoint가 **실제로 수락 중**인 것을 확인한다. Go의 http.Server는
+	// Serve가 listener를 등록하기 전에 Shutdown이 지나가면 listener 정리를 Serve
+	// goroutine의 defer로 미루고, unix listener의 unlink는 경로 기준이라 그 늦은
+	// 정리가 **다음 기동이 만든 socket**을 지운다. 그 경합은 이 테스트의 대상이
+	// 아니므로(보고서에 별건으로 적었다) 여기서 결정적으로 배제한다.
+	probe, err := Dial(context.Background(), DescriptorPath(dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := probe.Read(context.Background()); err != nil {
+		t.Fatal(err)
+	}
 	// 다른 부팅의 회수가 먼저 지나갔다.
 	for _, path := range []string{DescriptorPath(dir), SocketPath(dir), ControlDirectory(dir)} {
 		if err := os.Remove(path); err != nil {
