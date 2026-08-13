@@ -132,6 +132,14 @@ type SupervisedLoop struct {
 type RuntimeOptions struct {
 	// Loops are the loops to run. At least one is required.
 	Loops []SupervisedLoop
+	// Auxiliary is work the runtime starts and drains but does not supervise.
+	// Optional. See AuxiliaryExecutor (auxiliary.go) for why alert delivery
+	// cannot be a supervised loop: a delivery fault must not stop the loop that
+	// places a stop-loss.
+	//
+	// The runtime still waits for everything here before it returns, because the
+	// caller closes the journal the moment it does.
+	Auxiliary []AuxiliaryExecutor
 	// AccountRef scopes the escalation. Required when any loop carries Health:
 	// an operating-mode transition is per account, and an unscoped one is not a
 	// transition anybody can act on.
@@ -212,6 +220,25 @@ func NewRuntime(opts RuntimeOptions) (*Runtime, error) {
 		}
 	}
 
+	// Auxiliary executors are validated against the same seen set, not one of
+	// their own: the name is what a stop record points at, and two things the
+	// runtime starts sharing one name make that record ambiguous at exactly the
+	// moment somebody is reading it to find out what died.
+	for _, aux := range opts.Auxiliary {
+		name := strings.TrimSpace(aux.Name)
+		switch {
+		case name == "":
+			return nil, fmt.Errorf("%w: an auxiliary executor has no name; the record of its stop has "+
+				"to say what stopped", ErrRuntimeUnavailable)
+		case seen[name]:
+			return nil, fmt.Errorf("%w: %q is already the name of something this runtime starts",
+				ErrRuntimeUnavailable, name)
+		case aux.Run == nil:
+			return nil, fmt.Errorf("%w: the %s executor has no Run function", ErrRuntimeUnavailable, name)
+		}
+		seen[name] = true
+	}
+
 	r := &Runtime{
 		opts:      opts,
 		clk:       opts.Clock,
@@ -280,6 +307,26 @@ func (r *Runtime) Run(ctx context.Context) error {
 			defer wg.Done()
 			stops <- stop{name: loop.Name, err: loop.Run(loopCtx)}
 		}(loop)
+	}
+
+	// The auxiliary executors start with the loops and are drained with them, and
+	// that is all they share. Nothing here sends to stops, so one that returns
+	// cannot become the first stop and cannot bring the engine down. The channel
+	// arithmetic above is untouched: stops is buffered to len(Loops) and the
+	// senders are still exactly the loops.
+	//
+	// They go into the same wg on purpose. wg.Wait() below is already this
+	// function's journal-close contract — "every goroutine it started has
+	// returned too" — and a second WaitGroup would be a second place to forget
+	// it rather than a second guarantee.
+	for _, aux := range r.opts.Auxiliary {
+		wg.Add(1)
+		go func(aux AuxiliaryExecutor) {
+			defer wg.Done()
+			// loopCtx, not ctx: runAuxiliary judges the stop against what it is
+			// handed, and the two differ when a supervised loop fails.
+			r.runAuxiliary(loopCtx, aux)
+		}(aux)
 	}
 
 	supervised := make(chan struct{})

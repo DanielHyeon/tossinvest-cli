@@ -1,16 +1,16 @@
 {
   "file": "internal/obs/notifier.go",
-  "source_sha256": "2e62edada6c7456220d2f6489548b6846ce57dacd317aa41f650df85da15e9f1",
+  "source_sha256": "0bc75668ff17c3d6dec1c8191e24f00b80a700c091ed33fe80c1acbd4b9a5bd8",
   "package": "obs",
   "function": "Flush",
   "receiver": "Notifier",
   "signature": "Notifier.Flush(params=1, results=3)",
   "start": {
-    "line": 427,
+    "line": 727,
     "column": 1
   },
   "end": {
-    "line": 462,
+    "line": 826,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 428,
+        "line": 728,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 438,
+        "line": 738,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "range",
       "at": {
-        "line": 441,
+        "line": 741,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 442,
+        "line": 742,
         "column": 3
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 451,
+        "line": 753,
         "column": 3
       }
     },
@@ -58,7 +58,111 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 455,
+        "line": 759,
+        "column": 4
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 764,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 767,
+        "column": 4
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 779,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 782,
+        "column": 4
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "else",
+      "at": {
+        "line": 786,
+        "column": 11
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 783,
+        "column": 5
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 786,
+        "column": 11
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 803,
+        "column": 4
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "else",
+      "at": {
+        "line": 807,
+        "column": 11
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 804,
+        "column": 5
+      }
+    },
+    {
+      "id": "B17",
+      "kind": "if",
+      "at": {
+        "line": 807,
+        "column": 11
+      }
+    },
+    {
+      "id": "B18",
+      "kind": "if",
+      "at": {
+        "line": 813,
+        "column": 3
+      }
+    },
+    {
+      "id": "B19",
+      "kind": "if",
+      "at": {
+        "line": 816,
         "column": 3
       }
     }
@@ -67,28 +171,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 429,
+        "line": 729,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 439,
+        "line": 739,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 456,
+        "line": 814,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 461,
+        "line": 825,
         "column": 2
       }
     }
@@ -97,7 +201,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 434,
+        "line": 734,
         "column": 2
       },
       "text": "n.mu.Lock"
@@ -105,7 +209,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 435,
+        "line": 735,
         "column": 8
       },
       "text": "n.mu.Unlock"
@@ -113,7 +217,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 437,
+        "line": 737,
         "column": 18
       },
       "text": "n.Journal.PendingAlerts"
@@ -121,7 +225,47 @@
     {
       "kind": "call",
       "at": {
-        "line": 446,
+        "line": 752,
+        "column": 18
+      },
+      "text": "n.Journal.ClaimAlertByID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 752,
+        "column": 58
+      },
+      "text": "n.claimant"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 760,
+        "column": 5
+      },
+      "text": "n.Log.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 768,
+        "column": 5
+      },
+      "text": "n.logClaimHeld"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 772,
+        "column": 3
+      },
+      "text": "n.logClaimStolen"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 774,
         "column": 14
       },
       "text": "EventType"
@@ -129,7 +273,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 451,
+        "line": 779,
         "column": 14
       },
       "text": "n.Publisher.Publish"
@@ -137,31 +281,111 @@
     {
       "kind": "call",
       "at": {
-        "line": 452,
-        "column": 8
+        "line": 780,
+        "column": 22
+      },
+      "text": "EventType"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 781,
+        "column": 20
       },
       "text": "n.Journal.MarkAlertAttemptFailed"
     },
     {
       "kind": "call",
       "at": {
-        "line": 452,
-        "column": 56
+        "line": 781,
+        "column": 81
       },
       "text": "perr.Error"
     },
     {
       "kind": "call",
       "at": {
-        "line": 455,
-        "column": 14
+        "line": 784,
+        "column": 6
+      },
+      "text": "n.Log.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 787,
+        "column": 5
+      },
+      "text": "n.logLeaseLost"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 800,
+        "column": 25
+      },
+      "text": "releaseCtx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 801,
+        "column": 22
+      },
+      "text": "n.Journal.ReleaseAlertClaim"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 802,
+        "column": 4
+      },
+      "text": "relCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 805,
+        "column": 6
+      },
+      "text": "n.Log.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 808,
+        "column": 5
+      },
+      "text": "n.logLeaseLost"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 812,
+        "column": 20
       },
       "text": "n.Journal.MarkAlertDelivered"
     },
     {
       "kind": "call",
       "at": {
-        "line": 460,
+        "line": 819,
+        "column": 4
+      },
+      "text": "n.logLeaseLost"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 819,
+        "column": 50
+      },
+      "text": "EventType"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 824,
         "column": 19
       },
       "text": "n.Journal.UndeliveredCount"
@@ -171,49 +395,77 @@
     {
       "kind": ":=",
       "at": {
-        "line": 437,
+        "line": 737,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 445,
+        "line": 752,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 451,
+        "line": 773,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 779,
         "column": 6
       }
     },
     {
-      "kind": "=",
+      "kind": ":=",
       "at": {
-        "line": 452,
+        "line": 780,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 455,
-        "column": 6
+        "line": 781,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 800,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 801,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 812,
+        "column": 3
       }
     },
     {
       "kind": "++",
       "at": {
-        "line": 458,
+        "line": 822,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 460,
+        "line": 824,
         "column": 2
       }
     }
@@ -223,7 +475,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 435,
+        "line": 735,
         "column": 2
       },
       "text": "n.mu.Unlock"

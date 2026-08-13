@@ -1,6 +1,7 @@
 # a098 design
 
-base: `285c7619110d2f8c53a1d9ddfbadd16ad0e9e53e`
+base: `e6c4636adc4358796a6ac6feb3f8ac9a23d73193` — **a099 착지 뒤 재고정**
+(2026-08-12, 사유는 tasks 머리말)
 
 ## D1 — 왜 루프인가, 왜 exit 사이클 안이 아닌가
 
@@ -74,7 +75,9 @@ a099의 1라운드 리뷰가 C의 결함을 정확히 짚었다(A-P2). `Flush`�
 > **`ClaimAlertByID`가 lease를 안 받는 것이 코드에 남았다.** doc comment `:282-284`가
 > 이유를 적는다 — *"letting a caller pass one is how a second sender ends up judging
 > somebody else's claim by its own clock"*. 기간은 `journal.Options.AlertLease`로
-> **인스턴스에** 주입한다(`journal.go:65`), 그것이 D6의 4.7이 하는 일이다.
+> **인스턴스에** 주입한다(`journal.go:65`) — **a099가 이미 그렇게 하고 프로덕션은
+> 기본값 81초를 쓴다. a098은 그 값을 안 건드린다.** 원래 그 자리가 D6의 4.7이었는데
+> `not-applicable`로 판정됐다 (D6의 ⛔ 블록 · `tasks.md` 4.7).
 >
 > **`Notifier.Flush`도 이제 이 API를 쓴다** (a099 §4.11). a098의 루프가 `Flush`를
 > 안 부르는 것은 그대로지만, **같은 원장 임차 위에서 도는 두 발송자**라는 구도는
@@ -215,6 +218,24 @@ a099 2라운드 리뷰가 A-P10 = B-P6으로 잡은 것이다. **a099를 혼자 
 > `alert_claim.go:34`)가 4.7이 덮어써야 할 기본값이고,
 > `obs.AlertDeliveryBound`(`alert_lease.go:39`)가 그 계산을 이미 코드로 갖고 있다 —
 > **4.7은 그 함수를 부르면 되고 숫자를 다시 유도하면 안 된다.**
+
+> ## ⛔⛔ 위 표의 **셋째 줄이 틀렸다 — 실측이 뒤집었다** (2026-08-12, 구현 중)
+>
+> *"살아 있는 설정에서 임차 기간 주입 — a099가 혼자 못 하는 것"*은 **거짓이다.**
+> 4.7을 실제로 만들려고 네 입력의 구성 자리를 세다가 드러났다. 상세 측정은
+> `tasks.md`의 4.7이고, 판정은 **`not-applicable`**이다.
+>
+> | 표가 주장한 것 | 실측 |
+> |---|---|
+> | a099는 **기본값 단언까지만** 진다 | **거짓** — `Notifier.checkAlertLease`(`internal/obs/notifier.go:692-707`)가 **런타임에** 살아 있는 `Attempts`·`RetryDelay`로 bound 를 계산해 임차와 비교하고 `EventAlertLeaseTooShort`를 낸다 |
+> | 「살아 있는 설정」이 기본값과 다를 수 있다 | **오늘은 다를 수 없다** — 네 입력 중 프로덕션이 세팅하는 것이 **하나도 없다**(구성 자리 넷을 다 셌다). `AlertDeliveryBound(살아 있는 것) ≡ DefaultAlertDeliveryBound()` |
+> | 주입하면 나아진다 | **나빠진다** — 문장대로 `bound`를 `AlertLease`에 넘기면 임차가 **81s → 54s**로 **짧아진다.** 짧은 임차의 대가는 `alert_lease.go:29-34`가 적는다 |
+>
+> **⛔ 배포 단위(D6 본문)는 이것으로 안 흔들린다 — 그것을 분명히 적는다.**
+> a099 단독이 오늘보다 나쁜 이유는 *"claim 한 뒤 죽은 행을 다시 집을 주체가 없다"*이고,
+> 그것을 지는 것은 **4.0**이다. 표의 넷 중 **4.0·4.6·4.4 는 그대로 살아 있고 전부
+> a098이 진다.** 떨어져 나간 것은 넷째 조건 하나이며, `deploy-pair.txt`의 근거는
+> 셋으로도 성립한다. **줄어든 것은 결합의 이유가 아니라 그 이유의 개수다.**
 
 > **기동 복원이 왜 a098인가.** `EntryGate.Block`은 **메모리 래치**이고 재시작이 지운다
 > (`execgw/retry.go:498-505`). 원장에는 미전달 행이 남아 있는데 프로세스는 그것을

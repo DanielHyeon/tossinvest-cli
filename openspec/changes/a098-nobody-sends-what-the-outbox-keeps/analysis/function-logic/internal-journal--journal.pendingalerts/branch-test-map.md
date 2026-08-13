@@ -1,41 +1,86 @@
 # Branch Test Map: `Journal.PendingAlerts`
 
-Source: `internal/journal/outbox.go` (392-405). AST 기준 branches 2 / returns 2.
+Source: `internal/journal/outbox.go` (**517-530**). AST 기준 branches 2 / returns 2.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:395` `limit > 0` → `LIMIT` 절. **두 갈래를 한 줄에 적는다** — 거짓 갈래만 덮여 있다 | 거짓(`limit<=0`): `TestReplayKeyConflictEnqueuesTheCriticalAlert` (`internal/execgw/replay_test.go:628`). **참(`limit>0`): 없음 — 트리 전체에 그런 호출이 0건** | no | **부분** |
-| B2 | `:400` 질의 오류 | **없음** — 배수 중 원장을 깨는 테스트가 없다 | no | **no** |
+| B1 | `:520` `limit > 0` → `LIMIT` 절. **두 갈래를 한 줄에 적는다** — 거짓 갈래만 덮여 있다 | 거짓(`limit<=0`): `internal/journal/outbox_test.go:48`·`:253` 외 열다섯. **참(`limit>0`): 없음 — 트리 전체에 그런 호출이 0건** | no | **부분** |
+| B2 | `:525` 질의 오류 | **없음** — 질의를 깨는 테스트가 없다 | no | **no** |
 
-## `LIMIT` 경로는 오늘 죽은 코드다
+## 두 측정이 독립으로 같은 말을 한다
 
-호출 지점 전수(프로덕션 2 + 테스트 7)에서 **`limit` 인자가 전부 `0`이다.**
+위 표의 「없음」은 호출 지점을 세어서 얻은 것이다. **커버리지로 따로 재서 대조했다** —
+`go test ./internal/journal/ -count=1 -coverprofile` (exit 0 · **1419건 통과**):
 
-```text
-internal/obs/notifier.go:437          PendingAlerts(ctx, 0)   Flush
-internal/obs/notifier.go:491          PendingAlerts(ctx, 0)   Acknowledge
-internal/journal/outbox_test.go:49    PendingAlerts(ctx, 0)
-internal/execgw/replay_test.go:638    PendingAlerts(..., 0)
-internal/obs/obs_test.go:407·480·516·579   PendingAlerts(ctx, 0)
-internal/obs/a096_one_send_per_condition_test.go:405   PendingAlerts(ctx, 0)
-```
+| 블록 | 무엇 | count |
+|---|---|---:|
+| `517.82-520.15` | 함수 진입 ~ B1 조건 | 1 |
+| **`520.15-523.3`** | **B1 참 팔 — `LIMIT` 절을 붙인다** | **0** |
+| `524.2-525.16` | 질의 ~ B2 조건 | 1 |
+| **`525.16-527.3`** | **B2 참 팔 — 질의 오류** | **0** |
+| `528.2-529.25` | `defer rows.Close` + `scanAlerts` | 1 |
 
-`limit > 0`인 호출은 **하나도 없다.** 그러므로 B1의 참 갈래는 프로덕션에서도
-테스트에서도 실행된 적이 없다.
+**세는 방법 둘이 같은 답을 냈다.** 호출 지점 열일곱이 전부 `0`이라는 사실과,
+그 갈래의 블록 카운트가 `0`이라는 사실은 서로를 대신하지 않는다 — 앞엣것은
+**소스를 읽어서**, 뒤엣것은 **돌려서** 얻었다.
 
-**이것이 a092에 주는 값이다** — a092의 배치 설계(`alertFlushBatch`)는 이 손잡이를
-쓸 계획이고, 그 손잡이는 **한 번도 돌려진 적이 없다.** a098은 배치를 도입하지 않으므로
-이 갈래를 켜지 않는다. **a092가 켤 때 RED가 필요하다는 사실을 여기 적어 둔다.**
+## `LIMIT` 경로는 **오늘도** 죽은 코드다 — a099 착지 뒤 다시 셌다
+
+호출 지점 전수(2026-08-12 재측정):
+`grep -rn 'PendingAlerts(' internal/ cmd/ --include='*.go'` → **정의 1 + 호출 17**.
+**열일곱 전부 `limit` 인자가 `0`이다.**
+
+| 어디 | 수 | 인자 |
+|---|---:|---|
+| 프로덕션 — `notifier.go:737`(`Flush`) · `:855`(`Acknowledge`) | 2 | `0` |
+| `internal/obs` 테스트 | 10 | `0` |
+| `internal/journal` 테스트 | 4 | `0` |
+| `internal/execgw` 테스트 | 1 | `0` |
+
+1판은 *"호출 9"*로 셌다. a099가 여덟을 더했고 **여덟 다 `0`이다.**
+그러므로 B1의 참 갈래는 프로덕션에서도 테스트에서도 **한 번도 실행된 적이 없다.**
+
+## ⛔⛔ 1판의 소유 배정이 틀렸다 — 그 갈래를 **처음 켜는 것이 a098이다** (2026-08-12)
+
+1판은 이렇게 적고 있었다:
+
+> *"a098은 배치를 도입하지 않으므로 이 갈래를 켜지 않는다. **a092가 켤 때** RED가
+> 필요하다는 사실을 여기 적어 둔다."*
+
+**a098의 tasks가 그 문장을 부정한다.** 4.0의 한 주기 형태가 첫 줄부터
+`PendingAlerts(ctx, **batch**)`이고(tasks `:287`), 4.0b가
+*"한 주기 배치 크기를 §3이 잰 값으로 정한다"*(tasks `:310`)이며,
+design D4가 *"배치 크기·공정성 — **자기 루프 것만 정한다**"*로 a092와 갈라 놓는다.
+
+**즉 배치를 「도입하지 않는다」가 아니라 「자기 것만 도입한다」였고, 그것이 곧
+`limit > 0`이다.** 1판은 a092의 `alertFlushBatch`만 배치로 세고 **a098 자신의
+배치를 안 셌다.**
+
+| | 1판 | **정정 (2판)** |
+|---|---|---|
+| B1 참 갈래를 처음 켜는 change | a092 | **a098** |
+| 그 갈래의 RED 소유 | a092 | **a098** |
+| 근거 | — | tasks `:287`·`:310` · design D4·D5 |
+
+> **이 정정이 §3 등록부에 구멍 하나를 만든다.** 오늘 R1~R19 중
+> *"`limit=N`이 정확히 앞의 N행을 id 오름차순으로 준다"*를 지는 행이 **없다.**
+> 그 구멍은 tasks §3에서 닫는다 — **여기서 번호를 발명하지 않는다.**
 
 ## 필요한 RED
 
 | # | Branch | Scenario | 기대 | 소유 |
 |---|---|---|---|---|
-| — | B1 참 | PENDING 5행에 `limit=2` | 2행, `id` 오름차순으로 앞의 둘 | **a092** (배치를 도입하는 change) |
-| R2 | B2 | 배수 중 질의 오류 | a098의 루프가 죽지 않는다 | a098 |
+| **§3 신설** | B1 **참** | PENDING 5행에 `limit=2` | 2행, `id` 오름차순으로 **앞의 둘.** 나머지 셋은 **다음 주기에 나온다** | **a098** (4.0b가 이 갈래를 켠다) |
+| §3 신설 | B2 | 배수 중 질의 오류 | a098의 루프가 **죽지 않는다** — 그 주기만 건너뛴다 | a098 |
+
+> **B2의 기대를 「루프가 죽지 않는다」로 쓰는 이유**: 이 함수는 오류를 그대로
+> 올려보내고 아무것도 안 정리한다(`:526`). 오류를 삼키는 자리는 **호출자**이고,
+> a098의 실행자가 그 호출자다. 이 함수 쪽에 RED가 있는 것이 아니다.
 
 ## 산출물 근거
 
-- 분기·이탈 열거: `ast.json` (branches 2, returns 2)
-- 호출 지점 전수: `rg 'PendingAlerts\(' -g '*.go'` → 정의 1 + 호출 9
-- `attempts` 열이 실려 온다: `alertSelect` `outbox.go:387`, `Alert.Attempts` `:95`
+- 분기·이탈 열거: `ast.json` (branches 2, returns 2) — `go run ./tools/logic-map`
+- 호출 지점 전수: 위 grep, 2026-08-12 재측정 → **17건 전부 `0`**
+- `attempts` 열이 실려 온다: `alertSelect` `outbox.go:511`, `Alert.Attempts`
+- **임차 세 열도 실려 온다**: `alertSelect` `:512` (`claimed_by`·`claimed_at`·`claim_expires_at`) —
+  a099 4.10의 투영. R9와 4.4 목록 명령이 이것을 읽는다

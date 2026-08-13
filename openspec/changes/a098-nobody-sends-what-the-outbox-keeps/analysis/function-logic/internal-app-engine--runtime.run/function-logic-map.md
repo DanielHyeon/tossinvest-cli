@@ -1,8 +1,39 @@
 # Function Logic Map: `Runtime.Run`
 
-- Source: `internal/app/engine/runtime.go`
-- AST evidence: `ast.json`
+- Source: `internal/app/engine/runtime.go` (**286-380**) — 편집 전에는 `261-332`
+- AST evidence: `ast.json` — 편집 후 branches **5** / returns **3** / calls 34 / defers 4
+  (편집 전 4 / 3 / 30 / 3)
 - Risk scan: `risk-pattern-report.md`
+- source SHA-256: 편집 전 `4bcd9ee7…` → **편집 후 `306276bd…`**
+
+## ✅ 편집 후 재측정 — 안전 성질 둘은 맞고 **id 예측이 틀렸다** (2026-08-12, task 4.1)
+
+| | 편집 전 | 예측 | **편집 후 실측** | |
+|---|---:|---:|---:|---|
+| 분기 | 4 | **5** | **5** | 맞음 |
+| **이탈** | 3 | **3 그대로** | **3** | **맞음 — 이것이 가장 중요한 칸이다** |
+| 호출 | 30 | — | 34 | |
+| defer | 3 | — | 4 | 새 `defer wg.Done()` |
+
+**이탈 3이 그대로인 것이 「정지 정책을 안 건드렸다」의 실측이다.** 이탈이 4가 됐다면
+보조 실행자가 종료 경로를 하나 더 만든 것이고, 그것은 결정 9-2가 안 고른 길이다.
+
+> **⛔ 신설 갈래의 id 는 `B5`가 아니라 `B4`다 — 아래 branch-test-map 의 예측이 틀렸다.**
+> 갈래를 **가운데** 넣었으므로 그 뒤의 id 가 **전부 하나씩 밀린다**:
+>
+> | | 편집 전 | **편집 후** |
+> |---|---|---|
+> | `Recover != nil` | B1 `:262` | B1 `:289` |
+> | 회복 실패 | B2 `:267` | B2 `:294` |
+> | `range Loops` | B3 `:277` | B3 `:304` |
+> | **`range Auxiliary`** | — | **B4 `:322` (신설)** |
+> | `gracefulStop` | **B4** `:304` | **B5** `:352` |
+>
+> 조건은 하나도 안 바뀌었고 **번호만 바뀌었다.** 그런데 branch-test-map 은 번호로
+> 칸을 가리키므로, 그 표를 안 고치면 **「B4 = 취소 경로」라고 적힌 줄이 신설 갈래를
+> 가리키게 된다.** buildGateway 번들이 적은 것과 같은 함정이고
+> (*"B 번호로 소스 순서를 추론하면 안 된다"*), 이번에는 **삽입이 뒤의 id 를 민다**는
+> 다른 얼굴이다. 표를 아래에서 고쳤다.
 
 > **왜 이 산출물이 a098에 있는가** (19라운드 B-P7). a098의 GREEN은
 > **`Runtime.Run`이 띄우는 goroutine 집합을 넓힌다**. `Runtime.Run`은 기존 High-risk
@@ -35,15 +66,34 @@
 
 ## Branches and early returns
 
-`ast.json`의 열거를 그대로 쓴다 — 분기 4 · 이탈 3 · 호출 30 · defer 3.
+`ast.json`의 열거를 그대로 쓴다 — **편집 후** 분기 5 · 이탈 3 · 호출 34 · defer 4.
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 `:262` | `r.opts.Recover != nil` | 없음 | — | 기존 회복 테스트 |
-| B2 `:267` | `r.opts.Recover(ctx)`가 오류 | 없음 | **`:268` 반환** — 루프 0개 | 기존 |
-| B3 `:277` | `range r.opts.Loops` | `wg.Add(1)` · goroutine 기동 | — | **a098 R2 — 배달 실행자는 이 슬라이스에 안 들어간다** |
-| B4 `:304` | `r.gracefulStop(ctx, first.err)` | 로그 한 줄 | **`:308` `nil` 반환** | a098 **R7** — 취소 경로가 이 분기로 나가야 한다 |
-| (분기 아님) `:331` | 위 넷 모두 거짓 | `r.alert` + 로그 | **`:331` `ErrLoopFailed` 감싼 오류** | **a098 R2** — 배달 실행자는 **구조적으로** 여기 못 온다 |
+| B1 `:289` | `r.opts.Recover != nil` | 없음 | — | 기존 회복 테스트 |
+| B2 `:294` | `r.opts.Recover(ctx)`가 오류 | 없음 | **`:295` 반환** — 루프 0개 | 기존 |
+| B3 `:304` | `range r.opts.Loops` | `wg.Add(1)` · goroutine 기동 · **`stops`에 보낸다** | — | **a098 R2 — 배달 실행자는 이 슬라이스에 안 들어간다** |
+| **B4 `:322` (a098 신설)** | `range r.opts.Auxiliary` | `wg.Add(1)` · goroutine 기동 · **`stops`에 안 보낸다** | — | **a098 R2 · R14** |
+| B5 `:352` | `r.gracefulStop(ctx, first.err)` | 로그 한 줄 | **`:356` `nil` 반환** | a098 **R7** — 취소 경로가 이 분기로 나가야 한다 |
+| (분기 아님) `:379` | 위 전부 거짓 | `r.alert` + 로그 | **`:379` `ErrLoopFailed` 감싼 오류** | **a098 R2** — 배달 실행자는 **구조적으로** 여기 못 온다 |
+
+**B3와 B4의 차이는 한 줄이고, 그 한 줄이 이 change 전부다.** 둘 다 `wg.Add(1)`을 하고
+둘 다 `loopCtx`를 타고 둘 다 같은 `wg.Wait()`가 기다린다. B3만 `stops`에 보낸다.
+
+> **✅ 4.2가 B4의 goroutine 본문을 채웠다 (2026-08-12).** 4.1 시점에는
+> `_ = aux.Run(loopCtx)`로 반환값을 버렸고, 지금은 `r.runAuxiliary(loopCtx, aux)`다.
+> **분기·이탈은 안 움직였다 (5·3)** — `recover`·판정·`OnStop`이 전부 `auxiliary.go`의
+> 새 함수 둘에 있기 때문이다. 그것이 그 둘을 이 함수 밖에 둔 이유다:
+> 인라인으로 넣었으면 분기가 **8**이 되고, 그러면 *"정지 정책을 안 건드렸다"*를
+> 분기 수로 말할 수 없게 된다.
+>
+> **`loopCtx`를 넘기는 것이 판정을 정한다.** `runAuxiliary`는 **넘겨받은 ctx**로
+> `gracefulStop`을 부르므로, 여기서 부모 `ctx`를 넘기면 감독 루프 하나가 실패해
+> 엔진이 내려갈 때 **아무 잘못도 없는 실행자의 정상 반환이 죽음으로 오인된다**(A-P2).
+> 뮤테이션 H'가 그것을 실제로 냈다 — 아래 branch-test-map.
+>
+> ⚠ 편집 후 재측정: 분기 5 · 이탈 3 · 호출 34 · defer 4 · **대입 8 → 7**
+> (`_ =` 대입이 호출로 바뀌었다) · sha `306276bd…` → **`a80916ef…`** · B5 `:352` → `:351`.
 
 > **⛔⛔ 3판까지 이 표는 정반대를 적었다 — 사용자 결정 9-2가 뒤집었다.**
 >

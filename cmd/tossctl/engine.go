@@ -115,7 +115,11 @@ func newEngineCmd(root *rootOptions) *cobra.Command {
 		Use:   "engine",
 		Short: "Run the automated trading engine",
 	}
-	cmd.AddCommand(newEngineRunCmd(root), newEngineReconcileResolveCmd(root))
+	// a098 4.4b — 밀린 critical 알림의 운영자 표면. `engine` 아래에 두는 이유는
+	// 두 명령이 **엔진 디렉터리로** 대상을 정하기 때문이다: `engine run` 과 같은
+	// `engineJournalDir` 를 쓰므로, 격리 프로파일은 자기 엔진의 알림만 본다.
+	cmd.AddCommand(newEngineRunCmd(root), newEngineReconcileResolveCmd(root),
+		newEngineAlertsCmd(root))
 	return cmd
 }
 
@@ -267,6 +271,18 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 		return err
 	}
 	defer strategyRuntime.Close()
+	// a098 4.4 — 밀린 critical 알림의 운영자 표면. 승인은 이 프로세스 안에서
+	// 일어나야 한다: 진입 게이트는 여기 메모리에 있고, 다른 프로세스가 원장만
+	// 고치면 운영자가 승인해도 진입은 재시작까지 막힌 채다 (design D7.1).
+	alertOps, err := ectx.AlertOperations()
+	if err != nil {
+		return err
+	}
+	alertControl, err := engine.StartAlertControlServer(dir, alertOps)
+	if err != nil {
+		return err
+	}
+	defer alertControl.Close()
 	fmt.Fprintf(out, "account          %s\nloops            %s\n",
 		ectx.Automation.MaskedAccount(), strings.Join(rt.LoopNames(), ", "))
 	fmt.Fprintf(out, "stop             SIGINT/SIGTERM — 루프 완주 후 journal 정합 close. 두 번째 시그널은 즉시 종료\n\n")
@@ -363,6 +379,18 @@ func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, l
 		return nil, err
 	}
 
+	// The critical-alert outbox needs somebody to drain it. Before this, a row
+	// written while the transport was down stayed PENDING until the same
+	// condition happened to be observed again — the alert was durable and
+	// undelivered, which is a record rather than an alert (a098).
+	//
+	// It is Auxiliary, not a supervised loop: a delivery fault must not stop the
+	// loop that places a stop-loss.
+	alertDelivery, err := ectx.AlertDeliverer(clk)
+	if err != nil {
+		return nil, err
+	}
+
 	return engine.NewRuntime(engine.RuntimeOptions{
 		AccountRef: ectx.AccountRef,
 		Alerts:     ectx.Notifier,
@@ -397,6 +425,7 @@ func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, l
 			},
 			strategyEntry.SupervisedLoop(),
 		},
+		Auxiliary: []engine.AuxiliaryExecutor{alertDelivery},
 	})
 }
 

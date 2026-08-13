@@ -273,6 +273,7 @@ func AllReasonCodes() []ReasonCode {
 		ReasonQueryStale,
 		ReasonUnresolvedInDoubt,
 		ReasonAlertUndelivered,
+		ReasonAlertSenderDown,
 
 		ReasonBalanceInsufficient,
 		ReasonBalanceUnavailable,
