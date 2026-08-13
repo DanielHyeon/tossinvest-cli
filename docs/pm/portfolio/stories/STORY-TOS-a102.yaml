@@ -23,5 +23,26 @@
     "The engine publishes an observable ready signal only after restart recovery completes; lock or process existence does not count",
     "The boot survey waits for that signal with a hard cap, starts immediately when no live engine is observed, starts anyway at the cap, and the boot note says which case happened — a silent cap overrun is forbidden",
     "The wait never delays the operator console screen, and a survey already running is left alone (a101 contract kept)"
+  ],
+  "measured": {
+    "date": "2026-08-13",
+    "tests": "internal/reconcile 147 · internal/enginelock+cmd/tossctl 601 (-race 동일) · 무회귀 4패키지 1442 — 전부 rc=0, Manager 독립 재실행 포함",
+    "mutation_ledger": "T1 8+재가 2 · T2 29/29 사멸 (A1 N1·N2, A2 N1~N5·N7, gstack 라운드 T1~T9 포함) · Manager 스팟체크 2건 직접 재현(예산 경계 연산자 → TestRateLimitBudgetStopsExactlyAtTheBoundary, 토큰 비교 제거 → TestAReusedPIDIsNotTheSameEngine) · 원복은 sha256 대조",
+    "review_rounds": "A1 1왕복(831cbc08) · A2 2왕복(9daa052c·9e184687) · gstack 7패스 → §3.9c 12항목(2a193cb6). P1(컨테이너 PID 재사용이 ready 신호를 뚫는 것)은 Codex 2패스+Claude 적대 3모델 독립 수렴",
+    "key_numbers": "backoff 15s = 서베이 간격과 동일(하한 클램프) · budget 5m · engineReadyCap = 그 예산에서 유도(5m) · poll 2s · ready = ReadyAt ∧ pid 생존 ∧ proc_instance 토큰 정확 일치(boot_id+starttime ticks)"
+  },
+  "deviations": [
+    "cap 120s(설계 1판)는 gstack 리뷰 3패스 수렴으로 5m 유도로 개정됐다(D6-2) — 스로틀 없는 5회 판독 아침(~128s)에도 걸리는 fail-open이었다.",
+    "PID 등식(D4b)만으로는 컨테이너 recreate의 PID 재사용을 못 막는다 — D4b-2가 프로세스 인스턴스 토큰을 추가했다.",
+    "2a193cb6에 Manager의 openspec 문서 편집이 T2의 범위 지정 add에 쓸려 함께 커밋됐다(내용은 정확, 관례 예외로 기록).",
+    "A2가 실측 재현한 경주 중 둘은 회귀 테스트로 이식되지 않은 채 MERGE-OK가 났고, gstack testing 패스가 재발견해 §3.9c에서 고정했다 — 재현은 고정이 아니다."
+  ],
+  "limits": [
+    "dirty-crash 재시작(in-doubt attempt 존재)에서는 복구 2단계(replay/resolution)의 429가 여전히 즉시 fail-closed다 — 선언된 생략, 후속 change 후보(재시도에 취소·인수 의미론이 걸린다).",
+    "/proc 없는 환경(비Linux dev)은 인스턴스 토큰을 만들 수도 읽을 수도 없어 부팅 서베이가 매번 상한(5m) 후 시작한다. 운영(리눅스 컨테이너)은 해당 없음.",
+    "429 재시도는 수집을 1페이지부터 다시 걷는다(최악 ~546 페이지 요청/예산) — cursor 재개는 execgw 계약 변경으로 범위 밖.",
+    "5분 대기 창은 끝난 뒤에야 obs 한 줄로 보이고, 대시보드는 Status.Ready()를 그리지 않는다 — 실시간 관측은 후속.",
+    "spawn 게이트는 프로세스-로컬이다 — 겹치는 콘솔 둘의 이중 spawn은 a102 이전과 동일하게 남는다(교차 프로세스 배타는 soakproc flock, 별도 change).",
+    "엔진 기동 자체는 여전히 사람의 [엔진 시작]이다 — 이 change는 기동을 자동화하지 않고, 기동된 부팅이 굶어 죽는 기전만 지운다."
   ]
 }

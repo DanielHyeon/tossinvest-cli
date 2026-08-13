@@ -101,4 +101,4 @@
 | `a099-a-claim-excludes-the-second-sender` | STORY-TOS-a099 | in_progress |
 | `a100-wire-fill-to-broker-protection` | STORY-TOS-a100 | in_progress |
 | `a101-the-soak-outlives-a-deploy` | STORY-TOS-a101 | implemented |
-| `a102-boot-does-not-starve-the-engine` | STORY-TOS-a102 | in_progress |
+| `a102-boot-does-not-starve-the-engine` | STORY-TOS-a102 | implemented |

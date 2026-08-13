@@ -11,7 +11,7 @@
 재검증 **MERGE-OK**.
 
 | # | 지적 | 처분 |
-|---|---|---|
+| --- | --- | --- |
 | F1 | **설계 전제 붕괴** — Report를 소비하는 곳이 없다. `engine.go`가 `_, rerr :=`로 버려서 §1의 rate-limit 계수는 아무 데도 닿지 않는다 | 설계 정정 **D5b** (obs 한 줄) — T2 범위로 이관, 3.4b에서 구현 |
 | N1 | 생존 뮤테이션 — 예산 경계 연산자를 바꿔도 초록 | 경계 산술 테스트(30s=2×15s)로 사멸 |
 | N2 | 생존 뮤테이션 — `clk.Sleep` 오류 삼킴이 초록 | 취소 후 브로커 호출 수(`calls==1`) 단언으로 사멸 |
@@ -28,7 +28,7 @@
 재검증 **MERGE-OK + 잔여 2** → §3.9b `9e184687`로 마감.
 
 | # | 지적 | 처분 |
-|---|---|---|
+| --- | --- | --- |
 | F1 | **시체 마커의 가짜 ready** — 크래시는 Release를 안 부르고, 신선도만 보면 죽은 엔진의 ready_at이 "보호가 서 있다"로 읽힌다(02:03의 다음 장면을 실행 재현) | 설계 정정 **D4b** — ready는 마커 PID가 산 엔진 집합에 있을 때만; 열거 실패는 not-yet(모름≠없음) |
 | N1–N4 | **생존 뮤테이션 4** — ready no-op·readiness 상수 0화·cap/poll 맞바꿈·형태 보존 `ready=nil` 전부 초록. "단위는 완벽한데 배선은 0%" | 설계 정정 **D5c** — 배선 자체를 실행 테스트로. stubRuntime이 ready를 잡고 마커 파일로 단언 |
 | F3/F4 | **파일 경주 3종 실측** — ready_at 소거 139/3000, 찢어진 읽기 3617/12259(O_TRUNC 창), Release 뒤 refresh 부활(결정적) | 설계 정정 **D4c** — write를 뮤텍스 안, tmp+rename 원자화, live 플래그 |
@@ -48,7 +48,7 @@ Codex 적대 · Codex 구조화. **A1·A2가 이미 훑은 코드에서 7패스�
 ### 3.1 수렴 지도 (독립 패스가 같은 지점을 짚은 것)
 
 | 지점 | 짚은 패스 | 처분 |
-|---|---|---|
+| --- | --- | --- |
 | **PID 재사용이 D4b를 뚫는다** (컨테이너 recreate: 신선한 전임자 마커 + 재생성된 PID namespace의 결정적 배정 + Hold 전 몇 초 창) | Codex 구조화 **P1** · Codex 적대 Critical · Claude 적대 F10 | **D4b-2** — 프로세스 인스턴스 토큰(boot_id+starttime ticks) 정확 일치. §3.9c ① |
 | cap 120s가 스로틀 없는 5회 판독 아침(~128s)에도 걸리고, 초과는 fail-open | Claude 적대 F1 · performance · security · Codex 적대 | **D6-2** — cap을 겹1 예산(5m)에서 유도. §3.9c ② |
 | nil ctx가 `clk.Sleep`에서 역참조 — 분리 goroutine 패닉 = 콘솔 다운 | security · testing · Claude 적대 F4 | 정규화 + 테스트. §3.9c ③ |
@@ -115,4 +115,35 @@ soakproc flock) · 콘솔 stderr 콜백의 미조인 goroutine(운영은 os.Stde
 
 ## 5. §3.9c 결과
 
-(T2 라운드 완료 후 기입)
+커밋 `2a193cb6`. 12항목 전부 착지.
+
+- **D4b-2**: `Marker.ProcInstance` + `(*Held).Identify(token)` + cmd의
+  `engineProcInstance`(boot_id + `/proc/<pid>/stat` field 22, 정확 일치 —
+  starttime 파싱은 comm의 괄호를 피해 마지막 `)`에서 자른다). Hold 시그니처
+  확장 대신 setter — 여덟 호출자 무접촉, 토큰이 소용 있는 시점(step 7의
+  ready_at)보다 앞이라 안전 공백 없음. enginelock의 OS 무지 유지.
+- **D6-2**: `engineReadyCap = reconcile.DefaultMaxRateLimitWait` — 산술 테스트가
+  상수에서 유도되어 150회로 따라옴.
+- 뮤테이션 신규 T1~T9 중 **넷이 처음에 생존**(토큰 미탑재·refresh write·nil
+  ctx·노트 상수) → 각각 고정 후 재사멸. 기존 20건 재사멸(좌표 이동 2건 재앵커).
+  **원장 29/29**, 원복 sha256 5파일 OK.
+- 실측: enginelock+tossctl **601건**(-race 동일) · 무회귀 4패키지 1442 ·
+  `make lint` rc=0 · `check_analysis` rc=0. FLM 재기준 5건(runenginerun은 분기
+  18→19로 늘었고 새 분기가 실행됨을 실측).
+
+Manager 독립 검증(§6.1): T1의 예산 경계 연산자(`>`→`>=`)와 T2의 토큰 비교
+제거를 직접 가해 각각 `TestRateLimitBudgetStopsExactlyAtTheBoundary`,
+`TestAReusedPIDIsNotTheSameEngine`이 죽는 것을 재현했다(토큰 뮤테이션 1차
+형태는 컴파일 오류라 **뮤테이션 아님 판정** 후 `_, err :=` 형태로 재가).
+원복은 sha256 대조. 601·147건 및 `make lint`도 독립 재실행으로 확인.
+
+기록할 일탈 2건 (침묵하지 않음):
+
+1. `2a193cb6`에 Manager의 미커밋 산출물(design.md D4b-2·D6-2, tasks.md §3.9c,
+   review.md 초판)이 T2의 범위 지정 `git add openspec/changes/a102-…`에 쓸려
+   함께 들어갔다. 내용은 전부 이 라운드를 발주한 Manager의 것이고 같은 change·
+   같은 브랜치라 히스토리 재작성 없이 **혼입을 기록으로 남긴다** — 저장소 관례
+   (docs 커밋 분리)의 예외다.
+2. **새 한계**: /proc 없는 환경(비Linux dev)에서는 토큰을 만들 수도 읽을 수도
+   없어 부팅 서베이가 매번 상한(5m)을 기다린 뒤 시작한다. 유한하고 보수 방향이며
+   운영(리눅스 컨테이너)은 해당 없음 — story limits에 등재.

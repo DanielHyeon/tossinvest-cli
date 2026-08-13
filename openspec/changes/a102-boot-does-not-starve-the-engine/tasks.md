@@ -224,12 +224,12 @@ Teammate는 여기·design.md에 없는 결정이 필요해지면 **멈추고 Ma
 - [x] 5.1 A1: T1 커밋 적대 리뷰 → 지적은 T1이 고치고 재커밋 (831cbc08),
   왕복 기록을 review.md에
 - [x] 5.2 A2: T2 커밋 적대 리뷰 → 동일 (9daa052c·9e184687, 재검증 MERGE-OK)
-- [ ] 5.3 gstack /review (브랜치 전체) → Fix-First 정산 → review.md 종합
+- [x] 5.3 gstack /review (브랜치 전체) → Fix-First 정산 → review.md 종합
 
 ## 6. Manager 완료 검증
 
-- [ ] 6.1 뮤테이션 스팟체크 — T1·T2가 기록한 뮤테이션 중 각 1건을 직접 재현
-- [ ] 6.2 tasks 전 항목 대조 + design 검증 계약 5조 확인
-- [ ] 6.3 PM 갱신 (story measured/deviations/limits 실측 기입)
-- [ ] 6.4 `make sdd-sync && make sdd-check && make gate CHANGE=a102-boot-does-not-starve-the-engine`
-- [ ] 6.5 완료 보고 — 남은 위험과 not-applicable 목록 포함
+- [x] 6.1 뮤테이션 스팟체크 — T1·T2가 기록한 뮤테이션 중 각 1건을 직접 재현
+- [x] 6.2 tasks 전 항목 대조 + design 검증 계약 5조 확인
+- [x] 6.3 PM 갱신 (story measured/deviations/limits 실측 기입)
+- [x] 6.4 `make sdd-sync && make sdd-check && make gate CHANGE=a102-boot-does-not-starve-the-engine`
+- [x] 6.5 완료 보고 — 남은 위험과 not-applicable 목록 포함
