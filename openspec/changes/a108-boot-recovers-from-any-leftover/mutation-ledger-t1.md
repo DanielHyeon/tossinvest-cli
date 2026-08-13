@@ -153,3 +153,71 @@ A1 F6이 요구한 것도 "핀"이 아니라 **비대칭의 제거**였다(P3). 
 그대로다. 파일 기반 거부 핀(`TestStartRefusesUnsafeLeftoverShapes`)은 그대로 남아 있고,
 symlink 행은 대상 디렉터리 안에 **회수 가능한 잔재**를 넣도록 강화해서 "따라갔다면
 지웠을 파일"의 생존으로 거부를 측정한다.
+
+---
+
+## §C. gstack Fix 라운드 (2026-08-14, Fix-First B1~B5) — 9건 적용, 8건 사망, 생존 1
+
+baseline: 커밋 `d3d0cdcb`. 드라이버는 파일 원문을 **메모리에 들고** 되돌리고, 매 회
+① 원문 문자열 전체 동일성 ② 아래 심볼 개수 일치를 확인했다. 9회 전부 일치.
+
+```text
+listenPrivateSocket 5 · stagingPrefix 6 · stagingPath 4 · discardPublication 4 ·
+verifyStaleSocketShape 3 · openVerifiedDescriptor 4 · ownedByEffectiveUser 4 ·
+controlDirectoryModeIsSafe 4 · sameDescriptorFile 3 · SetUnlinkOnClose 4 ·
+errDescriptorChanged 3 · os.Rename 2 · processAlive 0 · MUTANT 0
+```
+
+### C1. RED 을 먼저 봤다 (관측 기록)
+
+상수(`stagingSocketKind`·`stagingDescriptorKind`)와 `discardPublication` 을 **순수
+추가**한 상태 — 판정은 옛것 그대로 — 에서 새 테스트를 돌려 아래를 관측했다. 그
+다음에 판정을 바꿨다.
+
+```text
+임시 이름 ".staging-sock-8dd91c3a"(22자)이 최종 이름 "runtime.sock"(12자)보다 길다
+잔재에서 기동이 거부됐다: listen unix …/.staging-sock-1e7ff879: bind: invalid argument
+    (같은 부팅의 최종 경로는 107자로 상한 안이다)
+projectionSocketAccepts = true, want false            (owner 쓰기 비트가 없는 socket)
+잔재에서 기동이 거부됐다: projection owner is still alive   (같은 socket, Start 경유)
+치우면 안 되는 상태에서 기동이 받아들여졌다              (빈 .s-* 디렉터리)
+```
+
+RED 을 **테스트만 담은 커밋**으로 남기지 못한 이유를 적는다: 새 핀 셋이 아직 없는
+심볼(상수 2 · `discardPublication`)을 부르므로 테스트만 커밋하면 컴파일이 깨지고,
+컴파일 실패는 RED 가 아니다. 그래서 순서를 「순수 추가 → RED 관측 → 판정 변경」으로
+쪼갰고 관측 결과를 위에 그대로 남긴다.
+
+### C2. 원장
+
+| # | 뒤집은 판정 | 뮤테이션 | 죽은 테스트 |
+|---|---|---|---|
+| M22 | B1 임시 이름 길이 | `stagingPrefix` 를 `.staging-` 로 되돌림 | `TestStagingNamesAreNeverLongerThanTheNamesTheyBecome`, `TestStartPublishesWhereTheFinalSocketPathIsAtTheLimit`, `TestStartRecoversFromUnpublishedStagingLeftover` |
+| M23 | B1 임시 이름 길이 | 종류 이름을 `sock`·`endpoint` 로 되돌림 | `TestStagingNamesAreNeverLongerThanTheNamesTheyBecome`, `TestStartPublishesWhereTheFinalSocketPathIsAtTheLimit` |
+| M24 | B1 descriptor 이름 생성기 | `stagingPath` → `os.CreateTemp` (옛 발행) | **생존** (아래 C3) |
+| M25 | B2① owner 쓰기 절 | 절 삭제 — EACCES 를 다시 「생존」으로 | `TestProjectionLivenessClausesEachDecideOnTheirOwn/owner_쓰기_비트가_없다`, `TestStartRecoversFromUnwritableSocketLeftover` |
+| M26 | B2② 연결 거부·부재 절 | 절 삭제 — 죽은 socket 을 「생존」으로 | `TestProjectionLivenessClausesEachDecideOnTheirOwn/{경로가_없다,아무도_수락하지_않는다}`, `TestDialRefusesSocketWithNoListener`, `TestStartReclaimsExactDeadProjectionEndpoint`, `TestStartRecoversFrom{DeadEndpointWhoseDescriptorPIDIsAlive,DeadSocketOnlyLeftover,PreChmodSocketLeftover,TruncatedDescriptorLeftover}` |
+| M27 | B2② 수락 절 | 수락을 「사망」으로 반전 | 18건 — `TestProjectionLivenessClausesEachDecideOnTheirOwn/수락한다` 와 `TestStartRefusesLive*` 셋을 포함 |
+| M28 | B3 staging 모양 검증 | 검증 삭제 — 이름만 보고 지운다 | `TestStartRefusesStagingLeftoverOfAnUnexpectedShape/빈_디렉터리` |
+| M29 | B4 실패 정리의 범위 | `discardPublication` 에서 descriptor 제거를 뺌 | `TestDiscardingAFailedPublicationLeavesNothingBehind` |
+| M30 | B2③ 디렉터리 모드 검사 | `Perm() == 0o700` → `Perm()&0o077 == 0` | `TestControlDirectoryModeClausesEachRefuseOnTheirOwn` |
+
+### C3. 살아남은 뮤테이션 — M24 (숨기지 않고 적는다)
+
+**M24: descriptor 의 임시 이름을 `os.CreateTemp` 로 되돌려도 아무 테스트도 죽지 않는다.**
+
+새 접두(`.s-`) 위에서 `os.CreateTemp` 는 `.s-e` + 임의 자릿수 십진수를 붙이므로
+basename 이 최대 14자가 되어 「최종 이름(13자) 이하」 계약을 깬다. 그런데 그 초과에
+**디스크에서 관측되는 결과가 없다.** 길이 계약이 실제로 무언가를 정하는 곳은 socket
+쪽뿐이고(bind 의 sun_path 107자 상한), descriptor 는 PATH_MAX 근처에도 가지 않는다.
+socket 쪽 계약은 M22·M23 과 `TestStartPublishesWhereTheFinalSocketPathIsAtTheLimit`
+이 두 방향으로 잡는다.
+
+결정적으로 죽이는 방법도 없다: `CreateTemp` 의 접미 길이가 난수라 자릿수가 회마다
+다르고(1~10), 임시 이름은 rename 뒤 사라져 관측 창이 마이크로초다. 길이를 production
+코드에서 단언하는 가드를 넣으면 그 가드가 **확률적으로** 걸려 불안정한 테스트가 된다
+— 불안정한 테스트는 핀이 아니다([[passing-test-is-not-evidence]] 의 반대편).
+
+그래서 descriptor 쪽에서 M24 가 지키는 것은 **일관성 결정**이다: 두 산출물이 같은
+생성기·같은 접두·같은 길이 규칙을 쓴다. 그 결정은 코드와 주석에 있고, 측정은 없다.
+(M17 과 같은 부류의 정직한 공백이다.)
