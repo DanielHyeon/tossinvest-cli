@@ -97,33 +97,36 @@
 
 ### 6a. T1-fix (`internal/strategyprojectionrpc`)
 
-- [ ] 6.1 RED: pre-chmod socket 잔재(umask 077 → 0700)의 영구 거부와 0바이트·잘린
+- [x] 6.1 RED: pre-chmod socket 잔재(umask 077 → 0700)의 영구 거부와 0바이트·잘린
   descriptor의 영구 거부를 A1 절차대로 재현·고정한다.
-- [ ] 6.2 GREEN(D1-2): descriptor·socket 모두 stage+rename 발행(socket은 임시 이름
+- [x] 6.2 GREEN(D1-2): descriptor·socket 모두 stage+rename 발행(socket은 임시 이름
   bind→chmod 0600→rename), staging 잔재를 자기 잔재로 회수, 검증-사망 socket perm
   검사를 `perm&0o077==0`으로 좁게 완화, descriptor 내용 파싱 실패는 사망 입증 시 회수
   (형식 검사 유지). 6.1의 RED가 GREEN이 된다.
-- [ ] 6.3 GREEN(D2-2): `SetUnlinkOnClose(false)` + `Close`가 `s.listener`를 명시적으로
+- [x] 6.3 GREEN(D2-2): `SetUnlinkOnClose(false)` + `Close`가 `s.listener`를 명시적으로
   닫고 최종 경로 제거를 소유한다. A1의 늦은-unlink 재현을 회귀 핀으로 결정화한다
   (후계자 socket 보존).
-- [ ] 6.4 GREEN(D4-2 T1 몫): `Dial`에 connect probe — S3(socket 잔존 사망)에서 즉시
+- [x] 6.4 GREEN(D4-2 T1 몫): `Dial`에 connect probe — S3(socket 잔존 사망)에서 즉시
   오류. S3 fixture 테스트.
-- [ ] 6.5 기존 핀 재분류: `TestStartRefusesUnsafeLeftoverShapes`의 socket-0600·반쯤-descriptor
+- [x] 6.5 기존 핀 재분류: `TestStartRefusesUnsafeLeftoverShapes`의 socket-0600·반쯤-descriptor
   행을 회수 테스트로 이동하고 M7 해석을 정정한다. 뮤테이션 원장을 새 판정 뒤집기로
   갱신한다(stage+rename 제거·perm 완화 폭 넓힘·probe 제거 각각이 어떤 테스트를 죽이는지).
-- [ ] 6.6 A1 P3 소거: `os.Remove(controlDir)`의 `ErrNotExist` 용인 비대칭, 새-주인 경합의
+  — 이행 편차(T1-fix, Manager 수용): socket-0600 하위 케이스 중 0o644 모양은 완화(perm&0o077==0)
+  아래서도 거부가 맞으므로 이동하지 않고 「group/other 비트」로 개명, pre-chmod 0700 모양을
+  회수 테스트로 신설했다. design D1-2와 정합.
+- [x] 6.6 A1 P3 소거: `os.Remove(controlDir)`의 `ErrNotExist` 용인 비대칭, 새-주인 경합의
   flock 인용 주석, 절 단위 미핀 3건(symlink·uid·SameFile) 핀 추가.
 
 ### 6b. T2-fix (`cmd/tossctl`)
 
-- [ ] 6.7 D3-2: `EnqueueAlert` 제거 — 강등 보고는 stderr + obs Normal 이벤트 로그.
+- [x] 6.7 D3-2: `EnqueueAlert` 제거 — 강등 보고는 stderr + obs Normal 이벤트 로그.
   proc-instance dedup 토큰 기계 제거. 핀 2종 추가: ① 강등 기동이 outbox 미전달 행을
   만들지 않는다, ② 강등 기동 후 재기동에서 entry gate가 그것 때문에 잠기지 않는다
   (A2가 요구한 다음-부팅 측정 — 전달 루프가 있는 harness로).
-- [ ] 6.8 D4-2 T2 몫: 비-NotExist stat 오류를 경고+강등으로(콘솔 패리티, 기존 fatal 핀
+- [x] 6.8 D4-2 T2 몫: 비-NotExist stat 오류를 경고+강등으로(콘솔 패리티, 기존 fatal 핀
   반전), `httpapi_reader.go`의 strategy Read 실패를 dormant 흡수로(집계 스냅샷 생존
   테스트), S3 fixture(6.4의 Dial probe 위에서).
-- [ ] 6.9 원장·문서 정정: execgw 선례 오독 정정, **비-unix 위험 항목 삭제**(A2 실측 —
+- [x] 6.9 원장·문서 정정: execgw 선례 오독 정정, **비-unix 위험 항목 삭제**(A2 실측 —
   `flock_other.go:16` `ErrLockUnsupported`가 1단계에서 기동을 막아 7단계 도달 불가),
   ready 테스트의 실측 범위를 이름/주석으로 정직화, RED 재구성(커밋 순서 부재) 기록,
   뮤테이션 원장 갱신(M2·M3 등 outbox 계열 재작성).

@@ -47,6 +47,39 @@ GREEN보다 81초 선행, 구현 파일 0)와 detached 체크아웃 재실행으
 - 2.5는 **미완**으로 남는다(핀이 실패 불가였음) — a109가 사고급 모양 핀을 소유한다.
 - 사고 당시 상태의 즉시 복구(잔재 수동 이동)는 이 리뷰 시점에도 **사람 실행 대기**다.
 
-## §4. Fix 라운드 결과
+## §4. Fix 라운드 결과 (2026-08-14)
 
-(6a·6b 완료 후 기록)
+**T1-fix (커밋 39ec4feb·19744358·bec6e133·217c8813)** — §6a 전부 이행. RED 5건(생산자가
+만드는 영구 거부) 선행 커밋 실재. `listenPrivateSocket`(임시 bind→chmod→rename,
+`SetUnlinkOnClose(false)`)·descriptor stage+rename·staging 잔재 회수·`perm&0o077==0`
+완화·형식/내용 분리·`Dial` connect probe·`Close`의 listener 소유. 패키지 테스트 23→35.
+뮤테이션 §B 15건 중 14 사망 + §A 7건 재적용 전부 재사망(**회수 함수를 다시 썼으므로 옛
+관측을 새 코드에 다시 돌렸다** — 좋은 규율). 생존 1(M17, rmdir ENOENT 경합 분기 —
+seam 없이 결정 불가, 명시 선언). M7 해석 정정 기록. 이행 편차 1건(0o644 케이스 비이동)은
+design 정합으로 Manager 수용(tasks 6.5 주석).
+
+**T2-fix (커밋 d8b27021·aecc03e0·e3b30841)** — §6b 전부 이행. **이번엔 RED 커밋이
+히스토리에 실재**(A2 F5 교훈 이행). outbox 철회 + 핀 2종(미전달 행 0 / journal 재개방
+후 entry gate 비잠금 — 대조군 EnqueueAlert로 harness의 측정 능력까지 증명). stat 콘솔
+패리티·reader의 strategy Read 실패 dormant 흡수(NOT_CONFIGURED과 RUNTIME_UNAVAILABLE을
+접지 않음). 뮤테이션 12/12 — M2b/M3b는 "부르지 않는다"가 아니라 "미전달 행이 없다"를
+재서 제3의 경로도 잡는다. 원장 정정 3건(execgw 선례·비-unix 항목 삭제·ready 테스트 개명).
+
+**교차 검증**: T2-fix가 의도된 RED로 남긴 `TestASocketFileWithNoOwnerDegradesTheDaemon`
+(S3에서 httpapi 강등)이 T1-fix의 Dial probe 병합만으로 무접촉 GREEN — 두 소유 경계에
+걸친 계약(D4-2)이 실제로 맞물렸다는 실측.
+
+**병합 후 검증(Manager)**: `strategyprojectionrpc`+`cmd/tossctl` -race 625 passed,
+`check_analysis.py` evidence complete(오류 0).
+
+## §5. 선언된 생략 (not-applicable)
+
+- T1-fix: `Start`/`writeDescriptor` 실패 분기 12+2건 무테스트 — 파일시스템 오류 주입
+  seam이 발행 경로에 새 실패 모드를 더한다. 성질 핀 3개로 대체 측정.
+- T1-fix: chown 불가(비root)·`Lstat` symlink mode 두 절은 디스크 상태로 단독 실패 불가 —
+  원장 §B5.
+- T2-fix: `httpAPIReader.Snapshot` B1~B7(기존 fail-closed 읽기) 미핀 — fixture가 7개
+  전부 성공해야 한다는 대조 조건으로 대체.
+- staging socket 이름의 sun_path 108 한도(실측 78바이트, 여유) — 길이 가드 미도입, 관찰만
+  기록. 극단적으로 긴 `$TOSSOS_DATA_DIR` 배포는 한도에 걸릴 수 있다.
+- tasks 2.5는 **미완**(실패-불가 핀) — a109가 소유.
