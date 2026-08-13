@@ -147,3 +147,17 @@ obs Normal 경로가 outbox에 닿지 않음을 notifier 코드로 재검증(A2 
 - 최종 검증: 두 패키지 -race GREEN · vet · make lint 0 · check_analysis 오류 0.
 - Manager 정산: design D1-2 문구를 코드에 맞춤(.staging→.s-, 형태 검증 명시). a108은
   미배포라 접두 변경의 현장 노출 없음.
+
+## §8. 게이트 (2026-08-14)
+
+`make gate CHANGE=a108-boot-recovers-from-any-leftover` **rc=0 (PASS)**. 경과 기록:
+
+- 1차 FAIL: 배포 절차를 tasks 체크박스로 넣은 구조 오류(미래 절차를 미완료로 셈) —
+  §5를 산문 절차로 전환, 2.5 supersede(a109), schema 대조 실측(31=31)으로 해소.
+- 2차 FAIL: `make test` 3건 실패 — 전부 **병합 완료된 에이전트 worktree 잔재
+  (.claude/worktrees/)를 repo 전체를 걷는 정적 가드가 오인**한 것(8,395 통과).
+  worktree 2개 제거로 해소. 교훈: 정적 가드가 있는 repo에서 격리 worktree는 병합 즉시
+  지워야 make test가 산다.
+- sdd-sync의 codegraphcontext 300s 타임아웃·GBrain busy는 advisory — CodeGraph 본체는
+  동기화됐고 sdd-check rc=0.
+- 진단 중 `| tail`이 rc를 삼키는 함정을 또 밟았다(세 번째) — 판정 명령은 파이프 없이.
