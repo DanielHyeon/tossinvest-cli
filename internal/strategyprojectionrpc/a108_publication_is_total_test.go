@@ -299,8 +299,73 @@ func TestDescriptorIdentityClausesRejectASwappedFile(t *testing.T) {
 	if sameDescriptorFile(one, two, one) {
 		t.Fatal("검사한 파일과 다른 파일을 열었는데 같다고 했다")
 	}
+	// 이 줄이 첫 절만 겨눈다: 연 파일과 연 뒤의 파일은 서로 같고, 검사한 파일만
+	// 다르다. 두 절을 `&&`로 묶어 놓으면 다른 줄들은 둘째 절만으로도 통과한다.
+	if sameDescriptorFile(one, two, two) {
+		t.Fatal("검사하기 전에 바꿔치기당했는데 같다고 했다")
+	}
 	if sameDescriptorFile(one, one, two) {
 		t.Fatal("연 뒤에 자리가 바뀌었는데 같다고 했다")
+	}
+}
+
+// TestDescriptorPublicationIsAtomic은 descriptor stage+rename의 핀이다.
+//
+// 발행이 원자적이면 최종 이름은 **완성된 파일에만** 붙는다: 다시 발행하는 동안에도
+// 읽는 쪽은 옛 내용이나 새 내용 중 하나를 볼 뿐, 반쯤 쓰인 것을 보지 않는다.
+// 제자리에서 만들고 쓰는 옛 발행은 이 성질을 두 방향으로 깬다 — 생성과 write 사이에
+// 0바이트가 보이고, `O_EXCL`이면 두 번째 발행 자체가 되지 않는다.
+func TestDescriptorPublicationIsAtomic(t *testing.T) {
+	dir := shortRuntimeDir(t)
+	a108MakeControlDir(t, dir)
+	tokens := [2]string{strings.Repeat("a", 43), strings.Repeat("b", 43)}
+	publish := func(token string) error {
+		return writeDescriptor(DescriptorPath(dir), Descriptor{SchemaVersion: descriptorSchema,
+			Socket: SocketFileName, Token: token, PID: os.Getpid()})
+	}
+	if err := publish(tokens[0]); err != nil {
+		t.Fatal(err)
+	}
+	published := make(chan error, 1)
+	go func() {
+		defer close(published)
+		for round := range 300 {
+			if err := publish(tokens[round%2]); err != nil {
+				published <- err
+				return
+			}
+		}
+	}()
+	reads, changed := 0, 0
+	for {
+		select {
+		case err, open := <-published:
+			if err != nil {
+				t.Fatalf("다시 발행하지 못했다: %v", err)
+			}
+			if !open {
+				if reads == 0 {
+					t.Fatal("발행 중에 읽기가 한 번도 성사되지 않았다 — 이 테스트는 아무것도 재지 않았다")
+				}
+				t.Logf("완성된 읽기 %d회 · rename 경합 %d회", reads, changed)
+				return
+			}
+		default:
+		}
+		descriptor, err := readDescriptor(DescriptorPath(dir))
+		if errors.Is(err, errDescriptorChanged) {
+			// rename이 우리 발밑에서 파일을 **다른 완성 파일로** 바꿨다. 이것이
+			// 원자성의 증거이지 반증이 아니다 — 반쯤 쓰인 것을 본 적은 없다.
+			changed++
+			continue
+		}
+		if err != nil {
+			t.Fatalf("발행 중에 완성되지 않은 descriptor가 보였다 (%d번째 읽기): %v", reads, err)
+		}
+		if descriptor.Token != tokens[0] && descriptor.Token != tokens[1] {
+			t.Fatalf("발행한 적 없는 토큰을 읽었다: %q", descriptor.Token)
+		}
+		reads++
 	}
 }
 

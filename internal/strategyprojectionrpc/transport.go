@@ -110,6 +110,15 @@ func sameDescriptorFile(inspected, opened, current os.FileInfo) bool {
 	return os.SameFile(inspected, opened) && os.SameFile(opened, current)
 }
 
+// errDescriptorChanged는 "검사한 파일과 읽는 파일이 다르다"는 신호다.
+//
+// 이것은 손상이 아니다. 발행이 rename이므로(design D1-2) 다시 발행하는 그 순간에
+// 읽으면 정상적으로 이 답이 나온다 — 반쯤 쓰인 파일을 본 것이 아니라 **다른 완성
+// 파일로 바뀐 것**이다. 형식·내용이 깨진 답과 구분되는 이름을 준 이유는, 그
+// 구분이 없으면 "발행 중에 반쯤 쓰인 것이 보이는가"를 재는 테스트가 rename의
+// 정상 경합을 손상으로 읽기 때문이다.
+var errDescriptorChanged = errors.New("strategy projection runtime: descriptor changed while it was opened")
+
 // openVerifiedDescriptor는 descriptor의 **형식**만 확인하고 연 파일을 돌려준다.
 //
 // 형식과 내용을 가르는 것이 design D1-2다. 형식(정확히 0600인 정규 파일 · symlink를
@@ -142,7 +151,7 @@ func openVerifiedDescriptor(path string) (*os.File, error) {
 	if currentErr != nil || !sameDescriptorFile(info, opened, current) ||
 		!opened.Mode().IsRegular() || opened.Mode().Perm() != 0o600 {
 		_ = file.Close()
-		return nil, errors.New("strategy projection runtime: descriptor changed while it was opened")
+		return nil, errDescriptorChanged
 	}
 	return file, nil
 }
