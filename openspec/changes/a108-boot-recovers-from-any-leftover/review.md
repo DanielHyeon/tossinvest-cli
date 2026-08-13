@@ -83,3 +83,42 @@ design 정합으로 Manager 수용(tasks 6.5 주석).
 - staging socket 이름의 sun_path 108 한도(실측 78바이트, 여유) — 길이 가드 미도입, 관찰만
   기록. 극단적으로 긴 `$TOSSOS_DATA_DIR` 배포는 한도에 걸릴 수 있다.
 - tasks 2.5는 **미완**(실패-불가 핀) — a109가 소유.
+
+## §6. gstack 독립 리뷰 (2026-08-14, 7패스)
+
+패스: 스페셜리스트 4(testing·maintainability·security·performance) + Red Team +
+Claude 적대(3라운드째) + Codex 적대·구조화(모델 교차). Codex 구조화 GATE: **FAIL**(P1 1)
+→ Fix-First(T3-fix) 후 재검증. Scope check: CLEAN(선언된 a109 등록 포함, drift 없음).
+
+### 수렴 지도
+
+| 발견 | 소스 | 판정 |
+| --- | --- | --- |
+| 동기 Notify가 부팅을 최대 10s 블록(rt.Run 전, ntfy 배선 시) — "관측이 보호를 막지 않는다" 계약을 fix 라운드 코드가 위반 | **performance + Claude 적대 + Codex 구조화 (3소스)** | **T3-fix A1 (P1)** |
+| dial-실패 강등이 NOT_CONFIGURED로 렌더 — 엔진 장애가 기능-미사용과 같은 신호 | **security + maintainability + Claude 적대 (3소스)** | **T3-fix A2** — sentinel reader로 RUNTIME_UNAVAILABLE |
+| staging 이름이 최종 이름보다 길어 sun_path 직전 배포에서 매 부팅 소실 — T1-fix의 "관찰"을 수정으로 승격 | **Codex 구조화 + Red Team (2소스)** | **T3-fix B1** |
+| probe 절 미핀 + owner-write 없는 socket EACCES→생존 오판(영구 거부 잔류) | **testing + Codex 적대 (2소스)** | **T3-fix B2** |
+| spec delta "가동 중 사망 → dormant"가 코드·핀(RUNTIME_UNAVAILABLE)과 모순 — archive 시 정본에 거짓 문장 | Red Team (CRITICAL) | **Manager 즉시 수정** (spec delta) |
+| 롤백이 a108을 가로지르면 구 바이너리가 새 잔재를 영구 거부 — 사고 재생산 | Claude 적대 | **Manager D5-3** + tasks 5.2 + a109 2b.3 |
+| .staging 디렉터리가 회수를 영구 wedge / 발행 실패 잔재 당회 잔존 / 무경고 강등(engineJournalDir) / token 스코프 / stale RED 주석 / line-range 인용 rot | 단일 소스 P3들 | **T3-fix B3·B4·A3·A4·A5** |
+
+### 기각·이관 (사유 명시)
+
+- **소비자측 lazy 재-dial**(Red Team): 회복 부팅마다 화면 소실이 기본값이 되는 지적은
+  타당하나 reader에 재시도 상태를 넣는 설계라 **a109 2b.1로 이관**. A2의 sentinel이
+  소실을 최소한 "보이게"는 만든다(unavailable ≠ 미사용).
+- **same-UID 위조 endpoint·pathname TOCTOU/dirfd**(Codex 적대 1·4, security 2):
+  전제가 journal·config를 이미 장악한 same-uid 공격자다 — 신뢰 앵커 밖. 하드닝 후보로
+  기록만.
+- **콘솔·httpapi 강등 블록 공용 helper**(maintainability): 콘솔은 a108 무접촉
+  원칙 — 정리 change 후보로 기록.
+- **wedged-engine 5s 스냅샷 스톨**(performance): 변경 전과 동일한 상한, 죽음의 일반
+  형태(ECONNREFUSED)는 µs — 선택 개선으로 기록.
+- **Codex 검증 한계**: 샌드박스 /tmp 읽기 전용으로 go test 미실행(발견은 정적 추적) —
+  Claude 적대·Red Team이 같은 트리에서 테스트 실행으로 보완.
+
+### Red Team이 닫은 각도
+
+obs Normal 경로가 outbox에 닿지 않음을 notifier 코드로 재검증(A2 P1의 entry-gate 위험
+종결 확인), 형제 endpoint 잔존 결함은 D5-2 스코프 선언과 일치, datagram 스쿼팅·ENOTDIR은
+안전 방향(Claude 적대 실측).

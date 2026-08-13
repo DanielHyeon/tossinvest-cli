@@ -176,3 +176,11 @@ A1 실측: policy runtime·alert control도 pre-chmod socket 잔재를 영구 �
 **engine-safety delta의 일반 요구를 strategy projection으로 좁히고, 일반 불변식은
 a109 등록으로 옮긴다.** 거짓 SHALL을 정본에 넣지 않기 위한 좁힘이며(A1 P1-3),
 좁힘의 근거와 측정은 a109 proposal이 승계한다.
+
+### D5-3. 롤백은 a108을 거꾸로 가로지른다 (gstack 3라운드 적대 발견)
+
+새 바이너리가 **합법적으로** 남기는 잔재(.staging-*, S0/S1/S2)를 구 바이너리의 회수는
+영구 거부한다. 롤백은 새 바이너리가 방금 죽었을 때 하는 것이므로, 잔재가 있을 확률이
+가장 높은 순간에 구 바이너리가 2026-08-13 사고를 재생산한다. 코드로 못 고친다 — 절차
+한 줄이다: **a108을 가로질러 롤백하기 전에 `.strategy-runtime-read/`를 지운다**(전부
+일회용 산출물이다). tasks 5.2에 반영, a109 tasks에도 승계.

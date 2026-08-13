@@ -28,7 +28,9 @@ httpapi는 strategy projection endpoint의 부재(descriptor 없음)와 모든 �
 #### Scenario: 가동 중 projection 사망
 
 - **WHEN** 기동 시 살아 있던 projection이 이후 죽어 strategy 읽기가 실패하면
-- **THEN** 전략 표면만 dormant가 되고 나머지 집계 스냅샷과 스트림은 계속 제공된다
+- **THEN** 전략 표면만 unavailable(`RUNTIME_UNAVAILABLE`)이 되고 나머지 집계 스냅샷과
+  스트림은 계속 제공된다 — dormant(`NOT_CONFIGURED`)는 reader 부재(기능 미사용)에만
+  쓰며, 죽음을 미사용으로 접지 않는다
 
 #### Scenario: 조사 불가 descriptor
 

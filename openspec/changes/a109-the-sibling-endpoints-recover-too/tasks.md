@@ -21,6 +21,15 @@
 - [ ] 2.2 산-주인 처리(거부 또는 flock 명문화 — 0.3의 판정대로).
 - [ ] 2.3 뮤테이션 원장.
 
+## 2b. a108 gstack 리뷰가 이관한 항목
+
+- [ ] 2b.1 httpapi의 소비자측 lazy 재-dial(rate-limit, reader nil일 때 stat+dial 1회) 또는
+  감독 순서(engine-ready 후 httpapi) 고정 — 회복 부팅마다 전략 화면이 수동 재시작 전까지
+  소실되는 기본값을 닫는다(a108 red-team). 엔진측 in-process 재시도 금지(D2-2)는 유지.
+- [ ] 2b.2 "Close가 flock 보유 중에 돈다" defer 순서 불변식 핀(a108 Claude 적대 3라운드 —
+  지금은 defer 등록 순서 하나에 얹혀 있고 테스트가 없다).
+- [ ] 2b.3 롤백 전 잔재 제거 절차를 세 endpoint에도 일반화(a108 D5-3).
+
 ## 3. 게이트
 
 - [ ] 3.1 영향 패키지 `go test -race`(app/engine은 `-timeout 25m` 이상) + `go vet`.
