@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/engine.go",
-  "source_sha256": "f206947ae6dcb1d0e55ef7ccc40fcf6cb94c42dbb219e8ba777409c28530eb0a",
+  "source_sha256": "ea35f850ccf5a05d468e9c0556186d84ed2318be81137bfecd6998c281fddfed",
   "package": "main",
   "function": "runEngineRun",
   "signature": "runEngineRun(params=2, results=1)",
@@ -487,7 +487,7 @@
       "kind": "call",
       "at": {
         "line": 246,
-        "column": 20
+        "column": 17
       },
       "text": "engineProcInstance"
     },
@@ -495,7 +495,7 @@
       "kind": "call",
       "at": {
         "line": 246,
-        "column": 39
+        "column": 36
       },
       "text": "os.Getpid"
     },
@@ -618,14 +618,6 @@
         "column": 3
       },
       "text": "reportStrategyProjectionDegraded"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 300,
-        "column": 70
-      },
-      "text": "clk.Now"
     },
     {
       "kind": "call",
