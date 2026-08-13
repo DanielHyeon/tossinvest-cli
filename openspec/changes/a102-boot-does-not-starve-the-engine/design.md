@@ -88,6 +88,33 @@ calls 7 — 재시도 루프와 `clk.Sleep` seam이 **이미 있다**):
 - `Hold`는 기존 함수 — **FLM 먼저**. AST는 teammate가
   `tools/logic-map`으로 생성한다.
 
+**D4b (A2 F1 정정) — 준비 신호는 살아 있는 그 프로세스의 것일 때만 신호다.**
+크래시는 `Release`를 부르지 않으므로 `ready_at`이 든 마커가 StaleAfter(5m) 동안
+디스크에 남고, 신선도만 보면 "죽은 엔진이 계좌를 지키고 있다"고 읽힌다 — A2가
+실행으로 재현했다(02:03 사고의 바로 다음 장면: 콘솔이 새 엔진을 띄우고, 새
+엔진이 조립 단계에 있는 동안 전임자의 ready_at이 '준비 확인'으로 읽혀 서베이가
+새 엔진의 복구 예산을 때린다). 따라서:
+
+- ready 판정은 `ReadyAt != nil` **그리고 마커의 PID가 지금 살아 있는 엔진
+  프로세스 중 하나일 때만** 참이다. `Marker.PID`는 이미 있고, 콘솔 쪽에는
+  `engineFindProcesses(dir)` seam이 이미 있다 — cmd 쪽에서 합성한다.
+  enginelock 패키지에 프로세스 열거를 넣지 않는다.
+- 살아 있는 엔진 프로세스가 있는데 마커 PID가 그 집합에 없으면: 그 마커는
+  시체의 것이다 — "준비 안 됨"으로 취급하고 계속 기다린다 (새 엔진이 flock을
+  잡으면 자기 PID로 마커를 다시 쓴다).
+- 살아 있는 엔진 프로세스가 없으면: 기존 D6대로 즉시 시작이다.
+
+**D4c (A2 F3·F4 정정) — 마커 쓰기의 규율.** 뮤텍스는 메모리만 덮고 파일은
+덮지 않았다. A2 실측: ready_at이 디스크에서 지워지는 순서(139/3000), 독자의
+찢어진 읽기(3617/12259, `os.WriteFile`의 O_TRUNC 창), 그리고 `Release` 뒤
+refresh가 마커를 부활시키는 갈래(결정적 재현 — 편집 전에는 "잘못 그린 상태
+줄"이었지만 이제 "죽은 보호가 서 있다"가 된다). 따라서:
+
+- `write`는 뮤텍스 안에서 한다 (1분 1회 — 비용 없음).
+- 파일 교체는 tmp+rename으로 원자화한다 (찢어진 읽기 제거).
+- `Release`는 뮤텍스 아래에서 live 플래그를 끄고, refresh는 그것을 확인해
+  쓰기를 건너뛴다 (부활 차단).
+
 ### D5 — 마킹은 cmd의 Recover 클로저에서 한다
 
 런타임은 `opts.Recover`를 루프 시작 전에 부른다(`internal/app/engine/runtime.go:289-294`).
@@ -147,6 +174,27 @@ awaitEngineReady(ctx, observe func() enginelock.Status, clk, cap, poll) verdict
   그대로 맞는 동작이다.
 - `runConsole`은 기존 함수 — **FLM 재기준** (calls-only delta 기대, a101 선례).
 
+**D7b (A2 F5 정정) — 부팅 경로와 버튼은 직렬화된다.** 편집 전 자동 시작
+블록은 리스너보다 앞에서 동기로 끝나 버튼과 겹칠 수 없었다. goroutine화가
+최대 120초의 동시 창을 새로 만들었고, 두 경로 모두 같은 record 위의
+check-then-act라 잠금 없이는 한 기록에 두 서베이가 붙을 수 있다(soakproc가
+스스로 "더 나쁘다"고 적은 결말). 콘솔 프로세스 안의 뮤텍스 하나로 부팅
+goroutine의 시작 경로와 버튼의 restartSoak 경로를 직렬화한다. 대기 중 버튼을
+누르면 버튼이 먼저 잡고, 부팅 경로는 그 뒤 pid 가드("이미 실행 중")로
+물러난다 — 순서가 아니라 잠금이 그것을 보장하게 만든다.
+
+**D7c (A2 F6 정정) — 형태가 아니라 실행으로 고정한다.** 소스 형태 테스트는
+"goroutine 안에 join을 넣는" 코드에 뚫린다(A2가 실제로 뚫었다). 부팅 블록의
+동기 부분을 이름 있는 함수(예: `startSoakAutostartAsync`)로 빼고, 그 함수가
+**영원히 블록하는 start를 줘도 즉시 반환**함을 실행으로 단언한다. runConsole의
+형태 검사는 그 함수를 부른다는 것 하나로 줄인다.
+
+**D5c (A2 F2 정정) — 배선 자체가 테스트에 잡혀야 한다.** A2의 생존 뮤테이션
+넷(N1 ready no-op · N2 관측 무력화 · N3 cap/poll 맞바꿈 · N5 ready=nil)은 전부
+"단위는 100%인데 프로덕션 배선은 0%"의 결과다. stubRuntime이 ready를 버리지
+않고 잡아서 호출 여부를 단언하고, `engineReadiness`·cap·poll의 전달을 이름
+있는 seam으로 빼서 단위 테스트한다. 최소 N1·N2·N3을 죽인다.
+
 ## 겹의 결합 — 왜 둘 다인가
 
 | 시나리오 | 겹1만 | 겹2만 | 둘 다 |
@@ -162,6 +210,11 @@ awaitEngineReady(ctx, observe func() enginelock.Status, clk, cap, poll) verdict
   고치는 것은 별도 change다.
 - 자동시작 supervisor화 — 이 change는 죽지 않게 하는 쪽이다.
 - `Recovery.Run`의 replay/observation 경로 429 — 관측된 실패 없음, not-applicable.
+- **취소가 `Runtime.Run` 밖으로 나가는 계약** (A2 F9 후반) — recovery가 nil을
+  돌려준 채 ctx가 이미 취소돼 있으면 `rt.Run`이 `context.Canceled`를 반환해
+  "nil = 정상 배수" 주석과 어긋난다. 고치려면 `internal/app/engine` 편집이
+  필요한데 그것은 이 change의 못이다 — 선언된 생략으로 남기고 후속 후보로
+  기록한다. cmd 쪽 ctx nil 방어(F9 전반)만 이번에 한다.
 - **비상 청산(flatten)의 429** — `internal/flatten/liquidate.go:596`이 같은
   `Collect`를 쓰므로 D1b 이후 429의 정체가 그곳까지 도달하지만, flatten은 그것을
   구분하지 않고 청산 라운드를 접는다 (A1 F5 발견). **이 change에서 고치지 않는다**:

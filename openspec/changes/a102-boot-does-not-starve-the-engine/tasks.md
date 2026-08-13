@@ -125,6 +125,18 @@ Teammate는 여기·design.md에 없는 결정이 필요해지면 **멈추고 Ma
   → **571건 통과**(19 + 552) · `-race` 포함 통과 · `internal/reconcile`·`internal/console`·
   `internal/obs`·`internal/app/engine` **1440건 무회귀** · `make lint` rc=0(gofmt 실재 확인).
 
+- [ ] 3.9 [T] **A2 리뷰 반영 (FIX-FIRST)** — ① D4b: ready 판정을 마커 PID의
+  생존에 묶는다 (F1 — 죽은 엔진의 잔재 ready_at이 '준비 확인'으로 읽히는 재현
+  차단; 시체 마커는 '준비 안 됨', 살아 있는 엔진 없음은 즉시 시작) ② D5c:
+  생존 뮤테이션 N1·N2·N3을 죽이는 실행 테스트 — stubRuntime이 ready를 잡고,
+  engineReadiness·cap·poll 전달을 seam으로 (F2) ③ D4c: write를 뮤텍스 안 +
+  tmp+rename + Release 후 refresh 부활 차단 (F3·F4 — 각각 재현 테스트) ④ D7b:
+  부팅 경로·버튼 뮤텍스 직렬화 (F5) ⑤ D7c: 부팅 블록 동기부를 이름 있는
+  함수로 빼고 '영원히 블록하는 start에도 즉시 반환'을 실행 단언 — N4를 죽인다
+  (F6) ⑥ obs 이벤트 값 유일성 테스트 — N7을 죽인다 (F7) ⑦ 콘솔 종료의
+  abandoned는 실패 문장이 아니라 note로 (F8) ⑧ recoverThenReady ctx nil 방어
+  (F9 일부). A2의 생존 뮤테이션 N1~N5·N7을 재가해 사멸 확인.
+
 ## 4. T2 — 산출물 정리
 
 - [x] 4.1 tasks 체크 + 커밋 (제목에 [a102 §3])
