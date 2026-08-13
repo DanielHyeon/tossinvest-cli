@@ -4,11 +4,11 @@
 > 않다. 이 묶음은 `check_analysis.py`가 요구하는 증거이며, 형식은 a056·a059의 선례
 > (같은 이유로 만든 테스트 함수 묶음)를 따른다.
 
-- Source: `cmd/tossctl/engine_test.go` (381-392)
+- Source: `cmd/tossctl/engine_test.go` (396-407)
 - AST evidence: `ast.json` — AST 기준 branches **2** / returns 0 / calls 5
 - Risk scan: `risk-pattern-report.md`
-- source SHA-256: `7bf68a13ea64c28bfd3cbd61e0ef31d9dd955a7b2fb18d769d62505e17f64e0d`
-- **a102가 바꾼 것**: 소스 형태 단언의 대상 문자열을 `Recover: func(ctx context.Context) error {`에서 `Recover: recoverThenReady(recovery.Run, ready,`로 바꿨다 — D5가 그 클로저를 교체했으므로 옛 문자열은 배선이 아니라 옛 모양을 고정한다. 「복구가 루프보다 먼저 온다」는 주장 자체는 그대로다.
+- source SHA-256: `ee98aa2936bff2145f0b98ff32889ad3865d4422ab60fdb6df532a7d0e6931c9`
+- **a102가 바꾼 것**: §3의 소스 형태 단언 대상 문자열을 `Recover: recoverThenReady(recovery.Run, ready,`로 바꿨다. 「복구가 루프보다 먼저 온다」는 주장 자체는 그대로다.
 
 ## Inputs and invariants
 
@@ -20,8 +20,8 @@
 
 | Branch | 위치 | Mutation/side effect | Return/이탈 |
 |---|---|---|---|
-| B1 | `:383` if | 테스트 코드 — 부수효과 없음 | 이 change로 바뀌지 않음 |
-| B2 | `:389` if | 테스트 코드 — 부수효과 없음 | 이 change로 바뀌지 않음 |
+| B1 | `:398` if | 테스트 코드 — 부수효과 없음 | 이 change로 바뀌지 않음 |
+| B2 | `:404` if | 테스트 코드 — 부수효과 없음 | 이 change로 바뀌지 않음 |
 
 ## Calls and live bindings
 

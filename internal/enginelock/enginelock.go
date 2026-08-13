@@ -208,10 +208,24 @@ type Held struct {
 
 // Release drops the marker. It is safe to call more than once, and safe on an
 // inert handle.
+//
+// Clearing live under the mutex is what stops a refresh already inside the
+// ticker's case from writing the file back after the remove. A102 A2 reproduced
+// that resurrection deterministically, and after this change what a resurrected
+// marker says is not "a misdrawn status line" but "protection is standing" about
+// a process that has stopped.
 func (h *Held) Release() {
-	if h == nil || !h.live {
+	if h == nil {
 		return
 	}
+	h.mu.Lock()
+	if !h.live {
+		h.mu.Unlock()
+		return
+	}
+	h.live = false
+	h.mu.Unlock()
+
 	h.once.Do(func() {
 		close(h.done)
 		if rerr := os.Remove(h.path); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
@@ -228,23 +242,25 @@ func (h *Held) Release() {
 // It is idempotent and keeps the first instant: the signal means the moment
 // protection came up, and a later call moving it would turn that into "the last
 // time somebody said so". Calling it on an inert handle does nothing.
+//
+// The write happens inside the mutex. Guarding only the struct left the file
+// unguarded, and A2 measured what that costs: ready_at erased on disk in 139 of
+// 3000 concurrent runs, because two writers can order their struct reads and
+// their file writes differently.
 func (h *Held) Ready(now time.Time) {
-	if h == nil || !h.live {
+	if h == nil {
 		return
 	}
 	h.mu.Lock()
-	if h.marker.ReadyAt != nil {
-		h.mu.Unlock()
+	defer h.mu.Unlock()
+	if !h.live || h.marker.ReadyAt != nil {
 		return
 	}
 	at := now.UTC()
 	h.marker.ReadyAt = &at
-	current := h.marker
-	h.mu.Unlock()
-
 	// A ready signal that could not be written costs the console a wait it did
 	// not need, never a refused start — the same asymmetry the first write has.
-	_ = write(h.path, current, now)
+	_ = write(h.path, h.marker, now)
 }
 
 // refresh rewrites the marker at at, from what the holder currently knows.
@@ -256,15 +272,18 @@ func (h *Held) Ready(now time.Time) {
 // Reading the marker from guarded state rather than from a captured copy is the
 // whole reason this exists: a refresh built from the value captured at Hold time
 // would rewrite the file without ready_at, and a ready engine would become
-// unready one minute later.
+// unready one minute later. The live check is inside the same lock Release takes,
+// so a refresh cannot bring back a marker that has just been removed.
 func (h *Held) refresh(at time.Time) error {
-	if h == nil || !h.live {
+	if h == nil {
 		return nil
 	}
 	h.mu.Lock()
-	current := h.marker
-	h.mu.Unlock()
-	return write(h.path, current, at)
+	defer h.mu.Unlock()
+	if !h.live {
+		return nil
+	}
+	return write(h.path, h.marker, at)
 }
 
 // Hold writes the marker and keeps it fresh until ctx ends or the returned
@@ -282,7 +301,9 @@ func Hold(ctx context.Context, path string, now time.Time) (*Held, error) {
 	if werr := write(path, m, now); werr != nil {
 		return h, werr
 	}
+	h.mu.Lock()
 	h.live = true
+	h.mu.Unlock()
 
 	go func() {
 		ticker := time.NewTicker(RefreshEvery)
@@ -302,23 +323,60 @@ func Hold(ctx context.Context, path string, now time.Time) (*Held, error) {
 	return h, nil
 }
 
+// write replaces the marker atomically.
+//
+// It used to be os.WriteFile, which truncates and then fills. Every reader that
+// looked inside that window got a short or empty file, and the reader is a
+// dashboard and an autostart script: A2 measured 3617 torn reads in 12259
+// attempts against the old shape. A rename over the same directory is atomic, so
+// a reader sees either the previous marker or the next one and never a half of
+// either — which is exactly the property the lenient reader could not supply for
+// itself, because "unparseable" degrades to "running, build unknown" and after
+// a102 that includes losing the ready signal.
+//
+// The temporary file is created in the marker's own directory so the rename
+// never crosses a filesystem, and it is removed on every failure path so a
+// journal directory does not collect debris from a full disk.
 func write(path string, m Marker, at time.Time) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-		return fmt.Errorf("enginelock: creating %s: %w", filepath.Dir(path), err)
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return fmt.Errorf("enginelock: creating %s: %w", dir, err)
 	}
 	m.RefreshedAt = at.UTC()
 	body, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
 		return fmt.Errorf("enginelock: rendering the marker: %w", err)
 	}
-	if err := os.WriteFile(path, append(body, '\n'), 0o600); err != nil {
-		return fmt.Errorf("enginelock: writing %s: %w", path, err)
+
+	tmp, err := os.CreateTemp(dir, ".engine-run-*.json")
+	if err != nil {
+		return fmt.Errorf("enginelock: staging %s: %w", path, err)
+	}
+	staged := tmp.Name()
+	if _, err := tmp.Write(append(body, '\n')); err != nil {
+		tmp.Close()
+		os.Remove(staged)
+		return fmt.Errorf("enginelock: writing %s: %w", staged, err)
+	}
+	if err := tmp.Close(); err != nil {
+		os.Remove(staged)
+		return fmt.Errorf("enginelock: closing %s: %w", staged, err)
+	}
+	if err := os.Chmod(staged, 0o600); err != nil {
+		os.Remove(staged)
+		return fmt.Errorf("enginelock: securing %s: %w", staged, err)
 	}
 	// The contents are for a reader; the modification time is the fact. Setting it
 	// explicitly keeps an injected clock authoritative in a test rather than
-	// whatever the filesystem happened to stamp.
-	if err := os.Chtimes(path, at, at); err != nil {
-		return fmt.Errorf("enginelock: timestamping %s: %w", path, err)
+	// whatever the filesystem happened to stamp — and doing it before the rename
+	// means the marker is never visible with the wrong timestamp.
+	if err := os.Chtimes(staged, at, at); err != nil {
+		os.Remove(staged)
+		return fmt.Errorf("enginelock: timestamping %s: %w", staged, err)
+	}
+	if err := os.Rename(staged, path); err != nil {
+		os.Remove(staged)
+		return fmt.Errorf("enginelock: publishing %s: %w", path, err)
 	}
 	return nil
 }

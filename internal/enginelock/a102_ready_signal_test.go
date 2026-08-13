@@ -17,8 +17,10 @@ package enginelock
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -238,6 +240,164 @@ func TestAFailedHoldPublishesNothing(t *testing.T) {
 
 	if _, statErr := os.Stat(path); statErr == nil {
 		t.Fatal("a failed Hold created a marker file after all")
+	}
+}
+
+// --- A2 라운드: 뮤텍스는 메모리만 덮었다 ------------------------------------------
+
+// TestReleaseIsNotUndoneByARefreshAlreadyInFlight is A2 F4, made deterministic.
+//
+// 크래시가 아니라 정상 종료의 문제다. `Release`가 파일을 지운 **직후**에 이미
+// ticker case에 들어간 refresh가 쓰면 마커가 되살아난다. a102 이전이면 그 결과는
+// "잘못 그린 상태 줄"이었지만, ready_at이 생긴 지금은 **죽은 보호가 서 있다**가 된다 —
+// 서베이가 그것을 보고 대기 없이 시작한다.
+//
+// select의 무작위 선택에 기대지 않고 `refresh`를 직접 불러 그 순서를 만든다.
+func TestReleaseIsNotUndoneByARefreshAlreadyInFlight(t *testing.T) {
+	path := MarkerPath(t.TempDir())
+	held, err := Hold(context.Background(), path, a102Now)
+	if err != nil {
+		t.Fatalf("Hold: %v", err)
+	}
+	held.Ready(a102Now.Add(50 * time.Second))
+	held.Release()
+
+	if err := held.refresh(a102Now.Add(RefreshEvery)); err != nil {
+		t.Fatalf("refresh after Release: %v", err)
+	}
+	if _, statErr := os.Stat(path); !errors.Is(statErr, os.ErrNotExist) {
+		body, _ := os.ReadFile(path)
+		t.Fatalf("a refresh resurrected a released marker: %v\n%s", statErr, body)
+	}
+	if status := Read(path, a102Now.Add(RefreshEvery+time.Second)); status.Ready() {
+		t.Fatal("a stopped engine reads as ready after a late refresh")
+	}
+}
+
+// TestReleaseWinsAgainstConcurrentRefreshes is the same rule under -race, with
+// the two paths actually running together.
+func TestReleaseWinsAgainstConcurrentRefreshes(t *testing.T) {
+	path := MarkerPath(t.TempDir())
+	held, err := Hold(context.Background(), path, a102Now)
+	if err != nil {
+		t.Fatalf("Hold: %v", err)
+	}
+	held.Ready(a102Now.Add(50 * time.Second))
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 200; i++ {
+			_ = held.refresh(a102Now.Add(time.Duration(i) * time.Second))
+		}
+	}()
+	time.Sleep(time.Millisecond)
+	held.Release()
+	wg.Wait()
+
+	if _, statErr := os.Stat(path); !errors.Is(statErr, os.ErrNotExist) {
+		t.Fatal("concurrent refreshes brought the marker back after Release")
+	}
+}
+
+// TestTheMarkerIsNeverReadHalfWritten is A2 F3's torn-read half.
+//
+// `os.WriteFile`은 자르고 나서 채운다. 그 창에 들어온 독자는 짧은 파일을 보고,
+// 관대한 reader가 그것을 "running, build unknown"으로 강등한다 — 그리고 a102
+// 이후로는 ready_at도 함께 사라진 것으로 읽힌다. 원자 교체면 독자는 이전 마커
+// 아니면 다음 마커를 보고, 그 중간은 없다.
+func TestTheMarkerIsNeverReadHalfWritten(t *testing.T) {
+	path := MarkerPath(t.TempDir())
+	held, err := Hold(context.Background(), path, a102Now)
+	if err != nil {
+		t.Fatalf("Hold: %v", err)
+	}
+	defer held.Release()
+	held.Ready(a102Now.Add(50 * time.Second))
+
+	stop := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for i := 0; ; i++ {
+			select {
+			case <-stop:
+				return
+			default:
+			}
+			_ = held.refresh(a102Now.Add(time.Duration(i%60) * time.Second))
+		}
+	}()
+
+	torn, lost, reads := 0, 0, 0
+	deadline := time.Now().Add(300 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		body, rerr := os.ReadFile(path)
+		if rerr != nil {
+			continue
+		}
+		reads++
+		var m Marker
+		if json.Unmarshal(body, &m) != nil {
+			torn++
+			continue
+		}
+		if m.ReadyAt == nil {
+			lost++
+		}
+	}
+	close(stop)
+	wg.Wait()
+
+	if reads == 0 {
+		t.Fatal("the reader never saw the marker at all")
+	}
+	if torn != 0 || lost != 0 {
+		t.Fatalf("torn=%d lost-ready=%d out of %d reads; the replacement is not atomic",
+			torn, lost, reads)
+	}
+}
+
+// TestTheMarkerFileKeepsItsMode. tmp+rename으로 바꾸면서 0600을 잃으면 pid와 빌드
+// 지문이 다른 사용자에게 열린다.
+func TestTheMarkerFileKeepsItsMode(t *testing.T) {
+	path := MarkerPath(t.TempDir())
+	held, err := Hold(context.Background(), path, a102Now)
+	if err != nil {
+		t.Fatalf("Hold: %v", err)
+	}
+	defer held.Release()
+
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("stat: %v", err)
+	}
+	if perm := info.Mode().Perm(); perm != 0o600 {
+		t.Errorf("marker mode = %v, want 0600", perm)
+	}
+}
+
+// TestAFailedWriteLeavesNoDebris. 원자 교체는 임시 파일을 만든다. 실패 경로가
+// 그것을 지우지 않으면 저널 디렉터리가 쓰레기를 모은다.
+func TestAFailedWriteLeavesNoDebris(t *testing.T) {
+	dir := t.TempDir()
+	path := MarkerPath(dir)
+	held, err := Hold(context.Background(), path, a102Now)
+	if err != nil {
+		t.Fatalf("Hold: %v", err)
+	}
+	defer held.Release()
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("ReadDir: %v", err)
+	}
+	for _, e := range entries {
+		if strings.HasPrefix(e.Name(), ".engine-run-") {
+			t.Errorf("a staging file survived a successful write: %s", e.Name())
+		}
 	}
 }
 

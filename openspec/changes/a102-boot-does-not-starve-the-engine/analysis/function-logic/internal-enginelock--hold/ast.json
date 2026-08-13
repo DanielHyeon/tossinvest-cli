@@ -1,15 +1,15 @@
 {
   "file": "internal/enginelock/enginelock.go",
-  "source_sha256": "8c784e84d88e3ef2a20143712b91267a3f7f15ed9ea4e6963903d6f2fb8f3f65",
+  "source_sha256": "9399c1d68e1dfad16f6b1334f9875897e8025a88b94beb370354ffb11f318f8d",
   "package": "enginelock",
   "function": "Hold",
   "signature": "Hold(params=3, results=2)",
   "start": {
-    "line": 277,
+    "line": 296,
     "column": 1
   },
   "end": {
-    "line": 303,
+    "line": 324,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 282,
+        "line": 301,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "for",
       "at": {
-        "line": 290,
+        "line": 311,
         "column": 3
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "select",
       "at": {
-        "line": 291,
+        "line": 312,
         "column": 4
       }
     }
@@ -42,28 +42,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 283,
+        "line": 302,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 293,
+        "line": 314,
         "column": 5
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 295,
+        "line": 316,
         "column": 5
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 302,
+        "line": 323,
         "column": 2
       }
     }
@@ -72,7 +72,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 278,
+        "line": 297,
         "column": 19
       },
       "text": "os.Getpid"
@@ -80,7 +80,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 278,
+        "line": 297,
         "column": 43
       },
       "text": "now.UTC"
@@ -88,7 +88,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 279,
+        "line": 298,
         "column": 16
       },
       "text": "binstamp.Self"
@@ -96,7 +96,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 281,
+        "line": 300,
         "column": 42
       },
       "text": "make"
@@ -104,7 +104,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 282,
+        "line": 301,
         "column": 13
       },
       "text": "write"
@@ -112,14 +112,30 @@
     {
       "kind": "call",
       "at": {
-        "line": 287,
+        "line": 304,
+        "column": 2
+      },
+      "text": "h.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 306,
+        "column": 2
+      },
+      "text": "h.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 308,
         "column": 5
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 288,
+        "line": 309,
         "column": 13
       },
       "text": "time.NewTicker"
@@ -127,7 +143,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 289,
+        "line": 310,
         "column": 9
       },
       "text": "ticker.Stop"
@@ -135,7 +151,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 294,
+        "line": 315,
         "column": 11
       },
       "text": "ctx.Done"
@@ -143,7 +159,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 297,
+        "line": 318,
         "column": 9
       },
       "text": "h.refresh"
@@ -153,56 +169,56 @@
     {
       "kind": ":=",
       "at": {
-        "line": 278,
+        "line": 297,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 279,
+        "line": 298,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 281,
+        "line": 300,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 282,
+        "line": 301,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 285,
+        "line": 305,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 288,
+        "line": 309,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 296,
+        "line": 317,
         "column": 9
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 297,
+        "line": 318,
         "column": 5
       }
     }
@@ -211,7 +227,7 @@
     {
       "kind": "go",
       "at": {
-        "line": 287,
+        "line": 308,
         "column": 2
       }
     }
@@ -220,7 +236,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 289,
+        "line": 310,
         "column": 3
       },
       "text": "ticker.Stop"

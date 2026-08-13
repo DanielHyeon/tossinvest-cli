@@ -1,24 +1,27 @@
 # Function Logic Map: `Hold`
 
-- Source: `internal/enginelock/enginelock.go` (277-303)
-- AST evidence: `ast.json` — AST 기준 branches **3** / returns 4 / calls 10 / defers 1 / go 1
+- Source: `internal/enginelock/enginelock.go` (296-324)
+- AST evidence: `ast.json` — AST 기준 branches **3** / returns 4 / calls 12 / defers 1 / go 1
 - Risk scan: `risk-pattern-report.md` (매치 없음)
-- source SHA-256: `8c784e84d88e3ef2a20143712b91267a3f7f15ed9ea4e6963903d6f2fb8f3f65`
+- source SHA-256: `9399c1d68e1dfad16f6b1334f9875897e8025a88b94beb370354ffb11f318f8d`
 - 작성 사유: a102 §3(D4) — 반환을 핸들로 바꾸고 `ReadyAt`을 도입한다. **기존 함수의 내부를
   편집하므로 편집 전에 만들었다.** 엔진 수명주기 신호이므로 High-risk다.
 
-## 두 판
+## 세 판
 
-| | 1판 (편집 전) | **2판 (GREEN 후, 이 문서)** |
-|---|---|---|
-| 위치 | `:178-216` | **`:277-303`** |
-| 시그니처 | `(release func(), err error)` | **`(*Held, error)`** |
-| AST 분기 | 4 | **3** |
-| 이탈 | 5 | **4** |
-| 호출 | 14 | **10** |
-| source SHA-256 | `d65deddfd1e6…` | **`8c784e84d88e…`** |
-| `Hold` 커버리지 | 80.0% | **86.7%** |
-| 패키지 통과 | 11건 | **19건** |
+| | 1판 (편집 전) | 2판 (`6cd643ca`) | **3판 (§3.9, 이 문서)** |
+|---|---|---|---|
+| 위치 | `:178-216` | `:277-303` | **`:296-324`** |
+| 시그니처 | `(release func(), err error)` | `(*Held, error)` | **그대로** |
+| AST 분기 | 4 | 3 | **3** |
+| 이탈 | 5 | 4 | **4** |
+| 호출 | 14 | 10 | **12** |
+| source SHA-256 | `d65deddfd1e6…` | `8c784e84d88e…` | **`9399c1d68e1d…`** |
+| `Hold` 커버리지 | 80.0% | 86.7% | **88.2%** |
+| 패키지 통과 | 11건 | 19건 | **24건** |
+
+**3판이 바꾼 것은 두 줄이다** — `h.live = true`를 `h.mu` 아래로 옮겼다(A2 F3·F4).
+분기·이탈은 그대로이고 호출이 둘 늘었다(`Lock`/`Unlock`). 몸통의 판정은 불변이다.
 
 **분기가 하나 줄었다.** 1판의 B2(`os.Remove` 실패)는 stop 클로저 안에 있었고, 2판에서는
 `(*Held).Release`라는 **이름 있는 메서드**로 나갔다. 함수 밖으로 나간 것이지 사라진 것이
@@ -53,24 +56,24 @@
 
 | Branch | 위치 | Condition | Mutation/side effect | Return/이탈 |
 |---|---|---|---|---|
-| B1 | `:282` | `write(path, m, now) != nil` | `h.live`가 false로 남는다 | `:283` `return h, werr` — **inert 핸들** |
-| B2 | `:290` | `for {}` — refresh 루프 | — | 루프 자체는 이탈이 없다 |
-| B3 | `:291` | `select` 3-way: `<-h.done` / `<-ctx.Done()` / `at := <-ticker.C` | 셋째 갈래만 `h.refresh(at)` | `:293`·`:295` goroutine return |
+| B1 | `:301` | `write(path, m, now) != nil` | `h.live`가 false로 남는다 | `:302` `return h, werr` — **inert 핸들** |
+| B2 | `:311` | `for {}` — refresh 루프 | — | 루프 자체는 이탈이 없다 |
+| B3 | `:312` | `select` 3-way: `<-h.done` / `<-ctx.Done()` / `at := <-ticker.C` | 셋째 갈래만 `h.refresh(at)` | `:314`·`:316` goroutine return |
 
-Return 4개: `:283`(B1) · `:293`·`:295`(refresh goroutine) · `:302`(정상 `return h, nil`).
+Return 4개: `:302`(B1) · `:314`·`:316`(refresh goroutine) · `:323`(정상 `return h, nil`).
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `os.Getpid` `:278` | 마커의 pid | — | ast.json |
-| `now.UTC` `:278` | StartedAt 정규화 | — | ast.json |
-| `binstamp.Self` `:279` | 실행 파일 지문 | **오류를 버린다** | ast.json |
-| `make(chan struct{})` `:281` | stop 신호 | — | ast.json |
-| `write` `:282` | 첫 마커 | 오류는 호출자에게 (거절은 아니다) | ast.json |
-| `time.NewTicker(RefreshEvery)` `:288` | 1분 갱신 | `defer ticker.Stop()` `:289` | ast.json |
-| `ctx.Done` `:294` | 종료 관측 | — | ast.json |
-| **`h.refresh(at)` `:297`** | **갱신 쓰기** | 실패는 침묵 — 다음 tick이 다시 쓴다 | ast.json · **D4의 핵심** |
+| `os.Getpid` `:297` | 마커의 pid | — | ast.json |
+| `now.UTC` `:297` | StartedAt 정규화 | — | ast.json |
+| `binstamp.Self` `:298` | 실행 파일 지문 | **오류를 버린다** | ast.json |
+| `make(chan struct{})` `:300` | stop 신호 | — | ast.json |
+| `write` `:301` | 첫 마커 (**원자 교체** — §3.9 D4c) | 오류는 호출자에게 (거절은 아니다) | ast.json |
+| `time.NewTicker(RefreshEvery)` `:309` | 1분 갱신 | `defer ticker.Stop()` `:289` | ast.json |
+| `ctx.Done` `:315` | 종료 관측 | — | ast.json |
+| **`h.refresh(at)` `:318`** | **갱신 쓰기** | 실패는 침묵 — 다음 tick이 다시 쓴다 | ast.json · **D4의 핵심** |
 
 live binding — 프로덕션 호출자는 **하나**다: `cmd/tossctl/engine.go:239`
 (`rg -n 'enginelock.Hold' --glob '!*_test.go'` → 1건). 테스트 호출자 8건은
@@ -83,6 +86,10 @@ live binding — 프로덕션 호출자는 **하나**다: `cmd/tossctl/engine.go
 - **1판이 값으로 캡처하던 `m`이 2판에서는 `Held.marker`이고 `Held.mu`가 지킨다.**
   `Ready`와 refresh goroutine이 같은 값을 보기 때문이다. 1판에는 그것을 바꾸는 주체가
   없었으므로 뮤텍스가 필요 없었다 — D4가 그 전제를 깼고, 이 문서의 1판이 그것을 미리 적었다.
+- **3판은 그 뮤텍스가 파일까지 덮게 했다.** 2판은 잠금 안에서 값을 복사한 뒤 잠금 **밖에서**
+  `write`를 불렀고, A2가 그 창을 실측했다(ready_at 디스크 소거 139/3000, 찢어진 읽기
+  3617/12259). 3판에서 `Ready`·`refresh`는 `h.mu`를 잡은 채 `write`까지 끝내고,
+  `write` 자체가 tmp+rename으로 원자다(`internal-enginelock--write` 묶음).
 - `Marker.ReadyAt`은 포인터지만 **가리키는 값을 고쳐 쓰는 코드가 없다.** `Ready`는 새
   포인터를 대입할 뿐이므로 복사본이 들고 있는 옛 포인터는 언제나 안전하다.
 - fallback: 첫 쓰기 실패 → inert 핸들 + 오류. refresh 실패 → 침묵. Ready 쓰기 실패 → 침묵
@@ -97,9 +104,11 @@ live binding — 프로덕션 호출자는 **하나**다: `cmd/tossctl/engine.go
      (`TestAFailedHoldPublishesNothing`).
   3. refresh를 `(*Held).refresh`로 빼서 뮤텍스로 보호된 상태를 읽게 했다
      (`TestRefreshPreservesTheReadySignal` — 검증계약 (d)).
+  4. **§3.9**: `h.live`의 쓰기를 `h.mu` 아래로 옮겼다. 읽는 쪽(`Release`·`Ready`·`refresh`)이
+     전부 잠금 아래로 들어갔으므로 쓰는 쪽도 같아야 한다.
 - High-risk impact: **yes** (엔진 수명주기 신호). 방향은 보수적이다 — 이 편집이 잘못돼도
   최악은 "콘솔이 안 해도 될 대기를 상한까지 한 뒤 서베이를 시작한다"이고, 그것은 오늘의
   동작(즉시 시작)보다 늦을 뿐 위험하지 않다.
-- 남은 공백: **`Release`의 `os.Remove` 실패 갈래는 여전히 count=0**이다(`:217.81,222.4`).
+- 남은 공백: **`Release`의 `os.Remove` 실패 갈래는 여전히 count=0**이다.
   1판의 B2와 같은 공백을 그대로 물려받았고 a102는 그것을 메우지 않는다 —
   **침묵하지 않고 이름을 붙여 남긴다.**

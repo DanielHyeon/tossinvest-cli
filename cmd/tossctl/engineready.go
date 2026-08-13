@@ -30,6 +30,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
@@ -59,6 +60,12 @@ func recoverThenReady(
 	observe func(reconcile.Report),
 ) func(context.Context) error {
 	return func(ctx context.Context) error {
+		if ctx == nil {
+			// The runtime supplies one, but this closure is the boundary and a nil
+			// here would panic on the cancellation check below — inside the engine's
+			// boot, before any loop starts (a102 A2 F9).
+			ctx = context.Background()
+		}
 		report, err := run(ctx)
 		if observe != nil {
 			observe(report)
@@ -100,6 +107,87 @@ func engineRecoveryObserver(logger *obs.Logger) func(reconcile.Report) {
 			obs.FieldDurationMS, report.RateLimitWaited.Milliseconds(),
 			obs.FieldReason, "브로커가 계좌 조회를 rate limit으로 거부해 재시작 복구가 기다렸다",
 		)
+	}
+}
+
+// --- D4b: the signal belongs to a process that is still alive --------------------
+
+// engineLook folds one observation of the engine into the only three answers the
+// wait needs.
+//
+// The three exist because a marker is a file and a file outlives the process that
+// wrote it. A crash never calls Release, so a marker carrying ready_at stays
+// readable for StaleAfter (5m) and freshness alone reads it as "an engine is
+// protecting this account". A2 reproduced the next scene of the 02:03 incident
+// from that: the console starts a replacement engine, and while the replacement
+// is still assembling, the predecessor's ready_at is read as "ready" and the
+// survey goes straight at the budget the new engine's recovery needs.
+type engineLook int
+
+const (
+	// engineLookReady is a live engine process that has published ready_at.
+	engineLookReady engineLook = iota
+	// engineLookNotYet is an engine worth waiting for that has not said it is
+	// ready — including the case where the only marker on disk belongs to a
+	// process that is gone.
+	engineLookNotYet
+	// engineLookAbsent is no live engine at all. Waiting for one would delay the
+	// survey for nothing, which is what today's behaviour already avoids.
+	engineLookAbsent
+)
+
+// readEngineSignal decides what one look at the engine means.
+//
+// The process list is the authority on liveness and the marker is the authority
+// on readiness; neither answers for the other. Rules, in order:
+//
+//   - an enumeration that failed proves nothing — not liveness, and not that the
+//     marker on disk belongs to a corpse. It is "not yet", which costs at most
+//     the cap and then starts anyway. bootSurvey draws the same line for the same
+//     reason ("A failed enumeration is not 'nothing is running'").
+//   - no engine process: absent, whatever the file says. A marker with ready_at
+//     and no process behind it is exactly the ghost a container recreate leaves.
+//   - ready_at present and the marker's pid is one of the live engines: ready.
+//   - anything else: not yet. That covers the boot window (process up, marker not
+//     written or not ready) and the corpse marker (process up, but a different
+//     one) — in both, the live engine is about to write its own marker.
+func readEngineSignal(status enginelock.Status, pids []int, findErr error) engineLook {
+	if findErr != nil {
+		return engineLookNotYet
+	}
+	if len(pids) == 0 {
+		return engineLookAbsent
+	}
+	if !status.Ready() {
+		return engineLookNotYet
+	}
+	for _, pid := range pids {
+		if pid == status.Marker.PID {
+			return engineLookReady
+		}
+	}
+	return engineLookNotYet
+}
+
+// consoleEngineReadiness builds the console's observation seam.
+//
+// It is a named function and not a closure inside runConsole because runConsole
+// is measured at 0.0%: a composition written there is a composition no test can
+// reach, and A2's surviving mutation N2 was exactly that — blanking this
+// observation left every unit test green.
+func consoleEngineReadiness(dir, markerPath string, now func() time.Time) func() engineLook {
+	return func() engineLook {
+		if strings.TrimSpace(dir) == "" || strings.TrimSpace(markerPath) == "" {
+			// The console could not resolve the engine directory. There is no
+			// marker to read and no journal to scope a process search to.
+			return engineLookAbsent
+		}
+		at := time.Now()
+		if now != nil {
+			at = now()
+		}
+		pids, findErr := engineFindProcesses(dir)
+		return readEngineSignal(enginelock.Read(markerPath, at), pids, findErr)
 	}
 }
 
@@ -159,7 +247,7 @@ const engineReadyPoll = 2 * time.Second
 // that shadows one in a file about waiting is a reading hazard for no gain.
 func awaitEngineReady(
 	ctx context.Context,
-	observe func() enginelock.Status,
+	observe func() engineLook,
 	clk clock.Clock,
 	limit, poll time.Duration,
 ) engineReadyVerdict {
@@ -174,11 +262,10 @@ func awaitEngineReady(
 	}
 	deadline := clk.Now().Add(limit)
 	for {
-		status := observe()
-		if !status.Running {
+		switch observe() {
+		case engineLookAbsent:
 			return engineReadyNoEngine
-		}
-		if status.Ready() {
+		case engineLookReady:
 			return engineReadyConfirmed
 		}
 		if !clk.Now().Before(deadline) {
@@ -202,18 +289,10 @@ func engineReadyNote(verdict engineReadyVerdict) string {
 	case engineReadyCapExceeded:
 		return fmt.Sprintf("엔진 준비 신호가 %s 안에 오지 않아 상한 초과 후", engineReadyCap)
 	case engineReadyAbandoned:
-		return "콘솔 종료로"
+		return "콘솔 종료로 서베이를 시작하지 않았다 —"
 	}
 	return "알 수 없는 대기 결과 후"
 }
-
-// errSoakBootConsoleClosed is the one verdict that does not start a survey.
-//
-// It comes back as an error rather than a note because that is how
-// runConfiguredSoakAutostart already reports "nothing was started", and a console
-// on its way down must not leave a survey nobody is watching behind it.
-var errSoakBootConsoleClosed = errors.New(
-	"콘솔이 종료되어 서베이를 시작하지 않았다")
 
 // errSoakBootNoStartWiring is the programming-error direction: a wait with
 // nothing to start after it.
@@ -231,16 +310,21 @@ var errSoakBootNoStartWiring = errors.New(
 //
 // The button is deliberately not wrapped. An operator who just pressed [soak
 // 재시작] and waits two minutes cannot tell that from a button that does not work.
+//
+// A console that closed mid-wait comes back as a note and not as an error. The
+// error shape made a normal shutdown print "soak 자동 시작 실패:", which reads as a
+// fault an operator should chase (a102 A2 F8); the sentence itself already says
+// nothing was started.
 func soakStartAfterEngineReady(
 	ctx context.Context,
-	observe func() enginelock.Status,
+	observe func() engineLook,
 	clk clock.Clock,
 	start func() (string, error),
 ) func() (string, error) {
 	return func() (string, error) {
 		verdict := awaitEngineReady(ctx, observe, clk, engineReadyCap, engineReadyPoll)
 		if verdict == engineReadyAbandoned {
-			return "", errSoakBootConsoleClosed
+			return engineReadyNote(verdict), nil
 		}
 		if start == nil {
 			// runConfiguredSoakAutostart already answers "this build has no soak
@@ -256,4 +340,72 @@ func soakStartAfterEngineReady(
 		}
 		return engineReadyNote(verdict) + " " + note, err
 	}
+}
+
+// --- D7b: one console, one spawner at a time ------------------------------------
+
+// soakSpawnGate serialises the two paths in this process that can spawn a survey.
+//
+// Before a102 the boot decision finished before the HTTP listener came up, so the
+// button could not exist yet and the two could not overlap. Making the wait
+// asynchronous opened a window of up to the cap in which both are live, and both
+// are check-then-act over the same record: soakFindProcesses, then spawn. Without
+// a lock the two enumerations can both answer "nothing is running" and both
+// spawn, which soakproc itself calls worse than a survey that needs a person
+// ("기록 하나에 두 서베이가 붙는 편이 더 나쁘다").
+//
+// It is package scope on purpose. Two gates serialise nothing, and a gate handed
+// to each path as an argument is a wiring line inside runConsole, which is
+// measured at 0.0% — the same hole that let A2's N2 survive.
+var soakSpawnGate sync.Mutex
+
+// spawnOneSurvey runs start with the console's spawn gate held.
+func spawnOneSurvey(start func() (string, error)) (string, error) {
+	if start == nil {
+		return "", errSoakBootNoStartWiring
+	}
+	soakSpawnGate.Lock()
+	defer soakSpawnGate.Unlock()
+	return start()
+}
+
+// guardedSoakRestart is the dashboard button's spawn, serialised against the boot
+// path and then recorded exactly as a101 recorded it.
+func guardedSoakRestart(start func() (string, error), save func(bool) error) (string, error) {
+	note, err := spawnOneSurvey(start)
+	return rememberSoakApproval(save, note, err)
+}
+
+// --- D7c: the console never joins the wait --------------------------------------
+
+// startSoakAutostartAsync is the whole boot-survey block, off the console's path.
+//
+// Everything the decision needs is built here rather than at the call site, so
+// the observation seam, the clock and the two constants are covered by tests
+// instead of living in runConsole where nothing reaches them. runConsole keeps one
+// call.
+//
+// It returns before the survey does — always. A source-shape test cannot promise
+// that: A2 wrote a version that kept `go func() {` and every other string the
+// shape test looked for and still blocked the console for the full cap, by
+// joining the goroutine before returning. So the promise is asserted by running
+// it against a start that never returns.
+func startSoakAutostartAsync(
+	ctx context.Context,
+	engineDir, markerPath string,
+	load func() (bool, error),
+	start func() (string, error),
+	report func(string),
+) {
+	observe := consoleEngineReadiness(engineDir, markerPath, time.Now)
+	guarded := soakStartAfterEngineReady(ctx, observe, clock.System(), func() (string, error) {
+		return spawnOneSurvey(start)
+	})
+	go func() {
+		note := runConfiguredSoakAutostart(load, guarded)
+		if strings.TrimSpace(note) == "" || report == nil {
+			return
+		}
+		report(note)
+	}()
 }

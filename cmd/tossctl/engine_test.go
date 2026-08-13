@@ -58,10 +58,25 @@ func stubAssembly(t *testing.T, ectx *engine.Context, err error) func() bool {
 // against a hand-built Context.
 func stubRuntime(t *testing.T, build func(*engine.Context) (*engine.Runtime, error)) {
 	t.Helper()
+	stubRuntimeWithReady(t, func(ectx *engine.Context, _ func()) (*engine.Runtime, error) {
+		return build(ectx)
+	})
+}
+
+// stubRuntimeWithReady is stubRuntime for tests that care about the ready seam.
+//
+// It exists because discarding that argument here is what let A2's mutations N1
+// (empty the ready closure) and N5 (pass nil for it) survive: every unit test of
+// recoverThenReady stayed green while the production wiring published nothing.
+// The factory is the only place the seam crosses from step 6 to step 7, so it is
+// the only place a test can watch it cross.
+func stubRuntimeWithReady(t *testing.T,
+	build func(*engine.Context, func()) (*engine.Runtime, error)) {
+	t.Helper()
 	previous := engineRuntimeFactory
 	engineRuntimeFactory = func(_ context.Context, ectx *engine.Context, _ clock.Clock, _ *obs.Logger,
-		_ func()) (*engine.Runtime, error) {
-		return build(ectx)
+		ready func()) (*engine.Runtime, error) {
+		return build(ectx, ready)
 	}
 	t.Cleanup(func() { engineRuntimeFactory = previous })
 }

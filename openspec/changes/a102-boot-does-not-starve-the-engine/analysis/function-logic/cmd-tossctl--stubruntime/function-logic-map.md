@@ -4,11 +4,11 @@
 > 않다. 이 묶음은 `check_analysis.py`가 요구하는 증거이며, 형식은 a056·a059의 선례
 > (같은 이유로 만든 테스트 함수 묶음)를 따른다.
 
-- Source: `cmd/tossctl/engine_test.go` (59-67)
+- Source: `cmd/tossctl/engine_test.go` (59-64)
 - AST evidence: `ast.json` — AST 기준 branches **0** / returns 1 / calls 3
 - Risk scan: `risk-pattern-report.md`
-- source SHA-256: `7bf68a13ea64c28bfd3cbd61e0ef31d9dd955a7b2fb18d769d62505e17f64e0d`
-- **a102가 바꾼 것**: `engineRuntimeFactory` 대체 함수의 시그니처에 D5의 ready seam 인자를 더했다(무시한다). 본문은 그대로다.
+- source SHA-256: `ee98aa2936bff2145f0b98ff32889ad3865d4422ab60fdb6df532a7d0e6931c9`
+- **a102가 바꾼 것**: §3.9(D5c) — 본문을 `stubRuntimeWithReady`에 위임한다. ready 인자를 버리던 자리가 A2의 생존 뮤테이션 N1·N5가 살던 곳이다. 이 헬퍼의 계약(기존 호출자에게는 그대로)은 불변이다.
 
 ## Inputs and invariants
 

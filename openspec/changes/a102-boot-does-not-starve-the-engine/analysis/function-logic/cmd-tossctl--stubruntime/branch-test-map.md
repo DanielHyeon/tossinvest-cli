@@ -1,6 +1,6 @@
 # Branch Test Map: `stubRuntime`
 
-Source: `cmd/tossctl/engine_test.go` (59-67). AST 기준 branches **0** / returns 1.
+Source: `cmd/tossctl/engine_test.go` (59-64). AST 기준 branches **0** / returns 1.
 
 | Branch | 위치 | 지는 테스트 | GREEN 실측 |
 |---|---|---|---|

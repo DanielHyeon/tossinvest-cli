@@ -125,7 +125,7 @@ Teammate는 여기·design.md에 없는 결정이 필요해지면 **멈추고 Ma
   → **571건 통과**(19 + 552) · `-race` 포함 통과 · `internal/reconcile`·`internal/console`·
   `internal/obs`·`internal/app/engine` **1440건 무회귀** · `make lint` rc=0(gofmt 실재 확인).
 
-- [ ] 3.9 [T] **A2 리뷰 반영 (FIX-FIRST)** — ① D4b: ready 판정을 마커 PID의
+- [x] 3.9 [T] **A2 리뷰 반영 (FIX-FIRST)** — ① D4b: ready 판정을 마커 PID의
   생존에 묶는다 (F1 — 죽은 엔진의 잔재 ready_at이 '준비 확인'으로 읽히는 재현
   차단; 시체 마커는 '준비 안 됨', 살아 있는 엔진 없음은 즉시 시작) ② D5c:
   생존 뮤테이션 N1·N2·N3을 죽이는 실행 테스트 — stubRuntime이 ready를 잡고,
@@ -136,6 +136,31 @@ Teammate는 여기·design.md에 없는 결정이 필요해지면 **멈추고 Ma
   (F6) ⑥ obs 이벤트 값 유일성 테스트 — N7을 죽인다 (F7) ⑦ 콘솔 종료의
   abandoned는 실패 문장이 아니라 note로 (F8) ⑧ recoverThenReady ctx nil 방어
   (F9 일부). A2의 생존 뮤테이션 N1~N5·N7을 재가해 사멸 확인.
+  → ① `engineLook`(ready/not-yet/absent) + `readEngineSignal`: 열거 실패는 not-yet,
+  프로세스 없음은 absent, `ReadyAt != nil` **그리고** 마커 PID가 산 집합에 있을 때만 ready.
+  재현 테스트 `TestACorpsesReadyMarkerIsNotAReadyEngine`(pid 4242 시체 마커 + 산 엔진 5150 →
+  not-yet). `enginelock`에는 프로세스 열거를 넣지 않았다.
+  ② `stubRuntimeWithReady`가 ready를 잡고, `TestTheReadySignalReachesTheMarkerThroughTheRuntimeSeam`이
+  **마커 파일**로 단언한다(복구 전 ready 아님 → ready() → ready_at + 이 프로세스 pid).
+  관측 합성은 `consoleEngineReadiness`로, 상한·간격은 `TestTheWrapperSpendsTheCapAtThePollInterval`이
+  **60회 × 2s = 120s**로 잰다. **N1·N2·N3·N5 사멸.**
+  ③ `write`를 tmp+chmod+chtimes+rename으로 원자화하고 `Ready`·`refresh`가 `h.mu`를 잡은 채
+  부른다. `Release`는 mu 아래에서 `live=false`. RED 실측(편집 전 코드): 찢어진 읽기
+  **30761/52239**, `Release` 뒤 refresh가 마커 부활(결정적 + 동시 두 판 모두).
+  ④ 패키지 스코프 `soakSpawnGate` + `spawnOneSurvey`/`guardedSoakRestart`.
+  `TestTheBootPathAndTheButtonCannotSpawnAtTheSameTime`은 첫 경로를 **붙잡아 둔 채** 둘째가
+  못 들어오는 것을 관측한다(통과만으로는 증거가 아니다).
+  ⑤ `startSoakAutostartAsync`가 부팅 블록 전체를 진다. `TestTheBootSurveyNeverBlocksTheConsole`이
+  **영원히 안 돌아오는 start**를 주고 바깥 호출의 즉시 반환을 잰다. runConsole 형태 검사는
+  두 줄로 축소. **N4 사멸.**
+  ⑥ `internal/obs/a102_event_values_are_unique_test.go` — `event.go`를 읽어 값 중복을 전수
+  검사 + 리터럴 고정. **N7 사멸.**
+  ⑦ abandoned는 `(note, nil)` — "콘솔 종료로 서베이를 시작하지 않았다". "실패" 문장이 나오지
+  않음을 단언.
+  ⑧ `recoverThenReady`가 nil ctx를 `context.Background()`로 대체.
+  **뮤테이션 19건(N1~N5·N7 + 1라운드 d~k + 신규 l·m·n·o·p) 전부 사멸**, 원복은 sha256 동일성.
+  **588건 통과**(enginelock 24 + tossctl 564) · `-race` 통과 · 무회귀 1442건 ·
+  `make lint` rc=0 · `check_analysis` rc=0.
 
 ## 4. T2 — 산출물 정리
 
