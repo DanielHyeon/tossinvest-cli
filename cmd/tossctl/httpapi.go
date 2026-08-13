@@ -143,15 +143,29 @@ func runHTTPAPI(cmd *cobra.Command, root *rootOptions, opts *httpAPIOptions) err
 		return err
 	}
 	defer resources.Close()
+	// a108 D4 — descriptor 부재와 dial 실패는 같은 강등이다.
+	//
+	// 이 데몬은 descriptor 가 없으면 전략 화면 없이 뜨도록 **설계돼 있었다.** 그런데
+	// descriptor 가 있는데 dial 이 실패하면 fatal 이었고, 2026-08-13 의 반쪽 잔재
+	// (endpoint.json 은 남고 runtime.sock 은 unlink 된 상태) 가 정확히 그쪽으로
+	// 떨어져 컨테이너가 `Restarting (1)` 로 돌았다. 설계된 강등과 crash loop 사이의
+	// 차이가 「파일 하나가 남아 있는가」일 이유가 없다.
+	//
+	// fatal 로 남는 것은 descriptor 를 **조사할 수조차 없는 경우**뿐이다. 그것은
+	// 잔재가 아니라 환경 이상이고, 삼키면 잘못 배치된 데몬이 조용히 반쪽으로 뜬다.
 	var strategyRuntime httpapi.StrategyRuntimeReader
 	if dir, dirErr := engineJournalDir(root); dirErr == nil {
 		descriptor := strategyprojectionrpc.DescriptorPath(dir)
 		if _, statErr := os.Stat(descriptor); statErr == nil {
 			client, dialErr := strategyprojectionrpc.Dial(ctx, descriptor)
 			if dialErr != nil {
-				return fmt.Errorf("httpapi: strategy runtime projection unavailable: %w", dialErr)
+				fmt.Fprintf(cmd.ErrOrStderr(),
+					"note: strategy runtime projection에 연결하지 못했다 (%s): %v\n"+
+						"      데몬은 전략 화면 없이 뜬다 — 엔진이 다시 뜬 뒤 이 데몬을 재시작하면 붙는다.\n",
+					descriptor, dialErr)
+			} else {
+				strategyRuntime = client
 			}
-			strategyRuntime = client
 		} else if !errors.Is(statErr, os.ErrNotExist) {
 			return fmt.Errorf("httpapi: inspect strategy runtime projection: %w", statErr)
 		}
