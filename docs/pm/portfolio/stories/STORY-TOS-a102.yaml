@@ -1,0 +1,27 @@
+{
+  "id": "STORY-TOS-a102",
+  "title": "Boot does not starve the engine",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a102-boot-does-not-starve-the-engine",
+    "path": "openspec/changes/a102-boot-does-not-starve-the-engine"
+  },
+  "found_by": {
+    "date": "2026-08-13",
+    "how": "Verifying the a098/a099 deploy. The engine died 986ms after the console declared '엔진 자동 시작: 엔진을 시작했다': the 3s start probe expired at 02:03:29.559Z, the survey autostart fired 2ms later and walked 2363 orders over 26 pages, and the engine's restart recovery took the 429 at 02:03:30.545Z and fail-closed with no retry and no supervisor. Three open positions sat without any stop-loss during KRX hours until an operator noticed — protection was UNWIRED and lives only in the engine process.",
+    "record": "openspec/changes/a102-boot-does-not-starve-the-engine/proposal.md"
+  },
+  "prior_art": {
+    "note": "a101 deliberately ordered the survey after the engine 'so the two do not contend for the same account's rate budget' (console.go:349-351). The intent was right; the mechanism — a 3-second head start — cannot cover a 26-page recovery walk. Separately, the same 429 survives mid-session (2026-08-12T12:52:37Z reconcile.mismatch 'will be retried next period', 15 occurrences in engine.log) and the read-only soak retries on a 15s backoff, so the asymmetry ran backwards: the side holding the stop-loss gave up first.",
+    "why_not_a_reversal": "a101's ordering and its survey-boot contract (console never blocked, running survey never killed, failure is one stderr line) are kept verbatim. a102 replaces the timing assumption with an observable signal and makes the engine side at least as patient as the survey."
+  },
+  "acceptance": [
+    "Restart recovery treats a broker rate limit as a wait, not a permanent failure: the refusal consumes no stabilisation attempt, the backoff is not shorter than the survey's, the total wait is bounded, and exhaustion fails closed naming the rate limit and the time waited",
+    "A non-rate-limit collect error still fails immediately — pinned by a regression test",
+    "Cancellation passes through the backoff immediately — a deploy's SIGTERM is not delayed",
+    "The engine publishes an observable ready signal only after restart recovery completes; lock or process existence does not count",
+    "The boot survey waits for that signal with a hard cap, starts immediately when no live engine is observed, starts anyway at the cap, and the boot note says which case happened — a silent cap overrun is forbidden",
+    "The wait never delays the operator console screen, and a survey already running is left alone (a101 contract kept)"
+  ]
+}

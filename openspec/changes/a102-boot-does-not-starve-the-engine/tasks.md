@@ -1,0 +1,83 @@
+# Tasks: a102-boot-does-not-starve-the-engine
+
+역할 분담: Manager(Fable)가 §0·§5·§6을, T1(Opus)이 §1·§2를, T2(Opus)가 §3·§4를 진다.
+각 Teammate 뒤에 전담 적대 리뷰가 붙고(§5), 지적은 그 Teammate가 고친다.
+Teammate는 여기·design.md에 없는 결정이 필요해지면 **멈추고 Manager에게 묻는다.**
+
+## 0. Manager 선행 산출물
+
+- [ ] 0.1 proposal.md (1aa3f0e1) + AST 7건 — 완료, 커밋됨
+- [ ] 0.2 design.md — D1~D7 확정
+- [ ] 0.3 spec delta — `reconciliation`, `operator-console`
+- [ ] 0.4 STORY-TOS-a102 + `_registry.yaml` + feature 역링크
+  (sdd-test가 story 없는 active change를 즉시 실패시킨다 — a103 실측)
+
+## 1. T1 — 겹1: recovery가 rate limit에 죽지 않는다 (High-risk: internal/reconcile)
+
+- [ ] 1.1 FLM/BTM **편집 전** 작성 — `Collector.Collect`(AST 있음 8/6/17),
+  `Recovery.stableSnapshot`(AST 있음 5/4/7), 편집하게 되는 다른 기존 함수 전부
+  (`Stabilisation.withDefaults` 포함 예상). `function-logic-map.md`와
+  `branch-test-map.md`, 형식은 a098의 것을 따른다.
+- [ ] 1.2 [T] RED — D1b: `%v` wrap 때문에 `errors.Is(…, official.ErrRateLimited)`가
+  Collect 오류에서 끊긴다는 실패 테스트. 429를 내는 fake broker로
+  Collect 오류를 받아 `errors.Is` 가 false임을 먼저 보인다.
+- [ ] 1.3 GREEN — snapshot.go 4곳(248·253·263·271)의 원인 wrap을 `%w`로.
+  `ErrPartialSnapshot` 소비자 무회귀 테스트 포함.
+- [ ] 1.4 [T] RED — stableSnapshot: 429 두 번 뒤 안정 스냅샷이 오는 fake에서
+  (a) recovery가 완주하고 (b) attempt·taken이 429에 소모되지 않고
+  (c) 대기 각 15s이며 (d) `Report.RateLimitWaits/RateLimitWaited`가 실측을
+  담는다는 테스트. 지금 구현에서는 (a)부터 실패한다.
+- [ ] 1.5 GREEN — D3 구현: `Stabilisation.RateLimitBackoff/MaxRateLimitWait`
+  (zero-default 15s/5m, `withDefaults`), 429는 attempt 미소모 + 백오프,
+  예산 소진 시 `ErrRecoveryIncomplete`(rate limit과 대기 시간 명시).
+- [ ] 1.6 [T] 경계 고정 — (a) 429 아닌 오류는 오늘처럼 즉시 실패 (b) 예산 소진
+  경로 (c) 백오프 중 ctx 취소가 즉시 통과 (불변식 4).
+- [ ] 1.7 [T] 뮤테이션 정산 — design §검증계약 (a)(b)(c)를 실행해 각각 어느
+  테스트가 죽는지 기록하고 원복을 심볼로 확인한다 (통과는 증거가 아니다).
+- [ ] 1.8 `go test ./internal/reconcile` + `make lint` rc=0. 결과를 branch-test-map에
+  기록.
+
+## 2. T1 — 산출물 정리
+
+- [ ] 2.1 tasks 체크 + 커밋 (제목에 [a102 §1], RED/GREEN/뮤테이션 증거를 본문에)
+
+## 3. T2 — 겹2: 서베이가 엔진의 준비 신호를 기다린다 (T1 커밋 위에서)
+
+- [ ] 3.1 FLM/BTM **편집 전** — `enginelock.Hold`(AST 생성부터), `runEngineRun`
+  (a098 FLM은 옛 base — 재기준), `runConsole`(AST 있음 44/21/114), 편집하는
+  기존 함수 전부.
+- [ ] 3.2 [T] RED — enginelock: (a) `Ready(now)` 후 marker 파일에 `ready_at`이
+  있고 (b) refresh 재작성이 그것을 보존하며 (c) `Ready` 멱등 (d) `Read`가
+  ReadyAt을 노출한다는 테스트. Hold의 현재 반환(release func)으로는 컴파일부터
+  실패한다 — 그것이 RED다.
+- [ ] 3.3 GREEN — D4: `Marker.ReadyAt`, `Hold` 핸들 반환(`Release`/`Ready`),
+  refresh 보존. 호출자 engine.go:239 갱신.
+- [ ] 3.4 [T] RED→GREEN — D5: `recoverThenReady(run, ready)` — 성공 시에만
+  ready, 실패 시 절대 안 부름. runEngineRun 배선.
+- [ ] 3.5 [T] RED→GREEN — D6: `awaitEngineReady(ctx, observe, clk, cap, poll)` —
+  4 verdict(준비/엔진 없음/cap 초과/ctx 취소) 각각 fake clock·observe로.
+  cap 120s·poll 2s 상수와 근거 주석.
+- [ ] 3.6 D7: runConsole의 soak 블록을 goroutine으로, start seam을
+  `awaitEngineReady`로 감싼다. `runConfiguredSoakAutostart`·`bootSurvey` 무편집.
+  노트가 어느 쪽이었는지 말한다 — 조용한 cap 초과 금지.
+- [ ] 3.7 [T] 뮤테이션 정산 — design §검증계약 (d)(e)(f). 기록 방식은 1.7과 같다.
+- [ ] 3.8 `go test ./internal/enginelock ./cmd/tossctl` + `make lint` rc=0.
+
+## 4. T2 — 산출물 정리
+
+- [ ] 4.1 tasks 체크 + 커밋 (제목에 [a102 §3])
+
+## 5. 리뷰 (Manager가 발주)
+
+- [ ] 5.1 A1: T1 커밋 적대 리뷰 → 지적은 T1이 고치고 재커밋, 왕복 기록을
+  review.md에
+- [ ] 5.2 A2: T2 커밋 적대 리뷰 → 동일
+- [ ] 5.3 gstack /review (브랜치 전체) → Fix-First 정산 → review.md 종합
+
+## 6. Manager 완료 검증
+
+- [ ] 6.1 뮤테이션 스팟체크 — T1·T2가 기록한 뮤테이션 중 각 1건을 직접 재현
+- [ ] 6.2 tasks 전 항목 대조 + design 검증 계약 5조 확인
+- [ ] 6.3 PM 갱신 (story measured/deviations/limits 실측 기입)
+- [ ] 6.4 `make sdd-sync && make sdd-check && make gate CHANGE=a102-boot-does-not-starve-the-engine`
+- [ ] 6.5 완료 보고 — 남은 위험과 not-applicable 목록 포함
