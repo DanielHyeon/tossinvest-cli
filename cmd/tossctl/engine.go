@@ -349,6 +349,22 @@ func engineVerifyLockPath(root *rootOptions) (string, error) {
 // no detector to defer to.
 var engineRuntimeFactory = engineRuntime
 
+// engineRecoverySequence is the restart recovery the Recover option runs.
+//
+// It is a package variable for the same reason engineAssemble and
+// engineRuntimeFactory above are, and the file comment on those says it: this
+// package's own tests have to be able to drive the whole discipline without a
+// broker. Here it buys one specific thing — a test can assemble the *real*
+// engineRuntime and then run the Recover option it produced, which is the only
+// way to observe that the ready seam survived the assembly.
+//
+// Without it that step was guarded by a source string, and a102's A2 review
+// showed what that is worth: `ready = nil` inserted between the parameter and
+// its use left every test green (mutation N5).
+var engineRecoverySequence = func(r *reconcile.Recovery) func(context.Context) (reconcile.Report, error) {
+	return r.Run
+}
+
 // ready is what the runtime's Recover step calls after it finishes, and it is a
 // parameter because the marker it writes into belongs to step 6 of the boot
 // sequence while the moment it records belongs to step 7 (a102 D5). Tests pass
@@ -414,7 +430,7 @@ func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, l
 		// so that this stays a call rather than a judgement: the Recover
 		// closure is measured at count=0 (this change's
 		// cmd-tossctl--engineruntime/branch-test-map.md).
-		Recover: recoverThenReady(recovery.Run, ready, engineRecoveryObserver(logger)),
+		Recover: recoverThenReady(engineRecoverySequence(recovery), ready, engineRecoveryObserver(logger)),
 		Loops: []engine.SupervisedLoop{
 			{
 				Name:    "reconcile",

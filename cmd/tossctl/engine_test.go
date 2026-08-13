@@ -400,8 +400,13 @@ func TestTheRestartRecoveryRunsBeforeTheLoops(t *testing.T) {
 	}
 	// a102 §3(D5) — the closure moved into recoverThenReady, which is the same
 	// hook with two things bolted to the outcome: the ready signal on success and
-	// the rate-limit report on every path. The wiring is still what this asserts.
-	if !strings.Contains(src, "Recover: recoverThenReady(recovery.Run, ready,") {
+	// the rate-limit report on every path.
+	//
+	// §3.9b — what this string can promise is only that the hook is wired. That
+	// the *ready seam* survives the assembly is asserted by running the assembled
+	// option (engine_runtime_branch_test.go), because A2 showed a source check
+	// cannot tell a live seam from `ready = nil` inserted above it.
+	if !strings.Contains(src, "Recover: recoverThenReady(engineRecoverySequence(recovery), ready,") {
 		t.Error("the recovery is not handed to the runtime's Recover hook, so nothing runs it first")
 	}
 }

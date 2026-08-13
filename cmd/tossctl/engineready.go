@@ -289,7 +289,9 @@ func engineReadyNote(verdict engineReadyVerdict) string {
 	case engineReadyCapExceeded:
 		return fmt.Sprintf("엔진 준비 신호가 %s 안에 오지 않아 상한 초과 후", engineReadyCap)
 	case engineReadyAbandoned:
-		return "콘솔 종료로 서베이를 시작하지 않았다 —"
+		// The only verdict that stands alone: no start note follows it, so it is a
+		// finished sentence rather than the prefix the other three are.
+		return "콘솔이 종료되어 서베이를 시작하지 않았다"
 	}
 	return "알 수 없는 대기 결과 후"
 }

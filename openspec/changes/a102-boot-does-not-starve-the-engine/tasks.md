@@ -159,6 +159,15 @@ Teammate는 여기·design.md에 없는 결정이 필요해지면 **멈추고 Ma
   않음을 단언.
   ⑧ `recoverThenReady`가 nil ctx를 `context.Background()`로 대체.
   **뮤테이션 19건(N1~N5·N7 + 1라운드 d~k + 신규 l·m·n·o·p) 전부 사멸**, 원복은 sha256 동일성.
+  → **§3.9b (A2 MERGE-OK 후 마이크로 라운드)**: ⑨ A2 재가에서 홀로 생존한 N5의 본문 형태
+  (파라미터와 사용 지점 사이의 `ready = nil` 재대입)를 죽였다. `engineRecoverySequence`
+  seam(`engineAssemble`·`engineRuntimeFactory`와 같은 패턴)을 두고,
+  `engine_runtime_branch_test.go`의 성공 케이스가 **조립된 `RuntimeOptions.Recover`를 실제
+  실행**한다 — 복구는 seam으로 대체(실계좌 조회 금지), ready가 run ctx를 취소하므로 루프는
+  즉시 취소로 돌아온다(실측: `Run` 반환 nil, ready 1회). ⑩ 콘솔 정상 종료 노트를 완결된
+  문장으로: `soak 자동 시작: 콘솔이 종료되어 서베이를 시작하지 않았다` (매달린 `—` 제거,
+  전문 일치 단언). **뮤테이션 20건 전부 사멸**(N5b 추가) · **588건 통과** · `-race` 통과 ·
+  무회귀 1442건 · `make lint` rc=0 · `check_analysis` rc=0.
   **588건 통과**(enginelock 24 + tossctl 564) · `-race` 통과 · 무회귀 1442건 ·
   `make lint` rc=0 · `check_analysis` rc=0.
 

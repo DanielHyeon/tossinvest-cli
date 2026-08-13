@@ -7,7 +7,7 @@
 - Source: `cmd/tossctl/engine_test.go` (59-64)
 - AST evidence: `ast.json` — AST 기준 branches **0** / returns 1 / calls 3
 - Risk scan: `risk-pattern-report.md`
-- source SHA-256: `ee98aa2936bff2145f0b98ff32889ad3865d4422ab60fdb6df532a7d0e6931c9`
+- source SHA-256: `3e6f2d0f2333d769e7f7fe9d250535bb6305ae819e1bdda8976676ca02f5e7e5`
 - **a102가 바꾼 것**: §3.9(D5c) — 본문을 `stubRuntimeWithReady`에 위임한다. ready 인자를 버리던 자리가 A2의 생존 뮤테이션 N1·N5가 살던 곳이다. 이 헬퍼의 계약(기존 호출자에게는 그대로)은 불변이다.
 
 ## Inputs and invariants

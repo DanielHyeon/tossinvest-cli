@@ -531,8 +531,9 @@ func TestAClosingConsoleStartsNoSurveyAndSaysSoWithoutCryingFailure(t *testing.T
 	if strings.Contains(line, "실패") {
 		t.Errorf("line=%q, want a normal shutdown not reported as a failure", line)
 	}
-	if !strings.Contains(line, "시작하지 않았다") {
-		t.Errorf("line=%q, want the operator told nothing was started", line)
+	// 완결된 문장이어야 한다 — 매달린 구두점이나 잘린 절이 남으면 운영자가 뒷말을 찾는다.
+	if want := "soak 자동 시작: 콘솔이 종료되어 서베이를 시작하지 않았다"; line != want {
+		t.Errorf("line=%q, want %q", line, want)
 	}
 }
 

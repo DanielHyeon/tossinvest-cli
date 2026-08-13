@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/engine_runtime_branch_test.go",
-  "source_sha256": "825e0de1e159dd9626e0b327ba12e35b94d93e022a005e0bdbc59d270a848983",
+  "source_sha256": "65b8fc0f0748a3a1841c3179b0cecc5da6f2be281218b4be75d371647dfff34c",
   "package": "main",
   "function": "TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess",
   "signature": "TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 100,
+    "line": 132,
     "column": 2
   },
   "branches": [
@@ -44,9 +44,48 @@
         "line": 97,
         "column": 2
       }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 129,
+        "column": 2
+      }
     }
   ],
-  "returns": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 114,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 114,
+        "column": 60
+      }
+    }
+  ],
   "calls": [
     {
       "kind": "call",
@@ -159,6 +198,102 @@
         "column": 3
       },
       "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 2
+      },
+      "text": "t.Cleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 23
+      },
+      "text": "context.WithCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 42
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 8
+      },
+      "text": "cancelRun"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 16
+      },
+      "text": "engineRuntime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 30
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 52
+      },
+      "text": "runtimeBranchContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 26
+      },
+      "text": "cancelRun"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 13
+      },
+      "text": "wired.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 3
+      },
+      "text": "t.Fatalf"
     }
   ],
   "assignments": [
@@ -231,8 +366,73 @@
         "line": 97,
         "column": 5
       }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 116,
+        "column": 21
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 118,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 122,
+        "column": 12
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 126,
+        "column": 5
+      }
     }
   ],
   "go_statements": null,
-  "defers": null
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 119,
+        "column": 2
+      },
+      "text": "cancelRun"
+    }
+  ]
 }

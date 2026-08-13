@@ -4,11 +4,11 @@
 > 않다. 이 묶음은 `check_analysis.py`가 요구하는 증거이며, 형식은 a056·a059의 선례
 > (같은 이유로 만든 테스트 함수 묶음)를 따른다.
 
-- Source: `cmd/tossctl/engine_runtime_branch_test.go` (49-100)
-- AST evidence: `ast.json` — AST 기준 branches **4** / returns 0 / calls 14
+- Source: `cmd/tossctl/engine_runtime_branch_test.go` (49-132)
+- AST evidence: `ast.json` — AST 기준 branches **7** / returns 2 / calls 26
 - Risk scan: `risk-pattern-report.md`
-- source SHA-256: `825e0de1e159dd9626e0b327ba12e35b94d93e022a005e0bdbc59d270a848983`
-- **a102가 바꾼 것**: `engineRuntime(...)` 두 호출에 D5의 ready seam 인자 `nil`을 더했다. B2~B4 표와 단언은 그대로다.
+- source SHA-256: `65b8fc0f0748a3a1841c3179b0cecc5da6f2be281218b4be75d371647dfff34c`
+- **a102가 바꾼 것**: §3.9b — 성공 케이스 뒤에 **조립된 `RuntimeOptions.Recover`를 실제 실행**하는 단언을 더했다. 복구 시퀀스는 seam으로 대체하고(실계좌 조회 금지), ready가 run ctx를 취소하므로 루프는 즉시 취소로 돌아온다. A2의 마지막 생존 뮤테이션(N5, 본문에서 `ready = nil`)을 죽인다.
 
 ## Inputs and invariants
 
@@ -24,12 +24,15 @@
 | B2 | `:83` if | 테스트 코드 — 부수효과 없음 | 이 change로 바뀌지 않음 |
 | B3 | `:91` if | 테스트 코드 — 부수효과 없음 | 이 change로 바뀌지 않음 |
 | B4 | `:97` if | 테스트 코드 — 부수효과 없음 | 이 change로 바뀌지 않음 |
+| B5 | `:123` if | 테스트 코드 — 부수효과 없음 | 이 change로 바뀌지 않음 |
+| B6 | `:126` if | 테스트 코드 — 부수효과 없음 | 이 change로 바뀌지 않음 |
+| B7 | `:129` if | 테스트 코드 — 부수효과 없음 | 이 change로 바뀌지 않음 |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `ast.json`의 호출 14건 | 테스트 픽스처 조립과 단언 | 이 change로 바뀌지 않음 | ast.json |
+| `ast.json`의 호출 26건 | 테스트 픽스처 조립과 단언 | 이 change로 바뀌지 않음 | ast.json |
 
 ## State mutations and fallbacks
 
