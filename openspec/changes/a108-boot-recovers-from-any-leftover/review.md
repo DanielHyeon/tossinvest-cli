@@ -80,8 +80,8 @@ design 정합으로 Manager 수용(tasks 6.5 주석).
   원장 §B5.
 - T2-fix: `httpAPIReader.Snapshot` B1~B7(기존 fail-closed 읽기) 미핀 — fixture가 7개
   전부 성공해야 한다는 대조 조건으로 대체.
-- staging socket 이름의 sun_path 108 한도(실측 78바이트, 여유) — 길이 가드 미도입, 관찰만
-  기록. 극단적으로 긴 `$TOSSOS_DATA_DIR` 배포는 한도에 걸릴 수 있다.
+- ~~staging socket 이름의 sun_path 108 한도 — 길이 가드 미도입, 관찰만 기록~~ →
+  **gstack 2소스 재발견으로 수정됨**(§7 B1: staging basename ≤ 최종 basename).
 - tasks 2.5는 **미완**(실패-불가 핀) — a109가 소유.
 
 ## §6. gstack 독립 리뷰 (2026-08-14, 7패스)
@@ -122,3 +122,28 @@ Claude 적대(3라운드째) + Codex 적대·구조화(모델 교차). Codex 구
 obs Normal 경로가 outbox에 닿지 않음을 notifier 코드로 재검증(A2 P1의 entry-gate 위험
 종결 확인), 형제 endpoint 잔존 결함은 D5-2 스코프 선언과 일치, datagram 스쿼팅·ENOTDIR은
 안전 방향(Claude 적대 실측).
+
+## §7. gstack Fix-First 결과 (T3-fix, HEAD cc65fe75)
+
+전 항목(A1~A6·B1~B5) 이행, 커밋 8건, RED 실관측 후 GREEN.
+
+- **A1**: `context.WithoutCancel` + goroutine — 핀이 세 가지를 잰다(부팅 비블록·Notifier
+  실도달·종료 신호가 보고를 끊지 않음). RED 실관측("느린 publisher가 부팅을 3s+ 붙잡았다").
+- **A2**: `unavailableStrategyRuntime` sentinel — dial 실패가 `RUNTIME_UNAVAILABLE`로
+  렌더(3행 표), absent→dormant 핀 유지.
+- **B1**: staging basename 12자(`.s-`+종류+8hex ≤ "runtime.sock") — RED가 진짜였다:
+  최종 경로 107자에서 staging bind `invalid argument` 실관측.
+- **B2**: owner-write 부재 socket = 사망(EACCES 오판 실증 후 수정), probe 절 테이블 5행
+  직접 호출, 0700 축소 방향 2행.
+- **B3**(staging 형태 검증 후 제거)·**B4**(`discardPublication`이 발행된 descriptor도
+  제거)·A3~A6·B5 이행.
+- 뮤테이션: T1 §C 9적용/8사망, T2 §gstack 7적용/7사망(M15는 첫 실행 생존 → 단언 추가로
+  폐사, 정직 기록). **생존 2 존치(Manager 수용)**: M17(rmdir ENOENT 경합 — seam 없이
+  결정 불가), M24(descriptor staging 이름 규칙 — 디스크 관측 결과 없음, 확률적 가드는
+  핀이 아니다; M17과 같은 계급).
+- **선언된 미핀 2**: engineJournalDir 실패 경고(전 테스트가 --config-dir을 쓰므로 도달
+  불가 — 프로세스 전역 XDG 오염 필요), B4 rename 후행 interleaving(새 seam 필요). 사유는
+  각 branch-test-map·원장에 기재.
+- 최종 검증: 두 패키지 -race GREEN · vet · make lint 0 · check_analysis 오류 0.
+- Manager 정산: design D1-2 문구를 코드에 맞춤(.staging→.s-, 형태 검증 명시). a108은
+  미배포라 접두 변경의 현장 노출 없음.

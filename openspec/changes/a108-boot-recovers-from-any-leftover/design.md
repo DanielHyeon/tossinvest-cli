@@ -118,7 +118,9 @@ A1이 실측한 잔여 영구-거부 2종은 둘 다 **생산자**가 만든다:
 이미 쓰는 의례다. socket은 control dir 안 숨김 임시 이름에 bind → chmod 0600 → rename
 (Linux에서 unix socket의 rename은 유효하고 bind는 inode에 붙는다). 파생 규칙:
 
-- 임시 이름(.staging 접두) 잔재는 낯선 엔트리가 아니라 자기 잔재다 — 회수 목록에 추가.
+- 임시 이름(`.s-` 접두 — gstack B1이 sun_path 예산 때문에 12자로 줄였다) 잔재는 낯선
+  엔트리가 아니라 자기 잔재다 — 회수 목록에 추가하되, 형태(정규파일·socket)를 검증한
+  뒤에만 지운다(gstack B3 — staging 이름의 디렉터리는 건드리지 않고 거부).
 - 검증-사망 잔재의 socket perm 검사는 정확-0600에서 **group/other 비트 없음
   (perm&0o077==0)**으로 좁게 완화한다(자기 uid·0700 dir·비symlink·nlink1·사망 입증
   하에서만) — 구버전 바이너리가 남긴 pre-chmod 잔재의 회수 경로.
