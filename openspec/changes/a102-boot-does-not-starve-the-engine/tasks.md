@@ -6,10 +6,10 @@ Teammate는 여기·design.md에 없는 결정이 필요해지면 **멈추고 Ma
 
 ## 0. Manager 선행 산출물
 
-- [ ] 0.1 proposal.md (1aa3f0e1) + AST 7건 — 완료, 커밋됨
-- [ ] 0.2 design.md — D1~D7 확정
-- [ ] 0.3 spec delta — `reconciliation`, `operator-console`
-- [ ] 0.4 STORY-TOS-a102 + `_registry.yaml` + feature 역링크
+- [x] 0.1 proposal.md (1aa3f0e1) + AST 7건 — 완료, 커밋됨
+- [x] 0.2 design.md — D1~D7 확정
+- [x] 0.3 spec delta — `reconciliation`, `operator-console`
+- [x] 0.4 STORY-TOS-a102 + `_registry.yaml` + feature 역링크
   (sdd-test가 story 없는 active change를 즉시 실패시킨다 — a103 실측)
 
 ## 1. T1 — 겹1: recovery가 rate limit에 죽지 않는다 (High-risk: internal/reconcile)
@@ -48,6 +48,16 @@ Teammate는 여기·design.md에 없는 결정이 필요해지면 **멈추고 Ma
   기록.
   → 143건 통과 · coverage 86.6% · `make lint` rc=0 (gofmt 실재 확인).
 
+- [ ] 1.9 [T] **A1 리뷰 반영 (FIX-FIRST)** — ① `ratelimit.go:95` `%v`→`%w`
+  (F3: 취소 정체가 지워진다 — 이 change의 존재 이유와 같은 결함) + 취소 시
+  `errors.Is(err, context.Canceled)` 고정 테스트 ② 취소 후 브로커 호출 수 단언
+  (F2 — 생존 뮤테이션 N2를 죽인다) ③ `MaxRateLimitWait = 2×RateLimitBackoff`
+  경계 테스트 (F4 — 생존 뮤테이션 N1을 죽인다) ④ 대기 중 `CheckEntry` 단언 (F7)
+  ⑤ `withDefaults`에 백오프 하한 클램프 + 테스트 (F6 — spec의 SHALL NOT을 노브
+  값과 무관하게 성립시킨다) ⑥ 영구 거부 브로커(refusals 무한) 케이스 (A1 부수
+  관찰 — 예산의 존재 이유를 산술이 아니라 무한 거부로도 고정) ⑦ 예산 < 백오프
+  1회일 때 메시지 정직성 (F8). 뮤테이션 N1·N2 재가해 죽음 확인.
+
 ## 2. T1 — 산출물 정리
 
 - [x] 2.1 tasks 체크 + 커밋 (제목에 [a102 §1], RED/GREEN/뮤테이션 증거를 본문에)
@@ -65,6 +75,9 @@ Teammate는 여기·design.md에 없는 결정이 필요해지면 **멈추고 Ma
   refresh 보존. 호출자 engine.go:239 갱신.
 - [ ] 3.4 [T] RED→GREEN — D5: `recoverThenReady(run, ready)` — 성공 시에만
   ready, 실패 시 절대 안 부름. runEngineRun 배선.
+- [ ] 3.4b [T] **D5b (A1 F1)** — 같은 클로저가 Report를 받아
+  `RateLimitWaits > 0`이면 obs 이벤트 한 줄 (몇 번·총 얼마나). 성공·실패 모두.
+  지금은 `engine.go:402`가 Report를 버려 최대 5분이 무음이다.
 - [ ] 3.5 [T] RED→GREEN — D6: `awaitEngineReady(ctx, observe, clk, cap, poll)` —
   4 verdict(준비/엔진 없음/cap 초과/ctx 취소) 각각 fake clock·observe로.
   cap 120s·poll 2s 상수와 근거 주석.

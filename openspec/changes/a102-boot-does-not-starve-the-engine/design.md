@@ -63,7 +63,13 @@ calls 7 — 재시도 루프와 `clk.Sleep` seam이 **이미 있다**):
 (기존 Interval/Required/MaxAttempts와 같은 zero-default 패턴, `withDefaults()`).
 
 관측: `Report`에 `RateLimitWaits int`와 `RateLimitWaited time.Duration` 추가.
-기존 report 소비 지점에 그대로 실린다 — 새 로거 배관 금지.
+
+> **A1 정정 (2026-08-13)**: 초판의 "기존 report 소비 지점에 그대로 실린다"는
+> 전제가 틀렸다 — **소비 지점이 없다.** `cmd/tossctl/engine.go:402`의 Recover
+> 클로저가 `_, rerr := recovery.Run(ctx)`로 Report를 버린다. 이대로면 최대 5분의
+> 대기가 로그 한 줄 없는 무음 구간이 된다 (A1 F1). 소비는 그 클로저를 어차피
+> 편집하는 **T2의 D5**에 붙인다: `RateLimitWaits > 0`이면 obs 이벤트 한 줄.
+> `internal/reconcile`에 로거를 넣지 않는다는 원칙은 유지된다.
 
 **왜 총 대기 예산이고 횟수가 아닌가**: 운영자에게 의미 있는 수는 "보호가 없는
 시간"이다. 5m 근거: KRX 아침 429 창(분 단위 예산)을 여유 있게 덮되, 죽은 브로커를
@@ -95,6 +101,10 @@ recoverThenReady(run func(ctx context.Context) error, ready func()) func(ctx con
 `run` 성공 시에만 `ready()`. 실패 시 절대 부르지 않는다. 인자 받는 함수로 빼서
 테스트가 닿게 한다 (`runEngineRun`은 커버리지가 낮다 — a098 FLM 실측).
 `internal/app/engine`은 **무변경**이다.
+
+**D5b (A1 F1 반영)**: 같은 클로저가 지금 버리는 `reconcile.Report`를 받아
+`RateLimitWaits > 0`이면 obs 이벤트 한 줄을 남긴다 — 몇 번, 총 얼마나 기다렸는지.
+운영자가 "보호가 없던 시간"을 사후에 셀 수 있어야 한다. 성공·실패 경로 모두다.
 
 `runEngineRun`은 기존 함수이고 클로저 배선이 바뀌므로 **FLM 재기준**이 필요하다
 (a098의 FLM은 다른 base다).
@@ -152,6 +162,21 @@ awaitEngineReady(ctx, observe func() enginelock.Status, clk, cap, poll) verdict
   고치는 것은 별도 change다.
 - 자동시작 supervisor화 — 이 change는 죽지 않게 하는 쪽이다.
 - `Recovery.Run`의 replay/observation 경로 429 — 관측된 실패 없음, not-applicable.
+- **비상 청산(flatten)의 429** — `internal/flatten/liquidate.go:596`이 같은
+  `Collect`를 쓰므로 D1b 이후 429의 정체가 그곳까지 도달하지만, flatten은 그것을
+  구분하지 않고 청산 라운드를 접는다 (A1 F5 발견). **이 change에서 고치지 않는다**:
+  청산은 High-risk 중에서도 비상 경로라 인내를 넣는 방향조차 별도 승인이 필요하고
+  (기다리는 청산이 옳은가 자체가 설계 질문이다), 관측된 실패 사례도 아직 없다.
+  후속 change 후보로 등록하며, 침묵한 생략이 아니라 **선언된 생략**이다.
+
+## 배포 주의 (A1 F14)
+
+**겹1을 겹2 없이 운영에 올리지 않는다.** 겹1 단독이면: marker는 recovery보다
+먼저 생기므로 대기 5분 내내 "Running·신선"이고, T2 이전의 콘솔은 그것만 보고
+부팅 서베이를 시작해 **recovery가 기다리는 바로 그 rate 예산에 읽기를 더한다.**
+"엔진은 살아 있는데 보호는 없는" 창이 즉사(~0초)에서 최대 5분으로 넓어진다.
+두 겹은 한 change이므로 같이 배포되는 것이 기본이고, 이 절은 부분 배포(예: §1
+커밋만 cherry-pick)를 금지 사유와 함께 기록한다.
 
 ## Spec delta
 
