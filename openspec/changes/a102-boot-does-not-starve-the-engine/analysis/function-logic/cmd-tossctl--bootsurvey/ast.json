@@ -1,0 +1,109 @@
+{
+  "file": "cmd/tossctl/soakautostart.go",
+  "source_sha256": "937b0c68762523ff02a39f0554371572c636308c431d9d19e42a7b7f66adab1c",
+  "package": "main",
+  "function": "bootSurvey",
+  "signature": "bootSurvey(params=2, results=2)",
+  "start": {
+    "line": 142,
+    "column": 1
+  },
+  "end": {
+    "line": 151,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 144,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 147,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 145,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 148,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 143,
+        "column": 15
+      },
+      "text": "running"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 10
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 89
+      },
+      "text": "joinPIDs"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 9
+      },
+      "text": "start"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 143,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

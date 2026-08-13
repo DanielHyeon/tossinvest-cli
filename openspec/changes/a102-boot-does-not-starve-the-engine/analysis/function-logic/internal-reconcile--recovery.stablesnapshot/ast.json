@@ -1,0 +1,206 @@
+{
+  "file": "internal/reconcile/recovery.go",
+  "source_sha256": "80ee029c47a7355dec620afaf64cd600cf540cff3525a360f6874dfee7a6dc1f",
+  "package": "reconcile",
+  "function": "stableSnapshot",
+  "receiver": "Recovery",
+  "signature": "Recovery.stableSnapshot(params=1, results=3)",
+  "start": {
+    "line": 333,
+    "column": 1
+  },
+  "end": {
+    "line": 359,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "for",
+      "at": {
+        "line": 338,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 340,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 344,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 347,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 350,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 341,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 345,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 351,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 356,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 9
+      },
+      "text": "r.clock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 339,
+        "column": 16
+      },
+      "text": "r.opts.Collector.Collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 341,
+        "column": 30
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 344,
+        "column": 16
+      },
+      "text": "stabiliser.Offer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 350,
+        "column": 13
+      },
+      "text": "clk.Sleep"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 30
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 356,
+        "column": 28
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 334,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 335,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 338,
+        "column": 6
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 338,
+        "column": 51
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 339,
+        "column": 3
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 343,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 344,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 350,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
