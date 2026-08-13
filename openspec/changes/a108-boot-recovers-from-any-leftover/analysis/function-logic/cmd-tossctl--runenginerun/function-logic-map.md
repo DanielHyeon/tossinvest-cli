@@ -1,11 +1,16 @@
 # Function Logic Map: `runEngineRun`
 
 - Source: `cmd/tossctl/engine.go` (183-324)
-- AST evidence: `ast.json` — AST branches 20 · returns 13 · defers 9 · calls 58
+- AST evidence: `ast.json` — AST branches 20 · returns 13 · defers 9
+  (source_sha256 `ea35f850ccf5a05d468e9c0556186d84ed2318be81137bfecd6998c281fddfed`,
+  **Fix 라운드 6.7 편집 후 재생성**)
 - Risk scan: `risk-pattern-report.md`
 - 편집 대상: **B18** (겹2). 기준(base) 판은 분기 19개·return 14개였고, 그 14번째가
   `strategyprojectionrpc.Start` 오류의 `return err` 다 — 2026-08-13 사고가 죽은 줄.
   이번 편집이 그 return 을 없애고 B17(성공 경로 전용 defer)과 B18(강등)을 만들었다.
+- **Fix 라운드(6.7, design D3-2)**: B18 의 분기 **구조는 그대로**이고 그 안의 보고 수단만
+  바뀌었다 — durable critical outbox 행이 사라지고 obs Normal 이벤트가 그 자리를 받는다.
+  AST 상 사라진 호출은 `clk.Now`(강등 인자) 하나이며 분기 수는 20 으로 불변이다.
 
 ## Inputs and invariants
 
@@ -17,10 +22,10 @@
 | 엔진 조립 | config→journal(RW)→official broker→obs→기동 인터록 | `engineAssemble` seam | 인터록 미충족이면 절 열거 후 `errEngineInterlockUnmet` (B4·B5·B6), 그 밖은 원인 그대로 (B4) |
 | `ectx.Automation.Verified` | true 여야 루프가 있다 | 조립 결과 | false 면 `errEngineGateOff` (B7) |
 | verify run lock | 신선하면 같은 계좌를 다투는 중 | `runlock.Fresh` | `errVerifyInProgress` (B8·B9) |
-| proc instance 토큰 | `/proc` 없는 커널에서는 없을 수 있음 | `engineProcInstance` | 없으면 마커에 안 싣고(B10), 알림 key 는 기동 시각으로 대체 |
+| proc instance 토큰 | `/proc` 없는 커널에서는 없을 수 있음 | `engineProcInstance` | 없으면 마커에 안 싣는다(B10). **a102 마커 전용이다** — 6.7 이 강등 보고의 dedup 토큰 사용을 지웠다 |
 | 활성 마커 | 자문(advisory) | `enginelock.Hold` | 실패는 **거절이 아니다** — note 한 줄 (B11/B12) |
 | position policy command/runtime 서버 | 있어야 콘솔이 정책을 바꾼다 | `engine.Start…Server` | 실패는 return (B14·B15·B16) |
-| **strategy projection endpoint** | **없어도 된다 (a108)** | `engineStrategyProjectionStart` seam | **강등 + durable critical 알림 + 루프 계속 (B18)** |
+| **strategy projection endpoint** | **없어도 된다 (a108)** | `engineStrategyProjectionStart` seam | **강등 + stderr 경고 + obs Normal 이벤트 + 루프 계속 (B18)**. 원장 outbox 에는 **아무것도 쓰지 않는다** (D3-2) |
 | alert 운영 표면 | 있어야 운영자가 승인한다 | `ectx.AlertOperations` | 실패는 return (B19·B20) |
 
 **관통 불변식(a108 이후):** 조회 전용 export 표면의 실패는 보호 루프의 기동을 막지 않는다.
@@ -47,7 +52,7 @@
 | B15 | policy command server 실패 | 없음 | 원인 그대로 | 미고정 |
 | B16 | policy runtime server 실패 | 없음 | 원인 그대로 | 미고정 |
 | **B17** | **projection 서버가 섰다** | `defer Close` 등록 | 없음 | `TestASucceedingProjectionIsStillServedAndClosed` |
-| **B18** | **projection 기동 실패** | stderr note + **durable critical 알림 1행** | **없음 — 루프는 계속 돈다** | `TestAFailedStrategyProjectionDoesNotStopTheEngine` 외 4건 |
+| **B18** | **projection 기동 실패** | stderr note + **obs Normal 이벤트 로그** (원장 행 0) | **없음 — 루프는 계속 돈다** | `TestAFailedStrategyProjectionDoesNotStopTheEngine` · `TestTheDegradedBootWritesNoUndeliveredOutboxRow` · `TestASecondDegradedBootLeavesTheNextBootsEntryGateUnlatched` · `TestTheDegradedBootStillHoldsTheJournalFlock` · `TestTheDegradedBootLeavesReadyToTheRuntimeSeam` |
 | B19 | alert 운영 표면 실패 | 없음 | 원인 그대로 | 미고정 |
 | B20 | alert control server 실패 | 없음 | 원인 그대로 | 미고정 |
 
@@ -61,8 +66,8 @@
 | `enginelock.Hold` / `Identify` | 6단계 자문 마커 | 실패는 note (B11) | AST · a102 |
 | `engineRuntimeFactory` (seam) | 7단계 루프 집합 | 실패는 return (B13) | AST · engine_runtime_branch_test.go |
 | `engine.StartPositionPolicy{Command,Runtime}Server` | 콘솔 정책 제어 | 실패는 return | AST |
-| **`engineStrategyProjectionStart` (seam)** | **조회 전용 export** | **실패는 강등 (a108 D3)** | AST · a108 T2 테스트 |
-| `ectx.Journal.EnqueueAlert` | 강등의 durable 기록 | 실패해도 return 하지 않는다 — note 한 줄 더 | `reportStrategyProjectionDegraded` |
+| **`engineStrategyProjectionStart` (seam)** | **조회 전용 export** | **실패는 강등 (a108 D3-2)** | AST · a108 T2 테스트 |
+| `ectx.Notifier.Notify` | 강등의 obs 기록 | **Normal 등급** — 반환 오류는 critical 경로 전용이라 여기서는 발생하지 않는다(obs/notifier.go:130-139) | `reportStrategyProjectionDegraded` |
 | `engine.StartAlertControlServer` | a098 운영자 승인 경로 | 실패는 return | AST |
 | `rt.Run(runCtx)` | 루프 감독 | 첫 정지가 전부를 내린다 | AST · internal/app/engine |
 
@@ -71,15 +76,20 @@
 - flock·마커·세 소켓(policy command TCP · policy runtime unix · alert control unix)은
   defer 로 정리된다. **projection 소켓의 defer 는 B17 안에서만 등록된다** — 강등 경로에는
   닫을 것이 없다.
-- `reportStrategyProjectionDegraded` 가 만드는 상태는 원장 alert outbox 행 하나다.
-  event key 는 `type|dir|실행토큰` 이라 **실행마다 갈리고 한 실행 안에서는 접힌다**.
-  토큰이 없으면 기동 시각(RFC3339Nano)이 그 자리를 대신한다.
-- 알림 쓰기 실패는 강등을 되돌리지 않는다. 되돌리면 「알림을 못 썼다」가 다시
-  엔진을 죽이는 이유가 되고, 그것은 이 change 가 지우려는 모양 그 자체다.
+- **`reportStrategyProjectionDegraded` 는 영속 상태를 하나도 만들지 않는다** (6.7 이후).
+  stderr 한 줄과 obs 로그 한 줄이 전부다. 원 D3 은 여기에 durable critical outbox 행을
+  뒀는데, 그 행이 `UndeliveredCount`(Type 무필터, outbox.go:532-540)에 잡혀
+  `restoreAlertEntryLatch`(gateway.go:153-168)로 **다음 부팅의 진입 게이트를 잠갔다**.
+  publisher 미설정 배포에서는 영구 PENDING 이므로 해제 수단이 운영자 ack 뿐이었다.
+- 그래서 이 분기의 부작용 목록은 「없음」이 계약이다. 뮤테이션으로도 그것을 잰다:
+  행을 하나라도 쓰면 `TestTheDegradedBootWritesNoUndeliveredOutboxRow` 가 죽는다.
+- 잃은 것을 상시로 말하는 표면은 이 함수 밖에 있다 — 콘솔·httpapi 의 전략 화면이
+  dormant/unavailable 로 뜬다. 「stderr 는 1회 유실형」이라는 걱정의 답은 그쪽이다.
 
 ## Safety conclusion
 
-- Safe edit boundary: B17·B18 과 `reportStrategyProjectionDegraded`. B1~B16·B19·B20 의
+- Safe edit boundary: B17·B18 과 `reportStrategyProjectionDegraded`. Fix 라운드는 그중
+  후자의 **본문만** 바꿨다(분기 구조 불변). B1~B16·B19·B20 의
   판정과 **순서**는 건드리지 않았다 — 특히 B3(flock) → B7(게이트) → B18(projection)의
   선후는 테스트로 고정돼 있다.
 - High-risk impact: **yes.** 엔진 기동 경로다. 다만 변경 방향은 「기동을 더 자주 성공시키는」

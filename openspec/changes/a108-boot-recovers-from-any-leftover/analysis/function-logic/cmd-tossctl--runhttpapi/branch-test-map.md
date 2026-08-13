@@ -1,8 +1,9 @@
 # Branch Test Map: `runHTTPAPI`
 
-- Source: `cmd/tossctl/httpapi.go` (120-242)
-- 이 change 가 편집한 분기는 **B9·B10** 이고, **B11 은 의도적으로 그대로 둔 것**이라
-  「유지」를 재는 행이 따로 있다. RED/GREEN 열은 이 change 에서 관측했는가를 뜻한다.
+- Source: `cmd/tossctl/httpapi.go` (120-251)
+- 이 change 가 편집한 분기는 **B9·B10·B11** 이다. 원 라운드는 B11 을 fatal 로 **유지**했고
+  Fix 라운드(6.8①)가 A2 의 반증을 받아 그것을 뒤집었다 — 아래 B11 행은 그래서
+  「유지 핀」이 아니라 「반전 핀」이다. RED/GREEN 열은 이 change 에서 관측했는가를 뜻한다.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
@@ -11,12 +12,12 @@
 | B3 | 직접 TLS 모드 | `TestHTTPAPIDefaultsStayLoopbackNoTokenReadOnlyAndRequireTLS` `httpapi_test.go:27` | no | no |
 | B4 | 인증서 로드 실패 | — (미고정) | no | no |
 | B5 | 리소스 열기 실패 | — (미고정) | no | no |
-| B6 | 엔진 디렉터리를 해석했다 | `TestTheDaemonReadsTheDescriptorBesideItsOwnJournal` `a108_the_daemon_treats_absence_and_failure_alike_test.go:202` | no | yes |
-| B7 | descriptor 가 stat 된다 (죽은 잔재) | `TestADeadDescriptorDoesNotStopTheDaemon` `a108_the_daemon_treats_absence_and_failure_alike_test.go:128` | yes | yes |
+| B6 | 엔진 디렉터리를 해석했다 | `TestTheDaemonReadsTheDescriptorBesideItsOwnJournal` `a108_the_daemon_treats_absence_and_failure_alike_test.go:296` | no | yes |
+| B7 | descriptor 가 stat 된다 (죽은 잔재) | `TestADeadDescriptorDoesNotStopTheDaemon` `a108_the_daemon_treats_absence_and_failure_alike_test.go:128` · S3 모양은 `TestASocketFileWithNoOwnerDegradesTheDaemon` `:276` (**의도된 RED** — T1-fix 대기) | yes | yes / S3 는 아직 |
 | B8 | descriptor 부재 — 설계된 강등 (대조군) | `TestAnAbsentDescriptorAndADeadOneBootTheSame` `a108_the_daemon_treats_absence_and_failure_alike_test.go:148` | no (기존 동작) | yes |
-| B9 | dial 실패 → 강등 (**이 change 가 바꾼 분기**) | `TestADeadDescriptorDoesNotStopTheDaemon` · `TestAnAbsentDescriptorAndADeadOneBootTheSame` | yes | yes |
+| B9 | dial 실패 → 강등 (**이 change 가 바꾼 분기**) | `TestADeadDescriptorDoesNotStopTheDaemon` · `TestAnAbsentDescriptorAndADeadOneBootTheSame` · `TestASocketFileWithNoOwnerDegradesTheDaemon`(S3, RED) | yes | yes |
 | B10 | dial 성공 → 클라이언트 대입 (**이 change 가 만든 else**) | — (미고정: 살아 있는 엔진 소켓이 필요하고 그것은 겹1 T1 범위다. 뮤테이션 M8 이 이 분기를 fatal 쪽으로 되돌리면 B9 테스트 둘이 죽는다) | no | no |
-| B11 | stat 오류가 NotExist 가 아니다 → **fatal 유지** | `TestAnUninspectableDescriptorIsStillFatal` `a108_the_daemon_treats_absence_and_failure_alike_test.go:179` | 해당 없음(유지 핀) | yes |
+| B11 | stat 오류가 NotExist 가 아니다 → **경고 + 강등** (6.8① 이 뒤집었다) | `TestAnUninspectableDescriptorDegradesLikeTheConsole` `a108_the_daemon_treats_absence_and_failure_alike_test.go:187` | yes (`d8b27021` 커밋 하나로 실패 관측) | yes |
 | B12 | 스냅샷 캐시 실패 | — (미고정) | no | no |
 | B13 | 스트림 생성 실패 | — (미고정) | no | no |
 | B14 | mutation 라우트 구성 실패 | `TestHTTPAPIMutationsStayAbsentUntilBothSecurityArtifactsAreConfigured` `httpapi_mutation_test.go:19` | no | no |
@@ -38,10 +39,25 @@
 2. 그 상태에서 `runHTTPAPI` 를 돌렸더니
    `httpapi: strategy runtime projection unavailable: strategy projection runtime:
    socket is invalid` 로 **오류 반환**했다 — 컨테이너가 `Restarting (1)` 로 돌던 그 모양.
-   같은 실행에서 `TestAnUninspectableDescriptorIsStillFatal` 는 통과했고(유지 핀은 처음부터
-   초록이어야 한다), `TestAnAbsentDescriptorAndADeadOneBootTheSame` 의 **부재 절반은
+   같은 실행에서 당시의 B11 유지 핀(현재는 반전돼 이름이 바뀌었다)은 통과했고,
+   `TestAnAbsentDescriptorAndADeadOneBootTheSame` 의 **부재 절반은
    통과**한 뒤 죽은 절반에서 실패했다 — harness 가 실제로 데몬을 세운다는 증거다.
 3. 강등을 구현하니 4건 전부 GREEN.
+
+## Fix 라운드(6.8①·6.8③)에서 RED 을 관측한 순서 — **커밋으로 남았다**
+
+테스트만 담은 커밋 `d8b27021` 이 GREEN 커밋 `aecc03e0` 보다 먼저 있다. 이 파일의
+분기에 해당하는 RED 는 둘이다:
+
+1. `TestAnUninspectableDescriptorDegradesLikeTheConsole` (B11) —
+   `httpapi = httpapi: inspect strategy runtime projection: … not a directory`.
+   fixture 는 먼저 `os.Stat` 이 **비-NotExist** 오류를 내는지 확인하고 들어간다
+   (「그냥 없어서 통과」한 기동을 강등의 증거로 쓰지 않으려고).
+2. `TestASocketFileWithNoOwnerDegradesTheDaemon` (S3, B7·B9) — 「S3 에서 강등이
+   발동하지 않았다」. **이것은 GREEN 커밋 뒤에도 RED 로 남는다**: 현재 `Dial` 은
+   descriptor 를 읽고 socket 의 Lstat·모드·perm 만 보므로(transport_unix.go:216-230)
+   S3 를 **성공**으로 판정한다. T1-fix 의 connect probe(6.4)가 병합되면 이 테스트는
+   손대지 않고 GREEN 이 된다 — 그 RED 가 병합 검증이다.
 
 ## 미고정으로 남긴 분기 (사유)
 

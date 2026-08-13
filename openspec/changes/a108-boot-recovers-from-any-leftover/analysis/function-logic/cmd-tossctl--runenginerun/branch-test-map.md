@@ -15,7 +15,7 @@
 | B7 | 게이트 OFF | `TestAGateOffEngineRefusesWithoutEnumeratingClauses` `engine_test.go:147` | no | no |
 | B8 | verify lock 경로를 해석했다 | `TestAFreshVerifyRunLockRefusesTheStart` `engine_test.go:208` | no | no |
 | B9 | verify lock 이 신선/오래됨 | `TestAFreshVerifyRunLockRefusesTheStart` · `TestAStaleVerifyRunLockDoesNotRefuse` `engine_test.go:231` | no | no |
-| B10 | proc instance 를 읽어 마커에 싣는다 | `TestTheReadySignalReachesTheMarkerThroughTheRuntimeSeam` `a102_ready_wiring_test.go:34` | no | no |
+| B10 | proc instance 를 읽어 마커에 싣는다 (a102 전용 — 6.7 이 강등 보고의 토큰 사용을 지웠다) | `TestTheReadySignalReachesTheMarkerThroughTheRuntimeSeam` `a102_ready_wiring_test.go:34` | no | no |
 | B11 | 마커를 못 잡았다 (거절 아님) | — (미고정: 기존 강등, 이 change 밖) | no | no |
 | B12 | 마커를 잡았다 | `TestTheMarkerIsHeldWhileTheLoopsRunAndRemovedAfter` `engine_test.go:253` | no | no |
 | B13 | 루프 조립 실패 | `TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess` `engine_runtime_branch_test.go:49` | no | no |
@@ -23,22 +23,39 @@
 | B15 | policy command server 실패 | — (미고정) | no | no |
 | B16 | policy runtime server 실패 | — (미고정) | no | no |
 | B17 | projection 이 정상적으로 섰다 → defer Close 등록 (**이 change 가 만든 분기**) | `TestASucceedingProjectionIsStillServedAndClosed` `a108_the_engine_outlives_its_read_endpoint_test.go:264` | yes (뮤테이션 M4·M5) | yes |
-| B18 | projection 기동 실패 → 강등 + durable critical 알림 + 루프 계속 (**이 change 가 만든 분기**) | `TestAFailedStrategyProjectionDoesNotStopTheEngine` `a108_the_engine_outlives_its_read_endpoint_test.go:155` · `TestTheDegradedBootLeavesADurableCriticalAlert` `:181` · `TestEachDegradedRunEarnsItsOwnAlertAndOnlyOne` `:226` · `TestTheDegradedBootStillHoldsTheJournalFlock` `:301` · `TestTheDegradedBootPublishesReadyOnlyAfterRecovery` `:335` · `TestTheGateIsRefusedBeforeTheProjectionEndpointIsTouched` `:376` | yes | yes |
+| B18 | projection 기동 실패 → 강등 + stderr 경고 + obs Normal 이벤트 + 루프 계속, **원장 outbox 무접촉** (**이 change 가 만든 분기**, 보고 수단은 6.7 이 재작성) | `TestAFailedStrategyProjectionDoesNotStopTheEngine` `a108_the_engine_outlives_its_read_endpoint_test.go:155` · `TestTheDegradedBootWritesNoUndeliveredOutboxRow` `:194` · `TestASecondDegradedBootLeavesTheNextBootsEntryGateUnlatched` `:240` · `TestTheDegradedBootStillHoldsTheJournalFlock` `:331` · `TestTheDegradedBootLeavesReadyToTheRuntimeSeam` `:377` · `TestTheGateIsRefusedBeforeTheProjectionEndpointIsTouched` `:418` | yes | yes |
 | B19 | alert 운영 표면 조립 실패 | — (미고정) | no | no |
 | B20 | alert control server 실패 | — (미고정) | no | no |
 
 ### B18 이 지는 여섯 가지 (한 행에 접힌 이유는 분기가 하나이기 때문이다)
 
+뮤테이션 번호는 Fix 라운드 뒤의 원장(`mutation-ledger-t2.md` §Fix)을 가리킨다.
+
 | 성질 | 테스트 | 죽이는 뮤테이션 |
 |---|---|---|
 | 엔진이 안 죽는다 | `TestAFailedStrategyProjectionDoesNotStopTheEngine` | M1 |
-| 강등이 durable critical 알림을 남긴다 | `TestTheDegradedBootLeavesADurableCriticalAlert` | M1·M2 |
-| 실행마다 알림, 실행 안에서는 한 번 | `TestEachDegradedRunEarnsItsOwnAlertAndOnlyOne` | M1·M2·M3 |
+| 강등이 미전달 outbox 행을 남기지 않는다 | `TestTheDegradedBootWritesNoUndeliveredOutboxRow` | M1·M2b·M3b |
+| 반복 강등 뒤에도 다음 부팅이 잠기지 않는다 | `TestASecondDegradedBootLeavesTheNextBootsEntryGateUnlatched` | M1·M2b·M3b |
 | journal flock 싱글턴 불변 | `TestTheDegradedBootStillHoldsTheJournalFlock` | M1·M7 |
-| a102 ready 발행 시점 불변 | `TestTheDegradedBootPublishesReadyOnlyAfterRecovery` | M1·M6 |
+| ready 는 seam 이 진다 (runEngineRun 이 직접 발행하지 않는다) | `TestTheDegradedBootLeavesReadyToTheRuntimeSeam` | M1·M6 |
 | automation interlock 평가 순서 불변 | `TestTheGateIsRefusedBeforeTheProjectionEndpointIsTouched` | M5 |
 
-## RED 을 실제로 관측한 순서 (B18)
+## Fix 라운드(6.7)에서 RED 을 관측한 순서 — **커밋으로 남았다**
+
+원 라운드의 RED 는 한 커밋에 접혀 히스토리에 없었다(A2 F5). 이번에는 테스트만 담은
+커밋 `d8b27021` 이 GREEN 커밋 `aecc03e0` 보다 **먼저** 있고, 그 커밋 하나로 5건이
+실패한다. B18 에 해당하는 것은 둘이다:
+
+1. `TestTheDegradedBootWritesNoUndeliveredOutboxRow` — 「미전달 outbox 행 1개를
+   남겼다, want 0」.
+2. `TestASecondDegradedBootLeavesTheNextBootsEntryGateUnlatched` — 「강등 기동 두 번
+   뒤 미전달 알림 1건」.
+
+같은 실행에서 `TestAFailedStrategyProjectionDoesNotStopTheEngine`(엔진이 안 죽는다)과
+`TestASucceedingProjectionIsStillServedAndClosed`(대조군)는 **통과**했다 — harness 가
+실제로 강등 기동을 세운다는 증거이고, 새 RED 가 「보고 수단」만 겨눈다는 증거다.
+
+## 원 라운드의 RED 관측 순서 (B18 — 재구성 기록)
 
 1. 무행위 리팩터로 `engineStrategyProjectionStart` seam 을 넣었다. 기존 574건 전부 GREEN
    유지 — 동작이 안 바뀌었다는 증거다.
