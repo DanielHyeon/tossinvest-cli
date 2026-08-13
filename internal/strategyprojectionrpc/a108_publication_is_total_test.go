@@ -20,7 +20,9 @@ package strategyprojectionrpc
 
 import (
 	"context"
+	"errors"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -121,5 +123,197 @@ func TestDialRefusesSocketWithNoListener(t *testing.T) {
 	client, err := Dial(context.Background(), DescriptorPath(dir))
 	if err == nil {
 		t.Fatalf("아무도 수락하지 않는 socket에 Dial이 성공했다 (client=%v)", client != nil)
+	}
+}
+
+// TestStartPublishesBothArtifactsByRename은 발행 의례 자체의 핀이다.
+// 기동이 끝난 디렉터리에는 최종 이름 둘만 있어야 한다 — 임시 이름이 남아 있으면
+// 발행이 중간에서 멈춘 것이고, listener가 최종 경로를 기억하고 있으면 socket이
+// rename이 아니라 제자리에서 만들어진 것이다.
+func TestStartPublishesBothArtifactsByRename(t *testing.T) {
+	dir := shortRuntimeDir(t)
+	server, err := Start(dir, a108Reader())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = server.Close() })
+	entries, err := os.ReadDir(ControlDirectory(dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+	names := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		names = append(names, entry.Name())
+	}
+	if len(names) != 2 {
+		t.Fatalf("control 디렉터리 엔트리 = %v, want 최종 이름 둘만", names)
+	}
+	if remembered := server.listener.Addr().String(); remembered == SocketPath(dir) {
+		t.Fatalf("listener가 최종 socket 경로를 기억한다 (%s) — 제자리에서 bind했다", remembered)
+	}
+}
+
+// TestPublishedListenerNeverUnlinksTheNameItRemembers는 D2-2의 절반이다.
+//
+// Go의 unix listener는 닫힐 때 **자기가 기억하는 경로**를 unlink한다. 발행 뒤 그
+// 이름은 이미 rename으로 비었지만, 늦은 정리가 도착하는 시점에 그 자리에 다른
+// 파일이 앉아 있을 수 있다. 그 표적을 테스트가 직접 놓고 닫아 본다.
+func TestPublishedListenerNeverUnlinksTheNameItRemembers(t *testing.T) {
+	dir := shortRuntimeDir(t)
+	a108MakeControlDir(t, dir)
+	listener, err := listenPrivateSocket(ControlDirectory(dir), SocketPath(dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+	remembered := listener.Addr().String()
+	if err := os.WriteFile(remembered, []byte("남의 파일"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := listener.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Lstat(remembered); err != nil {
+		t.Fatalf("listener가 자기가 기억하는 이름의 파일을 지웠다: %v", err)
+	}
+}
+
+// TestLateListenerCloseCannotUnlinkSuccessorSocket은 A1 F5의 결정적 회귀 핀이다.
+//
+// A1은 300라운드 중 3회로 재현했다: `Shutdown`이 `Serve`의 listener 등록을 앞지르면
+// 정리가 Serve goroutine의 defer로 밀리고, **경로 기준** unlink가 그 사이에 들어선
+// 후계자의 socket을 지운다. 여기서는 경합을 기다리지 않고 그 순서를 직접 만든다 —
+// 첫 주인의 listener를 손에 쥔 채 후계자를 세우고, 그 다음에 닫는다.
+func TestLateListenerCloseCannotUnlinkSuccessorSocket(t *testing.T) {
+	dir := shortRuntimeDir(t)
+	a108MakeControlDir(t, dir)
+	first, err := listenPrivateSocket(ControlDirectory(dir), SocketPath(dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// 주인이 파일만 치우고 사라진다(Close가 하는 일). listener는 아직 살아 있다.
+	if err := os.Remove(SocketPath(dir)); err != nil {
+		t.Fatal(err)
+	}
+	second, err := listenPrivateSocket(ControlDirectory(dir), SocketPath(dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = second.Close() })
+	before, err := os.Lstat(SocketPath(dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// 늦은 정리가 지금 도착한다.
+	if err := first.Close(); err != nil {
+		t.Fatal(err)
+	}
+	after, err := os.Lstat(SocketPath(dir))
+	if err != nil {
+		t.Fatalf("늦은 listener 정리가 후계자의 socket을 지웠다: %v", err)
+	}
+	if !os.SameFile(before, after) {
+		t.Fatal("후계자의 socket이 다른 파일로 바뀌었다")
+	}
+	conn, err := net.DialTimeout("unix", SocketPath(dir), projectionProbeTimeout)
+	if err != nil {
+		t.Fatalf("후계자가 더 이상 수락하지 않는다: %v", err)
+	}
+	_ = conn.Close()
+}
+
+// TestCloseClosesItsOwnListenerWithoutServe는 D2-2의 나머지 절반이다.
+//
+// `Serve`를 한 번도 부르지 않은 서버가 곧 "Shutdown이 등록을 앞지른" 그 창이다.
+// 그 상태에서 `Close`가 돌아왔을 때 listener는 이미 닫혀 있어야 한다 — 닫는 시점을
+// 예정된 goroutine에 맡기면 그 goroutine이 프로세스와 함께 죽는 것이 유일한 방어가
+// 된다(A1 F5의 지적).
+func TestCloseClosesItsOwnListenerWithoutServe(t *testing.T) {
+	dir := shortRuntimeDir(t)
+	a108MakeControlDir(t, dir)
+	listener, err := listenPrivateSocket(ControlDirectory(dir), SocketPath(dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := &Server{server: &http.Server{}, listener: listener,
+		descriptor: DescriptorPath(dir), socket: SocketPath(dir), controlDir: ControlDirectory(dir)}
+	if err := server.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := listener.Close(); !errors.Is(err, net.ErrClosed) {
+		t.Fatalf("Close가 listener를 닫지 않았다 (두 번째 Close = %v)", err)
+	}
+	if _, err := os.Lstat(ControlDirectory(dir)); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("Close가 control 디렉터리를 치우지 않았다: %v", err)
+	}
+}
+
+// 아래 셋은 A1 F6의 **절 단위 미핀** 소거다. 각 절은 다른 절이 이미 잡아 주는
+// 디스크 상태에 가려 혼자서는 죽어 본 적이 없었다.
+
+// TestControlDirectoryModeClausesEachRefuseOnTheirOwn — symlink 절이 여기서만 잰다.
+// 실제 `Lstat`이 돌려주는 symlink의 mode에는 ModeDir 비트가 없으므로 `IsDir()` 절이
+// 먼저 걸린다. 즉 디스크 상태로는 symlink 절만 실패시킬 수 없고, 그 절만 지운
+// 뮤테이션은 파일 기반 테스트를 전부 통과한다. 모드 값을 직접 넣어서 그 자리를 막는다.
+func TestControlDirectoryModeClausesEachRefuseOnTheirOwn(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		mode os.FileMode
+		want bool
+	}{
+		{"0700 디렉터리", os.ModeDir | 0o700, true},
+		{"디렉터리가 아니다", 0o700, false},
+		{"symlink 비트가 서 있다", os.ModeDir | os.ModeSymlink | 0o700, false},
+		{"group 비트가 있다", os.ModeDir | 0o750, false},
+		{"other 비트가 있다", os.ModeDir | 0o701, false},
+	} {
+		if got := controlDirectoryModeIsSafe(test.mode); got != test.want {
+			t.Errorf("%s: controlDirectoryModeIsSafe(%v) = %v, want %v", test.name, test.mode, got, test.want)
+		}
+	}
+}
+
+// TestDescriptorIdentityClausesRejectASwappedFile — SameFile 두 절의 핀이다.
+// 실제로 이 절이 걸리려면 검사와 열기 **사이**에 파일이 바뀌어야 하는데, 그
+// 인터리빙을 테스트가 결정적으로 만들 방법이 없다(seam을 새로 뚫지 않는 한).
+// 판정 자체를 세 개의 실파일로 직접 먹인다.
+func TestDescriptorIdentityClausesRejectASwappedFile(t *testing.T) {
+	dir := shortRuntimeDir(t)
+	first := filepath.Join(dir, "one")
+	second := filepath.Join(dir, "two")
+	for _, path := range []string{first, second} {
+		if err := os.WriteFile(path, []byte("{}"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	one, err := os.Lstat(first)
+	if err != nil {
+		t.Fatal(err)
+	}
+	two, err := os.Lstat(second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !sameDescriptorFile(one, one, one) {
+		t.Fatal("같은 파일 셋을 다르다고 했다")
+	}
+	if sameDescriptorFile(one, two, one) {
+		t.Fatal("검사한 파일과 다른 파일을 열었는데 같다고 했다")
+	}
+	if sameDescriptorFile(one, one, two) {
+		t.Fatal("연 뒤에 자리가 바뀌었는데 같다고 했다")
+	}
+}
+
+// TestOwnershipClauseRefusesAnotherUser — uid 절의 핀이다.
+// 이 테스트는 비root로 돌고, 비root는 파일 소유자를 바꿀 수 없다. 그래서 "남이 만든
+// 디렉터리"라는 디스크 상태 자체를 만들 수 없고, 판정을 직접 먹이는 것이 이 절을
+// 죽여 볼 수 있는 유일한 방법이다.
+func TestOwnershipClauseRefusesAnotherUser(t *testing.T) {
+	mine := uint32(os.Geteuid())
+	if !ownedByEffectiveUser(mine) {
+		t.Fatal("우리 uid를 남의 것이라고 했다")
+	}
+	if ownedByEffectiveUser(mine + 1) {
+		t.Fatal("남의 uid를 우리 것이라고 했다")
 	}
 }

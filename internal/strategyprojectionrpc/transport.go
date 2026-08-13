@@ -89,32 +89,70 @@ func (c *Client) Read(ctx context.Context) (strategyprojection.Snapshot, error) 
 	return strategyprojection.Clone(result), nil
 }
 
-func readDescriptor(path string) (Descriptor, error) {
+// controlDirectoryModeIsSafe는 control 디렉터리의 **모양** 세 절을 한자리에 모은다.
+// 세 절은 각각 다른 것을 막는다.
+//
+//	디렉터리가 아니다   우리가 만든 것이 아니다
+//	symlink다           검사한 곳과 지우는 곳이 달라진다
+//	0700이 아니다       남이 토큰을 들여다볼 수 있다
+//
+// 한 줄짜리 조건을 이름 있는 함수로 뽑은 이유는 절 하나하나를 **따로 죽여 볼 수**
+// 있게 하기 위해서다(A1 F6 — 절 단위 미핀). 조건이 호출부에 붙어 있으면 그 절만
+// 지운 뮤테이션이 어떤 테스트도 죽이지 않고 살아남는다.
+func controlDirectoryModeIsSafe(mode os.FileMode) bool {
+	return mode.IsDir() && mode&os.ModeSymlink == 0 && mode.Perm() == 0o700
+}
+
+// sameDescriptorFile은 "검사한 파일 · 연 파일 · 연 뒤에도 그 자리에 있는 파일"이
+// 전부 같은 inode인지 본다. 하나라도 다르면 검사와 사용 사이에 누가 바꿔치기한
+// 것이고, 그러면 우리가 검증한 것과 읽는 것이 다른 파일이다.
+func sameDescriptorFile(inspected, opened, current os.FileInfo) bool {
+	return os.SameFile(inspected, opened) && os.SameFile(opened, current)
+}
+
+// openVerifiedDescriptor는 descriptor의 **형식**만 확인하고 연 파일을 돌려준다.
+//
+// 형식과 내용을 가르는 것이 design D1-2다. 형식(정확히 0600인 정규 파일 · symlink를
+// 따라가지 않음 · 열기 전후로 같은 inode)은 "이것이 우리가 만든 파일인가"를 묻고,
+// 그 답이 아니오면 지금도 거부다. 내용(JSON·필드)은 D2 이후 **어떤 판정에도 쓰이지
+// 않으므로**, 반쯤 쓰인 JSON을 거부하는 것은 거부만 생산한다. 회수는 형식만 보고
+// (아래 reclaimStaleControlDirectory), 실제로 읽어 쓰는 Dial만 내용까지 본다.
+func openVerifiedDescriptor(path string) (*os.File, error) {
 	if filepath.Base(path) != DescriptorFileName || filepath.Base(filepath.Dir(path)) != ControlDirectoryName {
-		return Descriptor{}, errors.New("strategy projection runtime: unexpected descriptor path")
+		return nil, errors.New("strategy projection runtime: unexpected descriptor path")
 	}
 	directory, err := os.Lstat(filepath.Dir(path))
-	if err != nil || !directory.IsDir() || directory.Mode()&os.ModeSymlink != 0 || directory.Mode().Perm() != 0o700 {
-		return Descriptor{}, errors.New("strategy projection runtime: control directory is not exact 0700")
+	if err != nil || !controlDirectoryModeIsSafe(directory.Mode()) {
+		return nil, errors.New("strategy projection runtime: control directory is not exact 0700")
 	}
 	info, err := os.Lstat(path)
 	if err != nil || !info.Mode().IsRegular() || info.Mode()&os.ModeSymlink != 0 || info.Mode().Perm() != 0o600 {
-		return Descriptor{}, errors.New("strategy projection runtime: descriptor is not exact 0600 regular file")
+		return nil, errors.New("strategy projection runtime: descriptor is not exact 0600 regular file")
 	}
 	file, err := openDescriptorNoFollow(path)
+	if err != nil {
+		return nil, err
+	}
+	opened, err := file.Stat()
+	if err != nil {
+		_ = file.Close()
+		return nil, err
+	}
+	current, currentErr := os.Lstat(path)
+	if currentErr != nil || !sameDescriptorFile(info, opened, current) ||
+		!opened.Mode().IsRegular() || opened.Mode().Perm() != 0o600 {
+		_ = file.Close()
+		return nil, errors.New("strategy projection runtime: descriptor changed while it was opened")
+	}
+	return file, nil
+}
+
+func readDescriptor(path string) (Descriptor, error) {
+	file, err := openVerifiedDescriptor(path)
 	if err != nil {
 		return Descriptor{}, err
 	}
 	defer file.Close()
-	opened, err := file.Stat()
-	if err != nil {
-		return Descriptor{}, err
-	}
-	current, currentErr := os.Lstat(path)
-	if currentErr != nil || !os.SameFile(info, opened) || !os.SameFile(opened, current) ||
-		!opened.Mode().IsRegular() || opened.Mode().Perm() != 0o600 {
-		return Descriptor{}, errors.New("strategy projection runtime: descriptor changed while it was opened")
-	}
 	body, err := io.ReadAll(io.LimitReader(file, maxDescriptorBytes+1))
 	if err != nil || len(body) > maxDescriptorBytes {
 		return Descriptor{}, errors.New("strategy projection runtime: descriptor unreadable or oversized")

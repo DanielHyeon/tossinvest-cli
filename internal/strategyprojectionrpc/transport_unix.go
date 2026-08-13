@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -26,6 +27,14 @@ import (
 // 호스트의 Unix socket 연결은 즉시 끝나므로, 이 시간을 다 쓰면 답이 안 온 것이고
 // 그것은 죽었다는 증거가 아니다 — 그 경우는 살아 있다고 보고 기동을 거부한다.
 const projectionProbeTimeout = 200 * time.Millisecond
+
+// stagingPrefix는 **아직 발행되지 않은** 산출물의 이름 앞머리다.
+//
+// descriptor도 socket도 임시 이름에 먼저 만들고 rename으로 최종 이름을 준다. 그래서
+// 최종 이름이 보이면 그것은 항상 완성된 파일이다 — 반쯤 쓰인 상태가 최종 이름을
+// 가지는 순간이 없다(design D1-2). 대신 임시 이름으로 죽는 새 잔재가 생기는데,
+// 그것은 낯선 엔트리가 아니라 우리 잔재이므로 회수 목록에 들어간다.
+const stagingPrefix = ".staging-"
 
 type Server struct {
 	server     *http.Server
@@ -59,19 +68,17 @@ func Start(engineDir string, reader strategyprojection.Reader) (*Server, error) 
 	}
 	cleanupDir := func() { _ = os.Remove(controlDir) }
 	socketPath := SocketPath(root)
-	listener, err := net.Listen("unix", socketPath)
+	listener, err := listenPrivateSocket(controlDir, socketPath)
 	if err != nil {
 		cleanupDir()
 		return nil, err
 	}
+	// 경로를 지우는 것은 언제나 우리 손이다 — listener는 자기 이름을 unlink하지
+	// 않는다(listenPrivateSocket의 SetUnlinkOnClose(false), design D2-2).
 	cleanupListener := func() {
 		_ = listener.Close()
 		_ = os.Remove(socketPath)
 		cleanupDir()
-	}
-	if err := os.Chmod(socketPath, 0o600); err != nil {
-		cleanupListener()
-		return nil, err
 	}
 	tokenBytes := make([]byte, 32)
 	if _, err := rand.Read(tokenBytes); err != nil {
@@ -120,6 +127,61 @@ func Start(engineDir string, reader strategyprojection.Reader) (*Server, error) 
 	return server, nil
 }
 
+// stagingPath는 아직 발행되지 않은 산출물의 임시 경로를 만든다. 이름이 겹치면
+// bind가 EADDRINUSE로 실패하므로 난수를 붙인다 — 회수가 방금 비운 디렉터리라
+// 겹칠 일은 없지만, 겹치지 않는 것에 기대지 않는다.
+func stagingPath(controlDir, kind string) (string, error) {
+	suffix := make([]byte, 4)
+	if _, err := rand.Read(suffix); err != nil {
+		return "", err
+	}
+	return filepath.Join(controlDir, stagingPrefix+kind+"-"+hex.EncodeToString(suffix)), nil
+}
+
+// listenPrivateSocket은 socket을 **임시 이름에 bind → 0600 → rename** 순으로 발행한다.
+//
+// 왜 이 의례인가(design D1-2). `net.Listen`이 만드는 socket 파일의 권한은 umask가
+// 정한다 — 컨테이너 실측 umask 077이면 0700이다. 예전 코드는 최종 이름에 바로 bind한
+// 뒤 chmod했으므로, 그 두 줄 사이에서 죽으면 **최종 이름 자리에 0600이 아닌 socket**이
+// 남았다. 그리고 회수의 정확-0600 검사가 그것을 "unsafe"로 영구 거부했다. 버그가 보안
+// 핀으로 봉인돼 있었던 것이다(A1 F1 실측 3/3).
+//
+// rename은 같은 디렉터리 안이라 원자적이고, Linux에서 unix socket의 rename은 유효하다:
+// bind는 경로가 아니라 inode에 붙으므로 이름이 바뀌어도 그 listener는 계속 수락한다.
+// 그래서 최종 이름은 "완성된 socket이 나타나는 순간"에만 존재한다.
+//
+// `SetUnlinkOnClose(false)`가 design D2-2다. Go의 unix listener는 닫힐 때 **자기가
+// 기억하는 경로**를 unlink한다. `Shutdown`이 `Serve`의 listener 등록을 앞지르면 그
+// 정리가 Serve goroutine의 defer로 밀리고, 늦게 도착한 unlink가 그 경로에 이미 앉아
+// 있는 **후계자의 socket**을 지운다(A1 F5는 300라운드 중 3회 재현). 여기서 두 겹으로
+// 막는다 — listener가 기억하는 이름은 임시 이름이고, unlink 자체를 끈다.
+func listenPrivateSocket(controlDir, socketPath string) (net.Listener, error) {
+	staged, err := stagingPath(controlDir, "sock")
+	if err != nil {
+		return nil, err
+	}
+	listener, err := net.Listen("unix", staged)
+	if err != nil {
+		return nil, err
+	}
+	if unixListener, ok := listener.(*net.UnixListener); ok {
+		unixListener.SetUnlinkOnClose(false)
+	}
+	discard := func() {
+		_ = listener.Close()
+		_ = os.Remove(staged)
+	}
+	if err := os.Chmod(staged, 0o600); err != nil {
+		discard()
+		return nil, err
+	}
+	if err := os.Rename(staged, socketPath); err != nil {
+		discard()
+		return nil, err
+	}
+	return listener, nil
+}
+
 // reclaimStaleControlDirectory는 지난 기동이 남긴 잔재를 치운다.
 //
 // 이 함수가 다루는 상태는 Start·Close·이 함수 자신이 만들 수 있는 **전부**다.
@@ -144,54 +206,110 @@ func Start(engineDir string, reader strategyprojection.Reader) (*Server, error) 
 func reclaimStaleControlDirectory(engineDir string) error {
 	controlDir := ControlDirectory(engineDir)
 	info, err := os.Lstat(controlDir)
-	if err != nil || !info.IsDir() || info.Mode()&os.ModeSymlink != 0 || info.Mode().Perm() != 0o700 {
+	if err != nil || !controlDirectoryModeIsSafe(info.Mode()) {
 		return errors.New("strategy projection runtime: existing control directory is unsafe")
 	}
 	var directoryStat unix.Stat_t
-	if err := unix.Lstat(controlDir, &directoryStat); err != nil || directoryStat.Uid != uint32(os.Geteuid()) {
+	if err := unix.Lstat(controlDir, &directoryStat); err != nil || !ownedByEffectiveUser(directoryStat.Uid) {
 		return errors.New("strategy projection runtime: existing control directory ownership is unsafe")
 	}
 	entries, err := os.ReadDir(controlDir)
 	if err != nil {
 		return err
 	}
-	// 우리가 만들 수 있는 이름은 둘뿐이다. 하나라도 낯선 것이 있으면 이 디렉터리는
-	// 우리 잔재가 아니므로 아무것도 건드리지 않는다.
+	// 우리가 만들 수 있는 이름은 최종 두 개와 **발행 전 임시 이름**뿐이다. 하나라도
+	// 낯선 것이 있으면 이 디렉터리는 우리 잔재가 아니므로 아무것도 건드리지 않는다.
 	seen := make(map[string]bool, len(entries))
+	staged := make([]string, 0, len(entries))
 	for _, entry := range entries {
-		if entry.Name() != DescriptorFileName && entry.Name() != SocketFileName {
+		name := entry.Name()
+		switch {
+		case name == DescriptorFileName || name == SocketFileName:
+			seen[name] = true
+		case strings.HasPrefix(name, stagingPrefix):
+			// 최종 이름을 가진 적이 없는 산출물이다. 아무도 이것을 읽지도 연결하지도
+			// 않았으므로 검증할 것이 없다 — 우리 잔재로 치운다(design D1-2).
+			staged = append(staged, filepath.Join(controlDir, name))
+		default:
 			return errors.New("strategy projection runtime: stale control directory has unexpected entries")
 		}
-		seen[entry.Name()] = true
 	}
-	if seen[DescriptorFileName] {
-		if _, err := readDescriptor(DescriptorPath(engineDir)); err != nil {
-			return fmt.Errorf("strategy projection runtime: stale descriptor is unsafe: %w", err)
-		}
-	}
+	// 주인의 생사를 먼저 판정한다. 그 답이 descriptor를 얼마나 엄격하게 볼지 정하기
+	// 때문이다 — 사망이 증명되지 않은 채로 내용 실패를 회수로 읽으면 살아 있는 주인의
+	// 파일을 지우게 된다.
 	socketPath := SocketPath(engineDir)
 	if seen[SocketFileName] {
-		socketInfo, err := os.Lstat(socketPath)
-		if err != nil || socketInfo.Mode()&os.ModeSocket == 0 || socketInfo.Mode()&os.ModeSymlink != 0 || socketInfo.Mode().Perm() != 0o600 {
-			return errors.New("strategy projection runtime: stale socket is unsafe")
-		}
-		var socketStat unix.Stat_t
-		if err := unix.Lstat(socketPath, &socketStat); err != nil || socketStat.Uid != uint32(os.Geteuid()) || socketStat.Nlink != 1 {
-			return errors.New("strategy projection runtime: stale socket ownership is unsafe")
+		if err := verifyStaleSocketShape(socketPath); err != nil {
+			return err
 		}
 		if projectionSocketAccepts(socketPath) {
 			return errors.New("strategy projection runtime: projection owner is still alive")
 		}
 	}
+	// 여기 왔다면 주인은 죽었다: socket이 없으면 listener도 없고(Start는 listen이
+	// 성공한 뒤에만 descriptor를 쓴다), 있어도 아무도 수락하지 않았다.
+	//
+	// 그래서 descriptor는 **형식**만 본다. 0바이트·잘린 JSON은 O_EXCL→write→sync가
+	// 원자적이지 않아서 생기는 우리 자신의 반쯤 쓴 파일이고, D2 이후 그 내용은 어떤
+	// 판정에도 쓰이지 않는다 — 내용 파싱 실패를 거부로 읽으면 그 거부는 순수한
+	// 손실이다(A1 F2 실측 3/3, design D1-2).
+	if seen[DescriptorFileName] {
+		file, err := openVerifiedDescriptor(DescriptorPath(engineDir))
+		if err != nil {
+			return fmt.Errorf("strategy projection runtime: stale descriptor is unsafe: %w", err)
+		}
+		_ = file.Close()
+	}
 	// 없는 파일을 지우라는 요청은 성공과 같다. 주인이 아직 자기 Close 도중이면 양쪽이
-	// 같은 경로를 지우는데, 그 경합은 결과가 같으므로 양성이다(design D2).
-	for _, path := range []string{DescriptorPath(engineDir), socketPath} {
+	// 같은 경로를 지우는데, 그 경합은 결과가 같으므로 양성이다(design D2). 디렉터리도
+	// 같은 규칙을 쓴다 — 파일에만 ErrNotExist를 용인하고 rmdir에는 용인하지 않으면
+	// 같은 경합이 파일에서는 양성이고 디렉터리에서는 기동 실패가 되는데, 그 비대칭에
+	// 근거가 없다(A1 F6).
+	//
+	// probe와 제거 **사이**에 새 주인이 들어오는 경합의 방어는 이 함수가 아니다.
+	// 부팅 1단계의 journal flock이 엔진을 하나로 강제하므로(cmd/tossctl/engine.go:14
+	// "flock on the journal directory FIRST"), 같은 디렉터리에 회수와 발행을 동시에
+	// 하는 두 번째 엔진은 존재할 수 없다. 이 함수의 원자성이 아니라 그 잠금이 방어다.
+	for _, path := range append(staged, DescriptorPath(engineDir), socketPath) {
 		if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return fmt.Errorf("strategy projection runtime: remove stale endpoint: %w", err)
 		}
 	}
-	if err := os.Remove(controlDir); err != nil {
+	if err := os.Remove(controlDir); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return fmt.Errorf("strategy projection runtime: remove stale control directory: %w", err)
+	}
+	return nil
+}
+
+// ownedByEffectiveUser는 이 엔트리를 만든 것이 우리인지 본다. 남이 만든 socket·
+// 디렉터리는 회수 대상이 아니다 — 치우면 남의 것을 치우는 것이다.
+//
+// 한 줄짜리 비교를 이름 있는 함수로 뽑은 이유는 절 하나를 따로 죽여 볼 수 있게
+// 하기 위해서다(A1 F6). 비root로 도는 테스트는 파일 소유자를 바꿀 수 없어서 이
+// 절만 실패시키는 디스크 상태를 만들 수 없다.
+func ownedByEffectiveUser(uid uint32) bool {
+	return uid == uint32(os.Geteuid())
+}
+
+// verifyStaleSocketShape는 잔재 socket이 **우리가 만든 모양**인지 본다.
+//
+// 권한 검사가 정확-0600이 아니라 "group/other 비트 없음"인 것이 design D1-2의 좁은
+// 완화다. 구버전 바이너리가 listen과 chmod 사이에서 죽으면 umask가 정한 권한(실측
+// 077 → 0700)의 socket이 남고, 정확-0600 검사는 **자기 자신이 만든 그 잔재**를 영구
+// 거부했다. 완화의 폭은 딱 거기까지다 — group이나 other 비트가 하나라도 있으면
+// 여전히 거부다(0644 socket은 지금도 unsafe).
+//
+// 이 완화가 안전한 것은 나머지 조건이 전부 성립할 때뿐이고, 그 전부를 여기와
+// 호출부에서 확인한다: 우리 uid 소유 · 0700 디렉터리 안 · symlink 아님 ·
+// hard link 없음 · 그리고 아무도 수락하지 않음(주인의 사망 입증).
+func verifyStaleSocketShape(socketPath string) error {
+	info, err := os.Lstat(socketPath)
+	if err != nil || info.Mode()&os.ModeSocket == 0 || info.Mode()&os.ModeSymlink != 0 || info.Mode().Perm()&0o077 != 0 {
+		return errors.New("strategy projection runtime: stale socket is unsafe")
+	}
+	var socketStat unix.Stat_t
+	if err := unix.Lstat(socketPath, &socketStat); err != nil || !ownedByEffectiveUser(socketStat.Uid) || socketStat.Nlink != 1 {
+		return errors.New("strategy projection runtime: stale socket ownership is unsafe")
 	}
 	return nil
 }
@@ -223,6 +341,14 @@ func Dial(_ context.Context, descriptorPath string) (*Client, error) {
 	if err != nil || info.Mode()&os.ModeSocket == 0 || info.Mode().Perm() != 0o600 {
 		return nil, errors.New("strategy projection runtime: socket is invalid")
 	}
+	// 파일이 있다고 주인이 사는 것은 아니다. 전원이 끊기면 unlink할 기회가 없으므로
+	// socket 파일이 그대로 남는데(design D1의 S3 — 전원 단절의 기본 모양), 그 위에서
+	// lazy client를 돌려주면 실패는 **첫 Read**에서야 나타난다. 그때는 소비자가 이미
+	// "붙었다"고 판단한 뒤라 강등할 기회를 놓치고, httpapi에서는 집계 스냅샷 전체가
+	// 함께 죽었다(A2 F3 실측). 회수와 같은 원시로 지금 묻는다(design D4-2).
+	if !projectionSocketAccepts(socketPath) {
+		return nil, errors.New("strategy projection runtime: socket has no listener")
+	}
 	transport := &http.Transport{Proxy: nil, DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 		return (&net.Dialer{}).DialContext(ctx, "unix", socketPath)
 	}}
@@ -238,6 +364,18 @@ func (s *Server) Close() error {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 		result = s.server.Shutdown(ctx)
+		// listener는 **여기서 우리가** 닫는다. `Shutdown`이 `Serve`의 listener 등록을
+		// 앞지르면 Go는 정리를 Serve goroutine의 defer로 미루는데, 그 늦은 정리가
+		// 도착할 때 경로에는 이미 후계자의 socket이 앉아 있을 수 있다(A1 F5는 300
+		// 라운드 중 3회 재현). 닫는 시점을 예정된 goroutine에 맡기지 않는다.
+		// 이미 Shutdown이 닫았으면 net.ErrClosed가 오는데, 그것은 성공과 같다.
+		if s.listener != nil {
+			if err := s.listener.Close(); err != nil && !errors.Is(err, net.ErrClosed) && result == nil {
+				result = err
+			}
+		}
+		// 경로를 지울 권한은 이 루프 하나뿐이다 — listener는 자기 이름을 unlink하지
+		// 않고(SetUnlinkOnClose(false)), 기억하는 이름도 이미 사라진 임시 이름이다.
 		for _, path := range []string{s.descriptor, s.socket, s.controlDir} {
 			if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) && result == nil {
 				result = err
@@ -247,26 +385,71 @@ func (s *Server) Close() error {
 	return result
 }
 
+// writeDescriptor는 descriptor를 임시 이름에 다 쓴 뒤 rename으로 발행한다.
+//
+// 예전 코드는 최종 이름에 O_EXCL로 만들고 거기에 write·sync했다. 그 셋은 원자적이지
+// 않으므로 사이에서 죽으면 **최종 이름을 가진 0바이트·잘린 JSON**이 남았고, 회수의
+// 내용 검증이 그것을 영구 거부했다(A1 F2). rename은 원자적이라 최종 이름은 완성된
+// 파일에만 붙는다 — 같은 저장소의 다른 세 endpoint가 이미 쓰는 의례다
+// (internal/app/engine의 publishPrivateDescriptor).
+//
+// O_EXCL이 사라진 자리는 회수가 채운다: 이 함수가 불리는 시점의 control 디렉터리는
+// 방금 Mkdir한 빈 디렉터리여서 덮어쓸 최종 이름이 애초에 없다.
 func writeDescriptor(path string, descriptor Descriptor) error {
 	body, err := json.Marshal(descriptor)
 	if err != nil {
 		return err
 	}
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	staged, err := os.CreateTemp(filepath.Dir(path), stagingPrefix+"endpoint-")
 	if err != nil {
 		return err
 	}
-	if _, err := file.Write(body); err != nil {
-		_ = file.Close()
-		_ = os.Remove(path)
+	stagedPath := staged.Name()
+	// rename이 성공하면 이 이름은 이미 비어 있어 ErrNotExist로 끝난다. 실패한 모든
+	// 경로에서는 반쯤 쓴 파일이 여기서 사라진다 — 임시 잔재조차 남기지 않는다.
+	defer func() { _ = os.Remove(stagedPath) }()
+	if err := staged.Chmod(0o600); err != nil {
+		_ = staged.Close()
 		return err
 	}
-	if err := file.Sync(); err != nil {
-		_ = file.Close()
-		_ = os.Remove(path)
+	stagedInfo, err := staged.Stat()
+	if err != nil {
+		_ = staged.Close()
 		return err
 	}
-	return file.Close()
+	if _, err := staged.Write(body); err != nil {
+		_ = staged.Close()
+		return err
+	}
+	if err := staged.Sync(); err != nil {
+		_ = staged.Close()
+		return err
+	}
+	if err := staged.Close(); err != nil {
+		return err
+	}
+	// 발행하기 직전에 "지금 발행하려는 것이 내가 만든 그 파일인가"를 다시 확인한다.
+	closed, err := os.Lstat(stagedPath)
+	if err != nil || !os.SameFile(stagedInfo, closed) {
+		return errors.New("strategy projection runtime: staged descriptor changed before publication")
+	}
+	if err := os.Rename(stagedPath, path); err != nil {
+		return err
+	}
+	published, err := os.Lstat(path)
+	if err != nil || !os.SameFile(stagedInfo, published) {
+		return errors.New("strategy projection runtime: published descriptor is not the staged file")
+	}
+	// 디렉터리 엔트리까지 내려가야 전원이 끊겨도 rename이 살아남는다.
+	directory, err := os.Open(filepath.Dir(path))
+	if err != nil {
+		return err
+	}
+	if err := directory.Sync(); err != nil {
+		_ = directory.Close()
+		return err
+	}
+	return directory.Close()
 }
 
 func openDescriptorNoFollow(path string) (*os.File, error) {

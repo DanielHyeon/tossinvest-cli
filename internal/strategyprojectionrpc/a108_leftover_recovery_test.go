@@ -218,6 +218,9 @@ func TestStartRefusesUnsafeLeftoverShapes(t *testing.T) {
 			}
 			return []string{ControlDirectory(dir), SocketPath(dir)}
 		}},
+		// symlink 절의 핀이다(A1 F6). 대상 디렉터리에 **회수 가능한 모양 그대로**
+		// 잔재를 넣어 두는 것이 요점이다 — 그래야 "symlink를 따라갔다면 실제로
+		// 지웠을 파일"이 존재하고, 거부가 그 파일들의 생존으로 측정된다.
 		{"디렉터리가 symlink다", func(t *testing.T, dir string) []string {
 			target := filepath.Join(dir, "elsewhere")
 			if err := os.Mkdir(target, 0o700); err != nil {
@@ -226,9 +229,16 @@ func TestStartRefusesUnsafeLeftoverShapes(t *testing.T) {
 			if err := os.Symlink(target, ControlDirectory(dir)); err != nil {
 				t.Fatal(err)
 			}
-			return []string{ControlDirectory(dir), target}
+			// 이제 symlink를 통해 만든다: 대상 안에 회수 가능한 S3-사망 잔재가 놓인다.
+			a108DeadSocket(t, dir)
+			a108WriteLeftoverDescriptor(t, dir, 1<<30)
+			return []string{ControlDirectory(dir), target,
+				filepath.Join(target, SocketFileName), filepath.Join(target, DescriptorFileName)}
 		}},
-		{"socket 권한이 0600이 아니다", func(t *testing.T, dir string) []string {
+		// 완화 뒤에도 남는 것이 무엇인지를 이름으로 적는다(design D1-2).
+		// pre-chmod 잔재(0700)는 이제 회수하지만, group·other 비트가 하나라도 있으면
+		// 여전히 거부다 — 완화의 폭은 `perm&0o077 == 0`까지다.
+		{"socket에 group/other 비트가 있다", func(t *testing.T, dir string) []string {
 			a108MakeControlDir(t, dir)
 			a108DeadSocket(t, dir)
 			a108WriteLeftoverDescriptor(t, dir, 1<<30)
@@ -262,18 +272,12 @@ func TestStartRefusesUnsafeLeftoverShapes(t *testing.T) {
 			}
 			return []string{DescriptorPath(dir), SocketPath(dir)}
 		}},
-		// 이 행은 a108이 **닫지 못한 잔재 상태**를 드러낸 채로 고정한다.
-		// writeDescriptor는 O_EXCL 생성 → write → sync 순이라 그 사이에서 죽으면
-		// 0바이트 endpoint.json이 남고, 검증 실패는 design D1대로 거부다.
-		// 즉 이 상태는 여전히 사람 손을 요구한다 — 보고서에 잔여 결함으로 적었다.
-		{"descriptor가 반쯤 쓰인 채 남았다", func(t *testing.T, dir string) []string {
-			a108MakeControlDir(t, dir)
-			a108DeadSocket(t, dir)
-			if err := os.WriteFile(DescriptorPath(dir), nil, 0o600); err != nil {
-				t.Fatal(err)
-			}
-			return []string{DescriptorPath(dir), SocketPath(dir)}
-		}},
+		// 「descriptor가 반쯤 쓰인 채 남았다」 행은 여기 있었다. 그것은 보안 속성이
+		// 아니라 **우리가 만든 잔재를 우리가 거부하는 결함**이었고(A1 F2), Fix 라운드가
+		// 회수로 뒤집었다 — design D1-2. 지금 그 모양을 재는 곳은
+		// `TestStartRecoversFromEmptyDescriptorLeftover`와
+		// `TestStartRecoversFromTruncatedDescriptorLeftover`다.
+		// descriptor의 **형식** 검사(위 0600 행)는 그대로 여기 남는다.
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			dir := shortRuntimeDir(t)
