@@ -183,3 +183,57 @@ Fix 라운드는 그것을 고쳤다: 테스트만 담은 커밋 `d8b27021` 이 
   `ErrLockUnsupported` 가 **부팅 1단계**(`enginelock.Acquire`, engine.go:196)에서 기동을
   거절하므로 7단계에 도달할 수 없다. 원 라운드는 「비-unix 는 측정하지 않았다」를
   위험으로 적었는데, 그것은 도달 불가능한 코드에 대한 걱정이었다.
+
+---
+
+## §gstack 라운드 (2026-08-14, Fix-First A1~A6) — 7건 적용, 7건 사망
+
+baseline: 커밋 `fbb34fa1`(+ 뮤테이션 하나를 닫은 `e525d1d2`). 드라이버는 파일 원문을
+메모리에 들고 되돌리고, 매 회 원문 동일성과 아래 심볼 개수를 확인했다.
+
+```text
+reportStrategyProjectionDegraded 3 · engineStrategyProjectionDegradedEvent 4 ·
+engineStrategyProjectionStart 3 · EnqueueAlert 1(테스트 대조군 전용) ·
+ectx.Notifier.Notify 1 · context.WithoutCancel 1 · unavailableStrategyRuntime 6 ·
+strategyRuntimeReaderFor 4 · UnavailableSnapshot 1 · DormantSnapshot 1 ·
+r.strategyRuntime.Read 1 · "return fmt.Errorf" 1(sentinel 의 Read) · MUTANT 0
+```
+
+### RED 관측 (GREEN 보다 먼저)
+
+```text
+느린 알림 publisher 하나가 부팅을 3s 넘게 붙잡았다 — 손절 루프는 rt.Run 안에서
+  시작하고, 이 보고는 그 앞에 있다
+KR/US 판정 = "NOT_CONFIGURED", want "RUNTIME_UNAVAILABLE"   (dial 실패·S3 두 행)
+  같은 표의 「descriptor 가 없다」 대조군은 그때도 통과했다
+```
+
+### 원장
+
+| # | 뒤집은 판정 | 뮤테이션 | 죽은 테스트 |
+|---|---|---|---|
+| M13 | A1 보고의 실행 자리 | `Notify` 를 다시 **동기**로 | `TestTheDegradedBootDoesNotWaitForTheNotifier` |
+| M14 | A1 보고의 존재 | `Notify` 호출을 통째로 삭제 | `TestTheDegradedBootDoesNotWaitForTheNotifier` |
+| M15 | A1 보고의 수명 | `WithoutCancel` 제거 — 부모 ctx 상속 | `TestTheDegradedBootDoesNotWaitForTheNotifier` (아래 주) |
+| M16 | A2 강등의 신호값 | dial 실패를 다시 `nil` 로 | `TestADialFailureRendersUnavailableRatherThanNotConfigured/{descriptor_는_있는데_못_붙는다,주인_없는_socket_파일이_남았다}` |
+| M17 | A3 경고의 존재 | 조사 불가의 `Fprintf` 를 무력화 | `TestAnUninspectableDescriptorDegradesLikeTheConsole` |
+| M18 | A2 두 값의 구분 | **부재까지** sentinel 로 접는다 | `TestADialFailureRendersUnavailableRatherThanNotConfigured/descriptor_가_없다` |
+| M19 | 겹3 흡수의 실재 | 전략 읽기 자체를 건너뛴다 | `TestADialFailureRenders…/{2행}`, `TestALiveStrategyProjectionThatDiesLeavesTheAggregateStanding` |
+
+**M13·M14 가 A1 의 짝이다.** 하나는 「기다린다」를, 하나는 「조용해진다」를 만든다 —
+비동기화의 흔한 실패 모드가 둘 다 후자로 미끄러지는 것이므로, 같은 테스트가 양쪽을
+잡는 것이 계약이다(핀의 ①·②).
+
+**M16·M18 이 A2 의 짝이다.** 하나는 장애를 배포 선택으로 접고, 하나는 배포 선택을
+장애로 접는다. 어느 쪽이든 운영자는 화면에서 둘을 구별할 수 없다.
+
+### 살아남았다가 닫은 것 — M15
+
+첫 실행에서 **M15 가 살아남았다.** 핀이 재던 것은 ①늦지 않는다 ②닿는다 둘뿐이었고,
+`WithoutCancel` 이 지키는 성질(③ 종료가 보고를 끊지 않는다)은 부팅 ctx 가 테스트에서
+한 번도 취소되지 않아 관측 대상이 아니었다. 가짜 publisher 에 `ctx.Done()` 기록을
+더하고, 명령이 돌아온 뒤 부팅 ctx 를 취소한 다음 발행이 여전히 살아 있는지 보는
+절을 추가해서 닫았다(커밋 `e525d1d2`). 그 뒤 M15 는 죽는다.
+
+이것이 [[passing-test-is-not-evidence]] 의 전형이다 — 세 성질을 담은 구현에 두 성질만
+재는 핀을 붙이면, 나머지 하나는 **코드에만 있고 측정에는 없다.**
