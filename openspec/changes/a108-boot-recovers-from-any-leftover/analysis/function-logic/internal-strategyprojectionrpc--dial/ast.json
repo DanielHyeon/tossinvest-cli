@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyprojectionrpc/transport_unix.go",
-  "source_sha256": "75acae8c53543b55135f291363e2abf9463672d3a53976c3cd414d1be8a5af79",
+  "source_sha256": "af21b88fb2b3e685dc75f58bac9bcd63646904ae06a698cfadbf987e12823f92",
   "package": "strategyprojectionrpc",
   "function": "Dial",
   "signature": "Dial(params=2, results=2)",
   "start": {
-    "line": 216,
+    "line": 334,
     "column": 1
   },
   "end": {
-    "line": 230,
+    "line": 356,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 218,
+        "line": 336,
         "column": 2
       }
     },
@@ -25,7 +25,15 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 223,
+        "line": 341,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 349,
         "column": 2
       }
     }
@@ -34,28 +42,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 219,
+        "line": 337,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 224,
+        "line": 342,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 227,
+        "line": 350,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 229,
+        "line": 353,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 355,
         "column": 2
       }
     }
@@ -64,7 +79,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 217,
+        "line": 335,
         "column": 21
       },
       "text": "readDescriptor"
@@ -72,7 +87,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 217,
+        "line": 335,
         "column": 36
       },
       "text": "strings.TrimSpace"
@@ -80,7 +95,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 221,
+        "line": 339,
         "column": 16
       },
       "text": "filepath.Join"
@@ -88,7 +103,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 221,
+        "line": 339,
         "column": 30
       },
       "text": "filepath.Dir"
@@ -96,7 +111,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 222,
+        "line": 340,
         "column": 15
       },
       "text": "os.Lstat"
@@ -104,7 +119,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 223,
+        "line": 341,
         "column": 19
       },
       "text": "info.Mode"
@@ -112,7 +127,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 223,
+        "line": 341,
         "column": 53
       },
       "text": "Perm"
@@ -120,7 +135,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 223,
+        "line": 341,
         "column": 53
       },
       "text": "info.Mode"
@@ -128,7 +143,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 224,
+        "line": 342,
         "column": 15
       },
       "text": "errors.New"
@@ -136,7 +151,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 227,
+        "line": 349,
+        "column": 6
+      },
+      "text": "projectionSocketAccepts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 350,
+        "column": 15
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 353,
         "column": 10
       },
       "text": "DialContext"
@@ -146,28 +177,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 217,
+        "line": 335,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 221,
+        "line": 339,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 222,
+        "line": 340,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 226,
+        "line": 352,
         "column": 2
       }
     }

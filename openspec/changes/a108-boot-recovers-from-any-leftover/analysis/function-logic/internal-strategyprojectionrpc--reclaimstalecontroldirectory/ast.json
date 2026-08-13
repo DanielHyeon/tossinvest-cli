@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyprojectionrpc/transport_unix.go",
-  "source_sha256": "75acae8c53543b55135f291363e2abf9463672d3a53976c3cd414d1be8a5af79",
+  "source_sha256": "af21b88fb2b3e685dc75f58bac9bcd63646904ae06a698cfadbf987e12823f92",
   "package": "strategyprojectionrpc",
   "function": "reclaimStaleControlDirectory",
   "signature": "reclaimStaleControlDirectory(params=1, results=1)",
   "start": {
-    "line": 144,
+    "line": 206,
     "column": 1
   },
   "end": {
-    "line": 197,
+    "line": 282,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 147,
+        "line": 209,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 151,
+        "line": 213,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 155,
+        "line": 217,
         "column": 2
       }
     },
@@ -41,55 +41,55 @@
       "id": "B4",
       "kind": "range",
       "at": {
-        "line": 161,
+        "line": 224,
         "column": 2
       }
     },
     {
       "id": "B5",
-      "kind": "if",
+      "kind": "switch",
       "at": {
-        "line": 162,
+        "line": 226,
         "column": 3
       }
     },
     {
       "id": "B6",
-      "kind": "if",
+      "kind": "case",
       "at": {
-        "line": 167,
-        "column": 2
+        "line": 227,
+        "column": 3
       }
     },
     {
       "id": "B7",
-      "kind": "if",
+      "kind": "case",
       "at": {
-        "line": 168,
+        "line": 229,
         "column": 3
       }
     },
     {
       "id": "B8",
-      "kind": "if",
+      "kind": "case",
       "at": {
-        "line": 173,
-        "column": 2
+        "line": 233,
+        "column": 3
       }
     },
     {
       "id": "B9",
       "kind": "if",
       "at": {
-        "line": 175,
-        "column": 3
+        "line": 241,
+        "column": 2
       }
     },
     {
       "id": "B10",
       "kind": "if",
       "at": {
-        "line": 179,
+        "line": 242,
         "column": 3
       }
     },
@@ -97,15 +97,15 @@
       "id": "B11",
       "kind": "if",
       "at": {
-        "line": 182,
+        "line": 245,
         "column": 3
       }
     },
     {
       "id": "B12",
-      "kind": "range",
+      "kind": "if",
       "at": {
-        "line": 188,
+        "line": 256,
         "column": 2
       }
     },
@@ -113,15 +113,31 @@
       "id": "B13",
       "kind": "if",
       "at": {
-        "line": 189,
+        "line": 258,
         "column": 3
       }
     },
     {
       "id": "B14",
+      "kind": "range",
+      "at": {
+        "line": 273,
+        "column": 2
+      }
+    },
+    {
+      "id": "B15",
       "kind": "if",
       "at": {
-        "line": 193,
+        "line": 274,
+        "column": 3
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 278,
         "column": 2
       }
     }
@@ -130,77 +146,70 @@
     {
       "kind": "return",
       "at": {
-        "line": 148,
+        "line": 210,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 152,
+        "line": 214,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 156,
+        "line": 218,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 163,
+        "line": 234,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 169,
+        "line": 243,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 176,
+        "line": 246,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 180,
+        "line": 259,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 183,
+        "line": 275,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 190,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 194,
+        "line": 279,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 196,
+        "line": 281,
         "column": 2
       }
     }
@@ -209,7 +218,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 145,
+        "line": 207,
         "column": 16
       },
       "text": "ControlDirectory"
@@ -217,7 +226,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 146,
+        "line": 208,
         "column": 15
       },
       "text": "os.Lstat"
@@ -225,39 +234,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 147,
+        "line": 209,
         "column": 20
       },
-      "text": "info.IsDir"
+      "text": "controlDirectoryModeIsSafe"
     },
     {
       "kind": "call",
       "at": {
-        "line": 147,
-        "column": 36
+        "line": 209,
+        "column": 47
       },
       "text": "info.Mode"
     },
     {
       "kind": "call",
       "at": {
-        "line": 147,
-        "column": 71
-      },
-      "text": "Perm"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 147,
-        "column": 71
-      },
-      "text": "info.Mode"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 148,
+        "line": 210,
         "column": 10
       },
       "text": "errors.New"
@@ -265,7 +258,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 151,
+        "line": 213,
         "column": 12
       },
       "text": "unix.Lstat"
@@ -273,23 +266,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 151,
-        "column": 87
+        "line": 213,
+        "column": 67
       },
-      "text": "uint32"
+      "text": "ownedByEffectiveUser"
     },
     {
       "kind": "call",
       "at": {
-        "line": 151,
-        "column": 94
-      },
-      "text": "os.Geteuid"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 152,
+        "line": 214,
         "column": 10
       },
       "text": "errors.New"
@@ -297,7 +282,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 154,
+        "line": 216,
         "column": 18
       },
       "text": "os.ReadDir"
@@ -305,7 +290,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 160,
+        "line": 222,
         "column": 10
       },
       "text": "make"
@@ -313,7 +298,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 160,
+        "line": 222,
         "column": 32
       },
       "text": "len"
@@ -321,23 +306,55 @@
     {
       "kind": "call",
       "at": {
-        "line": 162,
-        "column": 6
+        "line": 223,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 30
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 11
       },
       "text": "entry.Name"
     },
     {
       "kind": "call",
       "at": {
-        "line": 162,
-        "column": 44
+        "line": 229,
+        "column": 8
       },
-      "text": "entry.Name"
+      "text": "strings.HasPrefix"
     },
     {
       "kind": "call",
       "at": {
-        "line": 163,
+        "line": 232,
+        "column": 13
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 28
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
         "column": 11
       },
       "text": "errors.New"
@@ -345,39 +362,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 165,
-        "column": 8
-      },
-      "text": "entry.Name"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 168,
-        "column": 16
-      },
-      "text": "readDescriptor"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 168,
-        "column": 31
-      },
-      "text": "DescriptorPath"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 169,
-        "column": 11
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 172,
+        "line": 240,
         "column": 16
       },
       "text": "SocketPath"
@@ -385,87 +370,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 174,
-        "column": 22
-      },
-      "text": "os.Lstat"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 175,
-        "column": 20
-      },
-      "text": "socketInfo.Mode"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 175,
-        "column": 60
-      },
-      "text": "socketInfo.Mode"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 175,
-        "column": 101
-      },
-      "text": "Perm"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 175,
-        "column": 101
-      },
-      "text": "socketInfo.Mode"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 176,
-        "column": 11
-      },
-      "text": "errors.New"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 179,
+        "line": 242,
         "column": 13
       },
-      "text": "unix.Lstat"
+      "text": "verifyStaleSocketShape"
     },
     {
       "kind": "call",
       "at": {
-        "line": 179,
-        "column": 82
-      },
-      "text": "uint32"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 179,
-        "column": 89
-      },
-      "text": "os.Geteuid"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 180,
-        "column": 11
-      },
-      "text": "errors.New"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 182,
+        "line": 245,
         "column": 6
       },
       "text": "projectionSocketAccepts"
@@ -473,7 +386,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 183,
+        "line": 246,
         "column": 11
       },
       "text": "errors.New"
@@ -481,31 +394,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 188,
-        "column": 32
+        "line": 257,
+        "column": 16
+      },
+      "text": "openVerifiedDescriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 39
       },
       "text": "DescriptorPath"
     },
     {
       "kind": "call",
       "at": {
-        "line": 189,
-        "column": 13
-      },
-      "text": "os.Remove"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 189,
-        "column": 45
-      },
-      "text": "errors.Is"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 190,
+        "line": 259,
         "column": 11
       },
       "text": "fmt.Errorf"
@@ -513,7 +418,55 @@
     {
       "kind": "call",
       "at": {
-        "line": 193,
+        "line": 261,
+        "column": 7
+      },
+      "text": "file.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 23
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 38
+      },
+      "text": "DescriptorPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 274,
+        "column": 13
+      },
+      "text": "os.Remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 274,
+        "column": 45
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 11
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
         "column": 12
       },
       "text": "os.Remove"
@@ -521,7 +474,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 194,
+        "line": 278,
+        "column": 50
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -531,84 +492,105 @@
     {
       "kind": ":=",
       "at": {
-        "line": 145,
+        "line": 207,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 146,
+        "line": 208,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 151,
+        "line": 213,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 154,
+        "line": 216,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 160,
+        "line": 222,
         "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 225,
+        "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 165,
-        "column": 3
+        "line": 228,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 232,
+        "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 168,
-        "column": 6
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 172,
+        "line": 240,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 174,
+        "line": 242,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 257,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 261,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 179,
+        "line": 274,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 189,
-        "column": 6
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 193,
+        "line": 278,
         "column": 5
       }
     }

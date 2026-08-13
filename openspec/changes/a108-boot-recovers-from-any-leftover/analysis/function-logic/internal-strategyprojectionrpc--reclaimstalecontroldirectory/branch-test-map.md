@@ -1,32 +1,41 @@
 # Branch Test Map: `reclaimStaleControlDirectory`
 
-- Source: `internal/strategyprojectionrpc/transport_unix.go` (144-197)
-- 테스트: `internal/strategyprojectionrpc/a108_leftover_recovery_test.go`(신규),
-  `internal/strategyprojectionrpc/transport_unix_test.go`(기존)
-- "RED observed"는 **편집 전 코드에서 그 테스트가 실패하는 것을 실제로 봤는가**다.
-  거부 분기는 편집 전에도 GREEN이었으므로 `no (편집 전 GREEN)`이고, 그 분기가 살아
-  있다는 증거는 RED이 아니라 뮤테이션 원장(`../../mutation-ledger-t1.md`)이다.
+- Source: `internal/strategyprojectionrpc/transport_unix.go` (206-282) — revision `current`
+- RED은 첫 라운드(tasks 1절)와 Fix 라운드(tasks 6.1) 두 번 있었다. 아래 표의 RED 열은
+  **그 분기를 연 라운드에서** 관측한 것이다.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | 잔재 디렉터리가 0700이 아니거나 symlink다 | `TestStartRefusesUnsafeLeftoverShapes` (0700 아님 · symlink 행) | no (편집 전 GREEN) | yes |
-| B2 | 잔재 디렉터리의 소유 uid가 다르다 | 없음 — 같은 uid로 도는 테스트로 재현 불가(무변경 분기) | no | no |
-| B3 | `os.ReadDir`이 실패한다 | 없음 — 0700 통과 후 읽기 실패는 환경 이상(무변경 분기) | no | no |
-| B4 | 엔트리를 순회해 이름 집합을 만든다 | `TestStartRecoversFromDescriptorOnlyLeftover` | yes (`stale endpoint is incomplete`) | yes |
-| B5 | 낯선 엔트리가 하나라도 있다 | `TestStartRefusesControlDirectoryWithUnknownEntry` | no (편집 전 GREEN) | yes |
-| B6 | descriptor가 남아 있다 (S1·S3) | `TestStartRecoversFromDescriptorOnlyLeftover` | yes (`stale endpoint is incomplete`) | yes |
-| B7 | descriptor가 검증을 통과하지 못한다 | `TestStartRefusesUnsafeLeftoverShapes` (0600 아님 · 반쯤 쓰인 행) | no (편집 전 GREEN) | yes |
-| B8 | socket이 남아 있다 (S2·S3) | `TestStartRecoversFromDeadSocketOnlyLeftover` | yes (`stale endpoint is incomplete`) | yes |
-| B9 | socket이 socket이 아니거나 0600이 아니다 | `TestStartRefusesUnsafeLeftoverShapes` (일반 파일 · 0600 아님 행) | no (편집 전 GREEN) | yes |
-| B10 | socket에 hard link가 걸려 있다 | `TestStartRefusesUnsafeLeftoverShapes` (hard link 행) | no (편집 전 GREEN) | yes |
-| B11 | 그 경로에서 누군가 아직 수락한다 | `TestStartRefusesLiveSocketWhoseDescriptorPIDIsDead`, `TestStartRefusesLiveSocketWithoutDescriptor`, `TestStartRefusesLiveProjectionOwnerWithoutRemovingIt` | yes — 첫째는 편집 전 코드가 **살아 있는 socket을 지우고 기동을 받아들였다** | yes |
-| B12 | descriptor·socket을 차례로 제거한다 | `TestStartRecoversFromDeadEndpointWhoseDescriptorPIDIsAlive` | yes (`projection owner is still alive`) | yes |
-| B13 | 제거가 실패했고 그것이 `ErrNotExist`가 아니다 | `TestStartRecoversFromEmptyControlDirectoryLeftover` (용인 쪽), 뮤테이션 M8 (엄격 쪽) | yes (`stale endpoint is incomplete`) | yes |
-| B14 | 디렉터리 제거가 실패한다 | 없음 — B5가 비어 있지 않은 디렉터리를 먼저 막는다(무변경 분기) | no | no |
+| B1 | 디렉터리가 0700이 아니거나 symlink다 | `TestStartRefusesUnsafeLeftoverShapes` | no (편집 전 GREEN) | yes |
+| B2 | 남이 만든 디렉터리다 | `TestOwnershipClauseRefusesAnotherUser` | no (Fix 라운드 신규 핀) | yes |
+| B3 | `ReadDir` 실패 | 없음 | no | no |
+| B4 | 엔트리를 훑는다 | `TestStartRefusesControlDirectoryWithUnknownEntry` | no (편집 전 GREEN) | yes |
+| B5 | 이름을 셋으로 가른다 | `TestStartRecoversFromUnpublishedStagingLeftover` | yes (`unexpected entries`) | yes |
+| B6 | 최종 이름이다 | `TestStartRecoversFromDescriptorOnlyLeftover` | yes (`stale endpoint is incomplete`) | yes |
+| B7 | 발행 전 임시 이름이다 | `TestStartRecoversFromUnpublishedStagingLeftover` | yes (`unexpected entries`) | yes |
+| B8 | 낯선 이름이다 → 전체 보존 | `TestStartRefusesControlDirectoryWithUnknownEntry` | no (편집 전 GREEN) | yes |
+| B9 | socket이 남아 있다 | `TestStartRecoversFromDeadSocketOnlyLeftover` | yes (`stale endpoint is incomplete`) | yes |
+| B10 | 거부: 남의 모양 / 통과: pre-chmod 0700은 우리 것 | `TestStartRefusesUnsafeLeftoverShapes` · `TestStartRecoversFromPreChmodSocketLeftover` | yes (`stale socket is unsafe` — 후자) | yes |
+| B11 | 누가 아직 수락한다 → 거부 | `TestStartRefusesLiveSocketWhoseDescriptorPIDIsDead` | no (편집 전 GREEN) | yes |
+| B12 | descriptor가 남아 있다 | `TestStartRecoversFromDescriptorOnlyLeftover` | yes | yes |
+| B13 | 거부: **형식**이 틀림 / 통과: **내용**이 반쯤 | `TestStartRefusesUnsafeLeftoverShapes` · `TestStartRecoversFromEmptyDescriptorLeftover` · `TestStartRecoversFromTruncatedDescriptorLeftover` | yes (`stale descriptor is unsafe` — 후자 둘) | yes |
+| B14 | 제거 목록을 훑는다 | `TestStartRecoversFromDeadEndpointWhoseDescriptorPIDIsAlive` | yes (`projection owner is still alive`) | yes |
+| B15 | 이미 없는 파일은 실패가 아니다 | `TestCloseToleratesLeftoverAlreadyRemoved` | no (편집 전 GREEN) | yes |
+| B16 | 이미 없는 디렉터리는 실패가 아니다 | 없음 — 아래 「B16은 재지 않았다」 | no | no |
 
-## 미테스트로 남긴 3개 (B2·B3·B14)
+B10과 B13의 행이 두 판정을 함께 적는 것은 같은 줄이 **어떤 모양은 거부하고 어떤
+모양은 통과시키기** 때문이다. 한쪽만 적으면 완화가 어디까지인지 문서에서 사라진다.
 
-셋 다 이 change가 **바꾸지 않은** 줄이고, 셋 다 편집 전에도 무테스트였다. B2는 다른
-uid의 디렉터리, B3은 읽기 불가 디렉터리, B14는 "우리 이름 둘만 있는데 rmdir이 실패"라는
-상태를 요구하며, 앞의 둘은 테스트 프로세스 권한으로 만들 수 없고 B14는 B5가 선행 차단한다.
-`not-applicable`이 아니라 **측정 한계**로 적는다.
+## B16은 재지 않았다 (선언된 생략)
+
+`os.Remove(controlDir)`의 `ErrNotExist` 절은 파일 제거와 rmdir **사이**에 디렉터리가
+사라져야 걸린다. 그 인터리빙은 production에 seam을 뚫지 않고 결정적으로 만들 수 없고,
+두 회수를 동시에 돌리는 방법도 진 쪽이 앞 단계에서 먼저 실패해 단언이 흔들린다.
+뮤테이션 M17은 **살아남았고** 원장 §B3에 그렇게 적었다. A1 F6이 요구한 것은 핀이
+아니라 파일/디렉터리 비대칭의 제거였다(P3) — 그것은 코드에 있다.
+
+## 첫 라운드에서 이 표가 달라진 점
+
+- B5·B7이 새로 생겼다(staging 분류). 첫 라운드에는 이름이 둘뿐이었다.
+- B9~B11이 B12~B13보다 **앞으로** 왔다. 사망 입증이 descriptor 엄격도를 정하기 때문이다.
+- B16이 새로 생겼다(rmdir의 `ErrNotExist` 절).

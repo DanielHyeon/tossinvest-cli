@@ -1,0 +1,568 @@
+{
+  "file": "internal/strategyprojectionrpc/transport_unix.go",
+  "source_sha256": "af21b88fb2b3e685dc75f58bac9bcd63646904ae06a698cfadbf987e12823f92",
+  "package": "strategyprojectionrpc",
+  "function": "writeDescriptor",
+  "signature": "writeDescriptor(params=2, results=1)",
+  "start": {
+    "line": 398,
+    "column": 1
+  },
+  "end": {
+    "line": 453,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 400,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 404,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 411,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 416,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 420,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 424,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 428,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 433,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 436,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 440,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 445,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 448,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 401,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 405,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 413,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 418,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 422,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 426,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 429,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 434,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 437,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 441,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 446,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 450,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 452,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 15
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 403,
+        "column": 17
+      },
+      "text": "os.CreateTemp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 403,
+        "column": 31
+      },
+      "text": "filepath.Dir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 407,
+        "column": 16
+      },
+      "text": "staged.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 8
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 21
+      },
+      "text": "os.Remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 411,
+        "column": 12
+      },
+      "text": "staged.Chmod"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 412,
+        "column": 7
+      },
+      "text": "staged.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 21
+      },
+      "text": "staged.Stat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 417,
+        "column": 7
+      },
+      "text": "staged.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 420,
+        "column": 15
+      },
+      "text": "staged.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 421,
+        "column": 7
+      },
+      "text": "staged.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 424,
+        "column": 12
+      },
+      "text": "staged.Sync"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 425,
+        "column": 7
+      },
+      "text": "staged.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 428,
+        "column": 12
+      },
+      "text": "staged.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 432,
+        "column": 17
+      },
+      "text": "os.Lstat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 433,
+        "column": 20
+      },
+      "text": "os.SameFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 434,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 12
+      },
+      "text": "os.Rename"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 439,
+        "column": 20
+      },
+      "text": "os.Lstat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 440,
+        "column": 20
+      },
+      "text": "os.SameFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 20
+      },
+      "text": "os.Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 28
+      },
+      "text": "filepath.Dir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 448,
+        "column": 12
+      },
+      "text": "directory.Sync"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 449,
+        "column": 7
+      },
+      "text": "directory.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 9
+      },
+      "text": "directory.Close"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 399,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 403,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 407,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 410,
+        "column": 17
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 411,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 412,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 415,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 417,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 420,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 421,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 424,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 425,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 428,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 432,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 436,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 439,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 444,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 448,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 449,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 410,
+        "column": 2
+      }
+    }
+  ]
+}

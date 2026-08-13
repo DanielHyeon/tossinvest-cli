@@ -1,84 +1,93 @@
 # Function Logic Map: `reclaimStaleControlDirectory`
 
-- Source: `internal/strategyprojectionrpc/transport_unix.go` (144-197)
-- AST evidence: `ast.json` (편집 **후** 재생성 — AST 분기 14, revision `current`)
+- Source: `internal/strategyprojectionrpc/transport_unix.go` (206-282)
+- AST evidence: `ast.json` — revision `current`. AST 분기 16
 - Risk scan: `risk-pattern-report.md`
 
-편집 전 이 함수는 118-167이고 분기 13이었다. 아래 표의 분기 주장은 전부 재생성한
-`ast.json`의 열거에서 나온다.
+이 change의 중심 함수다. 첫 라운드가 회수의 **커버리지**를 넓혔고(D1·D2), Fix 라운드가
+**발행이 만드는 상태**까지 회수 대상에 넣었다(D1-2). 분기는 13 → 16으로 늘었다:
+staging 접두 case, socket 모양 검사 분리, rmdir의 `ErrNotExist` 절.
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| `engineDir` | 이미 `Start`가 검사한 엔진 디렉터리 | 호출부 `Start`(base AST B2가 lstat·perm 검사 후 통과시킨 값) | 여기서는 재검사하지 않는다 — 이 함수의 단독 호출부는 `Start` 하나다 |
-| `<engineDir>/.strategy-runtime-read/` | 실디렉터리 · symlink 아님 · perm 정확히 0700 · 소유 uid == euid | 디스크(`os.Lstat` + `unix.Lstat`) | B1·B2 거부. 회수 가능 상태에서도 면제 없음 |
-| 디렉터리 엔트리 집합 | `endpoint.json`·`runtime.sock`의 **부분집합**(공집합 포함) | `os.ReadDir` | B5 거부 — 우리가 만들 수 있는 이름이 아니면 우리 잔재가 아니다 |
-| `endpoint.json`(있을 때) | `readDescriptor` 계약: 0600 정규파일 · symlink 아님 · no-follow open 후 동일 inode · 스키마 v1 | 디스크 | B7 거부 |
-| `runtime.sock`(있을 때) | socket 타입 · symlink 아님 · perm 정확히 0600 · uid == euid · nlink == 1 | 디스크 | B9·B10 거부 |
-| socket의 주인 생존 | **연결이 수락되지 않을 것** | `projectionSocketAccepts`의 connect probe (PID 아님 — design D2) | B11 거부 |
+| control 디렉터리 | 실디렉터리 · symlink 아님 · 정확히 0700 | `os.Lstat` + `controlDirectoryModeIsSafe` | B1 거부, 아무것도 지우지 않는다 |
+| 소유 uid | 유효 uid | `unix.Lstat` + `ownedByEffectiveUser` | B2 거부 |
+| 엔트리 이름 | `endpoint.json` · `runtime.sock` · `.staging-` 접두 | `os.ReadDir` | B8 거부(낯선 엔트리 하나면 전체 보존) |
+| socket 모양 | socket 타입 · symlink 아님 · `perm&0o077 == 0` · 우리 uid · nlink 1 | `verifyStaleSocketShape` | B10 거부 |
+| 주인의 생사 | 수락하면 살아 있다 | `projectionSocketAccepts` (connect probe) | B11 거부 — **남의 것은 치우지 않는다** |
+| descriptor 모양 | 정확히 0600 정규 파일 · no-follow · 열기 전후 같은 inode | `openVerifiedDescriptor` | B13 거부 |
+| descriptor **내용** | 검사하지 않는다 | — | 사망 입증 뒤에는 파싱 실패가 회수다(design D1-2) |
 
-관통 불변식 둘.
+### 완화의 폭과 그 조건 (design D1-2)
 
-1. **회수는 우리 수명주기가 만든 상태에서만 일어난다.** 이름 집합(B5)·권한·소유권이
-   그 판정이고, 하나라도 어긋나면 아무것도 지우지 않는다.
-2. **빠진 파일은 낯선 것이 아니라 덜 만들어진 것이다.** 부분집합을 허용하는 것이
-   이 change의 전부이며, 그것이 없으면 넷 중 셋이 영구 거부가 된다.
+socket perm 검사는 **정확-0600**에서 **`perm&0o077 == 0`**으로 좁게 완화됐다. 근거는
+A1 F1: 구버전은 최종 이름에 bind한 뒤 chmod했으므로 그 사이의 죽음이 umask가 정한
+0700 socket을 남겼고, 정확-0600 검사가 **자기 자신이 만든 잔재**를 영구 거부했다.
+완화가 안전한 이유는 나머지 다섯 조건이 전부 성립할 때만 회수하기 때문이다 —
+우리 uid · 0700 디렉터리 안 · symlink 아님 · hard link 없음 · **아무도 수락하지 않음**.
+group·other 비트가 하나라도 있으면 지금도 거부다(뮤테이션 M11이 그 폭을 잰다).
 
 ## Branches and early returns
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `os.Lstat` 실패 · 디렉터리 아님 · symlink · perm != 0700 | 없음 | `existing control directory is unsafe` | `TestStartRefusesUnsafeLeftoverShapes` (0700 아님 · symlink 행) |
-| B2 | `unix.Lstat` 실패 · uid != euid | 없음 | `existing control directory ownership is unsafe` | 소유권 행 — 같은 uid로 도는 테스트에서는 재현 불가(아래 "측정 한계") |
-| B3 | `os.ReadDir` 실패 | 없음 | 원본 오류 그대로 | 없음 (0700 통과 후 읽기 실패는 환경 이상) |
-| B4 | 엔트리 순회 | `seen` 채움 | — | 전 회수 테스트 |
-| B5 | 엔트리 이름이 descriptor/socket 둘 다 아님 | 없음 | `stale control directory has unexpected entries` | `TestStartRefusesControlDirectoryWithUnknownEntry` |
-| B6 | descriptor가 있다 | 없음 | — | `TestStartRecoversFromDescriptorOnlyLeftover` |
-| B7 | `readDescriptor` 실패 | 없음 | `stale descriptor is unsafe: %w` | `TestStartRefusesUnsafeLeftoverShapes` (0600 아님 · 반쯤 쓰인 descriptor 행) |
-| B8 | socket이 있다 | 없음 | — | `TestStartRecoversFromDeadSocketOnlyLeftover` |
-| B9 | socket lstat 실패 · socket 아님 · symlink · perm != 0600 | 없음 | `stale socket is unsafe` | `TestStartRefusesUnsafeLeftoverShapes` (일반 파일 · 0600 아님 행) |
-| B10 | uid != euid · nlink != 1 | 없음 | `stale socket ownership is unsafe` | `TestStartRefusesUnsafeLeftoverShapes` (hard link 행) |
-| B11 | connect probe가 수락됨 | 없음 | `projection owner is still alive` | `TestStartRefusesLiveSocketWhoseDescriptorPIDIsDead`, `TestStartRefusesLiveSocketWithoutDescriptor`, `TestStartRefusesLiveProjectionOwnerWithoutRemovingIt` |
-| B12 | descriptor·socket 경로 순회 | **파일 제거** | — | 전 회수 테스트 |
-| B13 | `os.Remove` 실패이고 `ErrNotExist`가 아님 | 일부 제거된 상태로 남음 | `remove stale endpoint: %w` | `TestStartRecoversFrom*`(용인 쪽) — 뮤테이션 M8이 반대쪽을 죽인다 |
-| B14 | 디렉터리 `os.Remove` 실패 | 파일 둘은 이미 제거됨 | `remove stale control directory: %w` | 없음 (B5가 비어 있지 않은 디렉터리를 먼저 막는다) |
+| B1 | 디렉터리 모양이 안전하지 않다 | 없음 | `existing control directory is unsafe` | `TestStartRefusesUnsafeLeftoverShapes/디렉터리...` |
+| B2 | 소유 uid가 우리가 아니다 | 없음 | `... ownership is unsafe` | `TestOwnershipClauseRefusesAnotherUser`(절 단위) |
+| B3 | `ReadDir` 실패 | 없음 | 그 오류 | 없음 |
+| B4 | 엔트리 순회 | 없음 | — | `TestStartRefusesControlDirectoryWithUnknownEntry` |
+| B5 | 이름 분류 switch | 없음 | — | 위와 같음 |
+| B6 | 최종 이름 둘 중 하나 | `seen` 표시 | — | 회수 테스트 전부 |
+| B7 | `.staging-` 접두 | 회수 목록에 추가 | — | `TestStartRecoversFromUnpublishedStagingLeftover` |
+| B8 | 그 밖의 이름 | 없음 | `unexpected entries` | `TestStartRefusesControlDirectoryWithUnknownEntry` |
+| B9 | socket이 있다 | 없음 | — | `TestStartRecoversFromDeadSocketOnlyLeftover` |
+| B10 | socket 모양 검사 실패 | 없음 | 그 오류 | `TestStartRefusesUnsafeLeftoverShapes/socket...` |
+| B11 | **누가 수락한다** | 없음 | `projection owner is still alive` | `TestStartRefusesLiveSocketWhoseDescriptorPIDIsDead` |
+| B12 | descriptor가 있다 | 없음 | — | `TestStartRecoversFromDescriptorOnlyLeftover` |
+| B13 | descriptor **형식** 검사 실패 | 없음 | `stale descriptor is unsafe` | `TestStartRefusesUnsafeLeftoverShapes/descriptor...` |
+| B14 | 제거 목록 순회 | **파일 제거** | — | 회수 테스트 전부 |
+| B15 | 제거 실패이고 `ErrNotExist`가 아니다 | 없음 | 그 오류 | `TestCloseToleratesLeftoverAlreadyRemoved` |
+| B16 | rmdir 실패이고 `ErrNotExist`가 아니다 | 없음 | 그 오류 | 뮤테이션 M17 **생존**(아래) |
 
-**early return이 아닌 성공 경로**는 197줄의 `return nil` 하나이며, 그 앞에서 디렉터리까지
-제거된다 — 회수 성공은 곧 `Start`가 `os.Mkdir`을 다시 성공시킬 수 있는 상태다.
+## 판정의 순서가 왜 이 순서인가
+
+**socket → descriptor** 순이다(첫 라운드는 반대였다). 주인의 생사가 descriptor를 얼마나
+엄격하게 볼지 정하기 때문이다: 사망이 증명된 뒤에야 내용 파싱 실패를 회수로 읽을 수
+있고, 증명 전에 그렇게 하면 살아 있는 주인의 파일을 지우게 된다.
+
+사망의 증명은 둘 중 하나다 — socket 파일이 아예 없거나(`Start`가 listen 성공 뒤에만
+descriptor를 쓰므로 listener가 없었다는 뜻), 있는데 아무도 수락하지 않거나.
 
 ## Calls and live bindings
 
-| Callee | Why called | Error/timeout/retry contract | Evidence |
+| Callee | Why called | Error contract | Evidence |
 |---|---|---|---|
-| `ControlDirectory` / `DescriptorPath` / `SocketPath` | 경로 계산 (transport.go) | 순수 함수 | AST calls |
-| `os.Lstat` / `unix.Lstat` | 타입·권한·소유·nlink 검사 | 오류는 즉시 거부 | AST calls, B1/B2/B9/B10 |
-| `os.ReadDir` | 엔트리 이름 집합 | 오류 그대로 전파 | AST calls, B3 |
-| `readDescriptor` (transport.go:92) | descriptor의 형식·권한·inode 동일성 | 오류는 wrap 후 거부. **PID·Token은 더 이상 읽지 않는다** | AST calls, B7 |
-| `projectionSocketAccepts` (신규, 같은 파일) | 이 경로에서 수락하는 자가 있는가 | `net.DialTimeout` 200ms. 수락=생존, ECONNREFUSED·부재=사망, 그 밖=생존으로 보수 판정 | AST calls, B11 |
-| `os.Remove` | 잔재 제거 | `ErrNotExist`만 용인 | AST calls, B13/B14 |
-| `errors.New` / `fmt.Errorf` | 거부 사유 | — | AST calls |
-
-**제거된 live binding**: `processAlive`(kill-0). 판정에서 빼는 것이 아니라 함수째 지웠다 —
-남기면 다음 독자가 다시 판정에 쓴다(design D2).
+| `controlDirectoryModeIsSafe` | 디렉터리 모양 세 절 | 순수 판정 | AST calls, B1 |
+| `ownedByEffectiveUser` | 소유 uid 절 | 순수 판정 | AST calls, B2·`verifyStaleSocketShape` |
+| `verifyStaleSocketShape` | socket 모양 다섯 절 | 오류를 그대로 올린다 | AST calls, B10 |
+| `projectionSocketAccepts` | **생존 판정** | 판정 불가는 "살아 있다"로 읽는다(보수) | AST calls, B11 |
+| `openVerifiedDescriptor` | descriptor 형식만 | 내용은 보지 않는다 | AST calls, B13 |
+| `os.Remove` × (staging + 2 + dir) | 제거 | `ErrNotExist` 용인 | AST calls, B15·B16 |
 
 ## State mutations and fallbacks
 
-- 디스크 변경은 B12/B13의 `os.Remove` 2회와 B14의 디렉터리 `os.Remove` 1회뿐이다.
-  그 앞의 모든 분기는 **읽기만** 한다 — 거부 경로는 디스크를 바꾸지 않는다.
-- fallback은 없다. 회수하거나 거부하거나 둘 중 하나이고, 부분 회수 후 성공은 없다.
-- 경합: 주인이 자기 `Close` 도중이면 같은 경로를 양쪽이 지운다. `Close`도(server.close B3)
-  `ErrNotExist`를 용인하므로 결과가 같다 — 양성 경합으로 문서화하고 수용한다(design D2).
-- **잔여**: `writeDescriptor`는 O_EXCL 생성 → write → sync 순이라 그 사이에서 죽으면
-  0바이트 descriptor가 남고, B7이 그것을 거부한다. 이 상태는 a108이 닫지 못했다.
+- 지우는 것: staging 잔재 전부 → descriptor → socket → 디렉터리. 그 밖의 것은
+  **하나도** 지우지 않는다(B8이 그 경계다).
+- 경합 용인: `ErrNotExist`는 성공과 같다. 주인의 `Close`와 겹치면 양쪽이 같은 경로를
+  지우는데 결과가 같으므로 양성이다(design D2).
+- **probe와 제거 사이에 새 주인이 들어오는 경합**의 방어는 이 함수가 아니라 부팅
+  1단계의 journal flock이다(`cmd/tossctl/engine.go`의 "flock on the journal directory
+  FIRST"). 이 함수는 원자적이지 않고, 원자적일 필요도 없다 — 엔진이 하나라는 것이
+  상위 계층에서 강제되기 때문이다. 코드 주석이 그 인용을 담는다(A1 F6).
+- **B16의 측정 부재(선언)**: rmdir의 `ErrNotExist` 용인은 파일 제거와 rmdir **사이**에
+  디렉터리가 사라져야 걸린다. seam 없이 결정적으로 만들 수 없어 뮤테이션 M17이
+  살아남았고, 원장 §B3에 생존으로 적었다. A1 F6이 요구한 것은 핀이 아니라 비대칭
+  제거였다 — 그 대칭은 코드에 있다.
 
 ## Safety conclusion
 
-- Safe edit boundary: 이 함수의 반환은 `Start`의 B5(base AST)에서 그대로 기동 실패가 된다.
-  따라서 "거부를 늘리는 변경"은 부팅을 못 하게 만들 수 있고, "회수를 늘리는 변경"은 남의
-  파일을 지울 수 있다. 두 방향 다 High-risk이며, 이 편집은 후자를 **connect probe로
-  좁히면서** 전자를 넓혔다.
-- High-risk impact: yes — 엔진 기동 경로. Pre-Edit 선언은 `../../pre-edit-gate.md` T1-1.
-- 측정 한계: B2(uid 불일치)·B3(ReadDir 실패)·B14는 같은 uid·정상 파일시스템에서 도는
-  테스트로 재현할 수 없다. 세 분기 모두 이 change가 **바꾸지 않은** 코드이고, B2는
-  편집 전부터 무테스트였다. 숨기지 않고 적는다.
+- Safe edit boundary: **판정 순서(socket → descriptor)와 완화의 폭.** 어느 쪽을 건드려도
+  design D1-2의 조건 집합을 다시 세워야 한다.
+- High-risk impact: yes — 잘못 회수하면 살아 있는 주인의 socket을 지우고, 잘못 거부하면
+  8/13 사고(영구 기동 실패 → 손절 감시 소멸)가 재발한다. 두 방향 모두 핀이 있다.

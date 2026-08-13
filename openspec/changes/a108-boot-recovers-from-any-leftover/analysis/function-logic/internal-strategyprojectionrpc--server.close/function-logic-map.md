@@ -1,63 +1,84 @@
 # Function Logic Map: `Server.Close`
 
-- Source: `internal/strategyprojectionrpc/transport_unix.go` (232-248)
-- AST evidence: `ast.json` (AST 분기 3, revision `current`)
+- Source: `internal/strategyprojectionrpc/transport_unix.go` (358-386)
+- AST evidence: `ast.json` — revision `current`. AST 분기 5
 - Risk scan: `risk-pattern-report.md`
 
-**이 change는 이 함수를 바꾸지 않았다.** 여기 있는 이유는 잔재의 **생산자**이기 때문이다 —
-회수가 다뤄야 하는 상태 집합은 이 함수가 어디서 중단될 수 있는가로 결정된다.
+첫 라운드는 이 함수를 **바꾸지 않았고**, 잔재의 생산자로서만 문서에 있었다. 그때
+"관측된 잔여 위험"으로 적어 둔 늦은 unlink를 A1이 300라운드 중 3회로 재현했고,
+Fix 라운드가 그것을 닫는다(design D2-2). 분기는 3 → 5로 늘었다: listener nil 검사와
+명시적 `Close` 오류 절.
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
 | `s` | nil 허용 | 호출부 | B1에서 nil이면 무동작 `nil` |
-| `s.once` | 정확히 1회 실행 | `sync.Once` | 두 번째 `Close`는 첫 결과를 재사용하지 않고 `nil` 반환 |
-| `s.descriptor` · `s.socket` · `s.controlDir` | `Start`가 만든 세 경로 | 구조체 필드 | B3: `ErrNotExist`는 실패가 아니다 |
-| 종료 예산 | 2초 | `context.WithTimeout` | 초과해도 제거 루프는 실행된다 |
+| `s.once` | 정확히 1회 실행 | `sync.Once` | 두 번째 `Close`는 `nil` |
+| `s.listener` | `Start`가 만든 listener. 자기 경로를 unlink하지 않는다 | `listenPrivateSocket` | B3: `net.ErrClosed`는 성공과 같다 |
+| `s.descriptor` · `s.socket` · `s.controlDir` | `Start`가 만든 세 경로 | 구조체 필드 | B5: `ErrNotExist`는 실패가 아니다 |
+| 종료 예산 | 2초 | `context.WithTimeout` | 초과해도 제거는 실행된다 |
 
 ## Branches and early returns
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
 | B1 | `s == nil` | 없음 | `nil` | 없음(무변경) |
-| B2 | descriptor → socket → controlDir 순회 | **파일·디렉터리 제거** | — | `TestCloseToleratesLeftoverAlreadyRemoved` |
-| B3 | 제거 실패이고 `ErrNotExist`가 아니며 아직 오류가 없다 | 첫 오류만 보존 | 그 오류 | `TestCloseToleratesLeftoverAlreadyRemoved` |
+| B2 | `s.listener != nil` | listener를 **여기서** 닫는다 | — | `TestCloseClosesItsOwnListenerWithoutServe` |
+| B3 | `Close` 실패이고 `net.ErrClosed`가 아니며 첫 오류다 | 오류 보존 | 그 오류 | `TestCloseClosesItsOwnListenerWithoutServe` |
+| B4 | descriptor → socket → controlDir 순회 | **파일·디렉터리 제거** | — | `TestCloseToleratesLeftoverAlreadyRemoved` |
+| B5 | 제거 실패이고 `ErrNotExist`가 아니며 첫 오류다 | 오류 보존 | 그 오류 | `TestCloseToleratesLeftoverAlreadyRemoved` |
+
+## 왜 listener를 여기서 닫는가 (design D2-2)
+
+`http.Server.Shutdown`은 **자기가 아는** listener만 닫는다. `Serve`가 아직 listener를
+등록하지 않은 사이에 `Shutdown`이 지나가면 정리가 `Serve` goroutine의 defer로 밀리고,
+unix listener의 unlink는 **경로 기준**이라 그 늦은 정리가 그 사이에 들어선 후계자의
+socket을 지운다. 오늘 그 도달을 막고 있던 것은 flock이 아니라 "예정된 goroutine이
+프로세스와 함께 죽는다"는 사실뿐이었다(A1 F5).
+
+Fix 라운드는 두 겹으로 막는다.
+
+1. listener가 기억하는 이름은 최종 경로가 아니라 이미 rename된 임시 이름이다(D1-2).
+2. `SetUnlinkOnClose(false)`로 unlink 자체를 끄고, 최종 경로 제거는 B4의 루프가
+   **혼자** 소유한다.
+
+그리고 닫는 시점을 goroutine에 맡기지 않는다 — B2가 `Close` 안에서 닫는다.
 
 ## 이 순서가 만드는 잔재 (회수 설계의 입력)
 
-`Shutdown` → descriptor → socket → controlDir. 어디서 중단되느냐가 다음 부팅이 보는
-디스크 상태를 정한다.
+`Shutdown` → listener → descriptor → socket → controlDir. 어디서 중단되느냐가 다음
+부팅이 보는 디스크 상태를 정한다.
 
 | 중단 지점 | 남는 것 | design D1 행 |
 |---|---|---|
-| `Shutdown` 직후 (Go의 unix listener가 socket을 unlink한 뒤) | 디렉터리 + descriptor | **S1 — 8/13 사고** |
+| listener 닫은 직후 | 디렉터리 + descriptor + socket | S3 |
 | descriptor 제거 후 | 디렉터리 + socket | S2 |
 | socket 제거 후 | 빈 디렉터리 | S0 |
-| `Shutdown` 전 (SIGKILL·전원 단절) | 둘 다 | S3 |
+| SIGKILL·전원 단절 | 둘 다 | S3 |
 
-**네 상태가 전부 이 함수의 중단 지점이다.** 예방(종료 순서 조정)을 채택하지 않은 근거가
-이 표다 — 순서를 어떻게 바꿔도 "그 사이에서 죽는" 상태는 남는다.
+첫 라운드 표의 "S1 — 8/13 사고" 행은 **여기서 사라졌다.** 그 행은 "Go의 unix listener가
+socket을 unlink한 뒤"를 중단 지점으로 삼았는데, `SetUnlinkOnClose(false)` 이후로 이
+함수는 socket을 그렇게 잃지 않는다. S1이 없어졌다는 뜻은 아니다 — 구버전이 남긴
+S1과, descriptor 제거가 socket보다 먼저인 순서에서 오는 S2는 그대로 회수 대상이다.
 
 ## Calls and live bindings
 
-| Callee | Why called | Error/timeout/retry contract | Evidence |
+| Callee | Why called | Error/timeout contract | Evidence |
 |---|---|---|---|
-| `s.server.Shutdown(ctx)` | listener 닫기 + 진행 중 요청 배수 | 2초 타임아웃. **listener를 닫는 것이 socket 파일을 unlink한다**(Go 기본) | AST calls |
-| `os.Remove` ×3 | 잔재 제거 | `ErrNotExist` 용인 | AST calls, B3 |
+| `s.server.Shutdown(ctx)` | 진행 중 요청 배수 | 2초 타임아웃 | AST calls |
+| `s.listener.Close()` | listener 소유권 | `net.ErrClosed` 용인 | AST calls, B3 |
+| `os.Remove` ×3 | 잔재 제거 | `ErrNotExist` 용인 | AST calls, B5 |
 
 ## State mutations and fallbacks
 
-- 경합: 다음 부팅의 회수가 같은 경로를 먼저 지울 수 있다. B3의 `ErrNotExist` 용인이
-  그 경합을 양성으로 만든다(design D2) — `TestCloseToleratesLeftoverAlreadyRemoved`가 핀.
-- **관측된 잔여 위험(이 change 밖)**: `Shutdown`이 `Serve`의 listener 등록보다 먼저
-  지나가면 listener 정리가 `Serve` goroutine의 defer로 밀리고, unix listener의 unlink는
-  **경로 기준**이라 그 늦은 정리가 그 사이에 만들어진 **새 socket**을 지운다. 실측으로
-  재현했고(`-count=200`에서 재현), 테스트는 Close 전에 수락을 확인해 그 경합을
-  배제했다. 운영에서는 journal flock이 두 엔진의 겹침을 막아 창이 닫힌다.
+- 경합: 다음 부팅의 회수가 같은 경로를 먼저 지울 수 있다. B5의 `ErrNotExist` 용인이
+  그 경합을 양성으로 만든다(design D2).
+- **겹2는 강등 후 in-process projection 재시도를 하지 않는다**(design D2-2 명문).
+  재시도는 같은 프로세스 안에서 이 창을 다시 연다.
 
 ## Safety conclusion
 
-- Safe edit boundary: 무변경. 제거 순서를 바꾸면 D1 표의 행이 바뀌므로 회수와 함께
-  다시 봐야 한다.
-- High-risk impact: yes (기동·종료 경로) — 이번 판에서는 편집하지 않았다.
+- Safe edit boundary: 제거 순서와 listener 소유권. 순서를 바꾸면 D1 표의 행이 바뀌고,
+  소유권을 goroutine에 돌려주면 A1 F5가 되살아난다.
+- High-risk impact: yes (기동·종료 경로).

@@ -1,0 +1,279 @@
+{
+  "file": "internal/strategyprojectionrpc/transport.go",
+  "source_sha256": "f207a023527866589c26b111e321f68c64154fbad976ebe7a8abec90a31855b0",
+  "package": "strategyprojectionrpc",
+  "function": "readDescriptor",
+  "signature": "readDescriptor(params=1, results=2)",
+  "start": {
+    "line": 159,
+    "column": 1
+  },
+  "end": {
+    "line": 183,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 166,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 172,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 176,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 162,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 167,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 173,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 177,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 180,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 15
+      },
+      "text": "openVerifiedDescriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 8
+      },
+      "text": "file.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 165,
+        "column": 15
+      },
+      "text": "io.ReadAll"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 165,
+        "column": 26
+      },
+      "text": "io.LimitReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 19
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 24
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 13
+      },
+      "text": "json.NewDecoder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 29
+      },
+      "text": "bytes.NewReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 2
+      },
+      "text": "decoder.DisallowUnknownFields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 172,
+        "column": 12
+      },
+      "text": "decoder.Decode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 24
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 12
+      },
+      "text": "decoder.Decode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 40
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 24
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 92
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 24
+      },
+      "text": "errors.New"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 165,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 169,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 172,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 176,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 164,
+        "column": 2
+      },
+      "text": "file.Close"
+    }
+  ]
+}
