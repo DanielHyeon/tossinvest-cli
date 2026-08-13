@@ -65,6 +65,7 @@ sdd-test:
 	python3 -m unittest discover -s tools/sdd -p 'test_*.py'
 	python3 -m unittest discover -s tools/sdd-history -p 'test_*.py'
 	python3 -m unittest discover -s tools/pm -p 'test_*.py'
+	python3 -m unittest discover -s tools/deploy -p 'test_*.py'
 	go test ./tools/logic-map
 
 sdd-check: sdd-doctor
@@ -72,7 +73,7 @@ sdd-check: sdd-doctor
 	python3 scripts/memory_index.py check
 	python3 tools/sdd/check_index_freshness.py
 	python3 tools/pm/generate_master_tracker.py --check
-	python3 -m compileall -q scripts tools/logic-map tools/sdd tools/sdd-history tools/pm
+	python3 -m compileall -q scripts tools/logic-map tools/sdd tools/sdd-history tools/pm tools/deploy
 	$(MAKE) sdd-test
 
 sdd-hooks-install:
@@ -101,15 +102,32 @@ gate:
 # tools/deploy/image_pin.py 에 있다. recipe 안에 쓴 판단은 어떤 테스트도 닿을 수
 # 없는 판단이기 때문이다 — cmd/tossctl/soakautostart.go:78-81 이 같은 이유로 같은
 # 선택을 한다.
+# CHANGE 와 COMMIT 은 recipe 문자열이 아니라 **환경**으로 넘긴다. make 가 값을
+# 명령줄에 끼워 넣으면 셸이 먼저 해석하므로 따옴표가 든 값은 image_pin 에 닿기
+# 전에 이미 빠져나간다 — 그때 image_pin 의 검증은 아무것도 막지 못한다.
+image: export TOSSOS_PIN_CHANGE = $(CHANGE)
+image: export TOSSOS_PIN_COMMIT = $(COMMIT)
 image:
-	@pin=$$(python3 tools/deploy/image_pin.py name --change "$(CHANGE)" --commit "$(COMMIT)") || exit 1; \
-	tags=$$(docker image inspect tossos:local --format '{{join .RepoTags ","}}' 2>/dev/null || true); \
-	python3 tools/deploy/image_pin.py guard --tags "$$tags" || exit 1; \
+	@set -e; \
+	pin=$$(python3 tools/deploy/image_pin.py name); \
+	if tags=$$(docker image inspect tossos:local --format '{{json .RepoTags}}' 2>&1); then \
+		state=present; \
+	elif printf '%s' "$$tags" | grep -qi 'no such image'; then \
+		state=absent; tags=''; \
+	else \
+		state=unknown; tags=''; \
+	fi; \
+	if docker image inspect "$$pin" >/dev/null 2>&1; then taken=yes; else taken=no; fi; \
+	python3 tools/deploy/image_pin.py guard --state "$$state" --tags "$$tags" --pin-taken "$$taken"; \
 	echo "핀 이름: $$pin"
 	docker compose build
-	@pin=$$(python3 tools/deploy/image_pin.py name --change "$(CHANGE)" --commit "$(COMMIT)"); \
+	@set -e; \
+	pin=$$(python3 tools/deploy/image_pin.py name); \
 	id=$$(docker image inspect tossos:local --format '{{.Id}}'); \
+	[ -n "$$id" ]; \
 	docker tag "$$id" "$$pin"; \
+	got=$$(docker image inspect "$$pin" --format '{{.Id}}'); \
+	[ "$$got" = "$$id" ]; \
 	echo "박았다: $$pin -> $$id"; \
 	echo "다음: 이 핀의 schema 가 현재 저널을 읽는지 적고(docs/operations.md), 사람이 교체를 승인한다"
 

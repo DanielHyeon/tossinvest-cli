@@ -72,10 +72,14 @@ non-root identity로 실행하므로 0600 secret을 읽을 수 있고 config/dat
 cp .env.example .env
 install -d -m 700 /srv/tossos/config /srv/tossos/data
 docker compose config
-docker compose build
+docker compose build          # 최초 설치에만. 이후 모든 빌드는 `make image CHANGE=…` 다
 docker compose up -d
 docker compose ps
 ```
+
+두 번째 빌드부터는 이 `docker compose build` 를 쓰지 않는다. 그것이 직전 이미지의
+이름을 가져가 롤백 대상을 없애기 때문이다 — 아래 「롤백 대상은 태그가 없으면
+사라진다」와 `make image` 를 본다.
 
 이미지는 host filesystem이나 Git checkout의 mode 보존 여부와 무관하게 entrypoint를
 `0755`로 복사해야 한다. NTFS checkout에서도 재빌드한 container가 exit 126으로

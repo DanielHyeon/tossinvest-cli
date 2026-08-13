@@ -101,3 +101,4 @@
 | `a099-a-claim-excludes-the-second-sender` | STORY-TOS-a099 | in_progress |
 | `a100-wire-fill-to-broker-protection` | STORY-TOS-a100 | in_progress |
 | `a101-the-soak-outlives-a-deploy` | STORY-TOS-a101 | implemented |
+| `a103-the-rollback-pin-is-made-not-remembered` | STORY-TOS-a103 | implemented |
