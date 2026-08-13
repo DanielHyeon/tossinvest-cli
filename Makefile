@@ -9,6 +9,7 @@ LDFLAGS := -X github.com/JungHoonGhae/tossinvest-cli/internal/version.Version=$(
 	-X github.com/JungHoonGhae/tossinvest-cli/internal/version.Date=$(DATE)
 
 .PHONY: build stage-local-update run test vet cover validate gate lint fmt tidy clean \
+	image \
 	sdd-doctor sdd-sync sdd-sync-full sdd-test sdd-check sdd-hooks-install sdd-infra
 
 build:
@@ -87,6 +88,30 @@ sdd-infra:
 # NTFS 마운트라 실행 비트가 없으므로 bash 로 명시 호출한다(docs/baseline.md 참고).
 gate:
 	bash tools/gate.sh $(CHANGE)
+
+# 이미지를 만들고 그 자리에서 되돌릴 이름을 박는다.
+#
+# `docker compose build` 는 tossos:local 태그를 새 이미지로 옮기고 직전 이미지는
+# 태그를 잃는다. 태그 없는 이미지는 다음 prune 에 사라져 롤백 대상이 없어진다.
+# 2026-08-11 · 08-12 · 08-13 세 번 그렇게 잃었고, 세 번 다 원인은 build 와 up 사이에
+# 문서에만 있는 `docker tag` 한 줄이 끼어 있던 것이었다. 그래서 두 일은 한 명령이다 —
+# 사이에 사람이 기억할 단계가 없어야 빠지지 않는다.
+#
+# 판단(직전 이미지가 이 빌드에 이름을 잃는가, 핀 이름이 쓸 수 있는 값인가)은
+# tools/deploy/image_pin.py 에 있다. recipe 안에 쓴 판단은 어떤 테스트도 닿을 수
+# 없는 판단이기 때문이다 — cmd/tossctl/soakautostart.go:78-81 이 같은 이유로 같은
+# 선택을 한다.
+image:
+	@pin=$$(python3 tools/deploy/image_pin.py name --change "$(CHANGE)" --commit "$(COMMIT)") || exit 1; \
+	tags=$$(docker image inspect tossos:local --format '{{join .RepoTags ","}}' 2>/dev/null || true); \
+	python3 tools/deploy/image_pin.py guard --tags "$$tags" || exit 1; \
+	echo "핀 이름: $$pin"
+	docker compose build
+	@pin=$$(python3 tools/deploy/image_pin.py name --change "$(CHANGE)" --commit "$(COMMIT)"); \
+	id=$$(docker image inspect tossos:local --format '{{.Id}}'); \
+	docker tag "$$id" "$$pin"; \
+	echo "박았다: $$pin -> $$id"; \
+	echo "다음: 이 핀의 schema 가 현재 저널을 읽는지 적고(docs/operations.md), 사람이 교체를 승인한다"
 
 # lint is gofmt + vet only — no extra tooling to install. `gofmt -l` lists
 # unformatted files without changing them, so the check fails loudly instead of

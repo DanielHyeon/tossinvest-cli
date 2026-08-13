@@ -268,17 +268,28 @@ digest pin은 **그 digest의 이미지가 아직 있을 때만** 롤백 계획�
 엔진만 죽는다** — 2026-08-05에 3분 51초 동안 실제로 겪은 형태다. 즉 롤백 파일이 롤백
 대상이 아니라 **함정**이 되어 있었다.
 
-그래서 순서에 한 단계가 더 있다.
+2026-08-13 11:03에 **또 빠졌다.** 위 절이 그 재발을 막으려고 2026-08-12 09:03에 쓰였는데
+26시간 뒤에 같은 결과가 났다. 원인은 잊어버림이 아니라 구조였다 — 사람이 실행하는 두
+명령(`build` → `up -d`) 사이에 **실행되지 않는 한 줄**이 끼어 있었고, 그 자리의 단계는
+빠진다. 문서를 한 번 더 쓰는 것은 이미 결과가 나온 처방이다.
 
-```
-docker compose build
+그래서 build와 tag는 **한 명령**이다. 사이에 기억할 단계가 없다.
+
+```bash
+make image CHANGE=<change-id>
+# → 빌드 전: 지금 tossos:local 인 이미지가 이 빌드에 이름을 잃는지 먼저 본다.
+#            잃는다면 거부한다 — 그 이미지에 이름을 준 뒤 다시 실행한다.
+# → 빌드 후: 새 이미지에 tossos:<change>-<commit> 을 박는다.
 docker image inspect tossos:local --format '{{.Id}}'
-docker tag <그 id> tossos:<change>-<commit>      # ← 이것이 빠지면 다음 빌드에 사라진다
 # release override의 두 service를 tossos@sha256:<그 id>로 적는다
 ```
 
+`docker compose build`를 손으로 치면 이 두 보호가 다 빠진다. 교체 경로에서는 쓰지 않는다.
+
 롤백 핀을 갱신할 때는 **그 이미지의 schema가 현재 저널을 읽을 수 있는지** 함께 적는다.
-schema가 낮은 핀은 롤백이 아니라 저널 복구 절차의 시작점이다.
+schema가 낮은 핀은 롤백이 아니라 저널 복구 절차의 시작점이다. 마이그레이션이 있었다면
+롤백은 이미지만 되돌리는 것이 아니라 **`schema_meta.pre_migration_backup_path`가 가리키는
+백업을 복원한 뒤** 그 이미지를 띄우는 것이다.
 
 ### Dormant digest-pinned deployment preflight
 
