@@ -243,8 +243,9 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	// replacement engine the predecessor's pid while the predecessor's marker is
 	// still fresh (a102 D4b-2). A build that cannot compute one says nothing, and
 	// the console then waits instead of trusting.
-	if token, terr := engineProcInstance(os.Getpid()); terr == nil {
-		marker.Identify(token)
+	instance, terr := engineProcInstance(os.Getpid())
+	if terr == nil {
+		marker.Identify(instance)
 	}
 	if merr != nil {
 		// Not a refusal. The exclusion is already held; what a missing marker
@@ -279,11 +280,25 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 		return err
 	}
 	defer policyRuntime.Close()
-	strategyRuntime, err := strategyprojectionrpc.Start(dir, ectx.StrategyRuntimeProjection())
-	if err != nil {
-		return err
+	// a108 D3 — 조회 전용 endpoint 하나가 손절을 든 프로세스를 죽이지 않는다.
+	//
+	// 2026-08-13 23:35 사고: 재부팅 잔재로 이 Start가 실패했고, 여기서 `return err`
+	// 한 줄이 엔진을 exit 1 시켰다. autostart가 1분마다 다시 세웠지만 디스크 상태는
+	// 그대로였으므로 영구 기동 루프가 됐고, 보호 루프 셋이 US 장중에 전부 정지했다.
+	//
+	// 강등이 안전한 이유는 하나다: **엔진 싱글턴을 강제하는 것은 부팅 1단계의
+	// journal flock이지 이 디렉터리가 아니다.** projection은 콘솔·httpapi가 화면을
+	// 그리려고 읽는 `strategyprojection.Reader` 내보내기일 뿐 루프의 입력이 아니므로,
+	// 강등으로 잃는 것은 화면이지 판정이 아니다.
+	strategyRuntime, projErr := engineStrategyProjectionStart(dir, ectx.StrategyRuntimeProjection())
+	if strategyRuntime != nil {
+		// nil 수신자에도 안전한 Close이지만, 강등 경로가 Close를 부를 이유는 없다.
+		// 조건을 여기 두면 그 판단이 이 파일 안에 남는다.
+		defer strategyRuntime.Close()
 	}
-	defer strategyRuntime.Close()
+	if projErr != nil {
+		reportStrategyProjectionDegraded(ctx, ectx, errOut, dir, instance, clk.Now(), projErr)
+	}
 	// a098 4.4 — 밀린 critical 알림의 운영자 표면. 승인은 이 프로세스 안에서
 	// 일어나야 한다: 진입 게이트는 여기 메모리에 있고, 다른 프로세스가 원장만
 	// 고치면 운영자가 승인해도 진입은 재시작까지 막힌 채다 (design D7.1).
@@ -307,6 +322,67 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 
 	return rt.Run(runCtx)
 }
+
+// engineStrategyProjectionAlertType 은 강등이 남기는 알림의 event type 이다.
+//
+// 문자열을 여기 두는 이유는 `internal/execgw`의 park 알림과 같다: 원장 outbox의
+// `Type`은 자유 문자열이고, 이 행을 실제로 보내는 a098 전달 루프는 outbox 행을
+// 무조건 critical로 발행한다(`alertdelivery.go`). 등급표(`internal/obs`의
+// criticalEvents)에 이름을 올리는 것이 더 옳지만 그 파일은 이 change의 T2 소유가
+// 아니다 — review.md에 이견으로 남긴다.
+const engineStrategyProjectionAlertType = "engine.strategy_projection_unavailable"
+
+// reportStrategyProjectionDegraded 는 강등을 **두 곳**에 남긴다.
+//
+// stderr 한 줄만 찍으면 그것은 「기동 1회 유실형」이다: 프로세스가 다시 뜨면 사라지고,
+// 운영자는 화면이 왜 비었는지 알 방법이 없다. 그러면 이 change가 만드는 것은 회복이
+// 아니라 **은폐**다. 그래서 durable outbox 행을 같이 쓴다 — 그 행은 전달될 때까지
+// PENDING으로 남고 `tossctl engine alerts list`가 보여준다.
+//
+// # event key 에 실행 토큰을 넣는 이유
+//
+// `EnqueueAlert`는 event key로 접고, remindAfter=0이므로 **이미 DELIVERED된 행을 다시
+// 세우지 않는다**(journal/outbox.go:142-145). key가 고정이면 오늘 강등을 한 번 알린 뒤
+// 다음 주의 강등 기동은 조용히 접힌다. 보고하는 조건은 "이 디렉터리가 망가졌다"가 아니라
+// "**이 실행**이 화면 없이 돈다"이므로, 마커가 쓰는 것과 같은 실행 토큰으로 구분한다.
+// 한 실행 안에서는 여전히 한 행이다.
+func reportStrategyProjectionDegraded(ctx context.Context, ectx *engine.Context, errOut io.Writer,
+	dir, instance string, at time.Time, cause error) {
+	detail := fmt.Sprintf("전략 projection endpoint를 열지 못했다 (%s): %v",
+		strategyprojectionrpc.ControlDirectory(dir), cause)
+	fmt.Fprintf(errOut, "note: %s\n"+
+		"      엔진은 보호 루프를 그대로 돌린다 — 잃은 것은 콘솔·httpapi의 전략 화면이다.\n", detail)
+	if ectx == nil || ectx.Journal == nil {
+		return
+	}
+	run := strings.TrimSpace(instance)
+	if run == "" {
+		// /proc이 없는 커널이거나 읽지 못한 경우. 기동 시각이 같은 일을 한다 —
+		// 실행마다 다르고, 같은 실행 안에서는 한 번만 계산된다.
+		run = at.UTC().Format(time.RFC3339Nano)
+	}
+	if _, err := ectx.Journal.EnqueueAlert(ctx, journal.Alert{
+		EventKey: engineStrategyProjectionAlertType + "|" + dir + "|" + run,
+		Type:     engineStrategyProjectionAlertType,
+		Severity: string(obs.SeverityCritical),
+		Title:    "STRATEGY_PROJECTION_UNAVAILABLE",
+		Body:     detail,
+	}); err != nil {
+		fmt.Fprintf(errOut, "note: 그 강등을 알림 원장에 적지도 못했다 (%v). "+
+			"이 실행에 대해서는 위 한 줄이 유일한 기록이다.\n", err)
+	}
+}
+
+// engineStrategyProjectionStart is 부팅 7단계가 여는 **조회 전용** projection
+// endpoint다. 콘솔과 httpapi가 전략 화면을 그리려고 읽는 unix socket 하나이고,
+// 엔진 루프의 입력은 아니다.
+//
+// engineAssemble·engineRuntimeFactory와 같은 package 변수 seam인 이유도 같다:
+// 이 지점의 **실패**를 재려면 실패를 주입할 수 있어야 하는데, 실패를 디스크
+// 잔재로 만들면 테스트가 internal/strategyprojectionrpc의 회수 규칙에 묶인다.
+// 그러면 회수 규칙을 고칠 때마다 이쪽 테스트가 같이 부서진다 — 재는 것이
+// "잔재가 어떻게 생겼는가"가 아니라 "실패했을 때 엔진이 죽는가"인데도.
+var engineStrategyProjectionStart = strategyprojectionrpc.Start
 
 // engineAssemble builds the engine profile.
 //
