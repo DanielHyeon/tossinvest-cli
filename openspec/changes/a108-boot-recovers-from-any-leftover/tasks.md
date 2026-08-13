@@ -70,16 +70,16 @@
 
 - [x] 4.1 A1(적대 리뷰, T1 산출물)·A2(적대 리뷰, T2 산출물) — 반증 지향: 회수가 치우면
   안 되는 것을 치우는 입력, 강등이 가리는 실패, 경합 창. 리뷰 결과는 `review.md`에 기록.
-- [ ] 4.2 편집한 기존 함수 FLM **편집 후 재생성**(SHA-256 일치),
+- [x] 4.2 편집한 기존 함수 FLM **편집 후 재생성**(SHA-256 일치),
   `python3 tools/logic-map/check_analysis.py --change a108-boot-recovers-from-any-leftover`.
-- [ ] 4.3 영향 패키지 `go test -race` + `go vet`
+- [x] 4.3 영향 패키지 `go test -race` + `go vet`
   (`strategyprojectionrpc`, `strategyprojection`, `app/engine`, `cmd/tossctl`).
-- [ ] 4.4 gstack 독립 리뷰(High-risk — adversarial Eng voice 필수), Fix-First 처리.
+- [x] 4.4 gstack 독립 리뷰(High-risk — adversarial Eng voice 필수), Fix-First 처리.
 - [ ] 4.5 `openspec validate --all --strict` → `make sdd-sync` → `make sdd-check` →
   `make gate CHANGE=a108-boot-recovers-from-any-leftover`.
-- [ ] 4.6 Manager 독립 검증: 뮤테이션 스팟체크 재현 ≥2건(팀메이트당 1), 사고 상태 fixture
+- [x] 4.6 Manager 독립 검증: 뮤테이션 스팟체크 재현 ≥2건(팀메이트당 1), 사고 상태 fixture
   재실행, tasks↔design 대조, STORY-TOS-a108 measured 기입.
-- [ ] 4.7 `review.md`에 생략 항목 `not-applicable` 사유 명시 — 침묵한 생략 금지.
+- [x] 4.7 `review.md`에 생략 항목 `not-applicable` 사유 명시 — 침묵한 생략 금지.
 
 ## 5. 배포와 사후
 

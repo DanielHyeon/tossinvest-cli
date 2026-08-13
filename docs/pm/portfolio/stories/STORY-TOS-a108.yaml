@@ -17,17 +17,32 @@
     "why_not_a_reversal": "a102 fixed recovery-vs-survey starvation; it never touched endpoint leftover reclamation. The three sibling endpoints (policy command, policy runtime, alert control) are tolerant by design and passed this reboot's leftovers; only strategyprojectionrpc refuses partial states forever."
   },
   "acceptance": [
-    "Reclaim handles every state its own lifecycle can produce (empty dir, descriptor-only, socket-only, both) with owner-death verification, and refuses foreign or unverifiable states exactly as before",
+    "Reclaim handles every state its own lifecycle can produce (empty dir, descriptor-only, socket-only, both, half-written artifacts and staging leftovers) with owner-death verification, and refuses foreign or unverifiable states exactly as before",
     "Liveness is judged by socket connect probe, not kill-0 on a reusable PID; a descriptor PID pointing at an unrelated live process no longer blocks reclamation",
-    "Engine boot survives strategy projection Start failure: loops run, an unresolved critical alert is raised, journal flock remains the sole singleton authority",
-    "httpapi treats present-but-undialable descriptor the same as absent: degraded start, no crash loop",
-    "Crash-shape regression pins exist for all four engine endpoints, with a mutation ledger proving each pin kills its reverted judgement",
+    "Engine boot survives strategy projection Start failure: loops run, degraded-boot reporting is gate-decoupled (stderr + ungraded obs event, no outbox row - the durable-critical design was reversed by review), journal flock remains the sole singleton authority",
+    "httpapi treats absent and every failure shape of the projection the same: degraded start rendering RUNTIME_UNAVAILABLE (never folded into feature-off), no crash loop, aggregate snapshot survives",
+    "Crash-shape regression pins exist for the strategy projection endpoint with a mutation ledger proving each pin kills its reverted judgement; accident-grade pins for the three sibling endpoints are owned by a109 (scope narrowed by review)",
     "make gate CHANGE=a108-boot-recovers-from-any-leftover passes"
   ],
-  "measured": null,
-  "deviations": [],
+  "measured": {
+    "date": "2026-08-14",
+    "tests": "strategyprojectionrpc 5->26 top-level (~50 with subtests), cmd/tossctl a108 set 0->16; both packages green under -race; the exact 2026-08-13 disk shape (descriptor-only leftover) plus five sibling crash shapes are recovery-pinned fixtures",
+    "mutation_ledger": "50+ mutations applied across four rounds (T1, T2, T1-fix, T2-fix, T3-fix); 2 declared survivors (M17 rmdir-ENOENT race branch, M24 descriptor staging-name rule) each recorded as unmeasurable-without-a-seam; Manager independently reproduced 2 kills (A1 synchronous-Notify revert, B2 owner-write clause removal)",
+    "review_rounds": "A1+A2 adversarial (both FIX-FIRST, 4 mutation reproductions matching ledgers), then gstack 7-pass (4 specialists + Red Team + Claude adversarial round 3 + Codex adversarial and structured across models); Codex structured GATE FAIL (synchronous Notify P1) fixed and re-verified",
+    "key_numbers": "3-source convergence x2 (boot-blocking Notify, dormant/unavailable fold); staging basename 12 bytes <= runtime.sock; connect probe bounded at 200ms; cross-ownership RED (S3 httpapi test) went green from the other teammate's merge alone"
+  },
+  "deviations": [
+    "T2's first round committed RED and GREEN in one commit (reconstructed evidence); the fix rounds returned to RED-first commits and the ledger records the lapse",
+    "Original D3 (durable critical alert) was reversed by adversarial review: an undelivered outbox row latches the next boot's entry gate, so degraded-boot reporting was rebuilt as stderr + ungraded obs event, gate-decoupled by pinned contract",
+    "The engine-safety delta was narrowed from all runtime endpoints to strategy projection only, because A1 measured the same disease in the three sibling endpoints; the general invariant moved to a109 rather than ship as a false SHALL",
+    "tasks 2.5 crash-shape pins were judged unfalsifiable by A1 and left unchecked; accident-grade shapes are owned by a109",
+    "Staging prefix changed mid-change (.staging- to .s-) for the sun_path budget; no field exposure since a108 never deployed"
+  ],
   "limits": [
-    "Why the host rebooted is an operations question outside this change.",
-    "httpapi does not lazily re-dial a projection that appears later; parity with the existing absent-descriptor behavior is kept and container restart remains the reconnect path."
+    "httpapi does not lazily re-dial: on every recovery boot the strategy surface stays unavailable (now visibly RUNTIME_UNAVAILABLE, not folded into feature-off) until the daemon restarts; consumer-side re-dial is a109 2b.1",
+    "Rolling back across a108 requires wiping .strategy-runtime-read/ first: the old binary permanently refuses the new binary's legitimate leftovers (design D5-3, deploy task 5.2)",
+    "Same-UID forged-endpoint and pathname-TOCTOU hardening (dirfd, server authentication) is out of trust scope and recorded only",
+    "Two declared unpinned branches: engineJournalDir-failure warnings (unreachable under test config) and post-rename cleanup interleaving (needs a seam)",
+    "Sibling endpoints (policy command/runtime, alert control) still refuse pre-chmod leftovers and remain fatal at boot - a109's scope"
   ]
 }
