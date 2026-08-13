@@ -98,3 +98,81 @@ control 각각에 대해 "부분 잔재 후 기동 성공"을 고정한다. 나�
 - 호스트 재부팅 원인 조사(운영 항목), performance.db 부재 경고(별개 기존 사안).
 - soak autostart는 a101이 이미 해결 — 이번 재부팅 후 서베이는 스스로 살아났다(로그 실측
   "soak 자동 시작: … 새로 시작했다"). a101의 5.6 검증이 이 사고로 완료된 셈이다.
+
+## 리뷰 개정 (A1·A2 적대 리뷰, 2026-08-14)
+
+두 리뷰 모두 FIX-FIRST였고, 각자 뮤테이션 2건을 독립 재현해 원장의 정직성은 확증했다.
+아래 개정이 Fix 라운드(tasks §6)의 계약이다.
+
+### D1-2. 발행도 회수만큼 전체적이어야 한다 — stage+rename 의례 (A1 P1×2)
+
+A1이 실측한 잔여 영구-거부 2종은 둘 다 **생산자**가 만든다:
+
+- pre-chmod socket: `net.Listen` → `Chmod` 사이의 죽음이 umask 077(컨테이너 실측)에서
+  0700 socket을 남기고, 회수의 정확-0600 검사가 그것을 "unsafe"로 영구 거부한다.
+  **버그가 보안 핀으로 봉인돼 있었다**(M7 해석 정정 대상).
+- 부분 descriptor: `O_EXCL`→write→sync는 원자적이지 않고, 내용 파싱 실패는 영구 거부다.
+  D2 이후 descriptor 내용은 **어떤 판정에도 쓰이지 않으므로** 이 게이트는 거부만 생산한다.
+
+수정: **두 산출물 모두 stage+rename으로 발행한다** — 같은 저장소의 다른 세 endpoint가
+이미 쓰는 의례다. socket은 control dir 안 숨김 임시 이름에 bind → chmod 0600 → rename
+(Linux에서 unix socket의 rename은 유효하고 bind는 inode에 붙는다). 파생 규칙:
+
+- 임시 이름(.staging 접두) 잔재는 낯선 엔트리가 아니라 자기 잔재다 — 회수 목록에 추가.
+- 검증-사망 잔재의 socket perm 검사는 정확-0600에서 **group/other 비트 없음
+  (perm&0o077==0)**으로 좁게 완화한다(자기 uid·0700 dir·비symlink·nlink1·사망 입증
+  하에서만) — 구버전 바이너리가 남긴 pre-chmod 잔재의 회수 경로.
+- descriptor **내용** 파싱 실패는 사망 입증 시 회수로 읽는다. **형식** 검사(0600·정규
+  파일·no-follow)는 유지한다.
+
+### D2-2. 경로를 unlink할 권한은 우리 손에만 (A1 P2)
+
+A1이 300라운드 중 7라운드 안 3회로 재현: `Shutdown`이 `Serve`의 listener 등록을
+앞지르면 unlink가 Serve goroutine의 defer로 밀리고, **경로 기준** unlink가 후계자의
+새 socket을 지운다. 오늘 도달을 막는 것은 flock이 아니라 "예정된 goroutine이
+프로세스와 함께 죽는다"는 사실뿐이다.
+
+수정: `SetUnlinkOnClose(false)` + `Close`가 `s.listener`를 명시적으로 닫고 최종 경로
+제거는 `Close`의 `os.Remove`만 수행한다. stage+rename(D1-2)과 결합하면 listener가
+기억하는 경로는 임시 이름이라 어느 쪽 unlink도 최종 경로를 건드리지 못한다.
+**겹2는 강등 후 in-process projection 재시도를 하지 않는다**(명문) — 재시도는 이 창을
+같은 프로세스 안에서 다시 연다. probe와 remove 사이 새-주인 경합의 실제 방어는
+journal flock임을 여기 명시한다(코드 주석도 flock을 인용할 것).
+
+### D3-2. outbox critical 철회 — 강등 보고는 게이트에 연결되지 않는다 (A2 P1×2, 결정 반전)
+
+원 D3의 "미해소 critical 알림"을 **철회한다**. A2가 실측·추적으로 보인 두 사실:
+
+1. `UndeliveredCount`는 Type 무필터라(`outbox.go:533`), publisher 미설정 배포에서 강등
+   행이 영원히 PENDING으로 남아 **다음 부팅의 entry gate를 잠근다**
+   (`restoreAlertEntryLatch` — 해제는 운영자 ack뿐). obs 교리와 정면 충돌: "측정 실패는
+   critical이 아니다 … 화면의 오탈자가 실계좌 매매를 멈출 수 있어서는 안 된다"
+   (`obs/event.go:266-278`). T2가 인용한 execgw 선례는 등급표 등재 + **의도적** entry.Block
+   이라 선례가 아니다(오독 정정).
+2. transport가 살아 있으면 행은 ~2초 뒤 DELIVERED로 사라진다 — "미해소 유지"는 애초
+   미구현이었고, 그것을 확인한 테스트는 전달 루프 없는 harness에서 PENDING을 본 것이다.
+
+새 계약: 강등 보고는 ① stderr 기동 경고, ② **obs Normal 이벤트 로그**(등급표 미등재가
+의도다 — Notifier로 흘러도 best-effort Normal), ③ 콘솔 전략 화면의 기존 dormant 표면.
+**강등 기동은 outbox 행을 만들지 않고 다음 부팅의 진입 상태를 바꾸지 않는다** — 둘 다
+핀으로 고정한다. proc-instance dedup 토큰 기계는 outbox 제거와 함께 불필요해진다.
+
+### D4-2. httpapi는 projection 때문에 죽지 않는다, 마침표 (A2 P2×2)
+
+- `Dial`이 connect probe로 생존을 확인한다(회수와 같은 원시) — S3(socket 파일이 남은
+  사망, **전원 단절의 기본 모양**)에서 lazy client 대신 즉시 오류 → 소비자 강등.
+  A2 실측: 지금은 Dial이 성공하고 첫 Read가 죽는다.
+- httpapi reader는 strategy Read 실패를 dormant로 흡수한다 — 지금은 집계 스냅샷
+  전체(engine·positions·orders)가 함께 죽는다(`httpapi_reader.go:479-483`).
+- 비-NotExist stat 오류도 콘솔 패리티로 경고+강등(원 D4의 fatal 결정 철회) — ENOTDIR
+  볼륨 오배치가 다시 crash loop를 만든다는 A2 반증을 수용.
+
+### D5-2. 범위 재단 — 형제 endpoint 셋은 a109로 (A1 P1)
+
+A1 실측: policy runtime·alert control도 pre-chmod socket 잔재를 영구 거부하고
+(`engine.go:272/277`는 여전히 fatal), alert control은 **살아 있는 주인의 socket 위에
+두 번째 서버가 올라선다**. tasks 2.5의 핀은 관용이 자명한 모양만 만들어 실패할 수
+없었다(정지 조건 무력화 — 기록). 이것은 a108과 같은 병이지만 표면이 세 배다:
+**engine-safety delta의 일반 요구를 strategy projection으로 좁히고, 일반 불변식은
+a109 등록으로 옮긴다.** 거짓 SHALL을 정본에 넣지 않기 위한 좁힘이며(A1 P1-3),
+좁힘의 근거와 측정은 a109 proposal이 승계한다.

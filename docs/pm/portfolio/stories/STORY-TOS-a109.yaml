@@ -1,0 +1,32 @@
+{
+  "id": "STORY-TOS-a109",
+  "title": "The sibling endpoints recover too",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a109-the-sibling-endpoints-recover-too",
+    "path": "openspec/changes/a109-the-sibling-endpoints-recover-too"
+  },
+  "found_by": {
+    "date": "2026-08-14",
+    "how": "a108's adversarial review A1 measured the three sibling engine endpoints (position policy command, position policy runtime, alert control) against the same crash shapes that took the engine down on 2026-08-13. Two of them permanently refuse a pre-chmod socket leftover (listen-to-chmod death under the container's umask 077 leaves a 0700 socket that the exact-0600 check rejects on every boot, and all three are fatal in runEngineRun), and alert control lets a second server mount on top of a live owner's socket. a108's own crash-shape pins could not fail: they only built shapes the tolerant paths trivially pass.",
+    "record": "openspec/changes/a108-boot-recovers-from-any-leftover/review.md (§1 F3·F4)"
+  },
+  "prior_art": {
+    "note": "a108 fixed the same disease for strategy projection: stage+rename publication, connect-probe liveness, total reclamation. Its engine-safety delta was narrowed to that one endpoint precisely so the general SHALL would not enter the canonical spec as a falsehood; this change earns the general form back by fixing the remaining three.",
+    "why_not_a_reversal": "The narrowing was declared, measured, and tracked (a108 design D5-2). This change is the tracked successor, not a contradiction."
+  },
+  "acceptance": [
+    "Registered ahead of implementation; work starts only after a108 lands",
+    "All three sibling endpoints publish sockets via stage+rename and reclaim every partial state their own lifecycle can produce, owner-death verified",
+    "A pre-chmod socket leftover no longer blocks engine boot on any endpoint",
+    "Live-owner takeover on alert control is either refused or explicitly documented and pinned as flock-defended",
+    "Crash-shape pins that can actually fail replace a108's tautological 2.5 pins",
+    "make gate CHANGE=a109-the-sibling-endpoints-recover-too passes"
+  ],
+  "measured": null,
+  "deviations": [],
+  "limits": [
+    "Whether the three fatal call sites in runEngineRun may degrade like strategy projection is decided per endpoint at design time — policy command is a command surface, not a read-only export, so a108 D3's argument does not transfer unexamined."
+  ]
+}

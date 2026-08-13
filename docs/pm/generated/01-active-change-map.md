@@ -105,3 +105,4 @@
 | `a103-the-rollback-pin-is-made-not-remembered` | STORY-TOS-a103 | implemented |
 | `a107-retire-the-second-protection-core` | STORY-TOS-a107 | in_progress |
 | `a108-boot-recovers-from-any-leftover` | STORY-TOS-a108 | in_progress |
+| `a109-the-sibling-endpoints-recover-too` | STORY-TOS-a109 | in_progress |
