@@ -243,9 +243,9 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	// replacement engine the predecessor's pid while the predecessor's marker is
 	// still fresh (a102 D4b-2). A build that cannot compute one says nothing, and
 	// the console then waits instead of trusting.
-	instance, terr := engineProcInstance(os.Getpid())
+	token, terr := engineProcInstance(os.Getpid())
 	if terr == nil {
-		marker.Identify(instance)
+		marker.Identify(token)
 	}
 	if merr != nil {
 		// Not a refusal. The exclusion is already held; what a missing marker
@@ -297,7 +297,7 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 		defer strategyRuntime.Close()
 	}
 	if projErr != nil {
-		reportStrategyProjectionDegraded(ctx, ectx, errOut, dir, instance, clk.Now(), projErr)
+		reportStrategyProjectionDegraded(ctx, ectx, errOut, dir, projErr)
 	}
 	// a098 4.4 — 밀린 critical 알림의 운영자 표면. 승인은 이 프로세스 안에서
 	// 일어나야 한다: 진입 게이트는 여기 메모리에 있고, 다른 프로세스가 원장만
@@ -323,54 +323,62 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	return rt.Run(runCtx)
 }
 
-// engineStrategyProjectionAlertType 은 강등이 남기는 알림의 event type 이다.
+// engineStrategyProjectionDegradedEvent 는 강등이 남기는 obs 이벤트 타입이다.
 //
-// 문자열을 여기 두는 이유는 `internal/execgw`의 park 알림과 같다: 원장 outbox의
-// `Type`은 자유 문자열이고, 이 행을 실제로 보내는 a098 전달 루프는 outbox 행을
-// 무조건 critical로 발행한다(`alertdelivery.go`). 등급표(`internal/obs`의
-// criticalEvents)에 이름을 올리는 것이 더 옳지만 그 파일은 이 change의 T2 소유가
-// 아니다 — review.md에 이견으로 남긴다.
-const engineStrategyProjectionAlertType = "engine.strategy_projection_unavailable"
+// # 이 이름이 obs 등급표에 없는 것이 **설계다** — a108 D3-2
+//
+// 다음 세 가지를 하지 마라. 셋 다 같은 사고로 이어진다.
+//
+//  1. 이 이름을 `internal/obs`의 `criticalEvents` 등급표에 올리지 마라.
+//  2. severity 를 critical 로 올리지 마라.
+//  3. 이 보고를 원장 outbox(`Journal.EnqueueAlert`)에 싣지 마라.
+//
+// 이유는 하나다. outbox 의 **미전달 행은 다음 부팅의 진입 게이트를 잠근다.**
+// `Journal.UndeliveredCount`는 Type 을 가리지 않고 PENDING 행을 세고
+// (`internal/journal/outbox.go:532-540`), `restoreAlertEntryLatch`가 그 수가 0보다
+// 크면 `execgw.ReasonAlertUndelivered`로 latch 한다
+// (`internal/app/engine/gateway.go:153-168`). 해제는 운영자 ack 뿐이다. 알림
+// publisher 가 설정되지 않은 배포에서 그 행은 **영원히** PENDING 이므로, 결과는
+// 「화면 하나를 잃었다는 보고가 실계좌의 신규 진입을 영구 차단한다」가 된다.
+//
+// obs 교리가 정확히 그것을 금지한다: "measurement failures are never critical …
+// 화면의 오탈자가 실계좌 매매를 멈출 수 있어서는 안 된다"
+// (`internal/obs/event.go:266-278`). projection 은 콘솔·httpapi 가 읽는 조회 전용
+// export 이므로 정확히 그 부류다.
+//
+// (원 D3 은 반대를 요구했고 `internal/execgw`의 park 알림을 선례로 들었다. 그것은
+// 선례가 아니었다 — 그 이벤트는 등급표에 **등재돼 있고** entry.Block 이 **의도된**
+// 판정이다. A2 적대 리뷰가 오독을 잡아 D3-2 로 결정을 반전시켰다.)
+//
+// 등급표 미등재 → `obs.SeverityOf`가 Normal 을 준다 → `Notify`는 로그 한 줄과
+// best-effort 발행만 하고 원장에 닿지 않는다(`obs/notifier.go:130-139`).
+// 나중에 Notifier 에 Publisher 가 붙어도 Normal 인 것이 **의도**다.
+const engineStrategyProjectionDegradedEvent obs.EventType = "engine.strategy_projection_unavailable"
 
-// reportStrategyProjectionDegraded 는 강등을 **두 곳**에 남긴다.
+// reportStrategyProjectionDegraded 는 강등을 두 곳에 남긴다: 기동 stderr 한 줄과
+// obs Normal 이벤트 로그.
 //
-// stderr 한 줄만 찍으면 그것은 「기동 1회 유실형」이다: 프로세스가 다시 뜨면 사라지고,
-// 운영자는 화면이 왜 비었는지 알 방법이 없다. 그러면 이 change가 만드는 것은 회복이
-// 아니라 **은폐**다. 그래서 durable outbox 행을 같이 쓴다 — 그 행은 전달될 때까지
-// PENDING으로 남고 `tossctl engine alerts list`가 보여준다.
-//
-// # event key 에 실행 토큰을 넣는 이유
-//
-// `EnqueueAlert`는 event key로 접고, remindAfter=0이므로 **이미 DELIVERED된 행을 다시
-// 세우지 않는다**(journal/outbox.go:142-145). key가 고정이면 오늘 강등을 한 번 알린 뒤
-// 다음 주의 강등 기동은 조용히 접힌다. 보고하는 조건은 "이 디렉터리가 망가졌다"가 아니라
-// "**이 실행**이 화면 없이 돈다"이므로, 마커가 쓰는 것과 같은 실행 토큰으로 구분한다.
-// 한 실행 안에서는 여전히 한 행이다.
+// 세 번째 표면은 이 함수 밖에 이미 있다 — 콘솔·httpapi 의 전략 화면이 dormant 로
+// 뜨고 그 자체가 「지금 화면이 없다」는 상시 표시다. 그래서 「stderr 한 줄은 1회
+// 유실형」이라는 원 D3 의 걱정은 durable outbox 행 없이도 답이 된다.
 func reportStrategyProjectionDegraded(ctx context.Context, ectx *engine.Context, errOut io.Writer,
-	dir, instance string, at time.Time, cause error) {
-	detail := fmt.Sprintf("전략 projection endpoint를 열지 못했다 (%s): %v",
-		strategyprojectionrpc.ControlDirectory(dir), cause)
+	dir string, cause error) {
+	control := strategyprojectionrpc.ControlDirectory(dir)
+	detail := fmt.Sprintf("전략 projection endpoint를 열지 못했다 (%s): %v", control, cause)
 	fmt.Fprintf(errOut, "note: %s\n"+
 		"      엔진은 보호 루프를 그대로 돌린다 — 잃은 것은 콘솔·httpapi의 전략 화면이다.\n", detail)
-	if ectx == nil || ectx.Journal == nil {
+	if ectx == nil || ectx.Notifier == nil {
 		return
 	}
-	run := strings.TrimSpace(instance)
-	if run == "" {
-		// /proc이 없는 커널이거나 읽지 못한 경우. 기동 시각이 같은 일을 한다 —
-		// 실행마다 다르고, 같은 실행 안에서는 한 번만 계산된다.
-		run = at.UTC().Format(time.RFC3339Nano)
-	}
-	if _, err := ectx.Journal.EnqueueAlert(ctx, journal.Alert{
-		EventKey: engineStrategyProjectionAlertType + "|" + dir + "|" + run,
-		Type:     engineStrategyProjectionAlertType,
-		Severity: string(obs.SeverityCritical),
-		Title:    "STRATEGY_PROJECTION_UNAVAILABLE",
-		Body:     detail,
-	}); err != nil {
-		fmt.Fprintf(errOut, "note: 그 강등을 알림 원장에 적지도 못했다 (%v). "+
-			"이 실행에 대해서는 위 한 줄이 유일한 기록이다.\n", err)
-	}
+	// 반환값을 버리는 것이 안전한 이유: `Notify`는 **critical** 이벤트를 durable 하게
+	// 만들지 못했을 때만 오류를 돌려준다(obs/notifier.go:124-139). 이 이벤트는
+	// Normal 이므로 그 경로에 들어가지 않는다.
+	_ = ectx.Notifier.Notify(ctx, obs.Event{
+		Type:   engineStrategyProjectionDegradedEvent,
+		Title:  "STRATEGY_PROJECTION_UNAVAILABLE",
+		Body:   detail,
+		Fields: map[string]any{obs.FieldScope: control},
+	})
 }
 
 // engineStrategyProjectionStart is 부팅 7단계가 여는 **조회 전용** projection

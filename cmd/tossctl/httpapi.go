@@ -143,7 +143,7 @@ func runHTTPAPI(cmd *cobra.Command, root *rootOptions, opts *httpAPIOptions) err
 		return err
 	}
 	defer resources.Close()
-	// a108 D4 — descriptor 부재와 dial 실패는 같은 강등이다.
+	// a108 D4-2 — 전략 endpoint 때문에 이 조회 데몬이 죽는 경로는 **하나도 없다.**
 	//
 	// 이 데몬은 descriptor 가 없으면 전략 화면 없이 뜨도록 **설계돼 있었다.** 그런데
 	// descriptor 가 있는데 dial 이 실패하면 fatal 이었고, 2026-08-13 의 반쪽 잔재
@@ -151,8 +151,13 @@ func runHTTPAPI(cmd *cobra.Command, root *rootOptions, opts *httpAPIOptions) err
 	// 떨어져 컨테이너가 `Restarting (1)` 로 돌았다. 설계된 강등과 crash loop 사이의
 	// 차이가 「파일 하나가 남아 있는가」일 이유가 없다.
 	//
-	// fatal 로 남는 것은 descriptor 를 **조사할 수조차 없는 경우**뿐이다. 그것은
-	// 잔재가 아니라 환경 이상이고, 삼키면 잘못 배치된 데몬이 조용히 반쪽으로 뜬다.
+	// **비-NotExist stat 오류도 강등이다** (원 D4 의 fatal 결정을 A2 리뷰가 뒤집었다).
+	// 「조사할 수 없는 것은 환경 이상이니 크게 실패해야 한다」가 원래 논지였는데,
+	// control 디렉터리 자리에 파일이 놓이거나 볼륨이 잘못 마운트되면 `os.Stat` 은
+	// ENOTDIR 로 실패하고 그러면 이 데몬은 **다시 crash loop 를 돈다** — 이 change 가
+	// 지우려던 바로 그 모양이다. 콘솔은 같은 상황에서 이미 경고 한 줄을 찍고 dormant
+	// 로 뜬다(`console.go:419-421`); 두 소비자가 같은 디스크 상태를 다르게 읽던 갈림을
+	// 여기서 닫는다. 삼키지 않는다는 요구는 **경고 문구**가 진다.
 	var strategyRuntime httpapi.StrategyRuntimeReader
 	if dir, dirErr := engineJournalDir(root); dirErr == nil {
 		descriptor := strategyprojectionrpc.DescriptorPath(dir)
@@ -167,7 +172,11 @@ func runHTTPAPI(cmd *cobra.Command, root *rootOptions, opts *httpAPIOptions) err
 				strategyRuntime = client
 			}
 		} else if !errors.Is(statErr, os.ErrNotExist) {
-			return fmt.Errorf("httpapi: inspect strategy runtime projection: %w", statErr)
+			fmt.Fprintf(cmd.ErrOrStderr(),
+				"note: strategy runtime endpoint를 확인할 수 없다 (%s): %v\n"+
+					"      데몬은 전략 화면 없이 뜬다 — 이것은 잔재가 아니라 환경 이상이다. "+
+					"경로·볼륨 배치를 고친 뒤 이 데몬을 재시작하면 붙는다.\n",
+				descriptor, statErr)
 		}
 	}
 	resources.reader.strategyRuntime = strategyRuntime
