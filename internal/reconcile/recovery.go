@@ -72,8 +72,10 @@ type Stabilisation struct {
 	// account that never settles is not a reason to trade on the last reading.
 	MaxAttempts int
 	// RateLimitBackoff is the wait after the broker refuses a read with a rate
-	// limit. Zero takes DefaultRateLimitBackoff. See ratelimit.go for why a
-	// refusal is waited out rather than counted as an attempt.
+	// limit. DefaultRateLimitBackoff is both the zero value and the floor:
+	// anything shorter is raised to it, because the spec fixes that interval as
+	// a lower bound rather than a preference. See ratelimit.go for why a refusal
+	// is waited out rather than counted as an attempt.
 	RateLimitBackoff time.Duration
 	// MaxRateLimitWait bounds the total time one recovery spends waiting out
 	// rate limits. Zero takes DefaultMaxRateLimitWait. Spending it fails the
@@ -91,10 +93,13 @@ func (s Stabilisation) withDefaults() Stabilisation {
 	if s.MaxAttempts <= 0 {
 		s.MaxAttempts = 5
 	}
-	// <= 0 rather than == 0 for the same reason as the three above: a negative
-	// backoff would make clock.Sleep return immediately and turn the retry into
-	// a spin against the broker that is already throttling us.
-	if s.RateLimitBackoff <= 0 {
+	// One rule covers three cases — unset, negative, and simply too short —
+	// because the reconciliation spec states a floor, not a default: the backoff
+	// "shall not" be shorter than the read-only survey's retry interval, and a
+	// knob that could go under it would make that requirement depend on who set
+	// the struct. Zero and negative land here too, so there is no second branch
+	// whose removal changes nothing (a102 A1 F6).
+	if s.RateLimitBackoff < DefaultRateLimitBackoff {
 		s.RateLimitBackoff = DefaultRateLimitBackoff
 	}
 	if s.MaxRateLimitWait <= 0 {

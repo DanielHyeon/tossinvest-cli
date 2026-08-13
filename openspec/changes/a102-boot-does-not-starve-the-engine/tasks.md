@@ -48,7 +48,7 @@ Teammate는 여기·design.md에 없는 결정이 필요해지면 **멈추고 Ma
   기록.
   → 143건 통과 · coverage 86.6% · `make lint` rc=0 (gofmt 실재 확인).
 
-- [ ] 1.9 [T] **A1 리뷰 반영 (FIX-FIRST)** — ① `ratelimit.go:95` `%v`→`%w`
+- [x] 1.9 [T] **A1 리뷰 반영 (FIX-FIRST)** — ① `ratelimit.go:95` `%v`→`%w`
   (F3: 취소 정체가 지워진다 — 이 change의 존재 이유와 같은 결함) + 취소 시
   `errors.Is(err, context.Canceled)` 고정 테스트 ② 취소 후 브로커 호출 수 단언
   (F2 — 생존 뮤테이션 N2를 죽인다) ③ `MaxRateLimitWait = 2×RateLimitBackoff`
@@ -57,6 +57,17 @@ Teammate는 여기·design.md에 없는 결정이 필요해지면 **멈추고 Ma
   값과 무관하게 성립시킨다) ⑥ 영구 거부 브로커(refusals 무한) 케이스 (A1 부수
   관찰 — 예산의 존재 이유를 산술이 아니라 무한 거부로도 고정) ⑦ 예산 < 백오프
   1회일 때 메시지 정직성 (F8). 뮤테이션 N1·N2 재가해 죽음 확인.
+  → ① `ratelimit.go:108` `%w` + `errors.Is(err, context.Canceled)` 단언 (RED 실측:
+  `= false; err = …: waiting out a rate limit: context canceled`).
+  ② `orders.calls == 1` 단언 — N2 아래 `reads = 21, want 1`로 죽는다.
+  ③ `TestRateLimitBudgetStopsExactlyAtTheBoundary`(30s/15s) — N1 아래 죽는다.
+  ④ 대기 중 `CheckEntry` = recovery_incomplete 단언.
+  ⑤ `withDefaults` B4를 `< DefaultRateLimitBackoff` 한 분기로 (포섭되는 죽은 분기를
+  만들지 않는다) + `TestRateLimitBackoffNeverGoesBelowTheSurveyInterval`
+  (RED: `RateLimitWaited = 5s, want the floor 15s`).
+  ⑥ `TestPermanentlyRefusingBrokerExhaustsTheBudget` — 무한 거부, 20회 대기/5m/21 호출.
+  ⑦ `TestBudgetTooSmallForOneBackoffSaysSo` (RED: 옛 문장이 한 번의 거부를
+  "kept being refused"라 적었다). **147건 통과 · `make lint` rc=0 · N1·N2 둘 다 죽음.**
 
 ## 2. T1 — 산출물 정리
 

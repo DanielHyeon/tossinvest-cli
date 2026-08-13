@@ -1,19 +1,19 @@
 # Branch Test Map: `Stabilisation.withDefaults`
 
-Source: `internal/reconcile/recovery.go` (84-104). AST 기준 branches **5** / returns 1.
+Source: `internal/reconcile/recovery.go` (86-109). AST 기준 branches **5** / returns 1.
 
 ## 커버리지는 주장이 아니라 측정값이다
 
 `go test ./internal/reconcile/ -count=1 -coverprofile`을 편집 전(`:75-86`, 130건 통과)과
-편집 후(`:84-104`, 143건 통과 · 86.6%)에 각각 돌려 블록 카운트를 잘라 읽었다.
+편집 후(`:86-109`, **147건 통과** · 86.6%)에 각각 돌려 블록 카운트를 잘라 읽었다.
 
 | Branch | 위치 | 조건 평가 | 본문 실행 | 근거 블록 (편집 후) | 편집 전 |
 |---|---|---|---|---|---|
-| B1 | `:85` `Interval <= 0` | yes | **no** | `85.21,87.3` count=**0** | count=0 |
-| B2 | `:88` `Required <= 0` | yes | **no** | `88.21,90.3` count=**0** | count=0 |
-| B3 | `:91` `MaxAttempts <= 0` | yes | **no** | `91.24,93.3` count=**0** | count=0 |
-| B4 | `:97` `RateLimitBackoff <= 0` | yes | **yes** | `97.29,99.3` count=**1** | (없던 분기) |
-| B5 | `:100` `MaxRateLimitWait <= 0` | yes | **yes** | `100.29,102.3` count=**1** | (없던 분기) |
+| B1 | `:87` `Interval <= 0` | yes | **no** | `87.21,89.3` count=**0** | count=0 |
+| B2 | `:90` `Required <= 0` | yes | **no** | `90.21,92.3` count=**0** | count=0 |
+| B3 | `:93` `MaxAttempts <= 0` | yes | **no** | `93.24,95.3` count=**0** | count=0 |
+| B4 | `:102` `RateLimitBackoff < 15s` | yes | **yes** | `102.50,104.3` count=**1** | (없던 분기) |
+| B5 | `:105` `MaxRateLimitWait <= 0` | yes | **yes** | `105.29,107.3` count=**1** | (없던 분기) |
 
 **a102가 더한 두 분기는 본문까지 실행된다.** 물려받은 세 분기는 편집 전과 똑같이 죽어
 있다 — 이 패키지의 모든 recovery 테스트가 `recoveryOptions`(`recovery_test.go:130`)와
@@ -26,11 +26,16 @@ Source: `internal/reconcile/recovery.go` (84-104). AST 기준 branches **5** / r
 
 | 분기 (재인용) | 무엇을 지는가 | 지는 테스트 |
 |---|---|---|
-| B4 `:97` | zero → 15s이고 그 값이 **서베이의 첫 백오프와 같다** | `TestRateLimitDefaultsMatchTheSurveyDiscipline` |
-| B5 `:100` | zero → 5m | `TestRateLimitDefaultsMatchTheSurveyDiscipline` |
+| B4 `:102` | zero → 15s이고 그 값이 **서베이의 첫 백오프와 같다** | `TestRateLimitDefaultsMatchTheSurveyDiscipline` |
+| B4 `:102` (하한) | 0보다 크지만 15s보다 짧은 노브도 15s로 올라간다 | `TestRateLimitBackoffNeverGoesBelowTheSurveyInterval` (§1.9 F6) |
+| B5 `:105` | zero → 5m | `TestRateLimitDefaultsMatchTheSurveyDiscipline` |
 
 그 테스트는 상수 비교(`soak.ReadRetryBackoff(0)`)와 **배선 실측**(zero 값으로 만든 복구가
 실제로 15초를 요청하는지)을 둘 다 본다. 상수만 맞고 배선이 없으면 소용없기 때문이다.
+
+§1.9의 하한 테스트는 5초짜리 노브로 만든 복구가 **실제로 15초를 요청하는지**를 잰다.
+RED 실측(구현 원복 상태): `RateLimitWaited = 5s, want the floor 15s` ·
+`waits = [5s 2s], want the first one raised to 15s`.
 
 ## 뮤테이션 정산
 
@@ -44,5 +49,5 @@ B4·B5 자체의 반증은 (a)의 부수 효과로도 관측됐다 — 뮤테이
 ## 산출물 근거
 
 - 분기·이탈 열거: `ast.json` (branches 5, returns 1) — `go run ./tools/logic-map`
-- 커버리지: `go test ./internal/reconcile/ -count=1 -coverprofile` exit 0 · 143건 통과 · 86.6%
-- 호출자 전수: `rg -n 'withDefaults' internal/reconcile/` → `recovery.go:84`(선언) · `:171`(유일 호출)
+- 커버리지: `go test ./internal/reconcile/ -count=1 -coverprofile` exit 0 · **147건 통과** · 86.6% (§1.9)
+- 호출자 전수: `rg -n 'withDefaults' internal/reconcile/` → `recovery.go:86`(선언) · `:176`(유일 호출)

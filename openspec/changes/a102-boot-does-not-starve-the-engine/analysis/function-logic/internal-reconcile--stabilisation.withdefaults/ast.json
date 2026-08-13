@@ -1,16 +1,16 @@
 {
   "file": "internal/reconcile/recovery.go",
-  "source_sha256": "e0d5690ff164c31e3f5cbb0086cdab84b206a0854a84110b120e87fb98aedfb1",
+  "source_sha256": "f32ab95497925c87fbd750dcd60772f75f30a39190dc8be03a1a7c8704622dc5",
   "package": "reconcile",
   "function": "withDefaults",
   "receiver": "Stabilisation",
   "signature": "Stabilisation.withDefaults(params=0, results=1)",
   "start": {
-    "line": 84,
+    "line": 86,
     "column": 1
   },
   "end": {
-    "line": 104,
+    "line": 109,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 85,
+        "line": 87,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 88,
+        "line": 90,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 91,
+        "line": 93,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 97,
+        "line": 102,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 100,
+        "line": 105,
         "column": 2
       }
     }
@@ -59,7 +59,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 103,
+        "line": 108,
         "column": 2
       }
     }
@@ -69,35 +69,35 @@
     {
       "kind": "=",
       "at": {
-        "line": 86,
+        "line": 88,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 89,
+        "line": 91,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 92,
+        "line": 94,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 98,
+        "line": 103,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 101,
+        "line": 106,
         "column": 3
       }
     }

@@ -86,13 +86,26 @@ func (r *Recovery) waitOutRateLimit(
 ) error {
 	backoff := r.stab.RateLimitBackoff
 	if spent := progress.RateLimitWaited + backoff; spent > r.stab.MaxRateLimitWait {
+		// The message says what actually happened. A budget too small to cover a
+		// single backoff means nothing was ever waited out, and a reason that
+		// says "kept being refused" about one refusal sends an operator looking
+		// for a broker outage that did not happen (a102 A1 F8).
+		if progress.RateLimitWaits == 0 {
+			return fmt.Errorf(
+				"%w: the account read was refused with a rate limit and the %s budget "+
+					"cannot cover one %s backoff, so it waited 0s and stopped",
+				ErrRecoveryIncomplete, r.stab.MaxRateLimitWait, backoff)
+		}
 		return fmt.Errorf(
 			"%w: the account read kept being refused with a rate limit; "+
 				"waited %s of the %s budget and stopped rather than overspend it",
 			ErrRecoveryIncomplete, progress.RateLimitWaited, r.stab.MaxRateLimitWait)
 	}
+	// %w, not %v: the cause here is the shutdown signal, and a caller that cannot
+	// tell "the operator stopped us" from "the broker stopped us" is the exact
+	// defect this change exists to remove (a102 A1 F3).
 	if err := clk.Sleep(ctx, backoff); err != nil {
-		return fmt.Errorf("%w: waiting out a rate limit: %v", ErrRecoveryIncomplete, err)
+		return fmt.Errorf("%w: waiting out a rate limit: %w", ErrRecoveryIncomplete, err)
 	}
 	progress.RateLimitWaits++
 	progress.RateLimitWaited += backoff

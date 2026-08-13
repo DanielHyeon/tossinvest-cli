@@ -1,6 +1,6 @@
 # Branch Test Map: `Recovery.stableSnapshot`
 
-Source: `internal/reconcile/recovery.go` (366-400). AST 기준 branches **7** / returns 5.
+Source: `internal/reconcile/recovery.go` (371-405). AST 기준 branches **7** / returns 5.
 
 ## 편집 전 — 무엇이 비어 있었나 (측정값)
 
@@ -21,23 +21,23 @@ Source: `internal/reconcile/recovery.go` (366-400). AST 기준 branches **7** / 
 
 ## 편집 후 — 재측정 (측정값)
 
-`go test ./internal/reconcile/ -count=1 -coverprofile`(exit 0 · **143건 통과**,
-coverage 86.6%)을 `recovery.go:366-400`으로 자른 것이다.
+`go test ./internal/reconcile/ -count=1 -coverprofile`(exit 0 · **147건 통과**,
+coverage 86.6%)을 `recovery.go:371-405`으로 자른 것이다.
 
 | Branch | 위치 | 조건 평가 | 본문 실행 | 근거 블록 | 지는 테스트 |
 |---|---|---|---|---|---|
-| B1 | `:371` 루프 | yes | **yes** | `371.51,373.17` count=1 | 전부 |
-| B2 | `:373` `Collect` 오류 | yes | **yes** | `373.17,374.48` count=1 | `TestNonRateLimitedCollectStillFailsImmediately` |
-| B3 | `:374` 429가 **아님** | yes | **yes** | `374.48,376.5` count=1 | `TestNonRateLimitedCollectStillFailsImmediately` |
-| B4 | `:377` 백오프 실패 | yes | **yes** | `377.68,379.5` count=1 | `TestRateLimitWaitBudgetExhaustionFailsClosed` · `TestRateLimitBackoffStopsOnContextCancel` |
-| B5 | `:385` `Stable` | yes | **yes** | `385.54,387.4` count=1 | `TestRateLimitedCollectDoesNotEndRecovery` |
-| B6 | `:388` 상한 도달 | yes | **yes** | `388.35,389.9` count=1 | `TestRecoveryFailsClosedWhenTheAccountWillNotSettle` (`recovery_test.go:302`) |
-| B7 | `:391` `Sleep` 오류 | yes | **no** | `391.57,393.4` count=**0** | — (아래 참조) |
+| B1 | `:376` 루프 | yes | **yes** | `376.51,378.17` count=1 | 전부 |
+| B2 | `:378` `Collect` 오류 | yes | **yes** | `378.17,379.48` count=1 | `TestNonRateLimitedCollectStillFailsImmediately` |
+| B3 | `:379` 429가 **아님** | yes | **yes** | `379.48,381.5` count=1 | `TestNonRateLimitedCollectStillFailsImmediately` |
+| B4 | `:382` 백오프 실패 | yes | **yes** | `382.68,384.5` count=1 | `TestRateLimitWaitBudgetExhaustionFailsClosed` · `TestRateLimitBackoffStopsOnContextCancel` · `TestRateLimitBudgetStopsExactlyAtTheBoundary` · `TestPermanentlyRefusingBrokerExhaustsTheBudget` · `TestBudgetTooSmallForOneBackoffSaysSo` |
+| B5 | `:390` `Stable` | yes | **yes** | `390.54,392.4` count=1 | `TestRateLimitedCollectDoesNotEndRecovery` |
+| B6 | `:393` 상한 도달 | yes | **yes** | `393.35,394.9` count=1 | `TestRecoveryFailsClosedWhenTheAccountWillNotSettle` (`recovery_test.go:302`) |
+| B7 | `:396` `Sleep` 오류 | yes | **no** | `396.57,398.4` count=**0** | — (아래 참조) |
 
 **편집 전에 비어 있던 두 칸 중 하나(수집 오류)가 채워졌다.** 429 경로(B3의 반대편)와
 백오프 실패(B4)는 새로 생겼고 처음부터 테스트가 있다.
 
-### ⚠ 남은 미덮임 하나 — B7 (`:391` 안정화 간격 대기의 실패)
+### ⚠ 남은 미덮임 하나 — B7 (`:396` 안정화 간격 대기의 실패)
 
 편집 전에도 count=0이었고 지금도 count=0이다. **a102가 만든 공백이 아니라 물려받은
 공백이다.** a102의 대기는 B4(429 백오프)이고 그쪽의 `ctx` 취소는
@@ -52,10 +52,24 @@ coverage 86.6%)을 `recovery.go:366-400`으로 자른 것이다.
 | (e) 모든 오류를 429로 본다 | `:374`의 조건에 `&& false` | `TestNonRateLimitedCollectStillFailsImmediately` | 같은 sha256 + `grep -c "errors.Is(err, official.ErrRateLimited)"` = 1 |
 | (d) 백오프가 취소를 무시한다 | `ratelimit.go`의 `clk.Sleep(ctx, …)` → `context.Background()` | `TestRateLimitBackoffStopsOnContextCancel` (2.19s 만에 실패) | `ratelimit.go` sha256 = `d5146716…` + `grep -c "clk.Sleep(ctx, backoff)"` = 1 |
 
+### §1.9 — A1이 살려 보인 뮤테이션 둘을 죽였다
+
+A1은 아래 둘을 가하고 **143건 전부 통과**하는 것을 실증했다. 즉 그 시점의 스위트는
+두 안전 성질을 **고정하지 못했다.** §1.9가 테스트를 더해 둘 다 죽인다.
+
+| 뮤테이션 | 실제 편집 | 1c76a580에서 | **§1.9에서 죽는 테스트** | 원복 확인 |
+|---|---|---|---|---|
+| **N1** 예산 경계 | `ratelimit.go:88` `spent > budget` → `>=` | **살아남음** (143 통과) | `TestRateLimitBudgetStopsExactlyAtTheBoundary` · `TestPermanentlyRefusingBrokerExhaustsTheBudget` | ratelimit.go sha256 `45170fa8…` + `grep -c "spent > r.stab.MaxRateLimitWait"` = 1 |
+| **N2** 종료 신호 삼킴 | `ratelimit.go:107` `if err := clk.Sleep(...)` → `_ = clk.Sleep(...)` | **살아남음** (143 통과) | `TestRateLimitBackoffStopsOnContextCancel` — `order-list reads = 21, want 1` | 같은 sha256 + `grep -c "waiting out a rate limit: %w"` = 1 |
+
+N2가 살아남았던 기전: 취소된 ctx에서 `Sleep`이 즉시 돌아오므로 예산이 순식간에 타고
+**최종 오류가 같아진다.** 오류만 보는 단언으로는 구분되지 않고, 다른 것은 **브로커를
+스무 번 더 불렀다는 사실**뿐이다. 그래서 §1.9의 단언은 호출 수다.
+
 (b)·(c)는 각각 `ratelimit.go`·`snapshot.go`의 것이라 그 번들에 적었다.
 
 ## 산출물 근거
 
 - 분기·이탈 열거: `ast.json` (branches 7, returns 5) — `go run ./tools/logic-map`
-- 커버리지: `go test ./internal/reconcile/ -count=1 -coverprofile` exit 0 · 143건 통과 · 86.6%
+- 커버리지: `go test ./internal/reconcile/ -count=1 -coverprofile` exit 0 · **147건 통과** · 86.6% (§1.9)
 - 편집 전 기준선: 같은 명령, 130건 통과 (HEAD `03139000`)
