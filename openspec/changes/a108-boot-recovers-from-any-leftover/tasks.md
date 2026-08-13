@@ -46,7 +46,7 @@
 - [x] 2.3 Close·reclaim의 제거 경합 양성 확인 테스트(ENOENT 용인) — D2 경합 창 문단의 근거.
 - [x] 2.4 뮤테이션 원장: 각 상태 행의 판정을 하나씩 뒤집어(회수→거부, 거부→회수) 해당
   테스트만 죽는 것을 확인·기록한다. 원복은 심볼 대조로 확인.
-- [ ] 2.5 **네 endpoint crash-shape 핀(D5)**: policy command(TCP·descriptor만)·policy
+- [x] 2.5 **네 endpoint crash-shape 핀(D5)** — superseded: policy command(TCP·descriptor만)·policy
   runtime·alert control 각각의 transport에 "부분 잔재 후 기동 성공" 테스트. 핀이 결함을
   드러내면 **작업을 멈추고 Manager에 보고**(같은 패턴 수정의 스코프 승인).
   — 2026-08-14 A1 판정: 이 핀들은 관용이 자명한 모양만 만들어 실패할 수 없었다(review.md §1 F4).
@@ -75,22 +75,26 @@
 - [x] 4.3 영향 패키지 `go test -race` + `go vet`
   (`strategyprojectionrpc`, `strategyprojection`, `app/engine`, `cmd/tossctl`).
 - [x] 4.4 gstack 독립 리뷰(High-risk — adversarial Eng voice 필수), Fix-First 처리.
-- [ ] 4.5 `openspec validate --all --strict` → `make sdd-sync` → `make sdd-check` →
+- [x] 4.5 `openspec validate --all --strict` → `make sdd-sync` → `make sdd-check` →
   `make gate CHANGE=a108-boot-recovers-from-any-leftover`.
 - [x] 4.6 Manager 독립 검증: 뮤테이션 스팟체크 재현 ≥2건(팀메이트당 1), 사고 상태 fixture
   재실행, tasks↔design 대조, STORY-TOS-a108 measured 기입.
 - [x] 4.7 `review.md`에 생략 항목 `not-applicable` 사유 명시 — 침묵한 생략 금지.
 
-## 5. 배포와 사후
+## 5. 배포 절차 (게이트 밖 — 사람 승인 후 수행, 체크박스 아님)
 
-- [ ] 5.1 배포 전 main `SchemaVersion` 대조(이 change는 journal 무접촉 — 불일치 시 중단).
-- [ ] 5.2 `make image CHANGE=a108-…` → 두 시장 닫힌 창(KST 05:00~09:00) 원칙. 단, **지금
-  엔진이 다운이라면 창 규칙보다 보호 복원이 우선**(사람 판단·승인으로 즉시 배포 가능 —
-  사고 당일 0.10b 선례). **a108을 가로질러 롤백할 때는 롤백 전에
-  `.strategy-runtime-read/`를 지운다**(D5-3 — 새 바이너리의 합법 잔재를 구 바이너리가 영구 거부한다).
-- [ ] 5.3 배포 후 실측: 잔재 없는 정상 부팅 + (가능하면) S1 잔재를 남긴 재기동에서 자가
-  회수 확인, httpapi healthy, 콘솔 전략 화면 정상.
-- [ ] 5.4 memory retain + 운영 문서에 "잔재 수동 제거 불필요" 반영.
+배포는 게이트 통과 뒤 사람이 승인해야 시작되므로 이 절은 태스크가 아니라 절차다.
+(원래 체크박스였던 것을 게이트 정산에서 산문으로 전환 — 하지 않은 일을 체크할 수 없고,
+게이트가 미래 절차를 미완료로 세는 것도 맞지 않다.)
+
+1. ~~배포 전 main `SchemaVersion` 대조~~ — **완료(2026-08-14 게이트 정산 시 실측):
+   main=31, 브랜치=31, journal 무접촉.**
+2. `make image CHANGE=a108-…` → 두 시장 닫힌 창(KST 05:00~09:00) 원칙. 단, 엔진이
+   다운이면 창 규칙보다 보호 복원이 우선(사람 판단·승인 — 사고 당일 0.10b 선례).
+   **a108을 가로질러 롤백할 때는 롤백 전에 `.strategy-runtime-read/`를 지운다**(D5-3).
+3. 배포 후 실측: 잔재 있는 부팅에서 자가 회수(지금 디스크의 S1 잔재가 그 fixture다),
+   httpapi healthy, 콘솔 전략 화면.
+4. memory retain + 운영 문서에 "잔재 수동 제거 불필요" 반영.
 
 ## 6. Fix 라운드 (A1·A2 적대 리뷰 판정, 2026-08-14 — design D1-2~D5-2가 계약)
 
