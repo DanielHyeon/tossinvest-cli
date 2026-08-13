@@ -28,6 +28,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/performancejournal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/settingmeta"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc"
 	"github.com/spf13/cobra"
 )
@@ -117,6 +118,75 @@ func (r *httpAPIResources) Close() error {
 	return errors.Join(errs...)
 }
 
+// unavailableStrategyRuntime 은 붙지 못한 endpoint 자리에 꽂는 **항상 실패하는** reader 다.
+//
+// 자리를 비워 두면(nil) 집계는 그것을 `NOT_CONFIGURED` 로 그린다. 그 값의 뜻은
+// 「이 배포는 전략 화면을 안 쓴다」 — **배포 선택**이지 장애가 아니다. 엔진이 죽어서
+// 못 붙은 것을 같은 값으로 그리면 운영자는 화면에서 둘을 구별할 수 없다.
+//
+// 이 구분은 집계 쪽에 이미 있었다(`httpAPIReader.Snapshot`: reader 가 없으면 dormant,
+// 있는데 못 읽으면 unavailable). 없던 것은 **부팅이 그 구분을 지키는 일**이다 —
+// 붙지 못했다는 사실을 nil 로 접으면 그 뒤의 판정이 아무리 정확해도 값이 틀린다.
+type unavailableStrategyRuntime struct{ cause error }
+
+func (r unavailableStrategyRuntime) Read(context.Context) (strategyprojection.Snapshot, error) {
+	return strategyprojection.Snapshot{}, fmt.Errorf("strategy runtime projection unavailable: %w", r.cause)
+}
+
+// strategyRuntimeReaderFor 는 디스크의 전략 endpoint 상태를 reader 하나로 접는다.
+//
+// # a108 D4-2 — 전략 endpoint 때문에 이 조회 데몬이 죽는 경로는 하나도 없다
+//
+// 이 데몬은 descriptor 가 없으면 전략 화면 없이 뜨도록 **설계돼 있었다.** 그런데
+// descriptor 가 있는데 dial 이 실패하면 fatal 이었고, 2026-08-13 의 반쪽 잔재
+// (endpoint.json 은 남고 runtime.sock 은 unlink 된 상태) 가 정확히 그쪽으로 떨어져
+// 컨테이너가 `Restarting (1)` 로 돌았다. 설계된 강등과 crash loop 사이의 차이가
+// 「파일 하나가 남아 있는가」일 이유가 없다.
+//
+// **비-NotExist stat 오류도 강등이다** (원 D4 의 fatal 결정을 A2 리뷰가 뒤집었다).
+// 「조사할 수 없는 것은 환경 이상이니 크게 실패해야 한다」가 원래 논지였는데, control
+// 디렉터리 자리에 파일이 놓이거나 볼륨이 잘못 마운트되면 `os.Stat` 은 ENOTDIR 로
+// 실패하고 그러면 이 데몬은 **다시 crash loop 를 돈다** — 이 change 가 지우려던 바로
+// 그 모양이다. 콘솔은 같은 상황에서 이미 경고 한 줄을 찍고 dormant 로 뜬다
+// (`internal/console` 의 전략 화면). 삼키지 않는다는 요구는 **경고 문구**가 진다.
+//
+// 함수로 뽑은 이유는 이 판정이 **직접 측정 가능해야** 하기 때문이다. 데몬 안에 묻혀
+// 있으면 「어느 실패가 어느 화면 값이 되는가」를 재려면 데몬 전체를 띄우고 TLS·인증을
+// 지나 HTTP 로 물어야 한다 — 재는 것은 그 배관이 아니라 이 판정인데도.
+func strategyRuntimeReaderFor(ctx context.Context, root *rootOptions,
+	errOut io.Writer) httpapi.StrategyRuntimeReader {
+	dir, dirErr := engineJournalDir(root)
+	if dirErr != nil {
+		fmt.Fprintf(errOut,
+			"note: 엔진 디렉터리를 정하지 못했다 (%v)\n"+
+				"      데몬은 전략 화면 없이 뜬다 — --config-dir 나 XDG 경로를 고친 뒤 재시작하면 붙는다.\n",
+			dirErr)
+		return nil
+	}
+	descriptor := strategyprojectionrpc.DescriptorPath(dir)
+	if _, statErr := os.Stat(descriptor); statErr != nil {
+		if !errors.Is(statErr, os.ErrNotExist) {
+			fmt.Fprintf(errOut,
+				"note: strategy runtime endpoint를 확인할 수 없다 (%s): %v\n"+
+					"      데몬은 전략 화면 없이 뜬다 — 이것은 잔재가 아니라 환경 이상이다. "+
+					"경로·볼륨 배치를 고친 뒤 이 데몬을 재시작하면 붙는다.\n",
+				descriptor, statErr)
+		}
+		return nil
+	}
+	client, dialErr := strategyprojectionrpc.Dial(ctx, descriptor)
+	if dialErr != nil {
+		fmt.Fprintf(errOut,
+			"note: strategy runtime projection에 연결하지 못했다 (%s): %v\n"+
+				"      데몬은 전략 화면 없이 뜬다 — 엔진이 다시 뜬 뒤 이 데몬을 재시작하면 붙는다.\n",
+			descriptor, dialErr)
+		// nil 이 아니라 sentinel 이다. descriptor 가 **있는데** 못 붙은 것은 부재가
+		// 아니므로 부재의 화면 값을 쓰면 안 된다(unavailableStrategyRuntime 의 주석).
+		return unavailableStrategyRuntime{cause: dialErr}
+	}
+	return client
+}
+
 func runHTTPAPI(cmd *cobra.Command, root *rootOptions, opts *httpAPIOptions) error {
 	ctx := cmd.Context()
 	if ctx == nil {
@@ -138,47 +208,12 @@ func runHTTPAPI(cmd *cobra.Command, root *rootOptions, opts *httpAPIOptions) err
 			return err
 		}
 	}
-	resources, err := openHTTPAPIResources(ctx, root, time.Now)
+	resources, err := openHTTPAPIResources(ctx, root, time.Now, cmd.ErrOrStderr())
 	if err != nil {
 		return err
 	}
 	defer resources.Close()
-	// a108 D4-2 — 전략 endpoint 때문에 이 조회 데몬이 죽는 경로는 **하나도 없다.**
-	//
-	// 이 데몬은 descriptor 가 없으면 전략 화면 없이 뜨도록 **설계돼 있었다.** 그런데
-	// descriptor 가 있는데 dial 이 실패하면 fatal 이었고, 2026-08-13 의 반쪽 잔재
-	// (endpoint.json 은 남고 runtime.sock 은 unlink 된 상태) 가 정확히 그쪽으로
-	// 떨어져 컨테이너가 `Restarting (1)` 로 돌았다. 설계된 강등과 crash loop 사이의
-	// 차이가 「파일 하나가 남아 있는가」일 이유가 없다.
-	//
-	// **비-NotExist stat 오류도 강등이다** (원 D4 의 fatal 결정을 A2 리뷰가 뒤집었다).
-	// 「조사할 수 없는 것은 환경 이상이니 크게 실패해야 한다」가 원래 논지였는데,
-	// control 디렉터리 자리에 파일이 놓이거나 볼륨이 잘못 마운트되면 `os.Stat` 은
-	// ENOTDIR 로 실패하고 그러면 이 데몬은 **다시 crash loop 를 돈다** — 이 change 가
-	// 지우려던 바로 그 모양이다. 콘솔은 같은 상황에서 이미 경고 한 줄을 찍고 dormant
-	// 로 뜬다(`console.go:419-421`); 두 소비자가 같은 디스크 상태를 다르게 읽던 갈림을
-	// 여기서 닫는다. 삼키지 않는다는 요구는 **경고 문구**가 진다.
-	var strategyRuntime httpapi.StrategyRuntimeReader
-	if dir, dirErr := engineJournalDir(root); dirErr == nil {
-		descriptor := strategyprojectionrpc.DescriptorPath(dir)
-		if _, statErr := os.Stat(descriptor); statErr == nil {
-			client, dialErr := strategyprojectionrpc.Dial(ctx, descriptor)
-			if dialErr != nil {
-				fmt.Fprintf(cmd.ErrOrStderr(),
-					"note: strategy runtime projection에 연결하지 못했다 (%s): %v\n"+
-						"      데몬은 전략 화면 없이 뜬다 — 엔진이 다시 뜬 뒤 이 데몬을 재시작하면 붙는다.\n",
-					descriptor, dialErr)
-			} else {
-				strategyRuntime = client
-			}
-		} else if !errors.Is(statErr, os.ErrNotExist) {
-			fmt.Fprintf(cmd.ErrOrStderr(),
-				"note: strategy runtime endpoint를 확인할 수 없다 (%s): %v\n"+
-					"      데몬은 전략 화면 없이 뜬다 — 이것은 잔재가 아니라 환경 이상이다. "+
-					"경로·볼륨 배치를 고친 뒤 이 데몬을 재시작하면 붙는다.\n",
-				descriptor, statErr)
-		}
-	}
+	strategyRuntime := strategyRuntimeReaderFor(ctx, root, cmd.ErrOrStderr())
 	resources.reader.strategyRuntime = strategyRuntime
 
 	snapshots, err := newHTTPAPISnapshotCache(resources.reader)
@@ -549,7 +584,13 @@ func httpAPIBoundary(opts *httpAPIOptions) (*networkboundary.Boundary, bool, err
 	return boundary, directTLS, nil
 }
 
-func openHTTPAPIResources(ctx context.Context, root *rootOptions, now func() time.Time) (*httpAPIResources, error) {
+// openHTTPAPIResources 는 조회 데몬이 읽을 저장소와 reader 를 연다.
+//
+// errOut 이 인자에 있는 이유는 이 함수의 강등이 **조용했기** 때문이다: 엔진
+// 디렉터리를 정하지 못하면 엔진 마커와 관리 런타임 화면이 그냥 빈 채로 뜬다.
+// 삼키지 않는다는 요구는 fatal 이 아니라 경고 문구가 진다(a108 D4-2와 같은 판정).
+func openHTTPAPIResources(ctx context.Context, root *rootOptions, now func() time.Time,
+	errOut io.Writer) (*httpAPIResources, error) {
 	journalPath, err := consoleJournalPath(root)
 	if err != nil {
 		return nil, err
@@ -599,6 +640,14 @@ func openHTTPAPIResources(ctx context.Context, root *rootOptions, now func() tim
 		reader.managementRuntime = positionPolicyRuntimeDescriptorReader{
 			descriptorPath: positionpolicyrpc.RuntimeDescriptorPath(dir),
 		}
+	} else {
+		// 무경고 강등 금지. 여기서 조용히 지나가면 엔진 마커와 관리 런타임 화면이
+		// **이유 없이** 빈 채로 뜨고, 운영자가 보는 것은 「엔진이 없다」와 구별되지
+		// 않는다. 데몬은 그대로 뜬다 — 말은 하되 죽지는 않는다.
+		fmt.Fprintf(errOut,
+			"note: 엔진 디렉터리를 정하지 못했다 (%v)\n"+
+				"      엔진 상태·관리 런타임 화면이 빈다 — --config-dir 나 XDG 경로를 고친 뒤 재시작하면 붙는다.\n",
+			err)
 	}
 	if journalReader != nil {
 		reader.performanceSource = performancejournal.New(journalReader)

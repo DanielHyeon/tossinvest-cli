@@ -243,8 +243,7 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	// replacement engine the predecessor's pid while the predecessor's marker is
 	// still fresh (a102 D4b-2). A build that cannot compute one says nothing, and
 	// the console then waits instead of trusting.
-	token, terr := engineProcInstance(os.Getpid())
-	if terr == nil {
+	if token, terr := engineProcInstance(os.Getpid()); terr == nil {
 		marker.Identify(token)
 	}
 	if merr != nil {
@@ -294,6 +293,11 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	if strategyRuntime != nil {
 		// nil 수신자에도 안전한 Close이지만, 강등 경로가 Close를 부를 이유는 없다.
 		// 조건을 여기 두면 그 판단이 이 파일 안에 남는다.
+		//
+		// 불변식: 이 Close는 **journal flock을 쥔 채로** 돈다. defer는 LIFO이고
+		// 1단계의 `lock.Release()`가 가장 먼저 등록됐으므로 가장 나중에 돈다 —
+		// 그래서 이 프로세스의 잔재 제거와 다음 엔진의 회수·발행이 겹칠 수 없다
+		// (회수 함수가 flock을 자기 방어로 인용하는 근거가 이 순서다).
 		defer strategyRuntime.Close()
 	}
 	if projErr != nil {
@@ -335,15 +339,16 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 //
 // 이유는 하나다. outbox 의 **미전달 행은 다음 부팅의 진입 게이트를 잠근다.**
 // `Journal.UndeliveredCount`는 Type 을 가리지 않고 PENDING 행을 세고
-// (`internal/journal/outbox.go:532-540`), `restoreAlertEntryLatch`가 그 수가 0보다
+// (`internal/journal` 의 `Journal.UndeliveredCount`), `restoreAlertEntryLatch`가 그 수가 0보다
 // 크면 `execgw.ReasonAlertUndelivered`로 latch 한다
-// (`internal/app/engine/gateway.go:153-168`). 해제는 운영자 ack 뿐이다. 알림
+// (`internal/app/engine` 의 `restoreAlertEntryLatch`). 해제는 운영자 ack 뿐이다. 알림
 // publisher 가 설정되지 않은 배포에서 그 행은 **영원히** PENDING 이므로, 결과는
 // 「화면 하나를 잃었다는 보고가 실계좌의 신규 진입을 영구 차단한다」가 된다.
 //
 // obs 교리가 정확히 그것을 금지한다: "measurement failures are never critical …
 // 화면의 오탈자가 실계좌 매매를 멈출 수 있어서는 안 된다"
-// (`internal/obs/event.go:266-278`). projection 은 콘솔·httpapi 가 읽는 조회 전용
+// (`internal/obs` 의 `criticalEvents` 등급표 위 measurement 절). projection 은
+// 콘솔·httpapi 가 읽는 조회 전용
 // export 이므로 정확히 그 부류다.
 //
 // (원 D3 은 반대를 요구했고 `internal/execgw`의 park 알림을 선례로 들었다. 그것은
@@ -351,7 +356,7 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 // 판정이다. A2 적대 리뷰가 오독을 잡아 D3-2 로 결정을 반전시켰다.)
 //
 // 등급표 미등재 → `obs.SeverityOf`가 Normal 을 준다 → `Notify`는 로그 한 줄과
-// best-effort 발행만 하고 원장에 닿지 않는다(`obs/notifier.go:130-139`).
+// best-effort 발행만 하고 원장에 닿지 않는다(`obs.Notifier.publishBestEffort`).
 // 나중에 Notifier 에 Publisher 가 붙어도 Normal 인 것이 **의도**다.
 const engineStrategyProjectionDegradedEvent obs.EventType = "engine.strategy_projection_unavailable"
 
@@ -370,15 +375,33 @@ func reportStrategyProjectionDegraded(ctx context.Context, ectx *engine.Context,
 	if ectx == nil || ectx.Notifier == nil {
 		return
 	}
-	// 반환값을 버리는 것이 안전한 이유: `Notify`는 **critical** 이벤트를 durable 하게
-	// 만들지 못했을 때만 오류를 돌려준다(obs/notifier.go:124-139). 이 이벤트는
-	// Normal 이므로 그 경로에 들어가지 않는다.
-	_ = ectx.Notifier.Notify(ctx, obs.Event{
-		Type:   engineStrategyProjectionDegradedEvent,
-		Title:  "STRATEGY_PROJECTION_UNAVAILABLE",
-		Body:   detail,
-		Fields: map[string]any{obs.FieldScope: control},
-	})
+	// # 보고는 부팅을 기다리게 하지 않는다
+	//
+	// `Notify`는 Publisher 가 붙어 있으면 **그 자리에서** 발행한다
+	// (`obs.Notifier.publishBestEffort`). ntfy publisher 는 네트워크이고 한 번의
+	// 발행 상한이 `obs.DefaultPublishTimeout`(10s)다. 이 줄은 `rt.Run` **앞**이므로
+	// 그 10초는 손절 루프가 시작되지 않는 10초가 된다 — 화면 하나를 잃었다는 보고가
+	// 보호의 시작을 늦추면 안 된다. 그래서 stderr 한 줄만 동기로 남기고 발행은 떼어
+	// 보낸다.
+	//
+	// ctx 를 부모에서 떼어 내는(`WithoutCancel`) 이유는 유실 방지다. 이 goroutine 이
+	// 상속할 것은 값이지 취소가 아니다 — 부모 ctx 는 SIGTERM 에서 끊기는데, 그때
+	// 취소하면 「종료하면서 남기는 마지막 말」이 늘 사라진다.
+	//
+	// 원장을 건드리지 않으므로 `ectx.Close()` 와 겹쳐도 안전하다: 이 이벤트는 obs
+	// 등급표에 없어서 Normal 이고(`engineStrategyProjectionDegradedEvent` 의 주석),
+	// Normal 경로는 로그 한 줄과 best-effort 발행뿐이라 journal handle 에 닿지 않는다.
+	// 반환값을 버리는 것이 안전한 이유도 같다 — `Notify`는 **critical** 이벤트를
+	// durable 하게 만들지 못했을 때만 오류를 돌려준다(`obs.Notifier.notifyCritical`).
+	detached := context.WithoutCancel(ctx)
+	go func() {
+		_ = ectx.Notifier.Notify(detached, obs.Event{
+			Type:   engineStrategyProjectionDegradedEvent,
+			Title:  "STRATEGY_PROJECTION_UNAVAILABLE",
+			Body:   detail,
+			Fields: map[string]any{obs.FieldScope: control},
+		})
+	}()
 }
 
 // engineStrategyProjectionStart is 부팅 7단계가 여는 **조회 전용** projection

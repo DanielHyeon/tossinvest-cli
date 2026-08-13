@@ -484,10 +484,17 @@ func (r *httpAPIReader) Snapshot(ctx context.Context) ([]byte, error) {
 	// 포지션조차 못 보는 것이 이 change 가 지우는 비대칭이다.
 	//
 	// 두 실패를 한 값으로 접지 않는다 — 콘솔이 이미 그렇게 판정한다
-	// (`internal/console/strategy_runtime_multimarket.go:45-52`):
+	// (`internal/console` 의 `buildMultiMarketStrategyRuntimePage`):
 	//   reader 가 **없다**  → dormant(NOT_CONFIGURED): 전략 화면을 안 쓰는 배포다.
 	//   reader 는 있는데 **못 읽는다** → unavailable(RUNTIME_UNAVAILABLE): 엔진이 없다.
 	// 접으면 운영자는 「기능을 안 켰다」와 「엔진이 죽었다」를 구별할 수 없다.
+	//
+	// 이 구분이 값으로 성립하려면 **부팅도 같은 구분을 지켜야 한다.** 여기서 nil 이
+	// 「안 쓰는 배포」를 뜻하므로, 붙지 못한 endpoint 를 nil 로 접어 넘기면 이 함수가
+	// 아무리 정확해도 화면은 틀린 값을 그린다. 그래서 dial 실패는 nil 이 아니라
+	// 항상-실패 sentinel 로 온다(`strategyRuntimeReaderFor` 의
+	// `unavailableStrategyRuntime`) — 여기 도착하는 nil 은 **정말로 reader 가 없는
+	// 배포**뿐이다: 엔진 디렉터리를 정하지 못했거나 descriptor 가 아예 없는 경우.
 	strategyRuntime := strategyprojection.DormantSnapshot(r.clockNow())
 	if r.strategyRuntime != nil {
 		value, readErr := r.strategyRuntime.Read(ctx)

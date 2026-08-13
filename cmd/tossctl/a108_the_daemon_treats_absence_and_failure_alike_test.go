@@ -13,9 +13,10 @@ package main
 // 남아 있는가」일 이유가 없다. fatal 로 남을 것은 descriptor 를 **조사할 수조차 없는
 // 경우**뿐이다 (권한 등 비-NotExist stat 오류) — 그것은 잔재가 아니라 환경 이상이다.
 //
-// 여기서는 seam 을 쓰지 않는다. 겹2 와 달리 실패를 만드는 것이 T1 이 편집 중인
-// 회수 규칙(`reclaimStaleControlDirectory`)이 아니라 `Dial` 자신의 socket 검사이고,
-// 그 검사는 이 change 가 건드리지 않는다.
+// 여기서는 seam 을 쓰지 않는다. 겹2 와 달리 실패를 만드는 것이 회수 규칙
+// (`reclaimStaleControlDirectory`)이 아니라 `Dial` 자신의 socket 검사이고, 그 검사는
+// 이 데몬이 부팅에서 실제로 부르는 것이기 때문이다. (Fix 라운드가 그 검사에 connect
+// probe 를 더했다 — 아래 S3 핀이 그 병합의 검증이 됐다.)
 
 import (
 	"context"
@@ -29,16 +30,40 @@ import (
 	"testing"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/testenv"
 )
 
-// a108ServeWindow 는 강등 기동이 「실제로 떴다」를 보이기 위해 서비스를 살려 두는 시간이다.
+// a108ServeWindow 는 데몬이 뜨지 **못했을 때** 테스트를 끝내는 상한이다.
 //
-// 강등하면 `runHTTPAPI` 는 listener 를 열고 ctx 가 끝날 때까지 돌아오지 않는다. 그래서
-// 이 창이 종료 조건이고, 창이 만료돼 nil 로 돌아온 것 자체가 「떴다」의 증거다. 실패
-// 경로는 listener 앞에서 돌아오므로 이 창을 쓰지 않는다.
+// 강등하면 `runHTTPAPI` 는 listener 를 열고 ctx 가 끝날 때까지 돌아오지 않는다. 예전에는
+// 이 창의 **만료**가 종료 조건이었는데, 그러면 관측하는 것이 「떴다」가 아니라 「3초를
+// 버텼다」가 되고 느린 호스트에서 흔들린다. 지금은 배너를 본 순간 창을 닫는다
+// (a108BannerWatcher) — 이 상한은 배너가 **오지 않는** 경우의 안전망일 뿐이다.
 const a108ServeWindow = 3 * time.Second
+
+// a108Banner 는 데몬이 서비스를 시작하고 나서 찍는 줄이다(`runHTTPAPI` 의 마지막 Fprintf).
+const a108Banner = "httpapi private endpoint"
+
+// a108BannerWatcher 는 그 줄을 본 순간 ctx 를 끊는다.
+//
+// 쓰는 쪽은 명령 자신의 goroutine 하나뿐이므로(cobra 는 호출한 goroutine 에서 돈다)
+// 여기에 잠금이 필요 없다.
+type a108BannerWatcher struct {
+	sink   strings.Builder
+	cancel context.CancelFunc
+	seen   bool
+}
+
+func (w *a108BannerWatcher) Write(p []byte) (int, error) {
+	n, err := w.sink.Write(p)
+	if !w.seen && strings.Contains(w.sink.String(), a108Banner) {
+		w.seen = true
+		w.cancel()
+	}
+	return n, err
+}
 
 // a108FreePort 는 커널이 고르게 한다. 고정 포트는 개발 호스트에서 돌고 있는 진짜
 // httpapi 데몬(37086)과 부딪힌다.
@@ -109,8 +134,9 @@ func a108RunHTTPAPI(t *testing.T, dir string) (string, string, error) {
 	defer cancel()
 	port := a108FreePort(t)
 	cmd := newHTTPAPICmd(&rootOptions{configDir: dir})
-	var out, errOut strings.Builder
-	cmd.SetOut(&out)
+	out := &a108BannerWatcher{cancel: cancel}
+	var errOut strings.Builder
+	cmd.SetOut(out)
 	cmd.SetErr(&errOut)
 	cmd.SetArgs([]string{
 		"--port", strconv.Itoa(port),
@@ -121,7 +147,7 @@ func a108RunHTTPAPI(t *testing.T, dir string) (string, string, error) {
 		"--tls-forwarded",
 	})
 	err := cmd.ExecuteContext(ctx)
-	return out.String(), errOut.String(), err
+	return out.sink.String(), errOut.String(), err
 }
 
 // TestADeadDescriptorDoesNotStopTheDaemon 은 crash loop 그 자체다.
@@ -265,14 +291,16 @@ func a108DeadSocketLeftover(t *testing.T, dir string) {
 
 // TestASocketFileWithNoOwnerDegradesTheDaemon 은 D4-2 의 S3 요구다.
 //
-// ⚠️ **이 테스트는 T1-fix 의 `Dial` connect probe 가 병합되기 전까지 RED 다.**
-// 지금 `Dial` 은 descriptor 를 읽고 socket 의 `Lstat`·모드·perm 만 보고 lazy client 를
-// 돌려준다(`internal/strategyprojectionrpc/transport_unix.go:216-230`). S3 에서 그 검사는
-// **전부 통과**하므로 데몬은 「붙었다」고 믿고 뜨고, 강등 경고를 찍지 않는다.
-// A2 가 실측한 그대로다(review.md §2 F3). 회수와 같은 원시 — 실제 connect — 를
-// `Dial` 이 하게 되면 이 테스트는 손대지 않고 GREEN 이 된다.
+// # 이 핀은 교차 RED 로 태어났고 지금은 회귀 핀이다
 //
-// RED 로 커밋하는 것이 의도다: 이 실패가 T1-fix 병합의 검증이 된다.
+// 처음 커밋됐을 때 이것은 **의도된 RED** 였다. 그때 `Dial` 은 descriptor 를 읽고
+// socket 의 `Lstat`·모드·perm 만 본 뒤 lazy client 를 돌려줬고, S3 에서 그 검사는
+// 전부 통과하므로 데몬은 「붙었다」고 믿고 떴다(A2 실측, review.md §2 F3). 실패는
+// 첫 Read 에서야 나타났고, 그때는 강등할 기회가 이미 지난 뒤였다.
+//
+// T1-fix 가 `Dial` 에 connect probe 를 넣으면서(design D4-2) 이 테스트는 **손대지
+// 않고** GREEN 이 됐다 — 즉 이 파일의 실패가 그 병합의 검증이었다. 지금부터 이
+// 테스트의 실패는 그 probe 가 사라졌다는 뜻이고, 그것은 회귀다.
 func TestASocketFileWithNoOwnerDegradesTheDaemon(t *testing.T) {
 	dir := a108HTTPAPIDir(t)
 	a108DeadSocketLeftover(t, dir)
@@ -286,7 +314,53 @@ func TestASocketFileWithNoOwnerDegradesTheDaemon(t *testing.T) {
 	}
 	if !strings.Contains(errOut, "strategy runtime projection") {
 		t.Errorf("S3 에서 강등이 발동하지 않았다 — Dial 이 연결하지 않고 성공을 보고했다. "+
-			"T1-fix 의 connect probe 가 병합되면 GREEN 이 된다:\n%s", errOut)
+			"connect probe 가 사라졌다:\n%s", errOut)
+	}
+}
+
+// --- gstack Fix 라운드: 강등의 신호값 --------------------------------------------
+
+// TestADialFailureRendersUnavailableRatherThanNotConfigured 는 gstack 리뷰 A2 다.
+//
+// 강등의 **결과 상태**가 이 change 의 사각지대였다. dial 이 실패하면 reader 자리가
+// 비었고(nil), 집계는 nil 을 `NOT_CONFIGURED` 로 그린다 — 그 값의 뜻은 「이 배포는
+// 전략 화면을 안 쓴다」이고, 그것은 **배포 선택**이지 장애가 아니다. 엔진이 죽어서
+// 못 붙은 것을 그 값으로 그리면 운영자는 화면에서 둘을 구별할 수 없다.
+//
+// 겹3 안에서 이미 판정한 구분을 부팅이 지키지 않고 있었던 것이다
+// (`TestALiveStrategyProjectionThatDiesLeavesTheAggregateStanding`: 붙었다가 죽은
+// reader 는 `RUNTIME_UNAVAILABLE`). 부재 쪽 대조군을 같은 표에서 함께 돌린다 —
+// 없으면 「전부 unavailable」이 통과한다.
+func TestADialFailureRendersUnavailableRatherThanNotConfigured(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		build func(t *testing.T, dir string)
+		want  strategyprojection.RefusalCode
+	}{
+		{"descriptor 가 없다", func(*testing.T, string) {}, strategyprojection.RefusalNotConfigured},
+		{"descriptor 는 있는데 못 붙는다", a108HalfLeftover, strategyprojection.RefusalRuntimeUnavailable},
+		{"주인 없는 socket 파일이 남았다", a108DeadSocketLeftover, strategyprojection.RefusalRuntimeUnavailable},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			dir := a108HTTPAPIDir(t)
+			test.build(t, dir)
+
+			var errOut strings.Builder
+			runtime := strategyRuntimeReaderFor(context.Background(), &rootOptions{configDir: dir}, &errOut)
+			reader := a108SnapshotReader(t, nil)
+			reader.strategyRuntime = runtime
+
+			snapshot := a108ReadAggregate(t, reader)
+			for _, market := range []strategyprojection.Market{
+				strategyprojection.MarketKR, strategyprojection.MarketUS,
+			} {
+				if got := a108MarketRefusal(t, snapshot.StrategyRuntime, market); got != test.want {
+					t.Errorf("%s 판정 = %q, want %q — 운영자는 「기능을 안 켰다」와 "+
+						"「엔진이 없다」를 화면에서 구별할 수 있어야 한다\n%s",
+						market, got, test.want, errOut.String())
+				}
+			}
+		})
 	}
 }
 

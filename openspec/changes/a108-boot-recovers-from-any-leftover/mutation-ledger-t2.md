@@ -41,9 +41,15 @@ TestASocketFileWithNoOwnerDegradesTheDaemon                      FAIL ← 의도
 
 **의도된 RED 하나를 숨기지 않는다.** `TestASocketFileWithNoOwnerDegradesTheDaemon`
 (S3 — descriptor·socket 파일 잔존 + 주인 사망)은 T1-fix 의 `Dial` connect probe(6.4)를
-기다린다. 지금 `Dial` 은 socket 의 Lstat·모드·perm 만 보므로 S3 를 **성공**으로 읽는다
-(`transport_unix.go:216-230`). 이 뮤테이션 라운드에서 그 테스트는 baseline 이 이미
-FAIL 이므로 어떤 뮤테이션의 「죽인 테스트」로도 세지 않았다.
+기다린다. 이 라운드 시점의 `Dial` 은 socket 의 Lstat·모드·perm 만 보므로 S3 를
+**성공**으로 읽는다. 이 뮤테이션 라운드에서 그 테스트는 baseline 이 이미 FAIL 이므로
+어떤 뮤테이션의 「죽인 테스트」로도 세지 않았다.
+
+**정산(gstack Fix 라운드, 2026-08-14).** T1-fix 가 병합되면서 그 RED 는 **테스트를
+손대지 않고** GREEN 이 됐다 — 교차 RED 가 병합의 검증으로 작동한 기록이다. 지금
+14건은 전부 GREEN 이고, 그 테스트의 실패는 「아직 안 만들어진 것」이 아니라
+**probe 가 사라졌다**는 회귀 신호다. 테스트의 주석과 실패 문구도 그렇게 고쳤다
+(gstack A5①). 아래 §gstack 라운드가 그 baseline 위에서 다시 잰 원장이다.
 
 ### 원장
 

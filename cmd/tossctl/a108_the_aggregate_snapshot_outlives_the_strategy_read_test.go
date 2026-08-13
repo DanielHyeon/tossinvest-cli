@@ -4,11 +4,11 @@ package main
 //
 // `httpAPIReader.Snapshot` 은 일곱 개의 조회를 모아 한 JSON 으로 만든다. 마지막이
 // 전략 projection 이고, 그 `Read` 가 실패하면 **집계 전체**가 오류로 죽었다
-// (httpapi_reader.go:479-485). 그러면 엔진이 재시작하는 몇 초 동안 — 또는 잔재 회수로
+// (`httpAPIReader.Snapshot` 의 마지막 조회). 그러면 엔진이 재시작하는 몇 초 동안 — 또는 잔재 회수로
 // projection 이 잠깐 사라진 동안 — 운영자는 포지션도 주문도 못 본다.
 //
 // 화면 하나가 사라지는 것과 화면 전체가 사라지는 것은 다른 사고다. 콘솔은 이미 그렇게
-// 판정한다(`internal/console/strategy_runtime_multimarket.go:45-52`): reader 가 **없으면**
+// 판정한다(`internal/console` 의 `buildMultiMarketStrategyRuntimePage`): reader 가 **없으면**
 // dormant(NOT_CONFIGURED), reader 는 있는데 **읽지 못하면** unavailable(RUNTIME_UNAVAILABLE).
 // 두 사실을 한 값으로 접지 않는 것도 그 선례를 따른다.
 //
@@ -56,7 +56,7 @@ func (a108SignalsFixture) Signals(context.Context) (console.SignalsReading, erro
 }
 
 // a108PerformanceFixture 는 빈 대시보드다. 귀속 행은 「이 배포에 없음」으로 답한다 —
-// `Performance` 가 그 오류만 건너뛰기 때문이다(httpapi_reader.go:391-393).
+// `Performance` 가 그 오류만 건너뛰기 때문이다(`httpAPIReader.Performance`).
 type a108PerformanceFixture struct{}
 
 func (a108PerformanceFixture) Dashboard(context.Context, performance.Query) (performance.DashboardView, error) {

@@ -32,6 +32,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -54,7 +55,7 @@ var a108Incident = errors.New("strategy projection runtime: stale endpoint is in
 // errA108LoopsReached 는 「부팅이 7단계 루프까지 갔다」는 표식이다.
 //
 // 스텁 runtime 의 Recover 가 돌려주므로 `Runtime.Run` 이 루프를 하나도 시작하지 않고
-// 이 오류를 그대로 돌려준다 (runtime.go:294). 즉 이 오류가 나왔다는 것은 부팅이
+// 이 오류를 그대로 돌려준다 (`engine.Runtime.Run` 의 Recover 절). 즉 이 오류가 나왔다는 것은 부팅이
 // **projection 단계를 지나 rt.Run 까지 도달했다**는 뜻이고, 그것이 재려는 것이다.
 var errA108LoopsReached = errors.New("a108: 부팅이 루프까지 도달했다")
 
@@ -178,12 +179,12 @@ func TestAFailedStrategyProjectionDoesNotStopTheEngine(t *testing.T) {
 // 원 D3 은 강등이 **durable critical outbox 행**을 남길 것을 요구했고
 // (`TestTheDegradedBootLeavesADurableCriticalAlert`), A2 적대 리뷰가 그것을 뒤집었다:
 // `Journal.UndeliveredCount` 는 Type 무필터로 PENDING 행을 세고
-// (`internal/journal/outbox.go:532-540`), 다음 부팅의 `restoreAlertEntryLatch` 가
+// (`internal/journal` 의 `Journal.UndeliveredCount`), 다음 부팅의 `restoreAlertEntryLatch` 가
 // 그 수가 0 보다 크면 진입 게이트를 `ReasonAlertUndelivered` 로 latch 한다
-// (`internal/app/engine/gateway.go:153-168`). 해제는 운영자 ack 뿐이다.
+// (`internal/app/engine` 의 `restoreAlertEntryLatch`). 해제는 운영자 ack 뿐이다.
 // publisher 가 설정되지 않은 배포에서 그 행은 영원히 PENDING 이므로,
 // **화면 하나를 잃었다는 보고가 실계좌의 신규 진입을 영구 차단**한다.
-// obs 교리가 정확히 그것을 금지한다(`internal/obs/event.go:266-278`).
+// obs 교리가 정확히 그것을 금지한다(`internal/obs` 의 measurement 절).
 //
 // # 이 harness 가 이 계약에 맞는 이유
 //
@@ -235,7 +236,7 @@ func TestTheDegradedBootWritesNoUndeliveredOutboxRow(t *testing.T) {
 // `restoreAlertEntryLatch` 자체는 `internal/app/engine` 소유이고 그 동작
 // (0보다 크면 latch, 0이면 통과)은 a098 테스트가 진다. 여기서 재는 것은 **그 함수에
 // 들어가는 값**이다 — 그 함수의 입력은 `Journal.UndeliveredCount` 하나뿐이므로
-// (gateway.go:154-160), 그 값이 0 이면 다음 부팅은 이 사유로 잠길 수 없다.
+// (`restoreAlertEntryLatch`), 그 값이 0 이면 다음 부팅은 이 사유로 잠길 수 없다.
 // 원장은 **다시 열어서** 읽는다: 그것이 다음 부팅이 실제로 하는 일이다.
 func TestASecondDegradedBootLeavesTheNextBootsEntryGateUnlatched(t *testing.T) {
 	dir := a108EngineDir(t)
@@ -321,6 +322,114 @@ func TestASucceedingProjectionIsStillServedAndClosed(t *testing.T) {
 	}
 }
 
+// --- gstack Fix 라운드: 보고가 부팅을 붙잡지 않는다 --------------------------------
+
+// a108BootDeadline 은 「강등 기동이 루프까지 가는 데 이 정도면 충분하다」는 창이다.
+//
+// 이 창이 잴 수 있는 것은 obs.DefaultPublishTimeout(10s) 보다 **작기 때문에** 의미가
+// 있다: 발행 한 번이 동기로 끼어 있으면 이 창 안에 루프에 닿을 수 없다.
+const a108BootDeadline = 3 * time.Second
+
+// a108BlockingPublisher 는 놓아 줄 때까지 돌아오지 않는 알림 transport 다.
+//
+// 진짜 ntfy publisher 가 이렇게 된다: 컨테이너가 재시작 중이거나 DNS 가 멈추면 한
+// 번의 발행이 상한까지 간다. 여기서는 그 상한을 「영원히」로 놓아 동기/비동기의
+// 차이만 남긴다.
+type a108BlockingPublisher struct {
+	entered     chan struct{}
+	release     chan struct{}
+	returned    chan struct{}
+	enteredOnce sync.Once
+	returnOnce  sync.Once
+	releaseOnce sync.Once
+}
+
+func newA108BlockingPublisher() *a108BlockingPublisher {
+	return &a108BlockingPublisher{
+		entered:  make(chan struct{}),
+		release:  make(chan struct{}),
+		returned: make(chan struct{}),
+	}
+}
+
+func (p *a108BlockingPublisher) Publish(context.Context, obs.Notification) error {
+	p.enteredOnce.Do(func() { close(p.entered) })
+	<-p.release
+	p.returnOnce.Do(func() { close(p.returned) })
+	return nil
+}
+
+func (p *a108BlockingPublisher) Release() { p.releaseOnce.Do(func() { close(p.release) }) }
+
+// TestTheDegradedBootDoesNotWaitForTheNotifier 는 gstack 리뷰 A1(3소스 수렴)이다.
+//
+// 강등 보고는 `rt.Run` **앞**에 있다. 그 자리에서 `Notify` 를 동기로 부르면, Publisher
+// 가 붙어 있는 배포(`TOSSCTL_NTFY_TOPIC` 설정 시 배선된다)에서 발행 한 번이 최대
+// `obs.DefaultPublishTimeout`(10s) 걸리고 — 그 10초는 **손절 루프가 시작되지 않는
+// 10초**다. 화면 하나를 잃었다는 보고가 보호의 시작을 늦추면 안 된다.
+//
+// 두 가지를 같이 잰다. 늦지 않는 것만 재면 「보고를 지웠다」가 통과하기 때문이다:
+//
+//	① 부팅이 기한 안에 루프까지 간다      (보고가 붙잡지 않는다)
+//	② 보고가 실제로 Notifier 에 닿았다    (조용해진 것이 아니다)
+func TestTheDegradedBootDoesNotWaitForTheNotifier(t *testing.T) {
+	dir := a108EngineDir(t)
+	ectx, _ := a108Engine(t, dir)
+	publisher := newA108BlockingPublisher()
+	ectx.Notifier.Publisher = publisher
+	stubAssembly(t, ectx, nil)
+	a108StubProjection(t, a108Incident)
+	stubRuntimeWithReady(t, func(*engine.Context, func()) (*engine.Runtime, error) {
+		return a108Loops(t, nil), nil
+	})
+
+	// 명령은 별도 goroutine 이다 — 동기 구현에서는 돌아오지 않기 때문이다. t 는
+	// 여기서 쓰지 않는다(다른 goroutine 의 t.Fatal 은 규칙 위반이다).
+	booted := make(chan error, 1)
+	finished := make(chan struct{})
+	go func() {
+		defer close(finished)
+		cmd := newRootCmd()
+		var out, errOut bytes.Buffer
+		cmd.SetOut(&out)
+		cmd.SetErr(&errOut)
+		cmd.SetArgs([]string{"--config-dir", dir, "engine", "run"})
+		booted <- cmd.ExecuteContext(context.Background())
+	}()
+	// seam 복원(t.Cleanup 은 LIFO)보다 **먼저** 이 goroutine 을 끝낸다. 실패로 빠져도
+	// 붙잡힌 명령이 seam 을 읽는 중에 복원이 일어나지 않는다.
+	t.Cleanup(func() {
+		publisher.Release()
+		select {
+		case <-finished:
+		case <-time.After(a108BootDeadline):
+		}
+	})
+
+	select {
+	case <-publisher.entered:
+	case <-time.After(a108BootDeadline):
+		t.Fatal("강등 보고가 Notifier 에 닿지 않았다 — 비동기로 옮기면서 조용해졌다면 " +
+			"그것은 고친 것이 아니라 지운 것이다")
+	}
+	select {
+	case err := <-booted:
+		if !errors.Is(err, errA108LoopsReached) {
+			t.Fatalf("engine run = %v, want the loops to have started", err)
+		}
+	case <-time.After(a108BootDeadline):
+		t.Fatalf("느린 알림 publisher 하나가 부팅을 %s 넘게 붙잡았다 — 손절 루프는 "+
+			"rt.Run 안에서 시작하고, 이 보고는 그 앞에 있다", a108BootDeadline)
+	}
+	// 보고는 부모 ctx 에 매달려 있지 않다: 명령이 돌아온 뒤에 놓아 줘도 전달된다.
+	publisher.Release()
+	select {
+	case <-publisher.returned:
+	case <-time.After(a108BootDeadline):
+		t.Fatal("놓아 준 뒤에도 발행이 끝나지 않았다")
+	}
+}
+
 // --- 3.2 안전 핀 ----------------------------------------------------------------
 
 // TestTheDegradedBootStillHoldsTheJournalFlock 은 3.2 ① 이다.
@@ -372,7 +481,7 @@ func TestTheDegradedBootStillHoldsTheJournalFlock(t *testing.T) {
 //     끊으면 진짜 runtime 은 영원히 ready 를 못 쓴다.
 //
 // 「Recover 가 끝난 뒤에만 발행된다」는 순서 자체는 `recoverThenReady` 의 성질이고
-// `TestRecoveryPublishesReadyOnlyWhenItFinished` (a102_engine_ready_test.go:94) 와
+// `TestRecoveryPublishesReadyOnlyWhenItFinished` (`a102_engine_ready_test.go`) 와
 // 그 이웃들이 소유한다. 이 파일은 그것을 **다시 증명하지 않는다.**
 func TestTheDegradedBootLeavesReadyToTheRuntimeSeam(t *testing.T) {
 	dir := a108EngineDir(t)
