@@ -1,7 +1,7 @@
 {
   "source": "tossinvest.com web bundles",
-  "build_id": "1fBomD3D0Cbl8kcbaAnYo",
-  "chunk_count": 26,
+  "build_id": "_9vWo9cLoNnz5P1aQeayp",
+  "chunk_count": 27,
   "total": 949,
   "counts": {
     "implemented": 81,
@@ -4356,5 +4356,5 @@
       "first_seen": "2026-06-19"
     }
   },
-  "updated_at": "2026-08-03"
+  "updated_at": "2026-08-10"
 }
