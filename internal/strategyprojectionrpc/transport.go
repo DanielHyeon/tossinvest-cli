@@ -125,7 +125,8 @@ var errDescriptorChanged = errors.New("strategy projection runtime: descriptor c
 // 따라가지 않음 · 열기 전후로 같은 inode)은 "이것이 우리가 만든 파일인가"를 묻고,
 // 그 답이 아니오면 지금도 거부다. 내용(JSON·필드)은 D2 이후 **어떤 판정에도 쓰이지
 // 않으므로**, 반쯤 쓰인 JSON을 거부하는 것은 거부만 생산한다. 회수는 형식만 보고
-// (아래 reclaimStaleControlDirectory), 실제로 읽어 쓰는 Dial만 내용까지 본다.
+// (transport_unix.go의 reclaimStaleControlDirectory), 실제로 읽어 쓰는 Dial만
+// 내용까지 본다.
 func openVerifiedDescriptor(path string) (*os.File, error) {
 	if filepath.Base(path) != DescriptorFileName || filepath.Base(filepath.Dir(path)) != ControlDirectoryName {
 		return nil, errors.New("strategy projection runtime: unexpected descriptor path")

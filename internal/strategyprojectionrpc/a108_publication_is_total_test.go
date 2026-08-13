@@ -94,7 +94,7 @@ func TestStartRecoversFromTruncatedDescriptorLeftover(t *testing.T) {
 func TestStartRecoversFromUnpublishedStagingLeftover(t *testing.T) {
 	dir := shortRuntimeDir(t)
 	a108MakeControlDir(t, dir)
-	for _, name := range []string{".staging-endpoint-2716057", ".staging-sock-9f3ac180"} {
+	for _, name := range []string{".s-e2716057", ".s-s9f3ac18"} {
 		if err := os.WriteFile(filepath.Join(ControlDirectory(dir), name), []byte("half"), 0o600); err != nil {
 			t.Fatal(err)
 		}
@@ -105,7 +105,7 @@ func TestStartRecoversFromUnpublishedStagingLeftover(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, entry := range entries {
-		if strings.HasPrefix(entry.Name(), ".staging") {
+		if strings.HasPrefix(entry.Name(), ".s-") {
 			t.Fatalf("발행 전 임시 이름이 살아남았다: %s", entry.Name())
 		}
 	}
@@ -265,6 +265,11 @@ func TestControlDirectoryModeClausesEachRefuseOnTheirOwn(t *testing.T) {
 		{"symlink 비트가 서 있다", os.ModeDir | os.ModeSymlink | 0o700, false},
 		{"group 비트가 있다", os.ModeDir | 0o750, false},
 		{"other 비트가 있다", os.ModeDir | 0o701, false},
+		// 축소 방향도 거부다(gstack). 위 두 행만 있으면 `Perm() == 0o700` 을
+		// `Perm()&0o077 == 0` 으로 넓힌 뮤테이션이 살아남는다 — 그 판정은 우리가 쓰지도
+		// 들어가지도 못하는 디렉터리를 "안전하다"고 읽고, 그 뒤의 제거는 전부 실패한다.
+		{"owner 쓰기 비트가 없다", os.ModeDir | 0o500, false},
+		{"owner 실행 비트가 없다", os.ModeDir | 0o600, false},
 	} {
 		if got := controlDirectoryModeIsSafe(test.mode); got != test.want {
 			t.Errorf("%s: controlDirectoryModeIsSafe(%v) = %v, want %v", test.name, test.mode, got, test.want)
@@ -366,6 +371,199 @@ func TestDescriptorPublicationIsAtomic(t *testing.T) {
 			t.Fatalf("발행한 적 없는 토큰을 읽었다: %q", descriptor.Token)
 		}
 		reads++
+	}
+}
+
+// --- gstack Fix 라운드 --------------------------------------------------------
+//
+// 아래는 gstack 7패스 리뷰가 Fix-First 로 판정한 넷이다. 전부 **발행이 만든** 모양이고,
+// 앞의 Fix 라운드와 같은 병의 나머지다: 회수는 전체적인데 발행이 그렇지 않다.
+
+// sunPathMax는 unix socket 경로가 가질 수 있는 최대 길이다.
+//
+// 커널의 `sun_path`는 108바이트이고 마지막 한 자리는 NUL 이 쓴다(실측: 107은 bind
+// 되고 108은 `invalid argument`). bind 하는 이름은 **임시 이름**이므로, 임시 이름이
+// 최종 이름보다 길면 최종 경로가 멀쩡한 배포에서도 발행만 실패한다.
+const sunPathMax = 107
+
+// TestStagingNamesAreNeverLongerThanTheNamesTheyBecome는 그 관계를 이름 길이로 고정한다.
+//
+// 경로 길이가 아니라 **basename 길이**를 재는 이유: 두 이름은 같은 디렉터리 안에
+// 있으므로, basename 이 길지 않으면 경로도 길지 않다. 디렉터리가 얼마나 깊든 성립한다.
+func TestStagingNamesAreNeverLongerThanTheNamesTheyBecome(t *testing.T) {
+	for _, test := range []struct {
+		kind  string
+		final string
+	}{
+		{stagingSocketKind, SocketFileName},
+		{stagingDescriptorKind, DescriptorFileName},
+	} {
+		staged, err := stagingPath("/tmp", test.kind)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got, want := len(filepath.Base(staged)), len(test.final); got > want {
+			t.Errorf("임시 이름 %q(%d자)이 최종 이름 %q(%d자)보다 길다 — "+
+				"최종 경로가 sun_path 상한 직전인 배포에서 bind 만 ENAMETOOLONG 으로 죽는다",
+				filepath.Base(staged), got, test.final, want)
+		}
+	}
+}
+
+// TestStartPublishesWhereTheFinalSocketPathIsAtTheLimit은 그 배포를 실제로 만든다.
+//
+// 최종 socket 경로가 정확히 상한인 디렉터리다. 여기서 기동이 실패하면 그것은 「경로가
+// 길다」가 아니라 **「우리가 최종 이름보다 긴 이름으로 bind 한다」**는 뜻이다 — 운영자가
+// 볼 수 있는 것은 매 부팅 projection 이 사라지는 것뿐이고, 최종 경로는 상한 안이므로
+// 원인이 보이지 않는다.
+func TestStartPublishesWhereTheFinalSocketPathIsAtTheLimit(t *testing.T) {
+	root := shortRuntimeDir(t)
+	// SocketPath(dir) = dir + "/" + ControlDirectoryName + "/" + SocketFileName 이므로
+	// 그 길이가 상한이 되는 dir 길이를 역산한다.
+	want := sunPathMax - len(SocketPath("")) - 1 // 마지막 -1 은 dir 과 그 아래를 잇는 "/"
+	pad := want - len(root) - 1
+	if pad < 1 || pad > 200 {
+		t.Skipf("이 호스트의 tmp 경로(%s)로는 상한 직전 디렉터리를 만들 수 없다", root)
+	}
+	dir := filepath.Join(root, strings.Repeat("d", pad))
+	if err := os.Mkdir(dir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(SocketPath(dir)); got != sunPathMax {
+		t.Fatalf("fixture 의 최종 socket 경로 = %d자, want %d — 이 테스트는 상한을 재지 않았다",
+			got, sunPathMax)
+	}
+	a108StartServes(t, dir)
+}
+
+// TestProjectionLivenessClausesEachDecideOnTheirOwn은 생존 판정 네 절의 핀이다.
+//
+// `Start` 를 통해 재면 verifyStaleSocketShape 가 먼저 걸리는 모양이 있어서 절 하나를
+// 따로 죽여 볼 수 없다. 판정 함수를 직접 부른다 — 검사를 약하게 만든 것이 아니라
+// **죽여 볼 수 있게** 만든 것이고, 호출부의 조건은 이 함수를 부르는 그대로다.
+//
+// owner 쓰기 절이 이 라운드에 새로 생겼다(gstack). `net.Listen` 이 만드는 권한은
+// umask 가 정하므로 `UMask=0277` 로 도는 배포에서는 pre-chmod 잔재가 **0500** 으로
+// 남는다. 그 socket 에 connect 하면 커널은 EACCES 를 주는데(실측), 옛 판정은 그것을
+// 「답이 안 왔으니 살아 있다」로 읽어 영구 거부를 만들었다. 발행은 항상 chmod 0600
+// 뒤에 최종 이름을 주므로, owner 쓰기가 없는 socket 은 **산 endpoint 일 수 없다.**
+func TestProjectionLivenessClausesEachDecideOnTheirOwn(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		build func(t *testing.T, dir string) string
+		want  bool
+	}{
+		{"경로가 없다", func(_ *testing.T, dir string) string {
+			return filepath.Join(dir, "absent.sock")
+		}, false},
+		{"아무도 수락하지 않는다", func(t *testing.T, dir string) string {
+			a108MakeControlDir(t, dir)
+			a108DeadSocketWithMode(t, dir, 0o600)
+			return SocketPath(dir)
+		}, false},
+		{"수락한다", func(t *testing.T, dir string) string {
+			a108MakeControlDir(t, dir)
+			a108LiveSocket(t, dir)
+			return SocketPath(dir)
+		}, true},
+		{"owner 쓰기 비트가 없다", func(t *testing.T, dir string) string {
+			if os.Geteuid() == 0 {
+				t.Skip("root 는 DAC 를 우회하므로 EACCES 를 만들 수 없다")
+			}
+			a108MakeControlDir(t, dir)
+			a108DeadSocketWithMode(t, dir, 0o500)
+			return SocketPath(dir)
+		}, false},
+		// 보수 기본값의 대조군이다. 이것이 없으면 "전부 사망으로 읽는다"는 구현이
+		// 위 셋을 통과한다 — 그리고 그 구현은 남의 socket 을 지운다.
+		{"죽었다는 증거가 아닌 오류", func(t *testing.T, dir string) string {
+			blocker := filepath.Join(dir, "regular")
+			if err := os.WriteFile(blocker, []byte("이 자리는 디렉터리가 아니다"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			return filepath.Join(blocker, SocketFileName) // ENOTDIR
+		}, true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			dir := shortRuntimeDir(t)
+			if got := projectionSocketAccepts(test.build(t, dir)); got != test.want {
+				t.Errorf("projectionSocketAccepts = %v, want %v", got, test.want)
+			}
+		})
+	}
+}
+
+// TestStartRecoversFromUnwritableSocketLeftover는 위 절이 디스크에서 하는 일이다.
+// `UMask=0277` 배포의 pre-chmod 잔재 — 매 부팅 영구 거부였다.
+func TestStartRecoversFromUnwritableSocketLeftover(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("root 는 DAC 를 우회하므로 이 잔재가 EACCES 를 만들지 않는다")
+	}
+	dir := shortRuntimeDir(t)
+	a108MakeControlDir(t, dir)
+	a108DeadSocketWithMode(t, dir, 0o500)
+	a108WriteLeftoverDescriptor(t, dir, 1<<30)
+	a108StartServes(t, dir)
+}
+
+// TestStartRefusesStagingLeftoverOfAnUnexpectedShape는 S4 규칙을 임시 이름에도 적용한다.
+//
+// 임시 이름을 「우리 잔재」로 회수하기로 한 것은 그 이름을 **우리만** 만들기 때문이다.
+// 그런데 이름만 보고 지우면, 그 자리에 우리가 만들 수 없는 모양(디렉터리 등)이 있어도
+// 지우려 든다. 빈 디렉터리면 **남의 디렉터리를 지우고**, 비어 있지 않으면 ENOTEMPTY 로
+// 회수 전체가 매 부팅 wedge 된다. 우리가 임시 이름으로 만드는 것은 정규 파일과 socket
+// 둘뿐이므로, 그 밖의 모양은 아무것도 건드리지 않고 거부한다(S4 와 같은 규칙).
+func TestStartRefusesStagingLeftoverOfAnUnexpectedShape(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		fill bool
+	}{
+		{"빈 디렉터리", false},
+		{"비어 있지 않은 디렉터리", true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			dir := shortRuntimeDir(t)
+			a108MakeControlDir(t, dir)
+			wedge := filepath.Join(ControlDirectory(dir), stagingPrefix+"wedge")
+			if err := os.Mkdir(wedge, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			keep := []string{wedge}
+			if test.fill {
+				inside := filepath.Join(wedge, "inside")
+				if err := os.WriteFile(inside, []byte("남의 것"), 0o600); err != nil {
+					t.Fatal(err)
+				}
+				keep = append(keep, inside)
+			}
+			// 회수 가능한 잔재를 같이 둔다: 거부가 「아무것도 건드리지 않는다」를 재려면
+			// 건드릴 수 있는 것이 실재해야 한다.
+			a108DeadSocketWithMode(t, dir, 0o600)
+			a108WriteLeftoverDescriptor(t, dir, 1<<30)
+			keep = append(keep, SocketPath(dir), DescriptorPath(dir))
+			a108StartRefusesAndKeeps(t, dir, keep...)
+		})
+	}
+}
+
+// TestDiscardingAFailedPublicationLeavesNothingBehind는 실패 정리의 전체성이다.
+//
+// `writeDescriptor` 의 rename 이 성공한 **뒤에도** 실패하는 줄이 있다(발행 확인의
+// SameFile, 디렉터리 sync). 그 경로에서 descriptor 는 이미 최종 이름을 갖고 있으므로,
+// 정리가 socket 과 디렉터리만 치우면 당회 부팅 내내 S1 잔재가 남고 디렉터리 제거도
+// ENOTEMPTY 로 실패한다.
+//
+// 그 인터리빙 자체는 seam 을 새로 뚫지 않고 결정적으로 만들 수 없다(원장 §C 에 사유).
+// 여기서 고정하는 것은 **정리의 커버리지**다 — 세 산출물 중 하나라도 빠지면 디렉터리가
+// 남는다.
+func TestDiscardingAFailedPublicationLeavesNothingBehind(t *testing.T) {
+	dir := shortRuntimeDir(t)
+	a108MakeControlDir(t, dir)
+	a108DeadSocketWithMode(t, dir, 0o600)
+	a108WriteLeftoverDescriptor(t, dir, os.Getpid())
+	discardPublication(ControlDirectory(dir), DescriptorPath(dir), SocketPath(dir))
+	if _, err := os.Lstat(ControlDirectory(dir)); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("발행 취소 뒤에도 control 디렉터리가 남았다 (%v) — 산출물 하나가 정리 목록에 없다", err)
 	}
 }
 

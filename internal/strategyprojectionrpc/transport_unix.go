@@ -34,7 +34,38 @@ const projectionProbeTimeout = 200 * time.Millisecond
 // 최종 이름이 보이면 그것은 항상 완성된 파일이다 — 반쯤 쓰인 상태가 최종 이름을
 // 가지는 순간이 없다(design D1-2). 대신 임시 이름으로 죽는 새 잔재가 생기는데,
 // 그것은 낯선 엔트리가 아니라 우리 잔재이므로 회수 목록에 들어간다.
-const stagingPrefix = ".staging-"
+//
+// # 왜 이렇게 짧은가
+//
+// bind 하는 이름은 최종 이름이 아니라 **이 임시 이름**이고, unix socket 경로에는
+// sun_path 상한(108바이트 — 실측상 107자까지 bind 된다)이 있다. 임시 이름이 최종
+// 이름보다 길면, 최종 경로는 상한 안인데 발행만 `invalid argument` 로 죽는 배포가
+// 생긴다. 운영자에게 보이는 것은 「매 부팅 projection 이 없다」뿐이고 최종 경로는
+// 멀쩡하므로 원인이 보이지 않는다. 그래서 임시 basename 을 최종 basename
+// (runtime.sock 12자 · endpoint.json 13자) 이하로 유지한다
+// (`TestStagingNamesAreNeverLongerThanTheNamesTheyBecome` 가 고정한다).
+const stagingPrefix = ".s-"
+
+// 임시 이름의 종류 한 글자. 사람이 잔재를 볼 때 무엇이 되려다 만 것인지 알려 준다.
+const (
+	stagingSocketKind     = "s"
+	stagingDescriptorKind = "e"
+)
+
+// discardPublication은 실패한 기동이 남길 수 있는 산출물을 **전부** 치운다.
+//
+// descriptor 가 이 목록에 있는 이유: `writeDescriptor` 의 rename 이 성공한 **뒤에도**
+// 실패하는 줄이 있다(발행 확인의 SameFile, 디렉터리 sync). 그 경로에서 descriptor 는
+// 이미 최종 이름을 갖고 있으므로, 치우지 않으면 당회 부팅 내내 이번 사고와 같은 S1
+// 잔재가 남고 디렉터리 제거도 ENOTEMPTY 로 실패한다.
+//
+// 없는 파일을 지우라는 요청은 성공과 같으므로 오류를 전부 버린다 — 이 함수가 불리는
+// 시점은 이미 기동이 실패한 뒤이고, 정리의 실패로 그 사유를 덮지 않는다.
+func discardPublication(controlDir, descriptorPath, socketPath string) {
+	_ = os.Remove(descriptorPath)
+	_ = os.Remove(socketPath)
+	_ = os.Remove(controlDir)
+}
 
 type Server struct {
 	server     *http.Server
@@ -68,6 +99,7 @@ func Start(engineDir string, reader strategyprojection.Reader) (*Server, error) 
 	}
 	cleanupDir := func() { _ = os.Remove(controlDir) }
 	socketPath := SocketPath(root)
+	descriptorPath := DescriptorPath(root)
 	listener, err := listenPrivateSocket(controlDir, socketPath)
 	if err != nil {
 		cleanupDir()
@@ -75,10 +107,12 @@ func Start(engineDir string, reader strategyprojection.Reader) (*Server, error) 
 	}
 	// 경로를 지우는 것은 언제나 우리 손이다 — listener는 자기 이름을 unlink하지
 	// 않는다(listenPrivateSocket의 SetUnlinkOnClose(false), design D2-2).
+	//
+	// descriptor 까지 치우는 이유는 discardPublication 의 주석에 있다: rename 이
+	// 성공한 뒤에 실패하는 줄이 있고, 그 경로의 descriptor 는 이미 최종 이름이다.
 	cleanupListener := func() {
 		_ = listener.Close()
-		_ = os.Remove(socketPath)
-		cleanupDir()
+		discardPublication(controlDir, descriptorPath, socketPath)
 	}
 	tokenBytes := make([]byte, 32)
 	if _, err := rand.Read(tokenBytes); err != nil {
@@ -130,12 +164,15 @@ func Start(engineDir string, reader strategyprojection.Reader) (*Server, error) 
 // stagingPath는 아직 발행되지 않은 산출물의 임시 경로를 만든다. 이름이 겹치면
 // bind가 EADDRINUSE로 실패하므로 난수를 붙인다 — 회수가 방금 비운 디렉터리라
 // 겹칠 일은 없지만, 겹치지 않는 것에 기대지 않는다.
+//
+// basename 은 `.s-` + 종류 한 글자 + 8자 hex = 12자로 고정이다. 그 길이가 왜
+// 계약인지는 stagingPrefix 의 주석에 있다.
 func stagingPath(controlDir, kind string) (string, error) {
 	suffix := make([]byte, 4)
 	if _, err := rand.Read(suffix); err != nil {
 		return "", err
 	}
-	return filepath.Join(controlDir, stagingPrefix+kind+"-"+hex.EncodeToString(suffix)), nil
+	return filepath.Join(controlDir, stagingPrefix+kind+hex.EncodeToString(suffix)), nil
 }
 
 // listenPrivateSocket은 socket을 **임시 이름에 bind → 0600 → rename** 순으로 발행한다.
@@ -156,7 +193,7 @@ func stagingPath(controlDir, kind string) (string, error) {
 // 있는 **후계자의 socket**을 지운다(A1 F5는 300라운드 중 3회 재현). 여기서 두 겹으로
 // 막는다 — listener가 기억하는 이름은 임시 이름이고, unlink 자체를 끈다.
 func listenPrivateSocket(controlDir, socketPath string) (net.Listener, error) {
-	staged, err := stagingPath(controlDir, "sock")
+	staged, err := stagingPath(controlDir, stagingSocketKind)
 	if err != nil {
 		return nil, err
 	}
@@ -228,8 +265,19 @@ func reclaimStaleControlDirectory(engineDir string) error {
 			seen[name] = true
 		case strings.HasPrefix(name, stagingPrefix):
 			// 최종 이름을 가진 적이 없는 산출물이다. 아무도 이것을 읽지도 연결하지도
-			// 않았으므로 검증할 것이 없다 — 우리 잔재로 치운다(design D1-2).
-			staged = append(staged, filepath.Join(controlDir, name))
+			// 않았으므로 **내용**은 검증할 것이 없다 — 우리 잔재로 치운다(design D1-2).
+			//
+			// 다만 **모양**은 본다. 이름만 보고 지우면, 우리가 임시 이름으로 만들 수
+			// 없는 모양(디렉터리 등)까지 지우려 든다: 비어 있으면 남의 디렉터리를
+			// 지우고, 비어 있지 않으면 ENOTEMPTY 로 회수 전체가 매 부팅 멈춘다.
+			// 우리가 만드는 것은 정규 파일(descriptor)과 socket 둘뿐이므로, 그 밖의
+			// 모양이면 아무것도 건드리지 않고 거부한다 — 낯선 엔트리와 같은 규칙이다.
+			path := filepath.Join(controlDir, name)
+			info, statErr := os.Lstat(path)
+			if statErr != nil || !(info.Mode().IsRegular() || info.Mode()&os.ModeSocket != 0) {
+				return errors.New("strategy projection runtime: stale staging entry has an unexpected shape")
+			}
+			staged = append(staged, path)
 		default:
 			return errors.New("strategy projection runtime: stale control directory has unexpected entries")
 		}
@@ -319,16 +367,36 @@ func verifyStaleSocketShape(socketPath string) error {
 // Start는 listen이 성공한 뒤에야 descriptor를 쓰므로, 수락하지 않는 socket 파일은
 // 죽은 주인의 것이다. 반대로 수락한다면 그게 누구든 이 디렉터리는 남의 것이다.
 //
-// 죽었다고 읽는 것은 두 가지뿐이다: 연결 거부(listener 없음)와 파일 부재. 그 밖의
-// 오류(권한·타임아웃 등)는 죽었다는 증거가 아니므로 살아 있다고 본다 — 잘못 살아
-// 있다고 보면 이번 기동만 실패하지만, 잘못 죽었다고 보면 남의 socket을 지운다.
+// 죽었다고 읽는 것은 세 가지뿐이다: 연결 거부(listener 없음), 파일 부재, 그리고
+// **owner 쓰기 비트가 없는 socket**. 그 밖의 오류(타임아웃 등)는 죽었다는 증거가
+// 아니므로 살아 있다고 본다 — 잘못 살아 있다고 보면 이번 기동만 실패하지만, 잘못
+// 죽었다고 보면 남의 socket을 지운다.
+//
+// # 왜 owner 쓰기 비트가 판정인가
+//
+// unix socket 에 connect 하려면 그 파일에 쓰기 권한이 있어야 하고, 없으면 커널은
+// EACCES 를 준다(실측). 그 오류를 "답이 안 왔다 = 살아 있다"로 읽으면 아무도 없는
+// socket 하나가 **영구 거부**를 만든다 — 이 change 가 지우려는 모양 그대로다.
+//
+// 그렇게 읽어도 되는 근거는 우리 발행 수명주기다. 최종 이름을 가진 socket 은 반드시
+// chmod 0600 을 지난 뒤 rename 된 것이고(listenPrivateSocket), 구버전이 최종 이름에
+// 바로 bind 하고 남긴 pre-chmod 잔재도 `net.Listen` 이 umask 로 만든 권한이라
+// `UMask=0277` 같은 배포에서만 owner 쓰기가 깎인다. 어느 쪽이든 **owner 가 쓸 수 없는
+// socket 은 우리가 발행한 산 endpoint 일 수 없다.** 그리고 회수 경로에서 이 함수에
+// 닿으려면 이미 우리 uid 소유 · 0700 디렉터리 안 · 비symlink · nlink 1 을 통과했다.
 func projectionSocketAccepts(socketPath string) bool {
 	conn, err := net.DialTimeout("unix", socketPath, projectionProbeTimeout)
 	if err == nil {
 		_ = conn.Close()
 		return true
 	}
-	return !errors.Is(err, unix.ECONNREFUSED) && !errors.Is(err, os.ErrNotExist)
+	if errors.Is(err, unix.ECONNREFUSED) || errors.Is(err, os.ErrNotExist) {
+		return false
+	}
+	if info, statErr := os.Lstat(socketPath); statErr == nil && info.Mode().Perm()&0o200 == 0 {
+		return false
+	}
+	return true
 }
 
 func Dial(_ context.Context, descriptorPath string) (*Client, error) {
@@ -400,11 +468,18 @@ func writeDescriptor(path string, descriptor Descriptor) error {
 	if err != nil {
 		return err
 	}
-	staged, err := os.CreateTemp(filepath.Dir(path), stagingPrefix+"endpoint-")
+	// 이름을 `os.CreateTemp` 에 맡기지 않는다. 그쪽은 접두에 임의 길이의 숫자를
+	// 붙이므로 임시 이름의 길이를 계약으로 잡을 수 없는데, 그 길이가 socket 쪽에서는
+	// bind 가능성 자체를 정한다(stagingPrefix 주석). 두 산출물이 같은 규칙을 쓰는 것이
+	// 회수 쪽에서도 읽기 쉽다 — 접두 하나로 둘 다 걸린다.
+	stagedPath, err := stagingPath(filepath.Dir(path), stagingDescriptorKind)
 	if err != nil {
 		return err
 	}
-	stagedPath := staged.Name()
+	staged, err := os.OpenFile(stagedPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	if err != nil {
+		return err
+	}
 	// rename이 성공하면 이 이름은 이미 비어 있어 ErrNotExist로 끝난다. 실패한 모든
 	// 경로에서는 반쯤 쓴 파일이 여기서 사라진다 — 임시 잔재조차 남기지 않는다.
 	defer func() { _ = os.Remove(stagedPath) }()
