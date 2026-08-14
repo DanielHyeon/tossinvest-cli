@@ -1,0 +1,30 @@
+{
+  "file": "cmd/tossctl/httpapi_reader.go",
+  "source_sha256": "6a7ccf3ee0792b17582ae0304e704b46e9e895a877d3e993df3608060a891074",
+  "package": "main",
+  "function": "applyStoredPosition",
+  "signature": "applyStoredPosition(params=3, results=0)",
+  "start": {
+    "line": 272,
+    "column": 1
+  },
+  "end": {
+    "line": 274,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 2
+      },
+      "text": "applyStoredPositionWithLiveness"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

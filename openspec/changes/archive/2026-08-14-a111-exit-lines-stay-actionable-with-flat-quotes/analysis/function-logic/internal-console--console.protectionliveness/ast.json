@@ -1,0 +1,55 @@
+{
+  "file": "internal/console/protection_liveness.go",
+  "source_sha256": "6fbf9afdf06e7c5f2db65b5dc0bcee9991605238376a4c6a4892a4ed2b9717a5",
+  "package": "console",
+  "function": "protectionLiveness",
+  "receiver": "Console",
+  "signature": "Console.protectionLiveness(params=1, results=1)",
+  "start": {
+    "line": 32,
+    "column": 1
+  },
+  "end": {
+    "line": 35,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 19
+      },
+      "text": "c.readProtectionMarker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 9
+      },
+      "text": "protectionLivenessAt"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

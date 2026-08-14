@@ -23,13 +23,21 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection"
 )
 
-const httpAPIPositionFreshness = 30 * time.Second
-
 type httpAPIAccountRef func() (string, error)
 type httpAPIAdoptionSettingsRead func() (config.Adoption, string, error)
 
 type httpAPIManagementRuntimeReader interface {
 	Runtime(context.Context) (positionpolicy.ManagementRuntime, error)
+}
+
+// httpAPIPositionBrokerSnapshot is the only positions data whose acquisition is
+// rate-limited by the transport cache. Journal evidence, engine liveness and
+// their operator projection are local truth and are deliberately re-read at
+// each request time.
+type httpAPIPositionBrokerSnapshot struct {
+	AccountRef string
+	ObservedAt time.Time
+	Rows       []domain.Position
 }
 
 // httpAPIReader is the production adapter for the seven transport reads. Every
@@ -55,7 +63,7 @@ type httpAPIReader struct {
 	adoptionDesired   httpAPIAdoptionSettingsRead
 	managementRuntime httpAPIManagementRuntimeReader
 	strategyRuntime   httpapi.StrategyRuntimeReader
-	positionsCache    httpAPITimedReadCache[httpapi.PositionsResource]
+	positionsCache    httpAPITimedReadCache[httpAPIPositionBrokerSnapshot]
 	ordersCache       httpAPITimedReadCache[httpapi.OrdersResource]
 }
 
@@ -87,27 +95,41 @@ func (r *httpAPIReader) Engine(context.Context) (httpapi.EngineResource, error) 
 }
 
 func (r *httpAPIReader) Positions(ctx context.Context) (httpapi.PositionsResource, error) {
-	return r.positionsCache.Get(ctx, r.clockNow(), httpAPIBrokerReadTTL, httpAPIBrokerReadErrorTTL, r.readPositions)
+	cacheAt := r.clockNow()
+	snapshot, err := r.positionsCache.Get(ctx, cacheAt, httpAPIBrokerReadTTL, httpAPIBrokerReadErrorTTL,
+		r.readPositionBrokerSnapshot)
+	if err != nil {
+		return httpapi.PositionsResource{}, err
+	}
+	return r.projectPositions(ctx, snapshot)
 }
 
-func (r *httpAPIReader) readPositions(ctx context.Context) (httpapi.PositionsResource, error) {
+func (r *httpAPIReader) readPositionBrokerSnapshot(ctx context.Context) (httpAPIPositionBrokerSnapshot, error) {
 	if r == nil || r.holdings == nil || r.accountRef == nil {
-		return httpapi.PositionsResource{}, errors.New("httpapi: position read is unavailable")
+		return httpAPIPositionBrokerSnapshot{}, errors.New("httpapi: position read is unavailable")
 	}
 	accountRef, err := r.accountRef()
 	if err != nil {
-		return httpapi.PositionsResource{}, err
+		return httpAPIPositionBrokerSnapshot{}, err
 	}
 	brokerRows, err := r.holdings.Holdings(ctx, "")
 	if err != nil {
-		return httpapi.PositionsResource{}, err
+		return httpAPIPositionBrokerSnapshot{}, err
 	}
+	return httpAPIPositionBrokerSnapshot{
+		AccountRef: accountRef, ObservedAt: r.clockNow(), Rows: slices.Clone(brokerRows),
+	}, nil
+}
 
+func (r *httpAPIReader) projectPositions(ctx context.Context,
+	broker httpAPIPositionBrokerSnapshot,
+) (httpapi.PositionsResource, error) {
 	journalRows := []journal.PositionExit{}
 	policyByPosition := map[string]positionpolicy.State{}
 	journalReadable := r.journal != nil && r.journalErr == nil
 	if journalReadable {
-		journalRows, err = r.journal.LivePositionExits(ctx, accountRef)
+		var err error
+		journalRows, err = r.journal.LivePositionExits(ctx, broker.AccountRef)
 		if err != nil {
 			return httpapi.PositionsResource{}, err
 		}
@@ -124,16 +146,19 @@ func (r *httpAPIReader) readPositions(ctx context.Context) (httpapi.PositionsRes
 		byKey[positionKey(row.Position.Market, row.Position.Symbol)] = row
 	}
 	runtime := r.readManagementRuntime(ctx)
+	// Journal, policy, runtime and marker reads may block. The marker is read
+	// exactly once from a pre-read clock; a post-read clock then becomes the one
+	// response authority for both marker liveness and every position line.
+	now, liveness := r.exitResponseAuthority()
 
-	now := r.clockNow()
-	items := make([]httpapi.Position, 0, len(brokerRows)+len(journalRows))
-	seen := make(map[string]struct{}, len(brokerRows))
-	for _, broker := range brokerRows {
-		key := positionKey(positionMarket(broker), broker.Symbol)
+	items := make([]httpapi.Position, 0, len(broker.Rows)+len(journalRows))
+	seen := make(map[string]struct{}, len(broker.Rows))
+	for _, brokerPosition := range broker.Rows {
+		key := positionKey(positionMarket(brokerPosition), brokerPosition.Symbol)
 		seen[key] = struct{}{}
-		projected := positionFromBroker(attest.Mask(accountRef), broker)
+		projected := positionFromBroker(attest.Mask(broker.AccountRef), brokerPosition)
 		if stored, ok := byKey[key]; ok {
-			applyStoredPosition(&projected, stored, now)
+			applyStoredPositionForRequest(&projected, stored, now, liveness)
 			state, lifecycleKnown := policyByPosition[strings.TrimSpace(stored.Position.ID)]
 			managed, released := lifecycleFlags(state, lifecycleKnown)
 			if released {
@@ -156,11 +181,11 @@ func (r *httpAPIReader) readPositions(ctx context.Context) (httpapi.PositionsRes
 		if _, ok := seen[positionKey(stored.Position.Market, stored.Position.Symbol)]; ok {
 			continue
 		}
-		projected := httpapi.Position{AccountLabel: attest.Mask(accountRef), PositionID: stored.Position.ID,
+		projected := httpapi.Position{AccountLabel: attest.Mask(broker.AccountRef), PositionID: stored.Position.ID,
 			Market: strings.ToUpper(stored.Position.Market), Symbol: stored.Position.Symbol,
 			Quantity: stored.Position.Quantity, AveragePrice: stored.Position.AvgPrice, InJournal: true,
 			Eligible: stored.Position.ExitEligible()}
-		applyStoredPosition(&projected, stored, now)
+		applyStoredPositionForRequest(&projected, stored, now, liveness)
 		state, lifecycleKnown := policyByPosition[strings.TrimSpace(stored.Position.ID)]
 		managed, released := lifecycleFlags(state, lifecycleKnown)
 		if released {
@@ -170,7 +195,8 @@ func (r *httpAPIReader) readPositions(ctx context.Context) (httpapi.PositionsRes
 		applyExitLineReference(&projected, &stored, state, lifecycleKnown, runtime)
 		items = append(items, projected)
 	}
-	return httpapi.PositionsResource{ObservedAt: pointerTo(now), Source: "official+journal-read-only", Items: items}, nil
+	return httpapi.PositionsResource{ObservedAt: pointerTo(broker.ObservedAt),
+		Source: "official+journal-read-only", Items: items}, nil
 }
 
 func (r *httpAPIReader) readManagementRuntime(ctx context.Context) positionpolicy.ManagementRuntime {
@@ -244,6 +270,28 @@ func positionFromBroker(accountLabel string, value domain.Position) httpapi.Posi
 }
 
 func applyStoredPosition(out *httpapi.Position, stored journal.PositionExit, asOf time.Time) {
+	applyStoredPositionWithLiveness(out, stored, asOf, operatorview.ExitLivenessUnavailable)
+}
+
+// applyStoredPositionForRequest keeps the JSON transport's stable machine reason
+// while the shared operator view remains free to render its localized prose.
+// The raw reason is needed by API clients to distinguish time expiry from an
+// immediate engine stop without parsing display text.
+func applyStoredPositionForRequest(out *httpapi.Position, stored journal.PositionExit, asOf time.Time,
+	liveness operatorview.ExitLiveness,
+) {
+	applyStoredPositionWithLiveness(out, stored, asOf, liveness)
+	if !stored.HasExit || out.ExitLine.Status != "stale" {
+		return
+	}
+	if view := operatorview.ApplyExitFreshness(stored.Exit.Snapshot, asOf, liveness); view.StaleReason != "" {
+		out.ExitLine.Reason = view.StaleReason
+	}
+}
+
+func applyStoredPositionWithLiveness(out *httpapi.Position, stored journal.PositionExit, asOf time.Time,
+	liveness operatorview.ExitLiveness,
+) {
 	out.InJournal = true
 	out.PositionID = stored.Position.ID
 	out.Eligible = stored.Position.ExitEligible()
@@ -255,7 +303,7 @@ func applyStoredPosition(out *httpapi.Position, stored journal.PositionExit, asO
 	source := operatorview.Source{UnknownReason: "persisted exit snapshot is absent",
 		RemainingQuantity: stored.Position.Quantity, EffectiveSource: "persisted effective snapshot"}
 	if stored.HasExit {
-		view := stored.Exit.Snapshot.WithFreshness(asOf, httpAPIPositionFreshness)
+		view := operatorview.ApplyExitFreshness(stored.Exit.Snapshot, asOf, liveness)
 		source.UnknownReason, source.StaleReason = view.UnknownReason, view.StaleReason
 		if view.Snapshot != nil {
 			source.Snapshot = &view.Snapshot.Line
@@ -270,6 +318,25 @@ func applyStoredPosition(out *httpapi.Position, stored journal.PositionExit, asO
 		}
 	}
 	out.ExitLine = httpapi.ExitLineFrom(operatorview.BuildExitLine(source))
+}
+
+func (r *httpAPIReader) exitResponseAuthority() (time.Time, operatorview.ExitLiveness) {
+	if r == nil {
+		return time.Time{}, operatorview.ExitLivenessUnavailable
+	}
+	if strings.TrimSpace(r.engineMarker) == "" {
+		return r.clockNow(), operatorview.ExitLivenessUnavailable
+	}
+	preMarker := r.clockNow()
+	status := enginelock.Read(r.engineMarker, preMarker)
+	responseAt := r.clockNow()
+	if status.Running && !status.RefreshedAt.IsZero() {
+		age := responseAt.Sub(status.RefreshedAt)
+		if age < 0 || age <= enginelock.StaleAfter {
+			return responseAt, operatorview.ExitLivenessRunning
+		}
+	}
+	return responseAt, operatorview.ExitLivenessStopped
 }
 
 func hasStoredExitEvidence(state journal.ExitState) bool {

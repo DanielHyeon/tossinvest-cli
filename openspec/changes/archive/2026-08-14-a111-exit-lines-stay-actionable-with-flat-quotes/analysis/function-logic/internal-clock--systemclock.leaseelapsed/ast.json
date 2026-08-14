@@ -1,0 +1,39 @@
+{
+  "file": "internal/clock/clock.go",
+  "source_sha256": "db243982efe45c3c09ed2b6c367e65664fb1ab11a08b3361bbfa3d6df1dcca1f",
+  "package": "clock",
+  "function": "leaseElapsed",
+  "receiver": "systemClock",
+  "signature": "systemClock.leaseElapsed(params=1, results=1)",
+  "start": {
+    "line": 85,
+    "column": 1
+  },
+  "end": {
+    "line": 85,
+    "column": 94
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 85,
+        "column": 67
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 74
+      },
+      "text": "time.Since"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

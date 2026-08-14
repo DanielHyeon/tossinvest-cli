@@ -10,6 +10,10 @@ const positionPolicyTemplates = `
 {{if .LoadErr}}<p class="danger" role="alert">불러오기 실패: <code>{{.LoadErr}}</code></p>{{end}}
 {{if not .Wired}}<p class="notice">engine-owned PositionPolicyCommander가 배선되지 않아 조회만 가능하다.</p>{{end}}
 {{if .QuarantineErr}}<p class="notice" role="status">판정 격리 상태를 읽지 못했다: <code>{{.QuarantineErr}}</code>. 격리된 포지션이 있어도 이 화면에 표시되지 않는다.</p>{{end}}
+{{if .ExitJournalKnown}}{{if not .ExitJournal.Readable}}
+{{template "journalstate" .ExitJournal}}
+<p class="notice" role="status">exit 평가 근거를 확인할 수 없어 현재 보호선과 다음 exit 단계를 표시하지 않는다.</p>
+{{end}}{{end}}
 
 <section aria-labelledby="auto-adoption-heading">
 <h2 id="auto-adoption-heading">{{.Descriptor.AutoAdoptionSection}}</h2>
@@ -56,7 +60,10 @@ desired와 effective가 달라도 어느 한쪽으로 덮어쓰지 않는다.</p
 {{if .State.HasPendingExit}}<span class="submetric danger">active exit 있음</span>{{end}}
 {{if .Quarantine.Present}}<span class="submetric danger">판정 격리 v{{.Quarantine.Version}} · {{.Quarantine.ReasonText}} · {{.Quarantine.Age}} 경과 · 유지 보호선 {{.Quarantine.ProtectionText}}</span>
 <span class="submetric danger">이 포지션은 지금 exit 판정 대상이 아니다 — 손절도 평가되지 않는다</span>{{end}}</td>
-<td data-label="desired/effective"><strong>{{.State.DesiredLabel}}</strong><span class="submetric">effective {{.State.EffectiveLabel}}</span></td>
+<td data-label="desired/effective"><strong>{{.State.DesiredLabel}}</strong><span class="submetric">effective {{.State.EffectiveLabel}}</span>
+<span class="exit-line-status">exit <strong class="status-pill {{if .ExitLine.Fresh}}ok{{else}}bad{{end}}">{{.ExitLine.StatusText}}</strong>{{if .ExitLine.Reason}} · {{.ExitLine.Reason}}{{end}}</span>
+<span class="safety-line" role="group" aria-label="현재 exit 보호선과 다음 단계">현재 보호선 <strong>{{.ExitLine.CurrentProtection}}</strong> · 다음 익절 <strong>{{.ExitLine.NextTarget}}</strong> · 다음 보호선 <strong>{{.ExitLine.NextProtection}}</strong></span>
+<span class="submetric">관측가 {{.ExitLine.ObservedPrice}} · 고점 {{.ExitLine.HighWater}} · 평가 {{.ExitLine.EvaluatedAt}}</span></td>
 <td data-label="현재 행 action"><div class="actions">{{range .Actions}}<form method="post" action="/position-management/preview">
 <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="action_token" value="{{.Token}}">
 <button type="submit" {{if .Danger}}class="secondary"{{end}} aria-label="{{.Label}} preview">{{.Label}}</button></form>{{end}}

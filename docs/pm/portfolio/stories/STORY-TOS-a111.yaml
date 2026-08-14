@@ -1,0 +1,35 @@
+{
+  "id": "STORY-TOS-a111",
+  "title": "Exit lines stay actionable with flat quotes",
+  "feature": "FEAT-TOS-009",
+  "intent": "planned",
+  "openspec": {
+    "change_id": "a111-exit-lines-stay-actionable-with-flat-quotes",
+    "path": "openspec/changes/archive/2026-08-14-a111-exit-lines-stay-actionable-with-flat-quotes"
+  },
+  "found_by": {
+    "date": "2026-08-14",
+    "how": "After A110 removed the false reconciliation block and production adopted five holdings, three newly managed positions whose first official quote equalled the adoption quote remained SEED/not_evaluated_yet. Already evaluated flat-price positions also became stale after 30 seconds because successful unchanged observations were discarded instead of durably refreshing their observation evidence.",
+    "record": "openspec/changes/archive/2026-08-14-a111-exit-lines-stay-actionable-with-flat-quotes/proposal.md"
+  },
+  "acceptance": [
+    "The first valid flat-price observation after SEED persists one complete canonical EVALUATED snapshot and actionable current/next lines through the existing full judgement path",
+    "A later semantically identical valid observation durably refreshes the complete effective observation tuple without appending an exit event or creating a proposal, intent, cancellation or state transition",
+    "Temporal CAS permits only a newer observation to replace durable evidence: an older observation returns a typed no-write conflict; at equal effective time official source evidence outranks cycle evidence; and the same cycle:N plus same identity is a true no-op including unchanged updated_at while the same cycle:N plus different identity is rejected",
+    "Quote source time is explicit: non-zero FetchedAt in the future or older than 15 seconds is invalid, exactly 15 seconds is accepted, and a zero source timestamp uses a persisted cycle:N whose working-set maximum is recovered after restart",
+    "An HTTP-success batch whose quotes are all invalid is a typed non-retryable evidence failure: it triggers no second broker retry, does not record QueryPrice success, clear freshness, or reset outage state, and causes no exit mutation; valid siblings in a mixed batch remain eligible",
+    "Every accepted position quote keeps persisted UTC FetchedAt separate from a process-local monotonic lease anchor captured after the batch; wall time must not precede FetchedAt and monotonic elapsed time is rechecked before each judgement and immediately before recording, refreshing, or the first side effect, so exactly 15 seconds is usable while expiry or wall-clock rollback skips the position without exit mutation",
+    "The A111 liveness contract supersedes the a077 running-age bypass: positively stopped is immediately stale with engine_not_running, while running, unavailable and unwired states all require snapshot integrity and each position's exact 30-second age bound; exactly 30 seconds remains fresh, older is stale, and an invalid sibling ages stale independently",
+    "Console /positions and /position-management plus /api/v1/positions consume the same A111 liveness contract, per-position persisted freshness verdict, evaluated time and canonical current/next exit-line values",
+    "After every blocking cache, journal, policy, runtime, quarantine and single engine-marker read, HTTP and console use one post-marker response-time sample for marker liveness and every per-position 30-second projection, so crossing a boundary during a read immediately produces stale dashes without a broker reread or second marker read",
+    "A marker already classified stopped by the pre-read marker result is downgrade-only: a later wall-clock rollback cannot resurrect it as running, and HTTP and console retain engine_not_running with all actionable fields hidden",
+    "Continuously successful flat-price observations keep the authoritative line fresh and the refreshed tuple remains valid after restart",
+    "SEED evaluation and flat refresh add no broker read and cause zero order, submitter, issuer or cancel side effects while preserving monotone protection, proposal deduplication and protective immediacy",
+    "make gate CHANGE=a111-exit-lines-stay-actionable-with-flat-quotes passes"
+  ],
+  "measured": null,
+  "deviations": [],
+  "limits": [
+    "This planned story authorizes no LIVE order, operating-toggle change, reconciliation release, schema migration or deployment without a separate human approval."
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "file": "internal/journal/exit_observation_refresh.go",
+  "source_sha256": "08d1b43e2aa49d98e8651f027dde20ff6e55cdf3ea12e2771780c8460e873728",
+  "package": "journal",
+  "function": "sameExitOperationalLine",
+  "signature": "sameExitOperationalLine(params=2, results=1)",
+  "start": {
+    "line": 160,
+    "column": 1
+  },
+  "end": {
+    "line": 169,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

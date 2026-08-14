@@ -1,0 +1,132 @@
+{
+  "file": "cmd/tossctl/httpapi_reader.go",
+  "source_sha256": "6a7ccf3ee0792b17582ae0304e704b46e9e895a877d3e993df3608060a891074",
+  "package": "main",
+  "function": "readPositionBrokerSnapshot",
+  "receiver": "httpAPIReader",
+  "signature": "httpAPIReader.readPositionBrokerSnapshot(params=1, results=2)",
+  "start": {
+    "line": 107,
+    "column": 1
+  },
+  "end": {
+    "line": 122,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 108,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 112,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 109,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 113,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 117,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 43
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 21
+      },
+      "text": "r.accountRef"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 21
+      },
+      "text": "r.holdings.Holdings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 39
+      },
+      "text": "r.clockNow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 59
+      },
+      "text": "slices.Clone"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 115,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

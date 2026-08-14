@@ -1,0 +1,70 @@
+{
+  "file": "internal/clock/clock.go",
+  "source_sha256": "db243982efe45c3c09ed2b6c367e65664fb1ab11a08b3361bbfa3d6df1dcca1f",
+  "package": "clock",
+  "function": "LeaseAnchor",
+  "signature": "LeaseAnchor(params=1, results=1)",
+  "start": {
+    "line": 57,
+    "column": 1
+  },
+  "end": {
+    "line": 62,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 59,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 10
+      },
+      "text": "lease.leaseAnchor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 9
+      },
+      "text": "c.Now"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 58,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

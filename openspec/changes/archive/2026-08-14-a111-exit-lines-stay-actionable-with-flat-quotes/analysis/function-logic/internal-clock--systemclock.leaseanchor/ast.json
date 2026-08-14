@@ -1,0 +1,39 @@
+{
+  "file": "internal/clock/clock.go",
+  "source_sha256": "db243982efe45c3c09ed2b6c367e65664fb1ab11a08b3361bbfa3d6df1dcca1f",
+  "package": "clock",
+  "function": "leaseAnchor",
+  "receiver": "systemClock",
+  "signature": "systemClock.leaseAnchor(params=0, results=1)",
+  "start": {
+    "line": 83,
+    "column": 1
+  },
+  "end": {
+    "line": 83,
+    "column": 65
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 83,
+        "column": 46
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 53
+      },
+      "text": "time.Now"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

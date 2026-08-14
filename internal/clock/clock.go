@@ -42,6 +42,33 @@ type Clock interface {
 	Sleep(ctx context.Context, d time.Duration) error
 }
 
+// leaseClock is an optional, process-local extension used only for elapsed
+// leases. It deliberately does not change Clock: test clocks keep their
+// deterministic Now/Since contract, while the system clock can retain Go's
+// monotonic time reading without exposing it through persisted timestamps.
+type leaseClock interface {
+	leaseAnchor() time.Time
+	leaseElapsed(time.Time) time.Duration
+}
+
+// LeaseAnchor captures an opaque process-local anchor for a short-lived lease.
+// Callers must not persist it. Clocks without the optional lease extension use
+// their ordinary Now/Since pair so test-controlled elapsed time remains exact.
+func LeaseAnchor(c Clock) time.Time {
+	if lease, ok := c.(leaseClock); ok {
+		return lease.leaseAnchor()
+	}
+	return c.Now()
+}
+
+// LeaseElapsed reports elapsed time for an anchor returned by LeaseAnchor.
+func LeaseElapsed(c Clock, anchor time.Time) time.Duration {
+	if lease, ok := c.(leaseClock); ok {
+		return lease.leaseElapsed(anchor)
+	}
+	return c.Since(anchor)
+}
+
 // System returns the real clock backed by the operating system.
 func System() Clock { return systemClock{} }
 
@@ -50,6 +77,12 @@ type systemClock struct{}
 func (systemClock) Now() time.Time { return time.Now().UTC() }
 
 func (systemClock) Since(t time.Time) time.Duration { return time.Since(t) }
+
+// leaseAnchor intentionally retains the monotonic reading time.Now attaches.
+// Now must remain UTC for journal timestamps, which strips that reading.
+func (systemClock) leaseAnchor() time.Time { return time.Now() }
+
+func (systemClock) leaseElapsed(anchor time.Time) time.Duration { return time.Since(anchor) }
 
 func (systemClock) Sleep(ctx context.Context, d time.Duration) error {
 	if d <= 0 {

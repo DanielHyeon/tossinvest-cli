@@ -1,0 +1,12 @@
+# Branch Test Map: `ExitObserver.ObserveOnce`
+
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | `internal/app/engine/exitloop.go:417`: preserve one-batch/fill priority and recheck the monotonic quote-use lease before each position | `TestA111QuoteUseLeaseCannotBeExtendedByWallClockRollback` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |
+| B2 | `internal/app/engine/exitloop.go:427`: preserve one-batch/fill priority and recheck the monotonic quote-use lease before each position | `TestA111QuoteUseLeaseCannotBeExtendedByWallClockRollback` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |
+| B3 | `internal/app/engine/exitloop.go:431`: preserve one-batch/fill priority and recheck the monotonic quote-use lease before each position | `TestA111QuoteUseLeaseCannotBeExtendedByWallClockRollback` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |
+| B4 | `internal/app/engine/exitloop.go:442`: preserve one-batch/fill priority and recheck the monotonic quote-use lease before each position | `TestA111QuoteUseLeaseCannotBeExtendedByWallClockRollback` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |
+| B5 | `internal/app/engine/exitloop.go:451`: preserve one-batch/fill priority and recheck the monotonic quote-use lease before each position | `TestA111QuoteUseLeaseCannotBeExtendedByWallClockRollback` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |
+| B6 | `internal/app/engine/exitloop.go:453`: preserve one-batch/fill priority and recheck the monotonic quote-use lease before each position | `TestA111QuoteUseLeaseCannotBeExtendedByWallClockRollback` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |
+| B7 | `internal/app/engine/exitloop.go:459`: preserve one-batch/fill priority and recheck the monotonic quote-use lease before each position | `TestA111QuoteUseLeaseCannotBeExtendedByWallClockRollback` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |
+| B8 | `internal/app/engine/exitloop.go:465`: preserve one-batch/fill priority and recheck the monotonic quote-use lease before each position | `TestA111QuoteUseLeaseCannotBeExtendedByWallClockRollback` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |

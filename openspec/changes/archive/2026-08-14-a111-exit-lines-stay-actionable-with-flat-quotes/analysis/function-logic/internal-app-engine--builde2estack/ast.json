@@ -1,0 +1,258 @@
+{
+  "file": "internal/app/engine/exit_e2e_test.go",
+  "source_sha256": "727dc511405355c79498870fc1bd22425706af99d685ce737b18720f82116715",
+  "package": "engine_test",
+  "function": "buildE2EStack",
+  "signature": "buildE2EStack(params=5, results=1)",
+  "start": {
+    "line": 242,
+    "column": 1
+  },
+  "end": {
+    "line": 284,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 258,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 262,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 272,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 280,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 283,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 4
+      },
+      "text": "official.WithBaseURL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 4
+      },
+      "text": "official.WithHTTPClient"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 28
+      },
+      "text": "srv.Client"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 2
+      },
+      "text": "opts.SetJournalProberForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 31
+      },
+      "text": "journal.FixedFSProber"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 3
+      },
+      "text": "opts.SetProtectionReadyForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 14
+      },
+      "text": "engine.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 2
+      },
+      "text": "t.Cleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 25
+      },
+      "text": "eng.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 19
+      },
+      "text": "execgw.NewRiskGuardian"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 11
+      },
+      "text": "risk.DefaultPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 40
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 19
+      },
+      "text": "engine.NewExitObserver"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 10
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 247,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 261,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 265,
+        "column": 21
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 267,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 275,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
