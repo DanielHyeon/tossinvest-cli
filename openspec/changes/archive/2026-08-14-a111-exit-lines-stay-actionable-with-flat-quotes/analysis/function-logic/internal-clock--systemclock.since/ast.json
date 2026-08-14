@@ -1,0 +1,40 @@
+{
+  "file": "internal/clock/clock.go",
+  "source_sha256": "b1e1da1c1f3f9d201fb794c9df1ae8b105147c548a21ba1d970244997f95f7ac",
+  "package": "clock",
+  "function": "Since",
+  "receiver": "systemClock",
+  "signature": "systemClock.Since(params=1, results=1)",
+  "start": {
+    "line": 52,
+    "column": 1
+  },
+  "end": {
+    "line": 52,
+    "column": 77
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 52,
+        "column": 55
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 62
+      },
+      "text": "time.Since"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

@@ -1,0 +1,12 @@
+# Branch Test Map: `ExitObserver.judgeLadder`
+
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | `internal/app/engine/exitloop.go:971`: retain ladder identity/rung guards and recheck the monotonic lease before persistence | `TestA111LeaseIsRecheckedAtTheRecordOrRefreshBoundary` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |
+| B2 | `internal/app/engine/exitloop.go:975`: retain ladder identity/rung guards and recheck the monotonic lease before persistence | `TestA111LeaseIsRecheckedAtTheRecordOrRefreshBoundary` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |
+| B3 | `internal/app/engine/exitloop.go:980`: retain ladder identity/rung guards and recheck the monotonic lease before persistence | `TestA111LeaseIsRecheckedAtTheRecordOrRefreshBoundary` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |
+| B4 | `internal/app/engine/exitloop.go:985`: retain ladder identity/rung guards and recheck the monotonic lease before persistence | `TestA111LeaseIsRecheckedAtTheRecordOrRefreshBoundary` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |
+| B5 | `internal/app/engine/exitloop.go:986`: retain ladder identity/rung guards and recheck the monotonic lease before persistence | `TestA111LeaseIsRecheckedAtTheRecordOrRefreshBoundary` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |
+| B6 | `internal/app/engine/exitloop.go:1014`: retain ladder identity/rung guards and recheck the monotonic lease before persistence | `TestA111LeaseIsRecheckedAtTheRecordOrRefreshBoundary` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |
+| B7 | `internal/app/engine/exitloop.go:1027`: retain ladder identity/rung guards and recheck the monotonic lease before persistence | `TestA111LeaseIsRecheckedAtTheRecordOrRefreshBoundary` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |
+| B8 | `internal/app/engine/exitloop.go:1030`: retain ladder identity/rung guards and recheck the monotonic lease before persistence | `TestA111LeaseIsRecheckedAtTheRecordOrRefreshBoundary` | intentional A111 RED before the corresponding production correction | focused A111 suite GREEN |

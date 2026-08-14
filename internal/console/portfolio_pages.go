@@ -133,6 +133,13 @@ func (c *Console) decoratePositionRows(ctx context.Context, rows []positionRow, 
 			}
 		}
 	}
+	// Policy and settings reads may block. Bound the one marker filesystem read
+	// with response-time samples after they finish, then share the post-read time
+	// across every age and freshness projection attached below.
+	markerReadAt := c.now()
+	markerWired, markerStatus := c.readProtectionMarker(markerReadAt)
+	responseAt := c.now()
+	live := protectionLivenessAt(markerWired, markerStatus, responseAt)
 	if runtimeAttempted {
 		for i := range rows {
 			row := &rows[i]
@@ -154,11 +161,11 @@ func (c *Console) decoratePositionRows(ctx context.Context, rows []positionRow, 
 				Managed: row.Managed(), Released: released, Runtime: runtime,
 			})
 			if row.Management.Block != nil {
-				row.ManagementBlock = newReconcileBlockView(*row.Management.Block, asOf)
+				row.ManagementBlock = newReconcileBlockView(*row.Management.Block, responseAt)
 			}
 		}
 	}
-	attachPositionExitLines(rows, asOf, runtime, c.protectionLiveness(asOf))
+	attachPositionExitLines(rows, responseAt, runtime, live)
 }
 
 // attachPositionExitLines selects the already-persisted effective snapshot for

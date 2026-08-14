@@ -1,0 +1,157 @@
+{
+  "file": "internal/console/a077_live_protection_test.go",
+  "source_sha256": "7f01859f1b20ad929035254c40893f9b436cbd02fcf48f97c8f39ebaa6220097",
+  "package": "console",
+  "function": "TestAReleasedGenerationsQuarantineDoesNotCloseTheCurrentOne",
+  "signature": "TestAReleasedGenerationsQuarantineDoesNotCloseTheCurrentOne(params=1, results=0)",
+  "start": {
+    "line": 168,
+    "column": 1
+  },
+  "end": {
+    "line": 187,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 7
+      },
+      "text": "newLivePositionHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 170,
+        "column": 2
+      },
+      "text": "seedJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 2
+      },
+      "text": "execRaw"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 20
+      },
+      "text": "ratchetViewSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 2
+      },
+      "text": "writeViewSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 2
+      },
+      "text": "holdEngineMarker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 32
+      },
+      "text": "h.clock.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 2
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 9
+      },
+      "text": "positionHTMLRow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 28
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 5
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 2
+      },
+      "text": "assertLineShown"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 169,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 176,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

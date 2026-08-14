@@ -24,6 +24,19 @@ func TestSystemClockNowIsUTC(t *testing.T) {
 	}
 }
 
+func TestSystemLeaseAnchorRetainsMonotonicReading(t *testing.T) {
+	c := clock.System()
+	anchor := clock.LeaseAnchor(c)
+	// Round(0) is Go's documented way to strip a time.Time's monotonic
+	// reading. Operator == also compares that opaque reading, unlike Equal.
+	if anchor == anchor.Round(0) {
+		t.Fatal("system lease anchor lost its monotonic reading")
+	}
+	if elapsed := clock.LeaseElapsed(c, anchor); elapsed < 0 {
+		t.Fatalf("system lease elapsed immediately went backwards: %v", elapsed)
+	}
+}
+
 // TestSystemClockSleepRespectsContext proves a cancelled context aborts a sleep
 // instead of holding an execution-path goroutine for the full duration.
 func TestSystemClockSleepRespectsContext(t *testing.T) {

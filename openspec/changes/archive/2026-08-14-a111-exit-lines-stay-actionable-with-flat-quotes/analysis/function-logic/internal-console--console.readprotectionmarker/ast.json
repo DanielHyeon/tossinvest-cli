@@ -1,0 +1,71 @@
+{
+  "file": "internal/console/protection_liveness.go",
+  "source_sha256": "6fbf9afdf06e7c5f2db65b5dc0bcee9991605238376a4c6a4892a4ed2b9717a5",
+  "package": "console",
+  "function": "readProtectionMarker",
+  "receiver": "Console",
+  "signature": "Console.readProtectionMarker(params=1, results=2)",
+  "start": {
+    "line": 40,
+    "column": 1
+  },
+  "end": {
+    "line": 46,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 42,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 43,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 10
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 15
+      },
+      "text": "enginelock.Read"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 41,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

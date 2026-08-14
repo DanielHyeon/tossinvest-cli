@@ -3,40 +3,10 @@ package console
 // protection_liveness.go decides whether the protection line the console has on
 // disk may still be read as the line that is in force (change a077).
 //
-// # The bug this file exists to correct
-//
-// The engine writes exit_states.last_observed_at from exactly one place —
-// journal's record() — and the observation loop returns before reaching it
-// whenever the judgement moved nothing:
-//
-//	snapshot = snapshot.ChangedFromState(…)
-//	if !snapshot.Changed {
-//	        return nil          // internal/app/engine/exitloop.go
-//	}
-//	return o.record(…)
-//
-// So that column is the last time the line *changed*, not the last time it was
-// looked at. The screens read it as an observation heartbeat and bounded it by
-// holdingsTTL — the broker cache's TTL, thirty seconds, a number with no
-// relationship to a protection line's lifetime. The result was that a position
-// trading below its recorded high-water, judged correctly every five seconds by
-// a healthy engine, went blank thirty seconds after its last change and stayed
-// blank all day. On 2026-08-03 that was every managed position in the account.
-//
-// # What replaced it
-//
-// The five values are a state, not a measurement. The last judgement fixed them;
-// the next judgement is what moves them. Time passing does not make them wrong.
-// Three things make them untrustworthy and this file asks about the first two —
-// the third (lifecycle generation, integrity) was already being asked:
-//
-//	nobody is maintaining them   no engine is running against this journal
-//	this position is excluded    an active exit-snapshot quarantine, which makes
-//	                             the exit loop refuse the position outright
-//
-// An unwired marker is neither. The operator-console spec forbids drawing it as
-// a stopped engine, so a console that cannot see the engine keeps the judgement
-// it made before a077 rather than being told something it cannot know.
+// A111 makes a flat evaluation a durable heartbeat as well as a state update.
+// Every console path consequently applies the same exact 30-second freshness
+// rule; stopped engines close it immediately, while unwired and unavailable
+// readers fail closed only on the evidence age/integrity rule.
 
 import (
 	"strings"
@@ -44,6 +14,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/enginelock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/operatorview"
 )
 
 // protectionLiveness answers a narrower question than engineView: is anything
@@ -59,11 +30,32 @@ type protectionLiveness struct {
 }
 
 func (c *Console) protectionLiveness(now time.Time) protectionLiveness {
+	wired, status := c.readProtectionMarker(now)
+	return protectionLivenessAt(wired, status, now)
+}
+
+// readProtectionMarker performs the one marker filesystem read for a console
+// response. Callers that need a later response-time authority must re-evaluate
+// this returned Status rather than reading the filesystem again.
+func (c *Console) readProtectionMarker(now time.Time) (bool, enginelock.Status) {
 	path := strings.TrimSpace(c.opts.EngineMarker)
 	if path == "" {
+		return false, enginelock.Status{}
+	}
+	return true, enginelock.Read(path, now)
+}
+
+// protectionLivenessAt re-evaluates a marker status at the response time
+// without another filesystem read. Keep the enginelock boundary exact: a
+// marker at StaleAfter is still running, while a stopped read is never upgraded
+// when the wall clock moves backward.
+func protectionLivenessAt(wired bool, status enginelock.Status, now time.Time) protectionLiveness {
+	if !wired {
 		return protectionLiveness{}
 	}
-	return protectionLiveness{Wired: true, Running: enginelock.Read(path, now).Running}
+	status.Running = status.Running && !status.RefreshedAt.IsZero() &&
+		now.Sub(status.RefreshedAt) <= enginelock.StaleAfter
+	return protectionLiveness{Wired: true, Running: status.Running}
 }
 
 // exitFreshness decides whether a persisted snapshot may still be read as the
@@ -71,17 +63,11 @@ func (c *Console) protectionLiveness(now time.Time) protectionLiveness {
 func exitFreshness(view journal.ExitSnapshotView, asOf time.Time, live protectionLiveness) journal.ExitSnapshotView {
 	switch {
 	case !live.Wired:
-		// This console cannot see the engine, and an unwired marker must not be
-		// drawn as a stopped one. Keep the judgement this screen made before
-		// a077: conservative, and wrong for a reason that is at least unchanged.
-		return view.WithFreshness(asOf, holdingsTTL)
+		return operatorview.ApplyExitFreshness(view, asOf, operatorview.ExitLivenessUnwired)
 	case !live.Running:
-		view.Stale, view.StaleReason = true, "engine_not_running"
-		return view
+		return operatorview.ApplyExitFreshness(view, asOf, operatorview.ExitLivenessStopped)
 	default:
-		// An engine is running against this journal. The snapshot's age is
-		// evidence of nothing; its integrity still is.
-		return view.WithIntegrity(asOf)
+		return operatorview.ApplyExitFreshness(view, asOf, operatorview.ExitLivenessRunning)
 	}
 }
 

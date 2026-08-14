@@ -676,6 +676,21 @@ func armExitProposalTx(ctx context.Context, tx *sql.Tx, positionID string,
 	return nil
 }
 
+// exitObservationRefreshGuardTx lets the read-only refresh transaction check
+// the proposal gate without spreading guarded-column authority into another
+// production file. It reports only whether a proposal exists and never writes.
+func exitObservationRefreshGuardTx(ctx context.Context, tx *sql.Tx,
+	positionID string,
+) (snapshotStatus string, proposalPending bool, err error) {
+	var pending string
+	err = tx.QueryRowContext(ctx, `SELECT coalesce(snapshot_status,''), coalesce(pending_action,'')
+		FROM exit_states WHERE position_id=?`, positionID).Scan(&snapshotStatus, &pending)
+	if err != nil {
+		return "", false, err
+	}
+	return snapshotStatus, strings.TrimSpace(pending) != "", nil
+}
+
 // resetExitStateForReadoptTx is the only reset writer for the four guarded
 // execution-time columns. The caller already holds the lifecycle transaction,
 // so the fresh t0 state and its generation become visible together or not at

@@ -100,6 +100,8 @@ form { display: inline; }
 .metric { display: block; font-size: 1rem; font-weight: 700; }
 .submetric { display: block; margin-top: 0.15rem; color: #6a6a62; font-size: 0.82rem; }
 .exit-line-stack { text-align: right; font-variant-numeric: tabular-nums; }
+.exit-line-status { display: block; margin-top: 0.2rem; }
+.safety-line { display: block; margin-top: 0.2rem; font-size: 1rem; line-height: 1.5; }
 .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: flex-start; }
 .actions form { display: block; }
 .actions button { padding: 0.32rem 0.65rem; font-size: 0.86rem; }

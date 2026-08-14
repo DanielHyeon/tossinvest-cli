@@ -1,0 +1,118 @@
+{
+  "file": "internal/clock/clock_test.go",
+  "source_sha256": "b857e53a62a350e1971d1632a3280c31a466c65871226195731ad9af189352b3",
+  "package": "clock_test",
+  "function": "TestSystemClockNowIsUTC",
+  "signature": "TestSystemClockNowIsUTC(params=1, results=0)",
+  "start": {
+    "line": 16,
+    "column": 1
+  },
+  "end": {
+    "line": 25,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 19,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 22,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 7
+      },
+      "text": "clock.System"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 18,
+        "column": 9
+      },
+      "text": "c.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 5
+      },
+      "text": "now.Location"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 20,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 20,
+        "column": 57
+      },
+      "text": "now.Location"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 22,
+        "column": 10
+      },
+      "text": "time.Since"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 17,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 18,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 22,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

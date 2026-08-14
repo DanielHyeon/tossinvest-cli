@@ -50,6 +50,21 @@ const (
 	ClassCanceled ErrorClass = "canceled"
 )
 
+// EvidenceInvalidError is a successful transport response that contains no
+// usable evidence for the query's safety contract. It is permanent for this
+// attempt: retrying the identical decoded payload would only spend the rate
+// budget and, crucially, must not stamp an entry-gate success.
+type EvidenceInvalidError struct{ Detail string }
+
+func (e *EvidenceInvalidError) Error() string {
+	if e == nil || strings.TrimSpace(e.Detail) == "" {
+		return "query evidence is invalid"
+	}
+	return "query evidence is invalid: " + e.Detail
+}
+
+func NewEvidenceInvalidError(detail string) error { return &EvidenceInvalidError{Detail: detail} }
+
 // ClassifyQueryError maps a read error onto the matrix.
 func ClassifyQueryError(err error) ErrorClass {
 	switch {
@@ -59,6 +74,8 @@ func ClassifyQueryError(err error) ErrorClass {
 		return ClassCanceled
 	case errors.Is(err, official.ErrAuth), errors.Is(err, official.ErrIPNotAllowed):
 		return ClassAuthFatal
+	case isEvidenceInvalid(err):
+		return ClassPermanent
 	case errors.Is(err, official.ErrRateLimited):
 		return ClassRateLimited
 	case errors.Is(err, official.ErrServer), errors.Is(err, official.ErrTransport):
@@ -78,6 +95,11 @@ func ClassifyQueryError(err error) ErrorClass {
 		}
 	}
 	return ClassTransient
+}
+
+func isEvidenceInvalid(err error) bool {
+	var evidence *EvidenceInvalidError
+	return errors.As(err, &evidence)
 }
 
 // RetryPolicy is the query half of the matrix. Mutations have no policy because
@@ -162,6 +184,12 @@ const (
 	QueryBuyingPower RequiredQuery = "buying_power"
 	QueryHoldings    RequiredQuery = "holdings"
 	QueryPrice       RequiredQuery = "price"
+
+	// QueryPriceEvidenceDuration is both the entry-gate staleness bound and the
+	// source/use lifetime of one exit quote. Keeping one exported duration makes
+	// the exact boundary impossible to widen on one side while leaving the other
+	// at fifteen seconds.
+	QueryPriceEvidenceDuration = 15 * time.Second
 )
 
 // DefaultStaleness is the provisional staleness table from the matrix.
@@ -170,7 +198,7 @@ func DefaultStaleness() map[RequiredQuery]time.Duration {
 		QueryOpenOrders:  20 * time.Second,
 		QueryBuyingPower: 45 * time.Second,
 		QueryHoldings:    60 * time.Second,
-		QueryPrice:       15 * time.Second,
+		QueryPrice:       QueryPriceEvidenceDuration,
 	}
 }
 

@@ -74,6 +74,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -411,9 +412,7 @@ type ExitCycle struct {
 // run, which drives the loop by hand rather than by clock.
 func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
 	var cycle ExitCycle
-	observation := cycleObservation{
-		at: o.clk.Now().UTC(), sequence: o.observationSequence.Add(1),
-	}
+	observation := cycleObservation{at: o.clk.Now().UTC()}
 
 	if o.opts.SLO != nil && o.opts.SLO.FillDetectionBehind() {
 		// Yield the whole cycle, and let the outage clock keep running. See the
@@ -439,8 +438,7 @@ func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
 		o.outageRaised = false
 		return cycle
 	}
-
-	quotes, err := o.observe(ctx, symbolsOf(states))
+	quotes, err := o.observe(ctx, symbolsOf(states), observation)
 	if err != nil {
 		cycle.Err = err
 		o.checkOutage(ctx, &cycle)
@@ -456,6 +454,11 @@ func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
 			// A symbol the price read did not answer for is a symbol this cycle
 			// did not observe. Hold it; the outage clock is per account and the
 			// next cycle may answer.
+			continue
+		}
+		if !o.quoteUsable(quote) {
+			// A quote that expired while an earlier position was handled is not a
+			// judgement. Keep its state untouched until the next one-batch cycle.
 			continue
 		}
 		cycle.Judged++
@@ -725,8 +728,10 @@ func (o *ExitObserver) openAdoptedState(ctx context.Context, p journal.Position)
 }
 
 type observedQuote struct {
-	Price     string
-	FetchedAt time.Time
+	Price       string
+	FetchedAt   time.Time
+	Source      string
+	leaseAnchor time.Time
 }
 
 type cycleObservation struct {
@@ -735,30 +740,75 @@ type cycleObservation struct {
 }
 
 // observe performs the one price read of the cycle.
-func (o *ExitObserver) observe(ctx context.Context, symbols []string) (map[string]observedQuote, error) {
+func (o *ExitObserver) observe(ctx context.Context, symbols []string, observation cycleObservation) (map[string]observedQuote, error) {
 	var quotes []domain.Quote
+	var out map[string]observedQuote
+	needsFallback := false
 	err := o.opts.Retrier.Query(ctx, execgw.QueryPrice, func(ctx context.Context) error {
 		var qerr error
 		quotes, qerr = o.opts.Prices.Prices(ctx, symbols)
-		return qerr
+		if qerr != nil {
+			return qerr
+		}
+		// Keep this process-local anchor separate from the persisted UTC evidence
+		// time. clock.LeaseAnchor preserves the system clock's monotonic reading,
+		// while injected clocks deterministically use their Now/Since pair.
+		leaseAnchor := clock.LeaseAnchor(o.clk)
+		validatedAt := leaseAnchor.UTC()
+		wanted := make(map[string]struct{}, len(symbols))
+		for _, symbol := range symbols {
+			wanted[strings.ToUpper(strings.TrimSpace(symbol))] = struct{}{}
+		}
+		next := make(map[string]observedQuote, len(quotes))
+		for _, q := range quotes {
+			symbol := strings.ToUpper(strings.TrimSpace(q.Symbol))
+			if _, needed := wanted[symbol]; !needed || q.Last <= 0 || math.IsNaN(q.Last) || math.IsInf(q.Last, 0) {
+				continue
+			}
+			effectiveAt, source := q.FetchedAt.UTC(), "quote_fetched_at"
+			if q.FetchedAt.IsZero() {
+				effectiveAt, source = validatedAt, ""
+				needsFallback = true
+			} else if effectiveAt.After(validatedAt) ||
+				validatedAt.Sub(effectiveAt) > execgw.QueryPriceEvidenceDuration {
+				continue
+			}
+			next[symbol] = observedQuote{Price: decimalOf(q.Last), FetchedAt: effectiveAt,
+				Source: source, leaseAnchor: leaseAnchor}
+		}
+		if len(next) == 0 {
+			return execgw.NewEvidenceInvalidError(fmt.Sprintf("no valid quote evidence for %d managed symbol(s)", len(symbols)))
+		}
+		out = next
+		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-
-	out := make(map[string]observedQuote, len(quotes))
-	for _, q := range quotes {
-		if q.Last <= 0 {
-			// A quote with no last trade is not an observation. Recording it as
-			// zero would read as a total collapse and liquidate the position.
-			continue
+	if needsFallback {
+		// Official fetched-at evidence never pays for this scan. Only a successful
+		// managed quote that actually needs the cycle fallback recovers the durable
+		// maximum, and it does so after the one broker read so a local journal error
+		// cannot make Retrier repeat that read.
+		maximum, err := o.opts.Journal.MaxExitObservationCycle(ctx, o.opts.AccountRef)
+		if err != nil {
+			return nil, err
 		}
-		out[strings.ToUpper(strings.TrimSpace(q.Symbol))] = observedQuote{
-			Price: decimalOf(q.Last), FetchedAt: q.FetchedAt,
+		for {
+			current := o.observationSequence.Load()
+			if current >= maximum || o.observationSequence.CompareAndSwap(current, maximum) {
+				break
+			}
 		}
-	}
-	if len(out) == 0 {
-		return nil, fmt.Errorf("engine: the price read answered for none of %d held symbol(s)", len(symbols))
+		sequence := o.observationSequence.Add(1)
+		source := "cycle:" + strconv.FormatUint(sequence, 10)
+		for symbol, quote := range out {
+			if quote.Source != "" {
+				continue
+			}
+			quote.Source = source
+			out[symbol] = quote
+		}
 	}
 	return out, nil
 }
@@ -806,6 +856,9 @@ func (o *ExitObserver) checkOutage(ctx context.Context, cycle *ExitCycle) {
 // judge evaluates one position and acts on what the evaluation asked for.
 func (o *ExitObserver) judge(ctx context.Context, m managed, quote observedQuote,
 	observation cycleObservation, cycle *ExitCycle) error {
+	if !o.quoteUsable(quote) {
+		return nil
+	}
 	if m.identityErr != nil {
 		o.alertRefused(ctx, m, m.identityErr)
 		return nil
@@ -900,12 +953,11 @@ func (o *ExitObserver) judgeRatchet(ctx context.Context, m managed, quote observ
 
 	snapshot = snapshot.ChangedFromState(m.state.HighWater, m.state.Baseline,
 		exitpolicy.Level(m.state.RatchetLevel), exitpolicy.NoRung)
-	if !snapshot.Changed && !m.reJudge {
-		// exit_events is append-only and the loop runs every five seconds. A
-		// judgement that moved nothing is not a judgement worth a row; the
-		// evaluator computes the condition (issues.md, task 0.1) so this does not
-		// re-derive it.
+	if !o.quoteUsable(quote) {
 		return nil
+	}
+	if !o.requiresFullJudgement(m, snapshot) {
+		return o.refreshObservation(ctx, m, snapshot, exitpolicy.NewRatchetRecoveryPolicy(evaluation), quote)
 	}
 
 	return o.record(ctx, m, snapshot,
@@ -972,11 +1024,56 @@ func (o *ExitObserver) judgeLadder(ctx context.Context, m managed, quote observe
 	// not the line, and the retry has already been spent by letting the position
 	// through (D8). Returning here would burn that retry without judging anything
 	// and leave the quarantine standing forever (a084 개정 2, D8).
-	if !snapshot.Changed && !m.reJudge {
+	if !o.quoteUsable(quote) {
 		return nil
+	}
+	if !o.requiresFullJudgement(m, snapshot) {
+		return o.refreshObservation(ctx, m, snapshot, exitpolicy.NewLadderRecoveryPolicy(evaluation), quote)
 	}
 	return o.record(ctx, m, snapshot, exitpolicy.NewLadderRecoveryPolicy(evaluation),
 		quote, observation, cycle)
+}
+
+// requiresFullJudgement keeps the complete event/proposal transaction for any
+// lifecycle or operational semantic movement. Only an evaluated exact flat line
+// may use the no-event observation heartbeat path.
+func (o *ExitObserver) requiresFullJudgement(m managed, snapshot exitpolicy.ExitLineSnapshot) bool {
+	if m.reJudge || m.state.SnapshotStatus != journal.SnapshotStatusEvaluated || m.state.Snapshot.Snapshot == nil {
+		return true
+	}
+	return snapshot.Changed || !journal.SameExitOperationalLine(m.state.Snapshot.Snapshot.Line, snapshot)
+}
+
+func (o *ExitObserver) refreshObservation(ctx context.Context, m managed, snapshot exitpolicy.ExitLineSnapshot,
+	recovery exitpolicy.RecoveryPolicyDefinition, quote observedQuote,
+) error {
+	if !o.quoteUsable(quote) {
+		return nil
+	}
+	err := o.opts.Journal.RefreshExitObservation(ctx, journal.ExitObservationRefresh{
+		PositionID: m.position.ID, LifecycleGeneration: m.state.LifecycleGeneration,
+		Snapshot: snapshot, RecoveryPolicy: recovery, ObservationSource: quote.Source, ObservedAt: quote.FetchedAt,
+		Provenance: journal.ExitDecisionProvenance{ObservationID: snapshot.ObservationID,
+			SnapshotID: snapshot.SnapshotID, DecisionID: snapshot.DecisionID, Policy: snapshot.Policy},
+	})
+	if errors.Is(err, journal.ErrExitObservationConflict) || errors.Is(err, journal.ErrExitObservationStale) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("engine: refreshing exit observation of %s: %w", m.position.ID, err)
+	}
+	return nil
+}
+
+func (o *ExitObserver) quoteUsable(quote observedQuote) bool {
+	// The wall check refuses evidence that is not yet valid after a wall-clock
+	// rollback. The elapsed check refuses a rollback from extending a quote's
+	// local use lease. Both comparisons intentionally keep the exact boundary.
+	now := o.clk.Now()
+	if now.UTC().Before(quote.FetchedAt) {
+		return false
+	}
+	return clock.LeaseElapsed(o.clk, quote.leaseAnchor) <= execgw.QueryPriceEvidenceDuration
 }
 
 func (o *ExitObserver) snapshotContext(m managed, quote observedQuote,
@@ -998,9 +1095,12 @@ func stableObservationID(accountRef string, m managed, quote observedQuote,
 		return "", err
 	}
 	stampKind, stamp, sequence := "fetched_at", quote.FetchedAt.UTC().Format(time.RFC3339Nano), ""
-	if quote.FetchedAt.IsZero() {
+	if strings.HasPrefix(quote.Source, "cycle:") || quote.FetchedAt.IsZero() {
 		stampKind, stamp = "cycle", fallback.at.UTC().Format(time.RFC3339Nano)
-		sequence = strconv.FormatUint(fallback.sequence, 10)
+		sequence = strings.TrimPrefix(quote.Source, "cycle:")
+		if sequence == "" {
+			sequence = strconv.FormatUint(fallback.sequence, 10)
+		}
 	}
 	h := sha256.New()
 	for _, field := range []string{
@@ -1077,6 +1177,9 @@ func (o *ExitObserver) ladderFor(m managed) (exitpolicy.LadderPolicy, error) {
 func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolicy.ExitLineSnapshot,
 	recoveryPolicy exitpolicy.RecoveryPolicyDefinition, quote observedQuote,
 	observation cycleObservation, cycle *ExitCycle) error {
+	if !o.quoteUsable(quote) {
+		return nil
+	}
 	proposal := snapshot.ExecutableProposal()
 	quantity := snapshot.ProjectedQuantity
 	orderable := snapshot.Orderable && !proposal.Zero()
@@ -1092,10 +1195,13 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 			DecisionID: snapshot.DecisionID, Policy: snapshot.Policy,
 		},
 	}
-	if quote.FetchedAt.IsZero() {
-		judgement.ObservationSource, judgement.ObservedAt = "cycle", observation.at
-	} else {
-		judgement.ObservationSource, judgement.ObservedAt = "quote_fetched_at", quote.FetchedAt
+	judgement.ObservationSource, judgement.ObservedAt = quote.Source, quote.FetchedAt
+	if judgement.ObservationSource == "" {
+		if quote.FetchedAt.IsZero() {
+			judgement.ObservationSource, judgement.ObservedAt = "cycle:"+strconv.FormatUint(observation.sequence, 10), observation.at
+		} else {
+			judgement.ObservationSource = "quote_fetched_at"
+		}
 	}
 
 	// Clearing the symbol comes *before* the arming, not after it, and the reason

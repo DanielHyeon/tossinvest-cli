@@ -15,6 +15,8 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitquarantine"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/operatorview"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
 )
 
@@ -52,6 +54,10 @@ type policyRowView struct {
 	// quarantine can land on any managed position regardless of provenance, and
 	// lifting one changes no lifecycle field.
 	Quarantine quarantineBadgeView
+	// ExitLine is the same canonical persisted line rendered on /positions.
+	// Position-management owns no policy calculation and never promotes SEED
+	// fields into an actionable line.
+	ExitLine operatorview.ExitLineView
 }
 
 type positionPolicyPage struct {
@@ -69,6 +75,11 @@ type positionPolicyPage struct {
 	BlockSource    string
 	Blocks         []reconcileBlockView
 	Rows           []policyRowView
+	// ExitJournal preserves the typed outcome of the independent exit-evidence
+	// read. Without it, an unavailable journal is indistinguishable from a
+	// readable journal that simply has no saved evaluation.
+	ExitJournal      journalView
+	ExitJournalKnown bool
 	// QuarantineErr explains why the quarantine column is blank. It is a
 	// secondary read: failing it must not stop the screen from drawing.
 	QuarantineErr string
@@ -242,6 +253,14 @@ func (c *Console) handlePositionManagement(w http.ResponseWriter, r *http.Reques
 		c.render(w, "position-policy", page)
 		return
 	}
+	exits, exitJournal, _ := c.livePositions(r.Context())
+	page.ExitJournal, page.ExitJournalKnown = exitJournal, true
+	exitByPosition := make(map[string]journal.PositionExit, len(exits))
+	if exitJournal.Readable() {
+		for _, row := range exits {
+			exitByPosition[strings.TrimSpace(row.Position.ID)] = row
+		}
+	}
 	names := c.holdingNames(c.now())
 	// Secondary read (change a079): a console talking to an engine that predates
 	// the capability, or an engine that cannot answer right now, still draws the
@@ -256,6 +275,13 @@ func (c *Console) handlePositionManagement(w http.ResponseWriter, r *http.Reques
 			quarantines[row.PositionID] = row
 		}
 	}
+	// Quarantine is an engine RPC and may block. Bound the one marker filesystem
+	// read by response-time samples, then use the post-read sample for both its
+	// liveness verdict and every exit line projected for this page.
+	markerReadAt := c.now()
+	markerWired, markerStatus := c.readProtectionMarker(markerReadAt)
+	asOf := c.now()
+	live := protectionLivenessAt(markerWired, markerStatus, asOf)
 	for _, state := range states {
 		management := positionpolicy.ProjectManagement(positionpolicy.ManagementInput{
 			Market: state.Market, Symbol: state.Symbol, JournalKnown: true,
@@ -263,8 +289,24 @@ func (c *Console) handlePositionManagement(w http.ResponseWriter, r *http.Reques
 			Released: state.Status == positionpolicy.StatusReleased && state.Version > 0,
 			Runtime:  runtime,
 		})
+		unknownReason := "no_saved_evaluation"
+		if !exitJournal.Readable() {
+			unknownReason = "journal_unavailable"
+		}
 		row := policyRowView{State: state, Management: management,
-			Name: names[symbolKey(state.Market, state.Symbol)]}
+			Name:     names[symbolKey(state.Market, state.Symbol)],
+			ExitLine: operatorview.BuildExitLine(operatorview.Source{UnknownReason: unknownReason})}
+		if stored, ok := exitByPosition[state.PositionID]; ok && stored.HasExit &&
+			state.Status == positionpolicy.StatusManaged && state.ExitEligible {
+			view := exitFreshness(stored.Exit.Snapshot, asOf, live)
+			source := operatorview.Source{UnknownReason: view.UnknownReason, StaleReason: view.StaleReason,
+				RemainingQuantity: stored.Position.Quantity, EffectiveSource: "persisted effective snapshot"}
+			if view.Snapshot != nil {
+				source.Snapshot = &view.Snapshot.Line
+				source.ObservationSource, source.ObservedAt = view.Snapshot.ObservationSource, view.Snapshot.ObservedAt
+			}
+			row.ExitLine = operatorview.BuildExitLine(source)
+		}
 		if management.Block != nil {
 			row.Block = newReconcileBlockView(*management.Block, c.now())
 		}

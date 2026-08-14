@@ -1,0 +1,62 @@
+{
+  "file": "internal/operatorview/exit_freshness.go",
+  "source_sha256": "35f6e64f84bdadca02b94ada01e08d09b547f9c52a78ae0ccc6b4c5ef7a929eb",
+  "package": "operatorview",
+  "function": "ApplyExitFreshness",
+  "signature": "ApplyExitFreshness(params=3, results=1)",
+  "start": {
+    "line": 23,
+    "column": 1
+  },
+  "end": {
+    "line": 29,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 24,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 26,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 9
+      },
+      "text": "view.WithFreshness"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 25,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

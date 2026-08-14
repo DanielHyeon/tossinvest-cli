@@ -1,0 +1,78 @@
+{
+  "file": "internal/journal/apply_hook.go",
+  "source_sha256": "459f1791fa91a6c7d108804c4c67374bce7a715ccf4874f1ebb4f31a4114a5ee",
+  "package": "journal",
+  "function": "exitObservationRefreshGuardTx",
+  "signature": "exitObservationRefreshGuardTx(params=3, results=3)",
+  "start": {
+    "line": 682,
+    "column": 1
+  },
+  "end": {
+    "line": 692,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 688,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 689,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 691,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 686,
+        "column": 8
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 686,
+        "column": 8
+      },
+      "text": "tx.QueryRowContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 691,
+        "column": 25
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 686,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

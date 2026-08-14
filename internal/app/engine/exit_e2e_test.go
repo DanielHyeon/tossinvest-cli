@@ -33,6 +33,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
@@ -177,6 +178,27 @@ type e2eStack struct {
 
 var e2eNow = time.Date(2026, 3, 30, 1, 0, 0, 0, time.UTC)
 
+// e2eClockDomainPrices keeps the official HTTP parsing/value path intact while
+// translating its wall-clock receipt stamp into this harness's fake-clock
+// domain. The observer compares FetchedAt to its injected clock; mixing those
+// two clocks would make an otherwise valid HTTP fixture look years in the
+// future. Production still uses the official client's own timestamp unchanged.
+type e2eClockDomainPrices struct {
+	next engine.PriceReader
+	clk  clock.Clock
+}
+
+func (p e2eClockDomainPrices) Prices(ctx context.Context, symbols []string) ([]domain.Quote, error) {
+	quotes, err := p.next.Prices(ctx, symbols)
+	if err != nil {
+		return nil, err
+	}
+	for i := range quotes {
+		quotes[i].FetchedAt = p.clk.Now()
+	}
+	return quotes, nil
+}
+
 func newE2EStack(t *testing.T) *e2eStack {
 	t.Helper()
 	broker, srv := newE2EBroker(t)
@@ -251,7 +273,7 @@ func buildE2EStack(t *testing.T, broker *e2eBroker, srv *httptest.Server,
 		t.Fatalf("NewRiskGuardian: %v", err)
 	}
 	observer, err := engine.NewExitObserver(engine.ExitObserverOptions{
-		Journal: eng.Journal, Prices: eng.Official, Retrier: eng.Retrier,
+		Journal: eng.Journal, Prices: e2eClockDomainPrices{next: eng.Official, clk: clk}, Retrier: eng.Retrier,
 		Issuer: guardian, Submit: eng.Gateway, Alerts: eng.Notifier,
 		Costs: costs.DefaultModel(), AccountRef: eng.AccountRef, Clock: clk,
 	})

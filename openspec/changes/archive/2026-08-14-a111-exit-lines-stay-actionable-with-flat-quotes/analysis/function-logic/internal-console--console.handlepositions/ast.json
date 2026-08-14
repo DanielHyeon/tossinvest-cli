@@ -1,0 +1,124 @@
+{
+  "file": "internal/console/portfolio_pages.go",
+  "source_sha256": "8200961741096a3b7164ae55f46b15c9bf2795ea9b412b9c2877375d14a7257a",
+  "package": "console",
+  "function": "handlePositions",
+  "receiver": "Console",
+  "signature": "Console.handlePositions(params=2, results=0)",
+  "start": {
+    "line": 70,
+    "column": 1
+  },
+  "end": {
+    "line": 82,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 10
+      },
+      "text": "c.positions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 22
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 11
+      },
+      "text": "c.chromeFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 57
+      },
+      "text": "snap.Holdings.freshness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 17
+      },
+      "text": "explainFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 2
+      },
+      "text": "c.decoratePositionRows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 25
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 54
+      },
+      "text": "c.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 2
+      },
+      "text": "c.render"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

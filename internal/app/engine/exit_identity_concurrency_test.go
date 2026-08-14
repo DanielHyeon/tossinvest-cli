@@ -101,7 +101,7 @@ func TestExitObserverConcurrentSameQuoteArmsAndMutatesOnce(t *testing.T) {
 
 	prices := &concurrentQuoteReader{
 		ready: make(chan struct{}),
-		quote: domain.Quote{Symbol: "005930", Last: 9700, FetchedAt: exitNow.Add(17 * time.Second)},
+		quote: domain.Quote{Symbol: "005930", Last: 9700, FetchedAt: exitNow},
 	}
 	submit := &journalMutationSubmitter{journal: h.journal}
 	observers := []*engine.ExitObserver{

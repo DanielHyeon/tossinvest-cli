@@ -1,0 +1,86 @@
+{
+  "file": "cmd/tossctl/httpapi_reader.go",
+  "source_sha256": "6a7ccf3ee0792b17582ae0304e704b46e9e895a877d3e993df3608060a891074",
+  "package": "main",
+  "function": "Positions",
+  "receiver": "httpAPIReader",
+  "signature": "httpAPIReader.Positions(params=1, results=2)",
+  "start": {
+    "line": 97,
+    "column": 1
+  },
+  "end": {
+    "line": 105,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 102,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 13
+      },
+      "text": "r.clockNow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 19
+      },
+      "text": "r.positionsCache.Get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 9
+      },
+      "text": "r.projectPositions"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

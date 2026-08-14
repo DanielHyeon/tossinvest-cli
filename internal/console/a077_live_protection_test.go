@@ -1,14 +1,10 @@
 package console
 
-// a077: the protection line is a state, not a measurement.
-//
-// The engine writes exit_states.last_observed_at only from record(), and
-// judgeRatchet/judgeLadder return before record() whenever the judgement moved
-// nothing. So that column is the last time the line *changed*, and treating it
-// as an observation heartbeat under the broker cache TTL emptied the whole 라인
-// column on a perfectly healthy engine. These tests pin the replacement: the
-// line is drawn while something is maintaining it, and closed when nothing is —
-// or when this position has been taken out of judgement entirely.
+// a077 established that a protection line is state, not a broker-cache value.
+// A111 narrows its heartbeat contract: every flat observation now persists its
+// own evidence, so even a running engine may show the line only for 30 seconds
+// after that evidence. Lines still close immediately when the engine stops or
+// the position is taken out of judgement.
 
 import (
 	"context"
@@ -80,12 +76,12 @@ func assertLineClosed(t *testing.T, row string, line exitpolicy.ExitLineSnapshot
 	}
 }
 
-// TestTheProtectionLineSurvivesAJudgementThatChangedNothing is a077 tasks 2.1 and
-// 2.2: the ledger's own values, hours after the last change, on both screens that
-// draw a protection line.
+// TestTheProtectionLineSurvivesAJudgementThatChangedNothing preserves a077's
+// state rendering on both screens when the engine has supplied a recent A111
+// flat-observation heartbeat.
 func TestTheProtectionLineSurvivesAJudgementThatChangedNothing(t *testing.T) {
 	h := newLivePositionHarness(t)
-	line := seedUnchangedJudgement(t, h, "2026-07-26T19:00:00Z") // six hours before the clock
+	line := seedUnchangedJudgement(t, h, "2026-07-27T00:59:45Z") // fifteen seconds before the clock
 	holdEngineMarker(t, h.marker, h.clock.Now())
 	h.authenticate(t)
 
@@ -179,7 +175,7 @@ func TestAReleasedGenerationsQuarantineDoesNotCloseTheCurrentOne(t *testing.T) {
 		VALUES ('pos-managed',1,1,'ambiguous_recovery','stale generation','2026-07-27T00:30:00Z');`)
 	line, recovery := ratchetViewSnapshot(t, "pos-managed", 2, "10", "obs-a077-gen2",
 		"70500", "70000", "68000", "0", exitpolicy.LevelNone)
-	writeViewSnapshot(t, h.journal, line, recovery, "2026-07-26T19:00:00Z")
+	writeViewSnapshot(t, h.journal, line, recovery, "2026-07-27T00:59:45Z")
 	holdEngineMarker(t, h.marker, h.clock.Now())
 	h.authenticate(t)
 
