@@ -1,34 +1,34 @@
 # Branch Test Map: `Tracker.Observe`
 
-| Branch | Scenario | Test/evidence | RED observed | GREEN observed |
+| Branch | Scenario | Test/evidence | RED | GREEN |
 |---|---|---|---|---|
-| B1 | first mismatch initializes the block set | `TestQuantityMismatchBlocksEntries` | existing | existing |
-| B2 | non-blocking comparison clears transient promotion streaks without clearing permanent state | existing mismatch permanent/reset regressions plus a110 reset case | pending | pending |
-| B3 | a blocking comparison derives unique canonical dispute streaks instead of incrementing a shared scalar | a110 changing-symbol, tuple and missing-order regressions | pending | pending |
-| B4 | a clean quantity read does not release a foreign-cause block | existing foreign-cause preservation regression | preserve | preserve |
-| B5 | a clean quantity read does not release an operator-only/differently released block | existing permanent/operator release regressions | preserve | preserve |
-| B6 | no strictly earlier adjustment credit leaves the block awaiting adjustment | existing a083/a083b credit tests | preserve | preserve |
-| B7 | a later comparison that still disputes the symbol cannot spend its credit | existing a083/a083b refuted-credit tests | preserve | preserve |
-| B8 | every current mismatch is projected to an ordinary block | `TestQuantityMismatchBlocksEntries` | existing | existing |
-| B9 | a new ordinary block is marked pending and latched before journal I/O | `TestNewMismatchLatchesTheGateBeforeJournalIO` | existing | existing |
-| B10 | any one exact current key at threshold proposes permanent promotion; changing keys cannot pool | a110 incident/exact-identity regressions | pending | pending |
-| B11 | the absent account permanent key is added pending without replacing durable foreign authority | existing conflict test plus a110 pending-promotion cases | pending | pending |
-| B12 | outcome slices are deterministic | existing block-ordering assertions | preserve | preserve |
-| B13 | current additions are indexed before generic pending retry | existing failed-enter retry plus a110 pending split | pending | pending |
-| B14 | ordinary older pending entries retry; stale account promotion retries only while its earning key continues | a110 failed permanent enter clean/different/same-key cases | pending | pending |
-| B15 | journal-confirmed additions replace pending rows as durable | existing write-through tests plus a110 same-key retry | pending | pending |
-| B16 | a different durable authoritative cause replaces the local proposal | existing cause-conflict regression | preserve | preserve |
-| B17 | only journal-confirmed exact releases leave the in-memory block set | existing partial/exact release regressions | preserve | preserve |
-| B18 | committed releases are indexed by normalized symbol for credit accounting | existing a083/a083b credit tests | preserve | preserve |
-| B19 | credits are examined independently per symbol | existing a083/a083b multi-symbol tests | preserve | preserve |
-| B20 | same/earlier/unparseable comparison time cannot spend a credit | existing a083/a083b time-order tests | preserve | preserve |
-| B21 | refuted, committed or orphaned credits are removed at their bounded lifetime | existing a083/a083b credit-lifetime tests | preserve | preserve |
-| Restore/Refresh | restart preserves already-durable permanent blocks without recreating transient streak evidence | existing restore tests plus new a110 restart regression | pending | pending |
+| B1 | first observation initializes blocks | ordinary mismatch suite | preserve | yes |
+| B2 | clean path selected | A110 clean/reset | yes | yes |
+| B3 | blocking path selected | A110 identity tables | yes | yes |
+| B4 | clean resolves pending permanent authority | commit-timeout/read-error cases | yes | yes |
+| B5 | clean inspects active blocks | a083 credit suites | preserve | yes |
+| B6 | foreign cause/release owner is skipped | cause ownership suites | preserve | yes |
+| B7 | absent/stale adjustment credit awaits | a083 time suites | preserve | yes |
+| B8 | still-disputed symbol cannot release | a083b reclassification suite | preserve | yes |
+| B9 | still-disputed symbol cannot release | a083b reclassification suite | preserve | yes |
+| B10 | pending earning key disappeared | clean/different/same-key cases | yes | yes |
+| B11 | current ordinary blocks are enumerated before authority read | `TestA110AuthorityOutageStillProjectsCurrentDifferentOrdinaryMismatch` | yes (M25) | yes |
+| B12 | unseen current block is inserted pending | same F9 test | yes | yes |
+| B13 | authority-read error returns only after current gate projection | same F9 test | yes | yes |
+| B14 | normal path advances streaks | identity tables | preserve | yes |
+| B15 | non-prelatched current blocks require insertion | ordinary latch tests | preserve | yes |
+| B16 | current ordinary blocks enumerated | changing-symbol/invalid tables | yes | yes |
+| B17 | unseen ordinary block added pending | pre-I/O latch tests | preserve | yes |
+| B18 | deterministic exact key reaches threshold | exact identity/handoff tests | yes | yes |
+| B19 | account permanent key added once | durable threshold test | preserve | yes |
+| B20 | confirmed durable additions enumerated | retry tests | preserve | yes |
+| B21 | durable permanent clears pending identity | same-key retry tests | yes | yes |
+| B22 | authoritative conflicts enumerated | cause-conflict regression | preserve | yes |
+| B23 | account authority clears pending identity only | conflict regression | preserve | yes |
+| B24 | confirmed releases delete exact block | release failure/partial suites | preserve | yes |
+| B25 | committed releases indexed | a083 credit suites | preserve | yes |
+| B26 | credits enumerated independently | a083 multi-symbol suite | preserve | yes |
+| B27 | non-later comparison preserves credit | a083 time-order suite | preserve | yes |
+| B28 | refuted/spent/orphan credit removed | a083b lifetime suite | preserve | yes |
 
-Additional B3/B10 acceptance vectors: equivalent `1`/`1.0` continues one streak; a float64 2^53
-collision pair remains distinct; blank/malformed/non-finite values stay ordinarily blocked but earn no
-promotion count; a valid sibling in the same diff still counts; duplicate identities count once; complete
-missing-order identity scopes opaque-ID reuse; each blank required missing-order component remains an
-ordinary block but cannot earn a promotion streak, while a valid sibling still counts.
-
-`pending` means the implementation Teammate must first demonstrate RED against the frozen base, then record GREEN after the minimal fix.
+Restore/Refresh acceptance: transient streaks never reconstruct; already durable permanent rows do.

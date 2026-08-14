@@ -1,0 +1,160 @@
+{
+  "file": "internal/reconcile/compare.go",
+  "source_sha256": "87956731b132e32cb3be7efe6009e27d959c5450ed5034394310797b58efbb6c",
+  "package": "reconcile",
+  "function": "quantitiesAgree",
+  "signature": "quantitiesAgree(params=2, results=1)",
+  "start": {
+    "line": 645,
+    "column": 1
+  },
+  "end": {
+    "line": 666,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 648,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 651,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 656,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 659,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 649,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 652,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 657,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 663,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 665,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 646,
+        "column": 14
+      },
+      "text": "riskcalc.CanonicalDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 647,
+        "column": 14
+      },
+      "text": "riskcalc.CanonicalDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 654,
+        "column": 14
+      },
+      "text": "strconv.ParseFloat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 655,
+        "column": 14
+      },
+      "text": "strconv.ParseFloat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 665,
+        "column": 9
+      },
+      "text": "binaryRoundTripArtifact"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 646,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 647,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 654,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 655,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -18,13 +18,12 @@ package reconcile
 // which is why the first response is to wait 30 seconds and look again rather
 // than to page a human.
 //
-// A disagreement that survives three of those is a different animal. Whatever it
-// is, "look again" has now been shown not to fix it, and continuing to loop would
-// be an engine that reports a problem forever and does nothing about it. So the
-// third consecutive failure is terminal: it is marked permanent, escalated to
-// account scope, and only an operator clears it. A success at any point resets
-// the counter, because the counter is measuring *consecutive* failure — the thing
-// that distinguishes a stuck account from a busy one.
+// One canonical disagreement that survives three consecutive comparisons is a
+// different animal. For that exact quantity tuple or missing-order identity,
+// "look again" has now been shown not to fix it. Its third observation is
+// terminal: the block is escalated to account scope and only an operator clears
+// it. Other disputes cannot donate observations to that streak, and disappearance
+// from one comparison resets that dispute's evidence.
 //
 // # The state table
 //
@@ -38,7 +37,7 @@ package reconcile
 //	restart recovery unfinished        recovery_incomplete                account  recovery completes    —
 //	quantity disagreement              reconciliation_mismatch            symbol   adjusted reconcile    operator
 //	order the account does not show    reconciliation_mismatch            symbol   adjusted reconcile    operator
-//	3 consecutive failed reconciles    reconciliation_mismatch_permanent  account  never                 operator
+//	same dispute reaches its threshold reconciliation_mismatch_permanent  account  never                 operator
 //	broker snapshot contradiction      unknown_broker_state               symbol   never                 operator
 //
 // # "Adjusted reconcile", and why an agreeing read is not enough
@@ -128,6 +127,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
 
 // Scope is how wide a block reaches.
@@ -192,7 +192,7 @@ func BlockRules() []BlockRule {
 			Manual:    true,
 		},
 		{
-			Condition: "reconciliation failed the configured number of times in a row",
+			Condition: "the same canonical dispute reached its consecutive-observation threshold",
 			Reason:    execgw.ReasonReconcilePermanent,
 			Scope:     ScopeAccount,
 			Auto:      ReleaseOperatorOnly,
@@ -263,6 +263,13 @@ func (b Block) Covers(market, symbol string) bool {
 	case ScopeMarket:
 		return strings.EqualFold(b.Market, market)
 	case ScopeSymbol:
+		// An absent symbol cannot safely name a narrower scope. It stays a symbol
+		// block internally so its key cannot collide with a genuine account-wide
+		// permanent promotion, but it covers the account just as syncGate projects
+		// it. This keeps Tracker.EntryAllowed and the gateway latch consistent.
+		if strings.TrimSpace(b.Symbol) == "" {
+			return true
+		}
 		return strings.EqualFold(b.Symbol, symbol)
 	default:
 		return true
@@ -273,7 +280,8 @@ func (b Block) Covers(market, symbol string) bool {
 // (reconciliation spec: 기본 30초).
 const DefaultReconcileInterval = 30 * time.Second
 
-// DefaultMaxFailures is how many consecutive failures make a mismatch permanent.
+// DefaultMaxFailures is how many consecutive observations of one canonical
+// dispute make that dispute permanent.
 const DefaultMaxFailures = 3
 
 // ReconcileStore is the durable half of the RECONCILE state.
@@ -303,23 +311,134 @@ type Tracker struct {
 	// MinInterval is the minimum wait between reconciliations. Zero takes
 	// DefaultReconcileInterval.
 	MinInterval time.Duration
-	// MaxFailures is how many consecutive failures make a mismatch permanent.
+	// MaxFailures is how many consecutive observations of one canonical dispute
+	// make that dispute permanent.
 	// Zero takes DefaultMaxFailures.
 	MaxFailures int
 	AccountRef  string
 
-	mu        sync.Mutex
-	failures  int
+	mu       sync.Mutex
+	failures int
+	// streaks records only the canonical disputes in the immediately preceding
+	// blocking comparison. It is deliberately process-local: a durable ordinary
+	// block proves that entry must stay closed, not that the same complete
+	// dispute was observed before a restart.
+	streaks   map[promotionDisputeKey]int
 	lastAt    time.Time
 	observed  bool
 	blocks    map[string]Block
 	permanent bool
+	// pendingPermanentKey identifies the exact dispute that earned an account
+	// promotion whose durable write failed. Unlike ordinary pending rows, this
+	// row may be retried only when that same key is in the next comparison.
+	pendingPermanent    bool
+	pendingPermanentKey promotionDisputeKey
 	// adjusted maps a symbol to the as-of of the *comparison the adjustment was
 	// computed from*. It is what turns an agreeing comparison from a reading into
 	// a release, and the stamp is what makes "the re-read after the adjustment"
 	// something this type can check rather than something its caller has to
 	// arrange (a083).
 	adjusted map[string]string
+}
+
+// promotionDisputeKey is deliberately comparable so a current comparison can
+// replace, rather than append to, the prior set of promotion evidence. The
+// journal remains the authority for blocks; this key is only the transient
+// proof that a particular disagreement has persisted.
+type promotionDisputeKey struct {
+	kind       string
+	account    string
+	symbol     string
+	local      string
+	broker     string
+	market     string
+	tradingDay string
+	side       string
+	orderID    string
+}
+
+const (
+	promotionQuantity     = "quantity"
+	promotionMissingOrder = "missing-order"
+)
+
+// promotionKeys returns the unique blocking disputes whose identity can be
+// proved exactly. A mismatch that cannot be classified stays an ordinary
+// fail-closed block, but it must not manufacture evidence for an operator-only
+// account outage.
+func promotionKeys(diff Diff, trackerAccount string) map[promotionDisputeKey]struct{} {
+	keys := make(map[promotionDisputeKey]struct{}, len(diff.Quantities)+len(diff.MissingOrders))
+	for _, mismatch := range diff.Quantities {
+		if key, ok := quantityPromotionKey(trackerAccount, diff.AccountRef, mismatch); ok {
+			keys[key] = struct{}{}
+		}
+	}
+	for _, missing := range diff.MissingOrders {
+		if key, ok := missingOrderPromotionKey(trackerAccount, diff.AccountRef, missing); ok {
+			keys[key] = struct{}{}
+		}
+	}
+	return keys
+}
+
+func quantityPromotionKey(trackerAccount, diffAccount string, mismatch QuantityMismatch) (promotionDisputeKey, bool) {
+	if mismatch.promotionIneligible {
+		return promotionDisputeKey{}, false
+	}
+	trackerAccount = strings.TrimSpace(trackerAccount)
+	diffAccount = strings.TrimSpace(diffAccount)
+	symbol := strings.ToUpper(strings.TrimSpace(mismatch.Symbol))
+	if trackerAccount == "" || diffAccount == "" || trackerAccount != diffAccount || symbol == "" {
+		return promotionDisputeKey{}, false
+	}
+	local, err := riskcalc.CanonicalDecimal(mismatch.Local)
+	if err != nil {
+		return promotionDisputeKey{}, false
+	}
+	broker, err := riskcalc.CanonicalDecimal(mismatch.Broker)
+	if err != nil {
+		return promotionDisputeKey{}, false
+	}
+	return promotionDisputeKey{
+		kind: promotionQuantity, account: trackerAccount, symbol: symbol, local: local, broker: broker,
+	}, true
+}
+
+func missingOrderPromotionKey(trackerAccount, diffAccount string, order LocalOrder) (promotionDisputeKey, bool) {
+	trackerAccount = strings.TrimSpace(trackerAccount)
+	diffAccount = strings.TrimSpace(diffAccount)
+	identity := order.Identity()
+	if trackerAccount == "" || diffAccount == "" || diffAccount != trackerAccount ||
+		identity.AccountRef != trackerAccount || identity.Market == "" || identity.TradingDay == "" ||
+		identity.Symbol == "" || identity.Side == "" || strings.TrimSpace(identity.OrderID) == "" {
+		return promotionDisputeKey{}, false
+	}
+	return promotionDisputeKey{
+		kind:    promotionMissingOrder,
+		account: identity.AccountRef, market: identity.Market, tradingDay: identity.TradingDay,
+		symbol: identity.Symbol, side: identity.Side, orderID: identity.OrderID,
+	}, true
+}
+
+// permanentPromotionDetail records only the canonical dispute that earned the
+// escalation. In particular it never summarizes the whole comparison: sibling
+// disputes may join or leave without becoming evidence for this account block.
+func permanentPromotionDetail(threshold int, key promotionDisputeKey) string {
+	switch key.kind {
+	case promotionQuantity:
+		return fmt.Sprintf(
+			"same canonical dispute reached permanent threshold: threshold=%d kind=%s account=%s symbol=%s local=%s broker=%s",
+			threshold, key.kind, key.account, key.symbol, key.local, key.broker)
+	case promotionMissingOrder:
+		return fmt.Sprintf(
+			"same canonical dispute reached permanent threshold: threshold=%d kind=%s account=%s market=%s day=%s symbol=%s side=%s orderID=%s",
+			threshold, key.kind, key.account, key.market, key.tradingDay, key.symbol, key.side, key.orderID)
+	default:
+		// thresholdKey only returns keys built by the two constructors above.
+		// Keep a deterministic fail-closed diagnostic if that invariant is ever
+		// broken without exposing the unrelated comparison around it.
+		return fmt.Sprintf("canonical dispute reached permanent threshold: threshold=%d kind=unknown", threshold)
+	}
 }
 
 // AdjustmentApplied records that an adjustment converged the projection of a
@@ -388,6 +507,18 @@ func creditUsableBy(credit, observed string) bool {
 	return observedAt.After(at)
 }
 
+// refuteUsableAdjustmentCredits records the part of a blocking comparison that
+// is already authoritative before any later journal read can fail. Only a
+// strictly earlier credit for a symbol disputed now is answered; unrelated and
+// same-comparison credits remain available to their own later observations.
+func (t *Tracker) refuteUsableAdjustmentCredits(disputed map[string]bool, observed string) {
+	for symbol, comparison := range t.adjusted {
+		if disputed[symbol] && creditUsableBy(comparison, observed) {
+			delete(t.adjusted, symbol)
+		}
+	}
+}
+
 // creditStampAt reads a credit's comparison stamp. Not-ok means it cannot be
 // ordered against anything, and every caller treats that as "keeps the block".
 func creditStampAt(credit string) (time.Time, bool) {
@@ -454,7 +585,8 @@ func symbolsInDispute(diff Diff) map[string]bool {
 
 // Outcome is what one observation did.
 type Outcome struct {
-	// Failures is the consecutive-failure count after this observation.
+	// Failures is the maximum same-canonical-dispute streak after this
+	// observation. It is a scalar compatibility view, not dispute identity.
 	Failures int
 	// Permanent reports that the mismatch is now permanent.
 	Permanent bool
@@ -499,15 +631,25 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 	// disagrees about cannot be released by it and cannot leave a credit standing,
 	// and those two facts must never be computed from different sets.
 	disputed := symbolsInDispute(diff)
+	keys := promotionKeys(diff, t.AccountRef)
 
 	var out Outcome
 	if !diff.BlocksEntry() {
-		// A success resets the counter — the counter measures *consecutive*
-		// failure, which is what separates a stuck account from a busy one. The
-		// counter and the block are separate decisions: the counter is about how
-		// the reconciliation *process* is doing, the block is about whether the
-		// engine knows its exposure, and only the second one needs a cause.
-		t.failures = 0
+		// This comparison itself is authoritative evidence that continuity broke.
+		// Record that fact before consulting journal authority: an authority outage
+		// may keep the ambiguous pending account block, but it cannot erase the
+		// observed break and later resurrect its retry identity.
+		t.clearStreaks()
+		if t.pendingPermanent {
+			t.pendingPermanentKey = promotionDisputeKey{}
+		}
+		if err := t.resolvePendingPermanentAuthority(ctx); err != nil {
+			return t.finishAuthorityError(now, interval, err)
+		}
+		// A failed account-wide promotion is conservative only until the next
+		// authoritative comparison can say whether its earning dispute continued.
+		// A clean result breaks that continuity, so remove just this non-durable
+		// proposal. Ordinary pending rows remain fail-closed and retry normally.
 		for _, block := range t.blocks {
 			if block.Cause != journal.ReconcileCauseQuantityMismatch ||
 				block.Release != ReleaseOnAdjustedReconcile {
@@ -540,15 +682,49 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 			out.Cleared = append(out.Cleared, block)
 		}
 	} else {
-		t.failures++
-		for _, block := range blocksFor(diff, t.AccountRef, now) {
-			if _, exists := t.blocks[block.Key()]; !exists {
-				block.pending = true
-				t.blocks[block.Key()] = block
-				out.Added = append(out.Added, block)
+		currentBlocks := blocksFor(diff, t.AccountRef, now)
+		currentBlocksLatched := false
+		_, earningKeyPresent := keys[t.pendingPermanentKey]
+		advanced := false
+		if t.pendingPermanent && !earningKeyPresent {
+			t.pendingPermanentKey = promotionDisputeKey{}
+			t.advanceStreaks(keys)
+			advanced = true
+			// The current comparison has already answered any older credit on a
+			// symbol it still disputes. Record that refutation before journal
+			// authority can fail; otherwise a later clean read could spend stale
+			// evidence and release the ordinary block.
+			t.refuteUsableAdjustmentCredits(disputed, diff.AsOf)
+			// This comparison is authoritative evidence of a new ordinary
+			// mismatch even when journal authority for the older ambiguous
+			// permanent write is unavailable. Project its blocks before that read
+			// can fail so Refresh and both entry gates retain the current fact.
+			for _, block := range currentBlocks {
+				if _, exists := t.blocks[block.Key()]; !exists {
+					block.pending = true
+					t.blocks[block.Key()] = block
+					out.Added = append(out.Added, block)
+				}
+			}
+			currentBlocksLatched = true
+			t.syncGate(t.snapshotBlocks())
+			if err := t.resolvePendingPermanentAuthority(ctx); err != nil {
+				return t.finishAuthorityError(now, interval, err)
 			}
 		}
-		if t.failures >= maxFailures && !t.permanent {
+		if !advanced {
+			t.advanceStreaks(keys)
+		}
+		if !currentBlocksLatched {
+			for _, block := range currentBlocks {
+				if _, exists := t.blocks[block.Key()]; !exists {
+					block.pending = true
+					t.blocks[block.Key()] = block
+					out.Added = append(out.Added, block)
+				}
+			}
+		}
+		if key, reached := t.thresholdKey(maxFailures); reached && !t.permanent {
 			permanent := Block{
 				Scope:     ScopeAccount,
 				Account:   t.AccountRef,
@@ -557,13 +733,13 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 				Since:     now,
 				Release:   ReleaseOperatorOnly,
 				Permanent: true,
-				Detail: fmt.Sprintf(
-					"reconciliation disagreed %d times in a row; looking again has been shown not to resolve it",
-					t.failures),
+				Detail:    permanentPromotionDetail(maxFailures, key),
 			}
 			if _, exists := t.blocks[permanent.Key()]; !exists {
 				permanent.pending = true
 				t.permanent = true
+				t.pendingPermanent = true
+				t.pendingPermanentKey = key
 				t.blocks[permanent.Key()] = permanent
 				out.Added = append(out.Added, permanent)
 			}
@@ -582,22 +758,27 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 	// already known.
 	t.syncGate(t.snapshotBlocks())
 	toPersist := out
-	added := make(map[string]bool, len(out.Added))
-	for _, block := range out.Added {
-		added[block.Key()] = true
-	}
-	for _, block := range t.blocks {
-		if block.pending && !added[block.Key()] {
-			toPersist.Added = append(toPersist.Added, block)
-		}
-	}
+	// Build the complete pending write set from the projection instead of
+	// appending a map iteration to this observation's additions. The account-wide
+	// fail-closed proposal goes first; if a later ordinary retry fails, the
+	// permanent row has already become durable. The stable remainder also makes
+	// retry behavior reproducible and cannot contain duplicate block keys.
+	toPersist.Added = t.pendingBlocksForPersistence()
 	persisted, persistErr := t.persist(ctx, toPersist)
 	for _, block := range persisted.durable {
 		block.pending = false
 		t.blocks[block.Key()] = block
+		if block.Scope == ScopeAccount && block.Permanent {
+			t.pendingPermanent = false
+			t.pendingPermanentKey = promotionDisputeKey{}
+		}
 	}
 	for _, block := range persisted.authoritative {
 		t.blocks[block.Key()] = block
+		if block.Scope == ScopeAccount {
+			t.pendingPermanent = false
+			t.pendingPermanentKey = promotionDisputeKey{}
+		}
 	}
 	for _, block := range persisted.released {
 		delete(t.blocks, block.Key())
@@ -684,7 +865,17 @@ func (t *Tracker) persist(ctx context.Context, out Outcome) (persistResult, erro
 		durable:  make([]Block, 0, len(out.Added)),
 		released: make([]Block, 0, len(out.Cleared)),
 	}
+	var unrepresentableErr error
 	for _, block := range out.Added {
+		if unrepresentableOrdinaryQuantityBlock(block) {
+			// reconcile_states represents an empty symbol as account-wide. Writing
+			// this ordinary block would therefore restore after restart as the
+			// operator-only permanent shape. Keep the in-memory block and account-safe
+			// gate pending, and surface the loss of durable symbol identity instead.
+			unrepresentableErr = fmt.Errorf(
+				"reconcile: refusing to persist an ordinary quantity block with an empty symbol; the in-memory account-safe block remains pending")
+			continue
+		}
 		expectedCause := firstNonEmpty(block.Cause, journal.ReconcileCauseQuantityMismatch)
 		state, entered, err := t.Journal.EnterReconcile(ctx, journal.EnterReconcileRequest{
 			AccountRef: firstNonEmpty(block.Account, t.AccountRef),
@@ -724,16 +915,16 @@ func (t *Tracker) persist(ctx context.Context, out Outcome) (persistResult, erro
 		}
 		result.released = append(result.released, block)
 	}
-	return result, nil
+	return result, unrepresentableErr
 }
 
 // Restore rebuilds the tracker and the entry gate from the journal.
 //
 // This is the restart path. The tracker's own rows (cause QUANTITY_MISMATCH)
-// become its block set again — an account-wide one is the permanent promotion,
-// which is why the counter is restored to the threshold rather than to zero:
-// coming back with failures=0 would let the next clean pass "release" a
-// permanent block a human never cleared.
+// become its block set again — an account-wide one is the permanent promotion.
+// The process-local key streaks are never reconstructed. For compatibility,
+// Failures reports the threshold while that durable permanent row exists; the
+// row itself, not the scalar, is what prevents a clean pass from releasing it.
 //
 // The gate is then rebuilt from *every* active state, not only this tracker's,
 // because the gate is the projection of the whole table.
@@ -763,11 +954,17 @@ func (t *Tracker) Restore(ctx context.Context) error {
 	t.mu.Lock()
 	t.blocks = blocks
 	t.permanent = permanent
+	// Streak evidence is process-local. Restore projects durable safety rows, but
+	// never treats one as proof that an exact dispute was observed before restart.
+	t.streaks = nil
+	t.pendingPermanent = false
+	t.pendingPermanentKey = promotionDisputeKey{}
+	t.failures = 0
 	// A restart comes back with the blocks and without the credits: whatever
 	// applied an adjustment before the crash is gone, and the first comparison
 	// after a restart must not release on its word.
 	t.adjusted = nil
-	if permanent && t.failures < t.maxFailures() {
+	if permanent {
 		t.failures = t.maxFailures()
 	}
 	if t.Gate != nil {
@@ -778,7 +975,7 @@ func (t *Tracker) Restore(ctx context.Context) error {
 }
 
 // Refresh replaces the durable part of the runtime projection without losing
-// pending fail-closed blocks, failure counters, or adjustment credits. Runtime
+// pending fail-closed blocks, same-dispute streaks, or adjustment credits. Runtime
 // writers outside this tracker (notably the fill projection hook) call it after
 // committing a journal change, and the reconciliation driver calls it before
 // adoption judgement.
@@ -796,9 +993,27 @@ func (t *Tracker) Refresh(ctx context.Context) error {
 		return fmt.Errorf("reconcile: refreshing the active RECONCILE states: %w", err)
 	}
 
+	durablePermanent := false
+	for _, state := range states {
+		if t.AccountRef != "" && state.AccountRef != t.AccountRef {
+			continue
+		}
+		block := blockFromReconcileState(state)
+		if block.Scope == ScopeAccount && block.Cause == journal.ReconcileCauseQuantityMismatch && block.Permanent {
+			durablePermanent = true
+			break
+		}
+	}
+	continuityBrokenProposal := t.pendingPermanent &&
+		t.pendingPermanentKey == (promotionDisputeKey{}) && !durablePermanent
+
 	blocks := map[string]Block{}
 	for key, block := range t.blocks {
 		if block.pending {
+			if continuityBrokenProposal && block.Scope == ScopeAccount && block.Permanent &&
+				block.Cause == journal.ReconcileCauseQuantityMismatch {
+				continue
+			}
 			blocks[key] = block
 		}
 	}
@@ -811,6 +1026,17 @@ func (t *Tracker) Refresh(ctx context.Context) error {
 	}
 	t.blocks = blocks
 	t.permanent = hasPermanentQuantityAccountBlock(blocks)
+	if durablePermanent || continuityBrokenProposal {
+		t.pendingPermanent = false
+		t.pendingPermanentKey = promotionDisputeKey{}
+	}
+	if continuityBrokenProposal {
+		// The comparison that broke continuity returned before it could become a
+		// complete new observation. Successful journal authority now proves the
+		// old proposal never existed durably, so no threshold-shaped scalar may
+		// survive it.
+		t.clearStreaks()
+	}
 	if t.permanent && t.failures < t.maxFailures() {
 		t.failures = t.maxFailures()
 	}
@@ -818,6 +1044,174 @@ func (t *Tracker) Refresh(ctx context.Context) error {
 	t.syncGate(active)
 	t.mu.Unlock()
 	return nil
+}
+
+// advanceStreaks replaces promotion evidence with exactly the disputes in this
+// blocking comparison. Therefore a key not seen now cannot lend its prior count
+// to a later, different disagreement.
+func (t *Tracker) advanceStreaks(keys map[promotionDisputeKey]struct{}) {
+	next := make(map[promotionDisputeKey]int, len(keys))
+	max := 0
+	for key := range keys {
+		count := t.streaks[key] + 1
+		next[key] = count
+		if count > max {
+			max = count
+		}
+	}
+	t.streaks = next
+	t.failures = max
+}
+
+func (t *Tracker) clearStreaks() {
+	t.streaks = nil
+	t.failures = 0
+}
+
+// thresholdKey returns one exact current dispute that has earned promotion.
+// The key's value is only used to bind a failed durable write to the next
+// comparison; every candidate is equivalent once it has reached the threshold.
+func (t *Tracker) thresholdKey(maxFailures int) (promotionDisputeKey, bool) {
+	var selected promotionDisputeKey
+	found := false
+	for key, count := range t.streaks {
+		if count >= maxFailures && (!found || promotionDisputeKeyLess(key, selected)) {
+			selected = key
+			found = true
+		}
+	}
+	return selected, found
+}
+
+func promotionDisputeKeyLess(left, right promotionDisputeKey) bool {
+	a := [...]string{left.kind, left.account, left.market, left.tradingDay, left.symbol,
+		left.side, left.orderID, left.local, left.broker}
+	b := [...]string{right.kind, right.account, right.market, right.tradingDay, right.symbol,
+		right.side, right.orderID, right.local, right.broker}
+	for i := range a {
+		if a[i] != b[i] {
+			return a[i] < b[i]
+		}
+	}
+	return false
+}
+
+// pendingBlocksForPersistence returns each pending block exactly once. Callers
+// hold t.mu. A permanent account proposal must precede every ordinary write so
+// a later error cannot prevent the wider fail-closed state from becoming
+// durable.
+func (t *Tracker) pendingBlocksForPersistence() []Block {
+	blocks := make([]Block, 0, len(t.blocks))
+	for _, block := range t.blocks {
+		if block.pending {
+			blocks = append(blocks, block)
+		}
+	}
+	sort.Slice(blocks, func(i, j int) bool {
+		leftPriority := persistencePriority(blocks[i])
+		rightPriority := persistencePriority(blocks[j])
+		if leftPriority != rightPriority {
+			return leftPriority < rightPriority
+		}
+		return blocks[i].Key() < blocks[j].Key()
+	})
+	return blocks
+}
+
+func persistencePriority(block Block) int {
+	if block.Scope == ScopeAccount && block.Permanent {
+		return 0
+	}
+	if unrepresentableOrdinaryQuantityBlock(block) {
+		return 2
+	}
+	return 1
+}
+
+func unrepresentableOrdinaryQuantityBlock(block Block) bool {
+	return block.Scope == ScopeSymbol && strings.TrimSpace(block.Symbol) == "" &&
+		block.Cause == journal.ReconcileCauseQuantityMismatch && !block.Permanent
+}
+
+// resolvePendingPermanentAuthority decides whether a pending account promotion
+// is still only an in-memory proposal before continuity is allowed to withdraw
+// it. EnterReconcile may commit and then return a transport error, so absence of
+// an acknowledgement is not proof of absence from the journal.
+//
+// Callers hold t.mu. An authority read failure changes nothing: the pending row
+// and account gate remain fail-closed until a later authoritative read succeeds.
+func (t *Tracker) resolvePendingPermanentAuthority(ctx context.Context) error {
+	if !t.pendingPermanent {
+		return nil
+	}
+	if t.Journal == nil {
+		t.withdrawPendingPermanent()
+		return nil
+	}
+
+	states, err := t.Journal.ActiveReconcileStates(ctx)
+	if err != nil {
+		return fmt.Errorf("reconcile: verifying a pending permanent promotion against journal authority: %w", err)
+	}
+	account := strings.TrimSpace(t.AccountRef)
+	for _, state := range states {
+		if account == "" || strings.TrimSpace(state.AccountRef) != account ||
+			!state.AccountWide() || state.Cause != journal.ReconcileCauseQuantityMismatch {
+			continue
+		}
+		block := blockFromReconcileState(state)
+		block.Account = account
+		block.pending = false
+		for key, candidate := range t.blocks {
+			if candidate.Scope == ScopeAccount && candidate.Permanent && candidate.pending &&
+				candidate.Cause == journal.ReconcileCauseQuantityMismatch {
+				delete(t.blocks, key)
+			}
+		}
+		t.blocks[block.Key()] = block
+		t.pendingPermanent = false
+		t.pendingPermanentKey = promotionDisputeKey{}
+		t.permanent = true
+		return nil
+	}
+
+	t.withdrawPendingPermanent()
+	return nil
+}
+
+// finishAuthorityError returns from Observe before any addition, release or
+// credit persistence can run. The existing conservative projection is mirrored
+// once more so an unavailable journal cannot turn ambiguity into an open gate.
+// Callers hold t.mu; this method releases it.
+func (t *Tracker) finishAuthorityError(now time.Time, interval time.Duration, err error) (Outcome, error) {
+	active := t.snapshotBlocks()
+	t.syncGate(active)
+	out := Outcome{
+		Failures:  t.failures,
+		Permanent: t.permanent,
+		Blocked:   len(active) > 0,
+		NextDueAt: now.Add(interval),
+	}
+	t.mu.Unlock()
+	return out, err
+}
+
+// withdrawPendingPermanent removes only the not-yet-durable account proposal.
+// It must be called while t.mu is held. Durable account rows remain
+// operator-only, and ordinary pending rows are intentionally untouched.
+func (t *Tracker) withdrawPendingPermanent() {
+	if !t.pendingPermanent {
+		return
+	}
+	for key, block := range t.blocks {
+		if block.Scope == ScopeAccount && block.Permanent && block.pending &&
+			block.Cause == journal.ReconcileCauseQuantityMismatch {
+			delete(t.blocks, key)
+		}
+	}
+	t.pendingPermanent = false
+	t.pendingPermanentKey = promotionDisputeKey{}
+	t.permanent = hasPermanentQuantityAccountBlock(t.blocks)
 }
 
 func scopeLabel(b Block) string {
@@ -870,7 +1264,9 @@ func (t *Tracker) Blocks() []Block {
 	return blocks
 }
 
-// Failures reports the consecutive-failure count.
+// Failures reports the maximum same-canonical-dispute streak. While a durable
+// permanent block is restored, it reports at least the configured threshold as
+// a compatibility view even though process-local key streaks are not rebuilt.
 func (t *Tracker) Failures() int {
 	t.mu.Lock()
 	defer t.mu.Unlock()
@@ -928,6 +1324,13 @@ func (t *Tracker) Resolve(ctx context.Context, operator, note string) error {
 		blocks := t.Blocks()
 		requests := make([]journal.ReleaseReconcileRequest, 0, len(blocks))
 		for _, block := range blocks {
+			if block.pending && unrepresentableOrdinaryQuantityBlock(block) {
+				// This block was deliberately never written: an empty journal symbol
+				// has account-wide permanent meaning. Operator resolution may clear the
+				// known in-memory guard after every real durable row is released, but
+				// must not ask the journal to release a row that cannot exist.
+				continue
+			}
 			requests = append(requests, journal.ReleaseReconcileRequest{
 				AccountRef:  firstNonEmpty(block.Account, t.AccountRef),
 				Symbol:      block.Symbol,
@@ -936,14 +1339,18 @@ func (t *Tracker) Resolve(ctx context.Context, operator, note string) error {
 				ExpectCause: firstNonEmpty(block.Cause, journal.ReconcileCauseQuantityMismatch),
 			})
 		}
-		if _, err := t.Journal.ReleaseReconciles(ctx, requests); err != nil {
-			return fmt.Errorf("reconcile: recording the atomic operator release: %w", err)
+		if len(requests) > 0 {
+			if _, err := t.Journal.ReleaseReconciles(ctx, requests); err != nil {
+				return fmt.Errorf("reconcile: recording the atomic operator release: %w", err)
+			}
 		}
 	}
 
 	t.mu.Lock()
 	t.permanent = false
-	t.failures = 0
+	t.clearStreaks()
+	t.pendingPermanent = false
+	t.pendingPermanentKey = promotionDisputeKey{}
 	t.blocks = map[string]Block{}
 	t.adjusted = nil
 	t.syncGate(nil)
@@ -1044,7 +1451,10 @@ func (t *Tracker) syncGate(active []Block) {
 	}
 	accountWide := map[execgw.ReasonCode]Block{}
 	for _, block := range active {
-		if block.Scope == ScopeAccount {
+		// An empty symbol cannot be represented safely as a symbol latch: the
+		// gateway deliberately promotes it to account scope. Keep that projection
+		// here too so the later reconcile-family clear does not reopen the gate.
+		if block.Scope == ScopeAccount || (block.Scope == ScopeSymbol && strings.TrimSpace(block.Symbol) == "") {
 			accountWide[block.Reason] = block
 		}
 	}
@@ -1055,7 +1465,7 @@ func (t *Tracker) syncGate(active []Block) {
 	// difference removed.
 	surviving := make(map[string]bool, len(active))
 	for _, block := range active {
-		if block.Scope != ScopeSymbol {
+		if block.Scope != ScopeSymbol || strings.TrimSpace(block.Symbol) == "" {
 			continue
 		}
 		surviving[strings.ToUpper(block.Symbol)+"|"+string(block.Reason)] = true

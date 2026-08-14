@@ -1,0 +1,62 @@
+{
+  "file": "internal/reconcile/compare.go",
+  "source_sha256": "87956731b132e32cb3be7efe6009e27d959c5450ed5034394310797b58efbb6c",
+  "package": "reconcile",
+  "function": "isZeroDecimal",
+  "signature": "isZeroDecimal(params=1, results=1)",
+  "start": {
+    "line": 711,
+    "column": 1
+  },
+  "end": {
+    "line": 717,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 713,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 714,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 716,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 712,
+        "column": 20
+      },
+      "text": "riskcalc.CanonicalDecimal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 712,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
