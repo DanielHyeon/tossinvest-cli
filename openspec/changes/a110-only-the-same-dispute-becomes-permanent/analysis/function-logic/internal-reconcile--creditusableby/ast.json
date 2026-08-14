@@ -1,0 +1,109 @@
+{
+  "file": "internal/reconcile/mismatch.go",
+  "source_sha256": "49fcb007cab394f144230db5b1bf330b95e2303dfef48648edc806501edd2a57",
+  "package": "reconcile",
+  "function": "creditUsableBy",
+  "signature": "creditUsableBy(params=2, results=1)",
+  "start": {
+    "line": 379,
+    "column": 1
+  },
+  "end": {
+    "line": 389,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 381,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 385,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 382,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 386,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 388,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 380,
+        "column": 12
+      },
+      "text": "creditStampAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 21
+      },
+      "text": "time.Parse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 46
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 388,
+        "column": 9
+      },
+      "text": "observedAt.After"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 380,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 384,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

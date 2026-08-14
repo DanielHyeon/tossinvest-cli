@@ -75,6 +75,7 @@
     - STORY-TOS-038 — Restore truthful adoption management controls [archived] → `fix-adoption-console-truth`
     - STORY-TOS-a062 — Keep external orders out of engine-owned reconciliation [archived] → `a062-reconcile-owned-orders`
     - STORY-TOS-a083 — Let a reconciliation quantity block release itself after the adjustment it earned [implemented] → `a083-a-block-releases-itself`
+    - STORY-TOS-a110 — Only the same unresolved reconciliation dispute becomes permanent [implemented] → `a110-only-the-same-dispute-becomes-permanent`
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
     - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [archived] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [archived] → `a042-persist-exit-line-snapshots`

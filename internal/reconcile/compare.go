@@ -23,11 +23,10 @@ package reconcile
 // differently; it is worth reporting and worthless as a trading signal, and
 // blocking on it would be an outage caused by arithmetic.
 //
-// The 1e-9 relative bound on quantities is *not* a tolerance in that sense. It is
-// the width of a float64 round trip: quantities arrive as decimal strings and are
-// summed as float64, so 0.1 + 0.2 comes back as 0.30000000000000004. Rejecting
-// that as a discrepancy would block trading on an artefact of binary arithmetic.
-// The same bound is used by internal/brokerstate and internal/execgw.
+// Quantity comparison preserves exact finite decimals. Distinct spellings may
+// agree only when their parsed values are within one float64 ULP at the larger
+// magnitude, which admits a binary round-trip artifact such as 0.1+0.2 without
+// turning a broad relative epsilon into business tolerance.
 
 import (
 	"context"
@@ -43,10 +42,6 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
-
-// quantityRoundTripEpsilon is the float64 round-trip width, not a business
-// tolerance. See the file comment.
-const quantityRoundTripEpsilon = 1e-9
 
 // DefaultPriceEpsilon is the documented average-price tolerance: one part per
 // million, relative. A KRW 70,000 average may legitimately differ by 0.07 between
@@ -259,6 +254,10 @@ type QuantityMismatch struct {
 	// Local is what the engine believed, Broker is what the account says.
 	Local  string
 	Broker string
+	// promotionIneligible keeps an ordinary fail-closed finding from becoming
+	// evidence that one valid canonical dispute repeated. It is process-local
+	// comparison metadata and is intentionally absent from the public record.
+	promotionIneligible bool
 }
 
 // Authority returns the value that wins. It is always the broker's: the account
@@ -390,24 +389,39 @@ func (c Comparer) Compare(snap Snapshot, local LocalState) Diff {
 		holding, heldAtBroker := brokerBySymbol[symbol]
 		localQty, knownLocally := local.Positions[symbol]
 
-		brokerQty := "0"
-		if heldAtBroker {
-			brokerQty = canonicalDecimal(holding.Quantity)
+		brokerQty, brokerValid := canonicalPresentQuantity(holding.Quantity, heldAtBroker)
+		localQty, localValid := canonicalPresentQuantity(localQty, knownLocally)
+		if !brokerValid || !localValid {
+			// Classify unreadable present evidence before the zero/external branches.
+			// Otherwise a malformed broker-only holding looks like owner exposure and
+			// an empty value looks like synthetic absence. Both would reopen entries
+			// on a quantity the comparer could not read.
+			diff.Quantities = append(diff.Quantities, QuantityMismatch{
+				Symbol: symbol, Local: localQty, Broker: brokerQty,
+				promotionIneligible: true,
+			})
+			continue
 		}
-		if !knownLocally {
-			localQty = "0"
-		}
-		localQty = canonicalDecimal(localQty)
 
 		bothZero := isZeroDecimal(localQty) && isZeroDecimal(brokerQty)
 		switch {
 		case bothZero:
 			// Nothing on either side. Not a match worth counting, not a problem.
-		case !knownLocally || isZeroDecimal(localQty):
+		case !knownLocally && isPositiveDecimal(brokerQty):
 			// The account holds something the engine never bought. That is a
-			// fact about the owner, not a malfunction.
+			// fact about the owner, not a malfunction. An explicitly projected
+			// zero is still local knowledge and must disagree with a positive
+			// broker quantity rather than being widened into "broker-only".
 			diff.ExternalPos = append(diff.ExternalPos, ExternalPosition{
 				Holding: holding, Provenance: ProvenanceExternal,
+			})
+		case !knownLocally:
+			// A negative broker-only holding is not owner exposure the engine may
+			// safely ignore. Keep the exact evidence and block, but do not let an
+			// impossible external projection earn a permanent-dispute streak.
+			diff.Quantities = append(diff.Quantities, QuantityMismatch{
+				Symbol: symbol, Local: localQty, Broker: brokerQty,
+				promotionIneligible: true,
 			})
 		case !quantitiesAgree(localQty, brokerQty):
 			diff.Quantities = append(diff.Quantities, QuantityMismatch{
@@ -474,6 +488,22 @@ func (c Comparer) Compare(snap Snapshot, local LocalState) Diff {
 			brokerOrderIdentity(diff.ExternalOrd[j].BrokerOrder, snap.AccountRef))
 	})
 	return diff
+}
+
+// canonicalPresentQuantity distinguishes a missing side of the comparison from
+// a present-but-unreadable value. Absence is the synthetic exact zero used by
+// the position comparison; blank, malformed and non-finite present evidence is
+// returned verbatim (trimmed) with ok=false so it becomes an ordinary mismatch.
+func canonicalPresentQuantity(raw string, present bool) (value string, ok bool) {
+	if !present {
+		return "0", true
+	}
+	trimmed := strings.TrimSpace(raw)
+	canonical, err := riskcalc.CanonicalDecimal(trimmed)
+	if err != nil {
+		return trimmed, false
+	}
+	return canonical, true
 }
 
 func localOrdersForComparison(local LocalState) []LocalOrder {
@@ -610,27 +640,85 @@ func comparePrices(symbol, local, broker string, epsilon float64) (PriceDeviatio
 	}, true
 }
 
-// quantitiesAgree applies the "허용 오차 0" rule: equal decimal strings, or a
-// difference no wider than a float64 round trip.
+// quantitiesAgree applies the "허용 오차 0" rule: equal exact decimals, or a
+// difference no wider than one float64 ULP at the larger magnitude.
 func quantitiesAgree(a, b string) bool {
-	if a == b {
-		return true
-	}
-	av, aerr := strconv.ParseFloat(a, 64)
-	bv, berr := strconv.ParseFloat(b, 64)
+	ac, aerr := riskcalc.CanonicalDecimal(a)
+	bc, berr := riskcalc.CanonicalDecimal(b)
 	if aerr != nil || berr != nil {
 		return false
 	}
-	scale := math.Max(1, math.Max(math.Abs(av), math.Abs(bv)))
-	return math.Abs(av-bv) <= quantityRoundTripEpsilon*scale
+	if ac == bc {
+		return true
+	}
+	av, aerr := strconv.ParseFloat(ac, 64)
+	bv, berr := strconv.ParseFloat(bc, 64)
+	if aerr != nil || berr != nil {
+		return false
+	}
+	if av == bv {
+		// The exact canonical strings already differ. Equality only after parsing
+		// means float64 collapsed distinct decimals (for example adjacent integers
+		// above 2^53), not that one is a round-trip rendering of the other.
+		return false
+	}
+	return binaryRoundTripArtifact(ac, bc, av, bv)
+}
+
+// binaryRoundTripArtifact recognizes only the spelling shape produced when a
+// short human decimal is expanded by float64 arithmetic. Generic one-ULP
+// proximity is insufficient: adjacent exact integers are still different
+// quantities. One side must have at most 15 significant decimal digits and a
+// fractional part; the other must be its longer shortest float64 spelling,
+// occupy the adjacent float, and round back at the short decimal scale.
+func binaryRoundTripArtifact(a, b string, av, bv float64) bool {
+	return shortAndExpandedDecimal(a, b, av, bv) ||
+		shortAndExpandedDecimal(b, a, bv, av)
+}
+
+func shortAndExpandedDecimal(short, expanded string, shortValue, expandedValue float64) bool {
+	shortFraction := decimalFractionDigits(short)
+	expandedFraction := decimalFractionDigits(expanded)
+	if shortFraction == 0 || expandedFraction <= shortFraction || decimalSignificantDigits(short) > 15 {
+		return false
+	}
+	if strconv.FormatFloat(expandedValue, 'f', -1, 64) != expanded {
+		return false
+	}
+	if math.Nextafter(shortValue, expandedValue) != expandedValue {
+		return false
+	}
+	return strconv.FormatFloat(expandedValue, 'f', shortFraction, 64) == short
+}
+
+func decimalFractionDigits(value string) int {
+	if point := strings.IndexByte(value, '.'); point >= 0 {
+		return len(value) - point - 1
+	}
+	return 0
+}
+
+func decimalSignificantDigits(value string) int {
+	value = strings.TrimPrefix(value, "-")
+	digits := strings.ReplaceAll(value, ".", "")
+	digits = strings.TrimLeft(digits, "0")
+	if digits == "" {
+		return 1
+	}
+	return len(digits)
 }
 
 func isZeroDecimal(s string) bool {
-	v, err := strconv.ParseFloat(strings.TrimSpace(s), 64)
+	canonical, err := riskcalc.CanonicalDecimal(s)
 	if err != nil {
 		return false
 	}
-	return math.Abs(v) <= quantityRoundTripEpsilon
+	return canonical == "0"
+}
+
+func isPositiveDecimal(s string) bool {
+	comparison, err := riskcalc.CompareDecimal(s, "0")
+	return err == nil && comparison > 0
 }
 
 // parseBrokerOrder reads one raw broker order into the snapshot's shape.

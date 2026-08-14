@@ -1,0 +1,63 @@
+{
+  "file": "internal/app/engine/adoption.go",
+  "source_sha256": "f121aba90cd05c31de5eeb9acad14497db9150c61314039419cbd5d9e0734edd",
+  "package": "engine",
+  "function": "blocked",
+  "receiver": "ReconcileDriver",
+  "signature": "ReconcileDriver.blocked(params=2, results=1)",
+  "start": {
+    "line": 159,
+    "column": 1
+  },
+  "end": {
+    "line": 164,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 161,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 163,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 9
+      },
+      "text": "d.opts.Tracker.Permanent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 39
+      },
+      "text": "d.opts.Tracker.EntryAllowed"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,92 @@
+{
+  "file": "internal/reconcile/snapshot.go",
+  "source_sha256": "74b032722d4e59996cf0f5e21db569b4438571890e5c8adcf9d82a7e5e10f976",
+  "package": "reconcile",
+  "function": "canonicalDecimal",
+  "signature": "canonicalDecimal(params=1, results=1)",
+  "start": {
+    "line": 493,
+    "column": 1
+  },
+  "end": {
+    "line": 506,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 495,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 499,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 496,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 503,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 505,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 13
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 20
+      },
+      "text": "riskcalc.CanonicalDecimal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 494,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 498,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

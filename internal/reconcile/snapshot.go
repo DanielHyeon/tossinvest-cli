@@ -48,6 +48,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
 
 // PositionsReader sweeps the account's holdings.
@@ -191,7 +192,7 @@ func (s Snapshot) Digest() string {
 	sort.Slice(holdings, func(i, j int) bool { return holdings[i].Symbol < holdings[j].Symbol })
 	for _, h := range holdings {
 		fmt.Fprintf(&b, "holding\t%s\t%s\t%s\n",
-			h.Symbol, canonicalDecimal(h.Quantity), canonicalDecimal(h.AveragePrice))
+			h.Symbol, canonicalHoldingQuantity(h.Quantity), canonicalDecimal(h.AveragePrice))
 	}
 
 	balances := append([]Balance(nil), s.Balances...)
@@ -321,7 +322,7 @@ func (c *Collector) holdings(ctx context.Context) ([]Holding, error) {
 		for _, h := range items {
 			out = append(out, Holding{
 				Symbol:       strings.ToUpper(strings.TrimSpace(h.Symbol)),
-				Quantity:     canonicalDecimal(h.Quantity),
+				Quantity:     canonicalHoldingQuantity(h.Quantity),
 				AveragePrice: canonicalDecimal(h.AveragePrice),
 				Market:       strings.ToLower(strings.TrimSpace(h.Market)),
 				CostBasisRaw: strings.TrimSpace(h.AveragePrice),
@@ -494,13 +495,27 @@ func canonicalDecimal(s string) string {
 	if trimmed == "" {
 		return "0"
 	}
-	v, err := strconv.ParseFloat(trimmed, 64)
+	canonical, err := riskcalc.CanonicalDecimal(trimmed)
 	if err != nil {
-		// Not a decimal: keep it verbatim rather than inventing a zero. A value
-		// we cannot read must stay visible in the digest so it can differ.
+		// Malformed and non-finite values remain visible verbatim rather than
+		// becoming zero or a float approximation. Callers can therefore disagree
+		// on unreadable evidence without losing the evidence itself.
 		return trimmed
 	}
-	return decimalString(v)
+	return canonical
+}
+
+// canonicalHoldingQuantity preserves unreadable broker evidence. A blank raw
+// holding is not a reported zero: the comparer must see that it could not be
+// read and keep entries blocked. Valid finite decimals still share the exact
+// canonical spelling used by quantity comparison.
+func canonicalHoldingQuantity(s string) string {
+	trimmed := strings.TrimSpace(s)
+	canonical, err := riskcalc.CanonicalDecimal(trimmed)
+	if err != nil {
+		return trimmed
+	}
+	return canonical
 }
 
 func decimalString(v float64) string { return strconv.FormatFloat(v, 'f', -1, 64) }

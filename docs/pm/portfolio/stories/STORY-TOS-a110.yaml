@@ -1,0 +1,29 @@
+{
+  "id": "STORY-TOS-a110",
+  "title": "Only the same unresolved reconciliation dispute becomes permanent",
+  "feature": "FEAT-TOS-005",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a110-only-the-same-dispute-becomes-permanent",
+    "path": "openspec/changes/a110-only-the-same-dispute-becomes-permanent"
+  },
+  "found_by": {
+    "date": "2026-08-14",
+    "how": "The live position-management screen showed desired and effective adoption ON while three unadopted holdings were covered by one six-day account-wide permanent reconciliation block. The journal and engine log showed that three successive dirty cycles concerned changing symbol-scoped quantity disputes; the first two later released with ADJUSTMENT_APPLIED, but Tracker.Observe's scalar failure counter promoted the sequence as if one unchanged dispute had survived three rechecks.",
+    "record": "live read-only browser, journal and engine-log investigation on 2026-08-14"
+  },
+  "acceptance": [
+    "A changing sequence of blocking disputes cannot pool observations into one permanent-promotion streak",
+    "The same canonical quantity or missing-order dispute observed for the configured threshold still creates the existing audited operator-only permanent block",
+    "A dirty comparison continues to create and enforce ordinary symbol-scoped blocks immediately; failure to classify a streak remains fail-closed",
+    "Existing permanent blocks never auto-release and still require engine exclusion, three stable official snapshots, operator identity, note and durable release",
+    "The 2026-08-07 incident shape is pinned as a regression: changing symbol disputes release normally and do not leave an account-wide permanent block",
+    "After a human-approved audited release of the pre-existing block, automatic adoption resumes and new managed positions receive canonical exit snapshots before actionable take-profit or stop lines appear",
+    "make gate CHANGE=a110-only-the-same-dispute-becomes-permanent passes"
+  ],
+  "measured": null,
+  "deviations": [],
+  "limits": [
+    "This story does not authorize automatic release of the currently active permanent block, any LIVE order, or any operating-toggle change."
+  ]
+}
