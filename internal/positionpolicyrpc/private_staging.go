@@ -139,7 +139,13 @@ func verifyPrivateStagingEntry(path string) (os.FileInfo, error) {
 		return nil, fmt.Errorf(
 			"private endpoint: stale staging entry has an unexpected shape: %s", filepath.Base(path))
 	}
-	if err := validateOwnerAndLinks(info, false); err != nil {
+	// 링크 수 1을 요구한다(a109 §2b.3 G7). **우리 staging은 언제나 링크 하나다**:
+	// `os.CreateTemp`도 `net.Listen`도 새 이름을 만들고, 발행은 rename으로 그 이름을
+	// **옮긴다**(링크를 더하지 않는다). 그러므로 링크가 둘이면 그것은 우리 잔재가
+	// 아니거나 누군가 같은 inode에 이름을 하나 더 붙인 것이고, 그 상태에서 회수가 하는
+	// 일(probe 전 chmod 0600 · unlink)은 두 번째 이름 쪽 주인에게도 일어난다.
+	// 최종 이름 쪽은 이미 같은 요구를 한다 — 여기서 닫는 것은 staging 쪽의 비대칭이다.
+	if err := validateOwnerAndLinks(info, true); err != nil {
 		return nil, err
 	}
 	return info, nil

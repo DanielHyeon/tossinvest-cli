@@ -151,10 +151,15 @@ func TestTheProbeRefusesASocketThatChangedUnderIt(t *testing.T) {
 	}
 
 	// 같은 이름, 다른 파일. 검증한 것과 만지는 것이 갈라진 순간이다.
-	if err := os.Remove(socketPath); err != nil {
+	//
+	// 후계자를 **원본이 아직 있는 동안** 만든 뒤 rename 으로 덮는다. 지우고 다시 만들면
+	// 파일시스템이 같은 inode 를 재배정할 수 있어서 "다른 파일"이 아닐 수 있다 — 그러면
+	// 재는 것이 계약이 아니라 그 배포의 inode 할당이 된다.
+	successor := filepath.Join(controlDir, StagingPrefix+"s0000001")
+	a109TestSocket(t, successor, 0o600)
+	if err := os.Rename(successor, socketPath); err != nil {
 		t.Fatal(err)
 	}
-	a109TestSocket(t, socketPath, 0o600)
 	if !privateSocketAccepts(socketPath, before) {
 		t.Error("검증한 파일과 다른 파일을 **죽었다**고 읽었다 — 회수는 그것을 지운다. " +
 			"물어보지 못한 것을 죽었다고 읽지 않는다")

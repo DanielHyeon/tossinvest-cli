@@ -40,6 +40,19 @@ func a109TestSocket(t *testing.T, path string, perm os.FileMode) {
 	}
 }
 
+// a109ProbeInfo는 probe 에 넘길 **검증 시점의 파일**이다.
+//
+// probe 는 chmod 뒤에 이 정보로 "같은 파일인가"를 다시 확인한다(a109 §2b.3 G7). 회수
+// 경로에서는 verifyStalePrivateSocket·verifyPrivateStagingEntry 가 그 정보를 준다.
+func a109ProbeInfo(t *testing.T, path string) os.FileInfo {
+	t.Helper()
+	info, err := os.Lstat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return info
+}
+
 // a109TestControlDir은 이름-독립 검증을 통과하는 control 디렉터리를 만든다.
 func a109TestControlDir(t *testing.T, engineDir, name string) string {
 	t.Helper()
@@ -210,7 +223,7 @@ func TestThePrivateSocketProbeReadsOnlyTwoThingsAsDead(t *testing.T) {
 		}
 		listener.(*net.UnixListener).SetUnlinkOnClose(false)
 		t.Cleanup(func() { _ = listener.Close(); _ = os.Remove(path) })
-		if !privateSocketAccepts(path) {
+		if !privateSocketAccepts(path, a109ProbeInfo(t, path)) {
 			t.Fatal("수락 중인 socket을 죽었다고 읽었다 — 이 오판이 남의 socket을 지운다")
 		}
 	})
@@ -219,13 +232,14 @@ func TestThePrivateSocketProbeReadsOnlyTwoThingsAsDead(t *testing.T) {
 		path := filepath.Join(controlDir, "refused.sock")
 		a109TestSocket(t, path, 0o600)
 		t.Cleanup(func() { _ = os.Remove(path) })
-		if privateSocketAccepts(path) {
+		if privateSocketAccepts(path, a109ProbeInfo(t, path)) {
 			t.Fatal("아무도 듣지 않는 socket을 살아 있다고 읽었다 — 영구 거부가 된다")
 		}
 	})
 
 	t.Run("파일 부재는 사망", func(t *testing.T) {
-		if privateSocketAccepts(filepath.Join(controlDir, "absent.sock")) {
+		// 부재는 chmod 가 ErrNotExist 로 먼저 갈라내므로 검증 정보가 없어도 사망이다.
+		if privateSocketAccepts(filepath.Join(controlDir, "absent.sock"), nil) {
 			t.Fatal("없는 socket을 살아 있다고 읽었다")
 		}
 	})
@@ -238,7 +252,7 @@ func TestThePrivateSocketProbeReadsOnlyTwoThingsAsDead(t *testing.T) {
 		path := filepath.Join(controlDir, "unwritable.sock")
 		a109TestSocket(t, path, 0o400)
 		t.Cleanup(func() { _ = os.Remove(path) })
-		if privateSocketAccepts(path) {
+		if privateSocketAccepts(path, a109ProbeInfo(t, path)) {
 			t.Fatal("아무도 듣지 않는 socket을 살아 있다고 읽었다 — 영구 거부가 된다")
 		}
 	})
@@ -256,7 +270,7 @@ func TestThePrivateSocketProbeReadsOnlyTwoThingsAsDead(t *testing.T) {
 		if err := os.Chmod(path, 0o400); err != nil {
 			t.Fatal(err)
 		}
-		if !privateSocketAccepts(path) {
+		if !privateSocketAccepts(path, a109ProbeInfo(t, path)) {
 			t.Fatal("수락 중인 socket을 권한 비트만 보고 죽었다고 읽었다 — " +
 				"그 추정이 산 주인의 socket을 지운다")
 		}
@@ -299,7 +313,7 @@ func TestReclaimRefusesALiveSocketWhoseOwnerWriteBitWasStripped(t *testing.T) {
 	if err != nil || !os.SameFile(before, after) {
 		t.Fatalf("거부하면서 주인의 socket을 지웠다: err=%v", err)
 	}
-	if !privateSocketAccepts(socketPath) {
+	if !privateSocketAccepts(socketPath, after) {
 		t.Fatal("주인의 socket이 더 이상 수락하지 않는다")
 	}
 }
@@ -325,7 +339,7 @@ func TestReclaimRefusesALiveStagingSocket(t *testing.T) {
 	if err := os.Chmod(live, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if !privateSocketAccepts(live) {
+	if !privateSocketAccepts(live, a109ProbeInfo(t, live)) {
 		t.Fatal("준비 실패: staging socket이 수락 중이 아니다")
 	}
 
@@ -339,7 +353,7 @@ func TestReclaimRefusesALiveStagingSocket(t *testing.T) {
 	if _, err := os.Lstat(live); err != nil {
 		t.Fatalf("거부하면서 수락 중인 staging socket을 지웠다: %v", err)
 	}
-	if !privateSocketAccepts(live) {
+	if !privateSocketAccepts(live, a109ProbeInfo(t, live)) {
 		t.Fatal("staging socket이 더 이상 수락하지 않는다")
 	}
 }
