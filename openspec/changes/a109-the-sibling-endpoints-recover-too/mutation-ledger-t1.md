@@ -197,3 +197,38 @@ crash 창을 열 수 없어서, 경합을 재현할 수 없어서, 결과가 같
 
 생존 선언은 그래서 **"이 뮤테이션은 죽지 않는다"가 아니라 "내가 쓴 방법으로는 안 죽었다"**로
 읽어야 한다. 남은 §B 셋도 그 지위다.
+
+---
+
+## §D2 gstack 8패스 정산분 (T3-fix — G4·G6·G7·G8, 2026-08-16)
+
+review.md §5의 합의 발견 중 T1 표면(회수·probe·command 부팅)에 해당하는 넷이다. 각 방어에
+뮤테이션 **1건씩**을 적용하고 실제로 테스트를 돌려 결과를 적었다. 원복은 `git checkout`이
+아니라 역편집이고, 매 건 sha256 대조 + `git status --porcelain` 빈 출력으로 확인했다
+(구동기: 앵커 유일성 검사 → 치환 → 테스트 → 역치환 → sha256·porcelain 검증).
+
+| # | 방어(G) | 뮤테이션 | 잡는 테스트 | 결과 |
+| --- | --- | --- | --- | --- |
+| M39 | G6 거부의 지목 | perm 절의 오류를 옛 문장(`"stale socket is unsafe"`)으로 되돌린다 | `TestReclaimNamesWhichClauseRefusedTheSocket/group·other_에_열려_있다` | **CAUGHT** (이름·절 둘 다 FAIL) |
+| M40 | G7 staging nlink | `validateOwnerAndLinks(info, true)` → `false` | `TestReclaimRefusesAStagingEntryWithASecondHardLink` | **CAUGHT** |
+| M41 | G7 chmod 후 SameFile | 재-Lstat·SameFile 절을 통째로 삭제(`_ = before`) | `TestTheProbeRefusesASocketThatChangedUnderIt` | **CAUGHT** |
+| M42 | G8 probe 상한(값) | `maxPrivateSocketProbes` 10 → 1000 | (1차) 없음 → **생존** · (핀 추가 후) `TestTheProbeBudgetIsTen` | **생존 → CAUGHT** |
+| M42b | G8 probe 상한(기전) | 예산 검사의 `return err` → `_ = err` | `TestReclaimRefusesToProbeAnUnboundedNumberOfSockets` | **CAUGHT** |
+| M43 | G4 지우는 자리 | Start 의 `dropStalePositionPolicyDescriptor(...)` 호출 삭제 | `TestTheCommandStartDropsTheDescriptorBeforeAnythingCanFail` | **CAUGHT** |
+| M44 | G4 소유 검증 | `ValidatePrivateFile` 게이트를 `if false`로 (검증 없이 지운다) | `TestTheCommandBootLeavesWhatItCannotVouchFor` 3/3 서브테스트 | **CAUGHT** |
+
+### M42가 살아남은 이유 — 상수 대 상수의 재발
+
+상한 테스트는 `maxPrivateSocketProbes + 1`개의 잔재를 만든다. 즉 **상수를 읽어서 입력을
+만든다.** 상수를 1000으로 바꾸면 테스트도 1001개를 만들고 거부는 그대로 일어난다 —
+초록이다. A1 P1-B가 잡은 것과 **같은 모양**이고(그때는 발행 접두), 같은 답을 썼다:
+관계식은 관계식대로 두고 **운영 값을 따로 못박는다**(`TestTheProbeBudgetIsTen`,
+`TestTheProductionRedialIntervalIsThirtySeconds`와 같은 방식). 재적용 시 CAUGHT.
+
+### 원복 검증 (배치 종료 후)
+
+- 파일별 sha256이 적용 **전**과 일치: 7/7 (M42b 포함 8/8, M42b는 손 역편집 후 대조)
+- `git status --porcelain <파일>` 빈 출력: 매 건
+- 심볼 수 대조: `private_staging_unix.go` — `func` 5 · `if` 30 (편집 후 기준선과 동일),
+  `private_staging.go`·`position_policy_transport.go` porcelain 빈 출력
+- `MUTANT` 문자열 0건(치환에 표식을 쓰지 않았다 — 앵커 유일성 검사로 대신했다)

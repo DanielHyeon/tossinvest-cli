@@ -203,3 +203,48 @@ M19 는 이유가 파일에 남아 있는 편집이다. 각각의 **진짜** 위
 - **강등 goroutine 과 `ectx.Close()` 의 실제 경합**: a108 이 논증으로 닫았고(Normal
   이벤트는 journal handle 에 닿지 않는다) a109 도 같은 논증을 쓴다. 시간 경합을
   재현하는 테스트는 없다 — 논증이 근거이고, 그 논증의 전제(등급표 미등재)는 M6 이 잰다.
+
+---
+
+## §8 gstack 8패스 정산분 (T3-fix — G1·G2·G3·G5, 2026-08-16)
+
+review.md §5의 합의 발견 중 T2 표면(재부착 자리·publisher·client 수명)에 해당하는 넷이다.
+각 방어에 뮤테이션 1건씩, 원복은 역편집 + sha256 대조 + `git status --porcelain` 빈 출력.
+
+| # | 방어(G) | 뮤테이션 | 잡는 테스트 | 결과 |
+| --- | --- | --- | --- | --- |
+| M33 | G1 빈 자리에 sentinel | `if a.reader == nil && reader != nil` → `if false && …` | `TestAnEmptySeatTakesTheUnavailableSentinel` | **CAUGHT** |
+| M34 | G2 무조건 wake | `StrategyRuntimeConfigured`의 깨우기를 `if wanted`로 되돌린다 | `TestThePublisherWakesASeatThatOnlyLooksAlive` | **CAUGHT** (2s 창 안에 시도 0회) |
+| M35 | G3 읽기 성공의 부착 복원 | observe 성공 경로의 `attached` 복원·보고 삭제 | `TestARecoveredReadIsAnAttachmentAgain` | **CAUGHT** |
+| M36 | G5 밀려난 reader 닫기 | `closeEvictedStrategyReader(evicted)` → `_ = evicted` | `TestTheReplacedReaderIsClosed` | **CAUGHT** |
+| M37 | G5 keep-alive 끄기 | `DisableKeepAlives: true` → `false` | `TestTheDialedTransportKeepsNoIdleConnections` | **CAUGHT** |
+| M38 | G5 Close 의 본문 | `c.http.CloseIdleConnections()` 삭제 | (1차) 없음 → **생존** · (핀 추가 후) `TestCloseReachesTheTransport` | **생존 → CAUGHT** |
+
+### M38이 살아남은 이유 — 바깥 방어가 안쪽 방어의 측정을 가린다
+
+G5는 두 겹이다: transport가 유휴 연결을 **두지 않고**(DisableKeepAlives), 자리는 밀려난
+client를 **닫는다**(Close). 그런데 첫째가 성립하면 둘째가 닫을 유휴 연결이 애초에 없으므로,
+dial 한 client로는 Close 본문을 지운 것이 관측되지 않는다. 겹친 방어에서 흔한 모양이고,
+답은 **안쪽을 직접 재는 것**이다: 감시 transport(`a109SpyTransport`)를 앉힌 client 하나로
+Close 가 transport 에 닿는지 센다. 재적용 시 CAUGHT.
+
+> 이 항목은 "필요 없는 방어였다"는 뜻이 **아니다**. Close 는 자리가 값의 구체 타입을
+> 모른 채(io.Closer) 놓아 줄 수 있게 하는 계약이고, transport 설정이 미래에 바뀌어도
+> 자리는 그대로다. 다만 **오늘의 운영 구성에서 그 효과는 0**이라는 것이 정직한 서술이다.
+
+### 동반 수정 — F2 핀의 프록시를 상태 측정으로 (G2의 파생)
+
+`TestALateReadFailureDoesNotUnseatTheNewAttachment`(A2 P2-2 / §2-fix F2)의 마지막 단정은
+「창을 지나 다시 물으면 재-dial 이 1회인가」였다. G2가 깨우기에서 생사 게이트를 걷어낸 뒤로
+그 수는 자리의 상태를 말하지 않는다(깨우기는 언제나 일어나고 과빈도는 rate limit 이 막는다).
+단정을 `state()`의 시도-대상 여부 **직접 측정**으로 바꿨다 — rate limit 이 우연히 가려 주는
+경우가 없어지므로 더 강한 측정이다. M30(자리 세대 비교 제거)은 같은 테스트의 탈착-보고
+단정이 여전히 잡는다.
+
+### 원복 검증 (배치 종료 후)
+
+- 파일별 sha256 일치: 6/6 (M38은 역치환 앵커가 유일하지 않아 **손 역편집** 후 대조 —
+  구동기가 중단을 보고했고, 그 상태를 그대로 두고 다음 뮤테이션을 적용하지 않았다)
+- `git status --porcelain <파일>` 빈 출력: 매 건
+- 심볼 수 대조: `transport.go` — `func (c *Client)` 2 · `CloseIdleConnections` 2(주석 1 +
+  호출 1), `httpapi_strategy_attach.go`·`transport_unix.go` porcelain 빈 출력

@@ -314,3 +314,62 @@ Manager 판결의 문면은 「`Read` 가 사용한 reader 를 `observe` 에 넘
 
 세대 번호는 같은 질문에 더 강한 답을 준다: 같은 값이 **다시 앉은** 경우도 새 자리로
 세므로, 옛 실패는 언제나 버려진다(보수 방향). 판정 자체는 바뀌지 않는다.
+
+## §5 gstack 8패스 정산 — G1~G10 (T3-fix, 2026-08-16)
+
+review.md §5의 합의 발견을 브랜치에 구현한 기록이다. **임의 확장 없음** — 아래 "선언"
+항목이 판결 문면과 다른 부분의 전부다.
+
+| G | 무엇을 했는가 | RED 관측 | 뮤테이션 |
+| --- | --- | --- | --- |
+| G1 | `attempt`가 **빈 자리**(nil=부재)에서만 sentinel을 앉힌다(승격). live → sentinel 격하는 하지 않는다 | `TestAnEmptySeatTakesTheUnavailableSentinel` FAIL | M33 CAUGHT |
+| G2 | `StrategyRuntimeConfigured`의 깨우기에서 `failed` 게이트 제거 → publisher tick이 자리 생사와 무관하게 시도를 깨운다 | `TestThePublisherWakesASeatThatOnlyLooksAlive` FAIL(2s 창 시도 0회) | M34 CAUGHT |
+| G3 | `observe` 성공이 `attached`를 복원하고 그 전이를 1회 보고한다(`reportAttached` 한 벌) | `TestARecoveredReadIsAnAttachmentAgain` FAIL | M35 CAUGHT |
+| G4 | `StartPositionPolicyCommandServer`가 소유 검증 뒤·실패 가능한 줄들 앞에서 죽은 run의 descriptor를 지운다 | 동작 2개 build failed + 자리 핀 FAIL | M43·M44 CAUGHT |
+| G5 | `Client.Close`(CloseIdleConnections) + `Dial`의 `DisableKeepAlives` + 자리의 eviction close | transport 핀 FAIL + Close 부재 build failed + eviction 핀 FAIL | M36·M37 CAUGHT · M38 생존→핀→CAUGHT |
+| G6 | `verifyStalePrivateSocket`의 거부가 basename + 실패 술어를 지목 | `TestReclaimNamesWhichClauseRefusedTheSocket` 3/3 FAIL | M39 CAUGHT |
+| G7 | staging nlink==1 + probe의 chmod 후 `os.SameFile` 재확인(불일치=생존 간주) + "불가능" 주장 정직화 | 하드링크 FAIL + 서명 build failed | M40·M41 CAUGHT |
+| G8 | 회수 probe 상한 10 + 초과 엔트리 이름 지목 거부 + 비용 근거 주석 | build failed(`undefined: maxPrivateSocketProbes`) | M42 생존→값 핀→CAUGHT · M42b CAUGHT |
+| G9 | engine의 verbatim 2블록을 `openReclaimedControlDirectory`·`closePrivateEndpointFiles`로 추출 | 해당 없음(기계적) | 아래 선언 참조 |
+| G10 | 회수의 probe-remove 창 주석이 journal flock을 **removal까지** 명시 인용 | 해당 없음(주석) | — |
+
+### 선언 (판결 문면과 다르거나, 문면이 정하지 않은 것)
+
+1. **G4의 RED는 정적 자리 핀이다.** 「강등 부팅 후 stale descriptor 생존」을 동작으로
+   재려면 Start를 **제거 지점 이후에** 실패시켜야 하는데, 그 지점이 없다: `net.Listen`
+   ·descriptor 발행에는 주입 seam이 없고, `crypto/rand.Read`는 Go 1.24부터 오류 대신
+   프로세스를 죽인다(GOROOT `crypto/rand/rand.go`: "crashes the program irrecoverably").
+   그래서 동작 핀 둘(지운다 / 확신 못 하는 것은 안 지운다)과 **자리** 핀 하나(go/parser로
+   `ValidateControlDirectory < drop < net.Listen`)로 나눠 잰다. 자리 핀은 M43이 죽인다.
+2. **G5의 테스트 파일 하나가 표면 밖이다.** 위임 표면은
+   `internal/strategyprojectionrpc/{transport.go,transport_unix.go}`의 좁은 추가였고,
+   production 변경은 정확히 그 둘(메서드 1 + 필드 1)뿐이다. 다만 그 둘을 재는
+   `a109_the_replaced_client_lets_go_test.go`를 같은 패키지에 새로 두었다 — 다른
+   패키지에서는 `client.http.Transport`를 볼 수 없어 「keep-alive를 끄지 않았다」를 잴
+   방법이 없다. a108의 회수·발행 의례는 읽지도 고치지도 않았다.
+3. **G2의 대가**: 자리가 건강해도 간격(운영 30초)마다 재해석이 한 번 돈다. 그 시도는
+   백그라운드이고 요청은 언제나 즉시 답하며, 밀려난 client는 G5가 닫는다. 얻는 것은
+   「live로 보이지만 죽은 자리」의 회복 경로이고, 그것이 없으면 집계가 고장 난 배포에서
+   전략 화면은 **영영** 돌아오지 않는다.
+4. **동반 수정 2건**(원장에 상세): F2 핀의 마지막 단정을 재-dial 횟수 프록시 →
+   `state()` 직접 측정으로(G2 이후 그 프록시는 상태를 말하지 않는다), 기존 probe 테스트
+   8개 호출부에 검증 정보 인자 추가(부재는 nil로 chmod ErrNotExist 갈래 유지).
+5. **G9에 새 뮤테이션을 넣지 않았다.** 새 방어가 아니라 **같은 동작의 이동**이고, 오류
+   문자열 6개가 그대로 나오도록 label만 받는다. 그 절들을 죽이는 뮤테이션은 이미 있다
+   (M1b·M3·M5·M9·M17 — 지금은 helper를 통해 같은 테스트를 죽인다). FLM의 두 Close 맵에
+   「옮긴 절의 커버리지」 표를 따로 두어 그 사실을 기록했다.
+6. **G10은 확인 결과 보강이 필요했다.** 회수의 "1차 방어는 journal flock" 절은 probe와
+   제거 **사이**를 이미 인용하고 있었지만, 실제 제거 루프 옆에는 그 근거가 없었다.
+   제거 루프에 창의 이름(probe-remove TOCTOU)과 flock·a108 대응 절을 명시 인용했다.
+
+### 잔존(정직 기록)
+
+- **I5 — `Client.Close`의 오늘 효과는 0이다.** `DisableKeepAlives`가 유휴 연결을 없애므로
+  닫을 것이 없다(M38이 그것을 보였다). 계약으로서의 값은 남지만, "연결 누수를 Close가
+  막는다"고 읽으면 과장이다. 실제로 막는 것은 keep-alive를 끈 쪽이다.
+- **I6 — G7의 SameFile 재확인은 창을 좁힐 뿐 닫지 않는다.** chmod와 Lstat 사이에도 같은
+  창이 있다. 같은 uid 프로세스를 신뢰 경계 안으로 두는 결정(freeze)이 바뀌지 않는 한
+  이 방어의 상한이 그것이다 — 우리가 하는 일은 **모르는 것을 살아 있다고 읽는 것**이다.
+- **I7 — probe 상한 10은 이물이 쌓인 디렉터리에서 강등을 만든다.** 보수 방향(치우지 않고
+  거부)이고 지목된 이름이 회복 안내가 되지만, 그 상태의 endpoint는 사람이 치울 때까지
+  강등으로 남는다. D3의 판정(fatal보다 낫다)이 그대로 적용된다.
