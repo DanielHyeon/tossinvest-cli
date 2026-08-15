@@ -159,3 +159,39 @@ FAIL — 원장 공백 발견). 3상태 보존·비차단·single-flight·3금�
 - 잔존(정직 기록): I2 — command endpoint의 `SweepPrivateStagingLeftovers`에는 F5
   probe가 없다(호출자가 TCP뿐이라는 문서 전제 — 가장 약한 방어). I3 — M26은 잠정
   생존. T2-12 — `publishHTTPAPISnapshots` 서명 변경은 병합 충돌 주의점.
+
+## §5 gstack 전체 리뷰 (2b.3, 2026-08-16 — 합본 0302b1b8 대 main)
+
+구성: Scope Check(CLEAN) + Manager critical pass + specialist 4종(testing·
+maintainability sonnet / security opus / performance sonnet, 전부 읽기 전용) +
+Claude 적대 패스(opus, red-team 헌장) + codex 적대 패스(gpt, 1차 5분 타임아웃 후
+10분 재시도 성공). **선언된 생략**: codex 구조화 리뷰(200+ 라인 규칙)는 1차 타임아웃
+후 적대 패스로 대체 — 총 8개 독립 패스(freeze·A1·A2 포함)가 같은 디프를 덮었다.
+red-team 전담 패스는 Claude 적대 패스가 그 헌장(specialist가 놓친 것 찾기) 그대로
+수행했으므로 별도 미발사.
+
+### 합의 발견 → T3-fix 위임 (G1~G9)
+
+| id | 출처 | 발견 | 판정 |
+| --- | --- | --- | --- |
+| G1 | Claude 적대 #1 | attempt가 nil 자리에서 unavailable sentinel을 버림 → descriptor-잔재 상태가 영구 NOT_CONFIGURED(D4-2 접힘 재발) | 수정 |
+| G2 | Claude 적대 #2 | publisher wake가 `failed` 게이트 — live-였다-죽은 자리는 집계 고장 시 영원히 안 깨어남(F3 반쪽) | 수정(무조건 wake) |
+| G3 | Claude 적대 #3 + testing #2 | observe 성공이 `attached` 미복원 → blip 1회 후 탈착 보고 영구 침묵 + 허위 재부착 로그 | 수정 |
+| G4 | Claude 적대 #4 | 강등된 command Start가 죽은 run의 descriptor(재활용 포트+토큰) 방치 — 소비자가 무관 프로세스에 bearer 전송 가능 | 수정(flock 보유 중 stale descriptor 제거) |
+| G5 | security #1(CRITICAL) + Claude 적대 #5 | 재부착마다 이전 client의 idle conn·goroutine 영구 고정(Dial transport에 Close·IdleConnTimeout 없음) — 다중 확인 | 수정(Client.Close 추가 + eviction close + DisableKeepAlives — a108 패키지의 좁은 추가, 저장소 관례 인용) |
+| G6 | Claude 적대 #6 | stale-socket 거부 1경로가 F6 미적용(원인·파일 미지목) | 수정 |
+| G7 | security #2·#3 + Claude 적대 #7 | staging 검증 nlink 미요구(하드링크 공유 inode chmod 관측) + chmod의 이름 재해석 창 | 수정(staging nlink==1 + chmod 후 SameFile 재검증, 불일치=생존 간주) |
+| G8 | performance | 회수 probe 무상한(N×200ms 순차, flock 보유 중) | 수정(probe 상한 + 초과는 이름 지목 거부) |
+| G9 | maintainability | engine 패키지 내 verbatim 중복 2블록(Mkdir→회수→Mkdir, Close 해체) — 자기 인용 원칙과 모순 | 수정(패키지-로컬 helper 추출, 기계적) |
+
+### 기각·기록
+
+- codex P1 "열거 후 발행 socket의 무probe unlink"(probe-remove TOCTOU): **기각 —
+  문서화된 잔존.** 그 창의 방어는 journal flock(a108 transport_unix.go:317–320 명문,
+  a109 design D2 동일 인용). 엔진 아닌 same-uid 점유는 freeze부터 수용된 위협 경계.
+  T3-fix가 removal 창까지 주석 인용을 확인한다.
+- security #4 "a108 원형의 owner-write 추정 잔존": 기지 사실 — issues I1·design 선언된
+  생략·후속 change 후보로 이미 기록(A1 P1-A의 a108 대응물).
+- testing #1(Read의 nil 가드 미실행): G1 테스트가 그 경로를 함께 덮는다.
+- maintainability의 rtk 디프 압축 관측: 리뷰어가 `rtk proxy`로 우회해 전문 검토 —
+  절차 기록.
