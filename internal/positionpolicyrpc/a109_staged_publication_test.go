@@ -220,6 +220,83 @@ func TestReclaimRefusesAStagingEntryOfTheWrongShape(t *testing.T) {
 	}
 }
 
+// TestReclaimRefusesASocketWithASecondHardLink — 검증을 완화하지 않는다.
+//
+// 잔재 socket의 perm 검사만 완화했고 나머지는 그대로 요구한다. hard link 가 하나 더
+// 걸린 socket 은 우리가 만든 것이 아니거나 누군가 이름을 하나 더 붙인 것이므로,
+// 지우면 그 이름 쪽 주인의 것을 지우는 셈이다.
+//
+// (이 핀은 뮤테이션 M10a — `validateOwnerAndLinks(info, true)` → `false` — 가 살아남아
+// 추가됐다. 소유 uid 절은 비root 테스트로 죽일 수 없어 원장에 생존으로 남는다.)
+func TestReclaimRefusesASocketWithASecondHardLink(t *testing.T) {
+	engineDir := privateTestDir(t)
+	controlDir := a109TestControlDir(t, engineDir, ".private-endpoint-under-test")
+	socketPath := filepath.Join(controlDir, "endpoint.sock")
+	a109TestSocket(t, socketPath, 0o600)
+	if err := os.Link(socketPath, filepath.Join(engineDir, "second-name.sock")); err != nil {
+		t.Skipf("이 파일시스템은 socket 의 hard link 를 허용하지 않는다: %v", err)
+	}
+	names := PrivateEndpointNames{
+		Descriptor: "endpoint.json", Socket: "endpoint.sock",
+		StagingPrefixes: []string{StagingPrefix},
+	}
+	if err := ReclaimStalePrivateEndpoint(controlDir, names); err == nil {
+		t.Fatal("hard link 가 걸린 socket 을 회수 대상으로 받아들였다")
+	}
+	if _, err := os.Lstat(socketPath); err != nil {
+		t.Fatalf("거부하면서 그 socket 을 지웠다: %v", err)
+	}
+}
+
+// TestReclaimRefusesAnUnsafeControlDirectory — 디렉터리 위생은 완화하지 않는다.
+//
+// owner 비트를 깎거나 group 에 열어 준 control 디렉터리는 **환경 이상**이지 우리 잔재가
+// 아니다. 회수가 그것을 검사 없이 비우면, "우리 것인지 모르는 디렉터리를 통째로 지우는"
+// 동작이 된다(design D2, P1-7①).
+func TestReclaimRefusesAnUnsafeControlDirectory(t *testing.T) {
+	engineDir := privateTestDir(t)
+	controlDir := a109TestControlDir(t, engineDir, ".private-endpoint-under-test")
+	leftover := filepath.Join(controlDir, "endpoint.json")
+	if err := os.WriteFile(leftover, []byte("{}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(controlDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	names := PrivateEndpointNames{
+		Descriptor: "endpoint.json", StagingPrefixes: []string{StagingPrefix},
+	}
+	if err := ReclaimStalePrivateEndpoint(controlDir, names); err == nil {
+		t.Fatal("0700이 아닌 control 디렉터리를 회수했다")
+	}
+	if _, err := os.Lstat(leftover); err != nil {
+		t.Fatalf("거부하면서 그 안의 파일을 지웠다: %v", err)
+	}
+}
+
+// TestReclaimRefusesADescriptorOfTheWrongShape — 관용하는 것은 **내용**뿐이다.
+//
+// 0바이트·잘린 JSON 은 우리 자신의 반쯤 쓴 파일이므로 관용한다(그 관용은
+// TestReclaimEmptiesTheDirectoryItRecovers 가 고정한다). 하지만 **모양**은 여전히 본다 —
+// descriptor 자리의 디렉터리나 남에게 열린 파일은 우리가 만들 수 있는 것이 아니다.
+func TestReclaimRefusesADescriptorOfTheWrongShape(t *testing.T) {
+	engineDir := privateTestDir(t)
+	controlDir := a109TestControlDir(t, engineDir, ".private-endpoint-under-test")
+	intruder := filepath.Join(controlDir, "endpoint.json")
+	if err := os.Mkdir(intruder, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	names := PrivateEndpointNames{
+		Descriptor: "endpoint.json", StagingPrefixes: []string{StagingPrefix},
+	}
+	if err := ReclaimStalePrivateEndpoint(controlDir, names); err == nil {
+		t.Fatal("descriptor 자리의 디렉터리를 회수 대상으로 받아들였다")
+	}
+	if _, err := os.Lstat(intruder); err != nil {
+		t.Fatalf("거부하면서 그것을 지웠다: %v", err)
+	}
+}
+
 // TestReclaimEmptiesTheDirectoryItRecovers — 회수의 전체성.
 //
 // 회수가 끝나면 디렉터리 자체가 없어야 한다. 남으면 다음 줄의 Mkdir 이 ErrExist 로
