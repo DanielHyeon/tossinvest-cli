@@ -1,0 +1,380 @@
+{
+  "file": "internal/strategyprojectionrpc/transport.go",
+  "source_sha256": "0f443db7eaab4e097f43bc19d1b950159db3437ed7279b0c1b795bb87cc175f4",
+  "package": "strategyprojectionrpc",
+  "function": "Read",
+  "receiver": "Client",
+  "signature": "Client.Read(params=1, results=2)",
+  "start": {
+    "line": 55,
+    "column": 1
+  },
+  "end": {
+    "line": 90,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 57,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 58,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 62,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 67,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 72,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 75,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 80,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 84,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 87,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 34
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 18
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 18
+      },
+      "text": "http.NewRequestWithContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 2
+      },
+      "text": "request.Header.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 19
+      },
+      "text": "c.http.Do"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 8
+      },
+      "text": "response.Body.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 15
+      },
+      "text": "io.ReadAll"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 26
+      },
+      "text": "io.LimitReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 19
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 18
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 18
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 13
+      },
+      "text": "json.NewDecoder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 29
+      },
+      "text": "bytes.NewReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 2
+      },
+      "text": "decoder.DisallowUnknownFields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 12
+      },
+      "text": "decoder.Decode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 18
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 12
+      },
+      "text": "decoder.Decode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 40
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 18
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 12
+      },
+      "text": "strategyprojection.Validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 9
+      },
+      "text": "strategyprojection.Clone"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 65,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 79,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 83,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 86,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 69,
+        "column": 2
+      },
+      "text": "response.Body.Close"
+    }
+  ],
+  "revision": "base"
+}

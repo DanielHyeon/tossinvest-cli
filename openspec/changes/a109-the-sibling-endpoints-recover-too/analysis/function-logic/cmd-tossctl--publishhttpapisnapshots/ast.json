@@ -1,15 +1,15 @@
 {
   "file": "cmd/tossctl/httpapi.go",
-  "source_sha256": "27f64ba89ad383dba108aa897f48b208249d6fc13a6a3414842f441169757787",
+  "source_sha256": "0adcaf22e6e13a075f81f80917133ce8471a3c39a10753c99d83e37f536fa299",
   "package": "main",
   "function": "publishHTTPAPISnapshots",
   "signature": "publishHTTPAPISnapshots(params=5, results=0)",
   "start": {
-    "line": 700,
+    "line": 709,
     "column": 1
   },
   "end": {
-    "line": 729,
+    "line": 738,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "for",
       "at": {
-        "line": 706,
+        "line": 715,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "select",
       "at": {
-        "line": 707,
+        "line": 716,
         "column": 3
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 716,
+        "line": 725,
         "column": 4
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 720,
+        "line": 729,
         "column": 4
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 723,
+        "line": 732,
         "column": 4
       }
     }
@@ -58,14 +58,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 709,
+        "line": 718,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 724,
+        "line": 733,
         "column": 5
       }
     }
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 702,
+        "line": 711,
         "column": 12
       },
       "text": "time.NewTicker"
@@ -82,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 703,
+        "line": 712,
         "column": 8
       },
       "text": "ticker.Stop"
@@ -90,7 +90,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 708,
+        "line": 717,
         "column": 10
       },
       "text": "ctx.Done"
@@ -98,7 +98,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 714,
+        "line": 723,
         "column": 8
       },
       "text": "httpapi.StrategyRuntimeAbsent"
@@ -106,7 +106,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 715,
+        "line": 724,
         "column": 17
       },
       "text": "snapshots.Refresh"
@@ -114,7 +114,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 719,
+        "line": 728,
         "column": 14
       },
       "text": "sha256.Sum256"
@@ -122,7 +122,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 723,
+        "line": 732,
         "column": 17
       },
       "text": "stream.Publish"
@@ -132,42 +132,42 @@
     {
       "kind": ":=",
       "at": {
-        "line": 702,
+        "line": 711,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 714,
-        "column": 4
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 715,
-        "column": 4
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 719,
-        "column": 4
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
         "line": 723,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 724,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 728,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 732,
         "column": 7
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 726,
+        "line": 735,
         "column": 4
       }
     }
@@ -177,7 +177,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 703,
+        "line": 712,
         "column": 2
       },
       "text": "ticker.Stop"

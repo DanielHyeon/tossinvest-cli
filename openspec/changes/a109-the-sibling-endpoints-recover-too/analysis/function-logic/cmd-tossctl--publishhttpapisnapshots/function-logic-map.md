@@ -1,6 +1,6 @@
 # Function Logic Map: `publishHTTPAPISnapshots`
 
-- Source: `cmd/tossctl/httpapi.go` (700-729)
+- Source: `cmd/tossctl/httpapi.go` (709-738)
 - AST evidence: `ast.json` — AST 분기 5 · return 2 · defer 1
   (source_sha256 는 ast.json 이 정본, a109 §2-fix F3 편집 후 생성)
 - Risk scan: `risk-pattern-report.md`

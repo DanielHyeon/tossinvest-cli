@@ -1,6 +1,6 @@
 {
   "file": "internal/strategyprojectionrpc/transport_unix.go",
-  "source_sha256": "4c67d4b92b8c5ae3d8c8cba28d17cf88353c220ca910811beaf60d3848d518de",
+  "source_sha256": "0c8f335eb21ba54a772550ac6e4bb18ee977d4fddd579cc616bf8f8ae8ca7f0b",
   "package": "strategyprojectionrpc",
   "function": "Dial",
   "signature": "Dial(params=2, results=2)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 424,
+    "line": 432,
     "column": 2
   },
   "branches": [
@@ -63,14 +63,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 421,
-        "column": 3
+        "line": 429,
+        "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 423,
+        "line": 431,
         "column": 2
       }
     }
@@ -167,8 +167,8 @@
     {
       "kind": "call",
       "at": {
-        "line": 421,
-        "column": 10
+        "line": 429,
+        "column": 11
       },
       "text": "DialContext"
     }
@@ -198,7 +198,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 420,
+        "line": 427,
         "column": 2
       }
     }
