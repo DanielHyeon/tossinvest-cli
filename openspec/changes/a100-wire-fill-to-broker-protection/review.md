@@ -495,3 +495,24 @@ official sellable 불완전과 미관리 whole-share KR 후보 부재, soak `rea
 attestation binary-unbound, `conditional-trigger=deferred`, `trading.conditional=false`가 남았다.
 pagination 정정은 이 gate들을 닫지 않는다. tasks 0.2/0.11과 T1은 계속 미완료이며 다음 live action,
 preview 또는 toggle은 허용되지 않는다.
+
+### 2026-08-15 R0/M0 selective source landing review
+
+사용자는 시장 폐장과 독립적인 R0 current-main evidence와 M0 measurement tooling만 별도 랜딩하도록
+승인했다. 선별 diff는 `cmd/tossctl/verify*`, M0 read-only `internal/official`, `internal/verifylive`, 이 change의
+분석·명세로 한정하며 engine/runtime product worker, journal schema, protection lifecycle, Docker/compose와
+A112/PM 파일을 포함하지 않는다. 이 landing은 A100 완료·archive·배포가 아니며 0.2 M-A, 0.11과 T1 이후
+checkbox를 바꾸지 않는다.
+
+두 Terra landing reviewer와 기존 M0/receipt adversary는 same official-client binding, exact CLI mode,
+pending recovery/manual HOLD, dirfd/no-follow/O_EXCL/fsync/exclusive lease/poison, causal child barrier를 다시
+검증해 P0=0/P1=0을 보고했다. GitHub full test의 최초 attempt에서 기존 execgw test가 닫힌 임시 port의
+재사용 불가능성을 가정해 실제 403을 받은 flaky failure가 발생했다. Terra 구현자는 테스트만 deterministic
+pre-write RoundTripper로 바꾸고 정확히 `POST /oauth2/token` 한 번만 transport에 도달하며 order POST는
+도달하지 않음을 고정했다. 별도 reviewer 재검토는 P0=0/P1=0/P2=0이고, 후속 GitHub CI는 PASS다.
+
+전체 `make gate CHANGE=a100-wire-fill-to-broker-protection`의 task-completeness 단계는 의도대로 실패한다.
+그 gate는 A100 전체 완료를 판정하므로 이 부분 랜딩에서 통과했다고 주장하거나 checkbox를 조작하지 않는다.
+부분 랜딩의 hard gate는 scoped tests/race/vet, strict OpenSpec, logic-map analysis, current CodeGraph
+`make sdd-check`, exact staged-path audit, final gstack P0/P1=0과 GitHub CI다. A100 전체 gate는 모든 제품
+lot이 실제 완료될 때만 통과시킨다.
