@@ -79,6 +79,21 @@ func StartPositionPolicyCommandServer(engineDir string,
 			_ = os.Remove(controlDir)
 		}
 	}
+	// 죽은 run 의 광고를 **여기서** 지운다 — a109 §2b.3 G4.
+	//
+	// 이 descriptor 는 loopback 주소와 bearer 토큰이고, 소비자는 거기 적힌 포트로 연결해
+	// 토큰을 보낸다. a109 D3 이후 이 Start 의 실패는 fatal 이 아니라 **강등**이므로,
+	// 실패한 부팅은 descriptor 를 새로 쓰지 않은 채 엔진을 계속 돌린다. 그때 남은 옛
+	// 광고의 포트는 이미 커널이 다른 프로세스에 재배정했을 수 있다(ephemeral).
+	//
+	// 그래서 자리는 실패 가능한 줄들 **앞**이다: 여기 이후 무엇이 실패하든 광고는 남지
+	// 않는다. 그리고 소유 검증(ValidateControlDirectory) **뒤**다 — 확인하지 않은
+	// 디렉터리에서는 아무것도 지우지 않는다.
+	//
+	// 산 주인의 광고를 지우는 것이 아닌 근거는 journal flock 이다: `runEngineRun` 은
+	// endpoint 기동 전에 그것을 쥐므로 같은 journal 의 두 번째 엔진은 존재할 수 없고,
+	// 여기 보이는 descriptor 는 정의상 죽은 run 의 것이다.
+	dropStalePositionPolicyDescriptor(positionpolicyrpc.DescriptorPath(dir))
 	// 이 endpoint에는 socket이 없다 — loopback TCP이므로 pre-chmod 병도, 산 주인 탈취도,
 	// probe할 대상도 없다. 남는 잔재는 자기 staging뿐이고(crash 시 os.CreateTemp가 남긴
 	// 반쯤 쓴 descriptor), 오늘까지 아무도 그것을 치우지 않아 부팅마다 쌓였다.
@@ -149,6 +164,23 @@ func StartPositionPolicyCommandServer(engineDir string,
 		_ = server.server.Serve(listener)
 	}()
 	return server, nil
+}
+
+// dropStalePositionPolicyDescriptor 는 죽은 run 이 남긴 광고 하나를 지운다.
+//
+// 확인은 **기존 private 검사**가 한다(`ValidatePrivateFile`: 정규 파일 · 정확-0600 ·
+// 우리 uid · 링크 1). 통과하지 못하는 것은 우리가 만들 수 있는 모양이 아니므로 그대로
+// 둔다 — 이 endpoint 의 규칙은 design D2a 다: 낯선 것은 무시하고, 위생이 표면을
+// 없애지 않는다. 오류를 돌려주지 않는 것도 같은 이유다. 격리 해제는 격리된 포지션의
+// 손절 포함 미판정 상태를 푸는 유일한 장중 경로이고, 그 표면을 위생이 지워서는 안 된다.
+//
+// 지우지 못한 경우(권한·경합)도 그냥 둔다: 발행이 성공하면 rename 이 덮고, 실패하면
+// 다음 부팅이 다시 시도한다.
+func dropStalePositionPolicyDescriptor(path string) {
+	if err := positionpolicyrpc.ValidatePrivateFile(path); err != nil {
+		return
+	}
+	_ = os.Remove(path)
 }
 
 func (s *PositionPolicyCommandServer) Close() error {
