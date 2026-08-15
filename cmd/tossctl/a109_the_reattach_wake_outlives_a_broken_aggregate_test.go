@@ -69,7 +69,7 @@ func TestTheReattachWakeSurvivesABrokenAggregate(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		publishHTTPAPISnapshots(ctx, stream, snapshots, 10*time.Millisecond)
+		publishHTTPAPISnapshots(ctx, stream, snapshots, attachment, 10*time.Millisecond)
 	}()
 
 	a109WaitFor(t, "집계가 깨진 채로의 재부착", func() bool {

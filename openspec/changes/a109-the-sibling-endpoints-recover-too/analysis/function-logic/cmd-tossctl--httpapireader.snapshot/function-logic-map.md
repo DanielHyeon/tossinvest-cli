@@ -24,6 +24,15 @@
 (unavailable/RUNTIME_UNAVAILABLE)를 **한 값으로 접지 않는다**. 재부착 wrapper 는 정의상
 non-nil 이므로 nil 검사로는 그 구분을 유지할 수 없다 — 그래서 상태 신호로 물어야 한다.
 
+**a109 §2-fix F3 (A2 P2-3) — B1–B7 의 오류는 재부착을 굶기지 않는다**: B8 의 부재 판정
+(`httpapi.StrategyRuntimeAbsent`)은 wrapper 의 재부착 시도를 깨우는 **부작용 있는
+술어**다. 그런데 이 함수는 앞의 일곱 조회 중 하나만 실패해도 B8 **앞에서** 끝난다.
+그래서 이 함수를 유일한 깨우기 경로로 두면 전략과 무관한 조회(옵티마이저 DB 등)
+하나의 고장이 재부착을 영원히 잠근다. 깨우기는 이제 publisher 루프
+(`publishHTTPAPISnapshots`)가 `Refresh` **밖에서** 먼저 부른다 — 이 함수의 분기는
+그대로이고, 이 함수에 얹혀 있던 **의존**이 사라졌다.
+핀: `TestTheReattachWakeSurvivesABrokenAggregate`.
+
 ## Branches and early returns
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |

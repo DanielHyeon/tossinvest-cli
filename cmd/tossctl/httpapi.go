@@ -179,7 +179,7 @@ func runHTTPAPI(cmd *cobra.Command, root *rootOptions, opts *httpAPIOptions) err
 	publisherDone := make(chan struct{})
 	go func() {
 		defer close(publisherDone)
-		publishHTTPAPISnapshots(publisherCtx, stream, snapshots, defaultHTTPAPIPublishInterval)
+		publishHTTPAPISnapshots(publisherCtx, stream, snapshots, strategyRuntime, defaultHTTPAPIPublishInterval)
 	}()
 	defer func() {
 		cancelPublisher()
@@ -684,7 +684,21 @@ func openHTTPAPIResources(ctx context.Context, root *rootOptions, now func() tim
 	return resources, nil
 }
 
-func publishHTTPAPISnapshots(ctx context.Context, stream *httpapi.Stream, snapshots *httpAPISnapshotCache, interval time.Duration) {
+// publishHTTPAPISnapshots 는 SSE 구독자에게 바뀐 집계 스냅샷을 실어 나른다.
+//
+// # 이 루프는 재부착의 **상시 구동원**이기도 하다 — a109 §2-fix F3 (A2 P2-3)
+//
+// 전략 reader 자리의 재부착 시도를 깨우는 것은 요청 경로이고, 요청이 없어도 도는
+// 것은 이 루프뿐이다. 그런데 깨우기가 `snapshots.Refresh` **성공** 안에 들어 있으면
+// (집계가 부재 판정을 부르면서 깨우므로) 전략과 무관한 조회 하나가 고장 난 순간
+// 재부착이 영원히 안 깨어난다: 집계는 앞의 일곱 조회 중 하나만 실패해도 전략
+// 블록에 닿기 전에 끝나고(`httpAPIReader.Snapshot` 의 B1–B7), 루프는 `continue`
+// 한다. 엔진이 돌아와도 화면은 안 돌아온다.
+//
+// 그래서 깨우기를 집계 **밖에서** 먼저 부른다. 새 ticker 를 두지 않는 이유는 주기가
+// 이미 맞기 때문이다 — 재부착 시도에는 자기 rate limit 이 따로 있다.
+func publishHTTPAPISnapshots(ctx context.Context, stream *httpapi.Stream, snapshots *httpAPISnapshotCache,
+	strategyRuntime httpapi.StrategyRuntimeReader, interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	var previous [sha256.Size]byte
@@ -694,6 +708,10 @@ func publishHTTPAPISnapshots(ctx context.Context, stream *httpapi.Stream, snapsh
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			// 부재 판정은 **부작용이 있는 술어**다: 재부착 wrapper 는 이 질문을 받으면
+			// 백그라운드 시도를 깨운다(`httpapi.StrategyRuntimePresence` 주석). 값을
+			// 쓰지 않고 부르는 것이 이 줄의 목적이다.
+			_ = httpapi.StrategyRuntimeAbsent(strategyRuntime)
 			body, err := snapshots.Refresh(ctx)
 			if err != nil {
 				continue
