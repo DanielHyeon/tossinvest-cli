@@ -20,8 +20,11 @@
 - [x] 1a FLM 맵 완성(자기 표면 **17개** — 등록문의 "9개"는 슬러그 수를 잘못 센 것이다:
   positionpolicyrpc 8 + app/engine 9). `check_analysis.py` 기준 T1 슬러그 오류 0
   (남은 3건은 T2 표면). Pre-Edit 선언은 `pre-edit-gate-t1.md`(T1-1~T1-4 + 선언된 무변경).
-- [ ] 1.1 RED: pre-chmod 0700 socket 잔재에서 policy runtime·alert control 기동이 영구
-  거부됨을 고정(A1 F3 재현 — umask 077 실측 모양).
+- [x] 1.1 RED: pre-chmod 0700 socket 잔재에서 policy runtime·alert control 기동이 영구
+  거부됨을 고정(A1 F3 재현 — 잔재는 명시적 chmod 0700으로 제작). 관측:
+  runtime = `preparing position policy runtime socket: ... stale endpoint is not an exact
+  0600 Unix socket`, alert = `preparing the alert control socket: ... path is not an exact
+  0600 Unix socket`. 완화 폭 핀(0640 거부)은 편집 전후 모두 GREEN이어야 하는 항목으로 동봉.
 - [ ] 1.2 RED: 수락 중인 socket 위 두 번째 Start가 기존 socket을 unlink하고 올라서는
   현재 동작을 고정(탈취 → 거부가 목표 동작).
 - [ ] 1.3 RED: staging 잔재(**현행·구버전 공통** CreateTemp `.position-policy-*`/
