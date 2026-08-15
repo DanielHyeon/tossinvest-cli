@@ -14,9 +14,29 @@
 
 | 명령 | 결과 |
 |---|---|
-| `go test -race -count=1 ./cmd/tossctl/ ./internal/httpapi/ ./internal/console/` | ok 159.061s / ok 0.170s / ok 1.617s |
+| `go test -race -count=1 ./cmd/tossctl/ ./internal/httpapi/` | ok 159.061s / ok 0.170s (§2-fix 종료 시 172.199s / 1.624s) |
+| `go test -race -count=1 -timeout 25m ./internal/console/` | §0a 참조 (§2-fix 종료 시 ok 693.315s) |
 | `go vet ./cmd/... ./internal/httpapi/ ./internal/console/` | rc=0 |
-| `gofmt -l ./cmd ./internal ./tools/logic-map` | 출력 없음 |
+| `$(go env GOROOT)/bin/gofmt -l ./cmd ./internal ./tools/logic-map` | 출력 없음 |
+
+### §0a 정정 — 두 줄이 거짓이었다 (a109 §2-fix F9)
+
+- **`gofmt` 는 PATH 에 없다.** 원래 적힌 `gofmt -l …` 은 이 환경에서 "command not
+  found" 이고, 그 실패를 "출력 없음"으로 읽으면 **검사 0건이 위반 0건으로 보고된다**
+  (없는 도구는 깨끗하다고 보고한다). 저장소의 진입점과 같은 절대경로
+  `$(go env GOROOT)/bin/gofmt` 로 고쳤다 — `Makefile` 의 `GOFMT` 도 같은 식이다.
+- **console 기준선 `ok 1.617s` 는 이 패키지의 수치가 아니다.** §2-fix 종료 시점 실측:
+
+  | 명령 | 결과 |
+  |---|---|
+  | `go test -race -count=1 -timeout 25m ./internal/console/` | **ok 693.315s** (wall 11m39.363s) |
+  | 같은 명령, **기본 timeout(600s)** | 그 전에 `panic: test timed out after 10m0s` — 693 > 600 이므로 완주할 수 없다 |
+  | `go test -race -count=1 ./cmd/tossctl/` | ok 172.199s (wall 2m58.530s) |
+  | `go test -race -count=1 ./internal/httpapi/` | ok 1.624s |
+
+  1.6초로 적힌 줄은 다음 사람에게 "console 은 빠르다"고 말하고, 그 사람은 기본
+  timeout 으로 돌린 뒤 **자기 변경이 무언가를 걸었다**고 읽는다. `internal/httpapi`
+  의 1.624s 와 자릿수가 같은 것이 그 줄의 출처로 보인다 — 패키지를 헷갈린 값이다.
 
 ## §1 강등 경로 — 세 지점 각각 (D3)
 
@@ -69,6 +89,50 @@
 | M19 | 금지 3종 주석의 `criticalEvents` 인용 **하나만** 지운다 | `TestTheDegradationCommentStillCitesTheForbiddenThree` | **생존 — 설계대로**: 이 핀은 「이유가 파일에 남아 있는가」를 재지 사본 수를 재지 않는다 |
 | M19b | 그 인용을 **전부**(2곳) 지운다 | 같은 테스트 | **CAUGHT** |
 
+## §4a a109 §2-fix — A2 재현과 새 방어의 측정
+
+집행 방식은 §0 과 같다(앵커 1회 확인 → 치환 → 실행 → 역치환 → 바이트 동일 확인).
+아래 **전부 `restored=true`**.
+
+### A2 가 보고한 것을 먼저 재현했다
+
+| # | 뮤테이션 | 테스트 | 결과 |
+|---|---|---|---|
+| M24 | 금지 2번 줄(`engine.go:366`) **삭제** — 옛 단정(`"critical"`)으로 | `TestTheDegradationCommentStillCitesTheForbiddenThree` | **생존** = A2 P2-4 재현 (`"critical"` 은 `"criticalEvents"` 의 부분 문자열) |
+| M25 | 순서 불변식의 flock 문장 삭제 — 옛 단정(`"flock"`)으로 | 같음 | **생존** (영문 헤더 `engine.go:14` 가 만족시킨다) |
+| M32a | `defer lock.Release()` 삭제 | `TestTheJournalLockIsReleasedAfterEveryEndpointClose` | **CAUGHT** ("defer 가 없다") |
+| M32b | **순서 역전** — `lock.Release` defer 를 endpoint Close 넷 **뒤로** 이동 | 같음 | **CAUGHT** (등록 #6 vs #2·#3·#4·#5, 네 줄 전부 보고) |
+
+M32b 가 A2 가 요구한 "defer 순서 역전" 항목이다. 원장에 M18(한 줄 아래로 = 여전히 참인
+편집, 생존이 정상)만 있고 **진짜 역전**이 없었다 — 그것이 이 핀의 유일한 사고 모양인데.
+
+### 고친 뒤 다시 쟀다
+
+| # | 뮤테이션 | 테스트 | 결과 |
+|---|---|---|---|
+| M24b | M24 와 같은 삭제, 고유 구절 단정으로 | `TestTheDegradationCommentStillCitesTheForbiddenThree` | **CAUGHT** |
+| M25b | M25 와 같은 삭제, `"flock을 쥔 채로"` 로 | 같음 | **CAUGHT** |
+| M26 | outbox 인용의 백틱 이름을 "그 함수"로 치환 | 같음 | **CAUGHT** |
+
+### 새 방어 셋 (F1·F2·F3) — 각각 한 번씩 죽였다
+
+| # | 뮤테이션 | 테스트 | 결과 |
+|---|---|---|---|
+| M29 | **F1 제거** — `requestCancelled` 를 `return false` 로 | `TestACancelledRequestDoesNotDetachAHealthyClient` | **CAUGHT** (시도 1회 + 탈착 보고 + live client 가 교체됨) |
+| M30 | **F2 제거** — `observe` 의 `seat != a.seat` 검사 삭제 | `TestALateReadFailureDoesNotUnseatTheNewAttachment` | **CAUGHT** (탈착 보고 + 재-dial 2회) |
+| M31 | **F3 제거** — publisher 의 `StrategyRuntimeAbsent` 한 줄 삭제 | `TestTheReattachWakeSurvivesABrokenAggregate` | **CAUGHT** (2초 안에 재부착 없음) |
+
+### 두 문구·계약 항목
+
+| # | 뮤테이션 | 테스트 | 결과 |
+|---|---|---|---|
+| M27b | alerts 부재 안내의 sentinel 을 날것의 오류(`opening the descriptor: %w`)로 | `TestTheCommandsRefuseWhenNoEngineIsRunning`(F6 수정판) | **CAUGHT** — a098 의 의도(운영자가 자기 경로를 의심하게 만들지 마라)가 **계속** 측정된다 |
+| M28 | `AlertControlServer.Close` 의 nil 가드 제거 | `TestTheSiblingEndpointClosesAreSafeOnANilServer`(신규) | **CAUGHT** (nil 역참조 패닉) — M7 이 생존한 이유가 이제 계약이다 |
+
+> M27 은 처음에 `if errors.Is(err, os.ErrNotExist)` 블록째 지워 **컴파일 실패**로
+> 끝났다(`"os" imported and not used`). 컴파일 실패는 뮤테이션 측정이 아니다 —
+> 컴파일되는 판(M27b)으로 다시 쟀다. M12 와 같은 실수이고 같은 처리다.
+
 ## §5 뮤테이션이 **테스트의 결함**을 잡아냈다 (두 건)
 
 이 원장의 실제 수확은 잡힌 26건이 아니라 **생존한 두 건**이다. 둘 다 「테스트가 다른
@@ -98,7 +162,14 @@ rate limit 을 끄고**(겹침을 막는 것은 single-flight 뿐이다) 20개�
 
 ## §6 생존 뮤테이션 선언 (측정 후 남긴 것)
 
-### M7 — 강등 경로의 nil 가드 제거는 **테스트가 잡을 수 없다**
+### M7 — 강등 경로의 nil 가드 제거는 **테스트가 잡을 수 없다** (§2-fix 로 절반 해소)
+
+> **§2-fix F7 갱신**: 아래 결론(가드는 동작을 바꾸지 않으므로 잡히지 않는 것이 정상)은
+> 그대로다. 다만 그 결론이 기대는 성질 — 세 `Close` 가 nil 수신자에 안전하다 — 은
+> **T1 표면의 성질인데 아무도 계약으로 적지 않았다**. 그것을 소비자 쪽에서 재는 테스트를
+> 넣었고(`TestTheSiblingEndpointClosesAreSafeOnANilServer`), M28 로 측정했다. 이제
+> T1 이 Close 를 고치다 가드를 없애면 **강등 defer 가 패닉하기 전에** 그 테스트가 운다.
+
 
 `defer policyControl.Close()` 를 무조건 등록해도 아무 테스트도 죽지 않는다. 이유는
 측정 가능하다: 세 서버 타입의 `Close` 가 **모두 nil 수신자에 안전**하다
@@ -116,6 +187,10 @@ rate limit 을 끄고**(겹침을 막는 것은 single-flight 뿐이다) 20개�
 둘은 생존이 **요구되는** 뮤테이션이다. M18 은 순서 불변식을 여전히 지키는 편집이고,
 M19 는 이유가 파일에 남아 있는 편집이다. 각각의 **진짜** 위반(M18b·M19b)은 잡힌다.
 정적 핀이 무해한 편집마다 우는 도구였다면 다음 사람이 그것을 지운다.
+
+> **§2-fix F9 보강**: M18 의 짝으로 「이 핀이 실제로 막는 사고」 — `lock.Release` defer 를
+> endpoint Close 넷 **뒤로** 옮기는 순서 역전 — 을 M32b 로 측정했다(CAUGHT). 생존이
+> 요구되는 뮤테이션만 적어 두면 그 핀이 **무엇을 잡는지는** 원장에 없다.
 
 ## §7 뮤테이션이 **닿지 못한** 표면 (정직한 공백)
 
