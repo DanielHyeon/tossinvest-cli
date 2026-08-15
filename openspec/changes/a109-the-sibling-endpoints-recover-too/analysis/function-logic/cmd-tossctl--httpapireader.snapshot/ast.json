@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/httpapi_reader.go",
-  "source_sha256": "876f5a33600f0de326089dd9b15176ec38c30f4183db8c4983b14fd0e8b1fba2",
+  "source_sha256": "0e66e9a41935c5d42cca47fff2c9d4b33aeab50d17065ed7a2c0dfe4ff729d17",
   "package": "main",
   "function": "Snapshot",
   "receiver": "httpAPIReader",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 591,
+    "line": 598,
     "column": 2
   },
   "branches": [
@@ -74,7 +74,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 570,
+        "line": 577,
         "column": 2
       }
     },
@@ -82,7 +82,7 @@
       "id": "B9",
       "kind": "if",
       "at": {
-        "line": 572,
+        "line": 579,
         "column": 3
       }
     },
@@ -90,7 +90,7 @@
       "id": "B10",
       "kind": "else",
       "at": {
-        "line": 574,
+        "line": 581,
         "column": 10
       }
     }
@@ -148,7 +148,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 578,
+        "line": 585,
         "column": 2
       }
     }
@@ -213,7 +213,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 569,
+        "line": 576,
         "column": 21
       },
       "text": "strategyprojection.DormantSnapshot"
@@ -221,7 +221,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 569,
+        "line": 576,
         "column": 56
       },
       "text": "r.clockNow"
@@ -229,7 +229,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 570,
+        "line": 577,
         "column": 6
       },
       "text": "httpapi.StrategyRuntimeAbsent"
@@ -237,7 +237,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 571,
+        "line": 578,
         "column": 21
       },
       "text": "r.strategyRuntime.Read"
@@ -245,7 +245,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 573,
+        "line": 580,
         "column": 22
       },
       "text": "strategyprojection.UnavailableSnapshot"
@@ -253,7 +253,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 573,
+        "line": 580,
         "column": 61
       },
       "text": "r.clockNow"
@@ -261,7 +261,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 578,
+        "line": 585,
         "column": 9
       },
       "text": "json.Marshal"
@@ -269,7 +269,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 589,
+        "line": 596,
         "column": 27
       },
       "text": "r.clockNow"
@@ -277,7 +277,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 590,
+        "line": 597,
         "column": 3
       },
       "text": "httpapi.PerformanceFrom"
@@ -285,7 +285,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 590,
+        "line": 597,
         "column": 55
       },
       "text": "httpapi.OptimizationFrom"
@@ -344,28 +344,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 569,
+        "line": 576,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 571,
+        "line": 578,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 573,
+        "line": 580,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 575,
+        "line": 582,
         "column": 4
       }
     }

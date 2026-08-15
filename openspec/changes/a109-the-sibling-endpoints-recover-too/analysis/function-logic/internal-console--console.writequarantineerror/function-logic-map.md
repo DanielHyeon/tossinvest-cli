@@ -1,8 +1,8 @@
 # Function Logic Map: `Console.writeQuarantineError`
 
-- Source: `internal/console/exit_quarantine.go` (244-270)
+- Source: `internal/console/exit_quarantine.go` (257-283)
 - AST evidence: `ast.json` — AST 분기 9 · return 0 · defer 0
-  (source_sha256 는 ast.json 이 정본, a109 §2.5 편집 후 생성)
+  (source_sha256 는 ast.json 이 정본, a109 §2-fix F5 편집 후 재생성)
 - Risk scan: `risk-pattern-report.md`
 - **a109 편집 대상: 미배선 거절의 본문 문자열 한 곳** — 원인 단정(「엔진 control plane이
   격리 해제를 제공하지 않는다」= 사실상 「빌드가 낡았다」)을 공유 상수
@@ -25,21 +25,21 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (:245) | 오류 종류 분기 | 없음 | 아래 가지들 | 기존 a079 표 테스트 |
-| **B2 (:246)** | `ErrUnwired` | 501 거절 + **정직화된 문구** | — | `TestEveryQuarantineRefusalPathCarriesTheSameHonestMessage` · 기존 a079(제목) |
-| B3 (:249) | `ErrNotQuarantined` | 404 | — | 기존 a079 |
-| B4 (:252) | `ErrVersionMismatch` | 412 | — | 기존 a079 |
-| B5 (:255) | `ErrCapabilityTooEarly` | 425 | — | 기존 a079 |
-| B6 (:258) | `ErrCapabilityExpired` | 410 | — | 기존 a079 |
-| B7 (:261) | `ErrCapabilityInvalid` | 403 | — | 기존 a079 |
-| B8 (:264) | `ErrConfirmationRequired` | 400 | — | 기존 a079 |
-| B9 (:267) | 그 밖 | 400 + 원문 | — | 기존 a079 |
+| B1 (:258) | 오류 종류 분기 | 없음 | 아래 가지들 | 기존 a079 표 테스트 |
+| **B2 (:259)** | `ErrUnwired` | 501 거절 + **정직화된 문구** | — | `TestEveryQuarantineRefusalPathCarriesTheSameHonestMessage` · 기존 a079(제목) |
+| B3 (:262) | `ErrNotQuarantined` | 404 | — | 기존 a079 |
+| B4 (:265) | `ErrVersionMismatch` | 412 | — | 기존 a079 |
+| B5 (:268) | `ErrCapabilityTooEarly` | 425 | — | 기존 a079 |
+| B6 (:271) | `ErrCapabilityExpired` | 410 | — | 기존 a079 |
+| B7 (:274) | `ErrCapabilityInvalid` | 403 | — | 기존 a079 |
+| B8 (:277) | `ErrConfirmationRequired` | 400 | — | 기존 a079 |
+| B9 (:280) | 그 밖 | 400 + 원문 | — | 기존 a079 |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `errors.Is` | sentinel 판별 | 순수 | AST · :246–267 |
+| `errors.Is` | sentinel 판별 | 순수 | AST · :259–280 |
 | `c.refuse` | 거절 화면 | 부작용은 응답뿐 | AST · 각 가지 |
 
 ## State mutations and fallbacks

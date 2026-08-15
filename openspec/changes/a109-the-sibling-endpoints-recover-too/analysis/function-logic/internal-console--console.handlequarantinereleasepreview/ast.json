@@ -1,16 +1,16 @@
 {
   "file": "internal/console/exit_quarantine.go",
-  "source_sha256": "d61ec3a1972e98a89cee54b5d45ae532cc2189efcf178d96eb890fd09ad0e54a",
+  "source_sha256": "9fb98b004ce27eca32f08bd6040d4cc5e77ecc390d0ac7c696b5a2df50493fa6",
   "package": "console",
   "function": "handleQuarantineReleasePreview",
   "receiver": "Console",
   "signature": "Console.handleQuarantineReleasePreview(params=2, results=0)",
   "start": {
-    "line": 176,
+    "line": 189,
     "column": 1
   },
   "end": {
-    "line": 209,
+    "line": 222,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 178,
+        "line": 191,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 184,
+        "line": 197,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 192,
+        "line": 205,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 196,
+        "line": 209,
         "column": 2
       }
     },
@@ -50,26 +50,12 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 201,
+        "line": 214,
         "column": 2
       }
     }
   ],
   "returns": [
-    {
-      "kind": "return",
-      "at": {
-        "line": 181,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 186,
-        "column": 3
-      }
-    },
     {
       "kind": "return",
       "at": {
@@ -80,7 +66,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 198,
+        "line": 199,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 207,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 211,
         "column": 3
       }
     }
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 177,
+        "line": 190,
         "column": 19
       },
       "text": "c.exitQuarantines"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 179,
+        "line": 192,
         "column": 3
       },
       "text": "c.refuse"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 183,
+        "line": 196,
         "column": 18
       },
       "text": "c.verifyQuarantineToken"
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 183,
+        "line": 196,
         "column": 42
       },
       "text": "r.PostFormValue"
@@ -121,7 +121,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 185,
+        "line": 198,
         "column": 3
       },
       "text": "c.refuse"
@@ -129,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 185,
+        "line": 198,
         "column": 67
       },
       "text": "err.Error"
@@ -137,7 +137,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 188,
+        "line": 201,
         "column": 18
       },
       "text": "commander.PreviewQuarantineRelease"
@@ -145,7 +145,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 188,
+        "line": 201,
         "column": 53
       },
       "text": "r.Context"
@@ -153,7 +153,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 190,
+        "line": 203,
         "column": 49
       },
       "text": "UTC"
@@ -161,7 +161,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 190,
+        "line": 203,
         "column": 49
       },
       "text": "c.now"
@@ -169,7 +169,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 193,
+        "line": 206,
         "column": 3
       },
       "text": "c.writeQuarantineError"
@@ -177,7 +177,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 196,
+        "line": 209,
         "column": 5
       },
       "text": "strings.TrimSpace"
@@ -185,7 +185,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 197,
+        "line": 210,
         "column": 3
       },
       "text": "c.refuse"
@@ -193,7 +193,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 217,
         "column": 2
       },
       "text": "c.render"
@@ -201,7 +201,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 205,
+        "line": 218,
         "column": 11
       },
       "text": "c.chromeOnRequest"
@@ -209,7 +209,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 207,
+        "line": 220,
         "column": 11
       },
       "text": "quarantineReasonText"
@@ -219,35 +219,35 @@
     {
       "kind": ":=",
       "at": {
-        "line": 177,
+        "line": 190,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 183,
+        "line": 196,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 188,
+        "line": 201,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 200,
+        "line": 213,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 202,
+        "line": 215,
         "column": 3
       }
     }

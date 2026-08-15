@@ -1,8 +1,8 @@
 # Function Logic Map: `Console.handleQuarantineReleasePreview`
 
-- Source: `internal/console/exit_quarantine.go` (176-209)
+- Source: `internal/console/exit_quarantine.go` (189-222)
 - AST evidence: `ast.json` — AST 분기 5 · return 4 · defer 0
-  (source_sha256 `d61ec3a1...` — ast.json 이 정본, a109 §2.5 편집 후 생성)
+  (source_sha256 는 ast.json 이 정본, a109 §2-fix F5 편집 후 재생성)
 - Risk scan: `risk-pattern-report.md`
 - **a109 편집 대상: 미배선 거절의 본문 문자열 한 곳** — 원인 단정(「엔진 control plane이
   격리 해제를 제공하지 않는다」= 사실상 「빌드가 낡았다」)을 공유 상수
@@ -30,20 +30,20 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| **B1 (:178)** | commander 미배선 | 501 거절 + **정직화된 문구** | 조기 return | `TestEveryQuarantineRefusalPathCarriesTheSameHonestMessage` |
-| B2 (:184) | token 검증 실패 | 403 거절 | 조기 return | 기존 a079 테스트 |
-| B3 (:192) | preview 호출 실패 | `writeQuarantineError` 로 위임 | 조기 return | 기존 a079 테스트 |
-| B4 (:196) | capability 가 비었다 | 500 거절 | 조기 return | 기존 |
-| B5 (:201) | `WaitSeconds <= 0` | 3초 기본값 | 없음 | 기존 |
+| **B1 (:191)** | commander 미배선 | 501 거절 + **정직화된 문구** | 조기 return | `TestEveryQuarantineRefusalPathCarriesTheSameHonestMessage` |
+| B2 (:197) | token 검증 실패 | 403 거절 | 조기 return | 기존 a079 테스트 |
+| B3 (:205) | preview 호출 실패 | `writeQuarantineError` 로 위임 | 조기 return | 기존 a079 테스트 |
+| B4 (:209) | capability 가 비었다 | 500 거절 | 조기 return | 기존 |
+| B5 (:214) | `WaitSeconds <= 0` | 3초 기본값 | 없음 | 기존 |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `c.exitQuarantines` | 엔진 command seam | 미배선은 501 (B1) | AST · :177 |
-| `c.refuse` | 거절 화면 | 부작용은 응답뿐 | AST · :179·185·197 |
-| `commander.PreviewQuarantineRelease` | 엔진에 preview 요청 | 실패는 `writeQuarantineError` 로 | AST · :188 |
-| `c.render` | preview 화면 | — | AST · :204 |
+| `c.exitQuarantines` | 엔진 command seam | 미배선은 501 (B1) | AST · :190 |
+| `c.refuse` | 거절 화면 | 부작용은 응답뿐 | AST · :192·198·210 |
+| `commander.PreviewQuarantineRelease` | 엔진에 preview 요청 | 실패는 `writeQuarantineError` 로 | AST · :201 |
+| `c.render` | preview 화면 | — | AST · :217 |
 
 ## State mutations and fallbacks
 

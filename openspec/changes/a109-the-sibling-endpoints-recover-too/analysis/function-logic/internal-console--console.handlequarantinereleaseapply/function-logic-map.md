@@ -1,8 +1,8 @@
 # Function Logic Map: `Console.handleQuarantineReleaseApply`
 
-- Source: `internal/console/exit_quarantine.go` (211-242)
+- Source: `internal/console/exit_quarantine.go` (224-255)
 - AST evidence: `ast.json` — AST 분기 3 · return 3 · defer 0
-  (source_sha256 는 ast.json 이 정본, a109 §2.5 편집 후 생성)
+  (source_sha256 는 ast.json 이 정본, a109 §2-fix F5 편집 후 재생성)
 - Risk scan: `risk-pattern-report.md`
 - **a109 편집 대상: 미배선 거절의 본문 문자열 한 곳** — 원인 단정(「엔진 control plane이
   격리 해제를 제공하지 않는다」= 사실상 「빌드가 낡았다」)을 공유 상수
@@ -27,17 +27,17 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| **B1 (:213)** | commander 미배선 | 501 거절 + **정직화된 문구** | 조기 return | `TestEveryQuarantineRefusalPathCarriesTheSameHonestMessage` |
-| B2 (:219) | capability 가 비었다 | 403 거절 | 조기 return | 기존 a079 테스트 |
-| B3 (:227) | 해제 호출 실패 | `writeQuarantineError` 로 위임 | 조기 return | 기존 a079 테스트 |
+| **B1 (:226)** | commander 미배선 | 501 거절 + **정직화된 문구** | 조기 return | `TestEveryQuarantineRefusalPathCarriesTheSameHonestMessage` |
+| B2 (:232) | capability 가 비었다 | 403 거절 | 조기 return | 기존 a079 테스트 |
+| B3 (:240) | 해제 호출 실패 | `writeQuarantineError` 로 위임 | 조기 return | 기존 a079 테스트 |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `c.exitQuarantines` | 엔진 command seam | 미배선은 501 (B1) | AST · :212 |
-| `commander.ReleaseQuarantine` | **유일한 상태 변경** | 실패는 `writeQuarantineError` | AST · :224 |
-| `http.Redirect` | 성공 후 화면 이동 | — | AST · :241 |
+| `c.exitQuarantines` | 엔진 command seam | 미배선은 501 (B1) | AST · :225 |
+| `commander.ReleaseQuarantine` | **유일한 상태 변경** | 실패는 `writeQuarantineError` | AST · :237 |
+| `http.Redirect` | 성공 후 화면 이동 | — | AST · :254 |
 
 ## State mutations and fallbacks
 

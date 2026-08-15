@@ -313,7 +313,11 @@ func TestTheDegradationEventsAreNotOnTheCriticalRail(t *testing.T) {
 // **격리 해제**를 잃고 그것은 격리된 포지션의 무보호 유지이며, alert control 은 ack 를
 // 잃고 그것은 latch 유지다. 잃는 것을 적지 않는 보고는 운영자에게 우선순위를 못 준다.
 func TestEveryDegradedEndpointNamesWhatItLost(t *testing.T) {
-	dir := "/tmp/a109-endpoint-copy"
+	// 이 테스트는 디스크를 만지지 않는다 — engineEndpoint 생성자 넷은 좌표 **문자열**을
+	// 조립하고 끝난다. 그래도 t.TempDir 을 쓴다: 하드코딩한 `/tmp/a109-endpoint-copy` 는
+	// 만들지도 않을 이름을 저장소에 남기고, 다음 사람이 「이건 왜 /tmp 인가」를 묻게
+	// 만든다 (a109 §2-fix F9).
+	dir := t.TempDir()
 	for _, endpoint := range []engineEndpoint{
 		engineProjectionEndpoint(dir), enginePolicyCommandEndpoint(dir),
 		enginePolicyRuntimeEndpoint(dir), engineAlertControlEndpoint(dir),

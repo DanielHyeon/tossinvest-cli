@@ -550,11 +550,18 @@ func (r *httpAPIReader) Snapshot(ctx context.Context) ([]byte, error) {
 	// 은 엔진 재시작이나 잔재 회수 중에 몇 초씩 사라질 수 있는 표면이고, 그때 운영자가
 	// 포지션조차 못 보는 것이 이 change 가 지우는 비대칭이다.
 	//
-	// 두 실패를 한 값으로 접지 않는다 — 콘솔이 이미 그렇게 판정한다
-	// (`internal/console` 의 `buildMultiMarketStrategyRuntimePage`):
+	// 두 실패를 한 값으로 접지 않는다:
 	//   reader 가 **없다**  → dormant(NOT_CONFIGURED): 전략 화면을 안 쓰는 배포다.
 	//   reader 는 있는데 **못 읽는다** → unavailable(RUNTIME_UNAVAILABLE): 엔진이 없다.
 	// 접으면 운영자는 「기능을 안 켰다」와 「엔진이 죽었다」를 구별할 수 없다.
+	//
+	// ⚠ 선례 인용 정정 (a109 §2-fix F9 / A2 P1-1): 콘솔은 이 구분을 **절반만** 지킨다.
+	// 콘솔 page(`internal/console` 의 `buildMultiMarketStrategyRuntimePage`)는 위 둘을
+	// 가르지만, 콘솔 **boot**(`cmd/tossctl/console.go:411–421`)는 dial 실패를 그냥
+	// nil 로 두고 "전략 화면은 dormant 로 뜬다"고 찍는다 — 즉 콘솔은 접는 쪽의
+	// 사례이기도 하다. 그러므로 이 함수의 구분은 콘솔을 **따르는** 것이 아니라
+	// 콘솔보다 **엄격한** 쪽이다. 선례로 인용하면 다음 사람이 콘솔 boot 를 보고
+	// 「저쪽도 접으니 괜찮다」로 읽는다.
 	//
 	// 이 구분이 값으로 성립하려면 **부팅도 같은 구분을 지켜야 한다.** 여기서 nil 이
 	// 「안 쓰는 배포」를 뜻하므로, 붙지 못한 endpoint 를 nil 로 접어 넘기면 이 함수가

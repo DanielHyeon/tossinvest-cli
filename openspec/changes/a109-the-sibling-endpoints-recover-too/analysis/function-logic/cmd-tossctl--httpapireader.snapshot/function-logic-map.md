@@ -1,9 +1,8 @@
 # Function Logic Map: `httpAPIReader.Snapshot`
 
-- Source: `cmd/tossctl/httpapi_reader.go` (517-591)
+- Source: `cmd/tossctl/httpapi_reader.go` (517-598)
 - AST evidence: `ast.json` — AST 분기 10 · return 8 · defer 0
-  (source_sha256 `876f5a33600f0de326089dd9b15176ec38c30f4183db8c4983b14fd0e8b1fba2`,
-  a109 §2.3 편집 후 생성)
+  (source_sha256 는 ast.json 이 정본, a109 §2-fix F9 편집 후 재생성)
 - Risk scan: `risk-pattern-report.md`
 - **a109 편집 대상: B8 의 조건 한 줄** — 전략 reader 의 부재 판정을 `!= nil` 에서
   `!httpapi.StrategyRuntimeAbsent(...)` 로 바꾼다(freeze P1-4). 앞의 일곱 조회와
@@ -44,18 +43,18 @@ non-nil 이므로 nil 검사로는 그 구분을 유지할 수 없다 — 그래
 | B5 (:535) | performance 실패 | 없음 | 오류 | 기존 |
 | B6 (:539) | settings 실패 | 없음 | 오류 | 기존 |
 | B7 (:543) | optimization 실패 | 없음 | 오류 | 기존 |
-| **B8 (:570)** | **전략 reader 가 부재가 아니다** | 없음 | 아래 둘 | `TestAnAbsentStrategyReaderStaysDormantRatherThanUnavailable` · `TestTheDaemonAttachesWhenTheEngineComesUpLater` |
-| B9 (:572) | 전략 읽기 실패 | 없음 | **unavailable 스냅샷** (오류 아님) | `TestALiveStrategyProjectionThatDiesLeavesTheAggregateStanding` |
-| B10 (:574) | 전략 읽기 성공 | 없음 | 읽은 값 | 위와 같음 |
+| **B8 (:577)** | **전략 reader 가 부재가 아니다** | 없음 | 아래 둘 | `TestAnAbsentStrategyReaderStaysDormantRatherThanUnavailable` · `TestTheDaemonAttachesWhenTheEngineComesUpLater` |
+| B9 (:579) | 전략 읽기 실패 | 없음 | **unavailable 스냅샷** (오류 아님) | `TestALiveStrategyProjectionThatDiesLeavesTheAggregateStanding` |
+| B10 (:581) | 전략 읽기 성공 | 없음 | 읽은 값 | 위와 같음 |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
 | 일곱 read 어댑터 | 집계의 본문 | 실패는 전체 오류 (B1–B7) | AST · :518–545 |
-| `httpapi.StrategyRuntimeAbsent` | 부재 판정 **한 벌** | 순수 함수 | AST · :570 |
-| `r.strategyRuntime.Read` | 전략 읽기 | 실패는 **흡수**되어 unavailable 값이 된다 | AST · :571 |
-| `strategyprojection.DormantSnapshot` / `UnavailableSnapshot` | 두 화면 값 | 순수 함수 | AST · :569·573 |
+| `httpapi.StrategyRuntimeAbsent` | 부재 판정 **한 벌** | 순수 함수 | AST · :577 |
+| `r.strategyRuntime.Read` | 전략 읽기 | 실패는 **흡수**되어 unavailable 값이 된다 | AST · :578 |
+| `strategyprojection.DormantSnapshot` / `UnavailableSnapshot` | 두 화면 값 | 순수 함수 | AST · :576·580 |
 
 ## State mutations and fallbacks
 
