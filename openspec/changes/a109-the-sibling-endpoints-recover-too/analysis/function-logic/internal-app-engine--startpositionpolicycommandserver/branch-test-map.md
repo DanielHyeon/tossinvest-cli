@@ -18,4 +18,4 @@
 | B14 | List 오류의 RPC 매핑 | 커버 없음 | no | no |
 | B15 | 격리 해제 능력 유무로 라우트가 갈린다 | `TestAServiceWithoutQuarantineCapabilityRegistersNoNewRoutes` · `TestTheQuarantineRoutesCarryAReleaseEndToEnd` | no | no |
 | B16 | descriptor 발행 실패 정리 | 커버 없음 | no | no |
-| (신규, B16 이후 위치) | staging 잔재가 회수되고 낯선 엔트리는 그대로 남는다 | a109 §1.3 RED가 현재 "잔재가 남는다"를 고정한다 | yes(§1.3) | yes(§1.4) |
+| (분기 아님 — B9와 B10 사이의 문장) | staging 위생: 자기 잔재는 회수되고 낯선 엔트리는 그대로 남는다 | `TestTheCommandEndpointSweepsItsStagingAndLeavesStrangers` (뮤테이션 M24·M25가 이 문장을 죽인다) | yes(§1.3) | yes(§1.4) |

@@ -4,11 +4,13 @@
 - AST evidence: `ast.json`
 - Risk scan: `risk-pattern-report.md`
 
-`AlertControlServer.Close`와 달리 이 구조체에는 **`listener` 필드가 이미 있다**
+`AlertControlServer.Close`와 달리 이 구조체에는 **`listener` 필드가 이미 있었다**
 (`position_policy_runtime_transport_unix.go`의 타입 정의). 그런데 Close는 그것을 쓰지
-않는다 — 닫는 일을 `Shutdown`에 맡긴다. 필드가 있는데 안 쓰는 것이 더 나쁘다: 소유권이
-있다는 표시만 있고 행사는 없다. a109는 `Shutdown` 직후 이 listener를 직접 닫는다
-(design D2b).
+않았다 — 닫는 일을 `Shutdown`에 맡겼다. 필드가 있는데 안 쓰는 것이 더 나쁘다: 소유권이
+있다는 표시만 있고 행사는 없다.
+
+a109가 `Shutdown` 직후 이 listener를 직접 닫는다(design D2b). 편집 후 AST 분기는 5개다
+(편집 전 3개 — 늘어난 둘이 그 직접 닫기다).
 
 ## Inputs and invariants
 
@@ -24,8 +26,10 @@
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
 | B1 | `s == nil` | 없음 | `nil` | nil 수신자 안전 |
-| B2 | `range []string{descriptor, socket, controlDir}` | 세 경로 제거 | — | Close 후 셋 다 사라짐 |
-| B3 | `err != nil && !errors.Is(err, os.ErrNotExist) && result == nil` | 없음 | 첫 오류만 보존 | ErrNotExist 관용 |
+| B2 | `s.listener != nil` | **listener를 직접 닫는다** | — | 늦은 unlink 차단(design D2b) |
+| B3 | `err != nil && !errors.Is(err, net.ErrClosed) && result == nil` | 없음 | 첫 오류만 보존 | 이미 Shutdown이 닫았으면 `net.ErrClosed`는 성공과 같다 |
+| B4 | `range []string{descriptor, socket, controlDir}` | 세 경로 제거 | — | Close 후 셋 다 사라짐 |
+| B5 | `err != nil && !errors.Is(err, os.ErrNotExist) && result == nil` | 없음 | 첫 오류만 보존 | ErrNotExist 관용 |
 | 분기 밖 종단 | — | `Shutdown` 결과가 기본값 | `result` | 정상 Close는 nil |
 
 ## Calls and live bindings
@@ -34,15 +38,17 @@
 |---|---|---|---|
 | `context.WithTimeout` | 2초 시한 | `defer cancel()` | AST defers |
 | `s.server.Shutdown` | 요청 정리 | 시한 초과 error 보존 | AST calls |
+| `s.listener.Close` | 늦은 unlink 차단(직접 소유) | `net.ErrClosed` 관용 | AST calls |
 | `os.Remove` ×3 | 산출물 제거 | ErrNotExist 관용 | AST calls |
-| `errors.Is` | 관용 판정 | — | AST calls |
+| `errors.Is` | 관용 판정 ×2 | — | AST calls |
 
 ## State mutations and fallbacks
 
-- 세 경로 제거. `s.listener`는 **쓰이지 않는다** — 이것이 a109가 채우는 빈칸이다.
+- 세 경로 제거. `s.listener`는 이제 **여기서 닫힌다** — 그 빈칸이 a109가 채운 것이다.
+  경로를 지울 권한은 제거 루프 하나뿐이다(`SetUnlinkOnClose(false)` + 임시 이름).
 
 ## Safety conclusion
 
-- Safe edit boundary: `Shutdown` 직후 `s.listener.Close()` 절 추가(`net.ErrClosed`는 성공과 같다).
-  제거 루프·순서·관용은 불변.
+- Safe edit boundary: `Shutdown` 직후 `s.listener.Close()` 절만 추가했다(`net.ErrClosed`는
+  성공과 같다). 제거 루프·순서·관용은 불변.
 - High-risk impact: yes — 늦은 unlink는 후계자의 socket을 지운다.

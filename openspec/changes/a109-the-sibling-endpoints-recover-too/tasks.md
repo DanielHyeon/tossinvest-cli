@@ -52,7 +52,12 @@
   경합 3·비root 측정 불가 1). 뮤테이션이 새 핀 3개를 열었다(hard link·디렉터리 위생·
   descriptor 모양) — §1.5 경계 테스트만으로는 그 네 뮤테이션이 전부 살아남았다.
   `mutation-ledger-t1.md`.
-- [ ] 1.7 구현 후 FLM AST·맵 재최신화.
+- [x] 1.7 구현 후 FLM AST·맵 재최신화. 편집한 3파일의 9개 슬러그 ast.json·risk report를
+  재생성했고(`positionpolicyrpc`의 8개는 파일 무변경이라 그대로 유효), 분기 집합이 바뀐
+  4개(Start×2·Close×2)의 맵을 편집-후 AST로 다시 썼다: alert Start 15→13, runtime Start
+  16→14(`createdControlDir` 조건과 `os.Chmod` 절이 사라지고 회수·재-Mkdir이 들어왔다),
+  두 Close 3→5(listener 직접 닫기). `check_analysis.py` 기준 T1 슬러그 오류 0
+  (남은 3건은 T2 표면).
 
 ## 2. T2 — 기동 강등·소비자 재부착 (cmd/tossctl/*)
 

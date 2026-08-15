@@ -9,9 +9,10 @@ pre-chmod 병도, 산 주인 탈취도 없다(probe할 대상 자체가 없다).
 `os.CreateTemp(dir, ".position-policy-control-*")`가 crash 시 남기는 **staging 잔재를
 아무도 치우지 않는다.** 어떤 검증도 디렉터리를 열거하지 않으므로 조용히 쌓인다.
 
-a109는 여기에 **staging 위생만** 더한다(design D2a). 열거+낯선-엔트리 거부는 넣지
-않는다 — 이물 하나가 격리 해제 표면을 매 부팅 지우는 새 실패 경로가 되기 때문이다
-(freeze P1-2). 낯선 엔트리는 오늘처럼 무시한다.
+a109는 여기에 **staging 위생만** 더했다(design D2a — B9와 B10 사이의 문장 하나,
+`SweepPrivateStagingLeftovers`). 열거+낯선-엔트리 거부는 넣지 않았다 — 이물 하나가 격리
+해제 표면을 매 부팅 지우는 새 실패 경로가 되기 때문이다(freeze P1-2). 낯선 엔트리는
+전과 같이 무시한다. 분기 수는 편집 전후 모두 16이다(위생은 분기가 아니라 문장이다).
 
 ## Inputs and invariants
 
@@ -66,7 +67,7 @@ a109는 여기에 **staging 위생만** 더한다(design D2a). 열거+낯선-엔
 
 ## Safety conclusion
 
-- Safe edit boundary: `ValidateControlDirectory` 통과 직후에 **staging 위생 한 줄**만
-  더한다. 낯선 엔트리 열거·거부는 넣지 않는다(D2a). 라우트·토큰·발행 순서 불변.
+- Safe edit boundary: `ValidateControlDirectory` 통과 직후에 **staging 위생 한 문장**만
+  더했다. 낯선 엔트리 열거·거부는 넣지 않았다(D2a). 라우트·토큰·발행 순서 불변.
 - High-risk impact: yes — 이 표면이 없으면 **격리 해제**(격리된 포지션의 손절 포함 미판정
   상태를 푸는 유일한 장중 경로)가 사라진다. 그래서 새 실패 경로를 만들지 않는 것이 요구다.

@@ -6,9 +6,9 @@
 
 **descriptor에는 병이 없다.** 이 함수는 이미 stage(`os.CreateTemp(dir, ".endpoint-*")`)
 +rename이고, rename은 원자적이라 최종 이름은 완성된 파일에만 붙는다(design "병의 재확인").
-a109가 여기서 하는 일은 **하나뿐**이다: staging 접두 `.endpoint-`를 이름 있는 상수로 만들어
-회수의 아는-이름 집합과 **같은 정의**를 쓰게 한다(design D1b의 완전성 요구). 접두가 두 곳에
-따로 적히면 회수가 자기 잔재를 낯선 것으로 거부한다.
+a109가 여기서 한 일은 **하나뿐**이다: staging 접두 `.endpoint-`를 상수
+`privateDescriptorStagingPrefix`로 만들어 회수의 아는-이름 집합과 **같은 정의**를 쓰게 했다
+(design D1b의 완전성 요구). 접두가 두 곳에 따로 적히면 회수가 자기 잔재를 낯선 것으로 거부한다.
 
 descriptor 3벌 fold는 **선언된 생략**이다(design 말미) — 병이 없는 표면의 High-risk 리팩터링.
 
@@ -27,7 +27,7 @@ descriptor 3벌 fold는 **선언된 생략**이다(design 말미) — 병이 없
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
 | B1 | `ValidatePrivateControlDirectory(dir) != nil` | 없음 | "validating the control directory before staging" | 0700 아닌 디렉터리 |
-| B2 | `os.CreateTemp(dir, ".endpoint-*") != nil` | 없음 | "staging a descriptor" | **접두가 여기서 정해진다** — a109가 상수화 |
+| B2 | `os.CreateTemp(dir, privateDescriptorStagingPrefix+"*") != nil` | 없음 | "staging a descriptor" | **접두가 여기서 정해진다** — 회수의 아는-이름과 같은 상수 |
 | B3 | `ValidatePrivateOpenFile != nil` | 파일 close | "validating a staged descriptor" | 커버 없음 |
 | B4 | `temporary.Stat() != nil` | 파일 close | "inspecting a staged descriptor" | 커버 없음 |
 | B5 | `writePositionPolicyDescriptorBody != nil` | temp 제거(defer) | "writing a descriptor" | chmod/write/short-write 오류 보존 |
@@ -64,6 +64,6 @@ descriptor 3벌 fold는 **선언된 생략**이다(design 말미) — 병이 없
 
 ## Safety conclusion
 
-- Safe edit boundary: `os.CreateTemp`의 접두 리터럴을 상수 참조로 바꾸는 것만. 검증·
-  rollback·sync 순서는 그대로 둔다.
+- Safe edit boundary: `os.CreateTemp`의 접두 리터럴을 상수 참조로 바꾼 것만. 검증·
+  rollback·sync 순서는 그대로다.
 - High-risk impact: yes — 기동 경로이고, 잘못 건드리면 토큰 파일의 위생이 무너진다.

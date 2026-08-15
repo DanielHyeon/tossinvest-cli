@@ -8,9 +8,9 @@ descriptor 발행 3벌 중 command endpoint 판이다. 절 구성은
 `writePositionPolicyRuntimeDescriptor`와 동일하고 이름만 다르다(`.position-policy-control-*`
 접두, `ValidatePublishedDescriptor`). **병은 없다** — 이미 stage+rename이다.
 
-a109가 하는 일은 하나: staging 접두를 이름 있는 상수로 만들어 command endpoint의 staging
-위생(design D2a)이 **같은 정의**를 쓰게 한다. 접두가 두 곳에 따로 적히면 위생이 자기
-잔재를 못 알아본다.
+a109가 한 일은 하나: staging 접두를 상수 `positionPolicyControlStagingPrefix`로 만들어
+command endpoint의 staging 위생(design D2a)이 **같은 정의**를 쓰게 했다. 접두가 두 곳에
+따로 적히면 위생이 자기 잔재를 못 알아본다.
 
 ## Inputs and invariants
 
@@ -27,7 +27,7 @@ a109가 하는 일은 하나: staging 접두를 이름 있는 상수로 만들�
 |---|---|---|---|---|
 | B1 | `json.Marshal` error | 없음 | 그 error | 도달 불가에 가깝다 |
 | B2 | `ValidateControlDirectory(dir) != nil` | 없음 | "validating control directory before staging" | 0750 디렉터리 거부 |
-| B3 | `os.CreateTemp(dir, ".position-policy-control-*") != nil` | 없음 | "staging control descriptor" | **접두가 여기서 정해진다** — a109가 상수화 |
+| B3 | `os.CreateTemp(dir, positionPolicyControlStagingPrefix+"*") != nil` | 없음 | "staging control descriptor" | **접두가 여기서 정해진다** — 위생과 같은 상수 |
 | B4 | `ValidatePrivateOpenFile != nil` | close | "validating staged control descriptor" | 커버 없음 |
 | B5 | `temporary.Stat() != nil` | close | "inspecting staged control descriptor" | 커버 없음 |
 | B6 | `writePositionPolicyDescriptorBody != nil` | temp 제거(defer) | "writing control descriptor" | chmod/write/short-write |
@@ -65,5 +65,5 @@ a109가 하는 일은 하나: staging 접두를 이름 있는 상수로 만들�
 
 ## Safety conclusion
 
-- Safe edit boundary: `os.CreateTemp` 접두 리터럴 → 상수 참조. 그 밖의 절은 불변.
+- Safe edit boundary: `os.CreateTemp` 접두 리터럴 → 상수 참조(완료). 그 밖의 절은 불변.
 - High-risk impact: yes — 격리 해제 표면의 토큰 파일이다.

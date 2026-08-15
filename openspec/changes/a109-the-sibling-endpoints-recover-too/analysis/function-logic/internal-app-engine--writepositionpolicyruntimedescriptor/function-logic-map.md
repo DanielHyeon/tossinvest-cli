@@ -9,8 +9,8 @@
 `publishPrivateDescriptor`에 없는 절(B9: rename 직전 디렉터리 재검증, B13: 발행된 이름의
 이름-고정 검증)까지 더 갖고 있다. 그 비대칭(P2-6)은 **선언된 생략**으로 남긴다.
 
-a109가 여기서 하는 일은 하나: staging 접두 `.position-policy-runtime-`을 이름 있는 상수로
-만들어 회수의 아는-이름 집합과 같은 정의를 쓰게 한다(D1b 완전성).
+a109가 여기서 한 일은 하나: staging 접두를 상수 `positionPolicyRuntimeStagingPrefix`로
+만들어 회수의 아는-이름 집합과 같은 정의를 쓰게 했다(D1b 완전성).
 
 ## Inputs and invariants
 
@@ -27,7 +27,7 @@ a109가 여기서 하는 일은 하나: staging 접두 `.position-policy-runtime
 |---|---|---|---|---|
 | B1 | `json.Marshal` error | 없음 | 그 error | 도달 불가에 가깝다 |
 | B2 | `ValidateRuntimeControlDirectory(dir) != nil` | 없음 | "validating runtime directory before staging" | 0700 아닌 디렉터리 |
-| B3 | `os.CreateTemp(dir, ".position-policy-runtime-*") != nil` | 없음 | "staging runtime descriptor" | **접두가 여기서 정해진다** — a109가 상수화 |
+| B3 | `os.CreateTemp(dir, positionPolicyRuntimeStagingPrefix+"*") != nil` | 없음 | "staging runtime descriptor" | **접두가 여기서 정해진다** — 회수의 아는-이름과 같은 상수 |
 | B4 | `ValidatePrivateOpenFile != nil` | close | "validating staged runtime descriptor" | 커버 없음 |
 | B5 | `temporary.Stat() != nil` | close | "inspecting staged runtime descriptor" | 커버 없음 |
 | B6 | `writePositionPolicyDescriptorBody != nil` | temp 제거(defer) | "writing runtime descriptor" | chmod/write/short-write |
@@ -64,5 +64,5 @@ a109가 여기서 하는 일은 하나: staging 접두 `.position-policy-runtime
 
 ## Safety conclusion
 
-- Safe edit boundary: `os.CreateTemp` 접두 리터럴 → 상수 참조. 그 밖의 절은 불변.
+- Safe edit boundary: `os.CreateTemp` 접두 리터럴 → 상수 참조(완료). 그 밖의 절은 불변.
 - High-risk impact: yes — 토큰 파일의 위생과 기동 성공 여부가 달린 경로다.
