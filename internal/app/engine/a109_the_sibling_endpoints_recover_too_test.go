@@ -145,6 +145,58 @@ func TestTheSiblingEndpointsStartOverAPreChmodSocket(t *testing.T) {
 	}
 }
 
+// TestTheSiblingEndpointsRefuseToTakeALiveOwnersSocket — a109 §1.2.
+//
+// a108이 strategy projection에 세운 규칙은 **"수락 중인 socket은 건드리지 않는다"**이다.
+// 두 형제는 정반대로 한다: 유효한 0600 socket이면 주인의 생사를 묻지 않고 unlink하고
+// 그 자리에 자기 listener를 올린다. 그래서 두 번째 서버가 첫 번째의 운영자 표면을
+// 가져간다 — 첫 번째의 클라이언트는 자기 토큰이 통하지 않는 socket을 보게 된다.
+//
+// 실제 방어가 journal flock뿐이라는 것이 문제의 절반이다. flock은 **엔진**을 하나로
+// 강제하지만, 이 경로를 점유한 것이 엔진이 아니거나 다른 journal 디렉터리의 엔진이면
+// 막지 못한다. 그 심층 방어가 없다는 사실을 코드도 문서도 말하지 않았다.
+//
+// 이 핀이 재는 것은 두 가지다: ① 두 번째 기동이 **거부**되는가, ② 거부하면서 주인의
+// socket을 **그대로 두는가**. 둘째가 없으면 "거부했지만 이미 지웠다"가 통과한다.
+func TestTheSiblingEndpointsRefuseToTakeALiveOwnersSocket(t *testing.T) {
+	for _, endpoint := range a109Endpoints() {
+		t.Run(endpoint.name, func(t *testing.T) {
+			dir := privateEngineTestDir(t)
+			a109ControlDir(t, endpoint.controlDir(dir))
+			socketPath := endpoint.socket(dir)
+
+			// 산 주인: 실제로 수락하는 listener. 커널이 backlog에 받아 주므로
+			// Accept 루프가 없어도 connect는 성공한다 — 그것이 "살아 있다"의 정의다.
+			owner, err := net.Listen("unix", socketPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			owner.(*net.UnixListener).SetUnlinkOnClose(false)
+			t.Cleanup(func() { _ = owner.Close(); _ = os.Remove(socketPath) })
+			if err := os.Chmod(socketPath, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			before, err := os.Lstat(socketPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			a109Accepts(t, socketPath)
+
+			server, startErr := endpoint.start(t, dir)
+			if startErr == nil {
+				_ = server.Close()
+				t.Fatal("주인이 수락 중인 socket 위에서 두 번째 기동이 성공했다 — " +
+					"산 endpoint의 탈취다")
+			}
+			after, err := os.Lstat(socketPath)
+			if err != nil || !os.SameFile(before, after) {
+				t.Fatalf("거부하면서 주인의 socket을 지웠다: err=%v", err)
+			}
+			a109Accepts(t, socketPath)
+		})
+	}
+}
+
 // TestTheSiblingEndpointsRejectAPermissiveSocketLeftover는 완화의 **폭**을 잰다.
 //
 // §1.1이 통과시키는 것은 "group/other 비트가 없는" 잔재뿐이다. 0640처럼 남이 읽을 수

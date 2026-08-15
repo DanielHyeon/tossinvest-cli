@@ -25,8 +25,10 @@
   runtime = `preparing position policy runtime socket: ... stale endpoint is not an exact
   0600 Unix socket`, alert = `preparing the alert control socket: ... path is not an exact
   0600 Unix socket`. 완화 폭 핀(0640 거부)은 편집 전후 모두 GREEN이어야 하는 항목으로 동봉.
-- [ ] 1.2 RED: 수락 중인 socket 위 두 번째 Start가 기존 socket을 unlink하고 올라서는
-  현재 동작을 고정(탈취 → 거부가 목표 동작).
+- [x] 1.2 RED: 수락 중인 socket 위 두 번째 Start가 기존 socket을 unlink하고 올라서는
+  현재 동작을 고정(탈취 → 거부가 목표 동작). 관측: 두 endpoint 모두 두 번째 Start가
+  **성공**했다(`주인이 수락 중인 socket 위에서 두 번째 기동이 성공했다`). 핀은 거부와
+  "거부하면서 주인의 socket을 그대로 둔다"(inode 동일성 + 재수락) 둘 다 잰다.
 - [ ] 1.3 RED: staging 잔재(**현행·구버전 공통** CreateTemp `.position-policy-*`/
   `.endpoint-*` + 신규 `.s-*`)와 낯선 엔트리 각각의 기동 결과 고정(잔재=회수,
   낯섦=거부 — socket endpoint 한정, command는 무시 유지 D2a).
