@@ -220,3 +220,19 @@ red-team 전담 패스는 Claude 적대 패스가 그 헌장(specialist가 놓�
   내 패턴 누락이었음을 전체 실행으로 확인 — 표본 선택의 함정 기록.)
 - httpapi_strategy_attach.go 전문 판독: G1 승격의 단방향성(live 격하 금지), seat
   세대·취소 판정·전이 1회 계약이 설계 취지와 일치함을 확인.
+
+### 게이트 기록 (2026-08-16)
+
+`make gate CHANGE=a109-the-sibling-endpoints-recover-too` → **GATE PASS** (9/9:
+tasks 미완료 0 · 짝 없음 · review 존재 · FLM evidence complete · sdd-check ·
+make test 전 패키지 ok · vet · validate 92/92). 최종 판정 로그는 rtk 우회
+(`rtk proxy make gate`)로 전문 확보 — GATE_RC=0, FAIL 0줄.
+
+앞선 FAIL 2회의 원인과 해소(둘 다 change 결함 아님):
+
+1. **FAIL #1 — `.sdd/.venv`는 워크트리-로컬이다.** a109 전용 워크트리는 새 checkout이라
+   venv가 없어 sdd-doctor의 typedb-driver 검사가 죽었다 → `make sdd-infra`로 해소.
+   그리고 이 실패를 앞서 가렸던 것은 **내 `| tail` 파이프가 삼킨 rc**였다(기억에 있는
+   병의 재발을 Manager 본인이 저지름 — 게이트의 파이프 없는 실행이 진실을 드러냈다).
+2. **FAIL #2 — tracker는 마지막 태스크 편집 뒤에 재생성해야 한다.** generate 후
+   tasks 체크박스를 편집해 생성 tracker 2개가 stale → 재생성·커밋·재sync로 해소.
