@@ -5,3 +5,4 @@
 | — | — | No configured risk pattern matched |
 
 > Findings are review candidates, not automatic defect verdicts.
+

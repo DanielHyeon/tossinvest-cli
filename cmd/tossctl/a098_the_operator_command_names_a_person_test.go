@@ -15,6 +15,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -320,6 +321,19 @@ func TestAcknowledgingSaysEntryIsStillBlocked(t *testing.T) {
 //
 // 이 두 명령이 엔진 없이 「성공」하면 그것은 원장만 고친 것이고, 그때 진입은
 // 재시작까지 막힌 채다 — design D7.1 이 없애려는 상태 그 자체다.
+//
+// # 왜 문자열이 아니라 sentinel 인가 — a109 §2-fix F6 (A2 P2-6)
+//
+// 이 단정은 원래 `strings.Contains(err.Error(), "엔진이 없다")` 였다. 그것은 **우연한
+// 결합**이었다: a098 이 지는 요구는 「거부가 운영자에게 무엇을 할지 말한다」이지 그
+// 문장의 글자가 아닌데, a109 가 같은 문구에서 **단정을 조건문으로** 바꾸자
+// (「엔진이 없다」 → 「엔진이 없다면 … 돌고 있다면 …」) 이 테스트가 실제로 깨졌다.
+// 문구가 더 정직해졌는데 옛 테스트가 그것을 회귀로 신고한 것이다.
+//
+// 그래서 여기서는 **거부의 정체**(어느 거부인가)를 잰다. 그 거부가 무엇을 말해야
+// 하는지 — 강등 가능성·확인할 곳·두 갈래의 행동 — 는 문구의 소유자인 a109 가
+// 잰다(`TestTheAlertsCLIDoesNotAssertTheEngineIsAbsent`). 한 사실을 두 테스트가
+// 각자의 이유로 잡고, 문구를 고치는 사람은 한 곳만 본다.
 func TestTheCommandsRefuseWhenNoEngineIsRunning(t *testing.T) {
 	dir, err := os.MkdirTemp("/tmp", "a098-no-engine-*")
 	if err != nil {
@@ -337,8 +351,9 @@ func TestTheCommandsRefuseWhenNoEngineIsRunning(t *testing.T) {
 		if err == nil {
 			t.Fatalf("%v succeeded with no engine running: %s", args, out)
 		}
-		if !strings.Contains(err.Error(), "엔진이 없다") {
-			t.Errorf("%v error = %v; 운영자가 경로를 의심하게 된다", args, err)
+		if !errors.Is(err, errEngineAlertsUnavailable) {
+			t.Errorf("%v error = %v; want errEngineAlertsUnavailable — 운영자가 자기 "+
+				"경로를 의심하게 만드는 날것의 오류(no such file 따위)로 새어 나왔다", args, err)
 		}
 	}
 }

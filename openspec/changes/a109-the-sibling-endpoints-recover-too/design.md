@@ -187,6 +187,17 @@ D1·D2가 자기 잔재 병을 원천 소거하므로, 강등이 실제로 발�
   dormant/unavailable 화면 값을 테스트로 핀한다. 이 두 파일은 T2 표면에 명시한다.
 - **보고는 상태 전이 시 1회다**(P2-4). 30초마다 실패를 stderr에 찍지 않는다 — 시도
   실패는 침묵, 부착·탈착 전이만 로그한다.
+- **상시 구동원은 publisher 루프다**(§2-fix F3 / A2 P2-3). 요청이 없어도 도는 것은
+  `publishHTTPAPISnapshots` 하나뿐인데, 깨우기가 집계(`Refresh`) **성공** 안에 있으면
+  전략과 무관한 조회 하나의 고장이 재부착을 영원히 잠근다 — `httpAPIReader.Snapshot`
+  은 앞의 일곱 조회 중 하나만 실패해도 전략 블록 앞에서 끝나고 루프는 `continue`한다.
+  깨우기는 `Refresh` **밖에서** 부른다. 새 ticker는 두지 않는다(주기는 이미 맞고,
+  시도에는 자기 rate limit이 있다).
+- **취소·늦은 실패는 endpoint 판정이 아니다**(§2-fix F1·F2 / A2 P2-1·P2-2). REST 경로가
+  `request.Context()`를 그대로 넘기므로 요청 취소가 `context.Canceled`로 도착하고,
+  `Read`는 잠금 밖에서 읽으므로 새 부착 뒤에 옛 실패가 도착할 수 있다. 전자는 호출자
+  ctx가 이미 끝났을 때 상태 무변경, 후자는 읽기가 쓴 **자리의 세대**가 현재일 때만
+  전이한다.
 - **저장소 내 선례 대비**(P2-2): `positionPolicyRuntimeDescriptorReader`
   (position_policy_commander.go:27–41)는 같은 문제를 "rate limit 없이 매 read 재해결"로
   푼다. httpapi 전략 read는 화면 폴링·SSE로 고빈도이고 Dial에 200ms probe가 있으므로,

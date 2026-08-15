@@ -25,14 +25,29 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 )
 
-// errEngineAlertsUnavailable 은 「엔진이 안 돌고 있다」를 dial 실패와 구분해서 말한다.
+// errEngineAlertsUnavailable 은 「승인 표면이 없다」를 dial 실패와 구분해서 말한다.
 //
-// descriptor 가 없다는 것은 오늘 사실상 하나를 뜻한다: 이 디렉터리로 도는 엔진이
-// 없다. 그것을 `no such file` 로 찍으면 운영자는 자기 경로를 의심하고, 진짜로
-// 의심해야 할 것 — 승인할 대상 프로세스가 없다 — 은 안 보인다.
+// descriptor 가 없다는 것을 `no such file` 로 찍으면 운영자는 자기 경로를 의심하고,
+// 진짜로 의심해야 할 것 — 승인할 대상 표면이 없다 — 은 안 보인다.
+//
+// # 이 문구는 원인을 **단정하지 않는다** — a109 D3a-2 (freeze P0-3)
+//
+// 예전 문구는 「이 디렉터리로 도는 엔진이 없다」였고 `engine run` 을 살리라고 안내했다.
+// a109 이후 그 단정은 **거짓일 수 있다**: alert control endpoint 기동이 실패하면 엔진은
+// 그 표면 없이 강등 부팅하고 보호 루프는 그대로 돈다(engine.go 의 D3 강등). 그때 이
+// 화면을 본 운영자는 멀쩡히 도는 엔진을 재시작하고, 강등 원인은 결정적이므로 같은
+// 상태가 그대로 재현된다 — 안내가 운영자를 무한 재시작에 넣는다.
+//
+// 그래서 **두 갈래를 조건문으로** 말하고 각각의 행동을 준다. 단정을 없애는 것이지
+// 안내를 없애는 것이 아니다 — 엔진이 정말 없을 때 무엇을 할지는 그대로 말한다
+// (`TestTheCommandsRefuseWhenNoEngineIsRunning` 이 그 안내를 a098 부터 요구한다:
+// 운영자가 자기 경로를 의심하게 만들면 안 된다).
 var errEngineAlertsUnavailable = errors.New(
-	"engine alerts: 이 디렉터리로 도는 엔진이 없다 (descriptor 없음). " +
-		"`tossctl engine run` 이 살아 있어야 승인이 진입 게이트까지 닿는다")
+	"engine alerts: 승인 표면이 없다 (descriptor 없음). " +
+		"이 디렉터리로 도는 엔진이 없다면 `tossctl engine run` 을 살려라 — " +
+		"엔진이 돌고 있다면 그 엔진이 이 표면 없이 강등 부팅한 것이고, " +
+		"원인은 엔진 로그의 alert control 강등 보고에 있다. " +
+		"그 원인을 제거한 뒤 재시작해야 하며, 재시작만으로는 같은 상태가 재현된다")
 
 const maxAlertDescriptorBytes = 4 << 10
 
