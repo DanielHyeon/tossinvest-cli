@@ -31,8 +31,9 @@ import (
 const positionPolicyRuntimeStagingPrefix = ".position-policy-runtime-"
 
 // positionPolicyRuntimeEndpointNames는 이 endpoint가 자기 control 디렉터리에 만들 수 있는
-// 이름의 전부다. 완전성은 테스트가 고정한다 — 각 발행 경로의 **생성기를 실제로 돌려서**
-// 그 결과가 이 집합에 속하는지 본다(design D1b).
+// 이름의 전부다. 완전성은 두 테스트가 나눠 고정한다(design D1b): socket staging은 발행이
+// 쓰는 생성기를 실제로 돌려서, descriptor staging 접두는 **소스를 파서** — 발행이
+// os.CreateTemp에 넘기는 것이 리터럴이 아니라 아래 상수 참조임을 확인한다(a109 §1-fix F2).
 func positionPolicyRuntimeEndpointNames() positionpolicyrpc.PrivateEndpointNames {
 	return positionpolicyrpc.PrivateEndpointNames{
 		Descriptor: positionpolicyrpc.RuntimeDescriptorFileName,

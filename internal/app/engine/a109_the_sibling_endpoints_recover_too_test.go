@@ -23,6 +23,9 @@ package engine
 
 import (
 	"errors"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"net"
 	"os"
 	"path/filepath"
@@ -354,11 +357,13 @@ func TestTheStagedSocketNameFitsInsideEverySiblingsFinalName(t *testing.T) {
 // 측정하는 것과 구조로 묶은 것을 나눠 적는다.
 //
 //	측정   socket staging 은 발행이 쓰는 **그 생성기**(StagedSocketName)를 실제로 돌리고,
-//	       descriptor staging 은 발행이 쓰는 **그 상수**로 os.CreateTemp 를 실제로 돌려
-//	       나온 이름을 집합에 물어본다. os.CreateTemp 가 접두 뒤에 붙이는 임의 숫자의
-//	       길이는 판마다 다르므로 "접두로 시작한다"는 가정도 여기서 깨질 수 있다.
-//	구조   발행이 그 상수를 쓴다는 것은 상수가 한 곳에만 정의되어 두 자리에서 참조된다는
-//	       사실로 묶었다(리터럴이 남아 있으면 §1.3 의 잔재 회수 핀이 죽는다).
+//	       descriptor staging 은 **같은 상수로** os.CreateTemp 를 돌려 나온 이름을 집합에
+//	       물어본다. os.CreateTemp 가 접두 뒤에 붙이는 임의 숫자의 길이는 판마다 다르므로
+//	       "접두로 시작한다"는 가정도 여기서 깨질 수 있다.
+//	정적   ⛔ 이 테스트는 **발행 경로가 그 상수를 쓴다는 것을 재지 않는다** — 상수를
+//	       가져다 자기가 CreateTemp 를 돌릴 뿐이다. 발행 쪽이 리터럴로 갈라져도 여기는
+//	       통과한다(A1 뮤테이션 A1-N1 이 그렇게 살아남았다). 그 절반은
+//	       TestEveryPublishedStagingPrefixIsTheSharedConstant 가 소스를 파서 잰다.
 func TestEveryNameThePublishingPathMakesIsKnownToItsReclaim(t *testing.T) {
 	for _, test := range []struct {
 		name             string
@@ -407,6 +412,118 @@ func TestEveryNameThePublishingPathMakesIsKnownToItsReclaim(t *testing.T) {
 			// 그리고 아무 이름이나 아는 것이어서는 안 된다. 빈 접두 하나가 그렇게 만든다.
 			if test.names.Knows("somebody-elses.json") {
 				t.Error("회수가 낯선 이름을 우리 것으로 안다 — 남의 파일을 치우게 된다")
+			}
+		})
+	}
+}
+
+// a109StagingPrefixSources는 세 transport의 (파일, 공유 상수) 짝이다.
+//
+// 셋 다 "descriptor를 임시 이름에 만들고 rename한다"는 같은 의례를 각자 한 벌씩 가지고
+// 있다(fold는 a109의 선언된 생략). 그래서 접두도 셋이고, 각각 발행과 회수 **두 자리**에서
+// 읽힌다.
+func a109StagingPrefixSources() []struct{ file, constant string } {
+	return []struct{ file, constant string }{
+		{"alert_control_transport_unix.go", "privateDescriptorStagingPrefix"},
+		{"position_policy_runtime_transport_unix.go", "positionPolicyRuntimeStagingPrefix"},
+		{"position_policy_transport.go", "positionPolicyControlStagingPrefix"},
+	}
+}
+
+// a109FileNameArgument는 파일을 만드는 호출에서 **이름을 정하는 인자**를 돌려준다.
+func a109FileNameArgument(call *ast.CallExpr) (ast.Expr, string, bool) {
+	selector, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok {
+		return nil, "", false
+	}
+	pkg, ok := selector.X.(*ast.Ident)
+	if !ok || pkg.Name != "os" {
+		return nil, "", false
+	}
+	switch {
+	case selector.Sel.Name == "CreateTemp" && len(call.Args) == 2:
+		return call.Args[1], "os.CreateTemp", true // (dir, pattern)
+	case selector.Sel.Name == "OpenFile" && len(call.Args) == 3:
+		return call.Args[0], "os.OpenFile", true // (name, flag, perm)
+	}
+	return nil, "", false
+}
+
+// TestEveryPublishedStagingPrefixIsTheSharedConstant — a109 §1-fix F2.
+//
+// 발행과 회수가 **한 소스**를 읽어야 한다. 두 곳에 따로 적으면 회수가 자기 잔재를 낯선
+// 것으로 거부하고, 그 거부는 결정적이라 매 부팅 같은 자리에서 멈춘다.
+//
+// 그런데 "상수를 쓴다"는 동적 테스트로 잴 수 없다. 이름-집합 완전성 테스트는 **그 상수로**
+// os.CreateTemp를 돌려 보므로, 발행 쪽이 리터럴로 갈라져도 그 테스트는 통과한다 — A1
+// 적대 리뷰의 뮤테이션 A1-N1(발행 접두만 `.endpoint2-`로)이 그렇게 살아남았다.
+//
+// 그래서 **소스를 판다.** 파일을 만드는 호출(os.CreateTemp·os.OpenFile)에서 이름을 정하는
+// 인자에 staging 접두 모양의 문자열 리터럴이 있으면 실패한다. 접두는 공유 상수 참조여야
+// 하고, 그 상수는 같은 파일의 회수·위생 쪽에서도 읽혀야 한다.
+func TestEveryPublishedStagingPrefixIsTheSharedConstant(t *testing.T) {
+	for _, source := range a109StagingPrefixSources() {
+		t.Run(source.file, func(t *testing.T) {
+			fileSet := token.NewFileSet()
+			parsed, err := parser.ParseFile(fileSet, source.file, nil, 0)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			publications := 0
+			ast.Inspect(parsed, func(node ast.Node) bool {
+				call, ok := node.(*ast.CallExpr)
+				if !ok {
+					return true
+				}
+				argument, callee, ok := a109FileNameArgument(call)
+				if !ok {
+					return true
+				}
+				publications++
+				usesConstant := false
+				ast.Inspect(argument, func(inner ast.Node) bool {
+					switch value := inner.(type) {
+					case *ast.BasicLit:
+						if value.Kind == token.STRING && value.Value != `"*"` &&
+							strings.HasPrefix(value.Value, `".`) {
+							t.Errorf("%s:%d — %s의 이름 인자에 접두 리터럴 %s가 있다. "+
+								"발행이 회수와 갈라지면 회수가 자기 잔재를 낯선 것으로 "+
+								"거부하고, 그 거부는 결정적이다 — %s를 쓸 것",
+								source.file, fileSet.Position(value.Pos()).Line, callee,
+								value.Value, source.constant)
+						}
+					case *ast.Ident:
+						if value.Name == source.constant {
+							usesConstant = true
+						}
+					}
+					return true
+				})
+				if callee == "os.CreateTemp" && !usesConstant {
+					t.Errorf("%s:%d — os.CreateTemp의 접두가 %s를 참조하지 않는다",
+						source.file, fileSet.Position(call.Pos()).Line, source.constant)
+				}
+				return true
+			})
+			if publications == 0 {
+				t.Fatalf("%s에서 파일을 만드는 호출을 하나도 찾지 못했다 — "+
+					"이 핀은 발행 경로를 잰다고 주장하면서 아무것도 재지 않고 있다",
+					source.file)
+			}
+
+			// 그리고 그 상수는 **두 자리 이상**에서 읽혀야 한다: 선언 · 발행 · 회수(또는
+			// 위생). 셋 미만이면 발행과 회수 중 한쪽이 그 상수를 안 쓰고 있다는 뜻이다.
+			references := 0
+			ast.Inspect(parsed, func(node ast.Node) bool {
+				if identifier, ok := node.(*ast.Ident); ok && identifier.Name == source.constant {
+					references++
+				}
+				return true
+			})
+			if references < 3 {
+				t.Errorf("%s에서 %s 참조가 %d개다(선언 1 + 발행 1 + 회수 1 이상이어야 한다) — "+
+					"한쪽이 그 상수를 읽지 않는다", source.file, source.constant, references)
 			}
 		})
 	}
