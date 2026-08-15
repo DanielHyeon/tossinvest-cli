@@ -28,6 +28,7 @@ import (
 	"path/filepath"
 	"slices"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -505,6 +506,43 @@ func TestTheSiblingEndpointsRefuseAForeignEntry(t *testing.T) {
 			}
 			if _, err := os.Lstat(foreign); err != nil {
 				t.Fatalf("거부하면서 낯선 엔트리를 지웠다: %v", err)
+			}
+		})
+	}
+}
+
+// TestTheSiblingEndpointsNameTheEntryTheyRefused — a109 §1-fix F6.
+//
+// D3 강등의 회복 수단은 "엔진 재시작"이 아니라 **"보고된 원인을 제거한 뒤 재시작"**이다
+// (freeze P0-4) — 원인이 결정적이라 재시작만으로는 같은 강등이 재현되기 때문이다. 그
+// 회복 경로는 거부가 **무엇을** 거부했는지 말할 때만 실행 가능하다.
+//
+// 재는 것은 운영자가 실제로 보는 문자열이다: Start의 오류는 회수의 오류를 감싸므로,
+// 여기서 이름이 보이면 엔진 로그의 강등 보고에도 보인다.
+func TestTheSiblingEndpointsNameTheEntryTheyRefused(t *testing.T) {
+	for _, endpoint := range a109Endpoints() {
+		t.Run(endpoint.name, func(t *testing.T) {
+			dir := privateEngineTestDir(t)
+			controlDir := endpoint.controlDir(dir)
+			a109ControlDir(t, controlDir)
+			// 우리 잔재와 이물이 함께 있다 — 이름이 없으면 셋 중 무엇이 원인인지 모른다.
+			a109DeadSocket(t, endpoint.socket(dir), 0o700)
+			if err := os.WriteFile(endpoint.descriptor(dir), []byte("{}"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(controlDir, "somebody-elses.json"),
+				[]byte("{}"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			server, err := endpoint.start(t, dir)
+			if err == nil {
+				_ = server.Close()
+				t.Fatal("낯선 엔트리가 있는데 기동이 성공했다")
+			}
+			if !strings.Contains(err.Error(), "somebody-elses.json") {
+				t.Fatalf("기동 거부 오류 %q가 위반 엔트리를 지목하지 않는다 — "+
+					"운영자는 무엇을 치워야 할지 모른 채 재시작만 반복한다", err)
 			}
 		})
 	}

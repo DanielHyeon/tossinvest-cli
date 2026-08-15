@@ -10,7 +10,10 @@ package positionpolicyrpc
 //	              안인데 발행만 죽는 배포가 생긴다. 길이는 **직접 센다**.
 //	완화의 위치   회수의 좁은 완화(perm&0o077==0)가 클라이언트 검증으로 새면 안 된다.
 //	              두 클라이언트 검증이 0700 socket 을 거부하는지 잰다.
-//	판정의 갈래   probe 의 세 사망 판정과 생존 판정을 각각 만든다.
+//	판정의 갈래   probe 의 **두** 사망 판정과 생존 판정을 각각 만든다(a109 §1-fix F1로
+//	              owner-write 추정 절이 사라져 셋에서 둘이 됐다).
+//	거부의 지목    거부 오류가 위반 엔트리를 지목하는지(§1-fix F6). D3 회복 경로가 그것을
+//	              전제한다 — 원인이 결정적이라 "재시작"만으로는 같은 강등이 재현된다.
 
 import (
 	"errors"
@@ -401,6 +404,86 @@ func TestReclaimRefusesADescriptorOfTheWrongShape(t *testing.T) {
 	if _, err := os.Lstat(intruder); err != nil {
 		t.Fatalf("거부하면서 그것을 지웠다: %v", err)
 	}
+}
+
+// TestReclaimSaysWhichEntryItRefused — a109 §1-fix F6.
+//
+// D3 강등의 회복 수단은 "엔진 재시작"이 아니라 **"보고된 원인을 제거한 뒤 재시작"**이다
+// (freeze P0-4). 원인이 결정적이므로 재시작만으로는 같은 강등이 재현되기 때문이다.
+//
+// 그 회복 경로에는 전제가 있다: 거부가 **무엇을** 거부했는지 말해야 한다. control
+// 디렉터리에 파일이 여럿이면 "unexpected entries"만으로는 운영자가 어느 것을 치워야
+// 할지 모르고, 지울 대상을 고르는 일은 그 자체로 위험하다.
+//
+// 경로가 아니라 basename 이면 충분하다 — 디렉터리는 이미 오류의 문맥에 있다.
+func TestReclaimSaysWhichEntryItRefused(t *testing.T) {
+	names := PrivateEndpointNames{
+		Descriptor: "endpoint.json", Socket: "endpoint.sock",
+		StagingPrefixes: []string{StagingPrefix},
+	}
+
+	t.Run("낯선 엔트리", func(t *testing.T) {
+		engineDir := privateTestDir(t)
+		controlDir := a109TestControlDir(t, engineDir, ".private-endpoint-under-test")
+		// 우리 잔재도 함께 둔다 — 이름이 없으면 운영자는 셋 중 무엇이 원인인지 모른다.
+		if err := os.WriteFile(filepath.Join(controlDir, "endpoint.json"),
+			[]byte("{}"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		a109TestSocket(t, filepath.Join(controlDir, StagingPrefix+"s1234567"), 0o600)
+		if err := os.WriteFile(filepath.Join(controlDir, "somebody-elses.json"),
+			[]byte("{}"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+
+		err := ReclaimStalePrivateEndpoint(controlDir, names)
+		if err == nil {
+			t.Fatal("낯선 엔트리를 받아들였다")
+		}
+		if !strings.Contains(err.Error(), "somebody-elses.json") {
+			t.Fatalf("거부 오류 %q가 위반 엔트리를 지목하지 않는다 — "+
+				"운영자는 무엇을 치워야 할지 모른 채 재시작만 반복한다", err)
+		}
+	})
+
+	t.Run("모양이 다른 staging 엔트리", func(t *testing.T) {
+		engineDir := privateTestDir(t)
+		controlDir := a109TestControlDir(t, engineDir, ".private-endpoint-under-test")
+		if err := os.Mkdir(filepath.Join(controlDir, StagingPrefix+"sdeadbee"), 0o700); err != nil {
+			t.Fatal(err)
+		}
+
+		err := ReclaimStalePrivateEndpoint(controlDir, names)
+		if err == nil {
+			t.Fatal("모양이 다른 staging 엔트리를 받아들였다")
+		}
+		if !strings.Contains(err.Error(), StagingPrefix+"sdeadbee") {
+			t.Fatalf("거부 오류 %q가 위반 엔트리를 지목하지 않는다", err)
+		}
+	})
+
+	t.Run("수락 중인 staging socket", func(t *testing.T) {
+		engineDir := privateTestDir(t)
+		controlDir := a109TestControlDir(t, engineDir, ".private-endpoint-under-test")
+		live := filepath.Join(controlDir, StagingPrefix+"sfeedfac")
+		listener, err := net.Listen("unix", live)
+		if err != nil {
+			t.Fatal(err)
+		}
+		listener.(*net.UnixListener).SetUnlinkOnClose(false)
+		t.Cleanup(func() { _ = listener.Close(); _ = os.Remove(live) })
+		if err := os.Chmod(live, 0o600); err != nil {
+			t.Fatal(err)
+		}
+
+		err = ReclaimStalePrivateEndpoint(controlDir, names)
+		if err == nil {
+			t.Fatal("수락 중인 staging socket을 받아들였다")
+		}
+		if !strings.Contains(err.Error(), StagingPrefix+"sfeedfac") {
+			t.Fatalf("거부 오류 %q가 수락 중인 엔트리를 지목하지 않는다", err)
+		}
+	})
 }
 
 // TestReclaimEmptiesTheDirectoryItRecovers — 회수의 전체성.
