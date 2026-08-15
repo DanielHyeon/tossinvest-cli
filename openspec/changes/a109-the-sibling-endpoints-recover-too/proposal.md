@@ -14,7 +14,7 @@ a108은 2026-08-13 재부팅 사고의 endpoint(strategy projection)만 고쳤�
 - **pre-chmod socket 잔재의 영구 거부** — policy runtime과 alert control은
   `PreparePrivateSocket`/`PrepareRuntimeSocket`이 정확-0600이 아닌 socket을 거부한다.
   listen→chmod 사이의 죽음이 umask 077(컨테이너 실측)에서 0700 socket을 남기면 매 부팅이
-  거부되고, 세 endpoint 모두 `cmd/tossctl/engine.go`(:272/:277/:294 부근)에서 **fatal**이라
+  거부되고, 세 endpoint 모두 `cmd/tossctl/engine.go`(`return err` :274/:279/:315)에서 **fatal**이라
   a108 이전의 strategy projection과 똑같이 엔진 기동 루프 전체가 죽는다. A1이 각 3회
   반복으로 재현했다.
 - **alert control은 살아 있는 주인의 socket 위에 두 번째 서버가 올라선다** — strategy
@@ -35,8 +35,11 @@ a108의 tasks 2.5가 이것을 잡지 못한 이유도 기록돼 있다: 핀이 
   없이 unlink 금지). journal flock이 1차 방어임은 코드 주석이 명시 인용한다(design D2).
 - `engine.go`의 세 fatal을 강등한다 — endpoint별 보수성 판정은 design D3 표,
   보고는 a108 D3-2 교리(critical·등급표·outbox 3금지)를 일반화한다.
-- httpapi 소비자측 lazy 재-dial(a108 gstack 이관 2b.1)과 defer 순서 핀(2b.2),
+- httpapi 소비자측 lazy 재-dial(a108 gstack 이관 2b.1 — wrapper는 live client 포함
+  전체를 감싸고 시도는 백그라운드 single-flight, design D4)과 defer 순서 핀(2b.2),
   롤백 절차 측정·기록(2b.3)을 함께 닫는다.
+- 강등을 엔진 부재로 단정하는 소비자 메시지 2곳(alerts CLI·격리 해제)을 정직화한다
+  (freeze P0-3, design D3a-2 — 문구만, 새 화면·디스크 상태 없음).
 - 사고급 모양의 crash-shape 핀(pre-chmod socket·산 주인·staging 잔재·낯선 엔트리)을
   깐다 — a108 2.5의 실패-불가 핀을 대체하되 기존 관용 핀은 유지한다.
 

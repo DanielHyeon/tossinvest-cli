@@ -1,0 +1,123 @@
+{
+  "file": "cmd/tossctl/engine.go",
+  "source_sha256": "8111c1c9e20f501b6221e231836fb02d7d03d127b3592892175c1beb38788381",
+  "package": "main",
+  "function": "reportStrategyProjectionDegraded",
+  "signature": "reportStrategyProjectionDegraded(params=5, results=0)",
+  "start": {
+    "line": 369,
+    "column": 1
+  },
+  "end": {
+    "line": 405,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 375,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 376,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 371,
+        "column": 13
+      },
+      "text": "strategyprojectionrpc.ControlDirectory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 372,
+        "column": 12
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 373,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 396,
+        "column": 14
+      },
+      "text": "context.WithoutCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 397,
+        "column": 5
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 398,
+        "column": 7
+      },
+      "text": "ectx.Notifier.Notify"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 371,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 372,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 396,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 398,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 397,
+        "column": 2
+      }
+    }
+  ],
+  "defers": null
+}
