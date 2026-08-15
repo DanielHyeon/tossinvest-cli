@@ -84,7 +84,24 @@ func assertQuarantineHonest(t *testing.T, path string, recorder *httptest.Respon
 		t.Errorf("%s: 제목이 아직 빌드를 탓한다 — 본문은 강등을 말하는데 굵은 줄은 "+
 			"「이 빌드에 없다」다:\n%s", path, body)
 	}
-	if !strings.Contains(body, "격리 해제 표면 없음") {
-		t.Errorf("%s: 제목이 무엇이 없는지 말하지 않는다:\n%s", path, body)
+	if !strings.Contains(body, quarantineUnwiredTitle) {
+		t.Errorf("%s: 이 경로만 다른 제목을 쓴다 (want %q):\n%s", path, quarantineUnwiredTitle, body)
+	}
+}
+
+// TestTheUnwiredQuarantineTitleNamesTheSurfaceNotTheBuild 는 그 제목 **값** 자체의 핀이다.
+//
+// 위 테스트는 세 경로가 같은 값을 쓰는지 보고, 여기서는 그 값이 무엇을 말하는지 본다.
+// 둘 다 필요하다 — 상수 한 벌로 모아도 그 한 벌이 다시 빌드를 탓하면 같은 사고다.
+func TestTheUnwiredQuarantineTitleNamesTheSurfaceNotTheBuild(t *testing.T) {
+	if strings.Contains(quarantineUnwiredTitle, "미배선") {
+		t.Errorf("제목이 아직 seam 미배선을 말한다 — 이 저장소에서 그것은 「이 빌드에 "+
+			"배선되지 않았다」는 뜻이고 강등 부팅에서 거짓이다: %q", quarantineUnwiredTitle)
+	}
+	for _, required := range []string{"격리 해제", "없음", "강등"} {
+		if !strings.Contains(quarantineUnwiredTitle, required) {
+			t.Errorf("제목에 %q 가 없다 — 무엇이 없는지·왜 없을 수 있는지 중 하나가 빠졌다: %q",
+				required, quarantineUnwiredTitle)
+		}
 	}
 }

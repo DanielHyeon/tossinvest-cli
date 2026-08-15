@@ -38,6 +38,19 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitquarantine"
 )
 
+// quarantineUnwiredTitle 은 그 거부 화면에서 운영자가 **먼저 읽는 줄**이다.
+//
+// # 정정의 단위는 줄이 아니라 값이다 — a109 §2-fix F5 (A2 P2-5)
+//
+// detail 만 정직하게 고치고 제목은 「판정 격리 command seam 미배선」으로 두었더니 굵은
+// 줄이 여전히 빌드를 탓했다. 이 저장소에서 "seam 미배선"은 「이 빌드에 그 기능이
+// 배선되지 않았다」는 뜻으로 쓰인다(`overview.go` 의 `reasonSeamUnwired`) — 강등
+// 부팅에서는 거짓이고, 그 거짓을 읽은 운영자는 빌드를 올리러 간다.
+//
+// ⛔ 제목도 detail 과 같은 이유로 **상수 한 벌**이다. 세 경로에 인라인으로 세 벌을 두면
+// 다음 정정이 또 하나를 남긴다.
+const quarantineUnwiredTitle = "격리 해제 표면 없음 — 엔진 미기동 또는 강등"
+
 // quarantineUnwiredDetail 은 격리 해제 표면이 없을 때 운영자가 읽는 문장이다.
 //
 // # 이 문구는 원인을 **단정하지 않는다** — a109 D3a-2 (freeze P0-3)
@@ -176,7 +189,7 @@ func quarantineAge(stamp string, now time.Time) string {
 func (c *Console) handleQuarantineReleasePreview(w http.ResponseWriter, r *http.Request) {
 	commander, ok := c.exitQuarantines()
 	if !ok {
-		c.refuse(w, http.StatusNotImplemented, "판정 격리 command seam 미배선",
+		c.refuse(w, http.StatusNotImplemented, quarantineUnwiredTitle,
 			quarantineUnwiredDetail)
 		return
 	}
@@ -211,7 +224,7 @@ func (c *Console) handleQuarantineReleasePreview(w http.ResponseWriter, r *http.
 func (c *Console) handleQuarantineReleaseApply(w http.ResponseWriter, r *http.Request) {
 	commander, ok := c.exitQuarantines()
 	if !ok {
-		c.refuse(w, http.StatusNotImplemented, "판정 격리 command seam 미배선",
+		c.refuse(w, http.StatusNotImplemented, quarantineUnwiredTitle,
 			quarantineUnwiredDetail)
 		return
 	}
@@ -244,7 +257,7 @@ func (c *Console) handleQuarantineReleaseApply(w http.ResponseWriter, r *http.Re
 func (c *Console) writeQuarantineError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, exitquarantine.ErrUnwired):
-		c.refuse(w, http.StatusNotImplemented, "판정 격리 command seam 미배선",
+		c.refuse(w, http.StatusNotImplemented, quarantineUnwiredTitle,
 			quarantineUnwiredDetail)
 	case errors.Is(err, exitquarantine.ErrNotQuarantined):
 		c.refuse(w, http.StatusNotFound, "활성 격리 없음",
