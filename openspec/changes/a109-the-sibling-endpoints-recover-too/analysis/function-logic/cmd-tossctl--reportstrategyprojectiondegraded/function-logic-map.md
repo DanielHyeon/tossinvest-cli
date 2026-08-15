@@ -5,6 +5,11 @@
   (source_sha256 `8111c1c9e20f501b6221e231836fb02d7d03d127b3592892175c1beb38788381`,
   a109 base `016da624`)
 - Risk scan: `risk-pattern-report.md`
+- **이 묶음은 `revision: base` 다.** a109 §2.2 가 이 함수를 endpoint 좌표를 받는
+  `reportEngineEndpointDegraded` 로 **일반화하며 이름을 바꿨다** — 일반화한 함수가
+  「strategy projection」을 이름에 달고 있으면 그 이름이 거짓말을 한다. 그래서 이 맵은
+  **기준(base) 판의 증거**로 남고, 편집 후 판의 맵은
+  `cmd-tossctl--reportengineendpointdegraded/` 에 있다. 분기 구조와 금지 3종은 그대로다.
 - **a109 T2 편집 대상: 시그니처의 일반화** — 오늘 이 함수는 strategy projection **하나**
   에 묶여 있다(`strategyprojectionrpc.ControlDirectory(dir)` 를 스스로 계산하고 문구가
   「전략 화면」을 단정한다). a109 D3a 는 endpoint 이름을 받는 형태로 일반화해 네

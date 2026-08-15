@@ -28,10 +28,10 @@ import (
 func TestTheAlertsCLIDoesNotAssertTheEngineIsAbsent(t *testing.T) {
 	message := errEngineAlertsUnavailable.Error()
 	for _, required := range []string{
-		"강등",       // 다른 가능성을 말한다
-		"엔진 로그",    // 어느 쪽인지 가르는 증거의 위치를 준다
-		"없다면",      // 엔진 부재는 **조건**이지 단정이 아니다
-		"돌고 있다면",   // 반대쪽 갈래도 말한다
+		"강등",         // 다른 가능성을 말한다
+		"엔진 로그",      // 어느 쪽인지 가르는 증거의 위치를 준다
+		"없다면",        // 엔진 부재는 **조건**이지 단정이 아니다
+		"돌고 있다면",     // 반대쪽 갈래도 말한다
 		"engine run", // 부재일 때의 행동은 a098 부터의 요구다
 	} {
 		if !strings.Contains(message, required) {

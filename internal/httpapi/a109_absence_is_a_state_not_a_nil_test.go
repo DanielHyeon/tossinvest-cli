@@ -42,8 +42,8 @@ func TestAbsenceIsAskedAsAStateNotANil(t *testing.T) {
 		want   bool
 	}{
 		"nil reader 는 부재다":                {reader: nil, want: true},
-		"상태를 말하지 않는 reader 는 있다":         {reader: apiStrategyRuntimeStub{}, want: false},
-		"부재라고 말하는 wrapper 는 부재다":         {reader: a109PresentReader{configured: false}, want: true},
+		"상태를 말하지 않는 reader 는 있다":          {reader: apiStrategyRuntimeStub{}, want: false},
+		"부재라고 말하는 wrapper 는 부재다":          {reader: a109PresentReader{configured: false}, want: true},
 		"붙었다고 말하는 wrapper 는 non-nil 이상이다": {reader: live, want: false},
 	} {
 		if got := StrategyRuntimeAbsent(test.reader); got != test.want {
@@ -95,10 +95,19 @@ func TestTheRESTRouteStaysDormantForAnUnconfiguredWrapper(t *testing.T) {
 }
 
 // TestTheStreamHelperRefusesAnUnconfiguredWrapper 는 SSE helper 의 같은 자리다.
+//
+// # 부재 fixture 가 **읽을 수 있는** 스냅샷을 드는 이유 (뮤테이션 M22 가 가르쳐 준 것)
+//
+// 처음에는 부재 fixture 를 빈 스냅샷으로 뒀다. 그러면 판정을 nil 검사로 되돌려도
+// (부재 wrapper 는 non-nil 이므로 통과) 그 다음 줄의 `Validate` 가 빈 스냅샷을 거절해
+// **오류가 나오고**, 테스트는 「거절했다」로 초록이었다 — 즉 다른 이유로 통과했다
+// (뮤테이션 원장 M22, 생존). 그래서 부재 fixture 도 **유효한** dormant 스냅샷을 든다:
+// 이제 오류를 낼 수 있는 것은 부재 판정 하나뿐이다.
 func TestTheStreamHelperRefusesAnUnconfiguredWrapper(t *testing.T) {
 	now := func() time.Time { return time.Date(2026, 8, 15, 12, 0, 0, 0, time.UTC) }
-	if _, err := StrategyRuntimeSnapshotFunc(a109PresentReader{configured: false},
-		now)(context.Background()); err == nil {
+	if _, err := StrategyRuntimeSnapshotFunc(a109PresentReader{
+		configured: false, snapshot: strategyprojection.DormantSnapshot(now()),
+	}, now)(context.Background()); err == nil {
 		t.Error("부재 wrapper 가 stream 스냅샷을 만들어 냈다 — nil 시절의 뜻과 달라졌다")
 	}
 	body, err := StrategyRuntimeSnapshotFunc(a109PresentReader{

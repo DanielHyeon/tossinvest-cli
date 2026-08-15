@@ -152,28 +152,30 @@ func TestTheRequestPathNeverWaitsForADial(t *testing.T) {
 	}
 }
 
-// TestTheAttemptIsSingleFlightAndRateLimited 는 두 성질을 한 번에 잰다.
+// TestTheAttemptIsSingleFlight 는 겹치지 않음을 **rate limit 과 분리해서** 잰다.
 //
-// 둘을 나눠 재면 각각을 통과시키는 반쪽 구현이 있다: single-flight 만 있으면 시도가
-// 끝나자마자 다음 시도가 붙어 사실상 무제한이고, rate limit 만 있으면 창 안의 동시
-// 요청 수만큼 dial 이 겹친다.
-func TestTheAttemptIsSingleFlightAndRateLimited(t *testing.T) {
+// # 왜 분리하는가 (뮤테이션 M10 이 가르쳐 준 것)
+//
+// 처음에는 둘을 한 테스트에서 쟀다. 그런데 창 안에서 20번 두드리면 두 번째부터는
+// **rate limit** 이 막으므로 dial 은 어차피 한 번이다 — 즉 single-flight 를 통째로
+// 지워도 그 테스트는 초록이었다(뮤테이션 원장 M10, 생존). 통과는 증거가 아니다.
+//
+// 그래서 여기서는 **간격을 0 으로 두어 rate limit 을 끈다.** 그러면 겹침을 막는 것은
+// single-flight 하나뿐이고, 그것을 지우면 20개의 dial 이 동시에 뜬다.
+func TestTheAttemptIsSingleFlight(t *testing.T) {
 	entered, release := make(chan struct{}, 64), make(chan struct{})
-	var calls int
-	var mu sync.Mutex
+	var calls atomic.Int64
 	clock := &a109Clock{now: time.Unix(1_760_000_000, 0).UTC()}
 	attachment := a109Attachment(t, clock, io.Discard,
 		func(context.Context) (httpapi.StrategyRuntimeReader, bool) {
-			mu.Lock()
-			calls++
-			mu.Unlock()
+			calls.Add(1)
 			entered <- struct{}{}
 			<-release
 			return nil, false
 		})
+	attachment.interval = 0 // rate limit 을 끈다 — 겹침을 막는 것은 single-flight 뿐이어야 한다
 	attachment.attach(nil, false)
 
-	// 창 안에서 20번 두드린다. 시도는 하나뿐이어야 한다 (single-flight).
 	var wg sync.WaitGroup
 	for range 20 {
 		wg.Add(1)
@@ -184,31 +186,48 @@ func TestTheAttemptIsSingleFlightAndRateLimited(t *testing.T) {
 	}
 	wg.Wait()
 	<-entered
-	countCalls := func() int {
-		mu.Lock()
-		defer mu.Unlock()
-		return calls
-	}
-	if got := countCalls(); got != 1 {
-		t.Fatalf("동시 요청 20건이 dial 을 %d번 불렀다, want 1 — single-flight 가 없다", got)
+	// 붙잡힌 시도가 하나뿐인지 본다. 잠시 기다리는 이유는 겹친 시도가 **늦게** 들어올
+	// 수도 있기 때문이다 — 즉시 세면 경합을 놓친다.
+	time.Sleep(100 * time.Millisecond)
+	if got := calls.Load(); got != 1 {
+		t.Fatalf("동시 요청 20건이 dial 을 %d번 불렀다, want 1 — single-flight 가 없다. "+
+			"엔진이 내려간 동안 화면 폴링 수만큼 200ms probe 가 겹친다", got)
 	}
 	close(release)
 	a109WaitFor(t, "첫 시도 종료", func() bool { return !attachment.inFlight() })
+}
 
-	// 시계를 안 밀고 또 두드린다. rate limit 이 막아야 한다.
+// TestTheAttemptIsRateLimited 는 창 밖에서만 다시 시도함을 잰다.
+//
+// single-flight 와 분리해서 재는 이유는 위와 같다: 이쪽은 **시도가 끝난 뒤** 또
+// 두드리는 경우이고, 그때 겹침은 존재하지 않으므로 막는 것은 rate limit 하나뿐이다.
+func TestTheAttemptIsRateLimited(t *testing.T) {
+	var calls atomic.Int64
+	clock := &a109Clock{now: time.Unix(1_760_000_000, 0).UTC()}
+	attachment := a109Attachment(t, clock, io.Discard,
+		func(context.Context) (httpapi.StrategyRuntimeReader, bool) {
+			calls.Add(1)
+			return nil, false
+		})
+	attachment.attach(nil, false)
+
+	attachment.StrategyRuntimeConfigured()
+	a109WaitFor(t, "첫 시도", func() bool { return calls.Load() == 1 && !attachment.inFlight() })
+
+	// 시계를 안 밀고 스무 번 두드린다. 창 안이므로 아무 일도 없어야 한다.
 	for range 20 {
 		attachment.StrategyRuntimeConfigured()
 	}
-	time.Sleep(50 * time.Millisecond)
-	if got := countCalls(); got != 1 {
+	time.Sleep(100 * time.Millisecond)
+	if got := calls.Load(); got != 1 {
 		t.Fatalf("창 안 재시도가 dial 을 %d번 불렀다, want 1 — rate limit 이 없다. "+
 			"엔진이 내려간 동안 read 마다 200ms probe 비용을 낸다", got)
 	}
 
-	// 창을 지나면 다시 시도한다.
+	// 창을 지나면 다시 시도한다. 안 그러면 rate limit 이 아니라 「한 번만 시도」다.
 	clock.advance(2 * time.Minute)
 	attachment.StrategyRuntimeConfigured()
-	a109WaitFor(t, "창 이후 재시도", func() bool { return countCalls() == 2 })
+	a109WaitFor(t, "창 이후 재시도", func() bool { return calls.Load() == 2 })
 }
 
 // TestAFailedAttemptDoesNotClobberTheCurrentScreen 은 뒷문으로 들어오는 접힘을 막는다.

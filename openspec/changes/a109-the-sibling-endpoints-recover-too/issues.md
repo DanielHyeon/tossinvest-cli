@@ -88,6 +88,25 @@
   소스를 재는 테스트가 된다. T1 표면(`internal/positionpolicyrpc`,
   `internal/app/engine`)과는 겹치지 않는다.
 
+## T2-8 (safe local) — 재부착 wrapper 는 `cmd/tossctl` 의 **새 파일**에 둔다
+
+- **발견**: wrapper 를 `httpapi.go` 안에 두자 `check_analysis.py` 가 삽입 지점 바로 위의
+  `unavailableStrategyRuntime.Read` 를 「수정됨」으로 잡았다 — 아무도 편집하지 않은
+  함수의 증거 묶음을 요구한다(`--unified=0` 의 인접 hunk 가 그 함수의 줄 범위에 닿는다).
+- **분류**: safe local. a102·a108 이 같은 이유로 세운 관례(「새 코드는 새 파일에」)를
+  따른다.
+- **처리**: `cmd/tossctl/httpapi_strategy_attach.go` 신설. `httpapi.go` 에는 부팅 1회
+  해석(`resolveStrategyRuntimeReader`)과 그것을 감싸는 `strategyRuntimeReaderFor` 만
+  남는다. T2 표면 목록에 없는 **신규 production 파일**이므로 여기 기록한다.
+
+## T2-9 (기록) — 뮤테이션이 테스트 결함 둘을 잡았다
+
+- M10(single-flight)과 M22(SSE 부재 판정)가 **생존**했고, 둘 다 「테스트가 다른 이유로
+  초록」이었다. 테스트를 고친 뒤 재측정해 CAUGHT 로 바꿨다 — 상세는
+  `mutation-ledger-t2.md` §5.
+- 이것이 원장의 실제 수확이다. 두 테스트는 이 change 안에서 **한 번도 실패한 적이
+  없었고**, 그래서 그 초록은 증거가 아니었다.
+
 ## T2-4 (기록) — D5b 실측은 편집 전에 끝냈고 결과는 "사전 wipe 불요"다
 
 - tasks 3.3 은 §3 소속이라 T2 가 체크하지 않는다. 측정 결과는 완료 보고에 담고

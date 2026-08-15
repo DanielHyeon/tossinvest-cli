@@ -1,0 +1,257 @@
+{
+  "file": "internal/console/exit_quarantine.go",
+  "source_sha256": "d61ec3a1972e98a89cee54b5d45ae532cc2189efcf178d96eb890fd09ad0e54a",
+  "package": "console",
+  "function": "handleQuarantineReleasePreview",
+  "receiver": "Console",
+  "signature": "Console.handleQuarantineReleasePreview(params=2, results=0)",
+  "start": {
+    "line": 176,
+    "column": 1
+  },
+  "end": {
+    "line": 209,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 178,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 184,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 201,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 181,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 186,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 194,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 198,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 19
+      },
+      "text": "c.exitQuarantines"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 18
+      },
+      "text": "c.verifyQuarantineToken"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 42
+      },
+      "text": "r.PostFormValue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 67
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 18
+      },
+      "text": "commander.PreviewQuarantineRelease"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 53
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 49
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 49
+      },
+      "text": "c.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 3
+      },
+      "text": "c.writeQuarantineError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 3
+      },
+      "text": "c.refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 2
+      },
+      "text": "c.render"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 11
+      },
+      "text": "c.chromeOnRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 11
+      },
+      "text": "quarantineReasonText"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 188,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 202,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

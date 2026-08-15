@@ -1,7 +1,6 @@
 # Branch Test Map: `runEngineRun`
 
-편집 **전** 상태다(a109 base `016da624`). B15·B16·B20 이 이 change 가 여는 세 분기이고,
-그 세 줄만 RED 로 고정한 뒤 GREEN 으로 바꾼다. 나머지는 기존 핀의 현황 기록이다.
+편집 **후** 상태다(a109 §2.1 RED → §2.2 GREEN).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
@@ -19,9 +18,20 @@
 | B12 | 마커 보유·해제 | `TestTheMarkerIsHeldWhileTheLoopsRunAndRemovedAfter` | no | yes |
 | B13 | 루프 조립 실패는 fail-closed | `TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess` | no | yes |
 | B14 | policy command service 실패는 fatal 유지 | 미고정 (endpoint 아님 — 이 change 밖) | no | no |
-| B15 | **policy command server 기동 실패 → 오늘 엔진 사망** | a109 §2.1 RED → §2.2 GREEN (`cmd/tossctl/a109_*_test.go`) | pending | pending |
-| B16 | **policy runtime server 기동 실패 → 오늘 엔진 사망** | a109 §2.1 RED → §2.2 GREEN (`cmd/tossctl/a109_*_test.go`) | pending | pending |
-| B17 | projection 성공 경로만 Close 를 등록한다 | `TestASucceedingProjectionIsStillServedAndClosed` | no | yes |
-| B18 | projection 기동 실패는 강등이고 원장에 안 쓴다 | `TestAFailedStrategyProjectionDoesNotStopTheEngine` · `TestTheDegradedBootWritesNoUndeliveredOutboxRow` · `TestTheDegradedBootDoesNotWaitForTheNotifier` | yes (a108) | yes |
-| B19 | alert 운영 표면 조립 실패는 fatal 유지 | 미고정 (endpoint 아님 — 이 change 밖) | no | no |
-| B20 | **alert control server 기동 실패 → 오늘 엔진 사망** | a109 §2.1 RED → §2.2 GREEN (`cmd/tossctl/a109_*_test.go`) | pending | pending |
+| B15 | policy command server 가 서면 Close 를 등록한다 | `TestSucceedingSiblingEndpointsAreStillServedAndClosed` | no | yes |
+| B16 | policy command 기동 실패는 **강등**이고 부팅은 계속된다 | `TestAFailedSiblingEndpointDoesNotStopTheEngine` · `TestADegradedSiblingSaysWhichSurfaceIsMissing` · `TestADegradedSiblingBootWritesNoUndeliveredOutboxRow` | **yes** (엔진 사망) | yes |
+| B17 | policy runtime server 가 서면 Close 를 등록한다 | `TestSucceedingSiblingEndpointsAreStillServedAndClosed` | no | yes |
+| B18 | policy runtime 기동 실패는 **강등** | 위 셋과 같음 | **yes** (엔진 사망) | yes |
+| B19 | projection 성공 경로만 Close 를 등록한다 | `TestASucceedingProjectionIsStillServedAndClosed` | no | yes |
+| B20 | projection 기동 실패는 강등이고 원장에 안 쓴다 | `TestAFailedStrategyProjectionDoesNotStopTheEngine` · `TestTheDegradedBootWritesNoUndeliveredOutboxRow` | yes (a108) | yes |
+| B21 | alert 운영 표면 조립 실패는 fatal 유지 | 미고정 (endpoint 아님 — 이 change 밖) | no | no |
+| B22 | alert control server 가 서면 Close 를 등록한다 | `TestSucceedingSiblingEndpointsAreStillServedAndClosed` | no | yes |
+| B23 | alert control 기동 실패는 **강등** | `TestAFailedSiblingEndpointDoesNotStopTheEngine` · `TestEveryEndpointCanFailAtOnceAndTheLoopsStillRun` | **yes** (엔진 사망) | yes |
+
+**분기 밖 계약 핀**:
+
+| 계약 | Test | RED observed | GREEN observed |
+|---|---|---|---|
+| 네 표면이 동시에 없어도 루프는 돈다 | `TestEveryEndpointCanFailAtOnceAndTheLoopsStillRun` | yes | yes |
+| 강등 기동도 journal flock 을 쥔다 | `TestTheDegradedSiblingBootStillHoldsTheJournalFlock` | yes | yes |
+| lock.Release defer 가 모든 endpoint Close 보다 먼저 등록된다 | `TestTheJournalLockIsReleasedAfterEveryEndpointClose` | no — §2.4 정적 핀 | yes |

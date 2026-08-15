@@ -1,4 +1,4 @@
-# Risk Pattern Report: `cmd/tossctl/engine.go`
+# Risk Pattern Report: `internal/console/exit_quarantine.go`
 
 | Rule | Location | Message |
 |---|---|---|

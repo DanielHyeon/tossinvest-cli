@@ -1,0 +1,375 @@
+{
+  "file": "cmd/tossctl/httpapi_reader.go",
+  "source_sha256": "876f5a33600f0de326089dd9b15176ec38c30f4183db8c4983b14fd0e8b1fba2",
+  "package": "main",
+  "function": "Snapshot",
+  "receiver": "httpAPIReader",
+  "signature": "httpAPIReader.Snapshot(params=1, results=2)",
+  "start": {
+    "line": 517,
+    "column": 1
+  },
+  "end": {
+    "line": 591,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 519,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 523,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 527,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 531,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 535,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 539,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 543,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 570,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 572,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "else",
+      "at": {
+        "line": 574,
+        "column": 10
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 520,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 524,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 528,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 532,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 536,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 540,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 544,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 578,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 518,
+        "column": 17
+      },
+      "text": "r.Engine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 522,
+        "column": 20
+      },
+      "text": "r.Positions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 526,
+        "column": 17
+      },
+      "text": "r.Orders"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 530,
+        "column": 21
+      },
+      "text": "r.Candidates"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 534,
+        "column": 26
+      },
+      "text": "r.Performance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 538,
+        "column": 19
+      },
+      "text": "r.Settings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 542,
+        "column": 27
+      },
+      "text": "r.Optimization"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 569,
+        "column": 21
+      },
+      "text": "strategyprojection.DormantSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 569,
+        "column": 56
+      },
+      "text": "r.clockNow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 570,
+        "column": 6
+      },
+      "text": "httpapi.StrategyRuntimeAbsent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 571,
+        "column": 21
+      },
+      "text": "r.strategyRuntime.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 573,
+        "column": 22
+      },
+      "text": "strategyprojection.UnavailableSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 573,
+        "column": 61
+      },
+      "text": "r.clockNow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 578,
+        "column": 9
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 589,
+        "column": 27
+      },
+      "text": "r.clockNow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 590,
+        "column": 3
+      },
+      "text": "httpapi.PerformanceFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 590,
+        "column": 55
+      },
+      "text": "httpapi.OptimizationFrom"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 518,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 522,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 526,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 530,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 534,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 538,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 542,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 569,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 571,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 573,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 575,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

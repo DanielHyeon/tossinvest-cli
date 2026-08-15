@@ -1,4 +1,4 @@
-# Risk Pattern Report: `cmd/tossctl/engine.go`
+# Risk Pattern Report: `internal/httpapi/strategy_runtime.go`
 
 | Rule | Location | Message |
 |---|---|---|

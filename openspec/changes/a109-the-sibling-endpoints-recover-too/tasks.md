@@ -39,26 +39,26 @@
 
 ## 2. T2 — 기동 강등·소비자 재부착 (cmd/tossctl/*)
 
-- [ ] 2a FLM 맵 완성(자기 표면: runEngineRun, strategyRuntimeReaderFor,
+- [x] 2a FLM 맵 완성(자기 표면: runEngineRun, strategyRuntimeReaderFor,
   reportStrategyProjectionDegraded) + Pre-Edit 선언.
-- [ ] 2.1 RED: 세 Start 실패 시 엔진 기동이 죽는 현재 동작 고정(seam은
+- [x] 2.1 RED: 세 Start 실패 시 엔진 기동이 죽는 현재 동작 고정(seam은
   `engineStrategyProjectionStart`(engine.go:416) 패키지 var 관례 — T1 완료 불요,
   P1-5).
-- [ ] 2.2 GREEN: 세 fatal 강등(D3) + 보고 일반화(D3a — stderr + 등급표 미등재 obs
+- [x] 2.2 GREEN: 세 fatal 강등(D3) + 보고 일반화(D3a — stderr + 등급표 미등재 obs
   Normal + WithoutCancel goroutine, 금지 3종 주석 유지).
-- [ ] 2.3 RED→GREEN: httpapi lazy 재-dial(D4 개정) — wrapper는 **live client 포함**
+- [x] 2.3 RED→GREEN: httpapi lazy 재-dial(D4 개정) — wrapper는 **live client 포함**
   전체를 감싸고(P0-1), 시도는 백그라운드 single-flight(요청 goroutine에서 dial·probe
   금지, P0-2), 부재/unavailable 화면 구분 보존(nil 검사 2곳 —
   httpapi_reader.go:565·internal/httpapi/strategy_runtime.go:18 — 상태 신호로 교체,
   P1-4), 보고는 상태 전이 1회(P2-4). 냉부팅 순서·가동 중 재시작(새 socket·새 토큰)
   복귀 시나리오 모두.
-- [ ] 2.4 defer 순서 정적 핀(D5a) — lock.Release() defer가 endpoint Close defer보다
+- [x] 2.4 defer 순서 정적 핀(D5a) — lock.Release() defer가 endpoint Close defer보다
   먼저 등록됨을 go/parser로 고정.
-- [ ] 2.5 소비자 오귀속 문구 정직화(D3a-2): engine_alerts_client_unix.go:33–35,
+- [x] 2.5 소비자 오귀속 문구 정직화(D3a-2): engine_alerts_client_unix.go:33–35,
   internal/console/exit_quarantine.go:227–229 — "엔진 부재 단정"을 "부재 또는 강등"
   안내로. 메시지 텍스트 핀 테스트 포함.
-- [ ] 2.6 뮤테이션 원장(t2) — 강등 경로·rate-limit·재부착 교체·문구 핀 각각.
-- [ ] 2.7 구현 후 FLM AST·맵 재최신화.
+- [x] 2.6 뮤테이션 원장(t2) — 강등 경로·rate-limit·재부착 교체·문구 핀 각각.
+- [x] 2.7 구현 후 FLM AST·맵 재최신화.
 
 ## 2b. 리뷰 라운드
 

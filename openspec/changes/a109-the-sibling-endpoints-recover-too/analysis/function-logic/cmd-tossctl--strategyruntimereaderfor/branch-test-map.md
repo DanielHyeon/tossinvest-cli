@@ -1,21 +1,21 @@
 # Branch Test Map: `strategyRuntimeReaderFor`
 
-편집 **전** 상태다(a109 base `016da624`). 네 분기의 **판정**은 a108 이 이미 핀했다 —
-a109 가 여는 것은 「그 판정 뒤에 다시 시도하는 경로가 없다」는 결함이다.
+편집 **후** 상태다(a109 §2.3 GREEN).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | 엔진 디렉터리를 못 정하면 경고 + dormant | 미고정 (경로 해석 실패는 환경 이상) | no | no |
-| B2 | descriptor 부재는 조용한 dormant | `TestADialFailureRendersUnavailableRatherThanNotConfigured` · `TestAnAbsentDescriptorAndADeadOneBootTheSame` | no | yes |
-| B3 | 조사 불가능(ENOTDIR)은 경고 + dormant, **fatal 아님** | `TestAnUninspectableDescriptorDegradesLikeTheConsole` | yes (a108 D4-2 뒤집기) | yes |
-| B4 | dial 실패는 sentinel → unavailable | `TestADeadDescriptorDoesNotStopTheDaemon` · `TestASocketFileWithNoOwnerDegradesTheDaemon` · `TestADialFailureRendersUnavailableRatherThanNotConfigured` | yes (a108) | yes |
+| B1 | ctx 없이 불린다 | 간접 — 프로덕션 호출자(`runHTTPAPI`)는 언제나 ctx 를 준다 | no | no |
 
-**a109 §2.3 이 더하는 시나리오**(이 표의 분기에는 없다 — wrapper 의 성질이다):
+**분기 밖 계약 핀**(이 함수가 실제로 지켜야 하는 것):
 
-| 시나리오 | Test | RED observed | GREEN observed |
+| 계약 | Test | RED observed | GREEN observed |
 |---|---|---|---|
-| 냉부팅 순서: httpapi 가 먼저 뜨고 엔진이 나중에 endpoint 를 발행 → 재시작 없이 회복 | a109 §2.3 (`cmd/tossctl/a109_*_test.go`) | pending | pending |
-| 가동 중 엔진 재시작(새 socket·새 토큰) → live 부착이 실패하기 시작 → 회복 | a109 §2.3 | pending | pending |
-| rate limit 안에서만 시도한다(창 안 재시도 없음) | a109 §2.3 | pending | pending |
-| 요청 goroutine 이 dial·probe 를 부르지 않는다 | a109 §2.3 | pending | pending |
-| 재부착 전 화면 값은 dormant/unavailable 구분을 유지한다 | a109 §2.3 | pending | pending |
+| 냉부팅 순서: 엔진이 나중에 떠도 재시작 없이 회복 | `TestTheDaemonAttachesWhenTheEngineComesUpLater` | yes (NOT_CONFIGURED 고착) | yes |
+| 가동 중 재시작(새 socket·새 토큰) 뒤 회복 | `TestTheDaemonReattachesAfterTheEngineRestarts` | yes (RUNTIME_UNAVAILABLE 고착) | yes |
+| 부팅 1회 해석의 세 화면 값이 그대로 유지된다 | `TestADialFailureRendersUnavailableRatherThanNotConfigured` | no (a108 회귀 핀) | yes |
+| 요청 경로가 dial 을 기다리지 않는다 | `TestTheRequestPathNeverWaitsForADial` | no (기전 핀, GREEN 에서 도입) | yes |
+| 시도는 겹치지 않는다 (rate limit 을 끈 상태에서 측정) | `TestTheAttemptIsSingleFlight` | no (기전 핀) — 뮤테이션 M10 이 구판의 결함을 잡아 분리했다 | yes |
+| 창 안에서는 다시 시도하지 않고 창 밖에서는 한다 | `TestTheAttemptIsRateLimited` | no (기전 핀) | yes |
+| 운영 기본 간격은 30s | `TestTheProductionRedialIntervalIsThirtySeconds` | no | yes |
+| 실패한 시도가 현재 화면 값을 흔들지 않는다 | `TestAFailedAttemptDoesNotClobberTheCurrentScreen` | no | yes |
+| 보고는 상태 전이 시 1회 | `TestTheAttachmentReportsOnlyTransitions` | no | yes |

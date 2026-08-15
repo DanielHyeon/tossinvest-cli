@@ -1,15 +1,15 @@
 {
   "file": "cmd/tossctl/httpapi.go",
-  "source_sha256": "37c2ed8990337096cb98973cba78f1d0e9cc61abade8df115106d754761ef2df",
+  "source_sha256": "fadda2b53b0ba6a6e851cdca81fcc26b598383bcfcb910a0c11bbd86ff5801cd",
   "package": "main",
   "function": "strategyRuntimeReaderFor",
   "signature": "strategyRuntimeReaderFor(params=3, results=1)",
   "start": {
-    "line": 254,
+    "line": 257,
     "column": 1
   },
   "end": {
-    "line": 286,
+    "line": 272,
     "column": 2
   },
   "branches": [
@@ -17,31 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 257,
-        "column": 2
-      }
-    },
-    {
-      "id": "B2",
-      "kind": "if",
-      "at": {
-        "line": 265,
-        "column": 2
-      }
-    },
-    {
-      "id": "B3",
-      "kind": "if",
-      "at": {
-        "line": 266,
-        "column": 3
-      }
-    },
-    {
-      "id": "B4",
-      "kind": "if",
-      "at": {
-        "line": 276,
+        "line": 259,
         "column": 2
       }
     }
@@ -50,28 +26,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 262,
-        "column": 3
+        "line": 266,
+        "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 273,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 283,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 285,
+        "line": 271,
         "column": 2
       }
     }
@@ -80,94 +42,48 @@
     {
       "kind": "call",
       "at": {
-        "line": 256,
-        "column": 17
+        "line": 260,
+        "column": 9
       },
-      "text": "engineJournalDir"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 258,
-        "column": 3
-      },
-      "text": "fmt.Fprintf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 264,
-        "column": 16
-      },
-      "text": "strategyprojectionrpc.DescriptorPath"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 265,
-        "column": 19
-      },
-      "text": "os.Stat"
+      "text": "context.Background"
     },
     {
       "kind": "call",
       "at": {
         "line": 266,
-        "column": 7
+        "column": 11
       },
-      "text": "errors.Is"
+      "text": "resolveStrategyRuntimeReader"
     },
     {
       "kind": "call",
       "at": {
-        "line": 267,
-        "column": 4
+        "line": 270,
+        "column": 2
       },
-      "text": "fmt.Fprintf"
+      "text": "attachment.attach"
     },
     {
       "kind": "call",
       "at": {
-        "line": 275,
-        "column": 21
+        "line": 270,
+        "column": 20
       },
-      "text": "strategyprojectionrpc.Dial"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 277,
-        "column": 3
-      },
-      "text": "fmt.Fprintf"
+      "text": "resolveStrategyRuntimeReader"
     }
   ],
   "assignments": [
     {
-      "kind": ":=",
+      "kind": "=",
       "at": {
-        "line": 256,
-        "column": 2
+        "line": 260,
+        "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 264,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 265,
-        "column": 5
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 275,
+        "line": 262,
         "column": 2
       }
     }

@@ -1,15 +1,15 @@
 {
   "file": "cmd/tossctl/engine.go",
-  "source_sha256": "8111c1c9e20f501b6221e231836fb02d7d03d127b3592892175c1beb38788381",
+  "source_sha256": "3d941a4616837f73ce2a2acf87ed4bfada5eaccdf4b77fa966b46ac4cd972209",
   "package": "main",
-  "function": "reportStrategyProjectionDegraded",
-  "signature": "reportStrategyProjectionDegraded(params=5, results=0)",
+  "function": "reportEngineEndpointDegraded",
+  "signature": "reportEngineEndpointDegraded(params=5, results=0)",
   "start": {
-    "line": 369,
+    "line": 468,
     "column": 1
   },
   "end": {
-    "line": 405,
+    "line": 505,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 375,
+        "line": 475,
         "column": 2
       }
     }
@@ -26,7 +26,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 376,
+        "line": 476,
         "column": 3
       }
     }
@@ -35,15 +35,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 371,
-        "column": 13
-      },
-      "text": "strategyprojectionrpc.ControlDirectory"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 372,
+        "line": 470,
         "column": 12
       },
       "text": "fmt.Sprintf"
@@ -51,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 373,
+        "line": 471,
         "column": 2
       },
       "text": "fmt.Fprintf"
@@ -59,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 396,
+        "line": 496,
         "column": 14
       },
       "text": "context.WithoutCancel"
@@ -67,14 +59,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 397,
+        "line": 497,
         "column": 5
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 398,
+        "line": 498,
         "column": 7
       },
       "text": "ectx.Notifier.Notify"
@@ -84,28 +76,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 371,
+        "line": 470,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 372,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 396,
+        "line": 496,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 398,
+        "line": 498,
         "column": 3
       }
     }
@@ -114,11 +99,10 @@
     {
       "kind": "go",
       "at": {
-        "line": 397,
+        "line": 497,
         "column": 2
       }
     }
   ],
-  "defers": null,
-  "revision": "base"
+  "defers": null
 }
