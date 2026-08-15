@@ -70,22 +70,11 @@ func StartPositionPolicyRuntimeServer(engineDir string,
 		return nil, fmt.Errorf("engine: validating position policy runtime engine directory: %w", err)
 	}
 	controlDir := positionpolicyrpc.RuntimeControlDirectory(dir)
-	if err := os.Mkdir(controlDir, 0o700); err != nil {
-		if !errors.Is(err, os.ErrExist) {
-			return nil, fmt.Errorf("engine: creating position policy runtime directory: %w", err)
-		}
-		// 디렉터리가 이미 있다는 것은 지난 기동의 잔재가 있다는 뜻이다. 회수는
-		// 전체성이다 — 자기 수명주기가 만들 수 있는 부분 상태를 전부 치우고 디렉터리째
-		// 비운 뒤 새로 만든다. **수락 중인 socket은 최종 이름이든 staging 이름이든
-		// 지우지 않는다**(design D2 + a109 §1-fix F5). 생사는 권한 비트로 추정하지 않고
-		// 연결해서 묻는다.
-		if err := positionpolicyrpc.ReclaimStalePrivateEndpoint(controlDir,
-			positionPolicyRuntimeEndpointNames()); err != nil {
-			return nil, fmt.Errorf("engine: reclaiming position policy runtime directory: %w", err)
-		}
-		if err := os.Mkdir(controlDir, 0o700); err != nil {
-			return nil, fmt.Errorf("engine: recreating position policy runtime directory: %w", err)
-		}
+	// Mkdir → 회수 → 재Mkdir 의례는 형제와 **같은 기계**를 쓴다(a109 §2b.3 G9 —
+	// 회수를 한 곳에 두는 이유가 그 부름에는 적용되지 않을 근거가 없다).
+	if err := openReclaimedControlDirectory(controlDir, "position policy runtime directory",
+		positionPolicyRuntimeEndpointNames()); err != nil {
+		return nil, err
 	}
 	// 회수가 끝났으므로 이 디렉터리는 언제나 **이번 기동이 만든 것**이다. 실패 정리가
 	// 조건 없이 지워도 되는 근거가 그것이다.
@@ -171,24 +160,10 @@ func (s *PositionPolicyRuntimeServer) Close() error {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 		result = s.server.Shutdown(ctx)
-		// listener는 **여기서 우리가** 닫는다. Shutdown이 Serve의 listener 등록을
-		// 앞지르면 Go는 정리를 Serve goroutine의 defer로 미루는데, 그 늦은 정리가
-		// 도착할 때 경로에는 이미 후계자의 socket이 앉아 있을 수 있다(a108 A1 F5는
-		// 300라운드 중 3회 재현). 닫는 시점을 예정된 goroutine에 맡기지 않는다.
-		// 이미 Shutdown이 닫았으면 net.ErrClosed가 오는데, 그것은 성공과 같다.
-		if s.listener != nil {
-			if err := s.listener.Close(); err != nil && !errors.Is(err, net.ErrClosed) &&
-				result == nil {
-				result = err
-			}
-		}
-		// 경로를 지울 권한은 이 루프 하나뿐이다 — listener는 자기 이름을 unlink하지
-		// 않고(SetUnlinkOnClose(false)), 기억하는 이름도 이미 사라진 임시 이름이다.
-		for _, path := range []string{s.descriptor, s.socket, s.controlDir} {
-			if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) && result == nil {
-				result = err
-			}
-		}
+		// listener 해체와 경로 제거는 형제와 **같은 기계**를 쓴다(a109 §2b.3 G9).
+		// 왜 listener를 여기서 우리가 닫는지, 왜 제거가 이 한 곳뿐인지는 그 기계의
+		// 자기 문서에 있다(`closePrivateEndpointFiles`).
+		result = closePrivateEndpointFiles(result, s.listener, s.descriptor, s.socket, s.controlDir)
 	})
 	return result
 }
