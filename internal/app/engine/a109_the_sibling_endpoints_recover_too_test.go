@@ -22,8 +22,12 @@ package engine
 // "그 권한의 잔재에서 기동이 이어진다"이므로 만드는 방법은 자유다.
 
 import (
+	"errors"
 	"net"
 	"os"
+	"path/filepath"
+	"slices"
+	"sort"
 	"testing"
 	"time"
 
@@ -219,5 +223,140 @@ func TestTheSiblingEndpointsRejectAPermissiveSocketLeftover(t *testing.T) {
 				t.Fatalf("거부하면서 잔재를 지웠다: %v", err)
 			}
 		})
+	}
+}
+
+// a109ControlEntries는 control 디렉터리에 남은 이름을 정렬해 돌려준다.
+func a109ControlEntries(t *testing.T, controlDir string) []string {
+	t.Helper()
+	entries, err := os.ReadDir(controlDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	names := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		names = append(names, entry.Name())
+	}
+	sort.Strings(names)
+	return names
+}
+
+// TestTheSiblingEndpointsReclaimTheirStagingLeftovers — a109 §1.3(잔재 쪽).
+//
+// 발행 전 임시 이름으로 죽은 산출물이다. 두 종류가 있고 **둘 다 현행이다**:
+//
+//	os.CreateTemp 이름   descriptor 발행 3벌이 오늘도 만든다(`.position-policy-runtime-*`,
+//	                     `.endpoint-*`). fold는 a109의 선언된 생략이므로 계속 만들어진다.
+//	`.s-` 이름           a109가 socket·descriptor 발행에 들이는 staging 접두.
+//
+// 오늘은 어떤 검증도 디렉터리를 **열거하지 않으므로** 이것들이 조용히 쌓인다. 기동은
+// 계속되니 아무도 모르고, 부팅마다 하나씩 늘어난다.
+//
+// 재는 것은 "기동이 되는가"가 아니라 **"회수 후 잔재가 0인가"**다. 전자는 오늘도 참이다.
+func TestTheSiblingEndpointsReclaimTheirStagingLeftovers(t *testing.T) {
+	for _, endpoint := range a109Endpoints() {
+		t.Run(endpoint.name, func(t *testing.T) {
+			dir := privateEngineTestDir(t)
+			controlDir := endpoint.controlDir(dir)
+			a109ControlDir(t, controlDir)
+
+			// 현행 CreateTemp 잔재(반쯤 쓰인 descriptor)
+			if err := os.WriteFile(filepath.Join(controlDir, endpoint.stagingLeftover),
+				[]byte(`{"socket":"`), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			// 신규 `.s-` 잔재 두 모양: 정규 파일(descriptor가 되려다 만 것)과
+			// socket(bind는 됐는데 rename 전에 죽은 것)
+			if err := os.WriteFile(filepath.Join(controlDir, ".s-e1a2b3c"),
+				[]byte(""), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			a109DeadSocket(t, filepath.Join(controlDir, ".s-s7f6e5d4"), 0o600)
+
+			server, err := endpoint.start(t, dir)
+			if err != nil {
+				t.Fatalf("staging 잔재에서 기동이 거부됐다: %v", err)
+			}
+			t.Cleanup(func() { _ = server.Close() })
+
+			a109Accepts(t, endpoint.socket(dir))
+			got := a109ControlEntries(t, controlDir)
+			want := []string{filepath.Base(endpoint.descriptor(dir)),
+				filepath.Base(endpoint.socket(dir))}
+			sort.Strings(want)
+			if !slices.Equal(got, want) {
+				t.Fatalf("회수 후 control 디렉터리 = %v, want %v — "+
+					"치우지 않은 staging 잔재는 부팅마다 하나씩 쌓인다", got, want)
+			}
+		})
+	}
+}
+
+// TestTheSiblingEndpointsRefuseAForeignEntry — a109 §1.3(낯섦 쪽).
+//
+// 우리가 만들 수 없는 이름이 있으면 이 디렉터리는 우리 잔재가 아니다. 그러면 **아무것도
+// 건드리지 않고 거부한다** — 치우면 남의 것을 치우는 것이고, 남의 것을 치우지 않으려면
+// 우리 것도 못 치운다.
+//
+// 이 규칙은 socket을 발행하는 endpoint에만 적용된다(design D2a). command endpoint에
+// 같은 거부를 넣으면 이물 하나가 격리 해제 표면을 매 부팅 지운다 — 아래 command 핀이
+// 그 반대 방향을 잰다.
+func TestTheSiblingEndpointsRefuseAForeignEntry(t *testing.T) {
+	for _, endpoint := range a109Endpoints() {
+		t.Run(endpoint.name, func(t *testing.T) {
+			dir := privateEngineTestDir(t)
+			controlDir := endpoint.controlDir(dir)
+			a109ControlDir(t, controlDir)
+			foreign := filepath.Join(controlDir, "somebody-elses.json")
+			if err := os.WriteFile(foreign, []byte("{}"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			server, err := endpoint.start(t, dir)
+			if err == nil {
+				_ = server.Close()
+				t.Fatal("낯선 엔트리가 있는 control 디렉터리에서 기동이 성공했다 — " +
+					"이 디렉터리는 우리 잔재가 아니다")
+			}
+			if _, err := os.Lstat(foreign); err != nil {
+				t.Fatalf("거부하면서 낯선 엔트리를 지웠다: %v", err)
+			}
+		})
+	}
+}
+
+// TestTheCommandEndpointSweepsItsStagingAndLeavesStrangers — a109 §1.3(command 쪽).
+//
+// loopback TCP endpoint에는 socket이 없으므로 pre-chmod 병도 탈취도 없다. 남는 병은
+// 하나다: `os.CreateTemp(".position-policy-control-*")`가 crash 때 남기는 잔재를
+// **아무도 치우지 않는다.**
+//
+// 그래서 여기 더하는 것은 **위생뿐**이고, 낯선 엔트리는 오늘처럼 무시한다. 이 endpoint가
+// 잃는 것은 격리 해제 — 격리된 포지션의 손절 포함 미판정 상태를 푸는 유일한 장중
+// 경로다. 이물 하나가 그 표면을 매 부팅 지우는 새 실패 경로를 만들지 않는다(D2a).
+func TestTheCommandEndpointSweepsItsStagingAndLeavesStrangers(t *testing.T) {
+	dir := privateEngineTestDir(t)
+	controlDir := positionpolicyrpc.ControlDirectory(dir)
+	a109ControlDir(t, controlDir)
+	staging := filepath.Join(controlDir, ".position-policy-control-1902847563")
+	if err := os.WriteFile(staging, []byte(`{"address":`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	foreign := filepath.Join(controlDir, "somebody-elses.json")
+	if err := os.WriteFile(foreign, []byte("{}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	server, err := StartPositionPolicyCommandServer(dir, &fakePolicyCommands{})
+	if err != nil {
+		t.Fatalf("staging 잔재와 이물이 있는 디렉터리에서 command 기동이 거부됐다: %v", err)
+	}
+	t.Cleanup(func() { _ = server.Close() })
+
+	if _, err := os.Lstat(staging); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("자기 staging 잔재가 남았다(err=%v) — 부팅마다 하나씩 쌓인다", err)
+	}
+	if _, err := os.Lstat(foreign); err != nil {
+		t.Fatalf("낯선 엔트리를 지웠다: %v — command endpoint의 회수는 위생뿐이다", err)
 	}
 }

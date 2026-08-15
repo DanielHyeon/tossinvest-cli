@@ -29,9 +29,12 @@
   현재 동작을 고정(탈취 → 거부가 목표 동작). 관측: 두 endpoint 모두 두 번째 Start가
   **성공**했다(`주인이 수락 중인 socket 위에서 두 번째 기동이 성공했다`). 핀은 거부와
   "거부하면서 주인의 socket을 그대로 둔다"(inode 동일성 + 재수락) 둘 다 잰다.
-- [ ] 1.3 RED: staging 잔재(**현행·구버전 공통** CreateTemp `.position-policy-*`/
+- [x] 1.3 RED: staging 잔재(**현행·구버전 공통** CreateTemp `.position-policy-*`/
   `.endpoint-*` + 신규 `.s-*`)와 낯선 엔트리 각각의 기동 결과 고정(잔재=회수,
-  낯섦=거부 — socket endpoint 한정, command는 무시 유지 D2a).
+  낯섦=거부 — socket endpoint 한정, command는 무시 유지 D2a). 관측: 두 socket endpoint
+  모두 회수 후 디렉터리에 잔재 3개가 그대로 남고(`[.position-policy-runtime-… .s-e… .s-s…
+  endpoint.json runtime.sock]`), 낯선 엔트리가 있어도 기동이 **성공**했다. command는
+  자기 staging 잔재가 남았고(err=nil) 이물 무시는 이미 참이다.
 - [ ] 1.4 GREEN: 이름-독립 staged listen(11자 staging — hex 절단, D1a)·전체성 회수
   (staging 소유 uid 검증 포함)·connect probe를 `internal/positionpolicyrpc`에 추가,
   두 socket transport가 사용(D1·D2). 아는-이름 집합은 호출자가 넘기고 완전성 테스트로
