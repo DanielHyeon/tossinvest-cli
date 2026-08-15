@@ -282,3 +282,237 @@ RED 테스트가 됐다. 새 probe 3개는 100.0% 측정됐다.
 7. **X9(attestation 카탈로그)가 a100을 배포 불가로 만들 수 있다.** 재발급이 a071의 서명 절차를
    요구하면 서명 도구 부재(C4)에 걸려 a105 없이는 배포할 수 없다. tasks 0.10이 착수 조건으로
    이것을 먼저 확인하는 이유다.
+
+## 2026-08-15 current-main 재동결 기록
+
+2026-08-11의 범위 축소는 유지하되 완료 표시는 재사용하지 않았다. 실행 base는 current main
+`882a0b490b0b6d2eb7abe5c5040c514776f49f3e`로 재고정했고, 다른 change로 이관하지 않는다.
+
+독립 A0가 찾은 착수 차단과 처리는 다음과 같다.
+
+- M-A partial/4b 실패는 더 이상 착수를 허용하지 않는다. parent child-id의 **local receipt**가
+  child fill local receipt보다 엄격히 먼저인 완전 PASS와 evidence-backed raw-status 표만 0.2/0.11을
+  닫는다. 2026-08-14 runbook은 만료된 역사본이며 매 세션 read-only 재발행과 주문별 사람 승인이 필요하다.
+- `PAUSED`/unknown은 ACTIVE가 아니고 mutation 금지+operator alert다. raw status/child id는
+  손실 없이 보존한다.
+- worker-only `protection_child_orders` registrar가 fill 전에 exact parent/client/scope/generation
+  owner를 기록한다. `TrackedFillOrders`, `confirmedFillOwners`, `resolveFillOrigin`이 ordinary/protection
+  owner를 exact union한다. child-before-registration은 소급 apply/backfill 없이
+  `ATTRIBUTION_FAILED` reconcile/alert와 mutation block으로 끝나고 account reconciliation만 복구한다.
+- current `engine.Runtime.Loops`는 하나의 non-cancel return이 전체 runtime을 내리므로 worker를
+  넣지 않는다. recovery 뒤 `AuxiliaryExecutor`로 기동·취소·drain하고 ordinary cycle error는
+  반환하지 않는다. panic/예상 밖 return은 `protection.convergence.worker_stopped`와 durable
+  reconcile/alert만 남기며 다른 safety loop와 entry gate를 바꾸지 않는다.
+- lifecycle public API seal을 T3 뒤에 두던 compile-order 순환을 없앴다. T2-B가 planned worker
+  call graph의 exact pure allowlist/authority-minting 0을 먼저 RED/GREEN하고 A2-B accepted된 뒤 T3를 연다.
+- config keys/defaults/invalid-block refusal, stable alert identity/episode, `/position-management` shared
+  projection을 normative spec에 고정했다.
+
+current-main read-only baseline은 `protectionlifecycle` 83.4%, `journal` 75.1%, `app/engine` 63.7%,
+`cmd/tossctl` 55.2%로 모두 PASS했다. 과거 a099 RED blocker는 current main의 사실이 아니다.
+R0 evidence는 기존 경계와 `engineRuntime`, `Gateway.adapt`, `TrackedFillOrders`,
+`confirmedFillOwners`, `resolveFillOrigin`, auxiliary stop seam, lifecycle API guard를 current source SHA로
+관리한다. `filldetect`는 계속 편집하지 않고 `ProjectPosition`은 citation-only/no-fallback이다.
+
+Manager는 OpenSpec/분석/최종 증거만 소유한다. 각 Terra 구현 로트는 별도 Terra 적대 리뷰어가
+검토하고 구현자 수정 뒤 같은 리뷰어의 `P0=0, P1=0`과 Manager 문서 acceptance를 받아야 다음
+로트로 간다. 전체 구현 후 gstack review, `make sdd-sync`, `make sdd-check`,
+`make gate CHANGE=a100-wire-fill-to-broker-protection`를 실행하고 Manager가 완료 여부를 대조한다.
+
+### R0 최종 독립 재검토 영수증
+
+2026-08-15 A0 Terra가 최신 shared 상태를 처음부터 다시 읽고 다음을 독립 재실행했다.
+
+- HEAD/base `882a0b490b0b6d2eb7abe5c5040c514776f49f3e` 일치
+- strict OpenSpec validate PASS, `check_analysis.py` PASS, `git diff --check` PASS
+- current `ast.json` 17개의 source SHA-256 전부 현재 소스와 일치
+- `make sdd-sync`는 hard index를 갱신하고 `all indexes current`로 종료(GBrain busy advisory만 유지)
+- T4 실행 순서는 **T4-A(4.5~4.6 authority/exit/child) accepted → T4-B(3.9·4.1~4.4 runtime wiring)**이며,
+  그 전에는 worker construction/start 및 broker mutation 도달 경로를 열 수 없음
+
+최종 판정은 **ACCEPT — P0=0, P1=0, P2=0**이다. R0만 닫혔으며 구현 착수 권위는 아니다.
+남은 hard gate는 사람의 주문별 승인을 받은 M-A complete PASS, parent child-id local receipt의
+child fill local receipt 엄격 선행, 그리고 그 결과로 동결한 0.11 raw-status 판정표다.
+
+### 2026-08-15 M-A 승인 후 read-only preflight와 M0 결정
+
+사용자가 M-A를 승인했지만 Terra preflight와 별도 A-M 적대 감사는 **HOLD/NO-GO**로 판정했고
+주문·preview·config·engine·Docker·journal mutation은 0건이었다.
+
+- 시점은 토요일 장외였고 다음 KR 세션 직전 재검증이 필요하다.
+- official OPEN conditional은 마스킹 기준 `PAUSED` 2건·`WATCHING` 3건이었다. 기존 주문은 M-A
+  cleanup과 섞지 않는다.
+- 046890/466100은 이미 OPEN/adopted 관리 상태이고 1주 108490에는 PAUSED conditional이 있어
+  fresh 비관리 최소위험 후보가 없었다. 관리 보유 1주 사용은 자동 선택하지 않고 별도 사람 결정이다.
+- official parent read는 가능했으나 WTS child surface는 invalid였고 installed/deployed auth·soak
+  authority가 갈렸다. 당일 fresh authority가 아니면 place 금지다.
+- 결정적 P0는 현 verify record가 parent/child successful response receipt의 monotonic sequence,
+  parent fsync → child request barrier와 raw payload digest를 남기지 않는다는 점이었다. shell wrapper와
+  wall/server timestamp는 process 내부 response 경계를 증명하지 못한다.
+
+따라서 다른 change를 만들지 않고 M0(tasks 0.2a)를 A100에 추가했다. 기존 human-confirmed
+`verify run --include-trigger --confirm-each`의 trigger step에만 official raw causal receipt를 추가하고,
+runtime·engine·protection·attestation·journal에는 연결하지 않는다. Terra-M0가 RED/GREEN을 구현하고
+별도 A-M0가 `P0=0/P1=0`으로 재검토하기 전에는 승인 상태와 무관하게 M-A place를 열지 않는다.
+
+### 2026-08-15 A-M0 1차 설계 리뷰 — REJECT 후 보강
+
+A-M0는 transport body-read 경계가 caller에 노출되지 않음, `readRetry`가 429를 성공으로 덮을 수 있음,
+create 직후 crash 시 exact parent cleanup identity가 durable하지 않음, confirm-each의 replay 예외,
+parent/child exact identity 필드 부족을 P0로 판정했다. 구현을 열지 않고 같은 A100의 M0 계약을 다음처럼
+보강했다.
+
+- M0는 exact trigger-only resume/redo mode이며 ttl-edge·다른 redo를 pre-broker 거부한다.
+- official transport가 every-attempt body-read-complete/status/raw-result를 decode 전에 제공한다.
+- parent/child exact ID는 causal receipt가 아니라 owner-only verify cleanup checkpoint에 즉시 fsync한다.
+- durable parent child-ID receipt부터 durable child fill까지의 첫 401/429/read/decode/identity gap은 irreversible
+  HOLD이며 retry 성공이 지우지 못한다.
+- exact raw field schema/tag equality, file+directory fsync, symlink/owner/mode 및 kill-point RED를 추가했다.
+
+이 보강은 아직 구현 착수 권위가 아니다. 같은 A-M0가 문서 재검토에서 `P0=0/P1=0`을 확인해야 한다.
+
+2차 재검토는 create response→checkpoint 사이의 unavoidable crash window와 `Runner.Run` cleanup
+prologue를 추가 P0로 찾았다. 이에 M0-only pre-create pending client intent를 owner-only verify record에
+먼저 fsync하고, crash resume은 official all-page unique match를 checkpoint한 뒤 mutation 없이 HOLD하도록
+정했다. parent raw child ID는 exact child checkpoint를 먼저 fsync하고 그 뒤 causal receipt를 fsync한다.
+ordinary outstanding가 있으면 cleanup prologue/broker factory 전에 거부하며, 401도 critical gap이고
+parent/child equality는 서로 다른 두 ID group으로 분리했다. 이 2차 보강 역시 같은 A-M0의 재수용 전에는
+구현 권위가 아니다.
+
+### 2026-08-15 A-M0 최종 문서 재검토 — ACCEPT
+
+동일 A-M0 reviewer가 최신 문서·current source seam과 strict validation을 다시 대조했다. 결론은
+**P0=0, P1=0**이며 Terra-M0 구현 착수를 승인했다. 승인 범위는 measurement-only M0뿐이다.
+구현 뒤 실제 diff/RED-GREEN/kill-point mutation을 별도 Terra adversary가 재검토하고 P0/P1을 0으로
+닫기 전에는 M-A place를 실행하지 않는다.
+
+- strict OpenSpec: 93/93 PASS
+- `check_analysis.py --change a100-wire-fill-to-broker-protection`: PASS
+- `git diff --check`: PASS
+
+### 2026-08-15 M0 구현 독립 리뷰와 Manager acceptance
+
+Terra 구현을 core/fixture와 receipt 하위 소유권으로 분리했고, 각 구현과 분리된 Terra adversary가
+실제 diff를 공격했다. 최초 core 리뷰는 재시작 중복 POST, arbitrary Broker+trace 위조, parent checkpoint
+writer 실패의 ordinary FAIL, exact-mode full catalogue 실행, pending recovery 불가, 거짓 zero-fill PASS를
+찾았다. receipt 리뷰는 parent path TOCTOU, concurrent/duplicate lease, arbitrary append, persistence 실패 뒤
+재사용, symlink ancestor, empty-body digest 누락을 찾았다. 구현자가 RED-first로 수정한 뒤 같은 reviewer가
+재검토했다.
+
+- A-M0 core 최종: **ACCEPT, P0=0, P1=0**. same concrete `official.Client`가 mutation과 raw+attempt를
+  함께 소유하고, exact prerequisites/pending recovery/manual HOLD/terminal checkpoint failure/causal ordering을
+  고정했다.
+- A-M0-R receipt 최종: **ACCEPT, P0=0, P1=0, P2=0**. 모든 path component dirfd/no-follow, leaf O_EXCL,
+  file→same-dirfd fsync, exclusive run lease, lease-only typed writer, poison latch와 empty-body digest를 확인했다.
+- core reviewer P2 하나는 첫 trace seam의 독립 재생 가능한 pre-GREEN commit 영수증이 없다는 과정상
+  한계다. 구현 결과 테스트와 mutation 대응은 검증됐으나 역사적 RED 순서를 새로 만들어내지 않고 그대로
+  기록한다.
+
+Manager 독립 재실행:
+
+- `go test ./internal/official ./internal/verifylive ./cmd/tossctl -count=1`: PASS
+- 같은 3 package `-race`: PASS
+- scoped `go vet`, `git diff --check`, strict OpenSpec validate: PASS
+- `check_analysis.py --change a100-wire-fill-to-broker-protection`: PASS
+
+따라서 tasks 0.2a와 8.0만 완료로 인정한다. M-A 실주문은 별도의 fresh session preflight와 주문별 사람
+승인이 필요하고 현재 장외/후보·residual 상태 때문에 여전히 HOLD다. M-A complete PASS와 0.11 raw-status
+판정표 전에는 T1을 열지 않는다.
+
+### 2026-08-15 M-A 다음 진행 재검토 — HOLD 유지
+
+M0 acceptance 뒤 Terra preflight와 구현자와 분리된 A-M Terra가 current state를 read-only로 다시
+감사했다. 두 결과는 일치했다.
+
+- 시장 폐장, OPEN conditional 5건(`PAUSED` 2/`WATCHING` 3), 후보 보유의 managed/residual 겹침,
+  incomplete sellable receipt, `trading.conditional=false`, stale soak/authority 때문에 실제 주문을
+  열 수 없다.
+- PATH 설치 binary는 M0 receipt flag가 없는 2026-07-30 build다. reviewed source에서 임시 candidate를
+  만들어 source 36건·SHA·help·local tests를 봉인했지만, `commit: unknown` dirty-source artifact이고
+  설치되지 않아 장중 execution authority가 아니다.
+- 사용자의 일반적인 진행 승인은 구체적인 symbol·trigger·expiry·1주·confirm token을 보여 준 뒤의
+  주문별 승인으로 대체할 수 없다.
+
+판정은 **A-M HOLD — P0: 실행 가능한 동일성 있는 M0 설치 artifact 부재와 시장 폐장;
+P1: residual/후보·sellable·auth/rate·soak·conditional gate 미완결**이다. preview/place/modify/cancel,
+verify resume, config/lifecycle mutation은 0건이었다. tasks 0.2와 0.11은 계속 미완료이고 T1은 열지 않는다.
+
+### 2026-08-15 M0 release artifact 재검토 — ACCEPT, 설치는 별도 gate
+
+Terra 구현 담당은 기존 `commit: unknown` 후보를 설치하지 않고, current reviewed source를 완전히
+봉인한 `/tmp/a100-m0-artifact.M8EeNi`를 만들었다. exact HEAD, binary-safe tracked patch, 206개
+untracked input, 14,540-entry source archive와 NUL-safe manifest, Go toolchain/build command/ldflags,
+candidate self-report, M0 help와 focused test evidence를 포함한다. 별도 source extraction 두 곳의
+binary SHA는 모두
+`899a74aca0d72411de80bb92fe89cfbdf31948dbf008635a1c4bb7125ddae882`로 같았다.
+
+Manager가 1차 대조에서 top-level manifest 부재를 찾아 구현자에게 돌려보냈다. 구현자는 receipt의
+immutable payload를 self-excluding `SHA256SUMS`로 다시 봉인했고 Manager와 별도 Terra adversary가
+각각 50/50 PASS를 재현했다. adversary 최종 판정은 **P0=0, P1=0, P2=0**이다. source archive path
+set과 NUL manifest, embedded version/commit/date, installed preimage와 same-filesystem atomic
+install/rollback 계획도 독립 일치했다.
+
+이 acceptance는 artifact provenance와 향후 원복 절차에만 해당한다. `/home/daniel/.local/bin/tossctl`
+은 여전히 SHA `b0e805f3…da96f9`의 기존 binary이며 실제 install, runtime/config/Broker/verify mutation은
+0건이다. 설치는 별도 명시 승인과 fresh preimage 확인이 필요하고, 설치 승인은 주문별 LIVE 승인을
+대체하지 않는다. 시장 폐장과 residual/후보/auth/rate/soak gate도 그대로이므로 M-A, 0.11, T1은
+계속 HOLD다.
+
+### 2026-08-15 M0 atomic install 리뷰 — ACCEPT, live scope는 계속 HOLD
+
+후속 승인 범위를 CLI 한 파일의 원자 설치로 한정했다. Terra 설치 담당은 candidate 50/50 seal과
+기존 PATH preimage를 다시 확인하고 same-directory backup·staged candidate를 각각 fsync한 뒤 단일
+atomic rename과 directory fsync를 수행했다. live target은 candidate SHA `899a74ac…e882`, backup은
+preimage SHA `b0e805f3…96f9`이고 둘 다 regular non-symlink `0755 daniel:daniel`, 같은 filesystem이다.
+postcheck는 isolated HOME의 identity/help뿐이었고 rollback은 필요하지 않았다.
+
+별도 reviewer의 1차 판정은 install integrity `P0=0`이었지만, receipt 직후 계속 갱신된 token/marker/
+log/WAL을 사전 snapshot하지 않은 비간섭성 P1을 남겼다. 별도 Terra가 read-only attribution receipt를
+봉인했다. installation보다 수시간 먼저 기동한 동일 engine PID와 containers(restart 0), 설치 직전부터
+이후까지 이어진 `reconcile.clean` cadence, 설치 전 config hash/mtime, audit/order/verify mutation 0건이
+기존 엔진의 자연 쓰기를 강하게 증명했다. 같은 reviewer 재검토는 **P0=0, P1=0, P2=1**로 P1을
+폐쇄했다. P2는 historical 개별 syscall owner를 사후 확정할 수 없다는 비차단 한계다.
+
+따라서 installed M0 identity gate는 ACCEPT다. 그러나 이 설치는 `verify run --include-trigger`/`--resume`,
+fresh Broker preflight, 주문, config flip, Docker/engine action을 승인하지 않는다. M-A와 0.11, 제품 lot은
+계속 시작 금지다.
+
+### 2026-08-15 fresh M-A read-only preflight 리뷰 — evidence ACCEPT, live HOLD
+
+후속 승인은 Broker/local read-only preflight에만 한정했다. Terra 수집 담당은 installed M0 identity,
+market/auth/rate, official conditional OPEN, holdings/sellable, local verify/config, soak/attestation을 읽고
+어떤 preview·주문·verify run/resume·config·lifecycle mutation도 실행하지 않았다.
+
+별도 Terra adversary는 최초 receipt의 “pagination incomplete”를 P1로 반려했다. 같은 시점의 독립
+forced-OpenAPI `--status OPEN --limit 100` read는 `count=5`, `has_next=false`, cursor 없음,
+`PAUSED` 2·`WATCHING` 3의 terminal 결과였다. 수집 담당은 추가 Broker 호출 없이 그 독립 증거를
+귀속한 `/tmp/a100-ma-preflight-corrected.kSn14D`를 새로 봉인했고, 같은 reviewer가 mode/owner,
+3/3 hash, redaction과 pagination 정정을 재검토했다. 최종 receipt verdict는
+**ACCEPT — P0=0, P1=0, P2=1**이다. P2는 host process survey의 runtime 귀속 한계다.
+
+그러나 운영 M-A는 **HOLD/NO-GO**다. KR 폐장, 기존 OPEN 5건의 사람별 retain/cancel 결정 부재,
+official sellable 불완전과 미관리 whole-share KR 후보 부재, soak `ready=false`/streak 0/window 0,
+attestation binary-unbound, `conditional-trigger=deferred`, `trading.conditional=false`가 남았다.
+pagination 정정은 이 gate들을 닫지 않는다. tasks 0.2/0.11과 T1은 계속 미완료이며 다음 live action,
+preview 또는 toggle은 허용되지 않는다.
+
+### 2026-08-15 R0/M0 selective source landing review
+
+사용자는 시장 폐장과 독립적인 R0 current-main evidence와 M0 measurement tooling만 별도 랜딩하도록
+승인했다. 선별 diff는 `cmd/tossctl/verify*`, M0 read-only `internal/official`, `internal/verifylive`, 이 change의
+분석·명세로 한정하며 engine/runtime product worker, journal schema, protection lifecycle, Docker/compose와
+A112/PM 파일을 포함하지 않는다. 이 landing은 A100 완료·archive·배포가 아니며 0.2 M-A, 0.11과 T1 이후
+checkbox를 바꾸지 않는다.
+
+두 Terra landing reviewer와 기존 M0/receipt adversary는 same official-client binding, exact CLI mode,
+pending recovery/manual HOLD, dirfd/no-follow/O_EXCL/fsync/exclusive lease/poison, causal child barrier를 다시
+검증해 P0=0/P1=0을 보고했다. GitHub full test의 최초 attempt에서 기존 execgw test가 닫힌 임시 port의
+재사용 불가능성을 가정해 실제 403을 받은 flaky failure가 발생했다. Terra 구현자는 테스트만 deterministic
+pre-write RoundTripper로 바꾸고 정확히 `POST /oauth2/token` 한 번만 transport에 도달하며 order POST는
+도달하지 않음을 고정했다. 별도 reviewer 재검토는 P0=0/P1=0/P2=0이고, 후속 GitHub CI는 PASS다.
+
+전체 `make gate CHANGE=a100-wire-fill-to-broker-protection`의 task-completeness 단계는 의도대로 실패한다.
+그 gate는 A100 전체 완료를 판정하므로 이 부분 랜딩에서 통과했다고 주장하거나 checkbox를 조작하지 않는다.
+부분 랜딩의 hard gate는 scoped tests/race/vet, strict OpenSpec, logic-map analysis, current CodeGraph
+`make sdd-check`, exact staged-path audit, final gstack P0/P1=0과 GitHub CI다. A100 전체 gate는 모든 제품
+lot이 실제 완료될 때만 통과시킨다.

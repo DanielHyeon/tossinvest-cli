@@ -46,7 +46,10 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 )
 
 // Options configures a run.
@@ -65,6 +68,12 @@ type Options struct {
 	// ConfirmEach opts out of the batch approval and back into a typed
 	// confirmation immediately before every single mutation.
 	ConfirmEach bool
+	// Resume says this invocation continues the owner-only verification record.
+	// M0 trigger evidence is intentionally valid only on a resumed run.
+	Resume bool
+	// Receipt is the durable, sanitized M0 causal evidence stream. Nil keeps a
+	// caller out of the trigger-only measurement mode.
+	Receipt *CausalReceipt
 	// Market is the market this run sends orders in. The zero value is KR, so a
 	// caller that says nothing behaves exactly as this tool did before it knew
 	// about US (§0.2). A symbol from another market is skipped with a reason.
@@ -148,16 +157,33 @@ type Runner struct {
 	// "unrestricted" — the failure direction has to be the safe one.
 	plan *Plan
 
-	accountRef      string
-	symbol          string
-	holdingSymbol   string
-	offset          float64
-	maxSellQuantity float64
-	includeTTLEdge  bool
-	includeTrigger  bool
-	ttlWait         time.Duration
-	triggerWindow   time.Duration
-	redo            map[StepID]bool
+	accountRef       string
+	symbol           string
+	holdingSymbol    string
+	offset           float64
+	maxSellQuantity  float64
+	includeTTLEdge   bool
+	includeTrigger   bool
+	m0Receipt        *CausalReceipt
+	m0ReceiptLease   *CausalReceiptLease
+	m0ReadSource     *official.M0ReadSource
+	m0CriticalWindow bool
+	m0Gap            bool
+	m0ReceiptErr     error
+	m0PendingClient  string
+	m0Mu             sync.Mutex
+	m0Attempts       map[string][]m0AttemptStamp
+	m0ParentBarrier  M0ReceiptStamp
+	m0ChildFill      M0ReceiptStamp
+	// Private killpoints prove durable ordering; production leaves both nil.
+	m0BeforeConditionalCreate func() error
+	m0AfterConditionalCreate  func() error
+	m0AfterChildCheckpoint    func() error
+	m0AfterParentCausal       func() error
+	m0AppendCheckpoint        func(Entry) error
+	ttlWait                   time.Duration
+	triggerWindow             time.Duration
+	redo                      map[StepID]bool
 
 	// readBackoffs counts how many times a read-only call has waited out a 429 in
 	// this process. The trigger observation snapshots it around each poll: inside
@@ -170,6 +196,124 @@ type Runner struct {
 	process Process
 	prior   []Entry
 	written []Entry
+}
+
+type m0AttemptStamp struct {
+	Receipt        M0ReceiptStamp
+	RequestStartNS int64
+	StatusCode     int
+	Err            error
+}
+
+func (r *Runner) m0ReadContext(ctx context.Context, phase string) context.Context {
+	if !r.m0ReceiptUsable() {
+		return ctx
+	}
+	return official.WithAttemptObserver(ctx, func(a official.AttemptTrace) {
+		if r.m0ReceiptLease == nil {
+			r.m0Mu.Lock()
+			r.m0ReceiptErr = errors.New("verify: M0 causal receipt run lease is unavailable")
+			r.m0Gap = true
+			r.m0Mu.Unlock()
+			return
+		}
+		stamp, err := r.m0ReceiptLease.RecordAttempt(phase, a)
+		r.m0Mu.Lock()
+		defer r.m0Mu.Unlock()
+		if err != nil {
+			r.m0ReceiptErr = err
+			r.m0Gap = true
+			return
+		}
+		r.m0Attempts[phase] = append(r.m0Attempts[phase], m0AttemptStamp{
+			Receipt: stamp, RequestStartNS: a.RequestStart.Sub(r.m0Receipt.start).Nanoseconds(), StatusCode: a.StatusCode, Err: a.Err,
+		})
+		if r.m0CriticalWindow && (a.Err != nil || a.StatusCode == 401 || a.StatusCode == 429) {
+			r.m0Gap = true
+		}
+	})
+}
+
+func (r *Runner) m0ReceiptUsable() bool {
+	return r.m0Receipt != nil && r.m0Receipt.usable()
+}
+
+func (r *Runner) recordM0Attempts(phase string, attempts []official.AttemptTrace) {
+	for _, attempt := range attempts {
+		if r.m0ReceiptLease == nil {
+			r.m0ReceiptErr = errors.New("verify: M0 causal receipt run lease is unavailable")
+			r.m0Gap = true
+			continue
+		}
+		stamp, err := r.m0ReceiptLease.RecordAttempt(phase, attempt)
+		r.m0Mu.Lock()
+		if err != nil {
+			r.m0ReceiptErr = err
+			r.m0Gap = true
+		} else {
+			r.m0Attempts[phase] = append(r.m0Attempts[phase], m0AttemptStamp{Receipt: stamp, RequestStartNS: attempt.RequestStart.Sub(r.m0Receipt.start).Nanoseconds(), StatusCode: attempt.StatusCode, Err: attempt.Err})
+			if r.m0CriticalWindow && (attempt.Err != nil || attempt.StatusCode == 401 || attempt.StatusCode == 429) {
+				r.m0Gap = true
+			}
+		}
+		r.m0Mu.Unlock()
+	}
+}
+
+func (r *Runner) appendM0Checkpoint(checkpoint M0Checkpoint) error {
+	if r.m0Receipt == nil {
+		return nil
+	}
+	if !r.m0ReceiptUsable() {
+		return errors.New("verify: M0 causal receipt is closed or unusable")
+	}
+	now := r.now().UTC()
+	e := Entry{
+		FormatVersion: RecordFormatVersion,
+		Kind:          KindM0Checkpoint,
+		RunID:         r.runID,
+		Process:       r.process,
+		StartedAt:     now,
+		FinishedAt:    now,
+		AccountRef:    maskedAccount(r.accountRef),
+		M0Checkpoint:  &checkpoint,
+	}
+	appendCheckpoint := r.m0AppendCheckpoint
+	if appendCheckpoint == nil {
+		appendCheckpoint = r.recorder.Append
+	}
+	if err := appendCheckpoint(e); err != nil {
+		return err
+	}
+	r.written = append(r.written, e)
+	return nil
+}
+
+func (r *Runner) m0ChildAttemptAfterParent() bool {
+	r.m0Mu.Lock()
+	defer r.m0Mu.Unlock()
+	if r.m0ParentBarrier.RunID != r.runID || r.m0ParentBarrier.Sequence == 0 {
+		return false
+	}
+	for _, attempt := range r.m0Attempts["child-order-read"] {
+		if attempt.Receipt.RunID == r.runID && attempt.RequestStartNS > r.m0ParentBarrier.FsyncDoneElapsedNS {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *Runner) m0PassReady() bool {
+	if !r.m0ReceiptUsable() {
+		return false
+	}
+	if r.m0Gap || r.m0CriticalWindow || r.m0ParentBarrier.RunID != r.runID || r.m0ChildFill.RunID != r.runID {
+		return false
+	}
+	if r.m0ParentBarrier.Sequence == 0 || r.m0ChildFill.Sequence == 0 || r.m0ParentBarrier.Sequence >= r.m0ChildFill.Sequence {
+		return false
+	}
+	return r.m0ChildAttemptAfterParent()
 }
 
 // New builds a runner.
@@ -194,6 +338,31 @@ func New(o Options) (*Runner, error) {
 	if err != nil {
 		return nil, err
 	}
+	if o.IncludeTrigger {
+		if !o.ConfirmEach || !o.Resume || o.IncludeTTLEdge || o.Receipt == nil || !o.Receipt.usable() ||
+			len(o.Redo) != 1 || o.Redo[0] != StepConditionalTrigger {
+			return nil, errors.New("verifylive: --include-trigger requires M0 receipt, --confirm-each, --resume, and --redo conditional-trigger only")
+		}
+		if len(Outstanding(o.Prior)) != 0 {
+			return nil, errors.New("verifylive: M0 trigger receipt holds before cleanup because the prior record has outstanding artifacts")
+		}
+		if checkpoint, ok, checkpointErr := M0Unsettled(o.Prior); checkpointErr != nil {
+			return nil, checkpointErr
+		} else if ok && checkpoint.Kind != "pending-create" {
+			return nil, fmt.Errorf("verifylive: M0 causal receipt HOLD: unsettled %s owner requires manual reconciliation", checkpoint.Kind)
+		} else if !ok {
+			// A pending-create checkpoint is the one response-lost state that may
+			// enter this process: Run performs its read-only all-page recovery and
+			// always terminates in HOLD.  It must happen before prerequisite checks
+			// so a crash can be reconciled even if the older record predates M0.
+			if err := M0ExactPrerequisites(o.Prior); err != nil {
+				return nil, err
+			}
+		}
+		if _, ok := official.M0ReadSourceFor(o.Broker); !ok {
+			return nil, errors.New("verifylive: M0 causal receipt requires an official-client raw read source")
+		}
+	}
 	r := &Runner{
 		broker:          o.Broker,
 		recorder:        o.Recorder,
@@ -212,6 +381,8 @@ func New(o Options) (*Runner, error) {
 		maxSellQuantity: o.MaxSellQuantity,
 		includeTTLEdge:  o.IncludeTTLEdge,
 		includeTrigger:  o.IncludeTrigger,
+		m0Receipt:       o.Receipt,
+		m0Attempts:      make(map[string][]m0AttemptStamp),
 		ttlWait:         o.TTLWait,
 		triggerWindow:   o.TriggerWindow,
 		redo:            map[StepID]bool{},
@@ -246,6 +417,10 @@ func New(o Options) (*Runner, error) {
 		r.redo[id] = true
 	}
 	r.runID = newToken("run")
+	if r.m0Receipt != nil {
+		r.runID = r.m0Receipt.RunID()
+		r.m0ReadSource, _ = official.M0ReadSourceFor(o.Broker)
+	}
 	return r, nil
 }
 
@@ -286,7 +461,33 @@ func (r *Runner) Entries() []Entry { return append([]Entry(nil), r.written...) }
 // program error, and it comes back in the summary.
 func (r *Runner) Run(ctx context.Context) (Summary, error) {
 	summary := Summary{RunID: r.runID}
+	if r.includeTrigger {
+		lease, err := r.m0Receipt.AcquireRunLease()
+		if err != nil {
+			summary.Halted, summary.Halt = true, truncateError(err)
+			return summary, fmt.Errorf("verify: M0 causal receipt HOLD: %w", err)
+		}
+		r.m0ReceiptLease = lease
+		defer lease.Release()
+	}
 	r.writeBanner()
+	if r.includeTrigger && !r.m0ReceiptUsable() {
+		err := errors.New("verify: M0 causal receipt HOLD: receipt was closed before the trigger run")
+		summary.Halted, summary.Halt, summary.Outstanding = true, truncateError(err), r.outstanding()
+		return summary, err
+	}
+	if pending, ok, pendingErr := r.m0PendingCheckpoint(); pendingErr != nil {
+		summary.Halted = true
+		summary.Halt = truncateError(pendingErr)
+		summary.Outstanding = r.outstanding()
+		return summary, pendingErr
+	} else if ok {
+		err := r.m0RecoverPending(ctx, pending)
+		summary.Halted = true
+		summary.Halt = truncateError(err)
+		summary.Outstanding = r.outstanding()
+		return summary, err
+	}
 
 	if halt, err := r.approveBatch(ctx); err != nil || halt != "" {
 		summary.Halted = true
@@ -365,6 +566,12 @@ func (r *Runner) Run(ctx context.Context) (Summary, error) {
 			// The run would have had to send something the approved list does not
 			// cover. Nothing was sent, and carrying on would mean the remaining
 			// steps run against conditions the approval did not describe.
+			summary.Halted = true
+			summary.Halt = sr.reason
+			summary.Outstanding = r.outstanding()
+			return summary, sr.abort
+		}
+		if errors.Is(sr.abort, ErrM0TerminalHold) {
 			summary.Halted = true
 			summary.Halt = sr.reason
 			summary.Outstanding = r.outstanding()
@@ -752,6 +959,9 @@ func (sr *stepRun) resolve(err error) {
 		}
 	case errors.Is(err, ErrOutsidePlan):
 		sr.outsidePlan(err)
+	case errors.Is(err, ErrM0TerminalHold):
+		sr.fail("%s", truncateError(err))
+		sr.abort = err
 	case errors.Is(err, ErrRefused), errors.Is(err, ErrConfirmationExpired):
 		sr.refuse(err.Error())
 	case errors.Is(err, ErrNotATerminal):

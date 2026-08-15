@@ -75,18 +75,19 @@ type verifyOptions struct {
 	record string
 	market string
 
-	symbol          string
-	holdingSymbol   string
-	offsetPct       float64
-	maxSellQuantity float64
-	includeTTLEdge  bool
-	includeTrigger  bool
-	confirmEach     bool
-	ttlWait         time.Duration
-	triggerWindow   time.Duration
-	resume          bool
-	redo            []string
-	list            bool
+	symbol            string
+	holdingSymbol     string
+	offsetPct         float64
+	maxSellQuantity   float64
+	includeTTLEdge    bool
+	includeTrigger    bool
+	triggerReceiptDir string
+	confirmEach       bool
+	ttlWait           time.Duration
+	triggerWindow     time.Duration
+	resume            bool
+	redo              []string
+	list              bool
 
 	// why is the reason an abort records against the chains it closes.
 	why string
@@ -198,7 +199,10 @@ has none. The tool never buys anything to create one.`),
 		"Also probe the idempotency validity window — this deliberately creates a SECOND live order")
 	cmd.Flags().BoolVar(&opts.includeTrigger, "include-trigger", false,
 		"Also observe a conditional order FIRING. This registers a stop the market is meant to reach: "+
-			"if it does, one share is sold at market and it cannot be undone")
+			"if it does, one share is sold at market and it cannot be undone. M0 requires --confirm-each --resume "+
+			"--redo conditional-trigger only and --trigger-receipt-dir")
+	cmd.Flags().StringVar(&opts.triggerReceiptDir, "trigger-receipt-dir", "",
+		"Existing owner-only 0700 directory for the M0 causal receipt; required with --include-trigger")
 	cmd.Flags().DurationVar(&opts.triggerWindow, "trigger-window", verifylive.DefaultTriggerWindow,
 		"How long the trigger observation waits for the market to reach its trigger before cancelling it")
 	cmd.Flags().BoolVar(&opts.confirmEach, "confirm-each", false,
@@ -302,6 +306,17 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 	if err != nil {
 		return err
 	}
+	if err := validateM0TriggerMode(opts, prior); err != nil {
+		return err
+	}
+	var receipt *verifylive.CausalReceipt
+	if opts.includeTrigger {
+		receipt, err = verifylive.OpenCausalReceipt(opts.triggerReceiptDir)
+		if err != nil {
+			return err
+		}
+		defer receipt.Close()
+	}
 	// Steps, not lines: a run whose batch approval was declined leaves the refusal
 	// on the record and nothing else, and that must not stand between the operator
 	// and a second attempt.
@@ -352,6 +367,8 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 		Confirm:         terminalConfirmer(cmd),
 		ConfirmBatch:    terminalBatchConfirmer(cmd),
 		ConfirmEach:     opts.confirmEach,
+		Resume:          opts.resume,
+		Receipt:         receipt,
 		Out:             out,
 		AccountRef:      accountRef,
 		Market:          market,
@@ -380,6 +397,37 @@ func runVerifyRun(cmd *cobra.Command, root *rootOptions, opts *verifyOptions) er
 		return nil
 	}
 	return runErr
+}
+
+// validateM0TriggerMode is intentionally before broker construction and every
+// confirmation surface. A trigger measurement that cannot create its receipt is
+// not allowed to turn into an ordinary live verification run.
+func validateM0TriggerMode(opts *verifyOptions, prior []verifylive.Entry) error {
+	if !opts.includeTrigger {
+		return nil
+	}
+	if !opts.confirmEach || !opts.resume || opts.includeTTLEdge || len(opts.redo) != 1 ||
+		strings.TrimSpace(opts.redo[0]) != string(verifylive.StepConditionalTrigger) ||
+		strings.TrimSpace(opts.triggerReceiptDir) == "" {
+		return fmt.Errorf("verify: --include-trigger requires --confirm-each --resume --redo conditional-trigger only and --trigger-receipt-dir")
+	}
+	if checkpoint, ok, err := verifylive.M0Unsettled(prior); err != nil {
+		return err
+	} else if ok && checkpoint.Kind != "pending-create" {
+		return fmt.Errorf("verify: M0 causal receipt HOLD: unsettled %s owner requires manual reconciliation before broker construction", checkpoint.Kind)
+	} else if !ok {
+		// A pending create is recovered read-only by Runner before confirmation,
+		// cleanup, or mutation. Do not let prerequisite history hide that crash
+		// boundary; the broker factory only supplies that same client to the
+		// read-only recovery path.
+		if err := verifylive.M0ExactPrerequisites(prior); err != nil {
+			return err
+		}
+	}
+	if len(verifylive.Outstanding(prior)) != 0 {
+		return fmt.Errorf("verify: M0 trigger receipt HOLD: prior verification record has outstanding artifacts; inspect with `tossctl verify status` and reconcile manually before any cleanup")
+	}
+	return nil
 }
 
 // acquireVerifyExecutionLock closes the cross-process start race among the

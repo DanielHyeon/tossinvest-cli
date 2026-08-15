@@ -6,6 +6,37 @@
 0절은 이 change의 전제가 참인지 묻고(선행 실측), 1절은 배선 대상 함수의 거부 분기 9개가 한 번도
 실행된 적이 없다는 측정에 대응한다. 그대로 켜면 미검증 결함이 배선과 동시에 프로덕션으로 나간다.
 
+## 2026-08-15 재동결 — 실행 로트와 독립 검토 계약
+
+**다른 change로 옮기지 않는다.** 아래 미구현 범위는 모두
+`a100-wire-fill-to-broker-protection` 안에서 수행한다. Manager(SOL)는 OpenSpec·분석 문서 작성과
+최종 증거 대조만 소유하고, 프로덕션 코드와 테스트의 작성·수정·실행은 Terra 구현 에이전트가
+소유한다. 각 구현 로트는 **서로 다른 Terra 적대 리뷰 에이전트**가 read-only로 검토하고,
+P0/P1을 구현자가 고친 뒤 같은 리뷰어가 재검토해 `P0=0, P1=0`을 선언해야 다음 로트로 간다.
+
+| 로트 | 포함 task | 구현 소유권 | 별도 적대 리뷰 | 종료 조건 |
+| --- | --- | --- | --- | --- |
+| R0 | 0.1, 0.4~0.7, 문서 모순 정정 | Manager 문서 + Terra 증거 수집 | A0 Terra | 현재 main base·FLM/BTM·strict validate 동결 |
+| M0 | 0.2a | Terra-M0: `verify run --include-trigger` causal receipt 도구 | A-M0 Terra | lossless parent/child receipt·fsync barrier·INCONCLUSIVE gate GREEN |
+| M-A | 0.2, 0.11 | **사람이 실행·승인하는 실계좌 측정** | A-M Terra read-only | 발동·child 체결·조회 귀속·raw status 표가 모두 PASS |
+| T1 | 1.1~1.3 | Terra-1: `internal/protectionlifecycle` RED와 필요한 최소 core 수정 | A1 Terra | 9개 거부 분기 본문 실행 + 회귀 GREEN |
+| T2-A | 2.1~2.6, 3.10 | Terra-2A: 도메인 매핑·journal schema·child ownership/apply | A2-A Terra | durable pending/causal child 귀속/선행-fill 거부 원자성 |
+| T2-B | 4.0 | Terra-2B: `protectionlifecycle` pure API seal/allowlist | A2-B Terra | exact public surface + authority-minting 0; T3 compile seam 준비 |
+| T3 | 3.1~3.8 | Terra-3: 독립 수렴 워커 core | A3 Terra | worker-only 실패 격리·수량/generation 재확인 |
+| T4-A | 4.5~4.6 | Terra-4A: exit 상주주문 취소·flat/child 권위 경계 | A4-A Terra | 기존 손절 즉시성·child 귀속 보존 + double-sell 창 최소화 |
+| T4-B | 3.9, 4.1~4.4 | Terra-4B: import 가드·gateway/runtime auxiliary 조립 | A4-B Terra | gate verified/recovery 이후 auxiliary 기동, `ProtectionWired` 불변 |
+| T5 | 5.1~6.4 | Terra-5: official fixture·운영 표면·rollback 회귀/문서 증거 | A5 Terra | KR/US fixture·console/alert·rollback 계약 GREEN |
+| G | 7.1~7.10 | Terra 검증 실행 + Manager 결과 대조 | gstack 독립 리뷰 | gate PASS, gstack P0/P1=0, Manager acceptance |
+
+M0가 GREEN·A-M0 accepted되기 전에는 M-A의 place를 실행하지 않는다. M-A PASS와 0.11의
+raw-status 판정표 동결 전에는 T1을 포함한 어떤 제품 구현 로트도 시작하지 않는다.
+T2-B의 exact lifecycle API seal이 GREEN·A2-B accepted되기 전에는 T3를 시작하지 않는다.
+T4-A의 child 귀속·완전청산 취소·flat 권위 경계가 GREEN·A4-A accepted되기 전에는 T4-B의
+worker construction/start와 broker mutation 도달 경로를 열지 않는다. 번호 순서와 무관하게
+실행 순서는 **4.5~4.6 → 3.9·4.1~4.4**다.
+한 구현자가 여러 로트를 맡을 수는 있지만, 같은 로트의 적대 리뷰어를 겸할 수 없고 소유 파일을
+겹쳐 편집하지 않는다. 각 로트의 리뷰·재검토·Manager acceptance는 8절에 기록한다.
+
 ## 0. 착수 전 조건
 
 - [x] 0.1 `base-commit.txt`가 현재 작업 base와 일치하는지 확인한다. 병행 세션이 커밋을 쌓았으면
@@ -13,16 +44,92 @@
   — 2026-08-11 확인: base `eb41e19a`, HEAD `ce78b0db`. 사이의 커밋 3개는 **전부 a100 자신의
   문서 커밋**이고 Go 변경이 없다. 따라서 함수 귀속의 비교 기준은 여전히 유효하며 재고정하지
   않는다(재고정은 fingerprint 재sync만 더 들고 얻는 것이 없다). **병행 세션 커밋은 없었다.**
+  — **2026-08-15 재개방:** 위 2026-08-11 판정은 더 이상 유효하지 않다. 현재 main은
+  `882a0b49`이고 그 사이 `gateway.go`, `exitloop.go`, `journal/apply_hook.go`,
+  `cmd/tossctl/engine.go`가 바뀌었다. `base-commit.txt`를 현재 main으로 재고정하고 R0 증거를
+  다시 만든 뒤에만 이 항목을 완료한다.
+  — **2026-08-15 완료:** base와 HEAD가 모두
+  `882a0b490b0b6d2eb7abe5c5040c514776f49f3e`이고 current-main evidence를 재생성했다.
+  `make sdd-sync`는 hard CodeGraph/CodeGraphContext를 최신으로 만들고 `all indexes current`로
+  종료했다(GBrain busy는 advisory previous freshness 유지 경고).
+- [x] 0.2a **M-A causal receipt measurement-only 도구를 먼저 만든다.** 2026-08-15 preflight에서
+  current CLI/verify record는 strict local order를 증명하지 못했다. 외부 shell timestamp나 WTS
+  `order show`로 대신하지 않는다. M0는 exact
+  `verify run --include-trigger --confirm-each --resume --redo conditional-trigger`만 열고
+  runtime·engine·protection·attestation·trading journal에는 연결하지 않으며 새 mutation method도 만들지
+  않는다. existing owner-only verify record/status/abort는 cleanup identity authority다.
+  - [x] 0.2a.1 편집 전 FLM/BTM을 `verifylive.Runner.stepConditionalTrigger`, `pollTrigger`,
+    `readConditional`, `readOrder`, `finishTrigger`, `createConditional`, `readRetry`, `verifylive.New`,
+    `cmd/tossctl.newVerifyRunCmd`, `runVerifyRun`, `official.Client.doRequest`·`Client.send`에 만든다.
+    cleanup/abort/status의 기존 함수를 실제로 편집하면 그것도 먼저 추가한다. 새 private helper는 기존
+    account/token/401-refresh semantics를 공유하고 기존 raw reader의 public 계약을 바꾸지 않는다.
+  - [x] 0.2a.2 M0는 새 receipt 경로, `--confirm-each --resume --redo conditional-trigger`가 아니거나
+    `--include-ttl-edge`, 다른 redo, trigger 외 미완료 mutating step이면 broker factory·confirmer·모든
+    mutation 전에 거부한다. prior verify record의 `Outstanding(...) != 0`이면 cleanup prologue를 실행하지
+    않고 같은 지점에서 HOLD한다. CLI와 `verifylive.New` direct caller가 같은 조합을 강제한다.
+  - [x] 0.2a.3 receipt parent/final path는 current uid 소유·non-symlink exact 0700/0600이다.
+    no-follow/O_EXCL로 만들고 versioned header+run ID를 file fsync한 뒤 parent directory도 fsync한다.
+    이 준비 전 broker factory·confirmer·mutation은 모두 0건이다. fresh resume은 허용하지만 과거 receipt
+    sequence는 재사용하지 않는다.
+  - [x] 0.2a.4 official transport는 모든 HTTP attempt의 request-start와 body-read-complete를 같은
+    process monotonic anchor에서 포착한다. numeric status/no-response class, 401 refresh attempt, 성공
+    `SHA-256(raw-result-bytes-v1)`, non-2xx/invalid-envelope `SHA-256(raw-response-body-bytes-v1)`를 decode 전에
+    writer에 전달한다. helper-return 뒤 `now()`는 response receipt가 아니다. account selection,
+    token refresh, rate-budget, error classification이 기존 send와 동일하다는 RED를 둔다.
+  - [x] 0.2a.5 extracted schema v1은 parent request/response conditional ID tag, client ID tag,
+    symbol/market/type/order type/quantity/first side·trigger/expiry/root·leg status/triggered-child tag와 child
+    request/response ID tag, requested market scope, raw symbol/side/status/quantity/filled/execution fields를
+    보존한다. causal receipt에는 account/token/opaque ID 원문을 쓰지 않는다. PASS는
+    `pending client tag == parent raw client tag`, pending approved parent fields == parent raw fields,
+    `parent child tag == child checkpoint tag == child request tag == child response tag`, child
+    SELL/market scope/symbol/quantity == approved parent leg를 각각 요구한다.
+  - [x] 0.2a.6 human gate 승인 뒤 broker create **전에** unique client ID, run ID와 approved
+    market/symbol/SINGLE/MARKET/SELL/qty=1/trigger/expiry를 owner-only verify record의 pending intent로
+    append+fsync한다. 일반 verify step은 이 checkpoint를 만들지 않는다. create-response→exact-parent
+    checkpoint 사이 crash의 다음 M0 resume은 safe receipt를 연 뒤 official all-page raw read로 pending
+    client+fields를 대조한다. unique match면 exact parent checkpoint를 fsync하고 그 run은 HOLD로 끝낸다.
+    zero/multiple/mismatch도 HOLD이며 자동 cancel/recreate하지 않는다.
+  - [x] 0.2a.6b parent raw에서 child ID를 얻으면 owner-only exact child reconciliation checkpoint를
+    먼저 append+fsync하고, 다음 sanitized parent causal receipt를 append+fsync한 뒤에만 child GET한다.
+    어느 kill point도 과거 sequence를 재개하지 않는다. status/abort-list는 exact/pending 객체를 보이되
+    triggered-but-child-unobserved 객체를 자동 취소하지 않는다.
+  - [x] 0.2a.7 durable parent child-ID receipt부터 durable child first-observed-fill receipt까지가 strict
+    critical window다. 기존 401 refresh/429 retry의 모든 attempt를 receipt화하고 첫 401/429/read/decode/
+    identity/write/sync gap은 irreversible HOLD다. 이후 성공 retry가 지우지 못한다. window 전 오류도
+    기록하지만 이 strict verdict의 자동 HOLD는 아니다.
+  - [x] 0.2a.8 PASS는 `parent_child_id.seq < child_first_observed_fill.seq`와
+    `parent_fsync_done < child_request_start`를 모두 요구한다. durable child fill로 window가 끝난 뒤 parent
+    terminal GET은 요구하지 않는다. 그 전 parent 404는 HOLD다. server/wall time은 대체 증거가 아니다.
+  - [x] 0.2a.9 RED/GREEN은 wall rollback/same-time, every-attempt 401/429, helper-return delay, raw
+    identity/decimal mismatch, symlink/owner/mode/O_EXCL/file+dir fsync, pending-before-create,
+    create-response-before-parent-ID, parent-raw-before-child-ID, child-ID-before-parent-causal,
+    parent-causal-before-child-GET kill points, outstanding cleanup-prologue refusal, zero/one/multiple recovery,
+    restart/no sequence merge, terminal boundary, forbidden flags, pre-mutation refusal, static M0 import isolation,
+    `MutationMethods()` exact 불변을 포함한다. Terra-M0 뒤 별도 A-M0 `P0=0/P1=0`이어야 0.2를 연다.
+  — **2026-08-15 Manager acceptance:** same-instance `*official.Client`가 mutation과 parent/child raw
+  result+attempt를 함께 소유하고 arbitrary/split Broker는 거부된다. receipt는 모든 path component를
+  dirfd/no-follow로 열며 active exclusive lease의 typed writer만 허용한다. write/fsync 실패는 영구 poison,
+  pending-create만 read-only recovery 진입, parent/child owner는 manual HOLD다. core A-M0와 receipt
+  A-M0-R은 각각 최종 **P0=0/P1=0**으로 ACCEPT했고 normal/race/vet/strict/FLM 검증도 PASS했다.
 - [ ] 0.2 **선행 실측 M-A — 조건주문이 실제로 발동해 체결되는가.** `measurement-prereq.md`의
   절차를 따른다. **실계좌 주문이므로 실행 직전에 사람이 승인한다**(§0-1, §0-7).
-  **실패하면 여기서 멈춘다** — 발동하지 않는 상주 주문은 보호가 아니므로 설계가 아니라
-  전제가 무너진다(design D10).
+  **완전 통과가 아니면 여기서 멈춘다** — 발동하지 않는 상주 주문은 보호가 아니며,
+  child id가 fill보다 늦거나 조회 불가능한 부분 통과도 3.10의 causal ownership을 증명하지 못한다.
+  trigger·수량 비교 실패도 수렴 정의를 무너뜨린다. 이 세 경우 모두 설계·spec을 다시 리뷰하기
+  전에는 1절로 가지 않는다(design D10).
+  — **2026-08-15 10:27 KST fresh preflight:** installed M0 identity와 official OPEN 전 페이지
+  (`PAUSED` 2, `WATCHING` 3)는 확인했지만 KR 폐장, 기존 5건의 사람별 retain/cancel 결정 부재,
+  official sellable 불완전·미관리 whole-share 후보 부재, soak/attestation unready·binary-unbound 때문에
+  **HOLD/NO-GO**다. corrected receipt `/tmp/a100-ma-preflight-corrected.kSn14D`는 같은 Terra
+  adversary가 evidence `P0=0/P1=0`으로 수용했지만 live 실행을 수용한 것은 아니다. preview·주문·
+  config·verify run/resume는 0건이며 이 체크박스와 0.11, T1은 계속 미완료다.
 - [x] 0.3 **선행 실측 M-B — 엔진 사망부터 exit observer 재무장까지의 무보호 창.** 이 change가
   사려는 안전의 크기다. 측정하지 않으면 개선 폭을 주장할 수 없다.
   — 2026-08-11 14:00Z, 0.10b의 배포 재시작에서 측정. **≤ 6.7초**(명령 발행 → 첫 `exit.*` 관측).
   기록은 `measurement-prereq.md`. **다만 이 값은 하한이다** — a056의 8분은 *기동 실패* 경우이고
   이번 측정은 정상 기동 경우다. a100이 사는 안전은 6.7초가 아니라 그 두 값 사이다.
-- [x] 0.4 **편집 전 Function Logic Map 대상 확정.** 6건을 특정하고 AST·FLM을 만들었다.
+- [x] 0.4 **편집 전 Function Logic Map 대상 확정.** 기존 6건에 현재 main의 runtime/child 귀속
+  경계 7건을 추가해 AST·FLM을 다시 만든다. 2026-08-11의 측정 수치와 줄 번호는 historical evidence다.
   - `internal/app/engine.buildGateway` — 수렴 워커 조립 지점. 분기 4개가 **전부 에러 검사**이고
     조건부 조립이 하나도 없다 ⇒ 워커는 무조건 생성하고 기동은 호출자가 한다.
   - `internal/journal.scanExitStateResult` — 보호 컬럼이 지나는 **단일 스캔 지점**. 분기 22개 중
@@ -33,12 +140,30 @@
   - `internal/app/engine.ExitObserver.record` — a087 청산 경로의 취소 판정 지점.
   - `internal/app/engine.ExitObserver.submit` — a087 매도 발행 지점.
   - `internal/protection.TestProtectionRemainsUnwired…` — 봉인 가드 본체.
-- [x] 0.5 산출물의 source SHA-256 일치를 `check_analysis.py`로 확인한다.
+  - `cmd/tossctl.engineRuntime` — interlock 이후 워커의 기동·취소·감독 지점.
+  - `internal/protectionofficial.Gateway.adapt` — raw status·triggered child id 손실 지점.
+  - `internal/journal.Journal.TrackedFillOrders` — unchanged fill detector가 child를 읽는 집합.
+  - `internal/journal.confirmedFillOwners` — fill보다 엄격히 선행한 owner의 시간 권위.
+  - `internal/journal.resolveFillOrigin` — ordinary/protection owner의 exact conflict 판정 지점.
+  - `internal/app/engine.Runtime.runAuxiliary`(+ panic 경계 `runAuxiliaryBody`) — worker stop이 기존
+    안전 loop를 내리지 않으면서 전용 event를 내는 authority.
+  - `protectionlifecycle_test.TestProductionAPIExportsNoAuthorityMintingFunction` — T2-B exact public
+    allowlist로 바꿀 기존 봉인 가드.
+  — **2026-08-15 완료:** 13개 current 경계의 AST·FLM·BTM·risk bundle과 historical
+  `Runner.RunCycle` 증거를 `analysis/function-logic/`에 동결했다.
+- [x] 0.5 현재 main에서 재생성한 산출물의 source SHA-256 일치를 `check_analysis.py`로 확인한다.
+  — **2026-08-15 완료:** `check_analysis.py` PASS, 발견된 current `ast.json` 17개의 source SHA
+  직접 대조 17/17 일치, strict OpenSpec validate와 `git diff --check` PASS.
 - [x] 0.6 `strategyDispatchCycle.dispatch` D7 면제 유효. 편집하지 않고, 분기 수치는 2차 개정에서
   삭제했으므로 내부 분기를 근거로 인용하지도 않는다.
-- [x] 0.7 High-risk Pre-Edit 선언을 `pre-edit-gate.md`에 남겼다. 6개 대상 중 **5개가
-  「조건부 통과」**이며 각 조건이 그 편집의 통과 요건이다. 「실패 테스트 선행 작성」은 각 task
+- [x] 0.7 High-risk Pre-Edit 선언을 `pre-edit-gate.md`에 현재 main 기준으로 다시 남긴다.
+  current 구현 경계 13개(기존 6개 + runtime/child/API 7개)의 조건과 citation-only 면제를
+  구분하고, 완료된 0.10 probe의 historical `Runner.RunCycle` 선언은 별도 증거로 유지한다.
+  각 조건이 그 편집의 통과 요건이다.
+  「실패 테스트 선행 작성」은 각 task
   착수 시점에 갱신한다.
+  — **2026-08-15 완료:** sections 1~6과 8~14에 current 경계 조건을 기록했고, section 7의
+  완료된 probe 선언을 historical evidence로 유지했다. 독립 A0 재검토 `P0=0/P1=0/P2=0`.
 - [x] 0.8 **ratchet 수준이 스칼라로 영속되는지 확인한다.** — **영속된다. D9의 전제가 틀렸었다.**
   `exit_states`는 `initial_stop`과 별도로 `baseline_price`를 갖고 exit 판정마다 갱신한다
   (`journal/exit_state.go:563`). t0 값은 `InitialStop`이고(`exitpolicy/ratchet.go:321-332`),
@@ -70,8 +195,8 @@
     기존 증거는 **2026-08-30에 만료된다**(30일 validity).
   - read는 supervised에서 조달할 수 없다(`soak/attest.go:255-277`). 수렴 워커가 매 주기 부르는
     `GET /conditional-orders`는 자동 경로의 상시 read이므로 **read-only soak에 probe를 추가하고
-    새로 3일 이상 돌려야 한다.**
-  ⇒ 배포 순서 고정: **(a) soak probe 추가 → (b) soak 재실행(≥3일, 기록 신선)
+    신선한 성공 cycle을 적어도 한 번 기록해야 한다.**
+  ⇒ 배포 순서 고정: **(a) soak probe 추가 → (b) soak 재실행(성공 cycle 1회, 기록 신선)
   → (c) 남은 verify 단계 실행(DELETE·modify, 사람 승인) → (d) `tossctl soak attest` 재발급
   → (e) 새 바이너리 배포.** (a)만 배포하고 (d)를 건너뛰면 두 시장의 loop가 전부 거부된다.
 
@@ -151,10 +276,13 @@
   **a100이 없어도** 뜨지 않는다. 0.10b-1이 이것을 함께 해소했다 — 성공 사이클 하나가
   기록됐고 15분 간격으로 계속 돈다. **다음 배포에서 자동으로 살아나는지가 a101의 남은 검증이다**
   (a101 tasks 5.4).
-- [ ] 0.11 **raw conditional status를 도메인 타입에 실을지 결정한다(D2).** 어댑터가
-  `WATCHING/PAUSED/ORDERING/ORDERED`를 같은 값으로 접으므로(`protectionofficial/gateway.go:308-310`)
-  일시정지된 주문과 무장된 주문이 구별되지 않는다. 싣지 않기로 하면 M-A가 `PAUSED`의 실재와
-  발동 여부를 관측하고, 실재하며 발동하지 않으면 **싣는 것이 필수 task가 된다.**
+- [ ] 0.11 **raw conditional status 보존과 판정표를 M-A 결과로 동결한다(D2).** raw status를
+  도메인과 journal에 싣는 것은 선택이 아니라 필수다. `PAUSED`의 부재 관측은 무장 증명이 아니며,
+  `WATCHING/PAUSED/ORDERING/ORDERED`를 같은 값으로 접는 현 어댑터는 수렴 증거가 될 수 없다.
+  M-A가 실제로 관측한 pre-trigger/triggering/terminal 문자열을 표로 남기고 다음을 지킨다.
+  - `PAUSED`와 unknown은 **미수렴·mutation 금지·operator alert**다.
+  - child 귀속이 끝나지 않은 triggering 상태는 ACTIVE도 terminal도 아니며 재등록하지 않는다.
+  - M-A가 armed 상태와 child ID/체결의 조회 가능성을 증명하지 못하면 1절로 가지 않는다.
 
 ## 1. 거부 경로 RED 테스트 — 배선보다 먼저 (Migration 1)
 
@@ -194,15 +322,20 @@
 - [ ] 2.2 왕복(round-trip) property 테스트로 매핑이 정보를 잃지 않음을 증명한다. 손실이 있으면
   lifecycle이 증명한 불변식이 전송 단계에서 깨진다.
 - [ ] 2.3 journal에 보호 컬럼을 **additive-nullable로만** 추가한다. 기존 컬럼의 의미를 바꾸지 않는다.
-  최소한 브로커 order id, lifecycle 상태, desired가 생긴 시각(미설치 시간 측정용)을 담는다.
-- [ ] 2.4 새 컬럼을 모르는 이전 바이너리로 여는 회귀 테스트 — 체결 감지·대사·reduce-only 청산이
-  그대로 동작하고 값이 없는 행은 「보호 미설치」로 읽힌다.
+  최소한 parent broker order id, client order id, raw status, triggered child order id, lifecycle 상태,
+  position generation, desired가 생긴 시각(미설치 시간 측정용), child apply watermark를 담는다.
+- [ ] 2.4 schema 호환 회귀를 두 방향으로 고정한다.
+  - 새 바이너리가 **이전 schema의 기존 행**을 열면 nullable 보호 값은 「보호 미설치」로 읽고
+    기존 체결 감지·대사·reduce-only 청산이 그대로 동작한다.
+  - 보호 컬럼을 포함한 **더 새로운 schema를 이전 바이너리로 열면** `ErrSchemaTooNew`로 엔진을
+    거부한다. 구 바이너리가 같은 journal로 계속 동작한다는 기대를 테스트해서는 안 된다(D4).
 - [ ] 2.5 `SchemaVersion` 증가와 main 대조. 낮은 SchemaVersion 바이너리가 뜨면 콘솔만 뜨고 엔진이
   조용히 죽는다(2026-08-04 실발생). 배포 전 대조를 7절에 건다.
 - [ ] 2.6 **전송 전 pending 커밋.** `recoverSubmit`은 영속된 pending command가 없으면
   "no exact submit pending"으로 시장을 latch한다(`protectionlifecycle/lifecycle.go:63`, `:71`).
   저장 순서를 「plan → **pending 커밋** → 전송 → 응답 커밋」으로 고정하고, 전송 직후 프로세스가
-  죽는 시나리오를 테스트한다. 2.3의 컬럼 목록이 이 레코드를 포함해야 한다.
+  죽는 시나리오를 테스트한다. 2.3의 컬럼 목록이 이 레코드를 포함해야 한다. conditional parent의
+  canonical owner는 전송 전에 고정하며 응답의 opaque id로 scope를 바꾸지 않는다.
 
 ## 3. 수렴 워커 (Migration 3)
 
@@ -213,10 +346,22 @@
 - [ ] 3.2 desired/observed 비교를 D2의 표대로 구현한다. 각 행이 하나의 테스트를 갖는다.
 - [ ] 3.3 **수렴 완료의 정의를 코드로 고정한다** — 보유 수량과 ACTIVE 보호 수량이 정확히 같고
   trigger가 journal 값에서 유도된 값과 같을 때만 수렴이다. "대략 맞음"을 허용하지 않는다.
+  ACTIVE는 0.11의 evidence-backed armed raw status만 허용한다. `PAUSED`, unknown, triggering,
+  child 미귀속은 수렴 완료가 아니다.
 - [ ] 3.4 **보호 미설치 시간**을 포지션별로 측정하고 상한 초과 시 알림을 낸다(D2).
-  상한이 없으면 「수렴 중」과 「영원히 실패 중」이 구별되지 않는다.
+  상한이 없으면 「수렴 중」과 「영원히 실패 중」이 구별되지 않는다. 기본 상한은 90초,
+  dirty/pending 재시도 기본 5초(지수 백오프, 최대 60초), 수렴한 ACTIVE 재확인 기본 60초로 두고
+  config key는 각각 `engine.protection_convergence.unprotected_alert_seconds`,
+  `dirty_retry_initial_seconds`, `retry_max_seconds`, `active_recheck_seconds`로 고정한다. block 부재는
+  90/5/60/60을 적용하고, 명시된 0·음수·`dirty_retry_initial_seconds > retry_max_seconds`는
+  block 전체를 거부해 worker를 기동하지 않는다. 정확한 경계 테스트를 둔다. 알림 identity는
+  `(account, market, position, generation, cause)`이며 같은 episode에는 한 번만 발행하고 해결 후
+  같은 cause가 재발하면 다시 발행한다.
 - [ ] 3.5 실패 격리 — 수렴 실패가 typed reconcile reason과 알림으로 끝나고 다른 루프의
-  outage·SLO·게이트를 건드리지 않음을 테스트한다.
+  outage·SLO·게이트를 건드리지 않음을 테스트한다. ordinary cycle failure는 worker `Run`의 반환이
+  아니라 데이터이며 내부 backoff로 계속 돈다. panic/예상 밖 return은 A100 전용 stable
+  `protection.convergence.worker_stopped` event와 durable reconcile/alert를 남기지만 reconcile·exit·
+  filldetect를 취소하거나 runtime nonzero 종료를 만들지 않는다.
 - [ ] 3.6 재시도와 백오프. **수렴한 포지션도 주기를 늘려 계속 재확인한다** — 상주 주문은
   나중에 취소·만료·일시정지될 수 있고 그때 보호 미설치 시간이 다시 시작되어야 한다.
   rate limit은 주기로 다루고 판정의 신선도를 버리지 않는다(리뷰 정정).
@@ -225,22 +370,55 @@
   시점과 다르면 전송하지 않고 그 주기를 버린다. 응답 후에도 다시 읽어 그 사이 수량이 바뀌었으면
   수렴 완료로 기록하지 않는다. 경합 원문: 워커가 10주를 읽는다 → 대사가 0주를 커밋한다
   (`reconcileloop.go:413`, `reconcile/converge.go:209`, `:244`) → 워커가 SELL 10을 등록한다.
-- [ ] 3.9 **실행 주체와 기동 순서.** 조립은 `gateway.go`, **기동·취소·감독은 `cmd/tossctl`의
-  런타임**(`engine.go:377`의 감독 루프 옆). `buildGateway` 안에서 goroutine을 띄우면 automation
-  interlock 평가보다 먼저 돈다(`app/engine/engine.go:489`, `:533`).
-  **automation gate가 verified가 아니면 워커는 기동하지 않는다** — 대사·exit 루프와 같은 규율이다.
+- [ ] 3.9 **실행 주체와 기동 순서.** 조립은 `gateway.go`, **기동·취소·drain은 `cmd/tossctl`의
+  `engineRuntime` 경계다.** 과거 `engine.go:377` 인용은 현재 main에서 폐기한다. `buildGateway`
+  안에서 goroutine을 띄우면 automation interlock 평가보다 먼저 돈다.
+  **automation gate가 verified가 아니면 워커는 기동하지 않는다.** 단 worker는 current
+  `engine.Runtime.Loops`에 넣지 않는다. 그 목록은 non-cancel return 하나로 모든 안전 loop를
+  내리는 all-or-nothing contract이므로 D3과 모순된다. recovery 완료 뒤 `AuxiliaryExecutor`로 시작해
+  같은 context에서 cancel/drain하고, 전용 stop event/reconcile/alert를 쓰되 entry gate와 다른 loop를
+  건드리지 않는다. existing alert-delivery의 stop event를 빌려 쓰지 않는다.
+- [ ] 3.10 **triggered child의 durable ownership과 fill apply 경로를 하나로 만든다.**
+  `internal/filldetect`는 편집하지 않는다. worker가 M-A로 증명된 parent/client/scope/generation과
+  `TriggeredOrderID`를 exact 비교한 뒤 journal의 좁은 registrar로 `protection_child_orders`에
+  소유권을 원자 기록한다. 그 뒤 기존 `Journal.TrackedFillOrders`가 child를 읽고 기존 Detector /
+  JournalLedger가 체결 권위를 유지한다. `TrackedFillOrders`, `confirmedFillOwners`,
+  `resolveFillOrigin`은 confirmed ordinary attempt와 protection child를 합쳐 **정확히 한 canonical
+  owner**만 허용하며 중복/충돌은 durable reconcile로 fail closed한다.
+
+  **소유권은 체결 관측보다 먼저 커밋되어야 한다.** registrar 시점에 같은 canonical child의
+  fill snapshot/event가 이미 존재하면 소급 귀속·delta 재생·hook 재실행을 하지 않는다. registrar를
+  거부하고 `ATTRIBUTION_FAILED` reconcile + stable alert를 durable 기록하며, 공식 계좌 대사가
+  position을 복구할 때까지 그 child와 position에 새 보호 mutation/재등록을 금지한다. 정상 순서의
+  owned child fill은 기존 RecordFill transaction으로 position/exit에 반영되고, worker는 그 durable
+  cumulative snapshot을 읽어 protection lifecycle의 applied watermark를 멱등하게 전진시킨 뒤에만
+  다음 mutation을 계획한다. restart·중복 registrar·RecordFill 경합에서 소유권과 lifecycle watermark가
+  한 번만 전진해야 한다.
 
 ## 4. 봉인 해제와 조립 (Migration 4)
+
+이 절은 번호순으로 실행하지 않는다. 상주 SELL을 생성할 수 있는 runtime 배선보다 먼저
+**4.5~4.6(T4-A)**의 child 귀속·완전청산 취소·flat 권위 경계를 GREEN/A4-A accepted로 닫는다.
+그 뒤에만 **3.9와 4.1~4.4(T4-B)**가 worker를 construction/start하여 broker mutation에
+도달시킬 수 있다. 중간 빌드가 runtime에서 상주 보호주문을 생성해서는 안 된다.
 
 - [ ] 4.0 **다섯 번째 봉인 — `protectionlifecycle` API 가드(D1). 이것 없이는 컴파일되지 않는다.**
   lifecycle 함수가 전부 unexported이고 `external_api_test.go:11`이 exported 패키지 레벨 함수를
   금지하므로 **외부 호출 표면이 0**이다. `dependency_test.go:12`가 journal·protection·execgw·app
   의존을 금지하므로 워커를 그 안에 둘 수도 없다.
-  - [ ] 4.0.1 상태 전이당 하나의 명명된 exported 함수만 노출한다. 인자는 `State`와 값 타입뿐이며
-    transport·approval·toggle 타입을 받지 않는다.
+  - [ ] 4.0.1 T3 worker가 실제로 호출하는 상태 전이당 하나의 명명된 exported 함수만 노출한다.
+    T2-B RED가 planned worker call graph에서 필요한 함수명을 먼저 추출해 exact allowlist 상수로
+    고정한다. 최소 후보는 `NewState`, `View`, `PrepareRegister`, `ApplySubmitResult`, `RecoverSubmit`,
+    `PrepareReplace`, `ApplyReplaceResult`, `RecoverReplace`, `PrepareCancel`, `ApplyCancelResult`,
+    `RecoverCancel`, `ApplyFill`, `DiscoverOrphan`, `ErrorCode`이며, worker가 호출하지 않는 후보는
+    allowlist에서 제거한다. 인자는 `State`와 pure value/evidence 타입뿐이고 transport·approval·toggle
+    타입을 받지 않는다. capability constructor가 필요하면 verified evidence value를 받는 단 하나만
+    허용하고 public bool/scalar로 권위를 만들 수 없음을 RED로 고정한다.
   - [ ] 4.0.2 가드를 **대체 단언으로 바꾼다** — exported 표면이 허용 목록과 정확히 일치하고
     어느 것도 transport/approval/toggle 타입을 시그니처에 갖지 않음을 정적으로 검사한다.
   - [ ] 4.0.3 `dependency_test.go`의 의존 금지는 **그대로 둔다.**
+  - [ ] 4.0.4 이 task는 lot 순서상 T2-B이며 T3보다 먼저 끝낸다. T3가 test-only shim이나 package
+    내부 우회로 API 부재를 숨겨서는 안 된다.
 - [ ] 4.1 `dormant_test.go`와 `a071_security_review_test.go`에서 **`protectionofficial.New` 하나만**
   금지 목록에서 뺀다. `protection.NewSupervisor`, `protection.db`, `GatewayFactory`는 유지한다.
 - [ ] 4.2 **import walk를 넓힌다.** 현재 walk는 `…/internal/protection`만 매칭하므로
@@ -259,15 +437,16 @@
     예외를 파면 a100 delta가 MODIFIED가 되어 a071·a091과 archive 순서로 얽힌다(design D8-3).
   - [ ] 4.5.4 포지션이 flat이면 워커가 상주 주문을 취소한다. **다음 주기까지의 창**이 남는다는
     사실과 그 창에 수동 매수가 들어오면 발동할 수 있다는 것을 6.4에 적는다.
-  - [ ] 4.5.5 D9의 trigger 유도를 구현한다 — 0.8의 확인 결과에 따라 `InitialStop`만 쓰거나
-    더 높은 스칼라로 교체한다. 후퇴는 거부한다.
-  - [ ] 4.5.6 **취소 대상을 `isProtective`가 아니라 `isFullExit`로 넓힌다.** 익절도 완전
-    청산이지만 보호 경로가 아니다(`exitloop.go:1207-1213`) — 좁게 두면 익절이 상주 주문을
-    남긴 채 포지션을 닫는다.
+  - [ ] 4.5.5 D9의 trigger는 **오직 현재 generation의 `exit_states.baseline_price`**에서 유도한다.
+    `InitialStop` 선택지나 시세 재계산은 없다. 후퇴는 typed refusal로 거부한다.
+  - [ ] 4.5.6 `record`의 기존 `isFullExit` 진입 조건은 바꾸지 않는다. 그 조건이 참일 때 기존
+    working order 정리와 **별도의 비차단 시도**로 상주 conditional protection도 취소 대상으로
+    포함한다. 상주 취소 실패를 기존 `clearTheSymbol`의 err/cleared나 arm suppression에 섞지 않는다.
   - [ ] 4.5.7 **발동한 child의 order id를 살린다.** 어댑터가 `TriggeredOrderID`를 bool로 접고
     (`protectionofficial/gateway.go:271`) 체결 감지는 `mutation_attempts`가 소유한 id만 추적하므로
     (`journal/fills.go:1538-1548`) **브로커가 우리 손절을 실행한 사실을 원장이 알 방법이 없다.**
-    `BrokerProtection`에 child id를 싣고, D2의 terminal 행을 「보유 재확인 후에만 재등록」으로 한다.
+    `BrokerProtection`에 raw status와 child id를 싣고, 3.10의 durable owner를 기록한다. D2의
+    terminal 행은 「child apply watermark와 공식 보유를 재확인한 후에만 재등록」으로 한다.
 - [ ] 4.6 **`ProtectionWired`가 여전히 생산되지 않음을 증명하는 테스트.** a071의 "구조적으로
   UNWIRED" 보장은 이 change 이후에도 유효하다. `EntryPermitted == true`를 실패로 단언하는
   기존 테스트 2건(`guardian_test.go:131-132`, `interlock_entry_test.go:70-71`)은 **그대로 둔다.**
@@ -293,8 +472,12 @@
   시퀀스를 fixture로 만든다. 3.8의 재확인이 등록을 막아야 한다. 5.3(워커 주기 두 개의 겹침)과
   다른 시나리오다.
 - [ ] 5.10 **익절 경로 재현.** 익절 완전 청산 전에 상주 주문 취소가 시도됨을 증명한다(4.5.6).
-- [ ] 5.11 **발동 후 원장 귀속 재현.** 상주 주문이 발동해 child가 체결되면 그 사실이 원장에
-  반영되고, 재등록이 일어나지 않음을 증명한다(4.5.7).
+- [ ] 5.11 **발동 후 원장 귀속 재현.** 상주 주문이 발동해 child가 체결되면 그 사실이 기존
+  fill detector의 snapshot→journal apply transaction을 통해 position/exit에 반영되고, 재등록이
+  일어나지 않음을 증명한다(3.10, 4.5.7). child fill이 registrar보다 먼저 도착하면 소급 적용 없이
+  durable `ATTRIBUTION_FAILED` reconcile/alert가 남고 새 보호 mutation이 금지되어야 한다.
+  registrar/RecordFill/restart가 겹치는 정상 순서에서는 lifecycle applied watermark가 정확히 한 번만
+  이동하고, ordinary order ownership과 충돌하면 durable identifier reconcile이 남는지 단언한다.
 
 ## 6. 롤백과 운영 절차 (Migration 6)
 
@@ -307,12 +490,17 @@
     사람이 각 주문의 처분을 정한다. **a100은 자동 취소도 자동 유지도 하지 않는다.**
   - [ ] 6.1.2 자동 롤백이 상주 주문을 취소하지 않음을 회귀 테스트로 고정하되, **그것이 안전을
     보장하지 않는다**는 문장을 문서에 함께 둔다.
-- [ ] 6.2 보호 미설치 시간과 수렴 실패가 콘솔·알림에 보이는지 확인한다.
+- [ ] 6.2 보호 미설치 시간과 수렴 실패를 `/position-management`의 관리 행에 표시한다.
+  raw status, desired/observed 수량·trigger, 현재 baseline과의 차, 마지막 성공/오류 시각,
+  unprotected elapsed, stable alert cause를 한 shared projection에서 만들고 alert와 화면이 같은
+  identity/cause를 쓰는지 확인한다. trigger·수량·ownership evidence가 불완전하면 actionable
+  `보호됨`을 표시하지 않는다.
 - [ ] 6.3 lane은 6개 모두 `Desired=OFF, Effective=OFF`로 남는다. 이 change는 어떤 토글도 flip하지 않는다.
 - [ ] 6.4 운영 절차 문서에 세 가지를 적는다. 운영자가 보는 화면에 없던 것이 생기는 유일한
   관찰 가능 변화이므로 오해할 여지를 남기지 않는다.
   - [ ] 6.4.1 **브로커에 상주 주문이 생긴다**는 사실과 수동 확인 방법.
-  - [ ] 6.4.2 **상주 trigger는 엔진의 현재 청산선이 아니라 재난 하한이다**(D9). 둘이 다를 수 있다.
+  - [ ] 6.4.2 **상주 trigger는 현재 generation의 영속 `baseline_price`로 수렴한다**(D9).
+    교체 전에는 broker trigger와 baseline이 다를 수 있으므로 그 delta와 경과 시간을 표시한다.
   - [ ] 6.4.3 포지션이 비-보호 경로로 닫히면 **다음 수렴 주기까지 상주 주문이 남고**, 그 창에
     수동 매수가 들어오면 그 주식에 대해 발동할 수 있다(M13 — 수량 예약 없음).
 - [x] 6.5 **`protection.Controller`(824줄) + `Repository`(540줄) 정리 change를 지금 등록한다.**
@@ -333,11 +521,8 @@
 - [ ] 7.4 `openspec validate --all --strict`
 - [ ] 7.5 `make sdd-sync` → `make sdd-check` → `make gate CHANGE=a100-wire-fill-to-broker-protection`
   (병행 세션이 커밋을 쌓았으면 base 재고정 후 연속 실행)
-  **선행 조건 하나가 이 change 밖에 있다.** 게이트 7/9 `make test`는 `7f3cbb03` 이후
-  이 브랜치에서 항상 빨갛다 — a099의 RED 핀 4건(`internal/journal` 1 · `internal/obs` 3)이
-  구현 없이 커밋돼 있기 때문이다. **a100이 무엇을 하든 a099가 GREEN이 되기 전에는
-  이 단계가 통과하지 않는다.** 2026-08-12 a101 게이트에서 확인했고 상세는
-  `a101-the-soak-outlives-a-deploy/review.md` 「게이트 최종 결과」에 있다.
+  2026-08-12의 a099 RED blocker 주장은 current main의 사실로 재사용하지 않는다. R0에서 Terra가
+  baseline을 다시 실행해 실제 실패만 기록하고, 과거 외부 blocker를 선험적으로 면제하지 않는다.
 - [ ] 7.6 gstack 독립 리뷰(구현 후). High-risk이므로 adversarial Eng voice가 필수다.
   proposal-freeze 리뷰는 2026-08-11에 완료했고 기록은 `review.md`다.
 - [ ] 7.7 배포 전 main과 `SchemaVersion` 대조(2.5).
@@ -349,6 +534,27 @@
 - [ ] 7.9 PM 동기화 — `STORY-TOS-a100.yaml`의 acceptance를 새 범위에 맞게 고치고 증거와 대조한다.
   **원안 acceptance는 `Wired` 생산을 포함하므로 그대로 두면 통과할 수 없다.**
 - [ ] 7.10 a105에 이관 항목을 기록한다(아래 「a105로 이관」 목록 전체).
+
+## 8. 구현 로트별 독립 검토 원장
+
+아래 항목은 해당 구현 task를 완료했다는 주장보다 **먼저** 닫혀야 한다. 리뷰어는 구현 파일을
+편집하지 않고 반례·mutation·회귀 실행 근거로 판정한다. P0/P1 발견 시 구현자가 수정하고 같은
+리뷰어가 재검토한다. Manager는 diff·task·증거를 대조할 뿐 코드·테스트를 작성하거나 고치지 않는다.
+
+- [x] 8.0 M0 measurement-only 구현 Terra 보고 → A-M0 적대 리뷰 → 수정 → A-M0 `P0=0/P1=0`
+  → Manager acceptance. M0는 제품 worker 구현 착수가 아니라 M-A 증거를 가능하게 하는 선행 도구다.
+  — core reviewer ACCEPT(P0=0/P1=0, P2=RED chronology audit note), receipt same-reviewer recheck
+  ACCEPT(P0=0/P1=0/P2=0). P2는 첫 trace seam의 독립 재생 가능한 pre-GREEN commit 영수증이 없다는
+  과정 기록이며 결과 동작을 약화하지 않는다.
+- [ ] 8.1 T1 구현 Terra 보고 → A1 적대 리뷰 → 수정 → A1 `P0=0/P1=0` → Manager acceptance.
+- [ ] 8.2 T2-A 구현 Terra 보고 → A2-A 적대 리뷰 → 수정 → A2-A `P0=0/P1=0` → Manager acceptance.
+- [ ] 8.2b T2-B 구현 Terra 보고 → A2-B 적대 리뷰 → 수정 → A2-B `P0=0/P1=0` → Manager acceptance.
+- [ ] 8.3 T3 구현 Terra 보고 → A3 적대 리뷰 → 수정 → A3 `P0=0/P1=0` → Manager acceptance.
+- [ ] 8.4 T4-A 구현 Terra 보고 → A4-A 적대 리뷰 → 수정 → A4-A `P0=0/P1=0` → Manager acceptance.
+- [ ] 8.5 T4-B 구현 Terra 보고 → A4-B 적대 리뷰 → 수정 → A4-B `P0=0/P1=0` → Manager acceptance.
+- [ ] 8.6 T5 구현 Terra 보고 → A5 적대 리뷰 → 수정 → A5 `P0=0/P1=0` → Manager acceptance.
+- [ ] 8.7 모든 로트 후 gstack review를 실행하고 P0/P1을 0으로 닫는다. 그 뒤 Manager가
+  OpenSpec task/FLM/BTM/mutation/gate/PM 증거를 독립 대조해 구현 완료 여부를 판정한다.
 
 ## a105로 이관 (proposal-freeze 리뷰, 2026-08-11)
 

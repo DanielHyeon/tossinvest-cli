@@ -1,0 +1,30 @@
+{
+  "file": "internal/official/protection_reads.go",
+  "source_sha256": "3983478598ac261eae4b6101be509d22b94b8645598c0e893fe28ab5ccb68487",
+  "package": "official",
+  "function": "adaptProtectionConditional",
+  "signature": "adaptProtectionConditional(params=1, results=1)",
+  "start": {
+    "line": 49,
+    "column": 1
+  },
+  "end": {
+    "line": 58,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 50,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

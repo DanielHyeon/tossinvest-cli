@@ -48,6 +48,22 @@ type fakeBroker struct {
 	err     error
 }
 
+// preWriteFailureTransport refuses the request before a connection or write can
+// begin. Unlike a released TCP port, it has no scheduler, socket, or port-reuse
+// dependency, so a NOT_DISPATCHED assertion is deterministic in CI.
+type preWriteFailureTransport struct {
+	calls  int
+	method string
+	path   string
+}
+
+func (t *preWriteFailureTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	t.calls++
+	t.method = req.Method
+	t.path = req.URL.Path
+	return nil, errors.New("test transport refused before write")
+}
+
 func (b *fakeBroker) PlacePendingOrder(context.Context, orderintent.PlaceIntent) (domain.MutationResult, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -709,17 +725,12 @@ func TestTransportOutcomeTable(t *testing.T) {
 // TestUnreachableBrokerIsNotDispatched: a connection that never carried a byte is
 // the one case we can safely close without a resolution procedure.
 func TestUnreachableBrokerIsNotDispatched(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
-	}))
-	base := srv.URL
-	client := srv.Client()
-	srv.Close() // nothing is listening any more: connect fails before any write
+	transport := &preWriteFailureTransport{}
+	client := &http.Client{Transport: transport}
 
 	off := official.New(official.Credentials{APIKey: "k", SecretKey: "s"},
 		filepath.Join(t.TempDir(), "token.json"),
-		official.WithBaseURL(base), official.WithHTTPClient(client), official.WithAccountSeq(7))
+		official.WithBaseURL("https://broker.test"), official.WithHTTPClient(client), official.WithAccountSeq(7))
 
 	clk := clock.NewFake(fixedNow)
 	j := openJournal(t, clk)
@@ -734,6 +745,14 @@ func TestUnreachableBrokerIsNotDispatched(t *testing.T) {
 	out, _ := gw.Place(context.Background(), placeRequest(t, j, clk))
 	if out.State != journal.StateNotDispatched {
 		t.Errorf("state: got %s, want NOT_DISPATCHED (%s)", out.State, out.Detail)
+	}
+	// The single call is token acquisition. The transport refuses before any
+	// socket write, so the order POST cannot be built or dispatched.
+	if transport.calls != 1 {
+		t.Errorf("transport calls: got %d, want exactly 1 token request", transport.calls)
+	}
+	if transport.method != http.MethodPost || transport.path != "/oauth2/token" {
+		t.Errorf("sole transport request: got %s %s, want POST /oauth2/token", transport.method, transport.path)
 	}
 }
 

@@ -62,7 +62,9 @@ func abortStep() Step {
 // Outstanding, not cleanupTargets: the whole point is to reach the objects the
 // hold rule protects. Nothing else widens — a filled or cancelled object is not
 // outstanding and is not here, and neither is anything the record never mentioned.
-func AbortTargets(entries []Entry) []Artifact { return Outstanding(entries) }
+func AbortTargets(entries []Entry) []Artifact {
+	return withoutM0ManualReconcile(entries, Outstanding(entries))
+}
 
 // AbortResult is what an abort did.
 type AbortResult struct {

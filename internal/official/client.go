@@ -189,16 +189,20 @@ type apiEnvelope struct {
 // every error are unchanged — and it covers the 429 case too, which is the single
 // most informative response and the one the error mapping used to discard.
 func (c *Client) doRequest(req *http.Request) (int, []byte, error) {
+	started := time.Now()
 	resp, err := c.hc.Do(req)
 	if err != nil {
+		observeAttempt(req.Context(), AttemptTrace{RequestStart: started, BodyReadComplete: time.Now(), Err: err})
 		return 0, nil, fmt.Errorf("%w: %s", ErrTransport, err)
 	}
 	defer resp.Body.Close()
 	c.rates.record(readRateBudget(req.URL.Path, resp.Header, time.Now()))
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		observeAttempt(req.Context(), AttemptTrace{RequestStart: started, BodyReadComplete: time.Now(), StatusCode: resp.StatusCode, Err: err})
 		return resp.StatusCode, nil, fmt.Errorf("%w: reading body: %s", ErrTransport, err)
 	}
+	observeAttempt(req.Context(), AttemptTrace{RequestStart: started, BodyReadComplete: time.Now(), StatusCode: resp.StatusCode, Body: append([]byte(nil), body...)})
 	return resp.StatusCode, body, nil
 }
 

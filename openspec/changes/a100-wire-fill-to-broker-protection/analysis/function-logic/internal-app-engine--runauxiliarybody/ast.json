@@ -1,0 +1,1 @@
+{"file":"internal/app/engine/auxiliary.go","source_sha256":"10cfb2178fc639723929d2f233e2f812ea66cba8edc4380f20ffd3fa84c849d6","package":"engine","function":"runAuxiliaryBody","signature":"runAuxiliaryBody(params=2, results=1)","start":{"line":123,"column":1},"end":{"line":130,"column":2},"branches":[{"id":"B1","kind":"if","at":{"line":125,"column":3}}]}

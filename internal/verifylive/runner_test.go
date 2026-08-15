@@ -27,6 +27,19 @@ import (
 // that stops at the persistence check, then a second one that finishes it.
 func runToCompletion(t *testing.T, h *harness, opts Options) (Summary, Summary) {
 	t.Helper()
+	if opts.IncludeTrigger && opts.Receipt != nil {
+		// M0 trigger tests seed their resume prerequisites; unlike the ordinary
+		// procedure they have no persistence handoff to manufacture first.
+		seedM0TriggerPrerequisites(t, h)
+		only, err := h.run(opts)
+		if err != nil {
+			t.Fatalf("M0 trigger run: %v entries=%+v", err, h.entries())
+		}
+		if only.Halted {
+			t.Fatalf("M0 trigger run halted: %+v", only)
+		}
+		return only, Summary{}
+	}
 	first, err := h.run(opts)
 	if err != nil {
 		t.Fatalf("first run: %v", err)

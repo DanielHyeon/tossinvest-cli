@@ -1,0 +1,62 @@
+{
+  "file": "internal/verifylive/cleanup.go",
+  "source_sha256": "5cdcedb9cabc83482a59f7b4928699991c73a175e116628ef2479f64949db2ee",
+  "package": "verifylive",
+  "function": "PendingCleanup",
+  "signature": "PendingCleanup(params=1, results=1)",
+  "start": {
+    "line": 119,
+    "column": 1
+  },
+  "end": {
+    "line": 121,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 120,
+        "column": 87
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 9
+      },
+      "text": "withoutM0ManualReconcile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 43
+      },
+      "text": "cleanupFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 94
+      },
+      "text": "Settled"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

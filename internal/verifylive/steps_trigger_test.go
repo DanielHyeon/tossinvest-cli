@@ -13,6 +13,8 @@ package verifylive
 // tests ends by asking the record what the account is holding.
 
 import (
+	"context"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -30,8 +32,41 @@ func triggerHarness(t *testing.T, script func(*fakeBroker)) *harness {
 	return newHarness(t, broker, alwaysConfirm())
 }
 
-func triggerOptions(window time.Duration) Options {
-	return Options{HoldingSymbol: "005930", IncludeTrigger: true, TriggerWindow: window}
+func seedM0TriggerPrerequisites(t *testing.T, h *harness) {
+	t.Helper()
+	// M0 is a resume/redo measurement, so it begins with every unrelated
+	// verification step durably settled and no outstanding artifact.
+	rec, err := OpenRecorder(h.record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, step := range Steps() {
+		if step.ID == StepConditionalTrigger {
+			continue
+		}
+		if err := rec.Append(Entry{Kind: KindStep, StepID: step.ID, Verdict: VerdictPass}); err != nil {
+			_ = rec.Close()
+			t.Fatal(err)
+		}
+	}
+	if err := rec.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func triggerOptions(t *testing.T, window time.Duration) Options {
+	t.Helper()
+	dir := t.TempDir()
+	if err := os.Chmod(dir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	receipt, err := OpenCausalReceipt(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = receipt.Close() })
+	return Options{HoldingSymbol: "005930", IncludeTrigger: true, ConfirmEach: true, Resume: true,
+		Redo: []StepID{StepConditionalTrigger}, Receipt: receipt, TriggerWindow: window}
 }
 
 // --- without the opt-in ----------------------------------------------------------
@@ -100,7 +135,7 @@ func TestTheTriggerStepObservesAFireAndItsChildFilling(t *testing.T) {
 		f.dropAfterReads = 2
 		f.firesOnRead(3, 4, 2)
 	})
-	runToCompletion(t, h, triggerOptions(2*time.Minute))
+	runToCompletion(t, h, triggerOptions(t, 2*time.Minute))
 
 	if got := h.verdict(StepConditionalTrigger); got != VerdictPass {
 		e, _ := LastEntry(h.entries(), StepConditionalTrigger)
@@ -170,7 +205,7 @@ func TestTheTriggerBasisIsDecidedByTheOrderOfTwoObservations(t *testing.T) {
 			// the thing fires anyway, which it can only do off the bid.
 			f.firesOnRead(2, 3, 2)
 		})
-		runToCompletion(t, h, triggerOptions(2*time.Minute))
+		runToCompletion(t, h, triggerOptions(t, 2*time.Minute))
 		if got, _ := h.observation(StepConditionalTrigger, "conditional.trigger.basis"); got != "bid" {
 			t.Errorf("basis = %q, want bid", got)
 		}
@@ -181,7 +216,7 @@ func TestTheTriggerBasisIsDecidedByTheOrderOfTwoObservations(t *testing.T) {
 			f.dropAfterReads = 2
 			f.firesOnRead(4, 5, 2)
 		})
-		runToCompletion(t, h, triggerOptions(2*time.Minute))
+		runToCompletion(t, h, triggerOptions(t, 2*time.Minute))
 		if got, _ := h.observation(StepConditionalTrigger, "conditional.trigger.basis"); got != "last-trade" {
 			t.Errorf("basis = %q, want last-trade", got)
 		}
@@ -200,7 +235,7 @@ func TestTheTriggerBasisIsDecidedByTheOrderOfTwoObservations(t *testing.T) {
 // false negative into the evidence.
 func TestTheMarketNeverComingIsNotAFailure(t *testing.T) {
 	h := triggerHarness(t, nil) // nothing scripted: it never fires
-	runToCompletion(t, h, triggerOptions(20*time.Second))
+	runToCompletion(t, h, triggerOptions(t, 20*time.Second))
 
 	if got := h.verdict(StepConditionalTrigger); got != VerdictSkipped {
 		t.Fatalf("verdict = %q, want skipped", got)
@@ -229,7 +264,7 @@ func TestACancelThatRacesATriggerDoesNotReportThatNothingHappened(t *testing.T) 
 	// conditional is gone, so re-reading it says exactly what a clean cancel says.
 	// Only the position can tell the two apart.
 	h := triggerHarness(t, func(f *fakeBroker) { f.fireOnCancel = true })
-	runToCompletion(t, h, triggerOptions(15*time.Second))
+	runToCompletion(t, h, triggerOptions(t, 15*time.Second))
 
 	entries := h.entries()
 	if !observationEquals(t, entries, StepConditionalTrigger,
@@ -255,18 +290,13 @@ func TestATriggerWithNoObservableFillLeavesTheChildHeld(t *testing.T) {
 	h := triggerHarness(t, func(f *fakeBroker) {
 		f.firesOnRead(2, 3, 0) // fires and links, never reports filled
 	})
-	opts := triggerOptions(2 * time.Minute)
-	if first, err := h.run(opts); err != nil || !first.Halted {
-		t.Fatalf("first run: err %v, halted %v", err, first.Halted)
-	}
-	h.broker.restart()
-	resumed := opts
-	resumed.Prior = nil
+	opts := triggerOptions(t, 2*time.Minute)
+	seedM0TriggerPrerequisites(t, h)
 	// The run must NOT report a clean finish. The conditional looks like it fired
 	// and the step could not prove it, so it stays on the record as live — and a
 	// stop that can fire, sitting on a real holding with nobody watching, is
 	// exactly what the end-of-run check is for.
-	second, err := h.run(resumed)
+	second, err := h.run(opts)
 	if err == nil {
 		t.Error("the run reported a clean finish although a fire-capable conditional was still live")
 	}
@@ -276,6 +306,9 @@ func TestATriggerWithNoObservableFillLeavesTheChildHeld(t *testing.T) {
 
 	if got := h.verdict(StepConditionalTrigger); got != VerdictFail {
 		t.Fatalf("verdict = %q, want fail — an unobserved fill is a measured negative", got)
+	}
+	if entry, ok := LastEntry(h.entries(), StepConditionalTrigger); !ok || strings.Contains(entry.Reason, "verify abort") || !strings.Contains(entry.Reason, "수동") {
+		t.Fatalf("unobserved-fill guidance = %+v, want manual reconciliation without verify abort", entry)
 	}
 	entries := h.entries()
 	var out []Artifact
@@ -295,17 +328,24 @@ func TestATriggerWithNoObservableFillLeavesTheChildHeld(t *testing.T) {
 		t.Errorf("HeldUntil = %q, want %q — without it the next run's prologue offers to cancel the evidence",
 			child.HeldUntil, StepConditionalTrigger)
 	}
-	// The child must not be on the next run's cancellation list — letting it fill is
-	// the measurement. The stray conditional may be, and should: nothing is
-	// watching it any more and it can still fire.
-	for _, a := range PendingCleanup(entries) {
-		if a.Kind == KindOrder {
-			t.Errorf("PendingCleanup offers the child order %s; the next run would put a cancellation of "+
-				"the evidence on the list a person approves", a.ID)
-		}
+	// M0 checkpoints keep both members of the observed pair visible for manual
+	// reconciliation, but out of every automatic cancellation target list.
+	if targets := PendingCleanup(entries); len(targets) != 0 {
+		t.Fatalf("PendingCleanup = %+v, want no automatic M0 cancellation", targets)
+	}
+	if targets := AbortTargets(entries); len(targets) != 0 {
+		t.Fatalf("AbortTargets = %+v, want M0 manual reconciliation only", targets)
+	}
+	runner := h.runner(t, Options{})
+	result, abortErr := runner.Abort(context.Background(), "")
+	if abortErr != nil || len(result.Targets) != 0 {
+		t.Fatalf("Abort = %+v err=%v, want zero M0 mutations", result, abortErr)
 	}
 	if n := h.broker.countRequests("POST /orders/" + child.ID + "/cancel"); n != 0 {
 		t.Errorf("the child order was cancelled %d time(s). Letting it fill IS the measurement", n)
+	}
+	if n := h.broker.countRequests("DELETE /conditional-orders/"); n != 0 {
+		t.Errorf("the observed parent conditional was cancelled %d time(s); M0 requires manual reconciliation", n)
 	}
 }
 
@@ -321,7 +361,7 @@ func TestAStopWhoseConditionWasMetAndDidNotFireIsAFailure(t *testing.T) {
 		f.dropAfterReads = 2 // the price reaches the trigger
 		// and nothing is scripted to fire.
 	})
-	runToCompletion(t, h, triggerOptions(5*time.Minute))
+	runToCompletion(t, h, triggerOptions(t, 5*time.Minute))
 
 	if got := h.verdict(StepConditionalTrigger); got != VerdictFail {
 		e, _ := LastEntry(h.entries(), StepConditionalTrigger)
@@ -348,8 +388,9 @@ func TestTheTriggerStepSkipsWhenThereIsNothingLeftToSell(t *testing.T) {
 	// One share, which the register step's stop reserves. There is nothing left for
 	// a second stop to sell, and the step has to notice before it registers one.
 	broker := newFakeBroker().withHolding("005930", 1).withBook("005930", 69800, 70100, 70000)
+	broker.sellable["005930"] = 0 // an independently held reservation; M0 must not create another stop.
 	h := newHarness(t, broker, alwaysConfirm())
-	runToCompletion(t, h, triggerOptions(20*time.Second))
+	runToCompletion(t, h, triggerOptions(t, 20*time.Second))
 
 	if got := h.verdict(StepConditionalTrigger); got != VerdictSkipped {
 		t.Fatalf("verdict = %q, want skipped", got)
@@ -365,7 +406,7 @@ func TestTheTriggerStepSkipsWhenThereIsNothingLeftToSell(t *testing.T) {
 // way to one.
 func TestTheTriggerStepSkipsWhenTheGridHasNoRoom(t *testing.T) {
 	h := triggerHarness(t, func(f *fakeBroker) { f.withBook("005930", 70000, 70100, 70000) })
-	runToCompletion(t, h, triggerOptions(20*time.Second))
+	runToCompletion(t, h, triggerOptions(t, 20*time.Second))
 
 	if got := h.verdict(StepConditionalTrigger); got != VerdictSkipped {
 		t.Fatalf("verdict = %q, want skipped", got)
@@ -385,7 +426,8 @@ func TestTheTriggerStepSkipsWhenTheGridHasNoRoom(t *testing.T) {
 // step's order cap uses.
 func TestTheTriggerStepMayHoldASecondConditionalAndNothingElseMay(t *testing.T) {
 	h := triggerHarness(t, nil)
-	r := h.runner(t, triggerOptions(time.Minute))
+	seedM0TriggerPrerequisites(t, h)
+	r := h.runner(t, triggerOptions(t, time.Minute))
 	r.prior = []Entry{{StepID: StepConditionalRegister, Artifacts: []Artifact{
 		{Kind: KindConditional, ID: "co-live", Symbol: "005930", CreatedAt: time.Now()},
 	}}}
@@ -415,7 +457,8 @@ func TestTheOrderCapIsUntouchedByTheTriggerStep(t *testing.T) {
 		t.Fatalf("MaxLiveOrders = %d, want 1", MaxLiveOrders)
 	}
 	h := triggerHarness(t, nil)
-	r := h.runner(t, triggerOptions(time.Minute))
+	seedM0TriggerPrerequisites(t, h)
+	r := h.runner(t, triggerOptions(t, time.Minute))
 	r.prior = []Entry{{StepID: StepOrderCancel, Artifacts: []Artifact{
 		{Kind: KindOrder, ID: "ord-live", Symbol: "005930", CreatedAt: time.Now()},
 	}}}

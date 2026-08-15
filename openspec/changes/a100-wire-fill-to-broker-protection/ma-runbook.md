@@ -1,4 +1,36 @@
-# M-A 실행 명령서 — 2026-08-14(금) KR 장중 09:00–15:30 KST
+# M-A 실행 명령서 — 2026-08-14 역사본(만료, 실행 금지)
+
+> **이 명령서는 실행 권위가 아니다.** 아래 날짜·expire·종목 후보·보유·잔여 주문·토글·attestation은
+> 2026-08-14 세션 전제라 2026-08-15 이후 재사용할 수 없다. 새 세션은
+> `measurement-prereq.md`의 2026-08-15 재발행 규칙에 따라 read-only receipt로 시장·보유·sellable·
+> 잔여물·토글·capability·새 expire를 다시 동결해야 한다. 그 뒤에도 등록·정정·취소마다 사람이
+> 즉시 승인하기 전에는 어떤 mutating 명령도 실행하지 않는다. 아래 명령은 형식 참고용 historical
+> record일 뿐이며 복사 실행을 금지한다.
+>
+> **2026-08-15 추가 정정:** 당시의 `tossctl order get <child-id>` 표기는 실제 CLI 명령이 아니다.
+> `order show`는 WTS surface라 M-A official causal evidence가 될 수 없다. 다음 세션은 tasks 0.2a의
+> M0가 official transport의 body-read-complete에서 parent/child raw result와 모든 attempt를 기록하고,
+> broker create 전 pending client intent, child GET 전 exact parent/child cleanup checkpoint를 owner-only
+> verify record에 fsync한다. prior outstanding가 있으면 cleanup prologue도 실행하지 않는다. M0가
+> GREEN·A-M0 accepted되기 전에는 이 역사본의 place 절차를 열지 않는다.
+>
+> **2026-08-15 artifact 갱신:** reviewed M0 source의 재현 가능한 설치 후보는
+> `/tmp/a100-m0-artifact.M8EeNi`에 봉인됐고 별도 Terra reviewer가 `P0=0/P1=0/P2=0`으로
+> 수용했다. 그러나 PATH binary 교체는 실행하지 않았으며 이 역사본의 날짜·종목·expire·잔여물은
+> 여전히 만료 상태다. 후보 설치에는 별도 명시 승인, 설치 뒤에는 새 장중 read-only preflight와
+> exact 주문별 승인이 필요하다. artifact acceptance를 아래 명령의 실행 승인으로 해석하지 않는다.
+>
+> **설치 후 정정:** 이후 사람 승인으로 candidate SHA `899a74ac…e882`를
+> `/home/daniel/.local/bin/tossctl`에 원자 설치했고 기존 SHA `b0e805f3…96f9`는 같은 directory의
+> 검증된 backup으로 남겼다. 설치 adversary 최종 판정은 `P0=0/P1=0/P2=1`이다. 이로써 binary
+> identity gate만 닫혔으며, 이 역사본의 실행 금지와 새 세션·새 주문별 승인 요구는 변하지 않는다.
+>
+> **2026-08-15 fresh preflight 정정:** corrected receipt
+> `/tmp/a100-ma-preflight-corrected.kSn14D`에서 official OPEN은 terminal 5건
+> (`PAUSED` 2, `WATCHING` 3)으로 확인됐다. 하지만 KR 폐장, 각 residual의 사람 retain/cancel 결정
+> 부재, official sellable·미관리 후보 미완결, soak/attestation unready·binary-unbound 때문에
+> 운영 판정은 HOLD다. 이 역사본의 후보·expire·명령을 재사용하거나 preview·toggle·verify run을
+> 시작하지 않는다.
 
 `measurement-prereq.md`의 M-A 절차를 실행 가능한 명령으로 편성한 것이다. 절차의 정본은
 measurement-prereq.md이고, 이 문서는 그날의 손 순서다. 사용자 승인(2026-08-14, "권장사항
@@ -75,17 +107,24 @@ tossctl order conditional place --symbol <SYM> --type SINGLE --order-type MARKET
 - 등록 직후: `tossctl order conditional get <id>` — trigger·수량이 요청과 비교 가능한
   형태로 돌아오는지(단계 4b, **실패 시 tasks 3.3 수렴 정의 재설계**). sellable-quantity
   재확인(M13 재확인 — 예약 없음 예상).
-- 이후 **15초 간격** `get <id>` 폴링(429 회피 — order walk는 하지 않는다):
-  상태 전이, `triggeredOrderId` 노출 시각(등록→노출 지연), child 주문 id.
-- child 체결: `tossctl order get <child-id>` — 체결 시각·수량·가격.
-- 발동 후 원 조건주문 최종 상태 문자열. **`PAUSED`가 관측되면 0.11 결정의 입력이다.**
+- 이후 M0의 기존 verify trigger poll만 사용한다. M0 mode는 exact
+  `--include-trigger --confirm-each --resume --redo conditional-trigger`이며 `--include-ttl-edge`나 다른
+  redo를 함께 쓰지 않는다. transport body-read 경계에서 raw 응답·모든 401/429 attempt,
+  `triggeredOrderId` local receipt sequence/monotonic 시각을 기록한다.
+- child 체결: 역사본의 `order get`/WTS `order show`를 사용하지 않는다. M0가 official child by-id
+  raw GET을 호출해 raw payload digest와 local receipt sequence/monotonic 시각, 체결 수량·상태·가격을
+  기록한다. parent child-id receipt의 fsync가 child request start보다 앞서고 그 receipt seq가 child
+  first-observed-fill seq보다 엄격히 작아야 하며 broker server timestamp만으로 판정하지 않는다.
+- parent child-ID receipt부터 child fill receipt까지 parent 404/read gap은 HOLD다. durable child fill 뒤
+  parent terminal GET은 요구하지 않는다. **pre-trigger `PAUSED`가 관측되면 0.11 결정의 입력이다.**
 
 ### 7. 기록·판정
 
 - 관측 전량을 `measurement-prereq.md` M-A 표 형식으로 이 change에 기입(에이전트),
   판정은 4갈래(통과/부분 통과/4b 실패/실패) 중 하나를 명시.
-- **실패면 a100을 멈춘다**(design D10). 통과·부분 통과면 tasks 0.2 체크, 0.11 결정 기록
-  → 1절부터 Teammate/적대 리뷰 파이프라인 가동.
+- **완전 통과가 아니면 a100을 멈춘다**(design D10). 부분 통과와 4b 실패도 tasks 0.2를 완료하지
+  않으며, D2/D8/3.10 재설계와 별도 proposal-freeze 적대 리뷰 전에는 T1을 열지 않는다. 완전
+  통과만 tasks 0.2 체크와 0.11 raw-status 판정표 동결 뒤 Teammate/적대 리뷰 파이프라인을 연다.
 
 ### 8. ⌨ 원복 (사람)
 

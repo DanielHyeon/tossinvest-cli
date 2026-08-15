@@ -15,9 +15,12 @@ package verifylive
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -147,6 +150,25 @@ type fakeBroker struct {
 	condReads  map[string]int
 	priceReads int
 	childReads map[string]int
+	// recoveryOrders, when non-nil, is the raw all-page recovery fixture.
+	recoveryOrders                []official.RawConditionalOrder
+	recoveryDuplicateAcrossStatus bool
+	recoveryPageScript            func(status, cursor string) (official.RawConditionalOrderList, error)
+	// suppressAttemptTrace models an arbitrary Broker that does not preserve the
+	// official read boundary; M0 must HOLD instead of accepting it as evidence.
+	suppressAttemptTrace bool
+	// rawParentOrderType and childIdentitySymbol deliberately corrupt one
+	// extracted field for M0 identity-negative fixtures.
+	rawParentOrderType  string
+	rawParentTrigger    string
+	childIdentitySymbol string
+	childIdentityQty    string
+	// m0ChildStatusOnce emits a failed first transport observation before the
+	// successful retry result, exercising the irreversible critical gap.
+	m0ChildStatusOnce        int
+	invalidEnvelopeOnce      bool
+	beforeOrderRawByID       func(string)
+	conditional404AfterReads int
 
 	// --- what happened ---
 	requests []string
@@ -416,22 +438,231 @@ func (f *fakeBroker) withWorkingOrder(id, symbol, status string) json.RawMessage
 	return raw
 }
 
-func (f *fakeBroker) OrderRawByID(_ context.Context, orderID string) (json.RawMessage, error) {
+func (f *fakeBroker) OrderRawByID(ctx context.Context, orderID string) (json.RawMessage, error) {
+	if f.beforeOrderRawByID != nil {
+		f.beforeOrderRawByID(orderID)
+	}
 	f.log("GET /orders/" + orderID)
 	f.mu.Lock()
-	defer f.mu.Unlock()
 	raw, ok := f.orders[orderID]
+	f.mu.Unlock()
 	if !ok {
 		return nil, &official.APIError{Code: 404, Body: `{"error":{"code":"order-not-found"}}`}
 	}
+	result := raw
 	if orderID != f.firedID {
-		return raw, nil
+		// Keep the ordinary scripted read.
+	} else {
+		f.mu.Lock()
+		f.childReads[orderID]++
+		filled := f.childFillsAfterReads > 0 && f.childReads[orderID] >= f.childFillsAfterReads
+		f.mu.Unlock()
+		if filled {
+			result = mustFilledOrderJSONFrom(result)
+		}
 	}
-	f.childReads[orderID]++
-	if f.childFillsAfterReads <= 0 || f.childReads[orderID] < f.childFillsAfterReads {
-		return raw, nil
+	if f.childIdentitySymbol != "" {
+		var decoded map[string]any
+		if err := json.Unmarshal(result, &decoded); err != nil {
+			panic(err)
+		}
+		decoded["symbol"] = f.childIdentitySymbol
+		result, _ = json.Marshal(decoded)
 	}
-	return mustFilledOrderJSON(orderID), nil
+	if f.childIdentityQty != "" {
+		var decoded map[string]any
+		if err := json.Unmarshal(result, &decoded); err != nil {
+			panic(err)
+		}
+		decoded["quantity"] = f.childIdentityQty
+		result, _ = json.Marshal(decoded)
+	}
+	return result, nil
+}
+
+func fakeResultEnvelope(result any) []byte {
+	body, err := json.Marshal(struct {
+		Result any `json:"result"`
+	}{Result: result})
+	if err != nil {
+		panic(err)
+	}
+	return body
+}
+
+// newM0HTTPClient is the M0-only fixture authority: Runner sees this concrete
+// client for both mutations and raw reads. The old fake is only the server's
+// state model, never a Broker supplied to an M0 Runner.
+func newM0HTTPClient(t *testing.T, f *fakeBroker) *official.Client {
+	t.Helper()
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		writeResult := func(result any) { fmt.Fprint(w, string(fakeResultEnvelope(result))) }
+		writeError := func(err error) {
+			if errors.Is(err, official.ErrRateLimited) {
+				w.WriteHeader(http.StatusTooManyRequests)
+			} else {
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+			fmt.Fprint(w, `{"error":{"code":"fixture-error"}}`)
+		}
+		conditionalResult := func(order official.RawConditionalOrder) map[string]any {
+			return map[string]any{"conditionalOrderId": order.ID, "clientOrderId": order.ClientOrderID,
+				"type": order.Type, "status": order.Status, "symbol": order.Symbol, "market": order.Market,
+				"quantity": order.Quantity, "orderType": order.OrderType, "expireDate": order.ExpireDate,
+				"first": map[string]any{"orderSide": order.OrderSide, "type": order.ConditionType,
+					"status": order.FirstStatus, "triggerPrice": order.TriggerPrice, "triggeredOrderId": order.TriggeredOrderID}}
+		}
+		if r.URL.Path == "/oauth2/token" {
+			fmt.Fprint(w, `{"access_token":"m0","expires_in":3600,"token_type":"Bearer"}`)
+			return
+		}
+		switch {
+		case r.URL.Path == "/api/v1/accounts":
+			writeResult([]map[string]any{{"accountNo": "123-45-678901", "accountSeq": 1, "accountType": "BROKERAGE"}})
+		case r.URL.Path == "/api/v1/sellable-quantity":
+			sellable, err := f.SellableQuantity(r.Context(), r.URL.Query().Get("symbol"))
+			if err != nil {
+				writeError(err)
+				return
+			}
+			writeResult(map[string]any{"sellableQuantity": trim(sellable.Quantity)})
+		case r.URL.Path == "/api/v1/holdings":
+			holdings, err := f.Holdings(r.Context(), r.URL.Query().Get("symbol"))
+			if err != nil {
+				writeError(err)
+				return
+			}
+			items := make([]map[string]any, 0, len(holdings))
+			for _, holding := range holdings {
+				items = append(items, map[string]any{"symbol": holding.Symbol, "marketCountry": "KR", "currency": "KRW", "quantity": trim(holding.Quantity), "lastPrice": trim(f.quotes[holding.Symbol])})
+			}
+			writeResult(map[string]any{"items": items})
+		case r.URL.Path == "/api/v1/prices":
+			quotes, err := f.Prices(r.Context(), strings.Split(r.URL.Query().Get("symbols"), ","))
+			if err != nil {
+				writeError(err)
+				return
+			}
+			items := make([]map[string]any, 0, len(quotes))
+			for _, quote := range quotes {
+				items = append(items, map[string]any{"symbol": quote.Symbol, "lastPrice": trim(quote.Last), "currency": "KRW"})
+			}
+			writeResult(items)
+		case r.URL.Path == "/api/v1/orderbook":
+			book, err := f.Orderbook(r.Context(), r.URL.Query().Get("symbol"))
+			if err != nil {
+				writeError(err)
+				return
+			}
+			bids, asks := make([]map[string]any, 0, len(book.Bids)), make([]map[string]any, 0, len(book.Offers))
+			for _, level := range book.Bids {
+				bids = append(bids, map[string]any{"price": trim(level.Price), "volume": trim(level.Volume)})
+			}
+			for _, level := range book.Offers {
+				asks = append(asks, map[string]any{"price": trim(level.Price), "volume": trim(level.Volume)})
+			}
+			writeResult(map[string]any{"bids": bids, "asks": asks, "currency": "KRW"})
+		case r.URL.Path == "/api/v1/price-limits":
+			limits, err := f.PriceLimits(r.Context(), r.URL.Query().Get("symbol"))
+			if err != nil {
+				writeError(err)
+				return
+			}
+			writeResult(map[string]any{"upperLimitPrice": trim(limits.UpperLimit), "lowerLimitPrice": trim(limits.LowerLimit), "currency": "KRW"})
+		case r.URL.Path == "/api/v1/conditional-orders" && r.Method == http.MethodPost:
+			var body official.ConditionalCreateBody
+			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			ref, err := f.CreateConditionalOrder(r.Context(), body)
+			if err != nil {
+				writeError(err)
+				return
+			}
+			writeResult(map[string]any{"conditionalOrderId": ref.ID, "clientOrderId": body.ClientOrderID})
+		case r.URL.Path == "/api/v1/conditional-orders" && r.Method == http.MethodGet:
+			page, err := f.ProtectionConditionalOrdersRaw(r.Context(), r.URL.Query().Get("status"), r.URL.Query().Get("symbol"), r.URL.Query().Get("cursor"), 100)
+			if err != nil {
+				writeError(err)
+				return
+			}
+			orders := make([]map[string]any, 0, len(page.Orders))
+			for _, order := range page.Orders {
+				orders = append(orders, conditionalResult(order))
+			}
+			writeResult(map[string]any{"conditionalOrders": orders, "nextCursor": page.NextCursor, "hasNext": page.HasNext})
+		case strings.HasPrefix(r.URL.Path, "/api/v1/conditional-orders/"):
+			id := strings.TrimPrefix(r.URL.Path, "/api/v1/conditional-orders/")
+			if r.Method == http.MethodDelete {
+				if err := f.CancelConditionalOrder(r.Context(), id); err != nil {
+					w.WriteHeader(http.StatusNotFound)
+					fmt.Fprint(w, `{"error":{"code":"not-found"}}`)
+					return
+				}
+				writeResult(map[string]any{})
+				return
+			}
+			raw, err := f.ConditionalOrderRaw(r.Context(), id)
+			if err != nil {
+				w.WriteHeader(http.StatusNotFound)
+				fmt.Fprint(w, `{"error":{"code":"not-found"}}`)
+				return
+			}
+			writeResult(conditionalResult(raw))
+		case strings.HasPrefix(r.URL.Path, "/api/v1/orders/"):
+			id := strings.TrimPrefix(r.URL.Path, "/api/v1/orders/")
+			f.mu.Lock()
+			status := f.m0ChildStatusOnce
+			if id == f.firedID && status != 0 {
+				f.m0ChildStatusOnce = 0
+			}
+			invalid := id == f.firedID && f.invalidEnvelopeOnce
+			if invalid {
+				f.invalidEnvelopeOnce = false
+			}
+			f.mu.Unlock()
+			if status != 0 {
+				w.WriteHeader(status)
+				fmt.Fprint(w, `{"error":{"code":"injected"}}`)
+				return
+			}
+			raw, err := f.OrderRawByID(r.Context(), id)
+			if err != nil {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			if invalid {
+				fmt.Fprint(w, `{"missing_result":true}`)
+				return
+			}
+			fmt.Fprintf(w, `{"result":%s}`, raw)
+		default:
+			fmt.Fprint(w, `{"result":{}}`)
+		}
+	}))
+	t.Cleanup(s.Close)
+	return official.New(official.Credentials{APIKey: "m0", SecretKey: "m0"}, filepath.Join(t.TempDir(), "token"), official.WithBaseURL(s.URL), official.WithHTTPClient(s.Client()), official.WithAccountSeq(1))
+}
+
+func mustFilledOrderJSONFrom(raw json.RawMessage) json.RawMessage {
+	var m map[string]any
+	if err := json.Unmarshal(raw, &m); err != nil {
+		panic(err)
+	}
+	m["orderType"] = "MARKET"
+	m["status"] = "FILLED"
+	execution, _ := m["execution"].(map[string]any)
+	execution["filledQuantity"] = m["quantity"]
+	execution["averageFilledPrice"] = "70000"
+	execution["filledAmount"] = "70000"
+	m["execution"] = execution
+	out, err := json.Marshal(m)
+	if err != nil {
+		panic(err)
+	}
+	return out
 }
 
 func (f *fakeBroker) ConditionalOrders(_ context.Context, status, symbol, _ string, _ int) (domain.ConditionalOrderList, error) {
@@ -462,6 +693,48 @@ func (f *fakeBroker) ConditionalOrders(_ context.Context, status, symbol, _ stri
 	return domain.ConditionalOrderList{Orders: out}, nil
 }
 
+// ProtectionConditionalOrdersRaw is the test-only read surface used by M0
+// response-lost recovery. It has no mutation method and emits the same observer
+// boundary as the official client.
+func (f *fakeBroker) ProtectionConditionalOrdersRaw(ctx context.Context, status, symbol, cursor string, _ int) (official.RawConditionalOrderList, error) {
+	f.log("GET /conditional-orders raw-recovery")
+	if f.recoveryPageScript != nil {
+		result, err := f.recoveryPageScript(status, cursor)
+		if err != nil {
+			return official.RawConditionalOrderList{}, err
+		}
+		return result, nil
+	}
+	f.mu.Lock()
+	if f.recoveryOrders != nil {
+		orders := append([]official.RawConditionalOrder(nil), f.recoveryOrders...)
+		if status == "CLOSED" && !f.recoveryDuplicateAcrossStatus {
+			orders = nil
+		}
+		f.mu.Unlock()
+		return official.RawConditionalOrderList{Orders: orders}, nil
+	}
+	orders := make([]official.RawConditionalOrder, 0, len(f.conds))
+	for id, c := range f.conds {
+		if symbol != "" && c.Symbol != symbol {
+			continue
+		}
+		clientID := ""
+		for key, value := range f.keys {
+			if value.orderID == id {
+				clientID = key
+				break
+			}
+		}
+		orders = append(orders, official.RawConditionalOrder{ID: c.ID, ClientOrderID: clientID, Symbol: c.Symbol, Market: c.Market,
+			Type: c.Type, Status: c.Status, FirstStatus: c.First.Status, OrderType: c.OrderType, OrderSide: "SELL",
+			Quantity: trim(c.Quantity), TriggerPrice: trim(c.First.TriggerPrice), ConditionType: c.First.Type,
+			TriggeredOrderID: c.First.TriggeredOrderID, ExpireDate: c.ExpireDate})
+	}
+	f.mu.Unlock()
+	return official.RawConditionalOrderList{Orders: orders}, nil
+}
+
 func (f *fakeBroker) ConditionalOrder(_ context.Context, id string) (domain.ConditionalOrder, error) {
 	f.log("GET /conditional-orders/" + id)
 	f.mu.Lock()
@@ -475,6 +748,9 @@ func (f *fakeBroker) ConditionalOrder(_ context.Context, id string) (domain.Cond
 	}
 	f.condReads[id]++
 	n := f.condReads[id]
+	if f.conditional404AfterReads > 0 && n >= f.conditional404AfterReads {
+		return domain.ConditionalOrder{}, &official.APIError{Code: 404, Body: `{"error":{"code":"conditional-order-not-found"}}`}
+	}
 	if f.fireAfterReads > 0 && n >= f.fireAfterReads {
 		c.First.Status = "TRIGGERED"
 		c.Status = "TRIGGERED"
@@ -488,6 +764,33 @@ func (f *fakeBroker) ConditionalOrder(_ context.Context, id string) (domain.Cond
 	}
 	f.conds[id] = c
 	return c, nil
+}
+
+func (f *fakeBroker) ConditionalOrderRaw(ctx context.Context, id string) (official.RawConditionalOrder, error) {
+	c, err := f.ConditionalOrder(ctx, id)
+	if err != nil {
+		return official.RawConditionalOrder{}, err
+	}
+	clientID := ""
+	f.mu.Lock()
+	for key, value := range f.keys {
+		if value.orderID == id {
+			clientID = key
+			break
+		}
+	}
+	f.mu.Unlock()
+	raw := official.RawConditionalOrder{ID: c.ID, ClientOrderID: clientID, Symbol: c.Symbol, Market: c.Market,
+		Type: c.Type, Status: c.Status, FirstStatus: c.First.Status, OrderType: c.OrderType, OrderSide: "SELL",
+		Quantity: trim(c.Quantity), TriggerPrice: trim(c.First.TriggerPrice), ConditionType: c.First.Type,
+		TriggeredOrderID: c.First.TriggeredOrderID, ExpireDate: c.ExpireDate}
+	if f.rawParentOrderType != "" {
+		raw.OrderType = f.rawParentOrderType
+	}
+	if f.rawParentTrigger != "" {
+		raw.TriggerPrice = f.rawParentTrigger
+	}
+	return raw, nil
 }
 
 // --- writes -------------------------------------------------------------------
@@ -619,7 +922,7 @@ func (f *fakeBroker) CreateConditionalOrder(_ context.Context, body official.Con
 	f.mu.Lock()
 	f.conds[id] = domain.ConditionalOrder{
 		ID: id, Type: body.Type, Status: "WATCHING", Symbol: body.Symbol, Market: "KR",
-		Quantity: parseDecimal(body.Quantity), OrderType: body.OrderType,
+		Quantity: parseDecimal(body.Quantity), OrderType: body.OrderType, ExpireDate: body.ExpireDate,
 		First: domain.ConditionalOrderCondition{
 			Type: "STOP", Status: "WATCHING", TriggerPrice: parseDecimal(body.First.TriggerPrice),
 		},
@@ -850,6 +1153,7 @@ func (o *operator) actions() []string {
 type harness struct {
 	t        *testing.T
 	broker   *fakeBroker
+	m0Client *official.Client
 	op       *operator
 	record   string
 	now      time.Time
@@ -914,6 +1218,14 @@ func (h *harness) build(opts Options) (*Runner, func(), error) {
 
 	h.instance++
 	opts.Broker = h.broker
+	if opts.IncludeTrigger {
+		if !h.broker.suppressAttemptTrace {
+			if h.m0Client == nil {
+				h.m0Client = newM0HTTPClient(h.t, h.broker)
+			}
+			opts.Broker = h.m0Client
+		}
+	}
 	opts.Recorder = rec
 	opts.Confirm = h.op.confirmer()
 	opts.ConfirmBatch = h.op.batchConfirmer()

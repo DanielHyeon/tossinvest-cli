@@ -1,0 +1,141 @@
+{
+  "file": "internal/verifylive/steps_trigger_test.go",
+  "source_sha256": "176dde0486ef6bfd34439a3e66af4e5daf15bc6444cfa413994e1cbcd40e835e",
+  "package": "verifylive",
+  "function": "TestTheOrderCapIsUntouchedByTheTriggerStep",
+  "signature": "TestTheOrderCapIsUntouchedByTheTriggerStep(params=1, results=0)",
+  "start": {
+    "line": 455,
+    "column": 1
+  },
+  "end": {
+    "line": 468,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 456,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 465,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 457,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 459,
+        "column": 7
+      },
+      "text": "triggerHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 460,
+        "column": 2
+      },
+      "text": "seedM0TriggerPrerequisites"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 7
+      },
+      "text": "h.runner"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 19
+      },
+      "text": "triggerOptions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 463,
+        "column": 66
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 465,
+        "column": 12
+      },
+      "text": "r.checkOrderCap"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 465,
+        "column": 43
+      },
+      "text": "mustStep"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 466,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 459,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 461,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 462,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 465,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

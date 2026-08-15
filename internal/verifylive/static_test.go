@@ -203,14 +203,14 @@ func TestNoAutomationBypassExists(t *testing.T) {
 			}
 		}
 	}
-	// os.Getpid is the one os call the package needs, and record.go is the only
-	// file allowed to make it.
+	// record.go owns the ordinary record and receipt.go owns the separate M0
+	// owner-only receipt filesystem barrier. Neither path can mint approval.
 	for name, src := range packageFiles(t, false) {
-		if name == "record.go" {
+		if name == "record.go" || name == "receipt.go" {
 			continue
 		}
 		if strings.Contains(strings.Join(nonCommentLines(src), "\n"), "os.") {
-			t.Errorf("%s reaches into os; only record.go needs to (the process identity and the record file)", name)
+			t.Errorf("%s reaches into os; only record.go and receipt.go may own local durable evidence", name)
 		}
 	}
 }

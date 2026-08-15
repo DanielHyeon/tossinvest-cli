@@ -1,0 +1,400 @@
+{
+  "file": "internal/verifylive/mutate.go",
+  "source_sha256": "e458ab76ccefd18ca4cd8cf4330fc6f12a9863d42618d10d99e276aa360b3a9a",
+  "package": "verifylive",
+  "function": "createConditional",
+  "receiver": "Runner",
+  "signature": "Runner.createConditional(params=4, results=2)",
+  "start": {
+    "line": 503,
+    "column": 1
+  },
+  "end": {
+    "line": 556,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 504,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 508,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 515,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 522,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 525,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 526,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 534,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 537,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 540,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 541,
+        "column": 3
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 545,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 505,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 513,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 520,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 527,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 535,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 538,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 542,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 550,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 555,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 504,
+        "column": 12
+      },
+      "text": "r.checkConditionalCap"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 507,
+        "column": 12
+      },
+      "text": "conditionalDetail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 508,
+        "column": 12
+      },
+      "text": "r.gate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 510,
+        "column": 13
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 515,
+        "column": 12
+      },
+      "text": "r.appendM0Checkpoint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 522,
+        "column": 5
+      },
+      "text": "r.m0ReceiptUsable"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 526,
+        "column": 13
+      },
+      "text": "r.m0BeforeConditionalCreate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 531,
+        "column": 13
+      },
+      "text": "r.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 532,
+        "column": 14
+      },
+      "text": "r.broker.CreateConditionalOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 533,
+        "column": 2
+      },
+      "text": "sr.logCall"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 533,
+        "column": 55
+      },
+      "text": "r.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 537,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 538,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 541,
+        "column": 13
+      },
+      "text": "r.m0AfterConditionalCreate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 545,
+        "column": 12
+      },
+      "text": "r.appendM0Checkpoint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 550,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 552,
+        "column": 2
+      },
+      "text": "sr.created"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 552,
+        "column": 55
+      },
+      "text": "r.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 553,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 504,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 507,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 508,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 515,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 523,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 526,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 531,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 532,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 541,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 545,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

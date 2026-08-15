@@ -82,6 +82,11 @@ const KindApproval = "approval"
 // isStepEntry is the single place that decides which of those two it is.
 const KindCleanup = "cleanup"
 
+// KindM0Checkpoint is an owner-only recovery line. Unlike the sanitized causal
+// receipt, it may retain exact broker identifiers so status/abort can direct a
+// human to the only objects this verification owns.
+const KindM0Checkpoint = "m0-checkpoint"
+
 // Verdict is a step's outcome.
 type Verdict string
 
@@ -270,6 +275,25 @@ type Entry struct {
 	Calls        []Call        `json:"calls,omitempty"`
 	Observations []Observation `json:"observations,omitempty"`
 	Artifacts    []Artifact    `json:"artifacts,omitempty"`
+	M0Checkpoint *M0Checkpoint `json:"m0_checkpoint,omitempty"`
+}
+
+// M0Checkpoint records pending/create/child recovery identity in the existing
+// owner-only verify record. It is not a trading-journal record.
+type M0Checkpoint struct {
+	Kind                string `json:"kind"`
+	ClientOrderID       string `json:"client_order_id,omitempty"`
+	ParentConditionalID string `json:"parent_conditional_id,omitempty"`
+	ChildOrderID        string `json:"child_order_id,omitempty"`
+	Symbol              string `json:"symbol"`
+	Market              string `json:"market"`
+	Type                string `json:"type"`
+	Quantity            string `json:"quantity"`
+	Side                string `json:"side"`
+	OrderType           string `json:"order_type"`
+	ConditionType       string `json:"condition_type"`
+	Trigger             string `json:"trigger"`
+	ExpireDate          string `json:"expire_date"`
 }
 
 // Recorder appends entries to the record.
