@@ -15,8 +15,11 @@ package strategyprojectionrpc
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
+	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -82,5 +85,36 @@ func TestTheClientCanBeLetGo(t *testing.T) {
 	if _, err := client.Read(context.Background()); err != nil {
 		t.Errorf("Close 가 client 를 무력화했다: %v — Close 는 유휴 연결만 놓아 주는 "+
 			"것이어야 진행 중인 읽기와 나란히 부를 수 있다", err)
+	}
+}
+
+// a109SpyTransport 는 Close 가 **transport 까지** 닿는지 세는 감시자다.
+type a109SpyTransport struct{ closes atomic.Int64 }
+
+func (t *a109SpyTransport) RoundTrip(*http.Request) (*http.Response, error) {
+	return nil, errors.New("a109: 이 감시자는 요청을 보내지 않는다")
+}
+
+func (t *a109SpyTransport) CloseIdleConnections() { t.closes.Add(1) }
+
+// TestCloseReachesTheTransport 는 Close 의 **본문**을 잰다.
+//
+// 왜 따로 재는가: 이 client 의 transport 는 이제 keep-alive 를 쓰지 않으므로 놓아 줄
+// 유휴 연결이 애초에 없다. 그래서 Close 의 본문을 지워도 dial 한 client 로는 아무
+// 차이가 관측되지 않는다 — 뮤테이션 M38 이 그렇게 살아남았다(mutation-ledger-t2.md).
+// 두 방어가 겹칠 때 바깥 것이 안쪽 것의 측정을 가리는 모양이고, 그때 답은 **안쪽을
+// 직접 재는 것**이다: 감시 transport 하나를 앉히고 Close 가 그것에 닿는지 본다.
+func TestCloseReachesTheTransport(t *testing.T) {
+	spy := &a109SpyTransport{}
+	client := &Client{
+		baseURL: "http://unix", token: strings.Repeat("a", 32),
+		http: &http.Client{Transport: spy},
+	}
+	if err := client.Close(); err != nil {
+		t.Fatalf("Close 가 오류를 냈다: %v", err)
+	}
+	if got := spy.closes.Load(); got != 1 {
+		t.Errorf("Close 가 transport 에 닿은 횟수 = %d, want 1 — Close 가 아무것도 하지 "+
+			"않으면 keep-alive 를 쓰는 미래의 transport 에서 연결이 그대로 남는다", got)
 	}
 }

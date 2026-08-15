@@ -166,6 +166,23 @@ func TestTheProbeRefusesASocketThatChangedUnderIt(t *testing.T) {
 	}
 }
 
+// TestTheProbeBudgetIsTen 은 **배포가 실제로 쓰는 값**이다.
+//
+// 아래 상한 테스트는 상수를 읽어 그보다 하나 많은 잔재를 만든다 — 상수를 1000으로 바꿔도
+// 초록이다(뮤테이션 M42 가 그렇게 살아남았다). 관계식만 재는 테스트는 그 값이 운영에서
+// 무엇인지 말하지 않는다. 그래서 값을 여기서 따로 못박는다.
+//
+// 10 인 근거: 우리 수명주기가 한 control 디렉터리에 남길 수 있는 socket 은 기동 하나당
+// 최대 둘(최종 이름 + 발행 중이던 staging)이고 회수는 매 기동에 디렉터리를 비운다.
+// 정상 범위는 0~2 이며 10 은 그 다섯 배다. 이 수를 늘릴수록 이상 상태에서 journal flock 을
+// 쥔 채 순차 200ms 를 기다리는 시간이 길어진다.
+func TestTheProbeBudgetIsTen(t *testing.T) {
+	if maxPrivateSocketProbes != 10 {
+		t.Errorf("운영 probe 상한 = %d, want 10 — 이 수 × %s 가 flock 을 쥔 채 엔진 기동 "+
+			"앞에 붙는다", maxPrivateSocketProbes, privateProbeTimeout)
+	}
+}
+
 // TestReclaimRefusesToProbeAnUnboundedNumberOfSockets 는 G8 이다.
 //
 // probe 하나는 최대 `privateProbeTimeout`(200ms)이고 순차다. 그리고 이 함수는 부팅
