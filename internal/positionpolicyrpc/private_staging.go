@@ -13,6 +13,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -131,7 +132,12 @@ func hasAnyPrefix(name string, prefixes []string) bool {
 func verifyPrivateStagingEntry(path string) (os.FileInfo, error) {
 	info, err := os.Lstat(path)
 	if err != nil || !(info.Mode().IsRegular() || info.Mode()&os.ModeSocket != 0) {
-		return nil, errors.New("private endpoint: stale staging entry has an unexpected shape")
+		// 오류는 **어느 엔트리**인지 말한다(a109 §1-fix F6). D3 강등의 회복 수단은
+		// "재시작"이 아니라 "보고된 원인을 제거한 뒤 재시작"이므로(freeze P0-4), 이름
+		// 없는 거부는 실행 가능한 안내가 아니다. 디렉터리는 이미 오류의 문맥에 있으니
+		// basename 이면 충분하다.
+		return nil, fmt.Errorf(
+			"private endpoint: stale staging entry has an unexpected shape: %s", filepath.Base(path))
 	}
 	if err := validateOwnerAndLinks(info, false); err != nil {
 		return nil, err

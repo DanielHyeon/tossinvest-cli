@@ -131,7 +131,11 @@ func ReclaimStalePrivateEndpoint(controlDir string, names PrivateEndpointNames) 
 				stagedSockets = append(stagedSockets, path)
 			}
 		default:
-			return errors.New("private endpoint: stale control directory has unexpected entries")
+			// 오류는 **어느 엔트리**인지 말한다(a109 §1-fix F6). 이 거부는 결정적이라
+			// 재시작으로는 벗어날 수 없고, 회복은 "보고된 원인을 제거한 뒤 재시작"뿐이다
+			// (freeze P0-4). 이름 없는 거부는 운영자에게 "디렉터리 안 무언가"만 말한다.
+			return fmt.Errorf(
+				"private endpoint: stale control directory has an unexpected entry: %s", name)
 		}
 	}
 	// 주인의 생사를 먼저 판정한다. 사망이 증명되지 않은 채로 다음 줄에 가면 살아 있는
@@ -155,7 +159,8 @@ func ReclaimStalePrivateEndpoint(controlDir string, names PrivateEndpointNames) 
 	// 절대 unlink하지 않는다.**
 	for _, path := range stagedSockets {
 		if privateSocketAccepts(path) {
-			return errors.New("private endpoint: a staging socket is still accepting")
+			return fmt.Errorf(
+				"private endpoint: a staging socket is still accepting: %s", filepath.Base(path))
 		}
 	}
 	// 여기 왔다면 주인은 죽었다: socket이 없으면 listener도 없고(발행은 listen이 성공한
