@@ -269,12 +269,12 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	if err != nil {
 		return err
 	}
-	policyControl, err := engine.StartPositionPolicyCommandServer(dir, policyCommands)
+	policyControl, err := enginePositionPolicyCommandStart(dir, policyCommands)
 	if err != nil {
 		return err
 	}
 	defer policyControl.Close()
-	policyRuntime, err := engine.StartPositionPolicyRuntimeServer(dir, policyCommands)
+	policyRuntime, err := enginePositionPolicyRuntimeStart(dir, policyCommands)
 	if err != nil {
 		return err
 	}
@@ -310,7 +310,7 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	if err != nil {
 		return err
 	}
-	alertControl, err := engine.StartAlertControlServer(dir, alertOps)
+	alertControl, err := engineAlertControlStart(dir, alertOps)
 	if err != nil {
 		return err
 	}
@@ -414,6 +414,31 @@ func reportStrategyProjectionDegraded(ctx context.Context, ectx *engine.Context,
 // 그러면 회수 규칙을 고칠 때마다 이쪽 테스트가 같이 부서진다 — 재는 것이
 // "잔재가 어떻게 생겼는가"가 아니라 "실패했을 때 엔진이 죽는가"인데도.
 var engineStrategyProjectionStart = strategyprojectionrpc.Start
+
+// 형제 endpoint 셋의 기동도 같은 package 변수 seam 으로 뺀다 (a109 §2.1).
+//
+// # 왜 여기에 또 seam 을 파는가
+//
+// 재려는 것은 "잔재가 어떻게 생겼는가"가 아니라 **"기동이 실패했을 때 엔진이 죽는가"**
+// 다. 실패를 디스크 잔재로 만들면 이 파일의 테스트가 `internal/positionpolicyrpc` ·
+// `internal/app/engine` 의 회수 규칙에 묶이고, 그 규칙은 a109 가 **지금 바꾸고 있는
+// 것**이라 두 작업이 서로를 깨뜨린다. `engineStrategyProjectionStart` 가 a108 에서
+// 같은 이유로 생긴 seam 이고, 이것은 그 관례의 형제 셋이다.
+//
+// ⛔ `internal/app/engine` 의 `cli_testseams.go` 를 관례로 인용하지 마라 — 그 파일은
+// 다른 패키지이고, 거기에 seam 을 더하면 이 편집이 그 패키지를 건드리게 된다.
+var (
+	// command endpoint 만 함수 리터럴로 감싼다. `StartPositionPolicyCommandServer` 의
+	// 두 번째 인자 타입이 `internal/app/engine` 의 **비공개** 인터페이스라, 직접 대입한
+	// 변수는 테스트가 대체 함수를 **적을 수 없는** 타입이 된다. 호출부가 실제로 넘기는
+	// 구체 타입으로 좁혀 두면 그 문제가 사라진다.
+	enginePositionPolicyCommandStart = func(dir string,
+		commands *engine.PositionPolicyCommandService) (*engine.PositionPolicyCommandServer, error) {
+		return engine.StartPositionPolicyCommandServer(dir, commands)
+	}
+	enginePositionPolicyRuntimeStart = engine.StartPositionPolicyRuntimeServer
+	engineAlertControlStart          = engine.StartAlertControlServer
+)
 
 // engineAssemble builds the engine profile.
 //
