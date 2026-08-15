@@ -50,8 +50,12 @@ Pre-Edit Gate:
         센다(절대 경로 103 요구는 넣지 않는다 — Linux 실측 상한 107).
     (3) SetUnlinkOnClose(false)를 반드시 건다. 걸지 않으면 listener 가 자기가 기억하는
         이름을 늦게 unlink 하고, 그 늦은 정리가 후계자의 socket 을 지운다(A1 F5).
-    (4) 최종 이름은 chmod 0600 을 지난 socket 에만 붙는다. 이것이 회수의 owner-write
-        사망 판정이 이식 적법한 근거다(freeze Security①).
+    (4) 최종 이름은 chmod 0600 을 지난 socket 에만 붙는다.
+        ⛔ **정정(2026-08-15, §1-fix F1).** 이 조건은 처음에 "회수의 owner-write 사망
+        판정이 이식 적법한 근거"로 쓰였다. 그 판정 자체가 틀렸으므로 근거의 용도가
+        바뀐다: 지금 이 사실이 뒷받침하는 것은 **probe 전 chmod 0600 이 안전하다**는
+        것이다(발행 계약상 최종 socket 은 원래 0600 이므로 chmod 는 우리 계약의 복원이고,
+        결과 권한은 어떤 경우에도 owner 전용이다).
 ```
 
 ## T1-2. 두 socket endpoint의 회수 — Prepare*Socket → 전체성 회수 + 사망 증명
@@ -90,10 +94,18 @@ Pre-Edit Gate:
         nlink 1 · 0700 디렉터리는 전부 그대로 요구한다.
     (2) **완화는 회수 전용 함수 안에만 있다.** 클라이언트 검증 두 개는 정확-0600 유지.
         뮤테이션 원장이 "클라이언트 검증을 완화하면 테스트가 죽는가"를 확인한다.
-    (3) **산 주인의 socket 은 절대 unlink 하지 않는다.** 제거 전 connect probe 를 하고,
-        사망으로 읽는 것은 셋뿐이다 — ECONNREFUSED · ENOENT · owner 쓰기 비트 없음.
+    (3) **수락 중인 socket 은 이름과 무관하게 절대 unlink 하지 않는다.** 제거 전
+        connect probe 를 하고, 사망으로 읽는 것은 **둘뿐**이다 — ECONNREFUSED · ENOENT.
         그 밖의 오류(타임아웃 등)는 생존으로 간주하고 **거부**한다. PID 는 판정에 쓰지
         않는다(컨테이너 재생성이 PID 를 재배정한다, a102 D4b-2).
+        ⛔ **정정(2026-08-15, §1-fix F1·F5).** 처음에는 셋이었고("owner 쓰기 비트 없음"이
+        셋째), 대상도 **최종 이름의 socket 뿐**이었다. 둘 다 A1 이 반증했다:
+          · owner-write 절은 묻는 대신 **추정**이었고, 쓰기 비트가 깎인 **수락 중인**
+            socket 을 지웠다(P1-A). 지금은 probe 전에 0600 으로 chmod 하고 묻는다 —
+            EACCES 가 사라지므로 산 socket 과 죽은 socket 이 결정적으로 갈린다.
+          · staging 이름의 socket 은 probe 없이 지웠다(P2-D). 발행의 첫 걸음이 staging
+            이름에 bind 하는 것이므로, 그 창의 후계자 socket 이 정확히 그 모양이다.
+            지금은 같은 probe 를 건다.
     (4) **우리가 만들지 않은 것은 치우지 않는다.** 아는 이름은 호출자가 넘기고, 낯선
         엔트리가 하나라도 있으면 아무것도 건드리지 않고 거부한다(socket endpoint 한정).
         staging 엔트리는 모양(정규 파일|socket)에 더해 **소유 uid**도 검증한다(P1-7③).
@@ -147,7 +159,18 @@ Pre-Edit Gate:
 - upstream 상속 테스트 영향: no
 - 실패 테스트 선행 작성: yes — §1.3 의 staging 잔재 회수 RED 가 이 이름들을 쓴다.
     추가로 §1.5 의 이름-집합 완전성 테스트가 "각 발행 경로가 실제로 만드는 이름이 그
-    transport 가 넘기는 집합에 속함"을 **생성기를 실제로 돌려서** 잰다(freeze P2-5).
+    transport 가 넘기는 집합에 속함"을 잰다(freeze P2-5).
+    ⛔ **정정(2026-08-15, §1-fix F2 · A1 P1-B).** 위 줄은 처음에 그 측정을 "각 발행 경로의
+    **생성기를 실제로 돌려서**"라고 적었다. **과장이었다.** 실제로는 이렇다:
+      · socket staging — 발행이 쓰는 그 생성기(`StagedSocketName`)를 실제로 돌린다. 참.
+      · descriptor staging — 테스트가 **상수를 가져다 자기가** `os.CreateTemp` 를 돌린다.
+        발행 경로는 실행되지 않는다. 그래서 발행 쪽이 리터럴로 갈라져도 통과한다 —
+        A1 의 뮤테이션 A1-N1(`.endpoint2-`)이 정확히 그렇게 살아남았다.
+    "발행이 이 상수를 쓴다"는 **동적으로 잴 수 없는 성질**이므로 정적으로 잰다:
+    `TestEveryPublishedStagingPrefixIsTheSharedConstant` 가 go/parser 로 세 transport 를
+    파서, 파일을 만드는 호출(`os.CreateTemp`·`os.OpenFile`)의 이름 인자에 접두 리터럴이
+    있으면 실패시키고, 그 상수가 선언·발행·회수 세 자리에서 읽히는지 센다. A1-N1 을
+    재적용해 사망을 확인했다(원장 §D).
 - 안전 불변식 §0 위반 여부 검토: **통과.** 검증·rollback·sync 순서를 건드리지 않는다.
     리터럴 위치만 바뀌고 만들어지는 이름은 같다.
 ```

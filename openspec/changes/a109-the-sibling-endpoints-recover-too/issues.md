@@ -81,3 +81,58 @@ transport의 `createdControlDir` 플래그가 의미를 잃어 제거했다(실�
 이것은 동작 변화다: 편집 전에는 "남이 만든 디렉터리는 실패해도 남긴다"였고, 편집 후에는
 "회수를 통과한 디렉터리만 존재하므로 지워도 우리 것"이다. 회수가 낯선 엔트리를 거부하는
 것이 그 전제이고, 그 거부를 §1.3 핀과 뮤테이션 M1b가 지킨다.
+
+---
+
+## T1 §1-fix — A1 적대 리뷰 판결 구현 중 남긴 것 (2026-08-15)
+
+### I1. a108 원형(`projectionSocketAccepts`)도 같은 owner-write 추정을 가지고 있다
+
+§1-fix F1은 `privateSocketAccepts`의 owner-write 사망 추정을 chmod-then-probe로 바꿨다.
+그 절은 a108 `internal/strategyprojectionrpc/transport_unix.go`의 `projectionSocketAccepts`에서
+이식한 것이고, **원형에는 그대로 남아 있다.**
+
+**후속 change 등록 후보.** a108 확정 코드는 이 change의 표면이 아니다(pre-edit-gate T1의
+선언된 무변경). 병의 모양은 동일하다 — 쓰기 비트가 깎인 **수락 중인** projection socket을
+죽었다고 읽고 지운다. 다만 노출은 형제보다 좁다: 그 endpoint의 최종 이름은 이미 D1 의례를
+지나 0600으로만 나타나므로, 그 상태에 이르려면 외부에서 chmod가 일어나야 한다.
+
+수정은 기계적이다(chmod 0600 → dial, owner-write 절 삭제). 같은 뮤테이션(F1-N1의 원형판)이
+그것을 지킬 수 있다.
+
+### I2. `SweepPrivateStagingLeftovers`에는 F5의 probe가 없다 — 범위를 주석에 적었다
+
+§1-fix F5는 "수락 중인 socket은 이름과 무관하게 unlink하지 않는다"를 **회수**
+(`ReclaimStalePrivateEndpoint`)에 통일했다. 위생(`SweepPrivateStagingLeftovers`)에는
+그 probe를 넣지 않았다.
+
+**근거:** 이 함수를 쓰는 유일한 endpoint(policy command)는 loopback TCP라 socket을 발행하지
+않는다 — 자기 접두의 socket을 만들 수 있는 경로가 없다. 그리고 `private_staging.go`는
+플랫폼 무관 파일이라 probe(unix 전용)를 부르려면 `_other.go` 스텁 짝을 새로 들여야 하는데,
+그것은 Manager 판결의 범위 밖이다("임의 확장 금지").
+
+**남은 위험:** 다음 사람이 socket을 발행하는 endpoint에 이 위생을 배선하면 그 방어가 없다.
+함수 doc에 그 조건을 명시했다("socket을 발행하는 endpoint에서 쓰려면 probe를 먼저 들여야
+한다"). 코드가 아니라 문서로 막은 것이므로 **약한 방어**다.
+
+### I3. 원장 §B에 남은 M26(Close의 listener 직접 닫기)은 잠정 생존이다
+
+M22("경합이라 못 죽인다")가 A1에게 반증된 이상, 같은 사유를 든 M26도 그 지위를 잃는다.
+지금 원장은 M26을 "경합(잠정)"으로 적고 있다 — "죽지 않는다"가 아니라 "내가 쓴 방법으로는
+안 죽었다"는 뜻이다.
+
+**후속 후보.** `Shutdown`이 대개 listener를 닫아 주므로 "누가 닫았는가"를 파일 관측으로
+가르는 방법을 아직 찾지 못했다. M22를 죽인 A1의 수법(정리 대상 자리에 관측용 파일을 두고
+그 생사를 본다)이 여기에도 통할 가능성이 있다.
+
+### I4. P2-F(산 주인 + 이물 공존의 오귀속)는 잔존 수용이다
+
+A1 P2-F: 산 주인이 살아 있는 디렉터리에 이물이 함께 있으면, 회수는 열거 루프에서 먼저
+만나는 **이물**을 이유로 거부하므로 운영자에게는 "이물을 치워라"만 보인다 — 실제로는
+주인이 살아 있는 것이 더 근본적인 원인인데도.
+
+**수용한다.** §1-fix F6으로 거부 오류가 위반 엔트리를 지목하므로, 안내는 이제 **실행
+가능하다**: 운영자가 그 이물을 치우고 재시작하면 다음 거부가 "the endpoint owner is still
+alive"로 바뀐다. 두 원인을 한 번에 보여 주려면 열거를 끝까지 돌고 오류를 모아야 하는데,
+그것은 "낯선 엔트리를 만나면 아무것도 건드리지 않고 즉시 멈춘다"는 D2의 성질을 약화한다.
+두 번의 부팅으로 두 원인이 순서대로 보이는 쪽을 택했다.
