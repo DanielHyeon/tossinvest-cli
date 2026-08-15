@@ -84,23 +84,39 @@
 
 ## 2b. 리뷰 라운드
 
-- [ ] 2b.1 A1(T1 적대)·A2(T2 적대) 독립 리뷰 — 뮤테이션 재현 포함 → review.md §1·§2.
-- [ ] 2b.2 Manager 판결 + 수정 라운드 → review.md §3·§4.
+- [x] 2b.1 A1(T1 적대)·A2(T2 적대) 독립 리뷰 — 뮤테이션 재현 포함 → review.md §1·§2.
+  A1: P1 3·P2 6, 뮤테이션 7건 원장 대조(3건 반증), RED 3커밋 축자 재현.
+  A2: P0 0·P1 2·P2 11, 뮤테이션 5건 재현 전부 일치, RED 2커밋 재현, D5b 독립 재현.
+- [x] 2b.2 Manager 판결 + 수정 라운드 → review.md §3·§4. T1-fix F1~F6(8커밋)·
+  T2-fix F1~F9(12커밋) — 전 항목 판결 후 위임, 전부 GREEN·원장 정산 완료.
 - [ ] 2b.3 gstack 전체 리뷰 + 수렴 → review.md §5.
 
 ## 3. 게이트
 
-- [ ] 3.1 영향 패키지 `go test -race`(app/engine ≥ `-timeout 25m`) + `go vet`.
+- [ ] 3.1 영향 패키지 `go test -race`(app/engine ≥ `-timeout 25m`, **internal/console
+  ≥ `-timeout 20m`** — 기본 10m 경계 582~693s 실측, A2 P1-2) + `go vet`. 병렬 실행
+  금지(CPU 기아로 위양성 FAIL 이력).
 - [ ] 3.2 `openspec validate --all --strict` → `make sdd-sync` → `make sdd-check` →
   `make gate CHANGE=a109-the-sibling-endpoints-recover-too` (검증 명령은 파이프 없이).
-- [ ] 3.3 롤백 절차(D5b): 코드 근거(구버전 회수는 ReadDir 미호출 — P2-3) + 구버전
-  바이너리 실측 둘 다 → 아래 배포 절차에 결과 기록.
+- [x] 3.3 롤백 절차(D5b): 코드 근거(구버전 production에 `os.ReadDir` 0건 — T2·A2 각각
+  독립 확인) + 실측(T2: 3 Start × 6모양 = 18/18 관용·잔재 생존, A2: 표본 3모양 독립
+  재현 일치) → 아래 배포 절차에 기록 완료.
 - [ ] 3.4 review.md 정산 + PM(STORY-TOS-a109) 동기화 + Manager 독립 검증 기록.
 
 ## 배포 절차 (게이트 밖 — 사람 승인 필요)
 
 merge·push·이미지 빌드·컨테이너 재시작은 사용자 승인 후 별도 수행한다. engine lock을
-잡는 재시작은 두 시장 폐장 창(KST 05:00–09:00)을 따른다. a109를 가로지르는 롤백
-절차는 3.3의 측정 결과가 정본이다: 측정이 "구버전이 신버전 잔재를 무시한다"로 나오면
-사전 wipe 불요를 명기하고, 아니면 wipe 대상 디렉터리(`.position-policy-control`,
-`.position-policy-runtime`, `.alert-control`)를 a108 D5-3 형식으로 명기한다.
+잡는 재시작은 두 시장 폐장 창(KST 05:00–09:00)을 따른다.
+
+- **land 단위는 T1+T2 합본이다**(A1 P1-C). T1의 낯선-엔트리 거부는 T2의 강등이 받는
+  것을 전제로 설계됐다 — T1만 land하면 이물 하나가 엔진 전체를 fatal 영구 기동
+  루프(장중 손절 없음)로 되돌린다. `feat/a109-…` 브랜치는 T2 병합 후에만 main 후보다.
+- **롤백(a109를 가로지르는): 사전 wipe 불요.** 근거 — 코드: 구버전 회수·발행 경로는
+  `os.ReadDir`를 부르지 않아 신버전 `.s-*` 잔재를 보지 못한다(T2·A2 독립 확인).
+  실측: 구버전 바이너리 기동 18/18 관용(T2), 표본 3모양 독립 재현 일치(A2).
+  단 두 가지를 함께 기록한다(A2 P2-11): ① 신버전 잔재는 구버전 부팅을 가로질러
+  **그대로 남고**, 구버전 Close는 그 잔재 때문에 control 디렉터리 rmdir을 조용히
+  실패한다(무해, 로그 없음). ② a109 재배포 시 첫 부팅의 회수가 잔재를 치운다.
+- **배포 후 확인**: 엔진 로그에서 세 endpoint의 강등 보고 유무 확인(운영 control
+  디렉터리의 이물 현존 여부는 개발 세션에서 확인 불가 — freeze 잔존 리스크). 강등
+  보고가 있으면 지목된 엔트리를 제거 후 재시작한다.

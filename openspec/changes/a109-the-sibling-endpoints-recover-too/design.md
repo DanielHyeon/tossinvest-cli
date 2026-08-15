@@ -90,10 +90,14 @@ P2-5). strategyprojectionrpc를 이 기계로 접는 것(descriptor 발행 3벌 
   control **디렉터리** perm에는 대응 완화를 두지 않는다 — owner 비트를 깎는 umask는
   환경 이상으로 분류하고 그 endpoint는 강등·보고된다(P1-7①, a108의 정확-0700 검사와
   일관).
-- **사망 증명**: 제거 전 connect probe(`projectionSocketAccepts` 의례: ECONNREFUSED·
-  ENOENT·owner-write-비트-없음 = 사망, 그 외 = 생존으로 간주하고 거부). PID는 판정에
-  쓰지 않는다(a102 D4b-2 — 컨테이너 재생성은 PID를 재배정한다). **수락 중인 socket은
-  절대 unlink하지 않는다** — 산-주인 탈취가 거부로 바뀐다.
+- **사망 증명**: 제거 전 connect probe. **A1 P1-A 판결로 a108 의례에서 한 가지를
+  바꾼다** — owner-write-비트-없음=사망 추정은 수락 중인 0400 socket을 죽었다고 읽고
+  지운다(A1 실측 재현). 이 시점의 socket은 이미 우리 uid 소유·비symlink·0700 디렉터리
+  검증을 통과했으므로 **chmod 0600 후 dial**하면 생사가 결정적으로 갈린다(산 socket은
+  수락→거부·보존, 죽은 socket은 ECONNREFUSED→회수; chmod 실패는 생존 간주). PID는
+  판정에 쓰지 않는다(a102 D4b-2). **수락 중인 socket은 최종 이름이든 staging 이름이든
+  절대 unlink하지 않는다**(A1 P2-D — socket 모양의 staging 엔트리에도 같은 probe).
+  거부 오류는 위반 엔트리의 이름을 지목한다(A1 P2-E — D3 "원인 제거 후 재시작"의 전제).
 - **1차 방어는 여전히 journal flock이다**: `runEngineRun`은 endpoint 기동 전에 flock을
   쥔다(부팅 1단계). probe는 flock이 막지 못하는 것(엔진 아닌 프로세스의 경로 점유,
   다른 journal 디렉터리의 엔진)에 대한 심층 방어이고, 코드 주석이 flock을 근거로
@@ -241,5 +245,10 @@ T2는 세 Start의 실패를 **`engineStrategyProjectionStart`(engine.go:416) �
 - 콘솔 lifecycle client의 재부착(P2-7): `console.go:397`의 부팅 1회 dial은 httpapi와
   같은 병이지만 이 change는 httpapi만 고친다 — D4의 "재부착은 소비자의 것" 논지가
   콘솔에는 아직 적용되지 않았음을 기록한다. 후속 change 등록 후보.
+- 콘솔의 전략 projection dial(`console.go:411–421`, A2 P1-1): 부팅 1회 dial 실패를
+  nil로 접어 콘솔 화면이 NOT_CONFIGURED로 남는다 — 같은 후속 change 후보. 콘솔 page는
+  구분하지만 콘솔 boot가 접는다.
+- a108 `projectionSocketAccepts`의 owner-write 사망 추정(A1 P1-A의 a108 대응물,
+  issues I1): a108 소유 코드라 이 change는 형제 기계만 고쳤다. 후속 change 등록 후보.
 - `templates_position_policy.go`의 "배선되지 않아 조회만 가능" 문구: 원인 단정이
   아니므로 유지(D3a-2).

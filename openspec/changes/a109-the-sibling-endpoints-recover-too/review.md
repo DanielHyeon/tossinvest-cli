@@ -91,3 +91,71 @@ P2-3 수용(코드 근거 병기), P2-4 수용(상태 전이 1회 보고), P2-5 
 이 change의 방어다. 배포 후 엔진 로그의 강등 보고 확인을 배포 절차에 남긴다.
 
 freeze 종결 — T1/T2 착수 허가.
+
+## §1 A1 적대 리뷰 (T1 — transport 회수, 2026-08-16)
+
+구성: Opus, 별도 컨텍스트, T1 워크트리(원복 검증 — porcelain 빈 출력 + production
+sha256 6/6 + MUTANT 잔재 0건). 재현: 뮤테이션 7건 원장 대조(M5·M9·M19·M27 일치,
+**M1a·M22·M23 반증**) + 신규 뮤테이션 A1-N1 생존 발견, RED 3커밋 전부 축자 재현,
+표면 준수·AST 신선도 20/20·시나리오×endpoint 커버리지·S4 cleanup 경로 전수·클라이언트
+정확-0600 전부 생존 확인.
+
+| id | 등급 | 발견 | 판결 → 수정 |
+| --- | --- | --- | --- |
+| P1-A | P1 | owner-write-없음=사망 추정이 수락 중인 0400 socket을 삭제 — 탈취 SHALL NOT의 실측 반례(두 endpoint). a108 원형에서 이식된 병 | 수용 → T1-fix F1: chmod-then-probe(추정 제거, 결정적 판정). a108 대응물은 issues I1 후속 후보 |
+| P1-B | P1 | 이름-집합 완전성 테스트가 상수 대 상수 — 발행 접두 분기 뮤테이션(A1-N1)이 전 테스트 생존. gate 문서의 "생성기를 실제로 돌려 잰다"는 과장 | 수용 → T1-fix F2: go/parser 정적 핀(리터럴 접두 거부 + 상수 3-참조 계수) + 문서 정정. A1-N1 재적용 시 CAUGHT |
+| P1-C | P1 | T1 단독 land는 이물→거부→fatal 영구 루프를 신설(강등은 T2 소유) | 수용 → land 단위 = T1+T2 합본, tasks 배포 절차 명문화 |
+| P2-A/B | P2 | "측정 불가" 생존 M23·M22를 결정적 핀으로 사망 실증 | 수용 → T1-fix F3: 핀 편입, 원장 재분류("방법을 안 썼다") |
+| P2-C | P2 | M1a 등가 반증 — 거부한 디렉터리 안 우리 파일 삭제 관측 | 수용 → T1-fix F4: 공존 시나리오 핀, 원장 재분류 |
+| P2-D | P2 | 수락 중인 staging socket을 probe 없이 삭제 | 수용 → T1-fix F5: "수락 중이면 이름 무관 unlink 금지"로 규칙 통일 |
+| P2-E | P2 | 거부 오류가 위반 엔트리 미지목 — D3 회복 경로의 전제 훼손 | 수용 → T1-fix F6: basename 지목 |
+| P2-F | P2 | 산주인+이물 공존 시 이물만 보고 | 잔존 수용(F6로 실행 가능; 두 원인 동시 수집은 "건드리지 않고 즉시 멈춘다"를 약화) — issues I4 |
+
+## §2 A2 적대 리뷰 (T2 — 강등·재부착, 2026-08-15)
+
+구성: Opus, 별도 컨텍스트, T2 워크트리(원복 검증 — porcelain 빈 출력 + sha256 4/4).
+재현: 뮤테이션 5건 원장 일치(M13·M10b·M21·M7·M19 계열 — M7은 원장보다 강하게 확인),
+RED 2커밋 재현 일치, D5b 독립 재현(3모양) 성립, 신규 측정 1건(defer 순서 역전 → 핀
+FAIL — 원장 공백 발견). 3상태 보존·비차단·single-flight·3금지·핀의 조용한-통과 없음
+·표면 준수 전부 생존 확인.
+
+| id | 등급 | 발견 | 판결 → 수정 |
+| --- | --- | --- | --- |
+| P1-1 | P1 | 콘솔 전략 dial(console.go:411–421)의 부팅-1회 접힘이 미선언 생략 + T2 주석의 선례 인용 반만 참 | 수용 → design 선언된 생략 명시(Manager), 주석 정정(T2-fix F9) |
+| P1-2 | P1 | internal/console -race 기본 timeout 경계(582~693s/600s) — 게이트 확률적 실패 + 원장 기준선 재현 불가 | 수용 → tasks §3.1 timeout 명문화(Manager), 원장 정정(T2-fix F9) |
+| P2-1 | P2 | 요청 ctx 취소를 endpoint 실패로 오독 — 창마다 탈착 보고·client 교체 | 수용 → T2-fix F1(취소+호출자 ctx 종료 시 무전이) |
+| P2-2 | P2 | 늦은 read 실패가 새 부착을 탈착으로 전복 | 수용 → T2-fix F2(자리 세대 비교 — 인터페이스 == 패닉 회피 사유는 issues T2-13) |
+| P2-3 | P2 | 재부착 wake가 집계 7조회 성공에 종속 | 수용 → T2-fix F3(tick 첫 줄 presence wake, 새 ticker 없음) |
+| P2-4 | P2 | 주석 핀 단정 2/3 공허 | 수용 → T2-fix F4(고유 구절, 재현 뮤테이션 CAUGHT 전환) |
+| P2-5 | P2 | 격리 거부 제목 3벌이 빌드 탓 + a079 핀 | 수용 → T2-fix F5(상수 1벌 + a079 동반 수정; ErrUnwired는 로그 전용 잔존 — issues T2-11) |
+| P2-6 | P2 | a098 결합이 어미 하나로 유지 | 수용 → T2-fix F6(errors.Is 교체) |
+| P2-7 | P2 | 부작용 있는 술어 미명문화 | 수용 → T2-fix F8 |
+| P2-8 | P2 | 시도 goroutine 종료 join 부재(이론·미관측 표기) | 잔존 수용 — 기록만 |
+| P2-9 | P2 | 원장 gofmt 명령이 command-not-found 모양 | 수용 → T2-fix F9(절대경로) |
+| P2-10 | P2 | M7 생존 사유가 T1이 고치는 nil 가드에 의존 | 수용 → T2-fix F7(nil-safe 계약 테스트 3종 — 병합 후 교차 검증 항목) |
+| P2-11 | P2 | D5b 결론 참이나 구버전 Close의 조용한 rmdir 실패 미기록 | 수용 → 배포 절차 prose 반영(Manager) |
+
+## §3 Manager 판결 요약
+
+- A2 P0 0건. 두 리뷰의 P1은 계약·측정의 구멍(A1 P1-A·P1-B)과 운영 절차(A1 P1-C,
+  A2 P1-1·P1-2)다. 안전 불변식 위반은 발견되지 않았다.
+- 수정 라운드는 전 항목 Manager 판결 후 위임 — T1-fix F1~F6, T2-fix F1~F9. 임의 확장
+  없음(T2-fix F2의 자리-세대 기전은 판결 취지 내 safe-local, 사유 기록됨).
+- land 단위: T1+T2 합본만 main 후보(A1 P1-C).
+- 후속 change 등록 후보 3건: a108 `projectionSocketAccepts`의 동일 추정(I1), 콘솔
+  lifecycle client 재부착(P2-7), 콘솔 전략 dial 접힘(A2 P1-1).
+
+## §4 수정 라운드 정산 (2026-08-16)
+
+- **T1-fix** 8커밋(f9bbd09d~24d654d2): F1 chmod-then-probe(RED 5 FAIL 관측→GREEN),
+  F2 정적 핀 + 과장 정정, F3/F4 A1 핀 편입, F5 staging probe, F6 엔트리 지목.
+  뮤테이션 7건 적용 7 사망(A1-N1·M23·M22·M1a·F1-N1·F5-N1·F6-N1). 원장 재분류:
+  생존 6→3(등가 1·경합 1 잠정·비root 1), 총 32 사망/3 생존. 검증: ppr 43·engine 593
+  passed(-race, 단독 순차), strategyprojectionrpc 48 passed(원형 무변경 확인),
+  make lint clean, FLM 재최신화(분기 집합 변화가 새 코드에만 있음이 AST로 확인).
+- **T2-fix** 12커밋: F1~F9 전부 GREEN, 원장 추가 12건(M24~M32b — defer 순서 역전
+  공백 포함) 전부 정산, check_analysis T2 표면 0오류. 검증: cmd/tossctl 172s ·
+  httpapi 119 passed · console 693s(-timeout 25m) 전부 ok, 회귀 0.
+- 잔존(정직 기록): I2 — command endpoint의 `SweepPrivateStagingLeftovers`에는 F5
+  probe가 없다(호출자가 TCP뿐이라는 문서 전제 — 가장 약한 방어). I3 — M26은 잠정
+  생존. T2-12 — `publishHTTPAPISnapshots` 서명 변경은 병합 충돌 주의점.
