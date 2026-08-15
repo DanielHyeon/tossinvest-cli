@@ -79,6 +79,16 @@ type strategyRuntimeAttachment struct {
 	failed   bool                          // 부재이거나 직전 Read 가 실패했다 = 시도 대상
 	lastTry  time.Time
 	trying   bool // single-flight
+	// seat 는 **reader 자리의 세대**다. 자리에 새 값이 앉을 때마다 하나 오른다.
+	//
+	// 왜 reader 값을 직접 비교하지 않는가: `Read` 는 잠금 밖에서 reader 를 부르므로
+	// 그 사이에 시도가 성공해 다른 값이 앉을 수 있고, 그때 도착한 옛 실패는 **이미
+	// 없는 endpoint** 의 소식이다(a109 §2-fix F2). 그것을 가리려면 「내가 읽은 그
+	// 자리인가」를 물어야 하는데, 인터페이스 값의 `==` 는 동적 타입이 비교 불가면
+	// **패닉한다** — `strategyprojection.Snapshot` 은 map 을 들고 있으므로 스냅샷을
+	// 품은 값 reader(테스트의 `a109Projection` 이 그 모양이다)가 정확히 그 경우다.
+	// 세대 번호는 같은 질문을 패닉 없이 답한다.
+	seat uint64
 }
 
 // StrategyRuntimeConfigured 는 「이 배포에 전략 화면이 있는가」다
@@ -89,7 +99,7 @@ type strategyRuntimeAttachment struct {
 // (`httpAPIReader.Snapshot`·router 의 REST 경로), 깨우기를 `Read` 에만 두면 냉부팅
 // 순서 — 엔진이 나중에 뜨는 경우 — 가 영원히 회복하지 못한다.
 func (a *strategyRuntimeAttachment) StrategyRuntimeConfigured() bool {
-	reader, wanted := a.state()
+	reader, _, wanted := a.state()
 	if wanted {
 		a.wake()
 	}
@@ -97,7 +107,7 @@ func (a *strategyRuntimeAttachment) StrategyRuntimeConfigured() bool {
 }
 
 func (a *strategyRuntimeAttachment) Read(ctx context.Context) (strategyprojection.Snapshot, error) {
-	reader, wanted := a.state()
+	reader, seat, wanted := a.state()
 	if wanted {
 		a.wake()
 	}
@@ -108,7 +118,7 @@ func (a *strategyRuntimeAttachment) Read(ctx context.Context) (strategyprojectio
 			errors.New("strategy runtime projection is not attached")
 	}
 	snapshot, err := reader.Read(ctx)
-	if a.observe(err) {
+	if a.observe(ctx, seat, err) {
 		// 직전 읽기가 실패했다 = 지금부터 재부착 대상이다. 다음 요청을 기다리지
 		// 않는다 — 폴링이 뜸한 시간대에 그 기다림이 곧 화면 공백이 된다.
 		a.wake()
@@ -116,10 +126,11 @@ func (a *strategyRuntimeAttachment) Read(ctx context.Context) (strategyprojectio
 	return snapshot, err
 }
 
-func (a *strategyRuntimeAttachment) state() (httpapi.StrategyRuntimeReader, bool) {
+// state 는 지금 자리에 있는 reader 와 그 **자리의 세대**, 그리고 시도 대상 여부다.
+func (a *strategyRuntimeAttachment) state() (httpapi.StrategyRuntimeReader, uint64, bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	return a.reader, a.failed
+	return a.reader, a.seat, a.failed
 }
 
 // inFlight 는 지금 시도가 돌고 있는지다.
@@ -138,6 +149,7 @@ func (a *strategyRuntimeAttachment) attach(reader httpapi.StrategyRuntimeReader,
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.reader, a.attached, a.failed = reader, live, !live
+	a.seat++
 }
 
 // wake 는 시도를 깨운다. 이 함수는 **절대 막히지 않는다**.
@@ -167,6 +179,7 @@ func (a *strategyRuntimeAttachment) attempt() {
 		return
 	}
 	a.reader, a.failed = reader, false
+	a.seat++
 	announce := !a.attached
 	a.attached = true
 	a.mu.Unlock()
@@ -182,10 +195,42 @@ func (a *strategyRuntimeAttachment) report(format string, args ...any) {
 	fmt.Fprintf(a.log, format, args...)
 }
 
+// requestCancelled 는 「이 실패가 endpoint 가 아니라 **요청자** 때문인가」다 —
+// a109 §2-fix F1 (A2 P2-1).
+//
+// REST 경로는 `request.Context()` 를 그대로 넘긴다(`internal/httpapi/router.go` 의
+// `read`). 그래서 브라우저 탭을 닫거나 요청 timeout 이 지난 것 하나가
+// `context.Canceled`·`DeadlineExceeded` 로 도착한다. 그것을 endpoint 판정으로 쓰면
+// 멀쩡한 엔진에 붙어 있는 client 가 요청 취소마다 교체 후보가 되고, 화면 폴링이
+// 잦을수록 재-dial(200ms probe)이 잦아진다.
+//
+// **호출자 ctx 가 실제로 끝났을 때만** 그렇게 읽는다. ctx 는 멀쩡한데 endpoint 쪽이
+// 취소 계열 오류를 돌려준 경우는 진짜 실패이므로 그대로 판정에 쓴다.
+func requestCancelled(ctx context.Context, err error) bool {
+	if !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+		return false
+	}
+	return ctx != nil && ctx.Err() != nil
+}
+
 // observe 는 방금 읽기의 결과를 기록하고 **탈착 전이만** 보고한다.
 // 반환값은 「지금 재부착 대상인가」다.
-func (a *strategyRuntimeAttachment) observe(err error) bool {
+//
+// seat 는 그 읽기가 **어느 자리의 reader** 로 이뤄졌는지다. `Read` 는 잠금 밖에서
+// 읽으므로 그 사이에 시도가 성공해 새 reader 가 앉을 수 있고, 그때 도착하는 옛
+// 실패로 방금 성립한 부착을 뒤엎으면 회복 직후에 다시 탈착으로 떨어진다
+// (a109 §2-fix F2 — A2 P2-2).
+func (a *strategyRuntimeAttachment) observe(ctx context.Context, seat uint64, err error) bool {
+	if err != nil && requestCancelled(ctx, err) {
+		// 상태를 **하나도** 바꾸지 않는다. 성공도 실패도 아니라 판정 자체가 없다.
+		return false
+	}
 	a.mu.Lock()
+	if seat != a.seat {
+		// 내가 읽은 자리는 이미 없다. 그 소식으로 지금 자리를 판정하지 않는다.
+		a.mu.Unlock()
+		return false
+	}
 	if err == nil {
 		a.failed = false
 		a.mu.Unlock()
