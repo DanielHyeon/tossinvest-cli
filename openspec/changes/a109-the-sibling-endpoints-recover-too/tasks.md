@@ -89,19 +89,26 @@
   A2: P0 0·P1 2·P2 11, 뮤테이션 5건 재현 전부 일치, RED 2커밋 재현, D5b 독립 재현.
 - [x] 2b.2 Manager 판결 + 수정 라운드 → review.md §3·§4. T1-fix F1~F6(8커밋)·
   T2-fix F1~F9(12커밋) — 전 항목 판결 후 위임, 전부 GREEN·원장 정산 완료.
-- [ ] 2b.3 gstack 전체 리뷰 + 수렴 → review.md §5.
+- [x] 2b.3 gstack 전체 리뷰 + 수렴 → review.md §5. 8패스(specialist 4·Claude 적대·
+  codex 적대·freeze·A-라운드 합산) → 합의 G1~G10 → T3-fix 12커밋 전부 GREEN,
+  기각 1건(codex TOCTOU — flock 문서화 잔존), Manager 스폿체크 2/2 재현.
 
 ## 3. 게이트
 
-- [ ] 3.1 영향 패키지 `go test -race`(app/engine ≥ `-timeout 25m`, **internal/console
+- [x] 3.1 영향 패키지 `go test -race`(app/engine ≥ `-timeout 25m`, **internal/console
   ≥ `-timeout 20m`** — 기본 10m 경계 582~693s 실측, A2 P1-2) + `go vet`. 병렬 실행
-  금지(CPU 기아로 위양성 FAIL 이력).
-- [ ] 3.2 `openspec validate --all --strict` → `make sdd-sync` → `make sdd-check` →
-  `make gate CHANGE=a109-the-sibling-endpoints-recover-too` (검증 명령은 파이프 없이).
+  금지(CPU 기아로 위양성 FAIL 이력). 결과: 합본 트리에서 build·vet·positionpolicyrpc·
+  cmd/tossctl·httpapi·engine·console 전부 rc=0 — T3-fix 전(교차 검증 스크립트)과
+  후(T3-fix 검증) 각 1회, strategyprojectionrpc 포함.
+- [x] 3.2 `openspec validate --all --strict`(92/92) → `make sdd-sync` → `make sdd-check`
+  → `make gate CHANGE=a109-the-sibling-endpoints-recover-too` (검증 명령은 파이프
+  없이 — 실행 기록은 review.md §5 게이트 절, 실패 시 이 체크는 되돌린다).
 - [x] 3.3 롤백 절차(D5b): 코드 근거(구버전 production에 `os.ReadDir` 0건 — T2·A2 각각
   독립 확인) + 실측(T2: 3 Start × 6모양 = 18/18 관용·잔재 생존, A2: 표본 3모양 독립
   재현 일치) → 아래 배포 절차에 기록 완료.
-- [ ] 3.4 review.md 정산 + PM(STORY-TOS-a109) 동기화 + Manager 독립 검증 기록.
+- [x] 3.4 review.md 정산(§0~§5 + T3-fix·Manager 독립 검증 절) + PM(STORY-TOS-a109
+  acceptance 재정렬·measured·deviations·limits 기입, tracker current) + Manager
+  스폿체크 2/2 재현 기록.
 
 ## 배포 절차 (게이트 밖 — 사람 승인 필요)
 

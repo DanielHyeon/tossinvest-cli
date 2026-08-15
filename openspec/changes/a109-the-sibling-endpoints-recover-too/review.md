@@ -195,3 +195,28 @@ red-team 전담 패스는 Claude 적대 패스가 그 헌장(specialist가 놓�
 - testing #1(Read의 nil 가드 미실행): G1 테스트가 그 경로를 함께 덮는다.
 - maintainability의 rtk 디프 압축 관측: 리뷰어가 `rtk proxy`로 우회해 전문 검토 —
   절차 기록.
+
+### T3-fix 정산 (2026-08-16)
+
+- 12커밋(866265ef~031856e5), G1~G10 전부 RED→GREEN(각 RED의 실제 FAIL 관측 기록).
+  전 스위트 재검증 green(engine 910s·console 500s 포함), strategyprojectionrpc 48→50
+  tests 회귀 0. 원장 추가 13건(M33~M44): 생존 2건(M38·M42)은 새 핀으로 CAUGHT 전환 —
+  **M42는 A1 P1-B와 같은 병(테스트가 상수를 읽어 입력을 만든다)의 재발을 T3-fix가
+  스스로 잡은 것.**
+- G5의 a108 패키지 접촉은 선언대로 좁다: `Client.Close` 메서드 추가 + `Dial` transport
+  `DisableKeepAlives`(저장소 관례 인용) + 테스트 1파일. 회수·발행 의례 무수정.
+- 잔존 선언: G4의 RED는 정적 자리 핀(제거 지점 이후 실패 seam 부재 — 동작 2핀 + 순서
+  핀으로 분할), G2의 대가(건강 자리도 간격당 재해석 1회 — eviction close·전이 1회
+  로그로 무해), I5~I7.
+
+### Manager 독립 검증 (2026-08-16)
+
+- 합본 트리 전 스위트(build·vet·5패키지 -race 순차) rc=0 — T3-fix 이전(교차 검증
+  스크립트)과 이후(T3-fix 자체 실행) 각 1회.
+- 스폿체크 뮤테이션 2건 독립 재현: ① G2 wake를 `failed` 게이트로 되돌림 →
+  `TestThePublisherWakesASeatThatOnlyLooksAlive` FAIL(정확히 그 핀). ② G7 SameFile
+  재확인 무력화 → `TestTheProbeRefusesASocketThatChangedUnderIt` FAIL. 둘 다
+  `git checkout` 원복 + porcelain 빈 출력 + 심볼 수 대조. (②의 1차 좁은 -run 생존은
+  내 패턴 누락이었음을 전체 실행으로 확인 — 표본 선택의 함정 기록.)
+- httpapi_strategy_attach.go 전문 판독: G1 승격의 단방향성(live 격하 금지), seat
+  세대·취소 판정·전이 1회 계약이 설계 취지와 일치함을 확인.

@@ -18,15 +18,31 @@
   },
   "acceptance": [
     "Registered ahead of implementation; work starts only after a108 lands",
-    "All three sibling endpoints publish sockets via stage+rename and reclaim every partial state their own lifecycle can produce, owner-death verified",
+    "Both socket-publishing sibling endpoints publish via stage+rename (11-char staging, hex truncated) and reclaim every partial state their own file lifecycle can produce, owner-death proven by chmod-then-probe (no permission-bit inference); the command endpoint reclaims its staging leftovers and drops its own stale final descriptor",
     "A pre-chmod socket leftover no longer blocks engine boot on any endpoint",
-    "Live-owner takeover on alert control is either refused or explicitly documented and pinned as flock-defended",
-    "Crash-shape pins that can actually fail replace a108's tautological 2.5 pins",
+    "An accepting socket is never unlinked, final or staging name alike — takeover became refusal, with journal flock documented as the primary defense",
+    "All three fatal call sites in runEngineRun demote to degraded boot with a-108-D3-2-doctrine reporting (no critical grade, no obs registry entry, no outbox row) and consumer messages that never assert engine absence",
+    "httpapi strategy screen re-attaches without daemon restart in both directions (cold-start order and mid-run engine restart), with dial/probe never on the request goroutine and the evicted client closed",
+    "Crash-shape pins that can actually fail replace a108's tautological 2.5 pins; the defer-order flock invariant is statically pinned",
     "make gate CHANGE=a109-the-sibling-endpoints-recover-too passes"
   ],
-  "measured": null,
-  "deviations": [],
+  "measured": {
+    "date": "2026-08-16",
+    "pipeline": "Manager contract (FLM AST 20 first) → freeze adversarial (P0 4·P1 9·P2 7, all adjudicated) → T1/T2 parallel (Opus, disjoint surfaces) → A1/A2 adversarial (7+5 mutations independently reproduced, 3 T1 survivors disproved) → T1-fix/T2-fix → merge (land unit = T1+T2) → gstack 8-pass (4 specialists + Claude adversarial + codex adversarial) → consensus G1–G10 → T3-fix → Manager spot-check 2/2",
+    "mutation_ledgers": "t1: 44 applied, survivors reduced 6→3→settled (equivalent 1, tentative race 1, non-root 1); t2: 38+ applied, every survivor either justified or converted to CAUGHT by a new pin; two recurrences of the constants-read-by-test disease (A1 P1-B, M42) were caught inside the pipeline itself",
+    "verification": "full sequential -race suite green twice on the merged tree (build, vet, positionpolicyrpc, cmd/tossctl, internal/httpapi, app/engine ~15min, console ~8-12min), strategyprojectionrpc 50 tests green, upstream pins (a098/a108/a110/a111) zero regressions",
+    "rollback": "no pre-wipe needed across a109 — old binary never calls os.ReadDir (code evidence, twice independently) and tolerated 18/18 leftover shapes (T2) + 3/3 independent reproduction (A2); old Close silently fails rmdir while leftovers persist, recorded in the deploy prose"
+  },
+  "deviations": [
+    "Registration reserved the demotion question; design D3 (post-freeze P0-4) answered it for all three endpoints with the fatal-baseline argument — the policy-command conservatism claim was corrected by the adversary to 'quarantined positions stay unjudged, still strictly better than fatal'",
+    "The re-attach wrapper wraps every seat state including live clients (freeze P0-1 reversed the registered nil/sentinel-only sketch), attempts run on a background single-flight goroutine (P0-2), and the publisher wake is unconditional (gstack G2)",
+    "G5 touched the a108-owned strategyprojectionrpc package narrowly (Client.Close + DisableKeepAlives + one test file); the reclamation/publication ceremony itself was not modified"
+  ],
   "limits": [
-    "Whether the three fatal call sites in runEngineRun may degrade like strategy projection is decided per endpoint at design time — policy command is a command surface, not a read-only export, so a108 D3's argument does not transfer unexamined."
+    "a108's own projectionSocketAccepts still carries the owner-write-bit death inference a109 removed for the siblings (A1 P1-A) — registered follow-up candidate, off-surface here",
+    "Console boot still folds both its lifecycle client and its strategy projection dial to nil once at startup (A2 P1-1, P2-7) — same disease, declared omission, follow-up candidate",
+    "SweepPrivateStagingLeftovers (command endpoint) has no probe; its safety rests on the documented TCP-only precondition (issues I2)",
+    "Probe cap (10) means pathological foreign accumulation degrades that endpoint loudly rather than probing unboundedly while the journal flock is held",
+    "Operational control directories were never inspected from the dev session (contact forbidden) — post-deploy check of degradation reports is written into the deploy prose"
   ]
 }
