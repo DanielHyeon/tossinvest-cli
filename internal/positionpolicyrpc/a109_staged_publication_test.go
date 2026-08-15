@@ -117,11 +117,16 @@ func TestTheClientSocketChecksStayExactlyZeroSixHundred(t *testing.T) {
 	})
 }
 
-// TestThePrivateSocketProbeReadsOnlyThreeThingsAsDead — design D2의 사망 판정.
+// TestThePrivateSocketProbeReadsOnlyTwoThingsAsDead — design D2의 사망 판정.
 //
 // 잘못 살아 있다고 보면 이번 기동만 실패한다. 잘못 죽었다고 보면 **남의 socket을
-// 지운다.** 그래서 사망으로 읽는 것은 셋뿐이고, 그 셋을 각각 만든다.
-func TestThePrivateSocketProbeReadsOnlyThreeThingsAsDead(t *testing.T) {
+// 지운다.** 그래서 사망으로 읽는 것은 **둘뿐**이다 — 연결 거부와 파일 부재.
+//
+// 셋이 아니라 둘인 것이 a109 §1-fix F1이다. 예전 판은 "owner 쓰기 비트가 없다"를 세 번째
+// 사망 판정으로 썼는데, 그것은 **추정**이었다: 쓰기 비트가 깎인 socket이 수락 중일 수도
+// 있고, 그때 그 추정은 산 주인의 socket을 지운다. 지금은 추정하지 않고 **묻는다** —
+// probe 전에 0600으로 chmod 하고 연결해 본다.
+func TestThePrivateSocketProbeReadsOnlyTwoThingsAsDead(t *testing.T) {
 	engineDir := privateTestDir(t)
 	controlDir := a109TestControlDir(t, engineDir, ".private-endpoint-under-test")
 
@@ -153,17 +158,118 @@ func TestThePrivateSocketProbeReadsOnlyThreeThingsAsDead(t *testing.T) {
 		}
 	})
 
-	t.Run("owner 쓰기 비트가 없으면 사망", func(t *testing.T) {
+	t.Run("쓰기 비트가 깎인 죽은 socket도 사망", func(t *testing.T) {
 		// connect 에는 쓰기 권한이 필요하고, 없으면 커널은 EACCES 를 준다. 그 오류를
 		// "답이 안 왔다 = 살아 있다"로 읽으면 아무도 없는 socket 하나가 영구 거부를
-		// 만든다. 우리가 발행한 산 endpoint 는 반드시 0600 이므로 그렇게 읽어도 된다.
+		// 만든다 — 이 change 가 지우려는 모양 그대로다. 그래서 EACCES 를 만나지 않는다:
+		// probe 가 먼저 0600 으로 chmod 하므로 이 잔재는 **연결 거부**로 갈린다.
 		path := filepath.Join(controlDir, "unwritable.sock")
 		a109TestSocket(t, path, 0o400)
 		t.Cleanup(func() { _ = os.Remove(path) })
 		if privateSocketAccepts(path) {
-			t.Fatal("owner가 쓸 수 없는 socket을 살아 있다고 읽었다")
+			t.Fatal("아무도 듣지 않는 socket을 살아 있다고 읽었다 — 영구 거부가 된다")
 		}
 	})
+
+	// ⛔ a109 §1-fix F1의 핵심. 위 잔재와 **디스크 상태가 같고**(0400 socket) 결과만
+	// 반대다. 권한 비트는 주인의 생사를 말해 주지 않는다 — 물어봐야 안다.
+	t.Run("쓰기 비트가 깎여도 수락 중이면 생존", func(t *testing.T) {
+		path := filepath.Join(controlDir, "unwritable-alive.sock")
+		listener, err := net.Listen("unix", path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		listener.(*net.UnixListener).SetUnlinkOnClose(false)
+		t.Cleanup(func() { _ = listener.Close(); _ = os.Remove(path) })
+		if err := os.Chmod(path, 0o400); err != nil {
+			t.Fatal(err)
+		}
+		if !privateSocketAccepts(path) {
+			t.Fatal("수락 중인 socket을 권한 비트만 보고 죽었다고 읽었다 — " +
+				"그 추정이 산 주인의 socket을 지운다")
+		}
+	})
+}
+
+// TestReclaimRefusesALiveSocketWhoseOwnerWriteBitWasStripped — a109 §1-fix F1.
+//
+// A1 재현: 주인이 **수락 중인** socket 의 owner 쓰기 비트만 깎여 있으면, owner-write
+// 사망 추정이 그것을 죽었다고 읽고 회수가 지운다. 그리고 그 자리에 두 번째 서버가 선다.
+//
+// 재는 것은 둘이다 — ① 회수가 **거부**하는가, ② 거부하면서 주인의 socket 을 **그대로
+// 두는가**. 둘째가 없으면 "거부했지만 이미 지웠다"가 통과한다.
+func TestReclaimRefusesALiveSocketWhoseOwnerWriteBitWasStripped(t *testing.T) {
+	engineDir := privateTestDir(t)
+	controlDir := a109TestControlDir(t, engineDir, ".private-endpoint-under-test")
+	socketPath := filepath.Join(controlDir, "endpoint.sock")
+	owner, err := net.Listen("unix", socketPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	owner.(*net.UnixListener).SetUnlinkOnClose(false)
+	t.Cleanup(func() { _ = owner.Close(); _ = os.Remove(socketPath) })
+	if err := os.Chmod(socketPath, 0o400); err != nil {
+		t.Fatal(err)
+	}
+	before, err := os.Lstat(socketPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	names := PrivateEndpointNames{
+		Descriptor: "endpoint.json", Socket: "endpoint.sock",
+		StagingPrefixes: []string{StagingPrefix},
+	}
+	if err := ReclaimStalePrivateEndpoint(controlDir, names); err == nil {
+		t.Fatal("수락 중인 socket을 쓰기 비트만 보고 회수했다 — 산 주인의 탈취다")
+	}
+	after, err := os.Lstat(socketPath)
+	if err != nil || !os.SameFile(before, after) {
+		t.Fatalf("거부하면서 주인의 socket을 지웠다: err=%v", err)
+	}
+	if !privateSocketAccepts(socketPath) {
+		t.Fatal("주인의 socket이 더 이상 수락하지 않는다")
+	}
+}
+
+// TestReclaimRefusesALiveStagingSocket — a109 §1-fix F5.
+//
+// A1 재현: 회수는 **최종 이름에만** probe 를 걸었다. staging 이름의 socket 은 "우리
+// 잔재"라는 이름표만 보고 probe 없이 지웠다. 그런데 발행의 첫 걸음이 바로 staging 이름에
+// bind 하는 것이다 — 그 창에 있는 후계자의 socket 이 정확히 이 모양이다.
+//
+// 규칙은 이름이 아니라 사실이어야 한다: **수락 중인 socket 은 이름과 무관하게 절대
+// unlink 하지 않는다.**
+func TestReclaimRefusesALiveStagingSocket(t *testing.T) {
+	engineDir := privateTestDir(t)
+	controlDir := a109TestControlDir(t, engineDir, ".private-endpoint-under-test")
+	live := filepath.Join(controlDir, StagingPrefix+"sfeedfac")
+	owner, err := net.Listen("unix", live)
+	if err != nil {
+		t.Fatal(err)
+	}
+	owner.(*net.UnixListener).SetUnlinkOnClose(false)
+	t.Cleanup(func() { _ = owner.Close(); _ = os.Remove(live) })
+	if err := os.Chmod(live, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if !privateSocketAccepts(live) {
+		t.Fatal("준비 실패: staging socket이 수락 중이 아니다")
+	}
+
+	names := PrivateEndpointNames{
+		Descriptor: "endpoint.json", Socket: "endpoint.sock",
+		StagingPrefixes: []string{StagingPrefix},
+	}
+	if err := ReclaimStalePrivateEndpoint(controlDir, names); err == nil {
+		t.Fatal("수락 중인 staging socket을 probe 없이 회수했다")
+	}
+	if _, err := os.Lstat(live); err != nil {
+		t.Fatalf("거부하면서 수락 중인 staging socket을 지웠다: %v", err)
+	}
+	if !privateSocketAccepts(live) {
+		t.Fatal("staging socket이 더 이상 수락하지 않는다")
+	}
 }
 
 // TestReclaimRefusesNamesItCannotTrust — 이름 집합 자체의 방어.

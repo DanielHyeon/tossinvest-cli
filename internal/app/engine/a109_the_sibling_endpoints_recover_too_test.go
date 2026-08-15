@@ -201,6 +201,93 @@ func TestTheSiblingEndpointsRefuseToTakeALiveOwnersSocket(t *testing.T) {
 	}
 }
 
+// TestTheSiblingEndpointsRefuseALiveOwnerWithoutTheWriteBit — a109 §1-fix F1.
+//
+// §1.2와 디스크 상태가 하나만 다르다: 주인의 socket에서 **owner 쓰기 비트가 깎여 있다**.
+// 예전 판의 probe는 그 비트 하나로 주인을 죽었다고 **추정**했고, 그래서 수락 중인
+// socket을 지우고 두 번째 서버가 그 자리에 섰다. 권한 비트는 주인의 생사를 말해 주지
+// 않는다 — 물어봐야 안다(probe 전에 0600으로 chmod하고 연결한다).
+func TestTheSiblingEndpointsRefuseALiveOwnerWithoutTheWriteBit(t *testing.T) {
+	for _, endpoint := range a109Endpoints() {
+		t.Run(endpoint.name, func(t *testing.T) {
+			dir := privateEngineTestDir(t)
+			a109ControlDir(t, endpoint.controlDir(dir))
+			socketPath := endpoint.socket(dir)
+
+			owner, err := net.Listen("unix", socketPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			owner.(*net.UnixListener).SetUnlinkOnClose(false)
+			t.Cleanup(func() { _ = owner.Close(); _ = os.Remove(socketPath) })
+			if err := os.Chmod(socketPath, 0o400); err != nil {
+				t.Fatal(err)
+			}
+			before, err := os.Lstat(socketPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			server, startErr := endpoint.start(t, dir)
+			if startErr == nil {
+				_ = server.Close()
+				t.Fatal("owner 쓰기 비트가 깎였다는 이유로 산 주인의 socket을 " +
+					"지우고 두 번째 기동이 성공했다 — 추정이 만든 탈취다")
+			}
+			after, err := os.Lstat(socketPath)
+			if err != nil || !os.SameFile(before, after) {
+				t.Fatalf("거부하면서 주인의 socket을 지웠다: err=%v", err)
+			}
+			// 권한과 무관하게 주인은 계속 수락한다. (probe가 0600을 복원했든 아니든
+			// 이 단정이 재는 것은 inode가 그대로 살아 있다는 사실이다.)
+			if err := os.Chmod(socketPath, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			a109Accepts(t, socketPath)
+		})
+	}
+}
+
+// TestTheSiblingEndpointsRefuseALiveStagingSocket — a109 §1-fix F5.
+//
+// 회수는 최종 이름에만 probe를 걸었다. staging 이름의 socket은 "우리 잔재"라는 이름표만
+// 보고 probe 없이 지웠다. 그런데 발행의 **첫 걸음**이 staging 이름에 bind 하는 것이다 —
+// 그 창에 있는 후계자의 socket이 정확히 이 모양이다.
+//
+// 규칙은 이름이 아니라 사실이어야 한다: 수락 중인 socket은 이름과 무관하게 unlink하지
+// 않는다.
+func TestTheSiblingEndpointsRefuseALiveStagingSocket(t *testing.T) {
+	for _, endpoint := range a109Endpoints() {
+		t.Run(endpoint.name, func(t *testing.T) {
+			dir := privateEngineTestDir(t)
+			controlDir := endpoint.controlDir(dir)
+			a109ControlDir(t, controlDir)
+			live := filepath.Join(controlDir, positionpolicyrpc.StagingPrefix+"sfeedfac")
+			owner, err := net.Listen("unix", live)
+			if err != nil {
+				t.Fatal(err)
+			}
+			owner.(*net.UnixListener).SetUnlinkOnClose(false)
+			t.Cleanup(func() { _ = owner.Close(); _ = os.Remove(live) })
+			if err := os.Chmod(live, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			a109Accepts(t, live)
+
+			server, startErr := endpoint.start(t, dir)
+			if startErr == nil {
+				_ = server.Close()
+				t.Fatal("수락 중인 staging socket 위에서 기동이 성공했다 — " +
+					"발행 중인 후계자의 socket을 지운 것이다")
+			}
+			if _, err := os.Lstat(live); err != nil {
+				t.Fatalf("거부하면서 수락 중인 staging socket을 지웠다: %v", err)
+			}
+			a109Accepts(t, live)
+		})
+	}
+}
+
 // TestTheSiblingEndpointsRejectAPermissiveSocketLeftover는 완화의 **폭**을 잰다.
 //
 // §1.1이 통과시키는 것은 "group/other 비트가 없는" 잔재뿐이다. 0640처럼 남이 읽을 수
