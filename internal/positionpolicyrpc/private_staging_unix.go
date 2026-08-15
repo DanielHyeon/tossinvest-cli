@@ -243,12 +243,16 @@ func verifyStalePrivateSocket(socketPath string) error {
 //
 // # 왜 그 chmod가 안전한가
 //
-// ① 이 지점은 이미 검증을 통과했다 — 우리 uid 소유, group/other 비트 없음, symlink 아님,
-// 0700 디렉터리 안(호출부의 ValidatePrivateControlDirectory · verifyStalePrivateSocket ·
-// verifyPrivateStagingEntry). 즉 남의 파일에 chmod하는 경로가 없다.
-// ② 발행 계약상 최종 socket은 **원래 0600이다**(ListenStagedPrivateSocket이 chmod 0600
-// 뒤에만 rename한다). 그러니 이 chmod가 하는 일은 우리 자신의 발행 계약을 되돌리는
-// 것이고, 결과 권한은 어떤 경우에도 **owner 전용**이라 접근이 넓어지지 않는다.
+// ① 두 호출부 모두 chmod 전에 **우리 uid 소유 · symlink 아님 · 0700 디렉터리 안**을
+// 확인한다(ValidatePrivateControlDirectory + verifyStalePrivateSocket 또는
+// verifyPrivateStagingEntry — 둘 다 Lstat 이므로 symlink는 socket으로 분류되지 않는다).
+// 즉 남의 파일에 chmod하는 경로도, symlink를 따라가는 경로도 없다. 최종 이름 쪽은
+// group/other 비트 없음과 nlink 1까지 요구한다(staging 쪽은 그 둘을 요구하지 않는다 —
+// 그래도 아래 ②가 성립하므로 안전하다).
+// ② 결과 권한이 **0600뿐**이라 접근이 넓어질 수 없다. 어떤 입력 권한에서 출발하든
+// chmod 0600은 owner 전용으로 좁히거나 그대로 둔다. 그리고 그 값은 발행 계약 그 자체다 —
+// 최종 socket은 ListenStagedPrivateSocket이 chmod 0600을 지난 뒤에만 rename하므로,
+// 이 chmod가 하는 일은 우리 자신의 계약을 되돌리는 것이다.
 //
 // chmod가 실패하면 보수적으로 읽는다: 파일이 없어졌으면 사망(그 자체가 사망 판정 중
 // 하나다), 그 밖의 실패는 생존으로 보아 기동을 거부시킨다 — 물어보지 못한 것을 죽었다고
