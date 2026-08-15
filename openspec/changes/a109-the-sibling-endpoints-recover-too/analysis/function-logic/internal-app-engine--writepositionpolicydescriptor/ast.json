@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/position_policy_transport.go",
-  "source_sha256": "37c3f301af4ba2b3cfed303e5cc7bc126a6e2507f1627ce0e71a6731c889ae66",
+  "source_sha256": "9ea26bf990d05ae8573f2789070cda0c9383e664fbee967a52e3dd037453e754",
   "package": "engine",
   "function": "writePositionPolicyDescriptor",
   "signature": "writePositionPolicyDescriptor(params=2, results=1)",
   "start": {
-    "line": 268,
+    "line": 300,
     "column": 1
   },
   "end": {
-    "line": 337,
+    "line": 369,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 270,
+        "line": 302,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 274,
+        "line": 306,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 278,
+        "line": 310,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 283,
+        "line": 315,
         "column": 2
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 288,
+        "line": 320,
         "column": 2
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 293,
+        "line": 325,
         "column": 2
       }
     },
@@ -65,7 +65,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 296,
+        "line": 328,
         "column": 2
       }
     },
@@ -73,7 +73,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 300,
+        "line": 332,
         "column": 2
       }
     },
@@ -81,7 +81,7 @@
       "id": "B9",
       "kind": "if",
       "at": {
-        "line": 303,
+        "line": 335,
         "column": 2
       }
     },
@@ -89,7 +89,7 @@
       "id": "B10",
       "kind": "if",
       "at": {
-        "line": 306,
+        "line": 338,
         "column": 2
       }
     },
@@ -97,7 +97,7 @@
       "id": "B11",
       "kind": "if",
       "at": {
-        "line": 310,
+        "line": 342,
         "column": 3
       }
     },
@@ -105,7 +105,7 @@
       "id": "B12",
       "kind": "if",
       "at": {
-        "line": 314,
+        "line": 346,
         "column": 3
       }
     },
@@ -113,7 +113,7 @@
       "id": "B13",
       "kind": "if",
       "at": {
-        "line": 318,
+        "line": 350,
         "column": 2
       }
     },
@@ -121,7 +121,7 @@
       "id": "B14",
       "kind": "if",
       "at": {
-        "line": 322,
+        "line": 354,
         "column": 2
       }
     },
@@ -129,7 +129,7 @@
       "id": "B15",
       "kind": "if",
       "at": {
-        "line": 326,
+        "line": 358,
         "column": 2
       }
     },
@@ -137,7 +137,7 @@
       "id": "B16",
       "kind": "if",
       "at": {
-        "line": 329,
+        "line": 361,
         "column": 2
       }
     },
@@ -145,7 +145,7 @@
       "id": "B17",
       "kind": "if",
       "at": {
-        "line": 333,
+        "line": 365,
         "column": 2
       }
     }
@@ -154,63 +154,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 271,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 275,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 279,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 285,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 290,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 294,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 297,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 301,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 304,
+        "line": 303,
         "column": 3
       }
     },
@@ -225,41 +169,41 @@
       "kind": "return",
       "at": {
         "line": 311,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 319,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 323,
+        "line": 317,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 327,
+        "line": 322,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 331,
+        "line": 326,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 334,
+        "line": 329,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 333,
         "column": 3
       }
     },
@@ -267,6 +211,62 @@
       "kind": "return",
       "at": {
         "line": 336,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 339,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 343,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 351,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 355,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 359,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 363,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 366,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 368,
         "column": 2
       }
     }
@@ -275,7 +275,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 269,
+        "line": 301,
         "column": 15
       },
       "text": "json.Marshal"
@@ -283,7 +283,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 273,
+        "line": 305,
         "column": 9
       },
       "text": "filepath.Dir"
@@ -291,178 +291,10 @@
     {
       "kind": "call",
       "at": {
-        "line": 274,
-        "column": 12
-      },
-      "text": "positionpolicyrpc.ValidateControlDirectory"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 275,
-        "column": 10
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 277,
-        "column": 20
-      },
-      "text": "os.CreateTemp"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 279,
-        "column": 10
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 281,
-        "column": 19
-      },
-      "text": "temporary.Name"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 282,
-        "column": 8
-      },
-      "text": "os.Remove"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 283,
-        "column": 12
-      },
-      "text": "positionpolicyrpc.ValidatePrivateOpenFile"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 284,
-        "column": 7
-      },
-      "text": "temporary.Close"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 285,
-        "column": 10
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 287,
-        "column": 21
-      },
-      "text": "temporary.Stat"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 289,
-        "column": 7
-      },
-      "text": "temporary.Close"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 290,
-        "column": 10
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 292,
-        "column": 8
-      },
-      "text": "writePositionPolicyDescriptorBody"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 294,
-        "column": 10
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 296,
-        "column": 12
-      },
-      "text": "positionpolicyrpc.ValidatePrivateFile"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 297,
-        "column": 10
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 299,
-        "column": 21
-      },
-      "text": "os.Lstat"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 300,
-        "column": 20
-      },
-      "text": "os.SameFile"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 301,
-        "column": 10
-      },
-      "text": "errors.New"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 303,
-        "column": 12
-      },
-      "text": "positionpolicyrpc.ValidateControlDirectory"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 304,
-        "column": 10
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
         "line": 306,
         "column": 12
       },
-      "text": "os.Rename"
+      "text": "positionpolicyrpc.ValidateControlDirectory"
     },
     {
       "kind": "call",
@@ -476,29 +308,30 @@
       "kind": "call",
       "at": {
         "line": 309,
-        "column": 8
-      }
+        "column": 20
+      },
+      "text": "os.CreateTemp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 311,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
     },
     {
       "kind": "call",
       "at": {
         "line": 313,
-        "column": 25
+        "column": 19
       },
-      "text": "os.Lstat"
+      "text": "temporary.Name"
     },
     {
       "kind": "call",
       "at": {
         "line": 314,
-        "column": 20
-      },
-      "text": "os.SameFile"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 315,
         "column": 8
       },
       "text": "os.Remove"
@@ -506,15 +339,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 318,
+        "line": 315,
         "column": 12
       },
-      "text": "positionpolicyrpc.ValidatePublishedDescriptor"
+      "text": "positionpolicyrpc.ValidatePrivateOpenFile"
     },
     {
       "kind": "call",
       "at": {
-        "line": 319,
+        "line": 316,
+        "column": 7
+      },
+      "text": "temporary.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 317,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -522,15 +363,71 @@
     {
       "kind": "call",
       "at": {
+        "line": 319,
+        "column": 21
+      },
+      "text": "temporary.Stat"
+    },
+    {
+      "kind": "call",
+      "at": {
         "line": 321,
-        "column": 24
+        "column": 7
+      },
+      "text": "temporary.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 8
+      },
+      "text": "writePositionPolicyDescriptorBody"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 12
+      },
+      "text": "positionpolicyrpc.ValidatePrivateFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 329,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 21
       },
       "text": "os.Lstat"
     },
     {
       "kind": "call",
       "at": {
-        "line": 322,
+        "line": 332,
         "column": 20
       },
       "text": "os.SameFile"
@@ -538,7 +435,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 323,
+        "line": 333,
         "column": 10
       },
       "text": "errors.New"
@@ -546,7 +443,110 @@
     {
       "kind": "call",
       "at": {
-        "line": 325,
+        "line": 335,
+        "column": 12
+      },
+      "text": "positionpolicyrpc.ValidateControlDirectory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 336,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 12
+      },
+      "text": "os.Rename"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 339,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 341,
+        "column": 8
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 345,
+        "column": 25
+      },
+      "text": "os.Lstat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
+        "column": 20
+      },
+      "text": "os.SameFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 347,
+        "column": 8
+      },
+      "text": "os.Remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 350,
+        "column": 12
+      },
+      "text": "positionpolicyrpc.ValidatePublishedDescriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 353,
+        "column": 24
+      },
+      "text": "os.Lstat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 354,
+        "column": 20
+      },
+      "text": "os.SameFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 357,
         "column": 20
       },
       "text": "os.Open"
@@ -554,7 +554,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 327,
+        "line": 359,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -562,7 +562,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 329,
+        "line": 361,
         "column": 12
       },
       "text": "directory.Sync"
@@ -570,7 +570,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 330,
+        "line": 362,
         "column": 7
       },
       "text": "directory.Close"
@@ -578,7 +578,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 331,
+        "line": 363,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -586,7 +586,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 333,
+        "line": 365,
         "column": 12
       },
       "text": "directory.Close"
@@ -594,7 +594,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 334,
+        "line": 366,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -604,92 +604,15 @@
     {
       "kind": ":=",
       "at": {
-        "line": 269,
+        "line": 301,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 273,
+        "line": 305,
         "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 274,
-        "column": 5
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 277,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 281,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 283,
-        "column": 5
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 284,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 287,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 289,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 292,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 296,
-        "column": 5
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 299,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 303,
-        "column": 5
       }
     },
     {
@@ -702,56 +625,133 @@
     {
       "kind": ":=",
       "at": {
+        "line": 309,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
         "line": 313,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 315,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 316,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 319,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 321,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 315,
+        "line": 324,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 328,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 331,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 335,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 338,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 345,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 347,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 318,
+        "line": 350,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 321,
+        "line": 353,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 325,
+        "line": 357,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 329,
+        "line": 361,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 330,
+        "line": 362,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 333,
+        "line": 365,
         "column": 5
       }
     }
@@ -761,7 +761,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 282,
+        "line": 314,
         "column": 2
       },
       "text": "os.Remove"
@@ -769,7 +769,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 309,
+        "line": 341,
         "column": 2
       }
     }

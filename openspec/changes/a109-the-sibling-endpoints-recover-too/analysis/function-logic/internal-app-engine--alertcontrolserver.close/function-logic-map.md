@@ -10,8 +10,9 @@ Close는 `Shutdown`이 listener를 닫아 주기를 기다렸다. a108이 실측
 앞지르면 정리가 Serve goroutine의 defer로 밀리고, 늦게 도착한 unlink가 이미 그 경로에
 앉은 **후계자의 socket**을 지운다.
 
-a109가 listener 필드를 추가하고 Close가 직접 닫는다(design D2b). 편집 후 AST 분기는
-5개다(편집 전 3개 — 늘어난 둘이 그 직접 닫기다).
+a109가 listener 필드를 추가하고 Close가 직접 닫는다(design D2b). 그리고 §2b.3 G9가 그
+해체를 형제와 공유하는 `closePrivateEndpointFiles`로 옮겼다 — 지금 이 함수의 AST 분기는
+**1개**(nil 수신자)다(편집 전 3개).
 
 ## Inputs and invariants
 
@@ -27,11 +28,11 @@ a109가 listener 필드를 추가하고 Close가 직접 닫는다(design D2b). �
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
 | B1 | `s == nil` | 없음 | `nil` | nil 수신자 안전 |
-| B2 | `s.listener != nil` | **listener를 직접 닫는다** | — | 늦은 unlink 차단(design D2b) |
-| B3 | `err != nil && !errors.Is(err, net.ErrClosed) && result == nil` | 없음 | 첫 오류만 보존 | 이미 Shutdown이 닫았으면 `net.ErrClosed`는 성공과 같다 |
-| B4 | `range []string{descriptor, socket, controlDir}` | 세 경로 제거 | — | Close 후 셋 다 사라짐 |
-| B5 | `err != nil && !errors.Is(err, os.ErrNotExist) && result == nil` | 없음 | 첫 오류만 보존 | ErrNotExist 관용(회수와의 경합은 양성) |
-| 분기 밖 종단 | — | `Shutdown` 결과가 `result`의 기본값 | `result` | 정상 Close는 nil |
+| 분기 밖 종단 | — | `Shutdown` → `closePrivateEndpointFiles`(listener 해체 + 세 경로 제거) | `result` | 정상 Close는 nil |
+
+옛 B2~B5(listener 직접 닫기 · `net.ErrClosed` 관용 · 세 경로 제거 · `os.ErrNotExist`
+관용)는 a109 §2b.3 G9가 `closePrivateEndpointFiles`로 옮겼다. 조건도 순서도 그대로이고,
+그 절들의 자기 문서는 이제 그 기계에 있다.
 
 ## Calls and live bindings
 
@@ -39,9 +40,7 @@ a109가 listener 필드를 추가하고 Close가 직접 닫는다(design D2b). �
 |---|---|---|---|
 | `context.WithTimeout` | Shutdown 시한 2초 | `defer cancel()` | AST defers |
 | `s.server.Shutdown` | 진행 중 요청 정리 | 시한 초과 error를 `result`로 | AST calls |
-| `s.listener.Close` | 늦은 unlink 차단(직접 소유) | `net.ErrClosed` 관용 | AST calls |
-| `os.Remove` ×3 | descriptor·socket·controlDir 제거 | ErrNotExist 관용, 첫 오류만 보존 | AST calls |
-| `errors.Is` | 관용 판정 ×2 | — | AST calls |
+| `closePrivateEndpointFiles` | listener 직접 해체 + descriptor·socket·controlDir 제거 | `net.ErrClosed`·ErrNotExist 관용, 첫 오류만 보존 | AST calls (a109 G9) |
 
 ## State mutations and fallbacks
 

@@ -4,8 +4,11 @@
 - AST evidence: `ast.json`
 - Risk scan: `risk-pattern-report.md`
 
-**a109 T1이 편집한 두 발행 경로 중 하나다.** 편집 **후**의 AST 분기 13개다(편집 전 15개
-— 없어진 것은 `createdControlDir` 조건 둘이고, 늘어난 것은 회수와 재-Mkdir 둘이다).
+**a109 T1이 편집한 두 발행 경로 중 하나다.** 편집 **후**의 AST 분기 10개다.
+
+§2b.3 G9가 Mkdir → 회수 → 재Mkdir 세 절(옛 B4~B7)을 형제와 공유하는
+`openReclaimedControlDirectory`로 옮겨 그 자리가 분기 하나(B4)가 됐다 — 동작·오류
+문자열은 불변이고, 옮긴 절의 커버리지는 아래 표가 그 기계를 가리킨다.
 
 편집 전 이 함수의 발행 의례는 B9(`PreparePrivateSocket`)·B10(`net.Listen` **최종 경로**)·
 B11(`os.Chmod` 0600)·B12(`ValidatePrivateSocket`)의 넷이었고, **B10과 B11 사이의 죽음**이
@@ -31,16 +34,13 @@ B11(`os.Chmod` 0600)·B12(`ValidatePrivateSocket`)의 넷이었고, **B10과 B11
 | B1 | `ops == nil` | 없음 | "has no operations" | 배선 실수 거부 |
 | B2 | `dir == ""` | 없음 | "has no engine directory" | 커버 없음 |
 | B3 | `ValidateEngineDirectory(dir) != nil` | 없음 | 감싼 error | 안전하지 않은 엔진 디렉터리 |
-| B4 | `os.Mkdir(controlDir, 0o700) != nil` | 디렉터리 생성 시도 | (B5·B6·B7로) | 기존 디렉터리 위에서의 기동 |
-| B5 | `!errors.Is(err, os.ErrExist)` | 없음 | "creating the alert control directory" | 생성 불가 |
-| B6 | `ReclaimStalePrivateEndpoint(...) != nil` | 회수(제거) 또는 무변경 | "reclaiming the alert control directory" | **낯선 엔트리·산 주인 거부** / 잔재 회수 |
-| B7 | 재-`os.Mkdir` 실패 | 없음 | "recreating the alert control directory" | 회수가 디렉터리를 비웠어야 도달하지 않는다 |
-| B8 | `ValidatePrivateControlDirectory(controlDir) != nil` | cleanup | 감싼 error | 0700 아닌 디렉터리 |
-| B9 | `ListenStagedPrivateSocket(...) != nil` | cleanup | "publishing the alert control socket" | **stage+rename 발행** — pre-chmod 상태가 최종 이름을 갖지 않는다 |
-| B10 | `ValidatePrivateSocket(socketPath) != nil` | cleanupListener | "validating" | 발행 후 **정확-0600** 확인(완화 누출 감시) |
-| B11 | `rand.Read` error | cleanupListener | "generating token" | 커버 없음 |
-| B12 | `json.Marshal` error | cleanupListener | "encoding descriptor" | 도달 불가에 가깝다 |
-| B13 | `publishPrivateDescriptor != nil` | cleanupListener | 그 error | descriptor 발행 실패 정리 |
+| B4 | `openReclaimedControlDirectory(...) != nil` | Mkdir · 회수(제거) · 재Mkdir | "creating/reclaiming/recreating the alert control directory" | **낯선 엔트리·산 주인 거부** / 잔재 회수 (옛 B4~B7이 이 기계 안이다) |
+| B5 | `ValidatePrivateControlDirectory(controlDir) != nil` | cleanup | 감싼 error | 0700 아닌 디렉터리 |
+| B6 | `ListenStagedPrivateSocket(...) != nil` | cleanup | "publishing the alert control socket" | **stage+rename 발행** — pre-chmod 상태가 최종 이름을 갖지 않는다 |
+| B7 | `ValidatePrivateSocket(socketPath) != nil` | cleanupListener | "validating" | 발행 후 **정확-0600** 확인(완화 누출 감시) |
+| B8 | `rand.Read` error | cleanupListener | "generating token" | 커버 없음 |
+| B9 | `json.Marshal` error | cleanupListener | "encoding descriptor" | 도달 불가에 가깝다 |
+| B10 | `publishPrivateDescriptor != nil` | cleanupListener | 그 error | descriptor 발행 실패 정리 |
 | go(종단) | 정상 종단 | `server.server.Serve(listener)` goroutine | `(server, nil)` | 기동 후 실제 수락 |
 
 ## Calls and live bindings
@@ -48,10 +48,9 @@ B11(`os.Chmod` 0600)·B12(`ValidatePrivateSocket`)의 넷이었고, **B10과 B11
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
 | `positionpolicyrpc.ValidateEngineDirectory` | 부모 위생 | error 전파, 재시도 없음 | AST calls |
-| `os.Mkdir` | control 디렉터리 | ErrExist만 관용 | AST calls |
+| `openReclaimedControlDirectory` | control 디렉터리 확보(Mkdir·회수·재Mkdir) | error 전파, 재시도 없음 | AST calls (a109 G9) |
 | `positionpolicyrpc.ValidatePrivateControlDirectory` | leaf 0700 | error 전파 | AST calls |
-| `positionpolicyrpc.ReclaimStalePrivateEndpoint` | 잔재 회수 + 사망 증명 | error 전파, 재시도 없음 | AST calls |
-| `alertControlEndpointNames` | 아는-이름 집합 | 오류 없음 | AST calls |
+| `alertControlEndpointNames` | 아는-이름 집합(회수 기계에 넘긴다) | 오류 없음 | AST calls |
 | `positionpolicyrpc.ListenStagedPrivateSocket` | staged bind → 0600 → rename | error 전파 | AST calls |
 | `positionpolicyrpc.ValidatePrivateSocket` | 발행 확인(정확-0600) | error 전파 | AST calls |
 | `crypto/rand.Read` | 토큰 | error 전파 | AST calls |

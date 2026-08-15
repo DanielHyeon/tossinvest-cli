@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/position_policy_transport.go",
-  "source_sha256": "37c3f301af4ba2b3cfed303e5cc7bc126a6e2507f1627ce0e71a6731c889ae66",
+  "source_sha256": "9ea26bf990d05ae8573f2789070cda0c9383e664fbee967a52e3dd037453e754",
   "package": "engine",
   "function": "Close",
   "receiver": "PositionPolicyCommandServer",
   "signature": "PositionPolicyCommandServer.Close(params=0, results=1)",
   "start": {
-    "line": 154,
+    "line": 186,
     "column": 1
   },
   "end": {
-    "line": 171,
+    "line": 203,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 155,
+        "line": 187,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 163,
+        "line": 195,
         "column": 3
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 166,
+        "line": 198,
         "column": 3
       }
     }
@@ -43,14 +43,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 156,
+        "line": 188,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 170,
+        "line": 202,
         "column": 2
       }
     }
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 159,
+        "line": 191,
         "column": 2
       },
       "text": "s.once.Do"
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 160,
+        "line": 192,
         "column": 18
       },
       "text": "context.WithTimeout"
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 160,
+        "line": 192,
         "column": 38
       },
       "text": "context.Background"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 161,
+        "line": 193,
         "column": 9
       },
       "text": "cancel"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 162,
+        "line": 194,
         "column": 12
       },
       "text": "s.server.Shutdown"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 163,
+        "line": 195,
         "column": 13
       },
       "text": "os.Remove"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 163,
+        "line": 195,
         "column": 53
       },
       "text": "errors.Is"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 166,
+        "line": 198,
         "column": 13
       },
       "text": "os.Remove"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 166,
+        "line": 198,
         "column": 23
       },
       "text": "filepath.Dir"
@@ -131,7 +131,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 166,
+        "line": 198,
         "column": 67
       },
       "text": "errors.Is"
@@ -141,42 +141,42 @@
     {
       "kind": ":=",
       "at": {
-        "line": 160,
+        "line": 192,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 162,
+        "line": 194,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 163,
+        "line": 195,
         "column": 6
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 164,
+        "line": 196,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 166,
+        "line": 198,
         "column": 6
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 167,
+        "line": 199,
         "column": 4
       }
     }
@@ -186,7 +186,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 161,
+        "line": 193,
         "column": 3
       },
       "text": "cancel"

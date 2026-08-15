@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/alert_control_transport_unix.go",
-  "source_sha256": "22b14e701c92a69c6d728a952b98b57117f80206ffd09fb476c9e3f7bc14abf0",
+  "source_sha256": "4ab4039f41549d732841dbaf0651502c618e89e68d64a0c2788bad392e65b989",
   "package": "engine",
   "function": "StartAlertControlServer",
   "signature": "StartAlertControlServer(params=2, results=2)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 181,
+    "line": 170,
     "column": 2
   },
   "branches": [
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 102,
+        "line": 104,
         "column": 2
       }
     },
@@ -49,36 +49,20 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 103,
-        "column": 3
+        "line": 111,
+        "column": 2
       }
     },
     {
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 111,
-        "column": 3
-      }
-    },
-    {
-      "id": "B7",
-      "kind": "if",
-      "at": {
-        "line": 115,
-        "column": 3
-      }
-    },
-    {
-      "id": "B8",
-      "kind": "if",
-      "at": {
-        "line": 122,
+        "line": 121,
         "column": 2
       }
     },
     {
-      "id": "B9",
+      "id": "B7",
       "kind": "if",
       "at": {
         "line": 132,
@@ -86,34 +70,26 @@
       }
     },
     {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    },
+    {
       "id": "B10",
       "kind": "if",
       "at": {
-        "line": 143,
-        "column": 2
-      }
-    },
-    {
-      "id": "B11",
-      "kind": "if",
-      "at": {
-        "line": 148,
-        "column": 2
-      }
-    },
-    {
-      "id": "B12",
-      "kind": "if",
-      "at": {
-        "line": 171,
-        "column": 2
-      }
-    },
-    {
-      "id": "B13",
-      "kind": "if",
-      "at": {
-        "line": 175,
+        "line": 164,
         "column": 2
       }
     }
@@ -143,28 +119,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 104,
-        "column": 4
+        "line": 106,
+        "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
         "line": 113,
-        "column": 4
+        "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 116,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 124,
+        "line": 123,
         "column": 3
       }
     },
@@ -178,35 +147,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 145,
+        "line": 139,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 150,
+        "line": 162,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 173,
+        "line": 166,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 177,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 180,
+        "line": 169,
         "column": 2
       }
     }
@@ -263,71 +225,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 102,
+        "line": 104,
         "column": 12
       },
-      "text": "os.Mkdir"
+      "text": "openReclaimedControlDirectory"
     },
     {
       "kind": "call",
       "at": {
-        "line": 103,
-        "column": 7
-      },
-      "text": "errors.Is"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 104,
-        "column": 16
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 111,
-        "column": 13
-      },
-      "text": "positionpolicyrpc.ReclaimStalePrivateEndpoint"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 112,
-        "column": 4
+        "line": 105,
+        "column": 3
       },
       "text": "alertControlEndpointNames"
     },
     {
       "kind": "call",
       "at": {
-        "line": 113,
-        "column": 16
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 115,
-        "column": 13
-      },
-      "text": "os.Mkdir"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 116,
-        "column": 16
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 121,
+        "line": 110,
         "column": 36
       },
       "text": "os.Remove"
@@ -335,7 +249,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 122,
+        "line": 111,
         "column": 12
       },
       "text": "positionpolicyrpc.ValidatePrivateControlDirectory"
@@ -343,7 +257,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 123,
+        "line": 112,
         "column": 3
       },
       "text": "cleanupControlDir"
@@ -351,7 +265,39 @@
     {
       "kind": "call",
       "at": {
-        "line": 124,
+        "line": 113,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 16
+      },
+      "text": "AlertControlSocketPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 19
+      },
+      "text": "positionpolicyrpc.ListenStagedPrivateSocket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 3
+      },
+      "text": "cleanupControlDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -360,17 +306,33 @@
       "kind": "call",
       "at": {
         "line": 126,
-        "column": 16
+        "column": 7
       },
-      "text": "AlertControlSocketPath"
+      "text": "listener.Close"
     },
     {
       "kind": "call",
       "at": {
-        "line": 131,
-        "column": 19
+        "line": 127,
+        "column": 7
       },
-      "text": "positionpolicyrpc.ListenStagedPrivateSocket"
+      "text": "os.Remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 3
+      },
+      "text": "cleanupControlDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 12
+      },
+      "text": "positionpolicyrpc.ValidatePrivateSocket"
     },
     {
       "kind": "call",
@@ -378,7 +340,7 @@
         "line": 133,
         "column": 3
       },
-      "text": "cleanupControlDir"
+      "text": "cleanupListener"
     },
     {
       "kind": "call",
@@ -391,55 +353,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 137,
-        "column": 7
-      },
-      "text": "listener.Close"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 138,
-        "column": 7
-      },
-      "text": "os.Remove"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 139,
-        "column": 3
-      },
-      "text": "cleanupControlDir"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 143,
-        "column": 12
-      },
-      "text": "positionpolicyrpc.ValidatePrivateSocket"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 144,
-        "column": 3
-      },
-      "text": "cleanupListener"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 145,
-        "column": 15
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 147,
+        "line": 136,
         "column": 16
       },
       "text": "make"
@@ -447,7 +361,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 148,
+        "line": 137,
         "column": 15
       },
       "text": "rand.Read"
@@ -455,7 +369,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 149,
+        "line": 138,
         "column": 3
       },
       "text": "cleanupListener"
@@ -463,7 +377,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 150,
+        "line": 139,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -471,7 +385,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 152,
+        "line": 141,
         "column": 11
       },
       "text": "base64.RawURLEncoding.EncodeToString"
@@ -479,7 +393,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 156,
+        "line": 145,
         "column": 15
       },
       "text": "AlertControlDescriptorPath"
@@ -487,7 +401,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 161,
+        "line": 150,
         "column": 22
       },
       "text": "alertControlRoutes"
@@ -495,7 +409,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 168,
+        "line": 157,
         "column": 15
       },
       "text": "json.Marshal"
@@ -503,7 +417,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 169,
+        "line": 158,
         "column": 58
       },
       "text": "os.Getpid"
@@ -511,7 +425,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 172,
+        "line": 161,
         "column": 3
       },
       "text": "cleanupListener"
@@ -519,7 +433,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 173,
+        "line": 162,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -527,7 +441,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 175,
+        "line": 164,
         "column": 12
       },
       "text": "publishPrivateDescriptor"
@@ -535,7 +449,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 176,
+        "line": 165,
         "column": 3
       },
       "text": "cleanupListener"
@@ -543,14 +457,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 179,
+        "line": 168,
         "column": 5
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 179,
+        "line": 168,
         "column": 18
       },
       "text": "server.server.Serve"
@@ -581,57 +495,71 @@
     {
       "kind": ":=",
       "at": {
-        "line": 102,
+        "line": 104,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 111,
-        "column": 6
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 115,
-        "column": 6
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 121,
+        "line": 110,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 121,
+        "line": 110,
         "column": 32
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 122,
+        "line": 111,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 126,
+        "line": 115,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 131,
+        "line": 120,
         "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 125,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 126,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 127,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 132,
+        "column": 5
       }
     },
     {
@@ -642,79 +570,51 @@
       }
     },
     {
-      "kind": "=",
+      "kind": ":=",
       "at": {
         "line": 137,
-        "column": 3
+        "column": 5
       }
     },
     {
-      "kind": "=",
+      "kind": ":=",
       "at": {
-        "line": 138,
-        "column": 3
+        "line": 141,
+        "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
         "line": 143,
-        "column": 5
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 147,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 148,
-        "column": 5
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 152,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 154,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 160,
+        "line": 149,
         "column": 2
       }
     },
     {
       "kind": ":=",
+      "at": {
+        "line": 157,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 164,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
       "at": {
         "line": 168,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 175,
-        "column": 5
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 179,
         "column": 14
       }
     }
@@ -723,7 +623,7 @@
     {
       "kind": "go",
       "at": {
-        "line": 179,
+        "line": 168,
         "column": 2
       }
     }

@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/position_policy_runtime_transport_unix.go",
-  "source_sha256": "0c9d9037d77014fc2df85f389ab6a6a67a9f147ea08ac4d72bdeaf49fbb1880c",
+  "source_sha256": "b44cacafdedf78d3220cd48f0a0f77e9a7f6b5370e5059638647b98d7eab0c8b",
   "package": "engine",
   "function": "Close",
   "receiver": "PositionPolicyRuntimeServer",
   "signature": "PositionPolicyRuntimeServer.Close(params=0, results=1)",
   "start": {
-    "line": 165,
+    "line": 154,
     "column": 1
   },
   "end": {
-    "line": 194,
+    "line": 169,
     "column": 2
   },
   "branches": [
@@ -18,40 +18,8 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 166,
+        "line": 155,
         "column": 2
-      }
-    },
-    {
-      "id": "B2",
-      "kind": "if",
-      "at": {
-        "line": 179,
-        "column": 3
-      }
-    },
-    {
-      "id": "B3",
-      "kind": "if",
-      "at": {
-        "line": 180,
-        "column": 4
-      }
-    },
-    {
-      "id": "B4",
-      "kind": "range",
-      "at": {
-        "line": 187,
-        "column": 3
-      }
-    },
-    {
-      "id": "B5",
-      "kind": "if",
-      "at": {
-        "line": 188,
-        "column": 4
       }
     }
   ],
@@ -59,14 +27,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 167,
+        "line": 156,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 193,
+        "line": 168,
         "column": 2
       }
     }
@@ -75,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 170,
+        "line": 159,
         "column": 2
       },
       "text": "s.once.Do"
@@ -83,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 171,
+        "line": 160,
         "column": 18
       },
       "text": "context.WithTimeout"
@@ -91,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 171,
+        "line": 160,
         "column": 38
       },
       "text": "context.Background"
@@ -99,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 172,
+        "line": 161,
         "column": 9
       },
       "text": "cancel"
@@ -107,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 173,
+        "line": 162,
         "column": 12
       },
       "text": "s.server.Shutdown"
@@ -115,77 +83,32 @@
     {
       "kind": "call",
       "at": {
-        "line": 180,
-        "column": 14
+        "line": 166,
+        "column": 12
       },
-      "text": "s.listener.Close"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 180,
-        "column": 49
-      },
-      "text": "errors.Is"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 188,
-        "column": 14
-      },
-      "text": "os.Remove"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 188,
-        "column": 46
-      },
-      "text": "errors.Is"
+      "text": "closePrivateEndpointFiles"
     }
   ],
   "assignments": [
     {
       "kind": ":=",
       "at": {
-        "line": 171,
+        "line": 160,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 173,
+        "line": 162,
         "column": 3
       }
     },
     {
-      "kind": ":=",
-      "at": {
-        "line": 180,
-        "column": 7
-      }
-    },
-    {
       "kind": "=",
       "at": {
-        "line": 182,
-        "column": 5
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 188,
-        "column": 7
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 189,
-        "column": 5
+        "line": 166,
+        "column": 3
       }
     }
   ],
@@ -194,7 +117,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 172,
+        "line": 161,
         "column": 3
       },
       "text": "cancel"
