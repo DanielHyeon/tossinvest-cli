@@ -23,6 +23,13 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 )
 
+// positionPolicyControlStagingPrefix는 이 endpoint의 descriptor 발행이 os.CreateTemp에
+// 넘기는 임시 이름의 앞머리다.
+//
+// 리터럴이 아니라 상수인 이유: 부팅의 staging 위생이 **같은 값**을 알아야 한다. 두 곳에
+// 따로 적으면 위생이 자기 잔재를 못 알아보고, 잔재는 계속 쌓인다.
+const positionPolicyControlStagingPrefix = ".position-policy-control-"
+
 type positionPolicyCommands interface {
 	List(context.Context) ([]positionpolicy.State, error)
 	Preview(context.Context, positionpolicy.Request) (positionpolicy.Preview, error)
@@ -72,6 +79,15 @@ func StartPositionPolicyCommandServer(engineDir string,
 			_ = os.Remove(controlDir)
 		}
 	}
+	// 이 endpoint에는 socket이 없다 — loopback TCP이므로 pre-chmod 병도, 산 주인 탈취도,
+	// probe할 대상도 없다. 남는 잔재는 자기 staging뿐이고(crash 시 os.CreateTemp가 남긴
+	// 반쯤 쓴 descriptor), 오늘까지 아무도 그것을 치우지 않아 부팅마다 쌓였다.
+	//
+	// 그래서 여기 더하는 것은 **위생뿐**이다. 낯선 엔트리는 오늘처럼 무시한다: 열거+거부를
+	// 넣으면 이물 하나가 격리 해제 표면을 매 부팅 지우는 새 실패 경로가 생기는데, 격리
+	// 해제는 격리된 포지션의 손절 포함 미판정 상태를 푸는 유일한 장중 경로다(design D2a).
+	positionpolicyrpc.SweepPrivateStagingLeftovers(controlDir,
+		[]string{positionPolicyControlStagingPrefix})
 	listener, err := net.Listen("tcp4", "127.0.0.1:0")
 	if err != nil {
 		cleanupControlDir()
@@ -258,7 +274,7 @@ func writePositionPolicyDescriptor(path string, descriptor positionpolicyrpc.Des
 	if err := positionpolicyrpc.ValidateControlDirectory(dir); err != nil {
 		return fmt.Errorf("engine: validating control directory before staging: %w", err)
 	}
-	temporary, err := os.CreateTemp(dir, ".position-policy-control-*")
+	temporary, err := os.CreateTemp(dir, positionPolicyControlStagingPrefix+"*")
 	if err != nil {
 		return fmt.Errorf("engine: staging control descriptor: %w", err)
 	}

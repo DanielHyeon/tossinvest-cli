@@ -35,11 +35,13 @@
   모두 회수 후 디렉터리에 잔재 3개가 그대로 남고(`[.position-policy-runtime-… .s-e… .s-s…
   endpoint.json runtime.sock]`), 낯선 엔트리가 있어도 기동이 **성공**했다. command는
   자기 staging 잔재가 남았고(err=nil) 이물 무시는 이미 참이다.
-- [ ] 1.4 GREEN: 이름-독립 staged listen(11자 staging — hex 절단, D1a)·전체성 회수
+- [x] 1.4 GREEN: 이름-독립 staged listen(11자 staging — hex 절단, D1a)·전체성 회수
   (staging 소유 uid 검증 포함)·connect probe를 `internal/positionpolicyrpc`에 추가,
   두 socket transport가 사용(D1·D2). 아는-이름 집합은 호출자가 넘기고 완전성 테스트로
   고정(D1b). command endpoint는 staging 위생만(D2a). Close에 listener 직접 닫기(D2b —
   AlertControlServer listener 필드 추가). 클라이언트 검증은 정확-0600 유지(P1-3).
+  산출물: `internal/positionpolicyrpc/private_staging.go`(이식성 있는 이름·위생),
+  `private_staging_unix.go`(staged listen·회수·probe). 세 transport 재배선 완료.
 - [ ] 1.5 staging basename **길이 11 직접 측정** + 각 최종 socket basename과의 ≤
   관계식 상수 테스트(절대 경로 103 요구 금지 — D1a, Linux 실측 상한 107).
 - [ ] 1.6 뮤테이션 원장(t1) — 회수 분기·probe 3갈래·완화 경계 각각을 죽여서 테스트가

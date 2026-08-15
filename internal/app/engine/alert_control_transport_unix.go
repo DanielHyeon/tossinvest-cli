@@ -48,9 +48,34 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 )
 
+// privateDescriptorStagingPrefix는 publishPrivateDescriptor가 os.CreateTemp에 넘기는
+// 임시 이름의 앞머리다.
+//
+// 리터럴이 아니라 상수인 이유: 회수가 "우리 잔재"로 인정하는 이름 집합에 **같은 값**이
+// 들어가야 한다. 두 곳에 따로 적으면 회수가 자기 잔재를 낯선 것으로 거부하고, 그 거부는
+// 결정적이라 매 부팅 같은 자리에서 멈춘다. 이름-독립이라는 이 함수의 성질은 그대로다 —
+// 접두는 endpoint 이름이 아니라 "발행 전"이라는 상태의 이름이다.
+const privateDescriptorStagingPrefix = ".endpoint-"
+
+// alertControlEndpointNames는 이 endpoint가 자기 control 디렉터리에 만들 수 있는 이름의
+// 전부다. 완전성은 테스트가 고정한다(design D1b).
+func alertControlEndpointNames() positionpolicyrpc.PrivateEndpointNames {
+	return positionpolicyrpc.PrivateEndpointNames{
+		Descriptor: alertControlDescriptorFileName,
+		Socket:     alertControlSocketFileName,
+		StagingPrefixes: []string{
+			positionpolicyrpc.StagingPrefix,
+			privateDescriptorStagingPrefix,
+		},
+	}
+}
+
 // AlertControlServer is the engine's alert operator endpoint.
 type AlertControlServer struct {
-	server     *http.Server
+	server *http.Server
+	// listener는 Close가 **직접** 닫는다. 필드가 없던 판은 그 일을 Shutdown 에 맡겼고,
+	// 늦게 도착한 정리가 후계자의 socket 을 지웠다(a108 A1 F5, design D2b).
+	listener   net.Listener
 	descriptor string
 	socket     string
 	controlDir string
@@ -74,45 +99,45 @@ func StartAlertControlServer(engineDir string, ops *AlertOperations) (*AlertCont
 		return nil, fmt.Errorf("engine: validating the alert control engine directory: %w", err)
 	}
 	controlDir := AlertControlDirectory(dir)
-	createdControlDir := false
 	if err := os.Mkdir(controlDir, 0o700); err != nil {
 		if !errors.Is(err, os.ErrExist) {
 			return nil, fmt.Errorf("engine: creating the alert control directory: %w", err)
 		}
-	} else {
-		createdControlDir = true
-	}
-	cleanupControlDir := func() {
-		if createdControlDir {
-			_ = os.Remove(controlDir)
+		// 디렉터리가 이미 있다는 것은 지난 기동의 잔재가 있다는 뜻이다. 회수는
+		// 전체성이다 — 자기 수명주기가 만들 수 있는 부분 상태를 전부 치우고 디렉터리째
+		// 비운 뒤 새로 만든다. 산 주인의 socket은 절대 지우지 않는다(design D2).
+		if err := positionpolicyrpc.ReclaimStalePrivateEndpoint(controlDir,
+			alertControlEndpointNames()); err != nil {
+			return nil, fmt.Errorf("engine: reclaiming the alert control directory: %w", err)
+		}
+		if err := os.Mkdir(controlDir, 0o700); err != nil {
+			return nil, fmt.Errorf("engine: recreating the alert control directory: %w", err)
 		}
 	}
+	// 회수가 끝났으므로 이 디렉터리는 언제나 **이번 기동이 만든 것**이다. 실패 정리가
+	// 조건 없이 지워도 되는 근거가 그것이다.
+	cleanupControlDir := func() { _ = os.Remove(controlDir) }
 	if err := positionpolicyrpc.ValidatePrivateControlDirectory(controlDir); err != nil {
 		cleanupControlDir()
 		return nil, fmt.Errorf("engine: validating the alert control directory: %w", err)
 	}
 	socketPath := AlertControlSocketPath(dir)
-	if err := positionpolicyrpc.PreparePrivateSocket(socketPath); err != nil {
-		cleanupControlDir()
-		return nil, fmt.Errorf("engine: preparing the alert control socket: %w", err)
-	}
-	listener, err := net.Listen("unix", socketPath)
+	// 임시 이름에 bind → 0600 → rename. 0600 이 붙기 전 상태는 최종 이름을 가진 적이
+	// 없으므로, "권한이 덜 붙은 socket 위에서 승인 라우트가 열리는" 순간이 없다
+	// (design D1). 예전 판은 최종 경로에 bind 한 뒤 chmod 했고, 그 두 줄 사이의 죽음이
+	// 매 부팅 거부되는 잔재를 만들었다.
+	listener, err := positionpolicyrpc.ListenStagedPrivateSocket(controlDir, socketPath)
 	if err != nil {
 		cleanupControlDir()
-		return nil, fmt.Errorf("engine: binding the alert control socket: %w", err)
+		return nil, fmt.Errorf("engine: publishing the alert control socket: %w", err)
 	}
 	cleanupListener := func() {
 		_ = listener.Close()
 		_ = os.Remove(socketPath)
 		cleanupControlDir()
 	}
-	// 0600 before anything is served. net.Listen creates the socket with the
-	// process umask, and a umask that leaves it group-readable would put the
-	// acknowledge route behind nothing but a token the descriptor also protects.
-	if err := os.Chmod(socketPath, 0o600); err != nil {
-		cleanupListener()
-		return nil, fmt.Errorf("engine: securing the alert control socket: %w", err)
-	}
+	// 발행 확인은 **정확-0600**이다. 회수의 좁은 완화가 발행으로 새지 않았다는 증거가
+	// 이 호출이다(freeze P1-3).
 	if err := positionpolicyrpc.ValidatePrivateSocket(socketPath); err != nil {
 		cleanupListener()
 		return nil, fmt.Errorf("engine: validating the alert control socket: %w", err)
@@ -125,6 +150,7 @@ func StartAlertControlServer(engineDir string, ops *AlertOperations) (*AlertCont
 	token := base64.RawURLEncoding.EncodeToString(tokenBytes)
 
 	server := &AlertControlServer{
+		listener:   listener,
 		descriptor: AlertControlDescriptorPath(dir),
 		socket:     socketPath,
 		controlDir: controlDir,
@@ -165,6 +191,19 @@ func (s *AlertControlServer) Close() error {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 		result = s.server.Shutdown(ctx)
+		// listener는 **여기서 우리가** 닫는다. Shutdown이 Serve의 listener 등록을
+		// 앞지르면 Go는 정리를 Serve goroutine의 defer로 미루는데, 그 늦은 정리가
+		// 도착할 때 경로에는 이미 후계자의 socket이 앉아 있을 수 있다(a108 A1 F5는
+		// 300라운드 중 3회 재현). 닫는 시점을 예정된 goroutine에 맡기지 않는다.
+		// 이미 Shutdown이 닫았으면 net.ErrClosed가 오는데, 그것은 성공과 같다.
+		if s.listener != nil {
+			if err := s.listener.Close(); err != nil && !errors.Is(err, net.ErrClosed) &&
+				result == nil {
+				result = err
+			}
+		}
+		// 경로를 지울 권한은 이 루프 하나뿐이다 — listener는 자기 이름을 unlink하지
+		// 않고(SetUnlinkOnClose(false)), 기억하는 이름도 이미 사라진 임시 이름이다.
 		for _, path := range []string{s.descriptor, s.socket, s.controlDir} {
 			if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) && result == nil {
 				result = err
@@ -278,7 +317,7 @@ func publishPrivateDescriptor(path string, body []byte) (result error) {
 	if err := positionpolicyrpc.ValidatePrivateControlDirectory(dir); err != nil {
 		return fmt.Errorf("engine: validating the control directory before staging: %w", err)
 	}
-	temporary, err := os.CreateTemp(dir, ".endpoint-*")
+	temporary, err := os.CreateTemp(dir, privateDescriptorStagingPrefix+"*")
 	if err != nil {
 		return fmt.Errorf("engine: staging a descriptor: %w", err)
 	}
