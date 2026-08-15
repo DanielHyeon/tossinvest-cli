@@ -56,6 +56,9 @@ type Report struct {
 	Steps       []Outcome  `json:"steps"`
 	Groups      []Group    `json:"groups"`
 	Outstanding []Artifact `json:"outstanding,omitempty"`
+	// M0Checkpoints are owner-record recovery facts. They are visible to status
+	// but intentionally never become cleanup/abort targets.
+	M0Checkpoints []M0Checkpoint `json:"m0_checkpoints,omitempty"`
 	// Unverified is the flat list task 2.6 turns into the no-automatic-entry
 	// list. It is duplicated out of Groups on purpose: the one question that
 	// gets asked most should not require walking a tree.
@@ -188,7 +191,6 @@ func BuildReport(recordPath string, entries []Entry, now time.Time) Report {
 			latest[o.Key] = located{obs: o, step: e.StepID, at: e.FinishedAt}
 		}
 	}
-
 	for _, group := range requiredProperties() {
 		g := Group{Name: group.Name, Tasks: group.Tasks}
 		for _, want := range group.Attributes {
@@ -302,6 +304,9 @@ type Progress struct {
 	Steps       []Outcome  `json:"steps"`
 	Pending     []StepID   `json:"pending"`
 	Outstanding []Artifact `json:"outstanding,omitempty"`
+	// M0Checkpoints are owner-record recovery facts. They are visible to status
+	// but intentionally never become cleanup/abort targets.
+	M0Checkpoints []M0Checkpoint `json:"m0_checkpoints,omitempty"`
 	// AwaitingRestart names the step that is waiting for a new process.
 	AwaitingRestart StepID `json:"awaiting_restart,omitempty"`
 }
@@ -328,6 +333,11 @@ func BuildProgress(recordPath string, entries []Entry) Progress {
 			p.Pending = append(p.Pending, step.ID)
 		}
 	}
+	for _, e := range entries {
+		if e.Kind == KindM0Checkpoint && e.M0Checkpoint != nil {
+			p.M0Checkpoints = append(p.M0Checkpoints, *e.M0Checkpoint)
+		}
+	}
 	p.Outstanding = Outstanding(entries)
 	return p
 }
@@ -335,7 +345,7 @@ func BuildProgress(recordPath string, entries []Entry) Progress {
 // WriteText renders the progress view.
 func (p Progress) WriteText(w io.Writer) {
 	fmt.Fprintf(w, "기록               %s\n", p.Record)
-	if len(p.Steps) == 0 {
+	if len(p.Steps) == 0 && len(p.M0Checkpoints) == 0 {
 		fmt.Fprintln(w, "\n아직 기록된 검증이 없다. `tossctl verify run`으로 시작하라.")
 		fmt.Fprintln(w, "`tossctl verify run --list`는 계좌를 건드리지 않고 전체 절차를 출력한다.")
 		return
@@ -359,6 +369,12 @@ func (p Progress) WriteText(w io.Writer) {
 			fmt.Fprintf(w, "  %s %s (%s)\n", a.Kind, a.ID, a.Symbol)
 		}
 		fmt.Fprintln(w, "  `tossctl verify run --resume`가 절차를 마치고 이들을 취소한다.")
+	}
+	if len(p.M0Checkpoints) > 0 {
+		fmt.Fprintln(w, "\nM0 복구 체크포인트 (취소 대상 아님):")
+		for _, checkpoint := range p.M0Checkpoints {
+			fmt.Fprintf(w, "  %s client=%s parent=%s child=%s\n", checkpoint.Kind, orNone(checkpoint.ClientOrderID), orNone(checkpoint.ParentConditionalID), orNone(checkpoint.ChildOrderID))
+		}
 	}
 }
 

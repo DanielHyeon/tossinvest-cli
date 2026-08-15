@@ -1,0 +1,438 @@
+{
+  "file": "internal/verifylive/fake_broker_test.go",
+  "source_sha256": "d31d4fbba7485ec830fb047312d1ab096e62a41876c4bb68185fce574f822f36",
+  "package": "verifylive",
+  "function": "build",
+  "receiver": "harness",
+  "signature": "harness.build(params=1, results=3)",
+  "start": {
+    "line": 1207,
+    "column": 1
+  },
+  "end": {
+    "line": 1271,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1210,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1214,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1221,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 1222,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 1223,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 1233,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 1236,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 1246,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 1252,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 1256,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 1266,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1241,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1249,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1268,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1270,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1208,
+        "column": 2
+      },
+      "text": "h.t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1209,
+        "column": 16
+      },
+      "text": "LoadEntries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1211,
+        "column": 3
+      },
+      "text": "h.t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1213,
+        "column": 14
+      },
+      "text": "OpenRecorder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1215,
+        "column": 3
+      },
+      "text": "h.t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1217,
+        "column": 30
+      },
+      "text": "rec.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1224,
+        "column": 18
+      },
+      "text": "newM0HTTPClient"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1230,
+        "column": 17
+      },
+      "text": "h.op.confirmer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1231,
+        "column": 22
+      },
+      "text": "h.op.batchConfirmer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1240,
+        "column": 11
+      },
+      "text": "h.now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1245,
+        "column": 11
+      },
+      "text": "h.now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1247,
+        "column": 4
+      },
+      "text": "h.broker.expireKeys"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1255,
+        "column": 16
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1265,
+        "column": 17
+      },
+      "text": "New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1267,
+        "column": 3
+      },
+      "text": "closeRecord"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1209,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1213,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1217,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1217,
+        "column": 26
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 1219,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1220,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1224,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1226,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1229,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1230,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1231,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1232,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1234,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1237,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1239,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1240,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1243,
+        "column": 2
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 1244,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1245,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1251,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1253,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1255,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1257,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1259,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1265,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

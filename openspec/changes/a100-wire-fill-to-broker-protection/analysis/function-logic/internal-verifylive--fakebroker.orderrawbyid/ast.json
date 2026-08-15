@@ -1,0 +1,294 @@
+{
+  "file": "internal/verifylive/fake_broker_test.go",
+  "source_sha256": "d31d4fbba7485ec830fb047312d1ab096e62a41876c4bb68185fce574f822f36",
+  "package": "verifylive",
+  "function": "OrderRawByID",
+  "receiver": "fakeBroker",
+  "signature": "fakeBroker.OrderRawByID(params=2, results=2)",
+  "start": {
+    "line": 441,
+    "column": 1
+  },
+  "end": {
+    "line": 481,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 442,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 449,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 453,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "else",
+      "at": {
+        "line": 455,
+        "column": 9
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 460,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 464,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 466,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 472,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 474,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 450,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 480,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 3
+      },
+      "text": "f.beforeOrderRawByID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 445,
+        "column": 2
+      },
+      "text": "f.log"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 446,
+        "column": 2
+      },
+      "text": "f.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 448,
+        "column": 2
+      },
+      "text": "f.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 456,
+        "column": 3
+      },
+      "text": "f.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 459,
+        "column": 3
+      },
+      "text": "f.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 13
+      },
+      "text": "mustFilledOrderJSONFrom"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 466,
+        "column": 13
+      },
+      "text": "json.Unmarshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 467,
+        "column": 4
+      },
+      "text": "panic"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 15
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 474,
+        "column": 13
+      },
+      "text": "json.Unmarshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 475,
+        "column": 4
+      },
+      "text": "panic"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 478,
+        "column": 15
+      },
+      "text": "json.Marshal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 447,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 452,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 457,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 458,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 461,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 466,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 469,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 470,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 474,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 477,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 478,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

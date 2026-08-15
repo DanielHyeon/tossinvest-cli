@@ -333,7 +333,12 @@ func (r *Runner) pollTrigger(ctx context.Context, sr *stepRun, w triggerWatch, o
 	co, err := r.readConditional(ctx, sr, w.conditionalID)
 	if err != nil {
 		// A read that failed is not evidence of anything. It is logged as a Call by
-		// readConditional, and the loop tries again on the next tick.
+		// readConditional, and the loop tries again on the next tick. Receipt
+		// persistence/transport failures are different: retrying must not hide a
+		// missing causal boundary.
+		if r.m0Receipt != nil && !obs.cancelled {
+			return false, err
+		}
 		return false, nil
 	}
 	if evidence, fired := firedEvidence(co); fired && obs.triggeredAt.IsZero() {
@@ -343,6 +348,48 @@ func (r *Runner) pollTrigger(ctx context.Context, sr *stepRun, w triggerWatch, o
 		fmt.Fprintf(r.out, "    발동 관측 — %s\n", evidence)
 	}
 	if id := strings.TrimSpace(co.First.TriggeredOrderID); id != "" && obs.childID == "" {
+		if r.m0ReceiptUsable() {
+			if co.ID != w.conditionalID || co.ClientOrderID != r.m0PendingClient ||
+				co.Symbol != w.symbol || co.Market != r.market || co.Type != "SINGLE" ||
+				co.Quantity != trim(MinQuantity) || co.OrderType != "MARKET" ||
+				!strings.EqualFold(co.First.Side, "SELL") || !strings.EqualFold(co.First.ConditionType, "STOP") ||
+				co.First.TriggerPriceRaw != trim(w.trigger.Price) || co.ExpireDate != r.expireDate() {
+				return false, fmt.Errorf("verify: M0 causal receipt HOLD: parent identity group does not equal pending approved fields")
+			}
+		}
+		if err := r.appendM0Checkpoint(M0Checkpoint{
+			Kind: "child-observed", ParentConditionalID: w.conditionalID, ChildOrderID: id, Symbol: w.symbol,
+			Market: r.market, Type: "SINGLE", Quantity: trim(MinQuantity), Side: "SELL", OrderType: "MARKET", ConditionType: "STOP", Trigger: trim(w.trigger.Price), ExpireDate: co.ExpireDate,
+		}); err != nil {
+			return false, err
+		}
+		if r.m0AfterChildCheckpoint != nil {
+			if err := r.m0AfterChildCheckpoint(); err != nil {
+				return false, err
+			}
+		}
+		if r.m0ReceiptUsable() {
+			if r.m0ReceiptLease == nil {
+				return false, fmt.Errorf("verify: M0 causal receipt HOLD: receipt run lease is unavailable")
+			}
+			stamp, err := r.m0ReceiptLease.RecordCausal("parent-child-id", m0CausalFieldsV1{
+				ParentRequestTag: r.m0Receipt.tag(w.conditionalID), ParentResponseTag: r.m0Receipt.tag(co.ID),
+				PendingClientTag: r.m0Receipt.tag(r.m0PendingClient), ParentClientTag: r.m0Receipt.tag(co.ClientOrderID),
+				ParentChildTag: r.m0Receipt.tag(co.First.TriggeredOrderID), ChildCheckpointTag: r.m0Receipt.tag(id),
+				Symbol: co.Symbol, RequestedMarket: r.market, Market: co.Market, Type: co.Type, OrderType: co.OrderType, Quantity: co.Quantity,
+				Side: co.First.Side, RootStatus: co.Status, FirstStatus: co.First.Status, Condition: co.First.ConditionType, Trigger: co.First.TriggerPriceRaw, Expiry: co.ExpireDate,
+			})
+			if err != nil {
+				return false, err
+			}
+			r.m0ParentBarrier = stamp
+			if r.m0AfterParentCausal != nil {
+				if err := r.m0AfterParentCausal(); err != nil {
+					return false, err
+				}
+			}
+			r.m0CriticalWindow = true
+		}
 		obs.childID, obs.childSeenAt, obs.childInterval = id, r.now(), obs.interval
 		sr.created(KindOrder, id, w.symbol, r.now(),
 			"created by conditional "+w.conditionalID+" firing; it is meant to fill")
@@ -357,15 +404,60 @@ func (r *Runner) pollTrigger(ctx context.Context, sr *stepRun, w triggerWatch, o
 	}
 	view, err := r.readOrder(ctx, sr, obs.childID)
 	if err != nil {
+		if r.m0Receipt != nil && (r.m0ReceiptErr != nil || r.m0CriticalWindow) {
+			return false, err
+		}
 		return false, nil
 	}
 	obs.childStatus = view.Status
-	if parseDecimal(view.Execution.FilledQuantity) <= 0 && !strings.EqualFold(view.Status, "FILLED") {
+	filledQuantity := parseDecimal(view.Execution.FilledQuantity)
+	if strings.EqualFold(view.Status, "FILLED") &&
+		(view.Execution.FilledQuantity != trim(MinQuantity) || filledQuantity <= 0 || view.Execution.AverageFilledPrice == "" ||
+			view.Execution.FilledAmount == "") {
+		return false, fmt.Errorf("verify: M0 causal receipt HOLD: FILLED child lacks exact positive one-share execution evidence")
+	}
+	if filledQuantity <= 0 && !strings.EqualFold(view.Status, "FILLED") {
 		return false, nil
+	}
+	if r.m0CriticalWindow && r.m0Gap {
+		return false, fmt.Errorf("verify: M0 causal receipt HOLD: critical parent-to-child window contains an irreversible read gap")
+	}
+	if r.m0ReceiptUsable() &&
+		(view.OrderID != obs.childID || view.Symbol != w.symbol || !strings.EqualFold(view.Side, "SELL") ||
+			view.Quantity != trim(MinQuantity) || !strings.EqualFold(view.OrderType, "MARKET") ||
+			view.Currency != m0Currency(r.market)) {
+		return false, fmt.Errorf("verify: M0 causal receipt HOLD: child identity group does not equal approved parent leg")
+	}
+	if r.m0CriticalWindow && r.m0ReceiptUsable() {
+		if r.m0ReceiptLease == nil {
+			return false, fmt.Errorf("verify: M0 causal receipt HOLD: receipt run lease is unavailable")
+		}
+		if !r.m0ChildAttemptAfterParent() {
+			return false, fmt.Errorf("verify: M0 causal receipt HOLD: no traced child request after durable parent barrier")
+		}
+		stamp, err := r.m0ReceiptLease.RecordCausal("child-first-observed-fill", m0CausalFieldsV1{
+			ChildRequestTag: r.m0Receipt.tag(obs.childID), ChildResponseTag: r.m0Receipt.tag(view.OrderID),
+			Symbol: view.Symbol, RequestedMarket: r.market, Market: r.market, OrderType: view.OrderType,
+			Quantity: view.Quantity, Side: view.Side, ChildStatus: view.Status, Currency: view.Currency,
+			FilledQuantity: view.Execution.FilledQuantity, AverageFilledPrice: view.Execution.AverageFilledPrice,
+			FilledAmount: view.Execution.FilledAmount, FilledAt: view.Execution.FilledAt,
+		})
+		if err != nil {
+			return false, err
+		}
+		r.m0ChildFill = stamp
+		r.m0CriticalWindow = false
 	}
 	obs.childFilledAt, obs.childFilledIntv = r.now(), obs.interval
 	fmt.Fprintf(r.out, "    child 주문 체결 확인 %s (%s)\n", obs.childID, orDash(view.Status))
 	return true, nil
+}
+
+func m0Currency(market string) string {
+	if NormalizeMarket(market) == "US" {
+		return "USD"
+	}
+	return "KRW"
 }
 
 // concludeUnreached is the ending where the market never came to the trigger.
@@ -509,6 +601,10 @@ func (r *Runner) finishTrigger(sr *stepRun, w triggerWatch, obs *triggerObservat
 
 	switch {
 	case !obs.childFilledAt.IsZero():
+		if !r.m0PassReady() {
+			sr.fail("M0 causal receipt HOLD: durable parent barrier, traced child request, and first-fill receipt do not form one causal chain")
+			return nil
+		}
 		// The whole point. The child is gone from the account because it filled,
 		// and the conditional is gone because it fired; both are terminal, and the
 		// record says which ending each one had.
@@ -524,12 +620,13 @@ func (r *Runner) finishTrigger(sr *stepRun, w triggerWatch, obs *triggerObservat
 		// that certain, and the two ways of being wrong are not symmetric: calling a
 		// live stop gone leaves a fire-capable order nothing is tracking, while
 		// calling a gone one live costs a 404 on a cancel nobody needed. The
-		// end-of-run check will report it and `verify abort` clears it.
+		// end-of-run status reports it for a human reconciliation; M0 never asks
+		// automated cleanup or abort to erase this unresolved evidence.
 		sr.observe("conditional.trigger.conditional_presumed_fired", "true",
 			"the conditional shows a trigger but the step did not observe what it produced, so it is left "+
-				"on the record as live rather than assumed gone")
+				"on the record as live rather than assumed gone; M0 leaves both objects for manual reconciliation and never auto-cancels them")
 		sr.fail("조건주문 %s의 발동은 관측했지만 %s 안에 %s. 이 조건주문과 child 주문은 살아 있는 것으로 "+
-			"기록에 남는다 — `tossctl verify status`가 출력하고 `tossctl verify abort`가 끝낸다",
+			"기록에 남는다 — `tossctl verify status`에서 parent/child를 확인해 사람이 수동 대사한다. M0는 자동 취소하지 않는다",
 			w.conditionalID, TriggerLinkWindow, missingLink(obs))
 		return nil
 	case obs.crossedWithoutFiring:

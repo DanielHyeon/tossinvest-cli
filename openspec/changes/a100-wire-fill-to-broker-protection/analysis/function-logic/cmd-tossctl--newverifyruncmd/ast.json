@@ -1,0 +1,302 @@
+{
+  "file": "cmd/tossctl/verify.go",
+  "source_sha256": "77d33e4d7375aa6857e0ff69dda5ad4d083ace0f62878a9b1db152967435d4f7",
+  "package": "main",
+  "function": "newVerifyRunCmd",
+  "signature": "newVerifyRunCmd(params=2, results=1)",
+  "start": {
+    "line": 131,
+    "column": 1
+  },
+  "end": {
+    "line": 217,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 180,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 216,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 11
+      },
+      "text": "runVerifyRun"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 2
+      },
+      "text": "BoolVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 2
+      },
+      "text": "BoolVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 2
+      },
+      "text": "Float64Var"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 2
+      },
+      "text": "Float64Var"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 2
+      },
+      "text": "BoolVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 2
+      },
+      "text": "BoolVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 2
+      },
+      "text": "DurationVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 2
+      },
+      "text": "BoolVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 2
+      },
+      "text": "DurationVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 2
+      },
+      "text": "StringSliceVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

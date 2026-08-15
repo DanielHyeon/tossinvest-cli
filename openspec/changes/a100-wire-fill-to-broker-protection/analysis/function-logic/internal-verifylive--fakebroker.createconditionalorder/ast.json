@@ -1,0 +1,210 @@
+{
+  "file": "internal/verifylive/fake_broker_test.go",
+  "source_sha256": "d31d4fbba7485ec830fb047312d1ab096e62a41876c4bb68185fce574f822f36",
+  "package": "verifylive",
+  "function": "CreateConditionalOrder",
+  "receiver": "fakeBroker",
+  "signature": "fakeBroker.CreateConditionalOrder(params=2, results=2)",
+  "start": {
+    "line": 910,
+    "column": 1
+  },
+  "end": {
+    "line": 941,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 913,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 917,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 930,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 933,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 918,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 940,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 911,
+        "column": 2
+      },
+      "text": "f.log"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 912,
+        "column": 15
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 914,
+        "column": 3
+      },
+      "text": "f.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 916,
+        "column": 3
+      },
+      "text": "f.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 921,
+        "column": 8
+      },
+      "text": "f.nextID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 922,
+        "column": 2
+      },
+      "text": "f.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 925,
+        "column": 13
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 927,
+        "column": 52
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 933,
+        "column": 5
+      },
+      "text": "strings.HasPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 938,
+        "column": 29
+      },
+      "text": "parseDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 939,
+        "column": 2
+      },
+      "text": "f.mu.Unlock"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 912,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 915,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 921,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 923,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 931,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 934,
+        "column": 3
+      }
+    },
+    {
+      "kind": "-=",
+      "at": {
+        "line": 938,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -922,28 +922,129 @@ func (r *Runner) readSellable(ctx context.Context, sr *stepRun, symbol string) (
 }
 
 func (r *Runner) readOrder(ctx context.Context, sr *stepRun, id string) (rawOrderView, error) {
+	if r.m0ReadSource != nil {
+		raw, err := readRetry(ctx, r, sr, EndpointReadOrderByID, map[string]string{"orderId": id}, func(ctx context.Context) (json.RawMessage, error) {
+			value, attempts, callErr := r.m0ReadSource.OrderRawByID(ctx, id)
+			r.recordM0Attempts("child-order-read", attempts)
+			return value, callErr
+		}, func(value json.RawMessage) any { return DigestBytes(value) })
+		if r.m0ReceiptErr != nil {
+			return rawOrderView{}, fmt.Errorf("verify: M0 causal receipt HOLD: %w", r.m0ReceiptErr)
+		}
+		if err != nil {
+			if r.m0CriticalWindow {
+				r.m0Gap = true
+			}
+			return rawOrderView{}, err
+		}
+		if r.m0ReceiptErr != nil {
+			return rawOrderView{}, fmt.Errorf("verify: M0 causal receipt HOLD: %w", r.m0ReceiptErr)
+		}
+		var view rawOrderView
+		if err := json.Unmarshal(raw, &view); err != nil {
+			return rawOrderView{}, fmt.Errorf("verify: order %s did not decode: %w", id, err)
+		}
+		return view, nil
+	}
+	ctx = r.m0ReadContext(ctx, "child-order-read")
 	raw, err := readRetry(ctx, r, sr, EndpointReadOrderByID, map[string]string{"orderId": id},
 		func(ctx context.Context) (json.RawMessage, error) { return r.broker.OrderRawByID(ctx, id) },
 		func(b json.RawMessage) any { return DigestBytes(b) })
 	if err != nil {
+		if r.m0CriticalWindow {
+			r.m0Gap = true
+		}
 		return rawOrderView{}, err
+	}
+	if r.m0ReceiptErr != nil {
+		if r.m0CriticalWindow {
+			r.m0Gap = true
+		}
+		return rawOrderView{}, fmt.Errorf("verify: M0 causal receipt HOLD: %w", r.m0ReceiptErr)
 	}
 	var view rawOrderView
 	if err := json.Unmarshal(raw, &view); err != nil {
+		if r.m0CriticalWindow {
+			r.m0Gap = true
+		}
 		return rawOrderView{}, fmt.Errorf("verify: order %s did not decode: %w", id, err)
 	}
 	return view, nil
 }
 
 func (r *Runner) readConditional(ctx context.Context, sr *stepRun, id string) (conditionalView, error) {
+	if r.m0ReadSource != nil {
+		raw, err := readRetry(ctx, r, sr, EndpointReadConditionalByID, map[string]string{"conditionalOrderId": id}, func(ctx context.Context) (official.RawConditionalOrder, error) {
+			value, attempts, callErr := r.m0ReadSource.ConditionalOrderRaw(ctx, id)
+			r.recordM0Attempts("parent-conditional-read", attempts)
+			return value, callErr
+		}, func(value official.RawConditionalOrder) any { return Digest(value) })
+		if r.m0ReceiptErr != nil {
+			return conditionalView{}, fmt.Errorf("verify: M0 causal receipt HOLD: %w", r.m0ReceiptErr)
+		}
+		if err != nil {
+			if r.m0CriticalWindow {
+				r.m0Gap = true
+			}
+			return conditionalView{}, err
+		}
+		if r.m0ReceiptErr != nil {
+			return conditionalView{}, fmt.Errorf("verify: M0 causal receipt HOLD: %w", r.m0ReceiptErr)
+		}
+		return conditionalView{ID: raw.ID, ClientOrderID: raw.ClientOrderID, Symbol: raw.Symbol, Market: raw.Market,
+			Type: raw.Type, Quantity: raw.Quantity, OrderType: raw.OrderType, Status: raw.Status, ExpireDate: raw.ExpireDate,
+			First: conditionalLegView{Status: raw.FirstStatus, Side: raw.OrderSide, ConditionType: raw.ConditionType,
+				TriggerPriceRaw: raw.TriggerPrice, TriggerPrice: parseDecimal(raw.TriggerPrice), TriggeredOrderID: raw.TriggeredOrderID,
+				ExpireDate: raw.ExpireDate}}, nil
+	}
+	ctx = r.m0ReadContext(ctx, "parent-conditional-read")
+	if r.m0ReceiptUsable() {
+		reader, ok := r.broker.(m0RawConditionalReader)
+		if !ok {
+			return conditionalView{}, fmt.Errorf("verify: M0 causal receipt HOLD: broker lacks raw conditional reader")
+		}
+		raw, err := readRetry(ctx, r, sr, EndpointReadConditionalByID,
+			map[string]string{"conditionalOrderId": id},
+			func(ctx context.Context) (official.RawConditionalOrder, error) {
+				return reader.ConditionalOrderRaw(ctx, id)
+			},
+			func(v official.RawConditionalOrder) any { return Digest(v) })
+		if err != nil {
+			if r.m0CriticalWindow {
+				r.m0Gap = true
+			}
+			return conditionalView{}, err
+		}
+		if r.m0ReceiptErr != nil {
+			if r.m0CriticalWindow {
+				r.m0Gap = true
+			}
+			return conditionalView{}, fmt.Errorf("verify: M0 causal receipt HOLD: %w", r.m0ReceiptErr)
+		}
+		return conditionalView{ID: raw.ID, ClientOrderID: raw.ClientOrderID, Symbol: raw.Symbol, Market: raw.Market,
+			Type: raw.Type, Quantity: raw.Quantity, OrderType: raw.OrderType, Status: raw.Status, ExpireDate: raw.ExpireDate,
+			First: conditionalLegView{Status: raw.FirstStatus, Side: raw.OrderSide, ConditionType: raw.ConditionType,
+				TriggerPriceRaw: raw.TriggerPrice, TriggerPrice: parseDecimal(raw.TriggerPrice), TriggeredOrderID: raw.TriggeredOrderID,
+				ExpireDate: raw.ExpireDate}}, nil
+	}
 	co, err := readRetry(ctx, r, sr, EndpointReadConditionalByID,
 		map[string]string{"conditionalOrderId": id},
 		func(ctx context.Context) (domain.ConditionalOrder, error) { return r.broker.ConditionalOrder(ctx, id) },
 		func(c domain.ConditionalOrder) any { return c.Status })
 	if err != nil {
+		if r.m0CriticalWindow {
+			r.m0Gap = true
+		}
 		return conditionalView{}, err
 	}
+	if r.m0ReceiptErr != nil {
+		if r.m0CriticalWindow {
+			r.m0Gap = true
+		}
+		return conditionalView{}, fmt.Errorf("verify: M0 causal receipt HOLD: %w", r.m0ReceiptErr)
+	}
 	return conditionalView{
+		ID:     id,
 		Status: co.Status,
 		First: conditionalLegView{
 			Status:           co.First.Status,
@@ -1118,13 +1219,29 @@ type rawOrderView struct {
 
 type conditionalLegView struct {
 	Status           string
+	Side             string
+	ConditionType    string
+	TriggerPriceRaw  string
 	TriggerPrice     float64
 	TriggeredOrderID string
+	ExpireDate       string
 }
 
 type conditionalView struct {
-	Status string
-	First  conditionalLegView
+	ID            string
+	ClientOrderID string
+	Symbol        string
+	Market        string
+	Type          string
+	Quantity      string
+	OrderType     string
+	Status        string
+	ExpireDate    string
+	First         conditionalLegView
+}
+
+type m0RawConditionalReader interface {
+	ConditionalOrderRaw(context.Context, string) (official.RawConditionalOrder, error)
 }
 
 // expireDate is a week out, in KST, which is the timezone the conditional order's

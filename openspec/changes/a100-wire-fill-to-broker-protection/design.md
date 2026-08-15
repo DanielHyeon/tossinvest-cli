@@ -123,7 +123,7 @@ journal·protection·execgw·app 의존을 금지하므로 워커를 이 패키�
 | ACTIVE, 수량·trigger 일치 | 무동작 — **수렴 완료** |
 | ACTIVE, 보유 수량 증가 | 더 안전한 방향으로 교체 |
 | ACTIVE, 보유 수량 감소 | 축소 교체. trigger 후퇴는 거부 |
-| terminal (다 채워짐/취소됨) | 포지션이 남아 있으면 재등록, 없으면 정리 |
+| terminal (다 채워짐/취소됨) | child apply watermark·공식 보유·causal owner를 재확인. owned fill 반영 뒤 포지션이 남아 있을 때만 재등록하고, flat이면 정리. child 미귀속/선행-fill이면 mutation 금지 |
 
 체결은 이 상태를 만드는 여러 원인 중 하나다. **체결 경로에 특별한 배선이 필요하지 않다** —
 체결이 journal에 커밋되면 다음 수렴 주기가 그것을 본다. 이것이 D3을 가능하게 한다.
@@ -131,6 +131,12 @@ journal·protection·execgw·app 의존을 금지하므로 워커를 이 패키�
 **수렴 완료의 정의를 관측 가능하게 만든다.** 포지션별 `보호 미설치 시간`(desired가 생긴
 시각부터 보호 확인까지)을 측정하고, 상한을 넘으면 알림을 낸다. 상한이 없으면 "수렴 중"과
 "영원히 실패 중"이 구별되지 않는다.
+
+설정 표면은 `engine.protection_convergence` 하나이며 초 단위 integer 네 키로 제한한다:
+`unprotected_alert_seconds=90`, `dirty_retry_initial_seconds=5`, `retry_max_seconds=60`,
+`active_recheck_seconds=60`. block 부재에는 이 보수 기본값을 쓰되, 명시된 0/음수와 initial>max는
+조용히 default하지 않고 block을 거부해 worker 기동을 막는다. 이 설정은 automation/LIVE 권위를
+부여하지 않는다.
 
 **단, 「ACTIVE」는 지금 어댑터로 판정할 수 없다** (adversarial Eng 리뷰 발견, 코드로 확인).
 
@@ -149,10 +155,11 @@ func lifecycle(status string, triggered bool) (bool, error) {
 
 - **비교 가능한 것으로만 판정한다**: `!Terminal && !Triggered`, `Quantity == 보유 수량`,
   `Trigger == 유도값`. 이 셋은 어댑터가 실제로 노출한다.
-- **`PAUSED`를 무장으로 오인할 수 있다는 것을 명시한다.** raw status를 도메인 타입에 실을지는
-  `internal/protection`·`protectionofficial` 편집을 요구하므로 **tasks 0에서 결정**하고,
-  실지 않기로 하면 M-A가 `PAUSED`가 실재하는 상태인지 관측한다. 실재하고 발동하지 않는다면
-  **raw status 노출이 필수 task가 된다.**
+- **raw status는 반드시 보존한다.** `PAUSED`의 부재 관측은 무장 증명이 아니므로
+  `internal/protection.BrokerProtection`과 journal이 broker 문자열을 손실 없이 가져야 한다.
+  M-A가 관측한 pre-trigger/triggering/terminal 문자열로 evidence-backed 판정표를 동결한다.
+  `PAUSED`와 unknown은 미수렴·mutation 금지·operator alert이고, triggering/child 미귀속 상태는
+  ACTIVE도 terminal도 아니며 재등록하지 않는다(tasks 0.11).
 - **"수렴하면 브로커를 다시 묻지 않는다"를 철회한다.** 상주 주문은 나중에 취소·만료·일시정지될
   수 있고, 그때 보호 미설치 시간이 다시 시작되어야 한다. 캐시가 아니라 **주기를 늘린
   재확인**으로 한다(rate limit은 주기로 다루고, 판정의 신선도를 버리지 않는다).
@@ -213,6 +220,16 @@ delta(`specs/fill-detection/spec.md`)가 이미 금지하고 있던 것이다 �
 - 실패는 자기 안에서 끝난다. 다른 루프의 outage·SLO·게이트를 건드리지 않는다.
 - 기존 함수 내부를 편집하지 않으므로 그 함수들의 실패 의미를 바꾸지 않는다.
 
+**실행 모델도 분리한다.** current `engine.Runtime.Loops`는 어떤 non-cancel return도 전체 runtime을
+중단하는 all-or-nothing supervisor다. 수렴 실패가 손절·체결·대사를 멈춰서는 안 된다는 위 계약과
+같은 worker를 그 목록에 넣는 것은 모순이다. 따라서 `engineRuntime`은 recovery 완료 뒤 worker를
+`AuxiliaryExecutor`로 시작하고 같은 context로 취소·drain한다. worker의 ordinary cycle error는
+`Run`에서 반환하지 않고 durable typed reconcile/alert + 내부 backoff로 처리한다. panic/예상 밖
+return은 전용 `protection.convergence.worker_stopped` event와 reconcile/alert로 보이게 하되 다른
+loop를 취소하거나 entry gate를 바꾸지 않는다. alert-delivery 전용 event를 재사용하지 않는다.
+`AuxiliaryExecutor`가 executor별 stop event를 표현하지 못하면 그 closed value seam만 좁게 확장하고
+`runAuxiliary`의 기존 비취소·panic·drain 분기를 RED/FLM으로 보존한다.
+
 **「커밋된 것만 읽는다」는 최신을 보장하지 않는다** (adversarial Eng 리뷰 발견). journal은
 statement 단위로 직렬화될 뿐이고, 워커가 브로커 왕복을 도는 동안 `ReconcileDriver`가 같은
 포지션의 수량을 조정하거나 포지션을 닫을 수 있다(`app/engine/reconcileloop.go:413`,
@@ -229,16 +246,18 @@ statement 단위로 직렬화될 뿐이고, 워커가 브로커 왕복을 도는
 - tasks 5.3은 워커 주기 두 개의 겹침만 재현했다. **대사와의 겹침을 별도 fixture로 재현한다.**
 
 **워커의 실행 주체와 기동 순서를 정한다** (adversarial Eng 리뷰 발견). 현재 감독되는 루프는
-reconcile·exit·filldetect·strategy 넷이고(`cmd/tossctl/engine.go:377`) gateway 조립에는 워커
+reconcile·exit·filldetect·strategy 넷이고(`cmd/tossctl.engineRuntime` current-main FLM) gateway 조립에는 워커
 필드가 없다(`app/engine/gateway.go:92`). "`gateway.go`에서 조립"만으로는 **누가 돌리는지가 없다.**
 
-- 조립은 `gateway.go`(import 경계 규칙), **기동·취소·감독은 `cmd/tossctl`의 런타임**이 한다.
+- 조립은 `gateway.go`(import 경계 규칙), **기동·취소·drain은 `cmd/tossctl`의 런타임 auxiliary**가 한다.
   둘을 분리하지 않으면 `buildGateway` 안에서 도는 goroutine이 automation interlock 평가보다
   먼저 시작한다(`app/engine/engine.go:489`, `:533`).
 - **automation gate가 verified가 아니면 워커는 돌지 않는다.** 대사·exit 루프가 같은 이유로
   거부한다(`reconcileloop.go:342` — "It refuses on an unverified automation gate … the loop
   writes to the ledger and, with adoption on, starts protecting positions with real sell orders").
   보호주문 등록은 실제 매도 주문이므로 같은 규율을 받는다.
+- worker는 `engine.Runtime.Loops`에 들어가지 않는다. auxiliary stop은 전용 event/reconcile/alert를
+  남기되 안전 loop 중단이나 entry gate 변경을 일으키지 않는다.
 
 `ReconcileDriver.RunOnce` 안의 한 단계로 넣는 대안은 기각했다. 그러면 기존 함수 내부를
 편집하게 되고(FLM 대상이 늘고), 보호 실패가 대사 사이클의 실패 의미와 섞일 위험이 (1)과 같은
@@ -436,9 +455,20 @@ a100 이후 한 포지션은 두 매도 권한을 갖는다: (i) 브로커 상�
    행이 재등록으로 간다.** 대사가 결국 수량을 고치지만 그 전에 워커 주기가 두 번째 상주 주문을
    만들 수 있다.
 
-   ⇒ **D2의 terminal 행은 「재등록」이 아니라 「보유 재확인 후에만 재등록」이어야 한다.**
-   그리고 child id를 살리는 것(`BrokerProtection`에 `TriggeredOrderID`를 싣는 것)이 이 change의
-   task가 된다 — 그것 없이는 "브로커가 우리 손절을 실행했다"를 원장이 알 방법이 없다.
+   ⇒ **D2의 terminal 행은 「재등록」이 아니라 「보유·child apply 재확인 후에만 재등록」이어야 한다.**
+   child id를 살리는 것만으로는 부족하다. worker는 parent/client/scope/generation을 exact 검증한
+   뒤 child가 fill detector에 보이기 **전에** journal의 `protection_child_orders` owner를 커밋한다.
+   `Journal.TrackedFillOrders`, `confirmedFillOwners`, `resolveFillOrigin`이 이 owner를 ordinary confirmed
+   attempt와 함께 읽어 정확히 한 canonical owner만 허용한다. fill detector 코드는 바꾸지 않고
+   기존 RecordFill transaction이 position/exit apply 권위를 유지한다.
+
+   **causal ownership은 소급하지 않는다.** child fill snapshot/event가 owner보다 먼저 durable해진
+   경우 그 delta를 뒤늦게 재생하거나 hook을 다시 부르면 v19의 strict-pre-existing ownership을
+   깨고 외부 주문을 우리 주문으로 재분류할 수 있다. registrar는 이 순서를 durable
+   `ATTRIBUTION_FAILED` reconcile + stable alert로 거부하고, 공식 계좌 대사가 position을 복구할
+   때까지 해당 child/position의 보호 mutation과 재등록을 막는다. 정상 순서의 owned fill 뒤에는
+   worker가 durable cumulative snapshot을 읽어 protection lifecycle watermark를 멱등 전진시킨 뒤
+   다음 mutation을 계획한다(tasks 3.10, 5.11).
 
 4. 포지션이 비-보호 경로로 닫힌 경우(수동 매도, 대사 주도 청산)에도 상주 주문은 남는다.
    수렴 워커가 flat 포지션의 상주 주문을 취소한다(D2의 terminal 행). **다음 주기까지의 창이
@@ -450,7 +480,8 @@ a100 이후 한 포지션은 두 매도 권한을 갖는다: (i) 브로커 상�
 **이 계약이 「청구권 하나」를 보장하지 않는다는 것을 적어 둔다.** 2번이 취소 확인 실패에도
 매도를 진행시키므로, 그 순간 상주 주문과 인프로세스 매도가 **동시에 유효할 수 있다.** 그것은
 버그가 아니라 선택이다 — §0-3이 청산 지연을 금지하므로 취소 확인을 기다리는 쪽이 더 위험하다.
-브로커가 보유 없는 두 번째 매도를 거부하는지는 **미확인(UNVERIFIED)**이며 M-A에서 관측한다.
+브로커가 보유 없는 두 번째 매도를 거부하는지는 **미확인(UNVERIFIED)**이다. M-A runbook은
+의도적인 이중매도를 만들지 않으므로 이 성질을 M-A가 증명한다고 주장하지 않는다.
 
 따라서 이 결정이 실제로 주는 것은 「청구권이 항상 하나」가 아니라 **「둘이 되는 창을 알려진
 경로마다 최소화하고, 남는 창을 명시한다」**이다. spec의 요구사항도 그렇게 쓴다.
@@ -492,6 +523,70 @@ a100 이후 한 포지션은 두 매도 권한을 갖는다: (i) 브로커 상�
 얼린 하한은 등록·취소만 필요했고 교체는 예외 경로였다. 이제
 `POST /api/v1/conditional-orders/{id}/modify`(또는 cancel+create)가 정상 경로이며,
 그 엔드포인트는 **verify 기록에 증거가 없다**(D11). D9의 정정이 D11의 비용을 키웠다.
+
+### D10-A. M-A는 single-process official causal receipt 없이는 실행하지 않는다
+
+2026-08-15 read-only preflight에서 현 `verify run --include-trigger`는 parent child id와 child fill을
+순서대로 읽지만 최종 record에는 wall-clock 관측만 남기고, 성공 HTTP response receipt의 monotonic
+sequence와 fsync barrier를 보존하지 않는 것이 확인됐다. 외부 shell wrapper는 tossctl process 내부의
+response-received 경계와 raw payload를 원자적으로 볼 수 없고, WTS `order show`는 세션 만료와
+official parent↔WTS child identity 차이 때문에 M-A 권위가 아니다.
+
+**결정:** 다른 change를 만들지 않고 A100의 M0로 기존 verify trigger step에 measurement-only
+receipt를 추가한다.
+
+- 새 broker mutation method를 추가하지 않는다. M0 mode는 기존 human-confirmed
+  `verify run --include-trigger --confirm-each --resume --redo conditional-trigger`만 허용한다.
+  `--include-ttl-edge`, 다른 redo, trigger 외 모든 step의 PASS가 없는 상태는 broker factory·confirmer 전에 거부해
+  unprompted replay를 M-A와 섞지 않는다. prior verify record에 ordinary outstanding가 있으면
+  `Runner.Run`의 cleanup prologue를 호출하지 않고 같은 경계에서 HOLD한다.
+  runtime·engine·protection·attestation·trading journal에는
+  연결하지 않으며, 기존 owner-only verify record와 abort만 cleanup authority로 재사용한다.
+- mutation과 parent/child raw read는 동일한 concrete `official.Client` 한 인스턴스에 묶는다. raw result와
+  attempt 집합은 그 client call이 원자적으로 반환하며 arbitrary Broker, split client/account, unrelated
+  sidecar trace는 M0 권위를 만들 수 없다.
+- receipt 경로는 current uid 소유·non-symlink exact 0700 parent 아래에 no-follow/O_EXCL 0600으로 만든다.
+  Linux에서는 `/`부터 모든 path component를 dirfd `openat(O_DIRECTORY|O_NOFOLLOW)`로 순회하고 leaf도
+  같은 validated dirfd에서 만든다. receipt의 전체 run은 exclusive lease 하나가 소유하고 lease의 typed
+  attempt/causal writer만 append할 수 있다. write/fsync 실패는 receipt를 영구 poison하고 이후 acquire/write를
+  모두 거부한다.
+  versioned header와 새 run ID를 file fsync하고 parent dir도 fsync한 뒤에만 broker를 만든다. 기존 verify
+  record의 resume은 fresh receipt run에서 허용하지만 이전 process sequence를 이어 붙이지 않는다.
+- 기존 `send`의 account/token/401 refresh/rate-budget/error semantics를 공유하는 private measurement raw
+  transport를 둔다. 각 HTTP attempt의 request-start와 `doRequest` body-read-complete를 같은 monotonic
+  anchor로 포착하고 numeric status/no-response class와 exact raw `result` bytes를 decode 전에 observer에
+  넘긴다. helper 반환 뒤 timestamp는 response-received가 아니다. 성공 digest는 canonical JSON이 아니라
+  **수신한 result bytes 그대로의 `SHA-256(raw-result-bytes-v1)`**이고, non-2xx/invalid envelope는 exact
+  body의 `SHA-256(raw-response-body-bytes-v1)`를 쓴다. body-read가 완료된 empty body도 empty-byte digest를
+  남기고, no-response/body-read-incomplete만 digest가 없다. extracted-fields schema도 v1로 봉인한다.
+- parent receipt는 request/response conditional ID tag, client tag, symbol/market/type/order type/quantity,
+  first side/trigger/expiry, root/leg status, child tag를 exact raw string으로 담는다. child receipt는
+  request/response ID tag, requested market scope, raw symbol/side/status/quantity/filled/execution fields를
+  담는다. pending client tag와 parent raw client tag, pending approved parent fields와 parent raw fields,
+  parent child tag와 child checkpoint/request/response tag를 각각 비교하며 두 종류 ID를 서로 같다고 하지 않는다.
+- trigger create gate 승인 뒤 broker call 전 unique client ID, run ID와 approved request를 existing
+  owner-only verify record의 pending intent로 append+fsync한다. create response와 exact parent checkpoint
+  사이 crash는 다음 M0 resume이 official all-page raw read로 client+fields unique match를 찾는다. unique면
+  exact parent를 checkpoint하고 그 run을 HOLD로 끝낸다. zero/multiple/mismatch도 HOLD이고 자동
+  cancel/recreate하지 않는다. 이 pre-create checkpoint는 M0 trigger에만 적용한다.
+- parent raw가 child ID를 반환하면 exact child reconciliation checkpoint를 owner-only verify record에
+  먼저 append+fsync하고, 그 다음 sanitized parent causal receipt를 append+fsync한 뒤 child GET한다.
+  어느 kill point든 과거 sequence를 재개하지 않는다. status/abort-list는 exact/pending 객체를 사람에게
+  보이되 triggered-but-child-unobserved 객체는 자동 취소하지 않는다.
+- `pending-create`만 다음 exact M0 resume에서 same-client read-only recovery에 들어간다. `parent-created`,
+  `parent-recovered`, `child-observed`는 broker factory 전에 manual HOLD다. parent POST 뒤 checkpoint writer가
+  실패한 현재 run도 ordinary FAIL로 계속하지 않고 typed terminal HOLD로 즉시 중단한다.
+- 모든 401/429/transport attempt를 receipt화한다. durable parent child-ID receipt부터 durable child
+  first-observed-fill receipt까지가 strict critical window이며 그 안의 첫 401/429/read/decode/identity gap은
+  irreversible INCONCLUSIVE/HOLD다. 후속 retry 성공이 지우지 못한다. critical window 전 attempt failure는
+  증거에는 남지만 이 strict causal verdict의 자동 HOLD 사유는 아니다.
+- parent child-id receipt append/flush/fsync가 끝난 뒤에만 child GET을 시작한다. PASS는 parent seq가 child
+  **first-observed-fill** seq보다 작고 parent fsync가 child request-start보다 앞설 때만 가능하다. child fill
+  receipt가 durable해지면 critical window가 끝나고 이후 parent terminal GET은 요구하지 않는다. 그 전
+  parent 404는 다른 read gap과 같이 HOLD다. broker event-time의 실제 first fill을 주장하지 않는다.
+
+M0는 제품 보호 구현이 아니라 M-A 증거를 가능하게 하는 선행 도구다. Terra-M0와 별도 A-M0 검토가
+`P0=0/P1=0`으로 끝나기 전에는 human place를 실행하지 않는다.
 
 ### D10. 이 change가 주장하지 않는 것 — 발동은 아직 미측정이다
 
@@ -546,8 +641,8 @@ capability attestation(`internal/attest/attest.go`, `capability-attestation.json
   2건뿐(2026-07-28).
 - **soak 기록**: 최신 cycle이 **2026-08-05**이고 soak는 그 뒤로 돌지 않았다. `MaxRecordAge`는
   **48시간**이므로(`soak/attest.go:57`, `:95-100`) **오늘 `soak attest`는 거부한다.**
-  ⇒ 재발급은 `tossctl soak run`을 다시 돌려 기록이 신선해질 때까지 기다리는 일이며,
-  연속 3일 streak도 다시 필요하다.
+  ⇒ 재발급은 `tossctl soak run`을 다시 돌려 기록이 신선해질 때까지 기다리는 일이다.
+  endpoint probe 자체에 3일 대기 조건은 없고, 3일 streak는 credential evidence의 별도 조건이다.
 - **verify 기록**(2026-07-31, KR): 조건주문 증거가 **부분적으로 이미 있다.**
   `POST /api/v1/conditional-orders` ok, `GET /api/v1/conditional-orders` ok,
   `GET /api/v1/conditional-orders/{id}` ok, `GET /api/v1/sellable-quantity` ok.
@@ -560,7 +655,8 @@ capability attestation(`internal/attest/attest.go`, `capability-attestation.json
 `GET /api/v1/prices`가 목록에 들어간 것과 같은 이유로 목록에 들어가야 한다. 그런데 read는
 supervised에서 조달할 수 없다(`acceptSupervised`가 명시적으로 거부한다 — "One supervised success
 is not what days of unattended operation prove"). ⇒ **read-only soak 도구에 조건주문 조회 probe를
-추가하고 3일 이상 새로 돌려야 한다.** 이것이 a100의 임계 경로에 있는 가장 긴 선행 작업이다.
+추가해 성공 cycle 안에서 세 endpoint를 증명해야 한다.** 3일은 probe의 시계가 아니며,
+credential streak가 이미 충족돼 있다면 endpoint는 그 신선한 window의 성공 1회로 실린다.
 
 ⇒ **`acceptSupervised`의 주석이 조건주문 제외를 정당화하는 근거("the gate does not require
 them")를 a100이 무효화한다.** 그 주석은 a100과 함께 고쳐야 하며, 고치지 않으면 코드가 자기
@@ -598,8 +694,9 @@ a100이 없어도 필요한 일이므로 지금 시작하는 것이 a100의 일�
 - **[배선과 동시에 미검증 결함이 나간다]** 13개 분기 중 9개가 미실행이다. → **거부 경로
   RED 테스트 9건을 배선보다 먼저.** tasks의 순서가 강제한다.
 - **[수렴 워커가 브로커를 과도하게 호출한다]** 매 주기 전 포지션 조회는 rate limit에 걸릴 수
-  있다. → 수렴이 끝난 포지션은 journal 상태로 판정하고 브로커를 다시 묻지 않는다. 주기와
-  백오프를 config로 두되 기본값은 보수적으로.
+  있다. → 수렴한 ACTIVE도 60초 기본 주기로 재검증하고, dirty/pending은 5초에서 시작해 60초까지
+  지수 백오프한다. broker list는 account/market 단위로 묶고 exact-by-id는 pending/triggering 복구에만
+  쓴다. 수렴 완료를 이유로 영구 캐시하지 않는다.
 - **[보호 설치 성공과 journal 커밋 사이의 프로세스 손실]** → a071이 계약을 정했다. exact broker ID
   조회로 복구하고, attested idempotency가 증명되지 않으면 재제출하지 않고 `RECONCILE_REQUIRED`로
   고정한다. a100은 구현할 뿐 새로 정하지 않는다.
@@ -610,9 +707,9 @@ a100이 없어도 필요한 일이므로 지금 시작하는 것이 a100의 일�
   상주 주문이 남는다. M13이 수량 예약 없음을 측정했으므로 그 창에 **수동 매수가 들어오면 그
   주식에 대해 발동할 수 있다.** → 레인이 전부 OFF인 현재는 자동 매수가 없어 노출이 수동 매수로
   한정된다. 운영 문서에 적고(tasks 6.4), **a105가 진입을 열 때 이 창을 닫는 것을 이관 목록에 넣는다.**
-- **[상주 trigger가 엔진의 현재 청산선보다 느슨하다]** ratchet가 올라가도 상주 trigger는
-  `InitialStop`에 머문다. → D9가 이를 **재난 하한으로 명시**하고 콘솔·운영 문서에 차이를 표시한다.
-  숨기면 "브로커에 손절이 있으니 안전하다"는 잘못된 안심이 생긴다.
+- **[상주 trigger와 현재 baseline 사이에 수렴 지연이 있다]** `baseline_price`가 올라간 뒤 다음
+  교체가 끝날 때까지 broker trigger가 더 낮을 수 있다. → delta와 마지막 성공 이후 경과를
+  콘솔·알림에 표시하고, 이를 영구 재난 하한이라고 설명하지 않는다.
 - **[죽은 코드 1,364줄]** → 정리 change를 **지금** 등록한다(tasks 6.5).
 - **[봉인 해제가 선례가 된다]** → 4개 중 1개만 열고, 같은 change에서 import 경계를 세 패키지로
   넓힌다(D6). 순 효과는 봉인 강화다.
@@ -621,14 +718,24 @@ a100이 없어도 필요한 일이므로 지금 시작하는 것이 a100의 일�
 
 ## Migration Plan
 
-0. **선행 실측 M-A·M-B**(`measurement-prereq.md`). 사람 승인 후 실행하고 결과를 기록한다.
-   M-A가 실패하면 여기서 멈춘다.
+0. **current-main 증거 재동결 → M0 causal receipt 도구 → 선행 실측 M-A**
+   (`measurement-prereq.md`). M-B는 이미 측정됐지만 M-A는 M0 GREEN·독립 리뷰 뒤 새 세션
+   read-only preflight와 사람의 주문별 승인으로만 실행한다. raw status와 parent의 child-id
+   local receipt가 child fill local receipt보다 **엄격히 먼저** 보이고 exact owner를 causal하게
+   등록할 수 있는 완전 PASS가 아니면 여기서 멈춘다.
 1. 거부 경로 RED 테스트 9건을 GREEN으로 만든다. 프로덕션 조립은 바뀌지 않는다.
-2. `protectionlifecycle` ↔ `protection` 도메인 매핑과 journal additive-nullable 스키마를 추가한다.
-   기존 행은 새 컬럼이 NULL이므로 「보호 미설치」로 읽히고 동작이 바뀌지 않는다.
+2. `protectionlifecycle` ↔ `protection` 도메인 매핑, raw status/child id 보존, journal
+   additive-nullable 스키마와 `protection_child_orders` registrar를 추가한다. 기존 행은 새 컬럼이
+   NULL이므로 「보호 미설치」로 읽히고 동작이 바뀌지 않는다. registrar는 fill보다 엄격히 선행한
+   exact owner만 허용하며 이미 durable한 child snapshot/event를 소급 귀속하지 않는다.
 3. 수렴 워커를 만든다. 조립되지 않으면 아무 일도 일어나지 않는다 — 이 단계에서 프로덕션
-   관찰 동작은 그대로다.
-4. 봉인 가드를 D6대로 바꾸고(1개 해제 + 경계 3패키지 확장) `gateway.go`에서 조립한다.
+   관찰 동작은 그대로다. 정상 owner는 기존 fill detector/RecordFill transaction으로 position과
+   exit를 갱신하고, 선행-fill은 reconcile/alert와 mutation block으로 끝낸다.
+4. runtime 조립보다 먼저 D8의 권위 경계를 닫는다. 즉 raw status/child id 보존, exact child owner,
+   완전청산 전 상주 conditional 취소, already-flat 구별과 `ProtectionWired` 불변을 GREEN·독립 리뷰
+   accepted로 만든다(tasks T4-A, 4.5~4.6). 이 단계까지 worker는 조립·기동되지 않아 broker
+   mutation에 도달할 수 없다. 그 뒤에만 봉인 가드를 D6대로 바꾸고(1개 해제 + 경계 3패키지 확장)
+   `gateway.go`에서 조립하며, recovery 이후 isolated Auxiliary로 기동한다(tasks T4-B, 3.9·4.1~4.4).
 5. `httptest` official fixture로 KR·US 각각 등록·수렴·교체·취소·재기동 복구·이중 권한 경합을
    증명한다. 실계좌는 건드리지 않는다.
 6. 롤백은 이미 브로커에 상주하는 보호를 취소하지 않는다.
@@ -650,7 +757,7 @@ a100이 없어도 필요한 일이므로 지금 시작하는 것이 a100의 일�
 | 5 | 촉발이 기존 보유에 닿는가 | D2 — 닿는다. 그것이 오늘의 주 대상이다 |
 | 6 | 보호 왕복을 체결 감지 안에 둘 수 있는가 | D3 — **없다.** `pollLocked` B6·B8이 금지한다 |
 | 7 | 인프로세스 매도와 상주 주문의 권한 관계 | D8 — 인프로세스가 상위. 이미 flat이면 시도하지 않는다 |
-| 8 | 상주 trigger가 ratchet를 따라가야 하는가 | D9 — 아니다. 재난 하한이며 스칼라 유도만 허용 |
+| 8 | 상주 trigger가 ratchet를 따라가야 하는가 | D9 — 영속 `baseline_price`를 따라 주기적으로 교체한다. 수렴 전 delta/경과를 표시한다 |
 | 9 | 조건주문이 실제로 발동하는가 | **미측정.** 선행 M-A. D10이 주장 범위를 제한한다 |
 
 ### 남아 있는 미지수 — 답이 아니라 측정 대상

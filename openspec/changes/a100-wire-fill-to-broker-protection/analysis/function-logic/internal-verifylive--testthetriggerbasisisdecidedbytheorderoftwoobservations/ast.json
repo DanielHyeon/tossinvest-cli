@@ -1,0 +1,188 @@
+{
+  "file": "internal/verifylive/steps_trigger_test.go",
+  "source_sha256": "176dde0486ef6bfd34439a3e66af4e5daf15bc6444cfa413994e1cbcd40e835e",
+  "package": "verifylive",
+  "function": "TestTheTriggerBasisIsDecidedByTheOrderOfTwoObservations",
+  "signature": "TestTheTriggerBasisIsDecidedByTheOrderOfTwoObservations(params=1, results=0)",
+  "start": {
+    "line": 201,
+    "column": 1
+  },
+  "end": {
+    "line": 224,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 209,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 220,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 2
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 8
+      },
+      "text": "triggerHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 4
+      },
+      "text": "f.firesOnRead"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 3
+      },
+      "text": "runToCompletion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 25
+      },
+      "text": "triggerOptions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 16
+      },
+      "text": "h.observation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 2
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 8
+      },
+      "text": "triggerHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 4
+      },
+      "text": "f.firesOnRead"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 3
+      },
+      "text": "runToCompletion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 25
+      },
+      "text": "triggerOptions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 16
+      },
+      "text": "h.observation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 203,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 209,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 215,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 216,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 220,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

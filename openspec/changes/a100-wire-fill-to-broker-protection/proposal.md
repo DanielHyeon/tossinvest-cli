@@ -1,6 +1,9 @@
 # a100 — 보유는 브로커에 손절을 남긴다
 
-> **상태: proposal-freeze 리뷰 완료(2026-08-11), 그 결과로 범위를 다시 잘랐다.**
+> **상태: 2026-08-15 current-main 재동결 중.** 2026-08-11의 범위 축소는 유지하지만 실행 base,
+> runtime 격리, raw status와 child causal ownership 경계를 다시 동결한다. 다른 change로 옮기지
+> 않는다. M-A 증거를 가능하게 하는 measurement-only M0를 먼저 닫고, M-A 완전 PASS와 0.11
+> raw-status 표 전에는 제품 Terra 구현 로트를 열지 않는다.
 > 리뷰 기록은 `review.md`다. 범위 축소의 근거는 `execgw.Gateway.checkProtection`의 reduce-only
 > 단락이며, 이관 대상과 사유는 아래 「Non-goals」와 `review.md`에 있다.
 > **디렉터리 이름은 `a100-wire-fill-to-broker-protection`으로 유지한다** — `base-commit.txt`,
@@ -90,6 +93,9 @@ func (g *Gateway) checkProtection(ctx context.Context, plan mutationPlan, previo
    막지 않는다.
 6. 한 포지션에 브로커측 매도 청구권이 둘이 되지 않도록 인프로세스 보호 매도(a087)와의
    권한 계약을 정한다.
+7. raw conditional status와 triggered child id를 손실 없이 보존하고, child fill보다 먼저
+   exact parent/client/scope/generation owner를 journal에 등록한다. 이미 관측된 child fill은 소급
+   귀속하지 않고 `ATTRIBUTION_FAILED` reconcile/alert로 fail closed한다.
 
 **`ProtectionWired`는 이 change 이후에도 계속 `false`다.** a071이 만든 "구조적으로 UNWIRED"
 보장은 그대로 유지되고, 진입은 여전히 전면 차단이다.
@@ -109,8 +115,22 @@ func (g *Gateway) checkProtection(ctx context.Context, plan mutationPlan, previo
 
 | # | 측정 | 왜 착수 전인가 |
 | --- | --- | --- |
-| M-A | 조건주문 1건이 실제로 발동해 체결되는지 (KR 우선, 최소 수량) | 발동하지 않으면 이 change의 산출물은 보호가 아니다. journal 스키마도 발동 관측 결과에 따라 달라진다 |
-| M-B | 엔진 사망 → 재기동 → exit observer 재무장까지의 무보호 창 | 이 change가 사려는 안전의 크기다. 창이 실측되지 않으면 개선 폭을 주장할 수 없다 |
+| M0 | parent/child official GET을 한 프로세스 monotonic receipt로 기록하는 측정 도구 | 현 CLI의 wall-clock verify record와 외부 wrapper는 child causal order를 증명하지 못한다 |
+| M-A | 조건주문 1건이 실제로 발동·체결되고 parent child-id local receipt가 child fill local receipt보다 먼저인지 (KR 우선, 최소 수량) | 발동하지 않으면 산출물은 보호가 아니다. causal owner를 fill 전에 만들 수 없으면 journal 계약을 구현할 수 없다 |
+| M-B | 엔진 사망 → 재기동 → exit observer 재무장까지의 무보호 창 | **2026-08-11 측정 완료(정상 재기동 ≤6.7초).** 정상 기동 하한이며 a056 실패 창을 대체하지 않는다 |
+
+M-A의 부분 통과와 trigger/수량 비교 실패는 구현 착수 실패다. `PAUSED`의 부재도 무장 증명이
+아니다. M-A는 raw status와 두 local receipt의 causal order를 동결하며 완전 PASS 외에는 T1로 가지 않는다.
+
+2026-08-15 read-only preflight는 **HOLD**였다. 토요일 장외, 서로 다른 auth/soak authority,
+기존 `PAUSED` 2건·`WATCHING` 3건, fresh 비관리 1주 후보 부재보다 더 근본적인 차단은 현 도구가
+HTTP response receipt의 process-local monotonic order와 fsync barrier를 남기지 않는다는 점이다.
+따라서 승인 자체를 주문 실행 권위로 쓰지 않고, M0 GREEN·독립 리뷰 뒤 다음 KR 세션 직전 fresh
+preflight와 exact human confirmation을 다시 받아야 한다. M0는 transport body-read 경계와 모든 HTTP
+attempt를 직접 receipt화하고, create 직후 exact cleanup checkpoint를 기존 owner-only verify record에
+fsync한다. create-response crash window는 broker call 전 fsync한 client-ID pending intent와 다음 resume의
+official all-page unique reconciliation로 닫는다. M-A는 `--redo conditional-trigger` 단독 mode이며 prior
+outstanding가 있으면 cleanup prologue도 실행하지 않으므로 idempotency replay/과거 cleanup과 섞이지 않는다.
 
 ## Supersession — a071 task 3.5 (분할)
 
@@ -171,6 +191,11 @@ a071 tasks.md §6을 함께 고친다.
 - 선행 실측 M-A는 실계좌 주문 1건을 포함한다. **사람이 그 시점에 직접 승인한다.**
 
 ## Evidence produced
+
+아래 표는 2026-08-11 historical freeze다. current-main `882a0b49`의 권위는
+`analysis/current-main-evidence.md`, current AST/FLM/BTM과 `pre-edit-gate.md`다. 추가 경계는
+`engineRuntime`, auxiliary stop seam, `Gateway.adapt`, `TrackedFillOrders`, `confirmedFillOwners`,
+`resolveFillOrigin`, lifecycle public API guard다.
 
 `tools/logic-map` AST 산출물 6건 + 측정된 branch test map.
 

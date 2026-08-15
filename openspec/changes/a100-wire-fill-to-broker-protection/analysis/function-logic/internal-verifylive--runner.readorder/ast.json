@@ -1,0 +1,404 @@
+{
+  "file": "internal/verifylive/steps.go",
+  "source_sha256": "154d16990e0aeef4989afd73643b5e5d16d1cdc0ecadeb4349635539e3d5d172",
+  "package": "verifylive",
+  "function": "readOrder",
+  "receiver": "Runner",
+  "signature": "Runner.readOrder(params=3, results=2)",
+  "start": {
+    "line": 924,
+    "column": 1
+  },
+  "end": {
+    "line": 973,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 925,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 931,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 934,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 935,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 940,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 944,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 953,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 954,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 959,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 960,
+        "column": 3
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 966,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 967,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 929,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 930,
+        "column": 40
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 932,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 938,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 941,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 945,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 947,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 951,
+        "column": 56
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 952,
+        "column": 33
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 957,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 963,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 970,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 972,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 926,
+        "column": 15
+      },
+      "text": "readRetry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 927,
+        "column": 32
+      },
+      "text": "r.m0ReadSource.OrderRawByID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 928,
+        "column": 4
+      },
+      "text": "r.recordM0Attempts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 930,
+        "column": 47
+      },
+      "text": "DigestBytes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 932,
+        "column": 27
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 941,
+        "column": 27
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 944,
+        "column": 13
+      },
+      "text": "json.Unmarshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 945,
+        "column": 27
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 949,
+        "column": 8
+      },
+      "text": "r.m0ReadContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 950,
+        "column": 14
+      },
+      "text": "readRetry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 951,
+        "column": 63
+      },
+      "text": "r.broker.OrderRawByID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 952,
+        "column": 40
+      },
+      "text": "DigestBytes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 963,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 966,
+        "column": 12
+      },
+      "text": "json.Unmarshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 970,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 926,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 927,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 936,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 944,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 949,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 950,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 955,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 961,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 966,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 968,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

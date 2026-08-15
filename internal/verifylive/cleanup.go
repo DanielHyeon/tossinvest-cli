@@ -101,10 +101,10 @@ func cleanupStep() Step {
 // record, which is what makes "this tool created it" a fact rather than a guess.
 // Nothing else on the account is ever a target.
 func (r *Runner) cleanupTargets() []Artifact {
-	return cleanupFrom(r.prior, func(id StepID) bool {
+	return withoutM0ManualReconcile(r.prior, cleanupFrom(r.prior, func(id StepID) bool {
 		settled, _ := r.settled(id)
 		return settled
-	})
+	}))
 }
 
 // PendingCleanup is cleanupTargets for a caller holding only the record.
@@ -117,7 +117,7 @@ func (r *Runner) cleanupTargets() []Artifact {
 // question from a second copy of the rule is how the deadlock this file exists to
 // remove would grow back on the console side.
 func PendingCleanup(entries []Entry) []Artifact {
-	return cleanupFrom(entries, func(id StepID) bool { return Settled(entries, id) })
+	return withoutM0ManualReconcile(entries, cleanupFrom(entries, func(id StepID) bool { return Settled(entries, id) }))
 }
 
 func cleanupFrom(entries []Entry, settled func(StepID) bool) []Artifact {

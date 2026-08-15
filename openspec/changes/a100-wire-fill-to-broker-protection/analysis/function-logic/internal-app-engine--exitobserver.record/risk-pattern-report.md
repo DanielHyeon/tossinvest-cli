@@ -1,7 +1,5 @@
-# Risk Pattern Report: `internal/app/engine/exitloop.go`
+# Risk Pattern Report: `ExitObserver.record`
 
-| Rule | Location | Message |
-|---|---|---|
-| go-panic | `internal/app/engine/exitloop.go:1693` | panic can bypass normal error and shutdown handling; map the recovery boundary. |
+Source: `internal/app/engine/exitloop.go`.
 
-> Findings are review candidates, not automatic defect verdicts.
+Conditional protection cancellation is observation/reconciliation work. Folding it into the existing clear failure branches would delay or prevent a stop-loss submission.

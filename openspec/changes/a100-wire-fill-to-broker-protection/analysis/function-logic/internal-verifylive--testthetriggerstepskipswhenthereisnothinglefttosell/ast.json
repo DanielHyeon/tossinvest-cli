@@ -1,0 +1,164 @@
+{
+  "file": "internal/verifylive/steps_trigger_test.go",
+  "source_sha256": "176dde0486ef6bfd34439a3e66af4e5daf15bc6444cfa413994e1cbcd40e835e",
+  "package": "verifylive",
+  "function": "TestTheTriggerStepSkipsWhenThereIsNothingLeftToSell",
+  "signature": "TestTheTriggerStepSkipsWhenThereIsNothingLeftToSell(params=1, results=0)",
+  "start": {
+    "line": 387,
+    "column": 1
+  },
+  "end": {
+    "line": 401,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 395,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 398,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 390,
+        "column": 12
+      },
+      "text": "withBook"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 390,
+        "column": 12
+      },
+      "text": "withHolding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 390,
+        "column": 12
+      },
+      "text": "newFakeBroker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 392,
+        "column": 7
+      },
+      "text": "newHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 392,
+        "column": 29
+      },
+      "text": "alwaysConfirm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 393,
+        "column": 2
+      },
+      "text": "runToCompletion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 393,
+        "column": 24
+      },
+      "text": "triggerOptions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 395,
+        "column": 12
+      },
+      "text": "h.verdict"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 396,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 398,
+        "column": 10
+      },
+      "text": "h.broker.countRequests"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 390,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 391,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 392,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 395,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 398,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

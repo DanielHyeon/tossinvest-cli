@@ -1,7 +1,5 @@
-# Risk Pattern Report: `internal/app/engine/gateway.go`
+# Risk Pattern Report: `buildGateway`
 
-| Rule | Location | Message |
-|---|---|---|
-| — | — | No configured risk pattern matched |
+Source: `internal/app/engine/gateway.go`.
 
-> Findings are review candidates, not automatic defect verdicts.
+Gateway construction restores authority before creating execution objects. Starting an A100 worker here would bypass the existing runtime recovery/supervision boundary.

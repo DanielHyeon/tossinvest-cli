@@ -1,0 +1,555 @@
+{
+  "file": "internal/verifylive/steps_trigger.go",
+  "source_sha256": "ab40c58cd6759c1c6aceb21ed98b8af78c4a2f700c21924922be168157404b1f",
+  "package": "verifylive",
+  "function": "finishTrigger",
+  "receiver": "Runner",
+  "signature": "Runner.finishTrigger(params=4, results=1)",
+  "start": {
+    "line": 566,
+    "column": 1
+  },
+  "end": {
+    "line": 659,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 586,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "else",
+      "at": {
+        "line": 591,
+        "column": 9
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 596,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "switch",
+      "at": {
+        "line": 602,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 603,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 604,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 617,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "case",
+      "at": {
+        "line": 632,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "case",
+      "at": {
+        "line": 642,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "case",
+      "at": {
+        "line": 650,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "case",
+      "at": {
+        "line": 655,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 606,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 616,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 631,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 641,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 649,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 654,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 657,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 568,
+        "column": 2
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 568,
+        "column": 55
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 572,
+        "column": 2
+      },
+      "text": "r.observeStamp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 574,
+        "column": 2
+      },
+      "text": "r.observeStamp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 576,
+        "column": 2
+      },
+      "text": "r.observeStamp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 577,
+        "column": 18
+      },
+      "text": "orNone"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 578,
+        "column": 2
+      },
+      "text": "r.observeStamp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 579,
+        "column": 13
+      },
+      "text": "orDash"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 582,
+        "column": 2
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 582,
+        "column": 45
+      },
+      "text": "strconv.FormatBool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 582,
+        "column": 65
+      },
+      "text": "obs.triggeredAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 584,
+        "column": 2
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 584,
+        "column": 55
+      },
+      "text": "strconv.FormatBool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 585,
+        "column": 3
+      },
+      "text": "orNone"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 586,
+        "column": 6
+      },
+      "text": "obs.triggeredAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 586,
+        "column": 35
+      },
+      "text": "obs.childSeenAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 587,
+        "column": 3
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 588,
+        "column": 4
+      },
+      "text": "strconv.FormatInt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 588,
+        "column": 22
+      },
+      "text": "Milliseconds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 588,
+        "column": 22
+      },
+      "text": "obs.childSeenAt.Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 590,
+        "column": 13
+      },
+      "text": "obs.childInterval.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 592,
+        "column": 3
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 595,
+        "column": 2
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 595,
+        "column": 42
+      },
+      "text": "triggerBasis"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 595,
+        "column": 61
+      },
+      "text": "triggerBasisDetail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 596,
+        "column": 6
+      },
+      "text": "obs.triggeredAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 597,
+        "column": 3
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 597,
+        "column": 53
+      },
+      "text": "topOfBook"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 603,
+        "column": 8
+      },
+      "text": "obs.childFilledAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 604,
+        "column": 7
+      },
+      "text": "r.m0PassReady"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 605,
+        "column": 4
+      },
+      "text": "sr.fail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 611,
+        "column": 3
+      },
+      "text": "sr.filled"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 613,
+        "column": 3
+      },
+      "text": "sr.filled"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 615,
+        "column": 3
+      },
+      "text": "sr.pass"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 617,
+        "column": 8
+      },
+      "text": "obs.triggeredAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 625,
+        "column": 3
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 628,
+        "column": 3
+      },
+      "text": "sr.fail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 630,
+        "column": 40
+      },
+      "text": "missingLink"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 635,
+        "column": 3
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 636,
+        "column": 4
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 637,
+        "column": 5
+      },
+      "text": "trim"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 638,
+        "column": 3
+      },
+      "text": "sr.fail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 640,
+        "column": 41
+      },
+      "text": "trim"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 646,
+        "column": 3
+      },
+      "text": "sr.fail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 651,
+        "column": 3
+      },
+      "text": "sr.skip"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 651,
+        "column": 11
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 653,
+        "column": 21
+      },
+      "text": "trim"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 656,
+        "column": 3
+      },
+      "text": "sr.fail"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 567,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -15,8 +15,10 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -27,7 +29,75 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/testenv"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
+	"github.com/spf13/cobra"
 )
+
+func TestM0CLIForbiddenModesRefuseBeforeBrokerFactoryOrConfirmation(t *testing.T) {
+	newReceiptDir := func(t *testing.T, mode os.FileMode) string {
+		t.Helper()
+		dir := t.TempDir()
+		if err := os.Chmod(dir, mode); err != nil {
+			t.Fatal(err)
+		}
+		return dir
+	}
+	base := func(dir string) *verifyOptions {
+		return &verifyOptions{market: verifylive.MarketKR, includeTrigger: true, confirmEach: true, resume: true,
+			redo: []string{string(verifylive.StepConditionalTrigger)}, triggerReceiptDir: dir}
+	}
+	for _, tc := range []struct {
+		name   string
+		change func(*verifyOptions)
+		prior  bool
+	}{
+		{name: "missing-confirm-each", change: func(o *verifyOptions) { o.confirmEach = false }},
+		{name: "missing-resume", change: func(o *verifyOptions) { o.resume = false }},
+		{name: "ttl-edge", change: func(o *verifyOptions) { o.includeTTLEdge = true }},
+		{name: "wrong-redo", change: func(o *verifyOptions) { o.redo = []string{string(verifylive.StepConditionalCancel)} }},
+		{name: "multiple-redo", change: func(o *verifyOptions) {
+			o.redo = []string{string(verifylive.StepConditionalTrigger), string(verifylive.StepConditionalCancel)}
+		}},
+		{name: "missing-receipt-dir", change: func(o *verifyOptions) { o.triggerReceiptDir = "" }},
+		{name: "insecure-receipt-dir", change: func(o *verifyOptions) { o.triggerReceiptDir = newReceiptDir(t, 0o755) }},
+		{name: "missing-non-trigger-prerequisite"},
+		{name: "prior-outstanding", prior: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			configDir := testenv.Isolate(t)
+			if tc.prior {
+				recorder, err := verifylive.OpenRecorder(filepath.Join(configDir, verifylive.RecordFileName(verifylive.MarketKR)))
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = recorder.Append(verifylive.Entry{Kind: verifylive.KindStep, Artifacts: []verifylive.Artifact{{Kind: "order", ID: "prior-live", Symbol: "005930"}}})
+				_ = recorder.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+			factoryCalls := 0
+			previous := verifyBrokerFactory
+			verifyBrokerFactory = func(*rootOptions) (verifylive.Broker, string, error) {
+				factoryCalls++
+				return nil, "", fmt.Errorf("factory must not run")
+			}
+			t.Cleanup(func() { verifyBrokerFactory = previous })
+			opts := base(newReceiptDir(t, 0o700))
+			if tc.change != nil {
+				tc.change(opts)
+			}
+			cmd := &cobra.Command{}
+			cmd.SetOut(io.Discard)
+			err := runVerifyRun(cmd, &rootOptions{configDir: configDir}, opts)
+			if err == nil {
+				t.Fatal("forbidden M0 mode reached run")
+			}
+			if factoryCalls != 0 {
+				t.Fatalf("broker factory called %d time(s) for forbidden M0 mode", factoryCalls)
+			}
+		})
+	}
+}
 
 // --- a fake official API -------------------------------------------------------
 

@@ -113,6 +113,8 @@ type RawConditionalOrder struct {
 	// which is a different vocabulary from the OPEN/CLOSED request filter.
 	Type   string
 	Status string
+	// FirstStatus is deliberately separate from the parent conditional status.
+	FirstStatus string
 	// OrderType is the order this conditional would place ("LIMIT" | "MARKET").
 	OrderType string
 	OrderSide string
@@ -186,12 +188,13 @@ func (c *Client) ConditionalOrdersRaw(ctx context.Context, status, symbol, curso
 	}
 	for _, o := range raw.ConditionalOrders {
 		out.Orders = append(out.Orders, RawConditionalOrder{
-			ID:        o.ConditionalOrderID,
-			Symbol:    o.Symbol,
-			Market:    o.Market,
-			Type:      o.Type,
-			Status:    o.Status,
-			OrderType: o.OrderType,
+			ID:          o.ConditionalOrderID,
+			Symbol:      o.Symbol,
+			Market:      o.Market,
+			Type:        o.Type,
+			Status:      o.Status,
+			FirstStatus: o.First.Status,
+			OrderType:   o.OrderType,
 			// Verbatim: parseDecimal here would put back the zero this type
 			// exists to keep out.
 			Quantity:         o.Quantity,

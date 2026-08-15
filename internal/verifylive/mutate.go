@@ -110,6 +110,12 @@ var ErrExposureCap = errors.New("verify: the live-exposure cap would be exceeded
 // carrying on — is precisely the behaviour a batch approval must not permit.
 var ErrOutsidePlan = errors.New("verify: this request is not on the approved list, so the run stops")
 
+// ErrM0TerminalHold marks a write failure after the broker has already accepted
+// the M0 parent.  Continuing would make later steps treat an uncheckpointed live
+// conditional as if it did not exist; the pending-create checkpoint remains the
+// sole durable owner and the next run may only perform read-only recovery.
+var ErrM0TerminalHold = errors.New("verify: M0 causal receipt HOLD")
+
 // orderSpec is one order this tool wants to place.
 type orderSpec struct {
 	Symbol   string
@@ -506,6 +512,21 @@ func (r *Runner) createConditional(ctx context.Context, sr *stepRun, body offici
 	}); err != nil {
 		return "", err
 	}
+	if err := r.appendM0Checkpoint(M0Checkpoint{
+		Kind: "pending-create", ClientOrderID: body.ClientOrderID, Symbol: body.Symbol, Market: r.market, Type: body.Type,
+		Quantity: body.Quantity, Side: body.First.OrderSide, OrderType: body.OrderType, ConditionType: "STOP",
+		Trigger: body.First.TriggerPrice, ExpireDate: body.ExpireDate,
+	}); err != nil {
+		return "", err
+	}
+	if r.m0ReceiptUsable() {
+		r.m0PendingClient = body.ClientOrderID
+	}
+	if r.m0BeforeConditionalCreate != nil {
+		if err := r.m0BeforeConditionalCreate(); err != nil {
+			return "", err
+		}
+	}
 
 	started := r.now()
 	ref, err := r.broker.CreateConditionalOrder(ctx, body)
@@ -515,6 +536,18 @@ func (r *Runner) createConditional(ctx context.Context, sr *stepRun, body offici
 	}
 	if strings.TrimSpace(ref.ID) == "" {
 		return "", fmt.Errorf("verify: 브로커가 조건주문을 받아들였지만 conditionalOrderId를 돌려주지 않았다")
+	}
+	if r.m0AfterConditionalCreate != nil {
+		if err := r.m0AfterConditionalCreate(); err != nil {
+			return "", err
+		}
+	}
+	if err := r.appendM0Checkpoint(M0Checkpoint{
+		Kind: "parent-created", ClientOrderID: body.ClientOrderID, ParentConditionalID: ref.ID, Symbol: body.Symbol,
+		Market: r.market, Type: body.Type, Quantity: body.Quantity, Side: body.First.OrderSide, OrderType: body.OrderType, ConditionType: "STOP",
+		Trigger: body.First.TriggerPrice, ExpireDate: body.ExpireDate,
+	}); err != nil {
+		return "", fmt.Errorf("%w: broker accepted parent %s but parent-created checkpoint could not be persisted: %w", ErrM0TerminalHold, ref.ID, err)
 	}
 	sr.created("conditional-order", ref.ID, body.Symbol, r.now(), "")
 	fmt.Fprintf(r.out, "    조건주문 등록 %s (%s %s 발동가 %s)\n",

@@ -1,0 +1,126 @@
+{
+  "file": "internal/verifylive/steps_trigger_test.go",
+  "source_sha256": "176dde0486ef6bfd34439a3e66af4e5daf15bc6444cfa413994e1cbcd40e835e",
+  "package": "verifylive",
+  "function": "TestTheTriggerStepSkipsWhenTheGridHasNoRoom",
+  "signature": "TestTheTriggerStepSkipsWhenTheGridHasNoRoom(params=1, results=0)",
+  "start": {
+    "line": 407,
+    "column": 1
+  },
+  "end": {
+    "line": 417,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 411,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 414,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 7
+      },
+      "text": "triggerHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 47
+      },
+      "text": "f.withBook"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 2
+      },
+      "text": "runToCompletion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 24
+      },
+      "text": "triggerOptions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 411,
+        "column": 12
+      },
+      "text": "h.verdict"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 412,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 414,
+        "column": 10
+      },
+      "text": "h.broker.countRequests"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 408,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 411,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 414,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}
