@@ -79,6 +79,75 @@ func TestTheStagedSocketNameIsElevenCharacters(t *testing.T) {
 	}
 }
 
+// TestTheStagedListenBindsAStagingNameNotTheFinalName — a109 §1-fix F3 (원장 M23).
+//
+// 원장은 M23(발행을 최종 경로 bind로 되돌린다)을 "crash 창이라 죽일 수 없다"고 선언했다.
+// **프로세스를 죽일 필요가 없다** — bind한 이름이 무엇인지는 listener가 그대로 들고 있다.
+// A1 적대 리뷰가 이 반증을 만들었다.
+//
+// 재는 것은 D1의 의례 그 자체다: bind는 staging 이름에 하고, 최종 이름은 완성된 0600
+// socket으로만 나타난다. 최종 이름에 직접 bind하면 pre-chmod 상태가 최종 이름을 가지는
+// 창이 다시 열린다 — 사고의 발생원이다.
+func TestTheStagedListenBindsAStagingNameNotTheFinalName(t *testing.T) {
+	engineDir := privateTestDir(t)
+	controlDir := a109TestControlDir(t, engineDir, ".private-endpoint-under-test")
+	final := filepath.Join(controlDir, "endpoint.sock")
+
+	listener, err := ListenStagedPrivateSocket(controlDir, final)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = listener.Close(); _ = os.Remove(final) })
+
+	bound := listener.Addr().String()
+	if bound == final {
+		t.Fatal("최종 이름에 직접 bind했다 — pre-chmod 상태가 최종 이름을 가지는 창이 " +
+			"다시 열렸다(design D1)")
+	}
+	if !strings.HasPrefix(filepath.Base(bound), StagingPrefix) {
+		t.Fatalf("bind한 이름 %q에 회수가 아는 staging 접두가 없다 — "+
+			"회수가 자기 잔재를 낯선 것으로 거부한다", bound)
+	}
+	info, err := os.Lstat(final)
+	if err != nil || info.Mode()&os.ModeSocket == 0 || info.Mode().Perm() != 0o600 {
+		t.Fatalf("최종 이름 info=%v err=%v, want 0600 socket", info, err)
+	}
+}
+
+// TestTheStagedListenDoesNotUnlinkTheNameItRemembers — a109 §1-fix F3 (원장 M22).
+//
+// 원장은 M22(`SetUnlinkOnClose(false)` 제거)를 "경합이라 관측 가능한 피해가 없다"고
+// 선언했다. **경합을 재현할 필요가 없다** — listener가 기억하는 이름에 파일을 다시
+// 만들어 두고 Close하면, unlink가 켜져 있으면 그 파일이 사라지고 꺼져 있으면 남는다.
+// A1 적대 리뷰가 이 반증을 만들었다.
+//
+// 재는 것은 D2b의 전제다: 경로를 지울 권한은 Close의 제거 루프 하나뿐이다. listener가
+// 자기 이름을 늦게 unlink하면 그 정리가 후계자의 파일에 도착한다(a108 A1 F5).
+func TestTheStagedListenDoesNotUnlinkTheNameItRemembers(t *testing.T) {
+	engineDir := privateTestDir(t)
+	controlDir := a109TestControlDir(t, engineDir, ".private-endpoint-under-test")
+	final := filepath.Join(controlDir, "endpoint.sock")
+
+	listener, err := ListenStagedPrivateSocket(controlDir, final)
+	if err != nil {
+		t.Fatal(err)
+	}
+	remembered := listener.Addr().String()
+	t.Cleanup(func() { _ = os.Remove(final); _ = os.Remove(remembered) })
+
+	// 후계자가 같은 임시 이름을 쓴 상황을 만든다(rename으로 비었던 자리다).
+	if err := os.WriteFile(remembered, []byte("successor"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := listener.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Lstat(remembered); errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("Close가 자기가 기억하는 이름 %q를 unlink했다 — "+
+			"늦은 정리가 후계자의 파일을 지운다(design D2b)", remembered)
+	}
+}
+
 // TestTheClientSocketChecksStayExactlyZeroSixHundred — freeze P1-3.
 //
 // 회수는 pre-chmod 0700 잔재를 관용하지만, 그 완화는 **회수 전용**이다. 클라이언트·발행

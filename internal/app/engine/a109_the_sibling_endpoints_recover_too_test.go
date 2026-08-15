@@ -511,6 +511,46 @@ func TestTheSiblingEndpointsRefuseAForeignEntry(t *testing.T) {
 	}
 }
 
+// TestTheSiblingEndpointsRefuseAForeignEntryAndKeepTheirOwnLeftovers — a109 §1-fix F4.
+//
+// 낯선 엔트리 하나만 있는 §1.3 핀은 "거부하면서 남의 것을 지우지 않는가"만 잰다. 그런데
+// 거부의 진짜 계약은 **아무것도 건드리지 않는 것**이다: 우리 잔재까지 그대로 있어야 한다.
+//
+// 왜 그것이 중요한가. 거부하면서 우리 socket 잔재를 지우면, 운영자가 이물을 치운 뒤의
+// 재시작은 **다른 디스크 상태**에서 출발한다 — 재현이 안 되는 회복이다. 그리고 그 삭제는
+// probe가 "죽었다"고 읽은 결과이므로, 같은 경로가 산 주인의 socket에도 열려 있다.
+//
+// A1 적대 리뷰가 이 조합(pre-chmod 잔재 + 이물)을 만들었고, 뮤테이션 M1a(낯선 엔트리를
+// 거부 대신 무시)가 정확히 이 핀에서 죽는다.
+func TestTheSiblingEndpointsRefuseAForeignEntryAndKeepTheirOwnLeftovers(t *testing.T) {
+	for _, endpoint := range a109Endpoints() {
+		t.Run(endpoint.name, func(t *testing.T) {
+			dir := privateEngineTestDir(t)
+			controlDir := endpoint.controlDir(dir)
+			a109ControlDir(t, controlDir)
+			a109DeadSocket(t, endpoint.socket(dir), 0o700)
+			foreign := filepath.Join(controlDir, "somebody-elses.json")
+			if err := os.WriteFile(foreign, []byte("{}"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			server, err := endpoint.start(t, dir)
+			if err == nil {
+				_ = server.Close()
+				t.Fatal("낯선 엔트리가 있는데 기동이 성공했다 — " +
+					"이 디렉터리는 우리 잔재가 아니다")
+			}
+			if _, err := os.Lstat(foreign); err != nil {
+				t.Fatalf("거부하면서 낯선 엔트리를 지웠다: %v", err)
+			}
+			if _, err := os.Lstat(endpoint.socket(dir)); err != nil {
+				t.Fatalf("거부하면서 우리 socket 잔재를 지웠다: %v — "+
+					"거부는 아무것도 건드리지 않는 것이다", err)
+			}
+		})
+	}
+}
+
 // TestTheSiblingEndpointsNameTheEntryTheyRefused — a109 §1-fix F6.
 //
 // D3 강등의 회복 수단은 "엔진 재시작"이 아니라 **"보고된 원인을 제거한 뒤 재시작"**이다
