@@ -163,6 +163,16 @@ func a109LockReleaseIsTopLevel(t *testing.T) bool {
 // 금지 3종의 이유는 **코드로 표현할 수 없다** — 등급표에 이름을 올리는 것은 다른
 // 패키지의 한 줄이고, 그것을 막는 것은 이 주석뿐이다. 주석이 사라지면 다음 사람은
 // 그 한 줄이 실계좌의 신규 진입을 영구 차단한다는 것을 알 길이 없다.
+//
+// # 인용은 **고유해야** 한다 — a109 §2-fix F4 (A2 P2-4)
+//
+// 처음 두 단정은 공허했다. `"critical"` 은 바로 윗줄의 `"criticalEvents"` 안에 이미
+// 들어 있고, `"flock"` 은 이 파일과 무관한 영문 헤더(engine.go:14)가 만족시킨다.
+// 실측으로 확인했다: 금지 2번 줄(engine.go:366)을 지워도, 순서 불변식의 flock 문장을
+// 지워도 이 테스트는 **초록이었다**(뮤테이션 원장 M24·M25).
+//
+// 그래서 각 인용을 그 문장에만 있는 **고유 구절**로 바꾼다. 정적 핀이 재는 것은
+// 「글자가 파일 어딘가에 있는가」가 아니라 「그 금지의 이유가 아직 적혀 있는가」다.
 func TestTheDegradationCommentStillCitesTheForbiddenThree(t *testing.T) {
 	fileSet := token.NewFileSet()
 	parsed, err := parser.ParseFile(fileSet, "engine.go", nil, parser.ParseComments|parser.SkipObjectResolution)
@@ -176,11 +186,11 @@ func TestTheDegradationCommentStillCitesTheForbiddenThree(t *testing.T) {
 	}
 	text := comments.String()
 	for _, required := range []string{
-		"criticalEvents",         // 등급표 등재 금지
-		"critical",               // severity 승격 금지
-		"EnqueueAlert",           // 원장 outbox 적재 금지
-		"restoreAlertEntryLatch", // 왜 그것이 사고인가
-		"flock",                  // defer 순서 불변식의 근거
+		"criticalEvents", // 등급표 등재 금지
+		"severity 를 critical 로 올리지 마라",      // severity 승격 금지 (그 문장에만 있는 구절)
+		"원장 outbox(`Journal.EnqueueAlert`)", // 원장 outbox 적재 금지
+		"restoreAlertEntryLatch",            // 왜 그것이 사고인가
+		"flock을 쥔 채로",                       // defer 순서 불변식의 근거 (영문 헤더로는 못 만족한다)
 	} {
 		if !strings.Contains(text, required) {
 			t.Errorf("engine.go 주석이 %q 를 더 이상 인용하지 않는다 — "+
