@@ -44,7 +44,7 @@
     - STORY-TOS-a102 — Boot does not starve the engine [implemented] → `a102-boot-does-not-starve-the-engine`
     - STORY-TOS-a107 — Retire the second protection core [in_progress] → `a107-retire-the-second-protection-core`
     - STORY-TOS-a108 — Boot recovers from any leftover [implemented] → `a108-boot-recovers-from-any-leftover`
-    - STORY-TOS-a109 — The sibling endpoints recover too [in_progress] → `a109-the-sibling-endpoints-recover-too`
+    - STORY-TOS-a109 — The sibling endpoints recover too [implemented] → `a109-the-sibling-endpoints-recover-too`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [implemented] → `console-click-approval`
