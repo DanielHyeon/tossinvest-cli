@@ -74,4 +74,17 @@ func assertQuarantineHonest(t *testing.T, path string, recorder *httptest.Respon
 		t.Errorf("%s: 화면이 강등 가능성을 말하지 않는다 — 이 경로만 옛 문구로 남았다:\n%s",
 			path, body)
 	}
+	// **제목도 값이다** — a109 §2-fix F5 (A2 P2-5).
+	//
+	// 본문(detail)은 강등을 말하게 고쳤는데 제목은 「판정 격리 command seam 미배선」
+	// 그대로였고, 그것은 화면에서 **먼저 읽히는 줄**이다. seam 미배선은 이 저장소에서
+	// 「이 빌드에 그 기능이 배선되지 않았다」는 뜻으로 쓰인다(overview.go 의
+	// reasonSeamUnwired) — 강등 부팅에서는 거짓이고, 운영자는 빌드를 올리러 간다.
+	if strings.Contains(body, "판정 격리 command seam 미배선") {
+		t.Errorf("%s: 제목이 아직 빌드를 탓한다 — 본문은 강등을 말하는데 굵은 줄은 "+
+			"「이 빌드에 없다」다:\n%s", path, body)
+	}
+	if !strings.Contains(body, "격리 해제 표면 없음") {
+		t.Errorf("%s: 제목이 무엇이 없는지 말하지 않는다:\n%s", path, body)
+	}
 }
