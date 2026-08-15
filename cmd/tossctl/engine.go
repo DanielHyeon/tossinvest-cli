@@ -65,6 +65,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/filldetect"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/runlock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc"
@@ -269,16 +270,41 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	if err != nil {
 		return err
 	}
-	policyControl, err := enginePositionPolicyCommandStart(dir, policyCommands)
-	if err != nil {
-		return err
+	// a109 D3 — a108의 강등을 형제 endpoint 셋으로 넓힌다.
+	//
+	// 이 셋도 2026-08-13의 projection과 **같은 병**을 앓았다: 잔재 하나가 Start를
+	// 실패시키면 여기서 `return err` 한 줄이 엔진을 죽이고, autostart가 1분마다 다시
+	// 세우지만 디스크 상태는 그대로이므로 **영구 기동 루프**가 된다. 그 상태의 실제
+	// 이름은 「장중 손절 없음」이다.
+	//
+	// 강등이 fatal보다 나은 이유는 비교로만 성립한다. 잃는 것을 정직하게 적으면:
+	//
+	//	policy command   Preview/Apply와 **격리 해제** 표면. 격리 해제는 격리된
+	//	                 포지션의 손절 포함 미판정 상태를 푸는 유일한 장중 경로다 —
+	//	                 강등은 그 무보호를 **유지**한다. 그래도 fatal(전 포지션
+	//	                 무보호)보다 엄격히 낫다.
+	//	policy runtime   콘솔·httpapi의 관리 런타임 화면. 조회 전용이다.
+	//	alert control    운영자 ack 표면. ack 불가는 미전달 critical의 entry latch를
+	//	                 **유지**하므로 신규 진입이 계속 막힌다 — 보수 방향이다.
+	//
+	// 셋 다 루프의 입력이 아니라 표면이고, 엔진 싱글턴을 강제하는 것은 부팅 1단계의
+	// journal flock이지 이 디렉터리들이 아니다.
+	policyControl, policyControlErr := enginePositionPolicyCommandStart(dir, policyCommands)
+	if policyControl != nil {
+		defer policyControl.Close()
 	}
-	defer policyControl.Close()
-	policyRuntime, err := enginePositionPolicyRuntimeStart(dir, policyCommands)
-	if err != nil {
-		return err
+	if policyControlErr != nil {
+		reportEngineEndpointDegraded(ctx, ectx, errOut,
+			enginePolicyCommandEndpoint(dir), policyControlErr)
 	}
-	defer policyRuntime.Close()
+	policyRuntime, policyRuntimeErr := enginePositionPolicyRuntimeStart(dir, policyCommands)
+	if policyRuntime != nil {
+		defer policyRuntime.Close()
+	}
+	if policyRuntimeErr != nil {
+		reportEngineEndpointDegraded(ctx, ectx, errOut,
+			enginePolicyRuntimeEndpoint(dir), policyRuntimeErr)
+	}
 	// a108 D3 — 조회 전용 endpoint 하나가 손절을 든 프로세스를 죽이지 않는다.
 	//
 	// 2026-08-13 23:35 사고: 재부팅 잔재로 이 Start가 실패했고, 여기서 `return err`
@@ -301,7 +327,7 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 		defer strategyRuntime.Close()
 	}
 	if projErr != nil {
-		reportStrategyProjectionDegraded(ctx, ectx, errOut, dir, projErr)
+		reportEngineEndpointDegraded(ctx, ectx, errOut, engineProjectionEndpoint(dir), projErr)
 	}
 	// a098 4.4 — 밀린 critical 알림의 운영자 표면. 승인은 이 프로세스 안에서
 	// 일어나야 한다: 진입 게이트는 여기 메모리에 있고, 다른 프로세스가 원장만
@@ -310,11 +336,14 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	if err != nil {
 		return err
 	}
-	alertControl, err := engineAlertControlStart(dir, alertOps)
-	if err != nil {
-		return err
+	alertControl, alertControlErr := engineAlertControlStart(dir, alertOps)
+	if alertControl != nil {
+		defer alertControl.Close()
 	}
-	defer alertControl.Close()
+	if alertControlErr != nil {
+		reportEngineEndpointDegraded(ctx, ectx, errOut, engineAlertControlEndpoint(dir),
+			alertControlErr)
+	}
 	fmt.Fprintf(out, "account          %s\nloops            %s\n",
 		ectx.Automation.MaskedAccount(), strings.Join(rt.LoopNames(), ", "))
 	fmt.Fprintf(out, "stop             SIGINT/SIGTERM — 루프 완주 후 journal 정합 close. 두 번째 시그널은 즉시 종료\n\n")
@@ -360,18 +389,89 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 // 나중에 Notifier 에 Publisher 가 붙어도 Normal 인 것이 **의도**다.
 const engineStrategyProjectionDegradedEvent obs.EventType = "engine.strategy_projection_unavailable"
 
-// reportStrategyProjectionDegraded 는 강등을 두 곳에 남긴다: 기동 stderr 한 줄과
+// engineControlEndpointDegradedEvent 는 형제 셋(policy command·policy runtime·alert
+// control)의 강등이 남기는 obs 이벤트 타입이다 — a109 D3a.
+//
+// ⛔ 바로 위 `engineStrategyProjectionDegradedEvent` 의 주석이 **이 이름에도 그대로
+// 정본**이다. 금지 3종(등급표 등재·critical 승격·원장 outbox 적재)은 여기서도 불변이고,
+// 이유도 같다: 미전달 PENDING 행 하나가 다음 부팅의 진입 게이트를 잠근다.
+//
+// 이름을 하나 더 두는 이유는 운영자가 로그에서 **어느 종류의 표면이 없는가**를 이벤트
+// 타입으로도 가를 수 있어야 하기 때문이다. 어느 endpoint 인지는 scope 필드가 말한다.
+const engineControlEndpointDegradedEvent obs.EventType = "engine.control_endpoint_unavailable"
+
+// engineEndpoint 는 강등 보고가 「어느 표면인가」를 말하는 데 필요한 최소 좌표다.
+//
+// 강등이 넷으로 늘면 「강등했다」만 찍는 보고는 쓸모가 없다 — 운영자가 알아야 하는
+// 것은 무엇을 잃었고 **어느 디렉터리의 무엇을 지워야 하는가**다.
+type engineEndpoint struct {
+	// surface 는 운영자가 읽는 표면 이름이다.
+	surface string
+	// lost 는 이 표면이 없을 때 실제로 잃는 것이다. 「아무것도 안 잃는다」로 적지
+	// 않는다 — policy command 는 격리 해제를 잃고, 그것은 무보호의 유지다.
+	lost string
+	// control 은 원인이 놓여 있는 디렉터리다. obs scope 이자 운영자의 작업 대상이다.
+	control string
+	// event 는 obs 이벤트 타입이다. **둘 다 등급표에 없다**(위 두 const 주석).
+	event obs.EventType
+	// title 은 알림 제목이다.
+	title string
+}
+
+func engineProjectionEndpoint(dir string) engineEndpoint {
+	return engineEndpoint{
+		surface: "전략 projection", lost: "콘솔·httpapi의 전략 화면",
+		control: strategyprojectionrpc.ControlDirectory(dir),
+		event:   engineStrategyProjectionDegradedEvent, title: "STRATEGY_PROJECTION_UNAVAILABLE",
+	}
+}
+
+func enginePolicyCommandEndpoint(dir string) engineEndpoint {
+	return engineEndpoint{
+		surface: "position policy command",
+		// 정직하게 적는다: 격리 해제는 격리된 포지션의 손절 포함 미판정을 푸는 유일한
+		// 장중 경로다. 이 표면이 없으면 그 무보호가 **유지**된다.
+		lost:    "콘솔의 정책 Preview/Apply와 판정 격리 해제 표면 (격리된 포지션의 미판정이 유지된다)",
+		control: positionpolicyrpc.ControlDirectory(dir),
+		event:   engineControlEndpointDegradedEvent, title: "POSITION_POLICY_COMMAND_UNAVAILABLE",
+	}
+}
+
+func enginePolicyRuntimeEndpoint(dir string) engineEndpoint {
+	return engineEndpoint{
+		surface: "position policy runtime", lost: "콘솔·httpapi의 관리 런타임 화면 (조회 전용)",
+		control: positionpolicyrpc.RuntimeControlDirectory(dir),
+		event:   engineControlEndpointDegradedEvent, title: "POSITION_POLICY_RUNTIME_UNAVAILABLE",
+	}
+}
+
+func engineAlertControlEndpoint(dir string) engineEndpoint {
+	return engineEndpoint{
+		surface: "alert control",
+		// ack 불가는 미전달 critical 의 entry latch 를 유지시킨다 — 신규 진입이 계속
+		// 막히는 쪽이므로 보수 방향이다.
+		lost:    "운영자의 밀린 critical 알림 승인 표면 (미승인 latch는 유지되어 신규 진입이 계속 막힌다)",
+		control: engine.AlertControlDirectory(dir),
+		event:   engineControlEndpointDegradedEvent, title: "ALERT_CONTROL_UNAVAILABLE",
+	}
+}
+
+// reportEngineEndpointDegraded 는 강등을 두 곳에 남긴다: 기동 stderr 한 줄과
 // obs Normal 이벤트 로그.
 //
-// 세 번째 표면은 이 함수 밖에 이미 있다 — 콘솔·httpapi 의 전략 화면이 dormant 로
-// 뜨고 그 자체가 「지금 화면이 없다」는 상시 표시다. 그래서 「stderr 한 줄은 1회
-// 유실형」이라는 원 D3 의 걱정은 durable outbox 행 없이도 답이 된다.
-func reportStrategyProjectionDegraded(ctx context.Context, ectx *engine.Context, errOut io.Writer,
-	dir string, cause error) {
-	control := strategyprojectionrpc.ControlDirectory(dir)
-	detail := fmt.Sprintf("전략 projection endpoint를 열지 못했다 (%s): %v", control, cause)
+// # 왜 「재시작하라」고 하지 않는가 — a109 D3/D3b
+//
+// D1·D2 가 자기 잔재를 원천 소거한 뒤 강등이 실제로 발동하는 원인은 이물·환경 이상
+// 뿐이고, 그것들은 **결정적**이다. 재시작만 하면 같은 강등이 그대로 재현된다. 그래서
+// 안내는 「원인을 제거한 뒤 재시작하라」여야 한다 — 이 한 줄의 차이가 운영자를
+// 무한 재시작에서 꺼낸다.
+func reportEngineEndpointDegraded(ctx context.Context, ectx *engine.Context, errOut io.Writer,
+	endpoint engineEndpoint, cause error) {
+	detail := fmt.Sprintf("%s endpoint를 열지 못했다 (%s): %v", endpoint.surface, endpoint.control, cause)
 	fmt.Fprintf(errOut, "note: %s\n"+
-		"      엔진은 보호 루프를 그대로 돌린다 — 잃은 것은 콘솔·httpapi의 전략 화면이다.\n", detail)
+		"      엔진은 보호 루프를 그대로 돌린다 — 잃은 것은 %s다.\n"+
+		"      원인은 결정적이다: 위 디렉터리의 원인을 제거한 뒤 재시작하라. 재시작만으로는 같은 강등이 재현된다.\n",
+		detail, endpoint.lost)
 	if ectx == nil || ectx.Notifier == nil {
 		return
 	}
@@ -396,10 +496,10 @@ func reportStrategyProjectionDegraded(ctx context.Context, ectx *engine.Context,
 	detached := context.WithoutCancel(ctx)
 	go func() {
 		_ = ectx.Notifier.Notify(detached, obs.Event{
-			Type:   engineStrategyProjectionDegradedEvent,
-			Title:  "STRATEGY_PROJECTION_UNAVAILABLE",
+			Type:   endpoint.event,
+			Title:  endpoint.title,
 			Body:   detail,
-			Fields: map[string]any{obs.FieldScope: control},
+			Fields: map[string]any{obs.FieldScope: endpoint.control},
 		})
 	}()
 }

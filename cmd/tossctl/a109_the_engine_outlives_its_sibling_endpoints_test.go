@@ -36,6 +36,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/enginelock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 )
@@ -273,6 +274,62 @@ func TestEveryEndpointCanFailAtOnceAndTheLoopsStillRun(t *testing.T) {
 	}
 	if undelivered != 0 {
 		t.Errorf("네 번의 강등이 미전달 알림 %d건을 남겼다, want 0", undelivered)
+	}
+}
+
+// TestTheDegradationEventsAreNotOnTheCriticalRail 은 금지 3종의 **기계적** 핀이다.
+//
+// 위 테스트들은 「원장에 행이 안 생긴다」를 harness 로 관측한다. 이것은 그 결과를 만드는
+// 원인 — 이벤트 타입이 obs 등급표에 없다 — 을 직접 잰다. 둘 다 필요하다: 결과만 재면
+// 어느 날 등급표에 이름이 오를 때 "왜 갑자기 진입이 잠겼는가"를 아무도 설명하지 못한다.
+func TestTheDegradationEventsAreNotOnTheCriticalRail(t *testing.T) {
+	for _, event := range []obs.EventType{
+		engineStrategyProjectionDegradedEvent, engineControlEndpointDegradedEvent,
+	} {
+		if got := obs.SeverityOf(event); got != obs.SeverityNormal {
+			t.Errorf("%s 등급 = %q, want %q — critical 은 durable outbox 행을 만들고 "+
+				"미전달 행은 다음 부팅의 진입 게이트를 잠근다", event, got, obs.SeverityNormal)
+		}
+		for _, critical := range obs.CriticalEvents() {
+			if critical == event {
+				t.Errorf("%s 가 obs 등급표에 등재됐다 — 표면 하나를 잃었다는 보고가 "+
+					"실계좌의 신규 진입을 영구 차단한다", event)
+			}
+		}
+	}
+	// a108 이 세운 이벤트 타입 **값**은 바뀌지 않았다. 일반화가 기존 배포의 로그 필터를
+	// 조용히 무효로 만들면 그것은 고친 것이 아니라 옮긴 것이다.
+	if engineStrategyProjectionDegradedEvent != "engine.strategy_projection_unavailable" {
+		t.Errorf("a108 이벤트 타입 값이 바뀌었다: %q", engineStrategyProjectionDegradedEvent)
+	}
+	if engineControlEndpointDegradedEvent == engineStrategyProjectionDegradedEvent {
+		t.Error("형제 강등이 projection 과 같은 이벤트 타입을 쓴다 — 로그에서 종류를 가를 수 없다")
+	}
+}
+
+// TestEveryDegradedEndpointNamesWhatItLost 는 D3 표의 정직성 요구다.
+//
+// 강등 안내가 「아무것도 느슨해지지 않는다」로 적히면 그것은 거짓이다. policy command 는
+// **격리 해제**를 잃고 그것은 격리된 포지션의 무보호 유지이며, alert control 은 ack 를
+// 잃고 그것은 latch 유지다. 잃는 것을 적지 않는 보고는 운영자에게 우선순위를 못 준다.
+func TestEveryDegradedEndpointNamesWhatItLost(t *testing.T) {
+	dir := "/tmp/a109-endpoint-copy"
+	for _, endpoint := range []engineEndpoint{
+		engineProjectionEndpoint(dir), enginePolicyCommandEndpoint(dir),
+		enginePolicyRuntimeEndpoint(dir), engineAlertControlEndpoint(dir),
+	} {
+		if strings.TrimSpace(endpoint.surface) == "" || strings.TrimSpace(endpoint.lost) == "" ||
+			strings.TrimSpace(endpoint.control) == "" || strings.TrimSpace(endpoint.title) == "" ||
+			strings.TrimSpace(string(endpoint.event)) == "" {
+			t.Errorf("endpoint 좌표가 비었다: %+v", endpoint)
+		}
+		if !strings.HasPrefix(endpoint.control, dir) {
+			t.Errorf("%s 의 control 이 엔진 디렉터리 밖이다: %s", endpoint.surface, endpoint.control)
+		}
+	}
+	if lost := enginePolicyCommandEndpoint(dir).lost; !strings.Contains(lost, "격리") {
+		t.Errorf("policy command 강등 안내가 격리 해제를 말하지 않는다 (%q) — "+
+			"격리된 포지션의 무보호가 유지된다는 사실이 사라지면 강등 논증이 거짓이 된다", lost)
 	}
 }
 
