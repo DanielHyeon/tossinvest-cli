@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/httpapi.go",
-  "source_sha256": "fadda2b53b0ba6a6e851cdca81fcc26b598383bcfcb910a0c11bbd86ff5801cd",
+  "source_sha256": "27f64ba89ad383dba108aa897f48b208249d6fc13a6a3414842f441169757787",
   "package": "main",
   "function": "strategyRuntimeReaderFor",
   "signature": "strategyRuntimeReaderFor(params=3, results=1)",

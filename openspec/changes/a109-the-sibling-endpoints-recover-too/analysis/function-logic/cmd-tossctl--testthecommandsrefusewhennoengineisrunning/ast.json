@@ -1,0 +1,172 @@
+{
+  "file": "cmd/tossctl/a098_the_operator_command_names_a_person_test.go",
+  "source_sha256": "23719671eb2d95bebb219fdd60489b82ac42cce74b442c97d38ba2888d7c49c6",
+  "package": "main",
+  "function": "TestTheCommandsRefuseWhenNoEngineIsRunning",
+  "signature": "TestTheCommandsRefuseWhenNoEngineIsRunning(params=1, results=0)",
+  "start": {
+    "line": 337,
+    "column": 1
+  },
+  "end": {
+    "line": 359,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 339,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 343,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 346,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 351,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 354,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 14
+      },
+      "text": "os.MkdirTemp"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 340,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 342,
+        "column": 2
+      },
+      "text": "t.Cleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 342,
+        "column": 25
+      },
+      "text": "os.RemoveAll"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 343,
+        "column": 12
+      },
+      "text": "os.Chmod"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 344,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 350,
+        "column": 18
+      },
+      "text": "a098RunAlerts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 352,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 354,
+        "column": 7
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 338,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 342,
+        "column": 21
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 343,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 350,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

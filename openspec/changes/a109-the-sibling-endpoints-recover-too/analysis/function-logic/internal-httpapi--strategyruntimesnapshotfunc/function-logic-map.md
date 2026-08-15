@@ -1,6 +1,6 @@
 # Function Logic Map: `StrategyRuntimeSnapshotFunc`
 
-- Source: `internal/httpapi/strategy_runtime.go` (52-67)
+- Source: `internal/httpapi/strategy_runtime.go` (68-83)
 - AST evidence: `ast.json` — AST 분기 3 · return 5 · defer 0
   (source_sha256 `0338efa58b203e8be67620e10f262d0e2f39794d759f431dd50e6ba579f82366`,
   a109 §2.3 편집 후 생성)
