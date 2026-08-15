@@ -42,8 +42,11 @@
   AlertControlServer listener 필드 추가). 클라이언트 검증은 정확-0600 유지(P1-3).
   산출물: `internal/positionpolicyrpc/private_staging.go`(이식성 있는 이름·위생),
   `private_staging_unix.go`(staged listen·회수·probe). 세 transport 재배선 완료.
-- [ ] 1.5 staging basename **길이 11 직접 측정** + 각 최종 socket basename과의 ≤
+- [x] 1.5 staging basename **길이 11 직접 측정** + 각 최종 socket basename과의 ≤
   관계식 상수 테스트(절대 경로 103 요구 금지 — D1a, Linux 실측 상한 107).
+  추가 경계: 클라이언트 정확-0600 핀(P1-3), probe 4갈래(생존·ECONNREFUSED·부재·
+  owner-write 없음), 이름 집합 방어(빈 descriptor·빈 접두), staging 모양 거부,
+  회수 후 디렉터리 부재, 위생의 무해성, 이름 집합 완전성(P2-5).
 - [ ] 1.6 뮤테이션 원장(t1) — 회수 분기·probe 3갈래·완화 경계 각각을 죽여서 테스트가
   잡는지 기록. 원복은 심볼 수로 확인.
 - [ ] 1.7 구현 후 FLM AST·맵 재최신화.

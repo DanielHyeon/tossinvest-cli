@@ -226,6 +226,104 @@ func TestTheSiblingEndpointsRejectAPermissiveSocketLeftover(t *testing.T) {
 	}
 }
 
+// TestTheStagedSocketNameFitsInsideEverySiblingsFinalName — a109 §1.5.
+//
+// bind 하는 이름은 최종 이름이 아니라 **임시 이름**이고, unix socket 경로에는 sun_path
+// 상한이 있다. 임시 이름이 최종 이름보다 길면 최종 경로는 상한 안인데 발행만 죽는
+// 배포가 생기고, 운영자에게 보이는 것은 「매 부팅 그 표면이 없다」뿐이라 원인이 보이지
+// 않는다.
+//
+// ⛔ 재는 것은 **basename 길이**이지 절대 경로 길이가 아니다. 두 이름은 같은 디렉터리
+// 안에 있으므로 basename이 길지 않으면 경로도 길지 않다 — 디렉터리가 얼마나 깊든
+// 성립한다. 절대 경로 상한(Linux 실측 107)을 테스트에 넣으면 그것은 호스트의 tmp 경로
+// 길이를 재는 테스트가 된다.
+//
+// 형제 중 `alerts.sock`이 11자로 가장 짧다. a108(strategy projection)의 12자 staging을
+// 그대로 쓰면 여기서 계약이 깨진다 — 그래서 형제 공용 staging은 11자다.
+func TestTheStagedSocketNameFitsInsideEverySiblingsFinalName(t *testing.T) {
+	staged, err := positionpolicyrpc.StagedSocketName()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, final := range []string{
+		AlertControlSocketFileName(),            // alerts.sock — 11자
+		positionpolicyrpc.RuntimeSocketFileName, // runtime.sock — 12자
+	} {
+		if len(staged) > len(final) {
+			t.Errorf("임시 이름 %q(%d자)이 최종 이름 %q(%d자)보다 길다 — "+
+				"최종 경로가 sun_path 상한 직전인 배포에서 bind만 죽는다",
+				staged, len(staged), final, len(final))
+		}
+	}
+}
+
+// TestEveryNameThePublishingPathMakesIsKnownToItsReclaim — freeze P2-5.
+//
+// 아는-이름 집합에서 하나라도 빠지면 낯선-엔트리 거부가 **우리 자신의 잔재**를 거부한다.
+// 그 거부는 결정적이라 매 부팅 같은 자리에서 멈추고, 운영자가 볼 수 있는 것은 그 표면이
+// 사라진 것뿐이다.
+//
+// 측정하는 것과 구조로 묶은 것을 나눠 적는다.
+//
+//	측정   socket staging 은 발행이 쓰는 **그 생성기**(StagedSocketName)를 실제로 돌리고,
+//	       descriptor staging 은 발행이 쓰는 **그 상수**로 os.CreateTemp 를 실제로 돌려
+//	       나온 이름을 집합에 물어본다. os.CreateTemp 가 접두 뒤에 붙이는 임의 숫자의
+//	       길이는 판마다 다르므로 "접두로 시작한다"는 가정도 여기서 깨질 수 있다.
+//	구조   발행이 그 상수를 쓴다는 것은 상수가 한 곳에만 정의되어 두 자리에서 참조된다는
+//	       사실로 묶었다(리터럴이 남아 있으면 §1.3 의 잔재 회수 핀이 죽는다).
+func TestEveryNameThePublishingPathMakesIsKnownToItsReclaim(t *testing.T) {
+	for _, test := range []struct {
+		name             string
+		names            positionpolicyrpc.PrivateEndpointNames
+		descriptorPrefix string
+		final            []string
+	}{
+		{
+			name:             "position policy runtime",
+			names:            positionPolicyRuntimeEndpointNames(),
+			descriptorPrefix: positionPolicyRuntimeStagingPrefix,
+			final: []string{positionpolicyrpc.RuntimeDescriptorFileName,
+				positionpolicyrpc.RuntimeSocketFileName},
+		},
+		{
+			name:             "alert control",
+			names:            alertControlEndpointNames(),
+			descriptorPrefix: privateDescriptorStagingPrefix,
+			final:            []string{alertControlDescriptorFileName, alertControlSocketFileName},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			made := append([]string{}, test.final...)
+
+			staged, err := positionpolicyrpc.StagedSocketName()
+			if err != nil {
+				t.Fatal(err)
+			}
+			made = append(made, staged)
+
+			temporary, err := os.CreateTemp(t.TempDir(), test.descriptorPrefix+"*")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := temporary.Close(); err != nil {
+				t.Fatal(err)
+			}
+			made = append(made, filepath.Base(temporary.Name()))
+
+			for _, name := range made {
+				if !test.names.Knows(name) {
+					t.Errorf("발행이 만드는 이름 %q를 회수가 모른다 — "+
+						"낯선-엔트리 거부가 우리 잔재를 매 부팅 거부한다", name)
+				}
+			}
+			// 그리고 아무 이름이나 아는 것이어서는 안 된다. 빈 접두 하나가 그렇게 만든다.
+			if test.names.Knows("somebody-elses.json") {
+				t.Error("회수가 낯선 이름을 우리 것으로 안다 — 남의 파일을 치우게 된다")
+			}
+		})
+	}
+}
+
 // a109ControlEntries는 control 디렉터리에 남은 이름을 정렬해 돌려준다.
 func a109ControlEntries(t *testing.T, controlDir string) []string {
 	t.Helper()
