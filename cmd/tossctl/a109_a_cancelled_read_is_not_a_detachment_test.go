@@ -160,12 +160,22 @@ func TestALateReadFailureDoesNotUnseatTheNewAttachment(t *testing.T) {
 		t.Errorf("사라진 endpoint 의 늦은 실패가 **새 부착**을 탈착으로 보고했다:\n%s",
 			log.String())
 	}
-	// 창을 지나 다시 묻는다. 상태가 뒤집혔다면 여기서 두 번째 시도가 뜬다.
+	// 그리고 자리가 **시도 대상으로 뒤집혔는지**를 직접 묻는다.
+	//
+	// 예전 판은 이것을 「창을 지나 다시 물으면 두 번째 dial 이 뜨는가」로 쟀다. a109
+	// §2b.3 G2 가 깨우기에서 생사 게이트를 걷어낸 뒤로 그 수는 자리의 상태를 말하지
+	// 않는다 — 깨우기는 언제나 일어나고, 과빈도는 rate limit 이 막는다. 프록시를 상태
+	// 그 자체로 바꾼 것은 **더 강한** 측정이다: rate limit 이 우연히 가려 주는 경우가
+	// 없어진다.
+	if _, _, wanted := attachment.state(); wanted {
+		t.Errorf("늦은 실패가 새 부착을 failed 로 뒤집었다 — 방금 붙은 endpoint 가 "+
+			"곧바로 다시 시도 대상이 된다:\n%s", log.String())
+	}
+	// 창을 지나 다시 물어도 이 자리는 한 번도 탈착된 적이 없다 — 부착 보고도 없다.
 	clock.advance(2 * time.Minute)
 	attachment.StrategyRuntimeConfigured()
-	time.Sleep(100 * time.Millisecond)
-	if got := attempts.Load(); got != 1 {
-		t.Errorf("재-dial 시도 %d회, want 1 — 늦은 실패가 새 부착을 failed 로 뒤집었고 "+
-			"방금 붙은 endpoint 를 다시 dial 한다", got)
+	a109WaitFor(t, "창 이후 시도 종료", func() bool { return !attachment.inFlight() })
+	if got := strings.Count(log.String(), "다시 붙었다"); got != 0 {
+		t.Errorf("부착 보고 %d줄, want 0 — 이 자리는 탈착된 적이 없다\n%s", got, log.String())
 	}
 }

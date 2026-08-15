@@ -697,6 +697,15 @@ func openHTTPAPIResources(ctx context.Context, root *rootOptions, now func() tim
 //
 // 그래서 깨우기를 집계 **밖에서** 먼저 부른다. 새 ticker 를 두지 않는 이유는 주기가
 // 이미 맞기 때문이다 — 재부착 시도에는 자기 rate limit 이 따로 있다.
+//
+// # 이 tick 은 자리의 생사를 묻지 않는다 — a109 §2b.3 G2
+//
+// 집계 밖으로 꺼낸 것만으로는 반쪽이었다. 깨우기 자체가 「자리가 시도 대상인가」
+// (`failed`)에 매여 있으면, 부팅 때 live 로 붙었다가 엔진 재시작으로 죽은 자리는
+// **아무도 Read 하지 않는 한** 시도 대상이 되지 않는다 — 그리고 집계가 고장 난 배포에는
+// 그 Read 가 없다. 지금 이 tick 은 자리의 상태와 무관하게 시도를 깨우고, 과빈도는 시도
+// 쪽의 rate limit·single-flight 가 막는다
+// (`strategyRuntimeAttachment.StrategyRuntimeConfigured`).
 func publishHTTPAPISnapshots(ctx context.Context, stream *httpapi.Stream, snapshots *httpAPISnapshotCache,
 	strategyRuntime httpapi.StrategyRuntimeReader, interval time.Duration) {
 	ticker := time.NewTicker(interval)

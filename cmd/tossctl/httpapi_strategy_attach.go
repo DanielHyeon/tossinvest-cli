@@ -98,11 +98,21 @@ type strategyRuntimeAttachment struct {
 // 유일한 지점**이기 때문이다. 소비자는 부재면 `Read` 를 아예 부르지 않으므로
 // (`httpAPIReader.Snapshot`·router 의 REST 경로), 깨우기를 `Read` 에만 두면 냉부팅
 // 순서 — 엔진이 나중에 뜨는 경우 — 가 영원히 회복하지 못한다.
+//
+// # 깨우기는 자리의 생사를 묻지 않는다 (a109 §2b.3 G2)
+//
+// 예전 판은 「시도 대상인가」(`failed`)일 때만 깨웠다. 그 게이트는 자리가 **live 로
+// 보이지만 실제로는 죽은** 상태를 통과시키지 못한다: 엔진이 재시작하면 부팅 때 잡은
+// client 는 영구 실패하는데, 그 사실은 **누군가 Read 해야** 드러난다. 그리고 집계가
+// 고장 난 배포에서는 전략 블록에 닿는 Read 자체가 없다(`httpAPIReader.Snapshot` 의
+// B1–B7 이 앞에서 끝난다). 그래서 상시 구동원(publisher 루프)이 이 술어를 부르는데도
+// 재부착은 영영 안 깨어났다 — §2-fix F3 이 깨우기를 집계 밖으로 꺼낸 것의 나머지 반쪽이다.
+//
+// 과빈도는 게이트가 아니라 **rate limit 과 single-flight** 가 막는다(wake 안). 그 둘이
+// 있는 한 무조건 깨우기의 비용은 「간격당 시도 1회」로 고정된다.
 func (a *strategyRuntimeAttachment) StrategyRuntimeConfigured() bool {
-	reader, _, wanted := a.state()
-	if wanted {
-		a.wake()
-	}
+	reader, _, _ := a.state()
+	a.wake()
 	return reader != nil
 }
 
@@ -172,20 +182,61 @@ func (a *strategyRuntimeAttachment) attempt() {
 	a.mu.Lock()
 	a.trying = false
 	if !live {
-		// 실패는 침묵이고, 지금 화면 값을 흔들지 않는다. 실패한 해석으로 현재 reader 를
-		// 갈아끼우면 「붙어 있다가 잠깐 못 읽는 중」이 「이 배포는 전략 화면을 안 쓴다」로
-		// 바뀔 수 있다 — 같은 접힘이 뒷문으로 들어온다.
+		// 실패는 침묵이고, **붙어 있는** 자리를 흔들지 않는다. 실패한 해석으로 현재
+		// reader 를 갈아끼우면 「붙어 있다가 잠깐 못 읽는 중」이 「이 배포는 전략 화면을
+		// 안 쓴다」로 바뀔 수 있다 — 같은 접힘이 뒷문으로 들어온다.
+		//
+		// # 빈 자리는 예외다 (a109 §2b.3 G1)
+		//
+		// 자리가 **비어 있으면**(nil = 부재 = dormant 화면) 해석이 준 sentinel 을 버릴
+		// 이유가 없다. 버리면 「descriptor 는 있는데 붙지 못했다」가 「이 배포는 전략
+		// 화면을 안 쓴다」로 남고, 그 상태는 자기 힘으로 벗어나지 못한다 — 시도가
+		// 성공하기 전까지 화면은 영구 NOT_CONFIGURED 다(a108 D4-2 가 지운 접힘의 재발).
+		// 부재 → unavailable 은 **승격**이고, 그 반대 방향(live → sentinel 격하)은 위
+		// 문단이 금지하는 그것이므로 여기서 하지 않는다.
+		if a.reader == nil && reader != nil {
+			a.reader = reader
+			a.seat++
+		}
 		a.mu.Unlock()
 		return
 	}
+	// 자리에서 밀려나는 값을 잡아 둔다 — 잠금 밖에서 닫는다(a109 §2b.3 G5).
+	evicted := a.reader
 	a.reader, a.failed = reader, false
 	a.seat++
 	announce := !a.attached
 	a.attached = true
 	a.mu.Unlock()
+	closeEvictedStrategyReader(evicted)
 	if announce {
-		a.report("note: strategy runtime projection에 다시 붙었다 — 전략 화면이 회복된다.\n")
+		a.reportAttached()
 	}
+}
+
+// closeEvictedStrategyReader 는 자리에서 밀려난 reader 를 놓아 준다 — a109 §2b.3 G5.
+//
+// 재부착은 자리의 값을 갈아끼운다. 밀려난 값이 HTTP client 면 그것이 쥔 **유휴 연결**은
+// 아무도 닫지 않는 한 데몬 수명 내내 남는다 — 엔진이 오르내릴 때마다 한 벌씩.
+//
+// 닫는 것은 유휴 연결뿐이고 **진행 중인 읽기는 건드리지 않는다**
+// (`strategyprojectionrpc.Client.Close` = `Transport.CloseIdleConnections`). 그래서
+// 잠금 밖에서, 그리고 옛 자리를 아직 읽고 있는 요청과 나란히 불러도 안전하다.
+// io.Closer 가 아닌 값(부재의 nil·sentinel·테스트 reader)은 닫을 것이 없다.
+func closeEvictedStrategyReader(reader httpapi.StrategyRuntimeReader) {
+	if closer, ok := reader.(io.Closer); ok {
+		_ = closer.Close()
+	}
+}
+
+// reportAttached 는 부착 전이 한 줄이다.
+//
+// 이 문장을 함수로 둔 이유: 부착 전이를 말하는 자리가 둘이다 — 시도 goroutine 이
+// 새 client 를 앉힐 때, 그리고 요청 goroutine 의 읽기가 **다시 성공**할 때
+// (a109 §2b.3 G3). 같은 전이를 두 문장으로 적으면 로그를 읽는 사람이 그 둘을 다른
+// 사건으로 읽는다.
+func (a *strategyRuntimeAttachment) reportAttached() {
+	a.report("note: strategy runtime projection에 다시 붙었다 — 전략 화면이 회복된다.\n")
 }
 
 // report 는 전이 한 줄을 남긴다. 잠금은 이 한 곳뿐이다.
@@ -213,7 +264,7 @@ func requestCancelled(ctx context.Context, err error) bool {
 	return ctx != nil && ctx.Err() != nil
 }
 
-// observe 는 방금 읽기의 결과를 기록하고 **탈착 전이만** 보고한다.
+// observe 는 방금 읽기의 결과를 기록하고 **상태 전이**를 보고한다.
 // 반환값은 「지금 재부착 대상인가」다.
 //
 // seat 는 그 읽기가 **어느 자리의 reader** 로 이뤄졌는지다. `Read` 는 잠금 밖에서
@@ -232,8 +283,19 @@ func (a *strategyRuntimeAttachment) observe(ctx context.Context, seat uint64, er
 		return false
 	}
 	if err == nil {
+		// 읽기가 다시 성공했다 = 이 자리는 붙어 있다 (a109 §2b.3 G3).
+		//
+		// 이 복원이 없으면 깜빡임(실패 1회 → 다음 읽기 성공) 뒤에 `attached` 가 false 로
+		// 남는다. 같은 client 로 회복한 경우 시도 goroutine 은 개입하지 않으므로 그 상태를
+		// 되돌릴 사람이 없고, 그러면 **그 뒤의 진짜 사망**이 `announce := a.attached` 에서
+		// 걸러져 아무 말도 하지 않는다 — 운영자에게 endpoint 가 조용히 사라진다.
 		a.failed = false
+		announce := !a.attached
+		a.attached = true
 		a.mu.Unlock()
+		if announce {
+			a.reportAttached()
+		}
 		return false
 	}
 	a.failed = true
