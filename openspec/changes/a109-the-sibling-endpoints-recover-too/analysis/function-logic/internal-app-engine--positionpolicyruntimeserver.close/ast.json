@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/position_policy_runtime_transport_unix.go",
-  "source_sha256": "0e2467fe40c2cd6f60604a2e82632d2f3fad4622a6065e8d4a52f26150cafec1",
+  "source_sha256": "0c9d9037d77014fc2df85f389ab6a6a67a9f147ea08ac4d72bdeaf49fbb1880c",
   "package": "engine",
   "function": "Close",
   "receiver": "PositionPolicyRuntimeServer",
   "signature": "PositionPolicyRuntimeServer.Close(params=0, results=1)",
   "start": {
-    "line": 162,
+    "line": 165,
     "column": 1
   },
   "end": {
-    "line": 191,
+    "line": 194,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 163,
+        "line": 166,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 176,
+        "line": 179,
         "column": 3
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 177,
+        "line": 180,
         "column": 4
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "range",
       "at": {
-        "line": 184,
+        "line": 187,
         "column": 3
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 185,
+        "line": 188,
         "column": 4
       }
     }
@@ -59,14 +59,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 164,
+        "line": 167,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 190,
+        "line": 193,
         "column": 2
       }
     }
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 167,
+        "line": 170,
         "column": 2
       },
       "text": "s.once.Do"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 168,
+        "line": 171,
         "column": 18
       },
       "text": "context.WithTimeout"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 168,
+        "line": 171,
         "column": 38
       },
       "text": "context.Background"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 169,
+        "line": 172,
         "column": 9
       },
       "text": "cancel"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 170,
+        "line": 173,
         "column": 12
       },
       "text": "s.server.Shutdown"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 177,
+        "line": 180,
         "column": 14
       },
       "text": "s.listener.Close"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 177,
+        "line": 180,
         "column": 49
       },
       "text": "errors.Is"
@@ -131,7 +131,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 185,
+        "line": 188,
         "column": 14
       },
       "text": "os.Remove"
@@ -139,7 +139,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 185,
+        "line": 188,
         "column": 46
       },
       "text": "errors.Is"
@@ -149,42 +149,42 @@
     {
       "kind": ":=",
       "at": {
-        "line": 168,
+        "line": 171,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 170,
+        "line": 173,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 177,
+        "line": 180,
         "column": 7
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 179,
+        "line": 182,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 185,
+        "line": 188,
         "column": 7
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 186,
+        "line": 189,
         "column": 5
       }
     }
@@ -194,7 +194,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 169,
+        "line": 172,
         "column": 3
       },
       "text": "cancel"

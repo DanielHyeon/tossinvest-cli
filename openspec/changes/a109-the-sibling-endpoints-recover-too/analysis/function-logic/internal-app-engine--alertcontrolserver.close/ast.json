@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/alert_control_transport_unix.go",
-  "source_sha256": "7c69728aea8830ab681bcce9ef85f21600096fe310560f0645185d78193f19d8",
+  "source_sha256": "22b14e701c92a69c6d728a952b98b57117f80206ffd09fb476c9e3f7bc14abf0",
   "package": "engine",
   "function": "Close",
   "receiver": "AlertControlServer",
   "signature": "AlertControlServer.Close(params=0, results=1)",
   "start": {
-    "line": 185,
+    "line": 187,
     "column": 1
   },
   "end": {
-    "line": 214,
+    "line": 216,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 186,
+        "line": 188,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 199,
+        "line": 201,
         "column": 3
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 200,
+        "line": 202,
         "column": 4
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "range",
       "at": {
-        "line": 207,
+        "line": 209,
         "column": 3
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 208,
+        "line": 210,
         "column": 4
       }
     }
@@ -59,14 +59,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 187,
+        "line": 189,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 213,
+        "line": 215,
         "column": 2
       }
     }
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 190,
+        "line": 192,
         "column": 2
       },
       "text": "s.once.Do"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 191,
+        "line": 193,
         "column": 18
       },
       "text": "context.WithTimeout"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 191,
+        "line": 193,
         "column": 38
       },
       "text": "context.Background"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 192,
+        "line": 194,
         "column": 9
       },
       "text": "cancel"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 193,
+        "line": 195,
         "column": 12
       },
       "text": "s.server.Shutdown"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 200,
+        "line": 202,
         "column": 14
       },
       "text": "s.listener.Close"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 200,
+        "line": 202,
         "column": 49
       },
       "text": "errors.Is"
@@ -131,7 +131,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 208,
+        "line": 210,
         "column": 14
       },
       "text": "os.Remove"
@@ -139,7 +139,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 208,
+        "line": 210,
         "column": 46
       },
       "text": "errors.Is"
@@ -149,42 +149,42 @@
     {
       "kind": ":=",
       "at": {
-        "line": 191,
+        "line": 193,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 193,
+        "line": 195,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 200,
+        "line": 202,
         "column": 7
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 202,
+        "line": 204,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 208,
+        "line": 210,
         "column": 7
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 209,
+        "line": 211,
         "column": 5
       }
     }
@@ -194,7 +194,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 192,
+        "line": 194,
         "column": 3
       },
       "text": "cancel"
