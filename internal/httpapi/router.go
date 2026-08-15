@@ -151,7 +151,10 @@ func (r *router) read(request *http.Request, resource string) (any, error) {
 		value, err := r.reader.Optimization(ctx)
 		return OptimizationFrom(value), err
 	case "strategy-runtime":
-		if r.strategyRuntime == nil {
+		// nil 검사가 아니라 상태 신호로 묻는다 — a109 재부착 wrapper 는 정의상
+		// non-nil 이므로 nil 검사는 영원히 거짓이 되고, 그러면 전략 화면을 안 쓰는
+		// 배포의 REST 응답이 dormant 에서 오류로 바뀐다(StrategyRuntimeAbsent 주석).
+		if StrategyRuntimeAbsent(r.strategyRuntime) {
 			return strategyprojection.DormantSnapshot(r.now().UTC()), nil
 		}
 		value, err := r.strategyRuntime.Read(ctx)

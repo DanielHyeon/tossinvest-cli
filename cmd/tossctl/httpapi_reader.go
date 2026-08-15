@@ -562,8 +562,12 @@ func (r *httpAPIReader) Snapshot(ctx context.Context) ([]byte, error) {
 	// 항상-실패 sentinel 로 온다(`strategyRuntimeReaderFor` 의
 	// `unavailableStrategyRuntime`) — 여기 도착하는 nil 은 **정말로 reader 가 없는
 	// 배포**뿐이다: 엔진 디렉터리를 정하지 못했거나 descriptor 가 아예 없는 경우.
+	//
+	// a109 D4 — 그 nil 검사가 이제 **상태 신호**다. 재부착 wrapper 는 정의상 non-nil
+	// 이므로 nil 로는 부재를 물을 수 없다. 판정은 `httpapi.StrategyRuntimeAbsent` 한
+	// 벌뿐이다 — 소비자마다 다시 쓰면 같은 디스크 상태가 화면마다 다른 값이 된다.
 	strategyRuntime := strategyprojection.DormantSnapshot(r.clockNow())
-	if r.strategyRuntime != nil {
+	if !httpapi.StrategyRuntimeAbsent(r.strategyRuntime) {
 		value, readErr := r.strategyRuntime.Read(ctx)
 		if readErr != nil {
 			strategyRuntime = strategyprojection.UnavailableSnapshot(r.clockNow())

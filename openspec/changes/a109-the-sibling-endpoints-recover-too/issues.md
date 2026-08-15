@@ -50,6 +50,44 @@
   returns[9]=279, returns[11]=315). freeze P1-9 가 정정한 :294 표기는 남아 있지 않다.
   **수정 불요** — 확인만 기록한다.
 
+## T2-5 (safe local) — 재부착 wrapper 의 로그는 두 goroutine 이 함께 쓴다
+
+- **발견**: 첫 `-race` 전체 실행이 `strategyRuntimeAttachment` 의 로그 writer 에서 데이터
+  경합을 잡았다 — 부착 전이는 **시도 goroutine**이, 탈착 전이는 **요청 goroutine**이
+  말하는데 둘 다 잠금 없이 `fmt.Fprintf(a.log, …)` 였다.
+- **왜 결함인가**: 설계는 「보고는 상태 전이 시 1회」만 정했고 그 보고가 **두 goroutine
+  에서 나온다**는 것은 D4 의 백그라운드 시도 결정이 만든 결과다. 설계에 없던 상태다.
+- **분류**: safe local — 구현이 만든 경합이고 수정도 구현 안에서 끝난다.
+- **처리**: 로그 전용 잠금(`logMu`)과 `report` 한 곳. 상태 잠금(`mu`)을 쓰지 않은 이유는
+  느린 writer 하나가 모든 요청의 상태 조회를 멈추게 하면 안 되기 때문이다.
+
+## T2-6 (safe local) — a098 테스트가 alerts 문구의 부분 문자열을 핀하고 있었다
+
+- **발견**: `cmd/tossctl/a098_the_operator_command_names_a_person_test.go:341`
+  (`TestTheCommandsRefuseWhenNoEngineIsRunning`)가
+  `strings.Contains(err.Error(), "엔진이 없다")` 를 요구한다. D3a-2 의 첫 문구 시안
+  (「…엔진이 없거나, …강등 부팅했다」)은 그 부분 문자열을 깨뜨려 이 테스트가 **실제로
+  실패**했다.
+- **왜 중요한가**: a098 의 의도는 「운영자가 자기 경로를 의심하게 만들지 마라」이고,
+  a109 의 요구는 「엔진 부재를 **단정**하지 마라」다. 둘은 충돌하지 않는다 — 충돌한 것은
+  단정문을 통째로 지운 첫 시안이었다.
+- **분류**: safe local (문구 재작성으로 해소, 기존 테스트는 손대지 않았다).
+- **처리**: 문구를 **조건문 두 갈래**로 바꿨다 — 「엔진이 없다면 `engine run` 을 살려라 —
+  엔진이 돌고 있다면 강등 부팅한 것이고 원인은 엔진 로그에 있다」. 단정이 사라지면서
+  부재일 때의 행동 안내(a098 의 요구)는 그대로 남는다.
+- **남는 결합**: a098 은 여전히 부분 문자열로 이 문구에 묶여 있다. 다음에 이 문장을
+  고치는 사람은 그 테스트를 같이 봐야 한다 — **여기 적어 두는 것이 그 결합을 보이게
+  하는 유일한 방법**이다.
+
+## T2-7 (safe local) — 표면 밖 신규 테스트 파일 둘
+
+- `internal/httpapi/a109_absence_is_a_state_not_a_nil_test.go` (T2-1 의 REST 자리를 잰다)
+- `internal/console/a109_a_degraded_surface_is_not_an_old_build_test.go` (§2.5 문구 핀)
+- 둘 다 **신규 파일**이고 기존 파일을 고치지 않는다. 그 패키지의 코드를 바꾼 이상 핀도
+  그 패키지에 있어야 한다 — cmd/tossctl 에서 문자열로 흉내 내면 그것은 동작이 아니라
+  소스를 재는 테스트가 된다. T1 표면(`internal/positionpolicyrpc`,
+  `internal/app/engine`)과는 겹치지 않는다.
+
 ## T2-4 (기록) — D5b 실측은 편집 전에 끝냈고 결과는 "사전 wipe 불요"다
 
 - tasks 3.3 은 §3 소속이라 T2 가 체크하지 않는다. 측정 결과는 완료 보고에 담고

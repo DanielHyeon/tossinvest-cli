@@ -23,7 +23,6 @@ package main
 
 import (
 	"context"
-	"strings"
 	"testing"
 	"time"
 
@@ -97,11 +96,32 @@ func a109WaitForScreen(t *testing.T, reader *httpAPIReader, want strategyproject
 // a109ReattachWindow 는 이 테스트가 회복을 기다리는 상한이다.
 const a109ReattachWindow = 5 * time.Second
 
+// a109FastRedial 은 rate limit 을 이 테스트 동안만 좁힌다.
+//
+// 30초를 기다리는 테스트는 아무도 돌리지 않고, 안 돌리는 테스트는 없는 테스트다.
+// **운영 기본값 자체**는 아래 TestTheProductionRedialIntervalIsThirtySeconds 가 핀한다 —
+// 주입 가능성을 「기본값을 안 재도 되는 이유」로 쓰면 그것이 구멍이다.
+func a109FastRedial(t *testing.T) {
+	t.Helper()
+	previous := strategyRuntimeRedialInterval
+	strategyRuntimeRedialInterval = 20 * time.Millisecond
+	t.Cleanup(func() { strategyRuntimeRedialInterval = previous })
+}
+
+// TestTheProductionRedialIntervalIsThirtySeconds 는 배포가 실제로 쓰는 값이다.
+func TestTheProductionRedialIntervalIsThirtySeconds(t *testing.T) {
+	if strategyRuntimeRedialInterval != 30*time.Second {
+		t.Errorf("운영 재부착 간격 = %s, want 30s — Dial 본문의 200ms probe 때문에 "+
+			"간격 없는 재시도는 read 마다 그 비용을 낸다", strategyRuntimeRedialInterval)
+	}
+}
+
 // TestTheDaemonAttachesWhenTheEngineComesUpLater 는 시나리오 ①(냉부팅 순서)이다.
 func TestTheDaemonAttachesWhenTheEngineComesUpLater(t *testing.T) {
 	dir := a108HTTPAPIDir(t)
-	var errOut strings.Builder
-	runtime := strategyRuntimeReaderFor(context.Background(), &rootOptions{configDir: dir}, &errOut)
+	a109FastRedial(t)
+	errOut := &a109SyncWriter{}
+	runtime := strategyRuntimeReaderFor(context.Background(), &rootOptions{configDir: dir}, errOut)
 	reader := a109ScreenReader(t, runtime)
 
 	// 엔진은 아직 없다 — 화면은 「이 배포는 전략 화면을 안 쓴다」로 뜬다.
@@ -128,10 +148,11 @@ func TestTheDaemonAttachesWhenTheEngineComesUpLater(t *testing.T) {
 // nil·sentinel 만 감싸는 wrapper 로는 이 경로가 통째로 빠진다.
 func TestTheDaemonReattachesAfterTheEngineRestarts(t *testing.T) {
 	dir := a108HTTPAPIDir(t)
+	a109FastRedial(t)
 	first := a109StartEngineProjection(t, dir)
 
-	var errOut strings.Builder
-	runtime := strategyRuntimeReaderFor(context.Background(), &rootOptions{configDir: dir}, &errOut)
+	errOut := &a109SyncWriter{}
+	runtime := strategyRuntimeReaderFor(context.Background(), &rootOptions{configDir: dir}, errOut)
 	reader := a109ScreenReader(t, runtime)
 	if got := a109Screen(t, reader); got != strategyprojection.RefusalEvidenceStale {
 		t.Fatalf("live 부착의 화면 = %q, want %q — 대조군이 이미 틀렸다",
