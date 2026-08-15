@@ -1,0 +1,157 @@
+{
+  "file": "internal/app/engine/position_policy_runtime_transport_unix.go",
+  "source_sha256": "83442d89f6f5f230fd52bd1ce6c12c88aaf5eeb0f9fbfd7240d6b38110fcda52",
+  "package": "engine",
+  "function": "Close",
+  "receiver": "PositionPolicyRuntimeServer",
+  "signature": "PositionPolicyRuntimeServer.Close(params=0, results=1)",
+  "start": {
+    "line": 139,
+    "column": 1
+  },
+  "end": {
+    "line": 155,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 140,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 148,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 149,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 141,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 2
+      },
+      "text": "s.once.Do"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 18
+      },
+      "text": "context.WithTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 145,
+        "column": 38
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 9
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 12
+      },
+      "text": "s.server.Shutdown"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 14
+      },
+      "text": "os.Remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 46
+      },
+      "text": "errors.Is"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 145,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 147,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 149,
+        "column": 7
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 150,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 146,
+        "column": 3
+      },
+      "text": "cancel"
+    }
+  ]
+}
