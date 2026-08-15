@@ -17,8 +17,9 @@
 
 ## 1. T1 — transport 발행·회수 (internal/*)
 
-- [ ] 1a FLM 맵 완성(자기 표면 9개: prepare/stat/validate×2계열, Start×3, Close×3)
-  + Pre-Edit 선언(High-risk).
+- [x] 1a FLM 맵 완성(자기 표면 **17개** — 등록문의 "9개"는 슬러그 수를 잘못 센 것이다:
+  positionpolicyrpc 8 + app/engine 9). `check_analysis.py` 기준 T1 슬러그 오류 0
+  (남은 3건은 T2 표면). Pre-Edit 선언은 `pre-edit-gate-t1.md`(T1-1~T1-4 + 선언된 무변경).
 - [ ] 1.1 RED: pre-chmod 0700 socket 잔재에서 policy runtime·alert control 기동이 영구
   거부됨을 고정(A1 F3 재현 — umask 077 실측 모양).
 - [ ] 1.2 RED: 수락 중인 socket 위 두 번째 Start가 기존 socket을 unlink하고 올라서는
