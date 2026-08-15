@@ -126,15 +126,17 @@ func hasAnyPrefix(name string, prefixes []string) bool {
 // 소유 uid까지 보는 이유(freeze P1-7③): a108은 자기 접두 하나만 다뤘지만 여기는
 // `.endpoint-` 같은 일반적 접두까지 넓힌다. 회수의 범위를 넓히면서 검사 부재의 폭까지
 // 함께 넓히지 않는다.
-func verifyPrivateStagingEntry(path string) error {
+// 통과하면 그 엔트리의 Lstat 정보를 함께 돌려준다. 호출부가 **socket 모양인지** 알아야
+// 하기 때문이다 — 수락 중인 socket은 이름이 무엇이든 지우지 않는다(a109 §1-fix F5).
+func verifyPrivateStagingEntry(path string) (os.FileInfo, error) {
 	info, err := os.Lstat(path)
 	if err != nil || !(info.Mode().IsRegular() || info.Mode()&os.ModeSocket != 0) {
-		return errors.New("private endpoint: stale staging entry has an unexpected shape")
+		return nil, errors.New("private endpoint: stale staging entry has an unexpected shape")
 	}
 	if err := validateOwnerAndLinks(info, false); err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return info, nil
 }
 
 // SweepPrivateStagingLeftovers는 socket을 발행하지 **않는** endpoint의 위생이다.
@@ -146,6 +148,12 @@ func verifyPrivateStagingEntry(path string) error {
 //
 // 디렉터리를 읽지 못하거나 잔재 하나를 지우지 못하면 그냥 남긴다 — 다음 부팅이 다시
 // 시도한다.
+//
+// ⛔ **범위의 정직한 서술(a109 §1-fix F5)**: 회수 쪽(ReclaimStalePrivateEndpoint)은
+// staging 이름의 socket에도 connect probe를 걸어 수락 중이면 지우지 않는다. 이 위생에는
+// 그 probe가 없다 — 이 함수를 쓰는 유일한 endpoint(policy command)는 loopback TCP라
+// socket을 **발행하지 않고**, 그래서 자기 접두의 socket을 만들 수 있는 경로가 없기
+// 때문이다. socket을 발행하는 endpoint에서 이 함수를 쓰려면 probe를 먼저 들여야 한다.
 func SweepPrivateStagingLeftovers(controlDir string, prefixes []string) {
 	entries, err := os.ReadDir(strings.TrimSpace(controlDir))
 	if err != nil {
@@ -157,7 +165,7 @@ func SweepPrivateStagingLeftovers(controlDir string, prefixes []string) {
 			continue
 		}
 		path := filepath.Join(strings.TrimSpace(controlDir), name)
-		if err := verifyPrivateStagingEntry(path); err != nil {
+		if _, err := verifyPrivateStagingEntry(path); err != nil {
 			continue
 		}
 		_ = os.Remove(path)

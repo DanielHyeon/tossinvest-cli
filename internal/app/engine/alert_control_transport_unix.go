@@ -105,7 +105,9 @@ func StartAlertControlServer(engineDir string, ops *AlertOperations) (*AlertCont
 		}
 		// 디렉터리가 이미 있다는 것은 지난 기동의 잔재가 있다는 뜻이다. 회수는
 		// 전체성이다 — 자기 수명주기가 만들 수 있는 부분 상태를 전부 치우고 디렉터리째
-		// 비운 뒤 새로 만든다. 산 주인의 socket은 절대 지우지 않는다(design D2).
+		// 비운 뒤 새로 만든다. **수락 중인 socket은 최종 이름이든 staging 이름이든
+		// 지우지 않는다**(design D2 + a109 §1-fix F5). 생사는 권한 비트로 추정하지 않고
+		// 연결해서 묻는다.
 		if err := positionpolicyrpc.ReclaimStalePrivateEndpoint(controlDir,
 			alertControlEndpointNames()); err != nil {
 			return nil, fmt.Errorf("engine: reclaiming the alert control directory: %w", err)

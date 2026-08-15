@@ -114,6 +114,7 @@ func ReclaimStalePrivateEndpoint(controlDir string, names PrivateEndpointNames) 
 	// 있으면 이 디렉터리는 우리 잔재가 아니므로 **아무것도 건드리지 않는다.**
 	seen := make(map[string]bool, len(entries))
 	staged := make([]string, 0, len(entries))
+	stagedSockets := make([]string, 0, len(entries))
 	for _, entry := range entries {
 		name := entry.Name()
 		switch {
@@ -121,10 +122,14 @@ func ReclaimStalePrivateEndpoint(controlDir string, names PrivateEndpointNames) 
 			seen[name] = true
 		case names.isStaging(name):
 			path := filepath.Join(clean, name)
-			if err := verifyPrivateStagingEntry(path); err != nil {
+			info, err := verifyPrivateStagingEntry(path)
+			if err != nil {
 				return err
 			}
 			staged = append(staged, path)
+			if info.Mode()&os.ModeSocket != 0 {
+				stagedSockets = append(stagedSockets, path)
+			}
 		default:
 			return errors.New("private endpoint: stale control directory has unexpected entries")
 		}
@@ -141,6 +146,16 @@ func ReclaimStalePrivateEndpoint(controlDir string, names PrivateEndpointNames) 
 			if privateSocketAccepts(socketPath) {
 				return errors.New("private endpoint: the endpoint owner is still alive")
 			}
+		}
+	}
+	// staging 이름의 socket도 똑같이 묻는다(a109 §1-fix F5). 이름표가 "우리 잔재"라는
+	// 것은 그것이 **죽었다**는 뜻이 아니다 — 발행의 첫 걸음이 바로 staging 이름에
+	// bind하는 것이고(ListenStagedPrivateSocket), 그 창에 있는 후계자의 socket이 정확히
+	// 이 모양이다. 규칙은 이름이 아니라 사실이다: **수락 중인 socket은 이름과 무관하게
+	// 절대 unlink하지 않는다.**
+	for _, path := range stagedSockets {
+		if privateSocketAccepts(path) {
+			return errors.New("private endpoint: a staging socket is still accepting")
 		}
 	}
 	// 여기 왔다면 주인은 죽었다: socket이 없으면 listener도 없고(발행은 listen이 성공한
@@ -202,32 +217,47 @@ func verifyStalePrivateSocket(socketPath string) error {
 // 발행은 listen이 성공한 뒤에야 descriptor를 쓰므로, 수락하지 않는 socket 파일은 죽은
 // 주인의 것이다. 반대로 수락한다면 그게 누구든 이 디렉터리는 남의 것이다.
 //
-// 죽었다고 읽는 것은 세 가지뿐이다: 연결 거부(listener 없음), 파일 부재, 그리고
-// **owner 쓰기 비트가 없는 socket**. 그 밖의 오류(타임아웃 등)는 죽었다는 증거가 아니므로
-// 살아 있다고 본다 — 잘못 살아 있다고 보면 이번 기동만 실패하지만, 잘못 죽었다고 보면
-// 남의 socket을 지운다.
+// 죽었다고 읽는 것은 **두 가지뿐**이다: 연결 거부(listener 없음)와 파일 부재. 그 밖의
+// 오류(타임아웃 등)는 죽었다는 증거가 아니므로 살아 있다고 본다 — 잘못 살아 있다고 보면
+// 이번 기동만 실패하지만, 잘못 죽었다고 보면 남의 socket을 지운다.
 //
-// # 왜 owner 쓰기 비트가 판정인가
+// # 왜 probe 전에 chmod 하는가 (a109 §1-fix F1)
 //
 // unix socket에 connect 하려면 그 파일에 쓰기 권한이 있어야 하고, 없으면 커널은 EACCES를
 // 준다. 그 오류를 "답이 안 왔다 = 살아 있다"로 읽으면 아무도 없는 socket 하나가 **영구
 // 거부**를 만든다 — 이 change가 지우려는 모양 그대로다.
 //
-// 그렇게 읽어도 되는 근거는 발행 수명주기다. 최종 이름을 가진 socket은 반드시 chmod
-// 0600을 지난 뒤 rename 된 것이고(ListenStagedPrivateSocket), 구버전이 최종 이름에 바로
-// bind하고 남긴 pre-chmod 잔재도 `net.Listen`이 umask로 만든 권한이라 `UMask=0277` 같은
-// 배포에서만 owner 쓰기가 깎인다. 어느 쪽이든 **owner가 쓸 수 없는 socket은 우리가
-// 발행한 산 endpoint일 수 없다.**
+// 예전 판은 그래서 "owner 쓰기 비트가 없으면 죽었다"를 세 번째 사망 판정으로 썼다.
+// 그것은 묻는 대신 **추정하는** 것이었고, 추정은 틀릴 수 있다: 쓰기 비트가 깎인 socket이
+// **수락 중일 수도 있다.** 그때 그 추정은 산 주인의 socket을 지우고 두 번째 서버를
+// 그 자리에 세운다(A1 적대 리뷰 P1-A 재현, 두 형제 모두).
+//
+// 지금은 추정하지 않고 **묻는다**. probe 전에 0600으로 chmod하면 EACCES 자체가 사라지고,
+// 산 socket은 수락(→거부·보존)으로 죽은 socket은 ECONNREFUSED(→회수)로 **결정적으로**
+// 갈린다.
+//
+// # 왜 그 chmod가 안전한가
+//
+// ① 이 지점은 이미 검증을 통과했다 — 우리 uid 소유, group/other 비트 없음, symlink 아님,
+// 0700 디렉터리 안(호출부의 ValidatePrivateControlDirectory · verifyStalePrivateSocket ·
+// verifyPrivateStagingEntry). 즉 남의 파일에 chmod하는 경로가 없다.
+// ② 발행 계약상 최종 socket은 **원래 0600이다**(ListenStagedPrivateSocket이 chmod 0600
+// 뒤에만 rename한다). 그러니 이 chmod가 하는 일은 우리 자신의 발행 계약을 되돌리는
+// 것이고, 결과 권한은 어떤 경우에도 **owner 전용**이라 접근이 넓어지지 않는다.
+//
+// chmod가 실패하면 보수적으로 읽는다: 파일이 없어졌으면 사망(그 자체가 사망 판정 중
+// 하나다), 그 밖의 실패는 생존으로 보아 기동을 거부시킨다 — 물어보지 못한 것을 죽었다고
+// 읽지 않는다.
 func privateSocketAccepts(socketPath string) bool {
+	if err := os.Chmod(socketPath, 0o600); err != nil {
+		return !errors.Is(err, os.ErrNotExist)
+	}
 	conn, err := net.DialTimeout("unix", socketPath, privateProbeTimeout)
 	if err == nil {
 		_ = conn.Close()
 		return true
 	}
 	if errors.Is(err, unix.ECONNREFUSED) || errors.Is(err, os.ErrNotExist) {
-		return false
-	}
-	if info, statErr := os.Lstat(socketPath); statErr == nil && info.Mode().Perm()&0o200 == 0 {
 		return false
 	}
 	return true
