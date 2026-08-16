@@ -295,7 +295,9 @@ func TestReleaseErrorsAreMappedToOperatorLanguage(t *testing.T) {
 		{"version 충돌", exitquarantine.ErrVersionMismatch, http.StatusPreconditionFailed, "격리 version 충돌"},
 		{"너무 이름", exitquarantine.ErrCapabilityTooEarly, http.StatusTooEarly, "3초 확인 대기 중"},
 		{"만료", exitquarantine.ErrCapabilityExpired, http.StatusGone, "격리 해제 capability 만료"},
-		{"미배선", exitquarantine.ErrUnwired, http.StatusNotImplemented, "판정 격리 command seam 미배선"},
+		// 제목을 **값으로** 잡는다 — a109 §2-fix F5. 문자열을 다시 적으면 다음 정정이
+		// 이 줄을 놓치고, 놓친 줄이 옛 제목을 되살리는 것을 이 테스트가 통과시킨다.
+		{"미배선", exitquarantine.ErrUnwired, http.StatusNotImplemented, quarantineUnwiredTitle},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			commander := &quarantineCommander{

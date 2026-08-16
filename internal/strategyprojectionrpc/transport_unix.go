@@ -417,9 +417,17 @@ func Dial(_ context.Context, descriptorPath string) (*Client, error) {
 	if !projectionSocketAccepts(socketPath) {
 		return nil, errors.New("strategy projection runtime: socket has no listener")
 	}
-	transport := &http.Transport{Proxy: nil, DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
-		return (&net.Dialer{}).DialContext(ctx, "unix", socketPath)
-	}}
+	// `DisableKeepAlives`는 이 저장소의 사설 socket client 관례다 — a109 §2b.3 G5.
+	// 같은 모양의 형제 둘이 이미 그렇게 한다(`internal/positionpolicyrpc/runtime_unix.go:42`,
+	// `cmd/tossctl/engine_alerts_client_unix.go:85`). 이 client만 예외였고, a109의 재부착이
+	// 자리를 갈아끼우기 시작하면서 그 예외가 「놓아 줄 수 없는 유휴 연결」이 됐다.
+	//
+	// 비용은 요청마다 unix socket 연결 하나이고(같은 호스트라 즉시), 얻는 것은 밀려난
+	// client가 아무것도 붙잡지 않는다는 보장이다.
+	transport := &http.Transport{Proxy: nil, DisableKeepAlives: true,
+		DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+			return (&net.Dialer{}).DialContext(ctx, "unix", socketPath)
+		}}
 	return &Client{baseURL: "http://unix", token: descriptor.Token, http: &http.Client{Transport: transport, Timeout: 5 * time.Second}}, nil
 }
 

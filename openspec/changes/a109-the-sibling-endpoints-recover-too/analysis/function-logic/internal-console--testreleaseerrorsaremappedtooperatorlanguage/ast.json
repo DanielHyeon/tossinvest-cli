@@ -1,0 +1,225 @@
+{
+  "file": "internal/console/a079_quarantine_release_test.go",
+  "source_sha256": "c1da672db6d55d0ce9e8df77a4879db506803cea5fbbc4f221c5213c3dfc909b",
+  "package": "console",
+  "function": "TestReleaseErrorsAreMappedToOperatorLanguage",
+  "signature": "TestReleaseErrorsAreMappedToOperatorLanguage(params=1, results=0)",
+  "start": {
+    "line": 287,
+    "column": 1
+  },
+  "end": {
+    "line": 331,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 288,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 323,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 326,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 304,
+        "column": 69
+      },
+      "text": "managedPolicyState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 305,
+        "column": 55
+      },
+      "text": "quarantinedRow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 308,
+        "column": 9
+      },
+      "text": "quarantineHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 4
+      },
+      "text": "h.authenticate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 312,
+        "column": 4
+      },
+      "text": "commander.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 314,
+        "column": 4
+      },
+      "text": "commander.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 315,
+        "column": 13
+      },
+      "text": "quarantineToken"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 315,
+        "column": 32
+      },
+      "text": "h.page"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 316,
+        "column": 4
+      },
+      "text": "commander.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 318,
+        "column": 4
+      },
+      "text": "commander.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 12
+      },
+      "text": "h.post"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 15
+      },
+      "text": "body"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 31
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 303,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 308,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 313,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 315,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 317,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 320,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 326,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

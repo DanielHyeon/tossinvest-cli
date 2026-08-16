@@ -89,6 +89,32 @@ func (c *Client) Read(ctx context.Context) (strategyprojection.Snapshot, error) 
 	return strategyprojection.Clone(result), nil
 }
 
+// Close는 이 client가 쥔 **유휴 연결**을 놓아 준다 — a109 §2b.3 G5.
+//
+// # 왜 필요해졌는가
+//
+// a109의 조회 데몬은 엔진이 돌아오면 전략 reader 자리를 갈아끼운다(재부착). 그때
+// 밀려나는 값이 이 client인데, 놓아 줄 방법이 없으면 그것이 쥔 연결과 그 연결을 지키는
+// goroutine이 데몬 수명 내내 남는다 — 엔진이 오르내릴 때마다 한 벌씩.
+//
+// # 무엇을 닫고 무엇을 닫지 않는가
+//
+// `http.Client.CloseIdleConnections`는 이름 그대로 **유휴** 연결만 닫는다. 진행 중인
+// 요청은 끊지 않고, 닫은 뒤에도 이 client로 다시 읽을 수 있다. 그래서 재부착 쪽이
+// 잠금 밖에서, 옛 자리를 아직 읽고 있는 요청과 나란히 불러도 안전하다
+// (`cmd/tossctl`의 `closeEvictedStrategyReader`).
+//
+// nil 수신자와 nil transport에 안전한 이유는 자리에 **부재**도 앉기 때문이다.
+// 오류를 돌려주는 시그니처인 것은 io.Closer 계약을 만족시키기 위해서다 — 자리는
+// 값의 구체 타입을 모른 채 io.Closer로만 본다.
+func (c *Client) Close() error {
+	if c == nil || c.http == nil {
+		return nil
+	}
+	c.http.CloseIdleConnections()
+	return nil
+}
+
 // controlDirectoryModeIsSafe는 control 디렉터리의 **모양** 세 절을 한자리에 모은다.
 // 세 절은 각각 다른 것을 막는다.
 //
