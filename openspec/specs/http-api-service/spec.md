@@ -179,3 +179,21 @@ API가 반환하는 최신 observed-at은 durable snapshot refresh 근거여야 
 #### Scenario: 여러 flat refresh 뒤 API 조회
 - **WHEN** 한 position이 동일 line으로 여러 번 refresh된 뒤 positions와 exit history를 조회한다
 - **THEN** positions는 최신 observed-at을 반환하고 history는 첫 평가 이후 의미 없는 중복 event를 포함하지 않는다
+
+### Requirement: 전략 화면은 엔진이 돌아오면 사람 개입 없이 다시 붙는다
+
+httpapi는 전략 runtime reader가 부재이거나 직전 읽기가 실패한 상태일 때(부팅 시 live 부착 후의 엔진 재시작 포함) rate limit 아래 백그라운드 single-flight로 재부착을 시도해 엔진 복귀 후 데몬 재시작 없이 전략 화면을 회복해야 하며(SHALL), 요청 경로의 goroutine에서 dial·connect probe를 실행해서는 안 되고(SHALL NOT), 재부착 전의 응답 값은 기존 부재·unavailable 구분을 그대로 유지해야 한다(SHALL).
+
+#### Scenario: 엔진이 httpapi보다 늦게 뜬다
+
+- **WHEN** httpapi가 엔진보다 먼저 떠서 전략 reader 없이 가동 중이고 이후 엔진이
+  endpoint를 발행하면
+- **THEN** httpapi는 재시작 없이 rate limit 안에서 전략 화면을 회복한다
+
+#### Scenario: 가동 중 엔진 재시작 후 복귀
+
+- **WHEN** httpapi가 live client를 부착한 뒤 엔진이 재시작해(새 socket·새 토큰) 전략
+  읽기가 실패하기 시작하고 이후 엔진이 돌아오면
+- **THEN** httpapi는 재시작 없이 전략 화면을 회복하고, 회복 전 요청은 dial·probe를
+  거치지 않는 코드 경로로 현재 강등 값을 즉시 반환한다
+
