@@ -1,0 +1,31 @@
+{
+  "id": "STORY-TOS-a115",
+  "title": "The console strategy screen reattaches",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a115-the-console-strategy-screen-reattaches",
+    "path": "openspec/changes/a115-the-console-strategy-screen-reattaches"
+  },
+  "found_by": {
+    "date": "2026-08-16",
+    "how": "a109 A2 adversarial review P1-1: the console's strategy projection dial is boot-once and folds a dial failure into nil (console.go:411-421 at the time of record), so the console screens show NOT_CONFIGURED for a runtime that is configured but unreachable. The console page distinguishes dormant from unavailable; the console boot erases the distinction before the page can use it. The httpapi side of the same disease was fixed by a109 D4 with the misattribution SHALL NOT in the http-api-service spec.",
+    "record": "openspec/changes/archive/2026-08-16-a109-the-sibling-endpoints-recover-too/review.md (§2 A2 P1-1), openspec/changes/archive/2026-08-16-a109-the-sibling-endpoints-recover-too/design.md (선언된 생략)"
+  },
+  "prior_art": {
+    "note": "a109 D4's httpapi wrapper and its StrategyRuntimeAbsent predicate pinned the dormant/unavailable screen values; a109 D3a-2 pinned that consumer messages never assert engine absence. Both doctrines carry over.",
+    "why_not_a_reversal": "The fold predates the distinction: the page learned to distinguish states that the boot path never delivers."
+  },
+  "acceptance": [
+    "This story is registered ahead of implementation per a109's declared omission; start begins with the merge-or-not decision against a114 (same console.go boot path)",
+    "A configured-but-unreachable strategy runtime renders as unavailable, not NOT_CONFIGURED, and recovers to the real runtime state without a console restart once the engine is up",
+    "A genuinely unconfigured runtime still renders as unconfigured — no misattribution in either direction",
+    "make gate CHANGE=a115-the-console-strategy-screen-reattaches passes"
+  ],
+  "measured": null,
+  "deviations": [],
+  "limits": [
+    "Registration only as of 2026-08-16: no code is touched until start.",
+    "The cited line range (console.go:411-421) is the a109-record position; the start-time FLM re-derives it before any claim is reused."
+  ]
+}

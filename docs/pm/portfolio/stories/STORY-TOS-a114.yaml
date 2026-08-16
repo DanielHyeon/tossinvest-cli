@@ -1,0 +1,32 @@
+{
+  "id": "STORY-TOS-a114",
+  "title": "The console reattaches its lifecycle",
+  "feature": "FEAT-TOS-004",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a114-the-console-reattaches-its-lifecycle",
+    "path": "openspec/changes/a114-the-console-reattaches-its-lifecycle"
+  },
+  "found_by": {
+    "date": "2026-08-16",
+    "how": "a109 proposal-freeze review P2-7: the console engine lifecycle client dials once at boot (console.go:397 at the time of record). Same disease the httpapi daemon had before a109's D4 wrapper — if the engine comes up later than the console, or restarts while it runs, the console never reattaches without its own restart. a109 fixed httpapi only and recorded the console as a declared omission.",
+    "record": "openspec/changes/archive/2026-08-16-a109-the-sibling-endpoints-recover-too/design.md (선언된 생략, P2-7)"
+  },
+  "prior_art": {
+    "note": "a109 D4 established the reattach contract for httpapi: background single-flight retry, never a connect-bearing dial on the request path (Dial embeds a 200ms probe — freeze P0-2), transition-only logging, evicted-client resource release. The contract lives in the http-api-service spec; this change applies the same doctrine to the console consumer.",
+    "why_not_a_reversal": "Reattachment belongs to the consumer, not the endpoint owner — the a109 D4 thesis, extended to its second consumer."
+  },
+  "acceptance": [
+    "This story is registered ahead of implementation per a109's declared omission; start begins with the merge-or-not decision against a115 (same console.go boot path)",
+    "The console attaches to the engine lifecycle reading without a console restart in both orders: engine-late boot and mid-run engine restart",
+    "Retries are background single-flight; render/request paths never perform a connect-bearing dial",
+    "No typed-confirmation or extra approval friction is added to the console UI",
+    "make gate CHANGE=a114-the-console-reattaches-its-lifecycle passes"
+  ],
+  "measured": null,
+  "deviations": [],
+  "limits": [
+    "Registration only as of 2026-08-16: no code is touched until start.",
+    "The cited line number (console.go:397) is the a109-record position; the start-time FLM re-derives it before any claim is reused."
+  ]
+}

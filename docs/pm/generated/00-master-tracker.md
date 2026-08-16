@@ -45,6 +45,7 @@
     - STORY-TOS-a107 — Retire the second protection core [in_progress] → `a107-retire-the-second-protection-core`
     - STORY-TOS-a108 — Boot recovers from any leftover [implemented] → `a108-boot-recovers-from-any-leftover`
     - STORY-TOS-a109 — The sibling endpoints recover too [archived] → `a109-the-sibling-endpoints-recover-too`
+    - STORY-TOS-a113 — The projection probe proves death [in_progress] → `a113-the-projection-probe-proves-death`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [implemented] → `console-click-approval`
@@ -69,6 +70,8 @@
     - STORY-TOS-a081 — Let the trading screens share one reading of the engine instead of asking it per render [archived] → `a081-screens-share-one-engine-reading`
     - STORY-TOS-a085 — Say which stock, in Korean, in the alert and on the position screen [implemented] → `a085-an-alert-says-which-stock`
     - STORY-TOS-a101 — The capability survey outlives a deploy [implemented] → `a101-the-soak-outlives-a-deploy`
+    - STORY-TOS-a114 — The console reattaches its lifecycle [in_progress] → `a114-the-console-reattaches-its-lifecycle`
+    - STORY-TOS-a115 — The console strategy screen reattaches [in_progress] → `a115-the-console-strategy-screen-reattaches`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`

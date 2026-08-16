@@ -108,3 +108,6 @@
 | STORY-TOS-a109 | 8 |
 | STORY-TOS-a110 | 7 |
 | STORY-TOS-a111 | 13 |
+| STORY-TOS-a113 | 4 |
+| STORY-TOS-a114 | 5 |
+| STORY-TOS-a115 | 4 |
