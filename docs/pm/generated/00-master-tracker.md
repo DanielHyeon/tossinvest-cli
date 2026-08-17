@@ -6,6 +6,7 @@
     - STORY-TOS-001 — Adopt the full StockOS SDD workflow in TossOS [archived] → `adopt-stockos-full-sdd`
     - STORY-TOS-002 — Align TossOS Full SDD and enforce Story-to-OpenSpec one-to-one [in_progress] → `align-full-sdd-pm-contract`
     - STORY-TOS-a040 — Adopt StockOS OpenSpec numbering and Story mapping [implemented] → `a040-adopt-stockos-openspec-naming`
+    - STORY-TOS-a116 — Codex saves its own session context [implemented] → `a116-install-codex-session-save-hook`
 - EPIC-TOS-005 — Secure delivery and engineering operations [active]
   - FEAT-TOS-007 — Secure remote access and signed releases [active]
     - STORY-TOS-031 — Enable trusted-network VPN console access [implemented] → `enable-vpn-console-access`

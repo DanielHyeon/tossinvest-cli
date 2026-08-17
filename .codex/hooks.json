@@ -9,6 +9,18 @@
             "command": "python3 tools/sdd-history/agent_save_hook.py"
           }
         ]
+      },
+      {
+        "matcher": "^(Bash|apply_patch)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/save_session.py\"",
+            "async": true,
+            "timeout": 30,
+            "trusted": true
+          }
+        ]
       }
     ]
   }

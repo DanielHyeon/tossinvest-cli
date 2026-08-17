@@ -71,6 +71,7 @@ docs/superpowers/
 # Full SDD local indexes, event buffers, generated graph applications.
 /.codegraph/
 /.ai-context/
+/.codex-context/
 /.sdd/.venv/
 /.sdd/gbrain-home/
 /.sdd/index-state.json
