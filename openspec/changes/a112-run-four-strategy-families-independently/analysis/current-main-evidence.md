@@ -3,6 +3,13 @@
 ## Baseline
 
 - Frozen base: `016da6245feb60e13971388be386c2c2041469a8` (`[A100 R0/M0] causal receipt measurement tooling (#3)`).
+- **Landing re-freeze (2026-08-17):** the L0–L2, M-B, L1a and L1b lots were committed on the branch on top of `016da624`
+  (commits `7d628041`, `5f73ea74`, `a78ee6ff`, `29f05054`, `5a44d424`), then `origin/main` (`a3671987`, 50 commits:
+  a109 closure, a113–a115 registration) was merged as `d9d9f71f`. `base-commit.txt` now points at that merge commit
+  so later lots (L1c, L3–L7) diff only their own edits. Proven before re-freezing: `git diff --name-only 016da624
+  a3671987` touches no file under `internal/strategyevidence`, `internal/official`, `internal/scheduler`,
+  `internal/clock`, `internal/breakoutlane`, `internal/officialbars` or `tools/logic-map`, so every FLM/AST bundle's
+  `source_sha256` and the analysis above stay valid for the merged tree; `go test ./...` on the merge is green.
 - Repository: TossOS modular monolith; no new process, broker gateway or strategy database is required by this change.
 - `codegraph sync .` current-base synchronization was re-run for L0. The per-symbol
   AST/FLM/BTM/risk inventory is `analysis/function-logic/inventory.json`; each body edit
