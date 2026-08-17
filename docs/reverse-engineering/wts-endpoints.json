@@ -1,14 +1,14 @@
 {
   "source": "tossinvest.com web bundles",
-  "build_id": "_9vWo9cLoNnz5P1aQeayp",
-  "chunk_count": 27,
-  "total": 949,
+  "build_id": "Sg-uF4vsHmKQC9cjQ6v9G",
+  "chunk_count": 30,
+  "total": 968,
   "counts": {
     "implemented": 81,
-    "candidate": 361,
-    "excluded": 507,
+    "candidate": 373,
+    "excluded": 514,
     "candidate_next": 20,
-    "meaningful": 442
+    "meaningful": 454
   },
   "overrides": {},
   "endpoints": {
@@ -856,6 +856,18 @@
     "/api/v1/company-events": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/crm/chatbot/guest/start": {
+      "status": "candidate",
+      "first_seen": "2026-08-17"
+    },
+    "/api/v1/crm/chatbot/start": {
+      "status": "candidate",
+      "first_seen": "2026-08-17"
+    },
+    "/api/v1/crm/chatbot/view/content": {
+      "status": "candidate",
+      "first_seen": "2026-08-17"
     },
     "/api/v1/crypto-prices": {
       "status": "candidate",
@@ -2008,6 +2020,16 @@
       "note": "marketing/promotion",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/promotion/account-open-stock-draw/period": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-08-17"
+    },
+    "/api/v1/promotion/account-open-stock-draw/user": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-08-17"
+    },
     "/api/v1/promotion/alphabet/board-info": {
       "status": "excluded",
       "note": "marketing/promotion",
@@ -2318,11 +2340,6 @@
       "note": "marketing/promotion",
       "first_seen": "2026-06-19"
     },
-    "/api/v1/promotion/pre-apply/openapi/is-target": {
-      "status": "excluded",
-      "note": "marketing/promotion",
-      "first_seen": "2026-06-19"
-    },
     "/api/v1/promotion/pre-apply/status": {
       "status": "excluded",
       "note": "marketing/promotion",
@@ -2461,6 +2478,10 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/relation": {
+      "status": "candidate",
+      "first_seen": "2026-08-17"
+    },
     "/api/v1/relation/follow-alimy": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -2544,6 +2565,38 @@
     "/api/v1/rights/us/exercises/categories/dividend-option/account-give-type": {
       "status": "candidate",
       "first_seen": "2026-08-03"
+    },
+    "/api/v1/risk-taker/quiz/basket-result": {
+      "status": "candidate",
+      "first_seen": "2026-08-17"
+    },
+    "/api/v1/risk-taker/quiz/current": {
+      "status": "candidate",
+      "first_seen": "2026-08-17"
+    },
+    "/api/v1/risk-taker/quiz/participant-count": {
+      "status": "candidate",
+      "first_seen": "2026-08-17"
+    },
+    "/api/v1/risk-taker/quiz/participating": {
+      "status": "candidate",
+      "first_seen": "2026-08-17"
+    },
+    "/api/v1/risk-taker/quiz/preview": {
+      "status": "candidate",
+      "first_seen": "2026-08-17"
+    },
+    "/api/v1/risk-taker/quiz/result": {
+      "status": "candidate",
+      "first_seen": "2026-08-17"
+    },
+    "/api/v1/risk-taker/quiz/share": {
+      "status": "candidate",
+      "first_seen": "2026-08-17"
+    },
+    "/api/v1/risk-taker/quiz/shared": {
+      "status": "candidate",
+      "first_seen": "2026-08-17"
     },
     "/api/v1/search-all/auto-complete": {
       "status": "candidate",
@@ -3309,6 +3362,11 @@
       "note": "community/UGC",
       "first_seen": "2026-06-19"
     },
+    "/api/v2/comments/upload/picture": {
+      "status": "excluded",
+      "note": "community/UGC",
+      "first_seen": "2026-08-17"
+    },
     "/api/v2/common/auth/sms/simple/issue/basic": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -3548,6 +3606,26 @@
       "note": "minor-account flow",
       "first_seen": "2026-06-19"
     },
+    "/api/v2/minor/multi-account-open/manual-document": {
+      "status": "excluded",
+      "note": "minor-account flow",
+      "first_seen": "2026-08-17"
+    },
+    "/api/v2/minor/multi-account-open/manual-document/file": {
+      "status": "excluded",
+      "note": "minor-account flow",
+      "first_seen": "2026-08-17"
+    },
+    "/api/v2/minor/multi-account-open/manual-document/funnel-exposed": {
+      "status": "excluded",
+      "note": "minor-account flow",
+      "first_seen": "2026-08-17"
+    },
+    "/api/v2/minor/multi-account-open/manual-document/sign/token": {
+      "status": "excluded",
+      "note": "minor-account flow",
+      "first_seen": "2026-08-17"
+    },
     "/api/v2/minor/multi-account-open/manual-validation/minor-name": {
       "status": "excluded",
       "note": "minor-account flow",
@@ -3582,6 +3660,16 @@
       "status": "excluded",
       "note": "minor-account flow",
       "first_seen": "2026-06-19"
+    },
+    "/api/v2/minor/multi-account-open/scraping-failure": {
+      "status": "excluded",
+      "note": "minor-account flow",
+      "first_seen": "2026-08-17"
+    },
+    "/api/v2/minor/multi-account-open/scraping-failure-count": {
+      "status": "excluded",
+      "note": "minor-account flow",
+      "first_seen": "2026-08-17"
     },
     "/api/v2/minor/multi-account-open/terms": {
       "status": "excluded",
@@ -3691,11 +3779,6 @@
       "first_seen": "2026-06-19"
     },
     "/api/v2/promotion/lending/revenue-amount/paid-process/by-gateway": {
-      "status": "excluded",
-      "note": "marketing/promotion",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v2/promotion/pre-apply": {
       "status": "excluded",
       "note": "marketing/promotion",
       "first_seen": "2026-06-19"
@@ -4356,5 +4439,5 @@
       "first_seen": "2026-06-19"
     }
   },
-  "updated_at": "2026-08-10"
+  "updated_at": "2026-08-17"
 }
