@@ -216,7 +216,7 @@ func authoritySupportsMarket(authority SourceAuthority, market marketclock.Marke
 
 func kindSupportsMarket(kind EvidenceKind, market marketclock.Market) bool {
 	switch kind {
-	case KindTradability, KindDisclosureRisk, KindDisclosure:
+	case KindTradability, KindDisclosureRisk, KindDisclosure, KindOfficialClosedBar1m, KindOfficialQuoteL1:
 		return true
 	case KindKRNetFlow:
 		return market == marketclock.MarketKR
@@ -403,6 +403,16 @@ func validateTypedPayload(kind EvidenceKind, canonical []byte) error {
 		return err
 	}
 	if err := rejectSecretFields(object); err != nil {
+		return err
+	}
+	// breakout 증거는 자기만의 엄격한 해독기를 쓴다. 아래 옛 타입 지도보다 *먼저* 갈라지므로
+	// 기존 종류가 지나가는 길은 한 바이트도 달라지지 않는다.
+	switch kind {
+	case KindOfficialClosedBar1m:
+		_, err := decodeClosedBar1mObject(object)
+		return err
+	case KindOfficialQuoteL1:
+		_, err := decodeQuoteL1Object(object)
 		return err
 	}
 	types := map[string]string{"blocked": "bool", "code": "string", "score_ppm": "number", "flow": "number", "value": "number", "market": "string"}
