@@ -1,0 +1,111 @@
+{
+  "schema_version": "a112-m-b-us-source-receipt-v1",
+  "collection_date": "2026-08-16",
+  "collection_time_kst": "19:04:24-19:05:59 (sealed run B); 19:01:48-19:03:35 (run A, HOLD, not evidence)",
+  "lot": "M-B",
+  "collector_role": "human-run amended collector (agent execution blocked by session permission classifier); Manager replay + two independent read-only reviewers (Terra receipt adversary, gstack evidence reviewer)",
+  "manager_pass_authority": "SOL/Manager only",
+  "verdict": "PASS",
+  "pass": true,
+  "supersedes": ["receipt.json (2026-08-15 static HOLD)", "receipt-2026-08-16-run3.json (run 3 ACCEPT-HOLD at the pre-amendment page cap)"],
+  "decision": "M-B PASS recorded by the Manager on the sealed run-B receipt under the 2026-08-16 amended criteria (regular-session full coverage joined with the calendar body; cap exhaustion recorded in candle-crawl.json; terminal null recorded-not-required). Authorizes only L1 implementation start; does not accept L1, prove closed-bar finality or bar-label convention, prove quote level schema, activate a lane, dispatch, deploy or raise exposure.",
+  "receipt_root": "/tmp/a112-mb-us-receipt-run4.ZTagql",
+  "sealed_run_dir": "a112-mb-us-dbe13033da92e741f6101f98893d6951",
+  "hold_run_dir": "a112-mb-us-9b318b1f04d3e420d850ff42c410b34d (TAINTED HOLD\\n during post-identity/seal phase at 19:03:35.13 KST, no manifest.json; preflight.json and all six raw bodies byte-identical to run B; stderr line pending from the human; not evidence)",
+  "invocations": {
+    "authorized": 1,
+    "performed_by_human": 2,
+    "note": "the second invocation was the human's own decision after run A's HOLD; recorded in review.md; no agent executed or re-ran the collector",
+    "official_get_count": {"run_a": 6, "run_b": 6, "total": 12, "per_run": "4 candle + 1 orderbook + 1 calendar"}
+  },
+  "command_shape": "<pinned> --token-cache=<config-dir>/openapi-token.json --go-binary=<selected go1.26.5> --receipt-root=/tmp/a112-mb-us-receipt-run4.ZTagql --session-date=2026-08-14 --before=2026-08-15T05:00:00.000+09:00",
+  "modes": {"root": "0700 current-UID", "run": "0700 current-UID", "payloads": "25/25 regular 0600 current-UID, nlink 1", "tainted": "absent in run B"},
+  "entry_set_sealed_run": {
+    "manifest.json": "sha256:765013e4d678dd94a6a1405627140543f2219b67d3e74b4b16d8c29149e0b563 (schema a112-mb-us-receipt:v1, 24 sorted entries, self-excluding, 0 missing / 0 extra / 0 mismatch)",
+    "preflight.json": "sha256:51567351e20a75d7031c10f399f98036321d337921be59c012b1ae90bdf6aafe",
+    "candle-crawl.json": "sha256:000d49803e92bd586b0e637ec8b098d4896d228755eaad76a1053164f9c7d995 (172 bytes: schema a112-mb-us-candle-crawl:v1, pages 4, terminal cap_exhausted, last_cursor_sha256 sha256:149d05071f9091ebe59c6406b59b8939ace49cf1ebc9585eb23e1c1abc680fe1 == candle-04.meta.json.cursor_value_sha256)",
+    "candle-01.raw.json": "sha256:de0f87d3ff0aa06e7bd63726dca1d34b983a88d09bbac72f7573c3d232e3cf32",
+    "candle-01.cursor.raw.json": "sha256:295737f306defc7f68614ba1aa492570f322377bf84855b3db8798e1021116d5",
+    "candle-01.headers.raw.json": "sha256:82077199b4a97fa4dfe1a654e0f3adbd1e73fe1846595a279e4864ff3def8e03",
+    "candle-01.meta.json": "sha256:3eef9125cc57b05c7751bfc83d2c7b120e09a37791fb51da094a3e87219dbeef",
+    "candle-02.raw.json": "sha256:ff8f7f8bf0111262c1f6a990ea294cc4e322379b91027816f595e23c078016b8",
+    "candle-02.cursor.raw.json": "sha256:e357b14ea381aaba250073bf777e7dc24444e18f662cda881d430f908115b088",
+    "candle-02.headers.raw.json": "sha256:82077199b4a97fa4dfe1a654e0f3adbd1e73fe1846595a279e4864ff3def8e03",
+    "candle-02.meta.json": "sha256:9bf791e8082df99260aec6bc2478b20c203e07558d19b1da691c397067728d10",
+    "candle-03.raw.json": "sha256:65ab23baecc44b8ceca4abfedc197b0e09a4557b835fbea6913bbb050543e9a3",
+    "candle-03.cursor.raw.json": "sha256:263ae4c46093201e6e272525b16b7e19ddd68acbf9a2409ff24d470b829b9401",
+    "candle-03.headers.raw.json": "sha256:8f5a80572f69b5acbb333f824ac416799d897bc79128cc250c7ca679a76b505f",
+    "candle-03.meta.json": "sha256:059cff8827b3269511ba7539d70059f3a378b2ab7337d24b4784a3ca945ddeda",
+    "candle-04.raw.json": "sha256:f8bd3e3153a8bcfa41a9d076aaeadc9f3d8bc367924d0bb8c587ef6e1bfc7f96",
+    "candle-04.cursor.raw.json": "sha256:7c616b18040fd5a977b486e75aaf7802900f9d5a889f4425ac1f74ddf17a83a1",
+    "candle-04.headers.raw.json": "sha256:82077199b4a97fa4dfe1a654e0f3adbd1e73fe1846595a279e4864ff3def8e03",
+    "candle-04.meta.json": "sha256:605f8a560d9f808cbd2d01ec732bff7652cdcd273c5f697d7bdc9bc27f76c02b",
+    "orderbook.raw.json": "sha256:fec9d6e4d3bd287abcd7dad528b8a35613105562bbfc4fa152e21d1faae88a70",
+    "orderbook.headers.raw.json": "sha256:a0527f9ff6da724428de18d55ace2dbfe7b4a61ac0c5833c2ec37a94c1268baa",
+    "orderbook.meta.json": "sha256:f8a5260ced9bb83ed890352bdf7c4f05b6b14dc153fac9575c47870050809b3c",
+    "calendar.raw.json": "sha256:0b62946bf860fd3ac5480b221d78ae9489808be5b30c51c0e554a958eff311cb",
+    "calendar.headers.raw.json": "sha256:860b65e5051bb650c334c718839c992d0a27169f501a51aa0a1955efaaedb048",
+    "calendar.meta.json": "sha256:e56448fcf92d2c752605b0a9aa14579aa1708885d0b1dd515f57ec932a950152"
+  },
+  "identity": {
+    "executable_sha256": "sha256:232c787c50685c623f6bfade2d0713850e295ff32bb83834d9f0d324fb3137ce (frozen 18:49 KST from main.go sha256 1945343d…, reproduced by two Manager builds and one adversary rebuild under the prescribed environment)",
+    "go_toolchain_sha256": "sha256:8da5fd321795754b994c64e3eb8a5a14ff47bd285559a7e876f3c79abafc67f9",
+    "go_version": "go1.26.5",
+    "go_distribution_sha256": "sha256:2f398a29f6b13b2e8e1c91052cd4ddff5005e70252d40c10a1e01b6ccf6800a8 (16,692 entries, recomputed by the adversary)",
+    "git_binary_sha256": "sha256:2a8c18fbf43da9f692d75474c72bea9dfd796c260b0f3dfe456376abc3bbd668",
+    "base_commit": "016da6245feb60e13971388be386c2c2041469a8",
+    "worktree_head": "016da6245feb60e13971388be386c2c2041469a8",
+    "frozen_input_sha256": "sha256:f077bc7110a63cb7faf1ff07b6cf0855f2c84a8ed53dd5a5690e94682d2f4b8c",
+    "untracked_sha256": "sha256:7e37cc24e9861a80d0fee9ff7a45b30eeff29abded8bf17e8915e01a9f9b4d91 (223 entries)",
+    "tracked_diff_sha256": "sha256:1fdae7ae4e6df557cd2ea8310a8f5132412c63d607021f07241e89c927b0c4c2 (5 docs/pm files)",
+    "pre_equals_post": true,
+    "config": {"session_date": "2026-08-14", "before_sha256": "sha256:d3b7bd38459318d6f35df22e9fc13e8b9ac264173148400cf799188f96e0fc74 (= sha256 of the literal 2026-08-15T05:00:00.000+09:00)"},
+    "worktree_comparison_after_run": "source 25 / compiled 74 / untracked 223 identity maps: 0 / 0 / 1 mismatch — only review.md (Manager ledger edits after the run)"
+  },
+  "observed_broker_behaviour": {
+    "requests": [
+      "GET /api/v1/candles adjusted=false&before=<cursor percent-encoded once>&count=200&interval=1m&symbol=AAPL x4 (page 1 before = the explicit --before literal), HTTP 200 x4",
+      "GET /api/v1/orderbook symbol=AAPL, HTTP 200",
+      "GET /api/v1/market-calendar/US date=2026-08-14, HTTP 200"
+    ],
+    "page_ranges_kst": [
+      "p1 200 bars 2026-08-15T05:00 .. 01:41, nextBefore 01:40",
+      "p2 200 bars 01:40 .. 2026-08-14T22:21, nextBefore 22:20",
+      "p3 200 bars 22:20 .. 18:53, nextBefore 18:52",
+      "p4 200 bars 18:52 .. 15:08, nextBefore 15:07 (non-null -> cap_exhausted recorded, run continued)"
+    ],
+    "cursor_continuity": "cursor file == raw nextBefore each page (4/4); page N+1 query before == page N decoded cursor (3/3); page N+1 first bar == page N cursor (inclusive, 3/3); cursor == last bar - 1 min (4/4); 4 cursors + --before all distinct (no loop)",
+    "candles": "800 unique strictly-descending timestamps .000+09:00; keys timestamp/openPrice/highPrice/lowPrice/closePrice/volume/currency; 3,200 price fields JSON strings (1-4 dp, 20 integer-form), 800 volumes integer strings, 0 bare numbers; currency USD 800/800",
+    "regular_session_join": "calendar result.today.date 2026-08-14, regularMarket 2026-08-14T22:30:00.000+09:00 -> 2026-08-15T05:00:00.000+09:00 (end exclusive): 390 of 390 bars present, 0 missing, 0 non-1-minute gaps inside the window; convention-agnostic (22:30..05:00 inclusive = 391 consecutive bars all present, so 390/390 under bar-start or bar-end labelling)",
+    "pre_session_bars": "409 before 22:30 (309 inside preMarket 17:00-22:30, 100 inside dayMarket, earliest 15:08 KST); 27 non-1-minute steps, all before 22:30; exactly 1 bar at/after 05:00 (the inclusive --before cursor bar)",
+    "calendar_body": "today/previousBusinessDay(2026-08-13)/nextBusinessDay(2026-08-17), each with dayMarket 09:00-17:00, preMarket 17:00-22:30, regularMarket 22:30-05:00(+1d), afterMarket 05:00-08:50(+1d) KST",
+    "orderbook": "HTTP 200 {result:{timestamp 2026-08-14T16:59:58.000+09:00, currency USD, asks [], bids []}} — empty book, market closed; ask/bid level element schema and decimal encoding UNOBSERVED",
+    "rate_headers": "cardinality one, allow-listed keys only, Retry-After absent (serialised null): candles Limit 20 / Remaining 19,19,18,19 / Reset 1; orderbook Limit 15 / Remaining 14 / Reset 1; calendar Limit 3 / Remaining 2 / Reset 1; run A orderbook Remaining 13/15 shows quota shared with the live TossOS containers; Reset unit unstated by the broker",
+    "terminal_null": "NOT OBSERVED (recorded-not-required per amendment): terminal cap_exhausted, last decoded cursor 2026-08-14T15:07:00.000+09:00",
+    "meta_schema_notes": "orderbook/calendar meta carry cursor_json_sha256/cursor_value_sha256 = sha256 of empty bytes (digestBytes(nil) is non-empty so omitempty never fires); headers.raw.json serialises absent Retry-After as null; writeJSON payloads (preflight/manifest/candle-crawl) carry host path names by design and are not mirrored here",
+    "determinism": "run A and run B raw bodies byte-identical (market closed); only rate-header/meta bytes differ"
+  },
+  "timing_kst": {
+    "run_b": "dir 19:04:24.50 -> preflight 19:05:23.54 (pre-identity + prescribed rebuild ~59 s) -> requests 19:05:23-19:05:25.9 -> manifest 19:05:59.59 (post-identity ~34 s); 95.1 s of the 120 s budget; every request started with >= 59 s left",
+    "run_a": "dir 19:01:48.66 -> preflight 19:02:49.98 -> last payload 19:02:52.00 -> TAINTED 19:03:35.13 (106.5 s); graceful HOLD in the post-identity/seal phase; cause pending the human's stderr line"
+  },
+  "operational_precondition": "human pre-run paste: infra-toss-intelligence-1 Exited (2), tossos-tossos-1 and tossos-httpapi-1 Up (healthy) sharing the token cache, cache mtime 15:55:42 KST unchanged (still unchanged after both runs), pinned SHA confirmed; no console container listed; host tossctl quiescent (human shell only)",
+  "independent_reviews": {
+    "receipt_adversary": "ACCEPT-WITH-P2, P0=0 / P1=0 / P2=7 (see review.md run 4 section)",
+    "gstack_evidence": "SHIP-IT, P0=0 / P1=0 / P2=7; 15 DEMONSTRATED / 2 PARTIAL (orderbook level schema; credential-holder enumeration detail) / 1 ABSENT-recorded (terminal null); recommends Manager MAY record M-B PASS"
+  },
+  "residuals_carried_to_l1_and_ledger": [
+    "orderbook: empty book only — L1 must not infer quote level schema/typing/availability from this receipt",
+    "bar-label convention (bar-start vs bar-end) undecided; volume signature suggests bar-end; L1 decides opening_range_first_bar_id explicitly and proves finality separately",
+    "variable decimal scale (1-4 dp, integer-form prices) — L1 strict decoder must accept variable scale without float conversion",
+    "rate quota shared with live TossOS containers; X-Ratelimit-Reset unit unstated — L1 treats Reset as opaque and budgets conservatively",
+    "two human invocations under a one-invocation authorization; run A HOLD stderr and run B success line/exit code to be appended when the human pastes them",
+    "cli.go --before help text still says 'may be empty' (human-process rule forbids empty-cursor reruns)"
+  ],
+  "prohibited_actions_not_taken": [
+    "order place/cancel/amend/preview",
+    "verify run/resume/redo/abort",
+    "config or auth update/login/logout/exchange; token cache never read or printed by agents or reviewers",
+    "engine, toggle, journal, install, stage, commit, push, or deployment mutation; collector remains uninstalled; no production/order/config/auth/runtime file touched"
+  ]
+}

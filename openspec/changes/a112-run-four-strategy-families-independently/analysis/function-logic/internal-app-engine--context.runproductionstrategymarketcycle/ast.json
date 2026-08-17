@@ -1,0 +1,207 @@
+{
+  "file": "internal/app/engine/strategy_entry_supervisor.go",
+  "source_sha256": "64893ce595e48abb31ed7e6c5a7630ae19373930c9cff148141490444202f888",
+  "package": "engine",
+  "function": "runProductionStrategyMarketCycle",
+  "receiver": "Context",
+  "signature": "Context.runProductionStrategyMarketCycle(params=3, results=1)",
+  "start": {
+    "line": 419,
+    "column": 1
+  },
+  "end": {
+    "line": 441,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 421,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 425,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 430,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 433,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 437,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 422,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 426,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 431,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 434,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 438,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 440,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 420,
+        "column": 16
+      },
+      "text": "c.refreshPairedStrategyEntryProductionAssembly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 424,
+        "column": 14
+      },
+      "text": "fresh.proposals.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 425,
+        "column": 33
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 428,
+        "column": 12
+      },
+      "text": "proposal.entries.authority.Proposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 429,
+        "column": 14
+      },
+      "text": "c.Journal.CurrentPositionCampaignCAS"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 429,
+        "column": 83
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 11
+      },
+      "text": "fresh.dispatch.dispatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 437,
+        "column": 5
+      },
+      "text": "errors.Is"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 420,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 424,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 428,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 429,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 436,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

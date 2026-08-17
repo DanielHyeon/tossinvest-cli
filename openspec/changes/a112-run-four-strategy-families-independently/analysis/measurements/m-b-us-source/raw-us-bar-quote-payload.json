@@ -1,0 +1,28 @@
+{
+  "schema_version": "a112-m-b-raw-us-payload-v1",
+  "classification": "sanitized absence receipt; not a test fixture and not production authority",
+  "requested_market": "US",
+  "requested_symbol": "AAPL",
+  "required_currency": "USD",
+  "raw_closed_one_minute_bar_bytes": {
+    "status": "MISSING",
+    "sha256": null,
+    "reason": "No outbound request was permitted because RawMinuteCandles rejects US before transport. The generic path would discard exact decimal/timestamp bytes."
+  },
+  "raw_quote_bytes": {
+    "status": "MISSING",
+    "sha256": null,
+    "reason": "No raw official US quote DTO exists in the inspected current-base official package; Prices and Orderbook adapt decimal strings to float64 domain values."
+  },
+  "raw_usd_currency_observation": {
+    "status": "MISSING",
+    "sha256": null,
+    "reason": "USD is present only in the static OpenAPI enum, not in an observed sealed US response."
+  },
+  "non_evidence_excluded": [
+    "KR-only httptest payload in internal/official/candle_raw_test.go",
+    "OpenAPI examples",
+    "WTS or source=both CLI output",
+    "float/time-adapted domain values"
+  ]
+}

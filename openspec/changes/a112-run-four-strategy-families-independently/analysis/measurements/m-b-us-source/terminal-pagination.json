@@ -1,0 +1,17 @@
+{
+  "schema_version": "a112-m-b-terminal-pagination-v1",
+  "official_pagination_contract": {
+    "source": "GET /api/v1/candles CandlePageResponse",
+    "next_before": "verbatim previous-page cursor; null at terminal page",
+    "cursor_is_inclusive": true,
+    "contract_sha256": "dac2c617ff2858a4bacf0caa071d5c0c17c2db2633549f1fdaa4915b47b35e1a"
+  },
+  "us_transcript": {
+    "status": "MISSING",
+    "page_request_hashes": [],
+    "page_response_hashes": [],
+    "terminal_response_hash": null,
+    "reason": "M-B did not execute an external request because the only raw-preserving reader rejects US and the generic reader is forbidden as a lossless substitute."
+  },
+  "passable": false
+}

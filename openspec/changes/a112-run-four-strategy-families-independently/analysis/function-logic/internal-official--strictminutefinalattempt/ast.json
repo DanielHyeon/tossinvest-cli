@@ -1,0 +1,109 @@
+{
+  "file": "internal/official/strict_minute_candles.go",
+  "source_sha256": "441bed46f81bc928cab03d512b3ff1305c0c663cb1b58027986e2e91b739977d",
+  "package": "official",
+  "function": "strictMinuteFinalAttempt",
+  "signature": "strictMinuteFinalAttempt(params=1, results=2)",
+  "start": {
+    "line": 228,
+    "column": 1
+  },
+  "end": {
+    "line": 240,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 229,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 234,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 231,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 236,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 26
+      },
+      "text": "strictMinuteRefuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 19
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 26
+      },
+      "text": "strictMinuteRefuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 40
+      },
+      "text": "strconv.Itoa"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 233,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

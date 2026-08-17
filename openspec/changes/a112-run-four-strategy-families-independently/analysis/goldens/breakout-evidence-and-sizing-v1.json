@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "change_id": "a112-run-four-strategy-families-independently",
+  "frozen_base": "016da6245feb60e13971388be386c2c2041469a8",
+  "setup_identity": {
+    "algorithm": "SHA-256",
+    "domain": "tossos.breakout.setup.v1",
+    "preimage_encoding": "UTF-8",
+    "canonical_preimage_fields": ["market","symbol","session_id","calendar_version","opening_range_first_bar_id","opening_range_last_bar_id","lane_id","lane_version","config_digest"],
+    "separator": {"byte": 0,"notation": "NUL (0x00)"},
+    "trailing_delimiter": false,
+    "field_value_rejections": ["EMPTY","LEADING_OR_TRAILING_WHITESPACE","NUL"],
+    "forbidden_pre_hash_operations": ["TRIM","CASE_FOLD","UNICODE_NORMALIZATION","JSON_SERIALIZATION"],
+    "output_format": {"prefix": "sha256:","hex_case": "lowercase","hex_length": 64},
+    "known_vector": {
+      "market": "KR",
+      "symbol": "005930",
+      "session_id": "KRX:2026-08-18",
+      "calendar_version": "krx-calendar-v1",
+      "opening_range_first_bar_id": "bar-20260818-0900",
+      "opening_range_last_bar_id": "bar-20260818-0914",
+      "lane_id": "kr_short_breakout_retest_v1",
+      "lane_version": "v1",
+      "config_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expected_setup_id": "sha256:d2d5e2da006b841e45a1d2991624c5316b520a3900bb780653c79f455eeef04c"
+    },
+    "bar_revision_location": "snapshot/evidence digest only; never setup_id",
+    "proposal_identity": "idempotent per setup/snapshot/config",
+    "first_leg": "at most one shared-admission authority; no scale-in authority"
+  },
+  "evidence_schema": {
+    "required": ["market","symbol","session_id","calendar_version","setup_id","ordered_closed_bar_ids_and_revisions","opening_range","resistance","atr","rvol_and_counterfactuals","wick_and_body_ppm","transitions","quote_freshness_and_spread","entry_stop_target_cost_assumptions","source_timestamps","config_digest","evidence_digest"],
+    "units": "canonical integer minor units and integer ppm; no float",
+    "reject": ["unknown field","unknown enum","float","secret-like field","duplicate bar identity","out-of-order bar","unbounded bar array","future bar","unfinished bar","digest mismatch"],
+    "persistence": "append-only correction revisions; never overwrite an existing row",
+    "authority": "official regular-session closed 1-minute bars only; Toss rank/volume/flow is candidate discovery only"
+  },
+  "official_source_identities": {
+    "KR": {
+      "status": "PROVEN_LOSSLESS_CURRENT_BASE",
+      "identity": "official.Client.RawMinuteCandles /api/v1/candles, official-open-api, unadjusted 1m raw decimal/timestamp DTO",
+      "constraints": ["market must be KR","six-digit KRX symbol","strategycandle accepts KR only","caller validates KST/session/bar integrity"],
+      "source_files": ["internal/official/candle_raw.go","internal/strategycandle/adapter.go"]
+    },
+    "US": {
+      "status": "UNPROVEN_BLOCKED_M_B",
+      "identity": null,
+      "required_before_production_authority": ["raw decimal/timestamp preservation","terminal pagination transcript","USD currency","official regular-session/calendar identity","rate-header/budget semantics","sanitized M-B PASS receipt"],
+      "forbidden_substitutes": ["WTS source","float-adapted generic candles","test fixture"],
+      "effect_until_proven": "US breakout adapter and exact 8-lane activation remain OFF/UNOBSERVED; exposure-raising broker requests are zero"
+    }
+  },
+  "thresholds": {
+    "opening_range_regular_session_minutes": 15,
+    "breakout_close_buffer": "max(1 tick,100000 ppm * ATR)",
+    "retest_tolerance_ppm_min": 100000,
+    "retest_tolerance_ppm_max": 250000,
+    "timeout_closed_1m_bars": {"KR": 8,"US": 10},
+    "rvol_min_ppm": 1500000,
+    "rvol_counterfactual_ppm": [1200000,2000000,2500000],
+    "upper_wick_range_max_ppm": 350000,
+    "config_is_server_owned_versioned_experimental": true,
+    "config_change_reinterprets_existing_setup": false
+  },
+  "quote": {
+    "seal_required_fields": ["bid_minor","ask_minor","last_minor","instrument_currency","source_observed_at","received_at","digest"],
+    "positive_limits_required": ["max_quote_age_ms","max_spread_ppm","max_entry_drift_ppm"],
+    "evaluation_time": "immutable snapshot evaluated_at",
+    "timestamp_order": "source_observed_at <= received_at <= evaluated_at",
+    "age_formula": "evaluated_at - source_observed_at",
+    "buy_spread_ppm": "ceil((ask-bid)*1000000/floor((ask+bid)/2))",
+    "entry_drift_ppm": "ceil(abs(ask-proposed_entry)*1000000/proposed_entry)",
+    "inclusive_acceptance": "age <= max_quote_age_ms AND spread <= max_spread_ppm AND absolute_drift <= max_entry_drift_ppm",
+    "one_unit_over_limit": ["QUOTE_STALE","SPREAD_TOO_WIDE","ENTRY_DRIFT_EXCEEDED"]
+  },
+  "fx_and_sizing": {
+    "seal_required_fields": ["account_currency","instrument_currency","direction","rate_num","rate_den","integer_scale","as_of","fresh_until","digest"],
+    "canonical_direction": "ACCOUNT_MINOR_TO_INSTRUMENT_MINOR",
+    "rate_constraints": "positive integer numerator and denominator",
+    "capacity_conversion": "floor(account_minor * rate_num / rate_den)",
+    "per_share_cost_conversion": "ceil(account_minor * rate_num / rate_den)",
+    "worst_entry": "max(proposed_entry,ask) + entry_slippage_minor",
+    "risk_per_share": "entry-stop + entry_slippage + exit_slippage + round_trip_costs",
+    "q_candidate": "floor(min(risk_budget/risk_per_share,notional_cap/worst_entry)) using overflow-safe exact arithmetic",
+    "rounding": "capacity/risk/notional down; per-share cost/risk up; quantity never exceeds exact rational floor",
+    "refuse": ["missing or stale or mismatched FX/cost/price","non-positive risk","overflow","q_candidate=0","missing/non-protective stop","target below break-even or Guardian minimum RR"]
+  }
+}

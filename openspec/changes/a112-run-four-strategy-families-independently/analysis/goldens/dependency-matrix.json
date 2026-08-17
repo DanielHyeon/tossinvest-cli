@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "change_id": "a112-run-four-strategy-families-independently",
+  "frozen_base": "016da6245feb60e13971388be386c2c2041469a8",
+  "matrix": [
+    {"dependency":"M-B official US evidence measurement","status":"HOLD","evidence":"Current raw official 1m API accepts KR only; no sanitized M-B PASS receipt proves US raw decimal/timestamp, pagination, USD, session/calendar and rate semantics.","blocks":["L1","L3","L4","L5","L6","L7","US production breakout","exact 8-lane activation"],"zero_exposure":true},
+    {"dependency":"a064 evidence replay/source authority","status":"INCOMPLETE","evidence":"tasks 6.3 and 6.4 remain unchecked.","blocks":["L6","L7"],"zero_exposure":true},
+    {"dependency":"a066 q_final/owner/exit-bypass","status":"INCOMPLETE","evidence":"tasks 1.1, 1.2, 2.7, 4.5, 5.5-5.7 and 6.1-6.5 remain unchecked.","blocks":["L6","L7","scale-in authority"],"zero_exposure":true},
+    {"dependency":"a070 router/scheduler","status":"INCOMPLETE","evidence":"tasks 3.1, 3.4, 4.2 and 4.3 remain unchecked.","blocks":["L6","L7"],"zero_exposure":true},
+    {"dependency":"a072 shared dispatch runtime","status":"COMPLETE","evidence":"tasks.md is 57/57 checked, including paired-delivery task 1.5 and repository gate task 5.3.","blocks":[],"zero_exposure":false},
+    {"dependency":"A100 ProtectionReady","status":"UNWIRED_INCOMPLETE","evidence":"A100 R0/M0 landed at frozen base but is not product completion; shipped KR/US assemblies remain Wired:false and no shipped ProtectionWired producer exists.","blocks":["container replacement","operating activation","exposure-raising dispatch","L6","L7 deployment"],"zero_exposure":true},
+    {"dependency":"A112 paired KR/US production delivery gate","status":"BLOCKED","evidence":"a072 is complete, but A112's remaining production lots must still deliver and verify KR and US together; neither market alone may advance an A112 production prerequisite.","blocks":["single-market A112 production prerequisite advancement"],"zero_exposure":true}
+  ],
+  "permitted_while_blocked": ["L0 analysis","L2 pure fixture-only breakout core after Manager accepts L0","build-only/offline/shadow fixture verification"],
+  "forbidden_while_blocked": ["production US source authority","production 8-lane wiring","container replacement","automation activation","autostart activation","LIVE approval change","exposure-raising dispatch"]
+}

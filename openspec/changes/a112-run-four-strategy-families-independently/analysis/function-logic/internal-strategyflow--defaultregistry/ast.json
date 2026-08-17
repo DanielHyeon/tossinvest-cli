@@ -1,0 +1,38 @@
+{
+  "file": "internal/strategyflow/adapters.go",
+  "source_sha256": "5fa16d5a0d6e2286f965c396e726fb3bf8cba48b32e4ec110359ff533def69d1",
+  "package": "strategyflow",
+  "function": "defaultRegistry",
+  "signature": "defaultRegistry(params=0, results=1)",
+  "start": {
+    "line": 13,
+    "column": 1
+  },
+  "end": {
+    "line": 22,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 14,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 14,
+        "column": 9
+      },
+      "text": "newRegistry"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

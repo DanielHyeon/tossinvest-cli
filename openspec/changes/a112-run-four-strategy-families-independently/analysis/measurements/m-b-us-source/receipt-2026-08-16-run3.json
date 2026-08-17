@@ -1,0 +1,78 @@
+{
+  "schema_version": "a112-m-b-us-source-receipt-v1",
+  "collection_date": "2026-08-16",
+  "collection_time_kst": "16:01:28-16:02:01",
+  "lot": "M-B",
+  "collector_role": "human-run collector (agent execution blocked by session permission classifier); Manager replay + two independent read-only reviewers",
+  "manager_pass_authority": "SOL/Manager only",
+  "verdict": "HOLD",
+  "pass": false,
+  "hold_reason": "candle pagination did not reach raw null within four pages (pre-amendment tools/a112-mb-us-source/main.go:170-171, source sha256 2aa28733…; superseded by lot 0.7b.3 which records cap exhaustion in candle-crawl.json and continues); orderbook/calendar/seal never reached in this run",
+  "decision": "ACCEPT-HOLD. Receipt integrity accepted. Official US 1m candle raw transport, USD, decimal preservation, cursor continuity and rate headers are now OBSERVED; terminal null, orderbook, calendar join, post identity and self-excluding manifest remain absent. Tasks 0.7c and 0.7 stay unchecked. L1 and L3-L7 remain blocked.",
+  "receipt_root": "/tmp/a112-mb-us-receipt-run3.lCsMTV",
+  "authorized_run_dir": "a112-mb-us-9206d489c3f7a3a5ae64723d4f085b59",
+  "extra_human_run_dirs": [
+    "a112-mb-us-345aed38cb863d6828200caae71ed3a5 (15:55:22 KST, raw bodies byte-identical to authorized run)",
+    "a112-mb-us-84b898bd86c949f109fe994656a513d0 (15:56:03 KST, raw bodies byte-identical to authorized run)"
+  ],
+  "official_get_count": {"authorized_run": 4, "all_three_runs": 12, "orderbook": 0, "calendar": 0},
+  "modes": {"root": "0700 current-UID", "run": "0700 current-UID", "payloads": "all regular 0600 current-UID"},
+  "entry_set_authorized_run": {
+    "TAINTED": "sha256:3a6e33f5ab9acbd5ca6cd34321def789cf40c24eeaa8142f398c0ac208d61574 (5 bytes HOLD\\n)",
+    "preflight.json": "sha256:06e98bbc45571656017516fad391bdacdee0fe5b0dd48c900e920c4ce84333b2",
+    "candle-01.raw.json": "sha256:1cad7830e429d0f07302e319a26c2ede0188e778d9bc1504e69e86634536c6c4",
+    "candle-01.cursor.raw.json": "sha256:1e8a31f2ddf4c043b8b1137b521813f34283e1c31aa842e73a33fa5d94cfe2b0",
+    "candle-01.headers.raw.json": "sha256:82077199b4a97fa4dfe1a654e0f3adbd1e73fe1846595a279e4864ff3def8e03",
+    "candle-01.meta.json": "sha256:e9333487f10a26e4e6b91309830f9fc3f2384591bba1957c2898f016850dcbf3",
+    "candle-02.raw.json": "sha256:c849cbb7628cf557ed46e2f82b65fad8cd05cf3b232ef19fbda49902a439a3f3",
+    "candle-02.cursor.raw.json": "sha256:5cffa0ade1b6fe1b066a7745e2e9e4faadb1ff964256c749908cfa21396125e4",
+    "candle-02.headers.raw.json": "sha256:82077199b4a97fa4dfe1a654e0f3adbd1e73fe1846595a279e4864ff3def8e03",
+    "candle-02.meta.json": "sha256:533bd8087ea8d15a7fe2f364ab60bc9498df6b6cc7e22252c11a2477e81dbfbe",
+    "candle-03.raw.json": "sha256:3659adc16d468d67abee2174e87ca99391409cccfe665859a51fc1274c998b64",
+    "candle-03.cursor.raw.json": "sha256:f7ce825265628156da476797211401d093a7a3ed862467862ae649fefb9d3c1c",
+    "candle-03.headers.raw.json": "sha256:8f5a80572f69b5acbb333f824ac416799d897bc79128cc250c7ca679a76b505f",
+    "candle-03.meta.json": "sha256:336b7b7f6761b50ba6f695d2c623476c8e74f9949ac201fa7a42ae851073ff89",
+    "candle-04.raw.json": "sha256:c44f1bde493bd4aeaacb21acad8c7d54a097f85693fb22bf609533e33427b5de",
+    "candle-04.cursor.raw.json": "sha256:9028f210b696ee09f9e5a706a4d0774ebc61fe79e947babfbb134fd2c094585f",
+    "candle-04.headers.raw.json": "sha256:ed4310ba58927d195b9fece02f8dd0306d1e3a8b73f23ca8b3b7d452b8342cd1",
+    "candle-04.meta.json": "sha256:0c591f5fdc79ed0fba9a33e24d91d90e4922dcac2d7e1c638455a61a4e50cecb"
+  },
+  "absent_by_design_after_page_cap_hold": ["manifest.json", "orderbook.*", "calendar.*", "post identity"],
+  "identity": {
+    "executable_sha256": "sha256:f2f71c3dd66ac4e78373f61a1b0a629f3fb3c6f44ca269f3e68a54e857db793f",
+    "base_commit": "016da6245feb60e13971388be386c2c2041469a8",
+    "worktree_head": "016da6245feb60e13971388be386c2c2041469a8",
+    "go_version": "go1.26.5",
+    "config": {"session_date": "2026-08-14", "before": "empty (sha256 of empty)"},
+    "vs_frozen_2026-08-16_13:10_receipt": "identical except untracked_content_sha256 for a112 review.md/tasks.md (Manager ledger edits) and therefore untracked_sha256",
+    "reproducibility_note": "the frozen executable SHA reproduces only under the prescribed environment GOENV=off GOFLAGS= GOWORK=off GOPROXY=off GOSUMDB=off CGO_ENABLED=0; a default-environment build of the same source yields a different SHA"
+  },
+  "observed_broker_behaviour": {
+    "request": "GET /api/v1/candles adjusted=false&count=200&interval=1m&symbol=AAPL (+before=<prior decoded cursor percent-encoded once> on pages 2-4)",
+    "status": "200 x4",
+    "page_ranges_kst": [
+      "p1 200 bars 2026-08-15T09:00 .. 04:47, nextBefore 04:46",
+      "p2 200 bars 04:46 .. 01:27, nextBefore 01:26",
+      "p3 200 bars 01:26 .. 2026-08-14T22:07, nextBefore 22:06",
+      "p4 200 bars 22:06 .. 18:33, nextBefore 18:32 (non-null -> cap HOLD)"
+    ],
+    "cursor_continuity": "cursor file == raw nextBefore each page; page N+1 first timestamp == page N nextBefore (3/3); strictly descending; no cursor loop",
+    "regular_session_2026-08-14": "390 of 390 one-minute bars present (22:30 KST 08-14 .. 04:59 KST 08-15); zero gaps",
+    "extended_hours": "52 non-1-minute gaps, all outside regular session (minutes without trades are omitted, not zero-filled); 90 bars in 07:00-09:00 KST fall outside every documented calendar session",
+    "types": "all OHLCV values are JSON decimal strings; currency USD 800/800; timestamps YYYY-MM-DDTHH:MM:SS.000+09:00",
+    "rate_headers": "X-Ratelimit-Limit 20, Remaining 19/19/18/17, Reset 1, Retry-After null; identical bytes on pages 1-2 are a 1-second window refill, cardinality one per response",
+    "determinism": "raw bodies byte-identical across the three runs (market closed)"
+  },
+  "root_cause_of_hold": "design assumption, not tool or broker defect: OpenAPI nextBefore null means end of retained history; from an empty initial cursor terminal null requires walking AAPL 1m history to its beginning, unreachable within 4x200. Encoded at tasks.md 0.7b/0.7b.2/0.7c, design.md M-B1 paragraph, spec M-B1 scenarios, main.go:134/170-171.",
+  "operational_precondition_discovered": "StockOS infra-toss-intelligence-1 shares the same OpenAPI credential with an in-memory-only token; the broker keeps one live token per credential, so its re-issue killed the shared cache token roughly once a minute (13:10 first-run HTTP 401 and soak cycle 14 walk 401). It was stopped by the human at ~15:56 KST before this run; the cache token stayed stable for >4.5 minutes afterwards. Any future M-B run needs every foreign credential holder enumerated and quiescent.",
+  "independent_reviews": {
+    "receipt_adversary": "see review.md 2026-08-16 run 3 section",
+    "gstack_evidence": "DONE_WITH_CONCERNS -> ACCEPT-HOLD, P0=0 / P1=1 (terminal-null-within-cap criterion unsatisfiable together with full session coverage) / P2=6"
+  },
+  "prohibited_actions_not_taken": [
+    "order place/cancel/amend/preview",
+    "verify run/resume/redo/abort",
+    "config or auth update/login/logout/exchange; token cache never read or printed by agents",
+    "engine, toggle, journal, install, stage, commit, push, or deployment mutation (docker stop of the foreign StockOS container was a human action)"
+  ]
+}

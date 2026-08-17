@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "change_id": "a112-run-four-strategy-families-independently",
+  "frozen_base": "016da6245feb60e13971388be386c2c2041469a8",
+  "manifest": {
+    "path": "analysis/goldens/manifest.sha256",
+    "algorithm": "SHA-256",
+    "path_order": "LC_ALL=C bytewise ascending basename",
+    "coverage": "all canonical golden JSON and non-code jq validator artifacts; the manifest and validation receipt are intentionally self-excluded to avoid recursive hashing"
+  },
+  "commands": [
+    "codegraph sync .",
+    "openspec validate a112-run-four-strategy-families-independently --strict --no-interactive",
+    "jq -e -f analysis/goldens/validate-four-family-runtime.jq analysis/goldens/four-family-runtime-v1.json",
+    "jq -e -f analysis/goldens/validate-breakout-evidence-and-sizing.jq analysis/goldens/breakout-evidence-and-sizing-v1.json",
+    "printf '%s\\0%s\\0%s\\0%s\\0%s\\0%s\\0%s\\0%s\\0%s\\0%s' 'tossos.breakout.setup.v1' 'KR' '005930' 'KRX:2026-08-18' 'krx-calendar-v1' 'bar-20260818-0900' 'bar-20260818-0914' 'kr_short_breakout_retest_v1' 'v1' 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' | sha256sum",
+    "jq '.descriptors |= .[:7]' analysis/goldens/four-family-runtime-v1.json | jq -e -f analysis/goldens/validate-four-family-runtime.jq",
+    "jq '.descriptors += [.descriptors[0]]' analysis/goldens/four-family-runtime-v1.json | jq -e -f analysis/goldens/validate-four-family-runtime.jq",
+    "jq '.families[3] = \"UNKNOWN\"' analysis/goldens/four-family-runtime-v1.json | jq -e -f analysis/goldens/validate-four-family-runtime.jq",
+    "jq 'del(.descriptors[7])' analysis/goldens/four-family-runtime-v1.json | jq -e -f analysis/goldens/validate-four-family-runtime.jq",
+    "jq -r '.official_source_identities.KR.source_files[]' analysis/goldens/breakout-evidence-and-sizing-v1.json | xargs -r -n1 test -f",
+    "(cd analysis/goldens && sha256sum -c manifest.sha256)",
+    "git diff --check"
+  ],
+  "results": {
+    "codegraph_sync": "PASS: CodeGraph reported already up to date",
+    "sdd_check": "PASS: CodeGraph hard-evidence index matches the worktree; CodeGraphContext/GBrain advisory freshness warnings only",
+    "openspec_strict": "PASS",
+    "json_parse": "PASS",
+    "positive_schema_assertions": "PASS: output true, exit 0",
+    "setup_identity_contract": "PASS: exact UTF-8 domain, ordered fields, NUL separator/no trailing delimiter, field rejections, forbidden transformations, output format, and known-vector fields are required",
+    "setup_identity_known_vector": "PASS: output sha256:d2d5e2da006b841e45a1d2991624c5316b520a3900bb780653c79f455eeef04c",
+    "negative_seven_descriptor": "PASS: output false, exit 1 (rejected)",
+    "negative_duplicate_descriptor": "PASS: output false, exit 1 (rejected)",
+    "negative_unknown_family": "PASS: output false, exit 1 (rejected)",
+    "negative_missing_descriptor": "PASS: output false, exit 1 (rejected)",
+    "source_path_assertions": "PASS: internal/official/candle_raw.go and internal/strategycandle/adapter.go exist",
+    "sha256_manifest": "PASS",
+    "whitespace": "PASS"
+  },
+  "non_authorization": "This receipt does not mark OpenSpec tasks complete, does not authorize production edits, and does not authorize build deployment, activation, configuration, broker, auth, engine, or container actions."
+}

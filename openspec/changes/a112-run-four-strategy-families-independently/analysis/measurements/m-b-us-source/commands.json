@@ -1,0 +1,39 @@
+{
+  "schema_version": "a112-m-b-command-log-v1",
+  "commands": [
+    {
+      "command": "sed -n '/SDD_SHARED_START/,/SDD_SHARED_END/p' .claude/CLAUDE.md; sed -n '1,320p' docs/WORKFLOW.md; read A112 OpenSpec artifacts",
+      "purpose": "read development rules and M-B acceptance contract",
+      "network": false,
+      "mutation": false
+    },
+    {
+      "command": "rg --files and rg -n over cmd/, internal/, docs/, and A112 artifacts",
+      "purpose": "locate official candle, quote, calendar, rate-budget, and CLI routing sources",
+      "network": false,
+      "mutation": false
+    },
+    {
+      "command": "sed -n on internal/official/candle_raw.go, candle_reads.go, market_reads.go, ratebudget.go, typed_calendar_reads.go, internal/hybrid/client.go, and cmd/tossctl/quote.go",
+      "purpose": "inspect lossless/raw versus float/time-adapted paths",
+      "network": false,
+      "mutation": false
+    },
+    {
+      "command": "command -v tossctl; tossctl version; tossctl --help; tossctl quote --help; ./tossctl version; ./tossctl quote chart --help",
+      "purpose": "identify binaries and inspect help only",
+      "network": false,
+      "mutation": false
+    },
+    {
+      "command": "jq -S selected candle, US-calendar, currency, and rate-limit objects from docs/migration/openapi.latest.json; sha256sum inspected files and binaries; git rev-parse/show/ls-tree/diff --quiet",
+      "purpose": "seal static official-contract and source identities",
+      "network": false,
+      "mutation": false
+    }
+  ],
+  "external_requests": [],
+  "auth_state_read": false,
+  "configuration_files_read": false,
+  "stop_condition": "Static preflight disproved a current-base lossless US source before an external request could satisfy M-B."
+}

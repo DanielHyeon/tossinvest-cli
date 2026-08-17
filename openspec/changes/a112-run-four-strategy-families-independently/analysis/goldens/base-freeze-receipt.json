@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "change_id": "a112-run-four-strategy-families-independently",
+  "frozen_base": "016da6245feb60e13971388be386c2c2041469a8",
+  "base_subject": "[A100 R0/M0] causal receipt measurement tooling (#3)",
+  "base_verification": {
+    "head_equals_frozen_base": true,
+    "origin_main_equals_frozen_base": true,
+    "base_is_ancestor_of_head": true
+  },
+  "sdd_evidence": {
+    "memory_recall": "no matching file-memory result",
+    "gbrain": "advisory unavailable: existing single-writer process reported busy; not disturbed",
+    "codegraph": "codegraph sync . completed; CodeGraph reported already up to date",
+    "codegraphcontext": "advisory stats were readable; report generation was discarded because it was outside L0 ownership",
+    "openspec_strict_validation": "PASS",
+    "read_only_worktree_reference": {
+      "git_head": "016da6245feb60e13971388be386c2c2041469a8",
+      "fingerprint_command": "python3 tools/sdd/check_index_freshness.py",
+      "fingerprint_reference": ".sdd/index-state.json indexes.codegraph.fingerprint",
+      "observed_worktree_fingerprint_before_receipt_update": "3c053f11ce14e6c68f68bcdb265f201f40f61dd22332b5a47598544c10e42b9a",
+      "result": "PASS: CodeGraph hard-evidence index matches the worktree",
+      "scope_note": "The observed value is the exact git-ls-files cached+untracked fingerprint immediately before this receipt update. The index-state reference is the provided SDD tool's exact post-sync fingerprint; its ignored state file is not added to this change."
+    }
+  },
+  "pre_edit_targets": {
+    "source": "analysis/pre-edit-targets.md",
+    "existing_function_edit_rule": "Before its own production edit, each FLM-required target must receive a fresh current-base AST, Function Logic Map, Branch Test Map, and risk-pattern report. This L0 receipt does not falsely mark any future-lot function as edited or mapped.",
+    "high_risk_later_lots": ["QuotaAuthority.Acquire","QuotaAuthority.Complete","NewStrategyEntrySupervisor","productionStrategyFirstLegAuthorityLoader.collectStrategyFirstLegAuthority","strategyFirstLegAdmissionBridge.admit","validateStrategyFirstLegResult","validateStrategyFirstLegAuthority"],
+    "reuse_first_boundary": "strategyDispatchCycle.dispatch remains citation/reuse-first unless a separately authorized lineage seam requires an edit."
+  },
+  "function_logic_freeze": {
+    "inventory": "analysis/function-logic/inventory.json",
+    "current_base_bundle_count": 38,
+    "per_bundle_artifacts": ["ast.json","function-logic-map.md","branch-test-map.md","risk-pattern-report.md"],
+    "deferred_non_function_or_citation_rows": ["AcquireRequest and Capability are types","execgw.ProfileProtection is a constant","protection readiness remains a prerequisite boundary"],
+    "test_claim": "Each Branch Test Map records planned targeted RED coverage only. L0 ran no new RED or GREEN test and claims no executed branch coverage."
+  },
+  "a100_landing_interpretation": {
+    "r0_m0_landing_present": true,
+    "product_protection_complete": false,
+    "current_protection_status": "UNWIRED",
+    "hard_evidence": ["internal/app/engine/protection_wiring.go constructs KR/US assemblies with Wired:false","internal/execgw/protection.go has no shipped producer of ProtectionWired"],
+    "consequence": "Build or offline/shadow verification only; no container replacement and no exposure-raising dispatch."
+  },
+  "paired_delivery_gate": {
+    "a072_status": "COMPLETE (57/57 checked, including task 1.5)",
+    "a112_production_status": "BLOCKED",
+    "rule": "KR and US must be delivered and verified in the same A112 production wave; neither market alone can satisfy an A112 production prerequisite."
+  },
+  "exposure_raising_invariant": "Any missing dependency below yields zero exposure-raising broker requests; reduce-only safety lifecycle remains callable."
+}

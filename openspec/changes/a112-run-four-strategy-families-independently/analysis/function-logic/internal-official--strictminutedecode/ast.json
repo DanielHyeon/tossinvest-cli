@@ -1,0 +1,414 @@
+{
+  "file": "internal/official/strict_minute_candles.go",
+  "source_sha256": "441bed46f81bc928cab03d512b3ff1305c0c663cb1b58027986e2e91b739977d",
+  "package": "official",
+  "function": "strictMinuteDecode",
+  "signature": "strictMinuteDecode(params=4, results=4)",
+  "start": {
+    "line": 243,
+    "column": 1
+  },
+  "end": {
+    "line": 288,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 253,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 257,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 262,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 266,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 271,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 274,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 280,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 284,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 245,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 251,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 254,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 258,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 263,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 267,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 272,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 275,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 281,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 285,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 287,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 26
+      },
+      "text": "strictMinuteRefuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 15
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 28
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 67
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 6
+      },
+      "text": "utf8.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 26
+      },
+      "text": "strictMinuteRefuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 12
+      },
+      "text": "strictMinuteCheckJSON"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 26
+      },
+      "text": "strictMinuteRefuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 63
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 256,
+        "column": 19
+      },
+      "text": "strictMinuteObject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 26
+      },
+      "text": "strictMinuteRefuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 76
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
+        "column": 26
+      },
+      "text": "strictMinuteRefuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 17
+      },
+      "text": "strictMinuteObject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 26
+      },
+      "text": "strictMinuteRefuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 65
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 26
+      },
+      "text": "strictMinuteRefuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 274,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 26
+      },
+      "text": "strictMinuteRefuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 28
+      },
+      "text": "strictMinuteCandles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 283,
+        "column": 27
+      },
+      "text": "strictMinuteCursor"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 253,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 256,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 261,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 265,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 269,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 270,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 279,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 283,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

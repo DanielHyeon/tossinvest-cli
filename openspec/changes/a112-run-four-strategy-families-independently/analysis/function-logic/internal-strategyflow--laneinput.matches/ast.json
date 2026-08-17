@@ -1,0 +1,38 @@
+{
+  "file": "internal/strategyflow/registry.go",
+  "source_sha256": "b188fe1dd7dfc1bc2f76b9905b8d461a6747156d5d3ed3e208f740dc79129e54",
+  "package": "strategyflow",
+  "function": "matches",
+  "receiver": "LaneInput",
+  "signature": "LaneInput.matches(params=1, results=1)",
+  "start": {
+    "line": 119,
+    "column": 1
+  },
+  "end": {
+    "line": 129,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 128,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

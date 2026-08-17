@@ -1,0 +1,119 @@
+{
+  "file": "internal/strategyrouter/quota.go",
+  "source_sha256": "f76c9e4fa25fc664efcc918ab5e1f588051dd5119149298778cf3d0a6d4a26c9",
+  "package": "strategyrouter",
+  "function": "acquireFingerprint",
+  "signature": "acquireFingerprint(params=1, results=1)",
+  "start": {
+    "line": 190,
+    "column": 1
+  },
+  "end": {
+    "line": 198,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 7
+      },
+      "text": "sha256.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 84
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 108
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 133
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 202
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 202
+      },
+      "text": "request.ObservedAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 2
+      },
+      "text": "copy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 18
+      },
+      "text": "h.Sum"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

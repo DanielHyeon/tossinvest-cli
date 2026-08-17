@@ -1,0 +1,22 @@
+{
+  "schema_version": "a112-m-b-us-calendar-v1",
+  "official_calendar_contract": {
+    "method": "GET",
+    "path": "/api/v1/market-calendar/US",
+    "operation_id": "getUsMarketCalendar",
+    "calendar_contract_sha256": "351c69397b2f020839fe11407778bdebf110a0b5f3da5146be809466157820b0",
+    "static_fact": "The documented US response exposes nullable day, pre, regular, and after sessions with KST timestamps."
+  },
+  "typed_client_support": {
+    "symbol": "official.Client.TypedMarketCalendar",
+    "source_file": "internal/official/typed_calendar_reads.go",
+    "source_sha256": "5f97bf011626abd443e60df1028db26dc9b8c598eaa6e106c5377acf4696b143",
+    "accepts_us": true
+  },
+  "bar_to_regular_session_join": {
+    "status": "MISSING",
+    "sha256": null,
+    "reason": "No sealed US raw candle response or matching calendar response was collected; static contracts cannot prove one observed closed bar belongs to an official regular session."
+  },
+  "passable": false
+}

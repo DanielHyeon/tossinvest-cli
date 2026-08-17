@@ -1,0 +1,303 @@
+{
+  "file": "internal/strategyrouter/quota.go",
+  "source_sha256": "f76c9e4fa25fc664efcc918ab5e1f588051dd5119149298778cf3d0a6d4a26c9",
+  "package": "strategyrouter",
+  "function": "Acquire",
+  "receiver": "QuotaAuthority",
+  "signature": "QuotaAuthority.Acquire(params=1, results=1)",
+  "start": {
+    "line": 205,
+    "column": 1
+  },
+  "end": {
+    "line": 242,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 206,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 216,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 220,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 221,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 207,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 213,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 217,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 222,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 224,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 227,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 241,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 26
+      },
+      "text": "validAcquireRequest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 2
+      },
+      "text": "authority.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 8
+      },
+      "text": "authority.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 16
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 16
+      },
+      "text": "authority.now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 5
+      },
+      "text": "trustedNow.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 55
+      },
+      "text": "trustedNow.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 17
+      },
+      "text": "acquireFingerprint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 21
+      },
+      "text": "capabilityToken"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 20
+      },
+      "text": "capabilitySeal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 211,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 215,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 219,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 220,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 229,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 230,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 234,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 235,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 236,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 237,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 238,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 240,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 210,
+        "column": 2
+      },
+      "text": "authority.mu.Unlock"
+    }
+  ]
+}

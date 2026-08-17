@@ -1,0 +1,78 @@
+{
+  "file": "internal/strategyrouter/quota.go",
+  "source_sha256": "f76c9e4fa25fc664efcc918ab5e1f588051dd5119149298778cf3d0a6d4a26c9",
+  "package": "strategyrouter",
+  "function": "validAcquireRequest",
+  "signature": "validAcquireRequest(params=1, results=1)",
+  "start": {
+    "line": 200,
+    "column": 1
+  },
+  "end": {
+    "line": 203,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 201,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 9
+      },
+      "text": "validQuotaKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 39
+      },
+      "text": "validMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 70
+      },
+      "text": "validHorizon"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 3
+      },
+      "text": "boundedNonEmpty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 73
+      },
+      "text": "boundedNonEmpty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 139
+      },
+      "text": "request.ObservedAt.IsZero"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

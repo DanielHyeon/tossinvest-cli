@@ -1,0 +1,79 @@
+{
+  "file": "internal/clock/market.go",
+  "source_sha256": "85264b6e9b4e6b13ddee690ca62e0d30cbd73efeb6926e626abc3d20c622f7a9",
+  "package": "clock",
+  "function": "TradingDay",
+  "receiver": "Market",
+  "signature": "Market.TradingDay(params=1, results=2)",
+  "start": {
+    "line": 158,
+    "column": 1
+  },
+  "end": {
+    "line": 164,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 161,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 163,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 14
+      },
+      "text": "m.Location"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 9
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 163,
+        "column": 9
+      },
+      "text": "t.In"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 159,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

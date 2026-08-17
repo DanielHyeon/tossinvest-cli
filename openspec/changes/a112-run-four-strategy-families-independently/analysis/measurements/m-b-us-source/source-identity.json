@@ -1,0 +1,72 @@
+{
+  "schema_version": "a112-m-b-source-identity-v1",
+  "repository": "github.com/JungHoonGhae/tossinvest-cli",
+  "current_head": "016da6245feb60e13971388be386c2c2041469a8",
+  "a112_base_commit": "016da6245feb60e13971388be386c2c2041469a8",
+  "source_paths_clean_vs_head": true,
+  "source_files": [
+    {
+      "path": "internal/official/candle_raw.go",
+      "git_blob": "e203cd9ac769cc29b1791c74cadd4c99f2e2b895",
+      "sha256": "5156cd6ed31e4e688c9aa5e6724ef82dbf13b6c811076a7a36dad7f812626c38"
+    },
+    {
+      "path": "internal/official/candle_reads.go",
+      "git_blob": "cbca6fe1d8f8f5fb3669975dafb30aec52499214",
+      "sha256": "6d20c6ace8c3b7cd7c68e033be935f95e969d7aae51fd9641e906686cb28077a"
+    },
+    {
+      "path": "internal/official/market_reads.go",
+      "git_blob": "31ce4b2b0a8684eb29ace430b895c65ab46b37f0",
+      "sha256": "b356524b48df5dc550c07d74c00f6f7c695e6364c78036e04df8df94ef2ce1ea"
+    },
+    {
+      "path": "internal/official/ratebudget.go",
+      "git_blob": "70064963a367d2e79453822c0138a4af9ae6cd06",
+      "sha256": "5c8466cbb828d318fbd82c521dbfdd6b533a280a25e3646e0acd9b44160db6ff"
+    },
+    {
+      "path": "internal/official/typed_calendar_reads.go",
+      "git_blob": "015d5f57a91280d45e6b20c02991a0c4039e7027",
+      "sha256": "5f97bf011626abd443e60df1028db26dc9b8c598eaa6e106c5377acf4696b143"
+    },
+    {
+      "path": "internal/hybrid/client.go",
+      "git_blob": "4060ad10841189cf6dc92cf686b250170139ac90",
+      "sha256": "14b91f37917e8df287a2cac6dcbbd25aa292dce50932d22d3cd10d800104e94f"
+    },
+    {
+      "path": "cmd/tossctl/quote.go",
+      "git_blob": "dc788218032072e356e16f8329de026d840cd4e8",
+      "sha256": "ae591519129cb94a56ffea7b1b73e5b9d6f414a1126a0f1758f114af04c7b5f0"
+    },
+    {
+      "path": "docs/migration/openapi.latest.json",
+      "git_blob": "55408100f6da127cc7edf010334a37bee5396dca",
+      "sha256": "02cfb91237aa0e2fe39a6776c1147afb8b323e0d3ff51ce57a86cb9675d4eb49"
+    }
+  ],
+  "local_binaries": [
+    {
+      "path": "tossctl",
+      "sha256": "56dc0e34d03ff5d71f1908e3d33ed92bc39849cf674b9ec4597a25e0ada232a0",
+      "reported_version": "dev",
+      "reported_commit": "unknown",
+      "measurement_authority": "not used; no source commit identity"
+    },
+    {
+      "path": "bin/tossctl",
+      "sha256": "c9039880853da208716135beb54abc5e9c7920c77753b0aeac3a1740dc5db3ba",
+      "measurement_authority": "not used; binary/source revision not established"
+    },
+    {
+      "path": "/home/daniel/.local/bin/tossctl",
+      "sha256": "899a74aca0d72411de80bb92fe89cfbdf31948dbf008635a1c4bb7125ddae882",
+      "reported_version": "a100-m0-candidate+git.882a0b490b0b.dirty.d5a775351fba",
+      "reported_commit": "882a0b490b0b6d2eb7abe5c5040c514776f49f3e",
+      "measurement_authority": "not used; revision differs from frozen A112 base"
+    }
+  ],
+  "binary_help_only": true,
+  "secrets_or_account_identifiers_persisted": false
+}

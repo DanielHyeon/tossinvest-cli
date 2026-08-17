@@ -1,0 +1,16 @@
+{
+  "schema_version": "a112-m-b-redaction-scan-v1",
+  "scope": "all payload JSON files in this receipt directory, excluding manifest.sha256",
+  "forbidden_value_patterns": [
+    "Authorization header values",
+    "OAuth client secret values",
+    "access or refresh credential values",
+    "cookies",
+    "account identifiers",
+    "order identifiers",
+    "request identifiers"
+  ],
+  "result": "PASS",
+  "matches": [],
+  "notes": "Only static source paths, hashes, public symbol AAPL, endpoint contracts, and explicit absence states are persisted."
+}

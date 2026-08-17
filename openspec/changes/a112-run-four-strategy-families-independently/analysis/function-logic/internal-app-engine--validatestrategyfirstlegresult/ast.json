@@ -1,0 +1,334 @@
+{
+  "file": "internal/app/engine/strategy_first_leg_admission.go",
+  "source_sha256": "a08618229629b30fd7f4f45b19b3773cb9b1e84f9dc3eebf6654e44ea4e72894",
+  "package": "engine",
+  "function": "validateStrategyFirstLegResult",
+  "signature": "validateStrategyFirstLegResult(params=1, results=2)",
+  "start": {
+    "line": 102,
+    "column": 1
+  },
+  "end": {
+    "line": 136,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 109,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 112,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 128,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 132,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 38
+      },
+      "text": "strategyFirstLegRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 102
+      },
+      "text": "lineage.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 122
+      },
+      "text": "terms.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 73
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 89
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 3
+      },
+      "text": "terms.AccountRef"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 47
+      },
+      "text": "terms.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 83
+      },
+      "text": "terms.Symbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 3
+      },
+      "text": "terms.CampaignID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 47
+      },
+      "text": "terms.LegOrdinal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 74
+      },
+      "text": "terms.Quantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 3
+      },
+      "text": "terms.LineageIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 50
+      },
+      "text": "Identity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 50
+      },
+      "text": "terms.Policy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 38
+      },
+      "text": "strategyFirstLegRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 55
+      },
+      "text": "terms.Entry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 70
+      },
+      "text": "terms.EffectiveStop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 93
+      },
+      "text": "terms.Target"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 6
+      },
+      "text": "price.Currency"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 47
+      },
+      "text": "price.MinorScale"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 87
+      },
+      "text": "price.UnitVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 39
+      },
+      "text": "strategyFirstLegRefusal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 104,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 108,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 110,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 114,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 115,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

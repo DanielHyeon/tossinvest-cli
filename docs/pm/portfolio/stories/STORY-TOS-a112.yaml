@@ -1,0 +1,18 @@
+{
+  "id": "STORY-TOS-a112",
+  "title": "Run four strategy families as independent evaluators",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a112-run-four-strategy-families-independently",
+    "path": "openspec/changes/a112-run-four-strategy-families-independently"
+  },
+  "acceptance": [
+    "Continuation, reversal, weekly-value and breakout-retest expose exactly eight OFF-by-default KR/US lane descriptors",
+    "Each lane has independent cadence, queue, deadline, health and entry-only failure latch while safety loops remain independent",
+    "A market coordinator arbitrates sealed proposals and sends at most one winner per owner scope through the existing shared Guardian and official Gateway",
+    "Breakout-retest uses only closed official bars for state transitions, forbids first-touch entry and records typed replayable evidence",
+    "No deployment or test step enables lane, automation, autostart or LIVE approval, and missing protection readiness produces zero exposure-raising requests"
+  ]
+}
+

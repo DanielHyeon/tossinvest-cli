@@ -1,0 +1,52 @@
+{
+  "schema_version": "a112-m-b-us-source-receipt-v1",
+  "collection_date": "2026-08-15",
+  "lot": "M-B",
+  "collector_role": "Terra read-only measurement collector",
+  "manager_pass_authority": "SOL/Manager only",
+  "verdict": "HOLD",
+  "pass": false,
+  "decision": "No lossless official US closed one-minute bar plus quote source is proven at the frozen current base. L1 and L3-L7 remain blocked.",
+  "required_field_status": {
+    "installed_or_source_binary_identity": "PRESENT",
+    "official_request_contract_hash": "PRESENT_STATIC_ONLY",
+    "terminal_pagination_transcript_hashes": "MISSING",
+    "raw_us_decimal_timestamp_byte_fixtures": "MISSING",
+    "us_symbol_and_usd_currency": "STATIC_CONTRACT_ONLY",
+    "official_regular_session_calendar_identity": "STATIC_CONTRACT_ONLY",
+    "rate_headers_budget_semantics": "STATIC_CONTRACT_ONLY; OBSERVATION_MISSING",
+    "redaction_scan": "PRESENT",
+    "permissions": "MISSING; chmod 0700/0600 returned success but this /mnt/D mount reports 0755 for the directory and every payload",
+    "self_excluding_manifest": "PRESENT"
+  },
+  "blocking_facts": [
+    "official.Client.RawMinuteCandles preserves raw decimal and timestamp strings but rejects market US before any HTTP request.",
+    "official.Client.Candles is the generic official path but converts timestamp with time.Parse and decimals with strconv.ParseFloat before exposing domain.Chart.",
+    "official.Client.Prices and official.Client.Orderbook similarly expose float-adapted domain values; no raw US quote DTO was found in internal/official.",
+    "No authenticated external request was sent: the lossless source precondition already fails locally, and credentials/configuration were intentionally not inspected.",
+    "Consequently there is no sanitized raw US body, terminal pagination transcript, observed USD result, observed US regular-session join, or observed rate-header budget to seal.",
+    "The receipt directory and payloads requested chmod 0700/0600, but this /mnt/D filesystem reports 0755 after a successful chmod; the required POSIX modes are therefore not independently verified."
+  ],
+  "prohibited_actions_not_taken": [
+    "order place/cancel/amend/preview",
+    "verify run/resume/redo/abort",
+    "config or auth update/login/logout/extend",
+    "engine, Docker, container, toggle, journal, build, install, stage, commit, push, or deployment mutation"
+  ],
+  "network_calls": [],
+  "payload_files": [
+    "source-identity.json",
+    "request-contract.json",
+    "raw-us-bar-quote-payload.json",
+    "terminal-pagination.json",
+    "session-calendar.json",
+    "rate-budget.json",
+    "redaction-scan.json",
+    "commands.json"
+  ],
+  "manifest": {
+    "path": "manifest.sha256",
+    "self_excluding": true,
+    "verification": "sha256sum -c manifest.sha256"
+  }
+}

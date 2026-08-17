@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "change_id": "a112-run-four-strategy-families-independently",
+  "frozen_base": "016da6245feb60e13971388be386c2c2041469a8",
+  "immutability": {
+    "consumer_rule": "L2/L3 consumers must use a hash-identical copy; they must not reinterpret or rewrite this golden.",
+    "change_rule": "Any content change requires an explicit Manager-authored OpenSpec amendment and a new manifest/receipt."
+  },
+  "families": [
+    "CONTINUATION",
+    "REVERSAL",
+    "WEEKLY_VALUE",
+    "BREAKOUT_RETEST"
+  ],
+  "markets": ["KR", "US"],
+  "descriptors": [
+    {"market":"KR","family":"CONTINUATION","lane_id":"kr_short_flow_continuation_v1","lane_version":"v1","horizon":"SHORT","desired":"OFF","effective":"OFF","runtime":"UNOBSERVED"},
+    {"market":"US","family":"CONTINUATION","lane_id":"us_short_participation_continuation_v1","lane_version":"v1","horizon":"SHORT","desired":"OFF","effective":"OFF","runtime":"UNOBSERVED"},
+    {"market":"KR","family":"REVERSAL","lane_id":"kr_short_absorption_reversal_v1","lane_version":"v1","horizon":"SHORT","desired":"OFF","effective":"OFF","runtime":"UNOBSERVED"},
+    {"market":"US","family":"REVERSAL","lane_id":"us_short_dislocation_reversal_v1","lane_version":"v1","horizon":"SHORT","desired":"OFF","effective":"OFF","runtime":"UNOBSERVED"},
+    {"market":"KR","family":"WEEKLY_VALUE","lane_id":"kr_weekly_disclosure_value_v1","lane_version":"v1","horizon":"WEEKLY","desired":"OFF","effective":"OFF","runtime":"UNOBSERVED"},
+    {"market":"US","family":"WEEKLY_VALUE","lane_id":"us_weekly_disclosure_value_v1","lane_version":"v1","horizon":"WEEKLY","desired":"OFF","effective":"OFF","runtime":"UNOBSERVED"},
+    {"market":"KR","family":"BREAKOUT_RETEST","lane_id":"kr_short_breakout_retest_v1","lane_version":"v1","horizon":"SHORT","desired":"OFF","effective":"OFF","runtime":"UNOBSERVED"},
+    {"market":"US","family":"BREAKOUT_RETEST","lane_id":"us_short_breakout_retest_v1","lane_version":"v1","horizon":"SHORT","desired":"OFF","effective":"OFF","runtime":"UNOBSERVED"}
+  ],
+  "worker_key_fields": ["market", "family", "lane_id", "lane_version"],
+  "coordinator_key_fields": ["market"],
+  "coordinator_count": 2,
+  "worker_count": 8,
+  "shared_authorities": {
+    "owner_key_fields": ["account", "market", "symbol", "position_generation"],
+    "family_or_horizon_in_owner_key": false,
+    "account_scoped_guardian_count": 1,
+    "account_wide_exposure_loss_domain_count": 1,
+    "journal_dispatch_owner_count": 1,
+    "official_execution_gateway_count": 1,
+    "q_final": "min(q_candidate,q_guardian,q_horizon,q_market,q_family_policy,q_sector,q_symbol)",
+    "q_final_must_not_exceed_q_candidate": true
+  },
+  "states": {
+    "breakout_forward": ["DISCOVERED","RANGE_LOCKED","BREAKOUT_CLOSED","RETEST_WAIT","RECLAIMED","ARMED","PROPOSED"],
+    "breakout_terminal": ["INVALIDATED","TIMED_OUT","CONSUMED"],
+    "allowed_transitions": [
+      {"from":"DISCOVERED","to":"RANGE_LOCKED"},
+      {"from":"RANGE_LOCKED","to":"BREAKOUT_CLOSED"},
+      {"from":"BREAKOUT_CLOSED","to":"RETEST_WAIT"},
+      {"from":"RETEST_WAIT","to":"RECLAIMED"},
+      {"from":"RECLAIMED","to":"ARMED"},
+      {"from":"ARMED","to":"PROPOSED"},
+      {"from":"DISCOVERED","to":"INVALIDATED"},
+      {"from":"RANGE_LOCKED","to":"INVALIDATED"},
+      {"from":"BREAKOUT_CLOSED","to":"INVALIDATED"},
+      {"from":"RETEST_WAIT","to":"INVALIDATED"},
+      {"from":"RECLAIMED","to":"INVALIDATED"},
+      {"from":"ARMED","to":"INVALIDATED"},
+      {"from":"RETEST_WAIT","to":"TIMED_OUT"},
+      {"from":"PROPOSED","to":"CONSUMED"}
+    ],
+    "terminal_non_resurrection": true,
+    "pre_terminal_correction": "same setup_id, new immutable snapshot/evidence digest, deterministic replay",
+    "post_terminal_or_proposed_correction": "must not resurrect, replace, or reissue a proposal/first-leg authority; append CORRECTION_AFTER_PROPOSAL diagnostic only",
+    "new_regular_session": "new setup_id"
+  },
+  "refusal_enums": {
+    "arbitration": ["ARBITRATION_UNCALIBRATED","ARBITRATION_TIE","ARBITRATION_MULTIPLE_OWNER","ARBITRATION_STALE_OWNER","ARBITRATION_STALE_ENVELOPE","ARBITRATION_SEAL_MISMATCH"],
+    "quote_fx_sizing": ["QUOTE_STALE","SPREAD_TOO_WIDE","ENTRY_DRIFT_EXCEEDED","FX_MISSING","FX_STALE","FX_CURRENCY_MISMATCH","FX_INVALID_RATE","SIZING_OVERFLOW","NON_PROTECTIVE_STOP","NON_PROTECTIVE_TARGET","ZERO_QUANTITY"],
+    "scheduler": ["BUDGET_DEFERRED"],
+    "diagnostic_not_refusal": ["CORRECTION_AFTER_PROPOSAL"]
+  },
+  "arbitration": {
+    "proposal_envelope_required_fields": ["worker_key","account","market","symbol","position_generation","candidate_id","setup_id","horizon","evidence_digest","config_digest","evaluated_at","fresh_until","entry","stop","target","quantity","raw_lane_score","score_ppm","arbitration_score_version","calibration_digest","lineage_seal"],
+    "score_ppm": {"integer": true,"minimum": 0,"maximum": 1000000},
+    "eligible_comparison_requires": ["desired=ON","effective=ON","approved arbitration_score_version","approved calibration_digest","same score version","same calibration digest"],
+    "selection": "highest unique score_ppm per owner scope after pure evaluation",
+    "active_owner": "always preserved before score comparison",
+    "refusal_mapping": {"tie":"ARBITRATION_TIE","incomparable_or_uncalibrated":"ARBITRATION_UNCALIBRATED","multiple_active_owners":"ARBITRATION_MULTIPLE_OWNER","stale_owner_revision":"ARBITRATION_STALE_OWNER","stale_envelope":"ARBITRATION_STALE_ENVELOPE","seal_mismatch":"ARBITRATION_SEAL_MISMATCH"},
+    "singleton_without_calibration_refusal": "ARBITRATION_UNCALIBRATED",
+    "singleton_without_calibration_dispatch_handoff": false,
+    "raw_candidate_score_or_registry_order_must_not_select": true
+  },
+  "queue": {
+    "dedup_key_fields": ["account","market","symbol","position_generation","family","lane_id","lane_version","snapshot_digest"],
+    "capacity": "server-owned positive finite",
+    "same_key": "latest current envelope coalesces",
+    "ordering": "deterministic lexical owner scope followed by sealed evaluation sequence",
+    "overflow": "typed refusal and bounded drop counter",
+    "active_owner_scope_silent_eviction_forbidden": true,
+    "market_wide_single_proposal_assumption_forbidden": true,
+    "selected_limit": "at most one selected proposal per owner scope"
+  },
+  "runtime_policy": {
+    "each_worker_owns": ["cadence","bounded_queue","monotonic_deadline","health","consecutive_failure_counter","entry_only_latch","versioned_backoff"],
+    "all_values": "server-owned positive finite values in a versioned runtime manifest",
+    "peer_lane_state_mutation_forbidden": true,
+    "safety_loops": ["fill_detection","reconciliation","broker_resident_protection_supervision","exit_observation","emergency_reduction"],
+    "entry_failure_must_not_delay_safety_loops": true
+  },
+  "operator_compatibility": {
+    "legacy_market_level_fields": "preserved",
+    "additive_children": ["lanes[8] fixed deterministic order","coordinators[2] fixed deterministic order"],
+    "surface": "read-only",
+    "older_clients_must_tolerate_unknown_additive_fields": true,
+    "unbounded_metric_labels_forbidden": ["setup","candidate","symbol"]
+  }
+}

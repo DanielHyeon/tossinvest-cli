@@ -1,0 +1,44 @@
+{
+  "schema_version": "a112-m-b-request-contract-v1",
+  "official_contract_source": {
+    "path": "docs/migration/openapi.latest.json",
+    "api_version": "1.2.4",
+    "canonical_contract_sha256": "dac2c617ff2858a4bacf0caa071d5c0c17c2db2633549f1fdaa4915b47b35e1a"
+  },
+  "static_official_bar_contract": {
+    "method": "GET",
+    "base_url": "https://openapi.tossinvest.com",
+    "path": "/api/v1/candles",
+    "operation_id": "getCandles",
+    "query_contract": {
+      "symbol": "AAPL",
+      "interval": "1m",
+      "count": 200,
+      "adjusted": false,
+      "before": "previous response nextBefore value; cursor contract only"
+    },
+    "auth_contract": "oauth2 client credentials",
+    "rate_limit_group": "MARKET_DATA_CHART",
+    "symbol_contract": "AAPL is a documented US symbol example",
+    "currency_contract": "Candle currency enum includes USD",
+    "pagination_contract": "nextBefore is a terminal null or a verbatim inclusive before cursor",
+    "executed": false,
+    "execution_blocker": "The current raw-preserving source rejects US before HTTP; generic execution would be float/time-adapted and cannot provide M-B authority."
+  },
+  "raw_preserving_candidate": {
+    "symbol": "official.Client.RawMinuteCandles",
+    "source_file": "internal/official/candle_raw.go",
+    "source_fragment_sha256": "3975c018753853f5880982fb91f4b2db3c2a9936f17326565dbc5ee47c3c03de",
+    "preserves": ["timestamp strings", "OHLCV decimal strings", "currency strings", "nextBefore cursor"],
+    "hard_rejection": "market must equal KR and symbol must match six-digit KRX format",
+    "us_request_permitted": false,
+    "outbound_request_on_us": false
+  },
+  "generic_candidate_rejected_for_m_b": {
+    "symbols": ["official.Client.Candles", "hybrid.Client.GetChart", "tossctl quote chart"],
+    "source_files": ["internal/official/candle_reads.go", "internal/official/market_reads.go", "internal/hybrid/client.go", "cmd/tossctl/quote.go"],
+    "reason": "The candle adapter parses timestamps and decimals into time.Time/float64, adds local fetch time, and the CLI route is source=both with a WTS fallback. It is not a raw-byte lossless authority.",
+    "adapter_fragment_sha256": "2395c7e3d4b4da82762c8613d0748b0e82e247d27a63e16065f3dfbb9802ea79",
+    "raw_source_substitute_allowed": false
+  }
+}

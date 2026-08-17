@@ -108,3 +108,4 @@
 | `a109-the-sibling-endpoints-recover-too` | STORY-TOS-a109 | in_progress |
 | `a110-only-the-same-dispute-becomes-permanent` | STORY-TOS-a110 | implemented |
 | `a111-exit-lines-stay-actionable-with-flat-quotes` | STORY-TOS-a111 | archived |
+| `a112-run-four-strategy-families-independently` | STORY-TOS-a112 | in_progress |

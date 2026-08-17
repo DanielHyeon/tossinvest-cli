@@ -1,0 +1,208 @@
+{
+  "file": "internal/app/engine/strategy_runtime_projection.go",
+  "source_sha256": "6f8241d38004892cdf51bb71f597b368545e3d18e362ecd036e666462de42fce",
+  "package": "engine",
+  "function": "Read",
+  "receiver": "Context",
+  "signature": "Context.Read(params=1, results=2)",
+  "start": {
+    "line": 23,
+    "column": 1
+  },
+  "end": {
+    "line": 49,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 24,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 30,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 39,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 43,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 25,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 31,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 35,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 41
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 2
+      },
+      "text": "c.strategyProjectionMu.RLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 2
+      },
+      "text": "c.strategyProjectionMu.RUnlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 41
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 19
+      },
+      "text": "store.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 17
+      },
+      "text": "supervisor.Snapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 23
+      },
+      "text": "strategyprojection.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 15
+      },
+      "text": "strategyprojection.WithMarketFailure"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 38,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 42,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 43,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 44,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

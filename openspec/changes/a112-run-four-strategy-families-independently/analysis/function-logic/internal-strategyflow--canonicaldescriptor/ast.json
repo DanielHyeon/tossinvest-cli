@@ -1,0 +1,86 @@
+{
+  "file": "internal/strategyflow/registry.go",
+  "source_sha256": "b188fe1dd7dfc1bc2f76b9905b8d461a6747156d5d3ed3e208f740dc79129e54",
+  "package": "strategyflow",
+  "function": "canonicalDescriptor",
+  "signature": "canonicalDescriptor(params=1, results=2)",
+  "start": {
+    "line": 109,
+    "column": 1
+  },
+  "end": {
+    "line": 117,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 112,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 113,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 11
+      },
+      "text": "descriptorFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 6
+      },
+      "text": "keyFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 28
+      },
+      "text": "keyFor"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

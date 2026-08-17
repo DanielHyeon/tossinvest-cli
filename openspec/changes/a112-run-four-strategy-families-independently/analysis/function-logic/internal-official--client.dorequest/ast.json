@@ -1,0 +1,252 @@
+{
+  "file": "internal/official/client.go",
+  "source_sha256": "6d145916a6797f3a32842561346c8767585a951d8883ebd81bf8af4632106639",
+  "package": "official",
+  "function": "doRequest",
+  "receiver": "Client",
+  "signature": "Client.doRequest(params=1, results=3)",
+  "start": {
+    "line": 191,
+    "column": 1
+  },
+  "end": {
+    "line": 207,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 201,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 196,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 203,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 206,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 13
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 193,
+        "column": 15
+      },
+      "text": "c.hc.Do"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 3
+      },
+      "text": "observeAttempt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 18
+      },
+      "text": "req.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 87
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 18
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 8
+      },
+      "text": "resp.Body.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 2
+      },
+      "text": "c.rates.record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 17
+      },
+      "text": "readRateBudget"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 59
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 15
+      },
+      "text": "io.ReadAll"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 3
+      },
+      "text": "observeAttempt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 18
+      },
+      "text": "req.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 87
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 32
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 2
+      },
+      "text": "observeAttempt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 17
+      },
+      "text": "req.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 86
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 133
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 140
+      }
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 198,
+        "column": 2
+      },
+      "text": "resp.Body.Close"
+    }
+  ]
+}

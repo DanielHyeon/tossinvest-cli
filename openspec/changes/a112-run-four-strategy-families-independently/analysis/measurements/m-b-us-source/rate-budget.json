@@ -1,0 +1,25 @@
+{
+  "schema_version": "a112-m-b-rate-budget-v1",
+  "documented_contract": {
+    "endpoint": "GET /api/v1/candles",
+    "rate_limit_group": "MARKET_DATA_CHART",
+    "documented_limit": "5 requests per second",
+    "response_headers": ["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "Retry-After"]
+  },
+  "client_static_semantics": {
+    "source_file": "internal/official/ratebudget.go",
+    "source_sha256": "5c8466cbb828d318fbd82c521dbfdd6b533a280a25e3646e0acd9b44160db6ff",
+    "behavior": "doRequest records headers per normalized path. Missing headers produce Reported=false; reset is preserved raw and classified as epoch, delta, absent, or unparsed."
+  },
+  "observed_us_request_headers": {
+    "status": "MISSING",
+    "limit": null,
+    "remaining": null,
+    "reset_raw": null,
+    "retry_after": null,
+    "response_header_sha256": null,
+    "reason": "No external request was made after lossless-source preflight failed. Therefore the runtime budget and reset encoding remain unmeasured for US."
+  },
+  "rate_limit_ambiguity": true,
+  "passable": false
+}

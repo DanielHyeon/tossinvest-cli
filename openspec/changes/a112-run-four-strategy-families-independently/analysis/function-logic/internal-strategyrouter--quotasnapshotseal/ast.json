@@ -1,0 +1,127 @@
+{
+  "file": "internal/strategyrouter/quota.go",
+  "source_sha256": "f76c9e4fa25fc664efcc918ab5e1f588051dd5119149298778cf3d0a6d4a26c9",
+  "package": "strategyrouter",
+  "function": "quotaSnapshotSeal",
+  "signature": "quotaSnapshotSeal(params=1, results=1)",
+  "start": {
+    "line": 56,
+    "column": 1
+  },
+  "end": {
+    "line": 67,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 61,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 7
+      },
+      "text": "sha256.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 86
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 86
+      },
+      "text": "snapshot.ObservedAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 138
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 138
+      },
+      "text": "snapshot.FreshUntil.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 59,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 3
+      },
+      "text": "writeUint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 2
+      },
+      "text": "copy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 18
+      },
+      "text": "h.Sum"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 57,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

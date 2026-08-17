@@ -1,0 +1,178 @@
+{
+  "file": "internal/strategyrouter/production.go",
+  "source_sha256": "eafb36f41e2c07b85737692afa20fac968123481c812237f8678ad7a140bb520",
+  "package": "strategyrouter",
+  "function": "validProductionRouteCandidates",
+  "signature": "validProductionRouteCandidates(params=2, results=1)",
+  "start": {
+    "line": 373,
+    "column": 1
+  },
+  "end": {
+    "line": 389,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 375,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 379,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 381,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 376,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 384,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 388,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 10
+      },
+      "text": "productionRouteDescriptors"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 375,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 375,
+        "column": 20
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 378,
+        "column": 10
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 378,
+        "column": 32
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 382,
+        "column": 5
+      },
+      "text": "validDesiredState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 382,
+        "column": 42
+      },
+      "text": "validDesiredState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 383,
+        "column": 5
+      },
+      "text": "productionRouteIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 383,
+        "column": 55
+      },
+      "text": "productionRouteIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 388,
+        "column": 9
+      },
+      "text": "len"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 374,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 378,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 380,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 386,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

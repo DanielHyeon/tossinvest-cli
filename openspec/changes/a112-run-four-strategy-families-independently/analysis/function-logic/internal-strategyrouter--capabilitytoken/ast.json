@@ -1,0 +1,111 @@
+{
+  "file": "internal/strategyrouter/quota.go",
+  "source_sha256": "f76c9e4fa25fc664efcc918ab5e1f588051dd5119149298778cf3d0a6d4a26c9",
+  "package": "strategyrouter",
+  "function": "capabilityToken",
+  "signature": "capabilityToken(params=3, results=1)",
+  "start": {
+    "line": 107,
+    "column": 1
+  },
+  "end": {
+    "line": 114,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 109,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 113,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 7
+      },
+      "text": "sha256.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 84
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 108
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 133
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 3
+      },
+      "text": "writeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 2
+      },
+      "text": "writeUint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 9
+      },
+      "text": "stringHex"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 19
+      },
+      "text": "h.Sum"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 108,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
