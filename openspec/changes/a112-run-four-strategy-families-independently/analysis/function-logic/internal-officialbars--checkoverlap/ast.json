@@ -1,15 +1,15 @@
 {
   "file": "internal/officialbars/producer.go",
-  "source_sha256": "83960410b7b870ca60fad568002060de49ebc7271d72b94d46f665ff274b29b1",
+  "source_sha256": "8d45ca93b090cfe9e10a93e5a658991ed3376820b56dfa05e49b809171c16772",
   "package": "officialbars",
   "function": "checkOverlap",
   "signature": "checkOverlap(params=2, results=1)",
   "start": {
-    "line": 419,
+    "line": 444,
     "column": 1
   },
   "end": {
-    "line": 432,
+    "line": 457,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "switch",
       "at": {
-        "line": 420,
+        "line": 445,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "case",
       "at": {
-        "line": 421,
+        "line": 446,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "case",
       "at": {
-        "line": 425,
+        "line": 450,
         "column": 2
       }
     }
@@ -42,21 +42,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 422,
+        "line": 447,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 428,
+        "line": 453,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 431,
+        "line": 456,
         "column": 2
       }
     }
@@ -65,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 421,
+        "line": 446,
         "column": 7
       },
       "text": "currentFirst.openAt.After"
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 422,
+        "line": 447,
         "column": 10
       },
       "text": "refuse"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 423,
+        "line": 448,
         "column": 31
       },
       "text": "currentFirst.openAt.Format"
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 424,
+        "line": 449,
         "column": 55
       },
       "text": "previousLast.openAt.Format"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 425,
+        "line": 450,
         "column": 7
       },
       "text": "currentFirst.openAt.Equal"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 428,
+        "line": 453,
         "column": 10
       },
       "text": "refuse"
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 429,
+        "line": 454,
         "column": 18
       },
       "text": "currentFirst.openAt.Format"

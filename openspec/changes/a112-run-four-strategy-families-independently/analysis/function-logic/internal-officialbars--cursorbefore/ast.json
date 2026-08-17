@@ -1,0 +1,46 @@
+{
+  "file": "internal/officialbars/producer_test.go",
+  "source_sha256": "6c6f064d3ecceb46ed4df8546cb5d1f16c40e2831dbfa99c223c0c99f2b5eda4",
+  "package": "officialbars",
+  "function": "cursorBefore",
+  "signature": "cursorBefore(params=2, results=1)",
+  "start": {
+    "line": 219,
+    "column": 1
+  },
+  "end": {
+    "line": 222,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 221,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 9
+      },
+      "text": "brokerTimestamp"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,15 +1,15 @@
 {
   "file": "internal/officialbars/producer.go",
-  "source_sha256": "83960410b7b870ca60fad568002060de49ebc7271d72b94d46f665ff274b29b1",
+  "source_sha256": "8d45ca93b090cfe9e10a93e5a658991ed3376820b56dfa05e49b809171c16772",
   "package": "officialbars",
   "function": "adoptPage",
   "signature": "adoptPage(params=1, results=2)",
   "start": {
-    "line": 398,
+    "line": 415,
     "column": 1
   },
   "end": {
-    "line": 409,
+    "line": 434,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 400,
+        "line": 417,
         "column": 2
       }
     },
@@ -25,7 +25,15 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 402,
+        "line": 419,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 426,
         "column": 3
       }
     }
@@ -34,14 +42,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 403,
+        "line": 420,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 408,
+        "line": 427,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 433,
         "column": 2
       }
     }
@@ -50,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 399,
+        "line": 416,
         "column": 9
       },
       "text": "make"
@@ -58,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 399,
+        "line": 416,
         "column": 32
       },
       "text": "len"
@@ -66,15 +81,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 401,
-        "column": 18
+        "line": 418,
+        "column": 19
       },
       "text": "time.Parse"
     },
     {
       "kind": "call",
       "at": {
-        "line": 403,
+        "line": 420,
         "column": 16
       },
       "text": "refuse"
@@ -82,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 404,
+        "line": 421,
         "column": 15
       },
       "text": "strconv.Itoa"
@@ -90,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 404,
+        "line": 421,
         "column": 72
       },
       "text": "strconv.Quote"
@@ -98,39 +113,94 @@
     {
       "kind": "call",
       "at": {
-        "line": 406,
-        "column": 9
+        "line": 423,
+        "column": 13
       },
-      "text": "append"
+      "text": "Add"
     },
     {
       "kind": "call",
       "at": {
-        "line": 406,
-        "column": 57
+        "line": 423,
+        "column": 13
       },
-      "text": "openAt.UTC"
+      "text": "closeAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 426,
+        "column": 6
+      },
+      "text": "openAt.Second"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 426,
+        "column": 30
+      },
+      "text": "openAt.Nanosecond"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 427,
+        "column": 16
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 428,
+        "column": 15
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 428,
+        "column": 48
+      },
+      "text": "openAt.Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 431,
+        "column": 9
+      },
+      "text": "append"
     }
   ],
   "assignments": [
     {
       "kind": ":=",
       "at": {
-        "line": 399,
+        "line": 416,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 401,
+        "line": 418,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 423,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 406,
+        "line": 431,
         "column": 3
       }
     }

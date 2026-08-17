@@ -1,0 +1,63 @@
+{
+  "file": "internal/officialbars/producer_test.go",
+  "source_sha256": "1d36e945513968599fdb553b18c1b8160436965aeb68ca345be054d25f12afde",
+  "package": "officialbars",
+  "function": "brokerTimestamp",
+  "signature": "brokerTimestamp(params=2, results=1)",
+  "start": {
+    "line": 106,
+    "column": 1
+  },
+  "end": {
+    "line": 109,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 108,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 9
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 9
+      },
+      "text": "instant.In"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 20
+      },
+      "text": "mustLocation"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

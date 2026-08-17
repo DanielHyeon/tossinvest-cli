@@ -27,7 +27,8 @@ var (
 	usOpen  = time.Date(2026, 8, 14, 13, 30, 0, 0, time.UTC)
 	usClose = time.Date(2026, 8, 14, 20, 0, 0, 0, time.UTC)
 	// 한국 정규장 09:00~15:30 KST는 00:00~06:30 UTC다.
-	krOpen = time.Date(2026, 8, 14, 0, 0, 0, 0, time.UTC)
+	krOpen  = time.Date(2026, 8, 14, 0, 0, 0, 0, time.UTC)
+	krClose = time.Date(2026, 8, 14, 6, 30, 0, 0, time.UTC)
 )
 
 const (
@@ -108,18 +109,34 @@ func brokerTimestamp(t *testing.T, instant time.Time) string {
 	return instant.In(mustLocation(t, marketclock.MarketKR)).Format("2006-01-02T15:04:05.000-07:00")
 }
 
+// usBar는 "이 시각에 여는 봉"을 만든다. 브로커가 전선에 싣는 시각표는 봉이 **닫는**
+// 순간이므로(2026-08-18 실측), 여기서 일부러 +1분 한 값을 Timestamp에 넣는다.
+// 시험의 기대값은 언제나 여는 시각으로 적고, 변환은 생산자가 한다.
 func usBar(t *testing.T, open time.Time, closePrice string) official.RawMinuteCandle {
 	t.Helper()
+	return usBarLabelled(t, open.Add(time.Minute), closePrice)
+}
+
+// usBarLabelled는 브로커가 보낸 시각표를 그대로 받는다(즉 봉이 닫는 순간).
+// 경계 시험처럼 "이 이름표가 붙은 봉"을 직접 말해야 할 때 쓴다.
+func usBarLabelled(t *testing.T, label time.Time, closePrice string) official.RawMinuteCandle {
+	t.Helper()
 	return official.RawMinuteCandle{
-		Timestamp: brokerTimestamp(t, open), Open: "231.4350", High: "231.5000",
+		Timestamp: brokerTimestamp(t, label), Open: "231.4350", High: "231.5000",
 		Low: "231.4000", Close: closePrice, Volume: "1234", Currency: "USD",
 	}
 }
 
+// krBar도 여는 시각을 받는다(전선에는 닫는 시각이 실린다).
 func krBar(t *testing.T, open time.Time, closePrice string) official.RawMinuteCandle {
 	t.Helper()
+	return krBarLabelled(t, open.Add(time.Minute), closePrice)
+}
+
+func krBarLabelled(t *testing.T, label time.Time, closePrice string) official.RawMinuteCandle {
+	t.Helper()
 	return official.RawMinuteCandle{
-		Timestamp: brokerTimestamp(t, open), Open: "71000", High: "71100",
+		Timestamp: brokerTimestamp(t, label), Open: "71000", High: "71100",
 		Low: "70900", Close: closePrice, Volume: "12", Currency: "KRW",
 	}
 }
@@ -196,10 +213,12 @@ func openTestStore(t *testing.T, clock marketclock.Clock) *strategyevidence.Stor
 	return store
 }
 
-// cursorBefore는 실측된 커서다: 그 페이지의 가장 오래된 봉보다 정확히 1분 이르다.
-func cursorBefore(t *testing.T, oldest time.Time) string {
+// cursorBefore는 실측된 커서다: 그 페이지의 가장 오래된 봉의 **이름표**보다 정확히
+// 1분 이르다. 이름표가 봉이 닫는 순간이므로, 여는 시각으로 말하면 그 값은 바로
+// 그 봉이 여는 순간과 같다. 인자는 다른 도우미들과 마찬가지로 여는 시각이다.
+func cursorBefore(t *testing.T, oldestOpen time.Time) string {
 	t.Helper()
-	return brokerTimestamp(t, oldest.Add(-time.Minute))
+	return brokerTimestamp(t, oldestOpen)
 }
 
 // recordingStore는 적재된 봉투를 그대로 붙잡아 둔다. 머리말과 본문을 시험이 직접 볼 수 있다.
@@ -390,11 +409,11 @@ func TestPollStoresOnlyRegularSessionBarsButUsesTheOthersAsSuccessors(t *testing
 	clock := marketclock.NewFake(pollAt)
 	store := openTestStore(t, clock)
 	reader := readerOf(usPage(t, pollAt, "page-1", "",
-		usBar(t, usClose.Add(time.Minute), "231.4400"),  // 16:01 ET, after hours
-		usBar(t, usClose, "231.4500"),                   // 16:00 ET, close is exclusive
-		usBar(t, usClose.Add(-time.Minute), "231.4600"), // 15:59 ET, last regular bar
-		usBar(t, usOpen, "231.4700"),                    // 09:30 ET, first regular bar
-		usBar(t, usOpen.Add(-time.Minute), "231.4800"))) // 09:29 ET, pre-session
+		usBar(t, usClose.Add(time.Minute), "231.4400"),  // 16:01 ET에 여는 봉, 장 마감 후
+		usBar(t, usClose, "231.4500"),                   // 16:00 ET에 여는 봉, 마감 시각은 제외
+		usBar(t, usClose.Add(-time.Minute), "231.4600"), // 15:59 ET에 여는 봉, 정규장 마지막
+		usBar(t, usOpen, "231.4700"),                    // 09:30 ET에 여는 봉, 정규장 첫 봉
+		usBar(t, usOpen.Add(-time.Minute), "231.4800"))) // 09:29 ET에 여는 봉, 개장 전
 
 	result, err := PollClosedBars(ctx, reader, store, BarPollInput{
 		Market: marketclock.MarketUS, Symbol: usSymbol,
@@ -414,7 +433,7 @@ func TestPollStoresOnlyRegularSessionBarsButUsesTheOthersAsSuccessors(t *testing
 		series.Bars[1].Payload.OpenAtMS != uint64(usClose.Add(-time.Minute).UnixMilli()) {
 		t.Fatalf("stored minutes = %+v", series.Bars)
 	}
-	// 15:59 봉의 successor는 정규장 밖의 16:00 봉이다.
+	// 15:59에 여는 봉의 successor는 정규장 밖에서 16:00에 여는 봉이다.
 	if series.Bars[1].Payload.SuccessorOpenAtMS != uint64(usClose.UnixMilli()) {
 		t.Fatalf("15:59 successor = %d, want the 16:00 after-hours bar", series.Bars[1].Payload.SuccessorOpenAtMS)
 	}
@@ -1388,7 +1407,7 @@ func TestPollEndToEndThroughTheRealOfficialClient(t *testing.T) {
 		usBar(t, instants[0], "231.4400"), usBar(t, instants[1], "231.4500"), usBar(t, instants[2], "231.4600"),
 	}
 	firstBefore := pollAt.Truncate(time.Second).In(mustLocation(t, marketclock.MarketKR)).Format(beforeLayout)
-	cursor := brokerTimestamp(t, instants[1].Add(-time.Minute))
+	cursor := cursorBefore(t, instants[1])
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/oauth2/token" {
@@ -1493,5 +1512,158 @@ func TestPollRefusesACalendarWindowThatIsNotOnItsOwnDay(t *testing.T) {
 	}
 	if len(reader.calls) != 0 {
 		t.Fatalf("a refused poll still called the reader: %+v", reader.calls)
+	}
+}
+
+// ---- 결정 30: 브로커의 시각표는 봉이 닫는 순간이다 ----
+
+func TestPollConvertsTheBrokerCloseLabelIntoAnOpenInstant(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	pollAt := usOpen.Add(20 * time.Minute)
+	// 이름표를 직접 적는다. 저장된 봉은 언제나 이름표보다 1분 이른 시각에 열어야 한다.
+	labels := []time.Time{usOpen.Add(10 * time.Minute), usOpen.Add(6 * time.Minute), usOpen.Add(3 * time.Minute)}
+	recorder := &recordingStore{inner: openTestStore(t, marketclock.NewFake(pollAt.Add(time.Second)))}
+	result, err := PollClosedBars(ctx, readerOf(usPage(t, pollAt, "page-1", "",
+		usBarLabelled(t, labels[0], "231.4400"),
+		usBarLabelled(t, labels[1], "231.4500"),
+		usBarLabelled(t, labels[2], "231.4600"))),
+		recorder, BarPollInput{
+			Market: marketclock.MarketUS, Symbol: usSymbol,
+			Calendar: usCalendarAt(t, usOpen.Add(-time.Hour)), PollAt: pollAt,
+		})
+	if err != nil || result.Admitted != 2 || len(recorder.appended) != 2 {
+		t.Fatalf("result = %+v err = %v appended = %d", result, err, len(recorder.appended))
+	}
+	wantSuccessor := map[uint64]uint64{
+		uint64(labels[1].Add(-time.Minute).UnixMilli()): uint64(labels[0].Add(-time.Minute).UnixMilli()),
+		uint64(labels[2].Add(-time.Minute).UnixMilli()): uint64(labels[1].Add(-time.Minute).UnixMilli()),
+	}
+	seen := map[uint64]bool{}
+	for _, envelope := range recorder.appended {
+		payload := payloadOf(t, envelope)
+		successor, known := wantSuccessor[payload.OpenAtMS]
+		if !known {
+			t.Fatalf("stored open %d is not a label minus one minute (labels %v)", payload.OpenAtMS, labels)
+		}
+		if payload.SuccessorOpenAtMS != successor {
+			t.Fatalf("successor = %d, want %d", payload.SuccessorOpenAtMS, successor)
+		}
+		seen[payload.OpenAtMS] = true
+	}
+	if len(seen) != 2 {
+		t.Fatalf("stored opens = %v", seen)
+	}
+	// 가장 새로 관측된 봉도 여는 시각으로 말한다.
+	if !result.NewestObserved.Equal(labels[0].Add(-time.Minute)) {
+		t.Fatalf("newest observed = %v, want %v", result.NewestObserved, labels[0].Add(-time.Minute))
+	}
+}
+
+func TestPollTreatsTheClosingLabelAsTheLastRegularBar(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	pollAt := usClose.Add(5 * time.Minute)
+	store := openTestStore(t, marketclock.NewFake(pollAt.Add(time.Second)))
+	// 정규장은 09:30~16:00 ET다. 이름표가 닫는 순간이므로 16:00 이름표를 단 봉은
+	// 15:59에 열고(창 안, 정규장 마지막), 09:30 이름표를 단 봉은 09:29에 연다(개장 전).
+	result, err := PollClosedBars(ctx, readerOf(usPage(t, pollAt, "page-1", "",
+		usBarLabelled(t, usClose.Add(time.Minute), "231.4300"),
+		usBarLabelled(t, usClose, "231.4400"),
+		usBarLabelled(t, usClose.Add(-time.Minute), "231.4500"),
+		usBarLabelled(t, usOpen.Add(time.Minute), "231.4600"),
+		usBarLabelled(t, usOpen, "231.4700"))), store, BarPollInput{
+		Market: marketclock.MarketUS, Symbol: usSymbol,
+		Calendar: usCalendarAt(t, usClose.Add(-time.Hour)), PollAt: pollAt,
+	})
+	if err != nil {
+		t.Fatalf("PollClosedBars: %v", err)
+	}
+	if result.Observed != 5 || result.Admitted != 3 {
+		t.Fatalf("result = %+v", result)
+	}
+	series := usSeries(t, store, pollAt, pollAt.Add(2*time.Second))
+	want := []uint64{
+		uint64(usOpen.UnixMilli()),
+		uint64(usClose.Add(-2 * time.Minute).UnixMilli()),
+		uint64(usClose.Add(-time.Minute).UnixMilli()),
+	}
+	if len(series.Bars) != len(want) {
+		t.Fatalf("stored bars = %d, want %d", len(series.Bars), len(want))
+	}
+	for index, bar := range series.Bars {
+		if bar.Payload.OpenAtMS != want[index] {
+			t.Fatalf("bar %d opens at %d, want %d", index, bar.Payload.OpenAtMS, want[index])
+		}
+	}
+}
+
+func TestPollTreatsTheKoreanClosingLabelAsTheLastRegularBar(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	pollAt := krClose.Add(5 * time.Minute)
+	store := openTestStore(t, marketclock.NewFake(pollAt.Add(time.Second)))
+	// KRX 정규장은 09:00~15:30 KST다. 15:30 이름표는 15:29에 여는 마지막 정규장 봉,
+	// 09:00 이름표는 08:59에 여는 개장 전 봉이다.
+	result, err := PollClosedBars(ctx, readerOf(pageOf("KR", krSymbol, pollAt, "page-1", "",
+		krBarLabelled(t, krClose.Add(time.Minute), "71040"),
+		krBarLabelled(t, krClose, "71050"),
+		krBarLabelled(t, krClose.Add(-time.Minute), "71060"),
+		krBarLabelled(t, krOpen.Add(time.Minute), "71070"),
+		krBarLabelled(t, krOpen, "71080"))), store, BarPollInput{
+		Market: marketclock.MarketKR, Symbol: krSymbol,
+		Calendar: krCalendarAt(t, krClose.Add(-time.Hour)), PollAt: pollAt,
+	})
+	if err != nil {
+		t.Fatalf("PollClosedBars: %v", err)
+	}
+	if result.Observed != 5 || result.Admitted != 3 {
+		t.Fatalf("result = %+v", result)
+	}
+	series, err := store.SealBarSeries(ctx, strategyevidence.BarSeriesQuery{
+		Market: "KR", Symbol: krSymbol, SessionID: "KRX:2026-08-14",
+		IntervalMS:   strategyevidence.ClosedBar1mIntervalMS,
+		EvaluationAt: pollAt, IngestionCutoff: pollAt.Add(2 * time.Second),
+	})
+	if err != nil {
+		t.Fatalf("SealBarSeries: %v", err)
+	}
+	want := []uint64{
+		uint64(krOpen.UnixMilli()),
+		uint64(krClose.Add(-2 * time.Minute).UnixMilli()),
+		uint64(krClose.Add(-time.Minute).UnixMilli()),
+	}
+	for index, bar := range series.Bars {
+		if bar.Payload.OpenAtMS != want[index] {
+			t.Fatalf("bar %d opens at %d, want %d", index, bar.Payload.OpenAtMS, want[index])
+		}
+	}
+}
+
+func TestPollReportsGapsOnConvertedOpenInstants(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	pollAt := usOpen.Add(20 * time.Minute)
+	store := openTestStore(t, marketclock.NewFake(pollAt.Add(time.Second)))
+	// 이름표 09:35 / 09:33 / 09:31 → 여는 시각 09:34 / 09:32 / 09:30.
+	// 빠진 분은 09:33과 09:31이다(이름표가 아니라 여는 시각으로 센다).
+	result, err := PollClosedBars(ctx, readerOf(usPage(t, pollAt, "page-1", "",
+		usBarLabelled(t, usOpen.Add(5*time.Minute), "231.4400"),
+		usBarLabelled(t, usOpen.Add(3*time.Minute), "231.4500"),
+		usBarLabelled(t, usOpen.Add(time.Minute), "231.4600"))), store, BarPollInput{
+		Market: marketclock.MarketUS, Symbol: usSymbol,
+		Calendar: usCalendarAt(t, usOpen.Add(-time.Hour)), PollAt: pollAt,
+	})
+	if err != nil {
+		t.Fatalf("PollClosedBars: %v", err)
+	}
+	if len(result.Gaps) != 2 {
+		t.Fatalf("gaps = %+v", result.Gaps)
+	}
+	if !result.Gaps[0].From.Equal(usOpen.Add(3*time.Minute)) || result.Gaps[0].Minutes != 1 {
+		t.Fatalf("first gap = %+v, want the minute opening at 09:33", result.Gaps[0])
+	}
+	if !result.Gaps[1].From.Equal(usOpen.Add(time.Minute)) || result.Gaps[1].Minutes != 1 {
+		t.Fatalf("second gap = %+v, want the minute opening at 09:31", result.Gaps[1])
 	}
 }

@@ -1,15 +1,15 @@
 {
   "file": "internal/official/strict_minute_candles.go",
-  "source_sha256": "441bed46f81bc928cab03d512b3ff1305c0c663cb1b58027986e2e91b739977d",
+  "source_sha256": "d32181a939f298db306f492b488468b5925ac0ba97dad3f82cb1cb3286254ced",
   "package": "official",
   "function": "strictMinuteObject",
   "signature": "strictMinuteObject(params=1, results=2)",
   "start": {
-    "line": 432,
+    "line": 444,
     "column": 1
   },
   "end": {
-    "line": 465,
+    "line": 477,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 435,
+        "line": 447,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 438,
+        "line": 450,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "for",
       "at": {
-        "line": 442,
+        "line": 454,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 444,
+        "line": 456,
         "column": 3
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 448,
+        "line": 460,
         "column": 3
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 452,
+        "line": 464,
         "column": 3
       }
     },
@@ -65,7 +65,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 458,
+        "line": 470,
         "column": 2
       }
     },
@@ -73,7 +73,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 461,
+        "line": 473,
         "column": 2
       }
     }
@@ -82,56 +82,56 @@
     {
       "kind": "return",
       "at": {
-        "line": 436,
+        "line": 448,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 439,
+        "line": 451,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 445,
+        "line": 457,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 449,
+        "line": 461,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 453,
+        "line": 465,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 459,
+        "line": 471,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 462,
+        "line": 474,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 464,
+        "line": 476,
         "column": 2
       }
     }
@@ -140,7 +140,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 433,
+        "line": 445,
         "column": 13
       },
       "text": "json.NewDecoder"
@@ -148,7 +148,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 433,
+        "line": 445,
         "column": 29
       },
       "text": "bytes.NewReader"
@@ -156,7 +156,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 434,
+        "line": 446,
         "column": 18
       },
       "text": "decoder.Token"
@@ -164,7 +164,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 439,
+        "line": 451,
         "column": 15
       },
       "text": "errors.New"
@@ -172,7 +172,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 441,
+        "line": 453,
         "column": 12
       },
       "text": "make"
@@ -180,7 +180,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 442,
+        "line": 454,
         "column": 6
       },
       "text": "decoder.More"
@@ -188,7 +188,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 443,
+        "line": 455,
         "column": 20
       },
       "text": "decoder.Token"
@@ -196,7 +196,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 449,
+        "line": 461,
         "column": 16
       },
       "text": "errors.New"
@@ -204,7 +204,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 452,
+        "line": 464,
         "column": 13
       },
       "text": "decoder.Decode"
@@ -212,7 +212,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 455,
+        "line": 467,
         "column": 17
       },
       "text": "bytes.Clone"
@@ -220,7 +220,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 457,
+        "line": 469,
         "column": 18
       },
       "text": "decoder.Token"
@@ -228,7 +228,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 462,
+        "line": 474,
         "column": 15
       },
       "text": "errors.New"
@@ -238,54 +238,33 @@
     {
       "kind": ":=",
       "at": {
-        "line": 433,
+        "line": 445,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 434,
+        "line": 446,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 438,
+        "line": 450,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 441,
+        "line": 453,
         "column": 2
       }
     },
     {
       "kind": ":=",
-      "at": {
-        "line": 443,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 447,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 452,
-        "column": 6
-      }
-    },
-    {
-      "kind": "=",
       "at": {
         "line": 455,
         "column": 3
@@ -294,14 +273,35 @@
     {
       "kind": ":=",
       "at": {
-        "line": 457,
+        "line": 459,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 464,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 467,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 469,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 461,
+        "line": 473,
         "column": 5
       }
     }

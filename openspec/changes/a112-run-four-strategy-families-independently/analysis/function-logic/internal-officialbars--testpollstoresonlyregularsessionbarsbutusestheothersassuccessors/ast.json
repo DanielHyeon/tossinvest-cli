@@ -1,0 +1,433 @@
+{
+  "file": "internal/officialbars/producer_test.go",
+  "source_sha256": "6c6f064d3ecceb46ed4df8546cb5d1f16c40e2831dbfa99c223c0c99f2b5eda4",
+  "package": "officialbars",
+  "function": "TestPollStoresOnlyRegularSessionBarsButUsesTheOthersAsSuccessors",
+  "signature": "TestPollStoresOnlyRegularSessionBarsButUsesTheOthersAsSuccessors(params=1, results=0)",
+  "start": {
+    "line": 405,
+    "column": 1
+  },
+  "end": {
+    "line": 444,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 422,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 425,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 429,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 432,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 437,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 440,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 406,
+        "column": 2
+      },
+      "text": "t.Parallel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 407,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 408,
+        "column": 12
+      },
+      "text": "usClose.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 11
+      },
+      "text": "marketclock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 11
+      },
+      "text": "openTestStore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 411,
+        "column": 12
+      },
+      "text": "readerOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 411,
+        "column": 21
+      },
+      "text": "usPage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 412,
+        "column": 3
+      },
+      "text": "usBar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 412,
+        "column": 12
+      },
+      "text": "usClose.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 3
+      },
+      "text": "usBar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 414,
+        "column": 3
+      },
+      "text": "usBar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 414,
+        "column": 12
+      },
+      "text": "usClose.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 415,
+        "column": 3
+      },
+      "text": "usBar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 416,
+        "column": 3
+      },
+      "text": "usBar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 416,
+        "column": 12
+      },
+      "text": "usOpen.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 418,
+        "column": 17
+      },
+      "text": "PollClosedBars"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 420,
+        "column": 13
+      },
+      "text": "usCalendarAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 420,
+        "column": 29
+      },
+      "text": "usClose.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 426,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 428,
+        "column": 12
+      },
+      "text": "usSeries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 429,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 430,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 430,
+        "column": 32
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 432,
+        "column": 40
+      },
+      "text": "uint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 432,
+        "column": 47
+      },
+      "text": "usOpen.UnixMilli"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 433,
+        "column": 38
+      },
+      "text": "uint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 433,
+        "column": 45
+      },
+      "text": "UnixMilli"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 433,
+        "column": 45
+      },
+      "text": "usClose.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 434,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 437,
+        "column": 49
+      },
+      "text": "uint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 437,
+        "column": 56
+      },
+      "text": "usClose.UnixMilli"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 438,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 440,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 4
+      },
+      "text": "result.Gaps.From.Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 30
+      },
+      "text": "usOpen.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 59
+      },
+      "text": "result.Gaps.To.Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 83
+      },
+      "text": "usClose.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 442,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 407,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 408,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 409,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 410,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 411,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 418,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 428,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

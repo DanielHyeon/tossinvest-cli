@@ -64,6 +64,12 @@ type StrictMinutePage struct {
 	Market string
 	Symbol string
 	// Candles는 받은 순서 그대로(최신이 앞) 담긴 원본 문자열이다.
+	//
+	// RawMinuteCandle.Timestamp는 브로커가 보낸 글자 그대로이고, 그 값은 봉이
+	// **닫는** 순간이다(2026-08-18 03:29 KST 실측: 벽시계가 [03:29, 03:30) 안에 있는
+	// 동안 자라던 봉의 이름표가 `03:30:00`이었다). 문서와 candle_reads.go의 주석은
+	// "봉 시작 시각"이라고 말하지만 틀렸다. 이 리더는 전송 계층 DTO이므로 값을 바꾸지
+	// 않는다 — 여는 시각으로 옮기는 일(−1분)은 생산자(internal/officialbars)의 몫이다.
 	Candles []RawMinuteCandle
 	// Terminal은 nextBefore가 null이었다는 뜻이다. 마지막 페이지다.
 	Terminal bool
@@ -117,6 +123,11 @@ func strictMinuteRefuse(reason, detail string) error {
 //
 // 요청을 보내기 전에 인자 문법을 모두 확인한다. 문법이 틀린 요청은 브로커에게
 // 보내지 않는다(공유 쿼터를 낭비하지 않는다).
+//
+// 시각 규약: 돌려주는 candle의 Timestamp도, before도, nextBefore도 모두 봉이 **닫는**
+// 순간이다(2026-08-18 실측; 결정 30). before는 그 닫는 시각에 대한 **포함** 상한이므로
+// `before = 지금`으로 부르면 아직 자라고 있는 봉은 저절로 빠진다(그 봉의 닫는 시각은
+// 아직 오지 않았다). 이 함수는 어떤 값도 여는 시각으로 바꾸지 않는다.
 func (c *Client) StrictMinuteCandles(ctx context.Context, market, symbol string, count int, before string) (StrictMinutePage, error) {
 	if c == nil {
 		return StrictMinutePage{}, strictMinuteRefuse(StrictReasonClientMissing, "client is required")
@@ -362,8 +373,9 @@ func strictMinuteCandle(raw []byte, currency string) (RawMinuteCandle, time.Time
 	if err != nil {
 		return RawMinuteCandle{}, time.Time{}, strictMinuteRefuse(StrictReasonCandle, err.Error())
 	}
-	// 1분봉의 시각은 언제나 분의 시작이다(실측 계약). 초나 소수가 붙어 있으면 거절한다.
-	// 여기서 막지 않으면 어긋난 봉 하나가 바로 아래 봉의 successor 주장까지 망가뜨린다.
+	// 1분봉의 시각표는 언제나 분 경계에 놓인다(실측 계약). 초나 소수가 붙어 있으면
+	// 거절한다. 여기서 막지 않으면 어긋난 봉 하나가 바로 아래 봉의 successor 주장까지
+	// 망가뜨린다. (이 값은 봉이 닫는 순간이다 — 위 함수 주석 참고.)
 	if instant.Second() != 0 || instant.Nanosecond() != 0 {
 		return RawMinuteCandle{}, time.Time{}, strictMinuteRefuse(StrictReasonCandleNotOnMinute,
 			"timestamp "+strconv.Quote(values["timestamp"])+" does not start a minute")

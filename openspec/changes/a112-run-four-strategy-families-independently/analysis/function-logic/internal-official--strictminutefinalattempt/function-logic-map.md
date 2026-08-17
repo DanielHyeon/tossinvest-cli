@@ -1,11 +1,11 @@
 # Function Logic Map: `strictMinuteFinalAttempt`
 
 - Source: `internal/official/strict_minute_candles.go`
-- Source SHA-256: `441bed46f81bc928cab03d512b3ff1305c0c663cb1b58027986e2e91b739977d` (current worktree; `sha256sum` verified equal to `ast.json` `source_sha256`, 2026-08-17)
+- Source SHA-256: `d32181a939f298db306f492b488468b5925ac0ba97dad3f82cb1cb3286254ced` (current worktree; `sha256sum` verified equal to `ast.json` `source_sha256`, 2026-08-18)
 - Signature: `strictMinuteFinalAttempt(attempts []AttemptTrace) (AttemptTrace, error)`
-- Source range: `228:1`–`240:2` (ast.json `start`/`end`)
-- AST evidence: `ast.json` generated 2026-08-17; branches 2, returns 3, calls 5, assignments 1, defers 0, go statements 0.
-- Disposition: New function (lot L1b, not in the frozen base 016da624); AST generated 2026-08-17 after GREEN; branch enumeration is the evidence for the L1b acceptance record.
+- Source range: `239:1`–`251:2` (ast.json `start`/`end`)
+- AST evidence: `ast.json` regenerated 2026-08-18 against the decision-30 sources; branches 2, returns 3, calls 5, assignments 1, defers 0, go statements 0.
+- Disposition: New function (lot L1b, not in the frozen base 016da624); AST regenerated 2026-08-18 against the decision-30 sources; branch enumeration is the evidence for the L1b acceptance record.
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
@@ -16,20 +16,20 @@
 
 ## Branches and early returns
 
-Exact AST return nodes: `231, 236, 239`.
+Exact AST return nodes: `242`, `247`, `250`.
 
 | Branch | AST kind | Source location | Meaning (one short clause) | Test disposition |
 |---|---|---|---|---|
-| B1 | if | 229:2 | no attempt was observed at all → `NO_SUCCESSFUL_ATTEMPT` | not-applicable: unreachable defence declared in the source comment at 230 — if `c.get` returned nil, `doRequest` emitted at least one trace on every one of its three exit paths (D6, declared untested in the implementation report) |
-| B2 | if | 234:2 | the last attempt carries an error or a non-2xx status → `NO_SUCCESSFUL_ATTEMPT` | not-applicable: unreachable defence declared in the source comment at 235 — `c.get` already returns an error in that case (`classifyStatus`), so the caller never reaches here; the untaken side (401 then 200 ⇒ the 200 attempt is used) is pinned by `TestStrictMinuteCandlesUsesTheLastSuccessfulAttemptAndChainsTheOuterObserver` |
+| B1 | if | 240:2 | no attempt was observed at all → `NO_SUCCESSFUL_ATTEMPT` | not-applicable: unreachable defence declared in the source comment at 241 — if `c.get` returned nil, `doRequest` emitted at least one trace on every one of its three exit paths (D6, declared untested in the implementation report) |
+| B2 | if | 245:2 | the last attempt carries an error or a non-2xx status → `NO_SUCCESSFUL_ATTEMPT` | not-applicable: unreachable defence declared in the source comment at 246 — `c.get` already returns an error in that case (`classifyStatus`), so the caller never reaches here; the untaken side (401 then 200 ⇒ the 200 attempt is used) is pinned by `TestStrictMinuteCandlesUsesTheLastSuccessfulAttemptAndChainsTheOuterObserver` |
 
 ## Calls and live bindings
 
 | Callee expression | Source location | Evidence |
 |---|---|---|
-| `len(attempts)`, `attempts[len(attempts)-1]` | 229, 233 | last-attempt selection (ruling 28) |
-| `strictMinuteRefuse(StrictReasonNoAttempt, …)` ×2 | 231, 236 | typed refusal, distinct from a transport error |
-| `strconv.Itoa(last.StatusCode)` | 237 | the refusal names the status it saw |
+| `len(attempts)`, `attempts[len(attempts)-1]` | 240, 244 | last-attempt selection (ruling 28) |
+| `strictMinuteRefuse(StrictReasonNoAttempt, …)` ×2 | 242, 247 | typed refusal, distinct from a transport error |
+| `strconv.Itoa(last.StatusCode)` | 248 | the refusal names the status it saw |
 
 ## State mutations and fallbacks
 

@@ -134,6 +134,8 @@ const (
 	maxAllowedPages = 8
 	// 첫 페이지 상한의 표기. 실측된 요청 문자열 그대로다(양쪽 시장 모두 KST).
 	beforeLayout = "2006-01-02T15:04:05.000-07:00"
+	// 봉 하나의 길이. 브로커 시각표를 여는 시각으로 옮길 때 쓴다.
+	barInterval = time.Duration(strategyevidence.ClosedBar1mIntervalMS) * time.Millisecond
 )
 
 // knownReadHorizon은 "이미 저장된 것"을 읽을 때 컷오프를 얼마나 멀리 두는지다.
@@ -155,6 +157,7 @@ func refuse(reason, detail string, cause error) error {
 }
 
 // observedBar는 한 봉과, 그 봉을 어느 응답에서 보았는지를 함께 들고 다닌다.
+// openAt은 이미 변환을 마친 **여는 시각**이다(브로커가 보낸 닫는 시각이 아니다).
 type observedBar struct {
 	candle official.RawMinuteCandle
 	openAt time.Time
@@ -295,6 +298,8 @@ func PollClosedBars(ctx context.Context, reader CandleReader, store BarStore, in
 			// 도달 불가 방어: 리더는 커서를 이미 같은 문법으로 통과시킨 뒤에만 넘긴다.
 			return result, refuse(RefusalPageInvalid, "cursor "+strconv.Quote(page.NextBefore)+" is not a timestamp", err)
 		}
+		// 커서와 before는 둘 다 브로커 이름표(=닫는 시각) 공간의 값이다. 여는 시각으로
+		// 옮기지 않고 그대로 견준다 — 상한과 상한을 비교하는 것이 맞다.
 		if !cursor.Before(beforeInstant) {
 			return result, refuse(RefusalCursorLoop,
 				"cursor "+strconv.Quote(page.NextBefore)+" is not strictly older than the bound it answered", nil)
@@ -394,16 +399,36 @@ func PollClosedBars(ctx context.Context, reader CandleReader, store BarStore, in
 	return result, nil
 }
 
-// adoptPage는 한 페이지의 봉을 시각과 함께 풀어 놓는다.
+// adoptPage는 한 페이지의 봉을 풀어 놓으면서, 브로커의 시각표를 **여는 시각**으로 옮긴다.
+//
+// 왜 빼는가 (2026-08-18 03:29 KST 사람이 직접 잰 값, 결정 30):
+// 벽시계 03:29:14에 가장 새 봉의 이름표가 `03:30:00`이고 거래량 251이었는데,
+// 26초 뒤 03:29:40에 **같은 이름표** `03:30:00`의 거래량이 1,089로 늘어 있었다.
+// 그동안 이름표 `03:29:00` 봉은 2,997에서 꼼짝하지 않았다. 즉 벽시계가 [03:29, 03:30)
+// 안에 있는 동안 자라던 봉의 이름표는 `03:30`이었다 — 이름표는 봉이 **닫는** 순간이다.
+// 문서(openapi "봉 시작 시각")도, candle_reads.go의 주석도, a047 KR 선례도 이 점에서
+// 모두 틀렸다. 26초짜리 측정 하나가 그 셋을 뒤집었다.
+//
+// 저장되는 증거의 시각 규약은 그대로 여는 시각(bar_label = "open_at")이다. 바뀐 것은
+// 전선에서 들어오는 값의 뜻뿐이므로, 변환은 여기 한 곳에서만 한다. 이 뺄셈을 "고쳐서"
+// 되돌리지 말 것 — 되돌리면 모든 봉이 1분씩 밀리고, 정규장 경계와 successor가 함께 어긋난다.
 func adoptPage(page official.StrictMinutePage) ([]observedBar, error) {
 	out := make([]observedBar, 0, len(page.Candles))
 	for index, candle := range page.Candles {
-		openAt, err := time.Parse(time.RFC3339, candle.Timestamp)
+		closeAt, err := time.Parse(time.RFC3339, candle.Timestamp)
 		if err != nil {
 			return nil, refuse(RefusalPageInvalid,
 				"candle "+strconv.Itoa(index)+" carries the unreadable timestamp "+strconv.Quote(candle.Timestamp), err)
 		}
-		out = append(out, observedBar{candle: candle, openAt: openAt.UTC(), readAt: page.ReadAt, digest: page.BodyDigest})
+		openAt := closeAt.UTC().Add(-barInterval)
+		// 리더가 이름표의 분 정렬을 이미 확인했으므로 옮긴 값도 분 경계에 있어야 한다.
+		// 그래도 값싸게 못을 박아 둔다. 이 불변식이 깨지면 봉 신원 자체가 무너진다.
+		if openAt.Second() != 0 || openAt.Nanosecond() != 0 {
+			return nil, refuse(RefusalPageInvalid,
+				"candle "+strconv.Itoa(index)+" opens at "+openAt.Format(time.RFC3339Nano)+
+					", which is not a whole minute", nil)
+		}
+		out = append(out, observedBar{candle: candle, openAt: openAt, readAt: page.ReadAt, digest: page.BodyDigest})
 	}
 	return out, nil
 }

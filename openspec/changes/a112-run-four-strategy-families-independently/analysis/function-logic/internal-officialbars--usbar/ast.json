@@ -1,0 +1,54 @@
+{
+  "file": "internal/officialbars/producer_test.go",
+  "source_sha256": "6c6f064d3ecceb46ed4df8546cb5d1f16c40e2831dbfa99c223c0c99f2b5eda4",
+  "package": "officialbars",
+  "function": "usBar",
+  "signature": "usBar(params=3, results=1)",
+  "start": {
+    "line": 115,
+    "column": 1
+  },
+  "end": {
+    "line": 118,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 9
+      },
+      "text": "usBarLabelled"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 26
+      },
+      "text": "open.Add"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

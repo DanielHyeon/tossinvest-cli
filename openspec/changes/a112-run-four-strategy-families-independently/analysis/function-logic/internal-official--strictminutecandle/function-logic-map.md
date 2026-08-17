@@ -1,11 +1,11 @@
 # Function Logic Map: `strictMinuteCandle`
 
 - Source: `internal/official/strict_minute_candles.go`
-- Source SHA-256: `441bed46f81bc928cab03d512b3ff1305c0c663cb1b58027986e2e91b739977d` (current worktree; `sha256sum` verified equal to `ast.json` `source_sha256`, 2026-08-17)
+- Source SHA-256: `d32181a939f298db306f492b488468b5925ac0ba97dad3f82cb1cb3286254ced` (current worktree; `sha256sum` verified equal to `ast.json` `source_sha256`, 2026-08-18)
 - Signature: `strictMinuteCandle(raw []byte, currency string) (RawMinuteCandle, time.Time, error)`
-- Source range: `324:1`–`380:2` (ast.json `start`/`end`)
-- AST evidence: `ast.json` generated 2026-08-17; branches 10, returns 9, calls 29, assignments 6, defers 0, go statements 0.
-- Disposition: New function (lot L1b, not in the frozen base 016da624); AST generated 2026-08-17 after GREEN; branch enumeration is the evidence for the L1b acceptance record.
+- Source range: `335:1`–`392:2` (ast.json `start`/`end`)
+- AST evidence: `ast.json` regenerated 2026-08-18 against the decision-30 sources; branches 10, returns 9, calls 29, assignments 6, defers 0, go statements 0.
+- Disposition: New function (lot L1b, not in the frozen base 016da624); AST regenerated 2026-08-18 against the decision-30 sources; branch enumeration is the evidence for the L1b acceptance record.
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
@@ -14,35 +14,36 @@
 - Key count is checked before key lookup so an added broker field fails visibly instead of being dropped — chosen fail-closed behaviour, with the cost recorded in decision 23 (a benign field addition becomes an outage until the contract is re-measured).
 - Numeric grammar is deliberately **not** validated here (decision 14): `strategyevidence` is the single decimal authority, and duplicating the grammar in a second package is exactly the duplication L1a's review flagged. This function only judges string-ness, emptiness and length.
 - Currency must equal the market currency derived from the `market` argument (`KR→KRW`, `US→USD`), so a US page carrying `KRW` refuses.
-- Timestamp must satisfy the grammar (numeric offset mandatory, optional 1–3 fractional digits), name an instant that exists, and — ruling 26 — start a minute. Ruling 26 exists so that one off-minute bar cannot poison the successor claim of the bar below it; the trade-off (that bar refuses the whole page) is recorded and accepted.
+- **Decision 30 (2026-08-18), documentation-only.** `timestamp` is the bar's **close** instant, not its open (US probe 03:29 KST; review.md); the source comment at 376–378 now says so. The value is carried through verbatim as a string and this function converts nothing — the producer's `adoptPage` subtracts one interval. Ruling 26's alignment rule is therefore about the *label* landing on a minute boundary; the producer re-asserts alignment on the converted side.
+- Timestamp must satisfy the grammar (numeric offset mandatory, optional 1–3 fractional digits), name an instant that exists, and — ruling 26 — land on a minute boundary. Ruling 26 exists so that one off-minute bar cannot poison the successor claim of the bar below it; the trade-off (that bar refuses the whole page) is recorded and accepted.
 
 ## Branches and early returns
 
-Exact AST return nodes: `327, 332, 340, 345, 353, 358, 363, 368, 371`.
+Exact AST return nodes: `338`, `343`, `351`, `356`, `364`, `369`, `374`, `380`, `383`.
 
 | Branch | AST kind | Source location | Meaning (one short clause) | Test disposition |
 |---|---|---|---|---|
-| B1 | if | 326:2 | the element is not an object → `CANDLE_INVALID` | `TestStrictMinuteCandlesRefusesMalformedBodies` (subtest `candle is not an object`) |
-| B2 | if | 331:2 | the candle does not carry exactly seven keys → `CANDLE_INVALID` | `TestStrictMinuteCandlesRefusesMalformedBodies` (subtests `unknown candle key` = 8 keys, `missing candle key` = 6 keys) |
-| B3 | range | 337:2 | pull each of the seven contract keys in fixed order | every accepting body test, e.g. `TestStrictMinuteCandlesSendsTheCanonicalQueryAndReturnsThePage`, `TestStrictMinuteCandlesAcceptsTheKoreanMarket` |
-| B4 | if | 339:3 | a contract key is absent although the count is seven → `CANDLE_INVALID` | untested: reachable only with exactly seven keys of which one is renamed; the fixtures reach the count rule (B2) first — recorded gap |
-| B5 | if | 344:3 | a value is not a non-empty JSON string → `CANDLE_INVALID` | `TestStrictMinuteCandlesRefusesMalformedBodies` (subtests `bare number price`, `bare number volume`, `null price`, `empty price string`) |
-| B6 | range | 349:2 | walk the five decimal fields for the length bound | every accepting body test |
-| B7 | if | 352:3 | a decimal longer than 30 bytes → `CANDLE_INVALID` | `TestStrictMinuteCandlesRefusesMalformedBodies` (subtest `over long decimal`, 31 digits) |
-| B8 | if | 357:2 | the candle's currency is not the market currency → `CANDLE_INVALID` | `TestStrictMinuteCandlesRefusesMalformedBodies` (subtest `foreign currency`: `KRW` on a US page) |
-| B9 | if | 362:2 | the timestamp fails the grammar or names an instant that does not exist → `CANDLE_INVALID` | `TestStrictMinuteCandlesRefusesMalformedBodies` (subtests `timestamp without an offset`, `timestamp with a zulu offset`, `timestamp that does not exist`) |
-| B10 | if | 367:2 | ruling 26: the instant does not start a minute → `CANDLE_NOT_ON_MINUTE` | `TestStrictMinuteCandlesRefusesMalformedBodies` (subtests `instant with non-zero seconds`, `instant with a fraction`) |
+| B1 | if | 337:2 | the element is not an object → `CANDLE_INVALID` | `TestStrictMinuteCandlesRefusesMalformedBodies` (subtest `candle is not an object`) |
+| B2 | if | 342:2 | the candle does not carry exactly seven keys → `CANDLE_INVALID` | `TestStrictMinuteCandlesRefusesMalformedBodies` (subtests `unknown candle key` = 8 keys, `missing candle key` = 6 keys) |
+| B3 | range | 348:2 | pull each of the seven contract keys in fixed order | every accepting body test, e.g. `TestStrictMinuteCandlesSendsTheCanonicalQueryAndReturnsThePage`, `TestStrictMinuteCandlesAcceptsTheKoreanMarket` |
+| B4 | if | 350:3 | a contract key is absent although the count is seven → `CANDLE_INVALID` | untested: reachable only with exactly seven keys of which one is renamed; the fixtures reach the count rule (B2) first — recorded gap |
+| B5 | if | 355:3 | a value is not a non-empty JSON string → `CANDLE_INVALID` | `TestStrictMinuteCandlesRefusesMalformedBodies` (subtests `bare number price`, `bare number volume`, `null price`, `empty price string`) |
+| B6 | range | 360:2 | walk the five decimal fields for the length bound | every accepting body test |
+| B7 | if | 363:3 | a decimal longer than 30 bytes → `CANDLE_INVALID` | `TestStrictMinuteCandlesRefusesMalformedBodies` (subtest `over long decimal`, 31 digits) |
+| B8 | if | 368:2 | the candle's currency is not the market currency → `CANDLE_INVALID` | `TestStrictMinuteCandlesRefusesMalformedBodies` (subtest `foreign currency`: `KRW` on a US page) |
+| B9 | if | 373:2 | the timestamp fails the grammar or names an instant that does not exist → `CANDLE_INVALID` | `TestStrictMinuteCandlesRefusesMalformedBodies` (subtests `timestamp without an offset`, `timestamp with a zulu offset`, `timestamp that does not exist`) |
+| B10 | if | 379:2 | ruling 26: the instant does not start a minute → `CANDLE_NOT_ON_MINUTE` | `TestStrictMinuteCandlesRefusesMalformedBodies` (subtests `instant with non-zero seconds`, `instant with a fraction`) |
 
 ## Calls and live bindings
 
 | Callee expression | Source location | Evidence |
 |---|---|---|
-| `strictMinuteObject(raw)` | 325 | pure extraction of the candle's keys and raw values; see `internal-official--strictminuteobject` |
-| `len(fields)` against `len(strictMinuteCandleKeys)` | 331 | the seven-key rule |
-| `strictMinuteString(value)` | 343 | string-ness and non-emptiness for every field |
-| `len(values[key])` against `strictMinuteMaxDecimal` | 352 | documented 30-byte `maxLength` on the five decimals |
-| `strictMinuteInstant(values["timestamp"])` | 361 | grammar then existence (a syntactically valid 30 February is caught by the parse) |
-| `instant.Second()`, `instant.Nanosecond()` | 367 | ruling 26 minute alignment |
+| `strictMinuteObject(raw)` | 336 | pure extraction of the candle's keys and raw values; see `internal-official--strictminuteobject` |
+| `len(fields)` against `len(strictMinuteCandleKeys)` | 342 | the seven-key rule |
+| `strictMinuteString(value)` | 354 | string-ness and non-emptiness for every field |
+| `len(values[key])` against `strictMinuteMaxDecimal` | 363 | documented 30-byte `maxLength` on the five decimals |
+| `strictMinuteInstant(values["timestamp"])` | 372 | grammar then existence (a syntactically valid 30 February is caught by the parse) |
+| `instant.Second()`, `instant.Nanosecond()` | 379 | ruling 26 minute alignment |
 
 ## State mutations and fallbacks
 
