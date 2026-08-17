@@ -1,0 +1,693 @@
+{
+  "file": "internal/app/engine/position_policy_runtime_transport_unix.go",
+  "source_sha256": "b44cacafdedf78d3220cd48f0a0f77e9a7f6b5370e5059638647b98d7eab0c8b",
+  "package": "engine",
+  "function": "StartPositionPolicyRuntimeServer",
+  "signature": "StartPositionPolicyRuntimeServer(params=2, results=2)",
+  "start": {
+    "line": 60,
+    "column": 1
+  },
+  "end": {
+    "line": 141,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 62,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 69,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 117,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 122,
+        "column": 3
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 63,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 67,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 70,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 77,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 84,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 92,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 103,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 108,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 119,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 124,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 137,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 140,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 15
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 15
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 12
+      },
+      "text": "positionpolicyrpc.ValidateEngineDirectory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 16
+      },
+      "text": "positionpolicyrpc.RuntimeControlDirectory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 12
+      },
+      "text": "openReclaimedControlDirectory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 3
+      },
+      "text": "positionPolicyRuntimeEndpointNames"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 36
+      },
+      "text": "os.Remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 12
+      },
+      "text": "positionpolicyrpc.ValidateRuntimeControlDirectory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 3
+      },
+      "text": "cleanupControlDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 16
+      },
+      "text": "positionpolicyrpc.RuntimeSocketPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 19
+      },
+      "text": "positionpolicyrpc.ListenStagedPrivateSocket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 3
+      },
+      "text": "cleanupControlDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 7
+      },
+      "text": "listener.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 7
+      },
+      "text": "os.Remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 3
+      },
+      "text": "cleanupControlDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 12
+      },
+      "text": "positionpolicyrpc.ValidateRuntimeSocket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 3
+      },
+      "text": "cleanupListener"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 16
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 15
+      },
+      "text": "rand.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 3
+      },
+      "text": "cleanupListener"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 11
+      },
+      "text": "base64.RawURLEncoding.EncodeToString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 35
+      },
+      "text": "positionpolicyrpc.RuntimeDescriptorPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 9
+      },
+      "text": "http.NewServeMux"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 2
+      },
+      "text": "mux.HandleFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 32
+      },
+      "text": "server.auth"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 4
+      },
+      "text": "writeRPCError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 19
+      },
+      "text": "reader.Runtime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 34
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 4
+      },
+      "text": "writePositionPolicyRPCError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 3
+      },
+      "text": "writeRPCJSON"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 133,
+        "column": 71
+      },
+      "text": "os.Getpid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 12
+      },
+      "text": "writePositionPolicyRuntimeDescriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 3
+      },
+      "text": "cleanupListener"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 5
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 18
+      },
+      "text": "server.server.Serve"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 65,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 69,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 75,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 81,
+        "column": 32
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 82,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 95,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 96,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 106,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 110,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 115,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 121,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 128,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 135,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 139,
+        "column": 14
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 139,
+        "column": 2
+      }
+    }
+  ],
+  "defers": null
+}

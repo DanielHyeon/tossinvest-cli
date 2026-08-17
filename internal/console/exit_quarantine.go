@@ -38,6 +38,38 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitquarantine"
 )
 
+// quarantineUnwiredTitle 은 그 거부 화면에서 운영자가 **먼저 읽는 줄**이다.
+//
+// # 정정의 단위는 줄이 아니라 값이다 — a109 §2-fix F5 (A2 P2-5)
+//
+// detail 만 정직하게 고치고 제목은 「판정 격리 command seam 미배선」으로 두었더니 굵은
+// 줄이 여전히 빌드를 탓했다. 이 저장소에서 "seam 미배선"은 「이 빌드에 그 기능이
+// 배선되지 않았다」는 뜻으로 쓰인다(`overview.go` 의 `reasonSeamUnwired`) — 강등
+// 부팅에서는 거짓이고, 그 거짓을 읽은 운영자는 빌드를 올리러 간다.
+//
+// ⛔ 제목도 detail 과 같은 이유로 **상수 한 벌**이다. 세 경로에 인라인으로 세 벌을 두면
+// 다음 정정이 또 하나를 남긴다.
+const quarantineUnwiredTitle = "격리 해제 표면 없음 — 엔진 미기동 또는 강등"
+
+// quarantineUnwiredDetail 은 격리 해제 표면이 없을 때 운영자가 읽는 문장이다.
+//
+// # 이 문구는 원인을 **단정하지 않는다** — a109 D3a-2 (freeze P0-3)
+//
+// 예전 문구는 「엔진 control plane이 격리 해제를 제공하지 않는다」였고, 그것은 사실상
+// 「빌드가 낡았다」는 뜻으로 읽힌다. a109 이후 그 단정은 거짓일 수 있다: position
+// policy command endpoint 기동이 실패하면 엔진은 그 표면 없이 강등 부팅한다
+// (cmd/tossctl/engine.go 의 D3 강등). 그때 운영자가 읽어야 하는 것은 「빌드를 올려라」가
+// 아니라 「엔진 로그의 강등 보고를 보고 그 원인을 지워라」다 — 강등 원인은 결정적이라
+// 재시작만으로는 같은 상태가 재현된다.
+//
+// ⛔ 상수 하나로 두는 이유: 이 문장은 세 경로(release preview·release apply·
+// writeQuarantineError)에서 같은 사실을 말한다. 셋 중 하나만 고치는 정정은 나머지 둘을
+// 남기고, 운영자가 먼저 만나는 것은 대개 preview 쪽이다.
+const quarantineUnwiredDetail = "격리 해제 표면이 지금 없다. 엔진이 이 표면 없이 " +
+	"강등 부팅했거나 이 빌드에 배선되지 않았다 — 엔진 로그에서 position policy command " +
+	"강등 보고를 확인하라. 강등이면 보고된 원인을 제거한 뒤 재시작해야 한다. " +
+	"아무것도 변경되지 않았다."
+
 const exitQuarantineTokenTTL = 5 * time.Minute
 
 // ExitQuarantineCommander is the console's complete authority over quarantine
@@ -157,8 +189,8 @@ func quarantineAge(stamp string, now time.Time) string {
 func (c *Console) handleQuarantineReleasePreview(w http.ResponseWriter, r *http.Request) {
 	commander, ok := c.exitQuarantines()
 	if !ok {
-		c.refuse(w, http.StatusNotImplemented, "판정 격리 command seam 미배선",
-			"엔진 control plane이 격리 해제를 제공하지 않는다. 아무것도 변경되지 않았다.")
+		c.refuse(w, http.StatusNotImplemented, quarantineUnwiredTitle,
+			quarantineUnwiredDetail)
 		return
 	}
 	payload, err := c.verifyQuarantineToken(r.PostFormValue("quarantine_token"))
@@ -192,8 +224,8 @@ func (c *Console) handleQuarantineReleasePreview(w http.ResponseWriter, r *http.
 func (c *Console) handleQuarantineReleaseApply(w http.ResponseWriter, r *http.Request) {
 	commander, ok := c.exitQuarantines()
 	if !ok {
-		c.refuse(w, http.StatusNotImplemented, "판정 격리 command seam 미배선",
-			"엔진 control plane이 격리 해제를 제공하지 않는다. 아무것도 변경되지 않았다.")
+		c.refuse(w, http.StatusNotImplemented, quarantineUnwiredTitle,
+			quarantineUnwiredDetail)
 		return
 	}
 	capability := strings.TrimSpace(r.PostFormValue("capability"))
@@ -225,8 +257,8 @@ func (c *Console) handleQuarantineReleaseApply(w http.ResponseWriter, r *http.Re
 func (c *Console) writeQuarantineError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, exitquarantine.ErrUnwired):
-		c.refuse(w, http.StatusNotImplemented, "판정 격리 command seam 미배선",
-			"엔진 control plane이 격리 해제를 제공하지 않는다. 아무것도 변경되지 않았다.")
+		c.refuse(w, http.StatusNotImplemented, quarantineUnwiredTitle,
+			quarantineUnwiredDetail)
 	case errors.Is(err, exitquarantine.ErrNotQuarantined):
 		c.refuse(w, http.StatusNotFound, "활성 격리 없음",
 			"이 generation에는 해제할 격리가 없다. 이미 해제됐거나 다른 세대의 기록이다. 아무것도 변경되지 않았다.")

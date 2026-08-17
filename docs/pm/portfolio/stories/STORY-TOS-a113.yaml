@@ -1,0 +1,31 @@
+{
+  "id": "STORY-TOS-a113",
+  "title": "The projection probe proves death",
+  "feature": "FEAT-TOS-003",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a113-the-projection-probe-proves-death",
+    "path": "openspec/changes/a113-the-projection-probe-proves-death"
+  },
+  "found_by": {
+    "date": "2026-08-16",
+    "how": "a109 A1 adversarial review P1-A deterministically reproduced the disease on the sibling machinery: a live accepting socket whose owner-write bit was chmod'ed away is read as dead and deleted. The sibling fix (chmod-then-probe with post-chmod SameFile re-verify) was ported FROM projectionSocketAccepts in a108's strategyprojectionrpc — and the original still carries the owner-write inference, untouched because a108 code was a declared no-change surface of a109 (pre-edit-gate T1).",
+    "record": "openspec/changes/archive/2026-08-16-a109-the-sibling-endpoints-recover-too/issues.md (I1), openspec/changes/archive/2026-08-16-a109-the-sibling-endpoints-recover-too/review.md (§1 A1 P1-A)"
+  },
+  "prior_art": {
+    "note": "a108 built the staged-publication and reclaim ceremony for strategy projection; a109 ported it to the three sibling endpoints and, in doing so, replaced the death inference with a death proof — on the siblings only.",
+    "why_not_a_reversal": "The a109 spec requirement already covers all engine-owned runtime endpoints; this change makes the original probe conform to it."
+  },
+  "acceptance": [
+    "This story is registered ahead of implementation per a109 issues I1; no start precondition beyond FLM of projectionSocketAccepts and its reclaim callers",
+    "The owner-write inference clause in projectionSocketAccepts is deleted and replaced by chmod-then-probe with post-chmod re-Lstat SameFile verification",
+    "The F1-N1 mutation archetype (reintroducing the inference) is applied and killed by a pinned test",
+    "make gate CHANGE=a113-the-projection-probe-proves-death passes"
+  ],
+  "measured": null,
+  "deviations": [],
+  "limits": [
+    "Registration only as of 2026-08-16: no code is touched until start.",
+    "Exposure is narrower than the siblings': the final socket name only ever appears at 0600 (it passed a108's stage+rename), so reaching the misjudged state requires an external chmod. The registration exists because the shape of the disease is identical, not because the exposure is equal."
+  ]
+}

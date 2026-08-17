@@ -22,6 +22,29 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 )
 
+// positionPolicyRuntimeStagingPrefix는 이 endpoint의 descriptor 발행이 os.CreateTemp에
+// 넘기는 임시 이름의 앞머리다.
+//
+// 리터럴이 아니라 상수인 이유: 회수가 "우리 잔재"로 인정하는 이름 집합에 **같은 값**이
+// 들어가야 한다. 두 곳에 따로 적으면 회수가 자기 잔재를 낯선 것으로 거부하고, 그 거부는
+// 결정적이라 매 부팅 같은 자리에서 멈춘다.
+const positionPolicyRuntimeStagingPrefix = ".position-policy-runtime-"
+
+// positionPolicyRuntimeEndpointNames는 이 endpoint가 자기 control 디렉터리에 만들 수 있는
+// 이름의 전부다. 완전성은 두 테스트가 나눠 고정한다(design D1b): socket staging은 발행이
+// 쓰는 생성기를 실제로 돌려서, descriptor staging 접두는 **소스를 파서** — 발행이
+// os.CreateTemp에 넘기는 것이 리터럴이 아니라 아래 상수 참조임을 확인한다(a109 §1-fix F2).
+func positionPolicyRuntimeEndpointNames() positionpolicyrpc.PrivateEndpointNames {
+	return positionpolicyrpc.PrivateEndpointNames{
+		Descriptor: positionpolicyrpc.RuntimeDescriptorFileName,
+		Socket:     positionpolicyrpc.RuntimeSocketFileName,
+		StagingPrefixes: []string{
+			positionpolicyrpc.StagingPrefix,
+			positionPolicyRuntimeStagingPrefix,
+		},
+	}
+}
+
 // PositionPolicyRuntimeServer is separate from the loopback command endpoint.
 // Its Unix socket exports one authenticated GET and possession of its client
 // cannot express Preview, Apply, or reconciliation mutation.
@@ -47,42 +70,34 @@ func StartPositionPolicyRuntimeServer(engineDir string,
 		return nil, fmt.Errorf("engine: validating position policy runtime engine directory: %w", err)
 	}
 	controlDir := positionpolicyrpc.RuntimeControlDirectory(dir)
-	createdControlDir := false
-	if err := os.Mkdir(controlDir, 0o700); err != nil {
-		if !errors.Is(err, os.ErrExist) {
-			return nil, fmt.Errorf("engine: creating position policy runtime directory: %w", err)
-		}
-	} else {
-		createdControlDir = true
+	// Mkdir → 회수 → 재Mkdir 의례는 형제와 **같은 기계**를 쓴다(a109 §2b.3 G9 —
+	// 회수를 한 곳에 두는 이유가 그 부름에는 적용되지 않을 근거가 없다).
+	if err := openReclaimedControlDirectory(controlDir, "position policy runtime directory",
+		positionPolicyRuntimeEndpointNames()); err != nil {
+		return nil, err
 	}
-	cleanupControlDir := func() {
-		if createdControlDir {
-			_ = os.Remove(controlDir)
-		}
-	}
+	// 회수가 끝났으므로 이 디렉터리는 언제나 **이번 기동이 만든 것**이다. 실패 정리가
+	// 조건 없이 지워도 되는 근거가 그것이다.
+	cleanupControlDir := func() { _ = os.Remove(controlDir) }
 	if err := positionpolicyrpc.ValidateRuntimeControlDirectory(controlDir); err != nil {
 		cleanupControlDir()
 		return nil, fmt.Errorf("engine: validating position policy runtime directory: %w", err)
 	}
 	socketPath := positionpolicyrpc.RuntimeSocketPath(dir)
-	if err := positionpolicyrpc.PrepareRuntimeSocket(socketPath); err != nil {
-		cleanupControlDir()
-		return nil, fmt.Errorf("engine: preparing position policy runtime socket: %w", err)
-	}
-	listener, err := net.Listen("unix", socketPath)
+	// 임시 이름에 bind → 0600 → rename. 최종 이름은 완성된 socket에만 붙으므로
+	// pre-chmod 상태가 최종 이름을 가지는 순간이 사라진다(design D1).
+	listener, err := positionpolicyrpc.ListenStagedPrivateSocket(controlDir, socketPath)
 	if err != nil {
 		cleanupControlDir()
-		return nil, fmt.Errorf("engine: binding position policy runtime socket: %w", err)
+		return nil, fmt.Errorf("engine: publishing position policy runtime socket: %w", err)
 	}
 	cleanupListener := func() {
 		_ = listener.Close()
 		_ = os.Remove(socketPath)
 		cleanupControlDir()
 	}
-	if err := os.Chmod(socketPath, 0o600); err != nil {
-		cleanupListener()
-		return nil, fmt.Errorf("engine: securing position policy runtime socket: %w", err)
-	}
+	// 발행 확인은 **정확-0600**이다. 회수의 좁은 완화가 발행으로 새지 않았다는 증거가
+	// 이 호출이다(freeze P1-3).
 	if err := positionpolicyrpc.ValidateRuntimeSocket(socketPath); err != nil {
 		cleanupListener()
 		return nil, fmt.Errorf("engine: validating position policy runtime socket: %w", err)
@@ -145,11 +160,10 @@ func (s *PositionPolicyRuntimeServer) Close() error {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 		result = s.server.Shutdown(ctx)
-		for _, path := range []string{s.descriptor, s.socket, s.controlDir} {
-			if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) && result == nil {
-				result = err
-			}
-		}
+		// listener 해체와 경로 제거는 형제와 **같은 기계**를 쓴다(a109 §2b.3 G9).
+		// 왜 listener를 여기서 우리가 닫는지, 왜 제거가 이 한 곳뿐인지는 그 기계의
+		// 자기 문서에 있다(`closePrivateEndpointFiles`).
+		result = closePrivateEndpointFiles(result, s.listener, s.descriptor, s.socket, s.controlDir)
 	})
 	return result
 }
@@ -164,7 +178,7 @@ func writePositionPolicyRuntimeDescriptor(path string,
 	if err := positionpolicyrpc.ValidateRuntimeControlDirectory(dir); err != nil {
 		return fmt.Errorf("engine: validating runtime directory before staging: %w", err)
 	}
-	temporary, err := os.CreateTemp(dir, ".position-policy-runtime-*")
+	temporary, err := os.CreateTemp(dir, positionPolicyRuntimeStagingPrefix+"*")
 	if err != nil {
 		return fmt.Errorf("engine: staging runtime descriptor: %w", err)
 	}

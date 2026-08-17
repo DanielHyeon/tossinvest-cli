@@ -105,7 +105,10 @@
 | STORY-TOS-a103 | 7 |
 | STORY-TOS-a107 | 5 |
 | STORY-TOS-a108 | 6 |
-| STORY-TOS-a109 | 6 |
+| STORY-TOS-a109 | 8 |
 | STORY-TOS-a110 | 7 |
 | STORY-TOS-a111 | 13 |
 | STORY-TOS-a112 | 5 |
+| STORY-TOS-a113 | 4 |
+| STORY-TOS-a114 | 5 |
+| STORY-TOS-a115 | 4 |

@@ -1,0 +1,108 @@
+{
+  "file": "cmd/tossctl/engine.go",
+  "source_sha256": "3d941a4616837f73ce2a2acf87ed4bfada5eaccdf4b77fa966b46ac4cd972209",
+  "package": "main",
+  "function": "reportEngineEndpointDegraded",
+  "signature": "reportEngineEndpointDegraded(params=5, results=0)",
+  "start": {
+    "line": 468,
+    "column": 1
+  },
+  "end": {
+    "line": 505,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 475,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 476,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 12
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 2
+      },
+      "text": "fmt.Fprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 496,
+        "column": 14
+      },
+      "text": "context.WithoutCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 497,
+        "column": 5
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 7
+      },
+      "text": "ectx.Notifier.Notify"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 470,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 496,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 498,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 497,
+        "column": 2
+      }
+    }
+  ],
+  "defers": null
+}

@@ -1,0 +1,162 @@
+{
+  "file": "internal/httpapi/strategy_runtime.go",
+  "source_sha256": "8f2c4ce0bda329fc880e9aec4d4f728fbb2879e33cdc77c412cc397a6311b3d3",
+  "package": "httpapi",
+  "function": "StrategyRuntimeSnapshotFunc",
+  "signature": "StrategyRuntimeSnapshotFunc(params=2, results=1)",
+  "start": {
+    "line": 68,
+    "column": 1
+  },
+  "end": {
+    "line": 83,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 70,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 74,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 77,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 69,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 71,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 75,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 78,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 80,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 6
+      },
+      "text": "StrategyRuntimeAbsent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 16
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 20
+      },
+      "text": "reader.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 13
+      },
+      "text": "strategyprojection.Validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 10
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 17
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 17
+      },
+      "text": "now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 36
+      },
+      "text": "strategyprojection.Clone"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 73,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -179,7 +179,7 @@ func runHTTPAPI(cmd *cobra.Command, root *rootOptions, opts *httpAPIOptions) err
 	publisherDone := make(chan struct{})
 	go func() {
 		defer close(publisherDone)
-		publishHTTPAPISnapshots(publisherCtx, stream, snapshots, defaultHTTPAPIPublishInterval)
+		publishHTTPAPISnapshots(publisherCtx, stream, snapshots, strategyRuntime, defaultHTTPAPIPublishInterval)
 	}()
 	defer func() {
 		cancelPublisher()
@@ -251,15 +251,39 @@ func (r unavailableStrategyRuntime) Read(context.Context) (strategyprojection.Sn
 // 함수로 뽑은 이유는 이 판정이 **직접 측정 가능해야** 하기 때문이다. 데몬 안에 묻혀
 // 있으면 「어느 실패가 어느 화면 값이 되는가」를 재려면 데몬 전체를 띄우고 TLS·인증을
 // 지나 HTTP 로 물어야 한다 — 재는 것은 그 배관이 아니라 이 판정인데도.
+// a109 D4 — 이 함수는 이제 **부팅 1회의 해석**과 그 뒤의 재부착을 한 값으로 묶는다.
+// 부팅 해석은 오늘과 똑같이 동기로 일어나고 경고도 그대로 찍는다(아래
+// resolveStrategyRuntimeReader). 달라진 것은 그 결과가 **굳지 않는다**는 것뿐이다.
 func strategyRuntimeReaderFor(ctx context.Context, root *rootOptions,
 	errOut io.Writer) httpapi.StrategyRuntimeReader {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	attachment := &strategyRuntimeAttachment{
+		resolve: func(attemptCtx context.Context) (httpapi.StrategyRuntimeReader, bool) {
+			// 재시도의 경고는 버린다 — 보고는 상태 전이 시 1회다. 여기서 errOut 을
+			// 그대로 넘기면 엔진이 하루 내려간 배포에서 같은 두 줄이 2880번 찍힌다.
+			return resolveStrategyRuntimeReader(attemptCtx, root, io.Discard)
+		},
+		ctx: ctx, now: time.Now, interval: strategyRuntimeRedialInterval, log: errOut,
+	}
+	attachment.attach(resolveStrategyRuntimeReader(ctx, root, errOut))
+	return attachment
+}
+
+// resolveStrategyRuntimeReader 는 디스크의 전략 endpoint 상태를 reader 하나로 접는다.
+//
+// 두 번째 반환값은 「live 로 붙었다」이고, 그것이 재부착 시도의 성패 판정이다. 세
+// 반환 모양(nil·sentinel·client)을 호출자가 타입으로 냄새 맡게 두면 그 판정이 두 벌이 된다.
+func resolveStrategyRuntimeReader(ctx context.Context, root *rootOptions,
+	errOut io.Writer) (httpapi.StrategyRuntimeReader, bool) {
 	dir, dirErr := engineJournalDir(root)
 	if dirErr != nil {
 		fmt.Fprintf(errOut,
 			"note: 엔진 디렉터리를 정하지 못했다 (%v)\n"+
 				"      데몬은 전략 화면 없이 뜬다 — --config-dir 나 XDG 경로를 고친 뒤 재시작하면 붙는다.\n",
 			dirErr)
-		return nil
+		return nil, false
 	}
 	descriptor := strategyprojectionrpc.DescriptorPath(dir)
 	if _, statErr := os.Stat(descriptor); statErr != nil {
@@ -270,19 +294,19 @@ func strategyRuntimeReaderFor(ctx context.Context, root *rootOptions,
 					"경로·볼륨 배치를 고친 뒤 이 데몬을 재시작하면 붙는다.\n",
 				descriptor, statErr)
 		}
-		return nil
+		return nil, false
 	}
 	client, dialErr := strategyprojectionrpc.Dial(ctx, descriptor)
 	if dialErr != nil {
 		fmt.Fprintf(errOut,
 			"note: strategy runtime projection에 연결하지 못했다 (%s): %v\n"+
-				"      데몬은 전략 화면 없이 뜬다 — 엔진이 다시 뜬 뒤 이 데몬을 재시작하면 붙는다.\n",
+				"      데몬은 전략 화면 없이 뜬다 — 엔진이 다시 뜨면 데몬 재시작 없이 다시 붙는다 (a109).\n",
 			descriptor, dialErr)
 		// nil 이 아니라 sentinel 이다. descriptor 가 **있는데** 못 붙은 것은 부재가
 		// 아니므로 부재의 화면 값을 쓰면 안 된다(unavailableStrategyRuntime 의 주석).
-		return unavailableStrategyRuntime{cause: dialErr}
+		return unavailableStrategyRuntime{cause: dialErr}, false
 	}
-	return client
+	return client, true
 }
 
 func httpAPIMutationRoutes(
@@ -660,7 +684,30 @@ func openHTTPAPIResources(ctx context.Context, root *rootOptions, now func() tim
 	return resources, nil
 }
 
-func publishHTTPAPISnapshots(ctx context.Context, stream *httpapi.Stream, snapshots *httpAPISnapshotCache, interval time.Duration) {
+// publishHTTPAPISnapshots 는 SSE 구독자에게 바뀐 집계 스냅샷을 실어 나른다.
+//
+// # 이 루프는 재부착의 **상시 구동원**이기도 하다 — a109 §2-fix F3 (A2 P2-3)
+//
+// 전략 reader 자리의 재부착 시도를 깨우는 것은 요청 경로이고, 요청이 없어도 도는
+// 것은 이 루프뿐이다. 그런데 깨우기가 `snapshots.Refresh` **성공** 안에 들어 있으면
+// (집계가 부재 판정을 부르면서 깨우므로) 전략과 무관한 조회 하나가 고장 난 순간
+// 재부착이 영원히 안 깨어난다: 집계는 앞의 일곱 조회 중 하나만 실패해도 전략
+// 블록에 닿기 전에 끝나고(`httpAPIReader.Snapshot` 의 B1–B7), 루프는 `continue`
+// 한다. 엔진이 돌아와도 화면은 안 돌아온다.
+//
+// 그래서 깨우기를 집계 **밖에서** 먼저 부른다. 새 ticker 를 두지 않는 이유는 주기가
+// 이미 맞기 때문이다 — 재부착 시도에는 자기 rate limit 이 따로 있다.
+//
+// # 이 tick 은 자리의 생사를 묻지 않는다 — a109 §2b.3 G2
+//
+// 집계 밖으로 꺼낸 것만으로는 반쪽이었다. 깨우기 자체가 「자리가 시도 대상인가」
+// (`failed`)에 매여 있으면, 부팅 때 live 로 붙었다가 엔진 재시작으로 죽은 자리는
+// **아무도 Read 하지 않는 한** 시도 대상이 되지 않는다 — 그리고 집계가 고장 난 배포에는
+// 그 Read 가 없다. 지금 이 tick 은 자리의 상태와 무관하게 시도를 깨우고, 과빈도는 시도
+// 쪽의 rate limit·single-flight 가 막는다
+// (`strategyRuntimeAttachment.StrategyRuntimeConfigured`).
+func publishHTTPAPISnapshots(ctx context.Context, stream *httpapi.Stream, snapshots *httpAPISnapshotCache,
+	strategyRuntime httpapi.StrategyRuntimeReader, interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	var previous [sha256.Size]byte
@@ -670,6 +717,10 @@ func publishHTTPAPISnapshots(ctx context.Context, stream *httpapi.Stream, snapsh
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			// 부재 판정은 **부작용이 있는 술어**다: 재부착 wrapper 는 이 질문을 받으면
+			// 백그라운드 시도를 깨운다(`httpapi.StrategyRuntimePresence` 주석). 값을
+			// 쓰지 않고 부르는 것이 이 줄의 목적이다.
+			_ = httpapi.StrategyRuntimeAbsent(strategyRuntime)
 			body, err := snapshots.Refresh(ctx)
 			if err != nil {
 				continue
