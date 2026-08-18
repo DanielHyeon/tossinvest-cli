@@ -113,3 +113,4 @@
 | `a114-the-console-reattaches-its-lifecycle` | STORY-TOS-a114 | in_progress |
 | `a115-the-console-strategy-screen-reattaches` | STORY-TOS-a115 | in_progress |
 | `a116-install-codex-session-save-hook` | STORY-TOS-a116 | implemented |
+| `a117-the-minute-timestamp-is-the-bars-close` | STORY-TOS-a117 | implemented |

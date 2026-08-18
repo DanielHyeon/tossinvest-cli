@@ -78,7 +78,9 @@ func verifiedBarFixtureAt(t *testing.T, start time.Time, mutate func([]strategym
 	rows := make([]strategymarket.RawMinuteCandle, 5)
 	for index := range rows {
 		rows[index] = strategymarket.RawMinuteCandle{
-			Timestamp: start.Add(time.Duration(index) * time.Minute).Format(time.RFC3339),
+			// 라벨은 봉이 닫힌 시각이다(a112 결정 30·31). start에 여는 버킷의
+			// 다섯 봉은 start+1분 .. start+5분 라벨을 단다.
+			Timestamp: start.Add(time.Duration(index+1) * time.Minute).Format(time.RFC3339),
 			Open:      "100", High: "101", Low: "99.9", Close: "100.1", Volume: "200", Currency: "KRW",
 		}
 	}

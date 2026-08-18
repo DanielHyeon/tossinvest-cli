@@ -1,0 +1,164 @@
+{
+  "file": "internal/strategyengine/lane_test.go",
+  "source_sha256": "6b224a50c8db46a7c66b6fe0d0ef120bb103045b54a715f6a13a64f9b0c8fdf2",
+  "package": "strategyengine",
+  "function": "verifiedBarFixtureAt",
+  "signature": "verifiedBarFixtureAt(params=3, results=1)",
+  "start": {
+    "line": 76,
+    "column": 1
+  },
+  "end": {
+    "line": 96,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 10
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 15
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 15
+      },
+      "text": "start.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 25
+      },
+      "text": "time.Duration"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 3
+      },
+      "text": "mutate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 10
+      },
+      "text": "strategymarket.SealAdaptedOfficialMinutePage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 14
+      },
+      "text": "strategymarket.SealOfficialClosedKRXFiveMinute"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 67
+      },
+      "text": "start.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 80,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

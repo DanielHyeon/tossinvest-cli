@@ -116,6 +116,7 @@
   - FEAT-TOS-010 — Strategy entry and market-aware scheduling [active]
     - STORY-TOS-a047 — Add the strategy entry engine [archived] → `a047-add-strategy-engine`
     - STORY-TOS-a048 — Add market-aware strategy scheduling [archived] → `a048-add-market-aware-scheduler`
+    - STORY-TOS-a117 — The minute timestamp is the bar's close [implemented] → `a117-the-minute-timestamp-is-the-bars-close`
   - FEAT-TOS-011 — Lane performance and strategy optimization [active]
     - STORY-TOS-a049 — Add deterministic lane performance attribution [archived] → `a049-add-lane-performance`
     - STORY-TOS-a050 — Add versioned strategy optimization lifecycle [archived] → `a050-add-strategy-optimization`

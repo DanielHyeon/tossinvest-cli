@@ -20,11 +20,11 @@ func officialPage(t *testing.T, adjusted bool) official.RawMinutePage {
 			_, _ = writer.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
 		case "/api/v1/candles":
 			_, _ = writer.Write([]byte(`{"result":{"candles":[` +
-				`{"timestamp":"2026-07-31T09:00:00+09:00","openPrice":"100.0100","highPrice":"101.100","lowPrice":"99.900","closePrice":"100.200","volume":"0.100","currency":"KRW"},` +
-				`{"timestamp":"2026-07-31T09:01:00+09:00","openPrice":"100.2","highPrice":"101.1","lowPrice":"99.9","closePrice":"100.2","volume":"0.1","currency":"KRW"},` +
+				`{"timestamp":"2026-07-31T09:01:00+09:00","openPrice":"100.0100","highPrice":"101.100","lowPrice":"99.900","closePrice":"100.200","volume":"0.100","currency":"KRW"},` +
 				`{"timestamp":"2026-07-31T09:02:00+09:00","openPrice":"100.2","highPrice":"101.1","lowPrice":"99.9","closePrice":"100.2","volume":"0.1","currency":"KRW"},` +
 				`{"timestamp":"2026-07-31T09:03:00+09:00","openPrice":"100.2","highPrice":"101.1","lowPrice":"99.9","closePrice":"100.2","volume":"0.1","currency":"KRW"},` +
-				`{"timestamp":"2026-07-31T09:04:00+09:00","openPrice":"100.2","highPrice":"101.1","lowPrice":"99.9","closePrice":"100.55","volume":"0.1","currency":"KRW"}` +
+				`{"timestamp":"2026-07-31T09:04:00+09:00","openPrice":"100.2","highPrice":"101.1","lowPrice":"99.9","closePrice":"100.2","volume":"0.1","currency":"KRW"},` +
+				`{"timestamp":"2026-07-31T09:05:00+09:00","openPrice":"100.2","highPrice":"101.1","lowPrice":"99.9","closePrice":"100.55","volume":"0.1","currency":"KRW"}` +
 				`]}}`))
 		default:
 			http.NotFound(writer, request)

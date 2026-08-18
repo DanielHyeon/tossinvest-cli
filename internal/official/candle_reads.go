@@ -13,7 +13,12 @@ import (
 // Endpoint: GET /api/v1/candles
 // Schema (openapi.latest.json component "CandlePageResponse"):
 //
-//	candles[].timestamp  string (datetime, RFC3339) — bar open time
+//	candles[].timestamp  string (datetime, RFC3339) — bar CLOSE time.
+//	                     openapi.latest.json calls it the bar's open time and that is
+//	                     wrong: measured live in KR and US on 2026-08-18 (a112 결정 30·31).
+//	                     A bar labelled t covers [t-interval, t). This DTO keeps the wire
+//	                     value untouched; converting is the consumer's job
+//	                     (internal/officialbars.adoptPage does open_at = timestamp - 60s).
 //	candles[].openPrice  string (decimal)
 //	candles[].highPrice  string (decimal)
 //	candles[].lowPrice   string (decimal)

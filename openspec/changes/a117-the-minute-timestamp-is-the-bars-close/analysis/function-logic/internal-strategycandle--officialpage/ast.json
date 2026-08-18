@@ -1,0 +1,249 @@
+{
+  "file": "internal/strategycandle/adapter_test.go",
+  "source_sha256": "d0f227759181a0727ba87ed06ac6f5d163bafd048e5429a2df7778510bb717dc",
+  "package": "strategycandle_test",
+  "function": "officialPage",
+  "signature": "officialPage(params=2, results=1)",
+  "start": {
+    "line": 15,
+    "column": 1
+  },
+  "end": {
+    "line": 40,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 18,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 19,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 21,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 29,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 39,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 16,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 12
+      },
+      "text": "httptest.NewServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 31
+      },
+      "text": "http.HandlerFunc"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 20,
+        "column": 11
+      },
+      "text": "writer.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 20,
+        "column": 24
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 22,
+        "column": 11
+      },
+      "text": "writer.Write"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 22,
+        "column": 24
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 4
+      },
+      "text": "http.NotFound"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 2
+      },
+      "text": "t.Cleanup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 12
+      },
+      "text": "official.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 76
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 90
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 118
+      },
+      "text": "official.WithBaseURL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 152
+      },
+      "text": "official.WithHTTPClient"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 176
+      },
+      "text": "server.Client"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 15
+      },
+      "text": "client.RawMinuteCandles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 39
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 17,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 20,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 22,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 35,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

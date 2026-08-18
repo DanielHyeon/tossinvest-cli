@@ -156,7 +156,11 @@ func aggregateClosedKRXFiveMinute(market, symbol, source string, adjusted bool, 
 		}
 		local := parsed.In(seoul)
 		minuteOfDay := local.Hour()*60 + local.Minute()
-		if local.Second() != 0 || local.Nanosecond() != 0 || minuteOfDay < 9*60 || minuteOfDay >= 15*60+30 {
+		// 브로커가 준 시각표는 봉이 "닫힌" 시각이다(a112 결정 30·31 라이브 실측).
+		// 그래서 라벨이 t인 1분봉은 [t-1분, t) 구간을 담는다. 정규장(09:00~15:30) 안에
+		// 있으려면 라벨이 09:01 이상 15:30 이하여야 한다. 09:00 라벨은 08:59~09:00,
+		// 즉 개장 전 1분이라 여기서 걸러진다.
+		if local.Second() != 0 || local.Nanosecond() != 0 || minuteOfDay < 9*60+1 || minuteOfDay > 15*60+30 {
 			return VerifiedBar{}, &IntegrityError{Kind: RefusalOutsideRegularSession, Detail: candle.Timestamp}
 		}
 		if currency == "" {
@@ -177,8 +181,11 @@ func aggregateClosedKRXFiveMinute(market, symbol, source string, adjusted bool, 
 		minutes = append(minutes, parsedMinute)
 	}
 	sort.Slice(minutes, func(i, j int) bool { return minutes[i].local.Before(minutes[j].local) })
-	startMinute := minutes[0].local.Hour()*60 + minutes[0].local.Minute()
-	if (startMinute-9*60)%5 != 0 {
+	// 버킷이 여는 시각은 첫 봉의 라벨보다 1분 이르다. 5분 격자는 09:00에서 시작하므로
+	// 정렬은 라벨이 아니라 이 여는 시각으로 따진다.
+	openAt := minutes[0].local.Add(-time.Minute)
+	openMinute := openAt.Hour()*60 + openAt.Minute()
+	if (openMinute-9*60)%5 != 0 {
 		return VerifiedBar{}, &IntegrityError{Kind: RefusalIncompleteBucket, Detail: "not aligned to KRX five-minute boundary"}
 	}
 	for i := 1; i < 5; i++ {
@@ -186,7 +193,8 @@ func aggregateClosedKRXFiveMinute(market, symbol, source string, adjusted bool, 
 			return VerifiedBar{}, &IntegrityError{Kind: RefusalMinuteGap, Detail: "minutes are not contiguous"}
 		}
 	}
-	closedAt := minutes[0].local.Add(5 * time.Minute)
+	// 버킷이 닫히는 시각은 여는 시각의 5분 뒤이고, 그것은 마지막 봉의 라벨과 같다.
+	closedAt := openAt.Add(5 * time.Minute)
 	if now.Before(closedAt) {
 		return VerifiedBar{}, &IntegrityError{Kind: RefusalOpenBucket, Detail: "bucket is not closed"}
 	}
@@ -207,7 +215,7 @@ func aggregateClosedKRXFiveMinute(market, symbol, source string, adjusted bool, 
 		symbol:   symbol,
 		source:   source,
 		adjusted: adjusted,
-		openAt:   minutes[0].local,
+		openAt:   openAt,
 		closedAt: closedAt,
 		open:     decimalString(minutes[0].values[0]),
 		high:     decimalString(high),

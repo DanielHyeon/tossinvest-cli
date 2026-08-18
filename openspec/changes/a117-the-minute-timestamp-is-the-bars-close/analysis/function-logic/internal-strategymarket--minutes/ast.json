@@ -1,0 +1,93 @@
+{
+  "file": "internal/strategymarket/bars_test.go",
+  "source_sha256": "ffeec4a89d78fe4855e5ce30829c88c97f959a21d242602cf3b9b1221f81558f",
+  "package": "strategymarket",
+  "function": "minutes",
+  "signature": "minutes(params=0, results=1)",
+  "start": {
+    "line": 16,
+    "column": 1
+  },
+  "end": {
+    "line": 23,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 18,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 22,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 9
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 39
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 39
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 76
+      },
+      "text": "time.FixedZone"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 17,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 19,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 21,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "STORY-TOS-a117",
+  "title": "The minute timestamp is the bar's close",
+  "feature": "FEAT-TOS-010",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a117-the-minute-timestamp-is-the-bars-close",
+    "path": "openspec/changes/a117-the-minute-timestamp-is-the-bars-close"
+  },
+  "found_by": {
+    "date": "2026-08-18",
+    "how": "The a112 live bar-label probes measured the broker's minute timestamp as the bar's close instant in both markets (decisions 30 and 31). Two copies of the older, false reading survived outside a112's ownership boundary, one of them executable in the a047 KRX five-minute aggregator.",
+    "record": "openspec/changes/a112-run-four-strategy-families-independently/review.md, decisions 30 and 31"
+  },
+  "acceptance": [
+    "The KRX five-minute bucket opens one minute before its first label and closes at its last label",
+    "A bar labelled 09:00 is refused as outside the regular session and a bar labelled 15:30 is admitted",
+    "Every existing refusal kind, decimal value and lane assertion is unchanged",
+    "The candle DTO comment states that the broker's document is wrong and why",
+    "make gate CHANGE=a117-the-minute-timestamp-is-the-bars-close passes"
+  ],
+  "measured": null,
+  "deviations": [],
+  "limits": [
+    "The defect was latent: CodeGraph shows the aggregator has no production caller, so no shipped behaviour changes.",
+    "docs/migration/openapi.latest.json keeps the broker's wording because it is a mirrored external document."
+  ]
+}

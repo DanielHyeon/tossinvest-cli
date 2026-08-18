@@ -1,0 +1,213 @@
+{
+  "file": "internal/strategymarket/bars_test.go",
+  "source_sha256": "b94852735790b61add409d2cf155b54e1b7113bcfc389bc120d7236c722c8ed3",
+  "package": "strategymarket",
+  "function": "TestNoPositionProofRequiresFreshAuthoritativeZeroPositionAndOrders",
+  "signature": "TestNoPositionProofRequiresFreshAuthoritativeZeroPositionAndOrders(params=1, results=0)",
+  "start": {
+    "line": 153,
+    "column": 1
+  },
+  "end": {
+    "line": 177,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 157,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 163,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 173,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 9
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 9
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 16
+      },
+      "text": "RequireNoPosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 34
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 20
+      },
+      "text": "proof.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 37
+      },
+      "text": "proof.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 63
+      },
+      "text": "proof.Symbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 93
+      },
+      "text": "proof.Authority"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 114
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 158,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 5
+      },
+      "text": "Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 166,
+        "column": 100
+      },
+      "text": "now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 16
+      },
+      "text": "RequireNoPosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 173,
+        "column": 34
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 156,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 173,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

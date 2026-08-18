@@ -3,5 +3,9 @@
   "title": "Strategy entry and market-aware scheduling",
   "epic": "EPIC-TOS-004",
   "intent": "active",
-  "stories": ["STORY-TOS-a047", "STORY-TOS-a048"]
+  "stories": [
+    "STORY-TOS-a047",
+    "STORY-TOS-a048",
+    "STORY-TOS-a117"
+  ]
 }
