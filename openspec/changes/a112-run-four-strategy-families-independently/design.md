@@ -139,7 +139,7 @@ v1의 server-owned experimental parameters는 opening range 15 regular-session m
 
 ### 5. evidence producer와 snapshot authority를 evaluator 밖에 둔다
 
-official read-only candle/quote adapter가 regular-session closed bars를 canonical integer minor/PPM payload로 append한다. bar identity는 `(market, symbol, session_id, interval, open_at)`이며 correction은 같은 ID를 덮지 않고 higher revision/new digest로 추가된다. evaluation은 `recorded_at`과 `source_observed_at` dual cutoff로 봉인한 immutable snapshot만 소비한다.
+official read-only candle/quote adapter가 regular-session closed bars를 canonical integer minor/PPM payload로 append한다. bar identity는 `(market, symbol, session_id, interval, open_at)`이며 correction은 같은 ID를 덮지 않고 higher revision/new digest로 추가된다. Wire `timestamp`는 봉 **종료** 시각이므로(2026-08-18 KR/US 라이브 실측, 결정 30·31) producer가 `open_at = timestamp − interval`로 변환해 이 identity를 만든다. evaluation은 `recorded_at`과 `source_observed_at` dual cutoff로 봉인한 immutable snapshot만 소비한다.
 
 Current main의 lossless `official.Client.RawMinuteCandles`와 `strategycandle` sealer는 KR 6자리 symbol과 KRX session만 허용하고 US를 명시 거부한다. 따라서 구현 전에 M-B measurement가 official US 1-minute endpoint의 raw decimal/timestamp 보존, pagination, USD currency, regular-session/calendar identity와 rate semantics를 실제 contract/fixture로 고정해야 한다. Generic `Candles`의 float 변환, WTS 응답 또는 테스트 fixture를 production US authority로 승격하지 않는다. M-B가 complete PASS가 아니면 exact 8-lane production matrix와 US breakout producer를 배선하지 않고 OFF/UNOBSERVED로 남긴다.
 
