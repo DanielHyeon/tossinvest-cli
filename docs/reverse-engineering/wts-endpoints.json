@@ -1,20 +1,25 @@
 {
   "source": "tossinvest.com web bundles",
-  "build_id": "Sg-uF4vsHmKQC9cjQ6v9G",
-  "chunk_count": 30,
-  "total": 968,
+  "build_id": "Bbg_UHsMLDTSgvEQh0PBL",
+  "chunk_count": 31,
+  "total": 997,
   "counts": {
     "implemented": 81,
-    "candidate": 373,
-    "excluded": 514,
+    "candidate": 395,
+    "excluded": 521,
     "candidate_next": 20,
-    "meaningful": 454
+    "meaningful": 476
   },
   "overrides": {},
   "endpoints": {
     "/api/v1/account": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/account-open/face-pay/registrable": {
+      "status": "excluded",
+      "note": "account opening flow",
+      "first_seen": "2026-08-24"
     },
     "/api/v1/account-open/face-pay/registration": {
       "status": "excluded",
@@ -310,6 +315,11 @@
       "note": "onboarding/eligibility UI",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/account/frontend/product-eligibility/single-stock-etp/mock-trade": {
+      "status": "excluded",
+      "note": "onboarding/eligibility UI",
+      "first_seen": "2026-08-24"
+    },
     "/api/v1/account/frontend/ria/payment-limit": {
       "status": "excluded",
       "note": "onboarding/eligibility UI",
@@ -344,6 +354,21 @@
       "status": "excluded",
       "note": "onboarding/eligibility UI",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/account/frontend/test/product-eligibility/reviews/delete": {
+      "status": "excluded",
+      "note": "onboarding/eligibility UI",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/account/frontend/test/product-eligibility/single-stock-etp/mock-trade/approve": {
+      "status": "excluded",
+      "note": "onboarding/eligibility UI",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/account/frontend/test/product-eligibility/single-stock-etp/mock-trade/reject": {
+      "status": "excluded",
+      "note": "onboarding/eligibility UI",
+      "first_seen": "2026-08-24"
     },
     "/api/v1/account/investment-propensity/eligible/with-contract": {
       "status": "excluded",
@@ -563,6 +588,18 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/asset-snapshot/all-accounts/chart": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/asset-snapshot/all-accounts/detail-by-date": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/asset-snapshot/all-accounts/page": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
     "/api/v1/asset-snapshot/chart": {
       "status": "candidate",
       "first_seen": "2026-07-13"
@@ -749,6 +786,62 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/common/auth/family-document/manual/file": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/common/auth/family-document/manual/files": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/common/auth/family-document/manual/sign/token": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/common/auth/family-document/manual/submit": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/common/auth/family-document/manual/terms": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/common/auth/family-document/manual/terms-agreement": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/common/auth/family-document/minor-name": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/common/auth/family-document/mock/file": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/common/auth/family-document/mock/review": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/common/auth/family-document/mock/scraping-failure-count": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/common/auth/family-document/mock/submit": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/common/auth/family-document/mock/truth-check": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/common/auth/family-document/scraping-failure": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/common/auth/family-document/verification": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
     "/api/v1/common/auth/id-card/bridge/encryption-key": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -882,6 +975,18 @@
     "/api/v1/dashboard/common/cached-orderable-amount": {
       "status": "implemented",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/dashboard/common/market-event/banners": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/dashboard/common/market-event/circuit-breaker": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
+    },
+    "/api/v1/dashboard/common/market-event/landing": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
     },
     "/api/v1/dashboard/common/ongoing-events/all": {
       "status": "candidate",
@@ -1073,6 +1178,10 @@
     "/api/v1/inbox-alimies/has-unread": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/index-infos": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
     },
     "/api/v1/index-prices": {
       "status": "implemented",
@@ -2220,6 +2329,11 @@
       "note": "marketing/promotion",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/promotion/delivery/rewards": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-08-24"
+    },
     "/api/v1/promotion/friend-invite/budget-exhausted": {
       "status": "excluded",
       "note": "marketing/promotion",
@@ -2284,6 +2398,11 @@
       "status": "excluded",
       "note": "marketing/promotion",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/promotion/minor-account-open/resource": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-08-24"
     },
     "/api/v1/promotion/minor-account-open/user-status": {
       "status": "excluded",
@@ -2525,6 +2644,10 @@
       "status": "excluded",
       "note": "transfer/document admin",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/reports/fax": {
+      "status": "candidate",
+      "first_seen": "2026-08-24"
     },
     "/api/v1/ria-calculator/limit": {
       "status": "candidate",
@@ -4439,5 +4562,5 @@
       "first_seen": "2026-06-19"
     }
   },
-  "updated_at": "2026-08-17"
+  "updated_at": "2026-08-24"
 }
