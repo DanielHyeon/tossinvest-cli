@@ -755,8 +755,71 @@ go run ./tools/a112-l1c-quote-probe --market KR --symbol 005930    # 09:00–15:
 1. The decision-42 acceptance run, one per market while that market is open (KR 09:00–15:30 KST, US 22:30–05:00 KST),
    reporting shape only — key names, JSON types, digit counts, level counts, the two instants and their difference. No
    prices as evidence, no raw body in the repository.
-2. The runner decision in residual (i) — amendment or untracked one-shot.
+2. ~~The runner decision in residual (i)~~ — **closed** by decision 45 (2026-08-27). The runner exists and has
+   been run (2026-08-28, decision 46), but against two *closed* markets, so item 1 above is still open.
 3. Then, and only then, task 3.6 is checked (decision 12) and this section is closed as ACCEPTED. `tasks.md` is
    deliberately unchanged by this landing, exactly as at L1b: 3.7 is a single atomic row that also demands the
    timezone/restart/correction/cache-miss replay fixtures and broker mutation spies at zero, which this lot does not
    deliver.
+
+### Brief amendment (2026-08-28, human instruction): decision 46
+
+46. **Decision 42's "no agent reruns it" clause is lifted by the user; its read-only ceiling is not.** The user
+    instructed the agent to run the probe without a per-run approval ("승인없이 너가 돌려", 2026-08-28). That clause of
+    decision 42 is therefore overridden for this change, and this record says so rather than pretending the original
+    clause was honoured. Everything else in decision 42 stands unchanged and was in fact obeyed: the runner reaches only
+    the two strict readers, each invocation is exactly two GETs of one market, nothing is written, and no price, volume
+    or raw body reaches the repository. Four GETs total were spent (two markets × two endpoints).
+
+### 2026-08-28 L1c probe runs — both markets CLOSED, so this is measurement, not acceptance
+
+Run at 05:29–05:31 KST by the agent under decision 46. **Neither market was open**: US regular hours had ended at 05:00
+KST (the book was in the after-hours session) and KR opens at 09:00 KST (the book was yesterday's close). Decision 42's
+acceptance precondition is an **open** market, so these runs do **not** close acceptance and task 3.6 stays unchecked.
+
+| | US / AAPL | KR / 005930 |
+|---|---|---|
+| `/orderbook` | HTTP 200, `sha256:43660d9f…38e433` | HTTP 200, `sha256:1cdc8b06…eed3b` |
+| `/prices` | HTTP 200, `sha256:200ba802…d52fa8` | HTTP 200, `sha256:4f99162d…1af2a` |
+| broker instant, orderbook | `2026-08-28T05:28:58.000+09:00` | `2026-08-27T20:00:00.000+09:00` |
+| broker instant, prices | `2026-08-28T05:28:30.000+09:00` | `2026-08-27T19:59:59.000+09:00` |
+| broker instant difference | **28s** | 1s |
+| read instant difference | 73.6ms | 72.3ms |
+| ask.price digits (int/frac) | 3 / **2** | 6 / 0 |
+| bid.price digits (int/frac) | 3 / **1** | 6 / 0 |
+| ask.volume / bid.volume digits | 2/0, 2/0 | 6/0, 5/0 |
+| last digits | 3 / 2 | 6 / 0 |
+| scale verdict | fits USD scale 4 | fits KRW scale 0 |
+
+**What these runs settle.**
+
+- **Residual (b) is closed.** `/api/v1/prices` had never been observed at the byte level in either market. It has now
+  been observed four times over two markets and returned the exact key set the strict reader demands each time — any
+  other key set, a duplicate key, a non-string scalar or a row count ≠ 1 would have been a typed refusal, not a 200.
+- **Residual (a) is closed for index 0.** The level element schema hypothesis taken from `openapi.latest.json`
+  (`{price, volume}` as decimal strings) is now *measured* rather than documented, in both markets. It remains
+  unmeasured for indices ≥ 1, which the reader does not read (decision 33).
+- **Residual (c) is closed.** Both `timestamp` fields were non-null in all four bodies, in both markets.
+- **Decimals are trimmed, not zero-padded.** The single US orderbook body carried `ask.price` with two fraction digits
+  and `bid.price` with one. Any consumer assuming a fixed decimal width for a market is wrong. The producer does not
+  assume one — its scale rule is an upper bound, which both markets satisfied.
+- **Decision 36's conservative binding did visible work.** On the US pair the two halves were **28 seconds** apart and
+  the binding took the *older* broker instant as `source_observed_at` and the *later* read as `received_at`, widening
+  the recorded age instead of narrowing it. In both samples the last-price half happened to win both ends; that is an
+  artefact of these two samples (it is read second, and here it also carried the earlier instant), not a rule.
+
+**What they do not settle.** Open-session behaviour: a US regular-session price may carry more fraction digits than the
+two seen after hours (the scale-4 ceiling is untested against a value that approaches it), and level counts are still
+the 2026-08-18 console figures. Residual (h) is *unreachable through this runner by construction* — it asks for the
+first two prices per side, and decision 33 confines the reader to index 0, so no amount of probe running can close it;
+closing it needs either a reader change or a separate one-off observation, and neither is this lot's.
+
+- **(k) NEW — nothing in the quote path bounds a quote's age, and the KR run measured it.** The KR bodies were stamped
+  `2026-08-27T20:00:00+09:00` and were read at 2026-08-28 05:30 KST — **9h30m old** — and both strict readers returned
+  success. `PollQuoteL1`'s instant checks assert *presence* only (`quote.go:137-143`, "… is missing"), and its refusal
+  set is reader-error / identity / currency / instant-missing / digest / envelope / store-error with **no age rule**;
+  the envelope refuses `received_at` *before* `observed_at` (clock skew) but not `received_at` long *after* it. So the
+  producer would have admitted a nine-and-a-half-hour-old closed-market book as an `ADMITTED` quote carrying a fresh
+  `received_at`. This is harmless today — the lot lands with zero production callers — but it is now a *measured* gap,
+  not a suspected one: whoever wires the producer in L5 must add a freshness gate first, or a strategy can act on a
+  book from a market that has been shut for nine hours.
