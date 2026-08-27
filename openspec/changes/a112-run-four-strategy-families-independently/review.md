@@ -518,3 +518,199 @@ The 2026-08-18 human probe was read through `tossctl quote orderbook` → `hybri
 Readers (`internal/official`, httptest + fake `/oauth2/token`, the `trace_test.go` pattern): market/symbol grammar refusals with zero server hits; exact query strings `symbol=005930` and `symbols=AAPL`; duplicate key at envelope/result/level depth ⇒ refuse; unknown `result` key, unknown level key, missing level key ⇒ refuse; bare-number price/volume/lastPrice ⇒ refuse; empty `asks` or `bids` ⇒ refuse (the M-B closed-market body is the fixture shape); `timestamp` null / absent / `Z`-suffixed / offset-less ⇒ refuse; `currency` ≠ market currency ⇒ refuse; `/prices` returning zero rows, two rows, or a row whose `symbol` does not echo ⇒ refuse; non-2xx last attempt ⇒ refuse (decision 28's rule, reused); `BodyDigest` equals `sha256` of the exact served bytes; the KR ten-level and US one-level bodies both accepted with only index 0 read.
 Producer (`internal/officialbars`, fake readers + real temp `strategyevidence.Store`): bid > ask ⇒ refuse before any append (and `checkQuoteL1` would refuse anyway — assert both); either half erroring ⇒ zero appends and no partial state; `source_observed_at_ms` == min and `received_at_ms` == max, proven by a fixture where the two halves disagree; composite digest equals the declared preimage; same instant + same digest ⇒ `Unchanged`, no second append; same instant + different digest ⇒ `Conflict`/quarantine, first revision still readable; USD five-decimal raw ⇒ refuse (scale 4); KRW fractional raw ⇒ refuse (scale 0); no `float64` anywhere in the package's production files (AST guard); import allowlist guard extended to the new file.
 GREEN gates: `go build ./...`; `go test ./internal/official ./internal/officialbars -count=1` and `-race`; `go vet`; `$(go env GOROOT)/bin/gofmt -l` empty; `go test ./internal/strategyevidence ./internal/breakoutlane -count=1` still green (untouched); `TestA112MBUS*` guards green; then the implementer's mutant table with `sha256sum -c` restoration proof (min↔max swapped; empty-side check dropped; timestamp-null refusal dropped; digest preimage reordered; row-echo check dropped; conflict path downgraded to overwrite) — "passing test is not evidence", and the revert baseline is the pre-mutation file hash, not `git checkout`.
+
+## 2026-08-27 L1c implementation — official strict quote readers + top-of-book producer (Manager record)
+
+### Ownership and authority boundary
+
+- **Created, exactly decision 43's list and nothing else:** `internal/official/strict_quote_reads.go` (423 lines),
+  `internal/official/strict_quote_reads_test.go` (357), `internal/officialbars/quote.go` (247),
+  `internal/officialbars/quote_test.go` (508). `git status` at code-complete carries those four untracked files plus a
+  one-line change to `base-commit.txt` (next section) — no other file in the repository moved.
+- **Not edited, as declared:** `client.go`, `token.go`, `trace.go`, `ratebudget.go`, `candle_raw.go`, `candle_reads.go`,
+  `market_reads.go`, `strict_minute_candles.go`, `producer.go`, `a112_mbus_*`, anything under `internal/strategyevidence`,
+  `internal/breakoutlane`, `internal/hybrid`, `internal/client`, any `cmd/`, engine, router, scheduler, journal, toggle or
+  container file. The shape helpers (`strictMinuteObject`, `strictMinuteCheckJSON`, `strictMinuteWalk`,
+  `strictMinuteString`, `strictMinuteInstant`, `strictMinuteFinalAttempt`, `strictMinuteMarketCurrency`,
+  `strictMinuteCheckSymbol`) and the caps (`strictMinuteMaxBody`, `strictMinuteMaxDecimal`) are **called**;
+  `strict_minute_candles.go` is byte-identical to its L1b state.
+- **Pre-Edit (High-risk adjacency: official client GET/token path):** no existing function body was edited, so no
+  existing symbol needed a Pre-Edit gate. The new readers reach the broker only through the unchanged `c.get` with a
+  per-call attempt observer that **chains** an outer observer instead of replacing it (the `StrictMinuteCandles`
+  pattern, so an M-B style outer observation is never silently dropped).
+- **No production caller is wired.** As with L1b, `PollQuoteL1` and both readers have zero non-test callers when this
+  lot lands; nothing about the running containers changes.
+
+### Baseline re-freeze (procedure, not a new decision)
+
+The lot opened with `check_analysis` **failing** on five functions that belong to **a117**
+(`internal/strategymarket/bars.go:aggregateClosedKRXFiveMinute` plus four test helpers in `bars_test.go`,
+`strategycandle/adapter_test.go`, `strategyengine/lane_test.go`): a117 landed on `main` after a112's frozen base
+`d9d9f71f`, so a112's diff window had swallowed another change's edits. Following the 2026-08-17 landing precedent
+recorded in `analysis/current-main-evidence.md`, `base-commit.txt` was re-frozen to `a8c3d067` (branch and `main` HEAD).
+Proven before re-freezing: the intervening commits cite no bundle source — `73a1e85c` is openspec-only, and `a8c3d067`
+touches `internal/official/candle_reads.go` (comment), `internal/strategymarket/*`, `internal/strategycandle/adapter_test.go`,
+`internal/strategyengine/lane_test.go` and PM files, none of which is the `file` of any bundle in
+`analysis/function-logic/`. After the re-freeze `check_analysis` reports "evidence complete or diff-proven exempt" and
+the L1c diff contains only this lot's own files.
+
+### What was built
+
+**Readers (`internal/official`).** `(*Client).StrictOrderbookTop(ctx, market, symbol) (StrictTopOfBook, error)` and
+`(*Client).StrictLastPrice(ctx, market, symbol) (StrictLastPrice, error)`, each exactly one GET, each returning the raw
+decimal strings as received, the broker instant (raw text *and* parsed), `ReadAt` (`BodyReadComplete` of the last
+attempt), `StatusCode`, `BodyDigest` over the exact served bytes and the advisory `Budget` — the `StrictMinutePage`
+shape of decision 15. `StrictQuoteError{Reason, Detail}` is a distinct type with its own reason vocabulary
+(`EMPTY_SIDE`, `NO_SOURCE_INSTANT`, `SYMBOL_ECHO_MISMATCH`, `ROW_COUNT_INVALID`, …); `strictQuoteAdopt` re-types a
+shape-helper refusal into a quote refusal so the grammar keeps **one** authority while a quote failure is never
+reported as a candle failure (`TestStrictQuoteRefusalsAreNeverCandleRefusals` pins both halves of that sentence).
+
+**Producer (`internal/officialbars`).** `PollQuoteL1(ctx, reader QuoteReader, store QuoteStore, in QuotePollInput)`
+reads the orderbook half first, then the prices half, checks that both answer for the requested market/symbol and agree
+on currency, refuses a missing instant on either half, binds them conservatively, composes the digest, builds the
+envelope through `strategyevidence.NewQuoteL1Envelope` and appends once. `QuotePollResult.Outcome` is exactly one of
+`ADMITTED` / `UNCHANGED` / `CONFLICT`.
+
+### Decisions honoured
+
+- **33 (top of book only).** `strictQuoteSideTop` reads index 0 and refuses an empty side; no level count, cap or
+  aggregate exists anywhere in either file. The KR ten-level and US one-level bodies are both accepted, and the same
+  test asserts only index 0 reached the result.
+- **34 (one seal, two endpoints, no retry).** The reader interface has exactly two methods; `PollQuoteL1` calls each at
+  most once. `TestPollQuoteL1AppendsNothingWhenEitherHalfFails` asserts zero appends, the reader's own error preserved
+  through `errors.Is`, **and** the call ledger (`orderbook` alone when the first half fails; never a repeat).
+- **35 (the broker instant is mandatory).** `strictQuoteInstant` demands a JSON string parsing under the existing
+  `strictMinuteInstant` grammar; null, absent, `Z`-suffixed, offset-less and impossible dates are all refused, and the
+  producer refuses a zero instant or a zero read instant on either half. The local clock is never substituted — neither
+  file calls `time.Now`.
+- **36 (min/max, no skew constant).** `earlier(...)`/`later(...)`; a fixture where the halves disagree in both
+  directions proves observed = older source instant and received = later read instant. No millisecond tolerance
+  constant was introduced.
+- **37 (composite digest).** `sha256("a112-quote-l1-v1\n" + <orderbook hex> + "\n" + <prices hex>)`, orderbook first.
+  The test re-derives the preimage from the written rule rather than calling the production helper, and a malformed
+  half-digest is a typed refusal (`QUOTE_DIGEST_INVALID`) before any append.
+- **38 (strict readers, new files).** `result` keys exactly `{timestamp, currency, asks, bids}`; level keys exactly
+  `{price, volume}`; price rows exactly `{symbol, lastPrice, currency, timestamp}`; every scalar a JSON string (a bare
+  number is refused); duplicate keys refused at envelope, result and level depth; `currency` must equal the market
+  currency; `/prices` is asked for exactly one symbol and a response with zero rows, two rows or a row that does not
+  echo the symbol is refused (the fall-through silence of `Client.Prices` is exactly why).
+- **39 (the reader is the fail-closed instrument).** No schema flag exists. One accepted shape, refusal otherwise.
+- **40 (producer, revision always 1).** `SourceRecordID` is `<CODE>:<SYMBOL>:quote_l1:<source_observed_at_ms>` via
+  `newQuoteL1Header`; `quoteRevision = 1`. **Implementation note:** the producer does not pre-read the store. Identity
+  collisions are judged by `Store.Append` itself — `AppendResult.Idempotent` ⇒ `UNCHANGED`, `ErrRevisionConflict` ⇒
+  `CONFLICT` with the first revision left readable and the attempt quarantined. That is the same rule the brief states,
+  reached without adding a read API to `internal/strategyevidence` (which decision 43 forbids editing). Its one
+  behavioural consequence is recorded as residual (g) below.
+- **41 (rate and cadence).** Exactly one pair of GETs per call, no loop, no cadence; `Budget` stays advisory.
+- **44 (residuals).** Carried forward and extended below.
+
+### RED → GREEN
+
+1. **RED (readers).** `strict_quote_reads_test.go` written first; `go vet ./internal/official` failed with
+   `undefined: StrictQuoteError`, `undefined: StrictQuoteLevel`, `*Client has no field or method StrictOrderbookTop`.
+2. **GREEN (readers).** `go test ./internal/official -run 'StrictQuote|StrictOrderbookTop|StrictLastPrice' -count=1`
+   → **61** tests/subtests, exit 0.
+3. **RED (producer).** `quote_test.go` written next; `go vet ./internal/officialbars` failed with `undefined: QuoteStore`.
+4. **GREEN (producer).** `go test ./internal/officialbars -run 'TestPollQuoteL1|TestProductionNeverTouchesFloatingPoint'
+   -v -count=1` → **29** tests/subtests, exit 0. One of them is not in the brief's RED list and was added during the
+   self-review pass: a broker instant **after** our read instant (clock skew) is refused rather than clamped, because
+   clamping would make a quote that was "observed after it was received" look ordinary and would loosen decision 35's
+   freshness gate by exactly that much.
+5. **Package gates.** `go build ./...` clean; `go test ./internal/official ./internal/officialbars -count=1` and the same
+   with `-race` → **497** tests/subtests, exit 0; `go test ./internal/strategyevidence ./internal/breakoutlane
+   ./internal/strategymarket ./internal/strategycandle -count=1` → **380**, exit 0 (untouched packages still green);
+   `$(go env GOROOT)/bin/gofmt -l` empty on all four new files; `go vet` clean.
+6. **Whole repository, after the commit.** `go test ./... -count=1` → **93 packages ok, 0 FAIL, exit 0**;
+   `make vet` exit 0; `$(go env GOROOT)/bin/gofmt -l internal cmd tools` empty;
+   `openspec validate --strict` valid; `check_analysis` "evidence complete or diff-proven exempt";
+   `python3 tools/pm/generate_master_tracker.py --check` current; `make sdd-sync` clean (GBrain advisory busy →
+   previous freshness kept, WARN only; the first attempt died on the codegraphcontext 15s advisory timeout and was
+   retried); `make sdd-check` exit 0 with "CodeGraph hard-evidence index matches the worktree".
+7. **Static guards.** The package-wide import allowlist and combined-constructor guards already glob `*.go`, so they
+   cover `quote.go` without editing `guard_test.go`; the new float guard
+   (`TestProductionNeverTouchesFloatingPoint`) lives in the created test file, walks every production file's AST and
+   fails on `float64`, `float32`, `ParseFloat` or `FormatFloat` — and asserts it inspected a non-zero number of
+   identifiers, so "the guard checked nothing" cannot pass as "the guard found nothing"
+   (`generated-evidence-must-be-measured`).
+
+### Mutation table (six mutants, `sha256` restoration proof)
+
+Each mutant was applied to a production file, the named test run, the file restored from its pre-mutation bytes, and the
+restored file's SHA-256 compared with the baseline hash — not `git checkout`
+(`mutation-revert-needs-the-right-baseline`).
+
+| Mutant | File | Test that must fail | Result |
+| --- | --- | --- | --- |
+| `earlier`/`later` swapped | `quote.go` | `TestPollQuoteL1BindsTheHalvesConservatively` | KILLED |
+| empty-side refusal returns a zero level | `strict_quote_reads.go` | `TestStrictOrderbookTopRefusesBodiesOutsideTheContract` | KILLED |
+| missing source instant accepted | `strict_quote_reads.go` | `TestStrictOrderbookTopRefusesBodiesOutsideTheContract` | KILLED |
+| digest preimage reordered | `quote.go` | `TestPollQuoteL1SealsTwoReadsIntoOneRow` | KILLED |
+| row-echo check disabled | `strict_quote_reads.go` | `TestStrictLastPriceRefusesBodiesOutsideTheContract` | KILLED |
+| conflict reported as admitted | `quote.go` | `TestPollQuoteL1QuarantinesADifferentBodyAtTheSameInstant` | KILLED |
+
+All six killed; both files restored to their pre-mutation hashes.
+
+### Function Logic Map: not-applicable
+
+L1c adds only **new files containing new leaf functions**. No function that existed at the frozen base `a8c3d067`
+changed, which `check_analysis` computes directly (`changed_existing_functions` requires a bundle only for a function
+present in the base file whose body a hunk touches). The five *citation-only* bundles for the existing functions this
+lot's brief reasons about (`adaptOrderbook`, `adaptPrices`, `parseDecimal`, `Client.Orderbook`, `Client.Prices`) were
+produced **before** the brief at `73a1e85c` and are unchanged. The exemption is declared here rather than left silent.
+
+### Gate practice learned here: `go test ./...` must run *after* committing a new file in `internal/official`
+
+The first full-suite run failed in `tools/a112-mb-us-source`
+(`TestTrimpathBuiltCollectorCompletesOfflineIdentityPreflightBeforeReader`,
+`TestTrimpathBuiltCollectorProcessHoldsBeforeExternalReadOnMissingCache`) with
+`a112 m-b1 measurement HOLD: pre-request identity: compiled input is not approved`. That is the M-B collector's
+executable-identity gate doing exactly its job: `validateCompiledInputForGOOSWith` (`identity.go:347-361`) accepts a
+compiled input only if it is **git-tracked** or on the frozen untracked allowlist, and the collector compiles the whole
+of `internal/official`. While `strict_quote_reads.go` sat untracked, every M-B identity preflight refused. After the
+commit the same package is green (76 tests, exit 0). Nothing in the collector or the allowlist was changed. The lesson
+for later lots: adding a file to `internal/official` makes `go test ./...` fail until that file is committed, and the
+failure text points at identity, not at the new file — so read it as "untracked", not as "broken".
+
+### Residuals
+
+Carrying (a)–(f) from decision 44 unchanged, and adding:
+
+- **(g) A same-instant re-read with different bytes quarantines rather than de-duplicating.** Because the producer does
+  not pre-read the store, two reads that land on the same broker instant with different bodies produce a `CONFLICT`
+  (nothing overwritten, the attempt quarantined, the first revision readable). Two reads that land on the same instant
+  with *identical* bodies **and** identical read instants are `UNCHANGED`. In production the read instants will differ,
+  so a repeated identical broker snapshot inside one instant granularity would be counted as a conflict, not as an
+  idempotent no-op. The direction is safe (nothing is overwritten and nothing is fabricated) and the signal is visible,
+  but if L5 chooses a cadence finer than the broker's timestamp granularity it must expect conflict rows. Deciding that
+  is L5's, not this lot's.
+- **(h) "Index 0 is the best level" is measured, not contracted.** `asks[0]`/`bids[0]` were the best ask and best bid in
+  the 2026-08-18 KR probe (asks ascending 284,000→288,500, bids descending 283,500→279,000) and trivially so in the
+  one-level US book; `openapi.latest.json`'s *schema descriptions* agree ("낮은 가격순" / "높은 가격순") while its
+  *examples* show asks worst-first. The reader does not verify the ordering, because verifying it would require parsing
+  every level's decimal inside the transport layer — and decimals have exactly one authority
+  (`strategyevidence`). If the broker ever served worst-first, the quote would read as a **wider** spread, which the
+  existing spread veto refuses; it cannot make a quote look tighter than it is. Decision 42's run should report the
+  first two prices per side so this stays measured.
+- **(i) There is no way to run decision 42's probe yet.** The run must exercise the new readers, and decision 43
+  forbids touching `cmd/`. The M-B precedent for exactly this problem is a dedicated tool
+  (`tools/a112-mb-us-source/main.go`). Adding `tools/a112-l1c-quote-probe/` is therefore the obvious shape, but it is a
+  **fifth created file** that decision 43's list does not carry, so it needs a one-line brief amendment (or an explicit
+  human decision to run it as an untracked one-shot) before it is written. No agent runs it either way — decision 42
+  requires a fresh human approval per run.
+- **(j) The new evidence kind reaches one unfiltered reader.** `SealBarSeries` filters on `evidence_kind`
+  (`breakout_series.go:73`), so quote rows can never contaminate a bar series. `SealSnapshot` does **not** filter by
+  kind — it returns every envelope for `(market, symbol, issuer)`. It has zero production callers today (grep over
+  `internal/` and `cmd/`: the only hit is its own definition), so nothing changes now; but whoever adopts it after L5
+  wires the quote producer will start receiving `official_quote_l1` items next to bars and must dispatch on
+  `Header.Kind`. Recorded here so that arrives as a known property rather than a surprise.
+
+### What remains before L1c is ACCEPTED
+
+1. The decision-42 acceptance run, one per market while that market is open (KR 09:00–15:30 KST, US 22:30–05:00 KST),
+   reporting shape only — key names, JSON types, digit counts, level counts, the two instants and their difference. No
+   prices as evidence, no raw body in the repository.
+2. The runner decision in residual (i) — amendment or untracked one-shot.
+3. Then, and only then, task 3.6 is checked (decision 12) and this section is closed as ACCEPTED. `tasks.md` is
+   deliberately unchanged by this landing, exactly as at L1b: 3.7 is a single atomic row that also demands the
+   timezone/restart/correction/cache-miss replay fixtures and broker mutation spies at zero, which this lot does not
+   deliver.

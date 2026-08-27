@@ -10,6 +10,15 @@
   a3671987` touches no file under `internal/strategyevidence`, `internal/official`, `internal/scheduler`,
   `internal/clock`, `internal/breakoutlane`, `internal/officialbars` or `tools/logic-map`, so every FLM/AST bundle's
   `source_sha256` and the analysis above stay valid for the merged tree; `go test ./...` on the merge is green.
+- **L1c re-freeze (2026-08-27):** `base-commit.txt` now points at `a8c3d067` (`fix(strategymarket,official): 분봉 시각표는
+  봉이 닫힌 시각이다 [a117]`), the branch and `main` HEAD when the L1c lot opened. Reason: **a117** landed on `main`
+  after `d9d9f71f`, so a112's diff window had swallowed another change's edits and `check_analysis` demanded bundles for
+  `internal/strategymarket/bars.go:aggregateClosedKRXFiveMinute` and four of a117's test helpers. Proven before
+  re-freezing: `git show --name-only` for the intervening commits lists only openspec/PM files plus
+  `internal/official/candle_reads.go` (comment), `internal/strategymarket/*`, `internal/strategycandle/adapter_test.go`
+  and `internal/strategyengine/lane_test.go` — none of them the `file` of any bundle under
+  `analysis/function-logic/`, so every `source_sha256` in this change stays valid. After the re-freeze `check_analysis`
+  is clean and later lots diff only their own edits.
 - Repository: TossOS modular monolith; no new process, broker gateway or strategy database is required by this change.
 - `codegraph sync .` current-base synchronization was re-run for L0. The per-symbol
   AST/FLM/BTM/risk inventory is `analysis/function-logic/inventory.json`; each body edit
