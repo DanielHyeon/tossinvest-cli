@@ -513,6 +513,26 @@ The 2026-08-18 human probe was read through `tossctl quote orderbook` → `hybri
 43. **Ownership / Pre-Edit declaration (High-risk adjacency: official client GET/token path).** Created: `internal/official/strict_quote_reads.go`, `internal/official/strict_quote_reads_test.go`, `internal/officialbars/quote.go`, `internal/officialbars/quote_test.go`. **Not edited:** `client.go`, `token.go`, `trace.go`, `ratebudget.go`, `candle_raw.go`, `candle_reads.go`, `market_reads.go`, `strict_minute_candles.go`, `producer.go`, `a112_mbus_*`, anything under `internal/strategyevidence/`, `internal/breakoutlane/`, `internal/hybrid/`, `internal/client/`, any `cmd/`, engine, router, scheduler, journal, toggle or container file. No production caller is wired: as with L1b, the producer has zero non-test callers when the lot lands.
 44. **Residuals recorded now.** (a) The level element schema and its decimal encoding remain UNOBSERVED until decision 42's run — the readers encode a hypothesis taken from `openapi.latest.json` (`OrderbookEntry {price, volume}` decimal strings) and refuse anything else; that hypothesis is *documented*, not measured, and this brief says so rather than letting the code imply otherwise. (b) `/api/v1/prices` has never been observed at the byte level at all. (c) The nullability of both `timestamp` fields is documented as nullable and observed non-null exactly once (US, closed market); a null on either half is refused, so a broker that nulls it during an open session makes the quote producer silent by design — visible as refusals, never as fabricated freshness. (d) Two GETs per quote on a shared quota. (e) `Reset` header remains opaque. (f) The correction unit of decision 32 also implicates `docs/migration/openapi.latest.json`'s own comment lineage; that document is the broker's and is not ours to edit — the standing follow-up change covers our two copies.
 
+### Brief amendment (2026-08-27, human-approved): decision 45
+
+45. **The acceptance run needs a runner, and it is a tool, not a command.** Decision 43's created list is extended by
+    exactly one directory: `tools/a112-l1c-quote-probe/` (`main.go`, `report.go`, `report_test.go`). Decision 42's run
+    must exercise the new readers; decision 43 forbids `cmd/`, so `tossctl` cannot carry it; and the precedent for
+    exactly this problem is a repository tool that is deliberately not installed into `tossctl`
+    (`tools/a112-mb-us-source/main.go`). Constraints, enforced by what the code can reach rather than by a promise: it
+    calls **only** `StrictOrderbookTop` and `StrictLastPrice` — no other client method appears in its source, and a
+    static test asserts that; exactly **two GETs per invocation, one market per invocation**; `--market` and `--symbol`
+    are required with no defaults, so it cannot run by accident; it prints **shape only** — acceptance or the typed
+    refusal, the integer/fraction digit counts of every decimal, the two broker instants and their difference, the two
+    read instants and their difference, both status codes and both body digests — and **never a price, never a volume,
+    never a raw body**, with a test that fails if a fixture's price text appears in the rendered report. It writes no
+    file and appends no evidence: a probe that wrote to the store would be a production caller, and decision 43 says
+    this lot lands with none.
+    **One line of decision 42 is deliberately not delivered:** the level count. Reporting it would require the reader
+    to count the ladder, which decision 33 forbids. The 2026-08-18 console measurement (KR ten levels, US one) is the
+    answer to that question and is recorded above; re-measuring it would mean weakening the reader to satisfy a report.
+    A fresh human approval is still required per run, and no agent runs it.
+
 ### RED list for the Terra implementer (quote rows of task 3.7; each RED named and captured before GREEN)
 
 Readers (`internal/official`, httptest + fake `/oauth2/token`, the `trace_test.go` pattern): market/symbol grammar refusals with zero server hits; exact query strings `symbol=005930` and `symbols=AAPL`; duplicate key at envelope/result/level depth ⇒ refuse; unknown `result` key, unknown level key, missing level key ⇒ refuse; bare-number price/volume/lastPrice ⇒ refuse; empty `asks` or `bids` ⇒ refuse (the M-B closed-market body is the fixture shape); `timestamp` null / absent / `Z`-suffixed / offset-less ⇒ refuse; `currency` ≠ market currency ⇒ refuse; `/prices` returning zero rows, two rows, or a row whose `symbol` does not echo ⇒ refuse; non-2xx last attempt ⇒ refuse (decision 28's rule, reused); `BodyDigest` equals `sha256` of the exact served bytes; the KR ten-level and US one-level bodies both accepted with only index 0 read.
@@ -703,6 +723,32 @@ Carrying (a)–(f) from decision 44 unchanged, and adding:
   `internal/` and `cmd/`: the only hit is its own definition), so nothing changes now; but whoever adopts it after L5
   wires the quote producer will start receiving `official_quote_l1` items next to bars and must dispatch on
   `Header.Kind`. Recorded here so that arrives as a known property rather than a surprise.
+
+### Runner built under decision 45 (2026-08-27)
+
+`tools/a112-l1c-quote-probe/` — `main.go` (77 lines), `report.go` (152), `report_test.go` (196). RED first
+(`undefined: observation`), then GREEN: **15 tests**, exit 0.
+
+- `run()` refuses before any request unless `--market` and `--symbol` are both given; it then resolves the ordinary
+  Open API paths, builds the ordinary client, and calls `StrictOrderbookTop` then `StrictLastPrice` in the producer's
+  order. A failed half is not retried and stops the run.
+- `renderReport` prints digit counts, instants, differences, status codes and digests, plus the seal-binding decision
+  the producer would make and a scale verdict derived from the digit counts (four fraction digits fit USD scale 4; a
+  fifth would be refused). It never prints a price, a volume or a body.
+- Three static guards, each mutation-proven: `TestReportNeverCarriesAValue` (mutant that prints `row.raw` → KILLED),
+  `TestProbeReachesOnlyTheTwoStrictReaders` (mutant adding `client.Accounts(ctx)` → KILLED; the same guard's text check
+  also fired for real during development, on a *comment* that spelled the evidence package, and the comment was
+  reworded rather than the guard weakened), `TestScaleVerdictFollowsTheMarketScale` (mutant loosening the scale
+  comparison by one → KILLED). All three files restored to their pre-mutation hashes.
+- The probe writes no file and appends no evidence, so this lot still lands with **zero production callers** of
+  `PollQuoteL1`.
+
+Run sheet (human, one fresh approval per run, market must be open):
+
+```
+go run ./tools/a112-l1c-quote-probe --market US --symbol AAPL      # 22:30–05:00 KST
+go run ./tools/a112-l1c-quote-probe --market KR --symbol 005930    # 09:00–15:30 KST
+```
 
 ### What remains before L1c is ACCEPTED
 
