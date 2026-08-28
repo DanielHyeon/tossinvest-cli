@@ -1,0 +1,204 @@
+{
+  "file": "internal/strategyrouter/production_test.go",
+  "source_sha256": "6bcf8e475597ac2322f973b843dd0dc37e48f9e2ebbb306483e82bc9a9334dc6",
+  "package": "strategyrouter",
+  "function": "TestPairedProductionRouteAuthorityLoadsExactThreeLanesIndependently",
+  "signature": "TestPairedProductionRouteAuthorityLoadsExactThreeLanesIndependently(params=1, results=0)",
+  "start": {
+    "line": 21,
+    "column": 1
+  },
+  "end": {
+    "line": 41,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 23,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 25,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 28,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 32,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 37,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 22,
+        "column": 13
+      },
+      "text": "newProductionRouteFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 24,
+        "column": 21
+      },
+      "text": "LoadProductionRouteAuthority"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 24,
+        "column": 50
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 6
+      },
+      "text": "authority.ManifestDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 42
+      },
+      "text": "authority.OwnerDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 14
+      },
+      "text": "authority.Request"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 72
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 13
+      },
+      "text": "Route"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 22,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 24,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 31,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 35,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

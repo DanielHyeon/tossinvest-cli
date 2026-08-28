@@ -13,10 +13,10 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
 )
 
-func TestProjectAcceptedStrategyflowLineagePairsAllSixKRUSLanes(t *testing.T) {
+func TestProjectAcceptedStrategyflowLineagePairsAllEightKRUSLanes(t *testing.T) {
 	descriptors := strategyflow.Descriptors()
-	if len(descriptors) != 6 {
-		t.Fatalf("descriptors=%d, want paired six", len(descriptors))
+	if len(descriptors) != 8 {
+		t.Fatalf("descriptors=%d, want paired eight", len(descriptors))
 	}
 	markets := map[string]int{}
 	for index, descriptor := range descriptors {
@@ -68,7 +68,7 @@ func TestProjectAcceptedStrategyflowLineagePairsAllSixKRUSLanes(t *testing.T) {
 		}
 		markets[market]++
 	}
-	if markets["KR"] != 3 || markets["US"] != 3 {
+	if markets["KR"] != 4 || markets["US"] != 4 {
 		t.Fatalf("unpaired projection matrix: %+v", markets)
 	}
 }
@@ -204,7 +204,7 @@ func TestRecordQFinalCampaignFirstLegAcceptsAllStrategyflowLanesPaired(t *testin
 			markets[string(descriptor.Market)]++
 		})
 	}
-	if markets["KR"] != 3 || markets["US"] != 3 {
+	if markets["KR"] != 4 || markets["US"] != 4 {
 		t.Fatalf("unpaired first-leg matrix: %+v", markets)
 	}
 }

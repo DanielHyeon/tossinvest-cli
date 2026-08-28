@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reversallane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane"
@@ -385,7 +386,7 @@ func validProductionRouteCandidates(market Market, values []productionRouteCandi
 		}
 		seen[value.LaneID] = true
 	}
-	return len(seen) == 3
+	return len(seen) == len(want)
 }
 
 type productionLaneDescriptor struct {
@@ -399,6 +400,7 @@ func productionRouteDescriptors(market Market) map[string]productionLaneDescript
 			continuationlane.KRContinuationLaneID: {HorizonShort, continuationlane.LaneVersionV1},
 			reversallane.KRReversalLaneID:         {HorizonShort, reversallane.LaneVersionV1},
 			weeklyvaluelane.KRWeeklyLaneID:        {HorizonWeekly, weeklyvaluelane.LaneVersionV1},
+			breakoutlane.KRLaneID:                 {HorizonShort, breakoutlane.LaneVersionV1},
 		}
 	}
 	if market == MarketUS {
@@ -406,6 +408,7 @@ func productionRouteDescriptors(market Market) map[string]productionLaneDescript
 			continuationlane.USContinuationLaneID: {HorizonShort, continuationlane.LaneVersionV1},
 			reversallane.USReversalLaneID:         {HorizonShort, reversallane.LaneVersionV1},
 			weeklyvaluelane.USWeeklyLaneID:        {HorizonWeekly, weeklyvaluelane.LaneVersionV1},
+			breakoutlane.USLaneID:                 {HorizonShort, breakoutlane.LaneVersionV1},
 		}
 	}
 	return nil

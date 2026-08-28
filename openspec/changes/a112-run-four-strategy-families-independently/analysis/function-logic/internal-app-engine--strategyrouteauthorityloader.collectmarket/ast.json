@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_route_authority.go",
-  "source_sha256": "7d5d9b410e53463ca271c40edbd5c637fb37ed6e16a3e6b8528ab1a56bdfffcb",
+  "source_sha256": "2c6b43decf3a2706bb7a6d0d71428587612c5a011aac086d7c058220bb78fb98",
   "package": "engine",
   "function": "collectMarket",
   "receiver": "strategyRouteAuthorityLoader",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 215,
+    "line": 218,
     "column": 2
   },
   "branches": [
@@ -98,7 +98,7 @@
       "id": "B11",
       "kind": "if",
       "at": {
-        "line": 197,
+        "line": 199,
         "column": 3
       }
     },
@@ -106,7 +106,7 @@
       "id": "B12",
       "kind": "if",
       "at": {
-        "line": 204,
+        "line": 207,
         "column": 2
       }
     },
@@ -114,7 +114,7 @@
       "id": "B13",
       "kind": "range",
       "at": {
-        "line": 209,
+        "line": 212,
         "column": 2
       }
     }
@@ -179,21 +179,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 203,
+        "line": 206,
         "column": 44
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 205,
+        "line": 208,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 212,
+        "line": 215,
         "column": 2
       }
     }
@@ -554,31 +554,47 @@
     {
       "kind": "call",
       "at": {
-        "line": 196,
+        "line": 198,
         "column": 13
       },
-      "text": "strategyrouter.Route"
+      "text": "strategyrouter.RouteSet"
     },
     {
       "kind": "call",
       "at": {
-        "line": 197,
-        "column": 73
+        "line": 199,
+        "column": 52
+      },
+      "text": "routed.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 70
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 26
       },
       "text": "strategyRouterMarket"
     },
     {
       "kind": "call",
       "at": {
-        "line": 197,
-        "column": 127
+        "line": 200,
+        "column": 80
       },
       "text": "approved.Symbol"
     },
     {
       "kind": "call",
       "at": {
-        "line": 201,
+        "line": 204,
         "column": 13
       },
       "text": "append"
@@ -586,7 +602,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 203,
+        "line": 206,
         "column": 2
       },
       "text": "sort.Slice"
@@ -594,7 +610,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 203,
+        "line": 206,
         "column": 51
       },
       "text": "entries.approved.Symbol"
@@ -602,7 +618,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 203,
+        "line": 206,
         "column": 82
       },
       "text": "entries.approved.Symbol"
@@ -610,7 +626,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 207,
         "column": 5
       },
       "text": "len"
@@ -618,7 +634,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 206,
+        "line": 209,
         "column": 58
       },
       "text": "candidates.approved.Len"
@@ -626,7 +642,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 208,
+        "line": 211,
         "column": 7
       },
       "text": "sha256.New"
@@ -634,7 +650,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 210,
+        "line": 213,
         "column": 10
       },
       "text": "h.Write"
@@ -642,14 +658,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 210,
+        "line": 213,
         "column": 18
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 210,
+        "line": 213,
         "column": 25
       },
       "text": "entry.approved.Symbol"
@@ -657,7 +673,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 210,
+        "line": 213,
         "column": 60
       },
       "text": "entry.route.OwnerDigest"
@@ -665,7 +681,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 213,
+        "line": 216,
         "column": 113
       },
       "text": "candidates.approved.Len"
@@ -673,7 +689,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 214,
+        "line": 217,
         "column": 17
       },
       "text": "len"
@@ -681,7 +697,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 214,
+        "line": 217,
         "column": 106
       },
       "text": "hex.EncodeToString"
@@ -689,7 +705,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 214,
+        "line": 217,
         "column": 125
       },
       "text": "h.Sum"
@@ -846,39 +862,40 @@
     {
       "kind": ":=",
       "at": {
-        "line": 196,
+        "line": 198,
         "column": 3
       }
     },
     {
       "kind": "++",
       "at": {
-        "line": 198,
+        "line": 201,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 201,
+        "line": 204,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 208,
+        "line": 211,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 210,
+        "line": 213,
         "column": 3
       }
     }
   ],
   "go_statements": null,
-  "defers": null
+  "defers": null,
+  "revision": "current"
 }

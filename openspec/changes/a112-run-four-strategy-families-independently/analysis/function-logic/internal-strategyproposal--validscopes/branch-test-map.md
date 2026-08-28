@@ -1,12 +1,13 @@
 # Branch Test Map: `validScopes`
 
-- Source SHA-256: `6cc7474d631e24c1daee677743fdbcc942787e9ae6874ed318cd3550326803b3`; AST branch locations are authoritative.
-- L0 did not alter this function and does not claim an existing test covers a branch.
+- Source: `internal/strategyproposal/production.go`; file SHA-256 `e2285c5ef57e399bf3bf2ca3a0e91b7449b2c152dd9623d5a617454f934082ad`. AST branch positions are authoritative.
+- Rows carry measured counts. package suite: `go test -tags tossos_testseams -covermode=count ./internal/strategyproposal/`; engine suite: `go test -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
+- Tests whose individual coverage profile entered at least one arm: `TestProductionProposalAuthorityFailureIsMarketLocal`, `TestProductionProposalAuthorityLoadsPairedSignedKRUSSnapshots`, `TestValidScopesAcceptsSeveralFamiliesForOneSymbolAndStillRejectsDuplicateLanes`.
 
-| Branch | Scenario anchor | Required test disposition | RED observed | GREEN observed |
-|---|---|---|---|---|
-| B1 | if at 469:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B2 | range at 473:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B3 | if at 474:3 | planned targeted RED before any edit; not run by L0 | no | no |
+| Branch | Anchor | Measured disposition |
+|---|---|---|
+| B1 | if at 530:2 | arm never entered: count 0 in every profile measured for this function |
+| B2 | range at 534:2 | arm entered 10x (package suite); entered by `TestProductionProposalAuthorityFailureIsMarketLocal`, `TestProductionProposalAuthorityLoadsPairedSignedKRUSSnapshots`, `TestValidScopesAcceptsSeveralFamiliesForOneSymbolAndStillRejectsDuplicateLanes` |
+| B3 | if at 538:3 | arm entered 2x (package suite); entered by `TestValidScopesAcceptsSeveralFamiliesForOneSymbolAndStillRejectsDuplicateLanes` |
 
-A lot may replace a planned row only after recording its exact test name and actual RED/GREEN command result.
+A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.

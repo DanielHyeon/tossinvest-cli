@@ -1,10 +1,11 @@
 # Branch Test Map: `defaultRegistry`
 
-- Source SHA-256: `5fa16d5a0d6e2286f965c396e726fb3bf8cba48b32e4ec110359ff533def69d1`; AST branch locations are authoritative.
-- L0 did not alter this function and does not claim an existing test covers a branch.
+- Source: `internal/strategyflow/adapters.go`; file SHA-256 `0f6b4e682e89e6d24c4c3686a5a1ad5ea1f0825e904236ea892b5905029065b6`. AST branch positions are authoritative.
+- Rows carry measured counts. package suite: `go test -tags tossos_testseams -covermode=count ./internal/strategyflow/`; engine suite: `go test -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
+- No individually-measured test entered any arm of this function; see the per-branch rows for what the package and engine suites did enter.
 
-| Branch | Scenario anchor | Required test disposition | RED observed | GREEN observed |
-|---|---|---|---|---|
-| B1 | branchless happy path | planned targeted RED before any edit; not run by L0 | no | no |
+| Branch | Anchor | Measured disposition |
+|---|---|---|
+| B1 | body at 13 | entered 8x |
 
-A lot may replace a planned row only after recording its exact test name and actual RED/GREEN command result.
+A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.

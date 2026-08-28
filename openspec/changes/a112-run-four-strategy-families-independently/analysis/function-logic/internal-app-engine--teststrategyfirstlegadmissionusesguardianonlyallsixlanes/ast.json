@@ -1,0 +1,194 @@
+{
+  "file": "internal/app/engine/strategy_first_leg_admission_test.go",
+  "source_sha256": "367a5e296f03b904d72489ab4dd505f8d0ce93cc74b5a80cd29971ac3434f60f",
+  "package": "engine",
+  "function": "TestStrategyFirstLegAdmissionUsesGuardianOnlyAllSixLanes",
+  "signature": "TestStrategyFirstLegAdmissionUsesGuardianOnlyAllSixLanes(params=1, results=0)",
+  "start": {
+    "line": 32,
+    "column": 1
+  },
+  "end": {
+    "line": 57,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 44,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 47,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 23
+      },
+      "text": "allSixStrategyFirstLegResults"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 16
+      },
+      "text": "firstLegBridgeIssuanceFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 13
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 15
+      },
+      "text": "admit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 15
+      },
+      "text": "newStrategyFirstLegAdmissionBridge"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 72
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 12
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 33,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 35,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 37,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 38,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 39,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 43,
+        "column": 4
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 51,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

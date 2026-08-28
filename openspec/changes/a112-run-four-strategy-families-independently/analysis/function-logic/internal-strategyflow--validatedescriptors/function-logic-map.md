@@ -1,48 +1,53 @@
 # Function Logic Map: `ValidateDescriptors`
 
-- Source: `internal/strategyflow/registry.go`
-- Current-base source SHA-256: `b188fe1dd7dfc1bc2f76b9905b8d461a6747156d5d3ed3e208f740dc79129e54`
+- Source: `internal/strategyflow/registry.go` (28-45)
+- Function: `ValidateDescriptors` in package `strategyflow`
 - Signature: `ValidateDescriptors(params=1, results=1)`
-- Source range: `25:1`–`42:2`
-- AST evidence: `ast.json`, generated from frozen base `016da6245feb60e13971388be386c2c2041469a8`.
+- File SHA-256: `c7cfd15029a18c87f4de9ff2cb2730280cd1345a6d182b0eee687a11348cbdda`
+- Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
+- AST evidence: `ast.json` — AST branches 4.
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
-- Inputs/results are the exact AST signature above; this L0 map does not infer undocumented state.
-- Any later edit must preserve OFF defaults, the owner key without family/horizon, and zero exposure-raising dispatch while a prerequisite is missing.
+Refuses any descriptor set that is not exactly the frozen matrix: right count, no unknown lane, no duplicate, and every field equal. L3 changed the frozen matrix from six to eight, so the count this function enforces moved with it.
+
+The signature above is the exhaustive input/result record; this map does not infer state the AST does not show.
 
 ## Branches and early returns
 
-- Exact AST return nodes: `27:3, 37:4, 41:2`.
+- Measurement regime: Go coverage profiles, count mode. package suite: `go test -tags tossos_testseams -covermode=count ./internal/strategyflow/`; engine suite: `go test -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
+- Measured entry: the function body executed **6x** under the package suite.
 
-| Branch | AST kind | Source location | Required test disposition |
+Exact AST return positions: 30:3, 40:4, 44:2.
+
+| Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 26:2 | planned targeted RED before any edit; not run by L0 |
-| B2 | range | 30:2 | planned targeted RED before any edit; not run by L0 |
-| B3 | range | 34:2 | planned targeted RED before any edit; not run by L0 |
-| B4 | if | 36:3 | planned targeted RED before any edit; not run by L0 |
+| B1 | if | 29:2 | arm entered 1x (package suite); entered by `TestValidateDescriptorsRejectsPartialDuplicateUnknownAndMismatched` |
+| B2 | range | 33:2 | arm entered 40x (package suite); entered by `TestPairedRegistryCoversAllFourFamiliesInBothMarkets`, `TestPairedRegistryCoversKRUSContinuationReversalWeeklyAndBreakout`, `TestValidateDescriptorsRejectsPartialDuplicateUnknownAndMismatched` |
+| B3 | range | 37:2 | arm entered 26x (package suite); entered by `TestPairedRegistryCoversAllFourFamiliesInBothMarkets`, `TestPairedRegistryCoversKRUSContinuationReversalWeeklyAndBreakout`, `TestValidateDescriptorsRejectsPartialDuplicateUnknownAndMismatched` |
+| B4 | if | 39:3 | arm entered 3x (package suite); entered by `TestValidateDescriptorsRejectsPartialDuplicateUnknownAndMismatched` |
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Current-base evidence/requirement |
-|---|---|---|
-| len | 26:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 26:25 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 27:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 27:67 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 27:85 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 29:14 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 29:42 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 33:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 33:32 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 37:11 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| Callee expression | Position |
+|---|---|
+| `len` | 29:5 |
+| `len` | 29:25 |
+| `fmt.Errorf` | 30:10 |
+| `len` | 30:67 |
+| `len` | 30:85 |
+| `make` | 32:14 |
+| `len` | 32:42 |
+| `make` | 36:10 |
+| `len` | 36:32 |
+| `fmt.Errorf` | 40:11 |
 
 ## State mutations and fallbacks
 
-- The AST is the exhaustive current-base record of assignments, calls, branches, defers and returns. Before a function body edit, the owning lot must update this map with changed condition semantics and concrete RED/GREEN test evidence.
+- AST assignments: 5. Defers: 0. Goroutine statements: 0.
+- Builds two local maps; mutates nothing outside.
 
 ## Safety conclusion
 
-- L0 status: pre-edit evidence only; no production function was edited and no branch test is claimed as run by L0.
-- A named targeted RED or explicit evidence-backed not-applicable rationale is required for every edited branch before GREEN.
+- This is the atomicity gate for the 8-set. It is what makes 'exactly four families in both markets' a checked property rather than a convention.

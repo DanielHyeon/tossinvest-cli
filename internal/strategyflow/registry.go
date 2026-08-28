@@ -3,6 +3,7 @@ package strategyflow
 import (
 	"fmt"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reversallane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
@@ -16,6 +17,8 @@ var pairedDescriptors = [...]Descriptor{
 	{Market: strategyrouter.MarketUS, Horizon: strategyrouter.HorizonShort, LaneID: reversallane.USReversalLaneID, LaneVersion: reversallane.LaneVersionV1, Release: reversallane.ReversalRelease, Desired: StateOff, Effective: StateOff, Runtime: RuntimeUnobserved},
 	{Market: strategyrouter.MarketKR, Horizon: strategyrouter.HorizonWeekly, LaneID: weeklyvaluelane.KRWeeklyLaneID, LaneVersion: weeklyvaluelane.LaneVersionV1, Release: weeklyvaluelane.WeeklyValueRelease, Desired: StateOff, Effective: StateOff, Runtime: RuntimeUnobserved},
 	{Market: strategyrouter.MarketUS, Horizon: strategyrouter.HorizonWeekly, LaneID: weeklyvaluelane.USWeeklyLaneID, LaneVersion: weeklyvaluelane.LaneVersionV1, Release: weeklyvaluelane.WeeklyValueRelease, Desired: StateOff, Effective: StateOff, Runtime: RuntimeUnobserved},
+	{Market: strategyrouter.MarketKR, Horizon: strategyrouter.HorizonShort, LaneID: breakoutlane.KRLaneID, LaneVersion: breakoutlane.LaneVersionV1, Release: BreakoutRelease, Desired: StateOff, Effective: StateOff, Runtime: RuntimeUnobserved},
+	{Market: strategyrouter.MarketUS, Horizon: strategyrouter.HorizonShort, LaneID: breakoutlane.USLaneID, LaneVersion: breakoutlane.LaneVersionV1, Release: BreakoutRelease, Desired: StateOff, Effective: StateOff, Runtime: RuntimeUnobserved},
 }
 
 func Descriptors() []Descriptor {
@@ -124,6 +127,8 @@ func (input LaneInput) matches(descriptor Descriptor) bool {
 		reversallane.USReversalLaneID:         laneReversalUS,
 		weeklyvaluelane.KRWeeklyLaneID:        laneWeeklyKR,
 		weeklyvaluelane.USWeeklyLaneID:        laneWeeklyUS,
+		breakoutlane.KRLaneID:                 laneBreakoutKR,
+		breakoutlane.USLaneID:                 laneBreakoutUS,
 	}
 	return want[descriptor.LaneID] != laneUnknown && input.kind == want[descriptor.LaneID]
 }

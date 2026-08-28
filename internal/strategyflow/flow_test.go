@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reversallane"
@@ -16,18 +17,19 @@ import (
 
 var flowNow = time.Date(2026, 7, 31, 1, 0, 0, 0, time.UTC)
 
-func TestPairedRegistryCoversKRUSContinuationReversalAndWeekly(t *testing.T) {
+func TestPairedRegistryCoversKRUSContinuationReversalWeeklyAndBreakout(t *testing.T) {
 	descriptors := Descriptors()
 	if err := ValidateDescriptors(descriptors); err != nil {
 		t.Fatalf("paired registry: %v", err)
 	}
-	if len(descriptors) != 6 {
-		t.Fatalf("descriptors=%d, want six paired bindings", len(descriptors))
+	if len(descriptors) != 8 {
+		t.Fatalf("descriptors=%d, want eight paired bindings", len(descriptors))
 	}
 	want := map[string]bool{
 		continuationlane.KRContinuationLaneID: false, continuationlane.USContinuationLaneID: false,
 		reversallane.KRReversalLaneID: false, reversallane.USReversalLaneID: false,
 		weeklyvaluelane.KRWeeklyLaneID: false, weeklyvaluelane.USWeeklyLaneID: false,
+		breakoutlane.KRLaneID: false, breakoutlane.USLaneID: false,
 	}
 	for _, descriptor := range descriptors {
 		if _, ok := want[descriptor.LaneID]; !ok {
@@ -59,9 +61,9 @@ func TestApprovedCandidatesRouteAndEvaluateAllPairedBindingsWithCompleteLineage(
 				laneCalls++
 				return acceptedEvaluation(descriptor, key, approved)
 			})
-			result := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteResult {
+			result := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteSetResult {
 				routerCalls++
-				return strategyrouter.RouteResult{Decision: routeDecision(descriptor, key, approved)}
+				return strategyrouter.RouteSetResult{Decisions: []strategyrouter.RouteDecision{routeDecision(descriptor, key, approved)}}
 			}, registry)
 			if result.Code != RefusalNone || result.Quantity != 1 || !result.Lineage.Valid() || !result.Lineage.Complete {
 				t.Fatalf("result=%+v lineage=%+v", result, result.Lineage)
@@ -90,17 +92,17 @@ func TestRouterRefusalSkipsLaneAndUnsupportedBindingIsTyped(t *testing.T) {
 	laneCalls := 0
 	registry := registryForTest(descriptor, func(LaneInput) laneEvaluation { laneCalls++; return laneEvaluation{} })
 
-	refused := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteResult {
-		return strategyrouter.RouteResult{Code: strategyrouter.RefusalAmbiguous}
+	refused := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteSetResult {
+		return strategyrouter.RouteSetResult{Code: strategyrouter.RefusalAmbiguous}
 	}, registry)
 	if refused.Code != RefusalRouter || refused.NativeCode != string(strategyrouter.RefusalAmbiguous) || laneCalls != 0 {
 		t.Fatalf("router refusal=%+v calls=%d", refused, laneCalls)
 	}
 
-	unsupported := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteResult {
+	unsupported := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteSetResult {
 		decision := routeDecision(descriptor, key, approved)
 		decision.LaneID = "us_unknown_lane_v1"
-		return strategyrouter.RouteResult{Decision: decision}
+		return strategyrouter.RouteSetResult{Decisions: []strategyrouter.RouteDecision{decision}}
 	}, registry)
 	if unsupported.Code != RefusalUnsupportedBinding || laneCalls != 0 {
 		t.Fatalf("unsupported=%+v calls=%d", unsupported, laneCalls)
@@ -114,8 +116,8 @@ func TestLaneRefusalPreservesFirstTypedCodeAndRouterLaneEvidence(t *testing.T) {
 	registry := registryForTest(descriptor, func(LaneInput) laneEvaluation {
 		return laneEvaluation{nativeCode: string(reversallane.RefusalStructuralMissing)}
 	})
-	result := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteResult {
-		return strategyrouter.RouteResult{Decision: routeDecision(descriptor, key, approved)}
+	result := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteSetResult {
+		return strategyrouter.RouteSetResult{Decisions: []strategyrouter.RouteDecision{routeDecision(descriptor, key, approved)}}
 	}, registry)
 	if result.Code != RefusalLane || result.NativeCode != string(reversallane.RefusalStructuralMissing) {
 		t.Fatalf("lane refusal=%+v", result)
@@ -140,8 +142,8 @@ func TestWrongMarketLaneInputAndForgedAcceptedLineageFailClosed(t *testing.T) {
 		forged.lineage.CandidateID = "forged-candidate"
 		return forged
 	})
-	route := func(strategyrouter.RouteRequest) strategyrouter.RouteResult {
-		return strategyrouter.RouteResult{Decision: routeDecision(descriptor, key, approved)}
+	route := func(strategyrouter.RouteRequest) strategyrouter.RouteSetResult {
+		return strategyrouter.RouteSetResult{Decisions: []strategyrouter.RouteDecision{routeDecision(descriptor, key, approved)}}
 	}
 
 	wrongInput := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: ContinuationUS(continuationlane.USEvaluationRequest{})}, route, registry)
@@ -159,8 +161,8 @@ func TestCompleteLineageSealDetectsMutation(t *testing.T) {
 	descriptor := descriptorByID(t, weeklyvaluelane.USWeeklyLaneID)
 	approved := approvedFixture(t, strategyrouter.MarketUS)
 	key, _ := strategyrouter.NewOwnerKey("acct", strategyrouter.MarketUS, approved.Symbol(), 3)
-	result := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteResult {
-		return strategyrouter.RouteResult{Decision: routeDecision(descriptor, key, approved)}
+	result := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteSetResult {
+		return strategyrouter.RouteSetResult{Decisions: []strategyrouter.RouteDecision{routeDecision(descriptor, key, approved)}}
 	}, registryForTest(descriptor, func(LaneInput) laneEvaluation { return acceptedEvaluation(descriptor, key, approved) }))
 	if !result.Lineage.Valid() {
 		t.Fatalf("valid lineage rejected: %+v", result.Lineage)
@@ -177,9 +179,9 @@ func TestExistingOwnerRoutePinsCampaignAndAcceptsLaneConfigLineage(t *testing.T)
 	key, _ := strategyrouter.NewOwnerKey("acct", strategyrouter.MarketUS, approved.Symbol(), 6)
 	evaluation := acceptedEvaluation(descriptor, key, approved)
 	evaluation.lineage.CampaignID = "existing-campaign"
-	result := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteResult {
-		return strategyrouter.RouteResult{Decision: strategyrouter.RouteDecision{Key: key, Horizon: descriptor.Horizon, LaneID: descriptor.LaneID,
-			LaneVersion: descriptor.LaneVersion, CampaignID: "existing-campaign", ExistingOwner: true}}
+	result := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteSetResult {
+		return strategyrouter.RouteSetResult{Decisions: []strategyrouter.RouteDecision{strategyrouter.RouteDecision{Key: key, Horizon: descriptor.Horizon, LaneID: descriptor.LaneID,
+			LaneVersion: descriptor.LaneVersion, CampaignID: "existing-campaign", ExistingOwner: true}}}
 	}, registryForTest(descriptor, func(LaneInput) laneEvaluation { return evaluation }))
 	if result.Code != RefusalNone || !result.Lineage.Complete || result.Lineage.CampaignID != "existing-campaign" ||
 		result.Lineage.ConfigDigest != evaluation.lineage.ConfigDigest {
@@ -187,9 +189,9 @@ func TestExistingOwnerRoutePinsCampaignAndAcceptsLaneConfigLineage(t *testing.T)
 	}
 
 	evaluation.lineage.CampaignID = "different-campaign"
-	refused := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteResult {
-		return strategyrouter.RouteResult{Decision: strategyrouter.RouteDecision{Key: key, Horizon: descriptor.Horizon, LaneID: descriptor.LaneID,
-			LaneVersion: descriptor.LaneVersion, CampaignID: "existing-campaign", ExistingOwner: true}}
+	refused := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteSetResult {
+		return strategyrouter.RouteSetResult{Decisions: []strategyrouter.RouteDecision{strategyrouter.RouteDecision{Key: key, Horizon: descriptor.Horizon, LaneID: descriptor.LaneID,
+			LaneVersion: descriptor.LaneVersion, CampaignID: "existing-campaign", ExistingOwner: true}}}
 	}, registryForTest(descriptor, func(LaneInput) laneEvaluation { return evaluation }))
 	if refused.Code != RefusalLineageMismatch || refused.Lineage.Complete {
 		t.Fatalf("campaign substitution was not refused: %+v", refused)
@@ -202,10 +204,10 @@ func TestCandidateAndLaneEvidenceAreDistinctAndBothPreserved(t *testing.T) {
 	key, _ := strategyrouter.NewOwnerKey("acct", strategyrouter.MarketKR, approved.Symbol(), 9)
 	evaluation := acceptedEvaluation(descriptor, key, approved)
 	evaluation.lineage.EvidenceDigest = "lane-evidence-distinct-from-candidate"
-	result := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteResult {
+	result := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteSetResult {
 		decision := routeDecision(descriptor, key, approved)
 		decision.EvidenceDigest = evaluation.lineage.EvidenceDigest
-		return strategyrouter.RouteResult{Decision: decision}
+		return strategyrouter.RouteSetResult{Decisions: []strategyrouter.RouteDecision{decision}}
 	}, registryForTest(descriptor, func(LaneInput) laneEvaluation { return evaluation }))
 	if result.Code != RefusalNone || result.Lineage.CandidateEvidenceDigest != approved.EvidenceDigest() ||
 		result.Lineage.RouterEvidenceDigest != evaluation.lineage.EvidenceDigest || result.Lineage.LaneEvidenceDigest != evaluation.lineage.EvidenceDigest {
@@ -273,6 +275,10 @@ func inputFor(descriptor Descriptor) LaneInput {
 		return WeeklyKR(weeklyvaluelane.EvaluationRequest{})
 	case weeklyvaluelane.USWeeklyLaneID:
 		return WeeklyUS(weeklyvaluelane.EvaluationRequest{})
+	case breakoutlane.KRLaneID:
+		return BreakoutKR(BreakoutRequest{})
+	case breakoutlane.USLaneID:
+		return BreakoutUS(BreakoutRequest{})
 	default:
 		return LaneInput{}
 	}

@@ -13,9 +13,11 @@ import (
 	"errors"
 	"io"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane"
 	marketclock "github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
@@ -36,6 +38,12 @@ const (
 )
 
 var ErrProductionProposalUnavailable = errors.New("strategyproposal: production proposal authority unavailable")
+
+// ErrBreakoutEvidenceUnavailable 는 돌파-되돌림 레인이 아직 생산 입력을 만들 수 없다는 뜻이다.
+// 순수 코어는 봉마다 RVOL·윗꼬리 ppm·거래량 확장 여부를, 스냅샷마다 ATR 을 요구하는데(결정 49),
+// L1 이 저장하는 닫힌 1분봉 증거에는 그 네 값이 하나도 없고 만들어 주는 생산자도 없다.
+// 그래서 여기서는 값을 지어내지 않고 닫아서 거절한다.
+var ErrBreakoutEvidenceUnavailable = errors.New("strategyproposal: breakout derived-metric evidence (atr, rvol ppm, upper-wick ppm, volume-expanded) is neither stored nor produced, so no breakout lane input can be built")
 
 type ProductionConfig struct {
 	ConfigDir, EvidencePath, JournalPath       string
@@ -79,9 +87,39 @@ type ProductionBatchAuthority struct {
 
 func (authority ProductionBatchAuthority) Len() int               { return len(authority.values) }
 func (authority ProductionBatchAuthority) ManifestDigest() string { return authority.manifestDigest }
+
+// batchKey 는 담는 단위다. 종목 하나가 여러 가족을 동시에 제안할 수 있으므로
+// 종목만으로 담으면 나중 것이 앞의 것을 조용히 덮어쓴다.
+func batchKey(symbol, laneID string) string {
+	return strings.ToUpper(strings.TrimSpace(symbol)) + "\x00" + laneID
+}
+
+// For 는 그 종목의 제안이 정확히 하나일 때만 돌려준다.
+// 둘 이상이면 여기서 고르지 않고 닫아서 거절한다 — 고르는 일은 조정자의 몫이고,
+// 임의로 하나를 집으면 그게 곧 사전 선택이기 때문이다.
 func (authority ProductionBatchAuthority) For(symbol string) (ProductionAuthority, bool) {
-	value, ok := authority.values[strings.ToUpper(strings.TrimSpace(symbol))]
-	return value, ok
+	values := authority.LanesFor(symbol)
+	if len(values) != 1 {
+		return ProductionAuthority{}, false
+	}
+	return values[0], true
+}
+
+// LanesFor 는 그 종목의 모든 가족 제안을 레인 이름 순서로 돌려준다.
+func (authority ProductionBatchAuthority) LanesFor(symbol string) []ProductionAuthority {
+	prefix := strings.ToUpper(strings.TrimSpace(symbol)) + "\x00"
+	keys := make([]string, 0, len(authority.values))
+	for key := range authority.values {
+		if strings.HasPrefix(key, prefix) {
+			keys = append(keys, key)
+		}
+	}
+	sort.Strings(keys)
+	values := make([]ProductionAuthority, 0, len(keys))
+	for _, key := range keys {
+		values = append(values, authority.values[key])
+	}
+	return values
 }
 
 type productionStop struct {
@@ -238,11 +276,13 @@ func LoadProductionAuthorityBatch(ctx context.Context, config ProductionConfig, 
 		if !wanted {
 			continue
 		}
-		routed := strategyrouter.Route(target.Router)
-		if routed.Code != strategyrouter.RefusalNone || routed.Decision.Key.AccountRef != config.AccountRef || routed.Decision.Key.Market != config.Market ||
-			routed.Decision.Key.Symbol != scope.Symbol || routed.Decision.Key.PositionGeneration != scope.PositionGeneration ||
-			routed.Decision.LaneID != scope.LaneID || routed.Decision.LaneVersion != scope.LaneVersion || routed.Decision.Horizon != scope.Horizon ||
-			target.Approved.CandidateLifeID() != scope.CandidateID || (routed.Decision.ExistingOwner && routed.Decision.CampaignID != scope.CampaignID) {
+		// 평가 전에 승자를 고르지 않는다. 자격 있는 가족을 전부 받아서
+		// 이 스코프의 레인이 그 안에 들어 있는지만 확인한다(태스크 4.3.1).
+		routed := strategyrouter.RouteSet(target.Router)
+		if routed.Code != strategyrouter.RefusalNone || !routed.Valid() || target.Approved.CandidateLifeID() != scope.CandidateID {
+			continue
+		}
+		if !routeSetAdmitsScope(routed, config, scope) {
 			continue
 		}
 		clockMarket := marketclock.MarketKR
@@ -261,12 +301,33 @@ func LoadProductionAuthorityBatch(ctx context.Context, config ProductionConfig, 
 		if !proposal.ValidProposal() {
 			continue
 		}
-		values[scope.Symbol] = ProductionAuthority{proposal: proposal, snapshotID: snapshot.ID, snapshotDigest: snapshot.Digest, weekly: weekly}
+		values[batchKey(scope.Symbol, scope.LaneID)] = ProductionAuthority{proposal: proposal, snapshotID: snapshot.ID, snapshotDigest: snapshot.Digest, weekly: weekly}
 	}
 	return ProductionBatchAuthority{values: values, manifestDigest: config.ManifestDigest}, nil
 }
 
+// routeSetAdmitsScope 는 자격 집합에 이 스코프와 정확히 같은 신원이 들어 있는지만 확인한다.
+// 하나도 없으면 그 스코프는 제안을 만들 수 없다. 느슨하게 맞추지 않는다.
+func routeSetAdmitsScope(routed strategyrouter.RouteSetResult, config ProductionConfig, scope productionScope) bool {
+	for _, decision := range routed.Decisions {
+		if decision.Key.AccountRef != config.AccountRef || decision.Key.Market != config.Market ||
+			decision.Key.Symbol != scope.Symbol || decision.Key.PositionGeneration != scope.PositionGeneration ||
+			decision.LaneID != scope.LaneID || decision.LaneVersion != scope.LaneVersion || decision.Horizon != scope.Horizon {
+			continue
+		}
+		// 자격은 맞지만 이미 다른 캠페인이 잡고 있으면 거절한다.
+		if decision.ExistingOwner && decision.CampaignID != scope.CampaignID {
+			return false
+		}
+		return true
+	}
+	return false
+}
+
 func buildLaneInput(ctx context.Context, config ProductionConfig, scope productionScope, snapshot strategyevidence.Snapshot, fx officialfx.Evidence, journalRO *journal.ReadOnly) (strategyflow.LaneInput, *journal.WeeklyFirstLegReservationBinding, error) {
+	if scope.LaneID == breakoutlane.KRLaneID || scope.LaneID == breakoutlane.USLaneID {
+		return strategyflow.LaneInput{}, nil, ErrBreakoutEvidenceUnavailable
+	}
 	stopObserved, ok1 := parseTime(scope.Stop.ObservedAt)
 	stopFresh, ok2 := parseTime(scope.Stop.FreshUntil)
 	fresh, ok3 := parseTime(scope.FreshUntil)
@@ -471,20 +532,23 @@ func validScopes(market strategyrouter.Market, scopes []productionScope) bool {
 	}
 	previous := ""
 	for _, scope := range scopes {
-		if scope.Symbol == "" || scope.Symbol != strings.ToUpper(strings.TrimSpace(scope.Symbol)) || scope.Symbol <= previous || scope.PositionGeneration == 0 || scope.CandidateID == "" || scope.CampaignID == "" || scope.SnapshotID == "" || scope.SnapshotDigest == "" || scope.PlannedQuantity == 0 || scope.LegOrdinal < 1 || scope.LegOrdinal > 7 || !laneMatchesMarket(market, scope.LaneID, scope.LaneVersion, scope.Horizon) {
+		// 한 종목이 여러 가족을 동시에 제안할 수 있으므로 순서와 유일성의 단위는
+		// 종목이 아니라 (종목, 레인) 쌍이다. 종목만으로 접으면 뒤 스코프가 앞을 덮어쓴다.
+		key := scope.Symbol + "\x00" + scope.LaneID
+		if scope.Symbol == "" || scope.Symbol != strings.ToUpper(strings.TrimSpace(scope.Symbol)) || key <= previous || scope.PositionGeneration == 0 || scope.CandidateID == "" || scope.CampaignID == "" || scope.SnapshotID == "" || scope.SnapshotDigest == "" || scope.PlannedQuantity == 0 || scope.LegOrdinal < 1 || scope.LegOrdinal > 7 || !laneMatchesMarket(market, scope.LaneID, scope.LaneVersion, scope.Horizon) {
 			return false
 		}
-		previous = scope.Symbol
+		previous = key
 	}
 	return true
 }
 
 func laneMatchesMarket(market strategyrouter.Market, lane, version string, horizon strategyrouter.Horizon) bool {
 	if market == strategyrouter.MarketKR {
-		return (lane == continuationlane.KRContinuationLaneID && version == continuationlane.LaneVersionV1 && horizon == strategyrouter.HorizonShort) || (lane == reversallane.KRReversalLaneID && version == reversallane.LaneVersionV1 && horizon == strategyrouter.HorizonShort) || (lane == weeklyvaluelane.KRWeeklyLaneID && version == weeklyvaluelane.LaneVersionV1 && horizon == strategyrouter.HorizonWeekly)
+		return (lane == continuationlane.KRContinuationLaneID && version == continuationlane.LaneVersionV1 && horizon == strategyrouter.HorizonShort) || (lane == reversallane.KRReversalLaneID && version == reversallane.LaneVersionV1 && horizon == strategyrouter.HorizonShort) || (lane == weeklyvaluelane.KRWeeklyLaneID && version == weeklyvaluelane.LaneVersionV1 && horizon == strategyrouter.HorizonWeekly) || (lane == breakoutlane.KRLaneID && version == breakoutlane.LaneVersionV1 && horizon == strategyrouter.HorizonShort)
 	}
 	if market == strategyrouter.MarketUS {
-		return (lane == continuationlane.USContinuationLaneID && version == continuationlane.LaneVersionV1 && horizon == strategyrouter.HorizonShort) || (lane == reversallane.USReversalLaneID && version == reversallane.LaneVersionV1 && horizon == strategyrouter.HorizonShort) || (lane == weeklyvaluelane.USWeeklyLaneID && version == weeklyvaluelane.LaneVersionV1 && horizon == strategyrouter.HorizonWeekly)
+		return (lane == continuationlane.USContinuationLaneID && version == continuationlane.LaneVersionV1 && horizon == strategyrouter.HorizonShort) || (lane == reversallane.USReversalLaneID && version == reversallane.LaneVersionV1 && horizon == strategyrouter.HorizonShort) || (lane == weeklyvaluelane.USWeeklyLaneID && version == weeklyvaluelane.LaneVersionV1 && horizon == strategyrouter.HorizonWeekly) || (lane == breakoutlane.USLaneID && version == breakoutlane.LaneVersionV1 && horizon == strategyrouter.HorizonShort)
 	}
 	return false
 }

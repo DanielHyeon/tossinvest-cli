@@ -1,11 +1,12 @@
 # Branch Test Map: `canonicalDescriptor`
 
-- Source SHA-256: `b188fe1dd7dfc1bc2f76b9905b8d461a6747156d5d3ed3e208f740dc79129e54`; AST branch locations are authoritative.
-- L0 did not alter this function and does not claim an existing test covers a branch.
+- Source: `internal/strategyflow/registry.go`; file SHA-256 `c7cfd15029a18c87f4de9ff2cb2730280cd1345a6d182b0eee687a11348cbdda`. AST branch positions are authoritative.
+- Rows carry measured counts. package suite: `go test -tags tossos_testseams -covermode=count ./internal/strategyflow/`; engine suite: `go test -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
+- Tests whose individual coverage profile entered at least one arm: `TestAcceptedProjectionCoversAllFourFamiliesInBothMarketsTogether`, `TestAcceptedProjectionRejectsRefusedImpureAndMutatedResults`, `TestApprovedCandidatesRouteAndEvaluateAllPairedBindingsWithCompleteLineage`.
 
-| Branch | Scenario anchor | Required test disposition | RED observed | GREEN observed |
-|---|---|---|---|---|
-| B1 | range at 111:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B2 | if at 112:3 | planned targeted RED before any edit; not run by L0 | no | no |
+| Branch | Anchor | Measured disposition |
+|---|---|---|
+| B1 | range at 114:2 | arm entered 146x (package suite); entered by `TestAcceptedProjectionCoversAllFourFamiliesInBothMarketsTogether`, `TestAcceptedProjectionRejectsRefusedImpureAndMutatedResults`, `TestApprovedCandidatesRouteAndEvaluateAllPairedBindingsWithCompleteLineage` |
+| B2 | if at 115:3 | arm entered 39x (package suite); entered by `TestAcceptedProjectionCoversAllFourFamiliesInBothMarketsTogether`, `TestAcceptedProjectionRejectsRefusedImpureAndMutatedResults`, `TestApprovedCandidatesRouteAndEvaluateAllPairedBindingsWithCompleteLineage` |
 
-A lot may replace a planned row only after recording its exact test name and actual RED/GREEN command result.
+A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.

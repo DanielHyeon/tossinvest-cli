@@ -95,10 +95,10 @@ func TestQFinalRejectsDifferentGuardianAndBucketFXPairedKRUS(t *testing.T) {
 	}
 }
 
-func TestQFinalCampaignFirstLegProjectsGuardianOwnedLineageAllSixLanes(t *testing.T) {
+func TestQFinalCampaignFirstLegProjectsGuardianOwnedLineageAllEightLanes(t *testing.T) {
 	descriptors := strategyflow.Descriptors()
-	if len(descriptors) != 6 {
-		t.Fatalf("descriptors=%d, want six paired lanes", len(descriptors))
+	if len(descriptors) != 8 {
+		t.Fatalf("descriptors=%d, want eight paired lanes", len(descriptors))
 	}
 	markets := map[string]int{}
 	for _, descriptor := range descriptors {
@@ -174,7 +174,7 @@ func TestQFinalCampaignFirstLegProjectsGuardianOwnedLineageAllSixLanes(t *testin
 			markets[market]++
 		})
 	}
-	if markets["KR"] != 3 || markets["US"] != 3 {
+	if markets["KR"] != 4 || markets["US"] != 4 {
 		t.Fatalf("unpaired lane matrix: %+v", markets)
 	}
 }

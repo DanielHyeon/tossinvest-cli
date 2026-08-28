@@ -1,0 +1,230 @@
+{
+  "file": "internal/strategyflow/flow_test.go",
+  "source_sha256": "59776edda49cc64112b0a744fb25fdfefb39d484df7cd87ea8cf6171f25b656b",
+  "package": "strategyflow",
+  "function": "TestExistingOwnerRoutePinsCampaignAndAcceptsLaneConfigLineage",
+  "signature": "TestExistingOwnerRoutePinsCampaignAndAcceptsLaneConfigLineage(params=1, results=0)",
+  "start": {
+    "line": 176,
+    "column": 1
+  },
+  "end": {
+    "line": 199,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 186,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 183,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 185,
+        "column": 66
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 193,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 195,
+        "column": 66
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 16
+      },
+      "text": "descriptorByID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 14
+      },
+      "text": "approvedFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 12
+      },
+      "text": "strategyrouter.NewOwnerKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 72
+      },
+      "text": "approved.Symbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 16
+      },
+      "text": "acceptedEvaluation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 12
+      },
+      "text": "evaluateWith"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 106
+      },
+      "text": "inputFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 5
+      },
+      "text": "registryForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 13
+      },
+      "text": "evaluateWith"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 107
+      },
+      "text": "inputFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 5
+      },
+      "text": "registryForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 178,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

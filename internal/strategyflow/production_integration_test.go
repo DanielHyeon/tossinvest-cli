@@ -12,7 +12,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane"
 )
 
-func TestProductionEvaluateUsesRealRouterAndAllSixConcreteEvaluators(t *testing.T) {
+func TestProductionEvaluateUsesRealRouterAndTheSixLaneProductionFixtures(t *testing.T) {
 	evaluatedAt := time.Date(2026, 8, 4, 0, 0, 3, 0, time.UTC)
 	for _, test := range []struct {
 		name, laneID, laneVersion, laneRelease, config string

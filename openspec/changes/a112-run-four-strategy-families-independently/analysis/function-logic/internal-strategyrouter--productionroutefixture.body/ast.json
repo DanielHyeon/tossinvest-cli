@@ -1,0 +1,165 @@
+{
+  "file": "internal/strategyrouter/production_test.go",
+  "source_sha256": "4a6fe328016fbef89ac4b186f65b5561ef7ef89b9f379837a20f12911f2eca70",
+  "package": "strategyrouter",
+  "function": "body",
+  "receiver": "productionRouteFixture",
+  "signature": "productionRouteFixture.body(params=1, results=1)",
+  "start": {
+    "line": 247,
+    "column": 1
+  },
+  "end": {
+    "line": 272,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 251,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "else",
+      "at": {
+        "line": 258,
+        "column": 9
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 266,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 56
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 93
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 93
+      },
+      "text": "fixture.now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 48
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 101
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 65
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 118
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 118
+      },
+      "text": "fixture.now.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 15
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 15
+      },
+      "text": "fixture.now.Add"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 248,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 252,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 259,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

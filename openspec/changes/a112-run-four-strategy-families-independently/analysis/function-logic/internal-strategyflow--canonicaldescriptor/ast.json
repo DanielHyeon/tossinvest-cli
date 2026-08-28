@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyflow/registry.go",
-  "source_sha256": "b188fe1dd7dfc1bc2f76b9905b8d461a6747156d5d3ed3e208f740dc79129e54",
+  "source_sha256": "c7cfd15029a18c87f4de9ff2cb2730280cd1345a6d182b0eee687a11348cbdda",
   "package": "strategyflow",
   "function": "canonicalDescriptor",
   "signature": "canonicalDescriptor(params=1, results=2)",
   "start": {
-    "line": 109,
+    "line": 112,
     "column": 1
   },
   "end": {
-    "line": 117,
+    "line": 120,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 111,
+        "line": 114,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 112,
+        "line": 115,
         "column": 3
       }
     }
@@ -34,14 +34,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 113,
+        "line": 116,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 116,
+        "line": 119,
         "column": 2
       }
     }
@@ -50,7 +50,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 110,
+        "line": 113,
         "column": 11
       },
       "text": "descriptorFor"
@@ -58,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 112,
+        "line": 115,
         "column": 6
       },
       "text": "keyFor"
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 112,
+        "line": 115,
         "column": 28
       },
       "text": "keyFor"
@@ -76,11 +76,12 @@
     {
       "kind": ":=",
       "at": {
-        "line": 110,
+        "line": 113,
         "column": 2
       }
     }
   ],
   "go_statements": null,
-  "defers": null
+  "defers": null,
+  "revision": "current"
 }

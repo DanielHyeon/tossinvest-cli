@@ -15,15 +15,15 @@ func acceptedProjectionFixture(t *testing.T, descriptor Descriptor) Result {
 		t.Fatal(err)
 	}
 	evaluation := acceptedEvaluation(descriptor, key, approved)
-	return evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteResult {
-		return strategyrouter.RouteResult{Decision: routeDecision(descriptor, key, approved)}
+	return evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)}, func(strategyrouter.RouteRequest) strategyrouter.RouteSetResult {
+		return strategyrouter.RouteSetResult{Decisions: []strategyrouter.RouteDecision{routeDecision(descriptor, key, approved)}}
 	}, registryForTest(descriptor, func(LaneInput) laneEvaluation { return evaluation }))
 }
 
-func TestAcceptedProjectionCoversKRUSContinuationReversalAndWeeklyTogether(t *testing.T) {
+func TestAcceptedProjectionCoversAllFourFamiliesInBothMarketsTogether(t *testing.T) {
 	descriptors := Descriptors()
-	if len(descriptors) != 6 {
-		t.Fatalf("descriptors=%d, want paired six", len(descriptors))
+	if len(descriptors) != 8 {
+		t.Fatalf("descriptors=%d, want paired eight", len(descriptors))
 	}
 	markets := map[strategyrouter.Market]int{}
 	for _, descriptor := range descriptors {
@@ -48,7 +48,7 @@ func TestAcceptedProjectionCoversKRUSContinuationReversalAndWeeklyTogether(t *te
 		}
 		markets[descriptor.Market]++
 	}
-	if markets[strategyrouter.MarketKR] != 3 || markets[strategyrouter.MarketUS] != 3 {
+	if markets[strategyrouter.MarketKR] != 4 || markets[strategyrouter.MarketUS] != 4 {
 		t.Fatalf("unpaired projection matrix: %+v", markets)
 	}
 }

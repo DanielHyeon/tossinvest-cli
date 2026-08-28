@@ -1,0 +1,329 @@
+{
+  "file": "internal/strategyflow/canonical_projection_test.go",
+  "source_sha256": "ac31a33808c126bebe48a706d67aa69783547b85d2aa7d24ce184371a84d40b4",
+  "package": "strategyflow",
+  "function": "TestAcceptedProjectionCoversKRUSContinuationReversalAndWeeklyTogether",
+  "signature": "TestAcceptedProjectionCoversKRUSContinuationReversalAndWeeklyTogether(params=1, results=0)",
+  "start": {
+    "line": 23,
+    "column": 1
+  },
+  "end": {
+    "line": 54,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 25,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 29,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 32,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 36,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 40,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 44,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 24,
+        "column": 17
+      },
+      "text": "Descriptors"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 47
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 13
+      },
+      "text": "acceptedProjectionFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 22
+      },
+      "text": "ProjectAccepted"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 18
+      },
+      "text": "ProjectAccepted"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 20
+      },
+      "text": "replay.Payload"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 40
+      },
+      "text": "projection.Payload"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 64
+      },
+      "text": "replay.PayloadDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 90
+      },
+      "text": "projection.PayloadDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 20
+      },
+      "text": "VerifyAcceptedProjection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 45
+      },
+      "text": "projection.Payload"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 21
+      },
+      "text": "verified.Lineage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 41
+      },
+      "text": "verified.ExecutionTerms"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 7
+      },
+      "text": "lineage.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 27
+      },
+      "text": "terms.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 4
+      },
+      "text": "terms.LineageIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 46,
+        "column": 51
+      },
+      "text": "terms.Quantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 24,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 30,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 31,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 35,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 39,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 43,
+        "column": 3
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 49,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

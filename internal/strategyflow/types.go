@@ -326,6 +326,8 @@ const (
 	laneReversalUS
 	laneWeeklyKR
 	laneWeeklyUS
+	laneBreakoutKR
+	laneBreakoutUS
 )
 
 // LaneInput is an exact tagged union. Constructors bind a request to one
@@ -338,6 +340,8 @@ type LaneInput struct {
 	reversalUS     reversallane.USEvaluationRequest
 	weeklyKR       weeklyvaluelane.EvaluationRequest
 	weeklyUS       weeklyvaluelane.EvaluationRequest
+	breakoutKR     BreakoutRequest
+	breakoutUS     BreakoutRequest
 }
 
 func ContinuationKR(request continuationlane.KREvaluationRequest) LaneInput {

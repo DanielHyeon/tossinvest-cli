@@ -1,0 +1,201 @@
+{
+  "file": "internal/strategyflow/execution_terms_test.go",
+  "source_sha256": "8f8745de1619d99ebd859d291d253ef47c56e2679d02a45aeb5250da702c8494",
+  "package": "strategyflow",
+  "function": "TestEvaluateRejectsAcceptedLaneWithoutExactExecutionTerms",
+  "signature": "TestEvaluateRejectsAcceptedLaneWithoutExactExecutionTerms(params=1, results=0)",
+  "start": {
+    "line": 66,
+    "column": 1
+  },
+  "end": {
+    "line": 86,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 79,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 81,
+        "column": 64
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 16
+      },
+      "text": "descriptorByID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 14
+      },
+      "text": "approvedFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 14
+      },
+      "text": "strategyrouter.NewOwnerKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 74
+      },
+      "text": "approved.Symbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 16
+      },
+      "text": "acceptedEvaluation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 14
+      },
+      "text": "routeDecision"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 12
+      },
+      "text": "evaluateWith"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 106
+      },
+      "text": "inputFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 3
+      },
+      "text": "registryForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 103
+      },
+      "text": "result.ExecutionTerms.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 69,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

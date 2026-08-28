@@ -18,6 +18,8 @@ func defaultRegistry() registry {
 		{descriptor: pairedDescriptors[3], evaluate: evaluateReversalUS},
 		{descriptor: pairedDescriptors[4], evaluate: evaluateWeeklyKR},
 		{descriptor: pairedDescriptors[5], evaluate: evaluateWeeklyUS},
+		{descriptor: pairedDescriptors[6], evaluate: evaluateBreakoutKR},
+		{descriptor: pairedDescriptors[7], evaluate: evaluateBreakoutUS},
 	})
 }
 
@@ -29,6 +31,8 @@ func proposalRegistry() registry {
 		{descriptor: pairedDescriptors[3], evaluate: proposeReversalUS},
 		{descriptor: pairedDescriptors[4], evaluate: proposeWeeklyKR},
 		{descriptor: pairedDescriptors[5], evaluate: proposeWeeklyUS},
+		{descriptor: pairedDescriptors[6], evaluate: proposeBreakoutKR},
+		{descriptor: pairedDescriptors[7], evaluate: proposeBreakoutUS},
 	})
 }
 

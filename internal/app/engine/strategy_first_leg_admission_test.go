@@ -29,9 +29,9 @@ func TestStrategyFirstLegAdmissionDormantPairedKRUS(t *testing.T) {
 	}
 }
 
-func TestStrategyFirstLegAdmissionUsesGuardianOnlyAllSixLanes(t *testing.T) {
+func TestStrategyFirstLegAdmissionUsesGuardianOnlyAllEightLanes(t *testing.T) {
 	markets := map[string]int{}
-	for _, lane := range allSixStrategyFirstLegResults(t) {
+	for _, lane := range allPairedStrategyFirstLegResults(t) {
 		lane := lane
 		t.Run(lane.result.Lineage.LaneID, func(t *testing.T) {
 			issuance := firstLegBridgeIssuanceFixture(lane.result)
@@ -51,7 +51,8 @@ func TestStrategyFirstLegAdmissionUsesGuardianOnlyAllSixLanes(t *testing.T) {
 			markets[string(lane.result.Lineage.Market)]++
 		})
 	}
-	if markets["KR"] != 3 || markets["US"] != 3 {
+	// 태스크 4.3: 시장마다 정확히 네 가족이다.
+	if markets["KR"] != 4 || markets["US"] != 4 {
 		t.Fatalf("unpaired lane matrix: %+v", markets)
 	}
 }
@@ -186,11 +187,11 @@ type pairedStrategyFirstLegCase struct{ result strategyflow.Result }
 
 func pairedStrategyFirstLegResults(t *testing.T) []pairedStrategyFirstLegCase {
 	t.Helper()
-	all := allSixStrategyFirstLegResults(t)
+	all := allPairedStrategyFirstLegResults(t)
 	return []pairedStrategyFirstLegCase{all[0], all[1]}
 }
 
-func allSixStrategyFirstLegResults(t *testing.T) []pairedStrategyFirstLegCase {
+func allPairedStrategyFirstLegResults(t *testing.T) []pairedStrategyFirstLegCase {
 	t.Helper()
 	descriptors := strategyflow.Descriptors()
 	out := make([]pairedStrategyFirstLegCase, 0, len(descriptors))

@@ -1,0 +1,543 @@
+{
+  "file": "internal/journal/strategyflow_projection_test.go",
+  "source_sha256": "3cb2ab2ecea3135d897246827710eff819e5092c5e285000014e368341085721",
+  "package": "journal",
+  "function": "TestProjectAcceptedStrategyflowLineagePairsAllSixKRUSLanes",
+  "signature": "TestProjectAcceptedStrategyflowLineagePairsAllSixKRUSLanes(params=1, results=0)",
+  "start": {
+    "line": 16,
+    "column": 1
+  },
+  "end": {
+    "line": 74,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 18,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 22,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 29,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 33,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 40,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 44,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 47,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 52,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 56,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 63,
+        "column": 3
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 66,
+        "column": 3
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 17
+      },
+      "text": "strategyflow.Descriptors"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 18,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 47
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 13
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 27,
+        "column": 77
+      },
+      "text": "pairedProjectionPrices"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 18
+      },
+      "text": "strategyflow.AcceptedResultForJournalTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 30,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 18
+      },
+      "text": "QFinalPolicyVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 108
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 115
+      },
+      "text": "rune"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 83
+      },
+      "text": "testIssued"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 39,
+        "column": 17
+      },
+      "text": "ProjectAcceptedStrategyflowLineage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 18
+      },
+      "text": "ProjectAcceptedStrategyflowLineage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 17
+      },
+      "text": "decodeStrategyflowRiskBinding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 17
+      },
+      "text": "strategyflow.VerifyAcceptedProjection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 55
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 20
+      },
+      "text": "Quantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 20
+      },
+      "text": "inner.ExecutionTerms"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 63
+      },
+      "text": "inner.Lineage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 4
+      },
+      "text": "Identity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 4
+      },
+      "text": "Policy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 4
+      },
+      "text": "inner.ExecutionTerms"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 20
+      },
+      "text": "build"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 62
+      },
+      "text": "testIssued"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 88
+      },
+      "text": "Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 88
+      },
+      "text": "testIssued"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 13
+      },
+      "text": "verifyStrategyRiskBinding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 17,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 21,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 23,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 24,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 25,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 26,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 27,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 28,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 32,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 37,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 39,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 43,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 51,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 55,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 66,
+        "column": 6
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 69,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

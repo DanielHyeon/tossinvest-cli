@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyproposal/production.go",
-  "source_sha256": "6cc7474d631e24c1daee677743fdbcc942787e9ae6874ed318cd3550326803b3",
+  "source_sha256": "e2285c5ef57e399bf3bf2ca3a0e91b7449b2c152dd9623d5a617454f934082ad",
   "package": "strategyproposal",
   "function": "validScopes",
   "signature": "validScopes(params=2, results=1)",
   "start": {
-    "line": 468,
+    "line": 529,
     "column": 1
   },
   "end": {
-    "line": 480,
+    "line": 544,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 469,
+        "line": 530,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "range",
       "at": {
-        "line": 473,
+        "line": 534,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 474,
+        "line": 538,
         "column": 3
       }
     }
@@ -42,21 +42,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 470,
+        "line": 531,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 475,
+        "line": 539,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 479,
+        "line": 543,
         "column": 2
       }
     }
@@ -65,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 469,
+        "line": 530,
         "column": 5
       },
       "text": "len"
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 469,
+        "line": 530,
         "column": 25
       },
       "text": "len"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 474,
+        "line": 538,
         "column": 44
       },
       "text": "strings.ToUpper"
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 474,
+        "line": 538,
         "column": 60
       },
       "text": "strings.TrimSpace"
@@ -97,8 +97,8 @@
     {
       "kind": "call",
       "at": {
-        "line": 474,
-        "column": 345
+        "line": 538,
+        "column": 336
       },
       "text": "laneMatchesMarket"
     }
@@ -107,18 +107,26 @@
     {
       "kind": ":=",
       "at": {
-        "line": 472,
+        "line": 533,
         "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 537,
+        "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 477,
+        "line": 541,
         "column": 3
       }
     }
   ],
   "go_statements": null,
-  "defers": null
+  "defers": null,
+  "revision": "current"
 }

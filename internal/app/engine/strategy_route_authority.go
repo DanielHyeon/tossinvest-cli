@@ -193,8 +193,11 @@ func (loader *strategyRouteAuthorityLoader) collectMarket(ctx context.Context, s
 			continue
 		}
 		request := authority.Request()
-		routed := strategyrouter.Route(request)
-		if routed.Code != strategyrouter.RefusalNone || request.Key.Market != strategyRouterMarket(market) || request.Key.Symbol != approved.Symbol() {
+		// 평가 전에 가족 하나를 고르지 않는다. 자격 있는 가족 전체가 살아 있어야
+		// 순수 평가 뒤의 조정자가 비로소 고를 수 있다(태스크 4.3.1).
+		routed := strategyrouter.RouteSet(request)
+		if routed.Code != strategyrouter.RefusalNone || !routed.Valid() || len(routed.Decisions) == 0 ||
+			request.Key.Market != strategyRouterMarket(market) || request.Key.Symbol != approved.Symbol() {
 			refused++
 			continue
 		}

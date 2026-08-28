@@ -823,3 +823,156 @@ closing it needs either a reader change or a separate one-off observation, and n
   `received_at`. This is harmless today — the lot lands with zero production callers — but it is now a *measured* gap,
   not a suspected one: whoever wires the producer in L5 must add a freshness gate first, or a strategy can act on a
   book from a market that has been shut for nine hours.
+
+## L3 — canonical contracts and RouteSet
+
+### Brief amendment (2026-08-28): decision 47
+
+47. **`RouteSet` is a new file in `internal/strategyrouter`, and `router.go` stays untouched.** Task 4.3.1 requires a
+    sealed RouteSet authority that emits *every* eligible family candidate, and task 4.3.2 requires that legacy `Route`
+    and its callers outside the exact production closure remain **behaviourally unchanged**. Those two requirements
+    together forbid editing `Route`'s body. The ownership ledger grants L3 exactly one file in this package
+    (`production.go`), so the created list is extended by exactly two files: `internal/strategyrouter/routeset.go` and
+    `internal/strategyrouter/routeset_test.go`. `router.go` is not edited — not one line — which is what makes "Route is
+    unchanged" a compile-level fact rather than a promise. `RouteSet` re-derives the same prelude validation from the
+    same exported inputs rather than calling `Route`, because calling it would re-impose the single-winner selection
+    this lot exists to remove.
+
+### Decision 48 — what the breakout binding may take from where
+
+48. **`internal/breakoutlane` is L2's and is not edited; the production envelope the composition needs is built in
+    `strategyflow`.** The other three families each expose a `BuildProduction<Market>ProposalAuthority` in their own
+    lane package, so `strategyproposal` hands them a manifest scope and receives a sealed request. `breakoutlane` has
+    no such builder and no exported accessor on `EvidenceSnapshot`, and it is not L3's to change. Therefore
+    `strategyflow` owns `BreakoutRequest`, which carries the pure core's `EvidenceInput` alongside the lineage envelope
+    (account, candidate, campaign, leg ordinal, planned ceiling, risk-budget digest), the price provenance envelope and
+    the execution-policy inputs — every one of which the pure core does not and must not produce. `LaneRelease` for
+    this family is a `strategyflow` constant (`BreakoutRelease`), because the frozen golden's descriptor record has no
+    `release` member and inventing one inside L2's package would be an unauthorised edit.
+    **q_candidate versus q_final:** `breakoutlane.Decision` exposes both. `Propose` is documented as the cap-free
+    q_candidate composition, so the proposal adapter reads `CandidateQuantity()`; `Evaluate` reads `FinalQuantity()`,
+    the same value capped by the manifest's `FinalCap`. This adds no cap and relaxes none: `q_final = min(...)` remains
+    a066's, and the golden's `q_final_must_not_exceed_q_candidate` is preserved because `FinalCap` can only lower.
+
+### Decision 49 — why the breakout lane fails closed instead of building an input
+
+49. **The pure core requires four derived per-bar/per-snapshot members that no evidence record stores and no code
+    produces. L3 closes the lane rather than inventing them.** This was found while wiring task 4.4 and is recorded
+    here because `internal/strategyproposal/production.go:42-46` cites it as its refusal reason.
+
+    **What the core demands (measured).** `breakoutlane.ClosedBarInput` (`types.go:104-106`) carries `RVOLPPM`,
+    `UpperWickRangePPM` and `VolumeExpanded`; `EvidenceInput` (`types.go:167-177`) carries `ATRMinor`, and
+    `validStructuralEvidenceInput` refuses outright when `ATRMinor == 0` (`machine.go:141`). The machine reads all
+    four and none is decorative: RVOL and wick together gate the breakout admission (`machine.go:57`), RVOL sets the
+    1.2/2.0/2.5 counterfactual flags (`:60-62`), `VolumeExpanded` gates the retest-failure path (`:96`), and ATR sets
+    both the close buffer (`:54`) and the retest tolerance (`:102`). All four are inside the sealed digests
+    (`arithmetic.go:83`, `machine.go:198`), so none may be quietly defaulted to zero — a zero changes the digest.
+
+    **What L1 stores (measured).** `strategyevidence.ClosedBar1mPayload` (`breakout_bar.go:51-75`) holds
+    `OpenMinor/HighMinor/LowMinor/CloseMinor/Volume` plus identity, finality, revision and provenance members — and no
+    RVOL, wick, ATR or volume-expansion member. `grep -rni 'atr|rvol|wick' internal/strategyevidence/` returns only
+    `driftAtRead` and `TestOfficialAuthorityMarketMatrix`: substring collisions, **zero real matches**.
+
+    **Who produces them (measured).** Nobody. Outside `internal/breakoutlane` the only assignments to any of the four
+    in the whole tree are in L3's own fixture (`internal/strategyflow/breakout_binding_test.go:55,117`); inside the
+    package every assignment is a test literal (`evaluator_test.go:17`, `final_redteam_test.go:110`). No test, spec or
+    config pins a formula for any of them.
+
+    **What is derivable and what is not.** `UpperWickRangePPM` is arithmetic over stored O/H/L/C and could be derived
+    *once the formula is chosen* — but nothing fixes it, and choosing one here would invent the semantics of a frozen
+    threshold (`v1UpperWickRangeMaxPPM = 350_000`, `types.go:27`). `RVOLPPM` and `VolumeExpanded` need a volume
+    baseline and `ATRMinor` needs a window; neither the baseline nor the period appears in `V1Config` (`types.go:83`),
+    in `design.md`, or in `openspec/specs/`. `BarSeriesQuery` takes exactly one `SessionID`
+    (`breakout_series.go:23-32`), so any cross-session baseline is N separate reads at the store's own measured cost
+    of 47ms (one revision) / 159ms (four revisions) per 390-bar session (`breakout_series.go:51-52`). None of that is
+    a detail `buildLaneInput` can settle.
+
+    **Why inventing a value would break the design, not merely approximate it.** `design.md:174` states that the
+    rolling-window/ATR/RVOL cache "는 성능 최적화일 뿐 권위가 아니다. cache miss/restart 때 append-only evidence로
+    동일 결과를 재생해야 한다." A number computed at composition time from an unrecorded rule is not replayable from
+    append-only evidence, so a fabricated ATR or RVOL would violate the design's own authority rule and would do so
+    *invisibly*, inside a sealed digest.
+
+    **Therefore** `buildLaneInput` returns `ErrBreakoutEvidenceUnavailable` for `breakoutlane.KRLaneID`/`USLaneID`
+    (`production.go:328-330`), and the sentinel names all four members rather than three. This fails closed: the
+    scope is skipped, no proposal is emitted, and nothing downstream sees a partially-invented snapshot. Defining and
+    storing the four members is an evidence-schema change — L1's, not L3's composition — so it is recorded as a
+    blocker here instead of being worked around. Tasks 4.1/4.2/4.3/4.3.1/4.3.2 are unaffected and land complete; the
+    disposition of 4.4's breakout branch and of 4.5's breakout half remains open pending that lot.
+
+### Decision 50 — the frozen 8-set breaks three paired-lane assertions outside L3's ledger
+
+50. **L3's ownership ledger is extended by exactly three test files, because growing `strategyflow.Descriptors()`
+    from six to eight is a compile-clean change that only a *tagged* test run can catch, and it breaks assertions
+    those three files hard-code.** The ledger grants L3 `internal/strategyflow/**`,
+    `internal/strategyrouter/production.go`, `internal/strategyproposal/**`,
+    `internal/app/engine/strategy_route_authority.go`, `strategy_proposal_authority.go` and their tests. It is
+    extended to also permit:
+
+    - `internal/app/engine/strategy_first_leg_admission_test.go`
+    - `internal/execgw/riskguardian_account_base_testseam_test.go`
+    - `internal/journal/strategyflow_projection_test.go`
+
+    **Why they break (measured).** Each iterates `strategyflow.Descriptors()` and then asserts a literal count:
+    `len(descriptors) != 6` (`riskguardian_account_base_testseam_test.go:100`,
+    `strategyflow_projection_test.go:18`) and `markets["KR"] != 3 || markets["US"] != 3`
+    (`strategy_first_leg_admission_test.go:54`, plus the same pair in the other two). Every *subtest* passes,
+    including both new breakout lanes — only the count assertions fail. The edits are therefore mechanical: 6→8,
+    3→4, and the names that say `AllSix`/`ThreeLanes` are corrected, since a test named for six lanes while running
+    eight is a false claim whether or not it is green.
+
+    **Why this was not visible earlier — and what that says about the gate.** `make test` is `go test ./...`
+    (`Makefile:36`) and CI runs that target (`.github/workflows/ci.yml:30-31`). Neither passes
+    `-tags tossos_testseams`, so **no test behind that build tag has ever run in CI**. Measured on this tree:
+    `internal/strategyproposal` runs **0** tests untagged and 6 tagged; `internal/strategyflow` 84 → 91;
+    `internal/app/engine` 602 → 647. The whole of `internal/strategyproposal`'s test suite — the package L3's
+    production wiring lives in — is invisible to the repository's own gate. This lot's first untagged run was
+    green while eight tagged tests were failing, which is the "passing test is not evidence" failure in its
+    ordinary, undramatic form: the suite that passed was not the suite that mattered.
+
+    **A separate defect this exposed, now fixed.** `ProductionBatchAuthorityForTest`
+    (`internal/strategyproposal/production_testseam.go`) sealed its map with the bare symbol while task 4.3.1
+    changed the production key to `batchKey(symbol, laneID)`. `For` then found nothing and every engine caller saw
+    `NO_ACCEPTED_PROPOSAL`. Seven of the eight tagged failures were that one key. The seam now calls the same
+    `batchKey` the production path calls, so the two cannot drift apart again by construction. The file is inside
+    the ledger's `internal/strategyproposal/**`, so no extension was needed for it.
+
+### L3 landing state (2026-08-28)
+
+**Ticked: 4.1, 4.2, 4.3.1, 4.3.2.** The 8-descriptor matrix, the sealed `LaneInput` union with both breakout
+variants and their two registries, the all-candidate `RouteSet` replacing pre-evaluation selection, and the
+AST/import-resolution guard over `strategy_route_authority.go`, `strategy_proposal_authority.go`,
+`strategy_entry_supervisor.go` plus the `strategy_*coordinator*.go` glob.
+
+**Not ticked, and why — three different reasons, none of them "ran out of time".**
+
+- **4.3** — the descriptor table and the exact candidate validation *are* four families per market
+  (`productionRouteDescriptors`, `validProductionRouteCandidates`), and a legacy three-family manifest is refused
+  by the count equality. What is missing is the rest of the task's own sentence: **family/scoring/calibration
+  seals**. Measured: `productionRouteCandidate` carries a pre-existing `Score` (`production.go:59`) that legacy
+  `Route` uses for single-winner selection (`router.go:276-278`), `RouteDecision` does not carry it at all, and
+  `grep -rn "Calibrat"` over `internal/strategyrouter` returns nothing. `RouteSet`'s seal is a decision-*set*
+  seal (`routeset.go:153-176`), not a calibration seal. Ticking 4.3 on the two-thirds that are done would claim
+  a seal that does not exist.
+- **4.4** — scope validation is extended (`validScopes` now keys on (symbol, laneID)), but `buildLaneInput`'s
+  breakout construction is blocked by decision 49 and fails closed instead.
+- **4.5** — not started. Note that its "all 8 descriptors" is reachable for route and proposal lineage but not
+  for a breakout *production* input, for the same reason as 4.4.
+
+**Measured verification.**
+
+| Command | Result |
+|---|---|
+| `make lint` (gofmt + `go vet ./...`) | clean |
+| `go test ./...` (untagged, the CI target) | all packages ok; `internal/journal` 361s |
+| `go test -tags tossos_testseams ./internal/{strategyflow,strategyproposal,strategyrouter,app/engine,execgw,riskbucket}/...` | ok |
+| `go test -tags tossos_testseams` over `internal/journal`'s strategyflow projection tests | ok |
+| `python3 tools/logic-map/check_analysis.py --change a112-…` | evidence complete |
+
+**What the Function Logic Maps record that a green suite does not.** 44 bundles were regenerated from measured
+coverage profiles rather than authored dispositions, and they record **46 branch arms that no measured profile
+ever enters** — concentrated in `buildLaneInput` (18), `LoadProductionAuthorityBatch` (14),
+`strategyRouteAuthorityLoader.collectMarket` (7) and `evaluateWith` (4). Those are refusal arms on the
+production proposal path. They are written down as gaps, not smoothed over: `go test` does not instrument
+`_test.go` files, so test-function bundles carry an arm classification and the run that exercised them instead
+of a fabricated coverage number.

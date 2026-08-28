@@ -1,0 +1,102 @@
+{
+  "file": "internal/strategyproposal/production_testseam.go",
+  "source_sha256": "854454d6d04e8527260f0f6148ac72660dd5871ba1667917f4bf5048aff4156b",
+  "package": "strategyproposal",
+  "function": "ProductionBatchAuthorityForTest",
+  "signature": "ProductionBatchAuthorityForTest(params=2, results=1)",
+  "start": {
+    "line": 7,
+    "column": 1
+  },
+  "end": {
+    "line": 18,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 9,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 10,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 11,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 17,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 8,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 8,
+        "column": 49
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 10,
+        "column": 7
+      },
+      "text": "proposal.ValidProposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 15,
+        "column": 10
+      },
+      "text": "batchKey"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 8,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 15,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyflow/adapters.go",
-  "source_sha256": "5fa16d5a0d6e2286f965c396e726fb3bf8cba48b32e4ec110359ff533def69d1",
+  "source_sha256": "0f6b4e682e89e6d24c4c3686a5a1ad5ea1f0825e904236ea892b5905029065b6",
   "package": "strategyflow",
   "function": "proposalRegistry",
   "signature": "proposalRegistry(params=0, results=1)",
   "start": {
-    "line": 24,
+    "line": 26,
     "column": 1
   },
   "end": {
-    "line": 33,
+    "line": 37,
     "column": 2
   },
   "branches": null,
@@ -17,7 +17,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 25,
+        "line": 27,
         "column": 2
       }
     }
@@ -26,7 +26,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 25,
+        "line": 27,
         "column": 9
       },
       "text": "newRegistry"
@@ -34,5 +34,6 @@
   ],
   "assignments": null,
   "go_statements": null,
-  "defers": null
+  "defers": null,
+  "revision": "current"
 }

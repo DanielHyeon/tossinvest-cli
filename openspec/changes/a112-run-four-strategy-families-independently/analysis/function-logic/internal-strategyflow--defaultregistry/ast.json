@@ -1,6 +1,6 @@
 {
   "file": "internal/strategyflow/adapters.go",
-  "source_sha256": "5fa16d5a0d6e2286f965c396e726fb3bf8cba48b32e4ec110359ff533def69d1",
+  "source_sha256": "0f6b4e682e89e6d24c4c3686a5a1ad5ea1f0825e904236ea892b5905029065b6",
   "package": "strategyflow",
   "function": "defaultRegistry",
   "signature": "defaultRegistry(params=0, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 22,
+    "line": 24,
     "column": 2
   },
   "branches": null,
@@ -34,5 +34,6 @@
   ],
   "assignments": null,
   "go_statements": null,
-  "defers": null
+  "defers": null,
+  "revision": "current"
 }

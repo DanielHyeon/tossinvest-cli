@@ -1,0 +1,40 @@
+{
+  "file": "internal/strategyproposal/production.go",
+  "source_sha256": "6cc7474d631e24c1daee677743fdbcc942787e9ae6874ed318cd3550326803b3",
+  "package": "strategyproposal",
+  "function": "Len",
+  "receiver": "ProductionBatchAuthority",
+  "signature": "ProductionBatchAuthority.Len(params=0, results=1)",
+  "start": {
+    "line": 80,
+    "column": 1
+  },
+  "end": {
+    "line": 80,
+    "column": 99
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 80,
+        "column": 69
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 76
+      },
+      "text": "len"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

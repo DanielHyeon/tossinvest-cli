@@ -1,81 +1,87 @@
 # Function Logic Map: `buildLaneInput`
 
-- Source: `internal/strategyproposal/production.go`
-- Current-base source SHA-256: `6cc7474d631e24c1daee677743fdbcc942787e9ae6874ed318cd3550326803b3`
+- Source: `internal/strategyproposal/production.go` (327-443)
+- Function: `buildLaneInput` in package `strategyproposal`
 - Signature: `buildLaneInput(params=6, results=3)`
-- Source range: `269:1`–`382:2`
-- AST evidence: `ast.json`, generated from frozen base `016da6245feb60e13971388be386c2c2041469a8`.
+- File SHA-256: `e2285c5ef57e399bf3bf2ca3a0e91b7449b2c152dd9623d5a617454f934082ad`
+- Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
+- AST evidence: `ast.json` — AST branches 21.
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
-- Inputs/results are the exact AST signature above; this L0 map does not infer undocumented state.
-- Any later edit must preserve OFF defaults, the owner key without family/horizon, and zero exposure-raising dispatch while a prerequisite is missing.
+Turns one manifest scope plus replayed evidence into a tagged `LaneInput`. L3 added the breakout arm at the top, which returns `ErrBreakoutEvidenceUnavailable` rather than composing anything (decision 49).
+
+The signature above is the exhaustive input/result record; this map does not infer state the AST does not show.
 
 ## Branches and early returns
 
-- Exact AST return nodes: `274:3, 278:4, 293:5, 295:4, 300:4, 302:3, 306:4, 318:4, 332:5, 334:4, 338:4, 340:3, 343:3, 347:3, 373:4, 375:3, 379:3, 381:2`.
+- Measurement regime: Go coverage profiles, count mode. package suite: `go test -tags tossos_testseams -covermode=count ./internal/strategyproposal/`; engine suite: `go test -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
+- Measured entry: the function body executed **4x** under the package suite.
 
-| Branch | AST kind | Source location | Required test disposition |
+Exact AST return positions: 329:3, 335:3, 339:4, 354:5, 356:4, 361:4, 363:3, 367:4, 379:4, 393:5, 395:4, 399:4, 401:3, 404:3, 408:3, 434:4, 436:3, 440:3, 442:2.
+
+| Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 273:2 | planned targeted RED before any edit; not run by L0 |
-| B2 | if | 276:2 | planned targeted RED before any edit; not run by L0 |
-| B3 | if | 277:3 | planned targeted RED before any edit; not run by L0 |
-| B4 | if | 289:3 | planned targeted RED before any edit; not run by L0 |
-| B5 | if | 292:4 | planned targeted RED before any edit; not run by L0 |
-| B6 | if | 299:3 | planned targeted RED before any edit; not run by L0 |
-| B7 | if | 304:2 | planned targeted RED before any edit; not run by L0 |
-| B8 | if | 305:3 | planned targeted RED before any edit; not run by L0 |
-| B9 | if | 309:3 | planned targeted RED before any edit; not run by L0 |
-| B10 | if | 313:3 | planned targeted RED before any edit; not run by L0 |
-| B11 | if | 317:3 | planned targeted RED before any edit; not run by L0 |
-| B12 | if | 329:3 | planned targeted RED before any edit; not run by L0 |
-| B13 | if | 331:4 | planned targeted RED before any edit; not run by L0 |
-| B14 | if | 337:3 | planned targeted RED before any edit; not run by L0 |
-| B15 | if | 342:2 | planned targeted RED before any edit; not run by L0 |
-| B16 | if | 346:2 | planned targeted RED before any edit; not run by L0 |
-| B17 | if | 350:2 | planned targeted RED before any edit; not run by L0 |
-| B18 | if | 370:2 | planned targeted RED before any edit; not run by L0 |
-| B19 | if | 372:3 | planned targeted RED before any edit; not run by L0 |
-| B20 | if | 378:2 | planned targeted RED before any edit; not run by L0 |
+| B1 | if | 328:2 | arm entered 1x (package suite); entered by `TestBreakoutLaneInputFailsClosedWhileTheDerivedMetricEvidenceIsMissing` |
+| B2 | if | 334:2 | arm never entered: count 0 in every profile measured for this function |
+| B3 | if | 337:2 | arm entered 3x (package suite); entered by `TestProductionProposalAuthorityFailureIsMarketLocal`, `TestProductionProposalAuthorityLoadsPairedSignedKRUSSnapshots` |
+| B4 | if | 338:3 | arm never entered: count 0 in every profile measured for this function |
+| B5 | if | 350:3 | arm entered 1x (package suite); entered by `TestProductionProposalAuthorityLoadsPairedSignedKRUSSnapshots` |
+| B6 | if | 353:4 | arm never entered: count 0 in every profile measured for this function |
+| B7 | if | 360:3 | arm never entered: count 0 in every profile measured for this function |
+| B8 | if | 365:2 | arm never entered: count 0 in every profile measured for this function |
+| B9 | if | 366:3 | arm never entered: count 0 in every profile measured for this function |
+| B10 | if | 370:3 | arm never entered: count 0 in every profile measured for this function |
+| B11 | if | 374:3 | arm never entered: count 0 in every profile measured for this function |
+| B12 | if | 378:3 | arm never entered: count 0 in every profile measured for this function |
+| B13 | if | 390:3 | arm never entered: count 0 in every profile measured for this function |
+| B14 | if | 392:4 | arm never entered: count 0 in every profile measured for this function |
+| B15 | if | 398:3 | arm never entered: count 0 in every profile measured for this function |
+| B16 | if | 403:2 | arm never entered: count 0 in every profile measured for this function |
+| B17 | if | 407:2 | arm never entered: count 0 in every profile measured for this function |
+| B18 | if | 411:2 | arm never entered: count 0 in every profile measured for this function |
+| B19 | if | 431:2 | arm never entered: count 0 in every profile measured for this function |
+| B20 | if | 433:3 | arm never entered: count 0 in every profile measured for this function |
+| B21 | if | 439:2 | arm never entered: count 0 in every profile measured for this function |
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Current-base evidence/requirement |
-|---|---|---|
-| parseTime | 270:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| parseTime | 271:20 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| parseTime | 272:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| int64 | 281:86 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| continuationlane.BuildProductionKRProposalAuthority | 291:14 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strategyflow.ContinuationKR | 295:11 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| a.Request | 295:39 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| continuationlane.BuildProductionUSProposalAuthority | 298:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strategyflow.ContinuationUS | 302:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| a.Request | 302:38 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| reversalStructure | 316:21 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| time.Duration | 325:22 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| reversallane.BuildProductionKRProposalAuthority | 330:14 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strategyflow.ReversalKR | 334:11 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| a.Request | 334:35 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| reversallane.BuildProductionUSProposalAuthority | 336:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strategyflow.ReversalUS | 340:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| a.Request | 340:34 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| isWeeklyLane | 342:6 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| journalRO.WeeklyMarketReservation | 345:22 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| string | 345:79 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| weeklyvaluelane.BuildProductionKRProposalAuthority | 371:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strategyflow.WeeklyKR | 375:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| a.Request | 375:32 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| weeklyvaluelane.BuildProductionUSProposalAuthority | 377:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strategyflow.WeeklyUS | 381:9 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| a.Request | 381:31 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| Callee expression | Position |
+|---|---|
+| `parseTime` | 331:23 |
+| `parseTime` | 332:20 |
+| `parseTime` | 333:16 |
+| `int64` | 342:86 |
+| `continuationlane.BuildProductionKRProposalAuthority` | 352:14 |
+| `strategyflow.ContinuationKR` | 356:11 |
+| `a.Request` | 356:39 |
+| `continuationlane.BuildProductionUSProposalAuthority` | 359:13 |
+| `strategyflow.ContinuationUS` | 363:10 |
+| `a.Request` | 363:38 |
+| `reversalStructure` | 377:21 |
+| `time.Duration` | 386:22 |
+| `reversallane.BuildProductionKRProposalAuthority` | 391:14 |
+| `strategyflow.ReversalKR` | 395:11 |
+| `a.Request` | 395:35 |
+| `reversallane.BuildProductionUSProposalAuthority` | 397:13 |
+| `strategyflow.ReversalUS` | 401:10 |
+| `a.Request` | 401:34 |
+| `isWeeklyLane` | 403:6 |
+| `journalRO.WeeklyMarketReservation` | 406:22 |
+| `string` | 406:79 |
+| `weeklyvaluelane.BuildProductionKRProposalAuthority` | 432:13 |
+| `strategyflow.WeeklyKR` | 436:10 |
+| `a.Request` | 436:32 |
+| `weeklyvaluelane.BuildProductionUSProposalAuthority` | 438:12 |
+| `strategyflow.WeeklyUS` | 442:9 |
+| `a.Request` | 442:31 |
 
 ## State mutations and fallbacks
 
-- The AST is the exhaustive current-base record of assignments, calls, branches, defers and returns. Before a function body edit, the owning lot must update this map with changed condition semantics and concrete RED/GREEN test evidence.
+- AST assignments: 23. Defers: 0. Goroutine statements: 0.
+- Reads the journal for the weekly reservation binding; no write.
 
 ## Safety conclusion
 
-- L0 status: pre-edit evidence only; no production function was edited and no branch test is claimed as run by L0.
-- A named targeted RED or explicit evidence-backed not-applicable rationale is required for every edited branch before GREEN.
+- Fails closed everywhere: every parse or build failure returns an error and no lane input. The breakout arm is the strongest form of that — it refuses rather than invent the four derived metrics no evidence record stores.

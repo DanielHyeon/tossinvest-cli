@@ -1,0 +1,280 @@
+{
+  "file": "internal/strategyflow/flow_test.go",
+  "source_sha256": "59776edda49cc64112b0a744fb25fdfefb39d484df7cd87ea8cf6171f25b656b",
+  "package": "strategyflow",
+  "function": "TestApprovedCandidatesRouteAndEvaluateAllPairedBindingsWithCompleteLineage",
+  "signature": "TestApprovedCandidatesRouteAndEvaluateAllPairedBindingsWithCompleteLineage(params=1, results=0)",
+  "start": {
+    "line": 50,
+    "column": 1
+  },
+  "end": {
+    "line": 86,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 56,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 68,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 71,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 74,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 81,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 62,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 66,
+        "column": 5
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 29
+      },
+      "text": "Descriptors"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 16
+      },
+      "text": "approvedFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 16
+      },
+      "text": "strategyrouter.NewOwnerKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 70
+      },
+      "text": "approved.Symbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 16
+      },
+      "text": "registryForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 62,
+        "column": 12
+      },
+      "text": "acceptedEvaluation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 14
+      },
+      "text": "evaluateWith"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 108
+      },
+      "text": "inputFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 84
+      },
+      "text": "routeDecision"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 62
+      },
+      "text": "result.Lineage.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 87
+      },
+      "text": "approved.CandidateLifeID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 52,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 54,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 55,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 59,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 4
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 61,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 64,
+        "column": 4
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 65,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

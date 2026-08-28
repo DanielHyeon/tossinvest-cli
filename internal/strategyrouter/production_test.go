@@ -12,13 +12,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reversallane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane"
 	_ "modernc.org/sqlite"
 )
 
-func TestPairedProductionRouteAuthorityLoadsExactThreeLanesIndependently(t *testing.T) {
+func TestPairedProductionRouteAuthorityLoadsExactFourLanesIndependently(t *testing.T) {
 	fixture := newProductionRouteFixture(t)
 	for _, market := range []Market{MarketKR, MarketUS} {
 		authority, err := LoadProductionRouteAuthority(context.Background(), fixture.config[market])
@@ -29,7 +30,7 @@ func TestPairedProductionRouteAuthorityLoadsExactThreeLanesIndependently(t *test
 			t.Fatalf("%s scalar provenance missing: %+v", market, authority)
 		}
 		request := authority.Request()
-		if len(request.Candidates) != 3 || request.Snapshot.Revision != 1 || len(request.Snapshot.Owners) != 0 {
+		if len(request.Candidates) != 4 || request.Snapshot.Revision != 1 || len(request.Snapshot.Owners) != 0 {
 			t.Fatalf("%s route reconstruction=%+v", market, request)
 		}
 		routed := Route(request)
@@ -90,7 +91,7 @@ func TestProductionRouteAuthoritySelectsEverySignedSymbolScope(t *testing.T) {
 			t.Fatalf("%s %s load: %v", test.market, test.symbol, err)
 		}
 		request := authority.Request()
-		if request.Key.Symbol != test.symbol || len(request.Candidates) != 3 || Route(request).Code != RefusalNone {
+		if request.Key.Symbol != test.symbol || len(request.Candidates) != 4 || Route(request).Code != RefusalNone {
 			t.Fatalf("%s %s scope=%+v", test.market, test.symbol, request)
 		}
 	}
@@ -252,12 +253,14 @@ func (fixture *productionRouteFixture) body(market Market) productionRouteBody {
 			{HorizonShort, continuationlane.KRContinuationLaneID, continuationlane.LaneVersionV1, 30, true, StateOn, StateOn, "kr-continuation-evidence", "kr-continuation-config"},
 			{HorizonShort, reversallane.KRReversalLaneID, reversallane.LaneVersionV1, 20, true, StateOn, StateOn, "kr-reversal-evidence", "kr-reversal-config"},
 			{HorizonWeekly, weeklyvaluelane.KRWeeklyLaneID, weeklyvaluelane.LaneVersionV1, 10, true, StateOn, StateOn, "kr-weekly-evidence", "kr-weekly-config"},
+			{HorizonShort, breakoutlane.KRLaneID, breakoutlane.LaneVersionV1, 5, true, StateOn, StateOn, "kr-breakout-evidence", "kr-breakout-config"},
 		}
 	} else {
 		lanes = []productionRouteCandidate{
 			{HorizonShort, continuationlane.USContinuationLaneID, continuationlane.LaneVersionV1, 30, true, StateOn, StateOn, "us-continuation-evidence", "us-continuation-config"},
 			{HorizonShort, reversallane.USReversalLaneID, reversallane.LaneVersionV1, 20, true, StateOn, StateOn, "us-reversal-evidence", "us-reversal-config"},
 			{HorizonWeekly, weeklyvaluelane.USWeeklyLaneID, weeklyvaluelane.LaneVersionV1, 10, true, StateOn, StateOn, "us-weekly-evidence", "us-weekly-config"},
+			{HorizonShort, breakoutlane.USLaneID, breakoutlane.LaneVersionV1, 5, true, StateOn, StateOn, "us-breakout-evidence", "us-breakout-config"},
 		}
 	}
 	return productionRouteBody{SchemaVersion: productionRouteSchema, Domain: productionRouteDomain, SignatureAlgorithm: productionRouteAlgorithm,
@@ -294,4 +297,75 @@ func (fixture *productionRouteFixture) write(t *testing.T, market Market, body p
 	config := fixture.config[market]
 	config.ManifestDigest = productionRouteDigest(data)
 	fixture.config[market] = config
+}
+
+// 태스크 4.3: 시장마다 정확히 네 가족이다. 세 가족짜리 레거시 매니페스트는
+// 더 이상 활성화 권한이 아니다.
+func TestProductionRouteDescriptorsCoverFourFamiliesPerMarket(t *testing.T) {
+	want := map[Market]map[string]Horizon{
+		MarketKR: {
+			continuationlane.KRContinuationLaneID: HorizonShort,
+			reversallane.KRReversalLaneID:         HorizonShort,
+			weeklyvaluelane.KRWeeklyLaneID:        HorizonWeekly,
+			breakoutlane.KRLaneID:                 HorizonShort,
+		},
+		MarketUS: {
+			continuationlane.USContinuationLaneID: HorizonShort,
+			reversallane.USReversalLaneID:         HorizonShort,
+			weeklyvaluelane.USWeeklyLaneID:        HorizonWeekly,
+			breakoutlane.USLaneID:                 HorizonShort,
+		},
+	}
+	for market, lanes := range want {
+		got := productionRouteDescriptors(market)
+		if len(got) != 4 {
+			t.Fatalf("%s has %d production descriptors, want 4", market, len(got))
+		}
+		for laneID, horizon := range lanes {
+			descriptor, ok := got[laneID]
+			if !ok {
+				t.Fatalf("%s is missing production descriptor %s", market, laneID)
+			}
+			if descriptor.Horizon != horizon || descriptor.LaneVersion != "v1" {
+				t.Fatalf("%s/%s descriptor drifted: %+v", market, laneID, descriptor)
+			}
+		}
+	}
+	if got := productionRouteDescriptors(Market("XX")); got != nil {
+		t.Fatalf("an unknown market produced descriptors: %+v", got)
+	}
+}
+
+func TestProductionRouteCandidatesRejectLegacyThreeFamilyAndPartialSets(t *testing.T) {
+	full := func(market Market) []productionRouteCandidate {
+		values := make([]productionRouteCandidate, 0, 4)
+		for laneID, descriptor := range productionRouteDescriptors(market) {
+			values = append(values, productionRouteCandidate{descriptor.Horizon, laneID, descriptor.LaneVersion,
+				10, true, StateOn, StateOn, "evidence-" + laneID, "config-" + laneID})
+		}
+		return values
+	}
+	for _, market := range []Market{MarketKR, MarketUS} {
+		values := full(market)
+		if !validProductionRouteCandidates(market, values) {
+			t.Fatalf("%s four-family candidate set was rejected", market)
+		}
+		if validProductionRouteCandidates(market, values[:3]) {
+			t.Fatalf("%s legacy three-family manifest was accepted as authority", market)
+		}
+		duplicated := append(append([]productionRouteCandidate(nil), values[:3]...), values[0])
+		if validProductionRouteCandidates(market, duplicated) {
+			t.Fatalf("%s duplicated candidate was accepted", market)
+		}
+		unknown := append([]productionRouteCandidate(nil), values...)
+		unknown[0].LaneID = "xx_unknown_lane_v1"
+		if validProductionRouteCandidates(market, unknown) {
+			t.Fatalf("%s unknown lane id was accepted", market)
+		}
+		mismatched := append([]productionRouteCandidate(nil), values...)
+		mismatched[0].LaneVersion = "v2"
+		if validProductionRouteCandidates(market, mismatched) {
+			t.Fatalf("%s mismatched lane version was accepted", market)
+		}
+	}
 }

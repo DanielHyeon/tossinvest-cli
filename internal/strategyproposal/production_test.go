@@ -8,17 +8,20 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane"
 	marketclock "github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/officialfx"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reversallane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyevidence"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane"
 )
@@ -190,4 +193,73 @@ func productionFixture(t *testing.T, market strategyrouter.Market, now time.Time
 		ActivationDigest: "activation", CalendarGeneration: "calendar-generation", CalendarDigest: "calendar-digest", SchedulerConfigVersion: "scheduler-v1",
 		EvidenceDBIdentity: "evidence-db-" + string(market)}
 	return config, target, fx
+}
+
+// 태스크 4.3.1 / 2.6.1: 한 종목에 여러 가족 스코프가 오면 전부 살아남아야 한다.
+// 예전처럼 종목 하나에 제안 하나로 접으면 뒤 스코프가 조용히 앞을 덮어쓴다.
+func TestValidScopesAcceptsSeveralFamiliesForOneSymbolAndStillRejectsDuplicateLanes(t *testing.T) {
+	base := productionScope{Symbol: "005930", PositionGeneration: 1, CandidateID: "c", CampaignID: "camp",
+		SnapshotID: "s", SnapshotDigest: "d", PlannedQuantity: 1, LegOrdinal: 1}
+	continuation := base
+	continuation.LaneID, continuation.LaneVersion, continuation.Horizon = continuationlane.KRContinuationLaneID, continuationlane.LaneVersionV1, strategyrouter.HorizonShort
+	reversal := base
+	reversal.LaneID, reversal.LaneVersion, reversal.Horizon = reversallane.KRReversalLaneID, reversallane.LaneVersionV1, strategyrouter.HorizonShort
+	breakout := base
+	breakout.LaneID, breakout.LaneVersion, breakout.Horizon = breakoutlane.KRLaneID, breakoutlane.LaneVersionV1, strategyrouter.HorizonShort
+
+	// 레인 이름 사전순: absorption_reversal < breakout_retest < flow_continuation.
+	if !validScopes(strategyrouter.MarketKR, []productionScope{reversal, breakout, continuation}) {
+		t.Fatal("several families for one symbol were rejected, so only one family per symbol can ever propose")
+	}
+	if validScopes(strategyrouter.MarketKR, []productionScope{continuation, reversal}) {
+		t.Fatal("unordered scopes were accepted, so the manifest order is not deterministic")
+	}
+	if validScopes(strategyrouter.MarketKR, []productionScope{continuation, continuation}) {
+		t.Fatal("the same lane twice was accepted for one symbol")
+	}
+}
+
+// 태스크 4.3: breakout 레인은 매니페스트에서 시장별로 인식돼야 한다.
+func TestLaneMatchesMarketCoversTheBreakoutFamily(t *testing.T) {
+	if !laneMatchesMarket(strategyrouter.MarketKR, breakoutlane.KRLaneID, breakoutlane.LaneVersionV1, strategyrouter.HorizonShort) {
+		t.Fatal("KR breakout lane is not recognised by the production manifest")
+	}
+	if !laneMatchesMarket(strategyrouter.MarketUS, breakoutlane.USLaneID, breakoutlane.LaneVersionV1, strategyrouter.HorizonShort) {
+		t.Fatal("US breakout lane is not recognised by the production manifest")
+	}
+	if laneMatchesMarket(strategyrouter.MarketKR, breakoutlane.USLaneID, breakoutlane.LaneVersionV1, strategyrouter.HorizonShort) {
+		t.Fatal("the US breakout lane was accepted in KR")
+	}
+	if laneMatchesMarket(strategyrouter.MarketKR, breakoutlane.KRLaneID, breakoutlane.LaneVersionV1, strategyrouter.HorizonWeekly) {
+		t.Fatal("the breakout lane was accepted on the weekly horizon")
+	}
+}
+
+// 결정 49: 파생 지표 증거가 없으므로 breakout 레인 입력은 오늘 닫힌 채로 거절돼야 한다.
+// 조용히 빈 입력을 만들어 통과시키면 근거 없는 제안이 생긴다.
+func TestBreakoutLaneInputFailsClosedWhileTheDerivedMetricEvidenceIsMissing(t *testing.T) {
+	scope := productionScope{Symbol: "005930", PositionGeneration: 1, CandidateID: "c", CampaignID: "camp",
+		SnapshotID: "s", SnapshotDigest: "d", PlannedQuantity: 1, LegOrdinal: 1,
+		LaneID: breakoutlane.KRLaneID, LaneVersion: breakoutlane.LaneVersionV1, Horizon: strategyrouter.HorizonShort,
+		Stop:       productionStop{ObservedAt: "2026-08-28T00:00:00Z", FreshUntil: "2026-08-28T01:00:00Z"},
+		FreshUntil: "2026-08-28T01:00:00Z"}
+	snapshot := strategyevidence.Snapshot{ID: "s", Digest: "d"}
+	lane, weekly, err := buildLaneInput(context.Background(), ProductionConfig{Market: strategyrouter.MarketKR, AccountRef: "acct"},
+		scope, snapshot, officialfx.Evidence{}, nil)
+	if err == nil {
+		t.Fatal("a breakout scope produced a lane input even though no ATR/RVOL evidence exists")
+	}
+	if !errors.Is(err, ErrBreakoutEvidenceUnavailable) {
+		t.Fatalf("breakout refusal must be typed, got %v", err)
+	}
+	if weekly != nil {
+		t.Fatal("a breakout scope minted a weekly reservation binding")
+	}
+	// LaneInput 은 비교할 수 없는 구조라 제로값 자체를 비교하지 못한다.
+	// 대신 어떤 descriptor 에도 붙지 않는다는 사실로 "빈 입력"임을 증명한다.
+	for _, descriptor := range strategyflow.Descriptors() {
+		if strategyflow.LaneInputMatchesForTest(lane, descriptor) {
+			t.Fatalf("a refused breakout scope still returned a lane input bound to %s", descriptor.LaneID)
+		}
+	}
 }

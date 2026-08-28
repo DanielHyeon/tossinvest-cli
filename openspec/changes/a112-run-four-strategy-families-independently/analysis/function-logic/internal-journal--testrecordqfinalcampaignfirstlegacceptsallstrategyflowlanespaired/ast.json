@@ -1,0 +1,359 @@
+{
+  "file": "internal/journal/strategyflow_projection_test.go",
+  "source_sha256": "4897ee72290331ac04e2257d255a1922214b9849ad48877fa0bf8b10d2649156",
+  "package": "journal",
+  "function": "TestRecordQFinalCampaignFirstLegAcceptsAllStrategyflowLanesPaired",
+  "signature": "TestRecordQFinalCampaignFirstLegAcceptsAllStrategyflowLanesPaired(params=1, results=0)",
+  "start": {
+    "line": 176,
+    "column": 1
+  },
+  "end": {
+    "line": 210,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 185,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 189,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 195,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 198,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 201,
+        "column": 4
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 207,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 17
+      },
+      "text": "strategyflow.Descriptors"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 9
+      },
+      "text": "openTestJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 15
+      },
+      "text": "strategyflowFirstLegFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 183,
+        "column": 61
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 184,
+        "column": 18
+      },
+      "text": "decodeStrategyflowRiskBinding"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 18
+      },
+      "text": "strategyflow.VerifyAcceptedProjection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 56
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 21
+      },
+      "text": "Quantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 21
+      },
+      "text": "inner.ExecutionTerms"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 5
+      },
+      "text": "inner.Lineage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 5
+      },
+      "text": "strings.HasPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 63
+      },
+      "text": "Identity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 63
+      },
+      "text": "Policy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 63
+      },
+      "text": "inner.ExecutionTerms"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 20
+      },
+      "text": "j.RecordQFinalCampaignFirstLeg"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 51
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 25
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 14
+      },
+      "text": "countRiskBucketRows"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 12
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 178,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 180,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 182,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 183,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 184,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 188,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 194,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 201,
+        "column": 7
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 204,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

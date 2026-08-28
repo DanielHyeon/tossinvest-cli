@@ -78,11 +78,11 @@
 
 ## 4. Canonical Registry and Production Assembly
 
-- [ ] 4.1 Expand `pairedDescriptors`, exact validation/canonicalization and lane matching from 6 to 8 descriptors in one change, preserving existing six IDs/versions and OFF defaults.
-- [ ] 4.2 Extend the sealed `LaneInput` union, constructors, evaluation/proposal registries and result conversion with explicit KR/US breakout variants; reject tag/route mismatches without fallback.
+- [x] 4.1 Expand `pairedDescriptors`, exact validation/canonicalization and lane matching from 6 to 8 descriptors in one change, preserving existing six IDs/versions and OFF defaults.
+- [x] 4.2 Extend the sealed `LaneInput` union, constructors, evaluation/proposal registries and result conversion with explicit KR/US breakout variants; reject tag/route mismatches without fallback.
 - [ ] 4.3 Extend production route descriptors and exact candidate validation from three to four families per market, adding family/scoring/calibration seals and rejecting legacy/partial manifests as activation authority.
-- [ ] 4.3.1 Replace production use of pre-evaluation `strategyrouter.Route` selection with a sealed `RouteSet` authority that validates and emits all eligible family candidates; only pure proposal evaluation followed by the coordinator's common calibrated arbiter may select across families.
-- [ ] 4.3.2 Add a Go-AST/import-resolution guard over exact production caller files `internal/app/engine/strategy_route_authority.go`, `strategy_proposal_authority.go`, `strategy_entry_supervisor.go` and every new `strategy_*coordinator*.go`: resolve the `github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter` import alias and forbid any selector call to its `Route` symbol while requiring at least one resolved `RouteSet` call. Legacy `Route` and callers outside this exact closure remain behaviorally unchanged.
+- [x] 4.3.1 Replace production use of pre-evaluation `strategyrouter.Route` selection with a sealed `RouteSet` authority that validates and emits all eligible family candidates; only pure proposal evaluation followed by the coordinator's common calibrated arbiter may select across families.
+- [x] 4.3.2 Add a Go-AST/import-resolution guard over exact production caller files `internal/app/engine/strategy_route_authority.go`, `strategy_proposal_authority.go`, `strategy_entry_supervisor.go` and every new `strategy_*coordinator*.go`: resolve the `github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter` import alias and forbid any selector call to its `Route` symbol while requiring at least one resolved `RouteSet` call. Legacy `Route` and callers outside this exact closure remain behaviorally unchanged.
 - [ ] 4.4 Extend production proposal scope validation and `buildLaneInput` with strict breakout snapshot/config construction while preserving continuation/reversal/weekly-value fixtures byte-for-byte where contracts are unchanged.
 - [ ] 4.5 Add paired KR/US production integration tests covering all 8 descriptors, exact route/proposal lineage, matrix migration refusal and no implicit desired/effective/LIVE activation.
 

@@ -1,11 +1,12 @@
 # Branch Test Map: `productionRouteDescriptors`
 
-- Source SHA-256: `eafb36f41e2c07b85737692afa20fac968123481c812237f8678ad7a140bb520`; AST branch locations are authoritative.
-- L0 did not alter this function and does not claim an existing test covers a branch.
+- Source: `internal/strategyrouter/production.go`; file SHA-256 `dbf4e5afdfefcc6210a870d5c5e1952d3531eb119181be452e704964759bbcd8`. AST branch positions are authoritative.
+- Rows carry measured counts. package suite: `go test -tags tossos_testseams -covermode=count ./internal/strategyrouter/`; engine suite: `go test -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
+- Tests whose individual coverage profile entered at least one arm: `TestPairedProductionRouteAuthorityLoadsExactFourLanesIndependently`, `TestProductionRouteAuthorityBatchUsesEverySignedScopeInOneMarketSnapshot`, `TestProductionRouteAuthorityFailureIsMarketLocal`, `TestProductionRouteAuthorityRestoresExactActiveOwner`.
 
-| Branch | Scenario anchor | Required test disposition | RED observed | GREEN observed |
-|---|---|---|---|---|
-| B1 | if at 397:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B2 | if at 404:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| Branch | Anchor | Measured disposition |
+|---|---|---|
+| B1 | if at 398:2 | arm entered 26x (package suite); entered by `TestPairedProductionRouteAuthorityLoadsExactFourLanesIndependently`, `TestProductionRouteAuthorityBatchUsesEverySignedScopeInOneMarketSnapshot`, `TestProductionRouteAuthorityRestoresExactActiveOwner` |
+| B2 | if at 406:2 | arm entered 25x (package suite); entered by `TestPairedProductionRouteAuthorityLoadsExactFourLanesIndependently`, `TestProductionRouteAuthorityBatchUsesEverySignedScopeInOneMarketSnapshot`, `TestProductionRouteAuthorityFailureIsMarketLocal` |
 
-A lot may replace a planned row only after recording its exact test name and actual RED/GREEN command result.
+A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.

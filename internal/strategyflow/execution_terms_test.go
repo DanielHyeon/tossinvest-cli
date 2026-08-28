@@ -18,8 +18,8 @@ func TestEvaluateSealsExactExecutionTerms(t *testing.T) {
 	decision := routeDecision(descriptor, key, approved)
 
 	result := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)},
-		func(strategyrouter.RouteRequest) strategyrouter.RouteResult {
-			return strategyrouter.RouteResult{Decision: decision}
+		func(strategyrouter.RouteRequest) strategyrouter.RouteSetResult {
+			return strategyrouter.RouteSetResult{Decisions: []strategyrouter.RouteDecision{decision}}
 		},
 		registryForTest(descriptor, func(LaneInput) laneEvaluation { return evaluation }))
 
@@ -75,8 +75,8 @@ func TestEvaluateRejectsAcceptedLaneWithoutExactExecutionTerms(t *testing.T) {
 	decision := routeDecision(descriptor, key, approved)
 
 	result := evaluateWith(Request{Approved: approved, Router: strategyrouter.RouteRequest{Key: key}, Lane: inputFor(descriptor)},
-		func(strategyrouter.RouteRequest) strategyrouter.RouteResult {
-			return strategyrouter.RouteResult{Decision: decision}
+		func(strategyrouter.RouteRequest) strategyrouter.RouteSetResult {
+			return strategyrouter.RouteSetResult{Decisions: []strategyrouter.RouteDecision{decision}}
 		},
 		registryForTest(descriptor, func(LaneInput) laneEvaluation { return evaluation }))
 

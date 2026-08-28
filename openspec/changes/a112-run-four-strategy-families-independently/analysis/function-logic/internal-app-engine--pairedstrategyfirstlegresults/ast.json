@@ -1,0 +1,55 @@
+{
+  "file": "internal/app/engine/strategy_first_leg_admission_test.go",
+  "source_sha256": "7b2eca4d50c6fb8aaec09b552e1576a74329ea353617b084bc259e914119ac41",
+  "package": "engine",
+  "function": "pairedStrategyFirstLegResults",
+  "signature": "pairedStrategyFirstLegResults(params=1, results=1)",
+  "start": {
+    "line": 188,
+    "column": 1
+  },
+  "end": {
+    "line": 192,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 9
+      },
+      "text": "allPairedStrategyFirstLegResults"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 190,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}

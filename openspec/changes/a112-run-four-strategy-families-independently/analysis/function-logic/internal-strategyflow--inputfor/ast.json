@@ -1,0 +1,232 @@
+{
+  "file": "internal/strategyflow/flow_test.go",
+  "source_sha256": "59776edda49cc64112b0a744fb25fdfefb39d484df7cd87ea8cf6171f25b656b",
+  "package": "strategyflow",
+  "function": "inputFor",
+  "signature": "inputFor(params=1, results=1)",
+  "start": {
+    "line": 264,
+    "column": 1
+  },
+  "end": {
+    "line": 285,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 265,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 266,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 268,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 270,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 272,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 274,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 276,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "case",
+      "at": {
+        "line": 278,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "case",
+      "at": {
+        "line": 280,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "case",
+      "at": {
+        "line": 282,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 267,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 269,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 271,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 273,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 275,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 277,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 279,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 281,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 283,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 10
+      },
+      "text": "ContinuationKR"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 10
+      },
+      "text": "ContinuationUS"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 10
+      },
+      "text": "ReversalKR"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 10
+      },
+      "text": "ReversalUS"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 10
+      },
+      "text": "WeeklyKR"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 277,
+        "column": 10
+      },
+      "text": "WeeklyUS"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 10
+      },
+      "text": "BreakoutKR"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 10
+      },
+      "text": "BreakoutUS"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "current"
+}
