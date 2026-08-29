@@ -8,7 +8,7 @@ LDFLAGS := -X github.com/JungHoonGhae/tossinvest-cli/internal/version.Version=$(
 	-X github.com/JungHoonGhae/tossinvest-cli/internal/version.Commit=$(COMMIT) \
 	-X github.com/JungHoonGhae/tossinvest-cli/internal/version.Date=$(DATE)
 
-.PHONY: build stage-local-update run test vet cover validate gate lint fmt tidy clean \
+.PHONY: build stage-local-update run test test-seams vet cover validate gate lint fmt tidy clean \
 	image \
 	sdd-doctor sdd-sync sdd-sync-full sdd-test sdd-check sdd-hooks-install sdd-infra
 
@@ -34,6 +34,21 @@ run:
 # can trip is a limit that reports the wrong failure.
 test:
 	go test -timeout 30m ./...
+
+# 태그 뒤 테스트를 실제로 돌리는 유일한 타깃.
+#
+# `tossos_testseams` 는 production 빌드에서 seam 을 빼려는 장치다. 테스트 바이너리는
+# production 이 아니므로 이 실행은 태그가 존재하는 이유와 충돌하지 않는다. 배선하기
+# 전까지 테스트 함수 71개가 저장소의 어떤 게이트에서도 돌지 않았고, 그중 하나는 계약이
+# 바뀐 2026-08-13 이후 한 달을 실패한 채 숨어 있었다 (a118).
+#
+# -timeout 45m: 2026-08-29 측정으로 태그 스위트 합계는 1844초(30.7분)였고 그중 300초는
+# 이 change 가 없앴다. `make test` 의 30m 를 그대로 쓰면 여유가 15% 남짓이라
+# internal/journal 이 마이그레이션 하나로 늘어나는 순간 — 그 타깃의 주석이 기록한 a084
+# 전례가 정확히 그것이다 — 정당한 실행이 timeout 으로 잘못 보고된다. 상한은 매달린 것을
+# 끊기 위한 것이지 느린 것을 벌하기 위한 것이 아니다.
+test-seams:
+	go test -timeout 45m -tags tossos_testseams ./...
 
 # vet only — `make lint` 은 gofmt 검사까지 함께 돌린다. 포맷 검사 없이 정적 분석만
 # 빠르게 돌리고 싶을 때 이 타겟을 쓴다.
@@ -142,6 +157,10 @@ lint:
 		exit 1; \
 	fi
 	go vet ./...
+# 태그를 준 두 번째 vet. 태그 뒤 파일 20개는 무태그 vet 이 아예 빌드하지 않으므로,
+# 이 줄이 없으면 그 파일들은 저장소의 어떤 정적 분석도 받지 않는다. `make test-seams`
+# 가 컴파일은 시키지만 vet 이 잡는 것(포맷 문자열 불일치 같은 것)은 잡지 못한다.
+	go vet -tags tossos_testseams ./...
 
 fmt:
 	$(GOFMT) -w ./cmd ./internal ./tools/logic-map

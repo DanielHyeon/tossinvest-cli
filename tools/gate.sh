@@ -3,7 +3,7 @@
 # gate.sh — openspec change 완료 게이트
 #
 # 하나의 change 를 "완료" 로 선언해도 되는지 기계적으로 검사한다. 사람이 눈으로
-# 훑는 대신 아래 9개 조건을 전부 통과해야만 exit 0 이 된다.
+# 훑는 대신 아래 10개 조건을 전부 통과해야만 exit 0 이 된다.
 #
 #   1. tasks.md 존재
 #   2. 미완료 체크박스 0개
@@ -12,8 +12,9 @@
 #   5. Function Logic Map 산출물 완성 또는 명시적 면제
 #   6. make sdd-check 통과
 #   7. make test 통과
-#   8. make vet 통과
-#   9. make validate 통과
+#   8. make test-seams 통과 (tossos_testseams 태그 뒤 테스트 — a118)
+#   9. make vet 통과
+#  10. make validate 통과
 #
 # 3단계(짝 change)에 대하여
 # ------------------------
@@ -52,7 +53,7 @@
 set -eu
 
 # 전체 게이트 단계 수
-TOTAL_STEPS=9
+TOTAL_STEPS=10
 
 # 미완료 task 줄의 정규식. CommonMark 는 목록 marker 앞 0~3칸 들여쓰기를 허용하므로
 # 그것도 미완료로 센다 — 들여썼다고 안 세면 미완료를 숨길 수 있다(더 세는 쪽이 안전하다).
@@ -250,10 +251,10 @@ if ! python3 tools/logic-map/check_analysis.py --change "$CHANGE_ID"; then
 fi
 echo "OK: Function Logic Map"
 
-# ---- 6~9. Full SDD / test / vet / validate --------------------------------
+# ---- 6~10. Full SDD / test / test-seams / vet / validate ------------------
 
 STEP_NO=6
-for target in sdd-check test vet validate; do
+for target in sdd-check test test-seams vet validate; do
 	step "$STEP_NO/$TOTAL_STEPS make $target"
 	if ! make "$target"; then
 		fail "make $target 실패"

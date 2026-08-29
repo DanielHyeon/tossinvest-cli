@@ -1,0 +1,38 @@
+{
+  "id": "STORY-TOS-a118",
+  "title": "A sealed test still runs",
+  "feature": "FEAT-TOS-001",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a118-a-sealed-test-still-runs",
+    "path": "openspec/changes/a118-a-sealed-test-still-runs"
+  },
+  "found_by": {
+    "date": "2026-08-29",
+    "how": "While closing a112 L3's review findings, the full tossos_testseams suite was run for the first time. 20 test files holding 71 test functions sit behind that tag, and neither make test, CI, nor the completion gate ever passed it. One assertion had been failing for a month unseen: the retry contract it pins was deliberately replaced by a102 on 2026-08-13 (1c76a580) and the test was never updated. The packages behind the tag are the High-risk list itself.",
+    "record": "openspec/changes/a112-run-four-strategy-families-independently/review.md, the 2026-08-29 cmd/tossctl ownership entry"
+  },
+  "acceptance": [
+    "make test-seams exists, is .PHONY, and runs the tossos_testseams suite",
+    "The completion gate and CI both execute the tagged suite, and a deliberately broken tagged test makes the gate fail",
+    "The stale assertion derives its expectation from MaxRateLimitWait and RateLimitBackoff instead of a literal, and no longer burns 300 seconds of wall clock",
+    "make lint vets the tagged build as well as the untagged one",
+    "No production code is edited",
+    "make gate CHANGE=a118-a-sealed-test-still-runs passes"
+  ],
+  "measured": {
+    "date": "2026-08-29",
+    "tagged_suite_before": "95 packages ok, 1 failure, 1844s cold",
+    "tagged_suite_after": "96 packages ok, 0 failures",
+    "corrected_test": "300.50s FAIL to 0.24s PASS",
+    "wiring_proof": "make test-seams exits 0 on a sound tree and exits 2 when one tagged test is deliberately broken"
+  },
+  "deviations": [
+    "The stale assertion arguably belongs to a102, which changed the contract and is complete but not yet archived. It is folded into this change because the two are ordered by contract: wiring the gate first would burn 300 seconds and turn CI red on every run."
+  ],
+  "limits": [
+    "Agent-based review specialists were not dispatched; this session forbids spawning subagents the user did not request. The structured and cross-model adversarial passes were run.",
+    "The gate now runs the suite twice, untagged and tagged, so its wall time roughly doubles. The untagged run is kept because it is the production build configuration and catches tests that pass only when a seam is present.",
+    "This change wires test execution only. The 18 non-test files behind the tag are untouched."
+  ]
+}

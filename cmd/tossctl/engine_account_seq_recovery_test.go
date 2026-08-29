@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -191,12 +192,32 @@ func TestActualEngineRecoveryStillFailsClosedOnASnapshot429(t *testing.T) {
 		t.Fatalf("assembleEngine: %v", err)
 	}
 	t.Cleanup(func() { _ = ectx.Close() })
+	// 예산과 백오프를 테스트가 명시한다. 기본값(5분 / 15초)을 그대로 두면 한 번 도는 데
+	// 벽시계 300초가 들고, 그 300초는 정보가 아니라 비용이다 — a118이 이 스위트를 게이트에
+	// 배선한 뒤로는 매 실행마다 든다.
+	const backoff = reconcile.DefaultRateLimitBackoff
+	// 일부러 백오프의 배수가 아닌 예산을 쓴다. 배수를 쓰면 "예산"과 "실제 소진액"이
+	// 우연히 같아져서 둘을 혼동한 단언이 통과해 버린다 — 리뷰가 잡은 그 구멍이다.
+	const budget = 3*backoff + 5*time.Second
+	// 기대 읽기 횟수는 계약에서 유도한다. 리터럴로 굳히면 상수를 바꾼 change 가 아무
+	// 신호도 받지 못한다 — 이 단언이 한 달 동안 틀린 채로 있었던 이유가 정확히 그것이다.
+	// 거절된 읽기는 attempt 를 소모하지 않으므로(internal/reconcile/recovery.go 의
+	// "Deliberately no attempt++") 루프 상한이 아니라 예산이 멈춘다: 예산을 다 쓸 때까지
+	// budget/backoff 번 기다리고, 그다음 읽기가 초과로 실패한다.
+	wantWaits := int(budget / backoff)
+	wantReads := wantWaits + 1
+
+	// 잠들지 않고 요청된 대기를 기록하는 시계. 상한을 지운 뮤테이션이 이 테스트를
+	// timeout 까지 매달지 않고 오류로 끝내 준다(a102Clock 의 runaway 가드).
+	clk := newA102Clock()
 	recovery, err := ectx.Recovery(reconcile.Options{
-		Clock: clock.System(),
+		Clock: clk,
 		Stabilise: reconcile.Stabilisation{
-			Interval:    time.Millisecond,
-			Required:    2,
-			MaxAttempts: 2,
+			Interval:         time.Millisecond,
+			Required:         2,
+			MaxAttempts:      2,
+			RateLimitBackoff: backoff,
+			MaxRateLimitWait: budget,
 		},
 	})
 	if err != nil {
@@ -215,8 +236,29 @@ func TestActualEngineRecoveryStillFailsClosedOnASnapshot429(t *testing.T) {
 	if calls := accountCalls.Load(); calls != 1 {
 		t.Fatalf("/api/v1/accounts calls = %d, want 1", calls)
 	}
-	if calls := ordersCalls.Load(); calls != 1 {
-		t.Fatalf("/api/v1/orders calls = %d, want 1", calls)
+	if calls := int(ordersCalls.Load()); calls != wantReads {
+		t.Fatalf("/api/v1/orders calls = %d, want %d (예산 %s ÷ 백오프 %s + 1)",
+			calls, wantReads, budget, backoff)
+	}
+	// 호출 수 하나로는 "예산이 멈췄다"와 "다른 무엇이 멈췄다"가 갈리지 않는다.
+	// 기대 소진액은 예산이 아니라 wantWaits × backoff 다. 마지막 한 번은 예산을 넘기므로
+	// 실행되지 않고, 예산이 백오프의 배수가 아닐 때 두 값이 갈린다.
+	wantWaited := time.Duration(wantWaits) * backoff
+	if report.RateLimitWaits != wantWaits || report.RateLimitWaited != wantWaited {
+		t.Fatalf("rate-limit 보고 = %d회 / %s, want %d회 / %s",
+			report.RateLimitWaits, report.RateLimitWaited, wantWaits, wantWaited)
+	}
+	if got := len(clk.waits); got != wantWaits {
+		t.Fatalf("실제 대기 = %d회, want %d — 예산을 넘겨 기다려서는 안 된다", got, wantWaits)
+	}
+	// 횟수만 세면 "더 짧게 자 놓고 장부에는 백오프만큼 적는" 버그가 통과한다.
+	for i, d := range clk.waits {
+		if d != backoff {
+			t.Fatalf("%d번째 대기 = %s, want %s", i+1, d, backoff)
+		}
+	}
+	if !strings.Contains(err.Error(), "rate limit") {
+		t.Fatalf("err = %q, want 사유가 rate limit 을 지목할 것", err)
 	}
 }
 

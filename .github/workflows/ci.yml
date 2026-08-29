@@ -42,3 +42,28 @@ jobs:
 
       - name: WTS 카탈로그 분류기 sanity
         run: python -m py_compile tools/wts_endpoints.py tools/update_new_markers.py
+
+  # 태그 뒤 테스트를 도는 별도 job.
+  #
+  # 주 job 에 단계로 더하지 않고 job 을 나눈 이유는 두 가지다. 하나는 임계 경로 —
+  # 러너가 있는 한 병렬로 돌아 벽시계를 늘리지 않는다. 다른 하나는 진단 —
+  # 실패했을 때 "무태그가 깨졌는가, 태그가 깨졌는가"가 job 이름으로 바로 갈린다.
+  #
+  # 배선하기 전까지 이 스위트는 저장소의 어떤 게이트에서도 돈 적이 없었고, 그 사이
+  # 테스트 하나가 한 달을 실패한 채 숨어 있었다 (a118).
+  seam-tagged-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      # `make test-seams`, not a bare `go test -tags …`: 상한은 타깃이 갖는다.
+      # 두 곳이 서로 다른 값을 말할 수 있으면 한 곳이 너무 많다 (주 job 과 같은 이유).
+      - name: Run seam-tagged Go tests
+        run: make test-seams
