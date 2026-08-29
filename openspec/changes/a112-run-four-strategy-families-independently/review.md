@@ -1536,3 +1536,194 @@ a118이 a112 위가 아니라 옆에 착륙했기 때문에, 옮기지 않으면
 | M3 — 콘솔이 부재 자리에 값을 지어냄 | KILLED |
 | M4 — `sha256:` 접두사 재차 제거 (P1-1 원래 결함) | KILLED |
 | M5 — `DisallowUnknownFields()` 복원 (P1-2 원래 결함) | KILLED |
+
+## 2026-08-29 L5 태스크 5.4.1 — 보정 중재 코어 (Manager 결정 57)
+
+사용자 지시: `L5의 ConfigDigest 노출 해소 후 5.4 보정 중재자 진행`. ConfigDigest 노출은
+결정 55~56으로 종결(`5c5efec7`)했고, 이어서 5.4를 두 선택지로 물어 사용자가 **1번(중재 코어만)**
+을 골랐다. 코디네이터 런타임(큐·cadence·bounded handoff)은 5.1/5.1.1/5.2/5.3/5.5의 몫으로 남기고,
+5.4를 5.4.1(코어, 이번 lot)과 5.4.2(런타임 이식)로 나눴다.
+
+**무엇을 만들었나.** `internal/strategyarbiter` — 소유자 범위 하나에서 봉인된 제안 중 최대
+하나를 고르는 순수 함수 `Arbitrate`. 거절은 11종의 typed refusal이다.
+
+| 코드 | 언제 |
+|---|---|
+| `ARBITRATION_INVALID_REQUEST` | 신원 누락, 또는 제안들이 서로 다른 자격 집합에 묶임 |
+| `ARBITRATION_NO_ELIGIBLE_PROPOSAL` | 견줄 제안 0건 |
+| `ARBITRATION_INVALID_SEAL` | 봉인 뒤 값이 바뀜 |
+| `ARBITRATION_SCOPE_MISMATCH` | 권한 열쇠 또는 제안 계보가 기대 범위 밖 |
+| `ARBITRATION_STALE_PROPOSAL` | 후보 유효 기한 경과 |
+| `ARBITRATION_DUPLICATE_LANE` | 같은 레인이 두 번 |
+| `ARBITRATION_INELIGIBLE_LANE` | 봉인된 자격 집합에 없는 레인 |
+| `ARBITRATION_UNCALIBRATED` | 채점 봉인 불일치·버전 불일치·상한 초과 |
+| `ARBITRATION_UNKNOWN_FAMILY` | 가족 점수 행에 정확히 하나로 안 붙음 |
+| `ARBITRATION_OWNER_CONFLICT` | 활성 소유자가 있는데 그 소유자 하나로 정리 안 됨 |
+| `ARBITRATION_SCORE_TIE` | 최고점 동률 |
+
+**설계 결정 셋.**
+
+1. **채점 기준을 호출자에게서 받지 않는다.** 처음에는 `Proposal{Calibration, Scores, SealsValid bool}`
+   로 잡았다가 버렸다. `SealsValid` 를 호출자가 `true` 로 적을 수 있으면 그 확인은 없는 것과 같다.
+   지금은 `Proposal{Result, Authority}` 이고 중재자가 직접 `Authority.SealsValid()` 를 부른다.
+2. **자격 집합도 유도한다.** `RouteSetResult` 를 인자로 받지 않고 `strategyrouter.RouteSet(authority.Request())`
+   를 중재자가 부른다. 그리고 모든 제안의 자격 집합 `SetDigest()` 가 같아야 한다 —
+   서로 다른 자격 집합에서 온 제안을 한 저울에 올리지 않는다.
+3. **상한은 유도하고 복사하지 않는다.** `strategyrouter.ScorePPMMax = productionRouteScorePPMMax`.
+   `1_000_000` 을 중재자에 다시 적으면 언젠가 한쪽만 고쳐진다([[contract-numbers-from-the-receipt]]의 재발 방지).
+
+**배선.** `strategyProposalAuthorityLoader.collectMarket` 의 C2 사전 스캔(`batch.Ambiguous`)을
+지우고 종목마다 `batch.LanesFor` → `arbitrateProposalScope` → 선택으로 바꿨다.
+`StrategyProposalAmbiguousFamily` 상수는 생산자가 없어져 삭제했고
+`StrategyProposalArbitrationRefused` + 스냅샷의 `ArbitrationRefusal` 필드가 대신 들어갔다.
+
+**보수성.** 중재가 거절하면 그 종목만 빼지 않고 **시장 전체를 닫는다.** C2가 지적한 기전이
+그대로 살아 있기 때문이다 — 하나를 빼면 목록이 둘에서 하나로 줄어 아래 세 소비자가 공유하는
+`len(entries) != 1` 관문이 오히려 만족되고 상관없는 다른 종목이 대신 풀린다. 5.4 이후 새로
+통과할 수 있게 된 경우는 오직 하나다: **봉인된 매니페스트가 승인한 점수로 유일 승자가 정해질 때.**
+
+**실계좌 노출 0 (실측).** `~/.config/tossctl/` 에 `strategy-lane-authority-{KR,US}.json` 도
+`strategy-proposal-input-{KR,US}.json` 도 없고, `TOSSOS_STRATEGY_LANE_*` / `TOSSOS_STRATEGY_PROPOSAL_*`
+env는 저장소·배포 override 어디에도 없다. 매니페스트가 없으면 route가 never ready고 제안 자체가
+만들어지지 않는다. 8개 레인이 꺼져 있다는 기억이 아니라 파일 부재로 확인했다.
+
+**뮤테이션이 죽은 코드 둘을 잡아냈다.** 이것이 이번 lot에서 가장 중요한 부분이다.
+
+- **M2 SURVIVED** — `calibration.ScoreVersion == "" || CalibrationDigest == ""` 조기 검사.
+  `SealsValid()` 가 `productionRouteIdentity` 로 빈 값을 이미 거절하므로(`production.go:713`)
+  이 검사는 **절대 실행되지 않는다.** 테스트를 더하는 대신 검사를 지웠다.
+- **`selectHighestScore` 의 `if best < 0`** — 네 스위트 전부에서 진입 0회로 **측정**됐다.
+  `Arbitrate` 가 빈 목록을 먼저 거절하므로 도달 불가다. 지웠다. 빈 목록이 들어와도 `ties == 0`
+  이라 `ties != 1` 에서 닫히고 색인은 쓰이지 않는다.
+
+같은 판단을 두 곳에 적으면 한쪽은 죽은 코드가 되고, 죽은 코드는 지켜 주는 것이 없다.
+
+**뮤테이션 22종, 전부 KILLED**(위 둘은 제거로 처리). 살아남았다가 테스트를 더해 죽인 것 넷:
+
+| # | 왜 살아남았나 | 무엇을 더했나 |
+|---|---|---|
+| M10 | 열거 밖 가족 이름을 쓰는 점수 행이 어느 테스트에도 없었다 | `TestAScoreRowNamingAnUnapprovedFamilyIsUnknown` |
+| M11 | 한 레인에 점수 행이 둘 붙은 표가 없었다 | `TestALaneMatchingTwoScoreRowsIsUnknown` |
+| M14/15/16/17 | 범위를 바꾸면 권한 열쇠와 계보가 **함께** 틀려, 계보 검사가 단독으로 발화한 적이 없었다 | `TestAProposalWhoseLineageLeavesTheScopeIsRefused` — 권한은 맞고 계보만 다른 요청 |
+| M18 | 권한 열쇠 검사가 계보 검사와 늘 겹쳤다 | `TestAProposalMeasuredAgainstAnotherSymbolsAuthorityIsRefused` |
+| M-E2 | **승자가 우연히 목록의 0번이었다.** `kr_short_absorption_reversal_v1 < kr_short_flow_continuation_v1` 이라 `lanes[0]` 이 정답과 같았다 | 승자를 세 레인의 **가운데**(breakout)로 옮겼다 — `lanes[0]` 과 `lanes[len-1]` 둘 다 죽는다 |
+| M-E3 | 기대 종목을 승인 후보에서 읽는지 경로 권한에서 읽는지가 픽스처에서 늘 같았다 | `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused` — 승인 후보 005930, 권한과 계보는 000660 |
+
+M-E2는 [[falsification-must-vary-the-right-axis]]의 재발이다. 크기(점수)만 바꾸고 **위치**(정렬 순서)를
+안 바꿨더니, 늘 첫 번째를 집는 구현과 구분되지 않았다.
+
+**삭제한 테스트.** `strategy_proposal_ambiguity_test.go` 의 AST 구조 검사를 지웠다. 그것은
+`batch.Ambiguous` 호출이 첫 `append` 보다 앞에 있다는 *구조* 를 봤고, 그 구조는 사라졌다.
+구조로 갈음한 이유는 그때 `ProductionBatchAuthorityForTest` 의 map key가 종목이라 한 종목에
+제안 둘을 담을 수 없었기 때문이다. 새 seam `ProductionBatchAuthorityMultiLaneForTest` 가 그것을
+가능하게 했고, 이제 같은 성질을 **행동**으로 잰다(M-E1이 KILLED로 그것을 증명한다).
+사라진 이름은 base 리비전 FLM 번들로 남겼다.
+
+**픽스처를 고쳤다 — 느슨하게가 아니라 엄격하게.** `proposalRoutePair` 가 만들던 경로 권한에는
+보정도 가족 점수도 없었다. 5.4 이후 그런 권한은 제안이 하나뿐인 종목도 거절시킨다. 이것은
+승인된 spec이 요구하는 동작이다("Singleton proposal도 approved score/calibration authority가 없으면
+production dispatch에 전달해서는 안 된다"). 즉 픽스처가 **spec이 금지하는 상태**를 정상으로
+흉내 내고 있었다. 매니페스트가 싣는 것과 같은 네 가족 점수표를 붙였고, 그 뒤에야 통과한다.
+
+**측정 도구를 만들었다.** 커버리지 블록↔AST 분기 좌표 매퍼가 없어 새로 썼다. 첫 판은 "같은 줄에서
+조건 뒤에 시작하는 블록"을 골랐는데, 여러 줄 조건에서는 여는 중괄호가 아래 줄에 있어 엉뚱한 블록을
+집었다. "분기 위치 바로 다음에 시작하는 블록"으로 고쳤다. `switch` 는 자기 본문 블록이 없어
+첫 `case` 의 수가 표시된다 — 표에 그대로 적는다.
+
+**남긴 잔여.**
+
+- 5.4.2 — 명시적 `MarketCoordinator` 타입, 큐 intake, coalescing, bounded handoff.
+- `collectMarket` 의 B2/B3/B4/B7(route/FX 미준비, loader 미구성, 중복 종목)은 이번에도 진입 0회로
+  측정됐다. 이 lot이 만든 분기가 아니라 기존 가드이며, 이전 번들에서도 같았다.
+- 서로 다른 채점 버전의 제안이 한 범위에 섞이는 경우는 **오늘 생산에서 만들어질 수 없다** —
+  종목당 경로 권한이 하나뿐이라 보정도 하나다. spec 시나리오가 요구하므로 기전은 만들었고
+  단위 테스트로 증명했지만, 생산 도달성은 5.1의 봉인된 envelope가 워커별 보정을 실을 때 생긴다.
+- 태스크 5.5의 의존성 폐쇄 증명은 열려 있다. 이번 lot은 **중재자 패키지 하나**에 대해
+  직접 import 허용목록을 테스트로 강제했다(`TestTheArbiterCannotReachAnyMutationCapability`,
+  M0으로 반증 확인). `go list -deps ./internal/strategyarbiter` 는 journal·execgw·broker를 포함하지 않는다.
+
+## 2026-08-29 L5 태스크 5.4.1 독립 적대적 리뷰 응답 (Manager 결정 58)
+
+리뷰 결과 P0 0건, **P1 2건**, P2 1건. **두 P1 모두 코드로 확인했고 둘 다 고쳤다.**
+리뷰는 C2 회귀와 KR/US 공유 상태는 없다고 확인했다.
+
+### P1-1 — 봉인된 제안과 경로 결정의 증거·설정 결속이 없었다 (확인·수정)
+
+`Propose` 는 그때의 경로 결정에서 `EvidenceDigest`/`ConfigDigest` 를 계보에 그대로
+박는다(`flow.go:67-68`). 내 중재자는 레인 삼항만 자격 집합과 맞춰 보고 그 두 값은 보지
+않았다. 그래서 같은 `(계좌, 시장, 종목, 세대, 레인)` 이면서 **다른 증거로 만들어진** 옛
+제안이 현재 권한을 타고 통과할 수 있었다. 후보 유효 기한 안이면 신선도도 못 막는다.
+
+오늘 생산에서는 도달 불가다 — `collectMarket` 이 매 사이클 같은 권한으로 배치를 새로
+만들고 제안을 사이클 넘어 보관하지 않는다. **그러나 5.1의 coalescing queue 가 바로 그
+보관을 만든다.** 그때 이 구멍이 열린다.
+
+`selectHighestScore` 가 결정의 두 다이제스트와 계보의 두 값을 비교하도록 고쳤다.
+뮤테이션 M20(결속 제거)·M21(증거만)·M22(설정만) 모두 KILLED.
+
+**리뷰가 지적한 더 중요한 것: 내 픽스처가 생산에서 있을 수 없는 상태였다.** 경로 픽스처는
+`"lane-evidence"`/`"lane-config"` 를, 제안 계보는 `sha256:6…`/`sha256:8…` 를 쓰고 있었다.
+생산에서 그 둘은 **같은 값**이다. 두 픽스처가 서로 어긋난 채로 모든 테스트가 초록이었고,
+그게 이 검사의 부재를 가렸다. 값을 손으로 맞추지 않고 `arbitrationLineageDigests` 로
+**실제 계보에서 읽게** 했다 — 두 곳에 적으면 언젠가 다시 어긋난다.
+
+### P1-2 — 거절 코드를 지어냈다. 동결 골든에 이미 이름이 있었다 (확인·수정)
+
+`analysis/goldens/four-family-runtime-v1.json:65` 의 `refusal_enums.arbitration` 은
+정확히 여섯 개다.
+
+`ARBITRATION_UNCALIBRATED` · `ARBITRATION_TIE` · `ARBITRATION_MULTIPLE_OWNER` ·
+`ARBITRATION_STALE_OWNER` · `ARBITRATION_STALE_ENVELOPE` · `ARBITRATION_SEAL_MISMATCH`
+
+같은 파일 6~7행이 "내용을 바꾸려면 Manager 가 쓴 OpenSpec amendment 와 새 manifest/receipt
+가 필요하다"고 적어 두었다. 나는 열한 개를 **지어냈고**, 그중 넷은 이름이 다르고
+(`SCORE_TIE`/`STALE_PROPOSAL`/`INVALID_SEAL`) 둘(`MULTIPLE_OWNER`, `STALE_OWNER`)은 아예
+없이 `INVALID_REQUEST` 로 뭉갰다.
+
+**이것은 [[contract-numbers-from-the-receipt]] 의 다섯 번째 재발이다.** 앞의 넷과 같은
+기전이다 — design.md 산문과 spec.md 산문을 읽고 이름을 **유도**했다. 동결 골든을 찾아본
+적이 없다. 심지어 "이 enum 을 고정한 소비자가 없다"고 스스로 확인까지 했는데, 그 확인은
+`ARBITRATION_` 을 코드에서 grep 한 것이었지 **계약 파일을 찾은 것이 아니었다.**
+
+수정:
+
+- `Refusal` 을 골든의 여섯 개로 좁혔다. 값은 골든에서 그대로 옮겼다.
+- `RouteSet` 이 묵은 리비전과 소유자 중복을 같은 코드로 뭉치므로, `ownerSnapshotFault` 가
+  스냅샷의 소유자 목록·리비전·신선도 창을 **직접 보고** 두 코드를 갈라낸다.
+  돌아온 코드를 되짚어 추측하지 않는다.
+- 잃어버린 진단 정보는 계약 밖 `Outcome.Detail`(과 엔진 스냅샷의 `ArbitrationDetail`)이
+  들고 간다. 여섯 코드는 여러 원인을 한 이름으로 묶기 때문에, 그것만 남기면 운영자가
+  `SEAL_MISMATCH` 하나로 일곱 가지 원인을 보게 된다.
+- **재발 방지를 코드에 심었다.** `TestTheRefusalContractIsExactlyTheFrozenGolden` 이
+  골든 JSON 을 파일에서 읽어 구현이 내보내는 집합과 정확히 대조한다. 매핑표가 이름 붙인
+  코드와 singleton 거절 코드까지 확인한다. 사람이 옮겨 적을 자리가 없으므로 같은 실수가
+  두 번 일어날 수 없다. 뮤테이션 M26(코드 하나를 골든 밖 이름으로 되돌림) KILLED.
+
+골든 자체는 **건드리지 않았다.** 그 파일의 변경은 Manager 의 OpenSpec amendment 를
+요구하며, 구현자가 계약을 자기 구현에 맞추는 것은 그 규칙을 뒤집는 일이다.
+
+### P2 — 정상 owner scope 둘도 여전히 시장 관문에 막힌다 (확인·유지)
+
+맞다. `TestThreeFamiliesOnOneSymbol…` 이 `entries==2` 를 기대하지만 바로 다음
+`ResultAuthority` 의 `len(entries) != 1` 이 둘 다 막는다. spec.md:47 은 두 scope 가 독립
+handoff 를 기다려야 한다고 쓴다. **이번 lot 에서 고치지 않는다** — 그 관문은 태스크 5.2
+가 대체할 대상이고, 5.4.2 로 명시해 두었다. 현재 상태는 이전보다 **더** 보수적이므로
+안전 방향이며, 리뷰도 그렇게 판정했다.
+
+### 잔여 (P2와 별개)
+
+- 선택 뒤 `Outcome` 이 버려져 dispatch 측이 "어떤 score/version/calibration 으로
+  중재됐는지" 재검증할 수 없다. 골든의 envelope 필수 필드에 `arbitration_score_version`·
+  `calibration_digest` 가 있으므로 5.1의 봉인 envelope 가 그것을 실을 자리다. 열어 둔다.
+
+### 최종 실측
+
+| | |
+|---|---|
+| 무태그 스위트 | exit 0 — 104 packages, 96 ok, FAIL 0 |
+| 태그 스위트 | exit 0 — 104 packages, 97 ok, FAIL 0 |
+| 뮤테이션 | 30종 전부 KILLED |
+| FLM 증거 | evidence complete; 중재자 5개 함수의 분기 36개 **전부** 진입 측정됨 |
+
+`collectMarket` 의 B2·B3·B4·B7(route/FX 미준비, loader 미구성, 중복 종목)은 이번에도 진입
+0회다. 이 lot 이 만든 분기가 아니라 기존 가드이며 이전 번들에서도 같았다.

@@ -1,0 +1,122 @@
+{
+  "file": "internal/strategyarbiter/arbiter.go",
+  "source_sha256": "1788b0503479c4c4e8b4b17d7e2e6e2fd189f414ebde7877a7d5043157be6d03",
+  "package": "strategyarbiter",
+  "function": "familyScore",
+  "signature": "familyScore(params=1, results=3)",
+  "start": {
+    "line": 283,
+    "column": 1
+  },
+  "end": {
+    "line": 300,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 287,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 288,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 293,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 296,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 294,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 297,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 299,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 24
+      },
+      "text": "proposal.Authority.FamilyScores"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 22
+      },
+      "text": "found.Family.Known"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 284,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 285,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 289,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 290,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

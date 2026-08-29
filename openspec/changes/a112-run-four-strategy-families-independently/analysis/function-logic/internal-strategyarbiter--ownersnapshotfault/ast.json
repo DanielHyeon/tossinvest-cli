@@ -1,0 +1,139 @@
+{
+  "file": "internal/strategyarbiter/arbiter.go",
+  "source_sha256": "1788b0503479c4c4e8b4b17d7e2e6e2fd189f414ebde7877a7d5043157be6d03",
+  "package": "strategyarbiter",
+  "function": "ownerSnapshotFault",
+  "signature": "ownerSnapshotFault(params=1, results=2)",
+  "start": {
+    "line": 194,
+    "column": 1
+  },
+  "end": {
+    "line": 212,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 196,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 197,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 201,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 204,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 207,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 202,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 205,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 209,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 211,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 6
+      },
+      "text": "request.EvaluatedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 39
+      },
+      "text": "request.Snapshot.ObservedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 4
+      },
+      "text": "request.EvaluatedAt.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 64
+      },
+      "text": "request.EvaluatedAt.Before"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 195,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 198,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/officialfx"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 )
@@ -35,9 +36,9 @@ const (
 	StrategyProposalAuthorityInvalid StrategyProposalReason = "PROPOSAL_AUTHORITY_INVALID"
 	StrategyProposalNoAcceptedScope  StrategyProposalReason = "NO_ACCEPTED_PROPOSAL"
 	StrategyProposalInternalFailure  StrategyProposalReason = "INTERNAL_FAILURE"
-	// 한 종목이 두 가족 이상을 제안했다. 고르는 일은 평가 뒤 조정자의 몫이고
-	// 아직 그 조정자가 없으므로 그 시장 전체를 닫는다(리뷰 지적 C2).
-	StrategyProposalAmbiguousFamily StrategyProposalReason = "AMBIGUOUS_FAMILY_PROPOSAL"
+	// 보정 중재가 그 종목에서 하나를 고르지 못했다. 어떤 이유로 닫혔는지는
+	// 스냅샷의 ArbitrationRefusal 이 그대로 들고 있다(태스크 5.4).
+	StrategyProposalArbitrationRefused StrategyProposalReason = "ARBITRATION_REFUSED"
 )
 
 type StrategyProposalMarketSnapshot struct {
@@ -46,6 +47,11 @@ type StrategyProposalMarketSnapshot struct {
 	Reason                                   StrategyProposalReason
 	RoutedCount, ProposedCount, RefusedCount int
 	ManifestDigest, ProposalSetDigest        string
+	// ArbitrationRefusal 은 Reason 이 ARBITRATION_REFUSED 일 때 중재가 돌려준
+	// 계약 코드다(동결 골든 refusal_enums.arbitration 의 여섯 개 중 하나).
+	// ArbitrationDetail 은 그 코드 안에서 무엇이 발화했는지 좁혀 주는 진단이며
+	// 계약이 아니다 — 여섯 코드는 여러 원인을 한 이름으로 묶기 때문이다.
+	ArbitrationRefusal, ArbitrationDetail string
 }
 
 type PairedStrategyProposalSnapshot struct {
@@ -199,26 +205,29 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 	if err != nil || batch.ManifestDigest() != digest {
 		return fail(StrategyProposalAuthorityInvalid)
 	}
-	// 목록을 만들기 *전에* 판단한다. 모호한 종목을 그냥 빼고 넘어가면
-	// 목록이 둘에서 하나로 줄어 아래 파이프라인의 len(entries)==1 관문이
-	// 오히려 만족되고, 막으려던 것과 상관없는 *다른* 종목이 풀린다.
+	// 한 종목이 여러 가족을 제안하면 여기서 보정 중재로 하나를 고른다.
+	// 중재가 닫힌 종목을 목록에서 그냥 빼면 목록이 둘에서 하나로 줄어 아래
+	// 파이프라인의 len(entries)==1 관문이 오히려 만족되고, 막으려던 것과
+	// 상관없는 *다른* 종목이 대신 풀린다. 그래서 시장 전체를 닫는다.
 	// routes.entries 는 심볼 순으로 정렬되어 있으므로 어느 종목이 먼저 걸리는지도 정해져 있다.
-	for _, entry := range routes.entries {
-		if batch.Ambiguous(entry.approved.Symbol()) {
-			result := fail(StrategyProposalAmbiguousFamily)
-			result.snapshot.ManifestDigest = digest
-			return result
-		}
-	}
 	entries := make([]strategyProposalEntryAuthority, 0, batch.Len())
 	refused := 0
-	for symbol, route := range bySymbol {
-		authority, ok := batch.For(symbol)
-		if !ok || !authority.Proposal().ValidProposal() {
+	for _, route := range routes.entries {
+		lanes := batch.LanesFor(route.approved.Symbol())
+		if len(lanes) == 0 {
 			refused++
 			continue
 		}
-		entries = append(entries, strategyProposalEntryAuthority{route: route, authority: authority})
+		outcome := arbitrateProposalScope(loader.accountRef, market, route, lanes, observedAt)
+		if outcome.Refusal != strategyarbiter.RefusalNone {
+			result := fail(StrategyProposalArbitrationRefused)
+			result.snapshot.ManifestDigest = digest
+			result.snapshot.ArbitrationRefusal = string(outcome.Refusal)
+			result.snapshot.ArbitrationDetail = outcome.Detail
+			result.snapshot.RefusedCount = refused + 1
+			return result
+		}
+		entries = append(entries, strategyProposalEntryAuthority{route: route, authority: lanes[outcome.Selected]})
 	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].route.approved.Symbol() < entries[j].route.approved.Symbol() })
 	if len(entries) == 0 {

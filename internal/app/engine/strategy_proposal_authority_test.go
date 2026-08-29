@@ -93,10 +93,16 @@ func proposalRoutePair(t *testing.T, now time.Time) strategyRouteAuthorityPair {
 		if err != nil {
 			t.Fatal(err)
 		}
-		route, err := strategyrouter.ProductionRouteAuthorityForTest(key, strategyrouter.HorizonShort, lane, continuationlane.LaneVersionV1, "lane-evidence", "lane-config", now)
+		// 증거·설정 다이제스트는 제안 계보가 실제로 들고 오는 값이어야 한다.
+		// 중재자가 그 둘의 일치를 확인하기 때문이다.
+		evidenceDigest, configDigest := arbitrationLineageDigests(t, value, now)
+		route, err := strategyrouter.ProductionRouteAuthorityForTest(key, strategyrouter.HorizonShort, lane, continuationlane.LaneVersionV1, evidenceDigest, configDigest, now)
 		if err != nil {
 			t.Fatal(err)
 		}
+		// 승인된 공통 채점 기준이 없으면 제안이 하나뿐이어도 중재가 거절한다.
+		// 매니페스트가 싣는 것과 같은 네 가족 점수표를 붙인다.
+		route = strategyrouter.WithArbitrationScoresForTest(route, arbitrationCalibrationForTest, familyScoresForTest(routerMarket))
 		entry := strategyRouteEntryAuthority{approved: approved, route: route}
 		return strategyRouteMarketAuthority{market: value, entries: []strategyRouteEntryAuthority{entry}, snapshot: StrategyRouteMarketSnapshot{Market: value, Ready: true, Reason: StrategyRouteReady, RoutedCount: 1, ManifestDigest: "route-" + string(value)}}
 	}
