@@ -105,6 +105,14 @@ func (authority ProductionBatchAuthority) For(symbol string) (ProductionAuthorit
 	return values[0], true
 }
 
+// Ambiguous 는 그 종목이 두 가족 이상을 제안했는지 알려준다.
+// For 는 그런 종목을 거절만 하고 이유를 밖에 알려주지 않는데, 부르는 쪽이
+// "제안이 없었다"와 "고를 수 없어서 닫았다"를 구별하지 못하면 그 종목만
+// 목록에서 빠지고 남은 *다른* 종목의 관문이 오히려 풀린다(리뷰 지적 C2).
+func (authority ProductionBatchAuthority) Ambiguous(symbol string) bool {
+	return len(authority.LanesFor(symbol)) > 1
+}
+
 // LanesFor 는 그 종목의 모든 가족 제안을 레인 이름 순서로 돌려준다.
 func (authority ProductionBatchAuthority) LanesFor(symbol string) []ProductionAuthority {
 	prefix := strings.ToUpper(strings.TrimSpace(symbol)) + "\x00"

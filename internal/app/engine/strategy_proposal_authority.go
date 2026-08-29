@@ -35,6 +35,9 @@ const (
 	StrategyProposalAuthorityInvalid StrategyProposalReason = "PROPOSAL_AUTHORITY_INVALID"
 	StrategyProposalNoAcceptedScope  StrategyProposalReason = "NO_ACCEPTED_PROPOSAL"
 	StrategyProposalInternalFailure  StrategyProposalReason = "INTERNAL_FAILURE"
+	// 한 종목이 두 가족 이상을 제안했다. 고르는 일은 평가 뒤 조정자의 몫이고
+	// 아직 그 조정자가 없으므로 그 시장 전체를 닫는다(리뷰 지적 C2).
+	StrategyProposalAmbiguousFamily StrategyProposalReason = "AMBIGUOUS_FAMILY_PROPOSAL"
 )
 
 type StrategyProposalMarketSnapshot struct {
@@ -195,6 +198,17 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 		EvidenceDBIdentity: strings.TrimSpace(loader.getenv(evidenceEnv))}, targets, fx.read.evidence)
 	if err != nil || batch.ManifestDigest() != digest {
 		return fail(StrategyProposalAuthorityInvalid)
+	}
+	// 목록을 만들기 *전에* 판단한다. 모호한 종목을 그냥 빼고 넘어가면
+	// 목록이 둘에서 하나로 줄어 아래 파이프라인의 len(entries)==1 관문이
+	// 오히려 만족되고, 막으려던 것과 상관없는 *다른* 종목이 풀린다.
+	// routes.entries 는 심볼 순으로 정렬되어 있으므로 어느 종목이 먼저 걸리는지도 정해져 있다.
+	for _, entry := range routes.entries {
+		if batch.Ambiguous(entry.approved.Symbol()) {
+			result := fail(StrategyProposalAmbiguousFamily)
+			result.snapshot.ManifestDigest = digest
+			return result
+		}
 	}
 	entries := make([]strategyProposalEntryAuthority, 0, batch.Len())
 	refused := 0

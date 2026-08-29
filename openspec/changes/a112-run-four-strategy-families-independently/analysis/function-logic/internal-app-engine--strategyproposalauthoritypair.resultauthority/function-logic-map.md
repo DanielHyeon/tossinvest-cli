@@ -1,41 +1,49 @@
-# Function Logic Map: `ResultAuthority`
+# Function Logic Map: `strategyProposalAuthorityPair.ResultAuthority`
 
-- Source: `internal/app/engine/strategy_proposal_authority.go`
-- Current-base source SHA-256: `9e8816b71972be1678026da1c774934c85adc33872eed6e3a616abf9fa73dc2b`
+- Source: `internal/app/engine/strategy_proposal_authority.go` (96-104)
+- Function: `strategyProposalAuthorityPair.ResultAuthority` in package `engine`
 - Signature: `strategyProposalAuthorityPair.ResultAuthority(params=0, results=1)`
-- Source range: `93:1`–`101:2`
-- AST evidence: `ast.json`, generated from frozen base `016da6245feb60e13971388be386c2c2041469a8`.
+- File SHA-256: `88e06b6c841ba30cb1c3107fba33c134c82b34f871dec646ee92b739a2e58c94`
+- Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
+- AST evidence: `ast.json` — AST branches 1.
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
-- Inputs/results are the exact AST signature above; this L0 map does not infer undocumented state.
-- Any later edit must preserve OFF defaults, the owner key without family/horizon, and zero exposure-raising dispatch while a prerequisite is missing.
+Projects a market's proposal entries to at most one result, and only when the market has exactly one valid entry.
+
+The signature above is the exhaustive input/result record; this map does not infer state the AST does not show.
 
 ## Branches and early returns
 
-- Exact AST return nodes: `96:4, 98:3, 100:2`.
+- Measurement regime: Go coverage profiles, count mode.
+- untagged proposal suite: `go test -count=1 -covermode=count -coverpkg=./internal/strategyproposal ./internal/strategyproposal/`
+- tagged proposal suite: `go test -count=1 -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/strategyproposal/`
+- tagged engine suite: `go test -count=1 -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
+- untagged engine suite: `go test -count=1 -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
+- Measured entry: the function body was not executed (untagged proposal suite); not executed (tagged proposal suite); executed 2x (tagged engine suite); not executed (untagged engine suite).
 
-| Branch | AST kind | Source location | Required test disposition |
+Exact AST return positions: 99:4, 101:3, 103:2.
+
+| Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 95:3 | planned targeted RED before any edit; not run by L0 |
+| B1 | if | 98:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Current-base evidence/requirement |
-|---|---|---|
-| len | 95:6 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| ValidProposal | 95:34 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| value.entries.authority.Proposal | 95:34 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| value.entries.authority.Proposal | 98:77 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| convert | 100:70 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| convert | 100:110 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| Callee expression | Position |
+|---|---|
+| `len` | 98:6 |
+| `ValidProposal` | 98:34 |
+| `value.entries.authority.Proposal` | 98:34 |
+| `value.entries.authority.Proposal` | 101:77 |
+| `convert` | 103:70 |
+| `convert` | 103:110 |
 
 ## State mutations and fallbacks
 
-- The AST is the exhaustive current-base record of assignments, calls, branches, defers and returns. Before a function body edit, the owning lot must update this map with changed condition semantics and concrete RED/GREEN test evidence.
+- AST assignments: 1. Defers: 0. Goroutine statements: 0.
 
 ## Safety conclusion
 
-- L0 status: pre-edit evidence only; no production function was edited and no branch test is claimed as run by L0.
-- A named targeted RED or explicit evidence-backed not-applicable rationale is required for every edited branch before GREEN.
+Not edited by this lot; the bundle is refreshed because the file hash moved. Its `len(entries) != 1` gate is one of the three C2 readers and is now fed a list that no longer shrinks on an ambiguity refusal.

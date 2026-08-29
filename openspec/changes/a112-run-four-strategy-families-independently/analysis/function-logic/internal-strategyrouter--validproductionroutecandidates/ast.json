@@ -1,187 +1,186 @@
 {
-  "file": "internal/strategyrouter/production.go",
-  "source_sha256": "dbf4e5afdfefcc6210a870d5c5e1952d3531eb119181be452e704964759bbcd8",
-  "package": "strategyrouter",
-  "function": "validProductionRouteCandidates",
-  "signature": "validProductionRouteCandidates(params=2, results=1)",
-  "start": {
-    "line": 374,
-    "column": 1
-  },
-  "end": {
-    "line": 390,
+ "file": "internal/strategyrouter/production.go",
+ "source_sha256": "1175f67d72d78cc9f3ef65d505d97112382de26ea1eae89165314529dafb26d9",
+ "package": "strategyrouter",
+ "function": "validProductionRouteCandidates",
+ "signature": "validProductionRouteCandidates(params=2, results=1)",
+ "start": {
+  "line": 532,
+  "column": 1
+ },
+ "end": {
+  "line": 555,
+  "column": 2
+ },
+ "branches": [
+  {
+   "id": "B1",
+   "kind": "if",
+   "at": {
+    "line": 534,
     "column": 2
+   }
   },
-  "branches": [
-    {
-      "id": "B1",
-      "kind": "if",
-      "at": {
-        "line": 376,
-        "column": 2
-      }
-    },
-    {
-      "id": "B2",
-      "kind": "range",
-      "at": {
-        "line": 380,
-        "column": 2
-      }
-    },
-    {
-      "id": "B3",
-      "kind": "if",
-      "at": {
-        "line": 382,
-        "column": 3
-      }
-    }
-  ],
-  "returns": [
-    {
-      "kind": "return",
-      "at": {
-        "line": 377,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 385,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 389,
-        "column": 2
-      }
-    }
-  ],
-  "calls": [
-    {
-      "kind": "call",
-      "at": {
-        "line": 375,
-        "column": 10
-      },
-      "text": "productionRouteDescriptors"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 376,
-        "column": 5
-      },
-      "text": "len"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 376,
-        "column": 20
-      },
-      "text": "len"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 379,
-        "column": 10
-      },
-      "text": "make"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 379,
-        "column": 32
-      },
-      "text": "len"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 383,
-        "column": 5
-      },
-      "text": "validDesiredState"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 383,
-        "column": 42
-      },
-      "text": "validDesiredState"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 384,
-        "column": 5
-      },
-      "text": "productionRouteIdentity"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 384,
-        "column": 55
-      },
-      "text": "productionRouteIdentity"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 389,
-        "column": 9
-      },
-      "text": "len"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 389,
-        "column": 22
-      },
-      "text": "len"
-    }
-  ],
-  "assignments": [
-    {
-      "kind": ":=",
-      "at": {
-        "line": 375,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 379,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 381,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 387,
-        "column": 3
-      }
-    }
-  ],
-  "go_statements": null,
-  "defers": null,
-  "revision": "current"
+  {
+   "id": "B2",
+   "kind": "range",
+   "at": {
+    "line": 538,
+    "column": 2
+   }
+  },
+  {
+   "id": "B3",
+   "kind": "if",
+   "at": {
+    "line": 546,
+    "column": 3
+   }
+  }
+ ],
+ "returns": [
+  {
+   "kind": "return",
+   "at": {
+    "line": 535,
+    "column": 3
+   }
+  },
+  {
+   "kind": "return",
+   "at": {
+    "line": 550,
+    "column": 4
+   }
+  },
+  {
+   "kind": "return",
+   "at": {
+    "line": 554,
+    "column": 2
+   }
+  }
+ ],
+ "calls": [
+  {
+   "kind": "call",
+   "at": {
+    "line": 533,
+    "column": 10
+   },
+   "text": "productionRouteDescriptors"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 534,
+    "column": 5
+   },
+   "text": "len"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 534,
+    "column": 20
+   },
+   "text": "len"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 537,
+    "column": 10
+   },
+   "text": "make"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 537,
+    "column": 32
+   },
+   "text": "len"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 548,
+    "column": 5
+   },
+   "text": "validDesiredState"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 548,
+    "column": 42
+   },
+   "text": "validDesiredState"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 549,
+    "column": 5
+   },
+   "text": "productionRouteIdentity"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 549,
+    "column": 55
+   },
+   "text": "productionRouteIdentity"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 554,
+    "column": 9
+   },
+   "text": "len"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 554,
+    "column": 22
+   },
+   "text": "len"
+  }
+ ],
+ "assignments": [
+  {
+   "kind": ":=",
+   "at": {
+    "line": 533,
+    "column": 2
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 537,
+    "column": 2
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 539,
+    "column": 3
+   }
+  },
+  {
+   "kind": "=",
+   "at": {
+    "line": 552,
+    "column": 3
+   }
+  }
+ ],
+ "go_statements": null,
+ "defers": null
 }

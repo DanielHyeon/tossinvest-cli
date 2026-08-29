@@ -1,11 +1,20 @@
 # Branch Test Map: `ProductionBatchAuthority.For`
 
-- Source: `internal/strategyproposal/production.go`; file SHA-256 `e2285c5ef57e399bf3bf2ca3a0e91b7449b2c152dd9623d5a617454f934082ad`. AST branch positions are authoritative.
-- Rows carry measured counts. package suite: `go test -tags tossos_testseams -covermode=count ./internal/strategyproposal/`; engine suite: `go test -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
-- No individually-measured test entered any arm of this function; see the per-branch rows for what the package and engine suites did enter.
+- Source: `internal/strategyproposal/production.go`; file SHA-256 `9fae1db65477dfe421a1e96e3437ff2909cc8439c1b987029a534d9aded9db94`. AST branch positions are authoritative.
+- Rows carry measured counts from Go coverage profiles, count mode.
+- untagged proposal suite: `go test -count=1 -covermode=count -coverpkg=./internal/strategyproposal ./internal/strategyproposal/`
+- tagged proposal suite: `go test -count=1 -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/strategyproposal/`
+- tagged engine suite: `go test -count=1 -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
+- untagged engine suite: `go test -count=1 -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
+
+Mutation receipts for this function (production source mutated, run, restored from a pristine copy taken before the mutation):
+
+| # | mutation | result | killed by |
+|---|---|---|---|
+| M2 | return `values[0]` whenever the symbol has any lane (previous lot) | KILLED | `TestForRefusesASymbolThatHasMoreThanOneLane` |
 
 | Branch | Anchor | Measured disposition |
 |---|---|---|
-| B1 | if at 102:2 | arm never entered: count 0 in every profile measured for this function |
+| B1 | if at 102:2 | arm entered 2x (untagged proposal suite); arm entered 2x (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); entered by `TestForRefusesASymbolThatHasMoreThanOneLane`, `TestForRefusesAnUnknownSymbol` |
 
 A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.

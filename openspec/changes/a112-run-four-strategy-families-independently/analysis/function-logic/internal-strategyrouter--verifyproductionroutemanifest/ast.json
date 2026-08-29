@@ -1,0 +1,285 @@
+{
+ "file": "internal/strategyrouter/production.go",
+ "source_sha256": "1175f67d72d78cc9f3ef65d505d97112382de26ea1eae89165314529dafb26d9",
+ "package": "strategyrouter",
+ "function": "verifyProductionRouteManifest",
+ "signature": "verifyProductionRouteManifest(params=2, results=2)",
+ "start": {
+  "line": 475,
+  "column": 1
+ },
+ "end": {
+  "line": 506,
+  "column": 2
+ },
+ "branches": [
+  {
+   "id": "B1",
+   "kind": "if",
+   "at": {
+    "line": 480,
+    "column": 2
+   }
+  },
+  {
+   "id": "B2",
+   "kind": "if",
+   "at": {
+    "line": 495,
+    "column": 2
+   }
+  },
+  {
+   "id": "B3",
+   "kind": "if",
+   "at": {
+    "line": 499,
+    "column": 2
+   }
+  }
+ ],
+ "returns": [
+  {
+   "kind": "return",
+   "at": {
+    "line": 492,
+    "column": 3
+   }
+  },
+  {
+   "kind": "return",
+   "at": {
+    "line": 496,
+    "column": 3
+   }
+  },
+  {
+   "kind": "return",
+   "at": {
+    "line": 500,
+    "column": 3
+   }
+  },
+  {
+   "kind": "return",
+   "at": {
+    "line": 505,
+    "column": 2
+   }
+  }
+ ],
+ "calls": [
+  {
+   "kind": "call",
+   "at": {
+    "line": 477,
+    "column": 37
+   },
+   "text": "productionRouteTime"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 478,
+    "column": 26
+   },
+   "text": "productionRouteTime"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 479,
+    "column": 20
+   },
+   "text": "productionRouteTime"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 487,
+    "column": 4
+   },
+   "text": "productionRouteIdentity"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 487,
+    "column": 62
+   },
+   "text": "productionRouteIdentity"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 489,
+    "column": 4
+   },
+   "text": "productionRouteIdentity"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 490,
+    "column": 5
+   },
+   "text": "config.ActivationExpiresAt.IsZero"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 490,
+    "column": 45
+   },
+   "text": "activationExpires.Equal"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 490,
+    "column": 101
+   },
+   "text": "observed.After"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 490,
+    "column": 139
+   },
+   "text": "config.ObservedAt.Before"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 491,
+    "column": 4
+   },
+   "text": "config.ObservedAt.Before"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 491,
+    "column": 51
+   },
+   "text": "observed.After"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 494,
+    "column": 20
+   },
+   "text": "validProductionRouteScopes"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 498,
+    "column": 20
+   },
+   "text": "json.Marshal"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 502,
+    "column": 20
+   },
+   "text": "DecodeString"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 502,
+    "column": 20
+   },
+   "text": "base64.StdEncoding.Strict"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 503,
+    "column": 28
+   },
+   "text": "base64.StdEncoding.EncodeToString"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 503,
+    "column": 98
+   },
+   "text": "len"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 504,
+    "column": 3
+   },
+   "text": "ed25519.Verify"
+  }
+ ],
+ "assignments": [
+  {
+   "kind": ":=",
+   "at": {
+    "line": 476,
+    "column": 2
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 477,
+    "column": 2
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 478,
+    "column": 2
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 479,
+    "column": 2
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 494,
+    "column": 2
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 498,
+    "column": 2
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 502,
+    "column": 2
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 503,
+    "column": 2
+   }
+  }
+ ],
+ "go_statements": null,
+ "defers": null
+}

@@ -1045,3 +1045,245 @@ branches — and it is behind `tossos_testseams`, so CI has never run it.
 The failing assertion is the call count — `/api/v1/orders calls = 21, want 1`, over 300s. So recovery **does**
 fail closed; what drifted is the retry policy against a 429 on a read endpoint. No order-placing path is
 implicated. It is recorded here as an open finding, unowned by a112, rather than silently carried.
+
+### Decision 51 — task 4.3's three seals, and why one of them was deleted rather than kept
+
+51. **The descriptor table and the exact candidate validation were already four families per market; what task 4.3
+    still owed was the family, scoring and calibration seals. All three now live in
+    `internal/strategyrouter/production.go`, and a legacy manifest is refused as activation authority by a declared
+    contract instead of by an emergent byte accident.**
+
+    **Anchor correction, adopted.** The independent review's C3 cited `production.go:389`
+    (`return len(seen) == len(want)`). Measured against the frozen blob — `git show
+    c8d9c0d5:internal/strategyrouter/production.go`, function at 374-390, three AST branches — the arm that kills a
+    legacy three-family manifest is **B1 at `:376`, `len(values) != len(want)`**; `:389` is a tail return that is
+    always true once the loop completes. Every claim below is anchored on B1, not on the tail.
+
+    **No legacy tolerance.** `design.md:208` lists `missing`, `partial 3-of-4` and `legacy 3-lane ON manifest`
+    together as refusal targets, `:210` excludes implicit migration and `:254` says a legacy manifest stays
+    `OFF/refusal`. So 4.3's own sentence and C3 do not conflict, and **no migration fallback was added**. What the
+    seals add is that the refusal is now *declared*: `productionRouteSchema` moved to `strategy-lane-authority:v2`
+    (`production.go:34`), so a v1 manifest is refused by name rather than only by the canonical-JSON byte round-trip.
+
+    **What each seal is.**
+
+    - **Family seal.** `productionLaneDescriptor` gained `Family` and the table (`production.go:563`) is now the one
+      declaration of the family/lane binding. `validProductionRouteCandidates` checks
+      `descriptor.Family != value.Family` (`:547`); the manifest carries `family` per candidate (`:84`).
+      `ProductionRouteAuthority.Seals().Family` is a domain-separated SHA-256 over the market and the
+      family/horizon/lane/version rows (`:222`).
+    - **Scoring seal.** The raw `int64 Score` is **gone from the manifest**. Candidates carry
+      `score_ppm` (`:88`), bounded to the approved `0..1,000,000` (`design.md`: "integer `score_ppm`(0..1,000,000)"),
+      and `LoadProductionRouteAuthorityBatch` deliberately leaves `Candidate.Score` unset. `Seals().Scoring` (`:237`)
+      hashes the approved score version together with the per-family ppm.
+    - **Calibration seal.** The manifest body carries `arbitration_score_version` and `calibration_digest`
+      (`:121-122`); `verifyProductionRouteManifest` refuses the whole market when either is absent (`:487`).
+      `Seals().Calibration` (`:250`) binds the two. `SealsValid()` (`:196`) recomputes all three from the calibration
+      and score rows the accessors return, so a value with a seal but drifted materials — the exact defect class of
+      decision 50 — is rejected by construction.
+
+    **The scoring seal is load-bearing, not decorative.** With no raw score in the manifest, legacy `Route` sees four
+    eligible candidates all scoring zero and returns `RefusalAmbiguous`. "No pre-evaluation selection" therefore stops
+    being a promise about call sites and becomes a property of the data: there is nothing left to select *by*.
+    `TestProductionRouteCandidatesCarryNoRawArbitrationScore` asserts both halves.
+
+    **Mutation receipts.** Each mutation was applied to production source, built, run, then restored from a pristine
+    copy taken before the mutation and confirmed byte-identical. A mutation that broke the build was discarded rather
+    than counted (the M3 lesson from the previous lot); none of these did.
+
+    | # | mutation | result | killed by |
+    |---|---|---|---|
+    | M6′ | delete `descriptor.Family != value.Family` | KILLED | `TestProductionRouteCandidatesRejectFamilyDriftAndPartialFamilyCoverage` |
+    | M7 | delete the `len(families) == len(want)` tail clause | **SURVIVED** | nothing — see below |
+    | M8′ | delete the `score_ppm` range check | KILLED | `TestProductionRouteCandidatesRejectAScorePPMAboveTheApprovedRange` |
+    | M9 | delete the calibration requirement in `verifyProductionRouteManifest` | KILLED | `TestProductionRouteManifestRefusesAMissingCalibrationSeal` |
+    | M10 | hand a raw score back with `Score: int64(value.ScorePPM)` | KILLED | `TestProductionRouteCandidatesCarryNoRawArbitrationScore` |
+    | M11 | roll the schema back to `strategy-lane-authority:v1` | KILLED | `TestProductionRouteManifestRefusesTheLegacySchemaVersion` |
+    | M12 | make the scoring seal ignore `score_ppm` | KILLED | `TestProductionRouteAuthorityCarriesThreeIndependentSeals` |
+    | M13 | return the sealed score slice instead of a copy | KILLED | `TestProductionRouteAuthorityCarriesThreeIndependentSeals` |
+    | M14 | `SealsValid()` returns true unconditionally | KILLED | `TestProductionRouteAuthorityCarriesThreeIndependentSeals` |
+    | M17 | bind the KR breakout lane to `FamilyContinuation` in the table | KILLED | `TestProductionRouteDescriptorsCoverFourFamiliesPerMarket` + 6 others |
+
+    **M7 survived, and the code was deleted rather than the test strengthened.** The first draft also counted
+    distinct families and returned `len(families) == len(want)`. No input can make that false: the count equality at
+    B1 fixes the list length, lane ids are deduplicated, and each lane must carry the table's family — so the family
+    count always equals the lane count. An unfalsifiable condition is not a defence, it is an unkillable claim of
+    coverage. The clause is gone; the property it pretended to check — *the table itself* holds four distinct
+    families — is now asserted where it can actually fail, in
+    `TestProductionRouteDescriptorsCoverFourFamiliesPerMarket`, and M17 is its receipt.
+
+    **Ownership ledger, extended by exactly one file.** `internal/strategyrouter/production_test.go` had to be
+    edited: it builds `productionRouteCandidate` with **positional** struct literals (`:253` at the time of the edit),
+    so any new sealed field breaks its compilation, and its fixture manifest is by definition a *legacy* manifest once
+    the seals are required. There is no way to add a required seal and leave the fixture that omits it valid — that is
+    the feature. Literals are now written with named fields so the next sealed field cannot silently shift a value
+    into the wrong slot.
+
+    **What this does not do — recorded, not smoothed over.**
+
+    - The seals are **carried, not yet consumed**. Nothing downstream calls `SealsValid()` or `Calibration()`. The
+      consumer is task 5.4's coordinator ("validates proposal seals/freshness … calibrated arbitration"), and
+      `design.md:239` puts `ARBITRATION_UNCALIBRATED` there. Wiring the check into the existing market worker would
+      hide arbitration inside the component `design.md` explicitly says not to hide it in, and would require editing
+      `internal/strategyrouter/production_testseam.go`, which is outside this lot's ledger.
+    - **Refusal diagnosability is not closed.** Every manifest fault still collapses into the single sentinel
+      `ErrProductionRouteUnavailable`, so an operator sees `ROUTE_AUTHORITY_INVALID` without knowing which seal was
+      missing. Typed refusal reasons were **not** implemented: `verifyProductionRouteManifest` is one boolean
+      expression, and attributing a reason means either splitting a high-risk validator mid-lot or keeping a second
+      copy of each checked value — the failure mode the "correction unit is the value" rule exists to prevent. The
+      `:v2` schema name closes the *class* (a legacy manifest is legible as such); per-field reasons remain open.
+    - Untouched on purpose, per the C1 re-classification: `Descriptors()`/`registry.go`, activation digests, desired
+      state and the eight-element `four-family-runtime-v1.json` golden. `internal/strategyrouter/router.go` is not
+      edited — not one line.
+
+### Decision 52 — review finding C2 survives task 4.3, and the correction belongs to one producer
+
+52. **C2 is real, it is not removed by 4.3's seals, and the minimal canonical fix is one guard in
+    `strategyProposalAuthorityLoader.collectMarket` — not three edits at the three gates.**
+
+    **Measured, from the AST rather than by eye.** `ProductionBatchAuthority.For`
+    (`internal/strategyproposal/production.go:100-106`, one branch, B1 at `102:2`) returns `(zero, false)` when a
+    symbol has anything other than exactly one lane, and **carries no reason**. In the engine,
+    `strategyProposalAuthorityLoader.collectMarket` consumed that as `refused++; continue` — the symbol simply left
+    the list. Three readers then share one shape:
+
+    | reader | anchor | branch |
+    |---|---|---|
+    | `strategyProposalAuthorityPair.ResultAuthority` | `strategy_proposal_authority.go:98` | B1 at `95:3` (pre-edit AST) |
+    | `strategyAccountAuthorityLoader.collectMarket` | `strategy_account_first_leg_authority.go:155` | B1 at `155:2` |
+    | `strategyProjectionFromAssembly` | `strategy_runtime_projection.go:105` | B7 at `105:3` |
+
+    All three test `len(entries) != 1`, and all three read the **same** `strategyProposalMarketAuthority.entries`. So
+    with two proposing symbols the market is blocked; drop one of them for being *ambiguous* — a fail-closed decision —
+    and the count becomes 1 and the **other** symbol is released. One symbol's refusal to choose becomes another
+    symbol's permission to trade.
+
+    **Does 4.3 remove it? No.** The seals validate and carry manifest data; they create no arbiter. The calibrated
+    arbiter that would resolve two families for one symbol is task 5.4, which does not exist. The hypothesis that a
+    calibration arbiter dissolves C2 is right about the *end state* and wrong about *this lot*.
+
+    **The correction unit is the value, so it is applied once.** The value is the entry list. The guard sits in
+    `collectMarket` (`strategy_proposal_authority.go:207`) **before** the first `entries = append`, and returns the
+    new typed reason `AMBIGUOUS_FAMILY_PROPOSAL` (`:40`) for the whole market. `ProductionBatchAuthority.Ambiguous`
+    (`internal/strategyproposal/production.go:112`) is what lets the caller tell "no proposal" from "too many". The
+    two gate files outside this lot's ledger — `strategy_account_first_leg_authority.go` and
+    `strategy_runtime_projection.go` — were **read only** and are unchanged; they need no edit because they consume
+    the corrected list.
+
+    The change is one-directional: it only adds a refusal. No input that was refused before is admitted now.
+
+    | # | mutation | result | killed by |
+    |---|---|---|---|
+    | M15 | delete the market-level ambiguity guard | KILLED | `TestProposalCollectMarketClosesTheMarketBeforeBuildingEntries` |
+    | M15b | call `Ambiguous` but do not return | KILLED | `TestProposalCollectMarketClosesTheMarketBeforeBuildingEntries` |
+    | M16 | `Ambiguous` uses `> 2` | KILLED | `TestAmbiguousSeparatesNoProposalFromTooManyProposals` |
+    | M18 | `Ambiguous` counts the market instead of the symbol | KILLED | `TestAmbiguousSeparatesNoProposalFromTooManyProposals` |
+
+    **What the coverage says, and it is not flattering.** Measured with count-mode profiles:
+    `strategyProposalAuthorityLoader.collectMarket` is entered **4x under the tagged engine suite and 0x under the
+    untagged one**, and the new refusal arm (B12 at `217:3`) is entered by **no** suite. The runtime path has no CI
+    coverage at all. That is why the engine-side test is a structural one: it parses the function and requires the
+    ambiguity refusal to *end before* the first `entries = append`, so it fails whether the guard is deleted or merely
+    demoted to a counter. Both mutations above confirm it. The full-fidelity behavioural test lives where it can run
+    untagged — `internal/strategyproposal`, where a batch with two lanes for one symbol can actually be built.
+
+    **Residual, and whose it is.** The same composition exists one stage earlier:
+    `strategyRouteAuthorityLoader.collectMarket` also does `refused++; continue` when `RouteSet` refuses a *signed*
+    scope, and an owner-reconstruction integrity fault there shrinks the route list the same way. `design.md`'s fault
+    table already assigns that case — "journal/Gateway/fence/owner integrity fault → 모든 신규 entry fail-closed" — and
+    task **5.6** is its named deliverable. It is not corrected here because `RefusalDisabled` (every lane OFF) is the
+    *normal* path through that same arm, so separating integrity faults from ordinary dormancy is a behaviour change
+    that belongs with the coordinator, not tacked onto this lot.
+
+### Decision 53 — the RouteSet-widened proposal admission is inside the intended scope, but its singleton is un-arbitrated
+
+53. **Replacing `Route` with `RouteSet` widened proposal admission from "equals the single raw-score winner" to
+    "is a member of the eligible set". That is what task 4.3.1 asked for, it cannot widen an owned symbol, and with
+    OFF defaults it admits nothing at all — but the family that reaches dispatch is now decided by manifest
+    composition rather than by an arbiter, and closing that is task 5.4's.**
+
+    **What changed, measured against the frozen base.** At `a8c3d067`,
+    `internal/strategyproposal/production.go:241` called `strategyrouter.Route(target.Router)` and admitted a scope
+    only if `routed.Decision` matched it exactly. Now (`:289`) it calls `RouteSet` and defers to
+    `routeSetAdmitsScope` (`:319-333`, three AST branches: B1 range `320:2`, B2 if `321:3`, B3 if `327:3`), which
+    admits any scope whose full identity appears in the eligible set. The result map keys on
+    `batchKey(symbol, laneID)`, so two families for one symbol no longer overwrite each other.
+
+    **Three bounds, each measured from `RouteSet`'s own AST (`routeset.go`, 23 branches).**
+
+    1. *An owned symbol cannot widen.* B15 at `104:2` (`len(active) == 1`) returns at `110:3` with **exactly one**
+       decision carrying `ExistingOwner: true`. `routeSetAdmitsScope`'s B3 then refuses when
+       `decision.CampaignID != scope.CampaignID`. So no second family can enter a symbol that already has an owner —
+       the duplicate-entry risk `design.md` names first is untouched.
+    2. *OFF admits nothing.* B20 at `124:3` skips any candidate that is not `Eligible && Desired==ON &&
+       Effective==ON`; B21 at `130:2` then returns `RefusalDisabled`, and the proposal loader requires
+       `routed.Code == RefusalNone` before it consults the set at all. With every descriptor shipped OFF the widened
+       admission is unreachable.
+    3. *Reaching it requires a signed v2 manifest.* Turning a lane ON means signing a manifest whose candidates are
+       `eligible/desired/effective = ON` — which, after decision 51, must also name an approved
+       `arbitration_score_version` and `calibration_digest`. So the calibration seal makes the *un-calibrated* variant
+       of this widening unsignable, even though it does not arbitrate.
+
+    **What genuinely widened, and the honest name for it.** A symbol whose highest-raw-score family had no proposal
+    scope used to produce nothing; now a lower-ranked family with a scope is admitted and, if it is the only one,
+    passes the `len(entries) == 1` gate and is dispatched. Removing raw-score preselection is exactly what
+    `design.md` requires ("Raw `Candidate.Score` 또는 registry 순서는 cross-family 선택 권위가 될 수 없다"), so the
+    *removal* is not a defect. The defect-shaped remainder is that the arbiter meant to replace it is not here, and
+    `design.md` is explicit that even a lone proposal must be refused without an approved calibration
+    ("singleton proposal도 approved common score version/calibration digest가 없으면 `ARBITRATION_UNCALIBRATED`로
+    거부한다"). Today an un-arbitrated singleton is accepted.
+
+    **Disposition.** Not a second C2 — C2 was one symbol's refusal releasing another symbol, which is a composition
+    bug; this is a missing component, already scoped, gated behind a human-signed ON manifest and behind a100
+    protection. It is recorded as an open obligation on **task 5.4**: the coordinator must refuse a singleton whose
+    route authority fails `SealsValid()` or names no approved calibration. Decision 51's seals are the inputs that
+    obligation now has to work with.
+
+### L3 landing state (2026-08-29) — 4.3 ticked
+
+**Newly ticked: 4.3.** The descriptor table and exact candidate validation were already four families per market;
+this lot added the three seals the task sentence also asks for and made the legacy refusal a declared contract
+(`strategy-lane-authority:v2`). Every seal has a mutation receipt in decision 51.
+
+**Still not ticked, unchanged reasons.**
+
+- **4.4** — `buildLaneInput`'s breakout construction is still blocked by decision 49 and fails closed.
+- **4.5** — not started; its "all 8 descriptors" is reachable for route and proposal lineage but not for a breakout
+  *production* input, for the same reason as 4.4.
+
+**Untagged test counts (top-level `Test` functions, `go test -list`).**
+
+| package | before | after |
+|---|---|---|
+| `internal/strategyrouter` | 40 | 46 |
+| `internal/strategyproposal` | 7 | 8 |
+| `internal/app/engine` | 386 | 387 |
+
+All six new router tests, the new `internal/strategyproposal/ambiguous_symbol_test.go` and the new
+`internal/app/engine/strategy_proposal_ambiguity_test.go` carry **no build tag**, so CI runs them.
+
+**Measured verification.**
+
+| Command | Result |
+|---|---|
+| `$(go env GOROOT)/bin/gofmt -l .` | 0 findings |
+| `make lint` (`go vet ./...`) | clean |
+| `go vet -tags tossos_testseams` over strategyrouter/strategyproposal/strategyflow/app-engine | clean (exit 0) |
+| `make test` (untagged, the CI target) | no failures; `tools/a112-mb-us-source` 309s dominates the run |
+| `go test -count=1 -tags tossos_testseams ./internal/{strategyflow,strategyproposal,strategyrouter,app/engine}/...` | ok (engine 82s) |
+| `openspec validate … --strict --no-interactive` | valid |
+| `python3 tools/logic-map/check_analysis.py --change a112-…` | evidence complete |
+
+**Function Logic Map bundles refreshed or created: 16.** Eleven were stale because the file hash moved; five are
+new (`verifyProductionRouteManifest`, `LoadProductionRouteAuthorityBatch`,
+`ProductionRouteAuthority.OwnerDigest`, and two production-route test functions). Every branch row carries a
+count read out of a count-mode coverage profile, and rows whose arm no profile entered say so.
+
+`ProductionRouteAuthority.OwnerDigest` is pinned `revision: base` on purpose: its body is unchanged, and the
+checker required it only because a pure insertion immediately after a function counts as intersecting it.
+
+**The uncomfortable number, recorded rather than smoothed over.**
+`strategyProposalAuthorityLoader.collectMarket` is entered **0x by the untagged (CI) engine suite** and 4x by the
+tagged one, and its new ambiguity refusal arm is entered by **no** suite at all. The C2 correction is therefore
+guarded in CI by a structural test over the function's own AST, plus a full-fidelity behavioural test one package
+down in `internal/strategyproposal` where an ambiguous batch can actually be constructed without a build tag.

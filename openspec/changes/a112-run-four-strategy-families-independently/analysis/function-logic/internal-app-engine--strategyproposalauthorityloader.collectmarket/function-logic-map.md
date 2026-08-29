@@ -1,98 +1,111 @@
-# Function Logic Map: `collectMarket`
+# Function Logic Map: `strategyProposalAuthorityLoader.collectMarket`
 
-- Source: `internal/app/engine/strategy_proposal_authority.go`
-- Current-base source SHA-256: `9e8816b71972be1678026da1c774934c85adc33872eed6e3a616abf9fa73dc2b`
+- Source: `internal/app/engine/strategy_proposal_authority.go` (159-236)
+- Function: `strategyProposalAuthorityLoader.collectMarket` in package `engine`
 - Signature: `strategyProposalAuthorityLoader.collectMarket(params=5, results=1)`
-- Source range: `156:1`–`222:2`
-- AST evidence: `ast.json`, generated from frozen base `016da6245feb60e13971388be386c2c2041469a8`.
+- File SHA-256: `88e06b6c841ba30cb1c3107fba33c134c82b34f871dec646ee92b739a2e58c94`
+- Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
+- AST evidence: `ast.json` — AST branches 14.
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
-- Inputs/results are the exact AST signature above; this L0 map does not infer undocumented state.
-- Any later edit must preserve OFF defaults, the owner key without family/horizon, and zero exposure-raising dispatch while a prerequisite is missing.
+Turns one market's routed entries into sealed proposal entries. It now refuses the whole market before building the entry list when any routed symbol carries more than one family proposal, because dropping that one symbol would shrink the list to one and thereby *satisfy* the `len(entries) != 1` gate that three downstream readers share (review finding C2).
+
+The signature above is the exhaustive input/result record; this map does not infer state the AST does not show.
 
 ## Branches and early returns
 
-- Exact AST return nodes: `159:3, 162:3, 165:3, 168:3, 173:3, 185:4, 197:3, 209:44, 214:3, 220:2`.
+- Measurement regime: Go coverage profiles, count mode.
+- untagged proposal suite: `go test -count=1 -covermode=count -coverpkg=./internal/strategyproposal ./internal/strategyproposal/`
+- tagged proposal suite: `go test -count=1 -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/strategyproposal/`
+- tagged engine suite: `go test -count=1 -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
+- untagged engine suite: `go test -count=1 -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
+- Measured entry: the function body was not executed (untagged proposal suite); not executed (tagged proposal suite); executed 4x (tagged engine suite); not executed (untagged engine suite).
 
-| Branch | AST kind | Source location | Required test disposition |
+Exact AST return positions: 162:3, 165:3, 168:3, 171:3, 176:3, 188:4, 200:3, 210:4, 223:44, 228:3, 234:2.
+
+| Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 161:2 | planned targeted RED before any edit; not run by L0 |
-| B2 | if | 164:2 | planned targeted RED before any edit; not run by L0 |
-| B3 | if | 167:2 | planned targeted RED before any edit; not run by L0 |
-| B4 | if | 172:2 | planned targeted RED before any edit; not run by L0 |
-| B5 | if | 176:2 | planned targeted RED before any edit; not run by L0 |
-| B6 | range | 182:2 | planned targeted RED before any edit; not run by L0 |
-| B7 | if | 184:3 | planned targeted RED before any edit; not run by L0 |
-| B8 | if | 196:2 | planned targeted RED before any edit; not run by L0 |
-| B9 | range | 201:2 | planned targeted RED before any edit; not run by L0 |
-| B10 | if | 203:3 | planned targeted RED before any edit; not run by L0 |
-| B11 | if | 210:2 | planned targeted RED before any edit; not run by L0 |
-| B12 | range | 217:2 | planned targeted RED before any edit; not run by L0 |
+| B1 | if | 164:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B2 | if | 167:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B3 | if | 170:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B4 | if | 175:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B5 | if | 179:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm entered 2x (tagged engine suite); arm not entered (untagged engine suite); entered by `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently` |
+| B6 | range | 185:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm entered 4x (tagged engine suite); arm not entered (untagged engine suite); entered by `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently` |
+| B7 | if | 187:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B8 | if | 199:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm entered 1x (tagged engine suite); arm not entered (untagged engine suite); entered by `TestStrategyProposalAuthorityKeepsMarketFailureLocal` |
+| B9 | range | 206:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm entered 3x (tagged engine suite); arm not entered (untagged engine suite); entered by `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently` |
+| B10 | if | 207:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B11 | range | 215:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm entered 3x (tagged engine suite); arm not entered (untagged engine suite); entered by `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently` |
+| B12 | if | 217:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B13 | if | 224:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B14 | range | 231:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm entered 3x (tagged engine suite); arm not entered (untagged engine suite); entered by `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently` |
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Current-base evidence/requirement |
-|---|---|---|
-| len | 159:144 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 161:31 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fail | 162:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fail | 165:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fail | 168:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.TrimSpace | 170:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| loader.getenv | 170:31 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| DecodeString | 171:14 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| base64.StdEncoding.Strict | 171:14 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| base64.StdEncoding.EncodeToString | 172:19 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 172:72 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fail | 173:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.TrimSpace | 179:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| loader.getenv | 179:30 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 180:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 180:58 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 181:14 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 181:59 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| entry.approved.Symbol | 183:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| bySymbol.approved.Valid | 184:22 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fail | 185:11 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| append | 188:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| entry.route.Request | 188:97 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| loader.load | 190:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strategyrouter.Market | 191:42 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.TrimSpace | 191:111 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| loader.getenv | 191:129 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| ed25519.PublicKey | 192:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.TrimSpace | 195:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| loader.getenv | 195:41 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| batch.ManifestDigest | 196:19 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fail | 197:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 199:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| batch.Len | 199:55 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| batch.For | 202:20 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| ValidProposal | 203:14 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| authority.Proposal | 203:14 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| append | 207:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| sort.Slice | 209:2 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| entries.route.approved.Symbol | 209:51 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| entries.route.approved.Symbol | 209:88 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 210:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fail | 211:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| sha256.New | 216:7 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| h.Write | 218:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| call | 218:18 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| entry.route.approved.Symbol | 218:25 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| entry.authority.Proposal | 218:66 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 221:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 221:52 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| hex.EncodeToString | 221:144 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| h.Sum | 221:163 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| Callee expression | Position |
+|---|---|
+| `len` | 162:144 |
+| `len` | 164:31 |
+| `fail` | 165:10 |
+| `fail` | 168:10 |
+| `fail` | 171:10 |
+| `strings.TrimSpace` | 173:13 |
+| `loader.getenv` | 173:31 |
+| `DecodeString` | 174:14 |
+| `base64.StdEncoding.Strict` | 174:14 |
+| `base64.StdEncoding.EncodeToString` | 175:19 |
+| `len` | 175:72 |
+| `fail` | 176:10 |
+| `strings.TrimSpace` | 182:12 |
+| `loader.getenv` | 182:30 |
+| `make` | 183:13 |
+| `len` | 183:58 |
+| `make` | 184:14 |
+| `len` | 184:59 |
+| `entry.approved.Symbol` | 186:13 |
+| `bySymbol.approved.Valid` | 187:22 |
+| `fail` | 188:11 |
+| `append` | 191:13 |
+| `entry.route.Request` | 191:97 |
+| `loader.load` | 193:16 |
+| `strategyrouter.Market` | 194:42 |
+| `strings.TrimSpace` | 194:111 |
+| `loader.getenv` | 194:129 |
+| `ed25519.PublicKey` | 195:15 |
+| `strings.TrimSpace` | 198:23 |
+| `loader.getenv` | 198:41 |
+| `batch.ManifestDigest` | 199:19 |
+| `fail` | 200:10 |
+| `batch.Ambiguous` | 207:6 |
+| `entry.approved.Symbol` | 207:22 |
+| `fail` | 208:14 |
+| `make` | 213:13 |
+| `batch.Len` | 213:55 |
+| `batch.For` | 216:20 |
+| `ValidProposal` | 217:14 |
+| `authority.Proposal` | 217:14 |
+| `append` | 221:13 |
+| `sort.Slice` | 223:2 |
+| `entries.route.approved.Symbol` | 223:51 |
+| `entries.route.approved.Symbol` | 223:88 |
+| `len` | 224:5 |
+| `fail` | 225:13 |
+| `sha256.New` | 230:7 |
+| `h.Write` | 232:10 |
+| `(unnamed)` | 232:18 |
+| `entry.route.approved.Symbol` | 232:25 |
+| `entry.authority.Proposal` | 232:66 |
+| `len` | 235:16 |
+| `len` | 235:52 |
+| `hex.EncodeToString` | 235:144 |
+| `h.Sum` | 235:163 |
 
 ## State mutations and fallbacks
 
-- The AST is the exhaustive current-base record of assignments, calls, branches, defers and returns. Before a function body edit, the owning lot must update this map with changed condition semantics and concrete RED/GREEN test evidence.
+- AST assignments: 25. Defers: 0. Goroutine statements: 0.
 
 ## Safety conclusion
 
-- L0 status: pre-edit evidence only; no production function was edited and no branch test is claimed as run by L0.
-- A named targeted RED or explicit evidence-backed not-applicable rationale is required for every edited branch before GREEN.
+The new guard only adds a refusal; it can never admit a proposal that was previously refused. All three `len(entries) != 1` readers — `ResultAuthority`, `strategyAccountAuthorityLoader.collectMarket` and `strategyProjectionFromAssembly` — read the list this function produces, so this is the single place the correction belongs.

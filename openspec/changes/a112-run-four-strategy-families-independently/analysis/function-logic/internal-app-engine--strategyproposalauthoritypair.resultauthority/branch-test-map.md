@@ -1,10 +1,14 @@
-# Branch Test Map: `ResultAuthority`
+# Branch Test Map: `strategyProposalAuthorityPair.ResultAuthority`
 
-- Source SHA-256: `9e8816b71972be1678026da1c774934c85adc33872eed6e3a616abf9fa73dc2b`; AST branch locations are authoritative.
-- L0 did not alter this function and does not claim an existing test covers a branch.
+- Source: `internal/app/engine/strategy_proposal_authority.go`; file SHA-256 `88e06b6c841ba30cb1c3107fba33c134c82b34f871dec646ee92b739a2e58c94`. AST branch positions are authoritative.
+- Rows carry measured counts from Go coverage profiles, count mode.
+- untagged proposal suite: `go test -count=1 -covermode=count -coverpkg=./internal/strategyproposal ./internal/strategyproposal/`
+- tagged proposal suite: `go test -count=1 -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/strategyproposal/`
+- tagged engine suite: `go test -count=1 -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
+- untagged engine suite: `go test -count=1 -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
 
-| Branch | Scenario anchor | Required test disposition | RED observed | GREEN observed |
-|---|---|---|---|---|
-| B1 | if at 95:3 | planned targeted RED before any edit; not run by L0 | no | no |
+| Branch | Anchor | Measured disposition |
+|---|---|---|
+| B1 | if at 98:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
 
-A lot may replace a planned row only after recording its exact test name and actual RED/GREEN command result.
+A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.

@@ -1,110 +1,110 @@
 {
-  "file": "internal/app/engine/strategy_proposal_authority.go",
-  "source_sha256": "9e8816b71972be1678026da1c774934c85adc33872eed6e3a616abf9fa73dc2b",
-  "package": "engine",
-  "function": "ResultAuthority",
-  "receiver": "strategyProposalAuthorityPair",
-  "signature": "strategyProposalAuthorityPair.ResultAuthority(params=0, results=1)",
-  "start": {
-    "line": 93,
-    "column": 1
+ "file": "internal/app/engine/strategy_proposal_authority.go",
+ "source_sha256": "88e06b6c841ba30cb1c3107fba33c134c82b34f871dec646ee92b739a2e58c94",
+ "package": "engine",
+ "function": "ResultAuthority",
+ "receiver": "strategyProposalAuthorityPair",
+ "signature": "strategyProposalAuthorityPair.ResultAuthority(params=0, results=1)",
+ "start": {
+  "line": 96,
+  "column": 1
+ },
+ "end": {
+  "line": 104,
+  "column": 2
+ },
+ "branches": [
+  {
+   "id": "B1",
+   "kind": "if",
+   "at": {
+    "line": 98,
+    "column": 3
+   }
+  }
+ ],
+ "returns": [
+  {
+   "kind": "return",
+   "at": {
+    "line": 99,
+    "column": 4
+   }
   },
-  "end": {
+  {
+   "kind": "return",
+   "at": {
     "line": 101,
-    "column": 2
+    "column": 3
+   }
   },
-  "branches": [
-    {
-      "id": "B1",
-      "kind": "if",
-      "at": {
-        "line": 95,
-        "column": 3
-      }
-    }
-  ],
-  "returns": [
-    {
-      "kind": "return",
-      "at": {
-        "line": 96,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 98,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 100,
-        "column": 2
-      }
-    }
-  ],
-  "calls": [
-    {
-      "kind": "call",
-      "at": {
-        "line": 95,
-        "column": 6
-      },
-      "text": "len"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 95,
-        "column": 34
-      },
-      "text": "ValidProposal"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 95,
-        "column": 34
-      },
-      "text": "value.entries.authority.Proposal"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 98,
-        "column": 77
-      },
-      "text": "value.entries.authority.Proposal"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 100,
-        "column": 70
-      },
-      "text": "convert"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 100,
-        "column": 110
-      },
-      "text": "convert"
-    }
-  ],
-  "assignments": [
-    {
-      "kind": ":=",
-      "at": {
-        "line": 94,
-        "column": 2
-      }
-    }
-  ],
-  "go_statements": null,
-  "defers": null
+  {
+   "kind": "return",
+   "at": {
+    "line": 103,
+    "column": 2
+   }
+  }
+ ],
+ "calls": [
+  {
+   "kind": "call",
+   "at": {
+    "line": 98,
+    "column": 6
+   },
+   "text": "len"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 98,
+    "column": 34
+   },
+   "text": "ValidProposal"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 98,
+    "column": 34
+   },
+   "text": "value.entries.authority.Proposal"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 101,
+    "column": 77
+   },
+   "text": "value.entries.authority.Proposal"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 103,
+    "column": 70
+   },
+   "text": "convert"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 103,
+    "column": 110
+   },
+   "text": "convert"
+  }
+ ],
+ "assignments": [
+  {
+   "kind": ":=",
+   "at": {
+    "line": 97,
+    "column": 2
+   }
+  }
+ ],
+ "go_statements": null,
+ "defers": null
 }

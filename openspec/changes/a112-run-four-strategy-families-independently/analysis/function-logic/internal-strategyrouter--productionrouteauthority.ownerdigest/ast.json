@@ -1,0 +1,31 @@
+{
+ "file": "internal/strategyrouter/production.go",
+ "source_sha256": "eafb36f41e2c07b85737692afa20fac968123481c812237f8678ad7a140bb520",
+ "package": "strategyrouter",
+ "function": "OwnerDigest",
+ "receiver": "ProductionRouteAuthority",
+ "signature": "ProductionRouteAuthority.OwnerDigest(params=0, results=1)",
+ "start": {
+  "line": 110,
+  "column": 1
+ },
+ "end": {
+  "line": 110,
+  "column": 99
+ },
+ "branches": null,
+ "returns": [
+  {
+   "kind": "return",
+   "at": {
+    "line": 110,
+    "column": 69
+   }
+  }
+ ],
+ "calls": null,
+ "assignments": null,
+ "go_statements": null,
+ "defers": null,
+ "revision": "base"
+}
