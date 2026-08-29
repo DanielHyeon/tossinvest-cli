@@ -2589,7 +2589,7 @@
         "type": "object",
         "description": "Single server-owned paired KR and US operational truth shared by REST, SSE, console and the private Unix read transport.",
         "additionalProperties": false,
-        "required": ["schemaVersion", "generatedAt", "markets"],
+        "required": ["schemaVersion", "generatedAt", "runtime", "markets"],
         "properties": {
           "schemaVersion": {
             "type": "string",
@@ -2599,8 +2599,27 @@
             "type": "string",
             "format": "date-time"
           },
+          "runtime": {
+            "$ref": "#/components/schemas/StrategyRuntimeIdentity"
+          },
           "markets": {
             "$ref": "#/components/schemas/StrategyRuntimeMarkets"
+          }
+        }
+      },
+      "StrategyRuntimeIdentity": {
+        "type": "object",
+        "description": "Config and build digests of the engine process that produced this snapshot, in the exact form the signed activation manifest is compared against (sha256:<64 hex>, prefix included). These are the two values an operator copies into that manifest, so the prefix is deliberately not stripped here even though evidence and activation digests elsewhere in this projection are. Both are present together or both are null; a null pair means the answer did not come from a running engine, and the console must not substitute its own build.",
+        "additionalProperties": false,
+        "required": ["configDigest", "buildDigest"],
+        "properties": {
+          "configDigest": {
+            "type": ["string", "null"],
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "buildDigest": {
+            "type": ["string", "null"],
+            "pattern": "^sha256:[0-9a-f]{64}$"
           }
         }
       },

@@ -94,6 +94,7 @@ const (
 type Snapshot struct {
 	SchemaVersion string                      `json:"schemaVersion"`
 	GeneratedAt   time.Time                   `json:"generatedAt"`
+	Runtime       RuntimeIdentityProjection   `json:"runtime"`
 	Markets       map[Market]MarketProjection `json:"markets"`
 }
 
@@ -218,7 +219,8 @@ func unknownMarket(market Market, code RefusalCode, observedAt time.Time) Market
 }
 
 func Clone(snapshot Snapshot) Snapshot {
-	out := Snapshot{SchemaVersion: snapshot.SchemaVersion, GeneratedAt: snapshot.GeneratedAt, Markets: make(map[Market]MarketProjection, len(snapshot.Markets))}
+	out := Snapshot{SchemaVersion: snapshot.SchemaVersion, GeneratedAt: snapshot.GeneratedAt,
+		Runtime: cloneRuntimeIdentity(snapshot.Runtime), Markets: make(map[Market]MarketProjection, len(snapshot.Markets))}
 	for market, item := range snapshot.Markets {
 		out.Markets[market] = cloneMarket(item)
 	}
@@ -264,6 +266,9 @@ func OrderedMarkets(snapshot Snapshot) []MarketProjection {
 func Validate(snapshot Snapshot) error {
 	if snapshot.SchemaVersion != SchemaVersion || snapshot.GeneratedAt.IsZero() || len(snapshot.Markets) != 2 {
 		return errors.New("strategy projection: invalid envelope")
+	}
+	if err := validateRuntimeIdentity(snapshot.Runtime); err != nil {
+		return fmt.Errorf("strategy projection: %w", err)
 	}
 	for _, market := range []Market{MarketKR, MarketUS} {
 		item, ok := snapshot.Markets[market]

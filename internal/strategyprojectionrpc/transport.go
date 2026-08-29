@@ -74,8 +74,19 @@ func (c *Client) Read(ctx context.Context) (strategyprojection.Snapshot, error) 
 	if response.StatusCode != http.StatusOK {
 		return result, fmt.Errorf("strategy projection runtime: HTTP %d", response.StatusCode)
 	}
+	// **모르는 필드를 거절하지 않는다** — a112 §"runtime lineage와 health" 의
+	// `legacy projection reader` 시나리오가 요구하는 바다: "additive lane/coordinator
+	// fields를 무시해도 read가 실패하지 않는다".
+	//
+	// 엄격 디코딩은 여기서 아무것도 지켜 주지 못한다. 이 응답은 0600 소켓 뒤의
+	// bearer 토큰으로 인증된 **엔진 자신**이 보낸 것이고, 내용은 바로 아래
+	// `strategyprojection.Validate` 가 의미 단위로 다시 판정한다. 엄격함이 실제로 한
+	// 일은 하나뿐이었다 — 엔진이 필드를 하나 더 실어 보내는 순간 **구버전 콘솔의
+	// 화면 전체가 죽는 것**. 그것이 이 시나리오가 금지하는 바로 그 실패다.
+	//
+	// (descriptor 쪽 `readDescriptor` 의 엄격함은 그대로 둔다. 그것은 네트워크 상대가
+	// 아니라 **디스크 파일**을 읽으므로 위협 모델이 다르다.)
 	decoder := json.NewDecoder(bytes.NewReader(body))
-	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&result); err != nil {
 		return result, fmt.Errorf("strategy projection runtime: invalid response: %w", err)
 	}

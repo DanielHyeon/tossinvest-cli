@@ -435,7 +435,9 @@ const optimizationTemplates = `
 {{if .LoadErr}}<p class="danger" role="alert">runtime projection을 읽지 못했다. 두 시장 모두 신규 진입 OFF와 typed unknown을 표시한다.</p>{{end}}
 {{if .Unwired}}<p class="notice">runtime endpoint 미기동 — KR과 US의 dormant OFF/UNOBSERVED/UNWIRED truth를 표시한다.</p>{{end}}
 <section aria-labelledby="strategy-runtime-contract"><h2 id="strategy-runtime-contract">Shared projection contract</h2>
-<dl><dt>Schema</dt><dd><code>{{.SchemaVersion}}</code></dd><dt>Generated at</dt><dd>{{.GeneratedAt}}</dd></dl>
+<dl><dt>Schema</dt><dd><code>{{.SchemaVersion}}</code></dd><dt>Generated at</dt><dd>{{.GeneratedAt}}</dd>
+<dt>Config digest</dt><dd><code>{{.ConfigDigest}}</code></dd><dt>Build digest</dt><dd><code>{{.BuildDigest}}</code></dd></dl>
+<p class="muted">활성화 매니페스트에 적는 두 값이다. 엔진이 보고한 값만 표시하며, 관측이 없으면 <code>not_observed</code>다.</p>
 <p><a href="/strategy-runtime">상태 새로고침</a> · GET으로 다시 읽기만 하며 설정이나 주문을 보내지 않는다.</p>
 </section>
 {{range .Markets}}

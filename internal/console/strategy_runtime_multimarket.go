@@ -16,10 +16,14 @@ type multiMarketStrategyRuntimePage struct {
 	chrome
 	SchemaVersion string
 	GeneratedAt   string
-	LoadErr       bool
-	Unwired       bool
-	Fields        []strategyprojection.FieldDescriptor
-	Markets       []multiMarketStrategyRuntimeView
+	// 운영자가 활성화 매니페스트에 옮겨 적는 두 숫자다. 시장별이 아니라 엔진 프로세스
+	// 하나의 사실이라서 시장 카드가 아니라 상단 contract 절에 있다 — a112 결정 54.
+	ConfigDigest string
+	BuildDigest  string
+	LoadErr      bool
+	Unwired      bool
+	Fields       []strategyprojection.FieldDescriptor
+	Markets      []multiMarketStrategyRuntimeView
 }
 
 func (multiMarketStrategyRuntimePage) Refresh() bool { return false }
@@ -58,6 +62,10 @@ func (c *Console) buildMultiMarketStrategyRuntimePage(r *http.Request) multiMark
 func (page *multiMarketStrategyRuntimePage) project(snapshot strategyprojection.Snapshot) {
 	page.SchemaVersion = snapshot.SchemaVersion
 	page.GeneratedAt = runtimeProjectionTime(snapshot.GeneratedAt)
+	// 엔진이 보낸 값만 쓴다. 콘솔이 자기 바이너리에서 같은 값을 계산해 빈칸을 채우면,
+	// 두 build 가 다를 때 엔진이 거절할 매니페스트를 운영자가 만들게 된다.
+	page.ConfigDigest = projectionValue(snapshot.Runtime.ConfigDigest)
+	page.BuildDigest = projectionValue(snapshot.Runtime.BuildDigest)
 	page.Fields = strategyprojection.Registry()
 	page.Markets = make([]multiMarketStrategyRuntimeView, 0, 2)
 	for _, item := range strategyprojection.OrderedMarkets(snapshot) {

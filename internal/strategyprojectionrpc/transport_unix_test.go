@@ -4,7 +4,6 @@ package strategyprojectionrpc
 
 import (
 	"context"
-	"encoding/json"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -159,15 +158,21 @@ func shortRuntimeDir(t *testing.T) string {
 	return dir
 }
 
-func TestUnixClientRejectsUnknownSchemaFieldsAndOversizedResponse(t *testing.T) {
-	valid := strategyprojection.DormantSnapshot(time.Now().UTC())
-	body, _ := json.Marshal(valid)
-	unknown := append(body[:len(body)-1], []byte(`,"unknown":true}`)...)
+// TestUnixClientRejectsOversizedResponse 는 a108 의 두 팔 중 **크기 상한**만 남긴 것이다.
+//
+// 사라진 팔은 "unknown field" 였다. a112 의 승인된 spec 이 그 반대를 요구한다 —
+// "older readers가 additive unknown fields를 무시할 수 있어야 한다 (SHALL)" 와
+// `legacy projection reader` 시나리오. 권위 순서상 승인된 OpenSpec 이 현재 테스트보다
+// 위이고, 엄격함이 실제로 하던 일은 엔진이 필드를 하나 더 실을 때 구버전 콘솔 화면을
+// 죽이는 것뿐이었다(토큰·0600 소켓·Validate 가 이미 각각의 일을 한다).
+//
+// 새 계약은 `a112_additive_fields_test.go` 가 양쪽으로 잰다: 모르는 필드는 무시하고,
+// 의미가 틀린 스냅샷은 여전히 거절한다.
+func TestUnixClientRejectsOversizedResponse(t *testing.T) {
 	for _, test := range []struct {
 		name string
 		body []byte
 	}{
-		{"unknown field", unknown},
 		{"oversized", []byte(strings.Repeat("x", MaxProjectionBytes+1))},
 	} {
 		t.Run(test.name, func(t *testing.T) {

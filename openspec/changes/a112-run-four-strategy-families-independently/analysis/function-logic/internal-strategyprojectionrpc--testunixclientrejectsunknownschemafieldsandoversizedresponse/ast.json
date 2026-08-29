@@ -1,0 +1,249 @@
+{
+ "file": "internal/strategyprojectionrpc/transport_unix_test.go",
+ "source_sha256": "b765db14f7c1c5b4e1e7fe58b4f808d5128e5dad6355290239f27eb71c7602e8",
+ "package": "strategyprojectionrpc",
+ "function": "TestUnixClientRejectsUnknownSchemaFieldsAndOversizedResponse",
+ "signature": "TestUnixClientRejectsUnknownSchemaFieldsAndOversizedResponse(params=1, results=0)",
+ "start": {
+  "line": 162,
+  "column": 1
+ },
+ "end": {
+  "line": 182,
+  "column": 2
+ },
+ "branches": [
+  {
+   "id": "B1",
+   "kind": "range",
+   "at": {
+    "line": 166,
+    "column": 2
+   }
+  },
+  {
+   "id": "B2",
+   "kind": "if",
+   "at": {
+    "line": 177,
+    "column": 4
+   }
+  }
+ ],
+ "returns": null,
+ "calls": [
+  {
+   "kind": "call",
+   "at": {
+    "line": 163,
+    "column": 11
+   },
+   "text": "strategyprojection.DormantSnapshot"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 163,
+    "column": 46
+   },
+   "text": "UTC"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 163,
+    "column": 46
+   },
+   "text": "time.Now"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 164,
+    "column": 13
+   },
+   "text": "json.Marshal"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 165,
+    "column": 13
+   },
+   "text": "append"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 165,
+    "column": 26
+   },
+   "text": "len"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 165,
+    "column": 40
+   }
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 171,
+    "column": 17
+   }
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 171,
+    "column": 24
+   },
+   "text": "strings.Repeat"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 173,
+    "column": 3
+   },
+   "text": "t.Run"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 174,
+    "column": 14
+   },
+   "text": "httptest.NewServer"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 174,
+    "column": 33
+   },
+   "text": "http.HandlerFunc"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 174,
+    "column": 104
+   },
+   "text": "w.Write"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 175,
+    "column": 10
+   },
+   "text": "server.Close"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 176,
+    "column": 50
+   },
+   "text": "strings.Repeat"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 176,
+    "column": 81
+   },
+   "text": "server.Client"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 177,
+    "column": 17
+   },
+   "text": "client.Read"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 177,
+    "column": 29
+   },
+   "text": "context.Background"
+  },
+  {
+   "kind": "call",
+   "at": {
+    "line": 178,
+    "column": 5
+   },
+   "text": "t.Fatal"
+  }
+ ],
+ "assignments": [
+  {
+   "kind": ":=",
+   "at": {
+    "line": 163,
+    "column": 2
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 164,
+    "column": 2
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 165,
+    "column": 2
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 174,
+    "column": 4
+   }
+  },
+  {
+   "kind": "=",
+   "at": {
+    "line": 174,
+    "column": 97
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 176,
+    "column": 4
+   }
+  },
+  {
+   "kind": ":=",
+   "at": {
+    "line": 177,
+    "column": 7
+   }
+  }
+ ],
+ "go_statements": null,
+ "defers": [
+  {
+   "kind": "defer",
+   "at": {
+    "line": 175,
+    "column": 4
+   },
+   "text": "server.Close"
+  }
+ ],
+ "revision": "base"
+}

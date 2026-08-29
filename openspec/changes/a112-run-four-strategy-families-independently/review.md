@@ -1408,3 +1408,131 @@ the stop-loss loop did not run *at all*. The bound is finite and exceeding it fa
 **Owner: not a112.** Fixing the assertion belongs with the lot that changed the contract (a102, not yet archived,
 and already holding the relevant logic-map bundles) or a small new change. Hard-coding `want 21` is refused: 21 is
 derived from two constants, so it rots when they move, and it burns 300 seconds of CI on every run.
+
+### Decision 55 — L5 5.0: 운영자가 적어야 하는 숫자를 읽을 수 있게 한다 (2026-08-29)
+
+결정 54가 L5에 남긴 잔여를 종결한다. 그 결정의 근거는 명령 하나였다 —
+`grep -rn "ConfigDigest" internal/httpapi/ cmd/tossctl/` → **0 hits**. 엔진은 두 digest를 계산해
+스냅샷 안에 채우면서도 어떤 운영 표면으로도 내보내지 않았고, 그래서 **사람이 활성화 매니페스트에
+적어야 할 숫자를 읽을 방법이 없었다.**
+
+**어디에 뒀는가 — envelope이지 시장 레코드가 아니다.** 두 값은 시장별 사실이 아니라 엔진 프로세스
+하나의 사실이다. 그리고 운영자가 이 숫자를 찾는 순간은 **두 시장이 다 UNKNOWN일 때**다. 시장
+레코드 안에 뒀다면 정확히 그때 사라진다. `SchemaVersion`/`GeneratedAt`과 같은 층에 둔 이유다.
+
+**어디서 붙이는가 — store가 아니라 `Context.Read`.** store의 내용은 전략 assembly refresh가
+채우는데, 그 refresh는 아직 한 번도 안 돌았거나 실패했을 수 있다. 운영자가 이 숫자를 가장 필요로
+하는 상태가 바로 그 상태다. `Read`는 REST·SSE·콘솔·Unix transport가 모두 지나는 단 하나의
+출구라, 여기 붙이면 표면마다 사본이 생기지 않는다.
+
+**콘솔이 스스로 계산하면 안 되는 이유.** 두 값 모두 같은 저장소의 상수(`RouterID`,
+`RouterRelease`, `Descriptors()`, `version.Current()`)로 만들어서 콘솔 바이너리도 똑같이 계산할 수
+있다. 하지만 콘솔과 엔진의 build가 다르면 그렇게 만든 숫자는 **엔진이 거절할 매니페스트**를 낳는다.
+값의 권위는 엔진 프로세스 하나이고, 엔진이 아닌 곳이 만든 스냅샷은 값이 아니라 `not_observed`다.
+
+**증명 의무.** 결정 54가 요구한 그대로 — 투영된 값 == `strategyRuntimeConfigDigest()`.
+`TestStrategyRuntimeReadExposesThisProcessConfigAndBuildDigest`가 dormant 스냅샷에서 이를 잰다.
+
+| 확인 | 결과 |
+|---|---|
+| `Context.Read`의 기존 테스트 수 | **0** — 이 lot이 이 함수를 처음 실행한다 |
+| RED 실측 | `Validate`(4 하위 케이스), `Clone`, 엔진 노출, 콘솔 두 건 |
+| M1 — `Clone`에서 `Runtime` 복사 제거 | KILLED (REST 응답의 `runtime.configDigest`가 null) |
+| M2 — `WithRuntimeIdentity`의 config/build 인자 맞바꿈 | KILLED (엔진 테스트 2건) |
+| `go vet ./...`, `gofmt -l` | 0 |
+| `check_analysis.py --change a112…` | evidence complete |
+
+**⚠ 이 문단의 최초 판단은 틀렸고 결정 56이 뒤집었다.** 처음에는 구버전 콘솔이 새 엔진을 못
+읽는 것을 "공개하고 받아들이는 대가"로 적었다. 그것은 이 change 자신의 승인된 spec 위반이다 —
+아래 결정 56을 보라.
+
+**SchemaVersion은 올리지 않았다.** `tossos.strategy-runtime-projection/v1` 그대로다. 올리면
+`Validate`가 버전 불일치로 **양쪽 방향 모두**를 하드 실패시킨다 — 지금은 한 방향만 저하된다.
+필드는 순수 가산이고 짝이 비어 있는 것이 유효한 상태이므로 버전을 올릴 계약 변화가 아니다.
+
+**남긴 것.** 결정 54의 L7 잔여(KR/US × 5단계 재발급 순서표)는 그대로 열려 있다. 이 lot은 사람이
+**읽을** 값을 만들었을 뿐, 무엇을 어떤 순서로 서명할지는 L7이 쓴다.
+
+**base-commit 재고정.** a112의 `base-commit.txt`를 `a8c3d067`(a117) → `aeeb209e`(a118)로 옮겼다.
+a118이 a112 위가 아니라 옆에 착륙했기 때문에, 옮기지 않으면 a112의 "수정된 함수" 집합에 a118의
+테스트 편집이 섞여 들어와 이 lot이 남의 변경에 대한 증거를 요구받는다.
+
+### Decision 56 — 독립 리뷰가 5.0의 P1 둘을 잡았다: 접두사와 wire 관용 (2026-08-29)
+
+교차 모델(Codex) read-only 적대 리뷰. **P0 0건, P1 2건, P2 2건.** 둘 다 실제 결함이고 둘 다 고쳤다.
+
+**P1-1 — 접두사를 벗겨서 기능 자체가 무효였다.**
+
+투영이 `projectionDigest()`로 `sha256:`를 벗긴 64자리를 내보냈다. 그런데 매니페스트 검증은
+`body.ConfigVersion != binding.ConfigVersion`과 `body.BuildDigest != binding.BuildDigest`의
+**정확한 문자열 비교**이고(`internal/scheduler/production_activation.go`의
+`validateProductionActivationManifest`), binding 쪽 값은 `strategy_schedule_authority.go`의
+`prepare`가 넣는 `sha256:<64hex>`다. `internal/strategyrouter/production.go`의
+`body.ConfigVersion != config.SchedulerConfigVersion`도 같다.
+
+즉 **화면의 숫자를 그대로 옮겨 적으면 `ErrManifestMismatch`가 난다.** 이 lot이 없애려던 바로
+그 실패를 이 lot이 새로 만들 뻔했다.
+
+기전은 익숙하다. 이 패키지의 다른 digest 필드(evidence, activation)가 벗긴 64자리를 쓰고
+`validDigest`가 그 형식만 통과시키므로, 새 필드도 그 관례에 맞춘 것이다. **보여 주는 값과
+받아 적는 값의 차이**를 못 본 것이 잘못이다. 이제 `runtimeIdentityPrefix` 주석이 그 구분을 적는다.
+
+**그리고 내 테스트가 결함을 그대로 굳혔다.** 기대값을 production과 같은 `projectionDigest()`로
+만들었기 때문에 둘이 같이 움직여 통과했다 — a118에서 배수 3/5/7로 같은 오류를 저지른 것과
+같은 부류다([[falsification-must-vary-the-right-axis]]). 정정은 **소비자가 요구하는 모양을
+직접 적는 것**이다: `sha256:` 접두사 + 소문자 64자리 hex를 형식으로 단언하고, 그 다음에 신원을
+비교한다. 뮤테이션 M4(원래 결함 재도입)가 두 테스트에 죽는다.
+
+**P1-2 — 엄격 디코딩은 이 change 자신의 spec 위반이다.**
+
+`strategyprojectionrpc.Client.Read`의 `DisallowUnknownFields()`는 새 엔진이 필드를 하나 더
+실어 보내는 순간 구버전 콘솔의 읽기를 통째로 실패시킨다. a112의 승인된 spec
+`runtime lineage와 health는 lane 단위로 결정적으로 관측된다`는 정반대를 요구한다 —
+"older readers가 additive unknown fields를 무시할 수 있어야 한다 (SHALL)", 그리고
+`legacy projection reader` 시나리오 "additive lane/coordinator fields를 무시해도 read가
+실패하지 않는다".
+
+결정 55에서 이것을 "공개하고 받아들이는 대가"로 적은 것은 **틀렸다.** 권위 순서는 안전 불변식 →
+승인된 OpenSpec → 현재 HEAD·실행 테스트다. 스스로 승인한 spec이 금지한 실패를 배포 관행으로
+정당화할 수 없다. 그리고 a112는 `lanes[8]`·`coordinators[2]`를 추가할 change이므로 이 충돌은
+어차피 터질 예정이었다.
+
+**엄격함이 실제로 지키던 것은 없다.** 응답은 0700 디렉터리 안 0600 소켓 뒤에서 bearer 토큰으로
+인증된 엔진 자신이 보내고, 크기는 `MaxProjectionBytes`, 형식은 디코더, 값 개수는 trailing 검사,
+의미는 `strategyprojection.Validate`가 각각 막는다. 모르는 필드 거절이 유일하게 만든 결과가
+"화면 전체가 죽는 것"이었다. 디스크 파일을 읽는 `readDescriptor`의 엄격함은 **유지한다** —
+위협 모델이 다르다.
+
+**Manager 재정 — 원장 확장 2건.**
+
+1. **`internal/strategyprojectionrpc/transport.go` — 승인.** L5 원장에는 없지만 이 lot이 바꾼
+   projection이 건너는 transport 자체이고, 위반한 spec 요구가 이 change 자신의 것이다.
+2. **`internal/strategyprojectionrpc/transport_unix_test.go` — 승인.**
+   `TestUnixClientRejectsUnknownSchemaFieldsAndOversizedResponse`의 두 팔 중 unknown-field 팔이
+   spec이 금지하는 동작을 고정하고 있었다. 크기 팔은 그대로 두고 이름을
+   `TestUnixClientRejectsOversizedResponse`로 좁혔다. 잃은 커버리지는 없다 —
+   `a112_additive_fields_test.go`가 양쪽으로 잰다. 사라진 이름은 base 리비전 FLM 번들로
+   남겼다(`revision: base`).
+
+**잔여 window는 여전히 있고, 이번에는 고칠 수 없다.** 이미 설치된 구버전 바이너리에는 엄격한
+디코더가 박혀 있다. 이 정정이 사는 것은 **다음번부터**다. 지금 배포의 완화책은 하나뿐이고
+현재 배포가 이미 그렇게 한다 — `compose.yaml`의 두 서비스가 같은 이미지에서 뜨고 한 번에 교체된다.
+
+**P2 둘.**
+
+- `runtime` 생략·`null`·`{}`가 Go에서 모두 같은 nil 쌍으로 디코딩되어 OpenAPI의 `required`를
+  강제하지 못한다. **고치지 않는다.** 이 모델의 모든 필드가 같은 성질이고(생략된 `lane`도
+  zero value가 된다), 문서의 `required`는 "우리가 무엇을 내보내는가"를 적은 것이며 Go는 이 필드를
+  항상 직렬화한다. 받는 쪽 판정은 `Validate`가 의미 단위로 한다.
+- 투영→Unix client→집계→SSE를 identity를 실은 채로 관통하는 테스트가 없다. `Client.Read`
+  경로는 `TestClientIgnoresAdditiveFieldsFromANewerEngine`이 덮지만 SSE parity는 여전히
+  nil 쌍 스냅샷을 쓴다. **열린 잔여로 남긴다** — L5의 8-worker projection이 `lanes[8]`을 실을 때
+  같은 자리에서 함께 세우는 것이 맞다.
+
+| 뮤테이션 (모두 실측) | 결과 |
+|---|---|
+| M1 — `Clone`에서 `Runtime` 복사 제거 | KILLED |
+| M2 — config/build 인자 맞바꿈 | KILLED |
+| M3 — 콘솔이 부재 자리에 값을 지어냄 | KILLED |
+| M4 — `sha256:` 접두사 재차 제거 (P1-1 원래 결함) | KILLED |
+| M5 — `DisallowUnknownFields()` 복원 (P1-2 원래 결함) | KILLED |

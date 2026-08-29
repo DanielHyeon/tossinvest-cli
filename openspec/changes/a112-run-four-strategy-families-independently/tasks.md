@@ -88,6 +88,7 @@
 
 ## 5. Independent Worker and Arbitration Runtime
 
+- [x] 5.0 Expose the engine process's own `ConfigDigest`/`BuildDigest` additively on the read-only projection envelope so REST, SSE, console and the private Unix transport all show the two numbers a signed activation manifest requires; the value must survive a market-level latch overlay, a snapshot that did not come from a running engine must report absence rather than a number, and no consumer may substitute its own build [a112 결정 54, 결정 55].
 - [ ] 5.1 Introduce typed family/worker keys, immutable proposal envelopes, bounded coalescing queue and versioned worker runtime policy without exposing mutation capabilities.
 - [ ] 5.1.1 Introduce explicit `FamilyWorker` and `MarketCoordinator` production types rather than hiding four family instances behind the existing two-market `StrategyMarketWorker` contract.
 - [ ] 5.2 Replace market-level single-proposal readiness with four independently supervised lane workers per market and keep remote evidence refresh outside the shared assembly mutex.

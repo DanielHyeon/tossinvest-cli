@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_runtime_projection.go",
-  "source_sha256": "6f8241d38004892cdf51bb71f597b368545e3d18e362ecd036e666462de42fce",
+  "source_sha256": "045bad629e9087a86fdbb9c67cb6f90e4e9ef898f1a37fb2aefbbeee30aa3296",
   "package": "engine",
   "function": "Read",
   "receiver": "Context",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 49,
+    "line": 65,
     "column": 2
   },
   "branches": [
@@ -40,25 +40,33 @@
     },
     {
       "id": "B4",
-      "kind": "range",
+      "kind": "if",
       "at": {
-        "line": 37,
+        "line": 50,
         "column": 2
       }
     },
     {
       "id": "B5",
-      "kind": "if",
+      "kind": "range",
       "at": {
-        "line": 39,
-        "column": 3
+        "line": 53,
+        "column": 2
       }
     },
     {
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 43,
+        "line": 55,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 59,
         "column": 3
       }
     }
@@ -88,7 +96,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 48,
+        "line": 51,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 64,
         "column": 2
       }
     }
@@ -137,7 +152,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 38,
+        "line": 48,
+        "column": 13
+      },
+      "text": "strategyprojection.WithRuntimeIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 3
+      },
+      "text": "strategyRuntimeConfigDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 34
+      },
+      "text": "strategyRuntimeBuildDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
         "column": 17
       },
       "text": "supervisor.Snapshot"
@@ -145,7 +184,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 42,
+        "line": 58,
         "column": 23
       },
       "text": "strategyprojection.Market"
@@ -153,7 +192,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 44,
+        "line": 60,
         "column": 15
       },
       "text": "strategyprojection.WithMarketFailure"
@@ -175,30 +214,37 @@
       }
     },
     {
+      "kind": "=",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    },
+    {
       "kind": ":=",
       "at": {
-        "line": 38,
+        "line": 54,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 42,
+        "line": 58,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 43,
+        "line": 59,
         "column": 6
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 44,
+        "line": 60,
         "column": 4
       }
     }

@@ -31,8 +31,24 @@ func (c *Context) Read(ctx context.Context) (strategyprojection.Snapshot, error)
 		return strategyprojection.Snapshot{}, errors.New("engine: strategy runtime projection unavailable")
 	}
 	snapshot, err := store.Read(ctx)
-	if err != nil || supervisor == nil {
+	if err != nil {
 		return snapshot, err
+	}
+	// 이 프로세스가 실제로 쓰는 두 digest 를 여기서 붙인다 — a112 결정 54.
+	//
+	// 왜 store 가 아니라 여기인가: store 의 내용은 전략 assembly refresh 가 채우는데,
+	// 그 refresh 는 아직 한 번도 안 돌았거나 실패했을 수 있다. 운영자가 이 숫자를 가장
+	// 필요로 하는 순간이 바로 그때다. Read 는 REST·SSE·콘솔·Unix transport 가 모두
+	// 지나는 단 하나의 출구라서, 여기 붙이면 어느 표면에서도 같은 값이 보인다.
+	//
+	// **접두사를 벗기지 않는다.** 활성화 매니페스트 검증은 이 문자열을 그대로 비교한다
+	// (`scheduler.validateProductionActivationManifest` 의 `body.ConfigVersion !=
+	// binding.ConfigVersion`). 벗겨서 보여 주면 운영자가 옮겨 적은 매니페스트를 엔진이
+	// 거절한다 — 이 기능이 없애려던 바로 그 실패다.
+	snapshot = strategyprojection.WithRuntimeIdentity(snapshot,
+		strategyRuntimeConfigDigest(), strategyRuntimeBuildDigest())
+	if supervisor == nil {
+		return snapshot, nil
 	}
 	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
 		worker, ok := supervisor.Snapshot(market)
