@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a059-console-finds-the-engine-it-owns",
-    "path": "openspec/changes/a059-console-finds-the-engine-it-owns"
+    "path": "openspec/changes/archive/2026-08-29-a059-console-finds-the-engine-it-owns"
   },
   "acceptance": [
     "An engine spawned by the console with --config-dir and --session-file is found by the console's own process lookup",

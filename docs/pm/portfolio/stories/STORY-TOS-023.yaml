@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "console-owns-the-operating-toggles",
-    "path": "openspec/changes/console-owns-the-operating-toggles"
+    "path": "openspec/changes/archive/2026-08-29-console-owns-the-operating-toggles"
   },
   "acceptance": ["The console-owns-the-operating-toggles OpenSpec contract and tasks are satisfied"]
 }

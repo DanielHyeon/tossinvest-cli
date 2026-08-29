@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "console-operator-overview",
-    "path": "openspec/changes/console-operator-overview"
+    "path": "openspec/changes/archive/2026-08-29-console-operator-overview"
   },
   "acceptance": ["The console-operator-overview OpenSpec contract and tasks are satisfied"]
 }

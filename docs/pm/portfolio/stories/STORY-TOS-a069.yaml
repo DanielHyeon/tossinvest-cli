@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a069-add-kr-us-weekly-value-lanes",
-    "path": "openspec/changes/a069-add-kr-us-weekly-value-lanes"
+    "path": "openspec/changes/archive/2026-08-29-a069-add-kr-us-weekly-value-lanes"
   },
   "acceptance": [
     "OpenDART and SEC EDGAR point-in-time value evidence feed separate KR and US weekly lanes in the same delivery wave",

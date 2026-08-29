@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a040-adopt-stockos-openspec-naming",
-    "path": "openspec/changes/a040-adopt-stockos-openspec-naming"
+    "path": "openspec/changes/archive/2026-08-29-a040-adopt-stockos-openspec-naming"
   },
   "acceptance": [
     "Every new numbered change uses aNNN-kebab-intent and exactly one STORY-TOS-aNNN",

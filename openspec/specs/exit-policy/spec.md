@@ -332,3 +332,102 @@ flat 관측 지원은 기존 exit quote 호출 수와 rate priority를 늘려서
 #### Scenario: 실제 보호선 breach
 - **WHEN** flat refresh 사이에 유효 가격이 current protection을 침범한다
 - **THEN** 기존 complete judgement, durable arm, submit 순서로 정확히 한 보호 proposal이 처리된다
+
+### Requirement: 포지션별 등록 ladder 평가
+exit 관측 루프는 LADDER 포지션마다 저장된 policy ID로 등록 정책을 해석하고, observer 전역 공통표로 서로 다른 활성 포지션을 재해석해서는 안 된다 (SHALL NOT).
+
+#### Scenario: 서로 다른 활성 정책
+- **WHEN** 같은 계좌의 두 활성 포지션이 각각 BALANCED와 HYBRID_50 snapshot을 가진다
+- **THEN** 각 포지션은 자신의 목표·보호선·부분익절 비율로 평가된다
+
+#### Scenario: 저장된 정책이 등록되지 않음
+- **WHEN** LADDER exit state의 non-empty policy ID가 현재 registry에 없다
+- **THEN** 그 포지션의 판정과 주문 제출은 보류되고 운영 경고가 기록된다
+
+### Requirement: 기존 청산 우선순위와 단조성 보존
+공통 정책 평가는 기존 baseline breach의 위험 축소 우선순위, pending take-profit cancel-first, journal arm-before-submit, baseline/high-water 단조성 규칙을 그대로 적용해야 한다 (SHALL).
+
+#### Scenario: rung 승격과 보호선 이탈 동시 발생
+- **WHEN** 한 관측에서 high-water가 새 rung/trailing 보호선을 승격시키고 현재가가 그 보호선 아래다
+- **THEN** 더 높은 보호선을 먼저 기록하고 부분익절보다 잔량 전량 보호 청산을 우선한다
+
+#### Scenario: pending 부분익절 중 보호선 이탈
+- **WHEN** 부분익절 proposal이 pending인 동안 보호선이 이탈된다
+- **THEN** 청산을 보류하지 않고 기존 주문을 먼저 취소한 뒤 잔량 청산 proposal을 처리한다
+
+### Requirement: 같은 정책 안의 rung 전진은 격리 사유가 아니다
+
+시스템은 policy identity·position·generation·entry·initial stop이 모두 일치하는 두 복구 후보에 대해, 한쪽만 rung을 활성화했다는 이유로 그 쌍을 비교 불가로 판정해서는 안 된다(SHALL NOT).
+rung 미활성은 ladder 단계의 **최하위**이며, rung 미활성에서 rung n으로의 이동은 정상적인 전진으로 비교해야 한다(SHALL). ladder 정책은 rung으로, ratchet 정책은 ratchet level로 단계를 판정하며, 두 후보가 모두 rung 미활성이면 기존 ratchet level 순위 비교를 그대로 사용해야 한다(SHALL).
+
+이 요구사항은 격리 자체를 약화해서는 안 된다(SHALL NOT). policy identity가 다르거나, 해석할 수 없는 ratchet level이거나, protection·high-water·단계가 서로 다른 방향으로 움직여 하나의 검증된 후보를 고를 수 없으면 기존대로 해당 포지션을 격리해야 한다(SHALL). 재계산 후보가 저장 후보보다 뒤쳐진 단계이면 저장 후보를 유지해야 하며 기준선을 낮춰서는 안 된다(MUST NOT).
+
+#### Scenario: 첫 rung 활성화
+- **WHEN** 저장된 canonical snapshot이 rung 미활성이고 같은 정책의 재계산 후보가 rung 0을 활성화하며 protection과 high-water도 함께 올랐다
+- **THEN** 재계산 후보가 통째로 선택되고 포지션은 격리되지 않으며 판정이 계속된다
+
+#### Scenario: rung을 잃은 재계산
+- **WHEN** 저장된 후보가 rung n을 보유하고 재계산 후보가 rung 미활성으로 돌아갔다
+- **THEN** 저장된 후보가 유지되고 기준선이 낮아지지 않는다
+
+#### Scenario: 여전히 엇갈리는 축
+- **WHEN** 재계산 후보의 rung은 더 높은데 protection은 저장 후보보다 낮다
+- **THEN** 하나의 후보를 고르지 않고 해당 포지션을 격리한다
+
+#### Scenario: 정책이 다른 두 후보
+- **WHEN** 두 후보의 policy identity·entry·initial stop 중 하나라도 다르다
+- **THEN** rung 상태와 무관하게 정체성 불일치로 거부한다
+
+#### Scenario: 해석할 수 없는 ratchet level
+- **WHEN** 두 후보가 모두 rung 미활성이고 한쪽의 ratchet level이 알려진 순위에 없다
+- **THEN** 기존대로 정체성 불일치로 거부한다
+
+#### Scenario: 판정이 멈추지 않는다
+- **WHEN** 관리 중인 ladder 포지션이 첫 익절선을 넘는다
+- **THEN** 그 포지션은 이후 관측 주기에서도 계속 판정 대상이며 손절 평가가 유지된다
+
+### Requirement: 격리는 그것을 내린 판정자가 바뀌면 한 번 다시 판정된다
+
+격리 행에는 그 판정을 내린 **복구 선택기의 개정**을 기록해야 한다(SHALL).
+
+활성 격리의 기록된 개정이 현재 빌드의 개정과 다르면, 시스템은 그 세대를 판정 대상에서
+제외하지 않고 복구 선택을 **한 번 다시 수행해야 한다**(SHALL). 개정이 기록되지 않은
+격리(이 요구사항 이전에 기록된 행)는 개정이 다른 것으로 취급한다(SHALL).
+
+재판정이 검증된 후보 하나를 선택하면 그 격리를 자동 해제하고, 해제 원인이 사람이나
+계좌 권위가 아니라 **선택기 개정**임을 원장에서 구별할 수 있어야 한다(SHALL). 해제와
+판정 기록은 하나의 원자적 단위여야 한다(SHALL) — 격리는 풀렸는데 판정은 기록되지 않은
+상태가 남아서는 안 된다(SHALL NOT).
+
+재판정이 여전히 안전한 후보 하나를 고르지 못하면 기존 격리를 닫고 **현재 개정으로
+기록한 새 격리**를 열어야 한다(SHALL). 같은 개정이 같은 세대를 두 번 재판정해서는
+안 된다(SHALL NOT).
+
+이 요구사항은 격리의 판정 기준을 약화해서는 안 된다(SHALL NOT). 재판정은 격리를
+만든 것과 동일한 복구 선택을 수행하며, policy identity 불일치·해석 불가능한 단계·
+서로 다른 방향으로 움직인 축은 그대로 격리 사유로 남는다. 재판정이 거부로 끝나는 경로는
+어떤 주문도 준비해서는 안 된다(SHALL NOT).
+
+선택기 개정이 같은 격리의 해제는 운영자 확인뿐이라는 기존 경로를 그대로 유지한다(SHALL).
+
+#### Scenario: 결함을 고친 빌드가 그 결함이 만든 격리를 만난다
+- **WHEN** 활성 격리의 기록된 선택기 개정이 현재 빌드의 개정과 다르고, 재판정이 검증된 후보 하나를 선택한다
+- **THEN** 격리는 선택기 개정을 원인으로 자동 해제되고, 같은 트랜잭션에서 판정이 기록되며, 그 포지션은 이후 관측에서 손절을 포함해 정상 판정된다
+
+#### Scenario: 개정 기록이 없는 과거 격리
+- **WHEN** 선택기 개정이 기록되지 않은 활성 격리를 가진 포지션이 관측된다
+- **THEN** 개정이 다른 것으로 취급해 한 번 재판정한다
+
+#### Scenario: 원인이 아직 남아 있다
+- **WHEN** 개정이 다른 격리를 재판정했는데 여전히 안전한 후보 하나를 고를 수 없다
+- **THEN** 기존 격리는 닫히고 현재 개정으로 기록한 새 격리가 열리며, 어떤 주문도 준비되지 않는다
+
+#### Scenario: 같은 개정은 두 번 시도하지 않는다
+- **WHEN** 현재 개정으로 기록된 활성 격리를 가진 포지션이 다음 관측 주기에 다시 나타난다
+- **THEN** 그 세대는 재판정되지 않고 지금과 같이 판정 대상에서 제외되며, 해제는 운영자 확인만 남는다
+
+#### Scenario: 해제만 되고 판정이 실패한다
+- **WHEN** 재판정 트랜잭션이 격리 해제 이후에 실패한다
+- **THEN** 해제와 판정이 함께 취소되고 격리는 활성 상태로 남는다
+
+---

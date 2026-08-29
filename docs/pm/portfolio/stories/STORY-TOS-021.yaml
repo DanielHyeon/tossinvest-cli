@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "console-excludes-in-one-click",
-    "path": "openspec/changes/console-excludes-in-one-click"
+    "path": "openspec/changes/archive/2026-08-29-console-excludes-in-one-click"
   },
   "acceptance": ["The console-excludes-in-one-click OpenSpec contract and tasks are satisfied"]
 }

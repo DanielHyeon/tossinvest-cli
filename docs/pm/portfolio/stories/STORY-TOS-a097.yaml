@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a097-a-re-armed-alert-is-a-new-episode",
-    "path": "openspec/changes/a097-a-re-armed-alert-is-a-new-episode"
+    "path": "openspec/changes/archive/2026-08-29-a097-a-re-armed-alert-is-a-new-episode"
   },
   "acceptance": [
     "A re-armed outbox row carries the cause of the observation that re-armed it, not the cause of the episode that settled",

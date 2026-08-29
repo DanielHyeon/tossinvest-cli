@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a082-one-token-across-the-processes",
-    "path": "openspec/changes/a082-one-token-across-the-processes"
+    "path": "openspec/changes/archive/2026-08-29-a082-one-token-across-the-processes"
   },
   "acceptance": [
     "A process refused by the broker adopts a different valid token already in the shared cache file instead of exchanging a new one that would invalidate the process holding it",

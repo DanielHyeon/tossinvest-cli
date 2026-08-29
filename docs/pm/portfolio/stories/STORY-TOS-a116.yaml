@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a116-install-codex-session-save-hook",
-    "path": "openspec/changes/a116-install-codex-session-save-hook"
+    "path": "openspec/changes/archive/2026-08-29-a116-install-codex-session-save-hook"
   },
   "found_by": {
     "date": "2026-08-17",

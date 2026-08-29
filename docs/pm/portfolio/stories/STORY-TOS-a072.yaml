@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a072-wire-multi-market-strategy-runtime",
-    "path": "openspec/changes/a072-wire-multi-market-strategy-runtime"
+    "path": "openspec/changes/archive/2026-08-29-a072-wire-multi-market-strategy-runtime"
   },
   "acceptance": [
     "A supervised production loop connects approved candidates through evidence, scheduler, router, lane, risk, Guardian, dispatch and the official gateway",

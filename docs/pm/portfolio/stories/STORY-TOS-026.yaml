@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "add-common-exit-optimization",
-    "path": "openspec/changes/add-common-exit-optimization"
+    "path": "openspec/changes/archive/2026-08-29-add-common-exit-optimization"
   },
   "acceptance": ["The add-common-exit-optimization OpenSpec contract and tasks are satisfied"]
 }

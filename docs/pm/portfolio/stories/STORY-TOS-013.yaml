@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "attest-covers-supervised-mutations",
-    "path": "openspec/changes/attest-covers-supervised-mutations"
+    "path": "openspec/changes/archive/2026-08-29-attest-covers-supervised-mutations"
   },
   "acceptance": ["The attest-covers-supervised-mutations OpenSpec contract and tasks are satisfied"]
 }

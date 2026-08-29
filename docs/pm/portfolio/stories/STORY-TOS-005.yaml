@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "verify-us-market",
-    "path": "openspec/changes/verify-us-market"
+    "path": "openspec/changes/archive/2026-08-29-verify-us-market"
   },
   "acceptance": ["The verify-us-market OpenSpec contract and tasks are satisfied"]
 }

@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a078-first-rung-keeps-its-judgement",
-    "path": "openspec/changes/a078-first-rung-keeps-its-judgement"
+    "path": "openspec/changes/archive/2026-08-29-a078-first-rung-keeps-its-judgement"
   },
   "acceptance": [
     "A ladder position holding a saved canonical snapshot at no rung, whose recomputation activates rung 0, is selected as a normal forward advance and is not quarantined",

@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "enable-vpn-console-access",
-    "path": "openspec/changes/enable-vpn-console-access"
+    "path": "openspec/changes/archive/2026-08-29-enable-vpn-console-access"
   },
   "acceptance": [
     "The loopback-published console opens without an application login",

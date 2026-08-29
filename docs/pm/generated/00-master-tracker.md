@@ -5,18 +5,18 @@
   - FEAT-TOS-001 — StockOS SDD toolchain adaptation [active]
     - STORY-TOS-001 — Adopt the full StockOS SDD workflow in TossOS [archived] → `adopt-stockos-full-sdd`
     - STORY-TOS-002 — Align TossOS Full SDD and enforce Story-to-OpenSpec one-to-one [in_progress] → `align-full-sdd-pm-contract`
-    - STORY-TOS-a040 — Adopt StockOS OpenSpec numbering and Story mapping [implemented] → `a040-adopt-stockos-openspec-naming`
-    - STORY-TOS-a116 — Codex saves its own session context [implemented] → `a116-install-codex-session-save-hook`
-    - STORY-TOS-a118 — A sealed test still runs [implemented] → `a118-a-sealed-test-still-runs`
+    - STORY-TOS-a040 — Adopt StockOS OpenSpec numbering and Story mapping [archived] → `a040-adopt-stockos-openspec-naming`
+    - STORY-TOS-a116 — Codex saves its own session context [archived] → `a116-install-codex-session-save-hook`
+    - STORY-TOS-a118 — A sealed test still runs [archived] → `a118-a-sealed-test-still-runs`
 - EPIC-TOS-005 — Secure delivery and engineering operations [active]
   - FEAT-TOS-007 — Secure remote access and signed releases [active]
-    - STORY-TOS-031 — Enable trusted-network VPN console access [implemented] → `enable-vpn-console-access`
+    - STORY-TOS-031 — Enable trusted-network VPN console access [archived] → `enable-vpn-console-access`
     - STORY-TOS-032 — Update TossOS from the console [archived] → `console-system-update`
     - STORY-TOS-033 — Require signed release system updates [archived] → `signed-release-system-update`
     - STORY-TOS-035 — Accept same-host console writes when privacy headers omit request origin [archived] → `fix-console-origin-fallback`
     - STORY-TOS-036 — Preserve canonical origin on console form submissions [archived] → `fix-console-referrer-origin`
     - STORY-TOS-037 — Automate Open API onboarding for soak restart [archived] → `automate-soak-openapi-onboarding`
-    - STORY-TOS-a082 — Let the console, engine and API daemon converge on one broker token instead of invalidating each other's [implemented] → `a082-one-token-across-the-processes`
+    - STORY-TOS-a082 — Let the console, engine and API daemon converge on one broker token instead of invalidating each other's [archived] → `a082-one-token-across-the-processes`
     - STORY-TOS-a103 — The rollback pin is made, not remembered [implemented] → `a103-the-rollback-pin-is-made-not-remembered`
   - FEAT-TOS-008 — SDD graph service reliability [active]
     - STORY-TOS-034 — Serialize project GBrain service ownership [archived] → `serialize-project-gbrain-serve`
@@ -24,39 +24,39 @@
 - EPIC-TOS-002 — Execution verification and trading safety [active]
   - FEAT-TOS-002 — Broker execution verification and measurement [active]
     - STORY-TOS-003 — Verify execution capability before relying on broker behavior [in_progress] → `verify-execution-capability`
-    - STORY-TOS-004 — Measure net risk-reward from executable evidence [implemented] → `add-net-rr-measurement`
-    - STORY-TOS-005 — Verify US market broker behavior [implemented] → `verify-us-market`
+    - STORY-TOS-004 — Measure net risk-reward from executable evidence [archived] → `add-net-rr-measurement`
+    - STORY-TOS-005 — Verify US market broker behavior [archived] → `verify-us-market`
     - STORY-TOS-006 — Apply verified US measurement corrections [implemented] → `apply-us-measurement-fixes`
     - STORY-TOS-007 — Clear verification leftovers safely [implemented] → `verify-clears-leftovers`
     - STORY-TOS-008 — Make verification survive already-processing responses [implemented] → `verify-survives-already-processing`
     - STORY-TOS-009 — Reopen conditional verification chains correctly [implemented] → `verify-reopens-conditional-chain`
-    - STORY-TOS-010 — Verify the exact object a mutation plan will change [implemented] → `verify-plans-the-object-it-mutates`
-    - STORY-TOS-011 — Verify conditional orders await the object they hold [implemented] → `verify-holds-what-it-awaits`
+    - STORY-TOS-010 — Verify the exact object a mutation plan will change [archived] → `verify-plans-the-object-it-mutates`
+    - STORY-TOS-011 — Verify conditional orders await the object they hold [archived] → `verify-holds-what-it-awaits`
     - STORY-TOS-012 — Verify conditional trigger observation [in_progress] → `verify-observes-the-trigger`
   - FEAT-TOS-003 — Engine interlocks and Guardian controls [active]
-    - STORY-TOS-013 — Attest supervised mutation coverage [implemented] → `attest-covers-supervised-mutations`
-    - STORY-TOS-014 — Size the US Guardian risk tier [implemented] → `size-us-guardian-tier`
-    - STORY-TOS-015 — Gate entry without delaying risk-reducing exits [implemented] → `interlock-gates-entry-not-exit`
+    - STORY-TOS-013 — Attest supervised mutation coverage [archived] → `attest-covers-supervised-mutations`
+    - STORY-TOS-014 — Size the US Guardian risk tier [archived] → `size-us-guardian-tier`
+    - STORY-TOS-015 — Gate entry without delaying risk-reducing exits [archived] → `interlock-gates-entry-not-exit`
     - STORY-TOS-016 — Wire the production risk Guardian [archived] → `wire-production-risk-guardian`
     - STORY-TOS-017 — Prime engine account sequence safely [archived] → `prime-engine-account-seq`
     - STORY-TOS-a045 — Add broker-resident protection orders [archived] → `a045-add-protection-orders`
-    - STORY-TOS-a056 — Keep an advisory marker from refusing an engine start [implemented] → `a056-autostart-survives-container-recreate`
-    - STORY-TOS-a059 — Let the console find exactly the engine it owns [implemented] → `a059-console-finds-the-engine-it-owns`
+    - STORY-TOS-a056 — Keep an advisory marker from refusing an engine start [archived] → `a056-autostart-survives-container-recreate`
+    - STORY-TOS-a059 — Let the console find exactly the engine it owns [archived] → `a059-console-finds-the-engine-it-owns`
     - STORY-TOS-a100 — Holdings leave a stop at the broker [in_progress] → `a100-wire-fill-to-broker-protection`
-    - STORY-TOS-a102 — Boot does not starve the engine [implemented] → `a102-boot-does-not-starve-the-engine`
+    - STORY-TOS-a102 — Boot does not starve the engine [archived] → `a102-boot-does-not-starve-the-engine`
     - STORY-TOS-a107 — Retire the second protection core [in_progress] → `a107-retire-the-second-protection-core`
-    - STORY-TOS-a108 — Boot recovers from any leftover [implemented] → `a108-boot-recovers-from-any-leftover`
+    - STORY-TOS-a108 — Boot recovers from any leftover [archived] → `a108-boot-recovers-from-any-leftover`
     - STORY-TOS-a109 — The sibling endpoints recover too [archived] → `a109-the-sibling-endpoints-recover-too`
     - STORY-TOS-a113 — The projection probe proves death [in_progress] → `a113-the-projection-probe-proves-death`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
-    - STORY-TOS-018 — Require explicit console click approval [implemented] → `console-click-approval`
-    - STORY-TOS-019 — Provide an operator console overview [implemented] → `console-operator-overview`
-    - STORY-TOS-020 — Provide the console orders screen [implemented] → `console-orders-screen`
-    - STORY-TOS-021 — Manage console exclusions in one click [implemented] → `console-excludes-in-one-click`
-    - STORY-TOS-022 — Set Guardian limits from the console [implemented] → `console-sets-guardian-limits`
-    - STORY-TOS-023 — Own operating toggles in the console [implemented] → `console-owns-the-operating-toggles`
-    - STORY-TOS-024 — Configure engine autostart from the menu [implemented] → `enable-engine-autostart-menu`
+    - STORY-TOS-018 — Require explicit console click approval [archived] → `console-click-approval`
+    - STORY-TOS-019 — Provide an operator console overview [archived] → `console-operator-overview`
+    - STORY-TOS-020 — Provide the console orders screen [archived] → `console-orders-screen`
+    - STORY-TOS-021 — Manage console exclusions in one click [archived] → `console-excludes-in-one-click`
+    - STORY-TOS-022 — Set Guardian limits from the console [archived] → `console-sets-guardian-limits`
+    - STORY-TOS-023 — Own operating toggles in the console [archived] → `console-owns-the-operating-toggles`
+    - STORY-TOS-024 — Configure engine autostart from the menu [archived] → `enable-engine-autostart-menu`
     - STORY-TOS-039 — Streamline trading views and remove CSP-blocked controls [archived] → `streamline-trading-views`
     - STORY-TOS-a054 — Give every console screen one status strip and one name [archived] → `a054-console-status-shell`
     - STORY-TOS-a055 — Group settings by reversibility and cadence, not by feature name [archived] → `a055-console-settings-cadence`
@@ -70,17 +70,17 @@
     - STORY-TOS-a076 — Move the subscribe address to a phone by scanning it instead of typing it [in_progress] → `a076-the-subscribe-address-is-scannable`
     - STORY-TOS-a080 — Refresh the protection line on the engine's cadence instead of the broker cache TTL [archived] → `a080-line-refreshes-on-engine-cadence`
     - STORY-TOS-a081 — Let the trading screens share one reading of the engine instead of asking it per render [archived] → `a081-screens-share-one-engine-reading`
-    - STORY-TOS-a085 — Say which stock, in Korean, in the alert and on the position screen [implemented] → `a085-an-alert-says-which-stock`
+    - STORY-TOS-a085 — Say which stock, in Korean, in the alert and on the position screen [archived] → `a085-an-alert-says-which-stock`
     - STORY-TOS-a101 — The capability survey outlives a deploy [implemented] → `a101-the-soak-outlives-a-deploy`
     - STORY-TOS-a114 — The console reattaches its lifecycle [in_progress] → `a114-the-console-reattaches-its-lifecycle`
     - STORY-TOS-a115 — The console strategy screen reattaches [in_progress] → `a115-the-console-strategy-screen-reattaches`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
-    - STORY-TOS-026 — Optimize and configure the common exit policy [implemented] → `add-common-exit-optimization`
+    - STORY-TOS-026 — Optimize and configure the common exit policy [archived] → `add-common-exit-optimization`
     - STORY-TOS-038 — Restore truthful adoption management controls [archived] → `fix-adoption-console-truth`
     - STORY-TOS-a062 — Keep external orders out of engine-owned reconciliation [archived] → `a062-reconcile-owned-orders`
-    - STORY-TOS-a083 — Let a reconciliation quantity block release itself after the adjustment it earned [implemented] → `a083-a-block-releases-itself`
-    - STORY-TOS-a110 — Only the same unresolved reconciliation dispute becomes permanent [implemented] → `a110-only-the-same-dispute-becomes-permanent`
+    - STORY-TOS-a083 — Let a reconciliation quantity block release itself after the adjustment it earned [archived] → `a083-a-block-releases-itself`
+    - STORY-TOS-a110 — Only the same unresolved reconciliation dispute becomes permanent [archived] → `a110-only-the-same-dispute-becomes-permanent`
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
     - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [archived] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [archived] → `a042-persist-exit-line-snapshots`
@@ -88,19 +88,19 @@
     - STORY-TOS-a044 — Manage per-position exit policies and lifecycle [archived] → `a044-manage-position-exit-policies`
     - STORY-TOS-a052 — Explain reconcile-blocked position adoption [archived] → `a052-reconcile-aware-position-management`
     - STORY-TOS-a053 — Restore visible exit-line references across markets [archived] → `a053-restore-visible-exit-line-references`
-    - STORY-TOS-a078 — Stop quarantining a ladder position for activating its first rung [implemented] → `a078-first-rung-keeps-its-judgement`
+    - STORY-TOS-a078 — Stop quarantining a ladder position for activating its first rung [archived] → `a078-first-rung-keeps-its-judgement`
     - STORY-TOS-a079 — Let an operator lift an exit-snapshot quarantine without rebuilding the baseline [in_progress] → `a079-operator-can-lift-a-quarantine`
     - STORY-TOS-a074 — Make the moment protection stops visible, and let critical alerts actually leave the machine [in_progress] → `a074-critical-events-reach-the-operator`
-    - STORY-TOS-a084 — Re-judge a quarantine once when the recovery selector that made it has changed [implemented] → `a084-a-quarantine-outlives-its-cause`
+    - STORY-TOS-a084 — Re-judge a quarantine once when the recovery selector that made it has changed [archived] → `a084-a-quarantine-outlives-its-cause`
     - STORY-TOS-a087 — A protective exit is a market order, not a limit order [in_progress] → `a087-a-protective-exit-is-a-market-order`
     - STORY-TOS-a089 — An unserved stop is counted, recorded and visible [in_progress] → `a089-an-unserved-stop-is-counted`
     - STORY-TOS-a091 — A stop that sold nothing is critical [in_progress] → `a091-a-stop-that-sold-nothing-is-critical`
     - STORY-TOS-a092 — An alert does not hold the stop [in_progress] → `a092-an-alert-does-not-hold-the-stop`
     - STORY-TOS-a094 — A stop clears what blocks it [in_progress] → `a094-a-stop-clears-what-blocks-it`
     - STORY-TOS-a095 — A stop must know what it covers [in_progress] → `a095-a-stop-must-know-what-it-covers`
-    - STORY-TOS-a096 — One condition is one alert [implemented] → `a096-one-condition-is-one-alert`
-    - STORY-TOS-a097 — A re-armed alert is a new episode [implemented] → `a097-a-re-armed-alert-is-a-new-episode`
-    - STORY-TOS-a098 — Nobody sends what the outbox keeps [implemented] → `a098-nobody-sends-what-the-outbox-keeps`
+    - STORY-TOS-a096 — One condition is one alert [archived] → `a096-one-condition-is-one-alert`
+    - STORY-TOS-a097 — A re-armed alert is a new episode [archived] → `a097-a-re-armed-alert-is-a-new-episode`
+    - STORY-TOS-a098 — Nobody sends what the outbox keeps [archived] → `a098-nobody-sends-what-the-outbox-keeps`
     - STORY-TOS-a099 — A claim excludes the second sender [in_progress] → `a099-a-claim-excludes-the-second-sender`
     - STORY-TOS-a111 — Exit lines stay actionable with flat quotes [archived] → `a111-exit-lines-stay-actionable-with-flat-quotes`
   - FEAT-TOS-012 — Mobile and service API [active]
@@ -109,15 +109,15 @@
     - STORY-TOS-CONTAINER-MODE — Pin the container entrypoint executable mode [archived] → `fix-container-entrypoint-permission`
 - EPIC-TOS-004 — Candidate discovery and entry quality [active]
   - FEAT-TOS-006 — Candidate discovery and signal refinement [active]
-    - STORY-TOS-027 — Add candidate discovery [implemented] → `add-candidate-discovery`
-    - STORY-TOS-028 — Fix chase-veto measurement [implemented] → `fix-chase-veto-measurement`
-    - STORY-TOS-029 — Retire the gainers candidate source [implemented] → `retire-gainers-source`
-    - STORY-TOS-030 — Refine extended-shadow bands [implemented] → `refine-extended-shadow-bands`
+    - STORY-TOS-027 — Add candidate discovery [archived] → `add-candidate-discovery`
+    - STORY-TOS-028 — Fix chase-veto measurement [archived] → `fix-chase-veto-measurement`
+    - STORY-TOS-029 — Retire the gainers candidate source [archived] → `retire-gainers-source`
+    - STORY-TOS-030 — Refine extended-shadow bands [archived] → `refine-extended-shadow-bands`
     - STORY-TOS-a046 — Approve evidence-backed candidate veto thresholds [archived] → `a046-approve-candidate-veto-thresholds`
   - FEAT-TOS-010 — Strategy entry and market-aware scheduling [active]
     - STORY-TOS-a047 — Add the strategy entry engine [archived] → `a047-add-strategy-engine`
     - STORY-TOS-a048 — Add market-aware strategy scheduling [archived] → `a048-add-market-aware-scheduler`
-    - STORY-TOS-a117 — The minute timestamp is the bar's close [implemented] → `a117-the-minute-timestamp-is-the-bars-close`
+    - STORY-TOS-a117 — The minute timestamp is the bar's close [archived] → `a117-the-minute-timestamp-is-the-bars-close`
   - FEAT-TOS-011 — Lane performance and strategy optimization [active]
     - STORY-TOS-a049 — Add deterministic lane performance attribution [archived] → `a049-add-lane-performance`
     - STORY-TOS-a050 — Add versioned strategy optimization lifecycle [archived] → `a050-add-strategy-optimization`
@@ -127,9 +127,9 @@
     - STORY-TOS-a066 — Cap multi-horizon risk and enforce single-lane ownership [in_progress] → `a066-add-multi-horizon-risk-buckets`
     - STORY-TOS-a067 — Add concurrent KR and US short continuation lanes [in_progress] → `a067-add-kr-us-continuation-lanes`
     - STORY-TOS-a068 — Add concurrent KR and US short reversal lanes [in_progress] → `a068-add-kr-us-reversal-lanes`
-    - STORY-TOS-a069 — Add concurrent KR and US weekly value repricing lanes [implemented] → `a069-add-kr-us-weekly-value-lanes`
+    - STORY-TOS-a069 — Add concurrent KR and US weekly value repricing lanes [archived] → `a069-add-kr-us-weekly-value-lanes`
     - STORY-TOS-a070 — Route candidates across markets, horizons and owning lanes [in_progress] → `a070-add-multi-market-horizon-router`
     - STORY-TOS-a071 — Wire attested broker protection for KR and US entry [in_progress] → `a071-wire-kr-us-protection-readiness`
-    - STORY-TOS-a072 — Wire the supervised KR and US strategy entry runtime [implemented] → `a072-wire-multi-market-strategy-runtime`
+    - STORY-TOS-a072 — Wire the supervised KR and US strategy entry runtime [archived] → `a072-wire-multi-market-strategy-runtime`
     - STORY-TOS-a073 — Operate and deploy the concurrent KR and US lanes [implemented] → `a073-operate-multi-market-strategy-lanes`
     - STORY-TOS-a112 — Run four strategy families as independent evaluators [in_progress] → `a112-run-four-strategy-families-independently`

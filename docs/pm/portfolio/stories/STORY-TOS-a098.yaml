@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a098-nobody-sends-what-the-outbox-keeps",
-    "path": "openspec/changes/a098-nobody-sends-what-the-outbox-keeps"
+    "path": "openspec/changes/archive/2026-08-29-a098-nobody-sends-what-the-outbox-keeps"
   },
   "acceptance": [
     "A critical alert written to the outbox has an executor that retries it, because a recorded alert nobody sends is a record and not an alert",

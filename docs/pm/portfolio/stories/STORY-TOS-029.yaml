@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "retire-gainers-source",
-    "path": "openspec/changes/retire-gainers-source"
+    "path": "openspec/changes/archive/2026-08-29-retire-gainers-source"
   },
   "acceptance": ["The retire-gainers-source OpenSpec contract and tasks are satisfied"]
 }

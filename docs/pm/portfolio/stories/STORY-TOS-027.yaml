@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "add-candidate-discovery",
-    "path": "openspec/changes/add-candidate-discovery"
+    "path": "openspec/changes/archive/2026-08-29-add-candidate-discovery"
   },
   "acceptance": ["The add-candidate-discovery OpenSpec contract and tasks are satisfied"]
 }

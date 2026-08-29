@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a096-one-condition-is-one-alert",
-    "path": "openspec/changes/a096-one-condition-is-one-alert"
+    "path": "openspec/changes/archive/2026-08-29-a096-one-condition-is-one-alert"
   },
   "acceptance": [
     "A critical alert whose outbox row has already been delivered or acknowledged is not sent again when the same condition is observed inside the reminder window",

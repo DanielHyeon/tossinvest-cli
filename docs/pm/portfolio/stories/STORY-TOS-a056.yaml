@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a056-autostart-survives-container-recreate",
-    "path": "openspec/changes/a056-autostart-survives-container-recreate"
+    "path": "openspec/changes/archive/2026-08-29-a056-autostart-survives-container-recreate"
   },
   "acceptance": [
     "A fresh engine marker whose PID no longer exists does not refuse a start; the start proceeds and the flock remains the exclusion",

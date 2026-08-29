@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a083-a-block-releases-itself",
-    "path": "openspec/changes/a083-a-block-releases-itself"
+    "path": "openspec/changes/archive/2026-08-29-a083-a-block-releases-itself"
   },
   "acceptance": [
     "An adjustment credit records the as-of of the comparison it was computed from, and an observation of that same comparison neither spends nor discards it",

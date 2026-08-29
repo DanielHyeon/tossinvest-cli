@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a085-an-alert-says-which-stock",
-    "path": "openspec/changes/a085-an-alert-says-which-stock"
+    "path": "openspec/changes/archive/2026-08-29-a085-an-alert-says-which-stock"
   },
   "acceptance": [
     "Alert titles and bodies are Korean and name a stock as name(code), taking the name from the holdings response the engine already reads, with no added broker request",
