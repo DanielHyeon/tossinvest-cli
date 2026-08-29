@@ -976,3 +976,72 @@ ever enters** — concentrated in `buildLaneInput` (18), `LoadProductionAuthorit
 production proposal path. They are written down as gaps, not smoothed over: `go test` does not instrument
 `_test.go` files, so test-function bundles carry an arm classification and the run that exercised them instead
 of a fabricated coverage number.
+
+### L3 review finding C4–C6 closed by mutation-verified regression tests (2026-08-29)
+
+The independent review of commit `3343e23d` reported three CRITICAL test-debt findings. Each was reported as
+CRITICAL because a **mutation of production code survived the suite** — not because the production code was
+wrong. All three are now closed by untagged tests, and each closure is proved the same way it was opened: by
+mutating production code and observing a named test fail.
+
+**Why untagged.** `make test` and CI run `go test ./...` with no `-tags tossos_testseams`
+(`Makefile:36`, `.github/workflows/ci.yml:30-31`). `internal/strategyproposal`'s only test file carries that
+tag, so the package ran **0 tests in CI**. Measured before and after, with `rtk proxy` so the runner's summary
+does not swallow `-v`:
+
+| package (untagged) | before | after |
+|---|---|---|
+| `internal/strategyproposal` | **0** | 7 |
+| `internal/strategyflow` | 84 | 89 |
+
+**New files, all without a build tag.**
+
+- `internal/strategyproposal/breakout_fail_closed_test.go` — the breakout refusal, plus a differential case
+  proving a non-breakout lane with the same empty scope is refused for a *different* reason. Without the
+  second case the first proves only "some error", not "the breakout lock".
+- `internal/strategyproposal/batch_authority_test.go` — `For` refusing a symbol with two lanes, `For`
+  returning the single lane, lane-order determinism over 64 rounds (Go randomises map iteration, so dropping
+  the sort fails this with probability ≈ 1), and the `\x00` key separator preventing `AAP` from reaching
+  `AAPL`.
+- `internal/strategyflow/route_decision_selection_test.go` — `selectRouteDecision` with **more than one
+  decision**, which is the entire point of the change: the requested lane found at position 3, a non-canonical
+  decision skipped rather than terminating the scan, the no-match fallback keeping the first canonical
+  decision, and both empty cases.
+
+**Mutation receipts.** Each mutation was applied to production source, run, then restored from a pristine copy
+and confirmed by `git diff --quiet` *and* by re-counting the restored symbol.
+
+| # | mutation | result | killed by |
+|---|---|---|---|
+| M1 | delete the breakout guard in `buildLaneInput` | KILLED | `TestBuildLaneInputRefusesBreakoutLanesWithTheBreakoutReason` |
+| M2 | `For` returns `values[0]` whenever the symbol has any lane | KILLED | `TestForRefusesASymbolThatHasMoreThanOneLane` |
+| M3 | drop `sort.Strings(keys)` in `LanesFor` | **discarded — false kill** | build failure, not a test |
+| M3′ | replace the sort with `sort.SearchStrings` so the build still holds | KILLED | `TestLanesForReturnsEveryLaneInTheSameOrderEveryTime` |
+| M4 | drop the `\x00` from `LanesFor`'s prefix | KILLED | `TestLanesForDoesNotLeakIntoASymbolThatMerelySharesAPrefix` |
+| M5 | `selectRouteDecision` scans only `Decisions[:1]` | KILLED | `…FindsTheRequestedLaneEvenWhenItIsNotFirst`, `…SkipsUnknownDecisionsAndKeepsLooking` |
+
+M3 is recorded rather than deleted. `sort` appears exactly once in `production.go`, so replacing the call with
+`_ = keys` left the import unused and the package stopped compiling. A build failure looks identical to a kill
+in the exit status and proves nothing about the test. M3′ is the real receipt.
+
+**Tasks deliberately left unticked.** These tests close review findings, not tasks. 4.4 asks for strict
+breakout snapshot/config *construction* (blocked by decision 49) and 4.5 for paired 8-descriptor integration
+tests; neither is delivered here.
+
+**Verification.** Real `gofmt` from `$(go env GOROOT)/bin` — 0 findings; `make lint` clean; `make test`
+(untagged, the CI target) — no failures; `-tags tossos_testseams` for both packages — ok; `make sdd-sync`
+all indexes current; `make sdd-check` OK. `make gate CHANGE=a112-…` still fails with **47 incomplete tasks**,
+unchanged by this commit — it is the change-completion gate and cannot pass mid-change.
+
+### Pre-existing tagged-only failure found while running the full tagged suite (2026-08-29)
+
+`TestActualEngineRecoveryStillFailsClosedOnASnapshot429` (`cmd/tossctl/engine_account_seq_recovery_test.go:219`)
+fails at `HEAD`, and fails identically with this commit's three new files moved out of the tree, so it is not
+caused by them. The assertion arrived on 2026-07-30 in `93165f96`, a month before a112 L3, and sits on many
+branches — and it is behind `tossos_testseams`, so CI has never run it.
+
+**What actually fails matters.** The safety assertions pass: recovery returns `ErrRecoveryIncomplete`,
+`report.Complete` is false, the partial snapshot is discarded, and `/api/v1/accounts` is called exactly once.
+The failing assertion is the call count — `/api/v1/orders calls = 21, want 1`, over 300s. So recovery **does**
+fail closed; what drifted is the retry policy against a 429 on a read endpoint. No order-placing path is
+implicated. It is recorded here as an open finding, unowned by a112, rather than silently carried.
