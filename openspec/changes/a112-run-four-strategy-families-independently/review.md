@@ -1287,3 +1287,124 @@ checker required it only because a pure insertion immediately after a function c
 tagged one, and its new ambiguity refusal arm is entered by **no** suite at all. The C2 correction is therefore
 guarded in CI by a structural test over the function's own AST, plus a full-fidelity behavioural test one package
 down in `internal/strategyproposal` where an ambiguous batch can actually be constructed without a build tag.
+
+### Decision 54 — C1 is a deploy-gate item, not a code defect, and C3's mechanism is subsumed by it (2026-08-29)
+
+The independent review's two remaining CRITICALs were re-derived from the code. **Both prescriptions change.**
+Every anchor below was re-read from `git show c8d9c0d5:<path>` blobs, because task 4.3 moved the line numbers in
+`internal/strategyrouter/production.go` while this was being measured.
+
+**The digest chain, and what a mismatch actually does.** `strategy_schedule_authority.go:288-292` hashes
+`{Domain, RouterID, RouterRelease, Lanes[]}` with SHA-256, where each `Lanes` element is
+`{Market, Horizon, LaneID, LaneVersion, Release}` — **lane identity only; `Desired`/`Effective` are not in it.**
+Four places compare the result: `scheduler/desired.go:292`, `scheduler/production_activation.go:188`,
+`strategyrouter/production.go:329`, `strategyproposal/production.go:518`. A mismatch is neither a panic nor an
+exception: `Restore` yields `ResumeDesiredMismatch` → `Ready=false` → `strategy_candidate_authority.go:150` and
+`strategy_route_authority.go:147` return `SCHEDULE_NOT_READY` → `strategy_entry_supervisor.go:425` returns nil.
+**The strategy entry loop keeps cycling and produces zero candidates. The safety loops are unaffected.**
+
+**C3 is subsumed.** The digest gate is evaluated *before* manifest validation, so the lane-count check C3 named is
+never reached. Repairing desired-state alone would still have `production.go:329` reject an old manifest
+irrespective of candidate count. C3 is therefore not tracked as an independent item.
+
+**Anchor correction.** The reported `production.go:389` (`return len(seen) == len(want)`) is the right function but
+the wrong arm. Of that function's three branches (374-390 at `c8d9c0d5`), **B1 at `:376`
+(`len(values) != len(want)`)** is what kills a legacy manifest; `:389` is an always-true tail return. Decision 51
+is anchored on B1.
+
+**There is no lane toggle in the code.** `Descriptors()` (`internal/strategyflow/registry.go`) is
+`return append([]Descriptor(nil), pairedDescriptors[:]...)` — one statement, zero branches, and it reads no
+toggle. A whole-tree `grep -rn "TOSSOS_STRATEGY"` returns only signed-manifest digest pins and public keys.
+Lane ON/OFF is expressed **only** inside the signed manifest's `eligible/desired/effective`, and all eight
+`pairedDescriptors` elements are `Desired: StateOff, Effective: StateOff`. **"Eight present, all OFF" is this
+design's canonical spelling of OFF**, and task 4.1's frozen golden (`four-family-runtime-v1.json`, enforced by
+`breakout_binding_test.go:151`'s `len != 8`) is what fixes it there.
+
+**C1 is not a burden a112 created.** The activation manifest's lifetime is 24 hours
+(`production_activation.go:24`, `productionActivationMaximumLife = 24 * time.Hour`) and `build_digest` is bound to
+the commit (`protection_wiring.go:24`). **Deploying a112 at all already invalidates the manifest.** Re-issuing is
+a standing requirement of every deploy, not this change's regression.
+
+**Current real-account exposure is zero, and the reason is corrected.** `~/.config/tossctl` holds no
+`scheduler-desired-*`, `strategy-activation-*`, `*lane-authority*` or `strategy-proposal-*` file; its three
+strategy-related directories contain only socket `endpoint.json`. With no file, `DefaultDesiredState()`
+(`AutoStart=false`) applies and `Restore` returns `ResumeAutoStartOff`, so **the digest comparison is never
+reached at all.** "Blocked because the digest differs" was the wrong description; "never gets as far as comparing"
+is the right one.
+
+**Disposition.**
+
+- **C1 is reclassified from CRITICAL to a deploy-gate item.** L3's ownership ledger contains neither
+  `strategy_schedule_authority.go` nor `strategy_runtime_projection.go`, so there was never an L3 edit that could
+  address it. **No L3 code changes.**
+- **L5** exposes `ConfigDigest`/`BuildDigest` additively on the read-only projection. Today the value is filled
+  into the snapshot but leaves through no operator surface at all
+  (`grep -rn "ConfigDigest" internal/httpapi/ cmd/tossctl/` → 0 hits), so **the number a human must write into the
+  file cannot be read.** Proof obligation: projected value == `strategyRuntimeConfigDigest()`.
+- **L7** turns the re-issue order (KR/US × 5 steps) into a deploy manifest.
+- **No signer is built.** a072 spec OS-1 fixes signing as a human authority outside this repository.
+
+**C3's prescription is rejected; only its diagnosability residue is accepted.** `design.md:208` lists `missing`,
+`partial 3-of-4` and `legacy 3-lane ON manifest` side by side in one sentence as things to refuse; `:210` excludes
+implicit migration because it widens the approved scope; `:254` states that a legacy manifest stays OFF/refusal.
+C3's narrow reading requires tolerating `missing`, which contradicts `:208` directly. §0.2's "OFF = upstream" does
+not govern here: the evidence that clause points at is the 650 upstream-inheritance tests, and
+`internal/strategyrouter/router.go` is product code first created in TossOS commit `7b57fd24` (2026-08-04).
+**Runtime decision semantics do not change** — breakout-OFF is expressed by signing the fourth candidate
+`eligible:false`. C3 read "behavioural compatibility" and "file compatibility" as one thing. The residue is
+per-field refusal attribution, and it is **not closed**: decision 51 raised the schema to
+`strategy-lane-authority:v2`, which closes the *class* of the refusal, but `verifyProductionRouteManifest` remains
+a single boolean. Carried forward as an open item.
+
+**Manager rulings on decision 51's two requests.**
+
+1. **Ledger extension by one file — `internal/strategyrouter/production_test.go` — approved.** It is the test for
+   a file already inside the ledger, it builds `productionRouteCandidate` with positional literals so a new field
+   breaks it mechanically, and its fixture manifest is by definition a legacy manifest once seals are required.
+2. **The `strategy-lane-authority:v2` bump — approved.** Verified fail-closed: the schema is checked inside the
+   refusing conjunction at `production.go:480`. Verified zero live impact: no signed route manifest exists on
+   disk. And `design.md:210` requires a re-signed four-family manifest regardless.
+
+**Independent Manager verification of `e12bca03`** (re-run, not taken on report):
+
+| Check | Result |
+|---|---|
+| `git diff c8d9c0d5 e12bca03 -- internal/strategyrouter/router.go` | empty — Route is untouched at compile level |
+| `grep -rn "strategyrouter\.Route("` outside tests | 0 callers |
+| C2 guard diff | +14 lines, insertion only, returns `fail(...)` before the first `entries` append |
+| `go test -count=1` over strategyrouter/strategyproposal/strategyflow/app-engine | ok |
+| the same four packages with `-tags tossos_testseams` | ok |
+
+### The `cmd/tossctl` rate-limit failure has an owner, and it is not a112 (2026-08-29)
+
+The failure recorded above as unowned is now diagnosed. **It is a stale expectation, not a production defect.**
+
+**21 is not a retry policy; it is a division.** `MaxRateLimitWait` 5m ÷ `RateLimitBackoff` 15s + 1. The 300-second
+wall time comes from the test passing `clock.System()`. Chain:
+`engine_account_seq_recovery_test.go:194,205` → `runtime_wiring.go:175` → `reconcile/recovery.go:238` → `:298` →
+`:371-404` `stableSnapshot` → `Collector.Collect` → `snapshot.go:271` `ScanOrders` → `GET /api/v1/orders` →
+`official/errors.go:54` → `ErrRateLimited` → `recovery.go:382` `waitOutRateLimit` → `ratelimit.go:108`
+`clk.Sleep(ctx, 15s)` → `recovery.go:385-386` "Deliberately no attempt++" → `continue`.
+
+**The contract was replaced deliberately.** The test file is a single commit, `93165f96` (2026-07-30), never
+updated. The retry contract changed 14 days later in `1c76a580` (2026-08-13,
+`feat(reconcile): 복구가 rate limit에 죽지 않는다 [a102 §1]`), whose message cites a real 2026-08-13T02:03:30.545Z
+incident and states the pre-change behaviour outright: a 429 on the boot account read ended restart recovery as
+immediately incomplete. `a102/specs/reconciliation/spec.md:14-16` requires the retry, the finite total wait, and a
+closed entry gate throughout. a102 is 34/34 complete. It hid because a102's own verification command
+(`a102/tasks.md:124`) carries no build tag.
+
+**Safety judgement — no shared mutation path.** The only code that loops is `stableSnapshot`, and inside it only
+`Collector.Collect` (three GETs). The execution gateway has no mutation-retry entry point at all
+(`internal/execgw/retry.go:6-14`, `:104-106`). Collector and gateway share one `official.Client` object but never
+overlap in time.
+
+**The cost that is real, and why it is still an improvement.** `runtime.go:288-297` runs `Recover` to completion
+**before any loop**, and `exit` — the stop-loss observer — is one of those loops (`cmd/tossctl/engine.go:679-710`).
+A sustained 429 at boot therefore delays the stop-loss loop by up to five minutes. This is **not** a weakening
+under safety invariant 4: before `1c76a580` the same 429 ended recovery immediately, the engine did not start, and
+the stop-loss loop did not run *at all*. The bound is finite and exceeding it fails closed.
+
+**Owner: not a112.** Fixing the assertion belongs with the lot that changed the contract (a102, not yet archived,
+and already holding the relevant logic-map bundles) or a small new change. Hard-coding `want 21` is refused: 21 is
+derived from two constants, so it rots when they move, and it burns 300 seconds of CI on every run.
