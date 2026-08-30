@@ -1,9 +1,9 @@
 # Function Logic Map: `NewStrategyEntrySupervisor`
 
 - Source: `internal/app/engine/strategy_entry_supervisor.go`
-- Current-base source SHA-256: `17ad4c0c684b74686dd1e80b256a06971802afa26bcfd300dbeac9bd5f7e0496`
+- Current-base source SHA-256: `12586e3cf90b708e66988931ad424d7312593bf518f0987a0893bf4f6f4b6fb9`
 - Signature: `NewStrategyEntrySupervisor(params=1, results=2)`
-- Source range: `495:1`–`572:2`
+- Source range: `494:1`–`571:2`
 - AST evidence: `ast.json`, generated from frozen base `016da6245feb60e13971388be386c2c2041469a8`.
 - Risk scan: `risk-pattern-report.md`.
 
@@ -14,63 +14,63 @@
 
 ## Branches and early returns
 
-- Exact AST return nodes: `501:3, 508:3, 511:3, 519:3, 525:4, 528:4, 531:4, 535:4, 539:4, 545:4, 548:4, 551:4, 565:4, 569:2`.
+- Exact AST return nodes: `500:3, 507:3, 510:3, 518:3, 524:4, 527:4, 530:4, 534:4, 538:4, 544:4, 547:4, 550:4, 564:4, 568:2`.
 
 | Branch | AST kind | Source location | Required test disposition |
 |---|---|---|---|
-| B1 | if | 497:2 | planned targeted RED before any edit; not run by L0 |
-| B2 | if | 500:2 | planned targeted RED before any edit; not run by L0 |
-| B3 | if | 504:2 | planned targeted RED before any edit; not run by L0 |
-| B4 | if | 507:2 | planned targeted RED before any edit; not run by L0 |
-| B5 | if | 510:2 | planned targeted RED before any edit; not run by L0 |
-| B6 | if | 514:2 | planned targeted RED before any edit; not run by L0 |
-| B7 | if | 518:2 | planned targeted RED before any edit; not run by L0 |
-| B8 | range | 523:2 | planned targeted RED before any edit; not run by L0 |
-| B9 | if | 524:3 | planned targeted RED before any edit; not run by L0 |
-| B10 | if | 527:3 | planned targeted RED before any edit; not run by L0 |
-| B11 | if | 530:3 | planned targeted RED before any edit; not run by L0 |
-| B12 | if | 533:3 | planned targeted RED before any edit; not run by L0 |
-| B13 | if | 537:3 | planned targeted RED before any edit; not run by L0 |
-| B14 | if | 541:3 | planned targeted RED before any edit; not run by L0 |
-| B15 | if | 547:3 | planned targeted RED before any edit; not run by L0 |
-| B16 | if | 550:3 | planned targeted RED before any edit; not run by L0 |
-| B17 | range | 563:2 | planned targeted RED before any edit; not run by L0 |
-| B18 | if | 564:3 | planned targeted RED before any edit; not run by L0 |
+| B1 | if | 496:2 | planned targeted RED before any edit; not run by L0 |
+| B2 | if | 499:2 | planned targeted RED before any edit; not run by L0 |
+| B3 | if | 503:2 | planned targeted RED before any edit; not run by L0 |
+| B4 | if | 506:2 | planned targeted RED before any edit; not run by L0 |
+| B5 | if | 509:2 | planned targeted RED before any edit; not run by L0 |
+| B6 | if | 513:2 | planned targeted RED before any edit; not run by L0 |
+| B7 | if | 517:2 | planned targeted RED before any edit; not run by L0 |
+| B8 | range | 522:2 | planned targeted RED before any edit; not run by L0 |
+| B9 | if | 523:3 | planned targeted RED before any edit; not run by L0 |
+| B10 | if | 526:3 | planned targeted RED before any edit; not run by L0 |
+| B11 | if | 529:3 | planned targeted RED before any edit; not run by L0 |
+| B12 | if | 532:3 | planned targeted RED before any edit; not run by L0 |
+| B13 | if | 536:3 | planned targeted RED before any edit; not run by L0 |
+| B14 | if | 540:3 | planned targeted RED before any edit; not run by L0 |
+| B15 | if | 546:3 | planned targeted RED before any edit; not run by L0 |
+| B16 | if | 549:3 | planned targeted RED before any edit; not run by L0 |
+| B17 | range | 562:2 | planned targeted RED before any edit; not run by L0 |
+| B18 | if | 563:3 | planned targeted RED before any edit; not run by L0 |
 
 ## Calls and live bindings
 
 | Callee expression | Source location | Current-base evidence/requirement |
 |---|---|---|
-| fmt.Errorf | 501:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 508:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 510:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 511:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| clock.System | 515:9 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| clk.Now | 517:9 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| now.IsZero | 518:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 519:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 522:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| validStrategyMarket | 524:7 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 525:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 528:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 531:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| descriptor.AuthorityExpiresAt.IsZero | 533:70 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| now.Before | 534:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| validStrategyDigest | 534:51 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 535:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| descriptor.RestartNotBefore.IsZero | 537:124 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| validStrategyWorkerRefusal | 538:96 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| descriptor.RestartNotBefore.IsZero | 538:151 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 539:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 545:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| descriptor.AuthorityExpiresAt.IsZero | 547:72 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 548:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| descriptor.RestartNotBefore.IsZero | 550:123 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 551:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 555:22 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 565:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 570:62 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 570:91 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 500:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 507:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| len | 509:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| errors.New | 510:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| clock.System | 514:9 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| clk.Now | 516:9 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| now.IsZero | 517:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| errors.New | 518:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| make | 521:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| validStrategyMarket | 523:7 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 524:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 527:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 530:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| descriptor.AuthorityExpiresAt.IsZero | 532:70 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| now.Before | 533:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| validStrategyDigest | 533:51 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 534:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| descriptor.RestartNotBefore.IsZero | 536:124 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| validStrategyWorkerRefusal | 537:96 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| descriptor.RestartNotBefore.IsZero | 537:151 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 538:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 544:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| descriptor.AuthorityExpiresAt.IsZero | 546:72 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 547:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| descriptor.RestartNotBefore.IsZero | 549:123 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 550:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| make | 554:22 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 564:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| make | 569:62 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| make | 569:91 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
 
 ## State mutations and fallbacks
 

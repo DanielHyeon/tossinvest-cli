@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_runtime_projection.go",
-  "source_sha256": "14ec90c888e64ccb7e45d5823f415cbf53a1b97b4a62adf9b476db478892f80a",
+  "source_sha256": "5f203ad88f4476284006b92099365d42d04a619a2f567524efdd9bb1beb64f65",
   "package": "engine",
   "function": "Read",
   "receiver": "Context",

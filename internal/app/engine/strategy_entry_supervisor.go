@@ -391,14 +391,13 @@ func buildProductionStrategyMarketWorker(ctx context.Context, clk clock.Clock, m
 	dormant.RefreshesAuthority = true
 	s, ca, ro, f, p, r, a := schedule.forMarket(market), candidate.forMarket(market), route.forMarket(market),
 		fx.forMarket(market), proposal.forMarket(market), riskAuthority.forMarket(market), account.forMarket(market)
-	// 제안 쪽 준비 상태와 개수는 handoff 가 혼자 판단한다. 여기서 다시 세면
+	// 제안 쪽 준비 상태와 개수는 경계가 혼자 판단한다. 여기서 다시 세면
 	// 승격 규칙과 dispatch 규칙이 따로 놀 수 있고, 그 차이는 아무도 보고하지 않는다.
-	handoff := p.dispatchHandoff()
+	result, handedOff := p.dispatchHandoff().Single()
 	if !s.snapshot.Ready || s.restore.Activation == nil || !ca.snapshot.Ready || !ro.snapshot.Ready || !f.snapshot.Ready ||
-		!handoff.Admitted() || !r.snapshot.Ready || !a.snapshot.Ready {
+		!handedOff || !r.snapshot.Ready || !a.snapshot.Ready {
 		return dormant
 	}
-	result := handoff.result
 	if !result.ValidProposal() {
 		return dormant
 	}
@@ -425,11 +424,11 @@ func (c *Context) runProductionStrategyMarketCycle(ctx context.Context, clk cloc
 		return err
 	}
 	// 조정자가 고른 것은 이 한 값으로만 공유 dispatch 에 닿는다.
-	handoff := fresh.proposals.forMarket(market).dispatchHandoff()
-	if !handoff.Admitted() || fresh.dispatch == nil {
+	result, handedOff := fresh.proposals.forMarket(market).dispatchHandoff().Single()
+	if !handedOff || fresh.dispatch == nil {
 		return nil
 	}
-	lineage := handoff.result.Lineage
+	lineage := result.Lineage
 	cas, err := c.Journal.CurrentPositionCampaignCAS(ctx, lineage.AccountRef, string(lineage.Market), lineage.Symbol)
 	if err != nil {
 		return err
@@ -437,7 +436,7 @@ func (c *Context) runProductionStrategyMarketCycle(ctx context.Context, clk cloc
 	if cas.Claimed || cas.State != "FLAT" && cas.State != "CLOSED" {
 		return nil
 	}
-	_, err = fresh.dispatch.dispatch(ctx, handoff.result)
+	_, err = fresh.dispatch.dispatch(ctx, result)
 	if errors.Is(err, journal.ErrStrategyDispatchLeaseConsumed) {
 		return nil
 	}

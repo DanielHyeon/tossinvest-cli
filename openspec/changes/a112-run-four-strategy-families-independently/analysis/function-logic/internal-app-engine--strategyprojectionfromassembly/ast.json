@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_runtime_projection.go",
-  "source_sha256": "14ec90c888e64ccb7e45d5823f415cbf53a1b97b4a62adf9b476db478892f80a",
+  "source_sha256": "5f203ad88f4476284006b92099365d42d04a619a2f567524efdd9bb1beb64f65",
   "package": "engine",
   "function": "strategyProjectionFromAssembly",
   "signature": "strategyProjectionFromAssembly(params=1, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 156,
+    "line": 155,
     "column": 2
   },
   "branches": [
@@ -73,7 +73,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 132,
+        "line": 131,
         "column": 3
       }
     }
@@ -82,7 +82,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 155,
+        "line": 154,
         "column": 2
       }
     }
@@ -164,7 +164,15 @@
       "kind": "call",
       "at": {
         "line": 122,
-        "column": 14
+        "column": 24
+      },
+      "text": "Single"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 24
       },
       "text": "dispatchHandoff"
     },
@@ -172,7 +180,7 @@
       "kind": "call",
       "at": {
         "line": 122,
-        "column": 14
+        "column": 24
       },
       "text": "assembly.proposals.forMarket"
     },
@@ -180,17 +188,9 @@
       "kind": "call",
       "at": {
         "line": 123,
-        "column": 7
+        "column": 21
       },
-      "text": "handoff.Admitted"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 123,
-        "column": 30
-      },
-      "text": "handoff.result.ValidProposal"
+      "text": "result.ValidProposal"
     },
     {
       "kind": "call",
@@ -203,7 +203,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 131,
+        "line": 130,
         "column": 58
       },
       "text": "projectionDigest"
@@ -211,7 +211,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 133,
+        "line": 132,
         "column": 21
       },
       "text": "projectionDigest"
@@ -219,7 +219,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 135,
+        "line": 134,
         "column": 44
       },
       "text": "strconv.Itoa"
@@ -227,7 +227,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 136,
+        "line": 135,
         "column": 28
       },
       "text": "string"
@@ -235,7 +235,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 137,
+        "line": 136,
         "column": 59
       },
       "text": "string"
@@ -243,7 +243,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 138,
+        "line": 137,
         "column": 23
       },
       "text": "projectionDigest"
@@ -377,17 +377,17 @@
       }
     },
     {
-      "kind": ":=",
+      "kind": "=",
       "at": {
-        "line": 131,
-        "column": 3
+        "line": 132,
+        "column": 4
       }
     },
     {
-      "kind": "=",
+      "kind": ":=",
       "at": {
-        "line": 133,
-        "column": 4
+        "line": 134,
+        "column": 3
       }
     },
     {
@@ -419,16 +419,9 @@
       }
     },
     {
-      "kind": ":=",
-      "at": {
-        "line": 139,
-        "column": 3
-      }
-    },
-    {
       "kind": "=",
       "at": {
-        "line": 153,
+        "line": 152,
         "column": 3
       }
     }

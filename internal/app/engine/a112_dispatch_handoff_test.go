@@ -8,8 +8,14 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 )
+
+// 여기 있는 시험은 경계의 **규칙**을 다시 검사하지 않는다. 그 규칙과 그
+// fail-closed 성질은 internal/strategyhandoff 의 시험이 값으로 지킨다.
+// 이 파일이 지키는 것은 **배선**이다: 엔진의 레인 권한이 실제로 그 경계에
+// 무엇을 건네고, 그 답이 승격과 dispatch 에 어떻게 닿는가.
 
 // 종목이 둘인 시장은 지금도 아무것도 내보내지 않는다. 달라지는 것은 그 이유를
 // 말한다는 점이다.
@@ -26,17 +32,18 @@ func TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff(t *testing.T) {
 		t.Fatalf("KR=%+v entries=%d, want a ready market with two selected scopes", pair.kr.snapshot, len(pair.kr.entries))
 	}
 	handoff := pair.kr.dispatchHandoff()
-	if handoff.Admitted() {
-		t.Fatalf("handoff admitted %q from a two-scope market", handoff.result.Lineage.Symbol)
+	result, handedOff := handoff.Single()
+	if handedOff {
+		t.Fatalf("handoff admitted %q from a two-scope market", result.Lineage.Symbol)
 	}
-	if handoff.refusal != strategyHandoffOverCapacity {
-		t.Fatalf("refusal=%q, want %q", handoff.refusal, strategyHandoffOverCapacity)
+	if handoff.Refusal() != strategyhandoff.OverCapacity {
+		t.Fatalf("refusal=%q, want %q", handoff.Refusal(), strategyhandoff.OverCapacity)
 	}
-	if handoff.pending != 2 {
-		t.Fatalf("pending=%d, want 2 — 몇 개라서 막혔는지 말하지 못하면 상한이 보이지 않는다", handoff.pending)
+	if handoff.Pending() != 2 {
+		t.Fatalf("pending=%d, want 2 — 몇 개라서 막혔는지 말하지 못하면 상한이 보이지 않는다", handoff.Pending())
 	}
-	if handoff.result.Lineage.Symbol != "" {
-		t.Fatalf("a refused handoff still carries %q", handoff.result.Lineage.Symbol)
+	if result.Lineage.Symbol != "" {
+		t.Fatalf("a refused handoff still carries %q", result.Lineage.Symbol)
 	}
 }
 
@@ -49,12 +56,14 @@ func TestASingleSelectedScopeIsTheValueThatCrossesTheSeam(t *testing.T) {
 			t.Fatalf("%s fixture entries=%d, want one", market, len(authority.entries))
 		}
 		handoff := authority.dispatchHandoff()
-		if !handoff.Admitted() || handoff.pending != 1 {
-			t.Fatalf("%s handoff=%+v, want an admitted single selection", market, handoff)
+		result, handedOff := handoff.Single()
+		if !handedOff || handoff.Pending() != 1 {
+			t.Fatalf("%s handoff refusal=%q pending=%d, want an admitted single selection",
+				market, handoff.Refusal(), handoff.Pending())
 		}
 		want := authority.entries[0].authority.Proposal()
-		if handoff.result.Lineage.Identity != want.Lineage.Identity {
-			t.Fatalf("%s handed off %q, want %q", market, handoff.result.Lineage.Identity, want.Lineage.Identity)
+		if result.Lineage.Identity != want.Lineage.Identity {
+			t.Fatalf("%s handed off %q, want %q", market, result.Lineage.Identity, want.Lineage.Identity)
 		}
 	}
 }
@@ -71,14 +80,14 @@ func TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached(t *testing.T
 	closed.snapshot.Ready = false
 	closed.snapshot.Reason = StrategyProposalArbitrationRefused
 	handoff := closed.dispatchHandoff()
-	if handoff.Admitted() {
-		t.Fatalf("a closed market handed off %q", handoff.result.Lineage.Symbol)
+	if result, handedOff := handoff.Single(); handedOff {
+		t.Fatalf("a closed market handed off %q", result.Lineage.Symbol)
 	}
-	if handoff.refusal != strategyHandoffMarketClosed {
-		t.Fatalf("refusal=%q, want %q", handoff.refusal, strategyHandoffMarketClosed)
+	if handoff.Refusal() != strategyhandoff.MarketClosed {
+		t.Fatalf("refusal=%q, want %q", handoff.Refusal(), strategyhandoff.MarketClosed)
 	}
-	if handoff.pending != 1 {
-		t.Fatalf("pending=%d, want the attached entry counted", handoff.pending)
+	if handoff.Pending() != 1 {
+		t.Fatalf("pending=%d, want the attached entry counted", handoff.Pending())
 	}
 }
 
@@ -87,12 +96,15 @@ func TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached(t *testing.T
 func TestAMarketThatSelectedNothingSaysSoInsteadOfBorrowingTheCapacityName(t *testing.T) {
 	handoff := strategyProposalMarketAuthority{market: StrategyMarketKR,
 		snapshot: StrategyProposalMarketSnapshot{Market: StrategyMarketKR, Ready: true, Reason: StrategyProposalReady}}.dispatchHandoff()
-	if handoff.Admitted() || handoff.refusal != strategyHandoffNoSelection || handoff.pending != 0 {
-		t.Fatalf("handoff=%+v, want an empty-selection refusal", handoff)
+	if _, handedOff := handoff.Single(); handedOff {
+		t.Fatal("an empty market handed something off")
+	}
+	if handoff.Refusal() != strategyhandoff.NoSelection || handoff.Pending() != 0 {
+		t.Fatalf("refusal=%q pending=%d, want an empty-selection refusal", handoff.Refusal(), handoff.Pending())
 	}
 }
 
-// handoff 가 거절하면 worker 는 Effective 로 올라가지 않는다.
+// 경계가 거절하면 worker 는 Effective 로 올라가지 않는다.
 //
 // 이것이 이 태스크가 동작을 바꾸지 않았다는 증거다. 상한을 한 자리로 모은
 // 것이지 푼 것이 아니다 — 푸는 것은 태스크 5.2 다.
@@ -118,8 +130,8 @@ func TestARefusedHandoffLeavesTheWorkerDormant(t *testing.T) {
 	// 같은 항목을 하나 더 붙여 상한을 넘긴다. 다른 것은 아무것도 바꾸지 않는다.
 	overCapacity := proposals
 	overCapacity.kr.entries = append(append([]strategyProposalEntryAuthority{}, proposals.kr.entries...), proposals.kr.entries[0])
-	if handoff := overCapacity.kr.dispatchHandoff(); handoff.refusal != strategyHandoffOverCapacity {
-		t.Fatalf("refusal=%q, want the capacity refusal this test rests on", handoff.refusal)
+	if refusal := overCapacity.kr.dispatchHandoff().Refusal(); refusal != strategyhandoff.OverCapacity {
+		t.Fatalf("refusal=%q, want the capacity refusal this test rests on", refusal)
 	}
 	if worker := build(overCapacity, StrategyMarketKR); worker.Effective {
 		t.Fatalf("KR worker=%+v went Effective while the handoff refused", worker)

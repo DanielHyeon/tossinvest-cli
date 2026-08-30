@@ -2008,7 +2008,8 @@ FLM 번들 열하나를 갱신했다. 그중 둘은 **새로 만든 것**이고 
 ### 무엇이 문제였나
 
 조정자가 고른 것은 `strategyProposalMarketAuthority.entries` 라는 **목록**으로 나가고, 그 목록을
-받는 생산 코드가 다섯 곳이었다. 다섯 곳이 각자 `len(entries) != 1` 을 다시 쓰고 각자
+받는 생산 코드가 **여섯 함수**였다(`strategy_account_first_leg_authority.go` 한 파일에 서로 다른
+소비자가 둘 있다 — `:151` 과 `:210`). 여섯 곳이 각자 `len(entries) != 1` 을 다시 쓰고 각자
 `entries[0]` 을 다시 집었다. 동반 조건은 서로 달랐다 — worker 승격은 `snapshot.Ready` 를 보고,
 `ResultAuthority` 와 읽기 전용 projection 은 보지 않았다.
 
@@ -2033,13 +2034,16 @@ func (authority strategyProposalMarketAuthority) dispatchHandoff() strategyDispa
 
 **상한 1 은 이 태스크가 고른 값이 아니라 지금 코드에서 읽은 값이다.** 동결 골든의
 `queue.market_wide_single_proposal_assumption_forbidden = true` 와
-`queue.selected_limit = "소유자 범위마다 하나"` 는 이 가정이 결국 사라져야 한다고 말한다.
+`queue.selected_limit` 원문 `"at most one selected proposal per owner scope"` 는 이 가정이 결국 사라져야 한다고 말한다.
 그것을 실제로 없애는 것은 태스크 5.2 이고, 없애는 순간 종목 둘인 시장이 주문을 **두 건**
 내게 된다 — 노출을 올리는 변경이다. 의존성 매트릭스는 A100 ProtectionReady 가
 `UNWIRED_INCOMPLETE` 인 동안 `exposure-raising dispatch` 를 금지한다. 그래서 5.5 는 상한에
-**이름을 붙였고 풀지는 않았다.** 이제 5.2 는 상수 하나를 고치는 일이 된다.
+**이름을 붙였고 풀지는 않았다.** ~~이제 5.2 는 상수 하나를 고치는 일이 된다.~~
+**[정정 — 아래 5.5-fix 참조]** 이 문장은 거짓이었고, 거짓인 채로 코드 주석과 커밋
+메시지에도 들어갔다. 첫 판본은 상한을 넘지 않으면 무조건 `entries[0]` 을 건넸으므로,
+상수만 2 로 올리면 종목 둘인 시장이 **승인되면서 두 번째 선택을 조용히 버렸다**.
 
-바꾼 자리는 셋이다: worker 승격, dispatch 주기, 읽기 전용 projection. 그리고 `ResultAuthority`.
+바꾼 자리는 넷이다: worker 승격, dispatch 주기, `ResultAuthority`, 읽기 전용 projection.
 `strategy_account_first_leg_authority.go` 의 사본 다섯 개는 **L6 소유**라 남겼다 —
 조용히 남긴 것이 아니라 `singleProposalAssumptionCensus` 표에 태스크 이름과 함께 적었고,
 여섯 번째 사본이 생기면 그 표가 깨진다.
@@ -2090,7 +2094,7 @@ func (authority strategyProposalMarketAuthority) dispatchHandoff() strategyDispa
 | `make test-seams` (태그 전체) | PASS |
 | `make lint` (gofmt + vet 양쪽 태그) | PASS |
 | engine 태그 스위트 (커버리지) | PASS, 73.9% |
-| engine 무태그 스위트 | PASS, 63.5% |
+| engine 무태그 스위트 | PASS, **63.4~63.5%** — 같은 바이너리·같은 트리에서 4회 측정해 2502/2502/2498/2499 of 3943 이 나왔다. 이 수는 실행마다 흔들린다(스케줄링 의존 시험이 무태그 쪽에 있다). 표본 하나를 안정된 값으로 적었던 것을 정정한다 |
 | `check_analysis` | evidence complete |
 | 인용 좌표 검증 | 미확인 0 |
 
@@ -2112,4 +2116,144 @@ func (authority strategyProposalMarketAuthority) dispatchHandoff() strategyDispa
 - handoff 거절을 운영자 화면에 비추는 일 — 태스크 7.3. 지금 `pending` 과 거절 코드는 값으로만
   존재하고 어떤 표면에도 나가지 않는다.
 - `strategy_account_first_leg_authority.go` 의 사본 다섯 — L6(태스크 6.2).
-- 독립 적대적 리뷰는 아직 받지 않았다. 이 기록은 구현자의 기록이다.
+- 독립 적대적 리뷰는 아래 5.5-fix 에서 받았다. P1 세 건이 나왔고 전부 고쳤다.
+
+## L5 5.5-fix — 적대 리뷰가 찾은 P1 세 건 (2026-08-30)
+
+세 리뷰어가 read-only 로 검토했고 P0 은 없었다. 배포된 동작에 결함도 없었다 — 진리표상
+갈라지는 유일한 행 `(Ready=false, len=1)` 은 도달 불가이고(항목을 채우는 유일한 return 이
+`Ready: true` 를 함께 박는다), 주문 경로는 시장당 1건 그대로였다.
+
+문제는 전부 **내가 쓴 문장이 내가 만든 검사보다 컸다**는 데 있었다.
+
+### P1-1 — 건네줄 수 있는 것보다 많이 승인했다
+
+첫 판본은 상한을 넘지 않으면 무조건 `entries[0]` 을 건넸다.
+
+```go
+if pending > strategyMarketHandoffCapacity { return ...OverCapacity }
+return strategyDispatchHandoff{result: authority.entries[0].authority.Proposal(), ...}
+```
+
+`strategyMarketHandoffCapacity` 를 2 로 올리면 종목 둘인 시장이 **승인되면서 두 번째 선택을
+거절 이름도 계수기도 없이 버린다.** 이 change 가 없애겠다고 선언한 바로 그 "조용한 유실"을
+seam 안에 새로 만든 것이었다. 그리고 내 주석·`review.md`·커밋 메시지가 셋 다
+"이제 5.2 는 상수 하나를 고치는 일이 된다"고 적어 **미래의 유지보수자를 그 함정으로
+초대**하고 있었다. 리뷰어가 실제로 상수를 올려 보았고, 트리 안 어떤 시험도 유실을 잡지 못했다.
+
+**고친 방법 — 승인과 전달을 한 서명으로 묶었다.**
+
+```go
+func (handoff Handoff) Single() (strategyflow.Result, bool)  // 실린 것이 하나가 아니면 값을 안 준다
+```
+
+상한만 올리면 그날 `Single` 이 값을 내주지 않고, dispatch 는 하나를 내보내는 대신
+**아무것도** 내보내지 않는다. 조용히 하나를 버리는 것보다 낫고, 그것이 다중 dispatch 를
+구현하라는 신호다. `Admit` 이 만들 수 없는 상태이므로 시험이 그 상태를 직접 만들어 고정한다
+(`TestARaisedCapacityHandsOffNothingRatherThanDroppingTheSecondSelection`) — 만들 수 없다고
+검사를 빼면, 상수를 올린 사람이 그 순간 아무 시험도 안 깨지는 것을 보게 된다.
+
+### P1-2 — 가드가 "물었는지"만 보고 "막았는지"는 안 봤다
+
+`TestNoProductionSiteReadsAHandoffWithoutAskingWhetherItWasAdmitted` 는 `Admitted()` 가
+**불렸는지**만 확인했다. 세 가지 우회가 전부 살아남았고 두 스위트가 모두 초록이었다:
+`_ = handoff.Admitted()` 로 호출만 남기고 관문 삭제, `var` 선언 바인딩(`*ast.AssignStmt` 만
+보므로 안 보임), 그리고 `p.dispatchHandoff().result` 처럼 바인딩 없이 바로 읽기. 게다가
+구조체 리터럴을 `handoff` 로 이름 짓고 `result` 필드를 달면 경계를 거치지 않은 값이
+dispatch 까지 갔다. 나는 그 시험이 M5·M11·M12 를 죽인다고 적었지만, 죽는 것은 *호출 삭제*
+한 형태뿐이었다.
+
+**고친 방법 — 가드를 지우고 타입으로 바꿨다.** 제안이 경계 밖으로 나가는 길은 `Single()`
+하나뿐이고 그 서명이 bool 을 함께 준다. 답을 안 받는 철자는 `_` 하나뿐이며(한 값짜리 문맥은
+컴파일이 안 된다) 그 하나를 `TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer` 가 막는다.
+받아 놓고 안 쓰면 컴파일러가 "declared and not used" 로 막는다. 새 접근자를 달아 우회하는
+문은 `internal/strategyhandoff/escape_test.go` 가 잠근다(Result 를 내주는 메서드는 반드시
+두 값을 돌려주고, `Handoff` 는 공개 필드를 갖지 않는다).
+
+### P1-3 — 능력 폐쇄를 틀린 영수증에서 읽었다
+
+금지 import 목록을 `strategy_dispatch_cycle.go` 의 import 에서 베껴 왔다. 그건 **그 파일의**
+영수증이지 이 모듈의 변경 표면이 아니다. `internal/official`(PlaceOrder/CancelOrder/
+ModifyOrder + 조건부 주문 3종)이 통째로 빠져 있었고, 더 나쁜 건 **import 없이도 뚫린다**는
+점이었다 — seam 파일에 `officialBroker` 를 받는 함수를 넣으면 `b.off.CancelConditionalOrder`
+로 보호 손절을 취소하면서 "변경 능력 없음" 판정을 받았다.
+
+**고친 방법 — 판단을 패키지 밖으로 옮겼다.** 같은 패키지 안에서는 이 약속을 증명할 수 없다.
+새 `internal/strategyhandoff` 는 `internal/strategyflow` 하나만 들여오고, 그 사실을 두 시험이
+지킨다: 직접 import **허용 목록**(금지 목록은 빠뜨린 것을 조용히 통과시킨다)과 `go list -deps`
+전이 폐쇄 + 양성 대조. 엔진에 남은 것은 어댑터 한 함수뿐이고, 그 파일의 검사도 허용 목록으로
+바꿨으며 같은 패키지 능력은 **손으로 적은 이름이 아니라 계산한 타입 집합**으로 막는다
+(필드 타입을 따라 고정점까지; 양성 대조로 `officialBroker` 와 `Context` 가 잡히는지 확인한다).
+
+### 무엇이 바뀌었고 무엇이 안 바뀌었나
+
+동작은 그대로다. `Capacity` 는 여전히 1 이고, 시장당 dispatch 는 여전히 최대 1건이며,
+`entries` 를 채우는 경로도 그대로다. 바뀐 것은 **틀릴 수 있는 방법**이다.
+
+| | 전 | 후 |
+|---|---|---|
+| 상한을 올리면 | 두 번째 선택이 조용히 사라진다 | 아무것도 안 나간다(fail-closed) |
+| 거절을 안 보고 값 읽기 | 세 가지 철자로 우회 가능 | `_` 하나뿐이고 그것을 막는다 |
+| seam 의 변경 능력 | 파일 단위 금지 목록, in-package 우회 가능 | 패키지 밖 import 폐쇄(전이+양성대조) |
+| 단일 제안 가정이 적힌 곳 | seam 1 + first-leg 5 | first-leg 5 (dispatch 경로에서 사라짐) |
+
+### 반증 실측 — 12/12 KILLED
+
+| ID | 뮤테이션 | 판정 | 죽인 시험 |
+|---|---|---|---|
+| M1 | seam 파일이 `officialBroker` 를 손에 쥔다(**리뷰어가 시연한 그 우회**) | KILLED | `TestTheCoordinatorAndHandoffSeamsHoldNoMutationCapability` — 5.5 판본에서는 **통과했다** |
+| M2 | seam 파일이 `internal/journal` 을 들여온다 | KILLED | 같은 시험(허용 목록) |
+| M3 | `dispatch` 를 메서드 값으로 꺼내 둔다 | KILLED | `TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch` |
+| M4 | 경계가 묶어 주지 않은 이름을 dispatch 에 넘긴다 | KILLED | 같은 시험 |
+| M5 | worker 승격 관문을 지우고 `_ = handedOff` | KILLED | `TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer` — 5.5 판본에서는 **SURVIVED** |
+| M6 | dispatch 주기 관문을 지우고 `_ = handedOff` | KILLED | 같은 시험 |
+| M7 | `ResultAuthority` 관문을 지우고 `_ = handedOff` | KILLED | 같은 시험 |
+| M8 | projection 관문을 지우고 `_ = handedOff` | KILLED | 같은 시험 |
+| M9 | 어댑터가 준비 상태를 안 본다 | KILLED | `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached` |
+| M10 | 어댑터가 첫 항목만 싣는다 | KILLED | `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff`, `TestARefusedHandoffLeavesTheWorkerDormant` |
+| M11 | `Single` 이 개수 검사를 그만둔다 | KILLED | `TestARaisedCapacityHandsOffNothingRatherThanDroppingTheSecondSelection` |
+| M12 | `Admit` 이 상한 검사를 그만둔다 | KILLED | 세 시험 |
+
+M1 과 M5 가 이 로트의 요점이다. **둘 다 5.5 판본에서는 통과했고**, 그것이 리뷰가 P1 로 든 이유다.
+
+원복은 `try/finally` 안에서 하고 12개 전부 sha256 대조했다(`unrestored_files: []`).
+앞선 배치는 하니스 타임아웃이 **중간에 죽이면서 뮤테이션 하나를 트리에 남겼고**, 이어진
+배치가 그 오염된 baseline 위에서 쟀다 — `PATTERN-ABSENT` 한 줄이 그 유일한 신호였다.
+그 판을 버리고 깨끗한 트리에서 다시 쟀다.
+
+### 이 검사들이 증명하지 못하는 것
+
+- `TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer` 는 답이 **어떤 if 조건 안에 나오는지**만
+  본다. 그 조건이 값을 쓰기 전에 반드시 돌아간다는 **지배 관계**는 증명하지 않는다. 진짜
+  지배를 증명하려면 `go/types` 와 제어 흐름 그래프가 필요하다. 여기서 막는 것은 실제로
+  일어난 실패 방식이다.
+- 엔진 안에 남은 어댑터 파일의 검사는 **파일 규율**이지 컴파일러 보장이 아니다. 컴파일러
+  보장이 필요한 자리 — 무엇이 건너갈지 고르는 판단 — 를 그래서 패키지 밖으로 옮겼다.
+- `HANDOFF_NO_SELECTION` 은 여전히 생산에서 도달 불가이고(`Ready==true ⟹ len≥1`),
+  `HANDOFF_MARKET_CLOSED` 는 여전히 여덟 가지 사유를 한 이름으로 뭉친다. 리뷰가 P1/P2 로
+  든 것이고 이 로트에서 **고치지 않았다** — 사용자가 P1 셋만 지시했다. 남긴 것에 적는다.
+
+### 실측
+
+| | |
+|---|---|
+| `make test` (무태그 전체) | PASS |
+| `make test-seams` (태그 전체) | PASS |
+| `make lint` (gofmt + vet 양쪽 태그) | PASS |
+| `make sdd-check` | PASS |
+| `make validate` | PASS |
+| engine 태그 스위트 | PASS, 73.9% (2912/3941) |
+| engine 무태그 스위트 | PASS, 63.5~63.6% (2498~2502 of 3936, 5회 측정) |
+| `internal/strategyhandoff` | PASS, 11 시험 |
+| `check_analysis` | evidence complete |
+| 인용 좌표 검증(이 로트가 만진 4 파일) | 미확인 0 |
+| 뮤테이션 | 12/12 KILLED, `unrestored_files: []` |
+| 분기 귀속 등식 | MISMATCH 0 |
+
+### 남긴 것 (P2 — 이 로트에서 고치지 않았다)
+
+- `HANDOFF_NO_SELECTION` 도달 불가, `HANDOFF_MARKET_CLOSED` 가 여덟 사유를 뭉치는 것.
+- `Refusal()`·`Pending()` 을 읽는 생산 코드가 아직 없다 — 태스크 7.3.
+- 이 change 의 다른 여덟 번들이 `Pinned revision: current` 라고 하면서 `source_sha256` 이
+  뒤처져 있다(이 로트가 만든 것이 아니고 만지지도 않았다).
+- 골든을 한국어로 의역한 자리들 — 이 로트가 만진 문서에서는 원문으로 바꿨다.

@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_proposal_authority.go",
-  "source_sha256": "b5e266ae728fcfc400e041bcdc82d2af4b68ec73542c2d6a525fa342523bf06f",
+  "source_sha256": "1ce0765cff483524cfbb428959be1d1b83da126f6533d07f708bce06b7fe1e7c",
   "package": "engine",
   "function": "ResultAuthority",
   "receiver": "strategyProposalAuthorityPair",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 154,
+    "line": 156,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 148,
+        "line": 150,
         "column": 3
       }
     }
@@ -27,21 +27,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 149,
+        "line": 151,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 151,
+        "line": 153,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 153,
+        "line": 155,
         "column": 2
       }
     }
@@ -50,31 +50,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 147,
-        "column": 14
+        "line": 149,
+        "column": 24
+      },
+      "text": "Single"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 24
       },
       "text": "value.dispatchHandoff"
     },
     {
       "kind": "call",
       "at": {
-        "line": 148,
-        "column": 7
+        "line": 150,
+        "column": 21
       },
-      "text": "handoff.Admitted"
+      "text": "result.ValidProposal"
     },
     {
       "kind": "call",
       "at": {
-        "line": 148,
-        "column": 30
-      },
-      "text": "handoff.result.ValidProposal"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 153,
+        "line": 155,
         "column": 70
       },
       "text": "convert"
@@ -82,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 153,
+        "line": 155,
         "column": 110
       },
       "text": "convert"
@@ -99,7 +99,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 147,
+        "line": 149,
         "column": 3
       }
     }

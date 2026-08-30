@@ -1,9 +1,9 @@
 # Function Logic Map: `strategyProjectionFromAssembly`
 
-- Source: `internal/app/engine/strategy_runtime_projection.go` (97-156)
+- Source: `internal/app/engine/strategy_runtime_projection.go` (97-155)
 - Function: `strategyProjectionFromAssembly` in package `engine`
 - Signature: `strategyProjectionFromAssembly(params=1, results=1)`
-- File SHA-256: `14ec90c888e64ccb7e45d5823f415cbf53a1b97b4a62adf9b476db478892f80a`
+- File SHA-256: `5f203ad88f4476284006b92099365d42d04a619a2f567524efdd9bb1beb64f65`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 8.
 - Risk scan: `risk-pattern-report.md`.
@@ -22,8 +22,11 @@ The signature above is the exhaustive input/result record; this map does not inf
 - Measurement regime: Go coverage profiles, count mode.
 - 모든 실행은 `systemd-run --user --scope -p MemoryMax=… -p MemorySwapMax=0` cgroup 안에서 돌렸다.
 - engine tagged suite: `go test -c -tags tossos_testseams -covermode=count -coverpkg=./internal/app/engine ./internal/app/engine/`
-  뒤에 그 바이너리를 `-test.coverprofile` 로 실행. 스위트 전체 PASS, 73.9% of statements.
-- engine untagged suite: 같은 명령에서 `-tags tossos_testseams` 만 뺀 것. 스위트 전체 PASS, 63.5% of statements.
+  뒤에 그 바이너리를 `-test.coverprofile` 로 실행. 스위트 전체 PASS, 73.9% of statements (2912/3941).
+- engine untagged suite: 같은 명령에서 `-tags tossos_testseams` 만 뺀 것. 스위트 전체 PASS,
+  **63.5~63.6% of statements** — 같은 바이너리·같은 트리에서 다섯 번 재서 2498·2499·2501·2502·2502
+  of 3936 이 나왔다. 이 수는 실행마다 흔들린다(무태그 쪽에 스케줄링 의존 시험이 있다).
+  앞선 판본이 표본 하나(63.5%)를 안정된 값으로 적은 것을 정정한다. 태그 스위트는 안정적이다.
 - 분기의 arm 은 그 분기 위치 **다음에 처음 열리는** 커버리지 블록이다. 조건이 여러 줄이면
   여는 중괄호가 다음 줄에 있어서, 같은 줄만 보던 첫 판본은 이 태스크가 실제로 바꾼 분기를
   `null`(=측정 없음)로 보고했다. "자료 없음"은 "진입 0"과 다르고 그 차이가 요점이다.
@@ -43,10 +46,13 @@ Exact AST return positions: 155:2.
 | B5 | case | 112:4 | arm not entered (양쪽 스위트) |
 | B6 | case | 114:4 | arm not entered (양쪽 스위트) |
 | B7 | if | 123:3 | **이 태스크가 바꾼 분기.** arm not entered (양쪽 스위트) |
-| B8 | if | 132:3 | arm not entered (양쪽 스위트) |
+| B8 | if | 131:3 | arm not entered (양쪽 스위트) |
 
-이 함수는 `StrategyEntryProductionAssembly` 전체를 요구하고, 트리 안에 그것을 만드는 시험이
-하나도 없다. `TestStrategyRuntimeRead*` 들은 `Context.Read` 를 시험하지 이 함수를 지나지 않는다.
+이 함수는 `StrategyEntryProductionAssembly` 전체를 요구하고, 트리 안에 그것을 **채워서**
+이 함수에 넣는 시험이 하나도 없다(`cmd/tossctl/engine_strategy_entry_dormant_test.go:88` 이
+`reflect.TypeOf` 로 그 타입을 언급하지만 값을 만들지는 않는다 — 앞선 판본이 "만드는 시험이
+하나도 없다"고 적은 것을 그렇게 정정한다). `TestStrategyRuntimeRead*` 들은 `Context.Read` 를
+시험하지 이 함수를 지나지 않는다.
 운영자 화면에 handoff 거절을 실제로 비추는 일은 태스크 7.3 이고, 그 태스크가 이 공백의 주인이다.
 
 ## Calls and live bindings
@@ -62,21 +68,21 @@ Exact AST return positions: 155:2.
 | `assembly.Risk.For` | 105:11 |
 | `assembly.Supervisor.Snapshot` | 106:17 |
 | `strategyprojection.WithMarketFailure` | 117:15 |
-| `dispatchHandoff` | 122:14 |
-| `assembly.proposals.forMarket` | 122:14 |
-| `handoff.Admitted` | 123:7 |
-| `handoff.result.ValidProposal` | 123:30 |
+| `Single` | 122:24 |
+| `dispatchHandoff` | 122:24 |
+| `assembly.proposals.forMarket` | 122:24 |
+| `result.ValidProposal` | 123:21 |
 | `strategyprojection.WithMarketFailure` | 124:15 |
-| `projectionDigest` | 131:58 |
-| `projectionDigest` | 133:21 |
-| `strconv.Itoa` | 135:44 |
-| `string` | 136:28 |
-| `string` | 137:59 |
-| `projectionDigest` | 138:23 |
+| `projectionDigest` | 130:58 |
+| `projectionDigest` | 132:21 |
+| `strconv.Itoa` | 134:44 |
+| `string` | 135:28 |
+| `string` | 136:59 |
+| `projectionDigest` | 137:23 |
 
 ## State mutations and fallbacks
 
-- AST assignments: 26. Defers: 0. Goroutine statements: 0.
+- AST assignments: 25. Defers: 0. Goroutine statements: 0.
 - 지역 `snapshot` 만 바꾼다. 활성화·주문·원장 어느 것도 쓰지 않는다.
 
 ## Safety conclusion

@@ -143,12 +143,14 @@ func (pair strategyProposalAuthorityPair) Snapshot() PairedStrategyProposalSnaps
 
 func (pair strategyProposalAuthorityPair) ResultAuthority() strategyResultAuthorityPair {
 	convert := func(market StrategyMarket, value strategyProposalMarketAuthority) strategyResultMarketAuthority {
-		// 몇 개까지 넘길 수 있는지는 여기서 정하지 않는다. handoff 한 곳이 정한다.
-		handoff := value.dispatchHandoff()
-		if !handoff.Admitted() || !handoff.result.ValidProposal() {
+		// 몇 개까지 넘길 수 있는지는 여기서 정하지 않는다. 경계 한 곳이 정한다.
+		// Single 은 값과 함께 "건너가도 되는가"를 돌려주므로, 거절을 안 보고
+		// 값을 읽는 판본은 아예 쓸 수 없다.
+		result, handedOff := value.dispatchHandoff().Single()
+		if !handedOff || !result.ValidProposal() {
 			return strategyResultMarketAuthority{market: market}
 		}
-		return strategyResultMarketAuthority{market: market, ready: true, result: handoff.result}
+		return strategyResultMarketAuthority{market: market, ready: true, result: result}
 	}
 	return strategyResultAuthorityPair{observedAt: pair.observedAt, kr: convert(StrategyMarketKR, pair.kr), us: convert(StrategyMarketUS, pair.us)}
 }

@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_entry_supervisor.go",
-  "source_sha256": "17ad4c0c684b74686dd1e80b256a06971802afa26bcfd300dbeac9bd5f7e0496",
+  "source_sha256": "12586e3cf90b708e66988931ad424d7312593bf518f0987a0893bf4f6f4b6fb9",
   "package": "engine",
   "function": "buildProductionStrategyMarketWorker",
   "signature": "buildProductionStrategyMarketWorker(params=13, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 420,
+    "line": 419,
     "column": 2
   },
   "branches": [
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 402,
+        "line": 401,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 405,
+        "line": 404,
         "column": 2
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 408,
+        "line": 407,
         "column": 2
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 414,
+        "line": 413,
         "column": 2
       }
     }
@@ -80,35 +80,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 403,
+        "line": 402,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 406,
+        "line": 405,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 409,
+        "line": 408,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 415,
+        "line": 414,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 417,
+        "line": 416,
         "column": 2
       }
     }
@@ -174,22 +174,22 @@
       "kind": "call",
       "at": {
         "line": 396,
-        "column": 13
+        "column": 23
+      },
+      "text": "Single"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 396,
+        "column": 23
       },
       "text": "p.dispatchHandoff"
     },
     {
       "kind": "call",
       "at": {
-        "line": 398,
-        "column": 4
-      },
-      "text": "handoff.Admitted"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 402,
+        "line": 401,
         "column": 6
       },
       "text": "result.ValidProposal"
@@ -197,7 +197,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 405,
+        "line": 404,
         "column": 15
       },
       "text": "gateway.ObserveStrategyProtection"
@@ -205,7 +205,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 405,
+        "line": 404,
         "column": 54
       },
       "text": "strings.ToLower"
@@ -213,7 +213,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 405,
+        "line": 404,
         "column": 70
       },
       "text": "string"
@@ -221,7 +221,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 408,
+        "line": 407,
         "column": 15
       },
       "text": "gateway.ObserveStrategyEntryGate"
@@ -229,7 +229,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 408,
+        "line": 407,
         "column": 53
       },
       "text": "strings.ToLower"
@@ -237,7 +237,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 408,
+        "line": 407,
         "column": 69
       },
       "text": "string"
@@ -245,7 +245,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 411,
+        "line": 410,
         "column": 12
       },
       "text": "strategyWorkerEvidenceDigest"
@@ -253,7 +253,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 414,
+        "line": 413,
         "column": 6
       },
       "text": "validStrategyDigest"
@@ -261,7 +261,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 414,
+        "line": 413,
         "column": 64
       },
       "text": "IsZero"
@@ -269,7 +269,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 414,
+        "line": 413,
         "column": 64
       },
       "text": "a.authority.FreshUntil"
@@ -277,7 +277,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 418,
+        "line": 417,
         "column": 23
       },
       "text": "a.authority.FreshUntil"
@@ -329,28 +329,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 401,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 405,
+        "line": 404,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 408,
+        "line": 407,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 411,
+        "line": 410,
         "column": 2
       }
     }
