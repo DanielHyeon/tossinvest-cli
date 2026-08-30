@@ -1,6 +1,6 @@
 # Branch Test Map: `Context.Read`
 
-- Source SHA-256: `045bad629e9087a86fdbb9c67cb6f90e4e9ef898f1a37fb2aefbbeee30aa3296`; AST branch locations are authoritative.
+- Source SHA-256: `14ec90c888e64ccb7e45d5823f415cbf53a1b97b4a62adf9b476db478892f80a`; AST branch locations are authoritative.
 - **이 lot 전까지 이 함수에는 어떤 테스트도 없었다.** 아래 네 테스트가 첫 실행이다.
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |

@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_proposal_authority.go",
-  "source_sha256": "b7a565a767a7ef790ff1390a5db4c5e83cac19897d408aae167d7243466b3d38",
+  "source_sha256": "b5e266ae728fcfc400e041bcdc82d2af4b68ec73542c2d6a525fa342523bf06f",
   "package": "engine",
   "function": "ResultAuthority",
   "receiver": "strategyProposalAuthorityPair",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 152,
+    "line": 154,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 146,
+        "line": 148,
         "column": 3
       }
     }
@@ -27,21 +27,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 147,
+        "line": 149,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 149,
+        "line": 151,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 151,
+        "line": 153,
         "column": 2
       }
     }
@@ -50,39 +50,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 146,
-        "column": 6
+        "line": 147,
+        "column": 14
       },
-      "text": "len"
+      "text": "value.dispatchHandoff"
     },
     {
       "kind": "call",
       "at": {
-        "line": 146,
-        "column": 34
+        "line": 148,
+        "column": 7
       },
-      "text": "ValidProposal"
+      "text": "handoff.Admitted"
     },
     {
       "kind": "call",
       "at": {
-        "line": 146,
-        "column": 34
+        "line": 148,
+        "column": 30
       },
-      "text": "value.entries.authority.Proposal"
+      "text": "handoff.result.ValidProposal"
     },
     {
       "kind": "call",
       "at": {
-        "line": 149,
-        "column": 77
-      },
-      "text": "value.entries.authority.Proposal"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 151,
+        "line": 153,
         "column": 70
       },
       "text": "convert"
@@ -90,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 151,
+        "line": 153,
         "column": 110
       },
       "text": "convert"
@@ -102,6 +94,13 @@
       "at": {
         "line": 145,
         "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 147,
+        "column": 3
       }
     }
   ],

@@ -1,7 +1,7 @@
 # Function Logic Map: `Context.Read`
 
 - Source: `internal/app/engine/strategy_runtime_projection.go`
-- Current source SHA-256: `045bad629e9087a86fdbb9c67cb6f90e4e9ef898f1a37fb2aefbbeee30aa3296`
+- Current source SHA-256: `14ec90c888e64ccb7e45d5823f415cbf53a1b97b4a62adf9b476db478892f80a`
 - Signature: `Context.Read(params=1, results=2)`
 - Source range: `23:1`–`65:2`
 - AST evidence: `ast.json`, regenerated from the post-edit worktree; AST 분기 7개 (편집 전 6개).

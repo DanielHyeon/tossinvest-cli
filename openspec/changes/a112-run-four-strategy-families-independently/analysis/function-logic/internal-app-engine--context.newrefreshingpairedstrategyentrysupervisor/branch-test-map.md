@@ -1,6 +1,6 @@
 # Branch Test Map: `NewRefreshingPairedStrategyEntrySupervisor`
 
-- Source SHA-256: `64893ce595e48abb31ed7e6c5a7630ae19373930c9cff148141490444202f888`; AST branch locations are authoritative.
+- Source SHA-256: `17ad4c0c684b74686dd1e80b256a06971802afa26bcfd300dbeac9bd5f7e0496`; AST branch locations are authoritative.
 - L0 did not alter this function and does not claim an existing test covers a branch.
 
 | Branch | Scenario anchor | Required test disposition | RED observed | GREEN observed |

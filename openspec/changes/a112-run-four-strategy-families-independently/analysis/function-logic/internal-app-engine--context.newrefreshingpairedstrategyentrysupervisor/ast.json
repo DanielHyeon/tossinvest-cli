@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_entry_supervisor.go",
-  "source_sha256": "64893ce595e48abb31ed7e6c5a7630ae19373930c9cff148141490444202f888",
+  "source_sha256": "17ad4c0c684b74686dd1e80b256a06971802afa26bcfd300dbeac9bd5f7e0496",
   "package": "engine",
   "function": "NewRefreshingPairedStrategyEntrySupervisor",
   "receiver": "Context",

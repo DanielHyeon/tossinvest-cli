@@ -2002,3 +2002,114 @@ FLM 번들 열하나를 갱신했다. 그중 둘은 **새로 만든 것**이고 
 `productionFixture`(픽스처를 두 조각으로 쪼개면서 본문이 바뀌었다). 이 저장소가 이미
 기록한 대로 Logic Map 은 늘 계획보다 많다. 인용한 모든 `줄:칸` 이 해당 ast.json 안에
 실제로 있는지 기계로 확인했다(미확인 0).
+
+## L5 5.5 — 조정자와 공유 dispatch 사이의 경계에 이름을 붙인다 (2026-08-30)
+
+### 무엇이 문제였나
+
+조정자가 고른 것은 `strategyProposalMarketAuthority.entries` 라는 **목록**으로 나가고, 그 목록을
+받는 생산 코드가 다섯 곳이었다. 다섯 곳이 각자 `len(entries) != 1` 을 다시 쓰고 각자
+`entries[0]` 을 다시 집었다. 동반 조건은 서로 달랐다 — worker 승격은 `snapshot.Ready` 를 보고,
+`ResultAuthority` 와 읽기 전용 projection 은 보지 않았다.
+
+같은 규칙의 사본이 다섯이면 하나를 고쳐도 넷은 옛 규칙을 유지하고, 그 차이는 아무도 보고하지
+않는다. 이 저장소는 같은 기전을 이미 기록했다 — 정정의 단위는 file:line 이 아니라 **값**이다.
+
+그리고 그 규칙은 아무 이름도 갖고 있지 않았다. 종목이 둘인 시장은 조정이 계약대로 끝나도
+아무 말 없이 아무것도 내보내지 않는다. 운영자에게는 "오늘 후보가 없었다"와 구별되지 않는다.
+
+### 무엇을 했나 — 그리고 무엇을 하지 않았나
+
+새 파일 `internal/app/engine/strategy_dispatch_handoff.go` 하나가 그 판단을 갖는다.
+
+```go
+const strategyMarketHandoffCapacity = 1
+func (authority strategyProposalMarketAuthority) dispatchHandoff() strategyDispatchHandoff
+```
+
+거절은 세 이름이다: `HANDOFF_MARKET_CLOSED`, `HANDOFF_NO_SELECTION`, `HANDOFF_OVER_CAPACITY`.
+중재 거절 이름(`strategyarbiter.Refusal`)을 빌려 쓰지 않는다 — 중재가 실패한 것과 중재 결과를
+넘기다 막힌 것은 다른 사건이고, 같은 이름을 쓰면 운영자가 둘을 구별할 수 없다.
+
+**상한 1 은 이 태스크가 고른 값이 아니라 지금 코드에서 읽은 값이다.** 동결 골든의
+`queue.market_wide_single_proposal_assumption_forbidden = true` 와
+`queue.selected_limit = "소유자 범위마다 하나"` 는 이 가정이 결국 사라져야 한다고 말한다.
+그것을 실제로 없애는 것은 태스크 5.2 이고, 없애는 순간 종목 둘인 시장이 주문을 **두 건**
+내게 된다 — 노출을 올리는 변경이다. 의존성 매트릭스는 A100 ProtectionReady 가
+`UNWIRED_INCOMPLETE` 인 동안 `exposure-raising dispatch` 를 금지한다. 그래서 5.5 는 상한에
+**이름을 붙였고 풀지는 않았다.** 이제 5.2 는 상수 하나를 고치는 일이 된다.
+
+바꾼 자리는 셋이다: worker 승격, dispatch 주기, 읽기 전용 projection. 그리고 `ResultAuthority`.
+`strategy_account_first_leg_authority.go` 의 사본 다섯 개는 **L6 소유**라 남겼다 —
+조용히 남긴 것이 아니라 `singleProposalAssumptionCensus` 표에 태스크 이름과 함께 적었고,
+여섯 번째 사본이 생기면 그 표가 깨진다.
+
+### compile/dependency 수준 증명
+
+| 시험 | 무엇을 고정하나 |
+|---|---|
+| `TestTheSingleProposalAssumptionLivesOnlyWhereTheCensusSaysItDoes` | 그 가정이 적혀 있어도 되는 파일과 그 개수. 측정값이다 — 처음 손으로 쓴 4 를 도구가 5 로 정정했다 |
+| `TestTheCoordinatorAndHandoffSeamsHoldNoMutationCapability` | seam 두 파일이 execgw·journal·orderintent 를 들여오지 않고, 같은 패키지 안의 dispatch cycle/gateway/first-leg 타입 이름도 갖지 않는다 |
+| `TestTheWorkerBuilderOnlyObservesThroughTheGateway` | worker 승격 본문에서 `gateway.` 로 시작하는 호출은 전부 `Observe` 로 시작한다 |
+| `TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch` | `.dispatch(` 생산 호출 자리는 정확히 하나이고, 그 자리에 넘어가는 값은 `handoff.result` 다 |
+| `TestNoProductionSiteReadsAHandoffWithoutAskingWhetherItWasAdmitted` | handoff 값을 읽는 함수는 반드시 `Admitted()` 를 부른다 |
+| `TestEveryMarketAuthorityCarryingEntriesAlsoReportsReady` | handoff 에 새로 생긴 준비 상태 검사가 **거부하게 될 정상 입력이 없다**는 근거 |
+
+### 뮤테이션 — 하나가 살아남았고, 그것이 시험 하나를 더 만들었다
+
+| ID | 뮤테이션 | 판정 | 죽인 시험 |
+|---|---|---|---|
+| M1 | handoff 의 준비 상태 검사를 지운다 | KILLED | `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached` |
+| M2 | 상한을 하나 올린다 | KILLED | `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff` |
+| M3 | 선택 없음에 상한 초과 이름을 쓴다 | KILLED | `TestAMarketThatSelectedNothingSaysSoInsteadOfBorrowingTheCapacityName` |
+| M4 | 거절할 때 `pending` 을 비운다 | KILLED | `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff` |
+| M6 | dispatch 호출 자리를 하나 더 만든다 | KILLED | `TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch` |
+| M7 | worker 승격 본문에서 `PlaceClaimedStrategy` 를 부른다 | KILLED | `TestTheWorkerBuilderOnlyObservesThroughTheGateway` |
+| M8 | seam 파일에 execgw import 를 넣는다 | KILLED | `TestTheCoordinatorAndHandoffSeamsHoldNoMutationCapability` |
+| M9 | projection 에 옛 사본을 되살린다 | KILLED | `TestTheSingleProposalAssumptionLivesOnlyWhereTheCensusSaysItDoes` |
+| M10 | 항목을 담은 채 `Ready:false` 인 시장 권한을 만든다 | KILLED | `TestEveryMarketAuthorityCarryingEntriesAlsoReportsReady` |
+| M5 | worker 승격에서 `!handoff.Admitted()` 를 지운다 | **처음 SURVIVED** → 아래 |
+| M11 | `ResultAuthority` 가 거절을 묻지 않고 result 를 읽는다 | KILLED | `TestNoProductionSiteReadsAHandoffWithoutAskingWhetherItWasAdmitted` |
+| M12 | projection 이 거절을 묻지 않고 result 를 읽는다 | KILLED | 같은 시험 |
+
+**M5 가 살아남은 이유가 이 태스크에서 가장 중요한 발견이다.** worker 승격에서 handoff 거절
+검사를 지워도 그때 있던 시험이 전부 통과했다 — 거절된 handoff 의 `result` 가 영값이라 바로
+아래 `!result.ValidProposal()` 이 대신 걸러 주기 때문이다. 즉 그 자리의 안전을 지키고 있던
+것은 handoff 가 아니라 **우연**이었다. 거절일 때도 값을 채우도록 누가 바꾸면 그 우연은
+사라지고, 어떤 **동작** 시험도 그것을 잡지 못한다. 그래서 동작이 아니라 쓰여 있는 것을 보는
+`TestNoProductionSiteReadsAHandoffWithoutAskingWhetherItWasAdmitted` 를 추가했고, M5·M11·M12 가
+그 시험 하나에 죽는다.
+
+원복은 전부 SHA-256 대조로 확인했다 — `git checkout` 은 커밋 전 GREEN 까지 지운다.
+
+### 실측 — 그리고 커버리지 공백을 숨기지 않는다
+
+| | |
+|---|---|
+| `make test` (무태그 전체) | PASS |
+| `make test-seams` (태그 전체) | PASS |
+| `make lint` (gofmt + vet 양쪽 태그) | PASS |
+| engine 태그 스위트 (커버리지) | PASS, 73.9% |
+| engine 무태그 스위트 | PASS, 63.5% |
+| `check_analysis` | evidence complete |
+| 인용 좌표 검증 | 미확인 0 |
+
+분기 귀속은 시험별 프로파일의 합이 스위트 전체와 정확히 같다(MISMATCH 0). 그 측정이 드러낸 것:
+
+- **`runProductionStrategyMarketCycle` 의 다섯 분기 전부 진입 0.** 두 스위트 어느 쪽도 이
+  함수에 들어오지 않는다. 즉 공유 dispatch 로 가는 유일한 자리의 근거는 실행이 아니라
+  AST 가드뿐이다. 이 공백은 이 태스크가 만든 것이 아니고(이 함수는 `*Context` 와 살아 있는
+  journal·gateway 를 요구한다) 주인은 태스크 5.7 이다.
+- **`strategyProjectionFromAssembly` 의 여덟 분기 전부 진입 0.** 트리 안에
+  `StrategyEntryProductionAssembly` 를 만드는 시험이 하나도 없다. 주인은 태스크 7.3 이다.
+- worker 승격의 B3·B5·B6(봉인 깨진 제안, 진입 게이트 관측 실패, digest/만료) 진입 0. 주인은 5.7.
+
+진입 0 은 통과가 아니다. 적지 않으면 구조 가드가 동작 증거처럼 읽힌다.
+
+### 남긴 것
+
+- 상한 자체(`market_wide_single_proposal_assumption_forbidden`)를 푸는 일 — 태스크 5.2.
+- handoff 거절을 운영자 화면에 비추는 일 — 태스크 7.3. 지금 `pending` 과 거절 코드는 값으로만
+  존재하고 어떤 표면에도 나가지 않는다.
+- `strategy_account_first_leg_authority.go` 의 사본 다섯 — L6(태스크 6.2).
+- 독립 적대적 리뷰는 아직 받지 않았다. 이 기록은 구현자의 기록이다.

@@ -1,4 +1,4 @@
-# Risk Pattern Report: `internal/app/engine/strategy_proposal_authority.go` (207-318)
+# Risk Pattern Report: `internal/app/engine/strategy_proposal_authority.go`
 
 | Rule | Location | Message |
 |---|---|---|

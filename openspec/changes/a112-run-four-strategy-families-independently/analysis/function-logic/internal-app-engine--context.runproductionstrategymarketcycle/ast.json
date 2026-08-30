@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_entry_supervisor.go",
-  "source_sha256": "64893ce595e48abb31ed7e6c5a7630ae19373930c9cff148141490444202f888",
+  "source_sha256": "17ad4c0c684b74686dd1e80b256a06971802afa26bcfd300dbeac9bd5f7e0496",
   "package": "engine",
   "function": "runProductionStrategyMarketCycle",
   "receiver": "Context",
   "signature": "Context.runProductionStrategyMarketCycle(params=3, results=1)",
   "start": {
-    "line": 419,
+    "line": 422,
     "column": 1
   },
   "end": {
-    "line": 441,
+    "line": 445,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 421,
+        "line": 424,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 425,
+        "line": 429,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 430,
+        "line": 434,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 433,
+        "line": 437,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 437,
+        "line": 441,
         "column": 2
       }
     }
@@ -59,28 +59,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 422,
+        "line": 425,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 426,
+        "line": 430,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 431,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 434,
+        "line": 435,
         "column": 3
       }
     },
@@ -94,7 +87,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 440,
+        "line": 442,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 444,
         "column": 2
       }
     }
@@ -103,7 +103,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 420,
+        "line": 423,
         "column": 16
       },
       "text": "c.refreshPairedStrategyEntryProductionAssembly"
@@ -111,31 +111,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 424,
-        "column": 14
+        "line": 428,
+        "column": 13
+      },
+      "text": "dispatchHandoff"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 428,
+        "column": 13
       },
       "text": "fresh.proposals.forMarket"
     },
     {
       "kind": "call",
       "at": {
-        "line": 425,
-        "column": 33
-      },
-      "text": "len"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 428,
-        "column": 12
-      },
-      "text": "proposal.entries.authority.Proposal"
-    },
-    {
-      "kind": "call",
-      "at": {
         "line": 429,
+        "column": 6
+      },
+      "text": "handoff.Admitted"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 433,
         "column": 14
       },
       "text": "c.Journal.CurrentPositionCampaignCAS"
@@ -143,15 +143,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 429,
-        "column": 83
+        "line": 433,
+        "column": 76
       },
       "text": "string"
     },
     {
       "kind": "call",
       "at": {
-        "line": 436,
+        "line": 440,
         "column": 11
       },
       "text": "fresh.dispatch.dispatch"
@@ -159,7 +159,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 437,
+        "line": 441,
         "column": 5
       },
       "text": "errors.Is"
@@ -169,14 +169,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 420,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 424,
+        "line": 423,
         "column": 2
       }
     },
@@ -190,14 +183,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 429,
+        "line": 432,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 433,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 436,
+        "line": 440,
         "column": 2
       }
     }

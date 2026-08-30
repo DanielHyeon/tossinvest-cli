@@ -117,13 +117,15 @@ func strategyProjectionFromAssembly(assembly StrategyEntryProductionAssembly) st
 			snapshot = strategyprojection.WithMarketFailure(snapshot, projectionMarket, code, observed)
 			continue
 		}
-		authority := assembly.proposals.forMarket(market)
-		if len(authority.entries) != 1 || !authority.entries[0].authority.Proposal().ValidProposal() {
+		// 화면이 보는 제안은 dispatch 가 받는 제안과 같아야 한다. 그래서
+		// 여기서도 같은 handoff 를 쓴다 — 따로 세면 화면과 실제가 갈라진다.
+		handoff := assembly.proposals.forMarket(market).dispatchHandoff()
+		if !handoff.Admitted() || !handoff.result.ValidProposal() {
 			snapshot = strategyprojection.WithMarketFailure(snapshot, projectionMarket,
 				strategyprojection.RefusalEvidenceStale, observed)
 			continue
 		}
-		result := authority.entries[0].authority.Proposal()
+		result := handoff.result
 		lineage := result.Lineage
 		laneID, laneVersion := lineage.LaneID, lineage.LaneVersion
 		evidenceID, evidenceDigest := lineage.CandidateLifeID, projectionDigest(lineage.LaneEvidenceDigest)

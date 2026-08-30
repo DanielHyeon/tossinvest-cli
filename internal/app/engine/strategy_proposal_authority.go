@@ -143,10 +143,12 @@ func (pair strategyProposalAuthorityPair) Snapshot() PairedStrategyProposalSnaps
 
 func (pair strategyProposalAuthorityPair) ResultAuthority() strategyResultAuthorityPair {
 	convert := func(market StrategyMarket, value strategyProposalMarketAuthority) strategyResultMarketAuthority {
-		if len(value.entries) != 1 || !value.entries[0].authority.Proposal().ValidProposal() {
+		// 몇 개까지 넘길 수 있는지는 여기서 정하지 않는다. handoff 한 곳이 정한다.
+		handoff := value.dispatchHandoff()
+		if !handoff.Admitted() || !handoff.result.ValidProposal() {
 			return strategyResultMarketAuthority{market: market}
 		}
-		return strategyResultMarketAuthority{market: market, ready: true, result: value.entries[0].authority.Proposal()}
+		return strategyResultMarketAuthority{market: market, ready: true, result: handoff.result}
 	}
 	return strategyResultAuthorityPair{observedAt: pair.observedAt, kr: convert(StrategyMarketKR, pair.kr), us: convert(StrategyMarketUS, pair.us)}
 }

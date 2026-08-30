@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_entry_supervisor.go",
-  "source_sha256": "64893ce595e48abb31ed7e6c5a7630ae19373930c9cff148141490444202f888",
+  "source_sha256": "17ad4c0c684b74686dd1e80b256a06971802afa26bcfd300dbeac9bd5f7e0496",
   "package": "engine",
   "function": "refreshPairedStrategyEntryProductionAssembly",
   "receiver": "Context",
   "signature": "Context.refreshPairedStrategyEntryProductionAssembly(params=2, results=2)",
   "start": {
-    "line": 443,
+    "line": 447,
     "column": 1
   },
   "end": {
-    "line": 460,
+    "line": 464,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 444,
+        "line": 448,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 450,
+        "line": 454,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 454,
+        "line": 458,
         "column": 2
       }
     }
@@ -43,14 +43,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 445,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 451,
+        "line": 449,
         "column": 3
       }
     },
@@ -65,6 +58,13 @@
       "kind": "return",
       "at": {
         "line": 459,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 463,
         "column": 2
       }
     }
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 445,
+        "line": 449,
         "column": 45
       },
       "text": "errors.New"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 447,
+        "line": 451,
         "column": 2
       },
       "text": "c.strategyRefreshMu.Lock"
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 448,
+        "line": 452,
         "column": 8
       },
       "text": "c.strategyRefreshMu.Unlock"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 449,
+        "line": 453,
         "column": 9
       },
       "text": "UTC"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 449,
+        "line": 453,
         "column": 9
       },
       "text": "clk.Now"
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 450,
+        "line": 454,
         "column": 34
       },
       "text": "now.Before"
@@ -121,7 +121,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 450,
+        "line": 454,
         "column": 69
       },
       "text": "now.Sub"
@@ -129,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 453,
+        "line": 457,
         "column": 16
       },
       "text": "c.NewPairedStrategyEntryProductionAssembly"
@@ -139,19 +139,12 @@
     {
       "kind": ":=",
       "at": {
-        "line": 449,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
         "line": 453,
         "column": 2
       }
     },
     {
-      "kind": "=",
+      "kind": ":=",
       "at": {
         "line": 457,
         "column": 2
@@ -160,7 +153,14 @@
     {
       "kind": "=",
       "at": {
-        "line": 458,
+        "line": 461,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 462,
         "column": 2
       }
     }
@@ -170,7 +170,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 448,
+        "line": 452,
         "column": 2
       },
       "text": "c.strategyRefreshMu.Unlock"
