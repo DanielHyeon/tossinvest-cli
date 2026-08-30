@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "verify-survives-already-processing",
-    "path": "openspec/changes/verify-survives-already-processing"
+    "path": "openspec/changes/archive/2026-08-29-verify-survives-already-processing"
   },
   "acceptance": ["The verify-survives-already-processing OpenSpec contract and tasks are satisfied"]
 }

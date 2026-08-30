@@ -7,10 +7,10 @@
 | `verify-execution-capability` | STORY-TOS-003 | in_progress |
 | `add-net-rr-measurement` | STORY-TOS-004 | archived |
 | `verify-us-market` | STORY-TOS-005 | archived |
-| `apply-us-measurement-fixes` | STORY-TOS-006 | implemented |
-| `verify-clears-leftovers` | STORY-TOS-007 | implemented |
-| `verify-survives-already-processing` | STORY-TOS-008 | implemented |
-| `verify-reopens-conditional-chain` | STORY-TOS-009 | implemented |
+| `apply-us-measurement-fixes` | STORY-TOS-006 | archived |
+| `verify-clears-leftovers` | STORY-TOS-007 | archived |
+| `verify-survives-already-processing` | STORY-TOS-008 | archived |
+| `verify-reopens-conditional-chain` | STORY-TOS-009 | archived |
 | `verify-plans-the-object-it-mutates` | STORY-TOS-010 | archived |
 | `verify-holds-what-it-awaits` | STORY-TOS-011 | archived |
 | `verify-observes-the-trigger` | STORY-TOS-012 | in_progress |
@@ -100,9 +100,9 @@
 | `a098-nobody-sends-what-the-outbox-keeps` | STORY-TOS-a098 | archived |
 | `a099-a-claim-excludes-the-second-sender` | STORY-TOS-a099 | in_progress |
 | `a100-wire-fill-to-broker-protection` | STORY-TOS-a100 | in_progress |
-| `a101-the-soak-outlives-a-deploy` | STORY-TOS-a101 | implemented |
+| `a101-the-soak-outlives-a-deploy` | STORY-TOS-a101 | archived |
 | `a102-boot-does-not-starve-the-engine` | STORY-TOS-a102 | archived |
-| `a103-the-rollback-pin-is-made-not-remembered` | STORY-TOS-a103 | implemented |
+| `a103-the-rollback-pin-is-made-not-remembered` | STORY-TOS-a103 | archived |
 | `a107-retire-the-second-protection-core` | STORY-TOS-a107 | in_progress |
 | `a108-boot-recovers-from-any-leftover` | STORY-TOS-a108 | archived |
 | `a109-the-sibling-endpoints-recover-too` | STORY-TOS-a109 | archived |

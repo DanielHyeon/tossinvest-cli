@@ -17,7 +17,7 @@
     - STORY-TOS-036 — Preserve canonical origin on console form submissions [archived] → `fix-console-referrer-origin`
     - STORY-TOS-037 — Automate Open API onboarding for soak restart [archived] → `automate-soak-openapi-onboarding`
     - STORY-TOS-a082 — Let the console, engine and API daemon converge on one broker token instead of invalidating each other's [archived] → `a082-one-token-across-the-processes`
-    - STORY-TOS-a103 — The rollback pin is made, not remembered [implemented] → `a103-the-rollback-pin-is-made-not-remembered`
+    - STORY-TOS-a103 — The rollback pin is made, not remembered [archived] → `a103-the-rollback-pin-is-made-not-remembered`
   - FEAT-TOS-008 — SDD graph service reliability [active]
     - STORY-TOS-034 — Serialize project GBrain service ownership [archived] → `serialize-project-gbrain-serve`
 ## INIT-TOS-002 — TossOS automated trading product [active]
@@ -26,10 +26,10 @@
     - STORY-TOS-003 — Verify execution capability before relying on broker behavior [in_progress] → `verify-execution-capability`
     - STORY-TOS-004 — Measure net risk-reward from executable evidence [archived] → `add-net-rr-measurement`
     - STORY-TOS-005 — Verify US market broker behavior [archived] → `verify-us-market`
-    - STORY-TOS-006 — Apply verified US measurement corrections [implemented] → `apply-us-measurement-fixes`
-    - STORY-TOS-007 — Clear verification leftovers safely [implemented] → `verify-clears-leftovers`
-    - STORY-TOS-008 — Make verification survive already-processing responses [implemented] → `verify-survives-already-processing`
-    - STORY-TOS-009 — Reopen conditional verification chains correctly [implemented] → `verify-reopens-conditional-chain`
+    - STORY-TOS-006 — Apply verified US measurement corrections [archived] → `apply-us-measurement-fixes`
+    - STORY-TOS-007 — Clear verification leftovers safely [archived] → `verify-clears-leftovers`
+    - STORY-TOS-008 — Make verification survive already-processing responses [archived] → `verify-survives-already-processing`
+    - STORY-TOS-009 — Reopen conditional verification chains correctly [archived] → `verify-reopens-conditional-chain`
     - STORY-TOS-010 — Verify the exact object a mutation plan will change [archived] → `verify-plans-the-object-it-mutates`
     - STORY-TOS-011 — Verify conditional orders await the object they hold [archived] → `verify-holds-what-it-awaits`
     - STORY-TOS-012 — Verify conditional trigger observation [in_progress] → `verify-observes-the-trigger`
@@ -71,7 +71,7 @@
     - STORY-TOS-a080 — Refresh the protection line on the engine's cadence instead of the broker cache TTL [archived] → `a080-line-refreshes-on-engine-cadence`
     - STORY-TOS-a081 — Let the trading screens share one reading of the engine instead of asking it per render [archived] → `a081-screens-share-one-engine-reading`
     - STORY-TOS-a085 — Say which stock, in Korean, in the alert and on the position screen [archived] → `a085-an-alert-says-which-stock`
-    - STORY-TOS-a101 — The capability survey outlives a deploy [implemented] → `a101-the-soak-outlives-a-deploy`
+    - STORY-TOS-a101 — The capability survey outlives a deploy [archived] → `a101-the-soak-outlives-a-deploy`
     - STORY-TOS-a114 — The console reattaches its lifecycle [in_progress] → `a114-the-console-reattaches-its-lifecycle`
     - STORY-TOS-a115 — The console strategy screen reattaches [in_progress] → `a115-the-console-strategy-screen-reattaches`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]

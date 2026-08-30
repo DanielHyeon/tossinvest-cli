@@ -172,3 +172,45 @@ require a new tag.
 #### Scenario: Release workflow is rerun after publication
 - **WHEN** the tag already has a published attested release
 - **THEN** the workflow refuses to replace or edit its assets
+
+### Requirement: 컨테이너 빌드는 롤백 핀을 스스로 만든다
+
+컨테이너 이미지 빌드 명령은 빌드가 성공한 그 자리에서 새 이미지에 내구 태그 `tossos:<change>-<commit>`을 붙여야 하며(SHALL), 태그가 실제로 그 이미지를 가리키는지 되읽어 확인한 뒤에만 성공을 보고해야 한다(SHALL). 빌드와 태그 사이에 사람이 기억해야 하는 단계가 있어서는 안 된다(SHALL NOT).
+
+핀 이름의 재사용은 거부해야 한다(SHALL) — `docker tag`는 이름을 만드는 것이
+아니라 옮기므로, 쓰이고 있는 이름을 다시 박으면 직전 이미지가 이름을 잃는다.
+
+#### Scenario: 빌드 성공 뒤 태그가 자동으로 박힌다
+
+- **WHEN** `make image CHANGE=<id>`가 빌드에 성공하면
+- **THEN** 새 이미지는 `tossos:<change>-<commit>` 태그를 갖고, 명령은 그 태그를
+  되읽어 이미지 ID가 일치함을 확인한 뒤에만 성공을 출력한다
+
+#### Scenario: 태그가 실패하면 성공을 보고하지 않는다
+
+- **WHEN** 빌드는 성공했지만 태그 부착 또는 되읽기 검증이 실패하면
+- **THEN** 명령은 0이 아닌 코드로 끝나고 "박았다"류의 성공 문구를 출력하지 않는다
+
+#### Scenario: 쓰이고 있는 핀 이름은 거부된다
+
+- **WHEN** 박으려는 핀 이름이 이미 다른 이미지에 붙어 있으면 (같은 커밋 재빌드)
+- **THEN** 빌드 전에 거부한다 — 그 이름을 옮겨 오면 직전 이미지가 무명이 되기 때문이다
+
+### Requirement: 빌드는 파괴할 이름을 빌드 전에 확인한다
+
+빌드 명령은 빌드 **전에** 현재 `tossos:local`이 가리키는 이미지가 이 빌드로 유일한 이름을 잃게 되는지 확인해야 하며(SHALL), 잃게 되면 거부해야 한다(SHALL). 이미지 상태를 읽지 못한 것을 "잃을 것이 없다"로 판정해서는 안 된다(SHALL NOT) — 보지 못한 검사는 안전의 증거가 아니다.
+
+#### Scenario: 직전 이미지가 이동 태그만 달고 있으면 거부한다
+
+- **WHEN** 현재 `tossos:local` 이미지의 태그가 `tossos:local` 하나뿐이면
+- **THEN** 빌드를 거부하고, 그 이미지에 내구 이름을 주는 방법을 출력한다
+
+#### Scenario: docker를 읽지 못하면 거부한다
+
+- **WHEN** 데몬 정지·미설치·소켓 권한 등으로 이미지 상태를 읽지 못하면
+- **THEN** 빌드를 거부한다 — "무엇을 잃는지 모르는 채로 빌드하지 않는다"
+
+#### Scenario: 첫 빌드는 통과한다
+
+- **WHEN** `tossos:local` 이미지가 아직 존재하지 않으면
+- **THEN** 잃을 이름이 없으므로 빌드는 진행되고, 끝나면 핀이 박힌다
