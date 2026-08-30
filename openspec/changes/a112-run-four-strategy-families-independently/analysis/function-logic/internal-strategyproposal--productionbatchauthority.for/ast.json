@@ -1,71 +1,71 @@
 {
- "file": "internal/strategyproposal/production.go",
- "source_sha256": "9fae1db65477dfe421a1e96e3437ff2909cc8439c1b987029a534d9aded9db94",
- "package": "strategyproposal",
- "function": "For",
- "receiver": "ProductionBatchAuthority",
- "signature": "ProductionBatchAuthority.For(params=1, results=2)",
- "start": {
-  "line": 100,
-  "column": 1
- },
- "end": {
-  "line": 106,
-  "column": 2
- },
- "branches": [
-  {
-   "id": "B1",
-   "kind": "if",
-   "at": {
-    "line": 102,
-    "column": 2
-   }
-  }
- ],
- "returns": [
-  {
-   "kind": "return",
-   "at": {
-    "line": 103,
-    "column": 3
-   }
+  "file": "internal/strategyproposal/production.go",
+  "source_sha256": "43ebb628cdfef4f891b652e81dc71c677063d0ad4cbbc9d0d3bc3b3cdcb52236",
+  "package": "strategyproposal",
+  "function": "For",
+  "receiver": "ProductionBatchAuthority",
+  "signature": "ProductionBatchAuthority.For(params=1, results=2)",
+  "start": {
+    "line": 115,
+    "column": 1
   },
-  {
-   "kind": "return",
-   "at": {
-    "line": 105,
+  "end": {
+    "line": 121,
     "column": 2
-   }
-  }
- ],
- "calls": [
-  {
-   "kind": "call",
-   "at": {
-    "line": 101,
-    "column": 12
-   },
-   "text": "authority.LanesFor"
   },
-  {
-   "kind": "call",
-   "at": {
-    "line": 102,
-    "column": 5
-   },
-   "text": "len"
-  }
- ],
- "assignments": [
-  {
-   "kind": ":=",
-   "at": {
-    "line": 101,
-    "column": 2
-   }
-  }
- ],
- "go_statements": null,
- "defers": null
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 118,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 12
+      },
+      "text": "authority.LanesFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 5
+      },
+      "text": "len"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
 }

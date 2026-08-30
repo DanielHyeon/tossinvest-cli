@@ -1,0 +1,289 @@
+{
+  "file": "internal/app/engine/strategy_market_coordinator.go",
+  "source_sha256": "dfeaa63b2021128330a97c202d125d2b268f2a97329347e937539b3e7dc74a5d",
+  "package": "engine",
+  "function": "coordinateMarketProposals",
+  "signature": "coordinateMarketProposals(params=5, results=2)",
+  "start": {
+    "line": 33,
+    "column": 1
+  },
+  "end": {
+    "line": 75,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 42,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 48,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 55,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 59,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 68,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 18
+      },
+      "text": "strategyRouterMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 17
+      },
+      "text": "strategycoordinator.NewMarketCoordinator"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 55
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 38,
+        "column": 103
+      },
+      "text": "batch.Len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 12
+      },
+      "text": "batch.LanesFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 41,
+        "column": 27
+      },
+      "text": "route.approved.Symbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 42,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 12
+      },
+      "text": "route.approved.Symbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 57
+      },
+      "text": "route.route.Request"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 14
+      },
+      "text": "lane.Proposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 52,
+        "column": 17
+      },
+      "text": "coordinator.Submit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 21
+      },
+      "text": "lane.SnapshotDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 33
+      },
+      "text": "coordinator.Drops"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 24
+      },
+      "text": "coordinator.Arbitrate"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 37,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 38,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 39,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 41,
+        "column": 3
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 43,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 46,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 49,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 52,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 59,
+        "column": 7
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 66,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 67,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 70,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

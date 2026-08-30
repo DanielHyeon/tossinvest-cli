@@ -1727,3 +1727,204 @@ handoff 를 기다려야 한다고 쓴다. **이번 lot 에서 고치지 않는�
 
 `collectMarket` 의 B2·B3·B4·B7(route/FX 미준비, loader 미구성, 중복 종목)은 이번에도 진입
 0회다. 이 lot 이 만든 분기가 아니라 기존 가드이며 이전 번들에서도 같았다.
+
+## L5 5.4.2 — 조정자가 받고 접고 줄 세운다 (Manager 기록)
+
+### 무엇이 바뀌었나
+
+중재를 `collectMarket` 안의 반복문에서 꺼내 시장 조정자로 옮겼다. 새 패키지
+`internal/strategycoordinator` 가 큐 흡수·접기(coalescing)·소유자 범위 결정 순서·유계 인계를 맡고,
+엔진 쪽 `coordinateMarketProposals` 가 그 둘 사이에서 값을 옮기고 계보 신원을 레인 권한으로 되돌린다.
+`arbitrateProposalScope` 는 트리에서 사라졌다(`rg` 0건, 대조군 3건으로 도구 동작 확인).
+
+### P0 — 생산 조정자가 매 주기 36GB 를 잡았다
+
+`NewMarketCoordinator` 가 용량을 `1<<30` 으로 넘겼고 그 값이 그대로
+`make(map[laneSlot]entry, capacity)` 에 들어갔다. 커널이 세 번 OOM 을 냈다:
+
+```
+09:51:46  Killed process (engine.test)  anon-rss 36,825,432kB
+10:22:18  Killed process (engine.test)  anon-rss 36,389,960kB
+10:26:33  Killed process (engine.test)  anon-rss 36,608,084kB
+oom-kill: constraint=CONSTRAINT_NONE ... global_oom
+```
+
+이것은 테스트만의 문제가 아니다. `coordinateMarketProposals` 는 **제안 수집 주기마다** 이 생성자를
+부른다. 같은 파일이 `Capacity = MaxOwnerScopes * LanesPerMarket`(=256)을 "서버가 정하며 호출자가
+못 바꾼다"고 선언해 두고 생성자만 10억을 들고 있었다 — [[correction-unit-must-be-the-value]] 와 같은
+기전이다. 선언된 값과 쓰이는 값이 갈라졌다.
+
+수정: 생성자가 `Capacity` 를 쓰게 하고, 미리 잡는 칸 수는 상한이 아니라 `LanesPerMarket` 로 낮췄다.
+상한은 넘침을 **판정**하는 수이지 미리 **잡을** 수가 아니다.
+
+### 이 lot 의 진짜 실패는 실행하지 않은 것이었다
+
+`TestTheProductionCoordinatorUsesTheServerOwnedCapacity` 는 **이미 있었다.** 그 단언이 바로 이
+버그를 겨눈다. 그런데 맵 선할당이 단언에 닿기 전에 프로세스를 죽여서 아무도 그것을 보지 못했다.
+
+더 근본적으로, 이 lot 을 GREEN 이라고 부른 실행은 전부 **무태그**였다.
+`coordinator_test.go`·`fixture_test.go`·`a112_coordinator_test.go` 는 `tossos_testseams` 뒤에 있고,
+무태그 `go test ./internal/strategycoordinator/` 의 `ok ... 0.003s` 는 골든 대조 두 건만 돈 결과다.
+[[passing-test-is-not-evidence]] 그대로다 — 통과는 증거가 아니고, 특히 **돌지 않은** 통과는 아무것도 아니다.
+a118 이 `make test-seams` 를 게이트에 넣어 둔 것이 이 lot 을 막았을 경로다.
+
+### 뮤테이션 (pristine 사본 복원, SHA-256 대조 확인)
+
+| # | mutation | result | killed by |
+|---|---|---|---|
+| M-C1 | 조정자 용량을 `1<<30` 으로 되돌림 | KILLED | `TestTheProductionCoordinatorUsesTheServerOwnedCapacity` |
+| M-E1 | `if outcome.Overflow` → `if false` | KILLED | `TestAMarketWithMoreScopesThanTheQueueHolds…` |
+| M-E2 | 넘침 결과의 `QueueDropCount` 대입 삭제 | KILLED | 같은 테스트 |
+| M-E3 | `entries()` 의 `return nil, false` → `continue` | 처음 SURVIVED → 테스트 추가 후 KILLED | `TestASelectionWithNoLaneToComeBackToClosesInsteadOfShrinkingTheList` |
+
+M-E3 가 살아남은 것은 우연이 아니라 측정과 일치했다 — 그 가드의 진입 수가 0 이었다. 가드를 지우는 대신
+그것을 죽이는 테스트를 넣었다. 그 뮤테이션이 만드는 결함은 "종목이 조용히 사라지고 목록만 짧아지는 것"이라
+안전 방향으로도 비울 수 없는 자리다.
+
+### Function Logic Map
+
+- 재생성: `collectMarket`(13→14 분기), 신규 `coordinateMarketProposals`, 신규 `strategyMarketArbitration.entries`.
+- 위치만 밀린 6개(`Arbitrate`·`continueExistingOwner`·`familyScore`·`ownerSnapshotFault`·`selectHighestScore`·
+  `ResultAuthority`)는 본문이 **바이트 단위로 동일함을 대조**한 뒤 해시와 좌표만 옮겼다. 측정값은 코드가
+  같으므로 그대로 유효하다.
+- `arbitrateProposalScope` 번들은 삭제했다. 그 함수는 트리에 없고, 동결 base 에도 없었다(파일 자체가
+  이 change 가 만든 것). `revision: base` 로 남기면 base 에 존재하지 않는 것을 존재한다고 적는 셈이다.
+- **귀속 완전성을 측정으로 증명했다**: 모든 분기에서 테스트별 진입 수의 합 = 스위트 전체 진입 수.
+  집합 밖 테스트가 어느 arm 이든 들어갔다면 이 등식이 깨진다. 깨진 행 0.
+
+### 남은 커버리지 구멍 (열어 둠)
+
+- `coordinateMarketProposals` B5 (계보 신원 충돌)와 `collectMarket` B9 (`arbitration.collision`) 진입 0회.
+  둘은 같은 사건의 안팎이며, 생산 경로로 만들려면 한 종목의 두 레인이 같은 봉인 계보 신원을 들고 와야 한다.
+  통과가 아니라 구멍으로 적는다.
+- `collectMarket` B2·B3·B4·B7(FX 미준비, loader 미구성, 빈/중복 종목)은 이번에도 진입 0회다.
+  이 lot 이 만든 분기가 아니라 기존 가드이며 이전 번들에서도 같았다.
+
+### 실측
+
+| | |
+|---|---|
+| engine 태그 스위트 | PASS, 73.9% of statements |
+| engine 무태그 스위트 | PASS, 63.9% of statements |
+| strategycoordinator 태그 스위트 | PASS (4GB cgroup 캡 안에서) |
+| gofmt (`$(go env GOROOT)/bin/gofmt`) | 위반 0 |
+| check_analysis | evidence complete |
+
+무거운 실행은 전부 `systemd-run --user --scope -p MemoryMax=… -p MemorySwapMax=0` 안에서 돌렸다.
+묶지 않으면 터질 때 데스크톱이 같이 죽는다.
+
+## L5 5.4.2 — 독립 적대적 리뷰 2차 (2026-08-30)
+
+구현 세션과 분리된 두 리뷰어(정확성 적대적 · 안전 불변식)를 같은 diff에 붙였다.
+리뷰어는 파일을 편집하지 않았고, 자기 주장을 `go test -overlay` 뮤테이션으로 스스로 검증했다.
+
+### 안전 불변식 감사 결과
+
+| 질문 | 판정 | 근거 |
+|---|---|---|
+| 실계좌 노출이 지금 0인가 | **예** | 운영 이미지(`2026-08-17` 빌드) 안 `tossctl` 에 `PROPOSAL_QUEUE_OVERFLOW`·`strategycoordinator`·`ARBITRATION_REFUSED` 문자열 0개, 양성 대조(`ROUTE_NOT_READY` 등) 1개씩. 브랜치는 main 에 안 붙었다(`main..HEAD` 9 커밋) |
+| 배포돼도 경로가 열리는가 | **아니오** | 컨테이너 env 는 다섯 개뿐이고 `TOSSOS_STRATEGY_*` 가 없다 → `strategy_route_authority.go` 의 키 길이 검사가 발화해 `Ready=false`, `collectMarket` 이 새 코드보다 43줄 위에서 반환 |
+| 토글 OFF 동치성 | **예** | OFF 상태 조기 반환 다섯 개가 전부 이 lot 이 만진 첫 줄보다 위에 있다. 스냅샷 구조체는 값 비교되는 곳이 없고 JSON 태그도 없다 |
+| 손절·보호 경로에 얹히는가 | **아니오** | 이 경로가 낼 수 있는 주문은 `Side: "buy"` 하나다. 감축·청산은 Guardian 의 `ReductionIssuer` 가 별도 감시 루프로 낸다. 조정자는 주기마다 새로 만들어져 주기를 넘겨 지연시킬 상태가 없다 |
+| 감사 추적성 | **아니오 — 깨져 있다** | 아래 P1-2 |
+
+**토글이 없다는 사실을 그대로 적는다.** 이 코드에는 기능 토글이 없다. `collectMarket` 자체는
+지금도 5초마다 불린다(휴면 worker 의 `RefreshesAuthority`). "OFF"의 정체는 서명된 매니페스트
+파일과 네 개 env 가 배포에 없다는 것뿐이며, 운영자가 그것을 넣는 순간 같은 프로세스 안에서
+조정자가 산다. 관문이 하나 더 있는 것이 아니다.
+
+### 고친 것
+
+| # | 발견 | 처리 |
+|---|---|---|
+| P1-1 | 큐 상한 `MaxOwnerScopes=64`(=256 칸)가 상류 매니페스트 상한 10,000 보다 39배 작다. "상류에 상한이 없어 유도할 영수증이 없다"는 주석은 **사실이 아니었다** — 영수증은 `strategyproposal/production.go` 의 `validScopes` 에 있었다. 65 종목이면 정상 매니페스트가 매 주기 시장을 닫는다 | `MaxOwnerScopes` 삭제, `Capacity = 10_000`, 영수증을 `MaxManifestScopes` 로 이름 붙여 내보내고 `receipt_contract_test.go` 가 두 패키지를 함께 읽어 같음을 강제 |
+| P1-2 | 새 진단(`PROPOSAL_QUEUE_OVERFLOW`·`ArbitrationRefusal`·`ArbitrationDetail`·`QueueDropCount`)이 엔진 패키지를 못 벗어난다. 운영자 표면은 이 닫힘을 `EVIDENCE_STALE` 하나로 뭉갠다. 그런데 주석은 "이 숫자가 조용한 유실이 없음을 증언한다"고 적고 있었다 | **투영 배선은 태스크 7.3 이므로 여기서 하지 않는다.** 대신 거짓 주석을 지우고, 이 수가 지금 배선에서 **언제나 0** 이라는 사실까지 함께 적었다. 골든에 없는 투영 enum 을 지어내지 않는다 |
+| P2-3 | `INTERNAL_FAILURE` 로 닫는 두 경로(계보 충돌·되돌릴 자리 없음)가 진단을 전부 버렸다. 같은 코드가 이 함수 안에서만 다섯 가지 일에 붙는다 | 두 경로에 구별되는 detail 상수와 digest·counts 를 실었다 |
+| P2-4 | `Arbitrate` 가 결함을 읽고 잠금을 놓은 뒤 선택을 만든다. 그 사이 `Submit` 이 낸 결함은 이 호출에 안 보여, **이미 닫힌 조정자가 선택을 내놓는다** | 잠금을 메서드 전체로 넓혔다. 안에서 부르는 중재자는 순수 함수이고 I/O 가 없다 |
+| P2-8 | 이 lot 이 `MaxManifestScopes` 를 만들면서 같은 파일 11줄 위에 벌거벗은 `10_000` 을 남겼다. 세는 것이 다른데(종목 vs 종목×레인) 눈에는 중복으로 보인다 | `productionMaxTargets` 로 따로 이름 붙이고, 왜 값이 같아도 합치면 안 되는지 적었다 |
+| P3 | `len(entries)==0` 가지만 `QueueDropCount` 를 안 실었다 | 형제 넷과 맞췄다 |
+| P3 | 닫힘 가지의 `RefusedCount = refused + 1` 이 규모에서 거짓말이다. 실측: 10,001 종목이 경로에 올라 하나도 못 나간 주기가 "1건 거절" | 닫힘 가지는 `RoutedCount` 를 그대로 싣는다 — 시장이 닫히면 전부 거절이다 |
+
+### 살아남던 뮤테이션과 그것을 죽인 시험
+
+리뷰어가 **직접 돌려서** 살아남는 것을 확인한 여섯 개다. 표의 시험은 이번에 새로 넣었고,
+넣은 뒤 같은 뮤테이션을 다시 돌려 죽는 것을 확인했다.
+
+| ID | 뮤테이션 | 전 | 후 | 죽인 시험 |
+|---|---|---|---|---|
+| M-G | `Capacity` 10,000 → 256 | — | KILLED | `TestTheQueueCapacityIsReadFromTheManifestScopeCeiling` |
+| M-H | `existing.key != key` 절 삭제 | SURVIVED | KILLED | `TestTheSameLineageWithOnlyADifferentSnapshotDigestClosesTheScope` |
+| M-I | `ProposalFamily` 가 늘 `""` | SURVIVED (engine 스위트까지) | KILLED | `TestAnAdmittedEnvelopeCarriesItsFamilyInTheDedupKey` |
+| M-J | `Key.Parts()` 값 순서 뒤섞기 | SURVIVED | KILLED | `TestPartsMatchesTheGoldenFieldOrderPositionally` |
+| M-K | `scopeOrderLess` 세대 갈래 → `false` | SURVIVED | KILLED | `TestScopeOrderFallsThroughToPositionGeneration` |
+| M-L | 범위 안 레인 정렬 삭제 | SURVIVED | KILLED | `TestTwoFaultyLanesInOneScopeAlwaysReportTheSameRefusal` |
+
+M-H 가 살아남던 기전은 이 저장소가 이미 기록한 것과 같다 — 기존 시험이 스냅샷과
+후보 유효기한 **두 축**을 함께 흔들었고, 유효기한은 계보 신원에 들어가므로 신원 절만으로도
+통과했다. 축 하나만 흔드는 시험을 새로 넣었다.
+
+### 죽이지 못한 것 (정직하게 적는다)
+
+- **M-F (`Arbitrate` 의 이른 잠금 해제) — SURVIVED.** 고쳤지만 **시험으로 증명하지 못했다.**
+  실패 이유는 시험이 약해서가 아니라 결함이 밖에서 관측 불가능하기 때문이다. 올바른 판본에서도
+  `Arbitrate` 가 경쟁에서 이기면 "닫히지 않은 결과"가 정당하게 나오므로, 그 관측만으로는 두
+  판본을 가를 수 없다. 가르려면 임계 구역 안에 주입 지점이 있어야 한다.
+  `TestAMarketClosedWhileArbitrateIsRunningStillReportsClosed` 는 겹침을 실제로 만들고
+  race detector 로 자료 경쟁이 없음을 지키지만, 이 뮤테이션은 못 죽인다. 시험 주석에 그대로 적었다.
+  확정적 증명은 8 worker/2 coordinator 하네스를 세우는 **태스크 5.7** 의 몫이다.
+- **M-M (`laneOrderLess` 를 `Family` 비교만으로 축소) — SURVIVED.** 한 시장의 네 레인이 가족과
+  1:1 이라 `Family` 만으로도 전순서가 되기 때문이다. 그래도 `LaneID`·`LaneVersion` 갈래를 남긴다 —
+  뒤 매니페스트가 한 가족에 두 레인을 붙이면 `Family` 만으로는 전순서가 아니게 되고
+  `sort.Slice` 가 불안정해져 결정성이 깨진다. 방어이며 죽은 코드가 아니다. 시험은 못 만든다.
+- **`Submit` 의 계보-범위 검사** 는 중재자가 같은 판정을 같은 detail 로 내므로 블랙박스로 죽일 수 없다.
+  남긴다 — 중재까지 가기 전에 잘못된 범위로 만든 열쇠가 큐에 앉는 것을 막는다.
+
+### 구조적으로 도달 불가인 표면 — 그대로 적는다
+
+리뷰어가 뮤테이션으로 확인했다(접힘 가지에 `panic` 을 넣어도 engine 스위트가 통과했다).
+
+- **접힘(coalescing) 은 지금 배선에서 절대 일어나지 않는다.** `collectMarket` 이 종목 중복을 먼저
+  거절하고 매니페스트가 (종목, 레인)마다 하나만 실으므로 같은 레인 칸이 두 번 오지 않는다.
+- **넘침도 일어나지 않는다.** 큐 상한이 매니페스트 상한과 같아졌으므로(P1-1) 정상 매니페스트는
+  정확히 들어맞고, 넘침은 상류 검증이 뚫렸을 때만 발화하는 방어다. 경계는 정확하다 —
+  `validScopes` 가 `>` 로 거절하므로 10,000 개짜리 합법 매니페스트는 넘치지 않는다.
+- 따라서 **`QueueDropCount` 는 지금 언제나 0** 이고, 넘침 시험은 매니페스트 검증을 우회하는
+  주입 배치로만 그 가지에 닿는다. 이 셋을 "조용한 유실이 없음의 증거"로 인용하지 않는다.
+  여러 worker 가 같은 칸을 두고 다투게 되는 것은 태스크 5.2·5.7 이다.
+
+### 미룬 것 — 태스크 5.4.3 으로 명시
+
+리뷰어가 **작동하는 시연**과 함께 낸 P1 하나를 이 lot 에서 고치지 않는다.
+
+`batch.LanesFor(symbol)` 이 빈 목록을 돌려주는 일은 "이 종목은 원래 제안이 없다"와
+"이 종목의 제안이 고장으로 사라졌다"를 구별하지 못한다. `LoadProductionAuthorityBatch`
+안에는 조용히 빈 목록을 만드는 `continue` 가 일곱 개 있다. 시연 결과는 다음과 같다 —
+두 종목이 경로에 올랐고 005930 의 제안만 사라졌는데, 시장이 `READY` 로 보고되고 목록이
+둘에서 하나로 줄었으며, 그 결과 `len(entries) != 1` 관문이 오히려 **만족되어** 000660 이
+풀렸다. 005930 이 제안을 유지했다면 풀리지 않았을 종목이다.
+
+미루는 근거: 이 `refused++; continue` 는 5.4.2 **이전부터** 같은 자리에 있었고, 고치려면
+`internal/strategyproposal` 의 배치 로더가 종목별 부재 사유를 형으로 들고 나오게 바꿔야 한다 —
+5.4.2 의 범위("중재자를 조정자 런타임에 얹는다") 밖이다. 다만 이 lot 이 그 루프를 다시 쓰면서
+같은 불변식을 주석으로 네 번 다시 선언했으므로, **선언만 하고 달성하지 않은 채로 두지 않는다.**
+태스크 5.4.3 으로 적었다. 침묵한 생략이 아니다.
+
+### 이번 회차 실측
+
+| | |
+|---|---|
+| `make test` (무태그 전체) | PASS |
+| `make test-seams` (태그 전체) | PASS |
+| `make vet` | PASS |
+| engine 태그 스위트 (커버리지) | PASS, 73.8% of statements |
+| engine 무태그 스위트 (커버리지) | PASS, 63.6% of statements |
+| `strategycoordinator`·`strategyarbiter`·`strategyproposal` `-race` | PASS |
+| gofmt (`$(go env GOROOT)/bin/gofmt`) | 위반 0 |
+| `check_analysis` | evidence complete |
+| `make sdd-check` | PASS |
+| `openspec validate --all --strict` | 59/59 |
+
+FLM 번들 아홉 개를 다시 만들었다(engine 넷 + strategyproposal 다섯). `strategyproposal` 쪽 다섯은
+본문이 안 바뀌고 const 블록이 늘어 줄만 +15 밀린 것이라 측정은 그대로 두고 위치·해시만 재기준화했으며,
+그 재기준화가 온전한지는 **md 가 인용한 모든 `줄:칸` 이 그 번들 ast.json 안에 실제로 있는지**를
+기계로 확인했다(미확인 0). engine 넷은 코드가 바뀌었으므로 커버리지를 다시 측정해 표를 다시 만들었다.

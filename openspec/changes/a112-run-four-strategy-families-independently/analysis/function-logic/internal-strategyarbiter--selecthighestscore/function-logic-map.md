@@ -3,7 +3,7 @@
 - Source: `internal/strategyarbiter/arbiter.go` (240-279)
 - Function: `selectHighestScore` in package `strategyarbiter`
 - Signature: `selectHighestScore(params=2, results=1)`
-- File SHA-256: `1788b0503479c4c4e8b4b17d7e2e6e2fd189f414ebde7877a7d5043157be6d03`
+- File SHA-256: `ba484e68bd49e73081afaf031129c1a418af4103a436b94382b4105b2f68da2a`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 9.
 - Risk scan: `risk-pattern-report.md`.

@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_proposal_authority.go",
-  "source_sha256": "61724700e3ecd848b656a37d5f8632a17aed7e02639179d1a5f62a1f508bd27e",
+  "source_sha256": "f4f6627f945825c7a199bd38f9152122decd51da410acd8660ea8463093413e0",
   "package": "engine",
   "function": "ResultAuthority",
   "receiver": "strategyProposalAuthorityPair",
   "signature": "strategyProposalAuthorityPair.ResultAuthority(params=0, results=1)",
   "start": {
-    "line": 102,
+    "line": 132,
     "column": 1
   },
   "end": {
-    "line": 110,
+    "line": 140,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 104,
+        "line": 134,
         "column": 3
       }
     }
@@ -27,21 +27,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 105,
+        "line": 135,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 107,
+        "line": 137,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 109,
+        "line": 139,
         "column": 2
       }
     }
@@ -50,7 +50,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 104,
+        "line": 134,
         "column": 6
       },
       "text": "len"
@@ -58,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 104,
+        "line": 134,
         "column": 34
       },
       "text": "ValidProposal"
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 104,
+        "line": 134,
         "column": 34
       },
       "text": "value.entries.authority.Proposal"
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 107,
+        "line": 137,
         "column": 77
       },
       "text": "value.entries.authority.Proposal"
@@ -82,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 109,
+        "line": 139,
         "column": 70
       },
       "text": "convert"
@@ -90,7 +90,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 109,
+        "line": 139,
         "column": 110
       },
       "text": "convert"
@@ -100,7 +100,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 103,
+        "line": 133,
         "column": 2
       }
     }

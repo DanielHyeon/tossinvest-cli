@@ -278,6 +278,23 @@ func selectHighestScore(request Request, routed strategyrouter.RouteSetResult) O
 		LineageIdentity: request.Proposals[best].Result.Lineage.Identity}
 }
 
+// ProposalFamily 는 제안이 묶인 전략군을 알려준다. 봉인된 가족 점수 표에서
+// 정확히 한 행에 붙지 않으면 빈 값이다.
+//
+// 조정자가 중복 제거 열쇠를 만들 때 가족이 필요해서 내보낸다. 같은 판단을
+// 조정자가 따로 구현하면 두 곳이 언젠가 서로 다른 가족을 말하게 된다.
+//
+// **붙지 않는 이유는 여기서 판정하지 않는다.** 채점 기준이 아예 없는 권한은
+// Arbitrate 가 보정 문제로 먼저 거절하는데, 열쇠를 만드는 자리에서 같은 입력을
+// "모르는 가족"으로 먼저 판정해 버리면 운영자가 보는 진단이 원인에서 멀어진다.
+func ProposalFamily(proposal Proposal) strategyrouter.Family {
+	score, code, _ := familyScore(proposal)
+	if code != RefusalNone {
+		return ""
+	}
+	return score.Family
+}
+
 // familyScore 는 제안의 레인을 봉인된 가족 점수 행 정확히 하나에 붙인다.
 // 두 행에 걸치거나 한 행에도 안 붙으면 그 제안은 견줄 수 없는 것이다.
 func familyScore(proposal Proposal) (strategyrouter.ProductionRouteFamilyScore, Refusal, string) {

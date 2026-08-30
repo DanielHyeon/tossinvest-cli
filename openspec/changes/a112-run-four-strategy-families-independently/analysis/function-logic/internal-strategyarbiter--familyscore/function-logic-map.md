@@ -1,9 +1,9 @@
 # Function Logic Map: `familyScore`
 
-- Source: `internal/strategyarbiter/arbiter.go` (283-300)
+- Source: `internal/strategyarbiter/arbiter.go` (300-317)
 - Function: `familyScore` in package `strategyarbiter`
 - Signature: `familyScore(params=1, results=3)`
-- File SHA-256: `1788b0503479c4c4e8b4b17d7e2e6e2fd189f414ebde7877a7d5043157be6d03`
+- File SHA-256: `ba484e68bd49e73081afaf031129c1a418af4103a436b94382b4105b2f68da2a`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 4.
 - Risk scan: `risk-pattern-report.md`.
@@ -26,21 +26,21 @@ The signature above is the exhaustive input/result record; this map does not inf
 - Per-test attribution set: every `Test*` function in `internal/strategyarbiter`, each run alone under the seam tag. This is the whole package, not a sample.
 - Measured entry: executed from both `continueExistingOwner` and `selectHighestScore` in the arbiter tagged suite and the engine tagged suite.
 
-Exact AST return positions: 294:3, 297:3, 299:2.
+Exact AST return positions: 311:3, 314:3, 316:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | range | 287:2 | arm not entered (arbiter untagged suite); arm entered 39x (arbiter tagged suite); arm entered 46x (engine tagged suite); arm not entered (engine untagged suite); entered by `TestALaneMatchingTwoScoreRowsIsUnknown`, `TestALaneOutsideTheSealedEligibleSetIsRefused`, `TestALaneWithNoFamilyScoreRowIsUnknown`, `TestAProposalBuiltFromOtherEvidenceIsRefused`, `TestAScoreAboveTheApprovedCeilingIsRefused`, `TestAScoreRowNamingAnUnapprovedFamilyIsUnknown`, `TestASingletonProposalWithoutApprovedScoreAuthorityIsRefused`, `TestAStaleProposalClosesTheWholeScope`, `TestATieAtTheTopIsRefusedRatherThanBrokenArbitrarily`, `TestATieBelowTheTopStillLeavesAUniqueWinner`, `TestAnActiveOwnerOnALaneWithNoScoreRowIsRefused`, `TestAnActiveWeeklyOwnerIsNotReplacedByAHigherScore`, `TestThreeFamiliesOnOneSymbolYieldTheSingleHighestScore` |
-| B2 | if | 288:3 | arm not entered (arbiter untagged suite); arm entered 19x (arbiter tagged suite); arm entered 12x (engine tagged suite); arm not entered (engine untagged suite); entered by `TestALaneMatchingTwoScoreRowsIsUnknown`, `TestALaneOutsideTheSealedEligibleSetIsRefused`, `TestAProposalBuiltFromOtherEvidenceIsRefused`, `TestAScoreAboveTheApprovedCeilingIsRefused`, `TestAScoreRowNamingAnUnapprovedFamilyIsUnknown`, `TestASingletonProposalWithoutApprovedScoreAuthorityIsRefused`, `TestAStaleProposalClosesTheWholeScope`, `TestATieAtTheTopIsRefusedRatherThanBrokenArbitrarily`, `TestATieBelowTheTopStillLeavesAUniqueWinner`, `TestAnActiveWeeklyOwnerIsNotReplacedByAHigherScore`, `TestThreeFamiliesOnOneSymbolYieldTheSingleHighestScore` |
-| B3 | if | 293:2 | arm not entered (arbiter untagged suite); arm entered 4x (arbiter tagged suite); arm not entered (engine tagged suite); arm not entered (engine untagged suite); entered by `TestALaneMatchingTwoScoreRowsIsUnknown`, `TestALaneWithNoFamilyScoreRowIsUnknown`, `TestAScoreRowNamingAnUnapprovedFamilyIsUnknown`, `TestAnActiveOwnerOnALaneWithNoScoreRowIsRefused` |
-| B4 | if | 296:2 | arm not entered (arbiter untagged suite); arm entered 1x (arbiter tagged suite); arm not entered (engine tagged suite); arm not entered (engine untagged suite); entered by `TestAScoreAboveTheApprovedCeilingIsRefused` |
+| B1 | range | 304:2 | arm not entered (arbiter untagged suite); arm entered 39x (arbiter tagged suite); arm entered 46x (engine tagged suite); arm not entered (engine untagged suite); entered by `TestALaneMatchingTwoScoreRowsIsUnknown`, `TestALaneOutsideTheSealedEligibleSetIsRefused`, `TestALaneWithNoFamilyScoreRowIsUnknown`, `TestAProposalBuiltFromOtherEvidenceIsRefused`, `TestAScoreAboveTheApprovedCeilingIsRefused`, `TestAScoreRowNamingAnUnapprovedFamilyIsUnknown`, `TestASingletonProposalWithoutApprovedScoreAuthorityIsRefused`, `TestAStaleProposalClosesTheWholeScope`, `TestATieAtTheTopIsRefusedRatherThanBrokenArbitrarily`, `TestATieBelowTheTopStillLeavesAUniqueWinner`, `TestAnActiveOwnerOnALaneWithNoScoreRowIsRefused`, `TestAnActiveWeeklyOwnerIsNotReplacedByAHigherScore`, `TestThreeFamiliesOnOneSymbolYieldTheSingleHighestScore` |
+| B2 | if | 305:3 | arm not entered (arbiter untagged suite); arm entered 19x (arbiter tagged suite); arm entered 12x (engine tagged suite); arm not entered (engine untagged suite); entered by `TestALaneMatchingTwoScoreRowsIsUnknown`, `TestALaneOutsideTheSealedEligibleSetIsRefused`, `TestAProposalBuiltFromOtherEvidenceIsRefused`, `TestAScoreAboveTheApprovedCeilingIsRefused`, `TestAScoreRowNamingAnUnapprovedFamilyIsUnknown`, `TestASingletonProposalWithoutApprovedScoreAuthorityIsRefused`, `TestAStaleProposalClosesTheWholeScope`, `TestATieAtTheTopIsRefusedRatherThanBrokenArbitrarily`, `TestATieBelowTheTopStillLeavesAUniqueWinner`, `TestAnActiveWeeklyOwnerIsNotReplacedByAHigherScore`, `TestThreeFamiliesOnOneSymbolYieldTheSingleHighestScore` |
+| B3 | if | 310:2 | arm not entered (arbiter untagged suite); arm entered 4x (arbiter tagged suite); arm not entered (engine tagged suite); arm not entered (engine untagged suite); entered by `TestALaneMatchingTwoScoreRowsIsUnknown`, `TestALaneWithNoFamilyScoreRowIsUnknown`, `TestAScoreRowNamingAnUnapprovedFamilyIsUnknown`, `TestAnActiveOwnerOnALaneWithNoScoreRowIsRefused` |
+| B4 | if | 313:2 | arm not entered (arbiter untagged suite); arm entered 1x (arbiter tagged suite); arm not entered (engine tagged suite); arm not entered (engine untagged suite); entered by `TestAScoreAboveTheApprovedCeilingIsRefused` |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `proposal.Authority.FamilyScores` | 287:24 |
-| `found.Family.Known` | 293:22 |
+| `proposal.Authority.FamilyScores` | 304:24 |
+| `found.Family.Known` | 310:22 |
 
 ## State mutations and fallbacks
 

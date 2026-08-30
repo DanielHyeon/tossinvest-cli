@@ -1,0 +1,101 @@
+{
+  "file": "internal/app/engine/strategy_market_coordinator.go",
+  "source_sha256": "dfeaa63b2021128330a97c202d125d2b268f2a97329347e937539b3e7dc74a5d",
+  "package": "engine",
+  "function": "entries",
+  "receiver": "strategyMarketArbitration",
+  "signature": "strategyMarketArbitration.entries(params=0, results=2)",
+  "start": {
+    "line": 80,
+    "column": 1
+  },
+  "end": {
+    "line": 90,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 84,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 85,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 54
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 12
+      },
+      "text": "append"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 83,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 87,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

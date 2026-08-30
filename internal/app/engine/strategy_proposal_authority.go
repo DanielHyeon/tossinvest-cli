@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
@@ -39,6 +38,19 @@ const (
 	// 보정 중재가 그 종목에서 하나를 고르지 못했다. 어떤 이유로 닫혔는지는
 	// 스냅샷의 ArbitrationRefusal 이 그대로 들고 있다(태스크 5.4).
 	StrategyProposalArbitrationRefused StrategyProposalReason = "ARBITRATION_REFUSED"
+	// 조정자 큐가 넘쳐 그 시장을 닫았다. 동결 골든의 refusal_enums 에는 큐 코드가
+	// 없으므로 중재 여섯 코드 중 하나를 빌려 쓰지 않고 엔진 자신의 이름을 쓴다 —
+	// 빌려 쓰면 큐가 넘친 일이 봉인이 깨진 일로 보고된다(태스크 5.4.2).
+	StrategyProposalQueueOverflow StrategyProposalReason = "PROPOSAL_QUEUE_OVERFLOW"
+)
+
+// 아래 두 문장은 INTERNAL_FAILURE 로 닫히는 여러 원인 중 조정 경로가 낸 둘을
+// 서로, 그리고 나머지와 구별하는 진단이다. 계약이 아니다 — INTERNAL_FAILURE 는
+// 이 함수 안에서만도 다섯 가지 서로 다른 일에 붙는 이름이라, 코드만 남기면
+// 운영자가 무엇이 닫았는지 알 방법이 없다.
+const (
+	strategyProposalDetailLineageCollision    = "two lanes claim the same sealed lineage identity"
+	strategyProposalDetailUnresolvedSelection = "a selection has no lane to come back to"
 )
 
 type StrategyProposalMarketSnapshot struct {
@@ -52,6 +64,24 @@ type StrategyProposalMarketSnapshot struct {
 	// ArbitrationDetail 은 그 코드 안에서 무엇이 발화했는지 좁혀 주는 진단이며
 	// 계약이 아니다 — 여섯 코드는 여러 원인을 한 이름으로 묶기 때문이다.
 	ArbitrationRefusal, ArbitrationDetail string
+	// QueueDropCount 는 조정자 큐에서 접히거나 들어가지 못한 봉투의 수다.
+	// 유계 계수기다.
+	//
+	// **이 숫자는 지금 배선에서 언제나 0 이고, 아직 운영자에게 닿지도 않는다.**
+	// 두 가지가 다 사실이므로 둘 다 적는다.
+	//
+	//  1. 언제나 0 인 이유: 계수기가 오르는 곳은 접힘과 넘침 둘뿐인데, 지금
+	//     배선은 둘 다 닿지 못한다. collectMarket 이 종목 중복을 먼저 거절하고
+	//     매니페스트가 (종목, 레인)마다 하나만 싣기 때문에 같은 레인 칸이 두 번
+	//     오지 않으며(접힘 없음), 큐 상한이 매니페스트 상한과 같아서 정상
+	//     매니페스트는 넘칠 수 없다(넘침 없음).
+	//  2. 닿지 않는 이유: 읽는 소비자가 없고, 지금의 유일한 운영자 표면은 이
+	//     시장의 닫힘을 EVIDENCE_STALE 하나로 뭉뚱그린다(strategy_runtime_projection.go).
+	//
+	// 그러므로 이 수를 "조용한 유실이 없음의 증거"로 인용하면 안 된다. 언제나
+	// 0 인 계수기는 아무것도 증언하지 않는다. 투영까지 잇는 일은 태스크 7.3 이고,
+	// 여러 worker 가 같은 칸을 두고 다투게 만드는 일은 태스크 5.2·5.7 이다.
+	QueueDropCount uint64
 }
 
 type PairedStrategyProposalSnapshot struct {
@@ -205,35 +235,56 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 	if err != nil || batch.ManifestDigest() != digest {
 		return fail(StrategyProposalAuthorityInvalid)
 	}
-	// 한 종목이 여러 가족을 제안하면 여기서 보정 중재로 하나를 고른다.
-	// 중재가 닫힌 종목을 목록에서 그냥 빼면 목록이 둘에서 하나로 줄어 아래
-	// 파이프라인의 len(entries)==1 관문이 오히려 만족되고, 막으려던 것과
-	// 상관없는 *다른* 종목이 대신 풀린다. 그래서 시장 전체를 닫는다.
-	// routes.entries 는 심볼 순으로 정렬되어 있으므로 어느 종목이 먼저 걸리는지도 정해져 있다.
-	entries := make([]strategyProposalEntryAuthority, 0, batch.Len())
-	refused := 0
-	for _, route := range routes.entries {
-		lanes := batch.LanesFor(route.approved.Symbol())
-		if len(lanes) == 0 {
-			refused++
-			continue
-		}
-		outcome := arbitrateProposalScope(loader.accountRef, market, route, lanes, observedAt)
-		if outcome.Refusal != strategyarbiter.RefusalNone {
-			result := fail(StrategyProposalArbitrationRefused)
-			result.snapshot.ManifestDigest = digest
-			result.snapshot.ArbitrationRefusal = string(outcome.Refusal)
-			result.snapshot.ArbitrationDetail = outcome.Detail
-			result.snapshot.RefusedCount = refused + 1
-			return result
-		}
-		entries = append(entries, strategyProposalEntryAuthority{route: route, authority: lanes[outcome.Selected]})
+	// 한 종목이 여러 가족을 제안하면 시장 조정자가 소유자 범위마다 하나만 고른다.
+	// 조정자가 한 범위를 닫으면 시장 전체를 닫는다. 닫힌 종목만 목록에서 빼면
+	// 목록이 둘에서 하나로 줄어 아래 파이프라인의 len(entries)==1 관문이 오히려
+	// 만족되고, 막으려던 것과 상관없는 *다른* 종목이 대신 풀린다.
+	// 목록의 순서는 조정자가 정한다 — 소유자 범위 사전순이라 종목 오름차순이다.
+	// 아래 닫힘 가지들이 RefusedCount 에 RoutedCount 를 그대로 넣는 이유:
+	// 시장이 닫히면 **경로에 오른 종목 전부**가 제안을 못 낸 것이다. "레인이
+	// 없던 종목 수 + 1" 같은 수를 넣으면 10,001 개가 경로에 오르고 하나도
+	// 나가지 못한 주기가 "1 건 거절"로 보고된다.
+	arbitration, refused := coordinateMarketProposals(loader.accountRef, market, routes.entries, batch, observedAt)
+	if arbitration.collision {
+		result := fail(StrategyProposalInternalFailure)
+		result.snapshot.ManifestDigest = digest
+		result.snapshot.ArbitrationDetail = strategyProposalDetailLineageCollision
+		result.snapshot.RefusedCount = result.snapshot.RoutedCount
+		result.snapshot.QueueDropCount = arbitration.outcome.Drops
+		return result
 	}
-	sort.Slice(entries, func(i, j int) bool { return entries[i].route.approved.Symbol() < entries[j].route.approved.Symbol() })
+	outcome := arbitration.outcome
+	if outcome.Overflow {
+		result := fail(StrategyProposalQueueOverflow)
+		result.snapshot.ManifestDigest = digest
+		result.snapshot.ArbitrationDetail = outcome.Detail
+		result.snapshot.RefusedCount = result.snapshot.RoutedCount
+		result.snapshot.QueueDropCount = outcome.Drops
+		return result
+	}
+	if outcome.Refusal != strategyarbiter.RefusalNone {
+		result := fail(StrategyProposalArbitrationRefused)
+		result.snapshot.ManifestDigest = digest
+		result.snapshot.ArbitrationRefusal = string(outcome.Refusal)
+		result.snapshot.ArbitrationDetail = outcome.Detail
+		result.snapshot.RefusedCount = result.snapshot.RoutedCount
+		result.snapshot.QueueDropCount = outcome.Drops
+		return result
+	}
+	entries, resolved := arbitration.entries()
+	if !resolved {
+		result := fail(StrategyProposalInternalFailure)
+		result.snapshot.ManifestDigest = digest
+		result.snapshot.ArbitrationDetail = strategyProposalDetailUnresolvedSelection
+		result.snapshot.RefusedCount = result.snapshot.RoutedCount
+		result.snapshot.QueueDropCount = outcome.Drops
+		return result
+	}
 	if len(entries) == 0 {
 		result := fail(StrategyProposalNoAcceptedScope)
 		result.snapshot.RefusedCount = refused
 		result.snapshot.ManifestDigest = digest
+		result.snapshot.QueueDropCount = outcome.Drops
 		return result
 	}
 	h := sha256.New()
@@ -241,7 +292,8 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 		_, _ = h.Write([]byte(entry.route.approved.Symbol() + "\x00" + entry.authority.Proposal().Lineage.Identity + "\x00"))
 	}
 	return strategyProposalMarketAuthority{market: market, entries: entries, snapshot: StrategyProposalMarketSnapshot{Market: market, Ready: true, Reason: StrategyProposalReady,
-		RoutedCount: len(routes.entries), ProposedCount: len(entries), RefusedCount: refused, ManifestDigest: digest, ProposalSetDigest: "sha256:" + hex.EncodeToString(h.Sum(nil))}}
+		RoutedCount: len(routes.entries), ProposedCount: len(entries), RefusedCount: refused, ManifestDigest: digest,
+		ProposalSetDigest: "sha256:" + hex.EncodeToString(h.Sum(nil)), QueueDropCount: outcome.Drops}}
 }
 
 func failedStrategyProposalPair(observedAt time.Time, reason StrategyProposalReason) strategyProposalAuthorityPair {

@@ -1,9 +1,9 @@
 # Function Logic Map: `strategyProposalAuthorityPair.ResultAuthority`
 
-- Source: `internal/app/engine/strategy_proposal_authority.go` (102-110)
+- Source: `internal/app/engine/strategy_proposal_authority.go` (132-140)
 - Function: `strategyProposalAuthorityPair.ResultAuthority` in package `engine`
 - Signature: `strategyProposalAuthorityPair.ResultAuthority(params=0, results=1)`
-- File SHA-256: `61724700e3ecd848b656a37d5f8632a17aed7e02639179d1a5f62a1f508bd27e`
+- File SHA-256: `f4f6627f945825c7a199bd38f9152122decd51da410acd8660ea8463093413e0`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 1.
 - Risk scan: `risk-pattern-report.md`.
@@ -24,22 +24,22 @@ The signature above is the exhaustive input/result record; this map does not inf
 - Per-test attribution set: the seven `Test*` functions that can reach `strategyProposalAuthorityLoader.collectMarket` — the six in `a112_arbitration_test.go` and `strategy_proposal_authority_test.go` plus none elsewhere, because no other engine test constructs a proposal loader or a production assembly. This is the complete reaching set, not a sample.
 - Measured entry: executed in the engine tagged suite only.
 
-Exact AST return positions: 105:4, 107:3, 109:2.
+Exact AST return positions: 135:4, 137:3, 139:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 104:3 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); no cover block (proposal tagged suite); entered by `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol` |
+| B1 | if | 134:3 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol` |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `len` | 104:6 |
-| `ValidProposal` | 104:34 |
-| `value.entries.authority.Proposal` | 104:34 |
-| `value.entries.authority.Proposal` | 107:77 |
-| `convert` | 109:70 |
-| `convert` | 109:110 |
+| `len` | 134:6 |
+| `ValidProposal` | 134:34 |
+| `value.entries.authority.Proposal` | 134:34 |
+| `value.entries.authority.Proposal` | 137:77 |
+| `convert` | 139:70 |
+| `convert` | 139:110 |
 
 ## State mutations and fallbacks
 

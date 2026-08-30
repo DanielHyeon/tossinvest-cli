@@ -1,6 +1,6 @@
-# Branch Test Map: `strategyProposalAuthorityPair.ResultAuthority`
+# Branch Test Map: `strategyMarketArbitration.entries`
 
-- Source: `internal/app/engine/strategy_proposal_authority.go` (132-140); file SHA-256 `f4f6627f945825c7a199bd38f9152122decd51da410acd8660ea8463093413e0`. AST branch positions are authoritative.
+- Source: `internal/app/engine/strategy_market_coordinator.go` (80-90); file SHA-256 `dfeaa63b2021128330a97c202d125d2b268f2a97329347e937539b3e7dc74a5d`. AST branch positions are authoritative.
 - Rows carry measured counts from Go coverage profiles, count mode.
 
 - Measurement regime: Go coverage profiles, count mode.
@@ -15,12 +15,12 @@
   정확히 같다. 이 집합 밖의 테스트가 어느 arm 이든 들어갔다면 그 등식이 깨진다. 깨진 행은
   `ATTRIBUTION MISMATCH` 로 표시되며 아래에는 하나도 없다.
 
-이 표는 5.4.1 판본의 옛 형식(다른 `-coverpkg`, 일곱 테스트 귀속 집합)을 그대로 두지 않고
-5.4.2 의 측정으로 다시 만든 것이다. 함수 본문은 이 lot 에서 바뀌지 않았지만 파일이 바뀌어
-줄 번호와 파일 해시가 움직였고, 옛 표가 인용하던 분기 위치는 더 이상 이 파일의 어떤 위치도 아니었다.
+M-E3 (`return nil, false` → `continue`) 가 이 메서드를 겨눈 mutation 이며
+`collectmarket` 쪽 표에 결과를 적었다. 처음에는 SURVIVED 했고, 그것을 죽이는 테스트를 넣은 뒤 KILLED 다.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 134:3 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol` |
+| B1 | range | 82:2 | arm entered 12x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestASelectionWithNoLaneToComeBackToClosesInsteadOfShrinkingTheList`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket` |
+| B2 | if | 84:3 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestASelectionWithNoLaneToComeBackToClosesInsteadOfShrinkingTheList` |
 
 A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.

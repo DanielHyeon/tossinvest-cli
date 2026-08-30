@@ -1,131 +1,131 @@
 {
- "file": "internal/strategyproposal/production.go",
- "source_sha256": "9fae1db65477dfe421a1e96e3437ff2909cc8439c1b987029a534d9aded9db94",
- "package": "strategyproposal",
- "function": "validScopes",
- "signature": "validScopes(params=2, results=1)",
- "start": {
-  "line": 537,
-  "column": 1
- },
- "end": {
-  "line": 552,
-  "column": 2
- },
- "branches": [
-  {
-   "id": "B1",
-   "kind": "if",
-   "at": {
-    "line": 538,
+  "file": "internal/strategyproposal/production.go",
+  "source_sha256": "43ebb628cdfef4f891b652e81dc71c677063d0ad4cbbc9d0d3bc3b3cdcb52236",
+  "package": "strategyproposal",
+  "function": "validScopes",
+  "signature": "validScopes(params=2, results=1)",
+  "start": {
+    "line": 552,
+    "column": 1
+  },
+  "end": {
+    "line": 567,
     "column": 2
-   }
   },
-  {
-   "id": "B2",
-   "kind": "range",
-   "at": {
-    "line": 542,
-    "column": 2
-   }
-  },
-  {
-   "id": "B3",
-   "kind": "if",
-   "at": {
-    "line": 546,
-    "column": 3
-   }
-  }
- ],
- "returns": [
-  {
-   "kind": "return",
-   "at": {
-    "line": 539,
-    "column": 3
-   }
-  },
-  {
-   "kind": "return",
-   "at": {
-    "line": 547,
-    "column": 4
-   }
-  },
-  {
-   "kind": "return",
-   "at": {
-    "line": 551,
-    "column": 2
-   }
-  }
- ],
- "calls": [
-  {
-   "kind": "call",
-   "at": {
-    "line": 538,
-    "column": 5
-   },
-   "text": "len"
-  },
-  {
-   "kind": "call",
-   "at": {
-    "line": 538,
-    "column": 25
-   },
-   "text": "len"
-  },
-  {
-   "kind": "call",
-   "at": {
-    "line": 546,
-    "column": 44
-   },
-   "text": "strings.ToUpper"
-  },
-  {
-   "kind": "call",
-   "at": {
-    "line": 546,
-    "column": 60
-   },
-   "text": "strings.TrimSpace"
-  },
-  {
-   "kind": "call",
-   "at": {
-    "line": 546,
-    "column": 336
-   },
-   "text": "laneMatchesMarket"
-  }
- ],
- "assignments": [
-  {
-   "kind": ":=",
-   "at": {
-    "line": 541,
-    "column": 2
-   }
-  },
-  {
-   "kind": ":=",
-   "at": {
-    "line": 545,
-    "column": 3
-   }
-  },
-  {
-   "kind": "=",
-   "at": {
-    "line": 549,
-    "column": 3
-   }
-  }
- ],
- "go_statements": null,
- "defers": null
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 553,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 557,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 561,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 554,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 562,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 566,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 553,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 553,
+        "column": 25
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 561,
+        "column": 44
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 561,
+        "column": 60
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 561,
+        "column": 336
+      },
+      "text": "laneMatchesMarket"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 556,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 560,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 564,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
 }

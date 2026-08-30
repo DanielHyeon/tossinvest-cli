@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_proposal_authority.go",
-  "source_sha256": "61724700e3ecd848b656a37d5f8632a17aed7e02639179d1a5f62a1f508bd27e",
+  "source_sha256": "f4f6627f945825c7a199bd38f9152122decd51da410acd8660ea8463093413e0",
   "package": "engine",
   "function": "collectMarket",
   "receiver": "strategyProposalAuthorityLoader",
   "signature": "strategyProposalAuthorityLoader.collectMarket(params=5, results=1)",
   "start": {
-    "line": 165,
+    "line": 195,
     "column": 1
   },
   "end": {
-    "line": 245,
+    "line": 297,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 170,
+        "line": 200,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 173,
+        "line": 203,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 176,
+        "line": 206,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 181,
+        "line": 211,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 185,
+        "line": 215,
         "column": 2
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "range",
       "at": {
-        "line": 191,
+        "line": 221,
         "column": 2
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 193,
+        "line": 223,
         "column": 3
       }
     },
@@ -74,15 +74,15 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 205,
+        "line": 235,
         "column": 2
       }
     },
     {
       "id": "B9",
-      "kind": "range",
+      "kind": "if",
       "at": {
-        "line": 215,
+        "line": 248,
         "column": 2
       }
     },
@@ -90,31 +90,39 @@
       "id": "B10",
       "kind": "if",
       "at": {
-        "line": 217,
-        "column": 3
+        "line": 257,
+        "column": 2
       }
     },
     {
       "id": "B11",
       "kind": "if",
       "at": {
-        "line": 222,
-        "column": 3
+        "line": 265,
+        "column": 2
       }
     },
     {
       "id": "B12",
       "kind": "if",
       "at": {
-        "line": 233,
+        "line": 275,
         "column": 2
       }
     },
     {
       "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 283,
+        "column": 2
+      }
+    },
+    {
+      "id": "B14",
       "kind": "range",
       "at": {
-        "line": 240,
+        "line": 291,
         "column": 2
       }
     }
@@ -123,77 +131,91 @@
     {
       "kind": "return",
       "at": {
-        "line": 168,
+        "line": 198,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 171,
+        "line": 201,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 174,
+        "line": 204,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 177,
+        "line": 207,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 182,
+        "line": 212,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 194,
+        "line": 224,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 206,
+        "line": 236,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 228,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 232,
-        "column": 44
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 237,
+        "line": 254,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 243,
+        "line": 263,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 272,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 281,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 288,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 294,
         "column": 2
       }
     }
@@ -202,7 +224,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 168,
+        "line": 198,
         "column": 144
       },
       "text": "len"
@@ -210,7 +232,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 170,
+        "line": 200,
         "column": 31
       },
       "text": "len"
@@ -218,7 +240,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 171,
+        "line": 201,
         "column": 10
       },
       "text": "fail"
@@ -226,7 +248,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 174,
+        "line": 204,
         "column": 10
       },
       "text": "fail"
@@ -234,7 +256,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 177,
+        "line": 207,
         "column": 10
       },
       "text": "fail"
@@ -242,7 +264,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 179,
+        "line": 209,
         "column": 13
       },
       "text": "strings.TrimSpace"
@@ -250,7 +272,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 179,
+        "line": 209,
         "column": 31
       },
       "text": "loader.getenv"
@@ -258,7 +280,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 180,
+        "line": 210,
         "column": 14
       },
       "text": "DecodeString"
@@ -266,7 +288,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 180,
+        "line": 210,
         "column": 14
       },
       "text": "base64.StdEncoding.Strict"
@@ -274,7 +296,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 181,
+        "line": 211,
         "column": 19
       },
       "text": "base64.StdEncoding.EncodeToString"
@@ -282,7 +304,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 181,
+        "line": 211,
         "column": 72
       },
       "text": "len"
@@ -290,7 +312,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 182,
+        "line": 212,
         "column": 10
       },
       "text": "fail"
@@ -298,7 +320,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 188,
+        "line": 218,
         "column": 12
       },
       "text": "strings.TrimSpace"
@@ -306,7 +328,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 188,
+        "line": 218,
         "column": 30
       },
       "text": "loader.getenv"
@@ -314,7 +336,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 189,
+        "line": 219,
         "column": 13
       },
       "text": "make"
@@ -322,7 +344,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 189,
+        "line": 219,
         "column": 58
       },
       "text": "len"
@@ -330,7 +352,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 190,
+        "line": 220,
         "column": 14
       },
       "text": "make"
@@ -338,7 +360,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 190,
+        "line": 220,
         "column": 59
       },
       "text": "len"
@@ -346,7 +368,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 192,
+        "line": 222,
         "column": 13
       },
       "text": "entry.approved.Symbol"
@@ -354,7 +376,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 193,
+        "line": 223,
         "column": 22
       },
       "text": "bySymbol.approved.Valid"
@@ -362,7 +384,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 194,
+        "line": 224,
         "column": 11
       },
       "text": "fail"
@@ -370,7 +392,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 197,
+        "line": 227,
         "column": 13
       },
       "text": "append"
@@ -378,7 +400,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 197,
+        "line": 227,
         "column": 97
       },
       "text": "entry.route.Request"
@@ -386,7 +408,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 199,
+        "line": 229,
         "column": 16
       },
       "text": "loader.load"
@@ -394,7 +416,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 200,
+        "line": 230,
         "column": 42
       },
       "text": "strategyrouter.Market"
@@ -402,7 +424,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 200,
+        "line": 230,
         "column": 111
       },
       "text": "strings.TrimSpace"
@@ -410,7 +432,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 200,
+        "line": 230,
         "column": 129
       },
       "text": "loader.getenv"
@@ -418,7 +440,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 201,
+        "line": 231,
         "column": 15
       },
       "text": "ed25519.PublicKey"
@@ -426,7 +448,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 234,
         "column": 23
       },
       "text": "strings.TrimSpace"
@@ -434,7 +456,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 234,
         "column": 41
       },
       "text": "loader.getenv"
@@ -442,7 +464,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 205,
+        "line": 235,
         "column": 19
       },
       "text": "batch.ManifestDigest"
@@ -450,7 +472,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 206,
+        "line": 236,
         "column": 10
       },
       "text": "fail"
@@ -458,103 +480,63 @@
     {
       "kind": "call",
       "at": {
-        "line": 213,
+        "line": 247,
+        "column": 26
+      },
+      "text": "coordinateMarketProposals"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
         "column": 13
-      },
-      "text": "make"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 213,
-        "column": 55
-      },
-      "text": "batch.Len"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 216,
-        "column": 12
-      },
-      "text": "batch.LanesFor"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 216,
-        "column": 27
-      },
-      "text": "route.approved.Symbol"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 217,
-        "column": 6
-      },
-      "text": "len"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 221,
-        "column": 14
-      },
-      "text": "arbitrateProposalScope"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 223,
-        "column": 14
       },
       "text": "fail"
     },
     {
       "kind": "call",
       "at": {
-        "line": 225,
-        "column": 41
+        "line": 258,
+        "column": 13
+      },
+      "text": "fail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 266,
+        "column": 13
+      },
+      "text": "fail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 40
       },
       "text": "string"
     },
     {
       "kind": "call",
       "at": {
-        "line": 230,
+        "line": 274,
+        "column": 23
+      },
+      "text": "arbitration.entries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
         "column": 13
       },
-      "text": "append"
+      "text": "fail"
     },
     {
       "kind": "call",
       "at": {
-        "line": 232,
-        "column": 2
-      },
-      "text": "sort.Slice"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 232,
-        "column": 51
-      },
-      "text": "entries.route.approved.Symbol"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 232,
-        "column": 88
-      },
-      "text": "entries.route.approved.Symbol"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 233,
+        "line": 283,
         "column": 5
       },
       "text": "len"
@@ -562,7 +544,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 234,
+        "line": 284,
         "column": 13
       },
       "text": "fail"
@@ -570,7 +552,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 239,
+        "line": 290,
         "column": 7
       },
       "text": "sha256.New"
@@ -578,7 +560,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 241,
+        "line": 292,
         "column": 10
       },
       "text": "h.Write"
@@ -586,14 +568,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 241,
+        "line": 292,
         "column": 18
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 241,
+        "line": 292,
         "column": 25
       },
       "text": "entry.route.approved.Symbol"
@@ -601,7 +583,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 241,
+        "line": 292,
         "column": 66
       },
       "text": "entry.authority.Proposal"
@@ -609,7 +591,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 244,
+        "line": 295,
         "column": 16
       },
       "text": "len"
@@ -617,7 +599,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 244,
+        "line": 295,
         "column": 52
       },
       "text": "len"
@@ -625,16 +607,16 @@
     {
       "kind": "call",
       "at": {
-        "line": 244,
-        "column": 144
+        "line": 296,
+        "column": 34
       },
       "text": "hex.EncodeToString"
     },
     {
       "kind": "call",
       "at": {
-        "line": 244,
-        "column": 163
+        "line": 296,
+        "column": 53
       },
       "text": "h.Sum"
     }
@@ -643,98 +625,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 166,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 167,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 179,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 180,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 184,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 186,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 188,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 189,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 190,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 192,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
         "line": 196,
-        "column": 3
+        "column": 2
       }
     },
     {
-      "kind": "=",
+      "kind": ":=",
       "at": {
         "line": 197,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 199,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 213,
+        "line": 209,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 210,
         "column": 2
       }
     },
@@ -746,100 +658,268 @@
       }
     },
     {
-      "kind": ":=",
+      "kind": "=",
       "at": {
         "line": 216,
         "column": 3
       }
     },
     {
-      "kind": "++",
+      "kind": ":=",
       "at": {
         "line": 218,
-        "column": 4
+        "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 221,
+        "line": 219,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 220,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 222,
         "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 223,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 224,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 225,
-        "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
         "line": 226,
-        "column": 4
+        "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
         "line": 227,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 230,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 234,
+        "line": 229,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 247,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 249,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 235,
+        "line": 250,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 236,
+        "line": 251,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 252,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 253,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 239,
+        "line": 256,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 258,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 259,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 260,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 261,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 262,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 266,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 267,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 268,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 269,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 270,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 271,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 274,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 276,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 277,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 278,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 279,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 280,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 284,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 285,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 286,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 287,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 290,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 241,
+        "line": 292,
         "column": 3
       }
     }

@@ -35,6 +35,21 @@ const (
 	productionDomain       = "TossOS/strategy-proposal-input/ed25519/v1"
 	productionAlgorithm    = "Ed25519"
 	productionMaximumBytes = 1 << 20
+	// MaxManifestScopes 는 한 시장 매니페스트가 실을 수 있는 (종목, 레인) 범위의
+	// 상한이다. validScopes 가 이 수를 넘는 매니페스트를 거절하므로, 이 수가
+	// 그 시장의 조정자 큐에 도착할 수 있는 봉투의 최대치이기도 하다.
+	//
+	// 이름을 붙여 내보내는 이유: 큐 상한을 고를 때 이 값을 **읽어서** 정해야
+	// 하기 때문이다. 큐가 이보다 작으면 매니페스트 검증이 통과시킨 정상 매니페스트가
+	// 큐에서 넘쳐 그 시장을 매 주기 닫는다. 숫자를 따로 고르면 두 값이 말없이 갈라진다.
+	MaxManifestScopes = 10_000
+	// productionMaxTargets 는 한 번에 건네받는 대상(=종목)의 상한이다.
+	//
+	// MaxManifestScopes 와 지금 값이 같지만 **세는 것이 다르다** — 이쪽은 종목,
+	// 저쪽은 (종목, 레인) 쌍이다. 같은 숫자를 벌거벗은 채로 두 곳에 두면 다음
+	// 사람이 "중복"으로 보고 하나로 합치고, 그 순간 큐 상한의 유도가 조용히
+	// 깨진다. 그래서 값이 같아도 이름을 따로 둔다.
+	productionMaxTargets = 10_000
 )
 
 var ErrProductionProposalUnavailable = errors.New("strategyproposal: production proposal authority unavailable")
@@ -241,7 +256,7 @@ func LoadProductionAuthorityBatch(ctx context.Context, config ProductionConfig, 
 	if ctx == nil || !ownerOK || name == "" || !filepath.IsAbs(config.ConfigDir) || !filepath.IsAbs(config.EvidencePath) || !filepath.IsAbs(config.JournalPath) ||
 		config.AccountRef == "" || config.ObservedAt.IsZero() || !digestValid(config.ManifestDigest) || !identity(config.TrustedKeyID) || len(config.TrustedKey) != ed25519.PublicKeySize ||
 		!identity(config.RouteManifestDigest) || !identity(config.ActivationDigest) || !identity(config.CalendarGeneration) || !identity(config.CalendarDigest) ||
-		!identity(config.SchedulerConfigVersion) || !identity(config.EvidenceDBIdentity) || len(targets) == 0 || len(targets) > 10_000 {
+		!identity(config.SchedulerConfigVersion) || !identity(config.EvidenceDBIdentity) || len(targets) == 0 || len(targets) > productionMaxTargets {
 		return ProductionBatchAuthority{}, ErrProductionProposalUnavailable
 	}
 	if err := ctx.Err(); err != nil {
@@ -535,7 +550,7 @@ func verifyManifest(manifest productionManifest, config ProductionConfig) bool {
 }
 
 func validScopes(market strategyrouter.Market, scopes []productionScope) bool {
-	if len(scopes) == 0 || len(scopes) > 10_000 {
+	if len(scopes) == 0 || len(scopes) > MaxManifestScopes {
 		return false
 	}
 	previous := ""

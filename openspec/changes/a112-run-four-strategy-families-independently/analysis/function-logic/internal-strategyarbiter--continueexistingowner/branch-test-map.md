@@ -1,6 +1,6 @@
 # Branch Test Map: `continueExistingOwner`
 
-- Source: `internal/strategyarbiter/arbiter.go`; file SHA-256 `1788b0503479c4c4e8b4b17d7e2e6e2fd189f414ebde7877a7d5043157be6d03`. AST branch positions are authoritative.
+- Source: `internal/strategyarbiter/arbiter.go`; file SHA-256 `ba484e68bd49e73081afaf031129c1a418af4103a436b94382b4105b2f68da2a`. AST branch positions are authoritative.
 - Rows carry measured counts from Go coverage profiles, count mode.
 - arbiter untagged suite: `go test -count=1 -covermode=count -coverpkg=./internal/strategyarbiter ./internal/strategyarbiter/`
 - arbiter tagged suite: `go test -count=1 -tags tossos_testseams -covermode=count -coverpkg=./internal/strategyarbiter ./internal/strategyarbiter/`
