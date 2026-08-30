@@ -1,4 +1,4 @@
-# Risk Pattern Report: `internal/app/engine/strategy_market_coordinator.go`
+# Risk Pattern Report: `internal/app/engine/strategy_market_coordinator.go` (80-90)
 
 | Rule | Location | Message |
 |---|---|---|

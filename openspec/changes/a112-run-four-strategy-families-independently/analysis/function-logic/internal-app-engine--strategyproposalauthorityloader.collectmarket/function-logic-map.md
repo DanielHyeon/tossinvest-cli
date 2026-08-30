@@ -1,11 +1,11 @@
 # Function Logic Map: `strategyProposalAuthorityLoader.collectMarket`
 
-- Source: `internal/app/engine/strategy_proposal_authority.go` (195-297)
+- Source: `internal/app/engine/strategy_proposal_authority.go` (207-318)
 - Function: `strategyProposalAuthorityLoader.collectMarket` in package `engine`
 - Signature: `strategyProposalAuthorityLoader.collectMarket(params=5, results=1)`
-- File SHA-256: `f4f6627f945825c7a199bd38f9152122decd51da410acd8660ea8463093413e0`
+- File SHA-256: `b7a565a767a7ef790ff1390a5db4c5e83cac19897d408aae167d7243466b3d38`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
-- AST evidence: `ast.json` — AST branches 14.
+- AST evidence: `ast.json` — AST branches 15.
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
@@ -17,14 +17,17 @@
 조정자가 한 범위를 닫으면 그 종목만 빼지 않고 **시장 전체를 닫는다** — 하나를 빼면 목록이 둘에서 하나로 줄어
 아래 세 소비자가 공유하는 `len(entries) != 1` 관문이 오히려 만족되고, 막으려던 것과 상관없는 다른 종목이 대신 풀린다.
 
-**이 불변식은 중재 결함에만 성립한다. 제안이 없는 종목에는 성립하지 않는다.** B6 안의 B7 위쪽
-(`batch.LanesFor` 가 빈 목록) 은 그 종목을 `refused++` 로 세고 건너뛴다. 그런데 그 빈 목록은
-"이 종목은 원래 제안이 없다"와 "이 종목의 제안이 고장으로 사라졌다"를 구별하지 못한다 —
-`LoadProductionAuthorityBatch` 안에 조용히 빈 목록을 만드는 `continue` 가 일곱 개 있다.
-그래서 고장 하나가 목록을 줄이고, 줄어든 목록이 `len(entries) != 1` 관문을 오히려 만족시켜
-상관없는 다른 종목을 풀어 준다. 5.4.2 적대적 리뷰가 시연으로 확인했고(P1-1), 이 `continue` 는
-5.4.2 이전부터 같은 자리에 있었다. 고치는 일은 태스크 5.4.3 이다. 여기서는 **선언과 달성이
-다르다는 사실을 적어 둔다.**
+**이 불변식은 5.4.2 까지 중재 결함에만 성립했다. 태스크 5.4.3 이 나머지 절반을 채웠다.**
+`batch.LanesFor` 가 빈 목록을 돌려주는 일은 "이 종목은 원래 제안이 없다"와 "이 종목의 제안이
+고장으로 사라졌다"를 구별하지 못했고, 그래서 고장 하나가 목록을 줄이고 줄어든 목록이
+`len(entries) != 1` 관문을 오히려 만족시켜 상관없는 다른 종목을 풀어 줬다(5.4.2 리뷰 P1-1,
+시연으로 확인). 지금은 `strategyproposal` 이 그 둘을 갈라 형(型)으로 들고 나오고, 이 함수가
+배치를 받자마자 `batch.Fault()` 를 먼저 본다 — 고장이면 조정에 넣지 않고 시장을 닫는다.
+
+고장의 기준은 "제안이 안 나왔다"가 아니라 **"약속받은 봉인된 입력을 얻지 못했다"** 다.
+시장 상태 때문에 평가가 거절한 것(스프레드·호가·사이징·보호적이지 않은 목표가)은 고장이
+아니라 매일 일어나는 정상 거절이므로 예전처럼 거절로 세고 시장은 열어 둔다. 그 경계는
+처음에 잘못 그었고 `TestAnEvaluationRefusalIsAbsenceNotFault` 가 잡았다.
 
 큐가 넘치면 중재 거절 코드를 빌려 쓰지 않고 `PROPOSAL_QUEUE_OVERFLOW` 라는 엔진 자신의 이름으로 보고한다.
 동결 골든 `refusal_enums` 에 큐 코드가 없으므로, 빌려 쓰면 큐가 넘친 일이 봉인이 깨진 일로 보고된다.
@@ -45,89 +48,100 @@ The signature above is the exhaustive input/result record; this map does not inf
   정확히 같다. 이 집합 밖의 테스트가 어느 arm 이든 들어갔다면 그 등식이 깨진다. 깨진 행은
   `ATTRIBUTION MISMATCH` 로 표시되며 아래에는 하나도 없다.
 
-Exact AST return positions: 198:3, 201:3, 204:3, 207:3, 212:3, 224:4, 236:3, 254:3, 263:3, 272:3, 281:3, 288:3, 294:2.
+Exact AST return positions: 210:3, 213:3, 216:3, 219:3, 224:3, 236:4, 248:3, 257:3, 275:3, 284:3, 293:3, 302:3, 309:3, 315:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 200:2 | arm entered 2x (engine tagged suite); arm not entered (engine untagged suite); `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne`, `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused` |
-| B2 | if | 203:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B3 | if | 206:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B4 | if | 211:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B5 | if | 215:2 | arm entered 7x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket` |
-| B6 | range | 221:2 | arm entered 10021x (engine tagged suite); arm not entered (engine untagged suite); `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne`, `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket` |
-| B7 | if | 223:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B8 | if | 235:2 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestStrategyProposalAuthorityKeepsMarketFailureLocal` |
-| B9 | if | 248:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B10 | if | 257:2 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne` |
-| B11 | if | 265:2 | arm entered 3x (engine tagged suite); arm not entered (engine untagged suite); `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal` |
-| B12 | if | 275:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B13 | if | 283:2 | arm entered 2x (engine tagged suite); arm not entered (engine untagged suite); `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated` |
-| B14 | range | 291:2 | arm entered 11x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket` |
+| B1 | if | 212:2 | arm entered 3x (engine tagged suite); arm not entered (engine untagged suite); `TestALostProposalClosesTheMarketInsteadOfReleasingTheOtherSymbol`, `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne`, `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused` |
+| B2 | if | 215:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B3 | if | 218:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B4 | if | 223:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B5 | if | 227:2 | arm entered 7x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket` |
+| B6 | range | 233:2 | arm entered 10023x (engine tagged suite); arm not entered (engine untagged suite); `TestALostProposalClosesTheMarketInsteadOfReleasingTheOtherSymbol`, `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne`, `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket` |
+| B7 | if | 235:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B8 | if | 247:2 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestStrategyProposalAuthorityKeepsMarketFailureLocal` |
+| B9 | if | 252:2 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestALostProposalClosesTheMarketInsteadOfReleasingTheOtherSymbol` |
+| B10 | if | 269:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B11 | if | 278:2 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne` |
+| B12 | if | 286:2 | arm entered 3x (engine tagged suite); arm not entered (engine untagged suite); `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal` |
+| B13 | if | 296:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B14 | if | 304:2 | arm entered 2x (engine tagged suite); arm not entered (engine untagged suite); `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated` |
+| B15 | range | 312:2 | arm entered 11x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket` |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `len` | 198:144 |
-| `len` | 200:31 |
-| `fail` | 201:10 |
-| `fail` | 204:10 |
-| `fail` | 207:10 |
-| `strings.TrimSpace` | 209:13 |
-| `loader.getenv` | 209:31 |
-| `DecodeString` | 210:14 |
-| `base64.StdEncoding.Strict` | 210:14 |
-| `base64.StdEncoding.EncodeToString` | 211:19 |
-| `len` | 211:72 |
-| `fail` | 212:10 |
-| `strings.TrimSpace` | 218:12 |
-| `loader.getenv` | 218:30 |
-| `make` | 219:13 |
-| `len` | 219:58 |
-| `make` | 220:14 |
-| `len` | 220:59 |
-| `entry.approved.Symbol` | 222:13 |
-| `bySymbol.approved.Valid` | 223:22 |
-| `fail` | 224:11 |
-| `append` | 227:13 |
-| `entry.route.Request` | 227:97 |
-| `loader.load` | 229:16 |
-| `strategyrouter.Market` | 230:42 |
-| `strings.TrimSpace` | 230:111 |
-| `loader.getenv` | 230:129 |
-| `ed25519.PublicKey` | 231:15 |
-| `strings.TrimSpace` | 234:23 |
-| `loader.getenv` | 234:41 |
-| `batch.ManifestDigest` | 235:19 |
-| `fail` | 236:10 |
-| `coordinateMarketProposals` | 247:26 |
-| `fail` | 249:13 |
-| `fail` | 258:13 |
-| `fail` | 266:13 |
-| `string` | 268:40 |
-| `arbitration.entries` | 274:23 |
-| `fail` | 276:13 |
-| `len` | 283:5 |
-| `fail` | 284:13 |
-| `sha256.New` | 290:7 |
-| `h.Write` | 292:10 |
-| `(unnamed)` | 292:18 |
-| `entry.route.approved.Symbol` | 292:25 |
-| `entry.authority.Proposal` | 292:66 |
-| `len` | 295:16 |
-| `len` | 295:52 |
-| `hex.EncodeToString` | 296:34 |
-| `h.Sum` | 296:53 |
+| `len` | 210:144 |
+| `len` | 212:31 |
+| `fail` | 213:10 |
+| `fail` | 216:10 |
+| `fail` | 219:10 |
+| `strings.TrimSpace` | 221:13 |
+| `loader.getenv` | 221:31 |
+| `DecodeString` | 222:14 |
+| `base64.StdEncoding.Strict` | 222:14 |
+| `base64.StdEncoding.EncodeToString` | 223:19 |
+| `len` | 223:72 |
+| `fail` | 224:10 |
+| `strings.TrimSpace` | 230:12 |
+| `loader.getenv` | 230:30 |
+| `make` | 231:13 |
+| `len` | 231:58 |
+| `make` | 232:14 |
+| `len` | 232:59 |
+| `entry.approved.Symbol` | 234:13 |
+| `bySymbol.approved.Valid` | 235:22 |
+| `fail` | 236:11 |
+| `append` | 239:13 |
+| `entry.route.Request` | 239:97 |
+| `loader.load` | 241:16 |
+| `strategyrouter.Market` | 242:42 |
+| `strings.TrimSpace` | 242:111 |
+| `loader.getenv` | 242:129 |
+| `ed25519.PublicKey` | 243:15 |
+| `strings.TrimSpace` | 246:23 |
+| `loader.getenv` | 246:41 |
+| `batch.ManifestDigest` | 247:19 |
+| `fail` | 248:10 |
+| `batch.Fault` | 252:22 |
+| `fail` | 253:13 |
+| `absence.String` | 255:37 |
+| `coordinateMarketProposals` | 268:26 |
+| `fail` | 270:13 |
+| `fail` | 279:13 |
+| `fail` | 287:13 |
+| `string` | 289:40 |
+| `arbitration.entries` | 295:23 |
+| `fail` | 297:13 |
+| `len` | 304:5 |
+| `fail` | 305:13 |
+| `sha256.New` | 311:7 |
+| `h.Write` | 313:10 |
+| `(unnamed)` | 313:18 |
+| `entry.route.approved.Symbol` | 313:25 |
+| `entry.authority.Proposal` | 313:66 |
+| `len` | 316:16 |
+| `len` | 316:52 |
+| `hex.EncodeToString` | 317:34 |
+| `h.Sum` | 317:53 |
 
 ## State mutations and fallbacks
 
-- AST assignments: 43. Defers: 0. Goroutine statements: 0.
+- AST assignments: 48. Defers: 0. Goroutine statements: 0.
 
 ## Safety conclusion
 
-이 lot 은 거절을 느슨하게 하지 않았다. 닫히는 경우가 셋 늘었다 — 계보 신원 충돌(B9),
-큐 넘침(B10), 되돌릴 자리 없음(B12). 셋 다 이전에는 존재하지 않던 닫힘이며 전부 보수 방향이다.
-B9 는 아직 진입 0 회다. 이것은 통과가 아니라 커버리지 구멍이며 그대로 남겨 보고한다.
+이 함수는 거절을 느슨하게 한 적이 없다. 5.4.2 가 닫히는 경우를 셋 늘렸고 — 계보 신원
+충돌(B10), 큐 넘침(B11), 되돌릴 자리 없음(B13) — 5.4.3 이 넷째를 더했다: 배치가 받아들인
+스코프의 제안을 잃음(B9). 넷 다 이전에는 존재하지 않던 닫힘이며 전부 보수 방향이다.
+B10 은 아직 진입 0 회다. 이것은 통과가 아니라 커버리지 구멍이며 그대로 남겨 보고한다.
+
+B9 를 **조정 앞**에 둔 이유: 조정까지 가면 잃은 종목은 그냥 없는 종목처럼 보이고,
+짧아진 목록이 아래 관문을 오히려 만족시킨다. 닫으려면 줄어들기 전에 봐야 한다.
+
+`ProductionFault` 는 어느 종목의 어느 레인이 무엇 때문에 사라졌는지를 한 줄로 싣는다.
+`QueueDropCount` 와 마찬가지로 **아직 운영자에게 닿지 않는다** — 투영은 태스크 7.3 이다.
 
 닫힘 가지 넷은 이제 `RefusedCount` 에 `RoutedCount` 를 그대로 싣는다. 시장이 닫히면 경로에 오른
 종목 전부가 못 나간 것이기 때문이다. 앞선 판본의 `refused + 1` 은 10,001 종목이 하나도 못 나간

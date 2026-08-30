@@ -1,11 +1,11 @@
 # Function Logic Map: `LoadProductionAuthorityBatch`
 
-- Source: `internal/strategyproposal/production.go` (252-330)
+- Source: `internal/strategyproposal/production.go` (307-418)
 - Function: `LoadProductionAuthorityBatch` in package `strategyproposal`
 - Signature: `LoadProductionAuthorityBatch(params=4, results=2)`
-- File SHA-256: `43ebb628cdfef4f891b652e81dc71c677063d0ad4cbbc9d0d3bc3b3cdcb52236`
+- File SHA-256: `b6e54b502e5092745426f8f4a37e4a02777d525a2099aa90de9f7379ee4a2c18`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
-- AST evidence: `ast.json` — AST branches 18.
+- AST evidence: `ast.json` — AST branches 21.
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
@@ -23,80 +23,86 @@ The signature above is the exhaustive input/result record; this map does not inf
 - untagged engine suite: `go test -count=1 -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
 - Measured entry: the function body was not executed (untagged proposal suite); executed 4x (tagged proposal suite); not executed (tagged engine suite); not executed (untagged engine suite).
 
-Exact AST return positions: 260:3, 263:3, 267:3, 271:3, 275:3, 287:3, 294:3, 329:2.
+Exact AST return positions: 315:3, 318:3, 322:3, 326:3, 330:3, 342:3, 349:3, 362:4, 416:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 256:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
-| B2 | if | 262:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
-| B3 | if | 266:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
-| B4 | if | 270:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
-| B5 | if | 274:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
-| B6 | range | 280:2 | arm not entered (untagged proposal suite); arm entered 3x (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); entered by `TestProductionProposalAuthorityFailureIsMarketLocal`, `TestProductionProposalAuthorityLoadsPairedSignedKRUSSnapshots` |
-| B7 | if | 281:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
-| B8 | if | 286:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
-| B9 | if | 289:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
-| B10 | if | 293:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
-| B11 | range | 297:2 | arm not entered (untagged proposal suite); arm entered 3x (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); entered by `TestProductionProposalAuthorityFailureIsMarketLocal`, `TestProductionProposalAuthorityLoadsPairedSignedKRUSSnapshots` |
-| B12 | if | 299:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
-| B13 | if | 305:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
-| B14 | if | 308:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
-| B15 | if | 312:3 | arm not entered (untagged proposal suite); arm entered 2x (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); entered by `TestProductionProposalAuthorityFailureIsMarketLocal`, `TestProductionProposalAuthorityLoadsPairedSignedKRUSSnapshots` |
-| B16 | if | 316:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
-| B17 | if | 320:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
-| B18 | if | 324:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B1 | if | 311:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B2 | if | 317:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B3 | if | 321:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B4 | if | 325:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B5 | if | 329:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B6 | range | 335:2 | arm not entered (untagged proposal suite); arm entered 9x (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); entered by `TestABreakoutLaneWithNoEvidenceYetIsAbsenceNotFault`, `TestAHealthyBatchCarriesNoFault`, `TestAProposalLostAfterAdmissionIsRecordedAsATypedFault`, `TestAScopeTheCurrentCandidateDoesNotMatchIsAbsenceNotFault`, `TestAnEvaluationRefusalIsAbsenceNotFault`, `TestAnUnusableRouteAuthorityIsAFault`, `TestProductionProposalAuthorityFailureIsMarketLocal`, `TestProductionProposalAuthorityLoadsPairedSignedKRUSSnapshots` |
+| B7 | if | 336:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B8 | if | 341:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B9 | if | 344:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B10 | if | 348:2 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B11 | if | 361:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B12 | range | 366:2 | arm not entered (untagged proposal suite); arm entered 9x (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); entered by `TestABreakoutLaneWithNoEvidenceYetIsAbsenceNotFault`, `TestAHealthyBatchCarriesNoFault`, `TestAProposalLostAfterAdmissionIsRecordedAsATypedFault`, `TestAScopeTheCurrentCandidateDoesNotMatchIsAbsenceNotFault`, `TestAnEvaluationRefusalIsAbsenceNotFault`, `TestAnUnusableRouteAuthorityIsAFault`, `TestProductionProposalAuthorityFailureIsMarketLocal`, `TestProductionProposalAuthorityLoadsPairedSignedKRUSSnapshots` |
+| B13 | if | 368:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B14 | if | 375:3 | arm not entered (untagged proposal suite); arm entered 1x (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); entered by `TestAnUnusableRouteAuthorityIsAFault` |
+| B15 | if | 380:3 | arm not entered (untagged proposal suite); arm entered 1x (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); entered by `TestAScopeTheCurrentCandidateDoesNotMatchIsAbsenceNotFault` |
+| B16 | if | 384:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B17 | if | 389:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B18 | if | 393:3 | arm not entered (untagged proposal suite); arm entered 1x (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); entered by `TestAProposalLostAfterAdmissionIsRecordedAsATypedFault` |
+| B19 | if | 398:3 | arm not entered (untagged proposal suite); arm entered 2x (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); entered by `TestABreakoutLaneWithNoEvidenceYetIsAbsenceNotFault`, `TestAnEvaluationRefusalIsAbsenceNotFault` |
+| B20 | if | 406:3 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
+| B21 | if | 409:4 | arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); no per-test profile in the attribution set entered it |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `canonicalConfig` | 253:11 |
-| `productionOwnerUID` | 254:20 |
-| `ProductionFileName` | 255:10 |
-| `filepath.IsAbs` | 256:46 |
-| `filepath.IsAbs` | 256:83 |
-| `filepath.IsAbs` | 256:123 |
-| `config.ObservedAt.IsZero` | 257:30 |
-| `digestValid` | 257:61 |
-| `identity` | 257:100 |
-| `len` | 257:133 |
-| `identity` | 258:4 |
-| `identity` | 258:45 |
-| `identity` | 258:83 |
-| `identity` | 258:123 |
-| `identity` | 259:4 |
-| `identity` | 259:48 |
-| `len` | 259:87 |
-| `len` | 259:108 |
-| `ctx.Err` | 262:12 |
-| `readProductionFile` | 265:15 |
-| `filepath.Join` | 265:34 |
-| `digest` | 266:19 |
-| `decodeManifest` | 269:19 |
-| `verifyManifest` | 270:20 |
-| `strategyevidence.OpenReadOnly` | 273:24 |
-| `marketclock.NewFake` | 273:118 |
-| `evidenceStore.Close` | 277:8 |
-| `strategyevidence.NewDormantSnapshotReadPort` | 278:10 |
-| `isWeeklyLane` | 281:6 |
-| `journal.OpenReadOnly` | 282:21 |
-| `journalRO.Close` | 290:9 |
-| `canonicalTargets` | 292:24 |
-| `make` | 296:12 |
-| `len` | 296:49 |
-| `strategyrouter.RouteSet` | 304:13 |
-| `routed.Valid` | 305:52 |
-| `target.Approved.CandidateLifeID` | 305:70 |
-| `routeSetAdmitsScope` | 308:7 |
-| `port.Replay` | 315:20 |
-| `buildLaneInput` | 319:24 |
-| `strategyflow.Propose` | 323:15 |
-| `proposal.ValidProposal` | 324:7 |
-| `batchKey` | 327:10 |
+| `canonicalConfig` | 308:11 |
+| `productionOwnerUID` | 309:20 |
+| `ProductionFileName` | 310:10 |
+| `filepath.IsAbs` | 311:46 |
+| `filepath.IsAbs` | 311:83 |
+| `filepath.IsAbs` | 311:123 |
+| `config.ObservedAt.IsZero` | 312:30 |
+| `digestValid` | 312:61 |
+| `identity` | 312:100 |
+| `len` | 312:133 |
+| `identity` | 313:4 |
+| `identity` | 313:45 |
+| `identity` | 313:83 |
+| `identity` | 313:123 |
+| `identity` | 314:4 |
+| `identity` | 314:48 |
+| `len` | 314:87 |
+| `len` | 314:108 |
+| `ctx.Err` | 317:12 |
+| `readProductionFile` | 320:15 |
+| `filepath.Join` | 320:34 |
+| `digest` | 321:19 |
+| `decodeManifest` | 324:19 |
+| `verifyManifest` | 325:20 |
+| `strategyevidence.OpenReadOnly` | 328:24 |
+| `marketclock.NewFake` | 328:118 |
+| `evidenceStore.Close` | 332:8 |
+| `strategyevidence.NewDormantSnapshotReadPort` | 333:10 |
+| `isWeeklyLane` | 336:6 |
+| `journal.OpenReadOnly` | 337:21 |
+| `journalRO.Close` | 345:9 |
+| `canonicalTargets` | 347:24 |
+| `make` | 351:12 |
+| `len` | 351:49 |
+| `strategyrouter.RouteSet` | 374:13 |
+| `routed.Valid` | 375:52 |
+| `fault` | 377:4 |
+| `target.Approved.CandidateLifeID` | 380:6 |
+| `routeSetAdmitsScope` | 384:7 |
+| `port.Replay` | 392:20 |
+| `fault` | 394:4 |
+| `buildLaneInput` | 397:24 |
+| `strategyflow.Propose` | 405:15 |
+| `proposal.ValidProposal` | 406:7 |
+| `fault` | 410:5 |
+| `batchKey` | 414:10 |
 
 ## State mutations and fallbacks
 
-- AST assignments: 19. Defers: 2. Goroutine statements: 0.
+- AST assignments: 22. Defers: 2. Goroutine statements: 0.
 
 ## Safety conclusion
 

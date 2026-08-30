@@ -102,6 +102,32 @@ func TestProductionProposalAuthorityFailureIsMarketLocal(t *testing.T) {
 
 func productionFixture(t *testing.T, market strategyrouter.Market, now time.Time) (ProductionConfig, ProductionTarget, officialfx.Evidence) {
 	t.Helper()
+	return productionFixtureWith(t, market, now, nil)
+}
+
+// productionLaneOverride 는 경로 결정과 매니페스트 스코프를 **함께** 다른 레인으로
+// 옮긴다. 둘 중 하나만 옮기면 자격 집합이 그 스코프를 안 받아서, 보려던 레인별
+// 처리에 닿기 전에 정상 부재로 걸러진다.
+type productionLaneOverride struct {
+	laneID  string
+	version string
+	horizon strategyrouter.Horizon
+}
+
+// productionFixtureWith 는 서명 **전에** 스코프 하나를 손볼 기회를 준다.
+// 서명 뒤에 고치면 매니페스트 검증이 먼저 거절해서, 정작 보려던 안쪽 경로에
+// 도달하지 못한다.
+func productionFixtureWith(t *testing.T, market strategyrouter.Market, now time.Time,
+	mutate func(*productionScope),
+) (ProductionConfig, ProductionTarget, officialfx.Evidence) {
+	t.Helper()
+	return productionFixtureOn(t, market, now, nil, mutate)
+}
+
+func productionFixtureOn(t *testing.T, market strategyrouter.Market, now time.Time,
+	override *productionLaneOverride, mutate func(*productionScope),
+) (ProductionConfig, ProductionTarget, officialfx.Evidence) {
+	t.Helper()
 	dir := t.TempDir()
 	clockMarket := marketclock.MarketKR
 	symbol, currency, lane := "005930", "KRW", continuationlane.KRContinuationLaneID
@@ -146,7 +172,11 @@ func productionFixture(t *testing.T, market strategyrouter.Market, now time.Time
 	if err != nil {
 		t.Fatal(err)
 	}
-	route, err := strategyrouter.ProductionRouteAuthorityForTest(key, strategyrouter.HorizonShort, lane, continuationlane.LaneVersionV1, snapshot.Digest, "config-"+string(market), now)
+	laneVersion, laneHorizon := continuationlane.LaneVersionV1, strategyrouter.HorizonShort
+	if override != nil {
+		lane, laneVersion, laneHorizon = override.laneID, override.version, override.horizon
+	}
+	route, err := strategyrouter.ProductionRouteAuthorityForTest(key, laneHorizon, lane, laneVersion, snapshot.Digest, "config-"+string(market), now)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -161,13 +191,16 @@ func productionFixture(t *testing.T, market strategyrouter.Market, now time.Time
 		CalendarGeneration: "calendar-generation", CalendarDigest: "calendar-digest", SchedulerConfigVersion: "scheduler-v1",
 		EvidenceDBIdentity: "evidence-db-" + string(market), Actor: "risk-committee", ObservedAt: now.Add(-time.Second).Format(time.RFC3339Nano),
 		FreshUntil: now.Add(time.Minute).Format(time.RFC3339Nano), Scopes: []productionScope{{Symbol: symbol, PositionGeneration: 1,
-			CandidateID: approved.CandidateLifeID(), CampaignID: "campaign-" + string(market), Horizon: strategyrouter.HorizonShort, LaneID: lane,
-			LaneVersion: continuationlane.LaneVersionV1, SnapshotID: snapshot.ID, SnapshotDigest: snapshot.Digest, RiskBudgetMinor: "1000",
+			CandidateID: approved.CandidateLifeID(), CampaignID: "campaign-" + string(market), Horizon: laneHorizon, LaneID: lane,
+			LaneVersion: laneVersion, SnapshotID: snapshot.ID, SnapshotDigest: snapshot.Digest, RiskBudgetMinor: "1000",
 			PerShareRiskMinor: "10", PlannedQuantity: 14, PolicyDigest: "risk-policy", AccountCurrency: "KRW", QuoteCurrency: currency,
 			LegOrdinal: 1, SavedEffectiveStopMinor: "90", Stop: productionStop{PriceMinor: "95", Source: "structure", Policy: "stop-v1",
 				Version: "v1", Digest: "stop-digest", ObservedAt: now.Add(-time.Second).Format(time.RFC3339Nano), FreshUntil: now.Add(time.Minute).Format(time.RFC3339Nano)},
 			EntryPriceMinor: "110", TargetPriceMinor: "130", FreshUntil: now.Add(time.Minute).Format(time.RFC3339Nano), ConfigDigest: "config-" + string(market),
 			ThresholdSet: "threshold-" + string(market), MinimumFlowPressurePPM: 100000, MinimumParticipationPPM: 200000, MinimumPriceChangePPM: 10000}}}
+	if mutate != nil {
+		mutate(&body.Scopes[0])
+	}
 	canonical, err := json.Marshal(body)
 	if err != nil {
 		t.Fatal(err)

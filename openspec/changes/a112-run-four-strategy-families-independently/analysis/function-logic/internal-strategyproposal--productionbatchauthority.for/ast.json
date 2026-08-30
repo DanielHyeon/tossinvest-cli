@@ -1,16 +1,16 @@
 {
   "file": "internal/strategyproposal/production.go",
-  "source_sha256": "43ebb628cdfef4f891b652e81dc71c677063d0ad4cbbc9d0d3bc3b3cdcb52236",
+  "source_sha256": "b6e54b502e5092745426f8f4a37e4a02777d525a2099aa90de9f7379ee4a2c18",
   "package": "strategyproposal",
   "function": "For",
   "receiver": "ProductionBatchAuthority",
   "signature": "ProductionBatchAuthority.For(params=1, results=2)",
   "start": {
-    "line": 115,
+    "line": 170,
     "column": 1
   },
   "end": {
-    "line": 121,
+    "line": 176,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 117,
+        "line": 172,
         "column": 2
       }
     }
@@ -27,14 +27,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 118,
+        "line": 173,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 120,
+        "line": 175,
         "column": 2
       }
     }
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 116,
+        "line": 171,
         "column": 12
       },
       "text": "authority.LanesFor"
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 117,
+        "line": 172,
         "column": 5
       },
       "text": "len"
@@ -61,7 +61,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 116,
+        "line": 171,
         "column": 2
       }
     }

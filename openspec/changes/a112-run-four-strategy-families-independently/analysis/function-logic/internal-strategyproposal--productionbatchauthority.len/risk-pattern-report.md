@@ -1,4 +1,4 @@
-# Risk Pattern Report: `internal/strategyproposal/production.go`
+# Risk Pattern Report: `internal/strategyproposal/production.go` (150-150)
 
 | Rule | Location | Message |
 |---|---|---|

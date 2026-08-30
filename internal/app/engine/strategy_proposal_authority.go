@@ -42,6 +42,14 @@ const (
 	// 없으므로 중재 여섯 코드 중 하나를 빌려 쓰지 않고 엔진 자신의 이름을 쓴다 —
 	// 빌려 쓰면 큐가 넘친 일이 봉인이 깨진 일로 보고된다(태스크 5.4.2).
 	StrategyProposalQueueOverflow StrategyProposalReason = "PROPOSAL_QUEUE_OVERFLOW"
+	// 매니페스트와 자격 집합이 **둘 다 받아들인** 스코프가 제안을 만들지 못했다.
+	// 그 종목만 빼면 목록이 짧아지고, 짧아진 목록이 아래 파이프라인의
+	// len(entries)==1 관문을 오히려 만족시켜 상관없는 다른 종목이 대신 풀린다 —
+	// 고장 하나가 시스템을 더 관대하게 만든다. 그래서 시장을 닫는다(태스크 5.4.3).
+	//
+	// "제안이 원래 없는 종목"은 여기 해당하지 않는다. 그것은 예전처럼 거절로 세고
+	// 시장은 열어 둔다. 둘을 가르는 판정은 strategyproposal 이 하고 여기서는 읽기만 한다.
+	StrategyProposalProductionFault StrategyProposalReason = "PROPOSAL_PRODUCTION_FAULT"
 )
 
 // 아래 두 문장은 INTERNAL_FAILURE 로 닫히는 여러 원인 중 조정 경로가 낸 둘을
@@ -82,6 +90,10 @@ type StrategyProposalMarketSnapshot struct {
 	// 0 인 계수기는 아무것도 증언하지 않는다. 투영까지 잇는 일은 태스크 7.3 이고,
 	// 여러 worker 가 같은 칸을 두고 다투게 만드는 일은 태스크 5.2·5.7 이다.
 	QueueDropCount uint64
+	// ProductionFault 는 Reason 이 PROPOSAL_PRODUCTION_FAULT 일 때 어느 종목의
+	// 어느 레인이 무엇 때문에 사라졌는지다. 종목만으로는 부족하다 — 한 종목이
+	// 네 가족을 동시에 낼 수 있다. 계약이 아니라 진단이다.
+	ProductionFault string
 }
 
 type PairedStrategyProposalSnapshot struct {
@@ -234,6 +246,15 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 		EvidenceDBIdentity: strings.TrimSpace(loader.getenv(evidenceEnv))}, targets, fx.read.evidence)
 	if err != nil || batch.ManifestDigest() != digest {
 		return fail(StrategyProposalAuthorityInvalid)
+	}
+	// 받아들여진 스코프가 제안을 잃었으면 여기서 닫는다. 조정까지 가면 그 종목은
+	// 그냥 없는 종목처럼 보이고, 짧아진 목록이 관문을 오히려 만족시킨다.
+	if absence, lost := batch.Fault(); lost {
+		result := fail(StrategyProposalProductionFault)
+		result.snapshot.ManifestDigest = digest
+		result.snapshot.ProductionFault = absence.String()
+		result.snapshot.RefusedCount = result.snapshot.RoutedCount
+		return result
 	}
 	// 한 종목이 여러 가족을 제안하면 시장 조정자가 소유자 범위마다 하나만 고른다.
 	// 조정자가 한 범위를 닫으면 시장 전체를 닫는다. 닫힌 종목만 목록에서 빼면

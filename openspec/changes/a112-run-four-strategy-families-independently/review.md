@@ -1928,3 +1928,77 @@ FLM 번들 아홉 개를 다시 만들었다(engine 넷 + strategyproposal 다�
 본문이 안 바뀌고 const 블록이 늘어 줄만 +15 밀린 것이라 측정은 그대로 두고 위치·해시만 재기준화했으며,
 그 재기준화가 온전한지는 **md 가 인용한 모든 `줄:칸` 이 그 번들 ast.json 안에 실제로 있는지**를
 기계로 확인했다(미확인 0). engine 넷은 코드가 바뀌었으므로 커버리지를 다시 측정해 표를 다시 만들었다.
+
+## L5 5.4.3 — 사라진 제안과 없던 제안을 가른다 (2026-08-30)
+
+5.4.2 적대적 리뷰가 시연과 함께 낸 P1 을 고친다. 그때는 범위 밖이라 태스크로 미뤘고, 그 태스크가 이것이다.
+
+### 무엇이 문제였나
+
+`batch.LanesFor(symbol)` 이 빈 목록을 돌려주는 일이 두 가지를 한 이름으로 뭉쳤다 —
+"이 종목은 원래 제안이 없다"와 "이 종목의 제안이 고장으로 사라졌다". 뭉치면 고장 하나가
+시장의 목록을 줄이고, **줄어든 목록이 `len(entries) != 1` 관문을 오히려 만족시켜** 상관없는
+다른 종목을 풀어 준다. 고장이 시스템을 더 관대하게 만드는 방향이다.
+
+### 고장의 기준을 어디에 그었나 — 그리고 처음에 틀렸다
+
+처음 그은 경계는 "매니페스트와 자격 집합이 둘 다 받아들인 뒤에 제안을 못 만들면 고장"이었다.
+`buildLaneInput` 오류 전부와 `!proposal.ValidProposal()` 전부가 고장이 되었다.
+
+**그 경계는 틀렸고, 스스로 쓴 시험이 그것을 잡았다.** `TestAnEvaluationRefusalIsAbsenceNotFault`
+가 목표가를 진입가 아래로 내리자 `LANE_INPUT_UNAVAILABLE` 고장으로 기록됐다 — 보호적이지 않은
+목표가는 **매일 일어나는 정상 거절**이고 동결 골든이 `quote_fx_sizing` 으로 이름까지 붙여 둔
+것이다. 그대로 냈으면 스프레드가 한 번 넓어질 때마다 그 시장이 통째로 닫혔다.
+5.4.2 의 큐 상한 P1 과 정확히 같은 모양의 고장이다 — **정상 입력을 시스템이 거부하게 만드는 것.**
+
+고쳐 그은 기준은 "제안이 안 나왔다"가 아니라 **"약속받은 봉인된 입력을 얻지 못했다"** 다.
+
+| 건너뛰기 | 판정 | 근거 |
+|---|---|---|
+| 매니페스트 스코프의 종목이 이번 주기 대상이 아님 | 정상 부재 | 매니페스트는 상위집합이다 |
+| `RouteSet` 을 쓸 수 없음 | **고장** | 자격이 없는 것이 아니라 자격이 있는지조차 말할 수 없다 |
+| 후보 생애가 매니페스트와 다름 | 정상 부재 | 묵은 매니페스트는 흔하다. 고장으로 세면 시장이 멈춘다 |
+| 자격 집합이 그 레인·캠페인을 안 받음 | 정상 부재 | 라우터가 그렇게 말한 것이다 |
+| 봉인된 증거 스냅샷 재생 실패 | **고장** | 약속받은 봉인 입력이 없다 |
+| `buildLaneInput` 오류 | 정상 부재 | 이 오류 공간은 돌파 증거 미구축부터 가격 관계·주간 예약까지 **시장 상태와 설정**이 대부분이다 |
+| `!ValidProposal()` 이고 `Code != RefusalNone` | 정상 부재 | 평가가 이유를 들고 거절한 것이다 |
+| `!ValidProposal()` 이고 `Code == RefusalNone` | **고장** | 이유 없이 봉인만 안 섰다. 방어적 검사 |
+
+### 뮤테이션
+
+| ID | 뮤테이션 | 판정 | 죽인 시험 |
+|---|---|---|---|
+| N-A | 고장을 아예 기록하지 않는다(변경 전 행동) | KILLED | `TestAProposalLostAfterAdmissionIsRecordedAsATypedFault` |
+| N-B | 후보 생애 불일치를 고장으로 센다 | KILLED | `TestAScopeTheCurrentCandidateDoesNotMatchIsAbsenceNotFault` |
+| N-C | 엔진이 고장을 보고도 안 닫는다 | KILLED | `TestALostProposalClosesTheMarketInsteadOfReleasingTheOtherSymbol` |
+| N-D | 사라진 자리를 스냅샷에 안 적는다 | KILLED | 같은 시험 |
+| N-F | 경로 권한 불가를 고장으로 안 센다 | KILLED | `TestAnUnusableRouteAuthorityIsAFault` |
+| N-H | `buildLaneInput` 오류를 고장으로 센다 | KILLED | `TestABreakoutLaneWithNoEvidenceYetIsAbsenceNotFault` |
+| N-J | 증거 재생 실패를 고장으로 안 센다 | KILLED | `TestAProposalLostAfterAdmissionIsRecordedAsATypedFault` |
+| N-I | 평가 거절까지 고장으로 센다 | **SURVIVED** | 아래 |
+
+**N-I 가 살아남는 이유를 탐침으로 확인했다.** `!proposal.ValidProposal()` 가지 맨 앞에
+`panic` 을 넣고 두 패키지 스위트를 돌렸더니 **아무 시험도 그 가지에 닿지 않았다.**
+`buildLaneInput` 이 먼저 거절하기 때문이다. 즉 두 팔을 가를 시험을 지금은 만들 수 없다.
+그래도 가지를 지운다는 선택은 하지 않는다 — 생산에서 `Propose` 는 호가·FX·사이징 사유로
+분명히 거절하고, 지우면 봉인 안 선 제안이 `values` 에 담겨 조정자까지 간다.
+그 분류가 옳다는 근거는 시험이 아니라 **한 층 위에서 같은 판정을 시험으로 못 박았다는 것**이다.
+
+### 실측
+
+| | |
+|---|---|
+| `make test` (무태그 전체) | PASS |
+| `make test-seams` (태그 전체) | PASS |
+| `make lint` (gofmt + vet 양쪽 태그) | PASS |
+| proposal 태그 스위트 (커버리지) | PASS, 30.1% |
+| proposal 무태그 스위트 | PASS, 9.7% |
+| engine 태그 스위트 | PASS, 73.8% |
+| engine 무태그 스위트 | PASS, 63.6% |
+| `check_analysis` | evidence complete |
+
+FLM 번들 열하나를 갱신했다. 그중 둘은 **새로 만든 것**이고 계획에 없었다 —
+`ProductionBatchAuthority.Len`(리시버 구조체에 필드가 늘어서 "수정된 기존 함수"가 되었다)과
+`productionFixture`(픽스처를 두 조각으로 쪼개면서 본문이 바뀌었다). 이 저장소가 이미
+기록한 대로 Logic Map 은 늘 계획보다 많다. 인용한 모든 `줄:칸` 이 해당 ast.json 안에
+실제로 있는지 기계로 확인했다(미확인 0).

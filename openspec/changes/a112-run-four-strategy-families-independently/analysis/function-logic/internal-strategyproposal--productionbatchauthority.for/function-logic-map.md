@@ -1,9 +1,9 @@
 # Function Logic Map: `ProductionBatchAuthority.For`
 
-- Source: `internal/strategyproposal/production.go` (115-121)
+- Source: `internal/strategyproposal/production.go` (170-176)
 - Function: `ProductionBatchAuthority.For` in package `strategyproposal`
 - Signature: `ProductionBatchAuthority.For(params=1, results=2)`
-- File SHA-256: `43ebb628cdfef4f891b652e81dc71c677063d0ad4cbbc9d0d3bc3b3cdcb52236`
+- File SHA-256: `b6e54b502e5092745426f8f4a37e4a02777d525a2099aa90de9f7379ee4a2c18`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 1.
 - Risk scan: `risk-pattern-report.md`.
@@ -23,18 +23,18 @@ The signature above is the exhaustive input/result record; this map does not inf
 - untagged engine suite: `go test -count=1 -covermode=count -coverpkg=./internal/strategyproposal,./internal/strategyflow,./internal/strategyrouter,./internal/app/engine ./internal/app/engine/`
 - Measured entry: the function body was executed 4x (untagged proposal suite); executed 7x (tagged proposal suite); executed 21x (tagged engine suite); not executed (untagged engine suite).
 
-Exact AST return positions: 118:3, 120:2.
+Exact AST return positions: 173:3, 175:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 117:2 | arm entered 2x (untagged proposal suite); arm entered 2x (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); entered by `TestForRefusesASymbolThatHasMoreThanOneLane`, `TestForRefusesAnUnknownSymbol` |
+| B1 | if | 172:2 | arm entered 2x (untagged proposal suite); arm entered 2x (tagged proposal suite); arm not entered (tagged engine suite); arm not entered (untagged engine suite); entered by `TestForRefusesASymbolThatHasMoreThanOneLane`, `TestForRefusesAnUnknownSymbol` |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `authority.LanesFor` | 116:12 |
-| `len` | 117:5 |
+| `authority.LanesFor` | 171:12 |
+| `len` | 172:5 |
 
 ## State mutations and fallbacks
 

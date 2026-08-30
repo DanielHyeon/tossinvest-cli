@@ -1,6 +1,6 @@
 # Branch Test Map: `strategyProposalAuthorityPair.ResultAuthority`
 
-- Source: `internal/app/engine/strategy_proposal_authority.go` (132-140); file SHA-256 `f4f6627f945825c7a199bd38f9152122decd51da410acd8660ea8463093413e0`. AST branch positions are authoritative.
+- Source: `internal/app/engine/strategy_proposal_authority.go` (144-152); file SHA-256 `b7a565a767a7ef790ff1390a5db4c5e83cac19897d408aae167d7243466b3d38`. AST branch positions are authoritative.
 - Rows carry measured counts from Go coverage profiles, count mode.
 
 - Measurement regime: Go coverage profiles, count mode.
@@ -21,6 +21,6 @@
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 134:3 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol` |
+| B1 | if | 146:3 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol` |
 
 A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.

@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyproposal/production.go",
-  "source_sha256": "43ebb628cdfef4f891b652e81dc71c677063d0ad4cbbc9d0d3bc3b3cdcb52236",
+  "source_sha256": "b6e54b502e5092745426f8f4a37e4a02777d525a2099aa90de9f7379ee4a2c18",
   "package": "strategyproposal",
   "function": "laneMatchesMarket",
   "signature": "laneMatchesMarket(params=4, results=1)",
   "start": {
-    "line": 569,
+    "line": 657,
     "column": 1
   },
   "end": {
-    "line": 577,
+    "line": 665,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 570,
+        "line": 658,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 573,
+        "line": 661,
         "column": 2
       }
     }
@@ -34,21 +34,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 571,
+        "line": 659,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 574,
+        "line": 662,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 576,
+        "line": 664,
         "column": 2
       }
     }

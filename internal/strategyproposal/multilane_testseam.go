@@ -21,3 +21,16 @@ func ProductionBatchAuthorityMultiLaneForTest(manifestDigest string, values map[
 	}
 	return ProductionBatchAuthority{values: sealed, manifestDigest: manifestDigest}
 }
+
+// ProductionBatchAuthorityWithFaultForTest 는 스코프 하나가 제안을 **잃은** 배치를
+// 만든다. 생산 경로에서는 증거 재생 실패 같은 일이 그 상태를 만든다.
+//
+// 잃은 것을 시늉하려고 그냥 값을 빼면 안 된다 — 뺀 배치는 "원래 없던 종목"과
+// 구별되지 않아서, 시험이 겨누는 바로 그 혼동을 시험 픽스처가 다시 저지른다.
+func ProductionBatchAuthorityWithFaultForTest(manifestDigest string, values map[string][]strategyflow.Result,
+	absence ProductionAbsence,
+) ProductionBatchAuthority {
+	batch := ProductionBatchAuthorityMultiLaneForTest(manifestDigest, values)
+	batch.absence, batch.faulted = absence, true
+	return batch
+}

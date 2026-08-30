@@ -60,6 +60,50 @@ var ErrProductionProposalUnavailable = errors.New("strategyproposal: production 
 // 그래서 여기서는 값을 지어내지 않고 닫아서 거절한다.
 var ErrBreakoutEvidenceUnavailable = errors.New("strategyproposal: breakout derived-metric evidence (atr, rvol ppm, upper-wick ppm, volume-expanded) is neither stored nor produced, so no breakout lane input can be built")
 
+// ProductionAbsenceReason 는 매니페스트가 실은 스코프가 제안을 못 만든 이유 중
+// **고장** 쪽의 종류다.
+//
+// 고장의 기준은 "제안이 안 나왔다"가 아니라 **"약속받은 봉인된 입력을 얻지
+// 못했다"** 이다. 시장 상태 때문에 평가가 거절한 것은 고장이 아니다 — 스프레드가
+// 넓거나, 호가가 묵었거나, 목표가가 보호적이지 않거나, 수량이 0 이 되는 일은
+// 매일 일어나고 동결 골든이 quote_fx_sizing 으로 이름까지 붙여 둔 정상 거절이다.
+// 그것들을 고장으로 세면 스프레드가 한 번 넓어질 때마다 시장이 통째로 닫힌다.
+//
+// 이 경계는 처음에 잘못 그었다. `buildLaneInput` 의 오류를 전부 고장으로 셌는데,
+// 그 오류 공간의 대부분이 바로 그 정상 거절이었다(레인 권한 구성이 가격 관계를
+// 거기서 본다). TestAnEvaluationRefusalIsAbsenceNotFault 가 그것을 잡았다.
+//
+// 동결 골든의 refusal_enums 에는 제안 생산 쪽 코드가 없다. 중재 여섯 코드 중 하나를
+// 빌려 쓰면 증거를 못 되살린 일이 봉인이 깨진 일로 보고되므로, 이름이 없으면 지어내지
+// 않고 이 패키지 자신의 이름을 쓴다(5.4.2 가 PROPOSAL_QUEUE_OVERFLOW 에서 쓴 근거와 같다).
+type ProductionAbsenceReason string
+
+const (
+	// 건네받은 경로 권한 자체를 쓸 수 없다. 자격이 없는 것과 다르다 —
+	// 자격이 있는지조차 말할 수 없는 상태다.
+	ProductionAbsenceRouteUnusable ProductionAbsenceReason = "ROUTE_AUTHORITY_UNUSABLE"
+	// 봉인된 증거 스냅샷을 되살리지 못했다.
+	ProductionAbsenceEvidenceReplay ProductionAbsenceReason = "EVIDENCE_REPLAY_FAILED"
+	// 거절 사유 하나 없이 제안의 봉인만 서지 않았다. 방어적 검사다 —
+	// 평가가 거절하면 Code 가 차므로 이 자리는 "이유 없이 실패한" 경우만 남는다.
+	ProductionAbsenceProposalSeal ProductionAbsenceReason = "PROPOSAL_SEAL_INVALID"
+)
+
+// ProductionAbsence 는 배치가 처음 만난 고장 하나다.
+//
+// 종목만으로는 부족하다 — 한 종목이 네 가족을 동시에 낼 수 있으므로 어느 레인이
+// 사라졌는지까지 적어야 운영자가 찾을 수 있다.
+type ProductionAbsence struct {
+	Symbol string
+	LaneID string
+	Reason ProductionAbsenceReason
+}
+
+// String 은 운영자가 읽을 한 줄이다. 계약이 아니라 진단이다.
+func (absence ProductionAbsence) String() string {
+	return string(absence.Reason) + " " + absence.Symbol + "/" + absence.LaneID
+}
+
 type ProductionConfig struct {
 	ConfigDir, EvidencePath, JournalPath       string
 	AccountRef                                 string
@@ -98,9 +142,20 @@ func (authority ProductionAuthority) WeeklyBinding() *journal.WeeklyFirstLegRese
 type ProductionBatchAuthority struct {
 	values         map[string]ProductionAuthority
 	manifestDigest string
+	// 처음 만난 고장 하나만 남긴다. 뒤에 무엇이 더 오든 이 시장은 이미 닫혔다.
+	absence ProductionAbsence
+	faulted bool
 }
 
-func (authority ProductionBatchAuthority) Len() int               { return len(authority.values) }
+func (authority ProductionBatchAuthority) Len() int { return len(authority.values) }
+
+// Fault 는 이 배치를 만드는 동안 **받아들여진 스코프**가 제안을 잃은 일이 있었는지다.
+//
+// 부르는 쪽이 이것을 안 보면 `LanesFor` 의 빈 목록이 "원래 없다"와 "잃었다"를
+// 한 이름으로 뭉치고, 잃은 종목이 목록에서 빠지면서 남은 종목의 관문이 오히려 풀린다.
+func (authority ProductionBatchAuthority) Fault() (ProductionAbsence, bool) {
+	return authority.absence, authority.faulted
+}
 func (authority ProductionBatchAuthority) ManifestDigest() string { return authority.manifestDigest }
 
 // batchKey 는 담는 단위다. 종목 하나가 여러 가족을 동시에 제안할 수 있으므로
@@ -294,18 +349,40 @@ func LoadProductionAuthorityBatch(ctx context.Context, config ProductionConfig, 
 		return ProductionBatchAuthority{}, ErrProductionProposalUnavailable
 	}
 	values := make(map[string]ProductionAuthority, len(targetBySymbol))
+	// 아래 건너뛰기는 두 종류다. **정상 부재**는 매니페스트나 자격 집합이 이
+	// 스코프를 애초에 받지 않은 것이고, **고장**은 둘 다 받아들인 뒤에 제안을
+	// 만들지 못한 것이다. 지금까지 둘 다 `continue` 하나로 같았고, 그래서
+	// 부르는 쪽은 빈 목록만 보고 둘을 구별하지 못했다. 구별하지 못하면 고장 하나가
+	// 시장의 목록을 줄이고, 줄어든 목록이 `len(entries) != 1` 관문을 오히려
+	// 만족시켜 상관없는 다른 종목을 풀어 준다(태스크 5.4.3).
+	var absence ProductionAbsence
+	faulted := false
+	fault := func(scope productionScope, reason ProductionAbsenceReason) {
+		if faulted {
+			return
+		}
+		faulted, absence = true, ProductionAbsence{Symbol: scope.Symbol, LaneID: scope.LaneID, Reason: reason}
+	}
 	for _, scope := range manifest.Scopes {
 		target, wanted := targetBySymbol[scope.Symbol]
 		if !wanted {
+			// 정상 부재: 매니페스트는 이번 주기에 경로에 오른 종목의 상위집합이다.
 			continue
 		}
 		// 평가 전에 승자를 고르지 않는다. 자격 있는 가족을 전부 받아서
 		// 이 스코프의 레인이 그 안에 들어 있는지만 확인한다(태스크 4.3.1).
 		routed := strategyrouter.RouteSet(target.Router)
-		if routed.Code != strategyrouter.RefusalNone || !routed.Valid() || target.Approved.CandidateLifeID() != scope.CandidateID {
+		if routed.Code != strategyrouter.RefusalNone || !routed.Valid() {
+			// 고장: 자격이 없는 것이 아니라 자격이 있는지조차 말할 수 없다.
+			fault(scope, ProductionAbsenceRouteUnusable)
+			continue
+		}
+		if target.Approved.CandidateLifeID() != scope.CandidateID {
+			// 정상 부재: 이 매니페스트는 지금 후보가 아닌 다른 후보 생애를 가리킨다.
 			continue
 		}
 		if !routeSetAdmitsScope(routed, config, scope) {
+			// 정상 부재: 자격 집합이 이 레인·캠페인을 받지 않는다.
 			continue
 		}
 		clockMarket := marketclock.MarketKR
@@ -314,19 +391,30 @@ func LoadProductionAuthorityBatch(ctx context.Context, config ProductionConfig, 
 		}
 		snapshot, err := port.Replay(ctx, clockMarket, strategyevidence.SnapshotReference{ID: scope.SnapshotID, Digest: scope.SnapshotDigest})
 		if err != nil {
+			fault(scope, ProductionAbsenceEvidenceReplay)
 			continue
 		}
 		lane, weekly, err := buildLaneInput(ctx, config, scope, snapshot, fx, journalRO)
 		if err != nil {
+			// 정상 부재: 레인 권한 구성이 거절한 것이다. 이 오류 공간은
+			// 돌파 증거 미구축(ErrBreakoutEvidenceUnavailable)부터 보호적이지 않은
+			// 목표가·묵은 주간 예약까지 **시장 상태와 설정** 이 대부분이다.
+			// 고장으로 세면 그중 하나만 나와도 그 시장이 닫힌다.
 			continue
 		}
 		proposal := strategyflow.Propose(strategyflow.Request{Approved: target.Approved, Router: target.Router, Lane: lane})
 		if !proposal.ValidProposal() {
+			// 평가가 이유를 들고 거절했으면 정상 부재다. 이유 없이 봉인만 안 선
+			// 경우에만 고장이다 — 그 자리는 지금 도달할 방법이 없는 방어적 검사다.
+			if proposal.Code == strategyflow.RefusalNone {
+				fault(scope, ProductionAbsenceProposalSeal)
+			}
 			continue
 		}
 		values[batchKey(scope.Symbol, scope.LaneID)] = ProductionAuthority{proposal: proposal, snapshotID: snapshot.ID, snapshotDigest: snapshot.Digest, weekly: weekly}
 	}
-	return ProductionBatchAuthority{values: values, manifestDigest: config.ManifestDigest}, nil
+	return ProductionBatchAuthority{values: values, manifestDigest: config.ManifestDigest,
+		absence: absence, faulted: faulted}, nil
 }
 
 // routeSetAdmitsScope 는 자격 집합에 이 스코프와 정확히 같은 신원이 들어 있는지만 확인한다.
