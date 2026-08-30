@@ -9,7 +9,11 @@
 // 가 그 목록을 읽고, 전이 의존까지 따라간다.
 package strategyhandoff
 
-import "github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
+import (
+	"errors"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
+)
 
 // Capacity 는 이 경계가 한 시장·한 주기에 실제로 건네줄 수 있는 선택의 수다.
 //
@@ -31,6 +35,18 @@ import "github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
 // 의 서명을 **함께** 바꿔야 한다.
 const Capacity = 1
 
+// deliverable 은 이 경계가 **실제로 건네주는** 선택의 수다. Single 과 Deliver 가
+// 하나를 건네므로 1 이다.
+//
+// Capacity 와 따로 두는 이유: 두 값이 갈라질 수 있고, 갈라지는 순간이 위험한
+// 순간이기 때문이다. Capacity 만 올리면 Admit 은 승인하는데 건네줄 수는 없다.
+// 그 상태는 무명으로 두지 않고 OverCarried 라고 부른다.
+const deliverable = 1
+
+// ErrNoDelivery 는 Deliver 에 몸통 없이 부른 프로그래밍 오류다. 조용히
+// 성공시키면 "건넸다"와 "건넬 곳이 없었다"가 같은 답이 된다.
+var ErrNoDelivery = errors.New("strategyhandoff: delivery body is nil")
+
 // Refusal 은 조정자가 고른 것이 공유 dispatch 까지 가지 못한 이유다.
 // 빈 값은 거절이 없다는 뜻이다.
 //
@@ -45,6 +61,10 @@ const (
 	MarketClosed Refusal = "HANDOFF_MARKET_CLOSED"
 	NoSelection  Refusal = "HANDOFF_NO_SELECTION"
 	OverCapacity Refusal = "HANDOFF_OVER_CAPACITY"
+	// OverCarried 는 승인됐지만 건네줄 수 있는 것보다 많이 실린 상태다.
+	// Capacity 가 deliverable 보다 커지는 날에만 생긴다. 적대 리뷰가 지적한
+	// 대로, 이름 없는 fail-closed 는 이 change 가 없애려던 것과 같은 모양이다.
+	OverCarried Refusal = "HANDOFF_OVER_CARRIED"
 )
 
 // Handoff 는 시장 조정자가 고른 것이 공유 dispatch 로 건너가는 유일한 값이다.
@@ -86,8 +106,24 @@ func Admit(ready bool, selected []strategyflow.Result) Handoff {
 	return Handoff{selected: append([]strategyflow.Result(nil), selected...), pending: pending}
 }
 
+// refusalNow 는 이 경계의 **유일한 술어**다. Refusal·Single·Deliver 가 모두
+// 이것을 부른다.
+//
+// 첫 수정 판본은 Refusal 과 Single 이 각각 다른 조건을 썼다. 상한을 올리면
+// Refusal 은 Admitted 라고 하면서 Single 은 값을 안 줬다 — 주문 경로는
+// fail-closed 였지만 이름과 계수기는 "승인"이라고 보고했다.
+func (handoff Handoff) refusalNow() Refusal {
+	if handoff.refusal != Admitted {
+		return handoff.refusal
+	}
+	if len(handoff.selected) != deliverable {
+		return OverCarried
+	}
+	return Admitted
+}
+
 // Refusal 은 왜 못 넘겼는지 답한다. 승인이면 빈 값이다.
-func (handoff Handoff) Refusal() Refusal { return handoff.refusal }
+func (handoff Handoff) Refusal() Refusal { return handoff.refusalNow() }
 
 // Pending 은 조정자가 이 시장에서 고른 소유자 범위의 수다.
 func (handoff Handoff) Pending() int { return handoff.pending }
@@ -95,13 +131,35 @@ func (handoff Handoff) Pending() int { return handoff.pending }
 // Single 은 공유 dispatch 로 건너갈 하나를 돌려준다. 두 번째 값이 false 면
 // 값은 없다.
 //
-// 승인되었더라도 실린 것이 하나가 아니면 내주지 않는다. 그 자리가 이 경계의
-// fail-closed 지점이다: 건네줄 수 있는 것보다 많이 실렸다는 말은 이 서명이
-// 상한과 어긋났다는 뜻이고, 그때 하나만 골라 내주면 나머지는 거절 이름도
-// 계수기도 없이 사라진다.
+// 주문을 내는 자리에서는 이것 대신 Deliver 를 쓴다. 여기서 돌려주는 bool 은
+// 부르는 쪽이 무시할 수 있고, 적대 리뷰가 실제로 무시하는 편집을 통과시켰다.
+// 이 서명이 남아 있는 세 자리(worker 승격, 결과 권한, 읽기 전용 projection)는
+// 값을 쓰기 전에 반드시 ValidProposal 을 다시 보므로, 답을 무시해도 영값이
+// 걸린다 — 그 성질은 우연이 아니라 TestARefusedSingleReturnsTheZeroResult
+// 와 strategyflow 의 시험이 값으로 지킨다.
 func (handoff Handoff) Single() (strategyflow.Result, bool) {
-	if handoff.refusal != Admitted || len(handoff.selected) != 1 {
+	if handoff.refusalNow() != Admitted {
 		return strategyflow.Result{}, false
 	}
 	return handoff.selected[0], true
+}
+
+// Deliver 는 건너간 것이 있을 때만 몸통을 부른다.
+//
+// **이 서명의 요점은 부르는 쪽에 무시할 boolean 을 주지 않는 것이다.**
+// Single 판본에서는 답을 받아 `if !handedOff { }` 같은 빈 조건에 넣으면
+// 관문이 사라지면서도 "답을 썼다"는 검사가 통과했다. 여기서는 몸통이 도는지를
+// 부르는 쪽이 정하지 않는다.
+//
+// 거절은 오류가 아니다 — 그 주기에 낼 것이 없었을 뿐이다. 몸통의 오류만
+// 그대로 밖으로 나간다.
+func (handoff Handoff) Deliver(to func(strategyflow.Result) error) error {
+	if to == nil {
+		return ErrNoDelivery
+	}
+	result, ok := handoff.Single()
+	if !ok {
+		return nil
+	}
+	return to(result)
 }

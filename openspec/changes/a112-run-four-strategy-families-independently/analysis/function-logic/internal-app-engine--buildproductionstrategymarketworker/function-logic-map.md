@@ -1,9 +1,9 @@
 # Function Logic Map: `buildProductionStrategyMarketWorker`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (377-419)
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (378-420)
 - Function: `buildProductionStrategyMarketWorker` in package `engine`
 - Signature: `buildProductionStrategyMarketWorker(params=13, results=1)`
-- File SHA-256: `12586e3cf90b708e66988931ad424d7312593bf518f0987a0893bf4f6f4b6fb9`
+- File SHA-256: `1c2432d0f49db59209fc147f57a0c68d30d15596e68642aff8356ea29b0d69d5`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 6.
 - Risk scan: `risk-pattern-report.md`.
@@ -27,16 +27,18 @@ The signature above is the exhaustive input/result record; this map does not inf
 - Measurement regime: Go coverage profiles, count mode.
 - 모든 실행은 `systemd-run --user --scope -p MemoryMax=… -p MemorySwapMax=0` cgroup 안에서 돌렸다.
 - engine tagged suite: `go test -c -tags tossos_testseams -covermode=count -coverpkg=./internal/app/engine ./internal/app/engine/`
-  뒤에 그 바이너리를 `-test.coverprofile` 로 실행. 스위트 전체 PASS, 73.9% of statements (2912/3941).
+  뒤에 그 바이너리를 `-test.coverprofile` 로 실행. 스위트 전체 PASS, **73.8~73.9% of statements** — 3회 측정에 2912·2909·2909 of 3941.
+  태그 스위트도 흔들린다. 앞선 판본이 표본 하나(2912)를 안정값으로 적었고, 적대
+  리뷰어는 같은 트리에서 2911 을 쟀다. 둘 다 맞고, 둘 다 **표본**이었다.
 - engine untagged suite: 같은 명령에서 `-tags tossos_testseams` 만 뺀 것. 스위트 전체 PASS,
-  **63.5~63.6% of statements** — 같은 바이너리·같은 트리에서 다섯 번 재서 2498·2499·2501·2502·2502
+  **63.5% of statements** — 같은 바이너리·같은 트리에서 다섯 번 재서 2498·2498·2499·2500·2501
   of 3936 이 나왔다. 이 수는 실행마다 흔들린다(무태그 쪽에 스케줄링 의존 시험이 있다).
-  앞선 판본이 표본 하나(63.5%)를 안정된 값으로 적은 것을 정정한다. 태그 스위트는 안정적이다.
+  앞선 판본이 표본 하나(63.5%)를 안정된 값으로 적은 것을 정정한다.
 - 분기의 arm 은 그 분기 위치 **다음에 처음 열리는** 커버리지 블록이다. 조건이 여러 줄이면
   여는 중괄호가 다음 줄에 있어서, 같은 줄만 보던 첫 판본은 이 태스크가 실제로 바꾼 분기를
   `null`(=측정 없음)로 보고했다. "자료 없음"은 "진입 0"과 다르고 그 차이가 요점이다.
 - Per-test attribution set: `buildProductionStrategyMarketWorker` 를 부르는 시험은 트리 전체에서 둘
-  (`strategy_dispatch_cycle_test.go:191`, `a112_dispatch_handoff_test.go:112`)이고,
+  (`strategy_dispatch_cycle_test.go:191`, `a112_dispatch_handoff_test.go:124`)이고,
   `ResultAuthority` 를 부르는 시험은 **둘**이다
   (`strategy_proposal_authority_test.go:44`, `a112_arbitration_test.go:214`). 그 각각을
   `-test.run '^<Test>$'` 로 따로 돌렸다. 앞선 판본이 "넷"이라고 적은 것은 **grep 히트 수를 시험
@@ -46,16 +48,16 @@ The signature above is the exhaustive input/result record; this map does not inf
   진입 수와 정확히 같다. 이 집합 밖의 시험이 어느 arm 이든 들어갔다면 그 등식이 깨진다.
   깨진 행은 `ATTRIBUTION MISMATCH` 로 표시되며 아래에는 하나도 없다.
 
-Exact AST return positions: 384:3, 399:3, 402:3, 405:3, 408:3, 414:3, 416:2.
+Exact AST return positions: 385:3, 400:3, 403:3, 406:3, 409:3, 415:3, 417:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 383:2 | arm entered 2x (tagged); 0 (untagged); `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` (`wiringReady=false` 두 시장) |
-| B2 | if | 397:2 | **이 태스크가 바꾼 분기.** arm entered 1x (tagged); 0 (untagged); `TestARefusedHandoffLeavesTheWorkerDormant` (KR 이 상한 초과로 거절) |
-| B3 | if | 401:2 | arm not entered (양쪽 스위트). 봉인이 깨진 제안으로 여기까지 오는 시험이 없다 |
-| B4 | if | 404:2 | arm entered 1x (tagged); 0 (untagged); `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` (`spy.failProtection` KR) |
-| B5 | if | 407:2 | arm not entered (양쪽 스위트). 진입 게이트 관측 실패를 만드는 시험이 없다 |
-| B6 | if | 413:2 | arm not entered (양쪽 스위트). 잘못된 digest·revision·만료를 만드는 시험이 없다 |
+| B1 | if | 384:2 | arm entered 2x (tagged); 0 (untagged); `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` (`wiringReady=false` 두 시장) |
+| B2 | if | 398:2 | **이 태스크가 바꾼 분기.** arm entered 1x (tagged); 0 (untagged); `TestARefusedHandoffLeavesTheWorkerDormant` (KR 이 상한 초과로 거절) |
+| B3 | if | 402:2 | arm not entered (양쪽 스위트). 봉인이 깨진 제안으로 여기까지 오는 시험이 없다 |
+| B4 | if | 405:2 | arm entered 1x (tagged); 0 (untagged); `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` (`spy.failProtection` KR) |
+| B5 | if | 408:2 | arm not entered (양쪽 스위트). 진입 게이트 관측 실패를 만드는 시험이 없다 |
+| B6 | if | 414:2 | arm not entered (양쪽 스위트). 잘못된 digest·revision·만료를 만드는 시험이 없다 |
 
 B3·B5·B6 은 **이 태스크가 바꾸지 않은** 분기이고 진입 0 은 커버리지 공백이지 통과가 아니다.
 그 공백을 메우는 것은 태스크 5.7(fault injection)의 몫이다.
@@ -64,27 +66,27 @@ B3·B5·B6 은 **이 태스크가 바꾸지 않은** 분기이고 진입 0 은 �
 
 | Callee expression | Position |
 |---|---|
-| `schedule.forMarket` | 392:27 |
-| `candidate.forMarket` | 392:55 |
-| `route.forMarket` | 392:84 |
-| `fx.forMarket` | 393:3 |
-| `proposal.forMarket` | 393:25 |
-| `riskAuthority.forMarket` | 393:53 |
-| `account.forMarket` | 393:86 |
-| `Single` | 396:23 |
-| `p.dispatchHandoff` | 396:23 |
-| `result.ValidProposal` | 401:6 |
-| `gateway.ObserveStrategyProtection` | 404:15 |
-| `strings.ToLower` | 404:54 |
-| `string` | 404:70 |
-| `gateway.ObserveStrategyEntryGate` | 407:15 |
-| `strings.ToLower` | 407:53 |
-| `string` | 407:69 |
-| `strategyWorkerEvidenceDigest` | 410:12 |
-| `validStrategyDigest` | 413:6 |
-| `IsZero` | 413:64 |
-| `a.authority.FreshUntil` | 413:64 |
-| `a.authority.FreshUntil` | 417:23 |
+| `schedule.forMarket` | 393:27 |
+| `candidate.forMarket` | 393:55 |
+| `route.forMarket` | 393:84 |
+| `fx.forMarket` | 394:3 |
+| `proposal.forMarket` | 394:25 |
+| `riskAuthority.forMarket` | 394:53 |
+| `account.forMarket` | 394:86 |
+| `Single` | 397:23 |
+| `p.dispatchHandoff` | 397:23 |
+| `result.ValidProposal` | 402:6 |
+| `gateway.ObserveStrategyProtection` | 405:15 |
+| `strings.ToLower` | 405:54 |
+| `string` | 405:70 |
+| `gateway.ObserveStrategyEntryGate` | 408:15 |
+| `strings.ToLower` | 408:53 |
+| `string` | 408:69 |
+| `strategyWorkerEvidenceDigest` | 411:12 |
+| `validStrategyDigest` | 414:6 |
+| `IsZero` | 414:64 |
+| `a.authority.FreshUntil` | 414:64 |
+| `a.authority.FreshUntil` | 418:23 |
 
 ## State mutations and fallbacks
 

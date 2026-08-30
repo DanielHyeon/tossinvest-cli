@@ -17,6 +17,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
 )
 
 // StrategyEntryLoopName is the single outer runtime loop which owns both market
@@ -423,24 +424,36 @@ func (c *Context) runProductionStrategyMarketCycle(ctx context.Context, clk cloc
 	if err != nil {
 		return err
 	}
+	if fresh.dispatch == nil {
+		return nil
+	}
 	// 조정자가 고른 것은 이 한 값으로만 공유 dispatch 에 닿는다.
-	result, handedOff := fresh.proposals.forMarket(market).dispatchHandoff().Single()
-	if !handedOff || fresh.dispatch == nil {
-		return nil
-	}
-	lineage := result.Lineage
-	cas, err := c.Journal.CurrentPositionCampaignCAS(ctx, lineage.AccountRef, string(lineage.Market), lineage.Symbol)
-	if err != nil {
+	//
+	// 여기서 `Single()` 이 아니라 `Deliver` 를 쓰는 이유는 하나다: **무시할 수
+	// 있는 답을 이 함수에 두지 않기 위해서**. 앞선 판본은 `result, handedOff :=`
+	// 로 받아 `if !handedOff || …` 로 막았고, 적대 리뷰가 그 관문을 지우면서
+	// `if !handedOff { }` 같은 빈 조건만 남기는 편집으로 두 스위트를 모두
+	// 통과시켰다 — 답을 "썼는지" 보는 검사는 답이 무엇을 막는지 보지 못한다.
+	// Deliver 에서는 몸통이 도는지 마는지를 이 함수가 정하지 않는다.
+	//
+	// 몸통이 받는 result 는 경계가 건넨 값이다. 그 값을 다른 것으로 바꿔치는
+	// 편집은 `entries` 를 다시 읽어야 하고, 그 철자는
+	// TestSeamConsumersCannotReadTheRawEntryListAgain 이 막는다.
+	return fresh.proposals.forMarket(market).dispatchHandoff().Deliver(func(result strategyflow.Result) error {
+		lineage := result.Lineage
+		cas, err := c.Journal.CurrentPositionCampaignCAS(ctx, lineage.AccountRef, string(lineage.Market), lineage.Symbol)
+		if err != nil {
+			return err
+		}
+		if cas.Claimed || cas.State != "FLAT" && cas.State != "CLOSED" {
+			return nil
+		}
+		_, err = fresh.dispatch.dispatch(ctx, result)
+		if errors.Is(err, journal.ErrStrategyDispatchLeaseConsumed) {
+			return nil
+		}
 		return err
-	}
-	if cas.Claimed || cas.State != "FLAT" && cas.State != "CLOSED" {
-		return nil
-	}
-	_, err = fresh.dispatch.dispatch(ctx, result)
-	if errors.Is(err, journal.ErrStrategyDispatchLeaseConsumed) {
-		return nil
-	}
-	return err
+	})
 }
 
 func (c *Context) refreshPairedStrategyEntryProductionAssembly(ctx context.Context, clk clock.Clock) (StrategyEntryProductionAssembly, error) {

@@ -115,7 +115,8 @@ func isZero(node ast.Expr) bool {
 // 이 표는 계약이 아니라 **빚 목록**이다. 동결 골든
 // (analysis/goldens/four-family-runtime-v1.json)의
 // queue.market_wide_single_proposal_assumption_forbidden 은 true 이고
-// queue.selected_limit 는 "시장마다 하나"가 아니라 "소유자 범위마다 하나"다.
+// queue.selected_limit 원문은 "at most one selected proposal per owner scope"
+// 로, "시장마다 하나"가 아니라 소유자 범위마다 하나다.
 // 즉 이 가정은 결국 전부 사라져야 한다. 5.5 는 dispatch 경로의 사본을 한 곳
 // (handoff seam)으로 모으는 데까지만 한다. 남은 줄은 그 사본을 없앨 로트를
 // 이름으로 달고 여기 남는다 — 목록에서 지우면 조용한 생략이 된다.
@@ -175,6 +176,16 @@ func TestEveryMarketAuthorityCarryingEntriesAlsoReportsReady(t *testing.T) {
 			name, ok := literal.Type.(*ast.Ident)
 			if !ok || name.Name != "strategyProposalMarketAuthority" {
 				return true
+			}
+			// 위치 인자 리터럴(`{market, entries, snapshot}`)은 키가 없어서
+			// 아래 검사가 통째로 건너뛴다. 적대 리뷰가 지적한 자리다 —
+			// 조용히 건너뛰느니 여기서 막는다.
+			for _, element := range literal.Elts {
+				if _, keyed := element.(*ast.KeyValueExpr); !keyed {
+					t.Errorf("%s builds a market authority with positional fields; this guard can only read keyed literals",
+						filepath.Base(path))
+					return true
+				}
 			}
 			fields := compositeFields(literal)
 			if _, carries := fields["entries"]; !carries {
@@ -270,6 +281,12 @@ var mutationCapabilityIdents = []string{
 // engineCapabilityTypes 는 package engine 안에서 변경 능력을 손에 쥐고 있는
 // 타입 이름을 **소스에서 계산한다**.
 //
+// 이 계산은 완전하지 않다. `TypeSpec` 의 타입 표현식만 보므로 함수형 필드
+// (`run func() error`)로 세탁한 능력과 함수 선언의 매개변수는 보지 못한다.
+// 적대 리뷰가 둘 다 시연했다. 그럼에도 두는 이유는 직접적인 형태 — 능력
+// 타입을 필드로 들고 있는 구조체 — 를 실제로 잡기 때문이고, 손으로 적은
+// 이름 목록보다는 뒤처지지 않기 때문이다.
+//
 // 손으로 적은 목록이 왜 안 되는지는 실측으로 드러났다. 첫 판본은 import 와
 // 이름 몇 개만 금지했는데, seam 파일에 import 를 하나도 늘리지 않고
 // `func (b *officialBroker) …{ b.off.CancelConditionalOrder(ctx, id) }` 를
@@ -361,17 +378,27 @@ func engineCapabilityTypes(t *testing.T) map[string]bool {
 	return marked
 }
 
-// TestTheCoordinatorAndHandoffSeamsHoldNoMutationCapability 는 두 seam 파일이
-// 주문이나 lease 를 만들 수 있는 무엇도 손에 넣지 못한다는 것을 증명한다.
+// TestTheSeamFilesStayWithinTheirDeclaredClosure 는 두 seam 파일이 **선언한
+// 것 밖을 들여오지 않는다**는 것을 증명한다. 그 이상은 증명하지 않는다.
 //
-// 이 검사가 증명할 수 있는 범위를 정확히 적어 둔다. 파일 단위 import 허용
-// 목록은 그 파일이 밖에서 무엇을 들여오는지 전부 고정한다. 같은 패키지 안의
-// 능력은 import 로 막을 수 없으므로 계산된 타입 이름으로 막는다. 그래도
-// package engine 안에 있는 한 이것은 **파일 규율**이지 컴파일러 보장이 아니다.
-// 컴파일러 보장이 필요한 자리 — 무엇이 건너갈지 고르는 판단 — 는 그래서
-// 이 패키지 밖(internal/strategyhandoff)으로 옮겼고, 거기서는 import 폐쇄가
-// 결정적이다.
-func TestTheCoordinatorAndHandoffSeamsHoldNoMutationCapability(t *testing.T) {
+// 이 시험의 이름은 원래 …HoldNoMutationCapability 였고, 그 이름은 거짓이었다.
+// 적대 리뷰가 import 를 하나도 늘리지 않고 이 파일 안에서 보호 손절을
+// 취소했다: 능력을 `run func() error` 같은 **함수형 필드**에 담으면 타입
+// 표현식이 능력 패키지도 능력 타입도 이름하지 않으므로 아래 고정점 계산이
+// 그것을 보지 못하고, 함수 **선언**은 `TypeSpec` 이 아니므로 매개변수의
+// `*officialBroker` 도 계산에 들어오지 않는다.
+//
+// **같은 패키지 안에서는 이 성질을 시험으로 배제할 수 없다.** 그래서 정말
+// 필요한 자리 — 무엇이 건너갈지 고르는 판단 — 를 패키지 밖
+// `internal/strategyhandoff` 로 옮겼고, 거기서는 import 폐쇄가 결정적이다.
+// 여기 남은 것은 그 밖의 두 가지다.
+//
+//  1. **결정적**: 파일 단위 import 허용 목록. 그 파일이 밖에서 무엇을
+//     들여오는지 전부 고정한다(직접 import 만 본다 — 전이는 보지 않는다).
+//  2. **부분적**: 계산된 능력 타입 이름 금지. 필드 타입으로 능력을 들고 있는
+//     경우는 잡고, 함수형 필드로 세탁한 경우는 못 잡는다. 방어의 한 겹이지
+//     증명이 아니다.
+func TestTheSeamFilesStayWithinTheirDeclaredClosure(t *testing.T) {
 	capabilityTypes := engineCapabilityTypes(t)
 	for _, name := range mutationCapabilityIdents {
 		capabilityTypes[name] = true
@@ -437,6 +464,21 @@ func TestTheWorkerBuilderOnlyObservesThroughTheGateway(t *testing.T) {
 	if gatewayParam == "" {
 		t.Fatalf("%s no longer takes a single named strategyDispatchGateway, so this guard reads nothing", workerBuilderFunc)
 	}
+	// 중간 바인딩(`g := gateway`) 하나면 아래 수신자 대조가 아무것도 못 찾는다.
+	// 적대 리뷰가 지적한 자리다. 이름을 옮기는 것 자체를 막는다.
+	ast.Inspect(builder.Body, func(node ast.Node) bool {
+		assign, ok := node.(*ast.AssignStmt)
+		if !ok {
+			return true
+		}
+		for _, value := range assign.Rhs {
+			if ident, isIdent := value.(*ast.Ident); isIdent && ident.Name == gatewayParam {
+				t.Errorf("%s rebinds the gateway to another name; the receiver check below would then read nothing",
+					workerBuilderFunc)
+			}
+		}
+		return true
+	})
 	observed := 0
 	ast.Inspect(builder.Body, func(node ast.Node) bool {
 		call, ok := node.(*ast.CallExpr)
@@ -490,9 +532,15 @@ func TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch(t *testing.T) {
 			if !ok || function.Body == nil {
 				continue
 			}
-			// dispatchHandoff().Single() 이 첫 자리에 묶어 준 이름들.
+			// 경계가 값을 건네주는 두 문 — Deliver 의 몸통 인자와
+			// Single 의 첫 반환값 — 이 묶어 준 이름들.
 			fromSeam := make(map[string]bool)
 			ast.Inspect(function.Body, func(node ast.Node) bool {
+				if call, ok := node.(*ast.CallExpr); ok {
+					if name := deliveredParamName(call); name != "" {
+						fromSeam[name] = true
+					}
+				}
 				assign, ok := node.(*ast.AssignStmt)
 				if !ok || len(assign.Rhs) != 1 || len(assign.Lhs) != 2 {
 					return true
@@ -557,15 +605,25 @@ func TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch(t *testing.T) {
 }
 
 // TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer 는 경계가 준 답을
-// 버리는 유일한 철자를 막는다.
+// 버리는 철자를 막는다.
 //
-// Single 은 두 값을 돌려주므로, 답을 안 받는 방법은 `_` 로 버리는 것 하나뿐이다
-// (한 값짜리 문맥에서 쓰면 컴파일이 안 된다). 그 하나를 여기서 막으면 나머지는
-// 컴파일러가 막는다 — 받아 놓고 아무 데서도 안 쓰면 "declared and not used" 다.
+// **이 검사가 무엇을 증명하지 못하는지 먼저 적는다.** 답이 관문 역할을 하는지는
+// 증명하지 못한다. 앞선 판본은 "답이 어떤 if 조건 안에 나오는가"를 요구했고,
+// 적대 리뷰가 `if !handedOff { }` — 조건 안에 있지만 아무것도 안 하는 if — 로
+// 두 스위트를 통과시켰다. 게다가 그 요구는 더 강한 `switch { case !handedOff… }`
+// 를 **거부**했다. 틀린 것을 통과시키고 맞는 것을 막는 검사였으므로 지웠다.
 //
-// 즉 이 검사와 컴파일러가 함께, 예전 AST 가드가 못 하던 일을 한다. 그 가드는
-// Admitted() 가 **불렸는지**만 봤고 그것이 관문인지는 보지 않아서, 호출만
-// 남기고 관문을 지우면 통과했다.
+// 주문을 낼 수 있는 유일한 자리(dispatch 주기)에서는 이 문제를 검사로 풀지
+// 않고 **답을 없애서** 풀었다 — `Deliver(func(Result) error)` 에는 무시할
+// boolean 이 없다. 여기 남은 세 자리는 값을 쓰기 전에 `ValidProposal` 을 다시
+// 보고, 거절된 `Single` 이 영값을 돌려준다는 사실은
+// `internal/strategyhandoff` 의 TestARefusedSingleReturnsTheZeroResult 가
+// 값으로 지킨다. 그래서 세 자리에서는 답을 무시해도 노출이 늘지 않는다.
+//
+// 이 검사가 실제로 막는 것은 답을 **받지 않는** 철자다. Single 은 두 값을
+// 돌려주므로 받지 않는 방법은 `_` 뿐이고, 그것은 `:=` 와 `var` 두 곳에 쓸 수
+// 있다. 앞선 판본은 `*ast.AssignStmt` 만 보아 `var result, _ = …` 를 놓쳤다 —
+// 같은 지적을 두 번 받고서야 고쳤다.
 func TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer(t *testing.T) {
 	checked := 0
 	for _, path := range engineProductionFiles(t) {
@@ -576,10 +634,6 @@ func TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer(t *testing.T) {
 			}
 			for _, answer := range seamAdmissionAnswers(t, filepath.Base(path), function) {
 				checked++
-				if !identAppearsInSomeIfCondition(function.Body, answer) {
-					t.Errorf("%s: %s binds the seam's admission answer %q but never tests it in a condition",
-						filepath.Base(path), function.Name.Name, answer)
-				}
 				if identIsBlankAssigned(function.Body, answer) {
 					t.Errorf("%s: %s silences the seam's admission answer with `_ = %s`",
 						filepath.Base(path), function.Name.Name, answer)
@@ -590,76 +644,135 @@ func TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer(t *testing.T) {
 	if checked == 0 {
 		t.Fatal("no production site reads the seam, so this guard proves nothing")
 	}
-	// 경계를 읽는 자리는 셋이다: worker 승격, dispatch 주기, 결과 권한,
-	// 그리고 읽기 전용 projection — 넷이다. 센 값을 적는다.
-	if checked != 4 {
-		t.Fatalf("production sites reading the seam=%d, want 4 (worker promotion, dispatch cycle, result authority, projection)", checked)
+	// 경계의 값을 읽는 자리는 셋이다: worker 승격, 결과 권한, 읽기 전용
+	// projection. dispatch 주기는 Deliver 를 쓰므로 여기 없다 — 그것이 요점이다.
+	if checked != 3 {
+		t.Fatalf("production sites binding the seam's answer=%d, want 3 (worker promotion, result authority, projection)", checked)
 	}
 }
 
+// seamConsumerFuncs 는 경계의 값을 소비하는 생산 함수 전부다.
+var seamConsumerFuncs = map[string]bool{
+	workerBuilderFunc:                true,
+	dispatchCallSiteFunc:             true,
+	"ResultAuthority":                true,
+	"strategyProjectionFromAssembly": true,
+}
+
+// TestSeamConsumersCannotReadTheRawEntryListAgain 은 소비자가 경계를 지나지
+// 않은 값을 집는 것을 막는다.
+//
+// 적대 리뷰가 이렇게 뚫었다: 경계가 묶어 준 이름을 받아 놓고 그 뒤에
+// `result = raw[len(raw)-1].authority.Proposal()` 로 덮어썼다. 이름은 맞고
+// 값은 원본이다. 이름을 보는 어떤 검사도 그것을 보지 못한다.
+//
+// **이 검사는 이름이 아니라 사실을 본다.** Go 에서 필드를 읽는 철자는 하나뿐이다
+// — 그 필드의 이름. `entries` 는 비공개 필드이므로 reflect 로도 값을 꺼낼 수
+// 없다(`Field(i).Interface()` 는 비공개 필드에서 패닉한다). 따라서 소비자
+// 본문에 `entries` 라는 토큰이 없으면 그 목록을 읽지 않았다는 뜻이고, 그것은
+// 열거가 아니라 완전한 사실이다.
+func TestSeamConsumersCannotReadTheRawEntryListAgain(t *testing.T) {
+	seen := make(map[string]bool)
+	control := 0
+	for _, path := range engineProductionFiles(t) {
+		for _, decl := range parseEngineFile(t, path).Decls {
+			function, ok := decl.(*ast.FuncDecl)
+			if !ok || function.Body == nil || function.Name == nil {
+				continue
+			}
+			mentions := identMentions(function.Body, "entries")
+			// 양성 대조: 어댑터는 반드시 entries 를 읽는다. 안 읽는다면 이
+			// 스캔이 고장난 것이고, 아래 단언들은 틀린 이유로 통과한다.
+			if function.Name.Name == "dispatchHandoff" {
+				control = mentions
+			}
+			if !seamConsumerFuncs[function.Name.Name] {
+				continue
+			}
+			seen[function.Name.Name] = true
+			if mentions != 0 {
+				t.Errorf("%s: %s reads the raw entry list %d time(s); the seam's value is the only one that may cross",
+					filepath.Base(path), function.Name.Name, mentions)
+			}
+		}
+	}
+	if control == 0 {
+		t.Fatal("the adapter does not mention `entries`, so this scan reads nothing and every assertion above is vacuous")
+	}
+	missing := make([]string, 0)
+	for name := range seamConsumerFuncs {
+		if !seen[name] {
+			missing = append(missing, name)
+		}
+	}
+	if len(missing) != 0 {
+		sort.Strings(missing)
+		t.Fatalf("these seam consumers were not scanned, so they are unguarded: %v", missing)
+	}
+}
+
+func identMentions(body *ast.BlockStmt, name string) int {
+	count := 0
+	ast.Inspect(body, func(node ast.Node) bool {
+		if ident, ok := node.(*ast.Ident); ok && ident.Name == name {
+			count++
+		}
+		return true
+	})
+	return count
+}
+
 // seamAdmissionAnswers 는 이 함수 안에서 dispatchHandoff().Single() 이 묶어 준
-// bool 이름들을 돌려준다. `_` 로 버렸으면 그 자리에서 바로 실패시킨다.
+// bool 이름들을 돌려준다. `:=` 와 `var` 둘 다 본다.
 func seamAdmissionAnswers(t *testing.T, file string, function *ast.FuncDecl) []string {
 	t.Helper()
 	names := make([]string, 0, 1)
-	ast.Inspect(function.Body, func(node ast.Node) bool {
-		assign, ok := node.(*ast.AssignStmt)
-		if !ok || len(assign.Rhs) != 1 {
-			return true
+	bind := func(lhs []ast.Expr, rhs []ast.Expr, spelling string) {
+		if len(rhs) != 1 {
+			return
 		}
-		outer, ok := assign.Rhs[0].(*ast.CallExpr)
+		outer, ok := rhs[0].(*ast.CallExpr)
 		if !ok {
-			return true
+			return
 		}
 		selector, ok := outer.Fun.(*ast.SelectorExpr)
 		if !ok || selector.Sel.Name != "Single" {
-			return true
+			return
 		}
 		inner, ok := selector.X.(*ast.CallExpr)
 		if !ok {
-			return true
+			return
 		}
 		if source, ok := inner.Fun.(*ast.SelectorExpr); !ok || source.Sel.Name != "dispatchHandoff" {
-			return true
+			return
 		}
-		if len(assign.Lhs) != 2 {
-			t.Errorf("%s: %s binds a dispatchHandoff().Single() to %d name(s), want the value and its admission answer",
-				file, function.Name.Name, len(assign.Lhs))
-			return true
+		if len(lhs) != 2 {
+			t.Errorf("%s: %s binds a dispatchHandoff().Single() (%s) to %d name(s), want the value and its admission answer",
+				file, function.Name.Name, spelling, len(lhs))
+			return
 		}
-		name, ok := assign.Lhs[1].(*ast.Ident)
+		name, ok := lhs[1].(*ast.Ident)
 		if !ok || name.Name == "_" {
-			t.Errorf("%s: %s throws away the seam's admission answer with `_`", file, function.Name.Name)
-			return true
+			t.Errorf("%s: %s throws away the seam's admission answer with `_` (%s)", file, function.Name.Name, spelling)
+			return
 		}
 		names = append(names, name.Name)
+	}
+	ast.Inspect(function.Body, func(node ast.Node) bool {
+		switch value := node.(type) {
+		case *ast.AssignStmt:
+			bind(value.Lhs, value.Rhs, ":=")
+		case *ast.ValueSpec:
+			// `var result, ok = …Single()` — 앞선 판본이 놓친 자리다.
+			lhs := make([]ast.Expr, 0, len(value.Names))
+			for _, name := range value.Names {
+				lhs = append(lhs, name)
+			}
+			bind(lhs, value.Values, "var")
+		}
 		return true
 	})
 	return names
-}
-
-// identAppearsInSomeIfCondition 은 그 이름이 어떤 if 의 조건 안에 나오는지 본다.
-//
-// 이것은 지배 관계의 **근사**다. 조건 안에 있다고 해서 그 조건이 값을 쓰기
-// 전에 반드시 돌아간다는 뜻은 아니다. 진짜 지배를 증명하려면 go/types 와
-// 제어 흐름 그래프가 필요하고, 그건 이 검사의 범위 밖이다. 여기서 막는 것은
-// **실제로 일어난 실패 방식**이다: 관문을 지우고 답만 어딘가에 남겨 두는 편집.
-func identAppearsInSomeIfCondition(body *ast.BlockStmt, name string) bool {
-	found := false
-	ast.Inspect(body, func(node ast.Node) bool {
-		branch, ok := node.(*ast.IfStmt)
-		if !ok || branch.Cond == nil {
-			return true
-		}
-		ast.Inspect(branch.Cond, func(inner ast.Node) bool {
-			if ident, ok := inner.(*ast.Ident); ok && ident.Name == name {
-				found = true
-			}
-			return !found
-		})
-		return !found
-	})
-	return found
 }
 
 // identIsBlankAssigned 는 `_ = name` 을 찾는다. 컴파일러의 미사용 변수 검사를
@@ -683,6 +796,27 @@ func identIsBlankAssigned(body *ast.BlockStmt, name string) bool {
 		return !blanked
 	})
 	return blanked
+}
+
+// deliveredParamName 은 `…dispatchHandoff().Deliver(func(result …) error {…})`
+// 에서 몸통이 받는 인자 이름을 돌려준다. 그 이름이 경계가 건넨 값이다.
+func deliveredParamName(call *ast.CallExpr) string {
+	selector, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok || selector.Sel.Name != "Deliver" || len(call.Args) != 1 {
+		return ""
+	}
+	source, ok := selector.X.(*ast.CallExpr)
+	if !ok {
+		return ""
+	}
+	if origin, ok := source.Fun.(*ast.SelectorExpr); !ok || origin.Sel.Name != "dispatchHandoff" {
+		return ""
+	}
+	body, ok := call.Args[0].(*ast.FuncLit)
+	if !ok || body.Type.Params == nil || len(body.Type.Params.List) != 1 || len(body.Type.Params.List[0].Names) != 1 {
+		return ""
+	}
+	return body.Type.Params.List[0].Names[0].Name
 }
 
 // dispatchMentionCensus 는 생산 코드가 `dispatch` 를 손에 쥐는 자리 **전부**와

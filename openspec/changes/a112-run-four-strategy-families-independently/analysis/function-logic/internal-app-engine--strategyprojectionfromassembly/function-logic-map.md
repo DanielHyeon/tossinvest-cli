@@ -22,11 +22,13 @@ The signature above is the exhaustive input/result record; this map does not inf
 - Measurement regime: Go coverage profiles, count mode.
 - 모든 실행은 `systemd-run --user --scope -p MemoryMax=… -p MemorySwapMax=0` cgroup 안에서 돌렸다.
 - engine tagged suite: `go test -c -tags tossos_testseams -covermode=count -coverpkg=./internal/app/engine ./internal/app/engine/`
-  뒤에 그 바이너리를 `-test.coverprofile` 로 실행. 스위트 전체 PASS, 73.9% of statements (2912/3941).
+  뒤에 그 바이너리를 `-test.coverprofile` 로 실행. 스위트 전체 PASS, **73.8~73.9% of statements** — 3회 측정에 2912·2909·2909 of 3941.
+  태그 스위트도 흔들린다. 앞선 판본이 표본 하나(2912)를 안정값으로 적었고, 적대
+  리뷰어는 같은 트리에서 2911 을 쟀다. 둘 다 맞고, 둘 다 **표본**이었다.
 - engine untagged suite: 같은 명령에서 `-tags tossos_testseams` 만 뺀 것. 스위트 전체 PASS,
-  **63.5~63.6% of statements** — 같은 바이너리·같은 트리에서 다섯 번 재서 2498·2499·2501·2502·2502
+  **63.5% of statements** — 같은 바이너리·같은 트리에서 다섯 번 재서 2498·2498·2499·2500·2501
   of 3936 이 나왔다. 이 수는 실행마다 흔들린다(무태그 쪽에 스케줄링 의존 시험이 있다).
-  앞선 판본이 표본 하나(63.5%)를 안정된 값으로 적은 것을 정정한다. 태그 스위트는 안정적이다.
+  앞선 판본이 표본 하나(63.5%)를 안정된 값으로 적은 것을 정정한다.
 - 분기의 arm 은 그 분기 위치 **다음에 처음 열리는** 커버리지 블록이다. 조건이 여러 줄이면
   여는 중괄호가 다음 줄에 있어서, 같은 줄만 보던 첫 판본은 이 태스크가 실제로 바꾼 분기를
   `null`(=측정 없음)로 보고했다. "자료 없음"은 "진입 0"과 다르고 그 차이가 요점이다.
@@ -35,7 +37,7 @@ The signature above is the exhaustive input/result record; this map does not inf
   그래서 이 함수에 대한 근거는 실행이 아니라 **소스에 무엇이 쓰여 있는지**뿐이고,
   아래 반증 표의 뮤테이션은 전부 AST 가드가 죽인 것이다.
 
-Exact AST return positions: 155:2.
+Exact AST return positions: 154:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
@@ -50,7 +52,8 @@ Exact AST return positions: 155:2.
 
 이 함수는 `StrategyEntryProductionAssembly` 전체를 요구하고, 트리 안에 그것을 **채워서**
 이 함수에 넣는 시험이 하나도 없다(`cmd/tossctl/engine_strategy_entry_dormant_test.go:88` 이
-`reflect.TypeOf` 로 그 타입을 언급하지만 값을 만들지는 않는다 — 앞선 판본이 "만드는 시험이
+`reflect.TypeOf(engine.StrategyEntryProductionAssembly{})` 로 영값을 만들지만 그것을 채워
+이 함수에 넣지는 않는다 — 앞선 판본이 "만드는 시험이
 하나도 없다"고 적은 것을 그렇게 정정한다). `TestStrategyRuntimeRead*` 들은 `Context.Read` 를
 시험하지 이 함수를 지나지 않는다.
 운영자 화면에 handoff 거절을 실제로 비추는 일은 태스크 7.3 이고, 그 태스크가 이 공백의 주인이다.

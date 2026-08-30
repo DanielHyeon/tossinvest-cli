@@ -24,6 +24,7 @@ const modulePath = "github.com/JungHoonGhae/tossinvest-cli/"
 // 빠져 있었다.
 func TestTheHandoffSeamImportsNothingOutsideItsAllowedClosure(t *testing.T) {
 	allowed := map[string]bool{
+		"errors":                             true,
 		modulePath + "internal/strategyflow": true,
 	}
 	fset := token.NewFileSet()
@@ -66,7 +67,20 @@ func TestTheHandoffSeamImportsNothingOutsideItsAllowedClosure(t *testing.T) {
 // 이유로** 통과한다. deps_test.go 의 엔진 검사가 같은 이유로 양성 대조를 달고
 // 있다.
 func TestTheHandoffSeamTransitivelyReachesNoMutationCapability(t *testing.T) {
-	command := exec.Command("go", "list", "-json", "-deps", ".")
+	// `-test` 를 붙이면 이 패키지의 시험 바이너리가 들여오는 것까지 들어온다.
+	// 붙이지 않은 앞선 판본은 "어떤 자동 시험도 실계좌 주문 경로에 닿지
+	// 않는다"는 저장소 규칙을 이 패키지에서 확인하지 않았다.
+	for _, arg := range []string{"-deps", "-deps-test"} {
+		t.Run(arg, func(t *testing.T) { assertNoMutationCapabilityInWalk(t, arg) }) //nolint:thelper
+	}
+}
+
+func assertNoMutationCapabilityInWalk(t *testing.T, mode string) {
+	args := []string{"list", "-json", "-deps", "."}
+	if mode == "-deps-test" {
+		args = []string{"list", "-json", "-deps", "-test", "."}
+	}
+	command := exec.Command("go", args...)
 	raw, err := command.Output()
 	if err != nil {
 		t.Fatalf("go list: %v", err)
@@ -111,9 +125,17 @@ func TestTheHandoffSeamTransitivelyReachesNoMutationCapability(t *testing.T) {
 	if len(deps) == 0 {
 		t.Fatal("go list returned no dependency packages, so the walk above read nothing")
 	}
+	//
+	// 앞선 판본은 strategyflow(직접 import)와 자기 자신만 요구했다. 둘 다
+	// 깊이 1 이하라서 걸음을 "자신 + 직접 import" 로 좁혀도 통과했다 —
+	// 즉 전이성을 전혀 증명하지 못했다. 아래 둘은 strategyflow 의 직접
+	// import 도 아니므로, 이 이름들이 보이면 걸음이 실제로 두 단계 넘게
+	// 내려갔다는 뜻이다.
 	for _, required := range []string{
 		modulePath + "internal/strategyflow",
 		modulePath + "internal/strategyhandoff",
+		modulePath + "internal/candidate",
+		modulePath + "internal/domain",
 	} {
 		if !deps[required] {
 			names := make([]string, 0, len(deps))

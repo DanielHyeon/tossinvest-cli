@@ -4,107 +4,146 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"go/types"
 	"io/fs"
 	"sort"
 	"strings"
 	"testing"
 )
 
-// 이 파일은 "거절 여부를 안 보고 값을 읽을 수 없다"는 성질을 **타입 서명**에
-// 못 박는다.
+// 이 파일은 "거절 여부를 안 보고 값을 읽을 수 없다"는 성질을 지킨다.
 //
-// 첫 판본에서 그 성질은 AST 가드 하나가 지키고 있었다. 그 가드는 handoff 값을
-// 쓰는 함수가 Admitted() 를 **부르는지**만 봤고, 그것이 실제로 관문 역할을
-// 하는지는 보지 않았다. 그래서 `_ = handoff.Admitted()` 로 호출만 남기고 관문을
-// 지우거나, `var` 선언으로 바인딩하거나, 아예 바인딩 없이 필드를 바로 읽으면
-// 전부 통과했다 — 두 스위트가 모두 초록인 채로.
+// 세 판본이 있었고 앞의 둘은 뚫렸다.
 //
-// 지금은 값이 Single() 로만 나가고 그 서명이 bool 을 함께 준다. 무시하려면
-// 명시적으로 버려야 한다. 남은 위험은 하나뿐이다: 누가 나중에 Result 를 그냥
-// 돌려주는 접근자를 새로 다는 것. 이 검사는 그 문 하나를 잠근다.
-func TestNoAccessorHandsOutAResultWithoutSayingWhetherItWasAdmitted(t *testing.T) {
-	fset := token.NewFileSet()
-	packages, err := parser.ParseDir(fset, ".", productionOnly, 0)
-	if err != nil {
-		t.Fatalf("parse package directory: %v", err)
-	}
-	checked := 0
-	offenders := make([]string, 0)
-	for _, pkg := range packages {
-		for path, file := range pkg.Files {
-			for _, decl := range file.Decls {
-				function, ok := decl.(*ast.FuncDecl)
-				if !ok || function.Recv == nil || len(function.Recv.List) != 1 {
+//  1. AST 가드: handoff 값을 쓰는 함수가 `Admitted()` 를 **부르는지**만 봤다.
+//     호출만 남기고 관문을 지우면 통과했다.
+//  2. 서명 검사: `Handoff` 의 **메서드**가 `strategyflow.Result` 를 돌려주면
+//     두 값을 돌려주도록 요구했다. 적대 리뷰어 셋이 각자 같은 구멍을 찾았다 —
+//     `func Escape(h Handoff) strategyflow.Result` 는 메서드가 아니라서 스캔
+//     자체에 안 걸렸고, `Into(dst *Result)`·`Any() any`·`map[int]Result`·
+//     `(Result, Result)`·`<-chan Result` 도 전부 통과했다. 모양을 열거하는
+//     검사는 언제나 열거하지 못한 모양을 남긴다.
+//  3. **지금 판본: 모양을 세지 않고 공개 표면 전체를 고정한다.** 이 패키지
+//     밖에서 쓸 수 있는 것은 아래 표가 전부이고, 이름과 서명까지 같아야 한다.
+//     새 탈출구는 예외 없이 새 공개 이름을 요구하므로 이 표와 어긋난다.
+//
+// 이 표를 늘리는 것 자체는 금지가 아니다. 금지는 **조용히** 늘리는 것이다.
+var exportedSurface = map[string]string{
+	"Capacity":      "const",
+	"Refusal":       "type",
+	"Admitted":      "const",
+	"MarketClosed":  "const",
+	"NoSelection":   "const",
+	"OverCapacity":  "const",
+	"OverCarried":   "const",
+	"ErrNoDelivery": "var",
+	"Handoff":       "type",
+
+	"Admit": "func(ready bool, selected []strategyflow.Result) Handoff",
+
+	"Handoff.Refusal": "func() Refusal",
+	"Handoff.Pending": "func() int",
+	// 값이 나가는 두 문. 서명까지 고정한다 — Single 이 bool 을 떼거나
+	// Deliver 가 몸통 대신 값을 돌려주면 이 표가 깨진다.
+	"Handoff.Single":  "func() (strategyflow.Result, bool)",
+	"Handoff.Deliver": "func(to func(strategyflow.Result) error) error",
+}
+
+func TestThePackageExposesExactlyTheSurfaceTheSeamNeeds(t *testing.T) {
+	found := make(map[string]string)
+	for _, file := range productionFiles(t) {
+		for _, decl := range file.Decls {
+			switch value := decl.(type) {
+			case *ast.FuncDecl:
+				name := value.Name.Name
+				if value.Recv != nil {
+					if len(value.Recv.List) != 1 {
+						continue
+					}
+					receiver := receiverTypeName(value.Recv.List[0].Type)
+					if !ast.IsExported(receiver) {
+						continue
+					}
+					name = receiver + "." + name
+				}
+				if !value.Name.IsExported() {
 					continue
 				}
-				if receiverTypeName(function.Recv.List[0].Type) != "Handoff" {
+				found[name] = types.ExprString(value.Type)
+			case *ast.GenDecl:
+				kind := map[token.Token]string{token.CONST: "const", token.VAR: "var", token.TYPE: "type"}[value.Tok]
+				if kind == "" {
 					continue
 				}
-				checked++
-				results, carries := 0, false
-				if function.Type.Results != nil {
-					for _, field := range function.Type.Results.List {
-						names := len(field.Names)
-						if names == 0 {
-							names = 1
+				for _, spec := range value.Specs {
+					switch inner := spec.(type) {
+					case *ast.TypeSpec:
+						if inner.Name.IsExported() {
+							found[inner.Name.Name] = kind
 						}
-						results += names
-						if isResultType(field.Type) {
-							carries = true
+					case *ast.ValueSpec:
+						for _, name := range inner.Names {
+							if name.IsExported() {
+								found[name.Name] = kind
+							}
 						}
 					}
-				}
-				// Result 를 내주는 접근자는 반드시 두 값을 돌려준다. 하나만
-				// 돌려주면 부르는 쪽이 거절을 볼 방법이 없다.
-				if carries && results < 2 {
-					offenders = append(offenders, path+":"+function.Name.Name)
 				}
 			}
 		}
 	}
-	if checked == 0 {
-		t.Fatal("no method on Handoff was scanned, so this guard proves nothing")
+	if len(found) == 0 {
+		t.Fatal("no exported declaration was scanned, so this surface is not pinned at all")
 	}
-	if len(offenders) != 0 {
-		sort.Strings(offenders)
-		t.Fatalf("these accessors hand out a strategyflow.Result without a companion admission answer: %v", offenders)
+	problems := make([]string, 0)
+	for name, signature := range found {
+		want, listed := exportedSurface[name]
+		if !listed {
+			problems = append(problems, "undeclared export "+name+" ("+signature+")")
+			continue
+		}
+		if want != signature {
+			problems = append(problems, name+" is "+signature+", the surface says "+want)
+		}
+	}
+	for name, want := range exportedSurface {
+		if _, ok := found[name]; !ok {
+			problems = append(problems, name+" is on the surface ("+want+") but the package does not declare it")
+		}
+	}
+	if len(problems) != 0 {
+		sort.Strings(problems)
+		t.Fatalf("the seam's public surface changed; every new door out of the boundary must be declared here: %v", problems)
 	}
 }
 
-// Handoff 의 필드는 모두 비공개여야 한다. 하나라도 열리면 위의 서명 검사는
-// 우회된다 — 부르는 쪽이 접근자를 거치지 않고 값을 읽으면 되기 때문이다.
+// Handoff 의 필드는 모두 비공개여야 한다. 하나라도 열리면 위의 표는 우회된다 —
+// 부르는 쪽이 어떤 접근자도 거치지 않고 값을 읽으면 되기 때문이다.
 func TestTheHandoffCarriesNoExportedField(t *testing.T) {
-	fset := token.NewFileSet()
-	packages, err := parser.ParseDir(fset, ".", productionOnly, 0)
-	if err != nil {
-		t.Fatalf("parse package directory: %v", err)
-	}
 	checked := 0
-	for _, pkg := range packages {
-		for path, file := range pkg.Files {
-			ast.Inspect(file, func(node ast.Node) bool {
-				spec, ok := node.(*ast.TypeSpec)
-				if !ok || spec.Name.Name != "Handoff" {
-					return true
-				}
-				structure, ok := spec.Type.(*ast.StructType)
-				if !ok || structure.Fields == nil {
-					t.Fatalf("%s: Handoff is no longer a struct, so this guard reads nothing", path)
-				}
-				for _, field := range structure.Fields.List {
-					if len(field.Names) == 0 {
-						t.Errorf("%s: Handoff embeds a type, which can re-export a carried value", path)
-					}
-					for _, name := range field.Names {
-						checked++
-						if name.IsExported() {
-							t.Errorf("%s: Handoff.%s is exported; the admission answer can then be bypassed", path, name.Name)
-						}
-					}
-				}
+	for _, file := range productionFiles(t) {
+		ast.Inspect(file, func(node ast.Node) bool {
+			spec, ok := node.(*ast.TypeSpec)
+			if !ok || spec.Name.Name != "Handoff" {
 				return true
-			})
-		}
+			}
+			structure, ok := spec.Type.(*ast.StructType)
+			if !ok || structure.Fields == nil {
+				t.Fatal("Handoff is no longer a struct, so this guard reads nothing")
+			}
+			for _, field := range structure.Fields.List {
+				if len(field.Names) == 0 {
+					t.Error("Handoff embeds a type, which can re-export a carried value")
+				}
+				for _, name := range field.Names {
+					checked++
+					if name.IsExported() {
+						t.Errorf("Handoff.%s is exported; the admission answer can then be bypassed", name.Name)
+					}
+				}
+			}
+			return true
+		})
 	}
 	if checked == 0 {
 		t.Fatal("no Handoff field was scanned, so this guard proves nothing")
@@ -116,6 +155,27 @@ func productionOnly(info fs.FileInfo) bool {
 	return !strings.HasSuffix(info.Name(), "_test.go")
 }
 
+func productionFiles(t *testing.T) []*ast.File {
+	t.Helper()
+	packages, err := parser.ParseDir(token.NewFileSet(), ".", productionOnly, 0)
+	if err != nil {
+		t.Fatalf("parse package directory: %v", err)
+	}
+	out := make([]*ast.File, 0, 2)
+	for name, pkg := range packages {
+		if name != "strategyhandoff" {
+			t.Fatalf("this directory declares package %q", name)
+		}
+		for _, file := range pkg.Files {
+			out = append(out, file)
+		}
+	}
+	if len(out) == 0 {
+		t.Fatal("no production file was parsed")
+	}
+	return out
+}
+
 func receiverTypeName(expr ast.Expr) string {
 	if star, ok := expr.(*ast.StarExpr); ok {
 		expr = star.X
@@ -125,17 +185,4 @@ func receiverTypeName(expr ast.Expr) string {
 		return ""
 	}
 	return ident.Name
-}
-
-func isResultType(expr ast.Expr) bool {
-	switch value := expr.(type) {
-	case *ast.SelectorExpr:
-		pkg, ok := value.X.(*ast.Ident)
-		return ok && pkg.Name == "strategyflow" && value.Sel.Name == "Result"
-	case *ast.ArrayType:
-		return isResultType(value.Elt)
-	case *ast.StarExpr:
-		return isResultType(value.X)
-	}
-	return false
 }

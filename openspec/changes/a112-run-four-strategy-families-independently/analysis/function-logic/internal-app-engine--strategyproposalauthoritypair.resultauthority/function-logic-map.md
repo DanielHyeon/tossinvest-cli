@@ -27,16 +27,18 @@ The signature above is the exhaustive input/result record; this map does not inf
 - Measurement regime: Go coverage profiles, count mode.
 - 모든 실행은 `systemd-run --user --scope -p MemoryMax=… -p MemorySwapMax=0` cgroup 안에서 돌렸다.
 - engine tagged suite: `go test -c -tags tossos_testseams -covermode=count -coverpkg=./internal/app/engine ./internal/app/engine/`
-  뒤에 그 바이너리를 `-test.coverprofile` 로 실행. 스위트 전체 PASS, 73.9% of statements (2912/3941).
+  뒤에 그 바이너리를 `-test.coverprofile` 로 실행. 스위트 전체 PASS, **73.8~73.9% of statements** — 3회 측정에 2912·2909·2909 of 3941.
+  태그 스위트도 흔들린다. 앞선 판본이 표본 하나(2912)를 안정값으로 적었고, 적대
+  리뷰어는 같은 트리에서 2911 을 쟀다. 둘 다 맞고, 둘 다 **표본**이었다.
 - engine untagged suite: 같은 명령에서 `-tags tossos_testseams` 만 뺀 것. 스위트 전체 PASS,
-  **63.5~63.6% of statements** — 같은 바이너리·같은 트리에서 다섯 번 재서 2498·2499·2501·2502·2502
+  **63.5% of statements** — 같은 바이너리·같은 트리에서 다섯 번 재서 2498·2498·2499·2500·2501
   of 3936 이 나왔다. 이 수는 실행마다 흔들린다(무태그 쪽에 스케줄링 의존 시험이 있다).
-  앞선 판본이 표본 하나(63.5%)를 안정된 값으로 적은 것을 정정한다. 태그 스위트는 안정적이다.
+  앞선 판본이 표본 하나(63.5%)를 안정된 값으로 적은 것을 정정한다.
 - 분기의 arm 은 그 분기 위치 **다음에 처음 열리는** 커버리지 블록이다. 조건이 여러 줄이면
   여는 중괄호가 다음 줄에 있어서, 같은 줄만 보던 첫 판본은 이 태스크가 실제로 바꾼 분기를
   `null`(=측정 없음)로 보고했다. "자료 없음"은 "진입 0"과 다르고 그 차이가 요점이다.
 - Per-test attribution set: `buildProductionStrategyMarketWorker` 를 부르는 시험은 트리 전체에서 둘
-  (`strategy_dispatch_cycle_test.go:191`, `a112_dispatch_handoff_test.go:112`)이고,
+  (`strategy_dispatch_cycle_test.go:191`, `a112_dispatch_handoff_test.go:124`)이고,
   `ResultAuthority` 를 부르는 시험은 **둘**이다
   (`strategy_proposal_authority_test.go:44`, `a112_arbitration_test.go:214`). 그 각각을
   `-test.run '^<Test>$'` 로 따로 돌렸다. 앞선 판본이 "넷"이라고 적은 것은 **grep 히트 수를 시험

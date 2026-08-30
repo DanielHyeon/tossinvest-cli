@@ -1,6 +1,7 @@
 package strategyhandoff
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
@@ -80,8 +81,11 @@ func TestTwoSelectedScopesAreRefusedByNameInsteadOfSilently(t *testing.T) {
 // 아무 시험도 깨지지 않는 것을 보게 된다.
 func TestARaisedCapacityHandsOffNothingRatherThanDroppingTheSecondSelection(t *testing.T) {
 	overCarried := Handoff{selected: []strategyflow.Result{selection("005930"), selection("000660")}, pending: 2}
-	if overCarried.Refusal() != Admitted {
-		t.Fatalf("refusal=%q, want the admitted state this test rests on", overCarried.Refusal())
+	// Admit 이 승인으로 만든 상태다(내부 refusal 은 빈 값). 밖으로 나가는
+	// 이름은 OverCarried 이고, 그 두 답이 갈라지지 않는 것을
+	// TestAnAdmittedButUndeliverableHandoffHasAName 이 지킨다.
+	if overCarried.refusal != Admitted {
+		t.Fatalf("내부 refusal=%q, want the admitted state this test rests on", overCarried.refusal)
 	}
 	result, ok := overCarried.Single()
 	if ok {
@@ -114,5 +118,118 @@ func TestTheHandoffDoesNotAliasTheCallersSlice(t *testing.T) {
 	result, ok := handoff.Single()
 	if !ok || result.Lineage.Identity != "005930" {
 		t.Fatalf("handed off %q ok=%v, want the value as it was at admission", result.Lineage.Identity, ok)
+	}
+}
+
+// Deliver 는 승인됐을 때만 몸통을 부른다. 이 서명이 있는 이유는 하나다:
+// 부르는 쪽에 **무시할 boolean 을 주지 않기 위해서**.
+//
+// 적대 리뷰가 `Single()` 판본에서 이것을 뚫었다. 답을 받아 놓고
+// `if !handedOff { }` 처럼 아무것도 안 하는 조건에 넣으면, 답을 "썼다"는
+// 검사는 통과하고 관문은 사라진다. 두 스위트가 모두 초록이었다.
+// Deliver 에는 그런 편집이 없다 — 몸통이 도는지 마는지를 부르는 쪽이 정하지 않는다.
+func TestDeliverRunsTheBodyOnlyWhenSomethingCrossedTheSeam(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		handoff Handoff
+		wantRun bool
+	}{
+		{"닫힌 시장", Admit(false, []strategyflow.Result{selection("005930")}), false},
+		{"고른 것 없음", Admit(true, nil), false},
+		{"상한 초과", Admit(true, []strategyflow.Result{selection("005930"), selection("000660")}), false},
+		{"승인", Admit(true, []strategyflow.Result{selection("005930")}), true},
+		{"승인됐으나 과적재", Handoff{selected: []strategyflow.Result{selection("005930"), selection("000660")}, pending: 2}, false},
+	} {
+		ran := 0
+		got := tc.handoff.Deliver(func(result strategyflow.Result) error {
+			ran++
+			if result.Lineage.Identity != "005930" {
+				t.Fatalf("%s: 몸통이 %q 를 받았다", tc.name, result.Lineage.Identity)
+			}
+			return nil
+		})
+		if got != nil {
+			t.Fatalf("%s: Deliver=%v, want nil", tc.name, got)
+		}
+		if want := map[bool]int{true: 1, false: 0}[tc.wantRun]; ran != want {
+			t.Fatalf("%s: 몸통이 %d 번 돌았다, want %d", tc.name, ran, want)
+		}
+	}
+}
+
+// 거절은 오류가 아니다. 몸통의 오류만 밖으로 나간다.
+func TestDeliverReturnsOnlyTheBodysError(t *testing.T) {
+	boom := errors.New("dispatch failed")
+	if got := Admit(true, []strategyflow.Result{selection("005930")}).Deliver(
+		func(strategyflow.Result) error { return boom }); !errors.Is(got, boom) {
+		t.Fatalf("Deliver=%v, want the body's error", got)
+	}
+	if got := Admit(true, nil).Deliver(func(strategyflow.Result) error { return boom }); got != nil {
+		t.Fatalf("거절이 오류로 새어 나왔다: %v", got)
+	}
+}
+
+// nil 몸통으로 부르는 것은 프로그래밍 오류다. 조용히 성공시키면 "건넸다"와
+// "건넬 곳이 없었다"가 같은 답이 된다.
+func TestDeliverRefusesANilBody(t *testing.T) {
+	if got := Admit(true, []strategyflow.Result{selection("005930")}).Deliver(nil); !errors.Is(got, ErrNoDelivery) {
+		t.Fatalf("Deliver(nil)=%v, want %v", got, ErrNoDelivery)
+	}
+}
+
+// Refusal() 과 Single() 은 같은 술어를 써야 한다.
+//
+// 첫 수정 판본은 그러지 않았다: 상한을 올리면 Refusal() 은 Admitted 라고
+// 하면서 Single() 은 값을 안 줬다. 주문 경로는 fail-closed 였지만 **이름과
+// 계수기는 "승인"이라고 보고**했다 — 이 change 가 없애려던 바로 그 무명 상태다.
+func TestAnAdmittedButUndeliverableHandoffHasAName(t *testing.T) {
+	overCarried := Handoff{selected: []strategyflow.Result{selection("005930"), selection("000660")}, pending: 2}
+	if got := overCarried.Refusal(); got != OverCarried {
+		t.Fatalf("Refusal()=%q, want %q — 건네주지 못하는 상태에 이름이 없으면 운영자는 그것을 볼 수 없다", got, OverCarried)
+	}
+	if _, ok := overCarried.Single(); ok {
+		t.Fatal("Single() 이 과적재 handoff 에서 값을 내줬다")
+	}
+	// 두 답이 갈라지지 않는다는 것을 모든 경우에서 확인한다.
+	for _, handoff := range []Handoff{
+		Admit(false, []strategyflow.Result{selection("005930")}),
+		Admit(true, nil),
+		Admit(true, []strategyflow.Result{selection("005930")}),
+		Admit(true, []strategyflow.Result{selection("005930"), selection("000660")}),
+		overCarried,
+		{},
+	} {
+		_, ok := handoff.Single()
+		if ok != (handoff.Refusal() == Admitted) {
+			t.Fatalf("Refusal()=%q 인데 Single() ok=%v — 두 답이 갈라졌다", handoff.Refusal(), ok)
+		}
+	}
+}
+
+// 거절된 Single 은 영값을 돌려준다. 이 성질이 세 소비자(worker 승격, 결과
+// 권한, 읽기 전용 projection)의 두 번째 방벽이다 — 그 셋은 값을 쓰기 전에
+// ValidProposal 을 다시 보고, 영값 Result 는 그것을 통과하지 못한다.
+//
+// 앞선 판본에서 그 방벽은 **우연**이었다("거절이면 값이 비어 있더라"). 여기서
+// 값으로 못 박아 우연을 사실로 바꾼다.
+func TestARefusedSingleReturnsTheZeroResult(t *testing.T) {
+	var zero strategyflow.Result
+	for _, handoff := range []Handoff{
+		Admit(false, []strategyflow.Result{selection("005930")}),
+		Admit(true, nil),
+		Admit(true, []strategyflow.Result{selection("005930"), selection("000660")}),
+		{selected: []strategyflow.Result{selection("005930"), selection("000660")}, pending: 2},
+		{},
+	} {
+		result, ok := handoff.Single()
+		if ok {
+			t.Fatalf("%q 가 값을 내줬다", handoff.Refusal())
+		}
+		if result != zero {
+			t.Fatalf("%q 의 거절이 영값이 아닌 %+v 를 돌려줬다", handoff.Refusal(), result)
+		}
+		if result.ValidProposal() {
+			t.Fatalf("%q 의 영값이 ValidProposal 을 통과했다 — 세 소비자의 두 번째 방벽이 사라진다", handoff.Refusal())
+		}
 	}
 }

@@ -2024,6 +2024,8 @@ FLM 번들 열하나를 갱신했다. 그중 둘은 **새로 만든 것**이고 
 새 파일 `internal/app/engine/strategy_dispatch_handoff.go` 하나가 그 판단을 갖는다.
 
 ```go
+// 5.5 당시의 모습이다. 아래 5.5-fix 가 이 둘을 모두 없앴다 —
+// 상수는 strategyhandoff.Capacity 로, 타입은 strategyhandoff.Handoff 로 갔다.
 const strategyMarketHandoffCapacity = 1
 func (authority strategyProposalMarketAuthority) dispatchHandoff() strategyDispatchHandoff
 ```
@@ -2039,8 +2041,9 @@ func (authority strategyProposalMarketAuthority) dispatchHandoff() strategyDispa
 내게 된다 — 노출을 올리는 변경이다. 의존성 매트릭스는 A100 ProtectionReady 가
 `UNWIRED_INCOMPLETE` 인 동안 `exposure-raising dispatch` 를 금지한다. 그래서 5.5 는 상한에
 **이름을 붙였고 풀지는 않았다.** ~~이제 5.2 는 상수 하나를 고치는 일이 된다.~~
-**[정정 — 아래 5.5-fix 참조]** 이 문장은 거짓이었고, 거짓인 채로 코드 주석과 커밋
-메시지에도 들어갔다. 첫 판본은 상한을 넘지 않으면 무조건 `entries[0]` 을 건넸으므로,
+**[정정 — 아래 5.5-fix 참조]** 이 문장은 거짓이었고, 거짓인 채로 코드 주석에도
+들어갔다. **[재정정 2026-08-31: "커밋 메시지에도"는 과장이었다. `8a161fc8` 의
+메시지는 "그것을 실제로 푸는 것은 태스크 5.2 다"라고만 적었다 — 둘이지 셋이 아니다.]** 첫 판본은 상한을 넘지 않으면 무조건 `entries[0]` 을 건넸으므로,
 상수만 2 로 올리면 종목 둘인 시장이 **승인되면서 두 번째 선택을 조용히 버렸다**.
 
 바꾼 자리는 넷이다: worker 승격, dispatch 주기, `ResultAuthority`, 읽기 전용 projection.
@@ -2053,10 +2056,10 @@ func (authority strategyProposalMarketAuthority) dispatchHandoff() strategyDispa
 | 시험 | 무엇을 고정하나 |
 |---|---|
 | `TestTheSingleProposalAssumptionLivesOnlyWhereTheCensusSaysItDoes` | 그 가정이 적혀 있어도 되는 파일과 그 개수. 측정값이다 — 처음 손으로 쓴 4 를 도구가 5 로 정정했다 |
-| `TestTheCoordinatorAndHandoffSeamsHoldNoMutationCapability` | seam 두 파일이 execgw·journal·orderintent 를 들여오지 않고, 같은 패키지 안의 dispatch cycle/gateway/first-leg 타입 이름도 갖지 않는다 |
+| ~~`TestTheCoordinatorAndHandoffSeamsHoldNoMutationCapability`~~ | ~~seam 두 파일이 execgw·journal·orderintent 를 들여오지 않는다~~ **[5.5-fix 에서 `TestTheSeamFilesStayWithinTheirDeclaredClosure` 로 개명. 옛 이름은 거짓이었다 — 함수형 필드로 세탁한 능력은 못 잡는다]** |
 | `TestTheWorkerBuilderOnlyObservesThroughTheGateway` | worker 승격 본문에서 `gateway.` 로 시작하는 호출은 전부 `Observe` 로 시작한다 |
-| `TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch` | `.dispatch(` 생산 호출 자리는 정확히 하나이고, 그 자리에 넘어가는 값은 `handoff.result` 다 |
-| `TestNoProductionSiteReadsAHandoffWithoutAskingWhetherItWasAdmitted` | handoff 값을 읽는 함수는 반드시 `Admitted()` 를 부른다 |
+| `TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch` | `.dispatch(` 생산 호출 자리는 정확히 하나 **[5.5-fix 정정: 넘어가는 값의 조건이 `handoff.result` 라는 철자에서 "경계가 묶어 준 이름"으로 바뀌었다]** |
+| ~~`TestNoProductionSiteReadsAHandoffWithoutAskingWhetherItWasAdmitted`~~ | ~~handoff 값을 읽는 함수는 반드시 `Admitted()` 를 부른다~~ **[삭제됨 — 5.5-fix. 이 시험은 "불렀는지"만 보았고 세 가지 철자로 우회됐다]** |
 | `TestEveryMarketAuthorityCarryingEntriesAlsoReportsReady` | handoff 에 새로 생긴 준비 상태 검사가 **거부하게 될 정상 입력이 없다**는 근거 |
 
 ### 뮤테이션 — 하나가 살아남았고, 그것이 시험 하나를 더 만들었다
@@ -2069,7 +2072,7 @@ func (authority strategyProposalMarketAuthority) dispatchHandoff() strategyDispa
 | M4 | 거절할 때 `pending` 을 비운다 | KILLED | `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff` |
 | M6 | dispatch 호출 자리를 하나 더 만든다 | KILLED | `TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch` |
 | M7 | worker 승격 본문에서 `PlaceClaimedStrategy` 를 부른다 | KILLED | `TestTheWorkerBuilderOnlyObservesThroughTheGateway` |
-| M8 | seam 파일에 execgw import 를 넣는다 | KILLED | `TestTheCoordinatorAndHandoffSeamsHoldNoMutationCapability` |
+| M8 | seam 파일에 execgw import 를 넣는다 | KILLED | `TestTheSeamFilesStayWithinTheirDeclaredClosure`(당시 이름 `…HoldNoMutationCapability`) |
 | M9 | projection 에 옛 사본을 되살린다 | KILLED | `TestTheSingleProposalAssumptionLivesOnlyWhereTheCensusSaysItDoes` |
 | M10 | 항목을 담은 채 `Ready:false` 인 시장 권한을 만든다 | KILLED | `TestEveryMarketAuthorityCarryingEntriesAlsoReportsReady` |
 | M5 | worker 승격에서 `!handoff.Admitted()` 를 지운다 | **처음 SURVIVED** → 아래 |
@@ -2201,7 +2204,7 @@ ModifyOrder + 조건부 주문 3종)이 통째로 빠져 있었고, 더 나쁜 �
 
 | ID | 뮤테이션 | 판정 | 죽인 시험 |
 |---|---|---|---|
-| M1 | seam 파일이 `officialBroker` 를 손에 쥔다(**리뷰어가 시연한 그 우회**) | KILLED | `TestTheCoordinatorAndHandoffSeamsHoldNoMutationCapability` — 5.5 판본에서는 **통과했다** |
+| P1a-M1 | seam 파일이 `officialBroker` 를 손에 쥔다(**리뷰어가 시연한 그 우회**) | KILLED | `TestTheSeamFilesStayWithinTheirDeclaredClosure`(당시 이름 `…HoldNoMutationCapability`) — 5.5 판본에서는 **통과했다** |
 | M2 | seam 파일이 `internal/journal` 을 들여온다 | KILLED | 같은 시험(허용 목록) |
 | M3 | `dispatch` 를 메서드 값으로 꺼내 둔다 | KILLED | `TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch` |
 | M4 | 경계가 묶어 주지 않은 이름을 dispatch 에 넘긴다 | KILLED | 같은 시험 |
@@ -2242,8 +2245,8 @@ M1 과 M5 가 이 로트의 요점이다. **둘 다 5.5 판본에서는 통과�
 | `make lint` (gofmt + vet 양쪽 태그) | PASS |
 | `make sdd-check` | PASS |
 | `make validate` | PASS |
-| engine 태그 스위트 | PASS, 73.9% (2912/3941) |
-| engine 무태그 스위트 | PASS, 63.5~63.6% (2498~2502 of 3936, 5회 측정) |
+| engine 태그 스위트 | PASS, 73.9% — **표본 하나였다**. 아래 5.5-fix2 에서 3회 재측정해 2912·2909·2909 of 3941(73.8~73.9%)로 정정한다 |
+| engine 무태그 스위트 | PASS, 63.5~63.6% (2498~2502 of 3936, 5회 측정) — 5.5-fix2 재측정은 2498~2501, 즉 63.5% 한 자리다 |
 | `internal/strategyhandoff` | PASS, 11 시험 |
 | `check_analysis` | evidence complete |
 | 인용 좌표 검증(이 로트가 만진 4 파일) | 미확인 0 |
@@ -2254,6 +2257,123 @@ M1 과 M5 가 이 로트의 요점이다. **둘 다 5.5 판본에서는 통과�
 
 - `HANDOFF_NO_SELECTION` 도달 불가, `HANDOFF_MARKET_CLOSED` 가 여덟 사유를 뭉치는 것.
 - `Refusal()`·`Pending()` 을 읽는 생산 코드가 아직 없다 — 태스크 7.3.
-- 이 change 의 다른 여덟 번들이 `Pinned revision: current` 라고 하면서 `source_sha256` 이
-  뒤처져 있다(이 로트가 만든 것이 아니고 만지지도 않았다).
+- ~~이 change 의 다른 여덟 번들이 `Pinned revision: current` 라고 하면서 `source_sha256` 이
+  뒤처져 있다.~~ **[정정 2026-08-31: 거꾸로였다. 130 개 번들을 세어 보니 stale 은 14 개이고
+  그 14 개는 **전부 base revision 을 선언한다**. `current` 라면서 stale 인 번들은 0 개다.
+  세지 않고 적었다.]**
 - 골든을 한국어로 의역한 자리들 — 이 로트가 만진 문서에서는 원문으로 바꿨다.
+
+## L5 5.5-fix2 — 재검토가 P1 다섯을 더 찾았고, 뿌리는 하나였다 (2026-08-31)
+
+계약대로 같은 리뷰어 셋이 `eb072255` 를 read-only 로 재검토했다. **P0 없음.** 동작은
+안전했다 — 진리표 8행이 fix 전후 바이트 동일, 시장당 주문 최대 1건, 5.5-fix 의 P1-1
+(상한 함정)은 `Capacity=2` 에서 주문 0 으로 **닫힌 것이 확인됐다**.
+
+그런데 P1-2(가드)와 P1-3(능력 폐쇄)은 닫히지 않았다. 리뷰어 B 가 다섯 우회를 시연했고
+**전부 두 스위트가 초록이었다**. 리뷰어 A·C 도 그중 하나(경계 탈출)를 각자 독립으로 찾았다.
+
+### 뚫린 다섯과, 그 다섯이 같은 병이라는 것
+
+| | 우회 | 왜 통과했나 |
+|---|---|---|
+| B-1 | `if !handedOff { }` — 관문을 지우고 조건만 남긴다 | 검사가 "답이 어떤 if 조건에 나오는가"만 물었다. 게다가 더 강한 `switch` 형태를 **거부**했다 |
+| B-2 | `var result, _ = …Single()` | 검사가 `*ast.AssignStmt` 만 보았다. **같은 지적을 두 번 받고도 안 고쳤다** |
+| B-3 | 묶인 이름을 `entries` 에서 다시 덮어쓴다 | 이름은 맞고 값이 원본이다. 이름 검사로는 볼 수 없다 |
+| B-4 | `func Escape(h Handoff) Result` | 검사가 **메서드**만 보았다. `Into(dst *Result)`·`Any() any`·`map[int]Result`도 통과 |
+| B-5 | `run func() error` 에 `*officialBroker` 를 클로저로 담는다 | 고정점 계산이 `TypeSpec` 의 타입 표현식만 본다. import 0, 이름 0 으로 보호 손절 취소 |
+
+B-1 과 B-3 을 합치면 한 편집으로 `Capacity`·거절 이름 셋이 모두 우회되고 상한 초과 시장이
+마지막 가족의 제안을 dispatch 한다.
+
+**뿌리는 하나다: 값·역할을 물어야 할 자리에 이름·철자를 물었다.** 실제로 닫혀 있던 것들은
+전부 타입이나 패키지 경계가 막은 것이었다(`p.dispatchHandoff().result` 는 컴파일이 안 된다).
+
+### 무엇을 했나
+
+가드를 더 쓰지 않았다. **검사가 필요 없게 만들거나, 열거가 아닌 사실로 바꿨다.**
+
+1. **dispatch 경로에서 답을 없앴다.** `Handoff.Deliver(func(strategyflow.Result) error) error`.
+   몸통이 도는지는 경계가 정한다 — 이 함수에 무시할 boolean 이 없다. B-1·B-2 가 여기서 끝난다.
+2. **`entries` 식별자를 소비자 넷의 본문에서 금지했다.** Go 에서 비공개 필드를 읽는 철자는
+   그 이름 하나뿐이고 `reflect` 로도 값을 꺼낼 수 없다(`Field(i).Interface()` 는 패닉한다).
+   그래서 이 금지는 열거가 아니라 **완전한 사실**이다. 양성 대조로 어댑터가 실제로
+   `entries` 를 읽는 것을 확인한다 — 안 읽으면 스캔이 고장난 것이다. B-3 이 여기서 끝난다.
+3. **패키지의 공개 표면 전체를 이름과 서명까지 고정했다**(`exportedSurface`). 모양을 세지
+   않는다 — 새 탈출구는 예외 없이 새 공개 이름을 요구하므로 표와 어긋난다. B-4 가 끝난다.
+4. **B-5 는 고치지 않고 주장을 철회했다.** 같은 패키지 안에서는 이 성질을 시험으로 배제할
+   수 없다. 시험 이름을 `TestTheCoordinatorAndHandoffSeamsHoldNoMutationCapability` 에서
+   `TestTheSeamFilesStayWithinTheirDeclaredClosure` 로 바꿨다 — 옛 이름은 거짓이었다.
+   무엇이 결정적이고(파일 단위 import 허용 목록) 무엇이 부분적인지(계산된 능력 타입)를
+   주석에 적었다. 정말 필요한 자리는 이미 패키지 밖으로 옮겨져 있다.
+5. **`Refusal()` 과 `Single()` 이 한 술어(`refusalNow`)를 쓴다.** 5.5-fix 는 둘이 갈라져서,
+   상한을 올리면 주문은 안 나가는데 이름은 "승인"이라고 보고했다. 그 상태에 `OverCarried`
+   라는 이름을 줬다 — 무명 fail-closed 는 이 change 가 없애려던 것과 같은 모양이다.
+6. **좌표 검사기를 역할까지 보게 고쳤다.** 앞선 판본은 "그 좌표가 AST 어딘가에 있는가"만
+   물었고, 그래서 projection 번들의 `Exact AST return positions: 155:2` 를 통과시켰다 —
+   155:2 는 반환이 아니라 **함수의 end 위치**로 존재했다. 존재 검사가 역할 검사 자리에
+   서 있었던 것이고, 그것이 위의 다섯과 정확히 같은 병이다. 새 검사기는 반환·분기·호출
+   표를 각각의 역할로 대조하고 `파일.go:줄` 인용까지 본다. 돌리자마자 리뷰어 C 가 손으로
+   찾은 두 좌표를 **그대로** 재현했고(`155:2`, `a112_dispatch_handoff_test.go:112`),
+   고친 뒤에는 이 로트가 새로 만든 오류 하나(B4 분기 위치)도 잡았다.
+
+### 반증 실측 — 13 중 12 KILLED
+
+| ID | 뮤테이션 | 판정 | 죽인 시험 |
+|---|---|---|---|
+| P1b-B1 | `Deliver` 를 `Single()` 로 되돌리고 관문을 빈 `if` 로 | KILLED | `TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer`(묶는 자리 3→4) |
+| P1b-B2 | `var result, _ = …Single()` | KILLED | 같은 시험 |
+| P1b-B3 | `result` 를 `entries` 마지막 값으로 덮어쓴다 | KILLED | `TestSeamConsumersCannotReadTheRawEntryListAgain` |
+| P1b-B4 | `func Escape(h Handoff) Result` | KILLED | `TestThePackageExposesExactlyTheSurfaceTheSeamNeeds` |
+| P1b-B5 | `func() error` 로 능력 세탁 | **SURVIVED** | — 위 4번에서 주장을 철회했다. 숨기지 않는다 |
+| P1b-R1 | seam 파일이 `officialBroker` 를 쥔다 | KILLED | `TestTheSeamFilesStayWithinTheirDeclaredClosure` |
+| P1b-R2 | seam 파일이 `internal/journal` 을 들여온다 | KILLED | 같은 시험 |
+| P1b-R3 | 어댑터가 첫 항목만 싣는다 | KILLED | `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff` |
+| P1b-R4 | 어댑터가 준비 상태를 안 본다 | KILLED | `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached` |
+| P1b-R5 | `Refusal()` 이 `Single()` 과 갈라진다 | KILLED | `TestARaisedCapacityHandsOffNothing…` |
+| P1b-R6 | `Deliver` 가 거절을 무시한다 | KILLED | `TestDeliverRunsTheBodyOnlyWhenSomethingCrossedTheSeam` |
+| P1b-R7 | 시장 권한을 위치 인자 리터럴로 만든다 | KILLED | `TestEveryMarketAuthorityCarryingEntriesAlsoReportsReady` |
+| P1b-B4b | `Single` 이 bool 을 뗀다 | KILLED | 컴파일 실패 + 표면 표 |
+
+원복은 `try/finally` 안에서 하고 sha256 으로 대조했다(`unrestored_files: []`, `leftover_files: []`).
+
+### 리뷰어 C 가 잡은 증거 오류 — 전부 정정
+
+| 주장 | 실측 |
+|---|---|
+| 인용 좌표 미확인 0 | **거짓**. 둘 틀렸다. 검사기가 역할을 안 봤다(위 6번) |
+| 태그 2912/3941, "안정적" | **2912·2909·2909** — 태그도 흔들린다. 표본을 안정값으로 적었다 |
+| 무태그 2498~2502 (63.5~63.6%) | 재측정 **2498·2498·2499·2500·2501** = 63.5% 한 자리 |
+| "다른 여덟 번들이 current 인데 stale" | **0 건**. stale 14 개는 전부 base 선언. 세지 않고 적었다 |
+| "주석·review.md·커밋 메시지 셋 다" | **둘**. `8a161fc8` 메시지에는 그 문장이 없다 |
+| 5.5 절의 코드 블록·시험 표 두 행 | 지금 트리에 없는 이름들. 취소선과 함께 표시 |
+| `tasks.md` "only inside that package" | 여섯 중 둘은 아직 engine 안(다섯 자리). 문장을 정밀화 |
+| 가드 시험 안의 골든 한국어 의역 | 원문 병기로 교체 |
+| `reflect.TypeOf` 가 "값을 만들지 않는다" | 영값을 **만든다**. 실질 주장(채워서 넣는 시험이 없다)은 유지 |
+| 뮤테이션 ID 충돌(12 아래 14 개) | 이 로트는 `P1b-` 접두사로 분리 |
+
+### 실측
+
+| | |
+|---|---|
+| `make test` / `make test-seams` / `make lint` / `make sdd-sync` | PASS |
+| `make sdd-check` / `openspec validate` | a117 중복 스텁(병행 세션)에서만 실패. 그 스텁을 치우면 tracker current, 59/59 |
+| engine 태그 스위트 | PASS, **73.8~73.9%** (2912·2909·2909 of 3941, 3회) |
+| engine 무태그 스위트 | PASS, **63.5%** (2498·2498·2499·2500·2501 of 3936, 5회) |
+| `internal/strategyhandoff` | PASS, 17 시험 |
+| `check_analysis` | evidence complete |
+| 역할 대조 좌표 검증(4 번들) | 문제 0 / 반환 18 · 분기 40 · 호출 54 · 파일:줄 11 |
+| 뮤테이션 | 13 중 12 KILLED, 1 은 철회한 주장 |
+
+`make test` 가 한 번 네 개 실패했는데 원인은 코드가 아니라 **트리**였다: 적대 리뷰어를
+`.claude/worktrees/` 안에서 돌렸더니 저장소를 훑는 정적 검사 넷이 코드베이스 사본 셋을
+더 보았다. 워크트리를 지우고 다시 돌려 통과했다.
+
+### 남긴 것
+
+- **B-5(같은 패키지 능력 세탁)**: 시험으로 배제할 수 없다. 남은 어댑터 한 함수마저
+  `internal/strategyhandoff` 로 옮기면 import 폐쇄가 결정적이 되지만, 그것은
+  `strategyProposalMarketAuthority` 를 패키지 밖으로 노출하는 설계 변경이라 L6/5.2 의 몫이다.
+- `HANDOFF_NO_SELECTION` 도달 불가, `HANDOFF_MARKET_CLOSED` 가 여덟 사유를 뭉치는 것 —
+  `Admit(ready bool, …)` 이 bool 만 받으므로 개명은 이제 서명 변경을 요구한다(7.3).
+- `Refusal()`·`Pending()` 을 읽는 생산 코드가 아직 없다(7.3).
+- 이 로트도 재검토를 받아야 한다.

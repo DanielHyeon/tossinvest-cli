@@ -1,9 +1,9 @@
 # Function Logic Map: `NewRefreshingPairedStrategyEntrySupervisor`
 
 - Source: `internal/app/engine/strategy_entry_supervisor.go`
-- Current-base source SHA-256: `12586e3cf90b708e66988931ad424d7312593bf518f0987a0893bf4f6f4b6fb9`
+- Current-base source SHA-256: `1c2432d0f49db59209fc147f57a0c68d30d15596e68642aff8356ea29b0d69d5`
 - Signature: `Context.NewRefreshingPairedStrategyEntrySupervisor(params=1, results=2)`
-- Source range: `337:1`–`361:2`
+- Source range: `338:1`–`362:2`
 - AST evidence: `ast.json`, generated from frozen base `016da6245feb60e13971388be386c2c2041469a8`.
 - Risk scan: `risk-pattern-report.md`.
 
@@ -14,25 +14,25 @@
 
 ## Branches and early returns
 
-- Exact AST return nodes: `339:3, 347:5, 355:3, 360:2`.
+- Exact AST return nodes: `340:3, 348:5, 356:3, 361:2`.
 
 | Branch | AST kind | Source location | Required test disposition |
 |---|---|---|---|
-| B1 | if | 338:2 | planned targeted RED before any edit; not run by L0 |
-| B2 | range | 342:2 | planned targeted RED before any edit; not run by L0 |
-| B3 | if | 354:2 | planned targeted RED before any edit; not run by L0 |
+| B1 | if | 339:2 | planned targeted RED before any edit; not run by L0 |
+| B2 | range | 343:2 | planned targeted RED before any edit; not run by L0 |
+| B3 | if | 355:2 | planned targeted RED before any edit; not run by L0 |
 
 ## Calls and live bindings
 
 | Callee expression | Source location | Current-base evidence/requirement |
 |---|---|---|
-| errors.New | 339:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 341:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| append | 344:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.runProductionStrategyMarketCycle | 347:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| NewStrategyEntrySupervisor | 351:21 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.strategyProjectionMu.Lock | 357:2 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.strategyProjectionMu.Unlock | 359:2 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| errors.New | 340:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| make | 342:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| append | 345:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| c.runProductionStrategyMarketCycle | 348:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| NewStrategyEntrySupervisor | 352:21 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| c.strategyProjectionMu.Lock | 358:2 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| c.strategyProjectionMu.Unlock | 360:2 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
 
 ## State mutations and fallbacks
 
