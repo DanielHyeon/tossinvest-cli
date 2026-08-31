@@ -1804,7 +1804,7 @@ M-E3 가 살아남은 것은 우연이 아니라 측정과 일치했다 — 그 
 
 | | |
 |---|---|
-| engine 태그 스위트 | PASS, 73.9% of statements |
+| engine 태그 스위트 | PASS, 73.9% of statements — **표본 하나다.** 5.5-fix2 의 3회 재측정(2912·2909·2909 of 3941)이 이 값을 73.8~73.9% 로 정정했다; 이 줄은 그때 무엇을 적었는지의 기록으로 남긴다 |
 | engine 무태그 스위트 | PASS, 63.9% of statements |
 | strategycoordinator 태그 스위트 | PASS (4GB cgroup 캡 안에서) |
 | gofmt (`$(go env GOROOT)/bin/gofmt`) | 위반 0 |
@@ -1927,7 +1927,8 @@ M-H 가 살아남던 기전은 이 저장소가 이미 기록한 것과 같다 �
 FLM 번들 아홉 개를 다시 만들었다(engine 넷 + strategyproposal 다섯). `strategyproposal` 쪽 다섯은
 본문이 안 바뀌고 const 블록이 늘어 줄만 +15 밀린 것이라 측정은 그대로 두고 위치·해시만 재기준화했으며,
 그 재기준화가 온전한지는 **md 가 인용한 모든 `줄:칸` 이 그 번들 ast.json 안에 실제로 있는지**를
-기계로 확인했다(미확인 0). engine 넷은 코드가 바뀌었으므로 커버리지를 다시 측정해 표를 다시 만들었다.
+기계로 확인했다(미확인 0)  
+> **정정(5.5-fix3):** 그 확인은 좌표의 **존재**만 봤다 — 역할은 보지 않았고, 게이트도 보지 않았다(`check_analysis.py` 의 좌표 검사는 소스 범위와 분기 개수뿐). 역할 대조는 `role_check.py` 로 들어왔다.. engine 넷은 코드가 바뀌었으므로 커버리지를 다시 측정해 표를 다시 만들었다.
 
 ## L5 5.4.3 — 사라진 제안과 없던 제안을 가른다 (2026-08-30)
 
@@ -2001,7 +2002,8 @@ FLM 번들 열하나를 갱신했다. 그중 둘은 **새로 만든 것**이고 
 `ProductionBatchAuthority.Len`(리시버 구조체에 필드가 늘어서 "수정된 기존 함수"가 되었다)과
 `productionFixture`(픽스처를 두 조각으로 쪼개면서 본문이 바뀌었다). 이 저장소가 이미
 기록한 대로 Logic Map 은 늘 계획보다 많다. 인용한 모든 `줄:칸` 이 해당 ast.json 안에
-실제로 있는지 기계로 확인했다(미확인 0).
+실제로 있는지 기계로 확인했다(미확인 0)  
+> **정정(5.5-fix3):** 그 확인은 좌표의 **존재**만 봤다 — 역할은 보지 않았고, 게이트도 보지 않았다(`check_analysis.py` 의 좌표 검사는 소스 범위와 분기 개수뿐). 역할 대조는 `role_check.py` 로 들어왔다..
 
 ## L5 5.5 — 조정자와 공유 dispatch 사이의 경계에 이름을 붙인다 (2026-08-30)
 
@@ -2096,10 +2098,10 @@ func (authority strategyProposalMarketAuthority) dispatchHandoff() strategyDispa
 | `make test` (무태그 전체) | PASS |
 | `make test-seams` (태그 전체) | PASS |
 | `make lint` (gofmt + vet 양쪽 태그) | PASS |
-| engine 태그 스위트 (커버리지) | PASS, 73.9% |
+| engine 태그 스위트 (커버리지) | PASS, 73.9% — **표본 하나다.** 5.5-fix2 의 3회 재측정(2912·2909·2909 of 3941)이 이 값을 73.8~73.9% 로 정정했다; 이 줄은 그때 무엇을 적었는지의 기록으로 남긴다 |
 | engine 무태그 스위트 | PASS, **63.4~63.5%** — 같은 바이너리·같은 트리에서 4회 측정해 2502/2502/2498/2499 of 3943 이 나왔다. 이 수는 실행마다 흔들린다(스케줄링 의존 시험이 무태그 쪽에 있다). 표본 하나를 안정된 값으로 적었던 것을 정정한다 |
 | `check_analysis` | evidence complete |
-| 인용 좌표 검증 | 미확인 0 |
+| 인용 좌표 검증 | 미확인 0 — **정정(5.5-fix3):** 이 "미확인 0" 은 좌표가 **존재하는지**만 본 결과다. 좌표가 무엇을 가리키는지는 그때 아무도 보지 않았고, 게이트도 보지 않았다. 역할 대조는 `tools/logic-map/role_check.py` 가 들어온 지금부터 성립하며, 그것을 이 저장소 401개 번들에 처음 돌렸을 때 잘린 호출 표 3개가 나왔다 |
 
 분기 귀속은 시험별 프로파일의 합이 스위트 전체와 정확히 같다(MISMATCH 0). 그 측정이 드러낸 것:
 
@@ -2249,7 +2251,7 @@ M1 과 M5 가 이 로트의 요점이다. **둘 다 5.5 판본에서는 통과�
 | engine 무태그 스위트 | PASS, 63.5~63.6% (2498~2502 of 3936, 5회 측정) — 5.5-fix2 재측정은 2498~2501, 즉 63.5% 한 자리다 |
 | `internal/strategyhandoff` | PASS, 11 시험 |
 | `check_analysis` | evidence complete |
-| 인용 좌표 검증(이 로트가 만진 4 파일) | 미확인 0 |
+| 인용 좌표 검증(이 로트가 만진 4 파일) | 미확인 0 — **정정(5.5-fix3):** 이 "미확인 0" 은 좌표가 **존재하는지**만 본 결과다. 좌표가 무엇을 가리키는지는 그때 아무도 보지 않았고, 게이트도 보지 않았다. 역할 대조는 `tools/logic-map/role_check.py` 가 들어온 지금부터 성립하며, 그것을 이 저장소 401개 번들에 처음 돌렸을 때 잘린 호출 표 3개가 나왔다 |
 | 뮤테이션 | 12/12 KILLED, `unrestored_files: []` |
 | 분기 귀속 등식 | MISMATCH 0 |
 
@@ -2359,7 +2361,7 @@ B-1 과 B-3 을 합치면 한 편집으로 `Capacity`·거절 이름 셋이 모�
 | `make sdd-check` / `openspec validate` | a117 중복 스텁(병행 세션)에서만 실패. 그 스텁을 치우면 tracker current, 59/59 |
 | engine 태그 스위트 | PASS, **73.8~73.9%** (2912·2909·2909 of 3941, 3회) |
 | engine 무태그 스위트 | PASS, **63.5%** (2498·2498·2499·2500·2501 of 3936, 5회) |
-| `internal/strategyhandoff` | PASS, 17 시험 |
+| `internal/strategyhandoff` | PASS, 17 시험 — **정정(5.5-fix3):** 그때 최상위 시험은 **16**개였다(17 은 셈 착오). fix3 이후 20개(handoff 15 · escape 2 · dependency-closure 3) |
 | `check_analysis` | evidence complete |
 | 역할 대조 좌표 검증(4 번들) | 문제 0 / 반환 18 · 분기 40 · 호출 54 · 파일:줄 11 |
 | 뮤테이션 | 13 중 12 KILLED, 1 은 철회한 주장 |
@@ -2377,3 +2379,101 @@ B-1 과 B-3 을 합치면 한 편집으로 `Capacity`·거절 이름 셋이 모�
   `Admit(ready bool, …)` 이 bool 만 받으므로 개명은 이제 서명 변경을 요구한다(7.3).
 - `Refusal()`·`Pending()` 을 읽는 생산 코드가 아직 없다(7.3).
 - 이 로트도 재검토를 받아야 한다.
+
+## 5.5-fix3 — 3라운드 적대 재검토와 그 수정
+
+### 리뷰어 셋이 같은 구멍을 세 가지 철자로 뚫었다
+
+서로를 못 보는 리뷰어 셋에게 로트 `8f8b1178` 을 read-only 로 맡겼다. **P0 0건.** A 는
+돈 경로 재작성이 행동상 동일함을 반환 집합 7행·CAS 4행 표로 확인했고
+(`Claimed || (State != "FLAT" && State != "CLOSED")`, `&&` 가 더 강하게 묶는다;
+`Proposal()` 은 순수 접근자라 단락 평가에 부작용이 없다), `deliverable == 1` 이므로
+`refusalNow` 가 옛 술어와 동치임을 보였다.
+
+**P1 은 셋 다 같은 것이었다.** 각자 `rawSelection()`, 새 파일의 `relay()`,
+Deliver 몸통 안의 `rawTailProposal()` 로 경계를 우회했고 셋 다 두 스위트가 초록이었다
+(A 630 passed / B 1323 of 1393, baseline 과 동일 / C 새 실패 0). 뿌리는 2라운드와 같다 —
+`guard_test.go:599` 가 **이름 소속**을 물었고, 같은 파일 `:667` 이 "이름을 보는 어떤 검사도
+그것을 보지 못한다"고 스스로 적어 두었다. `entries` 금지는 **네 함수의 본문**만 셌으므로
+헬퍼 하나를 한 다리 건너 두면 사라진다. 게다가 그 금지의 양성 대조가 반례였다 —
+소비자 넷은 전원 `dispatchHandoff()` 를 통해 이미 한 다리 건너 `entries` 를 읽고 있었다.
+
+### 고친 방법: 검사를 지우고 타입을 바꿨다
+
+| 무엇 | 어떻게 |
+|---|---|
+| 봉투 타입 | `strategyhandoff.Delivered` — 값 필드가 비공개. 밖에서는 영값만 만들 수 있다 |
+| dispatch 서명 | `dispatch(ctx, strategyhandoff.Delivered)` — 경계 밖 `Result` 는 **컴파일 실패** |
+| 지운 검사 | `TestSeamConsumersCannotReadTheRawEntryListAgain`, `seamConsumerFuncs`, `identMentions` 의 `entries` 금지, 호출 인자의 이름 소속 검사(`fromSeam`), `deliveredParamName` |
+| 더한 검사 | `TestOnlyTheSeamsEnvelopeCanReachTheSharedDispatch`(서명 고정), `TestExactlyOneProductionSiteAdmitsIntoTheSeam`(패키지 전체의 `Admit` 세기), `strategyhandoff` 의 `TestOnlyTheEngineImportsThisSeam`(이 경계를 들여오는 패키지 고정, 106 패키지 훑어 importer 1) |
+| 적재 미달 이름 | `refusalNow` 가 `<`/`>` 로 갈라 미달은 `HANDOFF_NO_SELECTION`. 다섯째 거절 어휘를 만들지 않는다 |
+| census 연산자 | `singleProposalAssumptionSites` 가 `value.Op` 를 읽는다. 앞 판본은 `len(x.entries) - 1` 도 "1과의 비교"로 셌다 |
+
+봉투가 증명하지 **못하는** 것을 코드와 문서에 함께 적었다: 봉투는 "dispatch 된 값이
+`Admit` 을 거쳤다"만 증명하고, 그 `Admit` 을 부른 것이 조정자였는지는 증명하지 않는다.
+그 나머지는 위의 두 세기가 맡고, 각각 **자기 범위 안에서 완전**하다(하나는 엔진 패키지
+전체의 호출, 하나는 모듈 전체의 import).
+
+### 뮤테이션
+
+| ID | 편집 | 결과 |
+|---|---|---|
+| M1 | 경계를 지나지 않은 `Result` 를 dispatch 에 넘긴다(리뷰어 셋의 공격 그대로) | KILLED — **컴파일 실패** |
+| M2 | 엔진이 스스로 `Admit` 을 불러 봉투를 만들어 넘긴다 | KILLED — `TestExactlyOneProductionSiteAdmitsIntoTheSeam` + 호출 자리 세기 |
+| M3 | 같은 봉투로 dispatch 를 3회 부른다 | **SURVIVED** |
+| M4 | 분기 표의 좌표를 같은 함수의 반환 좌표로 바꾼다(실제 a112 번들) | KILLED — `role_check` |
+| M5 | `len(entries) - 1` 산술식을 넣는다 | 세지 않음(의도대로) |
+
+원복은 `try/finally` 안에서 하고 sha256 으로 대조했다.
+
+**M3 은 남긴 것이 아니라 주장을 바꾼 것이다.** 소스 검사는 철자를 셀 뿐 실행을 세지
+않으므로 "한 주기에 한 번"은 이 가드의 성질이 아니다. 실제로 막는 것은 원장이고, 그것을
+재서 확인했다 — `TestTheSameEnvelopeCannotPlaceASecondOrder` 에서 두 번째 dispatch 는
+`AUTHORITY_COLLECTION_FAILED: production position campaign CAS changed` 로 막히고 Gateway
+주문은 1건에서 멈춘다. 위조 봉투는 Gateway **관측 0건**으로 첫 줄에서 걸린다
+(`TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall`) — 가정하지 않고 쟀다.
+
+### 게이트가 자기 증거를 못 잡던 것 — 기전을 고쳤다
+
+C 가 `check_analysis.py` 에 오류 넷을 심어 전부 통과시켰다. 그 좌표 검사는 소스 **범위**와
+분기 **개수**만 보고, 좌표가 무엇을 가리키는지는 보지 않았다. `tools/logic-map/role_check.py`
+가 그 역할을 대조하고 `check_analysis.py` 에 배선됐다.
+
+배선 **전에** 저장소의 번들 401개 전체에 돌려 쟀다: **맞는 문서에서 터진 것 0**, 진짜 결함
+3건 — 열거형 호출 표 셋이 정확히 40행에서 멈춰 있었다(실제 64·46·91). 셋 다 복구했다.
+오탐을 없애는 과정에서 규칙을 두 번 좁혔다: 표의 "AST kind" 칸은 산문이 들어오고
+(`case KindKRNetFlow → KR only`), 손으로 쓴 호출 분석 표(204개)는 한 줄이 호출 넷을 묶는다.
+그래서 **좌표만** 대조하고, 완전성을 주장하는 표(`| Callee expression | …`)만 1:1로 본다.
+`test_role_check.py` 는 역할 차원마다 오류를 하나씩 심고, 침묵해야 할 경우도 같은 수만큼
+못 박는다(12 시험).
+
+### 실측
+
+| | |
+|---|---|
+| `make lint` | PASS (gofmt 경로 확인함 — 빈 출력이 "검사 0"이 아님) |
+| `make test` | PASS, 98 패키지 ok, FAIL 0 |
+| `make test-seams` | PASS, 99 패키지 ok, FAIL 0 |
+| engine 태그 커버리지 | **73.9%** — 2914·2915·2914 of 3942 (3회) |
+| engine 무태그 커버리지 | **63.4~63.5%** — 2498·2499·2499 of 3937 (3회) |
+| `check_analysis` (a112) | evidence complete or diff-proven exempt |
+| `role_check` (저장소 404 번들) | findings 0 |
+| `tools/logic-map` 단위 시험 | 46 PASS |
+| `make sdd-test` | scripts 15 · logic-map 46 · sdd 29 · sdd-history 22 PASS; pm 만 1 실패 — 그 실패도 아래 a117 스텁이 원인이다(`duplicate numbered change a117`) |
+| `make sdd-sync` | PASS (GBrain advisory busy — 이전 신선도 유지) |
+| `make sdd-check` | **FAIL — 이 로트 밖의 원인**: 병행 Codex 세션의 untracked 중복 `a117-codex-session-handoff-and-gbrain-startup` 스텁. 그 세션이 번호를 다시 매겨야 한다(빈 번호 104·105·106·119·120) |
+| `make gate CHANGE=a112…` | **not-applicable** — 이것은 change 전체의 완료 게이트이고 a112 는 L1~L8 에 미완료 44건이 남아 진행 중이다. 2/10 단계에서 멈춘다. 로트 단위 검증은 위 항목들이다 |
+| `openspec validate a112… --strict` | **valid** |
+| `make validate` (`--all --strict`) | 59 passed / 1 failed — 실패는 위와 같은 a117 스텁 하나뿐 |
+
+### 남긴 것
+
+- **`Refusal()`·`Pending()` 의 생산 독자는 여전히 0.** 네 `HANDOFF_*` 이름이 운영자
+  화면에서는 `RefusalEvidenceStale` 하나로 접히므로, 지금 상태는 소스에서만 이름이 있고
+  운영에서는 **틀린 이름으로** 보고된다. 배선하지 않기로 했다 — 배선하면 동결 골든의
+  `refusal_enums` 에 없는 거절 어휘를 영수증 없이 늘리게 되고, 그것은 5.2/7.3 의 몫이다.
+  범위를 "소스에서 명명했다"로 좁혀 여기 남긴다.
+- **B-5(같은 패키지 능력 세탁)**: 2라운드에서 철회한 그대로. 어댑터 `dispatchHandoff` 가
+  아직 엔진 안에 있어서 import 폐쇄가 결정적이지 않다.
+- `ErrNoDelivery` 는 시장을 잠글 수 있으나 현재 도달 불가이고 문서화되지 않았다(7.3).
+- 이 로트도 재검토를 받아야 한다 — 세 라운드 연속 같은 뿌리에서 P1 이 나왔다.

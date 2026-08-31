@@ -14,73 +14,74 @@
 
 ## Branches and early returns
 
-- Exact AST return nodes: `56:3, 59:3, 65:3, 71:3, 75:3, 79:3, 83:3, 87:3, 91:3, 98:3, 104:3, 117:3, 123:3, 127:3, 129:2, 136:4`.
+- Exact AST return nodes: `67:3, 70:3, 76:3, 82:3, 86:3, 90:3, 94:3, 98:3, 102:3, 109:3, 115:3, 128:3, 134:3, 138:3, 140:2, 147:4`.
 
 | Branch | AST kind | Source location | Required test disposition |
 |---|---|---|---|
-| B1 | if | 55:2 | planned targeted RED before any edit; not run by L0 |
-| B2 | if | 58:2 | planned targeted RED before any edit; not run by L0 |
-| B3 | if | 63:2 | planned targeted RED before any edit; not run by L0 |
-| B4 | if | 70:2 | planned targeted RED before any edit; not run by L0 |
-| B5 | if | 74:2 | planned targeted RED before any edit; not run by L0 |
-| B6 | if | 78:2 | planned targeted RED before any edit; not run by L0 |
-| B7 | if | 82:2 | planned targeted RED before any edit; not run by L0 |
-| B8 | if | 86:2 | planned targeted RED before any edit; not run by L0 |
-| B9 | if | 90:2 | planned targeted RED before any edit; not run by L0 |
-| B10 | if | 97:2 | planned targeted RED before any edit; not run by L0 |
-| B11 | if | 103:2 | planned targeted RED before any edit; not run by L0 |
-| B12 | if | 116:2 | planned targeted RED before any edit; not run by L0 |
-| B13 | if | 122:2 | planned targeted RED before any edit; not run by L0 |
-| B14 | if | 126:2 | planned targeted RED before any edit; not run by L0 |
+| B1 | if | 66:2 | planned targeted RED before any edit; not run by L0 |
+| B2 | if | 69:2 | planned targeted RED before any edit; not run by L0 |
+| B3 | if | 74:2 | planned targeted RED before any edit; not run by L0 |
+| B4 | if | 81:2 | planned targeted RED before any edit; not run by L0 |
+| B5 | if | 85:2 | planned targeted RED before any edit; not run by L0 |
+| B6 | if | 89:2 | planned targeted RED before any edit; not run by L0 |
+| B7 | if | 93:2 | planned targeted RED before any edit; not run by L0 |
+| B8 | if | 97:2 | planned targeted RED before any edit; not run by L0 |
+| B9 | if | 101:2 | planned targeted RED before any edit; not run by L0 |
+| B10 | if | 108:2 | planned targeted RED before any edit; not run by L0 |
+| B11 | if | 114:2 | planned targeted RED before any edit; not run by L0 |
+| B12 | if | 127:2 | planned targeted RED before any edit; not run by L0 |
+| B13 | if | 133:2 | planned targeted RED before any edit; not run by L0 |
+| B14 | if | 137:2 | planned targeted RED before any edit; not run by L0 |
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Current-base evidence/requirement |
-|---|---|---|
-| validateStrategyFirstLegResult | 54:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 56:28 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 59:28 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| StrategyMarket | 61:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| cycle.schedule.forMarket | 62:18 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| cycle.fx.forMarket | 62:52 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 65:28 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strategyFirstLegPlaceIntent | 70:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| cycle.gateway.ObserveStrategyProtection | 73:21 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.ToLower | 73:66 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| string | 73:82 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| cycle.gateway.ObserveStrategyEntryGate | 77:25 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.ToLower | 77:69 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| string | 77:85 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| cycle.dispatchOwner | 81:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| cycle.firstLeg.admit | 85:14 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 87:28 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| cycle.journal.LookupDecision | 89:19 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 91:28 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| uint64 | 95:24 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| bundle.Generation | 96:20 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| cycle.risk.forMarket | 96:20 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 98:28 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| schedule.restore.Activation.Generation | 100:26 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| schedule.restore.Activation.ExpiresAt | 101:25 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| activationExpiresAt.IsZero | 103:34 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| now.IsZero | 103:66 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| now.Before | 103:83 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 104:28 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| journal.StrategyDispatchMarket | 106:63 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| protection.Generation | 109:25 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strconv.FormatUint | 109:68 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| protection.Generation | 109:87 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| protection.Digest | 109:135 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| reconciliation.Generation | 110:29 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| reconciliation.Digest | 110:80 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strategyRuntimeBuildDigest | 111:94 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| min | 112:9 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| activationExpiresAt.Sub | 112:29 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| cycle.journal.IssueVerifiedFirstLegStrategyDispatchLease | 113:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| cycle.journal.ClaimStrategyDispatchLease | 119:18 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strategyFirstLegPlaceIntent | 125:17 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| cycle.gateway.PlaceClaimedStrategy | 129:9 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| cycle.revalidateSchedule | 136:11 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| Callee expression | Position |
+|---|---|
+| `delivered.Result` | 64:12 |
+| `validateStrategyFirstLegResult` | 65:23 |
+| `errors.New` | 67:28 |
+| `errors.New` | 70:28 |
+| `StrategyMarket` | 72:12 |
+| `cycle.schedule.forMarket` | 73:18 |
+| `cycle.fx.forMarket` | 73:52 |
+| `errors.New` | 76:28 |
+| `strategyFirstLegPlaceIntent` | 81:15 |
+| `cycle.gateway.ObserveStrategyProtection` | 84:21 |
+| `strings.ToLower` | 84:66 |
+| `string` | 84:82 |
+| `cycle.gateway.ObserveStrategyEntryGate` | 88:25 |
+| `strings.ToLower` | 88:69 |
+| `string` | 88:85 |
+| `cycle.dispatchOwner` | 92:16 |
+| `cycle.firstLeg.admit` | 96:14 |
+| `fmt.Errorf` | 98:28 |
+| `cycle.journal.LookupDecision` | 100:19 |
+| `errors.New` | 102:28 |
+| `uint64` | 106:24 |
+| `bundle.Generation` | 107:20 |
+| `cycle.risk.forMarket` | 107:20 |
+| `errors.New` | 109:28 |
+| `schedule.restore.Activation.Generation` | 111:26 |
+| `schedule.restore.Activation.ExpiresAt` | 112:25 |
+| `activationExpiresAt.IsZero` | 114:34 |
+| `now.IsZero` | 114:66 |
+| `now.Before` | 114:83 |
+| `errors.New` | 115:28 |
+| `journal.StrategyDispatchMarket` | 117:63 |
+| `protection.Generation` | 120:25 |
+| `strconv.FormatUint` | 120:68 |
+| `protection.Generation` | 120:87 |
+| `protection.Digest` | 120:135 |
+| `reconciliation.Generation` | 121:29 |
+| `reconciliation.Digest` | 121:80 |
+| `strategyRuntimeBuildDigest` | 122:94 |
+| `min` | 123:9 |
+| `activationExpiresAt.Sub` | 123:29 |
+| `cycle.journal.IssueVerifiedFirstLegStrategyDispatchLease` | 124:16 |
+| `cycle.journal.ClaimStrategyDispatchLease` | 130:18 |
+| `strategyFirstLegPlaceIntent` | 136:17 |
+| `cycle.gateway.PlaceClaimedStrategy` | 140:9 |
+| `cycle.revalidateSchedule` | 147:11 |
 
 ## State mutations and fallbacks
 

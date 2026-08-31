@@ -12,7 +12,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff"
 )
 
 type strategyDispatchGateway interface {
@@ -50,7 +50,18 @@ func newStrategyDispatchCycle(jrn *journal.Journal, gateway strategyDispatchGate
 	return &strategyDispatchCycle{journal: jrn, gateway: gateway, firstLeg: firstLeg, schedule: schedule, fx: fx, risk: risk, owner: owner}
 }
 
-func (cycle *strategyDispatchCycle) dispatch(ctx context.Context, result strategyflow.Result) (execgw.Outcome, error) {
+// dispatch 는 봉투에 담겨 온 값만 받는다.
+//
+// 인자가 strategyflow.Result 가 아니라 strategyhandoff.Delivered 인 것이
+// 요점이다. 경계를 지나지 않은 Result 를 여기 넘기는 편집은 **컴파일되지
+// 않는다** — 앞선 세 라운드의 적대 리뷰가 뚫은 세 철자(rawSelection, relay,
+// rawTailProposal)가 전부 그 자리에서 멈춘다. 이름을 보는 검사가 아니라
+// 서명이 막으므로 새 철자를 만들 여지가 없다.
+//
+// 밖에서 만든 영값 봉투는 아래 첫 줄에서 걸린다 — 그 성질은 가정이 아니라
+// TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall 이 값으로 확인한다.
+func (cycle *strategyDispatchCycle) dispatch(ctx context.Context, delivered strategyhandoff.Delivered) (execgw.Outcome, error) {
+	result := delivered.Result()
 	accepted, refusal := validateStrategyFirstLegResult(result)
 	if refusal.Code != "" {
 		return execgw.Outcome{}, errors.New(refusal.Detail)

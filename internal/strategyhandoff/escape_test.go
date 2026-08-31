@@ -38,6 +38,10 @@ var exportedSurface = map[string]string{
 	"OverCarried":   "const",
 	"ErrNoDelivery": "var",
 	"Handoff":       "type",
+	// Delivered 는 이 경계를 지나온 값의 봉투다. 필드가 비공개라서 밖에서는
+	// 영값밖에 만들 수 없고, 그것이 이 타입의 전부다 — 값을 넣는 공개 문은
+	// 아래 표에 없다. Deliver 만이 채운 봉투를 만든다.
+	"Delivered": "type",
 
 	"Admit": "func(ready bool, selected []strategyflow.Result) Handoff",
 
@@ -46,7 +50,9 @@ var exportedSurface = map[string]string{
 	// 값이 나가는 두 문. 서명까지 고정한다 — Single 이 bool 을 떼거나
 	// Deliver 가 몸통 대신 값을 돌려주면 이 표가 깨진다.
 	"Handoff.Single":  "func() (strategyflow.Result, bool)",
-	"Handoff.Deliver": "func(to func(strategyflow.Result) error) error",
+	"Handoff.Deliver": "func(to func(Delivered) error) error",
+	// 봉투에서 값을 꺼내는 유일한 문. 채우는 문은 없다.
+	"Delivered.Result": "func() strategyflow.Result",
 }
 
 func TestThePackageExposesExactlyTheSurfaceTheSeamNeeds(t *testing.T) {

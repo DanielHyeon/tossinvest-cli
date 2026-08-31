@@ -17,7 +17,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff"
 )
 
 // StrategyEntryLoopName is the single outer runtime loop which owns both market
@@ -436,11 +436,13 @@ func (c *Context) runProductionStrategyMarketCycle(ctx context.Context, clk cloc
 	// 통과시켰다 — 답을 "썼는지" 보는 검사는 답이 무엇을 막는지 보지 못한다.
 	// Deliver 에서는 몸통이 도는지 마는지를 이 함수가 정하지 않는다.
 	//
-	// 몸통이 받는 result 는 경계가 건넨 값이다. 그 값을 다른 것으로 바꿔치는
-	// 편집은 `entries` 를 다시 읽어야 하고, 그 철자는
-	// TestSeamConsumersCannotReadTheRawEntryListAgain 이 막는다.
-	return fresh.proposals.forMarket(market).dispatchHandoff().Deliver(func(result strategyflow.Result) error {
-		lineage := result.Lineage
+	// 몸통이 받는 delivered 는 경계가 채운 봉투다. 그 값을 다른 것으로 바꿔치는
+	// 편집은 이제 검사가 아니라 **서명**이 막는다 — dispatch 는 봉투만 받고,
+	// 봉투의 값 필드는 strategyhandoff 밖에서 채울 수 없다. 앞 판본은 이 자리를
+	// `entries` 라는 토큰을 세어 지켰고, 적대 리뷰가 헬퍼 함수 하나로 세 번
+	// 우회했다. 토큰 금지는 함수 본문 단위라서 한 다리만 건너면 사라진다.
+	return fresh.proposals.forMarket(market).dispatchHandoff().Deliver(func(delivered strategyhandoff.Delivered) error {
+		lineage := delivered.Result().Lineage
 		cas, err := c.Journal.CurrentPositionCampaignCAS(ctx, lineage.AccountRef, string(lineage.Market), lineage.Symbol)
 		if err != nil {
 			return err
@@ -448,7 +450,7 @@ func (c *Context) runProductionStrategyMarketCycle(ctx context.Context, clk cloc
 		if cas.Claimed || cas.State != "FLAT" && cas.State != "CLOSED" {
 			return nil
 		}
-		_, err = fresh.dispatch.dispatch(ctx, result)
+		_, err = fresh.dispatch.dispatch(ctx, delivered)
 		if errors.Is(err, journal.ErrStrategyDispatchLeaseConsumed) {
 			return nil
 		}

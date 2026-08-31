@@ -12,6 +12,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from role_check import role_errors
+
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = (
     "ast.json",
@@ -449,6 +451,11 @@ def validate_target(
             f"from the AST {sorted(unexpected)}"
         )
     errors.extend(coordinate_errors(target.name, texts, value, branches))
+    # 좌표의 **역할**은 위의 검사가 보지 않는다. 범위와 개수만 맞으면 분기 표에
+    # 분기가 아닌 좌표를 적어도, 호출 표를 40행에서 잘라도 통과했다 — a112 3라운드
+    # 적대 리뷰가 그 구멍에 오류 넷을 심어 전부 통과시켰고, 저장소의 열거형 호출 표
+    # 세 개가 실제로 잘려 있었다.
+    errors.extend(role_errors(target.name, logic, value))
     errors.extend(
         test_citation_errors(
             target.name,

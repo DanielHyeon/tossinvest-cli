@@ -1,9 +1,9 @@
 # Function Logic Map: `Context.runProductionStrategyMarketCycle`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (422-457)
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (422-459)
 - Function: `Context.runProductionStrategyMarketCycle` in package `engine`
 - Signature: `Context.runProductionStrategyMarketCycle(params=3, results=1)`
-- File SHA-256: `1c2432d0f49db59209fc147f57a0c68d30d15596e68642aff8356ea29b0d69d5`
+- File SHA-256: `4e457c677157b2f8c73f813f8250575657b6beedddc1ad467db209a35579986d`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 5.
 - Risk scan: `risk-pattern-report.md`.
@@ -17,12 +17,24 @@
 
 적대 리뷰가 `Single()` 판본을 뚫었기 때문이다: 답을 받아 놓고 `if !handedOff { }` 처럼
 아무것도 안 하는 조건에 넣으면 관문은 사라지는데 "답을 썼는지" 보는 검사는 통과했고,
-두 스위트가 모두 초록이었다. 지금은 `Deliver(func(strategyflow.Result) error)` 를 쓴다 —
-**무시할 수 있는 boolean 이 이 함수에 없다.** 몸통이 도는지 마는지는 경계가 정한다.
+두 스위트가 모두 초록이었다. 지금은 `Deliver` 를 쓴다 — **무시할 수 있는 boolean 이 이
+함수에 없다.** 몸통이 도는지 마는지는 경계가 정한다.
 
-몸통이 받는 `result` 를 원본 목록의 값으로 바꿔치는 편집도 리뷰가 시연했다. 그것은
-`entries` 를 다시 읽어야 하고, Go 에서 비공개 필드를 읽는 철자는 그 이름 하나뿐이므로
-`TestSeamConsumersCannotReadTheRawEntryListAgain` 의 금지는 열거가 아니라 완전하다.
+**5.5-fix3 은 몸통이 받는 값의 타입을 바꿨다.** fix2 의 판본은 몸통이
+`strategyflow.Result` 를 받았고, 그 값을 원본 목록의 것으로 바꿔치는 편집을 `entries`
+라는 토큰 금지로 막았다. 3라운드 적대 리뷰어 셋이 각자 그 금지를 우회했다 —
+`rawSelection()`, 새 파일의 `relay()`, 몸통 안의 `rawTailProposal()`. **토큰 금지는 네
+함수의 본문 안에서만 셌기 때문에 헬퍼 하나를 한 다리 건너 두면 사라졌다.** 그리고 그
+금지의 양성 대조 자체가 반례였다: 소비자 넷은 전원 `dispatchHandoff()` 를 통해 이미 한
+다리 건너 `entries` 를 읽고 있었다.
+
+지금 몸통이 받는 것은 `strategyhandoff.Delivered` 다. 값 필드가 비공개라서 경계 밖에서는
+채울 수 없고, 경계를 지나지 않은 `strategyflow.Result` 를 `dispatch` 에 넘기는 편집은
+**컴파일되지 않는다**(뮤테이션 M1 으로 확인). 봉투가 증명하지 못하는 나머지 —
+엔진이 스스로 `Admit` 을 불러 봉투를 만드는 경로 — 는
+`TestExactlyOneProductionSiteAdmitsIntoTheSeam`(패키지 전체의 `Admit` 호출을 센다)과
+`strategyhandoff` 의 `TestOnlyTheEngineImportsThisSeam`(이 경계를 들여오는 패키지를
+고정한다)이 함께 막는다.
 
 The signature above is the exhaustive input/result record; this map does not infer state the AST does not show.
 
@@ -46,15 +58,15 @@ The signature above is the exhaustive input/result record; this map does not inf
   그래서 이 함수에 대한 근거는 실행이 아니라 **소스에 무엇이 쓰여 있는지**뿐이고,
   아래 반증 표의 뮤테이션은 전부 AST 가드가 죽인 것이다.
 
-Exact AST return positions: 425:3, 428:3, 442:2, 446:4, 449:4, 453:4, 455:3.
+Exact AST return positions: 425:3, 428:3, 444:2, 448:4, 451:4, 455:4, 457:3.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
 | B1 | if | 424:2 | arm not entered (양쪽 스위트) — assembly refresh 실패 |
 | B2 | if | 427:2 | **5.5-fix2 가 바꾼 분기** — `fresh.dispatch == nil`. handoff 거절은 더 이상 이 조건에 없다(경계 안으로 갔다). arm not entered (양쪽 스위트) |
-| B3 | if | 445:3 | arm not entered (양쪽 스위트) — 캠페인 CAS 읽기 실패 |
-| B4 | if | 448:3 | arm not entered (양쪽 스위트) — 이미 claim 되었거나 FLAT/CLOSED 아님 |
-| B5 | if | 452:3 | arm not entered (양쪽 스위트) — lease 이미 소모 |
+| B3 | if | 447:3 | arm not entered (양쪽 스위트) — 캠페인 CAS 읽기 실패 |
+| B4 | if | 450:3 | arm not entered (양쪽 스위트) — 이미 claim 되었거나 FLAT/CLOSED 아님 |
+| B5 | if | 454:3 | arm not entered (양쪽 스위트) — lease 이미 소모 |
 
 이 공백은 이 태스크가 만든 것이 아니다. 이 함수는 `*Context` 와 살아 있는 journal·gateway 를
 요구하고, 그 배선은 태스크 5.7(fault injection·race)과 L6 의 몫이다. 여기서는 그 공백을
@@ -65,13 +77,14 @@ Exact AST return positions: 425:3, 428:3, 442:2, 446:4, 449:4, 453:4, 455:3.
 | Callee expression | Position |
 |---|---|
 | `c.refreshPairedStrategyEntryProductionAssembly` | 423:16 |
-| `Deliver` | 442:9 |
-| `dispatchHandoff` | 442:9 |
-| `fresh.proposals.forMarket` | 442:9 |
-| `c.Journal.CurrentPositionCampaignCAS` | 444:15 |
-| `string` | 444:77 |
-| `fresh.dispatch.dispatch` | 451:12 |
-| `errors.Is` | 452:6 |
+| `Deliver` | 444:9 |
+| `dispatchHandoff` | 444:9 |
+| `fresh.proposals.forMarket` | 444:9 |
+| `delivered.Result` | 445:14 |
+| `c.Journal.CurrentPositionCampaignCAS` | 446:15 |
+| `string` | 446:77 |
+| `fresh.dispatch.dispatch` | 453:12 |
+| `errors.Is` | 454:6 |
 
 ## State mutations and fallbacks
 

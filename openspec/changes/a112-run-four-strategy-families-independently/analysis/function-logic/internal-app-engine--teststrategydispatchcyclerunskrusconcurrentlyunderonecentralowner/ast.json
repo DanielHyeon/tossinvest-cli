@@ -1,0 +1,396 @@
+{
+  "file": "internal/app/engine/strategy_dispatch_cycle_test.go",
+  "source_sha256": "ed412100d736dfcb474a0b6c126379c383dc0495be9bdceb409808c18d76f844",
+  "package": "engine",
+  "function": "TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner",
+  "signature": "TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner(params=1, results=0)",
+  "start": {
+    "line": 92,
+    "column": 1
+  },
+  "end": {
+    "line": 149,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 121,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 139,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 142,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 145,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 30
+      },
+      "text": "pairedStrategyDispatchCycleFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 13
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 11
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 16
+      },
+      "text": "deliverForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 34
+      },
+      "text": "entries.authority.Proposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 34
+      },
+      "text": "proposals.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 3
+      },
+      "text": "runners.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 6
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 10
+      },
+      "text": "runners.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 16
+      },
+      "text": "cycle.dispatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 31
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 2
+      },
+      "text": "close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 2
+      },
+      "text": "runners.Wait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 2
+      },
+      "text": "close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 2
+      },
+      "text": "spy.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 11
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 18
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 2
+      },
+      "text": "spy.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 133,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 17
+      },
+      "text": "j.LookupStrategyDispatchLease"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 47
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 103,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 107,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 112,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 124,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 138,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 143,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 109,
+        "column": 3
+      }
+    }
+  ],
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 110,
+        "column": 4
+      },
+      "text": "runners.Done"
+    }
+  ]
+}

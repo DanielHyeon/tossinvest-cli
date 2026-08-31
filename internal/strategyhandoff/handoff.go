@@ -116,7 +116,17 @@ func (handoff Handoff) refusalNow() Refusal {
 	if handoff.refusal != Admitted {
 		return handoff.refusal
 	}
-	if len(handoff.selected) != deliverable {
+	// 적재 미달과 과적재를 가른다. 앞 판본은 `!= deliverable` 하나로 갈라서
+	// 실린 것이 **없는** 영값 Handoff 까지 "많이 실렸다"라고 불렀다. 둘 다
+	// 거절인 것은 같지만, 이름이 반대면 운영자가 보는 것이 거짓이 된다.
+	//
+	// 적재 미달에 새 이름을 만들지 않는다. 실린 것이 없는 상태는 고른 것이
+	// 없는 상태와 같으므로 NoSelection 이 그대로 맞고, 동결 골든에 없는 거절
+	// 어휘를 영수증 없이 하나 더 늘리지 않는다.
+	if len(handoff.selected) < deliverable {
+		return NoSelection
+	}
+	if len(handoff.selected) > deliverable {
 		return OverCarried
 	}
 	return Admitted
@@ -144,6 +154,32 @@ func (handoff Handoff) Single() (strategyflow.Result, bool) {
 	return handoff.selected[0], true
 }
 
+// Delivered 는 이 경계를 지나온 값이라는 증거다. 밖에서는 채울 수 없다.
+//
+// **왜 값 대신 봉투인가.** 적대 리뷰 세 라운드가 각각 `rawSelection()`,
+// `relay()`, `rawTailProposal()` 로 같은 구멍을 뚫었다. 셋 다 경계를 지나지
+// 않은 strategyflow.Result 를 만들어 공유 dispatch 에 넘겼고, 셋 다 두 스위트를
+// 통과했다. 막던 것이 "그 값을 묶어 준 **이름**을 쓰는가"를 보는 AST 검사였고,
+// 이름은 언제나 다시 쓸 수 있기 때문이다.
+//
+// 봉투에서는 그 편집이 컴파일되지 않는다. result 는 비공개 필드라서 이 패키지
+// 밖에서는 `Delivered{}` 라는 영값밖에 만들 수 없고, 그 영값은 dispatch 의
+// 첫 줄 validateStrategyFirstLegResult 에서 걸린다 — 가정이 아니라
+// TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall 이 값으로 확인한다.
+//
+// **이 타입이 증명하지 못하는 것도 적는다.** 봉투는 "dispatch 된 값이 Admit 을
+// 거쳤다"만 증명한다. 그 Admit 을 부른 것이 시장 조정자였는지는 증명하지
+// 않는다 — 엔진 패키지는 스스로 Admit 을 부를 수 있다. 그 자리는 타입이 아니라
+// TestExactlyOneProductionSiteAdmitsIntoTheSeam 이 지키고, 그 검사는 함수
+// 본문이 아니라 패키지 전체의 호출을 센다.
+type Delivered struct {
+	// result 는 경계가 승인한 값이다. 비공개인 것이 이 타입의 전부다.
+	result strategyflow.Result
+}
+
+// Result 는 봉투가 실은 값을 돌려준다. 밖에서 만든 봉투는 영값을 돌려준다.
+func (delivered Delivered) Result() strategyflow.Result { return delivered.result }
+
 // Deliver 는 건너간 것이 있을 때만 몸통을 부른다.
 //
 // **이 서명의 요점은 부르는 쪽에 무시할 boolean 을 주지 않는 것이다.**
@@ -153,7 +189,7 @@ func (handoff Handoff) Single() (strategyflow.Result, bool) {
 //
 // 거절은 오류가 아니다 — 그 주기에 낼 것이 없었을 뿐이다. 몸통의 오류만
 // 그대로 밖으로 나간다.
-func (handoff Handoff) Deliver(to func(strategyflow.Result) error) error {
+func (handoff Handoff) Deliver(to func(Delivered) error) error {
 	if to == nil {
 		return ErrNoDelivery
 	}
@@ -161,5 +197,5 @@ func (handoff Handoff) Deliver(to func(strategyflow.Result) error) error {
 	if !ok {
 		return nil
 	}
-	return to(result)
+	return to(Delivered{result: result})
 }

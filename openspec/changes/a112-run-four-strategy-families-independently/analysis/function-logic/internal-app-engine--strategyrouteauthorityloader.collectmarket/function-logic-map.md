@@ -81,8 +81,30 @@ Exact AST return positions: 145:3, 148:3, 151:3, 154:3, 157:3, 162:3, 173:4, 185
 | `ed25519.PublicKey` | 181:36 |
 | `batch.ManifestDigest` | 184:19 |
 | `candidates.approved.Len` | 186:58 |
-
-(24 further call sites omitted; `ast.json` carries all 64.)
+| `candidates.approved.Len` | 186:99 |
+| `batch.For` | 190:20 |
+| `approved.Symbol` | 190:30 |
+| `authority.Request` | 195:14 |
+| `strategyrouter.RouteSet` | 198:13 |
+| `routed.Valid` | 199:52 |
+| `len` | 199:70 |
+| `strategyRouterMarket` | 200:26 |
+| `approved.Symbol` | 200:80 |
+| `append` | 204:13 |
+| `sort.Slice` | 206:2 |
+| `entries.approved.Symbol` | 206:51 |
+| `entries.approved.Symbol` | 206:82 |
+| `len` | 207:5 |
+| `candidates.approved.Len` | 209:58 |
+| `sha256.New` | 211:7 |
+| `h.Write` | 213:10 |
+| `(unnamed)` | 213:18 |
+| `entry.approved.Symbol` | 213:25 |
+| `entry.route.OwnerDigest` | 213:60 |
+| `candidates.approved.Len` | 216:113 |
+| `len` | 217:17 |
+| `hex.EncodeToString` | 217:106 |
+| `h.Sum` | 217:125 |
 
 ## State mutations and fallbacks
 

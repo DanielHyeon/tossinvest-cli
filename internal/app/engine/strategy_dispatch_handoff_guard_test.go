@@ -84,6 +84,13 @@ func singleProposalAssumptionSites(file *ast.File) int {
 	ast.Inspect(file, func(node ast.Node) bool {
 		switch value := node.(type) {
 		case *ast.BinaryExpr:
+			// 연산자를 본다. 앞 판본은 `value.Op` 를 한 번도 읽지 않아서
+			// `len(x.entries) - 1` 같은 산술식도 "1과의 비교"로 셌다. 지금
+			// census 가 맞는 것은 그 철자가 마침 없기 때문이지, 스캐너가
+			// 가려내서가 아니었다 — 우연이 지키는 계수는 계수가 아니다.
+			if !isComparison(value.Op) {
+				return true
+			}
 			for _, pair := range [][2]ast.Expr{{value.X, value.Y}, {value.Y, value.X}} {
 				call, ok := pair[0].(*ast.CallExpr)
 				if !ok || len(call.Args) != 1 {
@@ -103,6 +110,15 @@ func singleProposalAssumptionSites(file *ast.File) int {
 		return true
 	})
 	return sites
+}
+
+// isComparison 은 두 값을 견주는 연산자만 참이다. 산술은 비교가 아니다.
+func isComparison(op token.Token) bool {
+	switch op {
+	case token.EQL, token.NEQ, token.LSS, token.LEQ, token.GTR, token.GEQ:
+		return true
+	}
+	return false
 }
 
 func isZero(node ast.Expr) bool {
@@ -388,9 +404,17 @@ func engineCapabilityTypes(t *testing.T) map[string]bool {
 // 그것을 보지 못하고, 함수 **선언**은 `TypeSpec` 이 아니므로 매개변수의
 // `*officialBroker` 도 계산에 들어오지 않는다.
 //
-// **같은 패키지 안에서는 이 성질을 시험으로 배제할 수 없다.** 그래서 정말
-// 필요한 자리 — 무엇이 건너갈지 고르는 판단 — 를 패키지 밖
-// `internal/strategyhandoff` 로 옮겼고, 거기서는 import 폐쇄가 결정적이다.
+// **같은 패키지 안에서는 이 성질을 시험으로 배제할 수 없다.** 그래서 상한과
+// 거절 이름, 그리고 값이 건너가는 문을 패키지 밖 `internal/strategyhandoff`
+// 로 옮겼다.
+//
+// **무엇이 옮겨졌고 무엇이 안 옮겨졌는지 정확히 적는다.** 어댑터
+// `dispatchHandoff` 는 여전히 이 패키지 안에 있고, 조정자가 고른 것을 읽는
+// 일도 여기서 한다. 옮겨진 것은 그 값이 공유 dispatch 에 **닿는 방법**이다 —
+// `strategyhandoff.Delivered` 의 값 필드는 밖에서 채울 수 없으므로, 경계를
+// 지나지 않은 제안을 dispatch 에 넘기는 코드는 컴파일되지 않는다. 그 성질은
+// import 폐쇄가 아니라 서명이 지킨다.
+//
 // 여기 남은 것은 그 밖의 두 가지다.
 //
 //  1. **결정적**: 파일 단위 import 허용 목록. 그 파일이 밖에서 무엇을
@@ -518,12 +542,102 @@ func TestTheWorkerBuilderOnlyObservesThroughTheGateway(t *testing.T) {
 //
 // 지금은 건네는 값이 **같은 함수 안에서 dispatchHandoff().Single() 이 묶어
 // 준 이름**이어야 한다. 그 서명은 흉내 낼 수 없다.
-func TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch(t *testing.T) {
-	type site struct {
-		file, enclosing string
-		argument        ast.Expr
-		fromSeam        map[string]bool
+// dispatchEnvelopeType 은 공유 dispatch 가 받는 값의 타입 표기다.
+const dispatchEnvelopeType = "strategyhandoff.Delivered"
+
+// admitCallSiteFunc 는 경계에 값을 실어 넣는 유일한 생산 함수다.
+const admitCallSiteFunc = "dispatchHandoff"
+
+// TestOnlyTheSeamsEnvelopeCanReachTheSharedDispatch 는 공유 dispatch 가
+// 봉투만 받는다는 것을 소스에서 확인한다.
+//
+// **이 검사는 성질을 만들지 않는다. 성질을 만드는 것은 서명이다.** 경계를
+// 지나지 않은 strategyflow.Result 를 dispatch 에 넘기는 코드는 컴파일되지
+// 않는다 — 봉투의 값 필드가 strategyhandoff 밖에서 채울 수 없기 때문이다.
+// 여기서 하는 일은 그 서명이 조용히 예전으로 되돌아가는 것을 막는 것뿐이고,
+// 되돌아가면 앞선 세 라운드가 뚫은 세 철자(rawSelection, relay,
+// rawTailProposal)가 한꺼번에 되살아난다.
+func TestOnlyTheSeamsEnvelopeCanReachTheSharedDispatch(t *testing.T) {
+	checked := 0
+	for _, path := range engineProductionFiles(t) {
+		file := parseEngineFile(t, path)
+		for _, decl := range file.Decls {
+			function, ok := decl.(*ast.FuncDecl)
+			if !ok || function.Name == nil || function.Name.Name != "dispatch" || function.Recv == nil {
+				continue
+			}
+			checked++
+			params := make([]string, 0, 2)
+			for _, field := range function.Type.Params.List {
+				names := len(field.Names)
+				if names == 0 {
+					names = 1
+				}
+				for i := 0; i < names; i++ {
+					params = append(params, types.ExprString(field.Type))
+				}
+			}
+			if len(params) != 2 || params[1] != dispatchEnvelopeType {
+				t.Fatalf("%s: dispatch 의 인자는 %v 다, want (context.Context, %s) — "+
+					"봉투가 아닌 값을 받으면 경계를 지나지 않은 제안이 주문 경로에 닿는다",
+					filepath.Base(path), params, dispatchEnvelopeType)
+			}
+		}
 	}
+	if checked != 1 {
+		t.Fatalf("dispatch 메서드 선언=%d 개, want 정확히 하나", checked)
+	}
+}
+
+// TestExactlyOneProductionSiteAdmitsIntoTheSeam 은 봉투가 증명하지 **못하는**
+// 것을 지킨다.
+//
+// 봉투는 "dispatch 된 값이 Admit 을 거쳤다"까지만 증명한다. 엔진 패키지는
+// 스스로 `strategyhandoff.Admit(true, []Result{원본})` 을 불러 봉투를 만들 수
+// 있고, 그러면 서명은 아무것도 막지 못한다. 그래서 Admit 을 부르는 자리를
+// 하나로 고정한다.
+//
+// **앞 판본과 다른 것은 세는 범위다.** 이 자리에 있던
+// TestSeamConsumersCannotReadTheRawEntryListAgain 은 `entries` 라는 토큰을
+// **네 함수의 본문 안에서만** 셌다. 헬퍼 함수 하나를 한 다리 건너 두면
+// 사라졌고, 적대 리뷰어 셋이 각자 그렇게 뚫었다. 여기서는 이 패키지의 **모든**
+// 생산 파일에서 `Admit` 이라는 이름이 나오는 자리를 전부 센다 — 헬퍼를 만들면
+// 그 헬퍼가 세어진다.
+//
+// 별칭 import(`sh.Admit`), dot import(`Admit`), 함수 값(`var f = …Admit`)은
+// 전부 이 토큰을 쓰므로 이 세기 안에 들어온다. **들어오지 않는 경로도 적는다:**
+// 다른 패키지가 Admit 을 불러 만든 Handoff 를 엔진에 돌려주면 엔진 소스에는
+// 이 토큰이 없다. 그 경로는 여기가 아니라 strategyhandoff 의
+// TestOnlyTheEngineImportsThisSeam 이 막는다 — 그 검사는 이 패키지를 들여오는
+// 모듈 안의 패키지 전부를 센다. 두 검사가 함께여야 사슬이 닫힌다.
+func TestExactlyOneProductionSiteAdmitsIntoTheSeam(t *testing.T) {
+	sites := make([]string, 0, 1)
+	for _, path := range engineProductionFiles(t) {
+		for _, decl := range parseEngineFile(t, path).Decls {
+			function, ok := decl.(*ast.FuncDecl)
+			if !ok || function.Body == nil || function.Name == nil {
+				continue
+			}
+			for i := 0; i < identMentions(function.Body, "Admit"); i++ {
+				sites = append(sites, filepath.Base(path)+":"+function.Name.Name)
+			}
+		}
+	}
+	sort.Strings(sites)
+	if len(sites) != 1 || !strings.HasSuffix(sites[0], ":"+admitCallSiteFunc) {
+		t.Fatalf("경계에 값을 싣는 생산 자리=%v, want %s 하나뿐", sites, admitCallSiteFunc)
+	}
+}
+
+// TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch 는 주문을 낼 수
+// 있는 자리가 하나뿐임을 지킨다.
+//
+// 인자가 경계에서 온 값인지는 여기서 보지 않는다 — 그것은 이제 서명이 한다.
+// 앞 판본은 그 자리에서 "dispatch 에 넘긴 이름을 경계가 묶어 줬는가"를 물었고,
+// 적대 리뷰가 그 이름에 다른 값을 덮어써서 통과했다. **이름이 무엇을 담고
+// 있는지는 이름을 보아서는 알 수 없다.**
+func TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch(t *testing.T) {
+	type site struct{ file, enclosing string }
 	sites := make([]site, 0, 1)
 	for _, path := range engineProductionFiles(t) {
 		file := parseEngineFile(t, path)
@@ -532,40 +646,6 @@ func TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch(t *testing.T) {
 			if !ok || function.Body == nil {
 				continue
 			}
-			// 경계가 값을 건네주는 두 문 — Deliver 의 몸통 인자와
-			// Single 의 첫 반환값 — 이 묶어 준 이름들.
-			fromSeam := make(map[string]bool)
-			ast.Inspect(function.Body, func(node ast.Node) bool {
-				if call, ok := node.(*ast.CallExpr); ok {
-					if name := deliveredParamName(call); name != "" {
-						fromSeam[name] = true
-					}
-				}
-				assign, ok := node.(*ast.AssignStmt)
-				if !ok || len(assign.Rhs) != 1 || len(assign.Lhs) != 2 {
-					return true
-				}
-				outer, ok := assign.Rhs[0].(*ast.CallExpr)
-				if !ok {
-					return true
-				}
-				selector, ok := outer.Fun.(*ast.SelectorExpr)
-				if !ok || selector.Sel.Name != "Single" {
-					return true
-				}
-				inner, ok := selector.X.(*ast.CallExpr)
-				if !ok {
-					return true
-				}
-				source, ok := inner.Fun.(*ast.SelectorExpr)
-				if !ok || source.Sel.Name != "dispatchHandoff" {
-					return true
-				}
-				if name, ok := assign.Lhs[0].(*ast.Ident); ok {
-					fromSeam[name.Name] = true
-				}
-				return true
-			})
 			ast.Inspect(function.Body, func(node ast.Node) bool {
 				call, ok := node.(*ast.CallExpr)
 				if !ok {
@@ -575,8 +655,7 @@ func TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch(t *testing.T) {
 				if !ok || selector.Sel.Name != "dispatch" || len(call.Args) != 2 {
 					return true
 				}
-				sites = append(sites, site{file: filepath.Base(path), enclosing: function.Name.Name,
-					argument: call.Args[1], fromSeam: fromSeam})
+				sites = append(sites, site{file: filepath.Base(path), enclosing: function.Name.Name})
 				return true
 			})
 		}
@@ -591,14 +670,6 @@ func TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch(t *testing.T) {
 	}
 	if sites[0].enclosing != dispatchCallSiteFunc {
 		t.Fatalf("the dispatch call moved into %s, not %s", sites[0].enclosing, dispatchCallSiteFunc)
-	}
-	dispatched, ok := sites[0].argument.(*ast.Ident)
-	if !ok {
-		t.Fatalf("the dispatched value is %T, not a name the seam bound", sites[0].argument)
-	}
-	if !sites[0].fromSeam[dispatched.Name] {
-		t.Fatalf("the dispatched value %q was not bound by dispatchHandoff().Single(), "+
-			"so something other than the bounded handoff chose it", dispatched.Name)
 	}
 	// dispatch 를 메서드 값으로 꺼내 두면 위의 호출 세기를 통째로 우회한다.
 	assertEveryDispatchMentionIsInTheCensus(t)
@@ -648,66 +719,6 @@ func TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer(t *testing.T) {
 	// projection. dispatch 주기는 Deliver 를 쓰므로 여기 없다 — 그것이 요점이다.
 	if checked != 3 {
 		t.Fatalf("production sites binding the seam's answer=%d, want 3 (worker promotion, result authority, projection)", checked)
-	}
-}
-
-// seamConsumerFuncs 는 경계의 값을 소비하는 생산 함수 전부다.
-var seamConsumerFuncs = map[string]bool{
-	workerBuilderFunc:                true,
-	dispatchCallSiteFunc:             true,
-	"ResultAuthority":                true,
-	"strategyProjectionFromAssembly": true,
-}
-
-// TestSeamConsumersCannotReadTheRawEntryListAgain 은 소비자가 경계를 지나지
-// 않은 값을 집는 것을 막는다.
-//
-// 적대 리뷰가 이렇게 뚫었다: 경계가 묶어 준 이름을 받아 놓고 그 뒤에
-// `result = raw[len(raw)-1].authority.Proposal()` 로 덮어썼다. 이름은 맞고
-// 값은 원본이다. 이름을 보는 어떤 검사도 그것을 보지 못한다.
-//
-// **이 검사는 이름이 아니라 사실을 본다.** Go 에서 필드를 읽는 철자는 하나뿐이다
-// — 그 필드의 이름. `entries` 는 비공개 필드이므로 reflect 로도 값을 꺼낼 수
-// 없다(`Field(i).Interface()` 는 비공개 필드에서 패닉한다). 따라서 소비자
-// 본문에 `entries` 라는 토큰이 없으면 그 목록을 읽지 않았다는 뜻이고, 그것은
-// 열거가 아니라 완전한 사실이다.
-func TestSeamConsumersCannotReadTheRawEntryListAgain(t *testing.T) {
-	seen := make(map[string]bool)
-	control := 0
-	for _, path := range engineProductionFiles(t) {
-		for _, decl := range parseEngineFile(t, path).Decls {
-			function, ok := decl.(*ast.FuncDecl)
-			if !ok || function.Body == nil || function.Name == nil {
-				continue
-			}
-			mentions := identMentions(function.Body, "entries")
-			// 양성 대조: 어댑터는 반드시 entries 를 읽는다. 안 읽는다면 이
-			// 스캔이 고장난 것이고, 아래 단언들은 틀린 이유로 통과한다.
-			if function.Name.Name == "dispatchHandoff" {
-				control = mentions
-			}
-			if !seamConsumerFuncs[function.Name.Name] {
-				continue
-			}
-			seen[function.Name.Name] = true
-			if mentions != 0 {
-				t.Errorf("%s: %s reads the raw entry list %d time(s); the seam's value is the only one that may cross",
-					filepath.Base(path), function.Name.Name, mentions)
-			}
-		}
-	}
-	if control == 0 {
-		t.Fatal("the adapter does not mention `entries`, so this scan reads nothing and every assertion above is vacuous")
-	}
-	missing := make([]string, 0)
-	for name := range seamConsumerFuncs {
-		if !seen[name] {
-			missing = append(missing, name)
-		}
-	}
-	if len(missing) != 0 {
-		sort.Strings(missing)
-		t.Fatalf("these seam consumers were not scanned, so they are unguarded: %v", missing)
 	}
 }
 
@@ -798,27 +809,6 @@ func identIsBlankAssigned(body *ast.BlockStmt, name string) bool {
 	return blanked
 }
 
-// deliveredParamName 은 `…dispatchHandoff().Deliver(func(result …) error {…})`
-// 에서 몸통이 받는 인자 이름을 돌려준다. 그 이름이 경계가 건넨 값이다.
-func deliveredParamName(call *ast.CallExpr) string {
-	selector, ok := call.Fun.(*ast.SelectorExpr)
-	if !ok || selector.Sel.Name != "Deliver" || len(call.Args) != 1 {
-		return ""
-	}
-	source, ok := selector.X.(*ast.CallExpr)
-	if !ok {
-		return ""
-	}
-	if origin, ok := source.Fun.(*ast.SelectorExpr); !ok || origin.Sel.Name != "dispatchHandoff" {
-		return ""
-	}
-	body, ok := call.Args[0].(*ast.FuncLit)
-	if !ok || body.Type.Params == nil || len(body.Type.Params.List) != 1 || len(body.Type.Params.List[0].Names) != 1 {
-		return ""
-	}
-	return body.Type.Params.List[0].Names[0].Name
-}
-
 // dispatchMentionCensus 는 생산 코드가 `dispatch` 를 손에 쥐는 자리 **전부**와
 // 그 수다. 철자까지 고정한다.
 //
@@ -829,6 +819,16 @@ func deliveredParamName(call *ast.CallExpr) string {
 //
 // 값은 센 것이다. 생산 코드에서 `.dispatch` 는 두 줄뿐이고, 그중 한 줄이
 // 수신자와 호출로 두 번 나타난다.
+//
+// **이 표가 세지 못하는 것을 적는다: 실행 횟수다.** 적대 리뷰가
+// `for attempt := 0; attempt < 3; attempt++ { …dispatch(ctx, delivered) }` 로
+// 이 표를 그대로 통과시켰다 — 철자는 하나이고 실행은 셋이다. 그러므로 "한
+// 주기에 한 번"은 이 검사가 지키는 성질이 **아니다**.
+//
+// 실제로 지키는 것은 원장이다. 같은 봉투로 두 번째 dispatch 를 하면 first-leg
+// admission 이 `AUTHORITY_COLLECTION_FAILED: production position campaign CAS
+// changed` 로 막고 Gateway 주문은 한 건에서 멈춘다 — 읽어서 안 것이 아니라
+// TestTheSameEnvelopeCannotPlaceASecondOrder 가 재서 확인한 값이다.
 var dispatchMentionCensus = map[string]int{
 	"strategy_entry_supervisor.go: fresh.dispatch":          2,
 	"strategy_entry_supervisor.go: fresh.dispatch.dispatch": 1,

@@ -82,8 +82,12 @@ Exact AST return positions: none.
 | `t.Fatal` | 164:5 |
 | `Identity` | 167:65 |
 | `result.ExecutionTerms.Policy` | 167:65 |
-
-(6 further call sites omitted; `ast.json` carries all 46.)
+| `t.Fatalf` | 169:5 |
+| `rig.journal.PendingStrategyPlans` | 171:21 |
+| `context.Background` | 171:54 |
+| `len` | 171:101 |
+| `t.Fatalf` | 172:5 |
+| `t.Fatalf` | 178:3 |
 
 ## State mutations and fallbacks
 

@@ -63,7 +63,7 @@ func TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway(t *testing.
 	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
 		cycle, proposals, j, spy := pairedStrategyDispatchCycleFixture(t)
 		result := proposals.forMarket(market).entries[0].authority.Proposal()
-		out, err := cycle.dispatch(context.Background(), result)
+		out, err := cycle.dispatch(context.Background(), deliverForTest(t, result))
 		if err != nil || out.State != journal.StateConfirmed {
 			t.Fatalf("%s outcome=%+v err=%v", market, out, err)
 		}
@@ -101,11 +101,15 @@ func TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner(t *testin
 	var runners sync.WaitGroup
 	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
 		market := market
+		// 봉투는 경주 밖에서 미리 만든다. 고루틴 안에서 만들면 t.Fatalf 가
+		// 시험 고루틴 밖에서 불릴 수 있고, 두 dispatch 가 동시에 출발한다는
+		// 이 시험의 요점도 흐려진다.
+		delivered := deliverForTest(t, proposals.forMarket(market).entries[0].authority.Proposal())
 		runners.Add(1)
 		go func() {
 			defer runners.Done()
 			<-start
-			out, err := cycle.dispatch(context.Background(), proposals.forMarket(market).entries[0].authority.Proposal())
+			out, err := cycle.dispatch(context.Background(), delivered)
 			results <- result{market: market, out: out, err: err}
 		}()
 	}
@@ -156,7 +160,7 @@ func TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS
 				} else {
 					spy.failEntryGate = map[string]error{strings.ToLower(string(market)): refusal}
 				}
-				if _, err := cycle.dispatch(context.Background(), result); !errors.Is(err, refusal) {
+				if _, err := cycle.dispatch(context.Background(), deliverForTest(t, result)); !errors.Is(err, refusal) {
 					t.Fatalf("dispatch error=%v, want %v", err, refusal)
 				}
 				cas, err := j.CurrentPositionCampaignCAS(context.Background(), result.Lineage.AccountRef,

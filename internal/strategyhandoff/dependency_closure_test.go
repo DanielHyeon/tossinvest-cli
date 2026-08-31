@@ -149,3 +149,67 @@ func assertNoMutationCapabilityInWalk(t *testing.T, mode string) {
 		}
 	}
 }
+
+// TestOnlyTheEngineImportsThisSeam 은 이 경계를 들여오는 패키지를 고정한다.
+//
+// 왜 필요한가: `Handoff` 를 만드는 문은 `Admit` 하나뿐이고, `Delivered` 를
+// 채우는 문은 `Deliver` 하나뿐이다. 그래서 "경계를 지나지 않은 제안이 주문
+// 경로에 닿는" 편집은 반드시 어딘가에서 `Admit` 을 불러야 한다. 엔진
+// 패키지 안의 그 자리는 engine 의 TestExactlyOneProductionSiteAdmitsIntoTheSeam
+// 이 센다. 그러나 **다른 패키지**가 Admit 을 불러 만든 Handoff 를 엔진에
+// 돌려주면 엔진 소스에는 그 토큰이 없고, 그 세기는 아무것도 못 본다.
+//
+// 여기서 그 나머지를 막는다. Admit 을 부르려면 이 패키지를 import 해야 하고,
+// import 는 소스에 적히지 않으면 존재하지 않는다. 두 검사가 함께여야 사슬이
+// 닫힌다 — 어느 한쪽만으로는 닫히지 않는다.
+func TestOnlyTheEngineImportsThisSeam(t *testing.T) {
+	command := exec.Command("go", "list", "-json", modulePath+"...")
+	raw, err := command.Output()
+	if err != nil {
+		t.Fatalf("go list: %v", err)
+	}
+	seam := modulePath + "internal/strategyhandoff"
+	// 이 경계를 들여와도 되는 패키지. 허용 목록이지 금지 목록이 아니다 —
+	// 금지 목록은 새로 생긴 패키지를 조용히 통과시킨다.
+	allowed := map[string]bool{
+		modulePath + "internal/app/engine": true,
+		seam:                               true,
+	}
+	scanned, importers := 0, make([]string, 0, 2)
+	decoder := json.NewDecoder(strings.NewReader(string(raw)))
+	for {
+		var entry struct {
+			ImportPath                         string
+			Imports, TestImports, XTestImports []string
+		}
+		if err := decoder.Decode(&entry); err != nil {
+			if err == io.EOF {
+				break
+			}
+			t.Fatal(err)
+		}
+		scanned++
+		for _, group := range [][]string{entry.Imports, entry.TestImports, entry.XTestImports} {
+			for _, path := range group {
+				if path != seam {
+					continue
+				}
+				importers = append(importers, entry.ImportPath)
+				if !allowed[entry.ImportPath] {
+					t.Errorf("%s imports the handoff seam; only the engine may, "+
+						"because importing it is the only way to call Admit", entry.ImportPath)
+				}
+			}
+		}
+	}
+	// 양성 대조 둘. `go list` 가 아무것도 못 읽었거나 이 패키지를 아무도
+	// 안 들여오면 위의 단언은 **틀린 이유로** 통과한다.
+	if scanned == 0 {
+		t.Fatal("go list returned no packages, so the scan above read nothing")
+	}
+	if len(importers) == 0 {
+		t.Fatal("no package imports this seam, so the allow list above proves nothing")
+	}
+	sort.Strings(importers)
+	t.Logf("importers of the handoff seam: %v (scanned %d packages)", importers, scanned)
+}

@@ -141,10 +141,10 @@ func TestDeliverRunsTheBodyOnlyWhenSomethingCrossedTheSeam(t *testing.T) {
 		{"승인됐으나 과적재", Handoff{selected: []strategyflow.Result{selection("005930"), selection("000660")}, pending: 2}, false},
 	} {
 		ran := 0
-		got := tc.handoff.Deliver(func(result strategyflow.Result) error {
+		got := tc.handoff.Deliver(func(delivered Delivered) error {
 			ran++
-			if result.Lineage.Identity != "005930" {
-				t.Fatalf("%s: 몸통이 %q 를 받았다", tc.name, result.Lineage.Identity)
+			if delivered.Result().Lineage.Identity != "005930" {
+				t.Fatalf("%s: 몸통이 %q 를 받았다", tc.name, delivered.Result().Lineage.Identity)
 			}
 			return nil
 		})
@@ -161,10 +161,10 @@ func TestDeliverRunsTheBodyOnlyWhenSomethingCrossedTheSeam(t *testing.T) {
 func TestDeliverReturnsOnlyTheBodysError(t *testing.T) {
 	boom := errors.New("dispatch failed")
 	if got := Admit(true, []strategyflow.Result{selection("005930")}).Deliver(
-		func(strategyflow.Result) error { return boom }); !errors.Is(got, boom) {
+		func(Delivered) error { return boom }); !errors.Is(got, boom) {
 		t.Fatalf("Deliver=%v, want the body's error", got)
 	}
-	if got := Admit(true, nil).Deliver(func(strategyflow.Result) error { return boom }); got != nil {
+	if got := Admit(true, nil).Deliver(func(Delivered) error { return boom }); got != nil {
 		t.Fatalf("거절이 오류로 새어 나왔다: %v", got)
 	}
 }
@@ -231,5 +231,66 @@ func TestARefusedSingleReturnsTheZeroResult(t *testing.T) {
 		if result.ValidProposal() {
 			t.Fatalf("%q 의 영값이 ValidProposal 을 통과했다 — 세 소비자의 두 번째 방벽이 사라진다", handoff.Refusal())
 		}
+	}
+}
+
+// 봉투는 이 패키지 밖에서 채울 수 없다.
+//
+// 적대 리뷰 세 라운드가 같은 구멍을 세 가지 철자로 뚫었다 — `rawSelection()`,
+// 새 파일의 `relay()`, Deliver 몸통 안의 `rawTailProposal()`. 셋 다 경계를
+// 지나지 않은 strategyflow.Result 를 만들어 dispatch 에 넘겼고, 이름을 보는
+// 검사는 셋 다 통과시켰다. 이름을 더 잘 보는 검사를 쓰는 대신 **값을 넣을 수
+// 없는 타입**을 쓴다. Delivered 의 필드는 비공개라서, 밖에서는 영값밖에 만들
+// 수 없다.
+//
+// 이 시험은 그 영값이 정말로 비어 있다는 것을 값으로 확인한다. 비어 있다는
+// 것을 가정하지 않는다 — 가정한 fail-closed 는 이 change 가 이미 두 번 틀린
+// 자리다.
+func TestAForgedEnvelopeCarriesNothing(t *testing.T) {
+	var zero strategyflow.Result
+	forged := Delivered{}
+	if forged.Result() != zero {
+		t.Fatalf("밖에서 만든 봉투가 %+v 를 실었다 — 봉투가 위조 가능하다", forged.Result())
+	}
+	if forged.Result().ValidProposal() {
+		t.Fatal("위조한 봉투의 영값이 ValidProposal 을 통과했다")
+	}
+}
+
+// Deliver 는 몸통에 봉투를 건네고, 그 봉투 안에는 승인된 값이 들어 있다.
+func TestDeliverHandsTheBodyTheAdmittedValueInsideAnEnvelope(t *testing.T) {
+	handed := 0
+	var got strategyflow.Result
+	err := Admit(true, []strategyflow.Result{selection("005930")}).Deliver(func(delivered Delivered) error {
+		handed++
+		got = delivered.Result()
+		return nil
+	})
+	if err != nil || handed != 1 {
+		t.Fatalf("Deliver err=%v 몸통 실행=%d, want 한 번", err, handed)
+	}
+	if got.Lineage.Identity != "005930" {
+		t.Fatalf("봉투가 실은 값=%q, want 005930", got.Lineage.Identity)
+	}
+}
+
+// 적재 미달을 과적재라고 부르지 않는다.
+//
+// 앞 판본의 refusalNow 는 `len(selected) != deliverable` 하나로 갈라서, 실린
+// 것이 **없는** 영값 Handoff 까지 OVER_CARRIED("건네줄 수 있는 것보다 많이
+// 실렸다")라고 불렀다. 두 상태를 한 이름에 뭉치면 운영자가 보는 이름이 실제와
+// 반대가 된다.
+//
+// 새 이름을 만들지 않는 것이 요점이다. 적재 미달은 "고른 것이 없다"와 같은
+// 상태이므로 NoSelection 을 쓴다 — 동결 골든에 없는 거절 어휘를 영수증 없이
+// 다섯 개째로 늘리지 않는다.
+func TestAnUnderCarriedHandoffIsNotCalledOverCarried(t *testing.T) {
+	if got := (Handoff{}).Refusal(); got != NoSelection {
+		t.Fatalf("빈 handoff 의 refusal=%q, want %q — 실린 것이 없는 상태를 과적재라 부르면 이름이 거짓이 된다",
+			got, NoSelection)
+	}
+	overCarried := Handoff{selected: []strategyflow.Result{selection("005930"), selection("000660")}, pending: 2}
+	if got := overCarried.Refusal(); got != OverCarried {
+		t.Fatalf("과적재 handoff 의 refusal=%q, want %q", got, OverCarried)
 	}
 }
