@@ -115,3 +115,4 @@
 | `a116-install-codex-session-save-hook` | STORY-TOS-a116 | archived |
 | `a117-the-minute-timestamp-is-the-bars-close` | STORY-TOS-a117 | archived |
 | `a118-a-sealed-test-still-runs` | STORY-TOS-a118 | archived |
+| `a119-codex-session-handoff-and-gbrain-startup` | STORY-TOS-a119 | designed |

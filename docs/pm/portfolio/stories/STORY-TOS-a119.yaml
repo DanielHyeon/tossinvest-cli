@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a119",
+  "title": "Codex keeps its handoff fresh and starts GBrain once",
+  "feature": "FEAT-TOS-001",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a119-codex-session-handoff-and-gbrain-startup",
+    "path": "openspec/changes/a119-codex-session-handoff-and-gbrain-startup"
+  },
+  "found_by": {
+    "date": "2026-09-02",
+    "how": "A parallel Codex session created this change directory under a117, a number the archived a117-the-minute-timestamp-is-the-bars-close already held, so make sdd-check failed on both the duplicate number and the missing Story. The a112 session renumbered the directory to a119 and scaffolded this record from the change's own proposal.md so the numbering contract holds. The Codex session owns the content and should correct this record if it scoped the work differently.",
+    "record": "openspec/changes/a119-codex-session-handoff-and-gbrain-startup/proposal.md"
+  },
+  "acceptance": [
+    "The Codex PostToolUse trigger covers the tool events the current Codex host emits, so an ordinary Codex tool execution schedules the existing isolated saver",
+    "Codex session summaries and backups stay below .codex-context/, reading and writing no Claude-owned file or store",
+    "A Codex workspace starts at most one TossOS GBrain MCP process for its project data home, leaving the wrapper's single-writer safety behavior unchanged",
+    "Regression tests cover the accepted Codex event coverage and the single Codex-owned GBrain registration",
+    "No trading runtime, account state, order path, Claude hook or save-session.sh behavior changes"
+  ]
+}

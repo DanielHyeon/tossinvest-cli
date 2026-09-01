@@ -8,6 +8,7 @@
     - STORY-TOS-a040 — Adopt StockOS OpenSpec numbering and Story mapping [archived] → `a040-adopt-stockos-openspec-naming`
     - STORY-TOS-a116 — Codex saves its own session context [archived] → `a116-install-codex-session-save-hook`
     - STORY-TOS-a118 — A sealed test still runs [archived] → `a118-a-sealed-test-still-runs`
+    - STORY-TOS-a119 — Codex keeps its handoff fresh and starts GBrain once [designed] → `a119-codex-session-handoff-and-gbrain-startup`
 - EPIC-TOS-005 — Secure delivery and engineering operations [active]
   - FEAT-TOS-007 — Secure remote access and signed releases [active]
     - STORY-TOS-031 — Enable trusted-network VPN console access [archived] → `enable-vpn-console-access`
