@@ -27,7 +27,22 @@ Exact AST return nodes: `147, 149`.
 
 ## Calls and live bindings
 
-| Callee | Why called | Error/timeout/retry contract | Evidence |
+| Callee expression | Position |
+|---|---|
+| `q.Set` | 144:2 |
+| `strings.Join` | 144:19 |
+| `c.get` | 146:12 |
+| `adaptPrices` | 149:9 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
 | `strings.Join` / `q.Set` (144) | build the `symbols` parameter | none | `ast.json` calls |
 | `c.get` (146:12) | authenticated GET, decode `result` into `[]apiPrice` | ordinary `send` (see `internal-official--client.send`) | `ast.json` call |

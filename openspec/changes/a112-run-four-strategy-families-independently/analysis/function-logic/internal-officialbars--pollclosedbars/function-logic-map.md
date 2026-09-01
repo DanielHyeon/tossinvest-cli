@@ -72,7 +72,104 @@ Exact AST return nodes: `172`, `176`, `180`, `183`, `187`, `196`, `199`, `210`, 
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `refuse` | 172:18 |
+| `marketclock.ParseMarket` | 174:17 |
+| `string` | 174:41 |
+| `refuse` | 176:18 |
+| `strconv.Quote` | 176:57 |
+| `string` | 176:71 |
+| `marketCode` | 178:10 |
+| `checkSymbol` | 179:12 |
+| `refuse` | 183:18 |
+| `strconv.Quote` | 184:30 |
+| `string` | 184:44 |
+| `string` | 184:81 |
+| `in.PollAt.IsZero` | 186:5 |
+| `refuse` | 187:18 |
+| `in.Calendar.ValidityAt` | 195:17 |
+| `refuse` | 196:18 |
+| `string` | 196:73 |
+| `refuse` | 199:18 |
+| `market.TradingDay` | 208:19 |
+| `refuse` | 210:19 |
+| `strconv.Quote` | 211:68 |
+| `strconv.Quote` | 212:39 |
+| `market.TradingDay` | 215:18 |
+| `refuse` | 217:18 |
+| `refuse` | 220:18 |
+| `refuse` | 225:18 |
+| `strconv.Itoa` | 226:43 |
+| `strconv.Itoa` | 227:27 |
+| `marketclock.MarketKR.Location` | 233:16 |
+| `refuse` | 236:18 |
+| `sessionCalendar` | 239:15 |
+| `lowerBound.IsZero` | 243:5 |
+| `Format` | 250:12 |
+| `In` | 250:12 |
+| `in.PollAt.Truncate` | 250:12 |
+| `in.PollAt.Truncate` | 251:19 |
+| `reader.StrictMinuteCandles` | 258:16 |
+| `refuse` | 260:19 |
+| `strconv.Itoa` | 260:62 |
+| `refuse` | 263:19 |
+| `strconv.Quote` | 264:21 |
+| `strconv.Quote` | 265:15 |
+| `adoptPage` | 267:19 |
+| `len` | 272:6 |
+| `len` | 272:27 |
+| `len` | 273:29 |
+| `checkOverlap` | 274:14 |
+| `current.openAt.Equal` | 280:7 |
+| `append` | 284:10 |
+| `len` | 289:6 |
+| `current.openAt.Before` | 292:6 |
+| `len` | 292:14 |
+| `time.Parse` | 296:18 |
+| `refuse` | 299:19 |
+| `strconv.Quote` | 299:56 |
+| `cursor.Before` | 303:7 |
+| `refuse` | 304:19 |
+| `strconv.Quote` | 305:15 |
+| `page.Budget.Exhausted` | 311:6 |
+| `len` | 325:26 |
+| `bars.openAt.Before` | 326:7 |
+| `refuse` | 327:19 |
+| `bars.openAt.Format` | 328:57 |
+| `len` | 332:20 |
+| `len` | 333:5 |
+| `minuteGaps` | 336:16 |
+| `store.SealBarSeries` | 339:17 |
+| `in.PollAt.Add` | 342:17 |
+| `in.PollAt.Add` | 342:67 |
+| `refuse` | 346:18 |
+| `make` | 349:11 |
+| `len` | 349:61 |
+| `len` | 357:26 |
+| `bar.openAt.Before` | 359:6 |
+| `bar.openAt.Before` | 359:41 |
+| `uint64` | 366:15 |
+| `uint64` | 368:29 |
+| `bar.openAt.UnixMilli` | 368:36 |
+| `strategyevidence.NewClosedBar1mEnvelope` | 376:20 |
+| `append` | 384:21 |
+| `err.Error` | 384:83 |
+| `store.Append` | 387:16 |
+| `errors.Is` | 388:7 |
+| `refuse` | 392:19 |
+| `Format` | 392:80 |
+| `bar.openAt.UTC` | 392:80 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `marketclock.ParseMarket`, `marketCode`, `sessionCalendar` | 174, 178, 239 | market code and `KRX:`/`US:` session prefix; `TestPollUsesTheKoreanCalendarAndSessionPrefix` (`KRX:2026-08-14`), `TestPollLabelsOvernightUSBarsWithTheirEasternDate` (`US:2026-08-14`) |
 | `checkSymbol` | 179 | nil/blank check only — ruling 29 removed the duplicated market regexp |

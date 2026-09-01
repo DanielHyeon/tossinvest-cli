@@ -37,7 +37,40 @@ Exact AST return nodes: `256`, `262`, `265`, `269`, `274`, `278`, `283`, `286`, 
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `len` | 255:5 |
+| `strictMinuteRefuse` | 256:26 |
+| `strconv.Itoa` | 257:15 |
+| `len` | 257:28 |
+| `strconv.Itoa` | 257:67 |
+| `utf8.Valid` | 261:6 |
+| `strictMinuteRefuse` | 262:26 |
+| `strictMinuteCheckJSON` | 264:12 |
+| `strictMinuteRefuse` | 265:26 |
+| `err.Error` | 265:63 |
+| `strictMinuteObject` | 267:19 |
+| `strictMinuteRefuse` | 269:26 |
+| `err.Error` | 269:76 |
+| `strictMinuteRefuse` | 274:26 |
+| `strictMinuteObject` | 276:17 |
+| `strictMinuteRefuse` | 278:26 |
+| `err.Error` | 278:65 |
+| `strictMinuteRefuse` | 283:26 |
+| `len` | 285:5 |
+| `strictMinuteRefuse` | 286:26 |
+| `strictMinuteCandles` | 290:28 |
+| `strictMinuteCursor` | 294:27 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `len(body)` against `strictMinuteMaxBody` | 255 | 2 MiB post-read cap |
 | `utf8.Valid(body)` | 261 | ruling 29's UTF-8 rule, tested through a price field |

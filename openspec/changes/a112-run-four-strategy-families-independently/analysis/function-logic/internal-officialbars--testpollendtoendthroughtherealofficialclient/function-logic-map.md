@@ -38,7 +38,75 @@ Exact AST return node: `1415` (the token-handler early return inside the server 
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `context.Background` | 1392:9 |
+| `time.Now` | 1393:12 |
+| `marketclock.MarketUS.TradingDay` | 1394:14 |
+| `t.Fatalf` | 1396:3 |
+| `wideUSCalendar` | 1398:14 |
+| `pollAt.Add` | 1398:37 |
+| `Truncate` | 1399:12 |
+| `pollAt.UTC` | 1399:12 |
+| `minute.Add` | 1400:26 |
+| `minute.Add` | 1400:56 |
+| `minute.Add` | 1400:86 |
+| `instants.Before` | 1401:5 |
+| `instants.Before` | 1401:57 |
+| `t.Skipf` | 1404:3 |
+| `usBar` | 1407:3 |
+| `usBar` | 1407:38 |
+| `usBar` | 1407:73 |
+| `Format` | 1409:17 |
+| `In` | 1409:17 |
+| `pollAt.Truncate` | 1409:17 |
+| `mustLocation` | 1409:49 |
+| `cursorBefore` | 1410:12 |
+| `httptest.NewServer` | 1412:12 |
+| `http.HandlerFunc` | 1412:31 |
+| `fmt.Fprint` | 1414:4 |
+| `Get` | 1417:10 |
+| `r.URL.Query` | 1417:10 |
+| `fmt.Fprint` | 1419:4 |
+| `candleJSON` | 1419:43 |
+| `candleJSON` | 1419:67 |
+| `fmt.Fprint` | 1422:4 |
+| `candleJSON` | 1422:43 |
+| `t.Errorf` | 1424:4 |
+| `Get` | 1424:37 |
+| `r.URL.Query` | 1424:37 |
+| `w.WriteHeader` | 1425:4 |
+| `server.Close` | 1428:8 |
+| `official.New` | 1430:12 |
+| `t.TempDir` | 1430:76 |
+| `official.WithBaseURL` | 1431:3 |
+| `official.WithHTTPClient` | 1431:37 |
+| `server.Client` | 1431:61 |
+| `strategyevidence.Open` | 1433:16 |
+| `filepath.Join` | 1434:9 |
+| `t.TempDir` | 1434:23 |
+| `t.Fatalf` | 1437:3 |
+| `(unnamed)` | 1439:8 |
+| `store.Close` | 1439:21 |
+| `PollClosedBars` | 1442:17 |
+| `t.Fatalf` | 1446:3 |
+| `t.Fatalf` | 1449:3 |
+| `t.Fatalf` | 1452:3 |
+| `payloadOf` | 1455:14 |
+| `uint64` | 1458:36 |
+| `pollAt.UnixMilli` | 1458:43 |
+| `t.Fatalf` | 1459:4 |
+| `pollAt.UnixMilli` | 1459:92 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `time.Now`, `marketclock.MarketUS.TradingDay` | 1393, 1394 | the wall clock is the poll instant; the trading day comes from the same helper production uses (`internal-clock--market.tradingday`) |
 | `wideUSCalendar`, `usBar`, `cursorBefore`, `candleJSON` | 1398, 1407, 1410, 1419–1422 | fixture builders; `usBar` speaks open instants and emits close labels, `cursorBefore` emits the measured cursor for a given oldest open (decision 30) |

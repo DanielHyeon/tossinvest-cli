@@ -35,7 +35,31 @@ Exact AST return nodes: `105, 108, 119, 123, 126, 129, 133`.
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `time.Parse` | 107:15 |
+| `fmt.Errorf` | 108:25 |
+| `fmt.Errorf` | 119:25 |
+| `session.StartTime.IsZero` | 125:5 |
+| `session.EndTime.IsZero` | 125:35 |
+| `session.StartTime.Before` | 125:64 |
+| `fmt.Errorf` | 126:25 |
+| `Format` | 128:5 |
+| `session.StartTime.In` | 128:5 |
+| `Format` | 128:67 |
+| `session.EndTime.In` | 128:67 |
+| `fmt.Errorf` | 129:25 |
+| `session.EndTime.Sub` | 132:19 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `time.Parse("2006-01-02", day.Date)` | 107 | date shape check; the parsed value is discarded, only the error is used |
 | `fmt.Errorf("invalid date %q: %w", …)` | 108 | date refusal |

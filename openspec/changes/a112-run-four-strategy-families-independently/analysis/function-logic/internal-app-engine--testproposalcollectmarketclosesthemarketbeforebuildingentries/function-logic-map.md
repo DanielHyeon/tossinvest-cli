@@ -52,6 +52,29 @@ base 리비전의 17개 분기는 모두 AST 탐색 보조(파싱 실패, 노드
 
 ## Calls and live bindings
 
+| Callee expression | Position |
+|---|---|
+| `token.NewFileSet` | 28:10 |
+| `parser.ParseFile` | 29:15 |
+| `t.Fatalf` | 31:3 |
+| `ast.Inspect` | 34:2 |
+| `t.Fatalf` | 42:3 |
+| `ast.Inspect` | 46:2 |
+| `ast.Inspect` | 52:3 |
+| `ast.Inspect` | 63:4 |
+| `statement.End` | 70:63 |
+| `statement.End` | 71:24 |
+| `t.Fatal` | 76:3 |
+| `ast.Inspect` | 81:2 |
+| `len` | 83:13 |
+| `len` | 83:37 |
+| `assign.Pos` | 95:42 |
+| `assign.Pos` | 96:24 |
+| `t.Fatal` | 102:3 |
+| `t.Fatalf` | 105:3 |
+| `fset.Position` | 107:4 |
+| `fset.Position` | 107:38 |
+
 base 리비전의 호출은 `go/parser.ParseFile`, `go/ast.Inspect`, `token.NoPos` 비교와
 `t.Fatal`/`t.Fatalf` 뿐이다. production 심볼과의 유일한 결합은 파일 이름 문자열
 `"strategy_proposal_authority.go"` 과 메서드 이름 `"collectMarket"`, `"Ambiguous"` 이었다.

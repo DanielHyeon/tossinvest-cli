@@ -33,7 +33,52 @@ Exact AST return nodes: `138, 142, 147, 150, 153, 156, 159, 164, 168, 171, 177, 
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `marketAndCode` | 136:33 |
+| `strings.ToUpper` | 140:17 |
+| `strings.TrimSpace` | 140:33 |
+| `canonicalSymbolText` | 141:6 |
+| `invalid` | 142:20 |
+| `strings.TrimSpace` | 144:20 |
+| `sessionDateFor` | 145:22 |
+| `invalid` | 147:20 |
+| `err.Error` | 147:67 |
+| `canonicalPayloadText` | 149:6 |
+| `invalid` | 150:20 |
+| `checkMarketCurrency` | 152:12 |
+| `invalid` | 156:20 |
+| `openAt.IsZero` | 158:5 |
+| `observedAt.IsZero` | 158:24 |
+| `invalid` | 159:20 |
+| `openAt.UTC` | 161:15 |
+| `openAtUTC.UnixMilli` | 162:14 |
+| `invalid` | 164:20 |
+| `normalizedMarket.TradingDay` | 166:21 |
+| `invalid` | 168:20 |
+| `err.Error` | 168:64 |
+| `invalid` | 171:20 |
+| `openAtUTC.Add` | 174:14 |
+| `observedAt.UTC` | 175:17 |
+| `observedUTC.Before` | 176:5 |
+| `invalid` | 177:20 |
+| `closedBar1mRecordID` | 179:14 |
+| `uint64` | 179:92 |
+| `evidenceIDFor` | 181:31 |
+| `revisionIdentityFor` | 190:31 |
+| `supersededRevisionIdentity` | 191:31 |
+| `strings.ToUpper` | 197:31 |
+| `strings.TrimSpace` | 197:47 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `marketAndCode(market)` | 136 | normalises the market and yields the upper-case code used in every identity string |
 | `canonicalSymbolText`, `sessionDateFor`, `canonicalPayloadText`, `checkMarketCurrency` | 141, 145, 149, 152 | shared text/identity predicates (same rules the payload gate re-applies) |

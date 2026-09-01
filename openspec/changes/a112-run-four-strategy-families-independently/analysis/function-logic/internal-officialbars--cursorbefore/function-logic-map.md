@@ -26,7 +26,20 @@ The AST reports **0 branches**: `t.Helper()` then one unconditional `return` (AS
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `t.Helper` | 220:2 |
+| `brokerTimestamp` | 221:9 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `t.Helper()` | 220 | failures attribute to the calling test |
 | `brokerTimestamp(t, oldestOpen)` | 221 | formats the instant into the broker's wire layout (fixed KST offset, three fractional digits). The `.Add(-time.Minute)` that stood here at base is **deliberately absent** — under decision 30 the subtraction is already inside the label→open relation |

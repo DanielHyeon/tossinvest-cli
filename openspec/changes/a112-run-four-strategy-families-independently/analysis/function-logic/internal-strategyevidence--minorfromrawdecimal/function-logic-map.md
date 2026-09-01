@@ -32,7 +32,40 @@ Exact AST return nodes: `824, 832, 836, 839, 845, 856, 860` (6 refusals + the va
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `errors.New` | 824:13 |
+| `strings.IndexByte` | 827:14 |
+| `onlyDigits` | 830:27 |
+| `onlyDigits` | 830:55 |
+| `strings.IndexByte` | 831:4 |
+| `errors.New` | 832:13 |
+| `len` | 835:5 |
+| `errors.New` | 836:13 |
+| `uint64` | 838:5 |
+| `len` | 838:12 |
+| `errors.New` | 839:13 |
+| `formatUint` | 839:78 |
+| `uint64` | 841:11 |
+| `len` | 842:26 |
+| `appendDecimalDigit` | 843:15 |
+| `errors.New` | 845:14 |
+| `uint64` | 849:18 |
+| `byte` | 850:12 |
+| `uint64` | 851:17 |
+| `len` | 851:24 |
+| `appendDecimalDigit` | 854:15 |
+| `errors.New` | 856:14 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `strings.IndexByte(raw, '.')` | 827, 831 | split point; second call re-checks the trailing-`.` case |
 | `onlyDigits(integerPart)`, `onlyDigits(fractionPart)` | 830 | ASCII digit predicate (same file) |

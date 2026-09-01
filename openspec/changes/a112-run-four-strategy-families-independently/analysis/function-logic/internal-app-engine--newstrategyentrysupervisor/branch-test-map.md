@@ -5,23 +5,23 @@
 
 | Branch | Scenario anchor | Required test disposition | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 509:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B2 | if at 512:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B3 | if at 516:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B4 | if at 519:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B5 | if at 522:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B6 | if at 526:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B7 | if at 530:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B8 | range at 535:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B9 | if at 536:3 | planned targeted RED before any edit; not run by L0 | no | no |
-| B10 | if at 539:3 | planned targeted RED before any edit; not run by L0 | no | no |
-| B11 | if at 542:3 | planned targeted RED before any edit; not run by L0 | no | no |
-| B12 | if at 545:3 | planned targeted RED before any edit; not run by L0 | no | no |
-| B13 | if at 549:3 | planned targeted RED before any edit; not run by L0 | no | no |
-| B14 | if at 553:3 | planned targeted RED before any edit; not run by L0 | no | no |
-| B15 | if at 559:3 | planned targeted RED before any edit; not run by L0 | no | no |
-| B16 | if at 562:3 | planned targeted RED before any edit; not run by L0 | no | no |
-| B17 | range at 575:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B18 | if at 576:3 | planned targeted RED before any edit; not run by L0 | no | no |
+| B1 | if at 511:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B2 | if at 514:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B3 | if at 518:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B4 | if at 521:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B5 | if at 524:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B6 | if at 528:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B7 | if at 532:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B8 | range at 537:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B9 | if at 538:3 | planned targeted RED before any edit; not run by L0 | no | no |
+| B10 | if at 541:3 | planned targeted RED before any edit; not run by L0 | no | no |
+| B11 | if at 544:3 | planned targeted RED before any edit; not run by L0 | no | no |
+| B12 | if at 547:3 | planned targeted RED before any edit; not run by L0 | no | no |
+| B13 | if at 551:3 | planned targeted RED before any edit; not run by L0 | no | no |
+| B14 | if at 555:3 | planned targeted RED before any edit; not run by L0 | no | no |
+| B15 | if at 561:3 | planned targeted RED before any edit; not run by L0 | no | no |
+| B16 | if at 564:3 | planned targeted RED before any edit; not run by L0 | no | no |
+| B17 | range at 577:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B18 | if at 578:3 | planned targeted RED before any edit; not run by L0 | no | no |
 
 A lot may replace a planned row only after recording its exact test name and actual RED/GREEN command result.

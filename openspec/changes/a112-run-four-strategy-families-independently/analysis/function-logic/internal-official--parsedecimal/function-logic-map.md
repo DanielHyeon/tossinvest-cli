@@ -27,7 +27,19 @@ Exact AST return nodes: `17, 21, 23`.
 
 ## Calls and live bindings
 
-| Callee | Why called | Error/timeout/retry contract | Evidence |
+| Callee expression | Position |
+|---|---|
+| `strconv.ParseFloat` | 19:12 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
 | `strconv.ParseFloat` | convert the decimal string to `float64` | error is swallowed at B2 and mapped to `0`; no retry | `ast.json` call at 19:12 |
 

@@ -39,6 +39,32 @@
 
 ## Calls and live bindings
 
+| Callee expression | Position |
+|---|---|
+| `t.Run` | 154:4 |
+| `string` | 154:22 |
+| `pairedStrategyDispatchCycleFixture` | 155:33 |
+| `entries.authority.Proposal` | 156:15 |
+| `proposals.forMarket` | 156:15 |
+| `errors.New` | 157:16 |
+| `strings.ToLower` | 159:44 |
+| `string` | 159:60 |
+| `strings.ToLower` | 161:43 |
+| `string` | 161:59 |
+| `cycle.dispatch` | 163:18 |
+| `context.Background` | 163:33 |
+| `deliverForTest` | 163:55 |
+| `errors.Is` | 163:84 |
+| `t.Fatalf` | 164:6 |
+| `j.CurrentPositionCampaignCAS` | 166:17 |
+| `context.Background` | 166:46 |
+| `string` | 167:6 |
+| `t.Fatalf` | 169:6 |
+| `spy.mu.Lock` | 171:5 |
+| `len` | 172:15 |
+| `spy.mu.Unlock` | 173:5 |
+| `t.Fatalf` | 175:6 |
+
 - AST 호출 23개. 전체 열거는 `ast.json` 에 있다.
 - production 심볼과의 결합은 `cycle.dispatch` 와 픽스처가 만드는 권한 값들이며,
   이 로트가 더한 유일한 결합은 `deliverForTest` 다.

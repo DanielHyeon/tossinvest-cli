@@ -39,6 +39,23 @@ KR·US 두 시장이 각각 파생 lease 와 Gateway 를 지나 체결까지 가
 
 ## Calls and live bindings
 
+| Callee expression | Position |
+|---|---|
+| `pairedStrategyDispatchCycleFixture` | 64:31 |
+| `entries.authority.Proposal` | 65:13 |
+| `proposals.forMarket` | 65:13 |
+| `cycle.dispatch` | 66:15 |
+| `context.Background` | 66:30 |
+| `deliverForTest` | 66:52 |
+| `t.Fatalf` | 68:4 |
+| `len` | 70:6 |
+| `t.Fatalf` | 71:4 |
+| `j.LookupStrategyDispatchLease` | 74:17 |
+| `context.Background` | 74:47 |
+| `t.Fatalf` | 77:4 |
+| `t.Fatalf` | 82:5 |
+| `t.Fatalf` | 88:3 |
+
 - AST 호출 14개. 전체 열거는 `ast.json` 에 있다.
 - production 심볼과의 결합은 `cycle.dispatch` 와 픽스처가 만드는 권한 값들이며,
   이 로트가 더한 유일한 결합은 `deliverForTest` 다.

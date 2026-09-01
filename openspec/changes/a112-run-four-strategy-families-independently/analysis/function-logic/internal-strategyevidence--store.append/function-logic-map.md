@@ -43,7 +43,58 @@ Exact AST return nodes: `196, 201, 206, 211, 217, 221, 230, 233, 235, 239, 241, 
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `evidence.PayloadDigest` | 195:5 |
+| `invalid` | 196:26 |
+| `UTC` | 198:23 |
+| `s.clk.Now` | 198:23 |
+| `evidence.Header` | 199:7 |
+| `trustedIngestedAt.Before` | 200:5 |
+| `invalid` | 201:26 |
+| `NewEnvelope` | 204:18 |
+| `evidence.CanonicalPayload` | 204:33 |
+| `s.db.BeginTx` | 209:13 |
+| `(unnamed)` | 213:8 |
+| `tx.Rollback` | 213:21 |
+| `evidence.Header` | 214:6 |
+| `readByIdentity` | 215:26 |
+| `existing.PayloadDigest` | 220:6 |
+| `evidence.PayloadDigest` | 220:34 |
+| `sameImmutableProvenance` | 220:62 |
+| `existing.Header` | 220:86 |
+| `tx.Commit` | 221:63 |
+| `tx.ExecContext` | 223:19 |
+| `existing.Header` | 227:55 |
+| `existing.PayloadDigest` | 228:4 |
+| `evidence.PayloadDigest` | 228:44 |
+| `(unnamed)` | 228:70 |
+| `stamp` | 228:99 |
+| `tx.Commit` | 232:13 |
+| `fmt.Errorf` | 235:44 |
+| `readByIdentity` | 238:30 |
+| `invalid` | 241:27 |
+| `previous.Header` | 242:31 |
+| `invalid` | 243:27 |
+| `tx.ExecContext` | 246:11 |
+| `stamp` | 254:3 |
+| `stamp` | 254:27 |
+| `stamp` | 254:55 |
+| `stamp` | 254:76 |
+| `evidence.CanonicalPayload` | 255:53 |
+| `evidence.PayloadDigest` | 255:82 |
+| `fmt.Errorf` | 257:26 |
+| `tx.Commit` | 259:12 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `evidence.PayloadDigest()` | 195, 220, 228, 255 | the canonical digest, computed once in `NewEnvelope`; the comparison at 220 is what separates idempotence from conflict |
 | `invalid(...)` | 196, 201, 241, 243 | typed refusals (`RefusalPayloadInvalid`, `RefusalTimestampInvalid`, `RefusalIdentityMismatch` twice) |

@@ -51,7 +51,61 @@ Exact AST return nodes: `467, 471, 474, 477, 480, 484, 487, 490, 493, 496, 499, 
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `payloadFieldError` | 467:10 |
+| `strconv.Quote` | 467:55 |
+| `marketMoney` | 469:28 |
+| `payloadFieldError` | 471:10 |
+| `payloadFieldError` | 474:10 |
+| `payloadFieldError` | 477:10 |
+| `formatUint` | 477:60 |
+| `canonicalStoredSymbolText` | 479:6 |
+| `payloadFieldError` | 480:10 |
+| `sessionDateFor` | 482:22 |
+| `payloadFieldError` | 484:10 |
+| `err.Error` | 484:48 |
+| `canonicalPayloadText` | 486:6 |
+| `payloadFieldError` | 487:10 |
+| `payloadFieldError` | 490:10 |
+| `formatUint` | 490:60 |
+| `payloadFieldError` | 493:10 |
+| `strconv.Quote` | 493:58 |
+| `payloadFieldError` | 496:10 |
+| `payloadFieldError` | 499:10 |
+| `strconv.Quote` | 499:57 |
+| `payloadFieldError` | 502:10 |
+| `payloadFieldError` | 506:10 |
+| `marketclock.ParseMarket` | 510:17 |
+| `payloadFieldError` | 512:10 |
+| `market.TradingDay` | 514:17 |
+| `UTC` | 514:35 |
+| `time.UnixMilli` | 514:35 |
+| `int64` | 514:50 |
+| `payloadFieldError` | 516:10 |
+| `err.Error` | 516:48 |
+| `payloadFieldError` | 519:10 |
+| `payloadFieldError` | 527:11 |
+| `payloadFieldError` | 531:10 |
+| `payloadFieldError` | 534:10 |
+| `payloadFieldError` | 537:10 |
+| `checkRawMinor` | 550:13 |
+| `payloadFieldError` | 555:10 |
+| `payloadFieldError` | 559:10 |
+| `payloadFieldError` | 562:10 |
+| `payloadFieldError` | 565:10 |
+| `canonicalSHA256Digest` | 567:6 |
+| `payloadFieldError` | 568:10 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `marketMoney(bar.Market)` | 469 | single scale table (KR→KRW/0, US→USD/4); mutants 4→3 / 4→5 killed (review.md 2026-08-16 follow-up) |
 | `canonicalStoredSymbolText`, `sessionDateFor`, `canonicalPayloadText`, `canonicalSHA256Digest` | 479, 482, 486, 567 | pure text predicates in the same file |

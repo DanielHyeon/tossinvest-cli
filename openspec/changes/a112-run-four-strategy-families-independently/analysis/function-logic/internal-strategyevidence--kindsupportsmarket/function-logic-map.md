@@ -26,9 +26,9 @@
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
-|---|---|---|
-| — | — | no call node (pure switch) |
+| Callee expression | Position |
+|---|---|
+| (no call expressions in this function) | — |
 
 ## State mutations and fallbacks
 

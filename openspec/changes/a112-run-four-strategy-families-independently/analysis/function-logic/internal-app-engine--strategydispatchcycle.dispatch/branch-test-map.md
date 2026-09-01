@@ -5,19 +5,19 @@
 
 | Branch | Scenario anchor | Required test disposition | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 55:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B2 | if at 58:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B3 | if at 63:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B4 | if at 70:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B5 | if at 74:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B6 | if at 78:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B7 | if at 82:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B8 | if at 86:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B9 | if at 90:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B10 | if at 97:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B11 | if at 103:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B12 | if at 116:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B13 | if at 122:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B14 | if at 126:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B1 | if at 66:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B2 | if at 69:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B3 | if at 74:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B4 | if at 81:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B5 | if at 85:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B6 | if at 89:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B7 | if at 93:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B8 | if at 97:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B9 | if at 101:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B10 | if at 108:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B11 | if at 114:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B12 | if at 127:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B13 | if at 133:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B14 | if at 137:2 | planned targeted RED before any edit; not run by L0 | no | no |
 
 A lot may replace a planned row only after recording its exact test name and actual RED/GREEN command result.

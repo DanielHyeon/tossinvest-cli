@@ -3,7 +3,7 @@
 - Source: `internal/app/engine/strategy_dispatch_cycle.go`
 - Current-base source SHA-256: `0ce70d7b683d586d4224440b2fe66df7e018caacdb20b7c5ae1f46e7ad98d7b1`
 - Signature: `strategyDispatchCycle.dispatch(params=2, results=2)`
-- Source range: `53:1`–`138:2`
+- Source range: `63:1`–`149:2`
 - AST evidence: `ast.json`, generated from frozen base `016da6245feb60e13971388be386c2c2041469a8`.
 - Risk scan: `risk-pattern-report.md`.
 

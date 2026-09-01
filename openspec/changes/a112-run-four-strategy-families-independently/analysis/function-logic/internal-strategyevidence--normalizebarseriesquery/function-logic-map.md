@@ -29,7 +29,39 @@ Exact AST return nodes: `178, 184, 188, 191, 195, 202, 206`.
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `marketclock.ParseMarket` | 176:17 |
+| `invalid` | 178:32 |
+| `strings.ToUpper` | 180:17 |
+| `string` | 180:33 |
+| `strings.ToUpper` | 181:17 |
+| `strings.TrimSpace` | 181:33 |
+| `strings.TrimSpace` | 182:20 |
+| `canonicalSymbolText` | 183:6 |
+| `invalid` | 184:32 |
+| `sessionDateFor` | 187:15 |
+| `invalid` | 188:32 |
+| `err.Error` | 188:96 |
+| `invalid` | 191:32 |
+| `formatUint` | 192:12 |
+| `invalid` | 195:32 |
+| `strconv.Itoa` | 196:29 |
+| `query.EvaluationAt.IsZero` | 201:5 |
+| `query.IngestionCutoff.IsZero` | 201:36 |
+| `invalid` | 202:32 |
+| `query.EvaluationAt.UTC` | 204:23 |
+| `query.IngestionCutoff.UTC` | 205:26 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `marketclock.ParseMarket(query.Market)` | 176 | case/space-insensitive market parse (`internal/clock`) |
 | `strings.ToUpper`, `strings.TrimSpace` | 180–182 | normalisation of market/symbol/session |

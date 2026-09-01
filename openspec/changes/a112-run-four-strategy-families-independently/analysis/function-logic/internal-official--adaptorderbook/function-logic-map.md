@@ -30,7 +30,30 @@ Exact AST return node: `252`. There is exactly one return and no early exit; eve
 
 ## Calls and live bindings
 
-| Callee | Why called | Error/timeout/retry contract | Evidence |
+| Callee expression | Position |
+|---|---|
+| `make` | 230:12 |
+| `len` | 230:45 |
+| `parseDecimal` | 233:10 |
+| `append` | 235:12 |
+| `parseDecimal` | 236:12 |
+| `make` | 241:10 |
+| `len` | 241:43 |
+| `parseDecimal` | 244:10 |
+| `append` | 246:10 |
+| `parseDecimal` | 247:12 |
+| `UTC` | 258:15 |
+| `time.Now` | 258:15 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
 | `parseDecimal` (x4: 233:10, 236:12, 244:10, 247:12) | decimal string -> `float64` | fail-open: any malformed value becomes `0` and is indistinguishable from a real `0` (`internal-official--parsedecimal` bundle) | `ast.json` calls |
 | `make`/`len`/`append` | build the two level slices | none | `ast.json` calls at 230, 241, 235, 246 |

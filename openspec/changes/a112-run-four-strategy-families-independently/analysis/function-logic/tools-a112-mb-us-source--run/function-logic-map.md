@@ -64,7 +64,102 @@
 
 ## Calls and live bindings
 
-| Callee | Why called | Error/timeout/retry contract | Evidence |
+| Callee expression | Position |
+|---|---|
+| `validateConfig` | 72:12 |
+| `holdf` | 73:10 |
+| `holdf` | 76:10 |
+| `deps.now` | 78:13 |
+| `started.IsZero` | 79:5 |
+| `holdf` | 80:10 |
+| `context.WithDeadline` | 82:35 |
+| `Add` | 82:61 |
+| `time.Now` | 82:61 |
+| `cancelCollector` | 83:8 |
+| `collectorLive` | 84:32 |
+| `live` | 85:12 |
+| `holdf` | 86:10 |
+| `opener` | 92:16 |
+| `holdf` | 94:10 |
+| `(unnamed)` | 96:8 |
+| `store.close` | 96:21 |
+| `(unnamed)` | 97:8 |
+| `store.taint` | 99:8 |
+| `guarded.setLive` | 103:3 |
+| `live` | 108:12 |
+| `holdf` | 109:10 |
+| `snapshotIdentity` | 111:14 |
+| `holdf` | 113:10 |
+| `(unnamed)` | 115:8 |
+| `pre.close` | 115:21 |
+| `verifyPrescribedBinary` | 116:12 |
+| `holdf` | 117:10 |
+| `live` | 119:12 |
+| `holdf` | 120:10 |
+| `store.writeJSON` | 122:12 |
+| `receiptConfigFrom` | 122:71 |
+| `holdf` | 123:10 |
+| `live` | 125:12 |
+| `holdf` | 126:10 |
+| `bytes.Clone` | 129:12 |
+| `len` | 130:5 |
+| `string` | 131:8 |
+| `boundedRequestContext` | 136:37 |
+| `holdf` | 138:11 |
+| `deps.reader.Candle` | 140:22 |
+| `cancel` | 141:3 |
+| `holdf` | 143:11 |
+| `live` | 145:13 |
+| `holdf` | 146:11 |
+| `validateSourceResult` | 148:13 |
+| `holdf` | 149:11 |
+| `store.writeResult` | 151:13 |
+| `fmt.Sprintf` | 151:31 |
+| `holdf` | 152:11 |
+| `live` | 154:13 |
+| `holdf` | 155:11 |
+| `nextCursor` | 158:24 |
+| `holdf` | 160:11 |
+| `requireRemaining` | 166:13 |
+| `holdf` | 167:11 |
+| `string` | 169:8 |
+| `digestBytes` | 177:28 |
+| `store.writeJSON` | 179:12 |
+| `holdf` | 180:10 |
+| `live` | 182:12 |
+| `holdf` | 183:10 |
+| `collectSingle` | 185:12 |
+| `deps.reader.Orderbook` | 186:10 |
+| `collectSingle` | 190:12 |
+| `deps.reader.Calendar` | 191:10 |
+| `live` | 196:12 |
+| `holdf` | 197:10 |
+| `snapshotIdentity` | 199:15 |
+| `holdf` | 201:10 |
+| `(unnamed)` | 203:8 |
+| `post.close` | 203:21 |
+| `pre.equal` | 204:6 |
+| `holdf` | 205:10 |
+| `live` | 207:12 |
+| `holdf` | 208:10 |
+| `store.seal` | 210:12 |
+| `holdf` | 211:10 |
+| `live` | 213:12 |
+| `holdf` | 214:10 |
+| `store.verifySealed` | 216:12 |
+| `holdf` | 217:10 |
+| `live` | 219:12 |
+| `holdf` | 220:10 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
 | `deps.reader.Candle/Orderbook/Calendar` | the only network reads (M-B0 seam) | one request per call, no retry/fallback; error → HOLD | ast.json calls; a112_mbus_read.go single `hc.Do` |
 | `store.write*/seal/taint/verifySealed` | receipt capability | O_EXCL 0600 payloads, self-excluding manifest, taint on any HOLD | receipt_unix.go |

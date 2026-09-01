@@ -38,7 +38,50 @@ Exact AST return nodes: `121, 126, 131 (mismatch closure), 135, 143, 145, 147, 1
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `scanEnvelope` | 119:19 |
+| `envelope.Header` | 123:12 |
+| `DecodeClosedBar1mPayload` | 124:18 |
+| `envelope.CanonicalPayload` | 124:43 |
+| `invalid` | 131:10 |
+| `sessionDateFor` | 133:22 |
+| `mismatch` | 135:33 |
+| `err.Error` | 135:56 |
+| `closedBar1mRecordID` | 139:22 |
+| `uint64` | 140:23 |
+| `header.SourceEventAt.UnixMilli` | 140:30 |
+| `mismatch` | 143:33 |
+| `mismatch` | 145:33 |
+| `mismatch` | 147:33 |
+| `mismatch` | 149:33 |
+| `mismatch` | 151:33 |
+| `mismatch` | 153:33 |
+| `mismatch` | 155:33 |
+| `header.SourceAvailableAt.Equal` | 156:8 |
+| `header.SourceEventAt.Add` | 156:39 |
+| `time.Duration` | 156:64 |
+| `mismatch` | 157:33 |
+| `uint64` | 158:27 |
+| `header.SourceEventAt.UnixMilli` | 158:34 |
+| `mismatch` | 159:33 |
+| `uint64` | 160:37 |
+| `header.ObservedAt.UnixMilli` | 160:44 |
+| `mismatch` | 161:33 |
+| `mismatch` | 163:33 |
+| `revisionIdentityFor` | 164:34 |
+| `mismatch` | 165:33 |
+| `envelope.PayloadDigest` | 170:21 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `scanEnvelope(rows)` | 119 | store.go:460 — column scan, stamp parse, `NewEnvelope` re-validation, stored-digest equality |
 | `envelope.Header()`, `envelope.CanonicalPayload()`, `envelope.PayloadDigest()` | 123, 124, 170 | envelope accessors |

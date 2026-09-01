@@ -34,7 +34,26 @@ Exact AST return nodes: `323, 327, 331, 348, 352, 356, 363, 365`.
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `c.tm.token` | 321:14 |
+| `makeReq` | 325:14 |
+| `c.doRequest` | 329:21 |
+| `c.tm.refresh` | 346:23 |
+| `makeReq` | 350:14 |
+| `c.doRequest` | 354:21 |
+| `classifyStatus` | 363:10 |
+| `unwrapAndDecode` | 365:9 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `c.tm.token(ctx)` | 321 | shared token manager; cold load, cache hit and exchange are covered by `TestTokenExchangeAndCache`, `TestTokenColdLoadFromDiskCache` |
 | `makeReq(tok)` | 325, 350 | per-verb request builder, called once per attempt so the retry carries the new token |

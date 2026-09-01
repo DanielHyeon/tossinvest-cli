@@ -29,7 +29,7 @@ Exact AST return positions: 133:2.
 
 | Callee expression | Position |
 |---|---|
-| — | — |
+| (no call expressions in this function) | — |
 
 ## State mutations and fallbacks
 

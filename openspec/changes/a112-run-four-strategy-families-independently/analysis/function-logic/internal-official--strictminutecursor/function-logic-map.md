@@ -32,7 +32,34 @@ Exact AST return nodes: `398`, `403`, `406`, `410`, `414`, `417`, `420`.
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `strictMinuteRefuse` | 398:21 |
+| `bytes.TrimSpace` | 401:13 |
+| `bytes.Equal` | 402:5 |
+| `(unnamed)` | 402:26 |
+| `len` | 405:5 |
+| `strictMinuteRefuse` | 406:21 |
+| `strictMinuteString` | 408:16 |
+| `strictMinuteRefuse` | 410:21 |
+| `err.Error` | 410:60 |
+| `strictMinuteInstant` | 412:17 |
+| `strictMinuteRefuse` | 414:21 |
+| `err.Error` | 414:60 |
+| `len` | 416:5 |
+| `cursor.Before` | 416:27 |
+| `len` | 416:50 |
+| `strictMinuteRefuse` | 417:21 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `bytes.TrimSpace(raw)`, `bytes.Equal(trimmed, []byte("null"))` | 401–402 | the `null` arm is decided on the raw bytes, not on a decoded `any` |
 | `strictMinuteString(trimmed)` | 408 | string-ness and non-emptiness |

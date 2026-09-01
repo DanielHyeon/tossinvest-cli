@@ -39,7 +39,31 @@ Exact AST return nodes: `498`, `502`, `506`, `514`, `518`, `521`, `525`, `531`, 
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `decoder.Token` | 496:16 |
+| `errors.New` | 506:10 |
+| `strconv.Itoa` | 506:54 |
+| `make` | 510:11 |
+| `decoder.More` | 511:7 |
+| `decoder.Token` | 512:21 |
+| `errors.New` | 518:12 |
+| `fmt.Errorf` | 521:12 |
+| `strictMinuteWalk` | 524:14 |
+| `decoder.More` | 529:7 |
+| `strictMinuteWalk` | 530:14 |
+| `errors.New` | 537:10 |
+| `decoder.Token` | 539:15 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `decoder.Token()` ×3 | 496, 512, 539 | opening token, object keys, closing delimiter |
 | `errors.New`, `strconv.Itoa(strictMinuteMaxDepth)` | 506 | the depth refusal names the bound it enforces |

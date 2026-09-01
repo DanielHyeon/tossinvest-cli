@@ -2380,6 +2380,62 @@ B-1 과 B-3 을 합치면 한 편집으로 `Capacity`·거절 이름 셋이 모�
 - `Refusal()`·`Pending()` 을 읽는 생산 코드가 아직 없다(7.3).
 - 이 로트도 재검토를 받아야 한다.
 
+## 5.5 현재 상태 — 아래 fix 절들보다 이것을 먼저 읽는다
+
+fix3~fix13 은 **적대 리뷰 13 라운드의 시간순 기록**이다. 나중 절이 앞 절을 정정하는
+곳이 많으므로, 지금 무엇이 서 있는지는 그것들을 diff 해서 재구성하지 말고 여기서 읽는다.
+자세한 것은 `analysis/function-logic/internal-app-engine--productionstrategyfirstlegauthorityloader.collectstrategyfirstlegauthority/branch-test-map.md`
+의 B3 절과 tasks.md 의 6.2 선결조건에 있다.
+
+**무엇이 오늘 주문을 막는가.** `strategy_account_first_leg_authority.go` 가 건너온
+값을 믿지 않고 자기 권한 쌍에서 제안을 다시 꺼내 봉인된 identity 두 개를 대조한다 —
+개수 관문 `:217`, 재유도 `:221`–`:222`, 비교 `:223`–`:225`.
+
+**무엇이 그것을 고정하는가.** 셋이 함께여야 닫힌다.
+
+| | 어디 |
+|---|---|
+| 행동 — 이 가드가 돌고 거절한다 | 시험 함수 넷(하위 여섯), `strategy_first_leg_identity_backstop_test.go` |
+| 구조 — 이 가드가 봉인된 identity 를 **그대로** 비교한다 | 단언 하나, `strategy_first_leg_backstop_shape_test.go` |
+| 해시 완전성 — 그 identity 가 **모든 필드**를 담는다 | 32 + 8 케이스, `strategyflow/execution_terms_identity_fields_test.go` 와 `weeklyvaluelane/execution_policy_identity_fields_test.go` |
+
+행동만으로는 끝나지 않는다는 것이 이 13 라운드의 결론이다. identity 가 담는 스칼라가
+32 개이고, 라운드마다 축 하나씩을 시험으로 사면 다음 축이 항상 남았다.
+
+**아직 열려 있는 것.** 셋 다 이름만 적혀 있고 닫히지 않았다.
+
+1. `dispatchHandoff` 수신자 위조. 어떤 철자 census 로도 못 닫는다고 fix4 가 물렸고
+   그대로다. 13 라운드가 굳힌 것은 **backstop 이지 seam 이 아니다.** 진짜 해법
+   (`Admit` 이 조정자만 만들 수 있는 봉인 값을 받는 것)은 6.2 의 차단 선결조건이다.
+2. `revision: base` 번들 15 개가 소스 해시에 묶이지 않는다(13 개는 `base-commit.txt`
+   와도 불일치). "133/133 이 열거한다"는 표 모양의 참이지 좌표의 참이 아니다.
+3. `strategyflow` 에 exported 표면 census 가 없다. 이제 봉인된 `Result` 를 만드는
+   함수가 태그 아래 둘이다.
+
+**사람이 확인해야 하는 것.** 리뷰로는 못 정한다.
+
+- 1 번을 연 채로 5.5 를 내보내는 것을 받아들이는지.
+- CI(`.github/workflows/ci.yml`)가 `make sdd-test` 도 `check_analysis` 도 안 돌린다.
+  여덟 라운드 분량의 `role_check.py` 강제는 **수동 실행으로만** 검증된다. 배선하거나
+  명시적으로 받아들이거나.
+- ~~외부 `a117` 스텁이 `make sdd-check` 를 깨고 있다.~~ **2026-09-02 에 사람이 소유를
+  넘겨 처리했다** — `a119-…` 로 renumber 하고 `STORY-TOS-a119`(FEAT-TOS-001)·registry·
+  generated tracker 를 만들었다. Story 의 acceptance 는 그 세션의 proposal.md 에서 옮겨
+  적은 것이고 내용의 주인은 여전히 그 세션이다. `make sdd-check` 는 이제 통과한다.
+  남은 것은 그 스텁에 `specs/` 델타가 없어 `make validate --all` 이 1 건 실패하는 것.
+- `make gate` 는 이 change 에서 한 번도 돈 적이 없다(완료 게이트, 2/10 에서 멈춘다).
+
+**이 기록에서 가장 옮겨 쓸 만한 것 — 반증 방법이 틀린 두 사례.**
+
+1. `go test -overlay` 는 **디스크를 읽는 파서에 안 보인다.** 소스를 읽는 시험을
+   overlay 로 반증하면 전부 GREEN 이 나오고, 그것은 "가드가 강하다"가 아니라
+   **"안 쟀다"** 이다. 파일을 실제로 바꾸고 해시로 복원해야 한다.
+2. 리네임 뮤테이션이 `*.go` 를 통째로 훑으면 **시험 파일까지 고쳐** 자기를 잡아야 할
+   시험을 수리한다. 뮤테이션의 범위는 생산 코드로 한정해야 한다.
+
+둘 다 "통과했다"를 근거로 쓰기 전에 **반증이 실제로 그 축을 흔들었는지** 확인해야
+한다는 같은 규칙의 사례다.
+
 ## 5.5-fix3 — 3라운드 적대 재검토와 그 수정
 
 ### 리뷰어 셋이 같은 구멍을 세 가지 철자로 뚫었다
@@ -2405,28 +2461,39 @@ Deliver 몸통 안의 `rawTailProposal()` 로 경계를 우회했고 셋 다 두
 | 봉투 타입 | `strategyhandoff.Delivered` — 값 필드가 비공개. 밖에서는 영값만 만들 수 있다 |
 | dispatch 서명 | `dispatch(ctx, strategyhandoff.Delivered)` — 경계 밖 `Result` 는 **컴파일 실패** |
 | 지운 검사 | `TestSeamConsumersCannotReadTheRawEntryListAgain`, `seamConsumerFuncs`, `identMentions` 의 `entries` 금지, 호출 인자의 이름 소속 검사(`fromSeam`), `deliveredParamName` |
-| 더한 검사 | `TestOnlyTheSeamsEnvelopeCanReachTheSharedDispatch`(서명 고정), `TestExactlyOneProductionSiteAdmitsIntoTheSeam`(패키지 전체의 `Admit` 세기), `strategyhandoff` 의 `TestOnlyTheEngineImportsThisSeam`(이 경계를 들여오는 패키지 고정, 106 패키지 훑어 importer 1) |
+| 더한 검사 | `TestOnlyTheSeamsEnvelopeCanReachTheSharedDispatch`(서명 고정), `TestExactlyOneProductionSiteAdmitsIntoTheSeam`(패키지 전체의 `Admit` 세기), `strategyhandoff` 의 `TestOnlyTheEngineImportsThisSeam`(이 경계를 들여오는 패키지 고정, 106 패키지 훑어 importer 1 — *4차 정정: 그 106 은 `go list <module>/...` 의 우주이고 `testdata` 를 건너뛴다. 5.5-fix4 에서 `-deps` 폐포 셋 2595 항목으로 바꿨다*) |
 | 적재 미달 이름 | `refusalNow` 가 `<`/`>` 로 갈라 미달은 `HANDOFF_NO_SELECTION`. 다섯째 거절 어휘를 만들지 않는다 |
 | census 연산자 | `singleProposalAssumptionSites` 가 `value.Op` 를 읽는다. 앞 판본은 `len(x.entries) - 1` 도 "1과의 비교"로 셌다 |
 
 봉투가 증명하지 **못하는** 것을 코드와 문서에 함께 적었다: 봉투는 "dispatch 된 값이
 `Admit` 을 거쳤다"만 증명하고, 그 `Admit` 을 부른 것이 조정자였는지는 증명하지 않는다.
-그 나머지는 위의 두 세기가 맡고, 각각 **자기 범위 안에서 완전**하다(하나는 엔진 패키지
-전체의 호출, 하나는 모듈 전체의 import).
+~~그 나머지는 위의 두 세기가 맡고, 각각 **자기 범위 안에서 완전**하다(하나는 엔진 패키지
+전체의 호출, 하나는 모듈 전체의 import).~~
+
+**4차 정정 — 이 문장은 거짓이었고, 셋 다 그것을 뚫었다.** (a) 엔진 세기는 함수 본문
+밖을 못 봤다. (b) import 세기의 우주 `go list <module>/...` 는 `testdata` 디렉터리를
+건너뛰는데 컴파일러는 안 건너뛴다. (c) **그리고 둘 다 고쳐도 닫히지 않는다** —
+`dispatchHandoff` 는 평범한 패키지 사설 구조체의 메서드라 엔진 안 아무 함수나 수신자를
+리터럴로 만들어 부를 수 있고, 그때 `Admit` 도 import 도 나타나지 않는다. **주조 권한이
+이 패키지 안에 진짜로 있으므로 철자를 세는 검사로는 영원히 못 닫는다.**
 
 ### 뮤테이션
 
 | ID | 편집 | 결과 |
 |---|---|---|
-| M1 | 경계를 지나지 않은 `Result` 를 dispatch 에 넘긴다(리뷰어 셋의 공격 그대로) | KILLED — **컴파일 실패** |
-| M2 | 엔진이 스스로 `Admit` 을 불러 봉투를 만들어 넘긴다 | KILLED — `TestExactlyOneProductionSiteAdmitsIntoTheSeam` + 호출 자리 세기 |
+| M1 | 경계를 지나지 않은 `Result` 를 dispatch 에 넘긴다(리뷰어 셋의 공격 그대로) | KILLED — **컴파일 실패** — *4차 정정: 참이지만 **오늘의 철자에 대해서만** 참이었다. `Delivered` 의 필드를 `Value` 로 한 단어 바꾸면 셋이 전부 되살아나는데 그 비공개성을 고정하는 시험이 없었다(A P1-1). 5.5-fix4 에서 표면 표가 타입의 모양을 적게 했다.* |
+| M2 | 엔진이 스스로 `Admit` 을 불러 봉투를 만들어 넘긴다 | ~~KILLED~~ — **거짓이었다.** 세기가 `*ast.FuncDecl` 안만 훑어서 패키지 수준 `var f = …Admit` 이 빠져나갔다(A P1-2a, B P1-1). 5.5-fix4 에서 파일 전체로 올렸다 |
 | M3 | 같은 봉투로 dispatch 를 3회 부른다 | **SURVIVED** |
 | M4 | 분기 표의 좌표를 같은 함수의 반환 좌표로 바꾼다(실제 a112 번들) | KILLED — `role_check` |
 | M5 | `len(entries) - 1` 산술식을 넣는다 | 세지 않음(의도대로) |
 
 원복은 `try/finally` 안에서 하고 sha256 으로 대조했다.
 
-**M3 은 남긴 것이 아니라 주장을 바꾼 것이다.** 소스 검사는 철자를 셀 뿐 실행을 세지
+**M3 은 남긴 것이 아니라 주장을 바꾼 것이다.** *(4차 정정: 아래 문장이 "쟀다"고 적은
+귀속은 재지 않은 것이었다 — 그 시험은 `err != nil` 과 주문 1건만 단언하고 막은 주체는
+`t.Logf` 에만 있었다. B 가 CAS 관문을 지우고 돌려 보니 시험은 그대로 통과했고 원장의
+replay-identity 가 대신 막았다. 5.5-fix4 에서 이름으로 단언하게 고쳤고, at-most-once 가
+**과잉 결정**되어 있다는 것이 그 과정에서 드러났다.)* 소스 검사는 철자를 셀 뿐 실행을 세지
 않으므로 "한 주기에 한 번"은 이 가드의 성질이 아니다. 실제로 막는 것은 원장이고, 그것을
 재서 확인했다 — `TestTheSameEnvelopeCannotPlaceASecondOrder` 에서 두 번째 dispatch 는
 `AUTHORITY_COLLECTION_FAILED: production position campaign CAS changed` 로 막히고 Gateway
@@ -2439,13 +2506,17 @@ C 가 `check_analysis.py` 에 오류 넷을 심어 전부 통과시켰다. 그 �
 분기 **개수**만 보고, 좌표가 무엇을 가리키는지는 보지 않았다. `tools/logic-map/role_check.py`
 가 그 역할을 대조하고 `check_analysis.py` 에 배선됐다.
 
-배선 **전에** 저장소의 번들 401개 전체에 돌려 쟀다: **맞는 문서에서 터진 것 0**, 진짜 결함
+배선 **전에** 저장소의 번들 401개에 돌려 쟀다(*4차 정정: 그것은 **비아카이브 부분집합**
+이었다. 저장소는 3014개이고, 아카이브 2610개에서 오탐 셋이 나왔다 — 대비율 `4.5:1`,
+장 시작 `09:00`, 주소 `127.0.0.1:0`. 개수만 늘리고 **종류**를 안 바꾼 측정이었다*):
+**맞는 문서에서 터진 것 0**, 진짜 결함
 3건 — 열거형 호출 표 셋이 정확히 40행에서 멈춰 있었다(실제 64·46·91). 셋 다 복구했다.
 오탐을 없애는 과정에서 규칙을 두 번 좁혔다: 표의 "AST kind" 칸은 산문이 들어오고
-(`case KindKRNetFlow → KR only`), 손으로 쓴 호출 분석 표(204개)는 한 줄이 호출 넷을 묶는다.
+(`case KindKRNetFlow → KR only`), 손으로 쓴 호출 분석 표(*4차 정정: 204 가 아니라 **226개**;
+204 는 그중 최빈 헤더 철자의 수였다*)는 한 줄이 호출 넷을 묶는다.
 그래서 **좌표만** 대조하고, 완전성을 주장하는 표(`| Callee expression | …`)만 1:1로 본다.
 `test_role_check.py` 는 역할 차원마다 오류를 하나씩 심고, 침묵해야 할 경우도 같은 수만큼
-못 박는다(12 시험).
+못 박는다(13 시험).
 
 ### 실측
 
@@ -2461,7 +2532,7 @@ C 가 `check_analysis.py` 에 오류 넷을 심어 전부 통과시켰다. 그 �
 | `tools/logic-map` 단위 시험 | 46 PASS |
 | `make sdd-test` | scripts 15 · logic-map 46 · sdd 29 · sdd-history 22 PASS; pm 만 1 실패 — 그 실패도 아래 a117 스텁이 원인이다(`duplicate numbered change a117`) |
 | `make sdd-sync` | PASS (GBrain advisory busy — 이전 신선도 유지) |
-| `make sdd-check` | **FAIL — 이 로트 밖의 원인**: 병행 Codex 세션의 untracked 중복 `a117-codex-session-handoff-and-gbrain-startup` 스텁. 그 세션이 번호를 다시 매겨야 한다(빈 번호 104·105·106·119·120) |
+| `make sdd-check` | **FAIL — 원인 둘, 이 행은 순서가 틀렸다.** *4차 정정: 먼저 걸리는 것은 이 로트 자신의 stale CodeGraph 지문이다(`sdd-sync` 를 부모 커밋에서 돌리고 그 뒤 커밋했다). `generate_master_tracker --check` 는 그 앞에서 멈추므로 a117 스텁까지 가지도 않는다. 두 번째 원인이 병행 Codex 세션의 untracked 중복 `a117-codex-session-handoff-and-gbrain-startup` 스텁이고, 그 세션이 번호를 다시 매겨야 한다(빈 번호 104·105·106·119·120)* |
 | `make gate CHANGE=a112…` | **not-applicable** — 이것은 change 전체의 완료 게이트이고 a112 는 L1~L8 에 미완료 44건이 남아 진행 중이다. 2/10 단계에서 멈춘다. 로트 단위 검증은 위 항목들이다 |
 | `openspec validate a112… --strict` | **valid** |
 | `make validate` (`--all --strict`) | 59 passed / 1 failed — 실패는 위와 같은 a117 스텁 하나뿐 |
@@ -2477,3 +2548,892 @@ C 가 `check_analysis.py` 에 오류 넷을 심어 전부 통과시켰다. 그 �
   아직 엔진 안에 있어서 import 폐쇄가 결정적이지 않다.
 - `ErrNoDelivery` 는 시장을 잠글 수 있으나 현재 도달 불가이고 문서화되지 않았다(7.3).
 - 이 로트도 재검토를 받아야 한다 — 세 라운드 연속 같은 뿌리에서 P1 이 나왔다.
+
+## 5.5-fix4 — 4라운드 적대 재검토: 셋 다 REJECT, 뿌리는 여전히 하나 (2026-08-31)
+
+로트 `b73b35e1` 을 서로 못 보는 리뷰어 셋에게 read-only 로 맡겼다. **P0 0건, 셋 다
+REJECT.** 세 축(봉투 / 돈 경로 / 증거 게이트)에서 독립으로 왔는데 결론이 겹쳤다:
+**이 로트가 고치겠다고 만든 검사 둘이, 각자 자기가 고치려던 결함을 그대로 재현했다.**
+
+### 한 단어로 죽는 로트였다
+
+A 가 가장 싼 공격을 찾았다. `Delivered` 의 필드를 `result` → `Value` 로 **이름만**
+바꾸면 3라운드의 우회 셋이 전부 되살아나고 두 스위트가 그대로 초록이다. 로트 전체가
+그 필드 하나의 비공개성 위에 서 있는데 **그것을 고정하는 시험이 없었다.**
+`escape_test.go` 는 타입을 `"type"` 이라는 한 단어로만 적었고, 필드를 보는 유일한
+검사는 `spec.Name.Name != "Handoff"` 로 걸러 `Delivered` 를 보지 않았다. 검사 셋을
+지우고 타입 하나로 바꿨는데, 그 타입을 지키는 것이 아무것도 없었다.
+
+### 그리고 철자로는 영원히 안 닫히는 것
+
+A P1-2(b) 가 진짜 뿌리다. `strategyProposalMarketAuthority` 는 필드 셋짜리 패키지
+사설 구조체이고 `dispatchHandoff` 는 그 위의 메서드다. 그래서 엔진 안 아무 함수나
+수신자를 리터럴로 만들어 자기가 고른 entries 로 봉투를 찍을 수 있고, 그때 `Admit`
+토큰도 import 도 나타나지 않는다. A 가 `OVER_CAPACITY` 로 거절된 시장을 우회해 봉투를
+받아내는 코드를 컴파일해 보였다. **주조 권한이 이 패키지 안에 진짜로 있으므로 철자를
+세는 검사로는 닫히지 않는다.** 4라운드 동안 그 세기의 범위만 넓혀 왔다.
+
+### 오늘 안전한 이유는 이 경계가 아니다
+
+A 가 만든 네 우회 중 **주문을 낸 것은 하나도 없다.** 전부
+`strategy_account_first_leg_authority.go` 에서 막힌다 — 개수 관문 `:217`
+(`len(proposal.entries) != 1`), 재유도 `:221`–`:222`
+(`proposalAuthority := proposal.entries[0].authority` → `proposalAuthority.Proposal()`),
+identity 대조 `:223`–`:225`
+(`result.Lineage.Identity != accepted.result.Lineage.Identity ||
+result.ExecutionTerms.Identity() != accepted.result.ExecutionTerms.Identity()` →
+`production proposal identity changed`). 앞 판본은 이 자리를 `:217/:222` 로 적었는데,
+그 두 줄은 관문과 재유도이고 **실제로 위조를 거절하는 비교는 `:223` 이다.**
+그 다섯 줄은 `singleProposalAssumptionCensus` 에 **L6 6.2 가 지울 빚**으로 등록돼 있다.
+
+**그런데 그 backstop 에는 시험이 없었다.** `grep -rn "production proposal identity
+changed" --include=*.go .` 는 생산 코드 한 줄만 돌려준다 — 소비자가 없다. census 는
+`entries` 의 **모양**을 세므로 `:223`–`:225` 만 지우면 5 가 그대로 유지되고 초록이다.
+즉 5.5 가 "오늘의 안전은 여기서 온다"고 적은 줄은, 지워도 게이트가 조용한 줄이었다.
+Q1 권장안을 진행하면서 이 로트가 그것을 닫았다:
+`TestFirstLegAuthorityRefusesAProposalItDidNotAuthorize`
+(`strategy_first_leg_identity_backstop_test.go`, `tossos_testseams`) 는 KR 제안으로
+만든 `accepted` 를, KR 자리에 US 제안이 들어 있는 권한 쌍에 건네고 위 문구를 요구한다.
+**반증:** `:223`–`:225` 를 지우면 오류가
+`production risk authority scope changed` 로 바뀌어 빨개진다(sha256 원복 확인). 이것이
+identity 대조가 범위 대조보다 먼저 온다는 근거이기도 하다 — 순서를 말로 적지 않고
+뮤테이션으로 재서 적는다.
+
+즉 오늘의 backstop 은 이 로트가 만든 경계가 아니고, 6.2 가 그 다섯 줄을 지울 때
+대신 설 기계는 위 세 구멍이 뚫려 있었다. **6.2 는 진짜 출처 증명 —
+`Admit` 이 조정자만 만들 수 있는 봉인 값을 요구하는 것 — 이 서기 전에는 그 다섯 줄을
+지울 수 없다.** 이 차단 선결조건은 여기뿐 아니라 **tasks.md 의 6.2 본문에** 적었다.
+6.2 를 여는 사람이 읽는 곳은 5.5 의 문단이 아니라 자기 태스크이기 때문이다.
+
+### 고친 것과 그 반증
+
+| # | 리뷰어 | 결함 | 고침 | 반증(뮤테이션) |
+|---|---|---|---|---|
+| 1 | A P1-1 | 봉투 필드의 비공개성을 아무것도 고정 안 함 | 표면 표가 `types.ExprString` 으로 **모양**을 적는다; 필드 검사를 공개 타입 전부로 | `result`→`Value` → 두 검사가 **각각** 빨강 |
+| 2 | A P1-2a · B P1-1 | `Admit` 세기가 `*ast.FuncDecl` 안만 훑음 | `admitSites` 가 **선언 전부**를 훑고 자리 이름을 붙인다 | `var mintHandoff = …Admit` → 빨강, 자리를 이름으로 부름 |
+| 3 | A P1-3 | import 우주가 `testdata` 를 건너뜀 | `-deps` 폐포 셋(출하·시험·태그) 2595 항목 | `engine/testdata/seamrelay` → 빨강 |
+| 4 | B P1-2 | 막은 주체가 `t.Logf` 에만 있음 | 이름으로 단언 | CAS 관문 삭제 → 빨강(원장 replay 가 대신 막는 것이 드러남) |
+| 5 | C P1-1 | `branch-test-map` 좌표 38개가 옛 줄번호 | 좌표 재기준화 + 검사기가 그 파일도 본다 | 실제 번들에 stale 앵커 주입 → 게이트 exit 1 |
+| 6 | C P1-2 | 행 아무 데서나 숫자쌍을 좌표로 읽음 | **칸 하나가 통째로 좌표일 때만** 읽는다 | 오탐 셋을 시험에 심음; 맞는 행에 시각 삽입 → 조용, 좌표 틀리면 → 빨강 |
+| 7 | C P1-4 | `sdd-check` 실패 원인 오귀속 | 지문 재sync + 순서대로 다시 적음 | — |
+
+**세기의 범위는 이제 말로 적지 않고 세어서 적는다.** `TestAdmitCensusSeesEverySpellingItClaims`
+가 네 철자(평범한 호출·패키지 수준 함수 값·dot import·합성 리터럴)를 fixture 로 담아
+확인한다. 앞 판본은 같은 문장을 주석으로만 적었고 **그중 하나가 거짓이었으며, 그
+거짓이 구멍을 가렸다.**
+
+### 좌표 규칙은 모양을 세어서 정했다
+
+`4.5:1`(대비율) · `09:00`(장 시작) · `127.0.0.1:0`(주소)가 좌표로 읽히고 있었다. 3014
+번들에서 좌표를 담은 칸의 모양을 전수로 셌다: FLM 은 `N:N` 780칸, branch-test-map 은
+`if at N:N` 356 · `range at N:N` 51 · `N:N` 22 · `case at N:N` 22 · `switch at N:N` 6 ·
+`else at N:N` 2 · `branchless happy path at N:N` 2 와 그 뒤의 ` — 산문`. 그 모양만 읽는다.
+**오탐 셋은 지어낸 값이 아니라 저장소에서 나온 값이고, 그대로 시험에 심었다.**
+
+### 남긴 것 — 침묵한 생략이 되지 않도록
+
+- **`dispatchHandoff` 수신자 위조는 안 닫혔다.** 철자 세기로는 못 닫는다(위 참조).
+  진짜 해법은 `Admit` 이 조정자만 만들 수 있는 봉인 값을 받는 것이고, 그것은
+  coordinator 패키지를 건드려 5.5 범위를 넘는다. **사람이 권장안을 골랐다(5.5-fix5)** —
+  주장을 물리고, 오늘의 backstop 을 이름으로 적고, 진짜 출처 증명을 6.2 의 차단
+  선결조건으로 건다. 아래 §5.5-fix5 참조.
+- **완전성 표지를 단 호출 표 122개 중 39개는 여전히 기계 검사를 안 받는다.** 행에
+  좌표 대신 줄 번호만 적어서 규칙이 조용히 면제한다. `| Callee expression |` 이라는
+  **표지를 문서 저자가 고르므로, 이것은 이 change 가 지운 "이름이 있는지 보는 검사"와
+  같은 병이다.** ~~39개를 이름 붙은 빚으로 여기 남긴다.~~ **5.5-fix5 에서 닫았다** —
+  빚으로 남기지 않고 39 개 + 표가 아예 없던 11 개를 모두 열거로 바꾸고, 면제 자체를
+  오류로 만들었다. 아래 §5.5-fix5 참조.
+- `Refusal()`/`Pending()` 은 여전히 비테스트 호출자가 0이다(B P2-1 이 독립 확인).
+  동결 골든에는 `HANDOFF_` 이름이 **하나도** 없다 — 네 이름 모두 골든 미수록이다.
+- `ast.json` 은 검사되지 않는 신탁이다(C P2-1). 문서와 ast.json 을 **같이** 자르면
+  통과한다. 소스에서 다시 유도하는 것이 근본 해법이고 여러 구멍을 한꺼번에 죽인다.
+- `strategy_entry_supervisor.go:450` 의 CAS 술어는 `:232` 의 사본이고, 둘의 순서
+  (바깥이 느슨 → 안이 엄격)를 고정하는 것이 없다(B P2-2, 이 로트가 만든 것 아님).
+- 리스 소진을 삼키면 campaign 이 claimed 로 남아 그 종목의 CAS 가 이후 계속
+  실패할 수 있다(B P2-3, 선행 결함 `8022f578`). 주문은 안 나가지만 운영자 신호가 없다.
+- 엔진 패키지의 `-race` 1회는 1160초다. `-count=5` 는 약 97분이라 기본 10분 예산으로는
+  끝나지 않는다. **경합은 0이다** — 다섯 번 다 확인했다. 돌릴 수 있는 형태는
+  `go test -race -count=1 -timeout 40m ./internal/app/engine/`.
+
+### 실측 (5.5-fix4)
+
+| | |
+|---|---|
+| `make lint` | PASS |
+| `make test` | 98 ok / FAIL 0 |
+| `make test-seams` | 99 ok / FAIL 0 |
+| `tools/logic-map` 단위 시험 | **54 PASS** (46 → 8 추가) |
+| `role_check` 저장소 전수 | **3014 번들, findings 0** (비아카이브 404 + 아카이브 2610) |
+| `check_analysis` (a112) | evidence complete or diff-proven exempt |
+| 게이트 종단 주입 | stale 앵커 주입 → exit 1, 원복 sha256 일치 |
+| engine 태그 커버리지 | **74.0%** — 2917 of 3942 (3회 모두 동일) |
+| engine 무태그 커버리지 | **63.5%** — 2501 of 3937 (3회 모두 동일) |
+| `make sdd-sync` → `sdd-check` | 지문 재sync 후 "CodeGraph hard-evidence index matches the worktree" 통과; **남은 실패는 병행 세션의 a117 중복 스텁 하나뿐** |
+| `openspec validate a112 --strict` | valid |
+| `make gate` | **not-applicable** — change 전체의 완료 게이트이고 a112 는 미완료 태스크가 남아 2/10 단계에서 멈춘다. C 가 독립 확인함 |
+
+**커버리지가 이 로트에서 미세하게 올랐다**(2914→2917, 2498→2501). 새 시험이 생산
+코드를 더 덮은 것이 아니라 census/봉투 검사가 더 많은 선언을 훑기 때문이고, 세 번
+모두 같은 값이 나왔다 — 앞 로트에서 표본마다 흔들리던 것과 다르다.
+
+## 5.5-fix5 — 사람이 고른 두 결정을 실행한 로트
+
+4차 재검토가 남긴 두 구멍은 제가 판단할 수 없어 사람에게 물었고, 답이 왔다.
+Q1 은 권장안(주장을 물리고 6.2 의 차단 선결조건으로 건다), Q2 는 "39개가 기계
+검사를 받도록 고친다"였다. 이 절은 그 둘을 실행한 결과다.
+
+### Q1 — 출처 증명 주장을 물리고, 오늘의 backstop 을 시험으로 못 박았다
+
+권장안을 적으면서 **먼저 확인해야 할 것이 하나 남아 있었다.** "오늘 우회가 주문으로
+이어지지 않는 이유는 `strategy_account_first_leg_authority.go` 의 재유도·identity
+대조"라고 4차에 적었는데, 그 줄에 **시험이 있는지는 안 봤다.**
+
+```
+$ grep -rn "production proposal identity changed" --include=*.go .
+./internal/app/engine/strategy_account_first_leg_authority.go:224
+```
+
+소비자가 없다. 즉 **오늘의 안전이 여기서 온다고 적어 둔 줄은, 지워도 두 스위트가
+초록인 줄이었다.** census(`singleProposalAssumptionCensus`)가 지킨다고 생각하기 쉽지만
+census 는 `entries` 의 **모양**을 세므로 identity 비교만 지우면 5 가 그대로 유지된다.
+네 라운드 동안 반복된 것과 같은 자리 바꿈이다 — 세는 것과 막는 것은 다르다.
+
+좌표도 틀려 있었다. 4차는 이 자리를 `:217/:222` 로 적었는데 그 둘은 개수 관문과
+재유도이고, **실제로 위조를 거절하는 비교는 `:223`–`:225`** 다. 사본 두 곳을 모두
+고쳤다 — 정정의 단위는 file:line 이 아니라 값이다.
+
+그래서 권장안은 문서 세 곳을 고치는 일이 아니라 **시험 하나를 새로 만드는 일**이 됐다.
+
+| | |
+|---|---|
+| 새 시험 | `TestFirstLegAuthorityRefusesAProposalItDidNotAuthorize` (`internal/app/engine/strategy_first_leg_identity_backstop_test.go`, `tossos_testseams`) |
+| 무엇을 하나 | KR 제안으로 만든 `accepted` 를, KR 자리에 US 제안이 들어 있는 권한 쌍에 건넨다 — 주조된 봉투가 나르는 결과가 권한 쌍에 없는 상황과 같은 모양 |
+| 무엇을 요구하나 | 오류에 `production proposal identity changed` 가 들어 있을 것 |
+| **반증** | `:223`–`:225` 삭제 → 오류가 `production risk authority scope changed` 로 바뀌어 **빨강**. sha256 원복 확인(`1d710710…`) |
+
+그 반증은 덤으로 **identity 대조가 위험 범위 대조보다 먼저 온다**는 것을 잰 값이다.
+시험이 두 축(시장·identity)을 함께 바꾸므로 순서를 말로 적으면 미검증 주장이 된다 —
+반증은 결함이 사는 축을 바꿔야 한다.
+
+**새 파일에 넣었다.** 처음에는 기존 시험에서 fixture 를 추출했는데 `check_analysis` 가
+바로 잡았다: 기존 함수 `TestProductionFirstLegAuthorityLoaderPairedKRUS` 의 본문을
+바꿨으므로 FLM 번들을 요구한다. 행동 변화가 0 인 추출 리팩터링에 번들을 다는 대신
+기존 함수를 **원문 그대로 되돌리고** 새 파일에 fixture 를 따로 뒀다
+— 새 코드는 새 파일에 둔다. 되돌림은 `git show HEAD:<path>` 로 그 파일만 했다;
+`git checkout` 은 커밋 안 된 다른 작업까지 지우므로 쓰지 않는다.
+
+차단 선결조건은 review 가 아니라 **tasks.md 의 6.2 본문**에 적었다. 6.2 를 여는 사람이
+읽는 곳은 5.5 의 문단이 아니라 자기 태스크이기 때문이다. 거기에 두 가드가 **서로 다른
+반쪽**을 잡는다는 것과(census 는 모양, 새 시험은 행동), 그 다섯 줄을 지울 수 있는
+조건(`Admit` 이 조정자만 만들 수 있는 봉인 값을 받을 때)을 함께 적었다.
+
+**안 닫힌 것은 그대로다.** `dispatchHandoff` 수신자 위조는 여전히 컴파일된다. 권장안은
+그것을 닫는 안이 아니라 **주장을 사실에 맞추고 진짜 해법을 6.2 의 선결조건으로 거는**
+안이다. 5.5 는 이 구멍을 닫지 않았다고 읽는 것이 맞다.
+
+### Q2 — 면제를 빚으로 남기지 않고 없앴다
+
+4차가 센 값: 완전성 표지를 단 호출 표 122 개 중 83 개만 1:1 대조되고, **39 개는 행에
+좌표 대신 줄 번호만 적어 검사기가 표 전체를 건너뛰었다.** 표지를 저자가 고르므로
+"감사를 받을지"를 문서 저자가 정하고 있었다.
+
+**문서 쪽 — 50 개 번들을 열거로 바꿨다.**
+
+| | |
+|---|---|
+| 빠져나가던 표 | 39 개 (전부 a112) |
+| 열거 표가 아예 없던 번들 | 11 개 (같은 change) |
+| 다시 쓴 번들 | **50 개** (파일 변경 48 개, 2 개는 이미 목표 모양) |
+| 손으로 쓴 행 → 기계 행 | 215 → 952 |
+| change 전체 | **133/133 번들**, 호출 행 **2300**; 좌표를 적은 표 **127** 개, 호출이 0 이라 "없다"를 적은 표 **6** 개 (5차 리뷰가 128/5 를 정정) |
+
+손으로 쓴 분석은 **지우지 않았다.** 열거 표 아래에 "완전성 주장이 아니다"라는 제목을
+달아 남기고, 머리글을 `Callee expression` → `Callee (hand-written note)` 로 낮춰
+표지를 못 쓰게 했다. 그 산문의 줄 번호가 위 표와 어긋나면 위 표가 정본이라고 각
+번들에 적었다(실제로 `internal-official--adaptprices` 에서 `173:10` vs `173:15` 로
+어긋난다 — 손으로 읽은 값이 하나 틀렸던 것이고, 그것이 이 규칙이 있어야 하는 이유다).
+
+**검사기 쪽 — 세 가지가 달라졌고, 각각 반증했다.**
+
+| # | 바뀐 것 | 뮤테이션 | 결과 |
+|---|---|---|---|
+| 1 | 표지를 달고 좌표를 뺀 행은 **오류**다(면제 아님) | 행 하나의 `221:9` → `221` | exit 1, "1 of 2 row(s) carry no coordinate cell" |
+| 2 | 섹션의 **첫 연속 표 한 벌**만 읽는다 | 열거 두 행 삭제(아래 주석 표 3 행은 그대로) | exit 1, "enumerates 4 call(s) but ast.json has 6" — 주석 행이 개수를 채우지 못한다 |
+| 3 | 강제는 **change 단위**다(`call_enumeration_in_use`) | 한 번들의 표지를 `\| Callee \| Why called \|` 로 교체 | exit 1, "this change enumerates call positions elsewhere, so … must open with a … table" |
+| 4 | 호출이 0 인 함수만 좌표 없는 표를 적을 수 있다 | 호출 2 개인 번들을 "(no call expressions…)" 로 위장 | exit 1, "cites no call position, while ast.json has 2" |
+| 5 | 잘린 표는 그대로 잡힌다(회귀) | 열거 한 행 삭제 | exit 1, "enumerates 1 call(s) but ast.json has 2" |
+
+다섯 모두 sha256 원복을 확인했다. 단위 시험도 같은 방식으로 반증했다 — role_check 에
+네 가지 되돌림 뮤테이션을 심으니 **각각 정확히 시험 하나씩만** 빨개졌다(겹쳐서
+가려 주는 시험이 없다는 뜻이다).
+
+**남는 선택은 change 단위다 — 그리고 그것을 검사기에 적어 뒀다.** 열거 표를 한 번도
+쓰지 않는 change 는 여전히 아무것도 요구받지 않는다. 그것이 다른 16 개 활성 change 의
+손으로 쓴 번들 271 개를 정상으로 유지하는 이유다 —
+fail-closed 규칙이 거절할 **정상 입력**을 먼저 세고 나서 켰다. 대신 어떤 change 의 첫 번들이 표지를
+다는 순간 나머지 전부가 함께 요구된다. 그 절벽은 의도된 값이고, 놀라지 않도록
+`role_check.py` 주석에 적었다.
+
+### 실측 (5.5-fix5)
+
+| | |
+|---|---|
+| `make lint` | PASS |
+| `make test` | 98 ok / FAIL 0 |
+| `make test-seams` | 99 ok / FAIL 0 |
+| `tools/logic-map` 단위 시험 | **62 PASS** (54 → 8 추가) |
+| `role_check` 저장소 전수 | **3014 번들 / 93 change, 강제가 켜진 change 1 개, findings 0** |
+| `check_analysis` (a112) | evidence complete or diff-proven exempt |
+| 게이트 종단 주입 | 5 종 뮤테이션 전부 exit 1, 원복 sha256 일치 |
+| engine 태그 커버리지 | 2915·2916·2916 of 3942 (**73.9~74.0%**) |
+| engine 무태그 커버리지 | 2498·2499·2501 of 3937 (**63.4~63.5%**) |
+| `openspec validate a112 --strict` | valid |
+| `make gate` | **not-applicable** — change 완료 게이트이고 a112 는 미완료 태스크가 남아 2/10 에서 멈춘다 |
+
+커버리지는 4차의 2917(3회 동일)보다 **한두 문 낮고 회차마다 흔들린다.** 새 시험이
+생산 코드를 더 덮었는데 값이 내려간 것이므로, 이 패키지의 동시성 시험이 만드는 잡음
+범위 안이라고 읽는 것이 맞다 — 올랐다고 적지 않는다.
+
+## 5.5-fix6 — 5차 적대 리뷰가 낸 P1 셋을 고친 로트
+
+5차 리뷰는 P0 0 · P1 3 · P2 5 로 REQUEST CHANGES 였다. 셋 다 실재했고 재현했다.
+**같은 병이 이번 라운드의 고침 안에 다시 있었다** — 그 사실이 이 절의 요점이다.
+
+### P1-1 — 새 시험이 결함이 사는 축을 안 바꿨다
+
+5.5-fix5 가 만든 `TestFirstLegAuthorityRefusesAProposalItDidNotAuthorize` 는
+KR 자리에 **US** entries 를 넣어 위조한다. 그러면 identity 만이 아니라 시장·종목·
+계좌까지 함께 달라진다. 그래서 `:223` 의 술어가 identity 가 아니라 **market 만**
+비교하도록 약해져도 이 시험은 초록이다.
+
+재현했다. `go test -overlay` 로 술어만
+`string(result.Lineage.Market) != string(accepted.result.Lineage.Market)` 로 바꾸고
+(저장소 파일 sha256 `1d710710…` 앞뒤 동일):
+
+| | |
+|---|---|
+| `…AProposalItDidNotAuthorize` | **PASS** — 뮤턴트를 못 잡는다 |
+| `…ASiblingCampaignOnTheSameSymbol` (새로 추가) | **FAIL**, 그리고 실패값이 `err=<nil>` |
+
+`err=<nil>` 이 핵심이다. 뮤턴트에서는 **권한 쌍에 없는 캠페인으로 1차 진입이 그대로
+나간다.** 4차가 "우회 넷 중 주문을 낸 것은 없다"고 적은 근거가, 술어 한 줄만 약해지면
+사라진다는 뜻이다.
+
+고침은 `TestFirstLegAuthorityRefusesASiblingCampaignOnTheSameSymbol` 이다. 계좌·시장·
+종목·수량·가격을 전부 고정하고 `campaignID` 하나만 바꾼, 똑같이 봉인된 KR 제안을
+넣는다. 시험이 **스스로 축이 하나뿐인지 확인**한다 — 형제 제안을 만드는 쪽이 나중에
+다른 축까지 바꾸면 그 자리에서 터진다.
+
+a112 의 목표 상태는 한 종목에 네 가족이므로 "같은 시장·같은 종목·다른 identity" 가
+오히려 지배적인 모양이다. 5.5-fix5 는 그 모양을 한 번도 안 밟았다.
+
+기억에 적어 둔 규칙(`반증은 결함이 사는 축을 바꿔야 한다`)을 **문장으로 인용하면서
+적용하지 않았다.** 규칙을 아는 것과 쓰는 것은 다르다.
+
+### P1-2 — 완전성 표지를 단 열을 검사기가 한 번도 안 봤다
+
+`ENUMERATED_CALLS` 는 `| Callee expression |` 로 표를 고르고, 그 다음 검사기는 각
+행에서 **좌표만** 읽었다. 완전성을 주장하는 열이 정작 대조되지 않았다.
+
+리뷰어의 시연을 그대로 재현했다 — `adaptPrices` 의 두 행을 좌표는 그대로 두고 철자만
+`os.Exit`·`exec.Command` 로 바꾸면 `role_errors` 가 `[]` 를 돌려줬다. 즉 완전성을
+주장하는 표 아래에서 `adaptPrices` 가 `os.Exit` 을 부른다고 적을 수 있었다.
+
+이것이 다섯 라운드 동안 고쳐 온 그 병이다. 좌표만 보는 검사는 "그 자리에 호출이
+있다"까지만 말하고, 그 행이 그 호출을 **가리킨다**는 것은 말하지 않는다.
+
+이제 좌표가 맞은 뒤 철자를 대조한다. 철자가 없는 노드는 기존 문서 관례인 `(unnamed)` 로 읽는다 — 표지를 단 133 개
+안에서는 15 개지만 **저장소 전체로는 189 번들에 281 개**다(6차 리뷰가 정정). 두
+번째 change 가 표지를 다는 순간 이 탈출구는 15 가 아니라 281 이 된다. **133 개 번들 전부가 그대로 통과했다** — 생성한 표의 철자가
+실제로 맞았다는 뜻이고, 그것은 이 검사를 켜기 전에는 근거 없이 믿던 것이다.
+
+### P1-3 — 이 로트가 추가한 시험 8 개가 직접 실행에서 안 돌았다
+
+`if __name__ == "__main__": unittest.main()` 가 **파일 중간**에 있었고, 5.5-fix5 가
+추가한 두 클래스는 그 아래에 붙었다. `python3 test_role_check.py` 는 21 개만 돌고
+OK 를 냈다. 그 8 개는 네 가지 검사기 변경 **전부**의 유일한 가드였다.
+
+| | |
+|---|---|
+| 직접 실행 (고치기 전) | Ran **21** … OK |
+| discover (고치기 전) | Ran **29** … OK |
+| 직접 실행 (고친 뒤) | Ran **34** … OK — fix5 의 29 개에 fix6 이 5 개를 더했다 |
+
+회귀 반증: 스크래치패드 사본에서 5.5-fix5 가 없앤 침묵 면제(`if blank: return []`)를
+되살렸더니 — 고치기 전 직접 실행은 **OK**, 고친 뒤 직접 실행은 **FAILED (failures=1)**.
+39 개 면제가 돌아오는 것을 자연스러운 로컬 명령이 조용히 통과시키고 있었다.
+
+`.github/workflows/ci.yml` 은 `make test`·`make lint`·`make build` 만 돈다. 이 8 개는
+`make sdd-check`/`make gate` 에만 있고 CI 는 안 쓴다 — 리뷰어가 짚은 대로다. 이번
+로트에서 CI 워크플로는 건드리지 않았다(범위 밖). **미해결로 남긴다.**
+
+### P2 다섯
+
+| # | 무엇 | 고침 |
+|---|---|---|
+| P2-1 | 새 시험의 **파일명**이 세 곳에서 틀렸다(`…authority_test.go`, 실재하지만 그 시험이 없는 파일) — 그중 하나가 6.2 의 선결조건 문장 | 세 사본 전부 `strategy_first_leg_identity_backstop_test.go` 로. 남은 사본 0 |
+| P2-2 | B3 의 branch-test-map 이 아직 "planned … not run" 이었다 | 실측 RED/GREEN 과 두 시험 이름을 기록. 뮤테이션 두 종과 명령·sha256 도 함께 |
+| P2-3 | 강제 판정이 표지를 **첫 표의 첫 줄**에서만 찾아, 열거 위에 `|` 한 줄만 얹으면 표지를 남긴 채 감사가 꺼졌다 | 섹션의 아무 줄에서나 표지를 찾는다. 133 번들 전부를 오염시켜도 이제 `True`. "열거가 첫 표여야 한다"는 별도 규칙으로 남아 그 번들이 따로 터진다 |
+| P2-4 | `_first_table` 주석이 실제보다 세게 적혀 있었다 | 리뷰어도 해로운 입력을 못 만들었고, 주석 정확성 문제로 남긴다. **미해결** |
+| P2-5 | 측정표의 127/6 을 128/5 로 적었다 | 정정. 호출 0 인 번들 6 개를 이름으로 확인 |
+
+### "133/133" 의 한계 — 리뷰어가 잰 것을 그대로 적는다
+
+리뷰어는 생성기를 믿지 않고 독립 `go/parser` 워커로 재유도했다: **118 개 대조, 불일치
+0.** 나머지 **15 개는 `revision: base`** 라서 `check_analysis` 의 소스 해시 검사가
+묶지 않으며, 그중 13 개는 이 change 의 `base-commit.txt`(`aeeb209e`)와도 안 맞는다.
+
+그러니 정확히 말하면 **118 개는 소스로 재유도되어 맞았고, 15 개는 아무것도 검사하지
+않는 신탁과 일치한다.** "133/133 이 열거한다"는 표 모양에 대한 참이지 좌표가 옳다는
+뜻이 아니다. 구조적인 것이고 이 로트가 만든 것은 아니지만, 이 로트의 주장이 그것을
+물려받으므로 여기 적는다. **미해결로 남긴다.**
+
+### 실측 (5.5-fix6)
+
+| | |
+|---|---|
+| `test_role_check.py` | **34 PASS** (직접 실행·discover 동일) — fix4 의 54 와 fix5 의 62 는 `tools/logic-map` **전체** discover 값이고 단위가 다르다. 같은 기준으로 재면 **67** 이다 |
+| 새 규칙 반증 | 철자 대조 되돌림 → 해당 클래스 2 개만 FAIL · 강제 판정 되돌림 → 해당 시험 1 개만 FAIL |
+| 새 Go 시험 반증 | market-only 술어 뮤턴트에서 `…ASiblingCampaignOnTheSameSymbol` 만 FAIL(`err=<nil>`), 기존 시험은 PASS |
+
+이 표에 게이트 전 항목(`make lint`·`make test`·`make test-seams`·전수 스윕·`check_analysis`·`openspec validate`)이 빠져 있던 것을 6차가 지적했다. 돌리긴 했으나 §0 계약상 영수증은 이 파일에 있어야 하므로, 인도된 트리 기준 전 항목을 **5.5-fix7 의 실측표**에 적는다.
+
+## 5.5-fix7 — 6차 적대 리뷰가 낸 P1 하나와 P2 여섯
+
+6차는 P0 0 · P1 1 · P2 6 으로 다시 REQUEST CHANGES 였다. P1 은 **제 고침 한 단계
+아래에 같은 병이 있었다**는 것이었고, 재현했다.
+
+### P1 — `:223` 은 논리합 둘이고, 세 시험 중 둘이 같은 반쪽만 밟았다
+
+```go
+if result.Lineage.Identity != accepted.result.Lineage.Identity ||
+   result.ExecutionTerms.Identity() != accepted.result.ExecutionTerms.Identity() {
+```
+
+`internal/strategyflow/types.go:315` 에서 `executionTermsIdentity` 는 마지막에
+`terms.lineageIdentity` 를 해시에 넣는다. 그러므로 **lineage 가 다르면 terms 도
+반드시 다르다** — 왼쪽 항은 오른쪽에 포섭되고, 수량과 entry·stop·target 세 가격을
+지키는 것은 **오른쪽 항뿐**이다.
+
+fix6 이 만든 형제 시험은 `campaignID` 를 바꾼다. 그것은 축 하나가 아니라 lineage
+identity·terms identity·CampaignID **셋을 함께** 움직인다. 그래서 두 항이 같이 참이
+되고, 시험은 어느 항이 일하는지 구별하지 못한다.
+
+네 뮤턴트를 `go test -overlay` 로 넣어 쟀다(저장소 파일 sha256 `1d710710…` 앞뒤 동일):
+
+| `:223` 의 술어 | …ItDidNotAuthorize | …ASiblingCampaign | …RewrittenExecutionTerms |
+|---|---|---|---|
+| 원본(논리합 둘) | PASS | PASS | PASS |
+| `Lineage.Market` 만 | PASS | **FAIL** | **FAIL** |
+| **`Lineage.Identity` 만**(오른쪽 삭제) | PASS | PASS | **FAIL** |
+| **`Lineage.CampaignID` 만** | PASS | PASS | **FAIL** |
+| `ExecutionTerms.Identity()` 만(왼쪽 삭제) | PASS | PASS | PASS |
+
+마지막 줄이 **왼쪽 항이 포섭된다는 잰 값**이다 — 동등 변이다. 그리고 셋째·넷째 줄이
+6차의 지적이다: `||` 반쪽을 지우는 흔한 실수 하나로 **수량과 세 가격의 유일한 검사가
+사라지는데** fix6 의 두 시험은 초록이었다. 손절·사이징은 프로젝트가 High-risk 로
+못 박은 경로다.
+
+고침은 `TestFirstLegAuthorityRefusesRewrittenExecutionTermsUnderTheSameLineage` 다.
+lineage 는 가격을 담지 않으므로(`authority_testseam.go` 의 lineage 에 entry·stop·target
+이 없고 `PlannedCeiling` 은 주문 수량이 아니다), `campaignID` 를 고정한 채 손절 95→80 ·
+익절 120→130 만 바꾸면 **왼쪽 항은 거짓이고 오른쪽 항만 참**이 된다. 시험은 그것도
+스스로 확인한다 — lineage identity 가 같고 terms identity 가 다른지 먼저 본다.
+
+**한계는 리뷰어가 적은 대로 적는다.** `AcceptedResultForAuthorityTest` 는
+`tossos_testseams` 빌드 태그라 이 입력 자체는 생산 바이너리에서 만들 수 없고,
+생산 경로에서 가격이 움직이면 lane 증거 digest 가 lineage 를 함께 움직일 수 있다.
+생산에서 도달 가능한 입력은 **증명하지 못했다.** 이 항목이 서는 근거는 그것이
+아니라, 지키는 항이 어떤 시험으로도 안 덮여 있었다는 것이다.
+
+### P2 여섯
+
+| # | 무엇 | 고침 |
+|---|---|---|
+| P2-1 | 강제 판정이 여전히 **철자 존재 검사**였다. 공백 둘·앞 들여쓰기·굵게 — 화면에서 똑같이 보이는 세 가지로 133 개가 통째로 빠져나갔다 | 판정을 **내용**으로 옮겼다: 어느 표든 그 함수의 호출 좌표를 빠짐없이 같은 순서로 적고 있으면 이 change 는 열거를 쓰는 것이다. 표지 정규화(공백·강조·들여쓰기)도 함께. 다섯 공격 전부 강제가 켜진 채 남는다 |
+| P2-2 | `_call_names` 는 dict 아닌 노드를 `(unnamed)` 로 채우고 `_coords` 는 건너뛰어, **맞는 문서**가 어긋난 목록으로 터졌다 | 같은 방식으로 건너뛴다. 리뷰어의 입력으로 findings 0 확인 |
+| P2-3 | "철자 없는 노드 15 개(저장소에)" — 15 는 표지를 단 133 개 안의 수다 | 저장소 전체 **281 개 / 189 번들**로 정정(코드 주석과 review 양쪽) |
+| P2-4 | 고친 뒤 직접 실행을 29 로 적었는데 인도된 트리는 34였고, 34 를 fix4 의 54·fix5 의 62 와 같은 라벨에 뒀다(단위가 다르다) | 값과 단위를 함께 적었다. 같은 기준(`tools/logic-map` 전체 discover)이면 fix6 은 67, 지금은 **75** |
+| P2-5 | fix6 실측표가 게이트 전 항목을 빠뜨렸다 | fix6 에 그 사실을 적고, 인도된 트리 기준 전 항목을 아래 표에 적는다. branch-test-map 의 절 제목(fix5→fix5·fix6)과 중복된 꼬리말도 정리 |
+| P2-6 | tasks 6.2 의 "두 번째가 무엇을 비교하는지 증명한다" | 어느 반쪽을 덮고 어느 반쪽을 안 덮는지로 다시 썼다 |
+
+### 이 라운드가 만든 검사기 변경과 그 반증
+
+| 바뀐 것 | 되돌렸을 때 |
+|---|---|
+| 강제 판정을 표의 **내용**으로 | `TheMandateIsAPropertyOfTheTableNotOfItsHeading` 2 개만 FAIL |
+| 표지 철자 **정규화** | `AHeadingThatLooksTheSameIsTreatedTheSame` 3 개만 FAIL |
+| 섹션의 **모든 표**를 판정에 넣음 | `TheMandateIsNotTurnedOffByALineAboveTheEnumeration` 1 개만 FAIL |
+| `_call_names` 를 `_coords` 와 같게 | `TheNodeListsMustAgreeAboutMalformedNodes` 1 개만 FAIL |
+
+**남는 잔여는 하나이고 숨길 수 없는 것이다.** 열거를 정말로 그만두면(좌표를 지우면)
+강제가 꺼진다. 그때는 완전성 주장도 함께 사라지므로 감사만 조용히 꺼지는 일은 없다.
+저장소 3014 번들로 재면 이 판정에 걸리는 change 는 여전히 a112 하나다 — 다른 16 개
+change 의 손으로 쓴 표 중 우연히 1:1 인 것은 없다.
+
+### 실측 (5.5-fix7, 인도된 트리)
+
+| | |
+|---|---|
+| `make lint` | PASS |
+| `make test` | **98 ok / 0 FAIL** |
+| `make test-seams` | **99 ok / 0 FAIL** |
+| `test_role_check.py` | **42 PASS** (직접 실행 = discover) |
+| `tools/logic-map` 전체 discover | **75 PASS** |
+| 저장소 전수 스윕 | **3014 번들 / 93 change / 강제 1 / findings 0** |
+| `check_analysis --change a112` | evidence complete or diff-proven exempt |
+| `openspec validate --strict` | valid |
+| gofmt | 0 |
+| 술어 뮤턴트 4 종 | 위 표대로, 저장소 sha256 `1d710710…` 불변 |
+| `make sdd-sync` | all indexes current |
+| `make sdd-check` | 외부 a117 스텁에서만 실패(제 것 아님) |
+| `make gate` | **not-applicable** — change 완료 게이트, a112 는 미완료 태스크가 남아 2/10 에서 멈춘다 |
+
+## 5.5-fix8 — 7차 적대 리뷰가 낸 P1 하나와 P2 넷
+
+7차는 P0 0 · P1 1 · P2 4. **세 라운드 연속으로 같은 병이 한 단계씩 내려갔다** —
+5차는 "블록이 있느냐"만 봤고, 6차는 논리합의 포섭된 반쪽만 봤고, 7차는 그 반쪽
+안에서 **가격 두 개를 함께** 움직였다.
+
+### P1 — 세 번째 시험이 stop 과 target 을 동시에 옮겨서, 한 필드 누락은 못 잡았다
+
+6.2 가 실제로 할 편집은 논리항 삭제가 아니라 **비교를 필드별로 펼치면서 하나를
+빠뜨리는 것**이다. 리뷰어가 `:223` 을
+`Lineage.Identity || Entry || EffectiveStop || Target || Quantity` 로 펼친 뒤 하나씩
+빼 보니, fix7 의 세 시험이 **전부 초록**이었고 각각 그 가격만 바꾼 제안으로 주문이
+나갔다 — `EffectiveStop` 을 뺐을 때는 손절 95→80 짜리 1차 진입이 나가면서 엔진
+패키지가 두 스위트 모두 초록이었다.
+
+고침은 세 번째 시험을 **축 하나씩 세 하위 시험**으로 나눈 것이다. 각 케이스는
+`assertOnlyOnePriceMoved` 로 **자기 축 말고는 아무것도 안 움직였다**는 것을 스스로
+확인한다 — lineage identity 가 같고, 수량이 같고, 나머지 두 가격이 같아야 한다.
+
+| 뺀 필드 | 빨개지는 하위 시험 |
+|---|---|
+| `Entry()` | `…/entry 만` **만** |
+| `EffectiveStop()` | `…/stop 만` **만** |
+| `Target()` | `…/target 만` **만** |
+
+**수량은 덮지 못했다고 적는다.** 시험 seam 에서 `PlannedCeiling` 이 수량과 묶여
+있어, lineage 를 고정한 채 수량만 바꾼 제안을 만들 수 없다. B3 의 branch-test-map
+에 그 칸을 "덮이지 않음"으로 적었다 — 침묵한 생략은 금지다.
+
+### P2 넷
+
+| # | 무엇 | 고침 |
+|---|---|---|
+| P2-1 | "남는 회피는 열거를 그만두는 것뿐이고 숨길 수 없다"가 **거짓**이었다. 열거 표를 통째로 다른 `##` 절로 옮기면 표지도 행도 그대로 남은 채 강제가 꺼졌다 — 판정을 절 이름에 걸었으니 그것도 이름 검사다 | 판정이 **문서 전체**의 표를 본다. 그리고 `check_analysis` 가 번들의 두 산문 파일을 이어서 넘긴다. 이동 공격은 이제 `True` 로 남는다. 남는 회피를 정확히 적었다: 그 change 의 어느 산문에도 1:1 표가 없어야 하고, 그 길은 (a) 좌표 지우기 (b) 번들 밖으로 옮기기 둘뿐이며 둘 다 133 개를 다 고쳐야 한다 |
+| P2-2 | `_call_names` 와 `_coords` 가 여전히 한 단계 더 어긋났다 — `at` 이 없거나 dict 가 아닌 노드에서 갈렸고, **맞는 문서**가 터졌다 | 두 목록을 `_node_pairs` 하나에서 만든다. 구조상 어긋날 수가 없다 |
+| P2-3 | tasks 6.2 가 `:136` 에서 "all three" 라 해 놓고 `:138` 에서 "both tests above" 로 끝났다 — 구현자가 마지막에 읽는 문장이 옛 값이었다 | "all three tests above" |
+| P2-4 | `role_check.py` 모듈 주석이 아직 **표지가 강제를 켠다**고 적고 있었다(네 문장) | 다시 썼다. 표지는 스위치가 아니라 "어느 표를 대조할지" 고르는 것뿐이고, 판정은 내용으로 한다고 적었다. 뚫린 세 라운드도 함께 |
+
+**리뷰어가 자기 6차 권고를 정정한 것도 적어 둔다.** "`ast.json` 만으로 무조건
+강제하라"를 재 보니 **3014 중 2881 개가 16 개 change 에서 터진다.** change 단위
+절벽은 오늘 피할 수 없는 값이고, 그래서 내용 기준 판정이 맞는 선택이었다.
+
+### 이 라운드가 만든 검사기 변경과 그 반증
+
+| 바뀐 것 | 되돌렸을 때 |
+|---|---|
+| 판정이 문서 전체를 봄 | `test_moving_the_table_to_another_section_does_not_turn_it_off` 1 개만 FAIL |
+| 좌표·철자를 `_node_pairs` 하나에서 | `test_a_malformed_node_does_not_shift_the_name_list` 의 하위 2 개만 FAIL |
+
+### 실측 (5.5-fix8, 인도된 트리)
+
+| | |
+|---|---|
+| `make lint` | PASS |
+| `make test` | **98 ok / 0 FAIL** |
+| `make test-seams` | **99 ok / 0 FAIL** |
+| `test_role_check.py` | **43 PASS** (직접 실행 = discover) |
+| `tools/logic-map` 전체 discover | **76 PASS** |
+| 저장소 전수 스윕(두 파일 기준) | **3014 번들 / 93 change / 강제 1 / findings 0** |
+| `check_analysis --change a112` | evidence complete or diff-proven exempt |
+| `openspec validate --strict` | valid |
+| gofmt | 0 |
+| 필드 누락 확장 3 종 | 각각 해당 하위 시험만 RED, 저장소 sha256 `1d710710…` 불변 |
+| `make sdd-sync` | all indexes current |
+| `make sdd-check` | 외부 a117 스텁에서만 실패(제 것 아님). 리뷰어는 mutating 이라 안 돌렸다 — 정당한 판단이고, 그래서 이 두 줄은 제 실행값이다 |
+| `make gate` | **not-applicable** — change 완료 게이트, a112 는 미완료 태스크가 남아 2/10 에서 멈춘다 |
+
+## 5.5-fix9 — 8차 적대 리뷰(P1 0)의 P2 넷
+
+8차는 **P0 0 · P1 0 · P2 4** 로 APPROVE WITH FINDINGS 였다. 네 라운드 만에 처음으로
+P1 이 없다 — 축 공격이 통하지 않았고, 리뷰어가 주문을 내는 입력을 만들지 못했다.
+그래도 P2 넷을 다 닫았다. 둘은 "남는 회피는 X 뿐"이라는 문장이 **또** 틀린 것이었다.
+
+### P2-1 — `PriceProvenance` 는 여덟 필드인데 시험은 숫자 하나만 움직일 수 있었다
+
+`assertOnlyOnePriceMoved` 의 `==` 는 여덟 필드를 다 비교한다(Go 는 패키지 밖에서도
+비공개 필드를 포함한 구조체 비교를 허용한다). 그런데 `AcceptedResultForAuthorityTest`
+는 `source`·`version`·`digest` 를 역할별 상수로, `currency`·`minorScale` 을 시장에서,
+`unitVersion` 을 하드코딩으로, `asOf` 를 `observedAt` 에서 만든다 — 그리고 `asOf` 의
+원천인 `observedAt` 은 lineage 도 해시한다. **lineage 를 고정하면 움직일 수 있는
+필드가 `priceMinor` 하나뿐이었다.**
+
+그래서 `:223` 을 세 가격의 `priceMinor` 비교로 좁혀도 여섯 하위 시험이 전부 초록이고
+엔진 패키지가 두 스위트 다 초록이었다.
+
+**이것은 지어낸 위협이 아니다.** `internal/continuationlane/execution_terms.go` 는 같은
+손절 숫자에 대해 신선한 후보와 저장된 권한에서 서로 다른 출처를 만든다
+(`saved-effective-stop`/`stop-state-v1`). 그 패키지는 위조된 손절 출처를 이미 위협으로
+다루고 시험도 있다(`execution_terms_test.go` 가 `Version: "forged"` 를 심는다).
+1차 진입 backstop 에는 그 시험이 없었다.
+
+고침은 둘이다.
+
+1. `internal/strategyflow/authority_stop_provenance_testseam.go` (**새 파일**,
+   `tossos_testseams`): `ResultWithRestatedStopProvenanceForTest` 가 이미 봉인된 제안의
+   손절 **출처 셋만** 다시 적고 다시 봉인한다. 숫자와 lineage 는 그대로다.
+2. `TestFirstLegAuthorityRefusesARestatedStopProvenanceAtTheSamePrice`. 시험이 스스로
+   세 가격의 `priceMinor` 가 모두 같은지 확인한다 — 그 확인이 없으면 이 시험도 숫자
+   비교로 통과하는 시험이 된다.
+
+| 뮤테이션 | 결과 |
+|---|---|
+| 세 가격의 `priceMinor` 만 비교 | RED — 새 시험 **만** 실패 |
+
+**여전히 안 덮인 것을 적는다.** 출처 축은 stop 하나로만 밟는다. entry·target 의 출처와
+주문 수량은 덮이지 않았고, B3 의 표에 그렇게 적었다.
+
+### P2-2 — "남는 회피"가 네 라운드 연속 코드보다 한 칸 넓었다
+
+fix8 은 "(b) 번들 **밖** 다른 파일로 옮기기"라고 적었다. 그런데 `_bundle_text` 는
+파일 **두 개를 열거**해서 읽고 있었고, `risk-pattern-report.md` 는 번들 필수 파일 넷
+중 셋째다. 리뷰어가 133 개 전부의 열거를 거기로 옮기니 표는 머리글도 행도 그대로 살아
+있는 채 강제가 꺼졌다.
+
+| 열거가 있는 곳 | 강제 |
+|---|---|
+| 기준선 | True |
+| 같은 파일의 다른 `##` 절 | True |
+| `branch-test-map.md` | True |
+| **`risk-pattern-report.md`** (고치기 전) | **False** |
+| `risk-pattern-report.md` (고친 뒤) | **True** |
+
+고침은 한 줄이다 — `_bundle_text` 가 번들 디렉터리의 `*.md` 를 **전부** 읽는다.
+파일을 열거하지 않으므로 "번들 밖" 이라는 문장이 이제 **구조상** 참이다.
+
+절 → 철자 → `##` 절 → 파일 두 개. 네 번 모두 같은 방향으로 틀렸다: 코드가 실제로
+세는 **범위**를 확인하지 않고 문장을 썼다.
+
+### P2-3 · P2-4
+
+- **P2-3** 은 제 인계 메시지의 슬립이었다. 강제가 걸리는 a112 번들은 **133** 개이고,
+  127 은 좌표를 적은 표의 수다(호출이 0 인 6 개도 표지 표로 열어야 하고 열고 있다).
+  `review.md` 는 127 을 옳은 자리에만 쓰고 있었다 — 리뷰어가 확인했다.
+- **P2-4** B3 의 가격 세 줄이 "가격 전체가 고정된 것처럼" 읽혔다. 세 줄을
+  `숫자(priceMinor)` 로 한정하고, stop 출처 줄과 안 덮인 축 줄을 더했다.
+
+### 이 라운드가 만든 변경과 그 반증
+
+| 바뀐 것 | 되돌렸을 때 |
+|---|---|
+| `_bundle_text` 가 번들의 모든 `.md` 를 읽음 | `test_every_md_in_the_bundle_directory_is_read` 1 개만 FAIL |
+| 손절 출처 축 시험 + 새 seam | `priceMinor` 만 비교하는 뮤턴트에서 그 시험 1 개만 FAIL |
+
+### 실측 (5.5-fix9, 인도된 트리)
+
+| | |
+|---|---|
+| `make lint` | PASS |
+| `make test` | **98 ok / 0 FAIL** |
+| `make test-seams` | **99 ok / 0 FAIL** |
+| `tools/logic-map` 전체 discover | **77 PASS** |
+| 저장소 전수 스윕(번들의 모든 `.md`) | **3014 번들 / 93 change / 강제 1(a112, 133 번들) / findings 0** |
+| `check_analysis --change a112` | evidence complete or diff-proven exempt |
+| `openspec validate --strict` | valid |
+| gofmt | 0 |
+| `make sdd-sync` | all indexes current |
+| `make sdd-check` | 외부 a117 스텁에서만 실패(제 것 아님) |
+| `make gate` | **not-applicable** — change 완료 게이트, a112 는 미완료 태스크가 남아 2/10 에서 멈춘다 |
+
+## 5.5-fix10 — 9차가 낸 P1 하나, 그리고 **전략을 바꾼 라운드**
+
+9차는 P0 0 · P1 1 · P2 3. P1 은 stop 출처 세 필드를 **함께** 옮긴 시험이라
+`digest` 하나만 보는 술어에 안 걸린다는 것이었고, 리뷰어가 제 seam 으로 세 줄 만에
+`stop.digest` 만 바꾼 제안을 만들어 **주문을 냈다**.
+
+### 왜 여덟 번째 하위 시험을 만들지 않았나
+
+`executionTermsIdentity` 가 담는 스칼라는 **32 개**다 — 계좌·시장·종목·캠페인·
+legOrdinal·수량·정책·lineage 여덟에, 가격 셋 × 필드 여덟. 5~9 차는 라운드마다
+축 하나를 시험으로 샀고 매번 다음 축이 남았다. 32 개를 엔진 fixture 로 사려면
+대부분에 대해 **그 축만 움직이는 seam 을 새로 만들어야 한다** — fix9 가 그것을
+하나 만드느라 새 exported 함수를 하나 늘렸다. 이 방식은 종료하지 않는다.
+
+의무를 둘로 나누면 각각 끝난다. 리뷰어의 권고이고, 그대로 했다.
+
+| 무엇을 증명하나 | 어디서 | 왜 거기서 끝나나 |
+|---|---|---|
+| identity 가 **모든 필드**를 담는다 | `internal/strategyflow/execution_terms_identity_fields_test.go` (신규) | 필드를 가진 타입 안이라 fixture 도 seam 도 필요 없다. 32 개를 하나씩 바꿔 해시가 달라지는지 보고, **개수는 `reflect` 로 타입에서 읽는다** — 필드가 늘면 시험이 터져 표를 늘리게 만든다 |
+| 이 가드가 **그 identity 를 그대로** 비교한다 | `internal/app/engine/strategy_first_leg_backstop_shape_test.go` (신규) | 단언 **하나**. `:223` 의 조건이 정확히 두 identity 비교의 논리합인지 AST 구조로 본다 |
+
+**이것은 이 change 가 다섯 라운드에 걸쳐 지운 철자 census 가 아니다.** 그것들은
+"토큰 X 가 범위 어딘가에 있는가"를 물었고, X 가 다른 곳에 나타나면 뚫렸다 —
+완전성이 세는 **범위**의 함수였다. 여기서는 **그 비교의 피연산자가 이 식인가**를
+묻는다. 가드 그 자체인 AST 노드에 대한 구조 등식이라 다른 곳의 등장으로는 만족시킬
+수 없다. 그리고 혼자 서지 않는다: 행동 시험 넷(하위 여섯)이 "이 가드가 돌고 거절한다"를
+증명하고, 32 필드 표가 "비교되는 값이 모든 필드를 담는다"를 증명한다.
+**행동 + 구조 + 해시 완전성** 셋이 함께라야 닫힌다.
+
+### 반증
+
+32 필드 표 — `types.go` 의 해시에서 필드를 빼 본다(overlay, 원본 불변):
+
+| 뺀 것 | 결과 |
+|---|---|
+| 가격의 `digest` | RED — `entry.digest`·`stop.digest`·`target.digest` 셋만 |
+| `terms.quantity` | RED — `quantity` 하나만 |
+
+구조 단언 — **소스를 실제로 바꿔야 한다.** `parser.ParseFile` 은 디스크를 읽으므로
+`go test -overlay` 가 안 보인다. 처음에 overlay 로 재서 여섯 개가 전부 GREEN 이
+나왔고, 그것은 가드가 약하다는 뜻이 아니라 **제 반증 방법이 틀렸다는 뜻**이었다.
+백업 파일에서 복원하고 sha256(`1d710710…`)을 매 회 확인하며 다시 쟀다.
+
+| `:223` 을 바꾼 것 | 구조 단언 |
+|---|---|
+| `Lineage.Market` 만 · `Lineage.Identity` 만 · `CampaignID` 만 | RED |
+| `ExecutionTerms.Identity()` 만 (**행동상 동등 변이**) | RED |
+| 세 `priceMinor` 만 · 거기에 `EffectiveStop().Source()` 를 더한 것 | RED |
+
+넷째 줄이 요점이다. 포섭된 항을 지운 것이라 **행동으로는 어떤 시험도 구별할 수
+없다.** 구조는 구별한다.
+
+### P2 셋
+
+| # | 무엇 | 고침 |
+|---|---|---|
+| P2-1 | "남는 회피" 문장이 **다섯 번째로** 코드보다 한 칸 넓었다. `_bundle_text` 가 `*.md` 를 globbing 했고 `.md` 도 목록이다 — `notes.txt`·`notes.mdx`·`notes.markdown` 로 강제가 꺼졌다 | 이름으로도 확장자로도 안 거른다. 번들 디렉터리에서 **읽히는 파일 전부**를 넘긴다(디코딩 실패만 건너뛴다). 네 공격 모두 `True`. 시험도 그 세 확장자를 포함하게 넓혔다 |
+| P2-2 | `strategyflow` 의 exported 표면에 census 가 없다 — 이제 봉인된 `Result` 를 만드는 함수가 **둘**이다 | **부채로 이름만 적는다.** `strategyhandoff` 가 4차 전에 있던 상태와 같다. 이 change 의 파일 소유 밖이고, census 를 하나 더 만드는 것은 이 라운드가 지운 검사와 같은 종류를 늘리는 일이다 |
+| P2-3 | B3 의 stop 출처 줄이 "출처가 고정된 것처럼" 읽혔다 | `세 필드를 함께 바꾼 경우만` 으로 한정하고, `digest` 하나는 그 시험이 못 잡는다고 적었다. 나머지 축은 구조 단언과 32 필드 표가 덮는다고 표에 명시 |
+
+### 실측 (5.5-fix10, 인도된 트리)
+
+| | |
+|---|---|
+| `make lint` | PASS |
+| `make test` | **98 ok / 0 FAIL** |
+| `make test-seams` | **99 ok / 0 FAIL** |
+| `tools/logic-map` 전체 discover | **77 PASS** |
+| 저장소 전수 스윕(읽히는 파일 전부) | **3014 번들 / 93 change / 강제 1(a112, 133 번들) / findings 0** |
+| `check_analysis --change a112` | evidence complete or diff-proven exempt |
+| `openspec validate --strict` | valid |
+| gofmt | 0 |
+| 뮤테이션 원복 | 백업+sha256 확인(구조 단언은 디스크를 읽으므로 overlay 로는 반증되지 않는다) |
+| `make sdd-sync` | all indexes current |
+| `make sdd-check` | 외부 a117 스텁에서만 실패(제 것 아님) |
+| `make gate` | **not-applicable** — change 완료 게이트, a112 는 미완료 태스크가 남아 2/10 에서 멈춘다 |
+
+## 5.5-fix11 — 10차가 낸 P1 둘: 전략을 끝내려고 만든 두 산출물 안에 같은 병이 있었다
+
+10차는 P0 0 · P1 2 · P2 3. 전략 분할 자체는 옳다고 확인됐고, **양쪽 반쪽이 각각
+자기 범위를 안 못 박은 것**이 P1 이었다.
+
+### P1-1 — 조건은 구조로 보면서 본문은 존재로 봤다
+
+`refusesWith` 는 "이 블록 **어딘가에** 거절 문구가 있는가"를 물었다. 그것은 이
+change 가 다섯 라운드에 걸쳐 지운 존재 검사다. 리뷰어가 조건을 **한 글자도 안 바꾸고**
+본문 안에 분기를 넣었다:
+
+```go
+if <조건 그대로> {
+    if result.Lineage.PlannedCeiling != accepted.result.Lineage.PlannedCeiling {
+        result = accepted.result          // 건너온 값을 그대로 믿는다
+    } else {
+        return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production proposal identity changed")
+    }
+}
+```
+
+구조 단언 초록, 행동 시험 넷(하위 여섯) 초록, 두 스위트 초록, 그리고 **위조된 수량 9 ·
+손절 80 짜리 1차 진입**. fixture 가 전부 ceiling 8 이라 그 탈출구를 아무도 안 밟았다.
+
+고침은 본문도 구조로 보는 것이다 — `requireOnlyTheRefusal`: 문장 **하나**, 반환 둘,
+첫째가 빈 발주, 둘째가 그 문구의 `errors.New`. 실제 파일에 그 뮤턴트를 넣어 재니
+`가드 본문이 두 값을 돌려주는 return 이 아니다: *ast.IfStmt` 로 **RED**(sha256
+`1d710710…` 복원 확인). 이 요구는 유한하다 — 더해도 다음 단계가 생기지 않는다.
+
+`refusesWith` 는 남겼지만 **가드를 찾는 데만** 쓴다. 찾는 데 존재 검사를 쓰는 것과
+증명하는 데 쓰는 것은 다르고, 그 구분을 코드 주석에 적었다.
+
+### P1-2 — 32 필드 census 가 세 타입 중 둘만 읽었다
+
+`scalars = terms.NumField() - 1 - 3 + 3*price.NumField()` 는 `ExecutionPolicy` 를
+스칼라 **하나로 하드코딩**했다. 그 타입은 아홉 필드이고 `executionTermsIdentity` 는
+`policy.identity` 하나만 해시한다 — **여덟 필드가 세는 범위 밖에 있었다.**
+
+| overlay | 앞 판본 | 지금 |
+|---|---|---|
+| `ExecutionPolicy` 에 필드 추가 | 초록 | **RED** — `위임 9(want 8)` |
+| `PriceProvenance` 에 필드 추가(대조군) | RED | RED |
+
+고침은 둘이다. (a) 산술이 **세 타입 모두**의 `NumField()` 를 읽는다. (b) 여덟 필드가
+`policy.identity` 로 **위임**되는지를 `TestBreakoutPolicyIdentityChangesWithEveryFieldItCovers`
+가 잰다 — `capSnapshotID` 를 정책 해시에서 빼면 그 케이스만 RED.
+
+**위임이 확인되는 범위를 적는다.** continuation·reversal 은 나머지 여덟을 비운 채
+`ExecutionPolicy{identity: …}` 를 만들므로 잃을 값이 없다. **weekly 는 다르다** —
+`weeklyPolicy` 가 아홉을 다 채우면서 identity 는 lane 이 계산한 것을 받는다. 그 유도는
+이 패키지가 확인하지 않는다. **확인 안 된 위임으로 남긴다.**
+
+### P2 셋
+
+| # | 무엇 | 고침 |
+|---|---|---|
+| P2-1 | "행동 시험 **일곱**" — 실제는 함수 넷, 하위 시험 여섯. 같은 로트 안에서 셋은 맞고 둘은 틀렸다 | 두 사본 다 "넷(하위 여섯)" |
+| P2-2 | fix10 실측표가 `sdd-sync`·`sdd-check`·`make gate` 세 줄을 빠뜨렸다 — 8차 P2-5 와 같은 회귀 | 세 줄 복원 |
+| P2-3 | B3 가 구조 단언이 **잡는 것**만 적었다 | 못 잡던 것(본문 분기)과 지금도 안 보는 것(가드 앞뒤)을 같은 표에 적었다 |
+
+### 실측 (5.5-fix11, 인도된 트리)
+
+| | |
+|---|---|
+| `make lint` | PASS |
+| `make test` | **98 ok / 0 FAIL** |
+| `make test-seams` | **99 ok / 0 FAIL** |
+| `tools/logic-map` 전체 discover | **77 PASS** |
+| 저장소 전수 스윕 | **3014 번들 / 93 change / 강제 1(a112, 133 번들) / findings 0** |
+| `check_analysis --change a112` | evidence complete or diff-proven exempt |
+| `openspec validate --strict` | valid |
+| gofmt | 0 |
+| `make sdd-sync` | all indexes current |
+| `make sdd-check` | 외부 a117 스텁에서만 실패(제 것 아님) |
+| `make gate` | **not-applicable** — change 완료 게이트, a112 는 미완료 태스크가 남아 2/10 에서 멈춘다 |
+
+## 5.5-fix12 — 11차: 탈출구를 한 줄 위로 옮기면 그대로 통했다
+
+11차는 P0 0 · P1 1 · P2 3.
+
+### P1 — 10차 뮤턴트를 가드 **밖으로 한 줄** 옮기면 새 본문 검사가 안 본다
+
+```go
+if result.Lineage.PlannedCeiling != accepted.result.Lineage.PlannedCeiling {
+    result = accepted.result
+}
+<가드 노드 한 바이트도 안 바뀜>
+```
+
+대입이 비교보다 먼저이므로 가드가 볼 때는 identity 가 이미 같고, 가드는 옳게 아무것도
+안 한다. 구조 단언 초록 · 행동 시험 넷(하위 여섯) 초록 · 두 스위트 초록 · **위조된
+수량 9 · 손절 80 짜리 1차 진입**.
+
+**그리고 B3 에 적어 둔 문장이 틀렸다.** "가드 앞은 다른 가드(B2·B4)와 행동 시험이
+맡는다"고 적었는데 재 보니 **아무도 안 맡고 있었다.** 구멍을 이름만 적고 주인은
+확인하지 않은 것이다 — 이 로트가 "세는 범위를 확인하라"를 배운 것과 같은 실수의
+다른 얼굴이다.
+
+고침은 두 술어이고 유한하다.
+
+| 요구 | 무엇을 막나 |
+|---|---|
+| 가드는 `result := proposalAuthority.Proposal()` **바로 다음** 최상위 문장 | 위로 옮긴 탈출구, 그리고 감싸기 |
+| `result` 는 함수 전체에서 **한 번만** 대입 | 가드 뒤에서 다시 대입하는 변형 |
+
+실제 파일에 넣어 재고 sha256 `1d710710…` 로 매번 복원 확인:
+
+| 뮤턴트 | 결과 |
+|---|---|
+| 탈출구를 가드 위로(11차의 H) | RED — `가드 바로 앞 문장이 …가 아니다` |
+| 가드를 바깥 `if` 로 감싸기 | RED — `가드 2 개` |
+| 가드 뒤에서 재대입 | RED — `result 가 2 번 대입된다` |
+
+### P2 셋
+
+**P2-1 — 감싸기는 *우연히* 막히고 있었다.** `refusesWith` 가 재귀해서 감싼 `if` 도
+후보로 잡히는 것이 그 방어였다. `refusesWith` 를 직속 문장만 보도록 "정리"하면
+조용히 사라진다. 그 상태를 실제로 만들어(생산 파일 + 시험 파일 둘 다 백업·복원)
+재 보니 **최상위 문장 요구가 독립적으로** 잡았다: `가드가 함수 최상위 문장이 아니다`.
+의존을 주석에도 적었다.
+
+**P2-2 — weekly 위임은 확인 가능했고 성립한다.** 리뷰어가 두 홉을 추적했다:
+`executionPolicy` 의 `Identity` 는 `{seal, DecisionDigest, CalendarDigest,
+CapSnapshotID}` 에서 나오고 `seal` 은 나머지 다섯 값을 담는다. "확인 안 됨"으로
+남기는 대신 그 패키지에 여덟 케이스를 뒀다
+(`internal/weeklyvaluelane/execution_policy_identity_fields_test.go`).
+preimage 에서 `exitCosts` 를 빼면 `ExitCostsMinor` 케이스만 RED.
+값 다섯은 preimage 를 바꾸고 **다시 봉인해서** 넣는다 — 봉인 안 한 preimage 는
+`valid()` 가 거절하므로 그 경로가 실제 경로다.
+
+**P2-3 — `NumField()-1` 은 세기만 했다.** 이제 `identity` 필드가 실재하는지 확인하고,
+나머지 여덟을 **이름으로** 표와 대조한다. 다만 정직하게 적는다: **리네임을 실제로
+막는 것은 컴파일이다.** 생산 파일에서만 `capSnapshotID` 를 리네임해 보니 시험이
+그 필드를 직접 쓰므로 빌드가 깨진다. 이름 루프는 보조다.
+
+**반증 하나가 무효였다.** 처음에 `*.go` 전체를 리네임했더니 시험 파일까지 함께 바뀌어
+초록이 나왔다 — 뮤테이션이 자기가 잡아야 할 시험도 같이 고친 것이다. 생산 파일만
+바꾸도록 고쳐 다시 쟀다.
+
+### 실측 (5.5-fix12, 인도된 트리)
+
+| | |
+|---|---|
+| `make lint` | PASS |
+| `make test` | **98 ok / 0 FAIL** |
+| `make test-seams` | **99 ok / 0 FAIL** |
+| `tools/logic-map` 전체 discover | **77 PASS** |
+| 저장소 전수 스윕 | **3014 번들 / 93 change / 강제 1(a112, 133 번들) / findings 0** |
+| `check_analysis --change a112` | evidence complete or diff-proven exempt |
+| `openspec validate --strict` | valid |
+| gofmt | 0 |
+| `make sdd-sync` | all indexes current |
+| `make sdd-check` | 외부 a117 스텁에서만 실패(제 것 아님) |
+| `make gate` | **not-applicable** — change 완료 게이트, a112 는 2/10 에서 멈춘다 |
+
+## 5.5-fix13 — 12차(P1 0)의 P2 둘
+
+12차는 **P0 0 · P1 0 · P2 2** 로 APPROVE WITH FINDINGS. 두 번째로 P1 이 없는 라운드다.
+
+### P2-1 — 사슬의 **첫 고리**가 안 잡혀 있었다
+
+`statementText` 는 렌더된 문자열 비교이고, 그것은 존재 검사가 한 단계 올라간 것이다 —
+토큰이 아니라 **문장 하나의 철자**를 본다. 재유도는 두 고리인데 고리 2 만 잡았다.
+
+리뷰어가 넣은 것은 **6.2 가 실제로 쓸 편집**이다: 네 가족 중 조정자가 고른 항목을
+loop 로 찾아 `proposalAuthority` 를 다시 고른다. 고리 2 와 가드는 한 바이트도 안
+바뀌고 구조 단언·행동 시험 여섯·census 가 전부 초록이다. 그러면 가드가 **자기 참조**가
+된다 — accepted 와 맞는 항목을 골라 놓고 그것을 accepted 와 비교한다.
+
+**오늘은 해가 없다.** `:217` 이 `len(entries) != 1` 로 항목을 하나로 묶고, census 가
+그 관문을 잡고 있다. **그 둘이 정확히 6.2 가 바꿀 것**이므로 지금 닫았다.
+
+이제 세 이름(`proposal`·`proposalAuthority`·`result`)이 각각 한 번만 대입되고,
+두 고리가 가드 바로 앞에 이 순서로 있어야 한다. 실제 파일 뮤테이션(sha256
+`1d710710…` 복원 확인):
+
+| 뮤턴트 | 결과 |
+|---|---|
+| 고리 1 뒤 loop 로 재선택(6.2 의 모양) | RED — 사슬과 대입 수 **둘 다** |
+| `proposal` 재대입 | RED |
+
+### P2-2 — `&result` 는 대입으로 안 세고 있었다
+
+클로저 안의 `result = …` 와 안쪽 스코프의 `result :=` 는 이미 세고 있었다.
+빠진 것은 포인터 넘김이다 — `&result` 는 `*ast.UnaryExpr` 라서 대입만 세면 안 보인다.
+
+리뷰어는 이것을 **무해하다고 재고** P2 로 냈다: 가드가 뒤따르는 모든 문장을 지배하므로
+가드 뒤의 채택은 identity 가 이미 같을 때만 돌고, identity 동일은 봉인된 값 전체의
+동일이라 채택이 무의미하다. 그래도 세는 편이 한 줄이라 세기로 했고, 그 이유를 주석에
+적었다. `_ = &result` 를 넣으면 RED.
+
+### 리뷰어가 이 로트의 **방법 정정 두 개**를 근거로 인정했다
+
+`-overlay` 가 디스크를 읽는 파서에 안 보인다는 것(10차)과, 리네임 뮤테이션이 시험
+파일까지 고쳐 자기를 잡아야 할 시험을 수리했다는 것(11차). 둘 다 **틀린 반증**이었고
+둘 다 기록에 남겼다. 반증 방법이 틀리면 결과는 "가드가 약하다"가 아니라 "안 쟀다"이다.
+
+### 실측 (5.5-fix13, 인도된 트리)
+
+| | |
+|---|---|
+| `make lint` | PASS |
+| `make test` | **98 ok / 0 FAIL** |
+| `make test-seams` | **99 ok / 0 FAIL** |
+| `tools/logic-map` 전체 discover | **77 PASS** |
+| 저장소 전수 스윕 | **3014 번들 / 93 change / 강제 1(a112, 133 번들) / findings 0** |
+| `check_analysis --change a112` | evidence complete or diff-proven exempt |
+| `openspec validate --strict` | valid |
+| gofmt | 0 |
+| `make sdd-sync` | all indexes current |
+| `make sdd-check` | 외부 a117 스텁에서만 실패(제 것 아님) |
+| `make gate` | **not-applicable** — change 완료 게이트, a112 는 2/10 에서 멈춘다 |

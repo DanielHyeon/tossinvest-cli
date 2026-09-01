@@ -27,7 +27,21 @@ Fall-through (line 163): `t.In(loc).Format("2006-01-02")` with a nil error — c
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `m.Location` | 159:14 |
+| `Format` | 163:9 |
+| `t.In` | 163:9 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `m.Location()` | 159 | the market's IANA zone, loaded once behind `locOnce`; refuses unknown markets and a failed zone load (market.go:79–92) |
 | `t.In(loc)` | 163 | reinterpret the instant in the exchange's zone; no arithmetic, so DST transitions are handled by the zone database (`TestUTCOffsetAcrossDST`, `TestRegularSessionDSTTable`) |

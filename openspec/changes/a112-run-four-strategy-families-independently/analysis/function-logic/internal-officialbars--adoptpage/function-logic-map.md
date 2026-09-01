@@ -31,7 +31,32 @@ Exact AST return nodes: `420`, `427`, `433`.
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `make` | 416:9 |
+| `len` | 416:32 |
+| `time.Parse` | 418:19 |
+| `refuse` | 420:16 |
+| `strconv.Itoa` | 421:15 |
+| `strconv.Quote` | 421:72 |
+| `Add` | 423:13 |
+| `closeAt.UTC` | 423:13 |
+| `openAt.Second` | 426:6 |
+| `openAt.Nanosecond` | 426:30 |
+| `refuse` | 427:16 |
+| `strconv.Itoa` | 428:15 |
+| `openAt.Format` | 428:48 |
+| `append` | 431:9 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `make([]observedBar, 0, len(page.Candles))` | 416 | exact-capacity local slice; no growth beyond the page |
 | `time.Parse(time.RFC3339, candle.Timestamp)` | 418 | parse of the broker's **close** label — an instant the reader already validated; `internal-official--strictminutecandle` B9/B10 is the first parse |

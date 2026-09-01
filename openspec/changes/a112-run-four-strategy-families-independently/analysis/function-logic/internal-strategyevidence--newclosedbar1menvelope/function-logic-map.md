@@ -29,7 +29,38 @@ Exact AST return nodes: `303, 307, 310, 315, 326, 357, 359`.
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `newClosedBar1mHeader` | 300:17 |
+| `marketAndCode` | 305:18 |
+| `input.SuccessorOpenAt.IsZero` | 309:5 |
+| `invalid` | 310:22 |
+| `UnixMilli` | 313:17 |
+| `input.SuccessorOpenAt.UTC` | 313:17 |
+| `invalid` | 315:22 |
+| `marketMoney` | 317:24 |
+| `recomputeMinors` | 318:17 |
+| `json.Marshal` | 328:18 |
+| `strings.TrimSpace` | 332:23 |
+| `uint64` | 334:23 |
+| `uint64` | 336:23 |
+| `header.SourceEventAt.UnixMilli` | 336:30 |
+| `uint64` | 352:29 |
+| `uint64` | 353:29 |
+| `header.ObservedAt.UnixMilli` | 353:36 |
+| `invalid` | 357:22 |
+| `err.Error` | 357:64 |
+| `NewEnvelope` | 359:9 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `newClosedBar1mHeader(...)` | 300 | header identity/clocks; see `internal-strategyevidence--newclosedbar1mheader` |
 | `marketAndCode(input.Market)` | 305 | upper-case market code for the payload |

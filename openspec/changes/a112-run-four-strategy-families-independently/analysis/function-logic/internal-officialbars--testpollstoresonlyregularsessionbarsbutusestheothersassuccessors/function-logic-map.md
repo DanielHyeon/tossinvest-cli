@@ -33,7 +33,57 @@ The AST reports 6 branches and **no return nodes** — the function ends by fall
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Evidence |
+| Callee expression | Position |
+|---|---|
+| `t.Parallel` | 406:2 |
+| `context.Background` | 407:9 |
+| `usClose.Add` | 408:12 |
+| `marketclock.NewFake` | 409:11 |
+| `openTestStore` | 410:11 |
+| `readerOf` | 411:12 |
+| `usPage` | 411:21 |
+| `usBar` | 412:3 |
+| `usClose.Add` | 412:12 |
+| `usBar` | 413:3 |
+| `usBar` | 414:3 |
+| `usClose.Add` | 414:12 |
+| `usBar` | 415:3 |
+| `usBar` | 416:3 |
+| `usOpen.Add` | 416:12 |
+| `PollClosedBars` | 418:17 |
+| `usCalendarAt` | 420:13 |
+| `usClose.Add` | 420:29 |
+| `t.Fatalf` | 423:3 |
+| `t.Fatalf` | 426:3 |
+| `usSeries` | 428:12 |
+| `len` | 429:5 |
+| `t.Fatalf` | 430:3 |
+| `len` | 430:32 |
+| `uint64` | 432:40 |
+| `usOpen.UnixMilli` | 432:47 |
+| `uint64` | 433:38 |
+| `UnixMilli` | 433:45 |
+| `usClose.Add` | 433:45 |
+| `t.Fatalf` | 434:3 |
+| `uint64` | 437:49 |
+| `usClose.UnixMilli` | 437:56 |
+| `t.Fatalf` | 438:3 |
+| `len` | 440:5 |
+| `result.Gaps.From.Equal` | 441:4 |
+| `usOpen.Add` | 441:30 |
+| `result.Gaps.To.Equal` | 441:59 |
+| `usClose.Add` | 441:83 |
+| `t.Fatalf` | 442:3 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location | Evidence |
 |---|---|---|
 | `t.Parallel`, `context.Background` | 406, 407 | ordinary harness; the test owns its own store so parallel execution is safe |
 | `usClose.Add`, `usOpen.Add` | 408, 412–416, 433, 441 | every fixture instant and every expectation is expressed as an offset from the session edges, in **open** space |

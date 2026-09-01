@@ -46,6 +46,28 @@ read가 실패하지 않는다" 를 요구한다.
 
 ## Calls and live bindings
 
+| Callee expression | Position |
+|---|---|
+| `strategyprojection.DormantSnapshot` | 163:11 |
+| `UTC` | 163:46 |
+| `time.Now` | 163:46 |
+| `json.Marshal` | 164:13 |
+| `append` | 165:13 |
+| `len` | 165:26 |
+| `(unnamed)` | 165:40 |
+| `(unnamed)` | 171:17 |
+| `strings.Repeat` | 171:24 |
+| `t.Run` | 173:3 |
+| `httptest.NewServer` | 174:14 |
+| `http.HandlerFunc` | 174:33 |
+| `w.Write` | 174:104 |
+| `server.Close` | 175:10 |
+| `strings.Repeat` | 176:50 |
+| `server.Client` | 176:81 |
+| `client.Read` | 177:17 |
+| `context.Background` | 177:29 |
+| `t.Fatal` | 178:5 |
+
 base 리비전의 호출은 테스트 하네스뿐이다 — `strategyprojection.DormantSnapshot`,
 `json.Marshal`, `httptest.NewServer`, `Client.Read`. production 심볼 중 이 함수가 묶고
 있던 유일한 계약이 `Client.Read` 의 엄격 디코딩이었고, 그것이 이 lot 이 바꾼 대상이다.

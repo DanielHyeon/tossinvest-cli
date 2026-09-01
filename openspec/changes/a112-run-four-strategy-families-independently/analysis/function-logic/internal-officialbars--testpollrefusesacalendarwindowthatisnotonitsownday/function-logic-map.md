@@ -30,7 +30,36 @@ The AST reports 3 branches and **no return nodes** — the function ends by fall
 
 ## Calls and live bindings
 
-| Callee expression | Source location (base) | Evidence |
+| Callee expression | Position |
+|---|---|
+| `t.Parallel` | 1474:2 |
+| `context.Background` | 1475:9 |
+| `usOpen.Add` | 1476:12 |
+| `openTestStore` | 1477:11 |
+| `marketclock.NewFake` | 1477:28 |
+| `pollAt.Add` | 1477:48 |
+| `usCalendarAt` | 1480:13 |
+| `usOpen.Add` | 1480:29 |
+| `usOpen.AddDate` | 1482:9 |
+| `usClose.AddDate` | 1482:42 |
+| `readerOf` | 1484:12 |
+| `usPage` | 1484:21 |
+| `PollClosedBars` | 1485:12 |
+| `t.Fatal` | 1489:3 |
+| `refusalOf` | 1491:12 |
+| `t.Fatalf` | 1492:3 |
+| `len` | 1494:5 |
+| `t.Fatalf` | 1495:3 |
+
+### 손으로 쓴 주석 — 완전성 주장이 아니다
+
+위 표가 `ast.json` 의 호출 전부이고 `tools/logic-map/role_check.py` 가 1:1 로 대조한다.
+아래는 그 자리에 있던 손으로 쓴 분석이다. 줄 번호만 적거나 한 줄이 호출 여럿을 묶어서
+기계가 읽지 못했고, 그래서 잘려 있어도 게이트가 조용했다(a112 4차 리뷰가 센 39 개 중 하나).
+근거로서의 값은 남으므로 지우지 않는다. **좌표는 위 표가 정본이다** — 아래 산문의
+줄 번호는 그때 손으로 읽은 값이고, 어긋나면 위 표가 맞다.
+
+| Callee (hand-written note) | Source location (base) | Evidence |
 |---|---|---|
 | `t.Parallel`, `context.Background` | 1474, 1475 | ordinary harness; the test owns its store, so parallel execution is safe |
 | `usOpen.Add(10 * time.Minute)` | 1476 | an unremarkable in-session poll instant, so the refusal cannot come from the poll's own day |
