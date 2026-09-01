@@ -30,18 +30,23 @@ import (
 // 이 표를 늘리는 것 자체는 금지가 아니다. 금지는 **조용히** 늘리는 것이다.
 var exportedSurface = map[string]string{
 	"Capacity":      "const",
-	"Refusal":       "type",
+	"Refusal":       "type string",
 	"Admitted":      "const",
 	"MarketClosed":  "const",
 	"NoSelection":   "const",
 	"OverCapacity":  "const",
 	"OverCarried":   "const",
 	"ErrNoDelivery": "var",
-	"Handoff":       "type",
+	"Handoff":       "type struct{selected []strategyflow.Result; refusal Refusal; pending int}",
 	// Delivered 는 이 경계를 지나온 값의 봉투다. 필드가 비공개라서 밖에서는
 	// 영값밖에 만들 수 없고, 그것이 이 타입의 전부다 — 값을 넣는 공개 문은
 	// 아래 표에 없다. Deliver 만이 채운 봉투를 만든다.
-	"Delivered": "type",
+	//
+	// **그 비공개성을 여기 적어 둔 것만으로는 지켜지지 않았다.** 앞 판본은
+	// 값이 "type" 이어서 필드 이름을 `Value` 로 바꿔도 이 표가 조용했고, 그
+	// 한 단어가 이 로트가 지운 검사 셋을 전부 되살렸다. 이제 모양이 값에
+	// 들어 있으므로 필드를 공개하면 이 줄과 어긋난다.
+	"Delivered": "type struct{result strategyflow.Result}",
 
 	"Admit": "func(ready bool, selected []strategyflow.Result) Handoff",
 
@@ -85,7 +90,13 @@ func TestThePackageExposesExactlyTheSurfaceTheSeamNeeds(t *testing.T) {
 					switch inner := spec.(type) {
 					case *ast.TypeSpec:
 						if inner.Name.IsExported() {
-							found[inner.Name.Name] = kind
+							// 종류만 적으면 타입의 **모양**은 안 본다. 4차 적대
+							// 리뷰가 Delivered 의 필드 이름을 한 단어 바꿔서
+							// 3라운드의 우회 셋을 전부 되살렸는데도 두 스위트가
+							// 초록이었다 — 이 표가 "type" 이라는 한 단어만 붙들고
+							// 있었기 때문이다. 구조를 적으면 필드의 공개 여부가
+							// 이름과 같은 자리에서 고정된다.
+							found[inner.Name.Name] = kind + " " + types.ExprString(inner.Type)
 						}
 					case *ast.ValueSpec:
 						for _, name := range inner.Names {
@@ -123,36 +134,65 @@ func TestThePackageExposesExactlyTheSurfaceTheSeamNeeds(t *testing.T) {
 	}
 }
 
-// Handoff 의 필드는 모두 비공개여야 한다. 하나라도 열리면 위의 표는 우회된다 —
-// 부르는 쪽이 어떤 접근자도 거치지 않고 값을 읽으면 되기 때문이다.
-func TestTheHandoffCarriesNoExportedField(t *testing.T) {
-	checked := 0
+// 이 경계가 내보내는 **모든** 타입의 필드는 비공개여야 한다. 하나라도 열리면
+// 위의 표는 우회된다 — 부르는 쪽이 어떤 접근자도 거치지 않고 값을 읽으면 된다.
+//
+// **앞 판본은 이름을 `Handoff` 로 고정해서 보았다.** 그래서 Delivered 가 생겼을
+// 때 그 타입의 필드는 아무도 보지 않았고, 4차 적대 리뷰가 필드 이름을 한 단어
+// 바꿔 이 로트가 지운 우회 셋을 전부 되살렸는데도 두 스위트가 초록이었다.
+// **이름을 고르는 검사는 그 뒤에 생긴 이름을 못 본다.**
+//
+// 무엇을 보아야 하는지는 위 표에서 가져온다. 표가 struct 라고 적은 것을 하나라도
+// 못 보면 이 검사는 스스로 실패한다 — 다음에 타입이 늘어도 여기 손댈 필요가 없다.
+func TestNoExportedTypeCarriesAnExportedField(t *testing.T) {
+	wantStructs := make(map[string]bool)
+	for name, shape := range exportedSurface {
+		if strings.HasPrefix(shape, "type struct{") {
+			wantStructs[name] = true
+		}
+	}
+	if len(wantStructs) == 0 {
+		t.Fatal("the surface table names no struct, so this guard reads nothing")
+	}
+	seen := make(map[string]bool)
+	fields := 0
 	for _, file := range productionFiles(t) {
 		ast.Inspect(file, func(node ast.Node) bool {
 			spec, ok := node.(*ast.TypeSpec)
-			if !ok || spec.Name.Name != "Handoff" {
+			if !ok || !spec.Name.IsExported() {
 				return true
 			}
 			structure, ok := spec.Type.(*ast.StructType)
 			if !ok || structure.Fields == nil {
-				t.Fatal("Handoff is no longer a struct, so this guard reads nothing")
+				return true
 			}
+			seen[spec.Name.Name] = true
 			for _, field := range structure.Fields.List {
 				if len(field.Names) == 0 {
-					t.Error("Handoff embeds a type, which can re-export a carried value")
+					t.Errorf("%s embeds a type, which can re-export a carried value", spec.Name.Name)
 				}
 				for _, name := range field.Names {
-					checked++
+					fields++
 					if name.IsExported() {
-						t.Errorf("Handoff.%s is exported; the admission answer can then be bypassed", name.Name)
+						t.Errorf("%s.%s is exported; the boundary can then be read without its answer", spec.Name.Name, name.Name)
 					}
 				}
 			}
 			return true
 		})
 	}
-	if checked == 0 {
-		t.Fatal("no Handoff field was scanned, so this guard proves nothing")
+	for name := range wantStructs {
+		if !seen[name] {
+			t.Errorf("the surface table calls %s a struct but no such struct was scanned", name)
+		}
+	}
+	for name := range seen {
+		if !wantStructs[name] {
+			t.Errorf("%s is an exported struct the surface table does not list as one", name)
+		}
+	}
+	if fields == 0 {
+		t.Fatal("no exported struct field was scanned, so this guard proves nothing")
 	}
 }
 

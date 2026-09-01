@@ -605,27 +605,120 @@ func TestOnlyTheSeamsEnvelopeCanReachTheSharedDispatch(t *testing.T) {
 // 그 헬퍼가 세어진다.
 //
 // 별칭 import(`sh.Admit`), dot import(`Admit`), 함수 값(`var f = …Admit`)은
-// 전부 이 토큰을 쓰므로 이 세기 안에 들어온다. **들어오지 않는 경로도 적는다:**
-// 다른 패키지가 Admit 을 불러 만든 Handoff 를 엔진에 돌려주면 엔진 소스에는
-// 이 토큰이 없다. 그 경로는 여기가 아니라 strategyhandoff 의
-// TestOnlyTheEngineImportsThisSeam 이 막는다 — 그 검사는 이 패키지를 들여오는
-// 모듈 안의 패키지 전부를 센다. 두 검사가 함께여야 사슬이 닫힌다.
+// 전부 이 토큰을 쓰므로 이 세기 안에 들어온다 — **그리고 그 말은 아래
+// TestAdmitCensusSeesEverySpellingItClaims 가 fixture 로 확인한다.** 앞 판본은
+// 같은 문장을 주석으로만 적었고 순회는 `*ast.FuncDecl` 안에만 들어갔다. 함수
+// 본문 밖의 `var f = …Admit` 은 `*ast.GenDecl` 이라 안 보였고, 4차 적대 리뷰가
+// 정확히 그 철자로 뚫었다. **덮었다고 적은 문장이 구멍을 가렸다** — 그래서
+// 이제 범위를 말로 적지 않고 세어서 적는다.
+//
+// **들어오지 않는 경로도 적는다:** 다른 패키지가 Admit 을 불러 만든 Handoff 를
+// 엔진에 돌려주면 엔진 소스에는 이 토큰이 없다. 그 경로는 여기가 아니라
+// strategyhandoff 의 TestOnlyTheEngineImportsThisSeam 이 막는다.
+//
+// **그리고 이 세기로는 닫히지 않는 경로가 하나 더 있다.** dispatchHandoff 는
+// 평범한 패키지 사설 구조체의 메서드라 엔진 안의 아무 함수나 그 수신자를
+// 리터럴로 만들어 부를 수 있다 — 그때 `Admit` 은 엔진 소스에 나타나지 않는다.
+// 4차 적대 리뷰가 그것을 컴파일해 보였다. 주조 권한이 이 패키지 안에 진짜로
+// 있으므로 **철자를 세는 어떤 검사도 그것을 막을 수 없다.** 오늘 그 우회가
+// 주문으로 이어지지 않는 이유는 이 경계가 아니라 strategy_account_first_leg_
+// authority.go 의 재유도·identity 대조이고(`:217`, `:221`–`:222`, `:223`–`:225`),
+// 그 다섯 줄은 L6 6.2 가 지울 빚으로 아래 singleProposalAssumptionCensus 에
+// 등록돼 있다.
+//
+// **그 대조를 실제로 지키는 것은 census 가 아니다.** census 는 `entries` 의
+// 모양을 세므로 identity 비교만 지우면 5 가 유지돼 초록이다. 행동으로 그것을
+// 잡는 것은 strategy_first_leg_identity_backstop_test.go 의
+// TestFirstLegAuthorityRefusesAProposalItDidNotAuthorize 하나뿐이다.
 func TestExactlyOneProductionSiteAdmitsIntoTheSeam(t *testing.T) {
 	sites := make([]string, 0, 1)
 	for _, path := range engineProductionFiles(t) {
-		for _, decl := range parseEngineFile(t, path).Decls {
-			function, ok := decl.(*ast.FuncDecl)
-			if !ok || function.Body == nil || function.Name == nil {
-				continue
-			}
-			for i := 0; i < identMentions(function.Body, "Admit"); i++ {
-				sites = append(sites, filepath.Base(path)+":"+function.Name.Name)
-			}
+		for _, name := range admitSites(parseEngineFile(t, path)) {
+			sites = append(sites, filepath.Base(path)+":"+name)
 		}
 	}
 	sort.Strings(sites)
 	if len(sites) != 1 || !strings.HasSuffix(sites[0], ":"+admitCallSiteFunc) {
 		t.Fatalf("경계에 값을 싣는 생산 자리=%v, want %s 하나뿐", sites, admitCallSiteFunc)
+	}
+}
+
+// admitSites 는 한 파일에서 `Admit` 이 나오는 자리를 전부 세고, 각 자리를 그것을
+// 감싼 최상위 선언의 이름으로 부른다. 함수 본문만이 아니라 **선언 전부**를 훑는다.
+func admitSites(file *ast.File) []string {
+	sites := make([]string, 0, 1)
+	for _, decl := range file.Decls {
+		mentions := 0
+		ast.Inspect(decl, func(node ast.Node) bool {
+			if ident, ok := node.(*ast.Ident); ok && ident.Name == "Admit" {
+				mentions++
+			}
+			return true
+		})
+		for i := 0; i < mentions; i++ {
+			sites = append(sites, declName(decl))
+		}
+	}
+	return sites
+}
+
+// declName 은 최상위 선언을 부를 이름을 고른다. 이름이 없으면 그렇다고 말한다 —
+// 조용히 빈 문자열을 돌려주면 세기는 맞는데 자리를 못 부르게 된다.
+func declName(decl ast.Decl) string {
+	switch value := decl.(type) {
+	case *ast.FuncDecl:
+		if value.Name != nil {
+			return value.Name.Name
+		}
+	case *ast.GenDecl:
+		for _, spec := range value.Specs {
+			if inner, ok := spec.(*ast.ValueSpec); ok && len(inner.Names) != 0 {
+				return inner.Names[0].Name
+			}
+		}
+		return value.Tok.String() + " 블록"
+	}
+	return "(이름 없는 선언)"
+}
+
+// TestAdmitCensusSeesEverySpellingItClaims 는 위 주석이 적은 범위를 실제로 센다.
+//
+// **말로 적은 범위는 아무도 검사하지 않는다.** 앞 판본의 주석은 세 철자를
+// 덮는다고 적었고 그중 하나가 거짓이었으며, 그 거짓이 4라운드째 같은 뿌리의
+// 우회를 통과시켰다. 여기서는 그 철자들을 한 fixture 에 담아 세어 본다 —
+// 세는 범위를 좁히면 생산 코드를 건드리기 전에 이 시험이 먼저 빨개진다.
+func TestAdmitCensusSeesEverySpellingItClaims(t *testing.T) {
+	const fixture = `package engine
+
+import (
+	sh "example.com/strategyhandoff"
+	. "example.com/dotted"
+)
+
+// 1) 평범한 호출 — 앞 판본도 보던 자리
+func plainCall() { _ = sh.Admit(true, nil) }
+
+// 2) 패키지 수준 함수 값 — 앞 판본이 못 보던 자리
+var mintedElsewhere = sh.Admit
+
+// 3) dot import 로 이름이 그대로 드러난 호출
+func dottedCall() { _ = Admit(true, nil) }
+
+// 4) 합성 리터럴 안에 숨긴 함수 값
+var hidden = map[string]any{"seam": sh.Admit}
+
+// 5) 아무 언급도 없는 함수는 세어지지 않아야 한다
+func unrelated() int { return 0 }
+`
+	file, err := parser.ParseFile(token.NewFileSet(), "fixture.go", fixture, 0)
+	if err != nil {
+		t.Fatalf("fixture 를 파싱하지 못했다: %v", err)
+	}
+	got := admitSites(file)
+	sort.Strings(got)
+	want := "dottedCall, hidden, mintedElsewhere, plainCall"
+	if strings.Join(got, ", ") != want {
+		t.Fatalf("admitSites=%v, want [%s]", got, want)
 	}
 }
 
@@ -720,17 +813,6 @@ func TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer(t *testing.T) {
 	if checked != 3 {
 		t.Fatalf("production sites binding the seam's answer=%d, want 3 (worker promotion, result authority, projection)", checked)
 	}
-}
-
-func identMentions(body *ast.BlockStmt, name string) int {
-	count := 0
-	ast.Inspect(body, func(node ast.Node) bool {
-		if ident, ok := node.(*ast.Ident); ok && ident.Name == name {
-			count++
-		}
-		return true
-	})
-	return count
 }
 
 // seamAdmissionAnswers 는 이 함수 안에서 dispatchHandoff().Single() 이 묶어 준

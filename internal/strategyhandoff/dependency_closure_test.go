@@ -160,14 +160,22 @@ func assertNoMutationCapabilityInWalk(t *testing.T, mode string) {
 // 돌려주면 엔진 소스에는 그 토큰이 없고, 그 세기는 아무것도 못 본다.
 //
 // 여기서 그 나머지를 막는다. Admit 을 부르려면 이 패키지를 import 해야 하고,
-// import 는 소스에 적히지 않으면 존재하지 않는다. 두 검사가 함께여야 사슬이
-// 닫힌다 — 어느 한쪽만으로는 닫히지 않는다.
+// import 는 소스에 적히지 않으면 존재하지 않는다.
+//
+// **우주는 디렉터리 목록이 아니라 링커가 따라가는 import 사슬이다.** 앞 판본은
+// `go list <module>/...` 를 썼고, 그것은 `testdata` 라는 이름의 디렉터리를
+// 건너뛴다 — 그런데 컴파일러는 안 건너뛴다. 4차 적대 리뷰가
+// internal/app/engine/testdata/seamrelay 에 Admit 을 부르는 패키지를 두고
+// 엔진에서 그것을 import 했는데, 이 검사는 그대로 "importer 1 of 106" 이라고
+// 보고했다. 그래서 이제 `-deps` 로 **닿는** 패키지를 센다: 출하 바이너리의
+// 폐포와 시험 폐포를, 태그를 켠 것과 끈 것 둘 다.
+//
+// 두 검사가 함께여야 사슬이 닫힌다 — 어느 한쪽만으로는 닫히지 않는다.
+// **그리고 둘이 함께여도 닫히지 않는 경로가 하나 남는다:** 엔진 안에서
+// dispatchHandoff 의 수신자를 리터럴로 만들면 Admit 도 import 도 필요 없다.
+// 그것은 이 패키지가 막을 수 있는 것이 아니다 — engine 쪽 census 주석에 적어
+// 두었다.
 func TestOnlyTheEngineImportsThisSeam(t *testing.T) {
-	command := exec.Command("go", "list", "-json", modulePath+"...")
-	raw, err := command.Output()
-	if err != nil {
-		t.Fatalf("go list: %v", err)
-	}
 	seam := modulePath + "internal/strategyhandoff"
 	// 이 경계를 들여와도 되는 패키지. 허용 목록이지 금지 목록이 아니다 —
 	// 금지 목록은 새로 생긴 패키지를 조용히 통과시킨다.
@@ -175,31 +183,54 @@ func TestOnlyTheEngineImportsThisSeam(t *testing.T) {
 		modulePath + "internal/app/engine": true,
 		seam:                               true,
 	}
-	scanned, importers := 0, make([]string, 0, 2)
-	decoder := json.NewDecoder(strings.NewReader(string(raw)))
-	for {
-		var entry struct {
-			ImportPath                         string
-			Imports, TestImports, XTestImports []string
+	// 상대 경로를 쓰지 않는다. 이 시험은 모듈 루트가 아니라 패키지 디렉터리에서
+	// 돈다 — `./cmd/tossctl` 는 여기서 존재하지 않는다.
+	universes := [][]string{
+		{"list", "-json", "-deps", modulePath + "cmd/tossctl"},
+		{"list", "-json", "-deps", "-test", modulePath + "..."},
+		{"list", "-json", "-deps", "-test", "-tags", "tossos_testseams", modulePath + "..."},
+	}
+	scanned := 0
+	importers := make(map[string]bool)
+	for _, args := range universes {
+		command := exec.Command("go", args...)
+		raw, err := command.Output()
+		if err != nil {
+			t.Fatalf("go %v: %v", args, err)
 		}
-		if err := decoder.Decode(&entry); err != nil {
-			if err == io.EOF {
-				break
+		decoder := json.NewDecoder(strings.NewReader(string(raw)))
+		for {
+			var entry struct {
+				ImportPath                         string
+				Imports, TestImports, XTestImports []string
 			}
-			t.Fatal(err)
+			if err := decoder.Decode(&entry); err != nil {
+				if err == io.EOF {
+					break
+				}
+				t.Fatal(err)
+			}
+			scanned++
+			// 시험 변종은 `pkg [pkg.test]` 로 나온다. 들여오는 주체는 pkg 다.
+			name := entry.ImportPath
+			if cut := strings.Index(name, " ["); cut != -1 {
+				name = name[:cut]
+			}
+			for _, group := range [][]string{entry.Imports, entry.TestImports, entry.XTestImports} {
+				for _, path := range group {
+					if path == seam {
+						importers[name] = true
+					}
+				}
+			}
 		}
-		scanned++
-		for _, group := range [][]string{entry.Imports, entry.TestImports, entry.XTestImports} {
-			for _, path := range group {
-				if path != seam {
-					continue
-				}
-				importers = append(importers, entry.ImportPath)
-				if !allowed[entry.ImportPath] {
-					t.Errorf("%s imports the handoff seam; only the engine may, "+
-						"because importing it is the only way to call Admit", entry.ImportPath)
-				}
-			}
+	}
+	names := make([]string, 0, len(importers))
+	for name := range importers {
+		names = append(names, name)
+		if !allowed[name] {
+			t.Errorf("%s imports the handoff seam; only the engine may, "+
+				"because importing it is the only way to call Admit", name)
 		}
 	}
 	// 양성 대조 둘. `go list` 가 아무것도 못 읽었거나 이 패키지를 아무도
@@ -207,9 +238,10 @@ func TestOnlyTheEngineImportsThisSeam(t *testing.T) {
 	if scanned == 0 {
 		t.Fatal("go list returned no packages, so the scan above read nothing")
 	}
-	if len(importers) == 0 {
+	if len(names) == 0 {
 		t.Fatal("no package imports this seam, so the allow list above proves nothing")
 	}
-	sort.Strings(importers)
-	t.Logf("importers of the handoff seam: %v (scanned %d packages)", importers, scanned)
+	sort.Strings(names)
+	t.Logf("importers of the handoff seam: %v (scanned %d package entries across %d universes)",
+		names, scanned, len(universes))
 }

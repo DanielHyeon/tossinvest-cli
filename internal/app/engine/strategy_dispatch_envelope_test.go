@@ -4,6 +4,7 @@ package engine
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
@@ -78,5 +79,20 @@ func TestTheSameEnvelopeCannotPlaceASecondOrder(t *testing.T) {
 	if places != 1 {
 		t.Fatalf("Gateway 주문=%d 건, want 1 — 같은 봉투가 두 번 체결 경로에 닿았다", places)
 	}
-	t.Logf("두 번째 dispatch 를 막은 것: %v", err)
+	// **막은 것이 무엇인지까지 단언한다.** 앞 판본은 이 자리에서 t.Logf 로
+	// 이름을 찍기만 했다. 그래서 4차 적대 리뷰가 CAS 관문을 통째로 지워도 이
+	// 시험은 그대로 통과했고 — 다른 것이 대신 막았다 — review.md 가 "원장 CAS
+	// 가 막는 것을 쟀다"고 적은 문장은 재지 않은 귀속이었다.
+	const wantBlocker = "production position campaign CAS changed"
+	if !strings.Contains(err.Error(), wantBlocker) {
+		t.Fatalf("두 번째를 막은 것=%v, want %q 를 담은 오류", err, wantBlocker)
+	}
 }
+
+// **이 시험이 증명하지 않는 것.** 위 단언은 CAS 관문이 오늘 막는다는 것만
+// 말한다. 4차 적대 리뷰가 그 관문을 지우고 재 보니 두 번째 주문은 여전히
+// 막혔다 — 원장의 replay-identity 대조가 대신 막았고 Gateway 주문은 1건에서
+// 멈췄다. 즉 at-most-once 는 과잉 결정되어 있다. 그 두 번째 방어선은 여기서
+// 고정하지 않는다. 고정하려면 CAS 를 통과시키면서 replay identity 만 어긋나는
+// 원장 상태를 만들어야 하고, 그것은 이 로트가 소유한 파일 밖이다.
+// 침묵한 생략이 되지 않도록 여기 적어 둔다.
