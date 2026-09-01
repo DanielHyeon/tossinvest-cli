@@ -12,7 +12,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from role_check import role_errors
+from role_check import call_enumeration_in_use, role_errors
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = (
@@ -379,8 +379,42 @@ def coordinate_errors(target: str, texts: dict[str, str], value: dict, branches:
     return errors
 
 
+def _bundle_text(map_path):
+    """번들 디렉터리에서 **읽히는 파일 전부**를 이어 붙인다.
+
+    강제 판정은 "이 change 가 열거를 쓰는가"이고, 그 답은 열거가 번들 안 어느
+    파일에 있든 같다. 파일을 **열거해서** 읽으면 그 목록 밖으로 옮기는 것으로
+    판정이 꺼진다.
+
+    다섯 라운드 동안 "남는 회피는 X 뿐"이라는 문장이 매번 코드가 실제로 보는
+    범위보다 한 칸 넓었다: 절 → 표지 철자 → `##` 절 → 파일 이름 둘 →
+    확장자 `.md` 하나. 마지막 것은 9차 적대 리뷰가 `notes.txt` 로 보였다.
+    이제 이름으로도 확장자로도 거르지 않고 **읽히는가**로만 거른다 — 목록이
+    없으므로 새 파일 이름이나 새 확장자가 이 판정을 비켜 갈 수 없다."""
+    texts = []
+    for path in sorted(map_path.parent.glob("*")):
+        if not path.is_file():
+            continue
+        try:
+            texts.append(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError):
+            # 텍스트가 아니면 표가 들어 있을 수 없다. 건너뛰는 것과 목록을
+            # 만드는 것은 다르다 — 여기서 거르는 기준은 파일 이름이 아니라
+            # "읽히는가"이고, 그래서 새 확장자가 생겨도 저절로 포함된다.
+            continue
+    return "\n".join(texts)
+
+
+def _ast_value(path):
+    """ast.json 을 읽는다. 없거나 깨졌으면 판정에서 뺀다(모르는 것은 근거가 아니다)."""
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
 def validate_target(
-    target: Path, root: Path, index: dict | None = None
+    target: Path, root: Path, index: dict | None = None, require_calls: bool = False
 ) -> tuple[list[str], tuple[str, str] | None]:
     errors: list[str] = []
     texts: dict[str, str] = {}
@@ -455,7 +489,7 @@ def validate_target(
     # 분기가 아닌 좌표를 적어도, 호출 표를 40행에서 잘라도 통과했다 — a112 3라운드
     # 적대 리뷰가 그 구멍에 오류 넷을 심어 전부 통과시켰고, 저장소의 열거형 호출 표
     # 세 개가 실제로 잘려 있었다.
-    errors.extend(role_errors(target.name, logic, value))
+    errors.extend(role_errors(target.name, logic, value, branch_map, require_calls))
     errors.extend(
         test_citation_errors(
             target.name,
@@ -511,8 +545,16 @@ def check(change: str, root: Path = ROOT) -> list[str]:
     # Built once: the tree has thousands of test functions and every target
     # would otherwise rescan them.
     index = test_index(root)
+    # 열거형 호출 표를 **어디서든** 쓰는 change 는 모든 번들에서 써야 한다.
+    # 번들마다 표지를 고를 수 있으면 감사 여부를 저자가 정하게 되고, 그 문으로
+    # a112 의 39개가 빠져나갔다(4차 적대 리뷰). 판정은 표지 철자가 아니라
+    # 표의 **내용**으로 한다 — 철자로 보던 판본이 공백 하나에 뚫렸다(6차).
+    require_calls = call_enumeration_in_use(
+        (_bundle_text(path), _ast_value(path.parent / "ast.json"))
+        for path in sorted(analysis.glob("*/function-logic-map.md"))
+    )
     for target in targets:
-        target_errors, binding = validate_target(target, root, index)
+        target_errors, binding = validate_target(target, root, index, require_calls)
         errors.extend(target_errors)
         if binding:
             if binding in covered:

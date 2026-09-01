@@ -80,6 +80,29 @@ def run_check(root: Path) -> list[str]:
         return check_analysis.check("change", root)
 
 
+class BundleTextCoversEveryProseFileInTheBundle(unittest.TestCase):
+    """강제 판정이 읽는 범위가 **열거된 파일 목록**이면 그 목록 밖으로 옮기면 꺼진다.
+
+    8차 적대 리뷰가 `risk-pattern-report.md` 로 그것을 보였다 — 번들 필수 파일이고
+    표는 머리글도 행도 그대로 살아 있는데 감사만 꺼졌다. 네 라운드 동안 "남는
+    회피는 X 뿐"이라고 적은 문장이 매번 코드가 보는 범위보다 한 칸 넓었다."""
+
+    def test_every_md_in_the_bundle_directory_is_read(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            bundle = Path(raw) / "b"
+            bundle.mkdir()
+            # 확장자로 거르면 `.txt`·`.mdx` 로 빠져나간다(9차 적대 리뷰).
+            names = ("function-logic-map.md", "branch-test-map.md",
+                     "risk-pattern-report.md", "someone-elses-note.md",
+                     "notes.txt", "notes.mdx", "notes.markdown")
+            for index, name in enumerate(names):
+                (bundle / name).write_text(f"mark-{index}", encoding="utf-8")
+            (bundle / "ast.json").write_text("{}", encoding="utf-8")
+            text = check_analysis._bundle_text(bundle / "function-logic-map.md")
+        for index in range(len(names)):
+            self.assertIn(f"mark-{index}", text)
+
+
 class CheckAnalysisTests(unittest.TestCase):
     def test_explicit_exemption_is_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
