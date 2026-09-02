@@ -1,0 +1,21 @@
+# Branch Test Map: `invokeBoundedStrategyCycle`
+
+- Source SHA-256: `4e457c677157b2f8c73f813f8250575657b6beedddc1ad467db209a35579986d`; AST branch locations are authoritative.
+- Revision: base — 이 change 는 이 함수를 편집하지 않는다. RED 칸이 모두 `no (base)`
+  인 이유가 그것이다. 이 번들은 태스크 5.3.2 가 인용할 분기를 열거하기 위해 만들었다.
+
+커버리지는 주장이 아니라 **측정**이다. "Test" 칸은 시험마다 따로
+`go test ./internal/app/engine/ -run '^<Test>$' -coverprofile=…` 를 돌려 그
+프로파일이 해당 줄을 포함하는 블록을 `count>0` 으로 보고한 것만 적었고,
+"**없음**" 은 패키지 전체를 한 번에 돌린 프로파일에서도 `count=0` 인 것이다.
+
+| Branch | Scenario anchor | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | select at 888:2 — 상위 취소 / 사이클 완료 / 마감 시한 셋 중 먼저 오는 것 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues`(889-890), `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive`(891-892), `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction`(897) | no (base) | yes — 세 갈래 모두 count>0 |
+| B2 | if at 894:3 — 마감 시한이 울렸는데 상위가 **이미** 취소되어 있다 | **없음** | no (base) | **no — 패키지 전체 프로파일에서 block 894-896 count=0** |
+
+## 측정으로 확인한 빈칸
+
+B2 는 어느 시험도 돌리지 않는다. "마감 시한이 울렸는데 그 사이 상위가 이미
+취소되었다"는 경합이다. 태스크 5.7(fault injection·race)이 가져갈 자리이고,
+이 번들은 그 사실을 적을 뿐 메우지 않는다 — 이 change 는 이 함수를 편집하지 않는다.

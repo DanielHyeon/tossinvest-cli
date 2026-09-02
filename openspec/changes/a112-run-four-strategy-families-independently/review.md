@@ -3598,3 +3598,112 @@ cadence·queue depth·deadline 세 값은 정책이 **들고만** 있고 강제�
 허용 목록에 표준 라이브러리 셋(`strconv`·`strings`·`time`)을 이름으로 열었다.
 "표준이면 다 허용"으로 두면 `os/exec` 와 `net/http` 가 함께 열려 목록이 지키는 것이
 없어진다. `strategycoordinator` 가 같은 방식으로 `sort`·`sync`·`time` 을 열어 둔 선례를 따랐다.
+
+### 레인이 자기 시계를 갖는다 (2026-09-02, 5.3.2 · 5.3 의 두 번째 분할)
+
+로트 범위는 5.3.2 의 세 절 중 둘이다 — 단일 비행 카덴스와 단조 마감 시한.
+셋째(durable latch/recovery)는 5.3.3 으로 떼어 열어 두었다. 취향의 문제가 아니다:
+`internal/strategyworker` 는 **쓰기 능력이 없다는 것이 증명된** 패키지이고
+(`dependency_closure_test.go` 가 `-deps`·`-deps-test` 를 걷는다), 지속 latch 기록은
+쓰는 쪽이 있어야 한다. 여기서 만들면 5.1.1 이 세운 성질이 사라진다.
+`design.md:223` 도 "lane health/latch projection" 을 `internal/app/engine` 에 준다.
+
+#### 영수증
+
+| 만든 것 | 영수증 | 자리 |
+|---|---|---|
+| 감시견 세 갈래 | `invokeBoundedStrategyCycle` | `strategy_entry_supervisor.go:879`–`:899` |
+| 마감 시한 초과 = abnormal·abandoned | 같은 함수의 셋째 갈래 | `:897` |
+| 취소는 실패가 아니다 | `runMarket` 이 `if cancelled { return }` 을 오류 처리보다 앞에 둔다 | `:807` |
+| 카덴스 기준점 = 사이클 시작 | `runStrategyPoller` 가 enqueue 직후에 잔다 | `:719`–`:727` |
+| 투입 결과 세 철자 | `StrategyTriggerResult` 상수 | `:204`–`:207` |
+| panic → 비정상 실패 | `invokeStrategyCycle` | `:901` |
+
+인용 전에 두 함수의 `tools/logic-map` 번들을 먼저 만들었다
+(`internal-app-engine--invokeboundedstrategycycle`,
+`internal-app-engine--strategyentrysupervisor.runmarket`). 두 번들 다
+`revision: base` 이며 이 change 는 두 함수를 편집하지 않는다 — 인용만 한다.
+
+#### 번들이 **측정으로** 찾아낸 것: 엔진 스위트의 빈칸 일곱
+
+커버리지를 주장하지 않고 쟀다. 시험마다 따로 `-coverprofile` 을 돌리고, 패키지
+전체도 한 번 돌려 블록 `count` 를 읽었다. 어느 시험도 돌리지 않는 블록이 일곱이다:
+
+- `invokeBoundedStrategyCycle` `894-896` — 마감 시한과 취소가 **함께** 오는 경합
+- `runMarket` `787-790`, `821-824` — 잠금 자체가 실패하는 두 경로
+- `runMarket` `795-796`, `829-830` — 재시작 대기가 계약 밖 지연으로 실패하는 두 경로
+- `runMarket` `800-801` — 꺼졌거나 잠긴 worker 가 사이클을 건너뛰는 경로
+- `runMarket` `813-814` — 권한 갱신 전용 worker 의 오류가 잠그지 않는 경로
+
+공통점이 있다: **고장 처리 자체가 고장 나는 경로**다. 이 로트는 그것을 메우지
+않는다(그 함수들을 편집하지 않으므로). 태스크 5.7 의 자리로 적어 두었다.
+
+#### 두 정본이 갈리는 자리 하나 — 고르지 않고 적었다
+
+엔진은 마감 시한 초과를 `abnormal=true` 로 돌려준다(`:897`). 설계 고장표
+(`design.md:198`)는 deadline 을 "보통 오류 — 세고 다시 시도" 줄에 둔다.
+**두 정본이 갈린다.** 이 로트는 엔진을 따랐고 이유는 둘이다: (1) 생산 임계값이
+1 이라 오늘은 두 해석의 결과가 같다, (2) 갈리는 방향(임계값 > 1)에서 엔진 쪽이
+더 보수적이다 — 설계대로면 마감 시한을 넘긴 레인이 한 번 더 진입을 시도한다.
+`TestTheEngineWatchdogStillDecidesWhatThisLaneCopied` 가 엔진의 결론을 문자열로
+못 박으므로, 엔진이 마음을 바꾸면 사람이 그 자리에서 보게 된다.
+**임계값을 1 보다 크게 올리기 전에 사람이 이 갈림을 정해야 한다.**
+
+#### 골든이 요구하는데 엔진에 없는 것 하나
+
+`queue.overflow` 는 "typed refusal **and bounded drop counter**" 다. 엔진은
+`StrategyTriggerFull` 이라는 typed refusal 은 갖고 있지만 **버린 수를 세는 곳이
+없다**(`enqueueStrategyPoll` `:731`–`:747`, `Trigger` `:625`–`:641` 어디에도).
+`Lane.Dropped()` 가 그 빈칸이다.
+
+#### 왜 큐를 여기서 다시 만들지 않았나
+
+골든 `queue` 절의 `dedup_key_fields`·`same_key`·`ordering` 은 이미
+`strategycoordinator` 가 구현한다(`Key`, `laneSlot`, `Submit`, `Drops`).
+레인의 투입 칸은 **봉투 큐가 아니라 방아쇠 칸**이다 — 엔진의
+`worker.queue chan struct{}` 와 같은 것이고, 깊이만 정책이 정한다. 같은 판정을
+두 곳에 두면 운영자가 보는 진단이 갈린다는 것이 이 패키지가 이미 적어 둔 규칙이다.
+
+#### 반증 — 27 개, 27 개 잡힘. 두 개는 첫 형태가 틀렸다
+
+- **M18 이 진짜 구멍이었다.** 감시견이 마감 시한(30초) 대신 카덴스(5초)만큼 자게
+  바꿔도 초록이었다. 가짜 시계를 30초 밀면 5초짜리 잠도 함께 깨기 때문이다.
+  결함이 사는 차원은 "깨어나는가"가 아니라 "**언제** 깨어나는가"이고, 그 축은
+  마감 시한보다 **짧게** 밀어야만 갈린다. `TestTheWatchdogSleepsForTheDeadlineAnd
+  NotSomeOtherPolicyValue` 를 커밋된 시험으로 심었고, 그 시험은 두 값이 같아지면
+  스스로 `t.Fatalf` 로 무의미해졌다고 말한다.
+- **M26 은 대상에 안 닿았다.** "여덟 레인을 한 벌로 공유" 변이를 처음엔 없는
+  함수 이름으로 썼고 빌드가 깨졌다. 빌드 실패는 잡은 것이 아니다. 컴파일되는
+  패키지 수준 캐시로 다시 쓰니 기존 신선도 시험이 잡는다.
+
+구조 단언을 **썼다** — 5.1/5.3.1 로트에서는 안 썼고 그 이유도 적었는데, 여기서는
+조건이 다르다. 감시견 세 갈래의 **순서**는 행동으로 관측되지 않는다: 채널 셋이
+동시에 준비되면 Go 는 무작위로 고르므로 순서를 바꿔도 반드시 빨개지는 단일 시험이
+없다. 그래서 엔진 쪽과 이 패키지 쪽 select 를 둘 다 AST 로 못 박았고, 갈래 재배열
+변이(M16)가 그 시험에만 걸린다.
+
+#### 골든의 세 이름이 이제 행동을 요구한다
+
+`policy_test.go` 의 짝 시험에서 `cadence`·`bounded_queue`·`monotonic_deadline`
+셋은 예전에 `policy.Cadence() > 0` 처럼 **들고 있는 수**를 물었다. 아무도 그 수를
+강제하지 않아도 초록인 검사다. 이제 셋 다 레인을 실제로 돌려서 그 수가 행동을
+바꾸는지 묻는다(주기 전 거절, 깊이 초과 거절+계수, 마감 시한 초과 폐기).
+
+#### 폐포 허용 목록이 넓어졌다
+
+`internal/clock` 과 stdlib 넷(`context`·`errors`·`fmt`·`sync`)이 늘었다.
+`internal/clock` 은 자체 폐포가 `context`·`time`·`time/tzdata` 뿐이고 저장소의
+단일 주입 시간 출처다. 레인이 시계를 **드는** 이유는 감시견이 시간을 읽는 것이
+아니라 **자야** 하기 때문이고, 그래서 `Fail(now, …)` 의 `now` 인자를 없앴다 —
+출처가 둘이면 같은 사이클의 backoff 기한과 마감 시한이 다른 시간축에 놓인다.
+`fmt` 가 전이로 `os` 를 끌고 오는 것은 사실이며, 이 목록이 막는 것은 **직접**
+들여오는 능력이고 모듈 안의 능력 패키지는 `-deps`/`-deps-test` 걸음이 따로 본다 —
+그 사실을 허용 목록 주석에 적었다.
+
+#### 닫지 않은 것
+
+- latch 는 여전히 프로세스 메모리다. 5.3.3.
+- 생산 호출자는 여전히 0 이다. `ProductionLanes(clk)` 를 부르는 생산 코드가 없다.
+- 레인의 투입 칸은 봉투를 담지 않는다. 담게 하려면 조정자의 열쇠·접기 판정을
+  옮겨 와야 하고, 그것은 5.2 가 정할 일이다.
+- 엔진 스위트의 빈칸 일곱(위)은 이 로트가 메우지 않았다. 5.7.

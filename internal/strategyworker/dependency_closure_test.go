@@ -30,7 +30,11 @@ func productionOnly(info fs.FileInfo) bool {
 // 을 통째로 빠뜨렸다.
 func TestTheWorkerImportsNothingOutsideItsAllowedClosure(t *testing.T) {
 	allowed := map[string]bool{
-		modulePath + "internal/breakoutlane":        true,
+		modulePath + "internal/breakoutlane": true,
+		// 시계는 저장소의 단일 주입 시간 출처다. 자체 폐포가 `context`·`time`·
+		// `time/tzdata` 뿐이라 능력을 늘리지 않고, 레인이 이것을 들여오는 이유는
+		// 마감 시한 감시견이 시간을 **읽는** 것이 아니라 **자야** 하기 때문이다.
+		modulePath + "internal/clock":               true,
 		modulePath + "internal/continuationlane":    true,
 		modulePath + "internal/reversallane":        true,
 		modulePath + "internal/strategyarbiter":     true,
@@ -39,10 +43,19 @@ func TestTheWorkerImportsNothingOutsideItsAllowedClosure(t *testing.T) {
 		modulePath + "internal/weeklyvaluelane":     true,
 		// 표준 라이브러리는 이름으로 하나씩 연다. "표준이면 다 허용"으로 두면
 		// os/exec 와 net/http 가 함께 열리고, 그러면 이 허용 목록이 지키는 것이
-		// 없어진다. 아래 셋은 능력을 만들지 않는다 — 시간을 읽는 것도 아니고
-		// (레인은 now 를 인자로 받는다) 문자열과 시간 **타입**만 쓴다.
+		// 없어진다. 아래 여섯은 능력을 만들지 않는다.
+		//
+		// `context` 는 취소 신호, `sync` 는 레인 하나의 잠금, `errors`/`fmt` 는
+		// 오류 값과 panic 문자열, `strconv`/`strings` 는 latch ID 조립,
+		// `time` 은 시각 **타입**이다. `fmt` 가 전이로 `os` 를 끌고 오는 것은
+		// 사실이지만 이 목록이 막는 것은 **직접** 들여오는 능력이고, 모듈 안의
+		// 능력 패키지는 아래 `-deps`/`-deps-test` 걸음이 따로 본다.
+		"context": true,
+		"errors":  true,
+		"fmt":     true,
 		"strconv": true,
 		"strings": true,
+		"sync":    true,
 		"time":    true,
 	}
 	fset := token.NewFileSet()

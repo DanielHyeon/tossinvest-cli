@@ -1,0 +1,432 @@
+{
+  "file": "internal/app/engine/strategy_entry_supervisor.go",
+  "source_sha256": "4e457c677157b2f8c73f813f8250575657b6beedddc1ad467db209a35579986d",
+  "package": "engine",
+  "function": "runMarket",
+  "receiver": "StrategyEntrySupervisor",
+  "signature": "StrategyEntrySupervisor.runMarket(params=4, results=0)",
+  "start": {
+    "line": 769,
+    "column": 1
+  },
+  "end": {
+    "line": 834,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "select",
+      "at": {
+        "line": 770,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "for",
+      "at": {
+        "line": 775,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "select",
+      "at": {
+        "line": 776,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 785,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 787,
+        "column": 5
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 791,
+        "column": 5
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 792,
+        "column": 6
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 800,
+        "column": 4
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 804,
+        "column": 4
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 807,
+        "column": 4
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 810,
+        "column": 4
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 813,
+        "column": 4
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 816,
+        "column": 4
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 821,
+        "column": 4
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 825,
+        "column": 4
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 826,
+        "column": 5
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 772,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 778,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 789,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 793,
+        "column": 7
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 796,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 808,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 818,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 823,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 827,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 830,
+        "column": 5
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 771,
+        "column": 9
+      },
+      "text": "ctx.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 777,
+        "column": 10
+      },
+      "text": "ctx.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 781,
+        "column": 4
+      },
+      "text": "s.mu.RLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 783,
+        "column": 4
+      },
+      "text": "s.mu.RUnlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 784,
+        "column": 24
+      },
+      "text": "s.evaluationState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 786,
+        "column": 30
+      },
+      "text": "s.latchMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 788,
+        "column": 6
+      },
+      "text": "s.signalCentral"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 791,
+        "column": 15
+      },
+      "text": "s.waitMarketRestart"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 792,
+        "column": 9
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 795,
+        "column": 6
+      },
+      "text": "s.signalCentral"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 803,
+        "column": 43
+      },
+      "text": "invokeBoundedStrategyCycle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 805,
+        "column": 5
+      },
+      "text": "s.markAbandoned"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 816,
+        "column": 7
+      },
+      "text": "isCentralStrategyIntegrity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 817,
+        "column": 5
+      },
+      "text": "s.signalCentral"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 820,
+        "column": 29
+      },
+      "text": "s.latchMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 822,
+        "column": 5
+      },
+      "text": "s.signalCentral"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 825,
+        "column": 14
+      },
+      "text": "s.waitMarketRestart"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 826,
+        "column": 8
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 829,
+        "column": 5
+      },
+      "text": "s.signalCentral"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 780,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 782,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 784,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 786,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 791,
+        "column": 8
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 803,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 820,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 825,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

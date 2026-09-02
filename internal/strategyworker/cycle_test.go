@@ -5,6 +5,7 @@ package strategyworker
 import (
 	"testing"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reversallane"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter"
@@ -218,12 +219,13 @@ func emptyEnvelope(envelope strategycoordinator.Envelope) bool {
 func TestALatchedLaneEmitsNothingEvenWhenItIsEffective(t *testing.T) {
 	f := newFixture(allKRFamilies()...)
 	good := f.input(t, continuationlane.KRContinuationLaneID)
-	lane := newLane(effective(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation), ProductionRuntimePolicy())
+	lane := newLane(effective(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation),
+		ProductionRuntimePolicy(), clock.NewFake(f.now))
 
 	if before := lane.Run(good); before.Outcome != OutcomeEmitted {
 		t.Fatalf("the lane must emit before it is latched, got %s / %s", before.Outcome, before.Detail)
 	}
-	if _, latched := lane.Fail(f.now, "evidence refresh failed", false); !latched {
+	if _, latched := lane.Fail("evidence refresh failed", false); !latched {
 		t.Fatal("the lane did not latch")
 	}
 

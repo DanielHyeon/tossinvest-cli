@@ -1,11 +1,70 @@
 package strategyworker
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 )
+
+// 아래 셋은 골든의 세 이름이 **강제되는지**를 실제로 돌려서 본다.
+// 값을 들고 있는지 묻는 검사는 아무도 그 값을 쓰지 않아도 초록이다.
+
+// cadenceIsEnforced 는 주기가 지나기 전 두 번째 사이클이 거절되는지 본다.
+func cadenceIsEnforced(t *testing.T) bool {
+	t.Helper()
+	lane, fake := boundedLane(t, ProductionRuntimePolicy())
+	admit(t, lane)
+	if _, start := lane.RunBounded(context.Background(), Input{}, succeeds()); start != StartAdmitted {
+		return false
+	}
+	admit(t, lane)
+	if _, start := lane.RunBounded(context.Background(), Input{}, succeeds()); start != StartTooSoon {
+		return false
+	}
+	fake.Advance(lane.Policy().Cadence())
+	_, start := lane.RunBounded(context.Background(), Input{}, succeeds())
+	return start == StartAdmitted
+}
+
+// theInboundSlotIsBounded 는 정책 깊이를 넘긴 투입이 거절되고 세어지는지 본다.
+func theInboundSlotIsBounded(t *testing.T) bool {
+	t.Helper()
+	lane, _ := boundedLane(t, ProductionRuntimePolicy())
+	for filled := 0; filled < lane.Policy().QueueDepth(); filled++ {
+		if lane.Offer() != TriggerEnqueued {
+			return false
+		}
+	}
+	return lane.Offer() == TriggerFull && lane.Dropped() == 1
+}
+
+// theDeadlineIsEnforced 는 마감 시한을 넘긴 사이클이 실제로 버려지는지 본다.
+func theDeadlineIsEnforced(t *testing.T) bool {
+	t.Helper()
+	lane, fake := boundedLane(t, ProductionRuntimePolicy())
+	admit(t, lane)
+	release := make(chan struct{})
+	defer close(release)
+	done := make(chan BoundedCycle, 1)
+	go func() {
+		bounded, _ := lane.RunBounded(context.Background(), Input{}, func(context.Context, Input) Cycle {
+			<-release
+			return Cycle{}
+		})
+		done <- bounded
+	}()
+	if !fake.WaitForSleepers(1, 2*time.Second) {
+		return false
+	}
+	fake.Advance(lane.Policy().CycleDeadline())
+	bounded := <-done
+	return bounded.Abandoned && errors.Is(bounded.Err, ErrCycleDeadline)
+}
 
 // 골든의 `runtime_policy` 절을 읽는다. golden_contract_test.go 의 goldenFile 은
 // descriptors 만 담고 있어 이 절을 못 본다.
@@ -41,15 +100,19 @@ func readGoldenRuntimePolicy(t *testing.T) goldenRuntimePolicy {
 // 생기면 아래 표에 짝이 없어 빨개지고, 그때 사람이 그것을 구현해야 한다.
 func TestTheGoldenSevenAreEachSomethingThisLaneCanShow(t *testing.T) {
 	golden := readGoldenRuntimePolicy(t)
-	lane := ProductionLanes()[0]
+	lane, _ := boundedLane(t, ProductionRuntimePolicy())
 	policy := lane.Policy()
 
 	// 값이 관측되는지를 실제로 확인하는 짝. bool 을 돌려주는 함수로 두는 이유는
 	// "이름이 있다"가 아니라 "불러서 값이 나온다"를 요구하기 위해서다.
+	//
+	// 앞의 세 짝은 5.3.2 에서 바뀌었다. 예전에는 `policy.Cadence() > 0` 처럼
+	// **들고 있는 수**를 물었는데, 그러면 아무도 그 수를 강제하지 않아도 초록이다.
+	// 이제 셋 다 레인을 실제로 돌려서 그 수가 **행동을 바꾸는지**를 묻는다.
 	shown := map[string]func() bool{
-		"cadence":                     func() bool { return policy.Cadence() > 0 },
-		"bounded_queue":               func() bool { return policy.QueueDepth() >= 1 },
-		"monotonic_deadline":          func() bool { return policy.CycleDeadline() > 0 },
+		"cadence":                     func() bool { return cadenceIsEnforced(t) },
+		"bounded_queue":               func() bool { return theInboundSlotIsBounded(t) },
+		"monotonic_deadline":          func() bool { return theDeadlineIsEnforced(t) },
 		"health":                      func() bool { return lane.Health() == LaneHealthy },
 		"consecutive_failure_counter": func() bool { return lane.ConsecutiveFailures() == 0 },
 		"entry_only_latch":            func() bool { return !lane.Latched() },
@@ -111,7 +174,7 @@ func TestEveryProductionPolicyValueIsPositiveAndFinite(t *testing.T) {
 // 어느 레인이 어떤 값을 들었는지 사람이 세어 봐야만 알 수 있게 되기 때문이다.
 func TestEveryProductionLaneCarriesTheSameServerOwnedPolicy(t *testing.T) {
 	want := ProductionRuntimePolicy()
-	lanes := ProductionLanes()
+	lanes := ProductionLanes(clock.NewFake(laneNow))
 	if len(lanes) != len(ProductionWorkers()) {
 		t.Fatalf("there are %d workers but %d lanes", len(ProductionWorkers()), len(lanes))
 	}
@@ -189,11 +252,11 @@ func TestTheBackoffLadderSaturatesEvenWhenTheCeilingIsNotAMultipleOfTheStep(t *t
 // 되돌아 0 이 되면 잠긴 레인이 건강해 보이고, 재시도 지연도 처음부터 다시
 // 시작한다. 엔진도 같은 자리에 같은 상한을 두고 있다.
 func TestTheFailureCountersSaturateRatherThanWrap(t *testing.T) {
-	lane := newLane(ProductionWorkers()[0], ProductionRuntimePolicy())
+	lane := newLane(ProductionWorkers()[0], ProductionRuntimePolicy(), clock.NewFake(laneNow))
 	lane.consecutiveFailures = maxFailureCount
 	lane.restartAttempt = maxFailureCount
 
-	lane.Fail(time.Now(), "one more", false)
+	lane.Fail("one more", false)
 	if lane.ConsecutiveFailures() != maxFailureCount {
 		t.Errorf("the failure counter wrapped to %d", lane.ConsecutiveFailures())
 	}

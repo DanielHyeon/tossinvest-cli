@@ -27,7 +27,9 @@
 | `38b17426` | CI 배선 — `sdd-check-ci` 타깃 · `sdd-checks` job · 갈라짐을 막는 시험 (아래 2 절 (2)) |
 | `4724c3d0` | 5.1.1 — `internal/strategyworker`: 여덟 FamilyWorker · 폐포 증명 · 구조 단언 |
 | `b647dc91` | 5.1.1 을 5.1.1(타입, `[x]`) 과 5.1.2(배선, `[ ]`) 로 나눔 |
-| 이 커밋 | 5.1 닫힘(runtime policy) + 5.3 을 5.3.1(`[x]`)/5.3.2(`[ ]`) 로 나눔 — `policy.go`·`lane.go` |
+| `4c4fe685` | 5.1 닫힘(runtime policy) + 5.3 을 5.3.1(`[x]`)/5.3.2(`[ ]`) 로 나눔 — `policy.go`·`lane.go` |
+| `5389ff1e` | `origin/main`(52fb9bb2 WTS 카탈로그) 병합 — 병합 뒤 fingerprint 가 stale 이 되어 `make sdd-sync` 재실행 필요했다 |
+| 이 커밋 | 5.3.2 랜딩(단일 비행·카덴스·마감 시한) + 5.3 의 두 번째 분할 → 5.3.3(`[ ]`, durable latch) — `bounded.go` |
 
 랜딩 직전 실측: `make lint` PASS · `make test` 98 ok/0 FAIL · `make test-seams`
 99 ok/0 FAIL · python 77 OK · `check_analysis --change a112` evidence complete ·
@@ -108,7 +110,7 @@ renumber 하면 디렉터리가 둘로 갈릴 수 있다.
 2. ~~커밋 → `make sdd-sync` 재실행 → `make sdd-check`.~~ **끝났다.** fingerprint 는
    sync 시점 HEAD 를 기록하므로, 이 뒤로 커밋이 붙으면 다시 `make sdd-sync` 를 돌린다.
 3. 그다음 열려 있는 태스크로 간다. 5 절에서 남은 것은
-   **5.1.2 · 5.2 · 5.3.2 · 5.6 · 5.7**, 그다음이 6 절이다.
+   **5.1.2 · 5.2 · 5.3.3 · 5.6 · 5.7**, 그다음이 6 절이다.
    - **5.1.1 은 닫혔다 (2026-09-02, `4724c3d0`).** `internal/strategyworker` 에 여덟
      `FamilyWorker` 와 폐포 증명이 섰다 — 5.5 가 미룬 "worker 의 `Cycle` 이 broker
      mutation 에 못 닿는다"가 **새 타입에 대해서는** 시험이 되었다. 상세는
@@ -116,6 +118,20 @@ renumber 하면 디렉터리가 둘로 갈릴 수 있다.
    - **닫힌 것은 절반이고, 나머지 절반은 새 태스크 5.1.2 다.** 원래 5.1.1 문장의
      "rather than" 앞이 5.1.1, 뒤가 5.1.2 다. 나누면서 빠진 의무는 없다 — 원문의
      모든 절이 둘 중 하나의 소유이고 5.1.2 는 열려 있다.
+   - **5.1 은 닫혔고 5.3 은 세 조각이 되었다 (2026-09-02).** 5.3.1(고장 카운터·
+     backoff·entry latch)과 5.3.2(단일 비행·카덴스·마감 시한)가 랜딩했고,
+     5.3.3(**durable** latch 와 recovery conditions)만 열려 있다. 5.3.3 을 여기서
+     만들 수 없는 이유는 `internal/strategyworker` 가 **쓰기 능력이 없다는 것이
+     증명된** 패키지라서다 — 지속 기록에는 쓰는 쪽이 필요하고, 그것을 여기 넣으면
+     5.1.1 이 세운 성질이 사라진다. `design.md:223` 이 그 일을
+     `internal/app/engine` 에 준다. 오늘의 엔진도 지속 latch 가 없으므로 5.3.3 은
+     **옮겨 적기가 아니라 새 동작**이고, 영수증은 현재 코드가 아니라 서명 매니페스트다.
+   - **5.3.2 가 남긴 사람 결정 하나: deadline 이 abnormal 인가.** 엔진(`:897`)은
+     그렇다 하고 `design.md:198` 은 아니라 한다. 생산 임계값이 1 이라 오늘은 결과가
+     같아서 엔진을 따랐다. **임계값을 1 보다 올리기 전에** 사람이 정해야 한다.
+   - **5.7 이 가져갈 빈칸이 측정으로 일곱 개 나왔다.** 엔진 스위트가 한 번도 돌리지
+     않는 블록이다(잠금 실패·재시작 대기 실패·사이클 건너뛰기·마감시한과 취소의 경합).
+     좌표는 review.md 의 5.3.2 절과 두 FLM 번들의 branch-test-map 에 있다.
    - **아직 참인 것:** 생산은 `StrategyMarketWorker` 를 돌리고 그 `Cycle` 은
      `*Context` 클로저라 Journal/Gateway/Guardian 을 들고 있다. AST 산출물이
      `c.Journal.CurrentPositionCampaignCAS`(`:446`)와 `fresh.dispatch.dispatch`(`:453`)를

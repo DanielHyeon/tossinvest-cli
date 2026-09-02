@@ -291,25 +291,27 @@ func renderStatement(statement ast.Stmt) string {
 	case *ast.AssignStmt:
 		parts := make([]string, 0, len(typed.Lhs))
 		for _, target := range typed.Lhs {
-			parts = append(parts, types.ExprString(target))
+			parts = append(parts, renderExpr(target))
 		}
 		values := make([]string, 0, len(typed.Rhs))
 		for _, value := range typed.Rhs {
-			values = append(values, types.ExprString(value))
+			values = append(values, renderExpr(value))
 		}
 		return strings.Join(parts, ", ") + " " + typed.Tok.String() + " " + strings.Join(values, ", ")
 	case *ast.ReturnStmt:
 		values := make([]string, 0, len(typed.Results))
 		for _, value := range typed.Results {
-			values = append(values, types.ExprString(value))
+			values = append(values, renderExpr(value))
 		}
 		return "return " + strings.Join(values, ", ")
+	case *ast.ExprStmt:
+		return renderExpr(typed.X)
 	case *ast.IfStmt:
 		inner := make([]string, 0, len(typed.Body.List))
 		for _, nested := range typed.Body.List {
 			inner = append(inner, renderStatement(nested))
 		}
-		rendered := "if " + types.ExprString(typed.Cond) + " { " + strings.Join(inner, "; ") + " }"
+		rendered := "if " + renderExpr(typed.Cond) + " { " + strings.Join(inner, "; ") + " }"
 		if typed.Else != nil {
 			rendered += " else {...}"
 		}
@@ -317,6 +319,32 @@ func renderStatement(statement ast.Stmt) string {
 	default:
 		return "<unrenderable statement>"
 	}
+}
+
+// renderExpr 는 식 하나를 한 줄로 편다.
+//
+// `types.ExprString` 를 그대로 쓸 수 없는 이유는 그것이 합성 리터럴을 `T{…}`
+// 로 접기 때문이다. 이 파일의 비교는 **어떤 필드에 어떤 값을 넣는가**를 묻는
+// 것이라, 접힌 리터럴은 결론이 통째로 바뀌어도 같은 문자열이 된다.
+func renderExpr(expr ast.Expr) string {
+	literal, ok := expr.(*ast.CompositeLit)
+	if !ok {
+		return types.ExprString(expr)
+	}
+	fields := make([]string, 0, len(literal.Elts))
+	for _, element := range literal.Elts {
+		pair, ok := element.(*ast.KeyValueExpr)
+		if !ok {
+			fields = append(fields, renderExpr(element))
+			continue
+		}
+		fields = append(fields, renderExpr(pair.Key)+": "+renderExpr(pair.Value))
+	}
+	name := ""
+	if literal.Type != nil {
+		name = types.ExprString(literal.Type)
+	}
+	return name + "{" + strings.Join(fields, ", ") + "}"
 }
 
 // 임계값 1 의 영수증은 **엔진에 실패 카운터가 없다는 것**이다.

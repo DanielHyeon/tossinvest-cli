@@ -3,7 +3,10 @@ package strategyworker
 import (
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 )
 
 // LaneHealth 는 레인 하나의 관측 가능한 상태다. 세 값을 따로 두는 이유는
@@ -56,8 +59,16 @@ type Fault struct {
 // 골든의 `peer_lane_state_mutation_forbidden` 은 이 타입에서 구조적으로 참이고,
 // lane_test.go 가 그것을 실제로 재어 본다.
 type Lane struct {
-	worker              FamilyWorker
-	policy              RuntimePolicy
+	worker FamilyWorker
+	policy RuntimePolicy
+	// clk 는 이 레인의 **유일한** 시간 출처다. 예전 판본은 `now` 를 인자로 받았고
+	// 그 편이 능력을 안 늘려서 좋았지만, 마감 시한 감시견은 읽는 것이 아니라
+	// **자야** 하므로 인자로는 만들 수 없다. 출처가 둘이면(호출자의 now 와 레인의
+	// 시계) 같은 사이클의 backoff 기한과 마감 시한이 서로 다른 시간축에 놓인다.
+	clk clock.Clock
+	// mu 는 아래 전부를 지킨다. 레인은 이제 사이클 goroutine 과 투입하는 쪽이
+	// 함께 만지므로, 상태를 잠금 없이 두면 "단일 비행" 자체가 경합이 된다.
+	mu                  sync.Mutex
 	consecutiveFailures uint64
 	latched             bool
 	latchRevision       uint64
@@ -65,6 +76,11 @@ type Lane struct {
 	firstAbnormal       bool
 	restartAttempt      uint64
 	restartNotBefore    time.Time
+	pending             int
+	dropped             uint64
+	abandonedCycles     uint64
+	inFlight            bool
+	nextDue             time.Time
 }
 
 // newLane 은 정책까지 지정해 레인 하나를 만든다.
@@ -72,8 +88,8 @@ type Lane struct {
 // 내보내지 않는다. 정책을 아무나 고를 수 있으면 "server-owned" 가 거짓이 된다.
 // 이 패키지의 시험만 다른 임계값을 가진 레인을 만들 수 있고, 생산 진입점은
 // 아래 ProductionLanes 하나뿐이다.
-func newLane(worker FamilyWorker, policy RuntimePolicy) *Lane {
-	return &Lane{worker: worker, policy: policy}
+func newLane(worker FamilyWorker, policy RuntimePolicy, clk clock.Clock) *Lane {
+	return &Lane{worker: worker, policy: policy, clk: clk}
 }
 
 // ProductionLanes 는 생산 worker 여덟에 서버 정책을 붙인 레인 여덟이다.
@@ -83,12 +99,12 @@ func newLane(worker FamilyWorker, policy RuntimePolicy) *Lane {
 //
 // 이 패키지는 아직 생산 배선이 없다(dormant). 여덟 레인을 부르는 생산 코드는
 // 없고, 그 배선은 태스크 5.1.2 다.
-func ProductionLanes() []*Lane {
+func ProductionLanes(clk clock.Clock) []*Lane {
 	workers := ProductionWorkers()
 	lanes := make([]*Lane, 0, len(workers))
 	policy := ProductionRuntimePolicy()
 	for _, worker := range workers {
-		lanes = append(lanes, newLane(worker, policy))
+		lanes = append(lanes, newLane(worker, policy, clk))
 	}
 	return lanes
 }
@@ -100,22 +116,44 @@ func (lane *Lane) Key() Key { return lane.worker.Key() }
 func (lane *Lane) Policy() RuntimePolicy { return lane.policy }
 
 // ConsecutiveFailures 는 마지막 성공 이후 쌓인 실패 수다.
-func (lane *Lane) ConsecutiveFailures() uint64 { return lane.consecutiveFailures }
+func (lane *Lane) ConsecutiveFailures() uint64 {
+	lane.mu.Lock()
+	defer lane.mu.Unlock()
+	return lane.consecutiveFailures
+}
 
 // Latched 는 이 레인의 신규 진입이 잠겼는지다.
-func (lane *Lane) Latched() bool { return lane.latched }
+func (lane *Lane) Latched() bool {
+	lane.mu.Lock()
+	defer lane.mu.Unlock()
+	return lane.latched
+}
 
 // LatchRevision 는 이 레인이 잠긴 횟수다. 한 번 잠기면 더 오르지 않는다.
-func (lane *Lane) LatchRevision() uint64 { return lane.latchRevision }
+func (lane *Lane) LatchRevision() uint64 {
+	lane.mu.Lock()
+	defer lane.mu.Unlock()
+	return lane.latchRevision
+}
 
 // FirstFailure 는 이 레인을 잠근 **첫** 이유다. 뒤따르는 실패가 덮어쓰지 않는다.
-func (lane *Lane) FirstFailure() string { return lane.firstFailure }
+func (lane *Lane) FirstFailure() string {
+	lane.mu.Lock()
+	defer lane.mu.Unlock()
+	return lane.firstFailure
+}
 
 // RestartNotBefore 는 이 시각 전에는 다시 시도하지 않는다는 뜻이다.
-func (lane *Lane) RestartNotBefore() time.Time { return lane.restartNotBefore }
+func (lane *Lane) RestartNotBefore() time.Time {
+	lane.mu.Lock()
+	defer lane.mu.Unlock()
+	return lane.restartNotBefore
+}
 
 // Health 는 운영자가 보는 이 레인의 상태다.
 func (lane *Lane) Health() LaneHealth {
+	lane.mu.Lock()
+	defer lane.mu.Unlock()
 	if lane.latched {
 		return LaneLatched
 	}
@@ -130,7 +168,10 @@ func (lane *Lane) Health() LaneHealth {
 // 잠금이 먼저인 이유: 잠긴 레인을 DORMANT 로 보고하면 운영자는 "아직 안 켰다"로
 // 읽는다. 실제로는 고장으로 닫힌 것이고, 그 둘은 필요한 조치가 다르다.
 func (lane *Lane) Run(input Input) Cycle {
-	if lane.latched {
+	lane.mu.Lock()
+	latched := lane.latched
+	lane.mu.Unlock()
+	if latched {
 		return Cycle{Outcome: OutcomeLatched, Detail: DetailLatched}
 	}
 	return lane.worker.Run(input)
@@ -142,6 +183,8 @@ func (lane *Lane) Run(input Input) Cycle {
 // 패키지에는 그 증거를 만들 방법이 없다. 성공 한 번으로 풀면 실패를 만든 조건이
 // 그대로인데 진입만 다시 열린다.
 func (lane *Lane) Succeed() {
+	lane.mu.Lock()
+	defer lane.mu.Unlock()
 	lane.consecutiveFailures = 0
 }
 
@@ -153,7 +196,17 @@ func (lane *Lane) Succeed() {
 //
 // 비정상(panic·예상 밖 반환)은 임계값을 기다리지 않는다. 설계의 고장표가
 // 보통 오류(세고 다시 시도)와 비정상(그 자리에서 잠금)을 나눈 그대로다.
-func (lane *Lane) Fail(now time.Time, reason string, abnormal bool) (Fault, bool) {
+func (lane *Lane) Fail(reason string, abnormal bool) (Fault, bool) {
+	lane.mu.Lock()
+	defer lane.mu.Unlock()
+	return lane.failLocked(reason, abnormal)
+}
+
+// failLocked 는 Fail 의 본문이다. 사이클 정산(settle)이 같은 잠금 안에서
+// 불러야 하므로 따로 두었다 — 잠금을 놓았다 다시 잡으면 그 틈에 다른 goroutine
+// 이 곧 잠길 레인에 사이클을 하나 더 넣을 수 있다.
+func (lane *Lane) failLocked(reason string, abnormal bool) (Fault, bool) {
+	now := lane.clk.Now()
 	if lane.consecutiveFailures < maxFailureCount {
 		lane.consecutiveFailures++
 	}

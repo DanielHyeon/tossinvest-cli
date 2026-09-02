@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 )
@@ -23,16 +24,13 @@ func threeStrikes() RuntimePolicy {
 
 func laneUnder(t *testing.T, policy RuntimePolicy) *Lane {
 	t.Helper()
-	lanes := ProductionLanes()
-	if len(lanes) == 0 {
-		t.Fatal("no production lane was built")
-	}
-	return newLane(lanes[0].worker, policy)
+	lane, _ := boundedLane(t, policy)
+	return lane
 }
 
 // 갓 태어난 레인은 건강하고 잠기지 않았다.
 func TestEveryProductionLaneIsBornHealthyAndUnlatched(t *testing.T) {
-	lanes := ProductionLanes()
+	lanes := ProductionLanes(clock.NewFake(laneNow))
 	if len(lanes) != len(ProductionWorkers()) {
 		t.Fatalf("there are %d workers but %d lanes", len(ProductionWorkers()), len(lanes))
 	}
@@ -55,7 +53,7 @@ func TestAnOrdinaryFailureCountsAndLatchesExactlyAtTheThreshold(t *testing.T) {
 	lane := laneUnder(t, threeStrikes())
 
 	for attempt := uint64(1); attempt < lane.Policy().FailureThreshold(); attempt++ {
-		fault, latched := lane.Fail(laneNow, "evidence refresh failed", false)
+		fault, latched := lane.Fail("evidence refresh failed", false)
 		if latched {
 			t.Fatalf("failure %d latched before the threshold %d", attempt, lane.Policy().FailureThreshold())
 		}
@@ -73,7 +71,7 @@ func TestAnOrdinaryFailureCountsAndLatchesExactlyAtTheThreshold(t *testing.T) {
 		}
 	}
 
-	fault, latched := lane.Fail(laneNow, "evidence refresh failed again", false)
+	fault, latched := lane.Fail("evidence refresh failed again", false)
 	if !latched {
 		t.Fatalf("failure %d did not latch at threshold %d", lane.Policy().FailureThreshold(), lane.Policy().FailureThreshold())
 	}
@@ -104,7 +102,7 @@ func TestAnAbnormalFailureLatchesAtOnceBelowTheThreshold(t *testing.T) {
 		t.Fatal("this test needs a threshold above one to say anything")
 	}
 
-	fault, latched := lane.Fail(laneNow, "strategy evaluation panic", true)
+	fault, latched := lane.Fail("strategy evaluation panic", true)
 	if !latched {
 		t.Fatalf("an abnormal failure did not latch at count 1 of %d", lane.Policy().FailureThreshold())
 	}
@@ -123,8 +121,8 @@ func TestAnAbnormalFailureLatchesAtOnceBelowTheThreshold(t *testing.T) {
 func TestSuccessClearsTheCounterButNeverTheLatch(t *testing.T) {
 	lane := laneUnder(t, threeStrikes())
 
-	lane.Fail(laneNow, "first", false)
-	lane.Fail(laneNow, "second", false)
+	lane.Fail("first", false)
+	lane.Fail("second", false)
 	if lane.ConsecutiveFailures() != 2 {
 		t.Fatalf("counter before the success: %d", lane.ConsecutiveFailures())
 	}
@@ -135,7 +133,7 @@ func TestSuccessClearsTheCounterButNeverTheLatch(t *testing.T) {
 	}
 
 	for attempt := uint64(0); attempt < lane.Policy().FailureThreshold(); attempt++ {
-		lane.Fail(laneNow, "again", false)
+		lane.Fail("again", false)
 	}
 	if !lane.Latched() {
 		t.Fatal("the lane did not latch after a full run of failures following the success")
@@ -156,11 +154,11 @@ func TestASecondFailureDoesNotMintASecondLatch(t *testing.T) {
 		t.Fatalf("this test assumes the production threshold of one, got %d", lane.Policy().FailureThreshold())
 	}
 
-	first, latched := lane.Fail(laneNow, "the first reason", false)
+	first, latched := lane.Fail("the first reason", false)
 	if !latched {
 		t.Fatal("the production threshold of one did not latch on the first failure")
 	}
-	second, latchedAgain := lane.Fail(laneNow, "the second reason", true)
+	second, latchedAgain := lane.Fail("the second reason", true)
 	if latchedAgain {
 		t.Error("a second failure reported a second latch")
 	}
@@ -185,7 +183,7 @@ func TestTheRestartDelayFollowsThePolicyLadder(t *testing.T) {
 	policy := lane.Policy()
 
 	for attempt := uint64(1); attempt <= 8; attempt++ {
-		lane.Fail(laneNow, "again", false)
+		lane.Fail("again", false)
 		want := laneNow.Add(policy.Backoff(attempt))
 		if got := lane.RestartNotBefore(); !got.Equal(want) {
 			t.Errorf("attempt %d: restart not before %v, want %v", attempt, got, want)
@@ -198,11 +196,11 @@ func TestTheRestartDelayFollowsThePolicyLadder(t *testing.T) {
 // 골든이 `peer_lane_state_mutation_forbidden` 으로 적어 둔 것이고, 이 change 의
 // 이유 그 자체다 — 오늘은 한 시장이 잠기면 그 시장의 네 전략이 함께 멈춘다.
 func TestAFaultOnOneLaneChangesNothingOnItsPeers(t *testing.T) {
-	lanes := ProductionLanes()
+	lanes := ProductionLanes(clock.NewFake(laneNow))
 	if len(lanes) < 2 {
 		t.Fatalf("peer isolation needs more than one lane, got %d", len(lanes))
 	}
-	if _, latched := lanes[0].Fail(laneNow, "this lane only", true); !latched {
+	if _, latched := lanes[0].Fail("this lane only", true); !latched {
 		t.Fatal("the first lane did not latch, so this test proves nothing about its peers")
 	}
 	for index, peer := range lanes[1:] {
@@ -218,11 +216,11 @@ func TestAFaultOnOneLaneChangesNothingOnItsPeers(t *testing.T) {
 // 패키지 수준에 여덟을 한 벌 만들어 두고 그 포인터를 나눠 주면, 한 번 잠긴
 // 레인이 프로세스가 사는 내내 잠긴 채로 모든 호출자에게 건네진다.
 func TestProductionLanesHandsOutFreshLanesEveryTime(t *testing.T) {
-	first := ProductionLanes()
-	if _, latched := first[0].Fail(laneNow, "latched in this call", true); !latched {
+	first := ProductionLanes(clock.NewFake(laneNow))
+	if _, latched := first[0].Fail("latched in this call", true); !latched {
 		t.Fatal("the first lane did not latch, so a shared lane would not be visible")
 	}
-	for index, lane := range ProductionLanes() {
+	for index, lane := range ProductionLanes(clock.NewFake(laneNow)) {
 		if lane.Latched() || lane.ConsecutiveFailures() != 0 {
 			t.Fatalf("lane %d came back carrying an earlier call's fault", index)
 		}
@@ -239,7 +237,7 @@ func TestALatchedLaneReportsTheLatchRatherThanDormancy(t *testing.T) {
 	if lane.Run(Input{}).Outcome != OutcomeDormant {
 		t.Fatal("a dormant lane must report dormancy before it is latched")
 	}
-	if _, latched := lane.Fail(laneNow, "boom", true); !latched {
+	if _, latched := lane.Fail("boom", true); !latched {
 		t.Fatal("the lane did not latch")
 	}
 	cycle := lane.Run(Input{})
@@ -260,7 +258,7 @@ func TestALatchedLaneReportsTheLatchRatherThanDormancy(t *testing.T) {
 // 복구 증거를 만들 수 없다.
 func TestAFailureWithoutAReasonStillRecordsOne(t *testing.T) {
 	lane := laneUnder(t, ProductionRuntimePolicy())
-	fault, latched := lane.Fail(laneNow, "   ", false)
+	fault, latched := lane.Fail("   ", false)
 	if !latched {
 		t.Fatal("the lane did not latch")
 	}
