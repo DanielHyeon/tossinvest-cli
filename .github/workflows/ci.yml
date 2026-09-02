@@ -67,3 +67,45 @@ jobs:
       # 두 곳이 서로 다른 값을 말할 수 있으면 한 곳이 너무 많다 (주 job 과 같은 이유).
       - name: Run seam-tagged Go tests
         run: make test-seams
+
+  # SDD 도구 사슬 검사를 도는 별도 job.
+  #
+  # 배선하기 전까지 CI 는 `make test`·`make lint`·`make build` 만 돌았다. 즉 SDD
+  # 도구의 시험 176개(그중 tools/logic-map 77개가 열거표 감사 — `check_analysis.py`
+  # 와 `role_check.py`)와 PM 번호 계약·에이전트 부트스트랩 동기화·기억 원장 검사는
+  # **사람이 `make sdd-check` 를 직접 칠 때만** 돌았다. 검사는 존재하는 것으로는
+  # 아무것도 막지 못하고 도는 곳이 있어야 막는다 (a118 이 같은 것을 비싸게 가르쳤다).
+  #
+  # job 을 나눈 이유는 seam-tagged-tests 와 같다: 병렬이라 벽시계를 안 늘리고,
+  # 실패했을 때 "Go 가 깨졌는가, SDD 도구가 깨졌는가"가 job 이름으로 갈린다.
+  #
+  # `make sdd-check` 가 아니라 `make sdd-check-ci` 인 이유:
+  # `sdd-check` 는 codegraph 실행 파일과 gitignore 된 `.sdd/index-state.json` 을 보는
+  # 검사 둘을 포함해서 러너에서 통과할 수 없다. 그 둘만 뺀 부분집합이 `sdd-check-ci` 이고,
+  # 목록은 Makefile 한 곳에만 있다 — 여기에 개별 명령을 복사하면 두 곳이 갈라진다.
+  #
+  # 아직 여기서 안 도는 것: `tools/logic-map/check_analysis.py --change <id>` 자체.
+  # 그 검사는 번들을 유도 당시 소스에 묶으므로 change 하나의 **완료** 게이트
+  # (`make gate` 5/10 단계)에서만 참이다. 2026-09-02 측정으로 활성 change 31개 중
+  # 통과는 1개(a112)뿐이고, 나머지 30개는 AST 소스 해시 stale 15 · 넓어진 수정 집합의
+  # FLM 누락 11 · base-commit 누락/무효 4 다. 저장소 전체로 켜면 첫날부터 빨갛다.
+  sdd-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # `make sdd-test` 의 마지막 줄이 `go test ./tools/logic-map` 이라 Go 도 필요하다.
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Run portable SDD checks
+        run: make sdd-check-ci

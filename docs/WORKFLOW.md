@@ -303,11 +303,32 @@ make sdd-doctor              # 필수 CLI/skill/config 실재 확인
 make sdd-sync                # CodeGraph/CodeGraphContext/GBrain 증분 갱신
 make sdd-sync-full           # 전체 재색인
 make sdd-check               # CodeGraph worktree freshness + memory/config/PM/tests/doctor
+make sdd-check-ci            # 위에서 워크스테이션 전용 둘을 뺀 부분집합 (CI가 도는 것)
 ```
 
 `make sdd-sync`는 현재 tracked/untracked 소스 fingerprint를 로컬 상태에 기록한다.
 `make sdd-check`는 CodeGraph hard-evidence fingerprint 불일치를 차단하고,
 CodeGraphContext/GBrain 불일치는 advisory 경고만 출력한다.
+
+### CI가 도는 SDD 검사 — `sdd-check-ci`
+
+`make sdd-check`의 검사 중 둘은 GitHub 러너에서 돌 수 없다. `sdd-doctor`는 로컬에
+설치한 CLI(rtk·openspec·codegraph·gbrain)를 보고, `check_index_freshness.py`는
+codegraph 실행 파일과 gitignore된 `.sdd/index-state.json`을 본다 — 후자는 worktree마다
+다르므로 checkout에는 없다. 나머지(에이전트 부트스트랩 동기화, 기억 원장, PM 번호 계약,
+`compileall`, `make sdd-test`)는 전부 돌 수 있고, 그 부분집합이 `sdd-check-ci`다.
+`.github/workflows/ci.yml`의 `sdd-checks` job이 이 타깃 하나를 부른다.
+
+목록은 Makefile 한 곳에만 있다. 옮길 수 있는 검사를 새로 더할 곳은 언제나
+`sdd-check-ci`이고, `sdd-check`에 직접 더하면
+`tools/sdd/test_ci_runs_portable_sdd_checks.py`가 실패한다 — 검사는 존재하는 것으로
+막지 못하고 도는 곳이 있어야 막는다(a118).
+
+`tools/logic-map/check_analysis.py`는 여기 없다. 그 검사는 번들을 유도 당시 소스에
+묶으므로 change 하나의 **완료** 게이트(`make gate` 5/10단계)에서만 참이다. 2026-09-02
+측정으로 활성 change 31개 중 통과는 1개뿐이고 나머지 30개는 AST 소스 해시 stale 15 ·
+넓어진 수정 집합의 FLM 누락 11 · base-commit 누락/무효 4다. 저장소 전체로 켜면
+첫날부터 빨갛다.
 
 GBrain 실행 파일은 StockOS와 같은 전역 설치를 재사용하지만 데이터 홈은 TossOS 전용이다.
 MCP와 CLI가 모두 `tools/sdd/gbrain_project.py`를 경유하므로 다른 프로젝트의 `gbrain serve`

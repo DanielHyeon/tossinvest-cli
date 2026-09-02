@@ -2415,9 +2415,20 @@ fix3~fix13 은 **적대 리뷰 13 라운드의 시간순 기록**이다. 나중 
 **사람이 확인해야 하는 것.** 리뷰로는 못 정한다.
 
 - 1 번을 연 채로 5.5 를 내보내는 것을 받아들이는지.
-- CI(`.github/workflows/ci.yml`)가 `make sdd-test` 도 `check_analysis` 도 안 돌린다.
-  여덟 라운드 분량의 `role_check.py` 강제는 **수동 실행으로만** 검증된다. 배선하거나
-  명시적으로 받아들이거나.
+- ~~CI(`.github/workflows/ci.yml`)가 `make sdd-test` 도 `check_analysis` 도 안 돌린다.~~
+  **2026-09-02 에 사람이 "배선"을 골라 절반을 닫았다.** `sdd-checks` job 이 새로 생겨
+  `make sdd-check-ci` 를 부른다 — `sdd-check` 에서 **러너로 옮길 수 없다고 측정된 둘**
+  (`sdd-doctor` 는 로컬 설치 CLI 를, `check_index_freshness.py` 는 codegraph 실행 파일과
+  gitignore 된 `.sdd/index-state.json` 을 본다. 외부 도구를 지운 PATH + depth-1 클론에서
+  각각 exit 1)만 뺀 부분집합이다. 이제 CI 가 파이썬 시험 180개 — 그중 `tools/logic-map`
+  77개가 여덟 라운드 분량의 `role_check.py`·`check_analysis.py` 열거 강제다 — 와
+  `go test ./tools/logic-map` 을 돈다. 목록이 두 곳으로 갈라지는 것은
+  `tools/sdd/test_ci_runs_portable_sdd_checks.py` 가 막는다(뮤테이션 5종으로 반증 확인).
+  **안 배선한 것은 `check_analysis --change <id>` 자체다.** 그 검사는 번들을 유도 당시
+  소스에 묶으므로 change 하나의 완료 게이트에서만 참이다 — 측정하니 활성 change 31 개 중
+  통과가 **1 개(a112)**, 나머지 30 개는 AST 소스 해시 stale 15 · 넓어진 수정 집합의 FLM
+  누락 11 · base-commit 누락/무효 4 였다. 저장소 전체로 켜면 첫날부터 빨갛고, PR 이
+  건드린 change 만 골라 켜도 위 2 번과 같은 뿌리의 빚으로 남의 세션이 막힌다.
 - ~~외부 `a117` 스텁이 `make sdd-check` 를 깨고 있다.~~ **2026-09-02 에 사람이 소유를
   넘겨 처리했다** — `a119-…` 로 renumber 하고 `STORY-TOS-a119`(FEAT-TOS-001)·registry·
   generated tracker 를 만들었다. Story 의 acceptance 는 그 세션의 proposal.md 에서 옮겨

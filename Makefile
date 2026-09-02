@@ -10,7 +10,7 @@ LDFLAGS := -X github.com/JungHoonGhae/tossinvest-cli/internal/version.Version=$(
 
 .PHONY: build stage-local-update run test test-seams vet cover validate gate lint fmt tidy clean \
 	image \
-	sdd-doctor sdd-sync sdd-sync-full sdd-test sdd-check sdd-hooks-install sdd-infra
+	sdd-doctor sdd-sync sdd-sync-full sdd-test sdd-check sdd-check-ci sdd-hooks-install sdd-infra
 
 build:
 	mkdir -p bin
@@ -83,13 +83,29 @@ sdd-test:
 	python3 -m unittest discover -s tools/deploy -p 'test_*.py'
 	go test ./tools/logic-map
 
-sdd-check: sdd-doctor
+# SDD 검사 중 **러너에서도 돌 수 있는 것만** 모은 부분집합. CI 가 도는 것이 이것이다.
+#
+# 검사를 두 곳에 나눠 적으면 두 곳이 서로 다른 목록을 말할 수 있다 — `make test` 의
+# 상한을 CI 에 복사하지 않는 것과 같은 이유다. 그래서 CI 는 개별 명령을 나열하지 않고
+# 이 타깃 하나를 부르고, `sdd-check` 는 여기에 워크스테이션 전용 검사만 얹는다.
+# 옮길 수 있는 검사를 새로 더할 곳은 언제나 여기다 — `sdd-check` 에 직접 더하면
+# tools/sdd/test_ci_runs_portable_sdd_checks.py 가 실패한다.
+sdd-check-ci:
 	python3 tools/sdd/check_agent_config_sync.py
 	python3 scripts/memory_index.py check
-	python3 tools/sdd/check_index_freshness.py
 	python3 tools/pm/generate_master_tracker.py --check
 	python3 -m compileall -q scripts tools/logic-map tools/sdd tools/sdd-history tools/pm tools/deploy
 	$(MAKE) sdd-test
+
+# 위 부분집합 + 러너로 옮길 수 없는 둘. 옮길 수 없다는 것은 측정한 것이다
+# (2026-09-02, 외부 도구를 지운 PATH 와 depth-1 클론에서 각각 exit 1):
+#
+#   sdd-doctor               — rtk·openspec·codegraph·gbrain 등 로컬 설치 도구를 본다
+#   check_index_freshness.py — codegraph 실행 파일과 gitignore 된 `.sdd/index-state.json`
+#                              을 본다. 그 파일은 worktree 마다 다르므로 checkout 에 없다.
+sdd-check: sdd-doctor
+	python3 tools/sdd/check_index_freshness.py
+	$(MAKE) sdd-check-ci
 
 sdd-hooks-install:
 	git config core.hooksPath .githooks

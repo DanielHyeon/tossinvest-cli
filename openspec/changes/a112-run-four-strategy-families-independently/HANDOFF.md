@@ -4,8 +4,8 @@
 남은 셋을 정해야 하는 사람이다.
 
 한 줄: **5.5 의 backstop 굳히기는 적대 리뷰 13 라운드 끝에 APPROVE(P0/P1/P2 = 0)로
-끝났고, 2026-09-02 에 세 커밋으로 랜딩했다.** 사람이 정해야 하는 것 다섯 중 둘
-(커밋 단위·a117 스텁)은 답을 받아 처리했고, 셋이 남았다.
+끝났고, 2026-09-02 에 세 커밋으로 랜딩했다.** 사람이 정해야 하는 것 다섯 중 셋
+(커밋 단위·a117 스텁·CI 배선)은 답을 받아 처리했고, 둘이 남았다.
 
 상세는 `review.md` 의 `## 5.5 현재 상태` 블록(fix 절들보다 **앞**에 있다)과
 `analysis/function-logic/internal-app-engine--productionstrategyfirstlegauthorityloader.collectstrategyfirstlegauthority/branch-test-map.md`
@@ -22,9 +22,9 @@
 |---|---|
 | `14b76963` | 신규 시험·seam 5 + 수정 시험 4. 행동(시험 함수 넷/하위 여섯) · 구조 단언 하나 · 필드 완전성 32+8 |
 | `3183e22b` | `tools/logic-map/{role_check,check_analysis,test_role_check,test_check_analysis}.py` — 좌표 역할 대조와 열거 강제 |
-| 이 커밋 | `review.md` · `tasks.md` · a112 분석 번들 54 · 이 문서 |
-
-별도로 병행 세션의 스텁을 renumber 했다(아래 2 절 (4)).
+| `80d3931d` | 병행 세션 스텁 a117 → a119 renumber + PM 레코드 (아래 2 절 (4)) |
+| `364190c8` | `review.md` · `tasks.md` · a112 분석 번들 54 · 이 문서 |
+| 이 커밋 | CI 배선 — `sdd-check-ci` 타깃 · `sdd-checks` job · 갈라짐을 막는 시험 (아래 2 절 (2)) |
 
 랜딩 직전 실측: `make lint` PASS · `make test` 98 ok/0 FAIL · `make test-seams`
 99 ok/0 FAIL · python 77 OK · `check_analysis --change a112` evidence complete ·
@@ -32,7 +32,7 @@
 
 ## 2. 사람이 정해야 하는 것 — 리뷰로는 못 정한다
 
-(3)·(4) 는 2026-09-02 에 답을 받아 닫았다. (1)·(2)·(5) 가 남아 있다.
+(2)·(3)·(4) 는 2026-09-02 에 답을 받아 닫았다. (1)·(5) 가 남아 있다.
 
 ### (1) `dispatchHandoff` 위조를 연 채로 5.5 를 내보낼 것인가 ★ 가장 무거움
 
@@ -47,12 +47,30 @@
 
 **결정할 것:** 이 상태로 5.5 를 완료로 볼지, 아니면 6.2 전에 seam 을 먼저 닫을지.
 
-### (2) CI 를 배선할 것인가
+### (2) CI 를 배선할 것인가 — **닫혔다 (2026-09-02), 절반은 배선하고 절반은 이름만 적었다**
 
-`.github/workflows/ci.yml` 은 `make test`·`make lint`·`make build` 만 돈다.
-**`make sdd-test` 도 `check_analysis` 도 안 돈다.** 즉 여덟 라운드 분량의
-`role_check.py` 강제(열거 표 감사)는 `make sdd-check`/`make gate` 를 **사람이 직접
-칠 때만** 검증된다. 배선하거나, 명시적으로 "수동 검증으로 충분하다"고 받아들이거나.
+배선했다. `.github/workflows/ci.yml` 에 `sdd-checks` job 이 생겼고 `make sdd-check-ci`
+하나를 부른다. 그 타깃은 `sdd-check` 에서 **러너로 옮길 수 없는 둘만 뺀** 부분집합이다.
+
+옮길 수 없다는 것은 측정한 것이다 — 외부 도구를 지운 PATH 와 depth-1 클론에서 각각
+exit 1: `sdd-doctor` 는 로컬 설치 CLI(rtk·openspec·codegraph·gbrain)를 보고,
+`check_index_freshness.py` 는 codegraph 실행 파일과 gitignore 된
+`.sdd/index-state.json` 을 본다. 나머지는 같은 환경에서 전부 exit 0 이었다.
+
+이제 CI 가 도는 것: 파이썬 시험 180개(그중 `tools/logic-map` 77개가 열거표 감사 —
+`check_analysis.py`·`role_check.py`) + `go test ./tools/logic-map` + 에이전트 부트스트랩
+동기화 + 기억 원장 + PM 번호 계약 + `compileall`.
+
+목록이 두 곳으로 갈라지는 것은 시험이 막는다
+(`tools/sdd/test_ci_runs_portable_sdd_checks.py`, 뮤테이션 5종으로 반증 확인).
+`sdd-check` 에 옮길 수 있는 검사를 직접 한 줄 더하면 실패한다.
+
+**안 배선한 것 — `check_analysis.py --change <id>` 자체.** 그 검사는 번들을 유도 당시
+소스에 묶으므로 change 하나의 **완료** 게이트(`make gate` 5/10)에서만 참이다. 측정:
+활성 change 31개 중 통과 1개(a112). 나머지 30개는 **AST 소스 해시 stale 15 · 넓어진
+수정 집합의 FLM 누락 11 · base-commit 누락/무효 4**. 저장소 전체로 켜면 첫날부터
+빨갛고, PR 이 건드린 change 만 골라 켜도 a113~a115 를 잡는 세션이 남의 빚으로
+막힌다. 이것은 (5) 의 구조적 빈틈과 같은 뿌리다.
 
 ### (3) 커밋·푸시 시점 — **닫혔다 (2026-09-02)**
 
@@ -126,6 +144,7 @@ python3 tools/logic-map/check_analysis.py --change a112-run-four-strategy-famili
 openspec validate a112-run-four-strategy-families-independently --strict
 $(go env GOROOT)/bin/gofmt -l internal/ tools/    # 출력 없음
 make sdd-sync && make sdd-check              # PASS (a119 renumber 뒤)
+make sdd-check-ci                            # CI 가 도는 부분집합 — 로컬 도구 없이도 PASS
 ```
 
 `make gate CHANGE=…` 는 **not-applicable** 이다 — change **완료** 게이트라 미완료
