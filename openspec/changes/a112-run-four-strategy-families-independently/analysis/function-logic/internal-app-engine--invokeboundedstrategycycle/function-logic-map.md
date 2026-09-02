@@ -32,20 +32,20 @@
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `make` | 880:12 | 결과 채널. 버퍼 1 이라 늦게 끝난 사이클이 goroutine 을 붙잡지 않는다 |
-| `(unnamed)` | 881:5 | 사이클 goroutine. **이 goroutine 은 마감 시한에 취소되지 않는다** |
-| `invokeStrategyCycle` | 882:13 | panic 을 `abnormal=true` 인 error 로 바꾼다 |
-| `context.WithCancel` | 884:33 | 감시견 전용 취소 문맥 |
-| `cancelWatchdog` | 885:8 | `defer` — 감시견 goroutine 누수를 막는다 |
-| `make` | 886:14 | 감시견 채널. 버퍼 1 |
-| `(unnamed)` | 887:5 | 감시견 goroutine |
-| `clk.Sleep` | 887:26 | **마감 시한 그 자체.** `time.After` 가 아니라 주입 시계(`internal/clock`)다 |
-| `ctx.Done` | 889:9 | 상위 취소 관측 |
-| `ctx.Err` | 890:10 | 취소 사유를 그대로 돌려준다 |
-| `ctx.Err` | 894:6 | 마감 시한이 울린 뒤 상위가 이미 취소되었는지 |
-| `ctx.Err` | 895:11 | 그 경우 마감 시한이 아니라 취소를 돌려준다 |
+| `make` | 896:12 | 결과 채널. 버퍼 1 이라 늦게 끝난 사이클이 goroutine 을 붙잡지 않는다 |
+| `(unnamed)` | 897:5 | 사이클 goroutine. **이 goroutine 은 마감 시한에 취소되지 않는다** |
+| `invokeStrategyCycle` | 898:13 | panic 을 `abnormal=true` 인 error 로 바꾼다 |
+| `context.WithCancel` | 900:33 | 감시견 전용 취소 문맥 |
+| `cancelWatchdog` | 901:8 | `defer` — 감시견 goroutine 누수를 막는다 |
+| `make` | 902:14 | 감시견 채널. 버퍼 1 |
+| `(unnamed)` | 903:5 | 감시견 goroutine |
+| `clk.Sleep` | 903:26 | **마감 시한 그 자체.** `time.After` 가 아니라 주입 시계(`internal/clock`)다 |
+| `ctx.Done` | 905:9 | 상위 취소 관측 |
+| `ctx.Err` | 906:10 | 취소 사유를 그대로 돌려준다 |
+| `ctx.Err` | 910:6 | 마감 시한이 울린 뒤 상위가 이미 취소되었는지 |
+| `ctx.Err` | 911:11 | 그 경우 마감 시한이 아니라 취소를 돌려준다 |
 
-Exact AST return positions: 890:3, 892:3, 895:4, 897:3
+Exact AST return positions: 906:3, 908:3, 911:4, 913:3
 
 
 ## State mutations and fallbacks

@@ -1,14 +1,14 @@
 # Branch Test Map: `Context.runProductionStrategyMarketCycle`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (422-459); file SHA-256 `4e457c677157b2f8c73f813f8250575657b6beedddc1ad467db209a35579986d`. AST branch positions are authoritative.
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (422-475); file SHA-256 `66150078e25dfad6d1fec322b955e5f23e3aad77f0525321867a500e0960f58f`. AST branch positions are authoritative.
 - 이 태스크가 B2 를 편집했다. **어떤 시험도 이 함수에 닿지 않는다** — 아래는 그 사실과 구조적 반증이다.
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
 | B1 | if at 424:2 — refresh 실패 | 없음 | 아니오 | 아니오 — **진입 0** |
-| B2 | if at 427:2 — dispatch 부재(handoff 거절은 경계 안으로 갔다) | 없음 (단위 수준은 `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff` 가 같은 판단을 고정한다) | 아니오 | 아니오 — **진입 0** |
-| B3 | if at 447:3 — 캠페인 CAS 실패 | 없음 | 아니오 | 아니오 — **진입 0** |
-| B4 | if at 450:3 — 이미 점유된 캠페인 | 없음 | 아니오 | 아니오 — **진입 0** |
-| B5 | if at 454:3 — lease 소모 | 없음 | 아니오 | 아니오 — **진입 0** |
+| B2 | if at 443:2 — dispatch 부재(handoff 거절은 경계 안으로 갔다) | 없음 (단위 수준은 `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff` 가 같은 판단을 고정한다) | 아니오 | 아니오 — **진입 0** |
+| B3 | if at 463:3 — 캠페인 CAS 실패 | 없음 | 아니오 | 아니오 — **진입 0** |
+| B4 | if at 466:3 — 이미 점유된 캠페인 | 없음 | 아니오 | 아니오 — **진입 0** |
+| B5 | if at 470:3 — lease 소모 | 없음 | 아니오 | 아니오 — **진입 0** |
 
 ## 반증 실측
 

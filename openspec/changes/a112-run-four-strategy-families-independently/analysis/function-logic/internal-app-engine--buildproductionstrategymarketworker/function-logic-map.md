@@ -3,7 +3,7 @@
 - Source: `internal/app/engine/strategy_entry_supervisor.go` (378-420)
 - Function: `buildProductionStrategyMarketWorker` in package `engine`
 - Signature: `buildProductionStrategyMarketWorker(params=13, results=1)`
-- File SHA-256: `4e457c677157b2f8c73f813f8250575657b6beedddc1ad467db209a35579986d`
+- File SHA-256: `66150078e25dfad6d1fec322b955e5f23e3aad77f0525321867a500e0960f58f`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 6.
 - Risk scan: `risk-pattern-report.md`.

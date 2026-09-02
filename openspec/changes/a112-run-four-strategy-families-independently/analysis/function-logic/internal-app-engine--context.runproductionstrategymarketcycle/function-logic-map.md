@@ -1,9 +1,9 @@
 # Function Logic Map: `Context.runProductionStrategyMarketCycle`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (422-459)
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (422-475)
 - Function: `Context.runProductionStrategyMarketCycle` in package `engine`
 - Signature: `Context.runProductionStrategyMarketCycle(params=3, results=1)`
-- File SHA-256: `4e457c677157b2f8c73f813f8250575657b6beedddc1ad467db209a35579986d`
+- File SHA-256: `66150078e25dfad6d1fec322b955e5f23e3aad77f0525321867a500e0960f58f`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 5.
 - Risk scan: `risk-pattern-report.md`.
@@ -36,6 +36,25 @@
 `strategyhandoff` 의 `TestOnlyTheEngineImportsThisSeam`(이 경계를 들여오는 패키지를
 고정한다)이 함께 막는다.
 
+**5.1.2 가 더한 것 — 여덟 전략군 레인의 사이클.** 이 함수는 이제 새로 고침 뒤,
+handoff 앞에서 이 시장의 네 레인을 한 번씩 돌린다(`441:2`). 그 자리에서 도는 일은
+`strategyFamilyLaneStep` 하나이고 그 함수는 인자가 `*strategyworker.Lane` 뿐이라
+`*Context` 를 들 수 없다 — 오늘 이 함수의 몸통이 `c.Journal.CurrentPositionCampaignCAS`
+(`462:15`)와 `fresh.dispatch.dispatch`(`469:12`)를 들고 있는 것과 정확히 대비되는
+지점이다. **그 두 호출은 여전히 여기 있고, 그것이 맞다** — 스펙은 변경 권한을
+시장 하나에 하나만 두라고 요구하고, 이 함수가 그 하나다. 5.1.2 가 옮긴 것은
+*전략군의* 사이클이지 시장의 변경 권한이 아니다.
+
+**반환값이 없는 호출인 이유.** `evaluate` 는 아무것도 돌려주지 않는다. 관측을
+돌려주면 이 함수가 그것을 버릴 수 있고, 버린 것은 아무도 못 본다 — 위 fix2 가
+`Single()` 의 boolean 에서 배운 것과 같은 답이다. 결과는 레인 런타임 안에 남고
+`observations()` 가 읽는다.
+
+**레인 사이클이 새로 고침 잠금 밖인 이유.** 레인은 마감 시한 감시견을 달고 돈다.
+`c.strategyRefreshMu`(`481:2`) 안에서 돌리면 레인 하나의 느린 주기가 두 시장의 모든
+권한 수집을 함께 세운다. `TestTheMarketCycleRunsItsLanesAndTheRefreshDoesNot` 가
+`evaluate` 를 부르는 자리를 패키지 전체에서 세어 이 함수 하나로 고정한다.
+
 The signature above is the exhaustive input/result record; this map does not infer state the AST does not show.
 
 ## Branches and early returns
@@ -58,15 +77,15 @@ The signature above is the exhaustive input/result record; this map does not inf
   그래서 이 함수에 대한 근거는 실행이 아니라 **소스에 무엇이 쓰여 있는지**뿐이고,
   아래 반증 표의 뮤테이션은 전부 AST 가드가 죽인 것이다.
 
-Exact AST return positions: 425:3, 428:3, 444:2, 448:4, 451:4, 455:4, 457:3.
+Exact AST return positions: 425:3, 444:3, 460:2, 464:4, 467:4, 471:4, 473:3.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
 | B1 | if | 424:2 | arm not entered (양쪽 스위트) — assembly refresh 실패 |
-| B2 | if | 427:2 | **5.5-fix2 가 바꾼 분기** — `fresh.dispatch == nil`. handoff 거절은 더 이상 이 조건에 없다(경계 안으로 갔다). arm not entered (양쪽 스위트) |
-| B3 | if | 447:3 | arm not entered (양쪽 스위트) — 캠페인 CAS 읽기 실패 |
-| B4 | if | 450:3 | arm not entered (양쪽 스위트) — 이미 claim 되었거나 FLAT/CLOSED 아님 |
-| B5 | if | 454:3 | arm not entered (양쪽 스위트) — lease 이미 소모 |
+| B2 | if | 443:2 | **5.5-fix2 가 바꾼 분기** — `fresh.dispatch == nil`. handoff 거절은 더 이상 이 조건에 없다(경계 안으로 갔다). arm not entered (양쪽 스위트) |
+| B3 | if | 463:3 | arm not entered (양쪽 스위트) — 캠페인 CAS 읽기 실패 |
+| B4 | if | 466:3 | arm not entered (양쪽 스위트) — 이미 claim 되었거나 FLAT/CLOSED 아님 |
+| B5 | if | 470:3 | arm not entered (양쪽 스위트) — lease 이미 소모 |
 
 이 공백은 이 태스크가 만든 것이 아니다. 이 함수는 `*Context` 와 살아 있는 journal·gateway 를
 요구하고, 그 배선은 태스크 5.7(fault injection·race)과 L6 의 몫이다. 여기서는 그 공백을
@@ -77,14 +96,18 @@ Exact AST return positions: 425:3, 428:3, 444:2, 448:4, 451:4, 455:4, 457:3.
 | Callee expression | Position |
 |---|---|
 | `c.refreshPairedStrategyEntryProductionAssembly` | 423:16 |
-| `Deliver` | 444:9 |
-| `dispatchHandoff` | 444:9 |
-| `fresh.proposals.forMarket` | 444:9 |
-| `delivered.Result` | 445:14 |
-| `c.Journal.CurrentPositionCampaignCAS` | 446:15 |
-| `string` | 446:77 |
-| `fresh.dispatch.dispatch` | 453:12 |
-| `errors.Is` | 454:6 |
+| `evaluate` | 441:2 |
+| `c.productionStrategyLanes` | 441:2 |
+| `strategyLaneInputs` | 442:3 |
+| `fresh.proposals.forMarket` | 442:36 |
+| `Deliver` | 460:9 |
+| `dispatchHandoff` | 460:9 |
+| `fresh.proposals.forMarket` | 460:9 |
+| `delivered.Result` | 461:14 |
+| `c.Journal.CurrentPositionCampaignCAS` | 462:15 |
+| `string` | 462:77 |
+| `fresh.dispatch.dispatch` | 469:12 |
+| `errors.Is` | 470:6 |
 
 ## State mutations and fallbacks
 

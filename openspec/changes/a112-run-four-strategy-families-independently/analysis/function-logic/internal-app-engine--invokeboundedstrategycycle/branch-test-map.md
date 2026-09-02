@@ -1,6 +1,6 @@
 # Branch Test Map: `invokeBoundedStrategyCycle`
 
-- Source SHA-256: `4e457c677157b2f8c73f813f8250575657b6beedddc1ad467db209a35579986d`; AST branch locations are authoritative.
+- Source SHA-256: `66150078e25dfad6d1fec322b955e5f23e3aad77f0525321867a500e0960f58f`; AST branch locations are authoritative.
 - Revision: base — 이 change 는 이 함수를 편집하지 않는다. RED 칸이 모두 `no (base)`
   인 이유가 그것이다. 이 번들은 태스크 5.3.2 가 인용할 분기를 열거하기 위해 만들었다.
 
@@ -11,8 +11,8 @@
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | select at 888:2 — 상위 취소 / 사이클 완료 / 마감 시한 셋 중 먼저 오는 것 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues`(889-890), `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive`(891-892), `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction`(897) | no (base) | yes — 세 갈래 모두 count>0 |
-| B2 | if at 894:3 — 마감 시한이 울렸는데 상위가 **이미** 취소되어 있다 | `TestTheWatchdogRechecksCancellationInsteadOfTrustingItsOwnTimer` | no (base) | yes (block 894-896 count=1 — **5.6 이 처음 실행**) |
+| B1 | select at 904:2 — 상위 취소 / 사이클 완료 / 마감 시한 셋 중 먼저 오는 것 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues`(889-890), `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive`(891-892), `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction`(897) | no (base) | yes — 세 갈래 모두 count>0 |
+| B2 | if at 910:3 — 마감 시한이 울렸는데 상위가 **이미** 취소되어 있다 | `TestTheWatchdogRechecksCancellationInsteadOfTrustingItsOwnTimer` | no (base) | yes (block 894-896 count=1 — **5.6 이 처음 실행**) |
 
 ## 측정으로 확인한 빈칸
 

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter"
 )
 
 // LaneHealth 는 레인 하나의 관측 가능한 상태다. 세 값을 따로 두는 이유는
@@ -111,6 +112,18 @@ func ProductionLanes(clk clock.Clock) []*Lane {
 
 // Key 는 이 레인이 맡은 worker 의 열쇠다.
 func (lane *Lane) Key() Key { return lane.worker.Key() }
+
+// Owns 는 봉인된 제안이 이 레인의 것인지다.
+//
+// 판정은 여기서 하지 않고 worker 하나에 있다. 배선하는 쪽(엔진)이 "어느 레인의
+// 제안인가"를 스스로 다시 적으면 그 사본은 봉인을 먼저 보는 것을 잊기 쉽고,
+// 두 판정이 갈리면 잘못된 레인이 남의 제안을 자기 것으로 세운다.
+//
+// 잠금 상태를 보지 않는 이유: 소유는 고장과 무관한 성질이다. 잠긴 레인도
+// 자기 제안을 알아봐야 그 제안이 "주인 없는 것"으로 새지 않는다.
+func (lane *Lane) Owns(proposal strategyarbiter.Proposal) bool {
+	return lane.worker.owns(proposal)
+}
 
 // Policy 는 이 레인이 든 서버 소유 정책이다.
 func (lane *Lane) Policy() RuntimePolicy { return lane.policy }

@@ -275,6 +275,14 @@ type Context struct {
 	// authority recollections. It owns no broker capability.
 	strategyDispatchOwner *strategyDispatchOwnerCoordinator
 
+	// strategyLanes is the one process-lived set of eight family lanes. It is
+	// lazy because the clock arrives with the first production cycle, and it is
+	// shared because a lane's latch and failure counter are memory: rebuilding
+	// them on every refresh would reopen a lane that latched for a reason that
+	// still holds.
+	strategyLanesMu sync.Mutex
+	strategyLanes   *strategyLaneRuntime
+
 	strategyProjectionMu sync.RWMutex
 	strategyProjection   *strategyprojection.Store
 	strategySupervisor   *StrategyEntrySupervisor

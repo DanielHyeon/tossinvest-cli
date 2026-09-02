@@ -1,7 +1,7 @@
 # Function Logic Map: `StrategyEntrySupervisor.evaluationState`
 
 - Source: `internal/app/engine/strategy_entry_supervisor.go`
-- Source SHA-256: `4e457c677157b2f8c73f813f8250575657b6beedddc1ad467db209a35579986d`
+- Source SHA-256: `66150078e25dfad6d1fec322b955e5f23e3aad77f0525321867a500e0960f58f`
 - AST evidence: `ast.json`
 - Risk scan: `risk-pattern-report.md`
 - Revision: base — 이 change 는 이 함수를 **고치지 않는다.** 태스크 5.6 이
@@ -30,9 +30,9 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (`857:2`) | 종료 중이거나 nil 이거나 **잠겼거나** 사이클이 없거나 (dormant 이고 갱신자도 아님) | 없음 (RLock 만) | `(false, false)` (`859:3`) | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` |
-| B2 (`861:2`) | 권한 갱신 worker | 없음 | `(true, false)` (`862:3`) | `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError` |
-| 본문 (`865:2`) | effective worker | 없음 | `(fresh, !fresh)` — 만료 여부가 두 번째 값 | `TestExpiredAuthorityLatchesBeforeEvaluation` |
+| B1 (`873:2`) | 종료 중이거나 nil 이거나 **잠겼거나** 사이클이 없거나 (dormant 이고 갱신자도 아님) | 없음 (RLock 만) | `(false, false)` (`875:3`) | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` |
+| B2 (`877:2`) | 권한 갱신 worker | 없음 | `(true, false)` (`878:3`) | `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError` |
+| 본문 (`881:2`) | effective worker | 없음 | `(fresh, !fresh)` — 만료 여부가 두 번째 값 | `TestExpiredAuthorityLatchesBeforeEvaluation` |
 
 ## Calls and live bindings
 
@@ -40,12 +40,12 @@
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `s.mu.RLock` | 855:2 | 읽기 잠금 — 이 함수는 아무것도 바꾸지 않는다 |
-| `s.mu.RUnlock` | 856:8 | `defer` |
-| `Before` | 864:11 | 권한 신선도 비교 |
-| `s.clk.Now` | 864:11 | 주입 시계 |
+| `s.mu.RLock` | 871:2 | 읽기 잠금 — 이 함수는 아무것도 바꾸지 않는다 |
+| `s.mu.RUnlock` | 872:8 | `defer` |
+| `Before` | 880:11 | 권한 신선도 비교 |
+| `s.clk.Now` | 880:11 | 주입 시계 |
 
-Exact AST return positions: 859:3, 862:3, 865:2
+Exact AST return positions: 875:3, 878:3, 881:2
 
 ## State mutations and fallbacks
 
@@ -58,6 +58,6 @@ Exact AST return positions: 859:3, 862:3, 865:2
 - Safe edit boundary: 편집 없음. 인용만.
 - High-risk impact: yes — 진입 평가가 도는지 마는지를 이 함수가 정한다.
 - **인용해 가는 사실:** 순서가 계약이다. 엔진은 **큐를 먼저 읽고 그다음 거절**한다
-  (`776:3` → `783`). 5.3.2 의 `strategyworker.Lane` 은 반대로 **잠금을 먼저 보고
+  (`792:3` → `783`). 5.3.2 의 `strategyworker.Lane` 은 반대로 **잠금을 먼저 보고
   트리거를 건드리지 않는다.** 두 순서가 다른 것은 실수가 아니라 트리거가 무엇을
   들고 있느냐의 차이다 — 엔진의 트리거는 빈 `struct{}` 라 버려도 잃을 것이 없다.

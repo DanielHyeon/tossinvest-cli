@@ -1,6 +1,6 @@
 # Branch Test Map: `StrategyEntrySupervisor.runMarket`
 
-- Source SHA-256: `4e457c677157b2f8c73f813f8250575657b6beedddc1ad467db209a35579986d`; AST branch locations are authoritative.
+- Source SHA-256: `66150078e25dfad6d1fec322b955e5f23e3aad77f0525321867a500e0960f58f`; AST branch locations are authoritative.
 - Revision: base — 이 change 는 이 함수를 편집하지 않는다. RED 칸이 모두 `no (base)`
   인 이유가 그것이다. 이 번들은 태스크 5.3.2 가 인용할 분기를 열거하기 위해 만들었다.
 
@@ -11,22 +11,22 @@
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | select at 770:2 — 배리어 전에 취소되면 사이클 0 회 | 배리어 경합 시험(`TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently`) | no (base) | yes |
-| B2 | for at 775:2 — 시장 하나를 도는 **단일** 소비자 루프 | 같은 시험 | no (base) | yes |
-| B3 | select at 776:3 — 취소 vs 큐 도착 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues` | no (base) | yes |
-| B4 | if at 785:4 — 권한 만료가 평가 전에 잠근다 | `TestExpiredAuthorityLatchesBeforeEvaluation` | no (base) | yes (block 785-786) |
-| B5 | if at 787:5 — 만료 잠금 자체가 실패한다 | `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping`/"권한 만료의 잠금도…" | no (base) | yes (block 787-790 count=1 — **5.6 이 처음 실행**) |
-| B6 | if at 791:5 — 만료 뒤 재시작 대기가 실패한다 | 취소 갈래 `TestExpiredAuthorityLatchesBeforeEvaluation`; 비취소 갈래 `TestTheFourEscalations…`/"만료 뒤의 재시작 대기도…" | no (base) | yes (block 792-794 count=1, block 795-796 count=1 — **후자를 5.6 이 처음 실행**) |
-| B7 | if at 792:6 — 그 실패가 ctx 취소 때문이다 | `TestExpiredAuthorityLatchesBeforeEvaluation` | no (base) | yes (block 792-794 count=1) |
-| B8 | if at 800:4 — 꺼졌거나 잠긴 worker 가 사이클을 건너뛴다 | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` | no (base) | yes (block 800-801 count=1 — **5.6 이 처음 실행**) |
-| B9 | if at 804:4 — 마감 시한을 넘긴 사이클을 버려진 것으로 표시 | `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction` 외 3 | no (base) | yes |
-| B10 | if at 807:4 — 취소된 사이클이 루프를 끝낸다 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues` 외 2 | no (base) | yes |
-| B11 | if at 810:4 — 성공한 사이클이 다음 투입을 기다린다 | `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive` 외 2 | no (base) | yes |
-| B12 | if at 813:4 — 권한 갱신 전용 worker 의 오류는 잠그지 않는다 | `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError`, `TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo` | no (base) | yes (block 813-814 count=1 — **5.6 이 처음 실행. 이것이 오늘 생산이 실제로 도는 구성이다**) |
-| B13 | if at 816:4 — 중앙 무결성 오류가 모든 신규 진입을 멈춘다 | `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety` | no (base) | yes |
-| B14 | if at 821:4 — 보통 오류의 잠금 자체가 실패한다 | `TestTheFourEscalations…`/"관측 시각이 없으면…"·"latch revision 이 소진되면…", `TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt` | no (base) | yes (block 821-824 count=1 — **5.6 이 처음 실행**) |
-| B15 | if at 825:4 — 잠근 뒤 재시작 대기가 실패한다 | 취소 갈래 `TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority` 외 3; 비취소 갈래 `TestTheFourEscalations…`/"재시작 기한이 계약 밖이면…" | no (base) | yes (block 826-828 count=1, block 829-830 count=1 — **후자를 5.6 이 처음 실행**) |
-| B16 | if at 826:5 — 그 실패가 ctx 취소 때문이다 | `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction` 외 3 | no (base) | yes (block 826-828 count=1) |
+| B1 | select at 786:2 — 배리어 전에 취소되면 사이클 0 회 | 배리어 경합 시험(`TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently`) | no (base) | yes |
+| B2 | for at 791:2 — 시장 하나를 도는 **단일** 소비자 루프 | 같은 시험 | no (base) | yes |
+| B3 | select at 792:3 — 취소 vs 큐 도착 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues` | no (base) | yes |
+| B4 | if at 801:4 — 권한 만료가 평가 전에 잠근다 | `TestExpiredAuthorityLatchesBeforeEvaluation` | no (base) | yes (block 785-786) |
+| B5 | if at 803:5 — 만료 잠금 자체가 실패한다 | `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping`/"권한 만료의 잠금도…" | no (base) | yes (block 787-790 count=1 — **5.6 이 처음 실행**) |
+| B6 | if at 807:5 — 만료 뒤 재시작 대기가 실패한다 | 취소 갈래 `TestExpiredAuthorityLatchesBeforeEvaluation`; 비취소 갈래 `TestTheFourEscalations…`/"만료 뒤의 재시작 대기도…" | no (base) | yes (block 792-794 count=1, block 795-796 count=1 — **후자를 5.6 이 처음 실행**) |
+| B7 | if at 808:6 — 그 실패가 ctx 취소 때문이다 | `TestExpiredAuthorityLatchesBeforeEvaluation` | no (base) | yes (block 792-794 count=1) |
+| B8 | if at 816:4 — 꺼졌거나 잠긴 worker 가 사이클을 건너뛴다 | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` | no (base) | yes (block 800-801 count=1 — **5.6 이 처음 실행**) |
+| B9 | if at 820:4 — 마감 시한을 넘긴 사이클을 버려진 것으로 표시 | `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction` 외 3 | no (base) | yes |
+| B10 | if at 823:4 — 취소된 사이클이 루프를 끝낸다 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues` 외 2 | no (base) | yes |
+| B11 | if at 826:4 — 성공한 사이클이 다음 투입을 기다린다 | `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive` 외 2 | no (base) | yes |
+| B12 | if at 829:4 — 권한 갱신 전용 worker 의 오류는 잠그지 않는다 | `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError`, `TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo` | no (base) | yes (block 813-814 count=1 — **5.6 이 처음 실행. 이것이 오늘 생산이 실제로 도는 구성이다**) |
+| B13 | if at 832:4 — 중앙 무결성 오류가 모든 신규 진입을 멈춘다 | `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety` | no (base) | yes |
+| B14 | if at 837:4 — 보통 오류의 잠금 자체가 실패한다 | `TestTheFourEscalations…`/"관측 시각이 없으면…"·"latch revision 이 소진되면…", `TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt` | no (base) | yes (block 821-824 count=1 — **5.6 이 처음 실행**) |
+| B15 | if at 841:4 — 잠근 뒤 재시작 대기가 실패한다 | 취소 갈래 `TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority` 외 3; 비취소 갈래 `TestTheFourEscalations…`/"재시작 기한이 계약 밖이면…" | no (base) | yes (block 826-828 count=1, block 829-830 count=1 — **후자를 5.6 이 처음 실행**) |
+| B16 | if at 842:5 — 그 실패가 ctx 취소 때문이다 | `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction` 외 3 | no (base) | yes (block 826-828 count=1) |
 
 ## 측정으로 확인한 빈칸 — **닫혔다 (2026-09-03, 태스크 5.6)**
 

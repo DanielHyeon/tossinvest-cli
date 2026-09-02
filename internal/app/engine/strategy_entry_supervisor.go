@@ -424,6 +424,22 @@ func (c *Context) runProductionStrategyMarketCycle(ctx context.Context, clk cloc
 	if err != nil {
 		return err
 	}
+	// 이 시장의 네 전략군 레인이 자기 사이클을 한 번씩 돈다.
+	//
+	// 새로 고침 **뒤**이고 공유 mutex **밖**이다. 레인 사이클은 마감 시한을
+	// 가진 감시견을 달고 돌므로, 새로 고침 잠금 안에서 돌리면 레인 하나의
+	// 느린 주기가 두 시장의 모든 권한 수집을 함께 세운다.
+	//
+	// 여기서 도는 일은 `strategyFamilyLaneStep` 하나이고 그 함수는 `*Context`
+	// 를 들 수 없다 — 그것이 이 태스크가 옮긴 경계다. 아래 dispatch 주기는
+	// 여전히 원장과 공유 dispatch 를 들지만, 그것은 전략군의 사이클이 아니라
+	// **시장 하나가 가진 유일한 변경 권한**이고 스펙이 그 권한을 하나로
+	// 유지하라고 요구한다.
+	//
+	// 반환값이 없다. 레인 관측은 런타임 안에 남고, 호출자가 버릴 수 있는 답을
+	// 여기서 만들지 않는다.
+	c.productionStrategyLanes(clk).evaluate(ctx, market,
+		strategyLaneInputs(c.AccountRef, fresh.proposals.forMarket(market)))
 	if fresh.dispatch == nil {
 		return nil
 	}

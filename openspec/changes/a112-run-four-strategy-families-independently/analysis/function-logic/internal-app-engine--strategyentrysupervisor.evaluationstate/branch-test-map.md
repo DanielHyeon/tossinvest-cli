@@ -1,13 +1,13 @@
 # Branch Test Map: `StrategyEntrySupervisor.evaluationState`
 
-- Source SHA-256: `4e457c677157b2f8c73f813f8250575657b6beedddc1ad467db209a35579986d`; AST branch locations are authoritative.
+- Source SHA-256: `66150078e25dfad6d1fec322b955e5f23e3aad77f0525321867a500e0960f58f`; AST branch locations are authoritative.
 - Revision: base — 편집하지 않는다. 태스크 5.6 이 인용한다.
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 857:2 — 종료 중·nil·**잠김**·사이클 없음·권한 없는 dormant | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` | no (base) | yes (block 858-860 count=1, **5.6 이 처음 잠긴 갈래로 실행**) |
-| B2 | if at 861:2 — 권한 갱신 worker 는 만료를 보지 않는다 | `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError`, `TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo` | no (base) | yes (block 861-863) |
-| 본문 | 864:2 — effective worker 의 신선도 판정 | `TestExpiredAuthorityLatchesBeforeEvaluation` 외 다수 | no (base) | yes |
+| B1 | if at 873:2 — 종료 중·nil·**잠김**·사이클 없음·권한 없는 dormant | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` | no (base) | yes (block 858-860 count=1, **5.6 이 처음 잠긴 갈래로 실행**) |
+| B2 | if at 877:2 — 권한 갱신 worker 는 만료를 보지 않는다 | `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError`, `TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo` | no (base) | yes (block 861-863) |
+| 본문 | 880:2 — effective worker 의 신선도 판정 | `TestExpiredAuthorityLatchesBeforeEvaluation` 외 다수 | no (base) | yes |
 
 ## 측정으로 확인한 빈칸
 
