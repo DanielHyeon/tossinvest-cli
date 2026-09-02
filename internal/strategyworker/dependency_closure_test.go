@@ -37,6 +37,13 @@ func TestTheWorkerImportsNothingOutsideItsAllowedClosure(t *testing.T) {
 		modulePath + "internal/strategycoordinator": true,
 		modulePath + "internal/strategyrouter":      true,
 		modulePath + "internal/weeklyvaluelane":     true,
+		// 표준 라이브러리는 이름으로 하나씩 연다. "표준이면 다 허용"으로 두면
+		// os/exec 와 net/http 가 함께 열리고, 그러면 이 허용 목록이 지키는 것이
+		// 없어진다. 아래 셋은 능력을 만들지 않는다 — 시간을 읽는 것도 아니고
+		// (레인은 now 를 인자로 받는다) 문자열과 시간 **타입**만 쓴다.
+		"strconv": true,
+		"strings": true,
+		"time":    true,
 	}
 	fset := token.NewFileSet()
 	packages, err := parser.ParseDir(fset, ".", productionOnly, parser.ImportsOnly)

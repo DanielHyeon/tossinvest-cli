@@ -63,6 +63,11 @@ const (
 	OutcomeDormant Outcome = "DORMANT"
 	// OutcomeRefused 는 이 worker 가 제안을 자기 것으로 세울 수 없었다는 뜻이다.
 	OutcomeRefused Outcome = "REFUSED"
+	// OutcomeLatched 는 이 레인의 신규 진입이 고장으로 잠겼다는 뜻이다.
+	//
+	// DORMANT 와 합치면 안 된다. 잠긴 레인을 "아직 안 켰다"로 읽으면 운영자는
+	// 아무 조치도 하지 않는데, 실제로는 복구 증거가 필요한 상태다.
+	OutcomeLatched Outcome = "LATCHED"
 )
 
 // 아래 두 상수는 진단이지 계약이 아니다. 계약인 거절 코드는 골든이 정한

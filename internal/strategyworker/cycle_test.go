@@ -208,3 +208,30 @@ func emptyEnvelope(envelope strategycoordinator.Envelope) bool {
 	return envelope.Scope == (strategyrouter.OwnerKey{}) && envelope.SnapshotDigest == "" &&
 		envelope.Proposal.Result.Lineage.Identity == ""
 }
+
+// 잠긴 레인은 **켜져 있어도** 봉투를 내지 않는다.
+//
+// lane_test.go 의 같은 이름 시험은 잠들어 있는 레인을 쓴다. 그것만으로는
+// 잠금이 실제로 배출을 막는지 알 수 없다 — 잠든 worker 는 어차피 아무것도
+// 안 내기 때문이다. 여기서는 같은 입력에 봉투를 내던 레인을 잠그고, 그 뒤로
+// 아무것도 안 나오는지 본다.
+func TestALatchedLaneEmitsNothingEvenWhenItIsEffective(t *testing.T) {
+	f := newFixture(allKRFamilies()...)
+	good := f.input(t, continuationlane.KRContinuationLaneID)
+	lane := newLane(effective(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation), ProductionRuntimePolicy())
+
+	if before := lane.Run(good); before.Outcome != OutcomeEmitted {
+		t.Fatalf("the lane must emit before it is latched, got %s / %s", before.Outcome, before.Detail)
+	}
+	if _, latched := lane.Fail(f.now, "evidence refresh failed", false); !latched {
+		t.Fatal("the lane did not latch")
+	}
+
+	cycle := lane.Run(good)
+	if cycle.Outcome != OutcomeLatched {
+		t.Fatalf("a latched effective lane reported %s", cycle.Outcome)
+	}
+	if !emptyEnvelope(cycle.Envelope) {
+		t.Error("a latched effective lane still handed out an envelope")
+	}
+}

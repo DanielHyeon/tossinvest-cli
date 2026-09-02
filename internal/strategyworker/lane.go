@@ -1,0 +1,189 @@
+package strategyworker
+
+import (
+	"strconv"
+	"strings"
+	"time"
+)
+
+// LaneHealth 는 레인 하나의 관측 가능한 상태다. 세 값을 따로 두는 이유는
+// "아직 실패가 없다"와 "실패가 쌓였지만 아직 열려 있다"가 운영자에게 다른
+// 뜻이기 때문이다. 하나로 뭉치면 잠기기 직전의 레인이 건강해 보인다.
+type LaneHealth string
+
+const (
+	// LaneHealthy 는 연속 실패가 하나도 없다는 뜻이다.
+	LaneHealthy LaneHealth = "HEALTHY"
+	// LaneDegraded 는 실패가 쌓였지만 아직 임계값에 못 닿았다는 뜻이다.
+	LaneDegraded LaneHealth = "DEGRADED"
+	// LaneLatched 는 이 레인의 신규 진입이 잠겼다는 뜻이다.
+	LaneLatched LaneHealth = "LATCHED"
+)
+
+// DetailLatched 는 잠긴 레인이 내는 진단이다. 계약이 아니라 진단이다.
+const DetailLatched = "this lane's entry is latched OFF and needs recovery evidence"
+
+// DetailUnexplainedFailure 는 이유 없이 들어온 실패에 붙이는 이유다.
+const DetailUnexplainedFailure = "the lane failed without a reason"
+
+// maxFailureCount 는 카운터가 한 바퀴 도는 것을 막는 상한이다. 0 으로 넘어가면
+// 잠긴 레인이 건강해 보인다.
+const maxFailureCount = ^uint64(0)
+
+// Fault 는 레인 하나가 신규 진입을 잠글 때 남기는 읽기 전용 기록이다.
+//
+// 이것은 복구 영수증이 **아니다**. 이 값에는 entry 를 다시 여는 방법이 없고,
+// 그 방법을 이 패키지가 갖는 순간 "복구는 증거가 있어야 한다"가 거짓이 된다.
+type Fault struct {
+	Key              Key
+	LatchID          string
+	LatchRevision    uint64
+	Reason           string
+	Abnormal         bool
+	ObservedAt       time.Time
+	RestartAttempt   uint64
+	RestartNotBefore time.Time
+}
+
+// Lane 은 worker 하나의 레인-로컬 고장 상태 기계다.
+//
+// 왜 worker 와 따로 있나. `FamilyWorker` 는 값이고 아무것도 기억하지 않는다 —
+// 같은 입력에 언제나 같은 답을 낸다. 연속 실패와 latch 는 기억이라 값으로는
+// 담을 수 없다. 둘을 한 타입에 합치면 worker 를 복사하는 모든 자리가 조용히
+// 고장 상태까지 복사하게 된다.
+//
+// 상태는 이 레인 안에만 있다. 이웃 레인을 가리키는 필드가 하나도 없으므로
+// 골든의 `peer_lane_state_mutation_forbidden` 은 이 타입에서 구조적으로 참이고,
+// lane_test.go 가 그것을 실제로 재어 본다.
+type Lane struct {
+	worker              FamilyWorker
+	policy              RuntimePolicy
+	consecutiveFailures uint64
+	latched             bool
+	latchRevision       uint64
+	firstFailure        string
+	firstAbnormal       bool
+	restartAttempt      uint64
+	restartNotBefore    time.Time
+}
+
+// newLane 은 정책까지 지정해 레인 하나를 만든다.
+//
+// 내보내지 않는다. 정책을 아무나 고를 수 있으면 "server-owned" 가 거짓이 된다.
+// 이 패키지의 시험만 다른 임계값을 가진 레인을 만들 수 있고, 생산 진입점은
+// 아래 ProductionLanes 하나뿐이다.
+func newLane(worker FamilyWorker, policy RuntimePolicy) *Lane {
+	return &Lane{worker: worker, policy: policy}
+}
+
+// ProductionLanes 는 생산 worker 여덟에 서버 정책을 붙인 레인 여덟이다.
+//
+// 부를 때마다 새로 만든다. 패키지 수준에 한 벌을 두고 나눠 주면 한 번 잠긴
+// 레인이 프로세스가 사는 내내 모든 호출자에게 잠긴 채로 건네진다.
+//
+// 이 패키지는 아직 생산 배선이 없다(dormant). 여덟 레인을 부르는 생산 코드는
+// 없고, 그 배선은 태스크 5.1.2 다.
+func ProductionLanes() []*Lane {
+	workers := ProductionWorkers()
+	lanes := make([]*Lane, 0, len(workers))
+	policy := ProductionRuntimePolicy()
+	for _, worker := range workers {
+		lanes = append(lanes, newLane(worker, policy))
+	}
+	return lanes
+}
+
+// Key 는 이 레인이 맡은 worker 의 열쇠다.
+func (lane *Lane) Key() Key { return lane.worker.Key() }
+
+// Policy 는 이 레인이 든 서버 소유 정책이다.
+func (lane *Lane) Policy() RuntimePolicy { return lane.policy }
+
+// ConsecutiveFailures 는 마지막 성공 이후 쌓인 실패 수다.
+func (lane *Lane) ConsecutiveFailures() uint64 { return lane.consecutiveFailures }
+
+// Latched 는 이 레인의 신규 진입이 잠겼는지다.
+func (lane *Lane) Latched() bool { return lane.latched }
+
+// LatchRevision 는 이 레인이 잠긴 횟수다. 한 번 잠기면 더 오르지 않는다.
+func (lane *Lane) LatchRevision() uint64 { return lane.latchRevision }
+
+// FirstFailure 는 이 레인을 잠근 **첫** 이유다. 뒤따르는 실패가 덮어쓰지 않는다.
+func (lane *Lane) FirstFailure() string { return lane.firstFailure }
+
+// RestartNotBefore 는 이 시각 전에는 다시 시도하지 않는다는 뜻이다.
+func (lane *Lane) RestartNotBefore() time.Time { return lane.restartNotBefore }
+
+// Health 는 운영자가 보는 이 레인의 상태다.
+func (lane *Lane) Health() LaneHealth {
+	if lane.latched {
+		return LaneLatched
+	}
+	if lane.consecutiveFailures > 0 {
+		return LaneDegraded
+	}
+	return LaneHealthy
+}
+
+// Run 은 잠금을 먼저 보고 worker 사이클로 넘긴다.
+//
+// 잠금이 먼저인 이유: 잠긴 레인을 DORMANT 로 보고하면 운영자는 "아직 안 켰다"로
+// 읽는다. 실제로는 고장으로 닫힌 것이고, 그 둘은 필요한 조치가 다르다.
+func (lane *Lane) Run(input Input) Cycle {
+	if lane.latched {
+		return Cycle{Outcome: OutcomeLatched, Detail: DetailLatched}
+	}
+	return lane.worker.Run(input)
+}
+
+// Succeed 는 연속 실패 카운터를 지운다.
+//
+// latch 는 **풀지 않는다.** entry-only latch 는 복구 증거가 있어야 풀리고, 이
+// 패키지에는 그 증거를 만들 방법이 없다. 성공 한 번으로 풀면 실패를 만든 조건이
+// 그대로인데 진입만 다시 열린다.
+func (lane *Lane) Succeed() {
+	lane.consecutiveFailures = 0
+}
+
+// Fail 은 실패 하나를 기록하고, 필요하면 이 레인의 신규 진입을 잠근다.
+//
+// 두 번째 반환값은 "**이 호출이** 잠갔는가"다. 이미 잠긴 레인에서는 false 이고
+// 고장 기록도 빈 값이다 — 실패마다 새 latch 판을 찍으면 운영자가 보는 것은
+// 첫 원인이 아니라 마지막 원인이 된다.
+//
+// 비정상(panic·예상 밖 반환)은 임계값을 기다리지 않는다. 설계의 고장표가
+// 보통 오류(세고 다시 시도)와 비정상(그 자리에서 잠금)을 나눈 그대로다.
+func (lane *Lane) Fail(now time.Time, reason string, abnormal bool) (Fault, bool) {
+	if lane.consecutiveFailures < maxFailureCount {
+		lane.consecutiveFailures++
+	}
+	if lane.restartAttempt < maxFailureCount {
+		lane.restartAttempt++
+	}
+	lane.restartNotBefore = now.Add(lane.policy.Backoff(lane.restartAttempt))
+	if lane.latched || !(abnormal || lane.consecutiveFailures >= lane.policy.failureThreshold) {
+		return Fault{}, false
+	}
+	return lane.latch(now, reason, abnormal), true
+}
+
+func (lane *Lane) latch(now time.Time, reason string, abnormal bool) Fault {
+	if strings.TrimSpace(reason) == "" {
+		reason = DetailUnexplainedFailure
+	}
+	lane.latched = true
+	lane.latchRevision++
+	lane.firstFailure = reason
+	lane.firstAbnormal = abnormal
+	key := lane.worker.Key()
+	return Fault{
+		Key:              key,
+		LatchID:          "lane-latch:" + string(key.Market) + ":" + string(key.Family) + ":" + key.LaneID + ":" + key.LaneVersion + ":" + strconv.FormatUint(lane.latchRevision, 10),
+		LatchRevision:    lane.latchRevision,
+		Reason:           reason,
+		Abnormal:         abnormal,
+		ObservedAt:       now.UTC(),
+		RestartAttempt:   lane.restartAttempt,
+		RestartNotBefore: lane.restartNotBefore,
+	}
+}
