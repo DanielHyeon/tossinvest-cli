@@ -8,7 +8,7 @@ LDFLAGS := -X github.com/JungHoonGhae/tossinvest-cli/internal/version.Version=$(
 	-X github.com/JungHoonGhae/tossinvest-cli/internal/version.Commit=$(COMMIT) \
 	-X github.com/JungHoonGhae/tossinvest-cli/internal/version.Date=$(DATE)
 
-.PHONY: build stage-local-update run test test-seams vet cover validate gate lint fmt tidy clean \
+.PHONY: build stage-local-update run test test-seams test-race vet cover validate gate lint fmt tidy clean \
 	image \
 	sdd-doctor sdd-sync sdd-sync-full sdd-test sdd-check sdd-check-ci sdd-hooks-install sdd-infra
 
@@ -49,6 +49,35 @@ test:
 # 끊기 위한 것이지 느린 것을 벌하기 위한 것이 아니다.
 test-seams:
 	go test -timeout 45m -tags tossos_testseams ./...
+
+# 경합 검출기를 **실제로 돌리는** 유일한 타깃.
+#
+# 배선하기 전까지 이 저장소의 어떤 게이트도 `-race` 를 돌리지 않았다 —
+# Makefile 과 `.github/workflows/ci.yml` 전체에 그 낱말이 없었다. 태스크 5.7 이
+# "race … tests" 를 요구하는데, 경합 시험은 검출기 없이는 그냥 시험이다.
+# 이것이 왜 실제 차이인지는 잰 것이 있다: `internal/strategyworker` 의 레인 상태를
+# 패키지 수준 슬롯으로 바꾼 변이는 `-race` 없이 **초록**이었고 `-race` 로는
+# 그 시험 하나가 빨개졌다(review.md 의 5.7 절 N2).
+#
+# **왜 전부가 아닌가.** 2026-09-02 측정: `go test -race ./...` 는 10분에서
+# 끊겼다(완주 못 함). 아래 일곱 패키지는 11.9초다. 그래서 이 타깃은 a112 의
+# 네-가족 런타임이 사는 패키지만 돈다.
+#
+# **닫지 않은 것을 적는다.** 생산 코드에 goroutine·채널·`sync.`·`atomic.` 이
+# 있는 패키지는 2026-09-02 기준 41개이고, 그중 34개는 여전히 경합 검출기 밖이다
+# (가장 무거운 `internal/journal`·`internal/app/engine` 포함). 그 34개를 여기
+# 넣으면 게이트가 10분을 넘긴다. 새 런타임 패키지가 생기면 이 목록에 더한다.
+RACE_PACKAGES = \
+	./internal/strategyworker \
+	./internal/strategycoordinator \
+	./internal/strategyhandoff \
+	./internal/strategyarbiter \
+	./internal/strategyrouter \
+	./internal/strategyflow \
+	./internal/clock
+
+test-race:
+	go test -race -timeout 15m -count=1 -tags tossos_testseams $(RACE_PACKAGES)
 
 # vet only — `make lint` 은 gofmt 검사까지 함께 돌린다. 포맷 검사 없이 정적 분석만
 # 빠르게 돌리고 싶을 때 이 타겟을 쓴다.

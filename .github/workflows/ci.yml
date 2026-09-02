@@ -68,6 +68,13 @@ jobs:
       - name: Run seam-tagged Go tests
         run: make test-seams
 
+      # `-race` 는 2026-09-02 까지 이 저장소의 어떤 게이트에서도 돌지 않았다.
+      # 대상은 a112 네-가족 런타임 일곱 패키지이고 측정으로 12초다 — 전체
+      # `go test -race ./...` 는 10분에서 끊겼다. 남은 34개 동시성 패키지는
+      # 아직 검출기 밖이며 그 사실은 Makefile 의 test-race 주석에 적혀 있다.
+      - name: Run the race detector on the four-family runtime
+        run: make test-race
+
   # SDD 도구 사슬 검사를 도는 별도 job.
   #
   # 배선하기 전까지 CI 는 `make test`·`make lint`·`make build` 만 돌았다. 즉 SDD

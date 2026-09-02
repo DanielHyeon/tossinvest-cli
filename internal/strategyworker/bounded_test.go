@@ -30,14 +30,14 @@ func admit(t *testing.T, lane *Lane) {
 
 func neverRuns(t *testing.T) Step {
 	t.Helper()
-	return func(context.Context, Input) Cycle {
+	return func(context.Context, Input) (Cycle, error) {
 		t.Error("the step ran even though the lane should not have admitted a cycle")
-		return Cycle{}
+		return Cycle{}, nil
 	}
 }
 
 func succeeds() Step {
-	return func(context.Context, Input) Cycle { return Cycle{Outcome: OutcomeDormant} }
+	return func(context.Context, Input) (Cycle, error) { return Cycle{Outcome: OutcomeDormant}, nil }
 }
 
 // 투입 칸은 정책이 정한 깊이만큼만 받고, 넘친 것을 **센다**.
@@ -111,10 +111,10 @@ func TestALaneAdmitsOnlyOneCycleAtATime(t *testing.T) {
 	release := make(chan struct{})
 	done := make(chan Start, 1)
 	go func() {
-		_, start := lane.RunBounded(context.Background(), Input{}, func(context.Context, Input) Cycle {
+		_, start := lane.RunBounded(context.Background(), Input{}, func(context.Context, Input) (Cycle, error) {
 			close(inFlight)
 			<-release
-			return Cycle{Outcome: OutcomeDormant}
+			return Cycle{Outcome: OutcomeDormant}, nil
 		})
 		done <- start
 	}()
@@ -157,9 +157,9 @@ func TestTheCadenceIsMeasuredFromTheCycleStartNotItsEnd(t *testing.T) {
 	admit(t, lane)
 
 	slow := policy.Cadence() / 2
-	if _, start := lane.RunBounded(context.Background(), Input{}, func(context.Context, Input) Cycle {
+	if _, start := lane.RunBounded(context.Background(), Input{}, func(context.Context, Input) (Cycle, error) {
 		fake.Advance(slow)
-		return Cycle{Outcome: OutcomeDormant}
+		return Cycle{Outcome: OutcomeDormant}, nil
 	}); start != StartAdmitted {
 		t.Fatal("the slow cycle was refused")
 	}
@@ -187,9 +187,9 @@ func TestACycleThatCrossesTheDeadlineIsAbandonedAndCountedAsAFailure(t *testing.
 	}
 	done := make(chan result, 1)
 	go func() {
-		bounded, start := lane.RunBounded(context.Background(), Input{}, func(context.Context, Input) Cycle {
+		bounded, start := lane.RunBounded(context.Background(), Input{}, func(context.Context, Input) (Cycle, error) {
 			<-release
-			return Cycle{Outcome: OutcomeDormant}
+			return Cycle{Outcome: OutcomeDormant}, nil
 		})
 		done <- result{bounded, start}
 	}()
@@ -227,9 +227,9 @@ func TestALateResultFromAnAbandonedCycleChangesNothing(t *testing.T) {
 	release := make(chan struct{})
 	done := make(chan struct{})
 	go func() {
-		lane.RunBounded(context.Background(), Input{}, func(context.Context, Input) Cycle {
+		lane.RunBounded(context.Background(), Input{}, func(context.Context, Input) (Cycle, error) {
 			<-release
-			return Cycle{Outcome: OutcomeEmitted}
+			return Cycle{Outcome: OutcomeEmitted}, nil
 		})
 		close(done)
 	}()
@@ -252,7 +252,7 @@ func TestALateResultFromAnAbandonedCycleChangesNothing(t *testing.T) {
 func TestAPanickingStepIsAnAbnormalFailureRatherThanACrash(t *testing.T) {
 	lane, _ := boundedLane(t, threeStrikes())
 	admit(t, lane)
-	bounded, start := lane.RunBounded(context.Background(), Input{}, func(context.Context, Input) Cycle {
+	bounded, start := lane.RunBounded(context.Background(), Input{}, func(context.Context, Input) (Cycle, error) {
 		panic("evidence replay exploded")
 	})
 	if start != StartAdmitted {
@@ -275,9 +275,9 @@ func TestCancellationIsNotAFailure(t *testing.T) {
 	admit(t, lane)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	bounded, start := lane.RunBounded(ctx, Input{}, func(context.Context, Input) Cycle {
+	bounded, start := lane.RunBounded(ctx, Input{}, func(context.Context, Input) (Cycle, error) {
 		<-make(chan struct{}) // 취소가 이기도록 영원히 막는다
-		return Cycle{}
+		return Cycle{}, nil
 	})
 	if start != StartAdmitted {
 		t.Fatalf("the cycle was not admitted: %s", start)
@@ -391,9 +391,9 @@ func TestTheWatchdogSleepsForTheDeadlineAndNotSomeOtherPolicyValue(t *testing.T)
 	defer close(release)
 	done := make(chan struct{})
 	go func() {
-		lane.RunBounded(context.Background(), Input{}, func(context.Context, Input) Cycle {
+		lane.RunBounded(context.Background(), Input{}, func(context.Context, Input) (Cycle, error) {
 			<-release
-			return Cycle{}
+			return Cycle{}, nil
 		})
 		close(done)
 	}()
@@ -414,5 +414,45 @@ func TestTheWatchdogSleepsForTheDeadlineAndNotSomeOtherPolicyValue(t *testing.T)
 	<-done
 	if lane.Abandoned() != 1 {
 		t.Fatalf("the deadline elapsed and %d cycles were abandoned", lane.Abandoned())
+	}
+}
+
+// 보통 오류는 세고 다시 시도하며, 비정상과 다른 값으로 기록된다.
+//
+// **5.7 이 이 자리를 찾았다.** `Step` 이 `Cycle` 만 돌려주던 판본에서는 설계
+// 고장표(`design.md:198`)의 "보통 오류" 줄에 닿는 길이 아예 없었다 — 실패는
+// panic 과 마감 시한뿐이고 둘 다 비정상이라 임계값을 기다리지 않는다. 그래서
+// 임계값이라는 개념 자체가 생산 배선에서는 죽은 값이었다.
+func TestAnOrdinaryStepErrorCountsAndDoesNotLatchBelowTheThreshold(t *testing.T) {
+	lane, fake := boundedLane(t, threeStrikes())
+	failing := func(context.Context, Input) (Cycle, error) {
+		return Cycle{}, errors.New("evidence replay failed")
+	}
+
+	for attempt := uint64(1); attempt < lane.Policy().FailureThreshold(); attempt++ {
+		admit(t, lane)
+		bounded, start := lane.RunBounded(context.Background(), Input{}, failing)
+		if start != StartAdmitted {
+			t.Fatalf("attempt %d was refused: %s", attempt, start)
+		}
+		if bounded.Abnormal {
+			t.Fatalf("attempt %d was recorded as abnormal", attempt)
+		}
+		if bounded.Latched {
+			t.Fatalf("attempt %d latched before the threshold %d", attempt, lane.Policy().FailureThreshold())
+		}
+		if lane.ConsecutiveFailures() != attempt {
+			t.Fatalf("attempt %d left the counter at %d", attempt, lane.ConsecutiveFailures())
+		}
+		fake.Advance(lane.Policy().Backoff(attempt) + lane.Policy().Cadence())
+	}
+
+	admit(t, lane)
+	bounded, _ := lane.RunBounded(context.Background(), Input{}, failing)
+	if !bounded.Latched || bounded.Fault.Abnormal {
+		t.Fatalf("the threshold failure did not latch as an ordinary fault: %+v", bounded)
+	}
+	if lane.FirstFailure() != "evidence replay failed" {
+		t.Fatalf("the latch kept %q rather than the step's own error", lane.FirstFailure())
 	}
 }

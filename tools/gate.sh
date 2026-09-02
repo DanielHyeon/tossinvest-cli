@@ -13,8 +13,10 @@
 #   6. make sdd-check 통과
 #   7. make test 통과
 #   8. make test-seams 통과 (tossos_testseams 태그 뒤 테스트 — a118)
-#   9. make vet 통과
-#  10. make validate 통과
+#   9. make test-race 통과 (경합 검출기 — a112 5.7; 그전까지 `-race` 는 이
+#      저장소의 어떤 게이트에서도 돌지 않았다)
+#  10. make vet 통과
+#  11. make validate 통과
 #
 # 3단계(짝 change)에 대하여
 # ------------------------
@@ -53,7 +55,7 @@
 set -eu
 
 # 전체 게이트 단계 수
-TOTAL_STEPS=10
+TOTAL_STEPS=11
 
 # 미완료 task 줄의 정규식. CommonMark 는 목록 marker 앞 0~3칸 들여쓰기를 허용하므로
 # 그것도 미완료로 센다 — 들여썼다고 안 세면 미완료를 숨길 수 있다(더 세는 쪽이 안전하다).
@@ -251,10 +253,10 @@ if ! python3 tools/logic-map/check_analysis.py --change "$CHANGE_ID"; then
 fi
 echo "OK: Function Logic Map"
 
-# ---- 6~10. Full SDD / test / test-seams / vet / validate ------------------
+# ---- 6~11. Full SDD / test / test-seams / test-race / vet / validate -------
 
 STEP_NO=6
-for target in sdd-check test test-seams vet validate; do
+for target in sdd-check test test-seams test-race vet validate; do
 	step "$STEP_NO/$TOTAL_STEPS make $target"
 	if ! make "$target"; then
 		fail "make $target 실패"

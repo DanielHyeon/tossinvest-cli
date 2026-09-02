@@ -191,7 +191,23 @@
   **Left open, named rather than closed.** CI (`.github/workflows/ci.yml`) runs `make test`, `make lint`, `make build` — the logic-map suite lives only in `make sdd-check`/`make gate`, so those 8 guards still never run in CI; changing the workflow is outside this task. And "133 of 133 bundles enumerate" is a claim about table shape, not about coordinate truth: an independent `go/parser` re-derivation confirmed 118 of them against source with zero mismatches, while the other 15 are `revision: base` bundles that `check_analysis`'s source-hash check does not bind at all (13 of those 15 do not match this change's `base-commit.txt`). That gap is structural and pre-existing, but this change's claim inherits it.
 
 - [ ] 5.6 Preserve central integrity handling: journal/Gateway/fence/multiple-owner faults block all new entry while lane/market faults remain local and all safety loops retain independent contexts.
-- [ ] 5.7 Add race, goroutine-leak, queue pressure, fake-clock and fault-injection tests for 8 concurrent workers and 2 coordinators, including simultaneous same-symbol proposals and shutdown/restart.
+- [x] 5.7 Add race, goroutine-leak, queue pressure, fake-clock and fault-injection tests for 8 concurrent workers and 2 coordinators, including simultaneous same-symbol proposals and shutdown/restart. **(Landed 2026-09-02.)**
+
+  `internal/strategyworker/rehearsal_test.go` stands all eight lanes and both coordinators up together and drives them from eight goroutines behind one gate. This is the rehearsal `design.md:255` asks for before the swap, not the swap: the lanes here are test-turned-ON copies, and production callers remain zero.
+
+  **The race detector had never run in this repository.** Neither the `Makefile` nor `.github/workflows/ci.yml` contained the string `-race` before this lot. A task that asks for "race tests" is not satisfied by tests that no gate runs under the detector — that is the a118 lesson applied a third time. `make test-race` now runs it, `make gate` runs that as step 9 of 11, CI runs it, and `tools/sdd/test_race_detector_actually_runs.py` fails if any of those three wirings is removed (five mutants, five caught).
+
+  **Measured, not assumed:** `go test -race ./...` did not finish inside ten minutes, while the seven packages this runtime lives in take 11.9 seconds. So the target names those seven. **Thirty-four other packages whose production code uses goroutines, channels, `sync.` or `atomic.` remain outside the detector** — including `internal/journal` and `internal/app/engine`. That gap is named in the target's comment rather than left silent.
+
+  **What the detector actually bought, measured.** A mutant that moves a lane's first-failure reason into one package-level slot is **green without `-race`** and red with it. Its deterministic sibling — readers seeing the shared slot — is caught by the test alone. So the isolation test has teeth for deterministic cross-talk and needs the detector for the racy kind; both are recorded in `review.md`.
+
+  **5.7 found a hole in 5.3.2 and it is fixed here.** `Step` returned only a `Cycle`, so an *ordinary* error had no way into the lane: the sole failure paths were panic and deadline, both abnormal, both latching without waiting for the threshold. The design's fault table row "deadline/ordinary error → count and retry" was therefore unreachable, and `FailureThreshold` was a dead value for any production driver. `Step` now returns `(Cycle, error)`, which is also what the engine's receipt says (`StrategyCycle = func(context.Context) error`).
+
+  **`design.md:255`'s "spy the shared dispatch handoff" cannot be done from this package, and that is not a gap.** `strategyhandoff`'s own importer census pins the set of packages that may import the seam to the engine alone, because importing it is the only way to call `Admit` — the first draft of this file imported it and the census caught that. So the rehearsal cannot reach the seam at all, which is a stronger statement than a spy counting zero. The real spy belongs in the engine and is 5.1.2/5.2's.
+
+  **Restart forgetting a latch is now a committed assertion, not prose.** `TestRestartForgetsALatchedLaneWhichIsExactlyWhatTask533MustFix` measures both halves — the fresh lane is healthy *and* the original is still latched — so the 5.3.3 gap cannot quietly be believed fixed.
+
+  **What this task does not claim.** It proves these types do not tread on each other when run concurrently. It proves nothing about today's engine: the seven engine blocks no test executes are still listed, with coordinates, in the two FLM bundles' branch-test maps. There is still no production driver, so "8 concurrent workers" here means eight test-driven goroutines, not eight production goroutines.
 
 ## 6. Shared Risk Owner and Dispatch Integration
 

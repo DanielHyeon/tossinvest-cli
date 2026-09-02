@@ -52,9 +52,9 @@ func theDeadlineIsEnforced(t *testing.T) bool {
 	defer close(release)
 	done := make(chan BoundedCycle, 1)
 	go func() {
-		bounded, _ := lane.RunBounded(context.Background(), Input{}, func(context.Context, Input) Cycle {
+		bounded, _ := lane.RunBounded(context.Background(), Input{}, func(context.Context, Input) (Cycle, error) {
 			<-release
-			return Cycle{}
+			return Cycle{}, nil
 		})
 		done <- bounded
 	}()

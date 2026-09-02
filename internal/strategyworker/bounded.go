@@ -57,7 +57,14 @@ const (
 // 이 패키지는 이 함수가 무엇을 하는지 모른다. 마감 시한과 panic 복구를 씌울
 // 대상일 뿐이고, 그 대상이 무엇을 만질 수 있는지는 이 패키지의 import 폐포가
 // 아니라 **넘겨주는 쪽**이 정한다. 생산 배선(태스크 5.1.2)이 그 자리다.
-type Step func(context.Context, Input) Cycle
+//
+// **오류를 따로 돌려주는 이유** (5.7 이 찾은 것). 첫 판본은 `Cycle` 만
+// 돌려줬고, 그러면 설계 고장표(`design.md:198`)의 "보통 오류 — 세고 다시 시도"
+// 줄에 **닿는 길이 없었다**: 실패는 panic 과 마감 시한뿐이고 둘 다 비정상이라
+// 임계값을 기다리지 않는다. 엔진의 영수증도 이쪽이다 — `StrategyCycle` 은
+// `func(context.Context) error` 다. 거절(`OutcomeRefused`)과 오류는 다른 것이라
+// 한 값에 담지 않는다: 거절은 정당한 결과이고 오류는 고장이다.
+type Step func(context.Context, Input) (Cycle, error)
 
 // BoundedCycle 은 유계 사이클 한 번의 결과다.
 //
@@ -211,7 +218,7 @@ func invokeStep(ctx context.Context, input Input, step Step) (outcome BoundedCyc
 			outcome.Err = fmt.Errorf("strategyworker: lane cycle panic: %v", recovered)
 		}
 	}()
-	outcome.Cycle = step(ctx, input)
+	outcome.Cycle, outcome.Err = step(ctx, input)
 	return outcome
 }
 

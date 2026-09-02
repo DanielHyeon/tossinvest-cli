@@ -29,7 +29,8 @@
 | `b647dc91` | 5.1.1 을 5.1.1(타입, `[x]`) 과 5.1.2(배선, `[ ]`) 로 나눔 |
 | `4c4fe685` | 5.1 닫힘(runtime policy) + 5.3 을 5.3.1(`[x]`)/5.3.2(`[ ]`) 로 나눔 — `policy.go`·`lane.go` |
 | `5389ff1e` | `origin/main`(52fb9bb2 WTS 카탈로그) 병합 — 병합 뒤 fingerprint 가 stale 이 되어 `make sdd-sync` 재실행 필요했다 |
-| 이 커밋 | 5.3.2 랜딩(단일 비행·카덴스·마감 시한) + 5.3 의 두 번째 분할 → 5.3.3(`[ ]`, durable latch) — `bounded.go` |
+| `472ce405` | 5.3.2 랜딩(단일 비행·카덴스·마감 시한) + 5.3 의 두 번째 분할 → 5.3.3(`[ ]`, durable latch) — `bounded.go` |
+| 이 커밋 | 5.7 랜딩 — 여덟·둘 리허설, **경합 검출기 배선**(`make test-race`, gate 9/11, CI), `Step` 에 오류 반환 추가 |
 
 랜딩 직전 실측: `make lint` PASS · `make test` 98 ok/0 FAIL · `make test-seams`
 99 ok/0 FAIL · python 77 OK · `check_analysis --change a112` evidence complete ·
@@ -110,7 +111,7 @@ renumber 하면 디렉터리가 둘로 갈릴 수 있다.
 2. ~~커밋 → `make sdd-sync` 재실행 → `make sdd-check`.~~ **끝났다.** fingerprint 는
    sync 시점 HEAD 를 기록하므로, 이 뒤로 커밋이 붙으면 다시 `make sdd-sync` 를 돌린다.
 3. 그다음 열려 있는 태스크로 간다. 5 절에서 남은 것은
-   **5.1.2 · 5.2 · 5.3.3 · 5.6 · 5.7**, 그다음이 6 절이다.
+   **5.1.2 · 5.2 · 5.3.3 · 5.6**, 그다음이 6 절이다.
    - **5.1.1 은 닫혔다 (2026-09-02, `4724c3d0`).** `internal/strategyworker` 에 여덟
      `FamilyWorker` 와 폐포 증명이 섰다 — 5.5 가 미룬 "worker 의 `Cycle` 이 broker
      mutation 에 못 닿는다"가 **새 타입에 대해서는** 시험이 되었다. 상세는
@@ -132,6 +133,22 @@ renumber 하면 디렉터리가 둘로 갈릴 수 있다.
    - **5.7 이 가져갈 빈칸이 측정으로 일곱 개 나왔다.** 엔진 스위트가 한 번도 돌리지
      않는 블록이다(잠금 실패·재시작 대기 실패·사이클 건너뛰기·마감시한과 취소의 경합).
      좌표는 review.md 의 5.3.2 절과 두 FLM 번들의 branch-test-map 에 있다.
+     **5.7 은 닫혔지만 이 일곱은 여전히 열려 있다** — 5.7 의 리허설은 새 타입들을
+     재고 엔진은 재지 않는다. 그 일곱은 5.6(중앙 무결성) 또는 5.1.2 가 가져간다.
+   - **5.7 은 닫혔다 (2026-09-02).** 여덟 레인·두 조정자를 함께 세우는 리허설과,
+     그보다 중요한 것 하나: **이 저장소는 `-race` 를 한 번도 돌린 적이 없었다.**
+     이제 `make test-race`(일곱 패키지, 11.9초)를 게이트 9/11 단계와 CI 가 돌고,
+     배선이 빠지면 `tools/sdd/test_race_detector_actually_runs.py` 가 실패한다.
+     **남은 34개 동시성 패키지는 여전히 검출기 밖이다**(`internal/journal`,
+     `internal/app/engine` 포함; 전체 `-race` 는 10분에 끊겼다). 새 change 가
+     동시성 패키지를 만들면 `RACE_PACKAGES` 에 더할 것.
+   - **5.7 이 5.3.2 의 구멍을 찾아 고쳤다.** `Step` 이 오류를 못 돌려줘서 설계
+     고장표의 "보통 오류" 줄에 닿는 입력이 존재하지 않았다 — 즉 `FailureThreshold`
+     가 죽은 값이었다. 이제 `Step` 은 `(Cycle, error)` 다. 5.1.2 가 실제 사이클을
+     꽂을 때 이 서명을 쓴다.
+   - **`design.md:255` 의 "dispatch handoff 를 spy 로 막아라"는 엔진에서만 할 수 있다.**
+     `strategyhandoff` 의 importer census 가 그 seam 을 들여올 수 있는 패키지를
+     엔진 하나로 못 박는다. 5.1.2/5.2 를 여는 사람이 그 spy 를 세운다.
    - **아직 참인 것:** 생산은 `StrategyMarketWorker` 를 돌리고 그 `Cycle` 은
      `*Context` 클로저라 Journal/Gateway/Guardian 을 들고 있다. AST 산출물이
      `c.Journal.CurrentPositionCampaignCAS`(`:446`)와 `fresh.dispatch.dispatch`(`:453`)를
