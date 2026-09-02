@@ -3448,3 +3448,80 @@ loop 로 찾아 `proposalAuthority` 를 다시 고른다. 고리 2 와 가드는
 | `make sdd-sync` | all indexes current |
 | `make sdd-check` | 외부 a117 스텁에서만 실패(제 것 아님) |
 | `make gate` | **not-applicable** — change 완료 게이트, a112 는 2/10 에서 멈춘다 |
+
+## 2026-09-02 L5 태스크 5.1.1 — FamilyWorker 도입 (구현 기록)
+
+사람이 고른 범위: **타입 도입만.** 여덟 worker 와 폐포 증명을 새 패키지에 세우고
+엔진 배선은 건드리지 않는다. 설계가 정한 순서가 그것이고(`design.md:255` — 여덟
+worker 와 두 조정자를 먼저 dormant/shadow 로 세운다), 그래야 기존 High-risk 함수
+내부를 열지 않으므로 Pre-Edit 선언이 필요 없는 Normal 위험 로트가 된다.
+
+### 로트를 열기 전에 잰 것
+
+| 물음 | 답 | 근거 |
+|---|---|---|
+| `MarketCoordinator` 는 있는가 | **있다** — 5.4.2 가 랜딩했다 | `internal/strategycoordinator/coordinator.go:151` |
+| `FamilyWorker` 는 있는가 | **없다** | `grep -rn FamilyWorker --include=*.go .` 무출력 |
+| 5.1 의 넷 중 무엇이 남았는가 | 타입 키·불변 봉투·병합 큐는 이미 있고, **versioned worker runtime policy 만** 없다 | `Key:57` · `Envelope:104` · `Submit:203` / `RuntimePolicy` 유일 히트는 무관한 journal 시험 |
+| 5.5 가 넘긴 주장은 오늘 참인가 | **거짓이다** | `productionStrategyWorker:364` 가 `Cycle` 을 `c *Context` 클로저로 만든다. AST 산출물이 `Context.runProductionStrategyMarketCycle` 의 호출로 `c.Journal.CurrentPositionCampaignCAS`(`:446`)와 `fresh.dispatch.dispatch`(`:453`)를 열거한다 — 손으로 읽은 것이 아니다 |
+| 계약 값은 어디서 읽는가 | 동결 골든 | `worker_key_fields` 네 개 · `worker_count` 8 · `descriptors` 여덟 줄(전부 OFF/OFF/UNOBSERVED) |
+
+### 설계 판단 하나 — 왜 레인 권한 객체를 받지 않는가
+
+`internal/strategyproposal` 은 `internal/journal` 을 직접 들여온다. worker 가
+`strategyproposal` 의 레인 권한을 인자로 받으면 그 순간 **쓰기 가능한 원장이
+worker 폐포 안에 들어온다** — 스펙이 이름으로 금지한 넷 중 하나다. 그래서 worker 는
+봉인된 값(`strategyarbiter.Proposal` = `strategyflow.Result` + 봉인된 경로 권한)만
+받고, 그 조합의 전이 폐포는 `go list -deps` 로 재어 14 개 내부 패키지이며 그 안에
+journal·execgw·official·app 이 없다.
+
+### 남긴 것
+
+`Run` 이 하는 판정은 **하나**다: 이 제안이 이 worker 의 레인인가. 범위·봉인 재확인·
+용량은 조정자가 이미 판정하므로 다시 세지 않는다 — 조정자 `Submit` 이 가족을 읽는
+자리에 같은 이유의 주석이 있다("같은 판정을 두 곳에 두면 운영자가 보는 진단이 갈린다").
+
+결과 종류는 셋을 **따로** 둔다(`EMITTED`/`DORMANT`/`REFUSED`). "봉투 없음" 하나로
+뭉치면 잠든 worker 와 거절당한 제안이 같은 값이 되고, 그것이 5.4.3 이 고친 혼동
+(사라진 제안과 없던 제안)과 같은 모양이다.
+
+거절 코드는 새로 만들지 않았다. 골든의 `refusal_enums.arbitration` 여섯 개가 계약이고
+`RefusalSealMismatch` 가 "봉인으로 신원을 다시 세울 수 없다"를 이미 덮는다. 새로 만든
+두 문자열은 `Detail` 이며 계약이 아니다.
+
+### 반증
+
+16 뮤턴트 + 폐포 반증 2 종, 전부 CAUGHT, 매번 해시로 원복 확인.
+
+**1 차에서 넷이 살아남았다** — 시장·레인 ID·레인 버전·지평 비교를 **하나씩** 지워도
+열두 시험이 초록이었다. 우연이 아니다: 가족 유도(`strategyarbiter.familyScore`)가
+이미 (horizon, lane_id, lane_version) 세 축으로 점수 행을 찾고, 레인 ID 는 시장마다
+다르다. 그래서 한 축을 지워도 남은 축이 같은 입력을 막는다.
+
+이것을 "동등 변이"로 넘기지 않았다. 넷을 **함께** 지우면 US worker 가 KR 제안을
+받는다 — 각 비교는 정답에 필요하고 개별 관측만 안 되는 것이다. 축마다 시험을 하나씩
+사는 일이 끝나지 않는다는 것은 이 change 가 5.5 에서 13 라운드에 걸쳐 얻은 결론이고,
+답도 같다: 행동은 "가드가 돌고 거절한다"를, 구조(`worker_shape_test.go`)는 "가드가
+이 다섯을 비교한다"를 증명한다. 구조 단언을 넣은 뒤 넷이 전부 죽었고, 삭제가 아닌
+**바꿔치기**(엉뚱한 피연산자·순서 뒤집기·`&&`→`||`)와 골든 목록 훼손(하나 빼기·순서
+바꾸기·하나를 ON 으로 태어나게·열쇠 필드 이름 바꾸기)도 함께 죽는다.
+
+폐포 반증은 `internal/journal` 과 `internal/execgw` 를 실제로 import 해 본 것이고,
+직접 허용목록과 전이 걸음 **양쪽**에서 걸린다.
+
+### 여전히 열려 있는 것
+
+- 생산은 아직 `StrategyMarketWorker` 를 돌린다. "`StrategyMarketWorker` 뒤에 숨기지
+  않는다"의 나머지 절반은 5.2 의 문장 그대로이고, 그전에 dispatch handoff 를 spy 로
+  막는 것이 설계 순서다.
+- 5.1 의 남은 4 분의 1(서버 소유 versioned worker runtime policy)은 손대지 않았다.
+- 새 패키지는 아직 생산 호출자가 0 이다. 골든 대조 시험이 여덟을 생산 상수에 묶어
+  두므로 조용히 썩지는 않지만, 배선 전까지는 쓰이지 않는 코드다.
+
+### Function Logic Map
+
+**not-applicable — 새 패키지의 새 파일뿐이고 기존 함수 내부를 편집하지 않았다.**
+`check_analysis.py` 자신의 판정과 같다(`:143`–`:145`: 새 파일에 새로 생긴 함수는
+비교할 base 로직이 없으므로 "수정된 기존 함수"로 요구하지 않는다). 이 기록이 열거하는
+기존 함수 내부 사실(위 표의 `:446`·`:453`)은 손으로 읽은 것이 아니라 이미 있는 AST
+산출물에서 읽었다.
