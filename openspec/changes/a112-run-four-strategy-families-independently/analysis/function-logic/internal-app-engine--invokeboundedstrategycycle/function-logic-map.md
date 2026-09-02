@@ -23,7 +23,7 @@
 | B1-a (`:889`) | `<-ctx.Done()` — 상위가 먼저 취소됨 | 없음. 사이클 goroutine 은 **계속 돈다** | `ctx.Err(), false, true, true` (`:890`) | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues` |
 | B1-b (`:891`) | `outcome := <-result` — 사이클이 먼저 끝남 | 없음 | `outcome.err, outcome.abnormal, false, false` (`:892`) | `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive` |
 | B1-c (`:893`) | `<-deadline` — 감시견이 먼저 깨어남 | 없음 | 아래 B2 로 | `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction` |
-| B2 (`:894`) | 마감 시한이 울렸는데 `ctx.Err() != nil` | 없음 | `ctx.Err(), false, true, true` (`:895`) | **없음 — 측정으로 확인(아래)** |
+| B2 (`:894`) | 마감 시한이 울렸는데 `ctx.Err() != nil` | 없음 | `ctx.Err(), false, true, true` (`:895`) | `TestTheWatchdogRechecksCancellationInsteadOfTrustingItsOwnTimer` (5.6) |
 | B2-else (`:897`) | 마감 시한이 울렸고 ctx 는 살아 있음 | 없음 | `ErrStrategyCycleDeadline, true, false, true` (`:897`) | `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction` |
 
 ## Calls and live bindings

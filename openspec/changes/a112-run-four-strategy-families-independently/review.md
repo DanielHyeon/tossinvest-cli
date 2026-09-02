@@ -3786,3 +3786,138 @@ CI job 한 단계, 그리고 그 셋 중 하나라도 빠지면 실패하는
   branch-test-map 에 좌표로만 있다.
 - 34개 패키지가 경합 검출기 밖이다.
 - 생산 드라이버가 없으므로 "동시 worker 여덟"은 시험이 만든 goroutine 여덟이다.
+
+## 2026-09-03 L5 태스크 5.6.1 — 무엇이 어디까지 번지는가를 처음으로 쟀다 (구현 기록)
+
+한 줄: **전략 고장이 엔진을 세우는 경로 넷은 이 저장소에서 한 번도 실행된 적이
+없었고, 그 넷이 실행되면 손절을 놓는 loop 도 함께 죽는다.** 5.6 은 그것을
+재는 로트이고, 생산 코드는 한 줄도 바꾸지 않았다.
+
+### 왜 5.6 이 "보존"으로 끝날 수 없었나
+
+태스크 문장은 "중앙 무결성 처리를 **보존**한다"이다. 보존은 대상이 있어야 하고,
+대상은 5.1.2/5.2 의 교체다. 교체 전에는 "보존했다"를 말할 수 없다. 그래서
+5.1/5.3 이 그랬듯 둘로 갈랐다 — 5.6.1 은 **오늘 서 있는 런타임을 재는 계기**를
+만들고, 5.6.2 는 여덟 lane 위에서 같은 세 절을 다시 증명한다. 원문의 모든 절이
+둘 중 하나의 소유다.
+
+계기를 먼저 만든 이유는 측정에서 나왔다. 이 change 의 두 FLM 번들이 남긴
+`count=0` 블록 일곱은 무작위 잔여가 아니다. **그중 넷은 전략 고장이 `Run` 의
+반환에 닿는 유일한 경로다.** supervised loop 가 반환하면 Runtime 은 나머지 loop 를
+전부 취소한다(runtime.go 의 "부분 생존 금지") — fill detection·reconcile·
+exit observation 포함. 즉 그 넷은 "진입 쪽 고장이 손절을 함께 끄는가"를 정하는
+자리이고, 아무도 그것을 돌려 본 적이 없었다.
+
+### 잰 결과 (일곱 전부 `count=1`)
+
+| 블록 | 무엇 | 채운 시험 |
+|---|---|---|
+| `787-790` | 만료 잠금 자체가 실패 → 중앙 | `TestTheFourEscalations…`/"권한 만료의 잠금도…" |
+| `795-796` | 만료 뒤 재시작 대기 실패(비취소) → 중앙 | 같은 시험/"만료 뒤의 재시작 대기도…" |
+| `821-824` | 보통 오류의 잠금 자체가 실패 → 중앙 | 같은 시험/"관측 시각이 없으면…"·"latch revision 이 소진되면…" |
+| `829-830` | 잠근 뒤 재시작 대기 실패(비취소) → 중앙 | 같은 시험/"재시작 기한이 계약 밖이면…" |
+| `800-801` | 잠긴 시장이 큐에 남은 요청을 버린다 | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` |
+| `813-814` | 권한 갱신 전용 worker 가 오류를 삼킨다 | `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError` 외 1 |
+| `894-896` | 마감 시한이 울렸는데 상위가 이미 취소됨 | `TestTheWatchdogRechecksCancellationInsteadOfTrustingItsOwnTimer` |
+
+**넷의 공통점이 답이다.** 셋 다 평가가 실패한 것이 아니라 **감독자 자신의 장부가
+깨진 것**이다: 관측 시각이 없다(`latchMarket` B4, `928:2`), latch revision 이
+소진됐다(B5, `932:2`), 재시작 기한이 30s 계약 밖이다(`waitMarketRestart` B3,
+`845:2`). 보통 오류·panic·마감 시한은 그 목록에 **없다.** 그것이 "lane/market
+고장은 국소로 남는다"의 실질이고, 이제 산문이 아니라 다섯 칸의 값이다.
+
+### 오늘 생산이 실제로 도는 구성은 `813-814` 다
+
+`NewRefreshingPairedStrategyEntrySupervisor` 가 만드는 두 worker 는
+`Effective=false, RefreshesAuthority=true` 이고, `cmd/tossctl/engine.go:647` 이
+Runtime 에 넣는 것은 그 감독자다. 그래서 `refreshOnly` 가 참이고, 사이클 오류는
+잠금 없이 삼켜져 다음 poll 이 다시 시도한다. 즉 **오늘 저널·Gateway 고장은 시장을
+잠그지도, 엔진을 세우지도 않는다 — 그냥 그 사이클이 주문을 내지 않는다.**
+
+### 갈라진 두 권위 — 사람이 정할 것
+
+`runMarket` 의 판정 순서는 `refreshOnly`(813:4)가 `isCentralStrategyIntegrity`
+(816:4)보다 **앞**이다. 그래서 오늘 생산이 도는 유일한 구성에서는 중앙 무결성
+오류조차 삼켜진다.
+
+- `design.md:198` 의 고장표: "journal/Gateway/fence/owner integrity fault → 모든
+  신규 entry fail-closed".
+- 같은 절의 "lane context 와 safety context 를 분리한다" + spec 의 "lane worker 가
+  safety loop 를 취소해서는 안 된다 (MUST NOT)".
+
+순서를 뒤집으면 뒤엣것이 깨진다. 그리고 "fail-closed" 의 수단으로 **프로세스 정지**
+를 고르는 것은 보수적인 선택이 아니다 — 엔진이 서면 손절을 놓는 주체가 사라진다.
+이 저장소에는 진입만 닫는 수단이 이미 있다(`execgw.EntryGate.Block`, reconcile·
+alert·filldetect·flatten 이 전부 그것을 쓴다). 그러므로 이 로트는 **순서를 바꾸지
+않고 값으로 고정**했다(`TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo`,
+변이 M10 이 잡힌다). 바꾸려면 사람이 정한다.
+
+### 한 축 한 시험은 여기서도 끝나지 않았다
+
+`a112_fault_classification_test.go` 는 실제 저널·실제 Guardian·spy Gateway 로 세
+고장을 심고 매번 (a) Gateway place 호출 0, (b) 반환 오류가 중앙으로 분류되지
+않음을 함께 본다. Gateway 오류를 중앙으로 승격시키는 변이 둘은 잡혔다.
+**저널 리스 발급을 승격시키는 변이(M13)는 살아남았다** — 닫힌 저널이 그 줄에
+닿기 전에 소유권 fence 획득에서 먼저 실패하기 때문이다(측정: `sql: database is
+closed`). 5.5·5.1.1 과 같은 결론이고 답도 같다: **세는 범위를 올린다.**
+
+`a112_central_integrity_census_test.go` 는 패키지의 **모든 비시험 파일**을 파싱해
+sentinel 이 나타나는 자리 여덟을 전부 열거하고 얼린다(그중 만드는 자리는 셋,
+전부 `Run` 안). 그리고 `StrategyCentralIntegrityFailure` 의 **생산 호출자가 0**
+임을 확인한다. M13 은 이 시험이 잡는다. 어느 것이 "만들기"이고 어느 것이 "읽기"
+인지 시험이 판정하지 않는 이유는, 그 판정 자체가 우회 지점이 되기 때문이다 —
+열거는 판정하지 않으므로 우회할 것이 없고, 역할은 얼린 목록 옆 주석이 진다.
+
+### 어디에도 적혀 있지 않던 균형 하나
+
+`latchMarket` 의 fault 건네주기 `default` 팔(`964-965`)은 `count=0` 이고
+**도달 불가**다: 스트림 용량 2, 잠긴 시장은 `evaluationState`(857:2)가 거부하므로
+시장당 잠금 한 번, 시장은 정확히 둘. 2 = 2.
+
+이 등식은 어디에도 없었다. 그리고 5.1.2 가 둘을 여덟으로 바꾼다. 그러면 세 번째
+lane 의 잠금이 fault 를 못 건네고, 그 팔이 잠금을 오류로 되돌리고, `runMarket` 이
+중앙으로 올리고, **엔진과 safety loop 가 함께 선다** — "lane 고장은 국소로 남는다"
+를 지키려던 코드에서. `TestTheFaultStreamHoldsOneSlotForEveryWorkerThatCanLatch`
+가 그 등식을 값으로 못 박고, 용량을 1 로 만드는 변이(M7)가 잡힌다.
+
+### `894-896` 은 "안 돈 것"이 아니라 "관측할 수 없던 것"이었다
+
+실제 취소에서는 `ctx.Done()` 갈래와 마감 시한 갈래가 둘 다 준비되고, Go 는 무작위로
+고르며, **두 갈래의 반환값이 같다.** `Done()` 이 절대 준비되지 않으면서 `Err()` 는
+취소를 보고하는 context 를 넣으면 마감 시한 갈래만 열려 결정적으로 돈다. 그때
+이 갈래가 하는 일이 드러난다: 자기 타이머를 믿지 않고 취소를 다시 확인해 **취소를
+`abnormal` 로 승격시키지 않는다.** 생산 임계값이 1 이므로 그 승격은 곧 "정상
+종료가 시장을 잠근다"이다. 대조군과 함께 두 칸을 재고, 재확인을 지우는 변이(M6)가
+잡힌다.
+
+### 반증
+
+`strategy_entry_supervisor.go` 에 10, `strategy_dispatch_cycle.go` 에 3.
+해시 백업에서 복원했고(커밋 전 로트라 `git checkout` 금지), 복원 뒤 SHA-256 을
+대조했다.
+
+| 변이 | 결과 |
+|---|---|
+| M1 관측 시각 가드 삭제 | CAUGHT |
+| M2 latch revision 소진 가드 삭제 | CAUGHT |
+| M3 재시작 기한 상한 완화 | CAUGHT |
+| M4 `refreshOnly` 판정 반전 | CAUGHT |
+| M5 잠긴 시장 건너뛰기 무력화 | CAUGHT |
+| M6 watchdog 의 취소 재확인 삭제 | CAUGHT |
+| M7 fault 스트림 용량 2 → 1 | CAUGHT (`TestTheFaultStreamHolds…`, `TestEveryWorkerCanHandOff…`) |
+| M8 중앙 무결성 판정 무력화 | CAUGHT (기존 `TestCentralIntegrityFailureEscapes…`) |
+| M9 중앙 신호 전달 삭제 | CAUGHT |
+| M10 중앙 판정을 `refreshOnly` 앞으로 | CAUGHT (`TestARefreshOnlyWorkerSwallows…`) |
+| M11 진입 게이트 오류를 중앙으로 승격 | CAUGHT |
+| M12 보호 관측 오류를 중앙으로 승격 | CAUGHT |
+| M13 저널 리스 발급 오류를 중앙으로 승격 | 행동 시험에서 **SURVIVED** → census 가 CAUGHT |
+
+### 닫지 않은 것
+
+- **5.6.2 가 열려 있다.** 여기서 잰 것은 전부 "시장 둘, 시장당 소비자 goroutine
+  하나"의 성질이다. 교체가 그 셋을 다 바꾼다.
+- **순서 결정(refreshOnly 가 중앙보다 앞)은 사람의 것이다.** 이 로트는 고정만 했다.
+- 도달 불가로 확인한 블록 셋(`917-919`, `964-965`, `waitMarketRestart` 의
+  `837-839`·`841-843`)은 메우지 않았다. 각 번들의 branch-test-map 에 왜 열리지
+  않는지를 적었다 — "시험을 안 썼다"와 구별하기 위해서다.
+- 이 로트는 생산 코드를 바꾸지 않았다. `git diff -- '*.go'` 가 비어 있다.

@@ -3,7 +3,8 @@
 작성 2026-09-01, 갱신 2026-09-02. 대상은 이 change 를 이어받는 다음 세션과, 아래
 남은 셋을 정해야 하는 사람이다.
 
-한 줄: **5.5 의 backstop 굳히기는 적대 리뷰 13 라운드 끝에 APPROVE(P0/P1/P2 = 0)로
+한 줄(2026-09-03 갱신): 5 절에서 남은 것은 **5.1.2 · 5.2 · 5.3.3 · 5.6.2** 다.
+그전 한 줄: **5.5 의 backstop 굳히기는 적대 리뷰 13 라운드 끝에 APPROVE(P0/P1/P2 = 0)로
 끝났고, 2026-09-02 에 세 커밋으로 랜딩했다.** 사람이 정해야 하는 것 다섯 중 셋
 (커밋 단위·a117 스텁·CI 배선)은 답을 받아 처리했고, 둘이 남았다.
 
@@ -30,7 +31,8 @@
 | `4c4fe685` | 5.1 닫힘(runtime policy) + 5.3 을 5.3.1(`[x]`)/5.3.2(`[ ]`) 로 나눔 — `policy.go`·`lane.go` |
 | `5389ff1e` | `origin/main`(52fb9bb2 WTS 카탈로그) 병합 — 병합 뒤 fingerprint 가 stale 이 되어 `make sdd-sync` 재실행 필요했다 |
 | `472ce405` | 5.3.2 랜딩(단일 비행·카덴스·마감 시한) + 5.3 의 두 번째 분할 → 5.3.3(`[ ]`, durable latch) — `bounded.go` |
-| 이 커밋 | 5.7 랜딩 — 여덟·둘 리허설, **경합 검출기 배선**(`make test-race`, gate 9/11, CI), `Step` 에 오류 반환 추가 |
+| `89a626c3` | 5.7 랜딩 — 여덟·둘 리허설, **경합 검출기 배선**(`make test-race`, gate 9/11, CI), `Step` 에 오류 반환 추가 |
+| 이 커밋 | 5.6.1 랜딩 — 엔진 빈칸 일곱을 재서 채우고, "무엇이 엔진을 세울 수 있는가"를 패키지 전체 열거로 얼렸다. **생산 코드 변경 0** |
 
 랜딩 직전 실측: `make lint` PASS · `make test` 98 ok/0 FAIL · `make test-seams`
 99 ok/0 FAIL · python 77 OK · `check_analysis --change a112` evidence complete ·
@@ -96,6 +98,25 @@ Story 의 acceptance 는 **그 세션의 proposal.md 에서 그대로 옮겨 적
 실패). 그 세션이 델타를 채워야 한다. 그리고 그 세션이 스스로 다른 번호로
 renumber 하면 디렉터리가 둘로 갈릴 수 있다.
 
+### (6) `refreshOnly` 가 중앙 무결성 판정보다 앞이어야 하는가 (5.6.1 이 올린 것)
+
+`runMarket` 의 판정 순서는 `refreshOnly`(813:4) → `isCentralStrategyIntegrity`
+(816:4)다. 그래서 **오늘 생산이 실제로 돌리는 유일한 구성**(두 worker 다
+`Effective=false, RefreshesAuthority=true`)에서는 중앙 무결성 오류조차 삼켜진다.
+
+두 권위가 갈린다. `design.md:198` 의 고장표는 "journal/Gateway/fence/owner
+integrity fault → 모든 신규 entry fail-closed" 라 하고, 같은 절의 "lane context 와
+safety context 를 분리한다"와 spec 의 "lane worker 가 safety loop 를 취소해서는
+안 된다 (MUST NOT)"는 반대쪽을 가리킨다.
+
+순서를 뒤집으면 전략 평가 하나가 `Run` 을 반환시키고 Runtime 이 **모든 loop 를
+취소한다** — fill/exit/reconcile 포함. **엔진이 서면 손절을 놓는 주체가 없다.**
+그래서 5.6.1 은 순서를 바꾸지 않고 값으로 고정했다. 진입만 닫는 수단은 이미 있다
+(`execgw.EntryGate.Block`; reconcile·alert·filldetect·flatten 이 전부 그것을 쓴다).
+
+**결정할 것:** fail-closed 의 수단을 프로세스 정지로 볼지, EntryGate 로 볼지.
+후자라면 5.6.2 가 그 배선을 가져간다.
+
 ### (5) 닫지 않고 이름만 적은 둘을 받아들일 것인가
 
 - `revision: base` 번들 **15 개**가 소스 해시에 묶이지 않는다(13 개는 이 change 의
@@ -111,7 +132,7 @@ renumber 하면 디렉터리가 둘로 갈릴 수 있다.
 2. ~~커밋 → `make sdd-sync` 재실행 → `make sdd-check`.~~ **끝났다.** fingerprint 는
    sync 시점 HEAD 를 기록하므로, 이 뒤로 커밋이 붙으면 다시 `make sdd-sync` 를 돌린다.
 3. 그다음 열려 있는 태스크로 간다. 5 절에서 남은 것은
-   **5.1.2 · 5.2 · 5.3.3 · 5.6**, 그다음이 6 절이다.
+   **5.1.2 · 5.2 · 5.3.3 · 5.6.2**, 그다음이 6 절이다.
    - **5.1.1 은 닫혔다 (2026-09-02, `4724c3d0`).** `internal/strategyworker` 에 여덟
      `FamilyWorker` 와 폐포 증명이 섰다 — 5.5 가 미룬 "worker 의 `Cycle` 이 broker
      mutation 에 못 닿는다"가 **새 타입에 대해서는** 시험이 되었다. 상세는
@@ -132,9 +153,9 @@ renumber 하면 디렉터리가 둘로 갈릴 수 있다.
      같아서 엔진을 따랐다. **임계값을 1 보다 올리기 전에** 사람이 정해야 한다.
    - **5.7 이 가져갈 빈칸이 측정으로 일곱 개 나왔다.** 엔진 스위트가 한 번도 돌리지
      않는 블록이다(잠금 실패·재시작 대기 실패·사이클 건너뛰기·마감시한과 취소의 경합).
-     좌표는 review.md 의 5.3.2 절과 두 FLM 번들의 branch-test-map 에 있다.
-     **5.7 은 닫혔지만 이 일곱은 여전히 열려 있다** — 5.7 의 리허설은 새 타입들을
-     재고 엔진은 재지 않는다. 그 일곱은 5.6(중앙 무결성) 또는 5.1.2 가 가져간다.
+     좌표는 review.md 의 5.3.2 절과 두 FLM 번들의 branch-test-map 에 있었다.
+     **일곱은 2026-09-03 에 5.6.1 이 전부 채웠다** — 전부 `count=1` 이고 각 번들의
+     branch-test-map 이 어느 시험이 채웠는지를 적는다.
    - **5.7 은 닫혔다 (2026-09-02).** 여덟 레인·두 조정자를 함께 세우는 리허설과,
      그보다 중요한 것 하나: **이 저장소는 `-race` 를 한 번도 돌린 적이 없었다.**
      이제 `make test-race`(일곱 패키지, 11.9초)를 게이트 9/11 단계와 CI 가 돌고,
@@ -169,6 +190,19 @@ renumber 하면 디렉터리가 둘로 갈릴 수 있다.
    - **5.3 도 둘로 갈랐다.** 5.3.1(카운터·backoff·latch)은 닫혔고, 5.3.2 가
      single-flight cadence·monotonic deadline·**durable** latch/recovery 를 갖는다.
      이 로트의 latch 는 프로세스 메모리에 있어 재시작을 못 넘긴다.
+   - **5.6 은 둘로 갈렸고 5.6.1 이 닫혔다 (2026-09-03).** 5.6.1 은 오늘 서 있는
+     런타임의 고장 범위를 재는 계기이고, 5.6.2 는 교체 뒤 같은 세 절을 여덟 lane
+     위에서 다시 증명한다. 재서 나온 것 셋을 5.1.2 를 여는 사람이 반드시 볼 것:
+     (a) 전략 고장이 엔진을 세우는 경로는 넷뿐이고 넷 다 **감독자 자신의 장부가
+     깨진 경우**다 — 평가 실패는 아니다; (b) 오늘 생산이 도는 구성은
+     `refreshOnly` 갈래라 사이클 오류가 잠금 없이 삼켜진다 — 교체하면 그 성질이
+     사라진다; (c) **fault 스트림 용량 2 = 시장 수 2** 라는 균형이 어디에도 적혀
+     있지 않았고, 여덟으로 늘리면서 그것을 함께 옮기지 않으면 **세 번째 lane 의
+     잠금이 엔진과 safety loop 를 함께 세운다.** 지금은
+     `TestTheFaultStreamHoldsOneSlotForEveryWorkerThatCanLatch` 가 막는다.
+   - **`StrategyCentralIntegrityFailure` 는 생산 호출자가 0 이다** —
+     `a112_central_integrity_census_test.go` 가 패키지 전체 열거로 확인한다.
+     새 자리를 여는 것은 "엔진을 세울 새 이유를 만드는 것"이고 그 시험이 실패한다.
 4. **6.2 를 여는 사람은 tasks.md 6.2 본문을 먼저 읽는다.** 아래 4 절이 그 요약이다.
 
 ## 4. 6.2 를 여는 사람에게
