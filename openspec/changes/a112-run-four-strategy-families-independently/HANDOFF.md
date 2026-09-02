@@ -25,7 +25,8 @@
 | `80d3931d` | 병행 세션 스텁 a117 → a119 renumber + PM 레코드 (아래 2 절 (4)) |
 | `364190c8` | `review.md` · `tasks.md` · a112 분석 번들 54 · 이 문서 |
 | `38b17426` | CI 배선 — `sdd-check-ci` 타깃 · `sdd-checks` job · 갈라짐을 막는 시험 (아래 2 절 (2)) |
-| 이 커밋 | 5.1.1 절반 — `internal/strategyworker`: 여덟 FamilyWorker · 폐포 증명 · 구조 단언 |
+| `4724c3d0` | 5.1.1 — `internal/strategyworker`: 여덟 FamilyWorker · 폐포 증명 · 구조 단언 |
+| 이 커밋 | 5.1.1 을 5.1.1(타입, `[x]`) 과 5.1.2(배선, `[ ]`) 로 나눔 |
 
 랜딩 직전 실측: `make lint` PASS · `make test` 98 ok/0 FAIL · `make test-seams`
 99 ok/0 FAIL · python 77 OK · `check_analysis --change a112` evidence complete ·
@@ -106,15 +107,22 @@ renumber 하면 디렉터리가 둘로 갈릴 수 있다.
 2. ~~커밋 → `make sdd-sync` 재실행 → `make sdd-check`.~~ **끝났다.** fingerprint 는
    sync 시점 HEAD 를 기록하므로, 이 뒤로 커밋이 붙으면 다시 `make sdd-sync` 를 돌린다.
 3. 그다음 열려 있는 태스크로 간다. 5 절에서 남은 것은
-   **5.1 · 5.1.1 · 5.2 · 5.3 · 5.6 · 5.7**, 그다음이 6 절이다.
-   - **5.1.1 은 절반 랜딩했다 (2026-09-02).** `internal/strategyworker` 에 여덟
+   **5.1 · 5.1.2 · 5.2 · 5.3 · 5.6 · 5.7**, 그다음이 6 절이다.
+   - **5.1.1 은 닫혔다 (2026-09-02, `4724c3d0`).** `internal/strategyworker` 에 여덟
      `FamilyWorker` 와 폐포 증명이 섰다 — 5.5 가 미룬 "worker 의 `Cycle` 이 broker
      mutation 에 못 닿는다"가 **새 타입에 대해서는** 시험이 되었다. 상세는
      tasks.md 5.1.1 본문과 review.md 의 2026-09-02 절.
+   - **닫힌 것은 절반이고, 나머지 절반은 새 태스크 5.1.2 다.** 원래 5.1.1 문장의
+     "rather than" 앞이 5.1.1, 뒤가 5.1.2 다. 나누면서 빠진 의무는 없다 — 원문의
+     모든 절이 둘 중 하나의 소유이고 5.1.2 는 열려 있다.
    - **아직 참인 것:** 생산은 `StrategyMarketWorker` 를 돌리고 그 `Cycle` 은
      `*Context` 클로저라 Journal/Gateway/Guardian 을 들고 있다. AST 산출물이
      `c.Journal.CurrentPositionCampaignCAS`(`:446`)와 `fresh.dispatch.dispatch`(`:453`)를
-     열거한다. 배선은 5.2 의 문장이고, 그전에 handoff 를 spy 로 막는 것이 설계 순서다.
+     열거한다. 그 교체가 5.1.2 이고, 5.2 는 같은 변경의 감독 쪽이다. 그전에 handoff 를
+     spy 로 막는 것이 설계 순서다(`design.md:255`).
+   - **여덟은 지금 아무도 안 부른다.** 골든 대조 시험이 그것들을 동결된
+     `descriptors` 에 묶어 두므로 조용히 계약에서 어긋나지는 않지만, 5.1.2 전까지
+     생산 호출자는 0 이다.
    - 5.1 은 넷 중 셋이 이미 `strategycoordinator` 에 있다. 남은 하나는 서버 소유
      versioned worker runtime policy 이며, 지금 떼면 소비자가 없는 매니페스트가 된다.
 4. **6.2 를 여는 사람은 tasks.md 6.2 본문을 먼저 읽는다.** 아래 4 절이 그 요약이다.
