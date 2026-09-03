@@ -76,8 +76,21 @@ RACE_PACKAGES = \
 	./internal/strategyflow \
 	./internal/clock
 
+# `internal/app/engine` 은 통째로는 못 들어온다. 2026-09-03 측정:
+# `go test -race -tags tossos_testseams ./internal/app/engine` 은 **14분 46초**다
+# (위 일곱 패키지 전부가 11.9초인 것과 비교). 그래서 태스크 5.2 가 그 패키지에
+# 새로 만든 동시성만 이름으로 골라 돈다 — 같은 날 측정으로 **5.7초**다.
+#
+# 이름으로 고르는 것에는 실패 방식이 하나 있다: 나중에 늘린 동시성 시험이 이
+# 목록에 안 들어가고, 그 사실을 아무도 못 보는 것. a118 이 태그 뒤 테스트에서
+# 이미 한 번 겪은 모양이다. `tools/sdd/test_race_detector_actually_runs.py` 가
+# `a112_refresh_singleflight_test.go` 의 Test 함수 전부와 이 목록을 대조한다.
+RACE_ENGINE_PACKAGE = ./internal/app/engine
+RACE_ENGINE_TESTS = TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns|TestOnlyOneMarketEverLeadsAWave|TestAFailedWaveReachesEveryMarketAndIsNeverCached|TestAMarketWaitingOnTheWaveLeavesWhenItsOwnCycleIsCancelled|TestTheCacheWindowStillMeasuresFromTheWaveStart|TestAPanickingWaveNeverStrandsTheMarketsWaitingOnIt|TestTheMarketThatLeadsAWaveAlwaysPublishesIt|TestARefreshWithoutAClockRefusesBeforeItCanMintAWave|TestAFailedWaveCarriesNoAssemblyForEitherMarket
+
 test-race:
 	go test -race -timeout 15m -count=1 -tags tossos_testseams $(RACE_PACKAGES)
+	go test -race -timeout 5m -count=1 -run '$(RACE_ENGINE_TESTS)' $(RACE_ENGINE_PACKAGE)
 
 # vet only — `make lint` 은 gofmt 검사까지 함께 돌린다. 포맷 검사 없이 정적 분석만
 # 빠르게 돌리고 싶을 때 이 타겟을 쓴다.

@@ -98,6 +98,42 @@ class RaceDetectorActuallyRunsTests(unittest.TestCase):
         self.assertIsNotNone(phony, "Makefile 에 .PHONY 선언이 없습니다")
         self.assertIn(TARGET, phony.group(1).split())
 
+    def test_every_engine_concurrency_test_is_named_in_the_race_filter(self):
+        """이름으로 고른 목록은 **빠뜨릴 수 있다.** 그 빠뜨림을 실패로 만든다.
+
+        `internal/app/engine` 은 통째로 검출기에 넣을 수 없다(2026-09-03 측정:
+        14분 46초). 그래서 `test-race` 는 그 패키지에서 **이름으로** 고른다.
+        고르는 방식에는 a118 이 이미 겪은 실패가 있다 — 나중에 늘어난 시험이
+        어느 게이트에서도 안 도는 것. 아래는 대조다: 그 파일의 Test 함수
+        전부가 목록에 있어야 한다.
+        """
+        source = ROOT / "internal" / "app" / "engine" / "a112_refresh_singleflight_test.go"
+        self.assertTrue(source.is_file(), f"{source} 가 없습니다 — 목록이 가리키는 파일이 사라졌습니다")
+        declared = set(re.findall(r"^func (Test\w+)\(", source.read_text(encoding="utf-8"), re.M))
+        self.assertGreaterEqual(
+            len(declared), 1, "그 파일에 Test 함수가 없습니다 — 목록이 공허합니다"
+        )
+        match = re.search(r"^RACE_ENGINE_TESTS\s*=\s*(.+)$", self.makefile, re.M)
+        self.assertIsNotNone(match, "Makefile 에 RACE_ENGINE_TESTS 선언이 없습니다")
+        filtered = set(match.group(1).strip().split("|"))
+        missing = sorted(declared - filtered)
+        self.assertFalse(
+            missing,
+            f"이 동시성 시험들이 경합 검출기 밖입니다: {missing}. "
+            "RACE_ENGINE_TESTS 에 더하거나, 왜 검출기가 필요 없는지 적으십시오.",
+        )
+        stale = sorted(filtered - declared)
+        self.assertFalse(stale, f"RACE_ENGINE_TESTS 가 없는 시험을 가리킵니다: {stale}")
+
+    def test_the_engine_race_step_actually_runs(self):
+        """recipe 에 줄이 두 개여야 한다. 하나가 사라지면 절반이 조용히 빠진다."""
+        recipe = self._recipe(TARGET)
+        engine = [line for line in recipe if "RACE_ENGINE_TESTS" in line]
+        self.assertEqual(
+            len(engine), 1, f"test-race 가 엔진 동시성 시험을 돌지 않습니다: {recipe}"
+        )
+        self.assertIn("-race", engine[0])
+
     def _recipe(self, target):
         recipe = []
         capturing = False

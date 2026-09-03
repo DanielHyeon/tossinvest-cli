@@ -1,6 +1,6 @@
 # Branch Test Map: `Context.runProductionStrategyMarketCycle`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (422-475); file SHA-256 `66150078e25dfad6d1fec322b955e5f23e3aad77f0525321867a500e0960f58f`. AST branch positions are authoritative.
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (422-475); file SHA-256 `51840da714b49651bee5292a3b51f2814f98b7e2ee5e6996088fb9cceba14d2a`. AST branch positions are authoritative.
 - 이 태스크가 B2 를 편집했다. **어떤 시험도 이 함수에 닿지 않는다** — 아래는 그 사실과 구조적 반증이다.
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|

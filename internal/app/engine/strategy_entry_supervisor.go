@@ -478,19 +478,22 @@ func (c *Context) refreshPairedStrategyEntryProductionAssembly(ctx context.Conte
 	if c == nil || clk == nil {
 		return StrategyEntryProductionAssembly{}, errors.New("engine: paired strategy refresh unavailable")
 	}
-	c.strategyRefreshMu.Lock()
-	defer c.strategyRefreshMu.Unlock()
 	now := clk.Now().UTC()
-	if c.strategyRefresh != nil && !now.Before(c.strategyRefreshAt) && now.Sub(c.strategyRefreshAt) < time.Second {
-		return *c.strategyRefresh, nil
+	// 잠금 안에서 하는 일은 여기까지다: 캐시를 보거나, 도는 파도에 합류하거나,
+	// 지도자가 된다. 원격은 이 아래에서 잠금 없이 돈다 — 왜 그 순서여야
+	// 하는지는 strategy_refresh_wave.go 의 머리말에 잰 값과 함께 적혀 있다.
+	cached, wave, leader := c.joinStrategyRefreshWave(now)
+	if cached != nil {
+		return *cached, nil
 	}
-	fresh, err := c.NewPairedStrategyEntryProductionAssembly(ctx, clk)
-	if err != nil {
-		return StrategyEntryProductionAssembly{}, err
+	if !leader {
+		return awaitStrategyRefreshWave(ctx, wave)
 	}
-	c.strategyRefreshAt = now
-	c.strategyRefresh = &fresh
-	return fresh, nil
+	// 실패를 여기서 다시 비우지 않는다. 비우는 일은 파도 안에서 끝나고, 그래야
+	// 지도자와 기다린 시장이 **같은** 것을 받는다.
+	return c.collectStrategyRefreshWave(wave, now, func() (StrategyEntryProductionAssembly, error) {
+		return c.NewPairedStrategyEntryProductionAssembly(ctx, clk)
+	})
 }
 
 func strategyWorkerEvidenceDigest(values ...string) string {

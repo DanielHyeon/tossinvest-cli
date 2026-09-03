@@ -132,7 +132,32 @@
   **Two things 5.1.2.1 measured that this task must carry.** The lanes see the *arbitrated* proposal for their scope, not the pre-arbitration fan-out — `coordinateMarketProposals` still submits to the coordinator directly, so moving the gate means moving the lanes upstream of arbitration. And the fault-stream balance 5.6.1 found (`cap(faults) == 2 == markets`) is untouched here because lane faults stay inside `strategyworker.Lane`; routing them to the supervisor's stream is what would break it.
 
   **Done.** A lane that is not effective stops its family's proposal from reaching the coordinator, the promotion comes from a signed manifest rather than from legacy approval, and `TestEveryLaneStaysDormantOnAProposalItActuallyOwns` is replaced by a test that shows both states rather than deleted.
-- [ ] 5.2 Replace market-level single-proposal readiness with four independently supervised lane workers per market and keep remote evidence refresh outside the shared assembly mutex.
+- [x] 5.2.1 Keep remote evidence refresh outside the shared assembly mutex. **(Landed 2026-09-03.)**
+
+  **Split note, 2026-09-03.** 원문 5.2 는 두 절이다: (a) "market-level single-proposal readiness 를 시장마다 네 개의 독립 감독 lane worker 로 교체"와 (b) "remote evidence refresh 를 공유 assembly mutex 밖에 둔다". 이 태스크가 (b) 를, 5.2.2 가 (a) 를 가진다. 원문의 모든 절은 둘 중 정확히 하나가 가진다. 가른 이유는 (a) 가 5.1.2.2 와 같은 사람 결정(서명된 4-family 활성화 매니페스트)에 걸려 있는데 (b) 는 아무것에도 안 걸려 있고, 오늘 재서 확인한 실제 결함이기 때문이다.
+
+  **잰 결함 둘.** `refreshPairedStrategyEntryProductionAssembly` 는 `c.strategyRefreshMu` 를 들고 `NewPairedStrategyEntryProductionAssembly` 전체를 돌았다. 그 함수는 official 달력(`TypedMarketCalendar`)과 official FX 를 타고 후보 DB·저널·evidence DB 를 읽는다. CodeGraph 로 이 함수의 호출자는 `runProductionStrategyMarketCycle` 하나이고 그것이 시장마다 하나씩이므로, 경쟁하는 goroutine 은 정확히 둘이다 — KR 의 느린 official 응답이 US 주기 전체를 세웠고, 그 주기는 5.1.2.1 이후 레인 평가까지 들고 있다. 둘째, `strategyRefreshAt` 에 넣는 값이 파도의 **완료** 시각이 아니라 **시작** 시각이라 1초 창은 파도가 1초보다 오래 걸리면 아무도 못 태운다: 3초짜리 파도가 끝나는 순간 캐시는 이미 3초 묵었고, 잠금을 물려받은 두 번째 시장은 창 밖이라 자기 파도를 처음부터 다시 돌았다. **원격이 느릴수록 — 합치는 것이 가장 필요한 때 — 합치기가 정확히 꺼졌다.**
+
+  **고친 모양.** 잠금은 상태 전이만 지킨다. `joinStrategyRefreshWave` 가 잠금 안에서 세 답 중 하나를 준다(신선한 캐시 / 도는 파도에 합류 / 지도자). 파도는 잠금 밖에서 돌고, 기다리는 시장은 mutex 가 아니라 채널에서 기다린다 — 그래서 자기 주기가 취소되면 빠져나온다(오늘 `Lock()` 에 걸린 시장은 ctx 를 못 본다). **1초 창의 의미는 바꾸지 않았다**: 여전히 시작 시각을 잰다. 완료 시각으로 옮기면 캐시 수명이 파도 길이만큼 늘어나는 완화가 되고, 이 태스크는 그것을 요구하지 않는다. 합치기는 창이 아니라 파도가 한다.
+
+  **RED 은 셈이다.** 이 패키지에서 파도를 느리게 만들 방법이 없다(원격은 실제 official client 뒤에 있고 시계로 못 늦춘다). 그래서 편집 **전** 소스에서 실제로 실패한 것은 두 구조 시험이다: 잠금을 만지는 함수와 원격 파도를 부르는 함수가 서로소여야 한다는 것, 그리고 파도를 도는 자리가 하나여야 한다는 것. 잠금을 만지는 함수의 **호출 목록까지** 얼린다 — 하나만 얼리면 잠금 안에서 헬퍼를 부르고 그 헬퍼가 원격을 부르는 한 다리 우회가 남고, 그것이 5.5 의 적대 리뷰가 실제로 뚫은 방법이다.
+
+  **행동 절반은 `testing/synctest` 로 잰다.** sleep 이 하나도 없다. 그리고 이 도구가 여기서 특히 맞는 이유를 쟀다: **뮤텍스에 걸린 goroutine 은 "확실히 멈춰 선" 것으로 치지 않는다**(Go 1.26 측정 — `sync.Mutex.Lock` 에 걸린 goroutine 이 있으면 `synctest.Wait()` 가 영원히 안 돌아온다). 즉 이 시험들은 "채널에서 기다린다"와 "잠금 뒤에 줄 서 있다"를 구별한다.
+
+  **반증 16개 전부 CAUGHT, 대조군 2개 SURVIVED(의도).** 두 개는 두 번째 판이 필요했다. `M7`(지도자가 파도를 만들고 발표하지 않는다)은 첫 배터리에서 **살아남았다** — 위 시험이 전부 *시험이 지도자*라 생산 경로가 지도자가 되는 실행이 하나도 없었기 때문이다. 이름을 얼리는 셈으로도 못 잡는다(그 변이는 수집을 원래 자리에 그대로 둔다). `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` 이 그 구멍을 막는다. `M10b`(발표가 `done` 을 먼저 닫고 값을 나중에 쓴다)는 **`-race` 없이는 초록이고 `-race` 로만 빨갛다** — 5.7 의 N2 와 같은 모양이 이번엔 `internal/app/engine` 에서 나왔다.
+
+  **그래서 검출기를 이 패키지에 배선했다.** 2026-09-03 측정: `go test -race -tags tossos_testseams ./internal/app/engine` 은 **14분 46초**(기존 일곱 패키지 전부가 11.9초)라 통째로는 못 들어온다. 그래서 이 로트가 만든 동시성 시험만 이름으로 골라 돈다 — **5.7초**. 이름 고르기의 실패 방식(나중에 늘린 시험이 목록 밖으로 남는 것, a118 이 겪은 것)은 `tools/sdd/test_race_detector_actually_runs.py` 가 그 파일의 `Test` 함수 전부와 목록을 대조해 막는다.
+
+  **덤으로 고친 것 하나.** 5.6.1 이 BTM 에 적어 둔 커버리지 블록 번호 29개가 5.1.2.1(+16)과 이 로트(+3) 뒤 19줄 밀린 채였다. 산술로 옮기지 않고 프로파일을 다시 떠서 대조했다: 28개가 정확히 +19 자리에 있었고 `count` 도 전부 일치했다. 남은 하나는 실제 블록이 `804-806` 인데 `785-786`(= 804-805)로 적혀 있었다 — 옮겨 적을 때 한 줄 어긋난 것이고, 잰 값으로 바꿨다.
+
+  **이 태스크가 주장하지 않는 것.** 시장 단위 단일 제안 준비 상태는 그대로다(5.2.2). 7.5 의 "no remote I/O under strategy refresh mutex" 성능·운용 시험은 여기 없다 — 이 로트가 넣은 것은 구조 셈과 동시성 행동 시험이고, 부하 아래 지연을 재는 것은 7.5 다. 그리고 `internal/app/engine` 의 나머지 동시성은 여전히 검출기 밖이다.
+- [ ] 5.2.2 Replace market-level single-proposal readiness with four independently supervised lane workers per market.
+
+  **왜 열려 있나.** `buildProductionStrategyMarketWorker` 가 `p.dispatchHandoff().Single()` 로 시장의 준비 상태를 정한다 — 한 시장에 소유자 범위가 둘이면 `HANDOFF_OVER_CAPACITY` 로 그 시장 worker 전체가 dormant 가 된다. 동결 골든의 `queue.market_wide_single_proposal_assumption_forbidden: true` 와 스펙의 "서로 다른 symbol/owner scope 를 market-wide proposal 하나로 접어서는 안 되며 (MUST NOT)" 가 금지하는 바로 그 모양이고, 5.5 는 그 상한에 **이름만 붙였지 들어내지 않았다**.
+
+  **들어내는 것이 왜 사람 결정에 걸리나.** 오늘 소유자 범위가 둘인 시장은 아무 주문도 내지 않는다. 상한을 들어내면 그 시장이 거래를 시작한다 — 즉 진입 발행이 늘어나는 방향의 생산 동작 변화다. 네-가족 런타임이 OFF 인 동안 그런 변화가 생기면 "토글 OFF 는 upstream 동작과 동일해야 한다"에 정면으로 어긋난다. 그래서 이 절은 5.1.2.2 와 **같은** 서명된 활성화 매니페스트(사람 결정 (7))에 걸려 있다.
+
+  **Done.** 시장의 준비 상태가 "이 시장에 제안이 정확히 하나"가 아니라 네 레인 각자의 준비 상태에서 나오고, 각 레인이 자기 cadence·큐·마감·health·latch 로 **독립 감독**되며(오늘은 시장 주기가 넷을 차례로 돌린다), 소유자 범위마다 최대 하나가 bounded handoff 를 기다린다. 상한을 실제로 올리는 편집은 매니페스트가 선 뒤에만 한다.
 - [x] 5.3.1 Implement the lane-local health/failure counters, bounded retry/backoff and the entry-only latch. **(Landed 2026-09-02.)**
 
   **Split note, 2026-09-02.** The original 5.3 read "Implement lane-local single-flight cadence, monotonic deadline, health/failure counters, bounded retry/backoff and durable entry-only latch/recovery conditions." It is now three tasks: this one owns "health/failure counters, bounded retry/backoff and [the] entry-only latch", 5.3.2 owns "single-flight cadence, monotonic deadline", and 5.3.3 owns the word **durable** together with "recovery conditions". Every clause of the original is owned by exactly one of the three; 5.3.2 landed 2026-09-02 and 5.3.3 is open. The seam is placed where it is because this lot's latch is in process memory: it survives nothing.

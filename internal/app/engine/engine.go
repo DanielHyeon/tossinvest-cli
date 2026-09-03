@@ -286,9 +286,15 @@ type Context struct {
 	strategyProjectionMu sync.RWMutex
 	strategyProjection   *strategyprojection.Store
 	strategySupervisor   *StrategyEntrySupervisor
-	strategyRefreshMu    sync.Mutex
-	strategyRefreshAt    time.Time
-	strategyRefresh      *StrategyEntryProductionAssembly
+	// strategyRefreshMu 는 아래 세 칸의 상태 전이만 지킨다. 원격 권한 수집은
+	// 이 잠금 **밖에서** 돌고, 그 사실은 a112_refresh_wave_test.go 가 이
+	// 패키지의 모든 비시험 파일을 훑어 지킨다.
+	strategyRefreshMu sync.Mutex
+	strategyRefreshAt time.Time
+	strategyRefresh   *StrategyEntryProductionAssembly
+	// strategyRefreshWave 는 지금 돌고 있는 권한 수집 한 번이다. nil 이면
+	// 도는 것이 없다. 두 시장이 같은 파도를 타게 하는 것이 이 칸의 전부다.
+	strategyRefreshWave *strategyRefreshWave
 }
 
 // ConditionalMutator is the conditional-order write surface. It is an alias of

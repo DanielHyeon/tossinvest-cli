@@ -1,6 +1,6 @@
 # Branch Test Map: `buildProductionStrategyMarketWorker`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (378-420); file SHA-256 `1c2432d0f49db59209fc147f57a0c68d30d15596e68642aff8356ea29b0d69d5`. AST branch positions are authoritative.
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (378-420); file SHA-256 `51840da714b49651bee5292a3b51f2814f98b7e2ee5e6996088fb9cceba14d2a`. AST branch positions are authoritative.
 - 이 태스크는 B2 만 편집했다. 나머지 행은 측정만 갱신했다.
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|

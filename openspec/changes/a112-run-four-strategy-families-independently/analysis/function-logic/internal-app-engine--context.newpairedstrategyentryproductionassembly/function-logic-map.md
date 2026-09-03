@@ -1,7 +1,7 @@
 # Function Logic Map: `NewPairedStrategyEntryProductionAssembly`
 
 - Source: `internal/app/engine/strategy_entry_supervisor.go`
-- Current-base source SHA-256: `66150078e25dfad6d1fec322b955e5f23e3aad77f0525321867a500e0960f58f`
+- Current-base source SHA-256: `51840da714b49651bee5292a3b51f2814f98b7e2ee5e6996088fb9cceba14d2a`
 - Signature: `Context.NewPairedStrategyEntryProductionAssembly(params=2, results=2)`
 - Source range: `262:1`–`330:2`
 - AST evidence: `ast.json`, generated from frozen base `016da6245feb60e13971388be386c2c2041469a8`.

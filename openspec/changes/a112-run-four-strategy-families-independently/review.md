@@ -4049,3 +4049,117 @@ census 가 잡으려는 편집과 구분되지 않는다.** 그래서 좌표를 
   옮기는 순간 그 등식이 깨진다.
 - 레인마다 자기 goroutine·cadence 를 갖는 것은 5.2 다. 지금은 시장 주기가
   네 레인을 차례로 돌린다.
+
+## 2026-09-03 L5 태스크 5.2.1 — 원격 권한 수집이 공유 잠금 밖으로 나갔다 (구현 기록)
+
+### 편집 전에 잰 것
+
+| 사실 | 근거 |
+|---|---|
+| `refreshPairedStrategyEntryProductionAssembly` 가 `c.strategyRefreshMu` 를 들고 `NewPairedStrategyEntryProductionAssembly` 전체를 돈다 | 편집 전 `ast.json`: `c.strategyRefreshMu.Lock` `481:2`, `defer …Unlock` `482:2`, `c.NewPairedStrategyEntryProductionAssembly` `487:16` — 셋 다 한 본문 안 |
+| 그 파도가 원격을 탄다 | `NewPaired…` 본문이 `newStrategyScheduleAuthorityLoader(…, c.official, …)`(→ `TypedMarketCalendar`)와 `newStrategyFXAuthorityLoader(…, c.official, …)`(→ `officialfx.ProductionAuthorityService`)를 만들고 각각 `collect` 를 부른다 |
+| 경쟁하는 goroutine 은 정확히 둘 | CodeGraph: `refreshPaired…` 의 호출자는 `runProductionStrategyMarketCycle` 하나뿐이고, 그것은 시장마다 하나씩 돈다 |
+| 1초 창이 파도의 **시작** 시각을 잰다 | 편집 전 `ast.json`: `:=` at `483:2`(now 읽기)가 `487:16`(파도)보다 앞이고 `=` at `491:2`(`strategyRefreshAt = now`)가 뒤 |
+
+두 번째 사실의 귀결이 이 로트의 핵심이다. 파도가 1초보다 오래 걸리면 그것이 끝나는
+순간 캐시는 이미 그만큼 묵었고, 잠금을 물려받은 두 번째 시장은 창 밖이라 자기 파도를
+처음부터 다시 돈다. **원격이 느릴수록 합치기가 정확히 꺼진다.**
+
+### RED (편집 전 소스에서 실제로 실행)
+
+```
+--- FAIL: TestTheRemoteAuthorityWaveNeverRunsUnderTheSharedAssemblyMutex
+    Context.refreshPairedStrategyEntryProductionAssembly 가 공유 assembly mutex 를 들고 원격 권한 파도를 돌린다.
+    그 함수의 호출 목록: [c.NewPairedStrategyEntryProductionAssembly c.strategyRefreshMu.Lock
+                        c.strategyRefreshMu.Unlock clk.Now clk.Now().UTC errors.New now.Before now.Sub]
+--- FAIL: TestExactlyOneFunctionRunsTheRemoteAuthorityWave
+     got: Context.refreshPairedStrategyEntryProductionAssembly
+    want: Context.collectStrategyRefreshWave
+```
+
+행동 절반은 RED 를 만들 수 없다. 이 패키지에서 파도를 느리게 만드는 방법이 없기
+때문이다(원격은 실제 official client 뒤에 있고 주입된 시계로 늦출 수 없다). 그 절반의
+이빨은 RED 가 아니라 아래 배터리가 지운다. 이것을 침묵으로 넘기지 않고 BTM 의 B3 칸에
+"빨갛다가 아니라 없다"로 적었다.
+
+### 반증: 16개 CAUGHT, 대조군 2개 SURVIVED(의도)
+
+| 변이 | 심은 것 | 결과 |
+|---|---|---|
+| M1 | 진행 중인 파도 확인을 지운다(모두가 지도자) | CAUGHT |
+| M2 | 발표가 파도를 자리에서 안 내린다 | CAUGHT |
+| M3 | 실패한 파도도 캐시에 넣는다 | CAUGHT |
+| M4 | 창을 `<` 에서 `<=` 로 | CAUGHT |
+| M5 | 기다리는 쪽이 `ctx` 를 안 본다 | CAUGHT (거품 교착 감지) |
+| M6 | 기다린 쪽에 오류를 안 준다 | CAUGHT |
+| M7 | 지도자가 파도를 만들고 발표하지 않는다 | **1차 SURVIVED** → 아래 |
+| M8 | 파도를 잠금 안으로 다시 넣는다 | CAUGHT (호출 목록 셈) |
+| M9 | 패닉 발표 defer 를 지운다 | CAUGHT (거품 교착 감지) |
+| M10 | 발표가 파도에 값을 안 싣는다 | CAUGHT |
+| M10b | 발표가 `done` 을 먼저 닫고 값을 나중에 쓴다 | **`-race` 없이 SURVIVED / `-race` 로 CAUGHT** |
+| M10c | 발표가 `done` 을 안 닫는다 | CAUGHT (거품 교착 감지) |
+| M11 | 합류한 쪽도 지도자라고 답한다 | CAUGHT |
+| M12 | 기다리는 대신 빈 값을 돌려준다 | CAUGHT |
+| M13 | 실패한 파도를 비우지 않는다 | CAUGHT |
+| M15 | 잠금 안에서 헬퍼 한 다리를 거쳐 원격을 부른다 | CAUGHT (얼린 호출 목록) |
+| C1 | 무관한 주석 한 줄 | SURVIVED (의도) |
+| C2 | 수신자 철자를 `c` 에서 `owner` 로 바꿔 파도를 부른다 | SURVIVED (의도 — 아래) |
+
+원복은 해시 백업으로 하고 SHA-256 으로 확인했다(`git checkout` 은 커밋 전 GREEN 까지
+지운다 — 이 change 가 5.3.1 에서 이미 배운 것).
+
+**M7 이 살아남은 이유가 이 로트에서 가장 중요한 발견이다.** 위 시험이 전부 *시험이
+지도자*였다 — `joinStrategyRefreshWave` 로 지도자 자리를 잡고, 생산 함수는 언제나
+기다리는 쪽으로만 들어갔다. 그래서 "지도자가 파도를 발표한다"를 재는 실행이 하나도
+없었다. 이름을 얼리는 셈도 못 잡는다: M7 은 수집을 원래 함수에 그대로 두므로 자리 셈이
+초록이다. M7 의 실제 결과는 조용하지 않다 — 파도가 자리에 남고 아무도 닫지 않으므로
+**그 뒤의 모든 주기가** 죽은 파도에 합류해 자기 ctx 가 죽을 때까지 기다린다. 두 시장의
+진입이 함께 멈춘다. `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` 이 생산 경로를
+지도자로 세워 그 구멍을 막는다.
+
+**M15 와 C2 는 이 셈의 두 우회로를 각각 막았다는 확인이다.** M15 는 잠금 안에서
+헬퍼 하나를 부르고 그 헬퍼가 원격을 타는 모양이다 — 잠금을 만지는 함수 **목록**만
+얼렸다면 초록이었을 것이고, 그 목록이 5.5 의 적대 리뷰가 실제로 뚫은 자리다. 얼린
+**호출 목록**이 그것을 잡는다. C2 는 반대 방향이다: 첫 판본의 셈은 호출 철자를
+`c.NewPairedStrategyEntryProductionAssembly` 로 통째로 비교했고, 수신자 이름을 하나
+바꾸는 편집이면 셈이 눈이 멀었다. 지금은 메서드 이름만 보므로 C2 는 여전히 보인다
+(그래서 SURVIVED 가 맞는 답이다). 맨 이름을 빼는 이유도 잰 것이다: 이 패키지에는 같은
+이름의 패키지 수준 값 전용 생성자가 따로 있고 그것은 원격을 타지 않는다.
+
+**M10b 가 검출기의 값을 잰 두 번째 사례다.** 5.7 의 N2 와 같은 모양이 이번엔
+`internal/app/engine` 에서 나왔다: `-race` 없이 5회 반복해도 초록이고, `-race` 로는
+`WARNING: DATA RACE` 로 즉시 빨갛다.
+
+### 검출기 배선
+
+| 잰 것 | 값 |
+|---|---|
+| `go test -race -tags tossos_testseams ./internal/app/engine` | **14분 46초** |
+| 기존 `RACE_PACKAGES` 일곱 개 전부 | 11.9초 (5.7 측정) |
+| 이 로트의 동시성 시험만 `-race` 로 | **5.7초** |
+| `make test-race` 전체 (배선 뒤) | 13.9초 |
+
+그래서 패키지를 통째로 넣지 않고 이름으로 골랐다. 이름 고르기의 실패 방식은 a118 이
+이미 겪은 것 — 나중에 늘린 시험이 목록 밖으로 조용히 남는 것. `tools/sdd/
+test_race_detector_actually_runs.py` 에 두 시험을 더해, `a112_refresh_singleflight_test.go`
+의 `Test` 함수 전부가 목록에 있어야 하고 recipe 에 그 줄이 있어야 한다.
+
+### 덤: 5.6.1 의 커버리지 블록 번호를 다시 쟀다
+
+5.6.1 이 BTM 에 적어 둔 `block A-B` 29개가 5.1.2.1(+16)과 이 로트(+3) 뒤 19줄 밀린
+채였고 아무도 옮기지 않았다. 산술로 옮기지 않고 프로파일
+(`go test -count=1 -tags tossos_testseams -coverprofile ./internal/app/engine/`,
+2026-09-03, 77.6% of statements)을 다시 떠서 대조했다: 28개가 정확히 +19 자리에 있었고
+기록된 `count` 도 전부 일치했다. 남은 하나는 실제 블록이 `804-806` 인데 `785-786`
+(= 804-805)로 적혀 있었다 — 5.6.1 이 적을 때 한 줄 어긋난 것이다. 옮겨 적지 않고 잰
+값을 넣고, 그 사실을 해당 BTM 에 적었다.
+
+### 이 로트가 주장하지 않는 것
+
+- 시장 단위 단일 제안 준비 상태는 그대로다. 그것은 5.2.2 이고 5.1.2.2 와 같은 사람
+  결정에 걸려 있다.
+- 7.5 의 "no remote I/O under strategy refresh mutex" 성능·운용 시험은 여기 없다.
+  이 로트는 구조 셈과 동시성 행동을 쟀고, 부하 아래 지연은 재지 않았다.
+- `internal/app/engine` 의 나머지 동시성(감독자 루프·투영 저장소·dispatch 주기)은
+  여전히 검출기 밖이다. 통째로 넣으면 게이트가 15분 늘어난다.
+

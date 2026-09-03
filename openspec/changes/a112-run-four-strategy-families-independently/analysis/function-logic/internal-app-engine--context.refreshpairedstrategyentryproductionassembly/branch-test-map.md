@@ -1,12 +1,16 @@
 # Branch Test Map: `refreshPairedStrategyEntryProductionAssembly`
 
-- Source SHA-256: `1c2432d0f49db59209fc147f57a0c68d30d15596e68642aff8356ea29b0d69d5`; AST branch locations are authoritative.
-- L0 did not alter this function and does not claim an existing test covers a branch.
+- Source SHA-256: `51840da714b49651bee5292a3b51f2814f98b7e2ee5e6996088fb9cceba14d2a`; AST branch locations are authoritative.
+- L5 5.2.1 이 이 함수 본문을 바꿨다. 아래 RED 는 편집 **전** 소스에서 실제로 실행해
+  얻은 결과이고, GREEN 은 편집 뒤의 결과다.
 
-| Branch | Scenario anchor | Required test disposition | RED observed | GREEN observed |
+| Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 478:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B2 | if at 484:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B3 | if at 488:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B1 | if at 478:2 — `c` 또는 시계가 없다 | `TestARefreshWithoutAClockRefusesBeforeItCanMintAWave` | n/a (편집 전과 동작 같음; 이 로트가 처음 시험을 붙였다) | yes |
+| B2 | if at 486:2 — 창 안의 캐시 | `TestTheCacheWindowStillMeasuresFromTheWaveStart`, `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` | n/a (창 의미는 바꾸지 않았다; 이 로트가 처음 시험을 붙였다) | yes |
+| B3 | if at 489:2 — 지도자가 아니면 파도에 합류 | `TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns`, `TestAFailedWaveReachesEveryMarketAndIsNeverCached`, `TestAMarketWaitingOnTheWaveLeavesWhenItsOwnCycleIsCancelled`, `TestAPanickingWaveNeverStrandsTheMarketsWaitingOnIt`, `TestAFailedWaveCarriesNoAssemblyForEitherMarket` | **no — 정직하게 적는다: 이 갈래도 그것을 재는 시험도 편집과 함께 생겼다. 편집 전 소스에서는 컴파일되지 않으므로 "빨갛다"가 아니라 "없다"이다. 이 갈래의 이빨은 RED 가 아니라 반증 배터리가 지운다(M1·M11·M12) — 셋 다 CAUGHT** | yes |
+| 본문 | 494:9 — 지도자가 잠금 **밖에서** 수집한다 | `TestTheRemoteAuthorityWaveNeverRunsUnderTheSharedAssemblyMutex`, `TestExactlyOneFunctionRunsTheRemoteAuthorityWave`, `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` | **yes — 두 셈 시험 모두 편집 전 소스에서 실패했다(기록: review.md 5.2.1 절)** | yes |
 
-A lot may replace a planned row only after recording its exact test name and actual RED/GREEN command result.
+RED 는 손으로 옮겨 적은 것이 아니라 편집 전 `go test` 출력이다: 셈 시험은
+`Context.refreshPairedStrategyEntryProductionAssembly 가 공유 assembly mutex 를 들고
+원격 권한 파도를 돌린다` 로 실패했고, 자리 셈은 `got: …refreshPaired…` 로 실패했다.
