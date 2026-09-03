@@ -1,11 +1,11 @@
 # Function Logic Map: `Context.runProductionStrategyMarketCycle`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (422-475)
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (426-492)
 - Function: `Context.runProductionStrategyMarketCycle` in package `engine`
 - Signature: `Context.runProductionStrategyMarketCycle(params=3, results=1)`
-- File SHA-256: `51840da714b49651bee5292a3b51f2814f98b7e2ee5e6996088fb9cceba14d2a`
+- File SHA-256: `627c647d087032586c4b63ca315a30fd9fad6b51af329fa4e8bf4fecd7104e08`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
-- AST evidence: `ast.json` — AST branches 5.
+- AST evidence: `ast.json` — AST branches 7.
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
@@ -37,21 +37,32 @@
 고정한다)이 함께 막는다.
 
 **5.1.2 가 더한 것 — 여덟 전략군 레인의 사이클.** 이 함수는 이제 새로 고침 뒤,
-handoff 앞에서 이 시장의 네 레인을 한 번씩 돌린다(`441:2`). 그 자리에서 도는 일은
+handoff 앞에서 이 시장의 네 레인을 한 번씩 돌린다(`455:12`). 그 자리에서 도는 일은
 `strategyFamilyLaneStep` 하나이고 그 함수는 인자가 `*strategyworker.Lane` 뿐이라
 `*Context` 를 들 수 없다 — 오늘 이 함수의 몸통이 `c.Journal.CurrentPositionCampaignCAS`
-(`462:15`)와 `fresh.dispatch.dispatch`(`469:12`)를 들고 있는 것과 정확히 대비되는
+(`479:15`)와 `fresh.dispatch.dispatch`(`486:12`)를 들고 있는 것과 정확히 대비되는
 지점이다. **그 두 호출은 여전히 여기 있고, 그것이 맞다** — 스펙은 변경 권한을
 시장 하나에 하나만 두라고 요구하고, 이 함수가 그 하나다. 5.1.2 가 옮긴 것은
 *전략군의* 사이클이지 시장의 변경 권한이 아니다.
 
-**반환값이 없는 호출인 이유.** `evaluate` 는 아무것도 돌려주지 않는다. 관측을
-돌려주면 이 함수가 그것을 버릴 수 있고, 버린 것은 아무도 못 본다 — 위 fix2 가
-`Single()` 의 boolean 에서 배운 것과 같은 답이다. 결과는 레인 런타임 안에 남고
-`observations()` 가 읽는다.
+**관측은 돌려주지 않고, 오류만 돌려준다(5.3.3).** 관측을 돌려주면 이 함수가 그것을
+버릴 수 있고, 버린 것은 아무도 못 본다 — 위 fix2 가 `Single()` 의 boolean 에서 배운 것과
+같은 답이다. 결과는 레인 런타임 안에 남고 `observations()` 가 읽는다. 반면 `evaluate` 가
+돌려주는 **오류**는 "durable latch 를 원장에 남기지 못했다"는 뜻이고(B3, `455:2`),
+조용히 넘기면 다음 재시작이 잠긴 레인을 연다 — 5.3.3 이 없애려는 바로 그 동작이다.
+
+**활성화 세대의 출처(`456:3`).** `fresh.schedule.forMarket(market).restore.Activation.Generation()`
+이고 다른 수를 넣으면 durable latch 의 복구 조건이 서명과 무관해진다. 그 값은 ed25519
+서명 매니페스트를 사람이 바꿔야만 오르며, 어떤 식이 이 자리에 오는지는
+`TestTheRecoveryGenerationComesFromTheSignedActivationAndNothingElse` 가 패키지 전체
+열거로 얼려 둔다. 행동 시험으로는 못 잡는다 — 잘못된 수도 그냥 커지기 때문이다.
+
+**레인을 세우는 자리가 ctx 를 받는 이유(`451:16`).** 레인은 열린 채로 태어난 뒤 나중에
+잠기는 것이 아니라 **durable 기록에서** 태어난다. 만들어 놓고 나중에 되살리면 그사이에
+`Latched()` 가 거짓말을 하고, 그 창을 아무도 못 본다.
 
 **레인 사이클이 새로 고침 잠금 밖인 이유.** 레인은 마감 시한 감시견을 달고 돈다.
-`c.strategyRefreshMu`(`481:2`) 안에서 돌리면 레인 하나의 느린 주기가 두 시장의 모든
+`c.strategyRefreshMu` 안에서 돌리면 레인 하나의 느린 주기가 두 시장의 모든
 권한 수집을 함께 세운다. `TestTheMarketCycleRunsItsLanesAndTheRefreshDoesNot` 가
 `evaluate` 를 부르는 자리를 패키지 전체에서 세어 이 함수 하나로 고정한다.
 
@@ -77,42 +88,51 @@ The signature above is the exhaustive input/result record; this map does not inf
   그래서 이 함수에 대한 근거는 실행이 아니라 **소스에 무엇이 쓰여 있는지**뿐이고,
   아래 반증 표의 뮤테이션은 전부 AST 가드가 죽인 것이다.
 
-Exact AST return positions: 425:3, 444:3, 460:2, 464:4, 467:4, 471:4, 473:3.
+Exact AST return positions: 429:3, 453:3, 458:3, 461:3, 477:2, 481:4, 484:4, 488:4, 490:3.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 424:2 | arm not entered (양쪽 스위트) — assembly refresh 실패 |
-| B2 | if | 443:2 | **5.5-fix2 가 바꾼 분기** — `fresh.dispatch == nil`. handoff 거절은 더 이상 이 조건에 없다(경계 안으로 갔다). arm not entered (양쪽 스위트) |
-| B3 | if | 463:3 | arm not entered (양쪽 스위트) — 캠페인 CAS 읽기 실패 |
-| B4 | if | 466:3 | arm not entered (양쪽 스위트) — 이미 claim 되었거나 FLAT/CLOSED 아님 |
-| B5 | if | 470:3 | arm not entered (양쪽 스위트) — lease 이미 소모 |
+| B1 | if | 428:2 | arm not entered — assembly refresh 실패 |
+| B2 | if | 452:2 | **5.3.3 이 더한 분기** — durable latch 를 읽으며 레인을 세우지 못했다. arm not entered |
+| B3 | if | 455:2 | **5.3.3 이 더한 분기** — 레인 주기가 durable latch 를 남기지 못했다. arm not entered |
+| B4 | if | 460:2 | `fresh.dispatch == nil`. handoff 거절은 더 이상 이 조건에 없다(5.5-fix2 가 경계 안으로 옮겼다). arm not entered |
+| B5 | if | 480:3 | arm not entered — 캠페인 CAS 읽기 실패 |
+| B6 | if | 483:3 | arm not entered — 이미 claim 되었거나 FLAT/CLOSED 아님 |
+| B7 | if | 487:3 | arm not entered — lease 이미 소모 |
 
 이 공백은 이 태스크가 만든 것이 아니다. 이 함수는 `*Context` 와 살아 있는 journal·gateway 를
 요구하고, 그 배선은 태스크 5.7(fault injection·race)과 L6 의 몫이다. 여기서는 그 공백을
-숨기지 않고 적는다 — 진입 0 은 통과가 아니다.
+숨기지 않고 적는다 — 진입 0 은 통과가 아니다. **B2·B3 도 마찬가지다**: 5.3.3 이 그 두
+갈래를 값으로 재는 시험을 `a112_lane_latch_durability_test.go` 에 두었지만, 그 시험들은
+이 함수가 아니라 레인 런타임을 직접 부른다. 이 함수를 통째로 도는 시험은 여전히 없다.
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `c.refreshPairedStrategyEntryProductionAssembly` | 423:16 |
-| `evaluate` | 441:2 |
-| `c.productionStrategyLanes` | 441:2 |
-| `strategyLaneInputs` | 442:3 |
-| `fresh.proposals.forMarket` | 442:36 |
-| `Deliver` | 460:9 |
-| `dispatchHandoff` | 460:9 |
-| `fresh.proposals.forMarket` | 460:9 |
-| `delivered.Result` | 461:14 |
-| `c.Journal.CurrentPositionCampaignCAS` | 462:15 |
-| `string` | 462:77 |
-| `fresh.dispatch.dispatch` | 469:12 |
-| `errors.Is` | 470:6 |
+| `c.refreshPairedStrategyEntryProductionAssembly` | 427:16 |
+| `c.productionStrategyLanes` | 451:16 |
+| `lanes.evaluate` | 455:12 |
+| `restore.Activation.Generation` | 456:3 |
+| `fresh.schedule.forMarket` | 456:3 |
+| `strategyLaneInputs` | 457:3 |
+| `fresh.proposals.forMarket` | 457:36 |
+| `Deliver` | 477:9 |
+| `dispatchHandoff` | 477:9 |
+| `fresh.proposals.forMarket` | 477:9 |
+| `delivered.Result` | 478:14 |
+| `c.Journal.CurrentPositionCampaignCAS` | 479:15 |
+| `string` | 479:77 |
+| `fresh.dispatch.dispatch` | 486:12 |
+| `errors.Is` | 487:6 |
 
 ## State mutations and fallbacks
 
-- AST assignments: 4. Defers: 0. Goroutine statements: 0.
-- 이 함수 자신은 아무 상태도 쓰지 않는다. 쓰는 일은 전부 `dispatch` 안에서 일어난다.
+- AST assignments: 6. Defers: 0. Goroutine statements: 0.
+- 이 함수 자신은 아무 상태도 쓰지 않는다. 쓰는 일은 `dispatch` 안에서, 그리고 5.3.3
+  이후로는 레인 런타임의 durable latch 기록(`internal/journal` 의 append-only 두 테이블)
+  에서 일어난다. 후자는 이 함수가 직접 쓰지 않고 `evaluate` 안에서 일어나며, 실패하면
+  B3 으로 올라온다.
 
 ## Safety conclusion
 

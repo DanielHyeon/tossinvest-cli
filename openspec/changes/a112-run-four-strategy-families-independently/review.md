@@ -3767,7 +3767,7 @@ CI job 한 단계, 그리고 그 셋 중 하나라도 빠지면 실패하는
 
 #### 재기동이 잠금을 잊는다는 것을 재어서 못 박았다
 
-`TestRestartForgetsALatchedLaneWhichIsExactlyWhatTask533MustFix` 는 두 단언을
+`TestALaneBuiltWithoutADurableRecordIsBornUnlatched`(5.7 당시 이름 `TestRestartForgetsALatchedLaneWhichIsExactlyWhatTask533MustFix`)는 두 단언을
 함께 한다: 새 레인 여덟이 건강하고, **원래 레인은 여전히 잠겨 있다.** 뒤엣것이
 없으면 "잠근 적이 없다"와 구별되지 않는다. 이것이 5.3.3 의 자리다.
 
@@ -4162,4 +4162,172 @@ test_race_detector_actually_runs.py` 에 두 시험을 더해, `a112_refresh_sin
   이 로트는 구조 셈과 동시성 행동을 쟀고, 부하 아래 지연은 재지 않았다.
 - `internal/app/engine` 의 나머지 동시성(감독자 루프·투영 저장소·dispatch 주기)은
   여전히 검출기 밖이다. 통째로 넣으면 게이트가 15분 늘어난다.
+
+## 2026-09-03 L5 태스크 5.3.3 — Pre-Edit 선언 (High-risk: 원장 스키마)
+
+`docs/WORKFLOW.md:408` 이 요구하는 선언이다. 이 로트는 **원장 스키마**를 건드리므로
+High-risk 다.
+
+```text
+Pre-Edit Gate:
+- change id / task id: a112-run-four-strategy-families-independently / L5 5.3.3
+- 대상 심볼(패키지.함수):
+    internal/journal            SchemaVersion(31→32), migrations(추가 한 줄),
+                                새 파일 strategy_lane_latch.go(신규 함수)
+    internal/strategyworker     ProductionLanes(기존, 이 change 가 만든 새 함수),
+                                newLane(기존, 같음), 새 값 타입 LatchRestore
+    internal/app/engine         newStrategyLaneRuntime/productionStrategyLanes/
+                                evaluate(전부 5.1.2.1 이 만든 새 함수),
+                                runProductionStrategyMarketCycle(frozen base 함수 — FLM 필수),
+                                NewPairedStrategyEntryProductionAssembly(frozen base 함수 — FLM 필수)
+  (선언 뒤 정정) 계획에는 `strategyScheduleAuthorityPair.Snapshot` 편집이 있었다.
+  실제로는 그 공개 스냅숏을 건드리지 않고, 서명된 일정 **권위**를 assembly 의
+  비공개 칸으로 그대로 들고 갔다 — 스칼라 사본을 만들면 활성화 세대가 권위에서
+  한 다리 멀어지고, 그 한 다리가 복구 조건이 서명과 갈라지는 자리가 된다.
+  대신 편집된 frozen-base 함수는 `NewPairedStrategyEntryProductionAssembly` 이고
+  그 FLM 을 재생성했다. 그리고 계획에 없던 frozen-base 함수 하나가 더 편집됐다:
+  `internal/journal/schema_test.go` 의 `TestSchemaTablesAndColumns` — 얼린 테이블
+  열거표다. 새 테이블 둘이 생기면 그 시험이 빨개지는 것이 설계이고, 실제로
+  빨개져서 두 줄을 사람 손으로 선언했다. 그 FLM 도 새로 만들었다.
+- 기존 동작 파악 근거:
+    · 마이그레이션 규칙 4개와 down-migration 부재는 internal/journal/schema.go:8-22 에
+      적혀 있고, v25(strategy_dispatch_runtime_v25.sql)가 같은 영역의 선례다 —
+      STRICT 테이블 · CHECK 제약 · 불변/단조 트리거 · DELETE 금지.
+    · 레인 latch 의 현재 의미: internal/strategyworker/lane.go 의 latched/latchRevision/
+      firstFailure 는 프로세스 메모리이고, Succeed() 는 계수기만 지우며 latch 는 못
+      지운다. rehearsal_test.go 의
+      TestALaneBuiltWithoutADurableRecordIsBornUnlatched(당시 이름
+      TestRestartForgetsALatchedLaneWhichIsExactlyWhatTask533MustFix)가 그 구멍을
+      이미 값으로 못 박아 두었다.
+    · 복구 증거의 출처: scheduler.Activation 은 "opaque capability issued only after an
+      exact manifest verification"(desired.go:236)이고 Generation() 은 ed25519 서명
+      매니페스트의 manifest.Generation(production_activation.go:159)이다. 즉 사람이
+      서명한 파일을 바꾸지 않으면 오르지 않는다.
+    · 시장·가족 enum 은 골든 산문이 아니라 코드에서 읽었다:
+      strategyrouter/types.go:9(KR/US), production.go:57-60(네 가족).
+- upstream 상속 테스트 영향: no. 새 테이블 둘과 새 함수뿐이고, 기존 테이블·트리거·
+  쿼리를 하나도 바꾸지 않는다. `SchemaVersion` 상승은 전방 전용이며 구버전 바이너리는
+  `ErrSchemaTooNew` 로 **거절**한다(조용히 오해하지 않는다, schema.go:19-22).
+- 실패 테스트 선행 작성: yes.
+- 안전 불변식 §0 위반 여부 검토: 통과. 근거를 값으로 적는다 —
+    · 이 로트는 주문·손절·익절·사이징 경로를 건드리지 않는다. latch 는 **신규 진입만**
+      막고 exit/fill/reconcile/protection 은 5.6.1 이 잰 대로 별개 loop 다.
+    · 오늘 여덟 레인은 전부 DORMANT 라 `lane.Run` 이 아무것도 보기 전에 DORMANT 를
+      돌려준다. 사이클이 오류를 내는 유일한 길은 패닉과 마감 시한인데 dormant 사이클은
+      즉시 끝난다. **그래서 오늘 생산에서 이 테이블에 쓰이는 행은 0이다.**
+    · 되돌릴 수 없는 것 하나: 이 마이그레이션이 돈 DB 를 main 바이너리로 되돌리면
+      엔진이 `ErrSchemaTooNew` 로 뜨지 않는다. a112 는 8.6 기준 배포 BLOCKED 이고
+      병합 순서는 사람이 정한다. 이 로트는 배포하지 않는다.
+
+**이 로트가 없애는 운영 수단 하나를 먼저 적는다(fail-closed 가 무엇을 거부하는가).**
+오늘 잠긴 레인을 여는 방법은 **엔진 재시작**이다. 이 로트 뒤에는 재시작이 그것을
+열지 않는다 — 열려면 generation 이 더 큰 **서명된 활성화 매니페스트**가 필요하다.
+그것이 요구된 동작이지만(design.md 의 고장표 "recovery evidence 필요"), 재시작으로
+고치던 운영자에게는 수단이 하나 사라지는 것이다. 그래서 복구 조건은 DB 트리거로
+못 박고, 무엇이 필요한지를 오류 문구가 말하게 한다.
+
+## 2026-09-03 L5 태스크 5.3.3 — 잠금이 프로세스보다 오래 산다 (구현 기록)
+
+### 무엇을 어디에 뒀고, 왜 거기인가
+
+| 조각 | 자리 | 이 자리인 근거(읽은 것) |
+|---|---|---|
+| durable 기록 | 원장, schema **v32**, append-only 두 테이블 | 저널 고장의 분류가 이미 있다 — 신규 진입은 막고 엔진은 안 세운다(5.6.1 의 `a112_fault_classification_test.go`). 별도 저장소는 그 분류를 새로 정해야 하고 트랜잭션·백업·불변 트리거를 다시 만들어야 한다 |
+| writer | `internal/app/engine` | `internal/strategyworker` 는 자기 폐포에 쓸 수 있는 저널이 없음을 `-deps` 로 증명한 패키지다. `design.md:223` 이 "lane health/latch projection" 을 엔진에 배정 |
+| 레인이 받는 것 | 값 `LatchRestore` | 값은 능력이 아니다. 폐포 증명이 그대로 남는다 |
+| 복구 증거 | `scheduler.Activation.Generation()` | "opaque capability issued only after an exact manifest verification. Callers cannot forge it with a bool or public struct literal"(`desired.go:236`)이고 값은 ed25519 서명 매니페스트의 `manifest.Generation`(`production_activation.go:159`) |
+| 복구 판정 | SQLite 트리거 | 코드에 두면 다른 호출자가 다른 판정을 쓴다. `strategy_lane_latch_recovery_needs_newer_activation` 이 "엄격히 더 큰 세대"를 강제한다 |
+| 첫 원인 보존 | SQLite 트리거 + Go 의 열린-잠금 조회 | `strategy_lane_latch_first_cause_wins`. 레인의 메모리 규칙("두 번째 실패는 새 latch 판을 안 찍는다")이 프로세스 경계를 건너서도 사는 유일한 자리 |
+
+### 복구는 잠금을 푸는 것이 아니다
+
+푸는 길이 존재하면 그 길은 증거 없이도 불릴 수 있다. 그래서 `strategyworker` 에는
+`latched` 를 **거짓으로 만드는 자리가 하나도 없고**, 그 사실을 패키지 전체를 훑는
+셈이 지킨다 — 얼린 목록은 `latch = true`, `restoreLatch = true` 둘뿐이다. 엔진은
+원장이 복구를 받아들인 **뒤에만** 그 레인을 기록 없이 새로 세운다(`rebornLane`).
+
+### RED (편집 전 소스에서 실제로 실행)
+
+```
+--- FAIL: TestALatchedLaneComesBackLatchedAfterTheProcessRestarts
+    재시작이 잠긴 레인을 열었다 — 잠근 이유는 그대로인데 잠금만 사라졌다
+```
+
+컴파일 오류가 아니라 행동이다. 이 시험은 편집 전의 API 만 쓴다.
+
+### 가장 우회하기 쉬운 자리를 따로 얼렸다
+
+복구 조건은 "더 큰 수"가 아니라 "더 큰 **서명된** 세대"다. 그 인자에 주기 계수기나
+시각을 넣으면 트리거는 그대로 통과하고 잠금은 저절로 열린다 — 그리고 **두 수 다 그냥
+커지므로 어떤 행동 시험도 차이를 못 본다.** 그래서 인자로 넘어가는 식 자체를 센다:
+`runProductionStrategyMarketCycle: fresh.schedule.forMarket(market).restore.Activation.Generation()`
+하나만 얼려 두었다.
+
+### 오늘 생산에 쓰는 행은 0이고, 그것도 값이다
+
+여덟 레인은 전부 DORMANT 라 `Run` 이 아무것도 보기 전에 돌아오고 오류가 없다 →
+잠기지 않는다 → 행이 생기지 않는다. `TestTheProductionStepNeverLatchesSoTheLedgerStaysEmpty`
+가 두 시장에 다섯 주기를 돌리고 원장이 비어 있는지 본다.
+
+### 이 로트가 없애는 운영 수단
+
+오늘 잠긴 레인을 여는 방법은 **엔진 재시작**이다. 이 뒤로는 재시작이 열지 않는다.
+요구된 동작이지만(design.md 고장표의 "recovery evidence 필요"), 재시작으로 고치던
+사람에게는 수단이 하나 사라지는 것이므로 거절 문구가 무엇이 필요한지 말한다
+(`journal.ErrStrategyLaneLatchRecoveryEvidence`). 부수적으로 이것은 안전상 이득이기도
+하다 — 엔진 정지는 손절을 놓는 주체를 없앤다.
+
+### 반증: 14개 CAUGHT, 대조군 1개 SURVIVED(의도)
+
+| 변이 | 심은 것 | 결과 |
+|---|---|---|
+| N1 | 기록을 레인에 붙이지 않는다 | CAUGHT |
+| N2 | 붙지 않은 기록의 오류를 삼킨다 | CAUGHT |
+| N2b | 붙지 않은 기록을 아예 안 알아본다 | CAUGHT |
+| N3 | 잠긴 레인을 원장에 남기지 않는다 | CAUGHT |
+| N4 | 남기기 실패를 조용히 넘긴다 | CAUGHT |
+| N5 | 거절된 복구를 성공처럼 다룬다 | CAUGHT |
+| N6 | 원장에 묻지 않고 레인을 다시 세운다 | CAUGHT |
+| N7 | "더 큰 세대" 트리거를 지운다 | CAUGHT |
+| N8 | 열린 잠금 조회를 지운다(첫 원인 보존이 트리거에만 남는다) | CAUGHT |
+| N9 | `restoreLatch` 가 `latched = false` 를 쓴다 | CAUGHT |
+| N10 | 되살릴 때 첫 원인 문구를 바꾼다 | CAUGHT |
+| N11 | 복구 세대에 서명과 무관한 0 을 넘긴다 | CAUGHT |
+| N12 | 레인을 세우면서 기록을 안 읽는다 | CAUGHT |
+| C1 | 무관한 주석 한 줄 | SURVIVED (의도) |
+
+원복은 해시 백업으로 하고 SHA-256 으로 확인했다.
+
+**그리고 배터리가 실제 설계 결함 **둘**을 찾아냈다 — 그것이 이 로트에서 가장 값진 결과다.**
+
+**결함 하나: 문 없는 fail-closed.** 첫 판본은 이 빌드에 없는 레인을 가리키는 durable
+기록을 만나면 오류를 내고 그 기록을 **버렸다.** 버린 순간 그것을 닫을 방법이 사라진다 —
+`RecoverStrategyLaneLatch` 는 원장 순번을 받는데 그 순번을 아무도 안 들고 있기 때문이다.
+결과는 진입이 영원히 멈추고 빠져나갈 길이 없는 상태다. 기억에 "fail-closed 는 무엇을
+거부하는지 말해야 한다"로 남은 모양의 사촌이다: 거부는 맞는데 **되돌릴 문이 없다.**
+지금은 붙지 않은 기록도 들고 있다가 복구를 함께 시도하므로, 더 큰 서명 활성화 세대가
+오면 닫힌다. 그 문이 실제로 열리는지는 시험이 값으로 잰다
+(`TestADurableLatchThatNamesNoLaneInThisBuildStopsTheCycleLoudlyAndCanBeClosed`).
+
+**결함 둘: 판정이 둘이었다.**
+첫 판본은 복구 판정이 **둘**이었다. Go 쪽이 `activationGeneration > latch.ActivationGeneration`
+인 잠금만 골라 원장에 물었고, 원장의 트리거가 다시 같은 판정을 했다. 반증이 그 대가를
+값으로 보여 줬다:
+
+- 부등호를 `>=` 로 바꾼 변이 → **SURVIVED.** 트리거가 대신 막았다.
+- 트리거를 지운 변이 → 저널 시험만 빨갛고 **엔진 시험은 초록.** 부등호가 대신 막았다.
+
+즉 **각자가 상대의 시험을 통과시킨다.** 둘 중 하나가 조용히 사라져도 아무 색도 변하지
+않고, 남은 하나가 우연히 지키는 상태가 된다 — 기억에 "살아남은 뮤테이션 = 우연이
+지키는 안전"으로 남은 모양 그대로다. 그래서 Go 쪽 부등호를 **지웠다.** 이제 이 시장의
+열린 잠금 전부를 원장에 물어보고 답을 따르며, 판정은 기록이 사는 곳 하나에만 있다.
+그 뒤 트리거를 지운 변이는 엔진 시험도 빨갛다(위 표의 N7).
+
+### 이 로트가 주장하지 않는 것
+
+- 여덟은 여전히 진입의 관문이 아니다(5.1.2.2).
+- 복구는 세대가 오른 **다음 주기**에 일어난다. 세대를 올리는 서명 매니페스트 자체는
+  8 절이다.
+- 독립 적대 리뷰(8.5)는 아직이다. 원장 스키마는 `docs/WORKFLOW.md:403` 기준 High-risk 라
+  구현자와 다른 사람의 리뷰를 요구하며, 이 로트는 그것을 대신하지 않는다.
 

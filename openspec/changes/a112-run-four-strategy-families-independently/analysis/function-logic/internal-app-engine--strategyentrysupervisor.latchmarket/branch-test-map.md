@@ -1,6 +1,6 @@
 # Branch Test Map: `StrategyEntrySupervisor.latchMarket`
 
-- Source SHA-256: `51840da714b49651bee5292a3b51f2814f98b7e2ee5e6996088fb9cceba14d2a`; AST branch locations are authoritative.
+- Source SHA-256: `627c647d087032586c4b63ca315a30fd9fad6b51af329fa4e8bf4fecd7104e08`; AST branch locations are authoritative.
 - Revision: base — 이 change 는 이 함수를 편집하지 않는다. RED 칸이 모두
   `no (base)` 인 이유가 그것이다. 태스크 5.6 이 인용할 분기를 열거하려고 만들었다.
 
@@ -11,16 +11,16 @@
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 936:2 — 실패 문구가 비어 있다 | **없음** | no (base) | **no — block 936-938 count=0** |
-| B2 | if at 940:2 — 비정상 사이클의 refusal | `TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive` 외 1 | no (base) | yes (block 940-942) |
-| B3 | if at 943:2 — 권한 만료의 refusal | `TestExpiredAuthorityLatchesBeforeEvaluation` 외 1 | no (base) | yes (block 943-945) |
-| B4 | if at 947:2 — 관측 시각이 없어 잠금을 거부한다 | `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping`/"관측 시각이 없으면…" | no (base) | yes (block 947-949 count=1, **5.6 이 처음 실행**) |
-| B5 | if at 951:2 — latch revision 소진 | 같은 시험의 "latch revision 이 소진되면…"·"권한 만료의 잠금도…" 및 `TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt` | no (base) | yes (block 951-954 count=1, **5.6 이 처음 실행**) |
-| B6 | if at 957:2 — 첫 refusal 만 기록한다 | `TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal` 외 4 | no (base) | yes (block 957-959) |
-| B7 | if at 960:2 — 첫 실패 문구·latchID·revision++ | 같은 시험 외 4 | no (base) | yes (block 960-965) |
-| B8 | if at 966:2 — 재시작 시도 수 증가(포화 전) | 같은 시험 외 4 | no (base) | yes (block 966-968) |
-| B9 | select at 980:2 — fault 를 스트림에 건넸다 (`case` 팔) | `TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining` 외 5 | no (base) | yes (block 981-982) |
-| B9-default | 같은 select at 980:2 의 `default` — 스트림 포화 | **없음** | no (base) | **no — block 983-984 count=0, 구조적으로 도달 불가(아래)** |
+| B1 | if at 953:2 — 실패 문구가 비어 있다 | **없음** | no (base) | **no — block 953-955 count=0** |
+| B2 | if at 957:2 — 비정상 사이클의 refusal | `TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive` 외 1 | no (base) | yes (block 957-959) |
+| B3 | if at 960:2 — 권한 만료의 refusal | `TestExpiredAuthorityLatchesBeforeEvaluation` 외 1 | no (base) | yes (block 960-962) |
+| B4 | if at 964:2 — 관측 시각이 없어 잠금을 거부한다 | `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping`/"관측 시각이 없으면…" | no (base) | yes (block 964-966 count=1, **5.6 이 처음 실행**) |
+| B5 | if at 968:2 — latch revision 소진 | 같은 시험의 "latch revision 이 소진되면…"·"권한 만료의 잠금도…" 및 `TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt` | no (base) | yes (block 968-971 count=1, **5.6 이 처음 실행**) |
+| B6 | if at 974:2 — 첫 refusal 만 기록한다 | `TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal` 외 4 | no (base) | yes (block 974-976) |
+| B7 | if at 977:2 — 첫 실패 문구·latchID·revision++ | 같은 시험 외 4 | no (base) | yes (block 977-982) |
+| B8 | if at 983:2 — 재시작 시도 수 증가(포화 전) | 같은 시험 외 4 | no (base) | yes (block 983-985) |
+| B9 | select at 997:2 — fault 를 스트림에 건넸다 (`case` 팔) | `TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining` 외 5 | no (base) | yes (block 998-999) |
+| B9-default | 같은 select at 997:2 의 `default` — 스트림 포화 | **없음** | no (base) | **no — block 1000-1001 count=0, 구조적으로 도달 불가(아래)** |
 
 ## 측정으로 확인한 빈칸
 
@@ -31,7 +31,7 @@
   `errors.New("")` 같은 것을 돌려줘야 한다. 오늘 그 값을 만드는 생산 경로가 없다.
   자리표시자는 방어이지 관측된 동작이 아니다.
 - `964-965` (B9 의 `default`) — fault 스트림이 포화해야 열린다. 용량은 2 이고(`:584`),
-  잠긴 시장은 `evaluationState`(`876:2`)가 거부하므로 시장당 잠금은 한 번이며,
+  잠긴 시장은 `evaluationState`(`893:2`)가 거부하므로 시장당 잠금은 한 번이며,
   시장은 정확히 둘이다. **2 = 2 라서 넘칠 수 없다.** 이 균형은 어디에도 적혀
   있지 않았고, 5.1.2 가 시장 둘을 lane 여덟으로 바꾸면 깨진다. 태스크 5.6 은
   그래서 그 등식을 `TestTheFaultStreamHoldsOneSlotForEveryWorkerThatCanLatch`

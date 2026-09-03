@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker"
@@ -56,10 +57,26 @@ type strategyLaneObservation struct {
 // 1 초 뒤에 열린 채로 돌아온다 — 잠근 이유는 그대로인데. 그래서 이 값은
 // `*Context` 가 한 번만 만들고 계속 들고 있는다(`Context.strategyLanes`).
 type strategyLaneRuntime struct {
-	lanes []*strategyworker.Lane
+	// clk 와 ledger·accountRef 는 레인을 **다시 세우는** 데 필요하다. 복구는
+	// 잠금을 푸는 것이 아니라 기록 없이 다시 태어나게 하는 것이므로(5.3.3),
+	// 런타임은 자기가 무엇으로 레인을 만들었는지 기억해야 한다.
+	clk        clock.Clock
+	ledger     strategyLaneLedger
+	accountRef string
 
 	mu       sync.RWMutex
+	lanes    []*strategyworker.Lane
 	observed map[strategyworker.Key]strategyLaneObservation
+	// restored 는 durable 기록을 이미 한 번 읽었는지다. 두 시장이 같은 런타임을
+	// 나눠 쓰므로, 두 번 읽으면 두 번째가 첫 시장이 이번 프로세스에서 만든
+	// 잠금을 지운다.
+	restored bool
+	// latches 는 지금 **열려 있는** 원장 기록이다. 원장의 순번을 들고 있어야
+	// 복구를 요청할 수 있다.
+	latches map[strategyworker.Key]journal.StrategyLaneLatch
+	// unmatched 는 이 빌드에 없는 레인을 가리키는 기록이다. 버리지 않고 들고
+	// 있는 이유는 그것이 복구를 요청할 수 있는 유일한 손잡이이기 때문이다.
+	unmatched []journal.StrategyLaneLatch
 }
 
 // newStrategyLaneRuntime 은 생산 레인 여덟을 세운다.
@@ -67,13 +84,14 @@ type strategyLaneRuntime struct {
 // 목록도 정책도 여기서 고르지 않는다. 여덟이 누구인지는 `strategyworker` 의
 // 생산 진입점 하나가 정하고, 그 목록이 동결 골든과 같은지는 그 패키지의
 // golden_contract_test.go 가 골든 파일을 직접 읽어 대조한다.
-func newStrategyLaneRuntime(clk clock.Clock) *strategyLaneRuntime {
+func newStrategyLaneRuntime(clk clock.Clock, ledger strategyLaneLedger, accountRef string) *strategyLaneRuntime {
 	if clk == nil {
 		return nil
 	}
 	lanes := strategyworker.ProductionLanes(clk)
-	return &strategyLaneRuntime{lanes: lanes,
-		observed: make(map[strategyworker.Key]strategyLaneObservation, len(lanes))}
+	return &strategyLaneRuntime{clk: clk, ledger: ledger, accountRef: accountRef, lanes: lanes,
+		observed: make(map[strategyworker.Key]strategyLaneObservation, len(lanes)),
+		latches:  map[strategyworker.Key]journal.StrategyLaneLatch{}}
 }
 
 // productionStrategyLanes 는 이 프로세스의 여덟 레인을 돌려준다. 없으면 만든다.
@@ -81,16 +99,29 @@ func newStrategyLaneRuntime(clk clock.Clock) *strategyLaneRuntime {
 // 게으른 이유는 시계가 첫 생산 주기와 함께 도착하기 때문이고, 공유하는 이유는
 // 위에 적은 그대로다 — 레인의 잠금은 새로 고침보다 오래 살아야 한다.
 // `strategyDispatchOwner` 가 같은 이유로 같은 모양이다.
-func (c *Context) productionStrategyLanes(clk clock.Clock) *strategyLaneRuntime {
+//
+// **ctx 를 받는 이유는 durable 기록 때문이다**(5.3.3). 레인은 열린 채로 태어난
+// 뒤 나중에 잠기는 것이 아니라 기록에서 태어난다. 만들어 놓고 나중에 되살리면
+// 그사이에 `Latched()` 가 거짓말을 하고, 그 창을 아무도 못 본다.
+func (c *Context) productionStrategyLanes(ctx context.Context, clk clock.Clock) (*strategyLaneRuntime, error) {
 	if c == nil || clk == nil {
-		return nil
+		return nil, nil
 	}
 	c.strategyLanesMu.Lock()
 	defer c.strategyLanesMu.Unlock()
 	if c.strategyLanes == nil {
-		c.strategyLanes = newStrategyLaneRuntime(clk)
+		// 원장을 인터페이스로 좁혀 넘긴다. nil 저널을 그대로 넘기면 인터페이스가
+		// non-nil 이 되어 "원장이 없다" 를 판정할 수 없다.
+		var ledger strategyLaneLedger
+		if c.Journal != nil {
+			ledger = c.Journal
+		}
+		c.strategyLanes = newStrategyLaneRuntime(clk, ledger, c.AccountRef)
 	}
-	return c.strategyLanes
+	if err := c.strategyLanes.restoreLatches(ctx); err != nil {
+		return nil, err
+	}
+	return c.strategyLanes, nil
 }
 
 // lanesFor 는 이 시장이 맡은 네 레인이다.
@@ -102,6 +133,8 @@ func (runtime *strategyLaneRuntime) lanesFor(market StrategyMarket) []*strategyw
 		return nil
 	}
 	routerMarket := strategyRouterMarket(market)
+	runtime.mu.RLock()
+	defer runtime.mu.RUnlock()
 	selected := make([]*strategyworker.Lane, 0, len(runtime.lanes))
 	for _, lane := range runtime.lanes {
 		if lane.Key().Market == routerMarket {
@@ -133,10 +166,15 @@ func strategyFamilyLaneStep(lane *strategyworker.Lane) strategyworker.Step {
 // evaluate 는 이 시장의 네 레인에 각자 자기 것인 봉인된 제안을 한 번씩 돌리고
 // 그 관측을 기록한다.
 //
-// **돌려주는 값이 없다.** 앞선 판본은 관측과 봉투를 함께 돌려줬는데, 그러면
+// **관측은 돌려주지 않는다.** 앞선 판본은 관측과 봉투를 함께 돌려줬는데, 그러면
 // 호출자가 그중 하나를 버릴 수 있고 버린 것을 아무도 못 본다. 같은 문제를
 // dispatch 주기에서 `Deliver` 로 푼 것과 같은 답이다 — 무시할 수 있는 답을
 // 호출자에게 주지 않는다. 결과는 이 런타임 안에 남고 observations 가 읽는다.
+//
+// **오류는 돌려준다**(5.3.3). 그것은 답이 아니라 실패다: durable latch 를 원장에
+// 남기지 못했거나, 이 빌드에 없는 레인을 가리키는 기록이 남아 있다는 뜻이다.
+// 조용히 넘기면 다음 재시작이 잠긴 레인을 열고, 그것이 이 로트가 없애려는 바로
+// 그 동작이다.
 //
 // 어느 제안이 어느 레인의 것인지는 여기서 판정하지 않고 레인에게 묻는다
 // (`lane.Owns`). 같은 판정을 두 곳에 두면 운영자가 보는 진단이 갈리고, 여기
@@ -145,10 +183,16 @@ func strategyFamilyLaneStep(lane *strategyworker.Lane) strategyworker.Step {
 // 자기 제안이 없는 레인도 사이클을 돈다. "이번 물결에 낼 것이 없었다"와
 // "레인이 돌지 않았다"는 다른 뜻이고, 돌지 않은 레인은 관측에서 사라진다.
 func (runtime *strategyLaneRuntime) evaluate(ctx context.Context, market StrategyMarket,
-	inputs []strategyworker.Input,
-) {
+	activationGeneration uint64, inputs []strategyworker.Input,
+) error {
 	if runtime == nil {
-		return
+		return nil
+	}
+	// 순서가 계약이다. (기록에서 태어나는 것은 `productionStrategyLanes` 가 이미
+	// 했다.) 증거가 있으면 다시 태어나고 → 돌고 → 잠긴 것을 남긴다. 복구를 사이클
+	// 뒤로 미루면 증거가 이미 도착한 레인이 한 주기를 더 잠긴 채로 보낸다.
+	if err := runtime.recoverMarketLanes(ctx, market, activationGeneration); err != nil {
+		return err
 	}
 	lanes := runtime.lanesFor(market)
 	observations := make([]strategyLaneObservation, 0, len(lanes))
@@ -163,6 +207,14 @@ func (runtime *strategyLaneRuntime) evaluate(ctx context.Context, market Strateg
 		observations = append(observations, runtime.runLane(ctx, lane, input))
 	}
 	runtime.record(observations)
+	// 남기지 못한 잠금은 오류다. 조용히 넘기면 다음 재시작이 잠긴 레인을 열고,
+	// 그것이 이 태스크가 없애려는 바로 그 동작이다.
+	if err := runtime.persistMarketLatches(ctx, market, activationGeneration, runtime.clk.Now()); err != nil {
+		return err
+	}
+	// 마지막으로, 이 빌드에 없는 레인을 가리키는 기록이 남아 있으면 그것도
+	// 오류다 — 사람은 잠갔다고 믿는데 런타임은 열려 있는 상태다.
+	return runtime.staleLatchError(market)
 }
 
 // strategyLaneInputs 는 이 시장이 이번 물결에 세운 봉인된 제안을 레인 입력으로 바꾼다.

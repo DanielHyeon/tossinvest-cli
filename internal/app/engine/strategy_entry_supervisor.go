@@ -251,6 +251,10 @@ type StrategyEntryProductionAssembly struct {
 	firstLeg   *strategyFirstLegAdmissionBridge
 	dispatch   *strategyDispatchCycle
 	proposals  strategyProposalAuthorityPair
+	// schedule 은 이 물결의 **서명된** 일정 권위다. 공개 Schedule 스냅숏은
+	// 스칼라 관측이라 활성화 세대를 담지 않는다. durable lane latch 의 복구
+	// 조건이 그 세대이므로(5.3.3), 권위를 그대로 들고 있어야 한다.
+	schedule strategyScheduleAuthorityPair
 }
 
 // NewPairedStrategyEntryProductionAssembly loads KR and US from one frozen
@@ -322,7 +326,7 @@ func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context, 
 	assembly := StrategyEntryProductionAssembly{Supervisor: supervisor, Schedule: snapshot.Schedule,
 		Candidate: candidateAuthority.Snapshot(), Route: routeAuthority.Snapshot(), FX: fxAuthority.Snapshot(), Proposal: proposalAuthority.Snapshot(),
 		Risk: riskAuthority.Snapshot(), Account: accountAuthority.Snapshot(), firstLeg: firstLegBridge, dispatch: dispatchCycle,
-		proposals: proposalAuthority}
+		proposals: proposalAuthority, schedule: scheduleAuthority}
 	if err := c.publishStrategyRuntime(assembly); err != nil {
 		return StrategyEntryProductionAssembly{}, err
 	}
@@ -436,10 +440,23 @@ func (c *Context) runProductionStrategyMarketCycle(ctx context.Context, clk cloc
 	// **시장 하나가 가진 유일한 변경 권한**이고 스펙이 그 권한을 하나로
 	// 유지하라고 요구한다.
 	//
-	// 반환값이 없다. 레인 관측은 런타임 안에 남고, 호출자가 버릴 수 있는 답을
-	// 여기서 만들지 않는다.
-	c.productionStrategyLanes(clk).evaluate(ctx, market,
-		strategyLaneInputs(c.AccountRef, fresh.proposals.forMarket(market)))
+	// 레인 관측 자체는 런타임 안에 남는다 — 호출자가 버릴 수 있는 답을 여기서
+	// 만들지 않는다. 돌아오는 오류는 **durable latch 를 원장에 남기지 못했다**는
+	// 뜻이고(5.3.3), 그것을 조용히 넘기면 다음 재시작이 잠긴 레인을 연다.
+	//
+	// 활성화 세대는 이 시장의 **서명된** 활성화에서 읽는다. 다른 수를 넣으면
+	// durable latch 의 복구 조건이 서명과 무관해진다 — 그 값은 ed25519 매니페스트를
+	// 사람이 바꿔야만 오른다(strategy_lane_latch.go 의 머리말). 그 자리에 어떤 식이
+	// 오는지는 a112_lane_latch_durability_test.go 의 셈이 얼려 둔다.
+	lanes, err := c.productionStrategyLanes(ctx, clk)
+	if err != nil {
+		return err
+	}
+	if err := lanes.evaluate(ctx, market,
+		fresh.schedule.forMarket(market).restore.Activation.Generation(),
+		strategyLaneInputs(c.AccountRef, fresh.proposals.forMarket(market))); err != nil {
+		return err
+	}
 	if fresh.dispatch == nil {
 		return nil
 	}

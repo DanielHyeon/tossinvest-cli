@@ -25,7 +25,7 @@ import (
 func laneRuntimeFixture(t *testing.T) (*strategyLaneRuntime, *clock.Fake) {
 	t.Helper()
 	fake := clock.NewFake(time.Date(2026, 9, 3, 1, 0, 0, 0, time.UTC))
-	runtime := newStrategyLaneRuntime(fake)
+	runtime := newStrategyLaneRuntime(fake, nil, "")
 	if runtime == nil {
 		t.Fatal("생산 레인 런타임이 서지 않았다")
 	}
@@ -72,13 +72,13 @@ func TestTheProductionRuntimeStandsExactlyEightLanesFourPerMarket(t *testing.T) 
 func TestTheLaneSetOutlivesTheRefreshThatAskedForIt(t *testing.T) {
 	c := &Context{}
 	fake := clock.NewFake(time.Date(2026, 9, 3, 1, 0, 0, 0, time.UTC))
-	first := c.productionStrategyLanes(fake)
+	first := mustProductionStrategyLanes(t, c, fake)
 	if first == nil {
 		t.Fatal("첫 호출이 레인을 세우지 않았다")
 	}
 	// 두 번째 호출이 다른 시계를 들고 와도 레인은 그대로여야 한다. 시계가
 	// 바뀐다고 잠금이 풀리면 시계를 갈아 끼우는 것이 복구 수단이 된다.
-	second := c.productionStrategyLanes(clock.NewFake(time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)))
+	second := mustProductionStrategyLanes(t, c, clock.NewFake(time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)))
 	if first != second {
 		t.Fatal("새로 고침마다 레인을 다시 만든다 — 잠긴 레인이 열린 채로 돌아온다")
 	}
@@ -98,7 +98,7 @@ func TestTheLaneSetOutlivesTheRefreshThatAskedForIt(t *testing.T) {
 func TestEveryFamilyLaneIsDormantUntilASignedManifestPromotesIt(t *testing.T) {
 	runtime, _ := laneRuntimeFixture(t)
 	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
-		runtime.evaluate(context.Background(), market, nil)
+		runtime.evaluate(context.Background(), market, 0, nil)
 	}
 	observations := runtime.observations()
 	if len(observations) != len(runtime.lanes) {
@@ -145,18 +145,18 @@ func TestADroppedTriggerNeverDrivesACycle(t *testing.T) {
 	cadence := lane.Policy().Cadence()
 
 	// 1) 첫 주기는 들어가고 돈다. 다음 주기 시각이 정해진다.
-	runtime.evaluate(context.Background(), StrategyMarketKR, nil)
+	runtime.evaluate(context.Background(), StrategyMarketKR, 0, nil)
 	if got := lane.Dropped(); got != 0 {
 		t.Fatalf("첫 주기에 버린 수=%d, want 0", got)
 	}
 	// 2) 카덴스가 아직이라 투입은 칸에 남는다.
-	runtime.evaluate(context.Background(), StrategyMarketKR, nil)
+	runtime.evaluate(context.Background(), StrategyMarketKR, 0, nil)
 	if got, want := lane.Pending(), lane.Policy().QueueDepth(); got != want {
 		t.Fatalf("칸에 남은 투입=%d, want %d", got, want)
 	}
 	// 3) 이제 카덴스를 지나 보낸다. 칸은 여전히 차 있다.
 	fake.Advance(cadence)
-	runtime.evaluate(context.Background(), StrategyMarketKR, nil)
+	runtime.evaluate(context.Background(), StrategyMarketKR, 0, nil)
 
 	if got := lane.Dropped(); got == 0 {
 		t.Fatal("칸이 찼는데 버린 수가 0 이다 — 유실이 조용히 사라진다")

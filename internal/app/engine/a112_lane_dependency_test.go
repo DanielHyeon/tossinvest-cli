@@ -39,7 +39,7 @@ func laneOwnedInputs(t *testing.T) []strategyworker.Input {
 
 func laneRuntimeForDependency(t *testing.T) *strategyLaneRuntime {
 	t.Helper()
-	runtime := newStrategyLaneRuntime(clock.NewFake(time.Date(2026, 9, 3, 1, 0, 0, 0, time.UTC)))
+	runtime := newStrategyLaneRuntime(clock.NewFake(time.Date(2026, 9, 3, 1, 0, 0, 0, time.UTC)), nil, "")
 	if runtime == nil {
 		t.Fatal("생산 레인 런타임이 서지 않았다")
 	}
@@ -78,7 +78,7 @@ func TestExactlyOneLaneOwnsEachSealedProposal(t *testing.T) {
 // 안 된다 (MUST NOT)" 가 값으로 참이라는 뜻이다.
 func TestEveryLaneStaysDormantOnAProposalItActuallyOwns(t *testing.T) {
 	runtime := laneRuntimeForDependency(t)
-	runtime.evaluate(context.Background(), StrategyMarketKR, laneOwnedInputs(t))
+	_ = runtime.evaluate(context.Background(), StrategyMarketKR, 0, laneOwnedInputs(t))
 	admitted := 0
 	for _, observation := range runtime.observations() {
 		if observation.Key.Market != strategyrouter.MarketKR {
@@ -111,7 +111,7 @@ func TestEveryLaneStaysDormantOnAProposalItActuallyOwns(t *testing.T) {
 func TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes(t *testing.T) {
 	_, _, _, spy := pairedStrategyDispatchCycleFixture(t)
 	runtime := laneRuntimeForDependency(t)
-	runtime.evaluate(context.Background(), StrategyMarketKR, laneOwnedInputs(t))
+	_ = runtime.evaluate(context.Background(), StrategyMarketKR, 0, laneOwnedInputs(t))
 	spy.mu.Lock()
 	places, observed := len(spy.calls), len(spy.observed)
 	spy.mu.Unlock()

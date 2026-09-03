@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 31
+const SchemaVersion = 32
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -156,6 +156,11 @@ var migrations = []migration{
 	// senders is the ledger's and not one process's mutex. Additive-nullable;
 	// existing rows come out claimable, which is what they are today.
 	{Version: 31, SQL: schemaV31},
+	// schemaV32 lives in strategy_lane_latch_v32.go: it gives a strategy lane's
+	// entry latch a life longer than the process, and makes its recovery an
+	// append-only record that a strictly newer signed activation generation must
+	// justify (a112 task 5.3.3).
+	{Version: 32, SQL: schemaV32},
 }
 
 // schemaV1 is the initial schema.

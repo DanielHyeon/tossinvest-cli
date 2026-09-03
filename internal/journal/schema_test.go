@@ -149,6 +149,10 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"strategy_dispatch_owner_epochs",
 		"strategy_execution_lineage",
 		"strategy_first_leg_bindings",
+		// a112 5.3.3: 레인의 신규 진입 잠금과 그 복구. 둘 다 append-only 이고
+		// 복구는 엄격히 더 큰 서명 활성화 세대를 요구한다.
+		"strategy_lane_latch_recoveries",
+		"strategy_lane_latches",
 		"strategy_weekly_first_leg_bindings",
 		"strategy_weekly_market_reservations",
 		"strategy_weekly_reservation_lifecycle_receipts",

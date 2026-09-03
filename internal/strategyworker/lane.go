@@ -93,13 +93,19 @@ func newLane(worker FamilyWorker, policy RuntimePolicy, clk clock.Clock) *Lane {
 	return &Lane{worker: worker, policy: policy, clk: clk}
 }
 
-// ProductionLanes 는 생산 worker 여덟에 서버 정책을 붙인 레인 여덟이다.
+// ProductionLanes 는 생산 worker 여덟에 서버 정책을 붙인 레인 여덟이며, 전부
+// **열린 채로** 태어난다.
 //
 // 부를 때마다 새로 만든다. 패키지 수준에 한 벌을 두고 나눠 주면 한 번 잠긴
 // 레인이 프로세스가 사는 내내 모든 호출자에게 잠긴 채로 건네진다.
 //
-// 이 패키지는 아직 생산 배선이 없다(dormant). 여덟 레인을 부르는 생산 코드는
-// 없고, 그 배선은 태스크 5.1.2 다.
+// 생산 배선은 태스크 5.1.2.1 에서 섰다: `internal/app/engine` 의
+// `newStrategyLaneRuntime` 이 여덟을 세우고 시장 주기가 자기 넷을 돌린다.
+// 여덟은 전부 DORMANT 이므로 사이클은 아무것도 보지 않는다.
+//
+// **durable 기록에서 태어나야 하는 경우는 `ProductionLanesFrom` 이다**(5.3.3).
+// 이 함수는 그것의 "기록 없음" 형태다 — 기록이 없으면 열린 채로 태어나는 것이
+// 맞고, 그 판정은 기록이 사는 곳이 한다.
 func ProductionLanes(clk clock.Clock) []*Lane {
 	workers := ProductionWorkers()
 	lanes := make([]*Lane, 0, len(workers))
@@ -154,6 +160,17 @@ func (lane *Lane) FirstFailure() string {
 	lane.mu.Lock()
 	defer lane.mu.Unlock()
 	return lane.firstFailure
+}
+
+// FirstAbnormal 은 이 레인을 잠근 **첫** 실패가 비정상이었는지다.
+//
+// 설계의 고장표는 비정상(패닉·예기치 않은 반환·마감 시한)과 보통 오류를 다르게
+// 다루므로, durable 기록이 그 구별을 잃으면 다시 세운 레인이 왜 잠겼는지 운영자가
+// 알 수 없다. 읽기만 하고 아무것도 바꾸지 않는다.
+func (lane *Lane) FirstAbnormal() bool {
+	lane.mu.Lock()
+	defer lane.mu.Unlock()
+	return lane.firstAbnormal
 }
 
 // RestartNotBefore 는 이 시각 전에는 다시 시도하지 않는다는 뜻이다.

@@ -1,9 +1,9 @@
 # Function Logic Map: `buildProductionStrategyMarketWorker`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (378-420)
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (382-424)
 - Function: `buildProductionStrategyMarketWorker` in package `engine`
 - Signature: `buildProductionStrategyMarketWorker(params=13, results=1)`
-- File SHA-256: `51840da714b49651bee5292a3b51f2814f98b7e2ee5e6996088fb9cceba14d2a`
+- File SHA-256: `627c647d087032586c4b63ca315a30fd9fad6b51af329fa4e8bf4fecd7104e08`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 6.
 - Risk scan: `risk-pattern-report.md`.
@@ -48,16 +48,16 @@ The signature above is the exhaustive input/result record; this map does not inf
   진입 수와 정확히 같다. 이 집합 밖의 시험이 어느 arm 이든 들어갔다면 그 등식이 깨진다.
   깨진 행은 `ATTRIBUTION MISMATCH` 로 표시되며 아래에는 하나도 없다.
 
-Exact AST return positions: 385:3, 400:3, 403:3, 406:3, 409:3, 415:3, 417:2.
+Exact AST return positions: 389:3, 404:3, 407:3, 410:3, 413:3, 419:3, 421:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 384:2 | arm entered 2x (tagged); 0 (untagged); `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` (`wiringReady=false` 두 시장) |
-| B2 | if | 398:2 | **이 태스크가 바꾼 분기.** arm entered 1x (tagged); 0 (untagged); `TestARefusedHandoffLeavesTheWorkerDormant` (KR 이 상한 초과로 거절) |
-| B3 | if | 402:2 | arm not entered (양쪽 스위트). 봉인이 깨진 제안으로 여기까지 오는 시험이 없다 |
-| B4 | if | 405:2 | arm entered 1x (tagged); 0 (untagged); `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` (`spy.failProtection` KR) |
-| B5 | if | 408:2 | arm not entered (양쪽 스위트). 진입 게이트 관측 실패를 만드는 시험이 없다 |
-| B6 | if | 414:2 | arm not entered (양쪽 스위트). 잘못된 digest·revision·만료를 만드는 시험이 없다 |
+| B1 | if | 388:2 | arm entered 2x (tagged); 0 (untagged); `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` (`wiringReady=false` 두 시장) |
+| B2 | if | 402:2 | **이 태스크가 바꾼 분기.** arm entered 1x (tagged); 0 (untagged); `TestARefusedHandoffLeavesTheWorkerDormant` (KR 이 상한 초과로 거절) |
+| B3 | if | 406:2 | arm not entered (양쪽 스위트). 봉인이 깨진 제안으로 여기까지 오는 시험이 없다 |
+| B4 | if | 409:2 | arm entered 1x (tagged); 0 (untagged); `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` (`spy.failProtection` KR) |
+| B5 | if | 412:2 | arm not entered (양쪽 스위트). 진입 게이트 관측 실패를 만드는 시험이 없다 |
+| B6 | if | 418:2 | arm not entered (양쪽 스위트). 잘못된 digest·revision·만료를 만드는 시험이 없다 |
 
 B3·B5·B6 은 **이 태스크가 바꾸지 않은** 분기이고 진입 0 은 커버리지 공백이지 통과가 아니다.
 그 공백을 메우는 것은 태스크 5.7(fault injection)의 몫이다.
@@ -66,27 +66,27 @@ B3·B5·B6 은 **이 태스크가 바꾸지 않은** 분기이고 진입 0 은 �
 
 | Callee expression | Position |
 |---|---|
-| `schedule.forMarket` | 393:27 |
-| `candidate.forMarket` | 393:55 |
-| `route.forMarket` | 393:84 |
-| `fx.forMarket` | 394:3 |
-| `proposal.forMarket` | 394:25 |
-| `riskAuthority.forMarket` | 394:53 |
-| `account.forMarket` | 394:86 |
-| `Single` | 397:23 |
-| `p.dispatchHandoff` | 397:23 |
-| `result.ValidProposal` | 402:6 |
-| `gateway.ObserveStrategyProtection` | 405:15 |
-| `strings.ToLower` | 405:54 |
-| `string` | 405:70 |
-| `gateway.ObserveStrategyEntryGate` | 408:15 |
-| `strings.ToLower` | 408:53 |
-| `string` | 408:69 |
-| `strategyWorkerEvidenceDigest` | 411:12 |
-| `validStrategyDigest` | 414:6 |
-| `IsZero` | 414:64 |
-| `a.authority.FreshUntil` | 414:64 |
-| `a.authority.FreshUntil` | 418:23 |
+| `schedule.forMarket` | 397:27 |
+| `candidate.forMarket` | 397:55 |
+| `route.forMarket` | 397:84 |
+| `fx.forMarket` | 398:3 |
+| `proposal.forMarket` | 398:25 |
+| `riskAuthority.forMarket` | 398:53 |
+| `account.forMarket` | 398:86 |
+| `Single` | 401:23 |
+| `p.dispatchHandoff` | 401:23 |
+| `result.ValidProposal` | 406:6 |
+| `gateway.ObserveStrategyProtection` | 409:15 |
+| `strings.ToLower` | 409:54 |
+| `string` | 409:70 |
+| `gateway.ObserveStrategyEntryGate` | 412:15 |
+| `strings.ToLower` | 412:53 |
+| `string` | 412:69 |
+| `strategyWorkerEvidenceDigest` | 415:12 |
+| `validStrategyDigest` | 418:6 |
+| `IsZero` | 418:64 |
+| `a.authority.FreshUntil` | 418:64 |
+| `a.authority.FreshUntil` | 422:23 |
 
 ## State mutations and fallbacks
 

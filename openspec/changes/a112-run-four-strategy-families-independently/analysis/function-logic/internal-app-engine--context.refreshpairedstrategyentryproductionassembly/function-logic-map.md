@@ -1,9 +1,9 @@
 # Function Logic Map: `refreshPairedStrategyEntryProductionAssembly`
 
 - Source: `internal/app/engine/strategy_entry_supervisor.go`
-- Current-base source SHA-256: `51840da714b49651bee5292a3b51f2814f98b7e2ee5e6996088fb9cceba14d2a`
+- Current-base source SHA-256: `627c647d087032586c4b63ca315a30fd9fad6b51af329fa4e8bf4fecd7104e08`
 - Signature: `Context.refreshPairedStrategyEntryProductionAssembly(params=2, results=2)`
-- Source range: `477:1`–`497:2`
+- Source range: `494:1`–`514:2`
 - AST evidence: `ast.json`, regenerated after the L5 5.2.1 edit.
 - Risk scan: `risk-pattern-report.md`.
 
@@ -48,25 +48,25 @@ c.strategyRefreshAt = now
 
 ## Branches and early returns
 
-- Exact AST return nodes: `479:3, 487:3, 490:3, 494:2, 495:3`. 마지막 하나는 수집 클로저 안의 반환이다.
+- Exact AST return nodes: `496:3, 504:3, 507:3, 511:2, 512:3`. 마지막 하나는 수집 클로저 안의 반환이다.
 
 | Branch | AST kind | Source location | Test disposition |
 |---|---|---|---|
-| B1 | if — `c` 또는 시계가 없다 | 478:2 | `TestARefreshWithoutAClockRefusesBeforeItCanMintAWave` |
-| B2 | if — 창 안의 캐시가 있다 | 486:2 | `TestTheMarketThatLeadsAWaveAlwaysPublishesIt`(두 번째 호출), `TestTheCacheWindowStillMeasuresFromTheWaveStart` |
-| B3 | if — 지도자가 아니다 (파도에 합류) | 489:2 | `TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns` 외 4 |
+| B1 | if — `c` 또는 시계가 없다 | 495:2 | `TestARefreshWithoutAClockRefusesBeforeItCanMintAWave` |
+| B2 | if — 창 안의 캐시가 있다 | 503:2 | `TestTheMarketThatLeadsAWaveAlwaysPublishesIt`(두 번째 호출), `TestTheCacheWindowStillMeasuresFromTheWaveStart` |
+| B3 | if — 지도자가 아니다 (파도에 합류) | 506:2 | `TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns` 외 4 |
 
 ## Calls and live bindings
 
 | Callee expression | Source location | Note |
 |---|---|---|
-| errors.New | 479:45 | B1 의 거절 |
-| UTC | 481:9 | 창을 재는 시각을 UTC 로 고정한다 |
-| clk.Now | 481:9 | 창을 재는 유일한 시각. 잠금 **밖**에서 읽는다 |
-| c.joinStrategyRefreshWave | 485:26 | 잠금 안에서 하는 일의 전부 |
-| awaitStrategyRefreshWave | 490:10 | 채널에서 기다린다 — `ctx` 를 함께 본다 |
-| c.collectStrategyRefreshWave | 494:9 | 지도자의 자리. 잠금 밖 |
-| c.NewPairedStrategyEntryProductionAssembly | 495:10 | 원격 파도 본체. 클로저 안이므로 `collect` 인자로 넘어간다 |
+| errors.New | 496:45 | B1 의 거절 |
+| UTC | 498:9 | 창을 재는 시각을 UTC 로 고정한다 |
+| clk.Now | 498:9 | 창을 재는 유일한 시각. 잠금 **밖**에서 읽는다 |
+| c.joinStrategyRefreshWave | 502:26 | 잠금 안에서 하는 일의 전부 |
+| awaitStrategyRefreshWave | 507:10 | 채널에서 기다린다 — `ctx` 를 함께 본다 |
+| c.collectStrategyRefreshWave | 511:9 | 지도자의 자리. 잠금 밖 |
+| c.NewPairedStrategyEntryProductionAssembly | 512:10 | 원격 파도 본체. 클로저 안이므로 `collect` 인자로 넘어간다 |
 
 ## State mutations and fallbacks
 

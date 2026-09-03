@@ -84,9 +84,14 @@ RACE_PACKAGES = \
 # 이름으로 고르는 것에는 실패 방식이 하나 있다: 나중에 늘린 동시성 시험이 이
 # 목록에 안 들어가고, 그 사실을 아무도 못 보는 것. a118 이 태그 뒤 테스트에서
 # 이미 한 번 겪은 모양이다. `tools/sdd/test_race_detector_actually_runs.py` 가
-# `a112_refresh_singleflight_test.go` 의 Test 함수 전부와 이 목록을 대조한다.
+# 아래 RACE_ENGINE_FILES 가 가리키는 파일들의 Test 함수 전부와 이 목록을 대조한다.
+# 파일 목록도 Makefile 에 두는 이유: 가드에 경로를 박아 두면 새 동시성 시험 파일이
+# 생겼을 때 가드가 조용히 그것을 안 본다.
 RACE_ENGINE_PACKAGE = ./internal/app/engine
-RACE_ENGINE_TESTS = TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns|TestOnlyOneMarketEverLeadsAWave|TestAFailedWaveReachesEveryMarketAndIsNeverCached|TestAMarketWaitingOnTheWaveLeavesWhenItsOwnCycleIsCancelled|TestTheCacheWindowStillMeasuresFromTheWaveStart|TestAPanickingWaveNeverStrandsTheMarketsWaitingOnIt|TestTheMarketThatLeadsAWaveAlwaysPublishesIt|TestARefreshWithoutAClockRefusesBeforeItCanMintAWave|TestAFailedWaveCarriesNoAssemblyForEitherMarket
+RACE_ENGINE_FILES = \
+	internal/app/engine/a112_refresh_singleflight_test.go \
+	internal/app/engine/a112_lane_latch_durability_test.go
+RACE_ENGINE_TESTS = TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns|TestOnlyOneMarketEverLeadsAWave|TestAFailedWaveReachesEveryMarketAndIsNeverCached|TestAMarketWaitingOnTheWaveLeavesWhenItsOwnCycleIsCancelled|TestTheCacheWindowStillMeasuresFromTheWaveStart|TestAPanickingWaveNeverStrandsTheMarketsWaitingOnIt|TestTheMarketThatLeadsAWaveAlwaysPublishesIt|TestARefreshWithoutAClockRefusesBeforeItCanMintAWave|TestAFailedWaveCarriesNoAssemblyForEitherMarket|TestALatchedLaneComesBackLatchedAfterTheProcessRestarts|TestALatchOnlyReopensForAStrictlyNewerSignedActivation|TestARestoredLatchKeepsTheFirstCauseAcrossTheRestart|TestOneLatchedLaneLeavesItsSevenPeersOpenAcrossARestart|TestADurableLatchThatNamesNoLaneInThisBuildStopsTheCycleLoudlyAndCanBeClosed|TestALedgerThatCannotTakeTheLatchStopsTheCycle|TestTheRecoveryGenerationComesFromTheSignedActivationAndNothingElse|TestTheProductionStepNeverLatchesSoTheLedgerStaysEmpty|TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther
 
 test-race:
 	go test -race -timeout 15m -count=1 -tags tossos_testseams $(RACE_PACKAGES)

@@ -548,12 +548,18 @@ func TestShutdownCancelsEveryLaneWithoutLatchingAny(t *testing.T) {
 	}
 }
 
-// 재기동: 새 레인 여덟은 모두 건강하다 — **그리고 잠긴 것도 잊는다.**
+// 재기동: **기록 없이** 세운 레인 여덟은 모두 건강하다.
 //
-// 뒤 절반이 이 시험의 요점이다. 오늘의 latch 는 프로세스 메모리이므로
-// 재기동이 그것을 지운다. 그것을 산문으로만 적어 두면 나중에 누군가 "재기동해도
-// 잠긴 채로 온다"고 믿는다. 여기서 **재어서** 못 박고, 그 자리가 태스크 5.3.3 이다.
-func TestRestartForgetsALatchedLaneWhichIsExactlyWhatTask533MustFix(t *testing.T) {
+// 이 시험은 5.7 이 쓸 때 "재기동이 잠금을 지운다"는 **구멍**을 못 박는 것이었고,
+// 5.3.3 이 그 구멍을 닫은 뒤에도 단언은 그대로 옳다 — 다만 뜻이 바뀌었다.
+// 잠금은 이제 이 패키지 밖의 durable 기록에 살고, 이 패키지는 기록을 받지 않으면
+// 잠금을 **지어낼 수 없다**. 즉 아래가 재는 것은 결함이 아니라 계약이다:
+// 기록 없이 태어난 레인은 열려 있다.
+//
+// 기록에서 태어나는 쪽은 `restore_test.go` 의
+// `TestAProductionLaneBornFromADurableRecordIsLatched` 가 잰다. 둘이 함께 있어야
+// "잠금의 출처는 기록 하나뿐"이라는 문장이 된다.
+func TestALaneBuiltWithoutADurableRecordIsBornUnlatched(t *testing.T) {
 	stage := rehearse(t, ProductionRuntimePolicy())
 	lane := stage.lanes[0]
 	if _, latched := lane.Fail("evidence replay failed", false); !latched {

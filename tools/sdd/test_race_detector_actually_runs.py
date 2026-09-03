@@ -107,11 +107,17 @@ class RaceDetectorActuallyRunsTests(unittest.TestCase):
         어느 게이트에서도 안 도는 것. 아래는 대조다: 그 파일의 Test 함수
         전부가 목록에 있어야 한다.
         """
-        source = ROOT / "internal" / "app" / "engine" / "a112_refresh_singleflight_test.go"
-        self.assertTrue(source.is_file(), f"{source} 가 없습니다 — 목록이 가리키는 파일이 사라졌습니다")
-        declared = set(re.findall(r"^func (Test\w+)\(", source.read_text(encoding="utf-8"), re.M))
+        files = re.search(r"^RACE_ENGINE_FILES\s*=(.*?)(?=\n\n|\n[A-Za-z.])", self.makefile, re.S | re.M)
+        self.assertIsNotNone(files, "Makefile 에 RACE_ENGINE_FILES 선언이 없습니다")
+        paths = [p for p in files.group(1).replace("\\", " ").split() if p.endswith("_test.go")]
+        self.assertGreaterEqual(len(paths), 1, "RACE_ENGINE_FILES 가 비어 있습니다")
+        declared = set()
+        for relative in paths:
+            source = ROOT / relative
+            self.assertTrue(source.is_file(), f"{source} 가 없습니다 — 목록이 가리키는 파일이 사라졌습니다")
+            declared |= set(re.findall(r"^func (Test\w+)\(", source.read_text(encoding="utf-8"), re.M))
         self.assertGreaterEqual(
-            len(declared), 1, "그 파일에 Test 함수가 없습니다 — 목록이 공허합니다"
+            len(declared), 1, "그 파일들에 Test 함수가 없습니다 — 목록이 공허합니다"
         )
         match = re.search(r"^RACE_ENGINE_TESTS\s*=\s*(.+)$", self.makefile, re.M)
         self.assertIsNotNone(match, "Makefile 에 RACE_ENGINE_TESTS 선언이 없습니다")
