@@ -451,3 +451,88 @@ func TestTheLanesAreBuiltBeforeTheProposalsAreCollected(t *testing.T) {
 		t.Fatal("레인이 제안 수집보다 뒤에 세워진다 — 재시작 뒤 첫 주기에 잠긴 레인이 열린다")
 	}
 }
+
+// 관문이 멈춘 제안이 시장의 소유자 범위 수를 줄여서는 안 된다 (태스크 8.8.1).
+//
+// **8.5 적대 리뷰가 실측으로 연 자리다.** 이 저장소는 같은 위험을 이미 두 번
+// 고쳤고(5.4.2 큐 넘침, 5.4.3 잃어버린 제안) 그 근거가
+// `strategy_proposal_authority.go` 와 `strategycoordinator/coordinator.go` 의
+// 주석에 적혀 있다: 닫힌 범위만 목록에서 빼면 목록이 둘에서 하나로 줄고, 짧아진
+// 목록이 아래 파이프라인의 `strategyhandoff.Capacity = 1` 관문을 **오히려
+// 만족시켜** 막으려던 것과 상관없는 다른 종목이 대신 풀린다. 5.1.2.2 의 관문이
+// 세 번째 사례를 만들었다.
+//
+// KR fixture 는 종목 둘을 올린다: `005930` 은 여러 가족, `000660` 은 지속형
+// 하나뿐이다. 그래서 **지속형을 잠그면** `000660` 범위는 봉투를 하나도 못 낸다.
+// 그 상태에서 시장이 열려 있으면 `005930` 하나가 남아 경계를 통과하고, 고장
+// 하나가 시스템을 더 관대하게 만든 것이다.
+//
+// 잠그는 가족이 `TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading` 과 다른
+// 것이 요점이다. 거기서는 역전형을 잠가 두 범위가 **둘 다** 봉투를 내므로 시장이
+// 열려 있어야 하고, 여기서는 한 범위가 통째로 비므로 닫혀야 한다. 두 시험이
+// 함께 있어야 "가족 격리"와 "범위 소멸"이 구별된다.
+func TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve(t *testing.T) {
+	runtime, activation := familyGateFixture(t)
+	latched := 0
+	for _, lane := range runtime.lanesFor(StrategyMarketKR) {
+		if lane.Key().Family != strategyrouter.FamilyContinuation {
+			continue
+		}
+		if _, locked := lane.Fail("a measured fault", true); !locked {
+			t.Fatal("비정상 실패 하나로 레인이 잠기지 않았다")
+		}
+		latched++
+	}
+	if latched != 1 {
+		t.Fatalf("잠근 레인=%d 개, want 1 — fixture 가 바뀌면 이 시험은 다른 것을 잰다", latched)
+	}
+	authority := collectUnderGate(t, activation, runtime, "005930",
+		continuationlane.KRContinuationLaneID, reversallane.KRReversalLaneID)
+	if authority.snapshot.Ready {
+		t.Fatalf("시장이 열려 있다 (선택=%d 건) — 잠긴 가족이 한 범위를 통째로 지웠는데도"+
+			" 남은 하나가 `strategyhandoff.Capacity = 1` 관문을 만족시킨다."+
+			" 고장 하나가 시스템을 더 관대하게 만들었다", len(authority.entries))
+	}
+	if authority.snapshot.Reason != StrategyProposalFamilyGateClosed {
+		t.Fatalf("reason=%s, want %s", authority.snapshot.Reason, StrategyProposalFamilyGateClosed)
+	}
+	if authority.snapshot.RefusedCount != authority.snapshot.RoutedCount {
+		t.Fatalf("거절=%d, 경로=%d — 시장이 닫히면 경로에 오른 종목 전부가 제안을 못 낸 것이다",
+			authority.snapshot.RefusedCount, authority.snapshot.RoutedCount)
+	}
+	if _, handedOff := authority.dispatchHandoff().Single(); handedOff {
+		t.Fatal("닫힌 시장이 공유 dispatch 경계에 값을 건넸다")
+	}
+}
+
+// 관문이 무엇을 왜 멈췄는지가 운영자에게 보여야 한다 (태스크 8.8.1).
+//
+// 앞 판본의 `arbitration.gated` 는 **쓰이기만 하고 아무도 안 읽었다**. 리뷰어
+// 다섯이 각각 짚었다. 그 필드의 주석은 DORMANT(안 켰다)·LATCHED(고장으로
+// 닫혔다)·REFUSED(주인 없다)를 운영자가 가른다고 약속하는데, 코드는 그것을
+// 함수 끝에서 버렸다. 약속을 지키거나 약속을 지우거나 둘 중 하나여야 한다.
+func TestTheGateSaysWhichKindOfStopItMade(t *testing.T) {
+	runtime, activation := familyGateFixture(t)
+	for _, lane := range runtime.lanesFor(StrategyMarketKR) {
+		if lane.Key().Family != strategyrouter.FamilyReversal {
+			continue
+		}
+		if _, locked := lane.Fail("a measured fault", true); !locked {
+			t.Fatal("비정상 실패 하나로 레인이 잠기지 않았다")
+		}
+	}
+	authority := collectUnderGate(t, activation, runtime, "005930",
+		continuationlane.KRContinuationLaneID, reversallane.KRReversalLaneID)
+	if !authority.snapshot.Ready {
+		t.Fatalf("시장이 닫혔다: reason=%s — 두 범위가 다 봉투를 냈으므로 열려 있어야 한다",
+			authority.snapshot.Reason)
+	}
+	if authority.snapshot.GatedCount != 1 {
+		t.Fatalf("멈춘 제안=%d 건, want 1", authority.snapshot.GatedCount)
+	}
+	want := string(strategyworker.OutcomeLatched)
+	if len(authority.snapshot.GatedOutcomes) != 1 || authority.snapshot.GatedOutcomes[0] != want {
+		t.Fatalf("멈춘 종류=%v, want [%s] — 복구 증거가 필요한 상태가 '아직 안 켰다'로 보이면 안 된다",
+			authority.snapshot.GatedOutcomes, want)
+	}
+}

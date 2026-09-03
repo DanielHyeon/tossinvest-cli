@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_proposal_authority.go",
-  "source_sha256": "653c9fa1a7f9e24754fde6c7d7c56414fc540afe7f0992343795acb6f533314b",
+  "source_sha256": "913050cc0cc0763295af577e49fbb4ccb7d4e838fbfc3408f0f33057fbbe2418",
   "package": "engine",
   "function": "ResultAuthority",
   "receiver": "strategyProposalAuthorityPair",
   "signature": "strategyProposalAuthorityPair.ResultAuthority(params=0, results=1)",
   "start": {
-    "line": 156,
+    "line": 183,
     "column": 1
   },
   "end": {
-    "line": 168,
+    "line": 195,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 162,
+        "line": 189,
         "column": 3
       }
     }
@@ -27,21 +27,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 163,
+        "line": 190,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 165,
+        "line": 192,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 167,
+        "line": 194,
         "column": 2
       }
     }
@@ -50,7 +50,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 161,
+        "line": 188,
         "column": 24
       },
       "text": "Single"
@@ -58,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 161,
+        "line": 188,
         "column": 24
       },
       "text": "value.dispatchHandoff"
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 162,
+        "line": 189,
         "column": 21
       },
       "text": "result.ValidProposal"
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 167,
+        "line": 194,
         "column": 70
       },
       "text": "convert"
@@ -82,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 167,
+        "line": 194,
         "column": 110
       },
       "text": "convert"
@@ -92,14 +92,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 157,
+        "line": 184,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 161,
+        "line": 188,
         "column": 3
       }
     }

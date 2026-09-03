@@ -25,7 +25,24 @@ type strategyMarketArbitration struct {
 	// 수만 세지 않고 종류를 담는 이유: DORMANT(안 켰다) · LATCHED(고장으로
 	// 닫혔다) · REFUSED(주인 없다)는 운영자가 할 조치가 전부 다르다. 하나로
 	// 뭉치면 복구 증거가 필요한 상태가 "아직 안 켰다" 로 보인다.
+	//
+	// 이 값은 스냅샷으로 나간다(`GatedOutcomes`). 앞 판본은 여기 쌓기만 하고
+	// 아무도 읽지 않았고, 8.5 적대 리뷰의 리뷰어 다섯이 각각 그것을 짚었다 —
+	// 약속을 지키지 않는 필드는 관측이 아니라 주석이다.
 	gated []strategyworker.Outcome
+	// erasedScopes 는 관문이 **모든** 레인을 멈춰 봉투를 하나도 못 낸 소유자
+	// 범위의 수다.
+	//
+	// 왜 이것을 따로 세는가. 이 시장의 제안 목록이 짧아지면 아래 파이프라인의
+	// `strategyhandoff.Capacity = 1` 관문이 **오히려 만족되어**, 막으려던 것과
+	// 상관없는 *다른* 종목이 대신 풀린다. 같은 위험을 이 저장소는 이미 두 번
+	// 고쳤다(5.4.2 큐 넘침, 5.4.3 잃어버린 제안) — 둘 다 시장을 닫는다.
+	//
+	// **범위 안에서 가족 하나가 막히는 것은 여기 해당하지 않는다.** 이웃 가족이
+	// 같은 범위에서 이기면 그 범위는 봉투를 냈고 목록 길이는 그대로다. 그것이
+	// 이 change 가 사려던 가족 단위 격리이고, 여기서 세는 것은 격리가 아니라
+	// **범위의 소멸**이다.
+	erasedScopes int
 }
 
 // coordinateMarketProposals 는 한 시장의 모든 가족 제안을 조정자에 넣고 중재까지 마친다.
@@ -52,6 +69,9 @@ func coordinateMarketProposals(accountRef string, market StrategyMarket, routes 
 		}
 		scope := strategyrouter.OwnerKey{AccountRef: accountRef, Market: routerMarket,
 			Symbol: route.approved.Symbol(), PositionGeneration: route.route.Request().Key.PositionGeneration}
+		// 이 범위가 관문에 몇 개를 빼앗겼는지 센다. 전부 빼앗기면 그 범위는
+		// 사라지고, 사라진 범위는 목록을 짧게 만든다(위 erasedScopes 참고).
+		gatedInScope := 0
 		for _, lane := range lanes {
 			result := lane.Proposal()
 			// 스냅샷 다이제스트는 레인 권한이 들고 있는 값을 그대로 옮긴다.
@@ -72,6 +92,7 @@ func coordinateMarketProposals(accountRef string, market StrategyMarket, routes 
 				SnapshotDigest: lane.SnapshotDigest(), Proposal: envelope.Proposal})
 			if !ok {
 				arbitration.gated = append(arbitration.gated, outcome)
+				gatedInScope++
 				continue
 			}
 			if outcome == strategyworker.OutcomeEmitted {
@@ -94,6 +115,9 @@ func coordinateMarketProposals(accountRef string, market StrategyMarket, routes 
 				return arbitration, refused
 			}
 			arbitration.byIdentity[result.Lineage.Identity] = strategyProposalEntryAuthority{route: route, authority: lane}
+		}
+		if gatedInScope == len(lanes) {
+			arbitration.erasedScopes++
 		}
 	}
 	arbitration.outcome = coordinator.Arbitrate()

@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker"
 )
 
 const (
@@ -50,6 +52,17 @@ const (
 	// "제안이 원래 없는 종목"은 여기 해당하지 않는다. 그것은 예전처럼 거절로 세고
 	// 시장은 열어 둔다. 둘을 가르는 판정은 strategyproposal 이 하고 여기서는 읽기만 한다.
 	StrategyProposalProductionFault StrategyProposalReason = "PROPOSAL_PRODUCTION_FAULT"
+	// 4-가족 관문이 한 소유자 범위의 제안을 **전부** 멈췄다 (태스크 8.8.1).
+	//
+	// 그 범위만 목록에서 빼면 목록이 짧아지고, 짧아진 목록이 아래 파이프라인의
+	// `strategyhandoff.Capacity = 1` 관문을 오히려 만족시켜 상관없는 다른 종목이
+	// 대신 풀린다 — 위 PROPOSAL_PRODUCTION_FAULT 와 정확히 같은 기전이다.
+	// 그래서 같은 처리를 한다: 시장을 닫는다.
+	//
+	// 동결 골든의 refusal_enums 에는 엔진 이름이 없으므로 위 두 코드와 마찬가지로
+	// 엔진 자신의 이름을 쓴다. 중재 여섯 코드 중 하나를 빌리면 관문이 멈춘 일이
+	// 봉인이 깨진 일로 보고된다.
+	StrategyProposalFamilyGateClosed StrategyProposalReason = "FAMILY_GATE_CLOSED"
 )
 
 // 아래 두 문장은 INTERNAL_FAILURE 로 닫히는 여러 원인 중 조정 경로가 낸 둘을
@@ -72,6 +85,20 @@ type StrategyProposalMarketSnapshot struct {
 	// ArbitrationDetail 은 그 코드 안에서 무엇이 발화했는지 좁혀 주는 진단이며
 	// 계약이 아니다 — 여섯 코드는 여러 원인을 한 이름으로 묶기 때문이다.
 	ArbitrationRefusal, ArbitrationDetail string
+	// GatedCount 는 4-가족 관문이 조정자 앞에서 멈춘 제안의 수이고,
+	// GatedOutcomes 는 그 결과 종류를 사전순 중복 없이 담은 목록이다
+	// (태스크 8.8.1).
+	//
+	// 수와 종류를 **함께** 내는 이유: 수만 있으면 "왜 줄었는가"에 답할 수 없고,
+	// 종류만 있으면 "얼마나"에 답할 수 없다. DORMANT(안 켰다)·LATCHED(고장으로
+	// 닫혔다)·REFUSED(주인 없다)는 운영자가 할 조치가 전부 다르다 — 복구 증거가
+	// 필요한 상태가 "아직 안 켰다"로 보이면 안 된다.
+	//
+	// 이 수를 RefusedCount 에 합치지 않는다. RefusedCount 는 **경로에 오른
+	// 종목** 중 제안을 못 낸 수이고 이것은 **제안** 수다. 단위가 다른 둘을 더하면
+	// 종목 하나가 가족 셋을 냈다가 둘을 잃은 주기를 아무도 읽을 수 없게 된다.
+	GatedCount    int
+	GatedOutcomes []string
 	// QueueDropCount 는 조정자 큐에서 접히거나 들어가지 못한 봉투의 수다.
 	// 유계 계수기다.
 	//
@@ -258,9 +285,15 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 	// 반복해서 고쳐 온 **무시할 수 있는 답**이다 — 갈래 하나에서 빠뜨리면
 	// 그 주기의 레인 관측이 관문과 다른 승격을 보고, 아무도 그것을 못 본다.
 	var gate strategyFamilyGate
+	// 관문이 멈춘 것도 gate 와 같은 이유로 클로저 밖에 둔다. 관문이 돌기 전의
+	// 닫힘 갈래는 0 과 빈 목록을 싣는데, 그것이 맞는 값이다 — 그 주기에는
+	// 관문이 아직 아무것도 멈추지 않았다.
+	var gatedCount int
+	var gatedOutcomes []string
 	fail := func(reason StrategyProposalReason) strategyProposalMarketAuthority {
 		return strategyProposalMarketAuthority{market: market, activation: gate.activation,
-			snapshot: StrategyProposalMarketSnapshot{Market: market, Reason: reason, RoutedCount: len(routes.entries)}}
+			snapshot: StrategyProposalMarketSnapshot{Market: market, Reason: reason, RoutedCount: len(routes.entries),
+				GatedCount: gatedCount, GatedOutcomes: gatedOutcomes}}
 	}
 	if !routes.snapshot.Ready || len(routes.entries) == 0 || !schedule.snapshot.Ready || schedule.restore.Activation == nil {
 		return fail(StrategyProposalRouteNotReady)
@@ -323,6 +356,23 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 	// 이길 수 있었는데도 통째로 닫힌다.
 	gate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)
 	arbitration, refused := coordinateMarketProposals(loader.accountRef, market, routes.entries, batch, observedAt, gate)
+	gatedCount, gatedOutcomes = len(arbitration.gated), distinctGatedOutcomes(arbitration.gated)
+	// 관문이 한 소유자 범위를 통째로 지웠으면 시장을 닫는다 (태스크 8.8.1).
+	//
+	// 위 PROPOSAL_PRODUCTION_FAULT 와 같은 처리이고 같은 이유다: 그 범위만 빼면
+	// 목록이 짧아지고, 짧아진 목록이 `strategyhandoff.Capacity = 1` 관문을 오히려
+	// 만족시켜 상관없는 다른 종목이 대신 풀린다. 8.5 적대 리뷰가 이 경로로 실제
+	// 주문이 나가는 것을 실측했다.
+	//
+	// 중재 결과보다 **먼저** 본다. 뒤에 두면 지워진 범위 때문에 중재가 이미
+	// 다른 답을 냈고, 그 답이 무엇이든 이 시장은 닫혀야 한다.
+	if arbitration.erasedScopes != 0 {
+		result := fail(StrategyProposalFamilyGateClosed)
+		result.snapshot.ManifestDigest = digest
+		result.snapshot.RefusedCount = result.snapshot.RoutedCount
+		result.snapshot.QueueDropCount = arbitration.outcome.Drops
+		return result
+	}
 	if arbitration.collision {
 		result := fail(StrategyProposalInternalFailure)
 		result.snapshot.ManifestDigest = digest
@@ -372,7 +422,30 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 	return strategyProposalMarketAuthority{market: market, entries: entries, activation: gate.activation,
 		snapshot: StrategyProposalMarketSnapshot{Market: market, Ready: true, Reason: StrategyProposalReady,
 			RoutedCount: len(routes.entries), ProposedCount: len(entries), RefusedCount: refused, ManifestDigest: digest,
-			ProposalSetDigest: "sha256:" + hex.EncodeToString(h.Sum(nil)), QueueDropCount: outcome.Drops}}
+			ProposalSetDigest: "sha256:" + hex.EncodeToString(h.Sum(nil)), QueueDropCount: outcome.Drops,
+			GatedCount: gatedCount, GatedOutcomes: gatedOutcomes}}
+}
+
+// distinctGatedOutcomes 는 관문이 낸 결과 종류를 사전순 중복 없이 돌려준다.
+//
+// 정렬하는 이유는 운영자가 아니라 **비교**다. 순서가 입력 순서를 따라가면 같은
+// 상태가 주기마다 다른 문자열로 보고되고, 그러면 두 주기의 스냅샷을 눈으로도
+// 시험으로도 대조할 수 없다.
+func distinctGatedOutcomes(values []strategyworker.Outcome) []string {
+	if len(values) == 0 {
+		return nil
+	}
+	seen := make(map[string]struct{}, len(values))
+	kinds := make([]string, 0, len(values))
+	for _, value := range values {
+		if _, exists := seen[string(value)]; exists {
+			continue
+		}
+		seen[string(value)] = struct{}{}
+		kinds = append(kinds, string(value))
+	}
+	sort.Strings(kinds)
+	return kinds
 }
 
 func failedStrategyProposalPair(observedAt time.Time, reason StrategyProposalReason) strategyProposalAuthorityPair {

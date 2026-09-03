@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_market_coordinator.go",
-  "source_sha256": "91b72a6f52f9be492fc945dc5a3856f4d9cb4b8cdc9cc97832f0f08b698d096a",
+  "source_sha256": "e9a4bde458176c4679f254d71b56439b348110fb6dc1ab2338cd7f2cf376f728",
   "package": "engine",
   "function": "entries",
   "receiver": "strategyMarketArbitration",
   "signature": "strategyMarketArbitration.entries(params=0, results=2)",
   "start": {
-    "line": 106,
+    "line": 130,
     "column": 1
   },
   "end": {
-    "line": 116,
+    "line": 140,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 108,
+        "line": 132,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 110,
+        "line": 134,
         "column": 3
       }
     }
@@ -35,14 +35,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 111,
+        "line": 135,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 115,
+        "line": 139,
         "column": 2
       }
     }
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 107,
+        "line": 131,
         "column": 12
       },
       "text": "make"
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 107,
+        "line": 131,
         "column": 54
       },
       "text": "len"
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 113,
+        "line": 137,
         "column": 12
       },
       "text": "append"
@@ -77,21 +77,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 107,
+        "line": 131,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 109,
+        "line": 133,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 113,
+        "line": 137,
         "column": 3
       }
     }

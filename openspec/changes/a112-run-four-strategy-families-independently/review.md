@@ -4556,3 +4556,80 @@ if 두 노드**로 내므로, 좌표로 분기를 세는 이 change 의 열거�
   리뷰를 요구하며 이 로트는 그것을 대신하지 않는다.
 - 서명된 매니페스트를 **실제로 만들어 배포하는 절차**는 이 로트에 없다. 생산에는
   그 파일이 하나도 없고(측정), 그래서 오늘 생산 동작 변화는 0 이다.
+
+## 2026-09-04 — 8.5 독립 적대 리뷰와 그것이 연 수정 [결정 60]
+
+### 리뷰 실행 방식과 범위
+
+`docs/WORKFLOW.md` 는 "구현을 만든 컨텍스트와 그것을 검증하는 컨텍스트는 항상 별도
+세션"을 요구한다. 리뷰어 **일곱**(testing · security · maintainability · performance ·
+api-contract · red-team · 적대 chaos)과 **다른 모델**(codex, `model_reasoning_effort=high`)이
+각각 신선한 컨텍스트에서 돌았다.
+
+**범위를 좁힌 것을 명시한다.** 리뷰 대상은 리뷰된 적 없는 로트
+`06be6ca9^..515f85a8` 의 `internal/` 이다. 브랜치 전체 diff 는 6,225 파일이라 그대로
+주면 리뷰어가 어디에도 닿지 못한다. 앞선 커밋들은 각자의 라운드를 review.md 에 갖고
+있다. 이 축소는 침묵한 생략이 아니라 기록된 선택이다.
+
+### 판정: 이대로 main 불가
+
+**P0-1 · 관문 거절이 노출을 제조한다.** 레드팀이 이 저장소 픽스처로 실측했다:
+매니페스트 없음 = entries 2 → `HANDOFF_OVER_CAPACITY` → 주문 0. 활성화 + 레인 잠금 =
+entries 1 → **주문 나감**. 고장이 전혀 없는 부분 매니페스트(4 중 1만 ON)에서도 = 1 →
+**주문 나감**. 같은 기전을 이 change 가 이미 두 번 고쳤고(5.4.2·5.4.3) 그 경고 주석이
+관문 바로 위에 있다. 내 시험이 못 잡은 이유는 **한 종목·두 가족**만 세워 범위 *안*
+격리만 쟀기 때문이다 — 익스플로잇은 두 종목이다.
+
+**P0-2 · 위험 번들 결속이 충족 불가능하다.** `r.snapshot.BundleDigest` 는
+`sha256JSON({Scope, Policy, Entries})` 이고 `RiskSnapshotScope` 는 `Symbol` 과
+`AsOf time.Time` 을 품는다. 엔진은 `scope.AsOf.Equal(loader.observedAt)` 를 요구하고
+그 값은 파도의 벽시계다. 서명된 상수가 같아질 수 없으므로, 매니페스트를 배포하는
+순간 두 시장이 영원히 dormant 가 된다. 시험이 초록이던 이유는
+`buildWorkerUnderActivation` 이 **시험 시점에 살아 있는 digest 를 읽어** 매니페스트에
+넣었기 때문이다. 파일을 미리 서명하는 운영자는 그럴 수 없다.
+
+**P0-3 · 그 결속이 주문 경로에 없다.** 판정 결과인 `StrategyMarketWorker.Effective` 를
+읽는 곳은 화면(`strategy_runtime_projection.go:107`)과 supervisor 검증뿐이다. dormant
+worker 도 `Cycle` 을 들고 계속 돌며 `dispatchHandoff().Deliver` 로 주문에 닿고,
+`strategyDispatchCycle.dispatch` 는 자기 승인 사슬을 다시 유도하며 가족 활성화를 보지
+않는다. P0-2 와 겹치면 **화면은 멈추고 주문은 계속 나간다.**
+
+**배포 불가 사유(추가).** 18 필드 매니페스트에 문서·생성기·골든이 전무하다. 형제 둘은
+`docs/operations.md` 에 절을 갖는다. 정규화 규칙도 형제와 반대다(바이트 일치 vs
+pretty-print 허용). 약 30 가지 원인이 sentinel 하나로 뭉치고 엔진이 그것마저 버린다.
+
+### 리뷰어가 틀린 것 (받아 적지 않고 대조한 것)
+
+- **env 신뢰 앵커**: 이 로트가 만든 구멍이 아니다. `strategy_schedule_authority.go:252`
+  도 같은 방식으로 env 에서 KEY_ID/PUBLIC_KEY 를 읽는다 — 저장소 전체의 기존 자세다.
+- **재생 공격**: `productionRouteDigest(data) != config.ManifestDigest` 핀이 파일만의
+  롤백을 막는다. env 핀까지 되돌리는 것은 운영자의 의도적 행위이고 수명 24h 가 경계다.
+  잔여는 세대 래칫이 없다는 것뿐이며 8.7.2 로 넘긴다.
+- **TrustedKey 길이 삭제 시 패닉**: 엔진이 호출 전에 길이를 검증하므로 생산 경로에서는
+  패닉에 닿지 않는다. 심각도가 과대평가됐다.
+
+### 방법에 대한 결론
+
+반증 58 개와 자기 적대 리뷰 13 라운드가 이 셋을 하나도 못 잡았다. 전부 **내가 고른 축**
+안에서 움직였기 때문이다. 신선한 컨텍스트 일곱이 프레임 자체를 깼고 그중 하나는
+익스플로잇을 실측으로 재현했다. High-risk 로트에서 반증 횟수는 별도 검증 컨텍스트를
+대체하지 못한다.
+
+### 8.8.1 구현 기록 (이 커밋)
+
+관문 거절이 소유자 범위를 통째로 지우면 시장을 닫는다(`FAMILY_GATE_CLOSED`,
+`RefusedCount = RoutedCount`). 범위 **안에서** 가족 하나가 막히고 이웃이 이기는 것은
+그대로 둔다 — `TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading` 이 그것을 지키고
+이번 로트에서도 초록이다. `arbitration.gated` 는 이제 스냅샷으로 나가
+(`GatedCount`·`GatedOutcomes`) 쓰이기만 하던 필드가 읽히게 됐다.
+
+**반증**: 새 가드를 `if false && …` 로 무력화하니
+`TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve` 가 "시장이 열려 있다
+(선택=1 건)"으로 빨개졌다. 원복은 해시 검증으로 했다
+(`9e757ca147d0d66035c11bc9511d5d2f65c12b3585ff1b17e9d64e3a60642ec8`).
+
+**FLM 재측정**: 편집한 두 함수와 같은 파일의 형제 둘, 총 네 묶음을 다시 만들었다.
+분기 처리 상태는 커버리지 프로파일로 다시 쟀고(태그 78.3% / 무태그 69.5%, 테스트별
+27 개), 귀속 완전성 등식이 모든 분기에서 성립했다. `collectMarket` 은 새 분기가
+**가운데**에 들어가 옛 B10~B15 가 B11~B16 으로 밀렸으므로 조건을 소스와 하나씩
+대조했다. B10 진입 7 회 중 다섯이 US 시장이라는 fixture 성질도 그대로 적었다.

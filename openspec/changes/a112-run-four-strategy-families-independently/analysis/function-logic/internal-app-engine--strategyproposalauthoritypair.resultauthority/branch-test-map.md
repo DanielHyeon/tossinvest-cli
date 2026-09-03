@@ -1,10 +1,10 @@
 # Branch Test Map: `strategyProposalAuthorityPair.ResultAuthority`
 
-- Source: `internal/app/engine/strategy_proposal_authority.go` (156-168); file SHA-256 `653c9fa1a7f9e24754fde6c7d7c56414fc540afe7f0992343795acb6f533314b`. AST branch positions are authoritative.
+- Source: `internal/app/engine/strategy_proposal_authority.go` (183-195); file SHA-256 `913050cc0cc0763295af577e49fbb4ccb7d4e838fbfc3408f0f33057fbbe2418`. AST branch positions are authoritative.
 - 이 태스크가 이 함수를 편집했다. 아래 행은 실제로 돌린 시험과 뮤테이션 결과다.
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 162:3 — handoff 가 거절했거나 봉인이 깨진 제안 | `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol` (태그 스위트 1회 진입) | 아니오 — 이 태스크는 이 분기의 **동작**을 바꾸지 않았고 조건의 출처만 옮겼다 | 예 |
+| B1 | if at 189:3 — handoff 가 거절했거나 봉인이 깨진 제안 | `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol` (태그 스위트 1회 진입) | 아니오 — 이 태스크는 이 분기의 **동작**을 바꾸지 않았고 조건의 출처만 옮겼다 | 예 |
 
 ## 반증 실측
 

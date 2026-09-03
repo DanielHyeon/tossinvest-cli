@@ -366,3 +366,45 @@
   **이 태스크가 주장하지 않는 것.** 서명된 매니페스트를 실제로 만들어 배포하는 절차는 여기 없다. 생산에는 그 파일이 하나도 없고(측정: `find ~/.config/tossctl -maxdepth 2 -name 'strategy*'` → 0 건), 그래서 오늘 생산 동작 변화는 0 이다. 활성화가 없거나 만료·폐기됐을 때의 운영 rollback 자세는 8.7.2 다.
 
 - [ ] 8.7.2 Rollback entry workers to OFF when that activation is missing, expired or revoked, while retaining shared safety and lineage state.
+
+## 8.8 8.5 독립 적대 리뷰가 연 수정 (2026-09-04, 결정 60)
+
+8.5 를 리뷰어 7 + 다른 모델 1 로 실행했다(범위: `06be6ca9^..515f85a8`). 판정은
+**이대로 main 불가**다. 아래는 그 리뷰가 연 태스크이며, 8.7.1 이 landed 로 남아
+있어도 그 landing 은 여기 셋이 닫히기 전까지 **배포 가능하지 않다**.
+
+리뷰 기록·근거·리뷰어가 틀린 것까지 review.md 의 2026-09-04 절에 있다.
+
+- [x] 8.8.1 관문 거절이 시장의 소유자 범위 수를 줄여 downstream 의 "정확히 하나"
+  관문을 **만족시키는** 경로를 닫는다. 경로에 오른 범위가 레인을 갖고도 봉투를
+  하나도 못 내면 그 시장을 닫는다(5.4.2·5.4.3 과 같은 처리). 같은 범위 안에서
+  가족 하나가 막히고 이웃 가족이 이기는 것은 그대로 둔다 — 그것이 이 change 가
+  사려던 격리다. 멈춘 결과 종류를 스냅샷에 실어 `gated` 가 읽히게 한다.
+
+  **(Landed 2026-09-04.)** `FAMILY_GATE_CLOSED` 로 시장을 닫고 `RefusedCount` 에
+  `RoutedCount` 를 그대로 넣는다 — 5.4.2·5.4.3 과 같은 처리다. 세는 단위는 **제안이
+  아니라 소유자 범위**다: 범위의 레인이 전부 관문에 막혔을 때만 닫는다. 일부만 막힌
+  범위는 이웃 가족이 같은 범위에서 이기므로 목록 길이가 그대로이고, 그것은 이 change 가
+  사려던 격리이지 소멸이 아니다. `TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading`
+  (역전형을 잠가 두 범위가 다 봉투를 냄)과
+  `TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve`
+  (지속형을 잠가 `000660` 범위가 소멸)가 그 둘을 갈라 세운다. `arbitration.gated` 는
+  이제 `GatedCount`·`GatedOutcomes` 로 스냅샷에 나간다. 상세는 review.md 2026-09-04 절.
+
+- [ ] 8.8.2 매니페스트가 결속하는 다섯 값을 **서명 가능한 값**으로 바꾼다.
+  `risk_bundle_digest` 는 per-cycle 스냅샷 봉인(`Symbol`·`AsOf` 포함)이라 어떤
+  정상 입력으로도 참이 될 수 없었다. 운영자가 이미 관리하는
+  `TOSSOS_RISK_BUCKET_<M>_MANIFEST_SHA256` 을 쓴다. ProtectionReady 는 살아 있는
+  상태라 등식으로 결속할 수 없으므로 **하한 세대**로 바꾸고, 그 판정을 주문 경로에
+  둔다. 지금 판정은 `buildProductionStrategyMarketWorker` 안에 있어 화면만 바꾼다.
+
+- [ ] 8.8.3 이 매니페스트를 사람이 만들 수 있게 한다: 정규 바이트를 내고 서명하는
+  `tools/` 도구, `docs/operations.md` 의 형제 절과 같은 문서, 그리고 검증되는 골든
+  픽스처 하나. 시험은 **매니페스트 바이트를 먼저 만들고 나서** 엔진을 돌린다 —
+  결함이 사는 축이 값이 아니라 순서다.
+
+- [ ] 8.8.4 P1 정리: 오류를 필드 이름과 함께 감싸 스냅샷에 내기(만료·폐기를
+  "배포 안 함"과 구별), 닫힘 갈래 12 중 7 이 영값 활성화를 싣는 것, 골든의
+  desired/effective 단언 무효화, 엔진 race 목록에 관문 시험 등록,
+  `promotion` 인자를 검증된 활성화로 도는 시험, `*_testseam.go` 빌드 태그 가드,
+  그리고 레인을 제안 수집 앞으로 옮기며 생긴 원장 오류의 양시장 전파.
