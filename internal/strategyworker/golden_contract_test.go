@@ -103,11 +103,18 @@ func TestProductionWorkersAreExactlyTheEightTheGoldenFroze(t *testing.T) {
 		}
 		// OFF 기본값은 이 change 의 안전 약속 중 하나다. 골든이 여덟 줄 모두에
 		// 적어 두었으므로 여덟 줄 모두에서 확인한다.
-		if string(got.Desired()) != want.Desired || string(got.Effective()) != want.Effective ||
+		//
+		// **영값 활성화를 건네는 것이 골든이 얼린 상태의 정의다** (8.7.1).
+		// 골든의 `desired: OFF, effective: OFF` 는 "새 설치·migration·restart" —
+		// 즉 서명된 4-가족 활성화가 **없는** 상태의 값이다. 그 상태를 값으로
+		// 만드는 것이 `strategyrouter.FamilyActivation{}` 이고, 이 패키지 밖에서
+		// 만들 수 있는 유일한 활성화가 그것이다.
+		none := strategyrouter.FamilyActivation{}
+		if string(got.Desired(none)) != want.Desired || string(got.Effective(none)) != want.Effective ||
 			string(got.Runtime()) != want.Runtime {
 			t.Errorf("worker %d is not born dormant: golden %s/%s/%s, implementation %s/%s/%s",
 				index, want.Desired, want.Effective, want.Runtime,
-				got.Desired(), got.Effective(), got.Runtime())
+				got.Desired(none), got.Effective(none), got.Runtime())
 		}
 	}
 }

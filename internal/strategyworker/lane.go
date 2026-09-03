@@ -8,6 +8,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 )
 
 // LaneHealth 는 레인 하나의 관측 가능한 상태다. 세 값을 따로 두는 이유는
@@ -197,14 +198,18 @@ func (lane *Lane) Health() LaneHealth {
 //
 // 잠금이 먼저인 이유: 잠긴 레인을 DORMANT 로 보고하면 운영자는 "아직 안 켰다"로
 // 읽는다. 실제로는 고장으로 닫힌 것이고, 그 둘은 필요한 조치가 다르다.
-func (lane *Lane) Run(input Input) Cycle {
+//
+// **활성화보다도 잠금이 먼저다.** 순서가 계약이다 — 켜진 레인이 잠기면 그것은
+// LATCHED 이고 DORMANT 가 아니다. 뒤집으면 승격이 사라진 순간 잠긴 레인의
+// 진단이 "안 켰다"로 바뀌어, 복구 증거가 필요한 상태가 시야에서 사라진다.
+func (lane *Lane) Run(activation strategyrouter.FamilyActivation, input Input) Cycle {
 	lane.mu.Lock()
 	latched := lane.latched
 	lane.mu.Unlock()
 	if latched {
 		return Cycle{Outcome: OutcomeLatched, Detail: DetailLatched}
 	}
-	return lane.worker.Run(input)
+	return lane.worker.Run(activation, input)
 }
 
 // Succeed 는 연속 실패 카운터를 지운다.

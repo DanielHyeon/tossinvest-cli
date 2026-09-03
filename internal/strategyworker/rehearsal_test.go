@@ -87,7 +87,7 @@ func rehearse(t *testing.T, policy RuntimePolicy) *rehearsal {
 	lanes := make([]*Lane, 0, len(ProductionWorkers()))
 	for _, worker := range ProductionWorkers() {
 		key := worker.Key()
-		lanes = append(lanes, newLane(effective(t, key.Market, key.Family), policy, fake))
+		lanes = append(lanes, newLane(workerFor(t, key.Market, key.Family), policy, fake))
 	}
 	if len(lanes) != 8 {
 		t.Fatalf("the golden fixes eight workers and this rehearsal built %d", len(lanes))

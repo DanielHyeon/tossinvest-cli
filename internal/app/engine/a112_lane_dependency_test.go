@@ -78,7 +78,7 @@ func TestExactlyOneLaneOwnsEachSealedProposal(t *testing.T) {
 // 안 된다 (MUST NOT)" 가 값으로 참이라는 뜻이다.
 func TestEveryLaneStaysDormantOnAProposalItActuallyOwns(t *testing.T) {
 	runtime := laneRuntimeForDependency(t)
-	_ = runtime.evaluate(context.Background(), StrategyMarketKR, 0, laneOwnedInputs(t))
+	_ = runtime.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, laneOwnedInputs(t))
 	admitted := 0
 	for _, observation := range runtime.observations() {
 		if observation.Key.Market != strategyrouter.MarketKR {
@@ -111,7 +111,7 @@ func TestEveryLaneStaysDormantOnAProposalItActuallyOwns(t *testing.T) {
 func TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes(t *testing.T) {
 	_, _, _, spy := pairedStrategyDispatchCycleFixture(t)
 	runtime := laneRuntimeForDependency(t)
-	_ = runtime.evaluate(context.Background(), StrategyMarketKR, 0, laneOwnedInputs(t))
+	_ = runtime.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, laneOwnedInputs(t))
 	spy.mu.Lock()
 	places, observed := len(spy.calls), len(spy.observed)
 	spy.mu.Unlock()

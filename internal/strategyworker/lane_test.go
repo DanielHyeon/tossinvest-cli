@@ -234,13 +234,13 @@ func TestProductionLanesHandsOutFreshLanesEveryTime(t *testing.T) {
 // 닫힌 것이다.
 func TestALatchedLaneReportsTheLatchRatherThanDormancy(t *testing.T) {
 	lane := laneUnder(t, ProductionRuntimePolicy())
-	if lane.Run(Input{}).Outcome != OutcomeDormant {
+	if lane.Run(strategyrouter.FamilyActivation{}, Input{}).Outcome != OutcomeDormant {
 		t.Fatal("a dormant lane must report dormancy before it is latched")
 	}
 	if _, latched := lane.Fail("boom", true); !latched {
 		t.Fatal("the lane did not latch")
 	}
-	cycle := lane.Run(Input{})
+	cycle := lane.Run(strategyrouter.FamilyActivation{}, Input{})
 	if cycle.Outcome != OutcomeLatched {
 		t.Fatalf("a latched lane reported %s", cycle.Outcome)
 	}

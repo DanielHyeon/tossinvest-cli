@@ -191,18 +191,49 @@ func allMarkets() []strategyrouter.Market {
 	return []strategyrouter.Market{strategyrouter.MarketKR, strategyrouter.MarketUS}
 }
 
-// effective 는 생산 목록의 그 worker 를 켠 사본이다.
+// workerFor 는 생산 목록의 그 worker 다. 사본이 아니라 그 값 자체다.
 //
-// 생산 진입점은 여덟 개를 언제나 OFF 로 준다. 켜는 seam 을 내보내면 그 약속이
-// 권고가 되므로, 켜진 worker 는 이 패키지 안에서만 만들 수 있다.
-func effective(t *testing.T, market strategyrouter.Market, family strategyrouter.Family) FamilyWorker {
+// 앞 판본의 이름은 `effective` 였고 상태를 ON 으로 바꾼 **사본**을 돌려줬다.
+// 이제 그럴 수 없다 — desired/effective 는 필드가 아니라 서명된 활성화의
+// 함수이므로(8.7.1), 켜려면 아래 `promoting` 이 주조하는 활성화가 필요하다.
+// 그 주조 자체도 `tossos_testseams` 태그 아래에만 있는 문이다.
+func workerFor(t *testing.T, market strategyrouter.Market, family strategyrouter.Family) FamilyWorker {
 	t.Helper()
 	for _, worker := range ProductionWorkers() {
 		if worker.Key().Market == market && worker.Key().Family == family {
-			return newWorker(worker.Key(), worker.Horizon(),
-				strategyrouter.StateOn, strategyrouter.StateOn, worker.Runtime())
+			return worker
 		}
 	}
 	t.Fatalf("no production worker for %s/%s", market, family)
 	return FamilyWorker{}
 }
+
+// promoting 은 그 시장의 이름 부른 가족들만 켠 활성화다.
+//
+// 레인 ID 를 손으로 적지 않고 생산 목록에서 읽는다. 적으면 레인 ID 가 바뀔 때
+// 이 helper 가 조용히 아무것도 켜지 않고, 그러면 "잠들었다"는 단언이 잠들어서가
+// 아니라 승격이 비어서 통과한다.
+func promoting(t *testing.T, market strategyrouter.Market,
+	families ...strategyrouter.Family,
+) strategyrouter.FamilyActivation {
+	t.Helper()
+	promoted := map[string]bool{}
+	for _, worker := range ProductionWorkers() {
+		for _, family := range families {
+			if worker.Key().Market == market && worker.Key().Family == family {
+				promoted[worker.Key().LaneID] = true
+			}
+		}
+	}
+	if len(promoted) != len(families) {
+		t.Fatalf("promoting %s %v matched %d lanes, so this activation does not mean what it says",
+			market, families, len(promoted))
+	}
+	return strategyrouter.FamilyActivationForTest(market, 1, promoted)
+}
+
+// noActivation 은 서명된 파일이 없는 상태다. 오늘 생산의 값이다.
+//
+// 무태그 시험 파일에서는 이 helper 가 보이지 않으므로(이 fixture 는
+// tossos_testseams 아래에 있다) 거기서는 영값을 그대로 적는다.
+func noActivation() strategyrouter.FamilyActivation { return strategyrouter.FamilyActivation{} }

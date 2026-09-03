@@ -268,6 +268,16 @@ var seamImportAllowlist = map[string]map[string]bool{
 		"github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator": true,
 		"github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal":    true,
 		"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter":      true,
+		// 태스크 5.1.2.2 로 늘었다. 네 전략군 레인이 조정자 **앞**에 서므로
+		// 이 파일이 그 관문에 넘길 입력 타입과 결과 종류를 이름해야 한다.
+		//
+		// 이 한 줄이 능력을 늘리지 않는다는 것은 여기서 주장하는 것이 아니라
+		// **다른 시험이 증명한 것**이다: internal/strategyworker 의
+		// dependency_closure_test.go 가 `-deps`/`-deps-test` 로 그 패키지의
+		// 폐포 전체를 훑어 broker mutator·writable journal·Guardian issuer·
+		// activation/toggle writer 가 없음을 확인하고, 양성 대조로 걸음이
+		// 얕지 않다는 것까지 잰다.
+		"github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker": true,
 	},
 	handoffSeamFile: {
 		"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow":    true,

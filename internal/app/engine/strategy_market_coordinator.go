@@ -7,6 +7,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker"
 )
 
 // strategyMarketArbitration 은 한 시장을 조정한 결과다.
@@ -19,6 +20,12 @@ type strategyMarketArbitration struct {
 	outcome    strategycoordinator.Outcome
 	byIdentity map[string]strategyProposalEntryAuthority
 	collision  bool
+	// gated 는 4-가족 관문이 조정자 앞에서 멈춘 제안들의 결과 종류다.
+	//
+	// 수만 세지 않고 종류를 담는 이유: DORMANT(안 켰다) · LATCHED(고장으로
+	// 닫혔다) · REFUSED(주인 없다)는 운영자가 할 조치가 전부 다르다. 하나로
+	// 뭉치면 복구 증거가 필요한 상태가 "아직 안 켰다" 로 보인다.
+	gated []strategyworker.Outcome
 }
 
 // coordinateMarketProposals 는 한 시장의 모든 가족 제안을 조정자에 넣고 중재까지 마친다.
@@ -31,7 +38,7 @@ type strategyMarketArbitration struct {
 // 말한 종목을 그 권한을 검사하는 데 다시 쓰면, 어긋남을 잡아내려던 검사가
 // 언제나 참이 되어 아무것도 잡지 못한다.
 func coordinateMarketProposals(accountRef string, market StrategyMarket, routes []strategyRouteEntryAuthority,
-	batch strategyproposal.ProductionBatchAuthority, observedAt time.Time,
+	batch strategyproposal.ProductionBatchAuthority, observedAt time.Time, gate strategyFamilyGate,
 ) (strategyMarketArbitration, int) {
 	routerMarket := strategyRouterMarket(market)
 	coordinator := strategycoordinator.NewMarketCoordinator(routerMarket, observedAt)
@@ -49,9 +56,28 @@ func coordinateMarketProposals(accountRef string, market StrategyMarket, routes 
 			result := lane.Proposal()
 			// 스냅샷 다이제스트는 레인 권한이 들고 있는 값을 그대로 옮긴다.
 			// 이 값은 봉인된 계보 안에 없으므로 여기서 건네야 한다.
-			admission := coordinator.Submit(strategycoordinator.Envelope{Scope: scope,
+			envelope := strategycoordinator.Envelope{Scope: scope,
 				SnapshotDigest: lane.SnapshotDigest(),
-				Proposal:       strategyarbiter.Proposal{Result: result, Authority: route.route}})
+				Proposal:       strategyarbiter.Proposal{Result: result, Authority: route.route}}
+			// 이 가족의 레인이 이 제안을 조정자로 보내는가 (태스크 5.1.2.2).
+			//
+			// 관문이 서지 않은 시장에서는 아무것도 묻지 않고 위 봉투가 그대로
+			// 들어간다 — 그것이 오늘의 동작이고, 서명된 4-가족 활성화가 없는
+			// 시장의 값이다. 선 시장에서는 레인이 만든 봉투가 들어가고,
+			// 잠긴 레인의 가족은 여기서 멈춘다.
+			// `else if` 를 쓰지 않는다. Go AST 는 `} else if` 를 **같은 좌표의
+			// else 와 if 두 노드**로 내므로, 좌표로 분기를 세는 이 change 의
+			// 열거표에서 두 줄이 구별되지 않는다.
+			admitted, outcome, ok := gate.admit(strategyworker.Input{Scope: scope,
+				SnapshotDigest: lane.SnapshotDigest(), Proposal: envelope.Proposal})
+			if !ok {
+				arbitration.gated = append(arbitration.gated, outcome)
+				continue
+			}
+			if outcome == strategyworker.OutcomeEmitted {
+				envelope = admitted
+			}
+			admission := coordinator.Submit(envelope)
 			if !admission.Admitted {
 				// 거절은 조정자가 이미 붙들고 있다. 여기서 되돌릴 색인만 만들지 않는다.
 				continue

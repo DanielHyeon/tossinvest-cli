@@ -79,34 +79,49 @@ const (
 
 // FamilyWorker 는 (시장, 가족, 레인, 레인 버전) 하나를 맡는 worker 다.
 //
-// 상태는 골든이 정한 대로 desired/effective OFF, runtime UNOBSERVED 로 태어난다.
-// 켜는 일은 이 타입의 일이 아니다 — 서명된 활성화 권한이 하는 일이고, 그때까지
-// 모든 사이클은 DORMANT 다.
+// **desired/effective 는 필드가 아니다** (태스크 8.7.1). 두 값은 서명된 4-가족
+// 활성화의 함수이고, 활성화가 없으면 둘 다 OFF 다 — 골든이 여덟 서술자를
+// `desired: OFF, effective: OFF` 로 얼린 것이 바로 "활성화가 없을 때의 값"이고
+// 그것을 `Desired(FamilyActivation{})` 로 시험한다.
+//
+// 왜 필드가 아니라 인자인가. 활성화에는 만료가 있고(서명 매니페스트 24시간 상한)
+// 레인은 프로세스 수명이다(latch 와 연속 실패 계수기가 기억이라서 — 5.1.2.1).
+// 승격을 값 안에 구우면 **묵은 ON** 이 생긴다. 묵은 OFF 는 안전한 방향이지만
+// 묵은 ON 은 아니다. 인자로 두면 신선도를 새로 고침 파도가 준다.
+//
+// runtime 은 그대로 필드다. 그것은 승격이 아니라 관측이고(UNOBSERVED),
+// 관측을 올리는 일은 투영이 한다.
 type FamilyWorker struct {
-	key       Key
-	horizon   strategyrouter.Horizon
-	desired   strategyrouter.DesiredState
-	effective strategyrouter.DesiredState
-	runtime   strategyrouter.RuntimeState
+	key     Key
+	horizon strategyrouter.Horizon
+	runtime strategyrouter.RuntimeState
 }
 
-func (worker FamilyWorker) Key() Key                             { return worker.key }
-func (worker FamilyWorker) Horizon() strategyrouter.Horizon      { return worker.horizon }
-func (worker FamilyWorker) Desired() strategyrouter.DesiredState { return worker.desired }
-func (worker FamilyWorker) Effective() strategyrouter.DesiredState {
-	return worker.effective
+func (worker FamilyWorker) Key() Key                        { return worker.key }
+func (worker FamilyWorker) Horizon() strategyrouter.Horizon { return worker.horizon }
+
+// Desired 와 Effective 는 서명된 활성화가 이 worker 의 레인에 대해 말한 상태다.
+//
+// 시장·가족·레인·버전을 호출자가 고르지 않고 이 worker 의 열쇠에서 읽는다.
+// 호출자가 고르면 한 worker 가 남의 승격을 자기 것으로 읽을 수 있다.
+func (worker FamilyWorker) Desired(activation strategyrouter.FamilyActivation) strategyrouter.DesiredState {
+	return activation.Desired(worker.key.Market, worker.key.Family, worker.key.LaneID, worker.key.LaneVersion)
 }
+
+func (worker FamilyWorker) Effective(activation strategyrouter.FamilyActivation) strategyrouter.DesiredState {
+	return activation.Effective(worker.key.Market, worker.key.Family, worker.key.LaneID, worker.key.LaneVersion)
+}
+
 func (worker FamilyWorker) Runtime() strategyrouter.RuntimeState { return worker.runtime }
 
-// newWorker 는 상태까지 지정해 worker 하나를 만든다.
+// newWorker 는 worker 하나를 만든다.
 //
-// 내보내지 않는다. 켜진 worker 를 아무나 만들 수 있으면 OFF 기본값은 약속이
-// 아니라 권고가 된다. 이 패키지의 시험만 켜진 worker 를 만들 수 있고, 생산
-// 진입점은 아래 ProductionWorkers 하나뿐이다.
-func newWorker(key Key, horizon strategyrouter.Horizon,
-	desired, effective strategyrouter.DesiredState, runtime strategyrouter.RuntimeState,
-) FamilyWorker {
-	return FamilyWorker{key: key, horizon: horizon, desired: desired, effective: effective, runtime: runtime}
+// 내보내지 않는다. 생산 진입점은 아래 ProductionWorkers 하나뿐이다. 그리고
+// 여기서 켜진 worker 를 만들 방법은 **없다** — 상태 인자가 아예 사라졌으므로,
+// 켜려면 서명된 활성화를 통과시키는 길밖에 없다. 앞 판본은 desired/effective 를
+// 인자로 받았고, 그래서 시험이 상태를 직접 주조할 수 있었다.
+func newWorker(key Key, horizon strategyrouter.Horizon, runtime strategyrouter.RuntimeState) FamilyWorker {
+	return FamilyWorker{key: key, horizon: horizon, runtime: runtime}
 }
 
 // ProductionWorkers 는 골든이 정한 여덟 worker 를 그 순서 그대로 돌려준다.
@@ -117,30 +132,34 @@ func newWorker(key Key, horizon strategyrouter.Horizon,
 // 골든 파일을 직접 읽어 대조한다.
 func ProductionWorkers() []FamilyWorker {
 	return []FamilyWorker{
-		dormant(strategyrouter.MarketKR, strategyrouter.FamilyContinuation,
+		productionWorker(strategyrouter.MarketKR, strategyrouter.FamilyContinuation,
 			continuationlane.KRContinuationLaneID, continuationlane.LaneVersionV1, strategyrouter.HorizonShort),
-		dormant(strategyrouter.MarketUS, strategyrouter.FamilyContinuation,
+		productionWorker(strategyrouter.MarketUS, strategyrouter.FamilyContinuation,
 			continuationlane.USContinuationLaneID, continuationlane.LaneVersionV1, strategyrouter.HorizonShort),
-		dormant(strategyrouter.MarketKR, strategyrouter.FamilyReversal,
+		productionWorker(strategyrouter.MarketKR, strategyrouter.FamilyReversal,
 			reversallane.KRReversalLaneID, reversallane.LaneVersionV1, strategyrouter.HorizonShort),
-		dormant(strategyrouter.MarketUS, strategyrouter.FamilyReversal,
+		productionWorker(strategyrouter.MarketUS, strategyrouter.FamilyReversal,
 			reversallane.USReversalLaneID, reversallane.LaneVersionV1, strategyrouter.HorizonShort),
-		dormant(strategyrouter.MarketKR, strategyrouter.FamilyWeeklyValue,
+		productionWorker(strategyrouter.MarketKR, strategyrouter.FamilyWeeklyValue,
 			weeklyvaluelane.KRWeeklyLaneID, weeklyvaluelane.LaneVersionV1, strategyrouter.HorizonWeekly),
-		dormant(strategyrouter.MarketUS, strategyrouter.FamilyWeeklyValue,
+		productionWorker(strategyrouter.MarketUS, strategyrouter.FamilyWeeklyValue,
 			weeklyvaluelane.USWeeklyLaneID, weeklyvaluelane.LaneVersionV1, strategyrouter.HorizonWeekly),
-		dormant(strategyrouter.MarketKR, strategyrouter.FamilyBreakoutRetest,
+		productionWorker(strategyrouter.MarketKR, strategyrouter.FamilyBreakoutRetest,
 			breakoutlane.KRLaneID, breakoutlane.LaneVersionV1, strategyrouter.HorizonShort),
-		dormant(strategyrouter.MarketUS, strategyrouter.FamilyBreakoutRetest,
+		productionWorker(strategyrouter.MarketUS, strategyrouter.FamilyBreakoutRetest,
 			breakoutlane.USLaneID, breakoutlane.LaneVersionV1, strategyrouter.HorizonShort),
 	}
 }
 
-func dormant(market strategyrouter.Market, family strategyrouter.Family,
+// productionWorker 는 서술자 하나를 worker 로 만든다.
+//
+// 앞 판본의 이름은 `dormant` 였다. 이제 잠들었는지를 이 함수가 정하지 않고
+// 활성화가 정하므로 그 이름은 거짓이 된다.
+func productionWorker(market strategyrouter.Market, family strategyrouter.Family,
 	laneID, laneVersion string, horizon strategyrouter.Horizon,
 ) FamilyWorker {
 	return newWorker(Key{Market: market, Family: family, LaneID: laneID, LaneVersion: laneVersion},
-		horizon, strategyrouter.StateOff, strategyrouter.StateOff, strategyrouter.RuntimeUnobserved)
+		horizon, strategyrouter.RuntimeUnobserved)
 }
 
 // Input 은 사이클 한 번의 입력이다. 조정자 봉투가 필요로 하는 것과 정확히 같다.
@@ -160,14 +179,19 @@ type Cycle struct {
 
 // Run 은 봉인된 제안 하나를 조정자 봉투로 만든다.
 //
-// 여기서 하는 판정은 **하나**다: 이 제안이 이 worker 의 레인인가. 범위·봉인·
+// 첫 관문은 활성화다. `activation` 은 이 패키지 밖에서 영값 말고는 만들 수 없고
+// (`strategyrouter.FamilyActivation` 의 필드가 전부 비공개), 영값은 아무것도
+// 승격하지 않는다. 그래서 "켜진 worker 를 아무나 만들 수 있는가" 는 셈 시험이
+// 아니라 **ed25519 서명**이 막는다.
+//
+// 그다음 판정은 **하나**다: 이 제안이 이 worker 의 레인인가. 범위·봉인·
 // 용량은 조정자가 이미 판정하므로 다시 세지 않는다 — 같은 판정을 두 곳에 두면
 // 운영자가 보는 진단이 갈린다(조정자 Submit 이 가족을 읽는 자리에 같은 주석이 있다).
 //
 // 이 함수는 아무것도 바꾸지 않는다. 그 약속은 이 자리에서 확인할 수 없고
 // 패키지의 import 폐포가 확인한다.
-func (worker FamilyWorker) Run(input Input) Cycle {
-	if worker.effective != strategyrouter.StateOn {
+func (worker FamilyWorker) Run(activation strategyrouter.FamilyActivation, input Input) Cycle {
+	if worker.Effective(activation) != strategyrouter.StateOn {
 		return Cycle{Outcome: OutcomeDormant, Detail: DetailDormant}
 	}
 	if !worker.owns(input.Proposal) {

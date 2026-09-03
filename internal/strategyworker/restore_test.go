@@ -61,7 +61,7 @@ func TestAProductionLaneBornFromADurableRecordIsLatched(t *testing.T) {
 		if trigger := lane.Offer(); trigger != TriggerDisabled {
 			t.Fatalf("잠긴 레인이 투입을 받았다: %s", trigger)
 		}
-		if cycle := lane.Run(Input{}); cycle.Outcome != OutcomeLatched {
+		if cycle := lane.Run(strategyrouter.FamilyActivation{}, Input{}); cycle.Outcome != OutcomeLatched {
 			t.Fatalf("잠긴 레인의 사이클 결과가 %s 다", cycle.Outcome)
 		}
 	}
@@ -186,7 +186,7 @@ func TestARestoredLaneStillCannotUnlatchItself(t *testing.T) {
 	if !latched.Latched() {
 		t.Fatal("성공 한 번이 되살린 잠금을 열었다 — 복구 조건은 증거이지 성공이 아니다")
 	}
-	if cycle := latched.Run(Input{}); cycle.Outcome != OutcomeLatched {
+	if cycle := latched.Run(strategyrouter.FamilyActivation{}, Input{}); cycle.Outcome != OutcomeLatched {
 		t.Fatalf("성공 뒤 사이클 결과가 %s 다", cycle.Outcome)
 	}
 }

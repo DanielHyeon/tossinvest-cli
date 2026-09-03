@@ -284,7 +284,18 @@ func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context, 
 	if journalPath != "" {
 		evidencePath = filepath.Join(filepath.Dir(journalPath), "evidence.db")
 	}
+	// 레인을 제안 수집 **앞**에 세운다 (태스크 5.1.2.2).
+	//
+	// 순서가 안전이다. 4-가족 관문은 레인의 잠금을 읽어 판정하고, 그 잠금은
+	// 원장에서 태어난다(5.3.3). 관문 뒤에 세우면 재시작 뒤 **첫 주기**에
+	// durably 잠긴 레인이 열린 것으로 읽히고, 그 가족의 제안이 조정자에 닿는다.
+	// 레인 세우기는 기억이 있어 두 번 불러도 한 번만 복원한다.
+	lanes, err := c.productionStrategyLanes(ctx, clk)
+	if err != nil {
+		return StrategyEntryProductionAssembly{}, err
+	}
 	proposalAuthority := newStrategyProposalAuthorityLoader(c.Paths.ConfigDir, evidencePath, journalPath, c.AccountRef, os.Getenv).
+		withStrategyLanes(lanes).
 		collect(ctx, scheduleAuthority, routeAuthority, fxAuthority)
 	resultAuthority := proposalAuthority.ResultAuthority()
 	riskAuthority := newStrategyRiskAuthorityLoader(c.Paths.ConfigDir, journalPath, c.AccountRef, accountCurrency,
@@ -406,11 +417,28 @@ func buildProductionStrategyMarketWorker(ctx context.Context, clk clock.Clock, m
 	if !result.ValidProposal() {
 		return dormant
 	}
-	if _, err := gateway.ObserveStrategyProtection(ctx, strings.ToLower(string(market)), result.Quantity); err != nil {
+	protection, err := gateway.ObserveStrategyProtection(ctx, strings.ToLower(string(market)), result.Quantity)
+	if err != nil {
 		return dormant
 	}
 	if _, err := gateway.ObserveStrategyEntryGate(ctx, strings.ToLower(string(market)), result.Lineage.Symbol); err != nil {
 		return dormant
+	}
+	// 태스크 8.7.1 의 나머지 두 결속. 서명된 4-가족 활성화가 이름 부른 다섯
+	// digest 중 셋(보정·달력·빌드)은 제안 수집 단계가 결속했다. 위험 번들과
+	// ProtectionReady digest 는 그 단계에 **존재하지 않았고**, 여기에는 있다.
+	//
+	// 없는 사실을 결속하면 그 결속은 어떤 정상 입력으로도 참이 될 수 없다 —
+	// 이 change 가 이미 한 번 만들었다 고친 "문 없는 fail-closed" 다. 그래서
+	// 검증은 한 번만 하고(서명·digest 핀·서술자 집합), 결속은 그 사실이 사는
+	// 단계에서 한다.
+	//
+	// 활성화가 없는 시장에서는 아무것도 요구하지 않는다. 그것이 오늘의 동작이다.
+	if activation := p.familyActivation(); activation.Verified() {
+		if activation.RiskBundleDigest() != r.snapshot.BundleDigest ||
+			activation.ProtectionReadyDigest() != protection.Digest() {
+			return dormant
+		}
 	}
 	digest := strategyWorkerEvidenceDigest(s.snapshot.ActivationManifestDigest, s.calendar.Version,
 		ca.snapshot.ThresholdSetDigest, ca.snapshot.EvidenceDigest, ro.snapshot.OwnerSetDigest,
@@ -454,6 +482,7 @@ func (c *Context) runProductionStrategyMarketCycle(ctx context.Context, clk cloc
 	}
 	if err := lanes.evaluate(ctx, market,
 		fresh.schedule.forMarket(market).restore.Activation.Generation(),
+		fresh.proposals.forMarket(market).familyActivation(),
 		strategyLaneInputs(c.AccountRef, fresh.proposals.forMarket(market))); err != nil {
 		return err
 	}

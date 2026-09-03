@@ -120,6 +120,18 @@ type strategyProposalMarketAuthority struct {
 	market   StrategyMarket
 	entries  []strategyProposalEntryAuthority
 	snapshot StrategyProposalMarketSnapshot
+	// activation 은 이 시장의 조정 앞에 선 4-가족 관문이 쓴 서명 활성화다
+	// (태스크 5.1.2.2). 영값이면 관문이 서지 않았다는 뜻이다.
+	//
+	// 권위와 함께 실어 보내는 이유: 새로 고침 뒤 도는 레인 관측 사이클이 관문과
+	// **같은** 승격을 봐야 한다. 두 자리에서 따로 읽으면 만료가 그 사이에
+	// 지나갔을 때 관문은 통과시킨 제안을 관측은 DORMANT 로 적는다.
+	activation strategyrouter.FamilyActivation
+}
+
+// familyActivation 은 이 시장의 관문이 쓴 활성화다. 없으면 영값이다.
+func (authority strategyProposalMarketAuthority) familyActivation() strategyrouter.FamilyActivation {
+	return authority.activation
 }
 
 type strategyProposalAuthorityPair struct {
@@ -161,6 +173,35 @@ type strategyProposalAuthorityLoader struct {
 	configDir, evidencePath, journalPath, accountRef string
 	getenv                                           func(string) string
 	load                                             loadProductionProposalBatch
+	// lanes 는 이 프로세스의 여덟 전략군 레인이다 (태스크 5.1.2.2). nil 이면
+	// 4-가족 관문이 서지 않고 조정은 오늘과 같은 경로로 돈다.
+	//
+	// 레인을 여기서 만들지 않고 받는 이유: 레인의 latch 와 연속 실패 계수기는
+	// 프로세스 수명 기억이고, 새로 고침마다 만들면 잠긴 레인이 열린 채로
+	// 돌아온다(5.1.2.1). 만드는 곳은 `*Context` 하나다.
+	lanes *strategyLaneRuntime
+	// loadActivation 은 서명된 4-가족 활성화를 읽는 자리다. nil 이면 생산
+	// 구현(`loadFamilyActivation`)이 돈다 — 같은 로더의 `load` 필드와 같은
+	// 관례다.
+	//
+	// **이 seam 이 생산 경로를 가리지 않는다는 것을 시험이 지킨다**:
+	// `TestTheProductionActivationLoaderRunsAndFindsNoManifest` 가 nil 을 둔 채
+	// 실제 구현을 돌려 "매니페스트가 없으면 관문이 서지 않는다"를 잰다. 그 실행이
+	// 없으면 "seam 을 건너뛴다" 변이가 모든 시험을 통과한다.
+	loadActivation func(context.Context, StrategyMarket, strategyScheduleMarketAuthority,
+		strategyRouteMarketAuthority, time.Time) (strategyrouter.FamilyActivation, error)
+}
+
+// withStrategyLanes 는 이 로더에 이 프로세스의 레인을 붙인다.
+//
+// 생성자 인자로 받지 않는 이유: 레인은 원장을 읽어야 세워지고(durable latch),
+// 그 읽기는 오류를 낼 수 있다. 생성자에 넣으면 오류가 없는 로더를 만들 수 없다.
+func (loader *strategyProposalAuthorityLoader) withStrategyLanes(lanes *strategyLaneRuntime) *strategyProposalAuthorityLoader {
+	if loader == nil {
+		return nil
+	}
+	loader.lanes = lanes
+	return loader
 }
 
 func newStrategyProposalAuthorityLoader(configDir, evidencePath, journalPath, accountRef string, getenv func(string) string) *strategyProposalAuthorityLoader {
@@ -210,8 +251,16 @@ func (loader *strategyProposalAuthorityLoader) collect(ctx context.Context, sche
 
 func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context, schedule strategyScheduleMarketAuthority, routes strategyRouteMarketAuthority, fx strategyFXMarketAuthority, observedAt time.Time) strategyProposalMarketAuthority {
 	market := routes.market
+	// gate 를 fail 보다 **먼저** 선언한다. 클로저가 참조로 잡으므로, 아래에서
+	// 관문이 서는 순간 모든 닫힘 갈래가 그 활성화를 함께 싣게 된다.
+	//
+	// 앞 판본은 반환값마다 `carry(...)` 를 부르게 했다. 그것은 이 change 가
+	// 반복해서 고쳐 온 **무시할 수 있는 답**이다 — 갈래 하나에서 빠뜨리면
+	// 그 주기의 레인 관측이 관문과 다른 승격을 보고, 아무도 그것을 못 본다.
+	var gate strategyFamilyGate
 	fail := func(reason StrategyProposalReason) strategyProposalMarketAuthority {
-		return strategyProposalMarketAuthority{market: market, snapshot: StrategyProposalMarketSnapshot{Market: market, Reason: reason, RoutedCount: len(routes.entries)}}
+		return strategyProposalMarketAuthority{market: market, activation: gate.activation,
+			snapshot: StrategyProposalMarketSnapshot{Market: market, Reason: reason, RoutedCount: len(routes.entries)}}
 	}
 	if !routes.snapshot.Ready || len(routes.entries) == 0 || !schedule.snapshot.Ready || schedule.restore.Activation == nil {
 		return fail(StrategyProposalRouteNotReady)
@@ -269,7 +318,11 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 	// 시장이 닫히면 **경로에 오른 종목 전부**가 제안을 못 낸 것이다. "레인이
 	// 없던 종목 수 + 1" 같은 수를 넣으면 10,001 개가 경로에 오르고 하나도
 	// 나가지 못한 주기가 "1 건 거절"로 보고된다.
-	arbitration, refused := coordinateMarketProposals(loader.accountRef, market, routes.entries, batch, observedAt)
+	// 4-가족 관문은 **조정 앞**에 선다. 뒤에 세우면 중재가 이미 한 범위의
+	// 승자를 골라 버렸고, 그 승자의 레인이 잠겨 있으면 그 범위는 이웃 가족이
+	// 이길 수 있었는데도 통째로 닫힌다.
+	gate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)
+	arbitration, refused := coordinateMarketProposals(loader.accountRef, market, routes.entries, batch, observedAt, gate)
 	if arbitration.collision {
 		result := fail(StrategyProposalInternalFailure)
 		result.snapshot.ManifestDigest = digest
@@ -316,9 +369,10 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 	for _, entry := range entries {
 		_, _ = h.Write([]byte(entry.route.approved.Symbol() + "\x00" + entry.authority.Proposal().Lineage.Identity + "\x00"))
 	}
-	return strategyProposalMarketAuthority{market: market, entries: entries, snapshot: StrategyProposalMarketSnapshot{Market: market, Ready: true, Reason: StrategyProposalReady,
-		RoutedCount: len(routes.entries), ProposedCount: len(entries), RefusedCount: refused, ManifestDigest: digest,
-		ProposalSetDigest: "sha256:" + hex.EncodeToString(h.Sum(nil)), QueueDropCount: outcome.Drops}}
+	return strategyProposalMarketAuthority{market: market, entries: entries, activation: gate.activation,
+		snapshot: StrategyProposalMarketSnapshot{Market: market, Ready: true, Reason: StrategyProposalReady,
+			RoutedCount: len(routes.entries), ProposedCount: len(entries), RefusedCount: refused, ManifestDigest: digest,
+			ProposalSetDigest: "sha256:" + hex.EncodeToString(h.Sum(nil)), QueueDropCount: outcome.Drops}}
 }
 
 func failedStrategyProposalPair(observedAt time.Time, reason StrategyProposalReason) strategyProposalAuthorityPair {

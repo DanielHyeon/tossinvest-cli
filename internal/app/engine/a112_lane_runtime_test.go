@@ -98,7 +98,7 @@ func TestTheLaneSetOutlivesTheRefreshThatAskedForIt(t *testing.T) {
 func TestEveryFamilyLaneIsDormantUntilASignedManifestPromotesIt(t *testing.T) {
 	runtime, _ := laneRuntimeFixture(t)
 	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
-		runtime.evaluate(context.Background(), market, 0, nil)
+		runtime.evaluate(context.Background(), market, 0, strategyrouter.FamilyActivation{}, nil)
 	}
 	observations := runtime.observations()
 	if len(observations) != len(runtime.lanes) {
@@ -145,18 +145,18 @@ func TestADroppedTriggerNeverDrivesACycle(t *testing.T) {
 	cadence := lane.Policy().Cadence()
 
 	// 1) 첫 주기는 들어가고 돈다. 다음 주기 시각이 정해진다.
-	runtime.evaluate(context.Background(), StrategyMarketKR, 0, nil)
+	runtime.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil)
 	if got := lane.Dropped(); got != 0 {
 		t.Fatalf("첫 주기에 버린 수=%d, want 0", got)
 	}
 	// 2) 카덴스가 아직이라 투입은 칸에 남는다.
-	runtime.evaluate(context.Background(), StrategyMarketKR, 0, nil)
+	runtime.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil)
 	if got, want := lane.Pending(), lane.Policy().QueueDepth(); got != want {
 		t.Fatalf("칸에 남은 투입=%d, want %d", got, want)
 	}
 	// 3) 이제 카덴스를 지나 보낸다. 칸은 여전히 차 있다.
 	fake.Advance(cadence)
-	runtime.evaluate(context.Background(), StrategyMarketKR, 0, nil)
+	runtime.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil)
 
 	if got := lane.Dropped(); got == 0 {
 		t.Fatal("칸이 찼는데 버린 수가 0 이다 — 유실이 조용히 사라진다")
@@ -214,7 +214,12 @@ func TestOnlyThePackageLevelStepEverRunsInsideALane(t *testing.T) {
 		}
 	}
 	sort.Strings(sites)
-	want := []string{"strategy_lane_runtime.go:runLane:strategyFamilyLaneStep(lane)"}
+	// 두 번째 인자가 는 것은 태스크 8.7.1 이다. 그 값은
+	// `strategyrouter.FamilyActivation` — 이 패키지 밖에서는 영값만 만들 수 있고
+	// 영값은 아무것도 승격하지 않는 **값**이다. 능력이 아니라는 것은 아래
+	// TestTheFamilyLaneStepCarriesNothingButItsLaneAndTheSignedPromotion 이
+	// 두 인자의 **타입**을 못 박아 확인한다(개수가 아니라 타입이다).
+	want := []string{"strategy_lane_runtime.go:runLane:strategyFamilyLaneStep(lane, promotion)"}
 	if strings.Join(sites, "\n") != strings.Join(want, "\n") {
 		t.Fatalf("레인이 도는 일의 목록이 바뀌었다.\n got: %v\nwant: %v\n\n"+
 			"레인 안에서 도는 일은 `*Context` 를 들 수 없어야 한다. 이 목록에 줄이 늘면"+
@@ -250,25 +255,42 @@ func exprName(expr ast.Expr) string {
 	return "(식)"
 }
 
-// TestTheFamilyLaneStepCarriesNothingButItsLane 은 그 하나뿐인 값이 실제로
-// 무엇을 들 수 있는지를 본다.
+// TestTheFamilyLaneStepCarriesNothingButItsLaneAndTheSignedPromotion 은 그
+// 값들이 실제로 무엇을 들 수 있는지를 본다.
 //
 // 수신자가 없어야 하는 이유: 메서드로 두면 수신자가 무엇이든 될 수 있고,
 // `*Context` 를 수신자로 두는 순간 원장과 게이트웨이가 함께 들어온다. 오늘
 // 생산의 시장 주기가 정확히 그 모양이다.
-func TestTheFamilyLaneStepCarriesNothingButItsLane(t *testing.T) {
+//
+// **개수가 아니라 타입을 못 박는다** (태스크 8.7.1 로 인자가 둘이 되었다).
+// 앞 판본은 "인자는 하나" 라고 셌다. 개수 검사는 정당한 인자가 늘 때 반드시
+// 걸리고, 걸렸을 때 통과시키는 유일한 방법이 **숫자를 고치는 것**이라 감시
+// 대상과 같은 손짓이 된다. 타입 목록을 얼리면 새 인자는 자기 타입을 여기에
+// 적어야 하고, 그 타입이 능력이면 아래 계산이 잡는다.
+func TestTheFamilyLaneStepCarriesNothingButItsLaneAndTheSignedPromotion(t *testing.T) {
 	file := parseEngineFile(t, filepath.Join(".", "strategy_lane_runtime.go"))
 	step := engineFuncDecl(t, file, "strategyFamilyLaneStep")
 	if step.Recv != nil {
 		t.Fatal("strategyFamilyLaneStep 이 메서드가 됐다 — 수신자가 능력을 실어 나를 수 있다")
 	}
-	if len(step.Type.Params.List) != 1 || len(step.Type.Params.List[0].Names) != 1 {
-		t.Fatalf("인자 목록=%d 개, want 레인 하나 — 두 번째 인자가 능력을 실어 나를 수 있다",
-			len(step.Type.Params.List))
+	// 얼린 목록. 첫째는 레인 — 그 타입이 사는 패키지는 자기 import 폐포에
+	// 원장·게이트웨이·브로커 변경자가 없다는 것을 `-deps`/`-deps-test` 로 훑어
+	// 지킨다(strategyworker/dependency_closure_test.go). 둘째는 서명된 승격 —
+	// 필드가 전부 비공개라 이 패키지에서는 영값만 만들 수 있고, 영값은 아무것도
+	// 승격하지 않는다. 두 값 다 능력이 아니라 값이다.
+	wantTypes := []string{"*strategyworker.Lane", "strategyrouter.FamilyActivation"}
+	gotTypes := make([]string, 0, len(wantTypes))
+	for _, field := range step.Type.Params.List {
+		if len(field.Names) == 0 {
+			t.Fatal("이름 없는 매개변수가 있다 — 시험이 읽는 자리가 흐려진다")
+		}
+		for range field.Names {
+			gotTypes = append(gotTypes, exprTypeString(field.Type))
+		}
 	}
-	if got := exprTypeString(step.Type.Params.List[0].Type); got != "*strategyworker.Lane" {
-		t.Fatalf("인자 타입=%s, want *strategyworker.Lane — 이 타입이 사는 패키지는"+
-			" 자기 import 폐포에 원장·게이트웨이가 없다는 것을 -deps 로 훑어 지킨다", got)
+	if strings.Join(gotTypes, ", ") != strings.Join(wantTypes, ", ") {
+		t.Fatalf("인자 타입 목록=%v, want %v — 새 인자를 더하려면 그 타입을 여기 적을 것."+
+			" 능력을 실어 나르는 타입이면 아래 계산이 잡는다", gotTypes, wantTypes)
 	}
 	capabilities := engineCapabilityTypes(t)
 	for _, name := range mutationCapabilityIdents {

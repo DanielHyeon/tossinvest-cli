@@ -18,6 +18,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker"
 )
 
@@ -117,7 +118,7 @@ func TestALatchedLaneComesBackLatchedAfterTheProcessRestarts(t *testing.T) {
 	latchOneLane(t, lane, "breakout evidence store unavailable")
 
 	// 시장 주기가 한 번 돈다. 관측자는 이때 잠긴 레인을 원장에 남겨야 한다.
-	if err := runtime.evaluate(ctx, StrategyMarketKR, 7, nil); err != nil {
+	if err := runtime.evaluate(ctx, StrategyMarketKR, 7, strategyrouter.FamilyActivation{}, nil); err != nil {
 		t.Fatalf("시장 주기가 잠금을 남기지 못했다: %v", err)
 	}
 
@@ -143,13 +144,13 @@ func TestALatchOnlyReopensForAStrictlyNewerSignedActivation(t *testing.T) {
 	lane := runtime.lanesFor(StrategyMarketKR)[0]
 	key := lane.Key()
 	latchOneLane(t, lane, "breakout evidence store unavailable")
-	if err := runtime.evaluate(ctx, StrategyMarketKR, 7, nil); err != nil {
+	if err := runtime.evaluate(ctx, StrategyMarketKR, 7, strategyrouter.FamilyActivation{}, nil); err != nil {
 		t.Fatalf("잠금을 남기지 못했다: %v", err)
 	}
 
 	// 같은 세대로 몇 주기를 더 돌아도 열리지 않는다.
 	for cycle := 0; cycle < 3; cycle++ {
-		if err := runtime.evaluate(ctx, StrategyMarketKR, 7, nil); err != nil {
+		if err := runtime.evaluate(ctx, StrategyMarketKR, 7, strategyrouter.FamilyActivation{}, nil); err != nil {
 			t.Fatalf("주기 %d: %v", cycle, err)
 		}
 		if !laneByKey(t, runtime, key).Latched() {
@@ -158,7 +159,7 @@ func TestALatchOnlyReopensForAStrictlyNewerSignedActivation(t *testing.T) {
 	}
 
 	// 세대가 오른다. 사람이 서명 매니페스트를 바꾼 것이다.
-	if err := runtime.evaluate(ctx, StrategyMarketKR, 8, nil); err != nil {
+	if err := runtime.evaluate(ctx, StrategyMarketKR, 8, strategyrouter.FamilyActivation{}, nil); err != nil {
 		t.Fatalf("복구 주기: %v", err)
 	}
 	if laneByKey(t, runtime, key).Latched() {
@@ -183,13 +184,13 @@ func TestARestoredLatchKeepsTheFirstCauseAcrossTheRestart(t *testing.T) {
 	lane := runtime.lanesFor(StrategyMarketKR)[0]
 	key := lane.Key()
 	latchOneLane(t, lane, "the first cause")
-	if err := runtime.evaluate(ctx, StrategyMarketKR, 7, nil); err != nil {
+	if err := runtime.evaluate(ctx, StrategyMarketKR, 7, strategyrouter.FamilyActivation{}, nil); err != nil {
 		t.Fatalf("첫 잠금: %v", err)
 	}
 	// 잠긴 레인에 두 번째 실패를 먹인다. 레인은 두 번 잠기지 않고, 기록도
 	// 덮이지 않아야 한다.
 	lane.Fail("a later and less interesting failure", false)
-	if err := runtime.evaluate(ctx, StrategyMarketKR, 7, nil); err != nil {
+	if err := runtime.evaluate(ctx, StrategyMarketKR, 7, strategyrouter.FamilyActivation{}, nil); err != nil {
 		t.Fatalf("두 번째 주기: %v", err)
 	}
 
@@ -210,7 +211,7 @@ func TestOneLatchedLaneLeavesItsSevenPeersOpenAcrossARestart(t *testing.T) {
 	key := lane.Key()
 	latchOneLane(t, lane, "one lane, one fault")
 	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
-		if err := runtime.evaluate(ctx, market, 7, nil); err != nil {
+		if err := runtime.evaluate(ctx, market, 7, strategyrouter.FamilyActivation{}, nil); err != nil {
 			t.Fatalf("%s: %v", market, err)
 		}
 	}
@@ -255,15 +256,15 @@ func TestADurableLatchThatNamesNoLaneInThisBuildStopsTheCycleLoudlyAndCanBeClose
 	runtime := mustProductionStrategyLanes(t, c, fake)
 
 	// 같은 세대로는 주기가 계속 빨갛다.
-	if err := runtime.evaluate(ctx, StrategyMarketKR, 7, nil); err == nil {
+	if err := runtime.evaluate(ctx, StrategyMarketKR, 7, strategyrouter.FamilyActivation{}, nil); err == nil {
 		t.Fatal("이 빌드에 없는 레인의 잠금을 조용히 넘겼다")
 	}
 	// 다른 시장은 그 기록에 걸리지 않는다.
-	if err := runtime.evaluate(ctx, StrategyMarketUS, 7, nil); err != nil {
+	if err := runtime.evaluate(ctx, StrategyMarketUS, 7, strategyrouter.FamilyActivation{}, nil); err != nil {
 		t.Fatalf("KR 의 낡은 기록이 US 주기를 막았다: %v", err)
 	}
 	// 세대가 오르면 닫힌다 — 이것이 나가는 문이다.
-	if err := runtime.evaluate(ctx, StrategyMarketKR, 8, nil); err != nil {
+	if err := runtime.evaluate(ctx, StrategyMarketKR, 8, strategyrouter.FamilyActivation{}, nil); err != nil {
 		t.Fatalf("더 큰 서명 세대인데 낡은 기록이 닫히지 않았다: %v", err)
 	}
 	open, err := c.Journal.OpenStrategyLaneLatches(ctx, c.AccountRef)
@@ -287,7 +288,7 @@ func TestALedgerThatCannotTakeTheLatchStopsTheCycle(t *testing.T) {
 	if err := c.Journal.Close(); err != nil {
 		t.Fatalf("close: %v", err)
 	}
-	if err := runtime.evaluate(ctx, StrategyMarketKR, 7, nil); err == nil {
+	if err := runtime.evaluate(ctx, StrategyMarketKR, 7, strategyrouter.FamilyActivation{}, nil); err == nil {
 		t.Fatal("원장이 잠금을 받지 못했는데 주기가 성공했다")
 	}
 }
@@ -366,7 +367,7 @@ func TestTheProductionStepNeverLatchesSoTheLedgerStaysEmpty(t *testing.T) {
 	runtime := mustProductionStrategyLanes(t, c, fake)
 	for cycle := 0; cycle < 5; cycle++ {
 		for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
-			if err := runtime.evaluate(ctx, market, 7, nil); err != nil {
+			if err := runtime.evaluate(ctx, market, 7, strategyrouter.FamilyActivation{}, nil); err != nil {
 				t.Fatalf("주기 %d %s: %v", cycle, market, err)
 			}
 		}
@@ -397,7 +398,7 @@ func TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther(t
 	runtime := mustProductionStrategyLanes(t, c, fake)
 	kr := runtime.lanesFor(StrategyMarketKR)[0]
 	latchOneLane(t, kr, "one market, one fault")
-	if err := runtime.evaluate(ctx, StrategyMarketKR, 7, nil); err != nil {
+	if err := runtime.evaluate(ctx, StrategyMarketKR, 7, strategyrouter.FamilyActivation{}, nil); err != nil {
 		t.Fatalf("잠금을 남기지 못했다: %v", err)
 	}
 
@@ -412,7 +413,7 @@ func TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther(t
 			for cycle := 0; cycle < 20; cycle++ {
 				// KR 은 8 세대로 복구되고 US 는 잠긴 적이 없다. 둘이 같은
 				// 런타임의 목록을 동시에 읽고 고친다.
-				if err := runtime.evaluate(ctx, market, 8, nil); err != nil {
+				if err := runtime.evaluate(ctx, market, 8, strategyrouter.FamilyActivation{}, nil); err != nil {
 					failures <- err
 					return
 				}

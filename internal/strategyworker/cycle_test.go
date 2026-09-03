@@ -25,7 +25,8 @@ func TestEveryProductionWorkerIsBornDormantAndEmitsNothing(t *testing.T) {
 
 	// 같은 입력이 켜진 worker 에서는 실제로 봉투가 된다. 이 대조가 없으면
 	// 아래 여덟 개의 DORMANT 는 "입력이 나빴다"로도 설명된다.
-	if emitted := effective(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation).Run(good); emitted.Outcome != OutcomeEmitted {
+	if emitted := workerFor(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation).
+		Run(promoting(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation), good); emitted.Outcome != OutcomeEmitted {
 		t.Fatalf("the control input is not emittable (%s/%s), so the dormant assertions below prove nothing",
 			emitted.Outcome, emitted.Detail)
 	}
@@ -35,7 +36,7 @@ func TestEveryProductionWorkerIsBornDormantAndEmitsNothing(t *testing.T) {
 		t.Fatal("no production worker was scanned")
 	}
 	for index, worker := range workers {
-		cycle := worker.Run(good)
+		cycle := worker.Run(noActivation(), good)
 		if cycle.Outcome != OutcomeDormant {
 			t.Errorf("worker %d (%v) is not dormant: %s", index, worker.Key().Parts(), cycle.Outcome)
 		}
@@ -60,9 +61,10 @@ func TestEveryProductionWorkerIsBornDormantAndEmitsNothing(t *testing.T) {
 func TestAnEffectiveWorkerEmitsAnEnvelopeTheCoordinatorAdmitsForThisLane(t *testing.T) {
 	f := newFixture(allKRFamilies()...)
 	input := f.input(t, continuationlane.KRContinuationLaneID)
-	worker := effective(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation)
+	worker := workerFor(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation)
+	on := promoting(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation)
 
-	cycle := worker.Run(input)
+	cycle := worker.Run(on, input)
 	if cycle.Outcome != OutcomeEmitted {
 		t.Fatalf("want EMITTED, got %s (%s)", cycle.Outcome, cycle.Detail)
 	}
@@ -100,9 +102,10 @@ func TestAnEffectiveWorkerEmitsAnEnvelopeTheCoordinatorAdmitsForThisLane(t *test
 func TestAWorkerRefusesAProposalFromAnotherLane(t *testing.T) {
 	f := newFixture(allKRFamilies()...)
 	foreign := f.input(t, reversallane.KRReversalLaneID)
-	worker := effective(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation)
+	worker := workerFor(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation)
+	on := promoting(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation)
 
-	cycle := worker.Run(foreign)
+	cycle := worker.Run(on, foreign)
 	if cycle.Outcome != OutcomeRefused {
 		t.Fatalf("want REFUSED, got %s", cycle.Outcome)
 	}
@@ -117,7 +120,8 @@ func TestAWorkerRefusesAProposalFromAnotherLane(t *testing.T) {
 	}
 
 	// 그 제안의 주인은 거절하지 않는다 — 거절이 레인 때문임을 이 줄이 못 박는다.
-	if owner := effective(t, strategyrouter.MarketKR, strategyrouter.FamilyReversal).Run(foreign); owner.Outcome != OutcomeEmitted {
+	if owner := workerFor(t, strategyrouter.MarketKR, strategyrouter.FamilyReversal).
+		Run(promoting(t, strategyrouter.MarketKR, strategyrouter.FamilyReversal), foreign); owner.Outcome != OutcomeEmitted {
 		t.Fatalf("the reversal worker refused its own lane's proposal: %s / %s", owner.Outcome, owner.Detail)
 	}
 }
@@ -131,7 +135,8 @@ func TestAWorkerOfTheOtherMarketRefuses(t *testing.T) {
 	f := newFixture(allKRFamilies()...)
 	krInput := f.input(t, continuationlane.KRContinuationLaneID)
 
-	cycle := effective(t, strategyrouter.MarketUS, strategyrouter.FamilyContinuation).Run(krInput)
+	cycle := workerFor(t, strategyrouter.MarketUS, strategyrouter.FamilyContinuation).
+		Run(promoting(t, strategyrouter.MarketUS, strategyrouter.FamilyContinuation), krInput)
 	if cycle.Outcome != OutcomeRefused {
 		t.Fatalf("the US continuation worker accepted a KR proposal: %s", cycle.Outcome)
 	}
@@ -144,9 +149,10 @@ func TestAWorkerOfTheOtherMarketRefuses(t *testing.T) {
 func TestAWorkerRefusesAProposalWhoseSealNoLongerHolds(t *testing.T) {
 	f := newFixture(allKRFamilies()...)
 	input := f.input(t, continuationlane.KRContinuationLaneID)
-	worker := effective(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation)
+	worker := workerFor(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation)
+	on := promoting(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation)
 
-	if before := worker.Run(input); before.Outcome != OutcomeEmitted {
+	if before := worker.Run(on, input); before.Outcome != OutcomeEmitted {
 		t.Fatalf("the untouched input must be emittable first: %s / %s", before.Outcome, before.Detail)
 	}
 
@@ -158,7 +164,7 @@ func TestAWorkerRefusesAProposalWhoseSealNoLongerHolds(t *testing.T) {
 		t.Fatal("the tampering changed the lane, so it does not test the seal")
 	}
 
-	cycle := worker.Run(tampered)
+	cycle := worker.Run(on, tampered)
 	if cycle.Outcome != OutcomeRefused {
 		t.Fatalf("want REFUSED for a broken seal, got %s", cycle.Outcome)
 	}
@@ -173,11 +179,12 @@ func TestAWorkerRefusesAProposalWhoseSealNoLongerHolds(t *testing.T) {
 // 유도하는 값이다. 그 행을 뺀 권한을 주면, 계보의 레인은 그대로인데 가족만
 // 세울 수 없는 상태가 된다 — 신고를 믿는 구현은 이것도 통과시킨다.
 func TestAWorkerRefusesWhenTheFamilyCannotBeDerivedFromTheSealedAuthority(t *testing.T) {
-	worker := effective(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation)
+	worker := workerFor(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation)
+	on := promoting(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation)
 
 	// 대조: 가족 행이 있으면 같은 레인이 봉투가 된다.
 	withRow := newFixture(allKRFamilies()...).input(t, continuationlane.KRContinuationLaneID)
-	if cycle := worker.Run(withRow); cycle.Outcome != OutcomeEmitted {
+	if cycle := worker.Run(on, withRow); cycle.Outcome != OutcomeEmitted {
 		t.Fatalf("the control input is not emittable: %s / %s", cycle.Outcome, cycle.Detail)
 	}
 
@@ -191,7 +198,7 @@ func TestAWorkerRefusesWhenTheFamilyCannotBeDerivedFromTheSealedAuthority(t *tes
 		t.Fatalf("the fixture still derives a family (%q), so it does not test the derivation", family)
 	}
 
-	cycle := worker.Run(withoutRow)
+	cycle := worker.Run(on, withoutRow)
 	if cycle.Outcome != OutcomeRefused {
 		t.Fatalf("want REFUSED when the family cannot be derived, got %s", cycle.Outcome)
 	}
@@ -219,17 +226,18 @@ func emptyEnvelope(envelope strategycoordinator.Envelope) bool {
 func TestALatchedLaneEmitsNothingEvenWhenItIsEffective(t *testing.T) {
 	f := newFixture(allKRFamilies()...)
 	good := f.input(t, continuationlane.KRContinuationLaneID)
-	lane := newLane(effective(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation),
+	lane := newLane(workerFor(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation),
 		ProductionRuntimePolicy(), clock.NewFake(f.now))
 
-	if before := lane.Run(good); before.Outcome != OutcomeEmitted {
+	on := promoting(t, strategyrouter.MarketKR, strategyrouter.FamilyContinuation)
+	if before := lane.Run(on, good); before.Outcome != OutcomeEmitted {
 		t.Fatalf("the lane must emit before it is latched, got %s / %s", before.Outcome, before.Detail)
 	}
 	if _, latched := lane.Fail("evidence refresh failed", false); !latched {
 		t.Fatal("the lane did not latch")
 	}
 
-	cycle := lane.Run(good)
+	cycle := lane.Run(on, good)
 	if cycle.Outcome != OutcomeLatched {
 		t.Fatalf("a latched effective lane reported %s", cycle.Outcome)
 	}

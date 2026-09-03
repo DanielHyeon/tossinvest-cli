@@ -154,12 +154,18 @@ func (runtime *strategyLaneRuntime) lanesFor(market StrategyMarket) []*strategyw
 // 폐포에 broker mutator·writable journal·Guardian issuer 가 없다는 것을
 // `-deps` 로 훑어 시험으로 지킨다.
 //
+// **활성화도 인자다** (태스크 8.7.1). 승격은 이 함수가 정하지 않고 서명된
+// 매니페스트가 정하며, 관문이 이 주기에 읽은 그 값을 그대로 받는다. 여기서
+// 다시 읽으면 만료가 그 사이에 지나갔을 때 관문과 관측이 갈린다.
+//
 // 오류를 절대 돌려주지 않는 이유: 평가 실패는 오류가 아니라 **거절**이고,
 // 거절은 `Cycle.Outcome` 에 담긴다. 둘을 한 값에 담으면 정당한 거절이 레인의
 // 연속 실패 계수기를 올려 결국 진입을 잠근다.
-func strategyFamilyLaneStep(lane *strategyworker.Lane) strategyworker.Step {
+func strategyFamilyLaneStep(lane *strategyworker.Lane,
+	activation strategyrouter.FamilyActivation,
+) strategyworker.Step {
 	return func(_ context.Context, input strategyworker.Input) (strategyworker.Cycle, error) {
-		return lane.Run(input), nil
+		return lane.Run(activation, input), nil
 	}
 }
 
@@ -183,7 +189,7 @@ func strategyFamilyLaneStep(lane *strategyworker.Lane) strategyworker.Step {
 // 자기 제안이 없는 레인도 사이클을 돈다. "이번 물결에 낼 것이 없었다"와
 // "레인이 돌지 않았다"는 다른 뜻이고, 돌지 않은 레인은 관측에서 사라진다.
 func (runtime *strategyLaneRuntime) evaluate(ctx context.Context, market StrategyMarket,
-	activationGeneration uint64, inputs []strategyworker.Input,
+	activationGeneration uint64, promotion strategyrouter.FamilyActivation, inputs []strategyworker.Input,
 ) error {
 	if runtime == nil {
 		return nil
@@ -204,7 +210,7 @@ func (runtime *strategyLaneRuntime) evaluate(ctx context.Context, market Strateg
 				break
 			}
 		}
-		observations = append(observations, runtime.runLane(ctx, lane, input))
+		observations = append(observations, runtime.runLane(ctx, lane, promotion, input))
 	}
 	runtime.record(observations)
 	// 남기지 못한 잠금은 오류다. 조용히 넘기면 다음 재시작이 잠긴 레인을 열고,
@@ -244,14 +250,14 @@ func strategyLaneInputs(accountRef string, authority strategyProposalMarketAutho
 // 열지 않는다. 넣지 못했다면 그 이유가 곧 이번 주기의 관측이다 — 잠겨서
 // 못 받았는지(DISABLED), 칸이 차서 버렸는지(FULL)는 운영자가 할 조치가 다르다.
 func (runtime *strategyLaneRuntime) runLane(ctx context.Context, lane *strategyworker.Lane,
-	input strategyworker.Input,
+	promotion strategyrouter.FamilyActivation, input strategyworker.Input,
 ) strategyLaneObservation {
 	observation := strategyLaneObservation{Key: lane.Key(), Trigger: lane.Offer()}
 	if observation.Trigger != strategyworker.TriggerEnqueued {
 		observation.Health = lane.Health()
 		return observation
 	}
-	bounded, start := lane.RunBounded(ctx, input, strategyFamilyLaneStep(lane))
+	bounded, start := lane.RunBounded(ctx, input, strategyFamilyLaneStep(lane, promotion))
 	observation.Start = start
 	observation.Outcome = bounded.Cycle.Outcome
 	observation.Detail = bounded.Cycle.Detail
