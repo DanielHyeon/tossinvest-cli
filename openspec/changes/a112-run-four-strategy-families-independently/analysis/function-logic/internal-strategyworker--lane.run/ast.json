@@ -1,0 +1,79 @@
+{
+  "file": "internal/strategyworker/lane.go",
+  "source_sha256": "b6919f2ac3ce70c08631286b8c879bd3b3ab273228d21246b359fa5031e594c5",
+  "package": "strategyworker",
+  "function": "Run",
+  "receiver": "Lane",
+  "signature": "Lane.Run(params=2, results=1)",
+  "start": {
+    "line": 205,
+    "column": 1
+  },
+  "end": {
+    "line": 213,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 209,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 210,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 2
+      },
+      "text": "lane.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 2
+      },
+      "text": "lane.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 9
+      },
+      "text": "lane.worker.Run"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 207,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

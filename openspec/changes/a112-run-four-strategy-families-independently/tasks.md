@@ -125,13 +125,29 @@
 
   **One census of this change's own making had to be repaired first.** `a112_central_integrity_census_test.go` (5.6.1) froze absolute line numbers, so a sixteen-line insertion into an unrelated function above `Run` broke it, and the only way to pass would have been to edit the expected list — indistinguishable from the edit the census exists to catch. It now records each occurrence as an offset from its own enclosing declaration, which is stable under other people's edits and still catches a new mint (mutant M12) and a moved one.
 
-- [ ] 5.1.2.2 Replace the existing two-market `StrategyMarketWorker` gate with those eight, once a signed four-family activation manifest can promote them.
+- [x] 5.1.2.2 Replace the existing two-market `StrategyMarketWorker` gate with those eight, once a signed four-family activation manifest can promote them. **(Landed 2026-09-03.)**
 
   **Why it is open.** Production runs `StrategyMarketWorker`, whose `Cycle` is a closure over `*Context`; the regenerated AST artifact for `Context.runProductionStrategyMarketCycle` still enumerates `c.Journal.CurrentPositionCampaignCAS` at `:462` and `fresh.dispatch.dispatch` at `:469`. That is the market's one mutation authority and it stays; what is still missing is that the eight decide whether anything reaches it. Today they cannot, because they are all `effective: OFF` and nothing in `strategyworker` can mint an ON worker from outside the package — deliberately, since "server-owned" would otherwise be a comment.
 
   **Two things 5.1.2.1 measured that this task must carry.** The lanes see the *arbitrated* proposal for their scope, not the pre-arbitration fan-out — `coordinateMarketProposals` still submits to the coordinator directly, so moving the gate means moving the lanes upstream of arbitration. And the fault-stream balance 5.6.1 found (`cap(faults) == 2 == markets`) is untouched here because lane faults stay inside `strategyworker.Lane`; routing them to the supervisor's stream is what would break it.
 
+  **이 태스크의 선결 조건은 8.7.1 이고 같은 로트에서 함께 랜딩한다 [a112 결정 59].** 사람이 2026-09-03 에 세 선택지 중 "매니페스트 + 5.1.2.2 한 로트, 5.2.2 는 그다음" 을 골랐다. 이유는 두 방향이다: 매니페스트만 먼저 랜딩하면 소비자가 없고(5.1 이 이미 피한 모양), 셋을 한 로트로 묶으면 서명 검증·관문 교체·진입 상한 해제를 한 번에 리뷰해야 한다(5.5 가 적대 리뷰 13 라운드 걸린 규모).
+
   **Done.** A lane that is not effective stops its family's proposal from reaching the coordinator, the promotion comes from a signed manifest rather than from legacy approval, and `TestEveryLaneStaysDormantOnAProposalItActuallyOwns` is replaced by a test that shows both states rather than deleted.
+
+  **관문이 어디에 서는가, 그리고 왜 거기인가.** `coordinateMarketProposals` 안, 조정자 `Submit` **앞**이다. 뒤에 세우면 중재가 이미 한 범위의 승자를 골라 버렸고, 그 승자의 레인이 잠겨 있으면 그 범위는 이웃 가족이 이길 수 있었는데도 통째로 닫힌다. 5.1.2.1 이 "관문을 옮기려면 레인을 중재 앞으로 옮겨야 한다" 고 적어 둔 그 자리다. 관문이 하는 일은 그 가족의 레인에게 묻는 것 하나이고(`Lane.Owns` → `Lane.Run`), 레인이 낸 봉투를 그대로 조정자에 넣는다.
+
+  **두 권위의 겉보기 충돌을 여기서 푼다.** 5.1.2.1 은 "오늘 여덟을 관문으로 세우면 생산 진입이 0 이 되고 그것은 토글 OFF 불변식(§0-2)에 어긋난다" 고 적었고, 스펙은 반대로 "required activation authority 가 missing 이면 broker exposure-raising request 는 0건이어야 한다 (SHALL)" 고 적었다. 둘을 함께 만족시키는 유일한 모양이 **관문을 활성화된 런타임 안에만 세우는 것**이다: 활성화가 없으면 기존 시장 단위 경로가 그대로 돌고(= upstream 동작 보존), 있으면 그 시장의 넷이 각자 판정한다. design 이 partial 3-of-4 를 시장 전체 OFF 로 못 박았으므로 활성화된 시장의 서술자는 언제나 넷이고, 그래서 관문이 실제로 막는 것은 **잠긴 레인 하나**다 — 그 가족의 제안만 멈추고 이웃 셋은 계속한다. 그것이 이 change 가 사려던 것이다(`design.md:3`, "시장 장애 격리이지 전략군 장애 격리가 아니다").
+
+  **순서가 안전이다: 레인을 제안 수집 앞으로 옮겼다.** 관문은 레인의 잠금을 읽어 판정하고 그 잠금은 원장에서 태어난다(5.3.3). 뒤에 세우면 재시작 뒤 **첫 주기**에 durably 잠긴 레인이 열린 것으로 읽히고 그 가족의 제안이 조정자에 닿는다. 그 창은 한 주기뿐이라 어떤 행동 시험도 우연히 잡지 못하므로 순서를 구조로 못 박았다(`TestTheLanesAreBuiltBeforeTheProposalsAreCollected`).
+
+  **세 상태를 함께 세운다.** 원래 시험을 지우지 않고 교체했다. 활성화 없음 → 관문이 서지 않고 조정 결과가 관문 이전과 같은 값이다. 활성화 + 승격 → 그 가족의 제안이 조정자에 닿는다. 활성화 + 일부만 승격 → **관문이 순위를 바꾼다**(점수 1위의 레인이 안 켜졌으면 2위가 이긴다). 활성화 + 잠김 → 그 가족만 멈추고 2위가 이긴다. 마지막 둘이 "관문이 통과 도장이 아니다" 의 증거다 — 시장이 닫혔는지만 재면 승자를 잠갔을 때 아무도 못 이기는 구현도 통과한다.
+
+  **봉투가 둘 있고 그 둘이 같은 값인지를 잰다.** 관문이 서지 않은 갈래는 엔진이 만든 봉투를, 선 갈래는 레인이 만든 봉투를 넣는다. 두 사본이 갈릴 수 있으므로 구조를 단언하지 않고 **값을 견준다**(`TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope`) — 필드가 하나 늘 때 구조 단언은 통과하고 이 등식은 실패한다.
+
+  **시험 seam 을 하나 만들었고, 생산 경로가 지도자가 되는 실행을 함께 두었다.** `loader.loadActivation` 은 같은 로더의 `load` 필드와 같은 관례다. seam 만 있으면 "seam 을 건너뛴다" 변이가 모든 시험을 통과하므로, `TestTheProductionActivationLoaderRunsAndFindsNoManifest` 가 그 필드를 nil 로 둔 채 실제 구현을 돌린다. 그 시험은 결속을 **전부 유효하게 채운다** — 하나라도 비우면 "파일이 없다" 대신 "설정이 어긋났다" 를 재게 되고 파일 부재라는 축은 한 번도 안 재진다.
+
+  **이 태스크가 주장하지 않는 것.** 시장 단위 단일 제안 상한은 그대로다(5.2.2). 기존 시장 단위 경로를 지우지 않았다 — 활성화가 없을 때의 갈래로 남고, 지우는 것은 5.2.2 와 6 절이다. 레인 고장은 아직 감독자 fault 스트림에 안 간다(5.6.1 의 `cap(faults)==2==시장 수` 등식이 그대로다). 그리고 오늘 생산에는 서명된 매니페스트가 없으므로 **생산 동작 변화는 0** 이다.
 - [x] 5.2.1 Keep remote evidence refresh outside the shared assembly mutex. **(Landed 2026-09-03.)**
 
   **Split note, 2026-09-03.** 원문 5.2 는 두 절이다: (a) "market-level single-proposal readiness 를 시장마다 네 개의 독립 감독 lane worker 로 교체"와 (b) "remote evidence refresh 를 공유 assembly mutex 밖에 둔다". 이 태스크가 (b) 를, 5.2.2 가 (a) 를 가진다. 원문의 모든 절은 둘 중 정확히 하나가 가진다. 가른 이유는 (a) 가 5.1.2.2 와 같은 사람 결정(서명된 4-family 활성화 매니페스트)에 걸려 있는데 (b) 는 아무것에도 안 걸려 있고, 오늘 재서 확인한 실제 결함이기 때문이다.
@@ -331,4 +347,22 @@
 - [ ] 8.4 Refresh all edited-function AST/FLM/BTM/risk reports after GREEN implementation and confirm every branch/risk row maps to an automated test or an explicit reviewed non-code control.
 - [ ] 8.5 Complete independent adversarial review for owner uniqueness, score calibration, q_final monotonicity, evidence correction/replay, queue/failure isolation, API quota sharing, OFF defaults and safety-loop independence; resolve all P0/P1 findings.
 - [ ] 8.6 If and only if current A100 ProtectionReady and all dependency gates are complete, build/deploy in dormant OFF/UNOBSERVED mode and verify lane/automation/autostart/LIVE approval remain unchanged. Otherwise perform build-only/shadow-fixture verification, record deployment as BLOCKED, and prove exposure-raising broker requests remain zero.
-- [ ] 8.7 Require a separate human-approved operating activation with current four-family calibration, market calendar, risk, build and ProtectionReady digests before any lane effective ON; otherwise rollback entry workers to OFF while retaining shared safety/lineage state.
+- [x] 8.7.1 Build the mechanism that *requires* a separate human-approved operating activation: no lane may read effective ON without a verified signed four-family manifest binding the current calibration, market calendar, risk, build and ProtectionReady digests. **(Landed 2026-09-03.)**
+
+  **Split note, 2026-09-03 [a112 결정 59].** 원문 8.7 은 두 절이다: (a) "before any lane effective ON" 을 **요구하는 수단**과 (b) "otherwise rollback entry workers to OFF while retaining shared safety/lineage state" 라는 **운영 자세**. 이 태스크가 (a) 를, 8.7.2 가 (b) 를 가진다. 원문의 모든 절은 둘 중 정확히 하나가 가진다.
+
+  **왜 지금 갈라 여기서 하나.** 5.1.2.2 와 5.2.2 가 **같은** 이 수단에 걸려 있다(사람 결정 (7), HANDOFF.md). 사람이 2026-09-03 에 "매니페스트 + 5.1.2.2 를 한 로트, 5.2.2 는 그다음" 을 골랐다. 매니페스트만 따로 랜딩하면 소비자 없는 매니페스트가 되고, 그것은 이 change 가 5.1 에서 이미 피한 모양이다.
+
+  **어디에 살고, 왜 거기인가.** `internal/strategyrouter` 다. 고른 것이 아니라 두 제약이 정한 것이다: `design.md:221` 이 "exact four-per-market manifest" 를 그 패키지에 배정했고, 여덟 worker 가 사는 `internal/strategyworker` 는 이미 그 패키지를 자기 **허용 폐포**에 들여오고 있다(`dependency_closure_test.go`). 새 패키지에 두면 그 폐포를 넓혀야 하고, `internal/scheduler` 에 두면 desired-state **writer** 가 폐포에 들어와 스펙의 "worker dependency closure 에 activation/toggle writer 가 없어야 한다 (MUST NOT)" 를 깬다. 파일·digest·시각·식별자 검사는 같은 패키지의 감사받은 helper 를 그대로 쓴다(`readProductionRouteFile`·`productionRouteDigest`·`productionRouteTime`·`productionRouteIdentity`).
+
+  **별도 매니페스트인 이유는 잰 것이다.** 같은 패키지의 `strategy-lane-authority-<MARKET>.json` 도 이미 "시장마다 정확히 네 가족"을 서명으로 못 박는다(태스크 4.3, `validProductionRouteCandidates` 가 `len(values) != len(want)` 와 `len(seen) == len(want)` 로 개수까지 대조한다). 그러나 그 매니페스트의 `Desired`/`Effective` 는 **scope(종목·세대)마다** 있고, 여덟 `FamilyWorker` 의 열쇠에는 종목이 없다(골든 `worker_key_fields` 네 필드에 종목이 없다). 종목별 행을 worker 하나의 상태로 접으려면 "모든 scope 에서 ON 이면 ON" 같은 규칙을 **지어내야** 하고 지어낸 규칙은 계약이 아니다. 그리고 8.7 이 이름 부른 build·ProtectionReady digest 가 그 매니페스트에 없다. `design.md:210` 의 "새 runtime activation 은 exact 4-family-aware signed manifest 가 필요하다" 와 8.7 의 "**separate** human-approved operating activation" 이 같은 말이다.
+
+  **불투명함을 셈이 아니라 서명이 지킨다.** `FamilyActivation` 의 필드는 전부 비공개이므로 이 패키지 밖에서는 **영값만** 만들 수 있고, **영값이 안전한 값이다** — 아무것도 승격하지 않는다. 그래서 "켜진 worker 를 아무나 만들 수 있는가" 를 열거표로 지킬 필요가 없다: 승격을 얻는 유일한 길이 ed25519 검증을 통과하는 것이다. 5.5 가 세 라운드 동안 배운 것("이름·철자 검사는 반드시 뚫린다")의 정반대 방향이다.
+
+  **다섯 digest 는 두 단계에서 결속한다.** 보정·경로 매니페스트·달력·빌드는 제안 수집 단계에 존재하므로 거기서 결속하고, 위험 번들과 ProtectionReady 는 그 단계에 **없으므로**(둘 다 제안 뒤에 수집된다) `buildProductionStrategyMarketWorker` 에서 결속한다. 없는 사실을 결속하면 그 결속은 어떤 정상 입력으로도 참이 될 수 없고, 그것이 이 change 가 이미 한 번 만들었다 고친 문 없는 fail-closed 다. 검증은 한 번, 결속은 사실이 사는 자리에서.
+
+  **반증이 코드를 네 줄 지웠다.** 가장 무거운 것: "서술자는 정확히 넷" 규칙을 세 검사가 나눠 지키고 있었고 셋 중 **아무 둘이면 충분**하므로 셋을 각각 지운 변이가 전부 살아남았다 — 각자가 상대의 시험을 통과시킨다. 개수 검사가 나머지 둘의 재진술이라 그것을 지웠다. 그리고 닿지 않는 방어 셋(`Verified` 의 `validMarket`, 검증의 `len(want) == 0`, 관문의 `loader.lanes == nil`)을 지웠다. `len(want) == 0` 은 지우는 대신 **닫아 두는 등식**을 시험으로 만들었다: 파일 이름이 있는 시장의 집합 == 서술자 표가 있는 시장의 집합. 상세는 review.md 의 2026-09-03 절.
+
+  **이 태스크가 주장하지 않는 것.** 서명된 매니페스트를 실제로 만들어 배포하는 절차는 여기 없다. 생산에는 그 파일이 하나도 없고(측정: `find ~/.config/tossctl -maxdepth 2 -name 'strategy*'` → 0 건), 그래서 오늘 생산 동작 변화는 0 이다. 활성화가 없거나 만료·폐기됐을 때의 운영 rollback 자세는 8.7.2 다.
+
+- [ ] 8.7.2 Rollback entry workers to OFF when that activation is missing, expired or revoked, while retaining shared safety and lineage state.

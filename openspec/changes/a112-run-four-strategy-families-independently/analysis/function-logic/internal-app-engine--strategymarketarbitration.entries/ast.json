@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_market_coordinator.go",
-  "source_sha256": "dfeaa63b2021128330a97c202d125d2b268f2a97329347e937539b3e7dc74a5d",
+  "source_sha256": "91b72a6f52f9be492fc945dc5a3856f4d9cb4b8cdc9cc97832f0f08b698d096a",
   "package": "engine",
   "function": "entries",
   "receiver": "strategyMarketArbitration",
   "signature": "strategyMarketArbitration.entries(params=0, results=2)",
   "start": {
-    "line": 80,
+    "line": 106,
     "column": 1
   },
   "end": {
-    "line": 90,
+    "line": 116,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 82,
+        "line": 108,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 84,
+        "line": 110,
         "column": 3
       }
     }
@@ -35,14 +35,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 85,
+        "line": 111,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 89,
+        "line": 115,
         "column": 2
       }
     }
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 81,
+        "line": 107,
         "column": 12
       },
       "text": "make"
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 81,
+        "line": 107,
         "column": 54
       },
       "text": "len"
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 87,
+        "line": 113,
         "column": 12
       },
       "text": "append"
@@ -77,21 +77,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 81,
+        "line": 107,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 83,
+        "line": 109,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 87,
+        "line": 113,
         "column": 3
       }
     }

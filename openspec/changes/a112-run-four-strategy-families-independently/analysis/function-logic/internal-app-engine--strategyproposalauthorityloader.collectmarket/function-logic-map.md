@@ -1,9 +1,9 @@
 # Function Logic Map: `strategyProposalAuthorityLoader.collectMarket`
 
-- Source: `internal/app/engine/strategy_proposal_authority.go` (211-322)
+- Source: `internal/app/engine/strategy_proposal_authority.go` (252-376)
 - Function: `strategyProposalAuthorityLoader.collectMarket` in package `engine`
 - Signature: `strategyProposalAuthorityLoader.collectMarket(params=5, results=1)`
-- File SHA-256: `1ce0765cff483524cfbb428959be1d1b83da126f6533d07f708bce06b7fe1e7c`
+- File SHA-256: `653c9fa1a7f9e24754fde6c7d7c56414fc540afe7f0992343795acb6f533314b`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 15.
 - Risk scan: `risk-pattern-report.md`.
@@ -49,87 +49,88 @@ The signature above is the exhaustive input/result record; this map does not inf
   정확히 같다. 이 집합 밖의 테스트가 어느 arm 이든 들어갔다면 그 등식이 깨진다. 깨진 행은
   `ATTRIBUTION MISMATCH` 로 표시되며 아래에는 하나도 없다.
 
-Exact AST return positions: 214:3, 217:3, 220:3, 223:3, 228:3, 240:4, 252:3, 261:3, 279:3, 288:3, 297:3, 306:3, 313:3, 319:2.
+Exact AST return positions: 262:3, 266:3, 269:3, 272:3, 277:3, 289:4, 301:3, 310:3, 332:3, 341:3, 350:3, 359:3, 366:3, 372:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 216:2 | arm entered 3x (engine tagged suite); arm not entered (engine untagged suite); `TestALostProposalClosesTheMarketInsteadOfReleasingTheOtherSymbol`, `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne`, `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused` |
-| B2 | if | 219:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B3 | if | 222:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B4 | if | 227:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B5 | if | 231:2 | arm entered 7x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket` |
-| B6 | range | 237:2 | arm entered 10023x (engine tagged suite); arm not entered (engine untagged suite); `TestALostProposalClosesTheMarketInsteadOfReleasingTheOtherSymbol`, `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne`, `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket` |
-| B7 | if | 239:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B8 | if | 251:2 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestStrategyProposalAuthorityKeepsMarketFailureLocal` |
-| B9 | if | 256:2 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestALostProposalClosesTheMarketInsteadOfReleasingTheOtherSymbol` |
-| B10 | if | 273:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B11 | if | 282:2 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne` |
-| B12 | if | 290:2 | arm entered 3x (engine tagged suite); arm not entered (engine untagged suite); `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal` |
-| B13 | if | 300:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B14 | if | 308:2 | arm entered 2x (engine tagged suite); arm not entered (engine untagged suite); `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated` |
-| B15 | range | 316:2 | arm entered 11x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket` |
+| B1 | if| 265:2 | arm entered 5x (engine tagged suite); arm entered 2x (engine untagged suite); `TestALostProposalClosesTheMarketInsteadOfReleasingTheOtherSymbol`, `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne`, `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused`, `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
+| B2 | if| 268:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B3 | if| 271:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B4 | if| 276:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B5 | if| 280:2 | arm entered 19x (engine tagged suite); arm not entered (engine untagged suite); `TestAClosedMarketStillCarriesTheGatesActivation`, `TestALaneRefusesALineageThatRenamedItselfIntoAnotherLane`, `TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading`, `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff`, `TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt`, `TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestEveryLaneStaysDormantOnAProposalItActuallyOwns`, `TestExactlyOneLaneOwnsEachSealedProposal`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated`, `TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket`, `TestWithoutASignedActivationCoordinationIsUnchanged` |
+| B6 | range| 286:2 | arm entered 10059x (engine tagged suite); arm not entered (engine untagged suite); `TestAClosedMarketStillCarriesTheGatesActivation`, `TestALaneRefusesALineageThatRenamedItselfIntoAnotherLane`, `TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading`, `TestALostProposalClosesTheMarketInsteadOfReleasingTheOtherSymbol`, `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne`, `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff`, `TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt`, `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused`, `TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestEveryLaneStaysDormantOnAProposalItActuallyOwns`, `TestExactlyOneLaneOwnsEachSealedProposal`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated`, `TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket`, `TestWithoutASignedActivationCoordinationIsUnchanged` |
+| B7 | if| 288:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B8 | if| 300:2 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestStrategyProposalAuthorityKeepsMarketFailureLocal` |
+| B9 | if| 305:2 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestALostProposalClosesTheMarketInsteadOfReleasingTheOtherSymbol` |
+| B10 | if| 326:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B11 | if| 335:2 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne` |
+| B12 | if| 343:2 | arm entered 4x (engine tagged suite); arm not entered (engine untagged suite); `TestAClosedMarketStillCarriesTheGatesActivation`, `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal` |
+| B13 | if| 353:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B14 | if| 361:2 | arm entered 6x (engine tagged suite); arm not entered (engine untagged suite); `TestAClosedMarketStillCarriesTheGatesActivation`, `TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading`, `TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt`, `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated` |
+| B15 | range| 369:2 | arm entered 41x (engine tagged suite); arm not entered (engine untagged suite); `TestALaneRefusesALineageThatRenamedItselfIntoAnotherLane`, `TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading`, `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff`, `TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt`, `TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestEveryLaneStaysDormantOnAProposalItActuallyOwns`, `TestExactlyOneLaneOwnsEachSealedProposal`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket`, `TestWithoutASignedActivationCoordinationIsUnchanged` |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `len` | 214:144 |
-| `len` | 216:31 |
-| `fail` | 217:10 |
-| `fail` | 220:10 |
-| `fail` | 223:10 |
-| `strings.TrimSpace` | 225:13 |
-| `loader.getenv` | 225:31 |
-| `DecodeString` | 226:14 |
-| `base64.StdEncoding.Strict` | 226:14 |
-| `base64.StdEncoding.EncodeToString` | 227:19 |
-| `len` | 227:72 |
-| `fail` | 228:10 |
-| `strings.TrimSpace` | 234:12 |
-| `loader.getenv` | 234:30 |
-| `make` | 235:13 |
-| `len` | 235:58 |
-| `make` | 236:14 |
-| `len` | 236:59 |
-| `entry.approved.Symbol` | 238:13 |
-| `bySymbol.approved.Valid` | 239:22 |
-| `fail` | 240:11 |
-| `append` | 243:13 |
-| `entry.route.Request` | 243:97 |
-| `loader.load` | 245:16 |
-| `strategyrouter.Market` | 246:42 |
-| `strings.TrimSpace` | 246:111 |
-| `loader.getenv` | 246:129 |
-| `ed25519.PublicKey` | 247:15 |
-| `strings.TrimSpace` | 250:23 |
-| `loader.getenv` | 250:41 |
-| `batch.ManifestDigest` | 251:19 |
-| `fail` | 252:10 |
-| `batch.Fault` | 256:22 |
-| `fail` | 257:13 |
-| `absence.String` | 259:37 |
-| `coordinateMarketProposals` | 272:26 |
-| `fail` | 274:13 |
-| `fail` | 283:13 |
-| `fail` | 291:13 |
-| `string` | 293:40 |
-| `arbitration.entries` | 299:23 |
-| `fail` | 301:13 |
-| `len` | 308:5 |
-| `fail` | 309:13 |
-| `sha256.New` | 315:7 |
-| `h.Write` | 317:10 |
-| `(unnamed)` | 317:18 |
-| `entry.route.approved.Symbol` | 317:25 |
-| `entry.authority.Proposal` | 317:66 |
-| `len` | 320:16 |
-| `len` | 320:52 |
-| `hex.EncodeToString` | 321:34 |
-| `h.Sum` | 321:53 |
+| `len` | 263:90 |
+| `len` | 265:31 |
+| `fail` | 266:10 |
+| `fail` | 269:10 |
+| `fail` | 272:10 |
+| `strings.TrimSpace` | 274:13 |
+| `loader.getenv` | 274:31 |
+| `DecodeString` | 275:14 |
+| `base64.StdEncoding.Strict` | 275:14 |
+| `base64.StdEncoding.EncodeToString` | 276:19 |
+| `len` | 276:72 |
+| `fail` | 277:10 |
+| `strings.TrimSpace` | 283:12 |
+| `loader.getenv` | 283:30 |
+| `make` | 284:13 |
+| `len` | 284:58 |
+| `make` | 285:14 |
+| `len` | 285:59 |
+| `entry.approved.Symbol` | 287:13 |
+| `bySymbol.approved.Valid` | 288:22 |
+| `fail` | 289:11 |
+| `append` | 292:13 |
+| `entry.route.Request` | 292:97 |
+| `loader.load` | 294:16 |
+| `strategyrouter.Market` | 295:42 |
+| `strings.TrimSpace` | 295:111 |
+| `loader.getenv` | 295:129 |
+| `ed25519.PublicKey` | 296:15 |
+| `strings.TrimSpace` | 299:23 |
+| `loader.getenv` | 299:41 |
+| `batch.ManifestDigest` | 300:19 |
+| `fail` | 301:10 |
+| `batch.Fault` | 305:22 |
+| `fail` | 306:13 |
+| `absence.String` | 308:37 |
+| `loader.familyGateFor` | 324:9 |
+| `coordinateMarketProposals` | 325:26 |
+| `fail` | 327:13 |
+| `fail` | 336:13 |
+| `fail` | 344:13 |
+| `string` | 346:40 |
+| `arbitration.entries` | 352:23 |
+| `fail` | 354:13 |
+| `len` | 361:5 |
+| `fail` | 362:13 |
+| `sha256.New` | 368:7 |
+| `h.Write` | 370:10 |
+| `(unnamed)` | 370:18 |
+| `entry.route.approved.Symbol` | 370:25 |
+| `entry.authority.Proposal` | 370:66 |
+| `len` | 374:17 |
+| `len` | 374:53 |
+| `hex.EncodeToString` | 375:35 |
+| `h.Sum` | 375:54 |
 
 ## State mutations and fallbacks
 
-- AST assignments: 48. Defers: 0. Goroutine statements: 0.
+- AST assignments: 49. Defers: 0. Goroutine statements: 0.
 
 ## Safety conclusion
 

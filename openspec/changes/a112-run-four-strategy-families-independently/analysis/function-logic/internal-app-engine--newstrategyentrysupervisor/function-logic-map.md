@@ -14,63 +14,63 @@
 
 ## Branches and early returns
 
-- Exact AST return nodes: `551:3, 558:3, 561:3, 569:3, 575:4, 578:4, 581:4, 585:4, 589:4, 595:4, 598:4, 601:4, 615:4, 619:2`.
+- Exact AST return nodes: `580:3, 587:3, 590:3, 598:3, 604:4, 607:4, 610:4, 614:4, 618:4, 624:4, 627:4, 630:4, 644:4, 648:2`.
 
 | Branch | AST kind | Source location | Required test disposition |
 |---|---|---|---|
-| B1 | if | 547:2 | planned targeted RED before any edit; not run by L0 |
-| B2 | if | 550:2 | planned targeted RED before any edit; not run by L0 |
-| B3 | if | 554:2 | planned targeted RED before any edit; not run by L0 |
-| B4 | if | 557:2 | planned targeted RED before any edit; not run by L0 |
-| B5 | if | 560:2 | planned targeted RED before any edit; not run by L0 |
-| B6 | if | 564:2 | planned targeted RED before any edit; not run by L0 |
-| B7 | if | 568:2 | planned targeted RED before any edit; not run by L0 |
-| B8 | range | 573:2 | planned targeted RED before any edit; not run by L0 |
-| B9 | if | 574:3 | planned targeted RED before any edit; not run by L0 |
-| B10 | if | 577:3 | planned targeted RED before any edit; not run by L0 |
-| B11 | if | 580:3 | planned targeted RED before any edit; not run by L0 |
-| B12 | if | 583:3 | planned targeted RED before any edit; not run by L0 |
-| B13 | if | 587:3 | planned targeted RED before any edit; not run by L0 |
-| B14 | if | 591:3 | planned targeted RED before any edit; not run by L0 |
-| B15 | if | 597:3 | planned targeted RED before any edit; not run by L0 |
-| B16 | if | 600:3 | planned targeted RED before any edit; not run by L0 |
-| B17 | range | 613:2 | planned targeted RED before any edit; not run by L0 |
-| B18 | if | 614:3 | planned targeted RED before any edit; not run by L0 |
+| B1 | if| 576:2 | arm entered 46x (engine tagged suite); arm entered 46x (engine untagged suite); `TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo`, `TestAnEffectiveMarketFaultLeavesItsPeerAndTheSupervisorAlone`, `TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt`, `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety`, `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction`, `TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining`, `TestExpiredAuthorityLatchesBeforeEvaluation`, `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive`, `TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority`, `TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal`, `TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive`, `TestPairedMarketRestartHonorsPublishedAbsoluteDeadlineAfterHandoffRace`, `TestStrategyEntrySupervisorDefaultsPairedMarketsDormant`, `TestStrategyEntrySupervisorPollerKeepsCompletePeerRunningWhenOtherMarketDormant`, `TestStrategyEntrySupervisorPollsDormantRefreshWorkerWithoutOpeningPublicTrigger`, `TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave`, `TestStrategyEntrySupervisorRejectsUnsafeProductionPollIntervals`, `TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently`, `TestStrategyEntrySupervisorZeroPollIntervalKeepsExplicitTriggerSemantics`, `TestStrategySupervisorRejectsInvalidAssemblies`, `TestTheFaultStreamHoldsOneSlotForEveryWorkerThatCanLatch`, `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping`, `TestTheMarketThatLeadsAWaveAlwaysPublishesIt`, `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError`, `TestUSFXReadFailureDoesNotCancelKRIdentityOrSafetyBudgets` |
+| B2 | if| 579:2 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B3 | if| 583:2 | arm entered 34x (engine tagged suite); arm entered 34x (engine untagged suite); `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety`, `TestExpiredAuthorityLatchesBeforeEvaluation`, `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive`, `TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority`, `TestMarketQueueSaturationDoesNotConsumePeerQueue`, `TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal`, `TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive`, `TestPairedMarketRestartHonorsPublishedAbsoluteDeadlineAfterHandoffRace`, `TestShutdownAndTriggerShareBarrierAndDrainBothQueues`, `TestStrategyEntrySupervisorDefaultsPairedMarketsDormant`, `TestStrategyEntrySupervisorPollerKeepsCompletePeerRunningWhenOtherMarketDormant`, `TestStrategyEntrySupervisorPollsDormantRefreshWorkerWithoutOpeningPublicTrigger`, `TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave`, `TestStrategyEntrySupervisorRejectsUnsafeProductionPollIntervals`, `TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently`, `TestStrategyEntrySupervisorZeroPollIntervalKeepsExplicitTriggerSemantics`, `TestStrategySupervisorRejectsInvalidAssemblies`, `TestUSFXReadFailureDoesNotCancelKRIdentityOrSafetyBudgets` |
+| B4 | if| 586:2 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B5 | if| 589:2 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B6 | if| 593:2 | arm entered 23x (engine tagged suite); arm entered 23x (engine untagged suite); `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety`, `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive`, `TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority`, `TestMarketQueueSaturationDoesNotConsumePeerQueue`, `TestShutdownAndTriggerShareBarrierAndDrainBothQueues`, `TestStrategyEntrySupervisorDefaultsPairedMarketsDormant`, `TestStrategyEntrySupervisorPollerKeepsCompletePeerRunningWhenOtherMarketDormant`, `TestStrategyEntrySupervisorPollsDormantRefreshWorkerWithoutOpeningPublicTrigger`, `TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave`, `TestStrategyEntrySupervisorRejectsUnsafeProductionPollIntervals`, `TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently`, `TestStrategyEntrySupervisorZeroPollIntervalKeepsExplicitTriggerSemantics`, `TestStrategySupervisorRejectsInvalidAssemblies`, `TestUSFXReadFailureDoesNotCancelKRIdentityOrSafetyBudgets` |
+| B7 | if| 597:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B8 | range| 602:2 | arm entered 84x (engine tagged suite); arm entered 84x (engine untagged suite); `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue`, `TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo`, `TestAnEffectiveMarketFaultLeavesItsPeerAndTheSupervisorAlone`, `TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt`, `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety`, `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction`, `TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining`, `TestExpiredAuthorityLatchesBeforeEvaluation`, `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive`, `TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority`, `TestMarketQueueSaturationDoesNotConsumePeerQueue`, `TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal`, `TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive`, `TestPairedMarketRestartHonorsPublishedAbsoluteDeadlineAfterHandoffRace`, `TestShutdownAndTriggerShareBarrierAndDrainBothQueues`, `TestStrategyEntrySupervisorDefaultsPairedMarketsDormant`, `TestStrategyEntrySupervisorPollerKeepsCompletePeerRunningWhenOtherMarketDormant`, `TestStrategyEntrySupervisorPollsDormantRefreshWorkerWithoutOpeningPublicTrigger`, `TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave`, `TestStrategyEntrySupervisorRejectsUnsafeProductionPollIntervals`, `TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently`, `TestStrategyEntrySupervisorZeroPollIntervalKeepsExplicitTriggerSemantics`, `TestStrategySupervisorRejectsInvalidAssemblies`, `TestTheFaultStreamHoldsOneSlotForEveryWorkerThatCanLatch`, `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping`, `TestTheMarketThatLeadsAWaveAlwaysPublishesIt`, `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError`, `TestUSFXReadFailureDoesNotCancelKRIdentityOrSafetyBudgets` |
+| B9 | if| 603:3 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B10 | if| 606:3 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B11 | if| 609:3 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B12 | if| 612:3 | no coverage block for this arm (engine tagged suite); no coverage block for this arm (engine untagged suite); no per-test profile in the attribution set entered it |
+| B13 | if| 616:3 | no coverage block for this arm (engine tagged suite); no coverage block for this arm (engine untagged suite); no per-test profile in the attribution set entered it |
+| B14 | if| 620:3 | no coverage block for this arm (engine tagged suite); no coverage block for this arm (engine untagged suite); no per-test profile in the attribution set entered it |
+| B15 | if| 626:3 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B16 | if| 629:3 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B17 | range| 642:2 | arm entered 72x (engine tagged suite); arm entered 72x (engine untagged suite); `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue`, `TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo`, `TestAnEffectiveMarketFaultLeavesItsPeerAndTheSupervisorAlone`, `TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt`, `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety`, `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction`, `TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining`, `TestExpiredAuthorityLatchesBeforeEvaluation`, `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive`, `TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority`, `TestMarketQueueSaturationDoesNotConsumePeerQueue`, `TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal`, `TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive`, `TestPairedMarketRestartHonorsPublishedAbsoluteDeadlineAfterHandoffRace`, `TestShutdownAndTriggerShareBarrierAndDrainBothQueues`, `TestStrategyEntrySupervisorDefaultsPairedMarketsDormant`, `TestStrategyEntrySupervisorPollerKeepsCompletePeerRunningWhenOtherMarketDormant`, `TestStrategyEntrySupervisorPollsDormantRefreshWorkerWithoutOpeningPublicTrigger`, `TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave`, `TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently`, `TestStrategyEntrySupervisorZeroPollIntervalKeepsExplicitTriggerSemantics`, `TestTheFaultStreamHoldsOneSlotForEveryWorkerThatCanLatch`, `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping`, `TestTheMarketThatLeadsAWaveAlwaysPublishesIt`, `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError`, `TestUSFXReadFailureDoesNotCancelKRIdentityOrSafetyBudgets` |
+| B18 | if| 643:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
 
 ## Calls and live bindings
 
 | Callee expression | Source location | Current-base evidence/requirement |
 |---|---|---|
-| fmt.Errorf | 551:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 558:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 560:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 561:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| clock.System | 565:9 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| clk.Now | 567:9 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| now.IsZero | 568:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 569:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 572:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| validStrategyMarket | 574:7 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 575:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 578:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 581:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| descriptor.AuthorityExpiresAt.IsZero | 583:70 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| now.Before | 584:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| validStrategyDigest | 584:51 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 585:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| descriptor.RestartNotBefore.IsZero | 587:124 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| validStrategyWorkerRefusal | 588:96 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| descriptor.RestartNotBefore.IsZero | 588:151 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 589:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 595:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| descriptor.AuthorityExpiresAt.IsZero | 597:72 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 598:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| descriptor.RestartNotBefore.IsZero | 600:123 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 601:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 605:22 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 615:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 620:62 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 620:91 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 580:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 587:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| len | 589:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| errors.New | 590:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| clock.System | 594:9 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| clk.Now | 596:9 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| now.IsZero | 597:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| errors.New | 598:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| make | 601:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| validStrategyMarket | 603:7 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 604:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 607:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 610:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| descriptor.AuthorityExpiresAt.IsZero | 612:70 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| now.Before | 613:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| validStrategyDigest | 613:51 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 614:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| descriptor.RestartNotBefore.IsZero | 616:124 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| validStrategyWorkerRefusal | 617:96 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| descriptor.RestartNotBefore.IsZero | 617:151 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 618:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 624:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| descriptor.AuthorityExpiresAt.IsZero | 626:72 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 627:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| descriptor.RestartNotBefore.IsZero | 629:123 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 630:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| make | 634:22 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 644:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| make | 649:62 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| make | 649:91 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
 
 ## State mutations and fallbacks
 

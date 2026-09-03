@@ -40,12 +40,12 @@
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `s.mu.RLock` | 891:2 | 읽기 잠금 — 이 함수는 아무것도 바꾸지 않는다 |
-| `s.mu.RUnlock` | 892:8 | `defer` |
-| `Before` | 900:11 | 권한 신선도 비교 |
-| `s.clk.Now` | 900:11 | 주입 시계 |
+| `s.mu.RLock` | 920:2 | 읽기 잠금 — 이 함수는 아무것도 바꾸지 않는다 |
+| `s.mu.RUnlock` | 921:8 | `defer` |
+| `Before` | 929:11 | 권한 신선도 비교 |
+| `s.clk.Now` | 929:11 | 주입 시계 |
 
-Exact AST return positions: 895:3, 898:3, 901:2
+Exact AST return positions: 924:3, 927:3, 930:2.
 
 ## State mutations and fallbacks
 

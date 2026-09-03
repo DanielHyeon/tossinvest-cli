@@ -1,11 +1,11 @@
 # Function Logic Map: `coordinateMarketProposals`
 
-- Source: `internal/app/engine/strategy_market_coordinator.go` (33-75)
+- Source: `internal/app/engine/strategy_market_coordinator.go` (40-101)
 - Function: `coordinateMarketProposals` in package `engine`
 - Signature: `coordinateMarketProposals(params=5, results=2)`
-- File SHA-256: `dfeaa63b2021128330a97c202d125d2b268f2a97329347e937539b3e7dc74a5d`
+- File SHA-256: `91b72a6f52f9be492fc945dc5a3856f4d9cb4b8cdc9cc97832f0f08b698d096a`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
-- AST evidence: `ast.json` — AST branches 5.
+- AST evidence: `ast.json` — AST branches 7.
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
@@ -37,41 +37,57 @@ The signature above is the exhaustive input/result record; this map does not inf
   정확히 같다. 이 집합 밖의 테스트가 어느 arm 이든 들어갔다면 그 등식이 깨진다. 깨진 행은
   `ATTRIBUTION MISMATCH` 로 표시되며 아래에는 하나도 없다.
 
-Exact AST return positions: 68:5, 74:2.
+Exact AST return positions: 94:5, 100:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | range | 40:2 | arm entered 10020x (engine tagged suite); arm not entered (engine untagged suite); `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne`, `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket` |
-| B2 | if | 42:3 | arm entered 3x (engine tagged suite); arm not entered (engine untagged suite); `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated` |
-| B3 | range | 48:3 | arm entered 10020x (engine tagged suite); arm not entered (engine untagged suite); `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne`, `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket` |
-| B4 | if | 55:4 | arm entered 2x (engine tagged suite); arm not entered (engine untagged suite); `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne`, `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused` |
-| B5 | if | 59:4 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B1 | range| 47:2 | arm entered 10056x (engine tagged suite); arm not entered (engine untagged suite); `TestAClosedMarketStillCarriesTheGatesActivation`, `TestALaneRefusesALineageThatRenamedItselfIntoAnotherLane`, `TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading`, `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne`, `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff`, `TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt`, `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused`, `TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestEveryLaneStaysDormantOnAProposalItActuallyOwns`, `TestExactlyOneLaneOwnsEachSealedProposal`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated`, `TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket`, `TestWithoutASignedActivationCoordinationIsUnchanged` |
+| B2 | if| 49:3 | arm entered 3x (engine tagged suite); arm not entered (engine untagged suite); `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated` |
+| B3 | range| 55:3 | arm entered 10061x (engine tagged suite); arm not entered (engine untagged suite); `TestAClosedMarketStillCarriesTheGatesActivation`, `TestALaneRefusesALineageThatRenamedItselfIntoAnotherLane`, `TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading`, `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne`, `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff`, `TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt`, `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused`, `TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestEveryLaneStaysDormantOnAProposalItActuallyOwns`, `TestExactlyOneLaneOwnsEachSealedProposal`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket`, `TestWithoutASignedActivationCoordinationIsUnchanged` |
+| B4 | if| 73:4 | arm entered 6x (engine tagged suite); arm not entered (engine untagged suite); `TestAClosedMarketStillCarriesTheGatesActivation`, `TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading`, `TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt` |
+| B5 | if| 77:4 | arm entered 10x (engine tagged suite); arm not entered (engine untagged suite); `TestAClosedMarketStillCarriesTheGatesActivation`, `TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading`, `TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt` |
+| B6 | if | 81:4 | arm entered 2x (engine tagged suite); arm not entered (engine untagged suite); `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne`, `TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused` |
+| B7 | if | 85:4 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `strategyRouterMarket` | 36:18 |
-| `strategycoordinator.NewMarketCoordinator` | 37:17 |
-| `make` | 38:55 |
-| `batch.Len` | 38:103 |
-| `batch.LanesFor` | 41:12 |
-| `route.approved.Symbol` | 41:27 |
-| `len` | 42:6 |
-| `route.approved.Symbol` | 47:12 |
-| `route.route.Request` | 47:57 |
-| `lane.Proposal` | 49:14 |
-| `coordinator.Submit` | 52:17 |
-| `lane.SnapshotDigest` | 53:21 |
-| `coordinator.Drops` | 67:33 |
-| `coordinator.Arbitrate` | 73:24 |
+| `strategyRouterMarket` | 43:18 |
+| `strategycoordinator.NewMarketCoordinator` | 44:17 |
+| `make` | 45:55 |
+| `batch.Len` | 45:103 |
+| `batch.LanesFor` | 48:12 |
+| `route.approved.Symbol` | 48:27 |
+| `len` | 49:6 |
+| `route.approved.Symbol` | 54:12 |
+| `route.route.Request` | 54:57 |
+| `lane.Proposal` | 56:14 |
+| `lane.SnapshotDigest` | 60:21 |
+| `gate.admit` | 71:29 |
+| `lane.SnapshotDigest` | 72:21 |
+| `append` | 74:25 |
+| `coordinator.Submit` | 80:17 |
+| `coordinator.Drops` | 93:33 |
+| `coordinator.Arbitrate` | 99:24 |
 
 ## State mutations and fallbacks
 
-- AST assignments: 14. Defers: 0. Goroutine statements: 0.
+- AST assignments: 18. Defers: 0. Goroutine statements: 0.
 
 ## Safety conclusion
 
 제안을 하나도 내지 않은 종목은 중재 대상이 아니라 거절 수에만 든다(B2).
-계보 신원이 두 레인에 겹치면 아무거나 고르지 않고 닫는다(B5) — 겹치면 선택을 되돌릴 자리가 하나로 정해지지 않는다.
-B5 는 진입 0 회다. 커버리지 구멍이며 통과가 아니다.
+계보 신원이 두 레인에 겹치면 아무거나 고르지 않고 닫는다(**B7**) — 겹치면 선택을 되돌릴 자리가 하나로 정해지지 않는다.
+B7 은 진입 0 회다. 커버리지 구멍이며 통과가 아니다.
+
+**태스크 5.1.2.2 가 분기 둘을 더했고 그래서 옛 B4·B5 가 B6·B7 이 되었다.**
+새 둘은 4-가족 관문이다: B4(73:4)는 그 가족의 레인이 이 제안을 조정자로 보내지
+않는다는 답이고(DORMANT · LATCHED · REFUSED 를 `arbitration.gated` 에 담는다),
+B5(77:4)는 관문이 서 있을 때 레인이 만든 봉투로 갈아 끼우는 자리다. 관문이 서지
+않은 시장에서는 B4 가 참이 되지 않고 B5 도 지나가므로 위 봉투가 그대로 들어간다 —
+그것이 오늘의 동작이다.
+
+**표의 B 번호는 좌표 순서로 다시 붙었다.** 이 표를 읽는 사람이 옛 리뷰의 "B4" 를
+그대로 찾으면 다른 분기를 보게 된다. 그것이 절대 줄 번호로 얼린 열거표의 대가이며,
+이 change 는 그 대가를 알고 감수한다(`analysis/` 의 다른 번들도 같은 모양이다).

@@ -1,11 +1,11 @@
 # Function Logic Map: `buildProductionStrategyMarketWorker`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (382-424)
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (393-452)
 - Function: `buildProductionStrategyMarketWorker` in package `engine`
 - Signature: `buildProductionStrategyMarketWorker(params=13, results=1)`
-- File SHA-256: `627c647d087032586c4b63ca315a30fd9fad6b51af329fa4e8bf4fecd7104e08`
+- File SHA-256: `4eede127fbbec4233391d783660d1bca000e8d85ba61b02d394b5776840f4e50`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
-- AST evidence: `ast.json` — AST branches 6.
+- AST evidence: `ast.json` — AST branches 8.
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
@@ -48,49 +48,68 @@ The signature above is the exhaustive input/result record; this map does not inf
   진입 수와 정확히 같다. 이 집합 밖의 시험이 어느 arm 이든 들어갔다면 그 등식이 깨진다.
   깨진 행은 `ATTRIBUTION MISMATCH` 로 표시되며 아래에는 하나도 없다.
 
-Exact AST return positions: 389:3, 404:3, 407:3, 410:3, 413:3, 419:3, 421:2.
+Exact AST return positions: 400:3, 415:3, 418:3, 422:3, 425:3, 440:4, 447:3, 449:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 388:2 | arm entered 2x (tagged); 0 (untagged); `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` (`wiringReady=false` 두 시장) |
-| B2 | if | 402:2 | **이 태스크가 바꾼 분기.** arm entered 1x (tagged); 0 (untagged); `TestARefusedHandoffLeavesTheWorkerDormant` (KR 이 상한 초과로 거절) |
-| B3 | if | 406:2 | arm not entered (양쪽 스위트). 봉인이 깨진 제안으로 여기까지 오는 시험이 없다 |
-| B4 | if | 409:2 | arm entered 1x (tagged); 0 (untagged); `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` (`spy.failProtection` KR) |
-| B5 | if | 412:2 | arm not entered (양쪽 스위트). 진입 게이트 관측 실패를 만드는 시험이 없다 |
-| B6 | if | 418:2 | arm not entered (양쪽 스위트). 잘못된 digest·revision·만료를 만드는 시험이 없다 |
+| B1 | if| 399:2 | arm entered 4x (engine tagged suite); arm entered 2x (engine untagged suite); `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
+| B2 | if| 413:2 | no coverage block for this arm (engine tagged suite); no coverage block for this arm (engine untagged suite); no per-test profile in the attribution set entered it |
+| B3 | if| 417:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B4 | if| 421:2 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` |
+| B5 | if| 424:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B6 | if| 437:2 | arm entered 3x (engine tagged suite); arm not entered (engine untagged suite); `TestAVerifiedActivationWhoseRiskOrProtectionDigestDisagreesLeavesTheMarketDormant` |
+| B7 | if | 438:3 | arm entered 2x (engine tagged suite); arm not entered (engine untagged suite); `TestAVerifiedActivationWhoseRiskOrProtectionDigestDisagreesLeavesTheMarketDormant` |
+| B8 | if | 446:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
 
 B3·B5·B6 은 **이 태스크가 바꾸지 않은** 분기이고 진입 0 은 커버리지 공백이지 통과가 아니다.
 그 공백을 메우는 것은 태스크 5.7(fault injection)의 몫이다.
+
+
+**태스크 8.7.1 이 분기 둘을 더했고 그래서 옛 B6 이 B8 이 되었다.**
+B6(437:2)은 "이 시장에 검증된 4-가족 활성화가 있는가" 이고, B7(438:3)은 그 활성화가
+이름 부른 **위험 번들 digest 와 ProtectionReady digest 가 살아 있는 값과 같은가** 다.
+그 둘을 여기서 결속하는 이유는 두 사실이 제안 수집 단계에 **존재하지 않기** 때문이다
+(둘 다 제안 뒤에 수집된다). 없는 사실을 결속하면 그 결속은 어떤 정상 입력으로도 참이
+될 수 없고, 그것이 이 change 가 이미 한 번 만들었다 고친 문 없는 fail-closed 다.
+활성화가 없는 시장에서는 B6 이 참이 되지 않으므로 아무것도 요구하지 않는다 —
+그것이 오늘의 동작이고, 그 방향이 실제로 짐을 진다는 것은 반증 E17(활성화가 없어도
+결속을 요구하게 만든 변이)이 CAUGHT 인 것으로 확인했다.
+B8(446:2)은 옛 B6 그대로다: 증거 digest · desired revision · 권한 만료.
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `schedule.forMarket` | 397:27 |
-| `candidate.forMarket` | 397:55 |
-| `route.forMarket` | 397:84 |
-| `fx.forMarket` | 398:3 |
-| `proposal.forMarket` | 398:25 |
-| `riskAuthority.forMarket` | 398:53 |
-| `account.forMarket` | 398:86 |
-| `Single` | 401:23 |
-| `p.dispatchHandoff` | 401:23 |
-| `result.ValidProposal` | 406:6 |
-| `gateway.ObserveStrategyProtection` | 409:15 |
-| `strings.ToLower` | 409:54 |
-| `string` | 409:70 |
-| `gateway.ObserveStrategyEntryGate` | 412:15 |
-| `strings.ToLower` | 412:53 |
-| `string` | 412:69 |
-| `strategyWorkerEvidenceDigest` | 415:12 |
-| `validStrategyDigest` | 418:6 |
-| `IsZero` | 418:64 |
-| `a.authority.FreshUntil` | 418:64 |
-| `a.authority.FreshUntil` | 422:23 |
+| `schedule.forMarket` | 408:27 |
+| `candidate.forMarket` | 408:55 |
+| `route.forMarket` | 408:84 |
+| `fx.forMarket` | 409:3 |
+| `proposal.forMarket` | 409:25 |
+| `riskAuthority.forMarket` | 409:53 |
+| `account.forMarket` | 409:86 |
+| `Single` | 412:23 |
+| `p.dispatchHandoff` | 412:23 |
+| `result.ValidProposal` | 417:6 |
+| `gateway.ObserveStrategyProtection` | 420:21 |
+| `strings.ToLower` | 420:60 |
+| `string` | 420:76 |
+| `gateway.ObserveStrategyEntryGate` | 424:15 |
+| `strings.ToLower` | 424:53 |
+| `string` | 424:69 |
+| `p.familyActivation` | 437:19 |
+| `activation.Verified` | 437:41 |
+| `activation.RiskBundleDigest` | 438:6 |
+| `activation.ProtectionReadyDigest` | 439:4 |
+| `protection.Digest` | 439:42 |
+| `strategyWorkerEvidenceDigest` | 443:12 |
+| `validStrategyDigest` | 446:6 |
+| `IsZero` | 446:64 |
+| `a.authority.FreshUntil` | 446:64 |
+| `a.authority.FreshUntil` | 450:23 |
 
 ## State mutations and fallbacks
 
-- AST assignments: 9. Defers: 0. Goroutine statements: 0.
+- AST assignments: 10. Defers: 0. Goroutine statements: 0.
 - `dormant` 지역 변수만 바꾼다. 이 함수는 원장·게이트웨이·활성화 어느 것도 쓰지 않는다.
 
 ## Safety conclusion

@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_entry_supervisor.go",
-  "source_sha256": "627c647d087032586c4b63ca315a30fd9fad6b51af329fa4e8bf4fecd7104e08",
+  "source_sha256": "4eede127fbbec4233391d783660d1bca000e8d85ba61b02d394b5776840f4e50",
   "package": "engine",
   "function": "NewRefreshingPairedStrategyEntrySupervisor",
   "receiver": "Context",
   "signature": "Context.NewRefreshingPairedStrategyEntrySupervisor(params=1, results=2)",
   "start": {
-    "line": 342,
+    "line": 353,
     "column": 1
   },
   "end": {
-    "line": 366,
+    "line": 377,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 343,
+        "line": 354,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "range",
       "at": {
-        "line": 347,
+        "line": 358,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 359,
+        "line": 370,
         "column": 2
       }
     }
@@ -43,28 +43,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 344,
+        "line": 355,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 352,
+        "line": 363,
         "column": 5
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 360,
+        "line": 371,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 365,
+        "line": 376,
         "column": 2
       }
     }
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 344,
+        "line": 355,
         "column": 15
       },
       "text": "errors.New"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 346,
+        "line": 357,
         "column": 13
       },
       "text": "make"
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 349,
+        "line": 360,
         "column": 13
       },
       "text": "append"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 352,
+        "line": 363,
         "column": 12
       },
       "text": "c.runProductionStrategyMarketCycle"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 356,
+        "line": 367,
         "column": 21
       },
       "text": "NewStrategyEntrySupervisor"
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 362,
+        "line": 373,
         "column": 2
       },
       "text": "c.strategyProjectionMu.Lock"
@@ -121,7 +121,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 364,
+        "line": 375,
         "column": 2
       },
       "text": "c.strategyProjectionMu.Unlock"
@@ -131,35 +131,35 @@
     {
       "kind": ":=",
       "at": {
-        "line": 346,
+        "line": 357,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 348,
+        "line": 359,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 349,
+        "line": 360,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 356,
+        "line": 367,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 363,
+        "line": 374,
         "column": 2
       }
     }

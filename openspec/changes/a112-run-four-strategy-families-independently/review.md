@@ -4331,3 +4331,228 @@ Pre-Edit Gate:
 - 독립 적대 리뷰(8.5)는 아직이다. 원장 스키마는 `docs/WORKFLOW.md:403` 기준 High-risk 라
   구현자와 다른 사람의 리뷰를 요구하며, 이 로트는 그것을 대신하지 않는다.
 
+
+## 2026-09-03 L5/L8 로트 — 서명된 4-가족 활성화와 관문 교체 (Manager 결정 59)
+
+### 사람이 고른 것
+
+HANDOFF.md 의 사람 결정 (7) 을 물었고, 세 선택지 중 **1번**을 골랐다:
+**8.7.1(매니페스트) + 5.1.2.2(관문)를 한 로트로, 5.2.2 는 그다음.**
+
+고르지 않은 둘과 그 대가를 함께 적는다. (2) 매니페스트만 별도 로트 — 로트는 가장
+작지만 소비자 없는 매니페스트가 한 번 랜딩하고, 그것은 이 change 가 5.1 에서 이미
+피한 모양이다("소비자 없는 매니페스트가 되지 않도록 5.3 의 고장 절반을 같은 로트에
+붙였다"). (3) 셋을 한 로트로 — 서명 검증·관문 교체·진입 상한 해제를 한 번에 리뷰해야
+하고, 그 규모는 5.5 가 적대 리뷰 13 라운드를 쓴 규모다.
+
+### 착수 전에 잰 것 넷 — 계획을 바꾼 측정
+
+**(1) 생산에는 서명된 전략 매니페스트가 하나도 배포돼 있지 않다.**
+`~/.config/tossctl/` 에 `strategy-lane-authority-{KR,US}.json`,
+`strategy-activation-{KR,US}.json` 이 **없다**(`find ~/.config/tossctl -maxdepth 2
+-name 'strategy*'` → 0 건). 즉 오늘 생산의 전략 진입 파이프라인은 배선이 아니라
+**입력 부재**로 정지해 있다. 이 사실이 이 로트의 토글 불변식 논증의 바닥이다 —
+매니페스트가 없으면 승격 집합은 공집합이고, 공집합은 오늘의 값이다.
+
+**(2) "정확히 네 가족 per market" 서명 매니페스트는 이미 있다 — 다만 종목 단위다.**
+`internal/strategyrouter` 의 `strategy-lane-authority-<MARKET>.json` 은 ed25519
+서명·digest 핀·소유자/권한 검사를 갖추고, `validProductionRouteCandidates` 가
+`productionRouteDescriptors(market)`(정확히 4개)와 **개수까지** 대조한다
+(`len(values) != len(want)` → 거절, `len(seen) == len(want)` → 통과). 그래서
+legacy 3-lane 매니페스트는 구조적으로 아무것도 승격할 수 없다(태스크 4.3).
+**그런데 그 매니페스트의 `Desired`/`Effective` 는 `scope`(종목·세대)마다 있다.**
+여덟 `FamilyWorker` 는 종목이 없는 (시장, 가족, 레인, 버전) 열쇠이므로, 종목별 행을
+worker 하나의 상태로 접으려면 "모든 scope 에서 ON 이면 ON" 같은 **새 규칙을 지어내야**
+한다. 지어낸 규칙은 계약이 아니다. 그리고 8.7 이 요구하는 build·ProtectionReady
+digest 는 그 매니페스트에 없다. 그래서 **별도 매니페스트**로 간다 —
+design.md:210 의 "새 runtime activation 은 exact 4-family-aware signed manifest 가
+필요하다"와 8.7 의 "**separate** human-approved operating activation" 이 같은 말이다.
+
+**(3) 승격은 저장된 상태가 아니라 주기마다 건네는 값이어야 한다.**
+활성화에는 만료가 있다(`scheduler` 의 v1 매니페스트는 최대 24시간). 레인은
+프로세스 수명이다(latch 와 연속 실패 계수기가 기억이라서 — 5.1.2.1). 승격을 레인
+생성 시점에 굽는 설계는 **묵은 ON** 을 만든다. 묵은 OFF 는 안전한 방향이지만 묵은
+ON 은 아니다. 그래서 활성화는 `Run` 의 **인자**이고, 신선도는 파도가 준다.
+따라서 `FamilyWorker` 의 `desired`/`effective` **필드는 없어진다** — 그 두 값은
+활성화의 함수다. 동결 골든이 여덟을 `desired: OFF, effective: OFF` 로 얼린 것은
+"활성화가 없을 때의 값"이고, 그것이 `Desired(FamilyActivation{}) == OFF` 로 시험된다.
+
+**(4) 관문의 값은 on/off 가 아니라 가족 단위 고장 격리다 — 두 권위의 겉보기 충돌이
+여기서 풀린다.** 5.1.2.1 은 "오늘 여덟을 관문으로 세우면 생산 진입이 0 이 되고 그것은
+토글 OFF 불변식(§0-2, OFF = upstream 동작)에 어긋난다"고 적었다. 스펙은 반대로
+"required activation authority 가 missing 이면 broker exposure-raising request 는
+0건이어야 한다 (SHALL)"고 적었다. 둘을 동시에 만족시키는 유일한 모양은 **관문을
+활성화된 런타임 안에만 세우는 것**이다: 활성화가 없으면 기존 시장 단위 경로가 그대로
+돌고(= upstream 동작), 활성화가 있으면 그 시장의 넷이 각자 판정한다. design 이
+partial 3-of-4 를 시장 전체 OFF 로 못 박았으므로 활성화된 시장의 넷은 전부 ON 이고,
+그때 관문이 실제로 막는 것은 **잠긴 레인 하나**다 — 그 가족의 제안만 멈추고 이웃 셋은
+계속한다. 그것이 이 change 전체가 사려는 것이다("시장 장애 격리이지 전략군 장애
+격리가 아니다", design.md:3).
+
+### Pre-Edit Gate (High-risk)
+
+```text
+- change id / task id: a112-run-four-strategy-families-independently / 8.7.1 + 5.1.2.2
+- 대상 심볼(신규):
+  - strategyrouter.FamilyActivation / LoadProductionFamilyActivation /
+    ProductionFamilyActivationFileName / FamilyActivationForTest (tossos_testseams)
+- 대상 심볼(기존 함수 내부 수정):
+  - strategyworker.FamilyWorker.Run / .Desired / .Effective / newWorker /
+    ProductionWorkers / dormant
+  - strategyworker.Lane.Run
+  - engine.strategyFamilyLaneStep / strategyLaneRuntime.evaluate / .runLane
+  - engine.Context.runProductionStrategyMarketCycle
+  - engine.coordinateMarketProposals
+  - engine.strategyProposalAuthorityLoader.collectMarket
+- 기존 동작 파악 근거 (측정):
+  - FamilyWorker.Run 의 생산 호출자는 Lane.Run 하나 (codegraph callers + grep)
+  - Lane.Run 의 생산 호출자는 strategyFamilyLaneStep 하나
+    (internal/app/engine/strategy_lane_runtime.go:162)
+  - coordinateMarketProposals 의 호출자는 collectMarket 하나
+    (codegraph callers → strategy_proposal_authority.go:211)
+  - ProductionLanesFrom 의 호출자는 restoreLatches 와 rebornLane 둘
+    (codegraph impact → strategy_lane_latch.go:66, :193)
+  - 기존 시험: strategyworker/{cycle,lane,restore,rehearsal}_test.go,
+    golden_contract_test.go, worker_shape_test.go;
+    engine/a112_lane_dependency_test.go
+- upstream 상속 테스트 영향: no. 전략 진입 경로는 TossOS 제품 추가이며 upstream
+  650 스위트에 없다. 회귀 방지는 make test(무태그) + make test-seams 양쪽.
+- 실패 테스트 선행 작성: yes
+- 안전 불변식 §0 위반 여부 검토: 통과
+  - §0-2 (OFF = upstream): 활성화가 없으면 승격 집합은 공집합이고 관문은 세우지
+    않는다. 생산에는 서명 매니페스트가 아예 없다(위 측정 (1)).
+  - §0-3 (손절 즉시성): 이 로트는 entry 경로만 만진다. safety loop 는 안 만진다.
+  - §0-7 (운영 토글 flip 은 사람이): 이 로트는 flip 수단을 **만들지 않는다.**
+    승격의 유일한 출처는 사람이 서명한 파일이고, 시험용 주조 seam 은
+    tossos_testseams 태그 아래에만 있다(scheduler.ActivationForTest 선례).
+```
+
+### 이 로트가 주장하지 않을 것 (착수 시점에 미리 적는다)
+
+- 시장 단위 단일 제안 상한(`strategyhandoff.Capacity = 1`)은 그대로다 — 5.2.2.
+- 기존 시장 단위 경로를 **지우지** 않는다. 활성화가 없을 때의 갈래로 남는다.
+  지우는 것은 5.2.2 와 6 절이다.
+- 8.7.2(활성화가 없거나 만료·폐기됐을 때의 운영 rollback 자세)는 이 로트가 아니다.
+- 독립 적대 리뷰(8.5)는 이 로트가 대신하지 않는다.
+
+### 랜딩한 것 — 8.7.1 + 5.1.2.2
+
+**새 것 하나: 서명된 4-가족 활성화** (`internal/strategyrouter/production_family_activation.go`).
+`strategy-family-activation-<MARKET>.json` 은 ed25519 서명 · digest 핀 · 소유자/권한
+검사(0400, 소유 UID, symlink 거부, 열기 전후 동일 inode) · 64 KiB 상한 · **바이트가
+정확히 이 구조체의 정규 직렬화와 같아야 한다**는 한 등식을 요구한다. 그 한 등식이
+unknown field · 중복 키 · 뒤에 붙은 JSON · 필드 순서와 공백을 바꾼 사본을 **함께**
+거절한다 — 같은 패키지의 `decodeProductionRouteManifest` 가 같은 이유로 같은 모양이다.
+
+서술자는 **정확히 그 시장의 넷**이어야 하고, 표를 여기서 다시 적지 않고
+`productionRouteDescriptors(market)` 를 그대로 쓴다. 옮겨 적으면 두 표가 갈리고,
+갈리는 순간 한쪽 매니페스트로 켜진 레인이 다른 쪽에서는 미지의 레인이 된다.
+
+`FamilyActivation` 은 불투명하다. 필드가 전부 비공개이므로 이 패키지 밖에서는
+**영값만** 만들 수 있고, **영값이 안전한 값이다**(아무것도 승격하지 않는다). 그래서
+"켜진 worker 를 아무나 만들 수 있는가"를 셈 시험으로 지킬 필요가 없다 — 승격을 얻는
+유일한 길이 서명 검증을 통과하는 것이다. 시험용 주조 문은 `tossos_testseams` 태그
+아래에만 있다(선례: `internal/scheduler/activation_testseam.go`).
+
+**`FamilyWorker` 의 desired/effective 필드가 없어졌다.** 두 값은 활성화의 함수다
+(`Desired(activation)` / `Effective(activation)`). 골든이 여덟을
+`desired: OFF, effective: OFF` 로 얼린 것은 "활성화가 없을 때의 값"이고,
+`golden_contract_test.go` 가 이제 `Desired(FamilyActivation{})` 로 그것을 시험한다.
+필드가 아니라 인자인 이유는 만료다 — 레인은 프로세스 수명이고 활성화에는 24시간
+상한이 있으므로, 승격을 값 안에 구우면 **묵은 ON** 이 생긴다. 묵은 OFF 는 안전한
+방향이지만 묵은 ON 은 아니다. `newWorker` 에서 상태 인자가 사라졌으므로 시험조차
+상태를 직접 주조할 수 없다.
+
+**관문**(`internal/app/engine/strategy_family_activation.go`)은 `coordinateMarketProposals`
+안, 조정자 `Submit` **앞**에 선다. 뒤에 세우면 중재가 이미 한 범위의 승자를 골라
+버렸고, 그 승자의 레인이 잠겨 있으면 그 범위는 이웃 가족이 이길 수 있었는데도 통째로
+닫힌다. 관문이 하는 일은 그 가족의 레인에게 묻는 것 하나이고, 레인이 낸 봉투를 그대로
+조정자에 넣는다.
+
+**레인을 제안 수집 앞으로 옮겼다.** 순서가 안전이다: 관문은 레인의 잠금을 읽어
+판정하고 그 잠금은 원장에서 태어난다(5.3.3). 뒤에 세우면 재시작 뒤 **첫 주기**에
+durably 잠긴 레인이 열린 것으로 읽히고 그 가족의 제안이 조정자에 닿는다. 그 창은 한
+주기뿐이라 어떤 행동 시험도 우연히 잡지 못하므로 순서를 구조로 못 박았다
+(`TestTheLanesAreBuiltBeforeTheProposalsAreCollected`).
+
+**다섯 digest 는 두 단계에서 결속한다.** 보정·달력·빌드는 제안 수집 단계에 존재하므로
+거기서, 위험 번들과 ProtectionReady 는 그 단계에 **없으므로**(둘 다 제안 뒤에 수집된다)
+`buildProductionStrategyMarketWorker` 에서 결속한다. 없는 사실을 결속하면 그 결속은
+어떤 정상 입력으로도 참이 될 수 없고, 그것이 이 change 가 이미 한 번 만들었다 고친
+문 없는 fail-closed 다. 검증은 한 번, 결속은 사실이 사는 자리에서.
+
+### 반증 — 58개, 그리고 그것이 **코드를 네 줄 지웠다**
+
+반증이 찾은 것 중 가장 무거운 것부터.
+
+**판정이 셋이었다 (M2 · M7 · M27 전부 SURVIVED).** "서술자는 정확히 넷" 규칙을
+세 검사가 나눠 지키고 있었다 — 입력 개수(`len(body.Descriptors) == 4`) · 중복 거절 ·
+완전성(`len(state) == 4`). 셋 중 **아무 둘이면 충분**하므로 셋을 각각 지운 변이가
+전부 살아남았다. 각자가 상대의 시험을 통과시킨다(5.3.3 이 원장에서 만난 것과 같은
+모양). 개수 검사가 나머지 둘의 재진술이므로 그것을 **지웠다**. 남은 둘은 서로 다른
+성질이고 각각 다른 입력에서만 짐을 진다: 중복 거절은 `[c,r,w,b,b]`(다섯 중 넷이 다
+있음)를, 완전성은 `[c,r,w]`를. 지운 뒤 두 변이 다 CAUGHT.
+
+**시장 결속을 우연이 지키고 있었다 (M1 SURVIVED).** `body.Market != config.Market` 를
+지워도 색이 안 바뀌었다 — 기존 사례는 몸통만 US 로 바꾸고 서술자는 KR 로 두었기
+때문에 **서술자 표 대조**가 대신 잡았다. 그래서 몸통·서술자·digest 가 전부 US 로
+온전하고 어긋난 것이 **파일 이름이 말하는 시장** 하나뿐인 사례를 만들었다
+(`TestTheOtherMarketsWholeManifestInThisMarketsFilePromotesNothing`). 막지 못하면
+KR 파일이 US 레인을 켠다.
+
+**닿지 않는 방어 셋을 지웠다.** `Verified()` 의 `validMarket`(M28), 검증의
+`len(want) == 0`(M29), 관문의 `loader.lanes == nil`(E10) — 셋 다 지워도 아무 색이
+바뀌지 않았다. 지키는 것이 없는 방어다. `len(want) == 0` 은 지우는 대신 **닫아 두는
+등식**을 시험으로 만들었다: 파일 이름이 있는 시장의 집합 == 서술자 표가 있는 시장의
+집합(`TestEveryMarketWithAnActivationFileNameHasADescriptorTable`). 세 번째 시장에
+이름만 붙이면 서술자 0 개가 "완전"해지고 그때 이 시험이 실패한다.
+
+**닫힌 시장이 관문의 활성화를 버렸다 (E6 SURVIVED).** 준비된 시장만 재고 있었다.
+그 상태의 대가는 관측이다 — 관문은 섰는데 그 주기의 레인 관측은 승격을 못 보고
+DORMANT 를 적는다. 즉 시장이 고장 난 바로 그 주기에 운영자의 레인 화면이 어두워진다.
+`fail` 클로저가 활성화를 함께 싣게 고쳤다(반환값마다 `carry(...)` 를 부르는 첫 판본은
+이 change 가 반복해서 고쳐 온 **무시할 수 있는 답**이었다).
+
+**동등 변이 하나는 이유를 적어 둔다.** M31(`productionRouteDescriptors(body.Market)` →
+`(config.Market)`)은 SURVIVED 이고 결함이 아니다. 바로 위에서
+`body.Market == config.Market` 가 강제되고 그 강제 자체가 M1 로 CAUGHT 이므로 두 식은
+**증명 가능하게** 같다. "동등 변이"를 근거 없이 넘기지 않기 위해 그 증명을 적는다.
+
+라운드별: 매니페스트 28개(21 CAUGHT · 5 SURVIVED · 2 anchor 실패) → 고친 뒤 6개
+(4 CAUGHT) → 3차 5개(3 CAUGHT · 1 동등 · 1 anchor) · 관문 10개(6 CAUGHT · E7 은 의도한
+대조군 · 2 SURVIVED · 1 anchor) → 고친 뒤 4개(4 CAUGHT) · 뒤 단계 결속 5개(5 CAUGHT).
+E17(활성화가 없어도 결속을 요구한다)이 CAUGHT 인 것이 토글 OFF 방향이 실제로 짐을
+진다는 증거다.
+
+### 열거표 넷이 걸렸고 넷 다 판단해서 고쳤다
+
+1. `TestOnlyThePackageLevelStepEverRunsInsideALane` — 얼린 한 줄의 철자가
+   `strategyFamilyLaneStep(lane, promotion)` 로 바뀐다. 여전히 한 줄, 여전히 패키지
+   수준.
+2. `TestTheFamilyLaneStepCarriesNothingButItsLane` → `…AndTheSignedPromotion`.
+   **개수 검사를 타입 목록으로 바꿨다.** 개수 검사는 정당한 인자가 늘 때 반드시
+   걸리고, 걸렸을 때 통과시키는 유일한 방법이 숫자를 고치는 것이라 감시 대상과 같은
+   손짓이 된다. 이제 새 인자는 자기 타입을 목록에 적어야 하고 그 타입이 능력이면
+   같은 시험의 계산이 잡는다.
+3. `TestTheSingleProposalAssumptionLivesOnlyWhereTheCensusSaysItDoes` — 새 파일이
+   `routes.entries[0]` 을 써서 걸렸다. 그 철자는 "제안이 하나"라는 가정과 같으므로
+   **코드를 고쳤다**: 첫 항목을 기준으로 삼는 대신 집합으로 "항목 전부가 같은 하나에
+   동의한다"를 세게 했다. census 는 손대지 않았다.
+4. `TestTheSeamFilesStayWithinTheirDeclaredClosure` — 조정자 seam 파일의 허용 목록에
+   `internal/strategyworker` 를 더했다. 그 한 줄이 능력을 늘리지 않는다는 것은 여기서
+   주장하지 않고 **그 패키지의 `dependency_closure_test.go` 가 `-deps`/`-deps-test` 로
+   증명한다**(양성 대조로 걸음이 얕지 않다는 것까지 잰다).
+
+그리고 `else if` 를 두 `if` 로 풀었다. Go AST 는 `} else if` 를 **같은 좌표의 else 와
+if 두 노드**로 내므로, 좌표로 분기를 세는 이 change 의 열거표에서 두 줄이 구별되지
+않는다.
+
+### 이 로트가 주장하지 않는 것
+
+- 시장 단위 단일 제안 상한(`strategyhandoff.Capacity = 1`)은 그대로다 — 5.2.2.
+- 기존 시장 단위 경로를 지우지 않았다. 활성화가 없을 때의 갈래로 남는다.
+- 8.7.2(활성화가 없거나 만료·폐기됐을 때의 운영 rollback 자세)는 이 로트가 아니다.
+- 독립 적대 리뷰(8.5)는 아직이다. 진입 경로는 High-risk 이므로 구현자와 다른 사람의
+  리뷰를 요구하며 이 로트는 그것을 대신하지 않는다.
+- 서명된 매니페스트를 **실제로 만들어 배포하는 절차**는 이 로트에 없다. 생산에는
+  그 파일이 하나도 없고(측정), 그래서 오늘 생산 동작 변화는 0 이다.

@@ -1,9 +1,9 @@
 # Function Logic Map: `strategyProposalAuthorityPair.ResultAuthority`
 
-- Source: `internal/app/engine/strategy_proposal_authority.go` (144-156)
+- Source: `internal/app/engine/strategy_proposal_authority.go` (156-168)
 - Function: `strategyProposalAuthorityPair.ResultAuthority` in package `engine`
 - Signature: `strategyProposalAuthorityPair.ResultAuthority(params=0, results=1)`
-- File SHA-256: `1ce0765cff483524cfbb428959be1d1b83da126f6533d07f708bce06b7fe1e7c`
+- File SHA-256: `653c9fa1a7f9e24754fde6c7d7c56414fc540afe7f0992343795acb6f533314b`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 1.
 - Risk scan: `risk-pattern-report.md`.
@@ -48,11 +48,11 @@ The signature above is the exhaustive input/result record; this map does not inf
   진입 수와 정확히 같다. 이 집합 밖의 시험이 어느 arm 이든 들어갔다면 그 등식이 깨진다.
   깨진 행은 `ATTRIBUTION MISMATCH` 로 표시되며 아래에는 하나도 없다.
 
-Exact AST return positions: 151:4, 153:3, 155:2.
+Exact AST return positions: 163:4, 165:3, 167:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 150:3 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol` |
+| B1 | if| 162:3 | arm entered 3x (engine tagged suite); arm entered 2x (engine untagged suite); `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
 
 중재가 거절한 시장은 `Ready=false` 로 닫히므로 handoff 는 `HANDOFF_MARKET_CLOSED` 를 돌려주고
 이 arm 이 그것을 받는다.
@@ -61,11 +61,11 @@ Exact AST return positions: 151:4, 153:3, 155:2.
 
 | Callee expression | Position |
 |---|---|
-| `Single` | 149:24 |
-| `value.dispatchHandoff` | 149:24 |
-| `result.ValidProposal` | 150:21 |
-| `convert` | 155:70 |
-| `convert` | 155:110 |
+| `Single` | 161:24 |
+| `value.dispatchHandoff` | 161:24 |
+| `result.ValidProposal` | 162:21 |
+| `convert` | 167:70 |
+| `convert` | 167:110 |
 
 ## State mutations and fallbacks
 

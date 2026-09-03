@@ -1,0 +1,45 @@
+{
+  "file": "internal/app/engine/strategy_lane_runtime.go",
+  "source_sha256": "0526b42f2ba26f101931e4f30425ae64558dd1d7e0e0070fa5f9c9a2e34df104",
+  "package": "engine",
+  "function": "strategyFamilyLaneStep",
+  "signature": "strategyFamilyLaneStep(params=2, results=1)",
+  "start": {
+    "line": 164,
+    "column": 1
+  },
+  "end": {
+    "line": 170,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 168,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 10
+      },
+      "text": "lane.Run"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

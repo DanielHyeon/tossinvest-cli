@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_entry_supervisor.go",
-  "source_sha256": "627c647d087032586c4b63ca315a30fd9fad6b51af329fa4e8bf4fecd7104e08",
+  "source_sha256": "4eede127fbbec4233391d783660d1bca000e8d85ba61b02d394b5776840f4e50",
   "package": "engine",
   "function": "NewPairedStrategyEntryProductionAssembly",
   "receiver": "Context",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 334,
+    "line": 345,
     "column": 2
   },
   "branches": [
@@ -42,23 +42,23 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 301,
-        "column": 3
-      }
-    },
-    {
-      "id": "B5",
-      "kind": "range",
-      "at": {
-        "line": 318,
+        "line": 294,
         "column": 2
       }
     },
     {
-      "id": "B6",
+      "id": "B5",
       "kind": "if",
       "at": {
-        "line": 323,
+        "line": 312,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 329,
         "column": 2
       }
     },
@@ -66,7 +66,15 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 330,
+        "line": 334,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 341,
         "column": 2
       }
     }
@@ -82,35 +90,42 @@
     {
       "kind": "return",
       "at": {
-        "line": 306,
+        "line": 295,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 317,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 308,
+        "line": 319,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 324,
+        "line": 335,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 331,
+        "line": 342,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 333,
+        "line": 344,
         "column": 2
       }
     }
@@ -263,7 +278,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 287,
+        "line": 293,
+        "column": 16
+      },
+      "text": "c.productionStrategyLanes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
         "column": 23
       },
       "text": "collect"
@@ -271,7 +294,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 287,
+        "line": 297,
+        "column": 23
+      },
+      "text": "withStrategyLanes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
         "column": 23
       },
       "text": "newStrategyProposalAuthorityLoader"
@@ -279,7 +310,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 289,
+        "line": 300,
         "column": 21
       },
       "text": "proposalAuthority.ResultAuthority"
@@ -287,7 +318,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 290,
+        "line": 301,
         "column": 19
       },
       "text": "collect"
@@ -295,7 +326,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 290,
+        "line": 301,
         "column": 19
       },
       "text": "newStrategyRiskAuthorityLoader"
@@ -303,7 +334,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 292,
+        "line": 303,
         "column": 22
       },
       "text": "collect"
@@ -311,7 +342,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 292,
+        "line": 303,
         "column": 22
       },
       "text": "newStrategyAccountAuthorityLoader"
@@ -319,7 +350,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 295,
+        "line": 306,
         "column": 20
       },
       "text": "newProductionStrategyFirstLegAuthorityLoader"
@@ -327,7 +358,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 297,
+        "line": 308,
         "column": 20
       },
       "text": "newStrategyFirstLegAdmissionBridge"
@@ -335,7 +366,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 298,
+        "line": 309,
         "column": 19
       },
       "text": "newStrategyDispatchCycle"
@@ -343,7 +374,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 300,
+        "line": 311,
         "column": 12
       },
       "text": "collectMarket"
@@ -351,7 +382,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 300,
+        "line": 311,
         "column": 12
       },
       "text": "newStrategyScheduleAuthorityLoader"
@@ -359,7 +390,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 304,
+        "line": 315,
         "column": 4
       },
       "text": "fresh.restore.Activation.Generation"
@@ -367,7 +398,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 304,
+        "line": 315,
         "column": 45
       },
       "text": "expected.restore.Activation.Generation"
@@ -375,7 +406,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 305,
+        "line": 316,
         "column": 5
       },
       "text": "Equal"
@@ -383,7 +414,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 305,
+        "line": 316,
         "column": 5
       },
       "text": "fresh.restore.Activation.ExpiresAt"
@@ -391,7 +422,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 305,
+        "line": 316,
         "column": 48
       },
       "text": "expected.restore.Activation.ExpiresAt"
@@ -399,7 +430,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 306,
+        "line": 317,
         "column": 11
       },
       "text": "errors.New"
@@ -407,7 +438,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 315,
+        "line": 326,
         "column": 23
       },
       "text": "scheduleAuthority.Snapshot"
@@ -415,7 +446,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 317,
+        "line": 328,
         "column": 13
       },
       "text": "make"
@@ -423,7 +454,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 319,
+        "line": 330,
         "column": 13
       },
       "text": "append"
@@ -431,7 +462,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 319,
+        "line": 330,
         "column": 29
       },
       "text": "c.productionStrategyWorker"
@@ -439,7 +470,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 322,
+        "line": 333,
         "column": 21
       },
       "text": "NewStrategyEntrySupervisor"
@@ -447,7 +478,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 327,
+        "line": 338,
         "column": 14
       },
       "text": "candidateAuthority.Snapshot"
@@ -455,7 +486,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 327,
+        "line": 338,
         "column": 52
       },
       "text": "routeAuthority.Snapshot"
@@ -463,7 +494,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 327,
+        "line": 338,
         "column": 83
       },
       "text": "fxAuthority.Snapshot"
@@ -471,7 +502,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 327,
+        "line": 338,
         "column": 117
       },
       "text": "proposalAuthority.Snapshot"
@@ -479,7 +510,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 328,
+        "line": 339,
         "column": 9
       },
       "text": "riskAuthority.Snapshot"
@@ -487,7 +518,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 328,
+        "line": 339,
         "column": 44
       },
       "text": "accountAuthority.Snapshot"
@@ -495,7 +526,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 330,
+        "line": 341,
         "column": 12
       },
       "text": "c.publishStrategyRuntime"
@@ -582,42 +613,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 287,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 289,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 290,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 292,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 294,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 295,
+        "line": 293,
         "column": 2
       }
     },
@@ -631,26 +627,54 @@
     {
       "kind": ":=",
       "at": {
-        "line": 298,
+        "line": 300,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 301,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 303,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 305,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 306,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 308,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 309,
         "column": 2
       }
     },
     {
       "kind": "=",
-      "at": {
-        "line": 299,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 300,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
       "at": {
         "line": 310,
         "column": 2
@@ -659,35 +683,49 @@
     {
       "kind": ":=",
       "at": {
-        "line": 317,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 319,
+        "line": 311,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 322,
+        "line": 321,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 326,
+        "line": 328,
         "column": 2
       }
     },
     {
-      "kind": ":=",
+      "kind": "=",
       "at": {
         "line": 330,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 333,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 337,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 341,
         "column": 5
       }
     }

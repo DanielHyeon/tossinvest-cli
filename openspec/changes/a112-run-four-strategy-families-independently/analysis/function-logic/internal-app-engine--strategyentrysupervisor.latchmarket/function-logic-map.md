@@ -55,23 +55,23 @@
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `strings.TrimSpace` | 952:12 | 실패 문구 정규화 |
-| `failure.Error` | 952:30 | 잠금 이유의 원문 |
-| `errors.Is` | 960:5 | 권한 만료를 별도 refusal 로 분류 |
-| `s.clk.Now` | 963:16 | **관측 시각.** 주입 시계이지 `time.Now` 가 아니다 |
-| `observedAt.IsZero` | 964:5 | B4 — 시각 없이 잠금을 기록하지 않는다 |
-| `errors.New` | 965:23 | B4 의 오류 |
-| `s.mu.Lock` | 967:2 | 상태 변경 구간 시작 |
-| `s.mu.Unlock` | 969:3 | B5 의 조기 반환이 잠금을 푼다 |
-| `errors.New` | 970:23 | B5 의 오류 |
-| `fmt.Sprintf` | 980:20 | `latchID` — market·generation·revision+1 |
-| `strategyRestartBackoff` | 986:18 | 5s 계단, 30s 상한 |
-| `strategyRestartNotBefore` | 987:28 | 절대 기한. 9999 년으로 포화 |
-| `observedAt.UTC` | 993:119 | fault 의 관측 시각 |
-| `s.mu.Unlock` | 996:2 | 상태 변경 구간 끝 |
-| `errors.New` | 1001:23 | B9-b 의 오류 |
+| `strings.TrimSpace` | 981:12 | 실패 문구 정규화 |
+| `failure.Error` | 981:30 | 잠금 이유의 원문 |
+| `errors.Is` | 989:5 | 권한 만료를 별도 refusal 로 분류 |
+| `s.clk.Now` | 992:16 | **관측 시각.** 주입 시계이지 `time.Now` 가 아니다 |
+| `observedAt.IsZero` | 993:5 | B4 — 시각 없이 잠금을 기록하지 않는다 |
+| `errors.New` | 994:23 | B4 의 오류 |
+| `s.mu.Lock` | 996:2 | 상태 변경 구간 시작 |
+| `s.mu.Unlock` | 998:3 | B5 의 조기 반환이 잠금을 푼다 |
+| `errors.New` | 999:23 | B5 의 오류 |
+| `fmt.Sprintf` | 1009:20 | `latchID` — market·generation·revision+1 |
+| `strategyRestartBackoff` | 1015:18 | 5s 계단, 30s 상한 |
+| `strategyRestartNotBefore` | 1016:28 | 절대 기한. 9999 년으로 포화 |
+| `observedAt.UTC` | 1022:119 | fault 의 관측 시각 |
+| `s.mu.Unlock` | 1025:2 | 상태 변경 구간 끝 |
+| `errors.New` | 1030:23 | B9-b 의 오류 |
 
-Exact AST return positions: 965:3, 970:3, 999:3, 1001:3
+Exact AST return positions: 994:3, 999:3, 1028:3, 1030:3.
 
 ## State mutations and fallbacks
 

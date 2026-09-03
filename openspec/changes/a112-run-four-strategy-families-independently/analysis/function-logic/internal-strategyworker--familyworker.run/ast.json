@@ -1,0 +1,78 @@
+{
+  "file": "internal/strategyworker/worker.go",
+  "source_sha256": "588c56f0a3100d0f1fa93e8fed4cf303b506ad88823c53e8f8690ebe84504335",
+  "package": "strategyworker",
+  "function": "Run",
+  "receiver": "FamilyWorker",
+  "signature": "FamilyWorker.Run(params=2, results=1)",
+  "start": {
+    "line": 193,
+    "column": 1
+  },
+  "end": {
+    "line": 203,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 197,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 195,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 198,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 201,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 5
+      },
+      "text": "worker.Effective"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 6
+      },
+      "text": "worker.owns"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

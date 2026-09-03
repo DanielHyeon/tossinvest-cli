@@ -7,10 +7,10 @@
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 873:2 — 기한이 0 | **없음** | no (base) | **no — block 873-875 count=0, 도달 불가(아래)** |
-| B2 | if at 877:2 — 현재 시각이 0 | **없음** | no (base) | **no — block 877-879 count=0, 도달 불가(아래)** |
-| B3 | if at 881:2 — 남은 시간이 30s 상한을 넘는다 | `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping` 의 두 칸 | no (base) | yes (block 881-883 count=1, **5.6 이 처음 실행**) |
-| B4 | if at 884:2 — 기한이 이미 지났다 | `TestPairedMarketRestartHonorsPublishedAbsoluteDeadlineAfterHandoffRace` | no (base) | yes (block 884-886) |
+| B1 | if at 902:2 — 기한이 0 | **없음** | no (base) | **no — block 873-875 count=0, 도달 불가(아래)** |
+| B2 | if at 906:2 — 현재 시각이 0 | **없음** | no (base) | **no — block 877-879 count=0, 도달 불가(아래)** |
+| B3 | if at 910:2 — 남은 시간이 30s 상한을 넘는다 | `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping` 의 두 칸 | no (base) | yes (block 881-883 count=1, **5.6 이 처음 실행**) |
+| B4 | if at 913:2 — 기한이 이미 지났다 | `TestPairedMarketRestartHonorsPublishedAbsoluteDeadlineAfterHandoffRace` | no (base) | yes (block 884-886) |
 | 본문 | 887:2 — 남은 시간만큼 취소 가능한 대기 | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` 외 4 | no (base) | yes |
 
 ## 측정으로 확인한 빈칸

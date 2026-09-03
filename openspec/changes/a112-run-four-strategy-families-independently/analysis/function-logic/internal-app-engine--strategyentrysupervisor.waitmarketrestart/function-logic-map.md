@@ -40,16 +40,16 @@
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `notBefore.IsZero` | 873:5 | B1 |
-| `errors.New` | 874:10 | B1 의 오류 |
-| `s.clk.Now` | 876:9 | **지금**을 다시 읽는다 — 잠금 시각이 아니라 |
-| `now.IsZero` | 877:5 | B2 |
-| `errors.New` | 878:10 | B2 의 오류 |
-| `notBefore.Sub` | 880:11 | 절대 기한 − 지금 = 남은 시간 |
-| `errors.New` | 882:10 | B3 의 오류 |
-| `s.clk.Sleep` | 887:9 | 취소를 존중하는 유일한 대기 |
+| `notBefore.IsZero` | 902:5 | B1 |
+| `errors.New` | 903:10 | B1 의 오류 |
+| `s.clk.Now` | 905:9 | **지금**을 다시 읽는다 — 잠금 시각이 아니라 |
+| `now.IsZero` | 906:5 | B2 |
+| `errors.New` | 907:10 | B2 의 오류 |
+| `notBefore.Sub` | 909:11 | 절대 기한 − 지금 = 남은 시간 |
+| `errors.New` | 911:10 | B3 의 오류 |
+| `s.clk.Sleep` | 916:9 | 취소를 존중하는 유일한 대기 |
 
-Exact AST return positions: 874:3, 878:3, 882:3, 885:3, 887:2
+Exact AST return positions: 903:3, 907:3, 911:3, 914:3, 916:2.
 
 ## State mutations and fallbacks
 
