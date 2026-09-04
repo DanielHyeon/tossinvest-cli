@@ -1,0 +1,46 @@
+{
+  "file": "internal/app/engine/strategy_dispatch_cycle.go",
+  "source_sha256": "12f578d46efe7d948095f1c7d62b89a3b91cad09d7e2270b291d537ac1121ea6",
+  "package": "engine",
+  "function": "newStrategyDispatchCycle",
+  "signature": "newStrategyDispatchCycle(params=8, results=1)",
+  "start": {
+    "line": 48,
+    "column": 1
+  },
+  "end": {
+    "line": 57,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 53,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,6 +1,6 @@
 # Branch Test Map: `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`
 
-- Source: `internal/app/engine/strategy_dispatch_cycle_test.go` (92-149); file SHA-256 `ed412100d736dfcb474a0b6c126379c383dc0495be9bdceb409808c18d76f844`.
+- Source: `internal/app/engine/strategy_dispatch_cycle_test.go` (92-149); file SHA-256 `10f38fe4e88c3e076e8c88b1cc4764c847fb6052835e3be2595c85f34e9b1464`.
 
 이 함수는 시험 자신이다. 분기는 단언 실패 경로이므로 "그 분기를 도는 시험"은
 이 함수 자체이고, 초록은 어느 실패 arm 도 돌지 않았다는 뜻이다.

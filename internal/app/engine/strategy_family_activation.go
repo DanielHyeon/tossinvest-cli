@@ -138,6 +138,20 @@ func (loader *strategyProposalAuthorityLoader) loadFamilyActivation(ctx context.
 	if !agreed {
 		return strategyrouter.FamilyActivation{}, strategyrouter.ErrProductionFamilyActivationUnavailable
 	}
+	// 위험은 **정책 매니페스트** digest 로 결속한다 (태스크 8.8.2).
+	//
+	// 앞 판본은 per-cycle 위험 스냅샷 봉인에 걸었고 그 값은 종목과 파도 벽시계를
+	// 품으므로 사람이 미리 서명한 상수가 같아질 수 없었다. 여기서 읽는 것은
+	// 운영자가 이미 배포로 핀하는 값(`TOSSOS_RISK_BUCKET_<MARKET>_MANIFEST_SHA256`)
+	// 이고, 정책을 다시 서명할 때만 바뀐다 — 그래서 24시간 수명 동안 안정적이고
+	// 이 단계에 이미 존재한다.
+	//
+	// 같은 env 상수를 위험 권한 로더도 쓴다(strategy_risk_authority.go). 두 곳이
+	// 같은 이름을 읽으므로 값이 갈릴 수 없다.
+	riskPolicyEnv := strategyRiskKRManifestDigestEnv
+	if market == StrategyMarketUS {
+		riskPolicyEnv = strategyRiskUSManifestDigestEnv
+	}
 	return strategyrouter.LoadProductionFamilyActivation(ctx, strategyrouter.FamilyActivationConfig{
 		ConfigDir: loader.configDir, Market: strategyRouterMarket(market),
 		ManifestDigest: strings.TrimSpace(loader.getenv(digestEnv)),
@@ -145,6 +159,7 @@ func (loader *strategyProposalAuthorityLoader) loadFamilyActivation(ctx context.
 		TrustedKey:     ed25519.PublicKey(key), ObservedAt: observedAt,
 		RouteManifestDigest: routes.snapshot.ManifestDigest, CalibrationDigest: calibration,
 		CalendarVersion: schedule.calendar.Version, BuildDigest: strategyRuntimeBuildDigest(),
+		RiskPolicyDigest: strings.TrimSpace(loader.getenv(riskPolicyEnv)),
 	})
 }
 

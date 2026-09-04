@@ -391,12 +391,33 @@
   (지속형을 잠가 `000660` 범위가 소멸)가 그 둘을 갈라 세운다. `arbitration.gated` 는
   이제 `GatedCount`·`GatedOutcomes` 로 스냅샷에 나간다. 상세는 review.md 2026-09-04 절.
 
-- [ ] 8.8.2 매니페스트가 결속하는 다섯 값을 **서명 가능한 값**으로 바꾼다.
+- [x] 8.8.2 매니페스트가 결속하는 다섯 값을 **서명 가능한 값**으로 바꾼다.
   `risk_bundle_digest` 는 per-cycle 스냅샷 봉인(`Symbol`·`AsOf` 포함)이라 어떤
   정상 입력으로도 참이 될 수 없었다. 운영자가 이미 관리하는
   `TOSSOS_RISK_BUCKET_<M>_MANIFEST_SHA256` 을 쓴다. ProtectionReady 는 살아 있는
   상태라 등식으로 결속할 수 없으므로 **하한 세대**로 바꾸고, 그 판정을 주문 경로에
   둔다. 지금 판정은 `buildProductionStrategyMarketWorker` 안에 있어 화면만 바꾼다.
+
+  **(Landed 2026-09-04.)** 매니페스트 본문이 `risk_bundle_digest` 대신
+  `risk_policy_digest`(운영자가 이미 핀하는 `TOSSOS_RISK_BUCKET_<M>_MANIFEST_SHA256`)
+  를, `protection_ready_digest` 대신 `protection_ready_min_generation`(uint64, 0 금지)
+  을 싣는다. 앞의 넷은 제안 수집 단계가 등식으로 결속하고 — 넷 다 그 단계에
+  존재하며 활성화 수명 동안 변하지 않는다 — ProtectionReady 하한만
+  `strategyDispatchCycle.dispatch` 가 결속한다. 그 자리가 보호 세대를 들고 있으면서
+  주문을 거절할 수 있는 유일한 자리다. `buildProductionStrategyMarketWorker` 의
+  결속은 들어냈다(분기 둘 삭제): 값이 충족 불가였고, 그 함수가 만드는 `Effective`
+  는 화면과 승격만 움직여 주문을 하나도 막지 못했다.
+
+  하한을 **등식이 아니라 하한**으로 둔 것은 ProtectionReady 가 살아 있는 상태이기
+  때문이다. 세대는 단조 증가하므로 하한은 안전 방향으로만 어긋난다. 이 편차는
+  8.7 의 "current … ProtectionReady digests" 를 문자 그대로 따르지 않으므로 여기
+  적는다 — 문자 그대로 따르면 어떤 정상 입력으로도 참이 될 수 없다.
+
+  시험은 값을 시스템에서 읽지 않는다. `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`
+  가 하한을 숫자로 적고 배선의 보호 세대(9)와 견주며, 세 경우(활성화 없음 / 같음 /
+  낮음)를 함께 세워 "항상 거절" 판본을 배제한다. 반증 둘이 서로 다른 행을 빨갛게
+  만든다. 상세는 review.md 2026-09-04 절.
+
 
 - [ ] 8.8.3 이 매니페스트를 사람이 만들 수 있게 한다: 정규 바이트를 내고 서명하는
   `tools/` 도구, `docs/operations.md` 의 형제 절과 같은 문서, 그리고 검증되는 골든

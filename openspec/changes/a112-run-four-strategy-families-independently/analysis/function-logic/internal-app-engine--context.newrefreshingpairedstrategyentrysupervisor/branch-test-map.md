@@ -5,8 +5,8 @@
 
 | Branch | Scenario anchor | Required test disposition | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 354:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B2 | range at 358:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B3 | if at 370:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B1 | if at 355:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B2 | range at 359:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B3 | if at 371:2 | planned targeted RED before any edit; not run by L0 | no | no |
 
 A lot may replace a planned row only after recording its exact test name and actual RED/GREEN command result.

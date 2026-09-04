@@ -102,6 +102,10 @@ type FamilyActivationConfig struct {
 	CalibrationDigest   string
 	CalendarVersion     string
 	BuildDigest         string
+	// RiskPolicyDigest 는 이 시장의 서명된 위험 정책 매니페스트 digest 다
+	// (`TOSSOS_RISK_BUCKET_<MARKET>_MANIFEST_SHA256`). 운영자가 이미 관리하는
+	// 값이고 정책을 다시 서명할 때만 바뀐다.
+	RiskPolicyDigest string
 }
 
 type productionFamilyActivationDescriptor struct {
@@ -121,15 +125,34 @@ type productionFamilyActivationBody struct {
 	Generation         uint64 `json:"generation"`
 	Market             Market `json:"market"`
 
-	// 태스크 8.7 이 이름을 부른 다섯 digest 가 전부 서명 안에 있다. 셋은 아래
-	// validateProductionFamilyActivation 이 이 단계에서 결속하고, 둘은 값으로
-	// 나가 뒤 단계가 결속한다.
-	RouteManifestDigest   string `json:"route_manifest_digest"`
-	CalibrationDigest     string `json:"calibration_digest"`
-	CalendarVersion       string `json:"calendar_version"`
-	RiskBundleDigest      string `json:"risk_bundle_digest"`
-	BuildDigest           string `json:"build_digest"`
-	ProtectionReadyDigest string `json:"protection_ready_digest"`
+	// 태스크 8.7 이 이름을 부른 다섯 값이 전부 서명 안에 있다 (태스크 8.8.2 정정).
+	//
+	// **앞 판본은 위험과 ProtectionReady 를 per-cycle 스냅샷 봉인에 걸었고, 그
+	// 결속은 어떤 정상 입력으로도 참이 될 수 없었다.** `RiskSnapshotAuthorityBundle`
+	// 의 digest 는 `Symbol` 과 `AsOf`(파도의 벽시계)를 품으므로 파도마다·종목마다
+	// 바뀐다. 사람이 미리 서명하는 상수가 같아질 수 없다. ProtectionReady 도
+	// 살아 있는 readiness 스냅샷의 신원이라 같은 문제가 있다.
+	//
+	// 그래서 둘을 **서명 가능한 값**으로 바꿨다.
+	//
+	//   - 위험: 운영자가 이미 관리하는 **위험 정책 매니페스트** digest
+	//     (`TOSSOS_RISK_BUCKET_<MARKET>_MANIFEST_SHA256`). 정책을 다시 서명할
+	//     때만 바뀌므로 활성화 수명(24h) 동안 안정적이고, `docs/operations.md`
+	//     가 이미 그 값을 운영 절차로 문서화하고 있다.
+	//   - ProtectionReady: 등식이 아니라 **하한 세대**. 살아 있는 상태에 등식을
+	//     걸면 문 없는 fail-closed 가 되고, 하한은 "내가 승인한 것보다 오래된
+	//     보호 자세로는 켜지 마라"를 그대로 말한다. 세대는 단조 증가하므로
+	//     하한은 안전 방향으로만 어긋난다.
+	//
+	// 다섯 중 넷은 아래 validateProductionFamilyActivation 이 이 단계에서
+	// 결속한다. ProtectionReady 하한만 값으로 나가고, 그 사실이 존재하는
+	// **주문 경로**가 결속한다 — 앞 판본은 그것을 화면만 바꾸는 자리에 두었다.
+	RouteManifestDigest          string `json:"route_manifest_digest"`
+	CalibrationDigest            string `json:"calibration_digest"`
+	CalendarVersion              string `json:"calendar_version"`
+	RiskPolicyDigest             string `json:"risk_policy_digest"`
+	BuildDigest                  string `json:"build_digest"`
+	ProtectionReadyMinGeneration uint64 `json:"protection_ready_min_generation"`
 
 	Actor      string `json:"actor"`
 	ApprovedAt string `json:"approved_at"`
@@ -163,12 +186,14 @@ type familyLaneKey struct {
 // 만들 수 있는가" 를 셈 시험으로 지킬 필요가 없다 — 승격을 얻는 유일한 길이
 // ed25519 서명 검증을 통과하는 것이다.
 type FamilyActivation struct {
-	market                Market
-	generation            uint64
-	actor                 string
-	expiresAt             time.Time
-	riskBundleDigest      string
-	protectionReadyDigest string
+	market     Market
+	generation uint64
+	actor      string
+	expiresAt  time.Time
+	// protectionReadyMinGeneration 은 사람이 승인한 보호 자세의 **하한**이다.
+	// 등식이 아닌 이유는 ProtectionReady 가 살아 있는 상태이기 때문이다 —
+	// 등식을 걸면 어떤 정상 입력으로도 참이 될 수 없다(태스크 8.8.2).
+	protectionReadyMinGeneration uint64
 	// state 는 서명이 말한 (desired, effective) 를 서술자마다 그대로 담는다.
 	// "승격된 것만" 담지 않는 이유: desired ON / effective OFF 는 운영자가 보는
 	// 다른 상태이고, 승격만 담으면 그 구별이 사라진다.
@@ -194,11 +219,14 @@ func (activation FamilyActivation) Generation() uint64   { return activation.gen
 func (activation FamilyActivation) Actor() string        { return activation.actor }
 func (activation FamilyActivation) ExpiresAt() time.Time { return activation.expiresAt.UTC() }
 
-// RiskBundleDigest 와 ProtectionReadyDigest 는 이 단계에서 결속할 수 없었던 둘이다.
-// 값으로 나가고, 그 두 사실이 존재하는 단계가 결속한다.
-func (activation FamilyActivation) RiskBundleDigest() string { return activation.riskBundleDigest }
-func (activation FamilyActivation) ProtectionReadyDigest() string {
-	return activation.protectionReadyDigest
+// ProtectionReadyMinGeneration 은 사람이 승인한 보호 자세의 하한이다.
+//
+// 이 값만 값으로 나간다. 나머지 넷은 제안 수집 시점에 존재하므로 그 단계가
+// 결속했고, 이것은 **주문 경로**가 결속한다 — 보호 세대는 주문을 내려는 순간에만
+// 존재하는 사실이다. 앞 판본은 이 결속을 worker 서술자를 만드는 자리에 두었고,
+// 그 자리는 화면만 바꾸므로 주문을 하나도 막지 못했다(8.5 리뷰, 태스크 8.8.2).
+func (activation FamilyActivation) ProtectionReadyMinGeneration() uint64 {
+	return activation.protectionReadyMinGeneration
 }
 
 // Desired 와 Effective 는 서명이 이 레인에 대해 말한 상태다.
@@ -248,6 +276,7 @@ func LoadProductionFamilyActivation(ctx context.Context, config FamilyActivation
 		!productionRouteDigestValid(config.ManifestDigest) || !productionRouteIdentity(config.TrustedKeyID) ||
 		len(config.TrustedKey) != ed25519.PublicKeySize || !productionRouteIdentity(config.CalibrationDigest) ||
 		!productionRouteDigestValid(config.RouteManifestDigest) ||
+		!productionRouteDigestValid(config.RiskPolicyDigest) ||
 		!productionRouteIdentity(config.CalendarVersion) || !productionRouteIdentity(config.BuildDigest) {
 		return FamilyActivation{}, ErrProductionFamilyActivationUnavailable
 	}
@@ -284,8 +313,7 @@ func LoadProductionFamilyActivation(ctx context.Context, config FamilyActivation
 	}
 	expires, _ := productionRouteTime(manifest.ExpiresAt)
 	return FamilyActivation{market: manifest.Market, generation: manifest.Generation, actor: manifest.Actor,
-		expiresAt: expires, riskBundleDigest: manifest.RiskBundleDigest,
-		protectionReadyDigest: manifest.ProtectionReadyDigest, state: state}, nil
+		expiresAt: expires, protectionReadyMinGeneration: manifest.ProtectionReadyMinGeneration, state: state}, nil
 }
 
 // decodeProductionFamilyActivation 은 바이트가 정확히 이 구조체의 정규 직렬화와
@@ -333,7 +361,8 @@ func validateProductionFamilyActivation(body productionFamilyActivationBody,
 		body.RouteManifestDigest != config.RouteManifestDigest ||
 		body.CalibrationDigest != config.CalibrationDigest || body.CalendarVersion != config.CalendarVersion ||
 		body.BuildDigest != config.BuildDigest ||
-		!productionRouteIdentity(body.RiskBundleDigest) || !productionRouteIdentity(body.ProtectionReadyDigest) ||
+		body.RiskPolicyDigest != config.RiskPolicyDigest ||
+		body.ProtectionReadyMinGeneration == 0 ||
 		!productionRouteIdentity(body.Actor) {
 		return nil, ErrProductionFamilyActivationUnavailable
 	}

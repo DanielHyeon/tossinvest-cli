@@ -14,25 +14,25 @@
 
 ## Branches and early returns
 
-- Exact AST return nodes: `355:3, 363:5, 371:3, 376:2`.
+- Exact AST return nodes: `356:3, 364:5, 372:3, 377:2`.
 
 | Branch | AST kind | Source location | Required test disposition |
 |---|---|---|---|
-| B1 | if| 354:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B2 | range| 358:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B3 | if| 370:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B1 | if| 355:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B2 | range| 359:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B3 | if| 371:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
 
 ## Calls and live bindings
 
 | Callee expression | Source location | Current-base evidence/requirement |
 |---|---|---|
-| errors.New | 355:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 357:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| append | 360:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.runProductionStrategyMarketCycle | 363:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| NewStrategyEntrySupervisor | 367:21 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.strategyProjectionMu.Lock | 373:2 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.strategyProjectionMu.Unlock | 375:2 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| errors.New | 356:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| make | 358:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| append | 361:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| c.runProductionStrategyMarketCycle | 364:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| NewStrategyEntrySupervisor | 368:21 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| c.strategyProjectionMu.Lock | 374:2 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| c.strategyProjectionMu.Unlock | 376:2 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
 
 ## State mutations and fallbacks
 

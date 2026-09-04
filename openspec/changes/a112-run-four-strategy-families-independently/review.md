@@ -4633,3 +4633,51 @@ pretty-print 허용). 약 30 가지 원인이 sentinel 하나로 뭉치고 엔�
 27 개), 귀속 완전성 등식이 모든 분기에서 성립했다. `collectMarket` 은 새 분기가
 **가운데**에 들어가 옛 B10~B15 가 B11~B16 으로 밀렸으므로 조건을 소스와 하나씩
 대조했다. B10 진입 7 회 중 다섯이 US 시장이라는 fixture 성질도 그대로 적었다.
+
+### 8.8.2 구현 기록 (2026-09-04)
+
+**무엇을 바꿨나.** 매니페스트 본문의 두 필드를 서명 가능한 값으로 교체했다.
+
+| 앞 판본 | 왜 안 됐나 | 새 판본 |
+|---|---|---|
+| `risk_bundle_digest` = per-cycle 스냅샷 봉인 | `RiskSnapshotScope` 가 `Symbol` 과 `AsOf`(파도 벽시계)를 품어 파도마다·종목마다 바뀐다 | `risk_policy_digest` = 운영자가 이미 핀하는 `TOSSOS_RISK_BUCKET_<M>_MANIFEST_SHA256` |
+| `protection_ready_digest` = 살아 있는 readiness 신원 | 스냅샷마다 바뀌므로 등식이 성립할 수 없다 | `protection_ready_min_generation` (uint64, 0 금지) |
+
+넷(경로·보정·달력·빌드·위험 정책)은 제안 수집 단계가 등식으로 결속한다 — 넷 다
+그 단계에 존재하고 활성화 수명 동안 변하지 않는다. ProtectionReady 하한만
+`strategyDispatchCycle.dispatch` 가 결속한다.
+
+**계약 편차를 명시한다.** 8.7 원문은 "current … ProtectionReady **digests**" 다.
+등식으로 읽으면 어떤 정상 입력으로도 참이 될 수 없으므로 하한으로 바꿨다. 세대가
+단조 증가하므로 하한은 안전 방향으로만 어긋난다. 이것은 침묵한 생략이 아니라
+기록된 편차다.
+
+**들어낸 것.** `buildProductionStrategyMarketWorker` 의 결속(분기 둘)을 삭제했다.
+그 함수가 만드는 `Effective` 는 화면(`strategy_runtime_projection.go:107`)과 승격
+판정만 움직이고, 주문은 refresh worker 의 사이클이 `dispatchHandoff().Deliver` 로
+내보내며 그 경로는 이 서술자를 읽지 않는다.
+
+**시험이 값을 시스템에서 읽지 않는다.** 앞 판본의
+`buildWorkerUnderActivation` 은 살아 있는 digest 를 읽어 매니페스트에 넣었고,
+그래서 충족 불가라는 사실 자체를 가렸다. 그 헬퍼와 시험을 지우고
+`TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor` 로 바꿨다 —
+하한을 숫자로 적고 배선의 보호 세대(9)와 견주며, 세 경우(활성화 없음 / 하한과
+같음 / 하한보다 낮음)를 함께 세운다.
+
+**반증 둘, 서로 다른 행.** 가드를 `if false && …` 로 지우면 "낮으면 거절" 행이
+빨개지고(주문 1건, want 0), `if true || …` 로 항상 거절하면 "같으면 나간다" 행이
+빨개진다(주문 0건, want 1). 한 방향만 빨개지는 시험은 "항상 거절" 판본을
+통과시키므로, 두 방향이 다 필요하다. 원복은 해시 검증으로 했다.
+
+**FLM 재측정**: 편집이 끌어온 번들 17 개(형제 함수와 시험 함수 포함, 새 스캐폴드
+둘)를 다시 만들었다. 커버리지 재측정(태그 78.3% / 무태그 69.4%, 테스트별 69 개)에서
+귀속 완전성 등식이 처음에는 `dispatch` 의 여섯 arm 에서 깨졌다 — 내 59 개 집합 밖의
+시험이 그 arm 에 들어갔기 때문이다. dispatch 를 모는 파일 넷의 시험 전부를 집합에
+넣어 등식을 복구했다. **등식이 깨진 것을 무시하지 않고 집합을 넓힌 것이 요점이다.**
+`dispatch` 는 새 분기 둘이 가운데에 들어가 옛 B6~B14 가 B8~B16 으로 밀렸으므로
+조건을 소스와 하나씩 대조했고, `buildProductionStrategyMarketWorker` 는 분기 둘이
+사라져 그 행을 지우고 옛 B8 을 새 B6 으로 옮겼다.
+
+**알고도 남긴 것 하나.** `strategyEntrySupervisor.runMarket` 의 FLM 분기표는 16 개
+중 15 개만 싣는다. 이 로트가 만든 것이 아니고(내 편집은 그 함수에 분기를 더하지
+않았다) 완전성은 BTM 이 지키므로 그대로 두었다. 8.8.4 에서 정리한다.

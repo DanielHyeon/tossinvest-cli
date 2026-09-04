@@ -76,13 +76,13 @@ func (fixture *familyActivationFixture) body(market Market) productionFamilyActi
 		Generation: 7, Market: market,
 		RouteManifestDigest: "sha256:" + strings.Repeat("a", 64),
 		CalibrationDigest:   "sha256:calibration-" + string(market), CalendarVersion: "calendar-" + string(market),
-		RiskBundleDigest: "risk-bundle-" + string(market), BuildDigest: "build-digest-1",
-		ProtectionReadyDigest: "sha256:protection-" + string(market),
-		Actor:                 "human-approver",
-		ApprovedAt:            fixture.now.Add(-2 * time.Hour).Format(time.RFC3339Nano),
-		IssuedAt:              fixture.now.Add(-time.Hour).Format(time.RFC3339Nano),
-		ExpiresAt:             fixture.now.Add(time.Hour).Format(time.RFC3339Nano),
-		Descriptors:           fixture.descriptors(market, nil),
+		RiskPolicyDigest: "sha256:" + strings.Repeat("d", 64), BuildDigest: "build-digest-1",
+		ProtectionReadyMinGeneration: 11,
+		Actor:                        "human-approver",
+		ApprovedAt:                   fixture.now.Add(-2 * time.Hour).Format(time.RFC3339Nano),
+		IssuedAt:                     fixture.now.Add(-time.Hour).Format(time.RFC3339Nano),
+		ExpiresAt:                    fixture.now.Add(time.Hour).Format(time.RFC3339Nano),
+		Descriptors:                  fixture.descriptors(market, nil),
 	}
 }
 
@@ -94,7 +94,7 @@ func (fixture *familyActivationFixture) config(market Market,
 		TrustedKey: fixture.public, ObservedAt: fixture.now,
 		RouteManifestDigest: body.RouteManifestDigest,
 		CalibrationDigest:   body.CalibrationDigest, CalendarVersion: body.CalendarVersion,
-		BuildDigest: body.BuildDigest}
+		BuildDigest: body.BuildDigest, RiskPolicyDigest: body.RiskPolicyDigest}
 }
 
 // write 는 서명해 파일로 쓰고, 그 파일에 맞는 config 를 돌려준다.
@@ -399,11 +399,15 @@ func TestAnActivationWhoseBindingsDoNotMatchPromotesNothing(t *testing.T) {
 		"a market the body disagrees with": {
 			body: func(b *productionFamilyActivationBody) { b.Market = MarketUS },
 			want: ErrProductionFamilyActivationUnavailable},
-		"no risk bundle digest for the later binding": {
-			body: func(b *productionFamilyActivationBody) { b.RiskBundleDigest = "" },
-			want: ErrProductionFamilyActivationUnavailable},
-		"no protection-ready digest for the later binding": {
-			body: func(b *productionFamilyActivationBody) { b.ProtectionReadyDigest = "" },
+		// 이 시장이 배포한 위험 정책과 사람이 승인한 위험 정책이 다르다.
+		// **config 쪽을 바꾼다** — 이 값은 배포가 env 로 핀하고 매니페스트는
+		// 사람이 서명한다. body 만 바꾸면 fixture 가 config 를 body 에서
+		// 유도하므로 둘이 함께 움직여 불일치가 만들어지지 않는다.
+		"a risk policy digest the deployment disagrees with": {
+			config: func(c *FamilyActivationConfig) { c.RiskPolicyDigest = "sha256:" + strings.Repeat("c", 64) },
+			want:   ErrProductionFamilyActivationUnavailable},
+		"no protection-ready floor at all": {
+			body: func(b *productionFamilyActivationBody) { b.ProtectionReadyMinGeneration = 0 },
 			want: ErrProductionFamilyActivationUnavailable},
 		"no named approver": {
 			body: func(b *productionFamilyActivationBody) { b.Actor = "" },
@@ -552,7 +556,7 @@ func TestAnActivationWhoseBytesAreNotCanonicalPromotesNothing(t *testing.T) {
 
 // 검증된 값은 이 단계에서 결속할 수 없었던 두 digest 를 그대로 실어 낸다.
 // 뒤 단계가 그 둘을 살아 있는 값과 대조한다.
-func TestAVerifiedActivationCarriesTheTwoDigestsTheLaterStageMustBind(t *testing.T) {
+func TestAVerifiedActivationCarriesTheProtectionFloorTheOrderPathMustBind(t *testing.T) {
 	fixture := newFamilyActivationFixture(t)
 	body := fixture.body(MarketUS)
 	config := fixture.write(t, MarketUS, body)
@@ -560,12 +564,9 @@ func TestAVerifiedActivationCarriesTheTwoDigestsTheLaterStageMustBind(t *testing
 	if err != nil {
 		t.Fatal(err)
 	}
-	if activation.RiskBundleDigest() != body.RiskBundleDigest {
-		t.Errorf("risk bundle digest = %q, want %q", activation.RiskBundleDigest(), body.RiskBundleDigest)
-	}
-	if activation.ProtectionReadyDigest() != body.ProtectionReadyDigest {
-		t.Errorf("protection-ready digest = %q, want %q",
-			activation.ProtectionReadyDigest(), body.ProtectionReadyDigest)
+	if activation.ProtectionReadyMinGeneration() != body.ProtectionReadyMinGeneration {
+		t.Errorf("protection-ready floor = %d, want %d",
+			activation.ProtectionReadyMinGeneration(), body.ProtectionReadyMinGeneration)
 	}
 	if activation.Actor() != body.Actor {
 		t.Errorf("actor = %q, want %q", activation.Actor(), body.Actor)

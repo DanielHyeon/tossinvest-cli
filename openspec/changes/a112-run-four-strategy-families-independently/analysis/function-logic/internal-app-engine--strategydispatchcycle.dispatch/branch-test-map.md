@@ -5,19 +5,21 @@
 
 | Branch | Scenario anchor | Required test disposition | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 66:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B2 | if at 69:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B3 | if at 74:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B4 | if at 81:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B5 | if at 85:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B6 | if at 89:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B7 | if at 93:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B8 | if at 97:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B9 | if at 101:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B10 | if at 108:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B11 | if at 114:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B12 | if at 127:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B13 | if at 133:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B14 | if at 137:2 | planned targeted RED before any edit; not run by L0 | no | no |
+| B1 | if at 72:2 | arm entered 1x (tagged); arm not entered (untagged); `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall` | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
+| B2 | if at 75:2 | arm entered 19x (tagged); arm not entered (untagged); `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
+| B3 | if at 80:2 | arm not entered (tagged); arm not entered (untagged); no per-test profile in the attribution set entered it | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
+| B4 | if at 87:2 | arm entered 19x (tagged); arm not entered (untagged); `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
+| B5 | if at 91:2 | arm entered 4x (tagged); arm not entered (untagged); `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS` | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
+| B6 | if at 108:2 | arm entered 15x (tagged); arm not entered (untagged); `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
+| B7 | if at 109:3 | arm entered 1x (tagged); arm not entered (untagged); `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor` | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
+| B8 | if at 116:2 | arm entered 4x (tagged); arm not entered (untagged); `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS` | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
+| B9 | if at 120:2 | arm entered 2x (tagged); arm not entered (untagged); `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral` | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
+| B10 | if at 124:2 | arm entered 1x (tagged); arm not entered (untagged); `TestTheSameEnvelopeCannotPlaceASecondOrder` | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
+| B11 | if at 128:2 | arm not entered (tagged); arm not entered (untagged); no per-test profile in the attribution set entered it | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
+| B12 | if at 135:2 | arm not entered (tagged); arm not entered (untagged); no per-test profile in the attribution set entered it | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
+| B13 | if at 141:2 | arm not entered (tagged); arm not entered (untagged); no per-test profile in the attribution set entered it | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
+| B14 | if at 154:2 | arm not entered (tagged); arm not entered (untagged); no per-test profile in the attribution set entered it | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
+| B15 | if at 160:2 | arm not entered (tagged); arm not entered (untagged); no per-test profile in the attribution set entered it | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
+| B16 | if at 164:2 | arm not entered (tagged); arm not entered (untagged); no per-test profile in the attribution set entered it | n/a — 8.8.2 는 이 함수의 이 분기를 편집하지 않았다 | 예 |
 
 A lot may replace a planned row only after recording its exact test name and actual RED/GREEN command result.

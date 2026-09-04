@@ -25,12 +25,16 @@ type strategyDispatchGateway interface {
 // only sequence that can turn an accepted sealed result into an official
 // Gateway request once a separately authorized production worker invokes it.
 type strategyDispatchCycle struct {
-	journal            *journal.Journal
-	gateway            strategyDispatchGateway
-	firstLeg           *strategyFirstLegAdmissionBridge
-	schedule           strategyScheduleAuthorityPair
-	fx                 strategyFXAuthorityPair
-	risk               strategyRiskAuthorityPair
+	journal  *journal.Journal
+	gateway  strategyDispatchGateway
+	firstLeg *strategyFirstLegAdmissionBridge
+	schedule strategyScheduleAuthorityPair
+	fx       strategyFXAuthorityPair
+	risk     strategyRiskAuthorityPair
+	// proposals 는 이 파도의 제안 권한이다. 여기서 읽는 것은 하나뿐이다:
+	// 그 시장의 서명된 4-가족 활성화가 요구하는 **ProtectionReady 하한**
+	// (태스크 8.8.2). 제안 목록은 봉투가 이미 들고 오므로 읽지 않는다.
+	proposals          strategyProposalAuthorityPair
 	revalidateSchedule func(context.Context, StrategyMarket, strategyScheduleMarketAuthority) error
 
 	owner *strategyDispatchOwnerCoordinator
@@ -42,12 +46,14 @@ type strategyDispatchOwnerCoordinator struct {
 }
 
 func newStrategyDispatchCycle(jrn *journal.Journal, gateway strategyDispatchGateway, firstLeg *strategyFirstLegAdmissionBridge,
-	schedule strategyScheduleAuthorityPair, fx strategyFXAuthorityPair, risk strategyRiskAuthorityPair, owner *strategyDispatchOwnerCoordinator,
+	schedule strategyScheduleAuthorityPair, fx strategyFXAuthorityPair, risk strategyRiskAuthorityPair,
+	proposals strategyProposalAuthorityPair, owner *strategyDispatchOwnerCoordinator,
 ) *strategyDispatchCycle {
 	if owner == nil {
 		owner = &strategyDispatchOwnerCoordinator{}
 	}
-	return &strategyDispatchCycle{journal: jrn, gateway: gateway, firstLeg: firstLeg, schedule: schedule, fx: fx, risk: risk, owner: owner}
+	return &strategyDispatchCycle{journal: jrn, gateway: gateway, firstLeg: firstLeg, schedule: schedule,
+		fx: fx, risk: risk, proposals: proposals, owner: owner}
 }
 
 // dispatch 는 봉투에 담겨 온 값만 받는다.
@@ -84,6 +90,27 @@ func (cycle *strategyDispatchCycle) dispatch(ctx context.Context, delivered stra
 	protection, err := cycle.gateway.ObserveStrategyProtection(ctx, strings.ToLower(string(market)), result.Quantity)
 	if err != nil {
 		return execgw.Outcome{}, err
+	}
+	// 서명된 4-가족 활성화가 요구한 ProtectionReady 하한 (태스크 8.8.2).
+	//
+	// **이 자리인 이유.** 보호 세대는 주문을 내려는 순간에만 존재하는 사실이고,
+	// 이 함수가 그 사실을 들고 있으면서 주문을 거절할 수 있는 유일한 자리다.
+	// 앞 판본은 이 결속을 worker 서술자를 만드는 함수에 두었는데, 그 서술자는
+	// 화면과 승격만 움직이고 이 경로는 그것을 읽지 않는다 — 즉 어떤 주문도
+	// 막지 못했다(8.5 적대 리뷰가 값으로 보였다).
+	//
+	// **등식이 아니라 하한인 이유.** 보호 준비 상태는 살아 있고 스냅샷마다
+	// 세대가 오른다. 등식을 걸면 사람이 서명한 상수가 어떤 정상 입력으로도
+	// 참이 될 수 없다. 하한은 "내가 승인한 것보다 오래된 보호 자세로는 내지
+	// 마라"를 그대로 말하고, 세대가 단조 증가하므로 안전 방향으로만 어긋난다.
+	//
+	// 활성화가 없는 시장은 아무것도 요구하지 않는다 — 그것이 오늘의 동작이다.
+	if activation := cycle.proposals.forMarket(market).familyActivation(); activation.Verified() {
+		if protection.Generation() < activation.ProtectionReadyMinGeneration() {
+			return execgw.Outcome{}, fmt.Errorf(
+				"engine: protection readiness generation %d is below the signed four-family floor %d",
+				protection.Generation(), activation.ProtectionReadyMinGeneration())
+		}
 	}
 	reconciliation, err := cycle.gateway.ObserveStrategyEntryGate(ctx, strings.ToLower(string(market)), accepted.result.Lineage.Symbol)
 	if err != nil {

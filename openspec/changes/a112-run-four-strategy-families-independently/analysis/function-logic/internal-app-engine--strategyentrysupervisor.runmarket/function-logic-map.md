@@ -52,27 +52,27 @@ goroutine 이 **하나**이고, 사이클은 `<-worker.queue` 를 다시 읽기 
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `ctx.Done` | 836:9 | 배리어 전 취소 |
-| `ctx.Done` | 842:10 | 루프마다 취소 확인 |
-| `s.mu.RLock` | 846:4 | `refreshOnly` 를 읽기 위한 공유 잠금 |
-| `s.mu.RUnlock` | 848:4 | 같은 잠금 해제 |
-| `s.evaluationState` | 849:24 | 이 사이클을 돌려도 되는지 + 권한 만료 여부 |
-| `s.latchMarket` | 851:30 | 권한 만료로 시장 진입 잠금 |
-| `s.signalCentral` | 853:6 | 잠금 자체가 실패하면 중앙 고장 |
-| `s.waitMarketRestart` | 856:15 | backoff 만큼 대기 |
-| `ctx.Err` | 857:9 | 그 대기 실패가 취소 때문인지 |
-| `s.signalCentral` | 860:6 | 아니면 중앙 고장 |
-| `invokeBoundedStrategyCycle` | 868:43 | **마감 시한 아래 사이클 한 번.** 이 함수의 유일한 호출자다(CodeGraph) |
-| `s.markAbandoned` | 870:5 | 마감 시한을 넘긴 사이클을 버려진 것으로 표시 |
-| `isCentralStrategyIntegrity` | 881:7 | 원장·게이트웨이·펜스·소유자 무결성 오류인지 |
-| `s.signalCentral` | 882:5 | 그러면 모든 신규 진입을 멈춘다 |
-| `s.latchMarket` | 885:29 | 보통 오류로 시장 진입 잠금 |
-| `s.signalCentral` | 887:5 | 잠금 자체가 실패하면 중앙 고장 |
-| `s.waitMarketRestart` | 890:14 | backoff 만큼 대기 |
-| `ctx.Err` | 891:8 | 그 대기 실패가 취소 때문인지 |
-| `s.signalCentral` | 894:5 | 아니면 중앙 고장 |
+| `ctx.Done` | 838:9 | 배리어 전 취소 |
+| `ctx.Done` | 844:10 | 루프마다 취소 확인 |
+| `s.mu.RLock` | 848:4 | `refreshOnly` 를 읽기 위한 공유 잠금 |
+| `s.mu.RUnlock` | 850:4 | 같은 잠금 해제 |
+| `s.evaluationState` | 851:24 | 이 사이클을 돌려도 되는지 + 권한 만료 여부 |
+| `s.latchMarket` | 853:30 | 권한 만료로 시장 진입 잠금 |
+| `s.signalCentral` | 855:6 | 잠금 자체가 실패하면 중앙 고장 |
+| `s.waitMarketRestart` | 858:15 | backoff 만큼 대기 |
+| `ctx.Err` | 859:9 | 그 대기 실패가 취소 때문인지 |
+| `s.signalCentral` | 862:6 | 아니면 중앙 고장 |
+| `invokeBoundedStrategyCycle` | 870:43 | **마감 시한 아래 사이클 한 번.** 이 함수의 유일한 호출자다(CodeGraph) |
+| `s.markAbandoned` | 872:5 | 마감 시한을 넘긴 사이클을 버려진 것으로 표시 |
+| `isCentralStrategyIntegrity` | 883:7 | 원장·게이트웨이·펜스·소유자 무결성 오류인지 |
+| `s.signalCentral` | 884:5 | 그러면 모든 신규 진입을 멈춘다 |
+| `s.latchMarket` | 887:29 | 보통 오류로 시장 진입 잠금 |
+| `s.signalCentral` | 889:5 | 잠금 자체가 실패하면 중앙 고장 |
+| `s.waitMarketRestart` | 892:14 | backoff 만큼 대기 |
+| `ctx.Err` | 893:8 | 그 대기 실패가 취소 때문인지 |
+| `s.signalCentral` | 896:5 | 아니면 중앙 고장 |
 
-Exact AST return positions: 837:3, 843:4, 854:6, 858:7, 861:6, 873:5, 883:5, 888:5, 892:6, 895:5.
+Exact AST return positions: 839:3, 845:4, 856:6, 860:7, 863:6, 875:5, 885:5, 890:5, 894:6, 897:5.
 
 
 ## State mutations and fallbacks

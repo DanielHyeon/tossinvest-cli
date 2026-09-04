@@ -1,9 +1,9 @@
 # Function Logic Map: `Context.runProductionStrategyMarketCycle`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (454-521)
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (456-523)
 - Function: `Context.runProductionStrategyMarketCycle` in package `engine`
 - Signature: `Context.runProductionStrategyMarketCycle(params=3, results=1)`
-- File SHA-256: `4eede127fbbec4233391d783660d1bca000e8d85ba61b02d394b5776840f4e50`
+- File SHA-256: `22855de0f27de05c60c2b5ff8cf2d5c7e3ed50e78a9fa6f67fb81ec38decdbfa`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 7.
 - Risk scan: `risk-pattern-report.md`.
@@ -88,17 +88,17 @@ The signature above is the exhaustive input/result record; this map does not inf
   그래서 이 함수에 대한 근거는 실행이 아니라 **소스에 무엇이 쓰여 있는지**뿐이고,
   아래 반증 표의 뮤테이션은 전부 AST 가드가 죽인 것이다.
 
-Exact AST return positions: 457:3, 481:3, 487:3, 490:3, 506:2, 510:4, 513:4, 517:4, 519:3.
+Exact AST return positions: 459:3, 483:3, 489:3, 492:3, 508:2, 512:4, 515:4, 519:4, 521:3.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if| 456:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B2 | if| 480:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B3 | if| 483:2 | no coverage block for this arm (engine tagged suite); no coverage block for this arm (engine untagged suite); no per-test profile in the attribution set entered it |
-| B4 | if| 489:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B5 | if| 509:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B6 | if| 512:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B7 | if| 516:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B1 | if | 458:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B2 | if | 482:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B3 | if | 485:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B4 | if | 491:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B5 | if | 511:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B6 | if | 514:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B7 | if | 518:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
 
 이 공백은 이 태스크가 만든 것이 아니다. 이 함수는 `*Context` 와 살아 있는 journal·gateway 를
 요구하고, 그 배선은 태스크 5.7(fault injection·race)과 L6 의 몫이다. 여기서는 그 공백을
@@ -110,23 +110,23 @@ Exact AST return positions: 457:3, 481:3, 487:3, 490:3, 506:2, 510:4, 513:4, 517
 
 | Callee expression | Position |
 |---|---|
-| `c.refreshPairedStrategyEntryProductionAssembly` | 455:16 |
-| `c.productionStrategyLanes` | 479:16 |
-| `lanes.evaluate` | 483:12 |
-| `restore.Activation.Generation` | 484:3 |
-| `fresh.schedule.forMarket` | 484:3 |
-| `familyActivation` | 485:3 |
-| `fresh.proposals.forMarket` | 485:3 |
-| `strategyLaneInputs` | 486:3 |
-| `fresh.proposals.forMarket` | 486:36 |
-| `Deliver` | 506:9 |
-| `dispatchHandoff` | 506:9 |
-| `fresh.proposals.forMarket` | 506:9 |
-| `delivered.Result` | 507:14 |
-| `c.Journal.CurrentPositionCampaignCAS` | 508:15 |
-| `string` | 508:77 |
-| `fresh.dispatch.dispatch` | 515:12 |
-| `errors.Is` | 516:6 |
+| `c.refreshPairedStrategyEntryProductionAssembly` | 457:16 |
+| `c.productionStrategyLanes` | 481:16 |
+| `lanes.evaluate` | 485:12 |
+| `restore.Activation.Generation` | 486:3 |
+| `fresh.schedule.forMarket` | 486:3 |
+| `familyActivation` | 487:3 |
+| `fresh.proposals.forMarket` | 487:3 |
+| `strategyLaneInputs` | 488:3 |
+| `fresh.proposals.forMarket` | 488:36 |
+| `Deliver` | 508:9 |
+| `dispatchHandoff` | 508:9 |
+| `fresh.proposals.forMarket` | 508:9 |
+| `delivered.Result` | 509:14 |
+| `c.Journal.CurrentPositionCampaignCAS` | 510:15 |
+| `string` | 510:77 |
+| `fresh.dispatch.dispatch` | 517:12 |
+| `errors.Is` | 518:6 |
 
 ## State mutations and fallbacks
 

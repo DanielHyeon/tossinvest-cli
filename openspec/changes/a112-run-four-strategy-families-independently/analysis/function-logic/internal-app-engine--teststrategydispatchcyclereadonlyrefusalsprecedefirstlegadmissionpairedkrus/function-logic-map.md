@@ -3,7 +3,7 @@
 - Source: `internal/app/engine/strategy_dispatch_cycle_test.go`
 - Function: `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS` in package `engine`
 - Signature: `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS(params=1, results=0)`
-- File SHA-256: `ed412100d736dfcb474a0b6c126379c383dc0495be9bdceb409808c18d76f844`
+- File SHA-256: `10f38fe4e88c3e076e8c88b1cc4764c847fb6052835e3be2595c85f34e9b1464`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 7.
 - Risk scan: `risk-pattern-report.md`.

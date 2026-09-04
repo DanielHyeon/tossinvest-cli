@@ -15,18 +15,21 @@ import "time"
 // promoted 는 이 시장에서 desired/effective 를 함께 ON 으로 둘 레인 목록이다.
 // 목록에 없는 레인은 두 상태 모두 OFF 로 선다.
 func FamilyActivationForTest(market Market, generation uint64, promoted map[string]bool) FamilyActivation {
-	return FamilyActivationWithBindingsForTest(market, generation, promoted,
-		"risk-bundle-test", "protection-ready-test")
+	return FamilyActivationWithBindingsForTest(market, generation, promoted, 1)
 }
 
-// FamilyActivationWithBindingsForTest 는 뒤 단계가 결속하는 두 digest 까지
-// 지정한다. 그 결속은 위험 번들과 ProtectionReady 가 **존재하는 단계**에서
-// 일어나므로(태스크 8.7.1), 그 단계의 시험은 두 값을 골라야 한다.
+// FamilyActivationWithBindingsForTest 는 주문 경로가 결속하는 ProtectionReady
+// 하한까지 지정한다. 그 결속은 보호 세대가 **존재하는 단계**에서만 일어나므로
+// (태스크 8.8.2), 그 단계의 시험은 하한을 골라야 한다.
+//
+// 하한이 0 이면 생산 검증이 매니페스트를 거절하므로, 이 seam 도 0 을 주면
+// 영값을 돌려준다 — seam 이 생산보다 관대하면 seam 으로 지은 시험이 생산에서
+// 성립하지 않는 상태를 초록으로 통과시킨다.
 func FamilyActivationWithBindingsForTest(market Market, generation uint64, promoted map[string]bool,
-	riskBundleDigest, protectionReadyDigest string,
+	protectionReadyMinGeneration uint64,
 ) FamilyActivation {
 	want := productionRouteDescriptors(market)
-	if len(want) == 0 || generation == 0 {
+	if len(want) == 0 || generation == 0 || protectionReadyMinGeneration == 0 {
 		return FamilyActivation{}
 	}
 	state := make(map[familyLaneKey]productionFamilyActivationDescriptor, len(want))
@@ -40,8 +43,8 @@ func FamilyActivationWithBindingsForTest(market Market, generation uint64, promo
 				LaneVersion: table.LaneVersion, Desired: desired, Effective: effective}
 	}
 	return FamilyActivation{market: market, generation: generation, actor: "test-seam",
-		expiresAt: time.Now().UTC().Add(time.Hour), riskBundleDigest: riskBundleDigest,
-		protectionReadyDigest: protectionReadyDigest, state: state}
+		expiresAt:                    time.Now().UTC().Add(time.Hour),
+		protectionReadyMinGeneration: protectionReadyMinGeneration, state: state}
 }
 
 // AllFourFamiliesForTest 는 그 시장의 네 레인 ID 를 전부 켠 목록이다.

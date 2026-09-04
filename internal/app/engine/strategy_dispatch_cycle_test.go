@@ -271,7 +271,7 @@ func pairedStrategyDispatchCycleFixture(t *testing.T) (*strategyDispatchCycle, s
 	loader := newProductionStrategyFirstLegAuthorityLoader(fakeClock, j, guardian, schedule, proposals, riskPair, riskFixture.fx, accounts)
 	firstLeg := newStrategyFirstLegAdmissionBridge(guardian, loader)
 	spy := &strategyDispatchGatewaySpy{observed: map[string]int{}}
-	cycle := newStrategyDispatchCycle(j, spy, firstLeg, schedule, riskFixture.fx, riskPair, &strategyDispatchOwnerCoordinator{})
+	cycle := newStrategyDispatchCycle(j, spy, firstLeg, schedule, riskFixture.fx, riskPair, proposals, &strategyDispatchOwnerCoordinator{})
 	cycle.revalidateSchedule = func(context.Context, StrategyMarket, strategyScheduleMarketAuthority) error { return nil }
 	return cycle, proposals, j, spy
 }

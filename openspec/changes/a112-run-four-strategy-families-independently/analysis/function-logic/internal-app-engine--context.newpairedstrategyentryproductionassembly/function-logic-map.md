@@ -29,7 +29,7 @@
 
 ## Branches and early returns
 
-- Exact AST return nodes: `268:3, 295:3, 317:4, 319:3, 335:3, 342:3, 344:2`.
+- Exact AST return nodes: `268:3, 295:3, 318:4, 320:3, 336:3, 343:3, 345:2`.
 
 | Branch | AST kind | Source location | Required test disposition |
 |---|---|---|---|
@@ -37,10 +37,10 @@
 | B2 | if| 273:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
 | B3 | if| 284:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
 | B4 | if| 294:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B5 | if| 312:3 | no coverage block for this arm (engine tagged suite); no coverage block for this arm (engine untagged suite); no per-test profile in the attribution set entered it |
-| B6 | range| 329:2 | arm entered 2x (engine tagged suite); arm entered 2x (engine untagged suite); `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
-| B7 | if| 334:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B8 | if | 341:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B5 | if| 313:3 | no coverage block for this arm (engine tagged suite); no coverage block for this arm (engine untagged suite); no per-test profile in the attribution set entered it |
+| B6 | range| 330:2 | arm entered 2x (engine tagged suite); arm entered 2x (engine untagged suite); `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
+| B7 | if| 335:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B8 | if | 342:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
 
 
 **태스크 5.1.2.2 가 분기 하나를 더했고 그래서 옛 B4~B7 이 B5~B8 이 되었다.**
@@ -84,26 +84,26 @@
 | newProductionStrategyFirstLegAuthorityLoader | 306:20 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
 | newStrategyFirstLegAdmissionBridge | 308:20 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
 | newStrategyDispatchCycle | 309:19 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| collectMarket | 311:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| newStrategyScheduleAuthorityLoader | 311:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fresh.restore.Activation.Generation | 315:4 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| expected.restore.Activation.Generation | 315:45 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| Equal | 316:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fresh.restore.Activation.ExpiresAt | 316:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| expected.restore.Activation.ExpiresAt | 316:48 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 317:11 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| scheduleAuthority.Snapshot | 326:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 328:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| append | 330:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.productionStrategyWorker | 330:29 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| NewStrategyEntrySupervisor | 333:21 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| candidateAuthority.Snapshot | 338:14 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| routeAuthority.Snapshot | 338:52 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fxAuthority.Snapshot | 338:83 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| proposalAuthority.Snapshot | 338:117 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| riskAuthority.Snapshot | 339:9 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| accountAuthority.Snapshot | 339:44 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.publishStrategyRuntime | 341:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| collectMarket | 312:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| newStrategyScheduleAuthorityLoader | 312:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fresh.restore.Activation.Generation | 316:4 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| expected.restore.Activation.Generation | 316:45 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| Equal | 317:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fresh.restore.Activation.ExpiresAt | 317:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| expected.restore.Activation.ExpiresAt | 317:48 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| errors.New | 318:11 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| scheduleAuthority.Snapshot | 327:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| make | 329:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| append | 331:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| c.productionStrategyWorker | 331:29 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| NewStrategyEntrySupervisor | 334:21 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| candidateAuthority.Snapshot | 339:14 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| routeAuthority.Snapshot | 339:52 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fxAuthority.Snapshot | 339:83 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| proposalAuthority.Snapshot | 339:117 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| riskAuthority.Snapshot | 340:9 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| accountAuthority.Snapshot | 340:44 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| c.publishStrategyRuntime | 342:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
 
 ## State mutations and fallbacks
 

@@ -309,84 +309,58 @@ func TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope(t *testing.T) {
 	}
 }
 
-// buildWorkerUnderActivation 은 그 활성화 아래에서 KR 시장 worker 를 세우고
-// 그것이 effective 인지 돌려준다.
+// 서명된 활성화가 요구한 ProtectionReady 하한을 **주문 경로**가 지킨다
+// (태스크 8.8.2).
 //
-// 살아 있는 두 값(위험 번들 digest, ProtectionReady digest)을 배선에서 **읽어서**
-// 활성화 생성자에 건넨다. 손으로 적으면 배선이 값을 바꿀 때 이 시험이 조용히
-// "어긋남" 쪽만 재게 된다.
-func buildWorkerUnderActivation(t *testing.T,
-	activationFor func(risk, protection string) strategyrouter.FamilyActivation,
-) bool {
-	t.Helper()
-	_, proposals, _, spy := pairedStrategyDispatchCycleFixture(t)
-	cycle, _, _, _ := pairedStrategyDispatchCycleFixture(t)
-	loader, ok := cycle.firstLeg.loader.(*productionStrategyFirstLegAuthorityLoader)
-	if !ok {
-		t.Fatal("production first-leg authority loader unavailable")
-	}
-	now := loader.schedule.observedAt
-	risk := loader.risk.forMarket(StrategyMarketKR).snapshot.BundleDigest
-	if strings.TrimSpace(risk) == "" {
-		t.Fatal("배선의 위험 번들 digest 가 비었다 — 이 시험은 빈 값끼리 견주게 된다")
-	}
-	protection, err := spy.ObserveStrategyProtection(context.Background(), "kr", 1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if strings.TrimSpace(protection.Digest()) == "" {
-		t.Fatal("배선의 ProtectionReady digest 가 비었다 — 이 시험은 빈 값끼리 견주게 된다")
-	}
-	kr := proposals.forMarket(StrategyMarketKR)
-	kr.activation = activationFor(risk, protection.Digest())
-	proposals.kr = kr
-	worker := buildProductionStrategyMarketWorker(context.Background(), loader.clk, StrategyMarketKR, true, spy,
-		loader.schedule,
-		strategyCandidateAuthorityPair{observedAt: now, kr: readyCandidateAuthority(StrategyMarketKR),
-			us: readyCandidateAuthority(StrategyMarketUS)},
-		strategyRouteAuthorityPair{observedAt: now, kr: readyRouteAuthority(StrategyMarketKR),
-			us: readyRouteAuthority(StrategyMarketUS)},
-		loader.fx, proposals, loader.risk, loader.accounts, func(context.Context) error { return nil })
-	return worker.Effective
-}
-
-// 활성화가 이름 부른 위험·보호 digest 가 살아 있는 값과 어긋나면 시장이 잠든다.
+// **앞 판본이 왜 아무것도 막지 못했는지 먼저 적는다.** 그것은 이 결속을
+// `buildProductionStrategyMarketWorker` 안에 두고 `Effective` 를 껐다. 그런데
+// 주문은 refresh worker 의 사이클이 `dispatchHandoff().Deliver` 로 내보내고 그
+// 경로는 그 서술자를 읽지 않는다 — 화면만 어두워지고 주문은 계속 나갔다.
+// 게다가 결속 대상이 per-cycle 스냅샷 봉인이라 사람이 서명한 상수가 어떤 정상
+// 입력으로도 같아질 수 없었고, 시험은 **살아 있는 값을 읽어 매니페스트에 넣어**
+// 그 사실을 가렸다. 그래서 이 시험은 값을 시스템에서 읽지 않는다: 하한을 숫자로
+// 적고, 배선의 보호 세대(9)와 견준다.
 //
-// 이 결속이 **왜 여기에 있는지**를 함께 잰다. 두 digest 는 제안 수집 단계에
-// 존재하지 않는다(둘 다 제안 뒤에 수집된다). 거기서 결속하면 어떤 정상
-// 입력으로도 참이 될 수 없는 검사가 되고, 그것이 문 없는 fail-closed 다.
-//
-// 대조군이 함께 있다: 같은 배선에서 활성화가 **없으면** 두 digest 를 아무도
-// 요구하지 않고 worker 가 그대로 선다. 없으면 "그냥 항상 잠든다" 판본도 통과한다.
-func TestAVerifiedActivationWhoseRiskOrProtectionDigestDisagreesLeavesTheMarketDormant(t *testing.T) {
+// 세 경우를 함께 세운다. 하나만 세우면 "항상 거절" 판본도 통과한다.
+func TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor(t *testing.T) {
+	const wiredProtectionGeneration = 9
 	for name, entry := range map[string]struct {
-		activation func(risk, protection string) strategyrouter.FamilyActivation
-		want       bool
+		activation func() strategyrouter.FamilyActivation
+		wantPlaced int
 	}{
-		"no activation at all — today's value": {
-			activation: func(string, string) strategyrouter.FamilyActivation {
-				return strategyrouter.FamilyActivation{}
-			}, want: true},
-		"both digests agree": {
-			activation: func(risk, protection string) strategyrouter.FamilyActivation {
+		"활성화가 없으면 하한을 아무도 요구하지 않는다 — 오늘의 값": {
+			activation: func() strategyrouter.FamilyActivation { return strategyrouter.FamilyActivation{} },
+			wantPlaced: 1},
+		"배선의 보호 세대가 하한과 같으면 주문이 나간다": {
+			activation: func() strategyrouter.FamilyActivation {
 				return strategyrouter.FamilyActivationWithBindingsForTest(strategyrouter.MarketKR, 1,
-					strategyrouter.AllFourFamiliesForTest(strategyrouter.MarketKR), risk, protection)
-			}, want: true},
-		"the risk bundle digest disagrees": {
-			activation: func(_, protection string) strategyrouter.FamilyActivation {
+					strategyrouter.AllFourFamiliesForTest(strategyrouter.MarketKR), wiredProtectionGeneration)
+			}, wantPlaced: 1},
+		"배선의 보호 세대가 하한보다 낮으면 주문이 거절된다": {
+			activation: func() strategyrouter.FamilyActivation {
 				return strategyrouter.FamilyActivationWithBindingsForTest(strategyrouter.MarketKR, 1,
-					strategyrouter.AllFourFamiliesForTest(strategyrouter.MarketKR), "another-risk-bundle", protection)
-			}, want: false},
-		"the protection-ready digest disagrees": {
-			activation: func(risk, _ string) strategyrouter.FamilyActivation {
-				return strategyrouter.FamilyActivationWithBindingsForTest(strategyrouter.MarketKR, 1,
-					strategyrouter.AllFourFamiliesForTest(strategyrouter.MarketKR), risk, "sha256:another-protection")
-			}, want: false},
+					strategyrouter.AllFourFamiliesForTest(strategyrouter.MarketKR), wiredProtectionGeneration+1)
+			}, wantPlaced: 0},
 	} {
 		t.Run(name, func(t *testing.T) {
-			effective := buildWorkerUnderActivation(t, entry.activation)
-			if effective != entry.want {
-				t.Fatalf("worker effective=%v, want %v", effective, entry.want)
+			cycle, proposals, _, spy := pairedStrategyDispatchCycleFixture(t)
+			kr := proposals.forMarket(StrategyMarketKR)
+			kr.activation = entry.activation()
+			proposals.kr = kr
+			cycle.proposals = proposals
+			result, handedOff := kr.dispatchHandoff().Single()
+			if !handedOff {
+				t.Fatal("배선이 건네줄 제안을 만들지 못했다 — 이 시험은 아무것도 재지 않는다")
+			}
+			_, err := cycle.dispatch(context.Background(), deliverForTest(t, result))
+			spy.mu.Lock()
+			placed := len(spy.calls)
+			spy.mu.Unlock()
+			if placed != entry.wantPlaced {
+				t.Fatalf("브로커 주문=%d 건, want %d (err=%v)", placed, entry.wantPlaced, err)
+			}
+			if entry.wantPlaced == 0 && err == nil {
+				t.Fatal("주문은 안 나갔는데 오류도 없다 — 조용한 거절은 운영자가 못 본다")
 			}
 		})
 	}

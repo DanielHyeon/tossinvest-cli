@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_entry_supervisor.go",
-  "source_sha256": "4eede127fbbec4233391d783660d1bca000e8d85ba61b02d394b5776840f4e50",
+  "source_sha256": "22855de0f27de05c60c2b5ff8cf2d5c7e3ed50e78a9fa6f67fb81ec38decdbfa",
   "package": "engine",
   "function": "evaluationState",
   "receiver": "StrategyEntrySupervisor",
   "signature": "StrategyEntrySupervisor.evaluationState(params=1, results=2)",
   "start": {
-    "line": 919,
+    "line": 921,
     "column": 1
   },
   "end": {
-    "line": 931,
+    "line": 933,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 922,
+        "line": 924,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 926,
+        "line": 928,
         "column": 2
       }
     }
@@ -35,21 +35,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 924,
+        "line": 926,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 927,
+        "line": 929,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 930,
+        "line": 932,
         "column": 2
       }
     }
@@ -58,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 920,
+        "line": 922,
         "column": 2
       },
       "text": "s.mu.RLock"
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 921,
+        "line": 923,
         "column": 8
       },
       "text": "s.mu.RUnlock"
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 929,
+        "line": 931,
         "column": 11
       },
       "text": "Before"
@@ -82,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 929,
+        "line": 931,
         "column": 11
       },
       "text": "s.clk.Now"
@@ -92,7 +92,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 929,
+        "line": 931,
         "column": 2
       }
     }
@@ -102,7 +102,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 921,
+        "line": 923,
         "column": 2
       },
       "text": "s.mu.RUnlock"

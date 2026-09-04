@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/strategy_entry_supervisor.go",
-  "source_sha256": "4eede127fbbec4233391d783660d1bca000e8d85ba61b02d394b5776840f4e50",
+  "source_sha256": "22855de0f27de05c60c2b5ff8cf2d5c7e3ed50e78a9fa6f67fb81ec38decdbfa",
   "package": "engine",
   "function": "buildProductionStrategyMarketWorker",
   "signature": "buildProductionStrategyMarketWorker(params=13, results=1)",
   "start": {
-    "line": 393,
+    "line": 394,
     "column": 1
   },
   "end": {
-    "line": 452,
+    "line": 454,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 399,
+        "line": 400,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 413,
+        "line": 414,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 417,
+        "line": 418,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 421,
+        "line": 424,
         "column": 2
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 424,
+        "line": 427,
         "column": 2
       }
     },
@@ -57,23 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 437,
-        "column": 2
-      }
-    },
-    {
-      "id": "B7",
-      "kind": "if",
-      "at": {
-        "line": 438,
-        "column": 3
-      }
-    },
-    {
-      "id": "B8",
-      "kind": "if",
-      "at": {
-        "line": 446,
+        "line": 448,
         "column": 2
       }
     }
@@ -82,28 +66,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 400,
+        "line": 401,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 415,
+        "line": 416,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 418,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 422,
+        "line": 419,
         "column": 3
       }
     },
@@ -117,14 +94,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 440,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 447,
+        "line": 428,
         "column": 3
       }
     },
@@ -132,6 +102,13 @@
       "kind": "return",
       "at": {
         "line": 449,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 451,
         "column": 2
       }
     }
@@ -140,7 +117,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 408,
+        "line": 409,
         "column": 27
       },
       "text": "schedule.forMarket"
@@ -148,7 +125,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 408,
+        "line": 409,
         "column": 55
       },
       "text": "candidate.forMarket"
@@ -156,7 +133,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 408,
+        "line": 409,
         "column": 84
       },
       "text": "route.forMarket"
@@ -164,7 +141,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 409,
+        "line": 410,
         "column": 3
       },
       "text": "fx.forMarket"
@@ -172,7 +149,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 409,
+        "line": 410,
         "column": 25
       },
       "text": "proposal.forMarket"
@@ -180,7 +157,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 409,
+        "line": 410,
         "column": 53
       },
       "text": "riskAuthority.forMarket"
@@ -188,7 +165,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 409,
+        "line": 410,
         "column": 86
       },
       "text": "account.forMarket"
@@ -196,7 +173,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 412,
+        "line": 413,
         "column": 23
       },
       "text": "Single"
@@ -204,7 +181,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 412,
+        "line": 413,
         "column": 23
       },
       "text": "p.dispatchHandoff"
@@ -212,7 +189,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 417,
+        "line": 418,
         "column": 6
       },
       "text": "result.ValidProposal"
@@ -220,31 +197,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 420,
-        "column": 21
+        "line": 424,
+        "column": 15
       },
       "text": "gateway.ObserveStrategyProtection"
     },
     {
       "kind": "call",
       "at": {
-        "line": 420,
-        "column": 60
+        "line": 424,
+        "column": 54
       },
       "text": "strings.ToLower"
     },
     {
       "kind": "call",
       "at": {
-        "line": 420,
-        "column": 76
+        "line": 424,
+        "column": 70
       },
       "text": "string"
     },
     {
       "kind": "call",
       "at": {
-        "line": 424,
+        "line": 427,
         "column": 15
       },
       "text": "gateway.ObserveStrategyEntryGate"
@@ -252,7 +229,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 424,
+        "line": 427,
         "column": 53
       },
       "text": "strings.ToLower"
@@ -260,7 +237,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 424,
+        "line": 427,
         "column": 69
       },
       "text": "string"
@@ -268,47 +245,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 437,
-        "column": 19
-      },
-      "text": "p.familyActivation"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 437,
-        "column": 41
-      },
-      "text": "activation.Verified"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 438,
-        "column": 6
-      },
-      "text": "activation.RiskBundleDigest"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 439,
-        "column": 4
-      },
-      "text": "activation.ProtectionReadyDigest"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 439,
-        "column": 42
-      },
-      "text": "protection.Digest"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 443,
+        "line": 445,
         "column": 12
       },
       "text": "strategyWorkerEvidenceDigest"
@@ -316,7 +253,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 446,
+        "line": 448,
         "column": 6
       },
       "text": "validStrategyDigest"
@@ -324,7 +261,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 446,
+        "line": 448,
         "column": 64
       },
       "text": "IsZero"
@@ -332,7 +269,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 446,
+        "line": 448,
         "column": 64
       },
       "text": "a.authority.FreshUntil"
@@ -340,7 +277,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 450,
+        "line": 452,
         "column": 23
       },
       "text": "a.authority.FreshUntil"
@@ -350,14 +287,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 398,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 405,
+        "line": 399,
         "column": 2
       }
     },
@@ -376,7 +306,7 @@
       }
     },
     {
-      "kind": ":=",
+      "kind": "=",
       "at": {
         "line": 408,
         "column": 2
@@ -385,14 +315,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 412,
+        "line": 409,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 420,
+        "line": 413,
         "column": 2
       }
     },
@@ -406,14 +336,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 437,
+        "line": 427,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 443,
+        "line": 445,
         "column": 2
       }
     }

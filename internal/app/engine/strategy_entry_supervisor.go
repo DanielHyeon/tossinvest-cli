@@ -306,7 +306,8 @@ func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context, 
 	firstLegLoader := newProductionStrategyFirstLegAuthorityLoader(clk, c.Journal, guardian, scheduleAuthority,
 		proposalAuthority, riskAuthority, fxAuthority, accountAuthority)
 	firstLegBridge := newStrategyFirstLegAdmissionBridge(guardian, firstLegLoader)
-	dispatchCycle := newStrategyDispatchCycle(c.Journal, c.Gateway, firstLegBridge, scheduleAuthority, fxAuthority, riskAuthority, c.strategyDispatchOwner)
+	dispatchCycle := newStrategyDispatchCycle(c.Journal, c.Gateway, firstLegBridge, scheduleAuthority, fxAuthority, riskAuthority,
+		proposalAuthority, c.strategyDispatchOwner)
 	dispatchCycle.revalidateSchedule = func(checkCtx context.Context, market StrategyMarket, expected strategyScheduleMarketAuthority) error {
 		fresh := newStrategyScheduleAuthorityLoader(c.Paths.ConfigDir, clk, c.official, os.Getenv).collectMarket(checkCtx, market)
 		if !fresh.snapshot.Ready || fresh.restore.Activation == nil || expected.restore.Activation == nil ||
@@ -417,29 +418,30 @@ func buildProductionStrategyMarketWorker(ctx context.Context, clk clock.Clock, m
 	if !result.ValidProposal() {
 		return dormant
 	}
-	protection, err := gateway.ObserveStrategyProtection(ctx, strings.ToLower(string(market)), result.Quantity)
-	if err != nil {
+	// 보호 관측은 그대로 둔다. 관측 자체가 준비되지 않은 시장을 걸러 내는 일을
+	// 하고 있고(오류면 dormant), 그것은 이 로트가 바꾸지 않는다. 바뀐 것은
+	// 반환값을 활성화와 대조하지 **않는다**는 점뿐이다 — 아래 주석 참고.
+	if _, err := gateway.ObserveStrategyProtection(ctx, strings.ToLower(string(market)), result.Quantity); err != nil {
 		return dormant
 	}
 	if _, err := gateway.ObserveStrategyEntryGate(ctx, strings.ToLower(string(market)), result.Lineage.Symbol); err != nil {
 		return dormant
 	}
-	// 태스크 8.7.1 의 나머지 두 결속. 서명된 4-가족 활성화가 이름 부른 다섯
-	// digest 중 셋(보정·달력·빌드)은 제안 수집 단계가 결속했다. 위험 번들과
-	// ProtectionReady digest 는 그 단계에 **존재하지 않았고**, 여기에는 있다.
+	// **여기에는 활성화 결속이 없다 (태스크 8.8.2).**
 	//
-	// 없는 사실을 결속하면 그 결속은 어떤 정상 입력으로도 참이 될 수 없다 —
-	// 이 change 가 이미 한 번 만들었다 고친 "문 없는 fail-closed" 다. 그래서
-	// 검증은 한 번만 하고(서명·digest 핀·서술자 집합), 결속은 그 사실이 사는
-	// 단계에서 한다.
+	// 앞 판본은 위험 번들과 ProtectionReady digest 를 이 자리에서 대조하고
+	// 어긋나면 dormant 를 돌려줬다. 8.5 적대 리뷰가 그 결속이 두 가지 이유로
+	// 아무것도 막지 못한다는 것을 값으로 보였다.
 	//
-	// 활성화가 없는 시장에서는 아무것도 요구하지 않는다. 그것이 오늘의 동작이다.
-	if activation := p.familyActivation(); activation.Verified() {
-		if activation.RiskBundleDigest() != r.snapshot.BundleDigest ||
-			activation.ProtectionReadyDigest() != protection.Digest() {
-			return dormant
-		}
-	}
+	//  1. 두 값이 **per-cycle** 스냅샷 봉인이라 사람이 서명한 상수가 같아질 수
+	//     없었다. 매니페스트를 배포하면 두 시장이 영원히 dormant 가 된다.
+	//  2. 이 함수가 만드는 `Effective` 는 **화면과 승격 판정**만 움직인다. 주문은
+	//     refresh worker 의 사이클이 `dispatchHandoff().Deliver` 로 내보내고,
+	//     그 경로는 이 서술자를 읽지 않는다. 즉 화면은 멈추고 주문은 나갔다.
+	//
+	// 그래서 결속을 옮겼다: 넷은 제안 수집 단계(존재하고 변하지 않는 사실),
+	// ProtectionReady 하한은 `strategyDispatchCycle.dispatch`(보호 세대가
+	// 실제로 존재하고 주문을 거절할 수 있는 유일한 자리).
 	digest := strategyWorkerEvidenceDigest(s.snapshot.ActivationManifestDigest, s.calendar.Version,
 		ca.snapshot.ThresholdSetDigest, ca.snapshot.EvidenceDigest, ro.snapshot.OwnerSetDigest,
 		f.snapshot.Digest, p.snapshot.ProposalSetDigest, r.snapshot.BundleDigest, a.snapshot.Identity)
