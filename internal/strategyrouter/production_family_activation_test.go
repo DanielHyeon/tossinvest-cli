@@ -1,10 +1,8 @@
 package strategyrouter
 
 import (
+	"bytes"
 	"context"
-	"crypto/ed25519"
-	"crypto/rand"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"os"
@@ -19,23 +17,17 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane"
 )
 
-// 태스크 8.7.1: 서명된 4-가족 활성화만이 레인을 effective ON 으로 만든다.
+// 태스크 8.7.1: 검증된 4-가족 활성화만이 레인을 effective ON 으로 만든다.
+// 신뢰 앵커는 8.8.3 [결정 61] 이 ed25519 서명에서 외부 digest pin 으로 바꿨다.
 
 type familyActivationFixture struct {
-	dir     string
-	now     time.Time
-	public  ed25519.PublicKey
-	private ed25519.PrivateKey
+	dir string
+	now time.Time
 }
 
 func newFamilyActivationFixture(t *testing.T) *familyActivationFixture {
 	t.Helper()
-	public, private, err := ed25519.GenerateKey(rand.Reader)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return &familyActivationFixture{dir: t.TempDir(), now: time.Date(2026, 9, 3, 1, 0, 0, 0, time.UTC),
-		public: public, private: private}
+	return &familyActivationFixture{dir: t.TempDir(), now: time.Date(2026, 9, 3, 1, 0, 0, 0, time.UTC)}
 }
 
 // descriptors 는 그 시장의 네 서술자를 생산 표에서 읽어 만든다.
@@ -59,7 +51,7 @@ func (fixture *familyActivationFixture) descriptors(market Market,
 }
 
 // orderedLaneIDs 는 골든 서술자 순서(가족 순서)대로 레인 ID 를 준다.
-// map 순회 순서에 기대면 같은 시험이 실행마다 다른 바이트를 서명한다.
+// map 순회 순서에 기대면 같은 시험이 실행마다 다른 바이트를 낸다.
 func orderedLaneIDs(market Market) []string {
 	if market == MarketKR {
 		return []string{continuationlane.KRContinuationLaneID, reversallane.KRReversalLaneID,
@@ -72,7 +64,6 @@ func orderedLaneIDs(market Market) []string {
 func (fixture *familyActivationFixture) body(market Market) productionFamilyActivationBody {
 	return productionFamilyActivationBody{
 		SchemaVersion: productionFamilyActivationSchema, Domain: productionFamilyActivationDomain,
-		SignatureAlgorithm: productionFamilyActivationAlgorithm, KeyID: "family-activation-key-v1",
 		Generation: 7, Market: market,
 		RouteManifestDigest: "sha256:" + strings.Repeat("a", 64),
 		CalibrationDigest:   "sha256:calibration-" + string(market), CalendarVersion: "calendar-" + string(market),
@@ -90,25 +81,22 @@ func (fixture *familyActivationFixture) config(market Market,
 	body productionFamilyActivationBody, data []byte,
 ) FamilyActivationConfig {
 	return FamilyActivationConfig{ConfigDir: fixture.dir, Market: market,
-		ManifestDigest: productionRouteDigest(data), TrustedKeyID: "family-activation-key-v1",
-		TrustedKey: fixture.public, ObservedAt: fixture.now,
+		ManifestDigest: productionRouteDigest(data), ObservedAt: fixture.now,
 		RouteManifestDigest: body.RouteManifestDigest,
 		CalibrationDigest:   body.CalibrationDigest, CalendarVersion: body.CalendarVersion,
 		BuildDigest: body.BuildDigest, RiskPolicyDigest: body.RiskPolicyDigest}
 }
 
-// write 는 서명해 파일로 쓰고, 그 파일에 맞는 config 를 돌려준다.
+// write 는 정규 바이트를 파일로 쓰고, 그 파일에 맞는 config 를 돌려준다.
+//
+// **이 헬퍼가 만든 바이트는 검증기 자신의 직렬화기에서 나온다.** 그래서 여기 붙은
+// 시험들은 "도구가 낼 수 있는 바이트" 를 재지 못한다 — 그 축은
+// `production_family_activation_golden_test.go` 의 커밋된 골든이 혼자 잰다 [결정 61].
 func (fixture *familyActivationFixture) write(t *testing.T, market Market,
 	body productionFamilyActivationBody,
 ) FamilyActivationConfig {
 	t.Helper()
-	canonical, err := json.Marshal(body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	manifest := productionFamilyActivationManifest{productionFamilyActivationBody: body,
-		Signature: base64.StdEncoding.EncodeToString(ed25519.Sign(fixture.private, canonical))}
-	data, err := json.Marshal(manifest)
+	data, err := json.Marshal(body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,11 +120,11 @@ func (fixture *familyActivationFixture) writeRaw(t *testing.T, market Market, da
 	}
 }
 
-// 서명된 활성화가 정확히 자기가 이름 부른 네 레인을 승격한다.
+// 검증된 활성화가 정확히 자기가 이름 부른 네 레인을 승격한다.
 //
 // 대조군이 함께 있다: 같은 값에 **없는** 레인(다른 시장의 네 레인)을 물으면 OFF 다.
 // 없으면 "모든 질문에 ON 을 돌려주는" 판본도 이 시험을 통과한다.
-func TestASignedFourFamilyActivationPromotesExactlyTheLanesItNames(t *testing.T) {
+func TestAVerifiedFourFamilyActivationPromotesExactlyTheLanesItNames(t *testing.T) {
 	fixture := newFamilyActivationFixture(t)
 	for _, market := range []Market{MarketKR, MarketUS} {
 		body := fixture.body(market)
@@ -216,10 +204,7 @@ func TestTheZeroActivationIsNotVerifiedAndPromotesNothing(t *testing.T) {
 func TestWithNoActivationFileNothingIsPromoted(t *testing.T) {
 	fixture := newFamilyActivationFixture(t)
 	body := fixture.body(MarketKR)
-	canonical, _ := json.Marshal(body)
-	manifest := productionFamilyActivationManifest{productionFamilyActivationBody: body,
-		Signature: base64.StdEncoding.EncodeToString(ed25519.Sign(fixture.private, canonical))}
-	data, _ := json.Marshal(manifest)
+	data, _ := json.Marshal(body)
 	config := fixture.config(MarketKR, body, data)
 	activation, err := LoadProductionFamilyActivation(context.Background(), config)
 	if !errors.Is(err, ErrProductionFamilyActivationUnavailable) {
@@ -306,17 +291,11 @@ func TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing(t *tes
 func TestTheOtherMarketsWholeManifestInThisMarketsFilePromotesNothing(t *testing.T) {
 	fixture := newFamilyActivationFixture(t)
 	body := fixture.body(MarketUS)
-	canonical, err := json.Marshal(body)
+	data, err := json.Marshal(body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	manifest := productionFamilyActivationManifest{productionFamilyActivationBody: body,
-		Signature: base64.StdEncoding.EncodeToString(ed25519.Sign(fixture.private, canonical))}
-	data, err := json.Marshal(manifest)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// KR 이 읽는 이름으로 쓴다. 서명·digest·결속은 전부 US 몸통에 맞춰 온전하다.
+	// KR 이 읽는 이름으로 쓴다. digest 와 결속은 전부 US 몸통에 맞춰 온전하다.
 	fixture.writeRaw(t, MarketKR, data)
 	config := fixture.config(MarketKR, body, data)
 	activation, err := LoadProductionFamilyActivation(context.Background(), config)
@@ -328,7 +307,7 @@ func TestTheOtherMarketsWholeManifestInThisMarketsFilePromotesNothing(t *testing
 	}
 }
 
-// 사람이 서명해 일부만 켠 것은 정당하다. 켠 것만 켜지고 나머지는 OFF 다.
+// 사람이 만들어 일부만 켠 것은 정당하다. 켠 것만 켜지고 나머지는 OFF 다.
 func TestAnActivationPromotesOnlyTheFamiliesItTurnsOn(t *testing.T) {
 	fixture := newFamilyActivationFixture(t)
 	body := fixture.body(MarketKR)
@@ -340,7 +319,7 @@ func TestAnActivationPromotesOnlyTheFamiliesItTurnsOn(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !activation.Verified() {
-		t.Fatal("a partially-on activation must still be verified — a signed all-OFF file is not the same as no file")
+		t.Fatal("a partially-on activation must still be verified — a verified all-OFF file is not the same as no file")
 	}
 	want := map[Family]DesiredState{FamilyContinuation: StateOn, FamilyReversal: StateOff,
 		FamilyWeeklyValue: StateOn, FamilyBreakoutRetest: StateOff}
@@ -375,9 +354,9 @@ func TestAnActivationWhoseBindingsDoNotMatchPromotesNothing(t *testing.T) {
 		"a build digest the caller did not bind": {
 			config: func(c *FamilyActivationConfig) { c.BuildDigest = "build-digest-2" },
 			want:   ErrProductionFamilyActivationUnavailable},
-		"another key id": {
-			config: func(c *FamilyActivationConfig) { c.TrustedKeyID = "family-activation-key-v2" },
-			want:   ErrProductionFamilyActivationUnavailable},
+		// "another key id" 사례가 여기 있었다 [결정 61 이전]. 열쇠가 사라졌으므로
+		// 그 축은 없어졌고, 그것이 지키던 성질("이 배포를 위해 발급된 매니페스트인가")
+		// 은 아래 다섯 결속과 시장·파일이름 대응이 계속 지킨다.
 		"a digest pin that does not match the bytes": {
 			config: func(c *FamilyActivationConfig) {
 				c.ManifestDigest = "sha256:" +
@@ -401,7 +380,7 @@ func TestAnActivationWhoseBindingsDoNotMatchPromotesNothing(t *testing.T) {
 			want: ErrProductionFamilyActivationUnavailable},
 		// 이 시장이 배포한 위험 정책과 사람이 승인한 위험 정책이 다르다.
 		// **config 쪽을 바꾼다** — 이 값은 배포가 env 로 핀하고 매니페스트는
-		// 사람이 서명한다. body 만 바꾸면 fixture 가 config 를 body 에서
+		// 사람이 매니페스트에 적는다. body 만 바꾸면 fixture 가 config 를 body 에서
 		// 유도하므로 둘이 함께 움직여 불일치가 만들어지지 않는다.
 		"a risk policy digest the deployment disagrees with": {
 			config: func(c *FamilyActivationConfig) { c.RiskPolicyDigest = "sha256:" + strings.Repeat("c", 64) },
@@ -489,32 +468,42 @@ func TestAnActivationOutsideItsApprovedLifetimePromotesNothing(t *testing.T) {
 	}
 }
 
-// 다른 키로 서명한 파일은 승격하지 않는다. digest 핀은 맞춰 준다 — 맞지 않으면
-// 서명 검사에 닿기 전에 거절되므로 이 시험이 다른 것을 재게 된다.
-func TestAnActivationSignedByAnotherKeyPromotesNothing(t *testing.T) {
+// 배포가 핀한 뒤 파일이 바뀌면 승격하지 않는다.
+//
+// **이것이 `TestAnActivationSignedByAnotherKeyPromotesNothing` 을 대신한다**
+// [결정 61]. 지우지 않고 바꾼 이유: 앞 시험이 재던 성질은 "사람이 승인하지 않은
+// 바이트가 승격하는가" 였고, 그 성질은 서명이 사라져도 남는다 — 다만 그것을 막는
+// 것이 이제 digest 핀 하나다. 그래서 핀이 **정말로 부하를 지는지**를 파일 쪽에서
+// 잰다. config 쪽 불일치는 위 결속 표가 이미 재고 있고, 실제로 일어나는 일은
+// 배포 뒤 파일이 바뀌는 것이다.
+//
+// 몸통을 온전한 다른 몸통으로 바꾼다 — 쓰레기 바이트로 바꾸면 정규성 검사가
+// 대신 막아 주므로 핀이 지운 채로도 초록이 된다.
+func TestBytesThatChangedAfterTheDeploymentPinnedThemPromoteNothing(t *testing.T) {
 	fixture := newFamilyActivationFixture(t)
 	body := fixture.body(MarketKR)
-	_, other, err := ed25519.GenerateKey(rand.Reader)
+	pinned, err := json.Marshal(body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	canonical, err := json.Marshal(body)
+	config := fixture.config(MarketKR, body, pinned)
+	// 핀은 위 바이트를 가리킨 채, 파일에는 generation 만 다른 **온전한** 매니페스트를 쓴다.
+	swapped := fixture.body(MarketKR)
+	swapped.Generation = body.Generation + 1
+	data, err := json.Marshal(swapped)
 	if err != nil {
 		t.Fatal(err)
 	}
-	manifest := productionFamilyActivationManifest{productionFamilyActivationBody: body,
-		Signature: base64.StdEncoding.EncodeToString(ed25519.Sign(other, canonical))}
-	data, err := json.Marshal(manifest)
-	if err != nil {
-		t.Fatal(err)
+	if bytes.Equal(data, pinned) {
+		t.Fatal("교체가 바이트를 안 바꿨다 — 이 시험은 아무것도 재지 않는다")
 	}
 	fixture.writeRaw(t, MarketKR, data)
-	activation, err := LoadProductionFamilyActivation(context.Background(), fixture.config(MarketKR, body, data))
+	activation, err := LoadProductionFamilyActivation(context.Background(), config)
 	if !errors.Is(err, ErrProductionFamilyActivationUnavailable) {
 		t.Fatalf("want unavailable, got %v", err)
 	}
 	if activation.Verified() {
-		t.Fatal("a foreign signature produced a verified activation")
+		t.Fatal("핀이 가리키지 않는 바이트가 승격했다")
 	}
 }
 
@@ -531,13 +520,7 @@ func TestAnActivationWhoseBytesAreNotCanonicalPromotesNothing(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			fixture := newFamilyActivationFixture(t)
 			body := fixture.body(MarketKR)
-			canonical, err := json.Marshal(body)
-			if err != nil {
-				t.Fatal(err)
-			}
-			manifest := productionFamilyActivationManifest{productionFamilyActivationBody: body,
-				Signature: base64.StdEncoding.EncodeToString(ed25519.Sign(fixture.private, canonical))}
-			data, err := json.Marshal(manifest)
+			data, err := json.Marshal(body)
 			if err != nil {
 				t.Fatal(err)
 			}

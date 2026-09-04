@@ -248,6 +248,105 @@ malformed amount, broken policy/snapshot join, `RISK_OVERAGE`, `UNKNOWN_ACTUAL_R
 read를 기다리지 않는다. 정책 파일과 journal이 모두 유효해도 이는 q_final 계산 입력일 뿐 worker
 activation이나 LIVE 주문 승인으로 승격되지 않는다.
 
+### KR/US 4-가족 활성화 — 사람이 만들고 digest로 핀한다
+
+네 전략군 lane이 조정자 앞에서 판정 주체가 되려면 그 시장에 검증된 4-가족 활성화
+매니페스트가 있어야 한다. 없으면 기존 시장 단위 경로가 그대로 돌고 여덟 lane은 전부
+OFF다 — **오늘 생산의 상태가 그것이다.**
+
+각 시장은 config 디렉터리의 `strategy-family-activation-KR.json`,
+`strategy-family-activation-US.json`을 소비한다. 두 파일은 service UID 소유 regular
+file, exact mode `0400`, non-symlink여야 한다.
+
+신뢰 핀은 시장마다 **하나**다.
+
+- `TOSSOS_STRATEGY_FAMILY_ACTIVATION_KR_MANIFEST_SHA256`
+- `TOSSOS_STRATEGY_FAMILY_ACTIVATION_US_MANIFEST_SHA256`
+
+**이 매니페스트에는 서명이 없다 [a112 결정 61].** 위 위험 정책 매니페스트가 ed25519
+서명과 digest pin을 함께 쓰는 것과 다르다. 이유는 개인키가 배포 호스트 밖에 있을 때만
+서명이 pin보다 더 사는 것이 있는데 이 배포는 그렇지 않기 때문이고, 그래서 같은 저장소의
+후보 임계값 활성화(`<PREFIX>_<MARKET>_ACTIVATION_SHA256`)와 같은 모양을 쓴다. 신뢰
+앵커는 위 env pin 하나이며, TossOS에는 이 파일의 writer가 없다.
+
+서명이 없어도 **손으로 쓸 수는 없다.** 런타임은 파일 바이트가 자기 정규 직렬화와 한
+바이트도 다르지 않기를 요구한다(필드 순서·무들여쓰기·끝 개행 없음). 그래서 바이트는
+도구가 만든다.
+
+```bash
+go run ./tools/a112-family-activation \
+  -market KR -generation <이전보다 큰 수> \
+  -route-manifest-digest   "$TOSSOS_STRATEGY_LANE_KR_MANIFEST_SHA256" \
+  -calibration-digest      "<경로 권한 파일의 calibration_digest>" \
+  -calendar-version        "<공식 달력 버전>" \
+  -risk-policy-digest      "$TOSSOS_RISK_BUCKET_KR_MANIFEST_SHA256" \
+  -build-digest            "<엔진이 보고하는 BuildDigest>" \
+  -protection-ready-min-generation <승인하는 보호 자세 하한> \
+  -actor "<승인자>" \
+  -approved-at 2026-09-04T00:00:00Z \
+  -issued-at   2026-09-04T00:30:00Z \
+  -expires-at  2026-09-04T12:30:00Z \
+  -on CONTINUATION,REVERSAL,WEEKLY_VALUE,BREAKOUT_RETEST \
+  -out ~/.config/tossctl/strategy-family-activation-KR.json.new
+```
+
+도구는 **service UID로** 돌린다. 런타임은 파일 소유자를 자기 euid와 대조하므로, 다른
+사용자로 만든 파일은 배포 시각에 거절된다.
+
+도구는 파일을 `0400`으로 쓰고 마지막 줄에 `TOSSOS_..._MANIFEST_SHA256=sha256:…`을 낸다.
+**그 줄을 배포 env에 그대로 넣어야 한다** — 넣지 않으면 파일이 있어도 아무것도 켜지지
+않는다(핀이 없으면 fail-closed).
+
+읽는 값 다섯의 출처. 다섯 중 하나라도 배포된 실제 값과 다르면 거절이고, 거절은 전부
+"승격 없음"이다. 그 거절은 오늘 "매니페스트를 배포하지 않았다"와 같은 오류로 보이므로
+(구별은 태스크 8.8.4가 가져간다) 값은 배포 시각이 아니라 **여기서** 맞춰야 한다.
+
+| 값 | 어디서 읽나 |
+|---|---|
+| `route_manifest_digest` | 배포 env의 `TOSSOS_STRATEGY_LANE_<MARKET>_MANIFEST_SHA256` (엔진이 경로 권한을 핀하는 그 값) |
+| `calibration_digest` | 그 시장 경로 권한 파일 `strategy-lane-authority-<MARKET>.json`의 `calibration_digest` 필드 — projection에는 나오지 않으므로 파일에서 읽는다 |
+| `calendar_version` | 엔진이 쓰는 공식 달력의 `version` |
+| `risk_policy_digest` | 배포 env의 `TOSSOS_RISK_BUCKET_<MARKET>_MANIFEST_SHA256` (위 절) |
+| `build_digest` | 엔진 projection의 `BuildDigest` — REST·SSE·콘솔·private Unix transport가 모두 낸다 (태스크 5.0) |
+
+**재발급은 덮어쓰기가 아니다.** 수명 상한이 24시간이므로 재발급은 매일 있는 일인데,
+파일이 `0400`이라 도구는 같은 경로에 두 번 쓸 수 없고 애초에 시도하지도 않는다
+(`O_EXCL`, "이미 있으면 덮어쓰지 않는다"로 실패한다). 살아 있는 매니페스트를 읽는
+중에 바꾸지 않기 위해서다. 순서는 이렇다.
+
+1. 위 명령으로 `<경로>.new`를 만들고 도구가 낸 digest 줄을 받는다.
+2. 배포 env의 핀을 그 새 digest로 바꾼다.
+3. 옛 파일을 치우고 `<경로>.new`를 제 이름으로 옮긴다.
+4. engine container를 재시작한다 — env 핀은 프로세스 시작 시에 읽는다.
+
+2와 3 사이에는 파일과 핀이 어긋나 그 시장이 OFF다. 그것이 안전한 방향이고, 순서를
+뒤집으면(파일 먼저) 옛 핀이 새 파일을 가리키지 못해 마찬가지로 OFF다 — 어느 쪽이든
+fail-closed이지 승격이 아니다. **engine lock을 잡는 작업이므로 두 시장이 모두 닫힌
+창(KST 05:00~09:00)에서 한다.**
+
+`protection_ready_min_generation`은 등식이 아니라 **하한**이다(0 금지). ProtectionReady는
+살아 있는 상태라 등식으로 결속하면 어떤 정상 입력으로도 참이 될 수 없다. 이 하한만은
+제안 수집 단계가 아니라 **주문 경로**가 결속한다 — 승인한 것보다 오래된 보호 자세에서는
+주문이 나가지 않는다.
+
+수명 상한은 24시간이고 `-on`을 비우면 넷 다 OFF다(사람이 만들어 전부 끈 것과 매니페스트가
+아예 없는 것은 다른 상태다). partial 3-of-4, 미지의 lane, 중복 서술자, legacy 3-family
+승인은 전부 거절이며 해당 시장을 OFF로 유지한다.
+
+도구의 `-revoked`는 폐기 표식을 실은 매니페스트를 만든다. 런타임은 그것을 읽고 그
+시장을 OFF로 둔다. 다만 **오늘 그 이유는 운영자에게 보이지 않는다** — 로더는 폐기를
+별도 오류로 구별하지만 gate가 모든 오류를 빈 gate 하나로 접으므로, 화면에서는
+"매니페스트를 배포하지 않았다"와 같아 보인다(구별은 태스크 8.8.4, rollback 자세는
+8.7.2가 가져간다).
+
+그래서 그 전까지 급히 끄는 정석은 `-revoked` 매니페스트가 아니라 **핀을 env에서 빼고
+재시작**하는 것이다 — 핀이 없으면 파일이 무엇이든 아무것도 켜지지 않고, 재발급과 달리
+새 바이트를 만들 필요가 없다.
+
+`actor`는 자유 문자열이고 도구도 런타임도 검사하지 않는다. 서명을 뺀 뒤로 "누가 이
+활성화를 승인했는가"는 이 필드가 아니라 **핀을 넣은 배포 이력**이 답한다 —
+매니페스트 바이트 자체는 승인자를 증명하지 않는다 [a112 결정 61].
+
 ### 교체·회수·복구
 
 - TLS 인증서는 같은 public host SAN을 유지해 교체하고 container를 재생성한다.

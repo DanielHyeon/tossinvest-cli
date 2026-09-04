@@ -11,7 +11,7 @@
 
 RED→GREEN: 이 함수의 새 계약(승격이 인자다)은 **반증으로** 잼. `worker.Effective(activation)`
 검사를 지운 변이(E12, review.md 의 2026-09-03 절)는 태그·무태그 양쪽에서 CAUGHT.
-`TestASignedFourFamilyActivationPromotesExactlyTheLanesItNames` 와
+`TestAVerifiedFourFamilyActivationPromotesExactlyTheLanesItNames` 와
 `TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt` 가 두 상태를 함께 세운다.
 
 A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.

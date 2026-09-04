@@ -4681,3 +4681,349 @@ pretty-print 허용). 약 30 가지 원인이 sentinel 하나로 뭉치고 엔�
 **알고도 남긴 것 하나.** `strategyEntrySupervisor.runMarket` 의 FLM 분기표는 16 개
 중 15 개만 싣는다. 이 로트가 만든 것이 아니고(내 편집은 그 함수에 분기를 더하지
 않았다) 완전성은 BTM 이 지키므로 그대로 두었다. 8.8.4 에서 정리한다.
+
+## 2026-09-04 태스크 8.8.3 — 서명을 빼고, 사람이 만들 수 있게 한다 (구현 기록) [a112 결정 61]
+
+### 사람 결정 61
+
+사람이 "서명이 필요 없도록 하면 안 되나" 라고 물었고, 세 선택지를 평문으로 제시한 뒤
+**2번**을 골랐다: ed25519 를 빼고 신뢰 앵커를 외부 digest pin 하나로 둔다.
+
+제시한 근거와 그 반대편을 여기 남긴다 — 나중에 이 결정을 되돌아볼 사람이 무엇이
+교환됐는지 알아야 한다.
+
+- **서명이 실제로 더 사는 것은 하나다.** digest pin 은 서명과 **독립적으로** 파일
+  치환을 이미 막는다(`:285` 의 `productionRouteDigest(data) != config.ManifestDigest`
+  는 서명 검증과 별개 문이었다). 서명이 추가로 사는 것은 승인자와 배포자의 분리다.
+- **그 성질은 개인키가 배포 호스트 밖에 있을 때만 참이다.** 키가 config 옆에 있으면
+  env 를 쓸 수 있는 것은 무엇이든 파일과 핀을 함께 바꿀 수 있으므로 서명은
+  아무것도 더 지키지 않고 키 분실·교체 비용만 남는다. 사람이 키를 호스트 밖에 둘
+  생각이 없다고 답했다.
+- **포기한 것을 명시한다.** 이 저장소에서 자율로 도는 에이전트가 config 와 env 를
+  둘 다 쓸 수 있다면 4-가족 런타임을 켤 수 있다. 앞 판본에서는 그것이 개인키 없이
+  **구조적으로** 불가능했고, 이제는 정책이다. 이것이 결정 61 이 실제로 교환한 값이다.
+- **선례가 이미 있다.** 후보 임계값 활성화는 사람 승인 파일이면서 서명이 없다
+  (`internal/app/engine/strategy_candidate_authority.go:193` 의
+  `<PREFIX>_<MARKET>_ACTIVATION_SHA256`). 저장소가 두 관례를 다 갖고 있었고 이
+  매니페스트는 그중 가벼운 쪽으로 옮겼다.
+- **spec 은 바뀌지 않는다.** `spec.md` 에서 "signed" 는 SHADOW manifest 에만 붙는다.
+  활성화 서명 요구는 `design.md:210` 한 줄이었고 그 줄을 개정했다.
+
+### 정정한 전제 하나
+
+사람의 물음에는 "서명을 빼면 도구가 필요 없다" 가 함축돼 있었고 그것은 **틀렸다.**
+정규 바이트 등식(`decodeProductionFamilyActivation` 의 `bytes.Equal(canonical, data)`)
+은 서명과 무관한 별개의 문이고 그대로 남는다. Go `encoding/json` 출력은 구조체 선언
+순서·무들여쓰기·끝 개행 없음이므로 에디터로 쓴 JSON 은 통과할 수 없다. 그래서 도구는
+여전히 필요하고, 달라진 것은 **그 도구가 비밀을 갖지 않는다**는 것뿐이다.
+
+### 무엇이 랜딩했나
+
+- `internal/strategyrouter/production_family_activation.go`: `signature`·`key_id`·
+  `signature_algorithm` 필드와 `productionFamilyActivationManifest` 래퍼가 없어졌다.
+  `FamilyActivationConfig` 에서 `TrustedKeyID`·`TrustedKey` 가 없어졌다. domain 상수가
+  `…/ed25519/v1` → `…/sha256-pin/v1` 이 됐다(서명이 없는데 도메인이 ed25519 를
+  말하면 그 문자열이 거짓말이 된다).
+- 새 exported 표면 둘: `FamilyActivationDocument`(사람이 채우는 값)와
+  `EncodeProductionFamilyActivation`(정규 바이트). **서술자 넷은 문서에 없다** — 켤
+  가족만 받고 lane id·버전·수평선은 검증기가 쓰는 바로 그 표에서 유도한다. 운영자가
+  손으로 적으면 표가 바뀔 때 조용히 옛 이름을 넣게 되고 그 거절은 배포 시각에야 보인다.
+- `internal/app/engine/strategy_family_activation.go`: 배포가 관리할 env 가 시장마다
+  셋에서 **하나**로 줄었다(key id·공개키 제거).
+- `tools/a112-family-activation/`: 비밀 없는 생성기. `0400` 으로 쓰고 마지막 줄에
+  env 핀을 그대로 낸다.
+- `docs/operations.md`: 형제 절들과 같은 모양의 운영 절 하나. 다섯 결속 값의 출처와
+  "핀을 안 넣으면 파일이 있어도 아무것도 안 켜진다" 를 적었다.
+- `internal/strategyrouter/testdata/strategy-family-activation-KR.json`: **커밋된 골든.**
+
+### 골든이 이 로트의 핵심이고, 그 이유
+
+기존 로더 시험은 전부 `json.Marshal(body)` 로 바이트를 만들고 검증기도 같은 호출을
+한다. 그래서 "도구가 낼 수 있는 바이트" 와 "검증기가 받는 바이트" 가 갈려도 전부
+초록이다. 그리고 승격 경로 시험은 파일을 아예 안 지나간다(`FamilyActivationForTest`
+가 구조체를 직접 주조한다). 즉 **파일 → 핀 → 승격 경로를 끝까지 도는 실행이 하나도
+없었다.**
+
+골든은 도구가 낸 커밋된 바이트이고, 그 SHA-256 이 시험에 **손으로 적힌 리터럴**이다
+(`goldenFamilyActivationKRDigest`). 시험은 그것을 재생성하지 않는다. 직렬화가 바뀌면
+골든이 빨개진다 — 반증 M4 가 그것을 확인했다.
+
+절차 기록: RED 은 골든 시험 셋이 "testdata 없음" 으로 실패한 것이고(능력 부재),
+digest 리터럴은 GREEN 단계에서 도구 출력을 옮겨 적었다. 그것은 기대값 수정이 아니라
+새 산출물이지만, **커밋된 산출물의 해시를 그 산출물에서 읽었다**는 사실은 남는다 —
+막는 것은 바이트가 커밋돼 있고 시험이 재생성하지 않는다는 것 하나다.
+
+### 반증 7개, 전부 CAUGHT (둘은 두 번째 판에서)
+
+| # | 변이 | 결과 |
+|---|---|---|
+| M1 | digest 핀 검사 삭제 | CAUGHT |
+| M2 | 정규 바이트 등식 삭제 | CAUGHT |
+| M3 | 서술자 정렬 삭제 (같은 입력이 다른 바이트) | **틀린 기록이었다 — 아래 정정 절 참조** |
+| M4 | domain 상수를 ed25519 로 되돌림 (도구·검증기 드리프트) | CAUGHT |
+| M5 | 핀을 자기 자신과 비교 (자기 참조) | CAUGHT |
+| M6 | 생산 엔진 파일이 인코더를 호출 | CAUGHT |
+| M7 | 도구가 인코더를 안 부름 (이름 변경 시뮬레이션) | **첫 판 SURVIVED** |
+
+**M1 의 첫 시도는 무효였다.** `sed` 구분자로 `|` 를 쓰면서 패턴에 `||` 가 있어 치환이
+일어나지 않았고, 그 상태의 "SURVIVED" 는 "변이가 대상에 닿지 않았다" 였다. 기억에
+"뮤테이션은 대상에 닿아야 한다" 로 남은 것과 같은 모양이라, 다시 할 때 치환 개수를
+`assert` 로 확인하고 돌렸다 — 닿자마자 CAUGHT.
+
+**M7 이 진짜 결함을 찾았다.** 가드의 대조군이 심볼 **합집합**을 세고 있어서, 인코더
+참조가 사라져도 `FamilyActivationDocument` 가 대신 세어져 통과했다. 즉 인코더 이름이
+바뀌면 가드가 조용히 아무것도 안 세게 된다. 셈 단위를 (파일 × 심볼) 로 올려서 고쳤고,
+다시 돌리니 CAUGHT. 5.5·5.1.1·5.6.1 이 도달한 결론과 같다 — 한 축짜리 셈은 종료하지
+않으므로 세는 범위를 올린다.
+
+### 이 로트가 주장하지 않는 것
+
+- **US 골든이 없다.** KR 하나만 커밋했다. 두 시장의 경로는 같은 함수이고 시장 결속은
+  별도 시험이 재므로 골든을 둘 두면 같은 것을 두 번 재게 된다. 다만 US 매니페스트를
+  실제로 만들어 본 실행은 없다.
+- **생산 동작 변화 0.** 생산에 매니페스트가 0 건이므로(측정: `~/.config/tossctl`) 이
+  편집으로 켜지거나 꺼지는 것이 없다. 신뢰 앵커가 하나 줄었을 뿐 남은 앵커는 그대로다.
+- **8.7.2 는 여전히 열려 있다.** 만료·폐기 시의 rollback 자세는 이 로트에 없다.
+- **키 관리 절차가 없어진 것이지 승인 절차가 없어진 것이 아니다.** env 핀을 배포하는
+  것이 여전히 사람의 행위다.
+
+### Pre-Edit Gate
+
+```text
+- change id / task id: a112-run-four-strategy-families-independently / 8.8.3 [결정 61]
+- 대상 심볼: strategyrouter.LoadProductionFamilyActivation ·
+  .decodeProductionFamilyActivation · .validateProductionFamilyActivation ·
+  engine.strategyProposalAuthorityLoader.loadFamilyActivation
+- 기존 동작 파악 근거: CodeGraph 호출자 12 (생산 1 = loadFamilyActivation, 시험 11),
+  production_family_activation_test.go 13 시험
+- upstream 상속 테스트 영향: no (a112 가 만든 신규 파일)
+- 실패 테스트 선행 작성: yes (골든 시험 셋, "testdata 없음" 으로 RED)
+- 안전 불변식 §0 위반 여부 검토: 통과 (생산 매니페스트 0 건 → 동작 변화 0)
+- Function Logic Map: **not-applicable** — 넷 다 frozen base `aeeb209e` 에 부재.
+  `git cat-file -e aeeb209e:internal/strategyrouter/production_family_activation.go`
+  가 "exists on disk, but not in aeeb209e" 로 확인. 8.7.1 이 base 이후에 만든
+  신규 leaf 함수다.
+```
+
+### 검증 — 전부 돌았다 (2026-09-04, Go 툴체인 복구 후)
+
+| 명령 | 결과 |
+|---|---|
+| `make lint` | exit 0 (`go vet ./...` + `go vet -tags tossos_testseams ./...`) |
+| `gofmt -l internal/ tools/ cmd/` | 무출력, exit 0 |
+| `make test` (무태그) | exit 0 · **99 ok / 0 FAIL** |
+| `make test-seams` (태그) | exit 0 · **100 ok / 0 FAIL** |
+| `make test-race` | exit 0 |
+| `make sdd-sync` | exit 0 (`all indexes current`; GBrain advisory busy 는 무해) |
+| `make sdd-check` | exit 0 |
+| `check_analysis.py --change a112` | exit 0 · `evidence complete or diff-proven exempt` |
+| `python3 -m unittest discover -s tools/logic-map` | 77 OK |
+| `openspec validate a112 --strict --no-interactive` | valid |
+| 반증 7종 | 위 표, 전부 CAUGHT |
+
+`make gate CHANGE=…` 는 not-applicable — change **완료** 게이트라 미완료 태스크가
+있으면 2/10 에서 멈춘다(HANDOFF.md 5 절).
+
+### 환경 사고 둘, 그리고 그중 하나가 만든 가짜 초록
+
+**(1) Go 툴체인이 세션 중간에 사라졌다.** `rtk proxy go …` 가 30여 회 성공한 뒤
+`go: No such file or directory` 가 됐다. 원인을 뒤져 보니 Go 는 공식 위치가 아니라
+`~/Downloads/go1.26.5.linux-amd64/go` 에 풀려 있었고(2026-07-23), `~/.bashrc`·
+`~/.profile` 어디에도 PATH 설정이 없었다 — 즉 쉘에서는 원래부터 안 잡혔고 초반에
+돌던 것은 프로세스가 물려받은 별도 환경 덕이었다. 사람이 `/usr/local/go` 로 옮기고
+`~/.bashrc` 에 PATH 를 넣은 뒤 위 표를 전부 다시 돌렸다.
+
+**(2) 그 사이에 내가 가짜 초록을 하나 만들었다 — 기록해 둔다.**
+
+```bash
+$(go env GOROOT)/bin/gofmt -l internal/ tools/ 2>&1 | head -5 && echo "GOFMT CLEAN"
+```
+
+`go` 가 PATH 에 없어 `go env GOROOT` 가 빈 문자열을 냈고 → `/bin/gofmt` 실행 →
+없는 파일 → 에러가 **파이프로** 흘러가고 → `head` 가 exit 0 → `&&` 통과 → echo.
+재현해서 확인했다. **gofmt 는 그때 한 번도 안 돌았다.** 기억
+`missing-tool-reports-clean` 이 적어 둔 그대로다. 판정 명령을 파이프로 감싸면
+파이프라인 종료 코드가 마지막 명령의 것이 되어 앞의 실패가 사라진다 — 판정에는
+파이프를 쓰지 않고 `exit=$?` 를 직접 본다.
+
+**같은 구조인데 성립하는 것과 아닌 것을 갈라 둔다.** `BUILD OK`·`VET OK` 도 같은
+`| head && echo` 모양이었으나, 그때는 `rtk proxy go` 가 살아 있었고 출력이 **비어
+있었다**는 별개 증거가 있으므로 성립한다. `go test` 결과는 실제 패키지명과
+소요시간이 찍혔으므로 성립한다. 성립하지 않은 것은 도구 자체가 없었던 gofmt 하나다.
+
+**(3) 무태그 통과가 태그 빌드의 증거가 아님을 이 로트가 실제로 겪었다.**
+`internal/app/engine/a112_family_gate_test.go` 가 지운 상수 둘
+(`strategyFamilyActivationKeyIDEnv`·`strategyFamilyActivationPublicKeyEnv`)을 계속
+참조하고 있었다. `tossos_testseams` 태그 아래에서만 컴파일되므로 `make test` 는
+그것을 못 봤고, grep 으로 찾아 고쳤다. 이후 `go vet -tags tossos_testseams` 와
+`make test-seams` 100 ok 로 컴파일까지 확인했다. a118 이 게이트에 태그 스위트를
+넣어 둔 덕에 이 결함이 커밋 전에 잡혔다.
+
+## 2026-09-04 태스크 8.8.3 — 독립 적대 리뷰와 그것이 연 수정
+
+위 구현 기록을 쓴 뒤 다른 에이전트에게 read-only 적대 리뷰를 시켰다(범위: 미커밋
+working tree 전체, 8.8.3 로트). 판정 **HOLD**, `P0=0 / P1=3 / P2=4`.
+
+세 P1 을 전부 직접 재확인한 뒤 고쳤다. 리뷰어 말을 그대로 받지 않고 각각을 명령으로
+다시 잰 기록을 남긴다.
+
+### P1-1 — 운영 문서가 **없는 env 이름**을 부른다 (확인함, 고침)
+
+`docs/operations.md` 의 생성 명령이 `$TOSSOS_STRATEGY_ROUTE_KR_MANIFEST_SHA256` 을
+넘겼다. 그 이름은 저장소에 없다. 엔진이 실제로 핀하는 값은
+`strategy_route_authority.go:19` 의 `TOSSOS_STRATEGY_LANE_KR_MANIFEST_SHA256` 이다.
+
+```
+rg 'TOSSOS_STRATEGY_ROUTE'  →  단 한 건, docs/operations.md:279 (문서 자신)
+rg 'TOSSOS_STRATEGY_LANE'   →  internal/app/engine/strategy_route_authority.go:19-22
+```
+
+고장 방식이 나쁘다. 셸이 없는 변수를 빈 문자열로 펼치고, 도구는 값의 **의미**를
+검사하지 않으므로(그 판정을 두 곳에 두지 않기로 한 설계다) 빈 `route_manifest_digest`
+를 실은 매니페스트를 성공적으로 만들어 낸다. 운영자는 그 digest 를 핀하고, 런타임은
+결속 불일치로 거절하는데 그 거절이 오늘 "매니페스트를 배포 안 함"과 **같은 오류**로
+보인다(구별은 8.8.4). 즉 문서대로 따라 한 사람이 아무 진단도 없이 안 켜지는 시스템을
+얻는다. fail-closed 라 안전 구멍은 아니지만, **문서가 작동하는 매니페스트를 만들지
+못한다**는 것은 이 태스크의 산출물 넷 중 하나가 결함이라는 뜻이다.
+
+고친 것: 이름을 바로잡고, 다섯 값의 출처를 산문이 아니라 **표**로 적었다.
+`calibration_digest` 는 projection 에 나오지 않아 경로 권한 파일
+`strategy-lane-authority-<MARKET>.json` 의 같은 이름 필드에서 읽어야 하는데
+(`production.go:122` 로 확인), 앞 판본은 "경로 권한이 말하는 보정 digest" 라고만 적어
+어디를 열어야 하는지 말하지 않았다.
+
+### P1-2 — 문서의 절차가 **이틀째부터 실패한다** (확인함, 고침)
+
+도구가 `os.WriteFile(out, data, 0o400)` 였고 문서의 `-out` 은 살아 있는 경로였다.
+0400 파일은 소유자도 다시 열어 쓸 수 없다. 매니페스트 수명 상한이 24시간이므로
+재발급은 **매일** 있는 일인데, 두 번째 실행이 이렇게 끝난다.
+
+```
+run1 exit=0   (커밋된 골든과 바이트 동일, digest 도 핀과 같음)
+run2 exit=1   open …/tool-out-KR.json: permission denied
+```
+
+`chmod` 를 안내해 덮어쓰게 만드는 것이 아니라 **살아 있는 매니페스트를 건드리지
+않는 쪽**으로 고쳤다. 도구는 `O_EXCL` 로 만들고, 이미 있으면 "덮어쓰지 않는다" 로
+실패한다 — 실패 자리가 읽히는 중인 파일을 자르기 **전**으로 옮겨졌고, 오류가 원인을
+말한다("permission denied" 는 원인을 말하지 않았다). 문서에는 재발급 4 단계(새 경로
+→ 핀 교체 → 옛 파일 치환 → 재시작)와, 2·3 사이의 어긋난 창이 어느 쪽으로 기울어도
+OFF 라는 것, 그리고 engine lock 을 잡으므로 **두 시장이 닫힌 창(KST 05:00~09:00)**
+에서 한다는 것을 적었다.
+
+```
+고친 뒤: run2 exit=1  "매니페스트 파일을 만들지 못했다 — 이미 있으면 덮어쓰지 않는다: … file exists"
+         cmp(살아 있는 파일, 골든) exit=0   ← 건드리지 않았다
+```
+
+### P1-3 — **M3 = CAUGHT 는 틀린 기록이었다** (확인함, 고침)
+
+가장 무겁다. 위 표의 M3 행은 정렬 삭제가 잡힌다고 적었으나 잡히지 않는다. 기전은
+단순하다: **저작 경로를 실행하는 시험이 하나도 없었다.**
+
+```
+rg EncodeProductionFamilyActivation → 참조 3곳
+  · 정의 (production_family_activation.go)
+  · tools/a112-family-activation/main.go        ← 유일한 호출
+  · 인코더 가드 시험                            ← AST 식별자로 셀 뿐, 부르지 않는다
+tools/a112-family-activation/ 에 _test.go 없음
+```
+
+골든 시험은 **커밋된 바이트를 로더가 받아들이는지**만 잰다. 그것은 로더 직렬화기의
+드리프트 검출기일 뿐, `body()` 의 서술자 유도와 정렬은 어느 시험도 실행하지 않는다.
+정렬을 지우고 스위트를 돌리면 전부 초록이다(리뷰어가 복사본에서 확인했고, 나도
+치환 개수를 세어 확인한 뒤 재현했다 — 같은 입력 5회가 서로 다른 digest 셋을 냈다).
+
+실무 결과는 활성화가 아니라 **감사 가능성**이다. 도구가 방금 쓴 바이트의 digest 를
+출력하므로 무작위 순서의 매니페스트도 켜지기는 한다. 잃는 것은 "배포된 매니페스트의
+digest 를 그 입력으로부터 다시 유도하는" 능력, 즉 사후에 "이 핀이 무엇을 승인했는가"
+를 답하는 길이다.
+
+고친 것 — 저작 경로에 시험 둘을 심었다. 둘은 **서로 다른 결함**을 잡는다.
+
+| 시험 | 무엇을 재나 |
+|---|---|
+| `TestTheAuthoringEncoderStillProducesTheCommittedGoldenBytes` | 도구가 지금도 커밋된 골든 바이트를 낸다 (저작 ↔ 골든 드리프트) |
+| `TestTheAuthoringEncoderOrdersDescriptorsTheSameWayEveryRun` | 같은 문서가 64회 모두 같은 바이트 (map 순회 의존) |
+
+기대값은 실행 중인 시스템에서 읽지 않는다. 문서 값을 손으로 적고 결과를 **커밋된
+파일**과 겨룬다. 반대로 하면(도구를 돌려 그 출력을 기대값으로) 무엇이든 통과한다 —
+8.7.1 이 그렇게 충족 불가능한 결속을 초록으로 통과시켰다.
+
+64회인 이유: 네 서술자의 순열은 24가지라 1회로는 **24분의 1 확률로 우연히 초록**이
+된다. 실제로 M3 재실행에서 골든 등식 시험은 그 우연으로 통과했고 순서 시험만
+빨개졌다 — 시험을 둘로 나눈 근거가 측정으로 나왔다.
+
+### 반증 셋을 더 돌렸다
+
+| # | 변이 | 결과 |
+|---|---|---|
+| M3(재실행) | 서술자 정렬 삭제 | **CAUGHT** — `…OrdersDescriptorsTheSameWayEveryRun` (골든 등식은 24분의 1로 통과) |
+| M8 | `body()` 가 `ApprovedAt` 에 `IssuedAt` 을 싣는다 (필드 오배선) | CAUGHT — `…StillProducesTheCommittedGoldenBytes` |
+| M9 | 가드가 점 import 를 안 본다 | CAUGHT — 점 import 하위 시험만 |
+| M10 | 가드가 빈 import 를 만나면 조기 반환 | CAUGHT — 빈-import-우선 하위 시험만 |
+
+M8 은 골든 등식이 **저작 경로**를 재는지 확인한다(정렬만 잡으면 그 시험이 필요
+없을 수 있으므로). M9·M10 은 각자 자기 행만 빨갛게 만든다 — 축별로 갈라져 있다.
+
+### P2 넷도 처리했다
+
+- **P2-1 (가드 우회 둘).** `resolvedFamilyActivationRouterName` 이 import spec 을
+  **하나만** 보고 `.`·`_` 를 만나면 "안 부른다" 로 답했다. 그래서 점 import(맨
+  이름으로 부른다)와 `_` spec 을 진짜 별칭보다 먼저 적는 파일이 그냥 통과했다.
+  리뷰어가 셋 다 컴파일해 보였다. 세는 범위가 입력의 함수였던 것이고, M7·5.5 와
+  같은 기전이다. spec 전부를 보고 이름 **집합**과 점 여부를 함께 내도록 고쳤다.
+  반증값은 일회성 실험으로 두지 않고 `TestTheEncoderGuardCountsEveryWayToNameThePackage`
+  의 네 표본으로 **커밋했다**. 짝이 되는
+  `…CountsNothingWhenThePackageIsNotCalled` 가 "무엇이든 센다" 판본을 배제한다.
+- **P2-2 (사라진 서명을 계속 주장하는 문장들).** 코드 주석 9곳, 시험 이름 4개를
+  고쳤다. 이름 넷 중 둘은 `Makefile` 의 `RACE_ENGINE_TESTS` 목록에 있어서, 조용히
+  게이트에서 빠질 수 있는 자리다 — 이름을 바꾼 뒤 **실제로 도는 개수**를 셌다:
+  `-run` 목록 18개, `-v` 실행 결과 최상위 `--- PASS` **18개**, 둘 다 이름이 바뀐
+  시험을 포함한다. (경로 권한·위험 정책 매니페스트를 "서명된" 이라 부르는 문장은
+  **참이므로 그대로 뒀다** — 그 둘은 여전히 ed25519 + digest pin 이다.)
+- **P2-3 (기록이 빠뜨린 교환 하나).** 위 결정 61 절은 잃은 것을 하나만 적었다
+  (config+env 를 다 쓸 수 있는 에이전트가 런타임을 켤 수 있다). 리뷰어가 두 번째를
+  찾았고 그것이 맞다: **승인자의 부인방지**다. `key_id` 와 서명이 매니페스트를 특정
+  승인 키에 묶었는데, 이제 `actor` 는 인증되지 않은 바이트 안의 자유 문자열이고
+  도구도 런타임도 검사하지 않는다. 사후에 "누가 이 활성화를 승인했는가" 는 이제
+  전적으로 **핀을 넣은 배포 이력**이 답한다. `docs/operations.md` 에 그대로 적었다.
+  (리뷰어가 함께 확인한 것: 서명이 결속하던 **필드**는 하나도 안 잃었다. 제거된
+  검사는 `body.SignatureAlgorithm`·`body.KeyID` 둘뿐이고, 나머지는 digest 핀 +
+  `bytes.Equal(canonical, data)` 가 그대로 덮는다.)
+- **P2-4 (문서 빈칸).** `-revoked` 를 적었다 — 다만 **오늘 그 이유가 운영자에게
+  보이지 않는다**는 것을 함께 적었다. 로더는 폐기를 별도 sentinel 로 구별하지만
+  `familyGateFor` 가 모든 오류를 빈 gate 하나로 접는다(`strategy_family_activation.go:108`
+  에서 확인). 그래서 급히 끄는 정석은 `-revoked` 매니페스트가 아니라 **핀을 빼고
+  재시작**이라고 적었다. 도구를 service UID 로 돌려야 한다는 것도 적었다.
+
+### 리뷰어가 CLEAN 으로 확인한 것 (침묵과 구별하려고 남긴다)
+
+골든 무결성(파일 SHA-256 == 손으로 적은 리터럴, 시험이 재생성하지 않음), 도구 ↔ 골든
+왕복 바이트 동일, 골든의 반증 가능성(필드 선언 순서를 바꾸면 골든 시험 **하나만**
+빨개진다), 손으로 만든 바이트의 로더 우회 없음(수용 집합 == 이 빌드 marshaller 로
+왕복하는 바이트, 도구가 못 내는 유일한 형태는 `desired=ON, effective=OFF` 로 안전
+방향), 시각 왕복(RFC3339Nano · UTC 강제), 서술자 정렬의 전순서성(시장마다 가족 넷이
+서로 다름 — `production_test.go:315` 가 고정), **생산 동작 변화 0**(`~/.config/tossctl`
+에 `strategy-*` 0건, 배포 override 에 `FAMILY_ACTIVATION` 0건, 그리고 로더가
+`readProductionRouteFile` **앞**에서 핀 형식으로 단락하므로 새 I/O 도 없다),
+보호 하한이 주문 경로에 결속됨(`strategy_dispatch_cycle.go:109`), 가드 워크의 종료성.
+
+### 수정 뒤 검증 — 전부 다시 돌렸다
+
+| 명령 | 결과 |
+|---|---|
+| `make lint` | exit 0 |
+| `gofmt -l internal/ tools/ cmd/` | 0 바이트, exit 0 |
+| `make test` (무태그) | exit 0 · **99 ok / 0 FAIL** |
+| `make test-seams` (태그) | exit 0 · **100 ok / 0 FAIL** |
+| `make test-race` | exit 0 · 8 패키지 ok · 엔진 목록 18개 중 **18개 실행 확인** |
+| 도구 왕복 | `cmp(도구 출력, 커밋된 골든)` exit 0 · digest == 핀 |
+| 도구 재실행 | exit 1, 원인을 말하고 살아 있는 파일을 안 건드림 |
+| 반증 M3·M8·M9·M10 | 전부 CAUGHT, 각자 다른 행 |
+
+### 이 리뷰가 바꾸지 않은 것
+
+리뷰어도 **P0 은 0**이라고 판정했고 나도 재확인했다. 생산 동작 변화는 여전히 0 이다
+— 생산에 매니페스트가 없고 핀도 없다. 세 P1 은 전부 "산출물이 결함" 이지 "런타임이
+위험" 이 아니었다. US 골든이 없다는 것과 8.7.2 가 열려 있다는 것도 그대로다.

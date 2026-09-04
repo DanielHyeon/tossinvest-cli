@@ -54,7 +54,7 @@ handoff 앞에서 이 시장의 네 레인을 한 번씩 돌린다(`455:12`). �
 **활성화 세대의 출처(`456:3`).** `fresh.schedule.forMarket(market).restore.Activation.Generation()`
 이고 다른 수를 넣으면 durable latch 의 복구 조건이 서명과 무관해진다. 그 값은 ed25519
 서명 매니페스트를 사람이 바꿔야만 오르며, 어떤 식이 이 자리에 오는지는
-`TestTheRecoveryGenerationComesFromTheSignedActivationAndNothingElse` 가 패키지 전체
+`TestTheRecoveryGenerationComesFromTheVerifiedActivationAndNothingElse` 가 패키지 전체
 열거로 얼려 둔다. 행동 시험으로는 못 잡는다 — 잘못된 수도 그냥 커지기 때문이다.
 
 **레인을 세우는 자리가 ctx 를 받는 이유(`451:16`).** 레인은 열린 채로 태어난 뒤 나중에

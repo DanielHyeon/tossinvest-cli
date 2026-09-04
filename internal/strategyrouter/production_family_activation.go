@@ -3,17 +3,17 @@ package strategyrouter
 import (
 	"bytes"
 	"context"
-	"crypto/ed25519"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
 
-// 이 파일은 태스크 8.7.1 이다: **서명된 4-가족 활성화 매니페스트.**
+// 이 파일은 태스크 8.7.1 이다: **4-가족 활성화 매니페스트** (신뢰 앵커는 8.8.3
+// [결정 61] 이 서명에서 외부 digest pin 으로 바꿨다 — 아래 const 블록 참조).
 //
 // 왜 별도 매니페스트인가. 같은 패키지의 `strategy-lane-authority-<MARKET>.json`
 // 도 이미 "시장마다 정확히 네 가족"을 서명으로 못 박는다(태스크 4.3,
@@ -39,10 +39,23 @@ import (
 // 있고(아래 24시간 상한) 레인은 프로세스 수명이다. 승격을 레인 생성 시점에
 // 구우면 묵은 ON 이 생긴다 — 묵은 OFF 는 안전한 방향이지만 묵은 ON 은 아니다.
 
+// **신뢰 앵커는 서명이 아니라 외부 digest pin 이다 [a112 결정 61, 2026-09-04].**
+//
+// 앞 판본은 ed25519 서명을 요구했다. 사람이 그것을 빼기로 정했고 근거는
+// `design.md` §8 의 같은 날짜 개정 블록에 있다. 요약하면 셋이다: 같은 저장소에
+// 서명 없는 사람 승인 활성화 선례가 이미 있고(후보 임계값 활성화는
+// `<PREFIX>_<MARKET>_ACTIVATION_SHA256` 하나로 지킨다), digest pin 이 서명과
+// **독립적으로** 파일 치환을 이미 막고 있으며, 서명이 더 사는 승인자·배포자 분리는
+// 개인키가 배포 호스트 밖에 있을 때만 참인데 이 배포는 그렇지 않다.
+//
+// **서명을 빼도 사람이 손으로 쓸 수는 없다.** 아래 정규 바이트 등식은 서명과 무관한
+// 별개의 문이고 그대로 남는다. 매니페스트는 여전히 생성기가 만들며
+// (`tools/a112-family-activation`), 달라진 것은 그 생성기가 비밀을 갖지 않는다는 것뿐이다.
 const (
-	productionFamilyActivationSchema       = "strategy-four-family-activation:v1"
-	productionFamilyActivationDomain       = "TossOS/strategy-four-family-activation/ed25519/v1"
-	productionFamilyActivationAlgorithm    = "Ed25519"
+	productionFamilyActivationSchema = "strategy-four-family-activation:v1"
+	// domain 은 서명 도메인 분리자가 아니라 **종류 표식**으로 남는다. 다른 종류의
+	// 매니페스트 바이트가 이 자리에 놓였을 때 그것을 거절하는 것이 여전히 이 값이다.
+	productionFamilyActivationDomain       = "TossOS/strategy-four-family-activation/sha256-pin/v1"
 	productionFamilyActivationMaximumBytes = 64 << 10
 	// 24시간은 고른 값이 아니라 같은 저장소의 활성화 매니페스트에서 읽은 값이다
 	// (`internal/scheduler/production_activation.go` 의 productionActivationMaximumLife).
@@ -52,7 +65,7 @@ const (
 
 var (
 	// ErrProductionFamilyActivationUnavailable 는 "이 매니페스트로는 아무것도
-	// 승격할 수 없다" 는 뜻이다. 읽을 수 없거나, 서명이 안 맞거나, 결속이
+	// 승격할 수 없다" 는 뜻이다. 읽을 수 없거나, 배포가 핀한 digest 와 다르거나, 결속이
 	// 어긋나거나, 네 서술자가 정확히 서지 않은 경우 전부 여기로 온다.
 	ErrProductionFamilyActivationUnavailable = errors.New("strategyrouter: four-family activation unavailable")
 	// ErrProductionFamilyActivationRevoked 는 사람이 폐기 표시를 한 매니페스트다.
@@ -60,7 +73,7 @@ var (
 	// ErrProductionFamilyActivationExpired 는 수명이 지난 매니페스트다.
 	//
 	// 셋을 따로 두는 이유: 운영자가 할 일이 다르다. 어긋남은 배포를 고치는
-	// 일이고, 폐기는 사람의 결정이며, 만료는 다시 서명하는 일이다. 하나로
+	// 일이고, 폐기는 사람의 결정이며, 만료는 다시 발급하는 일이다. 하나로
 	// 뭉치면 "왜 안 켜지는가" 에 답할 수 없다.
 	ErrProductionFamilyActivationExpired = errors.New("strategyrouter: four-family activation expired")
 )
@@ -79,7 +92,10 @@ func ProductionFamilyActivationFileName(market Market) string {
 }
 
 // FamilyActivationConfig 는 읽기 전용 경로와 신뢰 핀, 그리고 이 단계에서 이미
-// 알고 있는 사실들이다. 서명 키도, desired-state writer 도, 토글도 없다.
+// 알고 있는 사실들이다. desired-state writer 도, 토글도 없다.
+//
+// ManifestDigest 가 **유일한 신뢰 앵커**다(결정 61). 배포가 env 로 핀하고 이 파일은
+// 그 핀과 바이트가 같을 때만 읽힌다.
 //
 // 여기 있는 세 digest(보정·달력·빌드)는 **제안 수집 시점에 존재하는 값**이다.
 // 위험 번들과 ProtectionReady digest 는 그 단계에 아직 없으므로 결속을 여기서
@@ -90,8 +106,6 @@ type FamilyActivationConfig struct {
 	ConfigDir      string
 	Market         Market
 	ManifestDigest string
-	TrustedKeyID   string
-	TrustedKey     ed25519.PublicKey
 	ObservedAt     time.Time
 
 	// RouteManifestDigest 는 이 시장의 서명된 경로 권한 전체를 가리키는 값이다.
@@ -118,14 +132,12 @@ type productionFamilyActivationDescriptor struct {
 }
 
 type productionFamilyActivationBody struct {
-	SchemaVersion      string `json:"schema_version"`
-	Domain             string `json:"domain"`
-	SignatureAlgorithm string `json:"signature_algorithm"`
-	KeyID              string `json:"key_id"`
-	Generation         uint64 `json:"generation"`
-	Market             Market `json:"market"`
+	SchemaVersion string `json:"schema_version"`
+	Domain        string `json:"domain"`
+	Generation    uint64 `json:"generation"`
+	Market        Market `json:"market"`
 
-	// 태스크 8.7 이 이름을 부른 다섯 값이 전부 서명 안에 있다 (태스크 8.8.2 정정).
+	// 태스크 8.7 이 이름을 부른 다섯 값이 전부 매니페스트 몸통 안에 있다 (태스크 8.8.2 정정).
 	//
 	// **앞 판본은 위험과 ProtectionReady 를 per-cycle 스냅샷 봉인에 걸었고, 그
 	// 결속은 어떤 정상 입력으로도 참이 될 수 없었다.** `RiskSnapshotAuthorityBundle`
@@ -163,9 +175,106 @@ type productionFamilyActivationBody struct {
 	Descriptors []productionFamilyActivationDescriptor `json:"descriptors"`
 }
 
-type productionFamilyActivationManifest struct {
-	productionFamilyActivationBody
-	Signature string `json:"signature"`
+// FamilyActivationDocument 는 사람이 채우는 값들이다 [a112 결정 61].
+//
+// **서술자 넷은 여기 없다.** 운영자가 레인 ID·버전·수평선을 손으로 적으면 표가
+// 바뀔 때 조용히 옛 이름을 적게 되고, 그런 매니페스트는 "미지의 레인" 으로
+// 거절되는데 그 거절은 배포 시각에야 보인다. 대신 켤 **가족**만 받고 나머지는
+// 검증기가 쓰는 바로 그 표(`productionRouteDescriptors`)에서 유도한다 — 그래서
+// 도구가 낸 바이트와 검증기가 아는 표는 갈릴 수 없다.
+//
+// desired 와 effective 를 따로 받지 않는 이유: 이 매니페스트가 곧 권위이므로
+// effective 를 desired 보다 늦출 별도 기전이 없다. 둘을 나누면 만들 수 있는
+// 상태가 늘고 그중 하나만 의미가 있다.
+type FamilyActivationDocument struct {
+	Market     Market
+	Generation uint64
+
+	RouteManifestDigest          string
+	CalibrationDigest            string
+	CalendarVersion              string
+	RiskPolicyDigest             string
+	BuildDigest                  string
+	ProtectionReadyMinGeneration uint64
+
+	Actor      string
+	ApprovedAt time.Time
+	IssuedAt   time.Time
+	ExpiresAt  time.Time
+	Revoked    bool
+
+	// On 은 desired/effective 를 함께 ON 으로 둘 가족들이다. 비면 넷 다 OFF —
+	// 그것도 정당한 매니페스트다(사람이 만들어 전부 껐다 ≠ 매니페스트가 없다).
+	On []Family
+}
+
+// body 는 문서를 이 빌드의 정규 몸통으로 옮긴다.
+//
+// 여기서 값을 검사하지 않는다. 검사는 LoadProductionFamilyActivation 하나가 하고,
+// 도구가 낸 바이트도 그 문을 지나야 한다 — 두 곳에서 검사하면 각자가 상대의 시험을
+// 통과시킨다(5.3.3 이 원장에서 만난 것과 같은 모양). 여기서 막는 것은 **모르는
+// 가족 이름** 하나뿐인데, 그것은 표에서 유도할 수 없어 조용히 빠지기 때문이다.
+func (document FamilyActivationDocument) body() (productionFamilyActivationBody, error) {
+	want := productionRouteDescriptors(document.Market)
+	if len(want) == 0 {
+		return productionFamilyActivationBody{}, ErrProductionFamilyActivationUnavailable
+	}
+	on := map[Family]bool{}
+	for _, family := range document.On {
+		if !family.Known() {
+			return productionFamilyActivationBody{}, ErrProductionFamilyActivationUnavailable
+		}
+		on[family] = true
+	}
+	descriptors := make([]productionFamilyActivationDescriptor, 0, len(want))
+	for laneID, table := range want {
+		state := StateOff
+		if on[table.Family] {
+			state = StateOn
+		}
+		descriptors = append(descriptors, productionFamilyActivationDescriptor{Family: table.Family,
+			Horizon: table.Horizon, LaneID: laneID, LaneVersion: table.LaneVersion,
+			Desired: state, Effective: state})
+	}
+	// 가족 이름으로 정렬한다 — 같은 패키지가 이미 쓰는 순서다(production.go 의
+	// candidate 정렬). map 순회 순서에 기대면 같은 입력이 실행마다 다른 바이트를
+	// 내고, 그러면 digest 핀이 무엇을 가리키는지 아무도 미리 말할 수 없다.
+	sort.Slice(descriptors, func(i, j int) bool { return descriptors[i].Family < descriptors[j].Family })
+	return productionFamilyActivationBody{
+		SchemaVersion: productionFamilyActivationSchema, Domain: productionFamilyActivationDomain,
+		Generation: document.Generation, Market: document.Market,
+		RouteManifestDigest: document.RouteManifestDigest, CalibrationDigest: document.CalibrationDigest,
+		CalendarVersion: document.CalendarVersion, RiskPolicyDigest: document.RiskPolicyDigest,
+		BuildDigest:                  document.BuildDigest,
+		ProtectionReadyMinGeneration: document.ProtectionReadyMinGeneration,
+		Actor:                        document.Actor,
+		ApprovedAt:                   document.ApprovedAt.UTC().Format(time.RFC3339Nano),
+		IssuedAt:                     document.IssuedAt.UTC().Format(time.RFC3339Nano),
+		ExpiresAt:                    document.ExpiresAt.UTC().Format(time.RFC3339Nano),
+		Revoked:                      document.Revoked,
+		Descriptors:                  descriptors,
+	}, nil
+}
+
+// EncodeProductionFamilyActivation 은 이 빌드가 받아들이는 **정규 바이트**를 낸다.
+//
+// 존재 이유는 정본이 하나여야 하기 때문이다 [a112 결정 61]. 매니페스트를 만드는
+// 도구가 구조체를 다시 선언하면 두 정의가 갈릴 수 있고, 갈리는 순간 도구가 낸
+// 바이트를 검증기가 거절한다 — 그리고 그 어긋남을 잡는 시험은 어디에도 없다
+// (같은 패키지의 로더 시험들은 전부 검증기 자신의 직렬화기로 바이트를 만든다).
+// 그래서 도구는 이 함수를 부르고, 커밋된 골든 바이트가 드리프트 검출기가 된다
+// (`production_family_activation_golden_test.go`).
+//
+// **이 함수는 아무것도 승격하지 못한다.** 바이트를 낼 뿐이고, 그 바이트가 무언가를
+// 켜려면 배포가 `TOSSOS_STRATEGY_FAMILY_ACTIVATION_<MARKET>_MANIFEST_SHA256` 을
+// 그 바이트로 핀해야 한다. 그 핀은 이 프로세스가 쓸 수 없다. 생산 코드가 이 함수를
+// 부르지 않는다는 것은 `dependency_test.go` 의 참조 셈이 지킨다.
+func EncodeProductionFamilyActivation(input FamilyActivationDocument) ([]byte, error) {
+	body, err := input.body()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(body)
 }
 
 // familyLaneKey 는 활성화가 승격을 색인하는 열쇠다.
@@ -184,7 +293,12 @@ type familyLaneKey struct {
 // **영값이 안전한 값이다.** 필드가 전부 비공개이므로 이 패키지 밖에서는 영값만
 // 만들 수 있고, 영값은 아무것도 승격하지 않는다. 그래서 "켜진 worker 를 아무나
 // 만들 수 있는가" 를 셈 시험으로 지킬 필요가 없다 — 승격을 얻는 유일한 길이
-// ed25519 서명 검증을 통과하는 것이다.
+// LoadProductionFamilyActivation 을 통과하는 것이고, 그 함수는 배포가 핀한 digest 와
+// 바이트가 같은 파일 없이는 아무것도 발급하지 않는다 [결정 61].
+//
+// EncodeProductionFamilyActivation 이 exported 라는 것은 이 성질을 깨지 않는다.
+// 그것은 **바이트**를 낼 뿐이고, 바이트가 무언가를 켜려면 이 프로세스가 쓸 수 없는
+// env 핀이 그 바이트를 가리켜야 한다.
 type FamilyActivation struct {
 	market     Market
 	generation uint64
@@ -194,7 +308,7 @@ type FamilyActivation struct {
 	// 등식이 아닌 이유는 ProtectionReady 가 살아 있는 상태이기 때문이다 —
 	// 등식을 걸면 어떤 정상 입력으로도 참이 될 수 없다(태스크 8.8.2).
 	protectionReadyMinGeneration uint64
-	// state 는 서명이 말한 (desired, effective) 를 서술자마다 그대로 담는다.
+	// state 는 매니페스트가 말한 (desired, effective) 를 서술자마다 그대로 담는다.
 	// "승격된 것만" 담지 않는 이유: desired ON / effective OFF 는 운영자가 보는
 	// 다른 상태이고, 승격만 담으면 그 구별이 사라진다.
 	state map[familyLaneKey]productionFamilyActivationDescriptor
@@ -203,7 +317,7 @@ type FamilyActivation struct {
 // Verified 는 이 값이 검증된 매니페스트에서 왔는지다.
 //
 // 이 시장의 4-가족 런타임이 판정 주체가 되었는가와 같은 뜻이다. 승격이 하나도
-// 없는 검증된 매니페스트도 Verified 다 — 사람이 서명해서 전부 OFF 로 둔 것과
+// 없는 검증된 매니페스트도 Verified 다 — 사람이 만들어 전부 OFF 로 둔 것과
 // 매니페스트가 아예 없는 것은 다른 상태다.
 // 시장을 여기서 다시 보지 않는 이유는 닿지 않기 때문이다. 이 값을 만드는 길은
 // 아래 LoadProductionFamilyActivation 과 태그 아래 test seam 둘뿐이고, 둘 다
@@ -229,7 +343,7 @@ func (activation FamilyActivation) ProtectionReadyMinGeneration() uint64 {
 	return activation.protectionReadyMinGeneration
 }
 
-// Desired 와 Effective 는 서명이 이 레인에 대해 말한 상태다.
+// Desired 와 Effective 는 매니페스트가 이 레인에 대해 말한 상태다.
 //
 // 시장을 인자로 받아 이 활성화의 시장과 대조한다. 받지 않고 값의 시장을 그냥
 // 쓰면, KR 활성화를 US 레인에 물어본 호출자가 KR 의 답을 받는다.
@@ -256,10 +370,16 @@ func (activation FamilyActivation) lookup(market Market, family Family,
 	return descriptor
 }
 
-// LoadProductionFamilyActivation 은 한 시장의 서명된 4-가족 활성화를 읽는다.
+// LoadProductionFamilyActivation 은 한 시장의 4-가족 활성화를 읽는다.
 //
 // 아무것도 쓰지 않고, 아무것도 만들지 않는다. 실패는 전부 "승격 없음" 이고
 // 그것이 곧 오늘의 값이다.
+//
+// 승격을 얻는 길은 문 셋을 **함께** 지나는 것이다 [a112 결정 61]: 파일이 현재
+// UID 소유의 `0400` 정규 파일이고, 바이트가 배포가 핀한 digest 와 같고, 그 바이트가
+// 이 빌드의 정규 직렬화와 한 바이트도 다르지 않아야 한다. 앞 판본은 여기에 ed25519
+// 서명 검증을 하나 더 두었다 — 사람이 그것을 뺐고, digest 핀이 파일 치환을 막는
+// 역할은 그대로다.
 func LoadProductionFamilyActivation(ctx context.Context, config FamilyActivationConfig) (FamilyActivation, error) {
 	if ctx == nil {
 		return FamilyActivation{}, ErrProductionFamilyActivationUnavailable
@@ -269,12 +389,11 @@ func LoadProductionFamilyActivation(ctx context.Context, config FamilyActivation
 	}
 	config.ConfigDir = filepath.Clean(strings.TrimSpace(config.ConfigDir))
 	config.ManifestDigest = strings.TrimSpace(config.ManifestDigest)
-	config.TrustedKeyID = strings.TrimSpace(config.TrustedKeyID)
 	owner, ownerOK := productionRouteOwnerUID()
 	name := ProductionFamilyActivationFileName(config.Market)
 	if !ownerOK || name == "" || !filepath.IsAbs(config.ConfigDir) || config.ObservedAt.IsZero() ||
-		!productionRouteDigestValid(config.ManifestDigest) || !productionRouteIdentity(config.TrustedKeyID) ||
-		len(config.TrustedKey) != ed25519.PublicKeySize || !productionRouteIdentity(config.CalibrationDigest) ||
+		!productionRouteDigestValid(config.ManifestDigest) ||
+		!productionRouteIdentity(config.CalibrationDigest) ||
 		!productionRouteDigestValid(config.RouteManifestDigest) ||
 		!productionRouteDigestValid(config.RiskPolicyDigest) ||
 		!productionRouteIdentity(config.CalendarVersion) || !productionRouteIdentity(config.BuildDigest) {
@@ -289,22 +408,13 @@ func LoadProductionFamilyActivation(ctx context.Context, config FamilyActivation
 	if err != nil {
 		return FamilyActivation{}, ErrProductionFamilyActivationUnavailable
 	}
-	canonical, err := json.Marshal(manifest.productionFamilyActivationBody)
-	if err != nil {
-		return FamilyActivation{}, ErrProductionFamilyActivationUnavailable
-	}
-	signature, err := base64.StdEncoding.Strict().DecodeString(manifest.Signature)
-	if err != nil || base64.StdEncoding.EncodeToString(signature) != manifest.Signature ||
-		len(signature) != ed25519.SignatureSize ||
-		!ed25519.Verify(config.TrustedKey, canonical, signature) {
-		return FamilyActivation{}, ErrProductionFamilyActivationUnavailable
-	}
-	// 폐기와 만료를 서명 **뒤에** 본다. 앞에서 보면 서명 없는 파일이 "폐기됐다"
-	// 는 답을 낼 수 있고, 그러면 운영자가 자기가 쓴 적 없는 결정을 보게 된다.
+	// 폐기와 만료를 핀·정규성 검사 **뒤에** 본다. 앞에서 보면 배포가 핀하지 않은
+	// 파일이 "폐기됐다" 는 답을 낼 수 있고, 그러면 운영자가 자기가 쓴 적 없는
+	// 결정을 보게 된다. (앞 판본은 이 자리가 서명 뒤였다 — 같은 이유였다.)
 	if manifest.Revoked {
 		return FamilyActivation{}, ErrProductionFamilyActivationRevoked
 	}
-	state, err := validateProductionFamilyActivation(manifest.productionFamilyActivationBody, config)
+	state, err := validateProductionFamilyActivation(manifest, config)
 	if err != nil {
 		return FamilyActivation{}, err
 	}
@@ -322,22 +432,28 @@ func LoadProductionFamilyActivation(ctx context.Context, config FamilyActivation
 // 그 한 등식이 unknown field, 중복 키, 뒤에 붙은 JSON, 그리고 필드 순서·공백을
 // 바꾼 사본까지 함께 거절한다. 검사를 하나씩 적으면 빠뜨린 것이 조용히 통과한다 —
 // 같은 패키지의 decodeProductionRouteManifest 가 같은 이유로 같은 모양이다.
-func decodeProductionFamilyActivation(data []byte) (productionFamilyActivationManifest, error) {
+//
+// **서명이 사라진 뒤 이 등식이 하는 일이 늘었다** [a112 결정 61]. 앞 판본에서는
+// 서명이 바이트 전체를 함께 묶었으므로 여기서 놓친 이형이 있어도 서명 검증이
+// 막았다. 이제는 이 등식과 digest 핀 둘뿐이다 — 그래서 사람이 만든 바이트가
+// 실제로 이 문을 지나는지를 커밋된 골든이 따로 잰다
+// (`production_family_activation_golden_test.go`).
+func decodeProductionFamilyActivation(data []byte) (productionFamilyActivationBody, error) {
 	if len(data) == 0 || len(data) > productionFamilyActivationMaximumBytes {
-		return productionFamilyActivationManifest{}, ErrProductionFamilyActivationUnavailable
+		return productionFamilyActivationBody{}, ErrProductionFamilyActivationUnavailable
 	}
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
-	var manifest productionFamilyActivationManifest
+	var manifest productionFamilyActivationBody
 	if err := decoder.Decode(&manifest); err != nil {
-		return productionFamilyActivationManifest{}, err
+		return productionFamilyActivationBody{}, err
 	}
 	if err := decoder.Decode(&struct{}{}); err != io.EOF {
-		return productionFamilyActivationManifest{}, ErrProductionFamilyActivationUnavailable
+		return productionFamilyActivationBody{}, ErrProductionFamilyActivationUnavailable
 	}
 	canonical, err := json.Marshal(manifest)
 	if err != nil || !bytes.Equal(canonical, data) {
-		return productionFamilyActivationManifest{}, ErrProductionFamilyActivationUnavailable
+		return productionFamilyActivationBody{}, ErrProductionFamilyActivationUnavailable
 	}
 	return manifest, nil
 }
@@ -356,7 +472,6 @@ func validateProductionFamilyActivation(body productionFamilyActivationBody,
 	config FamilyActivationConfig,
 ) (map[familyLaneKey]productionFamilyActivationDescriptor, error) {
 	if body.SchemaVersion != productionFamilyActivationSchema || body.Domain != productionFamilyActivationDomain ||
-		body.SignatureAlgorithm != productionFamilyActivationAlgorithm || body.KeyID != config.TrustedKeyID ||
 		body.Generation == 0 || body.Market != config.Market || !validMarket(body.Market) ||
 		body.RouteManifestDigest != config.RouteManifestDigest ||
 		body.CalibrationDigest != config.CalibrationDigest || body.CalendarVersion != config.CalendarVersion ||

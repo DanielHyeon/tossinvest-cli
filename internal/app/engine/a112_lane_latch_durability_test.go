@@ -131,13 +131,13 @@ func TestALatchedLaneComesBackLatchedAfterTheProcessRestarts(t *testing.T) {
 	}
 }
 
-// TestALatchOnlyReopensForAStrictlyNewerSignedActivation 은 복구 조건을 엔진
+// TestALatchOnlyReopensForAStrictlyNewerVerifiedActivation 은 복구 조건을 엔진
 // 경로로 확인한다.
 //
 // 재시작은 복구가 아니다. 세대를 그대로 들고 다시 서면 레인은 잠긴 채로 온다.
 // 세대가 오르면 — 사람이 서명된 매니페스트를 바꿔야만 오르는 수 — 레인이 기록
 // 없이 다시 태어난다.
-func TestALatchOnlyReopensForAStrictlyNewerSignedActivation(t *testing.T) {
+func TestALatchOnlyReopensForAStrictlyNewerVerifiedActivation(t *testing.T) {
 	c, fake := laneLatchFixture(t)
 	ctx := context.Background()
 	runtime := mustProductionStrategyLanes(t, c, fake)
@@ -293,7 +293,7 @@ func TestALedgerThatCannotTakeTheLatchStopsTheCycle(t *testing.T) {
 	}
 }
 
-// TestTheRecoveryGenerationComesFromTheSignedActivationAndNothingElse 는 이
+// TestTheRecoveryGenerationComesFromTheVerifiedActivationAndNothingElse 는 이
 // 로트에서 **가장 우회하기 쉬운 자리**를 얼린다.
 //
 // durable latch 의 복구 조건은 "더 큰 수"가 아니라 "더 큰 **서명된** 활성화
@@ -303,7 +303,7 @@ func TestALedgerThatCannotTakeTheLatchStopsTheCycle(t *testing.T) {
 //
 // 그래서 인자로 넘어가는 **식 자체**를 센다. 이 change 가 5.1.2.1 에서
 // 소유자 범위의 종목에 쓴 것과 같은 방법이다.
-func TestTheRecoveryGenerationComesFromTheSignedActivationAndNothingElse(t *testing.T) {
+func TestTheRecoveryGenerationComesFromTheVerifiedActivationAndNothingElse(t *testing.T) {
 	entries, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("read engine package: %v", err)

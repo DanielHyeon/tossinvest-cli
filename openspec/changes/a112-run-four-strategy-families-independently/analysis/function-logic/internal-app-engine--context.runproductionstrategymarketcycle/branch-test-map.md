@@ -22,6 +22,6 @@
 | P1b-B3: 몸통 안에서 값을 `entries` 의 마지막 것으로 덮어쓴다 | KILLED — 이제 **컴파일되지 않는다**. 몸통은 `strategyhandoff.Delivered` 를 받고 `dispatch` 도 그것만 받으므로, `strategyflow.Result` 를 넘기는 편집은 타입에서 멈춘다(뮤테이션 M1) |
 | P1c: 엔진이 스스로 `Admit` 을 불러 봉투를 만들어 넘긴다 | KILLED — `TestExactlyOneProductionSiteAdmitsIntoTheSeam` 실패(뮤테이션 M2) |
 | P1d: 같은 봉투로 `dispatch` 를 세 번 부른다 | SURVIVED — 소스 검사는 철자를 셀 뿐 실행을 세지 않는다. 막는 것은 원장의 position campaign CAS 이고, 그 사실은 `TestTheSameEnvelopeCannotPlaceASecondOrder` 가 값으로 잰다(뮤테이션 M3) |
-| 5.3.3 N11: 복구 세대에 서명과 무관한 `0` 을 넘긴다(`456:3`) | KILLED — `TestTheRecoveryGenerationComesFromTheSignedActivationAndNothingElse` 실패. 행동 시험으로는 못 잡는다: 잘못된 수도 그냥 커지므로 잠금이 저절로 열려도 어떤 값 비교도 달라지지 않는다 |
+| 5.3.3 N11: 복구 세대에 서명과 무관한 `0` 을 넘긴다(`456:3`) | KILLED — `TestTheRecoveryGenerationComesFromTheVerifiedActivationAndNothingElse` 실패. 행동 시험으로는 못 잡는다: 잘못된 수도 그냥 커지므로 잠금이 저절로 열려도 어떤 값 비교도 달라지지 않는다 |
 
 이 함수의 동작 커버리지는 0 이다. 그 사실을 적지 않고 넘어가면 구조 가드가 동작 증거처럼 읽힌다.

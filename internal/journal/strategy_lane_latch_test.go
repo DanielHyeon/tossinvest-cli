@@ -83,7 +83,7 @@ func TestTheOpenLatchIsAlwaysTheFirstCauseNotTheLast(t *testing.T) {
 	}
 }
 
-func TestALatchOpensOnlyForAStrictlyNewerSignedActivation(t *testing.T) {
+func TestALatchOpensOnlyForAStrictlyNewerVerifiedActivation(t *testing.T) {
 	ctx := context.Background()
 	j := openJournalAtSchema(t, t.TempDir()+"/journal.db", SchemaVersion)
 	defer j.Close()

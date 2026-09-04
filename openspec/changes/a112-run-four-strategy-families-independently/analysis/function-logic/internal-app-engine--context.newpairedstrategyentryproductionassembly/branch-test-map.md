@@ -5,8 +5,8 @@
   **권위**를 함께 싣는다). **분기는 하나도 바뀌지 않았고 개수도 그대로 7 이다** —
   아래 좌표는 그 한 줄이 만든 이동만 반영한다.
 - 그 한 줄이 하는 일을 재는 것은 이 함수의 분기가 아니라
-  `TestTheRecoveryGenerationComesFromTheSignedActivationAndNothingElse`(복구 세대를
-  읽는 식의 패키지 전체 열거)와 `TestALatchOnlyReopensForAStrictlyNewerSignedActivation`
+  `TestTheRecoveryGenerationComesFromTheVerifiedActivationAndNothingElse`(복구 세대를
+  읽는 식의 패키지 전체 열거)와 `TestALatchOnlyReopensForAStrictlyNewerVerifiedActivation`
   (그 값으로 실제로 잠금이 열리고 닫히는지)이다.
 - 그 밖에는 L0 와 같다: 이 함수의 분기를 실행하는 시험은 없다.
 

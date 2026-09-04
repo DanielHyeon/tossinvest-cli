@@ -6,7 +6,7 @@ import "time"
 
 // FamilyActivationForTest 는 명시적인 저장소 test-seam 바이너리에서만 불투명한
 // 활성화를 주조한다. 생산 코드는 여전히 LoadProductionFamilyActivation 하나로만
-// 얻는다 — 그 함수는 사람이 서명한 파일 없이는 아무것도 승격하지 않는다.
+// 얻는다 — 그 함수는 배포가 digest 로 핀한 파일 없이는 아무것도 승격하지 않는다.
 //
 // 선례는 `internal/scheduler/activation_testseam.go` 의 ActivationForTest 다.
 // 이 seam 이 태그 아래 있는 이유는 생산 빌드에 그 문이 아예 존재하지 않게

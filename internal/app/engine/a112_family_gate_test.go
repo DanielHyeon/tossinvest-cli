@@ -4,8 +4,6 @@ package engine
 
 import (
 	"context"
-	"crypto/ed25519"
-	"encoding/base64"
 	"errors"
 	"go/ast"
 	"os"
@@ -109,14 +107,12 @@ func TestTheProductionActivationLoaderRunsAndFindsNoManifest(t *testing.T) {
 	// 없다" 가 아니라 "설정이 어긋났다" 를 재게 되고, 그러면 파일 부재라는
 	// 축은 한 번도 안 재진다 — 기억에 "반증 실험은 축을 잘못 고르면 아무것도
 	// 반증 못 한다" 로 남은 모양이다.
-	key := make(ed25519.PublicKey, ed25519.PublicKeySize)
-	for index := range key {
-		key[index] = byte(index + 3)
-	}
+	//
+	// 결속은 이제 digest 핀 하나다 [결정 61] — 열쇠 둘이 사라졌으므로 채울 값도
+	// 줄었다. 그래도 이 핀은 **유효한** 값이어야 한다: 비우면 위와 같은 이유로
+	// 축이 바뀐다.
 	env := map[string]string{
 		strategyFamilyActivationKRManifestDigestEnv: "sha256:" + strings.Repeat("c", 64),
-		strategyFamilyActivationKeyIDEnv:            "family-activation-key-v1",
-		strategyFamilyActivationPublicKeyEnv:        base64.StdEncoding.EncodeToString(key),
 	}
 	dir := t.TempDir()
 	loader := newStrategyProposalAuthorityLoader(dir, filepath.Join(dir, "evidence.db"),
@@ -155,7 +151,7 @@ func TestTheProductionActivationLoaderRunsAndFindsNoManifest(t *testing.T) {
 // 생산에는 서명된 4-가족 매니페스트가 배포돼 있지 않다(측정: `~/.config/tossctl`
 // 에 strategy-* 매니페스트 0 건). 세 가족이 한 종목에 제안하면 점수가 가장 높은
 // 하나가 그대로 선택되어야 한다.
-func TestWithoutASignedActivationCoordinationIsUnchanged(t *testing.T) {
+func TestWithoutAVerifiedActivationCoordinationIsUnchanged(t *testing.T) {
 	runtime, _ := familyGateFixture(t)
 	authority := collectUnderGate(t, strategyrouter.FamilyActivation{}, runtime, "005930",
 		continuationlane.KRContinuationLaneID, reversallane.KRReversalLaneID)

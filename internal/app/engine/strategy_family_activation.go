@@ -2,8 +2,6 @@ package engine
 
 import (
 	"context"
-	"crypto/ed25519"
-	"encoding/base64"
 	"strings"
 	"time"
 
@@ -16,7 +14,7 @@ import (
 //
 // 오늘 한 시장의 제안은 `coordinateMarketProposals` 에서 곧바로 조정자로 들어간다.
 // 여덟 레인은 그 뒤 관측만 하고 아무것도 막지 못한다(5.1.2.1 이 그 상태를 적어
-// 두었다). 여기서 그것을 바꾼다 — 다만 **서명된 활성화가 있는 시장에서만** 이다.
+// 두었다). 여기서 그것을 바꾼다 — 다만 **검증된 활성화가 있는 시장에서만** 이다.
 //
 // **왜 활성화가 있을 때만인가. 두 권위가 갈리는 자리를 여기서 푼다.**
 // 5.1.2.1 은 "오늘 여덟을 관문으로 세우면 생산 진입이 0 이 되고 그것은 토글 OFF
@@ -33,17 +31,18 @@ import (
 // 이 change 가 사려던 것이다 — "시장 장애 격리이지 전략군 장애 격리가 아니다"
 // (`design.md:3`).
 
+// 신뢰 핀은 시장마다 **하나**다 [a112 결정 61]. 앞 판본은 여기에 key id 와 공개키
+// 둘을 더 읽었다. 서명을 뺐으므로 배포가 관리할 값이 셋에서 하나로 줄었고, 그 하나가
+// 후보 임계값 활성화(`strategyCandidateActivationDigestEnv`)와 같은 모양이다.
 const (
 	strategyFamilyActivationKRManifestDigestEnv = "TOSSOS_STRATEGY_FAMILY_ACTIVATION_KR_MANIFEST_SHA256"
 	strategyFamilyActivationUSManifestDigestEnv = "TOSSOS_STRATEGY_FAMILY_ACTIVATION_US_MANIFEST_SHA256"
-	strategyFamilyActivationKeyIDEnv            = "TOSSOS_STRATEGY_FAMILY_ACTIVATION_KEY_ID"
-	strategyFamilyActivationPublicKeyEnv        = "TOSSOS_STRATEGY_FAMILY_ACTIVATION_PUBLIC_KEY_BASE64"
 )
 
 // strategyFamilyGate 는 한 시장의 네 전략군 레인이 조정자 앞에서 하는 판정이다.
 //
 // **영값은 "이 시장의 4-가족 런타임이 판정 주체가 아니다" 는 뜻이고, 그것이
-// 오늘의 값이다.** 생산에는 서명된 4-가족 매니페스트가 배포돼 있지 않다(측정:
+// 오늘의 값이다.** 생산에는 4-가족 활성화 매니페스트가 배포돼 있지 않다(측정:
 // `~/.config/tossctl` 에 strategy-* 매니페스트 0 건).
 type strategyFamilyGate struct {
 	activation strategyrouter.FamilyActivation
@@ -112,13 +111,13 @@ func (loader *strategyProposalAuthorityLoader) familyGateFor(ctx context.Context
 	return strategyFamilyGate{activation: activation, lanes: loader.lanes.lanesFor(market)}
 }
 
-// loadFamilyActivation 은 이 시장의 서명된 4-가족 활성화를 읽는다.
+// loadFamilyActivation 은 이 시장의 4-가족 활성화를 읽는다.
 //
 // **여기서 결속하는 세 값은 이 단계에 실제로 존재하는 사실뿐이다.** 위험 번들과
 // ProtectionReady digest 는 이 단계에 아직 없다(둘 다 제안 뒤에 수집된다).
 // 없는 사실을 결속하면 그 결속은 어떤 정상 입력으로도 참이 될 수 없고, 그것이
 // 이 change 가 이미 한 번 만들었다 고친 "문 없는 fail-closed" 다. 그 둘은
-// 서명된 몸통에 실려 나가고 그 사실들이 존재하는 단계가 결속한다.
+// 매니페스트 몸통에 실려 나가고 그 사실들이 존재하는 단계가 결속한다.
 //
 // 보정 digest 는 경로 권한이 들고 있는 값에서 읽는다. 이 시장의 항목들이 서로
 // 다른 보정을 말하면 읽지 않는다 — 하나를 고르면 그 선택이 고른 사람의 것이 된다.
@@ -128,11 +127,6 @@ func (loader *strategyProposalAuthorityLoader) loadFamilyActivation(ctx context.
 	digestEnv := strategyFamilyActivationKRManifestDigestEnv
 	if market == StrategyMarketUS {
 		digestEnv = strategyFamilyActivationUSManifestDigestEnv
-	}
-	encoded := strings.TrimSpace(loader.getenv(strategyFamilyActivationPublicKeyEnv))
-	key, err := base64.StdEncoding.Strict().DecodeString(encoded)
-	if err != nil || base64.StdEncoding.EncodeToString(key) != encoded || len(key) != ed25519.PublicKeySize {
-		return strategyrouter.FamilyActivation{}, strategyrouter.ErrProductionFamilyActivationUnavailable
 	}
 	calibration, agreed := strategyMarketCalibrationDigest(routes)
 	if !agreed {
@@ -154,9 +148,7 @@ func (loader *strategyProposalAuthorityLoader) loadFamilyActivation(ctx context.
 	}
 	return strategyrouter.LoadProductionFamilyActivation(ctx, strategyrouter.FamilyActivationConfig{
 		ConfigDir: loader.configDir, Market: strategyRouterMarket(market),
-		ManifestDigest: strings.TrimSpace(loader.getenv(digestEnv)),
-		TrustedKeyID:   strings.TrimSpace(loader.getenv(strategyFamilyActivationKeyIDEnv)),
-		TrustedKey:     ed25519.PublicKey(key), ObservedAt: observedAt,
+		ManifestDigest: strings.TrimSpace(loader.getenv(digestEnv)), ObservedAt: observedAt,
 		RouteManifestDigest: routes.snapshot.ManifestDigest, CalibrationDigest: calibration,
 		CalendarVersion: schedule.calendar.Version, BuildDigest: strategyRuntimeBuildDigest(),
 		RiskPolicyDigest: strings.TrimSpace(loader.getenv(riskPolicyEnv)),

@@ -207,7 +207,13 @@ lane context와 safety context를 분리한다. lane OFF, market close, candidat
 
 production manifest는 각 market의 exact four descriptors와 family identity, lane/version, horizon, evidence schema, runtime policy, scoring/calibration과 config digest를 검증한다. missing, duplicate, unknown, partial 3-of-4, legacy 3-lane ON manifest는 새 권위로 자동 승격하지 않고 해당 새 runtime을 OFF로 유지한다.
 
-기존 승인 manifest를 묵시적으로 4-family 승인으로 migration하는 대안은 승인 범위를 넓히므로 배제한다. 새 runtime activation은 exact 4-family-aware signed manifest가 필요하다. descriptor deployment만으로 desired/effective state를 ON으로 만들지 않는다.
+기존 승인 manifest를 묵시적으로 4-family 승인으로 migration하는 대안은 승인 범위를 넓히므로 배제한다. 새 runtime activation은 exact 4-family-aware manifest가 필요하다. descriptor deployment만으로 desired/effective state를 ON으로 만들지 않는다.
+
+**개정 2026-09-04 [a112 결정 61] — 이 manifest의 신뢰 앵커는 서명이 아니라 외부 digest pin이다.** 앞 문장은 원래 "signed manifest"였다. 사람이 세 선택지 중 2번을 골랐다: ed25519 서명을 빼고 `TOSSOS_STRATEGY_FAMILY_ACTIVATION_<MARKET>_MANIFEST_SHA256` pin과 정규 바이트 등식만 남긴다.
+
+근거 셋. (a) 같은 저장소에 서명 없는 사람 승인 활성화 선례가 이미 있다 — 후보 임계값 활성화는 `<PREFIX>_<MARKET>_ACTIVATION_SHA256` pin 하나로 지킨다(`internal/app/engine/strategy_candidate_authority.go`). (b) digest pin은 이미 서명과 **독립적으로** 파일 치환을 막는다. 서명이 더 사는 것은 승인자와 배포자의 분리 하나인데, 그 성질은 개인키가 배포 호스트 **밖**에 있을 때만 참이고 이 배포에서는 그렇지 않다 — 키가 config 옆에 있으면 pin보다 나은 것이 없고 키 분실·교체 비용만 남는다. (c) 서명을 빼도 사람이 손으로 쓸 수는 없다. 정규 바이트 등식(`json.Marshal(body) == data`)은 서명과 무관한 별개의 문이고 그대로 남으므로, 매니페스트는 여전히 생성기가 만든다 — 다만 그 생성기가 비밀을 갖지 않는다.
+
+이 개정이 바꾸지 않는 것: 정확히 네 서술자, partial 3-of-4 거부, legacy 3-family 자동 승격 금지, 다섯 결속 값, 24시간 수명, `0400`·소유자 검사, 그리고 승격을 얻는 길이 검증된 매니페스트 하나뿐이라는 것. spec의 SHALL은 활성화 서명을 요구한 적이 없으므로(`spec.md`에서 "signed"는 SHADOW manifest에만 붙는다) spec 델타는 바뀌지 않는다. 아래 SHADOW manifest의 `signed`는 이 개정의 범위가 아니며 그대로 둔다.
 
 `OFF/OFF/UNOBSERVED`와 `SHADOW`는 다른 상태다. 새 설치·migration·restart는 전자를 유지한다. SHADOW는 server-owned signed shadow manifest가 명시된 경우에만 read-only evaluation/counterfactual projection을 허용하며 desired/effective/activation을 ON으로 만들거나 dispatch capability를 가질 수 없다. Restart는 과거 process-local shadow 상태를 복원하지 않는다.
 

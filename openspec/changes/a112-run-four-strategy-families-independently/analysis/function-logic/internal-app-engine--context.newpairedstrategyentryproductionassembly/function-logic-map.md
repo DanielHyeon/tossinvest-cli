@@ -17,7 +17,7 @@
 **스칼라 사본을 만들지 않은 이유.** 세대를 공개 스냅숏에 숫자로 복사하면 그 값이 권위에서
 한 다리 멀어지고, 그 한 다리가 "복구 조건이 서명과 갈라지는" 자리가 된다. 권위를 그대로
 들고 가면 복구 세대를 읽는 식이 `…restore.Activation.Generation()` 하나로 남고, 그 식은
-`TestTheRecoveryGenerationComesFromTheSignedActivationAndNothingElse` 가 패키지 전체
+`TestTheRecoveryGenerationComesFromTheVerifiedActivationAndNothingElse` 가 패키지 전체
 열거로 얼려 둔다.
 
 수집 순서·원격 호출·거절 갈래는 하나도 바뀌지 않았다.
