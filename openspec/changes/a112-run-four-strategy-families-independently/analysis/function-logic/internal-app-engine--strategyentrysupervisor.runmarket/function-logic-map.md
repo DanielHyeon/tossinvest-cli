@@ -3,9 +3,11 @@
 - Source: `internal/app/engine/strategy_entry_supervisor.go`
 - AST evidence: `ast.json`
 - Risk scan: `risk-pattern-report.md`
-- Revision: base — 이 change 는 이 함수를 **고치지 않는다.** 태스크 5.3.2 가
-  레인-로컬 단일 비행과 카덴스를 새로 만들면서 이 루프를 영수증으로 인용하기
-  때문에 만든 번들이다. 손으로 읽은 인용을 근거로 쓰지 않기 위한 AST 열거다.
+- Revision: **modified (태스크 8.8.4, 2026-09-05).** 그전까지 base 였고, 처음에는
+  태스크 5.3.2 가 이 루프를 영수증으로 인용하려고 만든 번들이었다. 8.8.4 가 B12 에
+  기록 호출 하나를 더했다 — 버리기 **전에** 센다. 삼킴 자세(`continue`, 잠그지 않음,
+  갈래 순서)는 바꾸지 않았고 그것을 못 박는 기존 시험 둘이 그대로 통과한다.
+- Source SHA-256: `c2a825fceac8692f865d89ae61b736d9a43ad10e0b5dec4968cfac304c93555a`
 
 ## Inputs and invariants
 
@@ -40,7 +42,7 @@ goroutine 이 **하나**이고, 사이클은 `<-worker.queue` 를 다시 읽기 
 | B9 (`:804`) | `abandoned` | `s.markAbandoned` | 계속 | 4 개 시험 |
 | B10 (`:807`) | `cancelled` | 없음 | `return` | 3 개 시험 |
 | B11 (`:810`) | `err == nil` | 없음 | `continue` | 3 개 시험 |
-| B12 (`:813`) | `refreshOnly` — 권한 갱신 전용 worker 의 오류 | 없음 | `continue` — **잠그지 않는다** | **없음 — 측정으로 확인** |
+| B12 (`:813`) | `refreshOnly` — 권한 갱신 전용 worker 의 오류 | `recordSwallowedCycleError` (포화 계수 + 첫 원인 보존) | `continue` — **잠그지 않는다** | 스냅샷의 `SwallowedCycleErrors`·`FirstSwallowedFailure` (8.8.4) |
 | B13 (`:816`) | 중앙 무결성 오류 | `s.signalCentral` | `return` — 모든 신규 진입 정지 | `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety` |
 | B14 (`:821`) | 잠금 자체가 실패 | `s.signalCentral` | `return` | **없음 — 측정으로 확인** |
 | B15 (`:825`) | 재시작 대기 실패 | 조건부 `signalCentral` | `return` | **없음 — 측정으로 확인(`:829` 블록)** |
@@ -52,27 +54,28 @@ goroutine 이 **하나**이고, 사이클은 `<-worker.queue` 를 다시 읽기 
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `ctx.Done` | 838:9 | 배리어 전 취소 |
-| `ctx.Done` | 844:10 | 루프마다 취소 확인 |
-| `s.mu.RLock` | 848:4 | `refreshOnly` 를 읽기 위한 공유 잠금 |
-| `s.mu.RUnlock` | 850:4 | 같은 잠금 해제 |
-| `s.evaluationState` | 851:24 | 이 사이클을 돌려도 되는지 + 권한 만료 여부 |
-| `s.latchMarket` | 853:30 | 권한 만료로 시장 진입 잠금 |
-| `s.signalCentral` | 855:6 | 잠금 자체가 실패하면 중앙 고장 |
-| `s.waitMarketRestart` | 858:15 | backoff 만큼 대기 |
-| `ctx.Err` | 859:9 | 그 대기 실패가 취소 때문인지 |
-| `s.signalCentral` | 862:6 | 아니면 중앙 고장 |
-| `invokeBoundedStrategyCycle` | 870:43 | **마감 시한 아래 사이클 한 번.** 이 함수의 유일한 호출자다(CodeGraph) |
-| `s.markAbandoned` | 872:5 | 마감 시한을 넘긴 사이클을 버려진 것으로 표시 |
-| `isCentralStrategyIntegrity` | 883:7 | 원장·게이트웨이·펜스·소유자 무결성 오류인지 |
-| `s.signalCentral` | 884:5 | 그러면 모든 신규 진입을 멈춘다 |
-| `s.latchMarket` | 887:29 | 보통 오류로 시장 진입 잠금 |
-| `s.signalCentral` | 889:5 | 잠금 자체가 실패하면 중앙 고장 |
-| `s.waitMarketRestart` | 892:14 | backoff 만큼 대기 |
-| `ctx.Err` | 893:8 | 그 대기 실패가 취소 때문인지 |
-| `s.signalCentral` | 896:5 | 아니면 중앙 고장 |
+| `ctx.Done` | 856:9 | 배리어 전 취소 |
+| `ctx.Done` | 862:10 | 루프마다 취소 확인 |
+| `s.mu.RLock` | 866:4 | `refreshOnly` 를 읽기 위한 공유 잠금 |
+| `s.mu.RUnlock` | 868:4 | 같은 잠금 해제 |
+| `s.evaluationState` | 869:24 | 이 사이클을 돌려도 되는지 + 권한 만료 여부 |
+| `s.latchMarket` | 871:30 | 권한 만료로 시장 진입 잠금 |
+| `s.signalCentral` | 873:6 | 잠금 자체가 실패하면 중앙 고장 |
+| `s.waitMarketRestart` | 876:15 | backoff 만큼 대기 |
+| `ctx.Err` | 877:9 | 그 대기 실패가 취소 때문인지 |
+| `s.signalCentral` | 880:6 | 아니면 중앙 고장 |
+| `invokeBoundedStrategyCycle` | 888:43 | **마감 시한 아래 사이클 한 번.** 이 함수의 유일한 호출자다(CodeGraph) |
+| `s.markAbandoned` | 890:5 | 마감 시한을 넘긴 사이클을 버려진 것으로 표시 |
+| `s.recordSwallowedCycleError` | 909:5 | **버리기 전에 센다** (8.8.4). `continue` 도 갈래 순서도 바꾸지 않는다 — 더한 것은 기록뿐이다 |
+| `isCentralStrategyIntegrity` | 912:7 | 원장·게이트웨이·펜스·소유자 무결성 오류인지 |
+| `s.signalCentral` | 913:5 | 그러면 모든 신규 진입을 멈춘다 |
+| `s.latchMarket` | 916:29 | 보통 오류로 시장 진입 잠금 |
+| `s.signalCentral` | 918:5 | 잠금 자체가 실패하면 중앙 고장 |
+| `s.waitMarketRestart` | 921:14 | backoff 만큼 대기 |
+| `ctx.Err` | 922:8 | 그 대기 실패가 취소 때문인지 |
+| `s.signalCentral` | 925:5 | 아니면 중앙 고장 |
 
-Exact AST return positions: 839:3, 845:4, 856:6, 860:7, 863:6, 875:5, 885:5, 890:5, 894:6, 897:5.
+Exact AST return positions: 857:3, 863:4, 874:6, 878:7, 881:6, 893:5, 914:5, 919:5, 923:6, 926:5.
 
 
 ## State mutations and fallbacks

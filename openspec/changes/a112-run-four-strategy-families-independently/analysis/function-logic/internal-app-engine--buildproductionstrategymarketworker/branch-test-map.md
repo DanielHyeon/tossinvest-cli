@@ -1,15 +1,15 @@
 # Branch Test Map: `buildProductionStrategyMarketWorker`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (394-454); file SHA-256 `22855de0f27de05c60c2b5ff8cf2d5c7e3ed50e78a9fa6f67fb81ec38decdbfa`. AST branch positions are authoritative.
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (411-471); file SHA-256 `22855de0f27de05c60c2b5ff8cf2d5c7e3ed50e78a9fa6f67fb81ec38decdbfa`. AST branch positions are authoritative.
 - 이 태스크는 B2 만 편집했다. 나머지 행은 측정만 갱신했다.
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 400:2 — 배선 미완/nil | `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` | 아니오 — 편집 없음 | 예 |
-| B2 | if at 414:2 — **handoff 거절 포함**, 권한 준비 미완 | `TestARefusedHandoffLeavesTheWorkerDormant` | 아니오 — 컴파일 실패로서의 RED 는 있었으나(`dispatchHandoff` 미존재) 동작 RED 는 없다. 이 태스크는 동작을 보존했다 | 예 |
-| B3 | if at 418:2 — 봉인 깨진 제안 | 없음 | 아니오 | 아니오 — **진입 0** |
-| B4 | if at 424:2 — 보호 관측 실패 | `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` | 아니오 — 편집 없음 | 예 |
-| B5 | if at 427:2 — 진입 게이트 관측 실패 | 없음 | 아니오 | 아니오 — **진입 0** |
-| B6 | if at 448:2 — digest/revision/만료 (옛 B6) | 없음 | 아니오 | 아니오 — **진입 0** |
+| B1 | if at 417:2 — 배선 미완/nil | `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` | 아니오 — 편집 없음 | 예 |
+| B2 | if at 431:2 — **handoff 거절 포함**, 권한 준비 미완 | `TestARefusedHandoffLeavesTheWorkerDormant` | 아니오 — 컴파일 실패로서의 RED 는 있었으나(`dispatchHandoff` 미존재) 동작 RED 는 없다. 이 태스크는 동작을 보존했다 | 예 |
+| B3 | if at 435:2 — 봉인 깨진 제안 | 없음 | 아니오 | 아니오 — **진입 0** |
+| B4 | if at 441:2 — 보호 관측 실패 | `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` | 아니오 — 편집 없음 | 예 |
+| B5 | if at 444:2 — 진입 게이트 관측 실패 | 없음 | 아니오 | 아니오 — **진입 0** |
+| B6 | if at 465:2 — digest/revision/만료 (옛 B6) | 없음 | 아니오 | 아니오 — **진입 0** |
 
 ## 반증 실측
 

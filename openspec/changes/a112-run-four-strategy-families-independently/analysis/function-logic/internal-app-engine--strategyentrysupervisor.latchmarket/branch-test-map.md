@@ -11,16 +11,16 @@
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 984:2 — 실패 문구가 비어 있다 | **없음** | no (base) | **no — block 953-955 count=0** |
-| B2 | if at 988:2 — 비정상 사이클의 refusal | `TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive` 외 1 | no (base) | yes (block 957-959) |
-| B3 | if at 991:2 — 권한 만료의 refusal | `TestExpiredAuthorityLatchesBeforeEvaluation` 외 1 | no (base) | yes (block 960-962) |
-| B4 | if at 995:2 — 관측 시각이 없어 잠금을 거부한다 | `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping`/"관측 시각이 없으면…" | no (base) | yes (block 964-966 count=1, **5.6 이 처음 실행**) |
-| B5 | if at 999:2 — latch revision 소진 | 같은 시험의 "latch revision 이 소진되면…"·"권한 만료의 잠금도…" 및 `TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt` | no (base) | yes (block 968-971 count=1, **5.6 이 처음 실행**) |
-| B6 | if at 1005:2 — 첫 refusal 만 기록한다 | `TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal` 외 4 | no (base) | yes (block 974-976) |
-| B7 | if at 1008:2 — 첫 실패 문구·latchID·revision++ | 같은 시험 외 4 | no (base) | yes (block 977-982) |
-| B8 | if at 1014:2 — 재시작 시도 수 증가(포화 전) | 같은 시험 외 4 | no (base) | yes (block 983-985) |
-| B9 | select at 1028:2 — fault 를 스트림에 건넸다 (`case` 팔) | `TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining` 외 5 | no (base) | yes (block 998-999) |
-| B9-default | 같은 select at 999:2 의 `default` — 스트림 포화 | **없음** | no (base) | **no — block 1000-1001 count=0, 구조적으로 도달 불가(아래)** |
+| B1 | if at 1035:2 — 실패 문구가 비어 있다 | **없음** | no (base) | **no — block 953-955 count=0** |
+| B2 | if at 1039:2 — 비정상 사이클의 refusal | `TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive` 외 1 | no (base) | yes (block 957-959) |
+| B3 | if at 1042:2 — 권한 만료의 refusal | `TestExpiredAuthorityLatchesBeforeEvaluation` 외 1 | no (base) | yes (block 960-962) |
+| B4 | if at 1046:2 — 관측 시각이 없어 잠금을 거부한다 | `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping`/"관측 시각이 없으면…" | no (base) | yes (block 964-966 count=1, **5.6 이 처음 실행**) |
+| B5 | if at 1050:2 — latch revision 소진 | 같은 시험의 "latch revision 이 소진되면…"·"권한 만료의 잠금도…" 및 `TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt` | no (base) | yes (block 968-971 count=1, **5.6 이 처음 실행**) |
+| B6 | if at 1056:2 — 첫 refusal 만 기록한다 | `TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal` 외 4 | no (base) | yes (block 974-976) |
+| B7 | if at 1059:2 — 첫 실패 문구·latchID·revision++ | 같은 시험 외 4 | no (base) | yes (block 977-982) |
+| B8 | if at 1065:2 — 재시작 시도 수 증가(포화 전) | 같은 시험 외 4 | no (base) | yes (block 983-985) |
+| B9 | select at 1079:2 — fault 를 스트림에 건넸다 (`case` 팔) | `TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining` 외 5 | no (base) | yes (block 998-999) |
+| B9-default | 같은 select at 1050:2 의 `default` — 스트림 포화 | **없음** | no (base) | **no — block 1000-1001 count=0, 구조적으로 도달 불가(아래)** |
 
 ## 측정으로 확인한 빈칸
 

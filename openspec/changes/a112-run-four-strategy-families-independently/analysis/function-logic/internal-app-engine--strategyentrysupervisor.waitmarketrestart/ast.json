@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_entry_supervisor.go",
-  "source_sha256": "22855de0f27de05c60c2b5ff8cf2d5c7e3ed50e78a9fa6f67fb81ec38decdbfa",
+  "source_sha256": "c713aa34dee53aa7d276e488efbd6928bc1be598e94128f66fc7f0055de392e0",
   "package": "engine",
   "function": "waitMarketRestart",
   "receiver": "StrategyEntrySupervisor",
   "signature": "StrategyEntrySupervisor.waitMarketRestart(params=2, results=1)",
   "start": {
-    "line": 903,
+    "line": 954,
     "column": 1
   },
   "end": {
-    "line": 919,
+    "line": 970,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 904,
+        "line": 955,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 908,
+        "line": 959,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 912,
+        "line": 963,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 915,
+        "line": 966,
         "column": 2
       }
     }
@@ -51,35 +51,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 905,
+        "line": 956,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 909,
+        "line": 960,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 913,
+        "line": 964,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 916,
+        "line": 967,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 918,
+        "line": 969,
         "column": 2
       }
     }
@@ -88,7 +88,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 904,
+        "line": 955,
         "column": 5
       },
       "text": "notBefore.IsZero"
@@ -96,7 +96,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 905,
+        "line": 956,
         "column": 10
       },
       "text": "errors.New"
@@ -104,7 +104,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 907,
+        "line": 958,
         "column": 9
       },
       "text": "s.clk.Now"
@@ -112,7 +112,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 908,
+        "line": 959,
         "column": 5
       },
       "text": "now.IsZero"
@@ -120,7 +120,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 909,
+        "line": 960,
         "column": 10
       },
       "text": "errors.New"
@@ -128,7 +128,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 911,
+        "line": 962,
         "column": 11
       },
       "text": "notBefore.Sub"
@@ -136,7 +136,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 913,
+        "line": 964,
         "column": 10
       },
       "text": "errors.New"
@@ -144,7 +144,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 918,
+        "line": 969,
         "column": 9
       },
       "text": "s.clk.Sleep"
@@ -154,14 +154,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 907,
+        "line": 958,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 911,
+        "line": 962,
         "column": 2
       }
     }

@@ -1,6 +1,6 @@
 # Function Logic Map: `buildProductionStrategyMarketWorker`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (394-454)
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (411-471)
 - Function: `buildProductionStrategyMarketWorker` in package `engine`
 - Signature: `buildProductionStrategyMarketWorker(params=13, results=1)`
 - File SHA-256: `22855de0f27de05c60c2b5ff8cf2d5c7e3ed50e78a9fa6f67fb81ec38decdbfa`
@@ -48,16 +48,16 @@ The signature above is the exhaustive input/result record; this map does not inf
   진입 수와 정확히 같다. 이 집합 밖의 시험이 어느 arm 이든 들어갔다면 그 등식이 깨진다.
   깨진 행은 `ATTRIBUTION MISMATCH` 로 표시되며 아래에는 하나도 없다.
 
-Exact AST return positions: 401:3, 416:3, 419:3, 425:3, 428:3, 449:3, 451:2.
+Exact AST return positions: 418:3, 433:3, 436:3, 442:3, 445:3, 466:3, 468:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 400:2 | arm entered 4x (engine tagged suite); arm entered 2x (engine untagged suite); `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
-| B2 | if | 414:2 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedHandoffLeavesTheWorkerDormant` |
-| B3 | if | 418:2 | arm entered 6x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedHandoffLeavesTheWorkerDormant`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` |
-| B4 | if | 424:2 | arm entered 6x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedHandoffLeavesTheWorkerDormant`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` |
-| B5 | if | 427:2 | arm entered 5x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedHandoffLeavesTheWorkerDormant`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` |
-| B6 | if | 448:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B1 | if | 417:2 | arm entered 4x (engine tagged suite); arm entered 2x (engine untagged suite); `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
+| B2 | if | 431:2 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedHandoffLeavesTheWorkerDormant` |
+| B3 | if | 435:2 | arm entered 6x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedHandoffLeavesTheWorkerDormant`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` |
+| B4 | if | 441:2 | arm entered 6x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedHandoffLeavesTheWorkerDormant`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` |
+| B5 | if | 444:2 | arm entered 5x (engine tagged suite); arm not entered (engine untagged suite); `TestARefusedHandoffLeavesTheWorkerDormant`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` |
+| B6 | if | 465:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
 
 B3·B5·B6 은 **이 태스크가 바꾸지 않은** 분기이고 진입 0 은 커버리지 공백이지 통과가 아니다.
 그 공백을 메우는 것은 태스크 5.7(fault injection)의 몫이다.
@@ -78,27 +78,27 @@ B8(446:2)은 옛 B6 그대로다: 증거 digest · desired revision · 권한 �
 
 | Callee expression | Position |
 |---|---|
-| `schedule.forMarket` | 409:27 |
-| `candidate.forMarket` | 409:55 |
-| `route.forMarket` | 409:84 |
-| `fx.forMarket` | 410:3 |
-| `proposal.forMarket` | 410:25 |
-| `riskAuthority.forMarket` | 410:53 |
-| `account.forMarket` | 410:86 |
-| `Single` | 413:23 |
-| `p.dispatchHandoff` | 413:23 |
-| `result.ValidProposal` | 418:6 |
-| `gateway.ObserveStrategyProtection` | 424:15 |
-| `strings.ToLower` | 424:54 |
-| `string` | 424:70 |
-| `gateway.ObserveStrategyEntryGate` | 427:15 |
-| `strings.ToLower` | 427:53 |
-| `string` | 427:69 |
-| `strategyWorkerEvidenceDigest` | 445:12 |
-| `validStrategyDigest` | 448:6 |
-| `IsZero` | 448:64 |
-| `a.authority.FreshUntil` | 448:64 |
-| `a.authority.FreshUntil` | 452:23 |
+| `schedule.forMarket` | 426:27 |
+| `candidate.forMarket` | 426:55 |
+| `route.forMarket` | 426:84 |
+| `fx.forMarket` | 427:3 |
+| `proposal.forMarket` | 427:25 |
+| `riskAuthority.forMarket` | 427:53 |
+| `account.forMarket` | 427:86 |
+| `Single` | 430:23 |
+| `p.dispatchHandoff` | 430:23 |
+| `result.ValidProposal` | 435:6 |
+| `gateway.ObserveStrategyProtection` | 441:15 |
+| `strings.ToLower` | 441:54 |
+| `string` | 441:70 |
+| `gateway.ObserveStrategyEntryGate` | 444:15 |
+| `strings.ToLower` | 444:53 |
+| `string` | 444:69 |
+| `strategyWorkerEvidenceDigest` | 462:12 |
+| `validStrategyDigest` | 465:6 |
+| `IsZero` | 465:64 |
+| `a.authority.FreshUntil` | 465:64 |
+| `a.authority.FreshUntil` | 469:23 |
 
 ## State mutations and fallbacks
 

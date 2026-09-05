@@ -482,3 +482,104 @@ func TestAnEffectiveMarketFaultLeavesItsPeerAndTheSupervisorAlone(t *testing.T) 
 		t.Fatalf("Run=%v", err)
 	}
 }
+
+// 삼킨 오류가 **세어져서 보인다** (태스크 8.8.4, 항목 7).
+//
+// 왜 이 시험이 따로 있어야 하는가. 위 두 시험은 삼킴이 **잠그지 않는다**는 것을
+// 계약으로 못 박는다 — 그것은 맞고 그대로 둔다. 이 시험이 다루는 것은 그 다음
+// 질문이다: 삼킨 뒤에 **아무도 그 일을 모른다.**
+//
+// 오늘 생산에서 이것이 실제로 일어나는 경로는 이렇다. 레인은 제안 수집 **앞**에
+// 서고(5.1.2.2), 레인 세우기는 원장에서 durable latch 를 읽는다(5.3.3). 그래서
+// `OpenStrategyLaneLatches` 의 **일시** 실패가 paired assembly 를 통째로 중단시키고,
+// 그 assembly 는 두 시장이 나눠 타는 한 파도이므로(5.2.1) **KR·US 가 함께** 오류를
+// 받는다. 그 오류가 여기 도착하면 `refreshOnly` 가 `continue` 로 버린다 —
+// 카운터도, 스냅샷 필드도, fault 도 없다. 운영자가 볼 수 있는 것이 하나도 없다.
+//
+// **전파 자체는 고치지 않는다.** 잠금 표는 두 시장을 함께 덮으므로, 그것을 못
+// 읽었을 때 두 시장 다 닫는 것이 안전한 방향이다. 고치는 것은 보이지 않는다는 것
+// 하나이고, 그래서 이 시험은 `Latched`·`FirstFailure`·fault 부재를 **함께** 단언한다
+// — 관측을 더하려다 잠금 자세를 바꾸면 그것이 여기서 빨개져야 한다.
+func TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows(t *testing.T) {
+	base := time.Date(2026, 9, 5, 0, 0, 0, 0, time.UTC)
+	fake := clock.NewFake(base)
+	var calls atomic.Int32
+	// 원장이 낸 오류를 그대로 흉내 낸다 — 이 문자열이 스냅샷까지 살아 와야 한다.
+	ledgerFailure := errors.New("engine: reading durable strategy lane latches: database is locked")
+	// **두 번째부터 다른 오류를 낸다.** 매번 같은 오류를 내면 "첫 값을 지킨다" 와
+	// "마지막으로 덮어쓴다" 가 같은 답을 내서 이 시험이 그 축을 아예 못 잰다 —
+	// 실제로 첫 판이 그렇게 쓰였고 덮어쓰기 변이가 살아남았다.
+	laterFailure := errors.New("engine: a later and different failure")
+	kr := engine.StrategyMarketWorker{Market: engine.StrategyMarketKR,
+		PollInterval: engine.DefaultStrategyCycleLimit, RefreshesAuthority: true,
+		Cycle: func(context.Context) error {
+			if calls.Add(1) == 1 {
+				return ledgerFailure
+			}
+			return laterFailure
+		}}
+	us := engine.StrategyMarketWorker{Market: engine.StrategyMarketUS,
+		PollInterval: engine.DefaultStrategyCycleLimit, RefreshesAuthority: true,
+		Cycle: func(context.Context) error { return nil }}
+	supervisor := mustStrategySupervisor(t, engine.StrategyEntrySupervisorOptions{
+		Clock: fake, CycleLimit: engine.MaximumStrategyCycleLimit,
+		Workers: []engine.StrategyMarketWorker{kr, us},
+	})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { done <- supervisor.Run(ctx) }()
+	waitClosed(t, supervisor.Ready(), "strategy supervisor readiness")
+
+	deadline := time.Now().Add(3 * time.Second)
+	for calls.Load() < 2 && time.Now().Before(deadline) {
+		fake.Advance(engine.DefaultStrategyCycleLimit)
+		time.Sleep(time.Millisecond)
+	}
+	if got := calls.Load(); got < 2 {
+		t.Fatalf("refresh cycles=%d, want >=2", got)
+	}
+	// 세어진 수가 보여야 한다. 카운터를 기다리는 것은 사이클 수와 별개다 —
+	// 사이클이 돈 것과 그 결과가 기록된 것은 다른 사건이고, 뒤엣것이 이 시험의 대상이다.
+	var snapshot engine.StrategyWorkerSnapshot
+	for time.Now().Before(deadline) {
+		got, ok := supervisor.Snapshot(engine.StrategyMarketKR)
+		if ok && got.SwallowedCycleErrors >= 2 {
+			snapshot = got
+			break
+		}
+		fake.Advance(engine.DefaultStrategyCycleLimit)
+		time.Sleep(time.Millisecond)
+	}
+	if snapshot.SwallowedCycleErrors < 2 {
+		t.Fatalf("삼킨 오류가 세어지지 않았다: SwallowedCycleErrors=%d, want >=2.\n"+
+			"이 갈래는 오늘 생산이 실제로 도는 구성이고, 세지 않으면 원장 고장이 "+
+			"두 시장의 진입을 조용히 멈춘 채 아무 데도 나타나지 않는다",
+			snapshot.SwallowedCycleErrors)
+	}
+	if snapshot.FirstSwallowedFailure != ledgerFailure.Error() {
+		t.Fatalf("첫 원인이 보존되지 않았다\n  got  = %q\n  want = %q\n"+
+			"마지막 것을 덮어쓰면 운영자가 **처음** 무엇이 깨졌는지 잃는다 — "+
+			"두 번째 사이클부터는 %q 를 내므로 이 칸이 그것이면 덮어쓴 것이다",
+			snapshot.FirstSwallowedFailure, ledgerFailure.Error(), laterFailure.Error())
+	}
+	// 삼킴 자세는 그대로다. 관측을 더하려다 이것이 바뀌면 여기서 잡힌다.
+	if snapshot.Latched || snapshot.FirstFailure != "" ||
+		snapshot.FirstRefusal != engine.StrategyWorkerRefusalNone || snapshot.RestartAttempt != 0 {
+		t.Fatalf("세기를 더하면서 잠금 자세가 바뀌었다: %+v", snapshot)
+	}
+	select {
+	case fault := <-supervisor.Faults():
+		t.Fatalf("refresh-only worker 가 fault 를 냈다: %+v", fault)
+	default:
+	}
+	// 성공하는 이웃 시장은 0 이어야 한다 — 세기가 시장별인지 본다.
+	peer, ok := supervisor.Snapshot(engine.StrategyMarketUS)
+	if !ok || peer.SwallowedCycleErrors != 0 || peer.FirstSwallowedFailure != "" {
+		t.Fatalf("이웃 시장이 남의 오류를 세었다: %+v", peer)
+	}
+	cancel()
+	if err := <-done; !errors.Is(err, context.Canceled) {
+		t.Fatalf("Run=%v", err)
+	}
+}

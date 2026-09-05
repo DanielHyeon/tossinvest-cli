@@ -383,9 +383,26 @@ func TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter(t *testi
 	if fields == nil {
 		t.Fatal("the engine no longer declares strategyMarketRuntime, so the threshold below has no receipt")
 	}
+	// `swallowedCount`·`firstSwallowed` 는 태스크 8.8.4 가 더했고, **임계값을
+	// 건드리지 않는다.** 근거는 이 둘이 **어떤 잠금 판정에도 들어가지 않는다**는
+	// 것이다. 열거해서 확인한 것이고(비시험 파일 전체) 자리는 셋뿐이다:
+	// 선언 둘, 쓰는 곳은 `recordSwallowedCycleError` 하나, 읽는 곳은 `Snapshot`
+	// 하나. `latchMarket` 은 둘 중 어느 것도 보지 않는다.
+	//
+	// **더 약한 근거를 쓰지 말 것.** "refreshOnly worker 는 잠기지 않는다" 는
+	// 거짓이다 — 권한 만료 갈래가 refreshOnly 검사보다 **앞**에 있어서 그 worker 도
+	// `latchMarket` 에 닿는다. 참인 것은 더 좁다: 삼킴 **갈래**(`runMarket` B12)가
+	// 사이클 오류의 잠금 호출 앞에서 `continue` 로 끊는다는 것, 그리고 그 계약을
+	// TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError 와
+	// TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo 가 못 박는다는 것.
+	//
+	// 그래서 임계값 1 의 유도 — **잠금은 세지 않고 첫 실패에 일어난다** — 는
+	// 그대로다. 그것이 무너지는 날은 삼킨 수가 잠금 판정에 들어가는 날이고, 그때는
+	// 이 목록이 아니라 임계값을 다시 정해야 한다.
 	want := []string{
 		"descriptor", "queue", "effective", "latched", "firstFailure", "firstRefusal",
 		"firstAbnormal", "latchID", "latchRevision", "abandoned", "restartAttempt", "restartNotBefore",
+		"swallowedCount", "firstSwallowed",
 	}
 	if strings.Join(fields, ",") != strings.Join(want, ",") {
 		t.Fatalf("the engine's per-market runtime state changed.\n got: %v\nwant: %v\n\n"+

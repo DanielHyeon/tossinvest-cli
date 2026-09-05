@@ -175,6 +175,14 @@ type strategyMarketRuntime struct {
 	abandoned        bool
 	restartAttempt   uint64
 	restartNotBefore time.Time
+
+	// 아래 둘은 **삼킨** 사이클 오류의 기록이다 (태스크 8.8.4).
+	//
+	// 잠금 상태(`firstFailure` 등)와 따로 두는 이유: 삼킨 오류는 잠그지 않았고
+	// 앞으로도 잠그지 않는다. 같은 칸에 넣으면 "잠겼다" 와 "삼켰다" 가 구별되지
+	// 않고, 그 구별이야말로 운영자가 알아야 하는 것이다.
+	swallowedCount uint64
+	firstSwallowed string
 }
 
 // StrategyWorkerSnapshot is a read-only, market-keyed operational view. It
@@ -196,6 +204,15 @@ type StrategyWorkerSnapshot struct {
 	RestartNotBefore    time.Time
 	QueueDepth          int
 	QueueCapacity       int
+
+	// SwallowedCycleErrors 는 이 시장의 권한 갱신 전용 worker 가 **버린** 사이클
+	// 오류의 수다(포화 계수). FirstSwallowedFailure 는 그중 **첫** 원인이다.
+	//
+	// 오늘 생산이 도는 구성이 정확히 그 갈래이고(worker 는 Effective=false,
+	// RefreshesAuthority=true), 그래서 이 둘이 0 과 빈 문자열이 아니면 "진입은
+	// 안 나가는데 아무도 그 이유를 모른다" 는 상태가 실제로 일어나고 있다는 뜻이다.
+	SwallowedCycleErrors  uint64
+	FirstSwallowedFailure string
 }
 
 type StrategyTriggerResult string
@@ -726,6 +743,7 @@ func (s *StrategyEntrySupervisor) Snapshot(market StrategyMarket) (StrategyWorke
 		AbandonedEvaluation: worker.abandoned,
 		RestartAttempt:      worker.restartAttempt, RestartNotBefore: worker.restartNotBefore,
 		QueueDepth: len(worker.queue), QueueCapacity: cap(worker.queue),
+		SwallowedCycleErrors: worker.swallowedCount, FirstSwallowedFailure: worker.firstSwallowed,
 	}, true
 }
 
@@ -878,6 +896,17 @@ func (s *StrategyEntrySupervisor) runMarket(ctx context.Context, start <-chan st
 				continue
 			}
 			if refreshOnly {
+				// **버리기 전에 센다** (태스크 8.8.4).
+				//
+				// `continue` 는 그대로다 — 이 갈래가 잠그지 않는 것은 계약이고
+				// 두 시험이 그것을 못 박는다. 여기서 더하는 것은 기록뿐이다.
+				//
+				// 이 갈래에 실제로 도착하는 오류 중 하나가 원장의 durable latch
+				// 읽기 실패다. 레인이 제안 수집 앞에 서므로(5.1.2.2) 그 실패는
+				// paired assembly 를 중단시키고, 두 시장이 한 파도를 나눠 타므로
+				// (5.2.1) KR·US 가 **함께** 여기 온다. 세지 않으면 두 시장의 진입이
+				// 조용히 멈춘 채 어느 화면에도 나타나지 않는다.
+				s.recordSwallowedCycleError(worker, err)
 				continue
 			}
 			if isCentralStrategyIntegrity(err) {
@@ -897,6 +926,28 @@ func (s *StrategyEntrySupervisor) runMarket(ctx context.Context, start <-chan st
 				return
 			}
 		}
+	}
+}
+
+// recordSwallowedCycleError 는 버려지는 사이클 오류를 시장별로 센다.
+//
+// **첫 원인을 지키고 마지막 것을 버린다.** 덮어쓰면 원장이 한 번 깨진 뒤 이어지는
+// 후속 오류가 그 첫 원인을 밀어내고, 운영자는 무엇이 **처음** 깨졌는지 잃는다.
+// 같은 이유로 `firstFailure`(잠금 쪽)도 첫 값을 지킨다.
+//
+// 포화시키는 이유: 이 수는 진단이지 회계가 아니다. 넘치면 되감겨 "고장이 막
+// 시작됐다" 로 읽히는데, 그것이 이 값이 답해야 하는 질문의 정반대다.
+func (s *StrategyEntrySupervisor) recordSwallowedCycleError(worker *strategyMarketRuntime, cause error) {
+	if s == nil || worker == nil || cause == nil {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if worker.swallowedCount < math.MaxUint64 {
+		worker.swallowedCount++
+	}
+	if worker.firstSwallowed == "" {
+		worker.firstSwallowed = cause.Error()
 	}
 }
 

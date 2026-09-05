@@ -5,8 +5,8 @@
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 924:2 — 종료 중·nil·**잠김**·사이클 없음·권한 없는 dormant | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` | no (base) | yes (block 894-896 count=1, **5.6 이 처음 잠긴 갈래로 실행**) |
-| B2 | if at 928:2 — 권한 갱신 worker 는 만료를 보지 않는다 | `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError`, `TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo` | no (base) | yes (block 897-899) |
+| B1 | if at 975:2 — 종료 중·nil·**잠김**·사이클 없음·권한 없는 dormant | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` | no (base) | yes (block 894-896 count=1, **5.6 이 처음 잠긴 갈래로 실행**) |
+| B2 | if at 979:2 — 권한 갱신 worker 는 만료를 보지 않는다 | `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError`, `TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo` | no (base) | yes (block 897-899) |
 | 본문 | 900:2 — effective worker 의 신선도 판정 | `TestExpiredAuthorityLatchesBeforeEvaluation` 외 다수 | no (base) | yes |
 
 ## 측정으로 확인한 빈칸
