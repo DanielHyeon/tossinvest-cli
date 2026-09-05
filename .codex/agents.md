@@ -4,7 +4,6 @@
 상세 개발 절차의 단일 정본은 `docs/WORKFLOW.md`이며 개발 작업 전에 반드시 읽는다.
 
 <!-- SDD_SHARED_START -->
-
 ## 필수 개발 규칙
 
 1. **YAGNI (You Aren't Gonna Need It)**
@@ -80,4 +79,17 @@ TossOS는 실제 돈을 다루는 자동매매 제품이다. 아래 규칙은 �
 10. 완료 보고 (금지 조건 확인 후)
 ```
 
+## UI 스킬 라우팅
+
+콘솔 화면(`internal/console/` 의 `html/template` 렌더)을 만질 때만 쓴다.
+백엔드·전략·주문 경로 작업에는 쓰지 않는다.
+
+- 화면 구조·색·타이포·접근성·반응형 판단 → `ui-ux-pro-max`
+- AG Grid/AG Charts 코드를 쓰거나 고치기 **전에** → `ag-dev`, 버전 올릴 때 → `ag-update`
+- TradingView lightweight-charts 작업 → `lightweight-charts`
+
+뒤의 셋은 저장소에 아직 대상이 없다(AG Grid·lightweight-charts 의존성 0). Claude 에서는
+`skillOverrides: user-invocable-only` 라 **모델 스킬 목록에 보이지 않으므로**, 필요해지면
+사용자에게 `/ag-dev` 처럼 직접 쳐 달라고 요청한다. Codex 에서는 `skills.config` 에
+`enabled = true` 로 켜져 있어 바로 호출된다.
 <!-- SDD_SHARED_END -->
