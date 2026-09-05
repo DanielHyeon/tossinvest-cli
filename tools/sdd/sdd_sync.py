@@ -49,6 +49,35 @@ def source_registered(listed: subprocess.CompletedProcess, source: str) -> bool:
     return source in listed.stdout
 
 
+def registered_path(listed: subprocess.CompletedProcess, source: str) -> str | None:
+    """`gbrain sources list` 가 이 source 아래에 찍은 로컬 경로를 읽어 돌려준다.
+
+    이름만 보는 등록 검사는 **경로 표류를 영원히 못 본다.** 2026-09-05 실측:
+    체크아웃을 옮기자 source 는 이름으로는 그대로 등록돼 있어서 `sources add` 가
+    건너뛰어졌고, 등록된 경로는 옛 자리를 계속 가리켰다. 그 뒤 sync 가 낸 말은
+    `Not a git repository: <옛 경로>` 였다 — 참이지만 무엇을 고쳐야 하는지는
+    말하지 않는다.
+
+    경로가 안 찍히면 `None` 이다. 그것은 "제자리"가 아니라 **"모름"** 이고,
+    호출자는 모름을 표류로 읽지 않는다. 옛 gbrain 이 경로를 안 찍기 때문이고,
+    표류 자체는 그때도 sync 가 자기 오류로 잡는다 — 이 검사가 더하는 것은 안전이
+    아니라 **진단**이므로, 못 읽는다고 멀쩡한 sync 를 막을 이유가 없다.
+    """
+
+    if probe_unreachable(listed):
+        return None
+    named = False
+    for line in listed.stdout.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if named:
+            return stripped if stripped.startswith("/") else None
+        if stripped.split()[0] == source:
+            named = True
+    return None
+
+
 def project_gbrain_command(*arguments: str) -> list[str]:
     return [sys.executable, str(GBRAIN_WRAPPER), *arguments]
 
@@ -203,6 +232,19 @@ def sync(full: bool = False, include_gbrain: bool = True) -> list[str]:
             if detail:
                 print(f"[sdd-sync] GBrain source probe failed: {detail}")
             failures.append("gbrain source probe")
+            record_index_state(successes)
+            return failures
+        drifted = registered_path(listed, source)
+        if source_registered(listed, source) and drifted not in (None, str(ROOT)):
+            print(
+                f"[sdd-sync] GBrain source {source!r} is registered at {drifted},"
+                f" not {ROOT}. Sync would read the old path. Repair is destructive"
+                f" (it deletes this source's pages, then re-indexes):\n"
+                f"  python3 {GBRAIN_WRAPPER} sources remove {source}"
+                f" --confirm-destructive\n"
+                f"  python3 {GBRAIN_WRAPPER} sources add {source} --path {ROOT}"
+            )
+            failures.append("gbrain source path drifted")
             record_index_state(successes)
             return failures
         if not source_registered(listed, source):

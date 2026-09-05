@@ -271,5 +271,96 @@ class SourceProbeTest(unittest.TestCase):
         record.assert_called_once_with({"codegraph", "codegraphcontext"})
 
 
+class SourcePathDriftTest(unittest.TestCase):
+    """이름만 보는 등록 검사는 경로 표류를 영원히 못 본다.
+
+    2026-09-05 실측: 체크아웃을 옮기자 source 는 `tossos-…` 라는 **이름으로는**
+    그대로 등록돼 있었고 `source_registered` 가 True 를 냈다. 그래서 `sources add`
+    는 건너뛰어졌고, 등록된 경로는 옛 자리를 계속 가리켰다. 그 다음에 도는 sync 가
+    낸 말은 `Not a git repository: /mnt/D/project/axipient/TossOS` 였다 — 참이지만
+    **무엇을 고쳐야 하는지는 안 말한다.** 진단 하나를 통째로 사람이 다시 해야 했고,
+    되돌리는 값은 페이지 5126개 재색인이었다.
+
+    그래서 이름이 아니라 **경로**를 본다. 고치는 것은 자동으로 하지 않는다 —
+    gbrain 이 요구하는 복구가 파괴적(remove 가 페이지까지 지운다)이라 사람의 승인
+    없이 부를 수 없다. 이 검사가 소유한 것은 판정과 처방을 **말하는 것**까지다.
+    """
+
+    def completed(self, stdout: str, returncode: int = 0):
+        return subprocess.CompletedProcess(
+            args=["gbrain", "sources", "list"],
+            returncode=returncode,
+            stdout=stdout,
+            stderr="",
+        )
+
+    def listing(self, path: str) -> str:
+        return (
+            "SOURCES\n"
+            "───────\n"
+            "  default               federated          0 pages  never synced\n"
+            "  tossos-x              isolated        4261 pages  never synced\n"
+            f"                        {path}\n"
+        )
+
+    def test_the_listed_path_is_read_back_for_the_named_source(self) -> None:
+        listed = self.completed(self.listing("/new/place/TossOS"))
+        self.assertEqual(
+            sdd_sync.registered_path(listed, "tossos-x"), "/new/place/TossOS"
+        )
+        # 경로가 없는 항목(`default`)에 남의 경로를 붙여 읽으면 안 된다.
+        self.assertIsNone(sdd_sync.registered_path(listed, "default"))
+
+    def test_a_listing_without_paths_claims_nothing(self) -> None:
+        """옛 gbrain 은 경로를 안 찍는다. 그때는 '표류 아님'이 아니라 '모름'이다."""
+        listed = self.completed(
+            "SOURCES\n  tossos-x                   isolated   816 pages\n"
+        )
+        self.assertIsNone(sdd_sync.registered_path(listed, "tossos-x"))
+
+    def test_a_drifted_registration_is_named_and_stops_the_run(self) -> None:
+        with mock.patch.object(sdd_sync.shutil, "which", lambda name: name != "codegraphcontext"), \
+             mock.patch.object(sdd_sync.subprocess, "run") as probe, \
+             mock.patch.object(sdd_sync, "run") as run, \
+             mock.patch.object(sdd_sync, "record_index_state"), \
+             mock.patch.object(sdd_sync.Path, "read_text", lambda self, encoding=None: "tossos-x\n"), \
+             mock.patch.object(sdd_sync.Path, "exists", lambda self: True):
+            probe.return_value = self.completed(
+                self.listing("/mnt/D/project/axipient/TossOS")
+            )
+            run.return_value = True
+            failures = sdd_sync.sync()
+
+        self.assertIn("gbrain source path drifted", failures)
+        gbrain_calls = [
+            call.args[0]
+            for call in run.call_args_list
+            if "gbrain" in " ".join(call.args[0])
+        ]
+        self.assertEqual(
+            gbrain_calls, [], "표류한 등록에 대고 add/sync 를 불렀다"
+        )
+
+    def test_a_registration_that_still_points_here_runs_the_sync(self) -> None:
+        """참인 쪽도 잰다 — 아니면 '언제나 표류'가 위 시험을 통과한다."""
+        with mock.patch.object(sdd_sync.shutil, "which", lambda name: name != "codegraphcontext"), \
+             mock.patch.object(sdd_sync.subprocess, "run") as probe, \
+             mock.patch.object(sdd_sync, "run") as run, \
+             mock.patch.object(sdd_sync, "record_index_state"), \
+             mock.patch.object(sdd_sync.Path, "read_text", lambda self, encoding=None: "tossos-x\n"), \
+             mock.patch.object(sdd_sync.Path, "exists", lambda self: True):
+            probe.return_value = self.completed(self.listing(str(sdd_sync.ROOT)))
+            run.return_value = True
+            failures = sdd_sync.sync()
+
+        self.assertNotIn("gbrain source path drifted", failures)
+        synced = [
+            call.args[0]
+            for call in run.call_args_list
+            if "sync" in " ".join(call.args[0])
+        ]
+        self.assertTrue(synced, "제자리인 등록인데 sync 를 안 불렀다")
+
+
 if __name__ == "__main__":
     unittest.main()
