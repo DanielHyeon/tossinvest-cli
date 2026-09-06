@@ -35,6 +35,13 @@ stop a running engine and SHALL NOT weaken or bypass the startup interlock.
 - **WHEN** the active attestation enters the warning window while an engine is already running
 - **THEN** the system reports the condition without stopping that engine or changing the next-start interlock decision
 
+#### Scenario: the console shows bounded advisory renewal diagnostics
+
+- **WHEN** the operator opens the existing capability-attestation section
+- **THEN** it shows the last renewal outcome, fixed reason messages, attempt age and expiry horizon without raw error text, credentials or account identifiers in renewal diagnostics
+- **AND** missing, invalid or stale diagnostics are reported as unknown rather than successful
+- **AND** warnings at or within 72 hours of expiry remain separate from startup-denial reasons and do not change attestation usability
+
 ### Requirement: attestation renewal preserves operational safety state
 
 Preparing, installing and verifying unattended renewal SHALL NOT change trading, Guardian, lane,
@@ -46,3 +53,26 @@ order command SHALL be invoked as part of renewal verification.
 
 - **WHEN** the aligned renewal service is installed and verified with human approval
 - **THEN** all operating toggles and risk settings remain byte-for-byte unchanged and no order-side effect occurs
+
+### Requirement: deployment acceptance retains actual approved operational evidence
+
+Acceptance and archival of this change SHALL require recorded explicit human approval for the reviewed
+service template and target profile before external installation, reload or activation, and approval of
+the production survey window before survey activation. The approval record SHALL identify the template
+digest and authorized operations without exposing credentials or account identifiers.
+
+Operational acceptance SHALL retain the actual dates and a non-sensitive profile reference for at least
+three consecutive survey days that qualify under the existing qualification criteria, and verification
+of a fresh attestation in that same profile. This requirement SHALL NOT alter issuer qualification
+criteria, attestation validity or startup interlocks. Synthetic tests, copied or relabeled legacy
+records, and backdated evidence SHALL NOT substitute for this operational proof.
+
+#### Scenario: engineering is ready but operational evidence is incomplete
+
+- **WHEN** isolated tests pass but explicit operational approval or three qualifying survey days are absent
+- **THEN** engineering results are retained and the change remains unaccepted and unarchived
+
+#### Scenario: approved operational verification is complete
+
+- **WHEN** the approved same-profile survey has three consecutive qualifying days under existing criteria
+- **THEN** acceptance records their actual dates and fresh same-profile attestation verification without a live engine restart or order mutation

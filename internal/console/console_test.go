@@ -19,6 +19,7 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -656,6 +657,136 @@ func TestTheDashboardReportsAnUnstartedMachineWithoutFailing(t *testing.T) {
 	}
 	if !strings.Contains(page, "게이트를 켜지 않는다") {
 		t.Error("the dashboard does not say the console is not the place gates are turned on")
+	}
+}
+
+func TestDashboardShowsBoundedRenewalDiagnosticWithoutChangingAttestationUsability(t *testing.T) {
+	h := newHarness(t)
+	now := time.Now().UTC().Truncate(time.Second)
+	if err := attest.Save(h.opts.Attestation, attest.Attestation{
+		FormatVersion: attest.FormatVersion,
+		AccountRef:    "123-45-678901",
+		IssuedAt:      now.Add(-time.Hour),
+		ExpiresAt:     now.Add(48 * time.Hour),
+		SoakDays:      3,
+		Endpoints:     soak.RequiredEndpoints(),
+		VerifiedBy:    "fixture",
+	}); err != nil {
+		t.Fatalf("Save attestation: %v", err)
+	}
+	if err := soak.SaveRenewalStatus(soak.RenewalStatusPath(h.opts.Attestation), soak.RenewalStatus{
+		FormatVersion: 1,
+		AttemptedAt:   now.Add(-time.Hour),
+		Outcome:       soak.RenewalRefused,
+		ReasonCodes:   []soak.RenewalReasonCode{soak.ReasonStreak},
+	}); err != nil {
+		t.Fatalf("SaveRenewalStatus: %v", err)
+	}
+	h.authenticate(t)
+	page := body(t, h.get(t, pathVerifyConsole))
+	for _, want := range []string{"attestation 만료까지", "72시간 이내다", "renewal 진단: refused", "연속 일수 조건", "마지막 시도"} {
+		if !strings.Contains(page, want) {
+			t.Errorf("dashboard missing %q:\n%s", want, truncateForLog(page))
+		}
+	}
+	view := h.readAttestation(now)
+	if !view.Usable {
+		t.Errorf("renewal diagnostic changed attestation usability: %+v", view)
+	}
+}
+
+func TestDashboardTreatsStaleOrMismatchedRenewalStatusAsUnknown(t *testing.T) {
+	h := newHarness(t)
+	now := time.Now().UTC().Truncate(time.Second)
+	expires := now.Add(7 * 24 * time.Hour)
+	if err := attest.Save(h.opts.Attestation, attest.Attestation{FormatVersion: attest.FormatVersion, AccountRef: "123-45", IssuedAt: now.Add(-time.Hour), ExpiresAt: expires, SoakDays: 3, Endpoints: soak.RequiredEndpoints()}); err != nil {
+		t.Fatalf("Save attestation: %v", err)
+	}
+	if err := soak.SaveRenewalStatus(soak.RenewalStatusPath(h.opts.Attestation), soak.RenewalStatus{FormatVersion: 1, AttemptedAt: now.Add(-13 * time.Hour), Outcome: soak.RenewalIssued, ExpiresAt: expires}); err != nil {
+		t.Fatalf("SaveRenewalStatus: %v", err)
+	}
+	if got := h.readAttestation(now).RenewalState; got != "unknown" {
+		t.Errorf("stale status state = %q, want unknown", got)
+	}
+	stale := h.readAttestation(now)
+	if stale.RenewalAttemptedAt.IsZero() || stale.RenewalAge == "" {
+		t.Errorf("stale status discarded useful attempt age: %+v", stale)
+	}
+	if err := soak.SaveRenewalStatus(soak.RenewalStatusPath(h.opts.Attestation), soak.RenewalStatus{FormatVersion: 1, AttemptedAt: now.Add(-time.Hour), Outcome: soak.RenewalIssued, ExpiresAt: expires.Add(time.Hour)}); err != nil {
+		t.Fatalf("Save mismatched status: %v", err)
+	}
+	if got := h.readAttestation(now).RenewalState; got != "unknown" {
+		t.Errorf("mismatched status state = %q, want unknown", got)
+	}
+}
+
+func TestRenewalWarningBoundariesAreInclusiveAt72HoursAndStaleOnlyAfter12Hours(t *testing.T) {
+	h := newHarness(t)
+	now := time.Now().UTC().Truncate(time.Second)
+	for _, tc := range []struct {
+		name            string
+		expiry, attempt time.Duration
+		warn, stale     bool
+	}{
+		{"exact", 72 * time.Hour, -12 * time.Hour, true, false},
+		{"beyond", 72*time.Hour + time.Second, -12*time.Hour - time.Second, false, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			expires := now.Add(tc.expiry)
+			if err := attest.Save(h.opts.Attestation, attest.Attestation{FormatVersion: attest.FormatVersion, AccountRef: "123", IssuedAt: now.Add(-time.Hour), ExpiresAt: expires, Endpoints: soak.RequiredEndpoints()}); err != nil {
+				t.Fatal(err)
+			}
+			if err := soak.SaveRenewalStatus(soak.RenewalStatusPath(h.opts.Attestation), soak.RenewalStatus{FormatVersion: 1, AttemptedAt: now.Add(tc.attempt), Outcome: soak.RenewalIssued, ExpiresAt: expires}); err != nil {
+				t.Fatal(err)
+			}
+			v := h.readAttestation(now)
+			if v.ExpiryWarning != tc.warn {
+				t.Errorf("warning=%v want %v", v.ExpiryWarning, tc.warn)
+			}
+			if (v.RenewalState == "unknown") != tc.stale {
+				t.Errorf("state=%q stale=%v", v.RenewalState, tc.stale)
+			}
+		})
+	}
+}
+
+func TestDashboardRedactsMalformedAttestationContents(t *testing.T) {
+	h := newHarness(t)
+	const secret = "raw-attestation-secret"
+	if err := os.WriteFile(h.opts.Attestation, []byte("{"+secret), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	h.authenticate(t)
+	page := body(t, h.get(t, pathVerifyConsole))
+	if strings.Contains(page, secret) {
+		t.Fatal("dashboard rendered malformed attestation contents")
+	}
+	if !strings.Contains(page, "attestation 파일을 읽을 수 없다") {
+		t.Fatal("dashboard omitted fixed malformed-attestation message")
+	}
+	if strings.Contains(page, "0001-") {
+		t.Fatal("dashboard rendered zero renewal timestamp")
+	}
+}
+
+func TestDashboardMismatchedRenewalStatusAndBlankPathAreUnknownWithoutZeroTimestamp(t *testing.T) {
+	h := newHarness(t)
+	now := time.Now().UTC().Truncate(time.Second)
+	expires := now.Add(24 * time.Hour)
+	if err := attest.Save(h.opts.Attestation, attest.Attestation{FormatVersion: attest.FormatVersion, AccountRef: "123", IssuedAt: now, ExpiresAt: expires, Endpoints: soak.RequiredEndpoints()}); err != nil {
+		t.Fatal(err)
+	}
+	if err := soak.SaveRenewalStatus(soak.RenewalStatusPath(h.opts.Attestation), soak.RenewalStatus{FormatVersion: 1, AttemptedAt: now, Outcome: soak.RenewalIssued, ExpiresAt: expires.Add(time.Hour)}); err != nil {
+		t.Fatal(err)
+	}
+	h.authenticate(t)
+	page := body(t, h.get(t, pathVerifyConsole))
+	if !strings.Contains(page, "renewal 진단: unknown") || strings.Contains(page, "0001-") {
+		t.Fatalf("bad unknown diagnostic: %s", truncateForLog(page))
+	}
+	blank := (&Console{}).readAttestation(now)
+	if blank.RenewalState != "unknown" || blank.Usable {
+		t.Errorf("blank view = %+v", blank)
 	}
 }
 

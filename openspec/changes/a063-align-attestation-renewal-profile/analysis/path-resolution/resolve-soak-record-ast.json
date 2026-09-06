@@ -1,0 +1,7 @@
+{
+  "file":"cmd/tossctl/soak.go","source_sha256":"3c3e528b0e3dc508357530d6a4789c3e30359ae851518ae82e4c97434af458e1","package":"main","function":"resolveSoakRecord","signature":"resolveSoakRecord(params=2, results=2)",
+  "start":{"line":568,"column":1},"end":{"line":580,"column":2},
+  "branches":[{"id":"B1","kind":"if","at":{"line":569,"column":2}},{"id":"B2","kind":"if","at":{"line":572,"column":2}},{"id":"B3","kind":"if","at":{"line":576,"column":2}}],
+  "returns":[{"kind":"return","at":{"line":570,"column":3}},{"kind":"return","at":{"line":573,"column":3}},{"kind":"return","at":{"line":577,"column":3}},{"kind":"return","at":{"line":579,"column":2}}],
+  "calls":[{"kind":"call","at":{"line":569,"column":16},"text":"strings.TrimSpace"},{"kind":"call","at":{"line":572,"column":20},"text":"strings.TrimSpace"},{"kind":"call","at":{"line":573,"column":10},"text":"filepath.Join"},{"kind":"call","at":{"line":575,"column":14},"text":"journal.DataDir"},{"kind":"call","at":{"line":577,"column":14},"text":"fmt.Errorf"},{"kind":"call","at":{"line":579,"column":9},"text":"filepath.Join"}]
+}

@@ -239,6 +239,26 @@ func TestBuildAttestationRefusesAnIncompleteSoak(t *testing.T) {
 	if !errors.Is(err, soak.ErrIncomplete) {
 		t.Errorf("err = %v, want it to wrap ErrIncomplete", err)
 	}
+	var incomplete *soak.IncompleteError
+	if !errors.As(err, &incomplete) {
+		t.Fatalf("err = %T, want typed IncompleteError", err)
+	}
+	if !strings.Contains(err.Error(), "unattended credential refresh is proven") {
+		t.Errorf("err = %q, want established qualification message", err)
+	}
+	if codes := incomplete.ReasonCodes(); len(codes) == 0 || codes[0] != soak.ReasonStreak {
+		t.Errorf("ReasonCodes = %v, want bounded insufficient-streak code", codes)
+	}
+}
+
+func TestEvaluatePreservesNilReasonsForAQualifyingSoak(t *testing.T) {
+	ok, reasons := soak.Summarize(threeCleanDays()).Evaluate(soakStart.AddDate(0, 0, 3), criteria())
+	if !ok {
+		t.Fatalf("qualifying soak evaluated false: %v", reasons)
+	}
+	if reasons != nil {
+		t.Errorf("successful Evaluate reasons = %#v, want nil compatibility", reasons)
+	}
 }
 
 // TestBuildAttestationCarriesTheMeasuredRate. Task 1.3 turns this number into

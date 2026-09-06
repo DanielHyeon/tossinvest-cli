@@ -24,6 +24,42 @@ import (
 // the individual reasons so a caller can print them.
 var ErrIncomplete = errors.New("soak: the capability soak is not complete")
 
+// QualificationIssue는 충족하지 못한 한 기준이다. 계좌나 endpoint 세부 정보가 든
+// 자유 형식 오류를 저장하지 않도록 code는 닫힌 목록으로 유지한다.
+type QualificationIssue struct {
+	Code    RenewalReasonCode
+	Message string
+}
+
+// IncompleteError는 ErrIncomplete와 기존 출력 문구를 보존하면서 한 번의 판정 결과를
+// 제한된 renewal 진단 코드로 전달한다.
+type IncompleteError struct {
+	Issues []QualificationIssue
+}
+
+func (e *IncompleteError) Error() string {
+	messages := make([]string, 0, len(e.Issues))
+	for _, issue := range e.Issues {
+		messages = append(messages, issue.Message)
+	}
+	return fmt.Sprintf("%s:\n  - %s", ErrIncomplete, strings.Join(messages, "\n  - "))
+}
+
+func (e *IncompleteError) Unwrap() error { return ErrIncomplete }
+
+// ReasonCodes는 renewal status에 쓸 안정적인 중복 제거 복사본을 돌려준다.
+func (e *IncompleteError) ReasonCodes() []RenewalReasonCode {
+	seen := make(map[RenewalReasonCode]bool, len(e.Issues))
+	var codes []RenewalReasonCode
+	for _, issue := range e.Issues {
+		if !seen[issue.Code] {
+			seen[issue.Code] = true
+			codes = append(codes, issue.Code)
+		}
+	}
+	return SortedReasonCodes(codes)
+}
+
 // Criteria is the bar a soak has to clear.
 type Criteria struct {
 	// MinConsecutiveDays is how many consecutive days of unattended credential
@@ -85,51 +121,61 @@ func (c Criteria) withDefaults() Criteria {
 // It returns all the reasons rather than the first, because each one costs the
 // operator a day to find out about separately.
 func (s Summary) Evaluate(now time.Time, c Criteria) (bool, []string) {
+	issues := s.evaluateIssues(now, c)
+	reasons := make([]string, 0, len(issues))
+	for _, issue := range issues {
+		reasons = append(reasons, issue.Message)
+	}
+	if len(reasons) == 0 {
+		return true, nil
+	}
+	return false, reasons
+}
+
+func (s Summary) evaluateIssues(now time.Time, c Criteria) []QualificationIssue {
 	c = c.withDefaults()
-	var reasons []string
+	var issues []QualificationIssue
 
 	if s.All.Cycles == 0 {
-		return false, []string{"the soak record is empty — run `tossctl soak run` first"}
+		return []QualificationIssue{{Code: ReasonRecordEmpty, Message: "the soak record is empty — run `tossctl soak run` first"}}
 	}
 
 	if age := now.UTC().Sub(s.LastAt); age > c.MaxRecordAge {
-		reasons = append(reasons, fmt.Sprintf(
+		issues = append(issues, QualificationIssue{Code: ReasonRecordStale, Message: fmt.Sprintf(
 			"the newest cycle in the record is %s old and at most %s is accepted; the attestation would be "+
 				"dated today while describing an API nobody has looked at since %s — restart `tossctl soak run`",
-			humanDays(age), humanDays(c.MaxRecordAge), s.LastAt.Format("2006-01-02")))
+			humanDays(age), humanDays(c.MaxRecordAge), s.LastAt.Format("2006-01-02"))})
 	}
 
 	if len(s.AccountRefs) > 1 {
-		reasons = append(reasons, fmt.Sprintf(
+		issues = append(issues, QualificationIssue{Code: ReasonAccountAmbiguous, Message: fmt.Sprintf(
 			"the record covers %d accounts (%s); an attestation names one account, so start a fresh "+
 				"record for the account you mean to trade",
-			len(s.AccountRefs), strings.Join(maskAll(s.AccountRefs), ", ")))
+			len(s.AccountRefs), strings.Join(maskAll(s.AccountRefs), ", "))})
 	}
 	if strings.TrimSpace(s.AccountRef) == "" {
-		reasons = append(reasons, "no account was resolved from the credentials, so there is nothing to attest about")
+		issues = append(issues, QualificationIssue{Code: ReasonAccountMissing, Message: "no account was resolved from the credentials, so there is nothing to attest about"})
 	}
 
 	if s.StreakDays < c.MinConsecutiveDays {
-		reasons = append(reasons, fmt.Sprintf(
+		issues = append(issues, QualificationIssue{Code: ReasonStreak, Message: fmt.Sprintf(
 			"unattended credential refresh is proven for %d consecutive day(s); %d are required",
-			s.StreakDays, c.MinConsecutiveDays))
+			s.StreakDays, c.MinConsecutiveDays)})
 	}
 
 	switch {
 	case s.Window.TokenObservations < 2:
-		reasons = append(reasons, fmt.Sprintf(
+		issues = append(issues, QualificationIssue{Code: ReasonTokenObservation, Message: fmt.Sprintf(
 			"the access-token expiry was readable in %d cycle(s) of the window; without at least two "+
 				"observations an unattended refresh cannot be told from a long-lived token",
-			s.Window.TokenObservations))
+			s.Window.TokenObservations)})
 	case s.Window.TokenRefreshes == 0:
-		reasons = append(reasons,
-			"no token refresh was observed: the expiry never moved forward, so the soak has watched a "+
-				"token that never needed renewing rather than a credential that renews itself")
+		issues = append(issues, QualificationIssue{Code: ReasonTokenRefresh, Message: "no token refresh was observed: the expiry never moved forward, so the soak has watched a token that never needed renewing rather than a credential that renews itself"})
 	}
 
 	for _, want := range c.RequiredEndpoints {
 		if statOf(s.Window.Endpoints, want).Successes == 0 {
-			reasons = append(reasons, endpointReason(want, statOf(s.Window.Endpoints, want)))
+			issues = append(issues, QualificationIssue{Code: ReasonEndpoint, Message: endpointReason(want, statOf(s.Window.Endpoints, want))})
 		}
 	}
 
@@ -138,12 +184,12 @@ func (s Summary) Evaluate(now time.Time, c Criteria) (bool, []string) {
 		if detail == "" {
 			detail = "see the record"
 		}
-		reasons = append(reasons, fmt.Sprintf(
+		issues = append(issues, QualificationIssue{Code: ReasonCompleteness, Message: fmt.Sprintf(
 			"%d cycle(s) inside the window failed the read-completeness check (%s)",
-			s.Window.CompletenessFailures, detail))
+			s.Window.CompletenessFailures, detail)})
 	}
 
-	return len(reasons) == 0, reasons
+	return issues
 }
 
 // endpointReason explains a required endpoint that never worked, including the
@@ -175,9 +221,9 @@ func BuildAttestation(s Summary, c Criteria, now time.Time, verifiedBy, notes st
 	supervised []attest.Proof) (attest.Attestation, error) {
 	c = c.withDefaults()
 
-	ok, reasons := s.Evaluate(now, c)
-	if !ok {
-		return attest.Attestation{}, fmt.Errorf("%w:\n  - %s", ErrIncomplete, strings.Join(reasons, "\n  - "))
+	issues := s.evaluateIssues(now, c)
+	if len(issues) != 0 {
+		return attest.Attestation{}, &IncompleteError{Issues: issues}
 	}
 
 	endpoints := s.Window.SuccessfulEndpoints()

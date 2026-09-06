@@ -1,0 +1,6 @@
+[Unit]
+Description=TossOS capability-attestation renewal diagnostics
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/tossctl --config-dir %h/.config/tossctl soak attest --record-renewal-status --verified-by tossos-attest.timer

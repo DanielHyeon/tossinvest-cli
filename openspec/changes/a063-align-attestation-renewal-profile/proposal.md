@@ -1,16 +1,18 @@
 ## Why
 
-The unattended attestation timer reads the legacy data-profile soak record while the operator console
-now writes the active survey record in its config profile. Renewal has therefore failed every six hours
-since 2026-07-30, and the current production attestation expires on 2026-08-29; the first engine restart
-after expiry would be refused without advance warning.
+The 2026-08-03 investigation recorded a mismatch between the unattended timer's legacy data-profile
+soak record and the console's config-profile survey record. It reported six-hour renewal failures since
+2026-07-30 and an attestation expiry of 2026-08-29. These are historical observations, not a verified
+description of the current deployment. The 2026-09-05 continuation must re-establish installed service,
+profile and expiry evidence before making an operational decision.
 
 ## What Changes
 
 - Bind unattended soak attestation to the same explicit config profile used by the operator console, so
   the survey record, credentials, attestation output and engine interlock agree.
-- Keep the read-only survey running long enough to collect the required three consecutive qualifying
-  days, then verify a fresh attestation before 2026-08-29.
+- In a human-approved operating window, collect the required three consecutive qualifying survey
+  days and verify a fresh attestation. The original 2026-08-29 deadline has passed; it cannot be claimed
+  as met by this continuation.
 - Add a pre-expiry operational check that makes timer failure or insufficient survey evidence visible
   before an engine restart is blocked.
 - Preserve every trading, Guardian, lane, kill-switch, adoption and automation-gate setting. This change

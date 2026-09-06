@@ -25,6 +25,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -33,6 +34,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
@@ -393,6 +395,39 @@ func TestSoakAttestRefusesAnUnfinishedSoakAndWritesNothing(t *testing.T) {
 	}
 }
 
+func TestSoakAttestRecordsBoundedRefusalStatus(t *testing.T) {
+	configDir := testenv.Isolate(t)
+	srv := newSoakServer(t)
+	pointSoakAt(t, srv, filepath.Join(configDir, "token.json"))
+	if _, _, err := runCLI(t, "--config-dir", configDir, "soak", "run", "--cycles", "1", "--interval", "0"); err != nil {
+		t.Fatalf("soak run: %v", err)
+	}
+
+	_, _, err := runCLI(t, "--config-dir", configDir, "soak", "attest", "--record-renewal-status")
+	if err == nil {
+		t.Fatal("soak attest wrote an attestation for an unfinished soak")
+	}
+	statusPath := soak.RenewalStatusPath(filepath.Join(configDir, attest.FileName))
+	status, loadErr := soak.LoadRenewalStatus(statusPath, time.Now().UTC())
+	if loadErr != nil {
+		t.Fatalf("LoadRenewalStatus: %v", loadErr)
+	}
+	if status.Outcome != soak.RenewalRefused {
+		t.Errorf("Outcome = %q, want refused", status.Outcome)
+	}
+	if len(status.ReasonCodes) == 0 {
+		t.Fatal("a refusal stored no bounded reason code")
+	}
+	for _, code := range status.ReasonCodes {
+		if !strings.Contains(string(code), "error") && code != soak.ReasonStreak && code != soak.ReasonTokenObservation && code != soak.ReasonEndpoint {
+			t.Errorf("unexpected bounded reason code %q", code)
+		}
+	}
+	if _, statErr := os.Stat(filepath.Join(configDir, attest.FileName)); !os.IsNotExist(statErr) {
+		t.Fatal("an attestation file exists although the soak was refused")
+	}
+}
+
 // TestSoakAttestWritesAVerifiableAttestation drives the whole judgement from a
 // seeded record: three consecutive days, every endpoint proven, the token seen
 // to renew itself.
@@ -430,6 +465,141 @@ func TestSoakAttestWritesAVerifiableAttestation(t *testing.T) {
 	}
 	if strings.Contains(out, "678901") {
 		t.Error("the output printed the full account number; it must be masked")
+	}
+}
+
+func TestSoakAttestRecordsIssuedStatusBesideTheResolvedProfileAttestation(t *testing.T) {
+	configDir := testenv.Isolate(t)
+	seedQualifyingRecord(t, filepath.Join(configDir, soak.FileName))
+	if _, _, err := runCLI(t, "--config-dir", configDir, "soak", "attest", "--record-renewal-status"); err != nil {
+		t.Fatalf("soak attest: %v", err)
+	}
+	attestationPath := filepath.Join(configDir, attest.FileName)
+	status, err := soak.LoadRenewalStatus(soak.RenewalStatusPath(attestationPath), time.Now().UTC())
+	if err != nil {
+		t.Fatalf("LoadRenewalStatus: %v", err)
+	}
+	a, err := attest.Load(attestationPath)
+	if err != nil {
+		t.Fatalf("Load attestation: %v", err)
+	}
+	if status.Outcome != soak.RenewalIssued || !status.ExpiresAt.Equal(a.ExpiresAt) || len(status.ReasonCodes) != 0 {
+		t.Errorf("status = %+v, want issued status matching attestation expiry", status)
+	}
+	other := filepath.Join(configDir, "other-attestation.json")
+	if _, err := os.Stat(soak.RenewalStatusPath(other)); !os.IsNotExist(err) {
+		t.Error("status recording crossed profile attestation paths")
+	}
+}
+
+func TestSoakAttestDefaultDoesNotWriteRenewalStatus(t *testing.T) {
+	configDir := testenv.Isolate(t)
+	seedQualifyingRecord(t, filepath.Join(configDir, soak.FileName))
+	if _, _, err := runCLI(t, "--config-dir", configDir, "soak", "attest"); err != nil {
+		t.Fatalf("soak attest: %v", err)
+	}
+	if _, err := os.Stat(soak.RenewalStatusPath(filepath.Join(configDir, attest.FileName))); !os.IsNotExist(err) {
+		t.Error("default attest invocation wrote an opt-in renewal status")
+	}
+}
+
+func TestSoakAttestStatusWriteFailureKeepsIssuedAttestationAndFailsCommand(t *testing.T) {
+	configDir := testenv.Isolate(t)
+	seedQualifyingRecord(t, filepath.Join(configDir, soak.FileName))
+	original := saveRenewalStatus
+	saveRenewalStatus = func(string, soak.RenewalStatus) error { return errors.New("injected renewal status failure") }
+	t.Cleanup(func() { saveRenewalStatus = original })
+	if _, _, err := runCLI(t, "--config-dir", configDir, "soak", "attest", "--record-renewal-status"); err == nil {
+		t.Fatal("status write failure returned success")
+	}
+	if _, err := attest.Load(filepath.Join(configDir, attest.FileName)); err != nil {
+		t.Fatalf("issued attestation was lost after status write failure: %v", err)
+	}
+}
+
+func TestSoakAttestUsesConfiguredAttestationPathForDistinctSameDirectoryProfiles(t *testing.T) {
+	configDir := testenv.Isolate(t)
+	shared := filepath.Join(configDir, "shared")
+	if err := os.MkdirAll(shared, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	pathA, pathB := filepath.Join(shared, "a.json"), filepath.Join(shared, "b.json")
+	cfg := config.DefaultFile()
+	cfg.Engine.AutomationGate.AttestationFile = pathA
+	writeConfigFile(t, configDir, cfg)
+	seedQualifyingRecord(t, filepath.Join(configDir, soak.FileName))
+	if _, _, err := runCLI(t, "--config-dir", configDir, "soak", "attest", "--record-renewal-status"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := attest.Load(pathA); err != nil {
+		t.Fatalf("configured attestation: %v", err)
+	}
+	if _, err := soak.LoadRenewalStatus(soak.RenewalStatusPath(pathA), time.Now().UTC()); err != nil {
+		t.Fatalf("configured status: %v", err)
+	}
+	if _, err := os.Stat(soak.RenewalStatusPath(pathB)); !os.IsNotExist(err) {
+		t.Fatal("status collided with same-directory profile")
+	}
+}
+
+func TestSoakAttestRecordingUsesOneResolvedAttestationPathSnapshot(t *testing.T) {
+	configDir := testenv.Isolate(t)
+	seedQualifyingRecord(t, filepath.Join(configDir, soak.FileName))
+	path := filepath.Join(configDir, "snapshot.json")
+	original := resolveAttestationPath
+	calls := 0
+	resolveAttestationPath = func(*rootOptions, string) (string, error) { calls++; return path, nil }
+	t.Cleanup(func() { resolveAttestationPath = original })
+	if _, _, err := runCLI(t, "--config-dir", configDir, "soak", "attest", "--record-renewal-status"); err != nil {
+		t.Fatal(err)
+	}
+	if calls != 1 {
+		t.Errorf("resolver calls = %d, want one snapshot", calls)
+	}
+	if _, err := attest.Load(path); err != nil {
+		t.Fatalf("attestation missing at snapshot path: %v", err)
+	}
+}
+
+func TestSoakAttestRenewalStatusRejectsPathOverrides(t *testing.T) {
+	configDir := testenv.Isolate(t)
+	seedQualifyingRecord(t, filepath.Join(configDir, soak.FileName))
+	for _, args := range [][]string{{"--record", filepath.Join(configDir, "other.ndjson")}, {"--out", filepath.Join(configDir, "other.json")}} {
+		args = append([]string{"--config-dir", configDir, "soak", "attest", "--record-renewal-status"}, args...)
+		_, _, err := runCLI(t, args...)
+		if err == nil || !strings.Contains(err.Error(), "rejects --record and --out") {
+			t.Errorf("args %v error = %v, want path-override rejection", args, err)
+		}
+	}
+}
+
+func TestRenewalTimerServiceUsesTheOptInFlagAndDoesNotMaskFailure(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("..", "..", "deploy", "systemd", "tossos-attest.service"))
+	if err != nil {
+		t.Fatalf("read renewal service template: %v", err)
+	}
+	service := string(data)
+	for _, want := range []string{"soak attest", "--record-renewal-status", "--config-dir %h/.config/tossctl"} {
+		if !strings.Contains(service, want) {
+			t.Errorf("service template missing %q", want)
+		}
+	}
+	if strings.Contains(service, "||") {
+		t.Error("service template masks attest failure with a shell fallback")
+	}
+	bin := filepath.Join(t.TempDir(), "tossctl")
+	if err := os.WriteFile(bin, []byte("#!/bin/sh\nexit 23\n"), 0o700); err != nil {
+		t.Fatalf("write failing tossctl stub: %v", err)
+	}
+	fields := strings.Fields(strings.TrimPrefix(strings.Split(service, "ExecStart=")[1], ""))
+	if len(fields) == 0 {
+		t.Fatal("service has no executable command")
+	}
+	fields[0] = bin
+	err = exec.Command(fields[0], fields[1:]...).Run()
+	var exitErr *exec.ExitError
+	if !errors.As(err, &exitErr) || exitErr.ExitCode() != 23 {
+		t.Fatalf("service command error = %v, want propagated exit 23", err)
 	}
 }
 

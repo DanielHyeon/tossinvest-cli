@@ -68,9 +68,10 @@ type soakOptions struct {
 	minDays  int
 	validity time.Duration
 
-	out        string
-	verifiedBy string
-	notes      string
+	out                 string
+	verifiedBy          string
+	notes               string
+	recordRenewalStatus bool
 	// verifyRecords overrides where the supervised live check's evidence is
 	// read from. Empty means the markets' standard paths — the same resolution
 	// `verify` itself uses. A flag one has to remember is how the attestation
@@ -78,6 +79,9 @@ type soakOptions struct {
 	// the working one.
 	verifyRecords []string
 }
+
+var saveRenewalStatus = soak.SaveRenewalStatus
+var resolveAttestationPath = resolveSoakAttestationPath
 
 func newSoakCmd(root *rootOptions) *cobra.Command {
 	opts := &soakOptions{}
@@ -228,6 +232,8 @@ to start until that has been done.`),
 	cmd.Flags().StringVar(&opts.out, "out", "", "Override where the attestation is written")
 	cmd.Flags().StringVar(&opts.verifiedBy, "verified-by", "", "Who ran the verification, for the audit trail")
 	cmd.Flags().StringVar(&opts.notes, "notes", "", "Free-form operator context recorded in the attestation")
+	cmd.Flags().BoolVar(&opts.recordRenewalStatus, "record-renewal-status", false,
+		"Record bounded local renewal diagnostics beside the profile attestation")
 	cmd.Flags().StringSliceVar(&opts.verifyRecords, "verify-record", nil,
 		"Override where the supervised live check's evidence is read from; repeatable. "+
 			"Default: each market's standard verification record")
@@ -467,7 +473,36 @@ func supervisedProofs(root *rootOptions, opts *soakOptions, now time.Time,
 	return out, nil
 }
 
-func runSoakAttest(cmd *cobra.Command, root *rootOptions, opts *soakOptions) error {
+func runSoakAttest(cmd *cobra.Command, root *rootOptions, opts *soakOptions) (result error) {
+	var statusPath string
+	var attestationPath string
+	if opts.recordRenewalStatus {
+		if strings.TrimSpace(opts.record) != "" || strings.TrimSpace(opts.out) != "" {
+			return fmt.Errorf("soak attest: --record-renewal-status rejects --record and --out")
+		}
+		path, err := resolveAttestationPath(root, "")
+		if err != nil {
+			return err
+		}
+		attestationPath = path
+		statusPath = soak.RenewalStatusPath(attestationPath)
+		attempted := time.Now().UTC()
+		defer func() {
+			status := renewalStatusForResult(result, attempted)
+			if result == nil {
+				status.Outcome = soak.RenewalIssued
+				status.ReasonCodes = nil
+				if a, err := attest.Load(attestationPath); err != nil {
+					result = fmt.Errorf("soak attest: reading issued attestation for renewal status: %w", err)
+				} else {
+					status.ExpiresAt = a.ExpiresAt
+				}
+			}
+			if err := saveRenewalStatus(statusPath, status); err != nil && result == nil {
+				result = fmt.Errorf("soak attest: recording renewal status: %w", err)
+			}
+		}()
+	}
 	summary, criteria, recordPath, err := loadSoakSummary(root, opts)
 	if err != nil {
 		return err
@@ -493,9 +528,13 @@ func runSoakAttest(cmd *cobra.Command, root *rootOptions, opts *soakOptions) err
 		return err
 	}
 
-	path, err := resolveSoakAttestationPath(root, opts.out)
-	if err != nil {
-		return err
+	path := attestationPath
+	if !opts.recordRenewalStatus {
+		var err error
+		path, err = resolveAttestationPath(root, opts.out)
+		if err != nil {
+			return err
+		}
 	}
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return fmt.Errorf("soak: creating %s: %w", filepath.Dir(path), err)
@@ -540,6 +579,22 @@ func runSoakAttest(cmd *cobra.Command, root *rootOptions, opts *soakOptions) err
 	fmt.Fprintln(out, "order execution (interlock clause 9). That is a compile-time constant no setting can")
 	fmt.Fprintln(out, "satisfy — the protective-order change flips it as the last step of its own work.")
 	return nil
+}
+
+func renewalStatusForResult(err error, attempted time.Time) soak.RenewalStatus {
+	status := soak.RenewalStatus{
+		FormatVersion: 1,
+		AttemptedAt:   attempted,
+		Outcome:       soak.RenewalFailed,
+		ReasonCodes:   []soak.RenewalReasonCode{soak.ReasonInput},
+	}
+	var incomplete *soak.IncompleteError
+	if errors.As(err, &incomplete) {
+		status.Outcome = soak.RenewalRefused
+		status.ReasonCodes = incomplete.ReasonCodes()
+		return status
+	}
+	return status
 }
 
 // --- shared plumbing --------------------------------------------------------

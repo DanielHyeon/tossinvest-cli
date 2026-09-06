@@ -10,8 +10,8 @@
   "acceptance": [
     "The unattended attestation renewal reads the capability-soak record from the same config profile used by the operator console",
     "The renewed attestation is written where the engine interlock for that profile reads it",
-    "A failed renewal is visible before the current attestation expires on 2026-08-29",
-    "At least three consecutive qualifying survey days are collected and a fresh attestation is verified before expiry",
+    "A failed renewal is visible before the active attestation expires, with actual expiry recorded at acceptance",
+    "At least three consecutive qualifying survey days are collected in an approved window and a fresh attestation is verified without backdating evidence",
     "No trading, Guardian, lane, kill-switch, adoption or automation-gate setting is changed by the implementation"
   ]
 }

@@ -1,0 +1,10 @@
+[Unit]
+Description=Record TossOS capability-attestation renewal diagnostics every six hours
+
+[Timer]
+OnCalendar=*-*-* 00/6:00:00
+Persistent=true
+Unit=tossos-attest.service
+
+[Install]
+WantedBy=timers.target

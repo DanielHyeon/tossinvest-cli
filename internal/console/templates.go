@@ -592,6 +592,9 @@ soak은 다음 사이클 경계에서 스스로 새 바이너리로 재실행한
   <p class="notice">게이트가 열리지 않는 이유:</p>
   <ul>{{range .Reasons}}<li>{{.}}</li>{{end}}</ul>
   {{end}}
+  {{if .ExpiryHorizon}}<p class="notice" role="status">attestation 만료까지 {{.ExpiryHorizon}} 남았다.{{if .ExpiryWarning}} 72시간 이내다.{{end}}</p>{{end}}
+  <p class="notice" role="status">renewal 진단: {{.RenewalState}}{{if not .RenewalAttemptedAt.IsZero}} · 마지막 시도 {{.RenewalAttemptedAt.Format "2006-01-02 15:04Z"}} ({{.RenewalAge}} 전){{end}}</p>
+  {{if .RenewalReasons}}<ul>{{range .RenewalReasons}}<li>{{.}}</li>{{end}}</ul>{{end}}
   <p class="muted">이 콘솔은 게이트를 켜지 않는다. 자동매매 토글은 사람이 직접 승인한다.</p>
   {{end}}
 </section>

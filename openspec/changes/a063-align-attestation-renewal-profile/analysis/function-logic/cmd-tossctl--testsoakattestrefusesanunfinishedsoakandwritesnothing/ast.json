@@ -1,0 +1,212 @@
+{
+  "file": "cmd/tossctl/soak_test.go",
+  "source_sha256": "562e7914c5b47738c7cd03418e0ae872a56a227fd45776faffbd011e0b96200f",
+  "package": "main",
+  "function": "TestSoakAttestRefusesAnUnfinishedSoakAndWritesNothing",
+  "signature": "TestSoakAttestRefusesAnUnfinishedSoakAndWritesNothing(params=1, results=0)",
+  "start": {
+    "line": 375,
+    "column": 1
+  },
+  "end": {
+    "line": 394,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 380,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 385,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 388,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 391,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 376,
+        "column": 15
+      },
+      "text": "testenv.Isolate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 9
+      },
+      "text": "newSoakServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 378,
+        "column": 2
+      },
+      "text": "pointSoakAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 378,
+        "column": 22
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 380,
+        "column": 18
+      },
+      "text": "runCLI"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 381,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 15
+      },
+      "text": "runCLI"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 388,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 388,
+        "column": 23
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 389,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 391,
+        "column": 19
+      },
+      "text": "os.Stat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 391,
+        "column": 27
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 391,
+        "column": 72
+      },
+      "text": "os.IsNotExist"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 392,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 376,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 377,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 380,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 384,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 391,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

@@ -14,6 +14,7 @@ package console
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -61,7 +62,13 @@ type attestView struct {
 	ExpiresAt  time.Time
 	Endpoints  []string
 	// Missing are the engine's required endpoints this attestation does not cover.
-	Missing []string
+	Missing            []string
+	RenewalState       string
+	RenewalReasons     []string
+	RenewalAttemptedAt time.Time
+	RenewalAge         string
+	ExpiryWarning      bool
+	ExpiryHorizon      string
 }
 
 // verifyView is the live verification's evidence record, read.
@@ -257,15 +264,16 @@ func (c *Console) readSoak(now time.Time) soakView {
 }
 
 func (c *Console) readAttestation(now time.Time) attestView {
-	v := attestView{Path: c.opts.Attestation}
+	v := attestView{Path: c.opts.Attestation, RenewalState: "unknown"}
 	if strings.TrimSpace(v.Path) == "" {
 		return v
 	}
 	a, err := attest.Load(v.Path)
 	if err != nil {
 		if !errors.Is(err, attest.ErrMissing) {
-			v.Reasons = append(v.Reasons, err.Error())
+			v.Reasons = append(v.Reasons, "attestation 파일을 읽을 수 없다")
 		}
+		v.readRenewalStatus(now)
 		return v
 	}
 
@@ -285,11 +293,71 @@ func (c *Console) readAttestation(now time.Time) attestView {
 	if a.Expired(now) {
 		v.Reasons = append(v.Reasons, "만료되었다 — soak을 다시 돌리고 `tossctl soak attest`를 다시 실행하라")
 	}
+	v.ExpiryWarning = !a.ExpiresAt.IsZero() && !a.ExpiresAt.Before(now) && a.ExpiresAt.Sub(now) <= 72*time.Hour
+	if !a.ExpiresAt.IsZero() && a.ExpiresAt.After(now) {
+		v.ExpiryHorizon = humanHorizon(a.ExpiresAt.Sub(now))
+	}
 	for _, missing := range v.Missing {
 		v.Reasons = append(v.Reasons, "미검증 endpoint: "+missing)
 	}
 	v.Usable = len(v.Reasons) == 0
+	v.readRenewalStatus(now)
 	return v
+}
+
+func (v *attestView) readRenewalStatus(now time.Time) {
+	if strings.TrimSpace(v.Path) == "" {
+		v.RenewalState = "unknown"
+		return
+	}
+	s, err := soak.LoadRenewalStatus(soak.RenewalStatusPath(v.Path), now)
+	if err != nil {
+		v.RenewalState = "unknown"
+		return
+	}
+	v.RenewalAttemptedAt = s.AttemptedAt
+	v.RenewalAge = humanHorizon(now.Sub(s.AttemptedAt))
+	if now.Sub(s.AttemptedAt) > 12*time.Hour {
+		v.RenewalState = "unknown"
+		return
+	}
+	v.RenewalState = string(s.Outcome)
+	if s.Outcome == soak.RenewalIssued && !s.ExpiresAt.Equal(v.ExpiresAt) {
+		v.RenewalState = "unknown"
+		v.RenewalAttemptedAt = time.Time{}
+		return
+	}
+	for _, code := range s.ReasonCodes {
+		v.RenewalReasons = append(v.RenewalReasons, renewalReasonMessage(code))
+	}
+}
+
+func humanHorizon(d time.Duration) string {
+	if d < time.Hour {
+		return "1시간 미만"
+	}
+	return fmt.Sprintf("약 %d시간", int(d.Round(time.Hour).Hours()))
+}
+
+func renewalReasonMessage(code soak.RenewalReasonCode) string {
+	switch code {
+	case soak.ReasonRecordEmpty:
+		return "soak 기록이 비어 있다"
+	case soak.ReasonRecordStale:
+		return "soak 기록이 오래되었다"
+	case soak.ReasonStreak:
+		return "연속 일수 조건을 충족하지 못했다"
+	case soak.ReasonTokenObservation:
+		return "토큰 만료 관측이 부족하다"
+	case soak.ReasonTokenRefresh:
+		return "토큰 갱신 관측이 없다"
+	case soak.ReasonEndpoint:
+		return "필수 읽기 endpoint 증거가 부족하다"
+	case soak.ReasonCompleteness:
+		return "읽기 완전성 검사가 실패했다"
+	default:
+		return "renewal 입력 또는 증거를 확인할 수 없다"
+	}
 }
 
 func (c *Console) readVerify(market string) verifyView {

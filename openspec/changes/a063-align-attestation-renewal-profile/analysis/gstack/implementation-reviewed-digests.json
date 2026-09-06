@@ -1,0 +1,17 @@
+{
+  "cmd/tossctl/soak.go": "5602b691caadfdf4694fabe6f475e4a8fbc5e5195a4a4cd87ad63132c783a4c2",
+  "cmd/tossctl/soak_test.go": "94cb3449ea94b431986e0e84c871342b7d109ad80f5c671e03a2572f411b5ead",
+  "internal/soak/attest.go": "d693c9dbd9583789b6372aa63a126e7e4817df874c74ff76c597633eb60d29d5",
+  "internal/soak/attest_test.go": "7a68e756e4aa71e2c09054e1611b4c0c61abfa4d51c869a00a94b15db5e4dddc",
+  "internal/soak/renewal_status.go": "d724b217ad17f6776ffc6ac74132877cf93b49f2a2143f067124a2f96c8a3114",
+  "internal/soak/renewal_status_unix.go": "0c50c76a0ab6360a631aee14a824844f6e1b5618a5706925bc1709542a5dfdde",
+  "internal/soak/renewal_status_other.go": "fed215ced9c67d16b06fdea3c7254c3fa789a292e1f914bdbbff33b947dd9edb",
+  "internal/soak/renewal_status_test.go": "95ef0740a2c0150a79eec7a968679318112e4f9210faee979b2ff3ea07ed5774",
+  "internal/soak/renewal_status_unix_test.go": "27de932f7630ad7f096d92674de5522607e45a177c3747a07eeed28242fc8007",
+  "internal/console/data.go": "b121d8b15fc6d4d997c0d4dc8752d89c9a1b51bf0c7de77de18aec4f5655fa7f",
+  "internal/console/templates.go": "6ecde7038ddf17b16888e472ae190fbf9d8a957a7b146b248e8bebe1cd3e06d3",
+  "internal/console/console_test.go": "8a25a853010b50c38ca8e61f0a7b22c52d3d440f69df3f412aa437e17f5bbae5",
+  "deploy/systemd/tossos-attest.service": "0bf50972660fa14ece6953b1d43aa51fe2df407a51783c7ea0c6decb3100de96",
+  "deploy/systemd/tossos-attest.timer": "0db4e0cbfada2a59de4756747f17a3d7596d80dc7a0adafb3b3460849611edde",
+  "docs/operations.md": "e6d95845963877dbe36f52d3d2bbcd65cefb3a43952d7d06ccb5055678a448e4"
+}

@@ -154,7 +154,7 @@ capability soak은 엔진 인터록이 읽는 attestation을 만드는 프로세
 | 플래그 없을 때 | 해석 결과 |
 |---|---|
 | 기록 (`resolveSoakRecord`) | `journal.DataDir()` → `~/.local/share/tossos/` |
-| attestation (`resolveSoakAttestationPath`) | `DefaultPaths().ConfigDir` → `~/.config/tossctl/` |
+| attestation (`resolveSoakAttestationPath`) | `engine.automation_gate.attestation_file`가 설정되면 그 경로, 아니면 `DefaultPaths().ConfigDir` → `~/.config/tossctl/` |
 
 a060 이후 콘솔이 세우는 서베이는 **config dir**에 기록한다. 그래서 플래그가 없으면 타이머는
 **아무도 쓰지 않는 파일**을 판정하고, 건강한 서베이가 도는 내내 6시간마다
@@ -162,11 +162,31 @@ a060 이후 콘솔이 세우는 서베이는 **config dir**에 기록한다. 그
 전부 "never exercised inside the window") 플래그를 넣자 차단 사유가 9건에서 1건으로
 떨어졌다.
 
-플래그는 **읽는 기록만** 바꾼다. attestation은 그대로 `~/.config/tossctl/`에 떨어지며,
-그곳이 엔진 기동 인터록이 찾는 자리다.
+`--config-dir`는 읽는 기록을 그 profile로 맞춘다. attestation은 같은 profile의 config가
+명시한 `engine.automation_gate.attestation_file`을 우선하고, 그것이 없을 때 profile의
+`capability-attestation.json`을 쓴다. 따라서 타이머와 콘솔은 동일 resolver의 결과를
+사용하며, 그 경로가 엔진 기동 interlock이 읽는 자리다.
+
+갱신 유닛은 `soak attest --record-renewal-status`를 사용한다. 이 선택지는 기본적으로 꺼져
+있으며, 켜면 attestation과 같은 전체 경로에 `.renewal-status.json`을 붙인 owner-only 진단 파일만
+기록한다. 실패한 갱신의 원인 코드는 제한된 목록으로 저장되며 계좌·자격증명·원시 오류는 저장하지
+않는다. 콘솔의 capability-attestation 구역은 이 진단을 12시간 안의 기록으로만 표시하고, 만료
+72시간 전 경고도 별도로 보여 준다. 두 표시는 엔진을 정지시키거나 인터록을 완화하지 않는다.
 
 발급 조건(실측): 최신 사이클 ≤2일 · 무인 갱신 연속 **3일** · 토큰 만료 관측 ≥2회 ·
 GET 전체 성공. **즉 서베이 상시 가동이 요건이다** — 그래서 위의 `soak.autostart`가 있다.
+
+유닛을 갱신하기 전에는 후보 바이너리에 이 선택지가 있는지 먼저 확인한다.
+
+```bash
+~/.local/bin/tossctl soak attest --help | grep -- --record-renewal-status
+```
+
+출력이 없으면 새 유닛을 설치하지 않는다. 출력을 확인한 뒤에만 후보 바이너리와
+`deploy/systemd/tossos-attest.{service,timer}`를 함께 사용자 systemd 경로에 복사하고,
+`systemctl --user daemon-reload` 및 timer 재시작은 운영자가 직접 승인해 실행한다. 되돌릴 때는
+직전 바이너리와 직전 두 unit 파일을 복원한 뒤 같은 순서로 reload한다. 이 절차는 renewal 진단
+배포에만 해당하며 엔진 재시작이나 automation gate 변경을 포함하지 않는다.
 
 #### autostart를 켠 뒤에는 [soak 재시작]을 누르지 않는다
 
