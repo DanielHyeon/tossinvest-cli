@@ -1,0 +1,218 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "source_sha256": "88aff065cdad4aa2c155451d23aef783b71519c4c333a2c8ad9fc47e8d091fe5",
+  "function": "resolve_base",
+  "signature": "resolve_base(change_dir, root)",
+  "start": {
+    "line": 192,
+    "column": 1
+  },
+  "end": {
+    "line": 222,
+    "column": 21
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "try",
+      "at": {
+        "line": 194,
+        "column": 5
+      },
+      "condition": ""
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 220,
+        "column": 5
+      },
+      "condition": "override and resolve(override) != persisted"
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 212,
+        "column": 9
+      },
+      "condition": "process.returncode"
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 17
+      },
+      "text": "resolve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 16
+      },
+      "text": "os.environ.get('SDD_BASE_REF', '').strip"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 21
+      },
+      "text": "path.read_text(encoding='utf-8').strip"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 19
+      },
+      "text": "subprocess.run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 16
+      },
+      "text": "process.stdout.strip"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 15
+      },
+      "text": "ValueError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 15
+      },
+      "text": "ValueError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 19
+      },
+      "text": "ValueError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 16
+      },
+      "text": "os.environ.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 21
+      },
+      "text": "resolve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 21
+      },
+      "text": "path.read_text"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 17
+      },
+      "text": "process.stderr.strip"
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 222,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 216,
+        "column": 9
+      }
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "assign",
+      "at": {
+        "line": 193,
+        "column": 5
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 218,
+        "column": 5
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 219,
+        "column": 5
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 195,
+        "column": 9
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 204,
+        "column": 9
+      }
+    }
+  ],
+  "raises": [
+    {
+      "kind": "raise",
+      "at": {
+        "line": 221,
+        "column": 9
+      }
+    },
+    {
+      "kind": "raise",
+      "at": {
+        "line": 197,
+        "column": 9
+      }
+    },
+    {
+      "kind": "raise",
+      "at": {
+        "line": 213,
+        "column": 13
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "file": "tools/sdd/sdd_doctor.py",
+  "source_sha256": "e038dce83e10cec6df49977a20c6bcb8dc5d873edae6bf81a95e08f2f7f04268",
+  "functions": [
+    {"name": "_inside", "line": 93, "end_line": 94, "branches": []},
+    {"name": "_normalized_path", "line": 97, "end_line": 99, "branches": []},
+    {"name": "_resolved_detail", "line": 102, "end_line": 106, "branches": [{"kind": "try", "line": 103, "end_line": 106}]},
+    {"name": "_typedb_pin", "line": 109, "end_line": 130, "branches": [{"kind": "try", "line": 111, "end_line": 114}, {"kind": "for", "line": 117, "end_line": 125}, {"kind": "if", "line": 119, "end_line": 120}, {"kind": "if", "line": 122, "end_line": 125}, {"kind": "if", "line": 124, "end_line": 125}, {"kind": "if", "line": 126, "end_line": 127}, {"kind": "if", "line": 128, "end_line": 129}]},
+    {"name": "_external_python", "line": 133, "end_line": 155, "branches": [{"kind": "if", "line": 134, "end_line": 135}, {"kind": "if", "line": 137, "end_line": 138}, {"kind": "try", "line": 139, "end_line": 144}, {"kind": "if", "line": 145, "end_line": 146}, {"kind": "try", "line": 147, "end_line": 150}, {"kind": "if", "line": 151, "end_line": 152}, {"kind": "if", "line": 153, "end_line": 154}]},
+    {"name": "_driver_status", "line": 158, "end_line": 198, "branches": [{"kind": "if", "line": 159, "end_line": 176}, {"kind": "if", "line": 162, "end_line": 172}, {"kind": "if", "line": 182, "end_line": 183}, {"kind": "if", "line": 185, "end_line": 186}, {"kind": "if", "line": 196, "end_line": 197}]},
+    {"name": "report", "line": 201, "end_line": 217, "branches": []}
+  ]
+}

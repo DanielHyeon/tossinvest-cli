@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -88,20 +90,117 @@ def service_status(name: str) -> dict:
     }
 
 
+def _inside(path: Path, root: Path) -> bool:
+    return path == root or root in path.parents
+
+
+def _normalized_path(path: str | Path) -> Path:
+    """Collapse lexical dot segments without resolving any symlinks."""
+    return Path(os.path.abspath(path))
+
+
+def _resolved_detail(path: Path) -> str:
+    try:
+        return str(path.resolve(strict=True))
+    except (OSError, RuntimeError, ValueError) as exc:
+        return f"unresolved ({exc})"
+
+
+def _typedb_pin(root: Path) -> tuple[str | None, str | None]:
+    requirements = root / "tools" / "sdd" / "requirements.txt"
+    try:
+        lines = requirements.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError) as exc:
+        return None, f"cannot read requirements: {exc}"
+    pins = []
+    exact = re.compile(r"typedb-driver==([A-Za-z0-9][A-Za-z0-9._+-]*)$")
+    for raw_line in lines:
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        match = exact.fullmatch(line)
+        if match:
+            pins.append(match.group(1))
+        elif line.startswith("typedb-driver"):
+            return None, "requirements typedb-driver pin is not exact"
+    if not pins:
+        return None, "requirements typedb-driver pin is missing"
+    if len(pins) != 1:
+        return None, "requirements typedb-driver pin is multiple"
+    return pins[0], None
+
+
+def _external_python(root: Path, raw: str) -> tuple[Path | None, str, str | None]:
+    if not raw:
+        return None, "unresolved", "selection is empty"
+    raw_candidate = Path(raw)
+    if not raw_candidate.is_absolute():
+        return None, "unresolved", "selection is not absolute"
+    try:
+        candidate = _normalized_path(raw)
+        lexical_root = _normalized_path(root)
+        canonical_root = root.resolve()
+    except (OSError, RuntimeError, ValueError) as exc:
+        return None, f"unresolved ({exc})", "repository root cannot be resolved"
+    if _inside(candidate, lexical_root) or _inside(candidate, canonical_root):
+        return None, _resolved_detail(candidate), "selection is lexically inside repository"
+    try:
+        resolved = candidate.resolve(strict=True)
+    except (OSError, RuntimeError, ValueError) as exc:
+        return None, f"unresolved ({exc})", "selection cannot be resolved"
+    if _inside(resolved, canonical_root):
+        return None, str(resolved), "selection resolves inside repository"
+    if not candidate.is_file() or not os.access(candidate, os.X_OK):
+        return None, str(resolved), "selection is not an executable file"
+    return candidate, str(resolved), None
+
+
+def _driver_status(root: Path) -> dict:
+    if "SDD_PYTHON" not in os.environ:
+        selected = root / ".sdd" / ".venv" / "bin" / "python"
+        resolved = _resolved_detail(selected)
+        if selected.exists():
+            status = command_status(
+                "typedb-driver",
+                (
+                    str(selected),
+                    "-c",
+                    "import importlib.metadata as m; print('typedb-driver ' + m.version('typedb-driver'))",
+                ),
+            )
+        else:
+            status = {"ok": False, "detail": "run `make sdd-infra`"}
+        return {
+            "ok": status["ok"],
+            "detail": f"mode=local raw={selected} resolved={resolved}; {status['detail']}",
+        }
+
+    raw = os.environ["SDD_PYTHON"]
+    selected, resolved, selection_error = _external_python(root, raw)
+    raw_detail = raw if raw else "<empty>"
+    prefix = f"mode=external raw={raw_detail} resolved={resolved}; "
+    if selection_error:
+        return {"ok": False, "detail": prefix + f"invalid selection: {selection_error}"}
+    pin, pin_error = _typedb_pin(root)
+    if pin_error:
+        return {"ok": False, "detail": prefix + pin_error}
+    status = command_status(
+        "typedb-driver",
+        (
+            str(selected),
+            "-c",
+            "import importlib.metadata as m; print('typedb-driver ' + m.version('typedb-driver'))",
+        ),
+    )
+    expected = f"typedb-driver {pin}"
+    if not status["ok"] or status["detail"] != expected:
+        return {"ok": False, "detail": prefix + f"expected typedb-driver=={pin}; observed {status['detail']}"}
+    return {"ok": True, "detail": prefix + f"{expected}"}
+
+
 def report(root: Path = ROOT) -> dict:
     tools = {name: command_status(name, command) for name, command in TOOLS.items()}
-    sdd_python = root / ".sdd" / ".venv" / "bin" / "python"
-    if sdd_python.exists():
-        typedb_driver = command_status(
-            "typedb-driver",
-            (
-                str(sdd_python),
-                "-c",
-                "import importlib.metadata as m; print('typedb-driver ' + m.version('typedb-driver'))",
-            ),
-        )
-    else:
-        typedb_driver = {"ok": False, "detail": "run `make sdd-infra`"}
+    typedb_driver = _driver_status(root)
     files = {
         value: {"ok": (root / value).exists(), "detail": "present" if (root / value).exists() else "missing"}
         for value in FILES

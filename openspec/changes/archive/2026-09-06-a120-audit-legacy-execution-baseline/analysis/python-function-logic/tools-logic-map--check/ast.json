@@ -1,0 +1,729 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "source_sha256": "88aff065cdad4aa2c155451d23aef783b71519c4c333a2c8ad9fc47e8d091fe5",
+  "function": "check",
+  "signature": "check(change, root)",
+  "start": {
+    "line": 510,
+    "column": 1
+  },
+  "end": {
+    "line": 578,
+    "column": 18
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "try",
+      "at": {
+        "line": 516,
+        "column": 5
+      },
+      "condition": ""
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 521,
+        "column": 5
+      },
+      "condition": "reference_file.exists()"
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 535,
+        "column": 5
+      },
+      "condition": "not analysis.exists()"
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 542,
+        "column": 5
+      },
+      "condition": "not targets"
+    },
+    {
+      "id": "B5",
+      "kind": "for",
+      "at": {
+        "line": 556,
+        "column": 5
+      },
+      "condition": ""
+    },
+    {
+      "id": "B6",
+      "kind": "for",
+      "at": {
+        "line": 563,
+        "column": 5
+      },
+      "condition": ""
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 522,
+        "column": 9
+      },
+      "condition": "analysis.exists() and any((path.is_dir() and any(path.iterdir()) for path in analysis.iterdir()))"
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 525,
+        "column": 9
+      },
+      "condition": "not re.fullmatch('[a-z0-9][a-z0-9-]*', referenced_change) or referenced_change == change"
+    },
+    {
+      "id": "B9",
+      "kind": "try",
+      "at": {
+        "line": 528,
+        "column": 9
+      },
+      "condition": ""
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 532,
+        "column": 9
+      },
+      "condition": "referenced_base != base"
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 536,
+        "column": 9
+      },
+      "condition": "required"
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 559,
+        "column": 9
+      },
+      "condition": "binding"
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 565,
+        "column": 9
+      },
+      "condition": "target is None"
+    },
+    {
+      "id": "B14",
+      "kind": "try",
+      "at": {
+        "line": 568,
+        "column": 9
+      },
+      "condition": ""
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 573,
+        "column": 9
+      },
+      "condition": "ast_value.get('source_sha256') != expected_hash"
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 576,
+        "column": 9
+      },
+      "condition": "ast_value.get('revision', 'current') != expected_revision"
+    },
+    {
+      "id": "B17",
+      "kind": "if",
+      "at": {
+        "line": 560,
+        "column": 13
+      },
+      "condition": "binding in covered"
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 521,
+        "column": 8
+      },
+      "text": "reference_file.exists"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 541,
+        "column": 15
+      },
+      "text": "sorted"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 547,
+        "column": 13
+      },
+      "text": "test_index"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 552,
+        "column": 21
+      },
+      "text": "call_enumeration_in_use"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 563,
+        "column": 30
+      },
+      "text": "required.items"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 515,
+        "column": 57
+      },
+      "text": "review.exists"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 515,
+        "column": 19
+      },
+      "text": "review.read_text"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 517,
+        "column": 16
+      },
+      "text": "resolve_base"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 518,
+        "column": 20
+      },
+      "text": "changed_existing_functions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 524,
+        "column": 29
+      },
+      "text": "reference_file.read_text(encoding='utf-8').strip"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 535,
+        "column": 12
+      },
+      "text": "analysis.exists"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 557,
+        "column": 34
+      },
+      "text": "validate_target"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 558,
+        "column": 9
+      },
+      "text": "errors.extend"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 564,
+        "column": 18
+      },
+      "text": "covered.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 522,
+        "column": 12
+      },
+      "text": "analysis.exists"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 522,
+        "column": 34
+      },
+      "text": "any"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 529,
+        "column": 31
+      },
+      "text": "resolve_base"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 537,
+        "column": 21
+      },
+      "text": "', '.join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 566,
+        "column": 13
+      },
+      "text": "errors.append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 569,
+        "column": 25
+      },
+      "text": "json.loads"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 572,
+        "column": 25
+      },
+      "text": "expected.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 572,
+        "column": 57
+      },
+      "text": "expected.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 573,
+        "column": 12
+      },
+      "text": "ast_value.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 574,
+        "column": 13
+      },
+      "text": "errors.append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 575,
+        "column": 42
+      },
+      "text": "expected.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 576,
+        "column": 12
+      },
+      "text": "ast_value.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 577,
+        "column": 13
+      },
+      "text": "errors.append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 524,
+        "column": 29
+      },
+      "text": "reference_file.read_text"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 525,
+        "column": 16
+      },
+      "text": "re.fullmatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 541,
+        "column": 39
+      },
+      "text": "analysis.iterdir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 541,
+        "column": 61
+      },
+      "text": "path.is_dir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 553,
+        "column": 10
+      },
+      "text": "_bundle_text"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 553,
+        "column": 30
+      },
+      "text": "_ast_value"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 554,
+        "column": 21
+      },
+      "text": "sorted"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 561,
+        "column": 17
+      },
+      "text": "errors.append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 569,
+        "column": 36
+      },
+      "text": "(target / 'ast.json').read_text"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 554,
+        "column": 28
+      },
+      "text": "analysis.glob"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 522,
+        "column": 38
+      },
+      "text": "path.is_dir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 522,
+        "column": 56
+      },
+      "text": "any"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 522,
+        "column": 88
+      },
+      "text": "analysis.iterdir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 522,
+        "column": 60
+      },
+      "text": "path.iterdir"
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 578,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 539,
+        "column": 9
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 543,
+        "column": 9
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 520,
+        "column": 9
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 523,
+        "column": 13
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 526,
+        "column": 13
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 533,
+        "column": 13
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 538,
+        "column": 13
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 531,
+        "column": 13
+      }
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "assign",
+      "at": {
+        "line": 511,
+        "column": 5
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 512,
+        "column": 5
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 513,
+        "column": 5
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 514,
+        "column": 5
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 515,
+        "column": 5
+      }
+    },
+    {
+      "kind": "annassign",
+      "at": {
+        "line": 540,
+        "column": 5
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 541,
+        "column": 5
+      }
+    },
+    {
+      "kind": "annassign",
+      "at": {
+        "line": 544,
+        "column": 5
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 547,
+        "column": 5
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 552,
+        "column": 5
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 517,
+        "column": 9
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 518,
+        "column": 9
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 524,
+        "column": 9
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 527,
+        "column": 9
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 534,
+        "column": 9
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 557,
+        "column": 9
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 564,
+        "column": 9
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 572,
+        "column": 9
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 575,
+        "column": 9
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 529,
+        "column": 13
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 537,
+        "column": 13
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 562,
+        "column": 13
+      }
+    },
+    {
+      "kind": "assign",
+      "at": {
+        "line": 569,
+        "column": 13
+      }
+    }
+  ],
+  "raises": []
+}

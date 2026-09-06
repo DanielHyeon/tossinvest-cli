@@ -1,0 +1,13 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "source_sha256": "2f769d5fe8e8cfa69c68acefa22ebac7c4c4dee90371a904360bea7980924417",
+  "function": "main",
+  "signature": "main()",
+  "start": {"line": 619, "column": 1},
+  "end": {"line": 630, "column": 12},
+  "branches": [
+    {"id": "B1", "kind": "if", "at": {"line": 625, "column": 5}, "condition": "errors"},
+    {"id": "B2", "kind": "for", "at": {"line": 626, "column": 9}, "condition": "error in errors"}
+  ]
+}

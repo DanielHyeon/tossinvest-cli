@@ -2,13 +2,22 @@ from __future__ import annotations
 
 import json
 import hashlib
+import io
+import os
 import subprocess
+import sys
 import tempfile
 import unittest
+import shutil
+from contextlib import redirect_stdout
 from pathlib import Path
 from unittest import mock
 
 import check_analysis
+import execution_baseline as adoption
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "sdd"))
+import sdd_doctor
 
 
 def write_bundle(
@@ -104,6 +113,244 @@ class BundleTextCoversEveryProseFileInTheBundle(unittest.TestCase):
 
 
 class CheckAnalysisTests(unittest.TestCase):
+    def test_main_distinguishes_ordinary_adoption_and_invalid_results(self) -> None:
+        def run_cli(errors: list[str], adopted: bool) -> tuple[int, str]:
+            output = io.StringIO()
+            def fake_check(change: str, root: Path, context: dict[str, object]) -> list[str]:
+                context["execution_baseline_adoption"] = adopted
+                return errors
+            with mock.patch.object(sys, "argv", ["check_analysis.py", "--change", "fixture"]), \
+                 mock.patch("check_analysis.check", side_effect=fake_check), \
+                 redirect_stdout(output):
+                status = check_analysis.main()
+            return status, output.getvalue()
+
+        ordinary_status, ordinary_output = run_cli([], False)
+        self.assertEqual(ordinary_status, 0)
+        self.assertIn("evidence complete or diff-proven exempt", ordinary_output)
+        adoption_status, adoption_output = run_cli([], True)
+        self.assertEqual(adoption_status, 0)
+        self.assertIn("execution-baseline adoption exception evidence complete", adoption_output)
+        invalid_status, invalid_output = run_cli(["invalid execution-baseline adoption: bad record"], False)
+        self.assertEqual(invalid_status, 1)
+        self.assertIn("invalid execution-baseline adoption: bad record", invalid_output)
+        self.assertNotIn("adoption exception evidence complete", invalid_output)
+
+    def test_main_real_adoption_prints_exception_label_only_after_validation(self) -> None:
+        raw, root, p, e = self._adoption_with_complete_bundle()
+        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
+            output = io.StringIO()
+            with mock.patch.object(
+                sys, "argv", ["check_analysis.py", "--change", adoption.CHANGE, "--root", str(root)]
+            ), redirect_stdout(output):
+                self.assertEqual(check_analysis.main(), 0)
+            self.assertIn("execution-baseline adoption exception evidence complete", output.getvalue())
+            record = root / "openspec" / "changes" / adoption.CHANGE / "execution-baseline.json"
+            record.write_text("{}")
+            self._commit(root, "invalid record"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
+            output = io.StringIO()
+            with mock.patch.object(
+                sys, "argv", ["check_analysis.py", "--change", adoption.CHANGE, "--root", str(root)]
+            ), redirect_stdout(output):
+                self.assertEqual(check_analysis.main(), 1)
+            self.assertIn("invalid execution-baseline adoption", output.getvalue())
+            self.assertNotIn("adoption exception evidence complete", output.getvalue())
+
+    def test_ordinary_no_record_uses_p_and_allows_dirty_worktree(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            for key, value in (("user.email", "a120@example.invalid"), ("user.name", "a120")):
+                subprocess.run(["git", "config", key, value], cwd=root, check=True)
+            (root / "go.mod").write_text("module fixture\ngo 1.23\n")
+            # `check()` invokes the real Go AST extractor from the fixture
+            # checkout.  Keep this as a copied, committed tool rather than a
+            # mock so the missing-map and green assertions exercise the same
+            # P-to-dirty-worktree path as production.
+            tool_source = Path(__file__).resolve().parent
+            shutil.copytree(
+                tool_source,
+                root / "tools" / "logic-map",
+                ignore=shutil.ignore_patterns("*.py", "__pycache__"),
+            )
+            source = root / "internal" / "ordinary.go"; source.parent.mkdir()
+            source.write_text("package internal\nfunc Run() int { return 1 }\n")
+            (root / "marker").write_text("P")
+            p = self._commit(root, "P")
+            change = root / "openspec" / "changes" / "ordinary"
+            change.mkdir(parents=True)
+            (change / "base-commit.txt").write_text(p + "\n")
+            (change / "review.md").write_text("Function Logic Map: not-applicable\n")
+            self._commit(root, "ordinary evidence")
+            source.write_text("package internal\nfunc Run() int { return 2 }\n")
+            self.assertEqual(check_analysis.resolve_base(change, root), p)
+            errors = check_analysis.check("ordinary", root)
+            self.assertTrue(any("missing Function Logic Map" in error or "missing evidence for modified function" in error for error in errors), errors)
+            bundle = change / "analysis" / "function-logic" / "internal--run"; bundle.mkdir(parents=True)
+            source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+            ast = {"file":"internal/ordinary.go","source_sha256":source_hash,"package":"internal","function":"Run","signature":"Run(params=0, results=1)","start":{"line":2,"column":1},"end":{"line":2,"column":1},"branches":[]}
+            (bundle / "ast.json").write_text(json.dumps(ast))
+            (bundle / "function-logic-map.md").write_text("# Function Logic Map: `Run`\ninternal/ordinary.go\n## Inputs and invariants\ne\n## Branches and early returns\ne\n## Calls and live bindings\ne\n## State mutations and fallbacks\ne\n## Safety conclusion\ne\n")
+            (bundle / "branch-test-map.md").write_text("# Branch Test Map: `Run`\n| B1 | leaf | test | yes | yes |\n")
+            (bundle / "risk-pattern-report.md").write_text("# Risk Pattern Report\ninternal/ordinary.go\n")
+            with mock.patch.dict("os.environ", {"SDD_BASE_REF": p}, clear=False):
+                self.assertEqual(check_analysis.check("ordinary", root), [])
+            head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            for override in ("HEAD", head):
+                with mock.patch.dict("os.environ", {"SDD_BASE_REF": override}, clear=False):
+                    self.assertEqual(
+                        check_analysis.check("ordinary", root),
+                        ["cannot derive modified Go functions: SDD_BASE_REF must resolve to the selected effective comparison base"],
+                    )
+
+    def test_real_reference_requires_the_same_p_base(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            for key, value in (("user.email", "a120@example.invalid"), ("user.name", "a120")):
+                subprocess.run(["git", "config", key, value], cwd=root, check=True)
+            (root / "go.mod").write_text("module fixture\ngo 1.23\n")
+            source = root / "internal" / "sample.go"; source.parent.mkdir()
+            source.write_text("package sample\nfunc Run() {}\n")
+            p = self._commit(root, "P")
+            (root / "marker").write_text("Q")
+            q = self._commit(root, "Q")
+            change = root / "openspec" / "changes" / "ordinary"
+            change.mkdir(parents=True)
+            (change / "base-commit.txt").write_text(p + "\n")
+            (change / "analysis" / "function-logic-reference.txt").parent.mkdir(parents=True)
+            (change / "analysis" / "function-logic-reference.txt").write_text("reference\n")
+            reference = root / "openspec" / "changes" / "reference"
+            reference.mkdir(parents=True)
+            (reference / "base-commit.txt").write_text(p + "\n")
+            bundle = reference / "analysis" / "function-logic" / "internal--run"; bundle.mkdir(parents=True)
+            source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+            ast = {"file":"internal/sample.go","source_sha256":source_hash,"package":"sample","function":"Run","signature":"Run(params=0, results=0)","start":{"line":2,"column":1},"end":{"line":2,"column":1},"branches":[]}
+            (bundle / "ast.json").write_text(json.dumps(ast))
+            (bundle / "function-logic-map.md").write_text("# Function Logic Map: `Run`\ninternal/sample.go\n## Inputs and invariants\ne\n## Branches and early returns\ne\n## Calls and live bindings\ne\n## State mutations and fallbacks\ne\n## Safety conclusion\ne\n")
+            (bundle / "branch-test-map.md").write_text("# Branch Test Map: `Run`\n| B1 | leaf | test | yes | yes |\n")
+            (bundle / "risk-pattern-report.md").write_text("# Risk Pattern Report\ninternal/sample.go\n")
+            self.assertEqual(check_analysis.check("ordinary", root), [])
+            (reference / "base-commit.txt").write_text(q + "\n")
+            self.assertEqual(
+                check_analysis.check("ordinary", root),
+                ["function-logic reference must share the exact comparison base"],
+            )
+    @staticmethod
+    def _commit(root: Path, subject: str) -> str:
+        subprocess.run(["git", "add", "."], cwd=root, check=True)
+        subprocess.run(["git", "commit", "-qm", subject], cwd=root, check=True)
+        return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+
+    def _adoption_with_complete_bundle(self, deleted: bool = False) -> tuple[tempfile.TemporaryDirectory, Path, str, str]:
+        raw = tempfile.TemporaryDirectory(); root = Path(raw.name)
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        for key, value in (("user.email", "a120@example.invalid"), ("user.name", "a120")):
+            subprocess.run(["git", "config", key, value], cwd=root, check=True)
+        (root / "go.mod").write_text("module fixture\ngo 1.23\n")
+        source = Path(__file__).resolve().parent
+        shutil.copytree(source, root / "tools" / "logic-map", ignore=shutil.ignore_patterns("*.py", "__pycache__"))
+        requirements = root / "tools" / "sdd" / "requirements.txt"; requirements.parent.mkdir(parents=True)
+        requirements.write_text("typedb-driver==3.11.5\n", encoding="utf-8")
+        change = root / "openspec" / "changes" / adoption.CHANGE; change.mkdir(parents=True)
+        (change / "base-commit.txt").write_text("pending\n")
+        target = root / "internal" / "soak" / "attest.go"; target.parent.mkdir(parents=True)
+        target.write_text("package soak\nfunc Attest() int { return 1 }\n")
+        p = self._commit(root, "P")
+        (change / "base-commit.txt").write_text(p + "\n"); target.write_text("package soak\nfunc Attest() int { return 2 }\n")
+        e = self._commit(root, "E"); ast = check_analysis.go_functions(target, root)[0]
+        target.write_text("package soak\n" if deleted else "package soak\nfunc Attest() int { return 3 }\n")
+        s = self._commit(root, "S")
+        if not deleted: ast = check_analysis.go_functions(target, root)[0]
+        with mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
+            ledger = change / "analysis" / "execution-baseline-ledger.json"; record = change / "execution-baseline.json"
+            adoption.draft(root, adoption.CHANGE, s, ledger, record)
+            for name, body in (("adversary.md", "adversary"), ("gstack.md", "gstack")):
+                path = change / "analysis" / name; path.write_text(body)
+            value = json.loads(record.read_text())
+            for prefix, name in (("adversarial_review", "adversary.md"), ("gstack_review", "gstack.md")):
+                path = change / "analysis" / name
+                value[prefix + "_path"] = path.relative_to(root).as_posix()
+                value[prefix + "_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+            record.write_bytes(adoption.canonical(value))
+        self._commit(root, "H")
+        ast.update({"package": "soak", "signature": "Attest(params=0, results=1)", "branches": []})
+        if deleted: ast["revision"] = "base"
+        bundle = change / "analysis" / "function-logic" / "internal-soak--attest"; bundle.mkdir(parents=True)
+        (bundle / "ast.json").write_text(json.dumps(ast))
+        (bundle / "function-logic-map.md").write_text("# Function Logic Map: `Attest`\ninternal/soak/attest.go\n## Inputs and invariants\nevidence\n## Branches and early returns\nevidence\n## Calls and live bindings\nevidence\n## State mutations and fallbacks\nevidence\n## Safety conclusion\nevidence\n")
+        (bundle / "branch-test-map.md").write_text("# Branch Test Map: `Attest`\n| B1 | leaf | test | yes | yes |\n")
+        (bundle / "risk-pattern-report.md").write_text("# Risk Pattern Report\ninternal/soak/attest.go\n")
+        self._commit(root, "map"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
+        return raw, root, p, e
+
+    @unittest.skipUnless(os.environ.get("SDD_PYTHON"), "requires an explicit external SDD_PYTHON integration environment")
+    def test_real_adoption_without_local_venv_accepts_external_doctor_probe(self) -> None:
+        raw, root, p, e = self._adoption_with_complete_bundle()
+        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
+            self.assertFalse((root / ".sdd" / ".venv").exists())
+            result = sdd_doctor.report(root)
+            typedb = result["python_modules"]["typedb-driver"]
+            self.assertTrue(typedb["ok"], typedb["detail"])
+            self.assertIn("mode=external", typedb["detail"])
+            self.assertEqual(adoption.validate(root / "openspec" / "changes" / adoption.CHANGE, root, p)["effective_base"], e)
+            forbidden = root / ".sdd" / ".venv" / "forbidden.py"
+            forbidden.parent.mkdir(parents=True)
+            forbidden.write_text("forbidden\n", encoding="utf-8")
+            with self.assertRaisesRegex(
+                adoption.AdoptionError,
+                r"untracked/ignored input is not allowed: \.sdd/\.venv/forbidden\.py",
+            ):
+                adoption.validate(root / "openspec" / "changes" / adoption.CHANGE, root, p)
+
+    def test_valid_adoption_uses_e_and_requires_complete_current_bundle(self) -> None:
+        raw, root, p, e = self._adoption_with_complete_bundle()
+        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
+            self.assertEqual(check_analysis.check(adoption.CHANGE, root), [])
+            bundle = root / "openspec" / "changes" / adoption.CHANGE / "analysis" / "function-logic" / "internal-soak--attest"
+            shutil.rmtree(bundle); self._commit(root, "remove map"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
+            errors = check_analysis.check(adoption.CHANGE, root)
+            self.assertTrue(any("analysis directory has no targets" in error or ("missing" in error and "Attest" in error) for error in errors))
+
+    def test_real_adoption_deleted_function_requires_base_revision(self) -> None:
+        raw, root, p, e = self._adoption_with_complete_bundle(deleted=True)
+        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
+            self.assertEqual(check_analysis.check(adoption.CHANGE, root), [])
+            path = root / "openspec" / "changes" / adoption.CHANGE / "analysis" / "function-logic" / "internal-soak--attest" / "ast.json"
+            value = json.loads(path.read_text()); value["revision"] = "current"; path.write_text(json.dumps(value))
+            self._commit(root, "wrong deletion revision"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
+            self.assertTrue(any("AST revision must be base" in error for error in check_analysis.check(adoption.CHANGE, root)))
+
+    def test_real_adoption_sdd_base_ref_accepts_only_e_and_invalid_record_never_falls_back(self) -> None:
+        raw, root, p, e = self._adoption_with_complete_bundle()
+        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
+            with mock.patch.dict("os.environ", {"SDD_BASE_REF": e}, clear=False):
+                self.assertEqual(check_analysis.check(adoption.CHANGE, root), [])
+            for bad in (p, "0" * 40, "HEAD"):
+                with mock.patch.dict("os.environ", {"SDD_BASE_REF": bad}, clear=False):
+                    self.assertTrue(any("cannot derive" in error for error in check_analysis.check(adoption.CHANGE, root)))
+            record = root / "openspec" / "changes" / adoption.CHANGE / "execution-baseline.json"
+            record.write_text("{}")
+            self._commit(root, "invalid record"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
+            with mock.patch.dict("os.environ", {"SDD_BASE_REF": e}, clear=False):
+                self.assertTrue(any("invalid execution-baseline adoption" in error for error in check_analysis.check(adoption.CHANGE, root)))
+
+    def test_real_adoption_stale_current_ast_hash_fails(self) -> None:
+        raw, root, p, e = self._adoption_with_complete_bundle()
+        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
+            ast_path = root / "openspec" / "changes" / adoption.CHANGE / "analysis" / "function-logic" / "internal-soak--attest" / "ast.json"
+            value = json.loads(ast_path.read_text()); value["source_sha256"] = "0" * 64; ast_path.write_text(json.dumps(value))
+            self._commit(root, "stale map"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
+            self.assertTrue(any("AST source hash is stale" in error or "AST hash does not match" in error for error in check_analysis.check(adoption.CHANGE, root)))
+
+    def test_real_adoption_rejects_local_maps_with_function_logic_reference(self) -> None:
+        raw, root, p, e = self._adoption_with_complete_bundle()
+        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
+            analysis = root / "openspec" / "changes" / adoption.CHANGE / "analysis"
+            (analysis / "function-logic-reference.txt").write_text("some-other-change\n")
+            self._commit(root, "conflicting reference"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
+            errors = check_analysis.check(adoption.CHANGE, root)
+            self.assertIn("function-logic reference cannot coexist with local function-logic evidence", errors)
     def test_explicit_exemption_is_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             change = Path(tmp) / "openspec" / "changes" / "docs-only"
@@ -327,9 +574,22 @@ evidence
         with mock.patch(
             "check_analysis.subprocess.run",
             return_value=failed,
-        ):
+        ), mock.patch("check_analysis._safe_changed_go_paths"):
             with self.assertRaises(RuntimeError):
                 check_analysis.changed_existing_functions(Path("/tmp"), "bad")
+
+    def test_newline_changed_go_path_is_rejected_before_unified_diff_parsing(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            for args in (("init", "-q"), ("config", "user.email", "a120@example.invalid"), ("config", "user.name", "a120")):
+                subprocess.run(["git", *args], cwd=root, check=True)
+            path = root / "pkg" / "line\nbreak.go"; path.parent.mkdir()
+            path.write_text("package pkg\nfunc X() {}\n", encoding="utf-8")
+            subprocess.run(["git", "add", "."], cwd=root, check=True); subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            path.write_text("package pkg\nfunc X() { println(1) }\n", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "cannot be represented losslessly"):
+                check_analysis._safe_changed_go_paths(root, base, "")
 
     def test_new_function_in_existing_file_is_not_reported_as_modified_existing(self) -> None:
         diff = subprocess.CompletedProcess(
@@ -370,6 +630,8 @@ evidence
                 "check_analysis.subprocess.run",
                 return_value=diff,
             ), mock.patch(
+                "check_analysis._safe_changed_go_paths",
+            ), mock.patch(
                 "check_analysis.base_file",
                 return_value=Path(base_source.name),
             ), mock.patch(
@@ -398,6 +660,8 @@ evidence
         with mock.patch(
             "check_analysis.subprocess.run",
             side_effect=(diff, missing),
+        ), mock.patch(
+            "check_analysis._safe_changed_go_paths",
         ):
             with self.assertRaises(RuntimeError):
                 check_analysis.changed_existing_functions(Path("/tmp"), "base")

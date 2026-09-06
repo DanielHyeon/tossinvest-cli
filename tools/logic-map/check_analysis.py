@@ -13,6 +13,7 @@ import tempfile
 from pathlib import Path
 
 from role_check import call_enumeration_in_use, role_errors
+from execution_baseline import AdoptionError, validate as validate_execution_baseline
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = (
@@ -83,20 +84,49 @@ def base_file(root: Path, base: str, source: str) -> Path | None:
     return path
 
 
+def _safe_changed_go_paths(root: Path, base: str, target: str) -> None:
+    """Reject names that the unified-diff header grammar cannot represent losslessly."""
+    process = subprocess.run(
+        ["git", "diff", "--no-ext-diff", "--name-only", "-z", base,
+         *([target] if target else []), "--", "*.go"],
+        cwd=root,
+        capture_output=True,
+        check=False,
+    )
+    if process.returncode:
+        stderr = process.stderr.decode("utf-8", "replace") if isinstance(process.stderr, bytes) else process.stderr
+        raise RuntimeError(stderr.strip() or f"git diff failed for base {base}")
+    raw_output = process.stdout if isinstance(process.stdout, bytes) else process.stdout.encode("utf-8")
+    for raw in (item for item in raw_output.split(b"\0") if item):
+        try:
+            path = raw.decode("utf-8", "strict")
+        except UnicodeDecodeError as error:
+            raise RuntimeError("modified Go path is not UTF-8") from error
+        # Git quotes tab/newline headers; do not silently parse that quoted form
+        # as a different path. Ordinary Unicode names remain supported.
+        if "\n" in path or "\r" in path or "\t" in path:
+            raise RuntimeError("modified Go path cannot be represented losslessly in unified diff")
+
+
 def changed_existing_functions(
     root: Path = ROOT,
     base: str = "",
+    target: str = "",
 ) -> dict[tuple[str, str], dict]:
     if not base:
         raise ValueError("Function Logic Map comparison base is required")
+    _safe_changed_go_paths(root, base, target)
     process = subprocess.run(
         [
             "git",
+            "-c",
+            "core.quotePath=false",
             "diff",
             "--no-ext-diff",
             "--find-renames",
             "--unified=0",
             base,
+            *( [target] if target else [] ),
             "--",
             "*.go",
         ],
@@ -123,6 +153,7 @@ def changed_existing_functions(
             raise RuntimeError(
                 f"cannot load existing base file {base}:{old_source}"
             )
+        current: Path | None = None
         try:
             old_functions = go_functions(temporary, root)
             old_qualified = {qualified(function) for function in old_functions}
@@ -136,7 +167,7 @@ def changed_existing_functions(
                         "function": qualified(function),
                         "base_hash": function.get("source_sha256"),
                     }
-            current = root / new_source if new_source else None
+            current = base_file(root, target, new_source) if target and new_source else (root / new_source if new_source else None)
             if current and current.exists():
                 for function in go_functions(current, root):
                     # Function Logic Maps are required for functions that existed
@@ -161,6 +192,8 @@ def changed_existing_functions(
                         }
         finally:
             temporary.unlink(missing_ok=True)
+            if target and current is not None:
+                current.unlink(missing_ok=True)
         hunks = []
 
     for line in process.stdout.splitlines():
@@ -189,7 +222,9 @@ def changed_existing_functions(
     return required
 
 
-def resolve_base(change_dir: Path, root: Path) -> str:
+def resolve_base(
+    change_dir: Path, root: Path, context: dict[str, object] | None = None
+) -> str:
     path = change_dir / "base-commit.txt"
     try:
         candidate = path.read_text(encoding="utf-8").strip()
@@ -216,10 +251,18 @@ def resolve_base(change_dir: Path, root: Path) -> str:
         return process.stdout.strip()
 
     persisted = resolve(candidate)
+    try:
+        adoption = validate_execution_baseline(change_dir, root, persisted)
+    except AdoptionError as exc:
+        raise ValueError(f"invalid execution-baseline adoption: {exc}") from exc
+    effective = str(adoption["effective_base"]) if adoption else persisted
+    if context is not None:
+        context["execution_baseline_adoption"] = adoption is not None
+        context["effective_base"] = effective
     override = os.environ.get("SDD_BASE_REF", "").strip()
-    if override and resolve(override) != persisted:
-        raise ValueError("SDD_BASE_REF must resolve to the persisted base-commit.txt")
-    return persisted
+    if override and resolve(override) != effective:
+        raise ValueError("SDD_BASE_REF must resolve to the selected effective comparison base")
+    return effective
 
 
 def normalized_source(value: str, root: Path) -> tuple[Path, str]:
@@ -507,14 +550,16 @@ def validate_target(
     return errors, (relative, function)
 
 
-def check(change: str, root: Path = ROOT) -> list[str]:
+def check(
+    change: str, root: Path = ROOT, context: dict[str, object] | None = None
+) -> list[str]:
     change_dir = root / "openspec" / "changes" / change
     analysis = change_dir / "analysis" / "function-logic"
     reference_file = change_dir / "analysis" / "function-logic-reference.txt"
     review = change_dir / "review.md"
     review_text = review.read_text(encoding="utf-8") if review.exists() else ""
     try:
-        base = resolve_base(change_dir, root)
+        base = resolve_base(change_dir, root, context)
         required = changed_existing_functions(root, base)
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         return [f"cannot derive modified Go functions: {exc}"]
@@ -583,12 +628,16 @@ def main() -> int:
     parser.add_argument("--change", required=True)
     parser.add_argument("--root", default=str(ROOT))
     args = parser.parse_args()
-    errors = check(args.change, Path(args.root))
+    context: dict[str, object] = {}
+    errors = check(args.change, Path(args.root), context)
     if errors:
         for error in errors:
             print(f"[logic-map] {error}")
         return 1
-    print(f"[logic-map] {args.change}: evidence complete or diff-proven exempt")
+    if context.get("execution_baseline_adoption"):
+        print(f"[logic-map] {args.change}: execution-baseline adoption exception evidence complete")
+    else:
+        print(f"[logic-map] {args.change}: evidence complete or diff-proven exempt")
     return 0
 
 

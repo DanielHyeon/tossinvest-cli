@@ -1,0 +1,25 @@
+{
+  "evidence_kind": "pre-edit-python-ast",
+  "captured_at": "2026-09-06",
+  "file": "tools/sdd/sdd_doctor.py",
+  "source_sha256": "eb6c4ecb4d1f80c17a1514bd93ba7683b37f40d5c8e508aec5c89e95a6a7c26d",
+  "head_blob": "c777d10b5216c4c830817992532de9fa58d52842",
+  "function": "report",
+  "signature": "report(root: Path = ROOT) -> dict",
+  "start": {"line": 91, "column": 1},
+  "end": {"line": 118, "column": 6},
+  "node_id_method": "N### is the one-based ast.walk(FunctionDef) preorder ordinal before filtering; IDs are evidence-local because CPython AST nodes have no source ID.",
+  "nodes": [
+    {"id": "N003", "type": "Assign", "start": {"line": 92, "column": 5}, "end": {"line": 92, "column": 85}, "target": "tools", "value": "{name: command_status(name, command) for name, command in TOOLS.items()}"},
+    {"id": "N004", "type": "Assign", "start": {"line": 93, "column": 5}, "end": {"line": 93, "column": 60}, "target": "sdd_python", "value": "root / '.sdd' / '.venv' / 'bin' / 'python'"},
+    {"id": "N005", "type": "If", "start": {"line": 94, "column": 5}, "end": {"line": 104, "column": 72}, "test": "sdd_python.exists()"},
+    {"id": "N015", "type": "Call", "start": {"line": 94, "column": 8}, "end": {"line": 94, "column": 27}, "call": "sdd_python.exists"},
+    {"id": "N016", "type": "Assign", "start": {"line": 95, "column": 9}, "end": {"line": 102, "column": 10}, "target": "typedb_driver", "value": "command_status('typedb-driver', (str(sdd_python), '-c', \"import importlib.metadata as m; print('typedb-driver ' + m.version('typedb-driver'))\"))"},
+    {"id": "N017", "type": "Assign", "start": {"line": 104, "column": 9}, "end": {"line": 104, "column": 72}, "target": "typedb_driver", "value": "{'ok': False, 'detail': 'run `make sdd-infra`'}"},
+    {"id": "N006", "type": "Assign", "start": {"line": 105, "column": 5}, "end": {"line": 108, "column": 6}, "target": "files", "value": "{value: {'ok': (root / value).exists(), 'detail': 'present' if (root / value).exists() else 'missing'} for value in FILES}"},
+    {"id": "N007", "type": "Return", "start": {"line": 109, "column": 5}, "end": {"line": 118, "column": 6}, "value_keys": ["tools", "skills", "python_modules", "files", "services"]},
+    {"id": "N047", "type": "Call", "start": {"line": 111, "column": 19}, "end": {"line": 111, "column": 33}, "call": "skill_status"},
+    {"id": "N086", "type": "Call", "start": {"line": 115, "column": 31}, "end": {"line": 115, "column": 67}, "call": "service_status"},
+    {"id": "N087", "type": "Call", "start": {"line": 116, "column": 30}, "end": {"line": 116, "column": 61}, "call": "service_status"}
+  ]
+}

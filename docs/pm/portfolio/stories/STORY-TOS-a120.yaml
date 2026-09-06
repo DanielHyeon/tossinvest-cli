@@ -1,0 +1,21 @@
+{
+  "id": "STORY-TOS-a120",
+  "title": "Audit legacy execution-baseline adoption",
+  "feature": "FEAT-TOS-001",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a120-audit-legacy-execution-baseline",
+    "path": "openspec/changes/archive/2026-09-06-a120-audit-legacy-execution-baseline"
+  },
+  "found_by": {
+    "date": "2026-09-06",
+    "how": "Stage-1 reservation for a narrowly allowlisted legacy execution-baseline adoption audit. The Manager owns the OpenSpec contract and must add the change artifacts before implementation begins.",
+    "record": "openspec/changes/archive/2026-09-06-a120-audit-legacy-execution-baseline/proposal.md"
+  },
+  "acceptance": [
+    "The approved OpenSpec defines the audit scope, frozen-base compatibility rules, evidence requirements, and verification gates before implementation",
+    "Only the fixed a063 P/E tuple can select an execution baseline; missing records retain P and present invalid records fail closed",
+    "A detached clean H validates committed change-local evidence, exact schema/debt disposition, P <= E <= S < H, and the direct S/H/worktree Go source lock",
+    "Valid adoption derives maps from E; independent adversarial review, gstack review, sdd-sync/check and make gate remain required before completion"
+  ]
+}
