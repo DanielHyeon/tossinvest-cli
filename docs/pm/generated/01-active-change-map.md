@@ -117,3 +117,4 @@
 | `a118-a-sealed-test-still-runs` | STORY-TOS-a118 | archived |
 | `a119-codex-session-handoff-and-gbrain-startup` | STORY-TOS-a119 | in_progress |
 | `a120-audit-legacy-execution-baseline` | STORY-TOS-a120 | archived |
+| `a121-reconcile-stale-verification-artifacts` | STORY-TOS-a121 | in_progress |
