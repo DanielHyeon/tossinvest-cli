@@ -38,15 +38,25 @@
 
 ### Requirement: Evidence payload 권위는 trading journal과 분리된다
 
-원문 response, normalized payload, revision과 projection은 독립 append-only `evidence.db`에만 저장되어야 한다(SHALL). trading journal은 실제 결정이 소비한 immutable `snapshot_id`와 `snapshot_digest`만 저장해야 하며(SHALL), evidence payload, source response, revision table, API credential 또는 source header를 저장해서는 안 된다(MUST NOT). snapshot ID 부재 또는 digest 불일치는 신규 exposure-raising 결정을 거부해야 한다(SHALL).
+원문 response, normalized payload, revision과 projection은 독립 append-only `evidence.db`에만 저장되어야 한다(SHALL). trading journal은 실제 결정이 소비한 immutable `snapshot_id`와 `snapshot_digest`만 저장해야 하며(SHALL), 이 change가 trading journal에 더하는 schema는 그 두 열과 그것을 지키는 제약뿐이어야 한다(SHALL). evidence payload, source response, revision table, API credential 또는 source header를 위한 열·표를 새로 만들어서는 안 된다(MUST NOT). 부분 참조(ID만 또는 digest만)와 형식이 어긋난 참조는 lineage를 기록하기 전에 거부되어야 한다(SHALL). 검증할 수 없는 snapshot 참조를 읽는 dormant read boundary는 typed unavailable을 반환해야 하며(SHALL), trading journal payload를 fallback으로 사용해서는 안 된다(MUST NOT).
+
+이 change는 증거의 수집·정규화·재현 계약까지만 제공하고 주문 진입 경로를 배선하지 않는다. 따라서 snapshot 참조를 **신규 exposure-raising 결정의 사전 조건으로 강제**하는 것, 그리고 journal이 기록한 참조를 **evidence.db에 실제로 조회해 보는 것**은 이 change의 범위가 아니라 lane 배선 change의 범위다. 두 절반(journal 쪽 형식 거부와 evidence.db 쪽 존재·digest 거부)은 각각 구현되고 측정되지만, 이 change에서 둘을 잇는 호출은 없다 — `internal/journal`은 `internal/strategyevidence`를 import하지 않는다. 오늘 생산 결정은 전부 NULL/NULL 참조를 기록하며, 그것이 legacy로 허용되는 상태다.
 
 #### Scenario: 결정의 evidence lineage 기록
 - **WHEN** lane decision이 봉인된 evidence snapshot을 소비한다
 - **THEN** trading journal에는 snapshot ID/digest만 기록되고 payload와 source response는 evidence.db에 남는다
 
-#### Scenario: Evidence DB를 열 수 없다
-- **WHEN** snapshot ID/digest를 evidence.db에서 검증할 수 없다
-- **THEN** 신규 진입은 EVIDENCE_SNAPSHOT_UNAVAILABLE로 거부되고 trading journal payload fallback은 시도하지 않는다
+#### Scenario: 부분 evidence 참조 기록 시도
+- **WHEN** 결정 lineage가 snapshot ID만 또는 digest만, 혹은 형식이 어긋난 쌍을 담고 기록을 시도한다
+- **THEN** 기록은 저장 계층에 닿기 전에 typed refusal로 거부되고 어떤 lineage 행도 남지 않는다
+
+#### Scenario: 검증할 수 없는 snapshot 참조를 읽는다
+- **WHEN** dormant read boundary가 결정 lineage에서 형식이 어긋난 snapshot 참조를 읽는다
+- **THEN** 읽기는 typed snapshot-unavailable로 거부되고 trading journal payload fallback은 시도하지 않는다
+
+#### Scenario: evidence.db에서 snapshot을 찾을 수 없다
+- **WHEN** dormant evidence 재현 port가 존재하지 않거나 digest가 어긋난 snapshot 참조를 받는다
+- **THEN** 재현은 typed snapshot-unavailable로 거부되고 다른 출처로 대체하지 않는다
 
 ### Requirement: fatal veto와 lane scoring evidence는 분리된다
 

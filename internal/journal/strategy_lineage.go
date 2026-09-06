@@ -420,7 +420,7 @@ func insertExactRiskDecision(ctx context.Context, tx *sql.Tx, decision Decision)
 
 func insertExactStrategyDecision(ctx context.Context, tx *sql.Tx, lineage StrategyDecisionLineage) (int, error) {
 	if !validConsumedEvidenceReference(lineage.ConsumedEvidenceSnapshotID, lineage.ConsumedEvidenceSnapshotDigest) {
-		return 0, errors.New("journal strategy plan: consumed evidence snapshot reference is invalid")
+		return 0, ErrStrategyEvidenceReferenceInvalid
 	}
 	created := lineage.CreatedAt.Format(time.RFC3339Nano)
 	result, err := tx.ExecContext(ctx, `INSERT OR IGNORE INTO strategy_decision_lineage(entry_decision_identity,candidate_life_id,market,symbol,threshold_version,threshold_set_digest,evidence_digest,consumed_evidence_snapshot_id,consumed_evidence_snapshot_digest,lane_id,lane_version,lane_source_digest,lane_constants_digest,entry_price,stop_price,target_price,quantity,policy_version,settings_digest,decision_payload,decision_payload_digest,activation_manifest_digest,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,

@@ -1,0 +1,453 @@
+{
+  "file": "internal/strategyevidence/source_test.go",
+  "source_sha256": "80ece192234cd018a476bd45fd3dc996130fdda7c36849a6f10eaabc06e809db",
+  "package": "strategyevidence",
+  "function": "TestAdapterEnforcesResponseBytesWindowAndRetryAfter",
+  "signature": "TestAdapterEnforcesResponseBytesWindowAndRetryAfter(params=1, results=0)",
+  "start": {
+    "line": 87,
+    "column": 1
+  },
+  "end": {
+    "line": 129,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 96,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 106,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 109,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 122,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 125,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 2
+      },
+      "text": "t.Parallel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 2
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 82
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 13
+      },
+      "text": "validSourcePolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 25
+      },
+      "text": "policy.officialSeal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 14
+      },
+      "text": "newAdapter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 44
+      },
+      "text": "StaticCredential"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 13
+      },
+      "text": "adapter.Fetch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 27
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 7
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 2
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 13
+      },
+      "text": "validSourcePolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 25
+      },
+      "text": "policy.officialSeal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 14
+      },
+      "text": "newAdapter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 44
+      },
+      "text": "StaticCredential"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 16
+      },
+      "text": "adapter.Fetch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 30
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 16
+      },
+      "text": "adapter.Fetch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 30
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 91
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 2
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 24
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 14
+      },
+      "text": "newAdapter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 25
+      },
+      "text": "validSourcePolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 57
+      },
+      "text": "StaticCredential"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 18
+      },
+      "text": "adapter.Fetch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 32
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 90,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 91,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 92,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 93,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 94,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 95,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 103,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 105,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 106,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 109,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 114,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 118,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 119,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 120,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 121,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -36,6 +36,11 @@ type ProjectionPolicy struct {
 type FatalAssessment struct {
 	Blocked bool
 	Reasons []Refusal
+	// Unavailable 은 fatal 로 **선언된** fact 가 이 snapshot 에서 고를 수 없었던
+	// 이유를 남긴다. Required 가 아니면 Blocked 도 Reasons 도 움직이지 않으므로,
+	// 이 지도가 없으면 "선언한 fatal 증거가 없었다"와 "fatal 이 없었다"가 결과에서
+	// 구별되지 않는다. lane 쪽 LaneEvidenceSet 은 처음부터 같은 지도를 갖고 있었다.
+	Unavailable map[EvidenceKind]Refusal
 }
 
 type LaneEvidenceSet struct {
@@ -59,11 +64,13 @@ func Project(snapshot Snapshot, policy ProjectionPolicy) (ProjectionResult, erro
 	result := ProjectionResult{
 		PolicyVersion: policy.Version,
 		SnapshotID:    snapshot.ID,
+		Fatal:         FatalAssessment{Unavailable: make(map[EvidenceKind]Refusal)},
 		Lane:          LaneEvidenceSet{Eligible: true, Evidence: make(map[EvidenceKind]Envelope), Unavailable: make(map[EvidenceKind]Refusal)},
 	}
 	for _, requirement := range policy.Fatal {
 		evidence, refusal := choose(snapshot, requirement)
 		if refusal.Code != "" {
+			result.Fatal.Unavailable[requirement.Kind] = refusal
 			if requirement.Required {
 				result.Fatal.Blocked = true
 				result.Fatal.Reasons = append(result.Fatal.Reasons, refusal)

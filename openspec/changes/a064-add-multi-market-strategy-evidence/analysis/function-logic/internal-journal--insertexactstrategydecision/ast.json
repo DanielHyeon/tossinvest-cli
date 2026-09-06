@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/strategy_lineage.go",
-  "source_sha256": "8bcde9f95a8c5f3626c2d0d80bd1f0745f81a3d55900d8a5bd7ef78ab2019c01",
+  "source_sha256": "922e447d6a4453e758062318eeb3359f029a58f22eb55b649789482eecded1a8",
   "package": "journal",
   "function": "insertExactStrategyDecision",
   "signature": "insertExactStrategyDecision(params=3, results=2)",
@@ -76,14 +76,6 @@
         "column": 6
       },
       "text": "validConsumedEvidenceReference"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 423,
-        "column": 13
-      },
-      "text": "errors.New"
     },
     {
       "kind": "call",

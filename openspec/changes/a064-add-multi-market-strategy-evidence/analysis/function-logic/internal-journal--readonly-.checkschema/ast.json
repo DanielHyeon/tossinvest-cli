@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/readonly.go",
-  "source_sha256": "93075f05175586f61dd9a7855a3f4f6be4321dbf059d9e7030b534e26814f9ef",
+  "source_sha256": "d7b4e59fa0168941a04006b80308ccd3a88fba291da022bbdaa9e9a75d244767",
   "package": "journal",
   "function": "checkSchema",
   "receiver": "ReadOnly",

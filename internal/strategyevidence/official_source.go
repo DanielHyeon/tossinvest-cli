@@ -66,7 +66,7 @@ func NewOfficialAdapter(policy SourcePolicy, transport Transport, credentials Cr
 	if policy.CredentialRequired && credentials == nil {
 		return nil, ErrSourceCredential
 	}
-	base := NewAdapter(policy, transport, credentials)
+	base := newAdapter(policy, transport, credentials)
 	base.shared = budget
 	base.budgetKey = string(policy.Authority) + "/" + policy.ContractID
 	return &OfficialAdapter{policy: policy, base: base}, nil
@@ -137,6 +137,19 @@ func (a *OfficialAdapter) fetchPage(ctx context.Context, request OfficialCollect
 
 var digitsOnly = regexp.MustCompile(`^[0-9]+$`)
 
+// secHistoricalPageName 은 SEC submissions 계약이 filings.files[].name 에 쓰는 유일한
+// 모양이다. 이 이름은 **원격 응답에서 읽어 다음 요청의 경로가 된다**. 비어 있는지만
+// 보는 검사는 서버가 우리 요청 경로를 고르게 두는 것과 같다(공식 endpoint 외 fallback
+// 금지 위반). 동결된 fixture 도 실제 SEC 응답도 CIK<요청한 CIK>-submissions-<3자리>.json
+// 하나뿐이므로, 이 규칙이 거부하는 정상 입력은 없다. 계약이 바뀌면 수집은
+// ErrSourceSchemaDrift 로 fail closed 되고, 그것이 옳은 결과다.
+var secHistoricalPageName = regexp.MustCompile(`^CIK([0-9]{10})-submissions-[0-9]{3}\.json$`)
+
+func validSECHistoricalPageName(entityID, name string) bool {
+	match := secHistoricalPageName.FindStringSubmatch(name)
+	return match != nil && match[1] == entityID
+}
+
 type secRecent struct {
 	AccessionNumber    []string `json:"accessionNumber"`
 	FilingDate         []string `json:"filingDate"`
@@ -184,7 +197,7 @@ func (a *OfficialAdapter) collectSEC(ctx context.Context, request OfficialCollec
 	}
 	totalBytes := int64(len(first.Body))
 	for index, file := range root.Filings.Files {
-		if strings.TrimSpace(file.Name) == "" || file.FilingCount < 0 {
+		if !validSECHistoricalPageName(request.EntityID, file.Name) || file.FilingCount < 0 {
 			return OfficialBatch{}, ErrSourceSchemaDrift
 		}
 		page, fetchErr := a.fetchPage(ctx, request, index+2, file.Name, request.ResponseByteLimit-totalBytes)

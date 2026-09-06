@@ -27,7 +27,7 @@ func TestIncompleteOrUnverifiedPolicyMakesZeroCalls(t *testing.T) {
 			transport := &fakeTransport{}
 			policy := validSourcePolicy()
 			tt.mutate(&policy)
-			adapter := NewAdapter(policy, transport, StaticCredential("top-secret"))
+			adapter := newAdapter(policy, transport, StaticCredential("top-secret"))
 			_, err := adapter.Fetch(context.Background(), FetchRequest{OperationID: "op-1"})
 			if !errors.Is(err, tt.want) {
 				t.Fatalf("want %v, got %v", tt.want, err)
@@ -43,7 +43,7 @@ func TestAdapterKeepsCredentialOutOfRequestMetadata(t *testing.T) {
 	t.Parallel()
 	transport := &fakeTransport{responses: []TransportResponse{{Status: 200, Body: []byte(`{"ok":true}`)}}}
 	policy := validDARTSourcePolicy()
-	adapter := NewAdapter(policy, transport, StaticCredential("top-secret"))
+	adapter := newAdapter(policy, transport, StaticCredential("top-secret"))
 	result, err := adapter.Fetch(context.Background(), FetchRequest{OperationID: "op-1", PageLimit: 1})
 	if err != nil {
 		t.Fatal(err)
@@ -75,7 +75,7 @@ func TestAdapterRejectsRuntimeBoundExpansionBeforeTransport(t *testing.T) {
 		t.Run(request.OperationID, func(t *testing.T) {
 			t.Parallel()
 			transport := &fakeTransport{}
-			adapter := NewAdapter(policy, transport, StaticCredential("secret"))
+			adapter := newAdapter(policy, transport, StaticCredential("secret"))
 			_, err := adapter.Fetch(context.Background(), request)
 			if !errors.Is(err, ErrSourceBoundExceeded) || transport.Calls() != 0 {
 				t.Fatalf("err=%v calls=%d", err, transport.Calls())
@@ -91,7 +91,7 @@ func TestAdapterEnforcesResponseBytesWindowAndRetryAfter(t *testing.T) {
 		policy := validSourcePolicy()
 		policy.MaxResponseBytes = 4
 		policy.contractSeal = policy.officialSeal()
-		adapter := NewAdapter(policy, transport, StaticCredential("secret"))
+		adapter := newAdapter(policy, transport, StaticCredential("secret"))
 		_, err := adapter.Fetch(context.Background(), FetchRequest{OperationID: "bytes"})
 		if !errors.Is(err, ErrSourceBoundExceeded) {
 			t.Fatalf("want bound error, got %v", err)
@@ -102,7 +102,7 @@ func TestAdapterEnforcesResponseBytesWindowAndRetryAfter(t *testing.T) {
 		policy := validSourcePolicy()
 		policy.MaxCalls = 1
 		policy.contractSeal = policy.officialSeal()
-		adapter := NewAdapter(policy, transport, StaticCredential("secret"))
+		adapter := newAdapter(policy, transport, StaticCredential("secret"))
 		if _, err := adapter.Fetch(context.Background(), FetchRequest{OperationID: "first"}); err != nil {
 			t.Fatal(err)
 		}
@@ -116,7 +116,7 @@ func TestAdapterEnforcesResponseBytesWindowAndRetryAfter(t *testing.T) {
 			{Status: 200, Body: []byte(`{"ok":true}`)},
 		}}
 		waiter := &fakeWaiter{}
-		adapter := NewAdapter(validSourcePolicy(), transport, StaticCredential("secret"))
+		adapter := newAdapter(validSourcePolicy(), transport, StaticCredential("secret"))
 		adapter.waiter = waiter
 		result, err := adapter.Fetch(context.Background(), FetchRequest{OperationID: "retry"})
 		if err != nil || result.Attempts != 2 {
@@ -133,7 +133,7 @@ func TestAdapterRejectsConcurrentCallBeforeSecondTransportRequest(t *testing.T) 
 	transport := &blockingTransport{started: make(chan struct{}), release: make(chan struct{})}
 	policy := validSourcePolicy()
 	policy.MaxConcurrency = 1
-	adapter := NewAdapter(policy, transport, StaticCredential("secret"))
+	adapter := newAdapter(policy, transport, StaticCredential("secret"))
 	firstDone := make(chan error, 1)
 	go func() {
 		_, err := adapter.Fetch(context.Background(), FetchRequest{OperationID: "first"})

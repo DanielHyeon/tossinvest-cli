@@ -73,6 +73,30 @@ const (
 	dartContractID = "opendart-disclosure-list-2019001"
 )
 
+// 공식 출처 정책의 절대 상한.
+//
+// 출처를 정확히 나눈다. maxOfficialPageSize 만 영수증에서 왔다 —
+// testdata/official_contracts.json 의 OpenDART `maximum_page_count`, 그리고
+// TestMintedPoliciesMatchTheFrozenContractFile 이 그 등식을 잰다. 나머지 여덟은
+// 계약 문서가 아니라 **이 모듈이 실제로 발행하는 두 정책 위에 둔 보수적 천장**이다.
+//
+// 그러므로 이것이 거부하는 정상 입력이 있다: 예컨대 OpenDART 의 문서화된 일일
+// 한도는 20,000 건인데 maxOfficialCalls 는 24시간 창에서 1000 건까지만 허용한다.
+// 오늘 MintSourcePolicy 를 부르는 생산 코드는 없으므로 잠재적이다. 더 큰 한도가
+// 필요해지면 그 숫자를 영수증에서 읽어 official_contracts.json 에 먼저 적고,
+// 그 값을 여기서 인용한다 — 손으로 올리지 않는다.
+const (
+	maxOfficialPageSize          = 100
+	maxOfficialCallWindow        = 24 * time.Hour
+	maxOfficialCalls             = 1000
+	maxOfficialPages             = 100
+	maxOfficialResponseBytes     = int64(64) << 20
+	maxOfficialConcurrency       = 8
+	maxOfficialRequestDeadline   = time.Minute
+	maxOfficialOperationDeadline = 10 * time.Minute
+	maxOfficialRetries           = 10
+)
+
 func MintSourcePolicy(config SourcePolicyConfig) (SourcePolicy, error) {
 	if config.Authority == AuthorityKRX {
 		return SourcePolicy{}, ErrSourceUnavailable
@@ -179,6 +203,17 @@ func (p SourcePolicy) validate() error {
 		}
 	}
 	if p.AccessContract != "official" || p.AbsoluteCallWindow <= 0 || p.MaxCalls <= 0 || p.MaxPages <= 0 || p.MaxResponseBytes <= 0 || p.MaxConcurrency <= 0 || p.RequestDeadline <= 0 || p.OperationDeadline <= 0 || p.RequestDeadline > p.OperationDeadline || len(p.RetryableStatuses) == 0 || p.MaxRetries < 0 || p.RetryAfterPolicy != RetryAfterBounded {
+		return ErrSourceDisabled
+	}
+	// "0보다 큰가"가 아니라 절대 천장으로 막는다. 지금 발행되는 두 정책(SEC·OpenDART)은
+	// 전부 이 안에 있고 — TestMintedPoliciesSurviveTheirOwnBounds 가 그것을 잰다 —
+	// 그러므로 **이 모듈이 만들 수 있는** 정책은 하나도 거부되지 않는다. 천장 자체가
+	// 무엇을 거부하는지는 위 상수 주석에 적었다.
+	if p.PageSize <= 0 || p.PageSize > maxOfficialPageSize || p.AbsoluteCallWindow > maxOfficialCallWindow ||
+		p.MaxCalls > maxOfficialCalls || p.MaxPages > maxOfficialPages ||
+		p.MaxResponseBytes > maxOfficialResponseBytes || p.MaxConcurrency > maxOfficialConcurrency ||
+		p.RequestDeadline > maxOfficialRequestDeadline || p.OperationDeadline > maxOfficialOperationDeadline ||
+		p.MaxRetries > maxOfficialRetries {
 		return ErrSourceDisabled
 	}
 	return nil
@@ -301,7 +336,10 @@ func NewSharedRateBudget() *SharedRateBudget {
 	return &SharedRateBudget{windows: make(map[string]*rateWindow)}
 }
 
-func NewAdapter(policy SourcePolicy, transport Transport, credentials CredentialProvider) *Adapter {
+// newAdapter 는 패키지 안에서만 쓴다. 밖에서 어댑터를 만드는 길은 NewOfficialAdapter
+// 하나뿐이고, 그것은 공유 rate 예산을 반드시 요구한다 — 어댑터를 N 개 만들어 정책
+// 한도를 N 배로 늘리는 길을 타입 수준에서 없앤다.
+func newAdapter(policy SourcePolicy, transport Transport, credentials CredentialProvider) *Adapter {
 	return &Adapter{policy: policy, transport: transport, credentials: credentials, now: time.Now, waiter: timerWaiter{}}
 }
 
@@ -393,10 +431,10 @@ func (a *Adapter) Fetch(ctx context.Context, request FetchRequest) (FetchResult,
 		requestCancel()
 		if err != nil {
 			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-				return FetchResult{Metadata: metadata, Attempts: attempt + 1}, err
+				return FetchResult{Metadata: metadata, Attempts: attempt + 1}, redactTransportError(err)
 			}
 			if attempt == a.policy.MaxRetries {
-				return FetchResult{Metadata: metadata, Attempts: attempt + 1}, fmt.Errorf("%w: %v", ErrSourceRetriesExhausted, err)
+				return FetchResult{Metadata: metadata, Attempts: attempt + 1}, fmt.Errorf("%w: %w", ErrSourceRetriesExhausted, redactTransportError(err))
 			}
 			continue
 		}
@@ -425,6 +463,36 @@ func (a *Adapter) Fetch(ctx context.Context, request FetchRequest) (FetchResult,
 		}
 	}
 	return FetchResult{Metadata: metadata}, ErrSourceIncomplete
+}
+
+// transportFailure 는 전송 계층 오류에서 "무엇이 실패했는가"만 남기고 원문 메시지를
+// 버린다. OpenDART 는 crtfc_key 를 **질의 문자열**로 인증하므로 net/http 가 만드는
+// *url.Error 는 인증된 URL 을 통째로 메시지에 담는다(stripPassword 는 userinfo 만
+// 지운다). 그 메시지를 그대로 돌려주면 로그·화면·상위 오류 어디에나 키가 남는다.
+type transportFailure struct{ sentinel error }
+
+func (e transportFailure) Error() string {
+	if e.sentinel == nil {
+		return "strategy evidence: transport request failed"
+	}
+	return "strategy evidence: transport request failed: " + e.sentinel.Error()
+}
+
+// Unwrap 은 우리가 아는 sentinel 만 이어 준다. 그래서 상위는 종류로 분기할 수 있고,
+// 남의 오류 문자열은 한 글자도 따라오지 않는다.
+func (e transportFailure) Unwrap() error { return e.sentinel }
+
+func redactTransportError(err error) error {
+	switch {
+	case err == nil:
+		return nil
+	case errors.Is(err, context.DeadlineExceeded):
+		return transportFailure{sentinel: context.DeadlineExceeded}
+	case errors.Is(err, context.Canceled):
+		return transportFailure{sentinel: context.Canceled}
+	default:
+		return transportFailure{}
+	}
 }
 
 func (a *Adapter) acquire() error {

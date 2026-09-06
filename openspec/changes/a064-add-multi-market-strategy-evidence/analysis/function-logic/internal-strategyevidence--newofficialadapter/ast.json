@@ -1,0 +1,129 @@
+{
+  "file": "internal/strategyevidence/official_source.go",
+  "source_sha256": "7ca8d2be9fe802d23cf737d04e24f8ff9608b5cc4ca01dbcb2bded82dbd39588",
+  "package": "strategyevidence",
+  "function": "NewOfficialAdapter",
+  "signature": "NewOfficialAdapter(params=4, results=2)",
+  "start": {
+    "line": 59,
+    "column": 1
+  },
+  "end": {
+    "line": 73,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 61,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 64,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 67,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 72,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 12
+      },
+      "text": "policy.validateOfficial"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 10
+      },
+      "text": "newAdapter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 19
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 69,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

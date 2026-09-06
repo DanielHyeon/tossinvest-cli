@@ -35,6 +35,55 @@
 ## 6. Verify and Gate
 
 - [x] 6.1 Run focused race/unit/integration tests and property fixtures for canonical digest, dual-cutoff point-in-time replay, evidence.db isolation, source-policy zero-call behavior, rate budgets and fail-closed projections; record RED-to-GREEN evidence.
-- [x] 6.2 Run static secret scans and a broker spy test proving all a064 paths create zero order intents, zero live broker requests and zero lane/automation toggle changes.
-- [ ] 6.3 Refresh all Function Logic Maps and Branch Test Maps after edits, then run `openspec validate a064-add-multi-market-strategy-evidence --strict --no-interactive`, `make sdd-check`, `make test`, `make vet` and `make validate`.
-- [ ] 6.4 Complete independent review, resolve findings and run `make gate CHANGE=a064-add-multi-market-strategy-evidence` without activating any live configuration.
+- [x] 6.2 Run static secret scans and a broker spy test proving all a064 paths create zero order intents,
+      zero live broker requests and zero lane/automation toggle changes. Re-done 2026-09-07: the original
+      evidence counted rows on `intents`/`mutation_attempts`/`risk_reservations`, tables the executed path
+      never writes, so it could not fail (issues.md I10). It is replaced by two instruments that can:
+      `TestStrategyEvidenceImportClosureReachesNoMutationPath` walks the package's transitive import
+      closure and refuses any broker/dispatch/execgw/guardian/journal/order/toggle/`net/http` path, and
+      `TestDormantEvidenceReadWritesNothingAnywhereInTheJournal` compares a digest of every table's row
+      count across the dormant read and asserts the read handle itself refuses a write. Both carry a
+      positive control. The write attempt targets `CREATE TABLE` and `PRAGMA user_version`, which no
+      immutability trigger guards — an earlier version aimed at `UPDATE strategy_decision_lineage`, which
+      the `..._no_update` trigger refuses even on a read-write DSN, so it proved nothing.
+- [x] 6.3 Refresh all Function Logic Maps and Branch Test Maps after edits, then run `openspec validate a064-add-multi-market-strategy-evidence --strict --no-interactive`, `make sdd-check`, `make test`, `make vet` and `make validate`. Fourteen bundles are current; the `snapshotDigest` and `ReadOnly.checkSchema` branch-test-maps were rewritten because measurement disproved the coverage they claimed.
+- [x] 6.4 Complete independent review, resolve findings and run `make gate CHANGE=a064-add-multi-market-strategy-evidence` without activating any live configuration. Two independent reviews ran in separate contexts; both returned BLOCK and both sets of findings are closed or recorded with a reason (review.md, issues.md). No live configuration, toggle or broker path was touched.
+
+## 7. Completion remediation (2026-09-07)
+
+- [x] 7.1 Bind the full snapshot Header: per-field digest tests over every `Header` and `SnapshotQuery`
+      field with reflect-based completeness, a frozen golden vector authored outside the production code,
+      and an ordering/no-caller-mutation test (issues.md I1, I2, I3).
+- [x] 7.2 Make the journal's Go guard distinguishable from the v21 SQL trigger with
+      `ErrStrategyEvidenceReferenceInvalid`, and drive the trigger's format disjuncts through direct SQL
+      that bypasses Go (issues.md I4, I9). Measured: of the five WHEN disjuncts, four are decisive —
+      NULL parity, the `'snapshot-'||digest` prefix, `length!=64` and the `GLOB '*[^0-9a-f]*'` class.
+      The fifth, `digest!=lower(digest)`, is strictly implied by the GLOB (no ASCII character differs from
+      its own lowercase while lying inside `[0-9a-f]`), so it can never decide and is recorded as such
+      rather than claimed as tested. The Go-side lowercase check *is* decisive, because `hex.DecodeString`
+      accepts uppercase, and it is bound.
+- [x] 7.2.1 Bind the read-side `validConsumedEvidenceReference` call in `ConsumedSnapshot`, the third
+      judgement of the same rule, with a stored malformed reference written past the v21 triggers.
+- [x] 7.2.2 Bind `snapshotItemMatchesQuery` — the other half of the pair issues.md I1 named — with a
+      correct digest supplied on purpose, so only the scope check can refuse.
+- [x] 7.2.3 Bind `insertExactStrategyDecision`'s statement-failure arm by the error it surfaces, not only
+      by the rollback, which a swallowed error reproduces through the read-back collision.
+- [x] 7.3 Execute `ReadOnly.checkSchema`'s six inspection-failure arms with a delegating driver that fails
+      one chosen query, and open complete v19/v20 journals read-only so both version gates are observed
+      false; name each missing v21 column individually (issues.md I6, I7, I8).
+- [x] 7.4 Replace the identifier-grep SELECT-only proofs with intra-package call-chain reachability, and
+      the schemaV21 literal grep with a measured v20→v21 schema diff (issues.md I12, I14).
+- [x] 7.5 Read `testdata/official_contracts.json` from Go and bind the minted policies, the SEC fair-access
+      rate, the declared-identity requirement, the OpenDART credential parameter and the KRX freeze flag to
+      it; enforce `snapshot_items` constraints by insertion rather than by counting (issues.md I11, I13).
+- [x] 7.6 Fix the production defects: redact transport errors so no credential or authenticated URL leaves
+      the adapter, refuse a SEC historical page name the remote body chose, bound every policy field by the
+      frozen contract, unexport `NewAdapter` so no adapter can skip the shared rate budget, and record a
+      missing optional fatal fact in `FatalAssessment.Unavailable` (issues.md I15, I16, I17, I18).
+- [x] 7.7 Make the policy zero-call test discriminating by re-sealing after each mutation, with one case per
+      `SourcePolicy` field and reflect-based completeness (issues.md I19).
+- [x] 7.8 Narrow the "Evidence payload 권위는 trading journal과 분리된다" Requirement to the dormant scope
+      this change actually implements, since forcing a snapshot reference as an order-entry precondition is
+      the lane-wiring change's scope, not a064's declared one (issues.md I20; human decision, 2026-09-07).
+- [x] 7.9 Verify every new test can fail: mutate each guarded property under `go test -overlay` and record
+      the surviving/caught result, with a positive control proving the instrument reaches the target.

@@ -45,11 +45,19 @@ passes as recorded above; the full non-race package suite passes.
 
 ## Isolation and no mutation
 
-- `schemaV21` contains only two `ALTER TABLE ... ADD COLUMN ... TEXT` statements.
+- `schemaV21` contains two `ALTER TABLE ... ADD COLUMN ... TEXT` statements **and two `CREATE TRIGGER`**
+  statements (`internal/journal/strategy_evidence.go:14-33`). An earlier revision of this line said "only
+  two ALTER TABLE", which made the isolation argument rest on a description the migration does not match;
+  review.md described the triggers, so the two documents disagreed. Corrected 2026-09-07 (issues.md I23).
 - Migration/schema tests reject evidence payload, revision, credential, secret, source-response and evidence
-  table storage in the trading journal.
+  table storage in the trading journal. Scope limit measured 2026-09-07: that test greps the `schemaV21`
+  **string literal in its own package**, not `sqlite_master` of the migrated database, so it cannot see a
+  payload or credential table introduced by any other migration (issues.md I14).
 - Dormant read AST tests reject `Exec`, `ExecContext`, `Begin`, `BeginTx`, mutating SQL, `net/http`, broker,
-  dispatch, execution-gateway, Guardian, runtime, operating and toggle imports.
+  dispatch, execution-gateway, Guardian, runtime, operating and toggle imports. Scope limit measured
+  2026-09-07: each test parses one file and walks one method body, and matches SQL literals with a trailing
+  space, so a write reached through a same-package helper, a differently named method, a `driver.Conn` or
+  `DELETE\nFROM` passes cleanly (issues.md I12).
 - After a journal snapshot-lineage read, `intents`, `mutation_attempts` and `risk_reservations` remain zero.
 - Exact KR and US replay is market-qualified; failure in one market does not alter or gate the other.
 
@@ -76,8 +84,14 @@ The focused non-race and race commands above include these HIGH regression tests
 
 ## Remaining repository gate
 
-Function Logic Maps for the two a064-modified existing functions were refreshed against current AST and their
-branch maps record GREEN coverage. The analysis checker currently reports only concurrently modified journal
-apply-hook/read-only/schema test functions owned by another workstream; it no longer reports an a064-owned
-map formatting, branch or stale-hash error. Repository-wide `make sdd-check`, test/vet/validate, independent
-review and `make gate CHANGE=a064-add-multi-market-strategy-evidence` remain integration-owner work.
+Function Logic Maps for the three a064-modified existing functions were refreshed against current AST and their
+branch maps record GREEN coverage.
+
+Superseded 2026-09-07 by the completion pass. The comparison base was moved from `c57915dd` to `bc03c4d4`
+because 307 unrelated commits had made the checker attribute 341 foreign functions to a064; at the new base
+it reports 0 required functions, so the checker's silence here is vacuity, not coverage (issues.md I27).
+Repository-wide `make sdd-check`, `make test`, `make test-seams`, `make test-race`, `make vet` and
+`make validate` all pass as of that date. What blocks completion is not the gates but the recorded claims:
+the branch maps' GREEN coverage above is contradicted for rows B1-B3 of `snapshotDigest`, B1-B2 of
+`insertExactStrategyDecision`, and B1/B6/B11/B13/B17/B21/B23/B24/B27 of `ReadOnly.checkSchema` — see
+issues.md I1-I9. `make gate CHANGE=a064-add-multi-market-strategy-evidence` is not run.

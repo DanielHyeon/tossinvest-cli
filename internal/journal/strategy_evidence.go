@@ -41,6 +41,12 @@ var strategyEvidenceReadOnlyColumns = []struct {
 
 var ErrStrategyEvidenceSnapshotUnavailable = errors.New("journal strategy evidence: consumed snapshot unavailable")
 
+// ErrStrategyEvidenceReferenceInvalid 은 **Go 층이** 부분·형식오류 참조를 거부했다는
+// 뜻이다. v21 SQL 트리거가 같은 여섯 입력을 똑같이 거부하므로, 거부의 출처가 구분되지
+// 않으면 Go 가드를 통째로 지워도 어떤 시험도 빨개지지 않는다. 그 상태를 없애려고
+// 타입을 붙였다 — 저장 계층에 닿기 전에 막았다는 사실 자체가 이 change 의 주장이다.
+var ErrStrategyEvidenceReferenceInvalid = errors.New("journal strategy plan: consumed evidence snapshot reference is invalid")
+
 // ConsumedStrategyEvidence is the complete trading-journal view of evidence.
 // It intentionally contains no evidence payload or source/revision metadata.
 type ConsumedStrategyEvidence struct {
