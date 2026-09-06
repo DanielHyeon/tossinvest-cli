@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a064-add-multi-market-strategy-evidence",
-    "path": "openspec/changes/a064-add-multi-market-strategy-evidence"
+    "path": "openspec/changes/archive/2026-09-06-a064-add-multi-market-strategy-evidence"
   },
   "acceptance": [
     "KR and US evidence use market-specific source, clock, currency and confidence contracts without pretending one market's unavailable facts exist in the other",
