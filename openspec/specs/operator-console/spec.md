@@ -1672,3 +1672,60 @@ gate와 기동 인터록은 그대로 유일한 판정자다). 승인은 `engine
 
 - **WHEN** 서베이는 시작됐으나 승인 기록이 실패한다
 - **THEN** 재시작은 성공으로 보고되고, 기록 실패는 그 결과에 덧붙여 알린다
+
+### Requirement: 콘솔은 KR과 US strategy runtime을 독립 projection으로 표시한다
+
+콘솔은 shared server-owned runtime projection을 사용해 KR과 US 각각의 lane desired/effective, evidence freshness/digest, campaign/leg, horizon risk bucket, scheduler/calendar, activation, ProtectionReady, reconciliation health, first typed refusal과 observed-at을 read-only로 표시해야 한다 (SHALL). ProtectionReady 값은 정확히 `WIRED` 또는 `UNWIRED`만 사용하고 실패 상세는 별도 typed refusal로 표시해야 한다 (SHALL). 한 시장을 읽지 못하면 그 시장의 envelope만 unavailable + `UNWIRED` + typed reason으로 fail-closed하고 다른 시장의 current snapshot을 유지해야 하며 (SHALL), unavailable을 default, 0 또는 다른 시장의 값으로 대체해서는 안 된다 (MUST NOT). 이 화면은 order, gate, lane/LIVE activation, autostart 또는 protection-weakening mutation control을 제공해서는 안 된다 (MUST NOT).
+
+이 화면은 배선돼 있다(2026-09-08 측정): `/strategy-runtime` 이 인증된 GET 경로로 등록돼
+있고, 두 시장 카드는 엔진이 발행하는 같은 projection 을 읽는다. 두 시장이 실제로 값을
+갖는지는 활성화의 함수이며, 활성화는 여전히 별도의 사람 결정이다.
+
+#### Scenario: KR blocked와 US eligible
+
+- **WHEN** KR은 stale evidence로 effective OFF이고 US는 current evidence와 scheduler로 eligible이다
+- **THEN** 두 market card가 각각의 desired/effective와 first refusal을 표시하고 KR 상태를 US에 복제하지 않는다
+
+#### Scenario: US runtime unavailable
+
+- **WHEN** runtime endpoint가 KR snapshot은 반환하지만 US snapshot을 읽지 못한다
+- **THEN** KR current state는 유지되고 US status만 unavailable, ProtectionReady는 `UNWIRED`와 runtime-unavailable refusal이며 0/default 또는 제3의 readiness enum으로 꾸미지 않는다
+
+#### Scenario: dormant 배포
+
+- **WHEN** service는 배포됐지만 lane, autostart, automation과 LIVE approval이 활성화되지 않았다
+- **THEN** 두 market card는 desired/effective OFF 또는 not-configured와 구체적 blocker를 표시하고 entry-ready로 표시하지 않는다
+
+#### Scenario: 콘솔 권한 회귀
+
+- **WHEN** multi-market runtime 화면의 route table과 HTML을 검사한다
+- **THEN** 신규 order/gate/LIVE/activation/protection mutation route와 자유 입력 control은 0건이다
+
+### Requirement: 콘솔 성과는 market과 campaign lineage를 설명한다
+
+콘솔은 lane performance를 market, lane/version, campaign/leg와 policy version으로 구분하고 완전한 persisted identifier chain만 attributed sample에 포함해야 한다 (SHALL). Partial fill/staged close에는 closed/residual quantity, gross PnL, entry/exit fee, tax, FX source/rate/as-of와 net PnL을 함께 표시해야 한다 (SHALL). Lineage 또는 observation이 없으면 각각 `link_missing`, `not_measured`와 누락 식별자를 표시해야 하고 (SHALL), symbol/time 또는 동일 ticker로 다른 시장·campaign에 귀속해서는 안 된다 (MUST NOT).
+
+화면은 배선돼 있으나 **화면이 읽는 파생 저장소를 채우는 것은 자동이 아니다**: 투영은
+`tossctl performance project-attribution` 이라는 별도 CLI 하위명령이고 엔진 사이클이
+부르지 않는다(2026-09-08 측정). 투영을 한 번도 돌리지 않았다면 이 화면은 빈 표본을
+정직하게 보여 주는 것이 맞고, 그것을 0 성과로 읽어서는 안 된다 (MUST NOT).
+
+#### Scenario: 동일 ticker의 다른 시장
+
+- **WHEN** KR과 US에 동일 문자열 ticker가 있지만 persisted market/campaign lineage는 US만 완전하다
+- **THEN** US sample만 해당 US lane/campaign에 귀속되고 KR row를 symbol로 추정하지 않는다
+
+#### Scenario: campaign leg 누락
+
+- **WHEN** closed trade에 lane/version은 있지만 campaign 또는 leg identifier가 없다
+- **THEN** attributed result에서 제외하고 `link_missing`과 누락 필드를 표시한다
+
+#### Scenario: staged close 잔여 수량
+
+- **WHEN** position의 일부만 close fill되고 나머지 수량은 authoritative journal에서 open이다
+- **THEN** realized close quantity와 residual open quantity를 분리하고 전체 position을 closed trade로 표시하지 않는다
+
+#### Scenario: FX evidence 누락
+
+- **WHEN** US close fill의 원 currency PnL은 있지만 reporting currency FX source/rate/as-of가 없다
+- **THEN** 원 currency metric은 보존하고 reporting-currency net PnL은 `not_measured`로 표시하며 0 또는 조회 시점 환율로 대체하지 않는다

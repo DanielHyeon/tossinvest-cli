@@ -90,3 +90,71 @@ The paired KR/US operational projection, lane performance, deployment guard and 
 are CLEAN. Existing safety loops are running and both markets remain independently OFF/NOT_CONFIGURED with
 zero strategy/protection mutation rows. No LIVE order, operating toggle, approval or market activation was
 performed. Market activation remains an explicit later human decision.
+
+## 완료 게이트 (2026-09-08, 아카이브 시점)
+
+이 절은 change 를 닫으면서 **실제로 돌린 것**만 적는다.
+
+| 단계 | 결과 |
+|---|---|
+| 1 tasks.md 존재 | OK |
+| 2 미완료 태스크 | 0건 (27/27) |
+| 3 deploy-pair.txt | 선언 없음 — 단독 배포 |
+| 4 review.md | 이 파일 |
+| 5 Function Logic Map | **a073 자기 완료 커밋(`fb135d85`)에서 PASS** — `evidence complete or diff-proven exempt` |
+| 6 make sdd-check | RC=0 |
+| 7 make test | RC=0 |
+| 8 make test-seams | RC=0 |
+| 9 make test-race | RC=0 |
+| 10 make vet | RC=0 |
+| 11 make validate | RC=0 (61/61) |
+
+### 5단계를 왜 HEAD 가 아니라 자기 커밋에서 쟀는가
+
+`check_analysis` 는 change 의 base commit 과 **워크트리**를 비교한다. a073 의 base 는
+`171739a4` (2026-08-04) 이고 HEAD 는 그로부터 한 달 넘게 앞서 있으므로, HEAD 에서 재면
+a074~a121 이 바꾼 함수 전부가 "a073 이 증거를 안 냈다"로 나온다. 그래서 두 자리에서
+재고 차이를 귀속했다.
+
+| 측정 | 지적 수 |
+|---|---|
+| HEAD (수리 전) | 338 |
+| a073 자기 완료 커밋 `fb135d85` (수리 전) | **2** |
+| a073 자기 완료 커밋 (수리 후) | **0** |
+| HEAD (수리 후) | 336 |
+
+즉 a073 에게 귀속되는 것은 2건이고 나머지 336 은 쌓임 아티팩트다. 그 2건은 아래에서
+고쳤다.
+
+### 고친 2건 — 이름이 바뀐 테스트를 가리키던 인용
+
+a073 의 커밋 `8022f578` 이 테스트 함수 둘의 **이름과 본문**을 바꿨다.
+
+- `TestCampaignCoreHasNoProductionBrokerOrToggleWiring` → `TestCampaignCoreProductionWiringHasNoBrokerOrToggleAuthority`
+- `TestTheApplyAnswerNamesTheMarketTheCurrencyCloses` → `TestTheApplyAnswerNamesPairedAccountBaseFXRequirements`
+
+이 change 는 FLM 증거를 a072 에서 빌려 쓰는데(`analysis/function-logic-reference.txt`),
+그 두 번들의 branch-test-map 이 **옛 이름**을 덮는 테스트로 계속 인용하고 있었다. 인용된
+이름은 현재 트리 어디에도 없으므로 그 커버리지 주장은 아무도 답하지 않는 주장이었다.
+
+당시 게이트는 이것을 못 봤다 — 인용한 테스트가 실재하는지 보는 검사는 a073 보다 **나중에**
+생겼다. 그러므로 이것은 그때 한 거짓말이 아니라, 더 엄격해진 검사가 드러낸 낡은 인용이다.
+
+수리는 인용만 현재 이름으로 옮겼다. `ast.json` 은 `revision: base` 라 base 시점 이름과
+좌표를 그대로 둔다 — 그것이 그 번들이 기술하는 대상이다. 옛 이름은 backtick 없이 적었다.
+backtick 을 두르면 그것도 "지금 트리에 있어야 하는 테스트"라는 인용이 되어 방금 고친
+거짓을 다시 만들기 때문이다.
+
+### 게이트 도구 결함 하나 — 아카이브가 참조를 고아로 만든다
+
+5단계를 처음 돌렸을 때 나온 것은 지적 목록이 아니라
+`function-logic reference base is invalid: missing base-commit.txt` 였다.
+
+원인은 a073 이 아니라 해결자다. `check_analysis.py` 는 참조된 change 를
+`openspec/changes/<id>` 에서만 찾았고, a072 는 2026-08-29 에 아카이브되어 그 자리에
+없었다. **증거를 빌려주는 쪽이 먼저 아카이브되면 빌리는 쪽의 게이트가 영구히 막힌다.**
+
+증상을 우회(번들 231개 복사·포인터 재작성)하지 않고 해결자를 고쳤다:
+`archive/<YYYY-MM-DD>-<id>` 도 본다. 날짜 접두사를 벗긴 나머지를 **전부** 맞추고
+(접미사 일치는 남의 증거를 통과시킨다), 같은 id 의 아카이브가 둘이면 고르지 않고 멈춘다.
+시험 넷과 반증 셋은 `tools/logic-map/test_check_analysis.py` 에 있다.

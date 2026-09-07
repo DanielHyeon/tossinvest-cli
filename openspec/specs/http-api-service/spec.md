@@ -227,3 +227,54 @@ httpapi는 strategy projection endpoint의 부재(descriptor 없음)와 모든 �
 - **THEN** 경고를 남기고 전략 표면 없이 기동한다 — 같은 디스크 상태에서 콘솔과 같은
   판정이다
 
+
+### Requirement: private API는 콘솔과 같은 market runtime projection을 제공한다
+
+Private read API와 SSE는 콘솔과 **같은** server-owned projection에서 KR과 US 각각의 lane desired/effective, evidence freshness/digest, campaign/leg, horizon risk bucket, scheduler/calendar, activation, ProtectionReady, reconciliation health, first typed refusal과 observed-at을 stable versioned schema로 반환해야 한다 (SHALL). Market별 status/error envelope를 사용해 한 시장 unavailable이 다른 시장 snapshot을 제거해서는 안 된다 (MUST NOT). ProtectionReady는 정확히 `WIRED`/`UNWIRED`만 사용해야 하고 (SHALL), 제3의 readiness enum이나 LIVE/gate/lane activation/autostart/order/protection mutation route를 추가해서는 안 된다 (MUST NOT).
+
+이 경로는 배선돼 있다(2026-09-08 측정): 엔진이 전략 assembly refresh 끝에 projection을
+발행하고, 인증된 runtime-only Unix transport를 거쳐 콘솔·REST·SSE·OpenAPI 가 같은 Go
+snapshot 을 읽는다. 이후 a112 가 같은 출구에 runtime identity digest 와 supervisor latch
+강등을 덧붙였으므로 이 계약은 **약해진 적이 없고 넓어졌다**.
+
+#### Scenario: 부분 market failure
+
+- **WHEN** KR runtime projection은 current이고 US projection read가 실패한다
+- **THEN** API는 KR snapshot과 US typed unavailable plus `UNWIRED` ProtectionReady를 반환하고 0값 성공이나 제3의 readiness로 만들지 않는다
+
+#### Scenario: 웹·API drift 검사
+
+- **WHEN** KR과 US runtime fixture를 console adapter와 API adapter로 각각 렌더한다
+- **THEN** market key, desired/effective, exact readiness, first refusal, provenance와 unavailable 의미가 동일하다
+
+#### Scenario: mutation surface 부재
+
+- **WHEN** private API route table과 OpenAPI schema를 검사한다
+- **THEN** multi-market runtime resource는 read/SSE만 존재하고 LIVE/gate/lane activation/order/protection mutation endpoint는 0건이다
+
+### Requirement: dormant deployment 교체 규칙은 실행 가능한 계획 라이브러리로 동결된다
+
+Service 교체 계획은 service별 current/target exact image digest, rendered Compose digest, config/activation/protection digest, environment key set, volume/mount identity, schema compatibility range와 baseline health의 immutable preimage를 요구해야 한다 (SHALL). Mutable tag, unknown range 또는 불완전 preimage이면 첫 replacement action을 0개로 만들어야 하며 (SHALL), 계획은 frozen order로 한 번에 하나씩 service별 최대 5분 health bound 안에서만 다음 한 단계를 내야 한다 (SHALL). Health 확인은 engine entry process를 시작하거나 autostart, automation, lane desired, LIVE approval, protection 설정을 바꾸거나 broker mutation을 수행해서는 안 된다 (MUST NOT).
+
+**이 규칙을 지키는 것은 코드가 아니라 사람이다.** `internal/deployguard` 는 증거를 검증하고
+다음 한 단계의 action **값**만 돌려주는 순수 라이브러리이며, 2026-09-08 측정에서 비테스트
+import 가 **0** 이다 — Docker/process 실행기, engine control, config·journal·protection
+writer, broker capability를 갖지 않는다. 실제 교체는 `docs/operations.md` 의 절차를 사람이
+수행한다. 따라서 이 Requirement 는 **교체 지점에서 강제되는 게이트가 아니라, 시험으로
+동결된 판정 규칙과 그 규칙을 따르는 사람 절차**다. 교체 경로가 이 라이브러리를 실제로
+부르게 만드는 것은 별도 change 의 범위다.
+
+#### Scenario: 불완전 preimage
+
+- **WHEN** service 하나의 image가 exact digest가 아니거나 schema compatibility range를 모른다
+- **THEN** 계획은 첫 replacement action을 0개로 내고 running image와 preimage를 그대로 둔다
+
+#### Scenario: rollback schema 비호환 발견
+
+- **WHEN** replacement 뒤 current schema가 old image compatibility range 밖임을 감지한다
+- **THEN** destructive rollback을 금지하고 new service를 유지하며 entry OFF, safety continuity와 typed `ROLLBACK_INCOMPATIBLE` 상태를 보존한다
+
+#### Scenario: 두 번째 service health 실패
+
+- **WHEN** 첫 service는 교체됐지만 두 번째 service가 frozen health timeout 안에 통과하지 못한다
+- **THEN** 이후 service는 건드리지 않고 applied 된 첫 service만 exact preimage digest로 역순 rollback하며 config/volume/journal/protection을 변경하지 않는다
