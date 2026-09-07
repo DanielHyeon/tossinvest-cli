@@ -1,14 +1,14 @@
 {
   "source": "tossinvest.com web bundles",
-  "build_id": "jftEJdC7grbL1_qM7D5FL",
-  "chunk_count": 31,
-  "total": 997,
+  "build_id": "7r39ou7dRVa7AiAbxAXNF",
+  "chunk_count": 25,
+  "total": 1035,
   "counts": {
-    "implemented": 81,
-    "candidate": 395,
-    "excluded": 521,
-    "candidate_next": 20,
-    "meaningful": 476
+    "implemented": 79,
+    "candidate": 423,
+    "excluded": 533,
+    "candidate_next": 19,
+    "meaningful": 502
   },
   "overrides": {},
   "endpoints": {
@@ -568,6 +568,14 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/accounts/ssn-verification/check": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/accounts/ssn-verification/mark-ssn-verified": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
     "/api/v1/additional-account-open/guard/auth/ci-verification": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -734,9 +742,33 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/brief/featured-stocks": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/brief/heatmap": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/brief/heatmap/stocks": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/brief/market/report": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/brief/market/summary": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
     "/api/v1/c-chart": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/chat/topics": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
     },
     "/api/v1/comments": {
       "status": "excluded",
@@ -968,6 +1000,10 @@
       "note": "가상자산 시세",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/dashboard/all-accounts": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
     "/api/v1/dashboard/asset/sections/all": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -1000,13 +1036,9 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
-    "/api/v1/dashboard/wts/overview/ai-signal-home/latest": {
+    "/api/v1/dashboard/product-categories/us-options": {
       "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/dashboard/wts/overview/ai-signal-home/personalized": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
+      "first_seen": "2026-09-07"
     },
     "/api/v1/dashboard/wts/overview/ai-signals": {
       "status": "candidate",
@@ -1389,6 +1421,10 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/mds/info/krx-extended-hour-support-yn": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
     "/api/v1/mds/info/trading-trend": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -1400,6 +1436,10 @@
     "/api/v1/member-terms/get-all-agreed-by-scope-range": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/member-terms/get-all-disagreed": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
     },
     "/api/v1/memo/private": {
       "status": "excluded",
@@ -1424,6 +1464,11 @@
     "/api/v1/messages/deca-down-notify": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/minor/accounts/close": {
+      "status": "excluded",
+      "note": "minor-account flow",
+      "first_seen": "2026-09-07"
     },
     "/api/v1/minor/multi-account-open/guard/auth/sign": {
       "status": "excluded",
@@ -1882,6 +1927,10 @@
       "status": "implemented",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/nova-feedback/user-feedbacks": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
     "/api/v1/og": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -1926,6 +1975,42 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/paper/cash-balance": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/paper/deposit": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/paper/education/lecture-video": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/paper/education/session": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/paper/education/summary": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/paper/init": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/paper/trading/markets/us-opt/orderable-quantity/sell": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/paper/trading/orders/histories": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/paper/trading/orders/histories/all/pending": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
     "/api/v1/pension/frontend/certificate/contribution-certificate/issuable": {
       "status": "excluded",
       "note": "pension account flow",
@@ -1945,6 +2030,26 @@
       "status": "excluded",
       "note": "pension account flow",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/pension/frontend/transfer/inbound": {
+      "status": "excluded",
+      "note": "pension account flow",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/pension/frontend/transfer/inbound/accounts": {
+      "status": "excluded",
+      "note": "pension account flow",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/pension/frontend/transfer/inbound/eligibility": {
+      "status": "excluded",
+      "note": "pension account flow",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/pension/frontend/transfer/inbound/history": {
+      "status": "excluded",
+      "note": "pension account flow",
+      "first_seen": "2026-09-07"
     },
     "/api/v1/pension/frontend/user-preference": {
       "status": "excluded",
@@ -1989,31 +2094,9 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
-    "/api/v1/prime/benefits/interest/simulate": {
+    "/api/v1/portal/agreement-modules": {
       "status": "candidate",
-      "first_seen": "2026-06-29"
-    },
-    "/api/v1/prime/exchange/transactions": {
-      "status": "candidate",
-      "first_seen": "2026-06-29"
-    },
-    "/api/v1/prime/test/users": {
-      "status": "candidate",
-      "first_seen": "2026-06-29"
-    },
-    "/api/v1/prime/users/benefits": {
-      "status": "implemented",
-      "first_seen": "2026-06-29"
-    },
-    "/api/v1/prime/users/benefits/cumulative": {
-      "status": "candidate",
-      "priority": "next",
-      "note": "토스프라임 혜택·구독 상태",
-      "first_seen": "2026-06-29"
-    },
-    "/api/v1/prime/users/info": {
-      "status": "implemented",
-      "first_seen": "2026-06-29"
+      "first_seen": "2026-09-07"
     },
     "/api/v1/product-eligibility/domestic-leverage-etp/trading": {
       "status": "excluded",
@@ -2573,14 +2656,6 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
-    "/api/v1/reasoning/graph": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/reasoning/interest": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
     "/api/v1/reasoning/latest": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -2668,6 +2743,10 @@
     "/api/v1/ria-calculator/withdrawable-stocks": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/rights": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
     },
     "/api/v1/rights/us/categories": {
       "status": "candidate",
@@ -2781,6 +2860,10 @@
       "status": "implemented",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/session/refresh": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
     "/api/v1/settings/abroad-access": {
       "status": "excluded",
       "note": "UI personalization/prefs",
@@ -2800,6 +2883,31 @@
       "status": "excluded",
       "note": "UI personalization/prefs",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/settings/password/update/mts/finalize": {
+      "status": "excluded",
+      "note": "UI personalization/prefs",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/settings/password/update/mts/new-value": {
+      "status": "excluded",
+      "note": "UI personalization/prefs",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/settings/password/update/mts/old-value": {
+      "status": "excluded",
+      "note": "UI personalization/prefs",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/settings/password/update/mts/sign": {
+      "status": "excluded",
+      "note": "UI personalization/prefs",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v1/settings/password/update/mts/sign/token": {
+      "status": "excluded",
+      "note": "UI personalization/prefs",
+      "first_seen": "2026-09-07"
     },
     "/api/v1/settings/privacy/info": {
       "status": "excluded",
@@ -3423,6 +3531,10 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v2/accounts/close/password": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
     "/api/v2/accounts/closeable": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -3863,6 +3975,22 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v2/paper/dashboard/asset/sections/all": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v2/paper/trading/my-orders/markets/us-opt/by-date/completed": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v2/paper/trading/order/cancel/prepare": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v2/paper/trading/orders/calculate": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
     "/api/v2/profit/daily/market": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -3875,6 +4003,16 @@
       "status": "excluded",
       "note": "marketing/promotion",
       "first_seen": "2026-06-19"
+    },
+    "/api/v2/promotion/cashback/recommend-stocks": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v2/promotion/cashback/recommend-stocks/lowest-price": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-09-07"
     },
     "/api/v2/promotion/commission/event/user/execution": {
       "status": "excluded",
@@ -3915,19 +4053,7 @@
       "status": "implemented",
       "first_seen": "2026-06-19"
     },
-    "/api/v2/reasoning/graph": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v2/reasoning/graph/latest": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
     "/api/v2/reasoning/indices": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v2/reasoning/interest": {
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
@@ -4257,6 +4383,14 @@
       "note": "account admin / tax / KYC",
       "first_seen": "2026-06-19"
     },
+    "/api/v3/accounts/close": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v3/accounts/close/pre-check": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
     "/api/v3/accounts/closeable": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -4313,6 +4447,22 @@
     "/api/v3/my-assets/transactions/markets": {
       "status": "implemented",
       "first_seen": "2026-06-19"
+    },
+    "/api/v3/paper/trading/order": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v3/paper/trading/order/bulk-cancel": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v3/paper/trading/order/bulk-cancel/prepare": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v3/paper/trading/order/cancel": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
     },
     "/api/v3/promotion/account-open-quiz": {
       "status": "excluded",
@@ -4545,6 +4695,14 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v4/stock-prices/bidoffer": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
+    "/api/v4/stock-prices/detail": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
+    },
     "/api/v4/trading/auto-trading": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -4560,7 +4718,11 @@
     "/api/v5/signup/link/simple": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v5/stock-prices": {
+      "status": "candidate",
+      "first_seen": "2026-09-07"
     }
   },
-  "updated_at": "2026-08-31"
+  "updated_at": "2026-09-07"
 }
