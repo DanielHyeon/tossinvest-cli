@@ -155,6 +155,17 @@ intent 는 여전히 막는다(`…InTheLiveGenerationStillBlocks` = 양성 대�
 - **D-4. 이전 generation 에서 걸어 둔 SELL 주문이 broker 에 살아 있는 경우**
   I-8 의 경계는 그것을 더 보지 않는다. 그 위험은 주문 수명 대사의 일이며, 경계 없는
   판본도 실질적으로는 막지 못했다(모든 진입을 영구히 막아 우회를 부른다).
+- **D-6. a072 가 a065 의 prospective-generation CAS 를 재구현했다** (2026-09-08 아카이브
+  준비 중 측정)
+  생산에서 campaign·leg 행을 만드는 것은 `CreatePositionCampaign`/`PlanCampaignLeg` 가
+  아니라 `internal/journal/strategy_first_leg_atomic.go:410,436` 이다. 그쪽은 같은 CAS
+  술어(generation/version 일치 · position 부재 또는 CLOSED · 활성 claim 없음)를 **두 번째
+  사본**으로 갖고 같은 command/event 를 쓴다. 지금은 두 사본이 일치하지만, 이것이 바로
+  이 리뷰가 찾은 그 병(같은 규칙 두 자리)이고 언제든 갈릴 수 있다. a065 의 command 표면
+  다섯(`CreatePositionCampaign`·`PlanCampaignLeg`·`LinkCampaignOrder`·`UpdateCampaignStop`·
+  `CancelProspectiveCampaign`)은 비테스트 호출자가 0 이므로, 합치는 일은 다중 leg
+  scale-in 을 배선하는 change 의 범위다.
+
 - **D-5. P2 목록** — 버전 CAS 다섯 자리가 `RowsAffected` 를 보지 않음(현재
   `_txlock=immediate` 때문에 경합으로 도달 불가, 잠복), 종결 자동 close 가
   `TransitionCampaign` 을 우회, `lineage_ambiguous`/`carry_baseline` 이 증명 가능하게
