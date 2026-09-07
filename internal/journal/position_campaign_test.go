@@ -249,6 +249,16 @@ func TestApplyPositionCampaignFillPreservesLatePredecessorExactlyOnce(t *testing
 		t.Fatal(err)
 	}
 	applyCampaignFillForTest(t, j, AppliedFill{OrderID: "new", AccountRef: "acct", Market: "kr", Symbol: "005930", Delta: "2", CumulativeQuantity: "2", CommittedAt: "2026-03-30T00:32:00Z"})
+	// 늦은 체결 **직전**의 후속 잔량을 먼저 잰다. 이 값이 아래 값과 같으면 D5 의
+	// "successor remaining 재계산" 은 일어나지 않은 것이다 — 예전 판본이 정확히
+	// 그랬고, 함수 본문을 return nil 로 바꿔도 스위트가 통과했다.
+	before, err := j.CampaignOrderWatermark(ctx, campaign.ID, 1, "new")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if before.RemainingQuantity != "4" {
+		t.Fatalf("before-late-fill successor=%+v, want remaining 4 (cap 6 − 누적 2, leg 잔여 4)", before)
+	}
 	applyCampaignFillForTest(t, j, AppliedFill{OrderID: "old", AccountRef: "acct", Market: "kr", Symbol: "005930", Delta: "1", CumulativeQuantity: "5", Terminal: true, CommittedAt: "2026-03-30T00:33:00Z"})
 	applyCampaignFillForTest(t, j, AppliedFill{OrderID: "old", AccountRef: "acct", Market: "kr", Symbol: "005930", Delta: "0", CumulativeQuantity: "5", Terminal: true, CommittedAt: "2026-03-30T00:34:00Z"})
 
@@ -266,9 +276,14 @@ func TestApplyPositionCampaignFillPreservesLatePredecessorExactlyOnce(t *testing
 	if legGot.FilledQuantity != "7" || legGot.ResidualQuantity != "3" {
 		t.Fatalf("leg=%+v, want filled 7 residual 3", legGot)
 	}
+	// predecessor 의 늦은 체결이 leg 잔여를 4 → 3 으로 줄였으므로 후속도 3 이다.
+	// 자기 cap 잔여는 여전히 4 지만, leg 가 더는 필요로 하지 않는 1 주를 사면 안 된다.
 	watermark, err := j.CampaignOrderWatermark(ctx, campaign.ID, 1, "new")
-	if err != nil || watermark.RemainingQuantity != "4" {
-		t.Fatalf("successor=%+v err=%v, want successor-cap remaining 4", watermark, err)
+	if err != nil || watermark.RemainingQuantity != "3" {
+		t.Fatalf("successor=%+v err=%v, want remaining 3 (leg 잔여가 상한)", watermark, err)
+	}
+	if before.RemainingQuantity == watermark.RemainingQuantity {
+		t.Fatalf("늦은 체결이 후속 잔량을 바꾸지 않았다: %s", watermark.RemainingQuantity)
 	}
 }
 

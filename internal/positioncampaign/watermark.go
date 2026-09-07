@@ -144,19 +144,35 @@ func (l *LegLedger) Observe(obs OrderObservation) (ObservationResult, error) {
 	if err != nil {
 		return ObservationResult{}, err
 	}
+	// Every active successor derives its remaining quantity from all newly
+	// known facts, including a predecessor's late fill. The journal writes the
+	// same column through the same function, so the two cannot drift.
+	//
+	// 계산은 commit 지점 **앞**에서 끝낸다 — 아래 주석의 불변식과 같은 이유다.
+	successorRemaining := make(map[string]string, len(l.Orders))
+	for id, item := range l.Orders {
+		if item.PredecessorID == "" || item.Terminal {
+			continue
+		}
+		// 관측된 주문 자신은 아직 commit 전이므로 새 누적을 쓴다.
+		itemCumulative := item.Cumulative
+		if item == order {
+			itemCumulative = cumulative
+		}
+		next, err := SuccessorRemaining(item.RequestedCap, itemCumulative, newResidual)
+		if err != nil {
+			return ObservationResult{}, err
+		}
+		successorRemaining[id] = next
+	}
 	// Commit the computed transition only after every decimal operation has
 	// succeeded. A malformed in-memory snapshot cannot consume the watermark and
 	// turn a retry into delta zero.
 	order.Cumulative = cumulative
 	l.Filled = newFilled
 	l.Residual = newResidual
-	// Every active successor derives its remaining quantity from all newly
-	// known facts, including a predecessor's late fill.
-	for _, item := range l.Orders {
-		if item.PredecessorID == "" || item.Terminal {
-			continue
-		}
-		item.Remaining = l.Residual
+	for id, remaining := range successorRemaining {
+		l.Orders[id].Remaining = remaining
 	}
 	if result.LateTerminal || result.CapExceeded || obs.LineageAmbiguous || aggregateCmp > 0 {
 		l.Reconcile = true

@@ -2,8 +2,13 @@ package positioncampaign
 
 import (
 	"errors"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"os"
 	"path/filepath"
+	"regexp"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -144,24 +149,132 @@ func TestCommandIdentityRejectsUnknownWhitespaceAndNULWithoutConcatenationCollis
 	}
 }
 
-func TestProductionCoreContainsNoLaneRatiosOrBrokerDependency(t *testing.T) {
-	entries, err := os.ReadDir(".")
+// 이 두 시험은 "금지 토큰이 **있는지**" 를 보지 않는다.
+//
+// 예전 판본은 네 부분문자열("8:4:2","2:4:8","net/http","internal/broker")을 찾았다.
+// 그중 하나는 존재하지 않는 디렉터리를 이름했고, 무엇보다 **철자를 고르면 통과한다** —
+// 적대 리뷰가 그 리터럴을 하나도 쓰지 않은 진짜 7-leg 비율표와 시장별 cap 을 이
+// 패키지에 붙였는데 스위트가 초록이었다. 이름을 보는 가드는 반드시 뚫린다.
+//
+// 그래서 판정을 **역할** 로 바꾼다: 무엇을 의존하는가(import 폐포)와 어떤 상수를
+// 담는가(숫자 열거표). 새 비율·cadence·cap 상수나 새 의존은 철자와 무관하게 걸린다.
+
+const positionCampaignModule = "github.com/JungHoonGhae/tossinvest-cli"
+
+// productionGoFiles 는 한 패키지 디렉터리의 비테스트 Go 파일을 파싱한다.
+func productionGoFiles(t *testing.T, dir string) map[string]*ast.File {
+	t.Helper()
+	entries, err := os.ReadDir(dir)
 	if err != nil {
 		t.Fatal(err)
 	}
+	out := map[string]*ast.File{}
 	for _, entry := range entries {
 		if entry.IsDir() || filepath.Ext(entry.Name()) != ".go" || strings.HasSuffix(entry.Name(), "_test.go") {
 			continue
 		}
-		body, err := os.ReadFile(entry.Name())
+		path := filepath.Join(dir, entry.Name())
+		file, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
-		text := string(body)
-		for _, forbidden := range []string{"8:4:2", "2:4:8", "net/http", "internal/broker"} {
-			if strings.Contains(text, forbidden) {
-				t.Errorf("%s contains forbidden lane/broker token %q", entry.Name(), forbidden)
+		out[path] = file
+	}
+	return out
+}
+
+// TestProductionCoreContainsNoLaneRatiosOrBrokerDependency 는 import **폐포** 전체를
+// 본다. 직접 import 만 보면 riskcalc 가 broker 를 끌어오는 순간 눈이 먼다.
+func TestProductionCoreContainsNoLaneRatiosOrBrokerDependency(t *testing.T) {
+	root, err := filepath.Abs(filepath.Join("..", ".."))
+	if err != nil {
+		t.Fatal(err)
+	}
+	allowed := map[string]bool{
+		"internal/positioncampaign": true,
+		"internal/riskcalc":         true,
+	}
+	visited := map[string]bool{}
+	queue := []string{"internal/positioncampaign"}
+	for len(queue) > 0 {
+		pkg := queue[0]
+		queue = queue[1:]
+		if visited[pkg] {
+			continue
+		}
+		visited[pkg] = true
+		if !allowed[pkg] {
+			t.Errorf("전략 중립 코어의 import 폐포에 %s 가 들어왔다", pkg)
+			continue
+		}
+		for path, file := range productionGoFiles(t, filepath.Join(root, pkg)) {
+			for _, spec := range file.Imports {
+				imported := strings.Trim(spec.Path.Value, `"`)
+				if strings.HasPrefix(imported, positionCampaignModule+"/") {
+					queue = append(queue, strings.TrimPrefix(imported, positionCampaignModule+"/"))
+					continue
+				}
+				// 표준 라이브러리 경로에는 점이 있는 첫 구간이 없다. 점이 있으면
+				// 제3자 모듈이다 — broker SDK 든 HTTP 클라이언트든 여기서 걸린다.
+				if strings.Contains(strings.SplitN(imported, "/", 2)[0], ".") {
+					t.Errorf("%s: 전략 중립 코어가 제3자 모듈 %s 를 의존한다", path, imported)
+				}
 			}
+		}
+	}
+	for pkg := range allowed {
+		if !visited[pkg] {
+			t.Errorf("허용 목록의 %s 가 실제 폐포에 없다 — 목록이 낡았다", pkg)
+		}
+	}
+}
+
+// TestProductionCoreNumericLiteralsAreFrozen 은 이 패키지가 담은 **모든** 숫자
+// 리터럴(10진 문자열 형태 포함)을 센다. 열거표는 측정으로 만들었다.
+//
+// spec: "코어는 특정 lane 의 비율, 최대 leg 수 또는 cadence 상수를 포함해서는 안 된다".
+// 비율표는 숫자 없이 쓸 수 없다. 그래서 값을 얼린다 — 새 숫자가 들어오면 그것이
+// 무엇이든 이 시험이 먼저 실패하고, 저자는 그 숫자가 왜 중립인지 적어야 한다.
+func TestProductionCoreNumericLiteralsAreFrozen(t *testing.T) {
+	frozen := map[string]string{
+		"0":     "빈 값·경계 비교",
+		"1":     "길이·인덱스 경계",
+		"128":   "command key 최대 길이 (identity 계약)",
+		`str:0`: "10진 수량 0",
+	}
+	numeric := regexp.MustCompile(`^[+-]?[0-9]+(\.[0-9]+)?$`)
+	found := map[string][]string{}
+	for path, file := range productionGoFiles(t, ".") {
+		ast.Inspect(file, func(node ast.Node) bool {
+			lit, ok := node.(*ast.BasicLit)
+			if !ok {
+				return true
+			}
+			value := lit.Value
+			switch lit.Kind {
+			case token.INT, token.FLOAT:
+			case token.STRING:
+				unquoted := strings.Trim(value, "`\"")
+				if !numeric.MatchString(unquoted) {
+					return true
+				}
+				value = "str:" + unquoted
+			default:
+				return true
+			}
+			found[value] = append(found[value], filepath.Base(path))
+			return true
+		})
+	}
+	for value, files := range found {
+		if _, ok := frozen[value]; !ok {
+			sort.Strings(files)
+			t.Errorf("전략 중립 코어에 새 숫자 상수 %s 가 들어왔다 (%v) — 비율/cadence/cap 인지 밝힐 것", value, files)
+		}
+	}
+	for value, why := range frozen {
+		if len(found[value]) == 0 {
+			t.Errorf("얼린 숫자 %s (%s) 가 사라졌다 — 열거표를 다시 재고 근거를 적을 것", value, why)
 		}
 	}
 }

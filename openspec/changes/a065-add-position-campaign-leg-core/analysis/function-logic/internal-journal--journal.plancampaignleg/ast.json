@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/position_campaign.go",
-  "source_sha256": "f161ba7aa32d1cf113096605eeb16ed547627b74e785ce20bbbd7ea87c316623",
+  "source_sha256": "0168dc2a026488a43161803e4441b8d40c561a244c0a7043006ff29e8d1e078b",
   "package": "journal",
   "function": "PlanCampaignLeg",
   "receiver": "Journal",

@@ -13,14 +13,14 @@
 | requested cap | initial cap equals authoritative intent quantity; replacement cap equals immutable edge requested quantity | `intents.quantity` / `scoped_lineage_edges.requested_quantity` | durable invalid-identity latch |
 | ambiguity | caller-declared ambiguity is evidence, never a successful false default | request digest + authoritative lookup | durable invalid-identity latch |
 | uniqueness | one scoped order owner and one successor per predecessor | unique indexes + precheck | latch RECONCILE + event |
-| EXIT FIRST | no CLOSING/unresolved risk reduction | journal local state | exposure blocked |
+| EXIT FIRST | 묶인 generation 이 CLOSED 가 아니고, CLOSING position 이 없으며, 현재 generation 이 열린 뒤의 미해결 risk-reducing intent 가 없을 것 | journal local state | exposure blocked — 거절도 증거를 남긴다(attempt 는 이미 CONFIRMED 이므로 주문을 되돌릴 수 없다) |
 
 ## Branches and early returns
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
 | B1 | retry command | none | record or stable refusal | retry tests |
-| B2 | version/admission block | none | typed refusal | version/EXIT FIRST tests |
+| B2 | version/admission block | EXIT FIRST 거절은 RECONCILE/entry-block 으로 격리하고 `ORDER_LINK_REFUSED` 를 남긴 뒤 commit 한다 | typed refusal | version/EXIT FIRST tests · `TestExposureRefusalAtLinkLeavesRefusalEvidence` |
 | B3 | missing/mismatched authoritative lineage | refusal command+event+latch | invalid identity after commit | hardening lineage test |
 | B3a | caller ambiguity or authoritative quantity mismatch | refusal command+event+latch | invalid identity after commit | independent-review ambiguity/cap tests |
 | B4 | duplicate scoped order/predecessor successor | refusal command+event+latch | invalid identity after commit | uniqueness tests |

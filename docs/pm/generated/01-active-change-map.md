@@ -68,7 +68,7 @@
 | `a062-reconcile-owned-orders` | STORY-TOS-a062 | archived |
 | `a063-align-attestation-renewal-profile` | STORY-TOS-a063 | in_progress |
 | `a064-add-multi-market-strategy-evidence` | STORY-TOS-a064 | archived |
-| `a065-add-position-campaign-leg-core` | STORY-TOS-a065 | in_progress |
+| `a065-add-position-campaign-leg-core` | STORY-TOS-a065 | implemented |
 | `a066-add-multi-horizon-risk-buckets` | STORY-TOS-a066 | in_progress |
 | `a067-add-kr-us-continuation-lanes` | STORY-TOS-a067 | in_progress |
 | `a068-add-kr-us-reversal-lanes` | STORY-TOS-a068 | in_progress |

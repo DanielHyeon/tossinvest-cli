@@ -88,16 +88,22 @@ type ReplayResult struct {
 type replayOrder struct {
 	leg         int64
 	predecessor string
-	cap         string
-	cumulative  string
-	terminal    bool
+	// attempt 는 broker order **하나**의 mutation attempt 다. 이 결속은 order
+	// 수준에서 불변이고, 스키마도 attempt_id 를 campaign_order_watermarks 에만
+	// 둔다 — campaign_legs 에는 없다.
+	attempt    string
+	cap        string
+	cumulative string
+	terminal   bool
 }
 
+// replayLeg 에 AttemptID 가 없는 것은 의도다. design D5 에서 교체 주문은 **같은 leg
+// 위에** 새 order/attempt 를 만든다. leg 수준 attempt 불변을 요구하면 정상적인 교체가
+// LEG_IDENTITY_CHANGED 로 신고된다 — 그 불변은 스키마에도 설계에도 없었다.
 type replayLeg struct {
 	Sequence          int64
 	PlanID            string
 	IntentID          string
-	AttemptID         string
 	State             LegState
 	RequestedQuantity string
 	FilledQuantity    string
@@ -181,20 +187,16 @@ func Replay(events []Event, snapshot Snapshot) ReplayResult {
 					return replayFailure(result, state, ReplayLegSequenceGap)
 				}
 				leg = replayLeg{Sequence: event.LegSequence, PlanID: event.PlanID,
-					IntentID: event.IntentID, AttemptID: event.AttemptID, State: LegPlanned,
+					IntentID: event.IntentID, State: LegPlanned,
 					RequestedQuantity: event.LegRequestedQuantity, FilledQuantity: "0", ResidualQuantity: event.LegRequestedQuantity}
 				legs[event.LegSequence] = leg
 				lastLeg = event.LegSequence
 			} else if (event.PlanID != "" && leg.PlanID != event.PlanID) ||
-				(event.IntentID != "" && leg.IntentID != "" && leg.IntentID != event.IntentID) ||
-				(event.AttemptID != "" && leg.AttemptID != "" && leg.AttemptID != event.AttemptID) {
+				(event.IntentID != "" && leg.IntentID != "" && leg.IntentID != event.IntentID) {
 				return replayFailure(result, state, ReplayLegIdentityChanged)
 			}
 			if event.IntentID != "" && leg.IntentID == "" {
 				leg.IntentID = event.IntentID
-			}
-			if event.AttemptID != "" && leg.AttemptID == "" {
-				leg.AttemptID = event.AttemptID
 			}
 			if event.EventKind == "ORDER_LINKED" {
 				legEvent := LegOrderLinked
@@ -233,12 +235,18 @@ func Replay(events []Event, snapshot Snapshot) ReplayResult {
 				if cap, err := positiveDecimal(event.RequestedCap); err != nil {
 					return replayFailure(result, state, ReplayInvalidEvidence)
 				} else {
-					order = replayOrder{leg: event.LegSequence, predecessor: event.PredecessorOrderID, cap: cap, cumulative: "0"}
+					order = replayOrder{leg: event.LegSequence, predecessor: event.PredecessorOrderID,
+						attempt: event.AttemptID, cap: cap, cumulative: "0"}
 					orders[event.OrderID] = order
 				}
 			} else if event.LegSequence != 0 && (order.leg != event.LegSequence ||
-				(event.PredecessorOrderID != "" && order.predecessor != event.PredecessorOrderID)) {
+				(event.PredecessorOrderID != "" && order.predecessor != event.PredecessorOrderID) ||
+				(event.AttemptID != "" && order.attempt != "" && order.attempt != event.AttemptID)) {
 				return replayFailure(result, state, ReplayOrderIdentityChanged)
+			}
+			if event.AttemptID != "" && order.attempt == "" {
+				order.attempt = event.AttemptID
+				orders[event.OrderID] = order
 			}
 			if event.CumulativeQuantity != "" {
 				cumulative, err := nonNegative(event.CumulativeQuantity)
@@ -260,7 +268,8 @@ func Replay(events []Event, snapshot Snapshot) ReplayResult {
 				order.terminal = event.OrderTerminal
 				orders[event.OrderID] = order
 			}
-			remaining, err := remainingFromCap(order.cap, order.cumulative)
+			remaining, err := StoredOrderRemaining(order.predecessor != "", order.terminal,
+				order.cap, order.cumulative, event.LegResidualQuantity)
 			if err != nil || remaining != event.OrderRemainingQuantity {
 				return replayFailure(result, state, ReplayOrderRemainingMismatch)
 			}
@@ -274,7 +283,23 @@ func Replay(events []Event, snapshot Snapshot) ReplayResult {
 				return replayFailure(result, state, ReplayLegQuantityMismatch)
 			}
 			if event.EventKind == "ORDER_WATERMARK_ADVANCED" {
-				next, err := replayLegFillTransition(leg, event)
+				delta, deltaErr := nonNegative(event.DeltaQuantity)
+				if deltaErr != nil {
+					return replayFailure(result, state, ReplayInvalidEvidence)
+				}
+				// 후속이 있으면 잔량은 취소된 것이 아니라 교체 주문으로 넘어간 것이다.
+				hasSuccessor := false
+				for _, candidate := range orders {
+					if candidate.predecessor == event.OrderID {
+						hasSuccessor = true
+						break
+					}
+				}
+				next, err := LegStateAfterFill(LegFillFacts{
+					LegState: leg.State, Delta: delta,
+					LegFilled: event.LegFilledQuantity, LegRequested: event.LegRequestedQuantity,
+					OrderTerminal: event.OrderTerminal, OrderHasSuccessor: hasSuccessor,
+				})
 				if err != nil || next != event.LegState {
 					return replayFailure(result, state, ReplayInvalidLegTransition)
 				}
@@ -360,40 +385,17 @@ func replayCampaignTransition(state Snapshot, event Event) (CampaignTransition, 
 			transition, err = TransitionCampaign(state.CampaignState, CampaignLegProgress)
 		}
 	case "STOP_COMPOSED":
-		transition = CampaignTransition{State: state.CampaignState, EntryBlocked: state.EntryBlocked || event.EntryBlocked}
+		// 이 갈래만 event 의 값을 입력으로 받는다. stop 후보(가격·유효성)는 event 에
+		// 실리지 않으므로 replay 가 ComposeLongStop 의 block 판정을 되계산할 방법이
+		// 없다. 되계산할 수 없는 것을 지어내는 대신 event 를 믿고, **단조성**만
+		// 아래 LatchEntryBlocked 로 강제한다.
+		transition = CampaignTransition{State: state.CampaignState, EntryBlocked: event.EntryBlocked}
 	default:
 		return CampaignTransition{}, false
 	}
+	// 이미 걸린 진입 차단은 어떤 전이도 풀지 않는다. 원장에 쓰는 쪽과 같은 함수다.
+	transition = LatchEntryBlocked(state.EntryBlocked, transition)
 	return transition, err == nil && transition.State == event.CampaignState && transition.EntryBlocked == event.EntryBlocked
-}
-
-func replayLegFillTransition(leg replayLeg, event Event) (LegState, error) {
-	delta, err := nonNegative(event.DeltaQuantity)
-	if err != nil {
-		return "", err
-	}
-	deltaCmp, _ := riskcalc.CompareDecimal(delta, "0")
-	if (leg.State == LegFilled || leg.State == LegCancelled) && deltaCmp > 0 {
-		return TransitionLeg(leg.State, LegLatePositiveFill)
-	}
-	filledCmp, err := riskcalc.CompareDecimal(event.LegFilledQuantity, event.LegRequestedQuantity)
-	if err != nil {
-		return "", err
-	}
-	if filledCmp >= 0 {
-		return TransitionLeg(leg.State, LegFullFill)
-	}
-	if deltaCmp > 0 {
-		return TransitionLeg(leg.State, LegPartialFill)
-	}
-	if event.OrderTerminal {
-		filledZero, _ := riskcalc.CompareDecimal(event.LegFilledQuantity, "0")
-		if filledZero == 0 {
-			return TransitionLeg(leg.State, LegZeroFillCancelled)
-		}
-		return TransitionLeg(leg.State, LegResidualCancelled)
-	}
-	return TransitionLeg(leg.State, LegDuplicateObservation)
 }
 
 func validateReplayLegQuantities(event Event, leg replayLeg, orders map[string]replayOrder) error {
@@ -431,7 +433,17 @@ func validateReplayLegQuantities(event Event, leg replayLeg, orders map[string]r
 	return nil
 }
 
-func remainingFromCap(cap, cumulative string) (string, error) {
+// RemainingFromCap 은 주문 하나가 자기 상한 대비 아직 살 수 있는 수량이다.
+// 원장 쪽에도 같은 산술이 따로 있었다 — 이제 그쪽이 이 함수를 부른다.
+func RemainingFromCap(cap, cumulative string) (string, error) {
+	cap, err := nonNegative(cap)
+	if err != nil {
+		return "", err
+	}
+	cumulative, err = nonNegative(cumulative)
+	if err != nil {
+		return "", err
+	}
 	cmp, err := riskcalc.CompareDecimal(cumulative, cap)
 	if err != nil {
 		return "", err
@@ -440,6 +452,10 @@ func remainingFromCap(cap, cumulative string) (string, error) {
 		return "0", nil
 	}
 	return riskcalc.SubDecimal(cap, cumulative)
+}
+
+func remainingFromCap(cap, cumulative string) (string, error) {
+	return RemainingFromCap(cap, cumulative)
 }
 
 func replayFailure(result ReplayResult, state Snapshot, reason ReplayReason) ReplayResult {

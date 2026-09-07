@@ -169,6 +169,12 @@ func TransitionLeg(from LegState, event LegEvent) (LegState, error) {
 			return LegFilled, nil
 		case LegZeroFillCancelled:
 			return LegCancelled, nil
+		case LegResidualCancelled:
+			// 첫 관측이 곧 마지막 관측인 경우다: "3주 체결 + 잔량 취소" 가 한 번에
+			// 온다. SUBMITTED 에서 PARTIAL 을 거치지 않고 바로 닫힌다. 이 행이
+			// 없으면 원장은 CANCELLED 를 쓰는데 표는 그것을 유도하지 못해
+			// 재구성이 건강한 원장을 drift 로 신고한다.
+			return LegCancelled, nil
 		case LegReplacementLinked:
 			return from, nil
 		}

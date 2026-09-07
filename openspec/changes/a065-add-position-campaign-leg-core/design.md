@@ -76,6 +76,7 @@ Leg와 order 전이의 정본은 다음 표다.
 | SUBMITTED | `0 < cumulative < order cap` | PARTIAL | 새 delta만 적용 |
 | SUBMITTED | cumulative가 order cap 도달 | FILLED | terminal full-fill |
 | SUBMITTED | zero-fill cancel/expiry | CANCELLED | terminal zero-fill |
+| SUBMITTED | 부분체결과 잔량 취소가 **같은 관측**으로 도착 | CANCELLED | 첫 체결이 곧 마지막 체결인 경우. 후속 order 가 없을 때만이며, 후속이 있으면 잔량은 취소가 아니라 교체로 넘어간다 (2026-09-07 6.4 리뷰에서 추가 — 이 행이 없어 원장은 CANCELLED 를 쓰는데 재구성이 그것을 유도하지 못했다) |
 | SUBMITTED | amend/replacement lineage | SUBMITTED | predecessor와 carry baseline을 가진 새 order watermark |
 | PARTIAL | 동일/낮은 cumulative order watermark | PARTIAL | delta 0 |
 | PARTIAL | 증가하되 cap 미만 | PARTIAL | 새 delta만 적용 |
@@ -94,7 +95,7 @@ fill의 실제 Position 반영은 기존 tx-scoped apply hook가 계속 소유�
 
 각 order record는 immutable broker order identity, submit/amend/replacement attempt identity, predecessor, carry baseline, requested cap, last cumulative filled quantity와 last observation identity를 가진다. cumulative watermark는 후퇴할 수 없고 새 적용량은 해당 order의 검증된 증가분뿐이다. replacement가 새 order identity를 만들면 predecessor의 carry baseline을 명시해 이전 fill을 다시 더하지 않는다.
 
-replaced 또는 cancelled predecessor의 cumulative watermark가 뒤늦게 증가하면 terminal order state를 reopen하지 않더라도 그 immutable broker order identity의 positive delta와 authoritative Position apply는 같은 journal transaction에서 exactly once 전진해야 한다. 그 transaction은 successor replacement의 remaining quantity와 leg aggregate filled/residual quantity를 새 사실에 맞게 재계산한다. 이미 요청 cap을 넘었거나 predecessor/replacement lineage가 ambiguous해도 실제 fill을 버리거나 cap에 맞춰 truncate/rollback해서는 안 된다. 대신 원 fill evidence와 Position을 보존하고 campaign을 `RECONCILE`로 latch해 신규 exposure를 차단한다. retry는 이미 전진한 per-order watermark 때문에 delta 0이고, commit 전 crash는 watermark, Position, replacement remaining과 campaign projection을 모두 rollback한다.
+replaced 또는 cancelled predecessor의 cumulative watermark가 뒤늦게 증가하면 terminal order state를 reopen하지 않더라도 그 immutable broker order identity의 positive delta와 authoritative Position apply는 같은 journal transaction에서 exactly once 전진해야 한다. 그 transaction은 successor replacement의 remaining quantity와 leg aggregate filled/residual quantity를 새 사실에 맞게 재계산한다. **successor remaining 의 정의는 두 상한의 작은 쪽이다**: 자기 cap 잔여(`max(0, cap − 자기 누적)`)와 leg 잔여. cap 잔여만 쓰면 predecessor 의 늦은 체결이 두 피연산자 어디에도 들어가지 않아 이 재계산이 증명 가능한 no-op 이 되고(2026-09-07 6.4 리뷰가 실측), leg 잔여만 쓰면 주문이 자기 상한을 넘길 수 있다. 정본은 `positioncampaign.StoredOrderRemaining` 하나이며 원장·도메인 ledger·재구성이 모두 그것을 부른다. 이미 요청 cap을 넘었거나 predecessor/replacement lineage가 ambiguous해도 실제 fill을 버리거나 cap에 맞춰 truncate/rollback해서는 안 된다. 대신 원 fill evidence와 Position을 보존하고 campaign을 `RECONCILE`로 latch해 신규 exposure를 차단한다. retry는 이미 전진한 per-order watermark 때문에 delta 0이고, commit 전 crash는 watermark, Position, replacement remaining과 campaign projection을 모두 rollback한다.
 
 모든 order delta 합이 leg requested quantity를 넘거나 lineage가 ambiguous하면 수량을 산술 보정하지 않고 위 보존 transaction 뒤 RECONCILE로 간다.
 

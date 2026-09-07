@@ -645,12 +645,29 @@ func (j *Journal) LinkCampaignOrder(ctx context.Context, req LinkCampaignOrderRe
 	if version != req.ExpectedVersion {
 		return CampaignOrderRecord{}, versionConflict(req.CampaignID, req.ExpectedVersion, version)
 	}
-	if exposureBlocked, err := campaignExposureBlockedInTx(ctx, tx, req.CampaignID); err != nil {
+	// EXIT FIRST 거절은 여기서 **노출을 막지 못한다**. LinkCampaignOrder 는 attempt 가
+	// 이미 CONFIRMED 이고 broker order id 를 가질 것을 요구하므로, 이 시점의 거절은
+	// 이미 나간 주문을 되돌리지 못하고 장부 기록만 막는다. 아무 흔적도 남기지 않으면
+	// 그 주문의 실제 체결이 원장에서 영구히 보이지 않는다.
+	//
+	// 그래서 형제 거절들과 같은 자리에 세운다: campaign 을 RECONCILE/entry-block 으로
+	// 격리하고 ORDER_LINK_REFUSED 를 남긴 뒤 commit 한다. 거절은 그대로 거절이다 —
+	// 노출은 여전히 허용되지 않고, 대사가 실제 사실을 회수할 수 있게 될 뿐이다.
+	//
+	// refusal code 는 기존 INVALID_IDENTITY 를 쓴다. spec 이 이름한 EXIT_FIRST_BLOCKED
+	// 를 별도 값으로 저장하려면 campaign_commands.result_error 의 CHECK 를 바꾸는
+	// 스키마 migration 이 필요하고, 그것은 a065 의 v20 소유 범위 밖이다(issues.md D-2).
+	exposureBlocked, err := campaignExposureBlockedInTx(ctx, tx, req.CampaignID)
+	if err != nil {
 		return CampaignOrderRecord{}, err
-	} else if exposureBlocked {
-		return CampaignOrderRecord{}, positioncampaign.ErrExposureBlocked
 	}
-	if blocked {
+	if exposureBlocked || blocked {
+		if err := latchCampaignLinkConflict(ctx, tx, req.CampaignID, version, req.CommandKey, digest, now); err != nil {
+			return CampaignOrderRecord{}, err
+		}
+		if err := tx.Commit(); err != nil {
+			return CampaignOrderRecord{}, err
+		}
 		return CampaignOrderRecord{}, positioncampaign.ErrExposureBlocked
 	}
 	if req.LineageAmbiguous {
@@ -726,6 +743,13 @@ func (j *Journal) LinkCampaignOrder(ctx context.Context, req LinkCampaignOrderRe
 			return CampaignOrderRecord{}, err
 		}
 	}
+	// 후속 주문의 remaining 은 링크되는 순간부터 leg 잔여에 묶인다. 재구성하는 쪽이
+	// 같은 함수로 이 값을 되계산하므로 cap 을 그대로 적으면 drift 로 신고된다.
+	linkedRemaining, err := positioncampaign.StoredOrderRemaining(req.PredecessorOrderID != "", false,
+		cap, "0", leg.ResidualQuantity)
+	if err != nil {
+		return CampaignOrderRecord{}, err
+	}
 	legEvent := positioncampaign.LegOrderLinked
 	if req.PredecessorOrderID != "" {
 		legEvent = positioncampaign.LegReplacementLinked
@@ -751,7 +775,7 @@ func (j *Journal) LinkCampaignOrder(ctx context.Context, req LinkCampaignOrderRe
 		 cumulative_filled,remaining_quantity,terminal,lineage_ambiguous,created_at,updated_at)
 		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'0',?,0,?, ?,?)`, req.CampaignID, req.LegSequence, req.OrderID,
 		authority.accountRef, authority.market, authority.tradingDay, authority.symbol, authority.side, authority.decisionID,
-		req.IntentID, req.AttemptID, nullableString(req.PredecessorOrderID), carry, cap, cap,
+		req.IntentID, req.AttemptID, nullableString(req.PredecessorOrderID), carry, cap, linkedRemaining,
 		boolInt(authority.lineageAmbiguous), now, now); err != nil {
 		return CampaignOrderRecord{}, fmt.Errorf("journal: linking campaign order: %w", err)
 	}
@@ -761,6 +785,9 @@ func (j *Journal) LinkCampaignOrder(ctx context.Context, req LinkCampaignOrderRe
 		req.CampaignID, req.LegSequence); err != nil {
 		return CampaignOrderRecord{}, err
 	}
+	// blocked 가 참이면 위에서 이미 거절했으므로 여기서 래치는 항상 no-op 이다.
+	// 그래도 같은 함수를 부른다 — 판정이 둘이면 언제든 갈린다.
+	nextCampaign = positioncampaign.LatchEntryBlocked(blocked, nextCampaign)
 	entryBlocked := boolInt(nextCampaign.EntryBlocked)
 	nextState := nextCampaign.State
 	if _, err := tx.ExecContext(ctx, `UPDATE position_campaigns SET state=?,version=?,entry_blocked=?,updated_at=?
@@ -939,6 +966,9 @@ type campaignFillMatch struct {
 	legSequence, version, expectedGeneration                               int64
 	actualGeneration                                                       sql.NullInt64
 	terminal, ambiguous                                                    bool
+	// entryBlocked 는 저장된 진입 차단 래치다. campaign 상태에 encode 되지 않는
+	// 유일한 차단 출처(stop 증거 누락)가 여기 산다. 읽지 않으면 되계산이 지운다.
+	entryBlocked bool
 }
 
 func ApplyPositionCampaignFill(ctx context.Context, tx *ApplyTx, fill AppliedFill) error {
@@ -947,7 +977,7 @@ func ApplyPositionCampaignFill(ctx context.Context, tx *ApplyTx, fill AppliedFil
 	}
 	rows, err := tx.Query(ctx, `SELECT w.campaign_id,w.leg_sequence,w.order_id,w.requested_cap,
 		w.cumulative_filled,w.terminal,w.lineage_ambiguous,l.requested_quantity,l.state,
-		c.state,c.version,c.expected_position_generation,c.actual_position_generation
+		c.state,c.version,c.expected_position_generation,c.actual_position_generation,c.entry_blocked
 		FROM campaign_order_watermarks w
 		JOIN campaign_legs l ON l.campaign_id=w.campaign_id AND l.sequence=w.leg_sequence
 		JOIN position_campaigns c ON c.id=w.campaign_id
@@ -967,13 +997,15 @@ func ApplyPositionCampaignFill(ctx context.Context, tx *ApplyTx, fill AppliedFil
 	var matches []campaignFillMatch
 	for rows.Next() {
 		var item campaignFillMatch
-		var terminal, ambiguous int
+		var terminal, ambiguous, entryBlocked int
 		if err := rows.Scan(&item.campaignID, &item.legSequence, &item.orderID, &item.cap,
 			&item.previous, &terminal, &ambiguous, &item.requested, &item.legState,
-			&item.campaignState, &item.version, &item.expectedGeneration, &item.actualGeneration); err != nil {
+			&item.campaignState, &item.version, &item.expectedGeneration, &item.actualGeneration,
+			&entryBlocked); err != nil {
 			return err
 		}
 		item.terminal, item.ambiguous = terminal != 0, ambiguous != 0
+		item.entryBlocked = entryBlocked != 0
 		matches = append(matches, item)
 	}
 	if err := rows.Err(); err != nil {
@@ -1080,51 +1112,53 @@ func ApplyPositionCampaignFill(ctx context.Context, tx *ApplyTx, fill AppliedFil
 	if err != nil {
 		return err
 	}
-	legState := positioncampaign.LegPartial
-	if requestedCmp >= 0 {
-		legState = positioncampaign.LegFilled
-	} else if fill.Terminal {
-		hasSuccessor, err := hasCampaignSuccessor(ctx, tx, item.campaignID, item.legSequence, item.orderID)
-		if err != nil {
-			return err
-		}
-		if !hasSuccessor {
-			legState = positioncampaign.LegCancelled
-		}
-	}
 	if requestedCmp > 0 {
 		reconcile = true
 	}
-	if reconcile {
-		// Preserve terminal FILLED/CANCELLED when a predecessor receives a late
-		// positive delta; the campaign latch carries the ambiguity.
-		if item.terminal && (item.legState == string(positioncampaign.LegFilled) || item.legState == string(positioncampaign.LegCancelled)) {
-			legState = positioncampaign.LegState(item.legState)
-		}
+	hasSuccessor, err := hasCampaignSuccessor(ctx, tx, item.campaignID, item.legSequence, item.orderID)
+	if err != nil {
+		return err
+	}
+	// leg 상태 판정은 여기서 하지 않는다. 원장에 쓰는 쪽과 원장을 다시 읽는 쪽이
+	// 같은 함수를 불러야 재구성이 건강한 원장을 drift 로 신고하지 않는다.
+	legState, legErr := positioncampaign.LegStateAfterFill(positioncampaign.LegFillFacts{
+		LegState: positioncampaign.LegState(item.legState), Delta: delta,
+		LegFilled: filled, LegRequested: item.requested,
+		OrderTerminal: fill.Terminal || item.terminal, OrderHasSuccessor: hasSuccessor,
+	})
+	if legErr != nil {
+		// 표가 모르는 사실이다. 상태는 그대로 두고(체결 수량은 이미 보존됐다)
+		// campaign 을 RECONCILE 로 격리한다 — 지어내지 않는다.
+		legState = positioncampaign.LegState(item.legState)
+		reconcile = true
 	}
 	if _, err := tx.Exec(ctx, `UPDATE campaign_legs SET filled_quantity=?,residual_quantity=?,state=?,version=version+1,updated_at=?
 		WHERE campaign_id=? AND sequence=?`, filled, residual, string(legState), fill.CommittedAt,
 		item.campaignID, item.legSequence); err != nil {
 		return err
 	}
-	if err := updateCampaignSuccessorRemaining(ctx, tx, item.campaignID, item.legSequence, fill.CommittedAt); err != nil {
+	if err := updateCampaignSuccessorRemaining(ctx, tx, item.campaignID, item.legSequence, residual, fill.CommittedAt); err != nil {
 		return err
 	}
 	campaignState := positioncampaign.CampaignState(item.campaignState)
-	entryBlocked := campaignState == positioncampaign.CampaignExiting || campaignState == positioncampaign.CampaignReconcile
+	next := positioncampaign.CampaignTransition{State: campaignState,
+		EntryBlocked: campaignState == positioncampaign.CampaignExiting || campaignState == positioncampaign.CampaignReconcile}
 	if campaignWasClosed {
-		campaignState = positioncampaign.CampaignClosed
-		entryBlocked = true
+		next = positioncampaign.CampaignTransition{State: positioncampaign.CampaignClosed, EntryBlocked: true}
 		if err := enterReconcileScopeInTx(ctx, tx, strings.TrimSpace(fill.AccountRef), "",
 			ReconcileCauseIdentifierConflict, "late fill for CLOSED campaign "+item.campaignID, fill.CommittedAt); err != nil {
 			return err
 		}
 	} else if reconcile {
-		campaignState = positioncampaign.CampaignReconcile
-		entryBlocked = true
+		next = positioncampaign.CampaignTransition{State: positioncampaign.CampaignReconcile, EntryBlocked: true}
 	} else if campaignState == positioncampaign.CampaignPlanned {
-		campaignState = positioncampaign.CampaignActive
+		next = positioncampaign.CampaignTransition{State: positioncampaign.CampaignActive}
 	}
+	// 저장된 진입 차단 래치는 평범한 체결이 풀지 않는다. 상태만으로 되계산하면
+	// stop 증거 누락으로 걸린 fail-closed 가 체결 한 번에 지워진다. 재구성하는
+	// 쪽도 같은 함수를 부른다.
+	next = positioncampaign.LatchEntryBlocked(item.entryBlocked, next)
+	campaignState, entryBlocked := next.State, next.EntryBlocked
 	newVersion := item.version + 1
 	if _, err := tx.Exec(ctx, `UPDATE position_campaigns SET state=?,version=?,entry_blocked=?,updated_at=?
 		WHERE id=? AND version=?`, string(campaignState), newVersion, boolInt(entryBlocked),
@@ -1160,10 +1194,21 @@ func ApplyPositionCampaignFill(ctx context.Context, tx *ApplyTx, fill AppliedFil
 	return nil
 }
 
-func updateCampaignSuccessorRemaining(ctx context.Context, tx *ApplyTx, campaignID string, legSequence int64, now string) error {
-	rows, err := tx.Query(ctx, `SELECT order_id,requested_cap,cumulative_filled
+// updateCampaignSuccessorRemaining 은 leg 잔여가 바뀐 뒤 그 leg 의 **아직 살아 있는**
+// 주문들의 remaining_quantity 를 다시 적는다.
+//
+// 예전 판본은 각 주문의 max(0, cap − 자기 누적) 만 다시 계산했다. predecessor 의 늦은
+// 체결은 그 두 피연산자 어디에도 들어가지 않으므로 이 함수는 **증명 가능한 no-op** 이었고
+// (본문을 return nil 로 바꿔도 스위트가 통과했다), design D5 가 요구하는 "successor
+// replacement 의 remaining 재계산" 은 실제로는 일어나지 않았다.
+//
+// 이제 값은 positioncampaign.StoredOrderRemaining 하나가 정한다. 재구성하는 쪽도
+// 같은 함수를 부르므로 두 정본이 갈릴 자리가 없다.
+func updateCampaignSuccessorRemaining(ctx context.Context, tx *ApplyTx, campaignID string,
+	legSequence int64, legResidual, now string) error {
+	rows, err := tx.Query(ctx, `SELECT order_id,requested_cap,cumulative_filled,predecessor_order_id IS NOT NULL
 		FROM campaign_order_watermarks
-		WHERE campaign_id=? AND leg_sequence=? AND predecessor_order_id IS NOT NULL AND terminal=0`,
+		WHERE campaign_id=? AND leg_sequence=? AND terminal=0`,
 		campaignID, legSequence)
 	if err != nil {
 		return err
@@ -1172,11 +1217,12 @@ func updateCampaignSuccessorRemaining(ctx context.Context, tx *ApplyTx, campaign
 	var updates []update
 	for rows.Next() {
 		var orderID, cap, cumulative string
-		if err := rows.Scan(&orderID, &cap, &cumulative); err != nil {
+		var hasPredecessor bool
+		if err := rows.Scan(&orderID, &cap, &cumulative, &hasPredecessor); err != nil {
 			rows.Close()
 			return err
 		}
-		remaining, err := campaignRemaining(cap, cumulative)
+		remaining, err := positioncampaign.StoredOrderRemaining(hasPredecessor, false, cap, cumulative, legResidual)
 		if err != nil {
 			rows.Close()
 			return err
@@ -1544,12 +1590,34 @@ func campaignHeaderInTx(ctx context.Context, tx *sql.Tx, id string) (positioncam
 // broker, and therefore cannot delay fill detection or risk-reducing paths.
 func campaignExposureBlockedInTx(ctx context.Context, tx *sql.Tx, campaignID string) (bool, error) {
 	var account, market, symbol string
-	if err := tx.QueryRowContext(ctx, `SELECT account_ref,market,symbol FROM position_campaigns WHERE id=?`, campaignID).
-		Scan(&account, &market, &symbol); err != nil {
+	var boundGeneration sql.NullInt64
+	if err := tx.QueryRowContext(ctx, `SELECT account_ref,market,symbol,actual_position_generation
+		FROM position_campaigns WHERE id=?`, campaignID).
+		Scan(&account, &market, &symbol, &boundGeneration); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, ErrCampaignNotFound
 		}
 		return false, fmt.Errorf("journal: reading campaign exposure scope: %w", err)
+	}
+	// 이 campaign 이 실제로 묶인 position generation 이 이미 닫혔으면 새 노출을
+	// 올리지 않는다. design D4 의 "ACTIVE | authoritative Position CLOSED | CLOSED"
+	// 행이 admission 쪽에서 요구하는 것이 이것이다. CLOSED 는 instance_seq 를
+	// 바꾸지 않으므로 체결 경로의 generation 검사로는 걸리지 않는다.
+	//
+	// 판정을 **묶인 generation** 으로 한정하는 것이 핵심이다. "최신 행이 CLOSED"
+	// 로 막으면 spec 의 "청산 후 재진입"(새 campaign identity + 새 generation
+	// lineage) 이 영구히 불가능해진다 — 정상 입력을 거부하는 fail-closed 다.
+	if boundGeneration.Valid {
+		var boundClosed int
+		if err := tx.QueryRowContext(ctx, `SELECT EXISTS(
+			SELECT 1 FROM positions p
+			WHERE p.account_ref=? AND p.market=? AND p.symbol=? AND p.instance_seq=? AND p.state='CLOSED')`,
+			account, market, symbol, boundGeneration.Int64).Scan(&boundClosed); err != nil {
+			return false, fmt.Errorf("journal: checking bound generation admission: %w", err)
+		}
+		if boundClosed != 0 {
+			return true, nil
+		}
 	}
 	var positionClosing int
 	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(
@@ -1563,10 +1631,31 @@ func campaignExposureBlockedInTx(ctx context.Context, tx *sql.Tx, campaignID str
 	if positionClosing != 0 {
 		return true, nil
 	}
+	// 미해결 risk-reducing intent 는 **현재 generation 이 열린 뒤**의 것만 본다.
+	//
+	// 왜 경계가 필요한가: 이 술어에는 해소 경로가 없는 모양이 셋 있다 — attempt 가
+	// 아예 없는 intent, 그리고 terminal fill snapshot 이 끝내 오지 않는 CONFIRMED
+	// 주문(거절 관측은 terminal=0, fail_closed=1 로 남아 영원히 그대로다). 경계가
+	// 없으면 2020 년의 죽은 intent 하나가 2026 년 campaign 의 첫 leg 를 막는다.
+	// 그건 안전이 아니라 기능 장애이고, 사람은 그런 게이트를 우회하게 된다.
+	//
+	// 왜 이 경계인가: 이 술어의 목적은 **지금 이 position** 에 대한 EXIT FIRST 다.
+	// 현재 generation 이 열리기 전의 intent 가 겨냥한 주식은 이미 팔렸다 — 그것이
+	// 이전 generation 이 닫혔다는 말의 뜻이다.
+	//
+	// 경계를 모르면 넓게 본다: position 행이 없거나 opened_at 이 비면 coalesce 가
+	// '' 를 주어 예전과 똑같이 전 구간을 훑는다(fail-closed).
+	//
+	// 남는 위험은 명시한다: 이전 generation 에서 걸어 둔 SELL 주문이 broker 에
+	// 아직 살아 있으면 이 술어는 그것을 더 보지 않는다. 그 위험은 주문 수명
+	// 대사(reconciliation)의 일이며 경계 없는 판본도 실질적으로 막지 못했다.
 	var riskReducingPending int
 	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(
 		SELECT 1 FROM intents i
 		WHERE i.account_ref=? AND i.market=? AND i.symbol=? AND upper(i.side)='SELL'
+		AND i.created_at >= coalesce((SELECT p.opened_at FROM positions p
+			WHERE p.account_ref=i.account_ref AND p.market=i.market AND p.symbol=i.symbol
+			ORDER BY p.instance_seq DESC LIMIT 1), '')
 		AND (
 			NOT EXISTS (SELECT 1 FROM mutation_attempts a WHERE a.intent_id=i.id)
 			OR EXISTS (SELECT 1 FROM mutation_attempts a WHERE a.intent_id=i.id
@@ -1941,23 +2030,10 @@ func campaignQuantity(value string) (string, error) {
 	return canonical, nil
 }
 
+// campaignRemaining 은 예전에 positioncampaign.RemainingFromCap 과 같은 산술을 따로
+// 갖고 있었다. 같은 규칙의 두 번째 사본은 언제든 갈린다 — 이제 위임한다.
 func campaignRemaining(cap, cumulative string) (string, error) {
-	cap, err := campaignQuantity(cap)
-	if err != nil {
-		return "", err
-	}
-	cumulative, err = campaignQuantity(cumulative)
-	if err != nil {
-		return "", err
-	}
-	cmp, err := riskcalc.CompareDecimal(cumulative, cap)
-	if err != nil {
-		return "", err
-	}
-	if cmp >= 0 {
-		return "0", nil
-	}
-	return riskcalc.SubDecimal(cap, cumulative)
+	return positioncampaign.RemainingFromCap(cap, cumulative)
 }
 
 func positiveCampaignQuantity(value string) (string, error) {

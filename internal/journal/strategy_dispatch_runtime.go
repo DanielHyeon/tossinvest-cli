@@ -1226,6 +1226,9 @@ func linkConfirmedStrategyCampaignTx(ctx context.Context, tx *sql.Tx, lease Stra
 	if err != nil {
 		return err
 	}
+	// 진입 차단 래치는 상태에서 되계산하지 않는다. 위에서 blocked 를 이미 거절했으므로
+	// 여기서는 no-op 이지만, 같은 규칙의 두 번째 구현을 남기지 않는 것이 요점이다.
+	nextCampaign = positioncampaign.LatchEntryBlocked(blocked, nextCampaign)
 	now := formatJournalTime(observedAt)
 	newVersion := version + 1
 	if _, err := tx.ExecContext(ctx, `INSERT INTO campaign_order_watermarks(
