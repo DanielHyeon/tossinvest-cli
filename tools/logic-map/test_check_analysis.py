@@ -236,6 +236,92 @@ class CheckAnalysisTests(unittest.TestCase):
                 check_analysis.check("ordinary", root),
                 ["function-logic reference must share the exact comparison base"],
             )
+    def _reference_fixture(self, root: Path, reference: Path) -> str:
+        """`ordinary` change 하나와, 그 change 가 가리키는 증거 보관처를 만든다.
+
+        증거는 `reference` 디렉터리에 두고 `ordinary` 는 포인터만 갖는다 — a073 이
+        a072 의 231개 번들을 그렇게 빌려 쓴다. 반환값은 공유 비교 base 다.
+        """
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        for key, value in (("user.email", "a073@example.invalid"), ("user.name", "a073")):
+            subprocess.run(["git", "config", key, value], cwd=root, check=True)
+        (root / "go.mod").write_text("module fixture\ngo 1.23\n")
+        source = root / "internal" / "sample.go"; source.parent.mkdir()
+        source.write_text("package sample\nfunc Run() {}\n")
+        p = self._commit(root, "P")
+        change = root / "openspec" / "changes" / "ordinary"
+        (change / "analysis").mkdir(parents=True)
+        (change / "base-commit.txt").write_text(p + "\n")
+        (change / "analysis" / "function-logic-reference.txt").write_text("reference\n")
+        reference.mkdir(parents=True, exist_ok=True)
+        (reference / "base-commit.txt").write_text(p + "\n")
+        bundle = reference / "analysis" / "function-logic" / "internal--run"; bundle.mkdir(parents=True)
+        source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+        ast = {"file":"internal/sample.go","source_sha256":source_hash,"package":"sample","function":"Run","signature":"Run(params=0, results=0)","start":{"line":2,"column":1},"end":{"line":2,"column":1},"branches":[]}
+        (bundle / "ast.json").write_text(json.dumps(ast))
+        (bundle / "function-logic-map.md").write_text("# Function Logic Map: `Run`\ninternal/sample.go\n## Inputs and invariants\ne\n## Branches and early returns\ne\n## Calls and live bindings\ne\n## State mutations and fallbacks\ne\n## Safety conclusion\ne\n")
+        (bundle / "branch-test-map.md").write_text("# Branch Test Map: `Run`\n| B1 | leaf | test | yes | yes |\n")
+        (bundle / "risk-pattern-report.md").write_text("# Risk Pattern Report\ninternal/sample.go\n")
+        return p
+
+    def test_real_reference_resolves_an_archived_change(self) -> None:
+        """참조된 change 를 아카이브해도 포인터가 고아가 되지 않는다.
+
+        openspec archive 는 change 를 `archive/<YYYY-MM-DD>-<id>` 로 옮긴다. 옮긴
+        뒤에도 그 증거를 빌려 쓰는 change 의 게이트는 통과해야 한다 — 안 그러면
+        먼저 아카이브한 쪽이 나중 쪽의 완료를 영구히 막는다.
+        """
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            archived = root / "openspec" / "changes" / "archive" / "2026-08-29-reference"
+            self._reference_fixture(root, archived)
+            self.assertEqual(check_analysis.check("ordinary", root), [])
+
+    def test_real_archived_reference_still_requires_the_same_base(self) -> None:
+        """아카이브 경로를 정말 읽는지 — base 를 어긋내면 반드시 빨개진다."""
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            archived = root / "openspec" / "changes" / "archive" / "2026-08-29-reference"
+            self._reference_fixture(root, archived)
+            (root / "marker").write_text("Q")
+            q = self._commit(root, "Q")
+            (archived / "base-commit.txt").write_text(q + "\n")
+            self.assertEqual(
+                check_analysis.check("ordinary", root),
+                ["function-logic reference must share the exact comparison base"],
+            )
+
+    def test_real_archived_reference_rejects_a_suffix_collision(self) -> None:
+        """`<날짜>-<id>` 를 정확히 맞춘다.
+
+        거절 대상을 이름으로 적는다: `2026-08-29-other-reference` 는 이름이
+        `reference` 로 끝날 뿐 다른 change 다. 접미사로 고르면 남의 증거를
+        내 증거로 통과시킨다.
+        """
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            other = root / "openspec" / "changes" / "archive" / "2026-08-29-other-reference"
+            self._reference_fixture(root, other)
+            self.assertEqual(
+                check_analysis.check("ordinary", root),
+                ["function-logic reference base is invalid: reference change is neither open nor archived: reference"],
+            )
+
+    def test_real_archived_reference_rejects_two_copies(self) -> None:
+        """같은 id 의 아카이브가 둘이면 고르지 않고 멈춘다.
+
+        고르면 어느 쪽 증거로 통과했는지 기록에 남지 않는다.
+        """
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            archive = root / "openspec" / "changes" / "archive"
+            self._reference_fixture(root, archive / "2026-08-29-reference")
+            shutil.copytree(archive / "2026-08-29-reference", archive / "2026-09-01-reference")
+            self.assertEqual(
+                check_analysis.check("ordinary", root),
+                ["function-logic reference base is invalid: archive holds 2 copies of reference: 2026-08-29-reference, 2026-09-01-reference"],
+            )
+
     @staticmethod
     def _commit(root: Path, subject: str) -> str:
         subprocess.run(["git", "add", "."], cwd=root, check=True)

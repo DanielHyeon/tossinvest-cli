@@ -222,6 +222,40 @@ def changed_existing_functions(
     return required
 
 
+# `openspec archive` 는 끝난 change 를 `archive/<YYYY-MM-DD>-<id>` 로 옮긴다.
+# 접미사로 고르면 `2026-08-29-other-reference` 가 `reference` 로 통과하므로
+# 날짜 접두사를 벗긴 나머지를 **전부** 맞춘다.
+ARCHIVED_CHANGE = re.compile(r"\d{4}-\d{2}-\d{2}-(?P<change>.+)")
+
+
+def resolve_referenced_change(root: Path, change: str) -> Path:
+    """증거를 빌려주는 change 의 디렉터리를 찾는다.
+
+    빌려주는 쪽이 먼저 아카이브되면 `changes/<id>` 는 사라진다. 거기만 보면
+    빌리는 쪽의 게이트가 영원히 막히므로 아카이브도 본다 — a073 이 a072 의
+    번들을 빌려 쓰는데 a072 가 먼저 아카이브되어 실제로 그렇게 됐다.
+    """
+    direct = root / "openspec" / "changes" / change
+    if direct.is_dir():
+        return direct
+    archive = root / "openspec" / "changes" / "archive"
+    matches = sorted(
+        path.name
+        for path in (archive.iterdir() if archive.is_dir() else ())
+        if path.is_dir()
+        and (matched := ARCHIVED_CHANGE.fullmatch(path.name)) is not None
+        and matched.group("change") == change
+    )
+    if not matches:
+        raise ValueError(f"reference change is neither open nor archived: {change}")
+    if len(matches) > 1:
+        # 고르면 어느 증거로 통과했는지 기록에 안 남는다. 세어서 멈춘다.
+        raise ValueError(
+            f"archive holds {len(matches)} copies of {change}: " + ", ".join(matches)
+        )
+    return archive / matches[0]
+
+
 def resolve_base(
     change_dir: Path, root: Path, context: dict[str, object] | None = None
 ) -> str:
@@ -569,8 +603,8 @@ def check(
         referenced_change = reference_file.read_text(encoding="utf-8").strip()
         if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", referenced_change) or referenced_change == change:
             return ["function-logic reference names an invalid or recursive change"]
-        referenced_dir = root / "openspec" / "changes" / referenced_change
         try:
+            referenced_dir = resolve_referenced_change(root, referenced_change)
             referenced_base = resolve_base(referenced_dir, root)
         except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
             return [f"function-logic reference base is invalid: {exc}"]
