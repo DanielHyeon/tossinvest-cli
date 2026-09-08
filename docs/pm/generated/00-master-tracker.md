@@ -11,6 +11,7 @@
     - STORY-TOS-a119 — Codex keeps its handoff fresh and starts GBrain once [in_progress] → `a119-codex-session-handoff-and-gbrain-startup`
     - STORY-TOS-a120 — Audit legacy execution-baseline adoption [archived] → `a120-audit-legacy-execution-baseline`
     - STORY-TOS-a121 — Reconcile stale verification artifacts from authoritative reads [in_progress] → `a121-reconcile-stale-verification-artifacts`
+    - STORY-TOS-a122 — Keep the Function Logic Map gate answerable after a merge [in_progress] → `a122-the-logic-map-gate-outlives-a-merge`
 - EPIC-TOS-005 — Secure delivery and engineering operations [active]
   - FEAT-TOS-007 — Secure remote access and signed releases [active]
     - STORY-TOS-031 — Enable trusted-network VPN console access [archived] → `enable-vpn-console-access`

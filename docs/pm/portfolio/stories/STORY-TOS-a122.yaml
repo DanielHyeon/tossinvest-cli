@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a122",
+  "title": "Keep the Function Logic Map gate answerable after a merge",
+  "feature": "FEAT-TOS-001",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a122-the-logic-map-gate-outlives-a-merge",
+    "path": "openspec/changes/a122-the-logic-map-gate-outlives-a-merge"
+  },
+  "found_by": {
+    "date": "2026-09-08",
+    "how": "Closing the post-deployment measurement tasks of a075 and a076 re-ran the completion gate, whose step 5 demanded Function Logic Map evidence for 316 functions belonging to a112 and the main merge. The same failure is present in untouched a074 (316), a077 (318) and a079 (317), because check_analysis.py compares the immutable base against the working tree rather than against the commit where the change landed. Post-deployment tasks close by construction after other work has landed, so every change carrying one ends in this state.",
+    "record": "openspec/changes/archive/2026-09-08-a075-alerts-turn-on-with-one-button/review.md"
+  },
+  "acceptance": [
+    "The comparison base stays the immutable base-commit.txt, and no change re-baselines it",
+    "A change whose landing point is recorded is compared against that point, so step 5 requires evidence only for the functions that change actually modified",
+    "A change with no recorded landing point is still compared against the working tree, leaving in-progress judgements unchanged",
+    "A forged or invalid landing point does not pass step 5 and the refusal names its reason",
+    "The archived a075 and a076 serve as regression fixtures: they pass with a landing point and fail as they do today without one"
+  ]
+}
