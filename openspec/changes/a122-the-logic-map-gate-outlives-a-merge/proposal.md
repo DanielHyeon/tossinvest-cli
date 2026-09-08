@@ -56,8 +56,17 @@ CLI 는 그것을 노출하지 않는다 — `main()` 의 인자는 `--change` �
   risk-pattern-report)을 바꾸는 것. 바뀌는 것은 어떤 함수 집합에 그것을 요구하는가다.
 - 이미 아카이브된 change 를 소급해 다시 판정하는 것.
 
+## 도중에 드러난 것
+
+아카이브된 change 는 지금 id 로 5단계를 재검사할 수 없다. `resolve_base` 가
+`openspec/changes/<id>/base-commit.txt` 만 찾고 `archive/<YYYY-MM-DD>-<id>/` 를 보지
+않아 `missing base-commit.txt` 로 떨어진다(2026-09-08 실측). `f6965ebb` 이 고친 것은
+빌린 증거를 푸는 `resolve_referenced_change` 이고 이 경로가 아니다. 이 change 의 회귀
+픽스처가 아카이브된 a075·a076 이므로 이것이 선결 조건이다.
+
 ## Impact
 
-- `tools/logic-map/check_analysis.py` 와 그 테스트.
+- `tools/logic-map/check_analysis.py` 와 그 테스트 — 비교 대상 쪽 끝, 그리고
+  `resolve_base` 가 아카이브 경로를 보지 못하는 것(아래 참고).
 - `tools/gate.sh` 5단계 호출부(필요하면).
 - `sdd-workflow` 스펙만. 런타임 거래·위험·원장·엔진 기동 의미는 건드리지 않는다.

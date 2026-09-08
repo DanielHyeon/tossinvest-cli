@@ -39,6 +39,12 @@
 
 - [ ] 4.1 아카이브된 a075·a076 을 회귀 픽스처로 쓴다. 착지 지점을 주면 통과하고
       주지 않으면 오늘과 같이 실패해야 한다 — 이 change 가 실제로 그 다섯을 푸는지의 증거다.
+
+      > **선결 조건 하나가 이미 드러났다.** 아카이브된 change 는 지금 id 로 재검사가
+      > 되지 않는다 — `resolve_base` 가 `openspec/changes/<id>/base-commit.txt` 만 보고
+      > `archive/<YYYY-MM-DD>-<id>/` 를 보지 않아서 `missing base-commit.txt` 로 떨어진다
+      > (2026-09-08 실측). 커밋 `f6965ebb` 이 고친 것은 `resolve_referenced_change`(빌린
+      > 증거 쪽)이고 이 경로가 아니다. 픽스처를 쓰려면 이것부터 닫아야 한다.
 - [ ] 4.2 a074 · a077 · a079 에 대해 실행해 요구되는 함수 집합이 각 change 가 실제로
       고친 것으로 줄어드는지 확인하고 그 수를 기록한다.
 - [ ] 4.3 focused 테스트와 `make test` · `make vet` · `make validate` · `make sdd-sync` ·

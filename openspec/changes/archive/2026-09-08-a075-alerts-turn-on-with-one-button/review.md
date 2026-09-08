@@ -198,6 +198,20 @@ Map)만 실패했다.** 이것을 사유를 적고 면제한다 — 침묵한 �
 `internal/verifylive/*` · `internal/scheduler/*` 처럼 이 change 가 이름조차 언급한 적
 없는 패키지가 올라온 것이 그 증거다.
 
+**두 자리에서 재고 차이를 귀속했다 — 면제이기 전에 측정이다.**
+이 저장소의 방법은 오래된 change 를 닫을 때 HEAD 와 **그 change 자신의 완료 커밋**
+두 자리에서 재고 그 차이를 귀속하는 것이다(a073·a065 가 같은 날 같은 방법으로 닫혔다).
+
+| 잰 자리 | base | 결과 |
+|---|---|---|
+| 자기 완료 커밋 `840b3377` (재기준화 커밋) | `448dfeb1` | **PASS — evidence complete or diff-proven exempt** |
+| HEAD `62b35779` | 같음 | FAIL — missing evidence 318건 |
+
+`git worktree add --detach 840b337725faa995144661673d82fb04a5508c3d` 안에서
+`python3 tools/logic-map/check_analysis.py --change` 를 돌린 결과다. **자기 것은 0건이고
+나머지는 전부 그 뒤에 쌓인 것**이라는 문장이 이 두 줄에서 나온다. 5단계가 오늘 요구하는
+함수 집합은 이 change 가 고친 것과 교집합이 없다.
+
 **이 면제가 숨기는 것이 없다는 근거 셋.**
 
 1. 이 세션은 **Go 파일을 0개** 바꿨다(`git diff --name-only` 에 `.go` 없음). 닫은
