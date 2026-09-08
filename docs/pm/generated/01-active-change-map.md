@@ -78,8 +78,8 @@
 | `a072-wire-multi-market-strategy-runtime` | STORY-TOS-a072 | archived |
 | `a073-operate-multi-market-strategy-lanes` | STORY-TOS-a073 | archived |
 | `a074-critical-events-reach-the-operator` | STORY-TOS-a074 | in_progress |
-| `a075-alerts-turn-on-with-one-button` | STORY-TOS-a075 | in_progress |
-| `a076-the-subscribe-address-is-scannable` | STORY-TOS-a076 | in_progress |
+| `a075-alerts-turn-on-with-one-button` | STORY-TOS-a075 | implemented |
+| `a076-the-subscribe-address-is-scannable` | STORY-TOS-a076 | implemented |
 | `a077-screens-show-what-they-already-know` | STORY-TOS-a077 | in_progress |
 | `a078-first-rung-keeps-its-judgement` | STORY-TOS-a078 | archived |
 | `a079-operator-can-lift-a-quarantine` | STORY-TOS-a079 | in_progress |
