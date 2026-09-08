@@ -18,17 +18,47 @@ trusted-network mode는
 상태를 바꾸는 모든 route는 CSRF gate를 요구하고 trusted-network에서는
 same-origin 검사도 요구한다 (SHALL). 현재 허용된 상태 변경은 검증 제어, 자기/soak/
 engine process 제어, 편입·Guardian 한도·trading policy·automation gate·공통 exit
-policy 설정, 검증된 system update 작업뿐이다(SHALL). 이 change는 그 목록이나 각
-seam의 기존 쓰기 범위를 넓히지 않는다 (SHALL NOT). console에는 direct 주문 발주·
-정정·취소 또는 credential 표시 route가 없어야 하며(SHALL NOT), engine/verify가
-계좌를 변경할 수 있는 조건은 기존 사람 승인, audit, startup interlock과 공식 API
-경로가 계속 결정한다 (SHALL).
+policy 설정, 검증된 system update 작업, 그리고 **알림 설정**(대상은
+`engine.notifications`의 `enabled`·`base_url`·`topic` 셋뿐이다)뿐이다(SHALL).
+console에는 direct 주문 발주·정정·취소 또는 credential 표시 route가 없어야 하며
+(SHALL NOT), engine/verify가 계좌를 변경할 수 있는 조건은 기존 사람 승인, audit,
+startup interlock과 공식 API 경로가 계속 결정한다 (SHALL).
+
+알림 설정을 켜는 것은 사람의 클릭이어야 한다 (SHALL — §0.7의 "사람이 직접 승인한다"는
+승인의 주체를 정하는 문장이며, 로컬 콘솔에서 사람이 누르는 것이 곧 그것이다).
+그 클릭은 **타이핑 확인이나 2단계 승인 마찰을 요구해서는 안 된다** (SHALL NOT —
+사용자 지시 2026-07-27). 화면은 누르기 전에 무엇이 켜지는지, 언제 반영되는지를
+읽는 문장으로 말해야 한다 (SHALL).
+
+알림 채널 식별자는 **기계가 만들어야 하며 화면이 사람에게서 받아서는 안 된다**
+(SHALL / SHALL NOT — 공개 알림 서비스에서 채널 이름은 유일한 접근 제어이고, 사람이
+고른 이름은 추측 가능하다). 생성된 식별자는 암호학적 난수여야 한다 (SHALL).
+전송 경로의 인증 토큰을 받는 입력란이 화면에 존재해서는 안 된다 (SHALL NOT —
+토큰은 환경에서만 읽는다는 기존 계약을 화면에서도 구조로 유지한다).
+
+채널 식별자는 audit 로그·구조화 로그·리다이렉트 URL의 결과 문구에 기록되어서는
+안 되며 (SHALL NOT — 그 자체가 접근 제어이고, 리다이렉트 결과 문구는 브라우저
+히스토리와 프록시 로그에 남는다), 화면 본문에는 표시되어야 한다 (SHALL — 표시하지
+않으면 운영자가 구독할 수 없다). 알림 설정 변경은 audit 로그에 시각·주체와 함께
+기록되어야 하며, 비밀에 해당하는 항목은 값 대신 **설정 여부**로 기록한다 (SHALL).
+
+알림 설정을 끄는 저장은 `enabled` 한 키만 다시 써야 한다 (SHALL — 채널 식별자를
+지우면 다시 켤 때 기존 구독이 죽는다; 꺼진 설정에 남은 식별자가 알림을 다시 켜지
+않는다는 것은 엔진 조립 경로가 이미 보장한다).
+
+콘솔은 설정한 채널로 **테스트 메시지 한 통**을 보낼 수 있다 (SHALL — 설정은 다음
+엔진 기동부터 반영되므로, 그 전에는 전송 가능 여부를 확인할 방법이 없다). 그 발송은
+critical 알림 outbox에 기록되어서는 안 되고, 실패해도 entry gate를 latch하거나
+operating mode를 변경해서는 안 된다 (SHALL NOT — 테스트는 진단이지 사건이 아니다).
+발송 실패는 알림 설정을 되돌려서는 안 되며 (SHALL NOT — 일시적 네트워크 실패로
+알림이 꺼진 상태에 머무는 것이 더 나쁜 결과다), 사유가 화면에 표시되어야 한다 (SHALL).
 
 route table 정적 검사는 package 모든 파일의 `HandleFunc`/`Handle`을 검사하고,
 모든 state-changing route가 mode와 무관하게 CSRF와 해당 mode의 origin gate chain
-뒤에 있음을 보장해야 한다 (SHALL). fixed health 외 별도의 public login/logout
-lifecycle route는 필요하지 않으며 direct account mutation capability를 추가해서는
-안 된다 (SHALL NOT).
+뒤에 있음을 보장해야 한다 (SHALL). 상태변경 행위 목록의 확장은 **스펙 문장과 정적
+검사 목록이 같은 커밋에서** 함께 움직여야 한다 (SHALL). fixed health 외 별도의
+public login/logout lifecycle route는 필요하지 않으며 direct account mutation
+capability를 추가해서는 안 된다 (SHALL NOT).
 
 #### Scenario: 기본 local listener
 - **WHEN** remote option 없이 console을 시작한다
@@ -57,6 +87,26 @@ lifecycle route는 필요하지 않으며 direct account mutation capability를 
 #### Scenario: engine interlock 유지
 - **WHEN** remote session에서 ProtectionReady 미충족 engine start를 누른다
 - **THEN** engine process의 기존 interlock refusal이 그대로 표시되고 console이 우회하지 않는다
+
+#### Scenario: 알림을 버튼 한 번으로 켠다
+- **WHEN** 알림이 꺼진 상태에서 운영자가 알림 켜기를 누른다
+- **THEN** 기계가 만든 암호학적 난수 채널로 `engine.notifications`의 세 키가 기록되고, audit에 시각·주체와 설정 여부가 남고, 화면이 구독 주소를 본문에 표시하며, 타이핑 확인은 요구되지 않는다
+
+#### Scenario: 채널 식별자는 결과 문구에 실리지 않는다
+- **WHEN** 알림 켜기·테스트·끄기의 결과가 리다이렉트로 표시된다
+- **THEN** 리다이렉트 URL의 결과 문구에 채널 식별자가 포함되지 않는다
+
+#### Scenario: 테스트 발송 실패
+- **WHEN** 설정된 채널로의 테스트 발송이 실패한다
+- **THEN** 알림 설정은 켜진 채로 남고, outbox 행이 생기지 않으며, entry gate와 operating mode가 바뀌지 않고, 실패 사유가 화면에 표시된다
+
+#### Scenario: 알림 끄기는 채널을 지우지 않는다
+- **WHEN** 알림이 켜진 상태에서 운영자가 알림 끄기를 누른다
+- **THEN** 저장된 파일의 `enabled`만 false가 되고 `topic` 바이트는 그대로 남는다
+
+#### Scenario: 토큰 입력란 부재
+- **WHEN** 알림 화면의 폼을 검사한다
+- **THEN** 전송 경로의 인증 토큰을 받는 입력란이 존재하지 않는다
 
 ### Requirement: 포지션 가시성
 
@@ -1729,3 +1779,26 @@ gate와 기동 인터록은 그대로 유일한 판정자다). 승인은 `engine
 
 - **WHEN** US close fill의 원 currency PnL은 있지만 reporting currency FX source/rate/as-of가 없다
 - **THEN** 원 currency metric은 보존하고 reporting-currency net PnL은 `not_measured`로 표시하며 0 또는 조회 시점 환율로 대체하지 않는다
+
+### Requirement: 구독 주소는 기기 간 전송 가능한 형태로 표시된다
+
+알림 채널이 구성되어 있고 전송이 켜져 있을 때, 콘솔은 구독 주소를 **손으로 옮겨 적지 않고 다른 기기로 전달할 수 있는 형태**로도 표시해야 한다 (SHALL — 채널 식별자는 암호학적 난수이므로 사람이 옮겨 적기에 적합하지 않고, critical 알림이 도달해야 하는 기기는 대개 콘솔을 여는 기기가 아니다).
+
+그 표시는 **응답 본문 안에서 완결되어야 한다** (SHALL — 별도 이미지 라우트를 만들면 채널 식별자가 URL 경로에 실리고, 그것은 리다이렉트 URL 금지와 같은 이유로 금지된다). 외부 서비스로 주소를 보내 생성해서는 안 된다 (MUST NOT).
+
+전송이 꺼져 있을 때는 그 표시를 하지 않아야 한다 (SHALL NOT — 아무것도 발행되지 않는 채널에 새 기기를 구독시키면 운영자가 침묵을 정상 동작으로 읽는다). 주소 자체의 표시는 계속한다 (SHALL — 다시 켜면 같은 주소로 돌아온다는 것이 운영자가 알아야 할 사실이다).
+
+표시가 생성되지 못하면 화면은 나머지를 그대로 렌더해야 한다 (SHALL — 주소는 문자열과 링크로 이미 카드에 있으므로, 그림 하나가 없다고 화면이 실패해서는 안 된다).
+
+#### Scenario: 전송이 켜진 상태의 구독 주소
+- **WHEN** 알림이 켜져 있고 채널이 구성된 상태로 알림 화면을 연다
+- **THEN** 구독 주소가 문자열·링크와 함께 다른 기기로 옮길 수 있는 형태로 표시되고, 그 표시는 응답 본문 안에 있으며 외부 요청을 만들지 않는다
+
+#### Scenario: 전송이 꺼진 상태
+- **WHEN** 채널은 남아 있으나 알림이 꺼진 상태로 알림 화면을 연다
+- **THEN** 주소는 계속 표시되지만 기기 전송용 표시는 렌더되지 않는다
+
+#### Scenario: 채널이 없는 상태
+- **WHEN** 채널이 구성되지 않은 상태로 알림 화면을 연다
+- **THEN** 기기 전송용 표시가 렌더되지 않고 화면의 나머지는 정상 렌더된다
+

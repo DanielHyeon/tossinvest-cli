@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a076-the-subscribe-address-is-scannable",
-    "path": "openspec/changes/a076-the-subscribe-address-is-scannable"
+    "path": "openspec/changes/archive/2026-09-08-a076-the-subscribe-address-is-scannable"
   },
   "acceptance": [
     "While alert delivery is on, the subscribe address is shown in a form that can be carried to another device without transcribing the random channel by hand",

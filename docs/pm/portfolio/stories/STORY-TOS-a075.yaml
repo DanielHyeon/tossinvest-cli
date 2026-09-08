@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a075-alerts-turn-on-with-one-button",
-    "path": "openspec/changes/a075-alerts-turn-on-with-one-button"
+    "path": "openspec/changes/archive/2026-09-08-a075-alerts-turn-on-with-one-button"
   },
   "acceptance": [
     "One press on the settings screen turns critical alert delivery on: it creates the channel, writes the three configuration keys, records the change in the audit trail and sends one test message",
