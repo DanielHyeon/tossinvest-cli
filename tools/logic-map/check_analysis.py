@@ -299,6 +299,92 @@ def resolve_base(
     return effective
 
 
+LANDING_FILE = "landed-commit.txt"
+FULL_SHA = re.compile(r"[0-9a-f]{40}")
+
+
+def _committed_bytes(root: Path, ref: str, relative: str) -> bytes | None:
+    """`ref` 시점의 파일 내용. 워킹트리를 보지 않는다."""
+    process = subprocess.run(
+        ["git", "show", f"{ref}:{relative}"],
+        cwd=root, capture_output=True, timeout=30, check=False,
+    )
+    return None if process.returncode else process.stdout
+
+
+def _is_ancestor(root: Path, older: str, newer: str) -> bool:
+    return subprocess.run(
+        ["git", "merge-base", "--is-ancestor", older, newer],
+        cwd=root, capture_output=True, timeout=10, check=False,
+    ).returncode == 0
+
+
+def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> str:
+    """이 change 의 작업이 착지한 지점. 기록이 없으면 빈 문자열이다.
+
+    유효성은 그 change 의 **증거**로 판정한다. 신원으로 판정하면 안 된다 —
+    `base-commit.txt` 는 proposal freeze 에 쓰이고 spec 이 불변을 SHALL 로 요구하므로
+    "착지 커밋에 그 파일이 같은 내용으로 있다"는 freeze 이후 **모든** 커밋에서 참이고
+    아무것도 가르지 못한다. 그 판정으로는 a112 에 freeze 직후 커밋을 주어 base→착지를
+    135→12 파일로 줄이고 비테스트 Go 48개를 숨길 수 있었다(2026-09-09 재현).
+
+    기록은 워킹트리가 아니라 **HEAD 커밋**에서 읽는다. 워킹트리에서 읽으면 untracked
+    파일로 게이트를 통과한 뒤 지울 수 있고, 그러면 어떤 대상으로 통과했는지가 아무
+    데도 안 남는다.
+    """
+    try:
+        relative = (change_dir / LANDING_FILE).relative_to(root).as_posix()
+    except ValueError:
+        return ""
+    raw = _committed_bytes(root, "HEAD", relative)
+    if raw is None:
+        return ""
+    try:
+        candidate = raw.decode("utf-8").strip()
+    except UnicodeDecodeError as exc:
+        raise ValueError(f"landing point is not UTF-8: {relative}") from exc
+    if not FULL_SHA.fullmatch(candidate):
+        # `rev-parse` 는 `HEAD`·브랜치·태그를 받는다. 이름은 리뷰 시점과 게이트 시점
+        # 사이에 뜻이 바뀌고, `HEAD` 한 단어면 커밋 안 된 Go 편집이 통째로 요구에서
+        # 빠진다.
+        raise ValueError(
+            f"landing point must be a full 40-hex commit id, not {candidate!r}"
+        )
+    process = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{candidate}^{{commit}}"],
+        cwd=root, capture_output=True, text=True, timeout=10, check=False,
+    )
+    if process.returncode or process.stdout.strip() != candidate:
+        raise ValueError(f"landing point is not a commit in this repository: {candidate}")
+    if not _is_ancestor(root, candidate, "HEAD"):
+        raise ValueError(f"landing point never landed on this history: {candidate}")
+    # base 는 조상이면 되고 같아도 된다. a074·a079·a075 의 정답이 바로 같은 경우다 —
+    # 2026-08-04 재기준화가 base 를 그 change 들의 작업 뒤로 옮겼다. 느슨해지지 않는
+    # 이유는 아래 증거 판정이 값을 고정하기 때문이다.
+    if not _is_ancestor(root, base, candidate):
+        raise ValueError(
+            f"landing point precedes the comparison base {base[:12]}: {candidate}"
+        )
+    mismatched = []
+    for ast_path in sorted(analysis.glob("*/ast.json")) if analysis.is_dir() else ():
+        value = _ast_value(ast_path)
+        if not isinstance(value, dict) or value.get("revision", "current") != "current":
+            continue
+        source = str(value.get("file", ""))
+        digest = str(value.get("source_sha256", ""))
+        if not source or not digest:
+            continue
+        blob = _committed_bytes(root, candidate, source)
+        if blob is None or hashlib.sha256(blob).hexdigest() != digest:
+            mismatched.append(source)
+    if mismatched:
+        raise ValueError(
+            f"landing point {candidate[:12]} is not the revision this evidence describes: "
+            + ", ".join(sorted(set(mismatched)))
+        )
+    return candidate
+
+
 def normalized_source(value: str, root: Path) -> tuple[Path, str]:
     raw = Path(value)
     path = raw if raw.is_absolute() else root / raw
@@ -491,8 +577,13 @@ def _ast_value(path):
 
 
 def validate_target(
-    target: Path, root: Path, index: dict | None = None, require_calls: bool = False
+    target: Path, root: Path, index: dict | None = None, require_calls: bool = False,
+    revision_ref: str = "",
 ) -> tuple[list[str], tuple[str, str] | None]:
+    """`revision_ref` 가 있으면 `revision: current` 해싱을 그 커밋에서 한다.
+
+    비교 대상과 증거 대조 대상이 갈리면 하나는 착지를, 하나는 오늘을 기술하는 두
+    정본이 된다. 병합 뒤에는 그 둘이 반드시 어긋난다."""
     errors: list[str] = []
     texts: dict[str, str] = {}
     for name in REQUIRED:
@@ -518,7 +609,13 @@ def validate_target(
         return errors + [f"{target.name}: {exc}"], None
     revision = value.get("revision", "current")
     if revision == "current":
-        if not source.is_file():
+        if revision_ref:
+            blob = _committed_bytes(root, revision_ref, relative)
+            if blob is None:
+                errors.append(f"{target.name}: AST source is missing: {relative}")
+            elif hashlib.sha256(blob).hexdigest() != value["source_sha256"]:
+                errors.append(f"{target.name}: AST source hash is stale: {relative}")
+        elif not source.is_file():
             errors.append(f"{target.name}: AST source is missing: {relative}")
         elif hashlib.sha256(source.read_bytes()).hexdigest() != value["source_sha256"]:
             errors.append(f"{target.name}: AST source hash is stale: {relative}")
@@ -587,16 +684,27 @@ def validate_target(
 def check(
     change: str, root: Path = ROOT, context: dict[str, object] | None = None
 ) -> list[str]:
-    change_dir = root / "openspec" / "changes" / change
+    # 아카이브된 change 도 자기 id 로 재검사할 수 있어야 한다. 아카이브 문법을 아는
+    # 해소기가 이미 있으므로 세 번째 사본을 만들지 않는다.
+    try:
+        change_dir = resolve_referenced_change(root, change)
+    except ValueError:
+        change_dir = root / "openspec" / "changes" / change
     analysis = change_dir / "analysis" / "function-logic"
     reference_file = change_dir / "analysis" / "function-logic-reference.txt"
     review = change_dir / "review.md"
     review_text = review.read_text(encoding="utf-8") if review.exists() else ""
     try:
         base = resolve_base(change_dir, root, context)
-        required = changed_existing_functions(root, base)
+        # 조상 판정은 `base-commit.txt` 의 글자가 아니라 `resolve_base` 가 **반환한**
+        # 값에 건다. a063 은 그 둘이 다르다(P → E).
+        landing = resolve_landing(change_dir, root, base, analysis)
+        required = changed_existing_functions(root, base, landing)
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         return [f"cannot derive modified Go functions: {exc}"]
+    if context is not None:
+        context["landing"] = landing
+        context["required_count"] = len(required)
     if reference_file.exists():
         if analysis.exists() and any(path.is_dir() and any(path.iterdir()) for path in analysis.iterdir()):
             return ["function-logic reference cannot coexist with local function-logic evidence"]
@@ -633,7 +741,7 @@ def check(
         for path in sorted(analysis.glob("*/function-logic-map.md"))
     )
     for target in targets:
-        target_errors, binding = validate_target(target, root, index, require_calls)
+        target_errors, binding = validate_target(target, root, index, require_calls, landing)
         errors.extend(target_errors)
         if binding:
             if binding in covered:
@@ -672,6 +780,14 @@ def main() -> int:
         print(f"[logic-map] {args.change}: execution-baseline adoption exception evidence complete")
     else:
         print(f"[logic-map] {args.change}: evidence complete or diff-proven exempt")
+    # 어떤 대상으로, 몇 개를 요구해서 통과했는지가 기록에 남아야 한다. 요구 집합이
+    # 비었는데 번들이 있으면 조용한 통과와 증거로 통과한 것을 구분할 수 없다.
+    landing = str(context.get("landing", ""))
+    if landing:
+        print(
+            f"[logic-map] {args.change}: landed-commit {landing} "
+            f"required {context.get('required_count', 0)} function(s)"
+        )
     return 0
 
 
