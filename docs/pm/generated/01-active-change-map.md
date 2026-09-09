@@ -98,7 +98,7 @@
 | `a096-one-condition-is-one-alert` | STORY-TOS-a096 | archived |
 | `a097-a-re-armed-alert-is-a-new-episode` | STORY-TOS-a097 | archived |
 | `a098-nobody-sends-what-the-outbox-keeps` | STORY-TOS-a098 | archived |
-| `a099-a-claim-excludes-the-second-sender` | STORY-TOS-a099 | implemented |
+| `a099-a-claim-excludes-the-second-sender` | STORY-TOS-a099 | archived |
 | `a100-wire-fill-to-broker-protection` | STORY-TOS-a100 | in_progress |
 | `a101-the-soak-outlives-a-deploy` | STORY-TOS-a101 | archived |
 | `a102-boot-does-not-starve-the-engine` | STORY-TOS-a102 | archived |

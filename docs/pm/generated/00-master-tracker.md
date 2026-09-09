@@ -105,7 +105,7 @@
     - STORY-TOS-a096 — One condition is one alert [archived] → `a096-one-condition-is-one-alert`
     - STORY-TOS-a097 — A re-armed alert is a new episode [archived] → `a097-a-re-armed-alert-is-a-new-episode`
     - STORY-TOS-a098 — Nobody sends what the outbox keeps [archived] → `a098-nobody-sends-what-the-outbox-keeps`
-    - STORY-TOS-a099 — A claim excludes the second sender [implemented] → `a099-a-claim-excludes-the-second-sender`
+    - STORY-TOS-a099 — A claim excludes the second sender [archived] → `a099-a-claim-excludes-the-second-sender`
     - STORY-TOS-a111 — Exit lines stay actionable with flat quotes [archived] → `a111-exit-lines-stay-actionable-with-flat-quotes`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
