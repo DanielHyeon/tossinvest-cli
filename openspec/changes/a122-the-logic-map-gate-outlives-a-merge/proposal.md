@@ -17,11 +17,12 @@ CLI 는 그것을 노출하지 않는다 — `main()` 의 인자는 `--change` �
 | a074-critical-events-reach-the-operator | FAIL — missing evidence 316건 |
 | a077-screens-show-what-they-already-know | FAIL — 318건 |
 | a079-operator-can-lift-a-quarantine | FAIL — 317건 |
-| a075 · a076 (2026-09-08 아카이브) | 같은 실패 |
+| a075 · a076 (2026-09-08 아카이브) | **다른 실패** — `cannot derive modified Go functions: missing base-commit.txt` (아카이브 뒤에는 id 로 재검사가 안 된다, 아래 §도중에 드러난 것) |
 
-지적된 함수는 `internal/verifylive/*` · `internal/scheduler/*` 처럼 이 change 들이
-이름조차 언급한 적 없는 패키지의 것이다. 즉 게이트는 "a074 가 a112 의 함수에 증거를
-냈는가"를 묻고 있고, **어떤 change 도 그 질문에 답할 수 없다.**
+HEAD 에서 요구되는 함수는 **319개**이고 a074 는 그중 3개, a077 은 1개, a079 는 2개만
+덮는다(319 − 316/318/317). 지적된 함수에는 `internal/verifylive/*` 32개처럼 이 change
+들이 이름조차 언급한 적 없는 것이 섞여 있다. 즉 게이트는 "a074 가 a112 의 함수에
+증거를 냈는가"를 묻고 있고, **어떤 change 도 그 질문에 답할 수 없다.**
 
 이것은 우연한 사고가 아니라 구조다. `배포 후 실측` 태스크는 **정의상** 배포 뒤에
 닫히고, 배포는 다른 작업이 착지한 뒤에 온다. 그래서 그런 태스크를 가진 change 는
@@ -29,7 +30,8 @@ CLI 는 그것을 노출하지 않는다 — `main()` 의 인자는 `--change` �
 
 기존 우회로 둘은 답이 아니다.
 
-- **재기준화**(a074~a079 의 review §병합 후 재기준화, 커밋 `840b3377`)는 이제 spec 과
+- **재기준화**(a074~a079 의 review §병합 후 재기준화는 `0c563c6c → 6b47be2f` 를 적고,
+  커밋 `840b3377` 이 문서에 없는 **두 번째** 재기준화 `6b47be2f → 448dfeb1` 를 했다)는 이제 spec 과
   충돌한다 — `sdd-workflow` 는 "일반 변경의 함수 분석 비교 기준은 **불변**
   `base-commit.txt`여야 한다(SHALL)"고 적는다. 게다가 그 절차는 `revision: current`
   AST 재추출과 분기 ID 재번호를 포함해 조용히 틀릴 여지가 크다.
@@ -41,8 +43,7 @@ CLI 는 그것을 노출하지 않는다 — `main()` 의 인자는 `--change` �
 - 비교의 **base 쪽은 손대지 않는다.** 불변 `base-commit.txt` 요구를 그대로 지킨다.
   고치는 것은 비교의 **반대쪽 끝**이다.
 - change 의 작업이 착지한 지점을 기록하고, 그 지점을 5단계 비교의 target 으로 쓴다.
-  그러면 질문이 "이 change 가 고친 함수에 증거가 있는가"로 되돌아오고, 병합 뒤에도
-  같은 답을 유지한다.
+  그러면 질문이 남의 change 를 담지 않게 되고, 병합 뒤에도 같은 답을 유지한다.
 - 착지 지점이 기록되지 않은 change 는 지금과 똑같이 워킹트리와 비교한다 — 작업 중인
   change 의 판정은 바뀌지 않아야 한다.
 - 착지 지점의 기록은 위조 가능하면 안 된다. 그 값이 5단계를 통과시키는 유일한 손잡이가
@@ -58,11 +59,28 @@ CLI 는 그것을 노출하지 않는다 — `main()` 의 인자는 `--change` �
 
 ## 도중에 드러난 것
 
-아카이브된 change 는 지금 id 로 5단계를 재검사할 수 없다. `resolve_base` 가
-`openspec/changes/<id>/base-commit.txt` 만 찾고 `archive/<YYYY-MM-DD>-<id>/` 를 보지
-않아 `missing base-commit.txt` 로 떨어진다(2026-09-08 실측). `f6965ebb` 이 고친 것은
+아카이브된 change 는 지금 id 로 5단계를 재검사할 수 없다. `check` 이
+`change_dir` 을 `openspec/changes/<id>` 로 하드코딩하고(`check_analysis.py:590`)
+`archive/<YYYY-MM-DD>-<id>/` 를 보지 않아, `resolve_base` 가 거기서
+`missing base-commit.txt` 로 떨어진다(2026-09-08 실측). 그 하드코딩은 `resolve_base`
+가 아니라 그 **호출자** 쪽이다. `f6965ebb` 이 고친 것은
 빌린 증거를 푸는 `resolve_referenced_change` 이고 이 경로가 아니다. 이 change 의 회귀
 픽스처가 아카이브된 a075·a076 이므로 이것이 선결 조건이다.
+
+### base 가 이 다섯의 작업보다 **뒤**에 있다 (2026-09-09 측정)
+
+`448dfeb1..840b3377` 사이에 커밋은 하나뿐이고 바뀐 Go 파일은 **0** 이다. 그 하나가
+"chore(sdd): rebaseline a074-a079 after strategy merge" 이고 `base-commit.txt` 들만
+고쳤다. 즉 2026-08-04 재기준화가 base 를 이 다섯의 Go 작업 **뒤로** 옮겼다 — a074 가
+증거를 낸 `ExitObserver.record` 의 파일은 `448dfeb1` 에 이미 있다.
+
+그래서 이 다섯에는 "이 change 가 고친 함수" 를 돌려주는 target 이 **없다**. 착지
+지점을 주면 요구 집합은 비고, 그 뒤를 주면 남의 작업이다. 이 change 가 이 다섯에
+주는 것은 올바른 질문이 아니라 **답할 수 있는 질문**이다. base 불변 SHALL 때문에
+base 쪽으로는 못 고치므로 이것이 남은 전부다.
+
+요구 집합이 비었는데 번들이 있으면 도구가 그렇게 말해야 한다 — 조용한 통과는
+면제와 구분되지 않는다. 근거는 `analysis/landing-point.md` 다.
 
 ## Impact
 

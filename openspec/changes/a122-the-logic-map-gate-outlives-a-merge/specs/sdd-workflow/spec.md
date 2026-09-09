@@ -17,10 +17,35 @@ change 의 판정은 바뀌지 않아야 한다.
 
 착지 지점의 기록은 위조 가능해서는 안 된다(SHALL NOT). 그 값은 비교 대상을 정하는
 유일한 손잡이이므로, 유효한 값의 조건과 기록 시점이 명시되어야 한다(SHALL).
+유효성은 그 change 의 **증거**로 판정되어야 하며(SHALL), change 의 신원이 그 커밋에
+존재하는지로 판정해서는 안 된다(SHALL NOT) — `base-commit.txt` 는 불변이므로 그 존재는
+freeze 이후 모든 커밋에서 참이고 아무것도 가르지 못한다. 구체적으로, 착지 지점에서
+그 change 의 모든 `revision: current` 증거 묶음의 source hash 가 일치해야 한다(SHALL).
+
+`revision: current` 증거의 source hash 대조 대상은 비교 대상 쪽 끝과 같아야 한다
+(SHALL). 착지 지점이 기록된 change 의 증거를 워킹트리와 대조해서는 안 된다(SHALL NOT).
+
+완료 게이트는 아카이브된 change 의 함수 분석도 그 id 로 재검사할 수 있어야 한다(SHALL).
 
 아래 명시적 legacy 실행 기준선 이관의 모든 조건을 만족하는 a063만 고정된 실행
 기준 E로 판정할 수 있으며, 원래 구현 전 증거 규칙을 소급 충족했다고 보고해서는
 안 된다(SHALL NOT). 원래 계획 기준 P는 계속 보존해야 한다(SHALL).
+
+#### Scenario: 보조 문맥과 현재 HEAD 충돌
+- **WHEN** CodeGraphContext 또는 기억 결과가 현재 HEAD와 다르면
+- **THEN** 현재 HEAD와 CodeGraph를 다시 확인·동기화한 뒤 그 결과를 구현 근거로 사용한다
+
+#### Scenario: 기존 함수 내부 변경
+- **WHEN** 기존 함수의 분기·early return·mutation·side effect를 변경하면
+- **THEN** 구현 전에 Function Logic Map과 Branch Test Map을 만들고 변경 후 source hash·함수·분기와 묶인 증거로 최신화한다
+
+#### Scenario: Function Logic Map 면제 시도
+- **WHEN** `not-applicable` 면제를 기록했지만 비교 기준 대비 기존 Go 함수가 수정되었다
+- **THEN** gate는 수정 함수를 diff에서 계산하고 해당 함수의 완전한 증거 묶음이 없으면 실패한다
+
+#### Scenario: 실행 기준선 이관 기록이 없는 변경
+- **WHEN** 변경에 execution-baseline 이관 기록이 없으면
+- **THEN** 기존 불변 기준과 전체 수정 함수 분석 규칙을 그대로 적용한다
 
 #### Scenario: 병합 뒤에 닫히는 배포 후 실측 태스크
 
@@ -33,6 +58,30 @@ change 의 판정은 바뀌지 않아야 한다.
 
 - **WHEN** 착지 지점이 기록되지 않은 change 로 완료 게이트를 실행하면
 - **THEN** 5단계는 지금과 같이 `base-commit.txt` 와 워킹트리를 비교한다
+
+착지 지점을 기록한 change 의 요구 집합이 비었는데 function-logic 번들이 존재하면,
+5단계는 통과하더라도 요구 집합이 비었음을 출력해야 한다(SHALL). 조용한 통과는 증거로
+통과한 것과 구분되지 않는다.
+
+#### Scenario: 착지 지점이 base 뒤에 있어 요구 집합이 비는 change
+
+- **WHEN** 착지 지점이 기록된 change 의 `base-commit.txt` 가 이미 그 change 의 Go
+  작업을 담고 있어 base 와 착지 지점 사이에 바뀐 함수가 없고, 그 change 에
+  function-logic 번들이 있으면
+- **THEN** 5단계는 번들 자체의 유효성은 계속 검사하고, 요구된 함수가 0개라는 사실을
+  출력한다
+
+#### Scenario: 착지 지점이 증거와 맞지 않는다
+
+- **WHEN** 기록된 착지 지점에서 그 change 의 `revision: current` 증거 묶음 중 하나라도
+  source hash 가 맞지 않으면
+- **THEN** 5단계는 통과하지 않고 어느 묶음이 맞지 않는지 이름으로 말한다
+
+#### Scenario: 아카이브된 change 의 재검사
+
+- **WHEN** 아카이브된 change 의 id 로 완료 게이트 함수 분석을 실행하면
+- **THEN** `archive/<YYYY-MM-DD>-<id>/` 의 기록으로 판정하고 `missing base-commit.txt`
+  로 실패하지 않는다
 
 #### Scenario: 위조된 착지 지점
 
