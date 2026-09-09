@@ -714,7 +714,54 @@ AST 산출물 **열셋**을 **proposal·design보다 먼저** 만들었다 — �
       > 기록 자체가 마지막 편집일 때만 멈춘다 — §6.4 를 돌리는 사람이 그 자리에서 다시
       > 확인해야 하는 것이지, 여기 적힌 exit 0 이 그때까지 유효하다는 뜻이 아니다.
 
-- [ ] 6.4 `make gate CHANGE=a099-a-claim-excludes-the-second-sender`
+- [x] 6.4 `make gate CHANGE=a099-a-claim-excludes-the-second-sender` — **2026-09-10, 11/11 통과 (`GATE PASS`)**
+
+      **이 줄을 체크하는 것 자체가 게이트를 여는 조건이다.** 2단계는 자기 change 의
+      gate 줄도 미완료로 센다 — 면제되는 것은 3단계의 **짝** 한 줄뿐이다
+      (`tools/gate.sh:265-268`). 그래서 순서는 a098 §6.3 이 남긴 그대로
+      **먼저 돌리고 → 적고 → 체크**이고, 체크한 뒤에는 tracker 재생성과 `sdd-sync` 를
+      다시 해야 6단계가 열린다(§6.9 의 되풀이가 여기서 끝난다).
+
+      **선행 실행 — 게이트 7~10단계에 해당하는 넷 (2026-09-10, 순차, 모두 exit 0):**
+
+      | 명령 | 결과 | 소요 |
+      |---|---|---|
+      | `make vet` | exit 0 | 6s |
+      | `make test` | exit 0 — 99 ok · 9 no-test (그중 81 은 Go 테스트 캐시 적중) | 304s |
+      | `make test-seams` | exit 0 — 100 ok · 8 no-test | 249s |
+      | `make test-race` | exit 0 — `-race` 로 7 패키지 + `internal/app/engine` 동시성 시험 18건, 전부 `-count=1` | 41s |
+
+      > 병렬이 아니라 **순차**로 돌렸다. `make test` 타깃 주석의 a084 전례대로
+      > `internal/journal` 마이그레이션 스위트는 부하를 받으면 느려져서, 병렬 실행은
+      > 정당한 실행을 timeout 으로 오보할 수 있다.
+
+      **게이트 11단계 (2026-09-10, `GATE PASS`, exit 0):**
+
+      | 단계 | 결과 |
+      |---|---|
+      | 1 tasks.md 존재 | OK |
+      | 2 미완료 체크박스 | **0건** — 이 줄을 체크해서 0 이 됐다 |
+      | 3 짝 change (a098) | `완료 + 구성원 일치` — a098 은 아카이브에서 찾았다 |
+      | 4 `review.md` | OK |
+      | 5 Function Logic Map | `evidence complete or diff-proven exempt` · `landed-commit e6c4636a… required 32 function(s)` |
+      | 6 `make sdd-check` | OK |
+      | 7 `make test` | OK |
+      | 8 `make test-seams` | OK |
+      | 9 `make test-race` | OK |
+      | 10 `make vet` | OK |
+      | 11 `make validate` | OK — `59 passed, 0 failed` |
+
+      > **6단계는 한 번도 안 걸렸다.** a098 §6.3 이 겪은 두 실패(fingerprint stale ·
+      > generated tracker stale)를 먼저 알고 순서를 바꿨기 때문이다 — 6.4 체크 →
+      > tracker 재생성(`a099 in_progress → implemented`) → `make sdd-sync`(rc 0,
+      > `all indexes current`) → 게이트. 편집이 전부 끝난 뒤에 sync 하는 것이
+      > §6.9 이 말한 되풀이를 끊는 지점이다.
+
+      **3단계는 2026-09-10 까지 막혀 있었다 — 이 change 가 아니라 도구의 결함이었다.**
+      짝 a098 이 2026-08-29 에 아카이브되면서 `openspec/changes/a098-…` 가 사라졌는데
+      게이트가 활성 경로만 봤다. a122 1.11(`93d1ffd7`)이 게이트에 아카이브 인식을
+      넣어서 열렸다. 그러므로 §6.9 이후 이 줄이 한 달 가까이 미완료로 남은 것은
+      a099 의 미비가 아니다.
 - [x] 6.5 **독립 리뷰 4라운드 — ⛔ BLOCK, 지적 전부 반영 완료 (2026-08-12, gstack).**
       기록은 `review.md` §11, 설계 반영은 `design.md` D14.
 
