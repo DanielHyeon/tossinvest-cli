@@ -96,3 +96,65 @@ a063은 이미 만들어진 격리를 다루는 change다. 격리가 **생기는
 
 badge와 action이 뜨는 것까지 확인했고 화면 자체는 사람이 눌러야 보이므로 task 11.1은
 열어 둔다.
+
+## 해제 화면은 이미 세 번 쓰였다 (2026-09-09 원장 실측, task 11.1 나머지 하나)
+
+8월 기록은 badge와 해제 action까지 확인하고 해제 **화면**을 "미측정"으로 남겼다.
+그 기록을 쓴 04:28Z로부터 21분 뒤, 사람이 콘솔에서 격리 셋을 실제로 해제했다.
+원장이 그것을 보존하고 있다.
+
+| 종목 | `released_at` | `release_kind` | `release_evidence` |
+|---|---|---|---|
+| kr 042660 | 2026-08-04T04:49:48Z | `HUMAN_REPAIR` | `LOCAL_OPERATOR released quarantine v1 (reason=ambiguous_recovery) from the console at 2026-08-04T04:49:48Z` |
+| us IONQ | 2026-08-04T04:50:09Z | `HUMAN_REPAIR` | 같은 형식, 같은 시각 |
+| us TSLA | 2026-08-04T04:50:23Z | `HUMAN_REPAIR` | 같은 형식, 같은 시각 |
+
+`HUMAN_REPAIR` + 서버가 조립한 `LOCAL_OPERATOR … from the console` 문장은 task 4.7이
+고정한 성공 경로 그 자체다.
+
+**해제가 preview 화면을 반드시 거쳤다는 구조 근거.** `ReleaseQuarantine`은 32바이트
+난수 capability를 검증하고(`exit_quarantine_command.go:231`), 그 난수를 만드는
+`issueQuarantineCapability`의 호출자는 **하나뿐**이다 — `PreviewQuarantineRelease`
+(`:119`, 저장소 전체에서 유일). 그 값이 브라우저에 닿는 길도 하나뿐이다 —
+`quarantine-release-preview` 템플릿 렌더(`internal/console/exit_quarantine.go:217`).
+게다가 `exitQuarantineCapabilityDelay = 3 * time.Second`라 발급 3초 안에는 거부되고,
+확인 없는 apply도 거부된다(4.3). 즉 해제가 원장에 남았다는 사실은 preview 화면이
+운영자 앞에 그려지고 3초 넘게 읽힌 뒤 확인을 받았다는 뜻이다. 세 번.
+
+세 해제의 간격(21초, 14초)도 사람이 화면 셋을 차례로 넘긴 모양이다.
+
+**task 11.1을 닫는다** — badge와 action은 2026-08-04T04:28Z GET으로, 해제 화면은
+같은 날 04:49~04:50Z의 해제 세 건으로 측정됐다. task 11.2가 못 박은 대로 누른 것은
+사람이고 에이전트가 아니다.
+
+## 남은 창이 닫혔다 — 지금은 재측정할 수 없다 (2026-09-09)
+
+같은 실측에서 확인한 것이다. 오늘은 해제 화면에 도달할 방법이 없다.
+
+| 자리 | 술어 | 오늘 |
+|---|---|---|
+| `internal/journal/exit_quarantine_list.go:46` | `q.released_at IS NULL AND q.position_generation = p.instance_seq` | 5건 |
+| `internal/journal/position_policy.go:85` | `WHERE p.state <> 'CLOSED'` | 3건 |
+| `internal/console/position_policy.go:321` | 두 번째 집합의 행에만 badge를 붙인다 | **0건** |
+
+활성 격리 5건은 전부 CLOSED 포지션이고, 열린 포지션 3건은 하나도 격리되지 않았다.
+badge가 없으면 서명된 `quarantine_token`이 없고, token이 없으면 preview POST가
+성립하지 않는다.
+
+배선 자체는 살아 있다는 것을 따로 확인했다.
+
+- 배포 바이너리에 a079 문자열이 있다(`격리 해제 표면 없음` 1건, `판정 격리 v` 1건).
+- 콘솔이 받는 `*consolePositionPolicyCommander`가 세 메서드를 모두 갖고
+  (`cmd/tossctl/exit_quarantine_commander.go:34,42,51`), 그 `lifecycle`인
+  `*positionpolicyrpc.Client`도 같은 셋을 만족한다(컴파일 시점 확인). 따라서
+  `exitQuarantines()`는 언제나 ok를 돌려주고 `Quarantines(ctx)`는 실제 RPC다.
+- `/position-management` 응답에 `판정 격리 상태를 읽지 못했다` notice가 **없다**.
+  즉 그 RPC가 성공했다 — 엔진이 5건을 돌려줬고 화면이 조용히 버렸다.
+
+## I8 — 활성 격리 read와 화면 범위가 어긋난다 (후속 change 후보)
+
+`ActiveExitSnapshotQuarantines`의 주석은 "관측할 수 없는 것에 대한 해제 버튼을 주지
+않는다"를 세대 술어의 근거로 적지만 `p.state`는 거르지 않는다. 그래서 read가
+"활성"이라 부르는 5건을 화면은 구조적으로 못 그리고, 어떤 문장도 그 사실을 말하지
+않는다. CLOSED 포지션의 격리가 무해하다면 read가 걸러야 하고, 무해하지 않다면 화면이
+말해야 한다. 지금은 둘 다 아니다. a079 범위 밖이다.
