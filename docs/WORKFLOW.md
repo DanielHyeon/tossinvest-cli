@@ -7,6 +7,9 @@
 > 개정: 2026-07-26 gstack 리뷰(codex + CEO/Eng/DX 4보이스) 결정 반영 — 기록은 openspec/changes/archive/2026-07-26-add-tossos-foundation/review.md
 > 개정 2: 2026-07-26 StockOS SDD 규칙(stockos/.claude/CLAUDE.md) 중 이식 가능 규칙 적용 — §0, 권위 경계, 위험도, Pre-Edit 선언, 완료 보고 조건
 > 개정 3: 2026-07-27 StockOS Full SDD 도구 체계를 Go/TossOS에 맞게 이식 — OpenSpec change `adopt-stockos-full-sdd`
+> 개정 4: 2026-07-31 StockOS Full SDD 실행 순서·READY·증거 조정·PM 1:1·완료 계약 정렬 — OpenSpec change `align-full-sdd-pm-contract`
+> 개정 5: 2026-09-09 개정 4의 138줄이 무관한 콘솔 커밋 `6d61e988`(2026-07-31 16:00, `c0619279` 9시간 뒤)에
+>   의해 삭제된 것을 발견하고 복원 — 기록은 `openspec/changes/align-full-sdd-pm-contract/issues.md`
 
 ## 0. 최상위 안전 불변식
 
@@ -57,6 +60,17 @@ StockOS와 전역 CLI·로컬 DB 서비스는 재사용할 수 있지만 인덱�
 TypeDB database, Neo4j source는 TossOS namespace로 분리한다. Python AST 분석기는 Go 코드에
 재사용하지 않으며 `tools/logic-map/extract_go_ast.go`가 그 역할을 맡는다.
 
+### SDD 4계층 앵커
+
+- **계약(OpenSpec)**: scope, non-goals, acceptance criteria, design을 구현 전에 고정한다.
+- **증거(CodeGraph + CodeGraphContext + Function Logic Map)**: 현재 코드의 함수 간 구조와
+  함수 내부 실제 분기를 분리해 검증한다.
+- **실행(Superpowers TDD)**: RED → GREEN → REFACTOR → VERIFY를 순서대로 수행한다.
+- **게이트(gstack + Makefile)**: review, security, QA와 자동 검사를 통과한 변경만
+  archive·handoff 대상으로 인정한다.
+
+도구가 추가되거나 일부 advisory 도구가 실패해도 이 네 앵커와 §0 안전 불변식은 축소할 수 없다.
+
 ## 역할 분리
 
 - **Manager(Fable, 총괄 아키텍트)**: 전체 작업을 분할하고 OpenSpec을 작성·검토한다. 구현 결과의 diff와 테스트를 독립적으로 재검증한다. 다중 에이전트가 허용된 환경에서는 구현·테스트를 별도 Teammate 컨텍스트에 위임한다.
@@ -67,18 +81,51 @@ TypeDB database, Neo4j source는 TossOS namespace로 분리한다. Python AST �
 
 0. **기억 회고**: `scripts/memory-recall.sh "<키워드>"`와
    `python3 tools/sdd/gbrain_project.py search "<키워드>"`로 과거 학습을 찾고 현재 증거로 재검증한다.
-1. **계약**: Manager가 `openspec/changes/<change-id>/`에 proposal, design, spec delta, tasks를 작성하고
-   `python3 tools/sdd/capture_change_base.py --change <change-id>`로 구현 전 commit을 고정한다.
-2. **strict 검증**: `openspec validate <change-id> --strict --no-interactive`.
-3. **proposal-freeze**: 아래 리뷰 게이트를 실행하고 `review.md`를 남긴다.
-4. **hard evidence**: `make sdd-sync` 후 대상 symbol의 definition, callers, callees, impact, test/config binding을 확인한다.
-5. **supporting evidence**: CodeGraphContext로 관련 문맥 후보를 찾되 hard evidence와 현재 HEAD로 조정한다.
-6. **함수 내부 증거**: 기존 함수 내부 편집이면 Go AST·ast-grep·Function Logic Map·Branch Test Map을 작성한다.
-7. **Superpowers TDD**: RED → GREEN 최소 구현 → REFACTOR → VERIFY. 각 task 체크는 산출물 커밋과 같은 커밋에서 수행한다.
-8. **게이트**: gstack code/security/QA 관점과 `make sdd-check`, 대상 테스트, 전체 test/vet/validate를 실행한다.
-9. **독립 검증**: Manager가 diff와 테스트를 구현 컨텍스트와 분리해 재검증한다.
-10. **완료**: `make gate CHANGE=<change-id>` 성공 후 PM story를 동기화하고 `openspec archive <change-id>`한다.
-11. **학습 유지**: 재사용 가치가 있고 검증된 학습만 episodic으로 retain한 뒤 근거가 있을 때 canonical로 승격한다.
+1. **Story와 계약**: Delivery Story를 먼저 만들고 정확히 하나의 예정 OpenSpec
+   `change_id`와 경로를 연결한다. 그다음 Manager가
+   `openspec/changes/<change-id>/`의 proposal, design, spec delta, tasks를 완성한다.
+   strict validate, 사람의 의도·안전 승인, 선행 Story 완료, 위험도, test 전략,
+   DB 변경 시 rollback, change당 single writer, PM generator `--check`가 모두 충족되어야
+   `READY`다.
+2. **구현 기준 고정**: `python3 tools/sdd/capture_change_base.py --change <change-id>`로
+   구현 전 commit을 고정하고 proposal-freeze 리뷰를 `review.md`에 기록한다.
+3. **CodeGraph hard evidence**: `make sdd-sync` 후 대상 symbol의 definition, callers,
+   callees, impact, test/config binding을 현재 HEAD와 함께 확인한다.
+4. **CodeGraphContext supporting evidence**: 관련 문맥과 누락 후보를 찾는다. 이 결과는
+   코드 변경 권한이 아니며 hard evidence를 대체하지 않는다.
+5. **증거 조정**: 두 도구와 현재 HEAD의 일치·불일치를
+   `analysis/code-context/codegraph-baseline.md`,
+   `codegraphcontext-context.md`, `evidence-reconciliation.md`에 기록한다.
+   불일치는 현재 HEAD와 테스트로 해소하기 전까지 편집을 차단한다.
+6. **함수 내부 증거**: 기존 함수 내부 편집이면 Go AST·ast-grep·Function Logic Map·
+   Branch Test Map을 먼저 작성한다. High-risk 함수는 면제할 수 없다.
+7. **Pre-Edit Gate**: 대상 심볼, 호출부, 기존 테스트, 불변식, 실패 테스트, rollback과
+   설정 영향 선언을 기록하고 통과한 뒤 production 파일을 편집한다.
+8. **Superpowers TDD**: RED → GREEN 최소 구현 → REFACTOR → VERIFY 순서를 지킨다.
+   각 task 체크는 산출물 커밋과 같은 커밋에서 수행한다.
+9. **게이트와 독립 검증**: gstack code/security/QA 관점, `make sdd-check`, 대상 테스트,
+   전체 test/test-seams/race/vet/validate를 실행하고 Manager가 diff와 테스트를 분리된
+   리뷰 패스로 재검증한다.
+10. **확정과 PM 동기화**: `make gate CHANGE=<change-id>` 성공 후 OpenSpec을 archive하고,
+    Story 경로와 파생 상태를 갱신한 뒤 PM generator/check를 통과시킨다. archive와 PM sync
+    전에는 change를 완료로 보고하지 않는다.
+11. **학습 유지**: 승인·테스트·리뷰와 merge 또는 deploy 근거가 있는 학습만 episodic으로
+    retain하고, 반복 검증된 내용만 canonical로 승격한다.
+
+### READY 판정
+
+첫 production 편집 전에 다음을 모두 확인한다. 하나라도 없으면 `NOT READY`다.
+
+```text
+- Story가 registry와 Feature에 등록되고 정확히 하나의 change를 가리킨다.
+- PM generator `--check`가 Story↔change 1:1과 계층의 양방향 링크를 통과한다.
+- proposal/design/spec delta/tasks가 완전하고 strict validate가 통과한다.
+- 사람의 범위·안전 승인이 있고 선행 Story가 완료되었다.
+- 위험도와 High-risk 경로, test 전략, review 보이스가 정해졌다.
+- DB/journal 변경이면 additive/rollback 순서가 있다.
+- CodeGraph baseline과 구현 전 base commit이 고정되었다.
+- change당 production writer가 한 명이다.
+```
 
 ## 코드 증거 절차
 
@@ -97,6 +144,11 @@ codegraphcontext report .
 CodeGraph와 현재 HEAD가 다르면 인덱스를 갱신하고 파일을 직접 읽는다. CodeGraphContext 결과만으로
 production 편집을 허용하지 않는다. GBrain은 식별자를 모르는 의미 검색과 과거 결정 recall에 쓰며
 현재 코드 사실은 CodeGraph와 HEAD로 재확인한다.
+
+두 증거 계층의 결론이 다르면 그 차이를 숨기지 않는다. 변경마다
+`analysis/code-context/`의 세 파일에 질의, 기준 commit, 확인한 파일·심볼, 불일치,
+현재 HEAD로 내린 결론을 남긴다. 단순 문서·신규 leaf처럼 코드 구조 질의가 의미 없는 경우에도
+`evidence-reconciliation.md`에 `not-applicable` 사유와 확인한 변경 표면을 기록한다.
 
 ## Function Logic Map
 
@@ -165,10 +217,36 @@ compliance를 소급 증명하거나 historical debt를 완료/면제로 표시�
 
 ## 완료 게이트 (자동화)
 
-`make gate CHANGE=<change-id>` = tasks.md 미완료 체크박스 0 + review.md 존재 +
-Function Logic Map 완성/명시적 면제 + `make sdd-check` + `make test` + `make vet` +
-`make validate` 전부 통과.
-규율이 아니라 스크립트가 게이트다(`tools/gate.sh`).
+`make gate CHANGE=<change-id>`는 `tools/gate.sh`의 11단계를 순서대로 돈다: ① tasks.md 존재
+② 미완료 체크박스 0 ③ 짝 change(`deploy-pair.txt`) 완료 ④ `review.md` 존재
+⑤ Function Logic Map 완성/명시적 면제 ⑥ `make sdd-check` ⑦ `make test` ⑧ `make test-seams`
+⑨ `make test-race` ⑩ `make vet` ⑪ `make validate`.
+규율이 아니라 스크립트가 게이트다.
+
+### 단계별 강제 지점 — 무엇이 기계 검사이고 무엇이 규율인가
+
+게이트가 보지 않는 단계는 **조용히 사라진다**. 2026-07-31 개정 4가 무관한 커밋에 삭제된 뒤
+6주 동안 아무도 몰랐고, 5단계 증거 조정 산출물은 2026-08-02 이후 한 건도 생산되지 않았다.
+그러니 각 단계가 어디서 막히는지 여기에 적어 둔다. `없음`은 면제가 아니라 **사람이 지켜야
+하고 리뷰에서만 잡히는 것**이라는 뜻이다.
+
+| SDD 사이클 단계 | 기계 검사 |
+| --- | --- |
+| 0 기억 회고 | **없음** — 원장 무결성만 `memory_index.py check`(sdd-check) |
+| 1 Story·계약·READY | Story↔change 1:1은 `generate_master_tracker.py --check`(sdd-check), strict validate는 gate ⑪. **READY 체크리스트 자체는 없음** |
+| 2 base commit·proposal-freeze | `base-commit.txt`는 `check_analysis.py`가 fail-closed로 사용, `review.md` 존재는 gate ④ |
+| 3 CodeGraph hard evidence | worktree fingerprint 신선도는 `check_index_freshness.py`(sdd-check). **질의를 실제로 했는지는 없음** |
+| 4 CodeGraphContext | **없음** |
+| 5 증거 조정 | **없음** ← 이 구멍이 산출물 0을 만들었다 |
+| 6 함수 내부 증거 | gate ⑤ `check_analysis.py` — 수정된 기존 Go 함수를 직접 계산하고 면제 문구를 요구한다 |
+| 7 Pre-Edit 선언 | **없음** |
+| 8 TDD | **없음** — 테스트가 도는 것은 gate ⑦⑧⑨, RED 선행 여부는 추적성으로만 본다 |
+| 9 게이트·독립 검증 | gate ⑥~⑪. **독립 리뷰 패스는 없음** |
+| 10 archive·PM sync | PM `--check`(sdd-check) |
+| 11 memory 승격 | 원장·연결 검증만 `memory_index.py check`(sdd-check) |
+
+강제 지점이 `없음`인 단계를 새로 기계화할 때는 활성 change 전체를 먼저 세어 본다.
+`check_analysis.py`를 저장소 전체로 켰을 때 31개 중 1개만 통과한 전례가 있다(아래 `sdd-check-ci` 절).
 
 ## 기억·관측·PM
 
@@ -195,7 +273,15 @@ Function Logic Map 완성/명시적 면제 + `make sdd-check` + `make test` + `m
 
 ### PM 계층
 
-`INIT-TOS → EPIC-TOS → FEAT-TOS → STORY-TOS → OpenSpec change`를 1:1 역추적한다.
+`INIT-TOS → EPIC-TOS → FEAT-TOS → STORY-TOS → OpenSpec change → Phase → Task`를 양방향으로
+역추적한다. **활성 OpenSpec change 하나는 Delivery Story 정확히 하나와 연결되고,
+Story 하나는 OpenSpec change 정확히 하나만 가리킨다.** bootstrap allowlist, 무기한
+예외, change-first 임시 고아 상태를 허용하지 않는다. 새 작업은 Story를 먼저 등록하고
+예정 `change_id`·경로를 연결한 다음 change를 만든다.
+
+Phase와 Task의 정본은 별도 PM 상태 파일이 아니라 해당 change의 `tasks.md` 제목과
+체크박스다. 따라서 portfolio가 OpenSpec task 상태를 복제하지 않으며, Story 아래 실행
+단위는 `tasks.md`에서만 변경한다.
 
 #### 신규 OpenSpec·Story 명명 규칙 (StockOS 호환)
 
@@ -209,8 +295,28 @@ Function Logic Map 완성/명시적 면제 + `make sdd-check` + `make test` + `m
 
 OpenSpec을 먼저 만들지 않는다. PM 계층에서 Story와 번호를 예약하고 같은 작업 흐름에서 대응 change를 생성해, Story와 OpenSpec이 항상 한 쌍으로 검증되게 한다.
 
+PM 검사는 다음 계약을 fail-closed로 강제한다.
+
+```text
+- 활성 OpenSpec change 집합 = 활성 change를 가리키는 Story change_id 집합
+- 모든 Story는 openspec.change_id와 openspec.path를 각각 정확히 하나 가진다
+- 같은 change_id를 둘 이상의 Story가 가리킬 수 없다
+- Initiative/Epic/Feature/Story의 forward/reverse link가 모두 일치한다
+- archive Story 경로는 실제 YYYY-MM-DD-<change-id> 디렉터리와 일치한다
+- bootstrap allowlist와 Story의 수동 status 필드는 허용하지 않는다
+```
+
+portfolio 원본은 계층, intent, 수용 기준, OpenSpec mapping만 보관한다. Story 진행 상태는
+proposal 존재, tasks 체크박스, active/archive 경로에서 generator가 `designed`,
+`in_progress`, `implemented`, `archived`로 파생한다. generated tracker와 수동 `status`는
+권위가 아니며 직접 편집하지 않는다. 이미 Story 없이 archive된 역사 change에는 소급
+Story를 강제하지 않지만, Story가 archive를 가리키면 실제 날짜-prefix 경로를 검증한다.
+StockOS의 STK backlog나 PM 사실을 복사하지 않는다.
+
+```bash
 python3 tools/pm/generate_master_tracker.py
 python3 tools/pm/generate_master_tracker.py --check
+```
 
 ## CodeGraph·CodeGraphContext 설치와 사용
 
@@ -443,17 +549,23 @@ TypeDB/Neo4j 서비스 실행 상태는 doctor가 보고하지만 CI hard gate�
 
 High-risk 경로: 라이브 주문 제출·취소·정정, 손절/익절/사이징, Guardian·kill switch·운영 모드, intent journal·원장 스키마, reconciliation, retry matrix·rate limit, 인증·세션, 체결 감지.
 
-## Pre-Edit 선언 (High-risk 전용)
+## Pre-Edit 선언
 
-High-risk 경로의 기존 코드를 수정하기 직전, Teammate는 다음을 선언하고 기록한다(구현 보고에 포함):
+비자명 production 코드 또는 기존 함수 내부 로직을 수정하기 직전, Teammate는 다음을
+`review.md` 또는 change 분석 산출물에 선언한다. High-risk 경로에는 면제가 없다.
+신규 leaf·문서·생성 tracker처럼 해당하지 않으면 `not-applicable` 사유와 변경 표면을 기록한다.
 
 ```text
 Pre-Edit Gate:
 - change id / task id:
 - 대상 심볼(패키지.함수):
-- 기존 동작 파악 근거: (기존 테스트·fixture·호출부 목록)
+- CodeGraph definition/callers/callees/impact:
+- CodeGraphContext 후보와 evidence reconciliation:
+- 기존 동작 파악 근거: (현재 HEAD·기존 테스트·fixture·호출부 목록)
+- Function Logic Map / Branch Test Map: 경로 또는 not-applicable
 - upstream 상속 테스트 영향: yes/no (yes면 회귀 방지 방법)
 - 실패 테스트 선행 작성: yes/no
+- 설정·DB·journal 변경과 rollback: 영향/없음 + 근거
 - 안전 불변식 §0 위반 여부 검토: 통과/차단
 ```
 
@@ -472,7 +584,28 @@ upstream 테스트 회귀 여부 (650 green 유지)
 Function Logic Map 적용/면제 근거
 agent config sync·PM check 결과
 CodeGraph/CodeGraphContext/GBrain freshness
+OpenSpec archive 경로와 Story 1:1/파생 상태
+Manager 또는 분리된 리뷰 패스의 판정
+merge 또는 deploy 상태와 memory 승격 근거
 남은 위험·미완료 항목
+```
+
+## 에이전트 실행 순서
+
+```text
+1. CLAUDE.md / AGENTS.md → .claude/CLAUDE.md → 이 문서 확인
+2. memory recall
+3. Delivery Story 선등록 → OpenSpec 계약/READY → base commit/proposal-freeze
+4. CodeGraph hard evidence + 현재 HEAD·기존 테스트 확인
+5. CodeGraphContext/GBrain 보조 문맥 → evidence reconciliation
+6. 기존 함수 내부 편집이면 Go AST/Function Logic Map/Branch Test Map
+7. Pre-Edit 선언
+8. RED 테스트 → GREEN 최소 구현 → REFACTOR → VERIFY
+9. 위험도에 따른 gstack guard/review/security/QA + make sdd-sync + make sdd-check + make gate
+10. Manager 또는 분리된 리뷰 패스의 diff·테스트 재검증
+11. OpenSpec archive → Story 경로/PM 파생 상태 sync
+12. 검증된 episodic retain → 반복 근거가 있는 canonical promotion
+13. 완료 보고 (금지 조건 확인 후)
 ```
 
 ## 브랜치·커밋 규칙

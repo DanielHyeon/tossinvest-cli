@@ -69,7 +69,7 @@
     - STORY-TOS-a060 — Make the console's soak restart use the profile the console is on [archived] → `a060-soak-restart-uses-this-profile`
     - STORY-TOS-a061 — Show instrument codes and names together in trade history [archived] → `a061-show-history-instrument-names`
     - STORY-TOS-a063 — Renew capability attestation from the console profile [in_progress] → `a063-align-attestation-renewal-profile`
-    - STORY-TOS-a077 — Make the trading screens show the protection line and the stock name they already hold [in_progress] → `a077-screens-show-what-they-already-know`
+    - STORY-TOS-a077 — Make the trading screens show the protection line and the stock name they already hold [implemented] → `a077-screens-show-what-they-already-know`
     - STORY-TOS-a075 — Turn critical alert delivery on with one button, with no hand-edited config and no token to paste [archived] → `a075-alerts-turn-on-with-one-button`
     - STORY-TOS-a076 — Move the subscribe address to a phone by scanning it instead of typing it [archived] → `a076-the-subscribe-address-is-scannable`
     - STORY-TOS-a080 — Refresh the protection line on the engine's cadence instead of the broker cache TTL [archived] → `a080-line-refreshes-on-engine-cadence`
@@ -93,7 +93,7 @@
     - STORY-TOS-a052 — Explain reconcile-blocked position adoption [archived] → `a052-reconcile-aware-position-management`
     - STORY-TOS-a053 — Restore visible exit-line references across markets [archived] → `a053-restore-visible-exit-line-references`
     - STORY-TOS-a078 — Stop quarantining a ladder position for activating its first rung [archived] → `a078-first-rung-keeps-its-judgement`
-    - STORY-TOS-a079 — Let an operator lift an exit-snapshot quarantine without rebuilding the baseline [in_progress] → `a079-operator-can-lift-a-quarantine`
+    - STORY-TOS-a079 — Let an operator lift an exit-snapshot quarantine without rebuilding the baseline [implemented] → `a079-operator-can-lift-a-quarantine`
     - STORY-TOS-a074 — Make the moment protection stops visible, and let critical alerts actually leave the machine [in_progress] → `a074-critical-events-reach-the-operator`
     - STORY-TOS-a084 — Re-judge a quarantine once when the recovery selector that made it has changed [archived] → `a084-a-quarantine-outlives-its-cause`
     - STORY-TOS-a087 — A protective exit is a market order, not a limit order [in_progress] → `a087-a-protective-exit-is-a-market-order`
