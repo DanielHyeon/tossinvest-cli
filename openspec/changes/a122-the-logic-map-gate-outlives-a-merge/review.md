@@ -204,3 +204,28 @@ a075 만 남는데 사유가 다르다 — `cmd-tossctl--runconsole` 의 branch-
 
 착지 지점 기제는 **판정 (4) 를 증거 검사로 바꾸면** 성립한다. 그대로 두면 성립하지
 않는다 — R2 의 위조가 High-risk 경로 48개를 숨긴다. 남은 지적은 tasks 로 옮긴다.
+
+## Pre-Edit Gate — task 1.11 (2026-09-10)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a122-the-logic-map-gate-outlives-a-merge / 1.11 → 2.7 · 3.4
+- 대상 심볼(패키지.함수): tools/gate.sh 의 CHANGE_DIR(:116) · PAIR_DIR(:184)
+                          (shell 이라 패키지·함수가 없다)
+- CodeGraph definition/callers/callees/impact: 대상이 shell 이라 인덱스에 없다.
+  호출자는 rg 전수 열거로 확정 — Makefile:169 하나. 근거는
+  analysis/code-context/codegraph-baseline.md
+- CodeGraphContext 후보와 evidence reconciliation:
+  analysis/code-context/{codegraphcontext-context,evidence-reconciliation}.md
+  — 같은 결함을 f6965ebb 와 task 3.2.2 가 이미 두 번 고쳤고 이번이 세 번째 자리다
+- 기존 동작 파악 근거: gate.sh 3단계 전문(:152-239)을 읽었다. 유지해야 하는 검사 넷 —
+  id 형태 검사, 자기 자신 선언 거부, 면제 줄 정확히 하나, 배포 단위 구성원 집합 일치.
+  실측 실패는 make gate CHANGE=a099-… 의 3단계(2026-09-09)
+- Function Logic Map / Branch Test Map: not-applicable — Go 파일이 한 줄도 바뀌지
+  않는다. 수정된 기존 Go 함수 0개이므로 5단계가 요구하는 산출물도 0개다
+- upstream 상속 테스트 영향: no — 개발 게이트 스크립트이고 tossctl 바이너리에 없다
+- 실패 테스트 선행 작성: yes — tools/sdd/test_gate_resolves_archived_changes.py
+- 설정·DB·journal 변경과 rollback: 없음. 스크립트 한 파일이라 revert 가 곧 rollback
+- 안전 불변식 §0 위반 여부 검토: 통과. 완화 방향이지만 거부할 정상 입력을 먼저
+  열거했다(task 1.11 의 (a)(b)(c)) — 오타 id 와 활성/아카이브 중복은 계속 거절한다
+```

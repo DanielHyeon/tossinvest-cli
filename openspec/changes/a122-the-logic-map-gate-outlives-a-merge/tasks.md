@@ -50,7 +50,7 @@
       대상으로 통과했는지가 남아야 한다.
 - [x] 1.10 착지 커밋에서의 change 디렉터리 경로를 정한다 — 아카이브·renumber 전의
       `openspec/changes/<id>/` 다. 경로가 아니라 내용으로 대조한다.
-- [ ] 1.11 `tools/gate.sh:116` · `:184` 가 활성 경로를 하드코딩해 아카이브된 id 가
+- [x] 1.11 `tools/gate.sh:116` · `:184` 가 활성 경로를 하드코딩해 아카이브된 id 가
       5단계에 **도달하지 못한다**. 이것을 안 고치면 `check` 의 아카이브 인식은
       `make gate` 로는 못 쓴다.
       **2026-09-09 실물 증거 — a099 가 `:184` 에 막혔다.** `landed-commit.txt` 를
@@ -68,6 +68,17 @@
       (지금 경로로 찾힌다), (b) 존재하지 않는 오타 id 는 **계속 실패해야 한다**,
       (c) 활성과 아카이브 양쪽에 같은 id 가 있으면 [[stacked-changes-break-the-gate]]
       의 3.2.4 와 같은 그늘이 생기므로 fail-closed.
+
+      **결정 (2026-09-10): 규칙은 재사용하고 코드는 재사용하지 않는다.**
+      `resolve_referenced_change` 는 Python 함수라 shell 에서 부를 수 없다. 그러므로
+      해소 규칙(날짜 접두사를 벗긴 나머지 **전부** 일치 · 중복이면 fail-closed)만
+      옮겨 적고, 정본이 둘이 되는 것을 [[transcribed-code-needs-both-sides-pinned]]
+      대로 **양쪽 다** 시험으로 못 박는다. 한 지점에서 규칙이 갈리는데 고르지 않고
+      적는다: 활성과 아카이브에 같은 id 가 동시에 있을 때 Python 은 `direct` 를 조용히
+      고르고(3.2.4 가 연 결함) shell 은 **fail-closed** 한다. shell 을 Python 에 맞춰
+      낮추지 않는다 — 3.2.4 가 Python 을 이쪽으로 올린다.
+      구현은 2.7(RED) 과 3.4(GREEN) 로 내린다. 증거는
+      `analysis/code-context/` 셋과 `review.md` 의 Pre-Edit Gate.
 - [ ] 1.12 a063 의 `execution_baseline.validate` 가 착지 기록을 감사하지 않는다.
       키 집합 열거(`execution_baseline.py:410-412`)에 넣을지 정한다.
 - [x] 1.13 ~~a077 의 증거가 자기 base 보다 낡았다~~ — **철회.** 근거였던 후보 탐색이
@@ -101,6 +112,18 @@
       (`test_check_analysis.py:83-90` 외 다섯). 통과하면 인자를 단언하는 시험을 만든다.
 - [x] 2.6 요구 집합이 빈 사실의 출력은 `context` 로 낸다. `check` 의 반환 리스트에
       붙이면 `main()` 이 1을 돌려 5단계가 **실패**한다(`check_analysis.py:667-670`).
+- [x] 2.7 gate 3단계가 **아카이브된 짝**을 넘어가는지 보는 테스트를 만든다. 픽스처는
+      임시 저장소에 `tools/gate.sh` 를 복사해 세우고, 3단계까지만 관찰하도록 4단계
+      (`review.md` 없음)에서 멈춘다. 네 축을 각각 고정한다 — (a) 활성 짝은 그대로
+      통과, (b) 없는 오타 id 는 **계속 실패**, (c) 활성과 아카이브에 같은 id 가 있으면
+      fail-closed, (d) 아카이브된 짝은 통과(지금은 여기서 죽는다). 더해서 gate 대상
+      자신이 아카이브된 경우(`:116`)도 1단계에서 죽지 않는지 본다.
+
+      `tools/sdd/test_gate_resolves_archived_changes.py` (8건). **첫 단언은 가짜였다** —
+      픽스처에 `review.md` 가 없어 게이트는 어차피 4단계에서 죽으므로 거절 케이스의
+      `returncode != 0` 은 해소기가 완전히 망가져도 초록이었다. 4단계에 **도달하지
+      못했다**까지 보도록 고친 뒤에야 정직한 RED 3건이 나왔다(아카이브된 짝 ·
+      활성이 아카이브를 가림 · gate 대상 자신이 아카이브).
 
 ## 3. GREEN
 
@@ -145,6 +168,25 @@ RED 은 픽스처 둘로 갈랐다. `_merge_fixture` 는 실제 병합 모양(ba
 
 RED 결과 10개 중 8 FAIL · 2 ok(양성 대조군, 그리고 기록 없을 때의 오늘 동작 핀).
 GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` 전부 통과.
+- [x] 3.4 `tools/gate.sh` 에 change 디렉터리 해소기를 하나 만들고 `CHANGE_DIR`(`:116`)
+      과 `PAIR_DIR`(`:184`) 을 그것으로 바꾼다. 해소 순서는 활성 → 아카이브이며 둘 다
+      있으면 멈춘다. 기존 검사 넷(id 형태, 자기 자신 선언 거부, 면제 줄 하나, 구성원
+      집합 일치)은 손대지 않는다.
+
+      **변이 검증** — 셋 다 정확한 테스트가 잡았다. 중복 판정 제거 → 활성/아카이브
+      중복과 아카이브 내 중복 2건 FAIL. 전부 일치를 접미사 일치로 → 접미사 테스트 FAIL.
+      아카이브 순회 제거 → 3건 FAIL. GREEN 원복은 `git checkout` 이 아니라 사본에서
+      했고 sha256 으로 확인했다([[mutation-revert-needs-the-right-baseline]]).
+
+      **실제 데이터 A/B** — 저장소의 실제
+      `archive/2026-08-29-a098-nobody-sends-what-the-outbox-keeps` 와 a099 의 실제
+      `deploy-pair.txt` 로 세운 픽스처에서, 새 gate 는
+      `OK: a098-… — 완료 + 구성원 일치` 로 4단계까지 가고 옛 gate(`29c609bd`)는
+      같은 픽스처에서 3단계에 죽는다.
+
+      **회귀 전수** — 활성 28 · 아카이브 98 id 를 훑어 활성과 아카이브에 같은 id 가
+      있는 경우 **0건**, 아카이브 내 중복 **0건**. 즉 더 엄격해진 규칙이 오늘 죽이는
+      정상 입력은 없다. `deploy-pair.txt` 를 가진 활성 change 는 a099 하나뿐이다.
 
 ## 4. VERIFY and handoff
 
