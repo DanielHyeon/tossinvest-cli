@@ -53,6 +53,21 @@
 - [ ] 1.11 `tools/gate.sh:116` · `:184` 가 활성 경로를 하드코딩해 아카이브된 id 가
       5단계에 **도달하지 못한다**. 이것을 안 고치면 `check` 의 아카이브 인식은
       `make gate` 로는 못 쓴다.
+      **2026-09-09 실물 증거 — a099 가 `:184` 에 막혔다.** `landed-commit.txt` 를
+      `e6c4636a` 로 기록하니 5단계가 `required 32 / errors 0` 으로 통과하는데,
+      `make gate CHANGE=a099-a-claim-excludes-the-second-sender` 는 거기까지 가지도
+      못하고 **3단계**에서 죽는다: `짝 change 의 tasks.md 가 없습니다:
+      openspec/changes/a098-nobody-sends-what-the-outbox-keeps/tasks.md`. a098 은
+      2026-08-29 에 `archive/2026-08-29-a098-…` 로 옮겨졌고 `PAIR_DIR` 은 그것을
+      보지 않는다. 즉 **짝이 먼저 아카이브되면 남은 쪽의 완료 게이트가 영구히
+      막힌다** — [[borrowed-flm-evidence-goes-stale]] 가 `f6965ebb` 로 고친 것과
+      같은 모양이 배포 짝 축에서 되풀이된 것이다. 고칠 때 `resolve_referenced_change`
+      의 해결 규칙(날짜 접두사를 벗긴 나머지 일치, 중복이면 fail-closed)을 재사용할지
+      결정한다.
+      **거부할 정상 입력 열거** — 이 완화가 죽이면 안 되는 것: (a) 아직 활성인 짝
+      (지금 경로로 찾힌다), (b) 존재하지 않는 오타 id 는 **계속 실패해야 한다**,
+      (c) 활성과 아카이브 양쪽에 같은 id 가 있으면 [[stacked-changes-break-the-gate]]
+      의 3.2.4 와 같은 그늘이 생기므로 fail-closed.
 - [ ] 1.12 a063 의 `execution_baseline.validate` 가 착지 기록을 감사하지 않는다.
       키 집합 열거(`execution_baseline.py:410-412`)에 넣을지 정한다.
 - [x] 1.13 ~~a077 의 증거가 자기 base 보다 낡았다~~ — **철회.** 근거였던 후보 탐색이
