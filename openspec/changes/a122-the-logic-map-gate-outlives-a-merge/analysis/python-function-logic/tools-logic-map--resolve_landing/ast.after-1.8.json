@@ -1,0 +1,285 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "73cc6bdc299d54d631a8639030fbc8e05ef1eba1",
+  "source_sha256": "a5ee9c6febc7d18cf8cf0d853d2213fd873136edf368c1a4b40e40da50e63fbc",
+  "function": "resolve_landing",
+  "signature": "resolve_landing(change_dir, root, base, analysis)",
+  "start": {
+    "line": 380,
+    "column": 1
+  },
+  "end": {
+    "line": 451,
+    "column": 21
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 399,
+      "inherited_line": false,
+      "source": "if candidate is None:"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 401,
+      "inherited_line": false,
+      "source": "if not FULL_SHA.fullmatch(candidate):"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 412,
+      "inherited_line": false,
+      "source": "process.returncode or process.stdout.strip() != candidate"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 412,
+      "inherited_line": false,
+      "source": "if process.returncode or process.stdout.strip() != candidate:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 414,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, candidate, 'HEAD'):"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 419,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, base, candidate):"
+    },
+    {
+      "id": "B7",
+      "kind": "For",
+      "line": 425,
+      "inherited_line": false,
+      "source": "for ast_path in sorted(analysis.glob('*/ast.json')) if analysis.is_dir() else ():"
+    },
+    {
+      "id": "B8",
+      "kind": "IfExp",
+      "line": 425,
+      "inherited_line": false,
+      "source": "sorted(analysis.glob('*/ast.json')) if analysis.is_dir() else ()"
+    },
+    {
+      "id": "B9",
+      "kind": "BoolOp",
+      "line": 427,
+      "inherited_line": false,
+      "source": "not isinstance(value, dict) or value.get('revision', 'current') != 'current'"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 427,
+      "inherited_line": false,
+      "source": "if not isinstance(value, dict) or value.get('revision', 'current') != 'current':"
+    },
+    {
+      "id": "B11",
+      "kind": "BoolOp",
+      "line": 431,
+      "inherited_line": false,
+      "source": "not source or not digest"
+    },
+    {
+      "id": "B12",
+      "kind": "If",
+      "line": 431,
+      "inherited_line": false,
+      "source": "if not source or not digest:"
+    },
+    {
+      "id": "B13",
+      "kind": "BoolOp",
+      "line": 435,
+      "inherited_line": false,
+      "source": "blob is None or hashlib.sha256(blob).hexdigest() != digest"
+    },
+    {
+      "id": "B14",
+      "kind": "If",
+      "line": 435,
+      "inherited_line": false,
+      "source": "if blob is None or hashlib.sha256(blob).hexdigest() != digest:"
+    },
+    {
+      "id": "B15",
+      "kind": "If",
+      "line": 437,
+      "inherited_line": false,
+      "source": "if not pinning:"
+    },
+    {
+      "id": "B16",
+      "kind": "If",
+      "line": 446,
+      "inherited_line": false,
+      "source": "if mismatched:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 400,
+      "value": "''"
+    },
+    {
+      "line": 451,
+      "value": "candidate"
+    }
+  ],
+  "raises": [
+    {
+      "line": 405,
+      "source": "raise ValueError(f'landing point must be a full 40-hex commit id, not {candidate!r}')"
+    },
+    {
+      "line": 413,
+      "source": "raise ValueError(f'landing point is not a commit in this repository: {candidate}')"
+    },
+    {
+      "line": 415,
+      "source": "raise ValueError(f'landing point never landed on this history: {candidate}')"
+    },
+    {
+      "line": 420,
+      "source": "raise ValueError(f'landing point precedes the comparison base {base[:12]}: {candidate}')"
+    },
+    {
+      "line": 442,
+      "source": "raise ValueError(f'landing point {candidate[:12]} is pinned by no `revision: current` evidence: a declared landing must be the revision some bundle describes')"
+    },
+    {
+      "line": 447,
+      "source": "raise ValueError(f'landing point {candidate[:12]} is not the revision this evidence describes: ' + ', '.join(sorted(set(mismatched))))"
+    }
+  ],
+  "calls": [
+    {
+      "line": 398,
+      "callee": "_declared_landing"
+    },
+    {
+      "line": 401,
+      "callee": "FULL_SHA.fullmatch"
+    },
+    {
+      "line": 405,
+      "callee": "ValueError"
+    },
+    {
+      "line": 408,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 412,
+      "callee": "process.stdout.strip"
+    },
+    {
+      "line": 413,
+      "callee": "ValueError"
+    },
+    {
+      "line": 414,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 415,
+      "callee": "ValueError"
+    },
+    {
+      "line": 419,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 420,
+      "callee": "ValueError"
+    },
+    {
+      "line": 425,
+      "callee": "analysis.glob"
+    },
+    {
+      "line": 425,
+      "callee": "analysis.is_dir"
+    },
+    {
+      "line": 425,
+      "callee": "sorted"
+    },
+    {
+      "line": 426,
+      "callee": "_ast_value"
+    },
+    {
+      "line": 427,
+      "callee": "isinstance"
+    },
+    {
+      "line": 427,
+      "callee": "value.get"
+    },
+    {
+      "line": 429,
+      "callee": "str"
+    },
+    {
+      "line": 429,
+      "callee": "value.get"
+    },
+    {
+      "line": 430,
+      "callee": "str"
+    },
+    {
+      "line": 430,
+      "callee": "value.get"
+    },
+    {
+      "line": 434,
+      "callee": "_committed_bytes"
+    },
+    {
+      "line": 435,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 435,
+      "callee": "hashlib.sha256(blob).hexdigest"
+    },
+    {
+      "line": 436,
+      "callee": "mismatched.append"
+    },
+    {
+      "line": 442,
+      "callee": "ValueError"
+    },
+    {
+      "line": 447,
+      "callee": "ValueError"
+    },
+    {
+      "line": 449,
+      "callee": "', '.join"
+    },
+    {
+      "line": 449,
+      "callee": "set"
+    },
+    {
+      "line": 449,
+      "callee": "sorted"
+    }
+  ]
+}

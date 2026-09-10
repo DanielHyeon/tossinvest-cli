@@ -356,6 +356,27 @@ def _commits_after(root: Path, base: str) -> str:
     return "" if process.returncode else process.stdout.strip()
 
 
+def _declared_landing(change_dir: Path, root: Path) -> str | None:
+    """HEAD 커밋에 적힌 착지 선언. 선언 자체가 없으면 `None` 이다.
+
+    값을 **판정하지 않는다** — 40자리인지, 커밋인지, 조상인지는 `resolve_landing`
+    이 묻는다. 여기가 답하는 것은 "선언이 있는가, 있다면 무엇이라고 적혀 있는가"
+    하나뿐이다. 빈 파일은 `""` 이고 `None` 과 **다르다**: 빈 선언도 선언이므로
+    없는 것으로 읽으면 그 change 가 조용히 워킹트리를 대상으로 삼게 된다.
+    """
+    try:
+        relative = (change_dir / LANDING_FILE).relative_to(root).as_posix()
+    except ValueError:
+        return None
+    raw = _committed_bytes(root, "HEAD", relative)
+    if raw is None:
+        return None
+    try:
+        return raw.decode("utf-8").strip()
+    except UnicodeDecodeError as exc:
+        raise ValueError(f"landing point is not UTF-8: {relative}") from exc
+
+
 def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> str:
     """이 change 의 작업이 착지한 지점. 기록이 없으면 빈 문자열이다.
 
@@ -374,17 +395,9 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
     딛는 증거 디렉터리여야 한다 — 빌린 증거를 쓰는 change 는 지역 번들이 0 이므로
     호출자가 **빌린 쪽을 먼저 풀어서** 넘긴다.
     """
-    try:
-        relative = (change_dir / LANDING_FILE).relative_to(root).as_posix()
-    except ValueError:
+    candidate = _declared_landing(change_dir, root)
+    if candidate is None:
         return ""
-    raw = _committed_bytes(root, "HEAD", relative)
-    if raw is None:
-        return ""
-    try:
-        candidate = raw.decode("utf-8").strip()
-    except UnicodeDecodeError as exc:
-        raise ValueError(f"landing point is not UTF-8: {relative}") from exc
     if not FULL_SHA.fullmatch(candidate):
         # `rev-parse` 는 `HEAD`·브랜치·태그를 받는다. 이름은 리뷰 시점과 게이트 시점
         # 사이에 뜻이 바뀌고, `HEAD` 한 단어면 커밋 안 된 Go 편집이 통째로 요구에서
@@ -771,6 +784,18 @@ def check(
             return [f"function-logic reference base is invalid: {exc}"]
         if referenced_base != base:
             return ["function-logic reference must share the exact comparison base"]
+        # 창의 **끝**도 같아야 한다. 빌린 번들이 착지를 고정하긴 하지만, 그 번들이
+        # 안 바뀌는 구간 안에서는 저자가 여전히 고를 수 있다 — a072 실측으로 326
+        # 커밋 중 2개가 그 구간이다. 선언 파일을 고른 근거가 "번들이 고정하므로
+        # 저자가 고를 수 없다" 하나이므로, 남의 번들로 고정할 때 남는 그 선택을
+        # 없앤다. 착지는 그것을 고정하는 증거가 사는 자리에 선언하고 빌리는 쪽은
+        # 값을 **복사**한다.
+        try:
+            shared = _declared_landing(change_dir, root) == _declared_landing(referenced_dir, root)
+        except ValueError as exc:
+            return [f"cannot derive modified Go functions: {exc}"]
+        if not shared:
+            return ["function-logic reference must share the exact landing point"]
         analysis = referenced_dir / "analysis" / "function-logic"
     try:
         # 조상 판정은 `base-commit.txt` 의 글자가 아니라 `resolve_base` 가 **반환한**

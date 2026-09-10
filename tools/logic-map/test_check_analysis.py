@@ -1148,6 +1148,57 @@ def _write_evidence(change: Path, *, package: str, function: str, relative: str,
     return bundle
 
 
+def _borrowed_fixture(
+    raw: tempfile.TemporaryDirectory, *, later_work: bool = False
+) -> tuple[Path, dict[str, str]]:
+    """`ordinary` 가 `reference` 의 번들을 빌린다. base P → 착지 L.
+
+    a073 이 a072 의 231개 번들을 이렇게 빌려 쓴다. 자기 번들은 0 이다.
+
+    `later_work` 를 켜면 L **뒤에** 커밋 L2 가 하나 더 서고, 거기서 빌린 증거가
+    기술하지 않는 기존 Go 함수가 바뀐다. 빌린 번들은 L 에서도 L2 에서도 그대로
+    고정되므로(그 파일은 안 바뀐다), 저자가 L 과 L2 중에서 **고를 수 있다**는
+    것이 3.2.3.1 이 남긴 자유다. 그 자유가 요구 집합을 가르는 모양이다."""
+    root = _init_fixture(raw)
+    source = root / "internal" / "sample.go"
+    source.parent.mkdir(parents=True)
+    source.write_text("package sample\nfunc Run() int { return 1 }\n")
+    other = root / "internal" / "other.go"
+    if later_work:
+        other.write_text("package sample\nfunc Other() int { return 1 }\n")
+    marks = {"P": _commit_all(root, "P: base")}
+    change = root / "openspec" / "changes" / "ordinary"
+    (change / "analysis").mkdir(parents=True)
+    (change / "base-commit.txt").write_text(marks["P"] + "\n")
+    (change / "review.md").write_text("ordinary\n")
+    (change / "analysis" / "function-logic-reference.txt").write_text("reference\n")
+    reference = root / "openspec" / "changes" / "reference"
+    reference.mkdir(parents=True)
+    (reference / "base-commit.txt").write_text(marks["P"] + "\n")
+    (reference / "review.md").write_text("reference\n")
+    source.write_text("package sample\nfunc Run() int { return 2 }\n")
+    _write_evidence(
+        reference, package="sample", function="Run", relative="internal/sample.go",
+        digest=hashlib.sha256(source.read_bytes()).hexdigest(),
+    )
+    marks["L"] = _commit_all(root, "L: the work and the borrowed evidence land")
+    if later_work:
+        other.write_text("package sample\nfunc Other() int { return 2 }\n")
+        marks["L2"] = _commit_all(root, "L2: work the borrowed evidence does not describe")
+    return root, marks
+
+
+def _declare_landing(change: Path, value: str, subject: str) -> None:
+    """착지 선언은 워킹트리가 아니라 **커밋**에서 읽히므로 반드시 커밋한다."""
+    (change / "landed-commit.txt").write_text(value + "\n")
+    _commit_all(_root_of(change), subject)
+
+
+def _root_of(change: Path) -> Path:
+    """`openspec/changes/<id>` 에서 저장소 루트로. 세지 않고 **유도**한다."""
+    return next(parent for parent in change.parents if (parent / "go.mod").is_file())
+
+
 class LandingPointBoundsTheComparisonTarget(unittest.TestCase):
     """5단계 비교의 **대상 쪽 끝**을 그 change 의 작업이 착지한 지점으로 묶는다.
 
@@ -1335,6 +1386,14 @@ class AForgedLandingPointIsRefusedByName(unittest.TestCase):
         리뷰 시점과 게이트 시점 사이에 바뀐다."""
         self._refuse("HEAD", "landing")
 
+    def test_an_empty_record_is_still_a_declaration(self) -> None:
+        """빈 파일은 **선언이 없는 것**이 아니다.
+
+        task 1.8 이 선언을 읽는 자리를 헬퍼로 뽑았다. 거기서 "파일 없음"과 "빈
+        선언"을 안 가르면, 빈 파일을 커밋한 change 가 조용히 워킹트리를 대상으로
+        삼고 아무 사유도 안 남는다."""
+        self._refuse("", "landing")
+
 
 
 class ADeclaredLandingMustBePinnedByEvidence(unittest.TestCase):
@@ -1427,44 +1486,23 @@ class ADeclaredLandingMustBePinnedByEvidence(unittest.TestCase):
                 f"base 리비전 번들이 착지를 고정한 것으로 셌다: {errors}",
             )
 
-    def _borrowed_fixture(self, raw: tempfile.TemporaryDirectory) -> tuple[Path, dict[str, str]]:
-        """`ordinary` 가 `reference` 의 번들을 빌린다. base P → 착지 L.
-
-        a073 이 a072 의 231개 번들을 이렇게 빌려 쓴다. 자기 번들은 0 이다."""
-        root = _init_fixture(raw)
-        source = root / "internal" / "sample.go"
-        source.parent.mkdir(parents=True)
-        source.write_text("package sample\nfunc Run() int { return 1 }\n")
-        marks = {"P": _commit_all(root, "P: base")}
-        change = root / "openspec" / "changes" / "ordinary"
-        (change / "analysis").mkdir(parents=True)
-        (change / "base-commit.txt").write_text(marks["P"] + "\n")
-        (change / "review.md").write_text("ordinary\n")
-        (change / "analysis" / "function-logic-reference.txt").write_text("reference\n")
-        reference = root / "openspec" / "changes" / "reference"
-        reference.mkdir(parents=True)
-        (reference / "base-commit.txt").write_text(marks["P"] + "\n")
-        (reference / "review.md").write_text("reference\n")
-        source.write_text("package sample\nfunc Run() int { return 2 }\n")
-        _write_evidence(
-            reference, package="sample", function="Run", relative="internal/sample.go",
-            digest=hashlib.sha256(source.read_bytes()).hexdigest(),
-        )
-        marks["L"] = _commit_all(root, "L: the work and the borrowed evidence land")
-        return root, marks
-
     def test_borrowed_evidence_still_pins_a_landing(self) -> None:
-        """거부하면 안 되는 정상 입력. 빌린 번들이 고정하므로 통과해야 한다."""
+        """거부하면 안 되는 정상 입력. 빌린 번들이 고정하므로 통과해야 한다.
+
+        task 1.8 이 창의 **양쪽 끝**을 공유하게 만든 뒤로, 이 정상 입력은 빌려주는
+        쪽에도 같은 선언이 있는 모양이다. 고정 판정이 재는 것은 그대로다."""
         raw = tempfile.TemporaryDirectory()
         with raw:
-            root, marks = self._borrowed_fixture(raw)
+            root, marks = _borrowed_fixture(raw)
             change = root / "openspec" / "changes" / "ordinary"
             self.assertEqual(
                 check_analysis.check("ordinary", root), [],
                 "양성 대조: 착지 기록 전에는 통과해야 한다",
             )
-            (change / "landed-commit.txt").write_text(marks["L"] + "\n")
-            _commit_all(root, "record the landing point")
+            (root / "openspec" / "changes" / "reference" / "landed-commit.txt").write_text(
+                marks["L"] + "\n"
+            )
+            _declare_landing(change, marks["L"], "record the shared landing point")
             self.assertEqual(
                 check_analysis.check("ordinary", root), [],
                 "빌린 증거로 고정되는 착지를 거절했다 — 정상 입력을 죽였다",
@@ -1478,15 +1516,131 @@ class ADeclaredLandingMustBePinnedByEvidence(unittest.TestCase):
         사유로 빨개진다. 사유가 갈리면 무엇이 막았는지 기록에 안 남는다."""
         raw = tempfile.TemporaryDirectory()
         with raw:
-            root, marks = self._borrowed_fixture(raw)
+            root, marks = _borrowed_fixture(raw)
             change = root / "openspec" / "changes" / "ordinary"
-            (change / "landed-commit.txt").write_text(marks["P"] + "\n")
-            _commit_all(root, "record the freeze floor instead")
+            # 양쪽이 **같은** 바닥을 선언한다. 공유 규칙(task 1.8)에 먼저 걸리면
+            # 고정 판정을 통째로 지워도 이 시험이 초록으로 남는다 — 판정 둘이
+            # 서로를 가리는 자리라서 여기서 갈라 둔다.
+            (root / "openspec" / "changes" / "reference" / "landed-commit.txt").write_text(
+                marks["P"] + "\n"
+            )
+            _declare_landing(change, marks["P"], "record the freeze floor instead")
             errors = check_analysis.check("ordinary", root)
             self.assertTrue(errors, "증거가 기술하지 않는 착지가 통과했다")
             self.assertTrue(
                 any("is not the revision this evidence describes" in error for error in errors),
                 f"착지 판정이 이름으로 거절해야 한다: {errors}",
+            )
+
+
+class ABorrowedWindowIsSharedAtBothEnds(unittest.TestCase):
+    """빌린 증거는 비교 창의 **양쪽 끝**을 다 공유해야 한다 (task 1.8).
+
+    창의 **시작**에는 이미 규칙이 있다 — `referenced_base != base` 면 거절한다.
+    **끝**에는 없었다. 3.2.3.1 이 넣은 고정("빌린 번들이 착지를 고정한다")은
+    "착지가 같아야 한다"보다 약하다: 빌린 번들이 **안 바뀌는 구간 안에서는** 저자가
+    여전히 고를 수 있고, 그 구간에 남의 Go 작업이 들어오면 요구 집합이 갈린다.
+
+    선언 파일을 고른 근거는 `analysis/landing-point.md` 의 한 문장뿐이다 — "번들이
+    고정하므로 저자가 고를 수 없다". 빌리는 change 에서는 그 번들이 **남의 것**이라
+    그 문장이 끝까지 참이 되지 않는다. 그래서 착지는 그것을 고정하는 증거가 사는
+    자리에 선언하고, 빌리는 쪽은 값을 **복사**한다.
+
+    실측 (2026-09-10, a072): `revision: current` 번들 99개를 동시에 고정하는 커밋은
+    base..HEAD 326개 중 **2개**이고 둘의 요구 집합은 같다. 오늘 이 규칙이 새로
+    거절하는 저장소 change 는 **0건**이다 — review.md §Pre-Edit 1.8 의 표."""
+
+    def _borrower(self, root: Path) -> Path:
+        return root / "openspec" / "changes" / "ordinary"
+
+    def _lender(self, root: Path) -> Path:
+        return root / "openspec" / "changes" / "reference"
+
+    def test_a_borrower_cannot_declare_a_landing_the_lender_did_not(self) -> None:
+        """빌리는 쪽만 선언한 값은 저자가 고른 값이다.
+
+        빌린 번들이 **고정하긴 한다** — 그래서 오늘 이 모양이 통과한다. 고정은
+        구간을 남기고, 그 구간 안에서 값을 고른 것은 저자다. 빌려주는 쪽에 같은
+        선언이 없으면 그 선택을 검증한 사람이 아무도 없다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _borrowed_fixture(raw)
+            _declare_landing(self._borrower(root), marks["L"], "borrower declares alone")
+            errors = check_analysis.check("ordinary", root)
+            self.assertTrue(
+                errors,
+                "빌려주는 쪽이 선언하지 않은 착지를 빌리는 쪽이 혼자 선언해 통과했다",
+            )
+            self.assertTrue(
+                any("must share the exact landing point" in error for error in errors),
+                f"거절 사유가 창의 끝을 공유하지 않았다여야 한다: {errors}",
+            )
+
+    def test_a_borrower_cannot_pick_an_earlier_landing_than_the_lender(self) -> None:
+        """빌린 번들이 고정하는 구간이 둘이면 저자가 좁은 쪽을 고를 수 있다.
+
+        먼저 **양성 대조**로 L2 가 실제로 요구를 늘리는지 잰다. 안 늘면 아래 단언은
+        아무것도 재지 못한다 — 숫자를 상수로 두면 변이가 살아남는다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _borrowed_fixture(raw, later_work=True)
+            borrower, lender = self._borrower(root), self._lender(root)
+            (lender / "landed-commit.txt").write_text(marks["L2"] + "\n")
+            _declare_landing(borrower, marks["L2"], "both declare the later landing")
+            control = check_analysis.check("ordinary", root)
+            self.assertTrue(
+                any("internal/other.go:Other" in error for error in control),
+                f"양성 대조: L2 창에는 빌린 증거가 안 덮는 작업이 있어야 한다: {control}",
+            )
+
+            _declare_landing(borrower, marks["L"], "borrower narrows the window to L")
+            errors = check_analysis.check("ordinary", root)
+            self.assertTrue(
+                any("must share the exact landing point" in error for error in errors),
+                f"빌리는 쪽이 창을 저 혼자 좁혀 남의 작업을 뺐다: {errors}",
+            )
+            self.assertFalse(
+                any("internal/other.go:Other" in error for error in errors),
+                "이 시험은 좁힌 창이 실제로 그 작업을 뺀다는 것을 전제한다 — "
+                f"안 빠졌다면 픽스처가 재는 것이 없다: {errors}",
+            )
+
+    def test_a_lender_only_declaration_is_not_inherited(self) -> None:
+        """빌려주는 쪽만 선언한 것도 창이 안 맞는 것이다. 규칙은 한 가지 모양이다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _borrowed_fixture(raw)
+            (self._lender(root) / "landed-commit.txt").write_text(marks["L"] + "\n")
+            _commit_all(root, "lender declares alone")
+            errors = check_analysis.check("ordinary", root)
+            self.assertTrue(
+                any("must share the exact landing point" in error for error in errors),
+                f"한쪽만 선언한 창을 통과시켰다: {errors}",
+            )
+
+    def test_a_shared_landing_is_accepted(self) -> None:
+        """거부하면 안 되는 정상 입력 (1): 양쪽이 같은 값을 선언한 모양."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _borrowed_fixture(raw)
+            (self._lender(root) / "landed-commit.txt").write_text(marks["L"] + "\n")
+            _declare_landing(self._borrower(root), marks["L"], "both declare the landing")
+            self.assertEqual(
+                check_analysis.check("ordinary", root), [],
+                "공유된 착지를 거절했다 — 규칙이 여는 바로 그 모양이다",
+            )
+
+    def test_neither_side_declaring_stays_accepted(self) -> None:
+        """거부하면 안 되는 정상 입력 (2): 양쪽 다 선언이 없는 모양.
+
+        a073·a072 의 **오늘 모양**이 이것이다. 이 규칙은 그 상태에 오류를 하나도
+        더하지 않는다 — 저장소 실물 영향이 0 인 근거가 이 시험이다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _borrowed_fixture(raw)
+            self.assertEqual(
+                check_analysis.check("ordinary", root), [],
+                "선언이 없는 빌림에 새 오류를 더했다",
             )
 
 

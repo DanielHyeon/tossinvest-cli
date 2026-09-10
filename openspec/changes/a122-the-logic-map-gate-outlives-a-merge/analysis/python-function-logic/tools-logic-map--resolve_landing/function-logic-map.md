@@ -84,3 +84,28 @@
 주문·손절·익절·사이징·Guardian·원장·대사·인증·체결 어디에도 닿지 않는다. 유일한
 production 호출자는 사람이 부르는 완료 게이트(`tools/gate.sh:321`)다. 실패 방향은
 **게이트가 안 열리는 쪽**이므로 보수적이다. Go 파일 변경 0.
+
+## 편집 (task 1.8) — 분기 20 → 16, 반환 3 → 2, raise 7 → 6
+
+`ast.after-1.8.json` 열거. **줄어든 것은 사라진 것이 아니라 옮겨간 것이다.**
+선언을 읽는 앞부분(B1~B5)을 `_declared_landing` 으로 뽑았다 — 빌린 증거의 착지
+공유 판정이 **같은 방법으로** 읽어야 비교가 뜻을 갖기 때문이다.
+
+| 이 함수에서 사라진 노드 | 어디로 갔나 |
+|---|---|
+| `B1 Try` (경로가 root 밖) · `B2 except ValueError` | `_declared_landing` B1·B2 |
+| `B3 if raw is None:` | `_declared_landing` B3 |
+| `B4 Try` (디코드) · `B5 except UnicodeDecodeError` | `_declared_landing` B4·B5 |
+| `raise ValueError('landing point is not UTF-8: …')` | `_declared_landing` 의 유일한 raise |
+| `return ''` 둘 중 하나 | `_declared_landing` 의 `return None` 둘 |
+
+| 이 함수에 새로 선 노드 | 줄 | 소스 |
+|---|---|---|
+| `if candidate is None:` | 391 | 선언 **파일이 없을** 때만 `return ''` |
+
+`None`(파일 없음)과 `''`(빈 선언)을 가르는 것이 이 한 줄이다. 안 가르면 빈 파일을
+커밋한 change 가 조용히 워킹트리를 대상으로 삼는다 — 변이 M2 로 쟀고
+`test_an_empty_record_is_still_a_declaration` 이 그것을 막는다.
+
+세는 것은 그대로다: 분기 20 − 5(이동) + 1(새) = 16, 반환 3 − 2 + 1 = 2,
+raise 7 − 1 = 6. 판정은 하나도 안 없어졌다.

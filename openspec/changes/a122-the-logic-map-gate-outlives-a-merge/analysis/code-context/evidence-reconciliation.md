@@ -126,3 +126,51 @@ Go 파일 변경 0줄.
 Logic Map for …` 메시지가 개수와 창을 담는다. 바꾸지 않는 것: 판정 전부, 성공 줄
 문구, `missing evidence for modified function …` 줄(316번 반복될 자리라 접미사를
 붙이지 않는다 — 창 줄이 한 번 말한다). Go 파일 변경 0줄.
+
+---
+
+# task 1.8 — 빌린 증거의 착지 공유 규칙 (2026-09-10)
+
+| 주장 | CodeGraph / 전수 열거 | 실측 | 조정 |
+|---|---|---|---|
+| 창의 **시작**에는 공유 규칙이 있다 | AST: `check` `B16 L772 if referenced_base != base:` → `L773 return` | — | 있다. 끝에는 없다 — 이것이 1.8 이 가리키는 비대칭 |
+| 빌리는 change 가 저장소에 몇 개인가 | `find openspec -name function-logic-reference.txt` → **1건** (a073 → a072) | — | 새 판정의 blast radius 는 1 id 다 |
+| 착지를 선언한 change 는 몇 개인가 | `find openspec -name landed-commit.txt` → **1건** (a099) | — | a099 는 빌리지 않는다. 두 집합이 **안 겹친다** |
+| 빌린 번들이 착지를 이미 고정하지 않나 | — | a072 의 `revision: current` 번들 **99개 파일**을 동시에 고정하는 커밋은 base..HEAD **326개 중 2개** (`171adda8`·`fb135d85`) | 고정은 구간을 남긴다. 그 구간 **안에서는** 저자가 고른다 |
+| 그 자유가 요구 집합을 가르나 | — | 두 커밋의 required 가 **둘 다 147** | 이 저장소에서 측정된 크기는 **0**. 원리로는 열려 있고 실물로는 안 갈린다 |
+| a073 의 수리 경로는 실재하나 | — | 오늘 오류 **336개**(240 미덮음 + 61 stale + 35 hash). 양쪽이 `171adda8` 을 선언한 상태를 읽는 자리에 주입해 `check` 를 끝까지 돌리면 **오류 0개** | 실재한다. 새 규칙은 그것을 죽이지 않고 **순서**를 만든다(a072 가 먼저 적는다) |
+| `resolve_landing` 을 부르는 자리 | CodeGraph: 호출자 `check` **1건** / AST: 호출 자리 **1곳**(`L803`) | — | 자리 단위로 확인 — [[caller-count-is-not-fix-site-count]] |
+| 새 판정이 옛 판정을 가리나 | AST: 새 `B19 L797` 이 `L803 resolve_landing` **앞** | 변이 M4(해시 대조 삭제) → **2건** FAIL | 가리지 않는다. 그 2건 중 하나가 빌린 증거의 위조 거절이다 |
+
+## CodeGraphContext 가 답하지 못한 것
+
+`borrowed function-logic evidence reference shares the comparison base and landing
+point` 로 물으면 무관한 Go 심볼(`officialfx.Evidence` · `candidate.Baseline` ·
+`riskbucket.PriceEvidence`)이 돌아온다. 대상이 Python 도구이고 의미 색인은 Go 쪽에
+서 있다 — 3.2.3.1·3.3 과 같은 결과다. GBrain 은 이번에도 `CONNECTION_CLOSED` 로
+붙지 않는다. 그래서 이 태스크의 근거는 전부 **전수 열거와 실측**이다.
+
+## 결정과 그 근거의 크기
+
+규칙: **빌린 증거를 쓰는 change 의 착지는 빌려주는 change 의 것과 정확히 같아야 하고,
+한쪽만 선언한 상태는 통과하지 않는다.**
+
+근거는 자유의 **크기**가 아니라 **누가 고르는가**다. 선언 파일을 고른 근거는
+`analysis/landing-point.md` 의 한 문장뿐이다 — "번들이 고정하므로 저자가 고를 수
+없다". 빌리는 change 에서는 그 번들이 남의 것이라 그 문장이 끝까지 참이 되지 않는다.
+착지는 그것을 고정하는 증거가 사는 자리에 선언하고 빌리는 쪽은 값을 복사한다 —
+[[two-judgements-cover-for-each-other]] 의 "규칙 하나는 상태가 사는 자리 하나에".
+
+## 이 규칙이 닫지 **않는** 것
+
+빌리는 change 의 작업이 공유된 착지 **뒤에** 착지하면 그 작업은 요구 집합 밖이고
+어떤 판정도 못 본다. 빌리는 change 는 정의상 자기 번들이 0 이라 그것을 고정할 증거를
+소유하지 않는다 — 공유 규칙이든 오늘의 고정 규칙이든 이 잔여는 같고, 새 규칙이
+만드는 것이 아니다. §5 잔여 5.5.
+
+## 조정된 구현 경계
+
+바꾸는 것: (1) 선언을 읽는 자리를 `_declared_landing` 으로 뽑는다(`None`=파일 없음,
+`""`=빈 선언을 가른다), (2) `check` 의 빌린 증거 블록에 창의 끝 대조를 하나 더한다.
+바꾸지 않는 것: 요구 함수 집합의 계산, base 규칙, 고정 판정, `validate_target`,
+기존 거절 메시지 전부, 빌리지 않는 change 의 판정 전부. Go 파일 변경 0줄.
