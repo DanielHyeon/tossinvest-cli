@@ -1490,6 +1490,122 @@ class ADeclaredLandingMustBePinnedByEvidence(unittest.TestCase):
             )
 
 
+class AFailingStepFiveSaysWhichWindowRequiredThem(unittest.TestCase):
+    """실패 출력이 "왜 이 함수가 요구되는가"를 말해야 한다 (task 3.3).
+
+    2026-09-10 실측: a074 는 324줄 중 316줄이 `missing evidence for modified function`
+    이고 **비교 창을 말하는 줄이 0** 이다. a076 은 이름 316개를 쉼표로 이은
+    **21,838자짜리 한 줄**이고 역시 0 이다. 그 316개는 전부 남의 change 함수인데
+    출력만 봐서는 알 길이 없다.
+
+    기제는 `main` 의 early return 이다 — `if errors: … return 1` 이 착지·요구 수를
+    찍는 자리를 건너뛴다. task 1.9 가 적은 "항상 출력한다"는 성공할 때만 참이었다."""
+
+    def _failing_fixture(self, raw: tempfile.TemporaryDirectory, *, with_evidence: bool):
+        """base P → 내 작업 L → 이웃 change N (→ 증거 E). 착지 기록은 없다."""
+        root = _init_fixture(raw)
+        own = root / "internal" / "own.go"
+        own.parent.mkdir(parents=True)
+        other = root / "internal" / "other.go"
+        own.write_text("package internal\nfunc Own() int { return 1 }\n")
+        other.write_text("package internal\nfunc Other() int { return 1 }\n")
+        marks = {"P": _commit_all(root, "P: base")}
+        change = root / "openspec" / "changes" / "mine"
+        change.mkdir(parents=True)
+        (change / "base-commit.txt").write_text(marks["P"] + "\n")
+        (change / "review.md").write_text("mine\n")
+        own.write_text("package internal\nfunc Own() int { return 2 }\n")
+        marks["L"] = _commit_all(root, "L: my work lands")
+        other.write_text("package internal\nfunc Other() int { return 2 }\n")
+        marks["N"] = _commit_all(root, "N: a different change lands")
+        if with_evidence:
+            _write_evidence(
+                change, package="internal", function="Own", relative="internal/own.go",
+                digest=hashlib.sha256(own.read_bytes()).hexdigest(),
+            )
+            _commit_all(root, "E: evidence for my own function only")
+        return root, marks
+
+    def _main_output(self, root: Path) -> tuple[int, str]:
+        output = io.StringIO()
+        with mock.patch.object(
+            sys, "argv", ["check_analysis.py", "--change", "mine", "--root", str(root)]
+        ), redirect_stdout(output):
+            code = check_analysis.main()
+        return code, output.getvalue()
+
+    def test_a_failure_prints_the_comparison_window(self) -> None:
+        """실패해도 base·대상·요구 수를 찍어야 한다. 오늘은 한 줄도 안 찍는다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = self._failing_fixture(raw, with_evidence=True)
+            code, printed = self._main_output(root)
+            self.assertEqual(code, 1, f"이 픽스처는 실패해야 한다: {printed}")
+            self.assertIn(
+                "missing evidence for modified function internal/other.go:Other", printed,
+                "양성 대조: 남의 함수가 실제로 요구되고 있어야 한다",
+            )
+            self.assertIn(marks["P"][:12], printed, f"base 를 말해야 한다: {printed}")
+            self.assertIn("working tree", printed, f"대상이 무엇인지 말해야 한다: {printed}")
+            self.assertIn("required 2 function(s)", printed, f"요구 수를 말해야 한다: {printed}")
+
+    def test_a_failure_says_how_much_of_the_window_is_not_this_change(self) -> None:
+        """"남의 것"을 **숫자로** 말해야 한다 — base 뒤에 착지한 커밋 수.
+
+        지어내지 않고 `git rev-list --count <base>..HEAD` 로 잰 값이다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = self._failing_fixture(raw, with_evidence=True)
+            expected = subprocess.check_output(
+                ["git", "rev-list", "--count", f"{marks['P']}..HEAD"], cwd=root, text=True
+            ).strip()
+            self.assertEqual(expected, "3", "픽스처가 L·N·E 셋을 담아야 한다")
+            code, printed = self._main_output(root)
+            self.assertIn("landed-commit.txt", printed, f"무엇을 하면 좁아지는지 말해야 한다: {printed}")
+            self.assertIn(f"{expected} commit(s)", printed, f"창의 크기를 숫자로 말해야 한다: {printed}")
+            # 상수를 죽인다. 커밋을 하나 더 얹으면 숫자도 하나 늘어야 한다 —
+            # 안 그러면 "3" 이라고 적어 둔 구현이 위 단언을 통과한다.
+            (root / "unrelated.md").write_text("someone else lands\n")
+            _commit_all(root, "another change lands after the base")
+            code, again = self._main_output(root)
+            self.assertIn("4 commit(s)", again, f"재서 쓴 값이 아니다: {again}")
+
+    def test_the_missing_map_message_carries_the_count_and_the_window(self) -> None:
+        """번들이 아예 없는 경로의 메시지(이름 316개를 이어 붙이던 그 한 줄)."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = self._failing_fixture(raw, with_evidence=False)
+            errors = check_analysis.check("mine", root)
+            self.assertEqual(len(errors), 1, errors)
+            self.assertIn("missing Function Logic Map", errors[0])
+            self.assertIn("2 function(s)", errors[0], f"몇 개인지 메시지 안에 있어야 한다: {errors[0][:200]}")
+            self.assertIn(marks["P"][:12], errors[0], f"어느 base 인지 메시지 안에 있어야 한다: {errors[0][:200]}")
+            self.assertIn("working tree", errors[0], f"어느 대상인지 메시지 안에 있어야 한다: {errors[0][:200]}")
+
+    def test_the_success_line_is_unchanged(self) -> None:
+        """기록 스무 곳이 인용하는 **성공** 줄은 글자 그대로 남아야 한다.
+
+        a074·a077·a079·a092·a112 의 review 가 이 문자열을 인용한다. 설명을 늘리는
+        태스크가 그 인용을 깨면 안 된다 — 회귀 핀이다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root = _init_fixture(raw)
+            own = root / "internal" / "own.go"
+            own.parent.mkdir(parents=True)
+            own.write_text("package internal\nfunc Own() int { return 1 }\n")
+            base = _commit_all(root, "P: base")
+            change = root / "openspec" / "changes" / "mine"
+            change.mkdir(parents=True)
+            (change / "base-commit.txt").write_text(base + "\n")
+            (change / "review.md").write_text(
+                f"# review\n\n{check_analysis.EXEMPTION}\n", encoding="utf-8"
+            )
+            _commit_all(root, "docs only, nothing to require")
+            code, printed = self._main_output(root)
+            self.assertEqual(code, 0, printed)
+            self.assertIn("mine: evidence complete or diff-proven exempt", printed)
+
+
 class AnEmptyRequiredSetIsAnnouncedNotSwallowed(unittest.TestCase):
     """요구 집합이 비었는데 번들이 있으면 그 사실을 말해야 한다(task 2.6·3.4).
 

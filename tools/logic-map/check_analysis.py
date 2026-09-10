@@ -342,6 +342,20 @@ def _is_ancestor(root: Path, older: str, newer: str) -> bool:
     ).returncode == 0
 
 
+def _target_text(landing: str) -> str:
+    """비교 대상 쪽 끝을 사람이 읽는 말로. 착지 기록의 유무가 유일한 갈림이다."""
+    return f"landed-commit {landing}" if landing else "working tree (no landed-commit.txt)"
+
+
+def _commits_after(root: Path, base: str) -> str:
+    """base 뒤에 착지한 커밋 수. 숫자를 **재서** 쓴다 — 못 재면 빈 문자열이다."""
+    process = subprocess.run(
+        ["git", "rev-list", "--count", f"{base}..HEAD"],
+        cwd=root, capture_output=True, text=True, timeout=10, check=False,
+    )
+    return "" if process.returncode else process.stdout.strip()
+
+
 def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> str:
     """이 change 의 작업이 착지한 지점. 기록이 없으면 빈 문자열이다.
 
@@ -771,7 +785,12 @@ def check(
     if not analysis.exists():
         if required:
             names = ", ".join(f"{source}:{function}" for source, function in required)
-            return [f"missing Function Logic Map for modified existing functions: {names}"]
+            # 이름만 쏟아내면 "왜 이것들이 요구되는가"가 안 남는다. 2026-09-10 실측으로
+            # a076 은 이름 316개를 이은 21,838자짜리 한 줄이었고 창을 말하는 줄이 0 이었다.
+            return [
+                f"missing Function Logic Map for {len(required)} function(s) modified "
+                f"between base {base[:12]} and {_target_text(landing)}: {names}"
+            ]
         return [] if EXEMPTION in review_text else [f"missing analysis or `{EXEMPTION}` review marker"]
     errors: list[str] = []
     targets = sorted(path for path in analysis.iterdir() if path.is_dir())
@@ -820,7 +839,26 @@ def main() -> int:
     parser.add_argument("--root", default=str(ROOT))
     args = parser.parse_args()
     context: dict[str, object] = {}
-    errors = check(args.change, Path(args.root), context)
+    root = Path(args.root)
+    errors = check(args.change, root, context)
+    # 창을 **먼저** 찍는다. 그리고 실패해도 찍는다 — 옛 판본은 `if errors: return 1`
+    # 이 이 자리를 건너뛰어서, 요구된 함수 이름 316개가 어느 두 지점 사이에서 나온
+    # 것인지 출력 어디에도 없었다(2026-09-10 a074·a076 실측: 그런 줄 0개).
+    base = str(context.get("effective_base", ""))
+    if base:
+        landing = str(context.get("landing", ""))
+        print(
+            f"[logic-map] {args.change}: base {base[:12]} → {_target_text(landing)} "
+            f"required {context.get('required_count', 0)} function(s)"
+        )
+        if not landing:
+            landed_after = _commits_after(root, base)
+            print(
+                f"[logic-map] {args.change}: the target is the working tree, so this window "
+                f"also holds {landed_after or '?'} commit(s) that landed after the base and "
+                f"every existing function they changed is required here too — record "
+                f"`{LANDING_FILE}` to narrow it to this change's own work"
+            )
     if errors:
         for error in errors:
             print(f"[logic-map] {error}")
@@ -829,14 +867,8 @@ def main() -> int:
         print(f"[logic-map] {args.change}: execution-baseline adoption exception evidence complete")
     else:
         print(f"[logic-map] {args.change}: evidence complete or diff-proven exempt")
-    # 어떤 대상으로, 몇 개를 요구해서 통과했는지가 기록에 남아야 한다. 요구 집합이
-    # 비었는데 번들이 있으면 조용한 통과와 증거로 통과한 것을 구분할 수 없다.
-    landing = str(context.get("landing", ""))
-    if landing:
-        print(
-            f"[logic-map] {args.change}: landed-commit {landing} "
-            f"required {context.get('required_count', 0)} function(s)"
-        )
+    # 어떤 대상으로 몇 개를 요구해서 통과했는지는 위의 창 줄이 말한다 — 성공·실패
+    # 양쪽에서 같은 한 줄이다. 두 줄로 나누면 실패 경로만 조용해진다(task 3.3).
     return 0
 
 

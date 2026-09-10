@@ -217,8 +217,63 @@
       **아카이브 내 중복 메시지는 한 글자도 안 바꿨다** — 그 경우의 동작이 안 바뀌었기
       때문이다. 기존 시험 `test_real_archived_reference_rejects_two_copies` 가 그것을
       문구째로 잡고 있다.
-- [ ] 3.3 5단계 실패 메시지가 "왜 이 함수가 요구되는가"를 말하도록 한다 — 오늘의
-      메시지는 316개 함수 이름만 쏟아내고 그것이 남의 change 것이라는 사실을 말하지 않는다.
+- [x] 3.3 **실패 출력이 비교 창을 말한다 (2026-09-10).** 창 줄 둘을 `main` 이
+      **실패 반환보다 앞에서** 찍고, 이름만 쏟아내던 메시지가 개수와 창을 담는다.
+
+      **오늘의 출력을 먼저 쟀다** (HEAD `848b9ba3`): a074 는 324줄 중 316줄이
+      `missing evidence for modified function` 이고 창을 말하는 줄이 **0**,
+      a076 은 이름 316개를 쉼표로 이은 **21,838자짜리 한 줄**에 역시 **0** 이다.
+
+      **기제는 early return 이었다.** 기계 열거(`analysis/python-function-logic/tools-logic-map--main/`)
+      가 `main` HEAD = 분기 4 · 반환 2 이고 `B1 L824 if errors:` → `L827 return 1` 이
+      `B4 L835 if landing:` 을 건너뛴다고 말한다 — 착지·요구 수를 찍는 자리가
+      **실패 경로에서 도달 불가**다. 3.2.4 와 같은 모양이다. 그래서 task 1.9 가
+      "항상 출력한다"고 적어 둔 것이 성공할 때만 참이었다. 이 태스크가 코드를
+      그 기록 쪽으로 올려 그 갈림을 닫는다.
+
+      새 출력(실측):
+
+      ```
+      [logic-map] a074-…: base 448dfeb1263d → working tree (no landed-commit.txt) required 319 function(s)
+      [logic-map] a074-…: the target is the working tree, so this window also holds 283 commit(s)
+                  that landed after the base and every existing function they changed is required
+                  here too — record `landed-commit.txt` to narrow it to this change's own work
+      ```
+
+      **283** 이 이 태스크가 주는 숫자다. 319개 요구가 커밋 283개짜리 창에서 나왔다는
+      말이 이제 출력에 있다.
+
+      | 검증 | 결과 |
+      |---|---|
+      | RED | 4건 중 3건 빨강. 4번째는 **성공 줄 회귀 핀**이라 오늘도 초록이어야 한다(기록 스무 곳이 그 문자열을 인용한다) |
+      | 변이 N1 창 출력을 실패 뒤로 | **2건** FAIL |
+      | 변이 N2 창 크기 줄 삭제 | 1건 FAIL |
+      | 변이 N3 메시지를 옛 문구로 | 1건 FAIL |
+      | 변이 N4 커밋 수를 상수 `"3"` 으로 | 1건 FAIL — 첫 시험은 이것을 통과시켰다(아래) |
+      | 실데이터 | 실제 change id **126건** 옛·새 전수: **rc 차이 0 · 판정 본문 차이 0 · stderr 차이 0**. 창 줄은 **116건**에 찍힌다 |
+      | 구조 | 반환 **2 → 2**(경로를 안 더한다), 분기 4 → 6, `print` 가 `return 1` 앞뒤로 갈린다 |
+      | 스위트 | `tools/logic-map` **139 OK** · `make sdd-test` 전부 OK · `sdd-check` 0 · `validate` 58/58 |
+
+      **N4 가 시험 하나를 고치게 했다.** 픽스처의 정답이 마침 3 이라 `return "3"` 이
+      단언을 통과했다 — 재서 쓴 값인지 상수인지 가르지 못한 것이다. 커밋을 하나 더
+      얹어 **4가 되는지**까지 보게 고쳤다([[generated-evidence-must-be-measured]]).
+
+      **불변식이 3.2.3.1 과 다르다.** 그쪽은 출력 차이 0 을 쟀지만 여기서는 출력이
+      반드시 달라진다. 그래서 잰 것은 **판정 불변**이다 — rc 와, 창 줄·메시지 머리를
+      정규화한 나머지가 126건 전부 글자 그대로 같다.
+
+      **창 줄이 없는 10건의 정체를 셌다.** 116/126 의 나머지가 어디 갔는지 추측하지
+      않고 갈랐다: `base-commit.txt` 가 아예 없는 **9건**(a119 · verify-execution-capability ·
+      2026-07-26~27 아카이브 일곱)과 a063 **1건**이다. a063 은 파일은 있지만
+      `resolve_base` 안의 실행 기준선 이관 검사가 `adoption requires detached HEAD` 로
+      먼저 던져서 `effective_base` 가 채워지기 전에 빠져나간다. 즉 창 줄은 **비교 기준을
+      해소한 change 에만** 찍힌다 — 해소 못 한 창을 지어내지 않는다(`if base:`).
+      9 + 1 = 10 으로 116 과 맞아떨어진다.
+
+      **안 바꾼 것.** `missing evidence for modified function …` 줄에는 접미사를 안
+      붙였다. a074 에서 316번 반복될 자리라 창 줄이 한 번 말하는 편이 낫다. 성공 줄
+      (`evidence complete or diff-proven exempt`)도 그대로 뒀다 — 회귀 핀 시험이 그것을
+      고정한다. 이름 목록 자체도 자르지 않았다(증거를 줄이는 것은 별도 결정이다).
 - [x] 3.4 착지 지점을 기록했는데 요구 집합이 비고 번들이 있으면 그 사실을 출력한다.
       조용한 통과는 증거로 통과한 것과 구분되지 않는다 — a074·a077·a079 가 정확히
       이 자리에 떨어진다(task 1.3 측정).

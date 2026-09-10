@@ -1,0 +1,154 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "848b9ba3fa0f2818b1417ab21c0a455ceecba1f7",
+  "source_sha256": "e6f4e7527acee3faac4f21ceffa535006b38ba76476d480bb6012480c9b7ca04",
+  "function": "main",
+  "signature": "main()",
+  "start": {
+    "line": 836,
+    "column": 1
+  },
+  "end": {
+    "line": 872,
+    "column": 13
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 848,
+      "inherited_line": false,
+      "source": "if base:"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 854,
+      "inherited_line": false,
+      "source": "if not landing:"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 858,
+      "inherited_line": false,
+      "source": "landed_after or '?'"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 862,
+      "inherited_line": false,
+      "source": "if errors:"
+    },
+    {
+      "id": "B5",
+      "kind": "For",
+      "line": 863,
+      "inherited_line": false,
+      "source": "for error in errors:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 866,
+      "inherited_line": false,
+      "source": "if context.get('execution_baseline_adoption'):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 865,
+      "value": "1"
+    },
+    {
+      "line": 872,
+      "value": "0"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 837,
+      "callee": "argparse.ArgumentParser"
+    },
+    {
+      "line": 838,
+      "callee": "parser.add_argument"
+    },
+    {
+      "line": 839,
+      "callee": "parser.add_argument"
+    },
+    {
+      "line": 839,
+      "callee": "str"
+    },
+    {
+      "line": 840,
+      "callee": "parser.parse_args"
+    },
+    {
+      "line": 842,
+      "callee": "Path"
+    },
+    {
+      "line": 843,
+      "callee": "check"
+    },
+    {
+      "line": 847,
+      "callee": "context.get"
+    },
+    {
+      "line": 847,
+      "callee": "str"
+    },
+    {
+      "line": 849,
+      "callee": "context.get"
+    },
+    {
+      "line": 849,
+      "callee": "str"
+    },
+    {
+      "line": 850,
+      "callee": "print"
+    },
+    {
+      "line": 851,
+      "callee": "_target_text"
+    },
+    {
+      "line": 852,
+      "callee": "context.get"
+    },
+    {
+      "line": 855,
+      "callee": "_commits_after"
+    },
+    {
+      "line": 856,
+      "callee": "print"
+    },
+    {
+      "line": 864,
+      "callee": "print"
+    },
+    {
+      "line": 866,
+      "callee": "context.get"
+    },
+    {
+      "line": 867,
+      "callee": "print"
+    },
+    {
+      "line": 869,
+      "callee": "print"
+    }
+  ]
+}

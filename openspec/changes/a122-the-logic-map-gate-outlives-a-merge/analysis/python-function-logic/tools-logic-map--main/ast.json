@@ -1,0 +1,120 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "HEAD",
+  "head_commit": "848b9ba3fa0f2818b1417ab21c0a455ceecba1f7",
+  "source_sha256": "58623824f97a7c3da7cdbfa5d9a0af2269d424fb41dcac88dcdb25c4bb03cd06",
+  "function": "main",
+  "signature": "main()",
+  "start": {
+    "line": 817,
+    "column": 1
+  },
+  "end": {
+    "line": 840,
+    "column": 13
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 824,
+      "inherited_line": false,
+      "source": "if errors:"
+    },
+    {
+      "id": "B2",
+      "kind": "For",
+      "line": 825,
+      "inherited_line": false,
+      "source": "for error in errors:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 828,
+      "inherited_line": false,
+      "source": "if context.get('execution_baseline_adoption'):"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 835,
+      "inherited_line": false,
+      "source": "if landing:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 827,
+      "value": "1"
+    },
+    {
+      "line": 840,
+      "value": "0"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 818,
+      "callee": "argparse.ArgumentParser"
+    },
+    {
+      "line": 819,
+      "callee": "parser.add_argument"
+    },
+    {
+      "line": 820,
+      "callee": "parser.add_argument"
+    },
+    {
+      "line": 820,
+      "callee": "str"
+    },
+    {
+      "line": 821,
+      "callee": "parser.parse_args"
+    },
+    {
+      "line": 823,
+      "callee": "Path"
+    },
+    {
+      "line": 823,
+      "callee": "check"
+    },
+    {
+      "line": 826,
+      "callee": "print"
+    },
+    {
+      "line": 828,
+      "callee": "context.get"
+    },
+    {
+      "line": 829,
+      "callee": "print"
+    },
+    {
+      "line": 831,
+      "callee": "print"
+    },
+    {
+      "line": 834,
+      "callee": "context.get"
+    },
+    {
+      "line": 834,
+      "callee": "str"
+    },
+    {
+      "line": 836,
+      "callee": "print"
+    },
+    {
+      "line": 838,
+      "callee": "context.get"
+    }
+  ]
+}
