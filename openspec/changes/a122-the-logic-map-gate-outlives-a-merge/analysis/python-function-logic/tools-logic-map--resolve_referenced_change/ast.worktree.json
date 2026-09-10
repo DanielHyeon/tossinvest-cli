@@ -1,0 +1,175 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1f2a2d6d7907484929eb122c6218b8878b1458cd",
+  "source_sha256": "b6ca421654cf5cb7be5f4cae1c296fd7ac15ad084c4070cf9c7b8cf3f082b0d1",
+  "function": "resolve_referenced_change",
+  "signature": "resolve_referenced_change(root, change)",
+  "start": {
+    "line": 241,
+    "column": 1
+  },
+  "end": {
+    "line": 279,
+    "column": 20
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "comprehension",
+      "line": 258,
+      "inherited_line": true,
+      "source": " for path in (archive.iterdir() if archive.is_dir() else ()) if path.is_dir() and (matched := ARCHIVED_CHANGE.fullmatch("
+    },
+    {
+      "id": "B2",
+      "kind": "IfExp",
+      "line": 260,
+      "inherited_line": false,
+      "source": "archive.iterdir() if archive.is_dir() else ()"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 261,
+      "inherited_line": false,
+      "source": "path.is_dir() and (matched := ARCHIVED_CHANGE.fullmatch(path.name)) is not None and (matched.group('change') == change)"
+    },
+    {
+      "id": "B4",
+      "kind": "IfExp",
+      "line": 265,
+      "inherited_line": false,
+      "source": "[direct] if open_here else []"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 266,
+      "inherited_line": false,
+      "source": "if not found:"
+    },
+    {
+      "id": "B6",
+      "kind": "BoolOp",
+      "line": 268,
+      "inherited_line": false,
+      "source": "open_here and archived"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 268,
+      "inherited_line": false,
+      "source": "if open_here and archived:"
+    },
+    {
+      "id": "B8",
+      "kind": "comprehension",
+      "line": 271,
+      "inherited_line": true,
+      "source": " for path in found"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 273,
+      "inherited_line": false,
+      "source": "if len(archived) > 1:"
+    },
+    {
+      "id": "B10",
+      "kind": "comprehension",
+      "line": 277,
+      "inherited_line": true,
+      "source": " for path in archived"
+    }
+  ],
+  "returns": [
+    {
+      "line": 279,
+      "value": "found[0]"
+    }
+  ],
+  "raises": [
+    {
+      "line": 267,
+      "source": "raise ValueError(f'reference change is neither open nor archived: {change}')"
+    },
+    {
+      "line": 269,
+      "source": "raise AmbiguousChange(f'{change} is open and archived at once: ' + ', '.join((path.relative_to(root).as_posix() for path in found)))"
+    },
+    {
+      "line": 275,
+      "source": "raise ValueError(f'archive holds {len(archived)} copies of {change}: ' + ', '.join((path.name for path in archived)))"
+    }
+  ],
+  "calls": [
+    {
+      "line": 256,
+      "callee": "direct.is_dir"
+    },
+    {
+      "line": 258,
+      "callee": "sorted"
+    },
+    {
+      "line": 260,
+      "callee": "archive.is_dir"
+    },
+    {
+      "line": 260,
+      "callee": "archive.iterdir"
+    },
+    {
+      "line": 261,
+      "callee": "path.is_dir"
+    },
+    {
+      "line": 262,
+      "callee": "ARCHIVED_CHANGE.fullmatch"
+    },
+    {
+      "line": 263,
+      "callee": "matched.group"
+    },
+    {
+      "line": 267,
+      "callee": "ValueError"
+    },
+    {
+      "line": 269,
+      "callee": "AmbiguousChange"
+    },
+    {
+      "line": 271,
+      "callee": "', '.join"
+    },
+    {
+      "line": 271,
+      "callee": "path.relative_to"
+    },
+    {
+      "line": 271,
+      "callee": "path.relative_to(root).as_posix"
+    },
+    {
+      "line": 273,
+      "callee": "len"
+    },
+    {
+      "line": 275,
+      "callee": "ValueError"
+    },
+    {
+      "line": 276,
+      "callee": "len"
+    },
+    {
+      "line": 277,
+      "callee": "', '.join"
+    }
+  ]
+}

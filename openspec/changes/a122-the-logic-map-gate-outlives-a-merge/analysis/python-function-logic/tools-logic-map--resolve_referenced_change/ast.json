@@ -1,0 +1,131 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "HEAD",
+  "head_commit": "1f2a2d6d7907484929eb122c6218b8878b1458cd",
+  "source_sha256": "e502829d521305f9e3049cd90d97ec81e9d95cfbaef00b8ef5e0e6cb3555867b",
+  "function": "resolve_referenced_change",
+  "signature": "resolve_referenced_change(root, change)",
+  "start": {
+    "line": 231,
+    "column": 1
+  },
+  "end": {
+    "line": 256,
+    "column": 32
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 239,
+      "inherited_line": false,
+      "source": "if direct.is_dir():"
+    },
+    {
+      "id": "B2",
+      "kind": "comprehension",
+      "line": 242,
+      "inherited_line": true,
+      "source": " for path in (archive.iterdir() if archive.is_dir() else ()) if path.is_dir() and (matched := ARCHIVED_CHANGE.fullmatch("
+    },
+    {
+      "id": "B3",
+      "kind": "IfExp",
+      "line": 244,
+      "inherited_line": false,
+      "source": "archive.iterdir() if archive.is_dir() else ()"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 245,
+      "inherited_line": false,
+      "source": "path.is_dir() and (matched := ARCHIVED_CHANGE.fullmatch(path.name)) is not None and (matched.group('change') == change)"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 249,
+      "inherited_line": false,
+      "source": "if not matches:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 251,
+      "inherited_line": false,
+      "source": "if len(matches) > 1:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 240,
+      "value": "direct"
+    },
+    {
+      "line": 256,
+      "value": "archive / matches[0]"
+    }
+  ],
+  "raises": [
+    {
+      "line": 250,
+      "source": "raise ValueError(f'reference change is neither open nor archived: {change}')"
+    },
+    {
+      "line": 253,
+      "source": "raise ValueError(f'archive holds {len(matches)} copies of {change}: ' + ', '.join(matches))"
+    }
+  ],
+  "calls": [
+    {
+      "line": 239,
+      "callee": "direct.is_dir"
+    },
+    {
+      "line": 242,
+      "callee": "sorted"
+    },
+    {
+      "line": 244,
+      "callee": "archive.is_dir"
+    },
+    {
+      "line": 244,
+      "callee": "archive.iterdir"
+    },
+    {
+      "line": 245,
+      "callee": "path.is_dir"
+    },
+    {
+      "line": 246,
+      "callee": "ARCHIVED_CHANGE.fullmatch"
+    },
+    {
+      "line": 247,
+      "callee": "matched.group"
+    },
+    {
+      "line": 250,
+      "callee": "ValueError"
+    },
+    {
+      "line": 251,
+      "callee": "len"
+    },
+    {
+      "line": 253,
+      "callee": "ValueError"
+    },
+    {
+      "line": 254,
+      "callee": "', '.join"
+    },
+    {
+      "line": 254,
+      "callee": "len"
+    }
+  ]
+}

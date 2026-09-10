@@ -228,32 +228,55 @@ def changed_existing_functions(
 ARCHIVED_CHANGE = re.compile(r"\d{4}-\d{2}-\d{2}-(?P<change>.+)")
 
 
+class AmbiguousChange(ValueError):
+    """같은 id 가 활성과 아카이브에 **동시에** 있다.
+
+    호출자가 이 실패를 문구가 아니라 **타입**으로 가릴 수 있도록 따로 둔다.
+    문구로 가르면 메시지를 고치는 순간 조용히 뚫린다. `ValueError` 를 상속하는
+    것은 이 함수의 다른 실패를 이미 `ValueError` 로 받고 있는 자리를 깨지 않기
+    위해서다.
+    """
+
+
 def resolve_referenced_change(root: Path, change: str) -> Path:
     """증거를 빌려주는 change 의 디렉터리를 찾는다.
 
     빌려주는 쪽이 먼저 아카이브되면 `changes/<id>` 는 사라진다. 거기만 보면
     빌리는 쪽의 게이트가 영원히 막히므로 아카이브도 본다 — a073 이 a072 의
     번들을 빌려 쓰는데 a072 가 먼저 아카이브되어 실제로 그렇게 됐다.
+
+    **활성을 찾아도 아카이브를 마저 센다.** 예전에는 활성이 있으면 거기서
+    바로 돌려줘서 아카이브를 열어 보지도 않았고, 그래서 중복 판정의 범위가
+    아카이브 안으로 좁아져 있었다. 아카이브 뒤 같은 id 로 디렉터리를 다시 만들면
+    조용히 그쪽이 이겼다는 뜻이다 — 고르면 어느 증거로 게이트가 열렸는지
+    기록에 남지 않는다. `tools/gate.sh` 의 해소기는 처음부터 이렇게 셌다.
     """
-    direct = root / "openspec" / "changes" / change
-    if direct.is_dir():
-        return direct
-    archive = root / "openspec" / "changes" / "archive"
-    matches = sorted(
-        path.name
+    changes = root / "openspec" / "changes"
+    direct = changes / change
+    open_here = direct.is_dir()
+    archive = changes / "archive"
+    archived = sorted(
+        path
         for path in (archive.iterdir() if archive.is_dir() else ())
         if path.is_dir()
         and (matched := ARCHIVED_CHANGE.fullmatch(path.name)) is not None
         and matched.group("change") == change
     )
-    if not matches:
+    found = ([direct] if open_here else []) + archived
+    if not found:
         raise ValueError(f"reference change is neither open nor archived: {change}")
-    if len(matches) > 1:
+    if open_here and archived:
+        raise AmbiguousChange(
+            f"{change} is open and archived at once: "
+            + ", ".join(path.relative_to(root).as_posix() for path in found)
+        )
+    if len(archived) > 1:
         # 고르면 어느 증거로 통과했는지 기록에 안 남는다. 세어서 멈춘다.
         raise ValueError(
-            f"archive holds {len(matches)} copies of {change}: " + ", ".join(matches)
+            f"archive holds {len(archived)} copies of {change}: "
+            + ", ".join(path.name for path in archived)
         )
-    return archive / matches[0]
+    return found[0]
 
 
 def resolve_base(
@@ -688,6 +711,10 @@ def check(
     # 해소기가 이미 있으므로 세 번째 사본을 만들지 않는다.
     try:
         change_dir = resolve_referenced_change(root, change)
+    except AmbiguousChange as exc:
+        # 아래 fallback 으로 흘려보내면 활성이 아카이브를 조용히 이긴다 —
+        # 그 침묵이 이 자리에서 고치려는 것 자체다. 타입으로 가른다.
+        return [str(exc)]
     except ValueError:
         change_dir = root / "openspec" / "changes" / change
     analysis = change_dir / "analysis" / "function-logic"

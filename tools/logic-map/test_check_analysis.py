@@ -322,6 +322,47 @@ class CheckAnalysisTests(unittest.TestCase):
                 ["function-logic reference base is invalid: archive holds 2 copies of reference: 2026-08-29-reference, 2026-09-01-reference"],
             )
 
+    def test_real_reference_refuses_when_open_and_archived_collide(self) -> None:
+        """빌린 증거의 id 가 활성과 아카이브에 동시에 있으면 고르지 않고 멈춘다.
+
+        오늘은 활성이 조용히 이긴다 — `resolve_referenced_change` 가
+        `if direct.is_dir(): return direct` 로 아카이브를 열어 보지도 않기 때문이다
+        (`analysis/python-function-logic` 열거의 B1/L239-240). 고르면 어느 증거로
+        게이트가 열렸는지 기록에 남지 않는다. 아카이브 **안**의 중복은 이미
+        멈추는데 활성+아카이브만 안 멈추는 것은 세는 범위가 좁아서다.
+        """
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            openspec = root / "openspec" / "changes"
+            self._reference_fixture(root, openspec / "reference")
+            self.assertEqual(check_analysis.check("ordinary", root), [], "양성 대조: 충돌 전에는 통과해야 한다")
+            shutil.copytree(openspec / "reference", openspec / "archive" / "2026-08-29-reference")
+            self.assertEqual(
+                check_analysis.check("ordinary", root),
+                ["function-logic reference base is invalid: reference is open and archived at once: "
+                 "openspec/changes/reference, openspec/changes/archive/2026-08-29-reference"],
+            )
+
+    def test_real_gate_target_refuses_when_open_and_archived_collide(self) -> None:
+        """게이트 **대상 자신**이 활성과 아카이브에 동시에 있어도 멈춘다.
+
+        해소기만 고치면 이 경로는 안 바뀐다. `check` 가 `:689-692` 에서
+        `except ValueError` 로 그 실패를 **삼키고** `openspec/changes/<id>` 로
+        되돌아가기 때문이다 — 삼킨 결과가 정확히 "활성이 조용히 이긴다"이다.
+        그래서 이 시험이 따로 있다.
+        """
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            openspec = root / "openspec" / "changes"
+            self._reference_fixture(root, openspec / "reference")
+            self.assertEqual(check_analysis.check("ordinary", root), [], "양성 대조: 충돌 전에는 통과해야 한다")
+            shutil.copytree(openspec / "ordinary", openspec / "archive" / "2026-08-29-ordinary")
+            self.assertEqual(
+                check_analysis.check("ordinary", root),
+                ["ordinary is open and archived at once: "
+                 "openspec/changes/ordinary, openspec/changes/archive/2026-08-29-ordinary"],
+            )
+
     @staticmethod
     def _commit(root: Path, subject: str) -> str:
         subprocess.run(["git", "add", "."], cwd=root, check=True)

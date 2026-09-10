@@ -229,3 +229,32 @@ Pre-Edit Gate:
 - 안전 불변식 §0 위반 여부 검토: 통과. 완화 방향이지만 거부할 정상 입력을 먼저
   열거했다(task 1.11 의 (a)(b)(c)) — 오타 id 와 활성/아카이브 중복은 계속 거절한다
 ```
+
+## Pre-Edit Gate — task 3.2.4 (2026-09-10)
+
+- 대상: `tools/logic-map/check_analysis.py` 의 `resolve_referenced_change` 와
+  `check` 의 해소 호출 자리 하나(`:689-692`). 그 외 파일 없음.
+- HEAD: `1f2a2d6d7907484929eb122c6218b8878b1458cd`
+- High-risk 여부: **아니다.** 주문·손절·익절·사이징·Guardian·원장·대사·인증·체결
+  어디에도 닿지 않는다. 유일한 production 호출자는 사람이 직접 부르는
+  `tools/gate.sh:321` 이고 CI 는 이 경로를 돌지 않는다(`.github/workflows/ci.yml:94`).
+- CodeGraph definition/callers/callees/impact: `resolve_referenced_change` 정의
+  `check_analysis.py:231`, 호출자 `check`(`:684`) **1건**. 함수 단위 답이라
+  한 함수 안의 두 호출 자리는 가르지 못한다.
+- CodeGraphContext 후보와 evidence reconciliation:
+  `analysis/code-context/evidence-reconciliation.md` 의 「task 3.2.4」 절.
+  CodeGraph 와 AST 열거의 해상도 차이를 거기서 해소했고, 그 결과 편집 범위가
+  하나에서 **둘**로 늘었다.
+- Function Logic Map / Branch Test Map: **Go 기준으로는 not-applicable** —
+  Go 파일이 한 줄도 바뀌지 않는다(이 문서 머리의 사유가 그대로 적용된다).
+  다만 이 편집은 **분기와 early return 을 근거로 삼으므로** 손으로 읽지 않고
+  기계로 열거했다: `analysis/python-function-logic/` 의 `ast.json` 둘과
+  거기서 유도한 지도·분기 시험표. 생성기(`enumerate.py`)를 같이 둬서 재현 가능하게 했다.
+  **저장소 도구가 아니라 이 change 의 일회용 열거기다** — a120 선례.
+- 설정·DB·journal 변경과 rollback: **없다.** 스키마·설정·저널 어디도 안 바뀐다.
+  롤백은 커밋 되돌리기 하나이고, 되돌리면 오늘의 동작으로 정확히 돌아간다.
+- 거부하게 될 정상 입력: 아카이브된 change 와 **같은 id 로 활성 디렉터리를 다시
+  만드는 것** 하나뿐. 2026-09-10 측정으로 저장소에 **0건**(활성 27 · 아카이브 id 99 ·
+  교집합 0 · 아카이브 내 중복 0). 활성만·아카이브만인 입력은 전부 지금과 같이 통과한다.
+- 토글: 없다. 이 편집에 토글이 없으므로 "토글 OFF = upstream 동작" 조항은 해당 없다.
+- 실패 방향: 게이트가 **안 열리는** 쪽이다. 보수적이다.

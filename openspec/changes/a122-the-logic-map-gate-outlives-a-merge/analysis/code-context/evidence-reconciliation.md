@@ -29,3 +29,38 @@ Python 의 `resolve_referenced_change` 와 shell 의 새 해소기는 같은 규
 적는다: 활성과 아카이브에 같은 id 가 동시에 있을 때 Python 은 활성을 조용히 고르고
 (a122 task 3.2.4 가 열어 둔 결함), shell 은 fail-closed 한다. shell 을 Python 에 맞춰
 낮추지 않는다 — 3.2.4 가 Python 을 shell 쪽으로 올릴 것이다.
+
+---
+
+# Evidence reconciliation — Python 해소기 fail-closed (task 3.2.4)
+
+Date: 2026-09-10
+HEAD: `1f2a2d6d7907484929eb122c6218b8878b1458cd`
+Verdict: 조정됨 — 그리고 위 「남은 불일치」가 여기서 닫힌다
+
+| 주장 | CodeGraph (hard) | 기계 열거 (`analysis/python-function-logic/`) | 해소 |
+|---|---|---|---|
+| `resolve_referenced_change` 의 호출자 | `check` 1건 | `check` 안 **두 자리**: `:690`, `:715` | 모순 아님 — CodeGraph 는 함수 단위, 열거는 호출 자리 단위. 편집 범위는 **자리 단위**로 잡는다 |
+| 활성이 아카이브를 가린다 | — | `B1 L239 if direct.is_dir():` → `L240 return direct` (early return) | 확인. 태스크 문구의 `:249-255` 는 raise 두 줄의 대략 범위였고, 정확한 좌표는 B1/L239-240 과 B6/L251-253 이다 |
+| 중복을 아카이브 안에서만 센다 | — | `B6 len(matches) > 1` 이 세는 `matches` 는 `B2` 아카이브 순회의 산출 | 확인. 세는 **범위**가 반환 경로보다 좁다 |
+| 해소기만 고치면 되는가 | — | `check` `B2 except ValueError:`(691)가 게이트 대상 경로에서 예외를 **삼킨다** | **아니다.** 호출 자리 하나를 같이 고쳐야 한다 — 이것이 이번 열거가 새로 준 사실이다 |
+| 편집 반경 | — | `check_analysis.py --change` 의 production 호출자는 `tools/gate.sh:321` 하나. CI 는 안 돈다(`.github/workflows/ci.yml:94`) | 사람이 부르는 완료 게이트로 한정 |
+
+## CodeGraph 가 답하지 못한 것과 그 처리
+
+CodeGraph 는 이 함수를 **색인한다**(1.11 의 shell 과 다르다). 다만 돌려주는 단위가
+함수라서 "한 함수 안의 서로 다른 호출 자리"를 가르지 못한다. 그 자리는
+`enumerate.py` 의 AST 열거로 갈랐고, 그것이 이 편집의 범위를 하나에서 둘로 늘렸다.
+CodeGraph 를 반증한 것이 아니라 **해상도가 다른 두 도구를 겹쳐 읽은 것**이다.
+
+## 조정된 구현 경계
+
+바꾸는 것: (1) `resolve_referenced_change` 의 세는 범위, (2) `check:689-692` 가
+그 실패를 받는 방법. 바꾸지 않는 것: 요구 함수 집합, base·landing 규칙, 번들 판정,
+아카이브 내 중복 메시지, 빌린 증거 경로의 메시지 형태. Go 파일 변경 0줄.
+
+## 위 「남은 불일치」의 종결
+
+1.11 이 shell 을 fail-closed 로 두고 Python 을 낮추지 않기로 한 그 갈림이,
+이 편집으로 **Python 을 shell 쪽으로 올려** 닫힌다. 정본은 여전히 둘이므로
+양쪽 시험을 각각 유지한다 — [[transcribed-code-needs-both-sides-pinned]].
