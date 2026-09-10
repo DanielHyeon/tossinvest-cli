@@ -354,6 +354,11 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
     기록은 워킹트리가 아니라 **HEAD 커밋**에서 읽는다. 워킹트리에서 읽으면 untracked
     파일로 게이트를 통과한 뒤 지울 수 있고, 그러면 어떤 대상으로 통과했는지가 아무
     데도 안 남는다.
+
+    그 증거 판정에는 전제가 있다: **고정할 번들이 있어야 한다.** 없으면 순회가 0회
+    돌고 저자가 구간의 바닥을 고를 수 있다. `analysis` 는 그래서 이 change 가 실제로
+    딛는 증거 디렉터리여야 한다 — 빌린 증거를 쓰는 change 는 지역 번들이 0 이므로
+    호출자가 **빌린 쪽을 먼저 풀어서** 넘긴다.
     """
     try:
         relative = (change_dir / LANDING_FILE).relative_to(root).as_posix()
@@ -389,6 +394,7 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
             f"landing point precedes the comparison base {base[:12]}: {candidate}"
         )
     mismatched = []
+    pinning = 0
     for ast_path in sorted(analysis.glob("*/ast.json")) if analysis.is_dir() else ():
         value = _ast_value(ast_path)
         if not isinstance(value, dict) or value.get("revision", "current") != "current":
@@ -397,9 +403,19 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
         digest = str(value.get("source_sha256", ""))
         if not source or not digest:
             continue
+        pinning += 1
         blob = _committed_bytes(root, candidate, source)
         if blob is None or hashlib.sha256(blob).hexdigest() != digest:
             mismatched.append(source)
+    if not pinning:
+        # 위의 판정들은 전부 "이것이 어느 커밋인가"만 묻는다. 어느 커밋인지를
+        # **고르지 못하게** 하는 것은 이 순회 하나뿐이고, 순회가 0회 돌면 저자가
+        # 구간의 바닥을 골라 요구 집합을 ∅ 로 만들 수 있다. 그 상태는 면제와
+        # 구분되지 않는다 — 고정할 증거가 없으면 선언도 없다.
+        raise ValueError(
+            f"landing point {candidate[:12]} is pinned by no `revision: current` "
+            "evidence: a declared landing must be the revision some bundle describes"
+        )
     if mismatched:
         raise ValueError(
             f"landing point {candidate[:12]} is not the revision this evidence describes: "
@@ -723,15 +739,11 @@ def check(
     review_text = review.read_text(encoding="utf-8") if review.exists() else ""
     try:
         base = resolve_base(change_dir, root, context)
-        # 조상 판정은 `base-commit.txt` 의 글자가 아니라 `resolve_base` 가 **반환한**
-        # 값에 건다. a063 은 그 둘이 다르다(P → E).
-        landing = resolve_landing(change_dir, root, base, analysis)
-        required = changed_existing_functions(root, base, landing)
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         return [f"cannot derive modified Go functions: {exc}"]
-    if context is not None:
-        context["landing"] = landing
-        context["required_count"] = len(required)
+    # 빌린 증거는 착지 판정 **앞에서** 푼다. 착지가 유효한지는 그 change 가 실제로
+    # 딛는 증거로 판정하는데, 빌린 change 는 지역 번들이 0 이라 뒤에서 풀면 고정할
+    # 것이 하나도 없는 채로 판정이 끝난다(a073 이 그 모양이다).
     if reference_file.exists():
         if analysis.exists() and any(path.is_dir() and any(path.iterdir()) for path in analysis.iterdir()):
             return ["function-logic reference cannot coexist with local function-logic evidence"]
@@ -746,6 +758,16 @@ def check(
         if referenced_base != base:
             return ["function-logic reference must share the exact comparison base"]
         analysis = referenced_dir / "analysis" / "function-logic"
+    try:
+        # 조상 판정은 `base-commit.txt` 의 글자가 아니라 `resolve_base` 가 **반환한**
+        # 값에 건다. a063 은 그 둘이 다르다(P → E).
+        landing = resolve_landing(change_dir, root, base, analysis)
+        required = changed_existing_functions(root, base, landing)
+    except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
+        return [f"cannot derive modified Go functions: {exc}"]
+    if context is not None:
+        context["landing"] = landing
+        context["required_count"] = len(required)
     if not analysis.exists():
         if required:
             names = ", ".join(f"{source}:{function}" for source, function in required)

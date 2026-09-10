@@ -1323,7 +1323,10 @@ class AForgedLandingPointIsRefusedByName(unittest.TestCase):
         실재하고, HEAD 의 조상이고, base 자신이며, 그 커밋에 이 change 의
         `base-commit.txt` 가 같은 내용으로 있다. 요구 집합은 ∅ 이 되어 "넣기만 하면
         통과" 구현이라면 초록이 된다. 증거는 `L` 을 기술하므로 거절돼야 한다."""
-        self._refuse("{P}", "internal/own.go")
+        # 사유를 **착지 판정의 문장**으로 못 박는다. `internal/own.go` 로 두면
+        # `validate_target` 의 `AST source hash is stale` 도 그 바늘을 만족해서,
+        # 착지 판정을 통째로 지우는 변이가 이 시험을 초록으로 통과한다(M4 로 실측).
+        self._refuse("{P}", "is not the revision this evidence describes")
 
     def test_a_landing_written_as_a_revision_expression(self) -> None:
         """task 1.7 — `rev-parse` 는 `HEAD`·브랜치·태그를 받는다.
@@ -1332,6 +1335,159 @@ class AForgedLandingPointIsRefusedByName(unittest.TestCase):
         리뷰 시점과 게이트 시점 사이에 바뀐다."""
         self._refuse("HEAD", "landing")
 
+
+
+class ADeclaredLandingMustBePinnedByEvidence(unittest.TestCase):
+    """착지 선언은 **그것을 고정할 증거가 있을 때만** 유효하다 (task 3.2.3.1).
+
+    `analysis/landing-point.md` 는 "착지가 base 와 같아도 안전하다 — 번들이 고정하므로
+    저자가 고를 수 없다"로 그 설계를 정당화한다. 그 문장에는 전제가 있다: **번들이
+    있어야 한다.** 번들이 0 이면 고정 순회가 0회 돌고, `mismatched` 는 빈 채로 남고,
+    저자가 구간의 바닥을 골라 요구 집합을 ∅ 로 만들 수 있다. 면제 표식까지 있으면
+    그대로 통과한다 — 이 클래스는 그 전제를 코드에 세운다.
+
+    거부하게 될 정상 입력을 먼저 적는다: **빌린 증거**(`function-logic-reference.txt`)
+    를 쓰는 change 는 자기 번들이 0 이다(a073 이 그 모양이고, 오늘 빨갛고, 그 빨강을
+    푸는 것이 바로 착지 선언이다). 그래서 고정은 그 change 가 실제로 딛는 증거로
+    판정해야 한다. 아래 둘째·셋째 시험이 그것을 못 박는다."""
+
+    def test_a_zero_bundle_change_cannot_declare_a_landing(self) -> None:
+        """번들 0 + 면제 표식 + 바닥 착지 = 오늘은 통과한다. 그것이 이 구멍이다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root = _init_fixture(raw)
+            own = root / "internal" / "own.go"
+            own.parent.mkdir(parents=True)
+            own.write_text("package internal\nfunc Own() int { return 1 }\n")
+            base = _commit_all(root, "P: base")
+            change = root / "openspec" / "changes" / "mine"
+            change.mkdir(parents=True)
+            (change / "base-commit.txt").write_text(base + "\n")
+            (change / "review.md").write_text(
+                f"# review\n\n{check_analysis.EXEMPTION}\n", encoding="utf-8"
+            )
+            # 이 change 의 **진짜** Go 작업. base 뒤에 있으므로 숨길 것이 있다.
+            own.write_text("package internal\nfunc Own() int { return 2 }\n")
+            _commit_all(root, "L: this change really does change a Go function")
+
+            # 양성 대조: 착지 기록이 없으면 그 작업이 요구로 잡혀야 한다. 이것이
+            # 빨갛지 않으면 아래 단언은 아무것도 재지 못한다.
+            control = check_analysis.check("mine", root)
+            self.assertTrue(
+                any("internal/own.go:Own" in error for error in control),
+                f"숨길 Go 작업이 실제로 있어야 한다: {control}",
+            )
+
+            (change / "landed-commit.txt").write_text(base + "\n")
+            _commit_all(root, "declare the freeze floor as the landing point")
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(
+                errors,
+                "번들이 0 인데 바닥을 착지로 선언해 통과했다 — 고정할 것이 없는 선언이다",
+            )
+            self.assertTrue(
+                any("pinned by no" in error for error in errors),
+                f"거절 사유가 '고정할 증거가 없다'여야 한다: {errors}",
+            )
+
+    def test_base_revision_bundles_do_not_pin_a_landing(self) -> None:
+        """`revision: base` 번들은 **base** 를 기술한다 — 착지에 대해 아무 말도 못 한다.
+
+        `validate_target` 도 그 번들은 해싱하지 않는다(`revision != "current"`).
+        고정할 수 없다는 것이 사실이므로 거절이 맞다. 저장소에 오늘 0건이고,
+        생기면 그때 무엇으로 고정할지 정해야 한다 — review.md §Pre-Edit 3.2.3.1."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root = _init_fixture(raw)
+            own = root / "internal" / "own.go"
+            own.parent.mkdir(parents=True)
+            own.write_text("package internal\nfunc Own() int { return 1 }\n")
+            base = _commit_all(root, "P: base")
+            change = root / "openspec" / "changes" / "mine"
+            change.mkdir(parents=True)
+            (change / "base-commit.txt").write_text(base + "\n")
+            (change / "review.md").write_text("mine\n")
+            bundle = _write_evidence(
+                change, package="internal", function="Own", relative="internal/own.go",
+                digest=hashlib.sha256(own.read_bytes()).hexdigest(),
+            )
+            value = json.loads((bundle / "ast.json").read_text(encoding="utf-8"))
+            value["revision"] = "base"
+            (bundle / "ast.json").write_text(json.dumps(value), encoding="utf-8")
+            _commit_all(root, "evidence that describes the base revision")
+            self.assertEqual(
+                check_analysis.check("mine", root), [],
+                "양성 대조: 착지 기록 전에는 통과해야 한다",
+            )
+            (change / "landed-commit.txt").write_text(base + "\n")
+            _commit_all(root, "record a landing point")
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(
+                any("pinned by no" in error for error in errors),
+                f"base 리비전 번들이 착지를 고정한 것으로 셌다: {errors}",
+            )
+
+    def _borrowed_fixture(self, raw: tempfile.TemporaryDirectory) -> tuple[Path, dict[str, str]]:
+        """`ordinary` 가 `reference` 의 번들을 빌린다. base P → 착지 L.
+
+        a073 이 a072 의 231개 번들을 이렇게 빌려 쓴다. 자기 번들은 0 이다."""
+        root = _init_fixture(raw)
+        source = root / "internal" / "sample.go"
+        source.parent.mkdir(parents=True)
+        source.write_text("package sample\nfunc Run() int { return 1 }\n")
+        marks = {"P": _commit_all(root, "P: base")}
+        change = root / "openspec" / "changes" / "ordinary"
+        (change / "analysis").mkdir(parents=True)
+        (change / "base-commit.txt").write_text(marks["P"] + "\n")
+        (change / "review.md").write_text("ordinary\n")
+        (change / "analysis" / "function-logic-reference.txt").write_text("reference\n")
+        reference = root / "openspec" / "changes" / "reference"
+        reference.mkdir(parents=True)
+        (reference / "base-commit.txt").write_text(marks["P"] + "\n")
+        (reference / "review.md").write_text("reference\n")
+        source.write_text("package sample\nfunc Run() int { return 2 }\n")
+        _write_evidence(
+            reference, package="sample", function="Run", relative="internal/sample.go",
+            digest=hashlib.sha256(source.read_bytes()).hexdigest(),
+        )
+        marks["L"] = _commit_all(root, "L: the work and the borrowed evidence land")
+        return root, marks
+
+    def test_borrowed_evidence_still_pins_a_landing(self) -> None:
+        """거부하면 안 되는 정상 입력. 빌린 번들이 고정하므로 통과해야 한다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = self._borrowed_fixture(raw)
+            change = root / "openspec" / "changes" / "ordinary"
+            self.assertEqual(
+                check_analysis.check("ordinary", root), [],
+                "양성 대조: 착지 기록 전에는 통과해야 한다",
+            )
+            (change / "landed-commit.txt").write_text(marks["L"] + "\n")
+            _commit_all(root, "record the landing point")
+            self.assertEqual(
+                check_analysis.check("ordinary", root), [],
+                "빌린 증거로 고정되는 착지를 거절했다 — 정상 입력을 죽였다",
+            )
+
+    def test_borrowed_evidence_refuses_a_landing_it_does_not_describe(self) -> None:
+        """고정이 **먹히는지**. 빌린 번들이 기술하지 않는 착지는 이름으로 거절한다.
+
+        오늘은 `resolve_landing` 이 **지역** 번들만 보므로(빌린 change 는 0개)
+        이 위조가 고정 판정을 그냥 통과하고, 뒤늦게 `validate_target` 이 다른
+        사유로 빨개진다. 사유가 갈리면 무엇이 막았는지 기록에 안 남는다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = self._borrowed_fixture(raw)
+            change = root / "openspec" / "changes" / "ordinary"
+            (change / "landed-commit.txt").write_text(marks["P"] + "\n")
+            _commit_all(root, "record the freeze floor instead")
+            errors = check_analysis.check("ordinary", root)
+            self.assertTrue(errors, "증거가 기술하지 않는 착지가 통과했다")
+            self.assertTrue(
+                any("is not the revision this evidence describes" in error for error in errors),
+                f"착지 판정이 이름으로 거절해야 한다: {errors}",
+            )
 
 
 class AnEmptyRequiredSetIsAnnouncedNotSwallowed(unittest.TestCase):

@@ -22,6 +22,13 @@ change 의 판정은 바뀌지 않아야 한다.
 freeze 이후 모든 커밋에서 참이고 아무것도 가르지 못한다. 구체적으로, 착지 지점에서
 그 change 의 모든 `revision: current` 증거 묶음의 source hash 가 일치해야 한다(SHALL).
 
+그 대조가 **공집합 위에서 참이 되어서는 안 된다**(SHALL NOT). 착지 지점을 고정하는
+`revision: current` 증거가 하나도 없으면 그 기록은 유효하지 않다(SHALL). "모두 일치"는
+번들이 0 이면 자동으로 참이고, 그러면 저자가 구간의 바닥을 골라 요구 집합을 비운 뒤
+면제 표식으로 통과할 수 있다. 증거를 다른 change 에서 빌리는 change 는 **빌린 증거**로
+고정되어야 하며(SHALL), 자기 디렉터리에 번들이 없다는 이유로 거절해서는 안 된다
+(SHALL NOT).
+
 `revision: current` 증거의 source hash 대조 대상은 비교 대상 쪽 끝과 같아야 한다
 (SHALL). 착지 지점이 기록된 change 의 증거를 워킹트리와 대조해서는 안 된다(SHALL NOT).
 
@@ -87,3 +94,16 @@ freeze 이후 모든 커밋에서 참이고 아무것도 가르지 못한다. �
 
 - **WHEN** 착지 지점 기록이 유효 조건을 만족하지 않는 값을 담고 있으면
 - **THEN** 5단계는 통과하지 않고 그 사유를 이름으로 말한다
+
+#### Scenario: 고정할 증거가 없는 착지 지점
+
+- **WHEN** function-logic 번들이 하나도 없거나 전부 `revision: base` 인 change 가 착지
+  지점을 기록하면
+- **THEN** 5단계는 통과하지 않고, 그 기록을 고정할 증거가 없다고 이름으로 말한다
+
+#### Scenario: 빌린 증거로 고정되는 착지 지점
+
+- **WHEN** `function-logic-reference.txt` 로 다른 change 의 증거를 빌리는 change 가 착지
+  지점을 기록하면
+- **THEN** 5단계는 빌린 증거의 `revision: current` 묶음으로 그 지점을 고정하고, 자기
+  디렉터리에 번들이 없다는 이유로 거절하지 않는다
