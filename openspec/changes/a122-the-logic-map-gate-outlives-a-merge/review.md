@@ -587,3 +587,97 @@ a076 에 착지를 준 실행이 이렇게 찍었다:
 
 - 측정 worktree 는 정리했다. 아카이브된 a075·a076 에 `landed-commit.txt` 를 **쓰지
   않았다** — 4.1 은 검증 태스크이고, 아카이브본 수리는 별개의 판단이다(§5).
+
+## VERIFY — task 4.2
+
+**대상** — a074 · a077 · a079 를 실행해 요구 집합이 줄어드는지 확인한다.
+**HEAD** `a7d9045d`. **생산 코드 변경 0** — 이 task 는 순수 측정이고 `check_analysis.py`
+는 손대지 않았다. 따라서 High-risk 경로 없음, 토글 없음.
+
+**방법** — 4.1 과 같다. `git worktree add --detach` 로 격리 worktree 를 세우고 세
+change 에 `landed-commit.txt` 를 **실제로 커밋**한다(`886ab949`). 주입이 아니라 선언을
+읽는 자리(HEAD 커밋에서 읽기 · 40-hex · 조상 판정)까지 전부 진짜 경로다.
+
+### 결과 — 셋 다 창을 되찾는다
+
+| | 착지 없음 | 착지 `840b3377` |
+|---|---|---|
+| a074 | required 319 · rc=1 · 오류 **325** | required **0** · rc=0 · 오류 **0** |
+| a077 | required 319 · rc=1 · 오류 **322** | required **0** · rc=0 · 오류 **0** |
+| a079 | required 319 · rc=1 · 오류 **323** | required **0** · rc=0 · 오류 **0** |
+
+셋 다 base `448dfeb1` 을 공유하고 착지가 한 점으로 모인다.
+
+### 사라지는 것은 두 종류이고, 둘째가 새로 확인된 것이다
+
+| 오류 | a074 | a077 | a079 |
+|---|---|---|---|
+| `missing evidence for modified function` (**남의 함수**) | 316 | 318 | 317 |
+| `AST source hash is stale` (**자기 증거**) | 5 | 2 | 3 |
+| `AST hash does not match modified function revision` | 3 | 1 | 2 |
+| 3.3 의 조언 줄 | 1 | 1 | 1 |
+
+stale 이 이름으로 부르는 파일은 정확히 그 change 자기 번들의 소스다 — a074
+`exitloop.go`·`engine.go`, a077 `portfolio_pages.go`, a079
+`position_policy_transport.go`·`position_policy.go`·`console.go`. 대상이 워킹트리이면
+증거 대조도 워킹트리에서 하므로 **남이 그 파일을 고치는 순간 자기 증거가 썩는다**.
+1.9 가 `validate_target(revision_ref=…)` 로 닫은 절반이 여기서 실물로 확인된다.
+
+### 이 task 의 전제는 틀렸다 — 요구 집합은 0 으로 간다
+
+"각 change 가 실제로 고친 것으로 줄어든다"가 아니다. **0** 이다. 산술이다.
+
+- base 와 착지 사이 커밋은 **1개**이고 그 커밋(`chore(sdd): rebaseline a074-a079
+  after strategy merge`)이 Go 파일을 **0개** 바꾼다.
+- 세 change 의 `revision: current` 번들 소스 **12/12 파일이 base 자체에서 이미 hash
+  일치**한다 → 셋의 Go 작업은 자기 base **앞**에 착지했다.
+
+spec 의 "착지 지점이 base 뒤에 있어 요구 집합이 비는 change" 시나리오가 정확히 이
+모양이고, 5단계는 그 0 을 출력하면서 번들 자체는 계속 검사한다. 이것을 잔여 5.7 에
+연다 — 활성 change 중 번들을 가진 13건 가운데 **8건**이 같은 상태다.
+
+### 거부할 정상 입력
+
+이 task 는 코드를 안 바꾸므로 새로 거부되는 입력이 **없다**. 다만 아래 셋이 착지를
+선언하면 무엇이 거부되는지는 재 두었다(P2·P3).
+
+### 통과는 증거가 아니다 — 변이
+
+rc=0 이 "검사를 안 했다"와 구분되는지는 이것으로만 갈린다.
+
+| 변이 | 결과 |
+|---|---|
+| P1 `exitobserver.run` 의 `source_sha256` → 0 (a074) | 거절 · `is not the revision this evidence describes: internal/app/engine/exitloop.go` |
+| P1' 같은 변이 (a077 `joinPositions`) | 거절 · `internal/console/portfolio.go` |
+| P1'' 같은 변이 (a079 `Console.routes`) | 거절 · `internal/console/console.go` |
+| P2 착지를 고정 구간 **밖**으로 | 거절 · 두 파일을 이름으로 부른다 |
+| P3 번들 전체 삭제, 착지 유지 | 거절 · `pinned by no revision: current evidence` |
+
+### 고정이 남기는 구간이 이번엔 결과를 바꾼다
+
+1.8 은 "고정은 값이 아니라 **구간**을 남긴다"고 적었고 당시 실측(a072 2/326, 둘 다
+required 147)에서 효과는 0 이었다. a074 는 구간이 **14/287** 이고 그 안에서 required
+가 **0 → 30**, rc 가 **0 → 1** 로 갈린다.
+
+| a074 착지 후보 | required |
+|---|---|
+| `840b3377` · `15d25f80` | **0** (rc=0) |
+| `df4407ed` · `359b1fe7` · `30d8bb93` | 4 |
+| `aaa7638d` · `8291c5e3` · `96c621d3` · `f1aae509` | 9 |
+| `56e85c68` | 14 |
+| `c58b66c9` · `3dd077ae` · `53626032` | 17 |
+| `8dba0173` | **30** |
+
+이번 경우 통과하는 선택(구간 **바닥**)이 **옳은 선택과 같다** — 위로 갈수록 늘어나는
+것이 a080·a081·a082·a083 의 함수, 즉 a122 가 없애려는 남의 작업이기 때문이다. 구간
+폭은 5.3 에 옮겨 적었다(a072 2 · a075 2 · a077 2 · a079 2 · a074 14 · a091 26).
+
+### 선언은 하지 않았다
+
+셋 다 배포 후 실측 task 가 열려 있다(5.1). 지금 착지를 선언하면 창이 그 자리에서
+얼고, 그 실측이 Go 수정을 부르면 그 수정이 창 **밖**으로 나가 어떤 판정도 못 본다 —
+5.5 가 빌린 증거에 대해 적은 모양이 빌리지 않은 change 에서도 생긴다. 선언은 셋이
+각자 Go 작업을 끝냈다고 판단할 때 그 change 가 한다.
+
+- 측정 worktree 는 제거했고(`git worktree remove --force` → `prune`) 세 change
+  디렉터리에는 **아무것도 쓰지 않았다**. 확인: `git status` 에 tracked 변경 0.

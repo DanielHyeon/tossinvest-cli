@@ -251,3 +251,45 @@ change 의 판정과 출력 전부, 성공 줄 문구, 이관 성공 줄 문구.
 
 바꾸는 것: `main` 의 창 출력 조건 하나(`if base:` → `if base and "landing" in context:`).
 바꾸지 않는 것: 판정 전부, 성공 줄, 이관 성공 줄, 창 줄의 문구 자체. Go 파일 변경 0줄.
+
+# task 4.2 — a074 · a077 · a079 회귀 측정
+
+**코드 변경 0.** 순수 측정 task 라 AST 산출물이 필요 없다. 조정할 것은 "무엇을
+쟀는가"와 "그 수가 어디서 왔는가" 둘뿐이다.
+
+| 주장 | 근거 | 도구 |
+|---|---|---|
+| 셋 다 base `448dfeb1` 을 공유한다 | `openspec/changes/<id>/base-commit.txt` 3개 동일 | `cat` |
+| 착지 후보가 한 점 `840b3377` 로 모인다 | 번들 소스별 hash 일치 커밋 교집합 (a074 14 · a077 2 · a079 2) | 일회용 열거기 `find_landing.py` |
+| 착지 없음 → required 319 · rc=1 | 실행 출력 3건 | `check_analysis.py --change` |
+| 착지 있음 → required 0 · rc=0 · 오류 0 | 격리 worktree 에 **커밋된** 선언으로 실행 | `git worktree` + `check_analysis.py --root` |
+| 오류가 두 종류다 (남의 함수 / 자기 증거 stale) | 출력 줄을 유형별로 셈 | `grep -c` |
+| stale 이 부르는 파일 = 그 change 자기 번들 소스 | 출력 줄의 파일명과 `ast.json` 의 `file` 대조 | `grep` + `json` |
+| base 와 착지 사이 Go 파일 변경 0 | `git diff --name-only <base> <landing> -- '*.go'` → 0 | `git` |
+| 번들 소스 12/12 가 base 에서 이미 일치 | `git cat-file blob <base>:<file>` 의 sha256 vs `source_sha256` | 일회용 census |
+| 활성 13건 중 8건이 같은 상태 | 활성 change 전수 census | 일회용 census |
+| 구간 안에서 required 가 0→30 | a074 의 14 후보 각각에 대해 실행 | `check_analysis.py --root` × 14 |
+
+## 손으로 읽지 않은 것
+
+착지 후보 구간은 **열거로** 구했다. "재기준화 커밋이 착지일 것이다"는 손으로 읽으면
+맞는 답이지만 **볼 곳을 고른 것**이고, 구간이 14 라는 사실은 그렇게는 안 나온다 —
+[[generated-evidence-must-be-measured]]. 구간의 존재가 1.8 의 전제였는데 그때는
+효과가 0 이었고(a072), 여기서 처음 결과를 바꾼다 —
+[[universal-check-passes-on-an-empty-sample]].
+
+## 통과를 증거로 쓰지 않았다
+
+`required 0` + `rc=0` 은 "검사를 안 했다"와 구분되지 않는다. 변이 다섯(P1·P1'·P1''·
+P2·P3)이 전부 빨갛게 만든 뒤에 근거로 썼다 — [[passing-test-is-not-evidence]].
+P3 은 a076 과 **같은 문**(`pinned by no revision: current evidence`)으로 죽는다.
+
+## CodeGraph / CodeGraphContext / GBrain
+
+해당 없음 — Go 심볼을 안 만지고 Python 도구 코드를 안 바꾼다. GBrain 은 이 세션에서
+`CONNECTION_CLOSED` 로 계속 붙지 않는다.
+
+## 조정된 구현 경계
+
+바꾸는 것: 문서 3개(`tasks.md` 4.2·5.3·5.7, `review.md`, 이 파일). 코드 0줄, Go 0줄,
+a074 · a077 · a079 디렉터리 0줄(선언은 5.1 때문에 **하지 않는다**).
