@@ -478,6 +478,78 @@ class CheckAnalysisTests(unittest.TestCase):
             self._commit(root, "conflicting reference"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
             errors = check_analysis.check(adoption.CHANGE, root)
             self.assertIn("function-logic reference cannot coexist with local function-logic evidence", errors)
+
+    def _adoption_output(self, root: Path) -> tuple[int, str]:
+        output = io.StringIO()
+        with mock.patch.object(
+            sys, "argv",
+            ["check_analysis.py", "--change", adoption.CHANGE, "--root", str(root)],
+        ), redirect_stdout(output):
+            code = check_analysis.main()
+        return code, output.getvalue()
+
+    def test_the_adoption_window_ends_at_the_audited_source_commit(self) -> None:
+        """이관 예외의 창 끝은 워킹트리가 아니라 감사된 `source_commit` 이다 (task 1.12).
+
+        `validate` 는 그 값을 이미 돌려준다(`{"effective_base", "source", "ledger"}`).
+        아무도 읽지 않아서 대상이 워킹트리로 떨어졌고, 그 답이 오늘 맞는 이유는
+        **다른 판정** 하나 때문이다 — source→head 에 `openspec/`·`docs/pm/` 밖 파일이
+        들어오면 `source-to-evidence drift` 로 죽는다. 맞는 답을 우연으로 얻고 있다.
+        실측으로 그 우연은 저장소에서 required **9 대 36** 짜리다(review.md
+        §Pre-Edit 1.12)."""
+        raw, root, p, e = self._adoption_with_complete_bundle()
+        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
+            change = root / "openspec" / "changes" / adoption.CHANGE
+            # 기대값은 실행 중인 코드가 아니라 **감사된 영수증**에서 읽는다.
+            source = json.loads((change / "execution-baseline.json").read_text())["source_commit"]
+            context: dict[str, object] = {}
+            self.assertEqual(check_analysis.check(adoption.CHANGE, root, context), [])
+            self.assertEqual(
+                context.get("landing"), source,
+                "이관 경로의 대상이 감사된 source_commit 이어야 한다",
+            )
+            code, output = self._adoption_output(root)
+            self.assertEqual(code, 0, output)
+            self.assertIn(f"audited source-commit {source}", output)
+            self.assertNotIn("working tree", output)
+
+    def test_the_adoption_path_does_not_advise_a_record_it_would_refuse(self) -> None:
+        """3.3 의 안내가 이관 감사와 모순됐다 (task 1.12).
+
+        실패·성공 양쪽에서 찍는 그 줄은 "`landed-commit.txt` 를 적어서 창을 좁혀라"
+        라고 말한다. 이관 경로에서 그것은 **감사 어디에도 없는 두 번째 손잡이**를
+        만들라는 말이고, 아래 시험이 거절하는 바로 그 파일이다."""
+        raw, root, p, e = self._adoption_with_complete_bundle()
+        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
+            code, output = self._adoption_output(root)
+            self.assertEqual(code, 0, output)
+            self.assertNotIn(check_analysis.LANDING_FILE, output)
+            # 양성 대조: 이관 성공 줄은 그대로 있어야 한다. 없으면 이 시험은 출력이
+            # 비었다는 이유로도 초록이 된다.
+            self.assertIn("execution-baseline adoption exception evidence complete", output)
+
+    def test_a_landing_record_is_refused_in_the_adoption_path(self) -> None:
+        """이관 예외의 입력은 전부 열거되고 digest 로 묶인다 — 착지 기록만 빼고.
+
+        `openspec/` 아래라 `source-to-evidence drift` 검사가 통과시키고, 추적 파일이라
+        untracked 감사도 못 보고, 닫힌 키 집합(`execution_baseline.py:410`)에도 없다.
+        그런데 비교 대상을 고른다. 손잡이는 하나여야 하고 그것은 감사된
+        `source_commit` 이다."""
+        raw, root, p, e = self._adoption_with_complete_bundle()
+        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
+            change = root / "openspec" / "changes" / adoption.CHANGE
+            source = json.loads((change / "execution-baseline.json").read_text())["source_commit"]
+            # 감사된 값과 **같은** 값을 적어도 거절한다 — 값이 아니라 손잡이의 개수가
+            # 문제다. 값으로 가르면 다른 값을 적는 순간 사유가 갈린다.
+            (change / check_analysis.LANDING_FILE).write_text(source + "\n")
+            self._commit(root, "declare a landing point inside the adoption path")
+            subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
+            errors = check_analysis.check(adoption.CHANGE, root)
+            self.assertTrue(errors, "감사되지 않는 두 번째 손잡이가 그대로 통과했다")
+            self.assertTrue(
+                any("adoption does not accept" in error for error in errors),
+                f"거절 사유를 이름으로 말해야 한다: {errors}",
+            )
     def test_explicit_exemption_is_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             change = Path(tmp) / "openspec" / "changes" / "docs-only"
@@ -1484,6 +1556,42 @@ class ADeclaredLandingMustBePinnedByEvidence(unittest.TestCase):
             self.assertTrue(
                 any("pinned by no" in error for error in errors),
                 f"base 리비전 번들이 착지를 고정한 것으로 셌다: {errors}",
+            )
+
+    def test_an_absolute_bundle_path_still_pins_a_landing(self) -> None:
+        """거부하면 안 되는 정상 입력. 번들의 `file` 은 **절대경로일 수 있다**.
+
+        `validate_target` 이 `normalized_source` 로 정규화하는 이유가 그것이다.
+        고정 순회가 그것을 안 하면 `git show <sha>:/abs/path` 가 언제나 실패해서
+        정상 입력이 위조로 몰린다 — 3.2.3.1 이 놓친 자리이고, a063 이관 픽스처가
+        절대경로를 만들면서 드러났다. 저장소 번들 **3048개는 오늘 전부 상대경로**라
+        실물 영향은 0 이다(2026-09-11 전수)."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root = _init_fixture(raw)
+            own = root / "internal" / "own.go"
+            own.parent.mkdir(parents=True)
+            own.write_text("package internal\nfunc Own() int { return 1 }\n")
+            base = _commit_all(root, "P: base")
+            change = root / "openspec" / "changes" / "mine"
+            change.mkdir(parents=True)
+            (change / "base-commit.txt").write_text(base + "\n")
+            (change / "review.md").write_text("mine\n")
+            own.write_text("package internal\nfunc Own() int { return 2 }\n")
+            _write_evidence(
+                change, package="internal", function="Own",
+                relative=str(own),  # ← 절대경로. 추출기가 이렇게 적을 수 있다.
+                digest=hashlib.sha256(own.read_bytes()).hexdigest(),
+            )
+            landing = _commit_all(root, "L: the work and the evidence land")
+            self.assertEqual(
+                check_analysis.check("mine", root), [],
+                "양성 대조: 착지 기록 전에는 통과해야 한다",
+            )
+            _declare_landing(change, landing, "record the landing point")
+            self.assertEqual(
+                check_analysis.check("mine", root), [],
+                "절대경로 번들이 고정하는 착지를 거절했다 — 정상 입력을 죽였다",
             )
 
     def test_borrowed_evidence_still_pins_a_landing(self) -> None:

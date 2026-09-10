@@ -429,3 +429,96 @@ a072 의 `revision: current` 번들은 **99개 파일 · 99개 digest** 다. bas
   편집이 닿는 것은 `L768`(빌린 쪽) 하나다.
 - 토글: 없다.
 - 실패 방향: 게이트가 **안 열리는** 쪽이다. 새 판정은 오류를 더할 뿐 지우지 않는다.
+
+## Pre-Edit Gate — task 1.12 (2026-09-11)
+
+- 대상: `tools/logic-map/check_analysis.py` 의 `resolve_base`(감사된 source 를 기록) ·
+  `check`(이관 경로의 대상 결정) · `_target_text`(무엇이 끝을 고정했는지 말한다).
+  `execution_baseline.py` 는 **안 바꾼다**. Go 0줄.
+- HEAD: `52d5cb2c` (1.8 커밋)
+- High-risk 여부: **아니다.** 다만 대상이 a063 **이관 예외** 경로다 — 사람이 승인한
+  단 하나의 예외이므로 거부할 정상 입력을 먼저 열거하고 실물로 쟀다.
+
+### 태스크의 물음과 답
+
+물음은 "착지 기록을 record 의 키 집합 열거(`execution_baseline.py:410`)에 넣을지"다.
+**답은 아니다 — 창의 끝은 이미 그 record 안에 있다.** 이름이 `source_commit` 이고,
+a063 의 실제 record 는 오늘 14개 키에 `source_commit = c727ad12` 를 담고 있다.
+같은 값을 두 번째 이름으로 또 적으면 재진술이고, 둘이 갈리면 어느 쪽이 계약인지
+아무도 모른다 — [[two-judgements-cover-for-each-other]]. 게다가 키 집합은 닫혀 있어
+(`set(record) != required` 면 거절) 키를 하나 넣으면 a063 의 커밋된 record 와 ledger
+digest 를 다시 만들어야 한다.
+
+### 진짜 구멍 둘 — 재서 확인했다
+
+**(1) 이관 경로의 대상은 감사된 값이 아니라 워킹트리다.** `validate` 는
+`{"effective_base": E, "source": source, "ledger": …}` 를 돌려주는데 `resolve_base` 는
+`effective_base` 만 읽는다(저장소 전수: `adoption["source"]` 를 읽는 곳 **0곳**).
+그래서 `resolve_landing` 이 `landed-commit.txt` 를 찾고, 없으니 대상이 워킹트리가 된다.
+
+그 답이 오늘 맞는 이유는 `validate` 의 **다른** 판정 때문이다 — source..head 에
+`openspec/`·`docs/pm/` 밖 파일이 있으면 `source-to-evidence drift` 로 죽는다. 즉
+맞는 답을 **다른 판정의 우연**으로 얻고 있다([[uncovered-block-may-be-held-dead-by-a-coincidence]]).
+그 우연이 얼마짜리인지 쟀다:
+
+| a063 의 대상 | required |
+|---|---|
+| 감사된 `source_commit` c727ad12 | **9** |
+| 워킹트리(2026-09-11 HEAD) | **36** |
+
+(`c727ad12..HEAD` 는 커밋 32개 · 파일 579개, 그중 **.go 24개**. 오늘 이관을 다시
+돌리면 drift 검사가 먼저 죽이므로 fail-closed 지만, 창의 계산은 남의 함수 27개를
+a063 의 것으로 센다.)
+
+**(2) 3.3 이 넣은 안내가 감사와 모순된다.** 이관 픽스처로 5단계를 실제로 돌려서 쟀다
+(2026-09-11):
+
+```
+[logic-map] a063-…: base 145812c4c6e0 → working tree (no landed-commit.txt) required 1 function(s)
+[logic-map] a063-…: … — record `landed-commit.txt` to narrow it to this change's own work
+[logic-map] a063-…: execution-baseline adoption exception evidence complete
+```
+
+두 번째 줄이 저자에게 **감사되지 않는 두 번째 손잡이를 만들라고 시킨다.**
+`landed-commit.txt` 는 `openspec/` 아래라 drift 검사가 통과시키고, 추적 파일이라
+untracked 감사도 못 보고, 닫힌 키 집합에도 없다. 이관 예외의 정당성이
+"판정에 들어가는 입력을 하나도 빠짐없이 열거하고 digest 로 묶었다"인데 그 열거에
+없는 입력이 대상을 고른다.
+
+### 결정
+
+1. **키를 넣지 않는다.** 창의 끝은 `source_commit` 이다.
+2. **이관 경로는 착지 기록을 거절한다.** 손잡이는 하나이고 그것은 감사된 것이다.
+3. **감사된 값을 실제로 쓴다.** a063 의 대상은 `source_commit` 이고 출력이 그렇게
+   말한다. 그러면 (2)가 거절하는 파일을 (2)가 시키지 않는다.
+
+### 거부할 정상 입력 — 먼저 열거하고 쟀다
+
+| 정상 입력 | 새 규칙 | 저장소 실물 |
+|---|---|---|
+| a063 이 착지를 선언하지 않는다 (**오늘 모양**) | 통과. 대상이 워킹트리 → **감사된 source** 로 바뀐다 | 1건. 판정은 이관 실행 시점에 같다(drift 가 보장) — 출력만 달라진다 |
+| a063 이 착지를 선언한다 | **거절** | **0건** — a063 에 `landed-commit.txt` 가 없다 |
+| 이관이 아닌 change 가 착지를 선언한다 | 영향 없음 | a099 1건, 이관 경로가 아니다 |
+| 이관이 아닌 change 가 선언하지 않는다 | 영향 없음 | 나머지 전부 |
+
+그러므로 이 규칙이 오늘 새로 거절하는 change 는 **0건**이고, 판정을 바꾸는 change 도
+**0건**이다. 바뀌는 것은 a063 이관 실행의 **출력 문구**다.
+
+### 이 편집이 지우는 우회로
+
+이관 경로는 `resolve_landing` 을 부르지 않게 된다. 그 함수의 판정(40-hex · 커밋 실재 ·
+HEAD 의 조상 · base 의 자손 · 증거 고정)은 **저자가 고른 값**을 위한 것이고, 감사된
+source 는 고른 값이 아니다 — `validate` 가 이미 `ancestry(P,E)` · `ancestry(E,source)` ·
+`ancestry(source,head,strict=True)` · `source^{tree}` 대조 · digest 셋으로 묶는다.
+같은 판정을 두 번 하지 않는다.
+
+- Function Logic Map: **Go 기준 not-applicable** (Go 0줄). 분기를 근거로 삼으므로
+  기계 열거를 편집 **전에** 만들었다 — `tools-logic-map--resolve_base/ast.before-1.12.json`
+  (L282-322 · 분기 10 · 반환 2 · raise 4). `check` 의 편집 전 상태는
+  `tools-logic-map--check/ast.after-1.8.json` 이고 그 `source_sha256`(`a5ee9c6febc7`)이
+  커밋된 `check_analysis.py` 의 해시와 같음을 대조했다.
+- CodeGraph: `resolve_base` 의 호출자는 `check` 1건 + `execution_baseline` 의 지연
+  import 경로. 호출 **자리**는 AST 로 셌다 — `check` 안에 `L768`·`L782` 둘이고
+  이 편집이 닿는 것은 `L768`(게이트 대상) 하나다.
+- 토글: 없다.
+- 실패 방향: 게이트가 **안 열리는** 쪽이다. 창이 넓어지는 일은 없다 — 좁아진다.

@@ -94,3 +94,31 @@ UTF-8 오류가 오늘과 같은 말을 하게), `L798` 이 새 사유다.
 `resolve_referenced_change` 의 호출 자리는 여전히 **둘**(`L756` 게이트 대상 ·
 `L781` 빌린 쪽)이고 이 편집이 닿는 것은 뒤의 하나다. 앞의 자리는 `AmbiguousChange`
 와 `ValueError` 를 타입으로 갈라 받는 3.2.4 의 모양 그대로다.
+
+---
+
+## 네 번째 편집 — 이관 예외의 창 끝 (task 1.12, 2026-09-11)
+
+`ast.after-1.8.json`(= 커밋 `52d5cb2c` 의 상태, `source_sha256` 을 커밋된 파일 해시와
+대조해 확인) → `ast.after-1.12.json`. **분기 40 → 43, 반환 13 → 14.**
+
+| 새 ID | 줄 | 소스 | 무엇을 하나 |
+|---|---|---|---|
+| B5 | 785 | `{} if context is None else context` | 문맥을 **항상** 채운다 |
+| B21·B22 | 820 | `if adopted and _declared_landing(…) is not None:` | 이관의 두 번째 손잡이 거절 |
+| B24 | 836 | `str(facts.get('adoption_source','')) if adopted else resolve_landing(…)` | 이관이면 감사된 값, 아니면 해소 |
+
+사라진 것 하나: `if context is not None:`(옛 B22). 문맥 기록이 조건부가 아니게 됐다.
+그것이 **판정**이었다는 것이 이 편집의 발견이다 — 호출자가 문맥을 안 주면 `check` 가
+"이것이 이관인가"를 스스로 모르게 되고, 같은 입력에 다른 문장을 만든다. 변이 N5
+(`facts` 를 `context` 로 되돌림)가 시험 하나를 빨갛게 한다.
+
+반환 하나가 늘었다(13 → 14): `L825` 의 이관 거절. `L848` 은 새 반환이 아니라
+`missing Function Logic Map …` 의 **문자열이 바뀐** 것이다(`_target_text` 에 감사
+여부를 넘긴다).
+
+**`resolve_landing` 을 이관 경로에서 부르지 않는다.** 그 함수의 판정 전부는 **저자가
+고른 값**을 위한 것이고 감사된 source 는 고른 값이 아니다. `validate` 가
+`ancestry(P,E)` · `ancestry(E,source)` · `ancestry(source,head,strict=True)` ·
+`source^{tree}` 대조 · digest 셋으로 이미 묶는다 — 같은 판정을 두 번 하지 않는다
+([[two-judgements-cover-for-each-other]]).

@@ -174,3 +174,42 @@ point` 로 물으면 무관한 Go 심볼(`officialfx.Evidence` · `candidate.Bas
 `""`=빈 선언을 가른다), (2) `check` 의 빌린 증거 블록에 창의 끝 대조를 하나 더한다.
 바꾸지 않는 것: 요구 함수 집합의 계산, base 규칙, 고정 판정, `validate_target`,
 기존 거절 메시지 전부, 빌리지 않는 change 의 판정 전부. Go 파일 변경 0줄.
+
+---
+
+# task 1.12 — 이관 예외의 창 끝은 감사된 값이다 (2026-09-11)
+
+| 주장 | CodeGraph / 전수 열거 | 실측 | 조정 |
+|---|---|---|---|
+| 착지 기록을 record 키 집합에 넣어야 하나 | `execution_baseline.py:410` 의 `required` 는 **닫힌** 14개 키이고 그중 `source_commit` 이 이미 창의 끝이다 | a063 실물 record: 14 키, `source_commit = c727ad12` | **넣지 않는다.** 같은 값의 두 번째 이름은 재진술이다 |
+| 감사된 창의 끝을 누가 읽나 | `validate` 는 `{"effective_base","source","ledger"}` 를 돌려주는데 `adoption["source"]` 를 읽는 곳이 저장소에 **0곳** | — | `resolve_base` 가 문맥에 적고 `check` 가 쓴다 |
+| 오늘 대상이 워킹트리인데 왜 답이 맞나 | `validate` 의 **다른** 판정 — source→head 에 `openspec/`·`docs/pm/` 밖 파일이 있으면 `source-to-evidence drift` | 감사된 source 면 required **9**, 워킹트리면 **36** (`c727ad12..HEAD` = 커밋 32 · 파일 579 · **.go 24**) | 맞는 답을 우연으로 얻고 있었다 |
+| 3.3 의 안내가 이관과 맞나 | — | 이관 픽스처 실행: `… record \`landed-commit.txt\` to narrow it …` 을 **찍는다** | 감사에 없는 손잡이를 만들라고 시킨다 — 모순이므로 이관 경로에선 안 찍는다 |
+| 착지 기록이 이관 감사를 통과하나 | `openspec/` 아래 → drift 통과 · 추적 파일 → untracked 감사 밖 · 닫힌 키 집합에 없음 | 픽스처로 재현: 기록을 넣어도 오늘 rc 는 안 바뀐다 | 거절한다 |
+| `resolve_base` 호출 자리 | CodeGraph 호출자 `check` 1건 / AST 호출 자리 `L768`·`L782` **둘** | — | 이 편집이 닿는 것은 `L768`(게이트 대상) 하나 — [[caller-count-is-not-fix-site-count]] |
+
+## 곁가지로 나온 결함 — 3.2.3.1 의 고정 순회가 절대경로를 못 읽는다
+
+이관 픽스처의 번들은 `file` 을 **절대경로**로 적는다. `validate_target` 은
+`normalized_source` 로 정규화하는데 3.2.3.1 이 넣은 고정 순회는 `str(value["file"])`
+을 그대로 `git show <sha>:<path>` 에 넘긴다. 절대경로면 언제나 실패하므로
+**정상 입력이 위조로 몰린다**(픽스처에서 실제로 그 사유로 빨갛게 나왔다).
+
+저장소 전수: 번들 `file` 필드 **상대 3048 · 절대 0** — 실물 영향은 0 이다. 그래도
+증상 우회가 아니라 근본 원인이므로 같은 커밋에서 고치고, 변이 N4 와
+`test_an_absolute_bundle_path_still_pins_a_landing` 으로 묶었다. 계약은 안 바뀐다 —
+spec 은 이미 "착지 지점에서 모든 `revision: current` 묶음의 source hash 가 일치해야
+한다"고 적었고, 코드가 그 말을 못 지키고 있었다.
+
+## CodeGraphContext / GBrain
+
+GBrain 은 이번에도 `CONNECTION_CLOSED` 다. 이 태스크의 근거는 전부 전수 열거와
+픽스처 실측이다.
+
+## 조정된 구현 경계
+
+바꾸는 것: (1) `resolve_base` 가 감사된 `source` 를 문맥에 적는다, (2) `check` 가
+문맥을 **항상** 채우고 이관이면 그 값을 대상으로 쓰며 착지 기록을 거절한다,
+(3) `_target_text` 가 무엇이 끝을 고정했는지 말한다, (4) 고정 순회가 번들 경로를
+정규화한다. 바꾸지 않는 것: `execution_baseline.py` **한 줄도**, 이관이 아닌
+change 의 판정과 출력 전부, 성공 줄 문구, 이관 성공 줄 문구. Go 파일 변경 0줄.

@@ -316,6 +316,10 @@ def resolve_base(
     if context is not None:
         context["execution_baseline_adoption"] = adoption is not None
         context["effective_base"] = effective
+        if adoption:
+            # `validate` 는 감사된 창의 **끝**을 이미 돌려준다. 옛 판본은 그 값을
+            # 버리고 `landed-commit.txt` 를 찾았고, 없으니 대상이 워킹트리가 됐다.
+            context["adoption_source"] = str(adoption["source"])
     override = os.environ.get("SDD_BASE_REF", "").strip()
     if override and resolve(override) != effective:
         raise ValueError("SDD_BASE_REF must resolve to the selected effective comparison base")
@@ -342,9 +346,15 @@ def _is_ancestor(root: Path, older: str, newer: str) -> bool:
     ).returncode == 0
 
 
-def _target_text(landing: str) -> str:
-    """비교 대상 쪽 끝을 사람이 읽는 말로. 착지 기록의 유무가 유일한 갈림이다."""
-    return f"landed-commit {landing}" if landing else "working tree (no landed-commit.txt)"
+def _target_text(landing: str, audited: bool = False) -> str:
+    """비교 대상 쪽 끝을 사람이 읽는 말로. **무엇이** 그 끝을 고정했는지까지 말한다.
+
+    이관 예외의 끝은 저자가 선언한 값이 아니라 `execution-baseline.json` 이 감사한
+    `source_commit` 이다. 둘을 같은 말로 적으면 있지도 않은 파일을 가리키게 된다.
+    """
+    if not landing:
+        return "working tree (no landed-commit.txt)"
+    return f"audited source-commit {landing}" if audited else f"landed-commit {landing}"
 
 
 def _commits_after(root: Path, base: str) -> str:
@@ -426,10 +436,15 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
         value = _ast_value(ast_path)
         if not isinstance(value, dict) or value.get("revision", "current") != "current":
             continue
-        source = str(value.get("file", ""))
+        raw_source = str(value.get("file", ""))
         digest = str(value.get("source_sha256", ""))
-        if not source or not digest:
+        if not raw_source or not digest:
             continue
+        # 번들의 `file` 은 절대경로일 수 있다 — `validate_target` 이 정규화하는 이유가
+        # 그것이다. 여기서 안 하면 `git show <sha>:/abs/path` 가 언제나 실패해서
+        # **정상 입력이 위조로 몰린다**. 저장소 번들 3048개는 오늘 전부 상대경로라
+        # 실물 영향은 0 이고, a063 이관 픽스처가 절대경로를 만들면서 드러났다.
+        _, source = normalized_source(raw_source, root)
         pinning += 1
         blob = _committed_bytes(root, candidate, source)
         if blob is None or hashlib.sha256(blob).hexdigest() != digest:
@@ -764,8 +779,12 @@ def check(
     reference_file = change_dir / "analysis" / "function-logic-reference.txt"
     review = change_dir / "review.md"
     review_text = review.read_text(encoding="utf-8") if review.exists() else ""
+    # 문맥은 **항상** 채운다. 호출자가 안 줘도 `check` 자신이 읽어야 하는 사실이 여기
+    # 들어온다(이관인가, 감사된 source 는 무엇인가). 호출자가 문맥을 줬으면 같은
+    # 사전이므로 밖에서 보이는 것은 그대로다.
+    facts: dict[str, object] = {} if context is None else context
     try:
-        base = resolve_base(change_dir, root, context)
+        base = resolve_base(change_dir, root, facts)
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         return [f"cannot derive modified Go functions: {exc}"]
     # 빌린 증거는 착지 판정 **앞에서** 푼다. 착지가 유효한지는 그 change 가 실제로
@@ -797,16 +816,30 @@ def check(
         if not shared:
             return ["function-logic reference must share the exact landing point"]
         analysis = referenced_dir / "analysis" / "function-logic"
+    adopted = bool(facts.get("execution_baseline_adoption"))
+    if adopted and _declared_landing(change_dir, root) is not None:
+        # 이관 예외의 정당성은 "판정에 들어가는 입력을 하나도 빠짐없이 열거하고
+        # digest 로 묶었다"이다. `landed-commit.txt` 는 `openspec/` 아래라 drift 검사가
+        # 통과시키고, 추적 파일이라 untracked 감사도 못 보고, 닫힌 키 집합에도 없다.
+        # 그런데 비교 대상을 고른다 — 손잡이는 하나여야 하고 그것은 감사된 쪽이다.
+        return [
+            "execution-baseline adoption does not accept a "
+            f"`{LANDING_FILE}` record: the window ends at the audited source commit"
+        ]
     try:
         # 조상 판정은 `base-commit.txt` 의 글자가 아니라 `resolve_base` 가 **반환한**
         # 값에 건다. a063 은 그 둘이 다르다(P → E).
-        landing = resolve_landing(change_dir, root, base, analysis)
+        # 이관이면 착지를 **해소하지 않는다**. `resolve_landing` 의 판정들은 저자가
+        # 고른 값을 위한 것이고, 감사된 source 는 고른 값이 아니다 — `validate` 가
+        # ancestry(P,E)·ancestry(E,source)·ancestry(source,head,strict)·tree 대조·
+        # digest 셋으로 이미 묶는다. 같은 판정을 두 번 하지 않는다.
+        landing = str(facts.get("adoption_source", "")) if adopted \
+            else resolve_landing(change_dir, root, base, analysis)
         required = changed_existing_functions(root, base, landing)
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         return [f"cannot derive modified Go functions: {exc}"]
-    if context is not None:
-        context["landing"] = landing
-        context["required_count"] = len(required)
+    facts["landing"] = landing
+    facts["required_count"] = len(required)
     if not analysis.exists():
         if required:
             names = ", ".join(f"{source}:{function}" for source, function in required)
@@ -814,7 +847,7 @@ def check(
             # a076 은 이름 316개를 이은 21,838자짜리 한 줄이었고 창을 말하는 줄이 0 이었다.
             return [
                 f"missing Function Logic Map for {len(required)} function(s) modified "
-                f"between base {base[:12]} and {_target_text(landing)}: {names}"
+                f"between base {base[:12]} and {_target_text(landing, adopted)}: {names}"
             ]
         return [] if EXEMPTION in review_text else [f"missing analysis or `{EXEMPTION}` review marker"]
     errors: list[str] = []
@@ -872,8 +905,9 @@ def main() -> int:
     base = str(context.get("effective_base", ""))
     if base:
         landing = str(context.get("landing", ""))
+        audited = bool(context.get("execution_baseline_adoption"))
         print(
-            f"[logic-map] {args.change}: base {base[:12]} → {_target_text(landing)} "
+            f"[logic-map] {args.change}: base {base[:12]} → {_target_text(landing, audited)} "
             f"required {context.get('required_count', 0)} function(s)"
         )
         if not landing:

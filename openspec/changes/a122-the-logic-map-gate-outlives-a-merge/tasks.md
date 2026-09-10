@@ -136,8 +136,75 @@
       낮추지 않는다 — 3.2.4 가 Python 을 이쪽으로 올린다.
       구현은 2.7(RED) 과 3.4(GREEN) 로 내린다. 증거는
       `analysis/code-context/` 셋과 `review.md` 의 Pre-Edit Gate.
-- [ ] 1.12 a063 의 `execution_baseline.validate` 가 착지 기록을 감사하지 않는다.
+- [x] 1.12 a063 의 `execution_baseline.validate` 가 착지 기록을 감사하지 않는다.
       키 집합 열거(`execution_baseline.py:410-412`)에 넣을지 정한다.
+
+      **결정 (2026-09-11). 키를 넣지 않는다 — 창의 끝은 이미 그 record 안에 있다.**
+      이름이 `source_commit` 이고, a063 의 실물 record 는 오늘 14개 키에
+      `source_commit = c727ad12` 를 담고 있다. 같은 값을 두 번째 이름으로 또 적으면
+      재진술이고, 둘이 갈리면 어느 쪽이 계약인지 아무도 모른다. 게다가 키 집합은
+      닫혀 있어(`set(record) != required` 면 거절) 키를 하나 넣으면 a063 의 커밋된
+      record 와 ledger digest 를 다시 만들어야 한다.
+
+      **대신 진짜 구멍 둘을 닫는다.** 전체 근거는 review.md §Pre-Edit 1.12.
+
+      (1) **이관 경로의 대상이 감사된 값이 아니라 워킹트리였다.** `validate` 는
+      `{"effective_base", "source", "ledger"}` 를 돌려주는데 `resolve_base` 는
+      `effective_base` 만 읽는다 — 저장소 전수로 `adoption["source"]` 를 읽는 곳이
+      **0곳**이었다. 그래서 `resolve_landing` 이 `landed-commit.txt` 를 찾고, 없으니
+      대상이 워킹트리가 된다. 그 답이 오늘 맞는 이유는 `validate` 의 **다른** 판정
+      (`source-to-evidence drift`) 때문이다 — 맞는 답을 우연으로 얻고 있었다.
+
+      | a063 의 대상 | required |
+      |---|---|
+      | 감사된 `source_commit` c727ad12 | **9** |
+      | 워킹트리 (2026-09-11 HEAD) | **36** |
+
+      (`c727ad12..HEAD` = 커밋 32 · 파일 579, 그중 **.go 24**. 오늘 이관을 다시 돌리면
+      drift 검사가 먼저 죽이므로 fail-closed 지만, 창의 계산은 남의 함수 27개를
+      a063 의 것으로 센다.)
+
+      (2) **3.3 이 넣은 안내가 이관 감사와 모순됐다.** 이관 픽스처로 5단계를 돌리면
+      `… record \`landed-commit.txt\` to narrow it …` 을 찍는다 — 감사 어디에도 없는
+      두 번째 손잡이를 만들라는 말이다. 그 파일은 `openspec/` 아래라 drift 검사가
+      통과시키고, 추적 파일이라 untracked 감사도 못 보고, 닫힌 키 집합에도 없는데
+      비교 대상을 고른다. 이관 경로는 그 기록을 **거절**하고, 대상을 감사된
+      `source_commit` 으로 말한다.
+
+      **거부할 정상 입력을 먼저 열거했고, 오늘 새로 거절하는 change 는 0건이다** —
+      a063 에 `landed-commit.txt` 가 없고, 이관이 아닌 change 는 이 경로에 안 들어온다.
+      판정이 바뀌는 change 도 0건이고, 바뀌는 것은 이관 실행의 **출력 문구**다.
+
+      | 검증 | 결과 |
+      |---|---|
+      | RED | 3건 전부 빨강 (대상이 `''` · 안내가 `landed-commit.txt` 를 찍음 · 착지 기록이 통과) |
+      | 변이 N1 이관의 착지 기록 거절 삭제 | **1건** FAIL |
+      | 변이 N2 감사된 source 대신 `resolve_landing` 호출 | **2건** FAIL |
+      | 변이 N3 대상 문구가 감사 여부를 안 가림 | **1건** FAIL |
+      | 변이 N4 번들 경로 정규화 제거 | **1건** FAIL (아래 곁가지) |
+      | 변이 N5 문맥이 없으면 이관을 못 봄 | **1건** FAIL |
+      | 변이 N6 감사된 source 를 문맥에 안 적음 | **2건** FAIL |
+      | 실데이터 A/B | 실제 change id **126건** 옛·새 전수 — **rc·stdout·stderr 차이 0건**. a063 은 옛·새 모두 rc=1 (`adoption requires detached HEAD`) — 이관 경로는 그 밖에서 도달하지 않으므로 재는 것은 픽스처 시험이다 |
+      | 구조 | `check` 분기 40 → **43** · 반환 13 → **14**; `resolve_base` 분기 10 → **11** (반환·raise 불변); `resolve_landing` **16/2/6 그대로** |
+      | 스위트 | `tools/logic-map` **149 OK** · `openspec validate --strict` valid |
+
+      **`execution_baseline.py` 는 한 줄도 안 바꿨다.** 사람이 승인한 예외의 감사
+      코드를 건드리지 않고, 그 감사가 **이미 돌려주는 값을 버리지 않게** 했을 뿐이다.
+      이관 경로는 `resolve_landing` 을 부르지 않는다 — 그 판정들은 저자가 고른 값을
+      위한 것이고, `validate` 가 `ancestry(P,E)` · `ancestry(E,source)` ·
+      `ancestry(source,head,strict=True)` · tree 대조 · digest 셋으로 이미 묶는다.
+
+      **곁가지로 3.2.3.1 의 결함 하나를 같이 고쳤다.** 고정 순회가 번들의 `file` 을
+      정규화하지 않아 절대경로면 `git show <sha>:/abs/path` 가 언제나 실패한다 —
+      **정상 입력이 위조로 몰린다**. 이관 픽스처의 번들이 절대경로를 쓰면서 드러났다.
+      저장소 전수로 번들 `file` 은 **상대 3048 · 절대 0** 이라 실물 영향은 0 이고
+      A/B 로는 영원히 안 보인다. 그래서 변이 N4 와
+      `test_an_absolute_bundle_path_still_pins_a_landing` 이 이것을 재는 전부다.
+      계약은 안 바뀐다 — spec 이 이미 요구하던 것을 코드가 못 지키고 있었다.
+
+      기계 열거: `analysis/python-function-logic/tools-logic-map--check/ast.after-1.12.json` ·
+      `tools-logic-map--resolve_base/ast.{before,after}-1.12.json` (**새 대상**) ·
+      `tools-logic-map--resolve_landing/ast.after-1.12.json`.
 - [x] 1.13 ~~a077 의 증거가 자기 base 보다 낡았다~~ — **철회.** 근거였던 후보 탐색이
       `git log -- <file>` 의 이력 단순화 때문에 병합 커밋 `448dfeb1` 을 빠뜨렸다.
       블롭을 직접 해싱하니 a077 의 7개 번들 전부가 거기서 맞는다.

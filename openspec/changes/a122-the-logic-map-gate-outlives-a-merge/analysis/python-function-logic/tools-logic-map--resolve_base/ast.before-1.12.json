@@ -1,0 +1,179 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "52d5cb2c",
+  "head_commit": "52d5cb2ce570a47c6f4092179a158238f9001df4",
+  "source_sha256": "a5ee9c6febc7d18cf8cf0d853d2213fd873136edf368c1a4b40e40da50e63fbc",
+  "function": "resolve_base",
+  "signature": "resolve_base(change_dir, root, context)",
+  "start": {
+    "line": 282,
+    "column": 1
+  },
+  "end": {
+    "line": 322,
+    "column": 21
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 286,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 288,
+      "inherited_line": false,
+      "source": "except OSError as exc:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 304,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 306,
+      "inherited_line": false,
+      "source": "process.stderr.strip() or f'invalid Function Logic Map base: {value}'"
+    },
+    {
+      "id": "B5",
+      "kind": "Try",
+      "line": 311,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B6",
+      "kind": "ExceptHandler",
+      "line": 313,
+      "inherited_line": false,
+      "source": "except AdoptionError as exc:"
+    },
+    {
+      "id": "B7",
+      "kind": "IfExp",
+      "line": 315,
+      "inherited_line": false,
+      "source": "str(adoption['effective_base']) if adoption else persisted"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 316,
+      "inherited_line": false,
+      "source": "if context is not None:"
+    },
+    {
+      "id": "B9",
+      "kind": "BoolOp",
+      "line": 320,
+      "inherited_line": false,
+      "source": "override and resolve(override) != effective"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 320,
+      "inherited_line": false,
+      "source": "if override and resolve(override) != effective:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 308,
+      "value": "process.stdout.strip()"
+    },
+    {
+      "line": 322,
+      "value": "effective"
+    }
+  ],
+  "raises": [
+    {
+      "line": 289,
+      "source": "raise ValueError('missing base-commit.txt; run `python3 tools/sdd/capture_change_base.py --change <change-id>` at proposal freeze') from exc"
+    },
+    {
+      "line": 305,
+      "source": "raise ValueError(process.stderr.strip() or f'invalid Function Logic Map base: {value}')"
+    },
+    {
+      "line": 314,
+      "source": "raise ValueError(f'invalid execution-baseline adoption: {exc}') from exc"
+    },
+    {
+      "line": 321,
+      "source": "raise ValueError('SDD_BASE_REF must resolve to the selected effective comparison base')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 287,
+      "callee": "path.read_text(encoding='utf-8').strip"
+    },
+    {
+      "line": 287,
+      "callee": "path.read_text"
+    },
+    {
+      "line": 289,
+      "callee": "ValueError"
+    },
+    {
+      "line": 296,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 305,
+      "callee": "ValueError"
+    },
+    {
+      "line": 306,
+      "callee": "process.stderr.strip"
+    },
+    {
+      "line": 308,
+      "callee": "process.stdout.strip"
+    },
+    {
+      "line": 310,
+      "callee": "resolve"
+    },
+    {
+      "line": 312,
+      "callee": "validate_execution_baseline"
+    },
+    {
+      "line": 314,
+      "callee": "ValueError"
+    },
+    {
+      "line": 315,
+      "callee": "str"
+    },
+    {
+      "line": 319,
+      "callee": "os.environ.get('SDD_BASE_REF', '').strip"
+    },
+    {
+      "line": 319,
+      "callee": "os.environ.get"
+    },
+    {
+      "line": 320,
+      "callee": "resolve"
+    },
+    {
+      "line": 321,
+      "callee": "ValueError"
+    }
+  ]
+}

@@ -109,3 +109,27 @@ production 호출자는 사람이 부르는 완료 게이트(`tools/gate.sh:321`
 
 세는 것은 그대로다: 분기 20 − 5(이동) + 1(새) = 16, 반환 3 − 2 + 1 = 2,
 raise 7 − 1 = 6. 판정은 하나도 안 없어졌다.
+
+## 편집 (task 1.12) — 분기 16 → 16, 반환 2 → 2, raise 6 → 6
+
+**구조가 하나도 안 바뀐다.** 고정 순회가 번들의 `file` 을 `normalized_source` 로
+정규화하는 한 줄이 들어갔고, 그것은 분기가 아니다. 기계 열거에서 보이는 유일한
+차이는 `B11·B12` 의 이름이다(`not source or not digest` → `not raw_source or not digest`).
+
+| | 옛 | 새 |
+|---|---|---|
+| 순회가 `git show` 에 넘기는 경로 | `str(value["file"])` 그대로 | `normalized_source(...)` 의 상대경로 |
+
+**왜 결함인가.** `validate_target` 은 같은 값을 `normalized_source` 로 정규화한다
+(`check_analysis.py:454`). 번들의 `file` 은 절대경로일 수 있고, 그러면
+`git show <sha>:/abs/path` 가 **언제나** 실패해서 `mismatched` 에 들어간다 — 즉
+**정상 입력이 위조로 몰린다**. 3.2.3.1 이 이 순회를 넣을 때 놓친 자리이고,
+a063 이관 픽스처의 번들이 절대경로를 쓰면서 드러났다.
+
+저장소 전수(2026-09-11): 번들 `file` 필드 **상대 3048 · 절대 0**. 실물 영향은 0 이라
+126건 A/B 에서 안 보인다. 그래서 변이 N4 와
+`test_an_absolute_bundle_path_still_pins_a_landing` 이 이것을 재는 유일한 장치다 —
+[[surviving-mutant-may-mean-accidental-safety]].
+
+계약은 안 바뀐다. spec 은 이미 "착지 지점에서 그 change 의 모든 `revision: current`
+증거 묶음의 source hash 가 일치해야 한다"고 적었고, 코드가 그 말을 못 지키고 있었다.
