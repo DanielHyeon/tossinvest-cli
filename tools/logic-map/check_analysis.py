@@ -903,7 +903,12 @@ def main() -> int:
     # 이 이 자리를 건너뛰어서, 요구된 함수 이름 316개가 어느 두 지점 사이에서 나온
     # 것인지 출력 어디에도 없었다(2026-09-10 a074·a076 실측: 그런 줄 0개).
     base = str(context.get("effective_base", ""))
-    if base:
+    # 창은 **잰 것만** 찍는다. 착지 해소가 실패하면 `landing` 과 `required_count` 는
+    # 아예 안 채워지고, 그 빈칸을 기본값으로 찍으면 `working tree … required 0` 이라는
+    # 거짓말이 된다 — 대상도 아니고 세지도 않은 값이다. 3.3 이 창을 찍게 만든 이유가
+    # "이름만 있고 이유가 없다"였는데 지어낸 이유는 그보다 나쁘다. 그 경우 사유는
+    # 아래 `cannot derive modified Go functions: …` 줄이 말한다.
+    if base and "landing" in context:
         landing = str(context.get("landing", ""))
         audited = bool(context.get("execution_baseline_adoption"))
         print(

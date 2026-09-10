@@ -522,3 +522,68 @@ source 는 고른 값이 아니다 — `validate` 가 이미 `ancestry(P,E)` · 
   이 편집이 닿는 것은 `L768`(게이트 대상) 하나다.
 - 토글: 없다.
 - 실패 방향: 게이트가 **안 열리는** 쪽이다. 창이 넓어지는 일은 없다 — 좁아진다.
+
+## VERIFY — task 4.1: 아카이브된 a075·a076 회귀 픽스처 (2026-09-11)
+
+- HEAD: `c91dc484` (1.12 커밋)
+- 4.1 이 적어 둔 **선결 조건은 이미 닫혔다.** "아카이브된 change 는 id 로 재검사가
+  안 된다"는 2026-09-08 실측이었고, task 3.2.4(`52c761de`)가 `check` 의 change 해소를
+  `resolve_referenced_change` 로 바꾸면서 풀렸다. 오늘 두 change 모두 아카이브 base
+  `448dfeb1` 을 해소한다.
+- 측정은 주입이 아니라 **격리 worktree 에 실제로 커밋**해서 했다
+  (`git worktree add --detach`, 커밋 `06b280e0`, 착지 = `840b3377`). 그래서 선언을
+  읽는 자리(HEAD 커밋에서 읽기·40-hex)까지 전부 진짜 경로다.
+
+### a075 — 해결된다
+
+| | 착지 없음 | 착지 `840b3377` |
+|---|---|---|
+| required | **319** | **0** |
+| 오류 | **324** (`missing evidence` 318 · `stale` 4 · `hash does not match` 1 · 인용 테스트 1) | **1** |
+
+323개가 사라진다. 남은 **1**은
+`cmd-tossctl--runconsole: branch test map cites TestContainerBuildsDoNotStageALocalUpdate`
+이고, task 1.13 이 "**a075 의 결함이고 a122 가 덮지 않는다**"고 이미 적어 둔 것이다.
+즉 이 change 는 자기가 고치겠다고 한 것만 정확히 고친다.
+
+### a076 — **해결되지 않는다**
+
+a076 은 `analysis/function-logic` 번들이 **0개**다(다섯 중 유일하다 — a074 7 · a075 8 ·
+a077 7 · a079 4). 착지를 선언하면 task 3.2.3.1 의 규칙이 거절한다:
+
+```
+[logic-map] cannot derive modified Go functions: landing point 840b337725fa is pinned by
+no `revision: current` evidence: a declared landing must be the revision some bundle describes
+```
+
+**그 거절은 옳다.** 3.2.3.1 이 막는 위조 경로가 정확히 이 모양이다 — 번들 0 + 면제
+표식 + 구간 바닥 착지. 저장소는 "증거가 없어서 0"과 "고친 Go 가 없어서 0"을 가르지
+못한다. a076 은 실제로 자기 창에서 기존 Go 함수를 하나도 안 고쳤지만(재기준화가
+base 를 그 작업 뒤로 옮겼다), 그것을 증명할 증거를 **소유하지 않는다**.
+
+그래서 proposal 이 "이 다섯에 답할 수 있는 질문을 준다"고 적은 것은 **다섯 중 넷**에
+대해 참이다. a076 은 §5 잔여로 연다(5.6).
+
+### 곁가지로 3.3 의 결함 하나가 실물로 나왔다 — 못 잰 창을 찍는다
+
+a076 에 착지를 준 실행이 이렇게 찍었다:
+
+```
+[logic-map] a076-…: base 448dfeb1263d → working tree (no landed-commit.txt) required 0 function(s)
+[logic-map] a076-…: … record `landed-commit.txt` to narrow it …
+[logic-map] cannot derive modified Go functions: landing point … is pinned by no …
+```
+
+첫 줄은 **거짓**이다. 대상은 워킹트리가 아니고(착지가 선언돼 있다), 요구 수는 세지도
+않았다(해소가 실패해 `landing`·`required_count` 가 아예 안 채워졌고 기본값이 찍혔다).
+둘째 줄은 이미 선언된 파일을 만들라고 한다. 3.3 이 창을 찍게 만든 이유가 "이름만 있고
+이유가 없다"였는데, **지어낸 이유는 그보다 나쁘다**.
+
+고쳤다 — 창은 **잰 것만** 찍는다(`if base and "landing" in context:`). 사유는 아래
+`cannot derive …` 줄이 말한다. 오늘 저장소에서 이 줄을 보는 change 는 **0건**이다
+(착지를 선언한 change 는 a099 하나이고 유효하다). 시험
+`test_a_window_that_could_not_be_derived_is_not_printed` 이 이것을 재고, 변이 O1 이
+그 시험 하나를 빨갛게 한다.
+
+- 측정 worktree 는 정리했다. 아카이브된 a075·a076 에 `landed-commit.txt` 를 **쓰지
+  않았다** — 4.1 은 검증 태스크이고, 아카이브본 수리는 별개의 판단이다(§5).

@@ -1788,6 +1788,29 @@ class AFailingStepFiveSaysWhichWindowRequiredThem(unittest.TestCase):
             _commit_all(root, "E: evidence for my own function only")
         return root, marks
 
+    def test_a_window_that_could_not_be_derived_is_not_printed(self) -> None:
+        """못 잰 창은 찍지 않는다 (task 4.1 에서 실물로 나왔다).
+
+        착지 해소가 실패하면 `landing` 과 `required_count` 는 아예 채워지지 않는다.
+        옛 판본은 그 빈칸을 기본값으로 찍어서 `working tree … required 0 function(s)`
+        라고 **거짓말**을 했다 — 대상도 아니고 세지도 않은 값이다. 3.3 이 창을 찍게
+        만든 이유가 "이름만 있고 이유가 없다"였는데, 지어낸 이유는 그보다 나쁘다.
+
+        2026-09-11 실측: 아카이브된 a076(번들 0)에 착지를 주니 정확히 그 줄이 나왔다.
+        실패 사유 줄은 그대로 있어야 하므로 아래에서 같이 단언한다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = self._failing_fixture(raw, with_evidence=False)
+            change = root / "openspec" / "changes" / "mine"
+            # 번들이 0 인 change 가 착지를 선언하면 3.2.3.1 이 거절한다 — 착지 해소가
+            # 실패하는 실물 경로다.
+            _declare_landing(change, marks["L"], "declare a landing nothing pins")
+            code, output = self._main_output(root)
+            self.assertEqual(code, 1, output)
+            self.assertIn("pinned by no", output)
+            self.assertNotIn("working tree", output)
+            self.assertNotIn("required 0 function(s)", output)
+
     def _main_output(self, root: Path) -> tuple[int, str]:
         output = io.StringIO()
         with mock.patch.object(

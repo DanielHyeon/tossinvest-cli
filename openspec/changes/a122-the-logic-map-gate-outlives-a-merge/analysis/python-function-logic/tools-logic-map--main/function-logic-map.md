@@ -69,3 +69,30 @@
 안 바뀌는 것**이고 그것으로 잰다. 성공 줄
 (`evidence complete or diff-proven exempt`)은 기록 스무 곳이 인용하므로 손대지 않았다.
 Go 파일 변경 0줄.
+
+## 편집 (task 4.1) — 분기 6 → 7, 반환 2 → 2 (값도 동일)
+
+`ast.before-4.1.json`(= 커밋 `c91dc484`) → `ast.after-4.1.json`.
+
+| 옛 | 새 |
+|---|---|
+| `B1 if base:` | `B1 base and 'landing' in context` (BoolOp) · `B2 if …:` (If) |
+
+경로는 하나도 안 지운다. 반환 둘의 **값까지 글자 그대로 같다**. `print` 자리는
+`[914, 920, 928, 931, 933]` 이고 창 줄 둘(914·920)은 여전히 실패 반환보다 **앞**이다 —
+3.3 이 세운 "실패해도 창을 찍는다"가 그대로다. 달라진 것은 **못 잰 창을 안 찍는다**
+하나다.
+
+**왜 조건 하나가 판정인가.** 착지 해소가 실패하면 `check` 는 `facts["landing"]` 에
+닿기 전에 돌아간다. 그래서 `"landing" in context` 는 "이 창을 실제로 쟀는가"와 같은
+말이다. 옛 조건은 그 빈칸을 `context.get("landing", "")` 의 기본값으로 메워
+`working tree (no landed-commit.txt) required 0 function(s)` 라고 찍었다 — 대상도
+아니고 세지도 않은 값이다.
+
+| 변이 | 빨개진 시험 |
+|---|---|
+| O1 조건 되돌리기(`if base:`) | **1** — `test_a_window_that_could_not_be_derived_is_not_printed` |
+| O2 창 줄 통째로 삭제 | **4** — 3.3 의 창 시험 둘 · 빈 요구 집합 · 1.12 이관 창 |
+
+둘이 **겹치지 않는다**. 조건과 줄이 각각 독립으로 묶였다는 뜻이고, 하나만 묶으면
+나머지 변이가 산다 — [[surviving-mutant-may-mean-accidental-safety]].
