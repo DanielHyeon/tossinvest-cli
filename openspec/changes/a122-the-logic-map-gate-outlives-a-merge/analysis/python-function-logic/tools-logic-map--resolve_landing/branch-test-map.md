@@ -92,3 +92,14 @@ M2 는 이 편집이 **만들어 낸** 자리다. 옛 판본에는 선언을 읽
 분기가 안 늘었으므로 **행동 시험 하나가 이 편집을 재는 전부**다. 저장소 번들 3048개가
 전부 상대경로라 실데이터 A/B 로는 영원히 안 보인다 — 시험이 없으면 이 줄은 지워도
 초록이다.
+
+## task 6.1.2 가 더한 둘
+
+| 소스 | 덮는 테스트 | 덮이나 |
+|---|---|---|
+| `if not floor:` | `test_uncommitted_evidence_cannot_pin_a_landing` (M2 로 확인) | yes |
+| `if not _is_ancestor(root, floor, candidate):` | `test_evidence_written_at_the_base_cannot_declare_the_base` · `test_archiving_the_change_does_not_invalidate_its_record`(거짓 갈래) (M1·M3 으로 확인) | yes |
+
+양성 대조군 둘을 같이 둔다 — 하한이 정상 선언까지 막으면 이쪽이 빨개진다:
+`test_an_honest_landing_at_the_evidence_commit_passes`(required 1 로 통과) ·
+`test_the_recorded_value_is_one_the_gate_then_accepts`(기록 → 판정 왕복).

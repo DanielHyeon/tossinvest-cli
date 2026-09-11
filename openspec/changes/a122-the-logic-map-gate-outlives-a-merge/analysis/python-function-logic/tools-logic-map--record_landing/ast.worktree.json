@@ -1,0 +1,173 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "cac190d8a9f3c976a73478e172bd8cd27e1159d6",
+  "source_sha256": "09b460a13b4d36ff0c73fde00fc5203d3ecb6e5755e72ded7ac8d053a6eb5a55",
+  "function": "record_landing",
+  "signature": "record_landing(change, root)",
+  "start": {
+    "line": 1005,
+    "column": 1
+  },
+  "end": {
+    "line": 1061,
+    "column": 6
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 1020,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 1022,
+      "inherited_line": false,
+      "source": "except AmbiguousChange as exc:"
+    },
+    {
+      "id": "B3",
+      "kind": "ExceptHandler",
+      "line": 1024,
+      "inherited_line": false,
+      "source": "except ValueError:"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 1027,
+      "inherited_line": false,
+      "source": "landing_file.exists() or _declared_landing(change_dir, root) is not None"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 1027,
+      "inherited_line": false,
+      "source": "if landing_file.exists() or _declared_landing(change_dir, root) is not None:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 1029,
+      "inherited_line": false,
+      "source": "if (change_dir / 'analysis' / 'function-logic-reference.txt').exists():"
+    },
+    {
+      "id": "B7",
+      "kind": "Try",
+      "line": 1035,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B8",
+      "kind": "ExceptHandler",
+      "line": 1037,
+      "inherited_line": false,
+      "source": "except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 1039,
+      "inherited_line": false,
+      "source": "if facts.get('execution_baseline_adoption'):"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 1048,
+      "inherited_line": false,
+      "source": "if dirty.returncode:"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 1055,
+      "inherited_line": false,
+      "source": "if not landing:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1023,
+      "value": "(1, [str(exc)])"
+    },
+    {
+      "line": 1028,
+      "value": "(1, [f'{change}: `{LANDING_FILE}` already exists — not overwritten'])"
+    },
+    {
+      "line": 1030,
+      "value": "(1, [f'{change}: this change borrows its evidence — copy the landing recorded on the change that owns the bundles instead of computing a second one'])"
+    },
+    {
+      "line": 1038,
+      "value": "(1, [f'{change}: cannot resolve the comparison base: {exc}'])"
+    },
+    {
+      "line": 1040,
+      "value": "(1, [f'{change}: execution-baseline adoption does not accept a `{LANDING_FILE}` record: the window already ends at the audited source commit'])"
+    },
+    {
+      "line": 1049,
+      "value": "(1, [f'{change}: the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits'])"
+    },
+    {
+      "line": 1056,
+      "value": "(1, [f'{change}: no landing recorded — {why}'])"
+    },
+    {
+      "line": 1058,
+      "value": "(0, [f\"{change}: recorded `{LANDING_FILE}` = {landing} (base {base[:12]}) — computed from this change's own evidence, not chosen; commit it with the change\"])"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1021,
+      "callee": "resolve_referenced_change"
+    },
+    {
+      "line": 1023,
+      "callee": "str"
+    },
+    {
+      "line": 1027,
+      "callee": "_declared_landing"
+    },
+    {
+      "line": 1027,
+      "callee": "landing_file.exists"
+    },
+    {
+      "line": 1029,
+      "callee": "(change_dir / 'analysis' / 'function-logic-reference.txt').exists"
+    },
+    {
+      "line": 1036,
+      "callee": "resolve_base"
+    },
+    {
+      "line": 1039,
+      "callee": "facts.get"
+    },
+    {
+      "line": 1044,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 1054,
+      "callee": "compute_landing"
+    },
+    {
+      "line": 1057,
+      "callee": "landing_file.write_text"
+    }
+  ]
+}

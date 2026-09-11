@@ -133,3 +133,44 @@ a063 이관 픽스처의 번들이 절대경로를 쓰면서 드러났다.
 
 계약은 안 바뀐다. spec 은 이미 "착지 지점에서 그 change 의 모든 `revision: current`
 증거 묶음의 source hash 가 일치해야 한다"고 적었고, 코드가 그 말을 못 지키고 있었다.
+
+---
+
+## 편집 — task 6.1.2 (분기 16 → 10, raise 6 → 8, 반환 2 → 2)
+
+전은 `ast.before-6.1.2.json`(HEAD `cac190d8`), 후는 `ast.worktree.json`. 같은 열거기다.
+
+**빠진 8** — 고정 순회를 `_pinning_bundles` · `_pinning_at` 으로 뽑았다. 이 함수에서
+사라졌을 뿐 판정은 그대로이고, 같은 순회를 `compute_landing` 도 쓴다. 규칙이 두 집에
+살면 각자가 상대의 시험을 통과시킨다 — [[two-judgements-cover-for-each-other]].
+
+| 종류 | 소스 |
+|---|---|
+| For · IfExp | `for ast_path in sorted(analysis.glob('*/ast.json')) if analysis.is_dir() else ()` |
+| BoolOp · If | `not isinstance(value, dict) or value.get('revision','current') != 'current'` |
+| BoolOp · If | `not raw_source or not digest` |
+| BoolOp · If | `blob is None or hashlib.sha256(blob).hexdigest() != digest` |
+
+**더한 2** — 저자가 못 고르는 하한. 둘 다 `mismatched` 판정 **뒤에** 선다.
+
+| 소스 | 무엇을 묻나 | 왜 이 자리인가 |
+|---|---|---|
+| `if not floor:` | 고정 번들이 역사에 들어온 적이 있나 | 게이트 뒤에 지울 수 있는 파일은 아무것도 고정하지 못한다 |
+| `if not _is_ancestor(root, floor, candidate):` | 선언이 자기 증거보다 앞서나 | 저자는 오늘 만든 번들을 과거 커밋에 넣을 수 없다 |
+
+**앞이 아니라 뒤에 세운 이유**는 기존 시험 하나 때문이다.
+`test_a_landing_the_evidence_does_not_describe` 의 바늘은
+`"is not the revision this evidence describes"` 인데, 하한을 앞에 세우면 그 픽스처가
+새 문장으로 거절돼서 **그 시험이 재던 것을 더는 재지 못한다.** 그 바늘은 6.3 이
+"이 파일이 같은 함정을 이미 한 번 발견하고 한 자리만 고쳤다"고 적은 바로 그 자리다.
+
+### 이 편집을 재는 변이 (실측, 원복은 sha256 동일성으로 확인)
+
+| 변이 | 1차 | 시험 보강 후 |
+|---|---|---|
+| M1 하한 판정을 통째로 삭제 | **CAUGHT** | CAUGHT |
+| M2 `if not floor:` 거절 삭제 | SURVIVED | **CAUGHT** |
+| M3 `-M --diff-filter=MA` → 평범한 `git log` | SURVIVED | **CAUGHT** |
+
+M2·M3 이 1차에서 살아남은 것이 시험 둘을 더 쓴 이유다 —
+[[surviving-mutant-may-mean-accidental-safety]].

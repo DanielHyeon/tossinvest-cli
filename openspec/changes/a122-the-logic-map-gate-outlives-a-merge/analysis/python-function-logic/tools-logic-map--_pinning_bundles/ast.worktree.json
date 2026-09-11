@@ -1,0 +1,118 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "cac190d8a9f3c976a73478e172bd8cd27e1159d6",
+  "source_sha256": "09b460a13b4d36ff0c73fde00fc5203d3ecb6e5755e72ded7ac8d053a6eb5a55",
+  "function": "_pinning_bundles",
+  "signature": "_pinning_bundles(root, analysis)",
+  "start": {
+    "line": 390,
+    "column": 1
+  },
+  "end": {
+    "line": 412,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 398,
+      "inherited_line": false,
+      "source": "for ast_path in sorted(analysis.glob('*/ast.json')) if analysis.is_dir() else ():"
+    },
+    {
+      "id": "B2",
+      "kind": "IfExp",
+      "line": 398,
+      "inherited_line": false,
+      "source": "sorted(analysis.glob('*/ast.json')) if analysis.is_dir() else ()"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 400,
+      "inherited_line": false,
+      "source": "not isinstance(value, dict) or value.get('revision', 'current') != 'current'"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 400,
+      "inherited_line": false,
+      "source": "if not isinstance(value, dict) or value.get('revision', 'current') != 'current':"
+    },
+    {
+      "id": "B5",
+      "kind": "BoolOp",
+      "line": 404,
+      "inherited_line": false,
+      "source": "not raw_source or not digest"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 404,
+      "inherited_line": false,
+      "source": "if not raw_source or not digest:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 412,
+      "value": "found"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 398,
+      "callee": "analysis.glob"
+    },
+    {
+      "line": 398,
+      "callee": "analysis.is_dir"
+    },
+    {
+      "line": 398,
+      "callee": "sorted"
+    },
+    {
+      "line": 399,
+      "callee": "_ast_value"
+    },
+    {
+      "line": 400,
+      "callee": "isinstance"
+    },
+    {
+      "line": 400,
+      "callee": "value.get"
+    },
+    {
+      "line": 402,
+      "callee": "str"
+    },
+    {
+      "line": 402,
+      "callee": "value.get"
+    },
+    {
+      "line": 403,
+      "callee": "str"
+    },
+    {
+      "line": 403,
+      "callee": "value.get"
+    },
+    {
+      "line": 410,
+      "callee": "normalized_source"
+    },
+    {
+      "line": 411,
+      "callee": "found.append"
+    }
+  ]
+}

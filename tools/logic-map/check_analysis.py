@@ -387,6 +387,84 @@ def _declared_landing(change_dir: Path, root: Path) -> str | None:
         raise ValueError(f"landing point is not UTF-8: {relative}") from exc
 
 
+def _pinning_bundles(root: Path, analysis: Path) -> list[tuple[Path, str, str]]:
+    """착지를 고정하는 번들 = `revision: current` 이고 `file`·`source_sha256` 둘 다 있는 것.
+
+    이 선별은 **한 곳에만** 산다. `resolve_landing` 과 `compute_landing` 이 각자
+    순회를 가지면 한쪽만 고쳐도 양쪽 시험이 초록이 된다
+    ([[two-judgements-cover-for-each-other]] 가 a064 에서 실측한 모양).
+    """
+    found: list[tuple[Path, str, str]] = []
+    for ast_path in sorted(analysis.glob("*/ast.json")) if analysis.is_dir() else ():
+        value = _ast_value(ast_path)
+        if not isinstance(value, dict) or value.get("revision", "current") != "current":
+            continue
+        raw_source = str(value.get("file", ""))
+        digest = str(value.get("source_sha256", ""))
+        if not raw_source or not digest:
+            continue
+        # 번들의 `file` 은 절대경로일 수 있다 — `validate_target` 이 정규화하는 이유가
+        # 그것이다. 여기서 안 하면 `git show <sha>:/abs/path` 가 언제나 실패해서
+        # **정상 입력이 위조로 몰린다**. 저장소 번들 3048개는 오늘 전부 상대경로라
+        # 실물 영향은 0 이고, a063 이관 픽스처가 절대경로를 만들면서 드러났다.
+        _, source = normalized_source(raw_source, root)
+        found.append((ast_path, source, digest))
+    return found
+
+
+def _pinning_at(root: Path, candidate: str, analysis: Path) -> tuple[int, list[str]]:
+    """`candidate` 에서 고정 번들이 몇 개이고 그중 어느 소스가 안 맞는가."""
+    mismatched: list[str] = []
+    bundles = _pinning_bundles(root, analysis)
+    for _, source, digest in bundles:
+        blob = _committed_bytes(root, candidate, source)
+        if blob is None or hashlib.sha256(blob).hexdigest() != digest:
+            mismatched.append(source)
+    return len(bundles), mismatched
+
+
+def _pre_archive_path(relative: str) -> str:
+    """아카이브된 경로의 **옮기기 전** 이름. 아카이브가 아니면 빈 문자열이다."""
+    prefix = "openspec/changes/archive/"
+    if not relative.startswith(prefix):
+        return ""
+    dated, _, tail = relative[len(prefix):].partition("/")
+    match = ARCHIVED_CHANGE.fullmatch(dated)
+    return f"openspec/changes/{match.group('change')}/{tail}" if match and tail else ""
+
+
+def _evidence_floor(root: Path, analysis: Path) -> str:
+    """고정 번들이 역사에 들어온 **마지막** 커밋. 못 찾으면 빈 문자열이다.
+
+    저자가 고를 수 없는 유일한 하한이다 — 오늘 만든 번들을 과거 커밋에 넣을 수
+    없기 때문이다. a122 6.1.1 이 활성 13건을 전수로 재서 13건 **전부** 고정 번들이
+    자기 base 뒤에 커밋됐음을 확인했으므로, 이 하한은 13건 전부에서 실재한다.
+
+    `-M --diff-filter=MA` 인 이유: 아카이브는 번들을 통째로 옮긴다. rename 을 세면
+    아카이브하는 순간 그 커밋이 바닥이 되어 **이미 유효했던 기록이 무효가 된다**.
+    옮기기 전 경로를 같이 줘야 `-M` 이 rename 을 rename 으로 보고 건너뛴다 —
+    a099(유일한 실물 기록)의 바닥이 `21a315d1` 로 나와 기록된 착지 `e6c4636a` 이하다.
+    경로마다 `--follow` 를 도는 판본은 a112 에서 61초였고 이 형태는 0.02초다.
+    """
+    paths: list[str] = []
+    for ast_path, _, _ in _pinning_bundles(root, analysis):
+        try:
+            relative = ast_path.relative_to(root).as_posix()
+        except ValueError:
+            continue
+        paths.append(relative)
+        before = _pre_archive_path(relative)
+        if before:
+            paths.append(before)
+    if not paths:
+        return ""
+    process = subprocess.run(
+        ["git", "log", "-M", "--diff-filter=MA", "-1", "--format=%H", "HEAD", "--", *paths],
+        cwd=root, capture_output=True, text=True, timeout=60, check=False,
+    )
+    return "" if process.returncode else process.stdout.strip()
+
+
 def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> str:
     """이 change 의 작업이 착지한 지점. 기록이 없으면 빈 문자열이다.
 
@@ -430,25 +508,7 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
         raise ValueError(
             f"landing point precedes the comparison base {base[:12]}: {candidate}"
         )
-    mismatched = []
-    pinning = 0
-    for ast_path in sorted(analysis.glob("*/ast.json")) if analysis.is_dir() else ():
-        value = _ast_value(ast_path)
-        if not isinstance(value, dict) or value.get("revision", "current") != "current":
-            continue
-        raw_source = str(value.get("file", ""))
-        digest = str(value.get("source_sha256", ""))
-        if not raw_source or not digest:
-            continue
-        # 번들의 `file` 은 절대경로일 수 있다 — `validate_target` 이 정규화하는 이유가
-        # 그것이다. 여기서 안 하면 `git show <sha>:/abs/path` 가 언제나 실패해서
-        # **정상 입력이 위조로 몰린다**. 저장소 번들 3048개는 오늘 전부 상대경로라
-        # 실물 영향은 0 이고, a063 이관 픽스처가 절대경로를 만들면서 드러났다.
-        _, source = normalized_source(raw_source, root)
-        pinning += 1
-        blob = _committed_bytes(root, candidate, source)
-        if blob is None or hashlib.sha256(blob).hexdigest() != digest:
-            mismatched.append(source)
+    pinning, mismatched = _pinning_at(root, candidate, analysis)
     if not pinning:
         # 위의 판정들은 전부 "이것이 어느 커밋인가"만 묻는다. 어느 커밋인지를
         # **고르지 못하게** 하는 것은 이 순회 하나뿐이고, 순회가 0회 돌면 저자가
@@ -462,6 +522,24 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
         raise ValueError(
             f"landing point {candidate[:12]} is not the revision this evidence describes: "
             + ", ".join(sorted(set(mismatched)))
+        )
+    # 해시가 맞는다는 것만으로는 값이 안 정해진다. a122 6.1.1 이 활성 13건을 전수로
+    # 재서 얻은 것: 고정을 통과하는 커밋이 13건 중 12건에서 2~59개이고, 그 수는 번들
+    # 수와 무관하다(a112 번들 132 → 후보 39, a091 번들 2 → 후보 27). 저자가 그중
+    # **가장 낮은 것**을 고르면 창이 비어 요구 집합이 ∅ 이 된다 — 8건이 오늘 그
+    # 상태이고, 증거를 base 상태로 써 두면 누구나 그 상태를 만들 수 있다.
+    # 하한 하나만 저자가 못 고른다: 자기 증거가 역사에 들어온 지점.
+    floor = _evidence_floor(root, analysis)
+    if not floor:
+        raise ValueError(
+            f"landing point {candidate[:12]} is pinned by evidence that never entered "
+            "this history: commit the `revision: current` bundles that pin it"
+        )
+    if not _is_ancestor(root, floor, candidate):
+        raise ValueError(
+            f"landing point {candidate[:12]} precedes the evidence that pins it "
+            f"({floor[:12]}): a declared landing cannot be older than the commit that "
+            "put this change's evidence into the history"
         )
     return candidate
 
@@ -891,13 +969,114 @@ def check(
     return errors
 
 
+def compute_landing(root: Path, base: str, analysis: Path) -> tuple[str, str]:
+    """게이트가 기록할 착지 지점. **저자가 고르지 않는다** (task 6.1.2).
+
+    `(값, 못 정한 사유)` 를 돌려준다. 값이 있으면 사유는 빈 문자열이다.
+
+    고르는 규칙은 하나다: 바닥(그 change 의 고정 번들이 역사에 들어온 지점) 이후
+    이면서 고정을 통과하는 **가장 낮은** 커밋. 가장 낮은 것을 고르는 이유는 창을
+    좁히는 것이 이 기능의 목적이기 때문이고, 그것이 안전한 이유는 바닥 아래로는
+    못 내려가기 때문이다 — 저자는 오늘 만든 번들을 과거 커밋에 넣을 수 없다.
+    """
+    if not _pinning_bundles(root, analysis):
+        return "", "no `revision: current` evidence pins a landing for this change"
+    floor = _evidence_floor(root, analysis)
+    if not floor:
+        return "", "the pinning evidence never entered this history (commit the bundles)"
+    start = floor if _is_ancestor(root, base, floor) else base
+    process = subprocess.run(
+        ["git", "rev-list", "--reverse", f"{start}..HEAD"],
+        cwd=root, capture_output=True, text=True, timeout=60, check=False,
+    )
+    if process.returncode:
+        return "", f"cannot walk the history after {start[:12]}"
+    for candidate in [start, *process.stdout.split()]:
+        if not _is_ancestor(root, base, candidate) or not _is_ancestor(root, floor, candidate):
+            continue
+        if not _pinning_at(root, candidate, analysis)[1]:
+            return candidate, ""
+    return "", (
+        f"no commit at or after the evidence ({floor[:12]}) matches every pinning bundle "
+        "— the evidence does not describe any revision on this history"
+    )
+
+
+def record_landing(change: str, root: Path = ROOT) -> tuple[int, list[str]]:
+    """계산한 착지를 `landed-commit.txt` 에 쓴다. `(rc, 줄들)`.
+
+    **거부하는 정상 입력을 먼저 적는다** [[fail-closed-must-name-what-it-rejects]]:
+
+    - 고정 번들이 없는 change(a122 자신·a067·a113 …). spec 의 "고정할 증거가 없는
+      착지 지점" 시나리오가 그 기록을 거절하므로, 쓰면 반드시 실패할 값을 쓰는 것이다.
+    - 증거를 빌리는 change. spec 이 "착지는 그것을 고정하는 증거가 있는 change 에
+      기록하고 빌리는 쪽은 값을 복사한다(SHALL)"로 자리를 정했다.
+    - 실행 기준선 이관 change(a063). 그 경로의 창 끝은 감사된 source commit 이고
+      spec 이 이 기록을 받지 않는다(SHALL NOT).
+    - 기록이 이미 있는 change. 덮어쓰면 그 값이 무엇이었는지가 아무 데도 안 남는다.
+    - 추적 파일이 수정된 워킹트리. 기록은 **커밋된** 지점을 가리키는데 그 상태의
+      Go 편집은 어느 커밋에도 없다. 그대로 쓰면 5단계가 못 보는 편집이 생긴다.
+    """
+    try:
+        change_dir = resolve_referenced_change(root, change)
+    except AmbiguousChange as exc:
+        return 1, [str(exc)]
+    except ValueError:
+        change_dir = root / "openspec" / "changes" / change
+    landing_file = change_dir / LANDING_FILE
+    if landing_file.exists() or _declared_landing(change_dir, root) is not None:
+        return 1, [f"{change}: `{LANDING_FILE}` already exists — not overwritten"]
+    if (change_dir / "analysis" / "function-logic-reference.txt").exists():
+        return 1, [
+            f"{change}: this change borrows its evidence — copy the landing recorded on "
+            "the change that owns the bundles instead of computing a second one"
+        ]
+    facts: dict[str, object] = {}
+    try:
+        base = resolve_base(change_dir, root, facts)
+    except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
+        return 1, [f"{change}: cannot resolve the comparison base: {exc}"]
+    if facts.get("execution_baseline_adoption"):
+        return 1, [
+            f"{change}: execution-baseline adoption does not accept a `{LANDING_FILE}` "
+            "record: the window already ends at the audited source commit"
+        ]
+    dirty = subprocess.run(
+        ["git", "diff", "--quiet", "HEAD"], cwd=root, capture_output=True,
+        timeout=30, check=False,
+    )
+    if dirty.returncode:
+        return 1, [
+            f"{change}: the working tree has uncommitted changes to tracked files — commit "
+            "them first, because a recorded landing points at a commit and step 5 would "
+            "then never compare those edits"
+        ]
+    landing, why = compute_landing(root, base, change_dir / "analysis" / "function-logic")
+    if not landing:
+        return 1, [f"{change}: no landing recorded — {why}"]
+    landing_file.write_text(landing + "\n", encoding="utf-8")
+    return 0, [
+        f"{change}: recorded `{LANDING_FILE}` = {landing} (base {base[:12]}) — computed "
+        "from this change's own evidence, not chosen; commit it with the change"
+    ]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--change", required=True)
     parser.add_argument("--root", default=str(ROOT))
+    parser.add_argument(
+        "--record-landing", action="store_true",
+        help="이 change 의 증거로 착지 지점을 계산해 기록한다 (저자가 고르지 않는다)",
+    )
     args = parser.parse_args()
     context: dict[str, object] = {}
     root = Path(args.root)
+    if args.record_landing:
+        code, lines = record_landing(args.change, root)
+        for line in lines:
+            print(f"[logic-map] {line}")
+        return code
     errors = check(args.change, root, context)
     # 창을 **먼저** 찍는다. 그리고 실패해도 찍는다 — 옛 판본은 `if errors: return 1`
     # 이 이 자리를 건너뛰어서, 요구된 함수 이름 316개가 어느 두 지점 사이에서 나온
@@ -920,8 +1099,10 @@ def main() -> int:
             print(
                 f"[logic-map] {args.change}: the target is the working tree, so this window "
                 f"also holds {landed_after or '?'} commit(s) that landed after the base and "
-                f"every existing function they changed is required here too — record "
-                f"`{LANDING_FILE}` to narrow it to this change's own work"
+                f"every existing function they changed is required here too — run "
+                f"`python3 tools/logic-map/check_analysis.py --change {args.change} "
+                f"--record-landing` to let the gate compute and record "
+                f"`{LANDING_FILE}`, which narrows it to this change's own work"
             )
     if errors:
         for error in errors:

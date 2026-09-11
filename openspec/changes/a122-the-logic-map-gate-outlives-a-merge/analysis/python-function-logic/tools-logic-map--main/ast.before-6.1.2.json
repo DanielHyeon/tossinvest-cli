@@ -1,198 +1,168 @@
 {
   "language": "python",
   "file": "tools/logic-map/check_analysis.py",
-  "revision": "worktree",
+  "revision": "HEAD",
   "head_commit": "cac190d8a9f3c976a73478e172bd8cd27e1159d6",
-  "source_sha256": "09b460a13b4d36ff0c73fde00fc5203d3ecb6e5755e72ded7ac8d053a6eb5a55",
+  "source_sha256": "267eb067410affdbfb64c7154f478a1f1ebb5d92e848beae1a213ce6232f25d6",
   "function": "main",
   "signature": "main()",
   "start": {
-    "line": 1064,
+    "line": 894,
     "column": 1
   },
   "end": {
-    "line": 1117,
+    "line": 936,
     "column": 13
   },
   "branches": [
     {
       "id": "B1",
-      "kind": "If",
-      "line": 1075,
-      "inherited_line": false,
-      "source": "if args.record_landing:"
-    },
-    {
-      "id": "B2",
-      "kind": "For",
-      "line": 1077,
-      "inherited_line": false,
-      "source": "for line in lines:"
-    },
-    {
-      "id": "B3",
       "kind": "BoolOp",
-      "line": 1090,
+      "line": 911,
       "inherited_line": false,
       "source": "base and 'landing' in context"
     },
     {
-      "id": "B4",
+      "id": "B2",
       "kind": "If",
-      "line": 1090,
+      "line": 911,
       "inherited_line": false,
       "source": "if base and 'landing' in context:"
     },
     {
-      "id": "B5",
+      "id": "B3",
       "kind": "If",
-      "line": 1097,
+      "line": 918,
       "inherited_line": false,
       "source": "if not landing:"
     },
     {
-      "id": "B6",
+      "id": "B4",
       "kind": "BoolOp",
-      "line": 1101,
+      "line": 922,
       "inherited_line": false,
       "source": "landed_after or '?'"
     },
     {
-      "id": "B7",
+      "id": "B5",
       "kind": "If",
-      "line": 1107,
+      "line": 926,
       "inherited_line": false,
       "source": "if errors:"
     },
     {
-      "id": "B8",
+      "id": "B6",
       "kind": "For",
-      "line": 1108,
+      "line": 927,
       "inherited_line": false,
       "source": "for error in errors:"
     },
     {
-      "id": "B9",
+      "id": "B7",
       "kind": "If",
-      "line": 1111,
+      "line": 930,
       "inherited_line": false,
       "source": "if context.get('execution_baseline_adoption'):"
     }
   ],
   "returns": [
     {
-      "line": 1079,
-      "value": "code"
-    },
-    {
-      "line": 1110,
+      "line": 929,
       "value": "1"
     },
     {
-      "line": 1117,
+      "line": 936,
       "value": "0"
     }
   ],
   "raises": [],
   "calls": [
     {
-      "line": 1065,
+      "line": 895,
       "callee": "argparse.ArgumentParser"
     },
     {
-      "line": 1066,
+      "line": 896,
       "callee": "parser.add_argument"
     },
     {
-      "line": 1067,
+      "line": 897,
       "callee": "parser.add_argument"
     },
     {
-      "line": 1067,
+      "line": 897,
       "callee": "str"
     },
     {
-      "line": 1068,
-      "callee": "parser.add_argument"
-    },
-    {
-      "line": 1072,
+      "line": 898,
       "callee": "parser.parse_args"
     },
     {
-      "line": 1074,
+      "line": 900,
       "callee": "Path"
     },
     {
-      "line": 1076,
-      "callee": "record_landing"
-    },
-    {
-      "line": 1078,
-      "callee": "print"
-    },
-    {
-      "line": 1080,
+      "line": 901,
       "callee": "check"
     },
     {
-      "line": 1084,
+      "line": 905,
       "callee": "context.get"
     },
     {
-      "line": 1084,
+      "line": 905,
       "callee": "str"
     },
     {
-      "line": 1091,
+      "line": 912,
       "callee": "context.get"
     },
     {
-      "line": 1091,
+      "line": 912,
       "callee": "str"
     },
     {
-      "line": 1092,
+      "line": 913,
       "callee": "bool"
     },
     {
-      "line": 1092,
+      "line": 913,
       "callee": "context.get"
     },
     {
-      "line": 1093,
+      "line": 914,
       "callee": "print"
     },
     {
-      "line": 1094,
+      "line": 915,
       "callee": "_target_text"
     },
     {
-      "line": 1095,
+      "line": 916,
       "callee": "context.get"
     },
     {
-      "line": 1098,
+      "line": 919,
       "callee": "_commits_after"
     },
     {
-      "line": 1099,
+      "line": 920,
       "callee": "print"
     },
     {
-      "line": 1109,
+      "line": 928,
       "callee": "print"
     },
     {
-      "line": 1111,
+      "line": 930,
       "callee": "context.get"
     },
     {
-      "line": 1112,
+      "line": 931,
       "callee": "print"
     },
     {
-      "line": 1114,
+      "line": 933,
       "callee": "print"
     }
   ]
