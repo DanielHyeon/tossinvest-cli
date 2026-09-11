@@ -1505,9 +1505,18 @@ class AForgedLandingPointIsRefusedByName(unittest.TestCase):
         with raw:
             self.assertEqual(check_analysis.check("mine", root), [])
 
-    def _refuse(self, value: str, needle: str) -> None:
+    def _refuse(self, value: str, needle: str, prepare=None) -> None:
+        """바늘은 그 가드의 **자기 문장**이다 (task 6.3).
+
+        예전 바늘 `"landing"` 은 착지 관련 오류 문장 **전부**에 들어 있어서, 가드를 하나
+        지워도 뒤의 다른 가드가 거절하고 시험은 초록으로 남았다 — 2026-09-11 변이 실측으로
+        가드 넷(40-hex · 커밋 실재 · `landing ≤ HEAD` · `base ≤ landing`)이 전부 SURVIVED.
+        이 파일은 같은 함정을 한 자리(`test_a_landing_the_evidence_does_not_describe`)에서
+        이미 한 번 고쳤다. 나머지 넷에 같은 처방을 한다."""
         raw, root, marks = self._clean_fixture()
         with raw:
+            if prepare is not None:
+                prepare(root, marks)
             change = root / "openspec" / "changes" / "mine"
             (change / "landed-commit.txt").write_text(value.format(**marks) + "\n")
             _commit_all(root, "record a landing point")
@@ -1519,10 +1528,25 @@ class AForgedLandingPointIsRefusedByName(unittest.TestCase):
             )
 
     def test_a_landing_that_is_not_a_commit(self) -> None:
-        self._refuse("f" * 40, "landing")
+        self._refuse("f" * 40, "is not a commit in this repository")
+
+    def test_a_landing_that_never_landed_on_this_history(self) -> None:
+        """곁가지 커밋은 **실재**하지만 이 역사의 조상이 아니다 (task 6.3).
+
+        이 가드(`landing ≤ HEAD`)에는 시험이 아예 없었다 — 곁가지 커밋을 만드는 픽스처가
+        0 이었다. 지워도 뒤의 증거 판정이 대신 거절하므로 느슨한 바늘로는 영영 못 잰다."""
+        def side_branch(root: Path, marks: dict[str, str]) -> None:
+            home = subprocess.check_output(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root, text=True
+            ).strip()
+            subprocess.run(["git", "checkout", "-q", "-b", "side", marks["P"]], cwd=root, check=True)
+            (root / "side.txt").write_text("side\n")
+            marks["S"] = _commit_all(root, "S: a commit on a side branch")
+            subprocess.run(["git", "checkout", "-q", home], cwd=root, check=True)
+        self._refuse("{S}", "never landed on this history", prepare=side_branch)
 
     def test_a_landing_before_the_base(self) -> None:
-        self._refuse("{R}", "landing")
+        self._refuse("{R}", "precedes the comparison base")
 
     def test_a_landing_the_evidence_does_not_describe(self) -> None:
         """task 2.3·2.4 — `P` 는 신원 판정 넷을 전부 통과한다.
@@ -1540,7 +1564,7 @@ class AForgedLandingPointIsRefusedByName(unittest.TestCase):
 
         `HEAD` 한 단어면 커밋 안 된 Go 편집이 통째로 요구에서 빠지고, 값의 뜻이
         리뷰 시점과 게이트 시점 사이에 바뀐다."""
-        self._refuse("HEAD", "landing")
+        self._refuse("HEAD", "must be a full 40-hex commit id")
 
     def test_an_empty_record_is_still_a_declaration(self) -> None:
         """빈 파일은 **선언이 없는 것**이 아니다.
@@ -1548,7 +1572,7 @@ class AForgedLandingPointIsRefusedByName(unittest.TestCase):
         task 1.8 이 선언을 읽는 자리를 헬퍼로 뽑았다. 거기서 "파일 없음"과 "빈
         선언"을 안 가르면, 빈 파일을 커밋한 change 가 조용히 워킹트리를 대상으로
         삼고 아무 사유도 안 남는다."""
-        self._refuse("", "landing")
+        self._refuse("", "must be a full 40-hex commit id")
 
 
 
@@ -2295,7 +2319,10 @@ class AnEmptyRequiredSetIsAnnouncedNotSwallowed(unittest.TestCase):
             ), redirect_stdout(output):
                 self.assertEqual(check_analysis.main(), 0)
             printed = output.getvalue()
-            self.assertIn(landing, printed, f"해소한 착지 SHA 가 기록에 남아야 한다: {printed}")
+            # SHA 만 찾으면 라벨을 이관의 `audited source-commit` 으로 바꿔도 초록이다(task 6.3,
+            # 변이 T1 실측 SURVIVED) — 그러면 출력이 있지도 않은 감사를 가리킨다. 라벨까지 본다.
+            self.assertIn(f"landed-commit {landing}", printed, f"해소한 착지를 라벨과 함께 말해야 한다: {printed}")
+            self.assertNotIn("audited source-commit", printed)
 
 
 if __name__ == "__main__":

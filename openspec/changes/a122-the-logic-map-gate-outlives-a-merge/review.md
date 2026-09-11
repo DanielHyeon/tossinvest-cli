@@ -1233,3 +1233,60 @@ c727ad12` 가 HEAD 의 조상이 아니라 막힌다. 이 수리의 근거는 **
 pid 55793 이 쥐고 있다. 둘 다 **advisory** 이고 hard CodeGraph fingerprint 는 신선하다
 (`sdd-check` rc=0). 남의 세션일 수 있는 MCP 프로세스는 죽이지 않았다
 ([[tossos-parallel-session-gate-contention]]).
+
+## VERIFY — task 6.3 (거절 시험이 실패 지점을 단언한다)
+
+생산 코드 변경 **0** — 시험만 바꿨다. 함수의 갈래를 근거로 쓰므로 `resolve_landing`
+(`ast.before-6.3.json`, 편집 없음)과 `_target_text`(`ast.json`)를 먼저 열거했다. gate.sh 는
+shell 이라 저장소 열거기가 없다 — **not-applicable: shell 함수의 AST 도구가 없다.** 그 자리의
+증거는 변이가 대신한다.
+
+### 먼저 쟀다 — 일곱 전부 SURVIVED
+
+| 변이 | 자리 | 6.3 전 | 6.3 후 | 빨개진 시험 |
+|---|---|---|---|---|
+| G1 40-hex 판정 삭제 | `resolve_landing` raise 510 | SURVIVED | **CAUGHT** | revision expression · empty record |
+| G2 커밋 실재 판정 삭제 | raise 518 | SURVIVED | **CAUGHT** | not a commit |
+| G3 `landing ≤ HEAD` 삭제 | raise 520 | SURVIVED | **CAUGHT** | never landed (신규) |
+| G4 `base ≤ landing` 삭제 | raise 525 | SURVIVED | **CAUGHT** | before the base |
+| T1 비이관 라벨을 감사 라벨로 | `_target_text` IfExp | SURVIVED | **CAUGHT** | empty required |
+| GS1 1단계 `RESOLVE_ERROR` 블록 삭제 | `gate.sh` 1단계 | SURVIVED (8/8) | **CAUGHT** | target open+archived (신규) |
+| GS2 `YYYY-MM-DD-` case 가드 삭제 | `gate.sh` 해소기 | SURVIVED (8/8) | **CAUGHT** | 날짜 없는 아카이브 이름 (신규) |
+
+전은 HEAD 의 시험이고(`63_gate_mutations.py` 는 HEAD blob 의 gate 시험을 `tools/sdd/` 에
+임시 이름으로 두고 돌린 뒤 지웠다), 후는 지금 시험이다. 같은 스크립트, 원복 sha256 동일,
+대조군 초록(logic-map 91 · gate 10).
+
+4.4 는 여섯을 셌다(착지 가드 셋 + gate 둘 + 라벨). **G2(커밋 실재)는 4.4 표에 없었다** —
+같은 원인(옛 바늘 `"landing"` 이 raise 여덟 문장 전부에 들어 있다)이라 같이 드러났다.
+
+### 무엇을 바꿨나
+
+- `_refuse(value, needle)` 의 바늘 넷을 **그 가드의 자기 문장**으로. 이 파일이 한 자리
+  (`test_a_landing_the_evidence_does_not_describe`)에서 이미 한 처방을 나머지에 했다.
+- `_refuse` 에 `prepare` 를 더해 곁가지 커밋 픽스처를 만들었다 — `landing ≤ HEAD` 에는
+  시험이 **아예 없었다**.
+- 라벨: SHA 만 보던 자리를 **그 자리에서** `landed-commit <sha>` 로 좁혔다. 옆에 새 시험을
+  세우지 않은 이유 — 느슨한 자리가 남으면 다음 사람이 그것을 베낀다.
+- gate.sh 시험 둘: 대상이 활성·아카이브에 **동시에** 있으면 1단계가 `확정할 수 없는
+  change-id` 로 멈춘다 · 날짜 모양이 아닌 이름(`abcd-ef-gh-<id>`)은 아카이브가 아니다.
+  옛 스위트가 두 변이를 못 잡은 이유는 도우미가 아니라 **그 입력을 만드는 픽스처가 없었던
+  것**이다 — 새 픽스처는 `assert_stopped_before_step_four` 만으로도 변이를 잡는다. 문장
+  단언은 그 위에 얹었다: 다른 단계가 같은 입력을 4단계 전에 막아도 초록이 되지 않게.
+
+### 정상 입력
+
+바꾼 것이 시험뿐이라 새로 거부되는 정상 입력은 없다. 새 픽스처 셋은 각 가드가 **거절해야
+할** 입력이고, 각 클래스의 양성 대조군(`test_the_fixture_passes_before_any_landing_record` ·
+`test_active_pair_still_works` · `test_archived_pair_is_found`)은 그대로 초록이다.
+
+### 게이트 (2026-09-12, 이 로트의 워킹트리)
+
+| 게이트 | 결과 |
+|---|---|
+| `make sdd-test` | rc=0 — scripts 15 · logic-map **166**(skip 1) · sdd **71** · sdd-history 22 · pm 15 · deploy 18 |
+| `openspec validate --all --strict` | 58/58 |
+| a122 5단계 | rc=0, required 0 |
+| `make sdd-check` | rc=0 (advisory 경고 둘) |
+| `make sdd-sync` | rc=2 — 6.2 때와 같은 잠금. `fuser` 로 다시 보니 여전히 pid 47230(`cgc mcp start`) |
+| 생산 코드 | `git diff --stat -- tools/` 에 시험 파일 둘뿐(+54 −6) |

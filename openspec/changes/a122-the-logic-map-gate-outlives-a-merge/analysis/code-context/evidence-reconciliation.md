@@ -501,3 +501,15 @@ CodeGraph 는 Python 을 인덱싱하지 않으므로 이 리뷰의 대상(`tool
 - 실물 a063 을 아카이브해 재판정하지 않았다 — 남의 change 상태이고, 이 HEAD 에서는 그 앞
   단계에서 막힌다.
 - gstack 독립 리뷰는 아직이다.
+
+---
+
+# task 6.3 — 거절 시험이 실패 지점을 단언한다
+
+| 주장 | 증거 | 도구 |
+|---|---|---|
+| 6.3 전 일곱이 SURVIVED | 가드마다 `if False:`(shell 은 `if false`·`continue` 제거)로 바꿔 시험 전체 실행 | `63_mutations.py before` · `63_gate_mutations.py`(HEAD blob 시험) |
+| 옛 바늘이 무딘 이유 | `resolve_landing` raise 여덟 문장이 전부 `landing point` 로 시작 | `enumerate.py` (`ast.before-6.3.json`) |
+| 6.3 후 일곱 전부 CAUGHT, 각 가드의 시험이 잡는다 | 같은 스크립트 재실행 | `63_mutations.py after` · `63_gate_mutations.py` |
+| `_target_text` 갈래와 각 갈래의 시험 | 열거 + 대응표 | `enumerate.py` (`tools-logic-map--_target_text/ast.json`) |
+| gate.sh 갈래 주장 | **not-applicable** — shell 열거기 없음, 변이가 대신한다 | — |

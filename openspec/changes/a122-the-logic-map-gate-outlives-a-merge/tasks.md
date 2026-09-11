@@ -896,7 +896,7 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       말한다"를 요구하므로 못 읽는 기록도 **거절**로 답한다 — 4.4 처방(해독 오류로 돌려주기)
       과 다르다. 저장소에 비-UTF-8 기록을 재는 시험이 **0** 이었고 셋을 더했다. 변이 M7~M9
       CAUGHT.
-- [ ] 6.3 **P1 — 거절 시험이 실패 지점을 단언하게 한다.** 뮤테이션 M2·M3·M4 가
+- [x] 6.3 **P1 — 거절 시험이 실패 지점을 단언하게 한다.** 뮤테이션 M2·M3·M4 가
       살아남은 원인은 하나다. `AForgedLandingPointIsRefusedByName._refuse(value, needle)`
       의 바늘이 네 자리에서 `"landing"` 인데 그 단어는 착지 관련 **모든** 오류 문장에
       들어 있어서, 가드를 지워도 다른 가드가 거절하고 시험이 초록으로 남는다. M3
@@ -914,6 +914,15 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       `YYYY-MM-DD-` `case` 가드(지우면 `?` 와일드카드가 `archive/abcd-ef-gh-…` 를
       먹는다), `_target_text` 의 비이관 갈래(시험이 SHA 만 `assertIn` 해서 라벨을
       안 본다). 이 셋도 같이 못 박는다.
+
+      **닫힘 (2026-09-12). 먼저 쟀다** — 지금 코드에서 착지 가드 넷(40-hex · 커밋 실재 ·
+      `landing ≤ HEAD` · `base ≤ landing`) · 비이관 라벨 · gate.sh 두 자리까지 **일곱이 전부
+      SURVIVED**. 넷째 가드(커밋 실재)는 4.4 표에 없었다. 바늘을 각 가드의 자기 문장으로
+      바꾸고, 곁가지 커밋 픽스처로 `never landed on this history` 를, gate 대상이 활성·아카이브에
+      동시에 있는 픽스처로 1단계의 `확정할 수 없는 change-id` 를, 날짜 모양이 아닌 아카이브
+      이름 픽스처로 `case` 가드를 못 박았다. 라벨은 SHA 만 보던 자리를 **그 자리에서**
+      `landed-commit <sha>` 로 좁혔다. 같은 스크립트로 다시 재니 **일곱 전부 CAUGHT** — 각
+      변이를 빨갛게 한 것이 그 가드의 시험이다(40-hex 만 둘). 생산 코드 변경 0.
 - [ ] 6.4 **P2 묶음.** 각각 작고 독립이다.
       (a) 착지를 선언하면 **커밋 안 된 Go 편집이 5단계에 안 보인다**. `make gate` 는
       `make sdd-check` fingerprint 로 일부 가리지만 `make sdd-sync` 를 다시 돌리면

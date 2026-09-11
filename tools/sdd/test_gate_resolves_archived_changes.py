@@ -139,6 +139,27 @@ class GateArchiveResolutionTest(unittest.TestCase):
         result = run_gate(self.repo, "a996-nowhere")
         self.assert_stopped_before_step_four(result)
 
+    # a122 6.3 — gate 대상 **자신**이 활성과 아카이브에 동시에 있으면 1단계가 멈춘다.
+    # 그 거절은 1단계의 `RESOLVE_ERROR` 블록 하나가 한다. 블록을 지워도 기존 시험은 전부
+    # 초록이었다 — 대체 경로 `openspec/changes/<id>` 가 **실재**해서 게이트가 활성
+    # 디렉터리로 그대로 진행하고 4단계에서 죽기 때문이다. 그래서 **무엇이라고** 멈추는지
+    # 1단계의 문장으로 본다.
+    def test_gate_target_open_and_archived_at_once_stops_at_step_one(self) -> None:
+        make_change(self.repo, "a995-twice")
+        make_change(self.repo, "archive/2026-08-29-a995-twice")
+        result = run_gate(self.repo, "a995-twice")
+        self.assert_stopped_before_step_four(result)
+        self.assertIn("확정할 수 없는 change-id", result.stdout + result.stderr)
+
+    # a122 6.3 — 날짜 모양이 아닌 이름은 아카이브가 아니다. `case` 가드를 지우면
+    # `${name#????-??-??-}` 의 `?` 가 아무 글자나 먹어 `abcd-ef-gh-<id>` 가 통과한다.
+    def test_archive_name_without_a_date_is_not_an_archive(self) -> None:
+        make_change(self.repo, "a999-mine", pairs=["a998-theirs"])
+        make_change(self.repo, "archive/abcd-ef-gh-a998-theirs", pairs=["a999-mine"])
+        result = run_gate(self.repo, "a999-mine")
+        self.assert_stopped_before_step_four(result)
+        self.assertIn("짝 change 를 찾을 수 없습니다", result.stdout + result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -103,3 +103,30 @@ M2 는 이 편집이 **만들어 낸** 자리다. 옛 판본에는 선언을 읽
 양성 대조군 둘을 같이 둔다 — 하한이 정상 선언까지 막으면 이쪽이 빨개진다:
 `test_an_honest_landing_at_the_evidence_commit_passes`(required 1 로 통과) ·
 `test_the_recorded_value_is_one_the_gate_then_accepts`(기록 → 판정 왕복).
+
+## 편집 — task 6.3 (시험만, 함수는 그대로 — `ast.before-6.3.json` = 지금 소스)
+
+함수를 안 바꿨으므로 번호가 안 움직였다. 바꾼 것은 가드 넷의 **바늘**이다. 옛 바늘
+`"landing"` 은 raise 여덟 문장 **전부**에 들어 있다(열거: 여덟 다 `landing point` 로 시작) —
+가드 하나를 지우면 뒤의 다른 가드가 거절하고 시험은 초록으로 남는다.
+
+| raise 줄 | 문장 | 가드 | 시험 | 새 바늘 |
+|---|---|---|---|---|
+| 510 | `landing point must be a full 40-hex commit id, not …` | 40-hex | `test_a_landing_written_as_a_revision_expression` · `test_an_empty_record_is_still_a_declaration` | `must be a full 40-hex commit id` |
+| 518 | `landing point is not a commit in this repository: …` | 커밋 실재 | `test_a_landing_that_is_not_a_commit` | `is not a commit in this repository` |
+| 520 | `landing point never landed on this history: …` | `landing ≤ HEAD` | `test_a_landing_that_never_landed_on_this_history` (**신규**, 곁가지 픽스처) | `never landed on this history` |
+| 525 | `landing point precedes the comparison base …` | `base ≤ landing` | `test_a_landing_before_the_base` | `precedes the comparison base` |
+
+맨 위 표의 "B9 HEAD 의 조상인가 — 버려진 갈래를 만드는 픽스처가 없다 **no**" 는 이제 **yes** 다.
+
+### 변이 (전·후 같은 스크립트 `63_mutations.py`, 시험 파일 전체, 원복 sha256 동일)
+
+| 변이 | 6.3 전 | 6.3 후 — 빨개진 시험 |
+|---|---|---|
+| G1 40-hex 판정 삭제 | SURVIVED | CAUGHT — revision expression · empty record |
+| G2 커밋 실재 판정 삭제 | SURVIVED | CAUGHT — not a commit |
+| G3 `landing ≤ HEAD` 삭제 | SURVIVED | CAUGHT — never landed |
+| G4 `base ≤ landing` 삭제 | SURVIVED | CAUGHT — before the base |
+
+4.4 의 M2·M3·M4 가 G4·G3·G1 이다. G2 는 4.4 표에 없었는데 같은 원인이라 같이 드러났고 같은
+처방으로 닫혔다.
