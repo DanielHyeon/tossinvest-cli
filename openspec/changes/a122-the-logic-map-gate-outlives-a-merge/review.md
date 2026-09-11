@@ -1290,3 +1290,87 @@ shell 이라 저장소 열거기가 없다 — **not-applicable: shell 함수의
 | `make sdd-check` | rc=0 (advisory 경고 둘) |
 | `make sdd-sync` | rc=2 — 6.2 때와 같은 잠금. `fuser` 로 다시 보니 여전히 pid 47230(`cgc mcp start`) |
 | 생산 코드 | `git diff --stat -- tools/` 에 시험 파일 둘뿐(+54 −6) |
+
+## VERIFY — §6 로트 독립 리뷰 (gstack /review, 2026-09-12)
+
+범위: `508f8b46..HEAD`(4.4 가 본 커밋 뒤) 의 코드 다섯 파일, +697 −76 — 6.1.2 `fb4e8f92` ·
+6.2/6.2.1 `94702b5c` · 6.3 `007c015e`. 원천 여덟: Claude 구조 리뷰 · 전문가 다섯(testing ·
+maintainability · security · performance · simplification) · Red Team · Claude 적대(시험 파일은
+요약 모드) · Codex 적대 · Codex 구조 리뷰(`--base 508f8b46`, `[P1]` 0 → GATE PASS).
+**이 리뷰는 코드를 한 줄도 바꾸지 않았다** — 4.4 와 같은 이유(리뷰가 잰 HEAD 와 기록이
+가리키는 HEAD 가 같아야 재현된다)에 더해, 함수 내부를 바꾸려면 FLM/BTM 이 먼저다.
+
+### 직접 재현 — CRITICAL 둘을 이 세션이 손으로 다시 쟀다 (`rv_verify.py`)
+
+| 경우 | 기록 전 | `--record-landing` | 기록 뒤 `check` | base..HEAD Go |
+|---|---|---|---|---|
+| V1 FLM 먼저(저장소 규칙의 순서) · 편집 뒤 번들 미갱신 | 빨강(stale hash) | rc=0, **편집 전 증거 커밋 X** 기록 | `[]` **required 0** | `internal/own.go` |
+| V2 Go 작업 먼저 · 작업 이전에서 갈라진 곁가지에 base 상태 증거 · 병합 | 빨강 | rc=0, **S1**(W 의 자손 아님) 기록 | `[]` **required 0** | `internal/own.go` |
+
+### 6.1.2 의 결론을 정정한다
+
+"하한 = 증거가 역사에 들어온 지점, 저자는 그 아래를 못 고른다"는 **선형 역사 · 정규 파일 ·
+병합 없음**에서만 참이다. 그리고 그 셋이 다 참이어도 **증거가 작업보다 먼저 들어오면 하한이
+작업 앞에 온다** — 이 저장소가 요구하는 순서(FLM 을 편집 **전에**)가 정확히 그 순서다. 6.6 을
+"잔여"로 적었지만 그것은 가장자리가 아니라 **기본 경로**다. 게다가 5단계는 그 빨강 옆에
+`--record-landing` 을 권하고, 도구가 그 값을 계산해 초록으로 만든다(V1). 도구 이전에도 손으로
+X 를 적으면 같은 결과였지만(4.4 위조 1번의 모양), 이제는 도구가 **권하고 계산한다**.
+
+### P0 — 5단계가 undocumented Go 편집을 required 0 으로 통과시킨다
+
+| # | 무엇 | 자리 | 원천 |
+|---|---|---|---|
+| C1 | FLM-first 번들을 편집 뒤 안 갱신 → 조언대로 `--record-landing` → 편집 전 커밋 기록 → required 0 | `check_analysis.py:1011`(`compute_landing`) · `:1114-1122`(조언 줄) | testing · security · Codex 적대 P1#1 · **V1** |
+| C2 | 하한이 DAG 의 하한이 아니다 — 곁가지 증거 병합 · 병렬 가지(`-1` 이 저자가 정하는 committer date 로 고름) · 병합 안에서만 바뀐 증거(`-m` 없음) | `:479` · `:555` | security · Claude 적대 2c/2d · Codex 적대 P1#4 · **V2** |
+| C3 | 하한은 **경로**를 보고 판정은 **워킹트리 내용**을 본다 — `ast.json` 심링크(링크 텍스트만 추적) · `{}` 자리표시 커밋 뒤 로컬 교체 · 대상 파일을 한 번도 커밋 안 해도 통과 | `:466-481` · `:750`(`_ast_value`) | Claude 적대 #1(CLI 끝까지 재현) · Codex 적대 P1#2 |
+| C4 | 빌리는 쪽 창: 빌려주는 쪽 기록은 가장 낮은 값이고 빌리는 쪽은 "복사하라"로 거절 → 빌리는 쪽의 뒤 Go 작업이 창 밖 | `:1046-1050` · `:907-913` | Red Team(픽스처) · Claude 적대 #7 |
+
+### P1
+
+| # | 무엇 | 자리 | 원천 |
+|---|---|---|---|
+| H1 | `--diff-filter=MA` 가 T(typechange)·R<100(편집 섞인 rename)을 안 센다 — 아카이브 커밋이 `source_sha256` 을 바꿔 실어도 하한이 안 움직인다 | `:479` | security · Claude 적대 2a/2b · Codex 적대 P1#3 |
+| H2 | 사용자 `log.follow=true` 가 경로 하나짜리 pathspec 에 `--follow` 를 조용히 켜서 하한이 기계마다 다르다 | `:479` | Red Team(픽스처) |
+| H3 | "도구가 계산한 값"을 게이트가 확인하지 않는다 — **a099 실측: 기록 `e6c4636a` ≠ 계산 `21a315d1`**. 같게 강제하면 유일한 실물 기록이 깨진다 → 사람 결정 | `:561` | Claude 적대 #3 · 이 세션 실측 |
+| H4 | `record_landing` 이 존재 확인 뒤 긴 계산을 하고 `write_text` 로 덮는다(비원자) · 끊긴 심링크를 따라 저장소 밖에 쓴다 | `:1044` · `:1074` | Claude 적대 #6(재현) · Codex 적대 P2#5 |
+| H5 | `compute_landing` 이 `ValueError`(저장소 밖 `file`·NUL)를 내면 `record_landing` 이 traceback 으로 죽는다 | `:1071` | Claude 적대 #4(재현) |
+| H6 | 새 `timeout=60` 호출의 `TimeoutExpired` 가 `check()` 의 except 를 빠져나가 창 줄이 안 찍힌다 | `:480` · `:934` | Claude 적대 #5(코드) |
+| H7 | 병합을 마치며 처음 커밋한 번들은 하한이 안 잡혀 **정상 증거가 거절된다**(C2 의 반대 방향) | `:478-481` | Codex 구조 P2(픽스처) |
+
+### P2 / 정보
+
+| # | 무엇 | 원천 |
+|---|---|---|
+| I1 | 성능: 못 찾는 walk 가 (후보+1)×(번들+2) spawn — 아카이브 a055 **133.7s**, enable-engine-autostart-menu **219.6s**, a089 10.3s, a095 14.1s. 번들마다 `git show`(파일 단위 아님)·조기 종료 없음·후보마다 재-glob·후보마다 `is_ancestor`(`--ancestry-path` 로 대체 가능) | performance(실측) · simplification(권고) |
+| I2 | `compute_landing` 이 `resolve_landing` 의 수락 조건을 **따로 한 벌** 가진다 — 판정 둘([[two-judgements-cover-for-each-other]]) | maintainability |
+| I3 | `execution_baseline.validate` 의 지역 `canonical` 이 모듈 함수 `canonical()` 을 가린다(6.2 가 만든 것) | maintainability |
+| I4 | `record_landing` 이 `check` 의 디렉터리 해소를 복사했고, 없는 id 에 "base 를 capture 하라"는 엉뚱한 조언을 한다 | maintainability |
+| I5 | 이관 거절 문장이 두 벌이고 이미 갈렸다("ends" / "already ends") | maintainability |
+| I6 | `_pre_archive_path` 가 아카이브 문법의 또 한 벌이다 — 6.2 가 `validate` 에 "셋째를 만들지 않는다"고 적은 바로 그 모양 | maintainability |
+| I7 | `_change_analysis_path` 의 "outside current change analysis" 가 이제 적힌 자리를 보는데 "current" 라고 말한다 | maintainability |
+| I8 | 기록이 디스크에 있는데 아직 커밋 전이거나 아카이브 이동이 staged 면 창 줄이 "working tree (no landed-commit.txt)" + `--record-landing` 을 권하고, 그 명령은 "already exists" 로 거절 — 서로 모순된 두 문장 사이를 돈다. 빌리는 쪽·번들 0 인 쪽에도 같은 조언 | Red Team · Claude 적대 #7 |
+| I9 | 시험: `compute_landing` 의 다중 후보 walk 가 한 번도 안 돈다(변이 M1·M2·M6 생존) | testing(변이 실측) |
+| I10 | 시험: `test_it_does_not_record_the_base…` 는 주장보다 약하다 — 위조 픽스처를 `record_landing` 에 준 적이 없다(M7 생존) | testing |
+| I11 | 시험: `--diff-filter` 의 `M` 이 없어져도 모른다(M3 생존) | testing |
+| I12 | 시험: 아카이브 시험이 착지가 살아남았는지 안 본다(M4 생존) | testing |
+| I13 | 시험: `record_landing` 의 모호·빌림·이관 거절 갈래(M11·M8·M9 생존) | testing |
+| I14 | 시험: `--record-landing` CLI 종료 코드(M5 생존) | testing |
+| I15 | 시험: 음성 대조가 아무 오류나 받는다(`AST source hash is stale` 를 안 봄) | testing |
+| I16 | 시험 결합: 다른 TestCase 를 만들어 사적 `_clean_fixture` 를 부른다 · 픽스처 다섯 벌 중복 | maintainability |
+| I17 | 문서: `tools/logic-map/README.md:16` · `docs/WORKFLOW.md:174` 가 `check_analysis.py --change` 만 적고 `--record-landing`·`landed-commit.txt` 가 없다 | 문서 staleness |
+
+부록(신뢰 4): 번들 디렉터리 이름의 glob 문자가 pathspec 을 넓힌다 — 하한을 올리기만 해서 위조 경로는 아니다.
+`execution_baseline` 의 id 신원 · 적힌 자리/지금 자리 분리에는 원천 여덟 모두 결함을 못 찾았다.
+
+### 계획 대조 (tasks.md §6)
+
+| 항목 | 판정 |
+|---|---|
+| 6.1.2.1 하한을 선언의 하한으로 | **PARTIAL** — 섰지만 C1~C3·H1·H2 로 하한이 아니다 |
+| 6.1.2.2 `--record-landing` | DONE — 그러나 C1 을 **돕는다** |
+| 6.1.2.3 spec "도구가 계산한다(SHALL)" | **PARTIAL** — 게이트가 확인하지 않는다(H3) |
+| 6.1.2.4 · 6.1.2.5 | DONE (문서·스크립트, 코드 diff 밖) |
+| 6.2 · 6.2.1 · 6.3 | DONE — 결함 없음, 다만 I3·I7 과 6.3 범위 밖 생존 변이(I9~I14) |
+
+PR Quality Score(공식 `10 − 2×critical − 0.5×informational`, critical 7 = C1~C4·H1·H2·H4,
+informational 22): **0/10**. 4.5 는 계속 막힌다.
