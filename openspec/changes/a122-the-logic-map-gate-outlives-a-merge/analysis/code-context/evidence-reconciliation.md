@@ -339,3 +339,49 @@ a122 가 만든 차이는 없지만, 그것은 **차이 없음**이지 **동작 
 ## 조정된 구현 경계
 
 바꾸는 것: 문서 3개(`tasks.md` 4.3, `review.md`, 이 파일). 코드 0줄, Go 0줄.
+
+# task 4.4 — 독립 적대 리뷰
+
+| 주장 | 증거 | 도구 |
+|---|---|---|
+| base 상태 증거 + `landing = base` 가 RED → GREEN 을 만든다 | 픽스처 4케이스(A 기준선 · B 정직증거+선언 거절 · C 위조 통과 · D 같은 위조 선언없이 RED) | `scratchpad/probe_base_landing.py`, 실제 Go 추출기 |
+| `revision: base` relabel 이 거절을 통과로 바꾼다 | 2케이스 A/B, `Other()` 가 required 밖으로 | `scratchpad/probe_revision_base.py` |
+| 아카이브 이름이 이관 판정을 깬다 | 활성 이름 vs 날짜 붙은 이름의 `AdoptionError` 문장 차이 | `scratchpad/probe_a063_archive.py` |
+| a099 의 고정은 정직하다(창 밖 0) · 그래도 후보 21 | 번들 37 → 파일 12 전부 창 안 · base..HEAD 239 중 21 통과 | `scratchpad/a099_pin.py` |
+| 가드 3개가 지워져도 스위트가 초록이다 | 뮤테이션 9회, 원복 sha256 동일성 확인 | `scratchpad/mutate.py` |
+| 옛/새 도구 구분이 필요한 자리 | — | 4.3 이 이미 쟀다. 4.4 는 새로 안 쟀다 |
+
+## 손으로 읽지 않은 것
+
+가드의 유효성은 **뮤테이션으로** 쟀다. "읽어 보니 맞다"는 근거로 쓰지 않았다 —
+M2·M3·M4 가 정확히 그 방식으로는 통과했을 자리다.
+
+## 통과를 증거로 쓰지 않았다
+
+세 위조 시나리오 전부 **대조군을 먼저 세웠다.** C 가 초록인 것만으로는 아무것도
+증명하지 못한다 — 같은 거짓 증거가 선언 없이는 빨갛다는 D 가 있어야 "a122 가 바꿨다"가
+성립한다. `AForgedLandingPointIsRefusedByName` 자신이 같은 규율을 문서로 적어 두었고
+(`test_the_fixture_passes_before_any_landing_record` = 양성 대조군), 이 리뷰는 그 규율을
+그 클래스의 **바늘**에 적용했을 때 셋이 무너지는 것을 발견했다.
+
+## 남의 상태를 안 건드렸다
+
+a063 검증은 `execution-baseline.json` 을 임시 디렉터리에 **복사**해서 이름만 재현했다.
+a063 을 실제로 옮기거나 그 worktree 를 청소하지 않았다 — 4.3 에서와 같은 이유다.
+
+## 못 한 것 (침묵하지 않는다)
+
+- **1.12 이관 경로는 이번에도 실데이터로 못 돌렸다.** 4.3 이 적은 세 막힘이 그대로다.
+  4.4 가 더한 것은 그 사각지대 **안에서** 결함 하나(6.2)를 찾아낸 것이고, 경로 자체를
+  돌린 것은 아니다.
+- **P0-1 의 수정안을 실측하지 않았다.** 6.1 이 제안하는 "창 안 파일로 고정을 한정"이
+  기존 13개 change 를 어떻게 가르는지는 안 쟀다. 그 측정은 6.1 의 일이다.
+- **생산 코드를 안 고쳤다.** 리뷰가 잰 HEAD 와 기록이 가리키는 HEAD 를 같게 두려는
+  의도적 선택이고, a112 8.5 가 P0 셋을 8.8.x 로 연 선례를 따랐다.
+
+## CodeGraph · GBrain
+
+GBrain 은 이번 세션 내내 `CONNECTION_CLOSED` 다(advisory 라 판정에 안 쓴다).
+CodeGraph 는 Python 을 인덱싱하지 않으므로 이 리뷰의 대상(`tools/logic-map/*.py`,
+`tools/gate.sh`)에 해당 없음 — 함수 관계는 AST 열거(`analysis/python-function-logic/`)와
+직접 읽기로 잡았다.

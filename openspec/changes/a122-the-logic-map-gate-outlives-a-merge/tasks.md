@@ -652,9 +652,38 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       가 닿을 수 있는 이관 경로에 **관측 가능한 차이를 만들지 않았다**. 1.12 의 근거는
       유닛 픽스처 3건(1.12 표)과 이 동일성이고, **실데이터 확인은 아니다.** 이것을
       4.4 독립 리뷰의 입력으로 명시한다.
-- [ ] 4.4 독립 적대 diff/테스트 리뷰와 gstack 리뷰를 마친다.
+- [x] 4.4 독립 적대 diff/테스트 리뷰와 gstack 리뷰를 마친다.
+
+      독립 원천 **다섯**으로 돌렸다 — gstack `/review` 전문가 4(Testing · Security ·
+      Maintainability · Simplification+Performance, 각자 빈 문맥) · **codex
+      `gpt-6-astra`**(외부 모델, read-only) · 이 세션이 직접 돌린 **뮤테이션 9개**.
+      대상 HEAD `0cca39cb`, base `1687baac`, 리뷰한 실행 코드는 `tools/` 5개 파일
+      (+1502/-23) 이다. 기록은 review.md `## VERIFY — task 4.4`.
+
+      **리뷰의 결론은 "이대로 4.5 로 못 간다" 이다.** 막는 것은 하나다 — spec 이
+      SHALL NOT 으로 금지한 "위조 가능한 착지 기록"이 실제로 위조된다. 서로 모르는
+      세 원천이 각각 재현했고 이 세션이 **RED → GREEN 대조군**으로 못 박았다:
+      증거를 base 상태로 써서 `landed-commit = base` 를 선언하면, a122 **이전에는**
+      `AST source hash is stale` 로 빨갛던 같은 입력이 **이후에는** `[]` · required
+      **0** 으로 통과한다. a122 는 못 막은 것이 아니라 **없던 길을 연다.**
+
+      이것은 구현 버그가 아니라 **spec 의 틈**이다. 코드는 spec 이 적은 판정("모든
+      `revision: current` 번들의 source hash 가 착지에서 일치")을 정확히 구현한다.
+      그 판정이 같은 문단의 목표("위조 가능해서는 안 된다")에 못 미친다.
+
+      뮤테이션 9개 중 **6개는 CAUGHT**(M1 빈 고정 · M5 해시 불일치 · M6 착지 해싱 ·
+      M7 이관이 선언 거절 · M8 빌림 양끝 · M9 활성+아카이브). **3개는 SURVIVED** —
+      `base ≤ landing` · `landing ≤ HEAD` · 40-hex 형태. 원복은 sha256 동일성으로
+      확인했다.
+
+      **생산 코드는 이 리뷰에서 한 줄도 바꾸지 않았다.** 리뷰가 잰 HEAD 와 기록이
+      가리키는 HEAD 가 같아야 재현되기 때문이다. 나온 것은 전부 §6 으로 연다.
 - [ ] 4.5 PM 동기화 후 `make gate CHANGE=a122-the-logic-map-gate-outlives-a-merge` 를
       돌리고 성공한 뒤에만 아카이브한다.
+
+      **4.4 가 이 task 를 막았다.** §6 의 P0 둘이 닫히기 전에는 돌리지 않는다 —
+      아카이브하는 순간 spec 본문이 저장소의 상설 규칙이 되고, 그 본문이 지금
+      위조를 허용하는 판정을 SHALL 로 적고 있다.
 
 ## 5. 이 change 가 열어 두는 것
 
@@ -712,3 +741,95 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       닫으려면 freeze 시점의 `base-commit.txt` 가 그 change 의 Go 작업 **앞**에
       있는지 물을 방법이 필요하다. 그 질문은 번들이 base 에서 일치하는지로 물을 수
       있다(4.2 의 census 가 그렇게 쟀다). 숫자·규칙을 지어내지 않고 둔다.
+
+## 6. 독립 적대 리뷰가 연 것 (task 4.4)
+
+- [ ] 6.1 **P0 — 착지 고정을 그 change 의 작업에 묶는다.** 오늘 `resolve_landing` 은
+      "선언된 커밋에서 저자의 `revision: current` 번들 해시가 맞는가"만 묻고, 그 번들이
+      **창 안에서 바뀐 파일을 기술하는가**는 묻지 않는다. 저자가 만든 값으로 저자가
+      고른 값을 검증하는 순환이다. 실측 위조 셋:
+
+      | 수단 | 대조군(선언 없음) | 선언 뒤 |
+      |---|---|---|
+      | 증거를 **base 상태**로 쓰고 `landed-commit = base` | `AST source hash is stale` → RED | `[]` · required **0** |
+      | 안 건드린 파일의 **미끼 번들** 하나 + `landed-commit = base` | `missing evidence … Own` · required 1 | `[]` · required **0** |
+      | 정직한 번들 둘 중 하나를 `revision: base` 로 **relabel** | `is not the revision this evidence describes` | `[]` · required 1, `Other()` 무분석 착지 |
+
+      세 번째는 JSON 한 필드가 전부다 — `resolve_landing` 은 `base` 번들을 건너뛰고
+      `validate_target` 은 `elif revision != "base"` 로 해시를 아예 안 본다.
+
+      **5.3 의 축이 틀렸다.** 5.3 은 "번들이 몇 개면 충분한가"를 묻는데, a099 는 고정
+      번들이 **37개**인데도 base..HEAD 239 커밋 중 **21개**가 그 고정을 통과한다.
+      개수가 아니라 **번들과 창 사이의 결속**이 빠져 있다. 후보 방향(숫자·규칙은
+      지어내지 않는다): 고정으로 세는 번들을 `git diff --name-only base landing -- '*.go'`
+      안의 파일로 한정하고, 그 수가 0 이면 거절한다. 그러면 미끼도 base 상태 증거도
+      고정에서 빠진다.
+
+      **그 방향은 공짜가 아니다 — 5.7 과 정면으로 부딪친다.** a074 · a077 · a079 는
+      base..착지 구간이 Go 파일 **0개**이므로(4.2 실측) 한정한 고정 수가 0 이 되어
+      **선언 자체가 거절된다.** 그러면 대상이 워킹트리로 돌아가 required 319 가 되고,
+      a122 가 풀어 주려던 셋이 다시 막힌다. 활성 change 13건 중 8건이 같은 모양이다.
+      즉 6.1 은 "위조를 막는다"와 "base 가 작업 뒤에 놓인 change 를 푼다"를 **동시에**
+      만족해야 하고, 그 둘이 한 판정 안에서 양립하는지가 이 task 의 진짜 질문이다.
+      숫자·규칙을 지어내지 말고 13건 전체에 대해 실데이터로 가른 뒤 정한다.
+- [ ] 6.2 **P0 — 아카이브된 이관 change 가 자기 id 로 재검사되게 한다.** spec 은
+      "아카이브된 change 의 함수 분석도 그 id 로 재검사할 수 있어야 한다(SHALL)"를
+      요구하는데, 이관 경로만 못 간다. `execution_baseline.validate` 가
+      `change_dir.name != CHANGE` 로 **날짜 없는 id** 를 요구하기 때문이다.
+      a063 의 상태는 건드리지 않고 `execution-baseline.json` 만 날짜 붙은 이름의 임시
+      디렉터리에 복사해 쟀다 — 활성 이름은 `adoption requires detached HEAD`(이름 검사
+      통과), 아카이브 이름은 `execution-baseline adoption is not allowed for this
+      change/base`. a063 이 아직 활성이라 **오늘은 잠복**이고 아카이브되는 날 터진다.
+      **4.3 이 "1.12 를 실데이터로 못 돌렸다"고 넘긴 바로 그 사각지대다.**
+      정본 신원을 디렉터리 basename 과 분리해 판정하고, 증거 경로·digest 검사는
+      그대로 둔다.
+- [ ] 6.2.1 **P0 — 이관 경로의 깨진 착지 기록이 `check()` 를 터뜨린다.**
+      `_declared_landing` 호출 다섯 자리 중 `check` 의 어댑션 probe(`if adopted and
+      _declared_landing(...) is not None`) **한 곳만** try 밖에 있다. 비-UTF-8 기록이면
+      `ValueError` 가 `check()` 를 뚫고 나가 `main()` 이 traceback 으로 죽고,
+      **3.3 이 보장하기로 한 `[logic-map]` 창 줄이 하나도 안 찍힌다.** 저장소 자신의
+      `_adoption_with_complete_bundle` 픽스처로 실측됐다. `adopted` 가 거짓이면
+      단락되므로 오늘 닿는 change 는 a063 하나 — 6.2 와 **같은 사각지대**다.
+      그 값을 위의 try 안에서 한 번 구해 재사용하고, 음성 경로 시험을 단다.
+- [ ] 6.3 **P1 — 거절 시험이 실패 지점을 단언하게 한다.** 뮤테이션 M2·M3·M4 가
+      살아남은 원인은 하나다. `AForgedLandingPointIsRefusedByName._refuse(value, needle)`
+      의 바늘이 네 자리에서 `"landing"` 인데 그 단어는 착지 관련 **모든** 오류 문장에
+      들어 있어서, 가드를 지워도 다른 가드가 거절하고 시험이 초록으로 남는다. M3
+      (`landing ≤ HEAD`)은 시험 자체가 없다 — 곁가지 커밋을 만드는 픽스처가 0 이다.
+      이 파일은 같은 함정을 **이미 한 번 발견하고 한 자리만 고쳤다**
+      (`test_a_landing_the_evidence_does_not_describe` 의 주석이 "M4 로 실측"이라고
+      적는다). 형제 넷에 같은 처방을 한다: 바늘을 그 가드의 **자기 문장**으로 바꾸고,
+      곁가지 커밋 픽스처를 더해 `never landed on this history` 를 못 박는다.
+      [[passing-test-is-not-evidence]] · "거절 테스트는 실패 **지점**을 단언할 것".
+
+      **Testing 전문가가 이 세션과 따로 같은 실험을 하고 같은 결론에 닿았다**(가드
+      넷을 각각 지워도 75 전부 초록). 그리고 이 세션이 안 건드린 셋을 더 찾았다 —
+      `gate.sh` 1단계 `RESOLVE_ERROR` 블록(지워도 8/8 초록인데 hits>1 이면 fallback
+      활성 디렉터리가 **실재**해서 변이가 4단계까지 간다), `gate.sh` 의
+      `YYYY-MM-DD-` `case` 가드(지우면 `?` 와일드카드가 `archive/abcd-ef-gh-…` 를
+      먹는다), `_target_text` 의 비이관 갈래(시험이 SHA 만 `assertIn` 해서 라벨을
+      안 본다). 이 셋도 같이 못 박는다.
+- [ ] 6.4 **P2 묶음.** 각각 작고 독립이다.
+      (a) 착지를 선언하면 **커밋 안 된 Go 편집이 5단계에 안 보인다**. `make gate` 는
+      `make sdd-check` fingerprint 로 일부 가리지만 `make sdd-sync` 를 다시 돌리면
+      풀린다. 이관 경로가 이미 쓰는 `git diff --quiet` 를 착지 경로에도 둘지 결정한다 —
+      **거부할 정상 입력을 먼저 열거할 것**([[fail-closed-must-name-what-it-rejects]]).
+      (b) `base-commit.txt` 는 여전히 워킹트리에서 읽고 40-hex 검사도 없다. 같은 창의
+      반대쪽 끝이 안 잠겨 있다(a122 이전부터 있던 것).
+      (c) `ARCHIVED_CHANGE` 의 `\d` 는 유니코드 숫자를 먹고 `gate.sh` 의 `[0-9]` 는
+      안 먹는다 → 두 해소기가 "날짜 접두사"의 뜻에 동의하지 않는다. `re.ASCII` 한 글자.
+      (d) `check` 의 `except ValueError` 가 `archive holds N copies` 를 삼키고
+      `missing base-commit.txt` 로 바꿔 말한다. `gate.sh` 는 같은 조건에 큰 소리로 멈춘다.
+      (e) `gate.sh:110` 주석이 "Python 보다 엄격하다"고 하는데 **같은 diff 가** Python
+      쪽에 `AmbiguousChange` 를 넣어 그 차이를 없앴다. `test_check_analysis.py` 의
+      docstring 은 지워진 `return direct` 를 현재형으로 인용하고 `:689-692` 는 이제
+      무관한 `except` 를 가리킨다([[frozen-census-needs-edit-stable-coordinates]]).
+      (f) 규칙이 두 집(`resolve_change_dir` / `resolve_referenced_change`)에 사는데
+      **동기화를 강제하는 것이 아무것도 없다** — 각 스위트가 자기 사본만 못 박아서
+      한쪽만 고치면 둘 다 초록이다. 공유 표 하나로 두 해소기를 같이 돌리는 시험.
+      (g) 성능(advisory): 같은 (ref, path) blob 을 `resolve_landing` 과
+      `validate_target` 이 두 번 해싱한다(a099 실측 74 spawn → 서로 다른 blob 12개).
+      (h) 픽스처가 개발자의 전역 git config 를 상속한다 — `commit.gpgsign = true` 가
+      전역에 있으면 새 클래스 전부가 `gpg: signing failed` 로 **에러**가 된다(실측).
+      `GIT_CONFIG_GLOBAL=/dev/null` 을 주거나 `_init_fixture` 에서 명시적으로 끈다.
+      같은 노출: `core.hooksPath` · `gpg.format` · `core.autocrlf`.
