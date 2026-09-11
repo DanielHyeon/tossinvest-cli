@@ -568,8 +568,90 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       그중 **8건**이 번들 소스가 자기 base 에서 이미 전부 일치한다(a074·a077·a079·
       a089·a091·a092·a094·a095). 즉 base 가 작업 뒤에 놓인 것은 이 셋만의 사정이
       아니다. 잔여 5.7 에 연다.
-- [ ] 4.3 focused 테스트와 `make test` · `make vet` · `make validate` · `make sdd-sync` ·
+- [x] 4.3 focused 테스트와 `make test` · `make vet` · `make validate` · `make sdd-sync` ·
       `make sdd-check` 를 돌린다.
+
+      | 게이트 | 결과 |
+      |---|---|
+      | focused `test_check_analysis.py` | **75 OK**(skipped 1) — a122 가 **31** 추가해 44 → 75 |
+      | `tools/logic-map` python 전체 | **150 OK**(skipped 1) |
+      | `make test` | rc=0 · 99 패키지 · FAIL 0 |
+      | `go test -count=1 ./...` (무캐시 강제) | rc=0 · 99 패키지 · **cached 0** · FAIL 0 |
+      | `make vet` | rc=0 |
+      | `make lint` | rc=0 — 무태그 + `tossos_testseams` 태그 vet 둘 다 |
+      | `make test-seams` | rc=0 · 100 패키지 · FAIL 0 |
+      | `make test-race` | rc=0 · 8 패키지 · **DATA RACE 0** |
+      | `make validate` | rc=0 · **58/58** |
+      | `openspec validate --strict` 활성 전수 | **27/27** valid |
+      | `make sdd-sync` | rc=0 · `all indexes current` |
+      | `make sdd-check` | rc=0 · `CodeGraph hard-evidence index matches the worktree` |
+
+      **`make test` 가 다수 `(cached)` 로 찍혀 무캐시로 다시 돌렸다.** 캐시된 결과는
+      Go 가 입력 키로 검증하므로 틀린 값은 아니지만, VERIFY task 에서 "아까 봤다"와
+      "지금 봤다"는 다른 문장이다 — [[missing-tool-reports-clean]] 의 "빈 출력·0 은
+      위반 0 이 아니라 검사 0". `-count=1` 에서 cached 줄이 **0개**임을 확인했다.
+
+      `make test-race` 는 4.3 의 목록에 없지만 돌렸다. a122 는 Go 를 0줄 바꾸므로
+      면제 사유가 성립하지만(**not-applicable: Go 변경 0**), 사유를 적는 것보다 재는
+      것이 싸서 쟀다. 8 패키지 전부 초록, DATA RACE 0.
+
+      ### 실데이터 전수 — change id 126건
+
+      활성 27 + 아카이브 99 에서 중복을 뺀 **126개 id** 에 대해 현재 도구를 돌렸다.
+
+      | | 건수 |
+      |---|---|
+      | rc=2 (**도구 붕괴**) | **0** |
+      | rc=0 (통과) | **2** — a099(착지를 선언했고 유효) · a122(Go 0줄) |
+      | rc=1 (증거 부족) | 124 |
+
+      124 중 **10건**이 한 줄로 끝난다. 그 사유를 전부 확인했다: **9건은 그 change 에
+      `base-commit.txt` 가 아예 없다**(2026-07-26~27 의 관례 이전 아카이브 7건 +
+      a119 · verify-execution-capability). 나머지 1건은 a063 으로,
+      `adoption requires detached HEAD` 다 — 이관 경로가 전용 detached worktree 에서만
+      돌게 되어 있어서이고, **a122 이전 도구도 글자 그대로 같은 줄을 찍는다**(확인함).
+
+      **a122 는 저장소를 초록으로 만들지 않는다.** 124건의 rc=1 은 5단계 강제가
+      아직 꺼져 있는 동안 쌓인 기존 부채이고, a122 가 주는 것은 각 change 가 자기
+      창을 되찾을 **손잡이**다. 그 손잡이를 쓴 change 는 오늘 a099 하나다.
+
+      ### 아카이브 재검사 A/B — 옛 도구 vs 지금 도구
+
+      spec 의 "아카이브된 change 의 재검사" 요구가 실제로 닫혔는지 옛 도구
+      (`a2d11fb2`, a122 가 `check_analysis.py` 를 만지기 직전)와 대조했다.
+
+      | id | 옛 도구 | 지금 도구 |
+      |---|---|---|
+      | a075 (아카이브) | `missing base-commit.txt` | `base 448dfeb1 → working tree … required 319` |
+      | a120 (아카이브) | `missing base-commit.txt` | `base e65e394b → … required 36` |
+      | a073 (아카이브) | `missing base-commit.txt` | 창 줄 정상 |
+
+      **계측기부터 검증했다.** 처음엔 옛 도구를 scratchpad 에 복사해 돌렸고 셋 다
+      `ModuleNotFoundError: No module named 'role_check'` 로 죽었다 — 형제 모듈이
+      import 되지 않은 **내 설정 오류**였지 옛 도구의 성질이 아니다. 도구를
+      `tools/logic-map/` 안에 두고 **활성 id 로 양성 대조군**을 먼저 돌려(옛 도구가
+      진짜 출력을 낸다) 계측기가 눈멀지 않았음을 확인한 뒤에 위 표를 쟀다 —
+      [[mutation-must-reach-the-thing-under-test]].
+
+      ### 1.12 이관 경로는 실데이터로 못 돌렸다 (not-applicable 아님, **차단**)
+
+      a063 의 이관 경로를 실물로 돌리려 했으나 세 지점 모두 막힌다.
+
+      | 시도 | 결과 |
+      |---|---|
+      | 메인 브랜치에서 | `adoption requires detached HEAD` |
+      | a063 전용 worktree(`/tmp/tossos-a063-execution-adoption`) | `untracked/ignored input is not allowed: .codex-context/.save-session.lock` |
+      | HEAD 에 새로 판 detached worktree | `required commit ancestry is absent` |
+
+      마지막은 원인이 분명하다: a063 이 감사한 `source_commit c727ad12` 는 **HEAD 의
+      조상이 아니고**(다른 갈래) 그 커밋에는 이관 기록 자체가 아직 없다. 남은 길은
+      a063 의 worktree 를 청소하는 것인데 **그것은 a063 의 상태이지 a122 의 것이
+      아니다** — 남의 change 작업 상태를 허락 없이 건드리지 않는다.
+
+      **세 지점 전부에서 옛 도구와 지금 도구가 글자까지 같은 줄을 찍는다.** 즉 a122
+      가 닿을 수 있는 이관 경로에 **관측 가능한 차이를 만들지 않았다**. 1.12 의 근거는
+      유닛 픽스처 3건(1.12 표)과 이 동일성이고, **실데이터 확인은 아니다.** 이것을
+      4.4 독립 리뷰의 입력으로 명시한다.
 - [ ] 4.4 독립 적대 diff/테스트 리뷰와 gstack 리뷰를 마친다.
 - [ ] 4.5 PM 동기화 후 `make gate CHANGE=a122-the-logic-map-gate-outlives-a-merge` 를
       돌리고 성공한 뒤에만 아카이브한다.

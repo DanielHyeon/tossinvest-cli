@@ -681,3 +681,78 @@ required 147)에서 효과는 0 이었다. a074 는 구간이 **14/287** 이고 
 
 - 측정 worktree 는 제거했고(`git worktree remove --force` → `prune`) 세 change
   디렉터리에는 **아무것도 쓰지 않았다**. 확인: `git status` 에 tracked 변경 0.
+
+## VERIFY — task 4.3
+
+**대상** — 스위트 전체와 정적 게이트. **HEAD** `1bd132db`. **생산 코드 변경 0**
+(4.2 와 같이 순수 검증 task). Go 0줄, High-risk 경로 없음, 토글 없음.
+
+| 게이트 | 결과 |
+|---|---|
+| focused `test_check_analysis.py` | 75 OK · a122 가 31 추가(44→75) |
+| `tools/logic-map` python 전체 | 150 OK |
+| `make test` | rc=0 · 99 패키지 · FAIL 0 |
+| `go test -count=1 ./...` | rc=0 · 99 패키지 · **cached 0** · FAIL 0 |
+| `make vet` / `make lint` | rc=0 / rc=0 (태그 vet 포함) |
+| `make test-seams` | rc=0 · 100 패키지 · FAIL 0 |
+| `make test-race` | rc=0 · 8 패키지 · DATA RACE 0 |
+| `make validate` | rc=0 · 58/58 |
+| `openspec validate --strict` 활성 전수 | 27/27 |
+| `make sdd-sync` / `make sdd-check` | rc=0 / rc=0 |
+
+### 캐시된 초록은 "지금 봤다"가 아니다
+
+`make test` 가 다수 `(cached)` 로 찍혀 `-count=1` 로 다시 돌렸고 cached 줄 **0개**를
+확인했다. Go 의 캐시는 입력 키로 검증하므로 틀린 값은 아니지만, VERIFY 의 문장은
+"검증된 값"이 아니라 "지금 돈 값"이어야 한다.
+
+`make test-race` 는 4.3 목록 밖이다. a122 는 Go 0줄이라 면제 사유가 성립하지만
+(**not-applicable: Go 변경 0**) 재는 쪽이 싸서 쟀다.
+
+### 실데이터 전수 126건 — 그리고 a122 는 저장소를 초록으로 만들지 않는다
+
+| | 건수 |
+|---|---|
+| rc=2 (도구 붕괴) | **0** |
+| rc=0 | **2** — a099(유효한 착지 선언) · a122(Go 0줄) |
+| rc=1 | 124 |
+
+한 줄로 끝나는 10건의 사유를 전부 확인했다 — 9건은 `base-commit.txt` 부재(관례 이전
+아카이브 7 + a119 + verify-execution-capability), 1건은 a063 의
+`adoption requires detached HEAD` 이고 **옛 도구도 같은 줄을 찍는다**.
+
+124건의 rc=1 을 a122 의 실패로 읽으면 안 된다. 5단계 강제가 꺼져 있는 동안 쌓인 기존
+부채이고, a122 가 주는 것은 **손잡이**(`landed-commit.txt`)다. 오늘 그것을 쓴 change 는
+a099 하나다.
+
+### 아카이브 재검사 A/B
+
+| id | 옛 도구(`a2d11fb2`) | 지금 도구 |
+|---|---|---|
+| a075 | `missing base-commit.txt` | `base 448dfeb1 → … required 319` |
+| a120 | `missing base-commit.txt` | `base e65e394b → … required 36` |
+| a073 | `missing base-commit.txt` | 창 줄 정상 |
+
+**계측기를 먼저 검증했다.** 첫 시도는 옛 도구를 scratchpad 에 복사해 돌렸고 셋 다
+`ModuleNotFoundError: role_check` 로 죽었다 — 형제 모듈 import 실패, 즉 **내 설정
+오류**였다. 그대로 적었으면 "옛 도구는 아카이브에서 죽는다"를 **엉뚱한 이유로**
+증명한 셈이 된다. 도구를 `tools/logic-map/` 안에 두고 **활성 id 양성 대조군**(옛 도구가
+진짜 출력을 낸다)을 통과시킨 뒤 다시 쟀다.
+
+### 1.12 는 실데이터로 확인되지 않았다 — 차단이고, 이것을 4.4 의 입력으로 넘긴다
+
+| 시도 | 결과 |
+|---|---|
+| 메인 브랜치 | `adoption requires detached HEAD` |
+| a063 전용 worktree | `untracked/ignored input …: .codex-context/.save-session.lock` |
+| HEAD 의 새 detached worktree | `required commit ancestry is absent` |
+
+마지막의 원인: a063 이 감사한 `source_commit c727ad12` 는 HEAD 의 **조상이 아니고**
+그 커밋에 이관 기록이 아직 없다. 남은 길은 a063 worktree 청소인데 그것은 a063 의
+상태다 — 남의 change 작업 상태를 허락 없이 건드리지 않는다.
+
+**세 지점 전부에서 옛 도구와 지금 도구의 출력이 글자까지 같다.** a122 가 닿을 수 있는
+이관 경로에 관측 가능한 차이는 없다. 1.12 의 근거는 유닛 픽스처 3건 + 이 동일성이며
+**실데이터 확인은 아니다.** 적대 리뷰가 여기를 봐야 한다.
+
+- 측정 worktree 는 제거했고(`wt43-a063`) a063 · a120 의 기존 worktree 는 손대지 않았다.

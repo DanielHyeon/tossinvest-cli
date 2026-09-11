@@ -293,3 +293,49 @@ P3 은 a076 과 **같은 문**(`pinned by no revision: current evidence`)으로 
 
 바꾸는 것: 문서 3개(`tasks.md` 4.2·5.3·5.7, `review.md`, 이 파일). 코드 0줄, Go 0줄,
 a074 · a077 · a079 디렉터리 0줄(선언은 5.1 때문에 **하지 않는다**).
+
+# task 4.3 — 스위트·정적 게이트 전체
+
+**코드 변경 0.** 검증 task 라 AST 산출물이 필요 없다.
+
+| 주장 | 근거 | 도구 |
+|---|---|---|
+| focused 75 OK, a122 가 31 추가 | 옛 파일과 `def test_` 집합 diff (44 → 75) | `git show` + `diff` |
+| Go 스위트가 **지금** 초록 | `-count=1` 로 cached 줄 0 확인 | `rtk proxy go test -count=1 ./...` |
+| 태그 테스트도 돈다 | `make lint` 가 태그 vet 을, `make test-seams` 가 100 패키지를 | `make` |
+| 126 id 중 도구 붕괴 0 | 전수 실행의 rc 분포 | `check_analysis.py --change` × 126 |
+| 한 줄로 끝나는 10건의 **사유** | 9건은 `base-commit.txt` 부재를 파일 존재로, 1건은 실행 출력으로 | `test -f` + 실행 |
+| 옛 도구는 아카이브 id 에서 못 답한다 | `a2d11fb2` 판을 `tools/logic-map/` 안에서 실행 | `git show` + 실행 |
+| a063 의 detached 요구는 a122 이전부터다 | 옛 도구도 같은 줄 | 옛 도구 실행 |
+
+## 계측기가 눈멀었던 것을 잡았다
+
+아카이브 A/B 첫 시도는 옛 도구를 scratchpad 에 복사해 돌렸고 셋 다
+`ModuleNotFoundError: No module named 'role_check'` 로 죽었다. **옛 도구의 성질이
+아니라 형제 모듈 import 실패**다. 그대로 적었으면 맞는 결론을 틀린 증거로 받치게 된다.
+도구를 원래 디렉터리에 두고 **활성 id 양성 대조군**을 먼저 통과시킨 뒤 다시 쟀다 —
+[[mutation-must-reach-the-thing-under-test]] 가 말하는 "켜면 YES" 대조군이 정확히
+이 자리에서 필요했다.
+
+## 캐시된 초록
+
+`make test` 의 `(cached)` 는 Go 가 입력 키로 검증한 값이라 거짓은 아니지만, VERIFY 가
+적어야 하는 것은 "지금 돈 값"이다 — [[missing-tool-reports-clean]].
+
+## 못 한 것 (침묵하지 않는다)
+
+1.12 이관 경로의 **실데이터 확인은 못 했다.** 세 지점(메인 브랜치 / a063 worktree /
+HEAD 의 새 detached worktree)이 각각 다른 이유로 막히고, 마지막은 a063 의
+`source_commit` 이 HEAD 의 조상이 아니어서다. 세 지점 모두 옛 도구와 출력이 동일해
+a122 가 만든 차이는 없지만, 그것은 **차이 없음**이지 **동작 확인**이 아니다. 4.4 에
+넘긴다.
+
+## CodeGraph / CodeGraphContext / GBrain
+
+해당 없음 — Go 심볼·도구 코드 변경 0. GBrain 은 이 세션 내내 `CONNECTION_CLOSED`
+이고 `make sdd-sync` 도 `gbrain advisory index is missing or stale` 을 WARN 으로
+남긴다(hard evidence 인 CodeGraph 는 일치).
+
+## 조정된 구현 경계
+
+바꾸는 것: 문서 3개(`tasks.md` 4.3, `review.md`, 이 파일). 코드 0줄, Go 0줄.
