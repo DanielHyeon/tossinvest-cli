@@ -147,3 +147,23 @@ B21·B22 가 기전이다: 이관 probe 는 "착지 기록이 **있는가**"를 
 `_landing_record`)뿐이다. `resolve_base` 두 호출은 인자만 늘었다. 변이 M7(probe 가 다시 해독)
 CAUGHT — `test_an_undecodable_landing_record_in_the_adoption_path_is_refused_not_raised` 가
 `ValueError` 로 **에러**가 된다(편집 전의 증상 그대로).
+
+## 편집 (task 7.1) — 분기 43 → 44, 반환 14 → 14
+
+`ast.before-7.1.json`(= 커밋 `60150803`) → `ast.after-7.1.json`.
+`check_analysis.py:885-1014` · Python
+
+| 방향 | 분기 |
+|---|---|
+| 추가 | `if not landing:` |
+| 삭제 | **없음** |
+
+**반환 14개가 하나도 안 바뀌었다.** 더한 것은 `facts` 에 사실 하나를
+채우는 `if not landing:` 뿐이고, 그 안에서 돌아가지 않는다. 즉 `check` 가 내는 오류
+목록은 이 편집 전후로 **동일**하다 — 7.1 이 "게이트 판정은 그대로"라고 적은 것의 구조적
+근거가 이 표다.
+
+**왜 `if not landing:` 으로 감쌌나.** 조언 줄은 대상이 워킹트리일 때만 나간다. 착지가
+있는 change 에서 번들 해시를 다시 세면 아무도 안 읽는 값에 `git show` 를 번들 수만큼
+쓴다. 실측(활성 24건, 2026-09-12): 이 편집 뒤에도 change 당 시간은 재기 전과 같은 대역
+(1.3s ~ 19.4s)이고, 가장 무거운 a071 이 19.4s 다.

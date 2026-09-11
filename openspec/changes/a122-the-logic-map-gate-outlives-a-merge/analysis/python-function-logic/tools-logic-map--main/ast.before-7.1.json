@@ -1,0 +1,199 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "HEAD",
+  "head_commit": "007c015e8c617bdfb9c7b7647446496ee5cc3762",
+  "source_sha256": "f6ebcb5aa388f5203fbe474dafb81f0958841a1095517d49d33d8dd9c0eb3a0f",
+  "function": "main",
+  "signature": "main()",
+  "start": {
+    "line": 1081,
+    "column": 1
+  },
+  "end": {
+    "line": 1134,
+    "column": 13
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 1092,
+      "inherited_line": false,
+      "source": "if args.record_landing:"
+    },
+    {
+      "id": "B2",
+      "kind": "For",
+      "line": 1094,
+      "inherited_line": false,
+      "source": "for line in lines:"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 1107,
+      "inherited_line": false,
+      "source": "base and 'landing' in context"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 1107,
+      "inherited_line": false,
+      "source": "if base and 'landing' in context:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 1114,
+      "inherited_line": false,
+      "source": "if not landing:"
+    },
+    {
+      "id": "B6",
+      "kind": "BoolOp",
+      "line": 1118,
+      "inherited_line": false,
+      "source": "landed_after or '?'"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 1124,
+      "inherited_line": false,
+      "source": "if errors:"
+    },
+    {
+      "id": "B8",
+      "kind": "For",
+      "line": 1125,
+      "inherited_line": false,
+      "source": "for error in errors:"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 1128,
+      "inherited_line": false,
+      "source": "if context.get('execution_baseline_adoption'):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1096,
+      "value": "code"
+    },
+    {
+      "line": 1127,
+      "value": "1"
+    },
+    {
+      "line": 1134,
+      "value": "0"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1082,
+      "callee": "argparse.ArgumentParser"
+    },
+    {
+      "line": 1083,
+      "callee": "parser.add_argument"
+    },
+    {
+      "line": 1084,
+      "callee": "parser.add_argument"
+    },
+    {
+      "line": 1084,
+      "callee": "str"
+    },
+    {
+      "line": 1085,
+      "callee": "parser.add_argument"
+    },
+    {
+      "line": 1089,
+      "callee": "parser.parse_args"
+    },
+    {
+      "line": 1091,
+      "callee": "Path"
+    },
+    {
+      "line": 1093,
+      "callee": "record_landing"
+    },
+    {
+      "line": 1095,
+      "callee": "print"
+    },
+    {
+      "line": 1097,
+      "callee": "check"
+    },
+    {
+      "line": 1101,
+      "callee": "context.get"
+    },
+    {
+      "line": 1101,
+      "callee": "str"
+    },
+    {
+      "line": 1108,
+      "callee": "context.get"
+    },
+    {
+      "line": 1108,
+      "callee": "str"
+    },
+    {
+      "line": 1109,
+      "callee": "bool"
+    },
+    {
+      "line": 1109,
+      "callee": "context.get"
+    },
+    {
+      "line": 1110,
+      "callee": "print"
+    },
+    {
+      "line": 1111,
+      "callee": "_target_text"
+    },
+    {
+      "line": 1112,
+      "callee": "context.get"
+    },
+    {
+      "line": 1115,
+      "callee": "_commits_after"
+    },
+    {
+      "line": 1116,
+      "callee": "print"
+    },
+    {
+      "line": 1126,
+      "callee": "print"
+    },
+    {
+      "line": 1128,
+      "callee": "context.get"
+    },
+    {
+      "line": 1129,
+      "callee": "print"
+    },
+    {
+      "line": 1131,
+      "callee": "print"
+    }
+  ]
+}

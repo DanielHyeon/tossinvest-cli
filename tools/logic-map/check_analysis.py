@@ -429,6 +429,31 @@ def _pinning_bundles(root: Path, analysis: Path) -> list[tuple[Path, str, str]]:
     return found
 
 
+def _base_shaped_bundles(root: Path, base: str, analysis: Path) -> list[str]:
+    """`revision: current` 인데 **base 의 소스**를 적은 고정 번들의 이름들.
+
+    이 모양이 §6 독립 리뷰의 V1 이다. 저장소 규칙대로 FLM 을 **먼저** 커밋하고 코드를
+    편집한 뒤 번들을 갱신하지 않으면, 번들은 base 의 소스를 적은 채로 남는다.
+
+    이것을 세는 이유는 **조언 한 줄** 때문이다. 그런 번들이 있으면 도구가 받아들일 수
+    있는 착지는 전부 그 파일이 아직 base 와 같은 지점이다. 그러므로 거기서 좁힌 창은
+    그 함수를 요구할 수 없고, `--record-landing` 을 권하면 게이트가 자기 조언 줄로
+    자기 판정을 지우는 길을 가리키게 된다.
+
+    판정은 신원이 아니라 **blob 등식**으로 한다 — 누구의 편집인지는 묻지 않는다
+    (1.12 가 신원 판정을 이미 배제했다).
+    """
+    names: list[str] = []
+    for ast_path, source, digest in _pinning_bundles(root, analysis):
+        path = root / source
+        if path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == digest:
+            continue  # 오늘의 소스를 적은 번들 — 세탁할 것이 없다
+        at_base = _committed_bytes(root, base, source)
+        if at_base is not None and hashlib.sha256(at_base).hexdigest() == digest:
+            names.append(ast_path.parent.name)
+    return sorted(names)
+
+
 def _pinning_at(root: Path, candidate: str, analysis: Path) -> tuple[int, list[str]]:
     """`candidate` 에서 고정 번들이 몇 개이고 그중 어느 소스가 안 맞는가."""
     mismatched: list[str] = []
@@ -935,6 +960,9 @@ def check(
         return [f"cannot derive modified Go functions: {exc}"]
     facts["landing"] = landing
     facts["required_count"] = len(required)
+    if not landing:
+        # 조언 줄은 대상이 워킹트리일 때만 나가므로 그때만 잰다 (task 7.1).
+        facts["base_shaped_bundles"] = _base_shaped_bundles(root, base, analysis)
     if not analysis.exists():
         if required:
             names = ", ".join(f"{source}:{function}" for source, function in required)
@@ -1113,14 +1141,36 @@ def main() -> int:
         )
         if not landing:
             landed_after = _commits_after(root, base)
-            print(
+            # 창의 크기는 **사실**이라 두 갈래가 공유한다. 갈리는 것은 조언뿐이다.
+            window = (
                 f"[logic-map] {args.change}: the target is the working tree, so this window "
                 f"also holds {landed_after or '?'} commit(s) that landed after the base and "
-                f"every existing function they changed is required here too — run "
-                f"`python3 tools/logic-map/check_analysis.py --change {args.change} "
-                f"--record-landing` to let the gate compute and record "
-                f"`{LANDING_FILE}`, which narrows it to this change's own work"
+                f"every existing function they changed is required here too"
             )
+            # 번들이 base 의 소스를 적고 있으면 `--record-landing` 을 **권하지 않는다**
+            # (task 7.1). 권하면 게이트가 자기 조언 줄로 자기 판정을 지운다: 그 명령이
+            # 계산할 수 있는 착지는 전부 그 함수가 아직 base 와 같은 지점이다.
+            base_shaped = [str(name) for name in (context.get("base_shaped_bundles") or [])]
+            if base_shaped:
+                # 이름은 세 개까지만 적고 나머지는 **세어서** 말한다. a076 의 21,838자
+                # 한 줄이 이 저장소가 이름을 다 쏟아내지 않는 이유다.
+                named = ", ".join(base_shaped[:3])
+                if len(base_shaped) > 3:
+                    named += f", and {len(base_shaped) - 3} more"
+                print(
+                    f"{window} — but {len(base_shaped)} of this change's `revision: current` "
+                    f"bundle(s) ({named}) record the source as it stood at the base, not at "
+                    f"HEAD, so every landing the gate could compute is one where those "
+                    f"functions still equal the base and the narrowed window would require "
+                    f"none of them; refresh those bundles against the current source instead"
+                )
+            else:
+                print(
+                    f"{window} — run "
+                    f"`python3 tools/logic-map/check_analysis.py --change {args.change} "
+                    f"--record-landing` to let the gate compute and record "
+                    f"`{LANDING_FILE}`, which narrows it to this change's own work"
+                )
     if errors:
         for error in errors:
             print(f"[logic-map] {error}")

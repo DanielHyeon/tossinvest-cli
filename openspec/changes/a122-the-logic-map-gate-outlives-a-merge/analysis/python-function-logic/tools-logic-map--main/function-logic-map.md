@@ -96,3 +96,54 @@ Go 파일 변경 0줄.
 
 둘이 **겹치지 않는다**. 조건과 줄이 각각 독립으로 묶였다는 뜻이고, 하나만 묶으면
 나머지 변이가 산다 — [[surviving-mutant-may-mean-accidental-safety]].
+
+## 편집 (task 7.1) — 분기 9 → 13, 반환 3 → 3
+
+`ast.before-7.1.json`(= 커밋 `60150803`) → `ast.after-7.1.json`. 표는 두 열거를
+스크립트가 대조해 만들었다 — 손으로 옮겨 적지 않았다.
+`check_analysis.py:1109-1184` · Python
+
+| ID | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1120 | If | `if args.record_landing:` |
+| B2 | 1122 | For | `for line in lines:` |
+| B3 | 1135 | BoolOp | `base and 'landing' in context` |
+| B4 | 1135 | If | `if base and 'landing' in context:` |
+| B5 | 1142 | If | `if not landing:` |
+| B6 | 1147 | BoolOp | `landed_after or '?'` |
+| B7 | 1153 | BoolOp | `context.get('base_shaped_bundles') or []` |
+| B8 | 1153 | comprehension | ` for name in context.get('base_shaped_bundles') or []` |
+| B9 | 1154 | If | `if base_shaped:` |
+| B10 | 1158 | If | `if len(base_shaped) > 3:` |
+| B11 | 1174 | If | `if errors:` |
+| B12 | 1175 | For | `for error in errors:` |
+| B13 | 1178 | If | `if context.get('execution_baseline_adoption'):` |
+
+**새로 생긴 넷**은 전부 `B5 if not landing:` 안에 있다:
+- `B7` BoolOp — `context.get('base_shaped_bundles') or []`
+- `B8` comprehension — ` for name in context.get('base_shaped_bundles') or []`
+- `B9` If — `if base_shaped:`
+- `B10` If — `if len(base_shaped) > 3:`
+
+번호가 밀렸다 — 옛 `B7·B8·B9`(`if errors:` · `for error in errors:` · 이관 문구)가
+새 `B11·B12·B13` 이다. [[positional-branch-ids-break-hand-renumbering]] 가 말하는
+자리이고, 그래서 이 표는 옛 표를 고쳐 쓰지 않고 **다시 열거해서** 적었다.
+
+**반환은 셋 그대로다**(`1096, 1127, 1134` →
+`1124, 1177, 1184`). 값도 같다. 이 편집은 경로를 더하거나
+지우지 않는다 — `if not landing:` 안에서 **출력 두 갈래**가 생겼을 뿐이고, 판정(rc)에
+닿는 분기는 하나도 안 바뀌었다.
+
+### 왜 사실과 조언을 갈랐나
+
+옛 판본은 창의 크기(사실)와 `--record-landing`(조언)이 **한 f-string** 이었다. 조언만
+막으려면 사실까지 같이 죽는다. 그래서 `window` 를 먼저 만들고 두 갈래가 그것을 공유한다 —
+3.3 이 세운 "실패해도 창을 찍는다"는 양쪽에서 글자 그대로 남는다.
+
+### 왜 `check` 가 재고 `main` 이 읽나
+
+`main` 에는 `change_dir` 도 `analysis` 도 없다. 여기서 다시 해소하면 디렉터리 해소가
+**세 벌**이 된다(7.6 이 이미 두 벌을 결함으로 적었다). `check` 는 그 둘을 이미 손에 쥐고
+있고 `facts["landing"]` · `facts["required_count"]` 를 넣는 자리가 바로 거기다.
+빌리는 change 면 `analysis` 가 빌려주는 쪽을 가리키는데, 고정 번들이 사는 자리가 거기라서
+그것이 맞는 대상이다.

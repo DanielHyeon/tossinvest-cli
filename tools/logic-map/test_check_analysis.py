@@ -2152,29 +2152,73 @@ class AFailingStepFiveSaysWhichWindowRequiredThem(unittest.TestCase):
     기제는 `main` 의 early return 이다 — `if errors: … return 1` 이 착지·요구 수를
     찍는 자리를 건너뛴다. task 1.9 가 적은 "항상 출력한다"는 성공할 때만 참이었다."""
 
-    def _failing_fixture(self, raw: tempfile.TemporaryDirectory, *, with_evidence: bool):
-        """base P → 내 작업 L → 이웃 change N (→ 증거 E). 착지 기록은 없다."""
+    def _failing_fixture(
+        self, raw: tempfile.TemporaryDirectory, *, with_evidence: bool,
+        evidence_at: str = "current", also_unchanged: bool = False,
+        base_shaped_extra: int = 0,
+    ):
+        """base P → 내 작업 L → 이웃 change N (→ 증거 E). 착지 기록은 없다.
+
+        `evidence_at` 은 번들이 **어느 시점의 소스**를 적는지다. `current` 는 오늘,
+        `base` 는 base 의 것(FLM 을 먼저 쓰고 편집 뒤 갱신하지 않은 모양 = V1),
+        `intermediate` 는 base 뒤이되 오늘은 아닌 것(stale 이지만 base 를 기술하지 않는다).
+        """
         root = _init_fixture(raw)
         own = root / "internal" / "own.go"
         own.parent.mkdir(parents=True)
         other = root / "internal" / "other.go"
         own.write_text("package internal\nfunc Own() int { return 1 }\n")
         other.write_text("package internal\nfunc Other() int { return 1 }\n")
+        if also_unchanged:
+            # base 이후 **한 번도 안 바뀌는** 파일. 그 번들은 신선한데도 내용이
+            # base 와 같다 — 등식만 보면 base 를 기술하는 것과 구별되지 않는다.
+            (root / "internal" / "still.go").write_text(
+                "package internal\nfunc Still() int { return 1 }\n")
+        extras = [root / "internal" / f"extra{n}.go" for n in range(1, base_shaped_extra + 1)]
+        for n, extra in enumerate(extras, start=1):
+            extra.write_text(f"package internal\nfunc Extra{n}() int {{ return 1 }}\n")
         marks = {"P": _commit_all(root, "P: base")}
         change = root / "openspec" / "changes" / "mine"
         change.mkdir(parents=True)
         (change / "base-commit.txt").write_text(marks["P"] + "\n")
         (change / "review.md").write_text("mine\n")
         own.write_text("package internal\nfunc Own() int { return 2 }\n")
+        for n, extra in enumerate(extras, start=1):
+            extra.write_text(f"package internal\nfunc Extra{n}() int {{ return 2 }}\n")
         marks["L"] = _commit_all(root, "L: my work lands")
         other.write_text("package internal\nfunc Other() int { return 2 }\n")
         marks["N"] = _commit_all(root, "N: a different change lands")
         if with_evidence:
+            # 해시를 손으로 옮겨 적지 않는다 — base 의 blob 을 git 에서 읽어서 쓴다.
+            blob = subprocess.check_output(
+                ["git", "show", f"{marks['P']}:internal/own.go"], cwd=root,
+            ) if evidence_at == "base" else own.read_bytes()
             _write_evidence(
                 change, package="internal", function="Own", relative="internal/own.go",
-                digest=hashlib.sha256(own.read_bytes()).hexdigest(),
+                digest=hashlib.sha256(blob).hexdigest(),
             )
+            for n, extra in enumerate(extras, start=1):
+                # 번들마다 base 의 blob 을 읽어서 적는다 — 전부 base 를 기술한다.
+                _write_evidence(
+                    change, package="internal", function=f"Extra{n}",
+                    relative=f"internal/extra{n}.go",
+                    digest=hashlib.sha256(subprocess.check_output(
+                        ["git", "show", f"{marks['P']}:internal/extra{n}.go"], cwd=root,
+                    )).hexdigest(),
+                )
+            if also_unchanged:
+                still = root / "internal" / "still.go"
+                _write_evidence(
+                    change, package="internal", function="Still",
+                    relative="internal/still.go",
+                    digest=hashlib.sha256(still.read_bytes()).hexdigest(),
+                )
             _commit_all(root, "E: evidence for my own function only")
+            if evidence_at == "intermediate":
+                # 번들이 적은 상태 뒤로 소스가 한 번 더 움직인다. 그러면 번들은
+                # stale 이지만 base 를 기술하지는 않는다 — a066 · a071 의 모양이다.
+                own.write_text("package internal\nfunc Own() int { return 3 }\n")
+                marks["M"] = _commit_all(root, "M: my work moves on past the bundle")
         return root, marks
 
     def test_a_window_that_could_not_be_derived_is_not_printed(self) -> None:
@@ -2243,6 +2287,109 @@ class AFailingStepFiveSaysWhichWindowRequiredThem(unittest.TestCase):
             _commit_all(root, "another change lands after the base")
             code, again = self._main_output(root)
             self.assertIn("4 commit(s)", again, f"재서 쓴 값이 아니다: {again}")
+
+    def test_a_bundle_that_records_the_base_is_not_told_to_record_a_landing(self) -> None:
+        """조언 줄이 **자기가 못 잡게 될 증거**를 세탁하라고 권하면 안 된다 (task 7.1).
+
+        V1(§6 로트 독립 리뷰가 낸 CRITICAL): 저장소 규칙대로 FLM 을 **먼저** 커밋하고
+        코드를 편집한 뒤 번들을 갱신하지 않으면 5단계는 `AST source hash is stale` 로
+        빨갛다. 그런데 **같은 출력이** `--record-landing` 을 권하고, 그 명령은 편집 전
+        커밋을 착지로 계산해서 required 0 으로 통과시킨다. 게이트가 자기 조언 줄로
+        자기 판정을 지우는 길이다.
+
+        번들이 base 의 소스를 적었으면 도구가 받아들일 수 있는 착지는 **전부** 그
+        함수가 아직 base 와 같은 지점이다. 그러므로 좁힌 창은 그 함수를 요구할 수
+        없다 — 조언이 가리키는 곳에 얻을 것이 없다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = self._failing_fixture(raw, with_evidence=True, evidence_at="base")
+            code, printed = self._main_output(root)
+            self.assertEqual(code, 1, printed)
+            # 양성 대조 — 이 픽스처가 실제로 stale 경로여야 한다.
+            self.assertIn("AST source hash is stale", printed, printed)
+            self.assertNotIn(
+                "--record-landing", printed,
+                f"stale 증거 옆에서 착지 기록을 권하면 안 된다: {printed}",
+            )
+            advice = self._advice_line(printed)
+            self.assertIn(
+                "internal--own", advice,
+                f"이름은 **조언 줄 안에** 있어야 한다 — 오류 줄에도 있으니 "
+                f"출력 전체를 보면 바늘이 무뎌진다: {advice}",
+            )
+            # 사실 부분(창의 크기)은 그대로 남아야 한다 — 3.3 이 세운 줄이다.
+            self.assertIn(
+                "commit(s) that landed after the base", printed,
+                f"창의 크기는 계속 말해야 한다: {printed}",
+            )
+
+    def test_a_stale_bundle_that_does_not_record_the_base_still_hears_the_advice(self) -> None:
+        """stale 이라고 다 막지 않는다 — **base 를 기술하는** 것만 막는다 (task 7.1).
+
+        2026-09-12 실측: 활성 11건이 워킹트리 모드에서 stale 로 보이고 그중 9건의
+        stale 번들이 base 상태를 기술한다. 나머지 둘(a066 · a071)은 base 뒤의 상태를
+        적었으므로 착지를 기록하면 창이 **실제로** 좁아진다 — 그쪽 조언은 살려 둔다.
+        이 시험이 없으면 "stale 이면 무조건 막는다"가 위 시험을 그대로 통과한다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = self._failing_fixture(
+                raw, with_evidence=True, evidence_at="intermediate",
+            )
+            code, printed = self._main_output(root)
+            self.assertEqual(code, 1, printed)
+            # 양성 대조 — 이쪽도 stale 이다. 다른 것은 **무엇을 기술하느냐** 하나다.
+            self.assertIn("AST source hash is stale", printed, printed)
+            self.assertIn(
+                "--record-landing", printed,
+                f"좁힐 것이 남은 change 는 조언을 잃으면 안 된다: {printed}",
+            )
+
+    def test_a_fresh_bundle_for_a_file_unchanged_since_the_base_keeps_the_advice(self) -> None:
+        """거부할 **정상 입력**을 먼저 적는다 [[fail-closed-must-name-what-it-rejects]].
+
+        base 이후 안 바뀐 파일의 번들은 신선한데도 `sha256(오늘) == sha256(base)` 다.
+        등식만 보면 V1 과 똑같이 생겼다. 그래서 판정은 등식 하나가 아니라 **신선한
+        번들을 먼저 건너뛰는** 것과 짝이어야 한다 — 그 `continue` 가 빠지면 멀쩡한
+        change 가 조언을 잃는다. 이 시험이 그 자리를 못 박는다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = self._failing_fixture(
+                raw, with_evidence=True, also_unchanged=True,
+            )
+            code, printed = self._main_output(root)
+            self.assertEqual(code, 1, printed)
+            # 양성 대조 — 그 번들이 신선해야(= stale 오류가 없어야) 이 시험이 뜻을 갖는다.
+            self.assertNotIn("internal--still: AST source hash is stale", printed, printed)
+            self.assertIn(
+                "--record-landing", printed,
+                f"신선한 번들은 세탁의 모양이 아니다 — 조언을 잃으면 안 된다: {printed}",
+            )
+            self.assertNotIn("record the source as it stood at the base", printed, printed)
+
+    def _advice_line(self, printed: str) -> str:
+        """조언 줄 **하나**를 집어낸다. 단언을 출력 전체에 걸면 오류 줄이 대신 만족시킨다."""
+        lines = [line for line in printed.splitlines() if "so this window also holds" in line]
+        self.assertEqual(1, len(lines), f"조언 줄이 정확히 하나여야 한다: {printed}")
+        return lines[0]
+
+    def test_only_three_bundles_are_named_and_the_rest_are_counted(self) -> None:
+        """이름을 다 쏟아내지 않는다 — a076 의 **21,838자 한 줄**이 그 이유다.
+
+        2026-09-12 실측: a092 는 base 를 기술하는 번들이 **29개**다. 자르고 세는
+        갈래가 실물 경로이므로 시험 없이 두지 않는다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = self._failing_fixture(
+                raw, with_evidence=True, evidence_at="base", base_shaped_extra=3,
+            )
+            code, printed = self._main_output(root)
+            self.assertEqual(code, 1, printed)
+            advice = self._advice_line(printed)
+            self.assertIn("4 of this change's", advice, f"총 수는 세야 한다: {advice}")
+            self.assertIn("and 1 more", advice, f"못 적은 것은 세어서 말해야 한다: {advice}")
+            self.assertEqual(
+                3, advice.count("internal--"), f"이름은 셋까지만 적어야 한다: {advice}",
+            )
 
     def test_the_missing_map_message_carries_the_count_and_the_window(self) -> None:
         """번들이 아예 없는 경로의 메시지(이름 316개를 이어 붙이던 그 한 줄)."""

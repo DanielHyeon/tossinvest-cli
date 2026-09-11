@@ -1374,3 +1374,140 @@ X 를 적으면 같은 결과였지만(4.4 위조 1번의 모양), 이제는 도
 
 PR Quality Score(공식 `10 − 2×critical − 0.5×informational`, critical 7 = C1~C4·H1·H2·H4,
 informational 22): **0/10**. 4.5 는 계속 막힌다.
+
+## VERIFY — task 7.1 (조언 줄이 stale 증거를 세탁하지 않는다)
+
+사람 결정 2026-09-12: §6 리뷰가 낸 B 를 **좁힌 판본**으로 간다 — stale 번들 중
+**base 의 소스를 적은 것**이 있을 때만 `--record-landing` 조언을 막는다.
+
+### 내가 D1 에 적은 전제가 틀렸다 (정정)
+
+D1 에서 나는 B 가 "정상 입력을 하나도 거절하지 않는다 — 찍히는 조언 문구만 바꾼다"고
+적었다. **틀렸다.** 판정(rc)은 그대로지만 **조언은 사라진다.** 활성 전수로 재 보니
+11건이 워킹트리 모드에서 stale 로 보이고(`71_census.py`: `LOSE_HINT: 11`), 그중 9건의
+stale 번들이 base 상태를 기술한다(`71_baseshape.py`:
+`CHANGES_WITH_BASE_SHAPED_STALE: 9 of 11`). 나머지 둘(a066 · a071)만 base **뒤** 상태를
+적었으므로 착지를 기록하면 창이 실제로 좁아진다. 이 실측이 옵션 1 을 고르게 한 근거이고,
+사용자에게 결정을 다시 물은 이유다. [[fail-closed-must-name-what-it-rejects]] 가 말하는
+"거절할 정상 입력을 먼저 열거하라"를 **내가 D1 에서 안 했다.**
+
+### 순서
+
+`ast.before-7.1.json`(`main` · `check` · `validate_target`, 커밋 `60150803` 시점)을
+**먼저** 열거했다. 편집 뒤 `ast.after-7.1.json` 을 같은 `enumerate.py` 로 뽑았고,
+FLM·BTM 의 분기 표는 두 열거를 스크립트가 대조해 만들었다 — 손으로 옮겨 적지 않았다.
+`validate_target` 은 열거만 하고 **바꾸지 않았다**(stale 문구가 어느 자리에서 나오는지
+확인하는 데 썼다: `validate_target` 둘 · `check` 하나).
+
+### RED → GREEN
+
+| 시험 | 구현 전 | 구현 후 |
+|---|---|---|
+| `test_a_bundle_that_records_the_base_is_not_told_to_record_a_landing` | **FAIL** | pass |
+| `test_a_stale_bundle_that_does_not_record_the_base_still_hears_the_advice` | pass | pass |
+| `test_a_fresh_bundle_for_a_file_unchanged_since_the_base_keeps_the_advice` | (구현 뒤 추가) | pass |
+| `test_only_three_bundles_are_named_and_the_rest_are_counted` | (구현 뒤 추가) | pass |
+
+둘째 시험은 **처음부터 초록이었다. RED 가 아니다** — 과잉 억제를 막는 핀이고, "stale
+이면 전부 막는다"(변이 M1)를 넣어야 빨개진다. 통과했다는 사실 자체는 증거가 아니므로
+그렇게 적는다 [[passing-test-is-not-evidence]].
+
+### 무엇을 바꿨나
+
+- 새 `_base_shaped_bundles(root, base, analysis)` — `revision: current` 인데 **base 의
+  소스**를 적은 번들의 이름들. 신선한 번들은 먼저 건너뛰고, 남은 것만 base 의 blob 과
+  대조한다. 판정은 신원이 아니라 **blob 등식**이다(1.12 가 신원 판정을 배제했다).
+- `check` — `if not landing:` 일 때만 그 값을 `facts` 에 넣는다. 반환은 14개 그대로다.
+- `main` — 창의 크기(**사실**)와 조언을 갈랐다. 두 갈래가 같은 `window` 문자열을
+  공유하므로 3.3 이 세운 "실패해도 창을 찍는다"는 양쪽에서 글자 그대로 남는다.
+
+`main` 에서 change 디렉터리를 다시 해소하지 않은 이유: 그러면 해소가 **세 벌**이 된다
+(7.6 이 이미 두 벌을 결함으로 적었다). `check` 는 `change_dir`·`analysis` 를 이미 쥐고 있다.
+
+### 게이트 판정은 그대로다 — 구조가 아니라 실측으로
+
+구조 근거는 `check` 의 반환 14개가 편집 전후로 동일하다는 것이다. 그것만으로는 주장이라
+HEAD 의 `check_analysis` 사본과 편집본을 **활성 change 전부**에 돌려 오류 목록·착지·
+요구 수를 글자 단위로 대조했다(`71_rc_ab.py`).
+
+```
+IDENTICAL: 27  DIFFERENT: 0
+```
+
+사본은 `tools/logic-map/` 안에 두고(ROOT 가 `__file__` 에서 유도되므로 스크래치패드에
+두면 다른 저장소를 본다) `finally` 로 지웠다 — `probe removed: True`.
+
+### 조언이 실제로 어떻게 갈리나 (구현 뒤 활성 전수, `71_verify.py`)
+
+```
+SUPPRESSED: 9 KEPT_ADVICE: 15
+```
+
+억제된 아홉: a074 · a077 · a079 · a089 · a091 · a092 · a094 · a095 · a100.
+a066 · a071 은 `base_shaped=0` 이라 조언을 **그대로 받는다** — 구현 전 예측
+(9 of 11)과 실측이 정확히 일치한다. a092 는 base 를 기술하는 번들이 **29개**라
+이름을 자르고 세는 갈래가 실물 경로다. a122 자신도 조언을 받는다(자기 검사 rc=0).
+
+### 변이 아홉 — 전부 CAUGHT (`71_mutations.py`, 원복 sha256 동일)
+
+원복은 `git checkout` 이 아니라 **저장한 바이트**로 했다. 구현이 아직 커밋 전이라
+`git checkout` 은 GREEN 까지 지운다 [[mutation-revert-needs-the-right-baseline]].
+
+| 변이 | 빨개진 시험 수 |
+|---|---|
+| M1 base 모양 판정 제거 (stale 이면 전부 억제) | 1 |
+| M2 억제를 아예 안 함 | 2 |
+| M3 신선 번들 건너뛰기(`continue`) 제거 | 1 |
+| M4 base 가 아니라 HEAD 와 대조 | 2 |
+| M5 어느 번들인지 안 말함 | 2 |
+| M6 억제 갈래에서 창의 크기(사실)를 뺌 | 2 |
+| M7 `check` 가 재지 않는다 | 2 |
+| M8 이름을 자르지 않고 다 쏟아냄 | 1 |
+| M9 못 적은 수를 안 셈 | 1 |
+
+**M5 는 처음에 SURVIVED 였고 원인은 내 바늘이었다.** `assertIn("internal--own", printed)`
+가 출력 **전체**를 보는데 같은 이름이 오류 줄
+(`[logic-map] internal--own: AST source hash is stale`)에도 있어서, 조언 줄이 이름을
+잃어도 통과했다. 6.3 이 `resolve_landing` 에서 고친 것과 **같은 결함**이
+내가 이번에 새로 쓴 시험에서 재발했다 [[existence-check-is-not-a-role-check]].
+`_advice_line` 로 조언 줄 하나를 집어내 바늘을 좁힌 뒤 CAUGHT 가 됐다.
+
+### 거부할 정상 입력 (먼저 열거했다)
+
+- **base 이후 안 바뀐 파일의 신선한 번들.** `sha256(오늘) == sha256(base)` 라 등식만
+  보면 V1 과 똑같이 생겼다. 신선한 번들을 **먼저 건너뛰는** `continue` 가 그것을 가르고,
+  `test_a_fresh_bundle_for_a_file_unchanged_since_the_base_keeps_the_advice` 가 그 자리를
+  못 박는다(변이 M3).
+- **a066 · a071 처럼 base 뒤 상태를 적은 stale 번들.** 조언을 그대로 받는다(변이 M1).
+
+### 안 한 것
+
+- **작업 중간 상태를 적은 FLM 은 안 잡힌다.** 번들이 base 도 오늘도 아닌 지점을
+  기술하면 이 판정은 조용하다. blob 등식으로는 "V1" 과 "base 가 작업 뒤에 놓인 change"
+  를 가를 수 없고, 그 차이는 **누구의 편집이었나** 하나인데 신원 판정은 1.12 가
+  배제했다. 그것이 **7.2** 다 — 착지를 무엇에 묶을지 다시 정하는 일.
+- **명령 자체는 그대로다.** `--record-landing` 은 여전히 편집 전 커밋을 계산할 수 있다.
+  7.1 은 게이트가 그것을 **권하지 않게** 했을 뿐이고, 거절하지 않는다. C1 은 7.2 전까지
+  닫히지 않는다. **4.5 는 계속 막힌다.**
+- `validate_target`·`check` 의 stale 문구 자체는 안 건드렸다.
+
+### 게이트 (2026-09-12, 이 로트의 워킹트리)
+
+| 명령 | 결과 |
+|---|---|
+| `python3 -m unittest discover -s tools/logic-map` | **95 tests OK** (skipped 1) |
+| `make lint` | rc=0 |
+| `make test` | rc=0 |
+| `make test-seams` | rc=0 |
+| `make sdd-test` | rc=0 |
+| `openspec validate … --strict` | valid |
+| `check_analysis.py --change a122…` | rc=0 |
+| `make sdd-sync` | **rc=2** — advisory 만 실패 |
+| `make sdd-check` | rc=0 |
+
+`sdd-sync` 의 rc=2 는 `codegraphcontext` 레그다:
+`Could not set lock on file /home/daniel/.codegraphcontext/global/db/kuzudb`.
+락을 쥔 것은 pid **47230** (`cgc`, 2026-09-11 23:16 기동) — **다른 세션의 프로세스**라
+죽이지 않았다. 타임아웃이 아니므로 재시도는 소용없다(2026-09-11 과 같은 원인).
+hard CodeGraph 레그(`codegraph sync .`)는 돌았고 `sdd-check` 가 rc=0 이므로 fingerprint 는
+stale 이 아니다. CodeGraphContext 는 advisory 이며 현재 HEAD·테스트를 대체하지 않는다.
