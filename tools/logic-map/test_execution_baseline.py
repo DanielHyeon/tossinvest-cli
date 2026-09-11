@@ -36,7 +36,7 @@ class ExecutionBaselineUnitTests(unittest.TestCase):
     def test_valid_adoption_then_only_inventory_mutation_fails_inventory_error(self) -> None:
         raw, root, change, p, e = self._valid_adoption()
         with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            self.assertEqual(adoption.validate(change, root, p)["effective_base"], e)
+            self.assertEqual(adoption.validate(change, root, p, change.name)["effective_base"], e)
             # A committed H mutation is required so the record remains byte-bound.
             ledger = json.loads((change / "analysis/execution-baseline-ledger.json").read_text())
             ledger["execution_to_source"]["function_inventory"] = []
@@ -44,7 +44,7 @@ class ExecutionBaselineUnitTests(unittest.TestCase):
             record = json.loads((change / "execution-baseline.json").read_text()); record["ledger_sha256"] = hashlib.sha256(ledger_raw).hexdigest(); (change / "execution-baseline.json").write_bytes(adoption.canonical(record))
             self._commit(root, "bad inventory H"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
             with self.assertRaisesRegex(adoption.AdoptionError, "execution-to-source function inventory mismatch"):
-                adoption.validate(change, root, p)
+                adoption.validate(change, root, p, change.name)
 
     def test_valid_fixture_evidence_binding_mutations_have_specific_errors(self) -> None:
         for field, value, error in (
@@ -57,7 +57,7 @@ class ExecutionBaselineUnitTests(unittest.TestCase):
                 record_path = change / "execution-baseline.json"; record = json.loads(record_path.read_text()); record[field] = value
                 if field == "gstack_review_path": record["gstack_review_sha256"] = record["adversarial_review_sha256"]
                 record_path.write_bytes(adoption.canonical(record)); self._commit(root, "mutate " + field); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-                with self.assertRaisesRegex(adoption.AdoptionError, error): adoption.validate(change, root, p)
+                with self.assertRaisesRegex(adoption.AdoptionError, error): adoption.validate(change, root, p, change.name)
 
     def test_valid_fixture_record_schema_and_envelope_mutations_fail_closed(self) -> None:
         cases = (
@@ -77,7 +77,7 @@ class ExecutionBaselineUnitTests(unittest.TestCase):
                 record = json.loads(record_path.read_text()); record[field] = value
                 record_path.write_bytes(adoption.canonical(record)); self._commit(root, "mutate " + field)
                 subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-                with self.assertRaisesRegex(adoption.AdoptionError, error): adoption.validate(change, root, p)
+                with self.assertRaisesRegex(adoption.AdoptionError, error): adoption.validate(change, root, p, change.name)
 
     def test_valid_fixture_unknown_and_wrong_ledger_schema_fail_closed(self) -> None:
         for mutate, error in (
@@ -93,7 +93,7 @@ class ExecutionBaselineUnitTests(unittest.TestCase):
                 record_path = change / "execution-baseline.json"; record = json.loads(record_path.read_text())
                 record["ledger_sha256"] = hashlib.sha256(ledger_raw).hexdigest(); record_path.write_bytes(adoption.canonical(record))
                 self._commit(root, "mutate ledger"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-                with self.assertRaisesRegex(adoption.AdoptionError, error): adoption.validate(change, root, p)
+                with self.assertRaisesRegex(adoption.AdoptionError, error): adoption.validate(change, root, p, change.name)
 
     def test_valid_fixture_base_head_and_source_mutations_have_specific_errors(self) -> None:
         cases = (
@@ -111,24 +111,24 @@ class ExecutionBaselineUnitTests(unittest.TestCase):
                     record[value[0]] = record[value[1]]
                     record_path.write_bytes(adoption.canonical(record))
                 self._commit(root, "mutate source envelope"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-                with self.assertRaisesRegex(adoption.AdoptionError, error): adoption.validate(change, root, p)
+                with self.assertRaisesRegex(adoption.AdoptionError, error): adoption.validate(change, root, p, change.name)
 
     def test_valid_fixture_refuses_symlink_base_attached_head_and_dirty_tracked_source(self) -> None:
         raw, root, change, p, e = self._valid_adoption()
         with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
             base = change / "base-commit.txt"; base.unlink(); base.symlink_to("execution-baseline.json")
             with self.assertRaisesRegex(adoption.AdoptionError, "evidence path contains symlink"):
-                adoption.validate(change, root, p)
+                adoption.validate(change, root, p, change.name)
         raw, root, change, p, e = self._valid_adoption()
         with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
             subprocess.run(["git", "checkout", "-q", "master"], cwd=root, check=True)
             with self.assertRaisesRegex(adoption.AdoptionError, "requires detached HEAD"):
-                adoption.validate(change, root, p)
+                adoption.validate(change, root, p, change.name)
         raw, root, change, p, e = self._valid_adoption()
         with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
             (root / "internal/soak/attest.go").write_text("package soak\nfunc Attest() int { return 99 }\n")
             with self.assertRaisesRegex(adoption.AdoptionError, "Go worktree bytes mismatch|evidence differs from HEAD"):
-                adoption.validate(change, root, p)
+                adoption.validate(change, root, p, change.name)
 
     def test_source_go_lock_rejects_mode_change_when_git_ignores_filemode(self) -> None:
         raw, root, change, p, e = self._valid_adoption()
@@ -137,21 +137,21 @@ class ExecutionBaselineUnitTests(unittest.TestCase):
             target = root / "internal/soak/attest.go"; target.chmod(0o755)
             self.assertEqual(subprocess.run(["git", "diff", "--quiet"], cwd=root).returncode, 0)
             with self.assertRaisesRegex(adoption.AdoptionError, "Go worktree mode mismatch"):
-                adoption.validate(change, root, p)
+                adoption.validate(change, root, p, change.name)
 
     def test_source_go_lock_rejects_source_tree_and_go_symlink_substitution(self) -> None:
         raw, root, change, p, e = self._valid_adoption()
         with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
             target = root / "internal/soak/attest.go"; target.unlink(); target.symlink_to(root / "go.mod")
             with self.assertRaisesRegex(adoption.AdoptionError, "evidence path contains symlink"):
-                adoption.validate(change, root, p)
+                adoption.validate(change, root, p, change.name)
         raw, root, change, p, e = self._valid_adoption()
         with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
             record_path = change / "execution-baseline.json"; record = json.loads(record_path.read_text())
             record["source_tree"] = "f" * 40; record_path.write_bytes(adoption.canonical(record))
             self._commit(root, "source tree substitution"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
             with self.assertRaisesRegex(adoption.AdoptionError, "source tree mismatch"):
-                adoption.validate(change, root, p)
+                adoption.validate(change, root, p, change.name)
 
     def test_tracked_source_go_symlink_and_non_utf8_git_path_fail_closed(self) -> None:
         raw, root = self._fixture()
@@ -175,9 +175,9 @@ class ExecutionBaselineUnitTests(unittest.TestCase):
                 else:
                     path.write_bytes(content)
                     if relative.endswith("/run"): path.chmod(0o755)
-                if error is None: self.assertEqual(adoption.validate(change, root, p)["effective_base"], e)
+                if error is None: self.assertEqual(adoption.validate(change, root, p, change.name)["effective_base"], e)
                 else:
-                    with self.assertRaisesRegex(adoption.AdoptionError, error): adoption.validate(change, root, p)
+                    with self.assertRaisesRegex(adoption.AdoptionError, error): adoption.validate(change, root, p, change.name)
 
     def test_ignored_build_inputs_are_not_hidden_by_git_ignore_rules(self) -> None:
         for relative in ("ignored.c", "ignored.s", "ignored.h", "ignored.go", "embed.txt"):
@@ -186,7 +186,7 @@ class ExecutionBaselineUnitTests(unittest.TestCase):
                 (root / ".git/info/exclude").write_text(relative + "\n", encoding="utf-8")
                 (root / relative).write_text("x", encoding="utf-8")
                 with self.assertRaisesRegex(adoption.AdoptionError, "untracked/ignored input is not allowed"):
-                    adoption.validate(change, root, p)
+                    adoption.validate(change, root, p, change.name)
 
     def test_go_input_enumeration_accepts_documented_shapes_and_rejects_bad_output(self) -> None:
         raw, root = self._fixture()
@@ -209,7 +209,7 @@ class ExecutionBaselineUnitTests(unittest.TestCase):
             path = root / ".codegraph/cache.json"; path.parent.mkdir(); path.write_text("{}", encoding="utf-8")
             with mock.patch.object(adoption, "go_inputs", return_value={".codegraph/cache.json"}):
                 with self.assertRaisesRegex(adoption.AdoptionError, "untracked/ignored Go build input"):
-                    adoption.validate(change, root, p)
+                    adoption.validate(change, root, p, change.name)
 
     def test_validate_unions_default_and_seams_inputs_and_blocks_each_profile_failure(self) -> None:
         raw, root, change, p, e = self._valid_adoption()
@@ -217,14 +217,14 @@ class ExecutionBaselineUnitTests(unittest.TestCase):
             path = root / ".codegraph/cache.json"; path.parent.mkdir(); path.write_text("{}")
             with mock.patch.object(adoption, "go_inputs", side_effect=(set(), {".codegraph/cache.json"})):
                 with self.assertRaisesRegex(adoption.AdoptionError, "Go build input"):
-                    adoption.validate(change, root, p)
+                    adoption.validate(change, root, p, change.name)
         for failure in (adoption.AdoptionError("default failed"), adoption.AdoptionError("seams failed")):
             raw, root, change, p, e = self._valid_adoption()
             with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
                 side = (failure, set()) if "default" in str(failure) else (set(), failure)
                 with mock.patch.object(adoption, "go_inputs", side_effect=side):
                     with self.assertRaisesRegex(adoption.AdoptionError, str(failure)):
-                        adoption.validate(change, root, p)
+                        adoption.validate(change, root, p, change.name)
     def _fixture(self) -> tuple[tempfile.TemporaryDirectory, Path]:
         raw = tempfile.TemporaryDirectory(); root = Path(raw.name)
         subprocess.run(["git", "init", "-q", "-b", "master"], cwd=root, check=True)
@@ -382,7 +382,7 @@ class ExecutionBaselineUnitTests(unittest.TestCase):
             root = Path(raw)
             change = root / "openspec" / "changes" / "ordinary"
             change.mkdir(parents=True)
-            self.assertIsNone(adoption.validate(change, root, "a" * 40))
+            self.assertIsNone(adoption.validate(change, root, "a" * 40, change.name))
 
     def test_present_record_for_wrong_change_fails_before_git(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -391,7 +391,7 @@ class ExecutionBaselineUnitTests(unittest.TestCase):
             change.mkdir(parents=True)
             (change / "execution-baseline.json").write_text("{}", encoding="utf-8")
             with self.assertRaises(adoption.AdoptionError):
-                adoption.validate(change, root, adoption.P)
+                adoption.validate(change, root, adoption.P, change.name)
 
 
 if __name__ == "__main__":

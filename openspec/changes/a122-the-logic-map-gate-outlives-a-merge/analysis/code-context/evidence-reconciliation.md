@@ -474,3 +474,30 @@ CodeGraph 는 Python 을 인덱싱하지 않으므로 이 리뷰의 대상(`tool
 - **`gate.sh` 를 안 건드렸다.** 6.1.2.6 으로 열었다.
 - **독립 적대 리뷰(gstack)를 이 로트에 아직 안 돌렸다.** 4.4 가 리뷰한 HEAD 이후로
   코드가 바뀌었으므로 4.4 의 리뷰는 이 변경을 안 봤다.
+
+---
+
+# task 6.2 · 6.2.1 — 이관 경로의 두 P0
+
+| 주장 | 증거 | 도구 |
+|---|---|---|
+| 아카이브 뒤 막는 자리가 넷이고 다섯째는 없다 | 메모리 사본에서 가드를 하나씩 풀어 다음 실패를 기록, 넷을 풀면 통과 | `62_chain.py` (생산 코드 무변경) |
+| 이관 기록은 옮기기 전 경로를 적는다 | a063 실물 `execution-baseline.json` 의 세 경로 · `draft` 의 `relative_to(root)` | `json.tool` · 코드 |
+| `_declared_landing` 의 try 밖 호출은 둘이다 | 호출 자리 × 둘러싼 handler | AST(`ast.walk` + 부모 사전) |
+| 편집이 계획대로 갈래를 바꿨다 | before/after 열거 diff | `enumerate.py` — HEAD blob · worktree |
+| 수리가 복사를 막던 둘째 벽을 없앴다 | 편집 전 사본(이름만 지움) = 접두사에서 막힘 · 편집 후 사본(신원 지움) = 통과 | `62_copywall.py` |
+| 각 편집 자리가 시험에 걸린다 | 변이 9, 한 변이에 한 시험, 원복 sha256 | `62_mutations.py` |
+| 활성 a063 판정은 편집 전과 같다 | 기존 이관 시험 초록 · 실물 a063 CLI 출력 동일 | unittest · CLI |
+| 실데이터 확인은 **아니다** | 실물 a063 은 `adoption requires detached HEAD` 앞을 못 지남 | CLI |
+
+## 순서
+
+`ast.before-6.2.json` 다섯(HEAD blob) → FLM "편집 계획" 다섯 곳 → RED 시험 다섯 → GREEN →
+`ast.after-6.2.json` 대조 → 변이 → 벽 실측. 6.1.2 가 어긴 순서를 이번에는 지켰다. 계획의 한
+문장이 틀렸던 것은 편집 전에 호출자를 세다가 찾았고, 틀렸다고 적은 채 고쳤다.
+
+## 못 한 것
+
+- 실물 a063 을 아카이브해 재판정하지 않았다 — 남의 change 상태이고, 이 HEAD 에서는 그 앞
+  단계에서 막힌다.
+- gstack 독립 리뷰는 아직이다.

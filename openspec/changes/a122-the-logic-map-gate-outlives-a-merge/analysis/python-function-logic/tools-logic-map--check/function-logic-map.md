@@ -122,3 +122,28 @@ UTF-8 오류가 오늘과 같은 말을 하게), `L798` 이 새 사유다.
 `ancestry(P,E)` · `ancestry(E,source)` · `ancestry(source,head,strict=True)` ·
 `source^{tree}` 대조 · digest 셋으로 이미 묶는다 — 같은 판정을 두 번 하지 않는다
 ([[two-judgements-cover-for-each-other]]).
+
+
+---
+
+## 편집 계획 — task 6.2 · 6.2.1 (코드보다 먼저, `ast.before-6.2.json` = HEAD `fb4e8f92`)
+
+분기 43 · 반환 14 는 **그대로** 여야 한다. 조건의 피연산자와 호출 인자만 바뀐다.
+
+| 자리 | 전 | 후 | task |
+|---|---|---|---|
+| L865 `resolve_base(change_dir, root, facts)` | 신원 = 디렉터리 이름 | `change_id=change` | 6.2 |
+| L879 `resolve_base(referenced_dir, root)` | 같음 | `change_id=referenced_change` | 6.2 |
+| B21·B22 L898 | `_declared_landing(...) is not None` — 해독, try 밖 | `_landing_record(...) is not None` — 해독 안 함 | 6.2.1 |
+
+B21·B22 가 기전이다: 이관 probe 는 "착지 기록이 **있는가**"를 묻는데 해독하는 함수를
+불렀고, 다섯 호출 자리 중 이것만 try 밖이었다. 비-UTF-8 기록이면 `ValueError` 가 `check()`
+를 뚫었다(4.4 Testing 전문가 실측).
+
+
+## 편집 결과 — task 6.2 · 6.2.1 (`ast.after-6.2.json`)
+
+분기 43 → 43 · 반환 14 → 14. 열거 diff 는 B21·B22 의 callee 하나(`_declared_landing` →
+`_landing_record`)뿐이다. `resolve_base` 두 호출은 인자만 늘었다. 변이 M7(probe 가 다시 해독)
+CAUGHT — `test_an_undecodable_landing_record_in_the_adoption_path_is_refused_not_raised` 가
+`ValueError` 로 **에러**가 된다(편집 전의 증상 그대로).

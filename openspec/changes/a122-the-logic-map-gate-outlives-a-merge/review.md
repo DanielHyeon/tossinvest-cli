@@ -1116,3 +1116,120 @@ M2·M3 이 살아남아서 시험 둘을 더 썼다 — 커밋 안 된 증거는
 `make gate` 가 기록을 **자동으로 쓰게 하지 않았다**(6.1.2.6 으로 열었다). 검사 게이트가
 워킹트리를 바꾸면 게이트의 뜻이 달라지고, 저장소 규칙이 mutating 단계를 사람 승인으로
 묶는다. 5단계 조언 줄이 그 명령을 이름으로 부르고, 값은 여전히 도구가 계산한다.
+
+## VERIFY — task 6.2 · 6.2.1 (이관 경로의 두 P0)
+
+### 순서를 지켰다
+
+6.1.2 는 열거를 편집 뒤에 뽑았다. 이번에는 다섯 함수(`validate` · `resolve_base` ·
+`_declared_landing` · `check` · `record_landing`)의 `ast.before-6.2.json` 을 HEAD blob 에서
+**먼저** 뽑고, 각 FLM 에 "편집 계획"을 코드보다 먼저 적었다. 계획의 예측(분기 수 42·11·43·11
+그대로, `_declared_landing` 5→3·반환 3→2, "다섯째 막는 자리 없음")을 편집 뒤 같은 열거기로
+대조했고 전부 맞았다. 계획 문장 하나는 편집 **전에** 틀린 것을 찾아 고쳤다 — "기본값 갈래를
+부르는 시험은 `SDD_PYTHON` 이 건너뛰는 하나뿐"은 거짓이었다(`test_execution_baseline.py` 가
+20 번 부른다). 결론(필수 인자)은 같고 사유가 다르다.
+
+### 6.2 — 막는 자리는 넷이었다 (4.4 는 하나를 쟀다)
+
+생산 코드를 건드리지 않고 `validate` 의 메모리 사본에서 가드를 하나씩 풀어 다음 실패를 쟀다.
+
+| 푼 가드 | 다음 실패 |
+|---|---|
+| 없음 | `execution-baseline adoption is not allowed for this change/base` |
+| 이름 | `adoption evidence path is outside current change analysis` |
+| + 접두사 | `missing evidence: …/a063-…/analysis/execution-baseline-ledger.json` |
+| + 원장 읽기 | `missing evidence: …/a063-…/analysis/adversary.md` |
+| + 리뷰 읽기 | **통과**, `effective_base == E` |
+
+기전: 이관 기록은 옮기기 **전** 경로를 적는다 — `draft` 가 그렇게 쓰고 a063 실물의 세 경로도
+`openspec/changes/a063-…/analysis/…` 다. 4.4 처방 "신원만 분리하고 경로·digest 검사는
+그대로"는 앞 절반만 맞다. 그대로 두면 이름을 고쳐도 둘째 줄에서 막힌다.
+
+수리: 신원 = 게이트가 요청받은 id(`validate` 의 **필수** 인자 — 호출자 셋이 각자 해소한 id
+를 넘긴다) · 경로 판정 = 적힌 자리 · 읽기 = 지금 자리. digest 비교는 한 글자도 안 바꿨다.
+`validate` 는 아카이브 문법을 새로 배우지 않는다 — 그 문법의 집이 이미 둘이다(6.4(f)).
+
+**수리가 없앤 벽 하나를 직접 쟀다.** 편집 전에는 a063 디렉터리를 다른 id 로 통째로
+복사하면 이름에서 막히고, 이름을 지워도 접두사에서 한 번 더 막혔다. 편집 뒤 신원 판정을
+지우면 복사본 둘(활성 이름·아카이브 이름)이 **통과**한다(`effective_base == E`). 복사를
+막는 것은 이제 신원 하나이고 복사 시험이 그것을 못 박는다. 변이 M2 의 CAUGHT 만으로는 이
+말을 할 수 없었다 — 바늘이 신원 판정의 문장이라 다른 검사가 막아도 빨개지기 때문이다.
+[[surviving-mutant-may-mean-accidental-safety]]
+
+### 6.2.1 — try 밖 자리는 둘이었다 (4.4 는 하나를 셌다)
+
+`_declared_landing` 호출 자리를 AST 로 다시 셌다(편집 전 HEAD `fb4e8f92`).
+
+| 줄 | 함수 | 묻는 것 | try |
+|---|---|---|---|
+| 486 | `resolve_landing` | 값 | 호출자 `check` 가 받는다 |
+| 891 ×2 | `check` 빌린 증거 | 값 | `except ValueError` |
+| **898** | `check` 이관 probe | **있는가** | **없음** — 4.4 가 센 자리 |
+| **1027** | `record_landing` | **있는가** | **없음** — 6.1.2 가 만든 자리, 4.4 뒤라 셀 수 없었다 |
+
+두 자리 다 "있는가"를 해독 함수에 물었다. try 를 두르지 않고 질문을 떼어 냈다 —
+`_landing_record` 는 있는가만 답하고 `_declared_landing` 이 그 위에서 해독한다(오류 문장
+그대로). spec 이 이관 경로의 착지 기록에 "받지 않는다고 이름으로 말한다"를 요구하므로 못
+읽는 기록도 **거절**로 답한다 — 4.4 처방(해독 오류로 돌려주기)과 다르다.
+
+저장소에 비-UTF-8 착지 기록을 재는 시험이 **0** 이었다. 셋을 더했다.
+
+### RED → GREEN
+
+| 시험 | 편집 전 | 편집 후 |
+|---|---|---|
+| `test_an_archived_adoption_is_rechecked_by_its_id` | **FAIL** — `not allowed for this change/base` | OK |
+| `test_an_undecodable_landing_record_in_the_adoption_path_is_refused_not_raised` | **ERROR** — `ValueError` 가 `check()` 를 뚫음 | OK |
+| `test_an_undecodable_committed_record_is_reported_not_raised` | **ERROR** — 같음, `record_landing` | OK |
+| `test_a_copied_adoption_record_does_not_make_another_change_a063` | OK — 이름이 막음 | OK — 신원이 막음 |
+| `test_the_value_path_still_names_an_undecodable_record` | OK | OK |
+
+뒤의 둘은 RED 가 아니라 **회귀 고정**이다(편집 전에 초록인 것이 의도다). 직접 부르는 시험
+22 자리(`test_execution_baseline.py` 20 · `test_check_analysis.py` 2)는 **디렉터리 이름**을
+id 로 넘기게 바꿨다 — 각 시험이 재던 뜻(이름 = 신원)을 한 글자도 안 바꾸려는 것이다.
+`resolve_base` 를 직접 부르는 시험 둘도 같다.
+
+### 변이 9 — 전부 CAUGHT, 한 변이에 한 시험 (`62_mutations.py`, 원복 sha256 동일)
+
+| 변이 | 빨개진 시험 |
+|---|---|
+| M1 신원을 다시 디렉터리 이름으로 | 아카이브 |
+| M2 신원 판정 삭제 | 복사 |
+| M3 접두사를 지금 자리로 판정 | 아카이브 |
+| M4 원장을 적힌 자리에서 읽기 | 아카이브 |
+| M5 리뷰를 적힌 자리에서 읽기 | 아카이브 |
+| M6 `resolve_base` 가 id 대신 이름을 넘김 | 아카이브 |
+| M7 이관 probe 가 다시 해독 | 이관 비-UTF-8 |
+| M8 `record_landing` probe 가 다시 해독 | 덮어쓰기 비-UTF-8 |
+| M9 값 경로가 관대하게 해독 | 값 경로 대조군 |
+
+대조군(무변이)은 `-k adoption -k undecodable` 로 고른 16 시험 전부 초록.
+
+### 실데이터 — 확인이 아니다
+
+실물 a063 은 이 HEAD 에서 `adoption requires detached HEAD` 앞을 못 지난다 — 편집 전후 같은
+줄이고 4.3 이 적은 줄과 같다. 4.3 이 쟀듯 detached worktree 에서도 감사된 `source_commit
+c727ad12` 가 HEAD 의 조상이 아니라 막힌다. 이 수리의 근거는 **저장소 픽스처**다.
+
+### 안 한 것
+
+- 6.3(거절 시험 바늘) · 6.4 · 6.5 · 6.6 은 이 로트 밖이다.
+- 6.4(c) `ARCHIVED_CHANGE` 의 `\d` 는 안 건드렸다 — `validate` 가 그 문법을 안 쓰므로 이
+  수리와 무관하다.
+- gstack 독립 리뷰는 §6 로트를 묶어 한 번 돈다. 아직 안 돌렸다.
+
+### 게이트 (2026-09-11, 이 로트의 워킹트리)
+
+| 게이트 | 결과 |
+|---|---|
+| `make sdd-test` | rc=0 — scripts 15 · logic-map **165**(skip 1) · sdd 69 · sdd-history 22 · pm 15 · deploy 18 |
+| `openspec validate --all --strict` | 58/58 |
+| a122 5단계 (`check_analysis --change a122-…`) | rc=0, required 0 |
+| `make sdd-check` | rc=0 (advisory 경고 둘: codegraphcontext · gbrain) |
+| `make sdd-sync` | **rc=2 — 두 번 돌려 두 번 같다.** `codegraphcontext` 가 `Could not set lock on file …/global/db/kuzudb` |
+
+`sdd-sync` 실패는 재시도로 안 풀린다 — 시간 초과가 아니라 잠금이다. 잠금을 쥔 것은 pid 47230
+`cgc mcp start`(CodeGraphContext MCP 서버, `fuser`·`lsof` 로 확인)이고 GBrain 은 `gbrain serve`
+pid 55793 이 쥐고 있다. 둘 다 **advisory** 이고 hard CodeGraph fingerprint 는 신선하다
+(`sdd-check` rc=0). 남의 세션일 수 있는 MCP 프로세스는 죽이지 않았다
+([[tossos-parallel-session-gate-contention]]).

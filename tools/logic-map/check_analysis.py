@@ -280,7 +280,8 @@ def resolve_referenced_change(root: Path, change: str) -> Path:
 
 
 def resolve_base(
-    change_dir: Path, root: Path, context: dict[str, object] | None = None
+    change_dir: Path, root: Path, context: dict[str, object] | None = None,
+    *, change_id: str,
 ) -> str:
     path = change_dir / "base-commit.txt"
     try:
@@ -309,7 +310,10 @@ def resolve_base(
 
     persisted = resolve(candidate)
     try:
-        adoption = validate_execution_baseline(change_dir, root, persisted)
+        # 이관 신원은 디렉터리 이름이 아니라 요청받은 id 로 가른다 — 아카이브가 이름을
+        # 바꾼다(task 6.2). 필수 인자인 이유: 기본값이 있으면 id 를 잊은 호출자가 조용히
+        # 옛 판정(이름)으로 떨어지고, 그것이 아카이브된 a063 을 막던 바로 그 판정이다.
+        adoption = validate_execution_baseline(change_dir, root, persisted, change_id)
     except AdoptionError as exc:
         raise ValueError(f"invalid execution-baseline adoption: {exc}") from exc
     effective = str(adoption["effective_base"]) if adoption else persisted
@@ -366,6 +370,22 @@ def _commits_after(root: Path, base: str) -> str:
     return "" if process.returncode else process.stdout.strip()
 
 
+def _landing_record(change_dir: Path, root: Path) -> tuple[str, bytes] | None:
+    """HEAD 커밋에 착지 기록이 **있는가**. 있으면 `(경로, 바이트)`, 없으면 `None`.
+
+    해독하지 않는다. "기록이 있는가"와 "기록에 무엇이 적혔나"는 다른 질문이고, 앞의
+    것에 해독하는 함수를 부르면 못 읽는 기록 앞에서 질문 자체가 터진다 — 이관 경로의
+    probe 와 `record_landing` 의 덮어쓰기 거절이 그랬다(task 6.2.1). 못 읽는 기록도
+    기록이다.
+    """
+    try:
+        relative = (change_dir / LANDING_FILE).relative_to(root).as_posix()
+    except ValueError:
+        return None
+    raw = _committed_bytes(root, "HEAD", relative)
+    return None if raw is None else (relative, raw)
+
+
 def _declared_landing(change_dir: Path, root: Path) -> str | None:
     """HEAD 커밋에 적힌 착지 선언. 선언 자체가 없으면 `None` 이다.
 
@@ -374,13 +394,10 @@ def _declared_landing(change_dir: Path, root: Path) -> str | None:
     하나뿐이다. 빈 파일은 `""` 이고 `None` 과 **다르다**: 빈 선언도 선언이므로
     없는 것으로 읽으면 그 change 가 조용히 워킹트리를 대상으로 삼게 된다.
     """
-    try:
-        relative = (change_dir / LANDING_FILE).relative_to(root).as_posix()
-    except ValueError:
+    record = _landing_record(change_dir, root)
+    if record is None:
         return None
-    raw = _committed_bytes(root, "HEAD", relative)
-    if raw is None:
-        return None
+    relative, raw = record
     try:
         return raw.decode("utf-8").strip()
     except UnicodeDecodeError as exc:
@@ -862,7 +879,7 @@ def check(
     # 사전이므로 밖에서 보이는 것은 그대로다.
     facts: dict[str, object] = {} if context is None else context
     try:
-        base = resolve_base(change_dir, root, facts)
+        base = resolve_base(change_dir, root, facts, change_id=change)
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         return [f"cannot derive modified Go functions: {exc}"]
     # 빌린 증거는 착지 판정 **앞에서** 푼다. 착지가 유효한지는 그 change 가 실제로
@@ -876,7 +893,7 @@ def check(
             return ["function-logic reference names an invalid or recursive change"]
         try:
             referenced_dir = resolve_referenced_change(root, referenced_change)
-            referenced_base = resolve_base(referenced_dir, root)
+            referenced_base = resolve_base(referenced_dir, root, change_id=referenced_change)
         except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
             return [f"function-logic reference base is invalid: {exc}"]
         if referenced_base != base:
@@ -895,7 +912,7 @@ def check(
             return ["function-logic reference must share the exact landing point"]
         analysis = referenced_dir / "analysis" / "function-logic"
     adopted = bool(facts.get("execution_baseline_adoption"))
-    if adopted and _declared_landing(change_dir, root) is not None:
+    if adopted and _landing_record(change_dir, root) is not None:
         # 이관 예외의 정당성은 "판정에 들어가는 입력을 하나도 빠짐없이 열거하고
         # digest 로 묶었다"이다. `landed-commit.txt` 는 `openspec/` 아래라 drift 검사가
         # 통과시키고, 추적 파일이라 untracked 감사도 못 보고, 닫힌 키 집합에도 없다.
@@ -1024,7 +1041,7 @@ def record_landing(change: str, root: Path = ROOT) -> tuple[int, list[str]]:
     except ValueError:
         change_dir = root / "openspec" / "changes" / change
     landing_file = change_dir / LANDING_FILE
-    if landing_file.exists() or _declared_landing(change_dir, root) is not None:
+    if landing_file.exists() or _landing_record(change_dir, root) is not None:
         return 1, [f"{change}: `{LANDING_FILE}` already exists — not overwritten"]
     if (change_dir / "analysis" / "function-logic-reference.txt").exists():
         return 1, [
@@ -1033,7 +1050,7 @@ def record_landing(change: str, root: Path = ROOT) -> tuple[int, list[str]]:
         ]
     facts: dict[str, object] = {}
     try:
-        base = resolve_base(change_dir, root, facts)
+        base = resolve_base(change_dir, root, facts, change_id=change)
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         return 1, [f"{change}: cannot resolve the comparison base: {exc}"]
     if facts.get("execution_baseline_adoption"):

@@ -62,3 +62,26 @@ rev-parse)` · `os.environ.get`. `execution_baseline.py` 는 **한 줄도 안 �
 
 주문·손절·익절·사이징·Guardian·원장·대사·인증·체결 어디에도 닿지 않는다. 읽기
 전용이고 실패 방향은 게이트가 **안 열리는** 쪽이다. Go 파일 변경 0.
+
+
+---
+
+## 편집 계획 — task 6.2 (코드보다 먼저, `ast.before-6.2.json` = HEAD `fb4e8f92`)
+
+분기 11 · 반환 2 · raise 4 는 **그대로** 여야 한다. 바뀌는 것은 호출 하나의 인자다.
+
+- `resolve_base(change_dir, root, context=None, *, change_id)` — 게이트가 요청받은 id 를
+  받아 `validate_execution_baseline(change_dir, root, persisted, change_id)` 에 넘긴다.
+  `validate` 가 신원을 디렉터리 이름이 아니라 이 id 로 가르게 하려는 것이다(아카이브는
+  이름을 `<YYYY-MM-DD>-<id>` 로 바꾼다).
+- 호출자 셋(`check` 의 게이트 대상 · `check` 의 빌린 증거 · `record_landing`)은 각자가
+  해소한 id 를 넘긴다. 셋 다 그 id 로 `resolve_referenced_change` 를 부른 직후다.
+- 키워드 전용 필수로 둔다. 기본값을 두면 id 를 안 넘기는 호출자가 조용히 옛 판정(이름)
+  으로 떨어진다.
+
+
+## 편집 결과 — task 6.2 (`ast.after-6.2.json`)
+
+분기 11 → 11 · 반환 2 → 2 · raise 4 → 4, 열거 diff 에 갈래 변화 **0**. 바뀐 것은 시그니처
+(키워드 전용 필수 `change_id`)와 `validate_execution_baseline` 에 넘기는 인자 하나다.
+변이 M6(인자를 `change_dir.name` 으로 되돌림) CAUGHT — 아카이브 시험이 빨개진다.

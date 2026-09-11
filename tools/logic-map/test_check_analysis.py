@@ -183,7 +183,7 @@ class CheckAnalysisTests(unittest.TestCase):
             (change / "review.md").write_text("Function Logic Map: not-applicable\n")
             self._commit(root, "ordinary evidence")
             source.write_text("package internal\nfunc Run() int { return 2 }\n")
-            self.assertEqual(check_analysis.resolve_base(change, root), p)
+            self.assertEqual(check_analysis.resolve_base(change, root, change_id=change.name), p)
             errors = check_analysis.check("ordinary", root)
             self.assertTrue(any("missing Function Logic Map" in error or "missing evidence for modified function" in error for error in errors), errors)
             bundle = change / "analysis" / "function-logic" / "internal--run"; bundle.mkdir(parents=True)
@@ -420,7 +420,7 @@ class CheckAnalysisTests(unittest.TestCase):
             typedb = result["python_modules"]["typedb-driver"]
             self.assertTrue(typedb["ok"], typedb["detail"])
             self.assertIn("mode=external", typedb["detail"])
-            self.assertEqual(adoption.validate(root / "openspec" / "changes" / adoption.CHANGE, root, p)["effective_base"], e)
+            self.assertEqual(adoption.validate(root / "openspec" / "changes" / adoption.CHANGE, root, p, adoption.CHANGE)["effective_base"], e)
             forbidden = root / ".sdd" / ".venv" / "forbidden.py"
             forbidden.parent.mkdir(parents=True)
             forbidden.write_text("forbidden\n", encoding="utf-8")
@@ -428,7 +428,7 @@ class CheckAnalysisTests(unittest.TestCase):
                 adoption.AdoptionError,
                 r"untracked/ignored input is not allowed: \.sdd/\.venv/forbidden\.py",
             ):
-                adoption.validate(root / "openspec" / "changes" / adoption.CHANGE, root, p)
+                adoption.validate(root / "openspec" / "changes" / adoption.CHANGE, root, p, adoption.CHANGE)
 
     def test_valid_adoption_uses_e_and_requires_complete_current_bundle(self) -> None:
         raw, root, p, e = self._adoption_with_complete_bundle()
@@ -550,6 +550,86 @@ class CheckAnalysisTests(unittest.TestCase):
                 any("adoption does not accept" in error for error in errors),
                 f"거절 사유를 이름으로 말해야 한다: {errors}",
             )
+
+    def _archive_adoption(self, root: Path) -> Path:
+        """`openspec archive` 가 하듯 a063 디렉터리를 **통째로** 옮기고 커밋한다."""
+        archived = root / "openspec" / "changes" / "archive" / f"2026-09-11-{adoption.CHANGE}"
+        archived.parent.mkdir(parents=True)
+        subprocess.run(
+            ["git", "mv", f"openspec/changes/{adoption.CHANGE}", archived.relative_to(root).as_posix()],
+            cwd=root, check=True,
+        )
+        self._commit(root, "archive a063")
+        subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
+        return archived
+
+    def test_an_archived_adoption_is_rechecked_by_its_id(self) -> None:
+        """아카이브된 a063 도 그 id 로 다시 판정할 수 있어야 한다 (task 6.2).
+
+        spec: "완료 게이트는 아카이브된 change 의 함수 분석도 그 id 로 재검사할 수 있어야
+        한다(SHALL)". 이관 경로만 못 갔다. 4.4 는 이름 판정 하나를 쟀는데, 가드를 하나씩
+        풀어 가며 재 보니 막는 자리가 **넷**이었다 — 이름 · 증거 경로의 접두사 · 원장
+        읽기 · 리뷰 읽기. 기록은 옮기기 **전** 경로를 적고(`draft` 가 그렇게 쓴다),
+        아카이브는 내용을 안 바꾸고 자리만 옮긴다."""
+        raw, root, p, e = self._adoption_with_complete_bundle()
+        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
+            archived = self._archive_adoption(root)
+            # 기대값은 실행 중인 코드가 아니라 **옮겨진 자리의 영수증**에서 읽는다.
+            source = json.loads((archived / "execution-baseline.json").read_text())["source_commit"]
+            context: dict[str, object] = {}
+            self.assertEqual(check_analysis.check(adoption.CHANGE, root, context), [])
+            self.assertTrue(context.get("execution_baseline_adoption"), "이관 경로로 판정해야 한다")
+            self.assertEqual(context.get("landing"), source)
+            code, output = self._adoption_output(root)
+            self.assertEqual(code, 0, output)
+            self.assertIn(f"audited source-commit {source}", output)
+            self.assertIn("execution-baseline adoption exception evidence complete", output)
+
+    def test_a_copied_adoption_record_does_not_make_another_change_a063(self) -> None:
+        """이관 예외는 a063 하나의 것이다. 신원은 **게이트가 요청받은 id** 로 가른다 (task 6.2).
+
+        증거를 지금 자리에서 읽게 되면 경로 판정은 더 이상 "통째로 복사한 디렉터리"를
+        막지 못한다 — 복사본 안에서도 적힌 경로는 a063 의 것이고 digest 도 맞는다. 그 뒤로
+        복사를 막는 것은 신원 판정 **하나**다. 활성 이름과 아카이브 이름 둘 다로 복사한다."""
+        raw, root, p, e = self._adoption_with_complete_bundle()
+        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
+            original = root / "openspec" / "changes" / adoption.CHANGE
+            shutil.copytree(original, root / "openspec" / "changes" / "a130-copy")
+            shutil.copytree(original, root / "openspec" / "changes" / "archive" / "2026-09-11-a131-copy")
+            self._commit(root, "copy a063 whole under two other ids")
+            subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
+            for other in ("a130-copy", "a131-copy"):
+                errors = check_analysis.check(other, root)
+                self.assertTrue(
+                    any("adoption is not allowed for this change/base" in error for error in errors),
+                    f"{other}: {errors}",
+                )
+            # 양성 대조: 원본은 그대로 통과해야 한다. 안 그러면 위 거절은 픽스처가 깨졌다는
+            # 이유로도 성립한다.
+            self.assertEqual(check_analysis.check(adoption.CHANGE, root), [])
+
+    def test_an_undecodable_landing_record_in_the_adoption_path_is_refused_not_raised(self) -> None:
+        """이관 경로의 착지 기록 probe 는 **있느냐**만 묻는다 (task 6.2.1).
+
+        옛 판본은 그 질문에 값을 **해독하는** 함수를 불렀고, 그 호출만 try 밖이었다.
+        비-UTF-8 기록이면 `ValueError` 가 `check()` 를 뚫고 `main()` 이 traceback 으로
+        죽었다. spec 은 이관 경로의 착지 기록에 "이관 경로가 그 기록을 받지 않는다는 것을
+        이름으로 말한다"를 요구한다 — 못 읽는 기록도 기록이다."""
+        raw, root, p, e = self._adoption_with_complete_bundle()
+        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
+            change = root / "openspec" / "changes" / adoption.CHANGE
+            (change / check_analysis.LANDING_FILE).write_bytes(b"\xff\xfe not utf-8\n")
+            self._commit(root, "an undecodable landing record inside the adoption path")
+            subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
+            errors = check_analysis.check(adoption.CHANGE, root)
+            self.assertTrue(
+                any("adoption does not accept" in error for error in errors),
+                f"거절 사유를 이름으로 말해야 한다: {errors}",
+            )
+            code, output = self._adoption_output(root)
+            self.assertEqual(code, 1, output)
+            self.assertIn("[logic-map] execution-baseline adoption does not accept", output)
+
     def test_explicit_exemption_is_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             change = Path(tmp) / "openspec" / "changes" / "docs-only"
@@ -882,7 +962,7 @@ evidence
                 side_effect=(persisted, override),
             ):
                 with self.assertRaises(ValueError):
-                    check_analysis.resolve_base(change, root)
+                    check_analysis.resolve_base(change, root, change_id=change.name)
 
 
     # The three checks below exist because ten of thirty-six a092 artifacts
@@ -1722,6 +1802,35 @@ class TheGateRecordsTheLandingInsteadOfTheAuthor(unittest.TestCase):
             code, lines = check_analysis.record_landing("mine", root)
             self.assertEqual(code, 1)
             self.assertTrue(any("no `revision: current` evidence" in line for line in lines), lines)
+
+    def test_an_undecodable_committed_record_is_reported_not_raised(self) -> None:
+        """"기록이 있는가"에 해독은 필요 없다 (task 6.2.1 — 호출 자리 열거가 찾은 둘째 자리).
+
+        4.4 는 `check` 의 probe 하나를 셌다. 6.1.2 가 같은 모양의 probe 를 여기에 하나
+        더 만들었고 역시 try 밖이다. 워킹트리에서 지운 기록이 HEAD 에 비-UTF-8 로 남아
+        있으면 `exists()` 가 거짓이라 해독 호출까지 가서 터졌다."""
+        raw, root, _ = self._fixture(base_also_matches=False)
+        with raw:
+            record = root / "openspec" / "changes" / "mine" / "landed-commit.txt"
+            record.write_bytes(b"\xff\xfe not utf-8\n")
+            _commit_all(root, "an undecodable record")
+            record.unlink()
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertTrue(any("already exists" in line for line in lines), lines)
+
+    def test_the_value_path_still_names_an_undecodable_record(self) -> None:
+        """대조군. "있는가"를 해독에서 떼어 내도 **값을 읽는 쪽**은 여전히 해독 실패를
+        이름으로 말해야 한다 (task 6.2.1). 저장소에 이 문장을 재는 시험이 0 이었다."""
+        raw, root, _ = self._fixture(base_also_matches=False)
+        with raw:
+            record = root / "openspec" / "changes" / "mine" / "landed-commit.txt"
+            record.write_bytes(b"\xff\xfe not utf-8\n")
+            _commit_all(root, "an undecodable record")
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(
+                any("landing point is not UTF-8" in error for error in errors), errors
+            )
 
 
 class ADeclaredLandingMustBePinnedByEvidence(unittest.TestCase):

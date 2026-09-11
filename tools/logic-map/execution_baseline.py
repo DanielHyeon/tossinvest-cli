@@ -390,7 +390,7 @@ def main() -> int:
     return 0
 
 
-def validate(change_dir: Path, root: Path, persisted: str) -> dict | None:
+def validate(change_dir: Path, root: Path, persisted: str, change_id: str) -> dict | None:
     record_path = change_dir / "execution-baseline.json"
     try:
         record_mode = record_path.lstat().st_mode
@@ -398,7 +398,11 @@ def validate(change_dir: Path, root: Path, persisted: str) -> dict | None:
         return None
     if not stat.S_ISREG(record_mode):
         raise AdoptionError("execution-baseline record is not a regular file")
-    if change_dir.name != CHANGE or persisted != P:
+    # 신원은 디렉터리 이름이 아니라 **게이트가 요청받은 id** 다 (task 6.2). 아카이브는
+    # `changes/<id>` 를 `changes/archive/<YYYY-MM-DD>-<id>` 로 옮겨 이름을 바꾸고, 그
+    # 문법으로 id 에서 디렉터리를 찾는 일은 호출자의 해소기가 이미 했다. 여기서 그 문법을
+    # 다시 배우면 같은 규칙이 사는 집이 셋이 된다.
+    if change_id != CHANGE or persisted != P:
         raise AdoptionError("execution-baseline adoption is not allowed for this change/base")
     if subprocess.run(["git", "symbolic-ref", "-q", "HEAD"], cwd=root, capture_output=True, check=False).returncode == 0:
         raise AdoptionError("adoption requires detached HEAD")
@@ -411,15 +415,21 @@ def validate(change_dir: Path, root: Path, persisted: str) -> dict | None:
     if set(record) != required:
         raise AdoptionError("invalid execution-baseline record")
     _schema_one(record["schema"], "execution-baseline record")
-    local_analysis = (change_dir.relative_to(root) / "analysis").as_posix() + "/"
+    # 기록은 옮기기 **전** 자리의 경로를 적는다(`draft` 가 `openspec/changes/<id>/…` 로
+    # 쓴다). 그 경로가 이 change 의 분석 안인지는 **적힌 자리**로 판정하고, 바이트는
+    # **지금 자리**에서 읽는다. 아카이브는 내용을 안 바꾸므로 아래 digest 가 그대로 묶는다.
+    canonical = f"openspec/changes/{CHANGE}"
+    here = change_dir.relative_to(root).as_posix()
+    local_analysis = canonical + "/analysis/"
     if not all(isinstance(record[key], str) for key in required - {"schema"}):
         raise AdoptionError("execution-baseline record field types are invalid")
     if record["change"] != CHANGE or record["planning_base"] != P or record["execution_base"] != E or record["pre_edit_provenance"] != "retrospective-exception":
         raise AdoptionError("invalid execution-baseline record")
     if record["inherited_history_disposition"] != "committed historical work; missing original analysis remains debt":
         raise AdoptionError("inherited history disposition is invalid")
+    located: dict[str, str] = {}
     for field in ("ledger_path", "adversarial_review_path", "gstack_review_path"):
-        _change_analysis_path(record[field], local_analysis, field)
+        located[field] = here + _change_analysis_path(record[field], local_analysis, field)[len(canonical):]
     for field in ("ledger_sha256", "adversarial_review_sha256", "gstack_review_sha256"):
         _sha256(record[field], field)
     if record["adversarial_review_path"] == record["gstack_review_path"]:
@@ -449,11 +459,11 @@ def validate(change_dir: Path, root: Path, persisted: str) -> dict | None:
     overlap = sorted(candidates & inputs)
     if overlap:
         raise AdoptionError(f"untracked/ignored Go build input: {overlap[0]}")
-    ledger_raw = _regular_committed(root, record["ledger_path"], head)
+    ledger_raw = _regular_committed(root, located["ledger_path"], head)
     if hashlib.sha256(ledger_raw).hexdigest() != record["ledger_sha256"]:
         raise AdoptionError("ledger digest mismatch")
     for name in ("adversarial_review", "gstack_review"):
-        if hashlib.sha256(_regular_committed(root, record[name + "_path"], head)).hexdigest() != record[name + "_sha256"]:
+        if hashlib.sha256(_regular_committed(root, located[name + "_path"], head)).hexdigest() != record[name + "_sha256"]:
             raise AdoptionError(f"{name} digest mismatch")
     ledger = strict_json(ledger_raw)
     ledger_required = {"schema", "planning_to_execution", "execution_to_source", "inherited_history_disposition"}

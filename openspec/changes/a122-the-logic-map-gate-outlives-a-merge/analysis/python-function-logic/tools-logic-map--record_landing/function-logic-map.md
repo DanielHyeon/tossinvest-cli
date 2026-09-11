@@ -46,3 +46,27 @@ change · 이관 change(a063) · 기록이 이미 있는 change · 추적 파일
 Go 편집은 어느 커밋에도 없다. 그대로 쓰면 5단계가 못 보는 편집이 생긴다.
 `make gate` 는 이것을 자동 실행하지 않는다 — 검사 게이트가 워킹트리를 바꾸면
 게이트의 뜻이 달라지고, 저장소 규칙이 mutating 단계를 사람 승인으로 묶는다.
+
+
+---
+
+## 편집 계획 — task 6.2 · 6.2.1 (코드보다 먼저, `ast.before-6.2.json` = HEAD `fb4e8f92`)
+
+분기 11 · 반환 8 은 **그대로** 여야 한다.
+
+| 자리 | 전 | 후 | task |
+|---|---|---|---|
+| B4·B5 L1027 | `landing_file.exists() or _declared_landing(...) is not None` | `… or _landing_record(...) is not None` | 6.2.1 |
+| L1036 `resolve_base(change_dir, root, facts)` | 신원 = 이름 | `change_id=change` | 6.2 |
+
+B4·B5 는 **이 로트가 찾은 둘째 자리**다. 4.4 는 `check` 의 probe 하나를 셌는데 이 함수는
+6.1.2(4.4 뒤)에 생겼다. 호출 자리를 AST 로 다시 세지 않았으면 못 봤다
+([[caller-count-is-not-fix-site-count]]). 워킹트리에서 지운 기록이 HEAD 에 비-UTF-8 로
+남아 있으면 `exists()` 가 거짓이라 해독까지 가서 터진다.
+
+
+## 편집 결과 — task 6.2 · 6.2.1 (`ast.after-6.2.json`)
+
+분기 11 → 11 · 반환 8 → 8. 열거 diff 는 B4·B5 의 callee 하나뿐이다. 변이 M8(probe 가 다시
+해독) CAUGHT — `test_an_undecodable_committed_record_is_reported_not_raised` 가 `ValueError`
+로 에러가 된다.

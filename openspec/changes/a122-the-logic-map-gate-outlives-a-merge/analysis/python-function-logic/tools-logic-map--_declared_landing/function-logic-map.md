@@ -45,3 +45,41 @@ untracked 파일로 게이트를 통과한 뒤 지울 수 있다(task 1.5).
 
 주문·손절·익절·사이징·Guardian·원장·대사·인증·체결 어디에도 닿지 않는다. 읽기
 전용이고 실패 방향은 게이트가 **안 열리는** 쪽이다. Go 파일 변경 0.
+
+
+---
+
+## 편집 계획 — task 6.2.1 (코드보다 먼저, `ast.before-6.2.json` = HEAD `fb4e8f92`)
+
+호출 자리 열거(AST, `check_analysis.py` 전체): 이 함수를 부르는 자리 **다섯**.
+
+| 줄 | 함수 | 묻는 것 | 둘러싼 try |
+|---|---|---|---|
+| 486 | `resolve_landing` | 값 | 없음 — 호출자 `check` 의 try(B23)가 받는다 |
+| 891 ×2 | `check`(빌린 증거) | 값(두 선언이 같은가) | `except ValueError` |
+| **898** | `check`(이관 probe) | **있는가** | **없음** |
+| **1027** | `record_landing` | **있는가** | **없음** — 6.1.2 가 만든 자리, 4.4 뒤라 4.4 가 못 셌다 |
+
+터지는 두 자리가 둘 다 **"있는가"** 를 묻는다. 그 질문에 해독하는 함수를 부른 것이
+기전이다 — try 로 감싸는 것은 증상을 받는 것이고, 질문을 맞는 함수에 거는 것이 근본 수정이다.
+
+- 새 함수 `_landing_record(change_dir, root) -> tuple[str, bytes] | None` 가 B1·B2
+  (`relative_to` 실패 → None)와 `_committed_bytes` 를 가져간다. 해독하지 않는다.
+- 이 함수는 그것을 불러 B3(없음)·B4·B5(해독)만 남긴다. 반환 3 → 2, raise 1 → 1,
+  분기 5 → 3. 오류 문장 `landing point is not UTF-8: {relative}` 는 한 글자도 안 바꾼다.
+- 898 · 1027 은 `_landing_record(...) is not None` 으로 묻는다.
+
+spec 이 가른 답: 이관 경로의 착지 기록에는 "이관 경로가 그 기록을 받지 않는다는 것을
+이름으로 말한다". 못 읽는 기록도 기록이므로, 해독 실패를 오류로 돌려주는 것
+(4.4 처방)보다 **있으니 거절**이 spec 에 맞다.
+
+
+## 편집 결과 — task 6.2.1 (`ast.after-6.2.json`)
+
+분기 5 → 3 · 반환 3 → 2 · raise 1 → 1. **계획대로다.** B1·B2(`try` / `except ValueError`)가
+`_landing_record` 로 옮겨 갔고 `if raw is None` 이 `if record is None` 이 됐다. 오류 문장
+`landing point is not UTF-8: {relative}` 는 그대로다.
+
+변이 M9(해독을 `errors="replace"` 로 관대하게) CAUGHT —
+`test_the_value_path_still_names_an_undecodable_record` 가 빨개진다. **그 문장을 재는 시험은
+이 편집 전에 저장소에 0 개였다.**
