@@ -1734,6 +1734,347 @@ class TheEvidenceFloorSurvivesArchivingAndDemandsCommittedEvidence(unittest.Test
             )
 
 
+class TheJudgedBundleMustBeTheCommittedBundle(unittest.TestCase):
+    """판정이 **읽은** 번들이 착지 커밋에 그대로 있어야 한다 (task 7.2, 리뷰 C3).
+
+    하한(`_evidence_floor`)은 번들의 **경로**를 보고, 판정(`validate_target`·
+    `_pinning_bundles`)은 **워킹트리의 내용**을 읽는다. 이 둘이 갈리는 자리마다
+    저자가 하한을 안 움직이고 증거를 바꿀 수 있다 — 자리표시자를 일찍 커밋해 두고
+    나중에 워킹트리에서 갈아 끼우거나, 번들 파일을 감시 밖 파일로 향하는 심링크로
+    두거나.
+
+    2026-09-12 전수 실측으로 고른 규칙이다: 활성·아카이브 76건에서 **거부 0**.
+    범위를 번들의 산문 파일까지 넓히면 3건이 착지를 잃어서(a092·a043·a096 — 전부
+    이웃 change 가 나중에 단 무효화 배너) `ast.json` 하나로 묶는다. 기록은 review.md
+    `## MEASURE — task 7.2 후보 실측` · `## DECIDE — task 7.2`.
+    """
+
+    def _placeholder_fixture(self) -> tuple[tempfile.TemporaryDirectory, Path, dict[str, str]]:
+        """자리표시자를 base 커밋에 넣고, 진짜 번들은 워킹트리에서만 갈아 끼운다."""
+        raw = tempfile.TemporaryDirectory()
+        root = _init_fixture(raw)
+        own = root / "internal" / "own.go"
+        own.parent.mkdir(parents=True)
+        own.write_text("package internal\nfunc Own() int { return 1 }\n")
+        change = root / "openspec" / "changes" / "mine"
+        change.mkdir(parents=True)
+        (change / "review.md").write_text("mine\n")
+        bundle = change / "analysis" / "function-logic" / "internal--own"
+        bundle.mkdir(parents=True)
+        # scaffold 가 만드는 빈 자리. 이 커밋이 하한이 된다 — 내용은 아무것도 고정하지 않는데도.
+        (bundle / "ast.json").write_text("{}\n", encoding="utf-8")
+        marks = {"P": _commit_all(root, "P: base, with the analysis directory scaffolded")}
+        (change / "base-commit.txt").write_text(marks["P"] + "\n")
+        at_base = hashlib.sha256(own.read_bytes()).hexdigest()
+        own.write_text("package internal\nfunc Own() int { return 2 }\n")
+        marks["W"] = _commit_all(root, "W: this change's Go work lands")
+        # 워킹트리에서만 갈아 끼운다. 커밋하면 하한이 여기로 올라와서 위조가 안 된다.
+        _write_evidence(
+            change, package="internal", function="Own", relative="internal/own.go",
+            digest=at_base,
+        )
+        return raw, root, marks
+
+    def _declare_only_the_landing(self, root: Path, change: str, value: str) -> None:
+        """`landed-commit.txt` **만** 커밋한다 — `git add .` 은 위조를 커밋해 버린다."""
+        (root / "openspec" / "changes" / change / "landed-commit.txt").write_text(value + "\n")
+        subprocess.run(
+            ["git", "add", f"openspec/changes/{change}/landed-commit.txt"], cwd=root, check=True
+        )
+        subprocess.run(["git", "commit", "-qm", "declare the landing"], cwd=root, check=True)
+
+    def test_the_replacement_is_red_without_a_landing_record(self) -> None:
+        """음성 대조군. 선언이 없으면 같은 입력이 오늘도 빨갛다."""
+        raw, root, _ = self._placeholder_fixture()
+        with raw:
+            self.assertTrue(check_analysis.check("mine", root))
+
+    def test_a_placeholder_committed_early_cannot_pin_a_landing(self) -> None:
+        """C3 — 커밋된 것은 `{}`, 판정이 읽은 것은 base 를 기술하는 번들."""
+        raw, root, marks = self._placeholder_fixture()
+        with raw:
+            self._declare_only_the_landing(root, "mine", marks["P"])
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(errors, "커밋 안 된 번들로 base 를 선언하면 거절해야 한다")
+            self.assertTrue(
+                any("does not hold the evidence this verdict read" in error for error in errors),
+                f"사유를 이 가드의 자기 문장으로 말해야 한다: {errors}",
+            )
+
+    def _symlink_fixture(self) -> tuple[tempfile.TemporaryDirectory, Path, str]:
+        """`ast.json` 이 감시 경로 **밖**을 가리키는 심링크. 대상은 한 번 고쳐진다."""
+        raw = tempfile.TemporaryDirectory()
+        root = _init_fixture(raw)
+        own = root / "internal" / "own.go"
+        own.parent.mkdir(parents=True)
+        own.write_text("package internal\nfunc Own() int { return 1 }\n")
+        change = root / "openspec" / "changes" / "mine"
+        change.mkdir(parents=True)
+        (change / "review.md").write_text("mine\n")
+        at_base = hashlib.sha256(own.read_bytes()).hexdigest()
+        bundle = _write_evidence(
+            change, package="internal", function="Own", relative="internal/own.go",
+            digest=at_base,
+        )
+        target = change / "analysis" / "real-ast.json"
+        shutil.move(str(bundle / "ast.json"), target)
+        (bundle / "ast.json").symlink_to(Path("..") / ".." / "real-ast.json")
+        base = _commit_all(root, "P: base, evidence symlinked out of its bundle")
+        (change / "base-commit.txt").write_text(base + "\n")
+        own.write_text("package internal\nfunc Own() int { return 2 }\n")
+        _commit_all(root, "W: this change's Go work lands")
+        # 대상 파일만 고친다. 감시 경로(`…/internal--own/ast.json`)는 그대로다.
+        value = json.loads(target.read_text(encoding="utf-8"))
+        value["signature"] = "Own(params=0, results=1) // rewritten out of sight"
+        target.write_text(json.dumps(value), encoding="utf-8")
+        _commit_all(root, "T: rewrite the target the symlink points at")
+        return raw, root, base
+
+    def test_a_bundle_symlinked_out_of_the_watched_path_cannot_pin_a_landing(self) -> None:
+        """C3 — 하한이 지켜보는 파일과 판정이 읽는 파일이 다르다.
+
+        `ast.json` 이 감시 경로 **밖**을 가리키는 심링크면 대상 파일을 몇 번을 고쳐도
+        하한은 안 움직인다."""
+        raw, root, base = self._symlink_fixture()
+        with raw:
+            self._declare_only_the_landing(root, "mine", base)
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(errors, "감시 밖 파일을 읽는 번들은 착지를 고정하지 못한다")
+            self.assertTrue(
+                any("does not hold the evidence this verdict read" in error for error in errors),
+                f"사유를 이 가드의 자기 문장으로 말해야 한다: {errors}",
+            )
+
+    def test_the_gate_will_not_compute_a_landing_it_cannot_hold(self) -> None:
+        """계산 경로에도 **같은** 조건이 선다.
+
+        규칙이 `resolve_landing` 에만 있으면 도구가 자기가 거절할 값을 계산해서 기록한다.
+        같은 규칙이 두 집에 살면 한쪽만 고쳐도 양쪽 시험이 초록이 되므로
+        ([[two-judgements-cover-for-each-other]]) 계산 쪽도 따로 못 박는다. 워킹트리는
+        깨끗하다 — `record_landing` 의 더러운 트리 거절이 이 자리를 가리지 않는다."""
+        raw, root, _ = self._symlink_fixture()
+        with raw:
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, f"들고 있지 않은 증거로 착지를 계산하면 안 된다: {lines}")
+            self.assertTrue(
+                any("no commit holds the evidence this verdict read" in line for line in lines),
+                f"사유를 이 가드의 자기 문장으로 말해야 한다: {lines}",
+            )
+            self.assertFalse((root / "openspec" / "changes" / "mine" / "landed-commit.txt").exists())
+
+    def test_an_honest_bundle_still_pins_its_landing(self) -> None:
+        """양성 대조군. 커밋된 번들과 워킹트리가 같으면 아무것도 안 막는다.
+
+        이것이 빨개지면 규칙이 정상 입력을 죽인 것이고, 실측한 '거부 0' 이 거짓이 된다."""
+        raw, root, marks = AForgedLandingPointIsRefusedByName()._clean_fixture()
+        with raw:
+            change = root / "openspec" / "changes" / "mine"
+            landing = subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=root, text=True
+            ).strip()
+            _declare_landing(change, landing, "record the landing the gate computed")
+            facts: dict[str, object] = {}
+            self.assertEqual(check_analysis.check("mine", root, facts), [])
+            self.assertEqual(facts["required_count"], 1)
+
+
+class AnEvidenceRewriteHiddenInAMoveStillRaisesTheFloor(unittest.TestCase):
+    """옮기면서 **고친** 증거는 하한을 올린다. 그대로 옮긴 것만 건너뛴다 (task 7.2, H1).
+
+    하한이 rename 을 건너뛰는 이유는 하나다 — 아카이브가 번들을 통째로 옮기고, 그
+    이동을 하한으로 세면 이미 유효했던 기록이 무효가 되기 때문이다. 그런데 `-M` 의
+    기본 유사도는 50% 라 **내용을 고치면서** 옮긴 것도 같은 rename 으로 보고 건너뛰었고,
+    `--diff-filter=MA` 는 정규 파일↔심링크 전환(`T`)을 아예 안 셌다. 둘 다 내용 교체인데
+    하한이 안 움직인다.
+
+    시험이 하한 함수 자체를 부르는 이유: 종단(`check`)에서는 같은 입력을 C3 등식
+    (`_unheld_bundles`)이 **먼저** 거절한다. 그 위에서 재면 이 시험은 하한이 아니라 다른
+    가드를 재게 된다([[first-failure-is-not-the-fix-scope]]). 하한의 계약은 "고정 번들이
+    역사에 마지막으로 들어오거나 바뀐 커밋"이고, 그 계약을 그 층에서 못 박는다.
+
+    2026-09-12 전수 실측: 하한이 움직이는 change 1건, 착지를 잃는 change 0건.
+    """
+
+    def _committed_change(self, root: Path) -> tuple[Path, str]:
+        """base 커밋에 번들이 이미 있는 change. `(change 경로, base)`."""
+        own = root / "internal" / "own.go"
+        own.parent.mkdir(parents=True)
+        own.write_text("package internal\nfunc Own() int { return 1 }\n")
+        change = root / "openspec" / "changes" / "mine"
+        change.mkdir(parents=True)
+        (change / "review.md").write_text("mine\n")
+        _write_evidence(
+            change, package="internal", function="Own", relative="internal/own.go",
+            digest=hashlib.sha256(own.read_bytes()).hexdigest(),
+        )
+        base = _commit_all(root, "P: base, with the evidence already committed")
+        (change / "base-commit.txt").write_text(base + "\n")
+        own.write_text("package internal\nfunc Own() int { return 2 }\n")
+        _commit_all(root, "W: this change's Go work lands")
+        return change, base
+
+    def test_an_archive_that_also_rewrites_the_bundle_moves_the_floor(self) -> None:
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root = _init_fixture(raw)
+            change, base = self._committed_change(root)
+            archive = root / "openspec" / "changes" / "archive" / "2026-09-11-mine"
+            archive.parent.mkdir(parents=True, exist_ok=True)
+            subprocess.run(
+                ["git", "mv", "openspec/changes/mine", archive.relative_to(root).as_posix()],
+                cwd=root, check=True,
+            )
+            # 옮기는 **같은 커밋**에서 번들을 다시 쓴다. 고정하는 리비전은 그대로다.
+            ast = archive / "analysis" / "function-logic" / "internal--own" / "ast.json"
+            value = json.loads(ast.read_text(encoding="utf-8"))
+            value["signature"] = "Own(params=0, results=1) // rescaffolded"
+            ast.write_text(json.dumps(value), encoding="utf-8")
+            moved = _commit_all(root, "archive the change and rewrite its bundle in one commit")
+            self.assertEqual(
+                check_analysis._evidence_floor(root, archive / "analysis" / "function-logic"),
+                moved,
+                "이동에 숨긴 재작성이 하한이어야 한다",
+            )
+
+    def test_a_pure_archive_move_still_does_not_move_the_floor(self) -> None:
+        """양성 대조군. 그대로 옮긴 것까지 세면 a099 의 실물 기록이 무효가 된다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root = _init_fixture(raw)
+            change, base = self._committed_change(root)
+            before = check_analysis._evidence_floor(root, change / "analysis" / "function-logic")
+            archive = root / "openspec" / "changes" / "archive" / "2026-09-11-mine"
+            archive.parent.mkdir(parents=True, exist_ok=True)
+            subprocess.run(
+                ["git", "mv", "openspec/changes/mine", archive.relative_to(root).as_posix()],
+                cwd=root, check=True,
+            )
+            _commit_all(root, "archive the change, byte for byte")
+            self.assertEqual(
+                check_analysis._evidence_floor(root, archive / "analysis" / "function-logic"),
+                before,
+                "그대로 옮긴 것은 하한이 아니다",
+            )
+
+    def test_turning_a_bundle_into_a_symlink_moves_the_floor(self) -> None:
+        """`T` — 정규 파일을 심링크로 바꾸면 읽히는 내용이 통째로 바뀐다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root = _init_fixture(raw)
+            change, base = self._committed_change(root)
+            bundle = change / "analysis" / "function-logic" / "internal--own"
+            target = change / "analysis" / "real-ast.json"
+            shutil.move(str(bundle / "ast.json"), target)
+            (bundle / "ast.json").symlink_to(Path("..") / ".." / "real-ast.json")
+            switched = _commit_all(root, "T: the bundle becomes a symlink")
+            self.assertEqual(
+                check_analysis._evidence_floor(root, change / "analysis" / "function-logic"),
+                switched,
+                "정규 파일↔심링크 전환도 내용 교체다",
+            )
+
+
+class TheFloorDoesNotChangeWithTheDevelopersGitConfig(unittest.TestCase):
+    """하한은 저장소의 함수여야 한다 — 그 기계의 git 설정의 함수가 아니라 (task 7.2, H2).
+
+    `log.follow = true` 는 흔한 개인 설정이고, 경로가 **하나**일 때 `git log` 를
+    `--follow` 로 만든다. 그러면 rename 이 짝지어져 `--diff-filter=MA` 에서 빠지고
+    하한이 이동 **이전**으로 내려간다. 같은 저장소·같은 선언이 기계마다 다른 판정을
+    받는다. 게이트는 자기가 부르는 git 의 설정을 지운다.
+
+    2026-09-12 전수 실측: 거부 0.
+    """
+
+    def _renamed_bundle_fixture(
+        self, *, describes: str = "base"
+    ) -> tuple[tempfile.TemporaryDirectory, Path, dict[str, str]]:
+        """번들이 한 번 **그대로** 이름을 바꾼 change. 하한 경로가 하나라 `log.follow` 가 켜진다.
+
+        `describes` 는 번들이 어느 리비전을 기술하는가다. `"base"` 는 위조 — 증거가
+        base 커밋에 이미 있고 base 상태를 기술하므로, 하한만 내려가면 창이 빈다.
+        `"current"` 는 정직한 change 다. 둘 다 있어야 규칙이 무엇을 거부하고 무엇을
+        통과시키는지 갈린다.
+        """
+        raw = tempfile.TemporaryDirectory()
+        root = _init_fixture(raw)
+        own = root / "internal" / "own.go"
+        own.parent.mkdir(parents=True)
+        own.write_text("package internal\nfunc Own() int { return 1 }\n")
+        change = root / "openspec" / "changes" / "mine"
+        change.mkdir(parents=True)
+        (change / "review.md").write_text("mine\n")
+        at_base = hashlib.sha256(own.read_bytes()).hexdigest()
+        if describes == "base":
+            _write_evidence(
+                change, package="internal", function="Own", relative="internal/own.go",
+                digest=at_base,
+            )
+        marks = {"P": _commit_all(root, "P: base")}
+        (change / "base-commit.txt").write_text(marks["P"] + "\n")
+        own.write_text("package internal\nfunc Own() int { return 2 }\n")
+        marks["W"] = _commit_all(root, "W: this change's Go work lands")
+        if describes != "base":
+            _write_evidence(
+                change, package="internal", function="Own", relative="internal/own.go",
+                digest=hashlib.sha256(own.read_bytes()).hexdigest(),
+            )
+            marks["E"] = _commit_all(root, "E: evidence enters history under its first name")
+        logic = change / "analysis" / "function-logic"
+
+        def move(source: str, destination: str, subject: str) -> str:
+            subprocess.run(
+                ["git", "mv", (logic / source).relative_to(root).as_posix(),
+                 (logic / destination).relative_to(root).as_posix()],
+                cwd=root, check=True,
+            )
+            return _commit_all(root, subject)
+
+        # 왕복이다. 한쪽 방향만 옮기면 오늘의 경로가 base 에 없어서 C3 등식이 **먼저**
+        # 거절하고, 그러면 이 시험은 하한이 설정에 흔들리는 것을 못 재고 다른 가드를
+        # 재게 된다. 제자리로 돌아와야 base 에 같은 경로·같은 바이트가 있고, 갈리는
+        # 것이 하한 하나만 남는다 — 이 설정 의존성의 **최소 증인**이다.
+        move("internal--own", "internal--own-moved", "R1: the bundle moves aside")
+        marks["R"] = move("internal--own-moved", "internal--own", "R2: and moves back")
+        return raw, root, marks
+
+    def test_a_stale_landing_is_refused_on_a_log_follow_machine(self) -> None:
+        raw, root, marks = self._renamed_bundle_fixture()
+        with raw:
+            subprocess.run(["git", "config", "log.follow", "true"], cwd=root, check=True)
+            change = root / "openspec" / "changes" / "mine"
+            _declare_landing(change, marks["P"], "declare the base as the landing")
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(errors, "개인 git 설정이 하한을 내리면 안 된다")
+            self.assertTrue(
+                any("precedes the evidence that pins it" in error for error in errors),
+                f"사유를 하한 가드의 자기 문장으로 말해야 한다: {errors}",
+            )
+
+    def test_the_same_repository_gets_the_same_verdict_either_way(self) -> None:
+        """같은 저장소·같은 선언이 설정 하나로 갈리면 안 된다."""
+        verdicts = []
+        for follow in ("false", "true"):
+            raw, root, marks = self._renamed_bundle_fixture()
+            with raw:
+                subprocess.run(["git", "config", "log.follow", follow], cwd=root, check=True)
+                _declare_landing(
+                    root / "openspec" / "changes" / "mine", marks["P"], "declare the base"
+                )
+                verdicts.append(bool(check_analysis.check("mine", root)))
+        self.assertEqual(verdicts[0], verdicts[1], "판정이 개인 설정에 따라 갈렸다")
+
+    def test_an_honest_landing_still_passes_on_a_log_follow_machine(self) -> None:
+        """양성 대조군. 설정을 지우는 것이 정상 선언까지 막으면 여기가 빨개진다."""
+        raw, root, marks = self._renamed_bundle_fixture(describes="current")
+        with raw:
+            subprocess.run(["git", "config", "log.follow", "true"], cwd=root, check=True)
+            change = root / "openspec" / "changes" / "mine"
+            _declare_landing(change, marks["R"], "declare the rename as the landing")
+            facts: dict[str, object] = {}
+            self.assertEqual(check_analysis.check("mine", root, facts), [])
+            self.assertEqual(facts["required_count"], 1)
+
+
 class TheGateRecordsTheLandingInsteadOfTheAuthor(unittest.TestCase):
     """착지 값을 만드는 주체가 저자에서 도구로 바뀐다 (task 6.1.2.2).
 

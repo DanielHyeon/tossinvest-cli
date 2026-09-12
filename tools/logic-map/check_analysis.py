@@ -482,11 +482,24 @@ def _evidence_floor(root: Path, analysis: Path) -> str:
     없기 때문이다. a122 6.1.1 이 활성 13건을 전수로 재서 13건 **전부** 고정 번들이
     자기 base 뒤에 커밋됐음을 확인했으므로, 이 하한은 13건 전부에서 실재한다.
 
-    `-M --diff-filter=MA` 인 이유: 아카이브는 번들을 통째로 옮긴다. rename 을 세면
+    `--diff-filter=MAT` 인 이유: 아카이브는 번들을 통째로 옮긴다. rename 을 세면
     아카이브하는 순간 그 커밋이 바닥이 되어 **이미 유효했던 기록이 무효가 된다**.
-    옮기기 전 경로를 같이 줘야 `-M` 이 rename 을 rename 으로 보고 건너뛴다 —
+    옮기기 전 경로를 같이 줘야 rename 이 rename 으로 보이고 건너뛰어진다 —
     a099(유일한 실물 기록)의 바닥이 `21a315d1` 로 나와 기록된 착지 `e6c4636a` 이하다.
     경로마다 `--follow` 를 도는 판본은 a112 에서 61초였고 이 형태는 0.02초다.
+
+    건너뛰는 것은 **그대로 옮긴 것뿐**이다 (task 7.2, H1). `-M` 의 기본 유사도 50% 는
+    내용을 고치면서 옮긴 것도 같은 rename 으로 보고 건너뛰었다 — 이동에 재작성을 숨기면
+    하한이 안 움직였다. `-M100%` 은 바이트가 같을 때만 rename 으로 본다: 아카이브의 순수
+    이동은 그대로 건너뛰고 재작성만 센다. `T`(정규 파일↔심링크)도 내용 교체인데 `MA` 가
+    안 셌다. 2026-09-12 전수 실측 — 하한이 움직이는 change 1건, 착지를 잃는 change 0건.
+
+    `--no-follow` 인 이유 (task 7.2, H2): `log.follow = true` 는 흔한 개인 설정이고,
+    경로가 **하나**일 때 이 호출을 `--follow` 로 만든다. 그러면 rename 이 짝지어져
+    필터에서 빠지고 하한이 이동 이전으로 내려간다 — 같은 저장소·같은 선언이 기계마다
+    다른 판정을 받는다. 하한은 저장소의 함수여야 한다. `diff.renames` 는 따로 안 지운다:
+    `-M100%` 이 명령줄에서 이미 탐지 방식을 정한다(그 절을 지워 봐도 죽는 시험이 없다 —
+    2026-09-12 뮤테이션 M-C3). 둘 다 기본값이라 실측 기준선(설정 없는 기계)의 답은 같다.
     """
     paths: list[str] = []
     for ast_path, _, _ in _pinning_bundles(root, analysis):
@@ -501,10 +514,49 @@ def _evidence_floor(root: Path, analysis: Path) -> str:
     if not paths:
         return ""
     process = subprocess.run(
-        ["git", "log", "-M", "--diff-filter=MA", "-1", "--format=%H", "HEAD", "--", *paths],
+        ["git", "log", "-M100%", "--no-follow", "--diff-filter=MAT", "-1", "--format=%H",
+         "HEAD", "--", *paths],
         cwd=root, capture_output=True, text=True, timeout=60, check=False,
     )
     return "" if process.returncode else process.stdout.strip()
+
+
+def _unheld_bundles(root: Path, candidate: str, analysis: Path) -> list[str]:
+    """`candidate` 가 **들고 있지 않은** 번들. 판정이 읽은 바이트를 기준으로 센다.
+
+    하한은 번들의 **경로**를 보고 판정은 **워킹트리의 내용**을 읽는다. 그 둘이 갈리는
+    자리마다 저자는 하한을 안 움직이고 증거를 바꿀 수 있다 (task 7.2, 리뷰 C3) —
+    자리표시자를 일찍 커밋해 두고 워킹트리에서 갈아 끼우거나, `ast.json` 을 감시 경로
+    밖으로 향하는 심링크로 두거나, 아예 커밋하지 않거나.
+
+    그래서 등식은 **워킹트리와** 세운다. HEAD 와 세우면 갈아 끼운 자리를 못 본다 —
+    바뀐 쪽이 워킹트리이기 때문이다(2026-09-12 실측: K1_head 는 자리표시자 구멍에 눈이
+    멀고 K1_worktree 는 안 멀다). 심링크는 blob 이 **가리키는 경로 문자열**이라 이
+    등식에서 저절로 갈린다.
+
+    범위가 `ast.json` 하나인 것도 실측이다. 번들의 산문 파일까지 넓히면 활성·아카이브
+    76건 중 3건이 착지를 잃는데(a092·a043·a096), 셋 다 **이웃 change 가 나중에 단
+    무효화 배너**라 정상 입력이다. `ast.json` 만으로는 거부 0 이다.
+    """
+    unheld: list[str] = []
+    for ast_path, _, _ in _pinning_bundles(root, analysis):
+        try:
+            relative = ast_path.relative_to(root).as_posix()
+        except ValueError:
+            continue
+        try:
+            judged = ast_path.read_bytes()  # 판정과 **같은 읽기** — 심링크면 따라간다
+        except OSError:
+            unheld.append(ast_path.parent.name)
+            continue
+        committed = _committed_bytes(root, candidate, relative)
+        if committed is None:
+            before = _pre_archive_path(relative)
+            if before:
+                committed = _committed_bytes(root, candidate, before)
+        if committed is None or committed != judged:
+            unheld.append(ast_path.parent.name)
+    return sorted(set(unheld))
 
 
 def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> str:
@@ -582,6 +634,16 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
             f"landing point {candidate[:12]} precedes the evidence that pins it "
             f"({floor[:12]}): a declared landing cannot be older than the commit that "
             "put this change's evidence into the history"
+        )
+    # 하한 **뒤**에 선다. 앞에 두면 "증거가 역사에 없다"·"착지가 증거보다 앞선다"를
+    # 재던 시험들의 거절 지점을 이 등식이 가로채서, 그 가드를 지워도 스위트가 초록으로
+    # 남는다([[first-failure-is-not-the-fix-scope]] 가 같은 파일에서 실측한 모양).
+    unheld = _unheld_bundles(root, candidate, analysis)
+    if unheld:
+        raise ValueError(
+            f"landing point {candidate[:12]} does not hold the evidence this verdict read: "
+            + ", ".join(unheld)
+            + " — the bundle judged here is not the bundle committed there"
         )
     return candidate
 
@@ -1036,11 +1098,22 @@ def compute_landing(root: Path, base: str, analysis: Path) -> tuple[str, str]:
     )
     if process.returncode:
         return "", f"cannot walk the history after {start[:12]}"
+    unheld: list[str] = []
     for candidate in [start, *process.stdout.split()]:
         if not _is_ancestor(root, base, candidate) or not _is_ancestor(root, floor, candidate):
             continue
-        if not _pinning_at(root, candidate, analysis)[1]:
+        if _pinning_at(root, candidate, analysis)[1]:
+            continue
+        # 고정을 통과해도, 판정이 읽은 번들을 그 커밋이 들고 있지 않으면 착지가 아니다
+        # (task 7.2, 리뷰 C3). `resolve_landing` 과 **같은** 조건이다.
+        unheld = _unheld_bundles(root, candidate, analysis)
+        if not unheld:
             return candidate, ""
+    if unheld:
+        return "", (
+            "no commit holds the evidence this verdict read (" + ", ".join(unheld) + ") "
+            "— commit the bundles as they are on disk"
+        )
     return "", (
         f"no commit at or after the evidence ({floor[:12]}) matches every pinning bundle "
         "— the evidence does not describe any revision on this history"
