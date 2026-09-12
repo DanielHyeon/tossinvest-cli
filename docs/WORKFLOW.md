@@ -233,7 +233,7 @@ compliance를 소급 증명하거나 historical debt를 완료/면제로 표시�
 | SDD 사이클 단계 | 기계 검사 |
 | --- | --- |
 | 0 기억 회고 | **없음** — 원장 무결성만 `memory_index.py check`(sdd-check) |
-| 1 Story·계약·READY | Story↔change 1:1은 `generate_master_tracker.py --check`(sdd-check), strict validate는 gate ⑪. **READY 체크리스트 자체는 없음** |
+| 1 Story·계약·READY | Story↔change 1:1은 `generate_master_tracker.py --check`(sdd-check), strict validate는 gate ⑪. **READY 체크리스트 자체는 없음**. Feature 아래 Story 수와 capability별 change 수는 **세지 않는다** |
 | 2 base commit·proposal-freeze | `base-commit.txt`는 `check_analysis.py`가 fail-closed로 사용, `review.md` 존재는 gate ④ |
 | 3 CodeGraph hard evidence | worktree fingerprint 신선도는 `check_index_freshness.py`(sdd-check). **질의를 실제로 했는지는 없음** |
 | 4 CodeGraphContext | **없음** |
@@ -278,6 +278,22 @@ compliance를 소급 증명하거나 historical debt를 완료/면제로 표시�
 Story 하나는 OpenSpec change 정확히 하나만 가리킨다.** bootstrap allowlist, 무기한
 예외, change-first 임시 고아 상태를 허용하지 않는다. 새 작업은 Story를 먼저 등록하고
 예정 `change_id`·경로를 연결한 다음 change를 만든다.
+
+**1:1은 Story↔change 한 쌍에만 있다.** 이 짝짓기는 계층 위로 전파되지 않는다.
+
+- **Feature 하나는 Story 여러 개를 가진다.** Story는 독립적으로 개발하고 검수할 수 있는
+  업무 단위로 쪼갠다. Feature를 Story 하나로 묶으면 검수 단위가 Feature만큼 커지고 절반만
+  끝난 상태를 표현할 방법이 사라진다.
+- **capability 하나는 change 여러 개가 단계적으로 구현한다.** 같은 기능을 한 change에 다
+  넣지 않고 단계로 나눈다. 나눈 수만큼 Story도 생기며 각 change는 자기 `aNNN` 번호를 받는다
+  (아래 명명 규칙).
+- 따라서 Feature·capability와 change 사이에는 1:1 강제가 **없다**.
+
+이 문단은 새 규칙이 아니라 이미 참인 것을 적는다. 2026-09-12 실측으로 Feature 13개가 Story
+117개를 나눠 갖고 가장 큰 Feature는 24개를 가지며, `operator-console` capability는 보관된
+delta 47건과 활성 3건이 구현했다. PM 검사도 이 둘을 세지 않는다 — 세는 것은 Story↔change
+짝과 계층의 양방향 링크뿐이고, Feature 아래 Story 수와 capability별 change 수에는 상한이
+없다.
 
 Phase와 Task의 정본은 별도 PM 상태 파일이 아니라 해당 change의 `tasks.md` 제목과
 체크박스다. 따라서 portfolio가 OpenSpec task 상태를 복제하지 않으며, Story 아래 실행

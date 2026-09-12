@@ -40,15 +40,18 @@ TossOS는 실제 돈을 다루는 자동매매 제품이다. 아래 규칙은 �
 ## 필수 진입과 완료 조건
 
 1. `docs/WORKFLOW.md`, 관련 OpenSpec change/spec, 현재 코드·테스트를 읽는다.
-2. memory recall → OpenSpec → CodeGraph hard evidence → CodeGraphContext 보조 문맥 →
+2. 작업은 Feature 가 아니라 Story 단위로 쪼갠다. Feature 하나가 Story 여럿을 갖고,
+   capability 하나를 change 여럿이 단계적으로 구현하며, 1:1 은 Story↔change 에만 있다
+   (`docs/WORKFLOW.md` PM 계층).
+3. memory recall → OpenSpec → CodeGraph hard evidence → CodeGraphContext 보조 문맥 →
    Go AST/Function Logic Map → RED/GREEN/REFACTOR/VERIFY 순서를 따른다.
-3. 기존 함수 내부 로직을 바꾸면 Function Logic Map과 Branch Test Map을 먼저 만든다.
+4. 기존 함수 내부 로직을 바꾸면 Function Logic Map과 Branch Test Map을 먼저 만든다.
    High-risk 기존 함수는 면제할 수 없다.
-4. 함수 내부의 분기·early return·side effect를 **근거로 삼는 문서**는 그 근거를 손으로
+5. 함수 내부의 분기·early return·side effect를 **근거로 삼는 문서**는 그 근거를 손으로
    읽어서 만들지 않는다. proposal·design·review가 그런 주장을 담으면 대상 함수의
    `tools/logic-map` AST 산출물을 **먼저** 만들고 그 열거를 근거로 쓴다.
    산출물 없이 쓴 분기 주장은 미검증이다.
-5. `make sdd-sync`, `make sdd-check`, `make gate CHANGE=<change-id>`와 독립 리뷰가
+6. `make sdd-sync`, `make sdd-check`, `make gate CHANGE=<change-id>`와 독립 리뷰가
    끝나기 전에는 완료라고 보고하지 않는다.
 
 ## 단계 건너뛰기 금지
