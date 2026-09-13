@@ -1876,3 +1876,123 @@ R1 은 그 방향도 막는다 — 정직하게 창을 넓힌 기록도 계산�
   `openspec validate --strict` valid.
 - 왕복: 76건 전부 계산값이 수락 집합의 원소이므로(§MEASURE 의 `73_accept.json`)
   `--record-landing` 이 쓰는 값은 이 등식을 통과한다. 픽스처에서도 왕복 시험이 재고 있다.
+
+## VERIFY — task 7.8 (생존 변이 일곱과 느슨한 바늘 둘) (2026-09-13)
+
+**생산 코드 변경 0** — `git diff --stat -- . ':!tools/logic-map/test_check_analysis.py'` 가
+비었다. 6.3 과 같은 모양이라 판정 A/B 를 따로 돌리지 않는다: 판정 함수의 바이트가
+같으므로 판정도 같다. 대신 실물 둘을 돌려 확인했다(아래 게이트 표).
+
+### 먼저 다시 쟀다 — 리뷰가 센 열이 지금은 일곱이다
+
+변이 정의는 지어내지 않았다. §6 리뷰(testing 전문가)가 남긴 `run_M*/` 사본을 기준선과
+diff 해서 그대로 옮겼고, 7.2.1 이 자리를 바꾼 M1 만 같은 뜻으로 재표현했다.
+[[caller-count-is-not-fix-site-count]] — 리뷰가 센 수는 리뷰 시점의 수다.
+
+| 변이 | 무엇 | 리뷰(2026-09-12) | 7.8 **전** | 7.8 후 |
+|---|---|---|---|---|
+| M1 | `compute` 가 고정 판정을 건너뛴다 | SURVIVED | **CAUGHT** | CAUGHT (2) |
+| M2 | `compute` 가 가장 높은 후보를 고른다 | SURVIVED | **CAUGHT** | CAUGHT (17) |
+| M3 | 하한이 수정(`M`)을 안 센다 | SURVIVED | SURVIVED | **CAUGHT** |
+| M4 | 아카이브된 기록이 안 보인다 | SURVIVED | SURVIVED | **CAUGHT** |
+| M5 | `--record-landing` 이 항상 rc 0 | SURVIVED | **CAUGHT** | CAUGHT |
+| M6 | `compute` 가 base 아래를 안 거른다 | SURVIVED | SURVIVED | **CAUGHT** (2) |
+| M7 | `compute` 가 하한 없음을 안 막는다 | SURVIVED | SURVIVED | **CAUGHT** |
+| M8 | `record` 가 빌림 거절을 안 한다 | SURVIVED | SURVIVED | **CAUGHT** |
+| M9 | `record` 가 이관 거절을 안 한다 | SURVIVED | SURVIVED | **CAUGHT** |
+| M11 | `record` 가 모호한 id 를 활성으로 떨어뜨린다 | SURVIVED | SURVIVED | **CAUGHT** |
+| PC1 | `_pre_archive_path` 가 항상 빈 문자열 | (대조군) | CAUGHT | CAUGHT |
+| PC2 | `resolve` 가 하한 순서를 안 본다 | (대조군) | CAUGHT | CAUGHT |
+
+M1·M2·M5 를 죽인 것은 7.8 이 아니라 **7.3.1·7.4 가 쓴 시험**이다(다중 후보를 가진
+픽스처가 그때 처음 생겼다). 리뷰의 열을 그대로 믿고 시험 열 개를 썼다면 셋은 이미
+죽어 있는 것을 다시 죽이는 것이었다. 원복 확인 sha256 `36f72fc173da` (전·후 동일).
+
+### 무엇을 어떻게 못 박았나
+
+- **M3 — 그 자리에서 고친 번들.** 기존 시험 셋은 전부 **이동**(rename·심링크 전환)을
+  잰다. `A`·`T` 만으로도 초록이라 `M` 이 빠져도 아무도 안 빨개졌다. 옮기지 않고
+  `ast.json` 을 다시 쓰는 — 가장 흔한 — 모양을 하한 함수 층에서 잰다.
+- **M4 — 아카이브 뒤에도 그 기록이 대상이다.** 옛 시험은 `check(...) == []` 만 봤는데
+  이 픽스처는 **워킹트리를 대상으로 삼아도 통과한다**(base..worktree 의 변경 함수를
+  증거가 그대로 기술하므로). 그래서 기록이 안 읽혀도 초록이었다. `facts["landing"]`
+  을 아카이브 **전후로** 단언한다 — 재는 것은 판정이 아니라 대상이다.
+- **M6 — 곁가지는 이 change 의 선 위에 없다.** 새 클래스
+  `AComputedLandingIsAlwaysOneTheGateWillAccept`. `git rev-list base..HEAD` 는 "base
+  에서 안 보이는 커밋 전부"라 병합이 있으면 base 를 한 번도 보지 못한 곁가지가 후보에
+  들어온다. 저장소의 픽스처가 전부 선형이라 그 절이 한 번도 안 걸렸다.
+  **먼저 닿는지 확인했다**([[mutation-must-reach-the-thing-under-test]]): 계측기
+  대조군 시험 하나가 하한 = S · `base ≤ S` 거짓 · 순회 목록에 S 포함을 단언한다.
+  변이 사본으로 실측한 종단 차이 — 정직: `record` 가 M 을 쓰고 `check` 초록(required 1),
+  M6: `record` 가 **S** 를 쓰고 곧바로 `check` 가 `landing point precedes the
+  comparison base` 로 **자기 기록을 거절**한다. 7.3.1 이 기록을 계산값과 묶은 뒤로
+  그 값은 고칠 수도 없다([[two-judgements-cover-for-each-other]] 의 반대 방향).
+- **M7 — 계산 경로의 하한 문장.** `resolve_landing` 에도 같은 뜻의 가드가 있어
+  느슨한 바늘(`"never entered"`)로는 안 갈린다. 바늘을 `(commit the bundles)` 로
+  좁혔다. 픽스처는 E 를 되돌려 번들을 **추적되지 않은** 파일로 만든다 — 추적 파일이
+  안 바뀌므로 위의 dirty 거절에 안 걸린다(걸리면 하한이 아니라 그 가드를 재게 된다).
+- **I10 — 위조 픽스처를 기록 경로에.** `TheGateRecordsTheLandingInsteadOfTheAuthor`
+  는 "도구는 저자가 고를 값을 안 쓴다"를 주장하면서 위조 픽스처를 `record_landing`
+  에 준 적이 없었다. 준다. 이 시험 하나가 M1 을 **독립으로 한 번 더** 잡는다
+  (고정 판정을 지우면 도구가 위조 지점 E 를 기록한다).
+- **M8 · M9 · M11 — 기록 경로의 거절 셋.** 빌림 · 이관 · 모호한 id. 셋 다 `check`
+  쪽 거절만 시험이 있었다. 판정 둘이 서로를 덮는 모양이다 — 기록 경로가 값을 써
+  버리면 5단계가 나중에 거절하지만 그때는 이미 감사 밖의 손잡이가 파일로 존재한다.
+  셋 다 rc 와 문장에 더해 **파일이 안 생겼는지**까지 단언한다.
+
+### I15 — 바늘 없는 음성 대조군이 무엇을 통과시켰나 (실측)
+
+`self.assertTrue(check_analysis.check("mine", root))` 두 자리. 픽스처를 **다른 이유로**
+깨뜨려서 쟀다.
+
+| 픽스처 | 깨뜨린 방법 | 옛 단언 | 새 단언(`AST source hash is stale`) |
+|---|---|---|---|
+| 위조 | 그대로(대조군) | 통과 | 통과 |
+| 위조 | 번들 통째 삭제 | **통과** | 실패 |
+| 위조 | base 를 없는 커밋으로 | **통과** | 실패 |
+| 자리표시자 | 그대로(대조군) | 통과 | 통과 |
+| 자리표시자 | 번들 통째 삭제 | **통과** | 실패 |
+| 자리표시자 | base 를 없는 커밋으로 | **통과** | 실패 |
+
+음성 대조군이 재야 하는 것은 "오늘도 막힌다"가 아니라 "오늘은 **이 사유로** 막힌다"다.
+번들 산문 하나만 지우는 방법으로는 안 갈렸다(두 오류가 같이 나온다) — 갈리는 것은
+stale 판정 자체에 도달하지 못하게 만드는 둘이다.
+
+### I16 — 결합과 사본 (실측)
+
+| | HEAD | 지금 |
+|---|---|---|
+| 다른 TestCase 를 인스턴스로 만들어 사적 픽스처 호출 | **2회** | **0회** |
+| 픽스처 빌더 (모듈 / 클래스) | 17 (3 / 14) | 19 (5 / 14) |
+
+`_clean_fixture` · `_forged_fixture` 를 모듈 `_landed_work_fixture` ·
+`_base_shaped_forgery_fixture` 로 올렸다. 픽스처를 한 클래스가 소유하는 한 그 결합은
+없앨 수 없다 — 소유자를 옮기는 것이 수리다.
+
+**안 한 것: 다섯 벌을 한 벌로 합치지 않았다.** 겹침을 재서 정했다 — 가장 높은 것이
+`TheEvidenceFloorSurvives…._fixture` 68%, `_base_shaped_forgery_fixture` 67%,
+`_own_work_fixture` 57%, `TheGateRecords…._fixture` 53%, `_placeholder_fixture` 51%,
+`_merge_fixture` 46%, `_committed_change` 47%, `_renamed_bundle_fixture` 41%.
+**동일한 사본은 하나도 없다.** 갈리는 부분이 각 클래스가 재는 바로 그것이다(base 앞의
+R 커밋 · base 상태 해시 · `{}` 자리표시자 · `base_also_matches` 스위치 · 두 번째로
+맞는 커밋). 스위치 다섯 개짜리 빌더 하나로 합치면 한 줄 편집이 다섯 클래스가 재는
+것을 동시에 바꾼다 — [[two-judgements-cover-for-each-other]] 가 픽스처에서 나는 모양이다.
+
+### 남은 것
+
+I13 의 M10 은 `run_M10*` 사본이 없다(리뷰 당시 CAUGHT 라 안 남았다). I9~I16 중 **I16 의
+사본 합치기만 의도적으로 안 했고** 위 표가 그 근거다. 7.5(성능)가 walk 를 바꾸면
+M1·M2·M6 이 다시 열리므로 이 스위트가 그때의 안전망이다.
+
+### 게이트 (2026-09-13)
+
+| 게이트 | 결과 |
+|---|---|
+| `check_analysis` 스위트 | 116 → **125** (skip 1) |
+| `make sdd-test` | rc=0 — scripts 15 · logic-map **200**(skip 1) · sdd 71 · sdd-history 22 · pm 16 · deploy 18 |
+| `make lint` | rc=0 |
+| `make test-seams` | rc=0 |
+| `openspec validate --all --strict` | 58/58 |
+| a099 5단계 (실물 기록) | rc=0 — `base af015dc9 → landed-commit 21a315d1 required 32` |
+| a122 5단계 | rc=0 — `working tree required 0` |
+| 생산 코드 | `git diff` 에 시험 파일 하나뿐 (+288 −58) |

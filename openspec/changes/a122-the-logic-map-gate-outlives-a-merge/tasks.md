@@ -1084,8 +1084,27 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
 - [ ] 7.7 **P2 — 창 줄이 스스로 모순된다 (I8).** 기록이 디스크에 있는데 커밋 전이거나 아카이브
       이동이 staged 면 "working tree (no landed-commit.txt)" + `--record-landing` 을 권하고, 그 명령은
       "already exists" 로 거절한다. 빌리는 쪽 · 번들 0 인 쪽에도 같은 조언이 나간다.
-- [ ] 7.8 **P2 — 시험 (I9~I16).** 생존 변이: 다중 후보 walk(M1·M2·M6) · 위조 픽스처를
+- [x] 7.8 **P2 — 시험 (I9~I16).** 생존 변이: 다중 후보 walk(M1·M2·M6) · 위조 픽스처를
       `record_landing` 에(M7) · `--diff-filter` 의 `M`(M3) · 아카이브 뒤 착지 보존(M4) · 모호/빌림/이관
       거절(M11·M8·M9) · CLI 종료 코드(M5). 음성 대조의 바늘 · 사적 픽스처 결합 · 픽스처 다섯 벌.
+      **닫음(2026-09-13). 생산 코드 변경 0** — 시험만 바꿨다(6.3 과 같은 모양). 기록은
+      review.md `## VERIFY — task 7.8`.
+      **먼저 다시 쟀다**: 리뷰가 센 열 중 **셋(M1·M2·M5)은 이미 죽어 있었다** — 7.3.1·7.4 가
+      다중 후보 픽스처와 CLI 시험을 만들었기 때문이다([[caller-count-is-not-fix-site-count]]).
+      변이 정의는 §6 리뷰가 남긴 `run_M*/` 사본을 diff 해서 그대로 썼다 — 지어내지 않았다.
+      남은 일곱(M3·M4·M6·M7·M8·M9·M11)에 시험을 써서 **열둘 전부 CAUGHT**(대조군 PC1·PC2 포함).
+      가장 큰 것은 **M6**: `git rev-list base..HEAD` 는 "base 에서 안 보이는 커밋 전부"라 병합이
+      있으면 base 를 한 번도 보지 못한 곁가지가 후보에 들어오는데, 저장소 픽스처가 전부
+      선형이라 그 절이 한 번도 안 걸렸다. 병합 픽스처를 만들어 **닿는지 먼저 확인**하고
+      ([[mutation-must-reach-the-thing-under-test]]) 종단으로 쟀다 — M6 아래서는 도구가 곁가지
+      S 를 기록하고 게이트가 곧바로 `precedes the comparison base` 로 **자기 기록을 거절한다**.
+      M4 는 옛 시험이 `check(...) == []` 만 봐서 기록이 안 읽혀도 초록이었다(그 픽스처는
+      워킹트리를 대상으로 삼아도 통과한다) — `facts["landing"]` 을 아카이브 전후로 단언한다.
+      I15(음성 대조 바늘)는 **무엇을 통과시켰는지 실측**했다: 픽스처를 다른 이유로 깨뜨린 네
+      모양에서 옛 단언은 전부 통과하고 새 단언은 전부 실패한다. I16 은 사적 픽스처 교차
+      호출 2→0(모듈로 올림), **사본 합치기는 의도적으로 안 했다** — 겹침 최대 68%, 동일한
+      사본 0, 갈리는 부분이 각 클래스가 재는 바로 그것이다.
+      시험 116 → **125** · `make sdd-test`(logic-map 200) · `make lint` · `make test-seams` ·
+      `openspec validate --all --strict` 58/58 · 실물 a099 rc=0(required 32 불변).
 - [ ] 7.9 **P2 — 문서 (I17).** `tools/logic-map/README.md` · `docs/WORKFLOW.md` 에 `--record-landing`
       · `landed-commit.txt` 가 없다. 7.2 가 규칙을 정한 뒤에 쓴다(지금 쓰면 곧 틀린다).
