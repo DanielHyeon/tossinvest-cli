@@ -182,3 +182,12 @@ CAUGHT — `test_an_undecodable_landing_record_in_the_adoption_path_is_refused_n
 | 사라짐 | 분기 | `except AmbiguousChange as exc:` |
 | 사라짐 | 분기 | `except ValueError:` |
 | 생김 | 분기 | `except ValueError as exc:` |
+
+## 편집 — task 7.7 · 내부 논리 변경 없음 (분기 43 → 43 · 반환 14 → 14 · 호출 집합 동일)
+
+7.7 은 이 함수를 편집하지 않았다. 열거를 **먼저** 뽑은 이유는 조언 판정을 여기(`facts`)에 넣는 안을 검토했기
+때문이다 — 그 안은 버렸다: 조언 때문에 부른 git 이 멎으면 `check` 의 **판정**이 결함 한 줄로 바뀐다. 두 열거
+(`ast.before-7.7.json` · `ast.after-7.7.json`)의 분기·반환 `source` 와 호출 집합을 스크립트로 대조해 같음을
+확인했다(줄 번호만 위 함수들의 추가로 밀렸다). 이 함수가 부르는 `_target_text` 의 반환 문장이 바뀌었으므로
+`missing Function Logic Map … between base X and <대상>` 오류의 **문자열**은 달라진다 — 그쪽 절에 적었다.
+

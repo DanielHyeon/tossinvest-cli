@@ -1,0 +1,117 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "3da639a9653f8e5b55da97243e4974ee74c105a0",
+  "source_sha256": "1dfa432b00817a8e18b8577e67024b675cb229e96d26c0c6c4db90b9c7618f6c",
+  "function": "compute_landing",
+  "signature": "compute_landing(root, base, analysis)",
+  "start": {
+    "line": 1162,
+    "column": 1
+  },
+  "end": {
+    "line": 1199,
+    "column": 6
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 1173,
+      "inherited_line": false,
+      "source": "if why:"
+    },
+    {
+      "id": "B2",
+      "kind": "IfExp",
+      "line": 1175,
+      "inherited_line": false,
+      "source": "floor if _is_ancestor(root, base, floor) else base"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 1180,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B4",
+      "kind": "For",
+      "line": 1183,
+      "inherited_line": false,
+      "source": "for candidate in [start, *process.stdout.split()]:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 1186,
+      "inherited_line": false,
+      "source": "if not refusal:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 1188,
+      "inherited_line": false,
+      "source": "if names:"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 1191,
+      "inherited_line": false,
+      "source": "if unheld:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1174,
+      "value": "('', why)"
+    },
+    {
+      "line": 1181,
+      "value": "('', f'cannot walk the history after {start[:12]}')"
+    },
+    {
+      "line": 1187,
+      "value": "(candidate, '')"
+    },
+    {
+      "line": 1192,
+      "value": "('', 'no commit holds the evidence this verdict read (' + ', '.join(unheld) + ') — commit the bundles as they are on disk')"
+    },
+    {
+      "line": 1196,
+      "value": "('', f'no commit at or after the evidence ({floor[:12]}) matches every pinning bundle — the evidence does not describe any revision on this history')"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1172,
+      "callee": "_walk_floor"
+    },
+    {
+      "line": 1175,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 1176,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 1183,
+      "callee": "process.stdout.split"
+    },
+    {
+      "line": 1185,
+      "callee": "_landing_refusal"
+    },
+    {
+      "line": 1193,
+      "callee": "', '.join"
+    }
+  ]
+}

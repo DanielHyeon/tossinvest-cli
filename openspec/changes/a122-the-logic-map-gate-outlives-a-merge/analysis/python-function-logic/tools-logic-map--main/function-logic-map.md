@@ -162,3 +162,17 @@ Go 파일 변경 0줄.
 | 생김 | 분기 | `except GATE_FAULTS as exc:` |
 | 생김 | 분기 | `try:` |
 | 생김 | 분기 | `except GATE_FAULTS as exc:` |
+
+## 편집 — task 7.7 (조언이 기록 명령의 판정에 묻는다) · 분기 17 → 20 · 반환 3 → 3 · raise 0 → 0
+
+편집 전 `ast.before-7.7.json`(HEAD `3da639a9` blob) · 편집 후 `ast.after-7.7.json`(워킹트리, L1329-1430). 아래 표는 두 열거의 `source` 를 스크립트가 줄 단위로 대조한 것이다.
+
+조언 줄의 권유 갈래(`else`) 안에서 `_recording_refusal` 에 묻는다. 사유가 있으면 ``— `--record-landing` cannot narrow it: <사유>`` 를 찍고 명령을 권하지 않는다. 판정 함수가 결함을 내면(`GATE_FAULTS`) `cannot tell whether it would record: …` 로 **권하지 않는다** — 조언은 판정이 아니므로 그 결함이 판정 줄을 바꾸지 않는다. 권유 문장은 기록을 약속하지 않게 바꿨다("if no commit on this history matches that evidence, the command says so instead of recording") — 걸어야 아는 거절은 예측하지 않기 때문이다(실물 15건, 전부 아카이브). base 모양 갈래(7.1)는 그대로 **앞**에 선다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 생김 | 분기 | `try:` |
+| 생김 | 분기 | `except GATE_FAULTS as exc:` |
+| 생김 | 분기 | `if refusal:` |
+
+호출 — 사라짐 없음 · 생김 ['_recording_refusal', 'resolve_referenced_change']

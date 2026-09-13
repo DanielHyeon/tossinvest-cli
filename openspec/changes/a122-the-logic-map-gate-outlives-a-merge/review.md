@@ -2197,3 +2197,195 @@ change 별 시간은 ±4% 넘게 흔들린다 — 예측 목록(X > 0)에 없던
   자손만 내면 규칙을 건드리지 않고 사라진다.
 - `validate` 의 이름 덫(I3)에는 시험을 안 세웠다 — 변수 이름을 재는 시험은 이 저장소의 관례가 아니고,
   열거 대조(분기·반환·raise 전후 동일, 소스 차이 0)가 편집이 이름뿐임을 보인다.
+
+## Pre-Edit Gate — task 7.7 (조언 줄이 기록 명령에 묻는다) (2026-09-13)
+
+### 먼저 다시 쟀다 — 리뷰가 센 넷은 일곱이고, 실물에서는 99 권유 중 38 이 모순이다
+
+리뷰 I8 이 적은 모양은 넷이다(디스크에만 있는 기록 · staged 아카이브 이동 · 빌리는 쪽 · 번들 0).
+수리 전에 HEAD(`3da639a9`) 사본으로 **픽스처에서 하나씩** 재현했다(`77_shapes.py`). 조언 줄이
+`--record-landing` 을 권하고 곧바로 그 명령을 돌린 결과다:
+
+| 모양 | 조언 줄 | 명령 | 리뷰 |
+|---|---|---|---|
+| S0 대조: 기록 없음 · 번들 있음 · 깨끗한 트리 | 권함 | **rc 0 기록** | — |
+| S1 기록이 디스크에만 있다(커밋 전) | `working tree (no landed-commit.txt)` + 권함 | `already exists — not overwritten` | I8 |
+| S2 기록 커밋 뒤 아카이브 이동이 staged | 같음 | `already exists — not overwritten` | I8 |
+| S3 빌리는 쪽(양쪽 다 기록 없음) | 권함 | `this change borrows its evidence …` | I8 |
+| S4 번들 0 | 권함 | `no landing recorded — no revision: current evidence pins …` | I8 |
+| S5 추적 파일 수정 | 권함 | `the working tree has uncommitted changes …` | **새로 셈** |
+| S6 번들이 커밋 전 | 권함 | `… never entered this history (commit the bundles)` | **새로 셈** |
+| S7 어느 커밋도 번들과 안 맞음 | 권함 | `… matches every pinning bundle …` | **새로 셈** |
+
+S1~S6 과 끊긴 심링크 기록은 명령이 **후보를 걷기 전에** 멈추는 자리다. S7 만 걸어야 안다.
+
+**실물 전수**(`77_census.py`) — 게이트가 받을 수 있는 id 126 전부에 HEAD 판본 `check` 를 돌려 `main` 이 어느
+조언 갈래로 가는지 context 로 가르고, 권유 갈래면 `record_landing` 을 **기록 없이** 돌렸다(`landed-commit.txt`
+를 여는 쓰기를 가로채 예외로 바꿨다 — 저장소에 안 썼다). 계측 동안 추적 파일은 건드리지 않았다(dirty 거절이 섞이지
+않게 — 끝난 뒤 `git status` 로 추적 변경 0 확인).
+
+| 조언 갈래 | 수 | 명령 결과 |
+|---|---|---|
+| 권함 | **99** | 기록 61 (활성 3: a066 · a071 · a112) · **거절 38** |
+| — 걷기 전 거절: 번들 0 | 22 | **활성 12** (a067 · a068 · a070 · a087 · a107 · a113 · a114 · a115 · a121 · a122 · align-full-sdd-pm-contract · verify-observes-the-trigger) · 아카이브 10 |
+| — 걷기 전 거절: 빌리는 쪽 | 1 | a073 |
+| — 걸어서 거절: 어느 커밋도 안 맞음 | 15 | 전부 아카이브. 명령 한 번 5.6 ~ **225.1초**(a055) |
+| base 모양 번들(7.1 갈래, 권하지 않음) | 16 | 활성 9 |
+| 창을 안 찍음(해소 전 실패) | 10 | — |
+| 착지 기록 있음 | 1 | a099 |
+
+**활성 change 에서 권유 15 중 12 가 모순이었다.** 깨끗한 실물 트리에는 S1 · S2 · S5 · S6 이 0 건이다 — 작업 중에만
+생기는 상태다.
+
+### 편집 전 열거 (HEAD `3da639a9` blob → `ast.before-7.7.json`)
+
+코드에 손대기 **전에** 뽑았다. 설계는 이 열거에서 나왔다 — `record_landing` 의 반환 열하나 중 여섯(심링크 ·
+기록 존재 · 빌림 · base · 이관 · dirty)과 `compute_landing` 의 순회 전 반환 둘(번들 0 · 하한 없음)이 "걷기 전에
+멈추는 자리"이고, `main` 의 권유 갈래(B13 `else`)는 그중 아무것도 부르지 않는다.
+
+| 함수 | 분기 | 반환 | 줄 |
+|---|---|---|---|
+| `_target_text` | 2 | 2 | L373-381 |
+| `record_landing` | 15 | 11 | L1186-1264 |
+| `compute_landing` | 8 | 6 | L1144-1183 |
+| `check` | 43 | 14 | L1015-1141 |
+| `main` | 17 | 3 | L1267-1352 |
+
+**순서를 적는다**: 열거(기계) → 설계 → RED → GREEN 을 **scratchpad 사본**에서 먼저 했고(전수 계측이 도는 동안
+추적 파일을 못 고쳐서), FLM 산문 절과 Branch Test Map 은 GREEN 뒤·저장소 반영 뒤에 썼다. Branch Test Map 은
+7.6 과 같이 변이가 **실제로 빨갛게 만든** 시험으로 채우므로 뮤테이션 뒤에만 쓸 수 있다.
+
+### 설계 결정
+
+- **판정 하나** `_recording_refusal(change, change_dir, root) -> (사유, base)` — 기록 명령의 걷기 전 거절 여섯 +
+  `_walk_floor`(계산의 순회 전 사유 둘을 뺀 함수). 기록 명령과 조언 줄이 **둘 다** 이것을 부른다. 따로 두면 명령에
+  거절이 늘 때 조언만 옛 조건으로 남는다([[two-judgements-cover-for-each-other]]).
+- **걷지 않는다.** 걸어서 아는 거절(15건)을 예측하려면 워킹트리가 대상인 모든 5단계가 순회를 돈다 — 최대 225초,
+  7.5(성능)와 반대 방향이다. 대신 권유 문장이 기록을 **약속하지 않는다**("if no commit on this history matches that
+  evidence, the command says so instead of recording").
+- **판정은 `check` 가 아니라 `main` 의 권유 갈래에서 부른다.** `check` 의 `facts` 에 넣는 안을 먼저 봤고 버렸다 —
+  조언 때문에 부른 git 이 멎으면 **판정**이 결함 한 줄로 바뀐다. `main` 에서는 자기 `GATE_FAULTS` 로 받아 "cannot
+  tell" 로 명령을 권하지 않고 판정 줄은 그대로 둔다.
+- **대상 텍스트** `(no landed-commit.txt)` → `(no landed-commit.txt in HEAD)` — 게이트가 읽는 자리를 말한다.
+- **디스크에만 있는 기록**은 HEAD 기록과 문장을 가른다: 경로 + `not in HEAD` + "commit it". 경로를 적는 이유 —
+  staged 아카이브 이동은 HEAD 의 옛 자리에 기록이 있어서 "HEAD 에 없다"만으로는 틀리다.
+
+## VERIFY — task 7.7 (2026-09-13)
+
+### RED → GREEN
+
+RED 12 가 **맞는 이유로** 빨갰다(`77_red.log`): 표 시험의 일곱 모양 전부 "명령의 거절 문장이 조언 줄에 없다",
+구조 시험 "`record_landing` 이 `_recording_refusal` 을 안 부른다", 7.4 시험의 대상 텍스트. 양성 대조군
+(`test_where_the_command_would_record_the_advice_still_names_it`)과 계산 경로 직접 시험은 HEAD 에서도 초록이다 — 뒤의
+것은 기존 행동의 못이다.
+
+GREEN 첫 판에서 **7.4 시험이 회귀를 잡았다**: 걷기 전 부분(`_walk_floor` → `_pinning_bundles`)이 저장소 밖을
+가리키는 번들에서 `ValueError` 를 내는데, 판정 호출을 `record_landing` 의 결함 경계 밖에 뒀다. 경계 안으로 옮겼다
+(변이 R21 이 그 자리를 다시 잰다).
+
+| 시험 (새로 9) | 재는 것 |
+|---|---|
+| `test_the_advice_never_names_a_command_that_would_refuse` | 일곱 모양(subTest). 명령을 **실제로 돌려** 나온 거절 문장이 조언 줄 안에 있고, 권유 문장이 없고, 대상 텍스트가 `in HEAD` 다. 문장을 시험에 옮겨 적지 않는다 |
+| `test_a_record_on_disk_is_named_as_not_committed` | 디스크 기록 = 경로 + `not in HEAD`; 커밋 뒤에는 옛 문장 그대로 |
+| `test_where_the_command_would_record_the_advice_still_names_it` | 양성 대조 — 권하고, 명령이 rc 0 으로 기록 |
+| `test_a_refusal_only_the_walk_finds_is_not_promised_away` | S7 — 권하되 약속 안 함, 명령은 걸어서 거절 |
+| `test_a_fault_while_asking_the_recorder_does_not_become_advice` | git 이 멎으면 권하지 않고 판정 줄은 결함 없는 실행과 같다 |
+| `test_a_refusal_that_outlives_a_commit_is_named_before_one_that_does_not` | 빌림+dirty · 번들 0+dirty — 영구 사유가 먼저 |
+| `test_the_recorder_and_its_advice_ask_one_judge` | 구조: 두 호출자가 판정을 부르고, 명령이 거절 조각을 직접 안 부르고, 하한 사유는 `_walk_floor` 한 곳 |
+| `test_the_computation_names_what_stops_it_before_the_walk` | `compute_landing` 직접 — 기록 명령이 판정에서 먼저 멈춰 이 두 반환이 그 경로로 안 닿는다 |
+| `test_a_base_it_cannot_resolve_is_named_as_the_base` | 기록 명령의 base 해소 실패 문장 |
+
+### 열거 대조 (편집 전 `ast.before-7.7.json` → 후 `ast.after-7.7.json`, 스크립트 대조 — `77_flm.py`)
+
+| 함수 | 분기 | 반환 | 요지 |
+|---|---|---|---|
+| `record_landing` | 15 → 8 | 11 → 6 | 거절 여섯의 갈래·반환이 `if refusal:` 하나로 |
+| `compute_landing` | 8 → 7 | 6 → 5 | 순회 전 둘이 `if why:` 하나로 |
+| `main` | 17 → 20 | 3 → 3 | `try` · `except GATE_FAULTS` · `if refusal:` |
+| `_target_text` | 2 → 2 | 2 → 2 | 반환 문장 하나 |
+| `check` | 43 → 43 | 14 → 14 | **차이 0**(호출 집합 동일) — 편집 안 함 |
+| `_recording_refusal` | — → 9 | — → 9 | 새 함수 |
+| `_walk_floor` | — → 2 | — → 3 | 새 함수 |
+
+### 뮤테이션 (`77_mut.py`, 저장소와 sha256 이 같은 사본에서 · 원복 sha256 확인)
+
+| 변이 | 첫 판 | 최종 | 잡은 시험(셋까지) |
+|---|---|---|---|
+| R1 판정: 심링크 거절 삭제 | CAUGHT | CAUGHT | 심링크 기록 시험 · 표 |
+| R2 판정: HEAD 기록 거절 삭제 | CAUGHT | CAUGHT | 디스크 기록 · 해독 못 하는 기록 |
+| R3 판정: 디스크 기록 거절 삭제 | CAUGHT | CAUGHT | 디스크 기록 · 덮어쓰기 거절 · 표 |
+| R4 판정: 디스크 문장을 HEAD 문장으로 합침 | CAUGHT | CAUGHT | 디스크 기록 (표는 못 잡는다 — 명령과 조언이 같은 판정이라 둘이 같이 바뀐다, 설계대로) |
+| R5 판정: 빌림 거절 삭제 | CAUGHT | CAUGHT | 빌림 거절 · 순서 |
+| **R6 판정: base 해소 실패를 안 받음** | **SURVIVED** | CAUGHT | `test_a_base_it_cannot_resolve_is_named_as_the_base` |
+| R7 판정: 이관 거절 삭제 | CAUGHT | CAUGHT | 이관 기록 거절 |
+| R8 판정: dirty 거절 삭제 | CAUGHT | CAUGHT | dirty 거절 · 표 |
+| R9 판정: 걷기 전 하한 사유 무시 | CAUGHT | CAUGHT | 표 · 순서 (기록 명령은 계산이 대신 거절 — 조언 쪽에서만 드러나는 자리) |
+| **R10 판정: 순서 — dirty 를 빌림 앞으로** | **SURVIVED** | CAUGHT | 순서 시험 |
+| R11 판정: base 대신 빈칸(배관) | CAUGHT | CAUGHT | 9 |
+| R12 기록: 판정 거절 무시 | CAUGHT | CAUGHT | 10 |
+| R13 조언: 판정을 안 묻고 권함 | CAUGHT | CAUGHT | 표 · 결함 · 순서 |
+| R14 조언: 결함이면 권함 | CAUGHT | CAUGHT | 결함 |
+| R15 조언: 해소기 대신 활성 경로를 넘김(배관) | CAUGHT | CAUGHT | 표(staged 아카이브) |
+| R16 계산: 걷기 전 사유 무시 | CAUGHT | CAUGHT | 계산 직접 시험 **하나** |
+| R17 하한: 번들 0 판정 삭제 | CAUGHT | CAUGHT | 번들 0 거절 · 계산 직접 · 순서 |
+| R18 하한: 하한 없음 판정 삭제 | CAUGHT | CAUGHT | 표 · 계산 직접 · 커밋 전 증거 |
+| R19 대상 텍스트 되돌림 | CAUGHT | CAUGHT | 표 · 7.4 CLI |
+| R20 권유 문장이 다시 약속함 | CAUGHT | CAUGHT | S7 |
+| R21 기록: 판정을 결함 경계 밖에서 | CAUGHT | CAUGHT | 7.4 저장소 밖 번들 |
+| R22 판정: 순서 — dirty 를 하한 사유 앞으로(옛 순서) | — | CAUGHT | 순서 시험 |
+
+**R6 은 우연이 지키던 안전이었다**([[surviving-mutant-may-mean-accidental-safety]]) — HEAD 에도 이 갈래를 재는 시험이
+0 이다. 변이 아래서도 rc 는 1 이었다(바깥 `GATE_FAULTS` 가 `no landing recorded — …` 로 받는다). 기록이 안 쓰이는 것은
+경계가 지켰고, 빠진 것은 "**무엇을** 못 풀었나"였다.
+
+**R10 은 순서가 못에 없다는 뜻이었고, 그 순서는 틀려 있었다.** 조언 줄은 사유를 **하나**만 말하므로 순서가 곧
+조언이다. 기록 명령의 순서(dirty → 번들 0 → 하한 없음)를 그대로 쓰면 영원히 기록할 수 없는 change 가 "먼저 커밋하라"를
+듣고 커밋한 뒤에야 진짜 사유를 듣는다 — 위 전수의 **활성 번들 0 열둘**이 tasks.md 한 줄만 고쳐도 그 상태다. dirty
+하나를 맨 뒤로 옮겼다(기록 명령에서는 번들 0·하한 없음·dirty 가 겹친 입력의 **문장**만 바뀐다, rc 는 둘 다 1).
+그 순서를 두 조합으로 못 박았고 R10 · R22 가 잡힌다. 실물에서도 드러난다: 편집으로 dirty 인 지금 트리에서 번들 0
+활성 열둘은 dirty 가 아니라 번들 0 을 말한다(아래 C).
+
+7.6 규칙 변이(`76_mut.py`, 저장소 대상)도 새 코드에 다시 걸었다: R1~R13 · R15 · R16 **CAUGHT**, R14(이관 문장 갈림)는
+문장이 판정 함수로 옮겨 가 치환 자리가 없어 SKIP — 새 자리(`return ADOPTION_REFUSES_A_LANDING, ""`)에 같은 변이 R14' 를 걸어
+**CAUGHT**(`test_the_recorder_refuses_the_adoption_path_too`). 7.8 변이(`78_mut.py` 경로만 사본으로 바꾼 `77_mut78.py`):
+M2 · M3 · M4 · M5 · M7 · M8 · M9 · PC2 **CAUGHT**, M1 · M6 · M11 · PC1 SKIP — 7.6 때와 같은 넷이고 같은 뜻의 76 R3 · R1 · R13 · R10 이
+잡는다. 원복 sha256 `1dfa432b0081` 동일.
+
+**계측 사고 한 건**: R14' 를 처음 걸던 실행이 사용자 중단으로 원복 전에 멎어 **사본**(`77_work`)에 변이가 남았다. 다음
+실행의 sha256 단언이 그것을 잡았고(`de86b65c…` ≠ `1dfa432b…`), 저장소 파일은 그대로였다(sha 대조). 사본을 저장소
+바이트로 되돌린 뒤 다시 쟀다. 그 뒤 7.8 하네스는 저장소가 아니라 사본을 대상으로 돌렸다 — 중단돼도 저장소가 안 남게.
+
+### 실물 A/B (`77_ab.py`)
+
+| | 결과 |
+|---|---|
+| (A) 판정 — 활성 27 + 착지 기록 아카이브 1, HEAD 사본 대 편집 판본 `check` | **IDENTICAL 28 · DIFFERENT 0** (대상 텍스트 치환 하나만 정규화). 정규화 전 갈린 10 은 전부 번들 0 change 의 `missing Function Logic Map … and working tree (…)` 문자열 |
+| (B) 조언 — 전수의 권유 99 에 새 판정, dirty 확인만 "깨끗함"으로 가로채 계측과 같은 상태 | **일치 99 · 불일치 0** — 걷기 전 거절 23 은 명령 문장과 **글자 그대로**, 기록 61 · 걸어서 거절 15 는 빈 사유(=권유) |
+| (C) 판정 비용 — 활성 권유 15, 가로채지 않고 | 번들 0 열둘 **0.01~0.20초**(dirty 확인 전에 멈춘다) · 번들 있는 셋 1.14~1.29초(`git diff --quiet HEAD`) |
+
+전수에서 `check` 한 번이 활성 0.1~23.7초 · 전체 0.1~34.9초였으므로 (C) 는 번들 있는 셋에서 +1.2초 안팎이고 번들 0 에서는 잴 수 없을 만큼 작다.
+
+### 실물 CLI (편집 판본, 파이프 없이 잰 종료 코드)
+
+| change | rc | 조언 줄 끝 |
+|---|---|---|
+| a122 (번들 0) | 0 | `--record-landing` cannot narrow it: no landing recorded — no `revision: current` evidence pins a landing for this change |
+| a073 (빌리는 쪽 · 아카이브) | 1 (오류 336, HEAD 와 같음) | `--record-landing` cannot narrow it: this change borrows its evidence — copy the landing recorded on the change that owns the bundles … |
+| a099 (착지 기록) | 0 | 조언 줄 없음 — `landed-commit 21a315d1… required 32` |
+
+### 게이트 (2026-09-13, 이 로트의 워킹트리)
+
+| 게이트 | 결과 |
+|---|---|
+| `check_analysis` + `execution_baseline` 스위트 | **168** (check_analysis 132 → **141**, skip 1) |
+| `make sdd-test` | rc=0 — scripts 15 · logic-map **216**(skip 1) · sdd 71 · sdd-history 22 · pm 16 · deploy 18 |
+| `make lint` · `make test-seams` | rc=0 · rc=0 |
+| `openspec validate a122 --strict` | valid (spec delta: 조언 요구 + 시나리오 하나 추가, AND 절 수정) |
+
+### 안 한 것
+
+- **걸어야 아는 거절의 예측** — 위 설계 결정. 15건 전부 아카이브이고 명령이 스스로 이유를 말한다.
+- **`_commits_after` 의 `TimeoutExpired`** — 조언 줄의 창 크기를 재는 git 호출이 `rc≠0` 만 받고 멎음은 안 받는다.
+  7.7 이 만든 것이 아니고 I8 도 아니다. 이번에 넣은 판정 호출만 자기 경계를 갖는다.
+- **빌리는 쪽 문장에 빌려주는 id 적기** — 문장은 옛 것 그대로다(`function-logic-reference.txt` 에 있다).
+- `tools/logic-map/README.md` · `docs/WORKFLOW.md` — 7.9 의 몫(7.2 가 규칙을 정한 뒤).

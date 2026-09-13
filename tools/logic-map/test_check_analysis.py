@@ -2277,6 +2277,43 @@ class TheGateRecordsTheLandingInsteadOfTheAuthor(unittest.TestCase):
             self.assertEqual(code, 1, lines)
             self.assertTrue(any("(commit the bundles)" in line for line in lines), lines)
 
+    def test_the_computation_names_what_stops_it_before_the_walk(self) -> None:
+        """`compute_landing` 은 `record_landing` 말고도 불린다(`resolve_landing`·시험). 기록
+        명령이 판정 함수로 **먼저** 멈추게 되면서(task 7.7) 그 경로로는 이 두 반환이 안 닿는다
+        — 그러면 이 둘을 지워도 스위트가 초록이다([[two-judgements-cover-for-each-other]])."""
+        raw, root, marks = self._fixture(base_also_matches=False)
+        with raw:
+            analysis = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+            subprocess.run(["git", "reset", "--hard", "-q", marks["W"]], cwd=root, check=True)
+            _write_evidence(
+                root / "openspec" / "changes" / "mine",
+                package="internal", function="Own", relative="internal/own.go",
+                digest=hashlib.sha256((root / "internal" / "own.go").read_bytes()).hexdigest(),
+            )
+            self.assertEqual(
+                check_analysis.compute_landing(root, marks["P"], analysis),
+                ("", "the pinning evidence never entered this history (commit the bundles)"),
+            )
+            shutil.rmtree(analysis)
+            self.assertEqual(
+                check_analysis.compute_landing(root, marks["P"], analysis),
+                ("", "no `revision: current` evidence pins a landing for this change"),
+            )
+
+    def test_a_base_it_cannot_resolve_is_named_as_the_base(self) -> None:
+        """base 를 못 풀면 **base 라고** 말한다. 이 갈래를 재는 시험이 HEAD 에도 0 이었다
+        (task 7.7 변이 R6 SURVIVED). 변이 아래서도 rc 는 1 이었다 — 바깥 결함 경계가
+        `no landing recorded — …` 로 받아서다. 기록이 안 쓰이는 것은 우연이 지켰고
+        빠진 것은 "무엇을" 못 풀었는지였다([[surviving-mutant-may-mean-accidental-safety]])."""
+        raw, root, _ = self._fixture(base_also_matches=False)
+        with raw:
+            (root / "openspec" / "changes" / "mine" / "base-commit.txt").write_text("0" * 40 + "\n")
+            _commit_all(root, "a base that names no commit")
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertEqual(len(lines), 1, lines)
+            self.assertTrue(lines[0].startswith("mine: cannot resolve the comparison base: "), lines)
+
     def test_the_recorder_refuses_the_forgery_this_class_is_named_after(self) -> None:
         """이 클래스는 "도구는 저자가 고를 값을 안 쓴다"를 주장하는데, 위조 픽스처를
         **기록 경로**에 준 적이 한 번도 없었다 (리뷰 I10).
@@ -2502,7 +2539,7 @@ class AFaultInGitBecomesAVerdictNotATraceback(unittest.TestCase):
             code, output = _cli(root)
             self.assertEqual(code, 1, output)
             self.assertIn("escapes repository", output)
-            self.assertIn("working tree (no landed-commit.txt)", output)
+            self.assertIn("working tree (no landed-commit.txt in HEAD)", output)
 
     def test_the_cli_names_a_fault_the_record_path_cannot_answer(self) -> None:
         """기록 경로가 스스로 못 답하는 결함도 CLI 에서는 이름이 된다.
@@ -2818,6 +2855,25 @@ class TheLandingRuleLivesInOnePlace(unittest.TestCase):
             self.assertIn("_landing_refusal", calls, function)
             # 규칙의 조각을 직접 부르는 자리가 곧 두 번째 사본이다.
             self.assertFalse(calls & {"_pinning_at", "_unheld_bundles"}, (function, sorted(calls)))
+
+    def test_the_recorder_and_its_advice_ask_one_judge(self) -> None:
+        """`--record-landing` 이 걷기 전에 멈추는 사유는 **한 함수**에 산다 (task 7.7, 리뷰 I8).
+
+        기록 명령과 조언 줄이 각자 답하던 동안 조언은 명령의 거절 일곱 중 어느 것도 몰랐다.
+        행동 시험은 **오늘 모양들**에서 둘이 같은지만 본다 — 명령에 여덟째 거절이 생기면
+        조언 줄의 사본이 없는 한 여기서만 드러난다."""
+        for function in ("record_landing", "main"):
+            self.assertIn("_recording_refusal", self._calls(function), function)
+        # 거절의 조각을 명령이 직접 부르면 그것이 두 번째 사본이다.
+        self.assertFalse(
+            self._calls("record_landing") & {"_landing_record", "resolve_base", "subprocess.run"},
+            sorted(self._calls("record_landing")),
+        )
+        # 걷기 전의 하한은 계산과 판정이 **같은** 함수에 묻는다.
+        for function in ("_recording_refusal", "compute_landing"):
+            calls = self._calls(function)
+            self.assertIn("_walk_floor", calls, function)
+            self.assertFalse(calls & {"_pinning_bundles", "_evidence_floor"}, (function, sorted(calls)))
 
     def test_archive_names_are_read_by_one_function(self) -> None:
         for function in ("resolve_referenced_change", "_pre_archive_path"):
@@ -3359,6 +3415,222 @@ class AFailingStepFiveSaysWhichWindowRequiredThem(unittest.TestCase):
         lines = [line for line in printed.splitlines() if "so this window also holds" in line]
         self.assertEqual(1, len(lines), f"조언 줄이 정확히 하나여야 한다: {printed}")
         return lines[0]
+
+    def _commands_refusing_shapes(self) -> dict[str, object]:
+        """조언 줄이 `--record-landing` 을 권했는데 그 명령이 **거절하던** 모양들 (task 7.7).
+
+        리뷰 I8 이 넷을 셌다(디스크에만 있는 기록 · staged 아카이브 이동 · 빌리는 쪽 ·
+        번들 0). 수리 전에 다시 재니 **셋이 더** 있었다 — 더러운 트리 · 커밋 전 번들 ·
+        끊긴 심링크 기록([[caller-count-is-not-fix-site-count]]). 일곱 다 명령이 걷기
+        **전에** 멈추는 자리다. 걷고 나서야 아는 거절은 아래 따로 잰다.
+        """
+        def on_disk_only(raw):
+            root, _ = self._failing_fixture(raw, with_evidence=True)
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 0, lines)  # 기록은 쓰였고 커밋만 안 됐다
+            return root, "mine"
+
+        def archive_move_staged(raw):
+            root, _ = self._failing_fixture(raw, with_evidence=True)
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 0, lines)
+            _commit_all(root, "record the landing")
+            (root / "openspec" / "changes" / "archive").mkdir(parents=True)
+            subprocess.run(
+                ["git", "mv", "openspec/changes/mine", "openspec/changes/archive/2026-09-13-mine"],
+                cwd=root, check=True,
+            )
+            return root, "mine"
+
+        def borrower(raw):
+            root, _ = _borrowed_fixture(raw, later_work=True)
+            return root, "ordinary"
+
+        def no_bundles(raw):
+            root, _ = self._failing_fixture(raw, with_evidence=False)
+            return root, "mine"
+
+        def dirty_tree(raw):
+            root, _ = self._failing_fixture(raw, with_evidence=True)
+            (root / "openspec" / "changes" / "mine" / "review.md").write_text("mine, edited\n")
+            return root, "mine"
+
+        def bundles_not_committed(raw):
+            root, _ = self._failing_fixture(raw, with_evidence=False)
+            _write_evidence(
+                root / "openspec" / "changes" / "mine", package="internal", function="Own",
+                relative="internal/own.go",
+                digest=hashlib.sha256((root / "internal" / "own.go").read_bytes()).hexdigest(),
+            )
+            return root, "mine"
+
+        def dangling_symlink_record(raw):
+            root, _ = self._failing_fixture(raw, with_evidence=True)
+            (root / "openspec" / "changes" / "mine" / "landed-commit.txt").symlink_to(
+                root / "nowhere.txt"
+            )
+            return root, "mine"
+
+        return {
+            "on_disk_only": on_disk_only,
+            "archive_move_staged": archive_move_staged,
+            "borrower": borrower,
+            "no_bundles": no_bundles,
+            "dirty_tree": dirty_tree,
+            "bundles_not_committed": bundles_not_committed,
+            "dangling_symlink_record": dangling_symlink_record,
+        }
+
+    def test_the_advice_never_names_a_command_that_would_refuse(self) -> None:
+        """조언 줄은 명령이 **스스로 말할 거절**을 대신 말한다 (task 7.7, 리뷰 I8).
+
+        옛 조언 줄은 명령의 거절 조건을 하나도 묻지 않고 명령을 권했다. 디스크에만 기록이
+        있는 change 에서 게이트는 "기록이 없다, 기록하라"고 하고 명령은 "이미 있다"고
+        했다 — 두 문장이 서로를 가리키며 돈다.
+
+        단언은 **명령의 문장이 조언 줄 안에 있다**는 것이다. 문장을 시험에 옮겨 적지
+        않는다: 옮겨 적으면 두 사본이 같이 바뀌어도 초록이다. 명령을 **실제로 돌려서**
+        나온 문장을 바늘로 쓴다.
+        """
+        for name, build in self._commands_refusing_shapes().items():
+            with self.subTest(shape=name):
+                raw = tempfile.TemporaryDirectory()
+                with raw:
+                    root, change = build(raw)
+                    _, printed = _cli(root, change=change)
+                    advice = self._advice_line(printed)
+                    code, recorded = _cli(root, "--record-landing", change=change)
+                    # 양성 대조 — 이 모양에서 명령이 **실제로** 거절해야 이 시험이 뜻을 갖는다.
+                    self.assertEqual(code, 1, recorded)
+                    self.assertFalse(
+                        (root / "nowhere.txt").exists(), "거절이 심링크를 따라 썼다",
+                    )
+                    reason = recorded.strip().split(f"{change}: ", 1)[1]
+                    self.assertIn(reason, advice, f"명령의 거절을 조언이 말해야 한다: {printed}")
+                    self.assertNotIn(
+                        "to let the gate compute", advice,
+                        f"거절할 명령을 권하면 안 된다: {advice}",
+                    )
+                    # 대상 텍스트도 **기록이 디스크에 있어도** 참이어야 한다. 옛 판본은
+                    # 디스크에 파일이 있는데 "(no landed-commit.txt)" 라고 찍었다.
+                    self.assertNotIn(f"(no {check_analysis.LANDING_FILE})", printed, printed)
+                    self.assertIn(f"(no {check_analysis.LANDING_FILE} in HEAD)", printed, printed)
+
+    def test_a_record_on_disk_is_named_as_not_committed(self) -> None:
+        """디스크에만 있는 기록은 **무엇을 하면 되는지**를 말해야 한다 — "이미 있다"만으로는
+        옛 두 문장 사이의 고리가 안 풀린다. 게이트가 기록을 커밋에서 읽는다는 것이 그 답이다.
+
+        HEAD 에 있는 기록의 문장과 **갈라야** 한다. 한 문장이면 "커밋하라"가 이미 커밋된
+        기록 앞에서 거짓말이 된다 — 아래 둘째 단언이 그 갈래를 잰다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = self._failing_fixture(raw, with_evidence=True)
+            self.assertEqual(check_analysis.record_landing("mine", root)[0], 0)
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertEqual(len(lines), 1, lines)
+            self.assertIn("openspec/changes/mine/landed-commit.txt", lines[0])
+            self.assertIn("not in HEAD", lines[0])
+            _commit_all(root, "commit the record")
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual((code, lines), (1, ["mine: `landed-commit.txt` already exists — not overwritten"]))
+
+    def test_a_refusal_that_outlives_a_commit_is_named_before_one_that_does_not(self) -> None:
+        """조언 줄은 사유를 **하나**만 말한다 — 그러니 순서가 곧 조언이다 (task 7.7).
+
+        추적 파일 수정은 커밋하면 사라진다. 그것을 먼저 말하면 영원히 기록할 수 없는
+        change(빌리는 쪽 · 번들 0)가 "먼저 커밋하라"를 듣고, 커밋한 뒤에야 진짜 사유를
+        듣는다. 이 저장소의 활성 번들 0 change 일곱은 tasks.md 한 줄만 고쳐도 그 상태다.
+        첫 판에서 이 순서를 재는 시험이 0 이었다(변이 R10 SURVIVED)."""
+        def borrower_in_a_dirty_tree(raw):
+            root, _ = _borrowed_fixture(raw)
+            (root / "openspec" / "changes" / "ordinary" / "review.md").write_text("edited\n")
+            return root, "ordinary", "borrows its evidence"
+
+        def no_bundles_in_a_dirty_tree(raw):
+            root, _ = self._failing_fixture(raw, with_evidence=False)
+            (root / "openspec" / "changes" / "mine" / "review.md").write_text("edited\n")
+            return root, "mine", "no `revision: current` evidence pins a landing"
+
+        for build in (borrower_in_a_dirty_tree, no_bundles_in_a_dirty_tree):
+            with self.subTest(shape=build.__name__):
+                raw = tempfile.TemporaryDirectory()
+                with raw:
+                    root, change, permanent = build(raw)
+                    # 양성 대조 — 트리가 **실제로** dirty 여야 이 순서를 잰다.
+                    self.assertEqual(
+                        subprocess.run(["git", "diff", "--quiet", "HEAD"], cwd=root).returncode, 1,
+                    )
+                    advice = self._advice_line(_cli(root, change=change)[1])
+                    self.assertIn(permanent, advice)
+                    self.assertNotIn("uncommitted changes", advice)
+                    code, lines = check_analysis.record_landing(change, root)
+                    self.assertEqual(code, 1, lines)
+                    self.assertIn(permanent, lines[0])
+
+    def test_where_the_command_would_record_the_advice_still_names_it(self) -> None:
+        """양성 대조군 — 거절이 없는 change 는 조언을 잃으면 안 된다
+        [[fail-closed-must-name-what-it-rejects]]. 권한 명령을 **곧바로 돌려서** 기록되는지까지
+        잰다: 조언 줄이 약속한 것을 명령이 지키는 왕복이다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = self._failing_fixture(raw, with_evidence=True)
+            advice = self._advice_line(_cli(root)[1])
+            self.assertIn("--record-landing` to let the gate compute", advice)
+            self.assertNotIn("cannot narrow it", advice)
+            code, recorded = _cli(root, "--record-landing")
+            self.assertEqual(code, 0, recorded)
+
+    def test_a_refusal_only_the_walk_finds_is_not_promised_away(self) -> None:
+        """걷고 나서야 아는 거절은 조언 줄이 **예측하지 않는다** — 대신 약속도 안 한다.
+
+        어느 커밋도 번들과 안 맞는지는 후보를 전부 걸어야 안다. 그 walk 는 change 하나에
+        133초까지 걸리고(리뷰 I1) 조언 줄은 워킹트리가 대상인 **모든** 실행에서 나간다.
+        그래서 권하되 "기록된다"고 약속하지 않고, 못 찾으면 명령이 그렇게 말한다고 적는다.
+        옛 문장("compute and record … which narrows it")은 이 모양에서 거짓이었다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = self._failing_fixture(raw, with_evidence=False)
+            _write_evidence(
+                root / "openspec" / "changes" / "mine", package="internal", function="Own",
+                relative="internal/own.go", digest=hashlib.sha256(b"never committed").hexdigest(),
+            )
+            _commit_all(root, "E: evidence no commit matches")
+            advice = self._advice_line(_cli(root)[1])
+            code, recorded = _cli(root, "--record-landing")
+            self.assertEqual(code, 1, recorded)
+            self.assertIn("matches every pinning bundle", recorded)  # 걷고 나서야 나오는 문장
+            self.assertIn("--record-landing` to let the gate compute", advice)
+            self.assertIn("says so instead of recording", advice, advice)
+
+    def test_a_fault_while_asking_the_recorder_does_not_become_advice(self) -> None:
+        """조언을 위해 부른 git 이 멎어도 **판정**은 그대로 찍히고 명령을 권하지 않는다.
+
+        조언은 판정이 아니다. 조언 때문에 부른 것이 판정 줄을 스택으로 바꾸거나, 모르는
+        채로 명령을 권하면 안 된다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = self._failing_fixture(raw, with_evidence=True)
+            _, before = _cli(root)
+            real_run = subprocess.run
+
+            def the_dirty_check_hangs(args: object, **kwargs: object):
+                if isinstance(args, list) and "--quiet" in args:
+                    raise subprocess.TimeoutExpired(cmd=args, timeout=30)
+                return real_run(args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", the_dirty_check_hangs):
+                code, printed = _cli(root)
+            self.assertEqual(code, 1, printed)
+            advice = self._advice_line(printed)
+            self.assertIn("timed out", advice)
+            self.assertNotIn("to let the gate compute", advice)
+            # 판정 줄은 조언과 무관하게 같아야 한다.
+            verdict = [line for line in printed.splitlines() if "so this window also holds" not in line]
+            self.assertEqual(
+                verdict,
+                [line for line in before.splitlines() if "so this window also holds" not in line],
+            )
 
     def test_only_three_bundles_are_named_and_the_rest_are_counted(self) -> None:
         """이름을 다 쏟아내지 않는다 — a076 의 **21,838자 한 줄**이 그 이유다.

@@ -33,3 +33,16 @@ task 6.3 은 시험만 바꾸지만 그 review 가 이 함수의 **갈래**를 �
 
 호출 없음(f-string 뿐), 상태 변경 없음. 출력 문자열만 만들고 게이트 판정에 들어가지 않는다.
 주문·손절·익절·사이징·Guardian·원장·대사·인증·체결 어디에도 닿지 않는다. Go 변경 0.
+
+## 편집 — task 7.7 (조언이 기록 명령의 판정에 묻는다) · 분기 2 → 2 · 반환 2 → 2 · raise 0 → 0
+
+편집 전 `ast.before-7.7.json`(HEAD `3da639a9` blob) · 편집 후 `ast.after-7.7.json`(워킹트리, L373-384). 아래 표는 두 열거의 `source` 를 스크립트가 줄 단위로 대조한 것이다.
+
+워킹트리 대상 문장을 `(no landed-commit.txt)` → `(no landed-commit.txt in HEAD)` 로. 게이트는 기록을 **커밋에서** 읽으므로 기록이 디스크에만 있을 때 옛 문장은 거짓이었고, 바로 옆 조언 줄이 권한 `--record-landing` 은 그 파일이 "이미 있다"고 거절했다(리뷰 I8). 분기 구조는 그대로다. 이 문장은 `check` 의 `missing Function Logic Map … between base X and <대상>` 오류에도 들어가므로 그 오류 **문자열**이 바뀐다 — 판정 A/B 가 그 치환 하나만 정규화해 비교한다(review.md `## VERIFY — task 7.7`).
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 반환 | `'working tree (no landed-commit.txt)'` |
+| 생김 | 반환 | `f'working tree (no {LANDING_FILE} in HEAD)'` |
+
+호출 — 사라짐 없음 · 생김 없음

@@ -101,3 +101,30 @@ B4·B5 는 **이 로트가 찾은 둘째 자리**다. 4.4 는 `check` 의 probe 
 | 사라짐 | 분기 | `except AmbiguousChange as exc:` |
 | 사라짐 | 분기 | `except ValueError:` |
 | 생김 | 분기 | `except ValueError as exc:` |
+
+## 편집 — task 7.7 (조언이 기록 명령의 판정에 묻는다) · 분기 15 → 8 · 반환 11 → 6 · raise 0 → 0
+
+편집 전 `ast.before-7.7.json`(HEAD `3da639a9` blob) · 편집 후 `ast.after-7.7.json`(워킹트리, L1276-1326). 아래 표는 두 열거의 `source` 를 스크립트가 줄 단위로 대조한 것이다.
+
+걷기 전 거절 여섯(심링크 · 기록 존재 · 빌림 · base 해소 · 이관 · dirty)을 새 함수 `_recording_refusal` 로 옮기고 `if refusal: return 1, [f"{change}: {refusal}"]` 한 갈래로 받는다. 5단계의 조언 줄이 **같은 함수**에 묻게 하려는 것이다(리뷰 I8). 문장은 `{change}: ` 뒤가 글자 그대로 같다 — 달라진 것은 둘: (1) 기록 존재 거절이 HEAD/디스크 둘로 갈려 디스크 쪽이 경로와 `not in HEAD` 를 말한다, (2) 순서에서 dirty 가 맨 뒤로 갔다(번들 0·하한 없음 뒤). 판정 호출은 `compute_landing` 과 **한 `try`** 안에 있다 — 걷기 전 부분도 번들을 읽어서 저장소 밖을 가리키는 번들이 거기서 터지는데, 경계 밖에 둔 첫 판본을 7.4 의 `test_record_landing_names_a_bundle_that_escapes_the_repository` 가 잡았다(변이 R21 로 재확인).
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 분기 | `if landing_file.is_symlink():` |
+| 사라짐 | 분기 | `landing_file.exists() or _landing_record(change_dir, root) is not None` |
+| 사라짐 | 분기 | `if landing_file.exists() or _landing_record(change_dir, root) is not None:` |
+| 사라짐 | 분기 | `if (change_dir / 'analysis' / 'function-logic-reference.txt').exists():` |
+| 사라짐 | 분기 | `except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:` |
+| 사라짐 | 분기 | `if facts.get('execution_baseline_adoption'):` |
+| 사라짐 | 분기 | `if dirty.returncode:` |
+| 사라짐 | 분기 | `try:` |
+| 생김 | 분기 | `if refusal:` |
+| 사라짐 | 반환 | `(1, [f'{change}: `{LANDING_FILE}` is a symlink — not followed: the record must be a regular file in the change directory, or the value the g` |
+| 사라짐 | 반환 | `(1, [f'{change}: `{LANDING_FILE}` already exists — not overwritten'])` |
+| 사라짐 | 반환 | `(1, [f'{change}: this change borrows its evidence — copy the landing recorded on the change that owns the bundles instead of computing a sec` |
+| 사라짐 | 반환 | `(1, [f'{change}: cannot resolve the comparison base: {exc}'])` |
+| 사라짐 | 반환 | `(1, [f'{change}: {ADOPTION_REFUSES_A_LANDING}'])` |
+| 사라짐 | 반환 | `(1, [f'{change}: the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commi` |
+| 생김 | 반환 | `(1, [f'{change}: {refusal}'])` |
+
+호출 — 사라짐 ["(change_dir / 'analysis' / 'function-logic-reference.txt').exists", '_landing_record', 'facts.get', 'landing_file.exists', 'landing_file.is_symlink', 'resolve_base', 'subprocess.run'] · 생김 ['_recording_refusal']

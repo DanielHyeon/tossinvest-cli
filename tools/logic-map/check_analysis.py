@@ -377,7 +377,10 @@ def _target_text(landing: str, audited: bool = False) -> str:
     `source_commit` 이다. 둘을 같은 말로 적으면 있지도 않은 파일을 가리키게 된다.
     """
     if not landing:
-        return "working tree (no landed-commit.txt)"
+        # "in HEAD" 인 이유 (task 7.7, 리뷰 I8): 게이트는 기록을 **커밋에서** 읽는다. 옛 문장
+        # "(no landed-commit.txt)" 는 기록이 디스크에만 있을 때 거짓이었고, 바로 옆 줄이 권한
+        # `--record-landing` 은 그 파일이 "이미 있다"고 거절했다.
+        return f"working tree (no {LANDING_FILE} in HEAD)"
     return f"audited source-commit {landing}" if audited else f"landed-commit {landing}"
 
 
@@ -1141,6 +1144,21 @@ def check(
     return errors
 
 
+def _walk_floor(root: Path, analysis: Path) -> tuple[str, str]:
+    """걷기 **전에** 정해지는 것 — 후보 순회가 설 하한. `(하한, 못 서는 사유)`.
+
+    `compute_landing` 과 `_recording_refusal` 이 **같이** 묻는다 (task 7.7, 리뷰 I8). 조언
+    줄은 걷지 않고 이것까지만 묻는데, 여기 두 사유를 조언 쪽이 따로 들고 있으면 계산이
+    문장을 바꿀 때 조언만 옛 문장으로 남는다([[two-judgements-cover-for-each-other]]).
+    """
+    if not _pinning_bundles(root, analysis):
+        return "", "no `revision: current` evidence pins a landing for this change"
+    floor = _evidence_floor(root, analysis)
+    if not floor:
+        return "", "the pinning evidence never entered this history (commit the bundles)"
+    return floor, ""
+
+
 def compute_landing(root: Path, base: str, analysis: Path) -> tuple[str, str]:
     """게이트가 기록할 착지 지점. **저자가 고르지 않는다** (task 6.1.2).
 
@@ -1151,11 +1169,9 @@ def compute_landing(root: Path, base: str, analysis: Path) -> tuple[str, str]:
     좁히는 것이 이 기능의 목적이기 때문이고, 그것이 안전한 이유는 바닥 아래로는
     못 내려가기 때문이다 — 저자는 오늘 만든 번들을 과거 커밋에 넣을 수 없다.
     """
-    if not _pinning_bundles(root, analysis):
-        return "", "no `revision: current` evidence pins a landing for this change"
-    floor = _evidence_floor(root, analysis)
-    if not floor:
-        return "", "the pinning evidence never entered this history (commit the bundles)"
+    floor, why = _walk_floor(root, analysis)
+    if why:
+        return "", why
     start = floor if _is_ancestor(root, base, floor) else base
     process = subprocess.run(
         ["git", "rev-list", "--reverse", f"{start}..HEAD"],
@@ -1183,6 +1199,80 @@ def compute_landing(root: Path, base: str, analysis: Path) -> tuple[str, str]:
     )
 
 
+def _recording_refusal(change: str, change_dir: Path, root: Path) -> tuple[str, str]:
+    """`--record-landing` 이 **걷기 전에** 멈추는 사유. `(사유, base)` — 멈추면 base 는 빈칸이다.
+
+    이 판정은 **한 곳에** 산다 (task 7.7, 리뷰 I8). 기록 명령이 거절 조건을 들고 있는
+    동안 5단계의 조언 줄은 그중 아무것도 묻지 않고 그 명령을 권했다. 그래서 기록이
+    디스크에만 있는 change 에서 게이트는 "기록이 없다, 기록하라"고 하고 명령은 "이미
+    있다"고 했다 — 두 문장이 서로를 가리키며 돈다. 리뷰가 그런 모양을 넷 셌고 수리 전에
+    다시 재니 일곱이었다(디스크에만 있는 기록 · staged 아카이브 이동 · 빌리는 쪽 · 번들 0 ·
+    더러운 트리 · 커밋 전 번들 · 끊긴 심링크 기록).
+
+    **순서는 영구적인 사유가 먼저다.** 기록 명령이 쓰던 순서를 그대로 두되 하나만 옮겼다 —
+    추적 파일 수정(커밋하면 사라진다)을 걷기 전 하한 사유 뒤로. 조언 줄은 사유 **하나**만
+    말하므로 순서가 곧 조언이다. 순서마다 시험이 그 조합의 문장을 못 박는다
+    ([[a-new-guard-unpins-the-guards-behind-it]]).
+
+    **걷는 것은 여기 없다.** 후보 순회는 change 하나에 133초까지 걸리고(리뷰 I1) 조언 줄은
+    워킹트리가 대상인 모든 실행에서 나간다. 그래서 걷고 나서야 아는 거절(어느 커밋도 번들과
+    안 맞음)은 조언이 예측하지 않고, 대신 약속하지도 않는 문장으로 권한다.
+    """
+    landing_file = change_dir / LANDING_FILE
+    if landing_file.is_symlink():
+        # `exists()` 는 링크를 **따라가서** 답한다. 끊긴 링크면 거짓이므로 존재 확인을
+        # 그대로 통과하고, 그 뒤의 쓰기가 링크를 따라 저장소 **밖에** 기록을 만든다
+        # (2026-09-13 실측: rc 0 으로 "recorded" 라고 말하면서 임시 디렉터리에 썼다).
+        # 기록은 커밋되는 파일이어야 하므로 링크 자리는 기록 자리가 아니다.
+        return (
+            f"`{LANDING_FILE}` is a symlink — not followed: the record must be a "
+            "regular file in the change directory, or the value the gate reads back is not "
+            "the value it wrote"
+        ), ""
+    if _landing_record(change_dir, root) is not None:
+        return f"`{LANDING_FILE}` already exists — not overwritten", ""
+    if landing_file.exists():
+        # HEAD 에 없는데 디스크에 있다 — 커밋 전이거나 아카이브 이동이 아직 staged 다.
+        # "이미 있다"만 말하면 게이트가 "기록이 없다"고 말하는 것과 고리를 이룬다. 둘이
+        # 갈리는 이유(게이트는 커밋에서 읽는다)가 곧 할 일이다. 경로를 적는 이유: staged
+        # 아카이브 이동에서는 HEAD 의 **옛 자리**에 기록이 있어서 "HEAD 에 없다"만으로는 틀린다.
+        relative = landing_file.relative_to(root).as_posix()
+        return (
+            f"`{relative}` already exists on disk but not in HEAD — not overwritten: "
+            "the gate reads the record from the commit, so commit it"
+        ), ""
+    if (change_dir / "analysis" / "function-logic-reference.txt").exists():
+        return (
+            "this change borrows its evidence — copy the landing recorded on "
+            "the change that owns the bundles instead of computing a second one"
+        ), ""
+    facts: dict[str, object] = {}
+    try:
+        base = resolve_base(change_dir, root, facts, change_id=change)
+    except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
+        return f"cannot resolve the comparison base: {exc}", ""
+    if facts.get("execution_baseline_adoption"):
+        return ADOPTION_REFUSES_A_LANDING, ""
+    _, why = _walk_floor(root, change_dir / "analysis" / "function-logic")
+    if why:
+        return f"no landing recorded — {why}", ""
+    # 추적 파일 수정은 **맨 뒤**다 — 커밋하면 사라지는 유일한 사유라서다. 앞에 두면 영원히
+    # 기록할 수 없는 change(번들 0 · 빌리는 쪽)가 "먼저 커밋하라"를 듣고, 커밋한 뒤에야
+    # 진짜 사유를 듣는다. 이 저장소의 활성 change 일곱이 번들 0 이고, tasks.md 한 줄만
+    # 고쳐도 트리는 dirty 다 (task 7.7 — 변이 R10 이 이 순서를 재는 시험이 0 임을 보였다).
+    dirty = subprocess.run(
+        ["git", "diff", "--quiet", "HEAD"], cwd=root, capture_output=True,
+        timeout=30, check=False,
+    )
+    if dirty.returncode:
+        return (
+            "the working tree has uncommitted changes to tracked files — commit "
+            "them first, because a recorded landing points at a commit and step 5 would "
+            "then never compare those edits"
+        ), ""
+    return "", base
+
+
 def record_landing(change: str, root: Path = ROOT) -> tuple[int, list[str]]:
     """계산한 착지를 `landed-commit.txt` 에 쓴다. `(rc, 줄들)`.
 
@@ -1204,41 +1294,13 @@ def record_landing(change: str, root: Path = ROOT) -> tuple[int, list[str]]:
     except ValueError as exc:
         return 1, [str(exc)]
     landing_file = change_dir / LANDING_FILE
-    if landing_file.is_symlink():
-        # `exists()` 는 링크를 **따라가서** 답한다. 끊긴 링크면 거짓이므로 존재 확인을
-        # 그대로 통과하고, 그 뒤의 쓰기가 링크를 따라 저장소 **밖에** 기록을 만든다
-        # (2026-09-13 실측: rc 0 으로 "recorded" 라고 말하면서 임시 디렉터리에 썼다).
-        # 기록은 커밋되는 파일이어야 하므로 링크 자리는 기록 자리가 아니다.
-        return 1, [
-            f"{change}: `{LANDING_FILE}` is a symlink — not followed: the record must be a "
-            "regular file in the change directory, or the value the gate reads back is not "
-            "the value it wrote"
-        ]
-    if landing_file.exists() or _landing_record(change_dir, root) is not None:
-        return 1, [f"{change}: `{LANDING_FILE}` already exists — not overwritten"]
-    if (change_dir / "analysis" / "function-logic-reference.txt").exists():
-        return 1, [
-            f"{change}: this change borrows its evidence — copy the landing recorded on "
-            "the change that owns the bundles instead of computing a second one"
-        ]
-    facts: dict[str, object] = {}
     try:
-        base = resolve_base(change_dir, root, facts, change_id=change)
-    except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
-        return 1, [f"{change}: cannot resolve the comparison base: {exc}"]
-    if facts.get("execution_baseline_adoption"):
-        return 1, [f"{change}: {ADOPTION_REFUSES_A_LANDING}"]
-    dirty = subprocess.run(
-        ["git", "diff", "--quiet", "HEAD"], cwd=root, capture_output=True,
-        timeout=30, check=False,
-    )
-    if dirty.returncode:
-        return 1, [
-            f"{change}: the working tree has uncommitted changes to tracked files — commit "
-            "them first, because a recorded landing points at a commit and step 5 would "
-            "then never compare those edits"
-        ]
-    try:
+        # 걷기 전에 멈추는 사유는 5단계의 조언 줄이 묻는 **그 함수**에 묻는다 (task 7.7, I8).
+        # 경계 **안에서** 묻는다: 걷기 전 부분도 번들을 읽으므로 저장소 밖을 가리키는 번들이
+        # 거기서 터진다 — 이 판정이 경계 밖에 있던 첫 판본을 7.4 의 시험이 잡았다.
+        refusal, base = _recording_refusal(change, change_dir, root)
+        if refusal:
+            return 1, [f"{change}: {refusal}"]
         landing, why = compute_landing(root, base, change_dir / "analysis" / "function-logic")
     except GATE_FAULTS as exc:
         # 저장소 밖을 가리키는 번들·읽을 수 없는 ast.json·멎은 git 은 전부 이 함수가
@@ -1333,12 +1395,28 @@ def main() -> int:
                     f"none of them; refresh those bundles against the current source instead"
                 )
             else:
-                print(
-                    f"{window} — run "
-                    f"`python3 tools/logic-map/check_analysis.py --change {args.change} "
-                    f"--record-landing` to let the gate compute and record "
-                    f"`{LANDING_FILE}`, which narrows it to this change's own work"
-                )
+                # 명령을 권하기 전에 **그 명령이 묻는 함수**에 묻는다 (task 7.7, 리뷰 I8).
+                # 옛 판본은 아무것도 안 묻고 권해서, 명령이 거절하는 일곱 모양에서 두 문장이
+                # 서로 모순됐다. 조언은 판정이 아니므로 여기서 난 결함이 판정 줄을 바꾸거나
+                # 모르는 채로 명령을 권하게 두지 않는다.
+                try:
+                    refusal, _ = _recording_refusal(
+                        args.change, resolve_referenced_change(root, args.change), root
+                    )
+                except GATE_FAULTS as exc:
+                    refusal = f"cannot tell whether it would record: {exc}"
+                if refusal:
+                    print(f"{window} — `--record-landing` cannot narrow it: {refusal}")
+                else:
+                    # 걷고 나서야 아는 거절은 예측하지 않는다 — 그래서 "기록된다"고 약속하지 않는다.
+                    print(
+                        f"{window} — run "
+                        f"`python3 tools/logic-map/check_analysis.py --change {args.change} "
+                        f"--record-landing` to let the gate compute `{LANDING_FILE}` from this "
+                        f"change's evidence and record it, which narrows it to this change's own "
+                        f"work; if no commit on this history matches that evidence, the command "
+                        f"says so instead of recording"
+                    )
     if errors:
         for error in errors:
             print(f"[logic-map] {error}")

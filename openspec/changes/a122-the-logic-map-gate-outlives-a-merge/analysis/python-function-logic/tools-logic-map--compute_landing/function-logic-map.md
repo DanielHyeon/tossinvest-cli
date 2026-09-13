@@ -75,3 +75,20 @@ a089·a095 가 마지막 사유로 거부된다 — 그 둘의 증거가 자기�
 | 사라짐 | 분기 | `if not _is_ancestor(root, base, candidate) or not _is_ancestor(root, floor, candidate):` |
 | 사라짐 | 분기 | `if _pinning_at(root, candidate, analysis)[1]:` |
 | 사라짐 | 분기 | `if not unheld:` |
+
+## 편집 — task 7.7 (조언이 기록 명령의 판정에 묻는다) · 분기 8 → 7 · 반환 6 → 5 · raise 0 → 0
+
+편집 전 `ast.before-7.7.json`(HEAD `3da639a9` blob) · 편집 후 `ast.after-7.7.json`(워킹트리, L1162-1199). 아래 표는 두 열거의 `source` 를 스크립트가 줄 단위로 대조한 것이다.
+
+순회 전 조기 종료 둘(고정 번들 0 · 하한 없음)을 `_walk_floor` 로 옮겼다 — `_recording_refusal` 이 같은 두 사유를 **같은 함수**로 묻게 하려는 것이다. 사유 문장은 글자 그대로다. 기록 명령은 이제 판정 함수에서 먼저 멈추므로 그 경로로는 여기 `if why:` 가 안 닿는다 — 그래서 `test_the_computation_names_what_stops_it_before_the_walk` 가 이 함수를 **직접** 부른다(변이 R16 은 그 시험 하나만 잡는다).
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 분기 | `if not _pinning_bundles(root, analysis):` |
+| 사라짐 | 분기 | `if not floor:` |
+| 생김 | 분기 | `if why:` |
+| 사라짐 | 반환 | `('', 'no `revision: current` evidence pins a landing for this change')` |
+| 사라짐 | 반환 | `('', 'the pinning evidence never entered this history (commit the bundles)')` |
+| 생김 | 반환 | `('', why)` |
+
+호출 — 사라짐 ['_evidence_floor', '_pinning_bundles'] · 생김 ['_walk_floor']

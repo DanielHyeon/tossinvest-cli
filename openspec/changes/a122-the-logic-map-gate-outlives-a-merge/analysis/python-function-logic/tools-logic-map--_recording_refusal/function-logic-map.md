@@ -1,0 +1,72 @@
+# Function Logic Map: `_recording_refusal`
+
+`tools/logic-map/check_analysis.py:1202-1273` · Python · **task 7.7 (리뷰 I8)** ·
+분기 9 · 반환 9 · raise 0 (`ast.after-7.7.json`)
+
+## Inputs and invariants
+
+요청받은 id `change`, 해소기가 이미 찾은 `change_dir`, `root`. `(사유, base)` 를 돌려준다 — 멈추면 base 는
+빈칸이고, 안 멈추면 사유가 빈칸이고 base 는 `resolve_base` 가 돌려준 **유효 base** 다(기록 명령이 그 값으로 걷는다).
+사유는 `{change}: ` 를 **안 붙인** 문장이다. 기록 명령은 앞에 붙여 찍고, 조언 줄은 그대로 인용한다.
+
+**걷지 않는다.** 후보 순회는 `compute_landing` 에 남는다. 조언 줄은 워킹트리가 대상인 모든 5단계 실행에서
+이 함수를 부르는데, 7.7 전수 계측에서 기록 명령 한 번이 a055 225.1초였다 — 순회 없이 걷기 전
+부분에서 멈추는 번들 0 change 들은 1.0~2.1초였으므로 차이는 거의 전부 순회다.
+
+## Branches and early returns — 열거 그대로
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | L1222 | If | `if landing_file.is_symlink():` |
+| B2 | L1232 | If | `if _landing_record(change_dir, root) is not None:` |
+| B3 | L1234 | If | `if landing_file.exists():` |
+| B4 | L1244 | If | `if (change_dir / 'analysis' / 'function-logic-reference.txt').exists():` |
+| B5 | L1250 | Try | `try:` |
+| B6 | L1252 | ExceptHandler | `except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:` |
+| B7 | L1254 | If | `if facts.get('execution_baseline_adoption'):` |
+| B8 | L1257 | If | `if why:` |
+| B9 | L1267 | If | `if dirty.returncode:` |
+
+| 반환 줄 | 값 |
+|---|---|
+| L1227 | `(f'`{LANDING_FILE}` is a symlink — not followed: the record must be a regular file in the change directory, or the value the gate reads back is not th` |
+| L1233 | `(f'`{LANDING_FILE}` already exists — not overwritten', '')` |
+| L1240 | `(f'`{relative}` already exists on disk but not in HEAD — not overwritten: the gate reads the record from the commit, so commit it', '')` |
+| L1245 | `('this change borrows its evidence — copy the landing recorded on the change that owns the bundles instead of computing a second one', '')` |
+| L1253 | `(f'cannot resolve the comparison base: {exc}', '')` |
+| L1255 | `(ADOPTION_REFUSES_A_LANDING, '')` |
+| L1258 | `(f'no landing recorded — {why}', '')` |
+| L1268 | `('the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then n` |
+| L1273 | `('', base)` |
+
+**순서가 조언이다.** 조언 줄은 사유를 하나만 말하므로 먼저 걸리는 사유가 사람이 듣는 사유다.
+기록 명령이 쓰던 순서(심링크 → 기록 존재 → 빌림 → base → 이관 → dirty → 번들 0 → 하한 없음)에서
+dirty(B9) **하나만** 맨 뒤로 옮겼다. dirty 는 커밋하면 사라지는 유일한 사유라서, 앞에 두면 영원히 기록할 수
+없는 change 가 "먼저 커밋하라"를 듣고 커밋한 뒤에야 진짜 사유를 듣는다. 이 저장소의 활성 change 중 번들 0 이
+열둘이다(7.7 전수 계측). 이 순서를 재는 시험이 첫 판에 0 이었다(변이 R10 SURVIVED) — 지금은
+`test_a_refusal_that_outlives_a_commit_is_named_before_one_that_does_not` 가 R10·R22 를 잡는다.
+
+B2·B3 을 가른 이유: 옛 판본은 `exists() or _landing_record(...)` 한 조건에 "already exists" 한 문장이었다.
+디스크에만 있는 기록(커밋 전 · staged 아카이브 이동)에서 그 문장과 "(no landed-commit.txt)" 가 고리를 이뤘다.
+B3 은 경로를 적는다 — staged 아카이브 이동에서는 HEAD 의 **옛 자리**에 기록이 있어 "HEAD 에 없다"만으로는 틀리다.
+
+## Calls and live bindings
+
+`landing_file.is_symlink` · `_landing_record` · `landing_file.exists` · `landing_file.relative_to` ·
+`(change_dir / 'analysis' / 'function-logic-reference.txt').exists` · `resolve_base` · `_walk_floor` · `subprocess.run`
+(`git diff --quiet HEAD`, timeout 30). 부르는 쪽 둘: `record_landing`(결함 경계 `GATE_FAULTS` 안) ·
+`main` 의 조언 권유 갈래(자기 `GATE_FAULTS` 안). 구조 시험
+`test_the_recorder_and_its_advice_ask_one_judge` 가 둘 다 이 함수를 부르고 기록 명령이 거절 조각을 직접 안 부르는지 본다.
+
+## State mutations and fallbacks
+
+쓰기 없음. `resolve_base` 가 넘긴 `facts` 는 이 함수 지역이다. 결함은 두 종류로 나간다: base 해소 실패는
+B6 이 **사유 문장**으로 받고, 나머지(`_walk_floor` 의 `ValueError`, git 의 `TimeoutExpired`)는 호출자 경계로 올린다.
+
+## Safety conclusion
+
+기록 명령이 **무엇을 거절하는지**는 순서 하나 말고는 안 바뀌었다 — 옮긴 거절 여섯의 조건과 문장(`{change}: ` 뒤)은
+글자 그대로이고, 기록이 쓰이는 입력은 그대로다(기록 쓰기는 여전히 `open(…, "xb")`). 바뀐 것: (1) dirty 가 걷기 전
+하한 사유 뒤로 가서 번들 0·하한 없음·dirty 가 겹친 입력의 **문장**이 바뀐다(rc 는 둘 다 1), (2) 디스크에만 있는
+기록의 문장이 경로와 `not in HEAD` 를 말한다, (3) 조언 줄이 이 함수의 사유를 인용한다. 판정(`check`)은 이 함수를
+부르지 않는다 — 조언이 판정 줄을 바꿀 길이 없다.
