@@ -2198,6 +2198,176 @@ class TheGateRecordsTheLandingInsteadOfTheAuthor(unittest.TestCase):
             )
 
 
+def _own_work_fixture(raw: tempfile.TemporaryDirectory) -> tuple[Path, dict[str, str]]:
+    """P(base) → W(이 change 의 Go 작업) → E(그 증거가 역사에 들어옴). 기록은 아직 없다.
+
+    `TheGateRecordsTheLandingInsteadOfTheAuthor._fixture(base_also_matches=False)`
+    와 같은 모양이고, 7.4 의 두 클래스가 이 **하나**를 나눠 쓴다 — 리뷰가 픽스처
+    사본 다섯 벌을 이미 부채로 셌으므로(I15) 여섯째를 만들지 않는다.
+    """
+    root = _init_fixture(raw)
+    own = root / "internal" / "own.go"
+    own.parent.mkdir(parents=True)
+    own.write_text("package internal\nfunc Own() int { return 1 }\n")
+    marks = {"P": _commit_all(root, "P: base")}
+    change = root / "openspec" / "changes" / "mine"
+    change.mkdir(parents=True)
+    (change / "base-commit.txt").write_text(marks["P"] + "\n")
+    (change / "review.md").write_text("mine\n")
+    own.write_text("package internal\nfunc Own() int { return 2 }\n")
+    marks["W"] = _commit_all(root, "W: this change's Go work lands")
+    _write_evidence(
+        change, package="internal", function="Own", relative="internal/own.go",
+        digest=hashlib.sha256(own.read_bytes()).hexdigest(),
+    )
+    marks["E"] = _commit_all(root, "E: its evidence enters the history")
+    return root, marks
+
+
+def _cli(root: Path, *extra: str, change: str = "mine") -> tuple[int, str]:
+    """CLI 를 생산 경로 그대로 돌린다 — 게이트가 실제로 부르는 것이 이것뿐이다."""
+    output = io.StringIO()
+    argv = ["check_analysis.py", "--change", change, "--root", str(root), *extra]
+    with mock.patch.object(sys, "argv", argv), redirect_stdout(output):
+        code = check_analysis.main()
+    return code, output.getvalue()
+
+
+def _escaping_bundle(root: Path) -> None:
+    """번들의 `file` 이 저장소 **밖**을 가리키게 만든다. 커밋까지 한다."""
+    ast_path = (
+        root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+        / "internal--own" / "ast.json"
+    )
+    value = json.loads(ast_path.read_text(encoding="utf-8"))
+    value["file"] = "../outside/own.go"
+    ast_path.write_text(json.dumps(value), encoding="utf-8")
+    _commit_all(root, "the bundle names a source outside the repository")
+
+
+class ARecordIsWrittenOnceAndNeverThroughASymlink(unittest.TestCase):
+    """`--record-landing` 이 **자기 자리에 한 번만** 쓴다 (task 7.4, 리뷰 H4).
+
+    오늘은 존재 확인과 쓰기 사이에 walk 하나가 통째로 들어간다 — 리뷰 I1 이 실측한
+    시간이 133.7s·219.6s 다. 그 사이에 생긴 기록을 `write_text` 가 조용히 덮고,
+    끊긴 심링크는 따라가서 저장소 **밖**에 쓴다. 같은 자리를 `execution_baseline.py`
+    는 `open(…, "xb")` 로 이미 닫아 놨다 — 이 파일만 안 닫혀 있었다.
+
+    양성 대조군은 따로 만들지 않는다. 정상 입력이 기록되는 것은
+    `TheGateRecordsTheLandingInsteadOfTheAuthor` 의 왕복 시험이 이미 재고 있고,
+    그 시험이 여기 고친 쓰기 경로를 그대로 지난다.
+    """
+
+    def test_a_dangling_symlink_record_is_refused_not_followed(self) -> None:
+        """끊긴 심링크는 `exists()` 가 거짓이라 존재 확인을 그냥 통과한다."""
+        raw = tempfile.TemporaryDirectory()
+        elsewhere = tempfile.TemporaryDirectory()
+        with raw, elsewhere:
+            root, _ = _own_work_fixture(raw)
+            stolen = Path(elsewhere.name) / "stolen.txt"
+            (root / "openspec" / "changes" / "mine" / "landed-commit.txt").symlink_to(stolen)
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertFalse(stolen.exists(), "기록이 저장소 밖에 쓰였다")
+            # 거절 **지점**을 단언한다 (task 6.3 이 같은 파일에서 배운 것). 배타 생성이
+            # 아래에서 같은 값을 돌려주므로, 지점을 안 재면 이 거절을 지워도 초록이다
+            # ([[surviving-mutant-may-mean-accidental-safety]] — 2026-09-13 M-A 로 실측).
+            self.assertTrue(any("is a symlink" in line for line in lines), lines)
+
+    def test_a_record_that_appears_while_computing_is_not_overwritten(self) -> None:
+        """경합을 **결정적으로** 재는 자리 — 계산이 도는 동안 기록이 생기게 만든다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _own_work_fixture(raw)
+            record = root / "openspec" / "changes" / "mine" / "landed-commit.txt"
+
+            def someone_records_while_we_walk(*args: object, **kwargs: object):
+                record.write_text(marks["W"] + "\n", encoding="utf-8")
+                return marks["E"], ""
+
+            with mock.patch.object(
+                check_analysis, "compute_landing", side_effect=someone_records_while_we_walk
+            ):
+                code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertEqual(record.read_text(encoding="utf-8").strip(), marks["W"])
+
+
+class AFaultInGitBecomesAVerdictNotATraceback(unittest.TestCase):
+    """판정 도구는 판정을 못 내겠으면 **이름으로** 말한다 (task 7.4, 리뷰 H5·H6).
+
+    두 자리가 열려 있었다. (H5) `compute_landing` 이 저장소 밖을 가리키는 번들 앞에서
+    `ValueError` 를 내면 `record_landing` 이 스택으로 죽는다. (H6) `TimeoutExpired` 는
+    `OSError` 가 **아니라서** `check` 의 예외 목록 넷을 그대로 빠져나간다 — git 이 한 번
+    멎으면 게이트를 돌린 사람은 무엇이 왜 막혔는지도, 어느 창으로 쟀는지도 못 읽는다.
+    """
+
+    def test_record_landing_names_a_bundle_that_escapes_the_repository(self) -> None:
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            _escaping_bundle(root)
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertTrue(any("escapes repository" in line for line in lines), lines)
+
+    def test_the_cli_names_the_same_fault_and_still_prints_the_window(self) -> None:
+        """창은 **잰 것**이므로 계속 찍는다. 이 결함은 착지를 잰 **뒤**에 터진다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            _escaping_bundle(root)
+            code, output = _cli(root)
+            self.assertEqual(code, 1, output)
+            self.assertIn("escapes repository", output)
+            self.assertIn("working tree (no landed-commit.txt)", output)
+
+    def test_the_cli_names_a_fault_the_record_path_cannot_answer(self) -> None:
+        """기록 경로가 스스로 못 답하는 결함도 CLI 에서는 이름이 된다.
+
+        `record_landing` 안에서 git 을 부르는 자리는 `compute_landing` 말고도 넷 더
+        있다(`resolve_referenced_change` · `_landing_record` · `resolve_base` ·
+        워킹트리 dirty 확인). 자리마다 목록을 베끼는 대신 **경계 하나**에 세웠으므로,
+        그 경계가 실제로 서 있는지를 그중 하나로 잰다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            real_run = subprocess.run
+
+            def the_dirty_check_hangs(args: object, **kwargs: object):
+                if isinstance(args, list) and "--quiet" in args:
+                    raise subprocess.TimeoutExpired(cmd=args, timeout=30)
+                return real_run(args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", the_dirty_check_hangs):
+                code, output = _cli(root, "--record-landing")
+            self.assertEqual(code, 1, output)
+            self.assertIn("timed out", output)
+            self.assertFalse(
+                (root / "openspec" / "changes" / "mine" / "landed-commit.txt").exists(),
+                "결함 앞에서 기록이 만들어졌다",
+            )
+
+    def test_a_timed_out_git_call_is_named_instead_of_raised(self) -> None:
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _own_work_fixture(raw)
+            _declare_landing(
+                root / "openspec" / "changes" / "mine", marks["E"], "declare the landing"
+            )
+            real_run = subprocess.run
+
+            def the_floor_call_hangs(args: object, **kwargs: object):
+                if isinstance(args, list) and "-M100%" in args:
+                    raise subprocess.TimeoutExpired(cmd=args, timeout=60)
+                return real_run(args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", the_floor_call_hangs):
+                code, output = _cli(root)
+            self.assertEqual(code, 1, output)
+            self.assertIn("timed out", output)
+
+
 class ADeclaredLandingMustBePinnedByEvidence(unittest.TestCase):
     """착지 선언은 **그것을 고정할 증거가 있을 때만** 유효하다 (task 3.2.3.1).
 

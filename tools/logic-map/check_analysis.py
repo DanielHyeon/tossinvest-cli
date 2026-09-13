@@ -332,6 +332,14 @@ def resolve_base(
 
 LANDING_FILE = "landed-commit.txt"
 FULL_SHA = re.compile(r"[0-9a-f]{40}")
+# 판정을 못 내는 입력이 **판정 대신 traceback** 이 되지 않게 하는 목록 (task 7.4, H5·H6).
+# `subprocess.SubprocessError` 가 여기 있는 이유: `TimeoutExpired` 는 `OSError` 가 아니라서
+# 자리마다 적혀 있던 목록 넷(`OSError, RuntimeError, ValueError, JSONDecodeError`)을 그대로
+# 빠져나갔다 — git 이 한 번 멎으면 5단계는 창 줄도 안 찍고 스택만 남겼다.
+# `json.JSONDecodeError` 는 `ValueError` 의 하위형이라 따로 안 적는다.
+# 목록은 **한 곳에만** 둔다 — 자리마다 베껴 두면 한 자리를 고쳐도 다른 자리의 시험이
+# 초록으로 남는다([[two-judgements-cover-for-each-other]]).
+GATE_FAULTS = (OSError, RuntimeError, ValueError, subprocess.SubprocessError)
 
 
 def _committed_bytes(root: Path, ref: str, relative: str) -> bytes | None:
@@ -1142,6 +1150,16 @@ def record_landing(change: str, root: Path = ROOT) -> tuple[int, list[str]]:
     except ValueError:
         change_dir = root / "openspec" / "changes" / change
     landing_file = change_dir / LANDING_FILE
+    if landing_file.is_symlink():
+        # `exists()` 는 링크를 **따라가서** 답한다. 끊긴 링크면 거짓이므로 존재 확인을
+        # 그대로 통과하고, 그 뒤의 쓰기가 링크를 따라 저장소 **밖에** 기록을 만든다
+        # (2026-09-13 실측: rc 0 으로 "recorded" 라고 말하면서 임시 디렉터리에 썼다).
+        # 기록은 커밋되는 파일이어야 하므로 링크 자리는 기록 자리가 아니다.
+        return 1, [
+            f"{change}: `{LANDING_FILE}` is a symlink — not followed: the record must be a "
+            "regular file in the change directory, or the value the gate reads back is not "
+            "the value it wrote"
+        ]
     if landing_file.exists() or _landing_record(change_dir, root) is not None:
         return 1, [f"{change}: `{LANDING_FILE}` already exists — not overwritten"]
     if (change_dir / "analysis" / "function-logic-reference.txt").exists():
@@ -1169,10 +1187,26 @@ def record_landing(change: str, root: Path = ROOT) -> tuple[int, list[str]]:
             "them first, because a recorded landing points at a commit and step 5 would "
             "then never compare those edits"
         ]
-    landing, why = compute_landing(root, base, change_dir / "analysis" / "function-logic")
+    try:
+        landing, why = compute_landing(root, base, change_dir / "analysis" / "function-logic")
+    except GATE_FAULTS as exc:
+        # 저장소 밖을 가리키는 번들·읽을 수 없는 ast.json·멎은 git 은 전부 이 함수가
+        # 답할 수 있는 것이다. 스택으로 죽으면 "왜 기록이 안 됐나"가 아무 데도 안 남는다.
+        return 1, [f"{change}: no landing recorded — {exc}"]
     if not landing:
         return 1, [f"{change}: no landing recorded — {why}"]
-    landing_file.write_text(landing + "\n", encoding="utf-8")
+    try:
+        with landing_file.open("xb") as output:
+            output.write((landing + "\n").encode("utf-8"))
+    except FileExistsError:
+        # 존재 확인과 이 쓰기 사이에 walk 하나가 통째로 들어간다(리뷰 I1 실측 133.7s·219.6s).
+        # 그 사이에 생긴 기록을 덮으면 그것이 무엇이었는지가 아무 데도 안 남는다. `x` 는
+        # 심링크에도 걸리므로 위의 거절이 뚫려도 저장소 밖으로는 못 쓴다 — 확인이 아니라
+        # **쓰기 자체**가 한 번만 만들어지는 것이 이 보장의 자리다.
+        return 1, [
+            f"{change}: `{LANDING_FILE}` appeared while the landing was being computed "
+            "— not overwritten"
+        ]
     return 0, [
         f"{change}: recorded `{LANDING_FILE}` = {landing} (base {base[:12]}) — computed "
         "from this change's own evidence, not chosen; commit it with the change"
@@ -1191,11 +1225,21 @@ def main() -> int:
     context: dict[str, object] = {}
     root = Path(args.root)
     if args.record_landing:
-        code, lines = record_landing(args.change, root)
+        try:
+            code, lines = record_landing(args.change, root)
+        except GATE_FAULTS as exc:
+            code, lines = 1, [f"{args.change}: no landing recorded — {exc}"]
         for line in lines:
             print(f"[logic-map] {line}")
         return code
-    errors = check(args.change, root, context)
+    # 판정의 **경계**가 여기다 (task 7.4, H6). 안쪽 자리마다 목록을 베끼면 새로 부르는
+    # git 하나가 그중 아무 목록에도 안 걸려 다시 스택이 된다 — 이 도구가 실제로 불리는
+    # 곳은 `tools/gate.sh` 의 CLI 하나뿐이므로 그 하나에 세운다. 창 줄은 아래에서 계속
+    # 찍힌다: `context` 는 참조로 채워지므로 착지를 **잰 뒤에** 터진 결함이면 그 창이 남아 있다.
+    try:
+        errors = check(args.change, root, context)
+    except GATE_FAULTS as exc:
+        errors = [f"cannot judge this change: {exc}"]
     # 창을 **먼저** 찍는다. 그리고 실패해도 찍는다 — 옛 판본은 `if errors: return 1`
     # 이 이 자리를 건너뛰어서, 요구된 함수 이름 316개가 어느 두 지점 사이에서 나온
     # 것인지 출력 어디에도 없었다(2026-09-10 a074·a076 실측: 그런 줄 0개).
