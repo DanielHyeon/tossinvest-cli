@@ -70,3 +70,34 @@ B4·B5 는 **이 로트가 찾은 둘째 자리**다. 4.4 는 `check` 의 probe 
 분기 11 → 11 · 반환 8 → 8. 열거 diff 는 B4·B5 의 callee 하나뿐이다. 변이 M8(probe 가 다시
 해독) CAUGHT — `test_an_undecodable_committed_record_is_reported_not_raised` 가 `ValueError`
 로 에러가 된다.
+
+---
+
+## 공백 기록 — 7.2.1 · 7.3.1 · 7.4 는 이 함수를 FLM 없이 바꿨다 (2026-09-13, 7.6 이 적음)
+
+이 세 task 는 내부를 바꾸면서 열거도 `not-applicable` 사유도 남기지 않았다. 7.6 이 7.2.1 직전
+(`eaf536d2`, 7.1 과 소스 동일)과 HEAD(`2b5b05c1`)를 같은 열거기로 뽑아 `ast.before-7.2.1.json` ·
+`ast.before-7.6.json` 으로 남긴다. 판정 근거(뮤테이션·A/B)는 각 task 의 VERIFY 절에 있다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 생김 | 분기 | `if landing_file.is_symlink():` |
+| 생김 | 분기 | `try:` |
+| 생김 | 분기 | `except GATE_FAULTS as exc:` |
+| 생김 | 분기 | `try:` |
+| 생김 | 분기 | `except FileExistsError:` |
+
+---
+
+## 편집 — task 7.6 (규칙 한 집) · 분기 16 → 15 · 반환 11 → 11 · raise 0 → 0
+
+편집 전 `ast.before-7.6.json`(HEAD `2b5b05c1`) · 편집 후 `ast.after-7.6.json`(워킹트리). 아래 표는 두 열거의
+`source` 를 스크립트가 줄 단위로 대조한 것이다.
+
+`except AmbiguousChange` + `except ValueError: change_dir = changes/<id>` 두 갈래를 `except ValueError as exc: return 1, [str(exc)]` 하나로. 없는 id 가 없는 경로로 바뀌어 `resolve_base` 의 "base 를 capture 하라"로 떨어지던 갈래가 없어졌다(리뷰 I4). 이관 거절 문장은 모듈 상수 `ADOPTION_REFUSES_A_LANDING` 이다(I5).
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 분기 | `except AmbiguousChange as exc:` |
+| 사라짐 | 분기 | `except ValueError:` |
+| 생김 | 분기 | `except ValueError as exc:` |

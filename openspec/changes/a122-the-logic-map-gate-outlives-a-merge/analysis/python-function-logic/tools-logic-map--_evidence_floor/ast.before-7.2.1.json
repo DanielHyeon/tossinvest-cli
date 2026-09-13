@@ -1,0 +1,106 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "eaf536d2",
+  "head_commit": "2b5b05c1c69dd3fcf9c64a6df60c6b8cd3df871d",
+  "source_sha256": "f7ca5855c3e0bd73387177e9c933f940ca0829144cf1624b2789f2d384963117",
+  "function": "_evidence_floor",
+  "signature": "_evidence_floor(root, analysis)",
+  "start": {
+    "line": 478,
+    "column": 1
+  },
+  "end": {
+    "line": 507,
+    "column": 64
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 492,
+      "inherited_line": false,
+      "source": "for ast_path, _, _ in _pinning_bundles(root, analysis):"
+    },
+    {
+      "id": "B2",
+      "kind": "Try",
+      "line": 493,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B3",
+      "kind": "ExceptHandler",
+      "line": 495,
+      "inherited_line": false,
+      "source": "except ValueError:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 499,
+      "inherited_line": false,
+      "source": "if before:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 501,
+      "inherited_line": false,
+      "source": "if not paths:"
+    },
+    {
+      "id": "B6",
+      "kind": "IfExp",
+      "line": 507,
+      "inherited_line": false,
+      "source": "'' if process.returncode else process.stdout.strip()"
+    }
+  ],
+  "returns": [
+    {
+      "line": 502,
+      "value": "''"
+    },
+    {
+      "line": 507,
+      "value": "'' if process.returncode else process.stdout.strip()"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 492,
+      "callee": "_pinning_bundles"
+    },
+    {
+      "line": 494,
+      "callee": "ast_path.relative_to"
+    },
+    {
+      "line": 494,
+      "callee": "ast_path.relative_to(root).as_posix"
+    },
+    {
+      "line": 497,
+      "callee": "paths.append"
+    },
+    {
+      "line": 498,
+      "callee": "_pre_archive_path"
+    },
+    {
+      "line": 500,
+      "callee": "paths.append"
+    },
+    {
+      "line": 503,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 507,
+      "callee": "process.stdout.strip"
+    }
+  ]
+}

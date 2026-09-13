@@ -35,3 +35,21 @@
 실패는 전부 빈 문자열이다. 빈 문자열이면 `_evidence_floor` 가 그 경로를 안
 더하고, 그러면 바닥이 rename 커밋으로 올라갈 수 있다 — 그 경우를
 `test_archiving_the_change_does_not_invalidate_its_record` 가 못 박는다.
+
+---
+
+## 편집 — task 7.6 (규칙 한 집) · 분기 3 → 3 · 반환 2 → 2 · raise 0 → 0
+
+편집 전 `ast.before-7.6.json`(HEAD `2b5b05c1`) · 편집 후 `ast.after-7.6.json`(워킹트리). 아래 표는 두 열거의
+`source` 를 스크립트가 줄 단위로 대조한 것이다.
+
+아카이브 이름 해독을 `_archived_change_id` 에 묻는다(I6). 경로 접두사는 모듈 상수 `ARCHIVE_PREFIX`. 분기 3 → 3.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 분기 | `if not relative.startswith(prefix):` |
+| 생김 | 분기 | `if not relative.startswith(ARCHIVE_PREFIX):` |
+| 사라짐 | 분기 | `match and tail` |
+| 생김 | 분기 | `change and tail` |
+| 사라짐 | 분기 | `f'openspec/changes/{match.group('change')}/{tail}' if match and tail else ''` |
+| 생김 | 분기 | `f'openspec/changes/{change}/{tail}' if change and tail else ''` |

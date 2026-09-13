@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import json
 import hashlib
 import io
@@ -304,7 +305,7 @@ class CheckAnalysisTests(unittest.TestCase):
             self._reference_fixture(root, other)
             self.assertEqual(
                 check_analysis.check("ordinary", root),
-                ["function-logic reference base is invalid: reference change is neither open nor archived: reference"],
+                ["function-logic reference base is invalid: change is neither open nor archived: reference"],
             )
 
     def test_real_archived_reference_rejects_two_copies(self) -> None:
@@ -545,11 +546,9 @@ class CheckAnalysisTests(unittest.TestCase):
             self._commit(root, "declare a landing point inside the adoption path")
             subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
             errors = check_analysis.check(adoption.CHANGE, root)
-            self.assertTrue(errors, "감사되지 않는 두 번째 손잡이가 그대로 통과했다")
-            self.assertTrue(
-                any("adoption does not accept" in error for error in errors),
-                f"거절 사유를 이름으로 말해야 한다: {errors}",
-            )
+            # 문장은 **상수 하나**다 (task 7.6, 리뷰 I5). 기록 경로와 한 벌씩 들고 있던
+            # 동안 이미 "ends" / "already ends" 로 갈렸다.
+            self.assertEqual(errors, [check_analysis.ADOPTION_REFUSES_A_LANDING])
 
     def test_the_recorder_refuses_the_adoption_path_too(self) -> None:
         """`check` 의 거절만 있고 **기록 경로**의 거절을 재는 시험이 0 이었다(변이 M9).
@@ -559,8 +558,10 @@ class CheckAnalysisTests(unittest.TestCase):
         raw, root, p, e = self._adoption_with_complete_bundle()
         with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
             code, lines = check_analysis.record_landing(adoption.CHANGE, root)
-            self.assertEqual(code, 1, lines)
-            self.assertTrue(any("adoption does not accept" in line for line in lines), lines)
+            self.assertEqual(
+                (code, lines),
+                (1, [f"{adoption.CHANGE}: {check_analysis.ADOPTION_REFUSES_A_LANDING}"]),
+            )
             self.assertFalse(
                 (root / "openspec" / "changes" / adoption.CHANGE
                  / check_analysis.LANDING_FILE).exists(),
@@ -1262,6 +1263,15 @@ class TestNamedTestsAreOpened(unittest.TestCase):
 def _commit_all(root: Path, subject: str) -> str:
     subprocess.run(["git", "add", "."], cwd=root, check=True)
     subprocess.run(["git", "commit", "-qm", subject], cwd=root, check=True)
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+
+
+def _commit_at(root: Path, subject: str, when: str) -> str:
+    """커밋 시각을 **고정**해서 커밋한다. `git log -1` 은 커밋 시각 순으로 고르므로,
+    시각이 같은 초에 겹치면 두 가지 중 어느 쪽이 하한인지가 실행마다 달라진다."""
+    env = {**os.environ, "GIT_AUTHOR_DATE": when, "GIT_COMMITTER_DATE": when}
+    subprocess.run(["git", "add", "."], cwd=root, check=True, env=env)
+    subprocess.run(["git", "commit", "-qm", subject], cwd=root, check=True, env=env)
     return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
 
 
@@ -2300,8 +2310,8 @@ class TheGateRecordsTheLandingInsteadOfTheAuthor(unittest.TestCase):
         """모호한 id 는 고르지 않고 멈춘다. 조용히 활성을 고르면 어느 change 에 기록한
         것인지가 아무 데도 안 남는다 (변이 M11).
 
-        `AmbiguousChange` 는 `ValueError` 를 상속하므로 그 아래의 `except ValueError`
-        가 **먼저 잡지 않는 것**이 이 거절의 자리다."""
+        옛 판본은 "못 찾음"을 fallback 으로 흘리고 "모호함"만 타입으로 멈췄다. 7.6 이
+        fallback 을 없앤 뒤로 둘 다 해소기의 문장으로 멈춘다 — 이 시험은 그 문장을 잰다."""
         raw, root, _ = self._fixture(base_also_matches=False)
         with raw:
             archive = root / "openspec" / "changes" / "archive" / "2026-09-11-mine"
@@ -2311,6 +2321,34 @@ class TheGateRecordsTheLandingInsteadOfTheAuthor(unittest.TestCase):
             code, lines = check_analysis.record_landing("mine", root)
             self.assertEqual(code, 1, lines)
             self.assertTrue(any("open and archived at once" in line for line in lines), lines)
+
+    def test_an_unknown_change_is_named_instead_of_given_a_base_to_capture(self) -> None:
+        """오타 난 id 에 "base 를 capture 하라"고 권하면 **없는 change 를 만들라**는 말이 된다
+        (리뷰 I4). 두 경로가 같은 해소기를 쓰므로 같은 문장으로 멈춘다."""
+        raw, root, _ = self._fixture(base_also_matches=False)
+        with raw:
+            code, lines = check_analysis.record_landing("mnie", root)
+            self.assertEqual((code, lines), (1, ["change is neither open nor archived: mnie"]))
+            self.assertEqual(
+                check_analysis.check("mnie", root), ["change is neither open nor archived: mnie"]
+            )
+
+    def test_two_archived_copies_are_named_on_both_paths(self) -> None:
+        """사본 둘도 해소기의 **자기 문장**으로 멈춘다. 옛 fallback 은 이것을 없는 경로로
+        바꿔서 역시 "base 를 capture 하라"로 만들었다."""
+        raw, root, _ = self._fixture(base_also_matches=False)
+        with raw:
+            archive = root / "openspec" / "changes" / "archive"
+            archive.mkdir(parents=True, exist_ok=True)
+            subprocess.run(
+                ["git", "mv", "openspec/changes/mine", "openspec/changes/archive/2026-09-11-mine"],
+                cwd=root, check=True,
+            )
+            shutil.copytree(archive / "2026-09-11-mine", archive / "2026-09-12-mine")
+            _commit_all(root, "two archived copies of one id")
+            expected = ["archive holds 2 copies of mine: 2026-09-11-mine, 2026-09-12-mine"]
+            self.assertEqual(check_analysis.check("mine", root), expected)
+            self.assertEqual(check_analysis.record_landing("mine", root), (1, expected))
 
     def test_an_undecodable_committed_record_is_reported_not_raised(self) -> None:
         """"기록이 있는가"에 해독은 필요 없다 (task 6.2.1 — 호출 자리 열거가 찾은 둘째 자리).
@@ -2682,6 +2720,68 @@ class AComputedLandingIsAlwaysOneTheGateWillAccept(unittest.TestCase):
             self.assertEqual(landing, marks["M"], why)
             self.assertNotEqual(landing, marks["S"], "곁가지는 이 change 의 선 위에 없다")
 
+    def _parallel_evidence_fixture(self) -> tuple[tempfile.TemporaryDirectory, Path, dict[str, str]]:
+        """P(base) → 곁가지 B(작업+증거) · 줄기 F(**같은 바이트**의 증거를 먼저, 더 늦게) → 병합 M.
+
+        하한은 `-1` 이 고르는 늦은 쪽 F 다. F 에는 작업이 아직 없어 불일치로 떨어지고,
+        그다음 후보 B 는 소스도 맞고 번들 바이트도 같은데 **F 의 자손이 아니다**. 이 후보를
+        막는 것은 하한 순서 가드 **혼자**다 — 다른 픽스처는 전부 하한 앞의 후보가 불일치로
+        먼저 떨어져서, 계산 경로가 규칙에 하한을 제대로 넘기는지를 아무도 안 쟀다
+        (7.6 뮤테이션 R16 SURVIVED)."""
+        raw = tempfile.TemporaryDirectory()
+        root = _init_fixture(raw)
+        own = root / "internal" / "own.go"
+        own.parent.mkdir(parents=True)
+        own.write_text("package internal\nfunc Own() int { return 1 }\n")
+        change = root / "openspec" / "changes" / "mine"
+        change.mkdir(parents=True)
+        (change / "review.md").write_text("mine\n")
+        (change / "base-commit.txt").write_text("pending\n")
+        marks = {"P": _commit_at(root, "P: base", "2026-09-01T00:00:00")}
+        (change / "base-commit.txt").write_text(marks["P"] + "\n")
+        _commit_at(root, "declare the base", "2026-09-01T01:00:00")
+        trunk = subprocess.check_output(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root, text=True
+        ).strip()
+        worked = "package internal\nfunc Own() int { return 2 }\n"
+        digest = hashlib.sha256(worked.encode()).hexdigest()
+        subprocess.run(["git", "checkout", "-q", "-b", "side"], cwd=root, check=True)
+        own.write_text(worked)
+        _write_evidence(change, package="internal", function="Own", relative="internal/own.go", digest=digest)
+        marks["B"] = _commit_at(root, "B: work and evidence on a branch", "2026-09-03T00:00:00")
+        subprocess.run(["git", "checkout", "-q", trunk], cwd=root, check=True)
+        _write_evidence(change, package="internal", function="Own", relative="internal/own.go", digest=digest)
+        marks["F"] = _commit_at(root, "F: the same evidence first on the trunk", "2026-09-04T00:00:00")
+        env = {**os.environ, "GIT_AUTHOR_DATE": "2026-09-05T00:00:00",
+               "GIT_COMMITTER_DATE": "2026-09-05T00:00:00"}
+        subprocess.run(["git", "merge", "-q", "--no-edit", "side"], cwd=root, check=True, env=env)
+        marks["M"] = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        return raw, root, marks
+
+    def test_the_parallel_fixture_reaches_a_candidate_only_the_floor_refuses(self) -> None:
+        """계측기 대조군 ([[mutation-must-reach-the-thing-under-test]])."""
+        raw, root, marks = self._parallel_evidence_fixture()
+        with raw:
+            analysis = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+            self.assertEqual(check_analysis._evidence_floor(root, analysis), marks["F"])
+            self.assertFalse(check_analysis._is_ancestor(root, marks["F"], marks["B"]))
+            self.assertIn("is not the revision this evidence describes",
+                          check_analysis._landing_refusal(root, marks["P"], marks["F"], analysis, marks["F"])[0])
+            # B 를 막는 것이 하한 순서 **하나**뿐임을 직접 보인다: 하한을 base 로 주면 받는다.
+            self.assertEqual(check_analysis._landing_refusal(root, marks["P"], marks["B"], analysis, marks["P"]), ("", []))
+            self.assertIn("precedes the evidence that pins it",
+                          check_analysis._landing_refusal(root, marks["P"], marks["B"], analysis, marks["F"])[0])
+
+    def test_a_candidate_older_than_its_evidence_is_not_the_landing(self) -> None:
+        raw, root, marks = self._parallel_evidence_fixture()
+        with raw:
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 0, lines)
+            _commit_all(root, "commit the recorded landing")
+            facts: dict[str, object] = {}
+            self.assertEqual(check_analysis.check("mine", root, facts), [])
+            self.assertEqual(facts["landing"], marks["M"], "곁가지 B 는 증거보다 앞선다")
+
     def test_what_it_records_on_a_merged_history_the_gate_still_accepts(self) -> None:
         """종단. 값 비교만 하면 "다른 값이 왜 나쁜가"가 시험에 안 남는다."""
         raw, root, marks = self._merged_fixture()
@@ -2693,6 +2793,47 @@ class AComputedLandingIsAlwaysOneTheGateWillAccept(unittest.TestCase):
             self.assertEqual(check_analysis.check("mine", root, facts), [])
             self.assertEqual(facts["landing"], marks["M"])
             self.assertEqual(facts["required_count"], 1)
+
+
+class TheLandingRuleLivesInOnePlace(unittest.TestCase):
+    """착지 수락 규칙과 아카이브 이름 규칙은 각자 **한 함수**에 산다 (task 7.6, 리뷰 I2 · I6).
+
+    두 벌이면 한쪽만 고쳐도 양쪽 시험이 초록이다([[two-judgements-cover-for-each-other]]).
+    그리고 행동 시험은 **일치하는 두 사본**을 못 가른다 — 둘이 오늘 같은 답을 내면 초록이기
+    때문이다. 그래서 이 클래스만 소스의 구조를 본다: 누가 누구에게 묻는가.
+    """
+
+    @staticmethod
+    def _calls(function: str) -> set[str]:
+        tree = ast.parse(Path(check_analysis.__file__).read_text(encoding="utf-8"))
+        node = next(
+            item for item in ast.walk(tree)
+            if isinstance(item, ast.FunctionDef) and item.name == function
+        )
+        return {ast.unparse(call.func) for call in ast.walk(node) if isinstance(call, ast.Call)}
+
+    def test_the_declared_and_the_computed_landing_ask_one_rule(self) -> None:
+        for function in ("resolve_landing", "compute_landing"):
+            calls = self._calls(function)
+            self.assertIn("_landing_refusal", calls, function)
+            # 규칙의 조각을 직접 부르는 자리가 곧 두 번째 사본이다.
+            self.assertFalse(calls & {"_pinning_at", "_unheld_bundles"}, (function, sorted(calls)))
+
+    def test_archive_names_are_read_by_one_function(self) -> None:
+        for function in ("resolve_referenced_change", "_pre_archive_path"):
+            calls = self._calls(function)
+            self.assertIn("_archived_change_id", calls, function)
+            self.assertNotIn("ARCHIVED_CHANGE.fullmatch", calls, function)
+
+    def test_an_archived_name_yields_its_id_and_nothing_else_does(self) -> None:
+        for name, expected in (
+            ("2026-09-11-mine", "mine"),
+            ("2026-08-29-other-reference", "other-reference"),
+            ("mine", ""),
+            ("abcd-ef-gh-mine", ""),
+            ("2026-09-11-", ""),
+        ):
+            self.assertEqual(check_analysis._archived_change_id(name), expected, name)
 
 
 class ADeclaredLandingMustBePinnedByEvidence(unittest.TestCase):

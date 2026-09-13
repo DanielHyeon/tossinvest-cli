@@ -174,3 +174,45 @@ a063 이관 픽스처의 번들이 절대경로를 쓰면서 드러났다.
 
 M2·M3 이 1차에서 살아남은 것이 시험 둘을 더 쓴 이유다 —
 [[surviving-mutant-may-mean-accidental-safety]].
+
+---
+
+## 공백 기록 — 7.2.1 · 7.3.1 · 7.4 는 이 함수를 FLM 없이 바꿨다 (2026-09-13, 7.6 이 적음)
+
+이 세 task 는 내부를 바꾸면서 열거도 `not-applicable` 사유도 남기지 않았다. 7.6 이 7.2.1 직전
+(`eaf536d2`, 7.1 과 소스 동일)과 HEAD(`2b5b05c1`)를 같은 열거기로 뽑아 `ast.before-7.2.1.json` ·
+`ast.before-7.6.json` 으로 남긴다. 판정 근거(뮤테이션·A/B)는 각 task 의 VERIFY 절에 있다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 생김 | 분기 | `if unheld:` |
+| 생김 | 분기 | `if candidate != computed:` |
+| 생김 | 분기 | `computed[:12] if computed else f'none — {why}'` |
+| 생김 | raise | `raise ValueError(f'landing point {candidate[:12]} does not hold the evidence this verdict read: ' + ', '.join(` |
+| 생김 | raise | `raise ValueError(f"landing point {candidate[:12]} is not the landing this change's evidence computes ({named})` |
+
+---
+
+## 편집 — task 7.6 (규칙 한 집) · 분기 13 → 8 · 반환 2 → 2 · raise 10 → 5
+
+편집 전 `ast.before-7.6.json`(HEAD `2b5b05c1`) · 편집 후 `ast.after-7.6.json`(워킹트리). 아래 표는 두 열거의
+`source` 를 스크립트가 줄 단위로 대조한 것이다.
+
+가드 여섯(base · 고정 0 · 불일치 · 하한 없음 · 하한 순서 · 미보유)을 `_landing_refusal` 로 옮겼다. 남은 것은 선언 **글자**에 대한 판정 셋(40-hex · 커밋 실재 · HEAD 조상)과 7.3.1 의 등식이다. 규칙의 순서는 이 함수가 쓰던 순서 그대로다 — 선언 경로의 시험들이 가드마다 그 문장을 못 박고 있기 때문이다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 생김 | 분기 | `if refusal:` |
+| 사라짐 | 분기 | `if not _is_ancestor(root, base, candidate):` |
+| 사라짐 | 분기 | `if not pinning:` |
+| 사라짐 | 분기 | `if mismatched:` |
+| 사라짐 | 분기 | `if not floor:` |
+| 사라짐 | 분기 | `if not _is_ancestor(root, floor, candidate):` |
+| 사라짐 | 분기 | `if unheld:` |
+| 생김 | raise | `raise ValueError(refusal)` |
+| 사라짐 | raise | `raise ValueError(f'landing point precedes the comparison base {base[:12]}: {candidate}')` |
+| 사라짐 | raise | `raise ValueError(f'landing point {candidate[:12]} is pinned by no `revision: current` evidence: a declared lan` |
+| 사라짐 | raise | `raise ValueError(f'landing point {candidate[:12]} is not the revision this evidence describes: ' + ', '.join(s` |
+| 사라짐 | raise | `raise ValueError(f'landing point {candidate[:12]} is pinned by evidence that never entered this history: commi` |
+| 사라짐 | raise | `raise ValueError(f"landing point {candidate[:12]} precedes the evidence that pins it ({floor[:12]}): a declare` |
+| 사라짐 | raise | `raise ValueError(f'landing point {candidate[:12]} does not hold the evidence this verdict read: ' + ', '.join(` |

@@ -167,3 +167,18 @@ CAUGHT — `test_an_undecodable_landing_record_in_the_adoption_path_is_refused_n
 있는 change 에서 번들 해시를 다시 세면 아무도 안 읽는 값에 `git show` 를 번들 수만큼
 쓴다. 실측(활성 24건, 2026-09-12): 이 편집 뒤에도 change 당 시간은 재기 전과 같은 대역
 (1.3s ~ 19.4s)이고, 가장 무거운 a071 이 19.4s 다.
+
+---
+
+## 편집 — task 7.6 (규칙 한 집) · 분기 44 → 43 · 반환 14 → 14 · raise 0 → 0
+
+편집 전 `ast.before-7.6.json`(HEAD `2b5b05c1`) · 편집 후 `ast.after-7.6.json`(워킹트리). 아래 표는 두 열거의
+`source` 를 스크립트가 줄 단위로 대조한 것이다.
+
+`record_landing` 과 같은 해소 수정(I4) · 이관 거절 문장 상수(I5). 나머지 분기 42개는 소스 한 줄 단위로 같다(스크립트 대조).
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 분기 | `except AmbiguousChange as exc:` |
+| 사라짐 | 분기 | `except ValueError:` |
+| 생김 | 분기 | `except ValueError as exc:` |

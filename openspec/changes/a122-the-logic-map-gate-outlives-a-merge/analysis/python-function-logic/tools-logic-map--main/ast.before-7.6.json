@@ -1,0 +1,283 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "2b5b05c1c69dd3fcf9c64a6df60c6b8cd3df871d",
+  "head_commit": "2b5b05c1c69dd3fcf9c64a6df60c6b8cd3df871d",
+  "source_sha256": "36f72fc173dab8baddd80d22f8f70af95d111a02e5095e63f22833865788008a",
+  "function": "main",
+  "signature": "main()",
+  "start": {
+    "line": 1239,
+    "column": 1
+  },
+  "end": {
+    "line": 1324,
+    "column": 13
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 1250,
+      "inherited_line": false,
+      "source": "if args.record_landing:"
+    },
+    {
+      "id": "B2",
+      "kind": "Try",
+      "line": 1251,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B3",
+      "kind": "ExceptHandler",
+      "line": 1253,
+      "inherited_line": false,
+      "source": "except GATE_FAULTS as exc:"
+    },
+    {
+      "id": "B4",
+      "kind": "For",
+      "line": 1255,
+      "inherited_line": false,
+      "source": "for line in lines:"
+    },
+    {
+      "id": "B5",
+      "kind": "Try",
+      "line": 1262,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B6",
+      "kind": "ExceptHandler",
+      "line": 1264,
+      "inherited_line": false,
+      "source": "except GATE_FAULTS as exc:"
+    },
+    {
+      "id": "B7",
+      "kind": "BoolOp",
+      "line": 1275,
+      "inherited_line": false,
+      "source": "base and 'landing' in context"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 1275,
+      "inherited_line": false,
+      "source": "if base and 'landing' in context:"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 1282,
+      "inherited_line": false,
+      "source": "if not landing:"
+    },
+    {
+      "id": "B10",
+      "kind": "BoolOp",
+      "line": 1287,
+      "inherited_line": false,
+      "source": "landed_after or '?'"
+    },
+    {
+      "id": "B11",
+      "kind": "BoolOp",
+      "line": 1293,
+      "inherited_line": false,
+      "source": "context.get('base_shaped_bundles') or []"
+    },
+    {
+      "id": "B12",
+      "kind": "comprehension",
+      "line": 1293,
+      "inherited_line": true,
+      "source": " for name in context.get('base_shaped_bundles') or []"
+    },
+    {
+      "id": "B13",
+      "kind": "If",
+      "line": 1294,
+      "inherited_line": false,
+      "source": "if base_shaped:"
+    },
+    {
+      "id": "B14",
+      "kind": "If",
+      "line": 1298,
+      "inherited_line": false,
+      "source": "if len(base_shaped) > 3:"
+    },
+    {
+      "id": "B15",
+      "kind": "If",
+      "line": 1314,
+      "inherited_line": false,
+      "source": "if errors:"
+    },
+    {
+      "id": "B16",
+      "kind": "For",
+      "line": 1315,
+      "inherited_line": false,
+      "source": "for error in errors:"
+    },
+    {
+      "id": "B17",
+      "kind": "If",
+      "line": 1318,
+      "inherited_line": false,
+      "source": "if context.get('execution_baseline_adoption'):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1257,
+      "value": "code"
+    },
+    {
+      "line": 1317,
+      "value": "1"
+    },
+    {
+      "line": 1324,
+      "value": "0"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1240,
+      "callee": "argparse.ArgumentParser"
+    },
+    {
+      "line": 1241,
+      "callee": "parser.add_argument"
+    },
+    {
+      "line": 1242,
+      "callee": "parser.add_argument"
+    },
+    {
+      "line": 1242,
+      "callee": "str"
+    },
+    {
+      "line": 1243,
+      "callee": "parser.add_argument"
+    },
+    {
+      "line": 1247,
+      "callee": "parser.parse_args"
+    },
+    {
+      "line": 1249,
+      "callee": "Path"
+    },
+    {
+      "line": 1252,
+      "callee": "record_landing"
+    },
+    {
+      "line": 1256,
+      "callee": "print"
+    },
+    {
+      "line": 1263,
+      "callee": "check"
+    },
+    {
+      "line": 1269,
+      "callee": "context.get"
+    },
+    {
+      "line": 1269,
+      "callee": "str"
+    },
+    {
+      "line": 1276,
+      "callee": "context.get"
+    },
+    {
+      "line": 1276,
+      "callee": "str"
+    },
+    {
+      "line": 1277,
+      "callee": "bool"
+    },
+    {
+      "line": 1277,
+      "callee": "context.get"
+    },
+    {
+      "line": 1278,
+      "callee": "print"
+    },
+    {
+      "line": 1279,
+      "callee": "_target_text"
+    },
+    {
+      "line": 1280,
+      "callee": "context.get"
+    },
+    {
+      "line": 1283,
+      "callee": "_commits_after"
+    },
+    {
+      "line": 1293,
+      "callee": "context.get"
+    },
+    {
+      "line": 1293,
+      "callee": "str"
+    },
+    {
+      "line": 1297,
+      "callee": "', '.join"
+    },
+    {
+      "line": 1298,
+      "callee": "len"
+    },
+    {
+      "line": 1299,
+      "callee": "len"
+    },
+    {
+      "line": 1300,
+      "callee": "print"
+    },
+    {
+      "line": 1301,
+      "callee": "len"
+    },
+    {
+      "line": 1308,
+      "callee": "print"
+    },
+    {
+      "line": 1316,
+      "callee": "print"
+    },
+    {
+      "line": 1318,
+      "callee": "context.get"
+    },
+    {
+      "line": 1319,
+      "callee": "print"
+    },
+    {
+      "line": 1321,
+      "callee": "print"
+    }
+  ]
+}

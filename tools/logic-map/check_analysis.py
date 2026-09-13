@@ -226,16 +226,19 @@ def changed_existing_functions(
 # 접미사로 고르면 `2026-08-29-other-reference` 가 `reference` 로 통과하므로
 # 날짜 접두사를 벗긴 나머지를 **전부** 맞춘다.
 ARCHIVED_CHANGE = re.compile(r"\d{4}-\d{2}-\d{2}-(?P<change>.+)")
+ARCHIVE_PREFIX = "openspec/changes/archive/"
 
 
-class AmbiguousChange(ValueError):
-    """같은 id 가 활성과 아카이브에 **동시에** 있다.
+def _archived_change_id(name: str) -> str:
+    """아카이브 디렉터리 이름 `<YYYY-MM-DD>-<id>` 이면 `<id>`, 아니면 빈 문자열.
 
-    호출자가 이 실패를 문구가 아니라 **타입**으로 가릴 수 있도록 따로 둔다.
-    문구로 가르면 메시지를 고치는 순간 조용히 뚫린다. `ValueError` 를 상속하는
-    것은 이 함수의 다른 실패를 이미 `ValueError` 로 받고 있는 자리를 깨지 않기
-    위해서다.
+    이 해독은 **여기 한 곳**에 산다 (task 7.6, 리뷰 I6). 해소기(id → 디렉터리)와
+    `_pre_archive_path`(아카이브 경로 → 옮기기 전 경로)가 각자 정규식을 들고 있었고,
+    6.2 가 `validate` 에 "셋째를 만들지 않는다"고 적은 바로 그 모양이었다. shell 쪽
+    사본(`tools/gate.sh`)은 언어가 달라 합칠 수 없어 자기 시험이 따로 못 박는다.
     """
+    matched = ARCHIVED_CHANGE.fullmatch(name)
+    return matched.group("change") if matched else ""
 
 
 def resolve_referenced_change(root: Path, change: str) -> Path:
@@ -258,15 +261,18 @@ def resolve_referenced_change(root: Path, change: str) -> Path:
     archived = sorted(
         path
         for path in (archive.iterdir() if archive.is_dir() else ())
-        if path.is_dir()
-        and (matched := ARCHIVED_CHANGE.fullmatch(path.name)) is not None
-        and matched.group("change") == change
+        if path.is_dir() and _archived_change_id(path.name) == change
     )
     found = ([direct] if open_here else []) + archived
     if not found:
-        raise ValueError(f"reference change is neither open nor archived: {change}")
+        # 이 해소기는 빌린 증거만이 아니라 **게이트 대상**도 찾는다 (task 7.6, I4).
+        # 그래서 문장에 "reference" 를 안 붙인다 — 오타 난 대상 id 에도 이 문장이 나간다.
+        raise ValueError(f"change is neither open nor archived: {change}")
     if open_here and archived:
-        raise AmbiguousChange(
+        # 따로 타입(`AmbiguousChange`)을 두던 이유는 호출자 둘이 "못 찾음"은 fallback 으로
+        # 흘리고 "모호함"만 멈춰야 했기 때문이다. 그 fallback 이 없어져서(task 7.6, I4)
+        # 가를 호출자가 0 이 됐다 — 이제 모든 실패가 같은 방식으로 멈춘다.
+        raise ValueError(
             f"{change} is open and archived at once: "
             + ", ".join(path.relative_to(root).as_posix() for path in found)
         )
@@ -332,6 +338,12 @@ def resolve_base(
 
 LANDING_FILE = "landed-commit.txt"
 FULL_SHA = re.compile(r"[0-9a-f]{40}")
+# 이관 경로가 착지 기록을 거절하는 문장. 판정 경로(`check`)와 기록 경로(`record_landing`)가
+# 한 벌씩 들고 있던 동안 이미 "ends" / "already ends" 로 갈렸다 (task 7.6, 리뷰 I5).
+ADOPTION_REFUSES_A_LANDING = (
+    f"execution-baseline adoption does not accept a `{LANDING_FILE}` record: "
+    "the window ends at the audited source commit"
+)
 # 판정을 못 내는 입력이 **판정 대신 traceback** 이 되지 않게 하는 목록 (task 7.4, H5·H6).
 # `subprocess.SubprocessError` 가 여기 있는 이유: `TimeoutExpired` 는 `OSError` 가 아니라서
 # 자리마다 적혀 있던 목록 넷(`OSError, RuntimeError, ValueError, JSONDecodeError`)을 그대로
@@ -475,12 +487,11 @@ def _pinning_at(root: Path, candidate: str, analysis: Path) -> tuple[int, list[s
 
 def _pre_archive_path(relative: str) -> str:
     """아카이브된 경로의 **옮기기 전** 이름. 아카이브가 아니면 빈 문자열이다."""
-    prefix = "openspec/changes/archive/"
-    if not relative.startswith(prefix):
+    if not relative.startswith(ARCHIVE_PREFIX):
         return ""
-    dated, _, tail = relative[len(prefix):].partition("/")
-    match = ARCHIVED_CHANGE.fullmatch(dated)
-    return f"openspec/changes/{match.group('change')}/{tail}" if match and tail else ""
+    dated, _, tail = relative[len(ARCHIVE_PREFIX):].partition("/")
+    change = _archived_change_id(dated)
+    return f"openspec/changes/{change}/{tail}" if change and tail else ""
 
 
 def _evidence_floor(root: Path, analysis: Path) -> str:
@@ -567,6 +578,77 @@ def _unheld_bundles(root: Path, candidate: str, analysis: Path) -> list[str]:
     return sorted(set(unheld))
 
 
+def _landing_refusal(
+    root: Path, base: str, candidate: str, analysis: Path, floor: str
+) -> tuple[str, list[str]]:
+    """`candidate` 를 착지로 **받지 않는** 사유. 받으면 `("", [])`.
+
+    착지의 수락 규칙은 **여기 한 곳**에 산다 (task 7.6, 리뷰 I2). 선언된 값을 판정하는
+    `resolve_landing` 과 값을 계산하는 `compute_landing` 이 각자 한 벌씩 들고 있었다 —
+    같은 여섯 조건을 다른 순서로. 두 벌이면 한쪽만 고쳐도 양쪽 시험이 초록이고, 갈리는
+    순간 도구는 자기 게이트가 거절할 값을 쓴다([[two-judgements-cover-for-each-other]]).
+
+    **순서가 거절 지점이다.** 선언 경로의 시험들은 가드마다 **그 가드의 문장**을 못
+    박는다(6.3). 순서를 바꾸면 한 입력이 다른 가드에 먼저 걸려 그 문장이 못에서 빠진다
+    ([[a-new-guard-unpins-the-guards-behind-it]]). 그래서 순서는 `resolve_landing` 이 쓰던
+    것을 그대로 쓴다. 계산 경로는 이 순서 때문에 곁가지 후보에서 번들 대조를 더 한다 —
+    2026-09-13 전수 실측으로 93건 합계 +328회(오늘 6,491회의 +5%), 그 거의 전부가 이미
+    느린 아카이브 change 일곱의 몫이고 활성 change 에서는 둘뿐이다. 그 walk 는 7.5 가 맡는다.
+
+    `floor` 는 호출자가 한 번 재서 넘긴다 — 후보마다 `git log` 를 다시 돌리지 않는다.
+    둘째 값은 판정이 읽은 번들을 그 커밋이 **안 들고 있을 때만** 그 번들 이름이다.
+    계산 경로가 "왜 못 찾았나"를 그 이름으로 말한다.
+    """
+    # base 는 조상이면 되고 같아도 된다. a074·a079·a075 의 정답이 바로 같은 경우다 —
+    # 2026-08-04 재기준화가 base 를 그 change 들의 작업 뒤로 옮겼다. 느슨해지지 않는
+    # 이유는 아래 증거 판정이 값을 고정하기 때문이다.
+    if not _is_ancestor(root, base, candidate):
+        return f"landing point precedes the comparison base {base[:12]}: {candidate}", []
+    pinning, mismatched = _pinning_at(root, candidate, analysis)
+    if not pinning:
+        # 위의 판정은 "이것이 어느 커밋인가"만 묻는다. 어느 커밋인지를 **고르지 못하게**
+        # 하는 것은 번들 순회이고, 순회가 0회 돌면 저자가 구간의 바닥을 골라 요구 집합을
+        # ∅ 로 만들 수 있다. 그 상태는 면제와 구분되지 않는다 — 고정할 증거가 없으면
+        # 선언도 없다.
+        return (
+            f"landing point {candidate[:12]} is pinned by no `revision: current` "
+            "evidence: a declared landing must be the revision some bundle describes"
+        ), []
+    if mismatched:
+        return (
+            f"landing point {candidate[:12]} is not the revision this evidence describes: "
+            + ", ".join(sorted(set(mismatched)))
+        ), []
+    # 해시가 맞는다는 것만으로는 값이 안 정해진다. a122 6.1.1 이 활성 13건을 전수로
+    # 재서 얻은 것: 고정을 통과하는 커밋이 13건 중 12건에서 2~59개이고, 그 수는 번들
+    # 수와 무관하다(a112 번들 132 → 후보 39, a091 번들 2 → 후보 27). 저자가 그중
+    # **가장 낮은 것**을 고르면 창이 비어 요구 집합이 ∅ 이 된다 — 8건이 오늘 그
+    # 상태이고, 증거를 base 상태로 써 두면 누구나 그 상태를 만들 수 있다.
+    # 하한 하나만 저자가 못 고른다: 자기 증거가 역사에 들어온 지점.
+    if not floor:
+        return (
+            f"landing point {candidate[:12]} is pinned by evidence that never entered "
+            "this history: commit the `revision: current` bundles that pin it"
+        ), []
+    if not _is_ancestor(root, floor, candidate):
+        return (
+            f"landing point {candidate[:12]} precedes the evidence that pins it "
+            f"({floor[:12]}): a declared landing cannot be older than the commit that "
+            "put this change's evidence into the history"
+        ), []
+    # 하한 **뒤**에 선다. 앞에 두면 "증거가 역사에 없다"·"착지가 증거보다 앞선다"를
+    # 재던 시험들의 거절 지점을 이 등식이 가로채서, 그 가드를 지워도 스위트가 초록으로
+    # 남는다([[first-failure-is-not-the-fix-scope]] 가 같은 파일에서 실측한 모양).
+    unheld = _unheld_bundles(root, candidate, analysis)
+    if unheld:
+        return (
+            f"landing point {candidate[:12]} does not hold the evidence this verdict read: "
+            + ", ".join(unheld)
+            + " — the bundle judged here is not the bundle committed there"
+        ), unheld
+    return "", []
+
+
 def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> str:
     """이 change 의 작업이 착지한 지점. 기록이 없으면 빈 문자열이다.
 
@@ -607,56 +689,11 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
         raise ValueError(f"landing point is not a commit in this repository: {candidate}")
     if not _is_ancestor(root, candidate, "HEAD"):
         raise ValueError(f"landing point never landed on this history: {candidate}")
-    # base 는 조상이면 되고 같아도 된다. a074·a079·a075 의 정답이 바로 같은 경우다 —
-    # 2026-08-04 재기준화가 base 를 그 change 들의 작업 뒤로 옮겼다. 느슨해지지 않는
-    # 이유는 아래 증거 판정이 값을 고정하기 때문이다.
-    if not _is_ancestor(root, base, candidate):
-        raise ValueError(
-            f"landing point precedes the comparison base {base[:12]}: {candidate}"
-        )
-    pinning, mismatched = _pinning_at(root, candidate, analysis)
-    if not pinning:
-        # 위의 판정들은 전부 "이것이 어느 커밋인가"만 묻는다. 어느 커밋인지를
-        # **고르지 못하게** 하는 것은 이 순회 하나뿐이고, 순회가 0회 돌면 저자가
-        # 구간의 바닥을 골라 요구 집합을 ∅ 로 만들 수 있다. 그 상태는 면제와
-        # 구분되지 않는다 — 고정할 증거가 없으면 선언도 없다.
-        raise ValueError(
-            f"landing point {candidate[:12]} is pinned by no `revision: current` "
-            "evidence: a declared landing must be the revision some bundle describes"
-        )
-    if mismatched:
-        raise ValueError(
-            f"landing point {candidate[:12]} is not the revision this evidence describes: "
-            + ", ".join(sorted(set(mismatched)))
-        )
-    # 해시가 맞는다는 것만으로는 값이 안 정해진다. a122 6.1.1 이 활성 13건을 전수로
-    # 재서 얻은 것: 고정을 통과하는 커밋이 13건 중 12건에서 2~59개이고, 그 수는 번들
-    # 수와 무관하다(a112 번들 132 → 후보 39, a091 번들 2 → 후보 27). 저자가 그중
-    # **가장 낮은 것**을 고르면 창이 비어 요구 집합이 ∅ 이 된다 — 8건이 오늘 그
-    # 상태이고, 증거를 base 상태로 써 두면 누구나 그 상태를 만들 수 있다.
-    # 하한 하나만 저자가 못 고른다: 자기 증거가 역사에 들어온 지점.
-    floor = _evidence_floor(root, analysis)
-    if not floor:
-        raise ValueError(
-            f"landing point {candidate[:12]} is pinned by evidence that never entered "
-            "this history: commit the `revision: current` bundles that pin it"
-        )
-    if not _is_ancestor(root, floor, candidate):
-        raise ValueError(
-            f"landing point {candidate[:12]} precedes the evidence that pins it "
-            f"({floor[:12]}): a declared landing cannot be older than the commit that "
-            "put this change's evidence into the history"
-        )
-    # 하한 **뒤**에 선다. 앞에 두면 "증거가 역사에 없다"·"착지가 증거보다 앞선다"를
-    # 재던 시험들의 거절 지점을 이 등식이 가로채서, 그 가드를 지워도 스위트가 초록으로
-    # 남는다([[first-failure-is-not-the-fix-scope]] 가 같은 파일에서 실측한 모양).
-    unheld = _unheld_bundles(root, candidate, analysis)
-    if unheld:
-        raise ValueError(
-            f"landing point {candidate[:12]} does not hold the evidence this verdict read: "
-            + ", ".join(unheld)
-            + " — the bundle judged here is not the bundle committed there"
-        )
+    # 유효한가는 **한 함수**가 판정한다 — 아래 `compute_landing` 이 후보마다 묻는 것과
+    # 같은 함수다 (task 7.6, 리뷰 I2).
+    refusal, _ = _landing_refusal(root, base, candidate, analysis, _evidence_floor(root, analysis))
+    if refusal:
+        raise ValueError(refusal)
     # **맨 뒤**에 선다 (task 7.3, 리뷰 H3). 위의 판정들은 전부 "이 값이 유효한가"를
     # 묻고, 이것 하나가 "이 값이 **그 값인가**"를 묻는다. 앞에 두면 위 가드들의 거절
     # 지점을 이 등식이 가로채서 그것들을 지워도 스위트가 초록으로 남는다
@@ -980,14 +1017,14 @@ def check(
 ) -> list[str]:
     # 아카이브된 change 도 자기 id 로 재검사할 수 있어야 한다. 아카이브 문법을 아는
     # 해소기가 이미 있으므로 세 번째 사본을 만들지 않는다.
+    # 해소기가 못 찾은 id 는 **그 문장으로** 멈춘다 (task 7.6, 리뷰 I4). 예전에는 없는
+    # `openspec/changes/<id>` 로 바꿔 넘겨서 "base 를 capture 하라"는 조언이 나갔다 —
+    # 오타 난 id 에 새 change 를 만들라는 말이다. 2026-09-13 전수: 게이트가 받을 수 있는
+    # id 126개 중 그 갈래로 떨어지는 것 0.
     try:
         change_dir = resolve_referenced_change(root, change)
-    except AmbiguousChange as exc:
-        # 아래 fallback 으로 흘려보내면 활성이 아카이브를 조용히 이긴다 —
-        # 그 침묵이 이 자리에서 고치려는 것 자체다. 타입으로 가른다.
+    except ValueError as exc:
         return [str(exc)]
-    except ValueError:
-        change_dir = root / "openspec" / "changes" / change
     analysis = change_dir / "analysis" / "function-logic"
     reference_file = change_dir / "analysis" / "function-logic-reference.txt"
     review = change_dir / "review.md"
@@ -1035,10 +1072,7 @@ def check(
         # digest 로 묶었다"이다. `landed-commit.txt` 는 `openspec/` 아래라 drift 검사가
         # 통과시키고, 추적 파일이라 untracked 감사도 못 보고, 닫힌 키 집합에도 없다.
         # 그런데 비교 대상을 고른다 — 손잡이는 하나여야 하고 그것은 감사된 쪽이다.
-        return [
-            "execution-baseline adoption does not accept a "
-            f"`{LANDING_FILE}` record: the window ends at the audited source commit"
-        ]
+        return [ADOPTION_REFUSES_A_LANDING]
     try:
         # 조상 판정은 `base-commit.txt` 의 글자가 아니라 `resolve_base` 가 **반환한**
         # 값에 건다. a063 은 그 둘이 다르다(P → E).
@@ -1131,15 +1165,13 @@ def compute_landing(root: Path, base: str, analysis: Path) -> tuple[str, str]:
         return "", f"cannot walk the history after {start[:12]}"
     unheld: list[str] = []
     for candidate in [start, *process.stdout.split()]:
-        if not _is_ancestor(root, base, candidate) or not _is_ancestor(root, floor, candidate):
-            continue
-        if _pinning_at(root, candidate, analysis)[1]:
-            continue
-        # 고정을 통과해도, 판정이 읽은 번들을 그 커밋이 들고 있지 않으면 착지가 아니다
-        # (task 7.2, 리뷰 C3). `resolve_landing` 과 **같은** 조건이다.
-        unheld = _unheld_bundles(root, candidate, analysis)
-        if not unheld:
+        # 선언 경로와 **같은 함수**에 묻는다 (task 7.6, 리뷰 I2). 받는 가장 낮은 후보가 착지다.
+        refusal, names = _landing_refusal(root, base, candidate, analysis, floor)
+        if not refusal:
             return candidate, ""
+        if names:
+            # 다른 조건은 다 통과했는데 판정이 읽은 번들을 안 들고 있다 (task 7.2, 리뷰 C3).
+            unheld = names
     if unheld:
         return "", (
             "no commit holds the evidence this verdict read (" + ", ".join(unheld) + ") "
@@ -1167,11 +1199,10 @@ def record_landing(change: str, root: Path = ROOT) -> tuple[int, list[str]]:
       Go 편집은 어느 커밋에도 없다. 그대로 쓰면 5단계가 못 보는 편집이 생긴다.
     """
     try:
+        # `check` 와 **같은** 해소다 — 못 찾거나 모호하면 해소기의 문장으로 멈춘다 (I4).
         change_dir = resolve_referenced_change(root, change)
-    except AmbiguousChange as exc:
+    except ValueError as exc:
         return 1, [str(exc)]
-    except ValueError:
-        change_dir = root / "openspec" / "changes" / change
     landing_file = change_dir / LANDING_FILE
     if landing_file.is_symlink():
         # `exists()` 는 링크를 **따라가서** 답한다. 끊긴 링크면 거짓이므로 존재 확인을
@@ -1196,10 +1227,7 @@ def record_landing(change: str, root: Path = ROOT) -> tuple[int, list[str]]:
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         return 1, [f"{change}: cannot resolve the comparison base: {exc}"]
     if facts.get("execution_baseline_adoption"):
-        return 1, [
-            f"{change}: execution-baseline adoption does not accept a `{LANDING_FILE}` "
-            "record: the window already ends at the audited source commit"
-        ]
+        return 1, [f"{change}: {ADOPTION_REFUSES_A_LANDING}"]
     dirty = subprocess.run(
         ["git", "diff", "--quiet", "HEAD"], cwd=root, capture_output=True,
         timeout=30, check=False,

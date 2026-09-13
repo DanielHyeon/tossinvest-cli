@@ -1,0 +1,73 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "2b5b05c1c69dd3fcf9c64a6df60c6b8cd3df871d",
+  "head_commit": "2b5b05c1c69dd3fcf9c64a6df60c6b8cd3df871d",
+  "source_sha256": "36f72fc173dab8baddd80d22f8f70af95d111a02e5095e63f22833865788008a",
+  "function": "_pre_archive_path",
+  "signature": "_pre_archive_path(relative)",
+  "start": {
+    "line": 476,
+    "column": 1
+  },
+  "end": {
+    "line": 483,
+    "column": 88
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 479,
+      "inherited_line": false,
+      "source": "if not relative.startswith(prefix):"
+    },
+    {
+      "id": "B2",
+      "kind": "BoolOp",
+      "line": 483,
+      "inherited_line": false,
+      "source": "match and tail"
+    },
+    {
+      "id": "B3",
+      "kind": "IfExp",
+      "line": 483,
+      "inherited_line": false,
+      "source": "f'openspec/changes/{match.group('change')}/{tail}' if match and tail else ''"
+    }
+  ],
+  "returns": [
+    {
+      "line": 480,
+      "value": "''"
+    },
+    {
+      "line": 483,
+      "value": "f'openspec/changes/{match.group('change')}/{tail}' if match and tail else ''"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 479,
+      "callee": "relative.startswith"
+    },
+    {
+      "line": 481,
+      "callee": "len"
+    },
+    {
+      "line": 481,
+      "callee": "relative[len(prefix):].partition"
+    },
+    {
+      "line": 482,
+      "callee": "ARCHIVED_CHANGE.fullmatch"
+    },
+    {
+      "line": 483,
+      "callee": "match.group"
+    }
+  ]
+}

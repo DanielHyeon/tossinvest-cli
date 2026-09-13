@@ -1996,3 +1996,204 @@ M1·M2·M6 이 다시 열리므로 이 스위트가 그때의 안전망이다.
 | a099 5단계 (실물 기록) | rc=0 — `base af015dc9 → landed-commit 21a315d1 required 32` |
 | a122 5단계 | rc=0 — `working tree required 0` |
 | 생산 코드 | `git diff` 에 시험 파일 하나뿐 (+288 −58) |
+
+## Pre-Edit Gate — task 7.6 (규칙 한 집) (2026-09-13)
+
+### 먼저 정정 — 7.2.1 · 7.3.1 · 7.4 는 FLM 없이 편집했다
+
+저장소 규칙은 기존 함수의 내부를 바꾸면 Function Logic Map 을 **먼저** 만들고, 생략하면
+`not-applicable` 사유를 남기라고 한다. 7.1 은 `enumerate.py` 로 그렇게 했다. 그 뒤 세 task 는
+`compute_landing` · `resolve_landing` · `record_landing` · `main` 의 내부를 바꾸면서 열거도 사유도
+남기지 않았다 — **침묵한 생략**이다. 7.6 이 같은 함수를 다시 만지므로 7.2.1 직전(`eaf536d2`,
+7.1 과 소스 동일)과 HEAD(`2b5b05c1`)를 같은 열거기로 뽑아 `ast.before-7.2.1.json` ·
+`ast.before-7.6.json` 으로 남겼다. 늘어난 분기는 스크립트가 소스 한 줄로 대조했다:
+
+| 함수 | 분기 | raise | 새로 생긴 것 (열거 그대로) | 만든 task |
+|---|---|---|---|---|
+| `compute_landing` | 8 → 10 | 0 → 0 | `if _pinning_at(…)[1]: continue`(부정 뒤집기) · `if not unheld:` · `if unheld:` | 7.2.1 |
+| `resolve_landing` | 10 → 13 | 8 → 10 | `if unheld:` + raise · `if candidate != computed:` + raise · `computed[:12] if computed else …` | 7.2.1 · 7.3.1 |
+| `record_landing` | 11 → 16 | 0 → 0 | `if landing_file.is_symlink():` · `try/except GATE_FAULTS` · `try/except FileExistsError` | 7.4 |
+| `main` | 13 → 17 | 0 → 0 | `try/except GATE_FAULTS` 두 쌍 | 7.4 |
+| `_evidence_floor` | 6 → 6 | 0 → 0 | (분기 없음 — git 인자만 `-M100% --no-follow --diff-filter=MAT`) | 7.2.1 |
+| `_unheld_bundles` | — → 9 | — | 7.2.1 이 새로 만든 함수 | 7.2.1 |
+
+세 task 의 **판정 근거**는 각 VERIFY 절의 뮤테이션·A/B 실측이었고 그것은 그대로 유효하다.
+빠진 것은 "편집 전에 무엇이 있었나"의 기계 열거였고, 위 표가 그 자리를 채운다.
+
+### 편집 전 열거 (HEAD `2b5b05c1`)
+
+| 파일:함수 | 분기 | 반환 | raise | 줄 |
+|---|---|---|---|---|
+| `check_analysis.py:check` | 44 | 14 | 0 | L978-1107 |
+| `check_analysis.py:resolve_landing` | 13 | 2 | 10 | L570-679 |
+| `check_analysis.py:compute_landing` | 10 | 6 | 0 | L1110-1151 |
+| `check_analysis.py:record_landing` | 16 | 11 | 0 | L1154-1236 |
+| `check_analysis.py:_pre_archive_path` | 3 | 2 | 0 | L476-483 |
+| `check_analysis.py:resolve_referenced_change` | 10 | 1 | 3 | L241-279 |
+| `execution_baseline.py:validate` | 42 | 2 | 24 | L393-497 |
+| `execution_baseline.py:_change_analysis_path` | 3 | 1 | 2 | L74-80 |
+
+### I2 — 수락 규칙 두 벌. 열거가 보여 주는 것
+
+`resolve_landing` 의 raise 열 줄 중 **여섯**(L614 base · L623 고정 0 · L628 불일치 · L640 하한 없음 ·
+L645 하한 순서 · L655 미보유)과 `compute_landing` 의 분기 B1·B2·B7·B8·B10 이 **같은 여섯 조건**이다.
+`_pinning_at` 의 첫 값은 후보와 무관하게 `len(_pinning_bundles)` 이므로 B1(순회 전)과 L623 은 같은
+조건이다. 갈리는 것은 **순서**뿐이다 — `resolve` 는 base → 고정 → 불일치 → 하한 없음 → 하한 순서 →
+미보유, `compute` 는 고정 → 하한 없음 → (base ∧ 하한 순서) → 불일치 → 미보유.
+
+**순서는 거절 지점이라 못의 일부다.** `compute` 순서로 맞추면 비용은 0 인데
+`test_a_landing_the_evidence_does_not_describe` 가 증거보다 **앞선** 커밋(P)을 선언해서 불일치
+문장을 못 박고 있으므로, 그 입력이 하한 가드에 먼저 걸려 불일치 가드가 못에서 빠진다
+([[a-new-guard-unpins-the-guards-behind-it]]). 그래서 규칙은 **`resolve` 의 순서로** 한 함수에 둔다.
+
+**그 선택의 비용을 먼저 쟀다** (`76_order.py`, 93건 전수, 착지가 계산되는 지점까지):
+오늘 `_pinning_at` 을 부르는 후보 **6,491** · 합친 순서에서 추가로 부르는 후보(base ≤ c 이지만
+하한 뒤가 아닌 곁가지) **328**(+5%) · 싸게 건너뛰는 후보 32. 추가의 **322** 가 이미 90~294초
+걸리는 아카이브 change 일곱(a055·a054·a042 …, 전부 같은 병합 구간)의 몫이고, 게이트가 실제로
+도는 활성 change 에서는 a089·a095 각 **2** 뿐이다. 그 walk 는 7.5(성능 — `--ancestry-path`)가
+맡는다. 계측기 결함 하나를 먼저 고쳤다: 저장된 표가 아카이브를 날짜 붙은 이름으로 들고 있어
+첫 판은 93건 중 12건만 셌다.
+
+### I4 — 없는 id 에 "base 를 capture 하라". 거부할 정상 입력을 먼저 쟀다
+
+`check` 와 `record_landing` 이 `except ValueError: change_dir = changes/<id>` 를 한 벌씩 들고
+있다. 해소기가 "없다"(또는 "아카이브에 사본이 둘")라고 말한 id 를 없는 경로로 바꿔 넘기므로
+그 다음 `resolve_base` 가 **"`capture_change_base.py --change <id>` 를 돌려라"** 를 권한다 — 오타
+난 id 에 새 change 의 base 를 만들라는 조언이다. 생산 호출자는 `tools/gate.sh:321` 하나이고
+1단계가 id 를 이미 해소한 뒤다. **전수**(`76_fallback.py`): 게이트가 받을 수 있는 id 126개
+(활성 + 아카이브에서 날짜를 벗긴 것) 중 해소 **126** · 모호 0 · fallback **0**, 빌림 참조 1개도
+해소된다. fallback 을 이름 붙은 거절로 바꿔도 **거부되는 정상 입력은 0** 이다.
+
+### I3 · I5 · I6 · I7
+
+- **I3** `validate` 의 지역 `canonical = f"openspec/changes/{CHANGE}"` 가 모듈 함수 `canonical()` 을
+  가린다. 오늘 그 함수 안에서 `canonical(...)` 호출은 0 이라 결함은 아니고 **덫**이다. 이름만 바꾼다
+  — 열거의 분기·반환·raise 수가 같아야 한다.
+- **I5** 이관 거절 문장: `check` "the window **ends** at" · `record_landing` "the window **already
+  ends** at". 사용처는 코드 둘뿐(얼린 열거 사본 제외). 게이트가 찍는 쪽 문장을 상수 하나로.
+- **I6** `_pre_archive_path` 가 `openspec/changes/archive/` 와 `ARCHIVED_CHANGE` 로 아카이브 이름을
+  한 번 더 해독한다. 이름 → id 규칙을 함수 하나로 두고 해소기와 함께 쓴다. **id 를 호출 사슬로
+  내려보내는 판본은 안 한다** — `_evidence_floor(root, analysis)` 를 직접 부르는 시험이 열 개가
+  넘고, 서명을 바꿔도 판정은 그대로다. shell 쪽 사본(`tools/gate.sh`)은 언어가 달라 못 합치며
+  `test_gate_resolves_archived_changes.py` 가 따로 못 박는다.
+- **I7** `_change_analysis_path` 는 6.2 뒤로 **적힌 자리**(옮기기 전)를 보는데 "outside **current**
+  change analysis" 라고 말한다.
+
+### 생산 판정에 미칠 영향 (예측 — 편집 뒤 실측으로 확인한다)
+
+I2·I3·I6 은 판정 불변, I4·I5·I7 은 오류 **문장**만 바뀐다(실물 입력에서 그 갈래에 닿는 것 0).
+판정 A/B 28건 IDENTICAL 을 기대하고, 착지 전수 93건의 계산값이 76건 그대로여야 한다.
+
+## VERIFY — task 7.6 (규칙 한 집) (2026-09-13)
+
+### RED → GREEN
+
+RED 아홉을 먼저 세웠고 **맞는 이유로** 빨갰다 — 옛 코드는 오타 id(`mnie`)와 아카이브 사본 둘 모두에
+`missing base-commit.txt; run capture_change_base.py --change <change-id>` 를 권했다(실측 출력).
+구현 뒤 `test_check_analysis` + `test_execution_baseline` **157** 초록.
+
+| 리뷰 | 무엇을 바꿨나 |
+|---|---|
+| I2 | 새 `_landing_refusal(root, base, candidate, analysis, floor) -> (사유, 미보유 이름)`. 여섯 조건을 `resolve_landing` 의 순서 그대로. `resolve_landing` 은 선언 **글자** 판정 셋 + 규칙 + 7.3.1 등식, `compute_landing` 은 순회 전 조기 종료 둘 + 후보마다 규칙 |
+| I3 | `validate` 의 지역 `canonical` → `recorded_dir` |
+| I4 | `check` · `record_landing` 의 `except ValueError: change_dir = changes/<id>` 삭제 → 해소기의 문장으로 멈춘다. 해소기의 못 찾음 문장에서 "reference" 를 뺐다(대상 id 에도 나간다). `AmbiguousChange` 타입 제거 — 가를 호출자가 0 |
+| I5 | 모듈 상수 `ADOPTION_REFUSES_A_LANDING`. 두 경로가 그것을 쓰고 시험이 **등식**으로 단언한다 |
+| I6 | `_archived_change_id(name)` + `ARCHIVE_PREFIX`. 해소기와 `_pre_archive_path` 가 그것에 묻는다 |
+| I7 | "outside current change analysis" → "outside this change's recorded analysis directory" |
+
+"한 집"은 **행동 시험으로 못 박히지 않는다** — 일치하는 두 사본은 오늘 같은 답을 내므로 초록이다.
+그래서 `TheLandingRuleLivesInOnePlace` 만 소스 구조를 본다: `resolve_landing` · `compute_landing` 둘 다
+`_landing_refusal` 을 부르고 `_pinning_at` · `_unheld_bundles` 를 직접 부르지 않는다, 해소기와
+`_pre_archive_path` 가 `_archived_change_id` 를 부르고 `ARCHIVED_CHANGE.fullmatch` 를 직접 부르지 않는다.
+
+### 열거 대조 (편집 전 `ast.before-7.6.json` → 후 `ast.after-7.6.json`, 스크립트 대조)
+
+| 함수 | 분기 | 반환 | raise | 요지 |
+|---|---|---|---|---|
+| `resolve_landing` | 13 → 8 | 2 → 2 | 10 → 5 | 가드 여섯이 빠지고 `if refusal: raise ValueError(refusal)` 하나 |
+| `compute_landing` | 10 → 8 | 6 → 6 | 0 → 0 | 사본 네 줄(`base∧하한` BoolOp/If · 불일치 · `if not unheld`)이 `if not refusal` · `if names` 로 |
+| `_landing_refusal` | — → 6 | — → 7 | — | 새 함수. 사유 문장은 편집 전 raise 문장과 글자 단위로 같다 |
+| `check` | 44 → 43 | 14 → 14 | 0 | handler 둘 → 하나. 나머지 분기 42 는 소스 한 줄 단위로 같다 |
+| `record_landing` | 16 → 15 | 11 → 11 | 0 | handler 둘 → 하나 |
+| `resolve_referenced_change` | 10 → 10 | 1 → 1 | 3 → 3 | 해독을 `_archived_change_id` 에 · 문장 둘 |
+| `_pre_archive_path` | 3 → 3 | 2 → 2 | 0 | 해독을 `_archived_change_id` 에 |
+| `validate` | 42 → 42 | 2 → 2 | 24 → 24 | 차이 0 (이름만) |
+| `_change_analysis_path` | 3 → 3 | 1 → 1 | 2 → 2 | 문장 하나 |
+
+### 뮤테이션 — 규칙 한 집이 **두 경로 모두에서** 보이는가 (`76_mut.py`)
+
+경로 분류는 이름으로 추측하지 않고, 빨개진 시험의 소스가 `record_landing`/`compute_landing`(계산)을
+부르는지 `check`/`resolve_landing`(선언)을 부르는지를 AST 로 셌다.
+
+| 변이 | 첫 판 | 7.6 후 | 빨개진 경로 |
+|---|---|---|---|
+| R1 규칙: base 조상 판정 삭제 | CAUGHT | CAUGHT | 계산 · 선언 |
+| R2 규칙: 고정 0 판정 삭제 | CAUGHT | CAUGHT | 선언 (계산은 순회 전에 돌아가서 구조상 안 닿는다) |
+| R3 규칙: 불일치 판정 삭제 | CAUGHT | CAUGHT | 계산 · 선언 |
+| R4 규칙: 하한 없음 판정 삭제 | CAUGHT | CAUGHT | 선언 (계산은 구조상 안 닿는다) |
+| R5 규칙: 하한 순서 판정 삭제 | CAUGHT | CAUGHT | 선언 → **계산 · 선언** |
+| R6 규칙: 미보유 판정 삭제 | CAUGHT | CAUGHT | 계산 · 선언 |
+| R7 compute 가 거절을 무시 | CAUGHT | CAUGHT | 계산 |
+| R8 compute 가 미보유 이름을 안 모음 | CAUGHT | CAUGHT | 계산 |
+| R9 resolve 가 거절을 무시 | CAUGHT | CAUGHT | 선언 |
+| R10 아카이브 이름 해독이 항상 빈 문자열 | CAUGHT | CAUGHT | 12개 |
+| R11 아카이브 이름 해독이 접미사로 고름 | CAUGHT | CAUGHT | 구조 시험 |
+| R12 · R13 check · record 가 fallback 을 되살림 | CAUGHT | CAUGHT | 둘 다 |
+| R14 record 의 이관 문장이 다시 갈림 | CAUGHT | CAUGHT | 계산 |
+| R15 `_change_analysis_path` 문장 되돌림 | CAUGHT | CAUGHT | — |
+| **R16 compute 가 규칙에 하한 대신 base 를 넘김** | **SURVIVED** | **CAUGHT** | 계산 |
+
+**R16 은 7.6 이 만든 구멍이 아니라 드러낸 구멍이다.** 옛 `compute_landing` 의 하한 순서 절을 지우는
+변이는 7.8 목록에 없었고, 규칙을 한 함수로 옮기며 "계산 경로가 규칙에 **하한을 넘기는가**"라는
+배관이 처음 따로 보였다. 동등 변이로 넘기지 않았다([[surviving-mutant-may-mean-accidental-safety]]):
+모든 픽스처에서 하한 앞의 후보가 **불일치로 먼저** 떨어져 가려졌을 뿐이다. 그 가드 **혼자** 막아야
+하는 모양을 두 번 만에 찾았다 — 첫 판(곁가지에 증거, 줄기에 같은 증거를 나중에)은 계산 경로가
+`start`(=하한)를 **먼저** 받아서 안 닿았고, 줄기가 저장소 규칙대로 **증거를 먼저** 커밋해 하한 커밋
+자체가 불일치로 떨어지는 모양에서 닿았다. 닿는지를 대조군 시험으로 먼저 단언하고(하한 = F · F 는
+B 의 조상이 아님 · F 는 불일치 · B 는 하한을 base 로 주면 받고 F 로 주면 거절) 왕복 시험으로 굳혔다.
+커밋 시각을 고정했다 — `git log -1` 은 시각 순이라 같은 초에 겹치면 하한이 실행마다 달라진다.
+
+7.8 의 변이도 새 코드에 다시 걸었다(`78_mut.py`): M2·M3·M4·M5·M7·M8·M9·PC2 **CAUGHT**, M1·M6·M11·PC1 은
+치환 자리가 규칙 함수로 옮겨 가 SKIP — 같은 뜻의 R3·R1·R13·R10 이 잡는다. 원복 sha256 `59bfba56a695` 동일.
+
+### 판정 A/B (`72_ab.py --refresh`, HEAD `2b5b05c1` 사본 대 워킹트리)
+
+**IDENTICAL 28 · DIFFERENT 0** — 활성 27 + 착지 기록이 있는 아카이브 1(a099: `21a315d1` · required 32 · 오류 0).
+
+### `compute_landing` 전수 비교 (`76_sweep.py`, HEAD 사본 대 워킹트리, 같은 change 에서 연달아)
+
+판정 A/B 28건에는 착지를 **계산하는** 아카이브 대부분이 없다. 규칙의 순서가 바뀐 계산 경로(곁가지
+후보에서 번들 대조를 먼저 한다)가 받는 값을 바꾸지 않는지는 여기서만 보인다.
+
+| | 결과 |
+|---|---|
+| 착지값 + 사유 문장 | **SAME 93 · DIFF 0** |
+| 착지가 나오는 change | 76 (7.3 측정과 같다) |
+| 시간 합계 | 1220s → 1270s (**+4.1%**) — Pre-Edit 의 예측 "번들 대조 +5%" 와 맞는다 |
+| 활성 change 12건 합계 | 44s → 45s |
+
+change 별 시간은 ±4% 넘게 흔들린다 — 예측 목록(X > 0)에 없던 `enable-vpn-console-access` 가 +17% 로
+나왔고, 그 구간에 이 세션이 `gh api` 호출을 겹쳐 돌렸다. 그래서 근거는 합계만 쓴다. 가장 큰 증가는
+예측 목록의 a054(+34%)·a055(+10%)다.
+
+### 게이트 (2026-09-13, 이 로트의 워킹트리)
+
+| 게이트 | 결과 |
+|---|---|
+| `check_analysis` 스위트 | 125 → **132** (skip 1) — 구조 3 · I4 2 · R16 2 |
+| `make sdd-test` | rc=0 — scripts 15 · logic-map **207**(skip 1) · sdd 71 · sdd-history 22 · pm 16 · deploy 18 |
+| `make lint` · `make test-seams` | rc=0 · rc=0 |
+| `openspec validate --all --strict` | 58/58 |
+| a099 5단계 (실물 기록) | rc=0 — `landed-commit 21a315d1 required 32` |
+| a122 5단계 | rc=0 (파이프 없이 잰 종료 코드) |
+| 오타 id `mnie` — 판정 · 기록 | 둘 다 rc=1 `change is neither open nor archived: mnie` (옛: "capture_change_base 를 돌려라") |
+
+### 안 한 것
+
+- **id 를 호출 사슬로 내려보내 `_pre_archive_path` 를 없애는 판본** — 서명 넷이 바뀌고 그것을 직접
+  부르는 시험이 열 개가 넘는데 판정은 그대로다. 대신 해독 규칙을 함수 하나로 모았다.
+- **shell 해소기(`tools/gate.sh`)와의 통합** — 언어가 다르다. `test_gate_resolves_archived_changes.py` 가 따로 못 박는다.
+- **곁가지 후보의 +328 번들 대조** — 7.5(성능)의 몫. `--ancestry-path` 로 순회 목록 자체가 하한의
+  자손만 내면 규칙을 건드리지 않고 사라진다.
+- `validate` 의 이름 덫(I3)에는 시험을 안 세웠다 — 변수 이름을 재는 시험은 이 저장소의 관례가 아니고,
+  열거 대조(분기·반환·raise 전후 동일, 소스 차이 0)가 편집이 이름뿐임을 보인다.

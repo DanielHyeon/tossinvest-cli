@@ -147,3 +147,18 @@ Go 파일 변경 0줄.
 있고 `facts["landing"]` · `facts["required_count"]` 를 넣는 자리가 바로 거기다.
 빌리는 change 면 `analysis` 가 빌려주는 쪽을 가리키는데, 고정 번들이 사는 자리가 거기라서
 그것이 맞는 대상이다.
+
+---
+
+## 공백 기록 — 7.2.1 · 7.3.1 · 7.4 는 이 함수를 FLM 없이 바꿨다 (2026-09-13, 7.6 이 적음)
+
+이 세 task 는 내부를 바꾸면서 열거도 `not-applicable` 사유도 남기지 않았다. 7.6 이 7.2.1 직전
+(`eaf536d2`, 7.1 과 소스 동일)과 HEAD(`2b5b05c1`)를 같은 열거기로 뽑아 `ast.before-7.2.1.json` ·
+`ast.before-7.6.json` 으로 남긴다. 판정 근거(뮤테이션·A/B)는 각 task 의 VERIFY 절에 있다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 생김 | 분기 | `try:` |
+| 생김 | 분기 | `except GATE_FAULTS as exc:` |
+| 생김 | 분기 | `try:` |
+| 생김 | 분기 | `except GATE_FAULTS as exc:` |

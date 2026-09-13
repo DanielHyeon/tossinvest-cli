@@ -1,0 +1,69 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "2b5b05c1c69dd3fcf9c64a6df60c6b8cd3df871d",
+  "source_sha256": "59bfba56a69519231774ed8ce4887c1975f6ed73ad37798fc0a1593bb092b284",
+  "function": "_pre_archive_path",
+  "signature": "_pre_archive_path(relative)",
+  "start": {
+    "line": 488,
+    "column": 1
+  },
+  "end": {
+    "line": 494,
+    "column": 74
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 490,
+      "inherited_line": false,
+      "source": "if not relative.startswith(ARCHIVE_PREFIX):"
+    },
+    {
+      "id": "B2",
+      "kind": "BoolOp",
+      "line": 494,
+      "inherited_line": false,
+      "source": "change and tail"
+    },
+    {
+      "id": "B3",
+      "kind": "IfExp",
+      "line": 494,
+      "inherited_line": false,
+      "source": "f'openspec/changes/{change}/{tail}' if change and tail else ''"
+    }
+  ],
+  "returns": [
+    {
+      "line": 491,
+      "value": "''"
+    },
+    {
+      "line": 494,
+      "value": "f'openspec/changes/{change}/{tail}' if change and tail else ''"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 490,
+      "callee": "relative.startswith"
+    },
+    {
+      "line": 492,
+      "callee": "len"
+    },
+    {
+      "line": 492,
+      "callee": "relative[len(ARCHIVE_PREFIX):].partition"
+    },
+    {
+      "line": 493,
+      "callee": "_archived_change_id"
+    }
+  ]
+}

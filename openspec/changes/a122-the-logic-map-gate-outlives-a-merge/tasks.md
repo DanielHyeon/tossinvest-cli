@@ -1077,10 +1077,26 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
 - [ ] 7.5 **P2 — 성능 (I1).** 못 찾는 walk 가 (후보+1)×(번들+2) spawn — a055 133.7s, 다른 아카이브
       219.6s. 파일 단위 fetch · 조기 종료 · 번들 목록 한 번 · `--ancestry-path`. 7.2 가 walk 를
       바꿀 수 있으므로 그 뒤에 한다.
-- [ ] 7.6 **P2 — 규칙 한 집 (I2 · I3 · I4 · I5 · I6 · I7).** `compute_landing` 과 `resolve_landing`
+- [x] 7.6 **P2 — 규칙 한 집 (I2 · I3 · I4 · I5 · I6 · I7).** `compute_landing` 과 `resolve_landing`
       의 수락 조건 두 벌 · `validate` 의 지역 `canonical` 이 모듈 함수를 가림 · 디렉터리 해소 두 벌과
       없는 id 의 엉뚱한 조언 · 이관 거절 문장 두 벌(이미 갈렸다) · `_pre_archive_path` 가 아카이브
       문법의 한 벌 더 · `_change_analysis_path` 문장이 "current" 라고 말한다.
+      **닫음(2026-09-13).** 기록은 review.md `## Pre-Edit Gate — task 7.6` · `## VERIFY — task 7.6`.
+      **먼저 정정했다: 7.2.1 · 7.3.1 · 7.4 는 FLM 없이 함수 내부를 바꿨다**(침묵한 생략). 7.2.1 직전과
+      HEAD 를 같은 열거기로 뽑아 여섯 함수의 공백을 기록으로 메웠다.
+      (I2) 새 `_landing_refusal` 하나에 여섯 조건을 **`resolve_landing` 의 순서로** 둔다 — 순서가 거절
+      지점이라, 비용 0 인 `compute` 순서로 맞추면 불일치 가드가 못에서 빠진다. 그 선택의 비용을 **먼저**
+      쟀다(93건 전수: 번들 대조 +328회, +5%, 거의 전부 이미 느린 아카이브 일곱) — 구현 뒤 실측 +4.1%.
+      (I4) 없는 id 를 없는 경로로 바꿔 넘기던 fallback 을 지웠다 — 거부할 정상 입력을 먼저 쟀다(게이트가
+      받을 수 있는 id 126개 중 그 갈래 0). 타입을 따로 둔 이유가 사라져 `AmbiguousChange` 도 걷었다.
+      (I3·I5·I6·I7) 이름 · 상수 · 해독 함수 하나 · 문장.
+      "한 집"은 행동 시험으로 못 박히지 않으므로(일치하는 두 사본은 초록) 구조 시험 셋을 세웠다.
+      뮤테이션 R1~R16 에서 **R16 이 SURVIVED** — 계산 경로가 규칙에 하한을 넘기는지를 아무도 안 쟀다
+      (7.6 전부터 있던 구멍). 하한 순서 가드 **혼자** 막아야 하는 모양(두 가지에 같은 바이트의 증거,
+      줄기는 증거를 먼저)을 닿는지 확인한 뒤 시험으로 굳혀 **열여섯 전부 CAUGHT**, 규칙의 네 조건은
+      계산·선언 **두 경로 모두**에서 빨개진다(나머지 둘은 계산 경로가 순회 전에 돌아가서 구조상 안 닿는다).
+      판정 A/B **IDENTICAL 28** · `compute_landing` 전수 **SAME 93**(값·사유) · 시험 125 → **132** ·
+      `make sdd-test`(logic-map 207) · `lint` · `test-seams` · `openspec validate` 58/58.
 - [ ] 7.7 **P2 — 창 줄이 스스로 모순된다 (I8).** 기록이 디스크에 있는데 커밋 전이거나 아카이브
       이동이 staged 면 "working tree (no landed-commit.txt)" + `--record-landing` 을 권하고, 그 명령은
       "already exists" 로 거절한다. 빌리는 쪽 · 번들 0 인 쪽에도 같은 조언이 나간다.

@@ -61,3 +61,23 @@
 production 호출자는 사람이 직접 부르는 완료 게이트(`tools/gate.sh:321`)이고
 CI 는 이 경로를 돌지 않는다(`.github/workflows/ci.yml:94`). 실패 방향은
 **게이트가 안 열리는 쪽**이므로 보수적이다.
+
+---
+
+## 편집 — task 7.6 (규칙 한 집) · 분기 10 → 10 · 반환 1 → 1 · raise 3 → 3
+
+편집 전 `ast.before-7.6.json`(HEAD `2b5b05c1`) · 편집 후 `ast.after-7.6.json`(워킹트리). 아래 표는 두 열거의
+`source` 를 스크립트가 줄 단위로 대조한 것이다.
+
+아카이브 이름 해독을 `_archived_change_id` 에 묻는다(I6). 못 찾음 문장에서 "reference" 를 뺐다 — 이 해소기는 게이트 **대상**도 찾고, 7.6 뒤로 그 문장이 오타 난 대상 id 에 그대로 나간다(I4). `AmbiguousChange` 타입을 `ValueError` 로 되돌렸다: 타입을 따로 둔 이유(호출자 둘이 "못 찾음"만 fallback 으로 흘려야 했다)가 I4 로 없어져 가르는 호출자가 0 이다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 분기 | ` for path in (archive.iterdir() if archive.is_dir() else ()) if path.is_dir() and (matched := ARCHIVED_CHANGE.` |
+| 생김 | 분기 | ` for path in (archive.iterdir() if archive.is_dir() else ()) if path.is_dir() and _archived_change_id(path.nam` |
+| 사라짐 | 분기 | `path.is_dir() and (matched := ARCHIVED_CHANGE.fullmatch(path.name)) is not None and (matched.group('change') =` |
+| 생김 | 분기 | `path.is_dir() and _archived_change_id(path.name) == change` |
+| 사라짐 | raise | `raise ValueError(f'reference change is neither open nor archived: {change}')` |
+| 생김 | raise | `raise ValueError(f'change is neither open nor archived: {change}')` |
+| 사라짐 | raise | `raise AmbiguousChange(f'{change} is open and archived at once: ' + ', '.join((path.relative_to(root).as_posix(` |
+| 생김 | raise | `raise ValueError(f'{change} is open and archived at once: ' + ', '.join((path.relative_to(root).as_posix() for` |

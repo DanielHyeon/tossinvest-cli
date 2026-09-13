@@ -49,7 +49,7 @@ class ExecutionBaselineUnitTests(unittest.TestCase):
     def test_valid_fixture_evidence_binding_mutations_have_specific_errors(self) -> None:
         for field, value, error in (
             ("gstack_review_path", "openspec/changes/a063-align-attestation-renewal-profile/analysis/adversary.md", "review paths must be distinct"),
-            ("ledger_path", "outside.json", "outside current change analysis"),
+            ("ledger_path", "outside.json", "outside this change's recorded analysis directory"),
             ("inherited_history_disposition", "completed", "disposition is invalid"),
         ):
             raw, root, change, p, e = self._valid_adoption()

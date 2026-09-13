@@ -76,7 +76,9 @@ def _change_analysis_path(value: object, analysis: str, field: str) -> str:
         raise AdoptionError(f"{field} must be a string")
     candidate = Path(value)
     if candidate.is_absolute() or ".." in candidate.parts or value == analysis.rstrip("/") or not value.startswith(analysis):
-        raise AdoptionError("adoption evidence path is outside current change analysis")
+        # 6.2 뒤로 이 판정은 **적힌 자리**(옮기기 전 경로)를 본다. "current" 라고 말하면
+        # 아카이브된 change 에서 지금 자리를 본 것처럼 읽힌다 (task 7.6, 리뷰 I7).
+        raise AdoptionError("adoption evidence path is outside this change's recorded analysis directory")
     return value
 
 
@@ -418,9 +420,11 @@ def validate(change_dir: Path, root: Path, persisted: str, change_id: str) -> di
     # 기록은 옮기기 **전** 자리의 경로를 적는다(`draft` 가 `openspec/changes/<id>/…` 로
     # 쓴다). 그 경로가 이 change 의 분석 안인지는 **적힌 자리**로 판정하고, 바이트는
     # **지금 자리**에서 읽는다. 아카이브는 내용을 안 바꾸므로 아래 digest 가 그대로 묶는다.
-    canonical = f"openspec/changes/{CHANGE}"
+    # 이름이 `recorded_dir` 인 이유: 모듈 함수 `canonical()` 을 가리지 않는다 (task 7.6, 리뷰 I3).
+    # 이 함수 안에서 오늘 `canonical(...)` 을 부르는 자리는 0 이지만, 부르는 순간 문자열을 부른다.
+    recorded_dir = f"openspec/changes/{CHANGE}"
     here = change_dir.relative_to(root).as_posix()
-    local_analysis = canonical + "/analysis/"
+    local_analysis = recorded_dir + "/analysis/"
     if not all(isinstance(record[key], str) for key in required - {"schema"}):
         raise AdoptionError("execution-baseline record field types are invalid")
     if record["change"] != CHANGE or record["planning_base"] != P or record["execution_base"] != E or record["pre_edit_provenance"] != "retrospective-exception":
@@ -429,7 +433,7 @@ def validate(change_dir: Path, root: Path, persisted: str, change_id: str) -> di
         raise AdoptionError("inherited history disposition is invalid")
     located: dict[str, str] = {}
     for field in ("ledger_path", "adversarial_review_path", "gstack_review_path"):
-        located[field] = here + _change_analysis_path(record[field], local_analysis, field)[len(canonical):]
+        located[field] = here + _change_analysis_path(record[field], local_analysis, field)[len(recorded_dir):]
     for field in ("ledger_sha256", "adversarial_review_sha256", "gstack_review_sha256"):
         _sha256(record[field], field)
     if record["adversarial_review_path"] == record["gstack_review_path"]:
