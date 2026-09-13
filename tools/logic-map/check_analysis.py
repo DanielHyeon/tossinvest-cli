@@ -584,6 +584,10 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
     돌고 저자가 구간의 바닥을 고를 수 있다. `analysis` 는 그래서 이 change 가 실제로
     딛는 증거 디렉터리여야 한다 — 빌린 증거를 쓰는 change 는 지역 번들이 0 이므로
     호출자가 **빌린 쪽을 먼저 풀어서** 넘긴다.
+
+    마지막 판정은 "유효한가"가 아니라 "**그 값인가**"다 (task 7.3). 유효 조건을 통과하는
+    값은 여럿이므로(실측: 착지를 얻는 76건 중 65건) 그것만으로는 저자의 선택이 안 없어진다.
+    기록은 `compute_landing` 이 내는 값과 같아야 한다.
     """
     candidate = _declared_landing(change_dir, root)
     if candidate is None:
@@ -652,6 +656,25 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
             f"landing point {candidate[:12]} does not hold the evidence this verdict read: "
             + ", ".join(unheld)
             + " — the bundle judged here is not the bundle committed there"
+        )
+    # **맨 뒤**에 선다 (task 7.3, 리뷰 H3). 위의 판정들은 전부 "이 값이 유효한가"를
+    # 묻고, 이것 하나가 "이 값이 **그 값인가**"를 묻는다. 앞에 두면 위 가드들의 거절
+    # 지점을 이 등식이 가로채서 그것들을 지워도 스위트가 초록으로 남는다
+    # ([[a-new-guard-unpins-the-guards-behind-it]] — 7.2.1 이 같은 파일에서 실측했다).
+    #
+    # 넣는 이유는 유효 조건이 값을 **정하지 못하기** 때문이다. 2026-09-13 전수 실측:
+    # 착지를 얻는 76건 중 65건이 유효한 값을 둘 이상 갖고(최대 516개), 44건에서는 그
+    # 선택이 판정 입력을 바꾼다. 그 선택이 오늘 이 역사에서 창을 **넓히는** 방향뿐이라는
+    # 것도 실측이지만(자손이 아닌 수락값 0/76 · 파일이 빠지는 자리 0/44), 되돌려진 편집이
+    # 하나만 있어도 넓힌 창은 느슨해질 수 있다. 값을 만드는 주체를 도구로 옮긴 규칙은
+    # 게이트가 그 값을 확인할 때만 규칙이다.
+    computed, why = compute_landing(root, base, analysis)
+    if candidate != computed:
+        named = computed[:12] if computed else f"none — {why}"
+        raise ValueError(
+            f"landing point {candidate[:12]} is not the landing this change's evidence "
+            f"computes ({named}): the record must be the gate's own value — "
+            f"`--record-landing` writes it — not one of the later commits that also match"
         )
     return candidate
 

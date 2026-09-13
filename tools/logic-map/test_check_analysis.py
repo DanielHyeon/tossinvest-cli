@@ -2368,6 +2368,103 @@ class AFaultInGitBecomesAVerdictNotATraceback(unittest.TestCase):
             self.assertIn("timed out", output)
 
 
+class TheRecordMustBeTheValueTheGateComputes(unittest.TestCase):
+    """기록은 도구가 계산한 **그 값**이어야 한다 (task 7.3, 리뷰 H3).
+
+    spec 은 이미 "저자가 선언하는 값이 아니라 도구가 계산해서 기록하는 값"을 SHALL 로
+    적는데, 게이트는 기록이 **유효한지**만 보고 그 값인지는 안 봤다. 2026-09-13 전수
+    실측: 착지를 얻는 76건 중 **65건**이 유효 조건을 통과하는 값을 둘 이상 갖고(최대
+    516개), **44건**에서는 그 선택이 판정 입력을 바꾼다. 이탈이 오늘 이 역사에서
+    창을 넓히는 방향뿐이라 해도(실측), 값을 만드는 주체를 도구로 옮긴 규칙은 게이트가
+    그 값을 확인할 때만 규칙이다. 사람이 2026-09-13 에 그렇게 골랐다.
+    """
+
+    def _fixture(self, raw: tempfile.TemporaryDirectory) -> tuple[Path, dict[str, str]]:
+        """P → W → E → L. `L` 은 **고정 소스를 안 건드리는** 나중 커밋이다.
+
+        그래서 `L` 은 오늘의 가드를 전부 통과한다 — 고정 해시가 맞고, 하한(E) 뒤이고,
+        판정이 읽은 번들을 들고 있다. 계산값은 `E` 이므로 저자에게 남은 선택이 정확히
+        이 모양이다."""
+        root, marks = _own_work_fixture(raw)
+        (root / "internal" / "neighbour.go").write_text(
+            "package internal\nfunc Neighbour() int { return 1 }\n"
+        )
+        marks["L"] = _commit_all(root, "L: a later commit that leaves the pinned source alone")
+        return root, marks
+
+    def test_a_later_commit_that_also_matches_is_refused(self) -> None:
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = self._fixture(raw)
+            _declare_landing(
+                root / "openspec" / "changes" / "mine", marks["L"], "declare the later value"
+            )
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(
+                any("is not the landing this change's evidence computes" in e for e in errors),
+                errors,
+            )
+            # 거절은 **두 값**을 다 말해야 한다. 하나만 말하면 저자는 무엇을 적어야
+            # 하는지 모른 채 게이트만 빨간 것을 본다.
+            self.assertTrue(any(marks["L"][:12] in e for e in errors), errors)
+            self.assertTrue(any(marks["E"][:12] in e for e in errors), errors)
+
+    def test_the_computed_value_is_still_accepted(self) -> None:
+        """양성 대조군. 새 등식이 **모든** 기록을 거절하면 시험은 그래도 초록이다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = self._fixture(raw)
+            _declare_landing(
+                root / "openspec" / "changes" / "mine", marks["E"], "declare the computed value"
+            )
+            self.assertEqual(check_analysis.check("mine", root), [])
+
+    def test_the_landing_is_the_first_matching_commit_not_where_evidence_entered(self) -> None:
+        """계산값은 **하한이 아니다**.
+
+        둘이 갈리는 모양은 흔한 커밋 순서다 — 증거를 먼저 올리고 코드를 그 뒤에 올리면
+        하한(ast.json 이 역사에 들어온 커밋)에서는 아직 소스가 안 맞고, 계산값은 소스가
+        처음 맞는 커밋이다. 이 픽스처가 없으면 "하한과 비교" 변이가 스위트를 통과한다
+        (2026-09-13 N-C 로 실측 — SURVIVED 였다)."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root = _init_fixture(raw)
+            own = root / "internal" / "own.go"
+            own.parent.mkdir(parents=True)
+            own.write_text("package internal\nfunc Own() int { return 1 }\n")
+            marks = {"P": _commit_all(root, "P: base")}
+            change = root / "openspec" / "changes" / "mine"
+            change.mkdir(parents=True)
+            (change / "base-commit.txt").write_text(marks["P"] + "\n")
+            (change / "review.md").write_text("mine\n")
+            after = b"package internal\nfunc Own() int { return 2 }\n"
+            _write_evidence(
+                change, package="internal", function="Own", relative="internal/own.go",
+                digest=hashlib.sha256(after).hexdigest(),
+            )
+            marks["E"] = _commit_all(root, "E: the evidence lands first, the source is still v1")
+            own.write_bytes(after)
+            marks["W2"] = _commit_all(root, "W2: the source the evidence describes lands")
+            analysis = change / "analysis" / "function-logic"
+            # 픽스처가 실제로 둘을 갈랐는지 **먼저** 단언한다. 안 갈렸으면 아래가 재는 것이 없다.
+            self.assertEqual(check_analysis._evidence_floor(root, analysis), marks["E"])
+            self.assertEqual(
+                check_analysis.compute_landing(root, marks["P"], analysis)[0], marks["W2"]
+            )
+            _declare_landing(change, marks["W2"], "declare the computed landing")
+            self.assertEqual(check_analysis.check("mine", root), [])
+
+    def test_what_the_gate_records_is_what_the_gate_then_demands(self) -> None:
+        """왕복. 도구가 쓴 값이 이 등식을 통과하지 않으면 기록 명령이 못 쓰게 된다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = self._fixture(raw)
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 0, lines)
+            _commit_all(root, "commit the recorded landing")
+            self.assertEqual(check_analysis.check("mine", root), [])
+
+
 class ADeclaredLandingMustBePinnedByEvidence(unittest.TestCase):
     """착지 선언은 **그것을 고정할 증거가 있을 때만** 유효하다 (task 3.2.3.1).
 
@@ -2593,14 +2690,23 @@ class ABorrowedWindowIsSharedAtBothEnds(unittest.TestCase):
         with raw:
             root, marks = _borrowed_fixture(raw, later_work=True)
             borrower, lender = self._borrower(root), self._lender(root)
-            (lender / "landed-commit.txt").write_text(marks["L2"] + "\n")
-            _declare_landing(borrower, marks["L2"], "both declare the later landing")
-            control = check_analysis.check("ordinary", root)
-            self.assertTrue(
-                any("internal/other.go:Other" in error for error in control),
-                f"양성 대조: L2 창에는 빌린 증거가 안 덮는 작업이 있어야 한다: {control}",
+            # 양성 대조는 **창 자체**에 대고 잰다. `check` 로 재던 옛 판본은 양쪽에 L2 를
+            # 선언해야 했는데, 7.3 의 등식이 그 선언 자체를 거절한다(계산값은 L 이다) —
+            # 그러면 대조가 재는 것이 창의 넓이가 아니라 새 등식이 된다. 층을 내려서 같은
+            # 사실을 잰다([[a-new-guard-unpins-the-guards-behind-it]]).
+            base = (borrower / "base-commit.txt").read_text(encoding="utf-8").strip()
+            wide = check_analysis.changed_existing_functions(root, base, marks["L2"])
+            self.assertIn(
+                ("internal/other.go", "Other"), wide,
+                "양성 대조: L2 창에는 빌린 증거가 안 덮는 작업이 있어야 한다",
+            )
+            narrow = check_analysis.changed_existing_functions(root, base, marks["L"])
+            self.assertNotIn(
+                ("internal/other.go", "Other"), narrow,
+                "양성 대조: 좁힌 창은 그 작업을 빼야 한다 — 안 빼면 아래가 재는 것이 없다",
             )
 
+            (lender / "landed-commit.txt").write_text(marks["L2"] + "\n")
             _declare_landing(borrower, marks["L"], "borrower narrows the window to L")
             errors = check_analysis.check("ordinary", root)
             self.assertTrue(
