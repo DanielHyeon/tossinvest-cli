@@ -1,11 +1,11 @@
 {
   "source": "tossinvest.com web bundles",
-  "build_id": "7r39ou7dRVa7AiAbxAXNF",
-  "chunk_count": 25,
+  "build_id": "zohm1Acaa2LR63_36yS6O",
+  "chunk_count": 23,
   "total": 1035,
   "counts": {
-    "implemented": 79,
-    "candidate": 423,
+    "implemented": 80,
+    "candidate": 422,
     "excluded": 533,
     "candidate_next": 19,
     "meaningful": 502
@@ -3129,10 +3129,6 @@
       "status": "implemented",
       "first_seen": "2026-06-19"
     },
-    "/api/v1/trading/orders/histories/tab": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
     "/api/v1/trading/settings/simple-trade": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -3931,10 +3927,6 @@
       "note": "minor-account flow",
       "first_seen": "2026-06-19"
     },
-    "/api/v2/my-assets/orders/markets": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
     "/api/v2/my-assets/transactions": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -4297,6 +4289,10 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v2/trading/orders/histories/all/pending": {
+      "status": "candidate",
+      "first_seen": "2026-09-14"
+    },
     "/api/v2/trading/settings/investor-exchange-choice-type": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -4635,6 +4631,10 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v3/trading/my-orders/completed": {
+      "status": "implemented",
+      "first_seen": "2026-09-14"
+    },
     "/api/v3/trading/order": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -4724,5 +4724,5 @@
       "first_seen": "2026-09-07"
     }
   },
-  "updated_at": "2026-09-07"
+  "updated_at": "2026-09-14"
 }
