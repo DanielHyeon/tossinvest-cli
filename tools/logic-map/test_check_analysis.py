@@ -2320,13 +2320,22 @@ class TheGateRecordsTheLandingInsteadOfTheAuthor(unittest.TestCase):
 
         진짜 작업이 L 에 있고 증거가 base 상태를 기술하면 어느 커밋도 고정을 통과하지
         못한다. 도구는 그때 값을 만들지 않는다 — 만들면 그 값이 곧 위조다."""
-        raw, root, _ = _base_shaped_forgery_fixture()
+        raw, root, marks = _base_shaped_forgery_fixture()
         with raw:
             code, lines = check_analysis.record_landing("mine", root)
             self.assertEqual(code, 1, lines)
+            self.assertEqual(len(lines), 1, lines)
+            self.assertIn("matches every pinning bundle", lines[0])
             self.assertTrue(
-                any("does not describe any revision" in line for line in lines), lines
+                lines[0].endswith("is not the revision this evidence describes: internal/own.go"),
+                lines,
             )
+            # 옛 꼬리 "the evidence does not describe any revision on this history" 는 **이
+            # 픽스처에서 거짓**이었다 — 증거는 base P 를 정확히 기술한다(아래 한 줄). 순회는
+            # 하한 이후만 걷고, 사유는 걸은 것만 말한다 (task 6.5).
+            analysis = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+            self.assertEqual(check_analysis._pinning_at(root, marks["P"], analysis), (1, []))
+            self.assertNotIn("any revision on this history", lines[0])
 
     def test_it_refuses_a_change_that_borrows_its_evidence(self) -> None:
         """빌리는 쪽은 값을 **복사**한다. 두 번째 값을 계산하면 창의 양끝이 갈린다.
@@ -2414,6 +2423,94 @@ class TheGateRecordsTheLandingInsteadOfTheAuthor(unittest.TestCase):
             errors = check_analysis.check("mine", root)
             self.assertTrue(
                 any("landing point is not UTF-8" in error for error in errors), errors
+            )
+
+
+class EvidenceAlreadyWrongInTheCommitThatHoldsItIsNamed(unittest.TestCase):
+    """`revision: current` 번들이 **자기를 담은 커밋에서** 이미 틀린 모양 (task 6.5).
+
+    증거를 뽑은 뒤 같은 세션에서 Go 를 한 번 더 고치고 둘을 한 커밋에 담으면 이 상태가
+    된다. 실물은 a089(`internal/journal/outbox.go`) · a095(`internal/obs/notifier.go`) —
+    번들이 base 에서는 맞고 번들을 담은 커밋 `a30eb35ae` 에서는 안 맞는다.
+
+    도구는 이때 아무것도 기록하지 않는다(6.1.2). 고친 것은 **그 사유**다. 옛 꼬리
+    "the evidence does not describe any revision on this history" 는 순회가 걷지 않은
+    구간까지 주장했고, 걷기 실패 17건 중 4건(a089 · a095 · 아카이브 둘)에서는 증거가 하한
+    **아래** 커밋을 전부 맞게 기술해 실측으로 거짓이었다. 이제 사유는 걸은 것만 말하고,
+    무엇이 틀렸는지는 규칙이 **첫 후보**에 준 문장을 그대로 인용한다.
+    """
+
+    def _fixture(self) -> tuple[tempfile.TemporaryDirectory, Path, dict[str, str]]:
+        """P(base) → E(증거 + 그 뒤 한 번 더 고친 Go, **한 커밋**) → X(이웃이 다른 파일을 고침).
+
+        번들 둘 중 `Own` 은 E 에서 이미 틀리고 `Other` 는 X 에서야 틀린다. 그래서 첫 후보 E
+        와 마지막 후보 X 의 거절 문장이 다르다 — 사유가 **어느** 후보의 문장을 인용하는지가
+        이 픽스처에서 갈린다."""
+        raw = tempfile.TemporaryDirectory()
+        root = _init_fixture(raw)
+        own = root / "internal" / "own.go"
+        other = root / "internal" / "other.go"
+        own.parent.mkdir(parents=True)
+        own.write_text("package internal\nfunc Own() int { return 1 }\n")
+        other.write_text("package internal\nfunc Other() int { return 1 }\n")
+        marks = {"P": _commit_all(root, "P: base")}
+        change = root / "openspec" / "changes" / "mine"
+        change.mkdir(parents=True)
+        (change / "base-commit.txt").write_text(marks["P"] + "\n")
+        (change / "review.md").write_text("mine\n")
+        own.write_text("package internal\nfunc Own() int { return 2 }\n")
+        other.write_text("package internal\nfunc Other() int { return 2 }\n")
+        # 증거는 **이 순간**의 소스를 적는다 ...
+        for function, source in (("Own", own), ("Other", other)):
+            _write_evidence(
+                change, package="internal", function=function,
+                relative=f"internal/{source.name}",
+                digest=hashlib.sha256(source.read_bytes()).hexdigest(),
+            )
+        # ... 그리고 같은 세션에서 Go 를 한 번 더 고친 뒤 둘을 한 커밋에 담는다.
+        own.write_text("package internal\nfunc Own() int { return 3 }\n")
+        marks["E"] = _commit_all(root, "E: evidence and one more Go edit in one commit")
+        other.write_text("package internal\nfunc Other() int { return 3 }\n")
+        marks["X"] = _commit_all(root, "X: a neighbour edits another pinned file")
+        return raw, root, marks
+
+    def test_the_recorder_names_what_already_differs_where_the_evidence_entered(self) -> None:
+        """사유는 걸은 구간만 말하고, 첫 후보(증거가 들어온 커밋)에서 틀린 소스를 이름으로 댄다.
+
+        마지막 후보 X 의 문장을 인용하면 `internal/other.go` 까지 붙는다 — 그 파일은 증거를
+        담은 커밋에서는 맞았으므로 고칠 대상이 아니다."""
+        raw, root, marks = self._fixture()
+        with raw:
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            entered = marks["E"][:12]
+            self.assertEqual(lines, [
+                f"mine: no landing recorded — no commit at or after the evidence ({entered}) "
+                "matches every pinning bundle — at the first commit walked, landing point "
+                f"{entered} is not the revision this evidence describes: internal/own.go"
+            ])
+            self.assertFalse((root / "openspec" / "changes" / "mine" / "landed-commit.txt").exists())
+
+    def test_the_gate_names_it_with_and_without_a_record(self) -> None:
+        """6.5 는 "대상이 워킹트리라 아무 게이트도 못 본다"로 열렸다. 오늘 두 경로 모두 이름으로
+        빨갛다 — 워킹트리 대상은 stale 로, 그 커밋을 선언하면 규칙의 불일치 문장으로."""
+        raw, root, marks = self._fixture()
+        with raw:
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(
+                any("AST source hash is stale: internal/own.go" in error for error in errors), errors
+            )
+            change = root / "openspec" / "changes" / "mine"
+            (change / "landed-commit.txt").write_text(marks["E"] + "\n")
+            _commit_all(root, "declare the commit that holds the evidence")
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(
+                any(
+                    f"landing point {marks['E'][:12]} is not the revision this evidence "
+                    "describes: internal/own.go" in error
+                    for error in errors
+                ),
+                errors,
             )
 
 

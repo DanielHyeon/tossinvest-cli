@@ -2389,3 +2389,145 @@ M2 · M3 · M4 · M5 · M7 · M8 · M9 · PC2 **CAUGHT**, M1 · M6 · M11 · PC1
   7.7 이 만든 것이 아니고 I8 도 아니다. 이번에 넣은 판정 호출만 자기 경계를 갖는다.
 - **빌리는 쪽 문장에 빌려주는 id 적기** — 문장은 옛 것 그대로다(`function-logic-reference.txt` 에 있다).
 - `tools/logic-map/README.md` · `docs/WORKFLOW.md` — 7.9 의 몫(7.2 가 규칙을 정한 뒤).
+
+## Pre-Edit Gate — task 6.5 (자기를 담은 커밋에서 이미 틀린 증거) (2026-09-14)
+
+**High-risk 아님** — 게이트 도구(`tools/logic-map`)의 거절 **문장** 하나다. 주문·손절·사이징 경로와 무관하고 판정(rc·기록 여부·값)을 바꾸지 않는다(아래 A/B 로 확인).
+
+### 먼저 다시 쟀다 — 6.5 가 연 "아무 게이트도 못 본다"는 이제 틀리고, 남은 것은 거짓 사유 한 줄이다
+
+6.5 는 6.1.1 측정에서 열렸다: a089 · a095 의 번들이 base 에서는 맞고 번들을 담은 커밋 `a30eb35ae` 에서는 안 맞는다.
+그 뒤 6.1.2 · 7.1 · 7.2.1 · 7.3.1 · 7.7 이 들어왔으므로 HEAD `483985dc` 에서 두 경로를 다시 돌렸다.
+
+| 경로 | a089 · a095 에서 오늘 나오는 것 |
+|---|---|
+| 5단계, 기록 없음(워킹트리 대상) | rc 1 · `AST source hash is stale: internal/journal/outbox.go` 등 · 7.1 조언 줄이 "base 의 소스를 적은 번들(a089 6개 · a095 4개) — 그 번들을 갱신하라"고 **이름으로** 말한다 |
+| 착지를 선언 | 규칙 `_landing_refusal` 의 `landing point a30eb35ae6da is not the revision this evidence describes: internal/journal/outbox.go` |
+| `--record-landing` | rc 1 · `no commit at or after the evidence (a30eb35ae6da) matches every pinning bundle — **the evidence does not describe any revision on this history**` |
+
+게이트는 이 모양을 **본다**. 남은 결함은 셋째 줄의 꼬리다 — 두 change 의 증거는 base `ec29dc72` 를 정확히 기술한다(base 에서
+고정 번들 6/6 · 9/9 일치). 도구가 이 change 에 대해 내는 유일한 사유가 사실과 반대다. spec 은 "계산이 못 찾으면 사유를
+이름으로 말해야 한다(SHALL)"를 요구한다.
+
+### 걷기 실패 전수 — 꼬리가 참인가 (`65_census.py` · `65_prefloor.py`, HEAD 코드로 읽기만)
+
+7.6 의 `compute_landing` 전수(93건)에서 값을 못 낸 것은 **17건**이고 17건 전부 같은 꼬리로 끝난다. 순회는 하한(`floor`)부터 HEAD
+까지만 걷는다. 꼬리가 참이려면 그 **아래**(`base..floor`, base 포함)에서도 전부 맞는 커밋이 없어야 한다. 그 구간을 `git cat-file --batch`
+한 프로세스로 전부 쟀다(바이트 등식만 — 규칙 함수는 안 부른다).
+
+| change | 번들 | 하한 (커밋 제목) | base 에서 전부 맞음 | 하한 아래 전부 맞는 커밋 / 구간 | 하한에서 틀린 소스 |
+|---|---:|---|:---:|---:|---|
+| a089-an-unserved-stop-is-counted | 6 | `a30eb35ae6da` fix(safety): bound alerts and plan exit  | **예** | **1** / 1 | `internal/journal/outbox.go` |
+| a095-a-stop-must-know-what-it-covers | 9 | `a30eb35ae6da` fix(safety): bound alerts and plan exit  | **예** | **1** / 1 | `internal/obs/notifier.go` |
+| 2026-07-31-automate-soak-openapi-onboarding | 13 | `d42e42e91717` chore(openspec): renumber operator chang | 아니오 | 0 / 160 | `cmd/tossctl/console.go`, `cmd/tossctl/soakproc.go` 외 4 |
+| 2026-07-31-console-adoption-controls | 16 | `d42e42e91717` chore(openspec): renumber operator chang | 아니오 | 0 / 226 | `cmd/tossctl/console.go`, `internal/app/engine/adoption.go` 외 7 |
+| 2026-07-31-fix-console-referrer-origin | 4 | `d42e42e91717` chore(openspec): renumber operator chang | 아니오 | 0 / 162 | `internal/console/pages.go`, `internal/console/remote.go` 외 1 |
+| 2026-07-31-streamline-trading-views | 4 | `d42e42e91717` chore(openspec): renumber operator chang | 아니오 | 0 / 156 | `internal/console/portfolio_label_test.go`, `internal/console/portfolio_test.go` 외 2 |
+| 2026-08-01-a042-persist-exit-line-snapshots | 28 | `d42e42e91717` chore(openspec): renumber operator chang | 아니오 | 0 / 150 | `internal/app/engine/exitloop.go`, `internal/exitpolicy/recovery.go` 외 7 |
+| 2026-08-02-a054-console-status-shell | 53 | `d42e42e91717` chore(openspec): renumber operator chang | 아니오 | 0 / 64 | `cmd/tossctl/console.go`, `internal/console/console.go` 외 11 |
+| 2026-08-02-a055-console-settings-cadence | 88 | `d42e42e91717` chore(openspec): renumber operator chang | 아니오 | 0 / 59 | `cmd/tossctl/adoptionsettings_stop_percent_test.go`, `cmd/tossctl/console.go` 외 7 |
+| 2026-08-08-console-system-update | 18 | `93165f969c40` feat(runtime): Guardian·복구·서명 업데이트·GBrai | 아니오 | 0 / 1 | `cmd/tossctl/console.go`, `internal/console/console.go` 외 2 |
+| 2026-08-08-wire-production-risk-guardian | 18 | `93165f969c40` feat(runtime): Guardian·복구·서명 업데이트·GBrai | 아니오 | 0 / 1 | `cmd/tossctl/console.go`, `internal/console/console.go` 외 2 |
+| 2026-08-29-add-common-exit-optimization | 36 | `c06192799fa9` feat(tossos): ship automated portfolio o | 아니오 | 0 / 1 | `cmd/tossctl/console.go`, `internal/config/engine.go` 외 2 |
+| 2026-08-29-console-click-approval | 27 | `3a2bc1481999` chore(sdd): Function Logic Map ast.json  | 아니오 | **1** / 6 | `cmd/tossctl/console.go`, `internal/console/console_test.go` 외 3 |
+| 2026-08-29-enable-engine-autostart-menu | 66 | `c06192799fa9` feat(tossos): ship automated portfolio o | 아니오 | 0 / 1 | `cmd/tossctl/console.go`, `cmd/tossctl/console_test.go` 외 1 |
+| 2026-08-29-enable-vpn-console-access | 54 | `c06192799fa9` feat(tossos): ship automated portfolio o | 아니오 | 0 / 1 | `internal/config/engine.go` |
+| 2026-08-29-verify-us-market | 54 | `3a2bc1481999` chore(sdd): Function Logic Map ast.json  | 아니오 | **2** / 5 | `internal/verifylive/fake_broker_test.go`, `internal/verifylive/mutate.go` |
+| 2026-09-07-a065-add-position-campaign-leg-core | 12 | `b55fff17253a` fix(a065): 같은 규칙의 두 번째 사본을 없애고 6.4 리뷰 결함 | 아니오 | 0 / 320 | `internal/journal/apply_hook.go`, `internal/journal/readonly.go` 외 2 |
+
+- **꼬리가 실측으로 거짓: 4/17** — a089 · a095(base 자체) · console-click-approval · verify-us-market(하한 아래 커밋).
+- 나머지 13건은 `base..HEAD` 에서는 참이지만 base **아래**는 안 쟀다 — 문장은 "이 역사의 어느 리비전도"라고 말하므로 그 13건에서도 **증명되지 않은 주장**이다.
+- 17/17 에서 순회의 첫 후보가 하한 자신이다(`start_is_floor`). 첫 후보의 거절은 17/17 이 규칙의 불일치 문장이고, a089 · a095 에서
+  그 문장이 가리키는 파일이 6.1.1 표의 "번들 커밋에서 안 맞는 파일"과 **같다**(`internal/journal/outbox.go` · `internal/obs/notifier.go`).
+
+**관찰 — 결정 아님 (7.2 의 몫).** console-click-approval · verify-us-market 의 하한은 `3a2bc148 chore(sdd): Function Logic Map ast.json
+경로를 저장소 상대 경로로` 다. 그 커밋은 두 change 의 번들 27 · 54 개 **전부**에서 `file` 한 줄만 절대→상대로 바꿨고 `source_sha256` 은
+그대로다(`git show` 실측). `--diff-filter=MAT` 는 이것을 증거가 새로 들어온 것으로 세어 하한을 작업 뒤로 올린다. 하한만 문제도 아니다 —
+7.2.1 의 `_unheld_bundles` 는 착지 커밋의 `ast.json` 바이트가 오늘의 것과 같기를 요구하므로 경로를 고치기 전 커밋은 그쪽에서도 막힌다.
+기계적인 증거 재작성이 이미 착지한 아카이브의 착지를 없앤다는 뜻이고, 무엇에 착지를 묶을지(7.2)가 답할 질문이다. d42e42e9(renumber)
+일곱은 하한 아래에서도 전부 맞는 커밋이 0 이라 같은 모양인지 이 측정으로는 말할 수 없다.
+
+### 편집 전 열거 (HEAD `483985dc` blob → `ast.before-6.5.json`)
+
+`enumerate.py` 로 편집 **전에** 뽑았다 — `ast.after-7.7.json` 과 내용(분기·반환·raise·호출·sha)이 같음을 확인했다. 반환 5 중 마지막이 이 문장이다:
+`('', f'no commit at or after the evidence ({floor[:12]}) matches every pinning bundle — the evidence does not describe any revision on this history')`.
+호출자(AST 로 `tools/**/*.py` 전부): `resolve_landing`(7.3.1 등식 — 기록이 규칙을 통과하면 순회가 그 기록 이하에서 값을 내므로 이 문장에 닿지 않는다고 **추론**했다, 시험으로 재지 않았다) · `record_landing` · 시험 셋(호출 자리 넷).
+
+### 설계 결정
+
+1. **꼬리를 지우고 걸은 것만 말한다.** "no commit at or after the evidence (…) matches every pinning bundle" 는 순회가 실제로 잰 것이라 남긴다(7.7 의 `test_a_refusal_only_the_walk_finds_is_not_promised_away` 가 이 머리를 바늘로 쓴다).
+2. **무엇이 틀렸는지는 규칙의 문장을 인용한다 — 새로 짓지 않는다.** 순회가 이미 받은 첫 거절 `refusal` 을 남겨 붙인다. 새 호출 0. 사유를 여기서 지으면 규칙이 문장을 바꿀 때 이 사유만 옛 말로 남는다([[two-judgements-cover-for-each-other]]).
+3. **첫 후보다, 마지막이 아니다.** 첫 후보는 17/17 이 증거가 들어온 커밋이고 거기서 틀린 소스가 저자가 고칠 번들이다. 뒤 후보의 문장에는 이웃이 나중에 고친 파일이 붙는다 — 시험 픽스처가 그 차이를 만든다.
+4. **"base 를 기술한다"를 새로 말하지 않는다.** 하한 아래를 걸어서 말할 수는 있지만 walk 가 늘고(7.5 가 이미 느리다고 연 자리) 게이트의 기록 없는 경로(7.1 조언)가 이미 그 사실을 이름으로 말한다.
+5. `unheld` 갈래와 그 문장은 안 건드린다 — 이 결함이 아니다.
+
+## VERIFY — task 6.5 (2026-09-14)
+
+### RED → GREEN
+
+시험 둘을 더하고 하나의 바늘을 고쳤다. 편집 전 코드에서 셋 중 **둘이 빨갛다**(`65_red.log`).
+
+| 시험 | 편집 전 | 편집 후 | 재는 것 |
+|---|---|---|---|
+| `EvidenceAlreadyWrongInTheCommitThatHoldsItIsNamed.test_the_recorder_names_what_already_differs_where_the_evidence_entered` | **FAIL** (옛 꼬리) | OK | 6.5 모양 그대로 — 증거를 뽑은 뒤 Go 를 한 번 더 고치고 **한 커밋**에 담는다. 기록 명령의 출력 한 줄을 **글자 그대로** 단언한다. 두 번째 후보 X 에서만 틀리는 파일을 둬서 첫/마지막 후보의 문장이 갈린다 |
+| `…test_the_gate_names_it_with_and_without_a_record` | OK | OK | 6.5 의 "아무 게이트도 못 본다"가 오늘 틀렸음을 못 박는다 — 워킹트리 대상은 `AST source hash is stale: internal/own.go`, 그 커밋을 선언하면 규칙의 불일치 문장 |
+| `TheGateRecordsTheLandingInsteadOfTheAuthor.test_the_recorder_refuses_the_forgery_this_class_is_named_after` | **FAIL** | OK | 바늘이 옛 꼬리(`does not describe any revision`)였다 — **거짓 문장을 못 박고 있었다**. 이 픽스처에서 증거는 base P 를 정확히 기술한다(`_pinning_at(P) == (1, [])` 를 같이 단언) |
+
+### 편집 전후 열거 (`ast.before-6.5.json` → `ast.after-6.5.json`)
+
+바뀐 함수는 `compute_landing` **하나**다(HEAD 와 워킹트리의 모든 함수 AST 덤프를 대조). 분기 7 → 8(`first or refusal`) · 반환 5 → 5
+(마지막 반환의 문장만) · raise 0 → 0 · 호출 변화 0. 표는 `tools-logic-map--compute_landing/function-logic-map.md` `## 편집 — task 6.5`.
+
+### 뮤테이션 (`65_mut.py`, 사본 `65_work` — 시작 sha 단언, 무변이 대조군 먼저)
+
+| 변이 | 결과 | 빨갛게 한 시험 |
+|---|---|---|
+| PC 무변이 | **GREEN** | — |
+| N1 옛 꼬리로 되돌림 | **CAUGHT** | 6.5 기록 시험 · 위조 기록 시험 |
+| N2 마지막 후보의 문장을 인용(`first = refusal`) | **CAUGHT** | 6.5 기록 시험 **하나** — 위조 픽스처는 후보가 하나라 못 가른다 |
+| N3 인용을 뺌 | **CAUGHT** | 둘 다 |
+| N4 넘긴 이름이 있을 때만 남김 | **CAUGHT** | 둘 다 |
+
+**계측 사고 한 건 — 대조군이 잡았다.** 첫 실행에서 무변이 사본이 **빨갰고** 변이 넷이 전부 "CAUGHT" 로 찍혔다. 시험 파일이
+`parents[1] / "sdd"` 에서 `sdd_doctor` 를 import 하는데 사본에 그 형제 디렉터리가 없어 ImportError 였다 — 변이가 아니라 import 가
+빨갛게 한 것이다. `sdd_doctor.py` 를 사본에 넣고, 하네스가 **대조군이 GREEN 이 아니면 변이를 걸지 않고 멈추게** 고친 뒤 다시 쟀다
+(위 표). 저장소 파일은 두 실행 내내 sha `f3fd18cae5ea` 로 그대로다.
+
+옛 하네스를 새 코드에 **다시** 걸었다(전부 사본 대상 — 7.6 하네스는 저장소를 직접 겨누던 것을 경로만 바꾼 `65_mut76.py`):
+
+| 하네스 | 결과 |
+|---|---|
+| 7.6 R1~R16 | R1~R13 · R15 · R16 **CAUGHT**, R14 SKIP(7.7 과 같다) — 옮긴 자리의 R14'(`65_r14p.py`) **CAUGHT** |
+| 7.7 R1~R22 (`77_mut.py 65_work`) | **22 전부 CAUGHT** |
+| 7.8 M·PC (`65_mut78.py`) | M2 · M3 · M4 · M5 · M7 · M8 · M9 · PC2 **CAUGHT**, M1 · M6 · M11 · PC1 SKIP(7.7 과 같은 넷) |
+
+바늘을 바꾼 위조 기록 시험이 **혼자** 잡던 옛 변이는 없었다(7.8 의 M1 은 두 시험이 잡았고 7.6 에서 자리가 사라져 SKIP).
+
+### 실물 A/B (`65_ab.py`) — 93건 전수, HEAD `483985dc` blob 대 워킹트리
+
+| | 결과 |
+|---|---|
+| 값·사유 둘 다 같음 | **76** (착지를 얻는 76건 전부) |
+| 사유 꼬리만 다름 | **17** — 새 꼬리가 `65_census.json`(편집 **전** 코드로 잰 첫 후보 거절)과 **글자 그대로** 같다 |
+| 그 밖 | **0** |
+
+a089 → `no commit at or after the evidence (a30eb35ae6da) matches every pinning bundle — at the first commit walked, landing point a30eb35ae6da is not the revision this evidence describes: internal/journal/outbox.go`
+a095 → `… internal/obs/notifier.go`. 6.1.1 이 손으로 짚은 두 파일과 같다.
+
+시간은 적지 않는다 — 6 프로세스가 동시에 걸어서 경합 아래 잰 값이다. 편집은 새 호출이 0 이다.
+
+### 게이트 (2026-09-14, 이 로트의 워킹트리)
+
+| 게이트 | 결과 |
+|---|---|
+| `test_check_analysis` | 141 → **143** (skip 1) |
+| `make sdd-test` | rc=0 — scripts 15 · logic-map **218**(skip 1) · sdd 71 · sdd-history 22 · pm 16 · deploy 18 |
+| `make lint` · `make test-seams` | rc=0 · rc=0 |
+| `openspec validate --all --strict` | 58/58 (spec delta: 계산 실패 사유 SHALL 두 문장 + 시나리오 하나) |
+
+### 안 한 것
+
+- **"증거가 base 를 기술한다"고 말하기** — 하한 아래를 걸어야 한다(walk 가 는다, 7.5). 기록 없는 5단계가 이미 7.1 조언으로 그것을 이름으로 말한다.
+- **기계적 증거 재작성이 하한을 올리는 것**(`3a2bc148` · 위 관찰) — 착지를 무엇에 묶을지의 질문이라 7.2 로 넘긴다. 7.2 에 한 줄 적었다.
+- `unheld` 사유 문장 — 이 결함이 아니다.
+- `tools/logic-map/README.md` · `docs/WORKFLOW.md` — 7.9.

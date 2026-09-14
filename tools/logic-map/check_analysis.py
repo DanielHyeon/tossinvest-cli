@@ -1179,12 +1179,17 @@ def compute_landing(root: Path, base: str, analysis: Path) -> tuple[str, str]:
     )
     if process.returncode:
         return "", f"cannot walk the history after {start[:12]}"
+    first = ""
     unheld: list[str] = []
     for candidate in [start, *process.stdout.split()]:
         # 선언 경로와 **같은 함수**에 묻는다 (task 7.6, 리뷰 I2). 받는 가장 낮은 후보가 착지다.
         refusal, names = _landing_refusal(root, base, candidate, analysis, floor)
         if not refusal:
             return candidate, ""
+        # 첫 후보의 거절을 남긴다 (task 6.5). 대개 증거가 역사에 들어온 바로 그 커밋이고,
+        # 거기서 이미 틀린 소스가 저자가 고칠 번들이다 — a089 · a095 는 증거를 뽑은 뒤 같은
+        # 커밋에서 Go 를 한 번 더 고쳤다. 뒤 후보의 문장에는 남이 나중에 고친 파일까지 붙는다.
+        first = first or refusal
         if names:
             # 다른 조건은 다 통과했는데 판정이 읽은 번들을 안 들고 있다 (task 7.2, 리뷰 C3).
             unheld = names
@@ -1193,9 +1198,12 @@ def compute_landing(root: Path, base: str, analysis: Path) -> tuple[str, str]:
             "no commit holds the evidence this verdict read (" + ", ".join(unheld) + ") "
             "— commit the bundles as they are on disk"
         )
+    # 걸은 것만 말한다 (task 6.5). 옛 꼬리 "the evidence does not describe any revision on
+    # this history" 는 순회가 안 걷는 하한 아래까지 주장했고, 2026-09-14 걷기 실패 17건
+    # 전수에서 4건(a089 · a095 · 아카이브 둘)은 증거가 하한 아래 커밋을 전부 맞게 기술했다.
     return "", (
         f"no commit at or after the evidence ({floor[:12]}) matches every pinning bundle "
-        "— the evidence does not describe any revision on this history"
+        f"— at the first commit walked, {first}"
     )
 
 

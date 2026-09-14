@@ -834,7 +834,7 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       닿는지 불명이다.
 - [x] 6.1.2.5 **FLM/BTM 갱신.** `resolve_landing`·`check`·`main` 의
       `analysis/python-function-logic/` 열거를 편집 전후로 다시 뽑는다.
-- [ ] 6.5 **P1 — `revision: current` 번들이 자기를 담은 커밋에서 이미 틀릴 수 있다.**
+- [x] 6.5 **P1 — `revision: current` 번들이 자기를 담은 커밋에서 이미 틀릴 수 있다.**
       6.1.1 측정 중 발견. a089 의 `internal/journal/outbox.go`, a095 의
       `internal/obs/notifier.go`(번들 2개)는 base 에서는 해시가 맞고 **그 번들을 담은
       커밋 `a30eb35ae` 에서는 안 맞는다** — 같은 커밋이 그 Go 파일을 바꿨기 때문이다.
@@ -842,6 +842,20 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       상태가 된다. 오늘은 대상이 워킹트리라 HEAD 하고만 비교해서 아무 게이트도 못 본다.
       착지를 선언하는 순간 드러나므로 6.1 결정과 함께 처리한다.
       [[generated-evidence-must-be-measured]]
+      **닫음(2026-09-14).** 기록은 review.md `## Pre-Edit Gate — task 6.5` · `## VERIFY — task 6.5`.
+      **먼저 다시 쟀다**: "아무 게이트도 못 본다"는 오늘 틀렸다 — HEAD `483985dc` 에서 a089 · a095 는 워킹트리 대상 5단계가
+      `AST source hash is stale` 로 빨갛고 7.1 조언이 base 를 적은 번들을 이름으로 대며, 착지를 선언하면 규칙이 틀린 파일을
+      이름으로 거절한다. **남은 결함은 기록 명령의 사유 한 줄이었다** — "the evidence does not describe any revision on this
+      history". 두 change 의 증거는 base 를 정확히 기술하므로 도구가 내는 유일한 사유가 사실과 반대였다. 걷기 실패 **17건
+      전수**를 하한 아래까지 걸어 재니 **4건**(a089 · a095 · console-click-approval · verify-us-market)에서 실측으로 거짓이고
+      나머지 13건도 순회가 안 걷는 범위를 주장했다. 수리: 사유는 걸은 것만 말하고, 무엇이 틀렸는지는 규칙이 **첫 후보**에 준
+      문장을 그대로 인용한다(새 호출 0, 17/17 에서 첫 후보 = 하한). a089 는 이제 `… at the first commit walked, landing point
+      a30eb35ae6da is not the revision this evidence describes: internal/journal/outbox.go` — 6.1.1 이 손으로 짚은 그 파일이다.
+      기존 위조 기록 시험의 바늘이 **거짓 문장을 못 박고 있었다**(그 픽스처에서도 증거는 base 를 기술한다). 시험 141 → **143** ·
+      변이 N1~N4 **CAUGHT**(N2 는 두 후보 픽스처 하나만 잡는다) · 옛 하네스 7.6 · 7.7 · 7.8 재실행 결과 불변(R14' 포함) ·
+      실물 A/B 93건 **값·사유 같음 76 · 꼬리만 다름 17(편집 전 첫 후보 문장과 글자 그대로) · 그 밖 0** · `make sdd-test`
+      (logic-map 218) · `lint` · `test-seams` · `validate --all` 58/58. 계측 사고: 사본 하네스가 형제 import 를 빠뜨려 무변이
+      대조군부터 빨갰고 변이가 전부 "CAUGHT" 로 찍혔다 — 대조군이 잡았고, 이제 하네스가 대조군이 초록이 아니면 멈춘다.
 - [ ] 6.1.2.6 **`make gate` 가 기록을 자동으로 쓸지 사람이 정한다.** 이번에 만든 것은
       명령(`--record-landing`)이고, 5단계 조언 줄이 그 명령을 이름으로 부른다.
       게이트가 **스스로 쓰게** 하지는 않았다 — 검사 게이트가 워킹트리를 바꾸면
@@ -1001,6 +1015,10 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       사람 몫이고, 공짜인 셋(K1·K4·H1)만 지금 바로 취할 수 있다.
       **사람이 2026-09-12 에 "공짜 셋만 지금"을 골랐다 → 7.2.1 로 닫았다.** 남은 것은
       **C1 · C2 · C4 · H7** 이고, 넷 다 증거 **내용**으로는 안 갈린다(위 측정의 결론).
+      **6.5 측정이 더한 사실(2026-09-14, 결정 아님)**: 기계적인 증거 재작성이 하한을 작업 뒤로 올린다. `3a2bc148`(ast.json
+      `file` 을 절대→상대로, `source_sha256` 불변)이 console-click-approval · verify-us-market 의 번들 **전부**를 고쳐 하한이 됐고,
+      두 change 의 증거는 그 아래 커밋을 전부 맞게 기술한다. 7.2.1 의 바이트 등식도 재작성 전 커밋을 막으므로 두 자물쇠가 같이
+      잠근다. 무엇에 묶을지를 정할 때 같이 볼 입력이다.
       다음 축은 값을 만드는 주체를 다시 옮기는 것뿐이다 — 도구가 계산하되 사람이 그 값과
       근거를 review.md 에 적어야 받아들이는 형태(7.3 의 H3 와 같은 자리). 이 결정 전에는
       **6.6 · 6.1.2.6 이 닫히지 않고 4.5 도 계속 막힌다.**

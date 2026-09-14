@@ -92,3 +92,17 @@ a089·a095 가 마지막 사유로 거부된다 — 그 둘의 증거가 자기�
 | 생김 | 반환 | `('', why)` |
 
 호출 — 사라짐 ['_evidence_floor', '_pinning_bundles'] · 생김 ['_walk_floor']
+
+## 편집 — task 6.5 (걷기 실패 사유는 걸은 것만 말한다) · 분기 7 → 8 · 반환 5 → 5 · raise 0 → 0
+
+편집 전 `ast.before-6.5.json`(HEAD `483985dc` blob, L1162-1199) · 편집 후 `ast.after-6.5.json`(워킹트리, L1162-1207). 아래 표는 두 열거의 `source` 를 스크립트가 줄 단위로 대조한 것이다. 같은 파일의 다른 함수는 AST 덤프가 HEAD 와 같다(바뀐 함수 집합 = `compute_landing` 하나, 실측).
+
+마지막 반환의 꼬리 "the evidence does not describe any revision on this history" 를 "at the first commit walked, {first}" 로 바꿨다. `first` 는 순회가 받은 **첫** 거절 문장이다(`first = first or refusal` — 열거기가 `BoolOp` 를 분기로 세서 분기가 하나 는다). 옛 꼬리는 순회가 걷지 않는 하한 아래까지 주장했고, 걷기 실패 17건 전수에서 4건(a089 · a095 · console-click-approval · verify-us-market)은 증거가 하한 아래 커밋을 전부 맞게 기술해 실측으로 거짓이었다. 첫 후보인 이유: 17건 전부 첫 후보가 하한 자신이고(`start_is_floor` 17/17), 거기서 이미 틀린 소스가 저자가 고칠 번들이다. 뒤 후보의 문장에는 이웃이 나중에 고친 파일이 붙는다. 새 호출 0 — 문장은 규칙 `_landing_refusal` 이 이미 만든 것을 인용한다([[two-judgements-cover-for-each-other]]: 사유 문장을 여기서 새로 지으면 규칙이 문장을 바꿀 때 이 사유만 옛 문장으로 남는다). `unheld` 갈래와 그 문장은 그대로다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 생김 | 분기 | `first or refusal` |
+| 사라짐 | 반환 | `('', f'no commit at or after the evidence ({floor[:12]}) matches every pinning bundle — the evidence does not describe any revision on this history')` |
+| 생김 | 반환 | `('', f'no commit at or after the evidence ({floor[:12]}) matches every pinning bundle — at the first commit walked, {first}')` |
+
+호출 — 사라짐 없음 · 생김 없음
