@@ -70,3 +70,16 @@ B6 이 **사유 문장**으로 받고, 나머지(`_walk_floor` 의 `ValueError`,
 하한 사유 뒤로 가서 번들 0·하한 없음·dirty 가 겹친 입력의 **문장**이 바뀐다(rc 는 둘 다 1), (2) 디스크에만 있는
 기록의 문장이 경로와 `not in HEAD` 를 말한다, (3) 조언 줄이 이 함수의 사유를 인용한다. 판정(`check`)은 이 함수를
 부르지 않는다 — 조언이 판정 줄을 바꿀 길이 없다.
+
+## 편집 — task 7.2.3 (빌리는 change 는 창을 좁히지 않는다) · 분기 9 → 9 · 반환 9 → 9 · raise 0 → 0
+
+편집 전 `ast.before-7.2.3.json`(HEAD `67d06bc9` blob, L1237-1308) · 편집 후 `ast.after-7.2.3.json`(워킹트리, L1242-1312). 표는 두 열거의 `source` 를 스크립트가 대조한 것이다.
+
+빌림 갈래의 문장을 모듈 상수 `BORROWED_REFUSES_A_LANDING` 으로 — 5단계와 **같은 문장**. 예전 문장("copy the landing recorded on the change that owns the bundles")은 리뷰 C4 의 구멍을 권했다. 분기 · 순서 변화 없음.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 반환 | `('this change borrows its evidence — copy the landing recorded on the change that owns the bundles instead of computing a second one', '')` |
+| 생김 | 반환 | `(BORROWED_REFUSES_A_LANDING, '')` |
+
+호출 — 사라짐 없음 · 생김 없음

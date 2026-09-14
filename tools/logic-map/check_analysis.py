@@ -344,6 +344,13 @@ ADOPTION_REFUSES_A_LANDING = (
     f"execution-baseline adoption does not accept a `{LANDING_FILE}` record: "
     "the window ends at the audited source commit"
 )
+# 증거를 빌리는 change 가 착지 기록을 거절하는 문장 (task 7.2.3, 리뷰 C4). 판정 경로와 기록 경로가
+# **같은 문장**을 쓴다 — 두 벌이면 갈린다(위 이관 문장이 그랬다).
+BORROWED_REFUSES_A_LANDING = (
+    f"a change that borrows its evidence does not accept a `{LANDING_FILE}` record: "
+    "a borrowed window is never narrowed, because the lender's evidence cannot pin where "
+    "this change's own Go work landed"
+)
 # 판정을 못 내는 입력이 **판정 대신 traceback** 이 되지 않게 하는 목록 (task 7.4, H5·H6).
 # `subprocess.SubprocessError` 가 여기 있는 이유: `TimeoutExpired` 는 `OSError` 가 아니라서
 # 자리마다 적혀 있던 목록 넷(`OSError, RuntimeError, ValueError, JSONDecodeError`)을 그대로
@@ -1081,18 +1088,16 @@ def check(
             return [f"function-logic reference base is invalid: {exc}"]
         if referenced_base != base:
             return ["function-logic reference must share the exact comparison base"]
-        # 창의 **끝**도 같아야 한다. 빌린 번들이 착지를 고정하긴 하지만, 그 번들이
-        # 안 바뀌는 구간 안에서는 저자가 여전히 고를 수 있다 — a072 실측으로 326
-        # 커밋 중 2개가 그 구간이다. 선언 파일을 고른 근거가 "번들이 고정하므로
-        # 저자가 고를 수 없다" 하나이므로, 남의 번들로 고정할 때 남는 그 선택을
-        # 없앤다. 착지는 그것을 고정하는 증거가 사는 자리에 선언하고 빌리는 쪽은
-        # 값을 **복사**한다.
-        try:
-            shared = _declared_landing(change_dir, root) == _declared_landing(referenced_dir, root)
-        except ValueError as exc:
-            return [f"cannot derive modified Go functions: {exc}"]
-        if not shared:
-            return ["function-logic reference must share the exact landing point"]
+        # 빌리는 change 는 창을 **좁히지 않는다** (task 7.2.3, 리뷰 C4 — 사람이 2026-09-14 에
+        # 골랐다). 1.8 은 빌려주는 쪽의 착지를 복사하게 했는데, 그 착지는 빌려주는 쪽 증거의
+        # 가장 낮은 값이라 빌리는 쪽이 그 **뒤에** 한 Go 작업이 창 밖으로 나갔다. 빌리는 쪽은
+        # 자기 번들이 0 이라 자기 작업이 어디 착지했는지 말할 증거를 소유하지 않는다.
+        # 그래서 빌리는 쪽의 기록은 이름으로 거절하고, 빌려주는 쪽의 기록은 이 창에 쓰지 않는다
+        # (아래 `resolve_landing` 은 빌리는 쪽 디렉터리를 보므로 기록이 없으면 빈 값 = 워킹트리).
+        # 있는가만 묻는다 — 해독하면 못 읽는 기록 앞에서 질문이 터진다(6.2.1).
+        # 오늘 저장소의 빌리는 change 는 a073 하나이고 기록이 없다(2026-09-14 확인).
+        if _landing_record(change_dir, root) is not None:
+            return [BORROWED_REFUSES_A_LANDING]
         analysis = referenced_dir / "analysis" / "function-logic"
     adopted = bool(facts.get("execution_baseline_adoption"))
     if adopted and _landing_record(change_dir, root) is not None:
@@ -1277,10 +1282,9 @@ def _recording_refusal(change: str, change_dir: Path, root: Path) -> tuple[str, 
             "the gate reads the record from the commit, so commit it"
         ), ""
     if (change_dir / "analysis" / "function-logic-reference.txt").exists():
-        return (
-            "this change borrows its evidence — copy the landing recorded on "
-            "the change that owns the bundles instead of computing a second one"
-        ), ""
+        # 5단계와 같은 문장이다 (task 7.2.3). 예전 문장은 "빌려주는 쪽의 착지를 복사하라"였고
+        # 그 복사가 리뷰 C4 의 구멍이었다.
+        return BORROWED_REFUSES_A_LANDING, ""
     facts: dict[str, object] = {}
     try:
         base = resolve_base(change_dir, root, facts, change_id=change)

@@ -2351,7 +2351,8 @@ class TheGateRecordsTheLandingInsteadOfTheAuthor(unittest.TestCase):
             root, _ = _borrowed_fixture(raw)
             code, lines = check_analysis.record_landing("ordinary", root)
             self.assertEqual(code, 1, lines)
-            self.assertTrue(any("borrows its evidence" in line for line in lines), lines)
+            # 5단계와 **같은 문장**이다 (task 7.2.3). 두 벌이면 갈린다(리뷰 I5 가 이관 문장에서 실측).
+            self.assertEqual(lines, [f"ordinary: {check_analysis.BORROWED_REFUSES_A_LANDING}"])
             self.assertFalse(
                 (root / "openspec" / "changes" / "ordinary" / "landed-commit.txt").exists(),
                 "거절했으면 파일도 없어야 한다",
@@ -3275,11 +3276,11 @@ class ADeclaredLandingMustBePinnedByEvidence(unittest.TestCase):
                 "절대경로 번들이 고정하는 착지를 거절했다 — 정상 입력을 죽였다",
             )
 
-    def test_borrowed_evidence_still_pins_a_landing(self) -> None:
-        """거부하면 안 되는 정상 입력. 빌린 번들이 고정하므로 통과해야 한다.
+    def test_borrowed_evidence_no_longer_pins_a_landing(self) -> None:
+        """3.2.3.1 은 빌린 번들로 착지를 고정하게 했다 — a073 의 유일한 수리 경로였다. 7.2.3 이 그 경로를
+        닫았다(빌리는 change 는 좁히지 않는다). 빌린 번들이 그 착지를 **정확히** 기술해도 기록은 거절된다.
 
-        task 1.8 이 창의 **양쪽 끝**을 공유하게 만든 뒤로, 이 정상 입력은 빌려주는
-        쪽에도 같은 선언이 있는 모양이다. 고정 판정이 재는 것은 그대로다."""
+        양성 대조: 기록 전에는 통과한다 — 거절이 픽스처의 다른 결함이 아니라 기록 때문인지 가른다."""
         raw = tempfile.TemporaryDirectory()
         with raw:
             root, marks = _borrowed_fixture(raw)
@@ -3291,53 +3292,23 @@ class ADeclaredLandingMustBePinnedByEvidence(unittest.TestCase):
             (root / "openspec" / "changes" / "reference" / "landed-commit.txt").write_text(
                 marks["L"] + "\n"
             )
-            _declare_landing(change, marks["L"], "record the shared landing point")
+            _declare_landing(change, marks["L"], "record the lender's landing on the borrower too")
             self.assertEqual(
-                check_analysis.check("ordinary", root), [],
-                "빌린 증거로 고정되는 착지를 거절했다 — 정상 입력을 죽였다",
-            )
-
-    def test_borrowed_evidence_refuses_a_landing_it_does_not_describe(self) -> None:
-        """고정이 **먹히는지**. 빌린 번들이 기술하지 않는 착지는 이름으로 거절한다.
-
-        오늘은 `resolve_landing` 이 **지역** 번들만 보므로(빌린 change 는 0개)
-        이 위조가 고정 판정을 그냥 통과하고, 뒤늦게 `validate_target` 이 다른
-        사유로 빨개진다. 사유가 갈리면 무엇이 막았는지 기록에 안 남는다."""
-        raw = tempfile.TemporaryDirectory()
-        with raw:
-            root, marks = _borrowed_fixture(raw)
-            change = root / "openspec" / "changes" / "ordinary"
-            # 양쪽이 **같은** 바닥을 선언한다. 공유 규칙(task 1.8)에 먼저 걸리면
-            # 고정 판정을 통째로 지워도 이 시험이 초록으로 남는다 — 판정 둘이
-            # 서로를 가리는 자리라서 여기서 갈라 둔다.
-            (root / "openspec" / "changes" / "reference" / "landed-commit.txt").write_text(
-                marks["P"] + "\n"
-            )
-            _declare_landing(change, marks["P"], "record the freeze floor instead")
-            errors = check_analysis.check("ordinary", root)
-            self.assertTrue(errors, "증거가 기술하지 않는 착지가 통과했다")
-            self.assertTrue(
-                any("is not the revision this evidence describes" in error for error in errors),
-                f"착지 판정이 이름으로 거절해야 한다: {errors}",
+                check_analysis.check("ordinary", root), [check_analysis.BORROWED_REFUSES_A_LANDING]
             )
 
 
-class ABorrowedWindowIsSharedAtBothEnds(unittest.TestCase):
-    """빌린 증거는 비교 창의 **양쪽 끝**을 다 공유해야 한다 (task 1.8).
+class ABorrowedWindowIsNeverNarrowed(unittest.TestCase):
+    """증거를 빌리는 change 는 비교 창을 **좁히지 않는다** (task 7.2.3, 리뷰 C4).
 
-    창의 **시작**에는 이미 규칙이 있다 — `referenced_base != base` 면 거절한다.
-    **끝**에는 없었다. 3.2.3.1 이 넣은 고정("빌린 번들이 착지를 고정한다")은
-    "착지가 같아야 한다"보다 약하다: 빌린 번들이 **안 바뀌는 구간 안에서는** 저자가
-    여전히 고를 수 있고, 그 구간에 남의 Go 작업이 들어오면 요구 집합이 갈린다.
+    1.8 은 창의 양쪽 끝을 빌려주는 change 와 공유하게 했다 — 빌리는 쪽은 빌려주는 쪽의 착지를
+    **복사**한다. 그런데 빌려주는 쪽의 착지는 빌려주는 쪽 증거의 가장 낮은 값(6.1.2 · 7.3.1)이라,
+    빌리는 쪽이 그 **뒤에** 한 Go 작업은 복사한 창 밖으로 나가고 어떤 판정도 못 본다. 빌리는 쪽은
+    정의상 자기 번들이 0 이라 자기 작업이 어디 착지했는지 말할 증거를 **소유하지 않는다**.
+    사람이 2026-09-14 에 "빌리는 change 는 좁히지 못한다"를 골랐다. base 공유는 그대로다.
 
-    선언 파일을 고른 근거는 `analysis/landing-point.md` 의 한 문장뿐이다 — "번들이
-    고정하므로 저자가 고를 수 없다". 빌리는 change 에서는 그 번들이 **남의 것**이라
-    그 문장이 끝까지 참이 되지 않는다. 그래서 착지는 그것을 고정하는 증거가 사는
-    자리에 선언하고, 빌리는 쪽은 값을 **복사**한다.
-
-    실측 (2026-09-10, a072): `revision: current` 번들 99개를 동시에 고정하는 커밋은
-    base..HEAD 326개 중 **2개**이고 둘의 요구 집합은 같다. 오늘 이 규칙이 새로
-    거절하는 저장소 change 는 **0건**이다 — review.md §Pre-Edit 1.8 의 표."""
+    대가는 저장소의 빌리는 change 하나(a073, 아카이브 · 기록 없음)가 1.8 이 열어 둔 수리 경로
+    (양쪽이 같은 착지를 기록해 336 오류 → 0)를 잃는 것이다. 그 경로는 쓰인 적이 없다."""
 
     def _borrower(self, root: Path) -> Path:
         return root / "openspec" / "changes" / "ordinary"
@@ -3345,100 +3316,74 @@ class ABorrowedWindowIsSharedAtBothEnds(unittest.TestCase):
     def _lender(self, root: Path) -> Path:
         return root / "openspec" / "changes" / "reference"
 
-    def test_a_borrower_cannot_declare_a_landing_the_lender_did_not(self) -> None:
-        """빌리는 쪽만 선언한 값은 저자가 고른 값이다.
+    def test_a_lender_record_does_not_narrow_the_borrower(self) -> None:
+        """C4 그 자체. 빌려주는 쪽이 L 을 기록하고 빌리는 쪽 작업이 L2 에 있으면, 빌리는 쪽의 창은
+        워킹트리까지이고 L2 의 작업이 **요구된다**.
 
-        빌린 번들이 **고정하긴 한다** — 그래서 오늘 이 모양이 통과한다. 고정은
-        구간을 남기고, 그 구간 안에서 값을 고른 것은 저자다. 빌려주는 쪽에 같은
-        선언이 없으면 그 선택을 검증한 사람이 아무도 없다."""
-        raw = tempfile.TemporaryDirectory()
-        with raw:
-            root, marks = _borrowed_fixture(raw)
-            _declare_landing(self._borrower(root), marks["L"], "borrower declares alone")
-            errors = check_analysis.check("ordinary", root)
-            self.assertTrue(
-                errors,
-                "빌려주는 쪽이 선언하지 않은 착지를 빌리는 쪽이 혼자 선언해 통과했다",
-            )
-            self.assertTrue(
-                any("must share the exact landing point" in error for error in errors),
-                f"거절 사유가 창의 끝을 공유하지 않았다여야 한다: {errors}",
-            )
-
-    def test_a_borrower_cannot_pick_an_earlier_landing_than_the_lender(self) -> None:
-        """빌린 번들이 고정하는 구간이 둘이면 저자가 좁은 쪽을 고를 수 있다.
-
-        먼저 **양성 대조**로 L2 가 실제로 요구를 늘리는지 잰다. 안 늘면 아래 단언은
-        아무것도 재지 못한다 — 숫자를 상수로 두면 변이가 살아남는다."""
+        먼저 양성 대조로 L 에서 좁힌 창이 그 작업을 **뺀다**는 것을 잰다 — 안 빼면 아래 단언이
+        아무것도 재지 못한다."""
         raw = tempfile.TemporaryDirectory()
         with raw:
             root, marks = _borrowed_fixture(raw, later_work=True)
             borrower, lender = self._borrower(root), self._lender(root)
-            # 양성 대조는 **창 자체**에 대고 잰다. `check` 로 재던 옛 판본은 양쪽에 L2 를
-            # 선언해야 했는데, 7.3 의 등식이 그 선언 자체를 거절한다(계산값은 L 이다) —
-            # 그러면 대조가 재는 것이 창의 넓이가 아니라 새 등식이 된다. 층을 내려서 같은
-            # 사실을 잰다([[a-new-guard-unpins-the-guards-behind-it]]).
             base = (borrower / "base-commit.txt").read_text(encoding="utf-8").strip()
-            wide = check_analysis.changed_existing_functions(root, base, marks["L2"])
-            self.assertIn(
-                ("internal/other.go", "Other"), wide,
-                "양성 대조: L2 창에는 빌린 증거가 안 덮는 작업이 있어야 한다",
-            )
-            narrow = check_analysis.changed_existing_functions(root, base, marks["L"])
             self.assertNotIn(
-                ("internal/other.go", "Other"), narrow,
-                "양성 대조: 좁힌 창은 그 작업을 빼야 한다 — 안 빼면 아래가 재는 것이 없다",
+                ("internal/other.go", "Other"),
+                check_analysis.changed_existing_functions(root, base, marks["L"]),
+                "양성 대조: L 에서 좁힌 창은 L2 의 작업을 빼야 한다",
             )
-
-            (lender / "landed-commit.txt").write_text(marks["L2"] + "\n")
-            _declare_landing(borrower, marks["L"], "borrower narrows the window to L")
-            errors = check_analysis.check("ordinary", root)
+            (lender / "landed-commit.txt").write_text(marks["L"] + "\n")
+            _commit_all(root, "the lender records its own computed landing")
+            facts: dict[str, object] = {}
+            errors = check_analysis.check("ordinary", root, facts)
+            self.assertEqual(facts.get("landing"), "", f"빌리는 쪽이 빌려주는 쪽의 착지로 좁혀졌다: {errors}")
             self.assertTrue(
-                any("must share the exact landing point" in error for error in errors),
-                f"빌리는 쪽이 창을 저 혼자 좁혀 남의 작업을 뺐다: {errors}",
-            )
-            self.assertFalse(
                 any("internal/other.go:Other" in error for error in errors),
-                "이 시험은 좁힌 창이 실제로 그 작업을 뺀다는 것을 전제한다 — "
-                f"안 빠졌다면 픽스처가 재는 것이 없다: {errors}",
+                f"빌리는 쪽의 뒤 작업이 요구에서 빠졌다: {errors}",
             )
+            self.assertFalse(any("landing point" in error for error in errors), errors)
 
-    def test_a_lender_only_declaration_is_not_inherited(self) -> None:
-        """빌려주는 쪽만 선언한 것도 창이 안 맞는 것이다. 규칙은 한 가지 모양이다."""
+    def test_a_borrower_that_copies_the_lender_is_refused(self) -> None:
+        """1.8 이 **받던** 모양 — 양쪽이 같은 값을 기록한다. 이제 빌리는 쪽의 기록은 이름으로 거절한다."""
         raw = tempfile.TemporaryDirectory()
         with raw:
-            root, marks = _borrowed_fixture(raw)
+            root, marks = _borrowed_fixture(raw, later_work=True)
             (self._lender(root) / "landed-commit.txt").write_text(marks["L"] + "\n")
-            _commit_all(root, "lender declares alone")
-            errors = check_analysis.check("ordinary", root)
-            self.assertTrue(
-                any("must share the exact landing point" in error for error in errors),
-                f"한쪽만 선언한 창을 통과시켰다: {errors}",
-            )
-
-    def test_a_shared_landing_is_accepted(self) -> None:
-        """거부하면 안 되는 정상 입력 (1): 양쪽이 같은 값을 선언한 모양."""
-        raw = tempfile.TemporaryDirectory()
-        with raw:
-            root, marks = _borrowed_fixture(raw)
-            (self._lender(root) / "landed-commit.txt").write_text(marks["L"] + "\n")
-            _declare_landing(self._borrower(root), marks["L"], "both declare the landing")
+            _declare_landing(self._borrower(root), marks["L"], "the borrower copies the lender")
             self.assertEqual(
-                check_analysis.check("ordinary", root), [],
-                "공유된 착지를 거절했다 — 규칙이 여는 바로 그 모양이다",
+                check_analysis.check("ordinary", root), [check_analysis.BORROWED_REFUSES_A_LANDING]
+            )
+            self.assertIn("a borrowed window is never narrowed", check_analysis.BORROWED_REFUSES_A_LANDING)
+
+    def test_a_borrower_record_alone_is_refused(self) -> None:
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _borrowed_fixture(raw)
+            _declare_landing(self._borrower(root), marks["L"], "the borrower records alone")
+            self.assertEqual(
+                check_analysis.check("ordinary", root), [check_analysis.BORROWED_REFUSES_A_LANDING]
+            )
+
+    def test_an_undecodable_borrower_record_is_refused_not_raised(self) -> None:
+        """"기록이 있는가"만 묻는다 — 해독하는 함수를 부르면 못 읽는 기록 앞에서 질문이 터진다
+        (6.2.1 이 이관 경로에서 실측한 모양). 못 읽는 기록도 기록이다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _borrowed_fixture(raw)
+            (self._borrower(root) / "landed-commit.txt").write_bytes(b"\xff\xfe\n")
+            _commit_all(root, "an undecodable borrower record")
+            self.assertEqual(
+                check_analysis.check("ordinary", root), [check_analysis.BORROWED_REFUSES_A_LANDING]
             )
 
     def test_neither_side_declaring_stays_accepted(self) -> None:
-        """거부하면 안 되는 정상 입력 (2): 양쪽 다 선언이 없는 모양.
-
-        a073·a072 의 **오늘 모양**이 이것이다. 이 규칙은 그 상태에 오류를 하나도
-        더하지 않는다 — 저장소 실물 영향이 0 인 근거가 이 시험이다."""
+        """거부하면 안 되는 정상 입력: 양쪽 다 기록이 없는 모양. a073 · a072 의 오늘 모양이다."""
         raw = tempfile.TemporaryDirectory()
         with raw:
             root, _ = _borrowed_fixture(raw)
             self.assertEqual(
                 check_analysis.check("ordinary", root), [],
-                "선언이 없는 빌림에 새 오류를 더했다",
+                "기록이 없는 빌림에 새 오류를 더했다",
             )
 
 

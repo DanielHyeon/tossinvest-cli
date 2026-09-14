@@ -191,3 +191,20 @@ CAUGHT — `test_an_undecodable_landing_record_in_the_adoption_path_is_refused_n
 확인했다(줄 번호만 위 함수들의 추가로 밀렸다). 이 함수가 부르는 `_target_text` 의 반환 문장이 바뀌었으므로
 `missing Function Logic Map … between base X and <대상>` 오류의 **문자열**은 달라진다 — 그쪽 절에 적었다.
 
+## 편집 — task 7.2.3 (빌리는 change 는 창을 좁히지 않는다) · 분기 43 → 41 · 반환 14 → 13 · raise 0 → 0
+
+편집 전 `ast.before-7.2.3.json`(HEAD `67d06bc9` blob, L1043-1169) · 편집 후 `ast.after-7.2.3.json`(워킹트리, L1050-1174). 표는 두 열거의 `source` 를 스크립트가 대조한 것이다.
+
+빌린 증거 갈래에서 1.8 의 공유 판정(`_declared_landing(빌리는 쪽) == _declared_landing(빌려주는 쪽)` → 다르면 `must share the exact landing point`, 해독 실패는 `cannot derive …`)을 걷고, **빌리는 쪽에 기록이 있는가**만 묻는다: `_landing_record(change_dir, root) is not None` 이면 `[BORROWED_REFUSES_A_LANDING]`. 사람이 2026-09-14 에 고른 규칙(리뷰 C4)이다 — 빌려주는 쪽의 착지는 빌려주는 쪽 증거의 가장 낮은 값이라 빌리는 쪽이 복사하면 그 뒤의 빌리는 쪽 작업이 창 밖이었다. 빌려주는 쪽의 기록은 이제 이 창에 안 쓰인다: 뒤의 `resolve_landing(change_dir, …)` 는 빌리는 쪽 디렉터리를 읽으므로 기록이 없으면 빈 값(워킹트리)이다 — 그 배관을 빌려주는 쪽으로 바꾸는 변이 C-E 를 `test_a_lender_record_does_not_narrow_the_borrower` 가 잡는다. 해독하지 않고 있는가만 묻는 이유는 6.2.1 과 같다(C-B 가 못 읽는 기록 앞에서 traceback 이 되는 것을 시험이 잡는다). base 공유 판정은 그대로다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 분기 | `try:` |
+| 사라짐 | 분기 | `except ValueError as exc:` |
+| 사라짐 | 분기 | `if not shared:` |
+| 생김 | 분기 | `if _landing_record(change_dir, root) is not None:` |
+| 사라짐 | 반환 | `[f'cannot derive modified Go functions: {exc}']` |
+| 사라짐 | 반환 | `['function-logic reference must share the exact landing point']` |
+| 생김 | 반환 | `[BORROWED_REFUSES_A_LANDING]` |
+
+호출 — 사라짐 ['_declared_landing'] · 생김 없음

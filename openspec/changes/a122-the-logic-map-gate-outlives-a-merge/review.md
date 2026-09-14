@@ -2665,3 +2665,79 @@ K-B · K-G 는 "하나 이상"을 재는 픽스처가 없어서 살았다 — �
 - **a074 · a077 · a079 · a091 · a092 · a094 의 5단계** — 이제 착지로 풀 수 없다. 도구에 면제 경로는 없고, a075 · a076 이 2026-09-08 에 쓴 사람의 면제 기록이 선례다.
 - C4(7.2.3) · H7(7.2.4) — 다음 task.
 - 7.5(성능) · 7.9(문서) · 6.1.2.6(자동 기록 여부) — 이제 착수할 수 있다.
+
+## Pre-Edit Gate — task 7.2.3 (빌리는 change 는 창을 좁히지 않는다) (2026-09-14)
+
+**High-risk 아님** — 게이트 도구의 수락 규칙. 게이트가 받는 것을 줄이는 편집이라 거부할 정상 입력을 먼저 쟀다.
+
+### 거부할 정상 입력
+
+`function-logic-reference.txt` 전수: **1건** — a073(아카이브) → a072(아카이브). 둘 다 `landed-commit.txt` 가 없다. 새 규칙이 거절하는 것은
+빌리는 쪽의 **기록**뿐이므로 오늘 저장소의 판정 변화는 0 으로 예측했다(아래 A/B 로 확인). 잃는 것은 1.8 이 a073 에 열어 둔 수리 경로
+(양쪽이 같은 착지를 기록해 오류 336 → 0)이고 쓰인 적이 없다.
+
+### 편집 전 열거 (HEAD `67d06bc9` blob → `ast.before-7.2.3.json`)
+
+`check` 의 빌림 갈래: base 공유 판정 → **착지 공유 판정**(`_declared_landing` 두 번 비교, 해독 실패는 `cannot derive …`) → 빌린 analysis 로 교체.
+`_recording_refusal` 의 빌림 갈래: "copy the landing recorded on the change that owns the bundles" — 리뷰 C4 의 구멍을 권하는 문장.
+
+### 설계 결정
+
+1. **빌리는 쪽 기록이 있는가만 묻는다**(`_landing_record`) — 해독하면 못 읽는 기록 앞에서 질문이 터진다(6.2.1).
+2. **빌려주는 쪽 기록은 이 창에 안 쓴다** — 뒤의 `resolve_landing(change_dir, …)` 가 빌리는 쪽 디렉터리를 읽으므로 코드를 더하지 않아도 된다.
+   그 배관이 곧 규칙이라 변이(C-E)로 못 박는다.
+3. **문장 한 벌** — `BORROWED_REFUSES_A_LANDING` 을 5단계와 기록 명령이 같이 쓴다(이관 문장이 두 벌에서 갈린 선례, 리뷰 I5).
+4. base 공유는 그대로.
+
+## VERIFY — task 7.2.3 (2026-09-14)
+
+### RED → GREEN
+
+`ABorrowedWindowIsSharedAtBothEnds`(5) → `ABorrowedWindowIsNeverNarrowed`(5)로 바꾸고, `ADeclaredLandingMustBePinnedByEvidence` 의 빌림 시험 둘을
+하나(`test_borrowed_evidence_no_longer_pins_a_landing`)로 줄였다 — "빌린 번들이 기술하지 않는 착지는 거절한다"는 이제 빌림 거절이 먼저 막아서
+재는 것이 없다. 편집 전: C4 시험 **FAIL**(공유 판정 문장), 새 문장 상수를 쓰는 다섯 **ERROR**. 편집 뒤 스위트 148 → **147** 전부 초록.
+
+### 편집 전후 열거
+
+바뀐 함수 `check` · `_recording_refusal` 둘(모든 함수 AST 대조). `check`: `try` · `except ValueError` · `if not shared` 가 사라지고
+`if _landing_record(change_dir, root) is not None` 하나, 호출 `_declared_landing` 사라짐. 표는 각 FLM 의 `## 편집 — task 7.2.3`.
+
+### 뮤테이션 (`723_mut.py`, 사본 `723_work`, 대조군 GREEN) — 첫 판에 전부 CAUGHT
+
+| 변이 | 결과 | 잡은 시험 |
+|---|---|---|
+| C-A 빌리는 쪽 기록 거절 삭제 | CAUGHT | 넷 |
+| C-B 있는가 대신 해독(`_declared_landing`) | CAUGHT | `test_an_undecodable_borrower_record_is_refused_not_raised`(traceback) |
+| C-C 빌려주는 쪽 기록을 봄 | CAUGHT | 셋 |
+| C-D 기록 명령 문장 되돌림 | CAUGHT | `test_it_refuses_a_change_that_borrows_its_evidence` |
+| **C-E 빌려주는 쪽 착지를 물려받음 (C4 구멍 자체)** | CAUGHT | `test_a_lender_record_does_not_narrow_the_borrower` |
+| R5' 기록 명령의 빌림 거절 삭제(7.7 R5 의 옮긴 자리) | CAUGHT | 둘 |
+
+옛 하네스를 새 코드에 다시 걸었다(전부 사본 `723_work`): 7.6 CAUGHT 15 · R14 SKIP(옮긴 자리 R14' **CAUGHT**) · 7.8 CAUGHT 8 · SKIP 4(이전과 같다) ·
+6.5 N1~N4 **CAUGHT** · 7.2.2 K-A~K-G **CAUGHT** · 옮긴 자리 R20' **CAUGHT**. 7.7 하네스는 **R10 에서 멈췄다** — 순서 변이가 옛 빌림 문장을
+치환 기준으로 삼아 단언이 깨졌다(쓰기 전이라 사본은 그대로, sha `5e4676c93884`). 그래서 R11~R22 는 필터로 따로 돌렸고(**R20 만 SKIP**, 나머지
+CAUGHT), R5(빌림 거절 삭제)는 SKIP → 옮긴 자리 R5' **CAUGHT**, R10 은 새 문장 자리에 R10'(dirty 를 빌림 앞으로)을 걸어 **CAUGHT**.
+새 규칙 뒤에 가려져 살아남게 된 옛 변이는 0 이다.
+
+### 게이트 (2026-09-14)
+
+| 게이트 | 결과 |
+|---|---|
+| `test_check_analysis` | 148 → **147** (skip 1) — 빌림 시험 둘을 하나로 줄였다 |
+| `make sdd-test` | rc=0 — logic-map **222**(skip 1) · scripts 15 · sdd 71 · sdd-history 22 · pm 16 · deploy 18 |
+| `make lint` · `make test-seams` | rc=0 · rc=0 |
+| `openspec validate --all --strict` | 58/58 (spec: 공유 요구를 "좁히지 않는다"로, 시나리오 둘 교체, 3.2.3.1 의 빌린 고정 문장 제거) |
+
+### 안 한 것
+
+- review.md `## Pre-Edit Gate — task 1.8` 은 결정 당시 기록으로 두었다 — tasks.md 1.8 에 뒤집혔다는 표시를 달았다.
+- 5.5(빌리는 쪽 자기 작업이 고정되지 않는다)는 이 규칙으로 닫혀 체크했다.
+
+### 실물 A/B (`723_ab.py`) — HEAD `67d06bc9` 대 워킹트리
+
+| | 결과 |
+|---|---|
+| a073(빌리는 쪽) 판정 | 오류 336 → 336 · 착지 없음 · required 388 → 388 · **IDENTICAL** |
+| a072(빌려주는 쪽) 판정 | 오류 336 → 336 · required 388 → 388 · **IDENTICAL** |
+| a073 기록 명령 사유 | "copy the landing recorded on …" → `BORROWED_REFUSES_A_LANDING` |
+
