@@ -2220,10 +2220,15 @@ class TheGateRecordsTheLandingInsteadOfTheAuthor(unittest.TestCase):
         raw, root, marks = self._fixture(base_also_matches=True)
         with raw:
             code, lines = check_analysis.record_landing("mine", root)
-            self.assertEqual(code, 0, lines)
-            recorded = (root / "openspec" / "changes" / "mine" / "landed-commit.txt").read_text().strip()
-            self.assertNotEqual(recorded, marks["P"], "base 를 기록하면 위조와 같은 값이다")
-            self.assertEqual(recorded, marks["E"])
+            # task 7.2.2 부터는 E 도 기록하지 않는다 — 고정 소스가 base 와 같은 착지는 증거가
+            # 작업이 어디 착지했는지 말하지 못한다(사람이 2026-09-14 에 고른 규칙, K2).
+            self.assertEqual(code, 1, lines)
+            self.assertFalse((root / "openspec" / "changes" / "mine" / "landed-commit.txt").exists())
+            self.assertIn(
+                f"landing point {marks['E'][:12]} changes none of the sources its evidence pins "
+                f"since the comparison base {marks['P'][:12]}",
+                lines[0],
+            )
 
     def test_it_refuses_to_overwrite_an_existing_record(self) -> None:
         raw, root, marks = self._fixture(base_also_matches=False)
@@ -2325,7 +2330,7 @@ class TheGateRecordsTheLandingInsteadOfTheAuthor(unittest.TestCase):
             code, lines = check_analysis.record_landing("mine", root)
             self.assertEqual(code, 1, lines)
             self.assertEqual(len(lines), 1, lines)
-            self.assertIn("matches every pinning bundle", lines[0])
+            self.assertIn("is accepted as the landing", lines[0])
             self.assertTrue(
                 lines[0].endswith("is not the revision this evidence describes: internal/own.go"),
                 lines,
@@ -2486,7 +2491,7 @@ class EvidenceAlreadyWrongInTheCommitThatHoldsItIsNamed(unittest.TestCase):
             entered = marks["E"][:12]
             self.assertEqual(lines, [
                 f"mine: no landing recorded — no commit at or after the evidence ({entered}) "
-                "matches every pinning bundle — at the first commit walked, landing point "
+                "is accepted as the landing — at the first commit walked, landing point "
                 f"{entered} is not the revision this evidence describes: internal/own.go"
             ])
             self.assertFalse((root / "openspec" / "changes" / "mine" / "landed-commit.txt").exists())
@@ -2512,6 +2517,161 @@ class EvidenceAlreadyWrongInTheCommitThatHoldsItIsNamed(unittest.TestCase):
                 ),
                 errors,
             )
+
+
+class ALandingMustChangeWhatItsEvidencePins(unittest.TestCase):
+    """착지는 고정 번들의 소스 중 **하나 이상**을 base 와 다르게 가진 커밋이어야 한다 (task 7.2.2).
+
+    사람이 2026-09-14 에 고른 규칙이다(리뷰 C1 · C2). 증거가 base 의 소스를 적은 채로 남으면
+    그 증거가 맞는 커밋은 전부 그 소스가 아직 base 와 같은 자리이고, 거기서 좁힌 창은 그
+    change 의 작업을 **하나도** 담지 못한다. 그런 착지는 두 모양에서 나온다:
+
+    - **V1** — 저장소 규칙대로 FLM 을 먼저 커밋하고 Go 를 고친 뒤 번들을 안 갱신한다.
+    - **V2** — Go 작업 뒤, 작업 이전에서 갈라진 곁가지에 base 상태 증거를 두고 병합한다.
+
+    그리고 **정상**인 셋째 모양이 증거 내용으로는 둘과 같다 — 재기준화가 base 를 작업 **뒤로**
+    옮긴 change(a074 · a077 · a079 …). 셋을 가를 정보가 저장소에 없어서, 사람이 셋째를 대가로
+    치르고 앞의 둘을 막았다. 셋째는 이제 착지를 얻지 못하고 넓은 창으로 돌아간다.
+    """
+
+    OLD = "package internal\nfunc Own() int { return 1 }\n"
+    NEW = "package internal\nfunc Own() int { return 2 }\n"
+
+    def _base(self, *, read_only_file: bool = False) -> tuple[tempfile.TemporaryDirectory, Path, Path, Path, str]:
+        raw = tempfile.TemporaryDirectory()
+        root = _init_fixture(raw)
+        own = root / "internal" / "own.go"
+        own.parent.mkdir(parents=True)
+        own.write_text(self.OLD)
+        if read_only_file:
+            (root / "internal" / "other.go").write_text("package internal\nfunc Other() int { return 1 }\n")
+        base = _commit_all(root, "P: base")
+        change = root / "openspec" / "changes" / "mine"
+        change.mkdir(parents=True)
+        (change / "base-commit.txt").write_text(base + "\n")
+        (change / "review.md").write_text("mine\n")
+        return raw, root, own, change, base
+
+    def _flm_first(self) -> tuple[tempfile.TemporaryDirectory, Path, dict[str, str]]:
+        """V1: P(base) → X(FLM 먼저 — 편집 전 소스를 적은 증거) → W(편집, 번들 안 갱신)."""
+        raw, root, own, change, base = self._base()
+        _write_evidence(
+            change, package="internal", function="Own", relative="internal/own.go",
+            digest=hashlib.sha256(own.read_bytes()).hexdigest(),
+        )
+        marks = {"P": base, "X": _commit_all(root, "X: FLM first, as the repository asks")}
+        own.write_text(self.NEW)
+        marks["W"] = _commit_all(root, "W: the edit, bundle not refreshed")
+        return raw, root, marks
+
+    def _refusal(self, candidate: str, base: str) -> str:
+        return (
+            f"landing point {candidate[:12]} changes none of the sources its evidence pins "
+            f"since the comparison base {base[:12]}: internal/own.go"
+        )
+
+    def test_the_recorder_refuses_evidence_written_before_the_edit(self) -> None:
+        """V1 — 리뷰가 손으로 재현한 모양 그대로. 7.2.2 전에는 rc 0 으로 X 를 기록했고 5단계가
+        `required 0` 으로 초록이었다(`internal/own.go` 가 바뀌었는데)."""
+        raw, root, marks = self._flm_first()
+        with raw:
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertFalse((root / "openspec" / "changes" / "mine" / "landed-commit.txt").exists())
+            self.assertEqual(len(lines), 1, lines)
+            self.assertIn(self._refusal(marks["X"], marks["P"]), lines[0])
+            # X 는 증거와 **맞는다**. 계산 실패의 머리가 "맞는 커밋이 없다"고 말하면 거짓이다.
+            self.assertNotIn("matches every pinning bundle", lines[0])
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(
+                any("AST source hash is stale: internal/own.go" in error for error in errors), errors
+            )
+
+    def test_a_declared_landing_that_changes_none_of_its_pinned_sources_is_refused(self) -> None:
+        """선언 경로도 같은 규칙에 묻는다 — 도구가 안 쓰는 값을 손으로 적어도 막힌다."""
+        raw, root, marks = self._flm_first()
+        with raw:
+            (root / "openspec" / "changes" / "mine" / "landed-commit.txt").write_text(marks["X"] + "\n")
+            _commit_all(root, "declare the commit before the edit")
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(
+                any(self._refusal(marks["X"], marks["P"]) in error for error in errors), errors
+            )
+
+    def test_the_recorder_refuses_side_branch_evidence_merged_after_the_work(self) -> None:
+        """V2 — 곁가지 S1 은 작업 W 의 자손이 아니라서 `own.go` 가 base 와 같다. 7.2.2 전에는
+        S1 을 기록했고 5단계가 `required 0` 이었다."""
+        raw, root, own, change, base = self._base()
+        with raw:
+            c0 = _commit_all(root, "C0: the change directory, no evidence yet")
+            at_base = hashlib.sha256(own.read_bytes()).hexdigest()
+            own.write_text(self.NEW)
+            _commit_all(root, "W: the Go work lands first")
+            home = subprocess.check_output(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root, text=True
+            ).strip()
+            subprocess.run(["git", "checkout", "-q", "-b", "side", c0], cwd=root, check=True)
+            _write_evidence(
+                change, package="internal", function="Own", relative="internal/own.go", digest=at_base,
+            )
+            s1 = _commit_all(root, "S1: base-state evidence on a side branch")
+            subprocess.run(["git", "checkout", "-q", home], cwd=root, check=True)
+            subprocess.run(["git", "merge", "-q", "--no-edit", "side"], cwd=root, check=True)
+            analysis = change / "analysis" / "function-logic"
+            self.assertEqual(check_analysis._evidence_floor(root, analysis), s1, "픽스처가 곁가지에 닿아야 한다")
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertIn(self._refusal(s1, base), lines[0])
+
+    def test_one_changed_pinned_source_is_enough(self) -> None:
+        """규칙은 **하나 이상**이다 — 전부가 아니다. 번들 둘 중 하나는 이 change 가 안 고친 파일
+        (근거로 삼은 함수)을 기술해도 착지는 받는다.
+
+        2026-09-12 실측으로 "전부 바뀌어야 한다"(K2-all)는 착지를 얻는 76건 중 25건을 잃는다 —
+        사람이 고른 규칙이 아니다. 변이 K-B(`all` → `any`)와 K-G(첫 번들만 본다)가 이 시험 없이
+        살아남았다. 정렬 순서로 `internal/other.go` 가 먼저 오게 두어 K-G 가 닿는다."""
+        raw, root, own, change, base = self._base(read_only_file=True)
+        with raw:
+            other = root / "internal" / "other.go"
+            own.write_text(self.NEW)
+            for function, source in (("Own", own), ("Other", other)):
+                _write_evidence(
+                    change, package="internal", function=function, relative=f"internal/{source.name}",
+                    digest=hashlib.sha256(source.read_bytes()).hexdigest(),
+                )
+            landing = _commit_all(root, "W: own.go changes, other.go does not")
+            # 닿는지 먼저 — `other.go` 가 base 에 **있고** 착지에서 같아야 이 시험이 "안 바뀐 고정
+            # 소스"를 잰다. 첫 판은 그 파일을 base 뒤에 만들어서 base 에 없었고(= 바뀐 것으로 셈),
+            # K-B · K-G 가 이 시험을 두고도 살아남았다([[mutation-must-reach-the-thing-under-test]]).
+            self.assertIsNotNone(check_analysis._committed_bytes(root, base, "internal/other.go"))
+            self.assertEqual(
+                check_analysis._committed_bytes(root, base, "internal/other.go"),
+                check_analysis._committed_bytes(root, landing, "internal/other.go"),
+            )
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 0, lines)
+            self.assertEqual(
+                (change / "landed-commit.txt").read_text().strip(), landing
+            )
+
+    def test_a_change_whose_work_precedes_its_base_gets_no_landing(self) -> None:
+        """사람이 치른 대가를 못 박는다. 재기준화가 base 를 작업 뒤로 옮긴 change 는 증거가 base 를
+        정확히 적는다 — V1 과 같은 모양이라 착지를 얻지 못한다. 규칙이 누그러지면 여기가 빨개진다."""
+        raw, root, own, change, base = self._base()
+        with raw:
+            _write_evidence(
+                change, package="internal", function="Own", relative="internal/own.go",
+                digest=hashlib.sha256(own.read_bytes()).hexdigest(),
+            )
+            (root / "docs.md").write_text("post-deployment measurement\n")
+            landing = _commit_all(root, "L: docs only — the work landed before the base")
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertIn(self._refusal(landing, base), lines[0])
+            (change / "landed-commit.txt").write_text(landing + "\n")
+            _commit_all(root, "declare it by hand")
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(any(self._refusal(landing, base) in error for error in errors), errors)
 
 
 def _own_work_fixture(raw: tempfile.TemporaryDirectory) -> tuple[Path, dict[str, str]]:
@@ -3696,9 +3856,12 @@ class AFailingStepFiveSaysWhichWindowRequiredThem(unittest.TestCase):
             advice = self._advice_line(_cli(root)[1])
             code, recorded = _cli(root, "--record-landing")
             self.assertEqual(code, 1, recorded)
-            self.assertIn("matches every pinning bundle", recorded)  # 걷고 나서야 나오는 문장
+            self.assertIn("is accepted as the landing", recorded)  # 걷고 나서야 나오는 문장
             self.assertIn("--record-landing` to let the gate compute", advice)
             self.assertIn("says so instead of recording", advice, advice)
+            # 조언이 말하는 조건도 명령과 같아야 한다 (task 7.2.2). 증거와 **맞는데** 규칙이 거절하는
+            # 후보가 생겼으므로 "맞는 커밋이 없으면"은 명령이 거절하는 경우를 다 덮지 못한다.
+            self.assertIn("if no commit on this history is accepted as the landing", advice, advice)
 
     def test_a_fault_while_asking_the_recorder_does_not_become_advice(self) -> None:
         """조언을 위해 부른 git 이 멎어도 **판정**은 그대로 찍히고 명령을 권하지 않는다.
@@ -3797,20 +3960,24 @@ class AnEmptyRequiredSetIsAnnouncedNotSwallowed(unittest.TestCase):
             root = _init_fixture(raw)
             own = root / "internal" / "own.go"
             own.parent.mkdir(parents=True)
-            # 작업이 base **앞**에 있다 — 2026-08-04 재기준화가 a074~a079 를 그 모양으로
-            # 만들었다. base..착지 의 Go diff 가 비고, 증거는 그 리비전을 기술한다.
-            own.write_text("package internal\nfunc Own() int { return 2 }\n")
-            base = _commit_all(root, "P: base already contains the work")
+            own.write_text("package internal\n\nfunc Own() int { return 2 }\n\n// owner: nobody yet\n")
+            base = _commit_all(root, "P: base")
             change = root / "openspec" / "changes" / "mine"
             change.mkdir(parents=True)
             (change / "base-commit.txt").write_text(base + "\n")
             (change / "review.md").write_text("mine\n")
+            # 요구 집합은 diff 조각에 닿은 **기존** 함수만 센다. 함수에서 떨어진 주석 한 줄만 바꾸면
+            # 고정 소스는 바뀌고(착지가 유효하다, task 7.2.2) 요구는 0 이다. 예전 픽스처는 작업이
+            # base **앞**에 있는 a074 모양이었는데, 그 모양은 이제 착지를 얻지 못한다 —
+            # `ALandingMustChangeWhatItsEvidencePins` 가 그것을 잰다. (함수를 파일 끝에 붙이면
+            # `--unified=0` 조각의 경계가 `Own` 에 닿아 요구가 1 이 된다 — 첫 판에서 실측.)
+            own.write_text("package internal\n\nfunc Own() int { return 2 }\n\n// owner: the operator team\n")
             _write_evidence(
                 change, package="internal", function="Own", relative="internal/own.go",
                 digest=hashlib.sha256(own.read_bytes()).hexdigest(),
             )
             (root / "docs.md").write_text("post-deployment measurement\n")
-            landing = _commit_all(root, "L: docs only, no Go change")
+            landing = _commit_all(root, "L: a comment away from any function, no existing function changes")
             (change / "landed-commit.txt").write_text(landing + "\n")
             _commit_all(root, "record the landing point")
 

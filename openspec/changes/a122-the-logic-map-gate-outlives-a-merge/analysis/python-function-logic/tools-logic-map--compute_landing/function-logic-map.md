@@ -106,3 +106,16 @@ a089·a095 가 마지막 사유로 거부된다 — 그 둘의 증거가 자기�
 | 생김 | 반환 | `('', f'no commit at or after the evidence ({floor[:12]}) matches every pinning bundle — at the first commit walked, {first}')` |
 
 호출 — 사라짐 없음 · 생김 없음
+
+## 편집 — task 7.2.2 (착지는 고정 소스를 바꾼 커밋이어야 한다) · 분기 8 → 8 · 반환 5 → 5 · raise 0 → 0
+
+편집 전 `ast.before-7.2.2.json`(HEAD `9692b8d1` blob, L1162-1207) · 편집 후 `ast.after-7.2.2.json`(워킹트리, L1187-1234). 표는 두 열거의 `source` 를 스크립트가 대조한 것이다.
+
+계산 실패 반환의 머리를 `matches every pinning bundle` → `is accepted as the landing` 으로. K2 는 증거와 **맞는데** 규칙이 거절하는 후보를 만든다(V1 의 X). 옛 머리는 그 경우에 거짓이다 — 6.5 가 꼬리에서 고친 것과 같은 결함이 머리에 새로 생긴 것이다. 분기·호출 변화 0.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 반환 | `('', f'no commit at or after the evidence ({floor[:12]}) matches every pinning bundle — at the first commit walked, {first}')` |
+| 생김 | 반환 | `('', f'no commit at or after the evidence ({floor[:12]}) is accepted as the landing — at the first commit walked, {first}')` |
+
+호출 — 사라짐 없음 · 생김 없음

@@ -1,0 +1,190 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "9692b8d1b6c77a0a3eb58613530520794d0e7db4",
+  "source_sha256": "57f486dffb57bfdc760e858005a72d92fedd91c1f1a5650935a6ad6fc2a5e4f3",
+  "function": "_landing_refusal",
+  "signature": "_landing_refusal(root, base, candidate, analysis, floor)",
+  "start": {
+    "line": 584,
+    "column": 1
+  },
+  "end": {
+    "line": 677,
+    "column": 18
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 609,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, base, candidate):"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 612,
+      "inherited_line": false,
+      "source": "if not pinning:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 621,
+      "inherited_line": false,
+      "source": "if mismatched:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 632,
+      "inherited_line": false,
+      "source": "if not floor:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 637,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, floor, candidate):"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 647,
+      "inherited_line": false,
+      "source": "if unheld:"
+    },
+    {
+      "id": "B7",
+      "kind": "comprehension",
+      "line": 666,
+      "inherited_line": true,
+      "source": " for _, source, _ in _pinning_bundles(root, analysis)"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 667,
+      "inherited_line": false,
+      "source": "if all((_committed_bytes(root, base, source) == _committed_bytes(root, candidate, source) for source in sources)):"
+    },
+    {
+      "id": "B9",
+      "kind": "comprehension",
+      "line": 667,
+      "inherited_line": true,
+      "source": " for source in sources"
+    },
+    {
+      "id": "B10",
+      "kind": "IfExp",
+      "line": 671,
+      "inherited_line": false,
+      "source": "f', and {len(sources) - 3} more' if len(sources) > 3 else ''"
+    }
+  ],
+  "returns": [
+    {
+      "line": 610,
+      "value": "(f'landing point precedes the comparison base {base[:12]}: {candidate}', [])"
+    },
+    {
+      "line": 617,
+      "value": "(f'landing point {candidate[:12]} is pinned by no `revision: current` evidence: a declared landing must be the revision some bundle describes', [])"
+    },
+    {
+      "line": 622,
+      "value": "(f'landing point {candidate[:12]} is not the revision this evidence describes: ' + ', '.join(sorted(set(mismatched))), [])"
+    },
+    {
+      "line": 633,
+      "value": "(f'landing point {candidate[:12]} is pinned by evidence that never entered this history: commit the `revision: current` bundles that pin it', [])"
+    },
+    {
+      "line": 638,
+      "value": "(f\"landing point {candidate[:12]} precedes the evidence that pins it ({floor[:12]}): a declared landing cannot be older than the commit that put this change's evidence into the history\", [])"
+    },
+    {
+      "line": 648,
+      "value": "(f'landing point {candidate[:12]} does not hold the evidence this verdict read: ' + ', '.join(unheld) + ' — the bundle judged here is not the bundle committed there', unheld)"
+    },
+    {
+      "line": 672,
+      "value": "(f\"landing point {candidate[:12]} changes none of the sources its evidence pins since the comparison base {base[:12]}: {listed} — evidence that still describes the base cannot tell where this change's Go work landed\", [])"
+    },
+    {
+      "line": 677,
+      "value": "('', [])"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 609,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 611,
+      "callee": "_pinning_at"
+    },
+    {
+      "line": 624,
+      "callee": "', '.join"
+    },
+    {
+      "line": 624,
+      "callee": "set"
+    },
+    {
+      "line": 624,
+      "callee": "sorted"
+    },
+    {
+      "line": 637,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 646,
+      "callee": "_unheld_bundles"
+    },
+    {
+      "line": 650,
+      "callee": "', '.join"
+    },
+    {
+      "line": 666,
+      "callee": "_pinning_bundles"
+    },
+    {
+      "line": 666,
+      "callee": "sorted"
+    },
+    {
+      "line": 667,
+      "callee": "all"
+    },
+    {
+      "line": 668,
+      "callee": "_committed_bytes"
+    },
+    {
+      "line": 668,
+      "callee": "_committed_bytes"
+    },
+    {
+      "line": 671,
+      "callee": "', '.join"
+    },
+    {
+      "line": 671,
+      "callee": "len"
+    },
+    {
+      "line": 671,
+      "callee": "len"
+    }
+  ]
+}

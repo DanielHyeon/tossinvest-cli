@@ -602,9 +602,10 @@ def _landing_refusal(
     둘째 값은 판정이 읽은 번들을 그 커밋이 **안 들고 있을 때만** 그 번들 이름이다.
     계산 경로가 "왜 못 찾았나"를 그 이름으로 말한다.
     """
-    # base 는 조상이면 되고 같아도 된다. a074·a079·a075 의 정답이 바로 같은 경우다 —
-    # 2026-08-04 재기준화가 base 를 그 change 들의 작업 뒤로 옮겼다. 느슨해지지 않는
-    # 이유는 아래 증거 판정이 값을 고정하기 때문이다.
+    # base 는 조상이면 된다. 같은 커밋도 이 판정은 통과하지만 맨 뒤의 조건(고정 소스 중
+    # 하나 이상이 base 와 달라야 한다, task 7.2.2)이 반드시 거절한다. 예전 주석은 "같아도
+    # 된다 — a074·a079·a075 의 정답"이라 적었는데, 그 모양은 증거가 base 의 소스를 적은
+    # V1 과 가를 수 없어서 사람이 2026-09-14 에 둘 다 막았다.
     if not _is_ancestor(root, base, candidate):
         return f"landing point precedes the comparison base {base[:12]}: {candidate}", []
     pinning, mismatched = _pinning_at(root, candidate, analysis)
@@ -649,6 +650,30 @@ def _landing_refusal(
             + ", ".join(unheld)
             + " — the bundle judged here is not the bundle committed there"
         ), unheld
+    # 착지는 고정 소스 중 **하나 이상**을 base 와 다르게 가진 커밋이어야 한다 (task 7.2.2,
+    # 리뷰 C1 · C2 — 사람이 2026-09-14 에 고른 규칙). 증거가 base 의 소스를 적은 채로 남으면
+    # 그 증거가 맞는 커밋은 전부 그 소스가 아직 base 와 같은 자리이고, 거기서 좁힌 창은 이
+    # change 의 작업을 하나도 담지 못한다. FLM 을 먼저 커밋하고 번들을 안 갱신한 change(V1)도,
+    # 작업 이전의 곁가지에 증거를 둔 병합(V2)도 그 모양이다.
+    # 재기준화가 base 를 작업 **뒤로** 옮긴 change(a074 · a077 · a079 …)도 증거 내용으로는 같은
+    # 모양이라 같이 거절된다. 가를 정보가 저장소에 없고, 사람이 그 대가를 알고 골랐다
+    # (7.2 실측 8건, 편집 전 재측정은 review.md `## Pre-Edit Gate — task 7.2.2`).
+    # 파일 단위로 본다 — 함수 단위 변화는 파일 단위 변화의 부분집합이라 여기서 받는 착지가
+    # 함수 단위에서 더 많이 받지는 않는다. 고정 번들이 0 이면 위에서 이미 돌아갔으므로 `all` 이
+    # 빈 표본 위에서 참이 되는 자리는 없다.
+    # **맨 뒤**에 선다 — 앞의 가드들은 각자 자기 문장으로 못 박혀 있다
+    # ([[a-new-guard-unpins-the-guards-behind-it]]).
+    sources = sorted({source for _, source, _ in _pinning_bundles(root, analysis)})
+    if all(
+        _committed_bytes(root, base, source) == _committed_bytes(root, candidate, source)
+        for source in sources
+    ):
+        listed = ", ".join(sources[:3]) + (f", and {len(sources) - 3} more" if len(sources) > 3 else "")
+        return (
+            f"landing point {candidate[:12]} changes none of the sources its evidence pins "
+            f"since the comparison base {base[:12]}: {listed} — evidence that still describes "
+            "the base cannot tell where this change's Go work landed"
+        ), []
     return "", []
 
 
@@ -1201,8 +1226,10 @@ def compute_landing(root: Path, base: str, analysis: Path) -> tuple[str, str]:
     # 걸은 것만 말한다 (task 6.5). 옛 꼬리 "the evidence does not describe any revision on
     # this history" 는 순회가 안 걷는 하한 아래까지 주장했고, 2026-09-14 걷기 실패 17건
     # 전수에서 4건(a089 · a095 · 아카이브 둘)은 증거가 하한 아래 커밋을 전부 맞게 기술했다.
+    # 머리도 "맞는 커밋이 없다"가 아니다 (task 7.2.2) — 증거와 맞는데 규칙이 거절한 후보가
+    # 있다(고정 소스가 base 와 같은 착지). 무엇이 거절했는지는 인용한 문장이 말한다.
     return "", (
-        f"no commit at or after the evidence ({floor[:12]}) matches every pinning bundle "
+        f"no commit at or after the evidence ({floor[:12]}) is accepted as the landing "
         f"— at the first commit walked, {first}"
     )
 
@@ -1422,8 +1449,8 @@ def main() -> int:
                         f"`python3 tools/logic-map/check_analysis.py --change {args.change} "
                         f"--record-landing` to let the gate compute `{LANDING_FILE}` from this "
                         f"change's evidence and record it, which narrows it to this change's own "
-                        f"work; if no commit on this history matches that evidence, the command "
-                        f"says so instead of recording"
+                        f"work; if no commit on this history is accepted as the landing, the "
+                        f"command says so instead of recording"
                     )
     if errors:
         for error in errors:

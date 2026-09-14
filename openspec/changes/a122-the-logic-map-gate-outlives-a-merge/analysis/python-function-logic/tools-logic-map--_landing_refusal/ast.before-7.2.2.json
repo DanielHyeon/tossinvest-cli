@@ -1,0 +1,126 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "HEAD",
+  "head_commit": "9692b8d1b6c77a0a3eb58613530520794d0e7db4",
+  "source_sha256": "f3fd18cae5ea00cb545c1a4eb546957c2f7d7a8dc23215c6ca5e7a71f01d52af",
+  "function": "_landing_refusal",
+  "signature": "_landing_refusal(root, base, candidate, analysis, floor)",
+  "start": {
+    "line": 584,
+    "column": 1
+  },
+  "end": {
+    "line": 652,
+    "column": 18
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 608,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, base, candidate):"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 611,
+      "inherited_line": false,
+      "source": "if not pinning:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 620,
+      "inherited_line": false,
+      "source": "if mismatched:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 631,
+      "inherited_line": false,
+      "source": "if not floor:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 636,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, floor, candidate):"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 646,
+      "inherited_line": false,
+      "source": "if unheld:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 609,
+      "value": "(f'landing point precedes the comparison base {base[:12]}: {candidate}', [])"
+    },
+    {
+      "line": 616,
+      "value": "(f'landing point {candidate[:12]} is pinned by no `revision: current` evidence: a declared landing must be the revision some bundle describes', [])"
+    },
+    {
+      "line": 621,
+      "value": "(f'landing point {candidate[:12]} is not the revision this evidence describes: ' + ', '.join(sorted(set(mismatched))), [])"
+    },
+    {
+      "line": 632,
+      "value": "(f'landing point {candidate[:12]} is pinned by evidence that never entered this history: commit the `revision: current` bundles that pin it', [])"
+    },
+    {
+      "line": 637,
+      "value": "(f\"landing point {candidate[:12]} precedes the evidence that pins it ({floor[:12]}): a declared landing cannot be older than the commit that put this change's evidence into the history\", [])"
+    },
+    {
+      "line": 647,
+      "value": "(f'landing point {candidate[:12]} does not hold the evidence this verdict read: ' + ', '.join(unheld) + ' — the bundle judged here is not the bundle committed there', unheld)"
+    },
+    {
+      "line": 652,
+      "value": "('', [])"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 608,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 610,
+      "callee": "_pinning_at"
+    },
+    {
+      "line": 623,
+      "callee": "', '.join"
+    },
+    {
+      "line": 623,
+      "callee": "set"
+    },
+    {
+      "line": 623,
+      "callee": "sorted"
+    },
+    {
+      "line": 636,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 645,
+      "callee": "_unheld_bundles"
+    },
+    {
+      "line": 649,
+      "callee": "', '.join"
+    }
+  ]
+}

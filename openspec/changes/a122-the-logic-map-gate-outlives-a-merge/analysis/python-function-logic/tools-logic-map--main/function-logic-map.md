@@ -176,3 +176,13 @@ Go 파일 변경 0줄.
 | 생김 | 분기 | `if refusal:` |
 
 호출 — 사라짐 없음 · 생김 ['_recording_refusal', 'resolve_referenced_change']
+
+## 편집 — task 7.2.2 (착지는 고정 소스를 바꾼 커밋이어야 한다) · 분기 20 → 20 · 반환 3 → 3 · raise 0 → 0
+
+편집 전 `ast.before-7.2.2.json`(HEAD `9692b8d1` blob, L1337-1438) · 편집 후 `ast.after-7.2.2.json`(워킹트리, L1364-1465). 표는 두 열거의 `source` 를 스크립트가 대조한 것이다.
+
+권유 갈래의 문장 하나: `if no commit on this history matches that evidence` → `if no commit on this history is accepted as the landing`. 조언이 말하는 조건이 명령이 거절하는 조건과 같아야 한다(7.7). 분기·호출 변화 0 — 7.7 의 R20 은 자리가 사라져 SKIP 이고 새 자리에 건 R20' 를 `test_a_refusal_only_the_walk_finds_is_not_promised_away` 가 잡는다.
+
+열거의 분기·반환·raise 가 **같다**.
+
+호출 — 사라짐 없음 · 생김 없음

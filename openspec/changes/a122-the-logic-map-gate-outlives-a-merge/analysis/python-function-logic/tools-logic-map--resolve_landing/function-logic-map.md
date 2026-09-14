@@ -216,3 +216,13 @@ M2·M3 이 1차에서 살아남은 것이 시험 둘을 더 쓴 이유다 —
 | 사라짐 | raise | `raise ValueError(f'landing point {candidate[:12]} is pinned by evidence that never entered this history: commi` |
 | 사라짐 | raise | `raise ValueError(f"landing point {candidate[:12]} precedes the evidence that pins it ({floor[:12]}): a declare` |
 | 사라짐 | raise | `raise ValueError(f'landing point {candidate[:12]} does not hold the evidence this verdict read: ' + ', '.join(` |
+
+## 편집 — task 7.2.2 (착지는 고정 소스를 바꾼 커밋이어야 한다) · 분기 8 → 8 · 반환 2 → 2 · raise 5 → 5
+
+편집 전 `ast.before-7.2.2.json`(HEAD `9692b8d1` blob, L655-719) · 편집 후 `ast.after-7.2.2.json`(워킹트리, L680-744). 표는 두 열거의 `source` 를 스크립트가 대조한 것이다.
+
+**내부 논리 변경 없음** (AST 덤프 동일). 부르는 규칙 `_landing_refusal` 에 조건이 하나 늘어서 선언 경로의 거절이 하나 는다 — `test_a_declared_landing_that_changes_none_of_its_pinned_sources_is_refused` · `test_a_change_whose_work_precedes_its_base_gets_no_landing` 가 그 경로를 잰다.
+
+열거의 분기·반환·raise 가 **같다**.
+
+호출 — 사라짐 없음 · 생김 없음

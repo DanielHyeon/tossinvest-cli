@@ -17,3 +17,13 @@
 **"닿지 않는다(구조)" 둘은 결함이 아니다.** 규칙 안의 그 두 조건은 선언 경로를 위해 있고,
 계산 경로는 같은 조건을 순회 전에 한 번 보고 자기 문장으로 돌아간다. 둘을 규칙에서 지우면
 선언 경로의 시험이 빨개지므로(R2·R4 CAUGHT) 규칙은 여전히 못 박혀 있다.
+
+## task 7.2.2 — 고정 소스를 바꾼 착지 (변이로 채운 행만, `722_mut.py` 양성 대조군 GREEN)
+
+| 갈래 (소스 한 줄) | 덮는 테스트 | 덮이나 |
+|---|---|---|
+| `if all(_committed_bytes(root, base, source) == _committed_bytes(root, candidate, source) for source in sources)` → 거절 | `test_the_recorder_refuses_evidence_written_before_the_edit` · `test_a_declared_landing_that_changes_none_of_its_pinned_sources_is_refused` · `test_the_recorder_refuses_side_branch_evidence_merged_after_the_work` · `test_a_change_whose_work_precedes_its_base_gets_no_landing` · `test_it_does_not_record_the_base_even_when_the_base_matches` | yes — K-A(가드 삭제) 다섯 모두 빨갛다 |
+| 같은 줄의 `all` (하나 이상 바뀌면 받는다) | `test_one_changed_pinned_source_is_enough` | yes — K-B(`any`)는 **이 시험 하나**만 잡는다. 첫 판 픽스처는 읽기 전용 파일을 base 뒤에 만들어 도달하지 못했고 K-B 가 살아남았다 — 도달 단언을 넣은 뒤 잡힌다 |
+| `sources = sorted({source for _, source, _ in _pinning_bundles(root, analysis)})` (전 번들) | `test_one_changed_pinned_source_is_enough` | yes — K-G(`[:1]`) 같은 시험 하나 |
+| 비교 기준 `base` | 25 시험 | yes — K-C(`HEAD`) |
+| 위치: 미보유 뒤 | `test_evidence_written_at_the_base_cannot_declare_the_base` 외 넷 | yes — K-D(하한 앞으로) |
