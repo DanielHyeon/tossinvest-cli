@@ -69,3 +69,14 @@
 | 생김 | 반환 | `(f"landing point {candidate[:12]} changes none of the sources its evidence pins since the comparison base {base[:12]}: {listed} — evidence that still describes the base c` |
 
 호출 — 사라짐 없음 · 생김 ['_committed_bytes', '_pinning_bundles', 'all', 'len']
+
+## 편집 — task 7.2.4 (병합 안에서만 들어온 증거의 한계를 사실대로 말한다) · 분기 10 → 10 (소스 동일) · 반환 8 → 8 · raise 0 → 0
+
+편집 전 `ast.before-7.2.4.json`(HEAD `f9811236` blob) · 편집 후 `ast.after-7.2.4.json`(워킹트리, L591-686).
+
+하한 없음 거절 문장을 같은 한계를 말하게: "… is pinned by evidence that no ordinary commit on this history adds: commit the `revision: current` bundles that pin it in an ordinary (non-merge) commit". 분기 · 반환 수 · 호출 불변(열거 대조). 7.2.2 의 K-D 변이는 이 문장을 옮기기 기준으로 썼으므로 새 문장 자리에 K-D' 로 다시 걸었다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 반환 | `(f'landing point {candidate[:12]} is pinned by evidence that never entered this history: commit the `revision: current` bundles that pin it', [])` |
+| 생김 | 반환 | `(f'landing point {candidate[:12]} is pinned by evidence that no ordinary commit on this history adds: commit the `revision: current` bundles that pin it in an ordinary (n` |

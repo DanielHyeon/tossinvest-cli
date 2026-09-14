@@ -39,3 +39,14 @@
 판정이 받는 후보는 안 바뀐다 — 받는 규칙은 `_landing_refusal` 에 그대로 있다. 바뀐 것은 이 두 사유를 묻는
 자리의 수(1 → 2)이고, 둘은 **같은 함수**를 부른다. 두 갈래를 지우는 변이(R17·R18)가 계산 경로와 조언 경로
 양쪽의 시험에서 빨개지는지는 review.md `## VERIFY — task 7.7` 에 있다.
+
+## 편집 — task 7.2.4 (병합 안에서만 들어온 증거의 한계를 사실대로 말한다) · 분기 2 → 2 (소스 동일) · 반환 3 → 3 · raise 0 → 0
+
+편집 전 `ast.before-7.2.4.json`(HEAD `f9811236` blob) · 편집 후 `ast.after-7.2.4.json`(워킹트리, L1179-1198).
+
+하한 없음 사유 문장을 "the pinning evidence never entered this history (commit the bundles)" → "no ordinary commit on this history adds the pinning evidence — commit the bundles in an ordinary commit (a merge commit's own changes are not read)" 로. 리뷰 H7: 병합을 마치며 번들을 처음 커밋하면 `_evidence_floor` 의 `git log`(`-m` 없음)가 그 병합의 변경을 안 읽어 여기로 오는데, 옛 문장은 번들이 커밋돼 있는데도 "역사에 들어온 적 없다, 커밋하라"고 했다. 동작(하한 없음 → 기록 안 함)은 사람이 2026-09-14 에 한계로 두기로 골랐다. 분기 · 반환 수 · 호출 불변(열거 대조). 한계 자체를 없애는 변이 H-C(`git log -m`)는 `EvidenceFirstCommittedInsideAMergeIsAKnownLimit` 가 잡는다 — 한계가 **선택**임을 못 박는다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 반환 | `('', 'the pinning evidence never entered this history (commit the bundles)')` |
+| 생김 | 반환 | `('', "no ordinary commit on this history adds the pinning evidence — commit the bundles in an ordinary commit (a merge commit's own changes are not read)")` |

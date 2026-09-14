@@ -2741,3 +2741,72 @@ CAUGHT), R5(빌림 거절 삭제)는 SKIP → 옮긴 자리 R5' **CAUGHT**, R10 
 | a072(빌려주는 쪽) 판정 | 오류 336 → 336 · required 388 → 388 · **IDENTICAL** |
 | a073 기록 명령 사유 | "copy the landing recorded on …" → `BORROWED_REFUSES_A_LANDING` |
 
+## Pre-Edit Gate — task 7.2.4 (H7: 병합 안에서만 들어온 증거) (2026-09-14)
+
+**동작은 바꾸지 않는다** — 사람이 2026-09-14 에 H7 을 한계로 두기로 골랐다. 고친 것은 그 한계를 말하는 **문장** 둘이다.
+
+### 지금 코드에서 재현했다 (`724_h7.py`, HEAD `f9811236`)
+
+P(base) → 변경 디렉터리 → 곁가지(무관한 편집) · 줄기에 W(작업) → `git merge --no-commit` 뒤 번들을 추가해 병합 커밋 M 으로 커밋.
+
+| 무엇 | 결과 |
+|---|---|
+| `_evidence_floor` | `''` — `git log --diff-filter=MAT`(`-m` 없음)가 병합 커밋의 변경을 안 읽는다 |
+| `record_landing` | rc 1 · `no landing recorded — the pinning evidence never entered this history (commit the bundles)` — **거짓**(번들은 HEAD 에 커밋돼 있다) |
+| `check`, 기록 없음 | `[]` · required 1 — 막히지 않는다. 한계의 크기는 "좁히지 못한다" |
+| M 을 손으로 기록 | `… is pinned by evidence that never entered this history: commit …` — 같은 거짓 |
+
+조언 줄(7.7)도 걷기 전 판정에서 같은 문장을 인용하므로, 이미 한 커밋을 또 하라고 권한다 — 7.7 이 닫은 I8(서로를 가리키는 두 문장)과 같은 결함.
+
+### 실물 영향
+
+7.2.2 A/B 의 착지 93 과 7.7 전수 126 에서 이 두 문장이 나온 id **0**. 판정 변화 0 을 예측한다.
+
+### 편집 전 열거
+
+`_walk_floor`(반환 3) · `_landing_refusal`(반환 8)의 하한 없음 반환 문장 둘. 분기 · 호출은 건드리지 않는다.
+
+## VERIFY — task 7.2.4 (2026-09-14)
+
+### RED → GREEN
+
+새 클래스 `EvidenceFirstCommittedInsideAMergeIsAKnownLimit`(시험 3) + 옛 문장을 바늘로 쓰던 시험 셋의 바늘 교체. 편집 전 **5 FAIL**(새 둘 · 바늘
+셋), `test_without_a_record_step_five_still_judges_the_working_tree` 는 편집 전에도 초록(한계의 크기를 못 박는 시험이라 그래야 한다).
+기록 명령 시험은 **도달 단언을 먼저** 세웠다 — 번들이 HEAD 에 있고 M 의 첫 부모에는 없고 M 이 부모 둘인 병합이다. 실패 원인이 문장인지
+확인했다(도달 단언은 통과). 시험 147 → **150**.
+
+### 편집 전후 열거
+
+바뀐 함수 `_walk_floor` · `_landing_refusal` 둘(모든 함수 AST 대조). 둘 다 분기 소스 · 반환 수 · 호출이 **같고** 반환 문장 하나씩만 다르다.
+
+### 뮤테이션 (`724_mut.py`, 사본 `724_work`, 대조군 GREEN)
+
+| 변이 | 결과 | 잡은 시험 |
+|---|---|---|
+| H-A `_walk_floor` 문장 되돌림 | **CAUGHT** | 셋(기록 명령 한계 시험 · 계산 · 미커밋 기록) |
+| H-B 규칙의 하한 없음 문장 되돌림 | **CAUGHT** | 둘(병합 손 기록 · 미커밋 선언) |
+| H-C **한계를 없앰**(`git log -m`) | **CAUGHT** | 넷 — 한계가 우연이 아니라 선택임을 시험이 못 박는다 |
+| R4' 규칙의 하한 없음 판정 삭제(7.6 R4 의 옮긴 자리) | **CAUGHT** | 둘 |
+| R18' `_walk_floor` 의 하한 없음 판정 삭제(7.7 R18 = 7.8 M7 의 옮긴 자리) | **CAUGHT** | 넷 |
+| K-D' K2 를 하한 판정 앞으로(7.2.2 K-D 의 옮긴 자리) | **CAUGHT** | 다섯 |
+
+옛 하네스 전부를 새 코드에 다시 걸었다: 7.6 CAUGHT 14 · SKIP R4 · R14(각각 R4' · R14' CAUGHT) · 7.7(R5 · R10 · R20 제외 실행) CAUGHT 18 · SKIP R18(R18'
+CAUGHT) · 7.8 CAUGHT 7 · SKIP 5(옛 넷 + M7 → R18') · 6.5 N1~N4 · 7.2.2 K-A~K-G · 7.2.3 C-A~C-E · R5' · R20' · R10' **전부 CAUGHT**. 새로 생긴 SKIP 은 이번에
+문장이 옮겨진 자리 넷뿐이고 모두 옮긴 자리 변이가 잡는다. 사본 sha `d9f9bda0a983` 로 복원.
+
+### 게이트
+
+| 게이트 | 결과 |
+|---|---|
+| `test_check_analysis` | 147 → **150** (skip 1) |
+| `make sdd-test` | rc=0 — logic-map **225**(skip 1) · scripts 15 · sdd 71 · sdd-history 22 · pm 16 · deploy 18 |
+| `make lint` · `make test-seams` | rc=0 · rc=0 |
+| `openspec validate --all --strict` | 58/58 (spec: H7 한계 문단 + 시나리오 하나) |
+
+실물 영향: 두 문장이 나오는 실물 id 0(위) — 판정 A/B 대상이 없다.
+
+### 남은 것
+
+- **H7 동작** — 한계 그대로. 없애는 변이(H-C, `git log -m`)를 시험이 잡으므로 없애려면 이 결정을 다시 해야 한다.
+- 7.2 결정이 새로 연 사람 결정: **H3 섞인 V1**(막는 변형 상실 14) · **6.6 의 H2 기록 뒤 작업**(좁히는 한 본질 — 한계로 둘지) ·
+  **6.1.2.6 자동 기록 여부**(이제 물을 수 있다).

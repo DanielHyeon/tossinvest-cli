@@ -637,9 +637,11 @@ def _landing_refusal(
     # 상태이고, 증거를 base 상태로 써 두면 누구나 그 상태를 만들 수 있다.
     # 하한 하나만 저자가 못 고른다: 자기 증거가 역사에 들어온 지점.
     if not floor:
+        # 위 `_walk_floor` 와 같은 한계를 같은 말로 (task 7.2.4, 리뷰 H7).
         return (
-            f"landing point {candidate[:12]} is pinned by evidence that never entered "
-            "this history: commit the `revision: current` bundles that pin it"
+            f"landing point {candidate[:12]} is pinned by evidence that no ordinary commit on "
+            "this history adds: commit the `revision: current` bundles that pin it in an "
+            "ordinary (non-merge) commit"
         ), []
     if not _is_ancestor(root, floor, candidate):
         return (
@@ -1185,7 +1187,14 @@ def _walk_floor(root: Path, analysis: Path) -> tuple[str, str]:
         return "", "no `revision: current` evidence pins a landing for this change"
     floor = _evidence_floor(root, analysis)
     if not floor:
-        return "", "the pinning evidence never entered this history (commit the bundles)"
+        # 걸은 것만 말한다 (task 7.2.4, 리뷰 H7). 하한을 찾는 `git log` 는 `-m` 이 없어서 병합 커밋
+        # 자신의 변경을 읽지 않는다 — 병합을 마치며 번들을 처음 커밋하면 여기로 온다. 옛 문장
+        # "never entered this history (commit the bundles)" 는 그 경우 거짓이었고, 이미 한 커밋을
+        # 또 하라고 권했다. 동작은 사람이 2026-09-14 에 한계로 두기로 골랐다(막는 쪽으로 틀린다).
+        return "", (
+            "no ordinary commit on this history adds the pinning evidence — commit the bundles "
+            "in an ordinary commit (a merge commit's own changes are not read)"
+        )
     return floor, ""
 
 

@@ -1754,7 +1754,7 @@ class TheEvidenceFloorSurvivesArchivingAndDemandsCommittedEvidence(unittest.Test
                            cwd=root, check=True)
             errors = check_analysis.check("mine", root)
             self.assertTrue(
-                any("never entered this history" in error for error in errors),
+                any("no ordinary commit on this history adds" in error for error in errors),
                 f"커밋 안 된 증거는 착지를 고정하지 못한다: {errors}",
             )
 
@@ -2280,7 +2280,7 @@ class TheGateRecordsTheLandingInsteadOfTheAuthor(unittest.TestCase):
             )
             code, lines = check_analysis.record_landing("mine", root)
             self.assertEqual(code, 1, lines)
-            self.assertTrue(any("(commit the bundles)" in line for line in lines), lines)
+            self.assertTrue(any("commit the bundles in an ordinary commit" in line for line in lines), lines)
 
     def test_the_computation_names_what_stops_it_before_the_walk(self) -> None:
         """`compute_landing` 은 `record_landing` 말고도 불린다(`resolve_landing`·시험). 기록
@@ -2297,7 +2297,8 @@ class TheGateRecordsTheLandingInsteadOfTheAuthor(unittest.TestCase):
             )
             self.assertEqual(
                 check_analysis.compute_landing(root, marks["P"], analysis),
-                ("", "the pinning evidence never entered this history (commit the bundles)"),
+                ("", "no ordinary commit on this history adds the pinning evidence — commit the bundles "
+                     "in an ordinary commit (a merge commit's own changes are not read)"),
             )
             shutil.rmtree(analysis)
             self.assertEqual(
@@ -2673,6 +2674,88 @@ class ALandingMustChangeWhatItsEvidencePins(unittest.TestCase):
             _commit_all(root, "declare it by hand")
             errors = check_analysis.check("mine", root)
             self.assertTrue(any(self._refusal(landing, base) in error for error in errors), errors)
+
+
+class EvidenceFirstCommittedInsideAMergeIsAKnownLimit(unittest.TestCase):
+    """병합 커밋 **안에서** 처음 커밋한 증거는 하한을 못 세운다 (task 7.2.4, 리뷰 H7).
+
+    하한은 `git log --diff-filter=MAT -- <번들>` 로 찾는데, `-m` 없는 `git log` 는 병합 커밋 자신의
+    변경을 읽지 않는다. 그래서 병합을 마치며 번들을 처음 추가하면 그 change 는 착지를 얻지 못한다.
+    막는 쪽으로 틀리는 문제라 사람이 2026-09-14 에 **한계로 두기로** 골랐다 — 기록이 없으면 5단계는
+    워킹트리로 판정하므로 그 change 가 막히지는 않고, 창을 좁히지 못할 뿐이다.
+
+    고친 것은 **문장**이다. 옛 문장 "the pinning evidence never entered this history (commit the bundles)"
+    는 이 모양에서 거짓이었다 — 번들은 HEAD 에 커밋돼 있다(아래 도달 단언). 문장이 한계를 사실대로
+    말해야 조언을 받은 사람이 이미 한 커밋을 또 하지 않는다([[a-not-found-reason-claims-only-what-was-searched]])."""
+
+    WALK = "no ordinary commit on this history adds the pinning evidence — commit the bundles in an ordinary commit (a merge commit's own changes are not read)"
+
+    def _fixture(self) -> tuple[tempfile.TemporaryDirectory, Path, dict[str, str]]:
+        raw = tempfile.TemporaryDirectory()
+        root = _init_fixture(raw)
+        own = root / "internal" / "own.go"
+        own.parent.mkdir(parents=True)
+        own.write_text("package internal\nfunc Own() int { return 1 }\n")
+        (root / "notes.md").write_text("a\n")
+        marks = {"P": _commit_all(root, "P: base")}
+        change = root / "openspec" / "changes" / "mine"
+        change.mkdir(parents=True)
+        (change / "base-commit.txt").write_text(marks["P"] + "\n")
+        (change / "review.md").write_text("mine\n")
+        _commit_all(root, "the change directory")
+        home = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root, text=True).strip()
+        subprocess.run(["git", "checkout", "-q", "-b", "side"], cwd=root, check=True)
+        (root / "notes.md").write_text("side\n")
+        _commit_all(root, "side: unrelated")
+        subprocess.run(["git", "checkout", "-q", home], cwd=root, check=True)
+        own.write_text("package internal\nfunc Own() int { return 2 }\n")
+        marks["W"] = _commit_all(root, "W: the work")
+        subprocess.run(["git", "merge", "-q", "--no-ff", "--no-commit", "side"], cwd=root, check=True,
+                       capture_output=True)
+        _write_evidence(
+            change, package="internal", function="Own", relative="internal/own.go",
+            digest=hashlib.sha256(own.read_bytes()).hexdigest(),
+        )
+        marks["M"] = _commit_all(root, "M: the merge, and the evidence first committed inside it")
+        return raw, root, marks
+
+    def test_the_recorder_names_the_limit_instead_of_asking_for_a_commit_already_made(self) -> None:
+        raw, root, marks = self._fixture()
+        with raw:
+            ast_json = "openspec/changes/mine/analysis/function-logic/internal--own/ast.json"
+            # 닿는지 먼저 — 번들이 **정말** 커밋돼 있고 병합 커밋 M 이 그것을 처음 들였다.
+            self.assertIsNotNone(check_analysis._committed_bytes(root, "HEAD", ast_json))
+            self.assertIsNone(check_analysis._committed_bytes(root, f"{marks['M']}^1", ast_json))
+            self.assertEqual(
+                len(subprocess.check_output(["git", "rev-list", "--parents", "-1", marks["M"]], cwd=root, text=True).split()),
+                3, "M 은 병합 커밋이어야 한다",
+            )
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertEqual(lines, [f"mine: no landing recorded — {self.WALK}"])
+
+    def test_without_a_record_step_five_still_judges_the_working_tree(self) -> None:
+        """한계의 크기: 막히는 것은 좁히기뿐이다. 증거가 맞으면 5단계는 통과한다."""
+        raw, root, _ = self._fixture()
+        with raw:
+            facts: dict[str, object] = {}
+            self.assertEqual(check_analysis.check("mine", root, facts), [])
+            self.assertEqual(facts.get("landing"), "")
+            self.assertEqual(facts.get("required_count"), 1)
+
+    def test_a_hand_written_record_at_the_merge_names_the_limit(self) -> None:
+        raw, root, marks = self._fixture()
+        with raw:
+            _declare_landing(root / "openspec" / "changes" / "mine", marks["M"], "declare the merge by hand")
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(
+                any(
+                    f"landing point {marks['M'][:12]} is pinned by evidence that no ordinary commit on this "
+                    "history adds" in error and "non-merge" in error
+                    for error in errors
+                ),
+                errors,
+            )
 
 
 def _own_work_fixture(raw: tempfile.TemporaryDirectory) -> tuple[Path, dict[str, str]]:
