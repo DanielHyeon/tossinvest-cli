@@ -27,3 +27,13 @@
 | `sources = sorted({source for _, source, _ in _pinning_bundles(root, analysis)})` (전 번들) | `test_one_changed_pinned_source_is_enough` | yes — K-G(`[:1]`) 같은 시험 하나 |
 | 비교 기준 `base` | 25 시험 | yes — K-C(`HEAD`) |
 | 위치: 미보유 뒤 | `test_evidence_written_at_the_base_cannot_declare_the_base` 외 넷 | yes — K-D(하한 앞으로) |
+
+## task 7.2.6 — 착지 뒤의 자기 수리 (변이로 채운 행만, `726_mut.py` 무변이 대조군 GREEN)
+
+| 갈래 (소스 한 줄) | 덮는 테스트 | 덮이나 |
+|---|---|---|
+| `later = [commit for commit in repairs if not _is_ancestor(root, commit, candidate)]` → 거절 | `test_a_review_fix_to_a_pinned_file_after_the_record_is_refused` · `test_any_go_file_counts_not_only_the_pinned_one` · `test_the_signal_survives_archiving_the_change` 외 4 | yes — S1(가드 삭제) 일곱이 빨갛다 |
+| 후보 자신은 안 센다 (`_is_ancestor` 는 같은 커밋에서 참) | `test_the_repair_commit_itself_is_the_landing_when_it_refreshes_the_evidence` | yes — S5. 첫 판 시험은 불일치 가드에 먼저 걸려 **닿지 않았고**(픽스처가 번들을 안 갱신), 수리와 갱신을 한 커밋에 넣은 모양으로 바꾼 뒤 잡힌다 |
+| 이름은 **가장 오래된** 수리 | `test_the_oldest_repair_is_the_one_named` | yes — S7 |
+| 위치: K2 뒤, 수락 앞 | `test_a_candidate_its_evidence_does_not_describe_keeps_that_sentence` | yes — S6(맨 앞으로). 첫 판에는 이 시험이 없어 SURVIVED 였다 |
+| 호출자가 **한 번** 재서 넘긴다 (두 집이 아니다) | `test_the_recorder_will_not_write_a_landing_its_own_later_work_outruns`(계산) · `test_the_refusal_says_how_to_move_the_record`(선언) | yes — S10 · S11 각각 |

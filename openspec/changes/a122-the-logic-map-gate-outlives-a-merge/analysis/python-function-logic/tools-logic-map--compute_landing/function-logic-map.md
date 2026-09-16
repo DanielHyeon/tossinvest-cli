@@ -119,3 +119,13 @@ a089·a095 가 마지막 사유로 거부된다 — 그 둘의 증거가 자기�
 | 생김 | 반환 | `('', f'no commit at or after the evidence ({floor[:12]}) is accepted as the landing — at the first commit walked, {first}')` |
 
 호출 — 사라짐 없음 · 생김 없음
+
+## 편집 — task 7.2.6 (깃발 집합을 한 번 잰다) · 분기 8 → 8 · 반환 5 → 5 · raise 0 → 0
+
+편집 전 `ast.before-7.2.6.json`(HEAD `e9f86820` blob) · 편집 후 `ast.after-7.2.6.json`(워킹트리, L1301-1350).
+
+순회 **전에** `_self_repair_commits` 를 한 번 부르고 그 목록을 후보마다 `_landing_refusal` 에 넘긴다 — `floor` 와 같은 모양이고, 후보마다 `git log` 를 다시 돌리지 않는다. 분기·반환은 불변이고 호출 이름 하나가 늘었다. 계산 경로에서만 규칙을 빼는 변이 S10 을 `test_the_recorder_will_not_write_a_landing_its_own_later_work_outruns` 가 잡는다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 생김 | 호출 | `_self_repair_commits` |

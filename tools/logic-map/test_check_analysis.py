@@ -2968,6 +2968,12 @@ class TheRecordMustBeTheValueTheGateComputes(unittest.TestCase):
             # 하는지 모른 채 게이트만 빨간 것을 본다.
             self.assertTrue(any(marks["L"][:12] in e for e in errors), errors)
             self.assertTrue(any(marks["E"][:12] in e for e in errors), errors)
+            # 그리고 **돌아가는 길**도 (task 7.2.6, spec 의 SHALL). 이 문장만 그것을
+            # 빠뜨려서, `--record-landing` 을 권해 놓고 그 명령은 "이미 있다"로 거절했다
+            # (2026-09-16 적대 리뷰 F3).
+            self.assertTrue(
+                any(check_analysis.LANDING_RECOVERY in e for e in errors), errors
+            )
 
     def test_the_computed_value_is_still_accepted(self) -> None:
         """양성 대조군. 새 등식이 **모든** 기록을 거절하면 시험은 그래도 초록이다."""
@@ -3144,11 +3150,11 @@ class AComputedLandingIsAlwaysOneTheGateWillAccept(unittest.TestCase):
             self.assertEqual(check_analysis._evidence_floor(root, analysis), marks["F"])
             self.assertFalse(check_analysis._is_ancestor(root, marks["F"], marks["B"]))
             self.assertIn("is not the revision this evidence describes",
-                          check_analysis._landing_refusal(root, marks["P"], marks["F"], analysis, marks["F"])[0])
+                          check_analysis._landing_refusal(root, marks["P"], marks["F"], analysis, marks["F"], [])[0])
             # B 를 막는 것이 하한 순서 **하나**뿐임을 직접 보인다: 하한을 base 로 주면 받는다.
-            self.assertEqual(check_analysis._landing_refusal(root, marks["P"], marks["B"], analysis, marks["P"]), ("", []))
+            self.assertEqual(check_analysis._landing_refusal(root, marks["P"], marks["B"], analysis, marks["P"], []), ("", []))
             self.assertIn("precedes the evidence that pins it",
-                          check_analysis._landing_refusal(root, marks["P"], marks["B"], analysis, marks["F"])[0])
+                          check_analysis._landing_refusal(root, marks["P"], marks["B"], analysis, marks["F"], [])[0])
 
     def test_a_candidate_older_than_its_evidence_is_not_the_landing(self) -> None:
         raw, root, marks = self._parallel_evidence_fixture()
@@ -3818,7 +3824,11 @@ class AFailingStepFiveSaysWhichWindowRequiredThem(unittest.TestCase):
             self.assertIn("not in HEAD", lines[0])
             _commit_all(root, "commit the record")
             code, lines = check_analysis.record_landing("mine", root)
-            self.assertEqual((code, lines), (1, ["mine: `landed-commit.txt` already exists — not overwritten"]))
+            self.assertEqual(
+                (code, lines),
+                (1, [f"mine: `landed-commit.txt` already exists — not overwritten; "
+                     f"{check_analysis.LANDING_RECOVERY}"]),
+            )
 
     def test_a_refusal_that_outlives_a_commit_is_named_before_one_that_does_not(self) -> None:
         """조언 줄은 사유를 **하나**만 말한다 — 그러니 순서가 곧 조언이다 (task 7.7).
@@ -4022,6 +4032,518 @@ class AnEmptyRequiredSetIsAnnouncedNotSwallowed(unittest.TestCase):
             # 변이 T1 실측 SURVIVED) — 그러면 출력이 있지도 않은 감사를 가리킨다. 라벨까지 본다.
             self.assertIn(f"landed-commit {landing}", printed, f"해소한 착지를 라벨과 함께 말해야 한다: {printed}")
             self.assertNotIn("audited source-commit", printed)
+
+
+def _self_repair_fixture(
+    raw: tempfile.TemporaryDirectory, *, repair: str = "pinned", record: bool = True
+) -> tuple[Path, dict[str, str]]:
+    """P(base) → W(작업) → E(증거) → 정직한 기록 → F(리뷰 수리). 기록은 **생산 경로**가 만든다.
+
+    로트마다 도는 리뷰 수리 라운드의 모양이다 (task 7.2.6, H4). `repair` 가 F 의 모양을 고른다:
+
+    - `pinned`     — 고정 파일과 change 디렉터리를 **같은 커밋**에서 (실물 a083 · a084 의 모양)
+    - `other-go`   — 고정되지 않은 Go 와 change 디렉터리를 같은 커밋에서 (ANYGO 가 덮는 자리)
+    - `docs-only`  — change 디렉터리만 (Go 없음)
+    - `neighbour`  — Go 만, 남의 커밋 (거절하면 안 되는 자리)
+    - `split`      — Go 커밋과 문서 커밋으로 **쪼갠다** (알려진 한계)
+    - `pinned-refreshed` — 수리와 번들 갱신이 한 커밋에 (그 커밋 자신이 착지가 되는 자리)
+    - `none`       — 수리 없음
+    """
+    root = _init_fixture(raw)
+    own = root / "internal" / "own.go"
+    own.parent.mkdir(parents=True)
+    own.write_text("package internal\nfunc Own() int { return 1 }\n")
+    other = root / "internal" / "other.go"
+    other.write_text("package internal\nfunc Other() int { return 1 }\n")
+    marks = {"P": _commit_all(root, "P: base")}
+    change = root / "openspec" / "changes" / "mine"
+    change.mkdir(parents=True)
+    (change / "base-commit.txt").write_text(marks["P"] + "\n")
+    (change / "review.md").write_text("mine\n")
+    # change 디렉터리는 **따로** 커밋한다. 작업과 한 커밋에 넣으면 그 커밋부터 깃발이 서서
+    # 시험이 재려는 자리(기록 **뒤**)가 아니라 그 앞을 재게 된다.
+    marks["D"] = _commit_all(root, "D: the change directory")
+    own.write_text("package internal\nfunc Own() int { return 2 }\n")
+    marks["W"] = _commit_all(root, "W: this change's Go work lands")
+    _write_evidence(
+        change, package="internal", function="Own", relative="internal/own.go",
+        digest=hashlib.sha256(own.read_bytes()).hexdigest(),
+    )
+    marks["E"] = _commit_all(root, "E: its evidence enters the history")
+    # 값을 시험이 고르지 않는다 — 게이트가 계산한 것을 그대로 커밋한다.
+    if record:
+        code, lines = check_analysis.record_landing("mine", root)
+        assert code == 0, lines
+        marks["record"] = (change / check_analysis.LANDING_FILE).read_text(encoding="utf-8").strip()
+        marks["recorded"] = _commit_all(root, "the honest record")
+    if repair == "none":
+        return root, marks
+    if repair == "split":
+        own.write_text("package internal\nfunc Own() int { return 3 }\n")
+        marks["F1"] = _commit_all(root, "F1: the fix alone")
+        (change / "review.md").write_text("mine\nreview round 1\n")
+        marks["F2"] = _commit_all(root, "F2: the notes alone")
+        return root, marks
+    if repair in ("pinned", "other-go", "docs-only", "pinned-refreshed"):
+        (change / "review.md").write_text("mine\nreview round 1\n")
+    if repair in ("pinned", "neighbour", "pinned-refreshed"):
+        own.write_text("package internal\nfunc Own() int { return 3 }\n")
+    if repair == "pinned-refreshed":
+        # 수리와 번들 갱신이 **한 커밋**에 있는 정직한 로트. 이 커밋 자신이 착지가 된다.
+        _write_evidence(
+            change, package="internal", function="Own", relative="internal/own.go",
+            digest=hashlib.sha256(own.read_bytes()).hexdigest(),
+        )
+    if repair == "other-go":
+        other.write_text("package internal\nfunc Other() int { return 3 }\n")
+    marks["F"] = _commit_all(root, f"F: review fix ({repair})")
+    return root, marks
+
+
+class WorkAfterTheRecordIsNotOutsideTheWindow(unittest.TestCase):
+    """착지를 기록한 **뒤에** 이 change 자신이 Go 를 더 고치면 그 기록은 착지가 아니다.
+
+    task 7.2.6 (H4) — 사람이 2026-09-16 에 변형 B-ANYGO 를 골랐다. 기록이 한 번 쓰이고 나면
+    5단계는 `base..기록` 만 대조하므로, 기록 뒤의 리뷰 수리는 **고정 파일**을 고쳐도 창 밖에
+    남아 초록이었다. 잊어버린 저자가 초록이고 번들을 갱신한 성실한 저자가 빨간 역전이었다.
+
+    내용으로는 못 가른다 — 고정 소스가 착지와 지금 같아야 한다는 후보 규칙은 착지 있는 68건
+    중 61(파일)·55(함수)를 거절했고 원인은 거의 전부 이웃이었다(review.md
+    `## MEASURE — task 7.2.6`). 가르는 신호는 **같은 커밋이 이 change 의 디렉터리도 만졌는가**
+    하나뿐이었다. 그 신원은 **거절에만** 쓴다(1.12).
+    """
+
+    def _analysis(self, root: Path) -> Path:
+        return root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+
+    def _only_this_rule_refuses(self, root: Path, marks: dict[str, str]) -> None:
+        """닿음 단언: 깃발을 비우면 **같은 후보**가 받아들여진다.
+
+        안 하면 다른 가드(불일치·미보유)가 이미 거절하는 입력에서도 이 시험이 초록이고,
+        새 규칙은 아무것도 재지 않는다([[mutation-must-reach-the-thing-under-test]]).
+        """
+        analysis = self._analysis(root)
+        self.assertEqual(
+            check_analysis._landing_refusal(
+                root, marks["P"], marks["record"], analysis,
+                check_analysis._evidence_floor(root, analysis), [],
+            ),
+            ("", []),
+        )
+
+    def test_a_review_fix_to_a_pinned_file_after_the_record_is_refused(self) -> None:
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _self_repair_fixture(raw, repair="pinned")
+            self._only_this_rule_refuses(root, marks)
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(
+                any(
+                    f"landing point {marks['record'][:12]} is followed by 1 later commit(s) "
+                    "of this change's own Go work" in error and marks["F"][:12] in error
+                    for error in errors
+                ),
+                errors,
+            )
+
+    def test_the_recorder_will_not_write_a_landing_its_own_later_work_outruns(self) -> None:
+        """계산 경로도 **같은 함수**에 묻는다 (task 7.6, 리뷰 I2).
+
+        기록이 아직 없는 상태에서 수리가 먼저 서면, 게이트는 그 앞 커밋을 착지로 쓰지 않는다.
+        이 시험이 없으면 계산 경로에서만 규칙을 빼는 변이가 살아남는다 — 그러면 도구가
+        자기 게이트가 거절할 값을 쓴다([[two-judgements-cover-for-each-other]]).
+        """
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _self_repair_fixture(raw, repair="pinned", record=False)
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertIn("is followed by 1 later commit(s) of this change's own Go work", lines[0])
+
+    def test_the_refusal_says_how_to_move_the_record(self) -> None:
+        """거절만 하고 길을 안 말하면 성실한 저자가 두 문장 사이에 갇힌다 (task 7.2.6)."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _self_repair_fixture(raw, repair="pinned")
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(
+                any(check_analysis.LANDING_RECOVERY in error for error in errors), errors
+            )
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertIn(check_analysis.LANDING_RECOVERY, lines[0])
+
+    def test_without_a_record_the_same_tree_was_already_red(self) -> None:
+        """역전이 결함이었다는 근거: 잊은 저자만 기록으로 초록이 됐다.
+
+        같은 트리에서 기록을 지우면 5단계는 워킹트리를 대상으로 삼아 stale 을 잡는다.
+        규칙이 없애는 것은 그 **비대칭**이다.
+        """
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _self_repair_fixture(raw, repair="pinned")
+            (root / "openspec" / "changes" / "mine" / check_analysis.LANDING_FILE).unlink()
+            _commit_all(root, "drop the record")
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(any("AST source hash is stale" in error for error in errors), errors)
+
+    def test_any_go_file_counts_not_only_the_pinned_one(self) -> None:
+        """사람이 고른 것은 ANYGO 다 — 한 커밋 모양의 H2 까지 덮는다 (6.6)."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _self_repair_fixture(raw, repair="other-go")
+            self._only_this_rule_refuses(root, marks)
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(
+                any("is followed by 1 later commit(s)" in error for error in errors), errors
+            )
+
+    def test_a_neighbours_later_go_edit_is_not_this_changes_own_repair(self) -> None:
+        """거절할 정상 입력을 재는 자리다. 이웃이 나중에 같은 파일을 고쳐도 기록은 유효하다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _self_repair_fixture(raw, repair="neighbour")
+            facts: dict[str, object] = {}
+            self.assertEqual(check_analysis.check("mine", root, facts), [])
+            self.assertEqual(facts.get("landing"), marks["record"])
+
+    def test_touching_the_change_without_editing_go_is_not_a_repair(self) -> None:
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _self_repair_fixture(raw, repair="docs-only")
+            facts: dict[str, object] = {}
+            self.assertEqual(check_analysis.check("mine", root, facts), [])
+            self.assertEqual(facts.get("landing"), marks["record"])
+
+    def test_splitting_the_fix_from_its_notes_evades_the_guard(self) -> None:
+        """**알려진 한계** (task 7.2.6). 망각 가드이지 위조 가드가 아니다.
+
+        Go 수리와 문서를 다른 커밋으로 쪼개면 어느 커밋도 둘 다 만지지 않아 깃발이 안 선다.
+        spec 이 이 한계를 적는다. 한계를 시험으로 못 박아 두면 없어질 때 보인다.
+        """
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _self_repair_fixture(raw, repair="split")
+            self.assertEqual(check_analysis._self_repair_commits(root, self._analysis(root)), [])
+            facts: dict[str, object] = {}
+            self.assertEqual(check_analysis.check("mine", root, facts), [])
+            self.assertEqual(facts.get("landing"), marks["record"])
+
+    def test_refreshing_the_evidence_and_recording_again_lands_after_the_fix(self) -> None:
+        """복구 경로가 **실제로** 돈다 — 문장이 가리키는 곳에 길이 있어야 한다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _self_repair_fixture(raw, repair="pinned")
+            change = root / "openspec" / "changes" / "mine"
+            (change / check_analysis.LANDING_FILE).unlink()
+            _commit_all(root, "remove the record it outgrew")
+            own = root / "internal" / "own.go"
+            _write_evidence(
+                change, package="internal", function="Own", relative="internal/own.go",
+                digest=hashlib.sha256(own.read_bytes()).hexdigest(),
+            )
+            refreshed = _commit_all(root, "refresh the bundle")
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 0, lines)
+            self.assertEqual((change / check_analysis.LANDING_FILE).read_text(encoding="utf-8").strip(), refreshed)
+            _commit_all(root, "the record again")
+            facts: dict[str, object] = {}
+            self.assertEqual(check_analysis.check("mine", root, facts), [])
+            self.assertEqual(facts.get("landing"), refreshed)
+            # 착지가 수리 **뒤로** 왔다: 기록 시점의 값보다 나중이다.
+            self.assertNotEqual(refreshed, marks["record"])
+
+    def test_a_candidate_its_evidence_does_not_describe_keeps_that_sentence(self) -> None:
+        """**자리가 못의 일부다** ([[a-new-guard-unpins-the-guards-behind-it]]).
+
+        수리 커밋 F 는 두 가지가 동시에 참이다 — 번들이 F 의 소스를 기술하지 않고(불일치),
+        그 뒤에 수리가 하나 더 있다. 진단은 **불일치**여야 한다: 저자가 고칠 것은 번들이고,
+        "나중 작업이 앞선다"는 그 다음 이야기다. 규칙을 앞으로 옮기면 이 문장이 바뀐다.
+        """
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _self_repair_fixture(raw, repair="pinned")
+            change = root / "openspec" / "changes" / "mine"
+            (root / "internal" / "own.go").write_text(
+                "package internal\nfunc Own() int { return 4 }\n"
+            )
+            (change / "review.md").write_text("mine\nreview round 2\n")
+            second = _commit_all(root, "F2: another review fix")
+            analysis = self._analysis(root)
+            repairs = check_analysis._self_repair_commits(root, analysis)
+            self.assertEqual(repairs, [marks["F"], second])
+            refusal, _ = check_analysis._landing_refusal(
+                root, marks["P"], marks["F"], analysis,
+                check_analysis._evidence_floor(root, analysis), repairs,
+            )
+            self.assertIn("is not the revision this evidence describes", refusal)
+            self.assertNotIn("is followed by", refusal)
+
+    def test_the_signal_survives_archiving_the_change(self) -> None:
+        """아카이브는 디렉터리를 **옮긴다**. 옮긴 뒤 이름만 보면 활성 시절의 자기 수리가
+        전부 안 보이고, 아카이브된 change 의 재검사가 조용히 초록이 된다 (6.2 가 연 경로).
+        """
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _self_repair_fixture(raw, repair="pinned")
+            archive = root / "openspec" / "changes" / "archive" / "2026-09-16-mine"
+            archive.parent.mkdir(parents=True, exist_ok=True)
+            subprocess.run(
+                ["git", "mv", "openspec/changes/mine", archive.relative_to(root).as_posix()],
+                cwd=root, check=True,
+            )
+            _commit_all(root, "archive the change")
+            analysis = archive / "analysis" / "function-logic"
+            self.assertEqual(check_analysis._self_repair_commits(root, analysis), [marks["F"]])
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(any("is followed by 1 later commit(s)" in error for error in errors), errors)
+
+    def test_the_repair_commit_itself_is_the_landing_when_it_refreshes_the_evidence(self) -> None:
+        """자기 자신은 세지 않는다 — `_is_ancestor` 는 같은 커밋에서 참이다.
+
+        수리와 번들 갱신을 **한 커밋**에 넣는 것이 이 저장소의 정직한 로트 모양이다. 자기
+        자신까지 세면 그런 change 는 착지를 영영 못 얻고, 규칙이 성실한 쪽을 벌한다.
+
+        닿음: 그 커밋이 깃발 목록에 **있는데도** 착지가 된다는 것을 같이 단언한다 —
+        안 하면 깃발이 비어서 초록인 경우와 구분되지 않는다
+        ([[mutation-must-reach-the-thing-under-test]]).
+        """
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _self_repair_fixture(raw, repair="pinned-refreshed", record=False)
+            self.assertEqual(
+                check_analysis._self_repair_commits(root, self._analysis(root)), [marks["F"]]
+            )
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 0, lines)
+            change = root / "openspec" / "changes" / "mine"
+            self.assertEqual(
+                (change / check_analysis.LANDING_FILE).read_text(encoding="utf-8").strip(),
+                marks["F"],
+            )
+            _commit_all(root, "the record")
+            facts: dict[str, object] = {}
+            self.assertEqual(check_analysis.check("mine", root, facts), [])
+            self.assertEqual(facts.get("landing"), marks["F"])
+
+
+class TheRepairSignalIsMeasuredOnceAndNamesOldestFirst(unittest.TestCase):
+    """깃발 집합은 **한 곳**에서 만든다 (`_self_repair_commits`).
+
+    두 벌이면 선언 경로와 계산 경로가 갈리고, 갈리는 순간 도구는 자기 게이트가 거절할 값을
+    쓴다([[two-judgements-cover-for-each-other]]).
+    """
+
+    def _analysis(self, root: Path) -> Path:
+        return root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+
+    def test_a_fix_on_a_side_branch_is_read(self) -> None:
+        """곁가지의 **비병합** 수리는 읽힌다. 한계는 병합 커밋 **자신의** 변경이고, 그것은
+        아래 `…_is_the_known_limit` 이 잰다 — 이름이 재지 않는 것을 약속하면 나중 독자가
+        그 갈래를 덮인 것으로 센다(2026-09-16 적대 리뷰 F7)."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _self_repair_fixture(raw, repair="none")
+            change = root / "openspec" / "changes" / "mine"
+            home = subprocess.check_output(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root, text=True
+            ).strip()
+            subprocess.run(["git", "checkout", "-q", "-b", "side"], cwd=root, check=True)
+            (root / "internal" / "own.go").write_text(
+                "package internal\nfunc Own() int { return 3 }\n"
+            )
+            (change / "review.md").write_text("mine\nside\n")
+            _commit_all(root, "side: the fix and its notes")
+            subprocess.run(["git", "checkout", "-q", home], cwd=root, check=True)
+            subprocess.run(["git", "merge", "-q", "--no-ff", "side"], cwd=root, check=True,
+                           capture_output=True)
+            analysis = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+            # 곁가지의 그 커밋은 비병합이므로 **읽힌다**. 한계는 병합 커밋 자신의 변경이다.
+            self.assertEqual(len(check_analysis._self_repair_commits(root, analysis)), 1)
+            self.assertNotEqual(check_analysis.check("mine", root), [])
+
+    def test_a_fix_made_inside_the_merge_commit_itself_is_the_known_limit(self) -> None:
+        """병합 커밋 **자신의** 변경(충돌 해소)은 안 읽힌다 — 7.2.4 의 H7 과 같은 부류.
+
+        `git log` 는 `--diff-merges` 를 명시해야만 병합의 diff 를 낸다(git 2.43 실측: 어떤
+        설정으로도 기본이 바뀌지 않는다). 그러므로 이 한계는 저장소 설정의 함수가 아니다.
+        한계를 시험으로 못 박아 두면 없어질 때 보인다.
+        """
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _self_repair_fixture(raw, repair="none")
+            change = root / "openspec" / "changes" / "mine"
+            home = subprocess.check_output(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root, text=True
+            ).strip()
+            subprocess.run(["git", "checkout", "-q", "-b", "other"], cwd=root, check=True)
+            (root / "internal" / "other.go").write_text(
+                "package internal\nfunc Other() int { return 9 }\n"
+            )
+            _commit_all(root, "other: an unrelated branch")
+            subprocess.run(["git", "checkout", "-q", home], cwd=root, check=True)
+            subprocess.run(["git", "merge", "-q", "--no-ff", "--no-commit", "other"],
+                           cwd=root, check=True, capture_output=True)
+            # 병합을 마치며 **그 커밋 안에서** Go 를 고치고 change 디렉터리도 만진다.
+            (root / "internal" / "own.go").write_text(
+                "package internal\nfunc Own() int { return 3 }\n"
+            )
+            (change / "review.md").write_text("mine\nfixed while merging\n")
+            merge = _commit_all(root, "M: the merge, and a fix made inside it")
+            self.assertEqual(
+                len(subprocess.check_output(
+                    ["git", "rev-list", "--parents", "-1", merge], cwd=root, text=True
+                ).split()), 3, "M 은 병합 커밋이어야 한다",
+            )
+            analysis = change / "analysis" / "function-logic"
+            self.assertEqual(check_analysis._self_repair_commits(root, analysis), [])
+
+    def test_a_fix_the_merge_hides_is_still_read(self) -> None:
+        """**가지치기가 일어나는** 병합 픽스처 (2026-09-16 적대 리뷰 F1, P0).
+
+        경로 제한을 건 `git log` 는 기본으로 역사를 단순화한다 — 병합이 **그 경로에 대해** 한
+        부모와 TREESAME 이면 반대편 가지를 통째로 버린다. 그러면 곁가지에서 한 자기 수리가
+        목록에서 사라져, 이 규칙이 닫으려는 H4 가 바로 이 change 의 제목이 가리키는 상황(병합)
+        에서 다시 열린다. 실측으로 재현했다: `check` 가 `[]` 초록인데 고정 파일은 기록 뒤에 바뀌어
+        있었다. 선형 픽스처는 이 가드를 안 건드린다([[linear-fixtures-never-exercise-dag-guards]]).
+        """
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _self_repair_fixture(raw, repair="none")
+            change = root / "openspec" / "changes" / "mine"
+            own = root / "internal" / "own.go"
+            home = subprocess.check_output(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root, text=True
+            ).strip()
+            subprocess.run(["git", "checkout", "-q", "-b", "side"], cwd=root, check=True)
+            own.write_text("package internal\nfunc Own() int { return 3 }\n")
+            (change / "review.md").write_text("mine\nside fix\n")
+            hidden = _commit_all(root, "C1: the fix and its notes, on a side branch")
+            subprocess.run(["git", "checkout", "-q", home], cwd=root, check=True)
+            # 줄기가 **같은 편집**을 해서 병합이 그 경로에 대해 줄기와 TREESAME 이 된다.
+            (change / "review.md").write_text("mine\nside fix\n")
+            _commit_all(root, "main: the same note edit")
+            subprocess.run(["git", "merge", "-q", "--no-ff", "-m", "merge", "side"],
+                           cwd=root, check=True, capture_output=True)
+            # 닿음: 단순화가 **실제로** 그 커밋을 버린다는 것을 먼저 보인다.
+            simplified = subprocess.check_output(
+                ["git", "log", "--no-merges", "--format=%H", "HEAD", "--",
+                 "openspec/changes/mine/"], cwd=root, text=True).split()
+            self.assertNotIn(hidden, simplified, "가지치기가 안 일어나면 이 시험은 F1 을 안 잰다")
+            self.assertEqual(check_analysis._self_repair_commits(root, self._analysis(root)), [hidden])
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(any("is followed by 1 later commit(s)" in error for error in errors), errors)
+
+    def test_a_rename_out_of_go_is_read_whatever_the_machine_configures(self) -> None:
+        """판정은 사람의 git 설정의 함수가 아니어야 한다 (적대 리뷰 F4).
+
+        `diff.renames` 가 켜져 있으면 `.go` 를 비-`.go` 이름으로 옮긴 커밋의 **옛 이름**이
+        목록에서 사라져 깃발이 안 선다. `_evidence_floor` 가 `-M100% --no-follow` 로 지킨
+        원칙과 같다 — 명령줄에서 못 박는다.
+        """
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _self_repair_fixture(raw, repair="none")
+            subprocess.run(["git", "config", "diff.renames", "true"], cwd=root, check=True)
+            change = root / "openspec" / "changes" / "mine"
+            subprocess.run(["git", "mv", "internal/other.go", "internal/moved.txt"],
+                           cwd=root, check=True)
+            (change / "review.md").write_text("mine\nmoved it\n")
+            moved = _commit_all(root, "F: move a Go file out of Go while noting it")
+            self.assertEqual(
+                check_analysis._self_repair_commits(root, self._analysis(root)), [moved]
+            )
+
+    def test_a_non_ascii_go_name_is_read(self) -> None:
+        """`core.quotePath` 기본값은 비ASCII 이름을 인용해서 `.go` 로 안 끝나게 만든다
+        (적대 리뷰 F5). 안 보이면 **거절을 안 해서** 창이 좁아지는 쪽으로 틀린다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _self_repair_fixture(raw, repair="none")
+            change = root / "openspec" / "changes" / "mine"
+            (root / "internal" / "한글.go").write_text(
+                "package internal\nfunc Hangul() int { return 1 }\n", encoding="utf-8"
+            )
+            (change / "review.md").write_text("mine\nadded it\n")
+            added = _commit_all(root, "F: a Go file with a non-ASCII name")
+            self.assertEqual(
+                check_analysis._self_repair_commits(root, self._analysis(root)), [added]
+            )
+
+    def test_a_git_failure_becomes_a_verdict_not_a_silent_pass(self) -> None:
+        """**실패는 위반 0 이 아니다** ([[missing-tool-reports-clean]] · 적대 리뷰 F2).
+
+        빈 목록으로 물러나면 git 이 멎은 것과 "만진 커밋이 없다"가 같은 말이 되고, 거절돼야 할
+        입력이 초록으로 지나간다(주입 실험에서 실측). 옆의 `_evidence_floor` 는 실패하면
+        거절로 간다 — 두 자리가 같은 방향이어야 한다.
+        """
+        real = subprocess.run
+        for needle, sentence in (("--full-history", "cannot list the commits that touched"),
+                                 ("--no-walk", "cannot read the files those commits changed"),
+                                 ("..HEAD", "cannot walk the history after")):
+            raw = tempfile.TemporaryDirectory()
+            with raw:
+                root, _ = _self_repair_fixture(raw, repair="pinned")
+
+                def broken(command, *args, _needle=needle, **kwargs):
+                    # `..HEAD` 는 `_repairs_after` 의 `rev-list <후보>..HEAD` **하나**만 고른다
+                    # — 순회의 `rev-list --reverse` 까지 깨면 무엇이 판정을 냈는지 안 갈린다.
+                    hit = (_needle in command if _needle != "..HEAD"
+                           else command[:2] == ["git", "rev-list"] and len(command) == 3
+                           and command[2].endswith("..HEAD"))
+                    if isinstance(command, list) and hit:
+                        return subprocess.CompletedProcess(command, 1, "", "fatal: injected\n")
+                    return real(command, *args, **kwargs)
+
+                with mock.patch.object(check_analysis.subprocess, "run", broken):
+                    errors = check_analysis.check("mine", root)
+                self.assertTrue(any(sentence in error for error in errors), (needle, errors))
+
+    def test_a_borrowing_change_never_measures_the_lenders_directory(self) -> None:
+        """`_self_repair_commits` 는 `analysis` 에서 change 디렉터리를 **유도**하는데, 빌린
+        증거 경로에서 `analysis` 는 **빌려주는 쪽**으로 재바인딩된다 (적대 리뷰 F6).
+
+        오늘은 도달하지 않는다 — 빌리는 change 의 기록은 이름으로 거절되고 선언이 없으면
+        `resolve_landing` 이 먼저 돌아간다. 그 사실을 **시험으로 못 박는다**: 1.8 의 "빌려주는
+        쪽 착지를 복사" 규칙이 되살아나면 이 시험이 빨개져서, 누구의 디렉터리를 재야 하는지를
+        그때 사람이 정하게 된다. 지금 조용히 남의 디렉터리를 재는 것보다 낫다.
+        """
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _borrowed_fixture(raw)
+            seen: list[Path] = []
+            real = check_analysis._self_repair_commits
+
+            def spy(root_arg, analysis_arg):
+                seen.append(analysis_arg)
+                return real(root_arg, analysis_arg)
+
+            with mock.patch.object(check_analysis, "_self_repair_commits", spy):
+                self.assertEqual(check_analysis.check("ordinary", root), [])
+            self.assertEqual(seen, [], "빌리는 경로는 이 신호를 재지 않는다")
+
+    def test_the_oldest_repair_is_the_one_named(self) -> None:
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _self_repair_fixture(raw, repair="pinned")
+            change = root / "openspec" / "changes" / "mine"
+            (root / "internal" / "own.go").write_text(
+                "package internal\nfunc Own() int { return 4 }\n"
+            )
+            (change / "review.md").write_text("mine\nreview round 2\n")
+            second = _commit_all(root, "F2: another review fix")
+            analysis = change / "analysis" / "function-logic"
+            self.assertEqual(
+                check_analysis._self_repair_commits(root, analysis), [marks["F"], second]
+            )
+            errors = check_analysis.check("mine", root)
+            self.assertTrue(
+                any(
+                    f"followed by 2 later commit(s)" in error and f"(first {marks['F'][:12]})" in error
+                    for error in errors
+                ),
+                errors,
+            )
 
 
 if __name__ == "__main__":

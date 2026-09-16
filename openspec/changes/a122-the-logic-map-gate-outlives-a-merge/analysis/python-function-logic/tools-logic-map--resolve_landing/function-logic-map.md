@@ -226,3 +226,23 @@ M2·M3 이 1차에서 살아남은 것이 시험 둘을 더 쓴 이유다 —
 열거의 분기·반환·raise 가 **같다**.
 
 호출 — 사라짐 없음 · 생김 없음
+
+## 편집 — task 7.2.6 (거절이 복구 경로를 말한다) · 분기 8 → 8 · 반환 2 → 2 · raise 5 → 5
+
+편집 전 `ast.before-7.2.6.json`(HEAD `e9f86820` blob) · 편집 후 `ast.after-7.2.6.json`(워킹트리, L781-853).
+
+같은 깃발 집합을 `_landing_refusal` 에 넘기고(`_self_repair_commits` 호출 하나 생김), 거기서 온 거절을 올릴 때 `LANDING_RECOVERY` 를 붙인다. 이 경로의 모든 거절은 "적힌 기록이 지금 규칙으로는 착지가 아니다"이고 돌아가는 길은 하나다 — 번들 갱신 → 기록 삭제 커밋 → 재기록. 문장은 **한 곳**(상수)에 산다: 기록 명령의 "이미 있다" 거절이 같은 상수를 쓴다([[two-judgements-cover-for-each-other]]).
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | raise | `raise ValueError(refusal)` |
+| 생김 | raise | `raise ValueError(f'{refusal} — {LANDING_RECOVERY}')` |
+| 생김 | 호출 | `_self_repair_commits` |
+
+### 7.2.6 수리 — 적대 리뷰 F3 (2026-09-16) · 분기 8 → 8 · raise 5 → 5
+
+계산값 대조 거절(`… is not the landing this change's evidence computes …`)만 복구 경로를
+빠뜨리고 있었다. spec 이 "거절된 기록을 옮기는 경로를 사유 문장이 말해야 한다(SHALL)"를 요구하는데
+이 문장 하나가 그것을 안 지켰고, 게다가 `--record-landing` 을 권하면서 그 명령은 "이미 있다"로
+거절했다 — 7.7 이 닫은 **서로를 가리키는 두 문장**과 같은 모양이다. `LANDING_RECOVERY` 를 잇는다.
+기존 시험 `test_a_later_commit_that_also_matches_is_refused` 에 단언 한 줄을 더해 못 박았다.

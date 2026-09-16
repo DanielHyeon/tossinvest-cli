@@ -1,0 +1,161 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "HEAD",
+  "head_commit": "e9f868200782e79e7c2e1124a27a06afd7e715be",
+  "source_sha256": "d9f9bda0a9836d5f3c0bcb87e8c4f3e0266b86a8e33975489044aa4e156bdcbd",
+  "function": "resolve_landing",
+  "signature": "resolve_landing(change_dir, root, base, analysis)",
+  "start": {
+    "line": 689,
+    "column": 1
+  },
+  "end": {
+    "line": 753,
+    "column": 21
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 712,
+      "inherited_line": false,
+      "source": "if candidate is None:"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 714,
+      "inherited_line": false,
+      "source": "if not FULL_SHA.fullmatch(candidate):"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 725,
+      "inherited_line": false,
+      "source": "process.returncode or process.stdout.strip() != candidate"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 725,
+      "inherited_line": false,
+      "source": "if process.returncode or process.stdout.strip() != candidate:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 727,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, candidate, 'HEAD'):"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 732,
+      "inherited_line": false,
+      "source": "if refusal:"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 746,
+      "inherited_line": false,
+      "source": "if candidate != computed:"
+    },
+    {
+      "id": "B8",
+      "kind": "IfExp",
+      "line": 747,
+      "inherited_line": false,
+      "source": "computed[:12] if computed else f'none — {why}'"
+    }
+  ],
+  "returns": [
+    {
+      "line": 713,
+      "value": "''"
+    },
+    {
+      "line": 753,
+      "value": "candidate"
+    }
+  ],
+  "raises": [
+    {
+      "line": 718,
+      "source": "raise ValueError(f'landing point must be a full 40-hex commit id, not {candidate!r}')"
+    },
+    {
+      "line": 726,
+      "source": "raise ValueError(f'landing point is not a commit in this repository: {candidate}')"
+    },
+    {
+      "line": 728,
+      "source": "raise ValueError(f'landing point never landed on this history: {candidate}')"
+    },
+    {
+      "line": 733,
+      "source": "raise ValueError(refusal)"
+    },
+    {
+      "line": 748,
+      "source": "raise ValueError(f\"landing point {candidate[:12]} is not the landing this change's evidence computes ({named}): the record must be the gate's own value — `--rec"
+    }
+  ],
+  "calls": [
+    {
+      "line": 711,
+      "callee": "_declared_landing"
+    },
+    {
+      "line": 714,
+      "callee": "FULL_SHA.fullmatch"
+    },
+    {
+      "line": 718,
+      "callee": "ValueError"
+    },
+    {
+      "line": 721,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 725,
+      "callee": "process.stdout.strip"
+    },
+    {
+      "line": 726,
+      "callee": "ValueError"
+    },
+    {
+      "line": 727,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 728,
+      "callee": "ValueError"
+    },
+    {
+      "line": 731,
+      "callee": "_evidence_floor"
+    },
+    {
+      "line": 731,
+      "callee": "_landing_refusal"
+    },
+    {
+      "line": 733,
+      "callee": "ValueError"
+    },
+    {
+      "line": 745,
+      "callee": "compute_landing"
+    },
+    {
+      "line": 748,
+      "callee": "ValueError"
+    }
+  ]
+}

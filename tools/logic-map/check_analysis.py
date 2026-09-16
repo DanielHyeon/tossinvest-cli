@@ -351,6 +351,16 @@ BORROWED_REFUSES_A_LANDING = (
     "a borrowed window is never narrowed, because the lender's evidence cannot pin where "
     "this change's own Go work landed"
 )
+# 적힌 기록이 거절당한 저자가 돌아가는 길 (task 7.2.6). **한 문장**을 판정 경로와 기록 명령이
+# 같이 쓴다 — 두 벌이면 갈린다. 이 길은 원래도 열려 있었고(기록을 지우면 다시 기록된다) 아무
+# 규칙도 느슨하게 하지 않는다: 다시 계산한 착지는 갱신된 번들이 세우는 새 하한 뒤에 선다.
+# 없던 것은 **문장**뿐이었다 — 성실하게 번들을 갱신한 저자가 "이 증거가 기술하는 리비전이
+# 아니다"와 "이미 있다 — 덮어쓰지 않았다" 사이에 갇혔다.
+LANDING_RECOVERY = (
+    f"to move a record the evidence has outgrown: refresh the bundles, remove `{LANDING_FILE}` "
+    "in a commit, then run `--record-landing` again (a record is never overwritten, so the "
+    "value it had stays in the history)"
+)
 # 판정을 못 내는 입력이 **판정 대신 traceback** 이 되지 않게 하는 목록 (task 7.4, H5·H6).
 # `subprocess.SubprocessError` 가 여기 있는 이유: `TimeoutExpired` 는 `OSError` 가 아니라서
 # 자리마다 적혀 있던 목록 넷(`OSError, RuntimeError, ValueError, JSONDecodeError`)을 그대로
@@ -588,8 +598,123 @@ def _unheld_bundles(root: Path, candidate: str, analysis: Path) -> list[str]:
     return sorted(set(unheld))
 
 
+def _self_repair_commits(root: Path, analysis: Path) -> list[str]:
+    """이 change 자신의 **나중 Go 작업** 커밋들. 오래된 것부터. 없으면 빈 목록이다.
+
+    세는 것은 하나다: 그 change 의 디렉터리를 만지면서 Go 파일도 고친 **비병합** 커밋
+    (task 7.2.6 — 사람이 2026-09-16 에 고른 변형 B-ANYGO).
+
+    **왜 내용이 아니라 이 신호인가.** 착지를 기록한 뒤 같은 고정 파일을 리뷰 수리로
+    고치고 번들을 안 갱신하면, 5단계는 그 수리를 **창 밖**에 두고 초록이 된다(H4). 내용으로
+    가르려던 후보 규칙(고정 소스가 착지와 지금 같아야 한다)은 착지 있는 68건 중 파일 단위
+    61건 · 함수 단위 55건을 거절했고 원인은 거의 전부 **이웃**의 커밋이었다 — 자기 수리와
+    남의 편집이 내용으로는 안 갈린다(2026-09-16 전수, review.md `## MEASURE — task 7.2.6`).
+    갈리는 신호는 "같은 커밋이 이 change 의 디렉터리도 만졌는가" 하나뿐이었다.
+
+    **신원을 거절에만 쓴다.** 1.12 가 막은 것은 신원으로 착지를 **받는** 판정이다
+    (`base-commit.txt` 가 freeze 뒤 모든 커밋에서 참이라 아무것도 못 갈랐다). 이 집합은
+    후보를 거절만 하므로 창을 좁히는 데 못 쓰이고, 틀리면 창이 **넓어지는** 쪽으로 틀린다.
+
+    **한계 둘을 적는다** [[fail-closed-must-name-what-it-rejects]]:
+    - Go 수리와 문서를 **다른 커밋**으로 쪼개면 이 집합에 안 들어온다. 망각을 막는
+      가드이지 위조를 막는 가드가 아니다.
+    - `--no-merges` 라 병합 커밋 자신의 변경은 안 읽는다 — 7.2.4 의 H7 과 같은 한계 부류.
+
+    파일 목록은 커밋마다 따로 묻지 않는다. 경로 제한을 건 `git log` 는 **그 경로만** 적어
+    주므로("이 커밋이 Go 도 고쳤나"를 못 본다), 디렉터리를 만진 커밋을 먼저 고른 뒤
+    `--no-walk` 한 번으로 그 커밋들의 **전체** 목록을 읽는다. 측정 때 쓴 커밋별
+    `git diff-tree` 판본과 착지 있는 68건 전수에서 깃발 224개 · 불일치 0 이다.
+    """
+    try:
+        change_dir = analysis.parent.parent.relative_to(root).as_posix()
+    except ValueError as exc:
+        # 오늘 도달하지 않는다 — 호출자는 전부 `root` 에서 조립한 경로를 넘기고, 루트 밖
+        # 번들만 있는 change 는 하한이 비어 이 함수 **앞에서** 거절된다. 그래도 빈 목록으로
+        # 물러나지 않는다: 빈 목록은 "거절할 것이 없다"라서, 판정 못 한 것을 위반 0 으로
+        # 읽게 된다([[missing-tool-reports-clean]]). 판정 못 하면 판정이 되어야 한다.
+        raise RuntimeError(f"cannot name this change's directory under the repository: {exc}") from exc
+    paths = [f"{change_dir}/"]
+    if change_dir.startswith(ARCHIVE_PREFIX):
+        # 아카이브 이동 **전**에 그 디렉터리를 만진 커밋이 대부분이다. 옮긴 뒤 이름만 보면
+        # 활성 시절의 자기 수리가 전부 안 보인다.
+        before = _archived_change_id(change_dir[len(ARCHIVE_PREFIX):].partition("/")[0])
+        if before:
+            paths.append(f"openspec/changes/{before}/")
+    touching = subprocess.run(
+        # `--full-history` 가 **핵심**이다 (2026-09-16 적대 리뷰 F1, 실측으로 재현). 경로 제한을
+        # 건 `git log` 는 기본으로 역사를 단순화한다 — 병합이 **그 경로에 대해** 한 부모와
+        # TREESAME 이면 반대편 가지를 통째로 버린다. 그러면 곁가지에서 한 자기 수리가 목록에서
+        # 사라지고, 이 규칙이 닫으려는 H4 가 바로 그 모양(병합)에서 다시 열린다. 픽스처 셋이
+        # 전부 초록이었다: 곁가지 수리 뒤 디렉터리 편집을 되돌린 경우 · 양쪽 가지가 같은 편집을
+        # 한 경우 · 디렉터리 충돌을 main 것으로 해소한 병합. 오늘 이 저장소에서 `--full-history`
+        # 가 더 세는 커밋은 활성 · 아카이브 전수에서 0 이다 — 지금 넣으면 공짜다.
+        ["git", "log", "--full-history", "--no-merges", "--format=%H", "HEAD", "--", *paths],
+        cwd=root, capture_output=True, text=True, timeout=120, check=False,
+    )
+    if touching.returncode:
+        # **실패는 거절이 아니라 판정이다.** 빈 목록으로 물러나면 git 이 멎은 것과 "만진 커밋이
+        # 없다"가 같은 말이 되고, 가드가 조용히 꺼진다(적대 리뷰 F2 — 주입 실험에서 rc 1 하나로
+        # 거절돼야 할 입력이 초록이었다). 옆의 `_evidence_floor` 는 실패하면 거절로 간다.
+        raise RuntimeError(
+            f"cannot list the commits that touched {change_dir}: "
+            f"{touching.stderr.strip().splitlines()[0] if touching.stderr.strip() else 'git log failed'}"
+        )
+    hashes = touching.stdout.split()
+    if not hashes:
+        return []
+    listing = subprocess.run(
+        # `core.quotePath` 의 기본값은 이름의 비ASCII 바이트를 따옴표로 감싸 인용한다 —
+        # 그러면 그런 이름의 `.go` 가 `.go` 로 안 끝나서 안 보인다(안 보이면 **거절을 안 해서**
+        # 창이 좁아지는 쪽으로 틀린다). 오늘 이 저장소의 추적 경로 15,974개 중 비ASCII 는 0 이라
+        # 측정값은 그대로다(A/B 깃발 224 · 불일치 0). 지어낸 규칙이 아니라 읽기를 사실대로 만드는 것이다.
+        # `diff.renames` 도 명령줄에서 못 박는다 (적대 리뷰 F4). 기본값이 켜져 있으면 `.go` 를
+        # 비-`.go` 이름으로 옮긴 커밋의 옛 이름이 목록에서 사라져 **깃발이 안 선다** — 판정이
+        # 사람의 git 설정의 함수가 된다. `_evidence_floor` 가 `-M100% --no-follow` 로 지킨
+        # 원칙과 같다: 하한도 이 신호도 저장소의 함수여야 한다. 끄는 쪽이 더 세는 방향이다.
+        ["git", "-c", "core.quotePath=false", "-c", "diff.renames=false",
+         "log", "--no-walk", "--no-merges", "--stdin", "--format=%x00%H", "--name-only"],
+        cwd=root, capture_output=True, text=True, timeout=120, check=False,
+        input="\n".join(hashes) + "\n",
+    )
+    if listing.returncode:
+        raise RuntimeError(
+            "cannot read the files those commits changed: "
+            f"{listing.stderr.strip().splitlines()[0] if listing.stderr.strip() else 'git log --no-walk failed'}"
+        )
+    flagged: set[str] = set()
+    for block in listing.stdout.split("\0"):
+        lines = [line for line in block.splitlines() if line]
+        if lines and any(name.endswith(".go") for name in lines[1:]):
+            flagged.add(lines[0])
+    # `git log` 는 새 것부터 준다. 거절 문장이 **가장 오래된** 것을 이름으로 대야 저자가
+    # 고칠 첫 자리를 가리킨다 — 뒤의 것들은 그 뒤에 쌓인 작업이다.
+    return [commit for commit in reversed(hashes) if commit in flagged]
+
+
+def _repairs_after(root: Path, candidate: str, repairs: list[str]) -> list[str]:
+    """`candidate` **뒤에** 서는 수리 커밋들. 순서는 `repairs` 의 순서(오래된 것부터).
+
+    `candidate..HEAD` 한 번으로 묻는다 — 후보마다 `merge-base` 를 수리 개수만큼 돌면
+    a112 처럼 수리가 스물여섯인 change 에서 후보 하나에 프로세스가 스물여섯이다. 집합은
+    같다: `rev-list A..HEAD` 가 곧 "HEAD 에서 닿고 A 의 조상이 아닌" 커밋이고, 후보 자신은
+    자기 조상이므로 빠진다(그래서 수리 커밋 **자신**은 착지가 될 수 있다 — 복구 경로).
+    """
+    if not repairs:
+        return []
+    process = subprocess.run(
+        ["git", "rev-list", f"{candidate}..HEAD"],
+        cwd=root, capture_output=True, text=True, timeout=120, check=False,
+    )
+    if process.returncode:
+        # 실패는 판정이다 — 빈 목록이면 가드가 조용히 꺼진다 (적대 리뷰 F2).
+        raise RuntimeError(f"cannot walk the history after {candidate[:12]}")
+    after = set(process.stdout.split())
+    return [commit for commit in repairs if commit in after]
+
+
 def _landing_refusal(
-    root: Path, base: str, candidate: str, analysis: Path, floor: str
+    root: Path, base: str, candidate: str, analysis: Path, floor: str,
+    repairs: list[str],
 ) -> tuple[str, list[str]]:
     """`candidate` 를 착지로 **받지 않는** 사유. 받으면 `("", [])`.
 
@@ -605,8 +730,8 @@ def _landing_refusal(
     2026-09-13 전수 실측으로 93건 합계 +328회(오늘 6,491회의 +5%), 그 거의 전부가 이미
     느린 아카이브 change 일곱의 몫이고 활성 change 에서는 둘뿐이다. 그 walk 는 7.5 가 맡는다.
 
-    `floor` 는 호출자가 한 번 재서 넘긴다 — 후보마다 `git log` 를 다시 돌리지 않는다.
-    둘째 값은 판정이 읽은 번들을 그 커밋이 **안 들고 있을 때만** 그 번들 이름이다.
+    `floor` 와 `repairs` 는 호출자가 한 번 재서 넘긴다 — 후보마다 `git log` 를 다시 돌리지
+    않는다. 둘째 값은 판정이 읽은 번들을 그 커밋이 **안 들고 있을 때만** 그 번들 이름이다.
     계산 경로가 "왜 못 찾았나"를 그 이름으로 말한다.
     """
     # base 는 조상이면 된다. 같은 커밋도 이 판정은 통과하지만 맨 뒤의 조건(고정 소스 중
@@ -683,6 +808,22 @@ def _landing_refusal(
             f"since the comparison base {base[:12]}: {listed} — evidence that still describes "
             "the base cannot tell where this change's Go work landed"
         ), []
+    # 착지 **뒤에** 이 change 자신의 Go 작업이 더 서 있으면 그 후보는 착지가 아니다
+    # (task 7.2.6 — 사람이 2026-09-16 에 고른 규칙). 기록이 한 번 쓰이고 나면 5단계는 그
+    # 기록까지만 대조하므로, 기록 뒤의 리뷰 수리는 고정 파일을 고쳐도 창 밖에 남는다(H4).
+    # 신호는 `_self_repair_commits` 가 한 곳에서 만든다(디렉터리 + Go, 비병합).
+    # **맨 뒤**에 선다 — 앞의 일곱 가드는 각자 자기 문장으로 못 박혀 있고, 앞에 세우면 그
+    # 못이 빠진다([[a-new-guard-unpins-the-guards-behind-it]]).
+    # 자기 자신은 세지 않는다: `_is_ancestor` 는 같은 커밋에서 참이므로 수리 커밋 **자신**은
+    # 착지가 될 수 있다. 그것이 복구 경로다(번들을 갱신하고 다시 기록하면 착지가 앞으로 온다).
+    later = _repairs_after(root, candidate, repairs)
+    if later:
+        return (
+            f"landing point {candidate[:12]} is followed by {len(later)} later commit(s) of "
+            f"this change's own Go work (first {later[0][:12]}): a non-merge commit that edits "
+            "Go while touching this change's directory landed after it, and the window "
+            f"{base[:12]}..{candidate[:12]} would not compare that edit"
+        ), []
     return "", []
 
 
@@ -728,9 +869,17 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
         raise ValueError(f"landing point never landed on this history: {candidate}")
     # 유효한가는 **한 함수**가 판정한다 — 아래 `compute_landing` 이 후보마다 묻는 것과
     # 같은 함수다 (task 7.6, 리뷰 I2).
-    refusal, _ = _landing_refusal(root, base, candidate, analysis, _evidence_floor(root, analysis))
+    refusal, _ = _landing_refusal(
+        root, base, candidate, analysis, _evidence_floor(root, analysis),
+        _self_repair_commits(root, analysis),
+    )
     if refusal:
-        raise ValueError(refusal)
+        # **복구 경로를 말한다** (task 7.2.6). 여기 오는 모든 거절은 "적힌 기록이 지금
+        # 규칙으로는 착지가 아니다"이고, 돌아가는 길은 언제나 같다 — 증거를 갱신하고,
+        # 기록을 지우는 커밋을 하고, 다시 기록한다. 예전 문장들은 무엇이 틀렸는지만 말해서,
+        # 번들을 성실하게 갱신한 저자가 빨간 문장과 "이미 있다 — 덮어쓰지 않았다" 사이에
+        # 갇혔다(2026-09-16 픽스처). 기록을 덮어쓰지 않는 규칙은 그대로다.
+        raise ValueError(f"{refusal} — {LANDING_RECOVERY}")
     # **맨 뒤**에 선다 (task 7.3, 리뷰 H3). 위의 판정들은 전부 "이 값이 유효한가"를
     # 묻고, 이것 하나가 "이 값이 **그 값인가**"를 묻는다. 앞에 두면 위 가드들의 거절
     # 지점을 이 등식이 가로채서 그것들을 지워도 스위트가 초록으로 남는다
@@ -748,7 +897,8 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
         raise ValueError(
             f"landing point {candidate[:12]} is not the landing this change's evidence "
             f"computes ({named}): the record must be the gate's own value — "
-            f"`--record-landing` writes it — not one of the later commits that also match"
+            f"`--record-landing` writes it — not one of the later commits that also match "
+            f"— {LANDING_RECOVERY}"
         )
     return candidate
 
@@ -1218,11 +1368,13 @@ def compute_landing(root: Path, base: str, analysis: Path) -> tuple[str, str]:
     )
     if process.returncode:
         return "", f"cannot walk the history after {start[:12]}"
+    # 후보마다 다시 재지 않는다 — `floor` 와 같은 모양으로 **한 번** 잰다 (task 7.2.6).
+    repairs = _self_repair_commits(root, analysis)
     first = ""
     unheld: list[str] = []
     for candidate in [start, *process.stdout.split()]:
         # 선언 경로와 **같은 함수**에 묻는다 (task 7.6, 리뷰 I2). 받는 가장 낮은 후보가 착지다.
-        refusal, names = _landing_refusal(root, base, candidate, analysis, floor)
+        refusal, names = _landing_refusal(root, base, candidate, analysis, floor, repairs)
         if not refusal:
             return candidate, ""
         # 첫 후보의 거절을 남긴다 (task 6.5). 대개 증거가 역사에 들어온 바로 그 커밋이고,
@@ -1279,7 +1431,9 @@ def _recording_refusal(change: str, change_dir: Path, root: Path) -> tuple[str, 
             "the value it wrote"
         ), ""
     if _landing_record(change_dir, root) is not None:
-        return f"`{LANDING_FILE}` already exists — not overwritten", ""
+        # 복구 경로를 **여기서도** 말한다 (task 7.2.6). 번들을 갱신한 저자가 5단계에서 빨간
+        # 문장을 받고 이 명령을 부르면, 예전에는 "이미 있다"만 듣고 두 문장 사이에 갇혔다.
+        return f"`{LANDING_FILE}` already exists — not overwritten; {LANDING_RECOVERY}", ""
     if landing_file.exists():
         # HEAD 에 없는데 디스크에 있다 — 커밋 전이거나 아카이브 이동이 아직 staged 다.
         # "이미 있다"만 말하면 게이트가 "기록이 없다"고 말하는 것과 고리를 이룬다. 둘이

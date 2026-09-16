@@ -83,3 +83,14 @@ B6 이 **사유 문장**으로 받고, 나머지(`_walk_floor` 의 `ValueError`,
 | 생김 | 반환 | `(BORROWED_REFUSES_A_LANDING, '')` |
 
 호출 — 사라짐 없음 · 생김 없음
+
+## 편집 — task 7.2.6 (이미 있는 기록도 길을 말한다) · 분기 9 → 9 · 반환 9 → 9 · raise 0 → 0
+
+편집 전 `ast.before-7.2.6.json`(HEAD `e9f86820` blob) · 편집 후 `ast.after-7.2.6.json`(워킹트리, L1353-1425).
+
+"이미 있다 — 덮어쓰지 않았다" 뒤에 `LANDING_RECOVERY` 를 잇는다. 덮어쓰기 거절 **동작은 그대로다**. 디스크에만 있는 기록의 문장(`… already exists on disk but not in HEAD`)은 안 바꿨다 — 거기서 할 일은 커밋이지 재기록이 아니고, 두 문장이 갈려 있어야 한다는 것을 7.7 의 시험이 이미 못 박고 있다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 반환 | `(f'`{LANDING_FILE}` already exists — not overwritten', '')` |
+| 생김 | 반환 | `(f'`{LANDING_FILE}` already exists — not overwritten; {LANDING_RECOVERY}', '')` |

@@ -80,3 +80,31 @@
 |---|---|---|
 | 사라짐 | 반환 | `(f'landing point {candidate[:12]} is pinned by evidence that never entered this history: commit the `revision: current` bundles that pin it', [])` |
 | 생김 | 반환 | `(f'landing point {candidate[:12]} is pinned by evidence that no ordinary commit on this history adds: commit the `revision: current` bundles that pin it in an ordinary (n` |
+
+## 편집 — task 7.2.6 (착지 뒤의 자기 수리) · 분기 10 → 12 · 반환 8 → 9 · raise 0 → 0
+
+편집 전 `ast.before-7.2.6.json`(HEAD `e9f86820` blob, L591-686) · 편집 후 `ast.after-7.2.6.json`(워킹트리, L666-778). 표는 두 열거의 `source`·`value` 를 스크립트가 대조한 것이다.
+
+인자 하나(`repairs`)와 조건 하나를 **맨 뒤**(7.2.2 의 K2 뒤, 수락 반환 앞)에 더했다: 후보 뒤에 그 change 자신의 Go 작업 커밋이 있으면 거절한다. 신호는 `_self_repair_commits` 가 한 곳에서 만들고 호출자가 **한 번** 재서 넘긴다(`floor` 와 같은 모양). `_is_ancestor` 는 같은 커밋에서 참이므로 수리 커밋 **자신**은 계속 받아들여진다 — 그것이 복구 경로다. 새 호출 이름은 0 이다(`_is_ancestor`·`len` 은 이미 있었다).
+
+맨 뒤인 이유는 앞의 일곱 가드가 각자 자기 문장으로 못 박혀 있기 때문이다([[a-new-guard-unpins-the-guards-behind-it]]). 변이 S6(맨 앞으로)이 첫 판에서 SURVIVED 였고, 수리 커밋이 **불일치이면서 동시에** 뒤에 수리가 하나 더 있는 픽스처(`test_a_candidate_its_evidence_does_not_describe_keeps_that_sentence`)를 넣은 뒤 잡힌다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| 생김 | 분기 | ` for commit in repairs if not _is_ancestor(root, commit, candidate)` |
+| 생김 | 분기 | `if later:` |
+| 생김 | 반환 | `(f"landing point {candidate[:12]} is followed by {len(later)} later commit(s) of this change's own Go work (first {later[0][:12]}): a non-merge commit that edits Go …", [])` |
+
+호출 — 사라짐 없음 · 생김 없음
+
+### 7.2.6 수리 — 적대 리뷰 뒤 (2026-09-16) · 분기 12 → 11 · 반환 9 → 9
+
+가드의 인라인 열거(`[c for c in repairs if not _is_ancestor(...)]`)를 `_repairs_after` 로 옮겼다
+(적대 리뷰 F8). 후보마다 `merge-base` 를 수리 개수만큼 돌던 것이 `rev-list <후보>..HEAD` 한 번이
+된다 — **같은 집합**이고 후보 자신은 여전히 빠진다. 분기 하나가 줄어든 것은 그 열거가 이 함수
+밖으로 나갔기 때문이다. 문장·자리·판정은 불변이다(변이 S4 · S5 · S6 · S7 이 그대로 잡는다).
+
+| | 종류 | 소스 |
+|---|---|---|
+| 사라짐 | 분기 | ` for commit in repairs if not _is_ancestor(root, commit, candidate)` |
+| 생김 | 호출 | `_repairs_after` |

@@ -1,0 +1,128 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "e9f868200782e79e7c2e1124a27a06afd7e715be",
+  "source_sha256": "6764d06a9e4be868145a059858263e2a19db4ea0065745f8fdf8db014120907d",
+  "function": "compute_landing",
+  "signature": "compute_landing(root, base, analysis)",
+  "start": {
+    "line": 1301,
+    "column": 1
+  },
+  "end": {
+    "line": 1350,
+    "column": 6
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 1312,
+      "inherited_line": false,
+      "source": "if why:"
+    },
+    {
+      "id": "B2",
+      "kind": "IfExp",
+      "line": 1314,
+      "inherited_line": false,
+      "source": "floor if _is_ancestor(root, base, floor) else base"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 1319,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B4",
+      "kind": "For",
+      "line": 1325,
+      "inherited_line": false,
+      "source": "for candidate in [start, *process.stdout.split()]:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 1328,
+      "inherited_line": false,
+      "source": "if not refusal:"
+    },
+    {
+      "id": "B6",
+      "kind": "BoolOp",
+      "line": 1333,
+      "inherited_line": false,
+      "source": "first or refusal"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 1334,
+      "inherited_line": false,
+      "source": "if names:"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 1337,
+      "inherited_line": false,
+      "source": "if unheld:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1313,
+      "value": "('', why)"
+    },
+    {
+      "line": 1320,
+      "value": "('', f'cannot walk the history after {start[:12]}')"
+    },
+    {
+      "line": 1329,
+      "value": "(candidate, '')"
+    },
+    {
+      "line": 1338,
+      "value": "('', 'no commit holds the evidence this verdict read (' + ', '.join(unheld) + ') — commit the bundles as they are on disk')"
+    },
+    {
+      "line": 1347,
+      "value": "('', f'no commit at or after the evidence ({floor[:12]}) is accepted as the landing — at the first commit walked, {first}')"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1311,
+      "callee": "_walk_floor"
+    },
+    {
+      "line": 1314,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 1315,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 1322,
+      "callee": "_self_repair_commits"
+    },
+    {
+      "line": 1325,
+      "callee": "process.stdout.split"
+    },
+    {
+      "line": 1327,
+      "callee": "_landing_refusal"
+    },
+    {
+      "line": 1339,
+      "callee": "', '.join"
+    }
+  ]
+}

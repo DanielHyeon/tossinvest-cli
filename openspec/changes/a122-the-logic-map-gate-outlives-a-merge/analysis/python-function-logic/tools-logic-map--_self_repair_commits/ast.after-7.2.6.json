@@ -1,0 +1,258 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "e9f868200782e79e7c2e1124a27a06afd7e715be",
+  "source_sha256": "caa7294dd88dba4f7c60c86810ad5083b9071cd27f09080221c451ee1bf082e1",
+  "function": "_self_repair_commits",
+  "signature": "_self_repair_commits(root, analysis)",
+  "start": {
+    "line": 601,
+    "column": 1
+  },
+  "end": {
+    "line": 691,
+    "column": 72
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 628,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 630,
+      "inherited_line": false,
+      "source": "except ValueError as exc:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 637,
+      "inherited_line": false,
+      "source": "if change_dir.startswith(ARCHIVE_PREFIX):"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 641,
+      "inherited_line": false,
+      "source": "if before:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 654,
+      "inherited_line": false,
+      "source": "if touching.returncode:"
+    },
+    {
+      "id": "B6",
+      "kind": "IfExp",
+      "line": 660,
+      "inherited_line": false,
+      "source": "touching.stderr.strip().splitlines()[0] if touching.stderr.strip() else 'git log failed'"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 663,
+      "inherited_line": false,
+      "source": "if not hashes:"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 679,
+      "inherited_line": false,
+      "source": "if listing.returncode:"
+    },
+    {
+      "id": "B9",
+      "kind": "IfExp",
+      "line": 682,
+      "inherited_line": false,
+      "source": "listing.stderr.strip().splitlines()[0] if listing.stderr.strip() else 'git log --no-walk failed'"
+    },
+    {
+      "id": "B10",
+      "kind": "For",
+      "line": 685,
+      "inherited_line": false,
+      "source": "for block in listing.stdout.split('\\x00'):"
+    },
+    {
+      "id": "B11",
+      "kind": "comprehension",
+      "line": 686,
+      "inherited_line": true,
+      "source": " for line in block.splitlines() if line"
+    },
+    {
+      "id": "B12",
+      "kind": "BoolOp",
+      "line": 687,
+      "inherited_line": false,
+      "source": "lines and any((name.endswith('.go') for name in lines[1:]))"
+    },
+    {
+      "id": "B13",
+      "kind": "If",
+      "line": 687,
+      "inherited_line": false,
+      "source": "if lines and any((name.endswith('.go') for name in lines[1:])):"
+    },
+    {
+      "id": "B14",
+      "kind": "comprehension",
+      "line": 687,
+      "inherited_line": true,
+      "source": " for name in lines[1:]"
+    },
+    {
+      "id": "B15",
+      "kind": "comprehension",
+      "line": 691,
+      "inherited_line": true,
+      "source": " for commit in reversed(hashes) if commit in flagged"
+    }
+  ],
+  "returns": [
+    {
+      "line": 664,
+      "value": "[]"
+    },
+    {
+      "line": 691,
+      "value": "[commit for commit in reversed(hashes) if commit in flagged]"
+    }
+  ],
+  "raises": [
+    {
+      "line": 635,
+      "source": "raise RuntimeError(f\"cannot name this change's directory under the repository: {exc}\") from exc"
+    },
+    {
+      "line": 658,
+      "source": "raise RuntimeError(f'cannot list the commits that touched {change_dir}: {(touching.stderr.strip().splitlines()[0] if touching.stderr.strip() else 'git log faile"
+    },
+    {
+      "line": 680,
+      "source": "raise RuntimeError(f'cannot read the files those commits changed: {(listing.stderr.strip().splitlines()[0] if listing.stderr.strip() else 'git log --no-walk fai"
+    }
+  ],
+  "calls": [
+    {
+      "line": 629,
+      "callee": "analysis.parent.parent.relative_to"
+    },
+    {
+      "line": 629,
+      "callee": "analysis.parent.parent.relative_to(root).as_posix"
+    },
+    {
+      "line": 635,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 637,
+      "callee": "change_dir.startswith"
+    },
+    {
+      "line": 640,
+      "callee": "_archived_change_id"
+    },
+    {
+      "line": 640,
+      "callee": "change_dir[len(ARCHIVE_PREFIX):].partition"
+    },
+    {
+      "line": 640,
+      "callee": "len"
+    },
+    {
+      "line": 642,
+      "callee": "paths.append"
+    },
+    {
+      "line": 643,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 658,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 660,
+      "callee": "touching.stderr.strip"
+    },
+    {
+      "line": 660,
+      "callee": "touching.stderr.strip"
+    },
+    {
+      "line": 660,
+      "callee": "touching.stderr.strip().splitlines"
+    },
+    {
+      "line": 662,
+      "callee": "touching.stdout.split"
+    },
+    {
+      "line": 665,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 677,
+      "callee": "'\\n'.join"
+    },
+    {
+      "line": 680,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 682,
+      "callee": "listing.stderr.strip"
+    },
+    {
+      "line": 682,
+      "callee": "listing.stderr.strip"
+    },
+    {
+      "line": 682,
+      "callee": "listing.stderr.strip().splitlines"
+    },
+    {
+      "line": 684,
+      "callee": "set"
+    },
+    {
+      "line": 685,
+      "callee": "listing.stdout.split"
+    },
+    {
+      "line": 686,
+      "callee": "block.splitlines"
+    },
+    {
+      "line": 687,
+      "callee": "any"
+    },
+    {
+      "line": 687,
+      "callee": "name.endswith"
+    },
+    {
+      "line": 688,
+      "callee": "flagged.add"
+    },
+    {
+      "line": 691,
+      "callee": "reversed"
+    }
+  ]
+}
