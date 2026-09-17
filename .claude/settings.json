@@ -38,6 +38,17 @@
             "command": "./save-session.sh > /dev/null 2>&1"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codegraph sync 2>/dev/null || true",
+            "async": true,
+            "statusMessage": "Updating codegraph index..."
+          }
+        ]
       }
     ]
   }
