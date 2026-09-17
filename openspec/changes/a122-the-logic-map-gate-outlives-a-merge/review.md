@@ -3304,3 +3304,28 @@ CAUGHT 17: T1 · T2 · T3 · T4 · T5 · T7 · T8 · T9 · T10 · T11 · T12 · 
 일곱 조건과 세 거절은 산문에서 옮기지 않고 `_landing_refusal` · `_walk_floor` ·
 `ADOPTION_REFUSES_A_LANDING` · `BORROWED_REFUSES_A_LANDING` · `LANDING_RECOVERY` 를 읽어서 적었다
 ([[contract-numbers-from-the-receipt]]).
+
+## 인계 준비 (2026-09-18)
+
+다음 세션이 이어받을 수 있게 셋을 만들었다. 코드·판정 변경 0.
+
+- **`HANDOFF.md`** — 먼저 읽는 문서(a112 선례와 같은 자리). 상태·읽는 순서·남은 일·
+  사람 결정 둘·밟기 쉬운 지뢰 여섯.
+- **`analysis/harness/`** — 7.5 의 측정·A/B·변이 하네스 여섯을 저장소로 옮겼다.
+  **이유는 재현성이다**: `_landing_refusal` · `_self_repair_commits` 의 branch-test-map 이
+  `722_mut.py` · `726_mut.py` · `76_mut.py` 를 증거로 인용하는데 그 파일들은 세션
+  스크래치패드와 함께 사라져서 **인용만 남고 재현이 불가능**했다
+  ([[borrowed-flm-evidence-goes-stale]]). 두 map 에 그 사실을 각주로 적었다.
+- 옮기면서 절대경로를 **유도**로 바꿨다 ([[renamed-checkout-strands-absolute-path-state]]).
+
+**옮긴 것이 도는지 실제로 돌려서 확인했다** — 그리고 둘이 깨져 있었다.
+`75_census.py` 는 `_walk_floor` 가 7.5 에서 값 셋을 돌려주게 되자 126건을 전부 "못 걸음"으로
+찍었다(빈 결과가 발견처럼 보인다, [[missing-tool-reports-clean]]). `75_ab.py` 는 비교 기준이
+`HEAD` 로 굳어 있어 7.5 가 랜딩한 뒤 **대조군이 오염**됐다 —
+[[a-recorded-boundary-stops-being-rechecked]] 그대로다. 기준을 인자로 빼고 오염되면 멈추게
+했다(기본값 `8091e6c4` = 7.5 직전). 고친 뒤 여섯 전부 새 자리에서 돈다:
+census 93 걷음 · levers · attrib · time · ab 대조군 OK · mut 대조군 GREEN + T3 CAUGHT.
+
+**병행 세션 실측**: 이 작업 중에 다른 세션이 같은 워크트리에서 `1764c833` 을 커밋했다
+(`.claude/` 둘). 내 커밋에 담지 않았고 HANDOFF 에 적었다
+([[tossos-parallel-session-gate-contention]]).

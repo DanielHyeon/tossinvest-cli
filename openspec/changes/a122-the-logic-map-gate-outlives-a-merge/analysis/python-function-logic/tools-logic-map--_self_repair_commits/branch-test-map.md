@@ -56,3 +56,11 @@
 | Go 수리와 문서를 **다른 커밋**으로 쪼갬 | `test_splitting_the_fix_from_its_notes_evades_the_guard` (초록으로 못 박음) | 망각 가드이지 위조 가드가 아니다. 내용으로 가르는 규칙은 이웃 때문에 68건 중 61/55 를 거절한다 |
 | 병합 커밋 자신의 수리 | `test_a_fix_made_inside_the_merge_commit_itself_is_the_known_limit` | 7.2.4 H7 과 같은 부류 |
 | 이웃이 나중에 같은 파일을 고침 | `test_a_neighbours_later_go_edit_is_not_this_changes_own_repair` | 거절하면 안 되는 자리 — 내용으로는 자기 수리와 안 갈린다 |
+
+---
+
+**여기 인용된 `722_mut.py` · `726_mut.py` · `76_mut.py` 는 저장소에 없다** (2026-09-18 확인).
+그 세션들의 스크래치패드에 살다가 사라져서 **인용만 남고 재현이 안 된다** —
+[[borrowed-flm-evidence-goes-stale]] 와 같은 모양이다. 7.5 부터는 하네스를
+`analysis/harness/` 에 커밋한다(`README.md` 참조). 위 표의 짝을 다시 확인해야 하면
+`75_mut.py` 를 본떠 그 task 의 변이를 다시 쓸 것 — **짝은 손으로 고르지 않는다.**

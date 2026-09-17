@@ -37,3 +37,11 @@
 | 이름은 **가장 오래된** 수리 | `test_the_oldest_repair_is_the_one_named` | yes — S7 |
 | 위치: K2 뒤, 수락 앞 | `test_a_candidate_its_evidence_does_not_describe_keeps_that_sentence` | yes — S6(맨 앞으로). 첫 판에는 이 시험이 없어 SURVIVED 였다 |
 | 호출자가 **한 번** 재서 넘긴다 (두 집이 아니다) | `test_the_recorder_will_not_write_a_landing_its_own_later_work_outruns`(계산) · `test_the_refusal_says_how_to_move_the_record`(선언) | yes — S10 · S11 각각 |
+
+---
+
+**여기 인용된 `722_mut.py` · `726_mut.py` · `76_mut.py` 는 저장소에 없다** (2026-09-18 확인).
+그 세션들의 스크래치패드에 살다가 사라져서 **인용만 남고 재현이 안 된다** —
+[[borrowed-flm-evidence-goes-stale]] 와 같은 모양이다. 7.5 부터는 하네스를
+`analysis/harness/` 에 커밋한다(`README.md` 참조). 위 표의 짝을 다시 확인해야 하면
+`75_mut.py` 를 본떠 그 task 의 변이를 다시 쓸 것 — **짝은 손으로 고르지 않는다.**
