@@ -22,6 +22,35 @@ python3 tools/logic-map/check_analysis.py --change <change-id>
 `base-commit.txt`와 같은 commit으로 resolve되어야 한다.
 ast-grep 발견은 자동 결함 판정이 아니다.
 
+## 착지 지점 — `landed-commit.txt`
+
+`check_analysis.py` 의 5단계는 `base-commit.txt` 부터 **워킹트리**까지를 비교한다. 그
+창 안에서 바뀐 기존 Go 함수는 전부 증거를 요구받으므로, base 뒤에 남이 고친 함수까지
+이 change 의 몫이 된다. Go 작업이 끝난 change 는 창의 끝을 착지 커밋으로 좁힐 수 있다.
+
+```bash
+python3 tools/logic-map/check_analysis.py --change <change-id> --record-landing
+```
+
+`openspec/changes/<change-id>/landed-commit.txt` 에 40자리 커밋 id 하나를 쓴다. 기록은
+**커밋해야** 효력이 있다 — 게이트는 워킹트리가 아니라 HEAD 에서 읽는다(안 그러면 untracked
+파일로 통과한 뒤 지울 수 있다).
+
+**값은 저자가 고르지 않는다.** 도구가 이 change 의 `revision: current` 번들로 계산하고,
+게이트는 적힌 값이 자기가 계산하는 값과 같은지 확인한다. 유효 조건을 통과하는 커밋은
+대개 여럿이라(실측: 착지를 얻는 76건 중 65건, 최대 516개) 조건만으로는 값이 안 정해진다.
+
+받는 착지는 다음을 전부 만족하는 **가장 낮은** 커밋이다: base 의 자손 · 고정 번들이 있고
+그 소스 해시가 전부 맞음 · 번들이 역사에 들어온 커밋 이후 · 판정이 디스크에서 읽은 번들
+바이트를 그 커밋이 들고 있음 · 고정 소스 중 하나 이상이 base 와 다름 · 그 뒤에 이 change
+자신의 Go 작업이 더 없음.
+
+기록은 **덮어쓰이지 않는다.** 증거를 갱신해 기록이 낡으면: 번들을 갱신 → `landed-commit.txt`
+를 지우는 커밋 → 다시 기록. 거절 문장이 이 길을 같이 말한다.
+
+증거를 **빌리는** change, a063 **이관 예외**, 고정 번들이 **0** 인 change 는 기록을 받지
+않는다. 5단계는 그때 워킹트리를 대상으로 삼고 명령을 권하지 않으며, 왜 못 좁히는지를 적는다.
+
 ## a063 execution-baseline adoption exception
 
 `execution_baseline.py`는 일반적인 baseline 재설정 도구가 아니다. a063의 고정된

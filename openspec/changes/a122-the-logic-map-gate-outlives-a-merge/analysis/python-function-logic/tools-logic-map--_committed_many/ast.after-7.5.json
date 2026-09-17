@@ -1,0 +1,139 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "8091e6c4d4b6c7685b2e02cdc14cab932d41874a",
+  "source_sha256": "461e02a35d028aced721858a48c85983564976d0bae40a3d68386d1f39a48e2c",
+  "function": "_committed_many",
+  "signature": "_committed_many(root, ref, relatives)",
+  "start": {
+    "line": 374,
+    "column": 1
+  },
+  "end": {
+    "line": 422,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "comprehension",
+      "line": 396,
+      "inherited_line": true,
+      "source": " for relative in wanted"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 397,
+      "inherited_line": false,
+      "source": "if not wanted:"
+    },
+    {
+      "id": "B3",
+      "kind": "comprehension",
+      "line": 401,
+      "inherited_line": true,
+      "source": " for relative in wanted"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 404,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B5",
+      "kind": "For",
+      "line": 407,
+      "inherited_line": false,
+      "source": "for relative in wanted:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 409,
+      "inherited_line": false,
+      "source": "if end < 0:"
+    },
+    {
+      "id": "B7",
+      "kind": "BoolOp",
+      "line": 416,
+      "inherited_line": false,
+      "source": "len(fields) != 3 or not fields[2].isdigit()"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 416,
+      "inherited_line": false,
+      "source": "if len(fields) != 3 or not fields[2].isdigit():"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 419,
+      "inherited_line": false,
+      "source": "if fields[1] == b'blob':"
+    }
+  ],
+  "returns": [
+    {
+      "line": 398,
+      "value": "found"
+    },
+    {
+      "line": 405,
+      "value": "found"
+    },
+    {
+      "line": 422,
+      "value": "found"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 395,
+      "callee": "dict.fromkeys"
+    },
+    {
+      "line": 395,
+      "callee": "list"
+    },
+    {
+      "line": 399,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 401,
+      "callee": "b''.join"
+    },
+    {
+      "line": 401,
+      "callee": "f'{ref}:{relative}\\x00'.encode"
+    },
+    {
+      "line": 408,
+      "callee": "data.find"
+    },
+    {
+      "line": 413,
+      "callee": "header.rsplit"
+    },
+    {
+      "line": 416,
+      "callee": "fields[2].isdigit"
+    },
+    {
+      "line": 416,
+      "callee": "len"
+    },
+    {
+      "line": 418,
+      "callee": "int"
+    }
+  ]
+}

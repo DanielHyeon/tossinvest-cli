@@ -1,0 +1,83 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "8091e6c4d4b6c7685b2e02cdc14cab932d41874a",
+  "source_sha256": "145b3e11847141597456dca1d84c817e7ec47f01c349ea1d3427d4efac771231",
+  "function": "normalized_source",
+  "signature": "normalized_source(value, root)",
+  "start": {
+    "line": 969,
+    "column": 1
+  },
+  "end": {
+    "line": 975,
+    "column": 69
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "IfExp",
+      "line": 971,
+      "inherited_line": false,
+      "source": "raw if raw.is_absolute() else root / raw"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 973,
+      "inherited_line": false,
+      "source": "if not resolved.is_relative_to(root.resolve()):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 975,
+      "value": "(resolved, resolved.relative_to(root.resolve()).as_posix())"
+    }
+  ],
+  "raises": [
+    {
+      "line": 974,
+      "source": "raise ValueError('AST source escapes repository')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 970,
+      "callee": "Path"
+    },
+    {
+      "line": 971,
+      "callee": "raw.is_absolute"
+    },
+    {
+      "line": 972,
+      "callee": "path.resolve"
+    },
+    {
+      "line": 973,
+      "callee": "resolved.is_relative_to"
+    },
+    {
+      "line": 973,
+      "callee": "root.resolve"
+    },
+    {
+      "line": 974,
+      "callee": "ValueError"
+    },
+    {
+      "line": 975,
+      "callee": "resolved.relative_to"
+    },
+    {
+      "line": 975,
+      "callee": "resolved.relative_to(root.resolve()).as_posix"
+    },
+    {
+      "line": 975,
+      "callee": "root.resolve"
+    }
+  ]
+}

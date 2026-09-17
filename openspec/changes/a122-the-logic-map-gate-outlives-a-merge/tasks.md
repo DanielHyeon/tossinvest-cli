@@ -1147,7 +1147,7 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       **실측**: 착지 전수 93건 — 같음 76 · 이동 0 · **상실 0** (양성 대조군 12/12), 판정 A/B
       28건 **IDENTICAL 28 · DIFFERENT 0**, 실물 기록 a099 는 착지 `e6c4636a` · required 32 ·
       8.5s→8.0s 로 불변. `make sdd-test` · 스위트 180개 · `openspec validate --strict` 통과.
-- [ ] 7.3 **P1 — 게이트가 "도구가 계산한 값"을 확인할지 사람이 정한다 (H3).** spec 은 기록이
+- [x] 7.3 **P1 — 게이트가 "도구가 계산한 값"을 확인할지 사람이 정한다 (H3).** spec 은 기록이
       도구의 값이어야 한다(SHALL)고 적는데 게이트는 안 본다. a099 실측: 기록 `e6c4636a` ≠ 계산
       `21a315d1` — 같게 강제하면 유일한 실물 기록이 깨진다(소급 인정 / 다시 기록). 7.2 뒤에 정한다.
       **측정 완료(2026-09-13) · 결정 대기.** 기록은 review.md `## MEASURE — task 7.3 (H3)`.
@@ -1162,7 +1162,8 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       **1.33s**(+8%). 후보 R2("계산값 이상")는 실측으로 **no-op** 이라 죽었다.
       **남은 선택은 R1(등식+a099 재기록) · R3(안 넣고 spec 을 실측에 맞게 정정) ·
       R4(계산값과 다르면 review.md 에 값과 근거 — 7.2 가 가리킨 축)이고 사람 몫이다.**
-      **사람이 2026-09-13 에 R1 을 골랐다 → 7.3.1 로 닫았다.**
+      **사람이 2026-09-13 에 R1 을 골랐다 → 7.3.1 로 닫았다.** (부모 체크박스는 그때 안 닫혔다 —
+      2026-09-18 에 닫는다. 결정도 구현도 7.3.1 에 있고 이 줄이 남긴 것은 표시뿐이었다.)
 - [x] 7.3.1 **기록이 계산값과 같은지 게이트가 확인한다 (H3, R1).** 기록은 `resolve_landing`
       의 **맨 뒤**에서 `compute_landing` 과 대조한다 — 앞에 두면 위 가드들의 거절 지점을
       이 등식이 가로챈다([[a-new-guard-unpins-the-guards-behind-it]], 7.2.1 이 같은 파일에서
@@ -1197,9 +1198,31 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       시험 6개 추가(112개 초록) · 뮤테이션 **M-A~M-G 일곱 전부 CAUGHT**(M-A 는 처음 SURVIVED —
       배타 생성이 링크 거절을 대신 막고 있었다, [[surviving-mutant-may-mean-accidental-safety]];
       거절 **지점**을 단언하게 고쳐서 잡았다).
-- [ ] 7.5 **P2 — 성능 (I1).** 못 찾는 walk 가 (후보+1)×(번들+2) spawn — a055 133.7s, 다른 아카이브
+- [x] 7.5 **P2 — 성능 (I1).** 못 찾는 walk 가 (후보+1)×(번들+2) spawn — a055 133.7s, 다른 아카이브
       219.6s. 파일 단위 fetch · 조기 종료 · 번들 목록 한 번 · `--ancestry-path`. 7.2 가 walk 를
       바꿀 수 있으므로 그 뒤에 한다.
+      **닫음(2026-09-18). 생산 코드 변경 0.** 기록은 review.md `## MEASURE · Pre-Edit Gate — task 7.5` ·
+      `## VERIFY — task 7.5`. **먼저 다시 쟀다**(리뷰 숫자는 리뷰 시점의 수다): 전수 126건 중 93이
+      걷고 후보 합계 36,767, 그리고 비용은 **실패하는 walk** 에 있었다(a071 73.19s · a092 72.32s 대
+      성공 1.64s · 0.78s). spawn 귀속으로 갈라 보니 **97.1~97.3% 가 blob fetch** 였다 — 근본 원인은
+      알고리즘이 아니라 **fetch 단위**(`git show` 한 프로세스에 파일 하나)였다.
+      고친 것 셋: 새 `_committed_many` 가 `git cat-file --batch -Z` **한 번**으로 읽고(`-Z` 는 개행 든
+      경로와 tree 의 raw NUL 을 둘 다 견딘다, blob 만 내용으로 친다) · `_committed_bytes` 가 그 위의
+      1-원소 호출이 되어 철자가 한 곳이 되고 · 번들 목록을 `floor`·`repairs` 와 같은 방식으로
+      **한 번 재서 넘긴다**. `normalized_source` 의 `root.resolve()` 중복(호출당 2회)도 없앴다.
+      첫 병목을 걷어내자 둘째가 프로파일에 드러나 셋을 차례로 쟀다: 73.19 → 27.84 → 10.97 → **3.69s**.
+      **판정 전수 A/B: 비교 116 · SAME 116 · DIFFERENT 0**(예외는 타입·문장까지), 합계
+      **2023.0s → 162.1s (12.5×)**, 최대 36.9×. 편집 전후 AST 대조로 `_landing_refusal`(11·9) 등
+      **여섯 함수의 분기·반환·raise 가 전부 불변** — 가드도 순서도 안 움직였다.
+      뮤테이션 18 중 **17 CAUGHT**. 첫 판 SURVIVED 넷은 전부 "시험이 그 갈래에 안 닿았다"였다
+      (트리를 혼자 물음 · 빈 출력으로 죽는 git · 아카이브 뒤 커밋 없음 · 행동이 같은 두 철자).
+      닿는 픽스처와 구조 시험으로 셋을 잡고, 끝까지 남은 T6 은 **동등 변이임을 T18(사전 채움 삭제 →
+      59개 빨강)로 증명**했다 — 가설로 안 넘겼다.
+      시험 175 → **182** · `make sdd-test`(logic-map 257) · `make lint` · `openspec validate` 58/58 ·
+      실물 a122 rc=0.
+      **안 한 것**: `--ancestry-path` 는 후보 **집합**을 바꾸는 규칙 변경이라 7.5 의 몫이 아니고
+      (7.8 M6 이 곁가지 후보의 실재를 실측했다), 조기 종료는 거절 문장이 고칠 자리를 **전부**
+      대야 해서 안 하며 배치 뒤엔 비용도 0 이다. 둘 다 review.md 에 사유를 적었다.
 - [x] 7.6 **P2 — 규칙 한 집 (I2 · I3 · I4 · I5 · I6 · I7).** `compute_landing` 과 `resolve_landing`
       의 수락 조건 두 벌 · `validate` 의 지역 `canonical` 이 모듈 함수를 가림 · 디렉터리 해소 두 벌과
       없는 id 의 엉뚱한 조언 · 이관 거절 문장 두 벌(이미 갈렸다) · `_pre_archive_path` 가 아카이브
@@ -1262,5 +1285,13 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       사본 0, 갈리는 부분이 각 클래스가 재는 바로 그것이다.
       시험 116 → **125** · `make sdd-test`(logic-map 200) · `make lint` · `make test-seams` ·
       `openspec validate --all --strict` 58/58 · 실물 a099 rc=0(required 32 불변).
-- [ ] 7.9 **P2 — 문서 (I17).** `tools/logic-map/README.md` · `docs/WORKFLOW.md` 에 `--record-landing`
+- [x] 7.9 **P2 — 문서 (I17).** `tools/logic-map/README.md` · `docs/WORKFLOW.md` 에 `--record-landing`
       · `landed-commit.txt` 가 없다. 7.2 가 규칙을 정한 뒤에 쓴다(지금 쓰면 곧 틀린다).
+      **닫음(2026-09-18). 코드 변경 0.** 기록은 review.md `## VERIFY — task 7.9`. 두 파일에서 두
+      낱말의 실측 출현은 **0회**였다. 7.2·7.3·7.7 이 규칙을 정한 뒤인 지금 썼다.
+      `docs/WORKFLOW.md` 에 `### 착지 지점 — landed-commit.txt`(명령 · **값은 저자가 고르지 않는다** ·
+      도구가 받는 일곱 조건 · 덮어쓰지 않는 규칙과 **복구 경로** · 받지 않는 세 경우), README 에 같은
+      내용을 도구 쪽 말로(기록은 **커밋해야** 효력이 있다 — 게이트는 HEAD 에서 읽는다).
+      조건과 거절 문장은 산문이 아니라 `_landing_refusal` · `_walk_floor` · `ADOPTION_REFUSES_A_LANDING` ·
+      `BORROWED_REFUSES_A_LANDING` · `LANDING_RECOVERY` 를 읽어서 적었다
+      ([[contract-numbers-from-the-receipt]]).

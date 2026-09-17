@@ -3103,3 +3103,204 @@ docstring 은 "한 번 재서 넘긴다"고 적었는데 이 줄만 후보 하�
 
 착지 상실 7건은 **판정이 아니라 `--record-landing` 이 거절하는 것**이다 — 기록이 없으면 5단계는
 워킹트리를 대상으로 삼으므로 창이 가장 넓다. 그래서 오늘 빨개지는 change 는 없다.
+
+## MEASURE · Pre-Edit Gate — task 7.5 (성능, 리뷰 I1) (2026-09-18)
+
+**리뷰가 적은 숫자는 리뷰 시점의 수다.** I1 은 `a055 133.7s · 다른 아카이브 219.6s` 로
+적혀 있는데 그 뒤 7.2.1 · 7.2.2 · 7.2.4 · 7.2.6 · 7.6 · 7.7 이 같은 경로를 여섯 번 고쳤다.
+그래서 수리 **직전에** 다시 쟀다 ([[caller-count-is-not-fix-site-count]]).
+
+### 전수 census (오늘 HEAD, 126 change)
+
+걷는 것 **93** · 안 걷는 것 33(번들 0 이 대부분, base 없음 셋). 후보 합계 **36,767**.
+후보 수 × 번들 수로 예측한 spawn 은 최소 **1,153,251** ~ 최대 4,576,237 이고, 한 번의
+게이트 실행이 무는 것은 그중 change **하나**의 몫이다. 가장 비싼 활성은 a071(후보 347 ·
+번들 35), 가장 비싼 아카이브는 a062(후보 388 · 번들 220).
+
+### 실측 — 비용은 **실패하는 walk** 에 있다
+
+| change | 벽시계 | spawn | 결과 |
+|---|---|---|---|
+| a071-wire-kr-us-protection-readiness | **73.19s** | 12,155 | none(347 후보 전부 거절) |
+| a092-an-alert-does-not-hold-the-stop | **72.32s** | 11,329 | none |
+| a112-run-four-strategy-families-… | 1.64s | 278 | `4f49a8eb` |
+| a100-wire-fill-to-broker-protection | 0.78s | 126 | `016da624` |
+
+성공하는 walk 는 착지에서 멈추므로 이미 싸다. 느린 것은 **아무 후보도 안 받는** walk 다.
+
+### spawn 이 어디서 나오는가 (스택 귀속, 잎이 아니라 호출자)
+
+- a071: `_committed_bytes` **97.1%** — 호출자로 가르면 `_pinning_at` 이 압도, `_unheld_bundles` 70(0.6%).
+- a092: `_committed_bytes` **97.3%**.
+- a112(성공): `_pinning_at` **47.5%** · `_unheld_bundles` **47.5%** — 받는 후보가 두 함수를 다 통과하므로 반반이다.
+- 어느 실행에서도 `_landing_refusal` 의 마지막 `all(...)` 는 4~6 spawn(0.0~2.2%)이다.
+
+**근본 원인은 알고리즘이 아니라 fetch 단위다**: 도구가 blob 을 `git show` 로 **한 프로세스에
+하나씩** 읽는다. 후보 하나에 번들 N 개면 프로세스 N 개다.
+
+### 지렛대 넷을 재서 고른다 (a071, 고유 소스 20)
+
+| 방식 | 후보당 | 347 후보 예측 |
+|---|---|---|
+| `git show` 하나씩 (오늘) | 83.4 ms | 28.9s |
+| `git cat-file --batch` 한 번 | **8.5 ms** | **2.9s** |
+| `git ls-tree` (blob id 만) | 4.9 ms | 1.7s — **쓸 수 없다**: sha256 을 못 만들어 판정이 안 선다 |
+| 번들 재파싱 ×3 (오늘) | 25.2 ms | 8.8s |
+
+두 방식이 **같은 바이트**를 낸다(20/20 확인). 한 개짜리도 batch 가 더 빠르다 —
+`show` 4.05~4.80 ms 대 `cat-file --batch -z` **2.64~3.39 ms**. 그래서 `_committed_bytes` 를
+배치 위에 올려도 단건 호출자가 느려지지 않는다.
+
+### 편집 집합과 **안 하는 것**
+
+바꾼다: 새 `_committed_many`(한 ref 의 여러 blob 을 `git cat-file --batch -z` **한 번**으로) ·
+`_committed_bytes`(그 위의 1-원소 호출 — "그 ref 의 blob 을 읽는다"는 철자를 **한 곳**에 둔다,
+[[two-judgements-cover-for-each-other]]) · `_pinning_at` · `_unheld_bundles`.
+
+**안 바꾼다**, 그리고 사유를 적는다:
+- `_landing_refusal` 의 마지막 `all(...)` — 측정값 4~6 spawn. 이 함수는 **순서가 못**이고
+  (7.2.2 · 7.2.6 · 7.6 이 각 갈래를 그 순서로 못 박았다) 값이 0 인 편집으로 그 자리를
+  건드리지 않는다 ([[a-new-guard-unpins-the-guards-behind-it]]).
+- 번들 목록 hoist(예측 8.8s) — `compute_landing` 은 `_pinning_bundles` 를 **부르면 안 된다**
+  (구조 시험 `test_the_recorder_and_its_advice_ask_one_judge` 가 단언한다). 뚫으려면
+  `_walk_floor` 의 계약을 바꿔야 하는데, 배치 뒤 남는 몫이 작아 값이 그 대가에 못 미친다.
+  **구현 뒤 실측으로 재확인한다.**
+- `--ancestry-path` (I1 이 적은 넷째) — 후보 **집합**을 바꾼다. 7.8 의 M6 이 곁가지 후보가
+  판정에 실제로 들어옴을 실측했으므로, 이것은 성능이 아니라 **규칙** 변경이고 7.5 의 몫이 아니다.
+
+### Pre-Edit 선언
+
+편집 전 AST 를 같은 열거기로 뽑아 뒀다 —
+`analysis/python-function-logic/tools-logic-map--{_committed_bytes,_pinning_at,_unheld_bundles}/ast.before-7.5.json`.
+`_committed_bytes` 는 이 change 에서 처음 편집하므로 디렉터리를 새로 만들었다.
+분기 수(편집 전): `_committed_bytes` 1 · `_pinning_at` 3 · `_unheld_bundles` 9.
+High-risk 아님 — 생산 거래 코드가 아니라 게이트 도구이고, 판정은 **바뀌면 안 된다**(A/B 로 증명한다).
+
+## VERIFY — task 7.5 (성능: blob 을 한 프로세스에 하나씩 읽지 않는다) (2026-09-18)
+
+**생산 Go 코드 변경 0.** 게이트 도구(`tools/logic-map/check_analysis.py`)만 바꿨고 판정은
+전수 A/B 로 불변을 증명했다.
+
+### 근본 원인은 알고리즘이 아니라 fetch 단위였다
+
+측정 기록은 위 `## MEASURE · Pre-Edit Gate — task 7.5`. 두 가지가 겹쳐 있었다.
+
+1. **blob 을 `git show` 로 한 프로세스에 하나씩** 읽었다 — 후보 하나에 번들 N 개면 프로세스 N 개.
+2. 번들 목록(`_pinning_bundles`)이 **후보마다** 다시 계산됐다 — glob + JSON 파싱 +
+   `Path.resolve()`. 그리고 `normalized_source` 는 `root.resolve()` 를 호출당 **두 번** 돌렸다.
+
+첫째를 걷어내자 둘째가 드러났다(프로파일 두 번). 그래서 셋을 차례로 쟀다 —
+73.19s → 27.84s → 10.97s → **3.69s** (a071).
+
+### 고친 것
+
+- 새 `_committed_many(root, ref, relatives)` — 한 ref 의 여러 blob 을 `git cat-file --batch -Z`
+  **한 번**으로. `-Z` 는 입력과 출력을 둘 다 NUL 로 끊는다(개행 든 경로 · tree 의 raw NUL).
+  크기는 **머리가 선언한 값**으로 자른다. **blob 만** 내용으로 친다.
+- `_committed_bytes` 는 그 위의 1-원소 호출이 됐다 — "그 커밋의 blob 을 읽는다"는 철자가
+  **한 곳**이다 ([[two-judgements-cover-for-each-other]]). 단건도 더 싸다(실측 4.05~4.80 ms → 2.64~3.39 ms).
+- `_pinning_at` · `_unheld_bundles` 가 번들 목록을 **받는다**. `_walk_floor` 가 자기가 잰
+  목록을 같이 돌려주고 `compute_landing` 이 `_landing_refusal` 에 넘긴다 — `floor` · `repairs` 가
+  이미 그렇게 넘어오던 방식 그대로다. `_evidence_floor` 도 같은 목록을 받는다.
+- `normalized_source` 의 `root.resolve()` 중복 제거(호출당 3회 → 2회). 판정 동일 —
+  오히려 검사와 계산이 **같은 닻**을 쓴다.
+
+**구조가 안 바뀐 것이 증거다.** 편집 전후 AST 를 같은 열거기로 뽑아 대조했다:
+`_landing_refusal` 분기 11 · 반환 9, `compute_landing` 8 · 5, `resolve_landing` 8 · 2 · raise 5,
+`_recording_refusal` 9 · 9, `_walk_floor` 2 · 3, `_evidence_floor` 6 · 2 — **여섯 전부 불변**.
+가드도 그 **순서**도 안 움직였다 ([[a-new-guard-unpins-the-guards-behind-it]]).
+바뀐 넷은 `_committed_many`(신규 9), `_committed_bytes`(1→0), `_pinning_at`(3→4),
+`_unheld_bundles`(9→13)이고 늘어난 갈래는 전부 배치 입력 조립이다.
+
+### 판정 A/B — 전수 126건
+
+`compute_landing` 을 편집 전 판본(HEAD blob 에서 꺼낸 사본)과 지금 판본으로 각각 돌려
+`(값, 사유)` 를 비교했다. 사본 대상 + 대조군 단언 ([[mutation-revert-needs-the-right-baseline]]).
+
+**비교 116 · SAME 116 · DIFFERENT 0** (base 없음 10). 예외도 타입과 문장까지 비교했다.
+
+합계 **2023.0s → 162.1s (12.5×)**. 가장 느렸던 것들:
+
+| change | before | after | 배 |
+|---|---|---|---|
+| 2026-08-29-add-candidate-discovery | 249.49s | 8.47s | 29.4× |
+| 2026-08-02-a055-console-settings-cadence | 193.71s | 5.25s | 36.9× |
+| 2026-08-29-enable-engine-autostart-menu | 166.61s | 7.70s | 21.6× |
+| 2026-08-29-verify-us-market | 147.27s | 7.23s | 20.4× |
+| a071-wire-kr-us-protection-readiness | 73.19s | 3.69s | 19.8× |
+
+spawn 도 같이 줄었다 — a071 12,155 → **697** (17.4×), a112 278 → **16**.
+리뷰 I1 이 적은 `133.7s · 219.6s` 는 오늘 실측(a055 193.71s · add-candidate-discovery 249.49s)과
+같은 자리이고 크기만 흘렀다.
+
+### 뮤테이션 — 18 중 17 CAUGHT, 남은 하나는 **동등 변이임을 증명**했다
+
+사본 대상 · 무변이 대조군 GREEN 선행. 첫 판에서 **넷이 SURVIVED**(T4 · T5 · T6 · T7 — 전부
+파싱 루프)였고, 그것이 곧 시험이 그 갈래에 **안 닿았다**는 뜻이었다
+([[mutation-must-reach-the-thing-under-test]]).
+
+- **T4**(비-blob 내용을 안 건너뜀) · **T7**(크기를 선언값이 아니라 NUL 탐색으로) — 트리를
+  **혼자** 물으면 응답이 하나라 경계가 밀려도 안 드러난다. 트리 뒤에 파일 둘을 더 묻고,
+  NUL 이 든 blob 을 따로 세웠다 → 둘 다 CAUGHT.
+- **T5**(rc≠0 인데 안 돌아감) · **T17**(T5+T6 동시) — 저장소 아닌 곳을 물으면 git 이 **빈 출력**
+  으로 죽고 그때는 파서도 같은 답을 낸다(서로를 덮었다,
+  [[surviving-mutant-may-mean-accidental-safety]]). **부분 출력을 남기고 죽는** git 을 세워
+  가르니 파서에 맡긴 쪽은 "진짜 blob 을 읽었다"고 답한다 → 둘 다 CAUGHT.
+- **T14**(`and` → `or`)는 아카이브된 번들을 **옮긴 뒤 커밋에서** 들고 있는 픽스처가 없어서
+  살아남았다. 그 갈래에 닿는지 먼저 단언하고 시험을 세웠다 → CAUGHT.
+- **T16**(`_committed_bytes` 를 자기 `git show` 로 되돌림)은 행동이 같아서 행동 시험이 원리적으로
+  못 가른다. 구조 시험 둘(`test_a_commits_blob_is_read_by_one_function` ·
+  `test_the_walk_measures_the_bundle_list_once`)로 의존을 못 박았다 → CAUGHT.
+- **T6**(`if end < 0: break` → `end = len(data)`)는 **끝까지 SURVIVED**. 가설로 넘기지 않고
+  변이로 확인했다: 답을 같게 만드는 것은 **사전 채움**(`found = {r: None for r in wanted}`)이고,
+  그 사전 채움을 지우는 변이 **T18 은 59개 시험이 잡는다**. 즉 T6 는 동등 변이이고
+  `break` 는 비용 선택이지 판정이 아니다.
+
+CAUGHT 17: T1 · T2 · T3 · T4 · T5 · T7 · T8 · T9 · T10 · T11 · T12 · T13 · T14 · T15 · T16 · T17 · T18.
+
+### 시험
+
+`test_check_analysis` **175 → 182** (7.5 가 8개 추가: 배치 등식 · 트리 · NUL blob · 개행 경로 ·
+실패 · 빈 요청 · spawn 수 둘 · 아카이브 보유, 그리고 구조 둘). spawn **수**를 세는 시험이
+핵심이다 — 시간은 기계마다 다르지만 프로세스 수는 알고리즘의 함수다
+([[passing-test-is-not-evidence]]).
+
+시험 쪽 호출 자리도 같이 고쳤다: 사설 판정을 직접 부르는 자리(17곳)가 이제 생산 경로가
+넘기는 것과 **같은 목록**을 `_bundles(root, analysis)` 로 만들어 넘긴다.
+
+### 게이트
+
+`make lint`(go vet ×2) · `make sdd-test`(logic-map **257** · 71 · 22 · 16 · 18 · 15, 전부 OK) ·
+`openspec validate --all --strict` **58 passed, 0 failed** ·
+`check_analysis.py --change a122-…` **rc=0**(required 0 · 창 줄 불변).
+
+**`make lint` 은 Python 을 안 본다**(go vet 둘뿐) — 빈 출력은 "위반 0"이 아니라 "검사 0"이다
+([[missing-tool-reports-clean]]). Python 쪽 판정은 위 스위트와 뮤테이션이 전부다.
+
+### 안 한 것과 사유
+
+- **`--ancestry-path`** (I1 의 넷째) — 후보 **집합**을 바꾼다. 7.8 의 M6 이 곁가지 후보가 판정에
+  실제로 들어옴을 실측했으므로 이것은 성능이 아니라 **규칙** 변경이고 7.5 의 몫이 아니다.
+- **조기 종료**(I1 의 둘째) — `_pinning_at` 은 안 맞는 소스를 **전부** 세어 거절 문장에 넣는다.
+  첫 불일치에서 멈추면 저자가 고칠 자리 목록이 한 개로 줄어든다. 배치 뒤 그 순회의 비용은
+  프로세스 0 이라 살 이유도 없어졌다.
+- **`_landing_refusal` 의 마지막 `all(...)`** — 실측 4~6 spawn(0.0~2.2%). 이 함수는 순서가 못이라
+  값 0 인 편집으로 건드리지 않는다.
+- `_committed_many` 의 `timeout` 은 60 이다(옛 단건 `git show` 는 30). 결함이 판정이 되는
+  시점이 30초 늦어질 뿐 판정 자체는 안 바뀐다 — `_evidence_floor` 가 쓰던 값과 같게 뒀다.
+
+## VERIFY — task 7.9 (문서: 착지 기록이 어디에도 안 적혀 있었다) (2026-09-18)
+
+**코드 변경 0.** `--record-landing` 과 `landed-commit.txt` 는 6.1.2 에서 생겨 7.2 · 7.3 · 7.7 이
+규칙을 바꿔 왔는데 `tools/logic-map/README.md` 에도 `docs/WORKFLOW.md` 에도 한 글자가 없었다
+(실측: 두 파일에 두 낱말 모두 0회). 7.2 가 규칙을 정한 뒤에 쓰기로 한 순서대로 지금 썼다.
+
+- `docs/WORKFLOW.md` — `## Function Logic Map` 안에 `### 착지 지점 — landed-commit.txt`.
+  명령, **값은 저자가 고르지 않는다**, 도구가 받는 일곱 조건, 덮어쓰지 않는 규칙과 **복구 경로**,
+  받지 않는 세 경우(빌림 · a063 이관 · 번들 0).
+- `tools/logic-map/README.md` — 같은 내용을 도구 쪽 말로. 기록을 **커밋해야** 효력이 있다는 것
+  (게이트는 HEAD 에서 읽는다)을 명시했다.
+
+일곱 조건과 세 거절은 산문에서 옮기지 않고 `_landing_refusal` · `_walk_floor` ·
+`ADOPTION_REFUSES_A_LANDING` · `BORROWED_REFUSES_A_LANDING` · `LANDING_RECOVERY` 를 읽어서 적었다
+([[contract-numbers-from-the-receipt]]).

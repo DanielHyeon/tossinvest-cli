@@ -1,0 +1,58 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "8091e6c4d4b6c7685b2e02cdc14cab932d41874a",
+  "source_sha256": "279cbe296679b5d0bb8e3971d493f65064ac977684941f2dd3656b73c1807bad",
+  "function": "_walk_floor",
+  "signature": "_walk_floor(root, analysis)",
+  "start": {
+    "line": 1397,
+    "column": 1
+  },
+  "end": {
+    "line": 1416,
+    "column": 21
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 1404,
+      "inherited_line": false,
+      "source": "if not _pinning_bundles(root, analysis):"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 1407,
+      "inherited_line": false,
+      "source": "if not floor:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1405,
+      "value": "('', 'no `revision: current` evidence pins a landing for this change')"
+    },
+    {
+      "line": 1412,
+      "value": "('', \"no ordinary commit on this history adds the pinning evidence — commit the bundles in an ordinary commit (a merge commit's own changes are not read)\")"
+    },
+    {
+      "line": 1416,
+      "value": "(floor, '')"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1404,
+      "callee": "_pinning_bundles"
+    },
+    {
+      "line": 1406,
+      "callee": "_evidence_floor"
+    }
+  ]
+}

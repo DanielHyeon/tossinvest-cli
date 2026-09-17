@@ -1,0 +1,39 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "8091e6c4d4b6c7685b2e02cdc14cab932d41874a",
+  "source_sha256": "caa7294dd88dba4f7c60c86810ad5083b9071cd27f09080221c451ee1bf082e1",
+  "function": "_committed_bytes",
+  "signature": "_committed_bytes(root, ref, relative)",
+  "start": {
+    "line": 374,
+    "column": 1
+  },
+  "end": {
+    "line": 380,
+    "column": 58
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "IfExp",
+      "line": 380,
+      "inherited_line": false,
+      "source": "None if process.returncode else process.stdout"
+    }
+  ],
+  "returns": [
+    {
+      "line": 380,
+      "value": "None if process.returncode else process.stdout"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 376,
+      "callee": "subprocess.run"
+    }
+  ]
+}

@@ -94,3 +94,17 @@ B6 이 **사유 문장**으로 받고, 나머지(`_walk_floor` 의 `ValueError`,
 |---|---|---|
 | 사라짐 | 반환 | `(f'`{LANDING_FILE}` already exists — not overwritten', '')` |
 | 생김 | 반환 | `(f'`{LANDING_FILE}` already exists — not overwritten; {LANDING_RECOVERY}', '')` |
+
+## task 7.5 — 번들 목록을 한 번 재서 넘긴다 (서명만, 분기 0 변화)
+
+`ast.before-7.5.json` 과 `ast.after-7.5.json` 을 같은 열거기로 뽑아 대조했다:
+**분기 9 · 반환 9 · raise 0 — 셋 다 그대로다.**
+이 함수의 판정도, 가드의 **순서**도 안 바뀐다 ([[a-new-guard-unpins-the-guards-behind-it]]).
+
+바뀐 것은 고정 번들 목록이 **어디서 오는가** 하나다. 후보마다 디렉터리를 다시 순회하던
+것을 호출자가 한 번 재서 넘긴다 — `floor` 와 `repairs` 가 이미 그렇게 넘어오고 있었고
+(7.2.6 · 7.6), 7.5 는 셋째를 같은 방식으로 묶었다. 번들은 걷는 동안 안 변한다: 이 도구는
+번들을 **읽기만** 한다.
+
+값: 2026-09-18 프로파일에서 `_pinning_bundles` 가 a071 walk 하나에 341회 돌아
+13.07s 중 9.30s 였다. 묶은 뒤 a071 이 10.97s → **3.69s**.

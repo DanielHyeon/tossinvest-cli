@@ -186,6 +186,42 @@ SHA-256·함수명·분기 수와 묶인 산출물이 없으면 면제를 거절
 기본 비교 기준은 change 생성 직후의 `base-commit.txt`이며 누락·invalid ref·git diff 오류는
 fail-closed다. CI의 `SDD_BASE_REF`는 이 persisted commit과 동일하게 resolve될 때만 허용한다.
 
+### 착지 지점 — `landed-commit.txt`
+
+비교 창의 **끝**은 기본값이 워킹트리다. 그래서 base 뒤에 남이 고친 함수까지 이 change 의
+증거로 요구된다. change 의 Go 작업이 끝났으면 그 끝을 착지 커밋으로 좁힐 수 있다.
+
+```bash
+python3 tools/logic-map/check_analysis.py --change <change-id> --record-landing
+git add openspec/changes/<change-id>/landed-commit.txt && git commit
+```
+
+**값은 저자가 고르지 않는다.** 도구가 이 change 의 `revision: current` 번들로 계산하고,
+게이트는 적힌 값이 **자기가 계산하는 값과 같은지** 확인한다. 손으로 적은 다른 값은
+유효해도 거절된다. 기록은 **HEAD 커밋에서** 읽으므로 커밋해야 효력이 있다.
+
+도구가 받는 착지는 다음을 **전부** 만족하는 가장 낮은 커밋이다.
+
+1. base 의 자손이다.
+2. `revision: current` 번들이 고정한다 — 번들이 0 이면 착지가 없다(창이 안 좁혀진다).
+3. 그 번들들의 `source_sha256` 과 소스가 그 커밋에서 전부 맞는다.
+4. 그 번들이 역사에 들어온 커밋 **이후**다. 저자가 오늘 만든 번들을 과거에 넣을 수 없으므로
+   이 하한만은 고를 수 없다.
+5. 판정이 **디스크에서 읽은** 번들 바이트를 그 커밋이 그대로 들고 있다.
+6. 고정된 소스 중 **하나 이상**이 base 와 다르다. 번들이 base 의 소스를 적은 채면 그 증거가
+   맞는 커밋은 전부 작업 이전이고, 거기서 좁힌 창은 이 change 의 작업을 담지 못한다.
+7. 그 뒤에 이 change 자신의 Go 작업(이 change 디렉터리를 만지면서 `.go` 를 고친 비병합
+   커밋)이 **더 없다**. 있으면 기록 뒤의 리뷰 수리가 창 밖에 남는다.
+
+기록은 **한 번만 쓰이고 덮어쓰이지 않는다.** 증거를 갱신해서 기록이 낡으면 되돌아가는 길은
+하나다 — 번들을 갱신하고, `landed-commit.txt` 를 **지우는 커밋**을 하고, 다시 기록한다.
+거절 문장이 그 길을 같이 말한다.
+
+받을 수 없는 경우가 셋 있다. 증거를 **빌리는** change(빌려준 쪽 증거는 이쪽 작업이 어디
+착지했는지 못 고정한다), a063 **이관 예외**(창의 끝이 감사된 source commit 이다), 그리고
+고정 번들이 **0** 인 change. 이때 5단계는 워킹트리를 대상으로 삼고 `--record-landing` 을
+권하지 않는다.
+
 ### a063 legacy execution-baseline exception
 
 `a063-align-attestation-renewal-profile`만 fixed P/E tuple을 쓸 수 있다. record가 없으면 일반 P

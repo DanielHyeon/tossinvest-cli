@@ -371,13 +371,65 @@ LANDING_RECOVERY = (
 GATE_FAULTS = (OSError, RuntimeError, ValueError, subprocess.SubprocessError)
 
 
-def _committed_bytes(root: Path, ref: str, relative: str) -> bytes | None:
-    """`ref` 시점의 파일 내용. 워킹트리를 보지 않는다."""
+def _committed_many(root: Path, ref: str, relatives: list[str]) -> dict[str, bytes | None]:
+    """`ref` 시점의 여러 파일 내용을 **한 프로세스**로 읽는다. 없으면 그 자리가 `None` 이다.
+
+    이 함수가 있는 이유는 fetch **단위** 때문이다 (task 7.5, 리뷰 I1). 도구는 blob 을
+    `git show` 로 한 프로세스에 하나씩 읽었고, 후보 하나를 판정하는 데 번들 수만큼
+    프로세스를 썼다. 2026-09-18 실측: 아무 후보도 안 받는 walk 에서 spawn 의 **97.1~97.3%**
+    가 blob fetch 였다(a071 은 12,155 중 11,799 · 73.19s). 한 후보당 83.4ms 가 8.5ms 가 된다.
+
+    `-Z` 인 이유는 **경로가 문자열이기 때문**이다. 입력을 줄로 끊으면 개행이 든 경로가
+    둘로 쪼개져 엉뚱한 blob 이나 `missing` 이 되고, 출력을 줄로 끊으면 tree 의 raw 바이트
+    안에 있는 개행이 응답을 쪼갠다. `-Z` 는 양쪽을 NUL 로 끊는다(git 2.34+ 가 `-z`,
+    출력까지는 2.42+ 의 `-Z`; 이 저장소는 2.43.0).
+
+    **blob 만 내용으로 친다.** `git show <ref>:<디렉터리>` 는 트리 **목록**을 찍는데, 그
+    바이트가 판정에 들어오면 파일 내용인 척한다. 여기서는 `None` 이다 — 막는 쪽으로 엄해진다.
+    오늘 실물 입력(번들의 `file` · 번들 `ast.json` 경로)에 디렉터리는 0 건이다
+    ([[fail-closed-must-name-what-it-rejects]]).
+
+    프로세스가 실패하면 전부 `None` 이다 — 옛 `git show` 의 rc≠0 과 **같은 방향**이고,
+    부르는 쪽은 `None` 을 불일치로 세므로 판정이 느슨해지지 않는다.
+    """
+    wanted = list(dict.fromkeys(relatives))     # 순서 유지 + 중복 제거(같은 소스를 적은 번들 여럿)
+    found: dict[str, bytes | None] = {relative: None for relative in wanted}
+    if not wanted:
+        return found
     process = subprocess.run(
-        ["git", "show", f"{ref}:{relative}"],
-        cwd=root, capture_output=True, timeout=30, check=False,
+        ["git", "cat-file", "--batch", "-Z"],
+        cwd=root, input=b"".join(f"{ref}:{relative}\0".encode("utf-8") for relative in wanted),
+        capture_output=True, timeout=60, check=False,
     )
-    return None if process.returncode else process.stdout
+    if process.returncode:
+        return found
+    data, position = process.stdout, 0
+    for relative in wanted:
+        end = data.find(b"\0", position)
+        if end < 0:
+            break                               # 응답이 요청보다 짧다 — 나머지는 `None`
+        header = data[position:end]
+        position = end + 1
+        fields = header.rsplit(b" ", 2)
+        # 찾은 객체의 머리는 `<oid> <type> <size>` 이고 내용이 뒤따른다. `missing`·
+        # `ambiguous` 는 크기가 없으므로 내용도 없다 — 크기 자리가 숫자인지로 가른다.
+        if len(fields) != 3 or not fields[2].isdigit():
+            continue
+        size = int(fields[2])
+        if fields[1] == b"blob":
+            found[relative] = data[position:position + size]
+        position += size + 1                    # 내용 뒤의 NUL 하나
+    return found
+
+
+def _committed_bytes(root: Path, ref: str, relative: str) -> bytes | None:
+    """`ref` 시점의 파일 내용. 워킹트리를 보지 않는다.
+
+    "그 커밋의 blob 을 읽는다"는 철자는 **한 곳**에 산다 (task 7.5). 두 벌이면 한쪽만
+    고쳐도 양쪽 시험이 초록이다([[two-judgements-cover-for-each-other]]). 단건도 배치가
+    더 싸다 — 실측 `git show` 4.05~4.80 ms 대 `cat-file --batch -Z` 2.64~3.39 ms.
+    """
+    return _committed_many(root, ref, [relative])[relative]
 
 
 def _is_ancestor(root: Path, older: str, newer: str) -> bool:
@@ -494,12 +546,22 @@ def _base_shaped_bundles(root: Path, base: str, analysis: Path) -> list[str]:
     return sorted(names)
 
 
-def _pinning_at(root: Path, candidate: str, analysis: Path) -> tuple[int, list[str]]:
-    """`candidate` 에서 고정 번들이 몇 개이고 그중 어느 소스가 안 맞는가."""
+def _pinning_at(
+    root: Path, candidate: str, bundles: list[tuple[Path, str, str]],
+) -> tuple[int, list[str]]:
+    """`candidate` 에서 고정 번들이 몇 개이고 그중 어느 소스가 안 맞는가.
+
+    번들 목록은 **호출자가 한 번 재서 넘긴다** (task 7.5) — `floor` · `repairs` 와 같다.
+    디렉터리를 받아 스스로 순회하던 판본은 후보마다 glob + JSON 파싱 + `Path.resolve()`
+    를 다시 했다(2026-09-18 프로파일: a071 의 walk 하나에서 `_pinning_bundles` 가 341회 ·
+    13.07s 중 9.30s). 번들은 걷는 동안 안 변한다 — 도구가 쓰지 않기 때문이다.
+    """
     mismatched: list[str] = []
-    bundles = _pinning_bundles(root, analysis)
+    # 번들마다 프로세스를 띄우지 않는다 (task 7.5) — 이 함수가 실패하는 walk 비용의
+    # 거의 전부였다. 같은 소스를 적은 번들 여럿은 `_committed_many` 가 한 번만 묻는다.
+    blobs = _committed_many(root, candidate, [source for _, source, _ in bundles])
     for _, source, digest in bundles:
-        blob = _committed_bytes(root, candidate, source)
+        blob = blobs[source]
         if blob is None or hashlib.sha256(blob).hexdigest() != digest:
             mismatched.append(source)
     return len(bundles), mismatched
@@ -514,7 +576,7 @@ def _pre_archive_path(relative: str) -> str:
     return f"openspec/changes/{change}/{tail}" if change and tail else ""
 
 
-def _evidence_floor(root: Path, analysis: Path) -> str:
+def _evidence_floor(root: Path, bundles: list[tuple[Path, str, str]]) -> str:
     """고정 번들이 역사에 들어온 **마지막** 커밋. 못 찾으면 빈 문자열이다.
 
     저자가 고를 수 없는 유일한 하한이다 — 오늘 만든 번들을 과거 커밋에 넣을 수
@@ -541,7 +603,7 @@ def _evidence_floor(root: Path, analysis: Path) -> str:
     2026-09-12 뮤테이션 M-C3). 둘 다 기본값이라 실측 기준선(설정 없는 기계)의 답은 같다.
     """
     paths: list[str] = []
-    for ast_path, _, _ in _pinning_bundles(root, analysis):
+    for ast_path, _, _ in bundles:
         try:
             relative = ast_path.relative_to(root).as_posix()
         except ValueError:
@@ -560,7 +622,9 @@ def _evidence_floor(root: Path, analysis: Path) -> str:
     return "" if process.returncode else process.stdout.strip()
 
 
-def _unheld_bundles(root: Path, candidate: str, analysis: Path) -> list[str]:
+def _unheld_bundles(
+    root: Path, candidate: str, bundles: list[tuple[Path, str, str]],
+) -> list[str]:
     """`candidate` 가 **들고 있지 않은** 번들. 판정이 읽은 바이트를 기준으로 센다.
 
     하한은 번들의 **경로**를 보고 판정은 **워킹트리의 내용**을 읽는다. 그 둘이 갈리는
@@ -577,22 +641,30 @@ def _unheld_bundles(root: Path, candidate: str, analysis: Path) -> list[str]:
     76건 중 3건이 착지를 잃는데(a092·a043·a096), 셋 다 **이웃 change 가 나중에 단
     무효화 배너**라 정상 입력이다. `ast.json` 만으로는 거부 0 이다.
     """
-    unheld: list[str] = []
-    for ast_path, _, _ in _pinning_bundles(root, analysis):
+    # 물어볼 경로를 **먼저 다 모으고** 한 프로세스로 읽는다 (task 7.5). 받는 후보는
+    # `_pinning_at` 과 이 함수를 **둘 다** 통과하므로, 한쪽만 고치면 성공하는 walk 의
+    # 비용은 절반만 준다(2026-09-18 실측: a112 에서 47.5% · 47.5%).
+    watched: list[tuple[Path, str, str]] = []
+    for ast_path, _, _ in bundles:
         try:
             relative = ast_path.relative_to(root).as_posix()
         except ValueError:
             continue
+        watched.append((ast_path, relative, _pre_archive_path(relative)))
+    blobs = _committed_many(
+        root, candidate, [path for _, relative, before in watched
+                          for path in ((relative, before) if before else (relative,))],
+    )
+    unheld: list[str] = []
+    for ast_path, relative, before in watched:
         try:
             judged = ast_path.read_bytes()  # 판정과 **같은 읽기** — 심링크면 따라간다
         except OSError:
             unheld.append(ast_path.parent.name)
             continue
-        committed = _committed_bytes(root, candidate, relative)
-        if committed is None:
-            before = _pre_archive_path(relative)
-            if before:
-                committed = _committed_bytes(root, candidate, before)
+        committed = blobs[relative]
+        if committed is None and before:
+            committed = blobs[before]
         if committed is None or committed != judged:
             unheld.append(ast_path.parent.name)
     return sorted(set(unheld))
@@ -713,7 +785,7 @@ def _repairs_after(root: Path, candidate: str, repairs: list[str]) -> list[str]:
 
 
 def _landing_refusal(
-    root: Path, base: str, candidate: str, analysis: Path, floor: str,
+    root: Path, base: str, candidate: str, bundles: list[tuple[Path, str, str]], floor: str,
     repairs: list[str],
 ) -> tuple[str, list[str]]:
     """`candidate` 를 착지로 **받지 않는** 사유. 받으면 `("", [])`.
@@ -740,7 +812,7 @@ def _landing_refusal(
     # V1 과 가를 수 없어서 사람이 2026-09-14 에 둘 다 막았다.
     if not _is_ancestor(root, base, candidate):
         return f"landing point precedes the comparison base {base[:12]}: {candidate}", []
-    pinning, mismatched = _pinning_at(root, candidate, analysis)
+    pinning, mismatched = _pinning_at(root, candidate, bundles)
     if not pinning:
         # 위의 판정은 "이것이 어느 커밋인가"만 묻는다. 어느 커밋인지를 **고르지 못하게**
         # 하는 것은 번들 순회이고, 순회가 0회 돌면 저자가 구간의 바닥을 골라 요구 집합을
@@ -777,7 +849,7 @@ def _landing_refusal(
     # 하한 **뒤**에 선다. 앞에 두면 "증거가 역사에 없다"·"착지가 증거보다 앞선다"를
     # 재던 시험들의 거절 지점을 이 등식이 가로채서, 그 가드를 지워도 스위트가 초록으로
     # 남는다([[first-failure-is-not-the-fix-scope]] 가 같은 파일에서 실측한 모양).
-    unheld = _unheld_bundles(root, candidate, analysis)
+    unheld = _unheld_bundles(root, candidate, bundles)
     if unheld:
         return (
             f"landing point {candidate[:12]} does not hold the evidence this verdict read: "
@@ -797,7 +869,7 @@ def _landing_refusal(
     # 빈 표본 위에서 참이 되는 자리는 없다.
     # **맨 뒤**에 선다 — 앞의 가드들은 각자 자기 문장으로 못 박혀 있다
     # ([[a-new-guard-unpins-the-guards-behind-it]]).
-    sources = sorted({source for _, source, _ in _pinning_bundles(root, analysis)})
+    sources = sorted({source for _, source, _ in bundles})
     if all(
         _committed_bytes(root, base, source) == _committed_bytes(root, candidate, source)
         for source in sources
@@ -869,8 +941,11 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
         raise ValueError(f"landing point never landed on this history: {candidate}")
     # 유효한가는 **한 함수**가 판정한다 — 아래 `compute_landing` 이 후보마다 묻는 것과
     # 같은 함수다 (task 7.6, 리뷰 I2).
+    # 번들 목록은 **한 번** 잰다 (task 7.5) — 하한과 규칙이 같은 목록을 본다. 두 번
+    # 재면 그 사이의 디스크 변화가 두 판정을 갈라 놓을 수 있다.
+    bundles = _pinning_bundles(root, analysis)
     refusal, _ = _landing_refusal(
-        root, base, candidate, analysis, _evidence_floor(root, analysis),
+        root, base, candidate, bundles, _evidence_floor(root, bundles),
         _self_repair_commits(root, analysis),
     )
     if refusal:
@@ -904,12 +979,17 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
 
 
 def normalized_source(value: str, root: Path) -> tuple[Path, str]:
+    # `root.resolve()` 는 이 호출 안에서 **불변**인데 두 번 돌고 있었다 (task 7.5). 한 번
+    # 재서 두 자리가 같이 쓴다 — 판정은 그대로이고 파일시스템 왕복만 셋에서 둘로 준다
+    # (2026-09-18 프로파일: 이 함수가 `_pinning_bundles` 안에서 resolve 를 호출당 3회,
+    # a071 의 walk 하나에 35,805회 · lstat 216,876회).
+    anchor = root.resolve()
     raw = Path(value)
     path = raw if raw.is_absolute() else root / raw
     resolved = path.resolve()
-    if not resolved.is_relative_to(root.resolve()):
+    if not resolved.is_relative_to(anchor):
         raise ValueError("AST source escapes repository")
-    return resolved, resolved.relative_to(root.resolve()).as_posix()
+    return resolved, resolved.relative_to(anchor).as_posix()
 
 
 def branch_ids(text: str) -> list[str]:
@@ -1326,16 +1406,19 @@ def check(
     return errors
 
 
-def _walk_floor(root: Path, analysis: Path) -> tuple[str, str]:
+def _walk_floor(
+    root: Path, analysis: Path,
+) -> tuple[str, str, list[tuple[Path, str, str]]]:
     """걷기 **전에** 정해지는 것 — 후보 순회가 설 하한. `(하한, 못 서는 사유)`.
 
     `compute_landing` 과 `_recording_refusal` 이 **같이** 묻는다 (task 7.7, 리뷰 I8). 조언
     줄은 걷지 않고 이것까지만 묻는데, 여기 두 사유를 조언 쪽이 따로 들고 있으면 계산이
     문장을 바꿀 때 조언만 옛 문장으로 남는다([[two-judgements-cover-for-each-other]]).
     """
-    if not _pinning_bundles(root, analysis):
-        return "", "no `revision: current` evidence pins a landing for this change"
-    floor = _evidence_floor(root, analysis)
+    bundles = _pinning_bundles(root, analysis)
+    if not bundles:
+        return "", "no `revision: current` evidence pins a landing for this change", []
+    floor = _evidence_floor(root, bundles)
     if not floor:
         # 걸은 것만 말한다 (task 7.2.4, 리뷰 H7). 하한을 찾는 `git log` 는 `-m` 이 없어서 병합 커밋
         # 자신의 변경을 읽지 않는다 — 병합을 마치며 번들을 처음 커밋하면 여기로 온다. 옛 문장
@@ -1344,8 +1427,8 @@ def _walk_floor(root: Path, analysis: Path) -> tuple[str, str]:
         return "", (
             "no ordinary commit on this history adds the pinning evidence — commit the bundles "
             "in an ordinary commit (a merge commit's own changes are not read)"
-        )
-    return floor, ""
+        ), bundles
+    return floor, "", bundles
 
 
 def compute_landing(root: Path, base: str, analysis: Path) -> tuple[str, str]:
@@ -1358,7 +1441,7 @@ def compute_landing(root: Path, base: str, analysis: Path) -> tuple[str, str]:
     좁히는 것이 이 기능의 목적이기 때문이고, 그것이 안전한 이유는 바닥 아래로는
     못 내려가기 때문이다 — 저자는 오늘 만든 번들을 과거 커밋에 넣을 수 없다.
     """
-    floor, why = _walk_floor(root, analysis)
+    floor, why, bundles = _walk_floor(root, analysis)
     if why:
         return "", why
     start = floor if _is_ancestor(root, base, floor) else base
@@ -1374,7 +1457,7 @@ def compute_landing(root: Path, base: str, analysis: Path) -> tuple[str, str]:
     unheld: list[str] = []
     for candidate in [start, *process.stdout.split()]:
         # 선언 경로와 **같은 함수**에 묻는다 (task 7.6, 리뷰 I2). 받는 가장 낮은 후보가 착지다.
-        refusal, names = _landing_refusal(root, base, candidate, analysis, floor, repairs)
+        refusal, names = _landing_refusal(root, base, candidate, bundles, floor, repairs)
         if not refusal:
             return candidate, ""
         # 첫 후보의 거절을 남긴다 (task 6.5). 대개 증거가 역사에 들어온 바로 그 커밋이고,
@@ -1455,7 +1538,7 @@ def _recording_refusal(change: str, change_dir: Path, root: Path) -> tuple[str, 
         return f"cannot resolve the comparison base: {exc}", ""
     if facts.get("execution_baseline_adoption"):
         return ADOPTION_REFUSES_A_LANDING, ""
-    _, why = _walk_floor(root, change_dir / "analysis" / "function-logic")
+    _, why, _bundles = _walk_floor(root, change_dir / "analysis" / "function-logic")
     if why:
         return f"no landing recorded — {why}", ""
     # 추적 파일 수정은 **맨 뒤**다 — 커밋하면 사라지는 유일한 사유라서다. 앞에 두면 영원히
