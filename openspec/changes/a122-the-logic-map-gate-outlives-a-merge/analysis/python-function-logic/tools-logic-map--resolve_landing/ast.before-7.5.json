@@ -1,164 +1,164 @@
 {
   "language": "python",
   "file": "tools/logic-map/check_analysis.py",
-  "revision": "worktree",
-  "head_commit": "8091e6c4d4b6c7685b2e02cdc14cab932d41874a",
-  "source_sha256": "279cbe296679b5d0bb8e3971d493f65064ac977684941f2dd3656b73c1807bad",
+  "revision": "8091e6c4d4b6c7685b2e02cdc14cab932d41874a",
+  "head_commit": "430543d388acdcbbe8fb280770a674141a164a23",
+  "source_sha256": "caa7294dd88dba4f7c60c86810ad5083b9071cd27f09080221c451ee1bf082e1",
   "function": "resolve_landing",
   "signature": "resolve_landing(change_dir, root, base, analysis)",
   "start": {
-    "line": 893,
+    "line": 830,
     "column": 1
   },
   "end": {
-    "line": 966,
+    "line": 903,
     "column": 21
   },
   "branches": [
     {
       "id": "B1",
       "kind": "If",
-      "line": 916,
+      "line": 853,
       "inherited_line": false,
       "source": "if candidate is None:"
     },
     {
       "id": "B2",
       "kind": "If",
-      "line": 918,
+      "line": 855,
       "inherited_line": false,
       "source": "if not FULL_SHA.fullmatch(candidate):"
     },
     {
       "id": "B3",
       "kind": "BoolOp",
-      "line": 929,
+      "line": 866,
       "inherited_line": false,
       "source": "process.returncode or process.stdout.strip() != candidate"
     },
     {
       "id": "B4",
       "kind": "If",
-      "line": 929,
+      "line": 866,
       "inherited_line": false,
       "source": "if process.returncode or process.stdout.strip() != candidate:"
     },
     {
       "id": "B5",
       "kind": "If",
-      "line": 931,
+      "line": 868,
       "inherited_line": false,
       "source": "if not _is_ancestor(root, candidate, 'HEAD'):"
     },
     {
       "id": "B6",
       "kind": "If",
-      "line": 939,
+      "line": 876,
       "inherited_line": false,
       "source": "if refusal:"
     },
     {
       "id": "B7",
       "kind": "If",
-      "line": 958,
+      "line": 895,
       "inherited_line": false,
       "source": "if candidate != computed:"
     },
     {
       "id": "B8",
       "kind": "IfExp",
-      "line": 959,
+      "line": 896,
       "inherited_line": false,
       "source": "computed[:12] if computed else f'none — {why}'"
     }
   ],
   "returns": [
     {
-      "line": 917,
+      "line": 854,
       "value": "''"
     },
     {
-      "line": 966,
+      "line": 903,
       "value": "candidate"
     }
   ],
   "raises": [
     {
-      "line": 922,
+      "line": 859,
       "source": "raise ValueError(f'landing point must be a full 40-hex commit id, not {candidate!r}')"
     },
     {
-      "line": 930,
+      "line": 867,
       "source": "raise ValueError(f'landing point is not a commit in this repository: {candidate}')"
     },
     {
-      "line": 932,
+      "line": 869,
       "source": "raise ValueError(f'landing point never landed on this history: {candidate}')"
     },
     {
-      "line": 945,
+      "line": 882,
       "source": "raise ValueError(f'{refusal} — {LANDING_RECOVERY}')"
     },
     {
-      "line": 960,
+      "line": 897,
       "source": "raise ValueError(f\"landing point {candidate[:12]} is not the landing this change's evidence computes ({named}): the record must be the gate's own value — `--rec"
     }
   ],
   "calls": [
     {
-      "line": 915,
+      "line": 852,
       "callee": "_declared_landing"
     },
     {
-      "line": 918,
+      "line": 855,
       "callee": "FULL_SHA.fullmatch"
     },
     {
-      "line": 922,
+      "line": 859,
       "callee": "ValueError"
     },
     {
-      "line": 925,
+      "line": 862,
       "callee": "subprocess.run"
     },
     {
-      "line": 929,
+      "line": 866,
       "callee": "process.stdout.strip"
     },
     {
-      "line": 930,
+      "line": 867,
       "callee": "ValueError"
     },
     {
-      "line": 931,
+      "line": 868,
       "callee": "_is_ancestor"
     },
     {
-      "line": 932,
+      "line": 869,
       "callee": "ValueError"
     },
     {
-      "line": 935,
+      "line": 872,
       "callee": "_landing_refusal"
     },
     {
-      "line": 936,
+      "line": 873,
       "callee": "_evidence_floor"
     },
     {
-      "line": 937,
+      "line": 874,
       "callee": "_self_repair_commits"
     },
     {
-      "line": 945,
+      "line": 882,
       "callee": "ValueError"
     },
     {
-      "line": 957,
+      "line": 894,
       "callee": "compute_landing"
     },
     {
-      "line": 960,
+      "line": 897,
       "callee": "ValueError"
     }
   ]

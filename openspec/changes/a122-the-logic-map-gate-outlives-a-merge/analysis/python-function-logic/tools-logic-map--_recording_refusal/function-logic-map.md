@@ -95,11 +95,15 @@ B6 이 **사유 문장**으로 받고, 나머지(`_walk_floor` 의 `ValueError`,
 | 사라짐 | 반환 | `(f'`{LANDING_FILE}` already exists — not overwritten', '')` |
 | 생김 | 반환 | `(f'`{LANDING_FILE}` already exists — not overwritten; {LANDING_RECOVERY}', '')` |
 
-## task 7.5 — 번들 목록을 한 번 재서 넘긴다 (서명만, 분기 0 변화)
+## task 7.5 — 번들 목록을 한 번 재서 넘긴다
 
-`ast.before-7.5.json` 과 `ast.after-7.5.json` 을 같은 열거기로 뽑아 대조했다:
-**분기 9 · 반환 9 · raise 0 — 셋 다 그대로다.**
-이 함수의 판정도, 가드의 **순서**도 안 바뀐다 ([[a-new-guard-unpins-the-guards-behind-it]]).
+`ast.before-7.5.json`(= `8091e6c4` 의 소스)과 `ast.after-7.5.json` 을 같은 열거기로 뽑아
+**순서 있는 배열로** 대조했다: 분기 **순서열 9개가 바이트 동일** · 반환 **순서열 9개가 바이트 동일**.
+
+> **처음에는 개수로 적었다가 정정했다** (2026-09-18 독립 리뷰 P2). `분기 N · 반환 M` 은
+> multiset 크기라 **순열에 불변**이다 — 가드를 서로 바꿔도 같은 수가 나오므로 "순서가 안
+> 움직였다"를 못 받친다. 순서 있는 배열은 이미 같은 JSON 안에 있었고, 그것을 인용해야 한다
+> ([[a-new-guard-unpins-the-guards-behind-it]] 가 지키려는 것이 바로 순서다).
 
 바뀐 것은 고정 번들 목록이 **어디서 오는가** 하나다. 후보마다 디렉터리를 다시 순회하던
 것을 호출자가 한 번 재서 넘긴다 — `floor` 와 `repairs` 가 이미 그렇게 넘어오고 있었고

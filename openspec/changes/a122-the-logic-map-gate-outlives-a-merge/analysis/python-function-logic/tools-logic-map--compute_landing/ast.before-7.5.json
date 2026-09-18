@@ -1,127 +1,127 @@
 {
   "language": "python",
   "file": "tools/logic-map/check_analysis.py",
-  "revision": "worktree",
-  "head_commit": "8091e6c4d4b6c7685b2e02cdc14cab932d41874a",
-  "source_sha256": "279cbe296679b5d0bb8e3971d493f65064ac977684941f2dd3656b73c1807bad",
+  "revision": "8091e6c4d4b6c7685b2e02cdc14cab932d41874a",
+  "head_commit": "430543d388acdcbbe8fb280770a674141a164a23",
+  "source_sha256": "caa7294dd88dba4f7c60c86810ad5083b9071cd27f09080221c451ee1bf082e1",
   "function": "compute_landing",
   "signature": "compute_landing(root, base, analysis)",
   "start": {
-    "line": 1419,
+    "line": 1351,
     "column": 1
   },
   "end": {
-    "line": 1468,
+    "line": 1400,
     "column": 6
   },
   "branches": [
     {
       "id": "B1",
       "kind": "If",
-      "line": 1430,
+      "line": 1362,
       "inherited_line": false,
       "source": "if why:"
     },
     {
       "id": "B2",
       "kind": "IfExp",
-      "line": 1432,
+      "line": 1364,
       "inherited_line": false,
       "source": "floor if _is_ancestor(root, base, floor) else base"
     },
     {
       "id": "B3",
       "kind": "If",
-      "line": 1437,
+      "line": 1369,
       "inherited_line": false,
       "source": "if process.returncode:"
     },
     {
       "id": "B4",
       "kind": "For",
-      "line": 1443,
+      "line": 1375,
       "inherited_line": false,
       "source": "for candidate in [start, *process.stdout.split()]:"
     },
     {
       "id": "B5",
       "kind": "If",
-      "line": 1446,
+      "line": 1378,
       "inherited_line": false,
       "source": "if not refusal:"
     },
     {
       "id": "B6",
       "kind": "BoolOp",
-      "line": 1451,
+      "line": 1383,
       "inherited_line": false,
       "source": "first or refusal"
     },
     {
       "id": "B7",
       "kind": "If",
-      "line": 1452,
+      "line": 1384,
       "inherited_line": false,
       "source": "if names:"
     },
     {
       "id": "B8",
       "kind": "If",
-      "line": 1455,
+      "line": 1387,
       "inherited_line": false,
       "source": "if unheld:"
     }
   ],
   "returns": [
     {
-      "line": 1431,
+      "line": 1363,
       "value": "('', why)"
     },
     {
-      "line": 1438,
+      "line": 1370,
       "value": "('', f'cannot walk the history after {start[:12]}')"
     },
     {
-      "line": 1447,
+      "line": 1379,
       "value": "(candidate, '')"
     },
     {
-      "line": 1456,
+      "line": 1388,
       "value": "('', 'no commit holds the evidence this verdict read (' + ', '.join(unheld) + ') — commit the bundles as they are on disk')"
     },
     {
-      "line": 1465,
+      "line": 1397,
       "value": "('', f'no commit at or after the evidence ({floor[:12]}) is accepted as the landing — at the first commit walked, {first}')"
     }
   ],
   "raises": [],
   "calls": [
     {
-      "line": 1429,
+      "line": 1361,
       "callee": "_walk_floor"
     },
     {
-      "line": 1432,
+      "line": 1364,
       "callee": "_is_ancestor"
     },
     {
-      "line": 1433,
+      "line": 1365,
       "callee": "subprocess.run"
     },
     {
-      "line": 1440,
+      "line": 1372,
       "callee": "_self_repair_commits"
     },
     {
-      "line": 1443,
+      "line": 1375,
       "callee": "process.stdout.split"
     },
     {
-      "line": 1445,
+      "line": 1377,
       "callee": "_landing_refusal"
     },
     {
-      "line": 1457,
+      "line": 1389,
       "callee": "', '.join"
     }
   ]

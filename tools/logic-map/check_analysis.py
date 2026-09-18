@@ -336,6 +336,11 @@ def resolve_base(
     return effective
 
 
+# `git cat-file --batch` 의 `-Z`(입력·출력 **둘 다** NUL 로 끊는다)가 들어온 버전.
+# 이보다 낮은 git 에서는 그 옵션이 거절되어 blob 읽기가 전부 실패하고, 게이트는 막히는
+# 쪽으로 틀리지만(fail-closed 실측: required 32 → 269, rc 120) **사유를 저자의 증거 탓으로
+# 오진한다**. 값을 여기 한 곳에 적어 두고 README·WORKFLOW 가 같은 수를 인용한다.
+GIT_BATCH_MINIMUM = "2.42"
 LANDING_FILE = "landed-commit.txt"
 FULL_SHA = re.compile(r"[0-9a-f]{40}")
 # 이관 경로가 착지 기록을 거절하는 문장. 판정 경로(`check`)와 기록 경로(`record_landing`)가
@@ -396,18 +401,46 @@ def _committed_many(root: Path, ref: str, relatives: list[str]) -> dict[str, byt
     found: dict[str, bytes | None] = {relative: None for relative in wanted}
     if not wanted:
         return found
+    for relative in wanted:
+        if "\0" in relative:
+            # 요청 자체가 NUL 로 끊기므로 경로 안의 NUL 은 레코드를 쪼개고, 그 뒤 자리들이
+            # **다른 파일의 바이트**를 받는다 (독립 리뷰 2026-09-18). 물어보지 않는다.
+            raise RuntimeError(f"path contains a NUL byte, cannot be asked for: {relative!r}")
     process = subprocess.run(
         ["git", "cat-file", "--batch", "-Z"],
-        cwd=root, input=b"".join(f"{ref}:{relative}\0".encode("utf-8") for relative in wanted),
+        cwd=root,
+        # `surrogateescape` 인 이유: 파일 이름은 바이트다. 옛 판본은 경로를 argv 로 넘겨
+        # `os.fsencode` 를 탔으므로 디코딩 불가능한 이름도 그대로 갔다. 엄격한 `utf-8` 로
+        # 인코딩하면 그런 이름 앞에서 **판정 대신 traceback** 이 된다.
+        input=b"".join(f"{ref}:{relative}\0".encode("utf-8", "surrogateescape")
+                       for relative in wanted),
         capture_output=True, timeout=60, check=False,
     )
     if process.returncode:
+        # 전부 `None` 이다 — 옛 `git show` 의 rc≠0 과 **같은 방향**이고, 부르는 쪽은 `None` 을
+        # 불일치로 세므로 판정이 느슨해지지 않는다.
+        #
+        # **여기를 결함으로 올리려다 되돌렸다** (독립 리뷰 2026-09-18, P1). 올리면 `-Z` 를
+        # 모르는 git(2.42 미만) 아래의 오진("저자의 증거가 낡았다")이 사라지지만, 거부할
+        # 정상 입력을 세어 보니 **저장소가 아닌 루트**가 이 함수의 정상 호출 모양이었다 —
+        # 번들 검증만 보는 시험 21개가 임시 디렉터리에서 돈다
+        # ([[fail-closed-must-name-what-it-rejects]]: 열거가 설계를 죽였다).
+        # 최소 git 버전은 `GIT_BATCH_MINIMUM` 과 README·WORKFLOW 에 적어 둔다.
         return found
     data, position = process.stdout, 0
+    answered: dict[str, bytes] = {}
     for relative in wanted:
         end = data.find(b"\0", position)
         if end < 0:
-            break                               # 응답이 요청보다 짧다 — 나머지는 `None`
+            # **부분 답을 쓰지 않는다** (독립 리뷰 2026-09-18, P0). 예전에는 여기서 `break`
+            # 했고 "나머지는 `None` 이라 답이 같다"고 적었는데 **거짓이었다**: 마지막 머리가
+            # 멀쩡하고 내용만 잘린 응답에서는 그 자리가 `None` 이 아니라 `b""` 가 되고,
+            # `None` 과 `b""` 는 `_unheld_bundles` 의 아카이브 대체 갈래를 여닫아 판정을 바꾼다.
+            # 프레이밍을 끝까지 못 읽으면 그것은 결함이다.
+            raise RuntimeError(
+                f"`git cat-file --batch -Z` answered {len(answered)} of {len(wanted)} "
+                f"request(s) at {ref[:12]}: the response is truncated"
+            )
         header = data[position:end]
         position = end + 1
         fields = header.rsplit(b" ", 2)
@@ -417,8 +450,16 @@ def _committed_many(root: Path, ref: str, relatives: list[str]) -> dict[str, byt
             continue
         size = int(fields[2])
         if fields[1] == b"blob":
-            found[relative] = data[position:position + size]
+            answered[relative] = data[position:position + size]
         position += size + 1                    # 내용 뒤의 NUL 하나
+    if position != len(data):
+        # 정상 응답은 **정확히** 소진된다(실측). 남은 바이트는 프레이밍을 잘못 읽었다는 뜻이고,
+        # 잘못 읽은 프레이밍은 자리를 밀어 다른 파일의 바이트를 답에 넣는다.
+        raise RuntimeError(
+            f"`git cat-file --batch -Z` left {len(data) - position} byte(s) unread at "
+            f"{ref[:12]}: the response framing was not understood"
+        )
+    found.update(answered)
     return found
 
 

@@ -22,6 +22,17 @@ python3 tools/logic-map/check_analysis.py --change <change-id>
 `base-commit.txt`와 같은 commit으로 resolve되어야 한다.
 ast-grep 발견은 자동 결함 판정이 아니다.
 
+## 요구 git 버전
+
+`check_analysis.py` 는 blob 을 `git cat-file --batch -Z` 로 읽는다. `-Z` 는 입력과 출력을
+**둘 다** NUL 로 끊어 개행이 든 경로와 tree 의 raw NUL 을 견딘다. 그 옵션은 **git 2.42**
+부터다(정본 값은 `check_analysis.GIT_BATCH_MINIMUM`).
+
+더 낮은 git 에서는 blob 읽기가 전부 실패한다. 게이트는 **막는 쪽으로** 틀리지만(실측:
+required 32 → 269, rc 120) **사유를 오진한다** — 저자의 증거가 낡았다고 말하고, 착지 기록이
+있는 change 에서는 이미 HEAD 에 있는 `landed-commit.txt` 를 커밋하라고 한다. 게이트가
+증거를 탓하는데 워킹트리가 멀쩡해 보이면 먼저 `git --version` 을 볼 것.
+
 ## 착지 지점 — `landed-commit.txt`
 
 `check_analysis.py` 의 5단계는 `base-commit.txt` 부터 **워킹트리**까지를 비교한다. 그
@@ -40,10 +51,10 @@ python3 tools/logic-map/check_analysis.py --change <change-id> --record-landing
 게이트는 적힌 값이 자기가 계산하는 값과 같은지 확인한다. 유효 조건을 통과하는 커밋은
 대개 여럿이라(실측: 착지를 얻는 76건 중 65건, 최대 516개) 조건만으로는 값이 안 정해진다.
 
-받는 착지는 다음을 전부 만족하는 **가장 낮은** 커밋이다: base 의 자손 · 고정 번들이 있고
-그 소스 해시가 전부 맞음 · 번들이 역사에 들어온 커밋 이후 · 판정이 디스크에서 읽은 번들
-바이트를 그 커밋이 들고 있음 · 고정 소스 중 하나 이상이 base 와 다름 · 그 뒤에 이 change
-자신의 Go 작업이 더 없음.
+받는 착지는 다음 **여덟**을 전부 만족하는 **가장 낮은** 커밋이다: base 의 자손 · 고정
+번들이 있음 · 그 소스 해시가 전부 맞음 · 그 번들을 역사에 넣은 **보통(비병합) 커밋이 있음** ·
+번들이 역사에 들어온 커밋 이후 · 판정이 디스크에서 읽은 번들 바이트를 그 커밋이 들고 있음 ·
+고정 소스 중 하나 이상이 base 와 다름 · 그 뒤에 이 change 자신의 Go 작업이 더 없음.
 
 기록은 **덮어쓰이지 않는다.** 증거를 갱신해 기록이 낡으면: 번들을 갱신 → `landed-commit.txt`
 를 지우는 커밋 → 다시 기록. 거절 문장이 이 길을 같이 말한다.

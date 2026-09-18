@@ -47,17 +47,22 @@ def build(tag: str, revision: str | None) -> object:
 
 before = build("before", BEFORE)
 after = build("after", None)
-assert "_committed_many" not in dir(before), (
-    f"{BEFORE[:12]} 사본에 이미 수리가 들어 있다 — 대조군이 오염됐다. 7.5 **직전** 커밋을 "
-    "첫 인자로 줄 것 (시간 예산은 숫자로 준다)")
-assert "_committed_many" in dir(after), "after 사본에 수리가 없다"
+# 대조군이 대조군인지는 **이름이 아니라 소스**로 확인한다. 이름으로 보면 기준을 중간
+# 커밋으로 잡는 정당한 사용(추이적 A/B)을 막고, 정작 같은 소스를 두 번 재는 오염은 못 잡는다.
+_before_src = (SP / "75_ab_before" / "check_analysis.py").read_bytes()
+_after_src = (SP / "75_ab_after" / "check_analysis.py").read_bytes()
+assert _before_src != _after_src, (
+    f"{BEFORE[:12]} 사본이 지금 워킹트리와 **같다** — 대조군이 오염됐다. 비교하려는 변경 "
+    "**직전** 커밋을 첫 인자로 줄 것 (시간 예산은 숫자로 준다)")
 print(f"대조군 OK · 비교 기준 blob = {BEFORE[:12]}")
 
 changes = ROOT / "openspec" / "changes"
 names = sorted(p.name for p in changes.iterdir() if p.is_dir() and p.name != "archive")
 names += sorted(p.name for p in (changes / "archive").iterdir() if p.is_dir())
 
-DONE = SP / "75_ab_done.json"
+# 파일 이름에 baseline 을 넣는다 — 안 넣으면 다른 `BEFORE` 로 한 번 더 돌릴 때 두 baseline 의
+# 결과가 **조용히 섞인다** (2026-09-18 독립 리뷰 P2).
+DONE = SP / f"75_ab_done.{BEFORE[:12]}.json"
 done = json.load(open(DONE)) if DONE.exists() else {}
 budget = next((float(a) for a in sys.argv[1:] if a.replace(".", "").isdigit()), 480.0)
 spent = 0.0

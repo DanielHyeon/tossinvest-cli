@@ -40,23 +40,46 @@ MUTATIONS = {
         '["git", "cat-file", "--batch", "-Z"],', '["git", "cat-file", "--batch", "-z"],')],
     "T2_line_framed_both_ways": [
         ('["git", "cat-file", "--batch", "-Z"],', '["git", "cat-file", "--batch"],'),
-        ('f"{ref}:{relative}\\0".encode("utf-8")', 'f"{ref}:{relative}\\n".encode("utf-8")'),
+        ('f"{ref}:{relative}\\0".encode("utf-8", "surrogateescape")',
+         'f"{ref}:{relative}\\n".encode("utf-8", "surrogateescape")'),
         ('        end = data.find(b"\\0", position)', '        end = data.find(b"\\n", position)'),
     ],
     "T3_any_type_counts_as_content": [(
         '        if fields[1] == b"blob":', '        if True:')],
     "T4_non_blob_content_not_skipped": [(
         '        if fields[1] == b"blob":\n'
-        '            found[relative] = data[position:position + size]\n'
+        '            answered[relative] = data[position:position + size]\n'
         '        position += size + 1',
         '        if fields[1] == b"blob":\n'
-        '            found[relative] = data[position:position + size]\n'
+        '            answered[relative] = data[position:position + size]\n'
         '            position += size + 1')],
     "T5_failure_is_not_all_none": [(
-        '    if process.returncode:\n        return found',
-        '    if process.returncode:\n        pass')],
-    "T6_short_response_not_stopped": [(
-        '        if end < 0:\n            break', '        if end < 0:\n            end = len(data)')],
+        '        # 최소 git 버전은 `GIT_BATCH_MINIMUM` 과 README·WORKFLOW 에 적어 둔다.\n'
+        '        return found',
+        '        # 최소 git 버전은 `GIT_BATCH_MINIMUM` 과 README·WORKFLOW 에 적어 둔다.\n'
+        '        pass')],
+    # **T6 은 P0 이었다** (2026-09-18 독립 리뷰). 옛 판본은 여기서 `break` 하고 "나머지는
+    # `None` 이라 답이 같다"고 적었는데 거짓이었다 — 마지막 머리가 멀쩡하고 내용만 잘린
+    # 응답에서 그 자리는 `b""` 가 되고 `None` 과 `b""` 는 판정을 가른다. 이제 판정이다.
+    "T6_truncation_falls_back_to_break": [(
+        '            raise RuntimeError(\n'
+        '                f"`git cat-file --batch -Z` answered {len(answered)} of {len(wanted)} "\n'
+        '                f"request(s) at {ref[:12]}: the response is truncated"\n'
+        '            )',
+        '            break')],
+    "T6b_truncation_keeps_the_partial_record": [(
+        '            raise RuntimeError(\n'
+        '                f"`git cat-file --batch -Z` answered {len(answered)} of {len(wanted)} "\n'
+        '                f"request(s) at {ref[:12]}: the response is truncated"\n'
+        '            )',
+        '            end = len(data)')],
+    "U1_leftover_bytes_ignored": [(
+        '    if position != len(data):', '    if False:')],
+    "U2_nul_in_path_not_refused": [(
+        '        if "\\0" in relative:', '        if False:')],
+    "U3_strict_utf8_encoding": [(
+        'f"{ref}:{relative}\\0".encode("utf-8", "surrogateescape")',
+        'f"{ref}:{relative}\\0".encode("utf-8")')],
     # T6 가 살아남는 **이유**를 가설이 아니라 변이로 확인한다: 사전 채움이 `break` 와
     # `continue` 를 같게 만든다. 그 사전 채움이 못 박혀 있으면 T6 는 동등 변이다.
     "T18_no_prefill_of_unanswered_paths": [(
@@ -87,10 +110,15 @@ MUTATIONS = {
         'root, candidate, [relative for _, relative, _ in watched],')],
     # 살아남은 둘이 서로를 덮는지 본다 ([[surviving-mutant-may-mean-accidental-safety]]).
     "T17_failure_and_short_response_both_open": [
-        ('    if process.returncode:\n        return found',
-         '    if process.returncode:\n        pass'),
-        ('        if end < 0:\n            break',
-         '        if end < 0:\n            end = len(data)'),
+        ('        # 최소 git 버전은 `GIT_BATCH_MINIMUM` 과 README·WORKFLOW 에 적어 둔다.\n'
+         '        return found',
+         '        # 최소 git 버전은 `GIT_BATCH_MINIMUM` 과 README·WORKFLOW 에 적어 둔다.\n'
+         '         pass'),
+        ('            raise RuntimeError(\n'
+         '                f"`git cat-file --batch -Z` answered {len(answered)} of {len(wanted)} "\n'
+         '                f"request(s) at {ref[:12]}: the response is truncated"\n'
+         '            )',
+         '            end = len(data)'),
     ],
     # --- 한 번 재서 넘기는 목록이 **그 목록**인가 ---
     "T12_walk_passes_no_bundles": [(
@@ -139,6 +167,32 @@ def failing(output: str) -> list[str]:
                    if line.startswith(("FAIL: ", "ERROR: "))})
 
 
+def reached(target: Path, edits) -> bool:
+    """변이가 **돌았는지**를 잰다 — 바뀐 줄에 도달하지 못하면 SURVIVED 는 음성이 아니라 침묵이다.
+
+    문자열이 바뀌었는지만 보는 하네스는 **눈먼 계측기와 진짜 음성을 같게 기록한다**
+    (2026-09-18 독립 리뷰 P2; T6 이 정확히 그 결과였다 — `end < 0` 갈래는 182개 시험에서
+    0회 도달인데 "동등 변이"로 적혔다, [[mutation-must-reach-the-thing-under-test]]).
+    바꾼 줄마다 표식을 심고 스위트를 돌려 표식이 찍히는지 본다.
+    """
+    text = target.read_text(encoding="utf-8")
+    marked = text
+    for _, new_line in edits if edits != "MOVE_FIRST" else []:
+        head = new_line.splitlines()[0]
+        if head.strip().startswith(("#", '"')) or not head.strip():
+            continue
+        indent = head[: len(head) - len(head.lstrip())]
+        marked = marked.replace(
+            head, f'{indent}import sys as _s; print("REACHED", file=_s.stderr)\n{head}', 1
+        )
+    if marked == text:
+        return False
+    target.write_text(marked, encoding="utf-8")
+    _, output = run(SUITE)
+    target.write_text(text, encoding="utf-8")
+    return "REACHED" in output
+
+
 if __name__ == "__main__":
     target = setup()
     pristine = target.read_text(encoding="utf-8")
@@ -160,7 +214,8 @@ if __name__ == "__main__":
         verdict = "CAUGHT" if code else "SURVIVED"
         if not code:
             survived.append(name)
-        print(f"{name:36s} {verdict:9s} {len(names):2d} "
+        touched = "" if code else ("  · 도달함" if reached(target, edits) else "  · **안 닿음**")
+        print(f"{name:36s} {verdict:9s}{touched} {len(names):2d} "
               f"{', '.join(n.split('.')[-1] for n in names[:3])}"
               + (f" 외 {len(names) - 3}" if len(names) > 3 else ""))
         target.write_text(pristine, encoding="utf-8")

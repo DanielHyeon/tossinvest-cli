@@ -1,8 +1,8 @@
 {
   "language": "python",
   "file": "tools/logic-map/check_analysis.py",
-  "revision": "worktree",
-  "head_commit": "8091e6c4d4b6c7685b2e02cdc14cab932d41874a",
+  "revision": "8091e6c4d4b6c7685b2e02cdc14cab932d41874a",
+  "head_commit": "430543d388acdcbbe8fb280770a674141a164a23",
   "source_sha256": "caa7294dd88dba4f7c60c86810ad5083b9071cd27f09080221c451ee1bf082e1",
   "function": "_pinning_at",
   "signature": "_pinning_at(root, candidate, analysis)",

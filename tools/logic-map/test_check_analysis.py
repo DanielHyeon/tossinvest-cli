@@ -4663,13 +4663,110 @@ class ABlobIsFetchedOncePerCommitNotOncePerBundle(unittest.TestCase):
 
     def test_git_failing_leaves_every_path_unanswered(self) -> None:
         """git 이 실패하면 **물은 경로 전부**가 `None` 이다 — 옛 `git show` 의 rc≠0 과 같은
-        방향이고, 부르는 쪽이 `None` 을 불일치로 세므로 판정이 느슨해지지 않는다."""
+        방향이고, 부르는 쪽이 `None` 을 불일치로 세므로 판정이 느슨해지지 않는다.
+
+        **결함으로 올리려다 되돌렸다** (2026-09-18 독립 리뷰 P1). 올리면 `-Z` 를 모르는
+        git(2.42 미만) 아래의 오진이 사라지지만, 거부할 정상 입력을 세어 보니 **저장소가
+        아닌 루트**가 이 함수의 정상 호출 모양이었다 — 번들 검증만 보는 시험 21개가 임시
+        디렉터리에서 돈다 ([[fail-closed-must-name-what-it-rejects]]). 이 시험이 그 모양을
+        못 박는다: 저장소가 아닌 곳에서도 판정이 traceback 이 아니라 답으로 나온다.
+        """
         with tempfile.TemporaryDirectory() as raw:
             outside = Path(raw)          # 저장소가 아니다 — git 이 rc≠0 로 죽는다
             self.assertEqual(
                 check_analysis._committed_many(outside, "HEAD", ["a.go", "b.go"]),
                 {"a.go": None, "b.go": None},
             )
+
+    def test_the_minimum_git_version_is_written_down_once(self) -> None:
+        """`-Z` 를 요구한다는 사실이 **어디에도 안 적혀 있었다** (2026-09-18 독립 리뷰 P1).
+
+        값은 한 곳(`GIT_BATCH_MINIMUM`)에 살고 산문이 그 수를 인용한다 — 두 벌이면 갈린다
+        ([[two-judgements-cover-for-each-other]])."""
+        self.assertEqual(check_analysis.GIT_BATCH_MINIMUM, "2.42")
+        tool = Path(check_analysis.__file__).resolve().parent
+        # 도구 옆의 README 는 사본 하네스에도 따라온다 — 언제나 잰다.
+        self.assertIn(check_analysis.GIT_BATCH_MINIMUM,
+                      (tool / "README.md").read_text(encoding="utf-8"))
+        workflow = tool.parent.parent / "docs" / "WORKFLOW.md"
+        if not workflow.is_file():
+            # 사본 하네스(`analysis/harness/75_mut.py`)는 `tools/logic-map` 만 복사한다.
+            # 없는 파일을 "통과" 로 세지 않고 **건너뛴 사실을 남긴다** —
+            # [[universal-check-passes-on-an-empty-sample]].
+            self.skipTest("docs/WORKFLOW.md is outside this checkout (copy harness)")
+        self.assertIn(check_analysis.GIT_BATCH_MINIMUM,
+                      workflow.read_text(encoding="utf-8"))
+
+    def test_a_truncated_response_is_a_verdict_not_a_partial_answer(self) -> None:
+        """응답이 요청보다 짧으면 **부분 답을 쓰지 않는다** (2026-09-18 독립 리뷰 P0).
+
+        예전에는 여기서 `break` 하고 "나머지는 `None` 이라 답이 같다"고 적었다. **거짓이었다**:
+        마지막 머리가 멀쩡하고 내용만 잘린 응답에서 그 자리는 `None` 이 아니라 `b""` 가 되고,
+        `None` 과 `b""` 는 `_unheld_bundles` 의 아카이브 대체 갈래를 여닫아 **판정을 바꾼다**.
+        변이 T6 이 살아남은 것은 동등해서가 아니라 **이 갈래에 닿는 시험이 없어서**였다
+        ([[mutation-must-reach-the-thing-under-test]]) — 그때 근거로 쓴 T18 은 `missing`
+        갈래를 증명한 것이라 명제가 달랐다.
+        """
+        raw, root, commit = self._repo()
+        with raw:
+            real = check_analysis.subprocess.run
+
+            def answers_one_of_two(*args: object, **kwargs: object):
+                process = real(*args, **kwargs)
+                argv = args[0] if args else kwargs.get("args")
+                if isinstance(argv, list) and "cat-file" in argv:
+                    # 마지막 머리는 멀쩡하고 내용만 없다 — `break` 판본이 `b""` 를 내던 모양.
+                    process.stdout = process.stdout.split(b"\0", 2)[0] + b"\0" + b"abc\0" \
+                        + b"cafebabecafebabecafebabecafebabecafebabe blob 5"
+                return process
+
+            with mock.patch.object(check_analysis.subprocess, "run", answers_one_of_two):
+                with self.assertRaises(check_analysis.GATE_FAULTS) as caught:
+                    check_analysis._committed_many(
+                        root, commit, ["internal/own0.go", "internal/own1.go"]
+                    )
+            self.assertIn("truncated", str(caught.exception))
+
+    def test_bytes_left_unread_are_a_verdict(self) -> None:
+        """정상 응답은 **정확히** 소진된다(실측). 남은 바이트는 프레이밍을 잘못 읽었다는
+        뜻이고, 밀린 프레이밍은 **다른 파일의 바이트**를 답에 넣는다."""
+        raw, root, commit = self._repo()
+        with raw:
+            real = check_analysis.subprocess.run
+
+            def adds_a_tail(*args: object, **kwargs: object):
+                process = real(*args, **kwargs)
+                argv = args[0] if args else kwargs.get("args")
+                if isinstance(argv, list) and "cat-file" in argv:
+                    process.stdout = process.stdout + b"leftover"
+                return process
+
+            with mock.patch.object(check_analysis.subprocess, "run", adds_a_tail):
+                with self.assertRaises(check_analysis.GATE_FAULTS) as caught:
+                    check_analysis._committed_many(root, commit, ["internal/own0.go"])
+            self.assertIn("byte(s) unread", str(caught.exception))
+
+    def test_a_nul_in_a_path_is_refused_before_it_desyncs_the_batch(self) -> None:
+        """요청이 NUL 로 끊기므로 경로 안의 NUL 은 레코드를 쪼갠다 — 물어보지 않는다.
+
+        개행은 `-Z` 가 견디지만 NUL 은 프레이밍 문자 자체다. 오늘 실물에서 못 닿는 이유는
+        `Path.resolve()` 가 먼저 `ValueError` 를 내기 때문뿐이고, 그것은 이 함수의 불변식이
+        아니다 ([[fail-closed-must-name-what-it-rejects]])."""
+        raw, root, commit = self._repo()
+        with raw:
+            with self.assertRaises(check_analysis.GATE_FAULTS) as caught:
+                check_analysis._committed_many(root, commit, ["internal/o\0wn.go"])
+            self.assertIn("NUL byte", str(caught.exception))
+
+    def test_a_path_that_is_not_utf8_still_reaches_git(self) -> None:
+        """파일 이름은 바이트다. 옛 판본은 경로를 argv 로 넘겨 `os.fsencode` 를 탔으므로
+        디코딩 불가능한 이름도 그대로 갔다 — 엄격한 `utf-8` 인코딩은 그 앞에서 **판정 대신
+        traceback** 이 된다."""
+        raw, root, commit = self._repo()
+        with raw:
+            odd = "internal/own\udcff.go"      # surrogateescape 로만 표현되는 이름
+            fetched = check_analysis._committed_many(root, commit, [odd])
+            self.assertIsNone(fetched[odd])    # 그 커밋에 없다 — 그러나 물어보긴 했다
 
     def test_nothing_asked_means_no_git_at_all(self) -> None:
         """물은 것이 없으면 프로세스를 안 띄운다."""
@@ -4681,10 +4778,10 @@ class ABlobIsFetchedOncePerCommitNotOncePerBundle(unittest.TestCase):
     def test_a_failure_that_still_printed_is_not_parsed(self) -> None:
         """rc≠0 인데 **읽을 만한 출력이 있는** 경우가 실패 갈래의 진짜 모양이다.
 
-        저장소 아닌 곳을 물으면 git 은 빈 출력으로 죽고, 그때는 파서도 같은 답(전부 `None`)을
-        낸다 — 그래서 rc 가드를 지워도 아무 시험이 안 빨개졌다(변이 T5 · T6 · T17 이
-        **서로를 덮었다**, [[surviving-mutant-may-mean-accidental-safety]]). 부분 출력을 남기고
-        죽는 git 은 그 둘을 가른다: 파서에 맡기면 **진짜 blob 을 읽었다고 답한다.**
+        저장소 아닌 곳을 물으면 git 은 빈 출력으로 죽고, 그때는 파서도 같은 답을 낸다 —
+        그래서 rc 가드를 지워도 아무 시험이 안 빨개졌다(변이 T5 · T17 이 **서로를 덮었다**,
+        [[surviving-mutant-may-mean-accidental-safety]]). 부분 출력을 남기고 죽는 git 은 그
+        둘을 가른다: 파서에 맡기면 **진짜 blob 을 읽었다고 답한다.**
         """
         raw, root, commit = self._repo()
         with raw:
@@ -4701,6 +4798,7 @@ class ABlobIsFetchedOncePerCommitNotOncePerBundle(unittest.TestCase):
 
             with mock.patch.object(check_analysis.subprocess, "run", dies_after_printing):
                 fetched = check_analysis._committed_many(root, commit, ["internal/own0.go"])
+            # 읽은 척하지 않는다 — 출력이 멀쩡해 보여도 rc 가 죽었으면 답이 아니다.
             self.assertEqual(fetched, {"internal/own0.go": None})
 
     def test_an_archived_bundle_held_at_the_candidate_is_not_called_unheld(self) -> None:

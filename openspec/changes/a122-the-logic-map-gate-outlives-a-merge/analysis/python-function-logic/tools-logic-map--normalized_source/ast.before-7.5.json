@@ -1,82 +1,82 @@
 {
   "language": "python",
   "file": "tools/logic-map/check_analysis.py",
-  "revision": "worktree",
-  "head_commit": "8091e6c4d4b6c7685b2e02cdc14cab932d41874a",
-  "source_sha256": "145b3e11847141597456dca1d84c817e7ec47f01c349ea1d3427d4efac771231",
+  "revision": "8091e6c4d4b6c7685b2e02cdc14cab932d41874a",
+  "head_commit": "430543d388acdcbbe8fb280770a674141a164a23",
+  "source_sha256": "caa7294dd88dba4f7c60c86810ad5083b9071cd27f09080221c451ee1bf082e1",
   "function": "normalized_source",
   "signature": "normalized_source(value, root)",
   "start": {
-    "line": 969,
+    "line": 906,
     "column": 1
   },
   "end": {
-    "line": 975,
+    "line": 912,
     "column": 69
   },
   "branches": [
     {
       "id": "B1",
       "kind": "IfExp",
-      "line": 971,
+      "line": 908,
       "inherited_line": false,
       "source": "raw if raw.is_absolute() else root / raw"
     },
     {
       "id": "B2",
       "kind": "If",
-      "line": 973,
+      "line": 910,
       "inherited_line": false,
       "source": "if not resolved.is_relative_to(root.resolve()):"
     }
   ],
   "returns": [
     {
-      "line": 975,
+      "line": 912,
       "value": "(resolved, resolved.relative_to(root.resolve()).as_posix())"
     }
   ],
   "raises": [
     {
-      "line": 974,
+      "line": 911,
       "source": "raise ValueError('AST source escapes repository')"
     }
   ],
   "calls": [
     {
-      "line": 970,
+      "line": 907,
       "callee": "Path"
     },
     {
-      "line": 971,
+      "line": 908,
       "callee": "raw.is_absolute"
     },
     {
-      "line": 972,
+      "line": 909,
       "callee": "path.resolve"
     },
     {
-      "line": 973,
+      "line": 910,
       "callee": "resolved.is_relative_to"
     },
     {
-      "line": 973,
+      "line": 910,
       "callee": "root.resolve"
     },
     {
-      "line": 974,
+      "line": 911,
       "callee": "ValueError"
     },
     {
-      "line": 975,
+      "line": 912,
       "callee": "resolved.relative_to"
     },
     {
-      "line": 975,
+      "line": 912,
       "callee": "resolved.relative_to(root.resolve()).as_posix"
     },
     {
-      "line": 975,
+      "line": 912,
       "callee": "root.resolve"
     }
   ]

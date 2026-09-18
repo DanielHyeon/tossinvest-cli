@@ -2,138 +2,204 @@
   "language": "python",
   "file": "tools/logic-map/check_analysis.py",
   "revision": "worktree",
-  "head_commit": "8091e6c4d4b6c7685b2e02cdc14cab932d41874a",
-  "source_sha256": "461e02a35d028aced721858a48c85983564976d0bae40a3d68386d1f39a48e2c",
+  "head_commit": "430543d388acdcbbe8fb280770a674141a164a23",
+  "source_sha256": "960007246609effb2ede26a6252d32b45fc2ca7746956819c7a1e1b2e9589b36",
   "function": "_committed_many",
   "signature": "_committed_many(root, ref, relatives)",
   "start": {
-    "line": 374,
+    "line": 379,
     "column": 1
   },
   "end": {
-    "line": 422,
+    "line": 463,
     "column": 17
   },
   "branches": [
     {
       "id": "B1",
       "kind": "comprehension",
-      "line": 396,
+      "line": 401,
       "inherited_line": true,
       "source": " for relative in wanted"
     },
     {
       "id": "B2",
       "kind": "If",
-      "line": 397,
+      "line": 402,
       "inherited_line": false,
       "source": "if not wanted:"
     },
     {
       "id": "B3",
-      "kind": "comprehension",
-      "line": 401,
-      "inherited_line": true,
-      "source": " for relative in wanted"
-    },
-    {
-      "id": "B4",
-      "kind": "If",
-      "line": 404,
-      "inherited_line": false,
-      "source": "if process.returncode:"
-    },
-    {
-      "id": "B5",
       "kind": "For",
-      "line": 407,
+      "line": 404,
       "inherited_line": false,
       "source": "for relative in wanted:"
     },
     {
+      "id": "B4",
+      "kind": "If",
+      "line": 405,
+      "inherited_line": false,
+      "source": "if '\\x00' in relative:"
+    },
+    {
+      "id": "B5",
+      "kind": "comprehension",
+      "line": 415,
+      "inherited_line": true,
+      "source": " for relative in wanted"
+    },
+    {
       "id": "B6",
       "kind": "If",
-      "line": 409,
+      "line": 419,
       "inherited_line": false,
-      "source": "if end < 0:"
+      "source": "if process.returncode:"
     },
     {
       "id": "B7",
-      "kind": "BoolOp",
-      "line": 416,
+      "kind": "For",
+      "line": 432,
       "inherited_line": false,
-      "source": "len(fields) != 3 or not fields[2].isdigit()"
+      "source": "for relative in wanted:"
     },
     {
       "id": "B8",
       "kind": "If",
-      "line": 416,
+      "line": 434,
+      "inherited_line": false,
+      "source": "if end < 0:"
+    },
+    {
+      "id": "B9",
+      "kind": "BoolOp",
+      "line": 449,
+      "inherited_line": false,
+      "source": "len(fields) != 3 or not fields[2].isdigit()"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 449,
       "inherited_line": false,
       "source": "if len(fields) != 3 or not fields[2].isdigit():"
     },
     {
-      "id": "B9",
+      "id": "B11",
       "kind": "If",
-      "line": 419,
+      "line": 452,
       "inherited_line": false,
       "source": "if fields[1] == b'blob':"
+    },
+    {
+      "id": "B12",
+      "kind": "If",
+      "line": 455,
+      "inherited_line": false,
+      "source": "if position != len(data):"
     }
   ],
   "returns": [
     {
-      "line": 398,
+      "line": 403,
       "value": "found"
     },
     {
-      "line": 405,
+      "line": 429,
       "value": "found"
     },
     {
-      "line": 422,
+      "line": 463,
       "value": "found"
     }
   ],
-  "raises": [],
+  "raises": [
+    {
+      "line": 408,
+      "source": "raise RuntimeError(f'path contains a NUL byte, cannot be asked for: {relative!r}')"
+    },
+    {
+      "line": 440,
+      "source": "raise RuntimeError(f'`git cat-file --batch -Z` answered {len(answered)} of {len(wanted)} request(s) at {ref[:12]}: the response is truncated')"
+    },
+    {
+      "line": 458,
+      "source": "raise RuntimeError(f'`git cat-file --batch -Z` left {len(data) - position} byte(s) unread at {ref[:12]}: the response framing was not understood')"
+    }
+  ],
   "calls": [
     {
-      "line": 395,
+      "line": 400,
       "callee": "dict.fromkeys"
     },
     {
-      "line": 395,
+      "line": 400,
       "callee": "list"
     },
     {
-      "line": 399,
+      "line": 408,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 409,
       "callee": "subprocess.run"
     },
     {
-      "line": 401,
+      "line": 415,
       "callee": "b''.join"
     },
     {
-      "line": 401,
+      "line": 415,
       "callee": "f'{ref}:{relative}\\x00'.encode"
     },
     {
-      "line": 408,
+      "line": 433,
       "callee": "data.find"
     },
     {
-      "line": 413,
-      "callee": "header.rsplit"
+      "line": 440,
+      "callee": "RuntimeError"
     },
     {
-      "line": 416,
-      "callee": "fields[2].isdigit"
-    },
-    {
-      "line": 416,
+      "line": 441,
       "callee": "len"
     },
     {
-      "line": 418,
+      "line": 441,
+      "callee": "len"
+    },
+    {
+      "line": 446,
+      "callee": "header.rsplit"
+    },
+    {
+      "line": 449,
+      "callee": "fields[2].isdigit"
+    },
+    {
+      "line": 449,
+      "callee": "len"
+    },
+    {
+      "line": 451,
       "callee": "int"
+    },
+    {
+      "line": 455,
+      "callee": "len"
+    },
+    {
+      "line": 458,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 459,
+      "callee": "len"
+    },
+    {
+      "line": 462,
+      "callee": "found.update"
     }
   ]
 }
