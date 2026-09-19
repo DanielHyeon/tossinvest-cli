@@ -74,3 +74,55 @@
 | B44 | 1491 | If | `if not branches and 'B1' not in mapped:` |
 | B45 | 1494 | BoolOp | `'# Risk Pattern Report' not in risk or relative not in risk` |
 | B46 | 1494 | If | `if '# Risk Pattern Report' not in risk or relative not in risk:` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1460-1584` · 분기 43 · 반환 5 · raise 0 (편집 전 L1370-1496 · 분기 46 · 반환 6 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+`held` 가 **필수 키워드**다(시험만 쓰던 디스크 fallback 삭제). 모양은 `_parse_ast` 한 곳이 본다 — 이 함수 안의 따로 된 모양 검사와 반환 하나를 지웠다(반환 6 → 5). 글자가 아닌 `ast.json` 은 이제 `invalid`(옛: `UnicodeDecodeError` 가 판정 전체를 `cannot judge` 한 줄로). 순서가 하나 바뀐다: 사전인데 필수 칸이 비고 **동시에** 모양이 틀리면 옛 판본은 placeholder, 새 판본은 invalid — 저장소 0 건.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1476 | For | `for name in REQUIRED:` |
+| B2 | 1478 | If | `if name == 'ast.json':` |
+| B3 | 1479 | If | `if path not in held:` |
+| B4 | 1482 | If | `if held[path] is None:` |
+| B5 | 1485 | Try | `try:` |
+| B6 | 1487 | ExceptHandler | `except ValueError:` |
+| B7 | 1489 | If | `if path.exists():` |
+| B8 | 1494 | If | `if 'TODO' in texts[name]:` |
+| B9 | 1496 | If | `if 'ast.json' not in texts:` |
+| B10 | 1501 | If | `if problem == 'invalid':` |
+| B11 | 1504 | BoolOp | `problem or any((not value.get(key) for key in keys))` |
+| B12 | 1504 | If | `if problem or any((not value.get(key) for key in keys)):` |
+| B13 | 1504 | comprehension | ` for key in keys` |
+| B14 | 1506 | Try | `try:` |
+| B15 | 1508 | ExceptHandler | `except ValueError as exc:` |
+| B16 | 1511 | If | `if revision == 'current':` |
+| B17 | 1512 | If | `if revision_ref:` |
+| B18 | 1515 | BoolOp | `prefetched is not None and relative in prefetched` |
+| B19 | 1515 | IfExp | `prefetched[relative] if prefetched is not None and relative in prefetched else _committed_bytes(root, revision_ref, rela` |
+| B20 | 1517 | If | `if blob is None:` |
+| B21 | 1519 | If | `if hashlib.sha256(blob).hexdigest() != value['source_sha256']:` |
+| B22 | 1521 | If | `if not source.is_file():` |
+| B23 | 1523 | If | `if hashlib.sha256(source.read_bytes()).hexdigest() != value['source_sha256']:` |
+| B24 | 1525 | If | `if revision != 'base':` |
+| B25 | 1529 | For | `for section in MAP_SECTIONS:` |
+| B26 | 1530 | If | `if section not in logic:` |
+| B27 | 1532 | BoolOp | `relative not in logic or function not in logic` |
+| B28 | 1532 | If | `if relative not in logic or function not in logic:` |
+| B29 | 1536 | BoolOp | `value.get('branches') or []` |
+| B30 | 1538 | If | `if '# Branch Test Map' not in branch_map:` |
+| B31 | 1541 | If | `if len(mapped) != len(set(mapped)):` |
+| B32 | 1543 | comprehension | ` for branch in branches if isinstance(branch, dict) and branch.get('id')` |
+| B33 | 1546 | BoolOp | `isinstance(branch, dict) and branch.get('id')` |
+| B34 | 1548 | BoolOp | `branches and len(expected) != len(branches)` |
+| B35 | 1548 | If | `if branches and len(expected) != len(branches):` |
+| B36 | 1551 | If | `if missing:` |
+| B37 | 1558 | IfExp | `expected if branches else {'B1'}` |
+| B38 | 1559 | If | `if unexpected:` |
+| B39 | 1576 | IfExp | `test_index(root) if index is None else index` |
+| B40 | 1579 | BoolOp | `not branches and 'B1' not in mapped` |
+| B41 | 1579 | If | `if not branches and 'B1' not in mapped:` |
+| B42 | 1582 | BoolOp | `'# Risk Pattern Report' not in risk or relative not in risk` |
+| B43 | 1582 | If | `if '# Risk Pattern Report' not in risk or relative not in risk:` |

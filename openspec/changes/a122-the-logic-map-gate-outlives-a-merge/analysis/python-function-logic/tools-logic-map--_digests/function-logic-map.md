@@ -10,3 +10,9 @@
 |---|---|---|---|
 | B1 | 615 | comprehension | ` for path, raw in reads` |
 | B2 | 616 | IfExp | `'' if raw is None else hashlib.sha256(raw).hexdigest()` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+편집 전 L613-618 (`ast.before-7.5.2.1.json` = revision `fc35eb2d`) · 편집 후 없음.
+
+지웠다(task 7.5.2.1) — 재확인이 해시 대신 `Evidence` 의 바이트를 그대로 비교한다.

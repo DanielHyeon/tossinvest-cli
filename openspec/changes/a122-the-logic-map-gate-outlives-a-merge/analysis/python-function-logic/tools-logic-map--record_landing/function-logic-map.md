@@ -128,3 +128,20 @@ B4·B5 는 **이 로트가 찾은 둘째 자리**다. 4.4 는 `check` 의 probe 
 | 생김 | 반환 | `(1, [f'{change}: {refusal}'])` |
 
 호출 — 사라짐 ["(change_dir / 'analysis' / 'function-logic-reference.txt').exists", '_landing_record', 'facts.get', 'landing_file.exists', 'landing_file.is_symlink', 'resolve_base', 'subprocess.run'] · 생김 ['_recording_refusal']
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:2005-2060` · 분기 8 · 반환 6 · raise 0 (편집 전 L1924-1974 · 분기 8 · 반환 6 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+명령 시작에 `HEAD` 를 풀고 증거를 **한 번** 읽어 걷기 전 판정 · 잼 · 걷기에 같이 넘긴다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 2020 | Try | `try:` |
+| B2 | 2023 | ExceptHandler | `except ValueError as exc:` |
+| B3 | 2026 | Try | `try:` |
+| B4 | 2036 | If | `if refusal:` |
+| B5 | 2039 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B6 | 2043 | If | `if not landing:` |
+| B7 | 2045 | Try | `try:` |
+| B8 | 2048 | ExceptHandler | `except FileExistsError:` |

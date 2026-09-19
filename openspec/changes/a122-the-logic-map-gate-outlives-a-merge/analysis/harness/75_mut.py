@@ -76,12 +76,12 @@ MUTATIONS = {
         '        header',
         '            raise RuntimeError(_TRUNCATED.format(count=len(answered), total=len(wanted), ref=ref[:12]))\n'
         '        header')],
-    "V9_fingerprint_not_rechecked": [(
-        '            _raise_if_inputs_moved(root, analysis, inputs)\n            return candidate, ""',
-        '            return candidate, ""')],
-    "V11_resolve_measures_twice": [(
-        '    computed, why = compute_landing(root, base, analysis, inputs)',
-        '    computed, why = compute_landing(root, base, analysis)')],
+    "V9_fingerprint_not_rechecked": [
+        ('            _raise_if_inputs_moved(root, inputs)\n            return candidate, ""',
+         '            return candidate, ""')],
+    "V11_resolve_measures_twice": [
+        ('    computed, _ = compute_landing(root, base, inputs)',
+         '    computed, _ = compute_landing(root, base, _measure_landing_inputs(root, head, evidence))')],
     "V12_verdict_ignores_the_prefetch": [(
         '            blob = (prefetched[relative] if prefetched is not None and relative in prefetched\n'
         '                    else _committed_bytes(root, revision_ref, relative))',
@@ -98,40 +98,27 @@ MUTATIONS = {
         '        required = changed_existing_functions(root, base, landing)\n'
         '    except (OSError, RuntimeError, ValueError) as exc:')],
     # --- 7.5.2: 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰) ---
-    "W1_judged_list_read_separately": [(
-        '    fingerprint, bundles, held = _evidence_fingerprint(root, analysis)\n',
-        '    fingerprint, _, held = _evidence_fingerprint(root, analysis)\n'
-        '    bundles = _pinning_bundles(root, analysis)\n')],
-    "W2_fingerprint_drops_bytes": [(
-        '    return Fingerprint(_head_commit(root), _digests(reads), pins), bundles, dict(reads)',
-        '    return Fingerprint(_head_commit(root), (), pins), bundles, dict(reads)')],
-    "W3_fingerprint_drops_head": [(
-        '    return Fingerprint(_head_commit(root), _digests(reads), pins), bundles, dict(reads)',
-        '    return Fingerprint("", _digests(reads), pins), bundles, dict(reads)')],
-    "W4_fingerprint_drops_pins": [(
-        '    return Fingerprint(_head_commit(root), _digests(reads), pins), bundles, dict(reads)',
-        '    return Fingerprint(_head_commit(root), _digests(reads), ()), bundles, dict(reads)')],
-    "W5_no_recheck_before_a_declared_refusal": [(
-        '        _raise_if_inputs_moved(root, analysis, inputs)\n        # **복구 경로를 말한다**',
-        '        # **복구 경로를 말한다**')],
-    "W7_verdict_not_bound_to_the_landing": [(
-        '    if judged is not None:\n        before, now', '    if False:\n        before, now')],
-    "W8_target_reads_the_disk_again": [(
-        '            target, root, index, require_calls, landing, prefetched, evidence,',
-        '            target, root, index, require_calls, landing, prefetched,')],
-    "W9_holding_reads_the_disk_again": [(
-        '        if held is not None:\n            judged = held.get(ast_path)',
-        '        if False:\n            judged = held.get(ast_path)')],
-    "W10_call_table_reads_the_disk": [(
-        '        (_bundle_text(path, evidence), _parsed(evidence.get(path.parent / "ast.json")))',
-        '        (_bundle_text(path, evidence), _parsed((path.parent / "ast.json").read_bytes()\n'
-        '         if (path.parent / "ast.json").exists() else None))')],
-    "W11_bundle_text_reads_the_disk": [(
-        '            if known is not None and path.name == "ast.json":',
-        '            if False:')],
-    "W12_prefetch_selection_not_contained": [(
-        '            except ValueError:\n                sources = []',
-        '            except ZeroDivisionError:\n                sources = []')],
+    "W1_judged_list_read_separately": [
+        ('    bundles = _select_pinning(root, evidence)\n    floor, why = _walk_floor(root, bundles, head)',
+         '    bundles = _select_pinning(root, _read_evidence(evidence.directory))\n    floor, why = _walk_floor(root, bundles, head)')],
+    "W5_no_recheck_before_a_declared_refusal": [
+        ('        _raise_if_inputs_moved(root, inputs)\n        # **복구 경로를 말한다**',
+         '        # **복구 경로를 말한다**')],
+    "W8_target_reads_the_disk_again": [
+        ('            target, root, index, require_calls, landing, prefetched, held=evidence.held,',
+         '            target, root, index, require_calls, landing, prefetched,\n            held=_read_evidence(evidence.directory).held,')],
+    "W9_holding_reads_the_disk_again": [
+        ('        judged = held.get(ast_path)             # 판정과 **같은 읽기** — 심링크면 따라간 바이트다',
+         '        judged = ast_path.read_bytes() if ast_path.is_file() else None')],
+    "W10_call_table_reads_the_disk": [
+        ('        (text, _parsed(evidence.held.get(target / "ast.json"))) for target, text in bundle_texts.items()',
+         '        (text, _parsed((target / "ast.json").read_bytes() if (target / "ast.json").is_file() else None))\n        for target, text in bundle_texts.items()')],
+    "W11_bundle_text_keeps_bytes_only_while_listed": [
+        ('    if ast_raw is not None:\n        paths["ast.json"] = target / "ast.json"',
+         '    if ast_raw is not None and (target / "ast.json").exists():\n        paths["ast.json"] = target / "ast.json"')],
+    "W12_prefetch_selection_not_contained": [
+        ('        except ValueError:\n            sources = []',
+         '        except ZeroDivisionError:\n            sources = []')],
     "W13_advice_fault_replaces_the_verdict": [(
         '        except GATE_FAULTS as exc:\n            facts["base_shaped_fault"] = str(exc)',
         '        except ZeroDivisionError as exc:\n            facts["base_shaped_fault"] = str(exc)')],
@@ -143,18 +130,18 @@ MUTATIONS = {
     "W16_parser_fault_does_not_name_the_path": [(
         '                f"{index + 1} of {len(wanted)} ({relative}) at {ref[:12]}: {header[:80]!r}"',
         '                f"{index + 1} of {len(wanted)} at {ref[:12]}: {header[:80]!r}"')],
-    "W17_shape_not_checked": [(
-        '    if not isinstance(value["start"], dict) or not isinstance(value["end"], dict) \\\n',
-        '    if False and not isinstance(value["start"], dict) or False and not isinstance(value["end"], dict) \\\n')],
+    "W17_object_shape_not_checked": [
+        ('    if any(value.get(key) and not isinstance(value[key], dict) for key in _AST_OBJECTS) \\\n',
+         '    if False and any(value.get(key) and not isinstance(value[key], dict) for key in _AST_OBJECTS) \\\n')],
     "W18_unmeasured_repairs_read_as_none": [(
         '    if repairs is None:\n        raise RuntimeError(',
         '    if repairs is None:\n        return []\n        raise RuntimeError(')],
-    "W19_repairs_measured_as_empty": [(
-        '    repairs = None if why else _self_repair_commits(root, analysis)',
-        '    repairs = [] if why else _self_repair_commits(root, analysis)')],
-    "W20_stale_context_kept": [(
-        '    for stale in ("landing_evidence", "base_shaped_fault"):',
-        '    for stale in ():')],
+    "W19_repairs_measured_as_empty": [
+        ('    repairs = None if why else _self_repair_commits(root, evidence.directory, head)',
+         '    repairs = [] if why else _self_repair_commits(root, evidence.directory, head)')],
+    "W20_stale_context_half_kept": [
+        ('    for stale in RUN_FACTS:',
+         '    for stale in RUN_FACTS[:2]:')],
     "W21_base_shape_read_per_bundle": [(
         '        if at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() == digest\n',
         '        if _committed_bytes(root, base, source) is not None\n'
@@ -162,11 +149,94 @@ MUTATIONS = {
     "W22_decode_without_newline_translation": [(
         '    return io.TextIOWrapper(io.BytesIO(raw), encoding="utf-8").read()',
         '    return raw.decode("utf-8")')],
-    "W23_unreadable_evidence_is_absent": [(
-        '            if raw is None:\n                errors.append(f"{target.name}: {name} could not be read")\n'
-        '                continue',
-        '            if raw is None:\n                errors.append(f"{target.name}: missing {name}")\n'
-        '                continue')],
+    "W23_unreadable_evidence_is_absent": [
+        ('            if held[path] is None:\n                errors.append(f"{target.name}: {name} could not be read")',
+         '            if held[path] is None:\n                errors.append(f"{target.name}: missing {name}")')],
+    # --- 7.5.2.1: 명령 하나는 역사 하나와 증거 읽기 하나 위에서 판정한다 ---
+    "Y1_record_read_at_symbolic_head": [
+        ('    raw = _committed_bytes(root, head, relative)',
+         '    raw = _committed_bytes(root, "HEAD", relative)')],
+    "Y2_ancestry_at_symbolic_head": [
+        ('    if not _is_ancestor(root, candidate, head):',
+         '    if not _is_ancestor(root, candidate, "HEAD"):')],
+    "Y3_floor_at_symbolic_head": [
+        ('"--format=%H",\n         head, "--", *paths],',
+         '"--format=%H",\n         "HEAD", "--", *paths],')],
+    "Y4_repair_signal_at_symbolic_head": [
+        ('"--no-merges", "--format=%H", head, "--", *paths],',
+         '"--no-merges", "--format=%H", "HEAD", "--", *paths],')],
+    "Y5_walk_at_symbolic_head": [
+        ('f"{start}..{inputs.head}"',
+         'f"{start}..HEAD"')],
+    "Y6_repairs_after_at_symbolic_head": [
+        ('["git", "rev-list", f"{candidate}..{head}"]',
+         '["git", "rev-list", f"{candidate}..HEAD"]')],
+    "Y7_cleanliness_at_symbolic_head": [
+        ('["git", "diff", "--quiet", head]',
+         '["git", "diff", "--quiet", "HEAD"]')],
+    "Y8_window_count_at_symbolic_head": [
+        ('f"{base}..{head}"',
+         'f"{base}..HEAD"')],
+    "Y9_ancestry_fault_is_a_no": [
+        ('    if process.returncode in (0, 1):\n        return process.returncode == 0',
+         '    if True:\n        return process.returncode == 0')],
+    "Y10_floor_fault_is_empty": [
+        ('    if process.returncode:\n        raise RuntimeError(\n            "cannot find the commit that put',
+         '    if process.returncode:\n        return ""\n        raise RuntimeError(\n            "cannot find the commit that put')],
+    "Y11_walk_fault_is_a_reason": [
+        ('    if process.returncode:\n        raise RuntimeError(\n            f"cannot walk the history after {start[:12]}: "',
+         '    if process.returncode:\n        return "", "cannot walk"\n        raise RuntimeError(\n            f"cannot walk the history after {start[:12]}: "')],
+    "Y12_cleanliness_fault_is_dirty": [
+        ('    if dirty.returncode not in (0, 1):',
+         '    if False:')],
+    "Y13_early_return_asks_the_disk": [
+        ('    if not evidence.present:',
+         '    if not analysis.exists():')],
+    "Y14_targets_listed_again": [
+        ('    for target in evidence.targets:\n        target_errors, binding',
+         '    for target in sorted(path for path in analysis.iterdir() if path.is_dir()):\n        target_errors, binding')],
+    "Y15_evidence_listed_by_glob": [
+        ('    targets = tuple(sorted(path for path in analysis.iterdir() if path.is_dir()))',
+         '    targets = tuple(sorted(path.parent for path in analysis.glob("*/ast.json")))')],
+    "Y16_absent_read_as_unreadable": [
+        ('        except FileNotFoundError:\n            continue\n        except OSError:',
+         '        except FileNotFoundError:\n            held[ast_path] = None\n        except OSError:')],
+    "Y17_listing_failure_is_silent": [
+        ('        except OSError as exc:\n            errors.append(f"{target.name}: cannot list the bundle directory',
+         '        except OSError as exc:\n            continue\n            errors.append(f"{target.name}: cannot list the bundle directory')],
+    "Y18_verdict_reads_the_evidence_again": [
+        ('    facts["landing"] = landing\n    facts["required_count"] = len(required)',
+         '    evidence = _read_evidence(analysis)\n    facts["landing"] = landing\n    facts["required_count"] = len(required)')],
+    "Y19_record_command_reads_twice": [
+        ('        landing, why = compute_landing(root, base, _measure_landing_inputs(root, head, evidence))',
+         '        landing, why = compute_landing(root, base, _measure_landing_inputs(\n            root, head, _read_evidence(change_dir / "analysis" / "function-logic")))')],
+    "Y20_recheck_skips_the_bytes": [
+        ('    if now != inputs.evidence:\n        raise RuntimeError(INPUTS_MOVED)',
+         '    if False:\n        raise RuntimeError(INPUTS_MOVED)')],
+    "Y21_recheck_compares_only_the_bytes_held": [
+        ('    if now != inputs.evidence:\n        raise RuntimeError(INPUTS_MOVED)',
+         '    if now.held != inputs.evidence.held:\n        raise RuntimeError(INPUTS_MOVED)')],
+    "Y22_recheck_skips_the_pins": [
+        ('    if bundles != inputs.bundles:\n        raise RuntimeError(INPUTS_MOVED)',
+         '    if False:\n        raise RuntimeError(INPUTS_MOVED)')],
+    "Y23_selection_fault_is_not_a_move": [
+        ('    except ValueError as exc:\n        raise RuntimeError(INPUTS_MOVED) from exc',
+         '    except ZeroDivisionError as exc:\n        raise RuntimeError(INPUTS_MOVED) from exc')],
+    "Y24_list_shape_not_checked": [
+        ('            or any(value.get(key) and not isinstance(value[key], list) for key in _AST_LISTS):',
+         '            or False:')],
+    "Y25_parsed_value_skips_the_shape": [
+        ('    return {} if raw is None else _parse_ast(raw)[0]',
+         '    return {} if raw is None else json.loads(_decoded(raw))')],
+    "Y26_non_dict_is_invalid_not_placeholder": [
+        ('    if not isinstance(value, dict):\n        return {}, "placeholder"',
+         '    if not isinstance(value, dict):\n        return {}, "invalid"')],
+    "Y27_output_stays_strict": [
+        ('        reconfigure(errors="backslashreplace")',
+         '        reconfigure(errors="strict")')],
+    "Y28_resolve_raises_on_a_loop": [
+        ('    resolved = Path(os.path.realpath(path))',
+         '    resolved = path.resolve()')],
     # --- 배치가 실제로 배치인가 (7.5) ---
     "T8_pinning_at_fetches_one_by_one": [(
         '    blobs = _committed_many(root, candidate, [source for _, source, _ in bundles])\n'
@@ -188,9 +258,9 @@ MUTATIONS = {
         'root, candidate, [path for _, relative, before in watched\n'
         '                          for path in ((relative, before) if before else (relative,))],',
         'root, candidate, [relative for _, relative, _ in watched],')],
-    "T12_walk_passes_no_bundles": [(
-        '            root, base, candidate, bundles, floor, repairs, inputs.held,',
-        '            root, base, candidate, [], floor, repairs, inputs.held,')],
+    "T12_walk_passes_no_bundles": [
+        ('        refusal, names = _landing_refusal(root, base, candidate, inputs)',
+         '        refusal, names = _landing_refusal(root, base, candidate, inputs._replace(bundles=[]))')],
     "T14_unheld_merged_guard_flipped": [(
         '        if committed is None and before:', '        if committed is None or before:')],
     "T15_anchor_is_not_the_root": [(

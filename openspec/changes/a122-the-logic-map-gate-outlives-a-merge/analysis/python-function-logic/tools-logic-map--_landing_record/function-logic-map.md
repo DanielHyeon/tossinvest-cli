@@ -52,3 +52,15 @@
 
 읽기 전용 게이트 도구. 주문·손절·익절·사이징·Guardian·원장·대사·인증·체결 어디에도 닿지
 않는다. Go 변경 0.
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:593-609` · 분기 3 · 반환 2 · raise 0 (편집 전 L560-573 · 분기 3 · 반환 2 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+상징 `HEAD` 대신 명령이 **한 번** 푼 sha(`head`)를 받는다. 7.5.2 는 `HEAD` 를 열 자리에서 따로 읽고 지문에 표본 하나만 넣었다 — 기록은 표본 **전에** 읽혔고 뒤의 git 호출은 살아 있는 `HEAD` 를 다시 읽어서 가지 전환 한 번(레드팀 repro_b)도, 떠났다 돌아온 `HEAD`(이 세션이 재현)도 rc 0 이었다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 604 | Try | `try:` |
+| B2 | 606 | ExceptHandler | `except ValueError:` |
+| B3 | 609 | IfExp | `None if raw is None else (relative, raw)` |

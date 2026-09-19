@@ -300,3 +300,27 @@ M2·M3 이 1차에서 살아남은 것이 시험 둘을 더 쓴 이유다 —
 | 1103 | `raise ValueError(f'landing point never landed on this history: {candidate}')` |
 | 1122 | `raise ValueError(f'{refusal} — {LANDING_RECOVERY}')` |
 | 1139 | `raise ValueError(f"landing point {candidate[:12]} is not the landing this change's evidenc` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1117-1207` · 분기 7 · 반환 2 · raise 5 (편집 전 L1057-1147 · 분기 9 · 반환 2 · raise 5, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+`head` · `evidence` 를 받고 `facts` 를 안 받는다 — 착지가 판정한 바이트와 대상 판정이 읽는 바이트가 **같은 값**이라 넘길 지문이 없다. 선언값 ≠ 계산값 갈래의 주석을 **참인 이유**로 고쳤다: 7.5.2 는 "움직인 입력으로 여기 오는 길은 없다" 고 적었는데 거짓이었다(`HEAD` 이동 · git 결함이 둘 다 왔다 — 레드팀 repro_a). 이제 역사는 고정이고 결함은 예외라, 여기 오는 것은 같은 역사 · 같은 증거에서 더 낮은 수락 후보뿐이다 — 그래서 `computed` 가 빈 값인 경우의 문장 갈래(`none — …`)도 지웠다(도달 불가).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1147 | If | `if candidate is None:` |
+| B2 | 1149 | If | `if not FULL_SHA.fullmatch(candidate):` |
+| B3 | 1160 | BoolOp | `process.returncode or process.stdout.strip() != candidate` |
+| B4 | 1160 | If | `if process.returncode or process.stdout.strip() != candidate:` |
+| B5 | 1162 | If | `if not _is_ancestor(root, candidate, head):` |
+| B6 | 1170 | If | `if refusal:` |
+| B7 | 1193 | If | `if candidate != computed:` |
+
+| raise 줄 | 소스 |
+|---|---|
+| 1153 | `raise ValueError(f'landing point must be a full 40-hex commit id, not {candidate!r}')` |
+| 1161 | `raise ValueError(f'landing point is not a commit in this repository: {candidate}')` |
+| 1163 | `raise ValueError(f'landing point never landed on this history: {candidate}')` |
+| 1180 | `raise ValueError(f'{refusal} — {LANDING_RECOVERY}')` |
+| 1201 | `raise ValueError(f"landing point {candidate[:12]} is not the landing this change's evidenc` |

@@ -1,0 +1,74 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "fc35eb2d",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "98845ce2dea180b8ab813180a51e9076ae1f787dea664362a61e8312675b135b",
+  "function": "_declared_landing",
+  "signature": "_declared_landing(change_dir, root)",
+  "start": {
+    "line": 576,
+    "column": 1
+  },
+  "end": {
+    "line": 591,
+    "column": 77
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 585,
+      "inherited_line": false,
+      "source": "if record is None:"
+    },
+    {
+      "id": "B2",
+      "kind": "Try",
+      "line": 588,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B3",
+      "kind": "ExceptHandler",
+      "line": 590,
+      "inherited_line": false,
+      "source": "except UnicodeDecodeError as exc:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 586,
+      "value": "None"
+    },
+    {
+      "line": 589,
+      "value": "raw.decode('utf-8').strip()"
+    }
+  ],
+  "raises": [
+    {
+      "line": 591,
+      "source": "raise ValueError(f'landing point is not UTF-8: {relative}') from exc"
+    }
+  ],
+  "calls": [
+    {
+      "line": 584,
+      "callee": "_landing_record"
+    },
+    {
+      "line": 589,
+      "callee": "raw.decode('utf-8').strip"
+    },
+    {
+      "line": 589,
+      "callee": "raw.decode"
+    },
+    {
+      "line": 591,
+      "callee": "ValueError"
+    }
+  ]
+}

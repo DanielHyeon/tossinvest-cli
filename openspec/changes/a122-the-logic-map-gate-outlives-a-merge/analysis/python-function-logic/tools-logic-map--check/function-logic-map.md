@@ -290,3 +290,62 @@ CAUGHT — `test_an_undecodable_landing_record_in_the_adoption_path_is_refused_n
 | B52 | 1665 | If | `if ast_value.get('source_sha256') != expected_hash:` |
 | B53 | 1667 | IfExp | `'current' if expected.get('current_hash') else 'base'` |
 | B54 | 1668 | If | `if ast_value.get('revision', 'current') != expected_revision:` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1587-1759` · 분기 50 · 반환 13 · raise 0 (편집 전 L1499-1670 · 분기 54 · 반환 14 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+역사를 **여기서 한 번** 풀고(`_head_commit`, `facts["head"]`) 증거를 **한 번** 읽는다(`_read_evidence`). 착지 판정 · 조기 반환(`evidence.present`) · 번들 목록(`evidence.targets`) · 열거형 호출 · 대상 판정 · 조언이 전부 그 값을 쓴다 — 7.5.2 의 "착지 뒤 다시 읽어 대조" 블록과 `SWAPPED` 반환을 지웠다(반환 14 → 13). 번들 파일 목록을 못 열면 이름 댄 줄. 앞선 실행의 사실은 `RUN_FACTS` 전부를 지운다(7.5.2 는 둘만). 태어나지 않은 `HEAD` 는 결함 줄.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1596 | Try | `try:` |
+| B2 | 1598 | ExceptHandler | `except ValueError as exc:` |
+| B3 | 1603 | IfExp | `review.read_text(encoding='utf-8') if review.exists() else ''` |
+| B4 | 1607 | IfExp | `{} if context is None else context` |
+| B5 | 1610 | For | `for stale in RUN_FACTS:` |
+| B6 | 1612 | Try | `try:` |
+| B7 | 1620 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B8 | 1626 | If | `if reference_file.exists():` |
+| B9 | 1627 | BoolOp | `analysis.exists() and any((path.is_dir() and any(path.iterdir()) for path in analysis.iterdir()))` |
+| B10 | 1627 | BoolOp | `path.is_dir() and any(path.iterdir())` |
+| B11 | 1627 | If | `if analysis.exists() and any((path.is_dir() and any(path.iterdir()) for path in analysis.iterdir())):` |
+| B12 | 1627 | comprehension | ` for path in analysis.iterdir()` |
+| B13 | 1630 | BoolOp | `not re.fullmatch('[a-z0-9][a-z0-9-]*', referenced_change) or referenced_change == change` |
+| B14 | 1630 | If | `if not re.fullmatch('[a-z0-9][a-z0-9-]*', referenced_change) or referenced_change == change:` |
+| B15 | 1632 | Try | `try:` |
+| B16 | 1635 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B17 | 1637 | If | `if referenced_base != base:` |
+| B18 | 1647 | If | `if _landing_record(change_dir, root, head) is not None:` |
+| B19 | 1651 | BoolOp | `adopted and _landing_record(change_dir, root, head) is not None` |
+| B20 | 1651 | If | `if adopted and _landing_record(change_dir, root, head) is not None:` |
+| B21 | 1657 | Try | `try:` |
+| B22 | 1670 | IfExp | `str(facts.get('adoption_source', '')) if adopted else resolve_landing(change_dir, root, base, head, evidence)` |
+| B23 | 1673 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B24 | 1677 | If | `if not landing:` |
+| B25 | 1682 | Try | `try:` |
+| B26 | 1684 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B27 | 1686 | If | `if not evidence.present:` |
+| B28 | 1687 | If | `if required:` |
+| B29 | 1688 | comprehension | ` for source, function in required` |
+| B30 | 1695 | IfExp | `[] if EXEMPTION in review_text else [f'missing analysis or `{EXEMPTION}` review marker']` |
+| B31 | 1697 | If | `if not evidence.targets:` |
+| B32 | 1711 | For | `for target in evidence.targets:` |
+| B33 | 1712 | If | `if not os.path.lexists(target / 'function-logic-map.md'):` |
+| B34 | 1714 | Try | `try:` |
+| B35 | 1716 | ExceptHandler | `except OSError as exc:` |
+| B36 | 1717 | BoolOp | `exc.strerror or exc` |
+| B37 | 1718 | comprehension | ` for target, text in bundle_texts.items()` |
+| B38 | 1731 | If | `if landing:` |
+| B39 | 1732 | Try | `try:` |
+| B40 | 1733 | comprehension | ` for _, source, _ in _select_pinning(root, evidence)` |
+| B41 | 1734 | ExceptHandler | `except ValueError:` |
+| B42 | 1737 | For | `for target in evidence.targets:` |
+| B43 | 1742 | If | `if binding:` |
+| B44 | 1743 | If | `if binding in covered:` |
+| B45 | 1746 | For | `for binding, expected in required.items():` |
+| B46 | 1748 | If | `if target is None:` |
+| B47 | 1753 | BoolOp | `expected.get('current_hash') or expected.get('base_hash')` |
+| B48 | 1754 | If | `if ast_value.get('source_sha256') != expected_hash:` |
+| B49 | 1756 | IfExp | `'current' if expected.get('current_hash') else 'base'` |
+| B50 | 1757 | If | `if ast_value.get('revision', 'current') != expected_revision:` |

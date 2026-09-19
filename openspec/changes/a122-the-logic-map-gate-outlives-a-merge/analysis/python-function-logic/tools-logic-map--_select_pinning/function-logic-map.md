@@ -13,3 +13,16 @@
 | B3 | 637 | If | `if not isinstance(value, dict) or value.get('revision', 'current') != 'current':` |
 | B4 | 641 | BoolOp | `not raw_source or not digest` |
 | B5 | 641 | If | `if not raw_source or not digest:` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:673-696` · 분기 4 · 반환 1 · raise 0 (편집 전 L626-649 · 분기 5 · 반환 1 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+`Evidence` 를 받는다(바이트 목록 대신). `_parsed` 가 이제 언제나 사전을 돌려주므로 사전인지 묻는 갈래가 빠졌다(분기 5 → 4).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 682 | For | `for ast_path, raw in evidence.held.items():` |
+| B2 | 684 | If | `if value.get('revision', 'current') != 'current':` |
+| B3 | 688 | BoolOp | `not raw_source or not digest` |
+| B4 | 688 | If | `if not raw_source or not digest:` |

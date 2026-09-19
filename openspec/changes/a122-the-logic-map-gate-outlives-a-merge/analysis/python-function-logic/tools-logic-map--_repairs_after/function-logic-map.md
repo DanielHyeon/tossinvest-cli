@@ -68,3 +68,21 @@
 |---|---|
 | 923 | `raise RuntimeError("this change's own later Go work was never measured — a landing cannot ` |
 | 934 | `raise RuntimeError(f'cannot walk the history after {candidate[:12]}')` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:961-993` · 분기 4 · 반환 2 · raise 2 (편집 전 L910-936 · 분기 4 · 반환 2 · raise 2, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+상징 `HEAD` 대신 명령이 **한 번** 푼 sha(`head`)를 받는다. 7.5.2 는 `HEAD` 를 열 자리에서 따로 읽고 지문에 표본 하나만 넣었다 — 기록은 표본 **전에** 읽혔고 뒤의 git 호출은 살아 있는 `HEAD` 를 다시 읽어서 가지 전환 한 번(레드팀 repro_b)도, 떠났다 돌아온 `HEAD`(이 세션이 재현)도 rc 0 이었다. 실패 문장에 git 의 말을 붙인다(`_first_line`).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 976 | If | `if repairs is None:` |
+| B2 | 980 | If | `if not repairs:` |
+| B3 | 986 | If | `if process.returncode:` |
+| B4 | 993 | comprehension | ` for commit in repairs if commit in after` |
+
+| raise 줄 | 소스 |
+|---|---|
+| 977 | `raise RuntimeError("this change's own later Go work was never measured — a landing cannot ` |
+| 988 | `raise RuntimeError(f'cannot walk the history after {candidate[:12]}: ' + _first_line(proce` |

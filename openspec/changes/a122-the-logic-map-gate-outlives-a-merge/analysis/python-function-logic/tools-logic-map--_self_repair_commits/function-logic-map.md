@@ -91,3 +91,33 @@ rc 1 하나로 거절돼야 할 입력이 초록이었다). 옆의 `_evidence_fl
 
 두 한계는 **놓치는** 쪽이므로 창이 넓어지지 않는다 — 그 자리는 이 규칙 이전 상태로 남는다.
 거절하는 쪽으로 틀리면(넓은 교차 커밋) 창이 넓어진다. 방향이 둘이고 다르다는 것을 spec 이 적는다.
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:868-958` · 분기 15 · 반환 2 · raise 3 (편집 전 L817-907 · 분기 15 · 반환 2 · raise 3, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+상징 `HEAD` 대신 명령이 **한 번** 푼 sha(`head`)를 받는다. 7.5.2 는 `HEAD` 를 열 자리에서 따로 읽고 지문에 표본 하나만 넣었다 — 기록은 표본 **전에** 읽혔고 뒤의 git 호출은 살아 있는 `HEAD` 를 다시 읽어서 가지 전환 한 번(레드팀 repro_b)도, 떠났다 돌아온 `HEAD`(이 세션이 재현)도 rc 0 이었다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 895 | Try | `try:` |
+| B2 | 897 | ExceptHandler | `except ValueError as exc:` |
+| B3 | 904 | If | `if change_dir.startswith(ARCHIVE_PREFIX):` |
+| B4 | 908 | If | `if before:` |
+| B5 | 921 | If | `if touching.returncode:` |
+| B6 | 927 | IfExp | `touching.stderr.strip().splitlines()[0] if touching.stderr.strip() else 'git log failed'` |
+| B7 | 930 | If | `if not hashes:` |
+| B8 | 946 | If | `if listing.returncode:` |
+| B9 | 949 | IfExp | `listing.stderr.strip().splitlines()[0] if listing.stderr.strip() else 'git log --no-walk failed'` |
+| B10 | 952 | For | `for block in listing.stdout.split('\x00'):` |
+| B11 | 953 | comprehension | ` for line in block.splitlines() if line` |
+| B12 | 954 | BoolOp | `lines and any((name.endswith('.go') for name in lines[1:]))` |
+| B13 | 954 | If | `if lines and any((name.endswith('.go') for name in lines[1:])):` |
+| B14 | 954 | comprehension | ` for name in lines[1:]` |
+| B15 | 958 | comprehension | ` for commit in reversed(hashes) if commit in flagged` |
+
+| raise 줄 | 소스 |
+|---|---|
+| 902 | `raise RuntimeError(f"cannot name this change's directory under the repository: {exc}") fro` |
+| 925 | `raise RuntimeError(f'cannot list the commits that touched {change_dir}: {(touching.stderr.` |
+| 947 | `raise RuntimeError(f'cannot read the files those commits changed: {(listing.stderr.strip()` |

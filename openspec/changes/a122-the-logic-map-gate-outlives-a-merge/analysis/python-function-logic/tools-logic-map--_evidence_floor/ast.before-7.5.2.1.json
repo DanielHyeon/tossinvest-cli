@@ -1,0 +1,102 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "fc35eb2d",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "98845ce2dea180b8ab813180a51e9076ae1f787dea664362a61e8312675b135b",
+  "function": "_evidence_floor",
+  "signature": "_evidence_floor(root, bundles)",
+  "start": {
+    "line": 713,
+    "column": 1
+  },
+  "end": {
+    "line": 756,
+    "column": 64
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 740,
+      "inherited_line": false,
+      "source": "for ast_path, _, _ in bundles:"
+    },
+    {
+      "id": "B2",
+      "kind": "Try",
+      "line": 741,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B3",
+      "kind": "ExceptHandler",
+      "line": 743,
+      "inherited_line": false,
+      "source": "except ValueError:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 747,
+      "inherited_line": false,
+      "source": "if before:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 749,
+      "inherited_line": false,
+      "source": "if not paths:"
+    },
+    {
+      "id": "B6",
+      "kind": "IfExp",
+      "line": 756,
+      "inherited_line": false,
+      "source": "'' if process.returncode else process.stdout.strip()"
+    }
+  ],
+  "returns": [
+    {
+      "line": 750,
+      "value": "''"
+    },
+    {
+      "line": 756,
+      "value": "'' if process.returncode else process.stdout.strip()"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 742,
+      "callee": "ast_path.relative_to"
+    },
+    {
+      "line": 742,
+      "callee": "ast_path.relative_to(root).as_posix"
+    },
+    {
+      "line": 745,
+      "callee": "paths.append"
+    },
+    {
+      "line": 746,
+      "callee": "_pre_archive_path"
+    },
+    {
+      "line": 748,
+      "callee": "paths.append"
+    },
+    {
+      "line": 751,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 756,
+      "callee": "process.stdout.strip"
+    }
+  ]
+}

@@ -56,13 +56,26 @@ assert _before_src != _after_src, (
     "**직전** 커밋을 첫 인자로 줄 것 (시간 예산은 숫자로 준다)")
 print(f"대조군 OK · 비교 기준 blob = {BEFORE[:12]}")
 
+
+def landing_of(module, base, analysis):
+    """판본마다 부르는 모양이 다르다 — 7.5.2.1 부터 입력 한 벌(고정한 `HEAD` · 한 번 읽은 증거)을
+    호출자가 잰다. 옛 판본은 `compute_landing(root, base, analysis)` 가 안에서 쟀다. 범위는 같다."""
+    if hasattr(module, "Evidence"):
+        inputs = module._measure_landing_inputs(
+            ROOT, module._head_commit(ROOT), module._read_evidence(analysis))
+        return module.compute_landing(ROOT, base, inputs)
+    return module.compute_landing(ROOT, base, analysis)
+
 changes = ROOT / "openspec" / "changes"
 names = sorted(p.name for p in changes.iterdir() if p.is_dir() and p.name != "archive")
 names += sorted(p.name for p in (changes / "archive").iterdir() if p.is_dir())
 
 # 파일 이름에 baseline 을 넣는다 — 안 넣으면 다른 `BEFORE` 로 한 번 더 돌릴 때 두 baseline 의
-# 결과가 **조용히 섞인다** (2026-09-18 독립 리뷰 P2).
-DONE = SP / f"75_ab_done.{BEFORE[:12]}.json"
+# 결과가 **조용히 섞인다** (2026-09-18 독립 리뷰 P2). after 쪽 소스도 넣는다 (task 7.5.2.1) — 워킹트리가
+# 바뀐 뒤 다시 돌리면 옛 after 로 잰 줄과 새 after 로 잰 줄이 한 표에 섞인다(`751_check_ab.py` 가 7.5.2 에서
+# 같은 이유로 고쳤는데 이 파일은 안 고쳤다).
+import hashlib
+DONE = SP / f"75_ab_done.{BEFORE[:12]}.{hashlib.sha256(_after_src).hexdigest()[:12]}.json"
 done = json.load(open(DONE)) if DONE.exists() else {}
 budget = next((float(a) for a in sys.argv[1:] if a.replace(".", "").isdigit()), 480.0)
 spent = 0.0
@@ -98,7 +111,7 @@ for name in names:
     for tag, module in (("before", before), ("after", module_after := after)):
         start = time.monotonic()
         try:
-            out[tag] = (module.compute_landing(ROOT, base, analysis), "")
+            out[tag] = (landing_of(module, base, analysis), "")
         except Exception as exc:                  # 예외도 판정이다 — 타입과 문장을 비교한다
             out[tag] = (None, f"{type(exc).__name__}: {exc}")
         out[tag + "_s"] = time.monotonic() - start

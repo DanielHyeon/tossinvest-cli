@@ -81,13 +81,14 @@ evidence
 
 
 def run_check(root: Path) -> list[str]:
-    """git 을 mock 하고 번들 검증만 잰다. 루트는 **빈 저장소**다 (task 7.5.1).
+    """git 을 mock 하고 번들 검증만 잰다. 루트는 **커밋 하나뿐인 저장소**다 (task 7.5.1 · 7.5.2.1).
 
     이 헬퍼는 `resolve_base` · `changed_existing_functions` 를 mock 해서 git 을 빼는데
     `_landing_record` 만 빠뜨렸다 — 저장소가 아닌 곳에서 git 이 rc≠0 으로 죽어도 예전에는
     조용히 `None`("기록 없음")이라 무해해 보였다. 이제 rc≠0 은 결함이다. 빈 저장소는 같은 전제를
-    진짜로 만든다(실측: `HEAD:x missing` rc 0)."""
-    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+    진짜로 만든다(실측: `HEAD:x missing` rc 0). 7.5.2.1 부터 명령이 먼저 `HEAD` 를 sha 로 풀므로
+    빈 커밋 하나를 둔다 — 태어나지 않은 `HEAD` 는 결함이다."""
+    _empty_repo(root)
     with mock.patch(
         "check_analysis.resolve_base",
         return_value="base",
@@ -116,7 +117,7 @@ class BundleTextCoversEveryProseFileInTheBundle(unittest.TestCase):
             for index, name in enumerate(names):
                 (bundle / name).write_text(f"mark-{index}", encoding="utf-8")
             (bundle / "ast.json").write_text("{}", encoding="utf-8")
-            text = check_analysis._bundle_text(bundle / "function-logic-map.md")
+            text = check_analysis._bundle_text(bundle, (bundle / "ast.json").read_bytes())
         for index in range(len(names)):
             self.assertIn(f"mark-{index}", text)
 
@@ -657,7 +658,7 @@ class CheckAnalysisTests(unittest.TestCase):
 
     def test_explicit_exemption_is_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
+            _empty_repo(tmp)  # 커밋 하나뿐인 저장소 — 7.5.1 · 7.5.2.1
             change = Path(tmp) / "openspec" / "changes" / "docs-only"
             change.mkdir(parents=True)
             (change / "review.md").write_text(
@@ -678,10 +679,10 @@ class CheckAnalysisTests(unittest.TestCase):
 
         이 시험은 저장소가 아닌 임시 디렉터리에서 `len(errors) > 0` 만 봤다. 7.5.1 이 git 실패를
         결함으로 올리자 `cannot derive … not a git repository` 한 줄이 그 단언을 만족해서,
-        자리표시자 가드를 **지워도 초록**이었다(변이로 증명). 빈 저장소에서 돌리고, 결함 줄이
+        자리표시자 가드를 **지워도 초록**이었다(변이로 증명). 커밋 하나뿐인 저장소에서 돌리고, 결함 줄이
         없음과 가드마다의 문장을 단언한다 ([[passing-test-is-not-evidence]])."""
         with tempfile.TemporaryDirectory() as tmp:
-            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)
+            _empty_repo(tmp)  # 커밋 하나뿐인 저장소 — 7.5.2 · 7.5.2.1
             target = (
                 Path(tmp)
                 / "openspec"
@@ -712,7 +713,7 @@ class CheckAnalysisTests(unittest.TestCase):
         """자리표시자 판정은 **하나라도** 비면 선다(`any`). 전부 비어야 서는 `all` 로 바뀌어도
         `{}` 로만 재는 시험은 초록이다 — 채운 칸이 섞인 모양을 따로 둔다."""
         with tempfile.TemporaryDirectory() as tmp:
-            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)
+            _empty_repo(tmp)  # 커밋 하나뿐인 저장소 — 7.5.2 · 7.5.2.1
             target = Path(tmp) / "openspec" / "changes" / "change" / "analysis" / "function-logic" / "pkg--run"
             target.mkdir(parents=True)
             (target / "ast.json").write_text(json.dumps({
@@ -726,7 +727,7 @@ class CheckAnalysisTests(unittest.TestCase):
 
     def test_completed_bundle_is_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
+            _empty_repo(tmp)  # 커밋 하나뿐인 저장소 — 7.5.1 · 7.5.2.1
             root = Path(tmp)
             source = root / "internal" / "sample.go"
             source.parent.mkdir(parents=True)
@@ -794,7 +795,7 @@ evidence
         # function arrives as "branches": null rather than []. The bundle must
         # validate instead of crashing on the None.
         with tempfile.TemporaryDirectory() as tmp:
-            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
+            _empty_repo(tmp)  # 커밋 하나뿐인 저장소 — 7.5.1 · 7.5.2.1
             root = Path(tmp)
             source = root / "internal" / "sample.go"
             source.parent.mkdir(parents=True)
@@ -859,7 +860,7 @@ evidence
 
     def test_modified_function_cannot_use_exemption(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
+            _empty_repo(tmp)  # 커밋 하나뿐인 저장소 — 7.5.1 · 7.5.2.1
             root = Path(tmp)
             change = root / "openspec" / "changes" / "change"
             change.mkdir(parents=True)
@@ -1029,7 +1030,7 @@ evidence
 
     def test_prose_line_range_must_match_the_ast_range(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
+            _empty_repo(tmp)  # 커밋 하나뿐인 저장소 — 7.5.1 · 7.5.2.1
             root = Path(tmp)
             write_bundle(
                 root,
@@ -1041,7 +1042,7 @@ evidence
 
     def test_a_matching_prose_line_range_is_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
+            _empty_repo(tmp)  # 커밋 하나뿐인 저장소 — 7.5.1 · 7.5.2.1
             root = Path(tmp)
             write_bundle(
                 root,
@@ -1055,14 +1056,14 @@ evidence
         # Most maps in the corpus cite no line range at all. Requiring one
         # would fail evidence that never claimed a coordinate.
         with tempfile.TemporaryDirectory() as tmp:
-            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
+            _empty_repo(tmp)  # 커밋 하나뿐인 저장소 — 7.5.1 · 7.5.2.1
             root = Path(tmp)
             write_bundle(root, branches=[])
             self.assertEqual(run_check(root), [])
 
     def test_prose_branch_count_must_match_the_ast_branch_count(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
+            _empty_repo(tmp)  # 커밋 하나뿐인 저장소 — 7.5.1 · 7.5.2.1
             root = Path(tmp)
             target = write_bundle(root, branches=[])
             (target / "function-logic-map.md").write_text(
@@ -1081,7 +1082,7 @@ evidence
         # "미테스트 분기 5개" is prose about coverage, not a claim about what
         # the extractor found. Only a claim anchored to AST is checked.
         with tempfile.TemporaryDirectory() as tmp:
-            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
+            _empty_repo(tmp)  # 커밋 하나뿐인 저장소 — 7.5.1 · 7.5.2.1
             root = Path(tmp)
             target = write_bundle(root, branches=[])
             (target / "branch-test-map.md").write_text(
@@ -1093,7 +1094,7 @@ evidence
 
     def test_branch_ids_absent_from_the_ast_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
+            _empty_repo(tmp)  # 커밋 하나뿐인 저장소 — 7.5.1 · 7.5.2.1
             root = Path(tmp)
             write_bundle(
                 root,
@@ -1105,7 +1106,7 @@ evidence
 
     def test_the_branchless_happy_path_row_is_not_read_as_an_extra_id(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
+            _empty_repo(tmp)  # 커밋 하나뿐인 저장소 — 7.5.1 · 7.5.2.1
             root = Path(tmp)
             write_bundle(root, branches=None)
             self.assertEqual(run_check(root), [])
@@ -1331,7 +1332,29 @@ def _commit_all_allowing_nothing(root: Path, subject: str) -> str:
 def _bundles(root: Path, analysis: Path) -> list:
     """생산 경로가 한 번 재서 넘기는 고정 번들 목록 (task 7.5). 시험이 사설 판정을
     직접 부를 때 같은 것을 넘긴다 — 여기서 다른 것을 만들면 시험이 생산과 다른 입력을 잰다."""
-    return check_analysis._pinning_bundles(root, analysis)
+    return check_analysis._select_pinning(root, check_analysis._read_evidence(analysis))
+
+
+def _head(root: Path) -> str:
+    """명령이 푸는 것과 같은 `HEAD` 의 sha (task 7.5.2.1). 사설 판정을 직접 부르는 시험이 같은 끝을 넘긴다."""
+    return check_analysis._head_commit(root)
+
+
+def _inputs(root: Path, analysis: Path, **replaced) -> "check_analysis.LandingInputs":
+    """생산 경로가 한 번 재서 넘기는 착지 입력 한 벌 (task 7.5.2.1 — 사설 판정에 스스로 읽는 기본값이
+    없어졌다). 시험이 하한 · 수리 신호를 골라 넣을 때만 `replaced` 로 바꾼다 — 나머지는 생산과 같은
+    읽기에서 온다."""
+    return check_analysis._measure_landing_inputs(
+        root, _head(root), check_analysis._read_evidence(analysis))._replace(**replaced)
+
+
+def _empty_repo(root: Path | str) -> None:
+    """커밋 **하나**(빈 것)만 있는 저장소 (task 7.5.2.1). 명령은 시작하자마자 `HEAD` 를 sha 로 푼다 —
+    태어나지 않은 `HEAD` 는 결함이다(review.md 가 거부하는 정상 입력으로 적었다). git 을 mock 하는 시험의
+    전제("HEAD 에 착지 기록이 없다")는 그대로다: 빈 커밋에도 기록은 없다."""
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+    subprocess.run(["git", "-c", "user.email=a122@example.invalid", "-c", "user.name=a122",
+                    "commit", "-q", "--allow-empty", "-m", "empty"], cwd=root, check=True)
 
 
 def _init_fixture(raw: tempfile.TemporaryDirectory) -> Path:
@@ -2039,7 +2062,7 @@ class AnEvidenceRewriteHiddenInAMoveStillRaisesTheFloor(unittest.TestCase):
             root = _init_fixture(raw)
             change, _ = self._committed_change(root)
             analysis = change / "analysis" / "function-logic"
-            added = check_analysis._evidence_floor(root, _bundles(root, analysis))
+            added = check_analysis._evidence_floor(root, _bundles(root, analysis), _head(root))
             ast = analysis / "internal--own" / "ast.json"
             value = json.loads(ast.read_text(encoding="utf-8"))
             value["source_sha256"] = hashlib.sha256(
@@ -2049,7 +2072,7 @@ class AnEvidenceRewriteHiddenInAMoveStillRaisesTheFloor(unittest.TestCase):
             rewritten = _commit_all(root, "rewrite the bundle where it stands")
             self.assertNotEqual(added, rewritten, "픽스처가 두 커밋을 갈라야 한다")
             self.assertEqual(
-                check_analysis._evidence_floor(root, _bundles(root, analysis)), rewritten,
+                check_analysis._evidence_floor(root, _bundles(root, analysis), _head(root)), rewritten,
                 "그 자리에서 고친 증거가 하한이어야 한다",
             )
 
@@ -2071,7 +2094,7 @@ class AnEvidenceRewriteHiddenInAMoveStillRaisesTheFloor(unittest.TestCase):
             ast.write_text(json.dumps(value), encoding="utf-8")
             moved = _commit_all(root, "archive the change and rewrite its bundle in one commit")
             self.assertEqual(
-                check_analysis._evidence_floor(root, _bundles(root, archive / "analysis" / "function-logic")),
+                check_analysis._evidence_floor(root, _bundles(root, archive / "analysis" / "function-logic"), _head(root)),
                 moved,
                 "이동에 숨긴 재작성이 하한이어야 한다",
             )
@@ -2082,7 +2105,7 @@ class AnEvidenceRewriteHiddenInAMoveStillRaisesTheFloor(unittest.TestCase):
         with raw:
             root = _init_fixture(raw)
             change, base = self._committed_change(root)
-            before = check_analysis._evidence_floor(root, _bundles(root, change / "analysis" / "function-logic"))
+            before = check_analysis._evidence_floor(root, _bundles(root, change / "analysis" / "function-logic"), _head(root))
             archive = root / "openspec" / "changes" / "archive" / "2026-09-11-mine"
             archive.parent.mkdir(parents=True, exist_ok=True)
             subprocess.run(
@@ -2091,7 +2114,7 @@ class AnEvidenceRewriteHiddenInAMoveStillRaisesTheFloor(unittest.TestCase):
             )
             _commit_all(root, "archive the change, byte for byte")
             self.assertEqual(
-                check_analysis._evidence_floor(root, _bundles(root, archive / "analysis" / "function-logic")),
+                check_analysis._evidence_floor(root, _bundles(root, archive / "analysis" / "function-logic"), _head(root)),
                 before,
                 "그대로 옮긴 것은 하한이 아니다",
             )
@@ -2108,7 +2131,7 @@ class AnEvidenceRewriteHiddenInAMoveStillRaisesTheFloor(unittest.TestCase):
             (bundle / "ast.json").symlink_to(Path("..") / ".." / "real-ast.json")
             switched = _commit_all(root, "T: the bundle becomes a symlink")
             self.assertEqual(
-                check_analysis._evidence_floor(root, _bundles(root, change / "analysis" / "function-logic")),
+                check_analysis._evidence_floor(root, _bundles(root, change / "analysis" / "function-logic"), _head(root)),
                 switched,
                 "정규 파일↔심링크 전환도 내용 교체다",
             )
@@ -2348,13 +2371,13 @@ class TheGateRecordsTheLandingInsteadOfTheAuthor(unittest.TestCase):
                 digest=hashlib.sha256((root / "internal" / "own.go").read_bytes()).hexdigest(),
             )
             self.assertEqual(
-                check_analysis.compute_landing(root, marks["P"], analysis),
+                check_analysis.compute_landing(root, marks["P"], _inputs(root, analysis)),
                 ("", "no ordinary commit on this history adds the pinning evidence — commit the bundles "
                      "in an ordinary commit (a merge commit's own changes are not read)"),
             )
             shutil.rmtree(analysis)
             self.assertEqual(
-                check_analysis.compute_landing(root, marks["P"], analysis),
+                check_analysis.compute_landing(root, marks["P"], _inputs(root, analysis)),
                 ("", "no `revision: current` evidence pins a landing for this change"),
             )
 
@@ -2672,7 +2695,7 @@ class ALandingMustChangeWhatItsEvidencePins(unittest.TestCase):
             subprocess.run(["git", "checkout", "-q", home], cwd=root, check=True)
             subprocess.run(["git", "merge", "-q", "--no-edit", "side"], cwd=root, check=True)
             analysis = change / "analysis" / "function-logic"
-            self.assertEqual(check_analysis._evidence_floor(root, _bundles(root, analysis)), s1, "픽스처가 곁가지에 닿아야 한다")
+            self.assertEqual(check_analysis._evidence_floor(root, _bundles(root, analysis), _head(root)), s1, "픽스처가 곁가지에 닿아야 한다")
             code, lines = check_analysis.record_landing("mine", root)
             self.assertEqual(code, 1, lines)
             self.assertIn(self._refusal(s1, base), lines[0])
@@ -3065,9 +3088,9 @@ class TheRecordMustBeTheValueTheGateComputes(unittest.TestCase):
             marks["W2"] = _commit_all(root, "W2: the source the evidence describes lands")
             analysis = change / "analysis" / "function-logic"
             # 픽스처가 실제로 둘을 갈랐는지 **먼저** 단언한다. 안 갈렸으면 아래가 재는 것이 없다.
-            self.assertEqual(check_analysis._evidence_floor(root, _bundles(root, analysis)), marks["E"])
+            self.assertEqual(check_analysis._evidence_floor(root, _bundles(root, analysis), _head(root)), marks["E"])
             self.assertEqual(
-                check_analysis.compute_landing(root, marks["P"], analysis)[0], marks["W2"]
+                check_analysis.compute_landing(root, marks["P"], _inputs(root, analysis))[0], marks["W2"]
             )
             _declare_landing(change, marks["W2"], "declare the computed landing")
             self.assertEqual(check_analysis.check("mine", root), [])
@@ -3141,7 +3164,7 @@ class AComputedLandingIsAlwaysOneTheGateWillAccept(unittest.TestCase):
         raw, root, marks = self._merged_fixture()
         with raw:
             analysis = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
-            self.assertEqual(check_analysis._evidence_floor(root, _bundles(root, analysis)), marks["S"])
+            self.assertEqual(check_analysis._evidence_floor(root, _bundles(root, analysis), _head(root)), marks["S"])
             self.assertFalse(check_analysis._is_ancestor(root, marks["P"], marks["S"]))
             walked = subprocess.check_output(
                 ["git", "rev-list", f"{marks['P']}..HEAD"], cwd=root, text=True
@@ -3152,7 +3175,7 @@ class AComputedLandingIsAlwaysOneTheGateWillAccept(unittest.TestCase):
         raw, root, marks = self._merged_fixture()
         with raw:
             analysis = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
-            landing, why = check_analysis.compute_landing(root, marks["P"], analysis)
+            landing, why = check_analysis.compute_landing(root, marks["P"], _inputs(root, analysis))
             self.assertEqual(landing, marks["M"], why)
             self.assertNotEqual(landing, marks["S"], "곁가지는 이 change 의 선 위에 없다")
 
@@ -3199,14 +3222,14 @@ class AComputedLandingIsAlwaysOneTheGateWillAccept(unittest.TestCase):
         raw, root, marks = self._parallel_evidence_fixture()
         with raw:
             analysis = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
-            self.assertEqual(check_analysis._evidence_floor(root, _bundles(root, analysis)), marks["F"])
+            self.assertEqual(check_analysis._evidence_floor(root, _bundles(root, analysis), _head(root)), marks["F"])
             self.assertFalse(check_analysis._is_ancestor(root, marks["F"], marks["B"]))
             self.assertIn("is not the revision this evidence describes",
-                          check_analysis._landing_refusal(root, marks["P"], marks["F"], _bundles(root, analysis), marks["F"], [])[0])
+                          check_analysis._landing_refusal(root, marks["P"], marks["F"], _inputs(root, analysis, floor=marks["F"], repairs=[]))[0])
             # B 를 막는 것이 하한 순서 **하나**뿐임을 직접 보인다: 하한을 base 로 주면 받는다.
-            self.assertEqual(check_analysis._landing_refusal(root, marks["P"], marks["B"], _bundles(root, analysis), marks["P"], []), ("", []))
+            self.assertEqual(check_analysis._landing_refusal(root, marks["P"], marks["B"], _inputs(root, analysis, floor=marks["P"], repairs=[])), ("", []))
             self.assertIn("precedes the evidence that pins it",
-                          check_analysis._landing_refusal(root, marks["P"], marks["B"], _bundles(root, analysis), marks["F"], [])[0])
+                          check_analysis._landing_refusal(root, marks["P"], marks["B"], _inputs(root, analysis, floor=marks["F"], repairs=[]))[0])
 
     def test_a_candidate_older_than_its_evidence_is_not_the_landing(self) -> None:
         raw, root, marks = self._parallel_evidence_fixture()
@@ -3268,16 +3291,16 @@ class TheLandingRuleLivesInOnePlace(unittest.TestCase):
             self._calls("record_landing") & {"_landing_record", "resolve_base", "subprocess.run"},
             sorted(self._calls("record_landing")),
         )
-        # 걷기 전의 하한은 계산과 판정이 **같은** 함수에 묻는다.
-        # `compute_landing` 은 7.5.1 부터 `_measure_landing_inputs` 를 거쳐 묻는다 — 선언 경로와
-        # 계산 경로가 **한 벌**의 입력을 쓰도록. 하한은 그래도 `_walk_floor` 한 곳에서 온다.
+        # 걷기 전의 하한은 계산과 판정이 **같은** 함수에 묻는다 — `_walk_floor` 한 곳. 둘 다 증거를
+        # 스스로 읽지 않고 명령이 한 번 읽은 것을 받는다 (task 7.5.2.1).
         for function in ("_recording_refusal", "_measure_landing_inputs"):
             calls = self._calls(function)
             self.assertIn("_walk_floor", calls, function)
-            self.assertFalse(calls & {"_pinning_bundles", "_evidence_floor"}, (function, sorted(calls)))
+            self.assertFalse(calls & {"_read_evidence", "_evidence_floor"}, (function, sorted(calls)))
+        # 계산은 받은 **한 벌**만 쓴다 (task 7.5.2.1) — 7.5.1 · 7.5.2 에서는 입력이 없으면 스스로 쟀다.
         calls = self._calls("compute_landing")
-        self.assertIn("_measure_landing_inputs", calls)
-        self.assertFalse(calls & {"_walk_floor", "_pinning_bundles", "_evidence_floor"},
+        self.assertFalse(calls & {"_measure_landing_inputs", "_walk_floor", "_read_evidence",
+                                  "_select_pinning", "_evidence_floor", "_self_repair_commits"},
                          sorted(calls))
 
     def test_a_commits_blob_is_read_by_one_function(self) -> None:
@@ -3302,14 +3325,26 @@ class TheLandingRuleLivesInOnePlace(unittest.TestCase):
 
         후보마다 다시 재도 답은 같으므로 행동 시험이 못 가른다. 값은 성능이 아니라 **일관성**
         이기도 하다: 두 번 재면 그 사이의 디스크 변화가 하한과 규칙을 갈라 놓는다."""
-        for function in ("_pinning_at", "_unheld_bundles", "_landing_refusal"):
-            self.assertNotIn("_pinning_bundles", self._calls(function), function)
-        # 선언 경로도 계산 경로도 입력을 **같은 함수**에서 한 번 잰다 (task 7.5.1, F2).
-        for function in ("compute_landing", "resolve_landing"):
+        # 걷는 쪽은 증거를 **읽지 않는다** — 명령이 한 번 읽은 것을 받는다 (task 7.5.2.1). 고르는 것은
+        # 잴 때 한 번이다(`_measure_landing_inputs`).
+        walking = ("_pinning_at", "_unheld_bundles", "_landing_refusal", "compute_landing", "resolve_landing")
+        for function in walking + ("_measure_landing_inputs", "_walk_floor"):
+            self.assertNotIn("_read_evidence", self._calls(function), function)
+        for function in walking:
+            self.assertNotIn("_select_pinning", self._calls(function), function)
+        # 선언 경로도 기록 경로도 입력을 **같은 함수**에서 한 번 잰다 (task 7.5.1, F2).
+        for function in ("resolve_landing", "record_landing"):
             calls = self._calls(function)
             self.assertIn("_measure_landing_inputs", calls, function)
-            self.assertFalse(calls & {"_pinning_bundles", "_evidence_floor", "_self_repair_commits"},
-                             (function, sorted(calls)))
+            self.assertFalse(calls & {"_evidence_floor", "_self_repair_commits"}, (function, sorted(calls)))
+        # 명령은 증거를 **한 자리**에서 읽는다 — 호출 자리를 센다(행동 시험은 한 번 실행만 본다).
+        tree = ast.parse(Path(check_analysis.__file__).read_text(encoding="utf-8"))
+        for function in ("check", "record_landing"):
+            node = next(item for item in ast.walk(tree)
+                        if isinstance(item, ast.FunctionDef) and item.name == function)
+            sites = [call for call in ast.walk(node)
+                     if isinstance(call, ast.Call) and ast.unparse(call.func) == "_read_evidence"]
+            self.assertEqual(len(sites), 1, function)
 
     def test_archive_names_are_read_by_one_function(self) -> None:
         for function in ("resolve_referenced_change", "_pre_archive_path"):
@@ -4214,8 +4249,10 @@ class WorkAfterTheRecordIsNotOutsideTheWindow(unittest.TestCase):
         analysis = self._analysis(root)
         self.assertEqual(
             check_analysis._landing_refusal(
-                root, marks["P"], marks["record"], _bundles(root, analysis),
-                check_analysis._evidence_floor(root, _bundles(root, analysis)), [],
+                root, marks["P"], marks["record"],
+                _inputs(root, analysis,
+                        floor=check_analysis._evidence_floor(root, _bundles(root, analysis), _head(root)),
+                        repairs=[]),
             ),
             ("", []),
         )
@@ -4313,7 +4350,7 @@ class WorkAfterTheRecordIsNotOutsideTheWindow(unittest.TestCase):
         raw = tempfile.TemporaryDirectory()
         with raw:
             root, marks = _self_repair_fixture(raw, repair="split")
-            self.assertEqual(check_analysis._self_repair_commits(root, self._analysis(root)), [])
+            self.assertEqual(check_analysis._self_repair_commits(root, self._analysis(root), _head(root)), [])
             facts: dict[str, object] = {}
             self.assertEqual(check_analysis.check("mine", root, facts), [])
             self.assertEqual(facts.get("landing"), marks["record"])
@@ -4359,11 +4396,13 @@ class WorkAfterTheRecordIsNotOutsideTheWindow(unittest.TestCase):
             (change / "review.md").write_text("mine\nreview round 2\n")
             second = _commit_all(root, "F2: another review fix")
             analysis = self._analysis(root)
-            repairs = check_analysis._self_repair_commits(root, analysis)
+            repairs = check_analysis._self_repair_commits(root, analysis, _head(root))
             self.assertEqual(repairs, [marks["F"], second])
             refusal, _ = check_analysis._landing_refusal(
-                root, marks["P"], marks["F"], _bundles(root, analysis),
-                check_analysis._evidence_floor(root, _bundles(root, analysis)), repairs,
+                root, marks["P"], marks["F"],
+                _inputs(root, analysis,
+                        floor=check_analysis._evidence_floor(root, _bundles(root, analysis), _head(root)),
+                        repairs=repairs),
             )
             self.assertIn("is not the revision this evidence describes", refusal)
             self.assertNotIn("is followed by", refusal)
@@ -4383,7 +4422,7 @@ class WorkAfterTheRecordIsNotOutsideTheWindow(unittest.TestCase):
             )
             _commit_all(root, "archive the change")
             analysis = archive / "analysis" / "function-logic"
-            self.assertEqual(check_analysis._self_repair_commits(root, analysis), [marks["F"]])
+            self.assertEqual(check_analysis._self_repair_commits(root, analysis, _head(root)), [marks["F"]])
             errors = check_analysis.check("mine", root)
             self.assertTrue(any("is followed by 1 later commit(s)" in error for error in errors), errors)
 
@@ -4401,7 +4440,7 @@ class WorkAfterTheRecordIsNotOutsideTheWindow(unittest.TestCase):
         with raw:
             root, marks = _self_repair_fixture(raw, repair="pinned-refreshed", record=False)
             self.assertEqual(
-                check_analysis._self_repair_commits(root, self._analysis(root)), [marks["F"]]
+                check_analysis._self_repair_commits(root, self._analysis(root), _head(root)), [marks["F"]]
             )
             code, lines = check_analysis.record_landing("mine", root)
             self.assertEqual(code, 0, lines)
@@ -4448,7 +4487,7 @@ class TheRepairSignalIsMeasuredOnceAndNamesOldestFirst(unittest.TestCase):
                            capture_output=True)
             analysis = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
             # 곁가지의 그 커밋은 비병합이므로 **읽힌다**. 한계는 병합 커밋 자신의 변경이다.
-            self.assertEqual(len(check_analysis._self_repair_commits(root, analysis)), 1)
+            self.assertEqual(len(check_analysis._self_repair_commits(root, analysis, _head(root))), 1)
             self.assertNotEqual(check_analysis.check("mine", root), [])
 
     def test_a_fix_made_inside_the_merge_commit_itself_is_the_known_limit(self) -> None:
@@ -4485,7 +4524,7 @@ class TheRepairSignalIsMeasuredOnceAndNamesOldestFirst(unittest.TestCase):
                 ).split()), 3, "M 은 병합 커밋이어야 한다",
             )
             analysis = change / "analysis" / "function-logic"
-            self.assertEqual(check_analysis._self_repair_commits(root, analysis), [])
+            self.assertEqual(check_analysis._self_repair_commits(root, analysis, _head(root)), [])
 
     def test_a_fix_the_merge_hides_is_still_read(self) -> None:
         """**가지치기가 일어나는** 병합 픽스처 (2026-09-16 적대 리뷰 F1, P0).
@@ -4519,7 +4558,7 @@ class TheRepairSignalIsMeasuredOnceAndNamesOldestFirst(unittest.TestCase):
                 ["git", "log", "--no-merges", "--format=%H", "HEAD", "--",
                  "openspec/changes/mine/"], cwd=root, text=True).split()
             self.assertNotIn(hidden, simplified, "가지치기가 안 일어나면 이 시험은 F1 을 안 잰다")
-            self.assertEqual(check_analysis._self_repair_commits(root, self._analysis(root)), [hidden])
+            self.assertEqual(check_analysis._self_repair_commits(root, self._analysis(root), _head(root)), [hidden])
             errors = check_analysis.check("mine", root)
             self.assertTrue(any("is followed by 1 later commit(s)" in error for error in errors), errors)
 
@@ -4540,7 +4579,7 @@ class TheRepairSignalIsMeasuredOnceAndNamesOldestFirst(unittest.TestCase):
             (change / "review.md").write_text("mine\nmoved it\n")
             moved = _commit_all(root, "F: move a Go file out of Go while noting it")
             self.assertEqual(
-                check_analysis._self_repair_commits(root, self._analysis(root)), [moved]
+                check_analysis._self_repair_commits(root, self._analysis(root), _head(root)), [moved]
             )
 
     def test_a_non_ascii_go_name_is_read(self) -> None:
@@ -4556,7 +4595,7 @@ class TheRepairSignalIsMeasuredOnceAndNamesOldestFirst(unittest.TestCase):
             (change / "review.md").write_text("mine\nadded it\n")
             added = _commit_all(root, "F: a Go file with a non-ASCII name")
             self.assertEqual(
-                check_analysis._self_repair_commits(root, self._analysis(root)), [added]
+                check_analysis._self_repair_commits(root, self._analysis(root), _head(root)), [added]
             )
 
     def test_a_git_failure_becomes_a_verdict_not_a_silent_pass(self) -> None:
@@ -4577,9 +4616,10 @@ class TheRepairSignalIsMeasuredOnceAndNamesOldestFirst(unittest.TestCase):
                 def broken(command, *args, _needle=needle, **kwargs):
                     # `..HEAD` 는 `_repairs_after` 의 `rev-list <후보>..HEAD` **하나**만 고른다
                     # — 순회의 `rev-list --reverse` 까지 깨면 무엇이 판정을 냈는지 안 갈린다.
+                    # 7.5.2.1 부터 끝은 상징 `HEAD` 가 아니라 명령이 푼 sha 다 — 모양(`<후보>..<끝>` 하나)으로 고른다.
                     hit = (_needle in command if _needle != "..HEAD"
                            else command[:2] == ["git", "rev-list"] and len(command) == 3
-                           and command[2].endswith("..HEAD"))
+                           and ".." in command[2])
                     if isinstance(command, list) and hit:
                         return subprocess.CompletedProcess(command, 1, "", "fatal: injected\n")
                     return real(command, *args, **kwargs)
@@ -4623,7 +4663,7 @@ class TheRepairSignalIsMeasuredOnceAndNamesOldestFirst(unittest.TestCase):
             second = _commit_all(root, "F2: another review fix")
             analysis = change / "analysis" / "function-logic"
             self.assertEqual(
-                check_analysis._self_repair_commits(root, analysis), [marks["F"], second]
+                check_analysis._self_repair_commits(root, analysis, _head(root)), [marks["F"], second]
             )
             errors = check_analysis.check("mine", root)
             self.assertTrue(
@@ -4894,7 +4934,8 @@ class ABlobIsFetchedOncePerCommitNotOncePerBundle(unittest.TestCase):
             ast_path = bundles[0][0].relative_to(root).as_posix()
             # 픽스처가 실제로 그 갈래에 닿는지 먼저 단언한다.
             self.assertTrue(check_analysis._pre_archive_path(ast_path), ast_path)
-            self.assertEqual(check_analysis._unheld_bundles(root, commit, bundles), [])
+            self.assertEqual(check_analysis._unheld_bundles(
+                root, commit, bundles, check_analysis._read_evidence(analysis).held), [])
 
     def test_a_newline_in_a_path_still_names_one_file(self) -> None:
         """경로에 개행이 있어도 **그 파일**이다. 배치 입력을 줄 단위로 나누면 한 경로가
@@ -4943,8 +4984,9 @@ class ABlobIsFetchedOncePerCommitNotOncePerBundle(unittest.TestCase):
                 )
             commit = _commit_all(root, "X: evidence")
             analysis = change / "analysis" / "function-logic"
+            held = check_analysis._read_evidence(analysis).held
             unheld, spawns = self._spawns(
-                lambda: check_analysis._unheld_bundles(root, commit, _bundles(root, analysis))
+                lambda: check_analysis._unheld_bundles(root, commit, _bundles(root, analysis), held)
             )
             self.assertEqual(unheld, [])
             self.assertEqual(spawns, 1, "번들 넷을 한 프로세스로 읽어야 한다")
@@ -5327,7 +5369,6 @@ class TheVerdictReadsWhatTheLandingJudged(unittest.TestCase):
     """
 
     MOVED = "changed while the landing was being judged"
-    SWAPPED = "changed after the landing was judged"
 
     @staticmethod
     def _stack_has(*names: str) -> bool:
@@ -5375,26 +5416,28 @@ class TheVerdictReadsWhatTheLandingJudged(unittest.TestCase):
         return root, ast_path
 
     def test_the_landing_inputs_read_each_bundle_once(self) -> None:
-        """**Codex P1 의 근본.** 지문과 판정 목록이 **한 번 읽은 바이트**에서 나와야 한다. 7.5.1 은
-        번들마다 세 번 읽었다(지문의 목록 · 지문의 바이트 · 하한의 목록)."""
+        """**Codex P1 의 근본.** 착지 입력과 판정이 **한 번 읽은 바이트**에서 나와야 한다. 7.5.1 은
+        번들마다 세 번 읽었다(지문의 목록 · 지문의 바이트 · 하한의 목록). 7.5.2.1 부터는 **명령 전체**에서
+        한 번이다 — 수락 직전 재확인의 읽기는 대조만 하므로 따로 센다."""
         raw = tempfile.TemporaryDirectory()
         with raw:
             root = self._two_bundles(raw)
-            analysis = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
             reads: dict[str, int] = {}
 
             def count(path):
-                if self._stack_has("_measure_landing_inputs"):
+                if not self._stack_has("_raise_if_inputs_moved"):
                     reads[path.parent.name] = reads.get(path.parent.name, 0) + 1
 
             with self._reads(count):
-                check_analysis._measure_landing_inputs(root, analysis)
+                code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 0, lines)
             self.assertEqual(reads, {"internal--own": 1, "internal--other": 1})
 
     def test_a_bundle_whose_read_fails_once_is_never_judged_absent(self) -> None:
-        """**Codex P1.** 착지 입력을 재는 동안 번들 B 의 읽기 **하나**가 실패한다 — 몇 번째 읽기든.
+        """**Codex P1.** 기록하는 동안 번들 B 의 읽기 **하나**가 실패한다 — 몇 번째 읽기든.
         7.5.1 은 셋째 읽기(하한의 목록)에서 실패하면 B 를 빼고 판정했는데 두 지문은 B 를 담아 같았다
-        → 착지를 **기록했다**. 한 번만 읽는 판본에는 둘째·셋째 읽기가 없다."""
+        → 착지를 **기록했다**. 이제 읽기는 둘뿐이다(판정 한 번 · 수락 직전 대조 한 번) — 어느 쪽이
+        실패해도 두 읽기가 달라서 "움직였다" 다."""
         fired_any = False
         for nth in (1, 2, 3):
             raw = tempfile.TemporaryDirectory()
@@ -5404,7 +5447,7 @@ class TheVerdictReadsWhatTheLandingJudged(unittest.TestCase):
                 seen = {"count": 0, "fired": False}
 
                 def flaky(path, nth=nth, seen=seen):
-                    if path.parent.name == "internal--other" and self._stack_has("_measure_landing_inputs"):
+                    if path.parent.name == "internal--other" and self._stack_has("record_landing"):
                         seen["count"] += 1
                         if seen["count"] == nth:
                             seen["fired"] = True
@@ -5445,79 +5488,6 @@ class TheVerdictReadsWhatTheLandingJudged(unittest.TestCase):
             self.assertFalse((ast_path.parents[3] / check_analysis.LANDING_FILE).exists(), lines)
             self.assertTrue(any(self.MOVED in line for line in lines), lines)
 
-    def test_a_commit_landing_mid_walk_is_seen_when_recording(self) -> None:
-        """HEAD 도 입력이다 (재리뷰 적대 F9). 수리 신호는 걷기 **전**의 역사로 쟀는데 후보 순회는
-        그 뒤의 `HEAD` 를 읽는다 — 이 작업트리는 병행 세션이 같이 쓴다."""
-        raw = tempfile.TemporaryDirectory()
-        with raw:
-            root, _ = _own_work_fixture(raw)
-            real = subprocess.run
-
-            def commits_mid_walk(*args, **kwargs):
-                argv = args[0] if args else kwargs.get("args")
-                if isinstance(argv, list) and "--reverse" in argv:
-                    (root / "notes.txt").write_text("a neighbour's commit\n")
-                    real(["git", "add", "notes.txt"], cwd=root, check=True)
-                    real(["git", "commit", "-qm", "a neighbour lands"], cwd=root, check=True)
-                return real(*args, **kwargs)
-
-            with mock.patch.object(check_analysis.subprocess, "run", commits_mid_walk):
-                code, lines = check_analysis.record_landing("mine", root)
-            self.assertEqual(code, 1, lines)
-            self.assertFalse((root / "openspec" / "changes" / "mine" / check_analysis.LANDING_FILE).exists())
-            self.assertTrue(any(self.MOVED in line for line in lines), lines)
-
-    def test_a_commit_landing_mid_walk_is_seen_when_judging(self) -> None:
-        """선언 경로도 같다. 계산 경로의 재확인을 선언 경로에서 빼는 변이(레드팀 M12)가 이것으로 죽는다."""
-        raw = tempfile.TemporaryDirectory()
-        with raw:
-            root, _ = self._landed(raw)
-            real = subprocess.run
-
-            def commits_mid_walk(*args, **kwargs):
-                argv = args[0] if args else kwargs.get("args")
-                if isinstance(argv, list) and "--reverse" in argv:
-                    (root / "notes.txt").write_text("a neighbour's commit\n")
-                    real(["git", "add", "notes.txt"], cwd=root, check=True)
-                    real(["git", "commit", "-qm", "a neighbour lands"], cwd=root, check=True)
-                return real(*args, **kwargs)
-
-            with mock.patch.object(check_analysis.subprocess, "run", commits_mid_walk):
-                errors = check_analysis.check("mine", root)
-            self.assertTrue(any(self.MOVED in error for error in errors), errors)
-
-    def test_evidence_swapped_after_the_landing_is_judged_is_refused(self) -> None:
-        """**수락 뒤의 창** (적대 서브에이전트, 7.5.1 이 "설계 변경" 이라며 남긴 것). 착지는 커밋된
-        증거(지도에 없는 분기 B2)로 판정됐는데, 수락 **뒤** 통과하는 증거로 갈아 끼우면 옛 판본은
-        그것으로 판정해 `[]` 를 냈다. 판정이 읽는 바이트는 착지가 판정한 바이트여야 한다."""
-        raw = tempfile.TemporaryDirectory()
-        with raw:
-            root, _ = _own_work_fixture(raw)
-            ast_path = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic" / "internal--own" / "ast.json"
-            passing = ast_path.read_bytes()
-            value = json.loads(passing)
-            value["branches"] = [
-                {"id": "B1", "kind": "if", "line": 2, "column": 1},
-                {"id": "B2", "kind": "if", "line": 2, "column": 1},
-            ]
-            ast_path.write_text(json.dumps(value), encoding="utf-8")
-            _commit_all(root, "E': evidence whose second branch the map does not cover")
-            code, lines = check_analysis.record_landing("mine", root)
-            self.assertEqual(code, 0, lines)
-            _commit_all(root, "record the landing")
-            honest = check_analysis.check("mine", root)
-            self.assertTrue(any("missing AST branches" in error for error in honest), honest)  # 대조군
-            real_changed = check_analysis.changed_existing_functions
-
-            def swaps_after_acceptance(*args, **kwargs):
-                ast_path.write_bytes(passing)
-                return real_changed(*args, **kwargs)
-
-            with mock.patch.object(check_analysis, "changed_existing_functions", swaps_after_acceptance):
-                errors = check_analysis.check("mine", root)
-            self.assertTrue(
-                any(error.startswith("internal--own:") and self.SWAPPED in error for error in errors), errors)
-
     def test_a_declared_landing_refused_on_moving_evidence_says_run_again(self) -> None:
         """착지 입력을 **잴 때** 저자가 `ast.json` 을 쓰던 중이었으면(잰 것은 중간 상태 B'), 선언 경로의
         거절은 B' 에서 나온다. 그때 복구 조언(기록을 지우고 다시 기록)을 하면 다시 돌리면 통과할
@@ -5533,9 +5503,10 @@ class TheVerdictReadsWhatTheLandingJudged(unittest.TestCase):
 
             def mid_edit_while_measuring(*args, **kwargs):
                 argv = args[0] if args else kwargs.get("args")
-                if isinstance(argv, list) and self._stack_has("resolve_landing"):
-                    if "cat-file" in argv and self._stack_has("_landing_record"):
-                        ast_path.write_bytes(partial)           # 입력을 재기 직전: 쓰던 중
+                if isinstance(argv, list):
+                    # 7.5.2.1 부터 증거는 `check` 가 역사를 푼 **뒤** 한 번 읽는다 — 그 앞뒤에 넣는다.
+                    if argv == ["git", "rev-parse", "--verify", "HEAD^{commit}"]:
+                        ast_path.write_bytes(partial)           # 증거를 읽기 직전: 쓰던 중
                     elif "--diff-filter=MAT" in argv and self._stack_has("_measure_landing_inputs"):
                         ast_path.write_bytes(original)          # 읽은 뒤: 저장을 마쳤다
                 return real(*args, **kwargs)
@@ -5647,20 +5618,6 @@ class TheVerdictReadsWhatTheLandingJudged(unittest.TestCase):
                 self.assertEqual(errors, [], landed)
                 self.assertEqual(elsewhere, [], landed)
 
-    def test_a_reused_context_does_not_carry_the_last_verdicts_evidence(self) -> None:
-        """`check` 는 호출자가 준 사전에 사실을 채운다. 앞선 실행이 남긴 "착지가 판정한 증거" 를 이번
-        실행의 것으로 읽으면 착지가 없는 change 가 남의 증거와 대조된다."""
-        facts: dict[str, object] = {}
-        first = tempfile.TemporaryDirectory()
-        second = tempfile.TemporaryDirectory()
-        with first, second:
-            landed, _ = self._landed(first)
-            self.assertEqual(check_analysis.check("mine", landed, facts), [])
-            self.assertIn("landing_evidence", facts)
-            plain, _ = _own_work_fixture(second)
-            self.assertEqual(check_analysis.check("mine", plain, facts), check_analysis.check("mine", plain))
-            self.assertNotIn("landing_evidence", facts)
-
     def test_bytes_read_once_decode_exactly_as_the_disk_read_did(self) -> None:
         """한 번 읽은 바이트를 글자로 바꾸는 규칙이 `Path.read_text` 와 **같아야** 한다 — 줄바꿈 변환까지.
         다르면 같은 증거가 디스크에서 읽을 때와 다른 글자가 된다."""
@@ -5703,19 +5660,20 @@ class TheVerdictReadsWhatTheLandingJudged(unittest.TestCase):
 
     def test_the_evidence_is_read_again_only_to_accept(self) -> None:
         """재확인은 **받을 때만** 선다(레드팀 · testing 전문가 MC). 후보마다 다시 재면 7.5 가 걷어낸
-        번들 순회가 돌아온다 — 프로세스를 안 띄우므로 spawn 수 시험은 못 본다."""
+        번들 순회가 돌아온다 — 프로세스를 안 띄우므로 spawn 수 시험은 못 본다. 거절하는 기록은 읽기 한 번
+        (판정), 받는 기록은 두 번(판정 · 수락 직전 대조)이다 (task 7.5.2.1)."""
         case = ALandingMustChangeWhatItsEvidencePins(
             "test_the_recorder_refuses_evidence_written_before_the_edit")
         raw, root, _ = case._flm_first()
-        with raw, mock.patch.object(check_analysis, "_evidence_fingerprint",
-                                    wraps=check_analysis._evidence_fingerprint) as taken:
+        with raw, mock.patch.object(check_analysis, "_read_evidence",
+                                    wraps=check_analysis._read_evidence) as taken:
             code, lines = check_analysis.record_landing("mine", root)
         self.assertEqual((code, taken.call_count), (1, 1), lines)
         raw = tempfile.TemporaryDirectory()
         with raw:
             root, _ = _own_work_fixture(raw)
-            with mock.patch.object(check_analysis, "_evidence_fingerprint",
-                                   wraps=check_analysis._evidence_fingerprint) as taken:
+            with mock.patch.object(check_analysis, "_read_evidence",
+                                   wraps=check_analysis._read_evidence) as taken:
                 code, lines = check_analysis.record_landing("mine", root)
             self.assertEqual((code, taken.call_count), (0, 2), lines)
 
@@ -5853,8 +5811,9 @@ class TheVerdictReadsWhatTheLandingJudged(unittest.TestCase):
             (root / "internal" / "own.go").write_text("package internal\nfunc Own() int { return 3 }\n")
             _commit_all(root, "N: HEAD now differs from the landing")
             target = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic" / "internal--own"
-            at_landing, _ = check_analysis.validate_target(target, root, None, False, marks["E"], {})
-            at_head, _ = check_analysis.validate_target(target, root, None, False, "HEAD", {})
+            held = check_analysis._read_evidence(target.parent).held
+            at_landing, _ = check_analysis.validate_target(target, root, None, False, marks["E"], {}, held=held)
+            at_head, _ = check_analysis.validate_target(target, root, None, False, "HEAD", {}, held=held)
             self.assertFalse(any("AST source" in error for error in at_landing), at_landing)
             self.assertTrue(any("AST source hash is stale" in error for error in at_head), at_head)
 
@@ -5901,15 +5860,692 @@ class TheVerdictReadsWhatTheLandingJudged(unittest.TestCase):
         with raw:
             root, marks = _own_work_fixture(raw)
             with self.assertRaises(check_analysis.GATE_FAULTS):
-                check_analysis._repairs_after(root, marks["E"], None)
+                check_analysis._repairs_after(root, marks["E"], None, _head(root))
             empty = root / "openspec" / "changes" / "mine" / "analysis" / "nothing-here"
-            inputs = check_analysis._measure_landing_inputs(root, empty)
+            inputs = check_analysis._measure_landing_inputs(
+                root, _head(root), check_analysis._read_evidence(empty))
             self.assertTrue(inputs.why)
             self.assertIsNone(inputs.repairs)
             analysis = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
             refusal, _ = check_analysis._landing_refusal(
-                root, marks["P"], marks["E"], _bundles(root, analysis), "", None)
+                root, marks["P"], marks["E"], _inputs(root, analysis, floor="", repairs=None))
             self.assertIn("no ordinary commit on this history adds", refusal)
+
+
+class OneCommandJudgesOneHistoryAndOneRead(unittest.TestCase):
+    """명령 하나는 역사 **하나**와 증거 읽기 **하나** 위에서 판정한다 (task 7.5.2.1 — 7.5.2 재리뷰).
+
+    7.5.2 는 `ast.json` 바이트만 한 번 읽어 묶고 "묶었다" 고 적었다. 판정이 읽는 입력은 그것만이
+    아니었다 — review.md `## MEASURE · Pre-Edit Gate — task 7.5.2.1` 의 목록(`7521_inputs.py` 가 AST 로
+    셌다): 역사(`HEAD`, 열 자리에서 따로) · 증거 디렉터리의 존재 · 번들 목록 · 번들 안의 파일 목록 ·
+    git 의 결함. 재리뷰가 그중 셋을 재현했다. 여기 시험은 입력마다 "움직여도 판정이 한 벌의 것인가" 를
+    잰다. 결함은 `subprocess.run` · 파일시스템 층에서 넣는다 — 판정 함수를 흉내 내면 수리를 건너뛴다.
+    """
+
+    PIN = ["git", "rev-parse", "--verify", "HEAD^{commit}"]
+
+    @staticmethod
+    def _git_seen(call):
+        """`call` 동안의 git 호출 전부 — `(argv, stdin 바이트)`."""
+        seen = []
+        real = subprocess.run
+
+        def watching(*args, **kwargs):
+            argv = args[0] if args else kwargs.get("args")
+            request = kwargs.get("input") or b""
+            seen.append((list(argv), request.encode() if isinstance(request, str) else request))
+            return real(*args, **kwargs)
+
+        with mock.patch.object(check_analysis.subprocess, "run", watching):
+            result = call()
+        return result, seen
+
+    @staticmethod
+    def _two_branches(raw: tempfile.TemporaryDirectory) -> tuple[Path, dict[str, str]]:
+        """레드팀 `repro_b` 의 모양. 기본 가지: P → W → E → R(기록) → F(기록 뒤의 자기 수리 — 빨강).
+        `other`: E → N(이웃 편집, 기록 없음 — 워킹트리 창이 이웃 함수까지 요구해서 빨강). **둘 다 각자로는
+        빨갛다** — 섞였을 때만 초록이 나온다."""
+        root = _init_fixture(raw)
+        own = root / "internal" / "own.go"
+        neighbour = root / "internal" / "neighbour.go"
+        own.parent.mkdir(parents=True)
+        own.write_text("package internal\nfunc Own() int { return 1 }\n")
+        neighbour.write_text("package internal\nfunc Neighbour() int { return 1 }\n")
+        marks = {"P": _commit_all(root, "P: base")}
+        change = root / "openspec" / "changes" / "mine"
+        change.mkdir(parents=True)
+        (change / "base-commit.txt").write_text(marks["P"] + "\n")
+        (change / "review.md").write_text("mine\n")
+        own.write_text("package internal\nfunc Own() int { return 2 }\n")
+        marks["W"] = _commit_all(root, "W: this change's Go work")
+        _write_evidence(change, package="internal", function="Own", relative="internal/own.go",
+                        digest=hashlib.sha256(own.read_bytes()).hexdigest())
+        marks["E"] = _commit_all(root, "E: its evidence")
+        home = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root, text=True).strip()
+        subprocess.run(["git", "checkout", "-q", "-b", "other"], cwd=root, check=True)
+        neighbour.write_text("package internal\nfunc Neighbour() int { return 2 }\n")
+        marks["N"] = _commit_all(root, "N: a neighbour edit, no record on this branch")
+        subprocess.run(["git", "checkout", "-q", home], cwd=root, check=True)
+        code, lines = check_analysis.record_landing("mine", root)
+        assert code == 0, lines
+        marks["record"] = (change / check_analysis.LANDING_FILE).read_text(encoding="utf-8").strip()
+        marks["R"] = _commit_all(root, "R: the record")
+        own.write_text("package internal\nfunc Own() int { return 3 }\n")
+        (change / "review.md").write_text("mine: review repair\n")
+        marks["F"] = _commit_all(root, "F: this change's own repair after the record")
+        return root, marks
+
+    # --- 역사: 한 명령은 `HEAD` 를 **한 번** 푼다 ---
+
+    def test_every_history_read_uses_the_one_resolved_commit(self) -> None:
+        """**구조로** 잰다: 한 명령 안에서 상징 `HEAD` 를 읽는 git 호출은 그것을 sha 로 푸는 **한 번**
+        뿐이다. 7.5.2 는 열 자리에서 따로 읽었다(착지 기록 · 조상 판정 · 하한 · 수리 신호 · 순회 · 수리 뒤 ·
+        지문 표본 · 깨끗한가 · 창 줄). 표본을 하나 더 두는 것으로는 못 닫는다 — 표본 **전**의 읽기와
+        떠났다 돌아온 `HEAD` 가 남는다(아래 두 시험)."""
+        landed = tempfile.TemporaryDirectory()
+        fresh = tempfile.TemporaryDirectory()
+        with landed, fresh:
+            recorded, _ = TheVerdictReadsWhatTheLandingJudged._landed(landed)
+            working, _ = _own_work_fixture(fresh)
+            for name, call in (
+                ("check, landed", lambda: check_analysis.check("mine", recorded)),
+                ("main, working tree + advice", lambda: _cli(working)),
+                ("record", lambda: check_analysis.record_landing("mine", working)),
+            ):
+                result, seen = self._git_seen(call)
+                reading_head = [argv for argv, request in seen
+                                if any("HEAD" in word for word in argv) or b"HEAD" in request]
+                self.assertEqual(reading_head, [self.PIN], (name, result))
+
+    def test_a_branch_switch_mid_run_judges_the_history_it_started_on(self) -> None:
+        """**레드팀 repro_b.** 병행 세션이 착지를 판정하는 도중 가지를 **한 번** 바꾼다(돌아오지 않는다).
+        7.5.2 는 기록을 전환 **전** `HEAD` 에서 읽고, 지문 표본과 수리 신호 · 순회는 전환 **뒤** `HEAD` 에서
+        읽어 rc 0 이었다 — 전환 전만 봐도, 후만 봐도 빨간데. 판정은 시작할 때의 역사 하나의 것이어야 한다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = self._two_branches(raw)
+            alone = check_analysis.check("mine", root)
+            self.assertTrue(any("of this change's own Go work" in error for error in alone), alone)  # 대조군
+            real = subprocess.run
+            switched = []
+
+            def switches_once(*args, **kwargs):
+                argv = args[0] if args else kwargs.get("args")
+                # 기록을 읽은 **뒤**, 옛 판본이 지문 표본을 뜨기 **전** — 선언값이 커밋인지 묻는 자리
+                if isinstance(argv, list) and argv[:3] == ["git", "rev-parse", "--verify"] \
+                        and argv[3] == marks["record"] + "^{commit}" and not switched:
+                    switched.append(True)
+                    real(["git", "checkout", "-q", "other"], cwd=root, check=True)
+                return real(*args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", switches_once):
+                mixed = check_analysis.check("mine", root)
+            self.assertTrue(switched, "주입이 닿지 않았다")
+            self.assertEqual(mixed, alone)
+
+    def test_a_head_that_leaves_and_returns_mid_run_is_never_read_twice(self) -> None:
+        """**떠났다 돌아온 `HEAD`(ABA)** — 이 세션이 재현했다. 기록 뒤 자기 수리(F)가 선 역사에서, "기록
+        뒤에 수리가 있나" 를 묻는 순간에만 `HEAD` 가 기록 커밋으로 물러났다가 곧 F 로 돌아온다. 7.5.2 는
+        그 순간의 `HEAD` 로 "없다" 고 판정했고, 수락 직전 표본 비교는 돌아온 F 를 보고 "그대로" 라고 답해
+        rc 0 이었다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _self_repair_fixture(raw, repair="pinned")
+            alone = check_analysis.check("mine", root)
+            self.assertTrue(any("of this change's own Go work" in error for error in alone), alone)  # 대조군
+            real = subprocess.run
+            moved = []
+
+            def steps_back_while_asked(*args, **kwargs):
+                argv = args[0] if args else kwargs.get("args")
+                if isinstance(argv, list) and argv[:2] == ["git", "rev-list"] \
+                        and "--reverse" not in argv and "--count" not in argv:
+                    moved.append(True)
+                    real(["git", "reset", "-q", "--soft", marks["recorded"]], cwd=root, check=True)
+                    try:
+                        return real(*args, **kwargs)
+                    finally:
+                        real(["git", "reset", "-q", "--soft", marks["F"]], cwd=root, check=True)
+                return real(*args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", steps_back_while_asked):
+                errors = check_analysis.check("mine", root)
+            self.assertTrue(moved, "주입이 닿지 않았다")
+            self.assertEqual(errors, alone)
+
+    def test_a_commit_landing_mid_judgment_does_not_change_the_verdict(self) -> None:
+        """역사를 고정하면 실행 중의 커밋은 판정을 **멈추지도 바꾸지도** 않는다. 7.5.2 는 그것을
+        `INPUTS_MOVED` 로 멈췄다 — 이 작업트리를 병행 세션이 같이 쓰므로 무관한 커밋 하나에 게이트가 멎었다.
+        지키려던 것(두 역사를 섞은 판정)은 고정이 없앴다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = TheVerdictReadsWhatTheLandingJudged._landed(raw)
+            real = subprocess.run
+
+            def commits_mid_walk(*args, **kwargs):
+                argv = args[0] if args else kwargs.get("args")
+                if isinstance(argv, list) and "--reverse" in argv:
+                    (root / "notes.txt").write_text("a neighbour's commit\n")
+                    real(["git", "add", "notes.txt"], cwd=root, check=True)
+                    real(["git", "commit", "-qm", "a neighbour lands"], cwd=root, check=True)
+                return real(*args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", commits_mid_walk):
+                errors = check_analysis.check("mine", root)
+            self.assertEqual(errors, [])
+
+    def test_a_commit_landing_mid_record_is_recorded_on_the_history_it_started_on(self) -> None:
+        """기록 명령도 같다 — 시작할 때 푼 역사 위에서 계산한 값을 쓴다. 그 뒤 역사가 바뀌면 게이트가
+        기록을 **다시 판정한다**(착지 뒤의 자기 수리면 거절한다) — 기록 명령이 미리 멈출 이유가 아니다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _own_work_fixture(raw)
+            real = subprocess.run
+
+            def commits_mid_walk(*args, **kwargs):
+                argv = args[0] if args else kwargs.get("args")
+                if isinstance(argv, list) and "--reverse" in argv:
+                    (root / "notes.txt").write_text("a neighbour's commit\n")
+                    real(["git", "add", "notes.txt"], cwd=root, check=True)
+                    real(["git", "commit", "-qm", "a neighbour lands"], cwd=root, check=True)
+                return real(*args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", commits_mid_walk):
+                code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 0, lines)
+            record = root / "openspec" / "changes" / "mine" / check_analysis.LANDING_FILE
+            self.assertEqual(record.read_text(encoding="utf-8").strip(), marks["E"])
+
+    # --- git 의 결함은 판정이 아니다 ---
+
+    def test_a_git_fault_is_never_advice_to_delete_the_record(self) -> None:
+        """**레드팀 repro_a · repro_a3.** 7.5.1 은 `_committed_many` 의 결함만 결함으로 올렸다. 순회 ·
+        하한 · 조상 판정의 rc 128 은 여전히 거절 사유가 되어 "기록을 지우고 다시 기록하라" 는 복구 조언이
+        붙었다 — 다시 돌리면 통과할 **유효한 기록**을 지우라는 말이다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = TheVerdictReadsWhatTheLandingJudged._landed(raw)
+            base = (root / "openspec" / "changes" / "mine" / "base-commit.txt").read_text().strip()
+            self.assertEqual(check_analysis.check("mine", root), [])                  # 대조군
+            real = subprocess.run
+            for name, hit in (
+                ("rev-list --reverse", lambda argv: "--reverse" in argv),
+                ("floor git log", lambda argv: "--diff-filter=MAT" in argv),
+                ("merge-base base", lambda argv: argv[:3] == ["git", "merge-base", "--is-ancestor"]
+                 and argv[3] == base),
+            ):
+                def transient(*args, hit=hit, **kwargs):
+                    argv = args[0] if args else kwargs.get("args")
+                    if isinstance(argv, list) and hit(argv):
+                        text = kwargs.get("text")
+                        return subprocess.CompletedProcess(
+                            argv, 128, "" if text else b"",
+                            "fatal: transient\n" if text else b"fatal: transient\n")
+                    return real(*args, **kwargs)
+
+                with mock.patch.object(check_analysis.subprocess, "run", transient):
+                    errors = check_analysis.check("mine", root)
+                self.assertEqual(len(errors), 1, (name, errors))
+                self.assertTrue(errors[0].startswith("cannot derive modified Go functions:"), (name, errors))
+                self.assertIn("transient", errors[0], name)
+                self.assertNotIn("to move a record", errors[0], name)
+
+    def test_a_cleanliness_check_git_cannot_answer_is_not_called_dirty(self) -> None:
+        """`git diff --quiet` 는 0(같다) · 1(다르다) 말고는 **답이 아니다**. 옛 판본은 rc 128 도 "추적
+        파일이 바뀌었다" 로 읽어 "먼저 커밋하라" 고 했다 — 커밋할 것이 없는 저자에게."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            real = subprocess.run
+
+            def transient(*args, **kwargs):
+                argv = args[0] if args else kwargs.get("args")
+                if isinstance(argv, list) and argv[:3] == ["git", "diff", "--quiet"]:
+                    return subprocess.CompletedProcess(argv, 128, b"", b"fatal: transient\n")
+                return real(*args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", transient):
+                code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertTrue(any("transient" in line for line in lines), lines)
+            self.assertFalse(any("uncommitted changes" in line for line in lines), lines)
+
+    # --- 모양 검사는 파싱하는 자리 한 곳에 ---
+
+    def test_every_malformed_ast_shape_is_a_verdict_not_a_traceback(self) -> None:
+        """재리뷰가 셌다: 27 모양 중 **열**이 7.5.2 뒤에도 traceback 이었다(`calls`/`returns` 가 수 ·
+        참거짓 · 최상위가 목록 · 글자 · 수 · 참거짓). 모양은 대상 판정이 아니라 **바이트를 값으로 푸는 자리**
+        에서 봐야 한다 — 열거형 호출 판정은 대상 판정보다 **먼저** 같은 값을 쓴다. 규칙은 하나다: 사전 ·
+        `start`/`end` 는 사전 · `branches`/`calls`/`returns` 는 목록(없거나 비어도 된다). 저장소 3,048 번들 0 건."""
+        invalid = [("calls", 5), ("calls", 5.5), ("calls", True), ("returns", 5), ("returns", 5.5),
+                   ("returns", True), ("calls", {"at": 1}), ("returns", "2:3"),
+                   ("start", 5), ("end", "2"), ("branches", 5)]
+        tops = [[{"file": "internal/own.go"}], "x", 5, True, [], None]
+        for case in invalid + [("<top>", top) for top in tops]:
+            raw = tempfile.TemporaryDirectory()
+            with raw:
+                root, _ = _own_work_fixture(raw)
+                ast_path = (root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+                            / "internal--own" / "ast.json")
+                key, bad = case
+                value = json.loads(ast_path.read_text(encoding="utf-8"))
+                if key == "<top>":
+                    value = bad
+                else:
+                    value[key] = bad
+                ast_path.write_text(json.dumps(value), encoding="utf-8")
+                errors = check_analysis.check("mine", root)
+                expected = ("internal--own: ast.json is placeholder evidence" if key == "<top>"
+                            else "internal--own: ast.json is invalid")
+                self.assertIn(expected, errors, case)
+
+    # --- 증거: 존재 · 목록 · 바이트를 한 번 ---
+
+    @staticmethod
+    def _landed_requiring_nothing(raw: tempfile.TemporaryDirectory) -> Path:
+        """창이 함수를 **하나도** 요구하지 않는 착지(고정 파일의 주석만 바뀐다) + 면제 표지 + 지도에 없는
+        분기 B2 를 가진 증거. 정직한 판정은 B2 로 빨갛다."""
+        root = _init_fixture(raw)
+        own = root / "internal" / "own.go"
+        own.parent.mkdir(parents=True)
+        own.write_text("package internal\n\n// rev 1\n\nfunc Own() int { return 1 }\n")
+        base = _commit_all(root, "P: base")
+        change = root / "openspec" / "changes" / "mine"
+        change.mkdir(parents=True)
+        (change / "base-commit.txt").write_text(base + "\n")
+        (change / "review.md").write_text(f"mine\n{check_analysis.EXEMPTION}\n")
+        own.write_text("package internal\n\n// rev 2\n\nfunc Own() int { return 1 }\n")
+        _commit_all(root, "W: the file changes, no existing function does")
+        bundle = _write_evidence(change, package="internal", function="Own", relative="internal/own.go",
+                                 digest=hashlib.sha256(own.read_bytes()).hexdigest())
+        value = json.loads((bundle / "ast.json").read_text(encoding="utf-8"))
+        value["branches"] = [{"id": "B1", "kind": "if", "line": 5, "column": 1},
+                             {"id": "B2", "kind": "if", "line": 5, "column": 1}]
+        (bundle / "ast.json").write_text(json.dumps(value), encoding="utf-8")
+        _commit_all(root, "E: evidence whose second branch the map does not cover")
+        code, lines = check_analysis.record_landing("mine", root)
+        assert code == 0, lines
+        _commit_all(root, "record the landing")
+        return root
+
+    def test_evidence_deleted_after_the_landing_is_judged_is_not_read_as_no_evidence(self) -> None:
+        """**재리뷰(적대).** 증거 디렉터리의 **존재**도 입력이다. 7.5.2 는 착지를 판정한 뒤
+        `analysis.exists()` 를 다시 물었고 그 조기 반환이 바이트 대조 **앞**에 있었다 — 착지가 판정한 뒤
+        디렉터리를 지우면 요구 0 + 면제 표지로 `[]` 였다. 판정은 한 번 읽은 것(디렉터리가 **있었다**)으로 선다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root = self._landed_requiring_nothing(raw)
+            honest = check_analysis.check("mine", root)
+            self.assertTrue(any("missing AST branches" in error for error in honest), honest)  # 대조군
+            analysis = root / "openspec" / "changes" / "mine" / "analysis"
+            real_changed = check_analysis.changed_existing_functions
+
+            def deletes_after_acceptance(*args, **kwargs):
+                shutil.rmtree(analysis)
+                return real_changed(*args, **kwargs)
+
+            with mock.patch.object(check_analysis, "changed_existing_functions", deletes_after_acceptance):
+                errors = check_analysis.check("mine", root)
+            self.assertNotEqual(errors, [])
+            self.assertFalse(any(error.startswith("missing analysis") for error in errors), errors)
+
+    def test_a_bundle_listing_that_misses_ast_json_keeps_the_bytes_judged(self) -> None:
+        """**Codex P1 재현.** 열거형 호출 판정은 번들 안의 읽히는 파일을 **전부** 잇는데, 그 목록을 살아
+        있는 `glob("*")` 로 만들었다 — 한 번 읽은 `ast.json` 이 목록에서 빠지면(한 번 읽은 뒤 지워짐) 그
+        바이트도 빠졌다. 여기 `ast.json` 은 문자열 안에 U+2028 로 끊은 호출 좌표 표를 담아 열거를 켠다
+        (`str.splitlines` 는 U+2028 에서도 끊는다). 정직한 판정은 "호출 표로 열어야 한다" 로 빨갛다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            ast_path = (root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+                        / "internal--own" / "ast.json")
+            value = json.loads(ast_path.read_text(encoding="utf-8"))
+            value["calls"] = [{"at": {"line": 2, "column": 30}, "text": "f"}]
+            value["note"] = "x | Callee | Position | | f | 2:30 | y"
+            ast_path.write_text(json.dumps(value, ensure_ascii=False), encoding="utf-8")
+            needle = "must open with a '| Callee expression | Position |' table"
+            honest = check_analysis.check("mine", root)
+            self.assertTrue(any(needle in error for error in honest), honest)          # 대조군
+            real_index = check_analysis.test_index
+
+            def deletes_after_the_read(*args, **kwargs):
+                ast_path.unlink()
+                return real_index(*args, **kwargs)
+
+            with mock.patch.object(check_analysis, "test_index", deletes_after_the_read):
+                errors = check_analysis.check("mine", root)
+            self.assertTrue(any(needle in error for error in errors), errors)
+
+    def test_a_bundle_directory_that_can_be_entered_but_not_listed_is_named(self) -> None:
+        """**Codex P2.** 검색(x)은 되고 목록(r)은 안 되는 번들 디렉터리. 7.5.2 의 `glob("*/ast.json")` 은
+        그 디렉터리를 조용히 건너뛰어 멀쩡히 읽히는 `ast.json` 을 "없다" 고 했다. 번들은 목록에서 세고
+        `ast.json` 은 **직접** 연다. 산문을 다 이어야 하는 열거형 호출 판정은 목록 없이는 못 서므로 그것을
+        **이름으로** 말한다 — 조용히 빈 글자로 판정하면 그 번들의 표가 판정에서 빠진다(permissive)."""
+        if hasattr(os, "geteuid") and os.geteuid() == 0:
+            self.skipTest("root 는 권한을 무시한다")
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            bundle = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic" / "internal--own"
+            bundle.chmod(0o311)
+            try:
+                errors = check_analysis.check("mine", root)
+            finally:
+                bundle.chmod(0o755)
+            self.assertNotIn("internal--own: missing ast.json", errors)
+            self.assertTrue(any(error.startswith("internal--own: cannot list the bundle directory")
+                                for error in errors), errors)
+
+    def test_a_symlink_loop_in_a_bundle_source_is_named(self) -> None:
+        """3.12 의 `Path.resolve()` 는 심링크 고리에서 `RuntimeError` 를 낸다(3.13 부터는 안 낸다). 대상
+        판정은 `ValueError` 만 이름을 붙여 받아서, 고리는 판정 전체를 한 줄(또는 traceback)로 바꿨다 (재리뷰
+        보안 전문가). 판정은 판본과 무관하게 **그 대상의 줄**이어야 한다 — 고리에는 읽을 소스가 없다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            os.symlink("loop.go", root / "internal" / "loop.go")
+            ast_path = (root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+                        / "internal--own" / "ast.json")
+            value = json.loads(ast_path.read_text(encoding="utf-8"))
+            value["file"] = "internal/loop.go"
+            ast_path.write_text(json.dumps(value), encoding="utf-8")
+            errors = check_analysis.check("mine", root)
+            self.assertIn("internal--own: AST source is missing: internal/loop.go", errors)
+
+    def test_a_surrogate_in_a_path_prints_as_an_escape_not_a_traceback(self) -> None:
+        """**레드팀.** JSON 의 `\\udcff` 는 합법이고 판정 줄은 그 경로를 이름으로 댄다. 출력이 엄격한
+        UTF-8 이면(`en_US.UTF-8` 의 기본) `print` 가 `UnicodeEncodeError` 로 **판정 줄 없이** 끝났다 — 결과가
+        로캘의 함수였다. `PYTHONIOENCODING` 으로 엄격함을 고정해 로캘과 무관하게 잰다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = TheVerdictReadsWhatTheLandingJudged._landed(raw)
+            ast_path = (root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+                        / "internal--own" / "ast.json")
+            value = json.loads(ast_path.read_text(encoding="utf-8"))
+            value["file"] = "internal/\udcff.go"
+            ast_path.write_text(json.dumps(value), encoding="utf-8")
+            _commit_all(root, "the bundle names a source that is not UTF-8")
+            process = subprocess.run(
+                [sys.executable, str(Path(check_analysis.__file__).resolve()),
+                 "--change", "mine", "--root", str(root)],
+                capture_output=True, env={**os.environ, "PYTHONIOENCODING": "utf-8:strict"},
+            )
+            self.assertEqual(process.returncode, 1, process.stderr)
+            self.assertNotIn(b"Traceback", process.stderr)
+            self.assertIn(b"internal/\\udcff.go", process.stdout)
+
+    def test_one_command_reads_the_evidence_once_to_judge(self) -> None:
+        """중심 주장을 **직접** 잰다: 판정에 쓰는 증거 읽기는 명령마다 한 번이다(수락 · 거절 앞 재확인은
+        **대조만** 한다 — 그 읽기의 바이트는 판정에 안 들어간다). 7.5.2 는 착지가 한 번, `check` 가 또 한 번
+        읽고 둘을 대조했다 — 대조를 지우거나 둘째 읽기를 더하는 변이가 살았다(X1~X4)."""
+        landed = tempfile.TemporaryDirectory()
+        fresh = tempfile.TemporaryDirectory()
+        with landed, fresh:
+            recorded, _ = TheVerdictReadsWhatTheLandingJudged._landed(landed)
+            working, _ = _own_work_fixture(fresh)
+            for name, call in (
+                ("check, landed", lambda: check_analysis.check("mine", recorded)),
+                ("check, working tree", lambda: check_analysis.check("mine", working)),
+                ("record", lambda: check_analysis.record_landing("mine", working)),
+            ):
+                judged = []
+                real = check_analysis._read_evidence
+
+                def counting(*args, **kwargs):
+                    if not TheVerdictReadsWhatTheLandingJudged._stack_has("_raise_if_inputs_moved"):
+                        judged.append(True)
+                    return real(*args, **kwargs)
+
+                with mock.patch.object(check_analysis, "_read_evidence", counting):
+                    call()
+                self.assertEqual(len(judged), 1, name)
+
+    def test_evidence_swapped_after_the_landing_is_judged_is_not_what_the_verdict_reads(self) -> None:
+        """수락 **뒤** 통과하는 증거로 갈아 끼워도 판정은 착지가 판정한 바이트(지도에 없는 B2)로 선다 —
+        정직한 판정과 **같다**. 7.5.2 는 다시 읽어 대조하고 "바뀌었다" 로 멈췄다: 창은 없었지만 판정이 둘째
+        읽기의 함수였다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            ast_path = (root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+                        / "internal--own" / "ast.json")
+            passing = ast_path.read_bytes()
+            value = json.loads(passing)
+            value["branches"] = [{"id": "B1", "kind": "if", "line": 2, "column": 1},
+                                 {"id": "B2", "kind": "if", "line": 2, "column": 1}]
+            ast_path.write_text(json.dumps(value), encoding="utf-8")
+            _commit_all(root, "E': evidence whose second branch the map does not cover")
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 0, lines)
+            _commit_all(root, "record the landing")
+            honest = check_analysis.check("mine", root)
+            self.assertTrue(any("missing AST branches" in error for error in honest), honest)  # 대조군
+            real_changed = check_analysis.changed_existing_functions
+
+            def swaps_after_acceptance(*args, **kwargs):
+                ast_path.write_bytes(passing)
+                return real_changed(*args, **kwargs)
+
+            with mock.patch.object(check_analysis, "changed_existing_functions", swaps_after_acceptance):
+                errors = check_analysis.check("mine", root)
+            self.assertEqual(errors, honest)
+
+    def test_a_bundle_removed_during_the_walk_is_seen(self) -> None:
+        """재확인은 **빠진** 번들도 본다(추가만 재던 시험 옆의 나머지 절반 — 재리뷰 testing 전문가 X2)."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root = TheVerdictReadsWhatTheLandingJudged._two_bundles(raw)
+            other = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic" / "internal--other"
+            real = subprocess.run
+
+            def removes_mid_walk(*args, **kwargs):
+                argv = args[0] if args else kwargs.get("args")
+                if isinstance(argv, list) and "--reverse" in argv and other.exists():
+                    shutil.rmtree(other)
+                return real(*args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", removes_mid_walk):
+                code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertTrue(any(TheVerdictReadsWhatTheLandingJudged.MOVED in line for line in lines), lines)
+
+    def test_a_bundle_directory_added_during_the_walk_is_seen(self) -> None:
+        """번들 **목록**도 한 번 읽은 것의 일부다. `ast.json` 이 아직 없는 번들 디렉터리가 걷는 도중 생기면
+        판정의 대상 목록이 바뀐다 — 7.5.2 의 `glob("*/ast.json")` 지문은 그것을 못 봤다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            late = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic" / "internal--late"
+            real = subprocess.run
+
+            def adds_mid_walk(*args, **kwargs):
+                argv = args[0] if args else kwargs.get("args")
+                if isinstance(argv, list) and "--reverse" in argv:
+                    late.mkdir(exist_ok=True)
+                return real(*args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", adds_mid_walk):
+                code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertTrue(any(TheVerdictReadsWhatTheLandingJudged.MOVED in line for line in lines), lines)
+
+    def test_a_bundle_rewritten_to_escape_mid_walk_is_a_move(self) -> None:
+        """**재리뷰 레드팀.** 걷는 도중 번들이 저장소 **밖**을 가리키게 다시 쓰이면 그것은 움직임이다.
+        7.5.2 의 재확인은 새 읽기에서 고정 목록부터 골라서, "움직였다" 대신 `escapes repository` 결함을
+        냈다 — 다시 돌리라는 말 대신 저자의 증거를 탓했다. 바이트를 **먼저** 대조한다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            ast_path = (root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+                        / "internal--own" / "ast.json")
+            real = subprocess.run
+
+            def escapes_mid_walk(*args, **kwargs):
+                argv = args[0] if args else kwargs.get("args")
+                if isinstance(argv, list) and "--reverse" in argv:
+                    value = json.loads(ast_path.read_text(encoding="utf-8"))
+                    value["file"] = "../outside/own.go"
+                    ast_path.write_text(json.dumps(value), encoding="utf-8")
+                return real(*args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", escapes_mid_walk):
+                code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertTrue(any(TheVerdictReadsWhatTheLandingJudged.MOVED in line for line in lines), lines)
+            self.assertFalse(any("escapes repository" in line for line in lines), lines)
+
+    def test_a_source_path_that_starts_escaping_mid_walk_is_a_move(self) -> None:
+        """바이트는 그대로인데 소스 경로의 **심링크**가 저장소 밖으로 바뀌면, 재확인의 고르기가
+        `ValueError` 를 낸다. 그것도 움직임이다 — 잴 때는 골라졌던 것이 지금 안 골라진다."""
+        raw = tempfile.TemporaryDirectory()
+        outside = tempfile.TemporaryDirectory()
+        with raw, outside:
+            root, _ = _own_work_fixture(raw)
+            (Path(outside.name) / "own.go").write_text("package internal\nfunc Own() int { return 2 }\n")
+            link = root / "link"
+            os.symlink("internal", link)
+            ast_path = (root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+                        / "internal--own" / "ast.json")
+            value = json.loads(ast_path.read_text(encoding="utf-8"))
+            value["file"] = "link/own.go"               # 풀면 `internal/own.go` — 고정은 그대로 선다
+            ast_path.write_text(json.dumps(value), encoding="utf-8")
+            _commit_all(root, "E': the bundle names its source through a symlinked directory")
+            self.assertEqual(check_analysis.record_landing("mine", root)[0], 0)       # 대조군
+            (root / "openspec" / "changes" / "mine" / check_analysis.LANDING_FILE).unlink()
+            real = subprocess.run
+
+            def retargets_mid_walk(*args, **kwargs):
+                argv = args[0] if args else kwargs.get("args")
+                if isinstance(argv, list) and "--reverse" in argv and link.resolve().parent == root:
+                    link.unlink()
+                    os.symlink(outside.name, link)
+                return real(*args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", retargets_mid_walk):
+                code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertTrue(any(TheVerdictReadsWhatTheLandingJudged.MOVED in line for line in lines), lines)
+
+    def test_the_pins_are_compared_even_when_the_bytes_hold(self) -> None:
+        """바이트가 그대로여도 고정 목록(소스 경로의 심링크 풀이)이 바뀌면 움직임이다 (재리뷰: 고정
+        목록만 움직이는 시험이 없었다)."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            head = check_analysis._head_commit(root)
+            analysis = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+            inputs = check_analysis._measure_landing_inputs(root, head, check_analysis._read_evidence(analysis))
+            check_analysis._raise_if_inputs_moved(root, inputs)                      # 대조군: 그대로
+            with self.assertRaises(check_analysis.GATE_FAULTS) as caught:
+                check_analysis._raise_if_inputs_moved(root, inputs._replace(bundles=[]))
+            self.assertIn(TheVerdictReadsWhatTheLandingJudged.MOVED, str(caught.exception))
+
+    def test_absent_and_unreadable_evidence_are_different_reads(self) -> None:
+        """없는 `ast.json`(키 없음)과 못 읽는 `ast.json`(`None`)은 다른 읽기다 — 판정 줄도 다르고
+        (`missing` / `could not be read`) 재확인에서도 다르다."""
+        if hasattr(os, "geteuid") and os.geteuid() == 0:
+            self.skipTest("root 는 권한을 무시한다")
+        with tempfile.TemporaryDirectory() as raw:
+            analysis = Path(raw)
+            (analysis / "absent").mkdir()
+            (analysis / "unreadable").mkdir()
+            (analysis / "unreadable" / "ast.json").write_text("{}")
+            (analysis / "unreadable" / "ast.json").chmod(0)
+            try:
+                evidence = check_analysis._read_evidence(analysis)
+            finally:
+                (analysis / "unreadable" / "ast.json").chmod(0o644)
+            self.assertEqual(evidence.targets, (analysis / "absent", analysis / "unreadable"))
+            self.assertNotIn(analysis / "absent" / "ast.json", evidence.held)
+            self.assertIsNone(evidence.held[analysis / "unreadable" / "ast.json"])
+
+    def test_a_walk_with_no_pinning_bundle_says_why(self) -> None:
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            self.assertEqual(
+                check_analysis._walk_floor(root, [], check_analysis._head_commit(root)),
+                ("", "no `revision: current` evidence pins a landing for this change"))
+
+    def test_a_submodule_header_must_be_the_whole_answer(self) -> None:
+        """`<oid> submodule` 은 **전체가** 그 모양일 때만 blob 아님이다 — 앞에 무엇이 붙으면 프레이밍이
+        밀린 것이다(`fullmatch` 를 `search` 로 바꾸는 변이가 살았다)."""
+        raw, root, commit = ABlobIsFetchedOncePerCommitNotOncePerBundle()._repo()
+        with raw:
+            with AFailedGitReadIsAFaultNotAnAbsence()._answers(b"x" + b"a" * 40 + b" submodule\0"), \
+                    self.assertRaises(check_analysis.GATE_FAULTS):
+                check_analysis._committed_many(root, commit, ["vendor/sub"])
+
+    def test_the_version_hint_is_not_given_for_an_ordinary_failure(self) -> None:
+        """rc 1 은 git 의 사용법 오류(129)가 아니다 — 버전 조언을 붙이지 않는다."""
+        raw, root, commit = ABlobIsFetchedOncePerCommitNotOncePerBundle()._repo()
+        with raw:
+            def fails(argv, request):
+                return subprocess.CompletedProcess(argv, 1, b"", b"error: something else\n")
+
+            with AFailedGitReadIsAFaultNotAnAbsence._cat_file(fails), \
+                    self.assertRaises(check_analysis.GATE_FAULTS) as caught:
+                check_analysis._committed_many(root, commit, ["internal/own0.go"])
+            self.assertIn("something else", str(caught.exception))
+            self.assertNotIn("needs git", str(caught.exception))
+
+    def test_a_hung_git_is_asked_once_for_the_verdict(self) -> None:
+        """착지 뒤 판정의 미리 읽기에서 git 이 멎으면 **한 번** 묻고 판정 줄이 된다 — 대상마다 다시
+        물으면 멎은 git 을 대상 수만큼 기다린다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root = AVerdictReadsPinnedSourcesInOneProcess._landed(raw, 3)
+            landing = (root / "openspec" / "changes" / "mine" / check_analysis.LANDING_FILE).read_text().strip()
+            asked = []
+
+            def hangs_for_the_verdict(argv, request):
+                if request.startswith(landing.encode()) and \
+                        not TheVerdictReadsWhatTheLandingJudged._stack_has("resolve_landing"):
+                    asked.append(True)
+                    raise subprocess.TimeoutExpired(argv, 60)
+                return None
+
+            with AFailedGitReadIsAFaultNotAnAbsence._cat_file(hangs_for_the_verdict):
+                code, output = _cli(root)
+            self.assertEqual((code, len(asked)), (1, 1), output)
+            self.assertIn("timed out", output)
+
+    def test_a_landed_change_judges_a_base_bundle_without_pinning_it(self) -> None:
+        """`revision: base` 번들은 착지를 고정하지 않는다 — 고정 목록에 넣으면 그 번들의 digest(base 의
+        소스)가 착지에서 안 맞아 정직한 기록이 거절된다. 착지가 있는 change 에서 그런 번들이 판정되는
+        경로를 부르는 시험이 없었다(재리뷰 testing 전문가)."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = TheVerdictReadsWhatTheLandingJudged._landed(raw)
+            base = (root / "openspec" / "changes" / "mine" / "base-commit.txt").read_text().strip()
+            base_source = subprocess.run(["git", "show", f"{base}:internal/own.go"],
+                                         cwd=root, capture_output=True, check=True).stdout
+            bundle = _write_evidence(
+                root / "openspec" / "changes" / "mine", package="internal", function="Base",
+                relative="internal/own.go", digest=hashlib.sha256(base_source).hexdigest())
+            value = json.loads((bundle / "ast.json").read_text(encoding="utf-8"))
+            value["revision"] = "base"
+            (bundle / "ast.json").write_text(json.dumps(value), encoding="utf-8")
+            self.assertEqual(check_analysis.check("mine", root), [])
+
+    def test_a_reused_context_carries_nothing_from_the_last_run(self) -> None:
+        """`check` 가 채우는 사실은 **전부** 이번 실행의 것이어야 한다. 7.5.2 는 둘만 지웠다 — 앞선 이관
+        실행의 `adoption_source` 나 조언의 번들 이름이 다음 실행의 창 줄로 새었다(재리뷰: pop 절반)."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            facts: dict[str, object] = {
+                "adoption_source": "stale", "landing": "stale", "required_count": 99,
+                "base_shaped_bundles": ["stale"], "base_shaped_fault": "stale", "head": "stale",
+                "execution_baseline_adoption": True, "effective_base": "stale",
+            }
+            check_analysis.check("mine", root, facts)
+            self.assertNotIn("adoption_source", facts)
+            self.assertNotIn("base_shaped_fault", facts)
+            self.assertEqual(facts["landing"], "")
+            self.assertEqual(facts["base_shaped_bundles"], [])
+            self.assertFalse(facts["execution_baseline_adoption"])
+            self.assertEqual(facts["head"], check_analysis._head_commit(root))
 
 
 if __name__ == "__main__":

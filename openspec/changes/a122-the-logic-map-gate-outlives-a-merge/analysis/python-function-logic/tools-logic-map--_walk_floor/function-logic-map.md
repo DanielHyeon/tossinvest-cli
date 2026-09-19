@@ -80,3 +80,14 @@
 | B1 | 1769 | If | `if bundles is None:` |
 | B2 | 1771 | If | `if not bundles:` |
 | B3 | 1774 | If | `if not floor:` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1831-1853` · 분기 2 · 반환 3 · raise 0 (편집 전 L1756-1783 · 분기 3 · 반환 3 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+`(root, bundles, head)` — 목록이 필수(스스로 읽는 갈래 삭제, 분기 3 → 2).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1841 | If | `if not bundles:` |
+| B2 | 1844 | If | `if not floor:` |

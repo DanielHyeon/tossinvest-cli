@@ -47,7 +47,10 @@ for name in sys.argv[1:]:
     COUNT["argv0"] = {}
     start = time.monotonic()
     try:
-        value, why = ca.compute_landing(ROOT, base, analysis)
+        # 7.5.2.1 부터 입력 한 벌을 호출자가 잰다 — 그 잼(하한 · 수리 신호)까지 시간에 넣는다(옛 판본의
+        # `compute_landing(…, analysis)` 가 안에서 재던 것과 같은 범위).
+        inputs = ca._measure_landing_inputs(ROOT, ca._head_commit(ROOT), ca._read_evidence(analysis))
+        value, why = ca.compute_landing(ROOT, base, inputs)
     except ca.GATE_FAULTS as exc:      # 7.5.1 부터 git 결함은 예외다 — 한 change 가 나머지를 멈추지 않게
         value, why = "", f"RAISED {type(exc).__name__}: {exc}"
     elapsed = time.monotonic() - start

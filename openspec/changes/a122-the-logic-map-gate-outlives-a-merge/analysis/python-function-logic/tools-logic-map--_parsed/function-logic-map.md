@@ -11,3 +11,13 @@
 | B1 | 1362 | If | `if raw is None:` |
 | B2 | 1364 | Try | `try:` |
 | B3 | 1366 | ExceptHandler | `except ValueError:` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1450-1457` · 분기 1 · 반환 1 · raise 0 (편집 전 L1355-1367 · 분기 3 · 반환 3 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+`_parse_ast` 에 위임 — 못 쓰는 값은 `{}`. 언제나 사전을 돌려준다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1457 | IfExp | `{} if raw is None else _parse_ast(raw)[0]` |

@@ -15,7 +15,14 @@
 | `75_attrib.py` | spawn 을 **호출자 함수**로 귀속 + 한 개짜리 fetch 두 방식 | `python3 75_attrib.py <change-dir-name>…` |
 | `75_time.py` | `compute_landing` 의 벽시계와 spawn 수 | `python3 75_time.py <change-dir-name>…` |
 | `75_ab.py` | 판정 A/B 전수 (사본 대조군 + 이어 달리기) | `python3 75_ab.py [<before-sha>] [<초 예산>]` |
-| `75_mut.py` | 변이 T1~T18 (사본 대상 · 무변이 대조군 선행) | `python3 75_mut.py` |
+| `75_mut.py` | 변이 T · U · V · W · Y (사본 대상 · 무변이 대조군 선행 · 스위트 전체 · 생존하면 양성 대조) | `python3 75_mut.py [<구간 lo:hi>]` |
+| `751_check_ab.py` | `check()` 반환 A/B 전수 (7.5.1) | `python3 751_check_ab.py [<before-sha>] [<초 예산>]` |
+| `752_reads.py` | a099 `check()` 한 번의 `ast.json` 읽기 수 · git 수 (7.5.2) | `python3 752_reads.py` |
+| `7521_inputs.py` | 진입점에서 닿는 **모든 I/O** 를 AST 로 센다 — "묶었다" 고 적기 전의 입력 목록 (7.5.2.1) | `python3 7521_inputs.py [check record_landing main]` |
+| `7521_main_ab.py` | `main()` 출력 전체 A/B · 순서를 번갈아 · 결정적 계수(git 수 · `ast.json` 읽기 수) (7.5.2.1) | `python3 7521_main_ab.py [<before-sha>] [<초 예산>]` |
+
+A/B 셋의 이어 달리기 기록(`_work/*_done.*.json`)은 **양쪽 소스**에 묶는다 — 기준만으로 묶으면 워킹트리가
+바뀐 뒤 옛 after 와 새 after 의 줄이 한 표에 섞인다(7.5.2 에서 `751`, 7.5.2.1 에서 `75_ab` 를 고쳤다).
 
 ## 읽는 법 두 가지
 

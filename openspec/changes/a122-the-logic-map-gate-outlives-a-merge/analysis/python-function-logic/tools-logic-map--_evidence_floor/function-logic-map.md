@@ -69,3 +69,22 @@ rename 을 세면 아카이브하는 순간 이미 유효했던 기록이 무효
 
 값: 2026-09-18 프로파일에서 `_pinning_bundles` 가 a071 walk 하나에 341회 돌아
 13.07s 중 9.30s 였다. 묶은 뒤 a071 이 10.97s → **3.69s**.
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:762-813` · 분기 6 · 반환 2 · raise 1 (편집 전 L713-756 · 분기 6 · 반환 2 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+상징 `HEAD` 대신 명령이 **한 번** 푼 sha(`head`)를 받는다. 7.5.2 는 `HEAD` 를 열 자리에서 따로 읽고 지문에 표본 하나만 넣었다 — 기록은 표본 **전에** 읽혔고 뒤의 git 호출은 살아 있는 `HEAD` 를 다시 읽어서 가지 전환 한 번(레드팀 repro_b)도, 떠났다 돌아온 `HEAD`(이 세션이 재현)도 rc 0 이었다. 그리고 git 이 못 걸으면 **결함**이다 — 빈 문자열을 돌려주던 판본은 "평범한 커밋이 이 증거를 들인 적이 없다" 는 거절과 복구 조언(기록을 지워라)을 만들었다(레드팀 repro_a3). 이제 빈 문자열은 "걸었는데 없다" 하나다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 792 | For | `for ast_path, _, _ in bundles:` |
+| B2 | 793 | Try | `try:` |
+| B3 | 795 | ExceptHandler | `except ValueError:` |
+| B4 | 799 | If | `if before:` |
+| B5 | 801 | If | `if not paths:` |
+| B6 | 808 | If | `if process.returncode:` |
+
+| raise 줄 | 소스 |
+|---|---|
+| 809 | `raise RuntimeError("cannot find the commit that put this change's evidence into the histor` |

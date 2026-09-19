@@ -79,3 +79,24 @@ spawn 47.5% · 47.5%).
 | B13 | 810 | If | `if committed is None and before:` |
 | B14 | 812 | BoolOp | `committed is None or committed != judged` |
 | B15 | 812 | If | `if committed is None or committed != judged:` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:816-865` · 분기 12 · 반환 1 · raise 0 (편집 전 L759-814 · 분기 15 · 반환 1 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+`held` 가 필수다 — 시험만 쓰던 "안 주면 디스크에서 읽는다" 갈래(분기 셋)를 지웠다(재리뷰 maintainability: 디스크를 읽는 둘째 길).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 844 | For | `for ast_path, _, _ in bundles:` |
+| B2 | 845 | Try | `try:` |
+| B3 | 847 | ExceptHandler | `except ValueError:` |
+| B4 | 851 | comprehension | ` for _, relative, before in watched` |
+| B5 | 851 | comprehension | ` for path in ((relative, before) if before else (relative,))` |
+| B6 | 852 | IfExp | `(relative, before) if before else (relative,)` |
+| B7 | 855 | For | `for ast_path, relative, before in watched:` |
+| B8 | 857 | If | `if judged is None:` |
+| B9 | 861 | BoolOp | `committed is None and before` |
+| B10 | 861 | If | `if committed is None and before:` |
+| B11 | 863 | BoolOp | `committed is None or committed != judged` |
+| B12 | 863 | If | `if committed is None or committed != judged:` |

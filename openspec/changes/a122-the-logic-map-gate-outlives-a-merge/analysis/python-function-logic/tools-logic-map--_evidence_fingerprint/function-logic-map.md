@@ -41,3 +41,9 @@
 | id | 줄 | 종류 | 소스 |
 |---|---|---|---|
 | B1 | 1728 | comprehension | ` for ast_path, source, digest in bundles` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+편집 전 L1709-1729 (`ast.before-7.5.2.1.json` = revision `fc35eb2d`) · 편집 후 없음.
+
+지웠다(task 7.5.2.1) — 지문(HEAD 표본 · 해시 · 고정 목록)이 없어졌다: 역사는 고정한 sha, 증거는 명령이 한 번 읽은 `Evidence` 그 자체.

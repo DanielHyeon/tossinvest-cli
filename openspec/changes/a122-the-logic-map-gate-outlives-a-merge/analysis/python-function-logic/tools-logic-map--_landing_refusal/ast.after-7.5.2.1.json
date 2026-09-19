@@ -1,0 +1,205 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "6acf286c58f08f4e5be3cb3f5cc54140373b0ec3013cb6d10862883314761903",
+  "function": "_landing_refusal",
+  "signature": "_landing_refusal(root, base, candidate, inputs)",
+  "start": {
+    "line": 996,
+    "column": 1
+  },
+  "end": {
+    "line": 1114,
+    "column": 18
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 1025,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, base, candidate):"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 1028,
+      "inherited_line": false,
+      "source": "if not pinning:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 1037,
+      "inherited_line": false,
+      "source": "if mismatched:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 1048,
+      "inherited_line": false,
+      "source": "if not floor:"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 1055,
+      "inherited_line": false,
+      "source": "if not _is_ancestor(root, floor, candidate):"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 1065,
+      "inherited_line": false,
+      "source": "if unheld:"
+    },
+    {
+      "id": "B7",
+      "kind": "comprehension",
+      "line": 1084,
+      "inherited_line": true,
+      "source": " for _, source, _ in bundles"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 1091,
+      "inherited_line": false,
+      "source": "if all((at_base[source] == at_candidate[source] for source in sources)):"
+    },
+    {
+      "id": "B9",
+      "kind": "comprehension",
+      "line": 1091,
+      "inherited_line": true,
+      "source": " for source in sources"
+    },
+    {
+      "id": "B10",
+      "kind": "IfExp",
+      "line": 1092,
+      "inherited_line": false,
+      "source": "f', and {len(sources) - 3} more' if len(sources) > 3 else ''"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 1107,
+      "inherited_line": false,
+      "source": "if later:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1026,
+      "value": "(f'landing point precedes the comparison base {base[:12]}: {candidate}', [])"
+    },
+    {
+      "line": 1033,
+      "value": "(f'landing point {candidate[:12]} is pinned by no `revision: current` evidence: a declared landing must be the revision some bundle describes', [])"
+    },
+    {
+      "line": 1038,
+      "value": "(f'landing point {candidate[:12]} is not the revision this evidence describes: ' + ', '.join(sorted(set(mismatched))), [])"
+    },
+    {
+      "line": 1050,
+      "value": "(f'landing point {candidate[:12]} is pinned by evidence that no ordinary commit on this history adds: commit the `revision: current` bundles that pin it in an ordinary (non-merge) commit', [])"
+    },
+    {
+      "line": 1056,
+      "value": "(f\"landing point {candidate[:12]} precedes the evidence that pins it ({floor[:12]}): a declared landing cannot be older than the commit that put this change's evidence into the history\", [])"
+    },
+    {
+      "line": 1066,
+      "value": "(f'landing point {candidate[:12]} does not hold the evidence this verdict read: ' + ', '.join(unheld) + ' — the bundle judged here is not the bundle committed there', unheld)"
+    },
+    {
+      "line": 1093,
+      "value": "(f\"landing point {candidate[:12]} changes none of the sources its evidence pins since the comparison base {base[:12]}: {listed} — evidence that still describes the base cannot tell where this change's Go work landed\", [])"
+    },
+    {
+      "line": 1108,
+      "value": "(f\"landing point {candidate[:12]} is followed by {len(later)} later commit(s) of this change's own Go work (first {later[0][:12]}): a non-merge commit that edits Go while touching this change's directory landed after it, and the window {base[:12]}..{candidate[:12]} would not compare that edit\", [])"
+    },
+    {
+      "line": 1114,
+      "value": "('', [])"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1025,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 1027,
+      "callee": "_pinning_at"
+    },
+    {
+      "line": 1040,
+      "callee": "', '.join"
+    },
+    {
+      "line": 1040,
+      "callee": "set"
+    },
+    {
+      "line": 1040,
+      "callee": "sorted"
+    },
+    {
+      "line": 1055,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 1064,
+      "callee": "_unheld_bundles"
+    },
+    {
+      "line": 1068,
+      "callee": "', '.join"
+    },
+    {
+      "line": 1084,
+      "callee": "sorted"
+    },
+    {
+      "line": 1089,
+      "callee": "_committed_many"
+    },
+    {
+      "line": 1090,
+      "callee": "_committed_many"
+    },
+    {
+      "line": 1091,
+      "callee": "all"
+    },
+    {
+      "line": 1092,
+      "callee": "', '.join"
+    },
+    {
+      "line": 1092,
+      "callee": "len"
+    },
+    {
+      "line": 1092,
+      "callee": "len"
+    },
+    {
+      "line": 1106,
+      "callee": "_repairs_after"
+    },
+    {
+      "line": 1109,
+      "callee": "len"
+    }
+  ]
+}

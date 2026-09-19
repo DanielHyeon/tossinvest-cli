@@ -1,0 +1,56 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "6acf286c58f08f4e5be3cb3f5cc54140373b0ec3013cb6d10862883314761903",
+  "function": "_head_commit",
+  "signature": "_head_commit(root)",
+  "start": {
+    "line": 1783,
+    "column": 1
+  },
+  "end": {
+    "line": 1794,
+    "column": 34
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 1792,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1794,
+      "value": "process.stdout.strip()"
+    }
+  ],
+  "raises": [
+    {
+      "line": 1793,
+      "source": "raise RuntimeError(f'cannot read HEAD: {_first_line(process.stderr, 'git rev-parse failed')}')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 1788,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 1793,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 1793,
+      "callee": "_first_line"
+    },
+    {
+      "line": 1794,
+      "callee": "process.stdout.strip"
+    }
+  ]
+}

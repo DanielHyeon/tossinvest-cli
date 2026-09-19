@@ -1,0 +1,106 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "6acf286c58f08f4e5be3cb3f5cc54140373b0ec3013cb6d10862883314761903",
+  "function": "_read_evidence",
+  "signature": "_read_evidence(analysis)",
+  "start": {
+    "line": 646,
+    "column": 1
+  },
+  "end": {
+    "line": 670,
+    "column": 51
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 658,
+      "inherited_line": false,
+      "source": "if not analysis.is_dir():"
+    },
+    {
+      "id": "B2",
+      "kind": "comprehension",
+      "line": 660,
+      "inherited_line": true,
+      "source": " for path in analysis.iterdir() if path.is_dir()"
+    },
+    {
+      "id": "B3",
+      "kind": "For",
+      "line": 662,
+      "inherited_line": false,
+      "source": "for target in targets:"
+    },
+    {
+      "id": "B4",
+      "kind": "Try",
+      "line": 664,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B5",
+      "kind": "ExceptHandler",
+      "line": 666,
+      "inherited_line": false,
+      "source": "except FileNotFoundError:"
+    },
+    {
+      "id": "B6",
+      "kind": "ExceptHandler",
+      "line": 668,
+      "inherited_line": false,
+      "source": "except OSError:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 659,
+      "value": "Evidence(analysis, False, (), {})"
+    },
+    {
+      "line": 670,
+      "value": "Evidence(analysis, True, targets, held)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 658,
+      "callee": "analysis.is_dir"
+    },
+    {
+      "line": 659,
+      "callee": "Evidence"
+    },
+    {
+      "line": 660,
+      "callee": "analysis.iterdir"
+    },
+    {
+      "line": 660,
+      "callee": "path.is_dir"
+    },
+    {
+      "line": 660,
+      "callee": "sorted"
+    },
+    {
+      "line": 660,
+      "callee": "tuple"
+    },
+    {
+      "line": 665,
+      "callee": "ast_path.read_bytes"
+    },
+    {
+      "line": 670,
+      "callee": "Evidence"
+    }
+  ]
+}

@@ -10,3 +10,11 @@
 | 못 읽음 = 판정 줄 | W23 | `test_evidence_that_could_not_be_read_is_named_not_skipped` |
 | 모양 검사 | W17 | `test_a_malformed_ast_is_a_verdict_not_a_traceback` |
 | 미리 읽기 fallback 은 착지에서 | — | `test_a_source_missing_from_the_prefetch_is_read_at_the_landing` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+짝은 손으로 고르지 않았다 — 각 갈래를 지우는 변이를 걸어 실제로 빨개진 시험을 옮겼다(`75_mut.py` 76 변이 · 생존 0 · 무변이 대조군 초록). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
+|---|---|---|
+| 못 읽음 = 판정 줄 | W23 | `test_evidence_that_could_not_be_read_is_named_not_skipped` |

@@ -3708,3 +3708,154 @@ revision `e9f905bd` 를 명시해 뽑았다 — 내용은 그 커밋의 blob 이
   아니라 착지 판정의 **범위**다. 그리고 수락 직전 재확인과 `check()` 의 대조 사이에 바뀌었다 돌아오는 것은
   둘 다 **같은** 지문과 대조하므로 `check()` 가 읽은 바이트가 지문과 다르면 멈춘다 — 돌아온 뒤 읽었다면
   판정한 바이트와 같다.
+
+## MEASURE · Pre-Edit Gate — task 7.5.2.1 (판정이 읽는 입력을 전부 세고 하나씩 묶는다) (2026-09-20)
+
+7.5.2 의 재리뷰(로트 `e9f905bd..fc35eb2d`, 출처 여덟)가 그 로트의 중심 주장 셋을 깼다. 사람이 "전부
+같은 절차로 고친다"(7.5.3 은 여전히 사람 결정)를 골랐다. 이번엔 편집 전에 **판정이 읽는 입력의 목록**을
+먼저 센다 — 7.5.2 는 바이트만 묶고 "묶었다" 고 적었고, 목록을 세지 않아서 역사(`HEAD`) · 디렉터리
+존재 · 목록 열거 셋을 놓쳤다.
+
+### 재리뷰가 깬 것 (재현된 것만)
+
+| 주장 | 깬 입력 | 재현 |
+|---|---|---|
+| "`HEAD` 도 지문에 있다" | 지문은 `HEAD` 를 **표본**으로 한 번 잴 뿐이고, 착지 기록은 그 표본 **전에** 상징 `HEAD` 에서 읽혔으며 뒤의 git 호출은 전부 살아 있는 `HEAD` 를 다시 읽었다 | 나: 떠났다 돌아온 `HEAD`(ABA) rc 0 · 레드팀 `repro_b`: 가지 전환 **한 번** rc 0(전환 전 `HEAD` 도 후 `HEAD` 도 각자 rc 1) |
+| "수락 뒤 창을 닫았다" | `analysis.exists()` 조기 반환이 묶기 **앞**에 있다 · `_bundle_text` 가 살아 있는 `glob("*")` 로 목록을 만든다 | Codex: 스냅숏 뒤 `ast.json` 을 지우면 fc35eb2d `[]`, e9f905bd 는 `missing ast.json` |
+| "선언값 ≠ 계산값 갈래는 도달 불가" | `HEAD` 이동 · git 결함이 거절 사유가 된다 | 레드팀 `repro_a`: rev-list rc 128 · `reset --soft` → 복구 조언(기록을 지워라) |
+| 모양 틀린 `ast.json` 은 판정 줄 | `calls`/`returns` 가 목록 아님 · 최상위가 사전 아님 — 열 가지 | 나: 10/27 이 아직 traceback |
+| 중심 주장의 시험 | 묶은 뒤 둘째 읽기 · 추가/제거 절반 · 새 지문 | testing 전문가 변이 X1~X4 생존 |
+
+### 입력 목록 — AST 로 셌다 (`analysis/harness/7521_inputs.py`)
+
+진입점 `check` · `record_landing` · `main` 에서 닿는 모든 함수의 모든 I/O 호출(`subprocess.run` ·
+파일시스템 메서드 · `os.environ` · 상징 `"HEAD"` 상수)을 기계로 열거했다. 첫 판은 `subprocess.run`
+안의 `HEAD` 만 세어 `_landing_record` 의 `_committed_bytes(root, "HEAD", …)` 를 놓쳤다 — 상수를 세게
+고쳤다. 아래 표의 "읽는 자리" 는 그 출력이다(fc35eb2d 줄 번호).
+
+| 입력 | 읽는 자리 (fc35eb2d) | 오늘 | 7.5.2.1 |
+|---|---|---|---|
+| **역사(`HEAD`)** | `_landing_record` 572(빌리는 쪽 · 이관 · 선언 셋이 부른다) · `resolve_landing` 1102 · `_evidence_floor` 751 · `_self_repair_commits` 859 · `compute_landing` 1807 · `_repairs_after` 928 · `_head_commit` 1699(표본) · `_recording_refusal` 1911(깨끗한가) · `_commits_after` 553(창 줄) | 상징 `HEAD` 를 **열 자리**에서 따로, 표본 하나 | **고정**: 명령마다 `_head_commit` **한 번** → 그 sha 를 모든 역사 읽기에. 지문에서 `head` 는 빠진다(움직일 것이 없다) |
+| 증거 디렉터리 **존재** | `_read_evidence` 604(`is_dir`) · `check` 1584(`exists`, 조기 반환) | 두 번, 조기 반환은 묶기 앞 | 한 번 읽기 `Evidence.present` — 조기 반환이 그것을 본다 |
+| 증거 **목록** | `_read_evidence` 604(`glob("*/ast.json")`) · `check` 1595(`iterdir`) · `check` 1627(`glob("*/function-logic-map.md")`) | 세 번, 두 종류 — 검색만 되는 디렉터리를 `glob` 은 빼고 `iterdir` 는 넣는다 | `Evidence.targets` 한 번(`iterdir`) · `ast.json` 은 `target/ast.json` 을 **직접** 읽는다 |
+| `ast.json` **바이트** | `_read_evidence` 606(재기 · 판정 · 재확인이 각자 부른다) · `_base_shaped_bundles` 670(→`_pinning_bundles`, 따로 읽기) · `_unheld_bundles` 803 · `_bundle_text` 1337 · `validate_target` 1397(뒤 셋은 인자가 없을 때 — 시험만) | 착지 경로에서 판정 읽기 둘(잴 때 · 판정할 때) + 재확인 | `check`/`record_landing` 이 **한 번** 읽어 착지와 판정에 **같은 값**을 넘긴다. 재확인은 비교만 한다. 시험 전용 디스크 fallback 은 없앤다(인자 필수) |
+| 번들 **파일 목록**(산문) | `_bundle_text` 1325(`glob("*")` + `is_file`) | 살아 있는 목록 — `ast.json` 이 목록에서 빠지면 판정이 든 바이트도 빠진다 · 못 여는 디렉터리는 조용히 빈다 | `ast.json` 은 목록과 **무관하게** 한 번 읽은 바이트 · 산문 목록은 `iterdir()` 로 — 못 열면 **이름 댄 판정 줄**(조용히 비지 않는다) |
+| 산문 파일(FLM · BTM · 위험 보고 · 그 밖) | `validate_target` 1397 · `_bundle_text` 1337 | 살아 있다 | **설계상 살아 있다 — 묶지 않는다.** 착지는 이것을 판정하지 않는다(7.2 실측: "드는가" 등식을 산문까지 넓히면 정상 착지 76건 중 3건을 잃는다). 창이 아니라 착지 판정의 **범위**다 |
+| 소스 경로의 심링크 풀이 | `normalized_source` 1158(`resolve`) — 고정 목록(착지 · 재확인)과 `validate_target` 이 각자 | 두 번 | 고정 목록은 수락 직전 재확인이 이미 비교한다(그대로). 판정 쪽 풀이는 **살아 있다 — 적는다**: 둘이 갈려도 판정이 통과하려면 두 경로가 착지에서 **같은 digest** 를 들어야 하고, 그러면 번들은 둘 다를 사실대로 기술한다. 심링크 고리는 `RuntimeError` → `ValueError`(대상 이름으로) |
+| 착지의 소스 | `_committed_many(landing)` | 불변 객체 | 그대로 |
+| 워킹트리 소스 | `validate_target`(착지 없을 때) · `changed_existing_functions(target="")` · `_base_shaped_bundles`(조언) | 살아 있다 | 그대로 — 착지가 없으면 창의 끝이 **정의상** 워킹트리다 |
+| 시험 파일 | `test_index` · `resolve_test_file` · `test_citation_errors` | 살아 있다 | 그대로(착지가 판정하지 않는다) |
+| `base-commit.txt` · `execution-baseline.json` · `function-logic-reference.txt` · `review.md` · `SDD_BASE_REF` | 각 한 번 | 한 번 | 그대로. `execution_baseline.validate` 는 `HEAD` 를 **자기 안에서 한 번** 읽는다(a063 하나, 창 끝은 감사된 source) — 이 로트 밖 |
+| **git 의 답(결함)** | `_is_ancestor` 530(rc 128 → "조상 아님") · `_evidence_floor` 756(rc≠0 → "") · `compute_landing` 1811(rc≠0 → 사유) · `_recording_refusal` 1915(rc 128 → "더럽다") | 결함이 **판정**으로 읽혀 복구 조언까지 붙는다 | 결함은 `RuntimeError`(`GATE_FAULTS`) — 7.5.1 이 `_committed_many` 에만 한 것을 나머지에 |
+
+### 편집 집합 (편집 전 AST 30개 — revision `fc35eb2d` 를 **명시**, 소스 해시 `98845ce2dea1…` = 그 blob)
+
+| 함수 | 무엇 | 출처 |
+|---|---|---|
+| `_head_commit` → 진입점 셋 | `check` · `record_landing` 이 **먼저** 푼다; `main` 은 `check` 가 푼 것을 쓴다 | 적대 · 레드팀 · 나 |
+| `_landing_record` · `_declared_landing` · `_is_ancestor`(인자) · `_evidence_floor` · `_self_repair_commits` · `_repairs_after` · `compute_landing` · `_recording_refusal` · `_commits_after` | 상징 `HEAD` 대신 받은 sha | 같음 |
+| `_is_ancestor` · `_evidence_floor` · `compute_landing` · `_recording_refusal` | rc 가 "예/아니오" 가 아니면 결함 | 레드팀 `repro_a`·`repro_a3` |
+| 새 `Evidence` · `_read_evidence` | 존재 · 목록 · 바이트를 **한 값**으로. `iterdir` 로 번들을 세고 `target/ast.json` 을 직접 읽는다: 없음(`FileNotFoundError`) = 키 없음, 못 읽음 = `None` | 수락 뒤 창 · Codex P2 |
+| `_digests` · `_pinning_bundles` · `_evidence_fingerprint` · `Fingerprint` | 지운다 — 지문은 `Evidence` 자체(바이트 비교, 해시 불필요)와 고정 목록 | 단순화 · 둘 이름 셋 |
+| `_select_pinning` · `_base_shaped_bundles` | `Evidence` 를 받는다 — 조언도 같은 한 번 읽기 | 수락 뒤 창 |
+| `LandingInputs` · `_measure_landing_inputs` · `_walk_floor` · `_landing_refusal` · `_unheld_bundles` | 입력 한 벌(`head` · `evidence` · 고정 목록 · 하한 · 사유 · 수리)을 **받는다** — 스스로 읽는 기본값 없음 | maintainability(시험 전용 `None`) |
+| `_raise_if_inputs_moved` | 증거를 다시 읽어 **먼저** 바이트로 대조하고, 같을 때만 고정 목록 — 고르다 난 `ValueError` 도 "움직였다" | 레드팀(escapes 가 MOVED 앞) |
+| `resolve_landing` | `head` · `evidence` 를 받고 `facts` 를 안 받는다. 선언값 ≠ 계산값 갈래의 주석을 **참인 이유**로 | 레드팀 |
+| `normalized_source` | 심링크 고리를 `ValueError` 로 | 보안 전문가 |
+| 새 `_ast_value` · `_parsed` · `validate_target` | 모양 검사를 **파싱하는 자리 한 곳**에: 사전 · `start`/`end` 사전 · `branches`/`calls`/`returns` 목록. `validate_target` 은 `held` 필수 | 모양 열 가지 |
+| `_bundle_text` | `(대상, 한 번 읽은 ast 바이트)` — 목록과 무관 · 목록은 `iterdir` | Codex P1 |
+| `check` | 고정 → 빌리는/이관 탐침 → **한 번 읽기** → 착지 · 판정 · 조언이 그 값. 앞선 실행의 사실은 **전부** 지운다 | 수락 뒤 창 · pop 절반 |
+| `record_landing` | 고정 → 한 번 읽기 → 사전 판정과 걷기가 같은 값 | 같음 |
+| `main` | 창 줄 · 조언이 `check` 가 푼 sha · 출력은 `backslashreplace` | 레드팀(서로게이트) |
+| `_committed_many` | 주석 하나("물은 spec 그대로" — gitlink 는 oid 로 온다). AST 불변 | maintainability |
+
+### 거부할 정상 입력 — 그리고 거부 **안** 할 때 통과하는 것
+
+| 새 거절·결함 | 정상 입력에서 (실측) | 안 하면 통과하는 것 |
+|---|---|---|
+| 명령 시작에 `HEAD` 를 푼다 | 저장소 0 — 거절되는 모양은 **태어나지 않은 `HEAD`**(첫 커밋 전 고아 가지)뿐이다. 그 모양은 옛 판본에서 base → 워킹트리 창으로 판정됐고 이제 결함 줄이다(막는 쪽) | 두 역사를 섞은 판정(rc 0) |
+| git 결함 넷 → 결함 | 0 (A/B 로 확인할 것) | 결함이 거절로 읽혀 **유효한 기록을 지우라**는 조언 |
+| `ast.json` 모양 | **0 / 3,048**(`start`·`end` 사전 아님 · `branches`·`calls`·`returns` 목록 아님 · 최상위 사전 아님 · 글자 아님 전부) | traceback |
+| 목록을 못 여는 번들 디렉터리 | **0 / 3,048** | 열거형 호출 판정이 그 번들의 산문을 조용히 잃는다(permissive) |
+
+**느슨해지는 쪽도 적는다**: 실행 중 커밋은 이제 판정을 멈추지 않는다 — 판정은 **고정한 sha 의 역사**를
+말한다. 7.5.2 는 그것을 `INPUTS_MOVED` 로 멈췄는데, 그 멈춤이 지키던 것(뒤섞인 역사)은 고정이 없앴다.
+
+### Pre-Edit 선언
+
+High-risk 아님(게이트 도구, 생산 Go 변경 0). 정상 입력에서 판정은 **한 글자도** 안 바뀌어야 한다 —
+`main()` 출력 전체(판정 줄 + 창 줄 + 조언 줄)의 A/B 를 `fc35eb2d` 기준으로 전수, **순서를 번갈아** 돌리고
+시간 대신 **결정적 계수**(git 프로세스 수 · `ast.json` 읽기 수)를 적는다(7.5.2 의 시간 이득은 대부분
+실행 순서 표류였다 — performance 전문가). RED 를 먼저 세운다.
+
+## VERIFY — task 7.5.2.1 (명령 하나는 역사 하나와 증거 읽기 하나 위에서 판정한다) (2026-09-20)
+
+### 무엇이 바뀌었나 — 한 문장
+
+**명령(`check` · `record_landing`)이 시작할 때 `HEAD` 를 sha 로 한 번 풀고 증거 디렉터리를 한 번 읽어,
+착지 판정 · 대상 판정 · 조언이 전부 그 두 값만 쓴다.** 7.5.2 는 바이트만 한 번 읽어 착지에 묶고 `check()` 가
+다시 읽어 대조했다 — 그 대조 **앞**의 조기 반환과 대조 **밖**의 목록 열거가 디스크를 다시 물었고, 역사는
+표본 하나만 비교해서 표본 **전**의 읽기와 떠났다 돌아온 `HEAD` 가 뚫렸다. 같은 값을 넘기면 대조할 것이 없다.
+수락 · 거절 앞 재확인은 남았고, 이제 **대조만** 한다(그 읽기의 바이트는 판정에 안 들어간다).
+
+### 7.5.2 가 쓴 문장 중 거짓이었던 것 — 정정
+
+- "수락 뒤의 창이 닫혔다"(tasks 7.5.2 · VERIFY 7.5.2): 거짓. `analysis.exists()` 조기 반환과 `_bundle_text` 의
+  살아 있는 목록 둘이 남아 있었다(재리뷰 적대 · Codex 재현).
+- "선언값 ≠ 계산값 갈래에는 움직인 입력이 못 온다(재확인 불필요)": 거짓. `HEAD` 이동과 git 결함이 둘 다
+  왔다(레드팀 repro_a). 이번에 그 둘을 없앴고 주석은 **이제 참인 이유**를 적는다.
+- "`HEAD` 도 지문에 넣었다": 표본이었지 고정이 아니었다(적대 · 레드팀 · 나 — 셋이 재현).
+- "합계 2048.9s → 1934.5s": 대부분 실행 순서 표류(늘 before 먼저). 판정 SAME 126/126 은 그대로 맞다.
+
+### RED 가 빨갰던 이유 (구현 전, `fc35eb2d` 위에서)
+
+새 시험 25 중 **20 이 실패** — 각자 자기 사유로(출력: 세션 스크래치 `7521_red_on_fc35eb2d.txt`):
+가지 전환 한 번 → `[]`(대조군은 "later commit(s) of this change's own Go work") · 떠났다 돌아온 `HEAD` → `[]` ·
+상징 `HEAD` 를 읽는 git 호출이 명령마다 여럿 · 실행 중 커밋 → `INPUTS_MOVED`(판정/기록 모두) · git 결함 셋 →
+"to move a record" 복구 조언 · `git diff --quiet` rc 128 → "uncommitted changes" · 모양 틀린 `ast.json` →
+`TypeError` · 수락 뒤 디렉터리 삭제 → `[]` · 목록에서 빠진 `ast.json` → `[]`(Codex 모양) · 검색만 되는 번들 →
+`missing ast.json` · 심링크 고리 → `RuntimeError` · 서로게이트 → `Traceback` · 판정 읽기 2회 · 수락 뒤 교체 →
+`SWAPPED` 줄 · 걷는 중 생긴 빈 번들 디렉터리 → 기록됨 · 재사용 문맥의 `adoption_source` 잔존 · 새 API 셋(오류).
+나머지 5 는 옛 코드에서도 초록이다 — 회귀를 막는 못(빠진 번들 · submodule `fullmatch` · rc 1 조언 · 멎은 git
+한 번 · base 번들)이다.
+
+### 편집 순서 — 이번엔 지켰다
+
+편집 전 AST 30 을 **편집 전에** revision `fc35eb2d` 로 뽑았다(Pre-Edit 표). 편집 뒤 새 함수 둘(`_parse_ast` ·
+`_first_line`)과 클래스 하나(`Evidence`)가 생겼고 셋(`_digests` · `_pinning_bundles` · `_evidence_fingerprint`)이
+없어졌다. `_landing_refusal` 의 가드 순서는 편집 전후 **분기 순서열 · 반환 순서열 둘 다 같다**.
+
+### 처음 설계에서 바꾼 것 둘
+
+- **심링크 고리**: Pre-Edit 는 "`RuntimeError` → `ValueError`" 였다. 그렇게 쓰자 손 복사 예외 목록을 막는 구조
+  시험(`test_every_fault_handler_uses_the_one_list`)이 그 `except RuntimeError` 를 잡았다. 원인을 재 보니 동작이
+  **파이썬 판본의 함수**였다(2026-09-20 실측: `Path.resolve()` 가 고리에서 3.12.3 만 raise, 3.13.13 · 3.14.5 는 안 함,
+  `os.path.realpath` 는 셋 다 같음). `realpath` 로 바꿨다 — 고리는 "AST source is missing" 이 된다.
+- **태어나지 않은 `HEAD`**: Pre-Edit 는 저장소 전수 0 만 쟀다. 스위트를 돌리자 git 을 mock 하는 픽스처 22 개가
+  커밋 없는 빈 저장소였다 — 픽스처에 빈 커밋 하나(`_empty_repo`)를 두었다. 픽스처의 전제("HEAD 에 기록 없음")는
+  그대로다. 가드는 안 바꿨다.
+
+### 증거
+
+| 무엇 | 결과 |
+|---|---|
+| `main()` 출력 전체 A/B (`7521_main_ab.py`, 기준 `fc35eb2d`, 활성+아카이브 전수, 순서 번갈아) | **비교 126 · SAME 126 · DIFFERENT 0** — 찍은 줄 전부 + rc, 순서를 번갈아(before 먼저 63 · after 먼저 63) |
+| 결정적 계수 (같은 A/B) | git 프로세스 20,019 → 20,133(+114 = 115 change 에서 +1 고정하는 자리 · a099 −1 — 7.5.2 의 표본 둘이 고정 하나로 · base 에서 멈추는 10 change 0) · `ast.json` 읽기 **9,072 → 5,803(−36%)** · 시간은 이득으로 적지 않는다: before 가 먼저 돈 63건 before 1134.2s · after 1103.0s, after 가 먼저 돈 63건 before 1088.7s · after 1115.4s — **먼저 도는 쪽이 ~3% 느리다**(7.5.2 의 2048.9s → 1934.5s 도 이것이었다) |
+| 변이 (`75_mut.py`, 스위트 전체, 생존 시 양성 대조) | **76/76 CAUGHT** — 7.5.2 까지의 52 중 48 유지(앵커 14 갱신, 셋은 이름도) · 코드가 없어진 넷(W2~W4 지문 칸 · W7 착지 뒤 대조) 퇴역 · 새 Y1~Y28. 무변이 대조군 초록(skipped 2 — 하나는 `docs/` 가 없는 사본에서 문서 시험이 스스로 건너뛴다, 변이 76 중 그 대상을 건드리는 것 0) |
+| a099 `check()` 한 번 (`752_reads.py`) | `ast.json` 읽기 446(7.5.1) → 114(7.5.2) → **76**(번들당 2.0 = 판정 1 + 수락 직전 대조 1) · git 82 → 83 |
+| 입력 목록 (`7521_inputs.py`) | `check` · `record_landing` · `main` 에서 닿는 상징 `HEAD` 읽기 **1**(푸는 자리) — 7.5.2 는 10 |
+| 시험 | 231 → **254**(+25 새 · +2 재확인 · −4 대체) · `make sdd-test`(logic-map **329**) · `make lint` · `openspec validate` 58/58 · a122 rc=0 · `make test-seams` rc 0 · `make sdd-check` rc 0(CodeGraph hard-evidence 가 워킹트리와 같다) |
+| `make sdd-sync` | **rc 2 — advisory 둘만**: CodeGraphContext 는 kuzudb 잠금을 다른 세션의 `cgc mcp start`(가동 1일 6시간)가 쥐고 있어 색인을 못 했고(두 번 돌려 같음 — 시간초과가 아니라 잠금이라 재시도로 안 풀린다), GBrain 은 `gbrain serve` 가 바빠 앞 신선도를 유지했다. `codegraph sync` 는 됐다. 남의 서버라 죽이지 않았다 — 둘 다 advisory(WORKFLOW) |
+| 하네스 | `75_census.py` 가 다시 걷는다(93/126) · `75_time` · `75_attrib` · `75_ab` · `751_check_ab` · `752_reads` · `75_levers` 전부 표본으로 돌렸다 · `75_ab` 이어 달리기를 after 소스에 묶었다 |
+| 문서 | README 의 `-Z` 없는 git 예시를 실제로 찍어 본 줄로(접두어 · `at <sha12>`) |
+
+### 남은 것
+
+- **7.5.3(이름 바뀐 고정 소스)**: 사람 결정 대기(그대로).
+- **살아 있는 입력 — 적었다, 묶지 않았다**: 번들 산문(착지 판정의 범위 밖, 7.2 실측) · 소스 경로의 심링크 풀이
+  (판정 쪽 한 번 더 — 갈려도 판정이 통과하려면 두 경로가 착지에서 같은 digest 를 들어야 한다) · 시험 파일 ·
+  워킹트리 소스(착지 없을 때 창의 끝이 정의상 워킹트리) · `execution_baseline.validate` 의 자기 `HEAD` 한 번(a063
+  하나, 창 끝은 감사된 source).
+- **못 읽는 `ast.json` 이 있는 채 기록**: 못 읽은 번들은 고정 목록에 안 들어가 착지가 그것 없이 계산된다(7.5.2
+  부터 같다). `check` 는 그 대상을 "could not be read" 로 빨갛게 하고, 읽히게 되면 게이트가 기록을 다시 판정한다
+  — 막는 쪽이다. 재리뷰가 짚지 않았고 이 로트에서 안 바꿨다.

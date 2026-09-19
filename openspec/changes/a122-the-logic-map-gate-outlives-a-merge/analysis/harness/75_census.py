@@ -41,8 +41,13 @@ for name in names:
         continue
     analysis = d / "analysis" / "function-logic"
     try:
-        bundles = len(ca._pinning_bundles(ROOT, analysis))
-        floor, why, _ = ca._walk_floor(ROOT, analysis)[:3]  # 7.5 부터 셋을 돌려준다
+        # 7.5.2.1 부터 하한은 호출자가 한 번 푼 `HEAD` 와 한 번 읽은 증거로 잰다 — 도구가 쓰는 것과 같은
+        # 한 벌을 여기서도 만든다. (7.5 · 7.5.2 가 `_walk_floor` 의 반환을 바꿀 때마다 이 줄이 깨졌다 —
+        # 7.5.2 재리뷰가 셋을 푸는 판본이 126 건 전부를 "못 걸음" 으로 찍는 것을 짚었다.)
+        head = ca._head_commit(ROOT)
+        pinned = ca._select_pinning(ROOT, ca._read_evidence(analysis))
+        bundles = len(pinned)
+        floor, why = ca._walk_floor(ROOT, pinned, head)
     except Exception as exc:
         rows.append({"change": name, "skip": f"floor: {type(exc).__name__}: {exc}"[:120]})
         continue
@@ -50,7 +55,7 @@ for name in names:
         rows.append({"change": name, "bundles": bundles, "skip": "no walk: " + why[:60]})
         continue
     start = floor if ca._is_ancestor(ROOT, base, floor) else base
-    walked = subprocess.run(["git", "rev-list", "--count", f"{start}..HEAD"],
+    walked = subprocess.run(["git", "rev-list", "--count", f"{start}..{head}"],
                             cwd=ROOT, capture_output=True, text=True, timeout=120, check=False)
     candidates = int(walked.stdout.strip() or 0) + 1 if not walked.returncode else -1
     rows.append({"change": name, "bundles": bundles, "candidates": candidates,

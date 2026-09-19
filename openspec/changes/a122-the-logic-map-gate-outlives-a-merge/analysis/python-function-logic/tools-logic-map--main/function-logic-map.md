@@ -216,3 +216,34 @@ Go 파일 변경 0줄.
 | B19 | 2073 | If | `if errors:` |
 | B20 | 2074 | For | `for error in errors:` |
 | B21 | 2077 | If | `if context.get('execution_baseline_adoption'):` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:2063-2182` · 분기 22 · 반환 3 · raise 0 (편집 전 L1977-2083 · 분기 21 · 반환 3 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+출력을 `backslashreplace` 로 — 판정 줄의 홀로 선 서로게이트가 엄격한 UTF-8 로캘에서 `UnicodeEncodeError` 로 판정 줄 없이 끝났다(레드팀, 로캘의 함수였다). 창 줄 · 조언은 `check` 가 푼 `head` 를 쓴다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 2073 | If | `if reconfigure is not None:` |
+| B2 | 2080 | If | `if args.record_landing:` |
+| B3 | 2081 | Try | `try:` |
+| B4 | 2083 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B5 | 2085 | For | `for line in lines:` |
+| B6 | 2092 | Try | `try:` |
+| B7 | 2094 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B8 | 2105 | BoolOp | `base and 'landing' in context` |
+| B9 | 2105 | If | `if base and 'landing' in context:` |
+| B10 | 2112 | If | `if not landing:` |
+| B11 | 2120 | BoolOp | `landed_after or '?'` |
+| B12 | 2126 | BoolOp | `context.get('base_shaped_bundles') or []` |
+| B13 | 2126 | comprehension | ` for name in context.get('base_shaped_bundles') or []` |
+| B14 | 2128 | If | `if fault:` |
+| B15 | 2132 | If | `if base_shaped:` |
+| B16 | 2136 | If | `if len(base_shaped) > 3:` |
+| B17 | 2150 | Try | `try:` |
+| B18 | 2158 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B19 | 2160 | If | `if refusal:` |
+| B20 | 2172 | If | `if errors:` |
+| B21 | 2173 | For | `for error in errors:` |
+| B22 | 2176 | If | `if context.get('execution_baseline_adoption'):` |

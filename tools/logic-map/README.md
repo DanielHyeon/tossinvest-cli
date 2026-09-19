@@ -33,8 +33,11 @@ ast-grep 발견은 자동 결함 판정이 아니다.
 (문서만 고친 change 도). 예:
 
 ```text
-cannot read blobs at 1a2b3c4d5e6f: `git cat-file --batch -Z` failed (rc 129: error: unknown switch `Z') — `-Z` needs git 2.42 or newer
+[logic-map] cannot derive modified Go functions: cannot read blobs at 1a2b3c4d5e6f: `git cat-file --batch -Z` failed (rc 129: error: unknown switch `Z') — `-Z` needs git 2.42 or newer
 ```
+
+(`at` 뒤는 게이트가 시작할 때 푼 `HEAD` 의 sha 앞 12자리다 — 2026-09-20 `-Z` 를 모르는 git 을 흉내 내어
+실제로 찍어 본 줄에서 sha 만 바꿨다.)
 
 버전 조언(`needs git 2.42`)은 git 이 **옵션을 모른다**(rc 129)고 할 때만 붙는다 — 저장소가 아닌
 루트(rc 128) 같은 다른 실패에는 git 의 말만 나간다. 영수증은 git 자신의 릴리스 노트

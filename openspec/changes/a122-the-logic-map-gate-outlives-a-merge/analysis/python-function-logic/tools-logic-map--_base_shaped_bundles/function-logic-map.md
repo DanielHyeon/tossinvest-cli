@@ -71,3 +71,17 @@ base 읽기를 한 프로세스로(7.5 가 남긴 per-bundle 루프 — 재리�
 | B3 | 675 | comprehension | ` for _, source, _ in stale` |
 | B4 | 676 | comprehension | ` for ast_path, source, digest in stale if at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() ==` |
 | B5 | 678 | BoolOp | `at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() == digest` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:699-727` · 분기 5 · 반환 1 · raise 0 (편집 전 L652-679 · 분기 5 · 반환 1 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+조언도 판정이 **한 번** 읽은 증거를 쓴다 — 따로 읽으면(옛 `_pinning_bundles`) 판정과 다른 번들을 말할 수 있다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 716 | comprehension | ` for ast_path, source, digest in _select_pinning(root, evidence) if not ((root / source).is_file() and hashlib.sha256((r` |
+| B2 | 720 | BoolOp | `(root / source).is_file() and hashlib.sha256((root / source).read_bytes()).hexdigest() == digest` |
+| B3 | 723 | comprehension | ` for _, source, _ in stale` |
+| B4 | 724 | comprehension | ` for ast_path, source, digest in stale if at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() ==` |
+| B5 | 726 | BoolOp | `at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() == digest` |

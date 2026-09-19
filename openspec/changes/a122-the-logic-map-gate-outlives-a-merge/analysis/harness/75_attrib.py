@@ -51,7 +51,10 @@ for name in sys.argv[1:]:
     BY_FUNC.clear()
     start = time.monotonic()
     try:
-        value, _ = ca.compute_landing(ROOT, base, d / "analysis" / "function-logic")
+        # 7.5.2.1 부터 입력 한 벌을 호출자가 잰다 — 옛 판본이 안에서 재던 것과 같은 범위를 귀속한다.
+        inputs = ca._measure_landing_inputs(
+            ROOT, ca._head_commit(ROOT), ca._read_evidence(d / "analysis" / "function-logic"))
+        value, _ = ca.compute_landing(ROOT, base, inputs)
     except ca.GATE_FAULTS as exc:      # 7.5.1 부터 git 결함은 예외다 — 한 change 가 나머지를 멈추지 않게
         value = ""
         print(f"{name[:44]:46s} RAISED {type(exc).__name__}: {exc}")

@@ -131,3 +131,26 @@ B6 이 **사유 문장**으로 받고, 나머지(`_walk_floor` 의 `ValueError`,
 `_walk_floor` 의 반환이 `(하한, 사유)` 둘로 줄어 언팩 한 줄(`_, why, _ =` → `_, why =`)만 바뀌었다.
 편집 전후 AST(`ast.before-7.5.2.json` = revision `e9f905bd` · `ast.after-7.5.2.json`)의 분기·반환·raise
 **순서열 차이 0** — 거절 일곱의 순서와 문장은 그대로다. **GREEN 도중 편집 집합에 들어왔다**(review.md).
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1918-2002` · 분기 10 · 반환 9 · raise 1 (편집 전 L1849-1921 · 분기 9 · 반환 9 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+`head` · `evidence` 를 받는다 — 기록 명령에서 걷기 전 판정과 걷기가 같은 한 벌. "깨끗한가" 는 `head` 와 비교하고, git 이 0 · 1 말고 답하면 결함(옛: rc 128 을 "먼저 커밋하라" 로).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1943 | If | `if landing_file.is_symlink():` |
+| B2 | 1953 | If | `if _landing_record(change_dir, root, head) is not None:` |
+| B3 | 1957 | If | `if landing_file.exists():` |
+| B4 | 1967 | If | `if (change_dir / 'analysis' / 'function-logic-reference.txt').exists():` |
+| B5 | 1972 | Try | `try:` |
+| B6 | 1974 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B7 | 1976 | If | `if facts.get('execution_baseline_adoption'):` |
+| B8 | 1979 | If | `if why:` |
+| B9 | 1989 | If | `if dirty.returncode not in (0, 1):` |
+| B10 | 1996 | If | `if dirty.returncode:` |
+
+| raise 줄 | 소스 |
+|---|---|
+| 1992 | `raise RuntimeError(f'cannot tell whether the working tree matches {head[:12]}: ' + _first_` |

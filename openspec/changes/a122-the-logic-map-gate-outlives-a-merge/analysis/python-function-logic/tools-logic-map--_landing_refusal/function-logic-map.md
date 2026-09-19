@@ -159,3 +159,23 @@
 | B9 | 1031 | comprehension | ` for source in sources` |
 | B10 | 1032 | IfExp | `f', and {len(sources) - 3} more' if len(sources) > 3 else ''` |
 | B11 | 1047 | If | `if later:` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:996-1114` · 분기 11 · 반환 9 · raise 0 (편집 전 L939-1054 · 분기 11 · 반환 9 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+입력 한 벌(`LandingInputs`)을 받는다 — 고정 목록 · 하한 · 수리 신호 · 한 번 읽은 바이트 · 고정한 `head`. **가드 여덟의 순서 · 문장 · 반환은 그대로다**(편집 전후 AST 의 반환 순서열 같음).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1025 | If | `if not _is_ancestor(root, base, candidate):` |
+| B2 | 1028 | If | `if not pinning:` |
+| B3 | 1037 | If | `if mismatched:` |
+| B4 | 1048 | If | `if not floor:` |
+| B5 | 1055 | If | `if not _is_ancestor(root, floor, candidate):` |
+| B6 | 1065 | If | `if unheld:` |
+| B7 | 1084 | comprehension | ` for _, source, _ in bundles` |
+| B8 | 1091 | If | `if all((at_base[source] == at_candidate[source] for source in sources)):` |
+| B9 | 1091 | comprehension | ` for source in sources` |
+| B10 | 1092 | IfExp | `f', and {len(sources) - 3} more' if len(sources) > 3 else ''` |
+| B11 | 1107 | If | `if later:` |

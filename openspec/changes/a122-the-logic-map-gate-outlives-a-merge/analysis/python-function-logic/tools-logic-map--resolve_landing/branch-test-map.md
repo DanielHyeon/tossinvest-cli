@@ -139,3 +139,13 @@ M2 는 이 편집이 **만들어 낸** 자리다. 옛 판본에는 선언을 읽
 |---|---|---|
 | 거절 앞 재확인 | W5 | `test_a_declared_landing_refused_on_moving_evidence_says_run_again` |
 | 판정한 지문을 넘긴다 | W7 | `test_evidence_swapped_after_the_landing_is_judged_is_refused` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+짝은 손으로 고르지 않았다 — 각 갈래를 지우는 변이를 걸어 실제로 빨개진 시험을 옮겼다(`75_mut.py` 76 변이 · 생존 0 · 무변이 대조군 초록). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
+|---|---|---|
+| `head` 로 조상 판정 | Y2 | `test_every_history_read_uses_the_one_resolved_commit` |
+| 거절 앞 재확인 | W5 | `test_a_declared_landing_refused_on_moving_evidence_says_run_again` |
+| 잰 입력 한 벌로 계산(두 번 재지 않음) | V11 | `test_the_declared_path_measures_once` |

@@ -25,3 +25,12 @@
 | `main`: `if refusal:` | R13 | `test_the_advice_never_names_a_command_that_would_refuse` · `test_a_fault_while_asking_the_recorder_does_not_become_advice` · `test_a_refusal_that_outlives_a_commit_is_named_before_one_that_does_not` |
 | `main`: `except GATE_FAULTS` → 권하지 않음 | R14 | `test_a_fault_while_asking_the_recorder_does_not_become_advice` |
 | `main`: 해소기가 찾은 디렉터리를 넘김 | R15(활성 경로) | `test_the_advice_never_names_a_command_that_would_refuse` (staged 아카이브 모양) |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+짝은 손으로 고르지 않았다 — 각 갈래를 지우는 변이를 걸어 실제로 빨개진 시험을 옮겼다(`75_mut.py` 76 변이 · 생존 0 · 무변이 대조군 초록). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
+|---|---|---|
+| `head` 와 비교 | Y7 | `test_every_history_read_uses_the_one_resolved_commit` |
+| 0 · 1 말고는 결함 | Y12 | `test_a_cleanliness_check_git_cannot_answer_is_not_called_dirty` |

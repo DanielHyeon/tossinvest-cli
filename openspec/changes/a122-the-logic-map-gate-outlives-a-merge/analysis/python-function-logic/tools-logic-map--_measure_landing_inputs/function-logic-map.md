@@ -39,3 +39,13 @@
 | id | 줄 | 종류 | 소스 |
 |---|---|---|---|
 | B1 | 1752 | IfExp | `None if why else _self_repair_commits(root, analysis)` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1817-1828` · 분기 1 · 반환 1 · raise 0 (편집 전 L1741-1753 · 분기 1 · 반환 1 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+`(root, head, evidence)` — 증거를 스스로 읽지 않는다. 여기서 읽으면 착지가 판정한 바이트와 대상 판정이 읽는 바이트가 다른 읽기가 된다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1827 | IfExp | `None if why else _self_repair_commits(root, evidence.directory, head)` |

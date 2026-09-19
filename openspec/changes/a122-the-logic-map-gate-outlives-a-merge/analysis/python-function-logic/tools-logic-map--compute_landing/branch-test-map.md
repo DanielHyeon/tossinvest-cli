@@ -36,3 +36,14 @@
 |---|---|---|
 | 수락 직전 재확인 | V9 | `test_a_bundle_published_during_the_walk_is_not_left_unchecked 외 6` |
 | 걷는 동안 `held` 만 | W9 | `test_evidence_swapped_and_restored_during_the_walk_is_not_judged` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+짝은 손으로 고르지 않았다 — 각 갈래를 지우는 변이를 걸어 실제로 빨개진 시험을 옮겼다(`75_mut.py` 76 변이 · 생존 0 · 무변이 대조군 초록). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
+|---|---|---|
+| `head` 까지 순회 | Y5 | `test_every_history_read_uses_the_one_resolved_commit` |
+| 못 걸으면 결함 | Y11 | `test_a_git_fault_is_never_advice_to_delete_the_record` |
+| 수락 직전 재확인 | V9 | `test_a_bundle_published_during_the_walk_is_not_left_unchecked 외 8` |
+| 입력 한 벌로 판정 | T12 | `81 시험` |

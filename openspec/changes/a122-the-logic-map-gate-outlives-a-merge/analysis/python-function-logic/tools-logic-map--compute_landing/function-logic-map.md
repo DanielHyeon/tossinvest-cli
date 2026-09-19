@@ -178,3 +178,24 @@ a089·a095 가 마지막 사유로 거부된다 — 그 둘의 증거가 자기�
 | B7 | 1829 | BoolOp | `first or refusal` |
 | B8 | 1830 | If | `if names:` |
 | B9 | 1833 | If | `if unheld:` |
+
+## task 7.5.2.1 — 판정이 읽는 입력을 전부 세고 하나씩 묶는다 (7.5.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1856-1915` · 분기 8 · 반환 4 · raise 1 (편집 전 L1786-1846 · 분기 9 · 반환 5 · raise 0, `ast.before-7.5.2.1.json` = revision `fc35eb2d`).
+
+`(root, base, inputs)` — 입력 한 벌이 필수(스스로 재는 갈래 삭제). 순회는 `inputs.head` 까지. git 이 못 걸으면 **결함**(옛: 사유를 돌려줘서 선언 경로가 "계산값과 다르다" + 복구 조언으로 읽었다 — 레드팀 repro_a).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1871 | If | `if inputs.why:` |
+| B2 | 1874 | IfExp | `floor if _is_ancestor(root, base, floor) else base` |
+| B3 | 1879 | If | `if process.returncode:` |
+| B4 | 1886 | For | `for candidate in [start, *process.stdout.split()]:` |
+| B5 | 1889 | If | `if not refusal:` |
+| B6 | 1898 | BoolOp | `first or refusal` |
+| B7 | 1899 | If | `if names:` |
+| B8 | 1902 | If | `if unheld:` |
+
+| raise 줄 | 소스 |
+|---|---|
+| 1880 | `raise RuntimeError(f'cannot walk the history after {start[:12]}: ' + _first_line(process.s` |

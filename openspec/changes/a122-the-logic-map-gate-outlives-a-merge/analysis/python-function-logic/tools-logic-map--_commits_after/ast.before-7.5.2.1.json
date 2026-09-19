@@ -1,0 +1,43 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "fc35eb2d",
+  "head_commit": "fc35eb2d013dccd0700836f857ad9d3e65bff0dc",
+  "source_sha256": "98845ce2dea180b8ab813180a51e9076ae1f787dea664362a61e8312675b135b",
+  "function": "_commits_after",
+  "signature": "_commits_after(root, base)",
+  "start": {
+    "line": 551,
+    "column": 1
+  },
+  "end": {
+    "line": 557,
+    "column": 64
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "IfExp",
+      "line": 557,
+      "inherited_line": false,
+      "source": "'' if process.returncode else process.stdout.strip()"
+    }
+  ],
+  "returns": [
+    {
+      "line": 557,
+      "value": "'' if process.returncode else process.stdout.strip()"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 553,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 557,
+      "callee": "process.stdout.strip"
+    }
+  ]
+}
