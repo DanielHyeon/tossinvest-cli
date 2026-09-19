@@ -4761,12 +4761,24 @@ class ABlobIsFetchedOncePerCommitNotOncePerBundle(unittest.TestCase):
     def test_a_path_that_is_not_utf8_still_reaches_git(self) -> None:
         """파일 이름은 바이트다. 옛 판본은 경로를 argv 로 넘겨 `os.fsencode` 를 탔으므로
         디코딩 불가능한 이름도 그대로 갔다 — 엄격한 `utf-8` 인코딩은 그 앞에서 **판정 대신
-        traceback** 이 된다."""
-        raw, root, commit = self._repo()
+        traceback** 이 된다.
+
+        내용을 **되받아서** 잰다. `None` 만 단언하면 "git 에 물었는데 그 커밋에 없다" 와
+        "아예 못 물었다" 가 같게 보인다 — 존재 검사는 역할 검사가 아니다
+        ([[existence-check-is-not-a-role-check]])."""
+        raw, root, _ = self._repo()
         with raw:
             odd = "internal/own\udcff.go"      # surrogateescape 로만 표현되는 이름
-            fetched = check_analysis._committed_many(root, commit, [odd])
-            self.assertIsNone(fetched[odd])    # 그 커밋에 없다 — 그러나 물어보긴 했다
+            body = b"package internal\nfunc Odd() int { return 9 }\n"
+            try:
+                (root / odd).write_bytes(body)
+            except (OSError, UnicodeEncodeError) as exc:
+                # UTF-8 파일명을 강제하는 파일시스템(APFS 등)은 이 이름을 못 만든다.
+                # 없는 표본 위에서 통과시키지 않고 **건너뛴 사실을 남긴다**
+                # ([[universal-check-passes-on-an-empty-sample]]).
+                self.skipTest(f"this filesystem refuses non-UTF-8 names: {exc}")
+            commit = _commit_all(root, "P: a name that is not UTF-8")
+            self.assertEqual(check_analysis._committed_many(root, commit, [odd])[odd], body)
 
     def test_nothing_asked_means_no_git_at_all(self) -> None:
         """물은 것이 없으면 프로세스를 안 띄운다."""

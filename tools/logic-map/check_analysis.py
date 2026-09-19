@@ -386,8 +386,9 @@ def _committed_many(root: Path, ref: str, relatives: list[str]) -> dict[str, byt
 
     `-Z` 인 이유는 **경로가 문자열이기 때문**이다. 입력을 줄로 끊으면 개행이 든 경로가
     둘로 쪼개져 엉뚱한 blob 이나 `missing` 이 되고, 출력을 줄로 끊으면 tree 의 raw 바이트
-    안에 있는 개행이 응답을 쪼갠다. `-Z` 는 양쪽을 NUL 로 끊는다(git 2.34+ 가 `-z`,
-    출력까지는 2.42+ 의 `-Z`; 이 저장소는 2.43.0).
+    안에 있는 개행이 응답을 쪼갠다. `-Z` 는 양쪽을 NUL 로 끊는다 — 요구 버전은
+    `GIT_BATCH_MINIMUM` 한 곳에 산다(여기 숫자를 다시 적으면 두 벌이 된다,
+    [[two-judgements-cover-for-each-other]]).
 
     **blob 만 내용으로 친다.** `git show <ref>:<디렉터리>` 는 트리 **목록**을 찍는데, 그
     바이트가 판정에 들어오면 파일 내용인 척한다. 여기서는 `None` 이다 — 막는 쪽으로 엄해진다.
@@ -396,6 +397,11 @@ def _committed_many(root: Path, ref: str, relatives: list[str]) -> dict[str, byt
 
     프로세스가 실패하면 전부 `None` 이다 — 옛 `git show` 의 rc≠0 과 **같은 방향**이고,
     부르는 쪽은 `None` 을 불일치로 세므로 판정이 느슨해지지 않는다.
+
+    **답을 못 내는 세 경우는 `RuntimeError` 다** — 경로에 NUL(요청 프레이밍 문자다) ·
+    응답이 잘림 · 응답에 안 읽힌 바이트. 셋 다 조용히 `None` 을 돌려주면 **다른 파일의
+    바이트**가 답에 섞이거나 부분 답이 판정에 들어간다. 경계의 `GATE_FAULTS` 가 이것을
+    오류 줄로 바꾼다 ([[a-fault-must-become-a-verdict]]).
     """
     wanted = list(dict.fromkeys(relatives))     # 순서 유지 + 중복 제거(같은 소스를 적은 번들 여럿)
     found: dict[str, bytes | None] = {relative: None for relative in wanted}
@@ -421,7 +427,7 @@ def _committed_many(root: Path, ref: str, relatives: list[str]) -> dict[str, byt
         # 불일치로 세므로 판정이 느슨해지지 않는다.
         #
         # **여기를 결함으로 올리려다 되돌렸다** (독립 리뷰 2026-09-18, P1). 올리면 `-Z` 를
-        # 모르는 git(2.42 미만) 아래의 오진("저자의 증거가 낡았다")이 사라지지만, 거부할
+        # 모르는 git(`GIT_BATCH_MINIMUM` 미만) 아래의 오진("저자의 증거가 낡았다")이 사라지지만, 거부할
         # 정상 입력을 세어 보니 **저장소가 아닌 루트**가 이 함수의 정상 호출 모양이었다 —
         # 번들 검증만 보는 시험 21개가 임시 디렉터리에서 돈다
         # ([[fail-closed-must-name-what-it-rejects]]: 열거가 설계를 죽였다).
@@ -1450,7 +1456,10 @@ def check(
 def _walk_floor(
     root: Path, analysis: Path,
 ) -> tuple[str, str, list[tuple[Path, str, str]]]:
-    """걷기 **전에** 정해지는 것 — 후보 순회가 설 하한. `(하한, 못 서는 사유)`.
+    """걷기 **전에** 정해지는 것 — 후보 순회가 설 하한.
+
+    `(하한, 못 서는 사유, 고정 번들 목록)`. 셋째는 호출자가 후보마다 다시 재지 않도록
+    **여기서 한 번 잰 것**을 그대로 돌려준다 (task 7.5).
 
     `compute_landing` 과 `_recording_refusal` 이 **같이** 묻는다 (task 7.7, 리뷰 I8). 조언
     줄은 걷지 않고 이것까지만 묻는데, 여기 두 사유를 조언 쪽이 따로 들고 있으면 계산이
@@ -1579,7 +1588,7 @@ def _recording_refusal(change: str, change_dir: Path, root: Path) -> tuple[str, 
         return f"cannot resolve the comparison base: {exc}", ""
     if facts.get("execution_baseline_adoption"):
         return ADOPTION_REFUSES_A_LANDING, ""
-    _, why, _bundles = _walk_floor(root, change_dir / "analysis" / "function-logic")
+    _, why, _ = _walk_floor(root, change_dir / "analysis" / "function-logic")
     if why:
         return f"no landing recorded — {why}", ""
     # 추적 파일 수정은 **맨 뒤**다 — 커밋하면 사라지는 유일한 사유라서다. 앞에 두면 영원히
