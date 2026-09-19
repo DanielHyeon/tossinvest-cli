@@ -1,0 +1,118 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "head_commit": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "source_sha256": "db2443db8fc2f047d3224d5b331bdafb15e17861dcfa8c5fdc8861adac62f0b2",
+  "function": "_pinning_bundles",
+  "signature": "_pinning_bundles(root, analysis)",
+  "start": {
+    "line": 572,
+    "column": 1
+  },
+  "end": {
+    "line": 594,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 580,
+      "inherited_line": false,
+      "source": "for ast_path in sorted(analysis.glob('*/ast.json')) if analysis.is_dir() else ():"
+    },
+    {
+      "id": "B2",
+      "kind": "IfExp",
+      "line": 580,
+      "inherited_line": false,
+      "source": "sorted(analysis.glob('*/ast.json')) if analysis.is_dir() else ()"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 582,
+      "inherited_line": false,
+      "source": "not isinstance(value, dict) or value.get('revision', 'current') != 'current'"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 582,
+      "inherited_line": false,
+      "source": "if not isinstance(value, dict) or value.get('revision', 'current') != 'current':"
+    },
+    {
+      "id": "B5",
+      "kind": "BoolOp",
+      "line": 586,
+      "inherited_line": false,
+      "source": "not raw_source or not digest"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 586,
+      "inherited_line": false,
+      "source": "if not raw_source or not digest:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 594,
+      "value": "found"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 580,
+      "callee": "analysis.glob"
+    },
+    {
+      "line": 580,
+      "callee": "analysis.is_dir"
+    },
+    {
+      "line": 580,
+      "callee": "sorted"
+    },
+    {
+      "line": 581,
+      "callee": "_ast_value"
+    },
+    {
+      "line": 582,
+      "callee": "isinstance"
+    },
+    {
+      "line": 582,
+      "callee": "value.get"
+    },
+    {
+      "line": 584,
+      "callee": "str"
+    },
+    {
+      "line": 584,
+      "callee": "value.get"
+    },
+    {
+      "line": 585,
+      "callee": "str"
+    },
+    {
+      "line": 585,
+      "callee": "value.get"
+    },
+    {
+      "line": 592,
+      "callee": "normalized_source"
+    },
+    {
+      "line": 593,
+      "callee": "found.append"
+    }
+  ]
+}

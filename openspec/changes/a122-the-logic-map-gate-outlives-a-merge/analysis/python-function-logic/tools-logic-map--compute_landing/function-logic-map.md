@@ -160,3 +160,21 @@ a089·a095 가 마지막 사유로 거부된다 — 그 둘의 증거가 자기�
 |---|---|---|
 | + | If | `if inputs is None:` |
 | + | If | `if _evidence_fingerprint(root, analysis) != fingerprint:` |
+
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+`tools/logic-map/check_analysis.py:1786-1846` · 분기 9 · 반환 5 · raise 0 (편집 전 L1562-1624 · 분기 10 · 반환 5 · raise 1, `ast.before-7.5.2.json` = revision `e9f905bd`).
+
+필드 이름으로 읽는다. 수락 직전 재확인이 `_raise_if_inputs_moved` 로 옮겼다(분기 10 → 9: 인라인 `if` 가 호출이 됐다). 걷는 동안 판정은 `inputs.held` — 잰 **그** 바이트 — 만 본다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1801 | If | `if inputs is None:` |
+| B2 | 1803 | If | `if inputs.why:` |
+| B3 | 1806 | IfExp | `floor if _is_ancestor(root, base, floor) else base` |
+| B4 | 1811 | If | `if process.returncode:` |
+| B5 | 1815 | For | `for candidate in [start, *process.stdout.split()]:` |
+| B6 | 1820 | If | `if not refusal:` |
+| B7 | 1829 | BoolOp | `first or refusal` |
+| B8 | 1830 | If | `if names:` |
+| B9 | 1833 | If | `if unheld:` |

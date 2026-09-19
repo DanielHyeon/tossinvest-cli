@@ -46,7 +46,10 @@ for name in sys.argv[1:]:
     COUNT["n"] = 0
     COUNT["argv0"] = {}
     start = time.monotonic()
-    value, why = ca.compute_landing(ROOT, base, analysis)
+    try:
+        value, why = ca.compute_landing(ROOT, base, analysis)
+    except ca.GATE_FAULTS as exc:      # 7.5.1 부터 git 결함은 예외다 — 한 change 가 나머지를 멈추지 않게
+        value, why = "", f"RAISED {type(exc).__name__}: {exc}"
     elapsed = time.monotonic() - start
     print(f"{name[:46]:48s} {elapsed:8.2f}s · spawn {COUNT['n']:7d} · "
           f"{(value[:12] if value else 'none')}")

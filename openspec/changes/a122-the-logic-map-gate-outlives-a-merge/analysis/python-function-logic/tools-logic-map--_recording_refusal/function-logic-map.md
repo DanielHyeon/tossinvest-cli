@@ -125,3 +125,9 @@ B6 이 **사유 문장**으로 받고, 나머지(`_walk_floor` 의 `ValueError`,
 |---|---|---|
 | − | ExceptHandler | `except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:` |
 | + | ExceptHandler | `except GATE_FAULTS as exc:` |
+
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+`_walk_floor` 의 반환이 `(하한, 사유)` 둘로 줄어 언팩 한 줄(`_, why, _ =` → `_, why =`)만 바뀌었다.
+편집 전후 AST(`ast.before-7.5.2.json` = revision `e9f905bd` · `ast.after-7.5.2.json`)의 분기·반환·raise
+**순서열 차이 0** — 거절 일곱의 순서와 문장은 그대로다. **GREEN 도중 편집 집합에 들어왔다**(review.md).

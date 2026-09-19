@@ -17,26 +17,9 @@ REPO = next(parent for parent in Path(__file__).resolve().parents
 SP = Path(__file__).resolve().parent / "_work"
 SP.mkdir(exist_ok=True)
 WORK = SP / "75_mut_work"
-SUITE = [
-    "test_check_analysis.ABlobIsFetchedOncePerCommitNotOncePerBundle",
-    "test_check_analysis.ALandingMustChangeWhatItsEvidencePins",
-    "test_check_analysis.AComputedLandingIsAlwaysOneTheGateWillAccept",
-    "test_check_analysis.TheRecordMustBeTheValueTheGateComputes",
-    "test_check_analysis.TheLandingRuleLivesInOnePlace",
-    "test_check_analysis.ADeclaredLandingMustBePinnedByEvidence",
-    "test_check_analysis.ABorrowedWindowIsNeverNarrowed",
-    "test_check_analysis.AFailingStepFiveSaysWhichWindowRequiredThem",
-    "test_check_analysis.WorkAfterTheRecordIsNotOutsideTheWindow",
-    "test_check_analysis.EvidenceFirstCommittedInsideAMergeIsAKnownLimit",
-    "test_check_analysis.EvidenceAlreadyWrongInTheCommitThatHoldsItIsNamed",
-    "test_check_analysis.TheRepairSignalIsMeasuredOnceAndNamesOldestFirst",
-    "test_check_analysis.ARecordIsWrittenOnceAndNeverThroughASymlink",
-    "test_check_analysis.AFaultInGitBecomesAVerdictNotATraceback",
-    "test_check_analysis.AFailedGitReadIsAFaultNotAnAbsence",
-    "test_check_analysis.TheLandingIsJudgedOnOneInventory",
-    "test_check_analysis.AVerdictReadsPinnedSourcesInOneProcess",
-    "test_check_analysis.CheckAnalysisTests",
-]
+# 스위트 **전체**를 돈다 (task 7.5.2) — 226개가 50초 안팎이라 고른 부분집합의 이득이 없고, 고르면
+# 새 시험 클래스를 목록에 안 넣는 것만으로 변이가 "살아남는다".
+SUITE = ["test_check_analysis"]
 
 MUTATIONS = {
     # --- 배치 프레이밍 (7.5 · 1.4 · 7.5.1 — 파서를 7.5.1 에서 엄격하게 다시 썼다) ---
@@ -77,7 +60,8 @@ MUTATIONS = {
         '            f"(rc {process.returncode}" + (f": {said[0][:160]}" if said else "") + ")"',
         '            f"(rc {process.returncode})"')],
     "V3_any_missing_line_counts_as_absent": [(
-        '        if header == spec + b" missing":', '        if header.endswith(b" missing"):')],
+        '        if header == request + b" missing" or _SUBMODULE_HEADER.fullmatch(header):',
+        '        if header.endswith(b" missing") or _SUBMODULE_HEADER.fullmatch(header):')],
     "V4_unknown_header_is_absence": [(
         '        if match is None:\n', '        if match is None:\n            continue\n')],
     "V5_terminator_not_checked": [(
@@ -88,20 +72,13 @@ MUTATIONS = {
         '    for spec in specs:\n        if "\\0" in spec:',
         '    for spec in wanted:\n        if "\\0" in spec:')],
     "V8_truncation_counts_blobs": [(
-        '                f"`git cat-file --batch -Z` answered {index} of {len(wanted)} "\n'
-        '                f"request(s) at {ref[:12]}: the response is truncated"\n'
-        '            )\n        header',
-        '                f"`git cat-file --batch -Z` answered {len(answered)} of {len(wanted)} "\n'
-        '                f"request(s) at {ref[:12]}: the response is truncated"\n'
-        '            )\n        header')],
+        '            raise RuntimeError(_TRUNCATED.format(count=index, total=len(wanted), ref=ref[:12]))\n'
+        '        header',
+        '            raise RuntimeError(_TRUNCATED.format(count=len(answered), total=len(wanted), ref=ref[:12]))\n'
+        '        header')],
     "V9_fingerprint_not_rechecked": [(
-        '            if _evidence_fingerprint(root, analysis) != fingerprint:',
-        '            if False:')],
-    "V10_fingerprint_taken_after_the_floor": [(
-        '    fingerprint = _evidence_fingerprint(root, analysis)\n'
-        '    floor, why, bundles = _walk_floor(root, analysis)\n',
-        '    floor, why, bundles = _walk_floor(root, analysis)\n'
-        '    fingerprint = _evidence_fingerprint(root, analysis)\n')],
+        '            _raise_if_inputs_moved(root, analysis, inputs)\n            return candidate, ""',
+        '            return candidate, ""')],
     "V11_resolve_measures_twice": [(
         '    computed, why = compute_landing(root, base, analysis, inputs)',
         '    computed, why = compute_landing(root, base, analysis)')],
@@ -120,6 +97,76 @@ MUTATIONS = {
         '    except GATE_FAULTS as exc:',
         '        required = changed_existing_functions(root, base, landing)\n'
         '    except (OSError, RuntimeError, ValueError) as exc:')],
+    # --- 7.5.2: 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰) ---
+    "W1_judged_list_read_separately": [(
+        '    fingerprint, bundles, held = _evidence_fingerprint(root, analysis)\n',
+        '    fingerprint, _, held = _evidence_fingerprint(root, analysis)\n'
+        '    bundles = _pinning_bundles(root, analysis)\n')],
+    "W2_fingerprint_drops_bytes": [(
+        '    return Fingerprint(_head_commit(root), _digests(reads), pins), bundles, dict(reads)',
+        '    return Fingerprint(_head_commit(root), (), pins), bundles, dict(reads)')],
+    "W3_fingerprint_drops_head": [(
+        '    return Fingerprint(_head_commit(root), _digests(reads), pins), bundles, dict(reads)',
+        '    return Fingerprint("", _digests(reads), pins), bundles, dict(reads)')],
+    "W4_fingerprint_drops_pins": [(
+        '    return Fingerprint(_head_commit(root), _digests(reads), pins), bundles, dict(reads)',
+        '    return Fingerprint(_head_commit(root), _digests(reads), ()), bundles, dict(reads)')],
+    "W5_no_recheck_before_a_declared_refusal": [(
+        '        _raise_if_inputs_moved(root, analysis, inputs)\n        # **복구 경로를 말한다**',
+        '        # **복구 경로를 말한다**')],
+    "W7_verdict_not_bound_to_the_landing": [(
+        '    if judged is not None:\n        before, now', '    if False:\n        before, now')],
+    "W8_target_reads_the_disk_again": [(
+        '            target, root, index, require_calls, landing, prefetched, evidence,',
+        '            target, root, index, require_calls, landing, prefetched,')],
+    "W9_holding_reads_the_disk_again": [(
+        '        if held is not None:\n            judged = held.get(ast_path)',
+        '        if False:\n            judged = held.get(ast_path)')],
+    "W10_call_table_reads_the_disk": [(
+        '        (_bundle_text(path, evidence), _parsed(evidence.get(path.parent / "ast.json")))',
+        '        (_bundle_text(path, evidence), _parsed((path.parent / "ast.json").read_bytes()\n'
+        '         if (path.parent / "ast.json").exists() else None))')],
+    "W11_bundle_text_reads_the_disk": [(
+        '            if known is not None and path.name == "ast.json":',
+        '            if False:')],
+    "W12_prefetch_selection_not_contained": [(
+        '            except ValueError:\n                sources = []',
+        '            except ZeroDivisionError:\n                sources = []')],
+    "W13_advice_fault_replaces_the_verdict": [(
+        '        except GATE_FAULTS as exc:\n            facts["base_shaped_fault"] = str(exc)',
+        '        except ZeroDivisionError as exc:\n            facts["base_shaped_fault"] = str(exc)')],
+    "W14_submodule_is_a_fault": [(
+        '        if header == request + b" missing" or _SUBMODULE_HEADER.fullmatch(header):',
+        '        if header == request + b" missing":')],
+    "W15_version_hint_on_every_failure": [(
+        'if process.returncode == 129 else ""', 'if True else ""')],
+    "W16_parser_fault_does_not_name_the_path": [(
+        '                f"{index + 1} of {len(wanted)} ({relative}) at {ref[:12]}: {header[:80]!r}"',
+        '                f"{index + 1} of {len(wanted)} at {ref[:12]}: {header[:80]!r}"')],
+    "W17_shape_not_checked": [(
+        '    if not isinstance(value["start"], dict) or not isinstance(value["end"], dict) \\\n',
+        '    if False and not isinstance(value["start"], dict) or False and not isinstance(value["end"], dict) \\\n')],
+    "W18_unmeasured_repairs_read_as_none": [(
+        '    if repairs is None:\n        raise RuntimeError(',
+        '    if repairs is None:\n        return []\n        raise RuntimeError(')],
+    "W19_repairs_measured_as_empty": [(
+        '    repairs = None if why else _self_repair_commits(root, analysis)',
+        '    repairs = [] if why else _self_repair_commits(root, analysis)')],
+    "W20_stale_context_kept": [(
+        '    for stale in ("landing_evidence", "base_shaped_fault"):',
+        '    for stale in ():')],
+    "W21_base_shape_read_per_bundle": [(
+        '        if at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() == digest\n',
+        '        if _committed_bytes(root, base, source) is not None\n'
+        '        and hashlib.sha256(_committed_bytes(root, base, source)).hexdigest() == digest\n')],
+    "W22_decode_without_newline_translation": [(
+        '    return io.TextIOWrapper(io.BytesIO(raw), encoding="utf-8").read()',
+        '    return raw.decode("utf-8")')],
+    "W23_unreadable_evidence_is_absent": [(
+        '            if raw is None:\n                errors.append(f"{target.name}: {name} could not be read")\n'
+        '                continue',
+        '            if raw is None:\n                errors.append(f"{target.name}: missing {name}")\n'
+        '                continue')],
     # --- 배치가 실제로 배치인가 (7.5) ---
     "T8_pinning_at_fetches_one_by_one": [(
         '    blobs = _committed_many(root, candidate, [source for _, source, _ in bundles])\n'
@@ -142,8 +189,8 @@ MUTATIONS = {
         '                          for path in ((relative, before) if before else (relative,))],',
         'root, candidate, [relative for _, relative, _ in watched],')],
     "T12_walk_passes_no_bundles": [(
-        '        refusal, names = _landing_refusal(root, base, candidate, bundles, floor, repairs)',
-        '        refusal, names = _landing_refusal(root, base, candidate, [], floor, repairs)')],
+        '            root, base, candidate, bundles, floor, repairs, inputs.held,',
+        '            root, base, candidate, [], floor, repairs, inputs.held,')],
     "T14_unheld_merged_guard_flipped": [(
         '        if committed is None and before:', '        if committed is None or before:')],
     "T15_anchor_is_not_the_root": [(

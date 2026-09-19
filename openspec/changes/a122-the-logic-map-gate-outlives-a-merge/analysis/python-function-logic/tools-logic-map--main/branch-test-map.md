@@ -70,3 +70,11 @@ N4 가 [[generated-evidence-must-be-measured]] 의 자리다. 처음 판본의 �
 ([[existence-check-is-not-a-role-check]]). `_advice_line` 로 조언 줄 하나를 집어내
 바늘을 좁히고 나서 CAUGHT 가 됐다. M1·M3·M8·M9 가 각각 **한 시험만** 죽이는 것은
 그 넷이 서로 다른 자리를 묶고 있다는 뜻이다.
+
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+짝은 손으로 고르지 않았다 — 각 갈래를 지우는 변이를 걸어 실제로 빨개진 시험을 옮겼다(`75_mut.py` 52 변이 · 생존 0, 첫 판 생존 W23 은 **안 닿음** → 닿는 시험을 더해 잡음). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
+|---|---|---|
+| 조언 결함 줄 | W13 | `test_advice_that_cannot_be_computed_does_not_replace_the_verdict` |

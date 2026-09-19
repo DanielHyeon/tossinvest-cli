@@ -227,3 +227,66 @@ CAUGHT — `test_an_undecodable_landing_record_in_the_adoption_path_is_refused_n
 | + | ExceptHandler | `except GATE_FAULTS as exc:` |
 | + | IfExp | `_committed_many(root, landing, sorted({source for _, source, _ in _pinning_bundles(root, a` |
 | + | comprehension | ` for _, source, _ in _pinning_bundles(root, analysis)` |
+
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+`tools/logic-map/check_analysis.py:1499-1670` · 분기 54 · 반환 14 · raise 0 (편집 전 L1359-1493 · 분기 43 · 반환 13 · raise 0, `ast.before-7.5.2.json` = revision `e9f905bd`).
+
+착지가 판정한 바이트에 묶는다: `ast.json` 을 **한 번** 읽어(`_read_evidence`) 착지의 지문과 대조하고, 다르면 번들 이름을 대고 멈춘다. 그 뒤의 모든 판정(대상 · 열거형 호출 · 번들 글자 · 요구 대조)이 그 바이트만 쓴다 — 7.5.1 이 "설계 변경" 이라며 남긴 수락 뒤의 창을 닫는다. 미리 읽기는 판정한 목록을 쓰고, 착지 해소가 없는 이관 change 에선 선별을 `ValueError` 안에서 해서 저장소 밖 소스가 대상 이름을 지우지 않게(Codex P2 · 적대 F3 — 이 로트 7.5.1 이 만든 회귀). 조언 계산(`_base_shaped_bundles`)의 결함은 판정이 아니라 조언 줄로. 앞선 실행이 같은 `facts` 에 남긴 판정 입력을 지운다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1508 | Try | `try:` |
+| B2 | 1510 | ExceptHandler | `except ValueError as exc:` |
+| B3 | 1515 | IfExp | `review.read_text(encoding='utf-8') if review.exists() else ''` |
+| B4 | 1519 | IfExp | `{} if context is None else context` |
+| B5 | 1521 | For | `for stale in ('landing_evidence', 'base_shaped_fault'):` |
+| B6 | 1523 | Try | `try:` |
+| B7 | 1525 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B8 | 1530 | If | `if reference_file.exists():` |
+| B9 | 1531 | BoolOp | `analysis.exists() and any((path.is_dir() and any(path.iterdir()) for path in analysis.iterdir()))` |
+| B10 | 1531 | BoolOp | `path.is_dir() and any(path.iterdir())` |
+| B11 | 1531 | If | `if analysis.exists() and any((path.is_dir() and any(path.iterdir()) for path in analysis.iterdir())):` |
+| B12 | 1531 | comprehension | ` for path in analysis.iterdir()` |
+| B13 | 1534 | BoolOp | `not re.fullmatch('[a-z0-9][a-z0-9-]*', referenced_change) or referenced_change == change` |
+| B14 | 1534 | If | `if not re.fullmatch('[a-z0-9][a-z0-9-]*', referenced_change) or referenced_change == change:` |
+| B15 | 1536 | Try | `try:` |
+| B16 | 1539 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B17 | 1541 | If | `if referenced_base != base:` |
+| B18 | 1551 | If | `if _landing_record(change_dir, root) is not None:` |
+| B19 | 1555 | BoolOp | `adopted and _landing_record(change_dir, root) is not None` |
+| B20 | 1555 | If | `if adopted and _landing_record(change_dir, root) is not None:` |
+| B21 | 1561 | Try | `try:` |
+| B22 | 1568 | IfExp | `str(facts.get('adoption_source', '')) if adopted else resolve_landing(change_dir, root, base, analysis, facts)` |
+| B23 | 1571 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B24 | 1575 | If | `if not landing:` |
+| B25 | 1580 | Try | `try:` |
+| B26 | 1582 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B27 | 1584 | If | `if not analysis.exists():` |
+| B28 | 1585 | If | `if required:` |
+| B29 | 1586 | comprehension | ` for source, function in required` |
+| B30 | 1593 | IfExp | `[] if EXEMPTION in review_text else [f'missing analysis or `{EXEMPTION}` review marker']` |
+| B31 | 1595 | comprehension | ` for path in analysis.iterdir() if path.is_dir()` |
+| B32 | 1596 | If | `if not targets:` |
+| B33 | 1604 | If | `if judged is not None:` |
+| B34 | 1606 | comprehension | ` for path in before.keys() \| now.keys() if before.get(path) != now.get(path)` |
+| B35 | 1610 | If | `if moved:` |
+| B36 | 1611 | comprehension | ` for name in moved` |
+| B37 | 1616 | comprehension | ` for ast_path, raw in reads` |
+| B38 | 1625 | comprehension | ` for path in sorted(analysis.glob('*/function-logic-map.md'))` |
+| B39 | 1638 | If | `if landing:` |
+| B40 | 1639 | If | `if judged is not None:` |
+| B41 | 1640 | comprehension | ` for _, source, _ in judged.pins` |
+| B42 | 1642 | Try | `try:` |
+| B43 | 1643 | comprehension | ` for _, source, _ in _select_pinning(root, reads)` |
+| B44 | 1644 | ExceptHandler | `except ValueError:` |
+| B45 | 1647 | For | `for target in targets:` |
+| B46 | 1652 | If | `if binding:` |
+| B47 | 1653 | If | `if binding in covered:` |
+| B48 | 1656 | For | `for binding, expected in required.items():` |
+| B49 | 1658 | If | `if target is None:` |
+| B50 | 1662 | If | `if not isinstance(ast_value, dict):` |
+| B51 | 1664 | BoolOp | `expected.get('current_hash') or expected.get('base_hash')` |
+| B52 | 1665 | If | `if ast_value.get('source_sha256') != expected_hash:` |
+| B53 | 1667 | IfExp | `'current' if expected.get('current_hash') else 'base'` |
+| B54 | 1668 | If | `if ast_value.get('revision', 'current') != expected_revision:` |

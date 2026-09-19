@@ -50,7 +50,11 @@ for name in sys.argv[1:]:
     base = ca.resolve_base(d, ROOT, {}, change_id=cid)
     BY_FUNC.clear()
     start = time.monotonic()
-    value, _ = ca.compute_landing(ROOT, base, d / "analysis" / "function-logic")
+    try:
+        value, _ = ca.compute_landing(ROOT, base, d / "analysis" / "function-logic")
+    except ca.GATE_FAULTS as exc:      # 7.5.1 부터 git 결함은 예외다 — 한 change 가 나머지를 멈추지 않게
+        value = ""
+        print(f"{name[:44]:46s} RAISED {type(exc).__name__}: {exc}")
     elapsed = time.monotonic() - start
     total = sum(BY_FUNC.values())
     print(f"{name[:44]:46s} {elapsed:7.2f}s · spawn {total:6d} · {value[:12] or 'none'}")

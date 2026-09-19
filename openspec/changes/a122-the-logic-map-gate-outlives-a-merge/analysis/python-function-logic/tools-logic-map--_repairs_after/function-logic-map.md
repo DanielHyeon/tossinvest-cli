@@ -50,3 +50,21 @@
 생산 Go 코드 변경 0. 판정을 바꾸지 않는다 — 첫 판(`merge-base` 반복)과 **같은 집합**을 내고,
 바뀐 것은 프로세스 수뿐이다. 그 동치는 변이로 못 박았다: 멤버십을 뒤집으면(S4) 착지 관련 시험
 열일곱이, 후보 자신을 집합에 넣으면(S5) 둘이 빨개진다.
+
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+`tools/logic-map/check_analysis.py:910-936` · 분기 4 · 반환 2 · raise 2 (편집 전 L839-857 · 분기 3 · 반환 2 · raise 1, `ast.before-7.5.2.json` = revision `e9f905bd`).
+
+`repairs is None`(잰 적 없음)이면 결함. 오늘은 하한 가드가 그 앞에서 거절해서 안 닿는다 — 그 사슬을 시험이 못 박는다(변이 W18 · W19).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 922 | If | `if repairs is None:` |
+| B2 | 926 | If | `if not repairs:` |
+| B3 | 932 | If | `if process.returncode:` |
+| B4 | 936 | comprehension | ` for commit in repairs if commit in after` |
+
+| raise 줄 | 소스 |
+|---|---|
+| 923 | `raise RuntimeError("this change's own later Go work was never measured — a landing cannot ` |
+| 934 | `raise RuntimeError(f'cannot walk the history after {candidate[:12]}')` |

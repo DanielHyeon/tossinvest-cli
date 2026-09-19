@@ -1,0 +1,67 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "source_sha256": "98845ce2dea180b8ab813180a51e9076ae1f787dea664362a61e8312675b135b",
+  "function": "_evidence_fingerprint",
+  "signature": "_evidence_fingerprint(root, analysis)",
+  "start": {
+    "line": 1709,
+    "column": 1
+  },
+  "end": {
+    "line": 1729,
+    "column": 88
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "comprehension",
+      "line": 1728,
+      "inherited_line": true,
+      "source": " for ast_path, source, digest in bundles"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1729,
+      "value": "(Fingerprint(_head_commit(root), _digests(reads), pins), bundles, dict(reads))"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1726,
+      "callee": "_read_evidence"
+    },
+    {
+      "line": 1727,
+      "callee": "_select_pinning"
+    },
+    {
+      "line": 1728,
+      "callee": "ast_path.as_posix"
+    },
+    {
+      "line": 1728,
+      "callee": "tuple"
+    },
+    {
+      "line": 1729,
+      "callee": "Fingerprint"
+    },
+    {
+      "line": 1729,
+      "callee": "_digests"
+    },
+    {
+      "line": 1729,
+      "callee": "_head_commit"
+    },
+    {
+      "line": 1729,
+      "callee": "dict"
+    }
+  ]
+}

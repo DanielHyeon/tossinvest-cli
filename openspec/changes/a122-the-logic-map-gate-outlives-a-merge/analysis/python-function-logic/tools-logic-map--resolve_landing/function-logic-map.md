@@ -275,3 +275,28 @@ M2·M3 이 1차에서 살아남은 것이 시험 둘을 더 쓴 이유다 —
 
 **분기 순서열 바이트 동일.**
 
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+`tools/logic-map/check_analysis.py:1057-1147` · 분기 9 · 반환 2 · raise 5 (편집 전 L978-1052 · 분기 8 · 반환 2 · raise 5, `ast.before-7.5.2.json` = revision `e9f905bd`).
+
+거절을 내기 전에 입력이 그대로인지 본다 — 입력을 **잴 때** 저자가 쓰던 중이었으면(재리뷰 적대 F5 재현) 복구 조언 대신 "다시 돌려라". 선언값과 계산값이 다른 자리에는 재확인을 두지 않았다: 선언값이 위를 통과했으면 같은 입력의 계산은 그 값 이하에서 **받고**, 받는 순간 `compute_landing` 이 재확인하므로 그 갈래는 도달 불가다(처음엔 넣었다가 뺐다 — 시험이 닿을 수 없는 갈래). 받으면 판정한 지문을 `facts` 로 넘긴다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1087 | If | `if candidate is None:` |
+| B2 | 1089 | If | `if not FULL_SHA.fullmatch(candidate):` |
+| B3 | 1100 | BoolOp | `process.returncode or process.stdout.strip() != candidate` |
+| B4 | 1100 | If | `if process.returncode or process.stdout.strip() != candidate:` |
+| B5 | 1102 | If | `if not _is_ancestor(root, candidate, 'HEAD'):` |
+| B6 | 1112 | If | `if refusal:` |
+| B7 | 1135 | If | `if candidate != computed:` |
+| B8 | 1138 | IfExp | `computed[:12] if computed else f'none — {why}'` |
+| B9 | 1145 | If | `if facts is not None:` |
+
+| raise 줄 | 소스 |
+|---|---|
+| 1093 | `raise ValueError(f'landing point must be a full 40-hex commit id, not {candidate!r}')` |
+| 1101 | `raise ValueError(f'landing point is not a commit in this repository: {candidate}')` |
+| 1103 | `raise ValueError(f'landing point never landed on this history: {candidate}')` |
+| 1122 | `raise ValueError(f'{refusal} — {LANDING_RECOVERY}')` |
+| 1139 | `raise ValueError(f"landing point {candidate[:12]} is not the landing this change's evidenc` |

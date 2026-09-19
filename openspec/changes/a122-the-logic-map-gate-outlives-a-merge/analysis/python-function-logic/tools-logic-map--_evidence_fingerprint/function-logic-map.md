@@ -31,3 +31,13 @@
 ## Safety conclusion
 
 하한을 계산하지 않는다 — `_walk_floor` 가 사는 "하한은 한 곳" 규칙과 겹치지 않는다. 못 읽는 `ast.json` 도 지문(빈 문자열)이다: 다음에 읽히면 달라지므로 변화로 잡힌다.
+
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+`tools/logic-map/check_analysis.py:1709-1729` · 분기 1 · 반환 1 · raise 0 (편집 전 L1501-1517 · 분기 3 · 반환 1 · raise 0, `ast.before-7.5.2.json` = revision `e9f905bd`).
+
+지문 = `Fingerprint(head, read, pins)` — 모든 `ast.json` 의 (경로, 바이트 해시) · 고정 목록 · `HEAD`. 그리고 **그 지문을 만든 같은 읽기**의 고정 목록과 바이트를 같이 돌려준다(옛 판본은 지문만 돌려줬고 판정 목록은 `_walk_floor` 가 따로 읽었다). `HEAD` 는 재리뷰 적대 F9: 수리 신호는 걷기 전 역사로 재는데 후보 순회는 그 뒤의 `HEAD` 를 읽는다 — 이 작업트리는 병행 세션이 같이 쓴다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1728 | comprehension | ` for ast_path, source, digest in bundles` |

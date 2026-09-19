@@ -68,3 +68,15 @@
 
 값: 2026-09-18 프로파일에서 `_pinning_bundles` 가 a071 walk 하나에 341회 돌아
 13.07s 중 9.30s 였다. 묶은 뒤 a071 이 10.97s → **3.69s**.
+
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+`tools/logic-map/check_analysis.py:1756-1783` · 분기 3 · 반환 3 · raise 0 (편집 전 L1534-1559 · 분기 2 · 반환 3 · raise 0, `ast.before-7.5.2.json` = revision `e9f905bd`).
+
+이미 읽은 고정 목록을 받을 수 있다(`bundles`, 안 주면 스스로 읽는다 — `_recording_refusal`). 반환이 `(하한, 사유)` 둘로 줄었다: 셋째(목록)는 이제 호출자가 넘긴 것이다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1769 | If | `if bundles is None:` |
+| B2 | 1771 | If | `if not bundles:` |
+| B3 | 1774 | If | `if not floor:` |

@@ -5,12 +5,14 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import os
 import re
 import subprocess
 import tempfile
 from pathlib import Path
+from typing import NamedTuple
 
 from role_check import call_enumeration_in_use, role_errors
 from execution_baseline import AdoptionError, validate as validate_execution_baseline
@@ -337,9 +339,10 @@ def resolve_base(
 
 
 # `git cat-file --batch` 의 `-Z`(입력·출력 **둘 다** NUL 로 끊는다)가 들어온 버전.
-# 이보다 낮은 git 에서는 그 옵션이 거절되어 blob 읽기가 전부 실패하고, 게이트는 막히는
-# 쪽으로 틀리지만(fail-closed 실측: required 32 → 269, rc 120) **사유를 저자의 증거 탓으로
-# 오진한다**. 값을 여기 한 곳에 적어 두고 README·WORKFLOW 가 같은 수를 인용한다.
+# 이보다 낮은 git 은 그 옵션을 모른다며 rc 129 로 멈추고, 게이트는 그 **git 의 말**을 담은
+# 결함으로 멈춘다 — 착지 기록을 읽는 자리가 모든 change 에 있으므로 모든 change 가 멈춘다
+# (task 7.5.1 이전에는 실패를 "파일 없음" 과 섞어 사유를 저자의 증거 탓으로 오진했다).
+# 값을 여기 한 곳에 적어 두고 README·WORKFLOW 가 같은 수를 인용한다.
 # 영수증: git 자신의 릴리스 노트 `RelNotes/2.42.0.txt` — *"git cat-file --batch" and friends
 # learned "-Z" that uses NUL delimiter for both input and output.* (처음엔 기억으로 적었다가
 # 2026-09-19 gstack 리뷰 F9 가 근거를 물어 이 줄로 확인했다.)
@@ -348,6 +351,24 @@ GIT_BATCH_MINIMUM = "2.42"
 # (2026-09-19 실측: blob · tree · 심링크 · gitlink · 없는 경로 · HEAD · 짧은 ref 전부 이 둘 중 하나).
 _OBJECT_HEADER = re.compile(
     rb"(?P<oid>[0-9a-f]{40}|[0-9a-f]{64}) (?P<type>blob|tree|commit|tag) (?P<size>[0-9]+)"
+)
+# 새 git 이 커밋이 없는 gitlink 에 내는 머리 — 내용이 없고 물은 spec 대신 oid 를 적는다
+# (task 7.5.2, 재리뷰 Codex P2). 영수증: git 소스 `builtin/cat-file.c` 의
+# `if (data->mode == S_IFGITLINK) report_object_status(opt, NULL, &data->oid, "submodule");` 와
+# `printf("%s %s%c", obj_name ? obj_name : oid_to_hex(oid), status, …)`. 이 기계의 git 2.43.0 은
+# 같은 경우에 `<spec> missing` 을 낸다 — 두 모양 모두 blob 이 아니다(`None`).
+_SUBMODULE_HEADER = re.compile(rb"(?:[0-9a-f]{40}|[0-9a-f]{64}) submodule")
+# 응답이 끝까지 안 온 두 자리(머리 · 내용)가 **한 문장**을 쓴다 — 두 벌이면 한쪽만 고쳐진다
+# (F4 가 이미 한 번 고쳤다). 센 것은 **읽은 레코드**다 — `missing` 도 레코드다.
+_TRUNCATED = (
+    "`git cat-file --batch -Z` answered {count} of {total} request(s) at {ref}: "
+    "the response is truncated"
+)
+# 착지를 판정하는 동안 입력(증거 바이트 · 고정 목록 · HEAD)이 움직였다는 문장 (task 7.5.1 · 7.5.2).
+# 수락 직전 재확인과 선언 경로의 거절 앞 재확인이 **같은 문장**을 쓴다.
+INPUTS_MOVED = (
+    "the evidence or the history changed while the landing was being judged — a bundle was "
+    "added, removed or rewritten, or a commit landed, mid-run; run it again"
 )
 LANDING_FILE = "landed-commit.txt"
 FULL_SHA = re.compile(r"[0-9a-f]{40}")
@@ -403,13 +424,17 @@ def _committed_many(root: Path, ref: str, relatives: list[str]) -> dict[str, byt
     오늘 실물 입력(번들의 `file` · 번들 `ast.json` 경로)에 디렉터리는 0 건이다
     ([[fail-closed-must-name-what-it-rejects]]).
 
-    **`None` 은 딱 하나를 뜻한다 — git 이 그 spec 에 `missing` 이라고 답했다(또는 blob 이
-    아니다).** "못 물었다" 는 `None` 이 아니라 `RuntimeError` 다. 둘을 섞던 판본에서 가드 7 과
-    `_landing_record` 가 permissive 로 틀렸다 (task 7.5.1, 2026-09-19 gstack 리뷰 — 두 출처가
-    독립적으로 찾았다). 결함 여섯: 프로세스 실패(rc≠0, git 의 stderr 를 담는다) · 요청에 NUL ·
-    응답 잘림 · 모르는 머리 · 내용 뒤 NUL 종단 없음 · 안 읽힌 바이트. 전부 조용히 넘기면 **다른
-    파일의 바이트**나 부분 답이나 부재가 판정에 들어간다. 경계의 `GATE_FAULTS` 가 오류 줄로
-    바꾼다 ([[a-fault-must-become-a-verdict]]).
+    **`None` 은 git 의 답이다 — 그 spec 에 `missing`(또는 커밋 없는 gitlink 의 `submodule`)이라고
+    답했거나 blob 이 아니다.** 트리 안에 있는데 객체를 못 읽는 경우(깨진 객체 · 가져오기에 실패한
+    partial clone)도 git 은 rc 0 으로 `missing` 이라 답한다 — 이 함수가 그것을 가를 수는 없고,
+    `None` 의 소비자는 전부 거절 · 누락 · 가장 넓은 창 쪽으로 읽는다(재리뷰 보안 전문가 실측).
+    "못 물었다" 는 `None` 이 아니라 `GATE_FAULTS` 안의 예외다 — 아래 결함 여섯은 `RuntimeError`,
+    프로세스를 못 띄우거나 멎으면 `OSError` · `SubprocessError`. 둘을 섞던 판본에서 가드 7 이
+    **편집 전 커밋을 착지로 기록했고**(permissive), `_landing_record` 는 거절 하나를 건너뛰고
+    가장 넓은 창으로 갔다 (task 7.5.1, 2026-09-19 gstack 리뷰). 결함 여섯: 프로세스 실패(rc≠0,
+    git 의 stderr 를 담는다) · 요청에 NUL · 응답 잘림 · 모르는 머리 · 내용 뒤 NUL 종단 없음 ·
+    안 읽힌 바이트. 전부 조용히 넘기면 **다른 파일의 바이트**나 부분 답이나 부재가 판정에
+    들어간다. 경계의 `GATE_FAULTS` 가 오류 줄로 바꾼다 ([[a-fault-must-become-a-verdict]]).
     """
     wanted = list(dict.fromkeys(relatives))     # 순서 유지 + 중복 제거(같은 소스를 적은 번들 여럿)
     found: dict[str, bytes | None] = {relative: None for relative in wanted}
@@ -439,27 +464,25 @@ def _committed_many(root: Path, ref: str, relatives: list[str]) -> dict[str, byt
         # `None` 을 "기록 없음" 으로 읽어 착지 검증을 **건너뛰었다**. 1.4 수리 때 이것을 결함으로
         # 올리려다 "시험 21개가 저장소 아닌 곳에서 돈다" 는 이유로 되돌렸는데, 다시 재니 그것은
         # git 을 mock 하려는 픽스처가 `_landing_record` 만 빠뜨린 것이었다.
-        # 이름은 **git 의 말**로 댄다 — 버렸던 stderr 가 오진을 없앤다(F6).
+        # 이름은 **git 의 말**로 댄다 — 버렸던 stderr 가 오진을 없앤다(F6). 버전 조언은 git 이
+        # **옵션을 모른다**고 할 때(rc 129 — git 의 사용법 오류)만 붙인다. 저장소가 아닌 루트
+        # (rc 128)에도 붙이던 판본은 git 의 말 옆에 추측한 진단을 다시 달았다(task 7.5.2, 재리뷰).
         said = process.stderr.decode("utf-8", "replace").strip().splitlines()
         raise RuntimeError(
             f"cannot read blobs at {ref[:12]}: `git cat-file --batch -Z` failed "
             f"(rc {process.returncode}" + (f": {said[0][:160]}" if said else "") + ")"
-            f" — `-Z` needs git {GIT_BATCH_MINIMUM} or newer"
+            + (f" — `-Z` needs git {GIT_BATCH_MINIMUM} or newer" if process.returncode == 129 else "")
         )
     data, position = process.stdout, 0
     answered: dict[str, bytes] = {}
-    for index, (relative, spec) in enumerate(zip(wanted, asked)):
+    for index, (relative, request) in enumerate(zip(wanted, asked)):
         end = data.find(b"\0", position)
         if end < 0:
-            # **부분 답을 쓰지 않는다** (독립 리뷰 2026-09-18, P0). 센 것은 **읽은 레코드**다 —
-            # `missing` 도 레코드다(gstack 리뷰 F4: blob 만 세던 문장은 "0 of 3" 이라 했다).
-            raise RuntimeError(
-                f"`git cat-file --batch -Z` answered {index} of {len(wanted)} "
-                f"request(s) at {ref[:12]}: the response is truncated"
-            )
+            # **부분 답을 쓰지 않는다** (독립 리뷰 2026-09-18, P0).
+            raise RuntimeError(_TRUNCATED.format(count=index, total=len(wanted), ref=ref[:12]))
         header = data[position:end]
         position = end + 1
-        if header == spec + b" missing":
+        if header == request + b" missing" or _SUBMODULE_HEADER.fullmatch(header):
             continue                            # 물은 spec **그대로** 돌아와야 없는 것이다
         match = _OBJECT_HEADER.fullmatch(header)
         if match is None:
@@ -467,20 +490,18 @@ def _committed_many(root: Path, ref: str, relatives: list[str]) -> dict[str, byt
             # `missing` 도 여기 온다 — 프레이밍이 밀렸다는 뜻이다.
             raise RuntimeError(
                 f"`git cat-file --batch -Z` gave an unrecognised answer to request "
-                f"{index + 1} of {len(wanted)} at {ref[:12]}: {header[:80]!r}"
+                f"{index + 1} of {len(wanted)} ({relative}) at {ref[:12]}: {header[:80]!r}"
             )
         size = int(match.group("size"))
         if position + size >= len(data):
             # 내용과 그 뒤의 NUL 이 들어갈 자리가 없다 — 잘렸다. 옛 판본은 여기서 넘쳐
-            # `left -6 byte(s) unread` 라고 **거꾸로** 말했다 (gstack 리뷰 F5).
-            raise RuntimeError(
-                f"`git cat-file --batch -Z` answered {index} of {len(wanted)} "
-                f"request(s) at {ref[:12]}: the response is truncated"
-            )
+            # `left -6 byte(s) unread` 라고 **거꾸로** 말했다 (gstack 리뷰 F5). 경계(`==`)가
+            # "내용은 다 왔고 NUL 만 없다" 이고, `>` 로 좁히면 아래 색인이 `IndexError` 로 샌다.
+            raise RuntimeError(_TRUNCATED.format(count=index, total=len(wanted), ref=ref[:12]))
         if data[position + size] != 0:
             # 총량이 맞는다고 프레이밍이 맞는 것은 아니다 — `abcX` 가 `abc` 로 받아들여졌다 (Codex P2).
             raise RuntimeError(
-                f"`git cat-file --batch -Z` payload {index + 1} of {len(wanted)} at "
+                f"`git cat-file --batch -Z` payload {index + 1} of {len(wanted)} ({relative}) at "
                 f"{ref[:12]} is not NUL-terminated: the response framing was not understood"
             )
         if match.group("type") == b"blob":
@@ -494,6 +515,7 @@ def _committed_many(root: Path, ref: str, relatives: list[str]) -> dict[str, byt
         )
     found.update(answered)
     return found
+
 
 def _committed_bytes(root: Path, ref: str, relative: str) -> bytes | None:
     """`ref` 시점의 파일 내용. 워킹트리를 보지 않는다.
@@ -569,16 +591,49 @@ def _declared_landing(change_dir: Path, root: Path) -> str | None:
         raise ValueError(f"landing point is not UTF-8: {relative}") from exc
 
 
+def _read_evidence(analysis: Path) -> list[tuple[Path, bytes | None]]:
+    """증거 디렉터리의 `ast.json` 전부를 **한 번씩** 읽는다. 못 읽으면 그 자리가 `None` 이다.
+
+    증거를 읽는 자리는 **여기 하나**다 (task 7.5.2, 재리뷰 Codex P1). 7.5.1 의 지문과 판정 목록은
+    같은 디렉터리를 **따로** 읽었다 — 둘째 읽기에서만 번들 B 가 한 번 실패하면 B 는 판정에서
+    빠지는데 두 지문은 B 를 담아 같다고 답했고, 착지가 B 를 판정하지 않고 기록됐다(재현).
+    해시와 파싱이 **같은 바이트**에서 나오면 그런 갈림이 생길 자리가 없다. 못 읽은 것도
+    지문에 남는다(빈 해시) — 다음에 읽히면 달라진다.
+    """
+    reads: list[tuple[Path, bytes | None]] = []
+    for ast_path in sorted(analysis.glob("*/ast.json")) if analysis.is_dir() else ():
+        try:
+            raw = ast_path.read_bytes()
+        except OSError:
+            raw = None
+        reads.append((ast_path, raw))
+    return reads
+
+
+def _digests(reads: list[tuple[Path, bytes | None]]) -> tuple[tuple[str, str], ...]:
+    """읽은 증거의 (경로, 바이트 해시). 못 읽은 자리는 빈 해시다."""
+    return tuple(
+        (path.as_posix(), "" if raw is None else hashlib.sha256(raw).hexdigest())
+        for path, raw in reads
+    )
+
+
 def _pinning_bundles(root: Path, analysis: Path) -> list[tuple[Path, str, str]]:
+    """착지를 고정하는 번들. 디스크에서 한 번 읽어 `_select_pinning` 에 묻는다."""
+    return _select_pinning(root, _read_evidence(analysis))
+
+
+def _select_pinning(root: Path, reads: list[tuple[Path, bytes | None]]) -> list[tuple[Path, str, str]]:
     """착지를 고정하는 번들 = `revision: current` 이고 `file`·`source_sha256` 둘 다 있는 것.
 
     이 선별은 **한 곳에만** 산다. `resolve_landing` 과 `compute_landing` 이 각자
     순회를 가지면 한쪽만 고쳐도 양쪽 시험이 초록이 된다
-    ([[two-judgements-cover-for-each-other]] 가 a064 에서 실측한 모양).
+    ([[two-judgements-cover-for-each-other]] 가 a064 에서 실측한 모양). 이미 읽은 바이트를
+    받는다 — 지문과 판정 목록이 같은 읽기에서 나오게 (task 7.5.2).
     """
     found: list[tuple[Path, str, str]] = []
-    for ast_path in sorted(analysis.glob("*/ast.json")) if analysis.is_dir() else ():
-        value = _ast_value(ast_path)
+    for ast_path, raw in reads:
+        value = _parsed(raw)
         if not isinstance(value, dict) or value.get("revision", "current") != "current":
             continue
         raw_source = str(value.get("file", ""))
@@ -607,16 +662,21 @@ def _base_shaped_bundles(root: Path, base: str, analysis: Path) -> list[str]:
 
     판정은 신원이 아니라 **blob 등식**으로 한다 — 누구의 편집인지는 묻지 않는다
     (1.12 가 신원 판정을 이미 배제했다).
+
+    base 는 **한 프로세스**로 읽는다 (task 7.5.2, 재리뷰 적대 F6) — 7.5 가 남긴 per-bundle 루프였다.
     """
-    names: list[str] = []
-    for ast_path, source, digest in _pinning_bundles(root, analysis):
-        path = root / source
-        if path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == digest:
-            continue  # 오늘의 소스를 적은 번들 — 세탁할 것이 없다
-        at_base = _committed_bytes(root, base, source)
-        if at_base is not None and hashlib.sha256(at_base).hexdigest() == digest:
-            names.append(ast_path.parent.name)
-    return sorted(names)
+    stale = [
+        (ast_path, source, digest)
+        for ast_path, source, digest in _pinning_bundles(root, analysis)
+        # 오늘의 소스를 적은 번들은 세탁할 것이 없다
+        if not ((root / source).is_file()
+                and hashlib.sha256((root / source).read_bytes()).hexdigest() == digest)
+    ]
+    at_base = _committed_many(root, base, [source for _, source, _ in stale])
+    return sorted(
+        ast_path.parent.name for ast_path, source, digest in stale
+        if at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() == digest
+    )
 
 
 def _pinning_at(
@@ -627,7 +687,8 @@ def _pinning_at(
     번들 목록은 **호출자가 한 번 재서 넘긴다** (task 7.5) — `floor` · `repairs` 와 같다.
     디렉터리를 받아 스스로 순회하던 판본은 후보마다 glob + JSON 파싱 + `Path.resolve()`
     를 다시 했다(2026-09-18 프로파일: a071 의 walk 하나에서 `_pinning_bundles` 가 341회 ·
-    13.07s 중 9.30s). 번들은 걷는 동안 안 변한다 — 도구가 쓰지 않기 때문이다.
+    13.07s 중 9.30s). 도구는 번들을 쓰지 않지만 **다른 쓰는 이**(병행 세션 · 편집기)는 걷는
+    동안에도 쓴다 — 그래서 `compute_landing` 이 수락 직전에 지문을 다시 본다 (task 7.5.1 · 7.5.2).
     """
     mismatched: list[str] = []
     # 번들마다 프로세스를 띄우지 않는다 (task 7.5) — 이 함수가 실패하는 walk 비용의
@@ -697,6 +758,7 @@ def _evidence_floor(root: Path, bundles: list[tuple[Path, str, str]]) -> str:
 
 def _unheld_bundles(
     root: Path, candidate: str, bundles: list[tuple[Path, str, str]],
+    held: dict[Path, bytes | None] | None = None,
 ) -> list[str]:
     """`candidate` 가 **들고 있지 않은** 번들. 판정이 읽은 바이트를 기준으로 센다.
 
@@ -713,6 +775,10 @@ def _unheld_bundles(
     범위가 `ast.json` 하나인 것도 실측이다. 번들의 산문 파일까지 넓히면 활성·아카이브
     76건 중 3건이 착지를 잃는데(a092·a043·a096), 셋 다 **이웃 change 가 나중에 단
     무효화 배너**라 정상 입력이다. `ast.json` 만으로는 거부 0 이다.
+
+    `held` 는 착지 입력을 잴 때 **한 번** 읽은 바이트다 (task 7.5.2). 주면 디스크를 다시 읽지
+    않는다 — 후보마다 다시 읽으면 바뀌었다 돌아온 바이트(ABA)로 판정한 착지를 수락 직전 재확인이
+    못 본다. 안 주면 여기서 읽는다(시험이 이 판정만 따로 물을 때).
     """
     # 물어볼 경로를 **먼저 다 모으고** 한 프로세스로 읽는다 (task 7.5). 받는 후보는
     # `_pinning_at` 과 이 함수를 **둘 다** 통과하므로, 한쪽만 고치면 성공하는 walk 의
@@ -730,9 +796,14 @@ def _unheld_bundles(
     )
     unheld: list[str] = []
     for ast_path, relative, before in watched:
-        try:
-            judged = ast_path.read_bytes()  # 판정과 **같은 읽기** — 심링크면 따라간다
-        except OSError:
+        if held is not None:
+            judged = held.get(ast_path)         # 판정과 **같은 읽기** — 심링크면 따라간 바이트다
+        else:
+            try:
+                judged = ast_path.read_bytes()
+            except OSError:
+                judged = None
+        if judged is None:
             unheld.append(ast_path.parent.name)
             continue
         committed = blobs[relative]
@@ -836,14 +907,22 @@ def _self_repair_commits(root: Path, analysis: Path) -> list[str]:
     return [commit for commit in reversed(hashes) if commit in flagged]
 
 
-def _repairs_after(root: Path, candidate: str, repairs: list[str]) -> list[str]:
+def _repairs_after(root: Path, candidate: str, repairs: list[str] | None) -> list[str]:
     """`candidate` **뒤에** 서는 수리 커밋들. 순서는 `repairs` 의 순서(오래된 것부터).
 
     `candidate..HEAD` 한 번으로 묻는다 — 후보마다 `merge-base` 를 수리 개수만큼 돌면
     a112 처럼 수리가 스물여섯인 change 에서 후보 하나에 프로세스가 스물여섯이다. 집합은
     같다: `rev-list A..HEAD` 가 곧 "HEAD 에서 닿고 A 의 조상이 아닌" 커밋이고, 후보 자신은
     자기 조상이므로 빠진다(그래서 수리 커밋 **자신**은 착지가 될 수 있다 — 복구 경로).
+
+    `None` 은 "잰 적 없다" 다 — 하한이 못 서면 `_measure_landing_inputs` 가 재지 않는다. 그것을
+    `[]`("수리 커밋이 없다")와 섞으면 `_self_repair_commits` 가 빈 목록을 거절한 이유가 여기서
+    되살아난다 (task 7.5.2, 재리뷰). 오늘은 하한 가드가 이 앞에서 거절해서 안 닿는다.
     """
+    if repairs is None:
+        raise RuntimeError(
+            "this change's own later Go work was never measured — a landing cannot be judged without it"
+        )
     if not repairs:
         return []
     process = subprocess.run(
@@ -859,7 +938,7 @@ def _repairs_after(root: Path, candidate: str, repairs: list[str]) -> list[str]:
 
 def _landing_refusal(
     root: Path, base: str, candidate: str, bundles: list[tuple[Path, str, str]], floor: str,
-    repairs: list[str],
+    repairs: list[str] | None, held: dict[Path, bytes | None] | None = None,
 ) -> tuple[str, list[str]]:
     """`candidate` 를 착지로 **받지 않는** 사유. 받으면 `("", [])`.
 
@@ -922,7 +1001,7 @@ def _landing_refusal(
     # 하한 **뒤**에 선다. 앞에 두면 "증거가 역사에 없다"·"착지가 증거보다 앞선다"를
     # 재던 시험들의 거절 지점을 이 등식이 가로채서, 그 가드를 지워도 스위트가 초록으로
     # 남는다([[first-failure-is-not-the-fix-scope]] 가 같은 파일에서 실측한 모양).
-    unheld = _unheld_bundles(root, candidate, bundles)
+    unheld = _unheld_bundles(root, candidate, bundles, held)
     if unheld:
         return (
             f"landing point {candidate[:12]} does not hold the evidence this verdict read: "
@@ -975,7 +1054,10 @@ def _landing_refusal(
     return "", []
 
 
-def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> str:
+def resolve_landing(
+    change_dir: Path, root: Path, base: str, analysis: Path,
+    facts: dict[str, object] | None = None,
+) -> str:
     """이 change 의 작업이 착지한 지점. 기록이 없으면 빈 문자열이다.
 
     유효성은 그 change 의 **증거**로 판정한다. 신원으로 판정하면 안 된다 —
@@ -996,6 +1078,10 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
     마지막 판정은 "유효한가"가 아니라 "**그 값인가**"다 (task 7.3). 유효 조건을 통과하는
     값은 여럿이므로(실측: 착지를 얻는 76건 중 65건) 그것만으로는 저자의 선택이 안 없어진다.
     기록은 `compute_landing` 이 내는 값과 같아야 한다.
+
+    받으면 **판정한 증거의 지문**을 `facts["landing_evidence"]` 에 남긴다 (task 7.5.2). `check` 가
+    그 뒤에 읽는 `ast.json` 이 이 지문의 바이트여야 한다 — 수락 뒤에 바뀐 증거로 판정하면 착지가
+    판정하지 않은 증거가 판정의 입력이 된다(재리뷰 적대 서브에이전트 재현).
     """
     candidate = _declared_landing(change_dir, root)
     if candidate is None:
@@ -1020,9 +1106,14 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
     # 입력은 **한 번** 잰다 — 아래 `compute_landing` 도 이 한 벌을 쓴다 (task 7.5.1, F2).
     # 7.5 의 주석은 "한 번 잰다" 였는데 실제로는 여기서 한 번, `compute_landing` 이 또 한 번이었다.
     inputs = _measure_landing_inputs(root, analysis)
-    floor, _, bundles, repairs, _ = inputs
-    refusal, _ = _landing_refusal(root, base, candidate, bundles, floor, repairs)
+    refusal, _ = _landing_refusal(
+        root, base, candidate, inputs.bundles, inputs.floor, inputs.repairs, inputs.held,
+    )
     if refusal:
+        # 거절이 **움직이던 입력**을 잰 것이면 복구 조언을 하지 않는다 (task 7.5.2, 재리뷰 적대 F5):
+        # 다시 돌리면 통과할 기록을 지우라고 권하게 된다. 거절 자체는 잰 바이트와 불변 커밋만의
+        # 함수다(`held`) — 그러니 여기서 달라졌다면 **잴 때** 저자가 쓰던 중이었다.
+        _raise_if_inputs_moved(root, analysis, inputs)
         # **복구 경로를 말한다** (task 7.2.6). 여기 오는 모든 거절은 "적힌 기록이 지금
         # 규칙으로는 착지가 아니다"이고, 돌아가는 길은 언제나 같다 — 증거를 갱신하고,
         # 기록을 지우는 커밋을 하고, 다시 기록한다. 예전 문장들은 무엇이 틀렸는지만 말해서,
@@ -1042,6 +1133,8 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
     # 게이트가 그 값을 확인할 때만 규칙이다.
     computed, why = compute_landing(root, base, analysis, inputs)
     if candidate != computed:
+        # 여기엔 재확인이 없다 — 선언값이 위를 통과했으면 같은 입력의 계산은 그 값 이하에서 **받고**,
+        # 받는 순간 `compute_landing` 이 재확인한다. 움직인 입력으로 여기 오는 길은 없다.
         named = computed[:12] if computed else f"none — {why}"
         raise ValueError(
             f"landing point {candidate[:12]} is not the landing this change's evidence "
@@ -1049,6 +1142,8 @@ def resolve_landing(change_dir: Path, root: Path, base: str, analysis: Path) -> 
             f"`--record-landing` writes it — not one of the later commits that also match "
             f"— {LANDING_RECOVERY}"
         )
+    if facts is not None:
+        facts["landing_evidence"] = inputs.fingerprint
     return candidate
 
 
@@ -1214,7 +1309,7 @@ def coordinate_errors(target: str, texts: dict[str, str], value: dict, branches:
     return errors
 
 
-def _bundle_text(map_path):
+def _bundle_text(map_path, known: dict[Path, bytes | None] | None = None):
     """번들 디렉터리에서 **읽히는 파일 전부**를 이어 붙인다.
 
     강제 판정은 "이 change 가 열거를 쓰는가"이고, 그 답은 열거가 번들 안 어느
@@ -1231,7 +1326,15 @@ def _bundle_text(map_path):
         if not path.is_file():
             continue
         try:
-            texts.append(path.read_text(encoding="utf-8"))
+            if known is not None and path.name == "ast.json":
+                # `check` 가 이미 읽어 착지와 대조한 `ast.json` 은 **그 바이트**만 쓴다 (task 7.5.2) —
+                # 다시 읽으면 대조하지 않은(또는 그 뒤에 생긴) 바이트가 판정에 들어온다.
+                raw = known.get(path)
+                if raw is None:
+                    continue
+                texts.append(_decoded(raw))
+            else:
+                texts.append(path.read_text(encoding="utf-8"))
         except (OSError, UnicodeDecodeError):
             # 텍스트가 아니면 표가 들어 있을 수 없다. 건너뛰는 것과 목록을
             # 만드는 것은 다르다 — 여기서 거르는 기준은 파일 이름이 아니라
@@ -1240,30 +1343,61 @@ def _bundle_text(map_path):
     return "\n".join(texts)
 
 
-def _ast_value(path):
-    """ast.json 을 읽는다. 없거나 깨졌으면 판정에서 뺀다(모르는 것은 근거가 아니다)."""
+def _decoded(raw: bytes) -> str:
+    """`Path.read_text(encoding="utf-8")` 와 **같은** 글자 — 줄바꿈 변환(`newline=None`)까지 같다.
+
+    `check` 가 한 번 읽은 `ast.json` 바이트를 여러 판정이 나눠 쓰려면 글자로 바꾸는 규칙도
+    디스크에서 읽던 것과 같아야 한다 (task 7.5.2). 못 푸는 바이트는 `read_text` 처럼 터진다.
+    """
+    return io.TextIOWrapper(io.BytesIO(raw), encoding="utf-8").read()
+
+
+def _parsed(raw: bytes | None):
+    """읽은 `ast.json` 바이트의 값. 없거나 깨졌으면 판정에서 뺀다(모르는 것은 근거가 아니다).
+
+    7.5.1 까지는 `_ast_value(path)` 가 디스크를 직접 읽었다. 이제 증거는 `_read_evidence` 가 한 번
+    읽고 모든 판정이 그 바이트를 이 함수로 푼다 (task 7.5.2) — 디스크를 읽는 철자가 둘이면 둘째가
+    판정하지 않은 바이트를 들여온다.
+    """
+    if raw is None:
+        return {}
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+        return json.loads(_decoded(raw))
+    except ValueError:
         return {}
 
 
 def validate_target(
     target: Path, root: Path, index: dict | None = None, require_calls: bool = False,
     revision_ref: str = "", prefetched: dict[str, bytes | None] | None = None,
+    evidence: dict[Path, bytes | None] | None = None,
 ) -> tuple[list[str], tuple[str, str] | None]:
     """`revision_ref` 가 있으면 `revision: current` 해싱을 그 커밋에서 한다.
 
     비교 대상과 증거 대조 대상이 갈리면 하나는 착지를, 하나는 오늘을 기술하는 두
-    정본이 된다. 병합 뒤에는 그 둘이 반드시 어긋난다."""
+    정본이 된다. 병합 뒤에는 그 둘이 반드시 어긋난다.
+
+    `evidence` 는 `check` 가 **한 번** 읽어 착지가 판정한 지문과 대조한 `ast.json` 들이다
+    (task 7.5.2). 주면 `ast.json` 을 디스크에서 다시 읽지 않는다 — 그 사이 바뀌거나 **새로 생긴**
+    증거로 판정하면 착지가 판정하지 않은 증거가 판정의 입력이 된다. 그 읽기에 없던 것은 없는 것이다."""
     errors: list[str] = []
     texts: dict[str, str] = {}
     for name in REQUIRED:
         path = target / name
-        if not path.exists():
+        if name == "ast.json" and evidence is not None:
+            if path not in evidence:
+                errors.append(f"{target.name}: missing {name}")
+                continue
+            raw = evidence[path]
+            if raw is None:
+                errors.append(f"{target.name}: {name} could not be read")
+                continue
+            texts[name] = _decoded(raw)
+        elif path.exists():
+            texts[name] = path.read_text(encoding="utf-8")
+        else:
             errors.append(f"{target.name}: missing {name}")
             continue
-        texts[name] = path.read_text(encoding="utf-8")
         if "TODO" in texts[name]:
             errors.append(f"{target.name}: {name} still contains TODO")
     if "ast.json" not in texts:
@@ -1275,6 +1409,12 @@ def validate_target(
     keys = ("file", "source_sha256", "package", "function", "signature", "start", "end")
     if not isinstance(value, dict) or any(not value.get(key) for key in keys):
         return errors + [f"{target.name}: ast.json is placeholder evidence"], None
+    # 뒤의 판정이 **꺼내 쓰는** 모양을 여기서 본다 (task 7.5.2, 재리뷰 레드팀 — 7.5 이전부터).
+    # `start` 가 5 이면 `coordinate_errors` 의 `.get` 이 `AttributeError` 로 `GATE_FAULTS` 밖으로
+    # 새어 판정 줄 없이 끝났다. 저장소 전수 3,048 번들 중 이 모양은 0 이다.
+    if not isinstance(value["start"], dict) or not isinstance(value["end"], dict) \
+            or not isinstance(value.get("branches") or [], list):
+        return errors + [f"{target.name}: ast.json is invalid"], None
     try:
         source, relative = normalized_source(str(value["file"]), root)
     except ValueError as exc:
@@ -1377,6 +1517,9 @@ def check(
     # 들어온다(이관인가, 감사된 source 는 무엇인가). 호출자가 문맥을 줬으면 같은
     # 사전이므로 밖에서 보이는 것은 그대로다.
     facts: dict[str, object] = {} if context is None else context
+    # 앞선 실행이 같은 사전에 남긴 **판정 입력**을 이 실행의 것으로 읽지 않는다 (task 7.5.2).
+    for stale in ("landing_evidence", "base_shaped_fault"):
+        facts.pop(stale, None)
     try:
         base = resolve_base(change_dir, root, facts, change_id=change)
     except GATE_FAULTS as exc:
@@ -1423,7 +1566,7 @@ def check(
         # ancestry(P,E)·ancestry(E,source)·ancestry(source,head,strict)·tree 대조·
         # digest 셋으로 이미 묶는다. 같은 판정을 두 번 하지 않는다.
         landing = str(facts.get("adoption_source", "")) if adopted \
-            else resolve_landing(change_dir, root, base, analysis)
+            else resolve_landing(change_dir, root, base, analysis, facts)
         required = changed_existing_functions(root, base, landing)
     except GATE_FAULTS as exc:
         return [f"cannot derive modified Go functions: {exc}"]
@@ -1431,7 +1574,13 @@ def check(
     facts["required_count"] = len(required)
     if not landing:
         # 조언 줄은 대상이 워킹트리일 때만 나가므로 그때만 잰다 (task 7.1).
-        facts["base_shaped_bundles"] = _base_shaped_bundles(root, base, analysis)
+        # **조언은 판정이 아니다** (task 7.5.2, 재리뷰 적대 F6): 여기서 git 이 죽으면 옛 판본은 판정
+        # 전체를 결함 한 줄로 바꿨다 — 워킹트리가 대상인 판정은 git 없이 디스크에서 서는데도.
+        # 결함은 조언 줄이 말한다(`main`).
+        try:
+            facts["base_shaped_bundles"] = _base_shaped_bundles(root, base, analysis)
+        except GATE_FAULTS as exc:
+            facts["base_shaped_fault"] = str(exc)
     if not analysis.exists():
         if required:
             names = ", ".join(f"{source}:{function}" for source, function in required)
@@ -1446,6 +1595,25 @@ def check(
     targets = sorted(path for path in analysis.iterdir() if path.is_dir())
     if not targets:
         return ["function-logic analysis directory has no targets"]
+    # 판정이 읽는 `ast.json` 은 **여기서 한 번** 읽는다 (task 7.5.2 — 7.5.1 이 "설계 변경" 이라며
+    # 남긴 수락 뒤의 창). 착지가 있으면 그 바이트가 착지가 판정한 지문과 **같아야** 한다 — 옛
+    # 판본은 수락 뒤 여러 번 다시 읽어서, 그 사이 갈아 끼운 증거로 판정했다(재리뷰 적대
+    # 서브에이전트 재현: 착지 판정 뒤 2.48s 창에서 `[]`). 아래의 모든 판정이 이 바이트를 쓴다.
+    reads = _read_evidence(analysis)
+    judged = facts.get("landing_evidence")
+    if judged is not None:
+        before, now = dict(judged.read), dict(_digests(reads))
+        moved = sorted({
+            Path(path).parent.name for path in before.keys() | now.keys()
+            if before.get(path) != now.get(path)
+        })
+        if moved:
+            return [
+                f"{name}: `ast.json` changed after the landing was judged — the verdict would "
+                "read evidence the landing was never checked against; run it again"
+                for name in moved
+            ]
+    evidence = {ast_path: raw for ast_path, raw in reads}
     covered: dict[tuple[str, str], Path] = {}
     # Built once: the tree has thousands of test functions and every target
     # would otherwise rescan them.
@@ -1455,20 +1623,30 @@ def check(
     # a112 의 39개가 빠져나갔다(4차 적대 리뷰). 판정은 표지 철자가 아니라
     # 표의 **내용**으로 한다 — 철자로 보던 판본이 공백 하나에 뚫렸다(6차).
     require_calls = call_enumeration_in_use(
-        (_bundle_text(path), _ast_value(path.parent / "ast.json"))
+        (_bundle_text(path, evidence), _parsed(evidence.get(path.parent / "ast.json")))
         for path in sorted(analysis.glob("*/function-logic-map.md"))
     )
     # 착지가 있으면 고정 소스를 그 커밋에서 **한 번** 읽는다 (task 7.5.1, gstack 리뷰 F3).
     # `index` 를 한 번 만드는 것과 같은 모양이다. 7.5 는 walk 만 배치로 바꾸고 이 루프 —
     # **매 게이트 실행의 본 판정 경로**(a112 번들 147 → 프로세스 147) — 를 남겼다.
-    prefetched = (
-        _committed_many(root, landing,
-                        sorted({source for _, source, _ in _pinning_bundles(root, analysis)}))
-        if landing else None
-    )
+    # 착지가 판정한 목록이 있으면 그것을 쓴다(위에서 바이트가 같음을 확인했다 — 다시 고르지 않는다).
+    # 없으면(이관 change) 여기서 고르되, 저장소 밖 소스처럼 **고를 수 없는** 번들이 있으면 미리
+    # 읽기를 건너뛴다 — 그 대상의 오류는 `validate_target` 이 대상 이름과 함께 낸다. 옛 판본은
+    # 여기서 멈춰 이름과 나머지 대상의 오류를 다 잃었다 (task 7.5.2, 재리뷰 Codex P2 · 적대 F3).
+    # git 의 결함은 건너뛰지 않는다 — 대상마다 다시 물으면 멎은 git 을 대상 수만큼 기다린다.
+    prefetched: dict[str, bytes | None] | None = None
+    if landing:
+        if judged is not None:
+            sources = sorted({source for _, source, _ in judged.pins})
+        else:
+            try:
+                sources = sorted({source for _, source, _ in _select_pinning(root, reads)})
+            except ValueError:
+                sources = []
+        prefetched = _committed_many(root, landing, sources)
     for target in targets:
         target_errors, binding = validate_target(
-            target, root, index, require_calls, landing, prefetched,
+            target, root, index, require_calls, landing, prefetched, evidence,
         )
         errors.extend(target_errors)
         if binding:
@@ -1480,9 +1658,8 @@ def check(
         if target is None:
             errors.append(f"missing evidence for modified function {binding[0]}:{binding[1]}")
             continue
-        try:
-            ast_value = json.loads((target / "ast.json").read_text(encoding="utf-8"))
-        except (OSError, ValueError):
+        ast_value = _parsed(evidence.get(target / "ast.json"))
+        if not isinstance(ast_value, dict):
             continue
         expected_hash = expected.get("current_hash") or expected.get("base_hash")
         if ast_value.get("source_sha256") != expected_hash:
@@ -1493,28 +1670,72 @@ def check(
     return errors
 
 
-# 착지 판정에 들어가는 **한 번 잰** 입력: (하한, 못 서는 사유, 고정 번들, 수리 신호, 증거 지문).
-LandingInputs = tuple[str, str, list[tuple[Path, str, str]], list[str],
-                      list[tuple[str, str, str, str]]]
+class Fingerprint(NamedTuple):
+    """판정이 딛는 입력의 지문 (task 7.5.2). 셋 중 하나라도 움직이면 판정을 다시 한다."""
+
+    head: str                                   # 지금 `HEAD` 의 커밋
+    read: tuple[tuple[str, str], ...]           # 모든 `ast.json` 의 (경로, 바이트 해시)
+    pins: tuple[tuple[str, str, str], ...]      # 고정 목록 (경로, 소스, digest)
 
 
-def _evidence_fingerprint(root: Path, analysis: Path) -> list[tuple[str, str, str, str]]:
-    """판정이 딛는 증거의 지문 — 고정 번들 목록과 각 `ast.json` 의 **바이트**.
+class LandingInputs(NamedTuple):
+    """착지 판정에 들어가는 **한 번 잰** 입력 (task 7.5.1 · 7.5.2).
+
+    위치 튜플이던 판본은 `floor` 와 `why`(둘 다 `str`)를 바꿔 넣어도 아무도 못 봤다(재리뷰
+    maintainability). `repairs` 는 하한이 못 서면 **재지 않으므로** `None` 이다 — `[]` 는
+    "수리 커밋이 없다" 이고 둘을 섞으면 안 된다(`_repairs_after` 가 `None` 을 결함으로 친다).
+    """
+
+    floor: str
+    why: str
+    bundles: list[tuple[Path, str, str]]
+    repairs: list[str] | None
+    fingerprint: Fingerprint
+    held: dict[Path, bytes | None]              # 지문을 만든 **그** 바이트 — 판정이 이것만 본다
+
+
+def _head_commit(root: Path) -> str:
+    """지금 `HEAD` 의 커밋. 못 읽으면 결함이다 — 빈 값은 "못 물었다" 를 "같다" 로 만든다."""
+    process = subprocess.run(
+        ["git", "rev-parse", "--verify", "HEAD^{commit}"],
+        cwd=root, capture_output=True, text=True, timeout=10, check=False,
+    )
+    if process.returncode:
+        said = process.stderr.strip().splitlines()
+        raise RuntimeError(f"cannot read HEAD: {said[0] if said else 'git rev-parse failed'}")
+    return process.stdout.strip()
+
+
+def _evidence_fingerprint(
+    root: Path, analysis: Path,
+) -> tuple[Fingerprint, list[tuple[Path, str, str]], dict[Path, bytes | None]]:
+    """판정이 딛는 입력의 지문과, **그 지문을 만든 같은 읽기**의 고정 목록 · 바이트.
 
     착지는 이 지문 **한 벌** 위에서 판정한다 (task 7.5.1 — Codex P1-2). 7.5 가 번들 목록을
-    걷기 내내 얼렸으므로, 걷는 도중에 생긴 번들이나 바뀐 `ast.json` 은 `_unheld_bundles` 가
-    보지 못한 채 착지가 기록됐다(재현). 7.5 이전 판본은 후보마다 다시 읽어서 봤다 — 회귀다.
-    다시 읽기로 되돌리면 7.5 의 비용이 돌아오므로, **수락 직전에 한 번** 지문이 그대로인지 본다.
+    걷기 내내 얼렸으므로 걷는 도중에 생긴 번들이나 바뀐 `ast.json` 을 못 본 채 착지가 기록됐다.
+    다시 읽기로 되돌리면 7.5 의 비용이 돌아오므로 **수락 직전에 한 번** 지문이 그대로인지 본다.
+
+    7.5.1 의 지문은 판정 목록과 **따로** 읽혔다 (task 7.5.2, 재리뷰 Codex P1 — 재현): 목록 쪽
+    읽기만 한 번 실패하면 그 번들이 판정에서 빠지는데 두 지문은 같았다. 이제 목록을 **돌려준다** —
+    판정은 지문을 만든 바이트로만 선다. 지문은 모든 `ast.json` 을 담는다(고정 아닌 것 · 못 읽은
+    것까지) — 읽기 실패로 목록에서 빠진 번들도 다음 읽기에서 지문을 바꾼다.
+    `HEAD` 도 담는다(재리뷰 적대 F9): 수리 신호는 걷기 전 역사로 재는데 후보 순회는 그 뒤의
+    `HEAD` 를 읽는다 — 이 작업트리는 병행 세션이 같이 쓴다.
     하한을 계산하지 않으므로 `_walk_floor` 가 사는 "하한은 한 곳" 규칙과 겹치지 않는다.
     """
-    fingerprint: list[tuple[str, str, str, str]] = []
-    for ast_path, source, digest in _pinning_bundles(root, analysis):
-        try:
-            held = hashlib.sha256(ast_path.read_bytes()).hexdigest()
-        except OSError:
-            held = ""                       # 못 읽는 것도 지문이다 — 다음에 읽히면 달라진다
-        fingerprint.append((ast_path.as_posix(), source, digest, held))
-    return fingerprint
+    reads = _read_evidence(analysis)
+    bundles = _select_pinning(root, reads)
+    pins = tuple((ast_path.as_posix(), source, digest) for ast_path, source, digest in bundles)
+    return Fingerprint(_head_commit(root), _digests(reads), pins), bundles, dict(reads)
+
+
+def _raise_if_inputs_moved(root: Path, analysis: Path, inputs: LandingInputs) -> None:
+    """판정한 입력이 지금도 그대로인가. 아니면 결함이다 — 그 위의 판정은 어느 쪽이든 믿을 수 없다.
+
+    수락 직전(`compute_landing`)과 선언 경로의 거절 앞(`resolve_landing`)이 **같은 함수**에 묻는다.
+    """
+    if _evidence_fingerprint(root, analysis)[0] != inputs.fingerprint:
+        raise RuntimeError(INPUTS_MOVED)
 
 
 def _measure_landing_inputs(root: Path, analysis: Path) -> LandingInputs:
@@ -1523,29 +1744,32 @@ def _measure_landing_inputs(root: Path, analysis: Path) -> LandingInputs:
     7.5 는 "번들 목록을 한 번 잰다" 고 주석을 달았는데 `resolve_landing` 이 재고 나서
     `compute_landing` 이 **또** 쟀다 — 선언한 착지를 목록 #1 로 판정하고 목록 #2 로 계산한 값과
     같기를 요구했다 (task 7.5.1, 서브에이전트 F2 — 실측 `_evidence_floor` · `_self_repair_commits`
-    각 두 번). 지문을 **먼저** 잰다 — 그 뒤에 생긴 변화는 수락 직전 재확인이 본다.
+    각 두 번). 지문을 **먼저** 잰다 — 그 뒤에 생긴 변화는 수락 직전 재확인이 본다. 그리고 판정
+    목록은 **그 지문의 읽기**에서 온다 — 증거 디렉터리를 두 번 읽지 않는다 (task 7.5.2).
     """
-    fingerprint = _evidence_fingerprint(root, analysis)
-    floor, why, bundles = _walk_floor(root, analysis)
-    repairs = _self_repair_commits(root, analysis) if not why else []
-    return floor, why, bundles, repairs, fingerprint
+    fingerprint, bundles, held = _evidence_fingerprint(root, analysis)
+    floor, why = _walk_floor(root, analysis, bundles)
+    repairs = None if why else _self_repair_commits(root, analysis)
+    return LandingInputs(floor, why, bundles, repairs, fingerprint, held)
 
 
 def _walk_floor(
-    root: Path, analysis: Path,
-) -> tuple[str, str, list[tuple[Path, str, str]]]:
-    """걷기 **전에** 정해지는 것 — 후보 순회가 설 하한.
+    root: Path, analysis: Path, bundles: list[tuple[Path, str, str]] | None = None,
+) -> tuple[str, str]:
+    """걷기 **전에** 정해지는 것 — 후보 순회가 설 하한. `(하한, 못 서는 사유)`.
 
-    `(하한, 못 서는 사유, 고정 번들 목록)`. 셋째는 호출자가 후보마다 다시 재지 않도록
-    **여기서 한 번 잰 것**을 그대로 돌려준다 (task 7.5).
+    `bundles` 는 이미 읽은 고정 목록이다 — `_measure_landing_inputs` 가 지문과 **같은 읽기**에서
+    골라 넘긴다 (task 7.5.2). 안 주면 여기서 읽는다(`_recording_refusal` 의 걷기 전 판정).
 
-    `compute_landing` 과 `_recording_refusal` 이 **같이** 묻는다 (task 7.7, 리뷰 I8). 조언
-    줄은 걷지 않고 이것까지만 묻는데, 여기 두 사유를 조언 쪽이 따로 들고 있으면 계산이
-    문장을 바꿀 때 조언만 옛 문장으로 남는다([[two-judgements-cover-for-each-other]]).
+    `_measure_landing_inputs`(선언 · 계산 경로가 같이 쓴다)와 `_recording_refusal` 이 **같이**
+    묻는다 (task 7.7, 리뷰 I8). 조언 줄은 걷지 않고 이것까지만 묻는데, 여기 두 사유를 조언
+    쪽이 따로 들고 있으면 계산이 문장을 바꿀 때 조언만 옛 문장으로 남는다
+    ([[two-judgements-cover-for-each-other]]).
     """
-    bundles = _pinning_bundles(root, analysis)
+    if bundles is None:
+        bundles = _pinning_bundles(root, analysis)
     if not bundles:
-        return "", "no `revision: current` evidence pins a landing for this change", []
+        return "", "no `revision: current` evidence pins a landing for this change"
     floor = _evidence_floor(root, bundles)
     if not floor:
         # 걸은 것만 말한다 (task 7.2.4, 리뷰 H7). 하한을 찾는 `git log` 는 `-m` 이 없어서 병합 커밋
@@ -1555,8 +1779,8 @@ def _walk_floor(
         return "", (
             "no ordinary commit on this history adds the pinning evidence — commit the bundles "
             "in an ordinary commit (a merge commit's own changes are not read)"
-        ), bundles
-    return floor, "", bundles
+        )
+    return floor, ""
 
 
 def compute_landing(
@@ -1573,11 +1797,12 @@ def compute_landing(
     """
     # 호출자가 이미 잰 입력이 있으면 그것을 쓴다(`resolve_landing` — 선언과 계산이 한 벌).
     # 없으면 여기서 잰다(`record_landing`). 하한은 어느 쪽이든 `_walk_floor` 한 곳이 답한다.
+    # 수리 신호도 `floor` 와 같이 **한 번** 잰 것을 쓴다 (task 7.2.6 · 7.5.1).
     if inputs is None:
         inputs = _measure_landing_inputs(root, analysis)
-    floor, why, bundles, repairs, fingerprint = inputs
-    if why:
-        return "", why
+    if inputs.why:
+        return "", inputs.why
+    floor, bundles, repairs = inputs.floor, inputs.bundles, inputs.repairs
     start = floor if _is_ancestor(root, base, floor) else base
     process = subprocess.run(
         ["git", "rev-list", "--reverse", f"{start}..HEAD"],
@@ -1585,21 +1810,18 @@ def compute_landing(
     )
     if process.returncode:
         return "", f"cannot walk the history after {start[:12]}"
-    # 수리 신호도 `floor` 와 같이 **한 번** 잰 것을 쓴다 (task 7.2.6 · 7.5.1).
     first = ""
     unheld: list[str] = []
     for candidate in [start, *process.stdout.split()]:
         # 선언 경로와 **같은 함수**에 묻는다 (task 7.6, 리뷰 I2). 받는 가장 낮은 후보가 착지다.
-        refusal, names = _landing_refusal(root, base, candidate, bundles, floor, repairs)
+        refusal, names = _landing_refusal(
+            root, base, candidate, bundles, floor, repairs, inputs.held,
+        )
         if not refusal:
-            # **수락 직전에** 판정이 딛은 증거가 그대로인지 본다 (task 7.5.1, Codex P1-2).
-            # 받는 쪽에만 선다 — 거절은 이미 보수적이고, 어느 가드가 거절하는지는 안 바뀐다
-            # ([[a-new-guard-unpins-the-guards-behind-it]]).
-            if _evidence_fingerprint(root, analysis) != fingerprint:
-                raise RuntimeError(
-                    "the pinning evidence changed while the landing was being computed — "
-                    "a bundle was added, removed or rewritten mid-run; run the gate again"
-                )
+            # **수락 직전에** 판정이 딛은 입력(증거 바이트 · 고정 목록 · HEAD)이 그대로인지 본다
+            # (task 7.5.1 · 7.5.2). 받는 쪽에만 선다 — 거절은 이미 보수적이고, 어느 가드가
+            # 거절하는지는 안 바뀐다 ([[a-new-guard-unpins-the-guards-behind-it]]).
+            _raise_if_inputs_moved(root, analysis, inputs)
             return candidate, ""
         # 첫 후보의 거절을 남긴다 (task 6.5). 대개 증거가 역사에 들어온 바로 그 커밋이고,
         # 거기서 이미 틀린 소스가 저자가 고칠 번들이다 — a089 · a095 는 증거를 뽑은 뒤 같은
@@ -1679,7 +1901,7 @@ def _recording_refusal(change: str, change_dir: Path, root: Path) -> tuple[str, 
         return f"cannot resolve the comparison base: {exc}", ""
     if facts.get("execution_baseline_adoption"):
         return ADOPTION_REFUSES_A_LANDING, ""
-    _, why, _ = _walk_floor(root, change_dir / "analysis" / "function-logic")
+    _, why = _walk_floor(root, change_dir / "analysis" / "function-logic")
     if why:
         return f"no landing recorded — {why}", ""
     # 추적 파일 수정은 **맨 뒤**다 — 커밋하면 사라지는 유일한 사유라서다. 앞에 두면 영원히
@@ -1807,7 +2029,12 @@ def main() -> int:
             # (task 7.1). 권하면 게이트가 자기 조언 줄로 자기 판정을 지운다: 그 명령이
             # 계산할 수 있는 착지는 전부 그 함수가 아직 base 와 같은 지점이다.
             base_shaped = [str(name) for name in (context.get("base_shaped_bundles") or [])]
-            if base_shaped:
+            fault = context.get("base_shaped_fault")
+            if fault:
+                # 그것을 **못 쟀으면** 권하지도 거절하지도 않는다 — 모르는 채로 명령을 권하면
+                # 위의 이유가 그대로 되살아난다 (task 7.5.2, 재리뷰 적대 F6).
+                print(f"{window} — cannot tell whether `--record-landing` could narrow it: {fault}")
+            elif base_shaped:
                 # 이름은 세 개까지만 적고 나머지는 **세어서** 말한다. a076 의 21,838자
                 # 한 줄이 이 저장소가 이름을 다 쏟아내지 않는 이유다.
                 named = ", ".join(base_shaped[:3])

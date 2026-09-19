@@ -55,3 +55,27 @@ spawn 47.5% · 47.5%).
 → git 한 번 → 번들마다 디스크 읽기). 디스크 읽기가 실패해도 git 을 이미 불렀다는 것이
 유일한 차이이고 **답에는 안 들어간다**. 등식은 여전히 **워킹트리와** 세운다 — 그것이
 갈아 끼운 자리를 보는 유일한 방법이기 때문이다(2026-09-12 K1 실측).
+
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+`tools/logic-map/check_analysis.py:759-814` · 분기 15 · 반환 1 · raise 0 (편집 전 L698-743 · 분기 13 · 반환 1 · raise 0, `ast.before-7.5.2.json` = revision `e9f905bd`).
+
+`held` 가 있으면 디스크를 다시 읽지 않는다. 후보마다 다시 읽던 판본은 바뀌었다 돌아오는 바이트(ABA)로 "든다" 고 판정했고, 수락 직전 재확인은 돌아온 바이트를 보고 "그대로" 라고 답했다 — 착지가 판정이 읽을 바이트를 들지 않는데 받았다(시험 `test_evidence_swapped_and_restored_during_the_walk_is_not_judged`). **이 함수는 편집 집합에 GREEN 도중 들어왔다** — review.md 에 순서 이탈로 적었다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 787 | For | `for ast_path, _, _ in bundles:` |
+| B2 | 788 | Try | `try:` |
+| B3 | 790 | ExceptHandler | `except ValueError:` |
+| B4 | 794 | comprehension | ` for _, relative, before in watched` |
+| B5 | 794 | comprehension | ` for path in ((relative, before) if before else (relative,))` |
+| B6 | 795 | IfExp | `(relative, before) if before else (relative,)` |
+| B7 | 798 | For | `for ast_path, relative, before in watched:` |
+| B8 | 799 | If | `if held is not None:` |
+| B9 | 802 | Try | `try:` |
+| B10 | 804 | ExceptHandler | `except OSError:` |
+| B11 | 806 | If | `if judged is None:` |
+| B12 | 810 | BoolOp | `committed is None and before` |
+| B13 | 810 | If | `if committed is None and before:` |
+| B14 | 812 | BoolOp | `committed is None or committed != judged` |
+| B15 | 812 | If | `if committed is None or committed != judged:` |

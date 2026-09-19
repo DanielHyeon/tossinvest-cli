@@ -29,8 +29,15 @@ ast-grep 발견은 자동 결함 판정이 아니다.
 부터다(정본 값은 `check_analysis.GIT_BATCH_MINIMUM`).
 
 더 낮은 git 에서는 blob 읽기가 실패하고, 게이트는 그것을 **결함으로** 멈추며 git 이 한
-말을 그대로 전한다 — 예: `cannot read blobs at … : \`git cat-file --batch -Z\` failed (rc 129:
-error: unknown switch \`Z') — \`-Z\` needs git 2.42 or newer`. 영수증은 git 자신의 릴리스 노트
+말을 그대로 전한다. 착지 기록을 읽는 자리가 모든 change 에 있으므로 **모든 change** 가 멈춘다
+(문서만 고친 change 도). 예:
+
+```text
+cannot read blobs at 1a2b3c4d5e6f: `git cat-file --batch -Z` failed (rc 129: error: unknown switch `Z') — `-Z` needs git 2.42 or newer
+```
+
+버전 조언(`needs git 2.42`)은 git 이 **옵션을 모른다**(rc 129)고 할 때만 붙는다 — 저장소가 아닌
+루트(rc 128) 같은 다른 실패에는 git 의 말만 나간다. 영수증은 git 자신의 릴리스 노트
 `RelNotes/2.42.0.txt` 다.
 
 예전(2026-09-18 까지)에는 실패를 "파일 없음"과 같게 다뤄서 **사유를 오진했고**(저자의 증거를

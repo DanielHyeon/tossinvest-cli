@@ -1262,6 +1262,35 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       고쳐 잡음) · 실물 a099 blob 프로세스 46 → 10 · 시험 187 → **203** · `sdd-test`(278) · `lint` ·
       `test-seams` · `validate` 58/58 · a122 rc=0.
       **남은 창 하나**를 기록했다: 수락 직전 재확인 뒤 `validate_target` 이 디스크를 다시 읽기까지.
+- [x] 7.5.2 **P1 — 수리한 트리의 재리뷰가 연 것 (gstack 리뷰 2026-09-19, 두 번째).** 로트
+      `a5c4bc77..e9f905bd` 재리뷰(Claude 전문가 다섯 · 적대 서브에이전트 · 레드팀 · Codex). 지난 수리
+      다섯 중 넷은 확인됐고 **P1-2 는 반쯤이었다**: 지문과 판정 목록이 **따로 읽혀서**, 한 `ast.json`
+      읽기가 잠깐 실패하면 그 번들이 판정에서 빠진 채 두 지문이 같다고 답한다(Codex 재현). 그리고
+      7.5.1 이 실패 계약을 바꾸자 `test_placeholders_are_rejected` 가 **git 결함 줄로 통과**하게 됐다
+      (자리표시자 가드를 지워도 초록 — 변이로 증명). 사람이 "이름 바뀐 파일 규칙(아래 7.5.3)을 뺀
+      나머지 전부" 를 골랐다. 범위: 한 번 읽기(지문 = 판정 목록 = HEAD) · 수락 뒤 창(판정이 읽는
+      `ast.json` 을 착지가 판정한 바이트에 묶음) · 이관 change 의 미리 읽기가 대상 이름을 잃는 회귀 ·
+      조언 계산의 결함이 판정을 지우지 않게 · 선언 경로의 거절이 움직인 입력 위에서 복구 조언을 하지
+      않게 · 새 git 의 `<oid> submodule` 답 · 모양이 틀린 `ast.json` 의 traceback · 시험 공백
+      (지문 재작성 · 판정 경로 · 경계 `>=` · fallback · 거절 문장) · 문서·주석·메시지.
+      **닫음(2026-09-19). 생산 Go 변경 0.** 기록은 review.md `## MEASURE · Pre-Edit Gate — task 7.5.2` ·
+      `## VERIFY — task 7.5.2`. 근본 수리 한 줄: **증거를 읽는 자리를 `_read_evidence` 하나로** — 착지의
+      지문(바이트 해시 + 고정 목록 + `HEAD`)과 판정 목록이 같은 읽기에서 나오고, walk 는 잰 바이트(`held`)만
+      보고, `check()` 는 자기 읽기를 그 지문과 대조한 뒤 그 바이트만 쓴다(7.5.1 이 "설계 변경" 이라며 남긴
+      수락 뒤의 창이 닫혔다). 곁들여: 이관 change 의 대상 이름 회귀 · 조언 결함이 판정을 지우지 않게 · 선언
+      경로 거절 앞 재확인 · `<oid> submodule` · 버전 조언은 rc 129 에서만 · 모양 틀린 `ast.json` 은 판정 줄 ·
+      수리 신호 `None`(잰 적 없음) · `LandingInputs`/`Fingerprint` 를 `NamedTuple` 로 · base 조언 한 프로세스 ·
+      공허해진 `test_placeholders_are_rejected` 를 진짜로.
+      증거: `check()` 전체 A/B **126/126 SAME**(기준 `e9f905bd`) · 변이 **52/52 CAUGHT**(스위트 전체, 첫 판
+      생존 W23 은 안 닿음 → 시험 추가) · `_landing_refusal` 가드 순서열 차이 0 · a099 `ast.json` 읽기 446 → 114 ·
+      시험 203 → **231** · `sdd-test` · `lint` · `test-seams` · `validate` 58/58 · a122 rc=0.
+      **순서 이탈 하나를 적었다**: 넷(`_unheld_bundles` · `_bundle_text` · `_landing_refusal` · `_recording_refusal`)은
+      GREEN 도중 편집 집합에 들어와 편집 전 AST 를 **편집 뒤에** revision 에서 뽑았다.
+      **안 한 것**: 가드 7 의 base 반복 읽기(호출 사이 상태를 늘린다, ~1.2s) · 7.5.3(사람 결정).
+- [ ] 7.5.3 **P1 — 이름 바뀐 고정 소스가 V1 을 다시 연다 (같은 재리뷰, 7.2.2 부터 있던 것).** 가드 7 은
+      고정 소스를 **같은 경로**에서만 비교한다. 순수 `git mv` 뒤에는 base 쪽이 없어서(`None`) "바뀌었다"
+      로 읽히고, FLM 을 먼저 커밋하고 번들을 안 갱신한 V1 이 기록되어 `required 0` 으로 통과한다
+      (두 출처가 독립적으로 재현, `a5c4bc77` 에서도 같음). 규칙 변경이라 **사람 결정** 대기.
 - [x] 7.6 **P2 — 규칙 한 집 (I2 · I3 · I4 · I5 · I6 · I7).** `compute_landing` 과 `resolve_landing`
       의 수락 조건 두 벌 · `validate` 의 지역 `canonical` 이 모듈 함수를 가림 · 디렉터리 해소 두 벌과
       없는 id 의 엉뚱한 조언 · 이관 거절 문장 두 벌(이미 갈렸다) · `_pre_archive_path` 가 아카이브

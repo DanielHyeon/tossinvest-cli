@@ -29,3 +29,13 @@
 ## Safety conclusion
 
 지문을 **먼저** 잰다. 하한 뒤에 재면 그 사이에 생긴 번들이 지문에는 있고 판정 목록에는 없어서, 수락 직전 재확인이 "그대로" 라고 답한다(변이 V10 이 이 순서를 잰다). 사유가 있으면 수리 신호를 안 잰다 — 그 경우 `_landing_refusal` 이 수리 가드(8번)에 닿기 전에 가드 2 나 4 에서 거절하므로 쓰이지 않는다.
+
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+`tools/logic-map/check_analysis.py:1741-1753` · 분기 1 · 반환 1 · raise 0 (편집 전 L1520-1531 · 분기 1 · 반환 1 · raise 0, `ast.before-7.5.2.json` = revision `e9f905bd`).
+
+한 번 읽기: `_evidence_fingerprint` 가 돌려준 목록을 `_walk_floor` 에 넘긴다(목록을 두 번 안 읽는다). `LandingInputs` 는 `NamedTuple`(위치 튜플은 `floor`·`why` 둘 다 `str` 이라 바꿔 넣어도 아무도 못 봤다). 하한이 못 서면 수리 신호는 `None`(잰 적 없음) — `[]`(없음)과 섞지 않는다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1752 | IfExp | `None if why else _self_repair_commits(root, analysis)` |

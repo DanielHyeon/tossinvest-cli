@@ -139,3 +139,23 @@
 |---|---|---|
 | − | If | `if all((_committed_bytes(root, base, source) == _committed_bytes(root, candidate, source) ` |
 | + | If | `if all((at_base[source] == at_candidate[source] for source in sources)):` |
+
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+`tools/logic-map/check_analysis.py:939-1054` · 분기 11 · 반환 9 · raise 0 (편집 전 L860-975 · 분기 11 · 반환 9 · raise 0, `ast.before-7.5.2.json` = revision `e9f905bd`).
+
+`held` 를 받아 `_unheld_bundles` 에 넘긴다. **가드 여덟의 순서·문장·반환은 한 글자도 안 바뀌었다** (편집 전후 AST 의 분기·반환·raise 순서열 차이 0).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 965 | If | `if not _is_ancestor(root, base, candidate):` |
+| B2 | 968 | If | `if not pinning:` |
+| B3 | 977 | If | `if mismatched:` |
+| B4 | 988 | If | `if not floor:` |
+| B5 | 995 | If | `if not _is_ancestor(root, floor, candidate):` |
+| B6 | 1005 | If | `if unheld:` |
+| B7 | 1024 | comprehension | ` for _, source, _ in bundles` |
+| B8 | 1031 | If | `if all((at_base[source] == at_candidate[source] for source in sources)):` |
+| B9 | 1031 | comprehension | ` for source in sources` |
+| B10 | 1032 | IfExp | `f', and {len(sources) - 3} more' if len(sources) > 3 else ''` |
+| B11 | 1047 | If | `if later:` |

@@ -186,3 +186,33 @@ Go 파일 변경 0줄.
 열거의 분기·반환·raise 가 **같다**.
 
 호출 — 사라짐 없음 · 생김 없음
+
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+`tools/logic-map/check_analysis.py:1977-2083` · 분기 21 · 반환 3 · raise 0 (편집 전 L1755-1856 · 분기 20 · 반환 3 · raise 0, `ast.before-7.5.2.json` = revision `e9f905bd`).
+
+조언 계산 결함이면 `--record-landing` 을 권하지도 거절하지도 않고 "cannot tell whether …: <git 의 말>" 로 말한다 — 모르는 채로 권하면 7.1 의 이유가 되살아난다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1988 | If | `if args.record_landing:` |
+| B2 | 1989 | Try | `try:` |
+| B3 | 1991 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B4 | 1993 | For | `for line in lines:` |
+| B5 | 2000 | Try | `try:` |
+| B6 | 2002 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B7 | 2013 | BoolOp | `base and 'landing' in context` |
+| B8 | 2013 | If | `if base and 'landing' in context:` |
+| B9 | 2020 | If | `if not landing:` |
+| B10 | 2025 | BoolOp | `landed_after or '?'` |
+| B11 | 2031 | BoolOp | `context.get('base_shaped_bundles') or []` |
+| B12 | 2031 | comprehension | ` for name in context.get('base_shaped_bundles') or []` |
+| B13 | 2033 | If | `if fault:` |
+| B14 | 2037 | If | `if base_shaped:` |
+| B15 | 2041 | If | `if len(base_shaped) > 3:` |
+| B16 | 2055 | Try | `try:` |
+| B17 | 2059 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B18 | 2061 | If | `if refusal:` |
+| B19 | 2073 | If | `if errors:` |
+| B20 | 2074 | For | `for error in errors:` |
+| B21 | 2077 | If | `if context.get('execution_baseline_adoption'):` |

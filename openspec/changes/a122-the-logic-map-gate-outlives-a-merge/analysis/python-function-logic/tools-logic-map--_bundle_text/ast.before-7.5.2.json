@@ -1,0 +1,80 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "head_commit": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "source_sha256": "db2443db8fc2f047d3224d5b331bdafb15e17861dcfa8c5fdc8861adac62f0b2",
+  "function": "_bundle_text",
+  "signature": "_bundle_text(map_path)",
+  "start": {
+    "line": 1217,
+    "column": 1
+  },
+  "end": {
+    "line": 1240,
+    "column": 28
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 1230,
+      "inherited_line": false,
+      "source": "for path in sorted(map_path.parent.glob('*')):"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 1231,
+      "inherited_line": false,
+      "source": "if not path.is_file():"
+    },
+    {
+      "id": "B3",
+      "kind": "Try",
+      "line": 1233,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B4",
+      "kind": "ExceptHandler",
+      "line": 1235,
+      "inherited_line": false,
+      "source": "except (OSError, UnicodeDecodeError):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1240,
+      "value": "'\\n'.join(texts)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1230,
+      "callee": "map_path.parent.glob"
+    },
+    {
+      "line": 1230,
+      "callee": "sorted"
+    },
+    {
+      "line": 1231,
+      "callee": "path.is_file"
+    },
+    {
+      "line": 1234,
+      "callee": "path.read_text"
+    },
+    {
+      "line": 1234,
+      "callee": "texts.append"
+    },
+    {
+      "line": 1240,
+      "callee": "'\\n'.join"
+    }
+  ]
+}

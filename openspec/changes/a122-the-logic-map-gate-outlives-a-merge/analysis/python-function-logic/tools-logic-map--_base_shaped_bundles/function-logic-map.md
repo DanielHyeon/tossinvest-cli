@@ -57,3 +57,17 @@
 | `B1` 번들 순회 | 위 둘 + `test_a_bundle_that_records_the_base_is_not_told_to_record_a_landing` | M7 |
 
 변이 아홉은 전부 CAUGHT 다(`branch-test-map.md` 의 표 · `71_mutations.py`).
+
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+`tools/logic-map/check_analysis.py:652-679` · 분기 5 · 반환 1 · raise 0 (편집 전 L597-619 · 분기 5 · 반환 1 · raise 0, `ast.before-7.5.2.json` = revision `e9f905bd`).
+
+base 읽기를 한 프로세스로(7.5 가 남긴 per-bundle 루프 — 재리뷰 적대 F6).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 668 | comprehension | ` for ast_path, source, digest in _pinning_bundles(root, analysis) if not ((root / source).is_file() and hashlib.sha256((` |
+| B2 | 672 | BoolOp | `(root / source).is_file() and hashlib.sha256((root / source).read_bytes()).hexdigest() == digest` |
+| B3 | 675 | comprehension | ` for _, source, _ in stale` |
+| B4 | 676 | comprehension | ` for ast_path, source, digest in stale if at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() ==` |
+| B5 | 678 | BoolOp | `at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() == digest` |

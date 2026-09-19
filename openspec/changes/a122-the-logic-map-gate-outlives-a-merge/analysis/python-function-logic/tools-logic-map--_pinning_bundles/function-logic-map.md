@@ -39,3 +39,12 @@
 
 빈 목록을 돌려줄 수 있고 그것은 오류가 아니다. **호출자가** 그 0 을 어떻게
 다룰지 정한다 — `resolve_landing` 은 거절하고 `compute_landing` 은 기록을 거부한다.
+
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+`tools/logic-map/check_analysis.py:621-623` · 분기 0 · 반환 1 · raise 0 (편집 전 L572-594 · 분기 6 · 반환 1 · raise 0, `ast.before-7.5.2.json` = revision `e9f905bd`).
+
+선별을 `_select_pinning` 으로 옮기고 이 함수는 `_read_evidence` → `_select_pinning` 위임만 남는다(분기 6 → 0). 선별 규칙의 철자는 여전히 한 곳이다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|

@@ -118,3 +118,41 @@ ref) — 정확히 두 모양 `<hex oid> <type> <size>` 와 `<물은 spec> missi
 | 476 | `raise RuntimeError(f'`git cat-file --batch -Z` answered {index} of {len(wanted)} request(s` |
 | 482 | `raise RuntimeError(f'`git cat-file --batch -Z` payload {index + 1} of {len(wanted)} at {re` |
 | 491 | `raise RuntimeError(f'`git cat-file --batch -Z` left {len(data) - position} byte(s) unread ` |
+
+## task 7.5.2 — 판정은 한 번 읽은 바이트로 선다 (수리한 트리의 재리뷰, 2026-09-19)
+
+`tools/logic-map/check_analysis.py:408-517` · 분기 19 · 반환 2 · raise 7 (편집 전 L387-496 · 분기 17 · 반환 2 · raise 7, `ast.before-7.5.2.json` = revision `e9f905bd`).
+
+새 git 의 `<oid> submodule`(커밋 없는 gitlink)을 blob 아님(`None`)으로 받는다(영수증: `builtin/cat-file.c` 의 `report_object_status(opt, NULL, &data->oid, "submodule")`). git 버전 조언은 rc 129(git 의 사용법 오류 — 이 기계에서 `unknown switch` 로 실측)일 때만 붙인다 — 저장소가 아닌 루트(rc 128)에 붙이던 것은 git 의 말 옆에 추측한 진단이었다. 파서 오류 둘이 물은 경로를 이름으로 댄다. 잘림 문장 두 벌을 `_TRUNCATED` 한 벌로. 파싱 루프의 변수를 `spec`→`request`(인코딩된 요청)로. docstring 의 `None` 계약을 고쳤다: 트리 안인데 못 읽는 객체도 git 은 rc 0 `missing` 이라 답한다(재리뷰 보안 전문가 실측) · 못 물었다 = `GATE_FAULTS` 안의 예외 · `_landing_record` 는 permissive 가 아니라 가장 넓은 창으로 갔다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 440 | comprehension | ` for relative in wanted` |
+| B2 | 441 | If | `if not wanted:` |
+| B3 | 443 | comprehension | ` for relative in wanted` |
+| B4 | 444 | For | `for spec in specs:` |
+| B5 | 445 | If | `if '\x00' in spec:` |
+| B6 | 452 | comprehension | ` for spec in specs` |
+| B7 | 455 | comprehension | ` for spec in asked` |
+| B8 | 458 | If | `if process.returncode:` |
+| B9 | 473 | IfExp | `f': {said[0][:160]}' if said else ''` |
+| B10 | 474 | IfExp | `f' — `-Z` needs git {GIT_BATCH_MINIMUM} or newer' if process.returncode == 129 else ''` |
+| B11 | 478 | For | `for index, (relative, request) in enumerate(zip(wanted, asked)):` |
+| B12 | 480 | If | `if end < 0:` |
+| B13 | 485 | BoolOp | `header == request + b' missing' or _SUBMODULE_HEADER.fullmatch(header)` |
+| B14 | 485 | If | `if header == request + b' missing' or _SUBMODULE_HEADER.fullmatch(header):` |
+| B15 | 488 | If | `if match is None:` |
+| B16 | 496 | If | `if position + size >= len(data):` |
+| B17 | 501 | If | `if data[position + size] != 0:` |
+| B18 | 507 | If | `if match.group('type') == b'blob':` |
+| B19 | 510 | If | `if position != len(data):` |
+
+| raise 줄 | 소스 |
+|---|---|
+| 448 | `raise RuntimeError(f'request contains a NUL byte, cannot be asked for: {spec!r}')` |
+| 471 | `raise RuntimeError(f'cannot read blobs at {ref[:12]}: `git cat-file --batch -Z` failed (rc` |
+| 482 | `raise RuntimeError(_TRUNCATED.format(count=index, total=len(wanted), ref=ref[:12]))` |
+| 491 | `raise RuntimeError(f'`git cat-file --batch -Z` gave an unrecognised answer to request {ind` |
+| 500 | `raise RuntimeError(_TRUNCATED.format(count=index, total=len(wanted), ref=ref[:12]))` |
+| 503 | `raise RuntimeError(f'`git cat-file --batch -Z` payload {index + 1} of {len(wanted)} ({rela` |
+| 512 | `raise RuntimeError(f'`git cat-file --batch -Z` left {len(data) - position} byte(s) unread ` |

@@ -55,7 +55,10 @@ ids += sorted(after.ARCHIVED_CHANGE.fullmatch(p.name).group("change")
               for p in (changes / "archive").iterdir()
               if p.is_dir() and after.ARCHIVED_CHANGE.fullmatch(p.name))
 
-DONE = SP / f"751_check_ab_done.{BEFORE[:12]}.json"
+# 이어 달리기 기록은 **양쪽 소스**에 묶는다 (task 7.5.2). 기준만으로 묶던 판본은 편집 도중에
+# 다시 돌리면 옛 after 로 잰 줄과 새 after 로 잰 줄을 한 표에 섞었다 — 그 표의 SAME 은 아무 판본의 것도 아니다.
+import hashlib
+DONE = SP / f"751_check_ab_done.{BEFORE[:12]}.{hashlib.sha256(after_src).hexdigest()[:12]}.json"
 done = json.load(open(DONE)) if DONE.exists() else {}
 spent = 0.0
 for cid in ids:

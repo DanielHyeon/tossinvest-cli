@@ -1,0 +1,51 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "source_sha256": "98845ce2dea180b8ab813180a51e9076ae1f787dea664362a61e8312675b135b",
+  "function": "_measure_landing_inputs",
+  "signature": "_measure_landing_inputs(root, analysis)",
+  "start": {
+    "line": 1741,
+    "column": 1
+  },
+  "end": {
+    "line": 1753,
+    "column": 74
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "IfExp",
+      "line": 1752,
+      "inherited_line": false,
+      "source": "None if why else _self_repair_commits(root, analysis)"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1753,
+      "value": "LandingInputs(floor, why, bundles, repairs, fingerprint, held)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1750,
+      "callee": "_evidence_fingerprint"
+    },
+    {
+      "line": 1751,
+      "callee": "_walk_floor"
+    },
+    {
+      "line": 1752,
+      "callee": "_self_repair_commits"
+    },
+    {
+      "line": 1753,
+      "callee": "LandingInputs"
+    }
+  ]
+}

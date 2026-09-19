@@ -1,0 +1,151 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "head_commit": "e9f905bdaac5819fd43aa5addd6b38176889b9e2",
+  "source_sha256": "db2443db8fc2f047d3224d5b331bdafb15e17861dcfa8c5fdc8861adac62f0b2",
+  "function": "compute_landing",
+  "signature": "compute_landing(root, base, analysis, inputs)",
+  "start": {
+    "line": 1562,
+    "column": 1
+  },
+  "end": {
+    "line": 1624,
+    "column": 6
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 1576,
+      "inherited_line": false,
+      "source": "if inputs is None:"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 1579,
+      "inherited_line": false,
+      "source": "if why:"
+    },
+    {
+      "id": "B3",
+      "kind": "IfExp",
+      "line": 1581,
+      "inherited_line": false,
+      "source": "floor if _is_ancestor(root, base, floor) else base"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 1586,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B5",
+      "kind": "For",
+      "line": 1591,
+      "inherited_line": false,
+      "source": "for candidate in [start, *process.stdout.split()]:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 1594,
+      "inherited_line": false,
+      "source": "if not refusal:"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 1598,
+      "inherited_line": false,
+      "source": "if _evidence_fingerprint(root, analysis) != fingerprint:"
+    },
+    {
+      "id": "B8",
+      "kind": "BoolOp",
+      "line": 1607,
+      "inherited_line": false,
+      "source": "first or refusal"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 1608,
+      "inherited_line": false,
+      "source": "if names:"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 1611,
+      "inherited_line": false,
+      "source": "if unheld:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1580,
+      "value": "('', why)"
+    },
+    {
+      "line": 1587,
+      "value": "('', f'cannot walk the history after {start[:12]}')"
+    },
+    {
+      "line": 1603,
+      "value": "(candidate, '')"
+    },
+    {
+      "line": 1612,
+      "value": "('', 'no commit holds the evidence this verdict read (' + ', '.join(unheld) + ') — commit the bundles as they are on disk')"
+    },
+    {
+      "line": 1621,
+      "value": "('', f'no commit at or after the evidence ({floor[:12]}) is accepted as the landing — at the first commit walked, {first}')"
+    }
+  ],
+  "raises": [
+    {
+      "line": 1599,
+      "source": "raise RuntimeError('the pinning evidence changed while the landing was being computed — a bundle was added, removed or rewritten mid-run; run the gate again')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 1577,
+      "callee": "_measure_landing_inputs"
+    },
+    {
+      "line": 1581,
+      "callee": "_is_ancestor"
+    },
+    {
+      "line": 1582,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 1591,
+      "callee": "process.stdout.split"
+    },
+    {
+      "line": 1593,
+      "callee": "_landing_refusal"
+    },
+    {
+      "line": 1598,
+      "callee": "_evidence_fingerprint"
+    },
+    {
+      "line": 1599,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 1613,
+      "callee": "', '.join"
+    }
+  ]
+}
