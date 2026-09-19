@@ -75,3 +75,46 @@ fallback 은 **하나**: 프로세스가 실패하면 전부 `None` (옛 `git sh
 `rc≠0` 을 결함으로 올리려다 되돌렸다 — 거부할 정상 입력을 세어 보니 **저장소가 아닌 루트**가
 이 함수의 정상 호출 모양이었다(시험 21개). 최소 git 버전은 `GIT_BATCH_MINIMUM` 에 적고
 README·WORKFLOW 가 그 수를 인용한다.
+
+## task 7.5.1 — "못 물었다" 는 `None` 이 아니다 (gstack 리뷰 2026-09-19)
+
+`tools/logic-map/check_analysis.py:387-496` · 분기 17 · 반환 2 · raise 7 (편집 전 분기 12 · 반환 3 · raise 3, `ast.before-7.5.1.json` = revision `b29e1f4e`).
+
+**위 Safety conclusion 의 "프로세스가 실패하면 전부 `None` — 부르는 쪽은 `None` 을 불일치로 센다"
+는 거짓이었다.** 두 출처의 적대 리뷰가 두 자리에서 깼다 — 가드 7(한쪽 실패 → `None != bytes` →
+"바뀌었다" → 편집 전 커밋 통과, **재현**)과 `_landing_record`("기록 없음" → 착지 검증 생략).
+이제 `None` 은 딱 하나 — git 이 **물은 spec 그대로** `missing` 이라고 답했다(또는 blob 이 아니다).
+
+git 이 실제로 내는 머리를 먼저 쟀다(blob · tree · 심링크 · **gitlink** · 없는 경로 · HEAD · 짧은
+ref) — 정확히 두 모양 `<hex oid> <type> <size>` 와 `<물은 spec> missing` 이다. 엄격한 파서가
+거부할 정상 입력은 0 이고, `check()` 전체 A/B **126/126 SAME** 이 그것을 확인한다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 415 | comprehension | ` for relative in wanted` |
+| B2 | 416 | If | `if not wanted:` |
+| B3 | 418 | comprehension | ` for relative in wanted` |
+| B4 | 419 | For | `for spec in specs:` |
+| B5 | 420 | If | `if '\x00' in spec:` |
+| B6 | 427 | comprehension | ` for spec in specs` |
+| B7 | 430 | comprehension | ` for spec in asked` |
+| B8 | 433 | If | `if process.returncode:` |
+| B9 | 446 | IfExp | `f': {said[0][:160]}' if said else ''` |
+| B10 | 451 | For | `for index, (relative, spec) in enumerate(zip(wanted, asked)):` |
+| B11 | 453 | If | `if end < 0:` |
+| B12 | 462 | If | `if header == spec + b' missing':` |
+| B13 | 465 | If | `if match is None:` |
+| B14 | 473 | If | `if position + size >= len(data):` |
+| B15 | 480 | If | `if data[position + size] != 0:` |
+| B16 | 486 | If | `if match.group('type') == b'blob':` |
+| B17 | 489 | If | `if position != len(data):` |
+
+| raise 줄 | 소스 |
+|---|---|
+| 423 | `raise RuntimeError(f'request contains a NUL byte, cannot be asked for: {spec!r}')` |
+| 444 | `raise RuntimeError(f'cannot read blobs at {ref[:12]}: `git cat-file --batch -Z` failed (rc` |
+| 456 | `raise RuntimeError(f'`git cat-file --batch -Z` answered {index} of {len(wanted)} request(s` |
+| 468 | `raise RuntimeError(f'`git cat-file --batch -Z` gave an unrecognised answer to request {ind` |
+| 476 | `raise RuntimeError(f'`git cat-file --batch -Z` answered {index} of {len(wanted)} request(s` |
+| 482 | `raise RuntimeError(f'`git cat-file --batch -Z` payload {index + 1} of {len(wanted)} at {re` |
+| 491 | `raise RuntimeError(f'`git cat-file --batch -Z` left {len(data) - position} byte(s) unread ` |

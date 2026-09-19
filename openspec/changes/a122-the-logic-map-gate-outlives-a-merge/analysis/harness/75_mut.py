@@ -32,62 +32,95 @@ SUITE = [
     "test_check_analysis.TheRepairSignalIsMeasuredOnceAndNamesOldestFirst",
     "test_check_analysis.ARecordIsWrittenOnceAndNeverThroughASymlink",
     "test_check_analysis.AFaultInGitBecomesAVerdictNotATraceback",
+    "test_check_analysis.AFailedGitReadIsAFaultNotAnAbsence",
+    "test_check_analysis.TheLandingIsJudgedOnOneInventory",
+    "test_check_analysis.AVerdictReadsPinnedSourcesInOneProcess",
+    "test_check_analysis.CheckAnalysisTests",
 ]
 
 MUTATIONS = {
-    # --- 배치 프레이밍 ---
+    # --- 배치 프레이밍 (7.5 · 1.4 · 7.5.1 — 파서를 7.5.1 에서 엄격하게 다시 썼다) ---
     "T1_output_not_nul_framed": [(
         '["git", "cat-file", "--batch", "-Z"],', '["git", "cat-file", "--batch", "-z"],')],
     "T2_line_framed_both_ways": [
         ('["git", "cat-file", "--batch", "-Z"],', '["git", "cat-file", "--batch"],'),
-        ('f"{ref}:{relative}\\0".encode("utf-8", "surrogateescape")',
-         'f"{ref}:{relative}\\n".encode("utf-8", "surrogateescape")'),
+        ('cwd=root, input=b"".join(spec + b"\\0" for spec in asked),',
+         'cwd=root, input=b"".join(spec + b"\\n" for spec in asked),'),
         ('        end = data.find(b"\\0", position)', '        end = data.find(b"\\n", position)'),
     ],
     "T3_any_type_counts_as_content": [(
-        '        if fields[1] == b"blob":', '        if True:')],
+        '        if match.group("type") == b"blob":', '        if True:')],
     "T4_non_blob_content_not_skipped": [(
-        '        if fields[1] == b"blob":\n'
         '            answered[relative] = data[position:position + size]\n'
         '        position += size + 1',
-        '        if fields[1] == b"blob":\n'
         '            answered[relative] = data[position:position + size]\n'
         '            position += size + 1')],
-    "T5_failure_is_not_all_none": [(
-        '        # 최소 git 버전은 `GIT_BATCH_MINIMUM` 과 README·WORKFLOW 에 적어 둔다.\n'
-        '        return found',
-        '        # 최소 git 버전은 `GIT_BATCH_MINIMUM` 과 README·WORKFLOW 에 적어 둔다.\n'
-        '        pass')],
-    # **T6 은 P0 이었다** (2026-09-18 독립 리뷰). 옛 판본은 여기서 `break` 하고 "나머지는
-    # `None` 이라 답이 같다"고 적었는데 거짓이었다 — 마지막 머리가 멀쩡하고 내용만 잘린
-    # 응답에서 그 자리는 `b""` 가 되고 `None` 과 `b""` 는 판정을 가른다. 이제 판정이다.
     "T6_truncation_falls_back_to_break": [(
-        '            raise RuntimeError(\n'
-        '                f"`git cat-file --batch -Z` answered {len(answered)} of {len(wanted)} "\n'
-        '                f"request(s) at {ref[:12]}: the response is truncated"\n'
-        '            )',
-        '            break')],
-    "T6b_truncation_keeps_the_partial_record": [(
-        '            raise RuntimeError(\n'
-        '                f"`git cat-file --batch -Z` answered {len(answered)} of {len(wanted)} "\n'
-        '                f"request(s) at {ref[:12]}: the response is truncated"\n'
-        '            )',
-        '            end = len(data)')],
-    "U1_leftover_bytes_ignored": [(
-        '    if position != len(data):', '    if False:')],
-    "U2_nul_in_path_not_refused": [(
-        '        if "\\0" in relative:', '        if False:')],
-    "U3_strict_utf8_encoding": [(
-        'f"{ref}:{relative}\\0".encode("utf-8", "surrogateescape")',
-        'f"{ref}:{relative}\\0".encode("utf-8")')],
-    # T6 가 살아남는 **이유**를 가설이 아니라 변이로 확인한다: 사전 채움이 `break` 와
-    # `continue` 를 같게 만든다. 그 사전 채움이 못 박혀 있으면 T6 는 동등 변이다.
+        '        if end < 0:\n', '        if end < 0:\n            break\n')],
+    "T7_size_from_content_scan": [(
+        '        size = int(match.group("size"))',
+        '        size = data.find(b"\\0", position) - position')],
     "T18_no_prefill_of_unanswered_paths": [(
         '    found: dict[str, bytes | None] = {relative: None for relative in wanted}',
         '    found: dict[str, bytes | None] = {}')],
-    "T7_size_from_content_scan": [(
-        '        size = int(fields[2])', '        size = data.find(b"\\0", position) - position')],
-    # --- 배치가 실제로 배치인가 ---
+    "U1_leftover_bytes_ignored": [(
+        '    if position != len(data):', '    if False:')],
+    "U3_strict_utf8_encoding": [(
+        '    asked = [spec.encode("utf-8", "surrogateescape") for spec in specs]',
+        '    asked = [spec.encode("utf-8") for spec in specs]')],
+    # --- 7.5.1: "못 물었다" 는 `None` 이 아니다 ---
+    "V1_rc_failure_is_absence_again": [(
+        '        said = process.stderr.decode("utf-8", "replace").strip().splitlines()\n',
+        '        return found\n'
+        '        said = process.stderr.decode("utf-8", "replace").strip().splitlines()\n')],
+    "V2_rc_message_drops_what_git_said": [(
+        '            f"(rc {process.returncode}" + (f": {said[0][:160]}" if said else "") + ")"',
+        '            f"(rc {process.returncode})"')],
+    "V3_any_missing_line_counts_as_absent": [(
+        '        if header == spec + b" missing":', '        if header.endswith(b" missing"):')],
+    "V4_unknown_header_is_absence": [(
+        '        if match is None:\n', '        if match is None:\n            continue\n')],
+    "V5_terminator_not_checked": [(
+        '        if data[position + size] != 0:', '        if False:')],
+    "V6_overshoot_not_checked": [(
+        '        if position + size >= len(data):', '        if False:')],
+    "V7_nul_checked_in_path_only": [(
+        '    for spec in specs:\n        if "\\0" in spec:',
+        '    for spec in wanted:\n        if "\\0" in spec:')],
+    "V8_truncation_counts_blobs": [(
+        '                f"`git cat-file --batch -Z` answered {index} of {len(wanted)} "\n'
+        '                f"request(s) at {ref[:12]}: the response is truncated"\n'
+        '            )\n        header',
+        '                f"`git cat-file --batch -Z` answered {len(answered)} of {len(wanted)} "\n'
+        '                f"request(s) at {ref[:12]}: the response is truncated"\n'
+        '            )\n        header')],
+    "V9_fingerprint_not_rechecked": [(
+        '            if _evidence_fingerprint(root, analysis) != fingerprint:',
+        '            if False:')],
+    "V10_fingerprint_taken_after_the_floor": [(
+        '    fingerprint = _evidence_fingerprint(root, analysis)\n'
+        '    floor, why, bundles = _walk_floor(root, analysis)\n',
+        '    floor, why, bundles = _walk_floor(root, analysis)\n'
+        '    fingerprint = _evidence_fingerprint(root, analysis)\n')],
+    "V11_resolve_measures_twice": [(
+        '    computed, why = compute_landing(root, base, analysis, inputs)',
+        '    computed, why = compute_landing(root, base, analysis)')],
+    "V12_verdict_ignores_the_prefetch": [(
+        '            blob = (prefetched[relative] if prefetched is not None and relative in prefetched\n'
+        '                    else _committed_bytes(root, revision_ref, relative))',
+        '            blob = _committed_bytes(root, revision_ref, relative)')],
+    "V13_guard_seven_reads_per_source": [(
+        '    at_base = _committed_many(root, base, sources)\n'
+        '    at_candidate = _committed_many(root, candidate, sources)\n'
+        '    if all(at_base[source] == at_candidate[source] for source in sources):',
+        '    if all(_committed_bytes(root, base, source) == _committed_bytes(root, candidate, source)\n'
+        '           for source in sources):')],
+    "V14_a_handler_copies_its_own_list": [(
+        '        required = changed_existing_functions(root, base, landing)\n'
+        '    except GATE_FAULTS as exc:',
+        '        required = changed_existing_functions(root, base, landing)\n'
+        '    except (OSError, RuntimeError, ValueError) as exc:')],
+    # --- 배치가 실제로 배치인가 (7.5) ---
     "T8_pinning_at_fetches_one_by_one": [(
         '    blobs = _committed_many(root, candidate, [source for _, source, _ in bundles])\n'
         '    for _, source, digest in bundles:\n'
@@ -108,32 +141,11 @@ MUTATIONS = {
         'root, candidate, [path for _, relative, before in watched\n'
         '                          for path in ((relative, before) if before else (relative,))],',
         'root, candidate, [relative for _, relative, _ in watched],')],
-    # 살아남은 둘이 서로를 덮는지 본다 ([[surviving-mutant-may-mean-accidental-safety]]).
-    "T17_failure_and_short_response_both_open": [
-        ('        # 최소 git 버전은 `GIT_BATCH_MINIMUM` 과 README·WORKFLOW 에 적어 둔다.\n'
-         '        return found',
-         '        # 최소 git 버전은 `GIT_BATCH_MINIMUM` 과 README·WORKFLOW 에 적어 둔다.\n'
-         '         pass'),
-        ('            raise RuntimeError(\n'
-         '                f"`git cat-file --batch -Z` answered {len(answered)} of {len(wanted)} "\n'
-         '                f"request(s) at {ref[:12]}: the response is truncated"\n'
-         '            )',
-         '            end = len(data)'),
-    ],
-    # --- 한 번 재서 넘기는 목록이 **그 목록**인가 ---
     "T12_walk_passes_no_bundles": [(
         '        refusal, names = _landing_refusal(root, base, candidate, bundles, floor, repairs)',
         '        refusal, names = _landing_refusal(root, base, candidate, [], floor, repairs)')],
-    "T13_declared_path_reads_a_second_list": [(
-        '    bundles = _pinning_bundles(root, analysis)\n'
-        '    refusal, _ = _landing_refusal(\n'
-        '        root, base, candidate, bundles, _evidence_floor(root, bundles),',
-        '    bundles = _pinning_bundles(root, analysis)\n'
-        '    refusal, _ = _landing_refusal(\n'
-        '        root, base, candidate, bundles, _evidence_floor(root, []),')],
     "T14_unheld_merged_guard_flipped": [(
         '        if committed is None and before:', '        if committed is None or before:')],
-    # --- resolve 중복 제거가 같은 닻을 쓰는가 ---
     "T15_anchor_is_not_the_root": [(
         '    anchor = root.resolve()', '    anchor = (root / "openspec").resolve()')],
     "T16_committed_bytes_is_a_second_spelling": [(
@@ -203,7 +215,13 @@ if __name__ == "__main__":
         raise SystemExit(1)
     print("control GREEN", output.strip().splitlines()[-1])
     survived = []
-    for name, edits in MUTATIONS.items():
+    # 구간 실행: `75_mut.py 0:8` — 이 환경에서는 백그라운드로 넘어간 프로세스가 살아남지 못해서
+    # 한 번에 다 못 돈다. 구간마다 무변이 대조군은 **그대로 먼저** 돈다(위).
+    window = next((a for a in sys.argv[1:] if ":" in a), ":")
+    lo, _, hi = window.partition(":")
+    chosen = list(MUTATIONS.items())[int(lo) if lo else None:int(hi) if hi else None]
+    print(f"구간 {window} — 변이 {len(chosen)}/{len(MUTATIONS)}")
+    for name, edits in chosen:
         text = pristine
         for old, new in edits:
             assert text.count(old) == 1, f"{name}: 앵커 {old[:60]!r} 가 {text.count(old)}회"
@@ -219,4 +237,4 @@ if __name__ == "__main__":
               f"{', '.join(n.split('.')[-1] for n in names[:3])}"
               + (f" 외 {len(names) - 3}" if len(names) > 3 else ""))
         target.write_text(pristine, encoding="utf-8")
-    print(f"\nSURVIVED {len(survived)}/{len(MUTATIONS)}" + (f": {survived}" if survived else ""))
+    print(f"\nSURVIVED {len(survived)}/{len(chosen)}" + (f": {survived}" if survived else ""))

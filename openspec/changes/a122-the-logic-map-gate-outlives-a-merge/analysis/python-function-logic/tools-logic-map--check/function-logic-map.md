@@ -208,3 +208,22 @@ CAUGHT — `test_an_undecodable_landing_record_in_the_adoption_path_is_refused_n
 | 생김 | 반환 | `[BORROWED_REFUSES_A_LANDING]` |
 
 호출 — 사라짐 ['_declared_landing'] · 생김 없음
+
+## task 7.5.1 — gstack 리뷰의 permissive 결함 수리
+
+`ast.before-7.5.1.json`(= git revision **`b29e1f4e`**, 소스 해시가 그 커밋과 일치)과
+`ast.after-7.5.1.json` 을 같은 열거기로 뽑아 **순서 있는 배열**을 difflib 으로 정렬했다
+(분기 41 · 반환 13 · raise 0 → 분기 43 · 반환 13 · raise 0).
+
+손 복사 예외 목록 셋을 `GATE_FAULTS` 로, 그리고 착지가 있으면 고정 소스를 **한 번** 미리 읽어 `validate_target` 에 넘긴다(F3 — 본 판정 경로가 번들마다 프로세스 하나였다).
+
+| | 종류 | 소스 |
+|---|---|---|
+| − | ExceptHandler | `except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:` |
+| + | ExceptHandler | `except GATE_FAULTS as exc:` |
+| − | ExceptHandler | `except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:` |
+| + | ExceptHandler | `except GATE_FAULTS as exc:` |
+| − | ExceptHandler | `except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:` |
+| + | ExceptHandler | `except GATE_FAULTS as exc:` |
+| + | IfExp | `_committed_many(root, landing, sorted({source for _, source, _ in _pinning_bundles(root, a` |
+| + | comprehension | ` for _, source, _ in _pinning_bundles(root, analysis)` |

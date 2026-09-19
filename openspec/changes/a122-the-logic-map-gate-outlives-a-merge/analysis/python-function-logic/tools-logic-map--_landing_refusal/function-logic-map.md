@@ -126,3 +126,16 @@
 
 값: 2026-09-18 프로파일에서 `_pinning_bundles` 가 a071 walk 하나에 341회 돌아
 13.07s 중 9.30s 였다. 묶은 뒤 a071 이 10.97s → **3.69s**.
+
+## task 7.5.1 — gstack 리뷰의 permissive 결함 수리
+
+`ast.before-7.5.1.json`(= git revision **`b29e1f4e`**, 소스 해시가 그 커밋과 일치)과
+`ast.after-7.5.1.json` 을 같은 열거기로 뽑아 **순서 있는 배열**을 difflib 으로 정렬했다
+(분기 11 · 반환 9 · raise 0 → 분기 11 · 반환 9 · raise 0).
+
+가드 7 이 양쪽을 한 프로세스씩 읽는다(F3). 한쪽이 못 읽히면 이제 여기 오기 전에 결함이 된다 — 예전에는 `None != bytes` 가 "바뀌었다" 로 읽혀 편집 전 커밋을 통과시켰다(F1, 재현).
+
+| | 종류 | 소스 |
+|---|---|---|
+| − | If | `if all((_committed_bytes(root, base, source) == _committed_bytes(root, candidate, source) ` |
+| + | If | `if all((at_base[source] == at_candidate[source] for source in sources)):` |

@@ -147,3 +147,16 @@ a089·a095 가 마지막 사유로 거부된다 — 그 둘의 증거가 자기�
 
 값: 2026-09-18 프로파일에서 `_pinning_bundles` 가 a071 walk 하나에 341회 돌아
 13.07s 중 9.30s 였다. 묶은 뒤 a071 이 10.97s → **3.69s**.
+
+## task 7.5.1 — gstack 리뷰의 permissive 결함 수리
+
+`ast.before-7.5.1.json`(= git revision **`b29e1f4e`**, 소스 해시가 그 커밋과 일치)과
+`ast.after-7.5.1.json` 을 같은 열거기로 뽑아 **순서 있는 배열**을 difflib 으로 정렬했다
+(분기 8 · 반환 5 · raise 0 → 분기 10 · 반환 5 · raise 1).
+
+입력을 호출자에게서 받을 수 있다(`resolve_landing` 과 한 벌 — F2), 그리고 **수락 직전에** 증거 지문이 그대로인지 본다(Codex P1-2 — 7.5 가 목록을 걷기 내내 얼려서 생긴 회귀).
+
+| | 종류 | 소스 |
+|---|---|---|
+| + | If | `if inputs is None:` |
+| + | If | `if _evidence_fingerprint(root, analysis) != fingerprint:` |

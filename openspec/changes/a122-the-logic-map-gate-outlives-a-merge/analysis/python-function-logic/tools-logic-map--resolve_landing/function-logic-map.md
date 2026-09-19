@@ -264,3 +264,14 @@ M2·M3 이 1차에서 살아남은 것이 시험 둘을 더 쓴 이유다 —
 
 값: 2026-09-18 프로파일에서 `_pinning_bundles` 가 a071 walk 하나에 341회 돌아
 13.07s 중 9.30s 였다. 묶은 뒤 a071 이 10.97s → **3.69s**.
+
+## task 7.5.1 — gstack 리뷰의 permissive 결함 수리
+
+`ast.before-7.5.1.json`(= git revision **`b29e1f4e`**, 소스 해시가 그 커밋과 일치)과
+`ast.after-7.5.1.json` 을 같은 열거기로 뽑아 **순서 있는 배열**을 difflib 으로 정렬했다
+(분기 8 · 반환 2 · raise 5 → 분기 8 · 반환 2 · raise 5).
+
+입력을 `_measure_landing_inputs` 로 한 번 재고 `compute_landing` 에 넘긴다(F2). 분기 순서열은 **바이트 동일**이다.
+
+**분기 순서열 바이트 동일.**
+

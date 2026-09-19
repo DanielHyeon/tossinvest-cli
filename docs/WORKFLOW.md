@@ -189,9 +189,10 @@ fail-closed다. CI의 `SDD_BASE_REF`는 이 persisted commit과 동일하게 res
 ### 요구 git 버전
 
 `tools/logic-map/check_analysis.py` 는 blob 을 `git cat-file --batch -Z` 로 읽으므로
-**git 2.42 이상**이 필요하다(정본 값은 `check_analysis.GIT_BATCH_MINIMUM`). 더 낮으면
-게이트는 막는 쪽으로 틀리지만 사유를 **저자의 증거 탓으로 오진**한다 — 증거를 탓하는데
-워킹트리가 멀쩡해 보이면 `git --version` 을 먼저 볼 것.
+**git 2.42 이상**이 필요하다(정본 값은 `check_analysis.GIT_BATCH_MINIMUM`, 영수증은 git 의
+`RelNotes/2.42.0.txt`). 더 낮으면 게이트는 결함으로 멈추고 **git 이 한 말**(`unknown switch 'Z'`)을
+그대로 전한다. "git 이 못 돌았다"와 "파일이 없다"는 다른 답이다 — 둘을 섞던 판본은 저자의 증거를
+탓했고 가드 하나가 편집 전 커밋을 착지로 기록했다(a122 7.5.1).
 
 ### 착지 지점 — `landed-commit.txt`
 

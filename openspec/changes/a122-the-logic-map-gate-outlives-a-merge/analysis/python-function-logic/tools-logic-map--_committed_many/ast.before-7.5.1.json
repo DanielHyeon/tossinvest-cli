@@ -1,0 +1,205 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "b29e1f4e15ee2ab2e8d2fc9a3e9cf2417c649f9e",
+  "head_commit": "b29e1f4e15ee2ab2e8d2fc9a3e9cf2417c649f9e",
+  "source_sha256": "0a5d596603bbbca67fb921784d7eb1f8ce5dc115a7d952544b938296fcf93c72",
+  "function": "_committed_many",
+  "signature": "_committed_many(root, ref, relatives)",
+  "start": {
+    "line": 379,
+    "column": 1
+  },
+  "end": {
+    "line": 469,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "comprehension",
+      "line": 407,
+      "inherited_line": true,
+      "source": " for relative in wanted"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 408,
+      "inherited_line": false,
+      "source": "if not wanted:"
+    },
+    {
+      "id": "B3",
+      "kind": "For",
+      "line": 410,
+      "inherited_line": false,
+      "source": "for relative in wanted:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 411,
+      "inherited_line": false,
+      "source": "if '\\x00' in relative:"
+    },
+    {
+      "id": "B5",
+      "kind": "comprehension",
+      "line": 421,
+      "inherited_line": true,
+      "source": " for relative in wanted"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 425,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B7",
+      "kind": "For",
+      "line": 438,
+      "inherited_line": false,
+      "source": "for relative in wanted:"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 440,
+      "inherited_line": false,
+      "source": "if end < 0:"
+    },
+    {
+      "id": "B9",
+      "kind": "BoolOp",
+      "line": 455,
+      "inherited_line": false,
+      "source": "len(fields) != 3 or not fields[2].isdigit()"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 455,
+      "inherited_line": false,
+      "source": "if len(fields) != 3 or not fields[2].isdigit():"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 458,
+      "inherited_line": false,
+      "source": "if fields[1] == b'blob':"
+    },
+    {
+      "id": "B12",
+      "kind": "If",
+      "line": 461,
+      "inherited_line": false,
+      "source": "if position != len(data):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 409,
+      "value": "found"
+    },
+    {
+      "line": 435,
+      "value": "found"
+    },
+    {
+      "line": 469,
+      "value": "found"
+    }
+  ],
+  "raises": [
+    {
+      "line": 414,
+      "source": "raise RuntimeError(f'path contains a NUL byte, cannot be asked for: {relative!r}')"
+    },
+    {
+      "line": 446,
+      "source": "raise RuntimeError(f'`git cat-file --batch -Z` answered {len(answered)} of {len(wanted)} request(s) at {ref[:12]}: the response is truncated')"
+    },
+    {
+      "line": 464,
+      "source": "raise RuntimeError(f'`git cat-file --batch -Z` left {len(data) - position} byte(s) unread at {ref[:12]}: the response framing was not understood')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 406,
+      "callee": "dict.fromkeys"
+    },
+    {
+      "line": 406,
+      "callee": "list"
+    },
+    {
+      "line": 414,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 415,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 421,
+      "callee": "b''.join"
+    },
+    {
+      "line": 421,
+      "callee": "f'{ref}:{relative}\\x00'.encode"
+    },
+    {
+      "line": 439,
+      "callee": "data.find"
+    },
+    {
+      "line": 446,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 447,
+      "callee": "len"
+    },
+    {
+      "line": 447,
+      "callee": "len"
+    },
+    {
+      "line": 452,
+      "callee": "header.rsplit"
+    },
+    {
+      "line": 455,
+      "callee": "fields[2].isdigit"
+    },
+    {
+      "line": 455,
+      "callee": "len"
+    },
+    {
+      "line": 457,
+      "callee": "int"
+    },
+    {
+      "line": 461,
+      "callee": "len"
+    },
+    {
+      "line": 464,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 465,
+      "callee": "len"
+    },
+    {
+      "line": 468,
+      "callee": "found.update"
+    }
+  ]
+}

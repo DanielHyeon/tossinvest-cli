@@ -80,6 +80,13 @@ evidence
 
 
 def run_check(root: Path) -> list[str]:
+    """git 을 mock 하고 번들 검증만 잰다. 루트는 **빈 저장소**다 (task 7.5.1).
+
+    이 헬퍼는 `resolve_base` · `changed_existing_functions` 를 mock 해서 git 을 빼는데
+    `_landing_record` 만 빠뜨렸다 — 저장소가 아닌 곳에서 git 이 rc≠0 으로 죽어도 예전에는
+    조용히 `None`("기록 없음")이라 무해해 보였다. 이제 rc≠0 은 결함이다. 빈 저장소는 같은 전제를
+    진짜로 만든다(실측: `HEAD:x missing` rc 0)."""
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
     with mock.patch(
         "check_analysis.resolve_base",
         return_value="base",
@@ -649,6 +656,7 @@ class CheckAnalysisTests(unittest.TestCase):
 
     def test_explicit_exemption_is_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
             change = Path(tmp) / "openspec" / "changes" / "docs-only"
             change.mkdir(parents=True)
             (change / "review.md").write_text(
@@ -690,6 +698,7 @@ class CheckAnalysisTests(unittest.TestCase):
 
     def test_completed_bundle_is_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
             root = Path(tmp)
             source = root / "internal" / "sample.go"
             source.parent.mkdir(parents=True)
@@ -757,6 +766,7 @@ evidence
         # function arrives as "branches": null rather than []. The bundle must
         # validate instead of crashing on the None.
         with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
             root = Path(tmp)
             source = root / "internal" / "sample.go"
             source.parent.mkdir(parents=True)
@@ -821,6 +831,7 @@ evidence
 
     def test_modified_function_cannot_use_exemption(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
             root = Path(tmp)
             change = root / "openspec" / "changes" / "change"
             change.mkdir(parents=True)
@@ -990,6 +1001,7 @@ evidence
 
     def test_prose_line_range_must_match_the_ast_range(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
             root = Path(tmp)
             write_bundle(
                 root,
@@ -1001,6 +1013,7 @@ evidence
 
     def test_a_matching_prose_line_range_is_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
             root = Path(tmp)
             write_bundle(
                 root,
@@ -1014,12 +1027,14 @@ evidence
         # Most maps in the corpus cite no line range at all. Requiring one
         # would fail evidence that never claimed a coordinate.
         with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
             root = Path(tmp)
             write_bundle(root, branches=[])
             self.assertEqual(run_check(root), [])
 
     def test_prose_branch_count_must_match_the_ast_branch_count(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
             root = Path(tmp)
             target = write_bundle(root, branches=[])
             (target / "function-logic-map.md").write_text(
@@ -1038,6 +1053,7 @@ evidence
         # "미테스트 분기 5개" is prose about coverage, not a claim about what
         # the extractor found. Only a claim anchored to AST is checked.
         with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
             root = Path(tmp)
             target = write_bundle(root, branches=[])
             (target / "branch-test-map.md").write_text(
@@ -1049,6 +1065,7 @@ evidence
 
     def test_branch_ids_absent_from_the_ast_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
             root = Path(tmp)
             write_bundle(
                 root,
@@ -1060,6 +1077,7 @@ evidence
 
     def test_the_branchless_happy_path_row_is_not_read_as_an_extra_id(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(["git", "init", "-q"], cwd=tmp, check=True)  # 빈 저장소 — 7.5.1
             root = Path(tmp)
             write_bundle(root, branches=None)
             self.assertEqual(run_check(root), [])
@@ -3223,10 +3241,16 @@ class TheLandingRuleLivesInOnePlace(unittest.TestCase):
             sorted(self._calls("record_landing")),
         )
         # 걷기 전의 하한은 계산과 판정이 **같은** 함수에 묻는다.
-        for function in ("_recording_refusal", "compute_landing"):
+        # `compute_landing` 은 7.5.1 부터 `_measure_landing_inputs` 를 거쳐 묻는다 — 선언 경로와
+        # 계산 경로가 **한 벌**의 입력을 쓰도록. 하한은 그래도 `_walk_floor` 한 곳에서 온다.
+        for function in ("_recording_refusal", "_measure_landing_inputs"):
             calls = self._calls(function)
             self.assertIn("_walk_floor", calls, function)
             self.assertFalse(calls & {"_pinning_bundles", "_evidence_floor"}, (function, sorted(calls)))
+        calls = self._calls("compute_landing")
+        self.assertIn("_measure_landing_inputs", calls)
+        self.assertFalse(calls & {"_walk_floor", "_pinning_bundles", "_evidence_floor"},
+                         sorted(calls))
 
     def test_a_commits_blob_is_read_by_one_function(self) -> None:
         """"그 커밋의 blob 을 읽는다"는 철자는 **한 곳**에 산다 (task 7.5).
@@ -3252,7 +3276,12 @@ class TheLandingRuleLivesInOnePlace(unittest.TestCase):
         이기도 하다: 두 번 재면 그 사이의 디스크 변화가 하한과 규칙을 갈라 놓는다."""
         for function in ("_pinning_at", "_unheld_bundles", "_landing_refusal"):
             self.assertNotIn("_pinning_bundles", self._calls(function), function)
-        self.assertIn("_walk_floor", self._calls("compute_landing"))
+        # 선언 경로도 계산 경로도 입력을 **같은 함수**에서 한 번 잰다 (task 7.5.1, F2).
+        for function in ("compute_landing", "resolve_landing"):
+            calls = self._calls(function)
+            self.assertIn("_measure_landing_inputs", calls, function)
+            self.assertFalse(calls & {"_pinning_bundles", "_evidence_floor", "_self_repair_commits"},
+                             (function, sorted(calls)))
 
     def test_archive_names_are_read_by_one_function(self) -> None:
         for function in ("resolve_referenced_change", "_pre_archive_path"):
@@ -4661,22 +4690,17 @@ class ABlobIsFetchedOncePerCommitNotOncePerBundle(unittest.TestCase):
             self.assertEqual(fetched["internal/nul.go"], binary)
             self.assertIn(b"func Own3()", fetched["internal/own3.go"])
 
-    def test_git_failing_leaves_every_path_unanswered(self) -> None:
-        """git 이 실패하면 **물은 경로 전부**가 `None` 이다 — 옛 `git show` 의 rc≠0 과 같은
-        방향이고, 부르는 쪽이 `None` 을 불일치로 세므로 판정이 느슨해지지 않는다.
+    def test_git_failing_is_a_fault_not_an_absence(self) -> None:
+        """git 이 실패하면 **결함**이다 — 물은 경로를 `None` 으로 채우지 않는다 (task 7.5.1).
 
-        **결함으로 올리려다 되돌렸다** (2026-09-18 독립 리뷰 P1). 올리면 `-Z` 를 모르는
-        git(2.42 미만) 아래의 오진이 사라지지만, 거부할 정상 입력을 세어 보니 **저장소가
-        아닌 루트**가 이 함수의 정상 호출 모양이었다 — 번들 검증만 보는 시험 21개가 임시
-        디렉터리에서 돈다 ([[fail-closed-must-name-what-it-rejects]]). 이 시험이 그 모양을
-        못 박는다: 저장소가 아닌 곳에서도 판정이 traceback 이 아니라 답으로 나온다.
+        1.4 수리 때 이것을 결함으로 올리려다 "시험 21개가 저장소 아닌 곳에서 돈다" 는 이유로
+        되돌렸고, 그 되돌림이 가드 7 과 `_landing_record` 의 permissive 구멍을 남겼다. 다시 재니
+        그 21개는 git 을 mock 하려는 픽스처가 `_landing_record` 만 빠뜨린 것이었다 — 빈 저장소로
+        바꾸면 전제("기록 없음")는 그대로다(실측: 빈 저장소 `missing` rc 0 · 저장소 아님 rc 128).
         """
         with tempfile.TemporaryDirectory() as raw:
-            outside = Path(raw)          # 저장소가 아니다 — git 이 rc≠0 로 죽는다
-            self.assertEqual(
-                check_analysis._committed_many(outside, "HEAD", ["a.go", "b.go"]),
-                {"a.go": None, "b.go": None},
-            )
+            with self.assertRaises(check_analysis.GATE_FAULTS):
+                check_analysis._committed_many(Path(raw), "HEAD", ["a.go", "b.go"])
 
     def test_the_minimum_git_version_is_written_down_once(self) -> None:
         """`-Z` 를 요구한다는 사실이 **어디에도 안 적혀 있었다** (2026-09-18 독립 리뷰 P1).
@@ -4711,13 +4735,19 @@ class ABlobIsFetchedOncePerCommitNotOncePerBundle(unittest.TestCase):
         with raw:
             real = check_analysis.subprocess.run
 
+            # 첫 레코드는 **git 이 낸 그대로** 둔다 — 크기를 속이면 엄격한 파서가 한 단계 먼저
+            # "NUL 종단 없음" 으로 잡아서 이 시험이 겨냥한 `end < 0` 갈래에 **닿지 않는다**
+            # (7.5.1 에서 실제로 그렇게 됐다, [[mutation-must-reach-the-thing-under-test]]).
+            first = real(["git", "cat-file", "--batch", "-Z"], cwd=root,
+                         input=f"{commit}:internal/own0.go\0".encode(),
+                         capture_output=True, check=True).stdout
+
             def answers_one_of_two(*args: object, **kwargs: object):
                 process = real(*args, **kwargs)
                 argv = args[0] if args else kwargs.get("args")
                 if isinstance(argv, list) and "cat-file" in argv:
-                    # 마지막 머리는 멀쩡하고 내용만 없다 — `break` 판본이 `b""` 를 내던 모양.
-                    process.stdout = process.stdout.split(b"\0", 2)[0] + b"\0" + b"abc\0" \
-                        + b"cafebabecafebabecafebabecafebabecafebabe blob 5"
+                    # 둘째 머리가 NUL 없이 끊겼다 — 부분 답을 쓰면 첫 자리만 채운 dict 가 나간다.
+                    process.stdout = first + b"cafebabecafebabecafebabecafebabecafebabe blob 5"
                 return process
 
             with mock.patch.object(check_analysis.subprocess, "run", answers_one_of_two):
@@ -4809,9 +4839,8 @@ class ABlobIsFetchedOncePerCommitNotOncePerBundle(unittest.TestCase):
                 return process
 
             with mock.patch.object(check_analysis.subprocess, "run", dies_after_printing):
-                fetched = check_analysis._committed_many(root, commit, ["internal/own0.go"])
-            # 읽은 척하지 않는다 — 출력이 멀쩡해 보여도 rc 가 죽었으면 답이 아니다.
-            self.assertEqual(fetched, {"internal/own0.go": None})
+                with self.assertRaises(check_analysis.GATE_FAULTS):
+                    check_analysis._committed_many(root, commit, ["internal/own0.go"])
 
     def test_an_archived_bundle_held_at_the_candidate_is_not_called_unheld(self) -> None:
         """아카이브된 번들은 **옮긴 뒤 경로**로 들고 있으면 들고 있는 것이다.
@@ -4888,6 +4917,367 @@ class ABlobIsFetchedOncePerCommitNotOncePerBundle(unittest.TestCase):
             )
             self.assertEqual(unheld, [])
             self.assertEqual(spawns, 1, "번들 넷을 한 프로세스로 읽어야 한다")
+
+
+
+class AFailedGitReadIsAFaultNotAnAbsence(unittest.TestCase):
+    """git 이 **못 돌았다** 와 객체가 **없다** 는 다른 답이다 (task 7.5.1, gstack 리뷰 2026-09-19).
+
+    `_committed_many` 는 rc≠0 에서 전부 `None` 을 돌려줬고 docstring 은 "부르는 쪽이 `None` 을
+    불일치로 세므로 판정이 느슨해지지 않는다" 고 **전칭으로** 적었다. 두 출처의 적대 리뷰가
+    그 전칭을 두 자리에서 깼다 — 가드 7 은 한쪽만 실패한 `None != bytes` 를 "소스가 바뀌었다" 로
+    읽어 **편집 전 커밋을 착지로 기록했고**, `_landing_record` 는 `None` 을 "기록 없음" 으로 읽어
+    착지 검증을 **통째로 건너뛰었다.** 결함은 `subprocess.run` 층에서 주입한다 —
+    `_committed_many` 의 반환을 흉내 내면 수리 자체를 건너뛴다
+    ([[mutation-must-reach-the-thing-under-test]]).
+    """
+
+    OLD_GIT = b"error: unknown switch `Z'\n"
+
+    @staticmethod
+    def _cat_file(behaviour):
+        """`git cat-file` 호출만 `behaviour(argv, request)` 에 맡긴다. `None` 을 돌려주면 진짜로 돈다."""
+        real = subprocess.run
+
+        def run(*args, **kwargs):
+            argv = args[0] if args else kwargs.get("args")
+            if isinstance(argv, list) and "cat-file" in argv:
+                forged = behaviour(argv, kwargs.get("input") or b"")
+                if forged is not None:
+                    return forged
+            return real(*args, **kwargs)
+
+        return mock.patch.object(check_analysis.subprocess, "run", run)
+
+    def _fail_reads_at(self, ref: str | None):
+        """`ref` 를 묻는 읽기만 `-Z` 를 모르는 git 처럼 죽인다. `None` 이면 전부."""
+        def behaviour(argv, request):
+            if ref is None or request.startswith(ref.encode()):
+                return subprocess.CompletedProcess(argv, 129, b"", self.OLD_GIT)
+            return None
+        return self._cat_file(behaviour)
+
+    def _answers(self, stdout: bytes):
+        return self._cat_file(lambda argv, request: subprocess.CompletedProcess(argv, 0, stdout, b""))
+
+    def test_a_one_sided_git_failure_cannot_land_a_pre_edit_commit(self) -> None:
+        """**P0 — 서브에이전트 F1 을 시험으로 굳힌다.** V1 픽스처에서 base 쪽 읽기**만** 죽이면
+        옛 판본은 rc 0 으로 편집 전 커밋 X 를 착지로 **기록했다**(재현). 그 창에는 이 change 의
+        Go 작업이 없다 — 가드 7 이 막으려던 바로 그것이다."""
+        case = ALandingMustChangeWhatItsEvidencePins(
+            "test_the_recorder_refuses_evidence_written_before_the_edit")
+        raw, root, marks = case._flm_first()
+        with raw:
+            record = root / "openspec" / "changes" / "mine" / check_analysis.LANDING_FILE
+            with self._fail_reads_at(marks["P"]):
+                code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertFalse(record.exists(), "편집 전 커밋을 착지로 기록했다")
+            # 거절 사유는 **git 이 한 말**이다 — 저자의 증거를 탓하지 않는다.
+            self.assertTrue(any("unknown switch" in line for line in lines), lines)
+
+    def test_a_committed_record_is_not_read_as_absent_when_git_fails(self) -> None:
+        """**Codex P1-1.** 커밋된 착지 기록이 있는데 git 이 못 읽으면 옛 판본은 "기록 없음" 으로
+        읽고 7.3.1 의 등식과 거절 가드 여덟을 **건너뛰었다** — `check` 가 `[]` 를 냈다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 0, lines)
+            _commit_all(root, "record the landing")
+            self.assertEqual(check_analysis.check("mine", root), [])    # 대조군: 정상 git
+            with self._fail_reads_at(None):
+                errors = check_analysis.check("mine", root)
+            self.assertTrue(any("unknown switch" in error for error in errors), errors)
+
+    def test_rc_failure_names_what_git_said(self) -> None:
+        """rc≠0 은 "없다" 가 아니라 결함이고 **git 의 말**로 이름을 댄다 (F6). 옛 판본은 stderr 를
+        받아 놓고 버렸고, 문서 세 곳이 그 오진을 피해 가는 법을 설명하고 있었다."""
+        with tempfile.TemporaryDirectory() as raw:
+            with self.assertRaises(check_analysis.GATE_FAULTS) as caught:
+                check_analysis._committed_many(Path(raw), "HEAD", ["a.go"])
+            self.assertIn("not a git repository", str(caught.exception))
+
+    def test_an_unknown_header_is_a_verdict_not_an_absence(self) -> None:
+        """**Codex P2.** 알 수 없는 머리를 "없는 파일" 로 치면 결함이 부재로 둔갑한다."""
+        raw, root, commit = ABlobIsFetchedOncePerCommitNotOncePerBundle()._repo()
+        with raw:
+            with self._answers(b"nonsense\0"), self.assertRaises(check_analysis.GATE_FAULTS):
+                check_analysis._committed_many(root, commit, ["internal/own0.go"])
+
+    def test_a_missing_answer_must_echo_the_spec_that_was_asked(self) -> None:
+        """`missing` 은 **물은 spec 그대로** 돌아온다(실측). 다른 spec 의 `missing` 은 프레이밍이
+        밀렸다는 뜻이고, 그대로 받으면 한 자리의 부재가 다른 자리에 붙는다."""
+        raw, root, commit = ABlobIsFetchedOncePerCommitNotOncePerBundle()._repo()
+        with raw:
+            with self._answers(f"{commit}:internal/other.go missing\0".encode()), \
+                    self.assertRaises(check_analysis.GATE_FAULTS):
+                check_analysis._committed_many(root, commit, ["internal/own0.go"])
+
+    def test_a_missing_payload_terminator_is_a_verdict(self) -> None:
+        """**Codex P2.** 내용 뒤의 NUL 을 안 보면 `abcX` 가 `abc` 로 받아들여진다 — 총량이 맞는다고
+        프레이밍이 맞는 것은 아니다."""
+        raw, root, commit = ABlobIsFetchedOncePerCommitNotOncePerBundle()._repo()
+        with raw:
+            oid = b"0" * 40
+            with self._answers(oid + b" blob 3\0abcX"), self.assertRaises(check_analysis.GATE_FAULTS):
+                check_analysis._committed_many(root, commit, ["internal/own0.go"])
+
+    def test_a_nul_in_the_ref_is_refused_by_name(self) -> None:
+        """NUL 검사가 경로만 봤다 (F7). 요청 문자열 **전체**가 프레이밍 대상이다."""
+        raw, root, _ = ABlobIsFetchedOncePerCommitNotOncePerBundle()._repo()
+        with raw:
+            with self.assertRaises(check_analysis.GATE_FAULTS) as caught:
+                check_analysis._committed_many(root, "HE\0AD", ["internal/own0.go"])
+            self.assertIn("NUL byte", str(caught.exception))
+
+    def test_a_truncated_response_counts_records_not_blobs(self) -> None:
+        """잘림 문장은 **읽은 레코드**를 센다 (F4). `missing` 레코드도 레코드다 — 옛 문장은
+        blob 만 세서 "0 of 3" 이라고 했다."""
+        raw, root, commit = ABlobIsFetchedOncePerCommitNotOncePerBundle()._repo()
+        with raw:
+            asked = ["a.go", "b.go", "c.go"]
+            stdout = b"".join(f"{commit}:{name} missing\0".encode() for name in asked[:2])
+            with self._answers(stdout), self.assertRaises(check_analysis.GATE_FAULTS) as caught:
+                check_analysis._committed_many(root, commit, asked)
+            self.assertIn("2 of 3", str(caught.exception))
+
+    def test_a_short_last_payload_is_reported_as_truncated(self) -> None:
+        """마지막 내용이 짧으면 "잘렸다" 고 말한다 (F5). 옛 문장은 `left -6 byte(s) unread` —
+        음수이고, 짧았는데 **남았다** 고 했다."""
+        raw, root, commit = ABlobIsFetchedOncePerCommitNotOncePerBundle()._repo()
+        with raw:
+            with self._answers(b"0" * 40 + b" blob 10\0abc"), \
+                    self.assertRaises(check_analysis.GATE_FAULTS) as caught:
+                check_analysis._committed_many(root, commit, ["internal/own0.go"])
+            self.assertIn("truncated", str(caught.exception))
+            self.assertNotIn("left -", str(caught.exception))
+
+    def test_every_fault_handler_uses_the_one_list(self) -> None:
+        """손 복사 예외 목록 넷이 `SubprocessError` 를 빠뜨려 새 60초 타임아웃이 창 줄을 삼켰다
+        (서브에이전트). 목록은 **한 곳**에 산다 — [[a-fault-must-become-a-verdict]]."""
+        tree = ast.parse(Path(check_analysis.__file__).read_text(encoding="utf-8"))
+        copied = [
+            node.lineno for node in ast.walk(tree)
+            if isinstance(node, ast.ExceptHandler) and node.type is not None
+            and "RuntimeError" in ast.unparse(node.type)
+        ]
+        self.assertEqual(copied, [], f"손 복사 예외 목록이 남은 줄: {copied}")
+
+    def test_a_git_timeout_during_the_landing_is_a_verdict(self) -> None:
+        """타임아웃은 `check` 밖으로 새지 않고 **판정 줄**이 된다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 0, lines)
+            _commit_all(root, "record the landing")
+
+            def hangs(argv, request):
+                raise subprocess.TimeoutExpired(cmd=argv, timeout=60)
+
+            with self._cat_file(hangs):
+                errors = check_analysis.check("mine", root)
+            self.assertTrue(errors, "타임아웃이 판정 없이 지나갔다")
+
+
+class TheLandingIsJudgedOnOneInventory(unittest.TestCase):
+    """착지 판정은 **한 번 잰** 번들 목록 위에서 선다 (task 7.5.1 — 서브에이전트 F2 · Codex P1-2).
+
+    7.5 는 "번들 목록을 한 번 잰다" 고 주석을 달았는데 `resolve_landing` 은 목록을 재고 나서
+    `compute_landing` 이 **또** 쟀다 — 선언한 착지를 목록 #1 로 판정하고 목록 #2 로 계산한 값과
+    같기를 요구했다. 그리고 7.5 가 목록을 걷기 내내 얼렸으므로, 걷는 도중에 생긴 번들은
+    `_unheld_bundles` 가 **보지 못했다**(7.5 이전 판본은 후보마다 다시 읽어서 봤다 — 회귀다).
+    """
+
+    def test_the_declared_path_measures_once(self) -> None:
+        """하한과 수리 신호가 착지 판정 한 번에 **한 번씩**만 계산된다(옛 판본: 둘 다 두 번)."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 0, lines)
+            _commit_all(root, "record the landing")
+            with mock.patch.object(check_analysis, "_evidence_floor",
+                                   wraps=check_analysis._evidence_floor) as floor, \
+                    mock.patch.object(check_analysis, "_self_repair_commits",
+                                      wraps=check_analysis._self_repair_commits) as repairs:
+                self.assertEqual(check_analysis.check("mine", root), [])
+            self.assertEqual((floor.call_count, repairs.call_count), (1, 1))
+
+    def test_a_bundle_published_during_the_walk_is_not_left_unchecked(self) -> None:
+        """**Codex P1-2.** 걷는 도중 커밋 안 된 번들 B 가 생기면 옛 판본은 얼린 목록에 B 가 없어
+        "그 커밋이 판정이 읽은 증거를 들고 있나" 를 B 에 대해 **묻지 않고** 착지를 기록했다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            change = root / "openspec" / "changes" / "mine"
+            other = root / "internal" / "other.go"
+            other.write_text("package internal\nfunc Other() int { return 1 }\n")
+            _commit_all(root, "an unrelated source the late bundle will pin")
+            real = subprocess.run
+
+            def publishes_mid_walk(*args, **kwargs):
+                argv = args[0] if args else kwargs.get("args")
+                if isinstance(argv, list) and "--reverse" in argv:
+                    _write_evidence(
+                        change, package="internal", function="Other",
+                        relative="internal/other.go",
+                        digest=hashlib.sha256(other.read_bytes()).hexdigest(),
+                    )
+                return real(*args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", publishes_mid_walk):
+                code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertFalse((change / check_analysis.LANDING_FILE).exists(), lines)
+
+
+    def test_a_bundle_published_while_the_floor_is_measured_is_not_left_unchecked(self) -> None:
+        """지문은 하한 **앞에서** 잰다. 하한을 재는 `git log` 도중에 번들 B 가 생기면, 판정 목록은
+        이미 B 없이 읽혔는데 뒤에 잰 지문에는 B 가 있어서 수락 직전 재확인이 "그대로" 라고 답한다
+        (변이 V10 이 **닿고도** 살아남았다 — 이 틈에 넣는 시험이 없었다)."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            change = root / "openspec" / "changes" / "mine"
+            other = root / "internal" / "other.go"
+            other.write_text("package internal\nfunc Other() int { return 1 }\n")
+            _commit_all(root, "an unrelated source the late bundle will pin")
+            real = subprocess.run
+
+            import traceback
+
+            def publishes_while_measuring_the_floor(*args, **kwargs):
+                argv = args[0] if args else kwargs.get("args")
+                # **착지 입력을 재는 도중**의 하한 `git log` 에서만 쓴다. `record_landing` 은 걷기 전에
+                # `_recording_refusal` 로 하한을 한 번 먼저 재므로, 첫 `git log` 에 쓰면 두 판본이
+                # 다 B 를 보고 이 시험이 순서를 **못 가른다** — 첫 판이 그래서 V10 을 못 잡았다
+                # ([[mutation-must-reach-the-thing-under-test]]).
+                measuring = any(frame.name == "_measure_landing_inputs"
+                                for frame in traceback.extract_stack())
+                if isinstance(argv, list) and "--diff-filter=MAT" in argv and measuring:
+                    _write_evidence(
+                        change, package="internal", function="Other",
+                        relative="internal/other.go",
+                        digest=hashlib.sha256(other.read_bytes()).hexdigest(),
+                    )
+                return real(*args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run",
+                                   publishes_while_measuring_the_floor):
+                code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertFalse((change / check_analysis.LANDING_FILE).exists(), lines)
+
+
+class AVerdictReadsPinnedSourcesInOneProcess(unittest.TestCase):
+    """착지가 있는 판정은 고정 소스를 착지에서 **한 번** 읽는다 (task 7.5.1 — 서브에이전트 F3).
+
+    7.5 는 "근본 원인은 fetch 단위였고 고쳤다" 고 적었는데 파일에서 가장 큰 남은 per-bundle
+    루프 둘을 안 바꿨다 — `validate_target`(**매 게이트 실행의 본 판정 경로**, a112 147 프로세스)과
+    가드 7(후보마다 2×소스 수). 그래서 번들 수와 무관해야 할 비용이 번들 수에 비례했다.
+    """
+
+    @staticmethod
+    def _landed(raw: tempfile.TemporaryDirectory, sources: int) -> Path:
+        """`_own_work_fixture` 와 같은 모양(P → W → E)에 고정 소스를 `sources` 개로 늘리고 기록까지 한다."""
+        root = _init_fixture(raw)
+        files = [root / "internal" / f"own{index}.go" for index in range(sources)]
+        files[0].parent.mkdir(parents=True)
+        for index, path in enumerate(files):
+            path.write_text(f"package internal\nfunc Own{index}() int {{ return 1 }}\n")
+        base = _commit_all(root, "P: base")
+        change = root / "openspec" / "changes" / "mine"
+        change.mkdir(parents=True)
+        (change / "base-commit.txt").write_text(base + "\n")
+        (change / "review.md").write_text("mine\n")
+        for index, path in enumerate(files):
+            path.write_text(f"package internal\nfunc Own{index}() int {{ return 2 }}\n")
+        _commit_all(root, "W: this change's Go work lands")
+        for index, path in enumerate(files):
+            _write_evidence(
+                change, package="internal", function=f"Own{index}",
+                relative=path.relative_to(root).as_posix(),
+                digest=hashlib.sha256(path.read_bytes()).hexdigest(),
+            )
+        _commit_all(root, "E: its evidence enters the history")
+        code, lines = check_analysis.record_landing("mine", root)
+        assert code == 0, lines
+        _commit_all(root, "record the landing")
+        return root
+
+    @staticmethod
+    def _cat_file_spawns(root: Path) -> tuple[list[str], int]:
+        seen = []
+        real = subprocess.run
+
+        def counting(*args, **kwargs):
+            argv = args[0] if args else kwargs.get("args")
+            if isinstance(argv, list) and "cat-file" in argv:
+                seen.append(argv)
+            return real(*args, **kwargs)
+
+        with mock.patch.object(check_analysis.subprocess, "run", counting):
+            errors = check_analysis.check("mine", root)
+        return errors, len(seen)
+
+    def test_guard_seven_reads_each_side_once_even_when_it_refuses(self) -> None:
+        """가드 7 은 **거절할 때** 모든 소스를 읽어야 한다(전부 base 와 같아서). 소스별로 읽는 판본은
+        `all()` 이 첫 번째로 다른 소스에서 멈추므로 **받는** 경우엔 싸 보인다 — 그래서 변이 V13 이
+        받는 픽스처에서 닿고도 살아남았다. V1 모양(FLM 먼저 커밋, 번들 안 갱신)은 가드 7 이 거절하는
+        모양이고, 거기서 소스 1개와 4개의 blob 읽기 프로세스 수가 **같아야** 한다."""
+        spawns = {}
+        for sources in (1, 4):
+            raw = tempfile.TemporaryDirectory()
+            with raw:
+                root = _init_fixture(raw)
+                files = [root / "internal" / f"own{index}.go" for index in range(sources)]
+                files[0].parent.mkdir(parents=True)
+                for index, path in enumerate(files):
+                    path.write_text(f"package internal\nfunc Own{index}() int {{ return 1 }}\n")
+                base = _commit_all(root, "P: base")
+                change = root / "openspec" / "changes" / "mine"
+                change.mkdir(parents=True)
+                (change / "base-commit.txt").write_text(base + "\n")
+                (change / "review.md").write_text("mine\n")
+                for index, path in enumerate(files):        # 증거가 **base** 를 적는다 (V1)
+                    _write_evidence(
+                        change, package="internal", function=f"Own{index}",
+                        relative=path.relative_to(root).as_posix(),
+                        digest=hashlib.sha256(path.read_bytes()).hexdigest(),
+                    )
+                _commit_all(root, "X: FLM first, as the repository asks")
+                for index, path in enumerate(files):
+                    path.write_text(f"package internal\nfunc Own{index}() int {{ return 2 }}\n")
+                _commit_all(root, "W: the edit, bundles not refreshed")
+                seen = []
+                real = subprocess.run
+
+                def counting(*args, **kwargs):
+                    argv = args[0] if args else kwargs.get("args")
+                    if isinstance(argv, list) and "cat-file" in argv:
+                        seen.append(argv)
+                    return real(*args, **kwargs)
+
+                with mock.patch.object(check_analysis.subprocess, "run", counting):
+                    code, lines = check_analysis.record_landing("mine", root)
+                self.assertEqual(code, 1, lines)            # 가드 7 이 X 를 거절한다
+                self.assertTrue(any("changes none of the sources" in line for line in lines), lines)
+                spawns[sources] = len(seen)
+        self.assertEqual(spawns[1], spawns[4], spawns)
+
+    def test_the_cost_does_not_grow_with_the_number_of_pinned_sources(self) -> None:
+        """고정 소스 1개와 4개에서 blob 읽기 프로세스 수가 **같다**. 옛 판본은 가드 7(2×N)과
+        `validate_target`(N) 때문에 번들 수에 비례했다."""
+        spawns = {}
+        for sources in (1, 4):
+            raw = tempfile.TemporaryDirectory()
+            with raw:
+                root = self._landed(raw, sources)
+                errors, spawns[sources] = self._cat_file_spawns(root)
+                self.assertEqual(errors, [], (sources, errors))
+        self.assertEqual(spawns[1], spawns[4], spawns)
 
 
 if __name__ == "__main__":

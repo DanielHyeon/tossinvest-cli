@@ -112,3 +112,16 @@ B6 이 **사유 문장**으로 받고, 나머지(`_walk_floor` 의 `ValueError`,
 
 값: 2026-09-18 프로파일에서 `_pinning_bundles` 가 a071 walk 하나에 341회 돌아
 13.07s 중 9.30s 였다. 묶은 뒤 a071 이 10.97s → **3.69s**.
+
+## task 7.5.1 — gstack 리뷰의 permissive 결함 수리
+
+`ast.before-7.5.1.json`(= git revision **`b29e1f4e`**, 소스 해시가 그 커밋과 일치)과
+`ast.after-7.5.1.json` 을 같은 열거기로 뽑아 **순서 있는 배열**을 difflib 으로 정렬했다
+(분기 9 · 반환 9 · raise 0 → 분기 9 · 반환 9 · raise 0).
+
+손 복사 예외 목록을 `GATE_FAULTS` 로(서브에이전트) — `SubprocessError` 가 빠져 타임아웃이 창 줄을 삼켰다.
+
+| | 종류 | 소스 |
+|---|---|---|
+| − | ExceptHandler | `except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:` |
+| + | ExceptHandler | `except GATE_FAULTS as exc:` |

@@ -1241,6 +1241,27 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       **안 한 것**: `--ancestry-path` 는 후보 **집합**을 바꾸는 규칙 변경이라 7.5 의 몫이 아니고
       (7.8 M6 이 곁가지 후보의 실재를 실측했다), 조기 종료는 거절 문장이 고칠 자리를 **전부**
       대야 해서 안 하며 배치 뒤엔 비용도 0 이다. 둘 다 review.md 에 사유를 적었다.
+- [x] 7.5.1 **P0 — "못 물었다" 는 "없다" 가 아니다 (gstack 리뷰 2026-09-19).** 7.5 의 `_committed_many`
+      는 rc≠0 에서 전부 `None` 을 돌려줬고, docstring 은 "부르는 쪽이 `None` 을 불일치로 센다" 고
+      **전칭으로** 적었다. gstack `/review` 의 두 출처가 그 전칭을 두 자리에서 깼고 **둘 다 재현했다**:
+      가드 7 은 한쪽만 실패한 `None != bytes` 를 "바뀌었다" 로 읽어 **편집 전 커밋을 착지로 기록했고**,
+      `_landing_record` 는 `None` 을 "기록 없음" 으로 읽어 착지 검증을 건너뛰었다. 사람이 "지금 다
+      고친다" 를 골랐다. **닫음(2026-09-19). 생산 Go 변경 0.** 기록은 review.md
+      `## MEASURE · Pre-Edit Gate — task 7.5.1` · `## VERIFY — task 7.5.1`.
+      근본 수리: rc≠0 을 결함으로(git 의 stderr 를 담아서) — `None` 은 이제 "git 이 물은 spec 그대로
+      `missing` 이라 답했다" 하나뿐이다. 파서는 git 이 실제로 내는 두 모양만 받는다(실측으로 정했다,
+      gitlink 포함). 곁들여: 입력을 **한 벌** 재서 선언·계산 경로가 공유(F2) · 수락 직전 증거 지문
+      재확인(Codex P1-2 — 7.5 가 목록을 얼려서 생긴 회귀) · `validate_target`·가드 7 배치(F3) ·
+      메시지 넷(F4~F7) · `GIT_BATCH_MINIMUM` 에 git 릴리스 노트 영수증(F9) · 손 복사 예외 목록
+      넷 → `GATE_FAULTS`.
+      **1.4 의 되돌림을 정정했다** — "시험 21개가 저장소 아닌 곳에서 돈다" 는 git 을 mock 하려다
+      `_landing_record` 만 빠뜨린 픽스처였다. 빈 저장소로 바꾸니 전제는 그대로였다(`missing` rc 0).
+      증거: `check()` **전체** A/B **126/126 SAME** · `compute_landing` 116/116 · 편집 전 AST 를
+      revision `b29e1f4e` 로 **명시**해 뽑음 · `_landing_refusal` 가드 순서 불변(바뀐 것은 가드 7 조건 한 줄) ·
+      변이 **31/31 CAUGHT**(첫 판 생존 V10·V13 은 양성 대조로 **닿았음**을 확인 → 시험이 그 갈래에 닿게
+      고쳐 잡음) · 실물 a099 blob 프로세스 46 → 10 · 시험 187 → **203** · `sdd-test`(278) · `lint` ·
+      `test-seams` · `validate` 58/58 · a122 rc=0.
+      **남은 창 하나**를 기록했다: 수락 직전 재확인 뒤 `validate_target` 이 디스크를 다시 읽기까지.
 - [x] 7.6 **P2 — 규칙 한 집 (I2 · I3 · I4 · I5 · I6 · I7).** `compute_landing` 과 `resolve_landing`
       의 수락 조건 두 벌 · `validate` 의 지역 `canonical` 이 모듈 함수를 가림 · 디렉터리 해소 두 벌과
       없는 id 의 엉뚱한 조언 · 이관 거절 문장 두 벌(이미 갈렸다) · `_pre_archive_path` 가 아카이브

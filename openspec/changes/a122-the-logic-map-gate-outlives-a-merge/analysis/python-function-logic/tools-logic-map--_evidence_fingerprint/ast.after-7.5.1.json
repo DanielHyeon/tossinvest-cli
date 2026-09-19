@@ -1,0 +1,73 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "b29e1f4e15ee2ab2e8d2fc9a3e9cf2417c649f9e",
+  "source_sha256": "db2443db8fc2f047d3224d5b331bdafb15e17861dcfa8c5fdc8861adac62f0b2",
+  "function": "_evidence_fingerprint",
+  "signature": "_evidence_fingerprint(root, analysis)",
+  "start": {
+    "line": 1501,
+    "column": 1
+  },
+  "end": {
+    "line": 1517,
+    "column": 23
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 1511,
+      "inherited_line": false,
+      "source": "for ast_path, source, digest in _pinning_bundles(root, analysis):"
+    },
+    {
+      "id": "B2",
+      "kind": "Try",
+      "line": 1512,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B3",
+      "kind": "ExceptHandler",
+      "line": 1514,
+      "inherited_line": false,
+      "source": "except OSError:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1517,
+      "value": "fingerprint"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1511,
+      "callee": "_pinning_bundles"
+    },
+    {
+      "line": 1513,
+      "callee": "ast_path.read_bytes"
+    },
+    {
+      "line": 1513,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 1513,
+      "callee": "hashlib.sha256(ast_path.read_bytes()).hexdigest"
+    },
+    {
+      "line": 1516,
+      "callee": "ast_path.as_posix"
+    },
+    {
+      "line": 1516,
+      "callee": "fingerprint.append"
+    }
+  ]
+}

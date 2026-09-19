@@ -28,10 +28,14 @@ ast-grep 발견은 자동 결함 판정이 아니다.
 **둘 다** NUL 로 끊어 개행이 든 경로와 tree 의 raw NUL 을 견딘다. 그 옵션은 **git 2.42**
 부터다(정본 값은 `check_analysis.GIT_BATCH_MINIMUM`).
 
-더 낮은 git 에서는 blob 읽기가 전부 실패한다. 게이트는 **막는 쪽으로** 틀리지만(실측:
-required 32 → 269, rc 120) **사유를 오진한다** — 저자의 증거가 낡았다고 말하고, 착지 기록이
-있는 change 에서는 이미 HEAD 에 있는 `landed-commit.txt` 를 커밋하라고 한다. 게이트가
-증거를 탓하는데 워킹트리가 멀쩡해 보이면 먼저 `git --version` 을 볼 것.
+더 낮은 git 에서는 blob 읽기가 실패하고, 게이트는 그것을 **결함으로** 멈추며 git 이 한
+말을 그대로 전한다 — 예: `cannot read blobs at … : \`git cat-file --batch -Z\` failed (rc 129:
+error: unknown switch \`Z') — \`-Z\` needs git 2.42 or newer`. 영수증은 git 자신의 릴리스 노트
+`RelNotes/2.42.0.txt` 다.
+
+예전(2026-09-18 까지)에는 실패를 "파일 없음"과 같게 다뤄서 **사유를 오진했고**(저자의 증거를
+탓했다), 가드 하나는 그 혼동 때문에 **편집 전 커밋을 착지로 기록했다**. 2026-09-19 gstack 리뷰가
+찾았고 a122 task 7.5.1 이 고쳤다 — "git 이 못 돌았다"와 "그 커밋에 그 파일이 없다"는 이제 다른 답이다.
 
 ## 착지 지점 — `landed-commit.txt`
 

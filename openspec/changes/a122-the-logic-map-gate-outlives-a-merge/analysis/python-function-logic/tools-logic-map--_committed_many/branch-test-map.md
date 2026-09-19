@@ -45,3 +45,29 @@
 
 하네스에도 **양성 대조**를 넣었다 — 변이가 **돌았는지**까지 재지 않으면 눈먼 계측기와
 진짜 음성이 같게 기록된다. T6 이 그 결과였다.
+
+
+## task 7.5.1 — "못 물었다" 와 "없다" 를 가른 뒤 (2026-09-19, `75_mut.py` 31 변이 · 생존 0)
+
+파서를 엄격하게 다시 썼으므로 위 표의 앵커 12개가 낡았고, 변이 집합을 **현재 소스 기준으로** 다시
+썼다. 짝은 여전히 손으로 고르지 않았다 — 각 갈래를 지우는 변이를 걸어 실제로 빨개진 시험을 옮겼다.
+
+| 갈래 (소스) | 변이 | 잡는 시험 |
+|---|---|---|
+| `if process.returncode: raise …` (못 물었다 = 결함) | V1 | `test_a_committed_record_is_not_read_as_absent_when_git_fails` · `test_a_failure_that_still_printed_is_not_parsed` 외 3 |
+| 결함 문장에 git 의 첫 줄 | V2 | `test_a_one_sided_git_failure_cannot_land_a_pre_edit_commit` 외 2 |
+| `if header == spec + b" missing"` (**물은 spec 그대로**) | V3 | `test_a_missing_answer_must_echo_the_spec_that_was_asked` |
+| `if match is None: raise` (모르는 머리) | V4 | `test_an_unknown_header_is_a_verdict_not_an_absence` 외 1 |
+| `if data[position + size] != 0` (NUL 종단) | V5 | `test_a_missing_payload_terminator_is_a_verdict` |
+| `if position + size >= len(data)` (넘침 = 잘림) | V6 | `test_a_short_last_payload_is_reported_as_truncated` |
+| `for spec in specs: if "\0" in spec` (요청 전체) | V7 | `test_a_nul_in_the_ref_is_refused_by_name` |
+| 잘림 문장이 **레코드**를 센다 | V8 | `test_a_truncated_response_counts_records_not_blobs` |
+| `if end < 0: raise` | T6 | `test_a_truncated_response_counts_records_not_blobs` · `test_a_truncated_response_is_a_verdict_not_a_partial_answer` |
+| 가드 7 양쪽 한 번씩 (호출자 `_landing_refusal`) | V13 | `test_guard_seven_reads_each_side_once_even_when_it_refuses` |
+
+**첫 판 생존 둘과 그 교훈.** V13 은 `all()` 이 첫 번째로 다른 소스에서 멈추므로 **받는** 픽스처에선
+소스별로 읽어도 비용이 같아 살아남았다 — 가드 7 이 **거절하는**(끝까지 읽는) V1 모양으로 잰다.
+V10(지문을 하한 뒤에)은 첫 시험이 번들을 `record_landing` 의 **걷기 전** 하한 측정에서 써 버려 두
+판본이 다 그것을 봤다 — 주입 지점을 `_measure_landing_inputs` 가 스택에 있을 때로 좁혔다. 양성 대조가
+둘 다 "도달함" 이라고 말했으므로 계측기가 아니라 시험 공백이었고, 둘 다 **코드가 아니라 시험**을 고쳐
+잡았다 ([[mutation-must-reach-the-thing-under-test]]).
