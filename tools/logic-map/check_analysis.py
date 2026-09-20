@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import errno
 import hashlib
 import io
@@ -28,6 +29,13 @@ REQUIRED = (
     "risk-pattern-report.md",
 )
 EXEMPTION = "Function Logic Map: not-applicable"
+# 읽기의 상한과 실패 문구 (task 7.5.2.3). 상한은 **거부하는 정상 입력을 먼저 세어** 골랐다: 저장소에서 가장 큰
+# `*.go` 97,231 B · 가장 큰 번들 파일 25,466 B · 16 MiB 넘는 번들 파일 0 / 12,193 (170배 여유).
+READ_CAP = 16 << 20
+NOT_REGULAR = "not a regular file"
+TOO_LARGE = f"larger than the {READ_CAP} byte limit"
+NOT_UTF8 = "not UTF-8 text"
+UNREADABLE = "{what} could not be read: {why}"
 HUNK = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 MAP_SECTIONS = (
     "## Inputs and invariants",
@@ -259,15 +267,18 @@ def resolve_referenced_change(root: Path, change: str) -> Path:
     조용히 그쪽이 이겼다는 뜻이다 — 고르면 어느 증거로 게이트가 열렸는지
     기록에 남지 않는다. `tools/gate.sh` 의 해소기는 처음부터 이렇게 셌다.
     """
+    # 고르기도 깔때기로 (task 7.5.2.3) — 어느 디렉터리를 판정하는지가 판정의 첫 입력이고, `is_dir()` 은
+    # `OSError` 를 삼켜 "못 물었다" 를 "없다" 로 만든다. 디렉터리가 아닌 것만 "없다" 이고 못 여는 것은 결함이다.
     changes = root / "openspec" / "changes"
     direct = changes / change
-    open_here = direct.is_dir()
+    open_here = _kind(direct) == "dir"
     archive = changes / "archive"
-    archived = sorted(
-        path
-        for path in (archive.iterdir() if archive.is_dir() else ())
-        if path.is_dir() and _archived_change_id(path.name) == change
-    )
+    try:
+        entries = _listed(archive)
+    except (FileNotFoundError, NotADirectoryError):
+        entries = []
+    archived = [archive / name for name, is_dir in entries
+                if is_dir and _archived_change_id(name) == change]
     found = ([direct] if open_here else []) + archived
     if not found:
         # 이 해소기는 빌린 증거만이 아니라 **게이트 대상**도 찾는다 (task 7.6, I4).
@@ -296,13 +307,17 @@ def resolve_base(
 ) -> str:
     path = change_dir / "base-commit.txt"
     try:
-        candidate = path.read_text(encoding="utf-8").strip()
-    except OSError as exc:
+        # 깔때기로 (task 7.5.2.3) — 옛 `read_text` 는 그 자리의 FIFO 에 영원히 멎었고, 창의 **시작**을 정하는
+        # 이 읽기가 원장에 없으면 실행 중 바뀌어도 재확인이 못 본다. 없는 것과 못 읽는 것을 가른다.
+        candidate = _decoded(_read_regular(path)).strip()
+    except FileNotFoundError as exc:
         raise ValueError(
             "missing base-commit.txt; run "
             "`python3 tools/sdd/capture_change_base.py --change <change-id>` "
             "at proposal freeze"
         ) from exc
+    except (OSError, UnicodeDecodeError) as exc:
+        raise ValueError(UNREADABLE.format(what="base-commit.txt", why=_why(exc))) from exc
 
     def resolve(value: str) -> str:
         process = subprocess.run(
@@ -638,29 +653,112 @@ class Evidence(NamedTuple):
     권하는 조언 줄은 **다음에 부를 명령**을 예측하므로 스스로 다시 읽는다 — 판정 줄은 그 읽기에 안 기댄다).
     번들 **산문**은 여기 없다 — 착지가 판정하지 않는 범위라 대상 판정이 읽을 때 읽는다. 같은지 볼 때는 바이트를 그대로
     비교한다 — 해시를 따로 둘 이유가 없다.
+
+    번들 **안의 이름 목록**도 여기 있다 (task 7.5.2.3). 7.5.2.2 는 그 목록을 세 곳에서 따로 만들었다: 빌림
+    공존 판정 · 감사 참여 판정(`lexists`) · `_bundle_text`. 목록이 셋이면 같은 디렉터리에 대해 서로 다른
+    대답이 판정에 들어갈 수 있고(중간에 파일이 생기면 실제로 갈린다), 세 자리 모두 syscall 을 따로 낸다.
     """
 
     directory: Path
     present: bool                               # 증거 디렉터리가 디렉터리로 있었나
     targets: tuple[Path, ...]                   # 번들 디렉터리 (`iterdir` 의 디렉터리)
     held: dict[Path, bytes | None]              # `target/ast.json` → 바이트 · 못 읽음 `None` · 없으면 키가 없다
+    listings: dict[Path, tuple[str, ...]]       # 번들 → 그 안의 이름들 (목록을 못 열면 키가 없다)
+    unlistable: dict[Path, str]                 # 목록을 못 연 번들 → 그 사유 (예외 객체를 담으면 값 비교가 깨진다)
 
 
-def _read_regular(path: Path) -> bytes | None:
-    """정규 파일이면 그 바이트, 정규 파일이 아니면(FIFO · 장치) `None`. 없거나 못 열면 · **디렉터리면** `OSError`.
+class NotRegularFile(OSError):
+    """정규 파일이 아닌 것을 열었다 — FIFO · 장치 · 소켓. 판정 줄이 **이름을 댄다** (task 7.5.2.3).
 
-    번들 파일을 여는 **유일한** 자리다 (task 7.5.2.2). 7.5.2.1 은 `_bundle_text` 를 `iterdir` 로 다시 쓰며 옛
-    `is_file()` 거름을 빠뜨려, 번들 안의 FIFO 하나에 게이트가 영원히 멎고 `/dev/zero` 를 가리키는 심링크면
-    `MemoryError`(GATE_FAULTS 밖)로 판정 줄 없이 죽었다(재리뷰 출처 넷 재현). 증거 읽기와 대상 판정의 산문 읽기는
-    그 앞 로트부터 종류를 안 봤다. `O_NONBLOCK` 으로 열고 **연 것의** 종류를 `fstat` 으로 본다 — 확인과 읽기
-    사이에 파일이 바뀔 틈이 없다(쓰는 쪽이 없는 FIFO 도 그렇게 바로 열리고 곧 닫힌다). 심링크는 따라가고,
-    따라간 끝의 종류를 본다 — 산문을 심링크로 둔 번들은 옛 판본처럼 읽힌다.
+    7.5.2.2 는 이 모양을 `None` 으로 돌려 **조용히 건너뛰었다**. 보안 리뷰가 그 문으로 들어왔다: 커밋된 표
+    파일을 게이트가 **여는 그 순간에만** FIFO 로 바꿨다 되돌리면 열거형 호출 감사가 꺼지고 `[]` 가 찍힌다
+    (실측 6/14, 디스크에는 표가 든 정규 파일이 그대로). 목록과 열기는 다른 syscall 이라 "at rest 에 이런
+    파일이 없다"(전수 0/12,193)는 **열기 순간**에 대한 진술이 아니다 ([[a-silent-skip-is-a-door]]).
+    """
 
-    **디렉터리는 건너뛰지 않는다.** 건너뛰면 번들 안에 폴더를 만들어 그 안에 열거형 호출 표를 넣는 것으로
-    감사가 꺼진다 — `_bundle_text` 가 막으려는 바로 그것("목록 밖으로 옮기면 판정이 꺼진다")이다. 그래서
-    종류 검사 **뒤에** 파일 객체로 감싼다: 먼저 감싸면 `open(fd)` 가 디렉터리에서 스스로 터지는데, 그 예외의
-    `filename` 은 경로가 아니라 **정수 fd** 라서 이름을 대려던 `_verdict` 가 `TypeError`(GATE_FAULTS 밖)로
-    죽었다 — 판정 줄 없이. 이 로트가 만든 회귀이고 내가 소켓을 재 보다 찾았다(2026-09-20).
+
+class FileTooLarge(OSError):
+    """정규 파일인데 상한보다 크다 (task 7.5.2.3).
+
+    종류만 막고 크기는 안 막아서, 큰 정규 파일 하나가 `MemoryError`(GATE_FAULTS 밖)로 판정 줄을 0 으로
+    만들었다(재리뷰 보안 · 적대). 상한의 근거: 저장소에서 가장 큰 `*.go` 97 KB · 가장 큰 번들 파일 26 KB ·
+    16 MiB 넘는 번들 파일 **0 / 12,193**.
+    """
+
+
+class NotUtf8Text(OSError):
+    """읽었는데 UTF-8 이 아니다 (task 7.5.2.3). 조용히 건너뛰면 그 파일의 표가 판정에서 빠진다.
+
+    `OSError` 로 만드는 까닭은 하나다: 번들 파일의 실패를 **이름 대는 자리가 하나**여야 한다. `_verdict` 가
+    `except OSError` 한 곳에서 "못 읽은 것"을 전부 이름 대므로, 새 실패 모양이 어느 목록에도 안 걸려
+    traceback 이 되는 길이 없다 ([[a-fault-must-become-a-verdict]]).
+    """
+
+
+class ReadLedger:
+    """판정이 디스크에서 읽은 것의 **원장**. 끝의 재확인이 이 목록을 그대로 다시 읽는다 (task 7.5.2.3).
+
+    7.5.2.1 은 손으로 적은 키 목록(`RUN_FACTS`)이 낡아서 깨졌고, 7.5.2.2 는 손으로 고른 재확인 집합
+    (`HEAD` + `Evidence`)이 판정 집합보다 좁아서 깨졌다 — **같은 실패가 두 번**이다(a112 실측: 판정이 읽은
+    1,739 경로 중 재확인이 본 것 149). 그래서 목록을 만들지 않는다: 디스크를 읽는 깔때기가 읽은 것의
+    **결과**를 여기 적고, `_reads_moved` 가 그것을 다시 읽어 견준다. 새 읽기 자리는 깔때기를 쓰는 순간
+    저절로 참여하고, 깔때기를 비켜 가는 것은 AST 구조 시험이 막는다.
+
+    **실패도 적는다**(없음 · 정규 파일 아님 · 권한 · 너무 큼). 그래야 "여는 순간에만 FIFO" · "이름을 빼고
+    되돌리기" 가 끝에서 **다르게** 보인다 — 실패를 안 적으면 견줄 것이 없다.
+    """
+
+    def __init__(self) -> None:
+        self.seen: dict[tuple[str, str], str] = {}
+        self.recording = True
+        self.diverged = ""                      # 한 판에서 같은 경로가 갈렸으면 그 경로
+
+
+_LEDGER: ReadLedger | None = None
+
+
+@contextlib.contextmanager
+def _ledger():
+    """이 명령이 읽는 것을 적는 원장을 연다. 열려 있지 않으면 깔때기는 아무것도 적지 않는다(시험이 직접 부를 때)."""
+    global _LEDGER
+    previous, book = _LEDGER, ReadLedger()
+    _LEDGER = book
+    try:
+        yield book
+    finally:
+        _LEDGER = previous
+
+
+def _remember(kind: str, key: str, outcome: str) -> None:
+    """읽기 결과를 원장에 적는다. 재확인 중에는 적지 않는다 — 그러면 자기 읽기를 자기가 견주게 된다."""
+    book = _LEDGER
+    if book is None or not book.recording:
+        return
+    previous = book.seen.get((kind, key))
+    if previous is not None and previous != outcome and not book.diverged:
+        # 한 판에서 같은 경로를 두 번 읽었고 결과가 갈렸다 — 끝까지 기다릴 것 없이 그 자리가 움직임이다.
+        book.diverged = key
+    book.seen[(kind, key)] = outcome
+
+
+def _failed(exc: OSError) -> str:
+    """실패의 지문. 종류와 errno 로 — 권한이 풀린 것도 파일이 생긴 것도 "달라졌다" 다."""
+    return f"{type(exc).__name__}:{exc.errno}"
+
+
+def _opened_bytes(path: Path) -> bytes:
+    """파일을 **여는 유일한 자리**. 정규 파일의 바이트, 그 밖은 이름을 담은 `OSError`.
+
+    `O_NONBLOCK` 으로 열고 **연 것의** 종류를 `fstat` 으로 본다 — 확인과 읽기 사이에 파일이 바뀔 틈이 없다
+    (쓰는 쪽이 없는 FIFO 도 그렇게 바로 열리고 곧 닫힌다). 심링크는 따라가고, 따라간 끝의 종류를 본다.
+
+    **디렉터리도 정규 파일이 아닌 것도 건너뛰지 않는다** (task 7.5.2.2 · 7.5.2.3). 건너뛰면 번들 안에 폴더를
+    만들거나 표 파일을 FIFO 로 바꿔 두는 것으로 감사가 꺼진다. 종류 검사는 파일 객체로 감싸기 **전에** 한다:
+    먼저 감싸면 `open(fd)` 가 디렉터리에서 스스로 터지는데 그 예외의 `filename` 은 경로가 아니라 **정수 fd**
+    라서 이름을 대려던 `_verdict` 가 `TypeError`(GATE_FAULTS 밖)로 죽었다(7.5.2.2 가 만든 회귀).
+
+    상한보다 한 바이트 더 읽어 넘치는지 본다 — `st_size` 를 믿지 않는다(희소 파일 · `/proc`).
+    어느 갈래로 나가도 서술자를 닫는다(`closefd=False` 라 `with` 는 닫지 않는다).
     """
     descriptor = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
     try:
@@ -668,11 +766,139 @@ def _read_regular(path: Path) -> bytes | None:
         if stat.S_ISDIR(mode):
             raise IsADirectoryError(errno.EISDIR, os.strerror(errno.EISDIR), str(path))
         if not stat.S_ISREG(mode):
-            return None
+            raise NotRegularFile(errno.EINVAL, NOT_REGULAR, str(path))
         with open(descriptor, "rb", closefd=False) as handle:
-            return handle.read()
+            raw = handle.read(READ_CAP + 1)
     finally:
         os.close(descriptor)
+    if len(raw) > READ_CAP:
+        raise FileTooLarge(errno.EFBIG, TOO_LARGE, str(path))
+    return raw
+
+
+def _file_outcome(path: Path) -> tuple[str, bytes | OSError]:
+    """`(지문, 바이트 또는 실패)`. 지문을 만드는 **한 자리** — 판정과 재확인이 같은 함수를 부른다.
+
+    둘이 각자 지문을 만들면 한쪽만 고쳐도 양쪽 시험이 초록이 된다
+    ([[two-judgements-cover-for-each-other]] 가 a064 에서 실측한 모양).
+    """
+    try:
+        raw = _opened_bytes(path)
+    except OSError as exc:
+        return _failed(exc), exc
+    return "bytes:" + hashlib.sha256(raw).hexdigest(), raw
+
+
+def _read_regular(path: Path) -> bytes:
+    """정규 파일의 바이트. 없거나 · 종류가 틀리거나 · 못 읽거나 · 너무 크면 이름을 담은 `OSError`.
+
+    판정이 **파일을 읽는 유일한 자리**다 (task 7.5.2.3). 결과를 원장에 적으므로, 이 함수로 읽은 것은
+    끝의 재확인이 반드시 다시 읽는다.
+    """
+    outcome, value = _file_outcome(path)
+    _remember("file", str(path), outcome)
+    if isinstance(value, OSError):
+        raise value
+    return value
+
+
+def _listing_outcome(path: Path) -> tuple[str, list[tuple[str, bool]] | OSError]:
+    """`(지문, [(이름, 디렉터리인가)] 또는 실패)`. 종류까지 지문에 넣는다 — 같은 이름의 파일↔폴더 교체도 변화다."""
+    try:
+        entries = sorted((child.name, child.is_dir()) for child in path.iterdir())
+    except OSError as exc:
+        return _failed(exc), exc
+    joined = "\n".join(f"{name}\t{'d' if is_dir else 'f'}" for name, is_dir in entries)
+    return "list:" + hashlib.sha256(joined.encode("utf-8")).hexdigest(), entries
+
+
+def _listed(path: Path) -> list[tuple[str, bool]]:
+    """디렉터리를 **여는 유일한 자리**. 이름과 종류를 정렬해 돌려주고 결과를 원장에 적는다."""
+    outcome, value = _listing_outcome(path)
+    _remember("dir", str(path), outcome)
+    if isinstance(value, OSError):
+        raise value
+    return value
+
+
+def _pattern_outcome(root: Path, pattern: str) -> tuple[str, list[Path]]:
+    """`(지문, 맞은 경로들)`. 트리 순회는 **집합**이 판정의 입력이다 — 파일 하나가 생겨도 달라진다."""
+    matches = sorted(root.rglob(pattern))
+    joined = "\n".join(str(path) for path in matches)
+    return "glob:" + hashlib.sha256(joined.encode("utf-8")).hexdigest(), matches
+
+
+def _globbed(root: Path, pattern: str) -> list[Path]:
+    """트리를 **순회하는 유일한 자리**(시험 함수 색인 · 인용 해소). 결과를 원장에 적는다."""
+    outcome, matches = _pattern_outcome(root, pattern)
+    _remember("glob", f"{root}\n{pattern}", outcome)
+    return matches
+
+
+def _kind_outcome(path: Path) -> tuple[str, str]:
+    """`(지문, 종류)` — `dir` · `reg` · `other` · 못 물으면 빈 글자."""
+    try:
+        mode = os.stat(path).st_mode
+    except OSError as exc:
+        return _failed(exc), ""
+    kind = "dir" if stat.S_ISDIR(mode) else "reg" if stat.S_ISREG(mode) else "other"
+    return "kind:" + kind, kind
+
+
+def _kind(path: Path) -> str:
+    """이름만 재는 **유일한 자리**. 읽지 않고 고르는 판정(디렉터리인가 · 정규 파일인가)도 원장에 남는다."""
+    outcome, kind = _kind_outcome(path)
+    _remember("kind", str(path), outcome)
+    return kind
+
+
+def _worktree_digest(path: Path) -> str | None:
+    """워킹트리 파일의 sha256 — 없거나 못 읽으면 `None`. 깔때기로 읽으므로 원장에 남는다."""
+    try:
+        return hashlib.sha256(_read_regular(path)).hexdigest()
+    except OSError:
+        return None
+
+
+def _shown(root: Path, path: str) -> str:
+    """판정 줄에 적을 이름 — 저장소 안이면 상대경로, 밖이면 그대로."""
+    try:
+        return Path(path).relative_to(root).as_posix()
+    except ValueError:
+        return path
+
+
+def _why(exc: BaseException) -> str:
+    """실패를 사람의 말로. `strerror` 가 있으면 그것 — 깔때기가 담은 사유가 그 자리에 있다."""
+    if isinstance(exc, UnicodeDecodeError):
+        # 해독 실패의 기본 문장은 바이트 위치까지 담아 길다 — 판정 줄에는 무엇이 틀렸는지만 적는다.
+        return NOT_UTF8
+    return str(getattr(exc, "strerror", "") or exc)
+
+
+_PROBE_NOW = {
+    "file": lambda key: _file_outcome(Path(key))[0],
+    "dir": lambda key: _listing_outcome(Path(key))[0],
+    "glob": lambda key: _pattern_outcome(Path(key.split("\n")[0]), key.split("\n")[1])[0],
+    "kind": lambda key: _kind_outcome(Path(key))[0],
+}
+
+
+def _reads_moved(root: Path, book: ReadLedger) -> str:
+    """판정 중 읽은 것을 **전부** 다시 읽어 지문을 견준다. 처음 다른 것의 이름, 같으면 빈 글자.
+
+    이 읽기의 바이트는 판정에 **들어가지 않는다** — 견주기만 한다. 재확인 중에는 원장에 적지 않는다.
+    """
+    if book.diverged:
+        return f"{_shown(root, book.diverged)} changed"
+    book.recording = False
+    try:
+        for (kind, key), before in sorted(book.seen.items()):
+            if _PROBE_NOW[kind](key) != before:
+                return f"{key.split(chr(10))[1] if kind == 'glob' else _shown(root, key)} changed"
+    finally:
+        book.recording = True
+    return ""
 
 
 def _read_evidence(analysis: Path) -> Evidence:
@@ -687,20 +913,33 @@ def _read_evidence(analysis: Path) -> Evidence:
     못 읽는 것(권한)과 정규 파일이 아닌 것(디렉터리 · FIFO · 장치 — 7.5.2.2, 열면 멎거나 끝없이 읽는다)은
     `None` 이다 — 판정 줄이 다르다(`missing` / `could not be read`). 못 읽은 것도 이 값에 남으므로 다음 읽기에서
     읽히면 재확인이 본다.
+
+    번들 **안의 이름 목록**도 여기서 한 번 읽는다 (task 7.5.2.3). 목록을 못 여는 번들은 이름과 사유를 들고
+    가서 대상마다 **이름 댄 판정 줄**이 된다 — 조용히 빈 목록으로 두면 그 번들의 표가 감사에서 빠진다.
+    디렉터리가 **아닌 것**(없음 · 파일 · 끊긴 링크)만 "증거 없음" 이고, 있는데 **못 여는 것**은 결함으로
+    올린다 — 7.5.2.2 는 `is_dir()` 이 `OSError` 를 삼켜서 읽을 수 없는 증거 디렉터리를 면제로 통과시켰다.
     """
-    if not analysis.is_dir():
-        return Evidence(analysis, False, (), {})
-    targets = tuple(sorted(path for path in analysis.iterdir() if path.is_dir()))
+    try:
+        entries = _listed(analysis)
+    except (FileNotFoundError, NotADirectoryError):
+        return Evidence(analysis, False, (), {}, {}, {})
+    targets = tuple(analysis / name for name, is_dir in entries if is_dir)
     held: dict[Path, bytes | None] = {}
+    listings: dict[Path, tuple[str, ...]] = {}
+    unlistable: dict[Path, str] = {}
     for target in targets:
         ast_path = target / "ast.json"
         try:
             held[ast_path] = _read_regular(ast_path)
         except FileNotFoundError:
-            continue
+            pass
         except OSError:
             held[ast_path] = None
-    return Evidence(analysis, True, targets, held)
+        try:
+            listings[target] = tuple(name for name, _ in _listed(target))
+        except OSError as exc:
+            unlistable[target] = _why(exc)
+    return Evidence(analysis, True, targets, held, listings, unlistable)
 
 
 def _select_pinning(root: Path, evidence: Evidence) -> list[tuple[Path, str, str]]:
@@ -749,9 +988,9 @@ def _base_shaped_bundles(root: Path, base: str, evidence: Evidence) -> list[str]
     stale = [
         (ast_path, source, digest)
         for ast_path, source, digest in _select_pinning(root, evidence)
-        # 오늘의 소스를 적은 번들은 세탁할 것이 없다
-        if not ((root / source).is_file()
-                and hashlib.sha256((root / source).read_bytes()).hexdigest() == digest)
+        # 오늘의 소스를 적은 번들은 세탁할 것이 없다. 워킹트리 소스도 깔때기로 읽는다 (task 7.5.2.3) —
+        # `is_file()` + `read_bytes()` 두 syscall 이 하나가 되고, 그 읽기가 원장에 남아 재확인이 본다.
+        if _worktree_digest(root / source) != digest
     ]
     at_base = _committed_many(root, base, [source for _, source, _ in stale])
     return sorted(
@@ -1296,7 +1535,10 @@ def test_spans(path: Path) -> dict[str, tuple[int, int]]:
     """Map each Test function in one file to the line range of its body."""
     spans: dict[str, tuple[int, int]] = {}
     try:
-        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        # 깔때기로 읽는다 (task 7.5.2.3) — 옛 `read_text` 는 그 자리의 FIFO 에 영원히 멎었고, 이 읽기가
+        # 원장에 없으면 시험 색인(판정의 입력)이 재확인 밖에 남는다. 글자가 아닌 바이트는 옛 판본과 같이
+        # `errors="replace"` 로 견딘다 — 이 판정은 Go 시험 선언만 찾고, 색인에 없는 이름은 인용 판정이 댄다.
+        lines = _read_regular(path).decode("utf-8", "replace").splitlines()
     except OSError:
         return spans
     for index, line in enumerate(lines):
@@ -1317,7 +1559,7 @@ def test_spans(path: Path) -> dict[str, tuple[int, int]]:
 def test_index(root: Path) -> dict[str, list[tuple[Path, int, int]]]:
     """Every Test function in the tree, by name. Built once per check() run."""
     index: dict[str, list[tuple[Path, int, int]]] = {}
-    for path in root.rglob("*_test.go"):
+    for path in _globbed(root, "*_test.go"):
         if ".git" in path.parts:
             continue
         for name, (start, end) in test_spans(path).items():
@@ -1336,13 +1578,15 @@ def resolve_test_file(cited: str, package_dir: Path, root: Path) -> Path | None:
 
     An ambiguous bare name resolves to nothing rather than to a guess.
     """
+    # 고르기도 깔때기로 (task 7.5.2.3) — 어느 파일을 읽을지 고르는 것이 판정의 입력이다. 그 고르기가 원장에
+    # 없으면 "그때 없던 파일이 지금 있다" 를 재확인이 못 본다.
     if "/" in cited:
         qualified = root / cited
-        return qualified if qualified.is_file() else None
+        return qualified if _kind(qualified) == "reg" else None
     local = package_dir / cited
-    if local.is_file():
+    if _kind(local) == "reg":
         return local
-    matches = [path for path in root.rglob(cited) if ".git" not in path.parts]
+    matches = [path for path in _globbed(root, cited) if ".git" not in path.parts]
     return matches[0] if len(matches) == 1 else None
 
 
@@ -1378,7 +1622,12 @@ def test_citation_errors(
             if path is None:
                 continue
             number = int(raw)
-            total = len(path.read_text(encoding="utf-8", errors="replace").splitlines())
+            try:
+                total = len(_read_regular(path).decode("utf-8", "replace").splitlines())
+            except OSError:
+                # 고를 때는 정규 파일이었는데 읽을 때 사라졌거나 못 읽는다 — 줄 수를 모르면 이 줄에 대해
+                # 아무 주장도 하지 않는다. 그 변화는 원장에 남아 끝의 재확인이 댄다 (task 7.5.2.3).
+                continue
             if number > total:
                 errors.append(
                     f"{target}: branch test map cites {basename}:{number}, "
@@ -1409,7 +1658,7 @@ def coordinate_errors(target: str, texts: dict[str, str], value: dict, branches:
     return errors
 
 
-def _bundle_text(target: Path, ast_raw: bytes | None) -> str:
+def _bundle_text(target: Path, ast_raw: bytes | None, *, names: tuple[str, ...] | None = None) -> str:
     """번들 디렉터리에서 **읽히는 파일 전부**를 이어 붙인다. `ast.json` 은 한 번 읽은 바이트다.
 
     강제 판정은 "이 change 가 열거를 쓰는가"이고, 그 답은 열거가 번들 안 어느
@@ -1429,10 +1678,18 @@ def _bundle_text(target: Path, ast_raw: bytes | None) -> str:
     호출 판정에서 조용히 빠졌다(permissive).
 
     파일은 `_read_regular` 로만 연다 (task 7.5.2.2). 7.5.2.1 은 이 함수를 다시 쓰며 옛 `is_file()` 거름을 빠뜨려
-    FIFO 에 멎고 `/dev/zero` 에 메모리를 다 썼다. 정규 파일이 아닌 것과 사라진 것은 건너뛴다(표가 들 수 없다) ·
-    **못 읽는 정규 파일은 올린다**: 조용히 건너뛰면 그 파일의 표가 판정에서 빠진다(재리뷰 적대) — 목록을 못 여는
-    디렉터리와 같은 이름 댄 줄이 된다."""
-    paths = {path.name: path for path in target.iterdir() if path.name != "ast.json"}
+    FIFO 에 멎고 `/dev/zero` 에 메모리를 다 썼다.
+
+    **조용히 건너뛰는 모양이 없다** (task 7.5.2.3, 재리뷰 보안). 7.5.2.2 는 정규 파일이 아닌 것과 못 푸는
+    바이트를 조용히 넘겼는데, 그것이 공격 경로였다: 커밋된 표 파일을 게이트가 **여는 그 순간에만** FIFO 로
+    바꿨다 되돌리면(실측 6/14) 또는 못 푸는 바이트를 한 개 심으면 그 파일의 표가 판정에서 빠져 감사가 꺼진다.
+    이제 사라진 것(`FileNotFoundError` — 끊긴 심링크 · 목록을 만든 뒤 지워짐)만 건너뛰고 나머지는 전부 올라가
+    **이름 댄 판정 줄**이 된다. 건너뛴 그 실패도 원장에 남으므로, 이름을 빼고 되돌리는 공격은 끝의 재확인이 댄다.
+
+    목록은 **호출자가 한 번 읽은 것**을 받는다 (task 7.5.2.3) — 증거 읽기가 이미 만든 목록이다. 안 주면
+    스스로 읽는다(단위 시험 · 번들 하나만 볼 때)."""
+    listed = names if names is not None else tuple(name for name, _ in _listed(target))
+    paths = {name: target / name for name in listed if name != "ast.json"}
     if ast_raw is not None:
         paths["ast.json"] = target / "ast.json"
     texts = []
@@ -1444,14 +1701,12 @@ def _bundle_text(target: Path, ast_raw: bytes | None) -> str:
                 raw = _read_regular(paths[name])
             except FileNotFoundError:
                 continue                        # 끊긴 링크 · 목록을 만든 뒤 사라진 파일 — 없는 것은 없는 것이다
-            if raw is None:
-                continue                        # FIFO · 장치 · 디렉터리 — 표가 들 수 없고, 열면 멎거나 끝없이 읽는다
         try:
             texts.append(_decoded(raw))
-        except UnicodeDecodeError:
-            # 글자가 아니면 표가 들어 있을 수 없다. 여기서 거르는 기준은 파일 이름이 아니라 "읽히는가"이고,
-            # 그래서 새 확장자가 생겨도 저절로 포함된다.
-            continue
+        except UnicodeDecodeError as exc:
+            # 글자가 아니면 표가 들어 있을 수 없다 — 그래서 **이름을 대고 멈춘다**. 조용히 넘기면 그 파일에
+            # 있던 표가 감사에서 빠지고, 그것이 저장소에 커밋된 채로 남을 수 있다(task 7.5.6 의 나머지 절반).
+            raise NotUtf8Text(errno.EILSEQ, NOT_UTF8, str(paths[name])) from exc
     return "\n".join(texts)
 
 
@@ -1544,11 +1799,15 @@ def validate_target(
                 errors.append(f"{target.name}: missing {name}")
                 continue
             except OSError:
-                raw = None
-            if raw is None:
                 errors.append(f"{target.name}: {name} could not be read")
                 continue
-            texts[name] = _decoded(raw)
+            try:
+                texts[name] = _decoded(raw)
+            except UnicodeDecodeError:
+                # 못 푸는 필수 산문은 **이 대상의** 판정 줄이다 (task 7.5.2.3, 재리뷰 적대). 올려 보내면
+                # 판정 전체가 대상 이름 없는 한 줄이 되어, 저자는 어느 번들인지 알 수 없다.
+                errors.append(f"{target.name}: {name} is not UTF-8 text")
+                continue
         if "TODO" in texts[name]:
             errors.append(f"{target.name}: {name} still contains TODO")
     if "ast.json" not in texts:
@@ -1576,10 +1835,19 @@ def validate_target(
                 errors.append(f"{target.name}: AST source is missing: {relative}")
             elif hashlib.sha256(blob).hexdigest() != value["source_sha256"]:
                 errors.append(f"{target.name}: AST source hash is stale: {relative}")
-        elif not source.is_file():
-            errors.append(f"{target.name}: AST source is missing: {relative}")
-        elif hashlib.sha256(source.read_bytes()).hexdigest() != value["source_sha256"]:
-            errors.append(f"{target.name}: AST source hash is stale: {relative}")
+        else:
+            # 워킹트리 소스도 깔때기로 (task 7.5.2.3): `is_file()` + `read_bytes()` 가 하나가 되고, 그 읽기가
+            # 원장에 남아 재확인이 본다. **없는 것과 못 읽는 것을 가른다** — 한 말로 하면 저자가 있는 파일을
+            # 다시 만들러 간다(7.5.1 의 "git 이 못 돌았다 ≠ 없다" 와 같은 구분).
+            try:
+                blob = _read_regular(source)
+            except (FileNotFoundError, NotADirectoryError):
+                errors.append(f"{target.name}: AST source is missing: {relative}")
+            except OSError as exc:
+                errors.append(f"{target.name}: AST source could not be read: {relative} ({_why(exc)})")
+            else:
+                if hashlib.sha256(blob).hexdigest() != value["source_sha256"]:
+                    errors.append(f"{target.name}: AST source hash is stale: {relative}")
     elif revision != "base":
         errors.append(f"{target.name}: unsupported AST revision {revision!r}")
     function = qualified(value)
@@ -1645,29 +1913,63 @@ def validate_target(
 def check(
     change: str, root: Path = ROOT, context: dict[str, object] | None = None
 ) -> list[str]:
-    # 아카이브된 change 도 자기 id 로 재검사할 수 있어야 한다. 아카이브 문법을 아는
-    # 해소기가 이미 있으므로 세 번째 사본을 만들지 않는다.
-    # 해소기가 못 찾은 id 는 **그 문장으로** 멈춘다 (task 7.6, 리뷰 I4). 예전에는 없는
-    # `openspec/changes/<id>` 로 바꿔 넘겨서 "base 를 capture 하라"는 조언이 나갔다 —
-    # 오타 난 id 에 새 change 를 만들라는 말이다. 2026-09-13 전수: 게이트가 받을 수 있는
-    # id 126개 중 그 갈래로 떨어지는 것 0.
-    # 문맥은 **항상** 채운다. 호출자가 안 줘도 `check` 자신이 읽어야 하는 사실이 여기
-    # 들어온다(이관인가, 감사된 source 는 무엇인가). 호출자가 문맥을 줬으면 같은
-    # 사전이므로 밖에서 보이는 것은 그대로다.
+    """이 change 의 판정 줄들. 빈 목록이면 증거가 완전하다.
+
+    **이 함수가 원장을 열고 닫는다** (task 7.5.2.3). 판정은 `_judged` 가 하고, 그것이 읽은 것은 전부 원장에
+    남는다 — 그래서 끝의 재확인이 다시 읽는 집합은 손으로 고른 것이 아니라 **판정이 읽은 그 집합**이다.
+    7.5.2.2 는 그 집합을 손으로 골라(`HEAD` + `Evidence`) 판정이 읽는 1,739 중 149 만 봤다(a112 실측).
+
+    판정 **앞에서** 돌아가는 결함 · 거절은 대조하지 않는다 — 이미 빨갛다. 그래서 `_judged` 가 끝까지 갔는지를
+    같이 돌려준다.
+    """
     facts: dict[str, object] = {} if context is None else context
     # 이 사전은 **이번 실행의 사실만** 담는다 — 맨 앞에서, 어느 반환보다 먼저 비운다 (task 7.5.2.2). 7.5.2 는 둘만,
     # 7.5.2.1 은 손으로 적은 목록(`RUN_FACTS`)을 id 해소 **뒤에서** 지워서, 오타 난 id 에는 앞선 실행의 창
     # (`landing` · `head` · …)이 남았다(재리뷰 레드팀 · Codex). 문맥은 출력 통로다 — 호출자가 미리 넣어 두고 읽는
     # 키는 없다(`main` · 하네스 · 시험 전부 빈 사전). 목록이 없으니 새 사실을 더해도 지우는 쪽을 잊을 수 없다.
     facts.clear()
+    with _ledger() as book:
+        verdict, judged = _judged(change, root, facts)
+        if not judged:
+            return verdict
+        # 판정을 내놓기 **직전**, 판정이 읽은 것이 아직 그대로인지 본다 (task 7.5.2.2 · 7.5.2.3).
+        moved = _judged_state_moved(root, str(facts["head"]), book)
+        return [moved] if moved else verdict
+
+
+def _judged(
+    change: str, root: Path, facts: dict[str, object]
+) -> tuple[list[str], bool]:
+    """판정 줄들과 "끝까지 갔는가". 디스크를 읽는 것은 전부 깔때기로 — 열린 원장에 남는다 (task 7.5.2.3).
+
+    `check` 에서 떼어 낸 까닭은 하나다: 원장을 여는 자리와 판정하는 자리를 가르면 조기 반환마다 재확인을
+    적을 필요가 없다(적는 자리가 여럿이면 하나를 잊는다 — 7.5.2.1 의 실패 모양).
+    """
+    # 아카이브된 change 도 자기 id 로 재검사할 수 있어야 한다. 아카이브 문법을 아는
+    # 해소기가 이미 있으므로 세 번째 사본을 만들지 않는다.
+    # 해소기가 못 찾은 id 는 **그 문장으로** 멈춘다 (task 7.6, 리뷰 I4). 예전에는 없는
+    # `openspec/changes/<id>` 로 바꿔 넘겨서 "base 를 capture 하라"는 조언이 나갔다 —
+    # 오타 난 id 에 새 change 를 만들라는 말이다. 2026-09-13 전수: 게이트가 받을 수 있는
+    # id 126개 중 그 갈래로 떨어지는 것 0.
+    # 문맥은 **항상** 채운다. 호출자가 안 줘도 판정 자신이 읽어야 하는 사실이 여기
+    # 들어온다(이관인가, 감사된 source 는 무엇인가). 호출자가 문맥을 줬으면 같은
+    # 사전이므로 밖에서 보이는 것은 그대로다.
     try:
         change_dir = resolve_referenced_change(root, change)
     except ValueError as exc:
-        return [str(exc)]
+        return [str(exc)], False
     analysis = change_dir / "analysis" / "function-logic"
     reference_file = change_dir / "analysis" / "function-logic-reference.txt"
     review = change_dir / "review.md"
-    review_text = review.read_text(encoding="utf-8") if review.exists() else ""
+    # 면제 표지를 읽는 자리다 — 깔때기로 (task 7.5.2.3). 옛 `exists()` 뒤 `read_text` 는 그 자리의 FIFO 에
+    # 영원히 멎었고(재리뷰 보안), 이 읽기가 원장에 없으면 면제 경로의 재확인 표본이 **0** 이었다
+    # (증거가 없으면 비교할 바이트가 없다 — 전칭이 공허하게 참).
+    try:
+        review_text = _decoded(_read_regular(review))
+    except FileNotFoundError:
+        review_text = ""
+    except (OSError, UnicodeDecodeError) as exc:
+        return [UNREADABLE.format(what="review.md", why=_why(exc))], False
     try:
         base = resolve_base(change_dir, root, facts, change_id=change)
         # 역사는 **여기서 한 번** 푼다 (task 7.5.2.1 — 재리뷰 적대 · 레드팀 · 이 세션이 재현). 7.5.2 는 상징
@@ -1677,24 +1979,38 @@ def check(
         # `HEAD`(첫 커밋 전 고아 가지)는 여기서 결함이 된다(옛 판본은 워킹트리 창으로 판정했다 — 막는 쪽).
         head = _head_commit(root)
     except GATE_FAULTS as exc:
-        return [f"cannot derive modified Go functions: {exc}"]
+        return [f"cannot derive modified Go functions: {exc}"], False
     facts["head"] = head
     # 빌린 증거는 착지 판정 **앞에서** 푼다. 착지가 유효한지는 그 change 가 실제로
     # 딛는 증거로 판정하는데, 빌린 change 는 지역 번들이 0 이라 뒤에서 풀면 고정할
     # 것이 하나도 없는 채로 판정이 끝난다(a073 이 그 모양이다).
-    if reference_file.exists():
-        if analysis.exists() and any(path.is_dir() and any(path.iterdir()) for path in analysis.iterdir()):
-            return ["function-logic reference cannot coexist with local function-logic evidence"]
-        referenced_change = reference_file.read_text(encoding="utf-8").strip()
+    # 참조 파일도 깔때기로 (task 7.5.2.3) — `exists()` 뒤 `read_text` 는 그 자리의 FIFO 에 영원히 멎었다.
+    try:
+        reference_raw: bytes | None = _read_regular(reference_file)
+    except FileNotFoundError:
+        reference_raw = None
+    except OSError as exc:
+        return [UNREADABLE.format(what="function-logic-reference.txt", why=_why(exc))], False
+    if reference_raw is not None:
+        # 지역 증거가 있으면 빌릴 수 없다. 여기서는 번들 **목록**만 본다 — 판정이 딛는 증거는 빌려주는
+        # 쪽이므로 지역 바이트를 읽을 이유가 없고, 증거를 읽는 자리는 아래 **하나**로 남는다.
+        try:
+            local = [analysis / name for name, is_dir in _listed(analysis) if is_dir]
+        except (FileNotFoundError, NotADirectoryError):
+            local = []
+        if any(_listed(bundle) for bundle in local):
+            return ["function-logic reference cannot coexist with local function-logic evidence"], False
+        # 글자가 아닌 바이트는 아래 이름 판정이 거절한다 — 해독 실패로 판정 줄을 잃지 않는다.
+        referenced_change = reference_raw.decode("utf-8", "replace").strip()
         if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", referenced_change) or referenced_change == change:
-            return ["function-logic reference names an invalid or recursive change"]
+            return ["function-logic reference names an invalid or recursive change"], False
         try:
             referenced_dir = resolve_referenced_change(root, referenced_change)
             referenced_base = resolve_base(referenced_dir, root, change_id=referenced_change)
         except GATE_FAULTS as exc:
-            return [f"function-logic reference base is invalid: {exc}"]
+            return [f"function-logic reference base is invalid: {exc}"], False
         if referenced_base != base:
-            return ["function-logic reference must share the exact comparison base"]
+            return ["function-logic reference must share the exact comparison base"], False
         # 빌리는 change 는 창을 **좁히지 않는다** (task 7.2.3, 리뷰 C4 — 사람이 2026-09-14 에
         # 골랐다). 1.8 은 빌려주는 쪽의 착지를 복사하게 했는데, 그 착지는 빌려주는 쪽 증거의
         # 가장 낮은 값이라 빌리는 쪽이 그 **뒤에** 한 Go 작업이 창 밖으로 나갔다. 빌리는 쪽은
@@ -1704,15 +2020,23 @@ def check(
         # 있는가만 묻는다 — 해독하면 못 읽는 기록 앞에서 질문이 터진다(6.2.1).
         # 오늘 저장소의 빌리는 change 는 a073 하나이고 기록이 없다(2026-09-14 확인).
         if _landing_record(change_dir, root, head) is not None:
-            return [BORROWED_REFUSES_A_LANDING]
+            return [BORROWED_REFUSES_A_LANDING], False
         analysis = referenced_dir / "analysis" / "function-logic"
+    # 증거는 **여기 한 자리에서 한 번** 읽는다 (task 7.5.2 · 7.5.2.1 · 7.5.2.3) — 디렉터리가 있었나 · 어떤
+    # 번들이 있었나 · 번들 안의 이름 목록 · 각 `ast.json` 의 바이트. 빌리는 change 면 위에서 `analysis` 가
+    # 빌려주는 쪽으로 바뀌었다 — 판정이 딛는 증거는 그쪽이다. 읽는 자리가 둘이면 어느 쪽이 판정에 들어갔는지
+    # 시험이 못 세고, 7.5.2.2 는 공존 판정이 같은 디렉터리를 **따로** 물어서 두 대답을 만들었다.
+    try:
+        evidence = _read_evidence(analysis)
+    except GATE_FAULTS as exc:
+        return [f"cannot derive modified Go functions: {exc}"], False
     adopted = bool(facts.get("execution_baseline_adoption"))
     if adopted and _landing_record(change_dir, root, head) is not None:
         # 이관 예외의 정당성은 "판정에 들어가는 입력을 하나도 빠짐없이 열거하고
         # digest 로 묶었다"이다. `landed-commit.txt` 는 `openspec/` 아래라 drift 검사가
         # 통과시키고, 추적 파일이라 untracked 감사도 못 보고, 닫힌 키 집합에도 없다.
         # 그런데 비교 대상을 고른다 — 손잡이는 하나여야 하고 그것은 감사된 쪽이다.
-        return [ADOPTION_REFUSES_A_LANDING]
+        return [ADOPTION_REFUSES_A_LANDING], False
     try:
         # 조상 판정은 `base-commit.txt` 의 글자가 아니라 `resolve_base` 가 **반환한**
         # 값에 건다. a063 은 그 둘이 다르다(P → E).
@@ -1720,17 +2044,12 @@ def check(
         # 고른 값을 위한 것이고, 감사된 source 는 고른 값이 아니다 — `validate` 가
         # ancestry(P,E)·ancestry(E,source)·ancestry(source,head,strict)·tree 대조·
         # digest 셋으로 이미 묶는다. 같은 판정을 두 번 하지 않는다.
-        # 증거는 **여기서 한 번** 읽는다 (task 7.5.2 · 7.5.2.1) — 디렉터리가 있었나 · 어떤 번들이
-        # 있었나 · 각 `ast.json` 의 바이트. 착지 판정 · 대상 판정 · base 모양 조언이 이 **한 값**을 쓴다. 7.5.2 는
-        # 착지가 한 번, 여기서 또 한 번 읽고 둘을 대조했는데, 대조 **앞**의 조기 반환(`analysis.exists()`)과
-        # 대조 **밖**의 목록 열거(`_bundle_text`)가 디스크를 다시 물었다(재리뷰: 둘 다 재현). 같은 값을
-        # 넘기면 대조할 것이 없다.
-        evidence = _read_evidence(analysis)
+        # 착지 판정 · 대상 판정 · base 모양 조언은 위에서 **한 번 읽은** 증거를 쓴다 (task 7.5.2 · 7.5.2.1).
         landing = str(facts.get("adoption_source", "")) if adopted \
             else resolve_landing(change_dir, root, base, head, evidence)
         required = changed_existing_functions(root, base, landing)
     except GATE_FAULTS as exc:
-        return [f"cannot derive modified Go functions: {exc}"]
+        return [f"cannot derive modified Go functions: {exc}"], False
     facts["landing"] = landing
     facts["required_count"] = len(required)
     if not landing:
@@ -1742,15 +2061,9 @@ def check(
             facts["base_shaped_bundles"] = _base_shaped_bundles(root, base, evidence)
         except GATE_FAULTS as exc:
             facts["base_shaped_fault"] = str(exc)
-    # 판정을 내놓기 **직전**, 판정한 역사와 증거가 아직 거기 있는지 본다 (task 7.5.2.2 — 사람이 2026-09-20 에
-    # 골랐다). 7.5.2.1 은 한 번 읽은 스냅숏으로 판정하고 그대로 내놓아서, 실행 중 증거가 무효로 바뀌어도 `[]` 였고
-    # (Codex P1) 실행 중 `HEAD` 가 움직여도 옛 `HEAD` 의 판정이 새 트리의 게이트 PASS 가 됐다(적대). 스냅숏은
-    # 판정을 **내적으로** 일관되게 하고, 이 대조는 그 판정이 **지금 거기 있는 것**의 판정임을 보인다 — 둘 다 있어야
-    # 한다. 달라졌으면 판정 대신 "다시 돌려라" 다(막는 쪽). 판정 앞에서 돌아가는 결함 · 거절은 대조하지 않는다 —
-    # 이미 빨갛다.
-    verdict = _verdict(root, base, landing, adopted, required, evidence, review_text)
-    moved = _judged_state_moved(root, head, evidence)
-    return [moved] if moved else verdict
+    # 스냅숏은 판정을 **내적으로** 일관되게 하고, `check` 의 재확인은 그 판정이 **지금 거기 있는 것**의
+    # 판정임을 보인다 — 둘 다 있어야 한다 (task 7.5.2.2 · 7.5.2.3).
+    return _verdict(root, base, landing, adopted, required, evidence, review_text), True
 
 
 def _verdict(
@@ -1788,17 +2101,26 @@ def _verdict(
     # 그 번들의 산문 없이 판정하면 그 번들의 표가 조용히 빠진다.
     bundle_texts: dict[Path, str] = {}
     for target in evidence.targets:
-        if not os.path.lexists(target / "function-logic-map.md"):
+        # 목록은 증거 읽기가 한 번 만든 것이다 (task 7.5.2.3) — 여기서 `lexists` 로 다시 묻던 판본은 감사
+        # 참여 여부를 판정과 **다른 읽기**로 정했고, 그 자리는 원장에도 안 남았다.
+        if target in evidence.unlistable:
+            errors.append(f"{target.name}: cannot read every file in the bundle "
+                          f"({evidence.unlistable[target]}: {target.name})")
+            continue
+        names = evidence.listings.get(target, ())
+        if "function-logic-map.md" not in names:
             continue
         try:
-            bundle_texts[target] = _bundle_text(target, evidence.held.get(target / "ast.json"))
+            bundle_texts[target] = _bundle_text(
+                target, evidence.held.get(target / "ast.json"), names=names)
         except OSError as exc:
-            # 목록을 못 열었거나 정규 파일 하나를 못 읽었다 (task 7.5.2.1 · 7.5.2.2) — 어느 쪽인지 이름으로 댄다.
-            # 이름이 글자가 아니면(`open(fd)` 의 예외는 `filename` 에 **정수 fd** 를 담는다) 번들 이름으로 떨어진다 —
-            # 이름을 대려다 `TypeError` 로 판정 줄 없이 죽지 않게. 경로를 담는 쪽은 `_read_regular` 가 못 박는다.
+            # 번들 파일 하나를 못 읽었다 (task 7.5.2.1 · 7.5.2.2 · 7.5.2.3) — 사유와 이름을 댄다: 권한 ·
+            # 디렉터리 · 정규 파일 아님 · 너무 큼 · UTF-8 아님이 모두 이 한 자리로 온다. 이름이 글자가 아니면
+            # (`open(fd)` 의 예외는 `filename` 에 **정수 fd** 를 담는다) 번들 이름으로 떨어진다 — 이름을 대려다
+            # `TypeError` 로 판정 줄 없이 죽지 않게. 경로를 담는 쪽은 `_opened_bytes` 가 못 박는다.
             named = exc.filename if isinstance(exc.filename, str) else ""
             where = Path(named).name if named else target.name
-            errors.append(f"{target.name}: cannot read every file in the bundle ({exc.strerror or exc}: {where})")
+            errors.append(f"{target.name}: cannot read every file in the bundle ({_why(exc)}: {where})")
     require_calls = call_enumeration_in_use(
         (text, _parsed(evidence.held.get(target / "ast.json"))) for target, text in bundle_texts.items()
     )
@@ -1878,23 +2200,40 @@ def _head_commit(root: Path) -> str:
     return process.stdout.strip()
 
 
-def _judged_state_moved(root: Path, head: str, evidence: Evidence) -> str:
-    """판정한 역사(`head`)와 증거가 **지금도** 거기 있는가. 달라졌으면 그 문장, 같으면 빈 문자열.
-
-    `check` 의 출구와 기록 명령의 쓰기 직전이 묻는다 (task 7.5.2.2). 판정 · 계산은 명령이 한 번 푼 sha 와 한 번
-    읽은 증거로만 서므로(7.5.2.1) 안에서는 섞이지 않는다 — 이 대조는 **그 판정을 내놓아도 되는가**를 본다. 이
-    읽기의 바이트는 판정에 들어가지 않는다. `HEAD` 를 못 읽으면 결함이다(`_head_commit`).
-
-    거절하는 정상 입력: 실행 중 병행 세션의 커밋 · 번들 편집. 값은 재실행 한 번이다 — 7.5.2.1 은 그것을 받아
-    들였는데, 그러면 판정은 옛 역사의 것이고 게이트의 나머지는 새 트리로 가서 무엇이 PASS 했는지 아무 데도 안
-    남았다(재리뷰 적대 · Codex P1).
-    """
+def _head_moved(root: Path, head: str) -> str:
+    """판정한 역사가 아직 `HEAD` 인가. 역사를 다시 묻는 **한 자리**다 — 못 읽으면 결함이다(`_head_commit`)."""
     now = _head_commit(root)
     if now != head:
         return JUDGED_STATE_MOVED.format(what=f"HEAD moved from {head[:12]} to {now[:12]}")
-    if _read_evidence(evidence.directory) != evidence:
-        return JUDGED_STATE_MOVED.format(what="the evidence changed")
     return ""
+
+
+def _judged_state_moved(root: Path, head: str, book: ReadLedger) -> str:
+    """판정한 역사와 **판정이 읽은 것 전부**가 지금도 그대로인가. 달라졌으면 그 문장, 같으면 빈 문자열.
+
+    `check` 의 출구와 기록 명령의 쓰기 직전이 묻는다 (task 7.5.2.2). 판정 · 계산은 명령이 한 번 푼 sha 와 한 번
+    읽은 바이트로만 서므로(7.5.2.1) 안에서는 섞이지 않는다 — 이 대조는 **그 판정을 내놓아도 되는가**를 본다. 이
+    읽기의 바이트는 판정에 들어가지 않는다.
+
+    대조 집합은 **원장**이다 (task 7.5.2.3). 7.5.2.2 는 `HEAD` + `Evidence` 만 골라서, 판정이 읽는 1,739 경로
+    중 149 만 봤다(a112 실측) — 번들 산문 · 워킹트리 소스 · `review.md` · `base-commit.txt` · 시험 색인이 밖에
+    있었고, 실행 중 그것을 건드리면 `[]` PASS 였다.
+
+    `HEAD` 를 **앞뒤로** 묻는다 (재리뷰 Codex 적대): 7.5.2.2 는 증거 스캔 앞에서만 물어서 스캔 도중의 커밋이
+    통과했다. 원장을 다시 읽는 데 a112 에서 ~0.7s 가 걸리고 그 사이에도 역사는 설 수 있다.
+
+    거절하는 정상 입력: 실행 중 병행 세션의 커밋 · 편집. 값은 재실행 한 번이다 — 7.5.2.1 은 그것을 받아
+    들였는데, 그러면 판정은 옛 상태의 것이고 게이트의 나머지는 새 트리로 가서 무엇이 PASS 했는지 아무 데도 안
+    남았다(재리뷰 적대 · Codex P1). **재확인 뒤의 창**은 어느 설계로도 못 없앤다 — rc 를 읽는 `tools/gate.sh`
+    까지가 그 창이다.
+    """
+    moved = _head_moved(root, head)
+    if moved:
+        return moved
+    changed = _reads_moved(root, book)
+    if changed:
+        return JUDGED_STATE_MOVED.format(what=changed)
+    return _head_moved(root, head)
 
 
 def _raise_if_inputs_moved(root: Path, inputs: LandingInputs) -> None:
@@ -2105,6 +2444,29 @@ def _recording_refusal(
     return "", base
 
 
+def _recording_moved(
+    change: str, change_dir: Path, root: Path, head: str, book: ReadLedger,
+) -> str:
+    """쓰기 **직전**: 이 기록을 만들어도 되는가. 안 되면 그 사유, 되면 빈 글자 (task 7.5.2.3).
+
+    7.5.2.2 는 역사와 증거만 다시 봤다. 그런데 거절 사유 일곱 중 **더러운 워킹트리**는 둘 중 어느 것도
+    아니다(기록 명령은 Go 소스를 읽지 않으므로 원장에도 없다): 후보 순회는 change 하나에 133~219초이고
+    (리뷰 I1 실측) 그 사이에 추적 Go 파일을 고치면 기록이 `open("xb")` 로 **영구히** 만들어져 그 편집이 든
+    분기가 창 밖에 남는다 — 보수는 사람 손이다(재리뷰 보안 · 적대).
+
+    **순서가 곧 사유다.** 역사를 먼저 묻는다: 실행 중 커밋이 서면 워킹트리는 그 커밋과 견주어 "더럽다" 로도
+    보이는데, 그때 할 말은 "커밋하라" 가 아니라 "역사가 움직였다" 다. 그다음 거절 집합, 마지막으로 원장
+    전체 — 뒤로 갈수록 넓게 본다.
+    """
+    moved = _head_moved(root, head)
+    if moved:
+        return moved
+    # 거절은 **쓰는 순간의** 디스크에 대한 질문이므로 증거를 다시 읽어서 묻는다. 두 읽기가 갈리면 원장이 본다.
+    refusal, _ = _recording_refusal(
+        change, change_dir, root, head, _read_evidence(change_dir / "analysis" / "function-logic"))
+    return refusal or _judged_state_moved(root, head, book)
+
+
 def record_landing(change: str, root: Path = ROOT) -> tuple[int, list[str]]:
     """계산한 착지를 `landed-commit.txt` 에 쓴다. `(rc, 줄들)`.
 
@@ -2126,22 +2488,23 @@ def record_landing(change: str, root: Path = ROOT) -> tuple[int, list[str]]:
     except ValueError as exc:
         return 1, [str(exc)]
     landing_file = change_dir / LANDING_FILE
+    analysis = change_dir / "analysis" / "function-logic"
     try:
-        # 역사는 **한 번** 풀고 증거는 **한 번** 읽는다 (task 7.5.2.1) — 걷기 전 판정과 걷기가 같은
-        # 값을 쓴다. 이 뒤에 커밋이 서도 기록은 시작할 때의 역사에서 계산한 값이다: 게이트가 기록을
-        # 그때의 역사에서 **다시 판정한다**(기록 뒤의 자기 수리면 거절한다).
-        head = _head_commit(root)
-        evidence = _read_evidence(change_dir / "analysis" / "function-logic")
-        # 걷기 전에 멈추는 사유는 5단계의 조언 줄이 묻는 **그 함수**에 묻는다 (task 7.7, I8).
-        # 경계 **안에서** 묻는다: 걷기 전 부분도 번들을 읽으므로 저장소 밖을 가리키는 번들이
-        # 거기서 터진다 — 이 판정이 경계 밖에 있던 첫 판본을 7.4 의 시험이 잡았다.
-        refusal, base = _recording_refusal(change, change_dir, root, head, evidence)
-        if refusal:
-            return 1, [f"{change}: {refusal}"]
-        landing, why = compute_landing(root, base, _measure_landing_inputs(root, head, evidence))
-        # 쓰기 **직전**에 계산한 역사와 증거가 아직 거기 있는지 본다 (task 7.5.2.2) — `check` 의 출구와 같은 대조다.
-        # 7.5.2.1 은 실행 중 커밋이 서도 시작할 때의 역사로 계산한 값을 썼다; 저자는 그것을 **새** 역사 위에 커밋한다.
-        moved = _judged_state_moved(root, head, evidence) if landing else ""
+        with _ledger() as book:
+            # 역사는 **한 번** 풀고 증거는 **한 번** 읽는다 (task 7.5.2.1) — 걷기 전 판정과 걷기가 같은
+            # 값을 쓴다. 이 뒤에 커밋이 서도 기록은 시작할 때의 역사에서 계산한 값이다: 게이트가 기록을
+            # 그때의 역사에서 **다시 판정한다**(기록 뒤의 자기 수리면 거절한다).
+            head = _head_commit(root)
+            evidence = _read_evidence(analysis)
+            # 걷기 전에 멈추는 사유는 5단계의 조언 줄이 묻는 **그 함수**에 묻는다 (task 7.7, I8).
+            # 경계 **안에서** 묻는다: 걷기 전 부분도 번들을 읽으므로 저장소 밖을 가리키는 번들이
+            # 거기서 터진다 — 이 판정이 경계 밖에 있던 첫 판본을 7.4 의 시험이 잡았다.
+            refusal, base = _recording_refusal(change, change_dir, root, head, evidence)
+            if refusal:
+                return 1, [f"{change}: {refusal}"]
+            landing, why = compute_landing(root, base, _measure_landing_inputs(root, head, evidence))
+            # 쓰기 **직전**에 거절 집합 **전체**를 다시 묻는다 (task 7.5.2.3).
+            moved = _recording_moved(change, change_dir, root, head, book) if landing else ""
     except GATE_FAULTS as exc:
         # 저장소 밖을 가리키는 번들·읽을 수 없는 ast.json·멎은 git 은 전부 이 함수가
         # 답할 수 있는 것이다. 스택으로 죽으면 "왜 기록이 안 됐나"가 아무 데도 안 남는다.

@@ -15,3 +15,13 @@
 | raise 줄 | 소스 |
 |---|---|
 | 669 | `raise IsADirectoryError(errno.EISDIR, os.strerror(errno.EISDIR), str(path))` |
+
+## task 7.5.2.3 — 재확인의 입력 집합은 판정의 입력 집합이다 (7.5.2.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:792-802` · 분기 1 · 반환 1 · raise 1 (편집 전 L649-675 · 분기 3 · 반환 2 · raise 1, `ast.before-7.5.2.3.json` = revision `1d12520c`).
+
+몸이 `_opened_bytes` 로 가고 여기는 **원장에 적는 깔때기**가 됐다. 반환형이 `bytes | None` → `bytes` 다: 종류가 틀린 것은 이제 예외이고, 호출자는 "못 읽었다" 를 예외 한 가지 모양으로만 만난다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 800 | If | `if isinstance(value, OSError):` |

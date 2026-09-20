@@ -1,0 +1,76 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d12520c97b800f234f5c25483068a2bd70bd19b",
+  "source_sha256": "487708dc51fe19f322275b49e31a7edc49025fd4fd28a04d4b728a41a4f7b70c",
+  "function": "_kind_outcome",
+  "signature": "_kind_outcome(path)",
+  "start": {
+    "line": 838,
+    "column": 1
+  },
+  "end": {
+    "line": 845,
+    "column": 32
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 840,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 842,
+      "inherited_line": false,
+      "source": "except OSError as exc:"
+    },
+    {
+      "id": "B3",
+      "kind": "IfExp",
+      "line": 844,
+      "inherited_line": false,
+      "source": "'dir' if stat.S_ISDIR(mode) else 'reg' if stat.S_ISREG(mode) else 'other'"
+    },
+    {
+      "id": "B4",
+      "kind": "IfExp",
+      "line": 844,
+      "inherited_line": false,
+      "source": "'reg' if stat.S_ISREG(mode) else 'other'"
+    }
+  ],
+  "returns": [
+    {
+      "line": 843,
+      "value": "(_failed(exc), '')"
+    },
+    {
+      "line": 845,
+      "value": "('kind:' + kind, kind)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 841,
+      "callee": "os.stat"
+    },
+    {
+      "line": 843,
+      "callee": "_failed"
+    },
+    {
+      "line": 844,
+      "callee": "stat.S_ISDIR"
+    },
+    {
+      "line": 844,
+      "callee": "stat.S_ISREG"
+    }
+  ]
+}

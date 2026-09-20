@@ -42,3 +42,22 @@
 | B4 | 697 | Try | `try:` |
 | B5 | 699 | ExceptHandler | `except FileNotFoundError:` |
 | B6 | 701 | ExceptHandler | `except OSError:` |
+
+## task 7.5.2.3 — 재확인의 입력 집합은 판정의 입력 집합이다 (7.5.2.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:904-942` · 분기 10 · 반환 2 · raise 0 (편집 전 L678-703 · 분기 6 · 반환 2 · raise 0, `ast.before-7.5.2.3.json` = revision `1d12520c`).
+
+번들 **안의 이름 목록**까지 여기서 한 번 읽는다(7.5.2.2 는 세 곳에서 따로 만들었다: 빌림 공존 · 감사 참여(`lexists`) · `_bundle_text`). 그리고 permissive 구멍 하나를 닫았다: `is_dir()` 이 `OSError` 를 삼켜서 **못 여는** 증거 디렉터리가 "증거 없음" 이 되어 면제 표지 하나로 통과했다 — 이제 디렉터리가 **아닌 것**만 없는 것이다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 922 | Try | `try:` |
+| B2 | 924 | ExceptHandler | `except (FileNotFoundError, NotADirectoryError):` |
+| B3 | 926 | comprehension | ` for name, is_dir in entries if is_dir` |
+| B4 | 930 | For | `for target in targets:` |
+| B5 | 932 | Try | `try:` |
+| B6 | 934 | ExceptHandler | `except FileNotFoundError:` |
+| B7 | 936 | ExceptHandler | `except OSError:` |
+| B8 | 938 | Try | `try:` |
+| B9 | 939 | comprehension | ` for name, _ in _listed(target)` |
+| B10 | 940 | ExceptHandler | `except OSError as exc:` |

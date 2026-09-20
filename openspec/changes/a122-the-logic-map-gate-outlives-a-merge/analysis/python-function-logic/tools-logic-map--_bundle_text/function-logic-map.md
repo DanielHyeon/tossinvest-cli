@@ -48,3 +48,22 @@
 | B7 | 1447 | If | `if raw is None:` |
 | B8 | 1449 | Try | `try:` |
 | B9 | 1451 | ExceptHandler | `except UnicodeDecodeError:` |
+
+## task 7.5.2.3 — 재확인의 입력 집합은 판정의 입력 집합이다 (7.5.2.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1661-1710` · 분기 10 · 반환 1 · raise 1 (편집 전 L1412-1455 · 분기 9 · 반환 1 · raise 0, `ast.before-7.5.2.3.json` = revision `1d12520c`).
+
+**조용히 건너뛰는 모양이 하나만 남았다**(사라진 파일). 종류가 틀린 것 · 못 푸는 바이트는 이름 댄 판정 줄이 된다 — 게이트가 여는 그 순간에만 FIFO 로 바꿨다 되돌리면 감사가 꺼졌고(실측 6/14), 못 푸는 바이트 한 개로도 같은 일이 일어났다. 목록은 호출자가 한 번 읽은 것을 받는다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1691 | IfExp | `names if names is not None else tuple((name for name, _ in _listed(target)))` |
+| B2 | 1691 | comprehension | ` for name, _ in _listed(target)` |
+| B3 | 1692 | comprehension | ` for name in listed if name != 'ast.json'` |
+| B4 | 1693 | If | `if ast_raw is not None:` |
+| B5 | 1696 | For | `for name in sorted(paths):` |
+| B6 | 1697 | If | `if name == 'ast.json':` |
+| B7 | 1700 | Try | `try:` |
+| B8 | 1702 | ExceptHandler | `except FileNotFoundError:` |
+| B9 | 1704 | Try | `try:` |
+| B10 | 1706 | ExceptHandler | `except UnicodeDecodeError as exc:` |

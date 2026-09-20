@@ -85,3 +85,16 @@ base 읽기를 한 프로세스로(7.5 가 남긴 per-bundle 루프 — 재리�
 | B3 | 723 | comprehension | ` for _, source, _ in stale` |
 | B4 | 724 | comprehension | ` for ast_path, source, digest in stale if at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() ==` |
 | B5 | 726 | BoolOp | `at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() == digest` |
+
+## task 7.5.2.3 — 재확인의 입력 집합은 판정의 입력 집합이다 (7.5.2.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:971-999` · 분기 4 · 반환 1 · raise 0 (편집 전 L732-760 · 분기 5 · 반환 1 · raise 0, `ast.before-7.5.2.3.json` = revision `1d12520c`).
+
+워킹트리 소스를 `_worktree_digest` 로 읽는다 — 조언 줄이 보는 바이트도 원장에 남는다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 988 | comprehension | ` for ast_path, source, digest in _select_pinning(root, evidence) if _worktree_digest(root / source) != digest` |
+| B2 | 995 | comprehension | ` for _, source, _ in stale` |
+| B3 | 996 | comprehension | ` for ast_path, source, digest in stale if at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() ==` |
+| B4 | 998 | BoolOp | `at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() == digest` |

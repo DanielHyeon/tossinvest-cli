@@ -90,16 +90,19 @@ def run_main(module, change: str) -> dict:
 
     # 7.5.2.2 부터 증거는 `_read_regular`(`os.open`)로 읽힌다 — 그 길도 세야 한다. 안 세면 after 쪽 읽기가 **0** 으로
     # 찍힌다(첫 표본 실행이 `48 → 0` 을 냈다 — 계측기가 눈멀었다).
+    # 7.5.2.3 부터 끝의 재확인이 `_file_outcome` 으로 **직접** 다시 읽는다 — `_read_regular` 에 걸면 그 읽기가
+    # 0 으로 찍힌다. 세는 자리는 모든 읽기가 지나는 **깔때기 안**(`_opened_bytes`)이다.
     extra = contextlib.nullcontext()
-    if hasattr(module, "_read_regular"):
-        real_regular = module._read_regular
+    inner = "_opened_bytes" if hasattr(module, "_opened_bytes") else "_read_regular"
+    if hasattr(module, inner):
+        real_regular = getattr(module, inner)
 
         def counting_regular(path):
             if Path(path).name == "ast.json":
                 counts["ast_reads"] += 1
             return real_regular(path)
 
-        extra = mock.patch.object(module, "_read_regular", counting_regular)
+        extra = mock.patch.object(module, inner, counting_regular)
     out = io.StringIO()
     argv = ["check_analysis.py", "--change", change, "--root", str(ROOT)]
     start = time.monotonic()

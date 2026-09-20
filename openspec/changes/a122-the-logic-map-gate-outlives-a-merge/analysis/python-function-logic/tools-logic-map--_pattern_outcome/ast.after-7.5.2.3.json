@@ -1,0 +1,63 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d12520c97b800f234f5c25483068a2bd70bd19b",
+  "source_sha256": "487708dc51fe19f322275b49e31a7edc49025fd4fd28a04d4b728a41a4f7b70c",
+  "function": "_pattern_outcome",
+  "signature": "_pattern_outcome(root, pattern)",
+  "start": {
+    "line": 824,
+    "column": 1
+  },
+  "end": {
+    "line": 828,
+    "column": 81
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "comprehension",
+      "line": 827,
+      "inherited_line": true,
+      "source": " for path in matches"
+    }
+  ],
+  "returns": [
+    {
+      "line": 828,
+      "value": "('glob:' + hashlib.sha256(joined.encode('utf-8')).hexdigest(), matches)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 826,
+      "callee": "root.rglob"
+    },
+    {
+      "line": 826,
+      "callee": "sorted"
+    },
+    {
+      "line": 827,
+      "callee": "'\\n'.join"
+    },
+    {
+      "line": 827,
+      "callee": "str"
+    },
+    {
+      "line": 828,
+      "callee": "hashlib.sha256(joined.encode('utf-8')).hexdigest"
+    },
+    {
+      "line": 828,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 828,
+      "callee": "joined.encode"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d12520c97b800f234f5c25483068a2bd70bd19b",
+  "source_sha256": "487708dc51fe19f322275b49e31a7edc49025fd4fd28a04d4b728a41a4f7b70c",
+  "function": "_kind",
+  "signature": "_kind(path)",
+  "start": {
+    "line": 848,
+    "column": 1
+  },
+  "end": {
+    "line": 852,
+    "column": 16
+  },
+  "branches": [],
+  "returns": [
+    {
+      "line": 852,
+      "value": "kind"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 850,
+      "callee": "_kind_outcome"
+    },
+    {
+      "line": 851,
+      "callee": "_remember"
+    },
+    {
+      "line": 851,
+      "callee": "str"
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d12520c97b800f234f5c25483068a2bd70bd19b",
+  "source_sha256": "487708dc51fe19f322275b49e31a7edc49025fd4fd28a04d4b728a41a4f7b70c",
+  "function": "test_spans",
+  "signature": "test_spans(path)",
+  "start": {
+    "line": 1534,
+    "column": 1
+  },
+  "end": {
+    "line": 1556,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 1537,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 1542,
+      "inherited_line": false,
+      "source": "except OSError:"
+    },
+    {
+      "id": "B3",
+      "kind": "For",
+      "line": 1544,
+      "inherited_line": false,
+      "source": "for index, line in enumerate(lines):"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 1546,
+      "inherited_line": false,
+      "source": "if not declared:"
+    },
+    {
+      "id": "B5",
+      "kind": "For",
+      "line": 1549,
+      "inherited_line": false,
+      "source": "for offset in range(index, len(lines)):"
+    },
+    {
+      "id": "B6",
+      "kind": "BoolOp",
+      "line": 1551,
+      "inherited_line": false,
+      "source": "depth <= 0 and offset > index"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 1551,
+      "inherited_line": false,
+      "source": "if depth <= 0 and offset > index:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1543,
+      "value": "spans"
+    },
+    {
+      "line": 1556,
+      "value": "spans"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1541,
+      "callee": "_read_regular(path).decode('utf-8', 'replace').splitlines"
+    },
+    {
+      "line": 1541,
+      "callee": "_read_regular"
+    },
+    {
+      "line": 1541,
+      "callee": "_read_regular(path).decode"
+    },
+    {
+      "line": 1544,
+      "callee": "enumerate"
+    },
+    {
+      "line": 1545,
+      "callee": "GO_TEST_DECL.match"
+    },
+    {
+      "line": 1549,
+      "callee": "len"
+    },
+    {
+      "line": 1549,
+      "callee": "range"
+    },
+    {
+      "line": 1550,
+      "callee": "lines[offset].count"
+    },
+    {
+      "line": 1550,
+      "callee": "lines[offset].count"
+    },
+    {
+      "line": 1552,
+      "callee": "declared.group"
+    },
+    {
+      "line": 1555,
+      "callee": "declared.group"
+    },
+    {
+      "line": 1555,
+      "callee": "len"
+    }
+  ]
+}

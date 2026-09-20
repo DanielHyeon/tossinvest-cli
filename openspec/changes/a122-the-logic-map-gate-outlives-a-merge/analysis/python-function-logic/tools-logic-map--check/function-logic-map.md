@@ -384,3 +384,15 @@ CAUGHT — `test_an_undecodable_landing_record_in_the_adoption_path_is_refused_n
 | B24 | 1741 | Try | `try:` |
 | B25 | 1743 | ExceptHandler | `except GATE_FAULTS as exc:` |
 | B26 | 1753 | IfExp | `[moved] if moved else verdict` |
+
+## task 7.5.2.3 — 재확인의 입력 집합은 판정의 입력 집합이다 (7.5.2.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1913-1937` · 분기 3 · 반환 2 · raise 0 (편집 전 L1645-1753 · 분기 26 · 반환 10 · raise 0, `ast.before-7.5.2.3.json` = revision `1d12520c`).
+
+판정 본문이 `_judged` 로 가고 여기는 **원장을 열고 닫는 자리**가 됐다. 판정이 끝까지 갔을 때만 재확인한다 — 판정 앞에서 돌아간 결함 · 거절은 이미 빨갛다(7.5.2.2 와 같다).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1925 | IfExp | `{} if context is None else context` |
+| B2 | 1933 | If | `if not judged:` |
+| B3 | 1937 | IfExp | `[moved] if moved else verdict` |

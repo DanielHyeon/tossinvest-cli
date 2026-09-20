@@ -164,3 +164,22 @@ B4·B5 는 **이 로트가 찾은 둘째 자리**다. 4.4 는 `check` 의 probe 
 | B8 | 2151 | If | `if moved:` |
 | B9 | 2153 | Try | `try:` |
 | B10 | 2156 | ExceptHandler | `except FileExistsError:` |
+
+## task 7.5.2.3 — 재확인의 입력 집합은 판정의 입력 집합이다 (7.5.2.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:2470-2531` · 분기 10 · 반환 7 · raise 0 (편집 전 L2108-2168 · 분기 10 · 반환 7 · raise 0, `ast.before-7.5.2.3.json` = revision `1d12520c`).
+
+원장 안에서 돌고, 쓰기 직전의 재확인을 `_recording_moved` 에 묻는다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 2485 | Try | `try:` |
+| B2 | 2488 | ExceptHandler | `except ValueError as exc:` |
+| B3 | 2492 | Try | `try:` |
+| B4 | 2503 | If | `if refusal:` |
+| B5 | 2507 | IfExp | `_recording_moved(change, change_dir, root, head, book) if landing else ''` |
+| B6 | 2508 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B7 | 2512 | If | `if not landing:` |
+| B8 | 2514 | If | `if moved:` |
+| B9 | 2516 | Try | `try:` |
+| B10 | 2519 | ExceptHandler | `except FileExistsError:` |

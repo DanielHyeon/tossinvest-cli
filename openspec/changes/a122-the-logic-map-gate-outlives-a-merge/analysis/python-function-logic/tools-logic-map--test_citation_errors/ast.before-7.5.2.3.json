@@ -1,0 +1,118 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "1d12520c",
+  "head_commit": "1d12520c97b800f234f5c25483068a2bd70bd19b",
+  "source_sha256": "b24e77d5e8f9de4208db0dbd4c85daae108896f1a3771ad6e155357c7a3f23fc",
+  "function": "test_citation_errors",
+  "signature": "test_citation_errors(target, text, package_dir, root, index)",
+  "start": {
+    "line": 1349,
+    "column": 1
+  },
+  "end": {
+    "line": 1387,
+    "column": 18
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 1353,
+      "inherited_line": false,
+      "source": "for name in sorted(set(CITED_TEST.findall(text))):"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 1354,
+      "inherited_line": false,
+      "source": "if name not in index:"
+    },
+    {
+      "id": "B3",
+      "kind": "For",
+      "line": 1375,
+      "inherited_line": false,
+      "source": "for line in text.splitlines():"
+    },
+    {
+      "id": "B4",
+      "kind": "For",
+      "line": 1376,
+      "inherited_line": false,
+      "source": "for basename, raw in CITED_TEST_LINE.findall(line):"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 1378,
+      "inherited_line": false,
+      "source": "if path is None:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 1382,
+      "inherited_line": false,
+      "source": "if number > total:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1387,
+      "value": "errors"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1353,
+      "callee": "CITED_TEST.findall"
+    },
+    {
+      "line": 1353,
+      "callee": "set"
+    },
+    {
+      "line": 1353,
+      "callee": "sorted"
+    },
+    {
+      "line": 1355,
+      "callee": "errors.append"
+    },
+    {
+      "line": 1375,
+      "callee": "text.splitlines"
+    },
+    {
+      "line": 1376,
+      "callee": "CITED_TEST_LINE.findall"
+    },
+    {
+      "line": 1377,
+      "callee": "resolve_test_file"
+    },
+    {
+      "line": 1380,
+      "callee": "int"
+    },
+    {
+      "line": 1381,
+      "callee": "path.read_text(encoding='utf-8', errors='replace').splitlines"
+    },
+    {
+      "line": 1381,
+      "callee": "len"
+    },
+    {
+      "line": 1381,
+      "callee": "path.read_text"
+    },
+    {
+      "line": 1383,
+      "callee": "errors.append"
+    }
+  ]
+}

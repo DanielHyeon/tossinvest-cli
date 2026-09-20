@@ -85,3 +85,24 @@ rev-parse)` · `os.environ.get`. `execution_baseline.py` 는 **한 줄도 안 �
 분기 11 → 11 · 반환 2 → 2 · raise 4 → 4, 열거 diff 에 갈래 변화 **0**. 바뀐 것은 시그니처
 (키워드 전용 필수 `change_id`)와 `validate_execution_baseline` 에 넘기는 인자 하나다.
 변이 M6(인자를 `change_dir.name` 으로 되돌림) CAUGHT — 아카이브 시험이 빨개진다.
+
+## task 7.5.2.3 — 재확인의 입력 집합은 판정의 입력 집합이다 (7.5.2.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:304-356` · 분기 12 · 반환 2 · raise 5 (편집 전 L293-341 · 분기 11 · 반환 2 · raise 4, `ast.before-7.5.2.3.json` = revision `1d12520c`).
+
+창의 **시작**을 정하는 글자를 깔때기로 읽는다(옛 `read_text` 는 FIFO 에 멎었다). 없는 것(`missing base-commit.txt` + 복구 명령)과 못 읽는 것을 가른다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 309 | Try | `try:` |
+| B2 | 313 | ExceptHandler | `except FileNotFoundError as exc:` |
+| B3 | 319 | ExceptHandler | `except (OSError, UnicodeDecodeError) as exc:` |
+| B4 | 331 | If | `if process.returncode:` |
+| B5 | 333 | BoolOp | `process.stderr.strip() or f'invalid Function Logic Map base: {value}'` |
+| B6 | 338 | Try | `try:` |
+| B7 | 343 | ExceptHandler | `except AdoptionError as exc:` |
+| B8 | 345 | IfExp | `str(adoption['effective_base']) if adoption else persisted` |
+| B9 | 346 | If | `if context is not None:` |
+| B10 | 349 | If | `if adoption:` |
+| B11 | 354 | BoolOp | `override and resolve(override) != effective` |
+| B12 | 354 | If | `if override and resolve(override) != effective:` |

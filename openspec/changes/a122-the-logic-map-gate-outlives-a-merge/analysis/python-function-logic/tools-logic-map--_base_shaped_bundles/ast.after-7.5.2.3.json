@@ -1,0 +1,80 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d12520c97b800f234f5c25483068a2bd70bd19b",
+  "source_sha256": "487708dc51fe19f322275b49e31a7edc49025fd4fd28a04d4b728a41a4f7b70c",
+  "function": "_base_shaped_bundles",
+  "signature": "_base_shaped_bundles(root, base, evidence)",
+  "start": {
+    "line": 971,
+    "column": 1
+  },
+  "end": {
+    "line": 999,
+    "column": 6
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "comprehension",
+      "line": 988,
+      "inherited_line": true,
+      "source": " for ast_path, source, digest in _select_pinning(root, evidence) if _worktree_digest(root / source) != digest"
+    },
+    {
+      "id": "B2",
+      "kind": "comprehension",
+      "line": 995,
+      "inherited_line": true,
+      "source": " for _, source, _ in stale"
+    },
+    {
+      "id": "B3",
+      "kind": "comprehension",
+      "line": 996,
+      "inherited_line": true,
+      "source": " for ast_path, source, digest in stale if at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() =="
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 998,
+      "inherited_line": false,
+      "source": "at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() == digest"
+    }
+  ],
+  "returns": [
+    {
+      "line": 996,
+      "value": "sorted((ast_path.parent.name for ast_path, source, digest in stale if at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() == digest))"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 990,
+      "callee": "_select_pinning"
+    },
+    {
+      "line": 993,
+      "callee": "_worktree_digest"
+    },
+    {
+      "line": 995,
+      "callee": "_committed_many"
+    },
+    {
+      "line": 996,
+      "callee": "sorted"
+    },
+    {
+      "line": 998,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 998,
+      "callee": "hashlib.sha256(at_base[source]).hexdigest"
+    }
+  ]
+}

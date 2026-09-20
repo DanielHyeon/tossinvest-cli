@@ -4,6 +4,7 @@
 사본 대상 + **무변이 대조군**이 먼저다 ([[mutation-revert-needs-the-right-baseline]] ·
 [[mutation-must-reach-the-thing-under-test]]). 대조군이 초록이 아니면 멈춘다.
 """
+import os
 import shutil
 import subprocess
 import sys
@@ -16,7 +17,9 @@ REPO = next(parent for parent in Path(__file__).resolve().parents
             if (parent / "tools" / "logic-map").is_dir())
 SP = Path(__file__).resolve().parent / "_work"
 SP.mkdir(exist_ok=True)
-WORK = SP / "75_mut_work"
+# 사본은 **프로세스별**이다 (task 7.5.2.3): 두 판이 한 사본을 쓰면 한쪽의 변이가 다른 쪽의 기준이 되고,
+# 그러면 CAUGHT/SURVIVED 가 뒤섞인다 — 2026-09-20 에 배경 판과 전경 창이 실제로 그렇게 됐다.
+WORK = SP / f"75_mut_work.{os.getpid()}"
 # 스위트 **전체**를 돈다 (task 7.5.2) — 226개가 50초 안팎이라 고른 부분집합의 이득이 없고, 고르면
 # 새 시험 클래스를 목록에 안 넣는 것만으로 변이가 "살아남는다".
 SUITE = ["test_check_analysis"]
@@ -195,10 +198,10 @@ MUTATIONS = {
         ('    for target in evidence.targets:\n        target_errors, binding',
          '    for target in sorted(path for path in analysis.iterdir() if path.is_dir()):\n        target_errors, binding')],
     "Y15_evidence_listed_by_glob": [
-        ('    targets = tuple(sorted(path for path in analysis.iterdir() if path.is_dir()))',
+        ('    targets = tuple(analysis / name for name, is_dir in entries if is_dir)',
          '    targets = tuple(sorted(path.parent for path in analysis.glob("*/ast.json")))')],
     "Y16_absent_read_as_unreadable": [
-        ('        except FileNotFoundError:\n            continue\n        except OSError:',
+        ('        except FileNotFoundError:\n            pass\n        except OSError:',
          '        except FileNotFoundError:\n            held[ast_path] = None\n        except OSError:')],
     "Y17_listing_failure_is_silent": [
         ('            named = exc.filename if isinstance(exc.filename, str) else ""',
@@ -238,8 +241,8 @@ MUTATIONS = {
          '    resolved = path.resolve()')],
     # --- 7.5.2.2: 판정은 내놓는 순간에도 거기 있는 것의 판정이다 · 번들 파일은 정규 파일만 ---
     "Z1_non_regular_files_are_read": [
-        ('        if not stat.S_ISREG(mode):\n            return None',
-         '        if False:\n            return None')],
+        ('        if not stat.S_ISREG(mode):\n            raise NotRegularFile(errno.EINVAL, NOT_REGULAR, str(path))',
+         '        if False:\n            raise NotRegularFile(errno.EINVAL, NOT_REGULAR, str(path))')],
     "Z2_unreadable_bundle_file_is_skipped": [
         ('            except FileNotFoundError:\n                continue                        # 끊긴 링크',
          '            except OSError:\n                continue                        # 끊긴 링크')],
@@ -250,17 +253,17 @@ MUTATIONS = {
         ('                raw = _read_regular(path)',
          '                raw = path.read_bytes()')],
     "Z5_no_recheck_at_the_exit": [
-        ('    moved = _judged_state_moved(root, head, evidence)\n    return [moved] if moved else verdict',
-         '    return verdict')],
+        ('        moved = _judged_state_moved(root, str(facts["head"]), book)\n        return [moved] if moved else verdict',
+         '        return verdict')],
     "Z6_exit_recheck_ignores_head": [
         ('    if now != head:\n        return JUDGED_STATE_MOVED',
          '    if False:\n        return JUDGED_STATE_MOVED')],
     "Z7_exit_recheck_ignores_evidence": [
-        ('    if _read_evidence(evidence.directory) != evidence:\n        return JUDGED_STATE_MOVED',
-         '    if False:\n        return JUDGED_STATE_MOVED')],
+        ('    changed = _reads_moved(root, book)',
+         '    changed = ""')],
     "Z8_record_writes_without_recheck": [
-        ('        moved = _judged_state_moved(root, head, evidence) if landing else ""',
-         '        moved = ""')],
+        ('            moved = _recording_moved(change, change_dir, root, head, book) if landing else ""',
+         '            moved = ""')],
     "Z9_window_line_without_head": [
         ('function(s) — judged at HEAD {head[:12]}"',
          'function(s)"')],
@@ -313,20 +316,14 @@ MUTATIONS = {
         '    )\n'
         '    return None if process.returncode else process.stdout')],
     # --- 7.5.2.2 BTM 을 쓰다가 찾은 빈 칸 둘 — 갈래는 있는데 그것을 지우는 변이가 없었다 (구간 `89:` 로 따로 돈다) ---
-    "Z14_bundle_text_decodes_a_non_regular_file": [
-        ('            if raw is None:\n                continue                        # FIFO',
-         '            if False:\n                continue                        # FIFO')],
+    # 7.5.2.3: `raw is None` 갈래가 없어졌다(정규 파일이 아니면 이름 댄 예외). 같은 구멍 — 못 푸는
+    # 바이트를 조용히 넘기기 — 를 되살리는 변이로 다시 겨눈다.
+    "Z14_bundle_text_skips_what_it_cannot_decode": [
+        ('            raise NotUtf8Text(errno.EILSEQ, NOT_UTF8, str(paths[name])) from exc',
+         '            continue')],
     "Z19_the_descriptor_is_left_open": [
-        ('        return None\n'
-         '        with open(descriptor, "rb", closefd=False) as handle:\n'
-         '            return handle.read()\n'
-         '    finally:\n'
-         '        os.close(descriptor)',
-         '        return None\n'
-         '        with open(descriptor, "rb", closefd=False) as handle:\n'
-         '            return handle.read()\n'
-         '    finally:\n'
-         '        pass')],
+        ('    finally:\n        os.close(descriptor)',
+         '    finally:\n        pass')],
     "Z16_a_folder_is_skipped_like_a_fifo": [
         ('        if stat.S_ISDIR(mode):\n            raise IsADirectoryError',
          '        if False:\n            raise IsADirectoryError')],
@@ -338,21 +335,70 @@ MUTATIONS = {
          '    try:\n'
          '        mode = os.fstat(descriptor).st_mode\n'
          '        if stat.S_ISDIR(mode):\n'
-         '            raise IsADirectoryError(errno.EISDIR, os.strerror(errno.EISDIR), str(path))\n'
-         '        if not stat.S_ISREG(mode):\n'
-         '            return None\n'
-         '        with open(descriptor, "rb", closefd=False) as handle:\n'
-         '            return handle.read()\n'
-         '    finally:\n'
-         '        os.close(descriptor)',
+         '            raise IsADirectoryError(errno.EISDIR, os.strerror(errno.EISDIR), str(path))',
          '    descriptor = os.open(path, os.O_RDONLY | os.O_NONBLOCK)\n'
-         '    with open(descriptor, "rb") as handle:\n'
-         '        if not stat.S_ISREG(os.fstat(descriptor).st_mode):\n'
-         '            return None\n'
-         '        return handle.read()')],
+         '    try:\n'
+         '        handle_first = open(descriptor, "rb", closefd=False)\n'
+         '        mode = os.fstat(descriptor).st_mode\n'
+         '        if stat.S_ISDIR(mode):\n'
+         '            raise IsADirectoryError(errno.EISDIR, os.strerror(errno.EISDIR))')],
     "Z15_unreadable_prose_is_called_missing": [
-        ('            except OSError:\n                raw = None',
-         '            except OSError:\n                errors.append(f"{target.name}: missing {name}")\n                continue')],
+        ('            except OSError:\n                errors.append(f"{target.name}: {name} could not be read")',
+         '            except OSError:\n                errors.append(f"{target.name}: missing {name}")')],
+    # --- 7.5.2.3: 재확인의 입력 집합은 판정의 입력 집합이다 (원장 · 깔때기 · 쓰기 직전 거절) ---
+    "AA1_ledger_forgets_failed_reads": [
+        ('    _remember("file", str(path), outcome)',
+         '    _remember("file", str(path), outcome) if not isinstance(value, OSError) else None')],
+    "AA2_ledger_forgets_listings": [
+        ('    _remember("dir", str(path), outcome)', '    pass')],
+    "AA3_ledger_forgets_tree_walks": [
+        ('    _remember("glob", f"{root}\\n{pattern}", outcome)', '    pass')],
+    "AA4_ledger_forgets_what_it_chose": [
+        ('    outcome, kind = _kind_outcome(path)\n    _remember("kind", str(path), outcome)\n    return kind',
+         '    outcome, kind = _kind_outcome(path)\n    return kind')],
+    "AA5_recheck_does_not_ask_head_after": [
+        ('    return _head_moved(root, head)\n\n\ndef _raise_if_inputs_moved',
+         '    return ""\n\n\ndef _raise_if_inputs_moved')],
+    "AA6_recheck_does_not_ask_head_first": [
+        ('    moved = _head_moved(root, head)\n    if moved:\n        return moved\n    changed = _reads_moved(root, book)',
+         '    changed = _reads_moved(root, book)')],
+    "AA7_record_does_not_reask_the_refusals": [
+        ('    refusal, _ = _recording_refusal(\n'
+         '        change, change_dir, root, head, _read_evidence(change_dir / "analysis" / "function-logic"))\n'
+         '    return refusal or _judged_state_moved(root, head, book)',
+         '    return _judged_state_moved(root, head, book)')],
+    "AA8_record_asks_the_refusals_before_history": [
+        ('    moved = _head_moved(root, head)\n    if moved:\n        return moved\n'
+         '    # 거절은 **쓰는 순간의** 디스크에 대한 질문이므로 증거를 다시 읽어서 묻는다.',
+         '    # 거절은 **쓰는 순간의** 디스크에 대한 질문이므로 증거를 다시 읽어서 묻는다.')],
+    "AA9_no_size_cap": [
+        ('    if len(raw) > READ_CAP:', '    if False:')],
+    "AA10_reads_past_the_cap": [
+        ('            raw = handle.read(READ_CAP + 1)', '            raw = handle.read()')],
+    "AA11_undecodable_prose_is_not_named": [
+        ('            try:\n                texts[name] = _decoded(raw)\n            except UnicodeDecodeError:',
+         '            texts[name] = _decoded(raw)\n            try:\n                pass\n            except UnicodeDecodeError:')],
+    "AA12_unlistable_bundle_is_silent": [
+        ('        except OSError as exc:\n            unlistable[target] = _why(exc)',
+         '        except OSError as exc:\n            pass')],
+    "AA13_unreadable_evidence_dir_is_an_exemption": [
+        ('    except (FileNotFoundError, NotADirectoryError):\n        return Evidence(analysis, False, (), {}, {}, {})',
+         '    except OSError:\n        return Evidence(analysis, False, (), {}, {}, {})')],
+    "AA14_unreadable_review_is_an_empty_marker": [
+        ('    except (OSError, UnicodeDecodeError) as exc:\n'
+         '        return [UNREADABLE.format(what="review.md", why=_why(exc))], False',
+         '    except (OSError, UnicodeDecodeError):\n        review_text = ""')],
+    "AA15_unreadable_base_is_called_missing": [
+        ('    except FileNotFoundError as exc:\n        raise ValueError(\n            "missing base-commit.txt; run "',
+         '    except OSError as exc:\n        raise ValueError(\n            "missing base-commit.txt; run "')],
+    "AA16_borrowed_change_ignores_local_bundles": [
+        ('        if any(_listed(bundle) for bundle in local):', '        if False:')],
+    "AA17_ledger_ignores_a_split_read": [
+        ('    if previous is not None and previous != outcome and not book.diverged:',
+         '    if False:')],
+    "AA19_listing_fingerprint_drops_the_kind": [
+        ('    joined = "\\n".join(f"{name}\\t{\'d\' if is_dir else \'f\'}" for name, is_dir in entries)',
+         '    joined = "\\n".join(name for name, is_dir in entries)')],
 }
 
 
@@ -387,8 +433,8 @@ def reached(target: Path, edits) -> bool:
     """
     text = target.read_text(encoding="utf-8")
     marked = text
-    for _, new_line in edits if edits != "MOVE_FIRST" else []:
-        head = new_line.splitlines()[0]
+    for old_line, _ in edits if edits != "MOVE_FIRST" else []:
+        head = old_line.splitlines()[0]
         if head.strip().startswith(("#", '"')) or not head.strip():
             continue
         indent = head[: len(head) - len(head.lstrip())]
@@ -407,6 +453,12 @@ if __name__ == "__main__":
     target = setup()
     pristine = target.read_text(encoding="utf-8")
     assert "_committed_many" in pristine, "대상이 사본에 없다"
+    # 사본이 **원본과 같은지** 단언한다 (task 7.5.2.3). 창을 나눠 돌리다 한 판이 중간에 죽으면 사본에
+    # 변이가 남고, 그 뒤의 모든 창이 **변이된 기준** 위에서 돈다 — 무변이 대조군이 빨개져야 알 수 있는데
+    # 그 빨감의 이유를 찾는 데 한 시간이 든다. 계측기부터 못 박는다
+    # ([[mutation-revert-needs-the-right-baseline]] · [[mutation-must-reach-the-thing-under-test]]).
+    origin = (REPO / "tools" / "logic-map" / "check_analysis.py").read_text(encoding="utf-8")
+    assert pristine == origin, "사본이 원본과 다르다 — 앞선 판이 변이를 남겼다"
     code, output = run(SUITE)
     if code != 0:
         print("STOP — 무변이 대조군이 빨갛다\n", output[-3000:])
@@ -435,4 +487,7 @@ if __name__ == "__main__":
               f"{', '.join(n.split('.')[-1] for n in names[:3])}"
               + (f" 외 {len(names) - 3}" if len(names) > 3 else ""))
         target.write_text(pristine, encoding="utf-8")
+        # 원복을 **세어서** 확인한다 — 다음 변이가 앞 변이 위에 얹히면 두 판정이 서로를 덮는다.
+        assert target.read_text(encoding="utf-8") == pristine, f"{name} 뒤 원복이 안 됐다"
     print(f"\nSURVIVED {len(survived)}/{len(chosen)}" + (f": {survived}" if survived else ""))
+    shutil.rmtree(WORK, ignore_errors=True)

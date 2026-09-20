@@ -1,0 +1,60 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d12520c97b800f234f5c25483068a2bd70bd19b",
+  "source_sha256": "487708dc51fe19f322275b49e31a7edc49025fd4fd28a04d4b728a41a4f7b70c",
+  "function": "_remember",
+  "signature": "_remember(kind, key, outcome)",
+  "start": {
+    "line": 732,
+    "column": 1
+  },
+  "end": {
+    "line": 741,
+    "column": 37
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "BoolOp",
+      "line": 735,
+      "inherited_line": false,
+      "source": "book is None or not book.recording"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 735,
+      "inherited_line": false,
+      "source": "if book is None or not book.recording:"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 738,
+      "inherited_line": false,
+      "source": "previous is not None and previous != outcome and (not book.diverged)"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 738,
+      "inherited_line": false,
+      "source": "if previous is not None and previous != outcome and (not book.diverged):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 736,
+      "value": null
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 737,
+      "callee": "book.seen.get"
+    }
+  ]
+}

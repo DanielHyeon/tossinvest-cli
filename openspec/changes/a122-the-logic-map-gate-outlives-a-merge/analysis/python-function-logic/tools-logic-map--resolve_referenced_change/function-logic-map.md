@@ -81,3 +81,23 @@ CI 는 이 경로를 돌지 않는다(`.github/workflows/ci.yml:94`). 실패 방
 | 생김 | raise | `raise ValueError(f'change is neither open nor archived: {change}')` |
 | 사라짐 | raise | `raise AmbiguousChange(f'{change} is open and archived at once: ' + ', '.join((path.relative_to(root).as_posix(` |
 | 생김 | raise | `raise ValueError(f'{change} is open and archived at once: ' + ', '.join((path.relative_to(root).as_posix() for` |
+
+## task 7.5.2.3 — 재확인의 입력 집합은 판정의 입력 집합이다 (7.5.2.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:257-301` · 분기 11 · 반환 1 · raise 3 (편집 전 L249-290 · 분기 10 · 반환 1 · raise 3, `ast.before-7.5.2.3.json` = revision `1d12520c`).
+
+활성/아카이브를 **고르는** 판정이 깔때기를 지난다. `is_dir()` 이 삼키던 `OSError` 도 이제 결함이다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 276 | Try | `try:` |
+| B2 | 278 | ExceptHandler | `except (FileNotFoundError, NotADirectoryError):` |
+| B3 | 280 | comprehension | ` for name, is_dir in entries if is_dir and _archived_change_id(name) == change` |
+| B4 | 281 | BoolOp | `is_dir and _archived_change_id(name) == change` |
+| B5 | 282 | IfExp | `[direct] if open_here else []` |
+| B6 | 283 | If | `if not found:` |
+| B7 | 287 | BoolOp | `open_here and archived` |
+| B8 | 287 | If | `if open_here and archived:` |
+| B9 | 293 | comprehension | ` for path in found` |
+| B10 | 295 | If | `if len(archived) > 1:` |
+| B11 | 299 | comprehension | ` for path in archived` |

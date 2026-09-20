@@ -181,3 +181,61 @@
 | B44 | 1637 | If | `if not branches and 'B1' not in mapped:` |
 | B45 | 1640 | BoolOp | `'# Risk Pattern Report' not in risk or relative not in risk` |
 | B46 | 1640 | If | `if '# Risk Pattern Report' not in risk or relative not in risk:` |
+
+## task 7.5.2.3 — 재확인의 입력 집합은 판정의 입력 집합이다 (7.5.2.2 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1763-1910` · 분기 49 · 반환 5 · raise 0 (편집 전 L1508-1642 · 분기 46 · 반환 5 · raise 0, `ast.before-7.5.2.3.json` = revision `1d12520c`).
+
+산문이 UTF-8 이 아니면 **그 대상의** 판정 줄이다(옛 판본은 올려 보내 판정 전체를 대상 이름 없는 한 줄로 만들었다). 워킹트리 소스도 깔때기로 읽고, **없는 것과 못 읽는 것을 가른다** — 심링크 고리는 "없다" 가 아니라 "못 읽는다" 다(7.5.2.2 의 문장을 정정한다).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1779 | For | `for name in REQUIRED:` |
+| B2 | 1781 | If | `if name == 'ast.json':` |
+| B3 | 1782 | If | `if path not in held:` |
+| B4 | 1785 | If | `if held[path] is None:` |
+| B5 | 1788 | Try | `try:` |
+| B6 | 1790 | ExceptHandler | `except ValueError:` |
+| B7 | 1796 | Try | `try:` |
+| B8 | 1798 | ExceptHandler | `except FileNotFoundError:` |
+| B9 | 1801 | ExceptHandler | `except OSError:` |
+| B10 | 1804 | Try | `try:` |
+| B11 | 1806 | ExceptHandler | `except UnicodeDecodeError:` |
+| B12 | 1811 | If | `if 'TODO' in texts[name]:` |
+| B13 | 1813 | If | `if 'ast.json' not in texts:` |
+| B14 | 1818 | If | `if problem == 'invalid':` |
+| B15 | 1821 | BoolOp | `problem or any((not value.get(key) for key in keys))` |
+| B16 | 1821 | If | `if problem or any((not value.get(key) for key in keys)):` |
+| B17 | 1821 | comprehension | ` for key in keys` |
+| B18 | 1823 | Try | `try:` |
+| B19 | 1825 | ExceptHandler | `except ValueError as exc:` |
+| B20 | 1828 | If | `if revision == 'current':` |
+| B21 | 1829 | If | `if revision_ref:` |
+| B22 | 1832 | BoolOp | `prefetched is not None and relative in prefetched` |
+| B23 | 1832 | IfExp | `prefetched[relative] if prefetched is not None and relative in prefetched else _committed_bytes(root, revision_ref, rela` |
+| B24 | 1834 | If | `if blob is None:` |
+| B25 | 1836 | If | `if hashlib.sha256(blob).hexdigest() != value['source_sha256']:` |
+| B26 | 1842 | Try | `try:` |
+| B27 | 1844 | ExceptHandler | `except (FileNotFoundError, NotADirectoryError):` |
+| B28 | 1846 | ExceptHandler | `except OSError as exc:` |
+| B29 | 1849 | If | `if hashlib.sha256(blob).hexdigest() != value['source_sha256']:` |
+| B30 | 1851 | If | `if revision != 'base':` |
+| B31 | 1855 | For | `for section in MAP_SECTIONS:` |
+| B32 | 1856 | If | `if section not in logic:` |
+| B33 | 1858 | BoolOp | `relative not in logic or function not in logic` |
+| B34 | 1858 | If | `if relative not in logic or function not in logic:` |
+| B35 | 1862 | BoolOp | `value.get('branches') or []` |
+| B36 | 1864 | If | `if '# Branch Test Map' not in branch_map:` |
+| B37 | 1867 | If | `if len(mapped) != len(set(mapped)):` |
+| B38 | 1869 | comprehension | ` for branch in branches if isinstance(branch, dict) and branch.get('id')` |
+| B39 | 1872 | BoolOp | `isinstance(branch, dict) and branch.get('id')` |
+| B40 | 1874 | BoolOp | `branches and len(expected) != len(branches)` |
+| B41 | 1874 | If | `if branches and len(expected) != len(branches):` |
+| B42 | 1877 | If | `if missing:` |
+| B43 | 1884 | IfExp | `expected if branches else {'B1'}` |
+| B44 | 1885 | If | `if unexpected:` |
+| B45 | 1902 | IfExp | `test_index(root) if index is None else index` |
+| B46 | 1905 | BoolOp | `not branches and 'B1' not in mapped` |
+| B47 | 1905 | If | `if not branches and 'B1' not in mapped:` |
+| B48 | 1908 | BoolOp | `'# Risk Pattern Report' not in risk or relative not in risk` |
+| B49 | 1908 | If | `if '# Risk Pattern Report' not in risk or relative not in risk:` |
