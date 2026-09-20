@@ -324,3 +324,28 @@ M2·M3 이 1차에서 살아남은 것이 시험 둘을 더 쓴 이유다 —
 | 1163 | `raise ValueError(f'landing point never landed on this history: {candidate}')` |
 | 1180 | `raise ValueError(f'{refusal} — {LANDING_RECOVERY}')` |
 | 1201 | `raise ValueError(f"landing point {candidate[:12]} is not the landing this change's evidenc` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1150-1240` · 분기 8 · 반환 2 · raise 5 (편집 전 L1117-1207 · 분기 7 · 반환 2 · raise 5, `ast.before-7.5.2.2.json` = revision `908a8a36`).
+
+빈 계산값이면 `none — <사유>` 를 다시 말한다. 7.5.2.1 은 "빈 값은 못 온다" 며 지웠는데 Codex 가 얕은 복제 경계를 실행 중 바꿔 빈 값을 만들었다 — sha 를 고정해도 git 이 그 역사를 **읽는 방식**은 고정되지 않는다. 주석을 참인 만큼으로("거의 언제나 진짜 불일치").
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1180 | If | `if candidate is None:` |
+| B2 | 1182 | If | `if not FULL_SHA.fullmatch(candidate):` |
+| B3 | 1193 | BoolOp | `process.returncode or process.stdout.strip() != candidate` |
+| B4 | 1193 | If | `if process.returncode or process.stdout.strip() != candidate:` |
+| B5 | 1195 | If | `if not _is_ancestor(root, candidate, head):` |
+| B6 | 1203 | If | `if refusal:` |
+| B7 | 1226 | If | `if candidate != computed:` |
+| B8 | 1233 | IfExp | `computed[:12] if computed else f'none — {why}'` |
+
+| raise 줄 | 소스 |
+|---|---|
+| 1186 | `raise ValueError(f'landing point must be a full 40-hex commit id, not {candidate!r}')` |
+| 1194 | `raise ValueError(f'landing point is not a commit in this repository: {candidate}')` |
+| 1196 | `raise ValueError(f'landing point never landed on this history: {candidate}')` |
+| 1213 | `raise ValueError(f'{refusal} — {LANDING_RECOVERY}')` |
+| 1234 | `raise ValueError(f"landing point {candidate[:12]} is not the landing this change's evidenc` |

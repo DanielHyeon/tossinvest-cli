@@ -27,3 +27,18 @@
 | B4 | 664 | Try | `try:` |
 | B5 | 666 | ExceptHandler | `except FileNotFoundError:` |
 | B6 | 668 | ExceptHandler | `except OSError:` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:678-703` · 분기 6 · 반환 2 · raise 0 (편집 전 L646-670 · 분기 6 · 반환 2 · raise 0, `ast.before-7.5.2.2.json` = revision `908a8a36`).
+
+번들 파일은 `_read_regular` 로만 연다 — 7.5.2.1 이 `_bundle_text` 를 다시 쓰며 `is_file()` 거름을 빠뜨려 FIFO 에 게이트가 멎고 `/dev/zero` 에 `MemoryError` 로 죽었다(재리뷰 출처 넷 재현). `ast.json` 이 정규 파일이 아니면 `None`("could not be read") — 앞 로트부터 `read_bytes` 가 무엇이든 열었다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 691 | If | `if not analysis.is_dir():` |
+| B2 | 693 | comprehension | ` for path in analysis.iterdir() if path.is_dir()` |
+| B3 | 695 | For | `for target in targets:` |
+| B4 | 697 | Try | `try:` |
+| B5 | 699 | ExceptHandler | `except FileNotFoundError:` |
+| B6 | 701 | ExceptHandler | `except OSError:` |

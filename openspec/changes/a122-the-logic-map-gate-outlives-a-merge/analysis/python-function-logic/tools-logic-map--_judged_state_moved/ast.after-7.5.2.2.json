@@ -1,0 +1,66 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "908a8a3621efa5c6fd891c3c73d27db6ac0e7e49",
+  "source_sha256": "b24e77d5e8f9de4208db0dbd4c85daae108896f1a3771ad6e155357c7a3f23fc",
+  "function": "_judged_state_moved",
+  "signature": "_judged_state_moved(root, head, evidence)",
+  "start": {
+    "line": 1881,
+    "column": 1
+  },
+  "end": {
+    "line": 1897,
+    "column": 14
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 1893,
+      "inherited_line": false,
+      "source": "if now != head:"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 1895,
+      "inherited_line": false,
+      "source": "if _read_evidence(evidence.directory) != evidence:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1894,
+      "value": "JUDGED_STATE_MOVED.format(what=f'HEAD moved from {head[:12]} to {now[:12]}')"
+    },
+    {
+      "line": 1896,
+      "value": "JUDGED_STATE_MOVED.format(what='the evidence changed')"
+    },
+    {
+      "line": 1897,
+      "value": "''"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1892,
+      "callee": "_head_commit"
+    },
+    {
+      "line": 1894,
+      "callee": "JUDGED_STATE_MOVED.format"
+    },
+    {
+      "line": 1895,
+      "callee": "_read_evidence"
+    },
+    {
+      "line": 1896,
+      "callee": "JUDGED_STATE_MOVED.format"
+    }
+  ]
+}

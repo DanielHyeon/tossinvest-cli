@@ -52,13 +52,12 @@ MUTATIONS = {
         '    asked = [spec.encode("utf-8", "surrogateescape") for spec in specs]',
         '    asked = [spec.encode("utf-8") for spec in specs]')],
     # --- 7.5.1: "못 물었다" 는 `None` 이 아니다 ---
-    "V1_rc_failure_is_absence_again": [(
-        '        said = process.stderr.decode("utf-8", "replace").strip().splitlines()\n',
-        '        return found\n'
-        '        said = process.stderr.decode("utf-8", "replace").strip().splitlines()\n')],
-    "V2_rc_message_drops_what_git_said": [(
-        '            f"(rc {process.returncode}" + (f": {said[0][:160]}" if said else "") + ")"',
-        '            f"(rc {process.returncode})"')],
+    "V1_rc_failure_is_absence_again": [
+        ('        said = _first_line(process.stderr, "")',
+         '        return found\n        said = _first_line(process.stderr, "")')],
+    "V2_rc_message_drops_what_git_said": [
+        ('            f"(rc {process.returncode}" + (f": {said}" if said else "") + ")"',
+         '            f"(rc {process.returncode})"')],
     "V3_any_missing_line_counts_as_absent": [(
         '        if header == request + b" missing" or _SUBMODULE_HEADER.fullmatch(header):',
         '        if header.endswith(b" missing") or _SUBMODULE_HEADER.fullmatch(header):')],
@@ -80,8 +79,8 @@ MUTATIONS = {
         ('            _raise_if_inputs_moved(root, inputs)\n            return candidate, ""',
          '            return candidate, ""')],
     "V11_resolve_measures_twice": [
-        ('    computed, _ = compute_landing(root, base, inputs)',
-         '    computed, _ = compute_landing(root, base, _measure_landing_inputs(root, head, evidence))')],
+        ('    computed, why = compute_landing(root, base, inputs)',
+         '    computed, why = compute_landing(root, base, _measure_landing_inputs(root, head, evidence))')],
     "V12_verdict_ignores_the_prefetch": [(
         '            blob = (prefetched[relative] if prefetched is not None and relative in prefetched\n'
         '                    else _committed_bytes(root, revision_ref, relative))',
@@ -140,8 +139,8 @@ MUTATIONS = {
         ('    repairs = None if why else _self_repair_commits(root, evidence.directory, head)',
          '    repairs = [] if why else _self_repair_commits(root, evidence.directory, head)')],
     "W20_stale_context_half_kept": [
-        ('    for stale in RUN_FACTS:',
-         '    for stale in RUN_FACTS[:2]:')],
+        ('    facts.clear()',
+         '    facts.pop("head", None)')],
     "W21_base_shape_read_per_bundle": [(
         '        if at_base[source] is not None and hashlib.sha256(at_base[source]).hexdigest() == digest\n',
         '        if _committed_bytes(root, base, source) is not None\n'
@@ -202,8 +201,8 @@ MUTATIONS = {
         ('        except FileNotFoundError:\n            continue\n        except OSError:',
          '        except FileNotFoundError:\n            held[ast_path] = None\n        except OSError:')],
     "Y17_listing_failure_is_silent": [
-        ('        except OSError as exc:\n            errors.append(f"{target.name}: cannot list the bundle directory',
-         '        except OSError as exc:\n            continue\n            errors.append(f"{target.name}: cannot list the bundle directory')],
+        ('            named = exc.filename if isinstance(exc.filename, str) else ""',
+         '            continue\n            named = exc.filename if isinstance(exc.filename, str) else ""')],
     "Y18_verdict_reads_the_evidence_again": [
         ('    facts["landing"] = landing\n    facts["required_count"] = len(required)',
          '    evidence = _read_evidence(analysis)\n    facts["landing"] = landing\n    facts["required_count"] = len(required)')],
@@ -237,6 +236,46 @@ MUTATIONS = {
     "Y28_resolve_raises_on_a_loop": [
         ('    resolved = Path(os.path.realpath(path))',
          '    resolved = path.resolve()')],
+    # --- 7.5.2.2: 판정은 내놓는 순간에도 거기 있는 것의 판정이다 · 번들 파일은 정규 파일만 ---
+    "Z1_non_regular_files_are_read": [
+        ('        if not stat.S_ISREG(mode):\n            return None',
+         '        if False:\n            return None')],
+    "Z2_unreadable_bundle_file_is_skipped": [
+        ('            except FileNotFoundError:\n                continue                        # 끊긴 링크',
+         '            except OSError:\n                continue                        # 끊긴 링크')],
+    "Z3_evidence_read_bypasses_the_type_check": [
+        ('            held[ast_path] = _read_regular(ast_path)',
+         '            held[ast_path] = ast_path.read_bytes()')],
+    "Z4_prose_read_bypasses_the_type_check": [
+        ('                raw = _read_regular(path)',
+         '                raw = path.read_bytes()')],
+    "Z5_no_recheck_at_the_exit": [
+        ('    moved = _judged_state_moved(root, head, evidence)\n    return [moved] if moved else verdict',
+         '    return verdict')],
+    "Z6_exit_recheck_ignores_head": [
+        ('    if now != head:\n        return JUDGED_STATE_MOVED',
+         '    if False:\n        return JUDGED_STATE_MOVED')],
+    "Z7_exit_recheck_ignores_evidence": [
+        ('    if _read_evidence(evidence.directory) != evidence:\n        return JUDGED_STATE_MOVED',
+         '    if False:\n        return JUDGED_STATE_MOVED')],
+    "Z8_record_writes_without_recheck": [
+        ('        moved = _judged_state_moved(root, head, evidence) if landing else ""',
+         '        moved = ""')],
+    "Z9_window_line_without_head": [
+        ('function(s) — judged at HEAD {head[:12]}"',
+         'function(s)"')],
+    "Z10_context_not_cleared": [
+        ('    facts.clear()',
+         '    pass')],
+    "Z11_recursion_escapes_the_parse": [
+        ('    except (ValueError, RecursionError):',
+         '    except ValueError:')],
+    "Z12_empty_computation_says_nothing": [
+        ('        named = computed[:12] if computed else f"none — {why}"',
+         '        named = computed[:12]')],
+    "Z13_file_failure_named_as_the_directory": [
+        ('            where = Path(named).name if named else target.name',
+         '            where = target.name')],
     # --- 배치가 실제로 배치인가 (7.5) ---
     "T8_pinning_at_fetches_one_by_one": [(
         '    blobs = _committed_many(root, candidate, [source for _, source, _ in bundles])\n'
@@ -263,8 +302,9 @@ MUTATIONS = {
          '        refusal, names = _landing_refusal(root, base, candidate, inputs._replace(bundles=[]))')],
     "T14_unheld_merged_guard_flipped": [(
         '        if committed is None and before:', '        if committed is None or before:')],
-    "T15_anchor_is_not_the_root": [(
-        '    anchor = root.resolve()', '    anchor = (root / "openspec").resolve()')],
+    "T15_anchor_is_not_the_root": [
+        ('    anchor = Path(os.path.realpath(root))',
+         '    anchor = Path(os.path.realpath(root / "openspec"))')],
     "T16_committed_bytes_is_a_second_spelling": [(
         '    return _committed_many(root, ref, [relative])[relative]',
         '    process = subprocess.run(\n'
@@ -272,6 +312,47 @@ MUTATIONS = {
         '        cwd=root, capture_output=True, timeout=30, check=False,\n'
         '    )\n'
         '    return None if process.returncode else process.stdout')],
+    # --- 7.5.2.2 BTM 을 쓰다가 찾은 빈 칸 둘 — 갈래는 있는데 그것을 지우는 변이가 없었다 (구간 `89:` 로 따로 돈다) ---
+    "Z14_bundle_text_decodes_a_non_regular_file": [
+        ('            if raw is None:\n                continue                        # FIFO',
+         '            if False:\n                continue                        # FIFO')],
+    "Z19_the_descriptor_is_left_open": [
+        ('        return None\n'
+         '        with open(descriptor, "rb", closefd=False) as handle:\n'
+         '            return handle.read()\n'
+         '    finally:\n'
+         '        os.close(descriptor)',
+         '        return None\n'
+         '        with open(descriptor, "rb", closefd=False) as handle:\n'
+         '            return handle.read()\n'
+         '    finally:\n'
+         '        pass')],
+    "Z16_a_folder_is_skipped_like_a_fifo": [
+        ('        if stat.S_ISDIR(mode):\n            raise IsADirectoryError',
+         '        if False:\n            raise IsADirectoryError')],
+    "Z17_the_name_is_used_without_a_type_check": [
+        ('            named = exc.filename if isinstance(exc.filename, str) else ""',
+         '            named = exc.filename')],
+    "Z18_the_folder_regression_returns": [
+        ('    descriptor = os.open(path, os.O_RDONLY | os.O_NONBLOCK)\n'
+         '    try:\n'
+         '        mode = os.fstat(descriptor).st_mode\n'
+         '        if stat.S_ISDIR(mode):\n'
+         '            raise IsADirectoryError(errno.EISDIR, os.strerror(errno.EISDIR), str(path))\n'
+         '        if not stat.S_ISREG(mode):\n'
+         '            return None\n'
+         '        with open(descriptor, "rb", closefd=False) as handle:\n'
+         '            return handle.read()\n'
+         '    finally:\n'
+         '        os.close(descriptor)',
+         '    descriptor = os.open(path, os.O_RDONLY | os.O_NONBLOCK)\n'
+         '    with open(descriptor, "rb") as handle:\n'
+         '        if not stat.S_ISREG(os.fstat(descriptor).st_mode):\n'
+         '            return None\n'
+         '        return handle.read()')],
+    "Z15_unreadable_prose_is_called_missing": [
+        ('            except OSError:\n                raw = None',
+         '            except OSError:\n                errors.append(f"{target.name}: missing {name}")\n                continue')],
 }
 
 

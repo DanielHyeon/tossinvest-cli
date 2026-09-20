@@ -30,3 +30,21 @@
 | B4 | 1401 | Try | `try:` |
 | B5 | 1402 | IfExp | `_decoded(ast_raw) if name == 'ast.json' else paths[name].read_text(encoding='utf-8')` |
 | B6 | 1404 | ExceptHandler | `except (OSError, UnicodeDecodeError):` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1412-1455` · 분기 9 · 반환 1 · raise 0 (편집 전 L1378-1409 · 분기 6 · 반환 1 · raise 0, `ast.before-7.5.2.2.json` = revision `908a8a36`).
+
+번들 파일은 `_read_regular` 로만 연다 — 7.5.2.1 이 `_bundle_text` 를 다시 쓰며 `is_file()` 거름을 빠뜨려 FIFO 에 게이트가 멎고 `/dev/zero` 에 `MemoryError` 로 죽었다(재리뷰 출처 넷 재현). 정규 파일 아닌 것 · 사라진 것은 건너뛰고, **못 읽는 정규 파일은 `OSError` 로 올린다**(재리뷰 적대: 조용히 건너뛰면 그 파일의 열거형 호출 표가 판정에서 빠진다) — `check` 가 이름 댄 줄로 만든다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1435 | comprehension | ` for path in target.iterdir() if path.name != 'ast.json'` |
+| B2 | 1436 | If | `if ast_raw is not None:` |
+| B3 | 1439 | For | `for name in sorted(paths):` |
+| B4 | 1440 | If | `if name == 'ast.json':` |
+| B5 | 1443 | Try | `try:` |
+| B6 | 1445 | ExceptHandler | `except FileNotFoundError:` |
+| B7 | 1447 | If | `if raw is None:` |
+| B8 | 1449 | Try | `try:` |
+| B9 | 1451 | ExceptHandler | `except UnicodeDecodeError:` |

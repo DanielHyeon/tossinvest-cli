@@ -14,6 +14,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -87,11 +88,23 @@ def run_main(module, change: str) -> dict:
             counts["ast_reads"] += 1
         return real_text(path, *args, **kwargs)
 
+    # 7.5.2.2 부터 증거는 `_read_regular`(`os.open`)로 읽힌다 — 그 길도 세야 한다. 안 세면 after 쪽 읽기가 **0** 으로
+    # 찍힌다(첫 표본 실행이 `48 → 0` 을 냈다 — 계측기가 눈멀었다).
+    extra = contextlib.nullcontext()
+    if hasattr(module, "_read_regular"):
+        real_regular = module._read_regular
+
+        def counting_regular(path):
+            if Path(path).name == "ast.json":
+                counts["ast_reads"] += 1
+            return real_regular(path)
+
+        extra = mock.patch.object(module, "_read_regular", counting_regular)
     out = io.StringIO()
     argv = ["check_analysis.py", "--change", change, "--root", str(ROOT)]
     start = time.monotonic()
     with mock.patch.object(sys, "argv", argv), contextlib.redirect_stdout(out), \
-            mock.patch.object(subprocess, "run", counting_run), \
+            mock.patch.object(subprocess, "run", counting_run), extra, \
             mock.patch.multiple(Path, read_bytes=counting_bytes, read_text=counting_text):
         try:
             code = module.main()
@@ -100,8 +113,34 @@ def run_main(module, change: str) -> dict:
     return {"rc": code, "lines": out.getvalue().splitlines(), "s": time.monotonic() - start, **counts}
 
 
-# 이어 달리기 기록은 **양쪽 소스**에 묶는다 (7.5.2 의 교훈 — 편집 도중 다시 돌리면 판본이 섞인다).
-DONE = SP / f"7521_main_ab_done.{BEFORE[:12]}.{hashlib.sha256(after_src).hexdigest()[:12]}.json"
+# 이어 달리기 기록은 **양쪽 소스**에 묶는다 (7.5.2 의 교훈 — 편집 도중 다시 돌리면 판본이 섞인다). 그리고 **저장소의
+# 입력 상태**에도 묶는다 (task 7.5.2.2, 재리뷰 Codex 구조 P2 — 한 번 돌린 뒤 번들의 `calls` 를 5 로 바꾸고 이어 달리면
+# 옛 기록이 `SAME` 을 그대로 냈다). 상태 = `HEAD` + 추적 파일의 워킹트리 변경 + 추적 안 된 파일 목록.
+def repo_state() -> str:
+    parts = [subprocess.run(argv, cwd=ROOT, capture_output=True, check=True).stdout for argv in (
+        ["git", "rev-parse", "HEAD"], ["git", "diff", "HEAD", "--binary"],
+        ["git", "ls-files", "--others", "--exclude-standard", "-z"])]
+    return hashlib.sha256(b"\0".join(parts)).hexdigest()[:12]
+
+
+DONE = SP / (f"7521_main_ab_done.{BEFORE[:12]}.{hashlib.sha256(after_src).hexdigest()[:12]}."
+             f"{repo_state()}.json")
+# after 의 창 줄 끝에는 판정한 `HEAD` 가 붙는다 (task 7.5.2.2). 그 꼬리를 떼고 비교하되, 떼어 낸 sha 가 그때의
+# `HEAD` 와 같은지 **따로** 본다 — 꼬리를 떼는 것으로 꼬리의 틀림까지 가리면 안 된다.
+JUDGED_AT = re.compile(r" — judged at HEAD ([0-9a-f]{12})$")
+
+
+def strip_judged_head(lines: list[str], head: str) -> tuple[list[str], bool]:
+    out, ok = [], True
+    for line in lines:
+        found = JUDGED_AT.search(line)
+        if found:
+            ok = ok and found.group(1) == head[:12]
+            line = line[:found.start()]
+        out.append(line)
+    return out, ok
+
+
 done = json.load(open(DONE)) if DONE.exists() else {}
 spent = 0.0
 for position, cid in enumerate(ids):
@@ -111,7 +150,13 @@ for position, cid in enumerate(ids):
     order = (("before", before), ("after", after)) if position % 2 == 0 else (("after", after), ("before", before))
     result = {tag: run_main(module, cid) for tag, module in order}
     spent += result["before"]["s"] + result["after"]["s"]
-    same = (result["before"]["rc"], result["before"]["lines"]) == (result["after"]["rc"], result["after"]["lines"])
+    head_now = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True,
+                              check=True).stdout.strip()
+    after_lines, head_ok = strip_judged_head(result["after"]["lines"], head_now)
+    before_lines = result["before"]["lines"]
+    if hasattr(before, "JUDGED_STATE_MOVED"):       # 기준도 7.5.2.2 이후면 같은 꼬리를 뗀다
+        before_lines, _ = strip_judged_head(before_lines, head_now)
+    same = head_ok and (result["before"]["rc"], before_lines) == (result["after"]["rc"], after_lines)
     done[cid] = {"same": same, "first": order[0][0], **{
         f"{tag}_{key}": result[tag][key] for tag in ("before", "after")
         for key in ("rc", "s", "git", "ast_reads")}}

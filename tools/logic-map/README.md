@@ -76,6 +76,15 @@ python3 tools/logic-map/check_analysis.py --change <change-id> --record-landing
 증거를 **빌리는** change, a063 **이관 예외**, 고정 번들이 **0** 인 change 는 기록을 받지
 않는다. 5단계는 그때 워킹트리를 대상으로 삼고 명령을 권하지 않으며, 왜 못 좁히는지를 적는다.
 
+**판정은 역사 하나 · 증거 읽기 하나 위에서 선다.** 명령(5단계 · `--record-landing`)은 시작할 때 `HEAD` 를
+sha 로 한 번 풀고 증거 디렉터리를 한 번 읽어 그 둘만으로 판정한다. 판정을 내놓기(기록을 쓰기) **직전**에
+`HEAD` 와 증거가 아직 그대로인지 다시 보고, 실행 중 커밋 · 가지 전환 · 번들 편집으로 달라졌으면 판정 대신
+`… while this change was being judged — …; run it again` 을 낸다 — 이 워크트리는 병행 세션이 같이 쓰므로
+그때는 다시 돌리면 된다. 창 줄 끝의 `judged at HEAD <sha>` 가 그 판정이 어느 역사의 것인지 말한다.
+번들 파일은 **정규 파일만** 읽는다(FIFO · 장치는 건너뛰고, 필수 파일이 그런 것이면 `could not be read`).
+번들 안의 **폴더와 소켓은 건너뛰지 않는다** — 이름 댄 판정 줄이다. 폴더를 건너뛰면 그 안에 열거형 호출 표를
+넣는 것으로 감사가 꺼진다.
+
 ## a063 execution-baseline adoption exception
 
 `execution_baseline.py`는 일반적인 baseline 재설정 도구가 아니다. a063의 고정된

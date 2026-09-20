@@ -28,3 +28,12 @@
 | 목록 못 열면 이름 댄 줄 | Y17 | `test_a_bundle_directory_that_can_be_entered_but_not_listed_is_named` |
 | 앞선 실행의 사실 전부 지움 | W20 | `test_a_reused_context_carries_nothing_from_the_last_run` |
 | 이관 미리 읽기 선별 격리 | W12 | `test_an_adopted_changes_escaping_bundle_keeps_its_name` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+짝은 손으로 고르지 않았다 — 각 갈래를 지우는 변이를 걸어 실제로 빨개진 시험을 옮겼다(전수 95 · 생존 0: 94 는 한 판에서 CAUGHT(스위트 272 · 무변이 대조군 GREEN) · Z14 는 **도달한 채 살아남아**(`io.BytesIO(None)` 이 조용히 빈 버퍼다) 구조 시험을 더한 뒤 같은 하네스로 다시 재서 CAUGHT(273)). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
+|---|---|---|
+| B1 앞 — 사실을 **맨 앞**에서 비운다(`facts.clear()`) | Z10 | `test_a_context_is_emptied_even_when_the_id_does_not_resolve` |
+| B26 한 출구의 재확인 — 달라졌으면 판정 대신 "다시 돌려라" | Z5 | `test_evidence_rewritten_after_the_read_is_not_reported_as_passing` |

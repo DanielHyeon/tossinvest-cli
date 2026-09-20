@@ -83,3 +83,11 @@ V10(지문을 하한 뒤에)은 첫 시험이 번들을 `record_landing` 의 **�
 | 파서 오류가 물은 경로를 댄다 | W16 | `test_a_framing_fault_names_the_path_it_was_reading` |
 | `>=` 경계(내용은 왔고 NUL 만 없다) | V6 | `test_a_payload_missing_only_its_terminator_is_truncated` |
 | 잘림 문장 한 벌이 레코드를 센다 | V8 | `test_a_truncated_response_counts_records_not_blobs` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+짝은 손으로 고르지 않았다 — 각 갈래를 지우는 변이를 걸어 실제로 빨개진 시험을 옮겼다(전수 95 · 생존 0: 94 는 한 판에서 CAUGHT(스위트 272 · 무변이 대조군 GREEN) · Z14 는 **도달한 채 살아남아**(`io.BytesIO(None)` 이 조용히 빈 버퍼다) 구조 시험을 더한 뒤 같은 하네스로 다시 재서 CAUGHT(273)). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
+|---|---|---|
+| B9 git 이 말을 했으면 붙인다(같은 160자 규칙의 셋째 철자였다) | V2 | `test_a_committed_record_is_not_read_as_absent_when_git_fails` |

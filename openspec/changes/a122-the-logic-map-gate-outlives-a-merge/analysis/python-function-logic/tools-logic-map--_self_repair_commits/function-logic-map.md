@@ -121,3 +121,31 @@ rc 1 하나로 거절돼야 할 입력이 초록이었다). 옆의 `_evidence_fl
 | 902 | `raise RuntimeError(f"cannot name this change's directory under the repository: {exc}") fro` |
 | 925 | `raise RuntimeError(f'cannot list the commits that touched {change_dir}: {(touching.stderr.` |
 | 947 | `raise RuntimeError(f'cannot read the files those commits changed: {(listing.stderr.strip()` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:901-991` · 분기 13 · 반환 2 · raise 3 (편집 전 L868-958 · 분기 15 · 반환 2 · raise 3, `ast.before-7.5.2.2.json` = revision `908a8a36`).
+
+git 의 말 첫 줄을 `_first_line` 한 벌로(손으로 적은 사본 둘 — 160자 자름이 없었다). 낡은 주석: "`_evidence_floor` 는 실패하면 거절로 간다" → 7.5.2.1 부터 결함이다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 928 | Try | `try:` |
+| B2 | 930 | ExceptHandler | `except ValueError as exc:` |
+| B3 | 937 | If | `if change_dir.startswith(ARCHIVE_PREFIX):` |
+| B4 | 941 | If | `if before:` |
+| B5 | 954 | If | `if touching.returncode:` |
+| B6 | 963 | If | `if not hashes:` |
+| B7 | 979 | If | `if listing.returncode:` |
+| B8 | 985 | For | `for block in listing.stdout.split('\x00'):` |
+| B9 | 986 | comprehension | ` for line in block.splitlines() if line` |
+| B10 | 987 | BoolOp | `lines and any((name.endswith('.go') for name in lines[1:]))` |
+| B11 | 987 | If | `if lines and any((name.endswith('.go') for name in lines[1:])):` |
+| B12 | 987 | comprehension | ` for name in lines[1:]` |
+| B13 | 991 | comprehension | ` for commit in reversed(hashes) if commit in flagged` |
+
+| raise 줄 | 소스 |
+|---|---|
+| 935 | `raise RuntimeError(f"cannot name this change's directory under the repository: {exc}") fro` |
+| 959 | `raise RuntimeError(f'cannot list the commits that touched {change_dir}: {_first_line(touch` |
+| 980 | `raise RuntimeError('cannot read the files those commits changed: ' + _first_line(listing.s` |

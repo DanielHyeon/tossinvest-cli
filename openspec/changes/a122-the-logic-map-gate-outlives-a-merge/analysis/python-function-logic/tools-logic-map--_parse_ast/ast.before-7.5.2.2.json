@@ -1,0 +1,139 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "908a8a36",
+  "head_commit": "908a8a3621efa5c6fd891c3c73d27db6ac0e7e49",
+  "source_sha256": "6acf286c58f08f4e5be3cb3f5cc54140373b0ec3013cb6d10862883314761903",
+  "function": "_parse_ast",
+  "signature": "_parse_ast(raw)",
+  "start": {
+    "line": 1430,
+    "column": 1
+  },
+  "end": {
+    "line": 1447,
+    "column": 21
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 1438,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 1440,
+      "inherited_line": false,
+      "source": "except ValueError:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 1442,
+      "inherited_line": false,
+      "source": "if not isinstance(value, dict):"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 1444,
+      "inherited_line": false,
+      "source": "any((value.get(key) and (not isinstance(value[key], dict)) for key in _AST_OBJECTS)) or any((value.get(key) and (not isi"
+    },
+    {
+      "id": "B5",
+      "kind": "BoolOp",
+      "line": 1444,
+      "inherited_line": false,
+      "source": "value.get(key) and (not isinstance(value[key], dict))"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 1444,
+      "inherited_line": false,
+      "source": "if any((value.get(key) and (not isinstance(value[key], dict)) for key in _AST_OBJECTS)) or any((value.get(key) and (not "
+    },
+    {
+      "id": "B7",
+      "kind": "comprehension",
+      "line": 1444,
+      "inherited_line": true,
+      "source": " for key in _AST_OBJECTS"
+    },
+    {
+      "id": "B8",
+      "kind": "BoolOp",
+      "line": 1445,
+      "inherited_line": false,
+      "source": "value.get(key) and (not isinstance(value[key], list))"
+    },
+    {
+      "id": "B9",
+      "kind": "comprehension",
+      "line": 1445,
+      "inherited_line": true,
+      "source": " for key in _AST_LISTS"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1441,
+      "value": "({}, 'invalid')"
+    },
+    {
+      "line": 1443,
+      "value": "({}, 'placeholder')"
+    },
+    {
+      "line": 1446,
+      "value": "({}, 'invalid')"
+    },
+    {
+      "line": 1447,
+      "value": "(value, '')"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1439,
+      "callee": "_decoded"
+    },
+    {
+      "line": 1439,
+      "callee": "json.loads"
+    },
+    {
+      "line": 1442,
+      "callee": "isinstance"
+    },
+    {
+      "line": 1444,
+      "callee": "any"
+    },
+    {
+      "line": 1444,
+      "callee": "isinstance"
+    },
+    {
+      "line": 1444,
+      "callee": "value.get"
+    },
+    {
+      "line": 1445,
+      "callee": "any"
+    },
+    {
+      "line": 1445,
+      "callee": "isinstance"
+    },
+    {
+      "line": 1445,
+      "callee": "value.get"
+    }
+  ]
+}

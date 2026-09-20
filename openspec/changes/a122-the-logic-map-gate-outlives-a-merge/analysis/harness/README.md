@@ -15,7 +15,7 @@
 | `75_attrib.py` | spawn 을 **호출자 함수**로 귀속 + 한 개짜리 fetch 두 방식 | `python3 75_attrib.py <change-dir-name>…` |
 | `75_time.py` | `compute_landing` 의 벽시계와 spawn 수 | `python3 75_time.py <change-dir-name>…` |
 | `75_ab.py` | 판정 A/B 전수 (사본 대조군 + 이어 달리기) | `python3 75_ab.py [<before-sha>] [<초 예산>]` |
-| `75_mut.py` | 변이 T · U · V · W · Y (사본 대상 · 무변이 대조군 선행 · 스위트 전체 · 생존하면 양성 대조) | `python3 75_mut.py [<구간 lo:hi>]` |
+| `75_mut.py` | 변이 T · U · V · W · Y · Z (사본 대상 · 무변이 대조군 선행 · 스위트 전체 · 생존하면 양성 대조) | `python3 75_mut.py [<구간 lo:hi>]` |
 | `751_check_ab.py` | `check()` 반환 A/B 전수 (7.5.1) | `python3 751_check_ab.py [<before-sha>] [<초 예산>]` |
 | `752_reads.py` | a099 `check()` 한 번의 `ast.json` 읽기 수 · git 수 (7.5.2) | `python3 752_reads.py` |
 | `7521_inputs.py` | 진입점에서 닿는 **모든 I/O** 를 AST 로 센다 — "묶었다" 고 적기 전의 입력 목록 (7.5.2.1) | `python3 7521_inputs.py [check record_landing main]` |
@@ -30,9 +30,21 @@ A/B 셋의 이어 달리기 기록(`_work/*_done.*.json`)은 **양쪽 소스**�
 굳혀 두면 수리가 랜딩한 다음 날 "before" 사본에 수리가 들어가 대조군이 조용히 오염된다 —
 그래서 사본에 `_committed_many` 가 있으면 **멈춘다**
 ([[a-recorded-boundary-stops-being-rechecked]]). 한 번에 다 못 도므로(before 쪽 합계 약 2000초)
-초 예산을 주고 여러 번 부르면 `_work/75_ab_done.json` 에 이어 달린다.
+초 예산을 주고 여러 번 부르면 `_work/75_ab_done.<기준 12자리>.<after 소스 해시 12자리>.json` 에 이어 달린다(위 문단).
 
 **하네스는 도구를 따라 낡는다.** `75_census.py` 는 `_walk_floor` 가 7.5 에서 값 셋을 돌려주게
 되자 전수 126건을 전부 "못 걸음"으로 찍었다 — 빈 결과가 발견처럼 보였다
 ([[missing-tool-reports-clean]]: 0 은 "위반 0"이 아니라 "검사 0"이다). 여기 있는 것들을
-쓰기 전에 **작은 표본 하나로 먼저 돌려 보고** 숫자가 말이 되는지 확인할 것.
+쓰기 전에 **작은 표본 하나로 먼저 돌려 보고** 숫자가 말이 되는지 확인할 것. 7.5.2.2 에서도 같았다: 증거
+읽기가 `_read_regular`(`os.open`)로 옮기자 `Path.read_bytes` 만 세던 `7521_main_ab.py` · `752_reads.py` 의
+`ast.json` 읽기 계수가 **0** 을 찍었다(표본 `48 → 0`) — 두 곳 다 그 길도 세게 고쳤다.
+
+**앵커는 소스를 따라 낡는다.** 7.5.2.2 에서 수리가 한 줄을 두 줄로 바꾸자 변이 셋의 앵커가 `0회` 가 됐다 —
+하네스는 그때 `assert` 로 멈춘다(조용히 건너뛰지 않는다). 돌리기 전에 앵커 수를 한 번 세어 볼 것:
+
+```python
+ca = Path("tools/logic-map/check_analysis.py").read_text()
+[(n, ca.count(o)) for n, e in MUTATIONS.items() for o, _ in e if ca.count(o) != 1]
+```
+
+그리고 **소스를 고치면 A/B 와 변이를 다시 돌린다** — 둘 다 그 소스의 증거이지 이름의 증거가 아니다.

@@ -9,3 +9,11 @@
 | `start`/`end` 모양 | W17 | `test_every_malformed_ast_shape_is_a_verdict_not_a_traceback · test_a_malformed_ast_is_a_verdict_not_a_traceback` |
 | `branches`/`calls`/`returns` 모양 | Y24 | `같은 둘` |
 | 사전 아님 = placeholder | Y26 | `test_every_malformed_ast_shape_is_a_verdict_not_a_traceback` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+짝은 손으로 고르지 않았다 — 각 갈래를 지우는 변이를 걸어 실제로 빨개진 시험을 옮겼다(전수 95 · 생존 0: 94 는 한 판에서 CAUGHT(스위트 272 · 무변이 대조군 GREEN) · Z14 는 **도달한 채 살아남아**(`io.BytesIO(None)` 이 조용히 빈 버퍼다) 구조 시험을 더한 뒤 같은 하네스로 다시 재서 CAUGHT(273)). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
+|---|---|---|
+| B2 `RecursionError` 도 `invalid` | Z11 | `test_a_deeply_nested_ast_is_named_invalid` |

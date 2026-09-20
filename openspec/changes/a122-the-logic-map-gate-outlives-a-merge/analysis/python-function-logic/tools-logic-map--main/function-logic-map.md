@@ -247,3 +247,34 @@ Go 파일 변경 0줄.
 | B20 | 2172 | If | `if errors:` |
 | B21 | 2173 | For | `for error in errors:` |
 | B22 | 2176 | If | `if context.get('execution_baseline_adoption'):` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:2171-2291` · 분기 22 · 반환 3 · raise 0 (편집 전 L2063-2182 · 분기 22 · 반환 3 · raise 0, `ast.before-7.5.2.2.json` = revision `908a8a36`).
+
+창 줄 끝에 `— judged at HEAD <sha12>` — 게이트의 PASS 가 어느 역사의 판정인지 출력에 남는다(재리뷰 적대). `head` 를 창 줄 앞으로 올렸다(조언 갈래만 쓰던 값).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 2181 | If | `if reconfigure is not None:` |
+| B2 | 2188 | If | `if args.record_landing:` |
+| B3 | 2189 | Try | `try:` |
+| B4 | 2191 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B5 | 2193 | For | `for line in lines:` |
+| B6 | 2200 | Try | `try:` |
+| B7 | 2202 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B8 | 2213 | BoolOp | `base and 'landing' in context` |
+| B9 | 2213 | If | `if base and 'landing' in context:` |
+| B10 | 2224 | If | `if not landing:` |
+| B11 | 2229 | BoolOp | `landed_after or '?'` |
+| B12 | 2235 | BoolOp | `context.get('base_shaped_bundles') or []` |
+| B13 | 2235 | comprehension | ` for name in context.get('base_shaped_bundles') or []` |
+| B14 | 2237 | If | `if fault:` |
+| B15 | 2241 | If | `if base_shaped:` |
+| B16 | 2245 | If | `if len(base_shaped) > 3:` |
+| B17 | 2259 | Try | `try:` |
+| B18 | 2267 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B19 | 2269 | If | `if refusal:` |
+| B20 | 2281 | If | `if errors:` |
+| B21 | 2282 | For | `for error in errors:` |
+| B22 | 2285 | If | `if context.get('execution_baseline_adoption'):` |

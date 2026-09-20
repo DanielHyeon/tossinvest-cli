@@ -349,3 +349,38 @@ CAUGHT — `test_an_undecodable_landing_record_in_the_adoption_path_is_refused_n
 | B48 | 1754 | If | `if ast_value.get('source_sha256') != expected_hash:` |
 | B49 | 1756 | IfExp | `'current' if expected.get('current_hash') else 'base'` |
 | B50 | 1757 | If | `if ast_value.get('revision', 'current') != expected_revision:` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1645-1753` · 분기 26 · 반환 10 · raise 0 (편집 전 L1587-1759 · 분기 50 · 반환 13 · raise 0, `ast.before-7.5.2.2.json` = revision `908a8a36`).
+
+사실을 **맨 앞**에서 `facts.clear()` — 7.5.2.1 은 손으로 적은 `RUN_FACTS` 를 id 해소 **뒤에서** 지워 오타 id 에 앞선 실행의 창이 남았다(레드팀 · Codex). 판정부(조기 반환 · 대상 판정)를 `_verdict` 로 떼고 **한 출구**에서 `_judged_state_moved` 를 묻는다 — 달라졌으면 판정 대신 "다시 돌려라"(Codex P1 · 적대: 스냅숏 판정이 디스크의 무효 증거 · 새 `HEAD` 위에서 PASS 로 나갔다). 판정 앞의 결함 · 거절은 대조하지 않는다(이미 빨갛다).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1657 | IfExp | `{} if context is None else context` |
+| B2 | 1663 | Try | `try:` |
+| B3 | 1665 | ExceptHandler | `except ValueError as exc:` |
+| B4 | 1670 | IfExp | `review.read_text(encoding='utf-8') if review.exists() else ''` |
+| B5 | 1671 | Try | `try:` |
+| B6 | 1679 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B7 | 1685 | If | `if reference_file.exists():` |
+| B8 | 1686 | BoolOp | `analysis.exists() and any((path.is_dir() and any(path.iterdir()) for path in analysis.iterdir()))` |
+| B9 | 1686 | BoolOp | `path.is_dir() and any(path.iterdir())` |
+| B10 | 1686 | If | `if analysis.exists() and any((path.is_dir() and any(path.iterdir()) for path in analysis.iterdir())):` |
+| B11 | 1686 | comprehension | ` for path in analysis.iterdir()` |
+| B12 | 1689 | BoolOp | `not re.fullmatch('[a-z0-9][a-z0-9-]*', referenced_change) or referenced_change == change` |
+| B13 | 1689 | If | `if not re.fullmatch('[a-z0-9][a-z0-9-]*', referenced_change) or referenced_change == change:` |
+| B14 | 1691 | Try | `try:` |
+| B15 | 1694 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B16 | 1696 | If | `if referenced_base != base:` |
+| B17 | 1706 | If | `if _landing_record(change_dir, root, head) is not None:` |
+| B18 | 1710 | BoolOp | `adopted and _landing_record(change_dir, root, head) is not None` |
+| B19 | 1710 | If | `if adopted and _landing_record(change_dir, root, head) is not None:` |
+| B20 | 1716 | Try | `try:` |
+| B21 | 1729 | IfExp | `str(facts.get('adoption_source', '')) if adopted else resolve_landing(change_dir, root, base, head, evidence)` |
+| B22 | 1732 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B23 | 1736 | If | `if not landing:` |
+| B24 | 1741 | Try | `try:` |
+| B25 | 1743 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B26 | 1753 | IfExp | `[moved] if moved else verdict` |

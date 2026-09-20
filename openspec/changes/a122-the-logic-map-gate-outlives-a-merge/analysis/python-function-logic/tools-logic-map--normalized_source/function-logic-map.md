@@ -53,3 +53,18 @@ a071 이 27.84s → **10.97s**.
 | raise 줄 | 소스 |
 |---|---|
 | 1226 | `raise ValueError('AST source escapes repository')` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:1243-1261` · 분기 2 · 반환 1 · raise 1 (편집 전 L1210-1227 · 분기 2 · 반환 1 · raise 1, `ast.before-7.5.2.2.json` = revision `908a8a36`).
+
+기준점도 `os.path.realpath` — 두 경로를 같은 도구로 풀어야 비교가 같은 규칙이다(재리뷰 maintainability).
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 1251 | IfExp | `raw if raw.is_absolute() else root / raw` |
+| B2 | 1259 | If | `if not resolved.is_relative_to(anchor):` |
+
+| raise 줄 | 소스 |
+|---|---|
+| 1260 | `raise ValueError('AST source escapes repository')` |

@@ -194,3 +194,41 @@ ref) — 정확히 두 모양 `<hex oid> <type> <size>` 와 `<물은 spec> missi
 | 511 | `raise RuntimeError(_TRUNCATED.format(count=index, total=len(wanted), ref=ref[:12]))` |
 | 514 | `raise RuntimeError(f'`git cat-file --batch -Z` payload {index + 1} of {len(wanted)} ({rela` |
 | 523 | `raise RuntimeError(f'`git cat-file --batch -Z` left {len(data) - position} byte(s) unread ` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:418-529` · 분기 19 · 반환 2 · raise 7 (편집 전 L417-528 · 분기 19 · 반환 2 · raise 7, `ast.before-7.5.2.2.json` = revision `908a8a36`).
+
+git 의 말 첫 줄을 `_first_line` 으로(같은 160자 규칙의 셋째 철자였다). 출력은 같다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 450 | comprehension | ` for relative in wanted` |
+| B2 | 451 | If | `if not wanted:` |
+| B3 | 453 | comprehension | ` for relative in wanted` |
+| B4 | 454 | For | `for spec in specs:` |
+| B5 | 455 | If | `if '\x00' in spec:` |
+| B6 | 462 | comprehension | ` for spec in specs` |
+| B7 | 465 | comprehension | ` for spec in asked` |
+| B8 | 468 | If | `if process.returncode:` |
+| B9 | 483 | IfExp | `f': {said}' if said else ''` |
+| B10 | 484 | IfExp | `f' — `-Z` needs git {GIT_BATCH_MINIMUM} or newer' if process.returncode == 129 else ''` |
+| B11 | 488 | For | `for index, (relative, request) in enumerate(zip(wanted, asked)):` |
+| B12 | 490 | If | `if end < 0:` |
+| B13 | 495 | BoolOp | `header == request + b' missing' or _SUBMODULE_HEADER.fullmatch(header)` |
+| B14 | 495 | If | `if header == request + b' missing' or _SUBMODULE_HEADER.fullmatch(header):` |
+| B15 | 500 | If | `if match is None:` |
+| B16 | 508 | If | `if position + size >= len(data):` |
+| B17 | 513 | If | `if data[position + size] != 0:` |
+| B18 | 519 | If | `if match.group('type') == b'blob':` |
+| B19 | 522 | If | `if position != len(data):` |
+
+| raise 줄 | 소스 |
+|---|---|
+| 458 | `raise RuntimeError(f'request contains a NUL byte, cannot be asked for: {spec!r}')` |
+| 481 | `raise RuntimeError(f'cannot read blobs at {ref[:12]}: `git cat-file --batch -Z` failed (rc` |
+| 492 | `raise RuntimeError(_TRUNCATED.format(count=index, total=len(wanted), ref=ref[:12]))` |
+| 503 | `raise RuntimeError(f'`git cat-file --batch -Z` gave an unrecognised answer to request {ind` |
+| 512 | `raise RuntimeError(_TRUNCATED.format(count=index, total=len(wanted), ref=ref[:12]))` |
+| 515 | `raise RuntimeError(f'`git cat-file --batch -Z` payload {index + 1} of {len(wanted)} ({rela` |
+| 524 | `raise RuntimeError(f'`git cat-file --batch -Z` left {len(data) - position} byte(s) unread ` |

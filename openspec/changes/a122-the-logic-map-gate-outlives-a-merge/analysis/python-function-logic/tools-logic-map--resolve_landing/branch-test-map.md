@@ -149,3 +149,11 @@ M2 는 이 편집이 **만들어 낸** 자리다. 옛 판본에는 선언을 읽
 | `head` 로 조상 판정 | Y2 | `test_every_history_read_uses_the_one_resolved_commit` |
 | 거절 앞 재확인 | W5 | `test_a_declared_landing_refused_on_moving_evidence_says_run_again` |
 | 잰 입력 한 벌로 계산(두 번 재지 않음) | V11 | `test_the_declared_path_measures_once` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+짝은 손으로 고르지 않았다 — 각 갈래를 지우는 변이를 걸어 실제로 빨개진 시험을 옮겼다(전수 95 · 생존 0: 94 는 한 판에서 CAUGHT(스위트 272 · 무변이 대조군 GREEN) · Z14 는 **도달한 채 살아남아**(`io.BytesIO(None)` 이 조용히 빈 버퍼다) 구조 시험을 더한 뒤 같은 하네스로 다시 재서 CAUGHT(273)). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
+|---|---|---|
+| B8 빈 계산값이면 사유를 말한다(`none — <why>`) | Z12 | `test_an_empty_computation_says_why` |

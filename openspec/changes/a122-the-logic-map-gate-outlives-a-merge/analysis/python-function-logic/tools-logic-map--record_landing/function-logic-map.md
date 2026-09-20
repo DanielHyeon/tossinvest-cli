@@ -145,3 +145,22 @@ B4·B5 는 **이 로트가 찾은 둘째 자리**다. 4.4 는 `check` 의 probe 
 | B6 | 2043 | If | `if not landing:` |
 | B7 | 2045 | Try | `try:` |
 | B8 | 2048 | ExceptHandler | `except FileExistsError:` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+`tools/logic-map/check_analysis.py:2108-2168` · 분기 10 · 반환 7 · raise 0 (편집 전 L2005-2060 · 분기 8 · 반환 6 · raise 0, `ast.before-7.5.2.2.json` = revision `908a8a36`).
+
+쓰기 직전에 `_judged_state_moved` — 7.5.2.1 은 시작할 때의 역사로 계산한 값을 새 역사 위에 쓰게 했다.
+
+| id | 줄 | 종류 | 소스 |
+|---|---|---|---|
+| B1 | 2123 | Try | `try:` |
+| B2 | 2126 | ExceptHandler | `except ValueError as exc:` |
+| B3 | 2129 | Try | `try:` |
+| B4 | 2139 | If | `if refusal:` |
+| B5 | 2144 | IfExp | `_judged_state_moved(root, head, evidence) if landing else ''` |
+| B6 | 2145 | ExceptHandler | `except GATE_FAULTS as exc:` |
+| B7 | 2149 | If | `if not landing:` |
+| B8 | 2151 | If | `if moved:` |
+| B9 | 2153 | Try | `try:` |
+| B10 | 2156 | ExceptHandler | `except FileExistsError:` |

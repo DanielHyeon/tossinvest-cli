@@ -86,3 +86,11 @@ N4 가 [[generated-evidence-must-be-measured]] 의 자리다. 처음 판본의 �
 | 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
 |---|---|---|
 | 출력 `backslashreplace` | Y27 | `test_a_surrogate_in_a_path_prints_as_an_escape_not_a_traceback` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+짝은 손으로 고르지 않았다 — 각 갈래를 지우는 변이를 걸어 실제로 빨개진 시험을 옮겼다(전수 95 · 생존 0: 94 는 한 판에서 CAUGHT(스위트 272 · 무변이 대조군 GREEN) · Z14 는 **도달한 채 살아남아**(`io.BytesIO(None)` 이 조용히 빈 버퍼다) 구조 시험을 더한 뒤 같은 하네스로 다시 재서 CAUGHT(273)). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
+|---|---|---|
+| 갈래 아님 — 창 줄 끝의 `judged at HEAD <sha>` | Z9 | `test_the_window_line_names_the_head_it_judged` |

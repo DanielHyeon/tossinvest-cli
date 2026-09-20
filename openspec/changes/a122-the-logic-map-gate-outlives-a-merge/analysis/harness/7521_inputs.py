@@ -20,18 +20,31 @@ from pathlib import Path
 
 ROOT = next(parent for parent in Path(__file__).resolve().parents
             if (parent / "tools" / "logic-map").is_dir())
-MODULES = [ROOT / "tools" / "logic-map" / "check_analysis.py", ROOT / "tools" / "logic-map" / "role_check.py"]
+# `execution_baseline.py` 도 넣는다 (task 7.5.2.2) — 7.5.2.1 의 첫 판은 두 파일만 걸어서 `resolve_base` 안의
+# `validate_execution_baseline` 이 `HEAD` 를 스스로 읽는 자리를 못 봤다(재리뷰 적대 · 레드팀).
+MODULES = [ROOT / "tools" / "logic-map" / name
+           for name in ("check_analysis.py", "role_check.py", "execution_baseline.py")]
 FS = {"read_bytes", "read_text", "exists", "is_dir", "is_file", "iterdir", "glob", "rglob", "resolve",
       "is_symlink", "open", "lstat", "stat", "write_bytes", "write_text", "unlink", "mkstemp"}
 
 
 def functions() -> dict[str, tuple[Path, ast.FunctionDef]]:
     found = {}
+    aliases = {}
     for module in MODULES:
         tree = ast.parse(module.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
                 found.setdefault(node.name, (module, node))
+            elif isinstance(node, ast.ImportFrom):
+                # `from execution_baseline import validate as validate_execution_baseline` — 부르는 쪽은 별칭으로
+                # 부른다. 별칭을 안 풀면 그 함수가 도달 집합에서 빠진다(7.5.2.2 에서 모듈만 더했을 때 그랬다).
+                for alias in node.names:
+                    if alias.asname:
+                        aliases[alias.asname] = alias.name
+    for alias, name in aliases.items():
+        if name in found:
+            found.setdefault(alias, found[name])
     return found
 
 

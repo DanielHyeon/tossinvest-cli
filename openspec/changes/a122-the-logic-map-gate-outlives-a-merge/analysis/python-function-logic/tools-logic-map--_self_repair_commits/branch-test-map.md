@@ -72,3 +72,11 @@
 | 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
 |---|---|---|
 | `head` 에서 걷기 | Y4 | `test_every_history_read_uses_the_one_resolved_commit · test_a_branch_switch_mid_run_judges_the_history_it_started_on` |
+
+## task 7.5.2.2 — 스냅숏은 끝에서 디스크와 다시 대조한다 (7.5.2.1 재리뷰, 2026-09-20)
+
+짝은 손으로 고르지 않았다 — 각 갈래를 지우는 변이를 걸어 실제로 빨개진 시험을 옮겼다(전수 95 · 생존 0: 94 는 한 판에서 CAUGHT(스위트 272 · 무변이 대조군 GREEN) · Z14 는 **도달한 채 살아남아**(`io.BytesIO(None)` 이 조용히 빈 버퍼다) 구조 시험을 더한 뒤 같은 하네스로 다시 재서 CAUGHT(273)). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
+|---|---|---|
+| 분기 변화 0 — git 의 말 첫 줄이 `_first_line` 한 벌로 | V2 | `test_a_one_sided_git_failure_cannot_land_a_pre_edit_commit` |

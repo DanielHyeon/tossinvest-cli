@@ -56,12 +56,25 @@ for tag, revision in (("before", BEFORE), ("after", None)):
         spawns[" ".join(argv[1:3]) if isinstance(argv, list) else "?"] += 1
         return real_run(*args, **kwargs)
 
+    # 7.5.2.2 부터 증거는 `_read_regular`(`os.open`)로 읽힌다 — 그 길도 센다. 안 세면 after 쪽이 0 으로 찍힌다
+    # (`7521_main_ab.py` 의 첫 표본이 `48 → 0` 을 냈다).
+    real_regular = getattr(module, "_read_regular", None)
+
+    def read_regular(path):
+        if Path(path).name == "ast.json":
+            reads["ast.json"] += 1
+        return real_regular(path)
+
     Path.read_bytes, Path.read_text, module.subprocess.run = read_bytes, read_text, run
+    if real_regular is not None:
+        module._read_regular = read_regular
     start = time.monotonic()
     try:
         errors = module.check(CHANGE, ROOT, {})
     finally:
         Path.read_bytes, Path.read_text, module.subprocess.run = real_bytes, real_text, real_run
+        if real_regular is not None:
+            module._read_regular = real_regular
     bundles = len(list((ROOT / "openspec/changes/archive/2026-09-09-a099-a-claim-excludes-the-second-sender"
                         / "analysis/function-logic").glob("*/ast.json")))
     print(f"{tag:6s} errors={len(errors)} · ast.json {bundles} 개 · 읽기 {reads['ast.json']} "
