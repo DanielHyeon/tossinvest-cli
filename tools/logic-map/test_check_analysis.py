@@ -7355,5 +7355,149 @@ class TheRecheckReadsWhatTheVerdictRead(unittest.TestCase):
         self.assertEqual(offenders, [], "깔때기 밖에서 디스크를 읽는다")
 
 
+class TheDiffBodyDoesNotNameTheFileUnderJudgement(unittest.TestCase):
+    """`--unified=0` 의 본문 줄은 파일 헤더와 **글자가 같을 수 있다** (task 7.5.2.4, 7.5.2.3 재리뷰 보안).
+
+    문맥 줄이 없으므로 지워진 줄은 `-`+내용, 더한 줄은 `+`+내용이다. 그래서 `-- x` 라는 소스 줄은
+    diff 에 `--- x` 로, `++ x` 는 `+++ x` 로 나온다. 상태 없는 파서는 그것을 파일 헤더로 읽어
+    **파일 중간에서 이름을 바꾼다** — 그 파일의 요구가 통째로 사라지거나(`/dev/null` 모양),
+    편집 *전* 논리의 지도로 내려앉는다(`revision: base` 모양). 여기 픽스처는 지어낸 diff 문자열이
+    아니라 **진짜 저장소 · 진짜 `git diff`** 다. Go 추출기만 세운다(고정 저장소에는 도구가 없다).
+    """
+
+    GO = "package pkg\n\nconst q = `\n{body}\n`\n\nfunc {name}() int {{\n\treturn {value}\n}}\n"
+
+    @staticmethod
+    def _functions(path: Path, root: Path) -> list[dict]:
+        """`go run` 대신 줄 번호만 센다 — 이 클래스가 재는 것은 파서이지 추출기가 아니다."""
+        lines = Path(path).read_text(encoding="utf-8").splitlines()
+        found: list[dict] = []
+        for index, line in enumerate(lines, start=1):
+            if not line.startswith("func "):
+                continue
+            end = index
+            while end < len(lines) and lines[end - 1] != "}":
+                end += 1
+            found.append({
+                "function": line[len("func "):].split("(")[0],
+                "start": {"line": index},
+                "end": {"line": end},
+                "source_sha256": "sha-" + Path(path).name,
+            })
+        return found
+
+    def _repo(self, before: dict[str, str], after: dict[str, str]) -> tuple[Path, str]:
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        root = Path(holder.name)
+        def run(*args: str) -> None:
+            subprocess.run(args, cwd=root, check=True, capture_output=True)
+        run("git", "init", "-q", ".")
+        run("git", "config", "user.email", "fixture@example.com")
+        run("git", "config", "user.name", "fixture")
+        for name, text in before.items():
+            (root / name).write_text(text, encoding="utf-8")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "base")
+        base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        for name in before:
+            if name not in after:
+                (root / name).unlink()
+        for name, text in after.items():
+            (root / name).write_text(text, encoding="utf-8")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "edit")
+        return root, base
+
+    def _required(self, root: Path, base: str) -> dict:
+        with mock.patch("check_analysis.go_functions", side_effect=self._functions):
+            return check_analysis.changed_existing_functions(root, base, "HEAD")
+
+    def _diff(self, root: Path, base: str) -> list[str]:
+        return subprocess.check_output(
+            ["git", "-c", "core.quotePath=false", "diff", "--no-ext-diff", "--find-renames",
+             "--unified=0", base, "HEAD", "--", "*.go"],
+            cwd=root, text=True).splitlines()
+
+    def _file(self, body: str, value: int, name: str = "F") -> str:
+        return self.GO.format(body=body, value=value, name=name)
+
+    def test_git_really_emits_a_file_header_shape_from_an_ordinary_source_line(self) -> None:
+        """픽스처가 지어낸 모양이 아니라는 것부터 못 박는다 — 이것이 틀리면 아래 넷은 허구다."""
+        root, base = self._repo({"x.go": self._file("-- /dev/null", 1)},
+                                {"x.go": self._file("++ /dev/null", 2)})
+        lines = self._diff(root, base)
+        first_hunk = next(index for index, line in enumerate(lines) if line.startswith("@@"))
+        body = lines[first_hunk:]
+        self.assertIn("--- /dev/null", body, "지워진 `-- ` 소스 줄이 본문에서 헤더 모양으로 안 나왔다")
+        self.assertIn("+++ /dev/null", body, "더한 `++ ` 소스 줄이 본문에서 헤더 모양으로 안 나왔다")
+
+    def test_a_deleted_header_shaped_line_does_not_erase_the_required_function(self) -> None:
+        root, base = self._repo({"x.go": self._file("-- /dev/null\nkeep", 1)},
+                                {"x.go": self._file("keep", 2)})
+        self.assertIn(("x.go", "F"), self._required(root, base),
+                      "본문의 `--- /dev/null` 이 그 파일의 요구를 통째로 지웠다")
+
+    def test_an_added_header_shaped_line_does_not_downgrade_the_requirement(self) -> None:
+        root, base = self._repo({"x.go": self._file("keep", 1)},
+                                {"x.go": self._file("keep\n++ /dev/null", 2)})
+        required = self._required(root, base)
+        self.assertIn(("x.go", "F"), required)
+        # 현재 쪽이 돌았으면 `current_hash` 가 남는다. `base_hash` 만 남으면 `_verdict` 가
+        # `revision: base` 를 요구하고, 저자는 편집 **전** 논리의 지도로 통과한다.
+        self.assertIn("current_hash", required[("x.go", "F")],
+                      "본문의 `+++ /dev/null` 이 요구를 편집 전 리비전으로 내려앉혔다")
+
+    def test_a_deleted_sql_comment_does_not_become_the_name_of_a_base_file(self) -> None:
+        # 이 모양은 오늘 이 저장소의 추적 Go 파일에 111 줄 있다(전부 raw string 안의 SQL 주석).
+        root, base = self._repo({"x.go": self._file("-- name of the table\nkeep", 1)},
+                                {"x.go": self._file("keep", 2)})
+        self.assertIn(("x.go", "F"), self._required(root, base),
+                      "평범한 SQL 주석 한 줄이 base 파일 이름이 됐다")
+
+    def test_a_real_added_file_header_still_means_there_is_no_base_logic(self) -> None:
+        root, base = self._repo(
+            {"x.go": self._file("keep", 1)},
+            {"x.go": self._file("keep", 2), "y.go": self._file("keep", 1, name="G")})
+        required = self._required(root, base)
+        self.assertIn(("x.go", "F"), required)
+        self.assertNotIn(("y.go", "G"), required, "새 파일의 함수가 '바뀐 기존 함수' 가 됐다")
+
+    def test_a_real_deleted_file_header_still_means_there_is_no_current_logic(self) -> None:
+        root, base = self._repo(
+            {"x.go": self._file("keep", 1), "z.go": self._file("keep", 1, name="H")},
+            {"x.go": self._file("keep", 2)})
+        required = self._required(root, base)
+        self.assertIn(("x.go", "F"), required)
+        self.assertIn(("z.go", "H"), required, "지워진 파일의 함수가 요구에서 사라졌다")
+        self.assertNotIn("current_hash", required[("z.go", "H")],
+                         "지워진 파일에 현재 리비전의 지도를 요구한다")
+
+
+class TheVerdictJudgesTheEvidenceItWasGiven(unittest.TestCase):
+    """`_verdict` 는 증거를 **다시 읽지 않는다** — 스냅숏이 판정의 입력이다 (task 7.5.2.2 · 7.5.2.3 의 주장).
+
+    그 문장은 `_verdict` 의 docstring 에 있고 README 에도 있었지만, 이른 반환을 `evidence.present`
+    대신 `evidence.directory.exists()` 로 바꾸는 변이가 304개 시험 아래서 **살아남았다**
+    (task 7.5.2.4 하네스 Y13 — 눈먼 도달 계측기를 고친 뒤 '도달함' 으로 확인했다).
+    stat 계열은 깔때기 밖 읽기를 보는 구조 시험의 감시 집합에도 없다. 그래서 행동으로 못 박는다.
+    """
+
+    def test_the_early_return_reads_the_snapshot_not_the_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            # 디스크에 **없는** 경로다. 스냅숏은 "증거가 있었다" 고 말한다.
+            gone = root / "openspec" / "changes" / "a000-x" / "analysis" / "function-logic"
+            evidence = check_analysis.Evidence(gone, True, (), {}, {}, {})
+            errors = check_analysis._verdict(
+                root, "b" * 40, "l" * 40, False,
+                {("x.go", "F"): {"file": "x.go", "function": "F", "current_hash": "h"}},
+                evidence, "",
+            )
+        self.assertEqual(
+            errors, ["function-logic analysis directory has no targets"],
+            "판정이 스냅숏 대신 디스크를 물었다 — 증거는 읽은 그것이어야 한다")
+
+
 if __name__ == "__main__":
     unittest.main()

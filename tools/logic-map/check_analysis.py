@@ -29,8 +29,12 @@ REQUIRED = (
     "risk-pattern-report.md",
 )
 EXEMPTION = "Function Logic Map: not-applicable"
-# 읽기의 상한과 실패 문구 (task 7.5.2.3). 상한은 **거부하는 정상 입력을 먼저 세어** 골랐다: 저장소에서 가장 큰
-# `*.go` 97,231 B · 가장 큰 번들 파일 25,466 B · 16 MiB 넘는 번들 파일 0 / 12,193 (170배 여유).
+# 읽기의 상한과 실패 문구 (task 7.5.2.3). 상한은 **거부하는 정상 입력을 먼저 세어** 골랐다. 열거표는
+# `analysis/harness/7524_census.py` 가 다시 찍는다 — 값은 저장소와 함께 움직이므로 날짜를 적는다.
+# 2026-09-22 실측: 가장 큰 `*.go` 97,231 B · 번들 파일 **전수 12,411 중** 최대 39,327 B(아카이브 a047) ·
+# 아카이브 아닌 1,633 중 최대 26,694 B · 16 MiB 넘는 번들 파일 **0**.
+# (7.5.2.4 정정: 옛 문장은 한 문장에 모집단이 둘이었다 — 25,466 B 는 활성 번들만의 최대였는데 전수를
+#  세는 0/12,193 과 나란히 적혀 전수의 최대처럼 읽혔다.)
 READ_CAP = 16 << 20
 NOT_REGULAR = "not a regular file"
 TOO_LARGE = f"larger than the {READ_CAP} byte limit"
@@ -209,28 +213,46 @@ def changed_existing_functions(
                 current.unlink(missing_ok=True)
         hunks = []
 
+    # 통합 diff 는 문법이고 그 문법에는 **상태**가 있다 (task 7.5.2.4, 7.5.2.3 재리뷰 보안).
+    # `--unified=0` 이라 문맥 줄이 없고 본문은 전부 `-`·`+`·`\` 로 시작한다. 그래서 열 0 의
+    # `diff --git ` 과 `@@` 는 모호하지 않지만 `--- `·`+++ ` 는 **모호하다** — 지워진 소스 줄
+    # `-- x` 가 `--- x` 로, 더한 소스 줄 `++ x` 가 `+++ x` 로 나오기 때문이다(진짜 git 실측).
+    # 상태 없이 읽던 판본은 파일 **중간에서** 이름을 바꿔, 그 파일의 요구를 통째로 지우거나
+    # (`/dev/null` 모양) 편집 전 논리의 지도로 내려앉혔다(`revision: base` 모양).
+    # 이름은 **첫 훅 앞에서만** 읽는다. 새로 거절하는 입력은 없다 — 본문에서 이름을 안 읽을 뿐이다.
+    in_body = False
+
+    def hunk(line: str) -> bool:
+        match = HUNK.match(line)
+        if match is None:
+            return False
+        hunks.append(
+            (
+                int(match.group(1)),
+                int(match.group(2) or 1),
+                int(match.group(3)),
+                int(match.group(4) or 1),
+            )
+        )
+        return True
+
     for line in process.stdout.splitlines():
         if line.startswith("diff --git "):
             flush()
             old_source = ""
             new_source = ""
+            in_body = False
+        elif in_body:
+            # 본문이다. 여기서 `--- `·`+++ ` 는 소스 줄이지 파일 이름이 아니다.
+            hunk(line)
+        elif hunk(line):
+            in_body = True
         elif line.startswith("--- "):
             value = line[4:]
             old_source = "" if value == "/dev/null" else value.removeprefix("a/")
         elif line.startswith("+++ "):
             value = line[4:]
             new_source = "" if value == "/dev/null" else value.removeprefix("b/")
-        else:
-            match = HUNK.match(line)
-            if match:
-                hunks.append(
-                    (
-                        int(match.group(1)),
-                        int(match.group(2) or 1),
-                        int(match.group(3)),
-                        int(match.group(4) or 1),
-                    )
-                )
     flush()
     return required
 
@@ -672,7 +694,8 @@ class NotRegularFile(OSError):
 
     7.5.2.2 는 이 모양을 `None` 으로 돌려 **조용히 건너뛰었다**. 보안 리뷰가 그 문으로 들어왔다: 커밋된 표
     파일을 게이트가 **여는 그 순간에만** FIFO 로 바꿨다 되돌리면 열거형 호출 감사가 꺼지고 `[]` 가 찍힌다
-    (실측 6/14, 디스크에는 표가 든 정규 파일이 그대로). 목록과 열기는 다른 syscall 이라 "at rest 에 이런
+    (타이밍으로 맞출 수 있다 — 그 판의 하네스는 안 남겼으므로 여기 횟수를 적지 않는다, 7.5.2.4 정정).
+    디스크에는 표가 든 정규 파일이 그대로다. 목록과 열기는 다른 syscall 이라 "at rest 에 이런
     파일이 없다"(전수 0/12,193)는 **열기 순간**에 대한 진술이 아니다 ([[a-silent-skip-is-a-door]]).
     """
 
@@ -1659,7 +1682,10 @@ def coordinate_errors(target: str, texts: dict[str, str], value: dict, branches:
 
 
 def _bundle_text(target: Path, ast_raw: bytes | None, *, names: tuple[str, ...] | None = None) -> str:
-    """번들 디렉터리에서 **읽히는 파일 전부**를 이어 붙인다. `ast.json` 은 한 번 읽은 바이트다.
+    """번들의 **읽히는 파일 전부**를 이어 붙인다. `ast.json` 은 한 번 읽은 바이트다.
+
+    이름 목록은 여기서 다시 만들지 않고 증거 읽기가 만든 것을 `names` 로 **넘겨받는다** (task 7.5.2.3 ·
+    7.5.2.4 정정: 옛 docstring 은 이 함수가 디렉터리를 연다고 읽혔다).
 
     강제 판정은 "이 change 가 열거를 쓰는가"이고, 그 답은 열거가 번들 안 어느
     파일에 있든 같다. 파일을 **열거해서** 읽으면 그 목록 밖으로 옮기는 것으로
@@ -1682,7 +1708,8 @@ def _bundle_text(target: Path, ast_raw: bytes | None, *, names: tuple[str, ...] 
 
     **조용히 건너뛰는 모양이 없다** (task 7.5.2.3, 재리뷰 보안). 7.5.2.2 는 정규 파일이 아닌 것과 못 푸는
     바이트를 조용히 넘겼는데, 그것이 공격 경로였다: 커밋된 표 파일을 게이트가 **여는 그 순간에만** FIFO 로
-    바꿨다 되돌리면(실측 6/14) 또는 못 푸는 바이트를 한 개 심으면 그 파일의 표가 판정에서 빠져 감사가 꺼진다.
+    바꿨다 되돌리거나(타이밍 — 재현 하네스 없음, 7.5.2.4 정정) 못 푸는 바이트를 한 개 심으면
+    그 파일의 표가 판정에서 빠져 감사가 꺼진다.
     이제 사라진 것(`FileNotFoundError` — 끊긴 심링크 · 목록을 만든 뒤 지워짐)만 건너뛰고 나머지는 전부 올라가
     **이름 댄 판정 줄**이 된다. 건너뛴 그 실패도 원장에 남으므로, 이름을 빼고 되돌리는 공격은 끝의 재확인이 댄다.
 
@@ -1915,9 +1942,16 @@ def check(
 ) -> list[str]:
     """이 change 의 판정 줄들. 빈 목록이면 증거가 완전하다.
 
-    **이 함수가 원장을 열고 닫는다** (task 7.5.2.3). 판정은 `_judged` 가 하고, 그것이 읽은 것은 전부 원장에
-    남는다 — 그래서 끝의 재확인이 다시 읽는 집합은 손으로 고른 것이 아니라 **판정이 읽은 그 집합**이다.
+    **이 함수가 원장을 열고 닫는다** (task 7.5.2.3). 판정이 **이 모듈의 파이썬 코드로** 읽은 것은 전부 원장에
+    남고, 끝의 재확인이 다시 읽는 집합은 손으로 고른 것이 아니라 그 원장이다.
     7.5.2.2 는 그 집합을 손으로 골라(`HEAD` + `Evidence`) 판정이 읽는 1,739 중 149 만 봤다(a112 실측).
+
+    **범위를 정확히 적는다 (task 7.5.2.4 정정).** 원장은 자식 프로세스가 읽는 것을 못 본다 —
+    `changed_existing_functions` 의 `git diff`, `base_file` 의 `git show`, `go_functions` 의 `go run`
+    (워킹트리 Go 바이트), 그리고 `execution_baseline.validate` 가 그렇다. 그 자리들은 판정 입력을
+    읽지만 원장에 안 남으므로, 판정 도중 그것들이 바뀌면 재확인이 통과한다. 7.5.2.3 의 README·VERIFY 가
+    "디스크를 읽는 자리가 깔때기 넷뿐" 이라고 적은 것은 **거짓**이었다 — 그 열거의 모집단이
+    이 모듈의 AST 였고 자식 프로세스는 애초에 모집단에 없었다. 닫는 것은 7.5.8 이다.
 
     판정 **앞에서** 돌아가는 결함 · 거절은 대조하지 않는다 — 이미 빨갛다. 그래서 `_judged` 가 끝까지 갔는지를
     같이 돌려준다.
@@ -1940,7 +1974,8 @@ def check(
 def _judged(
     change: str, root: Path, facts: dict[str, object]
 ) -> tuple[list[str], bool]:
-    """판정 줄들과 "끝까지 갔는가". 디스크를 읽는 것은 전부 깔때기로 — 열린 원장에 남는다 (task 7.5.2.3).
+    """판정 줄들과 "끝까지 갔는가". **이 모듈이 파이썬으로** 디스크를 읽는 것은 전부 깔때기로 간다 —
+    열린 원장에 남는다 (task 7.5.2.3). 자식 프로세스(`git` · `go run`)가 읽는 것은 원장 밖이다 (7.5.2.4 정정).
 
     `check` 에서 떼어 낸 까닭은 하나다: 원장을 여는 자리와 판정하는 자리를 가르면 조기 반환마다 재확인을
     적을 필요가 없다(적는 자리가 여럿이면 하나를 잊는다 — 7.5.2.1 의 실패 모양).
@@ -2096,8 +2131,9 @@ def _verdict(
     # 번들마다 표지를 고를 수 있으면 감사 여부를 저자가 정하게 되고, 그 문으로
     # a112 의 39개가 빠져나갔다(4차 적대 리뷰). 판정은 표지 철자가 아니라
     # 표의 **내용**으로 한다 — 철자로 보던 판본이 공백 하나에 뚫렸다(6차).
-    # 참여하는 번들은 한 번 읽은 목록에서 고른다(`lexists` — 옛 `glob` 이 잡던 것과 같다: 끊긴 링크 ·
-    # 디렉터리도 이름이 있으면 든다). 그 번들의 파일 목록을 못 열면 **이름 댄 판정 줄**이다 (task 7.5.2.1) —
+    # 참여하는 번들은 한 번 읽은 목록에서 고른다 — 이름이 있으면 든다(끊긴 링크 · 디렉터리도).
+    # (`lexists` 로 여기서 다시 묻던 판본은 7.5.2.3 에서 없어졌다 — 7.5.2.4 정정.)
+    # 그 번들의 파일 목록을 못 열면 **이름 댄 판정 줄**이다 (task 7.5.2.1) —
     # 그 번들의 산문 없이 판정하면 그 번들의 표가 조용히 빠진다.
     bundle_texts: dict[Path, str] = {}
     for target in evidence.targets:
@@ -2187,7 +2223,9 @@ class LandingInputs(NamedTuple):
 
 
 def _head_commit(root: Path) -> str:
-    """지금 `HEAD` 의 커밋. 명령마다 **한 번** 부른다 — 그 뒤의 역사 읽기는 전부 이 sha 다 (task 7.5.2.1).
+    """지금 `HEAD` 의 커밋. 판정이 쓰는 역사 sha 는 `_judged` 가 **한 번** 푼 그것이고 그 뒤의 역사 읽기는
+    전부 그 sha 다 (task 7.5.2.1). 이 함수 자체는 `check` 한 번에 **셋** 불린다 (7.5.2.4 정정): 판정 앞에
+    한 번, 재확인의 **앞뒤**로 한 번씩(`_head_moved`). 기록 명령은 쓰기 직전에 자기 몫을 또 묻는다.
 
     못 읽으면 결함이다 — 빈 값은 "못 물었다" 를 "같다" 로 만든다.
     """

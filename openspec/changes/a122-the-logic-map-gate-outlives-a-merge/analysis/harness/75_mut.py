@@ -5,6 +5,7 @@
 [[mutation-must-reach-the-thing-under-test]]). 대조군이 초록이 아니면 멈춘다.
 """
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -64,8 +65,11 @@ MUTATIONS = {
     "V3_any_missing_line_counts_as_absent": [(
         '        if header == request + b" missing" or _SUBMODULE_HEADER.fullmatch(header):',
         '        if header.endswith(b" missing") or _SUBMODULE_HEADER.fullmatch(header):')],
+    # 앵커에 앞 줄을 붙여 자리를 **특정**한다 — 7.5.2.4 가 diff 파서에 같은 철자의 줄을 하나 더
+    # 만들었고, 하네스는 그때 `count != 1` 로 멈췄다(조용히 아무 자리나 고르지 않는다).
     "V4_unknown_header_is_absence": [(
-        '        if match is None:\n', '        if match is None:\n            continue\n')],
+        '        match = _OBJECT_HEADER.fullmatch(header)\n        if match is None:\n',
+        '        match = _OBJECT_HEADER.fullmatch(header)\n        if match is None:\n            continue\n')],
     "V5_terminator_not_checked": [(
         '        if data[position + size] != 0:', '        if False:')],
     "V6_overshoot_not_checked": [(
@@ -191,12 +195,16 @@ MUTATIONS = {
     "Y12_cleanliness_fault_is_dirty": [
         ('    if dirty.returncode not in (0, 1):',
          '    if False:')],
+    # Y13 · Y14 는 `_verdict` 에 **없는 이름** `analysis` 를 넣어 `NameError` 로 빨개졌다 (task 7.5.2.4
+    # 재리뷰 시험품질). 함수가 갈릴 때 낡은 것이고, 그동안 이 둘은 "이른 반환이 디스크에 묻는다" ·
+    # "targets 를 다시 나열한다" 를 **증명하지 않았다**. 같은 뜻을 오늘의 범위로 다시 쓴다 —
+    # `evidence.directory` 가 바로 그 디렉터리다.
     "Y13_early_return_asks_the_disk": [
         ('    if not evidence.present:',
-         '    if not analysis.exists():')],
+         '    if not evidence.directory.exists():')],
     "Y14_targets_listed_again": [
         ('    for target in evidence.targets:\n        target_errors, binding',
-         '    for target in sorted(path for path in analysis.iterdir() if path.is_dir()):\n        target_errors, binding')],
+         '    for target in sorted(path for path in evidence.directory.iterdir() if path.is_dir()):\n        target_errors, binding')],
     "Y15_evidence_listed_by_glob": [
         ('    targets = tuple(analysis / name for name, is_dir in entries if is_dir)',
          '    targets = tuple(sorted(path.parent for path in analysis.glob("*/ast.json")))')],
@@ -399,6 +407,21 @@ MUTATIONS = {
     "AA19_listing_fingerprint_drops_the_kind": [
         ('    joined = "\\n".join(f"{name}\\t{\'d\' if is_dir else \'f\'}" for name, is_dir in entries)',
          '    joined = "\\n".join(name for name, is_dir in entries)')],
+    # --- 통합 diff 문법의 상태 (7.5.2.4) ---
+    # 본문 줄이 파일 이름을 정하면 그 파일의 요구가 사라지거나 편집 전 리비전으로 내려앉는다.
+    "AB1_body_lines_name_the_file_again": [
+        ('        elif in_body:\n            # 본문이다. 여기서 `--- `·`+++ ` 는 소스 줄이지 파일 이름이 아니다.\n            hunk(line)',
+         '        elif False:\n            # 본문이다. 여기서 `--- `·`+++ ` 는 소스 줄이지 파일 이름이 아니다.\n            hunk(line)')],
+    "AB2_the_body_never_opens": [
+        ('        elif hunk(line):\n            in_body = True', '        elif hunk(line):\n            in_body = False')],
+    "AB3_a_new_file_does_not_close_the_body": [
+        ('            new_source = ""\n            in_body = False', '            new_source = ""')],
+    "AB4_only_the_first_hunk_of_a_file_counts": [
+        ('            # 본문이다. 여기서 `--- `·`+++ ` 는 소스 줄이지 파일 이름이 아니다.\n            hunk(line)',
+         '            # 본문이다. 여기서 `--- `·`+++ ` 는 소스 줄이지 파일 이름이 아니다.\n            pass')],
+    "AB5_dev_null_is_an_ordinary_name": [
+        ('            old_source = "" if value == "/dev/null" else value.removeprefix("a/")',
+         '            old_source = value.removeprefix("a/")')],
 }
 
 
@@ -418,12 +441,18 @@ def run(names: list[str]) -> tuple[int, str]:
     return process.returncode, process.stderr
 
 
+def ran_count(output: str) -> int:
+    """`Ran N tests` 의 N — 판마다 같은 수를 돌았는지 보는 싼 환경 대조."""
+    match = re.search(r"^Ran (\d+) tests", output, re.MULTILINE)
+    return int(match.group(1)) if match else -1
+
+
 def failing(output: str) -> list[str]:
     return sorted({line.split(" ")[1] for line in output.splitlines()
                    if line.startswith(("FAIL: ", "ERROR: "))})
 
 
-def reached(target: Path, edits) -> bool:
+def reached(target: Path, edits, pristine: str) -> bool:
     """변이가 **돌았는지**를 잰다 — 바뀐 줄에 도달하지 못하면 SURVIVED 는 음성이 아니라 침묵이다.
 
     문자열이 바뀌었는지만 보는 하네스는 **눈먼 계측기와 진짜 음성을 같게 기록한다**
@@ -431,7 +460,11 @@ def reached(target: Path, edits) -> bool:
     0회 도달인데 "동등 변이"로 적혔다, [[mutation-must-reach-the-thing-under-test]]).
     바꾼 줄마다 표식을 심고 스위트를 돌려 표식이 찍히는지 본다.
     """
-    text = target.read_text(encoding="utf-8")
+    # 표식은 **변이를 얹기 전** 본문에 심는다 (task 7.5.2.4, 재리뷰 시험품질). 옛 판본은 원복 **전**에
+    # 디스크를 읽어서 *변이된* 본문에서 *옛 줄* 을 찾았다 — 줄을 통째로 바꾼 변이는 그 줄이 이미 없으니
+    # 언제나 `marked == text` 였고, 계측기는 113 중 **79** 에 대해 눈이 먼 채 "안 닿음" 이라고 답했다.
+    # 재는 질문은 "스위트가 이 자리를 도는가" 이고, 그 자리는 옛 줄의 자리다.
+    text = pristine
     marked = text
     for old_line, _ in edits if edits != "MOVE_FIRST" else []:
         head = old_line.splitlines()[0]
@@ -445,7 +478,7 @@ def reached(target: Path, edits) -> bool:
         return False
     target.write_text(marked, encoding="utf-8")
     _, output = run(SUITE)
-    target.write_text(text, encoding="utf-8")
+    target.write_text(pristine, encoding="utf-8")
     return "REACHED" in output
 
 
@@ -458,12 +491,17 @@ if __name__ == "__main__":
     # 그 빨감의 이유를 찾는 데 한 시간이 든다. 계측기부터 못 박는다
     # ([[mutation-revert-needs-the-right-baseline]] · [[mutation-must-reach-the-thing-under-test]]).
     origin = (REPO / "tools" / "logic-map" / "check_analysis.py").read_text(encoding="utf-8")
+    # 이 단언은 **구조상 참이다** — `setup()` 이 방금 무조건 rmtree+copytree 했다 (task 7.5.2.4 정정).
+    # 두 판이 서로의 변이를 기준으로 삼는 것을 실제로 막는 것은 위의 **pid 별 `WORK` 이름** 하나다.
+    # 싼 연기 감지기로 남겨 두되, 이것을 수리라고 적지 않는다.
     assert pristine == origin, "사본이 원본과 다르다 — 앞선 판이 변이를 남겼다"
     code, output = run(SUITE)
     if code != 0:
         print("STOP — 무변이 대조군이 빨갛다\n", output[-3000:])
         raise SystemExit(1)
-    print("control GREEN", output.strip().splitlines()[-1])
+    control_line = output.strip().splitlines()[-1]
+    control_ran = ran_count(output)
+    print(f"control GREEN {control_line} (Ran {control_ran})")
     survived = []
     # 구간 실행: `75_mut.py 0:8` — 이 환경에서는 백그라운드로 넘어간 프로세스가 살아남지 못해서
     # 한 번에 다 못 돈다. 구간마다 무변이 대조군은 **그대로 먼저** 돈다(위).
@@ -482,12 +520,24 @@ if __name__ == "__main__":
         verdict = "CAUGHT" if code else "SURVIVED"
         if not code:
             survived.append(name)
-        touched = "" if code else ("  · 도달함" if reached(target, edits) else "  · **안 닿음**")
-        print(f"{name:36s} {verdict:9s}{touched} {len(names):2d} "
+        target.write_text(pristine, encoding="utf-8")
+        # 도달 계측은 **원복 뒤에** 부른다 — 표식은 원본 본문에 심는 것이지 변이된 본문이 아니다.
+        touched = "" if code else ("  · 도달함" if reached(target, edits, pristine) else "  · **안 닿음**")
+        # 판이 대조군과 **다른 수의 시험**을 돌았으면 그 CAUGHT 는 변이의 증거가 아니라 환경의 증거다
+        # (task 7.5.2.4, 재리뷰 시험품질: `/` 가 0 인 창에서 다섯 변이가 n=130·244·269 로 전부 CAUGHT).
+        ran = ran_count(output)
+        suspect = "" if ran == control_ran else f"  · **환경 의심** (Ran {ran} ≠ {control_ran})"
+        print(f"{name:36s} {verdict:9s}{touched}{suspect} {len(names):2d} "
               f"{', '.join(n.split('.')[-1] for n in names[:3])}"
               + (f" 외 {len(names) - 3}" if len(names) > 3 else ""))
-        target.write_text(pristine, encoding="utf-8")
-        # 원복을 **세어서** 확인한다 — 다음 변이가 앞 변이 위에 얹히면 두 판정이 서로를 덮는다.
-        assert target.read_text(encoding="utf-8") == pristine, f"{name} 뒤 원복이 안 됐다"
+    # 대조군을 창 **끝에도** 돌린다 (task 7.5.2.4). 창 시작에만 돌리면, 도중에 환경이 무너진 판들이
+    # 전부 CAUGHT 로 찍히고 하네스는 그것을 변이의 증거와 못 가른다 — 끝 대조군이 빨가면 창을 통째로 버린다.
+    code, output = run(SUITE)
+    if code != 0:
+        free = shutil.disk_usage(WORK).free
+        print(f"\nSTOP — 창 **끝** 무변이 대조군이 빨갛다 (남은 디스크 {free // (1 << 20)} MiB)."
+              f" 이 창의 결과는 전부 버린다.\n", output[-3000:])
+        raise SystemExit(1)
+    print(f"창 끝 control GREEN {output.strip().splitlines()[-1]} (Ran {ran_count(output)})")
     print(f"\nSURVIVED {len(survived)}/{len(chosen)}" + (f": {survived}" if survived else ""))
     shutil.rmtree(WORK, ignore_errors=True)
