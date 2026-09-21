@@ -1,14 +1,14 @@
 {
   "source": "tossinvest.com web bundles",
-  "build_id": "zohm1Acaa2LR63_36yS6O",
-  "chunk_count": 23,
-  "total": 1035,
+  "build_id": "J0yMo7d6tXdSUWbN7MtA_",
+  "chunk_count": 26,
+  "total": 1175,
   "counts": {
-    "implemented": 80,
-    "candidate": 422,
-    "excluded": 533,
+    "implemented": 81,
+    "candidate": 532,
+    "excluded": 562,
     "candidate_next": 19,
-    "meaningful": 502
+    "meaningful": 613
   },
   "overrides": {},
   "endpoints": {
@@ -345,31 +345,6 @@
       "note": "onboarding/eligibility UI",
       "first_seen": "2026-06-19"
     },
-    "/api/v1/account/frontend/test/contracts/high-risk-trading/cancel/leverage-etp-etn": {
-      "status": "excluded",
-      "note": "onboarding/eligibility UI",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/account/frontend/test/contracts/high-risk-trading/cancel/single-stock-etp-education": {
-      "status": "excluded",
-      "note": "onboarding/eligibility UI",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v1/account/frontend/test/product-eligibility/reviews/delete": {
-      "status": "excluded",
-      "note": "onboarding/eligibility UI",
-      "first_seen": "2026-08-24"
-    },
-    "/api/v1/account/frontend/test/product-eligibility/single-stock-etp/mock-trade/approve": {
-      "status": "excluded",
-      "note": "onboarding/eligibility UI",
-      "first_seen": "2026-08-24"
-    },
-    "/api/v1/account/frontend/test/product-eligibility/single-stock-etp/mock-trade/reject": {
-      "status": "excluded",
-      "note": "onboarding/eligibility UI",
-      "first_seen": "2026-08-24"
-    },
     "/api/v1/account/investment-propensity/eligible/with-contract": {
       "status": "excluded",
       "note": "account admin / tax / KYC",
@@ -678,6 +653,10 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/autotrade/event/exist": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/autotrade/open-banking": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -710,17 +689,49 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/autotrade/plan/cancel": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/autotrade/plan/experienced": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/autotrade/plan/find": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/autotrade/plan/find/bizday": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/autotrade/plan/find/popular": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/autotrade/plan/modify": {
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/autotrade/plan/register": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/autotrade/plan/stock": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/autotrade/plan/sync": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/autotrade/schedule/find/remained": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/autotrade/schedule/update": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/badges": {
       "status": "candidate",
@@ -754,9 +765,17 @@
       "status": "candidate",
       "first_seen": "2026-09-07"
     },
+    "/api/v1/brief/investor-trading": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/brief/market/report": {
       "status": "candidate",
       "first_seen": "2026-09-07"
+    },
+    "/api/v1/brief/market/report/sources": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/brief/market/summary": {
       "status": "candidate",
@@ -766,6 +785,18 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/certs/exist": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/certs/renew/check": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/certs/replacement-agreed": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/chat/topics": {
       "status": "candidate",
       "first_seen": "2026-09-07"
@@ -774,6 +805,11 @@
       "status": "excluded",
       "note": "community/UGC",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/comments/block/immediately": {
+      "status": "excluded",
+      "note": "community/UGC",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/comments/bookmarks": {
       "status": "excluded",
@@ -982,6 +1018,66 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/contents/premium/permission": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/copytrade/master-stocks": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/copytrade/report": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/chat-auth/authenticate": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/chat-auth/new": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/chat/auto-disconnect": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/chat/banned-words/check": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/chat/blocked": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/chat/contacts": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/chat/direct/start": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/chat/end": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/chat/guest/start": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/chat/queue-metric": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/chat/start": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/chat/terms": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/crm/chatbot/guest/start": {
       "status": "candidate",
       "first_seen": "2026-08-17"
@@ -994,11 +1090,35 @@
       "status": "candidate",
       "first_seen": "2026-08-17"
     },
+    "/api/v1/crm/meetings/meeting-id": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/operation-hour/call": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/operation-hour/chat": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/waiting-count/call": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/crm/waiting-count/chat": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/crypto-prices": {
       "status": "candidate",
       "priority": "next",
       "note": "가상자산 시세",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/customer-center/is-holiday": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/dashboard/all-accounts": {
       "status": "candidate",
@@ -1172,6 +1292,10 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/executive-related-person/update-ci": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/feed/content/posts": {
       "status": "excluded",
       "note": "community/UGC",
@@ -1190,6 +1314,46 @@
     "/api/v1/fomc-live/alimy": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/gifts/accept": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/gifts/auth/sign": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/gifts/auth/sign/token": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/gifts/cancel": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/gifts/candidate-stocks": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/gifts/histories": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/gifts/recent-gift-receiver-name": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/gifts/reject": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/gifts/send": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/gifts/user": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/giphy/v1/gifs/search": {
       "status": "candidate",
@@ -1219,9 +1383,28 @@
       "status": "implemented",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/init": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/intelligence/user/mark": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/kyc/agent/ca-session/clear": {
+      "status": "excluded",
+      "note": "KYC",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/kyc/agent/ca-session/init": {
+      "status": "excluded",
+      "note": "KYC",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/kyc/agent/ca-verified-today": {
+      "status": "excluded",
+      "note": "KYC",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/kyc/agent/due-diligence": {
       "status": "excluded",
@@ -1237,6 +1420,11 @@
       "status": "excluded",
       "note": "KYC",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/kyc/agent/risk-assessment": {
+      "status": "excluded",
+      "note": "KYC",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/kyc/agent/risk-assessment/preview": {
       "status": "excluded",
@@ -1388,14 +1576,37 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/loan-propensity": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/login/device-info": {
       "status": "excluded",
       "note": "login flow (handled by auth-helper)",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/login/management": {
+      "status": "excluded",
+      "note": "login flow (handled by auth-helper)",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/login/management/expire": {
+      "status": "excluded",
+      "note": "login flow (handled by auth-helper)",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/login/management/sse-test": {
+      "status": "excluded",
+      "note": "login flow (handled by auth-helper)",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/logout": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/lounge/hot-comment": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/margin/bff/buy-control/required-deposit-amount": {
       "status": "candidate",
@@ -1549,6 +1760,11 @@
       "status": "excluded",
       "note": "minor-account flow",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/minor/multi-account-open/parent/kyc/phone-number-change": {
+      "status": "excluded",
+      "note": "minor-account flow",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/minor/multi-account-open/parent/kyc/preview": {
       "status": "excluded",
@@ -1927,6 +2143,26 @@
       "status": "implemented",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/news": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/news/companies": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/news/tics": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/night-alimies": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/night-alimies/agree": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/nova-feedback/user-feedbacks": {
       "status": "candidate",
       "first_seen": "2026-09-07"
@@ -2098,6 +2334,10 @@
       "status": "candidate",
       "first_seen": "2026-09-07"
     },
+    "/api/v1/prime/cash/event/target": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/product-eligibility/domestic-leverage-etp/trading": {
       "status": "excluded",
       "note": "product eligibility gating",
@@ -2172,10 +2412,6 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
-    "/api/v1/product/stock-prices": {
-      "status": "implemented",
-      "first_seen": "2026-06-19"
-    },
     "/api/v1/profit": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -2221,6 +2457,11 @@
       "status": "excluded",
       "note": "marketing/promotion",
       "first_seen": "2026-08-17"
+    },
+    "/api/v1/promotion/account-open/target": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/promotion/alphabet/board-info": {
       "status": "excluded",
@@ -2362,6 +2603,11 @@
       "note": "marketing/promotion",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/promotion/cashback/display": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/promotion/cashback/intelligence-info": {
       "status": "excluded",
       "note": "marketing/promotion",
@@ -2371,6 +2617,11 @@
       "status": "excluded",
       "note": "marketing/promotion",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/promotion/commission/status": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/promotion/community-follow/ranking/followers": {
       "status": "excluded",
@@ -2487,6 +2738,11 @@
       "note": "marketing/promotion",
       "first_seen": "2026-08-24"
     },
+    "/api/v1/promotion/minor-account-open/unrewarded-child": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/promotion/minor-account-open/user-status": {
       "status": "excluded",
       "note": "marketing/promotion",
@@ -2511,6 +2767,16 @@
       "status": "excluded",
       "note": "marketing/promotion",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/promotion/olive-young-stock/period": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/promotion/olive-young-stock/user": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/promotion/page/next-landing": {
       "status": "excluded",
@@ -2552,6 +2818,11 @@
       "note": "marketing/promotion",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/promotion/random-box/stock/total-cnt": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/promotion/santa-run/count": {
       "status": "excluded",
       "note": "marketing/promotion",
@@ -2582,6 +2853,11 @@
       "note": "marketing/promotion",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/promotion/targets": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/promotion/terms/event-types": {
       "status": "excluded",
       "note": "marketing/promotion",
@@ -2611,6 +2887,16 @@
       "status": "excluded",
       "note": "marketing/promotion",
       "first_seen": "2026-08-03"
+    },
+    "/api/v1/promotion/user_promotion/by-promotion": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/promotion/watchlist-onboarding/stocks": {
+      "status": "excluded",
+      "note": "marketing/promotion",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/properties/member": {
       "status": "candidate",
@@ -2656,6 +2942,10 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/reasoning/indices": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/reasoning/latest": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -2663,6 +2953,10 @@
     "/api/v1/reasoning/personalized": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/reasoning/stocks": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/redirect-push": {
       "status": "candidate",
@@ -2724,6 +3018,10 @@
       "status": "candidate",
       "first_seen": "2026-08-24"
     },
+    "/api/v1/ria-calculator/benefit-account/exists": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/ria-calculator/limit": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -2747,6 +3045,58 @@
     "/api/v1/rights": {
       "status": "candidate",
       "first_seen": "2026-09-07"
+    },
+    "/api/v1/rights/account": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/rights/all-opened-rights": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/rights/categories": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/rights/dividend": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/rights/dividend-option/account-give-type": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/rights/dividend-option/detail": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/rights/dividend/krw-taxation": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/rights/dividend/profit": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/rights/other-bank-out/impossible-dates": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/rights/plan": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/rights/plan/stock-split-plans": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/rights/tax-receipts/multiple-accounts": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/rights/tax-receipts/multiple-accounts/available-years": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/rights/us/categories": {
       "status": "candidate",
@@ -2824,6 +3174,38 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/search/keywords/associated": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/search/keywords/autocomplete": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/search/keywords/autocomplete/tradable": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/search/news": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/search/stocks/cached": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/search/tags": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/search/tics": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/search/tics/rankings": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/secure-keyboard/wts": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -2869,10 +3251,30 @@
       "note": "UI personalization/prefs",
       "first_seen": "2026-06-19"
     },
-    "/api/v1/settings/auto-trading/check-orderable": {
+    "/api/v1/settings/abroad-access/sign": {
       "status": "excluded",
       "note": "UI personalization/prefs",
-      "first_seen": "2026-06-19"
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/settings/abroad-access/sign/token": {
+      "status": "excluded",
+      "note": "UI personalization/prefs",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/settings/abroad-access/sms": {
+      "status": "excluded",
+      "note": "UI personalization/prefs",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/settings/abroad-access/sms/new": {
+      "status": "excluded",
+      "note": "UI personalization/prefs",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/settings/abroad-access/sms/verify": {
+      "status": "excluded",
+      "note": "UI personalization/prefs",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/settings/default-currency": {
       "status": "excluded",
@@ -2971,9 +3373,17 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/stock-prices": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/stock-prices/mainsession": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/suggest/stock-open": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/survey/vote": {
       "status": "candidate",
@@ -2982,6 +3392,10 @@
     "/api/v1/system-down-recipes": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/target-price-alimies": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/terms": {
       "status": "excluded",
@@ -3024,6 +3438,14 @@
     "/api/v1/test/product-eligibility/reviews/delete": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/tics": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/tics/all": {
+      "status": "implemented",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/tics/rankings": {
       "status": "implemented",
@@ -3081,10 +3503,6 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
-    "/api/v1/trading/auto-trading/profit-rate": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
     "/api/v1/trading/auto-trading/stocks-info": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -3128,6 +3546,10 @@
     "/api/v1/trading/orders/histories/all/pending": {
       "status": "implemented",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/trading/rights/accounts": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/trading/settings/simple-trade": {
       "status": "candidate",
@@ -3244,6 +3666,62 @@
       "note": "transfer/document admin",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/transfer/foreign-exchange/available-banks": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/transfer/foreign-exchange/check-duplicate": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/transfer/foreign-exchange/is-deposit-available": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/transfer/foreign-exchange/is-withdraw-available": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/transfer/foreign-exchange/pre-check": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/transfer/foreign-exchange/recent-accounts": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/transfer/foreign-exchange/send-preview": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/transfer/foreign-exchange/send-preview/result": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/transfer/foreign-exchange/send/ars": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/transfer/foreign-exchange/send/result": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/transfer/foreign-exchange/send/sign": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/transfer/foreign-exchange/send/sign/token": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/transfer/foreign-exchange/toss-accounts": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/transfer/foreign-exchange/withdraw-info": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/transfer/withdrawable-status": {
       "status": "implemented",
       "first_seen": "2026-06-19"
@@ -3338,10 +3816,25 @@
       "note": "UI personalization/prefs",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/user-profiles/badge/update": {
+      "status": "excluded",
+      "note": "UI personalization/prefs",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/user-profiles/block/permanently": {
+      "status": "excluded",
+      "note": "UI personalization/prefs",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/user-profiles/by-replies": {
       "status": "excluded",
       "note": "UI personalization/prefs",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/user-profiles/common": {
+      "status": "excluded",
+      "note": "UI personalization/prefs",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/user-profiles/create": {
       "status": "excluded",
@@ -3353,10 +3846,20 @@
       "note": "UI personalization/prefs",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/user-profiles/friends": {
+      "status": "excluded",
+      "note": "UI personalization/prefs",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/user-profiles/generate-nickname": {
       "status": "excluded",
       "note": "UI personalization/prefs",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/user-profiles/hidden-count": {
+      "status": "excluded",
+      "note": "UI personalization/prefs",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/user-profiles/hide": {
       "status": "excluded",
@@ -3412,6 +3915,10 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v1/user-search/rank/realtime/keyword": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v1/user-setting": {
       "status": "excluded",
       "note": "UI personalization/prefs",
@@ -3448,6 +3955,14 @@
     "/api/v1/users/settings/me/ats-notification": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v1/voluntary-rights": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v1/voluntary-rights/open-receptions": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v1/workspaces/9/faq": {
       "status": "candidate",
@@ -3535,6 +4050,10 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v2/accounts/contracts/high-risk-usa-option-trading/auth/wts": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v2/accounts/contracts/high-risk/auth/wts": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -3578,6 +4097,14 @@
     "/api/v2/accounts/investment-propensity/revision/auth/wts": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v2/article/digest": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v2/article/digest/like": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v2/autotrade/plan/find": {
       "status": "implemented",
@@ -3672,6 +4199,10 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v2/init": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v2/kyc/agent/agent-mode-kyc-reprocess": {
       "status": "excluded",
       "note": "KYC",
@@ -3753,6 +4284,11 @@
       "note": "login flow (handled by auth-helper)",
       "first_seen": "2026-06-19"
     },
+    "/api/v2/login/wts/sms/step": {
+      "status": "excluded",
+      "note": "login flow (handled by auth-helper)",
+      "first_seen": "2026-09-21"
+    },
     "/api/v2/login/wts/toss": {
       "status": "excluded",
       "note": "login flow (handled by auth-helper)",
@@ -3767,6 +4303,11 @@
       "status": "excluded",
       "note": "login flow (handled by auth-helper)",
       "first_seen": "2026-06-19"
+    },
+    "/api/v2/login/wts/toss/init": {
+      "status": "excluded",
+      "note": "login flow (handled by auth-helper)",
+      "first_seen": "2026-09-21"
     },
     "/api/v2/login/wts/toss/join": {
       "status": "excluded",
@@ -3796,6 +4337,16 @@
       "status": "excluded",
       "note": "community/UGC",
       "first_seen": "2026-06-19"
+    },
+    "/api/v2/minor/accounts/close": {
+      "status": "excluded",
+      "note": "minor-account flow",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v2/minor/accounts/close-and-withdraw": {
+      "status": "excluded",
+      "note": "minor-account flow",
+      "first_seen": "2026-09-21"
     },
     "/api/v2/minor/multi-account-open/child-name": {
       "status": "excluded",
@@ -3935,6 +4486,22 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
+    "/api/v2/news/companies": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v2/news/tics": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v2/night-alimies": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v2/night-alimies/agree": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v2/open-api/registration/cert/complete": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -4001,11 +4568,6 @@
       "note": "marketing/promotion",
       "first_seen": "2026-09-07"
     },
-    "/api/v2/promotion/cashback/recommend-stocks/lowest-price": {
-      "status": "excluded",
-      "note": "marketing/promotion",
-      "first_seen": "2026-09-07"
-    },
     "/api/v2/promotion/commission/event/user/execution": {
       "status": "excluded",
       "note": "marketing/promotion",
@@ -4041,6 +4603,10 @@
       "note": "marketing/promotion",
       "first_seen": "2026-06-19"
     },
+    "/api/v2/reasoning": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
     "/api/v2/reasoning-contents/interest": {
       "status": "implemented",
       "first_seen": "2026-06-19"
@@ -4060,6 +4626,18 @@
     "/api/v2/replies": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v2/search/brands/random": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v2/search/news": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v2/search/stocks": {
+      "status": "implemented",
+      "first_seen": "2026-09-21"
     },
     "/api/v2/settings/password/reset": {
       "status": "excluded",
@@ -4241,21 +4819,9 @@
       "note": "legal terms",
       "first_seen": "2026-06-19"
     },
-    "/api/v2/trading/auto-trading": {
+    "/api/v2/trading/commission-info": {
       "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v2/trading/auto-trading/prepare": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v2/trading/auto-trading/profit-rate/create": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v2/trading/auto-trading/profit-rate/prepare/create": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
+      "first_seen": "2026-09-21"
     },
     "/api/v2/trading/my-orders/markets": {
       "status": "implemented",
@@ -4310,10 +4876,23 @@
       "note": "transfer/document admin",
       "first_seen": "2026-06-19"
     },
+    "/api/v2/transfer-income-calculator/ria": {
+      "status": "excluded",
+      "note": "transfer/document admin",
+      "first_seen": "2026-09-21"
+    },
     "/api/v2/transfer-income/init": {
       "status": "excluded",
       "note": "transfer/document admin",
       "first_seen": "2026-06-19"
+    },
+    "/api/v2/transfer/foreign-exchange/withdraw-info": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v2/user-price-alimy": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v2/user-profiles": {
       "status": "excluded",
@@ -4334,6 +4913,10 @@
       "status": "excluded",
       "note": "UI personalization/prefs",
       "first_seen": "2026-06-19"
+    },
+    "/api/v2/user-search/rank/realtime/keyword": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v2/wts-login-device": {
       "status": "excluded",
@@ -4420,6 +5003,16 @@
     "/api/v3/ipd-toss-survey/forms": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v3/kyc/agent/agent-mode-kyc-reprocess": {
+      "status": "excluded",
+      "note": "KYC",
+      "first_seen": "2026-09-21"
+    },
+    "/api/v3/kyc/kyc-reprocess": {
+      "status": "excluded",
+      "note": "KYC",
+      "first_seen": "2026-09-21"
     },
     "/api/v3/login/ticket": {
       "status": "excluded",
@@ -4619,14 +5212,6 @@
       "status": "candidate",
       "first_seen": "2026-06-19"
     },
-    "/api/v3/trading/auto-trading/stop-loss": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
-    "/api/v3/trading/auto-trading/stop-loss/prepare/create": {
-      "status": "candidate",
-      "first_seen": "2026-06-19"
-    },
     "/api/v3/trading/auto-trading/update": {
       "status": "candidate",
       "first_seen": "2026-06-19"
@@ -4658,6 +5243,10 @@
     "/api/v3/wts/trading/order/cancel": {
       "status": "candidate",
       "first_seen": "2026-06-19"
+    },
+    "/api/v4/certs/exist": {
+      "status": "candidate",
+      "first_seen": "2026-09-21"
     },
     "/api/v4/certs/register/init-session-v2": {
       "status": "candidate",
@@ -4724,5 +5313,5 @@
       "first_seen": "2026-09-07"
     }
   },
-  "updated_at": "2026-09-14"
+  "updated_at": "2026-09-21"
 }
