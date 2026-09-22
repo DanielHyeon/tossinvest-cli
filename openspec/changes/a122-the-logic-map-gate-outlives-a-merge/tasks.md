@@ -1401,14 +1401,57 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       를 가진 change **117** 전부에서 그런 줄이 **0** 이다 → 오늘 어느 change 에서도 두 파서의 `required` 가 같다.
       실물 `main()` 출력 A/B **126/126 SAME · DIFFERENT 0** · 계수 불변(git 20,365 → 20,365 ·
       `ast.json` 읽기 9,072 → 9,072 — **이 로트의 비용은 0**) · 순서를 번갈아 잰 벽시계도 935.1→933.8s ·
-      935.0→933.1s 로 같다. 시험 298 → **305** · `lint` · `sdd-test`(logic-map 380) · `test-seams`(46 패키지) ·
+      935.0→933.1s 로 같다. 시험 298 → **305** · `lint` · `sdd-test`(logic-map 380) · `test-seams`(**108 패키지** — 7.5.22 정정,
+      앞 판본의 46 은 rtk 가 자른 로그를 센 것이다) ·
       `openspec validate --all --strict` 58/58 · a122 게이트 rc=0.
       **하네스 계측기 셋을 고쳤다**: 도달 계측기가 **원본** 본문에 표식을 심고(원복 뒤 호출) · 무변이 대조군이 창
       **끝에도** 돌아 환경이 무너진 창을 통째로 버리며 판마다 `Ran N` 을 대조군과 비교하고 · 동어반복 단언 둘을
       수리라고 적지 않는다(실제로 지켜 주는 것은 pid 별 `WORK` 이름 하나다). **Y13 · Y14 를 오늘 범위로 다시 썼고
       Y13 이 실제로 살아남아**(고친 계측기가 "도달함" 이라고 답했다 — 옛 판본이면 숨었다) 시험을 하나 더 낳았다.
-      `revision: base` 도 **같이 쟀다**: 번들 266 중 base 커밋의 파일 해시와 **MATCH 248 · STALE 18**(a112 16) →
+      `revision: base` 도 **같이 쟀다**: 번들 266 중 base 커밋의 파일 해시와 **MATCH 248 · STALE 18** →
       파일 수준 대조를 넣으면 오늘 정상인 18개를 새로 거절한다 → **사람 결정 7.5.7**.
+      (7.5.22 정정: 이 줄이 적었던 귀속 "a112 16" 은 **거짓**이다. 다시 세면
+      **a112 13 · a063 2 · 아카이브 a060 2 · 아카이브 a044 1** 이다 — 활성 15 · 아카이브 3.)
+- [x] 7.5.22 **P0 — git 이 본문을 안 내면 그 파일의 요구가 조용히 사라진다 (7.5.2.4 재리뷰 2026-09-22, 보안 · 출처 셋).**
+      `changed_existing_functions` 는 훅(`@@`)으로만 "바뀐 기존 함수" 를 센다. 그래서 워킹트리에
+      `.gitattributes` 한 줄(`*.go binary` 또는 `*.go -diff`)만 있으면 — **추적조차 안 해도** — git 이
+      `Binary files … differ` 를 내고 훅이 **0 개**가 되어 그 change 의 Go 요구가 **판정 줄 없이 0 건**이 된다.
+      앞단 가드는 `--name-only` 만 보므로 그 파일이 **평범하게** 보여서 아무것도 안 한다. 게이트의 중심 요구를
+      저자가 커밋도 안 한 파일 하나로 끌 수 있었다(진짜 git 으로 재현).
+      **닫음(2026-09-22). 생산 Go 변경 0.** 사람이 **선택지 2**(정정 로트 + P0)를 골랐다.
+      기록은 review.md `## 정정 — task 7.5.2.4` · `## MEASURE · Pre-Edit Gate — task 7.5.22` · `## VERIFY — task 7.5.22`.
+      근본 수리: **앞단 가드가 `--name-only` 대신 `--numstat` 을 읽는다**(같은 자리, 호출 수 그대로).
+      "훅이 0 개면 거절" 은 답이 아니다 — 정상인 mode-only 변경도 훅이 0 개다. `--numstat` 이 정확히 가른다:
+      본문 억제는 `-`/`-`, mode-only 는 `0`/`0`. 레코드 해독은 `_numstat_records` 로 뺐고, 새 거절은
+      이름 검사를 **전부 마친 뒤**에 선다(앞에 세우면 이름 가드의 시험이 남의 가드를 잰다).
+      덤: `--numstat` 은 rename 의 **양쪽 이름**을 내므로 파서가 `base_file` 에 넘기는 **옛** 이름이 처음으로
+      가드 범위에 들어왔다 — **7.5.13 의 절반이 닫혔다**(`--name-only` 은 새 이름만 냈다).
+      FLM 먼저: `analysis/python-function-logic/tools-logic-map--_safe_changed_go_paths/`
+      (편집 전 `:104-125` 분기 **11** · raise 3 → 편집 후 `:135-179` 분기 **14** · raise **4**, 헬퍼 분기 6).
+      **새 거절이 오늘 거절하는 정상 입력: 0 — 세어서 하는 말이다.** `base-commit.txt` 를 가진 change **117**
+      전부에서 `*.go` 파일 줄 **97,235** 를 셌다(`-`/`-` **0** · `0`/`0` **0** · rename 쌍 **0** · 이름 거절 **0**,
+      `analysis/harness/7522_numstat.py`). 가드 단독 A/B **234/234 SAME · DIFFERENT 0**(`7522_guard_ab.py`)이고
+      실물 `main()` 출력 전체 A/B 는 **126/126 SAME · DIFFERENT 0** — 계수 불변(git **20,365 → 20,365** ·
+      `ast.json` 읽기 **9,072 → 9,072**, **호출이 하나도 안 늘었다**). 벽시계는 두 순서 모두 after 가
+      +0.3%(988.1→993.1s · 994.9→997.2s).
+      RED: 새 시험 클래스 일곱 중 편집 전 **실패 4 · 통과 3**(통과 셋은 통과해야 하는 셋 — 픽스처가 허구가
+      아님을 못 박는 양성 대조군, 거절의 경계인 mode-only, 가드 순서). 편집 후 7/7.
+      **끝까지 이어지는 영수증**(`analysis/harness/7522_switch.py`, 격리 worktree 에서 재서 공유 워크트리를
+      안 건드린다): a112 는 오늘 판정 줄이 **36개** 나오고 `required` 가 **64** 인데, 추적도 안 된
+      `.gitattributes` 한 줄이면 편집 전 판본은 **판정 줄 0 · required 0 · `evidence complete`** 를 낸다.
+      편집 후에는 같은 입력이 **이름 댄 거절 한 줄**이다. 평소 입력에서는 두 판본이 36·64 로 같다.
+      변이 `AC1~AC5` **5/5 CAUGHT · 생존 0**(총 123, 대조군이 창 시작·끝 모두 GREEN `Ran 313`),
+      다섯 중 넷은 **정확히 한 시험**만 빨갛게 한다.
+      게이트: `lint` rc 0 · `sdd-test` rc 0(logic-map 380 → **388**) · `test-seams` rc 0
+      (**108 패키지** — `ok` 100 · `[no test files]` 8 · FAIL 0, `rtk proxy` 로 셌다) ·
+      `openspec validate --all --strict` **58/58** · a122 게이트 rc 0. 시험 305 → **313**.
+      **정정을 같이 실었다** — 내가 쓴 거짓 **열넷**(review.md `## 정정` 의 표)과 **내가 만든 회귀 둘**:
+      (C1) 도달 계측기가 표식으로 문법을 깨면 `SyntaxError` 트레이스백이 표식 줄을 인쇄해 **시험 0개 돈 판**을
+      "도달함" 으로 기록했다 — 변이 118 중 **30**(`7522_marker.py` 로 정적 전수). 이제 `compile()` 로 거르고
+      `Ran N` 이 대조군과 같을 때만 표식을 읽으며, **"안 닿음" 과 "못 쟀다" 를 가른다**(앞 판본은 둘 다 `False`).
+      (C2) 7.5.2.4 가 훅 적재를 `hunk()` 로 **옮기면서** 그 자리를 안 쟀다 — `@@ -a,b +c,d @@` 의 뒤 쌍을 앞 쌍으로
+      읽는 변이가 시험 305개 **전부를 통과**했고 동등 변이가 아니다(함수 위에 줄을 끼우면 `current_hash` →
+      `base_hash`, 이 change 가 없애려는 바로 그 내려앉음). 시험을 더해 못 박았다.
 - [ ] 7.5.4 **P0(앞 로트 전부터) — `ast.json` 의 구조가 소스에서 다시 유도되지 않는다 (7.5.2.1 재리뷰, 보안 전문가
       재현).** 게이트가 `ast.json` 을 소스에 묶는 것은 **파일 전체의 sha256** 하나다. 분기 · 반환 · 호출 · 시작/끝 ·
       서명은 저자가 적은 그대로 믿는다 — 분기 셋인 함수의 `ast.json` 에 `branches: null` 을 적고 B1 한 줄로 5단계가
@@ -1427,48 +1470,67 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       표를 **무엇으로 세는가**(해독 규칙 · 행 판별)의 문제이고 7.5.2.x 보다 오래됐다. 고치면 이 change 밖의 번들
       3,000여 개의 판정이 달라질 수 있어 **사람 결정** 대기 — 7.5.2.3 은 이것을 손대지 않고 문장만 좁혔다.
 - [ ] 7.5.7 **P1 — `revision: base` 는 파일 수준 소스 해시에 안 묶인다 (7.5.2.4 재리뷰 2026-09-21, 보안 · 내가 정정).**
-      `validate_target:1851` 은 `revision == "base"` 면 소스 해시를 안 본다. **정정**: `required` 에 든 대상은
-      `_verdict:2159` 가 `base_hash` 와 대조하므로 묶여 있다 — 안 묶이는 것은 `required` 밖의 `base` 번들이다.
-      묶으려면 base 커밋의 파일 바이트와 대조하면 되는데, 전수 실측(7.5.2.4)에서 **266 중 18**(a063 2 · a112 16)이
-      오늘 안 맞는다 → 이 change 밖의 번들을 새로 거절한다. **사람 결정** 대기.
+      `validate_target` 의 `revision == "base"` 갈래는 소스 해시를 안 본다. **정정**: `required` 에 든 대상은
+      `_verdict` 가 `ast.json` 의 `source_sha256` 을 `base_hash` 와 대조하므로 묶여 있다 — 안 묶이는 것은
+      `required` **밖**의 `base` 번들이다. 묶으려면 base 커밋의 파일 바이트와 대조하면 되는데, 전수 실측에서
+      **266 중 18** 이 오늘 안 맞는다 → 이 change 밖의 번들을 새로 거절한다. **사람 결정** 대기.
+      귀속(7.5.22 재측정, `197a0355`): **a112 13 · a063 2 · 아카이브 a060 2 · 아카이브 a044 1** —
+      활성 15 · 아카이브 3 이다. 앞 판본의 "a063 2 · a112 16" 과 "그중 16 은 이 브랜치에 살아 있는 a112" 는
+      둘 다 거짓이었다. 재현: `analysis/harness/7522_stale.py`(7.5.22 에서 커밋했다).
 - [ ] 7.5.8 **P0 — 판정 입력의 일부를 자식 프로세스가 읽어 원장 밖에 있다 (7.5.2.3 재리뷰 2026-09-21, 출처 둘 + 나).**
-      `changed_existing_functions` 의 `git diff`(:132) · `base_file` 의 `git show`(:85) · `go_functions` 의
-      `go run`(:56, **워킹트리 Go 바이트**) · `_committed_*` · `execution_baseline.validate`(`:128` `read_bytes` ·
-      `:200` `scandir` · `:398`·`:459` `lstat`) 가 판정 입력을 읽는데 원장에 안 남는다. 판정 중 추적 Go 파일을 고치면
-      생산 CLI 가 **rc 0 `evidence complete`** 를 내고 재실행은 rc 1 이다(두 출처 독립 재현). 노출: a112 는 Go
-      **138개**가 `required` 를 정하는데 원장의 Go 는 고정 소스 **37개**뿐이고, 고정 번들 0 인 change 는 표본이 **0**.
+      `check_analysis.py` 의 `subprocess.run` 은 **열여섯 자리**이고 원장 항목은 **0** 이다(7.5.22 재측정).
+      판정 입력을 읽는 것만 꼽아도 `changed_existing_functions` 의 `git diff` · `base_file` 의 `git show` ·
+      `go_functions` 의 `go run`(**워킹트리 Go 바이트**) · `_safe_changed_go_paths` 의 `git diff --numstat` ·
+      `_committed_many` 의 `git cat-file` · `_recording_refusal` 의 `git diff --quiet` · 역사를 걷는 아홉 자리 ·
+      그리고 `execution_baseline.validate` 의 `read_bytes`·`scandir`·`lstat` 이다. 판정 중 추적 Go 파일을 고치면
+      생산 CLI 가 **rc 0 `evidence complete`** 를 내고 재실행은 rc 1 이다(두 출처 독립 재현).
+      노출(a112, `197a0355` 실측): `required` 를 정하는 Go 파일 **32** 중 **13** 은 원장에 이름조차 없고,
+      나머지 19 도 **인용·시험 색인 때문에** 있는 것이지 `go run` 이 읽어서가 아니다 — 원장 항목 1,743 중
+      자식 프로세스의 읽기로 남은 것은 **0** 이다. (7.5.22 정정: 앞 판본의 "Go 138개 / 고정 소스 37개" 는
+      **재현되지 않는다**. 좌표 `:132`·`:85`·`:56` 도 전부 편집 전 파일을 가리키고 있었다.)
       7.5.2.3 의 README·VERIFY 가 "깔때기 넷뿐" 이라고 적은 것이 이것 때문에 거짓이었다(7.5.2.4 가 문장은 고쳤다).
-- [ ] 7.5.9 **P1 — `test_index` 가 추적되지 않는 파일을 색인한다 (같은 재리뷰, 정확성).** `:1559-1566` 이 `*_test.go`
-      전수에서 `.git` 만 거른다. 실측 디스크 963 · 추적 **953**(나머지 10은 gitignore 된 하네스 사본). 시험 인용이
-      **머지에 영원히 안 들어갈 파일**로 충족될 수 있다. 덤: `resolve_test_file` 의 맨이름 갈래가 사본이 생기면
-      `len(matches)!=1` 이라 **없던 거절**을 만든다.
-- [ ] 7.5.10 **P1 — 목록·순회 지문이 충돌한다 (같은 재리뷰, 정확성 — 충돌쌍 실제로 만듦).** `_listing_outcome:811` 이
-      `name\t{d|f}` 를 `\n` 으로 잇고 `_pattern_outcome:826` 이 경로를 `\n` 으로 잇는다. 탭·개행은 POSIX 이름에 합법이라
-      서로 다른 두 목록이 같은 지문을 낸다. 아이러니: 같은 파일 `_safe_changed_go_paths:120` 이 그 문자들을 거절한다.
+- [ ] 7.5.9 **P1 — `test_index` 가 추적되지 않는 파일을 색인한다 (같은 재리뷰, 정확성).** `test_index` 가
+      `*_test.go` 전수에서 `.git` 만 거른다. 시험 인용이 **머지에 영원히 안 들어갈 파일**로 충족될 수 있다.
+      덤: `resolve_test_file` 의 맨이름 갈래가 사본이 생기면 `len(matches)!=1` 이라 **없던 거절**을 만든다.
+      수: 추적 **953** 만 안정이고 디스크 수는 **움직인다**. 차이는 전부
+      `analysis/harness/_work/*/extract_go_ast_test.go`(gitignore 된 하네스 사본)이고, **하네스가 도는 동안
+      늘었다 준다** — 같은 날 실측으로 정지 상태 **963**(차이 10), 변이 하네스가 도는 중 **964**(차이 11,
+      열한째가 그 판의 `75_mut_work.<pid>/`). (7.5.22 정정: 앞 판본은 이 수를 고정값처럼 적었다.
+      오염원이 **이 change 자신의 하네스**이고, 세는 순간이 답을 바꾼다.)
+- [ ] 7.5.10 **P1 — 목록·순회 지문이 충돌한다 (같은 재리뷰, 정확성 — 충돌쌍 실제로 만듦).** `_listing_outcome` 이
+      `name\t{d|f}` 를 `\n` 으로 잇고 `_pattern_outcome` 이 경로를 `\n` 으로 잇는다. 탭·개행은 POSIX 이름에 합법이라
+      서로 다른 두 목록이 같은 지문을 낸다. 아이러니: 같은 파일의 `_safe_changed_go_paths` 가 그 문자들을 거절한다.
 - [ ] 7.5.11 **P1 — 깔때기 **안**에 조용한 건너뛰기가 둘 남았다 (같은 재리뷰, 정확성 · 시험품질).**
-      `_listing_outcome:808` 의 `child.is_dir()` 가 `OSError` 를 삼켜 stat 안 되는 항목을 파일로 분류하고
+      `_listing_outcome` 의 `child.is_dir()` 가 `OSError` 를 삼켜 stat 안 되는 항목을 파일로 분류하고
       (`_read_evidence` 는 **이미 디렉터리로 분류된** 것만 `unlistable` 에 넣는다 — 그 함수 docstring 이 바로 그
-      위험을 한 층 위에서만 고쳤다고 적고 있다), `_globbed`/`_pattern_outcome:824` 의 `Path.rglob` 이 못 읽는 하위
-      트리의 `OSError` 를 삼킨다. 뒤엣것은 결과가 보수적이라 재확인 구멍은 아니지만 시험이 0 이다.
-- [ ] 7.5.12 **P1 — realpath ABA (같은 재리뷰, 적대).** 원장 키가 `normalized_source:1497` 의 `os.path.realpath`
+      위험을 한 층 위에서만 고쳤다고 적고 있다), `_pattern_outcome` 의 `Path.rglob` 이 못 읽는 하위 트리의
+      `OSError` 를 삼킨다. 뒤엣것은 결과가 보수적이라 재확인 구멍은 아니지만 시험이 0 이다.
+      (`is_dir()` 가 삼키는 것은 판본 의존이다 — 이 저장소의 3.12 에서 실측할 것, [[python-behaviour-differs-by-version]].)
+- [ ] 7.5.12 **P1 — realpath ABA (같은 재리뷰, 적대).** 원장 키가 `normalized_source` 의 `os.path.realpath`
       뒤 경로라, 판정 중 심링크 디렉터리를 갈아끼우면 바이트가 같아 재확인이 통과한다. 저장소 노출 0.
-- [ ] 7.5.13 **P1 — `_safe_changed_go_paths` 가 git 이 인용하는 나머지를 놓친다 (7.5.2.3 재리뷰, 보안).** `:120` 은
-      `\n\r\t` 만 거절하는데 git 은 `"` · `\` · 나머지 제어 문자도 인용한다(`core.quotePath=false` 로도 안 꺼진다).
-      `x"y.go` → `--- "a/x\"y.go"` → `removeprefix("a/")` 무효 → 오진 차단. 저장소 노출 0 이고 결과가 permissive
-      가 아니라 거짓 차단이라 7.5.2.4 에서 뺐다. 그 함수의 docstring 이 "표현할 수 없는 이름을 거절한다" 고 적고 있다.
+- [ ] 7.5.13 **P1 — `_safe_changed_go_paths` 가 git 이 인용하는 나머지를 놓친다 (7.5.2.3 재리뷰, 보안).**
+      그 가드는 `\n\r\t` 만 거절하는데 git 은 `"` · `\` · 나머지 제어 문자도 인용한다(`core.quotePath=false`
+      로도 안 꺼진다). `x"y.go` → `--- "a/x\"y.go"` → `removeprefix("a/")` 무효.
+      **7.5.22 정정 — 앞 판본이 적은 사유가 틀렸다.** "결과가 permissive 가 아니라 거짓 차단" 은 **편집 모양에서만**
+      참이다. **rename** 모양에서는 키에 `base_hash` 만 남아 편집 **전** 지도가 통과하므로 permissive 다
+      (7.5.22 의 `test_the_guard_reads_both_names_of_a_rename` 이 편집 전에 낸 메시지가 바로 그 거짓 차단이었다).
+      7.5.22 가 rename 의 **옛 이름**을 가드 범위에 넣어 그 절반을 닫았다 — 남은 것은 `"`·`\`·나머지 제어 문자다.
+      저장소 노출 0(117 change · 이름 97,235 실측).
 - [ ] 7.5.14 **P2 — 구조 시험이 stat 계열을 안 본다 (같은 재리뷰, 정확성).** `test_check_analysis.py` 의 원시 집합 9개에
       `stat/lstat/exists/is_file/is_dir/is_symlink/access` 가 없어 네 번째 깔때기 `_kind` 를 아무것도 안 지킨다.
-      살아 있는 우회: `changed_existing_functions:184` · `_recording_refusal` 셋. **7.5.2.4 에서 이 결함이 행동으로
+      살아 있는 우회: `changed_existing_functions` 의 `Path.exists` · `_recording_refusal` 셋. **7.5.2.4 에서 이 결함이 행동으로
       보였다** — Y13(`evidence.present` → `evidence.directory.exists()`)이 구조 시험을 그냥 지나갔다.
       덤: `owner.setdefault` 라 `("record_landing","open")` 면제가 그 함수 안의 **미래의 모든** `open` 을 함께 면제한다.
       `execution_baseline.py`(stat 16자리)는 아예 범위 밖이다.
-- [ ] 7.5.15 **P2 — 판정 경로 subprocess 에 `timeout=` 이 없다 (같은 재리뷰, 정확성).** `check_analysis.py:85`·`:102`
-      와 `execution_baseline.py:31,86,223,409,451`. 멎으면 판정 줄이 없다 — `subprocess.SubprocessError` 를
-      `GATE_FAULTS` 에 넣은 그 파일의 계약과 어긋난다.
+- [ ] 7.5.15 **P2 — 판정 경로 subprocess 에 `timeout=` 이 없다 (같은 재리뷰, 정확성).** `check_analysis.py` 의
+      `subprocess.run` **열여섯 자리 중 둘** — `base_file` 의 `git show` 와 `_safe_changed_go_paths` 의
+      `git diff --numstat` — 에 `timeout=` 이 없다(7.5.22 재측정, 나머지 열넷은 있다). `execution_baseline.py` 는
+      다섯 자리다. 멎으면 판정 줄이 없다 — `subprocess.SubprocessError` 를 `GATE_FAULTS` 에 넣은 그 파일의
+      계약과 어긋난다.
 - [ ] 7.5.16 **P2 — `record_landing` 이 더러운 트리를 재확인 **앞**에서 묻는다 (같은 재리뷰, 정확성).**
-      `:2461-2467` 이 head → refusal → replay 순서다. 순서를 바꾸면 공짜로 닫힌다.
+      `record_landing` 이 head → refusal → replay 순서다. 순서를 바꾸면 공짜로 닫힌다.
 - [ ] 7.5.17 **P2 — 저자가 판정을 **판정 줄 0개로** 무한히 늘릴 수 있다 (같은 재리뷰, 보안).**
-      `resolve_test_file:1589` 의 맨이름 갈래가 전체 트리 `rglob` 을 인용마다 돌고(메모 없음) 해소 실패는 오류 줄을
+      `resolve_test_file` 의 맨이름 갈래가 전체 트리 `rglob` 을 인용마다 돌고(메모 없음) 해소 실패는 오류 줄을
       안 낸다. 원장이 그 패턴을 재확인에서 다시 돈다. 실측: 엉터리 맨이름 20개 → 판정 16.55s + 재확인 15.78s,
       **판정 줄 0**. `branch-test-map.md` 300 KB ≈ 4.5시간이고 `gate.sh:321` 에 timeout 이 없다.
 - [ ] 7.5.18 **P2 — `_bundle_text` 배관 시험이 이름만큼 못 박지 않는다 (같은 재리뷰, 시험품질).**
@@ -1481,9 +1543,10 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       값은 산문 넷과 코드 한 곳에 있는데 묶는 것이 없다. 해법은 한 화면 옆에 있다
       (`test_the_minimum_git_version_is_written_down_once`). 열거표는 이제 `7524_census.py` 가 다시 찍는다.
 - [ ] 7.5.21 **P3 — `main()` 의 git 호출이 결함 경계 **밖**이고, 잔챙이 셋 (같은 재리뷰, 보안 · 정확성).**
-      `_commits_after`(`main():2588`)가 `try/except GATE_FAULTS` 앞이라 멎으면 **이미 계산된 판정 줄 36개가 안 찍히고**
-      traceback 만 나간다 — 바로 위 주석이 그 경계가 있는 이유를 적어 놨다. 잔챙이: 원장 divergence 메시지가 glob 키를
-      뭉갠다(`:891`) · `moved` 판정 아래에서 `main` 이 사라진 상태의 창 줄과 권유를 찍는다 · 같은 거절이 두 문장으로 나간다.
+      `main` 이 부르는 `_commits_after` 가 `try/except GATE_FAULTS` 앞이라 멎으면 **이미 계산된 판정 줄 36개가
+      안 찍히고** traceback 만 나간다 — 바로 위 주석이 그 경계가 있는 이유를 적어 놨다. 잔챙이: 원장 divergence
+      메시지가 `_raise_if_inputs_moved` 에서 glob 키를 뭉갠다 · `moved` 판정 아래에서 `main` 이 사라진 상태의
+      창 줄과 권유를 찍는다 · 같은 거절이 두 문장으로 나간다.
 - [x] 7.6 **P2 — 규칙 한 집 (I2 · I3 · I4 · I5 · I6 · I7).** `compute_landing` 과 `resolve_landing`
       의 수락 조건 두 벌 · `validate` 의 지역 `canonical` 이 모듈 함수를 가림 · 디렉터리 해소 두 벌과
       없는 id 의 엉뚱한 조언 · 이관 거절 문장 두 벌(이미 갈렸다) · `_pre_archive_path` 가 아카이브

@@ -7363,6 +7363,10 @@ class TheDiffBodyDoesNotNameTheFileUnderJudgement(unittest.TestCase):
     **파일 중간에서 이름을 바꾼다** — 그 파일의 요구가 통째로 사라지거나(`/dev/null` 모양),
     편집 *전* 논리의 지도로 내려앉는다(`revision: base` 모양). 여기 픽스처는 지어낸 diff 문자열이
     아니라 **진짜 저장소 · 진짜 `git diff`** 다. Go 추출기만 세운다(고정 저장소에는 도구가 없다).
+
+    훅의 **좌표**도 같은 문법의 일부라 여기서 같이 못 박는다 (task 7.5.22): `@@ -a,b +c,d @@` 의
+    앞 쌍은 base 쪽, 뒤 쌍은 현재 쪽이다. 7.5.2.4 가 훅 적재를 `hunk()` 한 곳으로 **옮기면서**
+    그 자리를 안 쟀고, 뒤 쌍을 앞 쌍으로 읽는 변이가 시험 305개 전부를 통과했다.
     """
 
     GO = "package pkg\n\nconst q = `\n{body}\n`\n\nfunc {name}() int {{\n\treturn {value}\n}}\n"
@@ -7474,6 +7478,20 @@ class TheDiffBodyDoesNotNameTheFileUnderJudgement(unittest.TestCase):
                          "지워진 파일에 현재 리비전의 지도를 요구한다")
 
 
+    def test_the_hunk_keeps_the_new_side_coordinates_apart_from_the_base_side(self) -> None:
+        """`@@ -a,b +c,d @@` 의 뒤 쌍은 **현재** 쪽이다. 앞 쌍으로 읽으면 현재 쪽 교차가 빗나가고,
+        키에 `base_hash` 만 남아 `_verdict` 가 **편집 전** 논리의 지도를 요구한다 — 이 change 가
+        없애려는 바로 그 내려앉음이다. 함수 **위에** 줄을 끼워 두 쪽 좌표를 떼어 놓아야 갈린다."""
+        padding = "".join(f"// 위에 끼워 넣은 줄 {index}\n" for index in range(1, 21))
+        before = "package pkg\n\nfunc F() int {\n\treturn 1\n}\n"
+        after = "package pkg\n\n" + padding + "func F() int {\n\treturn 2\n}\n"
+        root, base = self._repo({"x.go": before}, {"x.go": after})
+        hunks = [line for line in self._diff(root, base) if line.startswith("@@")]
+        self.assertEqual(len(hunks), 2, f"픽스처가 두 쪽 좌표를 안 떼어 놨다: {hunks}")
+        required = self._required(root, base)
+        self.assertIn(("x.go", "F"), required)
+        self.assertIn("current_hash", required[("x.go", "F")],
+                      "현재 쪽 훅 좌표를 base 쪽으로 읽어 요구가 `revision: base` 로 내려앉았다")
 class TheVerdictJudgesTheEvidenceItWasGiven(unittest.TestCase):
     """`_verdict` 는 증거를 **다시 읽지 않는다** — 스냅숏이 판정의 입력이다 (task 7.5.2.2 · 7.5.2.3 의 주장).
 
@@ -7498,6 +7516,167 @@ class TheVerdictJudgesTheEvidenceItWasGiven(unittest.TestCase):
             errors, ["function-logic analysis directory has no targets"],
             "판정이 스냅숏 대신 디스크를 물었다 — 증거는 읽은 그것이어야 한다")
 
+
+class AGoFileWithNoTextualDiffIsNotSilentlyEmpty(unittest.TestCase):
+    """git 이 본문을 안 내면 그 파일의 요구가 **조용히** 사라진다 (task 7.5.22, 7.5.2.4 재리뷰 보안).
+
+    `changed_existing_functions` 는 훅(`@@`)으로만 "바뀐 기존 함수" 를 센다. `.gitattributes` 한 줄
+    (`*.go binary` 또는 `*.go -diff`)이면 git 은 `Binary files … differ` 를 내고 훅을 **0 개** 낸다.
+    파일은 `--name-only` 에 평범하게 보이므로 앞단 가드도 못 본다 — 그래서 `required` 가 비고 판정
+    줄이 **안 나간다**. 그 `.gitattributes` 는 **추적될 필요조차 없다**(워킹트리에 놓기만 하면 된다).
+
+    "훅이 0 개면 거절" 은 답이 아니다 — 정상인 mode-only 변경도 훅이 0 개다. `--numstat` 이 그 둘을
+    정확히 가른다: 본문 억제는 `-`/`-`, mode-only 는 `0`/`0`. 여기 픽스처는 지어낸 문자열이 아니라
+    **진짜 저장소 · 진짜 git** 이다.
+    """
+
+    GO = "package pkg\n\nfunc F() int {\n\treturn %d\n}\n"
+
+    def _repo(self, attributes: str = "", commit_attributes: bool = False,
+              mode_only: bool = False) -> tuple[Path, str]:
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        root = Path(holder.name)
+
+        def run(*args: str) -> None:
+            subprocess.run(args, cwd=root, check=True, capture_output=True)
+
+        run("git", "init", "-q", ".")
+        run("git", "config", "user.email", "fixture@example.com")
+        run("git", "config", "user.name", "fixture")
+        (root / "x.go").write_text(self.GO % 1, encoding="utf-8")
+        if attributes and commit_attributes:
+            (root / ".gitattributes").write_text(attributes, encoding="utf-8")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "base")
+        base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        if mode_only:
+            (root / "x.go").chmod(0o755)
+        else:
+            (root / "x.go").write_text(self.GO % 2, encoding="utf-8")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "edit")
+        if attributes and not commit_attributes:
+            # 추적하지 않는다 — 워킹트리에 놓기만 해도 git 은 이 속성을 읽는다.
+            (root / ".gitattributes").write_text(attributes, encoding="utf-8")
+        return root, base
+
+    @staticmethod
+    def _functions(path: Path, root: Path) -> list[dict]:
+        """`go run` 대신 줄 번호만 센다 — 이 클래스가 재는 것은 가드이지 추출기가 아니다."""
+        lines = Path(path).read_text(encoding="utf-8").splitlines()
+        found: list[dict] = []
+        for index, line in enumerate(lines, start=1):
+            if not line.startswith("func "):
+                continue
+            end = index
+            while end < len(lines) and lines[end - 1] != "}":
+                end += 1
+            found.append({"function": line[len("func "):].split("(")[0],
+                          "start": {"line": index}, "end": {"line": end},
+                          "source_sha256": "sha-" + Path(path).name})
+        return found
+
+    def _required(self, root: Path, base: str) -> dict:
+        with mock.patch("check_analysis.go_functions", side_effect=self._functions):
+            return check_analysis.changed_existing_functions(root, base, "HEAD")
+
+    def test_git_really_suppresses_the_body_for_a_binary_marked_go_file(self) -> None:
+        """픽스처가 허구가 아님부터 못 박는다 — 이것이 틀리면 아래 넷은 아무것도 재지 않는다."""
+        root, base = self._repo("*.go binary\n")
+        text = subprocess.check_output(
+            ["git", "diff", "--no-ext-diff", "--unified=0", base, "HEAD", "--", "*.go"],
+            cwd=root, text=True)
+        self.assertIn("Binary files", text, "git 이 본문을 억제하지 않았다")
+        self.assertNotIn("@@", text, "훅이 아직 나온다 — 이 픽스처는 결함을 못 만든다")
+        numbers = subprocess.check_output(
+            ["git", "diff", "--no-ext-diff", "--numstat", base, "HEAD", "--", "*.go"],
+            cwd=root, text=True)
+        self.assertTrue(numbers.startswith("-\t-\t"), f"numstat 이 `-`/`-` 가 아니다: {numbers!r}")
+
+    def test_a_suppressed_body_is_refused_instead_of_silently_requiring_nothing(self) -> None:
+        root, base = self._repo("*.go binary\n", commit_attributes=True)
+        with self.assertRaises(RuntimeError) as caught:
+            self._required(root, base)
+        self.assertIn("x.go", str(caught.exception),
+                      "거절이 어느 파일인지 말하지 않는다")
+        self.assertIn("no textual diff", str(caught.exception))
+
+    def test_an_uncommitted_gitattributes_is_enough_to_suppress_the_body(self) -> None:
+        """저자가 커밋하지 않은 파일 하나로 게이트의 요구를 끌 수 있으면 안 된다."""
+        root, base = self._repo("*.go binary\n", commit_attributes=False)
+        self.assertEqual(
+            subprocess.check_output(["git", "status", "--short", "--", ".gitattributes"],
+                                    cwd=root, text=True).split()[0], "??",
+            "픽스처의 .gitattributes 가 추적되고 있다 — 이 시험은 그 경우를 재지 않는다")
+        with self.assertRaises(RuntimeError):
+            self._required(root, base)
+
+    def test_the_minus_diff_attribute_suppresses_the_body_too(self) -> None:
+        root, base = self._repo("*.go -diff\n", commit_attributes=True)
+        with self.assertRaises(RuntimeError):
+            self._required(root, base)
+
+    def test_a_mode_only_change_is_not_refused(self) -> None:
+        """거절의 경계다. mode-only 변경도 훅이 0 개지만 **정상 입력**이다 — `0`/`0` 과 `-`/`-` 는 다르다."""
+        root, base = self._repo(mode_only=True)
+        self.assertEqual(self._required(root, base), {},
+                         "mode-only 변경이 요구를 만들었다")
+
+    def test_the_guard_reads_both_names_of_a_rename(self) -> None:
+        """`--name-only` 은 rename 의 **새** 이름만 낸다. 파서가 `base_file` 에 넘기는 것은 **옛** 이름이다."""
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        root = Path(holder.name)
+
+        def run(*args: str) -> None:
+            subprocess.run(args, cwd=root, check=True, capture_output=True)
+
+        run("git", "init", "-q", ".")
+        run("git", "config", "user.email", "fixture@example.com")
+        run("git", "config", "user.name", "fixture")
+        (root / "a\tb.go").write_text(self.GO % 1, encoding="utf-8")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "base")
+        base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        (root / "a\tb.go").rename(root / "c.go")
+        (root / "c.go").write_text(self.GO % 2, encoding="utf-8")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "rename")
+        names = subprocess.check_output(
+            ["git", "diff", "--no-ext-diff", "--name-only", base, "HEAD", "--", "*.go"],
+            cwd=root, text=True)
+        self.assertNotIn("a\tb.go", names, "이 git 은 rename 의 옛 이름을 --name-only 에 낸다")
+        with self.assertRaises(RuntimeError) as caught:
+            self._required(root, base)
+        self.assertIn("losslessly", str(caught.exception))
+
+
+    def test_the_name_guard_still_speaks_first_when_both_are_wrong(self) -> None:
+        """새 거절이 앞에 서면 이름 가드의 시험이 **남의 가드**를 재게 된다
+        ([[a-new-guard-unpins-the-guards-behind-it]]). 둘 다 틀린 입력에서 누가 말하는지 못 박는다."""
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        root = Path(holder.name)
+
+        def run(*args: str) -> None:
+            subprocess.run(args, cwd=root, check=True, capture_output=True)
+
+        run("git", "init", "-q", ".")
+        run("git", "config", "user.email", "fixture@example.com")
+        run("git", "config", "user.name", "fixture")
+        (root / "a\tb.go").write_text(self.GO % 1, encoding="utf-8")
+        (root / ".gitattributes").write_text("*.go binary\n", encoding="utf-8")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "base")
+        base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        (root / "a\tb.go").write_text(self.GO % 2, encoding="utf-8")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "edit")
+        with self.assertRaises(RuntimeError) as caught:
+            self._required(root, base)
+        self.assertIn("losslessly", str(caught.exception),
+                      "새 거절이 이름 가드를 가렸다 — 이름 가드의 시험이 이제 남의 가드를 잰다")
 
 if __name__ == "__main__":
     unittest.main()

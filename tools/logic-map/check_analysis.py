@@ -31,8 +31,10 @@ REQUIRED = (
 EXEMPTION = "Function Logic Map: not-applicable"
 # 읽기의 상한과 실패 문구 (task 7.5.2.3). 상한은 **거부하는 정상 입력을 먼저 세어** 골랐다. 열거표는
 # `analysis/harness/7524_census.py` 가 다시 찍는다 — 값은 저장소와 함께 움직이므로 날짜를 적는다.
-# 2026-09-22 실측: 가장 큰 `*.go` 97,231 B · 번들 파일 **전수 12,411 중** 최대 39,327 B(아카이브 a047) ·
-# 아카이브 아닌 1,633 중 최대 26,694 B · 16 MiB 넘는 번들 파일 **0**.
+# 2026-09-22 실측(`197a0355`): 가장 큰 `*.go` 97,231 B · 번들 파일 **전수 12,412 중** 최대 39,327 B
+# (아카이브 a047) · 아카이브 아닌 1,634 중 최대 26,694 B · 16 MiB 넘는 번들 파일 **0**.
+# (7.5.22 정정: 앞 로트가 적은 12,411/1,633 은 **편집 도중** 스냅숏이었다 — 그 로트가 커밋한
+#  번들 둘이 아직 없을 때 센 값이다. 커밋한 하네스가 내는 수와 산문이 갈리면 산문이 틀린 것이다.)
 # (7.5.2.4 정정: 옛 문장은 한 문장에 모집단이 둘이었다 — 25,466 B 는 활성 번들만의 최대였는데 전수를
 #  세는 0/12,193 과 나란히 적혀 전수의 최대처럼 읽혔다.)
 READ_CAP = 16 << 20
@@ -101,10 +103,56 @@ def base_file(root: Path, base: str, source: str) -> Path | None:
     return path
 
 
+def _numstat_records(raw_output: bytes) -> list[tuple[bytes, bytes, list[bytes]]]:
+    """`git diff --numstat -z` 의 레코드를 (더함, 지움, 경로들)로 읽는다 (task 7.5.22).
+
+    평범한 레코드는 `<더함>\\t<지움>\\t<경로>\\0` 이고, **rename 은 경로 칸이 비고 다음 두 칸**이
+    옛 이름과 새 이름이다. 경로는 `-z` 라 인용되지 않으므로 탭이 든 이름도 `maxsplit=2` 로 온전히 나온다.
+    모양이 다르면 지어내지 않고 결함으로 올린다 — 못 읽은 표를 "바뀐 파일 없음" 으로 읽으면 그것이
+    이 task 가 닫는 바로 그 구멍이다.
+    """
+    chunks = raw_output.split(b"\0")
+    records: list[tuple[bytes, bytes, list[bytes]]] = []
+    index = 0
+    while index < len(chunks):
+        if not chunks[index]:
+            index += 1
+            continue
+        parts = chunks[index].split(b"\t", 2)
+        if len(parts) != 3:
+            raise RuntimeError("cannot read git diff --numstat record")
+        added, deleted, first = parts
+        if first:
+            records.append((added, deleted, [first]))
+            index += 1
+            continue
+        pair = [item for item in chunks[index + 1:index + 3] if item]
+        if len(pair) != 2:
+            raise RuntimeError("cannot read git diff --numstat rename record")
+        records.append((added, deleted, pair))
+        index += 3
+    return records
+
+
 def _safe_changed_go_paths(root: Path, base: str, target: str) -> None:
-    """Reject names that the unified-diff header grammar cannot represent losslessly."""
+    """바뀐 `*.go` 를 **이름**과 **본문 유무** 둘로 거른다.
+
+    이름: 통합 diff 헤더 문법이 무손실로 표현하지 못하는 것을 거절한다.
+
+    본문: git 이 **본문을 안 낸** 파일을 거절한다 (task 7.5.22). `changed_existing_functions` 는
+    훅(`@@`)으로만 "바뀐 기존 함수" 를 세므로, `.gitattributes` 한 줄(`*.go binary` 또는 `*.go -diff`)
+    이면 git 이 `Binary files … differ` 를 내고 훅이 **0 개**가 되어 그 파일의 요구가 **조용히** 사라진다.
+    그 `.gitattributes` 는 **추적될 필요조차 없다**. "훅이 0 개면 거절" 로는 못 가른다 — 정상인
+    mode-only 변경도 훅이 0 개다. `--numstat` 이 정확히 가른다: 억제는 `-`/`-`, mode-only 는 `0`/`0`.
+
+    `--name-only` 이 아니라 `--numstat` 을 읽으므로 rename 의 **양쪽 이름**을 다 본다. 파서가
+    `base_file` 에 넘기는 것은 **옛** 이름인데 `--name-only` 은 그것을 내지 않았다.
+
+    새 거절은 **가장 뒤에 선다** — 이름 검사를 전부 마친 뒤에 본문을 묻는다. 앞의 가드를 가리면
+    그 가드의 시험이 남의 가드를 재게 된다.
+    """
     process = subprocess.run(
-        ["git", "diff", "--no-ext-diff", "--name-only", "-z", base,
+        ["git", "diff", "--no-ext-diff", "--numstat", "-z", base,
          *([target] if target else []), "--", "*.go"],
         cwd=root,
         capture_output=True,
@@ -114,15 +162,23 @@ def _safe_changed_go_paths(root: Path, base: str, target: str) -> None:
         stderr = process.stderr.decode("utf-8", "replace") if isinstance(process.stderr, bytes) else process.stderr
         raise RuntimeError(stderr.strip() or f"git diff failed for base {base}")
     raw_output = process.stdout if isinstance(process.stdout, bytes) else process.stdout.encode("utf-8")
-    for raw in (item for item in raw_output.split(b"\0") if item):
-        try:
-            path = raw.decode("utf-8", "strict")
-        except UnicodeDecodeError as error:
-            raise RuntimeError("modified Go path is not UTF-8") from error
-        # Git quotes tab/newline headers; do not silently parse that quoted form
-        # as a different path. Ordinary Unicode names remain supported.
-        if "\n" in path or "\r" in path or "\t" in path:
-            raise RuntimeError("modified Go path cannot be represented losslessly in unified diff")
+    records = _numstat_records(raw_output)
+    for _, _, paths in records:
+        for raw in paths:
+            try:
+                path = raw.decode("utf-8", "strict")
+            except UnicodeDecodeError as error:
+                raise RuntimeError("modified Go path is not UTF-8") from error
+            # Git quotes tab/newline headers; do not silently parse that quoted form
+            # as a different path. Ordinary Unicode names remain supported.
+            if "\n" in path or "\r" in path or "\t" in path:
+                raise RuntimeError("modified Go path cannot be represented losslessly in unified diff")
+    for added, deleted, paths in records:
+        if added == b"-" and deleted == b"-":
+            raise RuntimeError(
+                "modified Go file has no textual diff (binary or -diff attribute): "
+                + paths[-1].decode("utf-8", "strict")
+            )
 
 
 def changed_existing_functions(
@@ -1946,10 +2002,15 @@ def check(
     남고, 끝의 재확인이 다시 읽는 집합은 손으로 고른 것이 아니라 그 원장이다.
     7.5.2.2 는 그 집합을 손으로 골라(`HEAD` + `Evidence`) 판정이 읽는 1,739 중 149 만 봤다(a112 실측).
 
-    **범위를 정확히 적는다 (task 7.5.2.4 정정).** 원장은 자식 프로세스가 읽는 것을 못 본다 —
-    `changed_existing_functions` 의 `git diff`, `base_file` 의 `git show`, `go_functions` 의 `go run`
-    (워킹트리 Go 바이트), 그리고 `execution_baseline.validate` 가 그렇다. 그 자리들은 판정 입력을
-    읽지만 원장에 안 남으므로, 판정 도중 그것들이 바뀌면 재확인이 통과한다. 7.5.2.3 의 README·VERIFY 가
+    **범위를 정확히 적는다 (task 7.5.2.4 · 7.5.22 정정).** 원장은 자식 프로세스가 읽는 것을 **하나도**
+    못 본다. 이 파일의 `subprocess.run` 은 **열여섯 자리**이고 원장에 남는 것은 **0** 이다 — 앞 로트가
+    넷(`git diff` · `git show` · `go run` · `execution_baseline`)만 대고 그친 것은 열거가 아니라 예시였다.
+    판정 입력을 읽는 것만 꼽아도 `changed_existing_functions` 의 `git diff` · `base_file` 의 `git show` ·
+    `go_functions` 의 `go run`(워킹트리 Go 바이트) · `_safe_changed_go_paths` 의 `git diff --numstat` ·
+    `_committed_many` 의 `git cat-file` · `_recording_refusal` 의 `git diff --quiet` · 역사를 걷는 아홉
+    자리 · 그리고 `execution_baseline.validate` 다. 그것들이 판정 도중 바뀌면 재확인이 통과한다.
+    a112 실측(7.5.22): `required` 를 정하는 Go 파일 **32** 중 **13** 은 원장에 이름조차 없고, 나머지 19 도
+    **인용·시험 색인 때문에** 있는 것이지 `go run` 이 읽어서가 아니다. 7.5.2.3 의 README·VERIFY 가
     "디스크를 읽는 자리가 깔때기 넷뿐" 이라고 적은 것은 **거짓**이었다 — 그 열거의 모집단이
     이 모듈의 AST 였고 자식 프로세스는 애초에 모집단에 없었다. 닫는 것은 7.5.8 이다.
 
@@ -2224,8 +2285,10 @@ class LandingInputs(NamedTuple):
 
 def _head_commit(root: Path) -> str:
     """지금 `HEAD` 의 커밋. 판정이 쓰는 역사 sha 는 `_judged` 가 **한 번** 푼 그것이고 그 뒤의 역사 읽기는
-    전부 그 sha 다 (task 7.5.2.1). 이 함수 자체는 `check` 한 번에 **셋** 불린다 (7.5.2.4 정정): 판정 앞에
-    한 번, 재확인의 **앞뒤**로 한 번씩(`_head_moved`). 기록 명령은 쓰기 직전에 자기 몫을 또 묻는다.
+    전부 그 sha 다 (task 7.5.2.1). **판정이 끝까지 간 경로**에서 이 함수는 `check` 한 번에 셋 불린다:
+    판정 앞에 한 번, 재확인의 **앞뒤**로 한 번씩(`_head_moved`). 더 앞에서 거절이 나면 그보다 적다 —
+    활성 change 27건 실측(7.5.22): **3회 24건 · 0회 3건**(head 를 묻기 전에 거절). 앞 로트가 적은
+    "셋 불린다" 는 조건 없이 쓰여 있어서 거짓이었다. 기록 명령은 쓰기 직전에 자기 몫을 또 묻는다.
 
     못 읽으면 결함이다 — 빈 값은 "못 물었다" 를 "같다" 로 만든다.
     """

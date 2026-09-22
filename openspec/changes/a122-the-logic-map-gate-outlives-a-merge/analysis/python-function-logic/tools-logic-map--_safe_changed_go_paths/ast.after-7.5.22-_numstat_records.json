@@ -1,0 +1,115 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "197a0355b8b70be408454b06bdb90a351a819738",
+  "source_sha256": "8c63778797fa5216e61cb61a6d5c43e15d49fe118a445666d480f3110843150d",
+  "function": "_numstat_records",
+  "signature": "_numstat_records(raw_output)",
+  "start": {
+    "line": 104,
+    "column": 1
+  },
+  "end": {
+    "line": 132,
+    "column": 19
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "While",
+      "line": 115,
+      "inherited_line": false,
+      "source": "while index < len(chunks):"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 116,
+      "inherited_line": false,
+      "source": "if not chunks[index]:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 120,
+      "inherited_line": false,
+      "source": "if len(parts) != 3:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 123,
+      "inherited_line": false,
+      "source": "if first:"
+    },
+    {
+      "id": "B5",
+      "kind": "comprehension",
+      "line": 127,
+      "inherited_line": true,
+      "source": " for item in chunks[index + 1:index + 3] if item"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 128,
+      "inherited_line": false,
+      "source": "if len(pair) != 2:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 132,
+      "value": "records"
+    }
+  ],
+  "raises": [
+    {
+      "line": 121,
+      "source": "raise RuntimeError('cannot read git diff --numstat record')"
+    },
+    {
+      "line": 129,
+      "source": "raise RuntimeError('cannot read git diff --numstat rename record')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 112,
+      "callee": "raw_output.split"
+    },
+    {
+      "line": 115,
+      "callee": "len"
+    },
+    {
+      "line": 119,
+      "callee": "chunks[index].split"
+    },
+    {
+      "line": 120,
+      "callee": "len"
+    },
+    {
+      "line": 121,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 124,
+      "callee": "records.append"
+    },
+    {
+      "line": 128,
+      "callee": "len"
+    },
+    {
+      "line": 129,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 130,
+      "callee": "records.append"
+    }
+  ]
+}

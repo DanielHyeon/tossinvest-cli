@@ -422,6 +422,32 @@ MUTATIONS = {
     "AB5_dev_null_is_an_ordinary_name": [
         ('            old_source = "" if value == "/dev/null" else value.removeprefix("a/")',
          '            old_source = value.removeprefix("a/")')],
+    # --- task 7.5.22: 본문 없는 `*.go` 는 조용히 비지 않는다 ---
+    "AC1_a_suppressed_body_is_ordinary": [
+        ('        if added == b"-" and deleted == b"-":',
+         '        if False:')],
+    "AC2_mode_only_is_refused_too": [
+        ('        if added == b"-" and deleted == b"-":',
+         '        if added in (b"-", b"0") and deleted in (b"-", b"0"):')],
+    "AC3_a_rename_keeps_only_the_new_name": [
+        ('        pair = [item for item in chunks[index + 1:index + 3] if item]',
+         '        pair = [item for item in chunks[index + 2:index + 3] if item] * 2')],
+    "AC4_the_new_guard_stands_first": [
+        ('''    records = _numstat_records(raw_output)
+    for _, _, paths in records:''',
+         '''    records = _numstat_records(raw_output)
+    for added, deleted, paths in records:
+        if added == b"-" and deleted == b"-":
+            raise RuntimeError(
+                "modified Go file has no textual diff (binary or -diff attribute): "
+                + paths[-1].decode("utf-8", "replace")
+            )
+    for _, _, paths in records:''')],
+    "AC5_the_hunk_reads_the_base_side_twice": [
+        ('''                int(match.group(3)),
+                int(match.group(4) or 1),''',
+         '''                int(match.group(1)),
+                int(match.group(2) or 1),''')],
 }
 
 
@@ -452,34 +478,55 @@ def failing(output: str) -> list[str]:
                    if line.startswith(("FAIL: ", "ERROR: "))})
 
 
-def reached(target: Path, edits, pristine: str) -> bool:
-    """변이가 **돌았는지**를 잰다 — 바뀐 줄에 도달하지 못하면 SURVIVED 는 음성이 아니라 침묵이다.
+def reached(target: Path, edits, pristine: str, control_ran: int = 0) -> str:
+    """변이가 **돌았는지**를 잰다. `"YES"` · `"no"` · `"?"`(못 쟀다) 셋 중 하나를 돌려준다.
 
     문자열이 바뀌었는지만 보는 하네스는 **눈먼 계측기와 진짜 음성을 같게 기록한다**
     (2026-09-18 독립 리뷰 P2; T6 이 정확히 그 결과였다 — `end < 0` 갈래는 182개 시험에서
     0회 도달인데 "동등 변이"로 적혔다, [[mutation-must-reach-the-thing-under-test]]).
     바꾼 줄마다 표식을 심고 스위트를 돌려 표식이 찍히는지 본다.
+
+    **계측기가 거짓말하던 두 자리를 막는다 (task 7.5.22, 7.5.2.4 재리뷰).**
+
+    1. 표식을 **문장이 아닌 자리** 앞에 심으면(여러 줄 호출의 중간 줄 · `elif`/`else`/`except` 머리)
+       파이썬 문법이 깨진다. 그러면 인터프리터가 `SyntaxError` 트레이스백을 찍는데 **그 트레이스백이
+       문제의 소스 줄을 그대로 인쇄하고**, 그 줄에 `REACHED` 가 들어 있다. 옛 판본은 그것을 읽고
+       시험을 **0개** 돌린 판에 "도달함" 이라고 답했다(118 중 **30**). → 쓰기 전에 `compile()` 한다.
+    2. 표식이 문법을 안 깨도 스위트가 **수집 단계에서** 죽으면 같은 일이 난다. → `Ran N tests` 가
+       대조군과 같은 N 을 낼 때만 표식을 읽는다. 안 맞으면 "도달함" 이 아니라 `"?"` 다.
+
+    셋을 가르는 것이 요점이다 — **"안 닿음" 과 "못 쟀다" 는 다른 말이다.** 옛 판본은 둘 다 `False` 였다.
     """
-    # 표식은 **변이를 얹기 전** 본문에 심는다 (task 7.5.2.4, 재리뷰 시험품질). 옛 판본은 원복 **전**에
-    # 디스크를 읽어서 *변이된* 본문에서 *옛 줄* 을 찾았다 — 줄을 통째로 바꾼 변이는 그 줄이 이미 없으니
-    # 언제나 `marked == text` 였고, 계측기는 113 중 **79** 에 대해 눈이 먼 채 "안 닿음" 이라고 답했다.
-    # 재는 질문은 "스위트가 이 자리를 도는가" 이고, 그 자리는 옛 줄의 자리다.
     text = pristine
     marked = text
+    planted = 0
     for old_line, _ in edits if edits != "MOVE_FIRST" else []:
         head = old_line.splitlines()[0]
         if head.strip().startswith(("#", '"')) or not head.strip():
             continue
         indent = head[: len(head) - len(head.lstrip())]
-        marked = marked.replace(
+        candidate = marked.replace(
             head, f'{indent}import sys as _s; print("REACHED", file=_s.stderr)\n{head}', 1
         )
-    if marked == text:
-        return False
+        if candidate == marked:
+            continue
+        try:
+            compile(candidate, str(target), "exec")
+        except SyntaxError:
+            # 이 자리는 문장 앞이 아니다. 심지 **않는다** — 심으면 트레이스백이 표식을 인쇄해
+            # 시험 0개 돈 판이 "도달함" 이 된다.
+            continue
+        marked = candidate
+        planted += 1
+    if not planted:
+        return "?"
     target.write_text(marked, encoding="utf-8")
     _, output = run(SUITE)
     target.write_text(pristine, encoding="utf-8")
-    return "REACHED" in output
+    if control_ran > 0 and ran_count(output) != control_ran:
+        # 스위트가 대조군과 같은 수를 안 돌았다 — 표식을 읽을 자격이 없다.
+        return "?"
+    return "YES" if "REACHED" in output else "no"
 
 
 if __name__ == "__main__":
@@ -522,7 +569,12 @@ if __name__ == "__main__":
             survived.append(name)
         target.write_text(pristine, encoding="utf-8")
         # 도달 계측은 **원복 뒤에** 부른다 — 표식은 원본 본문에 심는 것이지 변이된 본문이 아니다.
-        touched = "" if code else ("  · 도달함" if reached(target, edits, pristine) else "  · **안 닿음**")
+        # 계측기는 셋을 가른다 (task 7.5.22): 도달함 · 안 닿음 · **못 쟀다**. 옛 판본은 뒤의 둘을
+        # 같은 `False` 로 뭉갰고, 표식이 문법을 깨면 트레이스백이 표식을 인쇄해 시험 0개 돈 판을
+        # "도달함" 으로 만들었다.
+        touched = "" if code else {
+            "YES": "  · 도달함", "no": "  · **안 닿음**", "?": "  · **못 쟀다**",
+        }[reached(target, edits, pristine, control_ran)]
         # 판이 대조군과 **다른 수의 시험**을 돌았으면 그 CAUGHT 는 변이의 증거가 아니라 환경의 증거다
         # (task 7.5.2.4, 재리뷰 시험품질: `/` 가 0 인 창에서 다섯 변이가 n=130·244·269 로 전부 CAUGHT).
         ran = ran_count(output)

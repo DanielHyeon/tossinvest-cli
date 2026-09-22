@@ -1,0 +1,157 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "197a0355b8b70be408454b06bdb90a351a819738",
+  "source_sha256": "b8877f17c99ec37e9ff1ac2e6257d1e811b812fadd1547194d580967a4219cb9",
+  "function": "_safe_changed_go_paths",
+  "signature": "_safe_changed_go_paths(root, base, target)",
+  "start": {
+    "line": 104,
+    "column": 1
+  },
+  "end": {
+    "line": 125,
+    "column": 100
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "IfExp",
+      "line": 108,
+      "inherited_line": false,
+      "source": "[target] if target else []"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 113,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B3",
+      "kind": "IfExp",
+      "line": 114,
+      "inherited_line": false,
+      "source": "process.stderr.decode('utf-8', 'replace') if isinstance(process.stderr, bytes) else process.stderr"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 115,
+      "inherited_line": false,
+      "source": "stderr.strip() or f'git diff failed for base {base}'"
+    },
+    {
+      "id": "B5",
+      "kind": "IfExp",
+      "line": 116,
+      "inherited_line": false,
+      "source": "process.stdout if isinstance(process.stdout, bytes) else process.stdout.encode('utf-8')"
+    },
+    {
+      "id": "B6",
+      "kind": "For",
+      "line": 117,
+      "inherited_line": false,
+      "source": "for raw in (item for item in raw_output.split(b'\\x00') if item):"
+    },
+    {
+      "id": "B7",
+      "kind": "comprehension",
+      "line": 117,
+      "inherited_line": true,
+      "source": " for item in raw_output.split(b'\\x00') if item"
+    },
+    {
+      "id": "B8",
+      "kind": "Try",
+      "line": 118,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B9",
+      "kind": "ExceptHandler",
+      "line": 120,
+      "inherited_line": false,
+      "source": "except UnicodeDecodeError as error:"
+    },
+    {
+      "id": "B10",
+      "kind": "BoolOp",
+      "line": 124,
+      "inherited_line": false,
+      "source": "'\\n' in path or '\\r' in path or '\\t' in path"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 124,
+      "inherited_line": false,
+      "source": "if '\\n' in path or '\\r' in path or '\\t' in path:"
+    }
+  ],
+  "returns": [],
+  "raises": [
+    {
+      "line": 115,
+      "source": "raise RuntimeError(stderr.strip() or f'git diff failed for base {base}')"
+    },
+    {
+      "line": 121,
+      "source": "raise RuntimeError('modified Go path is not UTF-8') from error"
+    },
+    {
+      "line": 125,
+      "source": "raise RuntimeError('modified Go path cannot be represented losslessly in unified diff')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 106,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 114,
+      "callee": "isinstance"
+    },
+    {
+      "line": 114,
+      "callee": "process.stderr.decode"
+    },
+    {
+      "line": 115,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 115,
+      "callee": "stderr.strip"
+    },
+    {
+      "line": 116,
+      "callee": "isinstance"
+    },
+    {
+      "line": 116,
+      "callee": "process.stdout.encode"
+    },
+    {
+      "line": 117,
+      "callee": "raw_output.split"
+    },
+    {
+      "line": 119,
+      "callee": "raw.decode"
+    },
+    {
+      "line": 121,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 125,
+      "callee": "RuntimeError"
+    }
+  ]
+}
