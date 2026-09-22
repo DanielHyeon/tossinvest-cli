@@ -159,11 +159,17 @@ digest 로 읽어야 한다(SHALL). 다른 id 의 디렉터리에 복사된 이�
 - **THEN** gate 는 그것을 본문으로 읽고(파일 이름은 그 파일의 첫 훅 **앞에서만** 정해진다) 그 파일의
   수정 함수 요구를 그대로 유지한다
 
-#### Scenario: git 이 바뀐 Go 파일의 본문을 안 낼 때
-- **WHEN** 바뀐 `*.go` 파일에 대해 git 이 본문(훅)을 내지 않으면 — `.gitattributes` 의 `binary`·`-diff`
-  속성이나 실제 이진 내용 때문이며, 그 `.gitattributes` 는 추적되지 않아도 된다
+#### Scenario: git 이 바뀐 Go 파일을 이진으로 다룰 때
+- **WHEN** 바뀐 `*.go` 파일을 git 이 이진으로 다루면 — `.gitattributes` 의 `binary`·`-diff` 속성이나
+  실제 이진 내용 때문이며, 그 `.gitattributes` 는 추적되지 않아도 된다
 - **THEN** gate 는 그 change 를 **거절한다**(요구가 조용히 0 건이 되게 두지 않는다). 판별은
   `--numstat` 의 `-`/`-` 이며, 본문이 바뀌지 않은 정상적인 mode-only 변경(`0`/`0`)은 거절하지 않는다
+
+#### Scenario: 바뀐 Go 파일의 diff 본문이 사라질 때
+- **WHEN** git 이 내용이 바뀌었다고 세면서도(`--numstat` 이 `0`/`0` 도 `-`/`-` 도 아니다) 판정이 읽는
+  diff 에 그 파일의 본문이 하나도 없으면 — 외부 diff 명령이나 `textconv` 필터가 지운 것이다
+- **THEN** gate 는 그 change 를 **거절한다**. 즉 gate 는 앞단 가드가 센 파일 집합과 판정이 본문을 읽은
+  파일 집합을 **대조해야** 하며, 한쪽만 믿어서는 안 된다
 
 #### Scenario: 실행 기준선 이관 기록이 없는 변경
 - **WHEN** 변경에 execution-baseline 이관 기록이 없으면

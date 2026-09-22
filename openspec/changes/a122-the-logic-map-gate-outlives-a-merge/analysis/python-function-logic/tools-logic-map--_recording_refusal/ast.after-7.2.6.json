@@ -1,162 +1,162 @@
 {
   "language": "python",
   "file": "tools/logic-map/check_analysis.py",
-  "revision": "worktree",
-  "head_commit": "e9f868200782e79e7c2e1124a27a06afd7e715be",
-  "source_sha256": "6764d06a9e4be868145a059858263e2a19db4ea0065745f8fdf8db014120907d",
+  "revision": "06e7eb74",
+  "head_commit": "d7d494eec8c449fbf73417d9f6d3a619e9e2a1f7",
+  "source_sha256": "caa7294dd88dba4f7c60c86810ad5083b9071cd27f09080221c451ee1bf082e1",
   "function": "_recording_refusal",
   "signature": "_recording_refusal(change, change_dir, root)",
   "start": {
-    "line": 1353,
+    "line": 1403,
     "column": 1
   },
   "end": {
-    "line": 1425,
+    "line": 1475,
     "column": 20
   },
   "branches": [
     {
       "id": "B1",
       "kind": "If",
-      "line": 1373,
+      "line": 1423,
       "inherited_line": false,
       "source": "if landing_file.is_symlink():"
     },
     {
       "id": "B2",
       "kind": "If",
-      "line": 1383,
+      "line": 1433,
       "inherited_line": false,
       "source": "if _landing_record(change_dir, root) is not None:"
     },
     {
       "id": "B3",
       "kind": "If",
-      "line": 1387,
+      "line": 1437,
       "inherited_line": false,
       "source": "if landing_file.exists():"
     },
     {
       "id": "B4",
       "kind": "If",
-      "line": 1397,
+      "line": 1447,
       "inherited_line": false,
       "source": "if (change_dir / 'analysis' / 'function-logic-reference.txt').exists():"
     },
     {
       "id": "B5",
       "kind": "Try",
-      "line": 1402,
+      "line": 1452,
       "inherited_line": false,
       "source": "try:"
     },
     {
       "id": "B6",
       "kind": "ExceptHandler",
-      "line": 1404,
+      "line": 1454,
       "inherited_line": false,
       "source": "except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:"
     },
     {
       "id": "B7",
       "kind": "If",
-      "line": 1406,
+      "line": 1456,
       "inherited_line": false,
       "source": "if facts.get('execution_baseline_adoption'):"
     },
     {
       "id": "B8",
       "kind": "If",
-      "line": 1409,
+      "line": 1459,
       "inherited_line": false,
       "source": "if why:"
     },
     {
       "id": "B9",
       "kind": "If",
-      "line": 1419,
+      "line": 1469,
       "inherited_line": false,
       "source": "if dirty.returncode:"
     }
   ],
   "returns": [
     {
-      "line": 1378,
+      "line": 1428,
       "value": "(f'`{LANDING_FILE}` is a symlink — not followed: the record must be a regular file in the change directory, or the value the gate reads back is not the value it wrote', '')"
     },
     {
-      "line": 1386,
+      "line": 1436,
       "value": "(f'`{LANDING_FILE}` already exists — not overwritten; {LANDING_RECOVERY}', '')"
     },
     {
-      "line": 1393,
+      "line": 1443,
       "value": "(f'`{relative}` already exists on disk but not in HEAD — not overwritten: the gate reads the record from the commit, so commit it', '')"
     },
     {
-      "line": 1400,
+      "line": 1450,
       "value": "(BORROWED_REFUSES_A_LANDING, '')"
     },
     {
-      "line": 1405,
+      "line": 1455,
       "value": "(f'cannot resolve the comparison base: {exc}', '')"
     },
     {
-      "line": 1407,
+      "line": 1457,
       "value": "(ADOPTION_REFUSES_A_LANDING, '')"
     },
     {
-      "line": 1410,
+      "line": 1460,
       "value": "(f'no landing recorded — {why}', '')"
     },
     {
-      "line": 1420,
+      "line": 1470,
       "value": "('the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits', '')"
     },
     {
-      "line": 1425,
+      "line": 1475,
       "value": "('', base)"
     }
   ],
   "raises": [],
   "calls": [
     {
-      "line": 1373,
+      "line": 1423,
       "callee": "landing_file.is_symlink"
     },
     {
-      "line": 1383,
+      "line": 1433,
       "callee": "_landing_record"
     },
     {
-      "line": 1387,
+      "line": 1437,
       "callee": "landing_file.exists"
     },
     {
-      "line": 1392,
+      "line": 1442,
       "callee": "landing_file.relative_to"
     },
     {
-      "line": 1392,
+      "line": 1442,
       "callee": "landing_file.relative_to(root).as_posix"
     },
     {
-      "line": 1397,
+      "line": 1447,
       "callee": "(change_dir / 'analysis' / 'function-logic-reference.txt').exists"
     },
     {
-      "line": 1403,
+      "line": 1453,
       "callee": "resolve_base"
     },
     {
-      "line": 1406,
+      "line": 1456,
       "callee": "facts.get"
     },
     {
-      "line": 1408,
+      "line": 1458,
       "callee": "_walk_floor"
     },
     {
-      "line": 1415,
+      "line": 1465,
       "callee": "subprocess.run"
     }
   ]

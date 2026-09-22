@@ -31,10 +31,11 @@ REQUIRED = (
 EXEMPTION = "Function Logic Map: not-applicable"
 # 읽기의 상한과 실패 문구 (task 7.5.2.3). 상한은 **거부하는 정상 입력을 먼저 세어** 골랐다. 열거표는
 # `analysis/harness/7524_census.py` 가 다시 찍는다 — 값은 저장소와 함께 움직이므로 날짜를 적는다.
-# 2026-09-22 실측(`197a0355`): 가장 큰 `*.go` 97,231 B · 번들 파일 **전수 12,412 중** 최대 39,327 B
-# (아카이브 a047) · 아카이브 아닌 1,634 중 최대 26,694 B · 16 MiB 넘는 번들 파일 **0**.
-# (7.5.22 정정: 앞 로트가 적은 12,411/1,633 은 **편집 도중** 스냅숏이었다 — 그 로트가 커밋한
-#  번들 둘이 아직 없을 때 센 값이다. 커밋한 하네스가 내는 수와 산문이 갈리면 산문이 틀린 것이다.)
+# 결정에 쓰이는 사실은 **크기**다: 가장 큰 `*.go` 97,231 B · 가장 큰 번들 파일 39,327 B(아카이브
+# a047) · 활성 번들 중 최대 26,694 B · **16 MiB 를 넘는 번들 파일 0** (2026-09-23 실측).
+# **번들의 총 개수는 여기 안 적는다 (7.5.23).** 그 수는 번들을 더하는 **모든 커밋마다** 바뀌므로,
+# 어느 값을 적어도 적는 그 커밋에서 이미 낡는다 — 두 로트 연속으로 그렇게 틀렸다(12,411 → 12,412 →
+# 실제 12,414, 매번 그 로트 자신이 더한 번들이 빠진 값이었다). 세려면 `7524_census.py` 를 돌린다.
 # (7.5.2.4 정정: 옛 문장은 한 문장에 모집단이 둘이었다 — 25,466 B 는 활성 번들만의 최대였는데 전수를
 #  세는 0/12,193 과 나란히 적혀 전수의 최대처럼 읽혔다.)
 READ_CAP = 16 << 20
@@ -134,7 +135,9 @@ def _numstat_records(raw_output: bytes) -> list[tuple[bytes, bytes, list[bytes]]
     return records
 
 
-def _safe_changed_go_paths(root: Path, base: str, target: str) -> None:
+def _safe_changed_go_paths(
+    root: Path, base: str, target: str
+) -> list[tuple[bytes, bytes, list[bytes]]]:
     """바뀐 `*.go` 를 **이름**과 **본문 유무** 둘로 거른다.
 
     이름: 통합 diff 헤더 문법이 무손실로 표현하지 못하는 것을 거절한다.
@@ -150,9 +153,16 @@ def _safe_changed_go_paths(root: Path, base: str, target: str) -> None:
 
     새 거절은 **가장 뒤에 선다** — 이름 검사를 전부 마친 뒤에 본문을 묻는다. 앞의 가드를 가리면
     그 가드의 시험이 남의 가드를 재게 된다.
+
+    **레코드를 돌려준다 (task 7.5.23).** `--numstat` 이 가르는 것은 "git 이 본문을 냈는가" 가 아니라
+    "git 이 이것을 이진으로 다루는가" 다 — 7.5.22 가 "정확히 가른다" 고 적은 것은 **거짓**이었다.
+    `textconv` 필터는 `--numstat` 에 `1`/`1` 을 내면서 판정 diff 의 본문을 **통째로 지운다**.
+    그래서 호출자가 이 레코드를 판정이 실제로 낸 훅과 **대조**한다(`changed_existing_functions`).
+    `--find-renames` 를 여기도 준다 — 판정과 같은 짝을 봐야 대조가 성립한다.
     """
     process = subprocess.run(
-        ["git", "diff", "--no-ext-diff", "--numstat", "-z", base,
+        ["git", "diff", "--no-ext-diff", "--no-textconv", "--find-renames",
+         "--numstat", "-z", base,
          *([target] if target else []), "--", "*.go"],
         cwd=root,
         capture_output=True,
@@ -179,6 +189,7 @@ def _safe_changed_go_paths(root: Path, base: str, target: str) -> None:
                 "modified Go file has no textual diff (binary or -diff attribute): "
                 + paths[-1].decode("utf-8", "strict")
             )
+    return records
 
 
 def changed_existing_functions(
@@ -188,14 +199,19 @@ def changed_existing_functions(
 ) -> dict[tuple[str, str], dict]:
     if not base:
         raise ValueError("Function Logic Map comparison base is required")
-    _safe_changed_go_paths(root, base, target)
+    records = _safe_changed_go_paths(root, base, target)
     process = subprocess.run(
         [
             "git",
             "-c",
             "core.quotePath=false",
             "diff",
+            # 이 셋이 **본문을 지우는 문**을 닫는다 (task 7.5.23). `--no-ext-diff` 는 외부 diff
+            # 명령을, `--no-textconv` 는 `diff=<드라이버>` 의 textconv 를 끈다 — 둘 다 없으면
+            # git 이 훅을 **0 개** 내고 그 파일의 요구가 조용히 사라진다. 깃발이 사라져도
+            # 아래 교차 검사가 런타임에 잡는다(깃발과 검사 둘 다 시험이 못 박는다).
             "--no-ext-diff",
+            "--no-textconv",
             "--find-renames",
             "--unified=0",
             base,
@@ -212,6 +228,9 @@ def changed_existing_functions(
     if process.returncode:
         raise RuntimeError(process.stderr.strip() or f"git diff failed for base {base}")
     required: dict[tuple[str, str], dict] = {}
+    # 판정 diff 가 **본문을 낸** 파일들. numstat 과 대조해서, 내용이 바뀌었다는데 훅이 하나도
+    # 없는 파일이 있으면 거절한다 (task 7.5.23).
+    bodied: set[str] = set()
     old_source = ""
     new_source = ""
     hunks: list[tuple[int, int, int, int]] = []
@@ -302,7 +321,11 @@ def changed_existing_functions(
             # 본문이다. 여기서 `--- `·`+++ ` 는 소스 줄이지 파일 이름이 아니다.
             hunk(line)
         elif hunk(line):
+            # 파일의 **첫** 훅이다. 이름 둘은 이 앞에서 이미 정해졌고 본문에서는 안 바뀌므로
+            # (7.5.2.4), 본문을 냈다는 표시는 여기 한 번이면 된다 — 뒤의 훅은 같은 이름을 다시
+            # 넣을 뿐이다. 두 자리에 두면 한쪽을 지우는 변이가 동등 변이가 된다 (task 7.5.23).
             in_body = True
+            bodied.update(name for name in (old_source, new_source) if name)
         elif line.startswith("--- "):
             value = line[4:]
             old_source = "" if value == "/dev/null" else value.removeprefix("a/")
@@ -310,6 +333,20 @@ def changed_existing_functions(
             value = line[4:]
             new_source = "" if value == "/dev/null" else value.removeprefix("b/")
     flush()
+    # **가드가 센 것과 판정이 읽은 것을 맞춰 본다** (task 7.5.23). numstat 이 내용이 바뀌었다고
+    # (`0`/`0` 도 `-`/`-` 도 아니라고) 말한 파일은 본문을 내야 한다. 안 냈으면 무언가가 본문을
+    # 지운 것이고 — textconv · 외부 diff · 아직 모르는 git 기능 — 그 파일의 요구는 **조용히**
+    # 사라진다. 문을 하나씩 세는 대신 **두 투영이 어긋났다**는 것을 본다.
+    for added, deleted, paths in records:
+        if added in (b"-", b"0") and deleted in (b"-", b"0"):
+            continue
+        names = [raw.decode("utf-8", "strict") for raw in paths]
+        if not bodied.intersection(names):
+            raise RuntimeError(
+                "git reported content changes but emitted no diff body for "
+                + names[-1]
+                + " — an external diff or textconv filter is hiding it"
+            )
     return required
 
 
@@ -2007,8 +2044,10 @@ def check(
     넷(`git diff` · `git show` · `go run` · `execution_baseline`)만 대고 그친 것은 열거가 아니라 예시였다.
     판정 입력을 읽는 것만 꼽아도 `changed_existing_functions` 의 `git diff` · `base_file` 의 `git show` ·
     `go_functions` 의 `go run`(워킹트리 Go 바이트) · `_safe_changed_go_paths` 의 `git diff --numstat` ·
-    `_committed_many` 의 `git cat-file` · `_recording_refusal` 의 `git diff --quiet` · 역사를 걷는 아홉
-    자리 · 그리고 `execution_baseline.validate` 다. 그것들이 판정 도중 바뀌면 재확인이 통과한다.
+    `_committed_many` 의 `git cat-file` · `_recording_refusal` 의 `git diff --quiet` · 역사를 걷는 **열**
+    자리 · 그리고 `execution_baseline.validate` 다 (7.5.23 정정: 앞 판본은 "아홉" 이라 적었다 —
+    6 + 9 = 15 라 자기가 바로 앞에 적은 16 과 안 맞았다. 열거를 고치면서 열거를 틀렸다).
+    그것들이 판정 도중 바뀌면 재확인이 통과한다.
     a112 실측(7.5.22): `required` 를 정하는 Go 파일 **32** 중 **13** 은 원장에 이름조차 없고, 나머지 19 도
     **인용·시험 색인 때문에** 있는 것이지 `go run` 이 읽어서가 아니다. 7.5.2.3 의 README·VERIFY 가
     "디스크를 읽는 자리가 깔때기 넷뿐" 이라고 적은 것은 **거짓**이었다 — 그 열거의 모집단이

@@ -413,7 +413,7 @@ MUTATIONS = {
         ('        elif in_body:\n            # 본문이다. 여기서 `--- `·`+++ ` 는 소스 줄이지 파일 이름이 아니다.\n            hunk(line)',
          '        elif False:\n            # 본문이다. 여기서 `--- `·`+++ ` 는 소스 줄이지 파일 이름이 아니다.\n            hunk(line)')],
     "AB2_the_body_never_opens": [
-        ('        elif hunk(line):\n            in_body = True', '        elif hunk(line):\n            in_body = False')],
+        ('        elif hunk(line):\n            # 파일의 **첫** 훅이다. 이름 둘은 이 앞에서 이미 정해졌고 본문에서는 안 바뀌므로\n            # (7.5.2.4), 본문을 냈다는 표시는 여기 한 번이면 된다 — 뒤의 훅은 같은 이름을 다시\n            # 넣을 뿐이다. 두 자리에 두면 한쪽을 지우는 변이가 동등 변이가 된다 (task 7.5.23).\n            in_body = True', '        elif hunk(line):\n            # 파일의 **첫** 훅이다. 이름 둘은 이 앞에서 이미 정해졌고 본문에서는 안 바뀌므로\n            # (7.5.2.4), 본문을 냈다는 표시는 여기 한 번이면 된다 — 뒤의 훅은 같은 이름을 다시\n            # 넣을 뿐이다. 두 자리에 두면 한쪽을 지우는 변이가 동등 변이가 된다 (task 7.5.23).\n            in_body = False')],
     "AB3_a_new_file_does_not_close_the_body": [
         ('            new_source = ""\n            in_body = False', '            new_source = ""')],
     "AB4_only_the_first_hunk_of_a_file_counts": [
@@ -443,6 +443,20 @@ MUTATIONS = {
                 + paths[-1].decode("utf-8", "replace")
             )
     for _, _, paths in records:''')],
+    # --- task 7.5.23: 가드와 판정이 같은 diff 를 읽는다 ---
+    "AD1_the_judged_diff_trusts_textconv": [
+        ('            "--no-textconv",\n', '')],
+    "AD2_the_judged_diff_trusts_an_external_diff": [
+        ('            "--no-ext-diff",\n            "--no-textconv",\n',
+         '            "--no-textconv",\n')],
+    "AD3_a_vanished_body_is_no_change": [
+        ('        if not bodied.intersection(names):', '        if False:')],
+    "AD4_a_mode_only_file_must_have_a_body": [
+        ('        if added in (b"-", b"0") and deleted in (b"-", b"0"):',
+         '        if added == b"-" and deleted == b"-":')],
+    "AD6_the_guard_ignores_renames": [
+        ('"--no-ext-diff", "--no-textconv", "--find-renames",',
+         '"--no-ext-diff", "--no-textconv",')],
     "AC5_the_hunk_reads_the_base_side_twice": [
         ('''                int(match.group(3)),
                 int(match.group(4) or 1),''',
@@ -478,7 +492,7 @@ def failing(output: str) -> list[str]:
                    if line.startswith(("FAIL: ", "ERROR: "))})
 
 
-def reached(target: Path, edits, pristine: str, control_ran: int = 0) -> str:
+def reached(target: Path, edits, pristine: str, control_ran: int) -> str:
     """변이가 **돌았는지**를 잰다. `"YES"` · `"no"` · `"?"`(못 쟀다) 셋 중 하나를 돌려준다.
 
     문자열이 바뀌었는지만 보는 하네스는 **눈먼 계측기와 진짜 음성을 같게 기록한다**
@@ -495,14 +509,27 @@ def reached(target: Path, edits, pristine: str, control_ran: int = 0) -> str:
     2. 표식이 문법을 안 깨도 스위트가 **수집 단계에서** 죽으면 같은 일이 난다. → `Ran N tests` 가
        대조군과 같은 N 을 낼 때만 표식을 읽는다. 안 맞으면 "도달함" 이 아니라 `"?"` 다.
 
-    셋을 가르는 것이 요점이다 — **"안 닿음" 과 "못 쟀다" 는 다른 말이다.** 옛 판본은 둘 다 `False` 였다.
+    3. **표식 head 가 파일에서 유일하지 않으면 `str.replace` 가 첫 자리에 심는다** (task 7.5.23,
+       시험품질 재리뷰). 그러면 계측기는 **한 번도 안 본 줄**에 대해 자신 있게 `YES`/`no` 를 답한다.
+       `compile()` 은 이것을 못 본다 — 엉뚱한 자리에 심어도 문법은 멀쩡하다. 실측: 표식 head 20개가
+       유일하지 않고, 그중 **다섯**이 다른 문장에(넷은 **다른 함수**에) 앉았다. → 유일할 때만 심는다.
+
+    4. **일부만 심겼으면 그렇게 말한다.** 변이가 줄 셋을 바꾸는데 하나만 심겼으면 `no` 는
+       "셋 다 안 닿았다" 가 아니라 "하나가 안 닿았다" 이다. 그 판은 `"?"` 로 낸다.
+
+    넷을 가르는 것이 요점이다 — **"안 닿음" 과 "못 쟀다" 는 다른 말이다.** 옛 판본은 둘 다 `False` 였다.
+    `control_ran` 은 기본값이 없다 — 0 을 넘기면 위 2번이 조용히 꺼지므로 호출자가 반드시 준다.
     """
     text = pristine
     marked = text
-    planted = 0
+    eligible = planted = 0
     for old_line, _ in edits if edits != "MOVE_FIRST" else []:
         head = old_line.splitlines()[0]
         if head.strip().startswith(("#", '"')) or not head.strip():
+            continue
+        eligible += 1
+        if pristine.count(head) != 1:
+            # 유일하지 않다. `str.replace(…, 1)` 은 **첫** 자리에 심으므로 엉뚱한 줄을 잴 수 있다.
             continue
         indent = head[: len(head) - len(head.lstrip())]
         candidate = marked.replace(
@@ -518,12 +545,18 @@ def reached(target: Path, edits, pristine: str, control_ran: int = 0) -> str:
             continue
         marked = candidate
         planted += 1
-    if not planted:
+    if not planted or planted != eligible:
+        # 심을 자리가 없거나(주석·문자열만 바꾸는 변이) · 하나도 못 심었거나 · 일부만 심었다.
+        # 셋 다 답이 아니다. `eligible == planted == 0` 을 따로 막지 않으면 표식 없는 판을
+        # 돌려 놓고 "안 닿음" 이라고 답한다 — 옛 판본의 거짓말이 그 모양으로 되살아난다.
         return "?"
     target.write_text(marked, encoding="utf-8")
-    _, output = run(SUITE)
-    target.write_text(pristine, encoding="utf-8")
-    if control_ran > 0 and ran_count(output) != control_ran:
+    try:
+        _, output = run(SUITE)
+    finally:
+        # 스위트가 멎어도 표식 붙은 사본을 남기지 않는다 ([[mutation-revert-needs-the-right-baseline]]).
+        target.write_text(pristine, encoding="utf-8")
+    if ran_count(output) != control_ran:
         # 스위트가 대조군과 같은 수를 안 돌았다 — 표식을 읽을 자격이 없다.
         return "?"
     return "YES" if "REACHED" in output else "no"

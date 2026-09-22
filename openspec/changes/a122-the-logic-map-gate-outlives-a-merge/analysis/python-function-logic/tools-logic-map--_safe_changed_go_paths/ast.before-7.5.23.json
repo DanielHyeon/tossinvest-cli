@@ -1,7 +1,7 @@
 {
   "language": "python",
   "file": "tools/logic-map/check_analysis.py",
-  "revision": "d7d494ee",
+  "revision": "worktree",
   "head_commit": "d7d494eec8c449fbf73417d9f6d3a619e9e2a1f7",
   "source_sha256": "2910deb1854c8d4d3d42da83b72c6c5ce1d264bb7125bc6ec0f78c71d6b138ba",
   "function": "_safe_changed_go_paths",

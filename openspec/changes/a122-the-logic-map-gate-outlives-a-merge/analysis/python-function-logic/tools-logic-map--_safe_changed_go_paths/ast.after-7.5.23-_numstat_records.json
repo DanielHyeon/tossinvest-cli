@@ -1,114 +1,114 @@
 {
   "language": "python",
   "file": "tools/logic-map/check_analysis.py",
-  "revision": "d7d494ee",
+  "revision": "worktree",
   "head_commit": "d7d494eec8c449fbf73417d9f6d3a619e9e2a1f7",
-  "source_sha256": "2910deb1854c8d4d3d42da83b72c6c5ce1d264bb7125bc6ec0f78c71d6b138ba",
+  "source_sha256": "e97d3999f924a44edf1468aad4014061b3662a6797e113ed5e081e58a3d40669",
   "function": "_numstat_records",
   "signature": "_numstat_records(raw_output)",
   "start": {
-    "line": 106,
+    "line": 107,
     "column": 1
   },
   "end": {
-    "line": 134,
+    "line": 135,
     "column": 19
   },
   "branches": [
     {
       "id": "B1",
       "kind": "While",
-      "line": 117,
+      "line": 118,
       "inherited_line": false,
       "source": "while index < len(chunks):"
     },
     {
       "id": "B2",
       "kind": "If",
-      "line": 118,
+      "line": 119,
       "inherited_line": false,
       "source": "if not chunks[index]:"
     },
     {
       "id": "B3",
       "kind": "If",
-      "line": 122,
+      "line": 123,
       "inherited_line": false,
       "source": "if len(parts) != 3:"
     },
     {
       "id": "B4",
       "kind": "If",
-      "line": 125,
+      "line": 126,
       "inherited_line": false,
       "source": "if first:"
     },
     {
       "id": "B5",
       "kind": "comprehension",
-      "line": 129,
+      "line": 130,
       "inherited_line": true,
       "source": " for item in chunks[index + 1:index + 3] if item"
     },
     {
       "id": "B6",
       "kind": "If",
-      "line": 130,
+      "line": 131,
       "inherited_line": false,
       "source": "if len(pair) != 2:"
     }
   ],
   "returns": [
     {
-      "line": 134,
+      "line": 135,
       "value": "records"
     }
   ],
   "raises": [
     {
-      "line": 123,
+      "line": 124,
       "source": "raise RuntimeError('cannot read git diff --numstat record')"
     },
     {
-      "line": 131,
+      "line": 132,
       "source": "raise RuntimeError('cannot read git diff --numstat rename record')"
     }
   ],
   "calls": [
     {
-      "line": 114,
+      "line": 115,
       "callee": "raw_output.split"
     },
     {
-      "line": 117,
+      "line": 118,
       "callee": "len"
-    },
-    {
-      "line": 121,
-      "callee": "chunks[index].split"
     },
     {
       "line": 122,
-      "callee": "len"
+      "callee": "chunks[index].split"
     },
     {
       "line": 123,
-      "callee": "RuntimeError"
-    },
-    {
-      "line": 126,
-      "callee": "records.append"
-    },
-    {
-      "line": 130,
       "callee": "len"
     },
     {
-      "line": 131,
+      "line": 124,
       "callee": "RuntimeError"
     },
     {
+      "line": 127,
+      "callee": "records.append"
+    },
+    {
+      "line": 131,
+      "callee": "len"
+    },
+    {
       "line": 132,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 133,
       "callee": "records.append"
     }
   ]
