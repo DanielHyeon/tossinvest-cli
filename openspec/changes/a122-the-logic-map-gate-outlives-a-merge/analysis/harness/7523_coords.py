@@ -162,5 +162,23 @@ print(f"\n`tasks.md` 의 살아 있는 좌표 {len([r for r in live if r[0] == '
       f" — 그중 **열린 task 안: {len(open_live)}**")
 for where, number, token in open_live:
     print(f"    {where}:{number}  {token}")
-print(f"판정: 열린 task 의 좌표 {len(open_live)} · 뜬 번들 {len(orphan)} · 낡은 범위 {len(drifted)}")
-raise SystemExit(1 if (open_live or orphan or drifted) else 0)
+# --- 산문이 적은 **이 수**가 지금 값과 같은가 (7.5.24) ---
+# 거짓말은 대부분 여기 산다: 하네스가 내는 수를 산문에 베껴 적고, 그 뒤 편집이 수를 바꾼다.
+# 세 로트 연속 그랬다. 그러니 **자기가 내는 수만이라도** 산문과 대조한다.
+SAID = re.compile(r"절대 인용 \*\*(\d+) 건\*\*")
+stale_counts = []
+for name in ("review.md", "tasks.md", "HANDOFF.md"):
+    where = CHANGE / name
+    if not where.exists():
+        continue
+    for number, line in enumerate(where.read_text(encoding="utf-8").splitlines(), start=1):
+        for match in SAID.finditer(line):
+            if int(match.group(1)) != len(live):
+                stale_counts.append((name, number, int(match.group(1))))
+print(f"\n산문이 적은 인용 수가 지금 값({len(live)})과 다른 자리: **{len(stale_counts)}**")
+for name, number, said in stale_counts:
+    print(f"    {name}:{number}  적힌 {said} · 지금 {len(live)}")
+
+print(f"판정: 열린 task 의 좌표 {len(open_live)} · 뜬 번들 {len(orphan)} · 낡은 범위 {len(drifted)}"
+      f" · 낡은 수 {len(stale_counts)}")
+raise SystemExit(1 if (open_live or orphan or drifted or stale_counts) else 0)

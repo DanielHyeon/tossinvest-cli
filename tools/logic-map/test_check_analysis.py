@@ -913,7 +913,7 @@ evidence
         with mock.patch(
             "check_analysis.subprocess.run",
             return_value=failed,
-        ), mock.patch("check_analysis._safe_changed_go_paths"):
+        ), mock.patch("check_analysis._safe_changed_go_paths", return_value=[(b"1", b"1", [b"internal/x.go"])]):
             with self.assertRaises(RuntimeError):
                 check_analysis.changed_existing_functions(Path("/tmp"), "bad")
 
@@ -969,7 +969,7 @@ evidence
                 "check_analysis.subprocess.run",
                 return_value=diff,
             ), mock.patch(
-                "check_analysis._safe_changed_go_paths",
+                "check_analysis._safe_changed_go_paths", return_value=[(b"1", b"1", [b"internal/x.go"])],
             ), mock.patch(
                 "check_analysis.base_file",
                 return_value=Path(base_source.name),
@@ -1000,7 +1000,7 @@ evidence
             "check_analysis.subprocess.run",
             side_effect=(diff, missing),
         ), mock.patch(
-            "check_analysis._safe_changed_go_paths",
+            "check_analysis._safe_changed_go_paths", return_value=[(b"1", b"1", [b"internal/x.go"])],
         ):
             with self.assertRaises(RuntimeError):
                 check_analysis.changed_existing_functions(Path("/tmp"), "base")
@@ -7545,6 +7545,31 @@ class TheGuardAndTheJudgementReadTheSameDiff(unittest.TestCase):
             run("git", "config", key, value)
         return root, base
 
+    def _repo_with(self, attributes: str, config: list[tuple[str, str]],
+                   before: str, after: str) -> tuple[Path, str]:
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        root = Path(holder.name)
+
+        def run(*args: str) -> None:
+            subprocess.run(args, cwd=root, check=True, capture_output=True)
+
+        run("git", "init", "-q", ".")
+        run("git", "config", "user.email", "fixture@example.com")
+        run("git", "config", "user.name", "fixture")
+        (root / "x.go").write_text(before, encoding="utf-8")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "base")
+        base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        (root / "x.go").write_text(after, encoding="utf-8")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "edit")
+        if attributes:
+            (root / ".gitattributes").write_text(attributes, encoding="utf-8")
+        for key, value in config:
+            run("git", "config", key, value)
+        return root, base
+
     def _required(self, root: Path, base: str) -> dict:
         with mock.patch("check_analysis.go_functions", side_effect=self._functions):
             return check_analysis.changed_existing_functions(root, base, "HEAD")
@@ -7595,6 +7620,86 @@ class TheGuardAndTheJudgementReadTheSameDiff(unittest.TestCase):
                 self._required(root, base)
         self.assertIn("emitted no diff body", str(caught.exception))
         self.assertIn("x.go", str(caught.exception))
+
+    def test_a_judged_diff_that_lists_fewer_files_is_refused(self) -> None:
+        """두 시야의 **크기**가 다르면 그 자체가 어긋남이다. 깃발이 사라지면 판정 diff 는 훅이 아니라
+        **구역 자체**를 안 내므로 이쪽이 먼저 잡는다 — 그런데 깃발이 살아 있으면 어느 시험도 이 갈래를
+        안 돌아서, 검사를 통째로 지우는 변이가 328 시험을 전부 통과했다 (task 7.5.24)."""
+        root, base = self._repo("", [])
+        real = subprocess.run
+
+        def nothing_judged(argv, *args, **kwargs):
+            outcome = real(argv, *args, **kwargs)
+            if "--unified=0" in argv:
+                outcome.stdout = ""          # git 이 파일을 하나도 안 낸 것처럼
+            return outcome
+
+        with mock.patch("check_analysis.subprocess.run", side_effect=nothing_judged):
+            with self.assertRaises(RuntimeError) as caught:
+                self._required(root, base)
+        self.assertIn("the two views of the same diff disagree", str(caught.exception))
+        self.assertIn("1 changed Go file", str(caught.exception))
+
+    def test_an_append_only_change_that_lost_its_body_is_still_refused(self) -> None:
+        """건너뛰는 조건이 `and` 가 아니라 `or` 면 **한쪽 칸이 0 인 레코드가 전부 빠진다** —
+        더하기만 한 편집(`N`/`0`)과 지우기만 한 편집(`0`/`N`)이 그렇다. 그 변이가 326 시험을
+        전부 통과했다 (task 7.5.24, 적대 재리뷰). 경계를 양쪽으로 못 박는다."""
+        for label, before, after in (
+            ("더하기만", self.GO % 1, self.GO % 1 + "\nfunc G() int {\n\treturn 2\n}\n"),
+            ("지우기만", self.GO % 1 + "\nfunc G() int {\n\treturn 2\n}\n", self.GO % 1),
+        ):
+            with self.subTest(label):
+                root, base = self._repo_with("", [], before, after)
+                counts = subprocess.check_output(
+                    ["git", "diff", "--no-ext-diff", "--numstat", base, "HEAD", "--", "*.go"],
+                    cwd=root, text=True).split("\t")[:2]
+                self.assertIn("0", counts, f"픽스처가 한쪽 0 이 아니다: {counts}")
+                real = subprocess.run
+
+                def body_stripped(argv, *args, **kwargs):
+                    outcome = real(argv, *args, **kwargs)
+                    if "--unified=0" in argv:
+                        kept = [line for line in outcome.stdout.splitlines()
+                                if not line.startswith("@@")]
+                        outcome.stdout = "\n".join(kept) + "\n"
+                    return outcome
+
+                with mock.patch("check_analysis.subprocess.run", side_effect=body_stripped):
+                    with self.assertRaises(RuntimeError) as caught:
+                        self._required(root, base)
+                self.assertIn("emitted no diff body", str(caught.exception))
+
+    def test_a_name_git_has_to_quote_is_not_called_a_vanished_body(self) -> None:
+        """거절의 또 다른 경계 (task 7.5.24). 이 파서가 아는 이름은 `removeprefix` 를 거친
+        **유도값**이고 git 이 인용한 것일 수도 있는데(`"a/we\\"ird.go"`), numstat 의 이름은
+        `-z` 라 날 바이트다. 이름으로 짝지으면 **정상 입력**이 거절된다 — 실제로 그랬다."""
+        for name in ('we"ird.go', "back\\slash.go"):
+            with self.subTest(name):
+                holder = tempfile.TemporaryDirectory()
+                self.addCleanup(holder.cleanup)
+                root = Path(holder.name)
+
+                def run(*args: str) -> None:
+                    subprocess.run(args, cwd=root, check=True, capture_output=True)
+
+                run("git", "init", "-q", ".")
+                run("git", "config", "user.email", "fixture@example.com")
+                run("git", "config", "user.name", "fixture")
+                (root / "seed.go").write_text(self.GO % 1, encoding="utf-8")
+                run("git", "add", "-A")
+                run("git", "commit", "-qm", "base")
+                base = subprocess.check_output(
+                    ["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+                (root / name).write_text(self.GO % 2, encoding="utf-8")
+                run("git", "add", "-A")
+                run("git", "commit", "-qm", "add")
+                header = subprocess.check_output(
+                    ["git", "-c", "core.quotePath=false", "diff", "--no-ext-diff",
+                     "--unified=0", base, "HEAD", "--", "*.go"], cwd=root, text=True)
+                self.assertIn('"', header.splitlines()[0] if "\\" in name else header,
+                              "픽스처가 git 의 인용을 안 만든다")
+                self.assertEqual(self._required(root, base), {},
+                                 "git 이 인용하는 이름의 **새 파일**이 거절됐다")
 
     def test_a_mode_only_change_is_not_called_a_vanished_body(self) -> None:
         """교차 검사의 **경계**. `0`/`0` 은 훅이 없는 것이 정상이므로 어긋남이 아니다."""

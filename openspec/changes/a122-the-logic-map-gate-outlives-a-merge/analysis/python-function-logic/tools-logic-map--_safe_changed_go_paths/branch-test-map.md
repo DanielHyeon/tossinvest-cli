@@ -23,9 +23,12 @@
 |---|---|---|
 | 판정 diff 의 `--no-textconv` | 판정 `git diff` 의 인자 | `…a_textconv_filter_does_not_empty_the_requirement` |
 | 판정 diff 의 `--no-ext-diff` | 같은 자리 | `…an_external_diff_command_does_not_empty_the_requirement` |
-| 교차 검사 (참) | `if not bodied.intersection(names):` | `…a_vanished_body_is_refused_rather_than_counted_as_no_change` |
+| 교차 검사 (참) | `if not had_body:` | `…a_vanished_body_is_refused_rather_than_counted_as_no_change` |
+| 두 시야의 **크기** | `if len(bodied) != len(records):` | 위 시험 + `…a_textconv_filter_does_not_empty_the_requirement`(깃발을 지우면 이쪽이 먼저 잡는다) |
+| 건너뛰기 조건의 `and` | `if added in (b"-", b"0") and deleted in (b"-", b"0"):` | `…an_append_only_change_that_lost_its_body_is_still_refused`(`N`/`0` · `0`/`N` 양쪽) |
+| 이름이 아니라 **순서**로 짝짓기 | `zip(records, bodied)` | `…a_name_git_has_to_quote_is_not_called_a_vanished_body` |
 | 교차 검사 (거짓) | `if added in (b"-", b"0") and deleted in (b"-", b"0"):` | `…a_mode_only_change_is_not_called_a_vanished_body` — **경계** |
-| 본문 표시 | 파서 고리의 `bodied.update(...)` 두 자리 | 위 셋이 같이 돈다(`AD5` 가 한 자리만 남기면 빨개진다) |
+| 본문 표시 | 파서 고리의 구역 표시(`bodied.append(False)` · `bodied[-1] = True`) | `AE3`(훅 전에 표시) · `AE4`(마지막 구역만 표시) |
 | `_numstat_records` 결함 둘 | `raise RuntimeError("cannot read git diff --numstat record")` · `… rename record` | `…a_record_that_cannot_be_read_is_a_fault_not_an_empty_table` · `…a_truncated_rename_record_is_a_fault_not_an_empty_table` |
 
 **깃발 둘은 시험이 **간접으로** 못 박는다.** `--no-textconv`/`--no-ext-diff` 를 지우면 그 저장소의

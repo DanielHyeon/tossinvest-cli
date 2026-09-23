@@ -228,9 +228,11 @@ def changed_existing_functions(
     if process.returncode:
         raise RuntimeError(process.stderr.strip() or f"git diff failed for base {base}")
     required: dict[tuple[str, str], dict] = {}
-    # 판정 diff 가 **본문을 낸** 파일들. numstat 과 대조해서, 내용이 바뀌었다는데 훅이 하나도
-    # 없는 파일이 있으면 거절한다 (task 7.5.23).
-    bodied: set[str] = set()
+    # 판정 diff 의 **구역마다** 본문(훅)이 있었는지. numstat 레코드와 **순서로** 짝짓는다 —
+    # 이름으로 짝지으면 안 된다 (task 7.5.24): 이 파서가 아는 이름은 `removeprefix` 를 거친
+    # **유도된** 것이고 git 이 인용한 것(`"a/we\"ird.go"`)일 수도 있는데, numstat 의 이름은
+    # `-z` 라 날 바이트다. 두 이름 공간을 교집합으로 견주면 정상 입력이 거절된다(실측).
+    bodied: list[bool] = []
     old_source = ""
     new_source = ""
     hunks: list[tuple[int, int, int, int]] = []
@@ -317,15 +319,16 @@ def changed_existing_functions(
             old_source = ""
             new_source = ""
             in_body = False
+            bodied.append(False)
         elif in_body:
             # 본문이다. 여기서 `--- `·`+++ ` 는 소스 줄이지 파일 이름이 아니다.
             hunk(line)
         elif hunk(line):
-            # 파일의 **첫** 훅이다. 이름 둘은 이 앞에서 이미 정해졌고 본문에서는 안 바뀌므로
-            # (7.5.2.4), 본문을 냈다는 표시는 여기 한 번이면 된다 — 뒤의 훅은 같은 이름을 다시
-            # 넣을 뿐이다. 두 자리에 두면 한쪽을 지우는 변이가 동등 변이가 된다 (task 7.5.23).
+            # 파일의 **첫** 훅이다. 본문을 냈다는 표시는 여기 한 번이면 된다 — 뒤의 훅은 같은
+            # 구역에 속하므로 더 말할 것이 없다 (task 7.5.23).
             in_body = True
-            bodied.update(name for name in (old_source, new_source) if name)
+            if bodied:
+                bodied[-1] = True
         elif line.startswith("--- "):
             value = line[4:]
             old_source = "" if value == "/dev/null" else value.removeprefix("a/")
@@ -337,14 +340,23 @@ def changed_existing_functions(
     # (`0`/`0` 도 `-`/`-` 도 아니라고) 말한 파일은 본문을 내야 한다. 안 냈으면 무언가가 본문을
     # 지운 것이고 — textconv · 외부 diff · 아직 모르는 git 기능 — 그 파일의 요구는 **조용히**
     # 사라진다. 문을 하나씩 세는 대신 **두 투영이 어긋났다**는 것을 본다.
-    for added, deleted, paths in records:
+    #
+    # 짝은 **순서**로 짓는다 (task 7.5.24). 두 호출은 같은 `git diff` 에 형식만 다르므로 파일을
+    # 같은 순서로 낸다(섞인 픽스처 여섯 모양으로 실측). 이름으로 짝지으려던 앞 판본은 정상
+    # 입력을 거절했다 — 이 파서의 이름은 `removeprefix` 를 거친 유도값이고 git 이 인용한 것일
+    # 수도 있는데 numstat 의 이름은 날 바이트라, 두 이름 공간이 안 만난다.
+    if len(bodied) != len(records):
+        raise RuntimeError(
+            f"git listed {len(records)} changed Go file(s) but the judged diff has "
+            f"{len(bodied)} — the two views of the same diff disagree"
+        )
+    for (added, deleted, paths), had_body in zip(records, bodied):
         if added in (b"-", b"0") and deleted in (b"-", b"0"):
             continue
-        names = [raw.decode("utf-8", "strict") for raw in paths]
-        if not bodied.intersection(names):
+        if not had_body:
             raise RuntimeError(
                 "git reported content changes but emitted no diff body for "
-                + names[-1]
+                + paths[-1].decode("utf-8", "strict")
                 + " — an external diff or textconv filter is hiding it"
             )
     return required

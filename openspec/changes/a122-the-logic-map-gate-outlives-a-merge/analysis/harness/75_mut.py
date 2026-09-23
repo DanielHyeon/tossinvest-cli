@@ -413,7 +413,7 @@ MUTATIONS = {
         ('        elif in_body:\n            # 본문이다. 여기서 `--- `·`+++ ` 는 소스 줄이지 파일 이름이 아니다.\n            hunk(line)',
          '        elif False:\n            # 본문이다. 여기서 `--- `·`+++ ` 는 소스 줄이지 파일 이름이 아니다.\n            hunk(line)')],
     "AB2_the_body_never_opens": [
-        ('        elif hunk(line):\n            # 파일의 **첫** 훅이다. 이름 둘은 이 앞에서 이미 정해졌고 본문에서는 안 바뀌므로\n            # (7.5.2.4), 본문을 냈다는 표시는 여기 한 번이면 된다 — 뒤의 훅은 같은 이름을 다시\n            # 넣을 뿐이다. 두 자리에 두면 한쪽을 지우는 변이가 동등 변이가 된다 (task 7.5.23).\n            in_body = True', '        elif hunk(line):\n            # 파일의 **첫** 훅이다. 이름 둘은 이 앞에서 이미 정해졌고 본문에서는 안 바뀌므로\n            # (7.5.2.4), 본문을 냈다는 표시는 여기 한 번이면 된다 — 뒤의 훅은 같은 이름을 다시\n            # 넣을 뿐이다. 두 자리에 두면 한쪽을 지우는 변이가 동등 변이가 된다 (task 7.5.23).\n            in_body = False')],
+        ('        elif hunk(line):\n            # 파일의 **첫** 훅이다. 본문을 냈다는 표시는 여기 한 번이면 된다 — 뒤의 훅은 같은\n            # 구역에 속하므로 더 말할 것이 없다 (task 7.5.23).\n            in_body = True', '        elif hunk(line):\n            # 파일의 **첫** 훅이다. 본문을 냈다는 표시는 여기 한 번이면 된다 — 뒤의 훅은 같은\n            # 구역에 속하므로 더 말할 것이 없다 (task 7.5.23).\n            in_body = False')],
     "AB3_a_new_file_does_not_close_the_body": [
         ('            new_source = ""\n            in_body = False', '            new_source = ""')],
     "AB4_only_the_first_hunk_of_a_file_counts": [
@@ -450,10 +450,21 @@ MUTATIONS = {
         ('            "--no-ext-diff",\n            "--no-textconv",\n',
          '            "--no-textconv",\n')],
     "AD3_a_vanished_body_is_no_change": [
-        ('        if not bodied.intersection(names):', '        if False:')],
+        ('        if not had_body:', '        if False:')],
     "AD4_a_mode_only_file_must_have_a_body": [
         ('        if added in (b"-", b"0") and deleted in (b"-", b"0"):',
          '        if added == b"-" and deleted == b"-":')],
+    # --- task 7.5.24: 짝은 이름이 아니라 순서로 ---
+    "AE1_the_skip_takes_either_zero": [
+        ('        if added in (b"-", b"0") and deleted in (b"-", b"0"):',
+         '        if added in (b"-", b"0") or deleted in (b"-", b"0"):')],
+    "AE2_the_two_views_need_not_agree_in_size": [
+        ('    if len(bodied) != len(records):', '    if False:')],
+    "AE3_a_section_is_marked_before_its_hunk": [
+        ('            bodied.append(False)', '            bodied.append(True)')],
+    "AE4_only_the_last_section_can_have_a_body": [
+        ('            if bodied:\n                bodied[-1] = True',
+         '            pass')],
     "AD6_the_guard_ignores_renames": [
         ('"--no-ext-diff", "--no-textconv", "--find-renames",',
          '"--no-ext-diff", "--no-textconv",')],
