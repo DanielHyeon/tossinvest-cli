@@ -36,6 +36,19 @@
 실측: 깃발을 지우면 `RuntimeError: git reported content changes but emitted no diff body for x.go`.
 7.5.22 까지 그 둘은 **지워도 313 시험이 전부 초록**인 공짜 삭제였다.
 
+## 7.5.27 — 워킹트리를 다시 쓰는 알려진 문
+
+시험은 `TheWorktreeIsNotRewrittenUnderTheGate`(워킹트리 대상, 진짜 git).
+
+| 갈래 | 소스 | 시험 |
+|---|---|---|
+| 가드도 고정을 받는다 | `_safe_changed_go_paths(root, base, target, pins)` · argv 의 `*(pins or [])` | `…a_clean_filter_does_not_hide_a_worktree_edit`(한쪽만 고정하면 두 시야가 갈려 거절) + 구조 `…both_git_calls_see_the_same_files` |
+| fsmonitor 고정 | `_git_view_pins` 의 `core.fsmonitor=false` | `…a_lying_fsmonitor_does_not_hide_a_worktree_edit` |
+| 필터 `clean` · `process` · `required` | `_git_view_pins` 의 드라이버 고리 | `…clean_filter…` · `…process_filter…`(진짜 v2 프로토콜) · `…required_filter_with_a_dotted_name…` |
+| 인덱스 플래그 (참) | 판정 끝의 `if not target:` → `_hidden_by_index_flags` | `…an_index_flag_that_hides_an_edit_is_refused_by_name`(subTest 둘) |
+| 인덱스 플래그 (경계) | 해시 대조 · 파일 없음 건너뛰기 | `…an_index_flag_that_hides_nothing_is_not_refused` |
+| 커밋 대상은 안 묻는다 | `if not target:` 의 거짓 갈래 | `…a_commit_target_does_not_read_the_worktree` |
+
 ## 픽스처가 허구가 아님을 먼저 못 박는다
 
 양성 대조군 둘 — `…git_really_suppresses_the_body_for_a_binary_marked_go_file`(`Binary files` 가 나오고

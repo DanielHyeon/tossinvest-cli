@@ -465,6 +465,37 @@ MUTATIONS = {
     "AE4_only_the_last_section_can_have_a_body": [
         ('            if bodied:\n                bodied[-1] = True',
          '            pass')],
+    # --- task 7.5.27: 워킹트리를 다시 쓰는 문을 명령줄에서 닫는다 ---
+    "AF1_the_fsmonitor_is_trusted": [
+        ('    pins = ["-c", "core.fsmonitor=false"]', '    pins = []')],
+    "AF2_filters_keep_their_clean": [
+        ('        pins += ["-c", f"filter.{driver}.clean=", "-c", f"filter.{driver}.process=",',
+         '        pins += ["-c", f"filter.{driver}.process=",')],
+    "AF3_filters_keep_their_process": [
+        ('        pins += ["-c", f"filter.{driver}.clean=", "-c", f"filter.{driver}.process=",',
+         '        pins += ["-c", f"filter.{driver}.clean=",')],
+    "AF4_a_required_filter_stays_required": [
+        ('                 "-c", f"filter.{driver}.required=false"]', '                 ]')],
+    "AF5_the_driver_name_loses_its_dots": [
+        ('        drivers.add(name[len("filter."):].rsplit(".", 1)[0])',
+         '        drivers.add(name.split(".")[1])')],
+    "AF6_the_guard_is_not_pinned": [
+        ('    records = _safe_changed_go_paths(root, base, target, pins)',
+         '    records = _safe_changed_go_paths(root, base, target)')],
+    "AF7_the_index_is_not_asked": [
+        ('    if not target:\n        hidden = _hidden_by_index_flags(root, pins)',
+         '    if False:\n        hidden = _hidden_by_index_flags(root, pins)')],
+    "AF8_a_flag_alone_is_refused": [
+        ('    return [path for (path, oid), digest in zip(flagged, digests) if digest != oid]',
+         '    return [path for (path, oid), digest in zip(flagged, digests)]')],
+    "AF9_a_missing_flagged_file_is_hashed": [
+        ('        if (root / path).is_file():', '        if True:')],
+    "AF10_assume_unchanged_is_not_a_flag": [
+        ('        if not (tag == b"S" or tag.islower()) or mode not in (b"100644", b"100755"):',
+         '        if not (tag == b"S") or mode not in (b"100644", b"100755"):')],
+    "AF11_a_commit_target_asks_the_index": [
+        ('    if not target:\n        hidden = _hidden_by_index_flags(root, pins)',
+         '    if True:\n        hidden = _hidden_by_index_flags(root, pins)')],
     "AD6_the_guard_ignores_renames": [
         ('"--no-ext-diff", "--no-textconv", "--find-renames",',
          '"--no-ext-diff", "--no-textconv",')],

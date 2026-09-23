@@ -1514,6 +1514,41 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       실물 `main()` A/B **126/126 SAME · DIFFERENT 0**(계수 불변: git 20,365 → 20,365 ·
       `ast.json` 읽기 9,072 → 9,072) · `lint` rc 0 · `sdd-test` rc 0(logic-map **404**) ·
       `test-seams` rc 0(**108 패키지**) · `openspec` 58/58 · a122 게이트 rc 0 · 좌표 게이트 rc 0.
+- [x] 7.5.27 **P0 — 워킹트리를 다시 쓰는 알려진 문을 명령줄에서 닫는다 (7.5.25 의 싼 막기, 사람이 선택지 2 를 골랐다 2026-09-23).**
+      7.5.25 의 **class**(git 의 투영을 안 믿고 판정 바이트를 직접 대조)는 그대로 열려 있다 — 이것은
+      **알려진 문**을 닫는다. 실측으로 문을 셌다(진짜 git): `filter.<드라이버>.clean` · 진짜 v2 프로토콜을
+      말하는 `filter.<드라이버>.process` · 거짓말하는 `core.fsmonitor` 는 편집을 **두 시야 모두**에서 감추고
+      명령줄 `-c` 고정으로 되돌아온다. `assume-unchanged`(`ls-files -v` 의 소문자) · `skip-worktree`(`S`)
+      는 설정이 아니라 인덱스 플래그라 고정으로 안 닫힌다. `core.checkStat=minimal` + `trustctime=false` +
+      mtime·크기 되돌리기는 **재현되지 않았다**(git 이 잡았다) — 고정을 안 넣었다(YAGNI).
+      **측정 오류 하나를 스스로 찾았다**: 첫 전수에서 process 필터를 "감췄다" 로 읽었는데, 프로토콜을
+      안 지키는 스크립트라 **git 이 rc 128 로 죽은 것**이었다(rc 를 안 봤다). 진짜 v2 프로토콜 필터로 다시
+      재서 감추는 것을 확인했고, 시험 픽스처도 그 필터를 쓴다.
+      **닫음(2026-09-23). 생산 Go 변경 0.** 수리 둘: (1) `_git_view_pins` 가 판정의 **두** `git diff` 에 같은
+      고정을 준다 — `core.fsmonitor=false`, 그리고 설정된 **모든** 필터 드라이버의 `clean=`·`process=`·
+      `required=false`(`clean` 만 비우면 `required=true` 드라이버에서 git 이 rc 128 로 죽는다 · 드라이버
+      이름에 점이 들어갈 수 있어 키의 **마지막** 칸만 뗀다 · 이름에 `=`·공백이 있으면 `-c` 로 못 적으니
+      거절). (2) `_hidden_by_index_flags` 가 워킹트리 대상에서 플래그 붙은 `*.go` 를 **같은 고정으로 해시**해
+      인덱스 blob 과 다를 때만 이름 대고 거절한다 — sparse-checkout 도 `skip-worktree` 를 쓰므로 플래그만으로는
+      안 거절한다(플래그만·편집 없음, 파일 없음(sparse 모양), 커밋 대상 셋이 경계 시험이다). 가장 뒤에 선다.
+      **실물 게이트 영수증**(`analysis/harness/7527_switch.py`, 격리 worktree · 설정은 **환경 변수로만** 주입해
+      공유 `.git/config` 에 아무것도 안 쓴다): a112 는 평소 판정 줄 **36** · required **64**. 추적 안 된
+      `.gitattributes` 한 줄 + clean 필터 설정 하나면 편집 전 판본이 **판정 줄 0 · required 1 · `evidence complete`**,
+      편집 후는 **36 · 64 그대로**(거절이 아니라 올바른 판정이다).
+      **새 거절이 오늘 거절하는 정상 입력 0** — 추적 `*.go` 1,762 전부 플래그 없음(`H`) · 필터 드라이버 0 ·
+      fsmonitor 없음 · sparse 꺼짐. **거절·변경 가능한 집합도 적는다**(7.5.24 의 교훈): `*.go` 에 **정상적인**
+      clean 필터를 쓰는 저장소(git-lfs · git-crypt)는 중화 때문에 워킹트리가 raw 바이트로 비교된다 — 판정이
+      달라지거나(lfs 포인터 대 실제 내용) base 파싱이 실패해 거절된다(git-crypt). 드라이버 이름에 `=`·공백이
+      있으면 거절한다. 오늘 노출 0.
+      변이에서 git 의 **우연** 하나: `process=` 하나만 비워도 clean 필터가 꺼져서(빈 process 가 시작에 실패하고
+      `required=false` 라 통과) `clean=` 을 빼는 변이 `AF2` 가 살아남았다 — 동등이라 적지 않고 반환값을 직접 재는
+      **계약 시험**으로 못 박았다. 옛 mock 시험 셋이 새 git 호출에서 먼저 실패를 받아 이름과 다른 이유로 통과할
+      뻔한 것도 새 헬퍼를 고정해 막았다.
+      증거: 시험 329 → **339** · 변이 `113:130` **19/19** + `AF1~AF11` 재실행 **11/11**(총 143 · 생존 0 ·
+      대조군 양끝 GREEN) · `lint` rc 0 · `sdd-test` rc 0(logic-map **414**) · `test-seams` rc 0(**108 패키지**) ·
+      `openspec validate --all --strict` 58/58 · a122 게이트 rc 0 · 좌표 게이트 rc 0 · 실물 `main()` A/B
+      **126/126 SAME · DIFFERENT 0** — git 호출은 20,365 → **20,596(+231, +1.1%)**, 판정마다 설정 읽기와
+      (워킹트리 대상이면) 인덱스 조회가 한 번씩 붙는다.
 - [ ] 7.5.26 **P2 — 파서가 `a/`·`b/` 접두사를 글자로 믿는다 (7.5.23 재리뷰 2026-09-23, 적대).**
       `changed_existing_functions` 가 `--- a/<이름>` 에서 `removeprefix("a/")` 로 이름을 정한다.
       `diff.noprefix=true` 면 헤더가 `--- <이름>` 이라 무해하지만, 경로가 **정말** `a/`·`b/` 로
@@ -1534,6 +1569,9 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       직접 대조해야 한다(base blob 대 `go_functions` 가 읽는 워킹트리 바이트, 또는 판정 `git diff` 를
       `-c filter.<x>.clean=` 로 중화). 둘 다 이 change 밖의 판정을 바꿀 수 있고 비용도 다르다 —
       규칙 변경이라 7.5.4 · 7.5.6 · 7.5.7 과 같은 줄에 둔다.
+      (2026-09-23: 사람이 **싼 막기**(선택지 2)를 골랐고 7.5.27 이 알려진 문 다섯을 닫았다 — clean·process
+      필터 · fsmonitor · assume-unchanged · skip-worktree. **class 는 이 task 에 그대로 남는다**: 아직 모르는
+      워킹트리 재작성 문은 여전히 두 시야를 함께 속일 수 있다.)
 - [ ] 7.5.4 **P0(앞 로트 전부터) — `ast.json` 의 구조가 소스에서 다시 유도되지 않는다 (7.5.2.1 재리뷰, 보안 전문가
       재현).** 게이트가 `ast.json` 을 소스에 묶는 것은 **파일 전체의 sha256** 하나다. 분기 · 반환 · 호출 · 시작/끝 ·
       서명은 저자가 적은 그대로 믿는다 — 분기 셋인 함수의 `ast.json` 에 `branches: null` 을 적고 B1 한 줄로 5단계가

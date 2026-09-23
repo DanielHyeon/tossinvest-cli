@@ -83,3 +83,9 @@
 관련: [[a-fingerprint-must-be-the-bytes-judged]] · [[universal-check-passes-on-an-empty-sample]] ·
 [[fail-closed-must-name-what-it-rejects]] · [[a-new-guard-unpins-the-guards-behind-it]] ·
 [[correction-unit-must-be-the-value]] · [[a-measurement-carries-its-moment]].
+
+## task 7.5.27 — 가드도 판정과 같은 고정을 받는다
+
+인자 `pins` 가 하나 늘었고 `git` 바로 뒤에 펼친다(`*(pins or [])`). 가드와 판정이 같은 시야를 봐야 7.5.23 의
+교차 검사가 성립한다 — 가드만 고정이 없으면 clean 필터 아래에서 가드는 레코드를 **안** 내고 판정은 내서
+크기가 갈려 거절된다(행동 시험이 잡는다). 분기 수는 그대로다(`ast.after-7.5.27.json`).

@@ -93,3 +93,11 @@
 이름을 안 비교하므로 git 의 인용과 `removeprefix` 의 유도가 판정에 안 섞인다.
 
 편집 후 `ast.after-7.5.24.json`: 분기 42 · raise 4 → **5**(크기 어긋남 거절이 하나 늘었다).
+
+## task 7.5.27 — 워킹트리를 다시 쓰는 알려진 문 (2026-09-23)
+
+두 git 호출 앞에서 `_git_view_pins(root)` 를 **한 번** 계산해 가드와 판정에 **같이** 준다
+(`core.fsmonitor=false` · 모든 필터 드라이버의 `clean=`·`process=`·`required=false`). 그리고 워킹트리
+대상이면 **가장 뒤에서** `_hidden_by_index_flags` 를 물어, `assume-unchanged`·`skip-worktree` 로 편집을
+감춘 `*.go` 를 이름 대고 거절한다. 이 둘은 교차 검사가 원리상 못 보는 모양 — 두 시야가 **함께** 거짓말하는
+모양 — 이다. class(판정 바이트를 git 의 투영 없이 대조)는 사람 결정 7.5.25 로 남는다.

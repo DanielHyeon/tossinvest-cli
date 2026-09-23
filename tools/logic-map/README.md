@@ -156,6 +156,17 @@ sha 로 한 번 풀고, 증거 디렉터리를 한 번 읽고, 그 뒤의 역사
 맞춰 본다**: numstat 이 내용이 바뀌었다고 한 파일이 훅을 하나도 안 냈으면 거절한다. 문을 하나씩
 세는 대신 **어긋남**을 보므로 `--no-ext-diff`·`--no-textconv` 가 사라져도 런타임에 잡힌다.
 
+**그리고 워킹트리를 다시 쓰는 문은 두 시야를 **함께** 속인다 (7.5.27).** 게이트의 기본 대상은 워킹트리다.
+`filter.<드라이버>.clean`·`.process` 는 편집을 base 의 바이트로 바꾸고, 거짓말하는 `core.fsmonitor` 는
+git 이 파일을 보지도 않게 한다 — `--numstat` 도 판정 diff 도 아무것도 안 내므로 위의 교차 검사가 원리상
+못 본다(실물 게이트에서 판정 줄 36 → 0). 그래서 판정의 두 `git diff` 가 **같은 명령줄 고정**을 받는다:
+`core.fsmonitor=false`, 설정된 모든 필터 드라이버의 `clean=`·`process=`·`required=false`.
+`assume-unchanged`·`skip-worktree` 인덱스 플래그는 설정이 아니라 고정으로 안 닫히므로, 플래그 붙은
+`*.go` 를 같은 고정으로 해시해 인덱스와 **다를 때만** 이름 대고 거절한다(sparse-checkout 도 `skip-worktree`
+를 쓰므로 플래그만으로는 안 거절한다). **이것은 알려진 문이다** — 판정 바이트를 git 의 투영 없이 직접 대조하는
+근본은 사람 결정(a122 7.5.25)으로 남아 있다. 그리고 `*.go` 에 **정상적인** clean 필터(git-lfs · git-crypt)를
+쓰는 저장소에서는 중화 때문에 판정이 raw 바이트로 바뀐다(오늘 노출 0).
+
 ## a063 execution-baseline adoption exception
 
 `execution_baseline.py`는 일반적인 baseline 재설정 도구가 아니다. a063의 고정된

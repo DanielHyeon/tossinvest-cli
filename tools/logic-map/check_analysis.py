@@ -104,6 +104,85 @@ def base_file(root: Path, base: str, source: str) -> Path | None:
     return path
 
 
+def _git_view_pins(root: Path) -> list[str]:
+    """판정의 `git diff` 둘이 쓸 **명령줄 고정** (task 7.5.27). 설정으로 여는 문을 끈다.
+
+    워킹트리 대상(게이트의 기본 모드)에서 git 은 비교하기 전에 워킹트리 바이트를 **다시 쓸 수 있다**.
+    `filter.<드라이버>.clean`·`.process` 는 편집을 base 의 바이트로 바꿔서 `--numstat` 이 레코드를 아예
+    안 내고, 거짓말하는 `core.fsmonitor` 는 git 이 파일을 보지도 않게 한다 — 두 시야가 **함께** 거짓말하므로
+    7.5.23 의 교차 검사가 원리상 못 본다(실측: 편집이 디스크에 있는데 `required` 가 빈다).
+
+    그래서 설정된 **모든** 필터 드라이버의 `clean`·`process` 를 비우고 `required=false` 로 둔다 — `clean` 만
+    비우면 `required=true` 드라이버에서 git 이 죽는다(rc 128, 실측). 드라이버 이름에는 점이 들어갈 수 있으므로
+    키의 **마지막** 칸만 뗀다. 이름에 `=` 이나 공백이 있으면 `-c` 로 정확히 못 적으므로 거절한다.
+
+    이것은 **알려진 문**을 닫는다. 판정하는 바이트를 git 의 투영 없이 직접 대조하는 것은 사람 결정 7.5.25 다.
+    """
+    process = subprocess.run(
+        ["git", "config", "-z", "--name-only", "--get-regexp", r"^filter\."],
+        cwd=root, capture_output=True, timeout=10, check=False,
+    )
+    if process.returncode not in (0, 1):          # 1 = 맞는 키가 없다
+        raise RuntimeError(_first_line(process.stderr.decode("utf-8", "replace"), "git config failed"))
+    pins = ["-c", "core.fsmonitor=false"]
+    drivers: set[str] = set()
+    for raw in process.stdout.split(b"\0"):
+        name = raw.decode("utf-8", "replace")
+        if not name.startswith("filter.") or name.count(".") < 2:
+            continue
+        drivers.add(name[len("filter."):].rsplit(".", 1)[0])
+    for driver in sorted(drivers):
+        if "=" in driver or any(ch.isspace() for ch in driver):
+            raise RuntimeError(f"git filter driver {driver!r} cannot be neutralized on the command line")
+        pins += ["-c", f"filter.{driver}.clean=", "-c", f"filter.{driver}.process=",
+                 "-c", f"filter.{driver}.required=false"]
+    return pins
+
+
+def _hidden_by_index_flags(root: Path, pins: list[str]) -> list[str]:
+    """`assume-unchanged`·`skip-worktree` 로 **편집을 감춘** `*.go` 경로 (task 7.5.27, 워킹트리 대상만).
+
+    두 플래그는 git 이 그 파일을 보지 않게 한다 — 편집이 디스크에 있어도 `git diff` 가 아무것도 안 낸다.
+    그런데 sparse-checkout 도 `skip-worktree` 를 쓰므로 **플래그만으로는 거절하지 않는다**: 파일이 디스크에
+    있고, 판정과 같은 고정(`pins`)으로 해시한 바이트가 인덱스의 blob 과 **다를 때만** 감춘 것이다.
+    플래그만 있고 편집이 없거나 파일이 없으면(sparse 모양) 정상 입력이다.
+    """
+    process = subprocess.run(
+        ["git", "ls-files", "-v", "-s", "-z", "--", "*.go"],
+        cwd=root, capture_output=True, timeout=30, check=False,
+    )
+    if process.returncode:
+        raise RuntimeError(_first_line(process.stderr.decode("utf-8", "replace"), "git ls-files failed"))
+    flagged: list[tuple[str, str]] = []
+    for entry in process.stdout.split(b"\0"):
+        if not entry:
+            continue
+        head, _, raw_path = entry.partition(b"\t")
+        fields = head.split()
+        if len(fields) != 4:
+            raise RuntimeError("cannot read git ls-files -v -s record")
+        tag, mode, oid, _ = fields
+        # `-v` 는 assume-unchanged 를 **소문자**로, skip-worktree 를 `S` 로 적는다.
+        if not (tag == b"S" or tag.islower()) or mode not in (b"100644", b"100755"):
+            continue
+        path = raw_path.decode("utf-8", "strict")
+        if (root / path).is_file():
+            flagged.append((path, oid.decode("ascii")))
+    if not flagged:
+        return []
+    hashed = subprocess.run(
+        ["git", *pins, "hash-object", "--stdin-paths"],
+        cwd=root, input="".join(f"{path}\n" for path, _ in flagged).encode("utf-8"),
+        capture_output=True, timeout=30, check=False,
+    )
+    if hashed.returncode:
+        raise RuntimeError(_first_line(hashed.stderr.decode("utf-8", "replace"), "git hash-object failed"))
+    digests = hashed.stdout.decode("ascii").split()
+    if len(digests) != len(flagged):
+        raise RuntimeError("git hash-object did not answer for every flagged Go file")
+    return [path for (path, oid), digest in zip(flagged, digests) if digest != oid]
+
+
 def _numstat_records(raw_output: bytes) -> list[tuple[bytes, bytes, list[bytes]]]:
     """`git diff --numstat -z` 의 레코드를 (더함, 지움, 경로들)로 읽는다 (task 7.5.22).
 
@@ -136,7 +215,7 @@ def _numstat_records(raw_output: bytes) -> list[tuple[bytes, bytes, list[bytes]]
 
 
 def _safe_changed_go_paths(
-    root: Path, base: str, target: str
+    root: Path, base: str, target: str, pins: list[str] | None = None
 ) -> list[tuple[bytes, bytes, list[bytes]]]:
     """바뀐 `*.go` 를 **이름**과 **본문 유무** 둘로 거른다.
 
@@ -161,7 +240,7 @@ def _safe_changed_go_paths(
     `--find-renames` 를 여기도 준다 — 판정과 같은 짝을 봐야 대조가 성립한다.
     """
     process = subprocess.run(
-        ["git", "diff", "--no-ext-diff", "--no-textconv", "--find-renames",
+        ["git", *(pins or []), "diff", "--no-ext-diff", "--no-textconv", "--find-renames",
          "--numstat", "-z", base,
          *([target] if target else []), "--", "*.go"],
         cwd=root,
@@ -199,10 +278,13 @@ def changed_existing_functions(
 ) -> dict[tuple[str, str], dict]:
     if not base:
         raise ValueError("Function Logic Map comparison base is required")
-    records = _safe_changed_go_paths(root, base, target)
+    # 두 호출이 **같은 고정**을 쓴다 — 가드와 판정이 같은 시야를 봐야 교차 검사가 성립한다 (task 7.5.27).
+    pins = _git_view_pins(root)
+    records = _safe_changed_go_paths(root, base, target, pins)
     process = subprocess.run(
         [
             "git",
+            *pins,
             "-c",
             "core.quotePath=false",
             "diff",
@@ -358,6 +440,17 @@ def changed_existing_functions(
                 "git reported content changes but emitted no diff body for "
                 + paths[-1].decode("utf-8", "strict")
                 + " — an external diff or textconv filter is hiding it"
+            )
+    # 인덱스 플래그로 감춘 편집은 **두 시야 모두**에서 사라지므로 위 대조가 못 본다 (task 7.5.27).
+    # 워킹트리 대상만이다 — 커밋 대상은 blob 끼리 견주므로 워킹트리의 플래그와 무관하다.
+    # 가장 뒤에 둔다: 앞의 가드들이 먼저 말해야 그 시험들이 남의 가드를 안 잰다.
+    if not target:
+        hidden = _hidden_by_index_flags(root, pins)
+        if hidden:
+            raise RuntimeError(
+                "an index flag (assume-unchanged or skip-worktree) hides an edit to "
+                + ", ".join(hidden)
+                + " — clear the flag with `git update-index --no-assume-unchanged --no-skip-worktree -- <path>`"
             )
     return required
 
