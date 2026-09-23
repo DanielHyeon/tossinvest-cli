@@ -24,3 +24,9 @@
 바뀌지 않은 파일은 인덱스와 같은 해시가 나온다.
 
 시험: 감춘 편집 둘(subTest) · 플래그만 있고 편집 없음 + 파일 없음(경계) · 커밋 대상(경계). 변이 `AF7~AF11`.
+
+## task 7.5.28
+
+행동은 그대로다. 두 갈래가 **시험 없이** 서 있었다(재리뷰가 변이로 드러냈다): 해시에 고정을 주는 것(`AG8` —
+빼면 clean 필터가 해시를 인덱스와 같게 만들어 감춘 편집이 통과한다)과 실행 파일 모드 `100755`(`AG9`).
+시험 `…a_flagged_file_behind_a_filter_is_still_refused` · `…an_executable_flagged_file_is_still_refused`.

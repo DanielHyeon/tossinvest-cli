@@ -467,7 +467,8 @@ MUTATIONS = {
          '            pass')],
     # --- task 7.5.27: 워킹트리를 다시 쓰는 문을 명령줄에서 닫는다 ---
     "AF1_the_fsmonitor_is_trusted": [
-        ('    pins = ["-c", "core.fsmonitor=false"]', '    pins = []')],
+        ('    pins = ["-c", "core.fsmonitor=false", "-c", "core.checkStat=default", "-c", "core.trustctime=true"]',
+         '    pins = ["-c", "core.checkStat=default", "-c", "core.trustctime=true"]')],
     "AF2_filters_keep_their_clean": [
         ('        pins += ["-c", f"filter.{driver}.clean=", "-c", f"filter.{driver}.process=",',
          '        pins += ["-c", f"filter.{driver}.process=",')],
@@ -483,8 +484,8 @@ MUTATIONS = {
         ('    records = _safe_changed_go_paths(root, base, target, pins)',
          '    records = _safe_changed_go_paths(root, base, target)')],
     "AF7_the_index_is_not_asked": [
-        ('    if not target:\n        hidden = _hidden_by_index_flags(root, pins)',
-         '    if False:\n        hidden = _hidden_by_index_flags(root, pins)')],
+        ('        hidden = _hidden_by_index_flags(root, pins)',
+         '        hidden = []')],
     "AF8_a_flag_alone_is_refused": [
         ('    return [path for (path, oid), digest in zip(flagged, digests) if digest != oid]',
          '    return [path for (path, oid), digest in zip(flagged, digests)]')],
@@ -494,8 +495,32 @@ MUTATIONS = {
         ('        if not (tag == b"S" or tag.islower()) or mode not in (b"100644", b"100755"):',
          '        if not (tag == b"S") or mode not in (b"100644", b"100755"):')],
     "AF11_a_commit_target_asks_the_index": [
-        ('    if not target:\n        hidden = _hidden_by_index_flags(root, pins)',
-         '    if True:\n        hidden = _hidden_by_index_flags(root, pins)')],
+        ('    if not target:\n        rewritten = _ident_go_paths(root)',
+         '    if True:\n        rewritten = _ident_go_paths(root)')],
+    # --- task 7.5.28: 줄 경계 · stat 캐시 · ident · 머리 줄의 탭 ---
+    "AG1_the_diff_splits_on_every_line_break": [
+        ('    diff_lines = process.stdout.decode("utf-8", "strict").split("\\n")',
+         '    diff_lines = process.stdout.decode("utf-8", "strict").splitlines()')],
+    "AG2_the_stat_check_is_trusted": [
+        ('    pins = ["-c", "core.fsmonitor=false", "-c", "core.checkStat=default", "-c", "core.trustctime=true"]',
+         '    pins = ["-c", "core.fsmonitor=false"]')],
+    "AG3_ident_is_not_asked": [
+        ('        rewritten = _ident_go_paths(root)', '        rewritten = []')],
+    "AG4_an_unset_ident_counts": [
+        ('            if fields[at + 2] not in (b"unspecified", b"unset")]',
+         '            if fields[at + 2] != b"unspecified"]')],
+    "AG5_a_set_ident_is_ignored": [
+        ('            if fields[at + 2] not in (b"unspecified", b"unset")]',
+         '            if fields[at + 2] not in (b"unspecified", b"unset", b"set")]')],
+    "AG6_the_header_keeps_its_tab": [
+        ('    return value[:-1] if value.endswith("\\t") else value', '    return value')],
+    "AG7_a_space_in_a_driver_is_refused": [
+        ('        if "=" in driver:', '        if "=" in driver or " " in driver:')],
+    "AG8_the_flag_hash_is_not_pinned": [
+        ('        ["git", *pins, "hash-object", "--stdin-paths"],', '        ["git", "hash-object", "--stdin-paths"],')],
+    "AG9_an_executable_flagged_file_is_skipped": [
+        ('        if not (tag == b"S" or tag.islower()) or mode not in (b"100644", b"100755"):',
+         '        if not (tag == b"S" or tag.islower()) or mode not in (b"100644",):')],
     "AD6_the_guard_ignores_renames": [
         ('"--no-ext-diff", "--no-textconv", "--find-renames",',
          '"--no-ext-diff", "--no-textconv",')],

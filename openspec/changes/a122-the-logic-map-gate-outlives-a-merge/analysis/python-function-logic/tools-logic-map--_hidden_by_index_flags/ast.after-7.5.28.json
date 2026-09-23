@@ -1,0 +1,244 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "4de485020dd0e128645b283a03d95c4b30378f96",
+  "source_sha256": "90b232ab9efd6f522ac52592c7232fe20ce8df0c72e94d07d5d4104d1b34d78d",
+  "function": "_hidden_by_index_flags",
+  "signature": "_hidden_by_index_flags(root, pins)",
+  "start": {
+    "line": 191,
+    "column": 1
+  },
+  "end": {
+    "line": 232,
+    "column": 84
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 203,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B2",
+      "kind": "For",
+      "line": 206,
+      "inherited_line": false,
+      "source": "for entry in process.stdout.split(b'\\x00'):"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 207,
+      "inherited_line": false,
+      "source": "if not entry:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 211,
+      "inherited_line": false,
+      "source": "if len(fields) != 4:"
+    },
+    {
+      "id": "B5",
+      "kind": "BoolOp",
+      "line": 215,
+      "inherited_line": false,
+      "source": "not (tag == b'S' or tag.islower()) or mode not in (b'100644', b'100755')"
+    },
+    {
+      "id": "B6",
+      "kind": "BoolOp",
+      "line": 215,
+      "inherited_line": false,
+      "source": "tag == b'S' or tag.islower()"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 215,
+      "inherited_line": false,
+      "source": "if not (tag == b'S' or tag.islower()) or mode not in (b'100644', b'100755'):"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 218,
+      "inherited_line": false,
+      "source": "if (root / path).is_file():"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 220,
+      "inherited_line": false,
+      "source": "if not flagged:"
+    },
+    {
+      "id": "B10",
+      "kind": "comprehension",
+      "line": 224,
+      "inherited_line": true,
+      "source": " for path, _ in flagged"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 227,
+      "inherited_line": false,
+      "source": "if hashed.returncode:"
+    },
+    {
+      "id": "B12",
+      "kind": "If",
+      "line": 230,
+      "inherited_line": false,
+      "source": "if len(digests) != len(flagged):"
+    },
+    {
+      "id": "B13",
+      "kind": "comprehension",
+      "line": 232,
+      "inherited_line": true,
+      "source": " for (path, oid), digest in zip(flagged, digests) if digest != oid"
+    }
+  ],
+  "returns": [
+    {
+      "line": 221,
+      "value": "[]"
+    },
+    {
+      "line": 232,
+      "value": "[path for (path, oid), digest in zip(flagged, digests) if digest != oid]"
+    }
+  ],
+  "raises": [
+    {
+      "line": 204,
+      "source": "raise RuntimeError(_first_line(process.stderr.decode('utf-8', 'replace'), 'git ls-files failed'))"
+    },
+    {
+      "line": 212,
+      "source": "raise RuntimeError('cannot read git ls-files -v -s record')"
+    },
+    {
+      "line": 228,
+      "source": "raise RuntimeError(_first_line(hashed.stderr.decode('utf-8', 'replace'), 'git hash-object failed'))"
+    },
+    {
+      "line": 231,
+      "source": "raise RuntimeError('git hash-object did not answer for every flagged Go file')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 199,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 204,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 204,
+      "callee": "_first_line"
+    },
+    {
+      "line": 204,
+      "callee": "process.stderr.decode"
+    },
+    {
+      "line": 206,
+      "callee": "process.stdout.split"
+    },
+    {
+      "line": 209,
+      "callee": "entry.partition"
+    },
+    {
+      "line": 210,
+      "callee": "head.split"
+    },
+    {
+      "line": 211,
+      "callee": "len"
+    },
+    {
+      "line": 212,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 215,
+      "callee": "tag.islower"
+    },
+    {
+      "line": 217,
+      "callee": "raw_path.decode"
+    },
+    {
+      "line": 218,
+      "callee": "(root / path).is_file"
+    },
+    {
+      "line": 219,
+      "callee": "flagged.append"
+    },
+    {
+      "line": 219,
+      "callee": "oid.decode"
+    },
+    {
+      "line": 222,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 224,
+      "callee": "''.join"
+    },
+    {
+      "line": 224,
+      "callee": "''.join((f'{path}\\n' for path, _ in flagged)).encode"
+    },
+    {
+      "line": 228,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 228,
+      "callee": "_first_line"
+    },
+    {
+      "line": 228,
+      "callee": "hashed.stderr.decode"
+    },
+    {
+      "line": 229,
+      "callee": "hashed.stdout.decode('ascii').split"
+    },
+    {
+      "line": 229,
+      "callee": "hashed.stdout.decode"
+    },
+    {
+      "line": 230,
+      "callee": "len"
+    },
+    {
+      "line": 230,
+      "callee": "len"
+    },
+    {
+      "line": 231,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 232,
+      "callee": "zip"
+    }
+  ]
+}

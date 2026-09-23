@@ -24,7 +24,7 @@
 | 판정 diff 의 `--no-textconv` | 판정 `git diff` 의 인자 | `…a_textconv_filter_does_not_empty_the_requirement` |
 | 판정 diff 의 `--no-ext-diff` | 같은 자리 | `…an_external_diff_command_does_not_empty_the_requirement` |
 | 교차 검사 (참) | `if not had_body:` | `…a_vanished_body_is_refused_rather_than_counted_as_no_change` |
-| 두 시야의 **크기** | `if len(bodied) != len(records):` | 위 시험 + `…a_textconv_filter_does_not_empty_the_requirement`(깃발을 지우면 이쪽이 먼저 잡는다) |
+| 두 시야의 **크기** | `if len(bodied) != len(records):` | `…a_judged_diff_that_lists_fewer_files_is_refused` — 그 **하나만** 이 갈래를 못 박는다(7.5.28 정정: 앞 판본은 다른 두 시험을 댔는데 검사를 지워도 둘 다 초록이었다) |
 | 건너뛰기 조건의 `and` | `if added in (b"-", b"0") and deleted in (b"-", b"0"):` | `…an_append_only_change_that_lost_its_body_is_still_refused`(`N`/`0` · `0`/`N` 양쪽) |
 | 이름이 아니라 **순서**로 짝짓기 | `zip(records, bodied)` | `…a_name_git_has_to_quote_is_not_called_a_vanished_body` |
 | 교차 검사 (거짓) | `if added in (b"-", b"0") and deleted in (b"-", b"0"):` | `…a_mode_only_change_is_not_called_a_vanished_body` — **경계** |
@@ -44,10 +44,21 @@
 |---|---|---|
 | 가드도 고정을 받는다 | `_safe_changed_go_paths(root, base, target, pins)` · argv 의 `*(pins or [])` | `…a_clean_filter_does_not_hide_a_worktree_edit`(한쪽만 고정하면 두 시야가 갈려 거절) + 구조 `…both_git_calls_see_the_same_files` |
 | fsmonitor 고정 | `_git_view_pins` 의 `core.fsmonitor=false` | `…a_lying_fsmonitor_does_not_hide_a_worktree_edit` |
-| 필터 `clean` · `process` · `required` | `_git_view_pins` 의 드라이버 고리 | `…clean_filter…` · `…process_filter…`(진짜 v2 프로토콜) · `…required_filter_with_a_dotted_name…` |
+| 필터 `clean` · `process` · `required` | `_git_view_pins` 의 드라이버 고리 | **계약** `…every_configured_driver_gets_all_three_pins` 가 셋 각각을 못 박는다 — 행동 시험 `…clean_filter…` · `…process_filter…` · `…required_filter_with_a_dotted_name…` 은 `clean=` 을 빼도 **초록**이다(git 의 우연, 7.5.28 정정) · 거절 갈래는 `…driver_name_that_cannot_be_pinned_is_refused` |
 | 인덱스 플래그 (참) | 판정 끝의 `if not target:` → `_hidden_by_index_flags` | `…an_index_flag_that_hides_an_edit_is_refused_by_name`(subTest 둘) |
 | 인덱스 플래그 (경계) | 해시 대조 · 파일 없음 건너뛰기 | `…an_index_flag_that_hides_nothing_is_not_refused` |
 | 커밋 대상은 안 묻는다 | `if not target:` 의 거짓 갈래 | `…a_commit_target_does_not_read_the_worktree` |
+
+## 7.5.28 — 줄 경계 · stat 캐시 · `ident` · 머리 줄의 탭
+
+| 갈래 | 소스 | 시험 |
+|---|---|---|
+| 판정 diff 를 `\n` 에서만 자름 | `process.stdout.decode("utf-8", "strict").split(…)` | `…a_unicode_line_separator_in_a_path_does_not_split_the_diff`(subTest 셋) · `…a_rename_to_a_name_with_a_line_separator…` |
+| 머리 줄 끝의 탭 | `_header_name` | `…a_name_with_a_space_is_not_refused` |
+| stat 캐시 고정 | `_git_view_pins` 의 `core.checkStat=default` · `core.trustctime=true` | `…a_minimal_stat_check_does_not_hide_a_same_size_edit` |
+| `ident` 거절 | `_ident_go_paths` · 판정 끝의 `rewritten` | `…the_ident_attribute_is_refused_by_name`(`AG3`·`AG5`) · 경계 `…an_explicitly_unset_ident_is_not_refused`(`AG4`) |
+| 드라이버 이름은 `=` 만 거절 | `if "=" in driver:` | `…a_driver_name_with_a_space_is_pinned_not_refused` · `…cannot_be_pinned_is_refused` |
+| 플래그 해시의 고정 · `100755` | `["git", *pins, "hash-object", …]` · 모드 조건 | `…a_flagged_file_behind_a_filter…` · `…an_executable_flagged_file…` |
 
 ## 픽스처가 허구가 아님을 먼저 못 박는다
 

@@ -124,7 +124,10 @@ def _git_view_pins(root: Path) -> list[str]:
     )
     if process.returncode not in (0, 1):          # 1 = 맞는 키가 없다
         raise RuntimeError(_first_line(process.stderr.decode("utf-8", "replace"), "git config failed"))
-    pins = ["-c", "core.fsmonitor=false"]
+    # 7.5.28: `core.checkStat=minimal` 은 크기·mtime 만 보므로 같은 크기로 고치고 mtime 을 되돌리면 git 이
+    # 파일을 안 다시 읽는다(재리뷰 재현 — 7.5.27 은 "재현 안 됨" 이라 적었는데 픽스처가 mtime 을 과거로 안
+    # 돌려 racy-git 창에 걸려 있었다). 기본 검사와 ctime 신뢰를 고정한다.
+    pins = ["-c", "core.fsmonitor=false", "-c", "core.checkStat=default", "-c", "core.trustctime=true"]
     drivers: set[str] = set()
     for raw in process.stdout.split(b"\0"):
         name = raw.decode("utf-8", "replace")
@@ -132,11 +135,57 @@ def _git_view_pins(root: Path) -> list[str]:
             continue
         drivers.add(name[len("filter."):].rsplit(".", 1)[0])
     for driver in sorted(drivers):
-        if "=" in driver or any(ch.isspace() for ch in driver):
+        # `-c name=value` 는 **첫** `=` 에서 가르므로 `=` 가 든 이름만 못 적는다. 공백은 적힌다(명령줄 값이
+        # 이긴다, 실측) — 7.5.27 은 공백도 거절해 정상 입력을 막았다 (task 7.5.28).
+        if "=" in driver:
             raise RuntimeError(f"git filter driver {driver!r} cannot be neutralized on the command line")
         pins += ["-c", f"filter.{driver}.clean=", "-c", f"filter.{driver}.process=",
                  "-c", f"filter.{driver}.required=false"]
     return pins
+
+
+def _header_name(line: str) -> str:
+    """`--- a/x.go` · `+++ b/x.go` 머리 줄의 이름 (task 7.5.28).
+
+    git 은 이름에 **공백이 있으면** 머리 줄 끝에 탭 하나를 붙인다(GNU diff 의 관례). 떼지 않으면
+    `my file.go\\t` 를 base 에서 찾다가 `cannot load existing base file` 로 **거짓 차단**했다 — 이 change
+    이전부터 있던 결함이고 재리뷰가 유니코드 줄 구분자를 재현하다 드러났다. 이름 가드가 `\\t` 든 이름을
+    이미 거절하므로 끝의 탭 하나를 떼는 것은 모호하지 않다.
+    """
+    value = line[4:]
+    return value[:-1] if value.endswith("\t") else value
+
+
+def _ident_go_paths(root: Path) -> list[str]:
+    """`ident` 속성이 켜진 추적 `*.go` 경로 (task 7.5.28, 워킹트리 대상만).
+
+    `ident` 는 `$Id: …$` 를 `$Id$` 로 접은 **뒤에** 비교한다 — 그 안에 넣은 논리 변경이 `--numstat` 에서도
+    판정 diff 에서도 사라진다(두 시야가 함께 거짓말한다, 재리뷰 재현). 속성이라 `-c` 로 못 끄고, 인덱스
+    플래그 검사의 해시도 같은 변환을 거쳐 못 본다. 그래서 켜져 있으면 이름 대고 거절한다 — 오늘 저장소의
+    `.gitattributes` 는 0 개다.
+    """
+    listed = subprocess.run(
+        ["git", "ls-files", "-z", "--", "*.go"],
+        cwd=root, capture_output=True, timeout=30, check=False,
+    )
+    if listed.returncode:
+        raise RuntimeError(_first_line(listed.stderr.decode("utf-8", "replace"), "git ls-files failed"))
+    if not listed.stdout.strip(b"\0"):
+        return []
+    checked = subprocess.run(
+        ["git", "check-attr", "-z", "--stdin", "ident"],
+        cwd=root, input=listed.stdout, capture_output=True, timeout=30, check=False,
+    )
+    if checked.returncode:
+        raise RuntimeError(_first_line(checked.stderr.decode("utf-8", "replace"), "git check-attr failed"))
+    # `-z` 출력은 `경로 \0 속성 \0 값 \0` 이 반복된다.
+    fields = checked.stdout.split(b"\0")
+    if fields and fields[-1] == b"":
+        fields.pop()
+    if len(fields) % 3:
+        raise RuntimeError("cannot read git check-attr output")
+    return [fields[at].decode("utf-8", "strict") for at in range(0, len(fields), 3)
+            if fields[at + 2] not in (b"unspecified", b"unset")]
 
 
 def _hidden_by_index_flags(root: Path, pins: list[str]) -> list[str]:
@@ -303,12 +352,19 @@ def changed_existing_functions(
         ],
         cwd=root,
         capture_output=True,
-        text=True,
         timeout=30,
         check=False,
     )
     if process.returncode:
-        raise RuntimeError(process.stderr.strip() or f"git diff failed for base {base}")
+        raise RuntimeError(
+            process.stderr.decode("utf-8", "replace").strip() or f"git diff failed for base {base}"
+        )
+    # **바이트로 받아 `\n` 에서만 자른다** (task 7.5.28). `text=True` 는 `\r` 을 줄바꿈으로 바꾸고,
+    # `str.splitlines()` 는 U+2028 · U+2029 · U+0085 에서도 자른다 — `core.quotePath=false` 라 git 은 그 글자를
+    # 인용하지 않으므로, 경로에 그 글자가 있으면 `diff --git` 머리가 잘려 뒷조각이 훅으로 읽히고 그 파일의
+    # 요구가 통째로 사라졌다(재리뷰 재현). 통합 diff 의 줄 경계는 `\n` 하나뿐이다. 해독은 엄격하다 —
+    # UTF-8 이 아닌 diff 는 전처럼 결함이다.
+    diff_lines = process.stdout.decode("utf-8", "strict").split("\n")
     required: dict[tuple[str, str], dict] = {}
     # 판정 diff 의 **구역마다** 본문(훅)이 있었는지. numstat 레코드와 **순서로** 짝짓는다 —
     # 이름으로 짝지으면 안 된다 (task 7.5.24): 이 파서가 아는 이름은 `removeprefix` 를 거친
@@ -395,7 +451,7 @@ def changed_existing_functions(
         )
         return True
 
-    for line in process.stdout.splitlines():
+    for line in diff_lines:
         if line.startswith("diff --git "):
             flush()
             old_source = ""
@@ -412,10 +468,10 @@ def changed_existing_functions(
             if bodied:
                 bodied[-1] = True
         elif line.startswith("--- "):
-            value = line[4:]
+            value = _header_name(line)
             old_source = "" if value == "/dev/null" else value.removeprefix("a/")
         elif line.startswith("+++ "):
-            value = line[4:]
+            value = _header_name(line)
             new_source = "" if value == "/dev/null" else value.removeprefix("b/")
     flush()
     # **가드가 센 것과 판정이 읽은 것을 맞춰 본다** (task 7.5.23). numstat 이 내용이 바뀌었다고
@@ -445,6 +501,12 @@ def changed_existing_functions(
     # 워킹트리 대상만이다 — 커밋 대상은 blob 끼리 견주므로 워킹트리의 플래그와 무관하다.
     # 가장 뒤에 둔다: 앞의 가드들이 먼저 말해야 그 시험들이 남의 가드를 안 잰다.
     if not target:
+        rewritten = _ident_go_paths(root)
+        if rewritten:
+            raise RuntimeError(
+                "the ident attribute rewrites " + ", ".join(rewritten)
+                + " before git compares it, which can hide an edit — remove `ident` for *.go"
+            )
         hidden = _hidden_by_index_flags(root, pins)
         if hidden:
             raise RuntimeError(

@@ -1,0 +1,157 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "4de48502",
+  "head_commit": "4de485020dd0e128645b283a03d95c4b30378f96",
+  "source_sha256": "c38eb527216052db3f3a3d8855d67820edabdb7979d496a6eacd2466de151e30",
+  "function": "_git_view_pins",
+  "signature": "_git_view_pins(root)",
+  "start": {
+    "line": 107,
+    "column": 1
+  },
+  "end": {
+    "line": 139,
+    "column": 16
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 125,
+      "inherited_line": false,
+      "source": "if process.returncode not in (0, 1):"
+    },
+    {
+      "id": "B2",
+      "kind": "For",
+      "line": 129,
+      "inherited_line": false,
+      "source": "for raw in process.stdout.split(b'\\x00'):"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 131,
+      "inherited_line": false,
+      "source": "not name.startswith('filter.') or name.count('.') < 2"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 131,
+      "inherited_line": false,
+      "source": "if not name.startswith('filter.') or name.count('.') < 2:"
+    },
+    {
+      "id": "B5",
+      "kind": "For",
+      "line": 134,
+      "inherited_line": false,
+      "source": "for driver in sorted(drivers):"
+    },
+    {
+      "id": "B6",
+      "kind": "BoolOp",
+      "line": 135,
+      "inherited_line": false,
+      "source": "'=' in driver or any((ch.isspace() for ch in driver))"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 135,
+      "inherited_line": false,
+      "source": "if '=' in driver or any((ch.isspace() for ch in driver)):"
+    },
+    {
+      "id": "B8",
+      "kind": "comprehension",
+      "line": 135,
+      "inherited_line": true,
+      "source": " for ch in driver"
+    }
+  ],
+  "returns": [
+    {
+      "line": 139,
+      "value": "pins"
+    }
+  ],
+  "raises": [
+    {
+      "line": 126,
+      "source": "raise RuntimeError(_first_line(process.stderr.decode('utf-8', 'replace'), 'git config failed'))"
+    },
+    {
+      "line": 136,
+      "source": "raise RuntimeError(f'git filter driver {driver!r} cannot be neutralized on the command line')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 121,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 126,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 126,
+      "callee": "_first_line"
+    },
+    {
+      "line": 126,
+      "callee": "process.stderr.decode"
+    },
+    {
+      "line": 128,
+      "callee": "set"
+    },
+    {
+      "line": 129,
+      "callee": "process.stdout.split"
+    },
+    {
+      "line": 130,
+      "callee": "raw.decode"
+    },
+    {
+      "line": 131,
+      "callee": "name.count"
+    },
+    {
+      "line": 131,
+      "callee": "name.startswith"
+    },
+    {
+      "line": 133,
+      "callee": "name[len('filter.'):].rsplit"
+    },
+    {
+      "line": 133,
+      "callee": "drivers.add"
+    },
+    {
+      "line": 133,
+      "callee": "len"
+    },
+    {
+      "line": 134,
+      "callee": "sorted"
+    },
+    {
+      "line": 135,
+      "callee": "any"
+    },
+    {
+      "line": 135,
+      "callee": "ch.isspace"
+    },
+    {
+      "line": 136,
+      "callee": "RuntimeError"
+    }
+  ]
+}

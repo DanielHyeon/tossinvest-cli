@@ -167,6 +167,11 @@ git 이 파일을 보지도 않게 한다 — `--numstat` 도 판정 diff 도 �
 근본은 사람 결정(a122 7.5.25)으로 남아 있다. 그리고 `*.go` 에 **정상적인** clean 필터(git-lfs · git-crypt)를
 쓰는 저장소에서는 중화 때문에 판정이 raw 바이트로 바뀐다(오늘 노출 0).
 
+**7.5.28 이 더한 것**: `core.checkStat=default`·`core.trustctime=true` 고정(같은 크기 편집을 stat 캐시가 감춘다) ·
+내장 속성 `ident` 거절(`$Id: …$` 안의 변경이 사라진다, `-c` 로 못 끈다) · 판정 diff 를 바이트로 받아 **`\n` 에서만**
+자름(`str.splitlines()` 는 U+2028 등에서도 잘라 경로 하나가 diff 를 부쉈다) · 머리 줄 끝에 git 이 붙이는 탭을
+뗌(공백 든 `*.go` 가 거짓 차단됐다).
+
 ## a063 execution-baseline adoption exception
 
 `execution_baseline.py`는 일반적인 baseline 재설정 도구가 아니다. a063의 고정된

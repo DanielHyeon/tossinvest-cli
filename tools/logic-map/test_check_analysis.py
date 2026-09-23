@@ -909,14 +909,14 @@ evidence
         self.assertEqual(check_analysis.branch_ids(text), ["B1", "B1"])
 
     def test_git_diff_failure_is_not_treated_as_empty_change(self) -> None:
-        # 새 git 호출 둘(`_git_view_pins` · `_hidden_by_index_flags`)을 고정한다 (task 7.5.27).
+        # 새 git 호출(`_git_view_pins` · `_hidden_by_index_flags` · `_ident_go_paths`)을 고정한다 (task 7.5.27 · 7.5.28).
         # 안 그러면 `subprocess.run` mock 이 **그 호출**에서 실패를 돌려주고, 이 시험이 판정 diff 가
         # 아니라 설정 읽기의 실패로 통과한다 — 이름과 다른 이유로 초록이 된다.
-        failed = subprocess.CompletedProcess([], 128, "", "bad revision")
+        failed = subprocess.CompletedProcess([], 128, b"", b"bad revision")
         with mock.patch(
             "check_analysis.subprocess.run",
             return_value=failed,
-        ), mock.patch("check_analysis._safe_changed_go_paths", return_value=[(b"1", b"1", [b"internal/x.go"])]), mock.patch("check_analysis._git_view_pins", return_value=[]), mock.patch("check_analysis._hidden_by_index_flags", return_value=[]):
+        ), mock.patch("check_analysis._safe_changed_go_paths", return_value=[(b"1", b"1", [b"internal/x.go"])]), mock.patch("check_analysis._git_view_pins", return_value=[]), mock.patch("check_analysis._hidden_by_index_flags", return_value=[]), mock.patch("check_analysis._ident_go_paths", return_value=[]):
             with self.assertRaises(RuntimeError):
                 check_analysis.changed_existing_functions(Path("/tmp"), "bad")
 
@@ -944,8 +944,8 @@ evidence
                     "+++ b/internal/x.go",
                     "@@ -8,0 +9,3 @@",
                 )
-            ),
-            "",
+            ).encode("utf-8"),
+            b"",
         )
         old_functions = [
             {
@@ -973,7 +973,7 @@ evidence
                 return_value=diff,
             ), mock.patch(
                 "check_analysis._safe_changed_go_paths", return_value=[(b"1", b"1", [b"internal/x.go"])],
-            ), mock.patch("check_analysis._git_view_pins", return_value=[]), mock.patch("check_analysis._hidden_by_index_flags", return_value=[]), mock.patch(
+            ), mock.patch("check_analysis._git_view_pins", return_value=[]), mock.patch("check_analysis._hidden_by_index_flags", return_value=[]), mock.patch("check_analysis._ident_go_paths", return_value=[]), mock.patch(
                 "check_analysis.base_file",
                 return_value=Path(base_source.name),
             ), mock.patch(
@@ -995,8 +995,8 @@ evidence
                     "+++ b/internal/x.go",
                     "@@ -1 +1 @@",
                 )
-            ),
-            "",
+            ).encode("utf-8"),
+            b"",
         )
         missing = subprocess.CompletedProcess([], 128, b"", b"missing")
         with mock.patch(
@@ -1004,7 +1004,7 @@ evidence
             side_effect=(diff, missing),
         ), mock.patch(
             "check_analysis._safe_changed_go_paths", return_value=[(b"1", b"1", [b"internal/x.go"])],
-        ), mock.patch("check_analysis._git_view_pins", return_value=[]), mock.patch("check_analysis._hidden_by_index_flags", return_value=[]):
+        ), mock.patch("check_analysis._git_view_pins", return_value=[]), mock.patch("check_analysis._hidden_by_index_flags", return_value=[]), mock.patch("check_analysis._ident_go_paths", return_value=[]):
             with self.assertRaises(RuntimeError):
                 check_analysis.changed_existing_functions(Path("/tmp"), "base")
 
@@ -7495,6 +7495,33 @@ class TheDiffBodyDoesNotNameTheFileUnderJudgement(unittest.TestCase):
         self.assertIn(("x.go", "F"), required)
         self.assertIn("current_hash", required[("x.go", "F")],
                       "현재 쪽 훅 좌표를 base 쪽으로 읽어 요구가 `revision: base` 로 내려앉았다")
+
+    def test_a_unicode_line_separator_in_a_path_does_not_split_the_diff(self) -> None:
+        """`str.splitlines()` 는 `\\n` 말고도 U+2028 · U+2029 · U+0085 에서 자른다. `core.quotePath=false`
+        라 git 은 그 글자를 인용하지 않고, 이름 가드는 `\\n\\r\\t` 만 거절한다. 그래서 경로
+        `a<U+2028>@@ -1 +1 @@.go` 가 `diff --git` 머리를 둘로 잘라 뒷조각이 **훅**으로 읽히고, 본문이 이름보다
+        먼저 열려 그 파일의 요구가 **통째로** 사라졌다 (task 7.5.28, 적대 재리뷰). 7.5.24 가 짝을 순서로
+        바꾸기 전에는 이 입력이 거절됐다 — 순서 짝짓기가 낸 **회귀**다. Go 는 이 이름을 받는다."""
+        for char in ("\u2028", "\u2029", "\u0085"):
+            with self.subTest(f"U+{ord(char):04X}"):
+                name = f"a{char}@@ -1 +1 @@.go"
+                root, base = self._repo({name: self._file("keep", 1)}, {name: self._file("keep", 2)})
+                self.assertIn((name, "F"), self._required(root, base),
+                              "경로의 유니코드 줄 구분자가 diff 를 잘라 요구가 사라졌다")
+
+    def test_a_name_with_a_space_is_not_refused(self) -> None:
+        """git 은 이름에 공백이 있으면 `---`·`+++` 줄 끝에 **탭**을 붙인다. 그 탭을 이름으로 읽어 base 파일을
+        못 찾고 거짓 차단했다 — 이 change 이전부터 있던 결함이다 (task 7.5.28)."""
+        root, base = self._repo({"my file.go": self._file("keep", 1)}, {"my file.go": self._file("keep", 2)})
+        header = [line for line in self._diff(root, base) if line.startswith("--- ")]
+        self.assertTrue(header and header[0].endswith("\t"), f"git 이 탭을 안 붙였다 — 픽스처 결함: {header}")
+        self.assertIn(("my file.go", "F"), self._required(root, base))
+
+    def test_a_rename_to_a_name_with_a_line_separator_keeps_the_requirement(self) -> None:
+        """base 에 이상한 이름이 없어도 된다 — 평범한 파일을 그 이름으로 옮기고 고치면 같다."""
+        name = "a\u2028@@ -1 +1 @@.go"
+        root, base = self._repo({"a.go": self._file("keep", 1)}, {name: self._file("keep", 2)})
+        self.assertTrue(self._required(root, base), "rename + 편집의 요구가 사라졌다")
 class TheGuardAndTheJudgementReadTheSameDiff(unittest.TestCase):
     """앞단 가드가 세는 것과 판정이 읽는 것이 **다른 투영**이면 가드는 아무것도 못 지킨다 (task 7.5.23).
 
@@ -7614,8 +7641,8 @@ class TheGuardAndTheJudgementReadTheSameDiff(unittest.TestCase):
             outcome = real(argv, *args, **kwargs)
             if "--unified=0" in argv:
                 # git 이 본문을 안 낸 것처럼 만든다 — 헤더는 그대로, 훅만 없다.
-                kept = [line for line in outcome.stdout.splitlines() if not line.startswith("@@")]
-                outcome.stdout = "\n".join(kept) + "\n"
+                kept = [line for line in outcome.stdout.split(b"\n") if not line.startswith(b"@@")]
+                outcome.stdout = b"\n".join(kept)
             return outcome
 
         with mock.patch("check_analysis.subprocess.run", side_effect=body_stripped):
@@ -7634,7 +7661,7 @@ class TheGuardAndTheJudgementReadTheSameDiff(unittest.TestCase):
         def nothing_judged(argv, *args, **kwargs):
             outcome = real(argv, *args, **kwargs)
             if "--unified=0" in argv:
-                outcome.stdout = ""          # git 이 파일을 하나도 안 낸 것처럼
+                outcome.stdout = b""         # git 이 파일을 하나도 안 낸 것처럼
             return outcome
 
         with mock.patch("check_analysis.subprocess.run", side_effect=nothing_judged):
@@ -7662,9 +7689,9 @@ class TheGuardAndTheJudgementReadTheSameDiff(unittest.TestCase):
                 def body_stripped(argv, *args, **kwargs):
                     outcome = real(argv, *args, **kwargs)
                     if "--unified=0" in argv:
-                        kept = [line for line in outcome.stdout.splitlines()
-                                if not line.startswith("@@")]
-                        outcome.stdout = "\n".join(kept) + "\n"
+                        kept = [line for line in outcome.stdout.split(b"\n")
+                                if not line.startswith(b"@@")]
+                        outcome.stdout = b"\n".join(kept)
                     return outcome
 
                 with mock.patch("check_analysis.subprocess.run", side_effect=body_stripped):
@@ -7913,7 +7940,7 @@ while True:
 
     def test_every_configured_driver_gets_all_three_pins(self) -> None:
         """고정의 **계약**을 직접 잰다 (task 7.5.27). git 2.43 에서는 `process=` 하나만 비워도 clean 필터가
-        꺼진다 — 빈 process 가 시작에 실패하고 `required=false` 라 내용을 그대로 통과시키는 **우연**이다.
+        꺼진다 — 빈 `process` 값은 아무것도 띄우지 않고 clean 명령을 끄는 **우연**이다(`GIT_TRACE` 로 확인, 7.5.28 정정).
         그래서 `clean=` 을 빼는 변이가 행동 시험을 전부 통과했다. 그 우연은 git 판본마다 다를 수 있으므로
         기대지 않는다: 설정된 드라이버마다 셋이 **다** 있어야 한다."""
         root, _ = self._repo()
@@ -7946,6 +7973,89 @@ while True:
         (root / "x.go").write_text(self.AFTER, encoding="utf-8")
         self.assertEqual(self._numstat(root, base), "", "fsmonitor 가 편집을 안 감췄다 — 픽스처 결함")
         self.assertIn(("x.go", "Stop"), self._required(root, base))
+
+    def test_a_minimal_stat_check_does_not_hide_a_same_size_edit(self) -> None:
+        """`core.checkStat=minimal` 은 크기·mtime 만 본다. 같은 크기로 고치고 mtime 을 되돌리면 git 이 파일을
+        안 다시 읽는다 — 7.5.27 은 이것을 "재현 안 됨" 이라 적었는데, 그 픽스처는 mtime 을 **과거로** 안 돌려
+        racy-git 창에 걸려 있었다(재리뷰가 재현했다). 과거 시각으로 두면 편집이 감춰진다."""
+        root, base = self._repo()
+        stamp = (1577836800, 1577836800)
+        os.utime(root / "x.go", stamp)
+        self._run(root, "git", "add", "-A")
+        self._run(root, "git", "commit", "-qm", "backdated", "--allow-empty")
+        base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        self._run(root, "git", "config", "core.checkStat", "minimal")
+        # 새 파일을 만들어 **옮겨 놓는다** — 옛 파일이 아직 있을 때 만드므로 inode 가 반드시 다르다.
+        # `unlink` 뒤에 쓰면 inode 가 재사용될 수 있고, 같은 초 안이면 ctime 도 같아서 **기본** stat 검사도
+        # 속는다(설정 없이 20 판 중 17 판 — 이 시험이 흔들린 이유다). 그 구멍은 설정이 아니라 stat 캐시를
+        # 믿는 것 자체라 명령줄 고정으로 못 닫는다 → 사람 결정 7.5.25. 이 시험은 **설정** 문만 잰다.
+        replacement = root / "x.go.new"
+        replacement.write_text(self.AFTER, encoding="utf-8")
+        os.utime(replacement, stamp)
+        before_inode = (root / "x.go").stat().st_ino
+        os.replace(replacement, root / "x.go")
+        self.assertNotEqual((root / "x.go").stat().st_ino, before_inode, "inode 가 안 바뀌었다 — 픽스처 결함")
+        self.assertEqual(self._numstat(root, base), "", "checkStat 가 편집을 안 감췄다 — 픽스처 결함")
+        self.assertIn(("x.go", "Stop"), self._required(root, base))
+
+    def test_the_ident_attribute_is_refused_by_name(self) -> None:
+        """`ident` 는 `$Id: …$` 를 `$Id$` 로 접은 뒤 비교한다 — 그 안에 넣은 논리 변경이 **두 시야 모두**에서
+        사라진다. 속성이라 `-c` 로 못 끈다. 그래서 워킹트리 대상에서 추적 `*.go` 에 `ident` 가 켜져 있으면
+        이름 대고 거절한다 (task 7.5.28, 적대 재리뷰)."""
+        root, base = self._repo()
+        body = self.BEFORE.replace("\treturn 1\n", '\t_ = "$Id$"\n\treturn 1\n')
+        (root / "x.go").write_text(body, encoding="utf-8")
+        self._run(root, "git", "commit", "-qam", "ident anchor")
+        base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        (root / "x.go").write_text(body.replace(
+            '"$Id$"', '"$Id: " + func() string { if true { panic(1) }; return "" }() + "$"'), encoding="utf-8")
+        (root / ".gitattributes").write_text("*.go ident\n", encoding="utf-8")
+        self.assertEqual(self._numstat(root, base), "", "ident 가 편집을 안 감췄다 — 픽스처 결함")
+        with self.assertRaises(RuntimeError) as caught:
+            self._required(root, base)
+        self.assertIn("ident", str(caught.exception))
+        self.assertIn("x.go", str(caught.exception))
+
+    def test_an_explicitly_unset_ident_is_not_refused(self) -> None:
+        """거절의 경계 — `-ident` 는 속성을 **끈다**(`check-attr` 가 `unset` 을 낸다). 켜진 것으로 세면 정상
+        입력을 막는다. 그 갈래를 뒤집는 변이가 시험 전부를 통과했다 (task 7.5.28)."""
+        root, base = self._repo()
+        (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+        (root / ".gitattributes").write_text("*.go -ident\n", encoding="utf-8")
+        said = subprocess.check_output(["git", "check-attr", "ident", "--", "x.go"], cwd=root, text=True)
+        self.assertIn("unset", said, f"픽스처가 unset 을 안 만든다: {said!r}")
+        self.assertIn(("x.go", "Stop"), self._required(root, base))
+
+    def test_a_flagged_file_behind_a_filter_is_still_refused(self) -> None:
+        """플래그 검사의 해시도 **고정**을 받아야 한다. 안 받으면 clean 필터가 해시를 인덱스 blob 과 같게
+        만들어 감춘 편집이 통과한다 — `hash-object` 의 고정을 빼는 변이가 339 시험을 전부 통과했다."""
+        root, base = self._repo()
+        self._run(root, "git", "update-index", "--assume-unchanged", "x.go")
+        (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+        self._hide_with_filter(root, base, "clean")
+        with self.assertRaises(RuntimeError) as caught:
+            self._required(root, base)
+        self.assertIn("hides", str(caught.exception))
+
+    def test_an_executable_flagged_file_is_still_refused(self) -> None:
+        """일반 파일 모드는 둘이다(`100644` · `100755`). 뒤엣것을 빼는 변이가 시험 전부를 통과했다."""
+        root, base = self._repo()
+        (root / "x.go").chmod(0o755)
+        self._run(root, "git", "commit", "-qam", "exec")
+        base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        self._run(root, "git", "update-index", "--skip-worktree", "x.go")
+        (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+        with self.assertRaises(RuntimeError) as caught:
+            self._required(root, base)
+        self.assertIn("x.go", str(caught.exception))
+
+    def test_a_driver_name_with_a_space_is_pinned_not_refused(self) -> None:
+        """7.5.27 은 이름에 공백이 든 드라이버를 거절했는데, `-c 'filter.my drv.clean='` 은 **적힌다**(명령줄
+        값이 이긴다, 재리뷰가 실측). 못 적는 것은 `=` 하나다 — 공백 거절은 정상 입력을 막는 헛거절이었다."""
+        root, _ = self._repo()
+        self._run(root, "git", "config", "filter.my drv.clean", "cat")
+        pins = check_analysis._git_view_pins(root)
+        self.assertIn("filter.my drv.clean=", pins)
 
     def test_an_index_flag_that_hides_an_edit_is_refused_by_name(self) -> None:
         for flag in ("--assume-unchanged", "--skip-worktree"):

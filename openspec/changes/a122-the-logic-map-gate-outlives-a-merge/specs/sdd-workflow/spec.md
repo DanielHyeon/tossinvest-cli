@@ -172,10 +172,16 @@ digest 로 읽어야 한다(SHALL). 다른 id 의 디렉터리에 복사된 이�
   파일 집합을 **대조해야** 하며, 한쪽만 믿어서는 안 된다
 
 #### Scenario: 워킹트리를 비교 전에 다시 쓰는 설정이나 인덱스 플래그가 있을 때
-- **WHEN** 판정 대상이 워킹트리이고, git 설정(필터 드라이버의 clean·process, fsmonitor)이나 인덱스
-  플래그(assume-unchanged, skip-worktree)가 바뀐 Go 파일의 편집을 git 의 비교에서 감추면
+- **WHEN** 판정 대상이 워킹트리이고, git 설정(필터 드라이버의 clean·process, fsmonitor, stat 캐시 검사)이나
+  인덱스 플래그(assume-unchanged, skip-worktree)나 내용을 바꾸는 속성(`ident`)이 바뀐 Go 파일의 편집을 git 의
+  비교에서 감추면
 - **THEN** gate 는 그 설정을 명령줄에서 무력화한 채로 판정하고, 인덱스 플래그가 실제로 편집을 감춘
-  파일은 이름을 대고 거절한다. 플래그만 있고 편집이 없는 파일(sparse-checkout 등)은 거절하지 않는다
+  파일과 `ident` 가 켜진 파일은 이름을 대고 거절한다. 플래그만 있고 편집이 없는 파일(sparse-checkout 등)은
+  거절하지 않는다
+
+#### Scenario: 바뀐 Go 파일의 경로에 공백이나 유니코드 줄 구분자가 있을 때
+- **WHEN** 바뀐 `*.go` 의 경로에 공백이나 U+2028 · U+2029 · U+0085 가 들어 있으면
+- **THEN** gate 는 그 파일의 수정 함수 요구를 그대로 세고, diff 의 줄 경계는 `\n` 하나로만 읽는다
 
 #### Scenario: 실행 기준선 이관 기록이 없는 변경
 - **WHEN** 변경에 execution-baseline 이관 기록이 없으면

@@ -1,0 +1,39 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "4de485020dd0e128645b283a03d95c4b30378f96",
+  "source_sha256": "90b232ab9efd6f522ac52592c7232fe20ce8df0c72e94d07d5d4104d1b34d78d",
+  "function": "_header_name",
+  "signature": "_header_name(line)",
+  "start": {
+    "line": 147,
+    "column": 1
+  },
+  "end": {
+    "line": 156,
+    "column": 57
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "IfExp",
+      "line": 156,
+      "inherited_line": false,
+      "source": "value[:-1] if value.endswith('\\t') else value"
+    }
+  ],
+  "returns": [
+    {
+      "line": 156,
+      "value": "value[:-1] if value.endswith('\\t') else value"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 156,
+      "callee": "value.endswith"
+    }
+  ]
+}

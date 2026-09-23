@@ -25,5 +25,14 @@
 그리고 **정상적인** clean 필터(git-lfs · git-crypt)도 끈다 — 그런 저장소에서는 판정이 raw 바이트로 바뀐다
 (오늘 노출 0).
 
-시험: `TheWorktreeIsNotRewrittenUnderTheGate` 의 clean · process(진짜 v2 프로토콜) · required+점 이름 ·
-fsmonitor 넷. 변이 `AF1~AF5`.
+시험: `TheWorktreeIsNotRewrittenUnderTheGate` 의 **여섯** — 행동 넷(clean · process(진짜 v2 프로토콜) ·
+required+점 이름 · fsmonitor)과 계약 둘(`…every_configured_driver_gets_all_three_pins` ·
+`…driver_name_that_cannot_be_pinned_is_refused`). `clean=` 을 못 박는 것은 **계약 시험 하나뿐**이다 — 행동 시험은
+git 의 우연으로 초록이 된다. 변이 `AF1~AF5`. (7.5.28 정정: 앞 판본은 "넷" 이라 적고 계약 둘을 빠뜨렸다.)
+
+## task 7.5.28
+
+`core.checkStat=default` · `core.trustctime=true` 를 더했다 — `checkStat=minimal` 이 같은 크기 편집을 감춘다
+(7.5.27 의 "재현 안 됨" 은 mtime 을 과거로 안 돌린 픽스처 탓의 **거짓**이었다). 드라이버 이름은 `=` 만 거절한다 —
+공백은 `-c` 로 적힌다(7.5.27 의 공백 거절은 헛거절이었다). 시험: `…minimal_stat_check…` · `…driver_name_with_a_space…`.
+변이 `AG2` · `AG7`.
