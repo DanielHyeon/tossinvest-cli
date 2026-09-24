@@ -29,3 +29,20 @@
 | 몸통 B13~B15 현재 쪽 = 스냅숏 바이트 | `AH4_the_current_side_rereads_the_disk` | `test_the_current_side_is_judged_from_the_snapshot_bytes` |
 
 지운 갈래(편집 전 B43~B45 · raise 6·7)의 변이 `AF7` · `AF11` · `AG3~AG5` 는 하네스에서 뺐다 — 겨눌 코드가 없다.
+
+## task 7.5.34
+
+편집 전 B2(`if target:` — 커밋 대상은 스냅숏 없이)와 그 변이 AH19 는 없어졌다. 커밋 대상이 워킹트리를 안 읽는 것은
+`_isolated_comparison` B11 이 지키고 `test_a_commit_target_does_not_read_the_worktree`(원장 단언)가 본다. 남은 B1(base 필수)은
+7.5.25 의 행 그대로다.
+
+### 몸통 `_changed_existing_functions` — task 7.5.34 (창 `174:187` 재실행 · `143:190`)
+
+| 갈래(편집 후 몸통) | 변이 | 잡는 시험 |
+|---|---|---|
+| 판정 diff 가 격리한 환경에서 돈다 | `AJ49_the_judgement_runs_outside_the_comparison` | 148 시험 |
+| B5 옛 쪽 바이트가 비교에 없다 → 이름 댄 결함 | `AJ50_the_old_side_is_not_checked` | `test_a_deleted_go_gitlink_is_refused_by_name` · `test_base_file_load_failure_is_not_treated_as_new_file` |
+| B13·B14 현재 쪽은 비교의 바이트 | `AJ51_the_current_side_is_empty` | 50 시험 |
+| 훅의 옛 쪽 · 새 쪽 좌표 | `AC5_the_hunk_reads_the_base_side_twice` | `test_the_hunk_keeps_the_new_side_coordinates_apart_from_the_base_side` (창 `143:190`) |
+
+편집 전 B40(git 밖 대조)과 그 변이 AI6 은 없어졌다. 편집 전 AH3 · AH4 가 재던 자리는 AJ49 · AJ51 이 새 코드에서 잰다.

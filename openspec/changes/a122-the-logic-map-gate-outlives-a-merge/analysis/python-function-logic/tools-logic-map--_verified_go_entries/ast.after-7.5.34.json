@@ -1,0 +1,311 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "ff19be0162521627988dc8e09a06297b57e4d35d",
+  "source_sha256": "613a3174efe33c71a7c1f120fc9102d8cbd00e02756b3d2aa8e0eec80b86c359",
+  "function": "_verified_go_entries",
+  "signature": "_verified_go_entries(root, algorithm, commits, hints)",
+  "start": {
+    "line": 199,
+    "column": 1
+  },
+  "end": {
+    "line": 258,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 210,
+      "inherited_line": false,
+      "source": "for commit, tree in zip(commits, hints):"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 217,
+      "inherited_line": false,
+      "source": "if listed.returncode:"
+    },
+    {
+      "id": "B3",
+      "kind": "For",
+      "line": 219,
+      "inherited_line": false,
+      "source": "for entry in listed.stdout.split(b'\\x00'):"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 220,
+      "inherited_line": false,
+      "source": "if not entry:"
+    },
+    {
+      "id": "B5",
+      "kind": "BoolOp",
+      "line": 224,
+      "inherited_line": false,
+      "source": "len(fields) != 3 or not raw_path or (not FULL_OID.fullmatch(fields[2]))"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 224,
+      "inherited_line": false,
+      "source": "if len(fields) != 3 or not raw_path or (not FULL_OID.fullmatch(fields[2])):"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 228,
+      "inherited_line": false,
+      "source": "if fields[1] == b'tree':"
+    },
+    {
+      "id": "B8",
+      "kind": "For",
+      "line": 232,
+      "inherited_line": false,
+      "source": "for commit in commits:"
+    },
+    {
+      "id": "B9",
+      "kind": "BoolOp",
+      "line": 234,
+      "inherited_line": false,
+      "source": "not first.startswith(b'tree ') or not FULL_OID.fullmatch(first[5:])"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 234,
+      "inherited_line": false,
+      "source": "if not first.startswith(b'tree ') or not FULL_OID.fullmatch(first[5:]):"
+    },
+    {
+      "id": "B11",
+      "kind": "While",
+      "line": 238,
+      "inherited_line": false,
+      "source": "while pending:"
+    },
+    {
+      "id": "B12",
+      "kind": "If",
+      "line": 240,
+      "inherited_line": false,
+      "source": "if wanted.get(tree, (b'',))[0] != b'tree':"
+    },
+    {
+      "id": "B13",
+      "kind": "BoolOp",
+      "line": 242,
+      "inherited_line": false,
+      "source": "os.fsdecode(prefix) or '/'"
+    },
+    {
+      "id": "B14",
+      "kind": "While",
+      "line": 246,
+      "inherited_line": false,
+      "source": "while position < len(data):"
+    },
+    {
+      "id": "B15",
+      "kind": "BoolOp",
+      "line": 249,
+      "inherited_line": false,
+      "source": "space < 0 or nul < 0 or nul + 1 + width > len(data)"
+    },
+    {
+      "id": "B16",
+      "kind": "If",
+      "line": 249,
+      "inherited_line": false,
+      "source": "if space < 0 or nul < 0 or nul + 1 + width > len(data):"
+    },
+    {
+      "id": "B17",
+      "kind": "If",
+      "line": 253,
+      "inherited_line": false,
+      "source": "if mode == TREE_MODE:"
+    },
+    {
+      "id": "B18",
+      "kind": "If",
+      "line": 255,
+      "inherited_line": false,
+      "source": "if name.endswith(b'.go'):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 258,
+      "value": "sides"
+    }
+  ],
+  "raises": [
+    {
+      "line": 218,
+      "source": "raise RuntimeError(_first_line(listed.stderr, 'git ls-tree failed'))"
+    },
+    {
+      "line": 225,
+      "source": "raise RuntimeError('cannot read git ls-tree record')"
+    },
+    {
+      "line": 235,
+      "source": "raise RuntimeError(f'cannot read commit {commit[:12]}')"
+    },
+    {
+      "line": 241,
+      "source": "raise RuntimeError(f\"git did not list tree {tree[:12]} under {os.fsdecode(prefix) or '/'} of {commit[:12]} — the object store's listing does not match the verif"
+    },
+    {
+      "line": 250,
+      "source": "raise RuntimeError(f'cannot read tree {tree[:12]}')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 208,
+      "callee": "hashlib.new"
+    },
+    {
+      "line": 210,
+      "callee": "zip"
+    },
+    {
+      "line": 212,
+      "callee": "wanted.setdefault"
+    },
+    {
+      "line": 213,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 218,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 218,
+      "callee": "_first_line"
+    },
+    {
+      "line": 219,
+      "callee": "listed.stdout.split"
+    },
+    {
+      "line": 222,
+      "callee": "entry.partition"
+    },
+    {
+      "line": 223,
+      "callee": "head.split"
+    },
+    {
+      "line": 224,
+      "callee": "FULL_OID.fullmatch"
+    },
+    {
+      "line": 224,
+      "callee": "len"
+    },
+    {
+      "line": 225,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 229,
+      "callee": "fields[2].decode"
+    },
+    {
+      "line": 229,
+      "callee": "os.fsdecode"
+    },
+    {
+      "line": 229,
+      "callee": "wanted.setdefault"
+    },
+    {
+      "line": 230,
+      "callee": "_verified_objects"
+    },
+    {
+      "line": 233,
+      "callee": "objects[commit].split"
+    },
+    {
+      "line": 234,
+      "callee": "FULL_OID.fullmatch"
+    },
+    {
+      "line": 234,
+      "callee": "first.startswith"
+    },
+    {
+      "line": 235,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 237,
+      "callee": "first[5:].decode"
+    },
+    {
+      "line": 239,
+      "callee": "pending.pop"
+    },
+    {
+      "line": 240,
+      "callee": "wanted.get"
+    },
+    {
+      "line": 241,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 242,
+      "callee": "os.fsdecode"
+    },
+    {
+      "line": 246,
+      "callee": "len"
+    },
+    {
+      "line": 247,
+      "callee": "data.find"
+    },
+    {
+      "line": 248,
+      "callee": "data.find"
+    },
+    {
+      "line": 249,
+      "callee": "len"
+    },
+    {
+      "line": 250,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 251,
+      "callee": "data[nul + 1:nul + 1 + width].hex"
+    },
+    {
+      "line": 254,
+      "callee": "pending.append"
+    },
+    {
+      "line": 255,
+      "callee": "name.endswith"
+    },
+    {
+      "line": 257,
+      "callee": "sides.append"
+    }
+  ]
+}

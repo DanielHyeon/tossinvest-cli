@@ -1,0 +1,238 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "ff19be0162521627988dc8e09a06297b57e4d35d",
+  "source_sha256": "613a3174efe33c71a7c1f120fc9102d8cbd00e02756b3d2aa8e0eec80b86c359",
+  "function": "_verified_objects",
+  "signature": "_verified_objects(root, algorithm, wanted)",
+  "start": {
+    "line": 152,
+    "column": 1
+  },
+  "end": {
+    "line": 196,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 163,
+      "inherited_line": false,
+      "source": "if not wanted:"
+    },
+    {
+      "id": "B2",
+      "kind": "comprehension",
+      "line": 167,
+      "inherited_line": true,
+      "source": " for oid in wanted"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 170,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B4",
+      "kind": "For",
+      "line": 174,
+      "inherited_line": false,
+      "source": "for oid, (kind, what) in wanted.items():"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 176,
+      "inherited_line": false,
+      "source": "if end < 0:"
+    },
+    {
+      "id": "B6",
+      "kind": "BoolOp",
+      "line": 181,
+      "inherited_line": false,
+      "source": "len(header) != 3 or header[0] != oid.encode('ascii') or header[1] != kind or (not header[2].isdigit())"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 181,
+      "inherited_line": false,
+      "source": "if len(header) != 3 or header[0] != oid.encode('ascii') or header[1] != kind or (not header[2].isdigit()):"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 184,
+      "inherited_line": false,
+      "source": "if position + size >= len(data):"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 186,
+      "inherited_line": false,
+      "source": "if data[position + size] != 10:"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 191,
+      "inherited_line": false,
+      "source": "if hashlib.new(algorithm, kind + b' %d\\x00' % size + body).hexdigest() != oid:"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 194,
+      "inherited_line": false,
+      "source": "if position != len(data):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 164,
+      "value": "{}"
+    },
+    {
+      "line": 196,
+      "value": "found"
+    }
+  ],
+  "raises": [
+    {
+      "line": 171,
+      "source": "raise RuntimeError(_first_line(process.stderr, 'git cat-file --batch failed'))"
+    },
+    {
+      "line": 177,
+      "source": "raise RuntimeError(f'`git cat-file --batch` stopped before {what} ({oid[:12]}): the response is truncated')"
+    },
+    {
+      "line": 182,
+      "source": "raise RuntimeError(f'the object store has no {kind.decode()} {oid[:12]} for {what}: {line[:80]!r}')"
+    },
+    {
+      "line": 185,
+      "source": "raise RuntimeError(f'`git cat-file --batch` stopped before {what} ({oid[:12]}): the response is truncated')"
+    },
+    {
+      "line": 187,
+      "source": "raise RuntimeError(f'`git cat-file --batch` answer for {what} ({oid[:12]}): the response framing was not understood')"
+    },
+    {
+      "line": 192,
+      "source": "raise RuntimeError(STORE_LIES.format(what=what, oid=oid[:12]))"
+    },
+    {
+      "line": 195,
+      "source": "raise RuntimeError(f'`git cat-file --batch` left {len(data) - position} byte(s) unread: the response framing was not understood')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 165,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 167,
+      "callee": "b''.join"
+    },
+    {
+      "line": 167,
+      "callee": "oid.encode"
+    },
+    {
+      "line": 171,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 171,
+      "callee": "_first_line"
+    },
+    {
+      "line": 174,
+      "callee": "wanted.items"
+    },
+    {
+      "line": 175,
+      "callee": "data.find"
+    },
+    {
+      "line": 177,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 179,
+      "callee": "line.split"
+    },
+    {
+      "line": 181,
+      "callee": "header[2].isdigit"
+    },
+    {
+      "line": 181,
+      "callee": "len"
+    },
+    {
+      "line": 181,
+      "callee": "oid.encode"
+    },
+    {
+      "line": 182,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 182,
+      "callee": "kind.decode"
+    },
+    {
+      "line": 183,
+      "callee": "int"
+    },
+    {
+      "line": 184,
+      "callee": "len"
+    },
+    {
+      "line": 185,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 187,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 191,
+      "callee": "hashlib.new(algorithm, kind + b' %d\\x00' % size + body).hexdigest"
+    },
+    {
+      "line": 191,
+      "callee": "hashlib.new"
+    },
+    {
+      "line": 192,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 192,
+      "callee": "STORE_LIES.format"
+    },
+    {
+      "line": 194,
+      "callee": "len"
+    },
+    {
+      "line": 195,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 195,
+      "callee": "len"
+    }
+  ]
+}

@@ -50,3 +50,7 @@ B15 · B16(`os.pathsep in … or '"' in …` 거절)이 빠졌다 — 대체 저
 그대로다. 분기 밖의 변경 셋: 경로를 `os.fsdecode` 로 읽는다(이름이 UTF-8 이 아닌 **안 바뀐** 파일로 멈추지 않게, F9) ·
 임시 인덱스에 실은 날 경로 → oid 를 `placed` 로 모아 셋째 값으로 돌려준다(sparse 로 안 꺼낸 경로도 인덱스 oid 로
 싣는다) · 모듈이 `GIT_NO_REPLACE_OBJECTS=1` 을 둬 이 함수의 git 도 교체 참조를 안 따른다(F1 · F4).
+
+## task 7.5.34 — 지웠다 (2026-09-24)
+
+`ast.before-7.5.34.json` 이 지우기 직전의 열거다. 읽기 절반은 `_worktree_entries` 로, 임시 인덱스는 `_isolated_tree` 로, 환경은 `_isolated_comparison` 으로 갔다. 이 함수의 핵심 결함 — 임시 저장소 뒤에 **실제 저장소를 대체 저장소로** 달아 git 이 스냅숏 blob 을 oid 로 다시 찾게 한 것 — 이 7.5.31 재리뷰 #1 · #2 의 뿌리였다.

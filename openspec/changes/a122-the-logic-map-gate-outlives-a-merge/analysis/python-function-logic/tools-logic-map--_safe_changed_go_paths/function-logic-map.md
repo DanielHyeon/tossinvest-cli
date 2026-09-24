@@ -104,3 +104,11 @@ the worktree snapshot`). 넷째 인자는 `pins` 에서 `environment` 로 바뀌
 이 거절에 걸리는 것은 0 이다. 시험이 이 함수를 직접 부르는 자리 하나(`test_newline_changed_go_path_is_rejected_before_unified_diff_parsing`)는
 스냅숏을 열어 건네도록 고쳤다. (7.5.31 정정: 커밋된 트리에서 직접 부르는 자리는 **셋**이다 — 같은 커밋이 뒤에 더한 `…untouched_worktree…` ·
 `…guard_without_the_snapshot…` 도 부른다. 같은 실수 일곱 번째의 한 사례.)
+
+## task 7.5.34 — 격리한 비교만 받는다 (2026-09-24)
+
+`ast.before-7.5.34.json`(분기 15 · raise 5) → `ast.after-7.5.34.json`(분기 **13** · raise **4**). difflib 정렬: 편집 전
+B1 · B2(`if not target and environment is None: raise ValueError`)가 빠졌다 — 서명이 `(root, comparison)` 이라 스냅숏 없는
+워킹트리 비교를 **만들 수 없다**. 편집 전 B5 → 편집 후 B3 은 결함 문장만 바뀌었다(`for base {base}` 를 뗐다 — base 인자가
+없다). 나머지 B3–B4 · B6–B15 는 편집 후 B1–B2 · B4–B13 과 같다. 분기 밖: diff 가 `*comparison.trees` 를
+`env=comparison.environment` 에서 견주고 **pathspec 을 안 받는다**(`"--", "*.go"` 를 뗐다 — 두 트리에 `*.go` 만 있다).

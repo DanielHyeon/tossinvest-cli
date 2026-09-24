@@ -143,3 +143,10 @@ blob = `go_functions` 가 지도를 뽑는 바이트. 셋이 한 번의 읽기�
 (`_changed_existing_functions`, `../tools-logic-map--_changed_existing_functions/ast.after-7.5.31.json`)은 분기 39 → **40**:
 맨 뒤에 `if placed is not None:` 하나(B40)가 붙어 `_snapshot_disagreement` 를 부른다 — 가드가 읽은 **같은** 레코드로,
 앞의 모든 가드 **뒤에**. 커밋 대상은 `placed` 가 `None` 이다.
+
+## task 7.5.34 — 두 대상 모두 격리한 비교 (2026-09-24)
+
+`ast.before-7.5.34.json`(분기 2 · 반환 2) → `ast.after-7.5.34.json`(분기 **1** · 반환 **1**). 편집 전 B2(`if target:` —
+커밋 대상은 스냅숏 없이)가 빠졌다: 커밋 대상도 `_isolated_comparison` 이 검증한 두 트리를 세운다(7.5.31 까지는 git 이
+oid 로 찾아 주는 두 트리를 그대로 견줬다 — 한쪽 blob 을 위조하면 `[]`). 커밋 대상이 워킹트리를 안 읽는 것은
+`_isolated_comparison` 의 B11 이 지킨다.

@@ -1598,14 +1598,64 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       `mnemonicPrefix` 는 `--cached` 뒤로 `c/`·`i/` · 가드를 직접 부르는 시험은 셋 · 몸통 docstring "스냅숏이 열려 있는 동안"
       은 커밋 대상에서 거짓 · README 의 clean 필터 "늘" 은 과장(항등 필터면 같다). 전부 제자리 정정했다.
       **새 task 둘**: 7.5.32 파서를 판정받는 워킹트리에서 빌드한다(F6, P0, 이전부터) · 7.5.33 base 쪽은 여전히 저장소를
-      믿는다(F5 · 부분 클론 fetch). `GIT_GLOB_PATHSPECS`(F7)는 7.5.26 에 실었다.
-      **변이가 코드를 지웠다**: `AI10`(ls-tree 의 blob 종류 거름을 뺌)이 살아남았다 — gitlink `*.go` 는 워킹트리에 남아
+      믿는다(F5 · 부분 클론 fetch). `GIT_GLOB_PATHSPECS`(F7)는 7.5.26 에 실었다(7.5.34 가 닫았다 — 그 항목의 정정 참조).
+      **변이가 코드를 지웠다**: `AI10`(ls-tree 의 blob 종류 거름을 뺌)이 살아남았다 — gitlink `*.go` 는 **인덱스에** 남아
       있으면 스냅숏이 모드로 거절하고(실측) 지우면 numstat 이 `0 1 sub.go` 로 낸다(실측). 닿을 수 없는 방어라 줄을 지웠다.
+      (7.5.34 정정: 앞 판본은 "워킹트리에 남아 있으면" 이라 적었다 — 거절을 부르는 것은 인덱스 항목이고, 워킹트리에 디렉터리가
+      없어도 거절됐다, 주장정확성 재리뷰 실측.)
       증거: 시험 357 → **362**(부모 코드에 붙이면 13 경우 빨강 — 새 동작을 재는 6 함수 · 8 경우: 실패 4 · 오류 4, 나머지 5
       오류는 스냅숏이 셋째 값을 돌려주게 된 계약 변경) · 변이 171 → 지운 AI10 을 빼고 **170**: 창 `0:43` · `43:86` · `86:129`
       각 **43/43**, `129:171` **41/42**(생존 AI10) — 대조군 모든 창 양끝 GREEN `Ran 362`. `lint` rc 0 · `sdd-test` rc 2 — **logic-map 437 통과**(357 → 362 에 스위트 밖 시험 포함 432 → 437); 멈춘 곳은 `tools/sdd` 의 `test_repository_contract_is_synchronized` 하나("Claude/Codex minimal safety bootstrap drift") — 다른 세션이 커밋하지 않은 `.claude/CLAUDE.md` · `.codex/agents.md` 편집 탓이다(깨끗한 클론 `9bc103fa` 에서는 통과, 이 로트는 두 파일을 안 건드리고 커밋에도 안 넣었다). 멈춘 뒤의 묶음은 따로 돌렸다: `sdd-history` 22 · `pm` 16 · `deploy` 18 · `go test ./tools/logic-map` 전부 통과 ·
       `test-seams` rc 0(**108 패키지**) · `openspec validate --all --strict` **58/58** · a122 게이트 **rc 0**(a112 `required 64` 그대로) · 좌표 게이트 **rc 0** · 실물 `main()`
       A/B **126/126 SAME · DIFFERENT 0**(기준 `9bc103fa`, 예산이 모자라 두 번에 이어 달림) — git 호출 20,710 → **20,825**: change 115 개가 정확히 +1(워킹트리 대상 판정마다 `ls-tree` 하나), 11 개는 그대로(커밋 대상이거나 이 함수 앞에서 멈춤) · `ast.json` 읽기 9,072 → 9,072 · 벽시계는 기계 부하로 흔들렸다(before 1,918.6 · 1,875.8s / after 1,779.0 · 1,824.8s — 참고만).
+- [x] 7.5.34 **P0 — 7.5.31 재리뷰가 연 것: git 밖 대조는 내용이 아니라 있음만 봤다 (2026-09-24, 사람이 선택지 1 을 골랐다).**
+      **결함.** `_snapshot_disagreement` 는 "oid 가 다른 경로가 레코드에 나왔는가" 만 본다 — git 이 그 blob 을 **oid 로**
+      실제 저장소에서 찾는 한 저장소의 대답이 판정이다. (#1) 편집 blob 의 oid 에 **base 도 디스크도 아닌** 바이트를 심으면
+      레코드는 나오고 요구는 빈다(또는 엉뚱한 함수로 옮겨 간다). (#2) `git mv` 뒤 새 이름의 blob 에 base 바이트를 심으면
+      100% rename `0`/`0` 이라 규칙이 다 통과하고 요구가 빈다 — 삭제도 같이 숨는다. (#3) 새로 더한 **빈** `.go` 를 규칙 3
+      이 헛거절한다. (#4) 연결 워크트리의 주 저장소 경로에 UTF-8 이 아닌 바이트가 있으면 `rev-parse` 출력의 엄격 해독이
+      터진다. (#5) 그 경로에 줄바꿈이 있으면 대체 저장소 경로가 잘린다. 주장정확성 재리뷰는 base 쪽 구멍(7.5.33)이 미끼
+      변형으로 ff19be01 에서도 `[]` 임을 쟀다.
+      **수리(선택지 1 — class 를 닫는다).** 게이트의 git 이 판정 blob 을 **실제 저장소에서 oid 로 찾지 않는다.** base(와
+      커밋 대상)는 커밋 → 트리 → blob 을 `cat-file --batch` 로 읽어 **Python 이 해시를 검증**하고, 워킹트리 쪽은 디스크
+      바이트를 그대로 쓴다. 두 쪽의 `*.go` 만 담은 트리를 **대체 저장소가 없는** 임시 저장소에 세우고 두 diff 는 그 두
+      트리를 견준다. 그래서 교체 참조 · 위조 loose · 위조 pack · 트리 · 커밋 위조가 모두 **해시 불일치로 이름 대고**
+      멈추거나 판정에 닿지 않는다. git 밖 대조(`_snapshot_disagreement`)는 지킬 것이 없어져 지우고(#3 이 같이 없어진다),
+      대체 저장소 경로(`--git-path objects` · `_c_quoted`)도 없어진다(#4 · #5). 두 diff 와 목록이 pathspec 을 안 받으므로
+      `GIT_*_PATHSPECS` 도 판정에 안 닿는다. 판정의 옛 쪽은 `base_file` 의 `git show` 가 아니라 검증한 바이트를 읽는다.
+      **작업 중 잰 것 셋.** (a) 첫 판은 `ls-tree -r -d` 의 항목을 전부 트리로 물었는데 `-d` 는 gitlink(`160000 commit`)도
+      낸다 — 하위 모듈이 하나라도 있으면 헛거절이었다(실측 후 고침, 시험 `test_a_submodule_in_the_base_is_not_refused`).
+      (b) `write-tree` 도 인덱스를 다시 쓴다 — `update-index` 에만 고정을 준 첫 판은 split index 에서 `sharedindex.*` 를
+      실제 `.git` 에 썼다(기존 시험이 잡았다, 두 호출이 `INDEX_WRITE_PINS` 를 받는다). (c) git 은 뿌리 트리 · 커밋은 파싱할
+      때 해시를 보지만(`hash mismatch`) **하위 트리는 해시 없이 읽는다** — 하위 트리를 빈 트리로 위조하면 `ls-tree -r` 에서도
+      그 아래 파일이 조용히 사라진다(2.43 실측). 이 모양은 이 로트의 검증만 잡는다.
+      **동작이 바뀐 것.** sparse 로 안 꺼낸 파일이 base 와 다르면 현재 쪽도 검증한 인덱스 blob 으로 본다(전에는 현재 쪽이
+      비었다 — 요구가 늘 수만 있다). base 에서 지운 gitlink `*.go` 는 늘 `cannot load existing base file` 로 멈춘다(전에는
+      그 커밋이 같은 저장소에 있으면 커밋 글을 Go 로 읽어 `{}`). 커밋 대상(착지 · 이관 감사)도 검증한 두 트리를 견준다.
+      증거: 시험 362 → **372**(바꾼 것 10 을 17 로 · gitlink 둘 · 뿌리/커밋 위조 분리 하나). 시험 파일을 ff19be01 코드에
+      붙이면 **53 경우 빨강**(실패 12 · 오류 41) — 행동이 틀린 것 22(실패 12: base 위조 셋 · 미끼 위조 둘 · rename · sparse
+      둘 · 커밋 대상 둘 · gitlink 하나 · 구조 하나 / 오류 10: pathspec 셋 · 연결 워크트리 둘 · 빈 파일 둘 · 물려받은 대체
+      저장소 · base 바이트 위조 둘의 헛거절), 나머지 31 은 새 API(`_verified_objects` · `_isolated_comparison` 결함 시험과
+      대역). 뿌리 트리 · 커밋 위조와 하위 모듈 시험은 ff19be01 에서도 초록이다(앞은 git 자신이 거절, 뒤는 첫 판의 회귀 방지).
+      변이 170 → **189**(AH · AI 31 을 코드와 함께 은퇴 · AJ 50 더함 · `_committed_many` 의 T6 · U1 · V6 앵커를 새 코드의 같은
+      철자 때문에 넓힘): 첫 판 190 — 창 `0:48` 48/48 · `48:96` 48/48 · `96:143` 47/47 · `143:190` **45/47**(생존 AJ44 ·
+      AJ47). AJ44(바이트 출처를 고르는 갈래)는 같은 oid 면 같은 바이트라 고를 것이 없었다 → oid → 바이트 한 표로 바꾸고 그
+      표를 겨누는 변이로 교체. AJ47(두 diff 의 `GIT_INDEX_FILE`)은 트리 둘을 견주는 diff 가 인덱스를 안 쓴다 → 줄을
+      지웠다. 그 함수를 겨누는 변이를 최종 코드에서 다시 돌렸다: 창 `174:187` **13/13** · `135:136`(AH21) **1/1**. 모든
+      창 대조군 양끝 GREEN `Ran 372`(하네스 사본은 `docs/WORKFLOW.md` 가 없어 skip 2). `make lint` rc 0 · `make sdd-test`
+      rc 2 — **logic-map 447 통과**(372 + 스위트 밖 75), 멈춘 곳은 전처럼 `tools/sdd` 의 bootstrap drift 하나(다른 세션의 커밋
+      안 한 `.claude/CLAUDE.md` · `.codex/agents.md`; 깨끗한 클론에서 71 통과) · 멈춘 뒤의 `sdd-history` 22 · `pm` 16 ·
+      `deploy` 18 · `go test ./tools/logic-map` 통과 · `make test-seams` rc 0(**108 패키지**, `rtk proxy` 로 셈 — `GOFLAGS=
+      -trimpath` 로 돌린 첫 판은 자기 소스를 경로로 여는 Go 시험 셋이 FAIL 했다: 내 환경 탓, 코드 변경 0) · `openspec
+      validate --all --strict` **58/58** · a122 게이트 **rc 0**(a112 `required 64` 그대로) · 좌표 게이트 **rc 0**(첫 판은 최종
+      편집 전에 뽑은 `ast.after` 일곱이 떠서 rc 1 — 다시 뽑았다). 실물 `main()` A/B **126/126 SAME · DIFFERENT 0**(기준
+      ff19be01) — git 호출 20,825 → **2,431**: 116 change 가 100~230 씩 줄었다(바뀐 파일마다 `git show` 하던 옛 쪽 읽기가
+      `cat-file` 하나가 됐다), 10 은 그대로 · `ast.json` 읽기 9,072 → 9,072 · 벽시계 before 1,451.9 · 1,455.2s / after 1,434.1
+      · 1,442.6s(순서를 번갈아, 참고만).
+      **정정 — 주장정확성 재리뷰(ff19be01), 같은 실수 여덟 번째.** 틀린 문장 넷: 규칙 직접 시험의 docstring(규칙 1 · 2 가
+      아니라 3 · 2 — 시험과 함께 지웠다) · 7.5.26 의 `GIT_GLOB_PATHSPECS` · `GIT_LITERAL_PATHSPECS` "조용히 지운다"(ff19be01
+      에서는 규칙 2 의 헛거절) · 7.5.33 의 재현 문장(ff19be01 에서는 이름 댄 거절). 그리고 7.5.31 의 gitlink "워킹트리에 남아
+      있으면" → 인덱스. 전부 제자리에 정정을 적었다.
 - [ ] 7.5.32 **P0(이 change 이전부터) — 함수 지도를 뽑는 파서를 판정받는 워킹트리에서 빌드한다 (7.5.25 적대 재리뷰 F6).**
       `go_functions` 는 `go run ./tools/logic-map` 으로 **워킹트리의** `extract_go_ast.go` 를 돌린다. 그 파일도 추적 `*.go`
       라서 게이트가 판정하는 대상인데, 그것을 고쳐 `--list` 가 `[]` 를 내게 하면 다른 파일의 편집과 **자기 편집까지**
@@ -1613,13 +1663,15 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       이것은 판정 도구 자체의 신뢰 경계다 — `check_analysis.py` 를 고치는 것과 같은 경계지만 이것은 게이트가 지켜야 할
       `*.go` 다. 근본은 파서를 **base 커밋에서** 빌드하는 것(`git archive <base> tools/logic-map` → 임시 모듈)이고 판정
       비용과 기존 번들의 재현성이 달라지는 설계 변경이라 **사람 결정** 대기.
-- [ ] 7.5.33 **P1(이 change 이전부터) — base 쪽은 여전히 git 의 저장소를 믿는다 (7.5.25 적대 재리뷰 F5 · F12).**
-      7.5.31 의 git 밖 대조는 **워킹트리 쪽**만 본다. base 트리(`ls-tree`)와 base blob(`base_file` 의 `git show`)은 git 이
-      oid 로 찾아 주는 대로 믿는다 — 실제 저장소에 base blob 의 oid 로 편집 내용을 담은 pack 을 심으면 base 와 워킹트리가
-      같아 보여 요구가 빈다(리뷰어 재현, 부모도 같다). `base_file` 이 돌려준 바이트를 Python 으로 해시해 트리의 oid 와
-      견주면 blob 위조는 닫히고, 트리 · 커밋 위조는 남는다. 같은 줄: 부분 클론(`--filter=blob:none`)에서 base blob 이
-      없으면 게이트가 promisor 로 **fetch** 하고 실제 `.git/objects/pack` 에 pack 이 생긴다(2 → 3, 판정은 맞다) — 어느
-      호출이 부르는지는 리뷰어가 가르지 못했다.
+- [ ] 7.5.33 **P2(이 change 이전부터) — 부분 클론에서 게이트가 base blob 을 가져온다 (7.5.25 적대 재리뷰 F12). 위조 절반은 7.5.34 가 닫았다.**
+      ~~base 쪽은 여전히 git 의 저장소를 믿는다(F5)~~ — 7.5.34 가 base 의 커밋 · 트리 · blob 을 해시 검증해 읽는다(하위 트리
+      위조까지, 시험 `test_a_forged_base_object_is_refused`). (7.5.34 정정: 이 항목의 첫 판본은 "7.5.31 의 git 밖 대조는 워킹트리
+      쪽만 본다 … pack 을 심으면 요구가 빈다(리뷰어 재현)" 라 적었는데, 그 재현은 리뷰어가 `9bc103fa` 에서 잰 것이고
+      ff19be01 에서는 규칙 1 의 **이름 댄 거절**이었다 — 옮겨 적으며 새 코드에서 다시 재지 않았다. 구멍 자체는 실재했다:
+      편집 내용 위에 미끼 줄을 얹은 위조는 ff19be01 에서도 `[]` 였다, 주장정확성 재리뷰 실측.)
+      **남은 절반**: 부분 클론(`--filter=blob:none`)에서 base blob 이 없으면 git 이 promisor 로 **fetch** 하고 실제
+      `.git/objects/pack` 에 pack 이 생긴다(2 → 3, 판정은 맞다). 7.5.34 뒤로 base blob 을 읽는 호출은 `_verified_objects` 의
+      `cat-file --batch` 하나다. 이 기계의 git 2.43 은 `--no-lazy-fetch` 를 모른다(`git --no-lazy-fetch version` rc 129 실측) — 막는 방법을 따로 재야 한다.
 - [ ] 7.5.29 **P2 — `_self_repair_commits` 도 git 출력을 `str.splitlines()` 로 자른다 (7.5.28 에서 셈).**
       7.5.28 이 판정 diff 에서 고친 것과 같은 값이다: `git log` 의 커밋 덩이를 `block.splitlines()` 로 잘라
       커밋 sha 와 경로를 가른다. 경로에 U+2028 등이 있으면 한 경로가 여럿으로 갈린다. 그 결과가 자기 수리
@@ -1638,12 +1690,18 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       출력 **형식**을 바꾸는 것은 워킹트리 바이트의 문제가 아니라 파서의 문제다: `diff.noprefix=true` 와
       `GIT_LITERAL_PATHSPECS=1`(`'*.go'` 가 글자 그대로의 이름이 되어 diff 가 빈다)은 요구를 **조용히** 지우고,
       `diff.mnemonicPrefix=true` · `color.ui=always` · 이름에 `"` 가 든 `*.go` 는 **거짓 차단**한다. 저장소 노출 0.
+      (7.5.34 정정: `GIT_LITERAL_PATHSPECS=1` 의 "조용히 지운다" 는 base 와 `9bc103fa` 에서만 참이었다 — ff19be01 에서는
+      7.5.31 의 규칙 2 가 **거절**했고 그 사유가 "the object store" 라 원인을 잘못 댔다, 주장정확성 재리뷰 실측. 7.5.34 의
+      목록과 두 diff 는 pathspec 을 안 받아 이 변수가 판정에 안 닿는다 — 시험 `test_pathspec_variables_do_not_change_the_judgement`.)
       (7.5.31 정정 — 주장정확성 재리뷰가 쟀다. 앞 판본은 `diff.noprefix=true` 도 "요구를 조용히 지운다" 에 넣었는데 **재지
       않고 적은 것이었고 틀렸다**: 평범한 `x.go` · `pkg/x.go` 는 요구가 선다. 문제는 경로가 `a/`·`b/` 로 시작할 때다 —
       `a/x.go` 는 거짓 차단, `b/x.go` 는 요구를 **엉뚱한 경로** `x.go` 로 적고, 그 경로에 미끼가 있으면 요구가 빈다(7.5.25
       적대 재리뷰 F8). 이 항목 첫 문단이 이미 그렇게 적고 있었다. 그리고 `color.ui=always` 는 **이 change 의 base 에서는
       조용히 `[]`** 였고 지금 코드에서 거짓 차단이 됐다 — "이전부터 거짓 차단" 이 아니다. 7.5.25 적대 재리뷰가 하나를 더
-      셌다: `GIT_GLOB_PATHSPECS=1` 이면 `'*.go'` 가 `sub/x.go` 에 안 맞아 요구가 조용히 빈다(F7, 이 change 이전부터).)
+      셌다: `GIT_GLOB_PATHSPECS=1` 이면 `'*.go'` 가 `sub/x.go` 에 안 맞아 요구가 조용히 빈다(F7, 이 change 이전부터).
+      — 7.5.34 정정: 그 문장은 base 와 `9bc103fa` 에서 참이고 **이 문장을 적은 ff19be01 에서는 거짓**이었다 — 같은 커밋의
+      규칙 2 가 "the object store answers for sub/x.go as if it were still there" 로 거절했다. 리뷰어가 앞 커밋에서 잰 것을
+      새 코드에서 다시 재지 않고 옮겼다. 7.5.34 가 닫았다.)
       근본은 같다 — 판정 diff 의 형식(`--src-prefix=a/ --dst-prefix=b/ --no-color`)과 pathspec 해석
       (`--glob-pathspecs` 또는 환경 변수를 지운 자식 환경)을 **우리가 정한다**.
 - [ ] 7.5.30 **P2 — 시험 스위트가 공유 go 빌드 캐시를 판마다 약 375 MB 씩 불린다 (7.5.25 변이 중 실측, 2026-09-24).**

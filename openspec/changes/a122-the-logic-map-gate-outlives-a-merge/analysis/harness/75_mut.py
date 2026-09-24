@@ -43,7 +43,7 @@ MUTATIONS = {
         '            answered[relative] = data[position:position + size]\n'
         '            position += size + 1')],
     "T6_truncation_falls_back_to_break": [(
-        '        if end < 0:\n', '        if end < 0:\n            break\n')],
+        '        if end < 0:\n            # **부분 답을', '        if end < 0:\n            break\n            # **부분 답을')],
     "T7_size_from_content_scan": [(
         '        size = int(match.group("size"))',
         '        size = data.find(b"\\0", position) - position')],
@@ -51,7 +51,7 @@ MUTATIONS = {
         '    found: dict[str, bytes | None] = {relative: None for relative in wanted}',
         '    found: dict[str, bytes | None] = {}')],
     "U1_leftover_bytes_ignored": [(
-        '    if position != len(data):', '    if False:')],
+        '    if position != len(data):\n        # 정상 응답은', '    if False:\n        # 정상 응답은')],
     "U3_strict_utf8_encoding": [(
         '    asked = [spec.encode("utf-8", "surrogateescape") for spec in specs]',
         '    asked = [spec.encode("utf-8") for spec in specs]')],
@@ -73,7 +73,7 @@ MUTATIONS = {
     "V5_terminator_not_checked": [(
         '        if data[position + size] != 0:', '        if False:')],
     "V6_overshoot_not_checked": [(
-        '        if position + size >= len(data):', '        if False:')],
+        '        if position + size >= len(data):\n            # 내용과', '        if False:\n            # 내용과')],
     "V7_nul_checked_in_path_only": [(
         '    for spec in specs:\n        if "\\0" in spec:',
         '    for spec in wanted:\n        if "\\0" in spec:')],
@@ -474,101 +474,147 @@ MUTATIONS = {
          '    diff_lines = process.stdout.decode("utf-8", "strict").splitlines()')],
     "AG6_the_header_keeps_its_tab": [
         ('    return value[:-1] if value.endswith("\\t") else value', '    return value')],
-    # --- task 7.5.25: git 의 워킹트리 투영 대신 스냅숏 인덱스 ---
-    "AH1_the_worktree_is_seen_through_git": [
-        ('    return [base, target] if target else ["--cached", base]',
-         '    return [base, target] if target else [base]')],
-    "AH2_the_guard_skips_the_snapshot": [
-        ('         "--numstat", "-z", *_compared(base, target), "--", "*.go"],\n        cwd=root,\n        env=environment,\n',
-         '         "--numstat", "-z", *_compared(base, target), "--", "*.go"],\n        cwd=root,\n')],
-    "AH3_the_judgement_skips_the_snapshot": [
-        ('            "*.go",\n        ],\n        cwd=root,\n        env=environment,\n',
-         '            "*.go",\n        ],\n        cwd=root,\n')],
-    "AH4_the_current_side_rereads_the_disk": [
-        ('                current = _temporary_go(contents[new_source]) if new_source in contents else None',
-         '                current = _temporary_go(_read_regular(root / new_source)) if new_source in contents else None')],
-    "AH5_a_sparse_file_is_a_deletion": [
-        ('                if tag.upper() == b"S":', '                if False:')],
-    "AH6_assume_unchanged_keeps_the_index_blob": [
-        ('                if tag.upper() == b"S":', '                if tag.upper() == b"S" or tag.islower():')],
-    # `(root / path).read_bytes()` 로 바꾸는 판본은 FIFO 시험에서 스위트를 **멈췄다**(`wait_for_partner`, 하네스 시한
-    # 5,400 초) — 깔때기가 막아 주던 바로 그 멈춤이다. 그 판본은 따로 쟀고(review 7.5.25), 여기서는 원장만 비켜 간다.
-    "AH7_reads_skip_the_ledger": [
-        ('                data = _read_regular(root / path)', '                data = _opened_bytes(root / path)')],
-    "AH8_the_split_index_leaks": [
-        ('            ["git", *SNAPSHOT_PINS, "-c", "core.splitIndex=false", "-c", "core.hooksPath=/dev/null",',
-         '            ["git", *SNAPSHOT_PINS, "-c", "core.hooksPath=/dev/null",')],
-    "AH9_the_hooks_run": [
-        ('            ["git", *SNAPSHOT_PINS, "-c", "core.splitIndex=false", "-c", "core.hooksPath=/dev/null",',
-         '            ["git", *SNAPSHOT_PINS, "-c", "core.splitIndex=false",')],
+    # --- task 7.5.25 · 7.5.31 에서 남은 것 — 겨누는 줄이 7.5.34 뒤에도 같은 뜻으로 있다 ---
+    # 나머지 AH · AI 는 7.5.34 가 그 코드를 지워(스냅숏 인덱스 · 대체 저장소 · git 밖 대조) 앵커가 없다. 그 결과는
+    # review 7.5.25 · 7.5.31 에 있고, 같은 뜻의 자리는 아래 AJ 가 새 코드에서 다시 겨눈다.
     "AH10_the_fsmonitor_runs": [
         ('SNAPSHOT_PINS = ("-c", "core.fsmonitor=false")', 'SNAPSHOT_PINS = ()')],
-    "AH11_the_guard_takes_no_snapshot": [
-        ('    if not target and environment is None:', '    if False:')],
-    "AH12_an_unmerged_file_is_taken": [
-        ('            if stage != b"0":', '            if False:')],
-    "AH13_a_symlink_is_taken": [
-        ('            if mode not in GO_FILE_MODES:', '            if False:')],
     "AH14_an_executable_is_refused": [
         ('GO_FILE_MODES = (b"100644", b"100755")', 'GO_FILE_MODES = (b"100644",)')],
-    "AH15_the_real_store_is_not_an_alternate": [
-        ('            "GIT_ALTERNATE_OBJECT_DIRECTORIES": os.pathsep.join(filter(None, (_c_quoted(str(objects)), inherited))),',
-         '            "GIT_ALTERNATE_OBJECT_DIRECTORIES": inherited,')],
-    "AH16_the_digest_is_not_a_blob_id": [
-        ('            digest = hashlib.new(algorithm, b"blob %d\\0" % len(data) + data).hexdigest()',
-         '            digest = hashlib.new(algorithm, data).hexdigest()')],
-    "AH17_every_blob_is_written": [
-        ('            if digest != oid.decode("ascii"):\n                _write_loose_blob',
-         '            if True:\n                _write_loose_blob')],
     "AH18_the_loose_header_is_wrong": [
         ('        handle.write(zlib.compress(b"blob %d\\0" % len(data) + data))',
          '        handle.write(zlib.compress(b"blob %d \\0" % len(data) + data))')],
-    "AH19_a_commit_target_takes_the_snapshot": [
-        ('    if target:\n        return _changed_existing_functions(root, base, target, None, {}, None)',
-         '    if False:\n        return _changed_existing_functions(root, base, target, None, {}, None)')],
-    "AH20_the_ls_files_runs_the_fsmonitor": [
-        ('        ["git", *SNAPSHOT_PINS, "ls-files", "-s", "-v", "-z", "--", "*.go"],',
-         '        ["git", "ls-files", "-s", "-v", "-z", "--", "*.go"],')],
     "AH21_a_failed_rev_parse_is_read": [
         ('    if described.returncode:', '    if False:')],
-    "AH22_a_short_rev_parse_is_read": [
-        ('    if len(answer) < 2 or not answer[0] or not answer[1]:', '    if False:')],
-    "AH23_a_failed_ls_files_is_read": [
-        ('    if listed.returncode:\n        raise RuntimeError(_first_line(listed.stderr.decode("utf-8", "replace"), "git ls-files failed"))',
-         '    if False:\n        raise RuntimeError(_first_line(listed.stderr.decode("utf-8", "replace"), "git ls-files failed"))')],
-    "AH24_a_short_record_is_read": [
-        ('            if len(fields) != 4 or not raw_path:', '            if False:')],
-    # AH25(`:`·`"` 경로 거절)는 7.5.31 이 거절을 인용으로 바꿔 겨눌 코드가 없다 — AI2 · AI3 이 그 자리를 잰다.
-    "AH26_a_failed_update_index_is_ignored": [
-        ('        if built.returncode:', '        if False:')],
-    # --- task 7.5.31: 7.5.25 재리뷰 — 교체 참조 · 거짓말하는 저장소 · 인용 · 해독 ---
     "AI1_replace_refs_are_followed": [
         ('os.environ["GIT_NO_REPLACE_OBJECTS"] = "1"\n', '')],
-    "AI2_the_alternate_is_not_quoted": [
-        ('os.pathsep.join(filter(None, (_c_quoted(str(objects)), inherited)))',
-         'os.pathsep.join(filter(None, (str(objects), inherited)))')],
-    "AI3_a_quote_is_not_escaped": [
-        (""".replace('"', '\\\\"')""", '')],
-    "AI4_an_odd_name_is_decoded_strictly": [
-        ('            path = os.fsdecode(raw_path)', '            path = raw_path.decode("utf-8", "strict")')],
-    "AI5_a_sparse_file_is_not_placed": [
-        ('                    placed[raw_path] = oid.decode("ascii")\n', '')],
-    "AI6_the_store_is_not_cross_checked": [
-        ('    if placed is not None:\n        _snapshot_disagreement', '    if False:\n        _snapshot_disagreement')],
-    "AI7_same_content_is_a_change": [
-        ('        if raw_path not in new_names or unmoved.get(raw_path) == (b"0", b"0"):',
-         '        if raw_path not in new_names:')],
-    "AI8_a_missing_record_is_fine": [
-        ('        if raw_path not in new_names or unmoved.get(raw_path) == (b"0", b"0"):',
-         '        if unmoved.get(raw_path) == (b"0", b"0"):')],
-    "AI9_a_hidden_deletion_is_fine": [
-        ('        if raw_path not in old_names:', '        if False:')],
-    # AI10(ls-tree 의 blob 종류 거름을 뺌)은 살아남았다 — 닿을 수 없는 방어라 **코드를 지웠다** (review 7.5.31).
-    "AI11_a_failed_ls_tree_is_read": [
-        ('    if listed.returncode:\n        raise RuntimeError(_first_line(listed.stderr.decode("utf-8", "replace"), "git ls-tree failed"))',
-         '    if False:\n        raise RuntimeError(_first_line(listed.stderr.decode("utf-8", "replace"), "git ls-tree failed"))')],
-    "AI12_an_unchanged_path_is_checked": [
-        ('        if before.get(raw_path) == oid:\n            continue', '        if False:\n            continue')],
+    # --- task 7.5.34: 판정 blob 을 실제 저장소에서 oid 로 찾지 않는다 — 검증한 객체와 격리한 저장소 ---
+    # `_verified_objects`
+    "AJ1_nothing_asked_still_runs_git": [
+        ('    if not wanted:\n        return {}\n    process = subprocess.run(\n        ["git", "cat-file", "--batch"],',
+         '    process = subprocess.run(\n        ["git", "cat-file", "--batch"],')],
+    "AJ2_a_failed_cat_file_is_read": [
+        ('        raise RuntimeError(_first_line(process.stderr, "git cat-file --batch failed"))',
+         '        pass')],
+    "AJ3_a_missing_header_is_read": [
+        ('        if end < 0:\n            raise RuntimeError(f"`git cat-file --batch` stopped before',
+         '        if False:\n            raise RuntimeError(f"`git cat-file --batch` stopped before')],
+    "AJ4_the_answer_may_name_another_oid": [
+        ('header[0] != oid.encode("ascii") or ', '')],
+    "AJ5_the_answer_may_be_another_kind": [
+        ('header[1] != kind or ', '')],
+    "AJ6_the_size_is_not_read_as_a_number": [
+        (' or not header[2].isdigit():', ':')],
+    "AJ7_a_short_body_is_read": [
+        ('        if position + size >= len(data):\n            raise RuntimeError(f"`git cat-file --batch` stopped before',
+         '        if False:\n            raise RuntimeError(f"`git cat-file --batch` stopped before')],
+    "AJ8_the_terminator_is_not_checked": [
+        ('        if data[position + size] != 0x0A:', '        if False:')],
+    "AJ9_the_hash_is_not_checked": [
+        ('        if hashlib.new(algorithm, kind + b" %d\\0" % size + body).hexdigest() != oid:', '        if False:')],
+    "AJ10_the_hash_omits_the_header": [
+        ('        if hashlib.new(algorithm, kind + b" %d\\0" % size + body).hexdigest() != oid:',
+         '        if hashlib.new(algorithm, body).hexdigest() != oid:')],
+    "AJ11_leftover_bytes_are_ignored": [
+        ('    if position != len(data):\n        raise RuntimeError(f"`git cat-file --batch` left',
+         '    if False:\n        raise RuntimeError(f"`git cat-file --batch` left')],
+    # `_verified_go_entries`
+    "AJ12_a_failed_ls_tree_is_read": [
+        ('            raise RuntimeError(_first_line(listed.stderr, "git ls-tree failed"))', '            pass')],
+    "AJ13_a_short_ls_tree_record_is_read": [
+        ('            if len(fields) != 3 or not raw_path or not FULL_OID.fullmatch(fields[2]):',
+         '            if False:')],
+    "AJ14_a_gitlink_is_asked_as_a_tree": [
+        ('            if fields[1] == b"tree":', '            if True:')],
+    "AJ15_the_commit_line_is_not_read": [
+        ('        if not first.startswith(b"tree ") or not FULL_OID.fullmatch(first[5:]):', '        if False:')],
+    "AJ16_the_walk_trusts_the_listing": [
+        ('            if wanted.get(tree, (b"",))[0] != b"tree":', '            if False:')],
+    "AJ17_a_short_tree_entry_is_read": [
+        ('                if space < 0 or nul < 0 or nul + 1 + width > len(data):', '                if False:')],
+    "AJ18_subtrees_are_not_walked": [
+        ('                if mode == TREE_MODE:', '                if False:')],
+    "AJ19_the_base_keeps_every_file": [
+        ('                elif name.endswith(b".go"):', '                else:')],
+    # `_worktree_entries`
+    "AJ20_a_failed_ls_files_is_read": [
+        ('        raise RuntimeError(_first_line(listed.stderr, "git ls-files failed"))', '        pass')],
+    "AJ21_a_short_ls_files_record_is_read": [
+        ('        if len(fields) != 4 or not raw_path:', '        if False:')],
+    "AJ22_the_worktree_keeps_every_file": [
+        ('        if not raw_path.endswith(b".go"):\n            continue', '        if False:\n            continue')],
+    "AJ23_an_odd_name_is_decoded_strictly": [
+        ('        path = os.fsdecode(raw_path)', '        path = raw_path.decode("utf-8", "strict")')],
+    "AJ24_an_unmerged_file_is_taken": [
+        ('        if stage != b"0":', '        if False:')],
+    "AJ25_a_symlink_is_taken": [
+        ('        if mode not in GO_FILE_MODES:', '        if False:')],
+    "AJ26_reads_skip_the_ledger": [
+        ('            data = _read_regular(root / path)', '            data = _opened_bytes(root / path)')],
+    "AJ27_a_sparse_file_is_a_deletion": [
+        ('            if tag.upper() == b"S":', '            if False:')],
+    "AJ28_assume_unchanged_keeps_the_index_blob": [
+        ('            if tag.upper() == b"S":', '            if tag.upper() == b"S" or tag.islower():')],
+    "AJ29_the_digest_is_not_a_blob_id": [
+        ('        entries[raw_path] = (mode, hashlib.new(algorithm, b"blob %d\\0" % len(data) + data).hexdigest())',
+         '        entries[raw_path] = (mode, hashlib.new(algorithm, data).hexdigest())')],
+    "AJ30_the_ls_files_runs_the_fsmonitor": [
+        ('        ["git", *SNAPSHOT_PINS, "ls-files", "-s", "-v", "-z"],', '        ["git", "ls-files", "-s", "-v", "-z"],')],
+    # `_isolated_tree`
+    "AJ31_the_split_index_leaks": [
+        ('INDEX_WRITE_PINS = (*SNAPSHOT_PINS, "-c", "core.splitIndex=false", "-c", "core.hooksPath=/dev/null")',
+         'INDEX_WRITE_PINS = (*SNAPSHOT_PINS, "-c", "core.hooksPath=/dev/null")')],
+    "AJ32_the_hooks_run": [
+        ('INDEX_WRITE_PINS = (*SNAPSHOT_PINS, "-c", "core.splitIndex=false", "-c", "core.hooksPath=/dev/null")',
+         'INDEX_WRITE_PINS = (*SNAPSHOT_PINS, "-c", "core.splitIndex=false")')],
+    "AJ33_write_tree_takes_no_pins": [
+        ('        ["git", *INDEX_WRITE_PINS, "write-tree", "--missing-ok"],',
+         '        ["git", *SNAPSHOT_PINS, "write-tree", "--missing-ok"],')],
+    "AJ34_a_failed_update_index_is_ignored": [
+        ('        raise RuntimeError(_first_line(built.stderr, "git update-index failed"))', '        pass')],
+    "AJ35_a_failed_write_tree_is_ignored": [
+        ('        raise RuntimeError(_first_line(written.stderr, "git write-tree failed"))', '        pass')],
+    "AJ36_the_write_tree_answer_is_not_read": [
+        ('    if not FULL_OID.fullmatch(tree):', '    if False:')],
+    "AJ37_absent_blobs_stop_the_tree": [
+        ('"write-tree", "--missing-ok"]', '"write-tree"]')],
+    # `_isolated_comparison`
+    "AJ38_an_option_is_taken_as_a_revision": [
+        ('        if revision.startswith("-"):', '        if False:')],
+    "AJ39_a_short_rev_parse_is_read": [
+        ('    if len(answer) != 1 + 2 * len(revisions) or not all(FULL_OID.fullmatch(item) for item in answer[1:]):',
+         '    if False:')],
+    "AJ40_unchanged_paths_are_loaded": [
+        ('if before.get(path) != after.get(path))', 'if True)')],
+    "AJ41_the_target_side_is_not_fetched": [
+        ('        for side, label in ((before, "base"), (after, "target" if target else "the index")):',
+         '        for side, label in ((before, "base"),):')],
+    "AJ42_the_worktree_side_is_fetched_from_the_store": [
+        (' and not (side is after and path in disk):', ':')],
+    "AJ43_a_gitlink_is_fetched": [
+        ('            if path in side and side[path][0] != GITLINK_MODE and not', '            if path in side and not')],
+    # AJ44 첫 판(`fetched.get(oid) or disk[path]`)은 살아남았다 — 같은 oid 면 같은 바이트라 고를 갈래가 없었다. 한 표로
+    # 바꾸고 그 표에 디스크 바이트를 싣는 줄을 겨눈다.
+    "AJ44_the_disk_bytes_are_not_tabled": [
+        ('    blobs.update((after[path][1], data) for path, data in disk.items())\n', '')],
+    "AJ45_an_inherited_alternate_is_kept": [
+        ('        environment = {key: value for key, value in os.environ.items() if key != "GIT_ALTERNATE_OBJECT_DIRECTORIES"}',
+         '        environment = dict(os.environ)')],
+    "AJ46_the_store_is_the_real_one": [
+        ('        environment["GIT_OBJECT_DIRECTORY"] = str(store)\n', '')],
+    # AJ47(두 diff 의 `GIT_INDEX_FILE` 을 뺌)은 살아남았다 — 트리 둘을 견주는 diff 는 인덱스를 안 쓴다. **줄을 지웠다.**
+    # `_safe_changed_go_paths` · `_changed_existing_functions`
+    "AJ48_the_guard_runs_outside_the_comparison": [
+        ('        "--numstat", "-z", *comparison.trees],\n        cwd=root,\n        env=comparison.environment,\n',
+         '        "--numstat", "-z", *comparison.trees],\n        cwd=root,\n')],
+    "AJ49_the_judgement_runs_outside_the_comparison": [
+        ('            *comparison.trees,\n        ],\n        cwd=root,\n        env=comparison.environment,\n',
+         '            *comparison.trees,\n        ],\n        cwd=root,\n')],
+    "AJ50_the_old_side_is_not_checked": [
+        ('        if old_source not in comparison.old:', '        if False:')],
+    "AJ51_the_current_side_is_empty": [
+        ('            current = _temporary_go(comparison.new[new_source]) if new_source in comparison.new else None',
+         '            current = None')],
     "AD6_the_guard_ignores_renames": [
         ('"--no-ext-diff", "--no-textconv", "--find-renames",',
          '"--no-ext-diff", "--no-textconv",')],

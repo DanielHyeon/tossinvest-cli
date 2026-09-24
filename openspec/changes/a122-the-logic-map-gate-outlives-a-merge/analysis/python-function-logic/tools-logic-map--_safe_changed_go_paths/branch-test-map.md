@@ -93,3 +93,13 @@
 | `--find-renames` (구조) | `AD6_the_guard_ignores_renames` | `test_both_git_calls_see_the_same_files` |
 
 7.5.27 · 7.5.28 의 `pins` 행(필터 고정 · stat 고정)은 7.5.25 에서 겨눌 코드가 없어졌다 — 그 행은 기록으로 둔다.
+
+## task 7.5.34 (창 `174:187` 재실행 · `143:190`)
+
+| 갈래 | 변이 | 잡는 시험 |
+|---|---|---|
+| diff 가 격리한 환경에서 돈다 | `AJ48_the_guard_runs_outside_the_comparison` | 154 시험 |
+| `--find-renames` | `AD6_the_guard_ignores_renames` | `test_both_git_calls_see_the_same_files` |
+
+편집 전 B1·B2(스냅숏 없는 워킹트리 비교 거절)와 그 변이 AH11 은 없어졌다 — 서명이 `Comparison` 을 받아 그 입력을 만들 수 없다.
+pathspec 이 없다는 것은 `test_both_git_calls_see_the_same_files`(구조)와 `test_pathspec_variables_do_not_change_the_judgement`(행동)가 본다.

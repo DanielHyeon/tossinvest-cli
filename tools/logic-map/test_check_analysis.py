@@ -105,12 +105,12 @@ def run_check(root: Path) -> list[str]:
 
 
 
-def _snapshot_stub(contents: dict[str, bytes] | None = None):
-    """`_worktree_snapshot` 의 대역 (task 7.5.25) — git 을 mock 하는 시험이 스냅숏의 git 호출에 안 걸리게 한다.
-    판정의 현재 쪽은 스냅숏의 바이트를 읽으므로, 현재 논리를 보려는 시험은 그 바이트를 건넨다."""
+def _comparison_stub(old: dict[str, bytes] | None = None, new: dict[str, bytes] | None = None):
+    """`_isolated_comparison` 의 대역 (task 7.5.34) — git 을 mock 하는 시험이 비교 준비의 git 호출에 안 걸리게 한다.
+    판정의 두 쪽은 비교가 건넨 바이트를 읽으므로, 함수 지도를 보려는 시험은 그 바이트를 건넨다."""
     @contextmanager
-    def stub(root: Path):
-        yield {}, dict(contents or {}), None
+    def stub(root: Path, base: str, target: str):
+        yield check_analysis.Comparison({}, (base, "new"), dict(old or {}), dict(new or {}))
     return stub
 
 class BundleTextCoversEveryProseFileInTheBundle(unittest.TestCase):
@@ -920,15 +920,15 @@ evidence
         self.assertEqual(check_analysis.branch_ids(text), ["B1", "B1"])
 
     def test_git_diff_failure_is_not_treated_as_empty_change(self) -> None:
-        # 워킹트리 스냅숏(`_worktree_snapshot`, task 7.5.25)을 고정한다. 안 그러면 `subprocess.run` mock 이
-        # **스냅숏의 git 호출**에서 실패를 돌려주고, 이 시험이 판정 diff 가 아니라 스냅숏의 실패로 통과한다 —
+        # 비교 준비(`_isolated_comparison`, task 7.5.25 · 7.5.34)를 고정한다. 안 그러면 `subprocess.run` mock 이
+        # **준비의 git 호출**에서 실패를 돌려주고, 이 시험이 판정 diff 가 아니라 준비의 실패로 통과한다 —
         # 이름과 다른 이유로 초록이 된다.
         failed = subprocess.CompletedProcess([], 128, b"", b"bad revision")
         with mock.patch(
             "check_analysis.subprocess.run",
             return_value=failed,
-        ), mock.patch("check_analysis._safe_changed_go_paths", return_value=[(b"1", b"1", [b"internal/x.go"])]), mock.patch("check_analysis._worktree_snapshot", _snapshot_stub()):
-            with self.assertRaises(RuntimeError):
+        ), mock.patch("check_analysis._safe_changed_go_paths", return_value=[(b"1", b"1", [b"internal/x.go"])]), mock.patch("check_analysis._isolated_comparison", _comparison_stub()):
+            with self.assertRaisesRegex(RuntimeError, "bad revision"):
                 check_analysis.changed_existing_functions(Path("/tmp"), "bad")
 
     def test_newline_changed_go_path_is_rejected_before_unified_diff_parsing(self) -> None:
@@ -941,10 +941,11 @@ evidence
             subprocess.run(["git", "add", "."], cwd=root, check=True); subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
             base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
             path.write_text("package pkg\nfunc X() { println(1) }\n", encoding="utf-8")
-            # 워킹트리 대상은 스냅숏 위에서 판정한다 (task 7.5.25) — 스냅숏이 이 이름을 날 바이트로 싣고, 가드가 거절한다.
+            # 워킹트리 대상은 격리한 비교 위에서 판정한다 (task 7.5.25 · 7.5.34) — 비교가 이 이름을 날 바이트로 싣고,
+            # 가드가 거절한다.
             with self.assertRaisesRegex(RuntimeError, "cannot be represented losslessly"), \
-                    check_analysis._worktree_snapshot(root) as (environment, _, _):
-                check_analysis._safe_changed_go_paths(root, base, "", environment)
+                    check_analysis._isolated_comparison(root, base, "") as comparison:
+                check_analysis._safe_changed_go_paths(root, comparison)
 
     def test_new_function_in_existing_file_is_not_reported_as_modified_existing(self) -> None:
         diff = subprocess.CompletedProcess(
@@ -976,7 +977,7 @@ evidence
                 "source_sha256": "current-file",
             }
         ]
-        with tempfile.TemporaryDirectory() as tmp, tempfile.NamedTemporaryFile(suffix=".go") as base_source:
+        with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             current = root / "internal" / "x.go"
             current.parent.mkdir(parents=True)
@@ -986,10 +987,8 @@ evidence
                 return_value=diff,
             ), mock.patch(
                 "check_analysis._safe_changed_go_paths", return_value=[(b"1", b"1", [b"internal/x.go"])],
-            ), mock.patch("check_analysis._worktree_snapshot", _snapshot_stub({"internal/x.go": b"package x\n"})), mock.patch(
-                "check_analysis.base_file",
-                return_value=Path(base_source.name),
-            ), mock.patch(
+            ), mock.patch("check_analysis._isolated_comparison", _comparison_stub(
+                {"internal/x.go": b"package x\n"}, {"internal/x.go": b"package x\n"})), mock.patch(
                 "check_analysis.go_functions",
                 side_effect=(old_functions, current_functions),
             ):
@@ -1011,14 +1010,14 @@ evidence
             ).encode("utf-8"),
             b"",
         )
-        missing = subprocess.CompletedProcess([], 128, b"", b"missing")
+        # base 쪽 바이트가 비교에 없다 — 검증한 base 에서 그 파일을 못 읽었다 (task 7.5.34 전에는 `git show` 실패).
         with mock.patch(
             "check_analysis.subprocess.run",
-            side_effect=(diff, missing),
+            side_effect=(diff,),
         ), mock.patch(
             "check_analysis._safe_changed_go_paths", return_value=[(b"1", b"1", [b"internal/x.go"])],
-        ), mock.patch("check_analysis._worktree_snapshot", _snapshot_stub()):
-            with self.assertRaises(RuntimeError):
+        ), mock.patch("check_analysis._isolated_comparison", _comparison_stub()):
+            with self.assertRaisesRegex(RuntimeError, "cannot load existing base file base:internal/x.go"):
                 check_analysis.changed_existing_functions(Path("/tmp"), "base")
 
     def test_environment_base_cannot_override_persisted_change_base(self) -> None:
@@ -5771,8 +5770,11 @@ class TheVerdictReadsWhatTheLandingJudged(unittest.TestCase):
             root, marks = _own_work_fixture(raw)
             (root / "internal" / "own.go").write_text("package internal\nfunc Own() int { return 3 }\n")
 
+            # 조언의 base 읽기(`_committed_many`, `-Z`)만 죽인다. 판정도 base 를 `cat-file` 로 읽지만(7.5.34 의
+            # `_verified_objects`, `-Z` 없음) 그 결함은 판정을 못 세우는 것이 맞고 `test_every_git_fault_of_the_comparison_is_named`
+            # 가 잰다 — 이 시험은 **조언**이 판정을 대신하지 않는지를 본다.
             def fails_at_the_base(argv, request):
-                if request.startswith(marks["P"].encode()):
+                if "-Z" in argv and request.startswith(marks["P"].encode()):
                     return subprocess.CompletedProcess(argv, 129, b"", AFailedGitReadIsAFaultNotAnAbsence.OLD_GIT)
                 return None
 
@@ -5816,7 +5818,9 @@ class TheVerdictReadsWhatTheLandingJudged(unittest.TestCase):
                 def counting(*args, **kwargs):
                     argv = args[0] if args else kwargs.get("args")
                     request = kwargs.get("input") or b""
-                    if isinstance(argv, list) and "cat-file" in argv and request.startswith(base.encode()):
+                    # 조언의 base 읽기(`-Z`)만 센다 — 판정의 검증 읽기(7.5.34, `-Z` 없음)는 판정마다 한 번이다.
+                    if isinstance(argv, list) and "cat-file" in argv and "-Z" in argv \
+                            and request.startswith(base.encode()):
                         seen.append(argv)
                     return real(*args, **kwargs)
 
@@ -7796,23 +7800,29 @@ class TheGuardAndTheJudgementReadTheSameDiff(unittest.TestCase):
                 continue
             seen[where] = {element.value for element in argv.elts
                            if isinstance(element, ast.Constant) and isinstance(element.value, str)}
-            # 두 호출이 **같은 쌍**(`_compared`)을 **같은 환경**(스냅숏 인덱스)에서 견준다 (task 7.5.25) —
-            # 한쪽만 스냅숏을 보면 두 시야가 갈리고, 대조는 어긋남만 보므로 둘이 함께 틀리면 못 본다.
+            # 두 호출이 **같은 쌍**(`comparison.trees`)을 **같은 환경**(격리한 저장소)에서 견준다 (task 7.5.25 ·
+            # 7.5.34) — 한쪽만 격리를 보면 두 시야가 갈리고, 대조는 어긋남만 보므로 둘이 함께 틀리면 못 본다.
             for element in argv.elts:
                 if isinstance(element, ast.Starred):
-                    for node in ast.walk(element.value):
-                        if isinstance(node, ast.Name) and node.id in ("_compared", "SNAPSHOT_PINS"):
-                            seen[where].add("*" + node.id)
-            if any(keyword.arg == "env" and isinstance(keyword.value, ast.Name) and keyword.value.id == "environment"
-                   for keyword in item.keywords):
-                seen[where].add("env=environment")
+                    value = element.value
+                    if isinstance(value, ast.Name) and value.id == "SNAPSHOT_PINS":
+                        seen[where].add("*SNAPSHOT_PINS")
+                    if isinstance(value, ast.Attribute) and value.attr == "trees":
+                        seen[where].add("*comparison.trees")
+            if any(keyword.arg == "env" and isinstance(keyword.value, ast.Attribute)
+                   and keyword.value.attr == "environment" for keyword in item.keywords):
+                seen[where].add("env=comparison.environment")
         for where, label in wanted.items():
             self.assertIn(where, seen, f"{label} 의 git 호출을 못 찾았다")
-            for flag in ("--no-ext-diff", "--no-textconv", "--find-renames", "*_compared", "*SNAPSHOT_PINS",
-                         "env=environment"):
+            for flag in ("--no-ext-diff", "--no-textconv", "--find-renames", "*comparison.trees", "*SNAPSHOT_PINS",
+                         "env=comparison.environment"):
                 self.assertIn(flag, seen[where],
                               f"{label}({where}) 의 git 호출에 `{flag}` 가 없다 — "
                               "가드와 판정이 다른 집합을 보면 교차 검사가 성립하지 않는다")
+            # pathspec 을 안 받는다 (task 7.5.34) — 두 트리에는 `*.go` 만 있다. pathspec 을 주면 `GIT_*_PATHSPECS`
+            # 가 그 뜻을 바꿔 두 시야를 **함께** 비운다(`GIT_LITERAL_PATHSPECS=1` 이면 `'*.go'` 가 글자 그대로의 이름).
+            for spelling in ("--", "*.go"):
+                self.assertNotIn(spelling, seen[where], f"{label}({where}) 의 git 호출이 pathspec 을 받는다")
 
 
 class TheWorktreeIsNotRewrittenUnderTheGate(unittest.TestCase):
@@ -7856,6 +7866,7 @@ class TheWorktreeIsNotRewrittenUnderTheGate(unittest.TestCase):
         self._run(root, "git", "config", "user.email", "fixture@example.com")
         self._run(root, "git", "config", "user.name", "fixture")
         for name in names:
+            (root / name).parent.mkdir(parents=True, exist_ok=True)
             (root / name).write_text(self.BEFORE, encoding="utf-8")
         self._run(root, "git", "add", "-A")
         self._run(root, "git", "commit", "-qm", "base")
@@ -8195,8 +8206,8 @@ while True:
             self._required(root, base)
 
     def test_a_repository_path_with_a_colon_or_a_quote_is_judged(self) -> None:
-        """`GIT_ALTERNATE_OBJECT_DIRECTORIES` 는 `:` 로 가른다 — 7.5.25 는 경로에 `:`·`"` 가 든 저장소를 거절했다.
-        git 은 `"` 로 시작하는 항목을 C 인용으로 읽는다(7.5.25 적대 재리뷰 F10 실측) — 인용해 적으면 헛거절이 없다 (7.5.31)."""
+        """7.5.25 는 실제 저장소를 대체 저장소 목록(`:` 로 가른다)에 적어 경로에 `:`·`"` 가 든 저장소를 거절했고(재리뷰
+        F10), 7.5.31 은 C 인용으로 적었다. 7.5.34 부터는 대체 저장소가 **없다** — 그 경로들이 여전히 판정되는지만 본다."""
         for name in ("a:b", 'a"b'):
             with self.subTest(name):
                 holder = tempfile.TemporaryDirectory()
@@ -8213,7 +8224,7 @@ while True:
                 (root / "x.go").write_text(self.AFTER, encoding="utf-8")
                 self.assertIn(("x.go", "Stop"), self._required(root, base))
 
-    def _forge(self, root: Path, oid: str, data: bytes, packed: bool) -> None:
+    def _forge(self, root: Path, oid: str, data: bytes, packed: bool, kind: bytes = b"blob") -> None:
         """실제 저장소에 **이름(oid)과 내용이 다른** 객체를 심는다 — loose 로, 또는 pack 으로(`pack-objects` 는 loose
         객체의 해시를 다시 확인하지 않고 담는다). git 은 객체를 oid 로만 찾으므로 그 oid 로 이 내용을 읽는다."""
         folder = root / ".git" / "objects" / oid[:2]
@@ -8221,20 +8232,27 @@ while True:
         loose = folder / oid[2:]
         if loose.exists():
             loose.chmod(0o644)
-        loose.write_bytes(zlib.compress(b"blob %d\0" % len(data) + data))
+        loose.write_bytes(zlib.compress(kind + b" %d\0" % len(data) + data))
         if packed:
             subprocess.run(["git", "pack-objects", "-q", str(root / ".git" / "objects" / "pack" / "pack")],
                            cwd=root, input=oid.encode() + b"\n", check=True, capture_output=True)
             loose.unlink()
 
+    @staticmethod
+    def _oid(root: Path, spec: str) -> str:
+        return subprocess.check_output(["git", "rev-parse", spec], cwd=root, text=True).strip()
+
+    @staticmethod
+    def _hashed(root: Path, name: str) -> str:
+        return subprocess.check_output(["git", "hash-object", name], cwd=root, text=True).strip()
+
     def test_a_replace_ref_does_not_hide_a_worktree_edit(self) -> None:
-        """`refs/replace/<편집 blob>` 참조 **하나**면 git 이 스냅숏의 blob 대신 base 의 blob 을 읽는다 — 편집 blob 이
-        저장소에 없어도 된다(7.5.25 적대 재리뷰 F1, 7.5.25 가 연 회귀). 게이트의 git 은 교체 참조를 안 따른다 (7.5.31)."""
+        """`refs/replace/<편집 blob>` 참조 **하나**면 git 이 편집 blob 대신 base 의 blob 을 읽는다 — 편집 blob 이 저장소에
+        없어도 된다(7.5.25 적대 재리뷰 F1, 7.5.25 가 연 회귀). 게이트의 git 은 교체 참조를 안 따르고(7.5.31), 판정 blob 을
+        실제 저장소에서 찾지도 않는다(7.5.34)."""
         root, base = self._repo()
         (root / "x.go").write_text(self.AFTER, encoding="utf-8")
-        edited = subprocess.check_output(["git", "hash-object", "x.go"], cwd=root, text=True).strip()
-        original = subprocess.check_output(["git", "rev-parse", f"{base}:x.go"], cwd=root, text=True).strip()
-        self._run(root, "git", "update-ref", f"refs/replace/{edited}", original)
+        self._run(root, "git", "update-ref", f"refs/replace/{self._hashed(root, 'x.go')}", self._oid(root, f"{base}:x.go"))
         self.assertIn(("x.go", "Stop"), self._required(root, base))
 
     def test_a_replace_ref_does_not_rewrite_the_base(self) -> None:
@@ -8242,54 +8260,214 @@ while True:
         root, base = self._repo()
         (root / "x.go").write_text(self.AFTER, encoding="utf-8")
         edited = subprocess.check_output(["git", "hash-object", "-w", "x.go"], cwd=root, text=True).strip()
-        original = subprocess.check_output(["git", "rev-parse", f"{base}:x.go"], cwd=root, text=True).strip()
-        self._run(root, "git", "replace", "-f", original, edited)
+        self._run(root, "git", "replace", "-f", self._oid(root, f"{base}:x.go"), edited)
         self.assertIn(("x.go", "Stop"), self._required(root, base))
 
-    def test_an_object_store_that_lies_about_the_edit_is_refused(self) -> None:
-        """편집 blob 의 oid 에 **base 의 바이트**를 담은 객체가 실제 저장소에 있으면 git 은 스냅숏이 쓴 것 대신 그것을
-        읽는다 — 스테이지한 편집의 loose 객체(F2), 또는 pack(F3 — git 은 pack 을 먼저 보므로 스냅숏이 객체를 늘 써도
-        못 막는다). 두 diff 가 **함께** 속으므로 대조는 git 밖에서 한다: 게이트가 해시한 oid 와 base 트리의 oid 가 다른
-        경로는 diff 에 **내용 변경**으로 나와야 한다 (7.5.31)."""
+    def test_an_object_store_that_lies_about_the_edit_does_not_hide_it(self) -> None:
+        """편집 blob 의 oid 에 다른 바이트를 담은 객체가 실제 저장소에 있어도 판정은 그 객체를 **안 읽는다** (7.5.34).
+        세 모양: 스테이지한 편집의 loose 객체(7.5.25 재리뷰 F2), pack(F3 — git 은 pack 을 먼저 본다), 그리고 base 도
+        디스크도 아닌 바이트(7.5.31 재리뷰 #1 — 7.5.31 의 있음 대조는 레코드가 나오니 통과시키고 요구가 비었다). 워킹트리
+        쪽 blob 은 게이트가 디스크에서 읽어 **격리한** 저장소에 쓴 것뿐이다."""
+        decoy = "// decoy\n" + self.BEFORE
         for packed in (False, True):
-            with self.subTest(packed=packed):
-                root, base = self._repo()
-                (root / "x.go").write_text(self.AFTER, encoding="utf-8")
-                if not packed:
-                    self._run(root, "git", "add", "x.go")
-                edited = subprocess.check_output(["git", "hash-object", "x.go"], cwd=root, text=True).strip()
-                self._forge(root, edited, self.BEFORE.encode(), packed)
-                lie = subprocess.check_output(["git", "cat-file", "-p", edited], cwd=root)
-                self.assertEqual(lie, self.BEFORE.encode(), "위조 객체가 안 읽힌다 — 픽스처 결함")
-                with self.assertRaisesRegex(RuntimeError, "object store.*x.go"):
+            for lie in (self.BEFORE, decoy):
+                with self.subTest(packed=packed, lie=lie[:8]):
+                    root, base = self._repo()
+                    (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+                    if not packed:
+                        self._run(root, "git", "add", "x.go")
+                    edited = self._hashed(root, "x.go")
+                    self._forge(root, edited, lie.encode(), packed)
+                    self.assertEqual(subprocess.check_output(["git", "cat-file", "-p", edited], cwd=root), lie.encode(),
+                                     "위조 객체가 안 읽힌다 — 픽스처 결함")
+                    self.assertEqual(sorted(self._required(root, base)), [("x.go", "Stop")])
+
+    def test_an_inherited_alternate_does_not_reach_the_comparison(self) -> None:
+        """격리는 **물려받은** 대체 저장소도 안 받는다 — git 은 대체 저장소의 pack 까지 loose 보다 먼저 보므로, 부모 환경의
+        `GIT_ALTERNATE_OBJECT_DIRECTORIES` 가 실제 저장소를 가리키면 위조 pack 이 격리한 blob 을 이긴다."""
+        root, base = self._repo()
+        (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+        self._forge(root, self._hashed(root, "x.go"), self.BEFORE.encode(), packed=True)
+        with mock.patch.dict(os.environ, {"GIT_ALTERNATE_OBJECT_DIRECTORIES": str(root / ".git" / "objects")}):
+            self.assertEqual(sorted(self._required(root, base)), [("x.go", "Stop")])
+
+    def test_a_rename_behind_a_forged_blob_does_not_hide_the_edit(self) -> None:
+        """7.5.31 재리뷰 #2 — `git mv` 뒤 새 이름의 blob 에 base 바이트를 심으면 git 은 100% rename(`0`/`0`)을 보고 7.5.31
+        의 규칙 셋이 다 통과해 요구가 비었다. 같은 수로 **삭제**도 숨었다(지운 파일의 바이트를 새 파일의 oid 에 심는다)."""
+        root, base = self._repo()
+        self._run(root, "git", "mv", "x.go", "y.go")
+        (root / "y.go").write_text(self.AFTER, encoding="utf-8")
+        self._run(root, "git", "add", "y.go")
+        self._forge(root, self._hashed(root, "y.go"), self.BEFORE.encode(), packed=True)
+        self.assertIn(("y.go", "Stop"), self._required(root, base))
+
+        root, base = self._repo()
+        (root / "x.go").unlink()
+        (root / "y.go").write_text("package pkg\n", encoding="utf-8")
+        self._run(root, "git", "add", "-A")
+        self._forge(root, self._hashed(root, "y.go"), self.BEFORE.encode(), packed=True)
+        self.assertIn(("x.go", "Stop"), self._required(root, base))
+
+    def test_a_forged_base_object_is_refused(self) -> None:
+        """base 쪽도 git 이 oid 로 찾아 주는 대로 믿으면 속는다 (7.5.33 · 7.5.25 적대 재리뷰 F5). 게이트는 base 의 커밋 ·
+        트리 · blob 을 읽을 때 **자기가 해시해** 이름과 맞는지 본다 (7.5.34) — 안 맞으면 저장소가 다시 쓰인 것이고 판정하지
+        않는다. 셋은 이 검증만 잡는다: blob 을 편집 내용으로(7.5.31 은 규칙 1 로 거절했다), 편집 내용 위에 미끼 줄을 얹어
+        (7.5.31 에서도 `[]` — 주장정확성 재리뷰 실측), **하위** 트리를 빈 트리로 — git 은 하위 트리를 해시 없이 읽어
+        `ls-tree -r` 에서도 `sub/x.go` 가 조용히 사라진다(2.43 실측)."""
+        for label in ("blob", "decoy", "subtree"):
+            with self.subTest(label):
+                root, base = self._repo(("sub/x.go",))
+                (root / "sub" / "x.go").write_text(self.AFTER, encoding="utf-8")
+                if label == "subtree":
+                    self._forge(root, self._oid(root, f"{base}:sub"), b"", packed=True, kind=b"tree")
+                else:
+                    lie = self.AFTER if label == "blob" else "// decoy\n" + self.AFTER
+                    self._forge(root, self._oid(root, f"{base}:sub/x.go"), lie.encode(), packed=True)
+                with self.assertRaisesRegex(RuntimeError, "do not hash to it"):
                     self._required(root, base)
 
-    def test_the_store_cross_check_reads_each_rule_directly(self) -> None:
-        """`_snapshot_disagreement` 의 규칙 셋을 레코드를 직접 건네 잰다. 정직한 git 에서는 "바뀐 경로가 레코드에
-        아예 없음" · "지운 경로가 없음" 이 닿기 어렵다 — 행동 시험만으로는 그 두 갈래를 빼는 변이가 살아남는다."""
-        root, base = self._repo(("x.go", "y.go"))
-        same = subprocess.check_output(["git", "rev-parse", f"{base}:y.go"], cwd=root, text=True).strip()
-        edited = "e" * len(same)
-        both = {b"x.go": edited, b"y.go": same}
-        judge = check_analysis._snapshot_disagreement
-        judge(root, base, both, [(b"1", b"1", [b"x.go"])])                       # 정상: 바뀐 것이 레코드에 있다
-        judge(root, base, {b"x.go": edited, b"y.go": same, b"n.go": edited},    # 정상: 새 파일 · rename 의 새 이름
-              [(b"1", b"1", [b"x.go"]), (b"1", b"0", [b"n.go"])])
-        with self.assertRaisesRegex(RuntimeError, "object store answers for x.go with bytes"):
-            judge(root, base, both, [])                                         # 규칙 1: 레코드에 없다
-        with self.assertRaisesRegex(RuntimeError, "object store answers for x.go with bytes"):
-            judge(root, base, both, [(b"0", b"0", [b"x.go"])])                  # 규칙 3: 내용이 같다고 한다
-        judge(root, base, {b"z.go": same, b"y.go": same},                       # 정상: rename 은 0/0 이어도 된다
-              [(b"0", b"0", [b"x.go", b"z.go"])])
-        with self.assertRaisesRegex(RuntimeError, "object store answers for x.go as if it were still there"):
-            judge(root, base, {b"y.go": same}, [])                              # 규칙 2: 지운 것이 레코드에 없다
-        judge(root, base, {b"y.go": same}, [(b"0", b"5", [b"x.go"])])           # 정상: 삭제가 레코드에 있다
-        with self.assertRaisesRegex(RuntimeError, "ls-tree|Not a valid|not a tree"):
-            judge(root, "0" * len(same), both, [])                              # base 트리를 못 읽으면 결함
+    def test_a_forged_root_tree_or_commit_is_refused(self) -> None:
+        """뿌리 트리와 커밋은 git 자신이 먼저 거절한다 — `rev-parse <base>^{tree}` 가 그 객체를 **파싱**하면서 해시를 본다
+        (`error: hash mismatch`, 2.43 실측). 어느 쪽이 먼저 말하든 이름 댄 거절이어야 한다: 뿌리 트리를 빈 트리로 바꾸면
+        `x.go` 가 새 파일처럼 보이고, 커밋을 편집한 트리로 바꾸면 base 와 워킹트리가 같아 보인다."""
+        for label in ("tree", "commit"):
+            with self.subTest(label):
+                root, base = self._repo()
+                (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+                if label == "tree":
+                    self._forge(root, self._oid(root, f"{base}^{{tree}}"), b"", packed=False, kind=b"tree")
+                else:
+                    after = subprocess.check_output(["git", "hash-object", "-w", "x.go"], cwd=root, text=True).strip()
+                    tree = subprocess.check_output(["git", "mktree"], cwd=root, input=f"100644 blob {after}\tx.go\n",
+                                                   text=True).strip()
+                    real = subprocess.check_output(["git", "cat-file", "commit", base], cwd=root)
+                    old_tree = self._oid(root, f"{base}^{{tree}}")
+                    self._forge(root, base, real.replace(old_tree.encode(), tree.encode(), 1), packed=False,
+                                kind=b"commit")
+                with self.assertRaisesRegex(RuntimeError, "hash mismatch|do not hash to it"):
+                    self._required(root, base)
+
+    def _gitlink(self, root: Path, name: str) -> None:
+        """`name` 에 gitlink(`160000`)를 싣고 커밋한다 — 가리키는 커밋은 이 저장소의 것이다(픽스처가 하위 저장소 없이 선다)."""
+        head = self._oid(root, "HEAD")
+        self._run(root, "git", "update-index", "--add", "--cacheinfo", f"160000,{head},{name}")
+        self._run(root, "git", "commit", "-qm", "gitlink")
+
+    def test_a_submodule_in_the_base_is_not_refused(self) -> None:
+        """`ls-tree -r -d` 는 gitlink(`160000 commit`)도 낸다. 그것을 트리로 물은 첫 판본은 하위 모듈이 하나라도 있는
+        저장소를 전부 헛거절했다(7.5.34 작업 중 실측) — 다른 저장소의 커밋은 여기 객체가 없다."""
+        root, _ = self._repo()
+        self._gitlink(root, "vendor/lib")
+        base = self._oid(root, "HEAD")
+        (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+        self.assertEqual(sorted(self._required(root, base)), [("x.go", "Stop")])
+
+    def test_a_deleted_go_gitlink_is_refused_by_name(self) -> None:
+        """base 의 `*.go` 가 gitlink 이고 지웠으면 옛 쪽에 Go 바이트가 없다 — 이름 대고 멈춘다. 옛 판본은 `git show` 가
+        그 커밋을 찍을 수 있으면(같은 저장소의 커밋) 그 글을 Go 로 읽어 `{}` 였고, 없으면 같은 문장으로 멈췄다. 격리한
+        비교는 gitlink 를 읽지 않는다 — 다른 저장소의 커밋이다."""
+        root, _ = self._repo()
+        self._gitlink(root, "sub.go")
+        base = self._oid(root, "HEAD")
+        self._run(root, "git", "rm", "-q", "--cached", "sub.go")
+        with self.assertRaisesRegex(RuntimeError, "cannot load existing base file .*:sub.go"):
+            self._required(root, base)
+
+    def test_the_commit_target_is_verified_too(self) -> None:
+        """대상이 커밋이어도 두 쪽 모두 검증한 바이트다 (7.5.34) — 착지 판정(`landed-commit.txt`)과 이관 감사가 이 모드로
+        돈다. 7.5.31 까지는 두 트리를 git 이 oid 로 찾아 주는 대로 견줬다(한쪽 blob 을 다른 쪽 바이트로 위조하면 `[]`)."""
+        for side in ("target", "base"):
+            with self.subTest(side):
+                root, base = self._repo()
+                (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+                self._run(root, "git", "commit", "-qam", "edit")
+                if side == "target":
+                    self._forge(root, self._oid(root, "HEAD:x.go"), self.BEFORE.encode(), packed=True)
+                else:
+                    self._forge(root, self._oid(root, f"{base}:x.go"), self.AFTER.encode(), packed=True)
+                with mock.patch("check_analysis.go_functions", side_effect=self._functions), \
+                        self.assertRaisesRegex(RuntimeError, "do not hash to it"):
+                    check_analysis.changed_existing_functions(root, base, "HEAD")
+
+    def test_a_sparse_entry_that_differs_from_the_base_is_judged_from_its_verified_blob(self) -> None:
+        """sparse 로 안 꺼낸 파일의 현재 쪽은 인덱스의 blob 이다 (7.5.25). 7.5.31 까지는 그 blob 을 git 만 읽었고 함수
+        지도의 현재 쪽은 비어 있었다(디스크 바이트가 없다). 7.5.34 는 그 blob 을 **검증해** 읽어 현재 쪽도 그 바이트로 보고,
+        위조돼 있으면 거절한다."""
+        for forged in (False, True):
+            with self.subTest(forged=forged):
+                root, base = self._repo()
+                (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+                self._run(root, "git", "commit", "-qam", "edit")
+                self._run(root, "git", "update-index", "--skip-worktree", "x.go")
+                (root / "x.go").unlink()
+                judged: list[str] = []
+
+                def spy(path: Path, where: Path) -> list[dict]:
+                    judged.append(Path(path).read_text(encoding="utf-8"))
+                    return self._functions(path, where)
+
+                if forged:
+                    self._forge(root, self._oid(root, ":x.go"), self.BEFORE.encode(), packed=True)
+                    with mock.patch("check_analysis.go_functions", side_effect=spy), \
+                            self.assertRaisesRegex(RuntimeError, "do not hash to it"):
+                        check_analysis.changed_existing_functions(root, base, "")
+                    continue
+                with mock.patch("check_analysis.go_functions", side_effect=spy):
+                    required = check_analysis.changed_existing_functions(root, base, "")
+                self.assertEqual(judged, [self.BEFORE, self.AFTER])
+                self.assertIn(("x.go", "Stop"), required)
+
+    def test_a_new_empty_go_file_is_not_refused(self) -> None:
+        """7.5.31 재리뷰 #3 — 새로 더한 **빈** `.go` 는 numstat 이 `0`/`0` 으로 내고, 7.5.31 의 규칙 3 이 그것을 저장소의
+        거짓말로 거절했다(헛거절). 7.5.34 에는 그 대조가 없다 — 지킬 것이 없어졌다."""
+        for how in (("add",), ("add", "-N")):
+            with self.subTest(how):
+                root, base = self._repo()
+                (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+                (root / "n.go").write_text("", encoding="utf-8")
+                self._run(root, "git", *how, "n.go")
+                self.assertEqual(sorted(self._required(root, base)), [("x.go", "Stop")])
+
+    def test_pathspec_variables_do_not_change_the_judgement(self) -> None:
+        """`GIT_LITERAL_PATHSPECS` · `GIT_GLOB_PATHSPECS` · `GIT_NOGLOB_PATHSPECS` 는 `'*.go'` 의 뜻을 바꾼다 — 글자 그대로의
+        이름이 되거나 `/` 를 못 건넌다. 7.5.25 까지는 요구가 조용히 비었고(7.5.25 재리뷰 F7) 7.5.31 에서는 "object store"
+        탓으로 헛거절했다(주장정확성 재리뷰). 7.5.34 의 목록과 두 diff 는 pathspec 을 안 받는다."""
+        for variable in ("GIT_LITERAL_PATHSPECS", "GIT_GLOB_PATHSPECS", "GIT_NOGLOB_PATHSPECS"):
+            with self.subTest(variable):
+                root, base = self._repo(("x.go", "sub/x.go"))
+                for name in ("x.go", "sub/x.go"):
+                    (root / name).write_text(self.AFTER, encoding="utf-8")
+                with mock.patch.dict(os.environ, {variable: "1"}):
+                    self.assertEqual(sorted(self._required(root, base)), [("sub/x.go", "Stop"), ("x.go", "Stop")])
+
+    def test_a_linked_worktree_under_an_awkward_main_path_is_judged(self) -> None:
+        """7.5.31 재리뷰 #4 · #5 — 연결 워크트리의 객체는 **주** 저장소 아래에 있다. 7.5.31 은 그 경로를 `rev-parse
+        --git-path objects` 로 받아 엄격히 해독했고(UTF-8 이 아닌 바이트면 해독 오류) 줄로 잘랐다(줄바꿈이면 경로가
+        잘린다). 7.5.34 는 실제 저장소의 경로를 묻지 않는다 — 객체는 `cat-file` 이 읽고 비교는 격리한 저장소에서 한다."""
+        for name in ("main\nrepo", os.fsdecode(b"main\xffrepo")):
+            with self.subTest(name=repr(name)):
+                holder = tempfile.TemporaryDirectory()
+                self.addCleanup(holder.cleanup)
+                main = Path(holder.name) / name
+                try:
+                    main.mkdir()
+                except (OSError, UnicodeError) as exc:
+                    self.skipTest(f"this filesystem refuses the name: {exc}")
+                self._run(main, "git", "init", "-q", ".")
+                self._run(main, "git", "config", "user.email", "fixture@example.com")
+                self._run(main, "git", "config", "user.name", "fixture")
+                (main / "x.go").write_text(self.BEFORE, encoding="utf-8")
+                self._run(main, "git", "add", "-A")
+                self._run(main, "git", "commit", "-qm", "base")
+                base = self._oid(main, "HEAD")
+                linked = Path(holder.name) / "linked"
+                self._run(main, "git", "worktree", "add", "-q", str(linked))
+                (linked / "x.go").write_text(self.AFTER, encoding="utf-8")
+                self.assertEqual(sorted(self._required(linked, base)), [("x.go", "Stop")])
 
     def test_an_unchanged_file_with_a_name_that_is_not_utf8_is_not_refused(self) -> None:
         """이름이 UTF-8 이 아닌 **안 바뀐** 추적 `*.go` 가 있으면 7.5.25 는 이름 없는 해독 오류로 멈췄다(F9 — 부모는
-        바뀐 파일의 이름만 해독했다). 스냅숏은 이름을 날 바이트로 다룬다; 바뀐 파일의 이름은 가드가 전처럼 거절한다."""
+        바뀐 파일의 이름만 해독했다). 비교는 이름을 날 바이트로 다룬다; 바뀐 파일의 이름은 가드가 전처럼 거절한다."""
         root, base = self._repo()
         try:
             (root / os.fsdecode(b"\xff.go")).write_text(self.BEFORE, encoding="utf-8")
@@ -8301,33 +8479,106 @@ while True:
         (root / "x.go").write_text(self.AFTER, encoding="utf-8")
         self.assertEqual(sorted(self._required(root, base)), [("x.go", "Stop")])
 
-    def test_every_git_fault_of_the_snapshot_is_named(self) -> None:
-        """스냅숏의 git 호출 셋(`rev-parse` · `ls-files` · `update-index`)이 실패하거나 모양이 틀리면 이름 대고
-        멈춘다 — 빈 스냅숏으로 읽으면 "바뀐 파일 없음" 이다. 호출 순서대로 하나씩 깬다."""
-        def done(code: int, out: bytes = b"") -> subprocess.CompletedProcess:
+    def test_every_bad_answer_of_the_object_store_is_named(self) -> None:
+        """`_verified_objects` 는 실제 저장소가 준 바이트를 **해시해** 받는다 (7.5.34). 틀린 대답은 이름 대고 멈춘다 —
+        건너뛰거나 부분 답을 쓰면 판정이 다른 바이트나 빈 쪽으로 선다. 정상 대답은 그 바이트를 돌려주고, 물을 것이
+        없으면 git 을 부르지 않는다."""
+        data = b"package p\n"
+        oid = hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
+        good = oid.encode() + b" blob %d\n" % len(data) + data + b"\n"
+
+        def done(out: bytes, code: int = 0) -> subprocess.CompletedProcess:
             return subprocess.CompletedProcess([], code, out, b"boom")
 
-        described = done(0, b"sha1\n.git/objects\n")
         cases = {
-            "rev-parse fails": ([done(128)], "boom"),
-            "rev-parse says too little": ([done(0, b"sha1\n")], "cannot read git rev-parse output"),
-            "ls-files fails": ([described, done(128)], "boom"),
-            "ls-files record is short": ([described, done(0, b"100644 " + b"0" * 40 + b"\tx.go\0")],
+            "git fails": (done(b"", 128), "boom"),
+            "missing": (done(oid.encode() + b" missing\n"), "has no blob"),
+            "wrong type": (done(oid.encode() + b" tree %d\n" % len(data) + data + b"\n"), "has no blob"),
+            "another oid": (done(b"f" * 40 + b" blob %d\n" % len(data) + data + b"\n"), "has no blob"),
+            "not a size": (done(oid.encode() + b" blob x\n" + data + b"\n"), "has no blob"),
+            "does not hash": (done(oid.encode() + b" blob 10\npackage q\n\n"), "do not hash to it"),
+            "no header": (done(b""), "stopped before x.go"),
+            "short body": (done(good[:-3]), "stopped before x.go"),
+            "no terminator": (done(good[:-1] + b"X"), "framing"),
+            "left over": (done(good + b"extra"), "framing"),
+        }
+        wanted = {oid: (b"blob", "x.go")}
+        for label, (answer, message) in cases.items():
+            with self.subTest(label), mock.patch("check_analysis.subprocess.run", return_value=answer):
+                with self.assertRaisesRegex(RuntimeError, message):
+                    check_analysis._verified_objects(Path("/tmp"), "sha1", wanted)
+        with mock.patch("check_analysis.subprocess.run", return_value=done(good)):
+            self.assertEqual(check_analysis._verified_objects(Path("/tmp"), "sha1", wanted), {oid: data})
+        with mock.patch("check_analysis.subprocess.run") as never:
+            self.assertEqual(check_analysis._verified_objects(Path("/tmp"), "sha1", {}), {})
+        never.assert_not_called()
+
+    def test_every_git_fault_of_the_comparison_is_named(self) -> None:
+        """비교 준비의 git 호출(`rev-parse` · `ls-tree` · `cat-file` · `ls-files` · `update-index` · `write-tree`)이
+        실패하거나 모양이 틀리면 이름 대고 멈춘다 — 빈 쪽으로 읽으면 "바뀐 파일 없음" 이다. 호출 순서대로 하나씩 깬다.
+        목록이 커밋의 트리를 빠뜨리면(검증한 커밋이 가리키는 트리를 못 받았다) 그것도 이름 댄다."""
+        empty = hashlib.sha1(b"tree 0\0").hexdigest()
+
+        def done(out: bytes = b"", code: int = 0) -> subprocess.CompletedProcess:
+            return subprocess.CompletedProcess([], code, out, b"boom")
+
+        def commit_of(tree: str) -> tuple[str, bytes]:
+            body = b"tree %s\n" % tree.encode()
+            return hashlib.sha1(b"commit %d\0" % len(body) + body).hexdigest(), body
+
+        commit, body = commit_of(empty)
+        answered = done(commit.encode() + b" commit %d\n" % len(body) + body + b"\n"
+                        + empty.encode() + b" tree 0\n\n")
+        described = done(b"sha1\n%s\n%s\n" % (commit.encode(), empty.encode()))
+        stray, stray_body = commit_of("1" * 40)
+        hidden = [done(b"sha1\n%s\n%s\n" % (stray.encode(), empty.encode())), done(),
+                  done(stray.encode() + b" commit %d\n" % len(stray_body) + stray_body + b"\n"
+                       + empty.encode() + b" tree 0\n\n")]
+        built = [done(), done(empty.encode() + b"\n")]
+
+        def answered_with(first: bytes, tree: str, tree_body: bytes) -> list[subprocess.CompletedProcess]:
+            """검증은 통과하는(해시가 맞는) 커밋 · 트리인데 **모양**이 틀린 대답 — 커밋에 `tree` 줄이 없거나 트리 항목이 잘렸다."""
+            oid = hashlib.sha1(b"commit %d\0" % len(first) + first).hexdigest()
+            return [done(b"sha1\n%s\n%s\n" % (oid.encode(), tree.encode())), done(),
+                    done(oid.encode() + b" commit %d\n" % len(first) + first + b"\n"
+                         + tree.encode() + b" tree %d\n" % len(tree_body) + tree_body + b"\n")]
+
+        broken = b"100644 x.go"
+        broken_tree = hashlib.sha1(b"tree %d\0" % len(broken) + broken).hexdigest()
+        cases = {
+            "rev-parse fails": ([done(code=128)], "boom"),
+            "rev-parse says too little": ([done(b"sha1\n" + commit.encode() + b"\n")], "cannot read git rev-parse output"),
+            "ls-tree fails": ([described, done(code=128)], "boom"),
+            "ls-tree record is short": ([described, done(b"040000 tree\tsub\0")], "cannot read git ls-tree record"),
+            "cat-file fails": ([described, done(), done(code=128)], "boom"),
+            "the listing hides a tree": (hidden, "did not list tree 111111111111"),
+            "a commit without a tree line": (answered_with(b"parent x\n", empty, b""), "cannot read commit"),
+            "a tree that cannot be read": (answered_with(b"tree %s\n" % broken_tree.encode(), broken_tree, broken),
+                                           "cannot read tree"),
+            "ls-files fails": ([described, done(), answered, done(code=128)], "boom"),
+            "ls-files record is short": ([described, done(), answered, done(b"100644 " + b"0" * 40 + b"\tx.go\0")],
                                          "cannot read git ls-files -s -v record"),
-            "update-index fails": ([described, done(0, b""), done(128)], "boom"),
+            "update-index fails": ([described, done(), answered, done(), done(code=128)], "boom"),
+            "write-tree fails": ([described, done(), answered, done(), done(), done(code=128)], "boom"),
+            "write-tree says nonsense": ([described, done(), answered, done(), done(), done(b"nonsense\n")],
+                                         "cannot read git write-tree output"),
+            "the second tree fails": ([described, done(), answered, done(), *built, done(code=128)], "boom"),
         }
         for label, (answers, message) in cases.items():
             with self.subTest(label), tempfile.TemporaryDirectory() as raw, \
                     mock.patch("check_analysis.subprocess.run", side_effect=answers):
                 with self.assertRaisesRegex(RuntimeError, message):
-                    with check_analysis._worktree_snapshot(Path(raw)):
+                    with check_analysis._isolated_comparison(Path(raw), "b" * 40, ""):
                         pass
-
-    def test_a_worktree_guard_without_the_snapshot_is_refused(self) -> None:
-        """스냅숏 없이 `--cached` 를 부르면 **실제** 인덱스를 견준다 — 워킹트리도 스냅숏도 아닌 셋째 시야다."""
-        root, base = self._repo()
-        with self.assertRaisesRegex(ValueError, "needs the worktree snapshot"):
-            check_analysis._safe_changed_go_paths(root, base, "")
+        with tempfile.TemporaryDirectory() as raw, mock.patch(
+                "check_analysis.subprocess.run", side_effect=[described, done(), answered, done(), *built, *built]):
+            with check_analysis._isolated_comparison(Path(raw), "b" * 40, "") as comparison:
+                self.assertEqual(comparison.trees, (empty, empty))
+        with mock.patch("check_analysis.subprocess.run") as never, \
+                self.assertRaisesRegex(ValueError, "not a revision: -x"):
+            with check_analysis._isolated_comparison(Path("/tmp"), "-x", ""):
+                pass
+        never.assert_not_called()
 
     def test_a_commit_target_does_not_read_the_worktree(self) -> None:
         """경계 — 대상이 커밋이면 blob 끼리 견주므로 워킹트리의 플래그는 판정과 무관하다."""
@@ -8340,25 +8591,28 @@ while True:
                 check_analysis._ledger() as book:
             required = check_analysis.changed_existing_functions(root, base, "HEAD")
         self.assertIn(("x.go", "Stop"), required)
-        # 스냅숏은 워킹트리 대상에서만 연다 (task 7.5.25). 커밋 대상이 열면 판정은 같지만 워킹트리를 읽어 **원장에
+        # 워킹트리는 워킹트리 대상에서만 읽는다 (task 7.5.25). 커밋 대상이 읽으면 판정은 같지만 워킹트리를 **원장에
         # 남기고**, 판정 중 워킹트리 편집이 커밋 대상 판정에 헛 재실행을 요구하게 된다(변이 AH19 가 살아남았다).
         self.assertNotIn(("file", str(root / "x.go")), book.seen, "커밋 대상 판정이 워킹트리를 읽었다")
 
     def test_an_untouched_worktree_is_an_empty_comparison(self) -> None:
-        """스냅숏의 blob id 는 git 의 것과 **같아야** 한다 — 다르면 판정은 그대로여도(git 이 내용을 견주어 훅을 안 낸다)
-        안 바뀐 추적 `*.go` 전부가 "바뀐 파일" 로 목록에 오르고, 판정마다 전부를 임시 저장소에 쓴다. 그 둘을 센다:
-        손대지 않으면 목록 0 · 쓴 객체 0, 한 파일을 고치면 목록 1 · 객체 1 (변이 AH16 · AH17 이 살아남았다)."""
-        root, base = self._repo(("x.go", "y.go"))
+        """비교는 **다른** 경로만 싣는다 — 워킹트리 쪽 oid 를 git 과 다르게 계산하면 판정은 그대로여도(git 이 내용을 견주어
+        훅을 안 낸다) 안 바뀐 `*.go` 전부가 "바뀐 파일" 로 목록에 오르고 판정마다 전부를 읽어 쓴다. 넷을 센다: 가드의
+        레코드 · 격리한 저장소의 blob · 두 쪽 바이트의 경로 (변이 AH16 · AH17 이 살아남았던 자리)."""
+        # Go 가 아닌 추적 파일이 하나 있다 — 두 쪽 모두 `.go` 로 거르므로 비교에 안 오른다.
+        root, base = self._repo(("x.go", "y.go", "notes.txt"))
 
-        def measured() -> tuple[int, int]:
-            with check_analysis._worktree_snapshot(root) as (environment, _, _):
-                records = check_analysis._safe_changed_go_paths(root, base, "", environment)
-                store = Path(environment["GIT_OBJECT_DIRECTORY"])
-                return len(records), sum(1 for item in store.rglob("*") if item.is_file())
+        def measured() -> tuple[int, int, list[str], list[str]]:
+            with check_analysis._isolated_comparison(root, base, "") as comparison:
+                records = check_analysis._safe_changed_go_paths(root, comparison)
+                store = Path(comparison.environment["GIT_OBJECT_DIRECTORY"])
+                blobs = sum(1 for item in store.rglob("*") if item.is_file()
+                            and zlib.decompress(item.read_bytes()).startswith(b"blob "))
+                return len(records), blobs, sorted(comparison.old), sorted(comparison.new)
 
-        self.assertEqual(measured(), (0, 0))
+        self.assertEqual(measured(), (0, 0, [], []))
         (root / "x.go").write_text(self.AFTER, encoding="utf-8")
-        self.assertEqual(measured(), (1, 1))
+        self.assertEqual(measured(), (1, 2, ["x.go"], ["x.go"]))
 
 
 class TheNumstatTableIsNeverInvented(unittest.TestCase):

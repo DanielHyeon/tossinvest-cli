@@ -1,0 +1,353 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "ff19be01",
+  "head_commit": "ff19be0162521627988dc8e09a06297b57e4d35d",
+  "source_sha256": "6ad654a895ea8f23b0234c7cbe44490ab7c72eb5bcca5f80f8de4430bec47138",
+  "function": "_worktree_snapshot",
+  "signature": "_worktree_snapshot(root)",
+  "start": {
+    "line": 145,
+    "column": 1
+  },
+  "end": {
+    "line": 235,
+    "column": 44
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 170,
+      "inherited_line": false,
+      "source": "if described.returncode:"
+    },
+    {
+      "id": "B2",
+      "kind": "BoolOp",
+      "line": 173,
+      "inherited_line": false,
+      "source": "len(answer) < 2 or not answer[0] or (not answer[1])"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 173,
+      "inherited_line": false,
+      "source": "if len(answer) < 2 or not answer[0] or (not answer[1]):"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 180,
+      "inherited_line": false,
+      "source": "if listed.returncode:"
+    },
+    {
+      "id": "B5",
+      "kind": "For",
+      "line": 188,
+      "inherited_line": false,
+      "source": "for entry in listed.stdout.split(b'\\x00'):"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 189,
+      "inherited_line": false,
+      "source": "if not entry:"
+    },
+    {
+      "id": "B7",
+      "kind": "BoolOp",
+      "line": 193,
+      "inherited_line": false,
+      "source": "len(fields) != 4 or not raw_path"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 193,
+      "inherited_line": false,
+      "source": "if len(fields) != 4 or not raw_path:"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 199,
+      "inherited_line": false,
+      "source": "if stage != b'0':"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 201,
+      "inherited_line": false,
+      "source": "if mode not in GO_FILE_MODES:"
+    },
+    {
+      "id": "B11",
+      "kind": "Try",
+      "line": 203,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B12",
+      "kind": "ExceptHandler",
+      "line": 205,
+      "inherited_line": false,
+      "source": "except (FileNotFoundError, NotADirectoryError):"
+    },
+    {
+      "id": "B13",
+      "kind": "If",
+      "line": 207,
+      "inherited_line": false,
+      "source": "if tag.upper() == b'S':"
+    },
+    {
+      "id": "B14",
+      "kind": "If",
+      "line": 213,
+      "inherited_line": false,
+      "source": "if digest != oid.decode('ascii'):"
+    },
+    {
+      "id": "B15",
+      "kind": "If",
+      "line": 233,
+      "inherited_line": false,
+      "source": "if built.returncode:"
+    }
+  ],
+  "returns": [],
+  "raises": [
+    {
+      "line": 171,
+      "source": "raise RuntimeError(_first_line(described.stderr.decode('utf-8', 'replace'), 'git rev-parse failed'))"
+    },
+    {
+      "line": 174,
+      "source": "raise RuntimeError('cannot read git rev-parse output')"
+    },
+    {
+      "line": 181,
+      "source": "raise RuntimeError(_first_line(listed.stderr.decode('utf-8', 'replace'), 'git ls-files failed'))"
+    },
+    {
+      "line": 194,
+      "source": "raise RuntimeError('cannot read git ls-files -s -v record')"
+    },
+    {
+      "line": 200,
+      "source": "raise RuntimeError(f'Go file is unmerged: {path} — resolve the conflict before the gate')"
+    },
+    {
+      "line": 202,
+      "source": "raise RuntimeError(f'tracked Go path is not a regular file in the index (mode {mode.decode()}): {path}')"
+    },
+    {
+      "line": 234,
+      "source": "raise RuntimeError(_first_line(built.stderr.decode('utf-8', 'replace'), 'git update-index failed'))"
+    }
+  ],
+  "calls": [
+    {
+      "line": 166,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 171,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 171,
+      "callee": "_first_line"
+    },
+    {
+      "line": 171,
+      "callee": "described.stderr.decode"
+    },
+    {
+      "line": 172,
+      "callee": "described.stdout.decode('utf-8', 'strict').split"
+    },
+    {
+      "line": 172,
+      "callee": "described.stdout.decode"
+    },
+    {
+      "line": 173,
+      "callee": "len"
+    },
+    {
+      "line": 174,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 175,
+      "callee": "(root / answer[1]).resolve"
+    },
+    {
+      "line": 176,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 181,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 181,
+      "callee": "_first_line"
+    },
+    {
+      "line": 181,
+      "callee": "listed.stderr.decode"
+    },
+    {
+      "line": 182,
+      "callee": "tempfile.TemporaryDirectory"
+    },
+    {
+      "line": 183,
+      "callee": "Path"
+    },
+    {
+      "line": 184,
+      "callee": "store.mkdir"
+    },
+    {
+      "line": 188,
+      "callee": "listed.stdout.split"
+    },
+    {
+      "line": 191,
+      "callee": "entry.partition"
+    },
+    {
+      "line": 192,
+      "callee": "head.split"
+    },
+    {
+      "line": 193,
+      "callee": "len"
+    },
+    {
+      "line": 194,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 198,
+      "callee": "os.fsdecode"
+    },
+    {
+      "line": 200,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 202,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 202,
+      "callee": "mode.decode"
+    },
+    {
+      "line": 204,
+      "callee": "_read_regular"
+    },
+    {
+      "line": 207,
+      "callee": "tag.upper"
+    },
+    {
+      "line": 208,
+      "callee": "lines.append"
+    },
+    {
+      "line": 209,
+      "callee": "oid.decode"
+    },
+    {
+      "line": 211,
+      "callee": "hashlib.new(algorithm, b'blob %d\\x00' % len(data) + data).hexdigest"
+    },
+    {
+      "line": 211,
+      "callee": "hashlib.new"
+    },
+    {
+      "line": 211,
+      "callee": "len"
+    },
+    {
+      "line": 213,
+      "callee": "oid.decode"
+    },
+    {
+      "line": 214,
+      "callee": "_write_loose_blob"
+    },
+    {
+      "line": 217,
+      "callee": "digest.encode"
+    },
+    {
+      "line": 217,
+      "callee": "lines.append"
+    },
+    {
+      "line": 218,
+      "callee": "os.environ.get"
+    },
+    {
+      "line": 221,
+      "callee": "Path"
+    },
+    {
+      "line": 221,
+      "callee": "str"
+    },
+    {
+      "line": 222,
+      "callee": "str"
+    },
+    {
+      "line": 224,
+      "callee": "_c_quoted"
+    },
+    {
+      "line": 224,
+      "callee": "filter"
+    },
+    {
+      "line": 224,
+      "callee": "os.pathsep.join"
+    },
+    {
+      "line": 224,
+      "callee": "str"
+    },
+    {
+      "line": 228,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 231,
+      "callee": "b''.join"
+    },
+    {
+      "line": 234,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 234,
+      "callee": "_first_line"
+    },
+    {
+      "line": 234,
+      "callee": "built.stderr.decode"
+    }
+  ]
+}
