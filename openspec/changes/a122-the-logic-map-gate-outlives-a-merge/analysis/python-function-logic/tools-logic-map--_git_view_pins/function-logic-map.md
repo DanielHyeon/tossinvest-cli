@@ -29,6 +29,9 @@
 required+점 이름 · fsmonitor)과 계약 둘(`…every_configured_driver_gets_all_three_pins` ·
 `…driver_name_that_cannot_be_pinned_is_refused`). `clean=` 을 못 박는 것은 **계약 시험 하나뿐**이다 — 행동 시험은
 git 의 우연으로 초록이 된다. 변이 `AF1~AF5`. (7.5.28 정정: 앞 판본은 "넷" 이라 적고 계약 둘을 빠뜨렸다.)
+(7.5.25 정정, cfe8d08b 주장정확성 재리뷰 F2: "계약 시험 **하나뿐**" 은 7.5.28 이 같은 커밋에서 더한
+`…driver_name_with_a_space_is_pinned_not_refused` 가 `filter.my drv.clean=` 을 단언하면서 **둘**이 됐다 — 뒤에 더한
+시험이 앞의 문장을 낡게 만든, 여섯 번째 같은 모양이다.)
 
 ## task 7.5.28
 
@@ -36,3 +39,12 @@ git 의 우연으로 초록이 된다. 변이 `AF1~AF5`. (7.5.28 정정: 앞 판
 (7.5.27 의 "재현 안 됨" 은 mtime 을 과거로 안 돌린 픽스처 탓의 **거짓**이었다). 드라이버 이름은 `=` 만 거절한다 —
 공백은 `-c` 로 적힌다(7.5.27 의 공백 거절은 헛거절이었다). 시험: `…minimal_stat_check…` · `…driver_name_with_a_space…`.
 변이 `AG2` · `AG7`.
+(7.5.25 정정, 재리뷰 F1: `…minimal_stat_check…` 가 못 박는 것은 `checkStat` **하나**다 — `trustctime=true` 만 빼도
+348 시험이 전부 초록이었다. 그런데 그 고정은 일을 했다(저장소가 `trustctime=false` 면 같은 inode 편집이 고정 없이
+10/10 감춰지고 고정하면 0/10). `AG2` 가 둘을 **한꺼번에** 빼서 변이 기록은 CAUGHT 였고, 그 기록을 옮겨 적은 행이
+틀렸다 — 두 설정을 같이 빼는 변이의 기록으로는 어느 쪽이 못 박혔는지 모른다.)
+
+## task 7.5.25 — 지웠다 (2026-09-24)
+
+이 함수는 git 의 워킹트리 투영에서 **알려진 문 하나**를 닫았다. 7.5.25 가 투영 자체를 안 쓰게 되면서(`_worktree_snapshot`)
+닫을 문이 판정에 닿을 자리가 없어졌다 — 호출자도 시험도 없다. 이 디렉터리의 `ast.*.json` 은 그 시점의 기록으로 둔다.

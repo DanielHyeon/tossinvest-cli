@@ -1,0 +1,42 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "cfe8d08bf1f4ed8e8efc73a69efb3df68a312871",
+  "source_sha256": "898a78bee26845486a44c75ee463624637c8a11f045a1a5ccb59b45813c602a0",
+  "function": "_write_loose_blob",
+  "signature": "_write_loose_blob(store, digest, data)",
+  "start": {
+    "line": 120,
+    "column": 1
+  },
+  "end": {
+    "line": 129,
+    "column": 69
+  },
+  "branches": [],
+  "returns": [],
+  "raises": [],
+  "calls": [
+    {
+      "line": 127,
+      "callee": "folder.mkdir"
+    },
+    {
+      "line": 128,
+      "callee": "open"
+    },
+    {
+      "line": 129,
+      "callee": "handle.write"
+    },
+    {
+      "line": 129,
+      "callee": "len"
+    },
+    {
+      "line": 129,
+      "callee": "zlib.compress"
+    }
+  ]
+}

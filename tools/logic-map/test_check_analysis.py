@@ -11,6 +11,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import time
 import traceback
 import unittest
 import shutil
@@ -101,6 +102,15 @@ def run_check(root: Path) -> list[str]:
     ):
         return check_analysis.check("change", root)
 
+
+
+def _snapshot_stub(contents: dict[str, bytes] | None = None):
+    """`_worktree_snapshot` 의 대역 (task 7.5.25) — git 을 mock 하는 시험이 스냅숏의 git 호출에 안 걸리게 한다.
+    판정의 현재 쪽은 스냅숏의 바이트를 읽으므로, 현재 논리를 보려는 시험은 그 바이트를 건넨다."""
+    @contextmanager
+    def stub(root: Path):
+        yield {}, dict(contents or {})
+    return stub
 
 class BundleTextCoversEveryProseFileInTheBundle(unittest.TestCase):
     """강제 판정이 읽는 범위가 **열거된 파일 목록**이면 그 목록 밖으로 옮기면 꺼진다.
@@ -909,14 +919,14 @@ evidence
         self.assertEqual(check_analysis.branch_ids(text), ["B1", "B1"])
 
     def test_git_diff_failure_is_not_treated_as_empty_change(self) -> None:
-        # 새 git 호출(`_git_view_pins` · `_hidden_by_index_flags` · `_ident_go_paths`)을 고정한다 (task 7.5.27 · 7.5.28).
-        # 안 그러면 `subprocess.run` mock 이 **그 호출**에서 실패를 돌려주고, 이 시험이 판정 diff 가
-        # 아니라 설정 읽기의 실패로 통과한다 — 이름과 다른 이유로 초록이 된다.
+        # 워킹트리 스냅숏(`_worktree_snapshot`, task 7.5.25)을 고정한다. 안 그러면 `subprocess.run` mock 이
+        # **스냅숏의 git 호출**에서 실패를 돌려주고, 이 시험이 판정 diff 가 아니라 스냅숏의 실패로 통과한다 —
+        # 이름과 다른 이유로 초록이 된다.
         failed = subprocess.CompletedProcess([], 128, b"", b"bad revision")
         with mock.patch(
             "check_analysis.subprocess.run",
             return_value=failed,
-        ), mock.patch("check_analysis._safe_changed_go_paths", return_value=[(b"1", b"1", [b"internal/x.go"])]), mock.patch("check_analysis._git_view_pins", return_value=[]), mock.patch("check_analysis._hidden_by_index_flags", return_value=[]), mock.patch("check_analysis._ident_go_paths", return_value=[]):
+        ), mock.patch("check_analysis._safe_changed_go_paths", return_value=[(b"1", b"1", [b"internal/x.go"])]), mock.patch("check_analysis._worktree_snapshot", _snapshot_stub()):
             with self.assertRaises(RuntimeError):
                 check_analysis.changed_existing_functions(Path("/tmp"), "bad")
 
@@ -930,8 +940,10 @@ evidence
             subprocess.run(["git", "add", "."], cwd=root, check=True); subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
             base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
             path.write_text("package pkg\nfunc X() { println(1) }\n", encoding="utf-8")
-            with self.assertRaisesRegex(RuntimeError, "cannot be represented losslessly"):
-                check_analysis._safe_changed_go_paths(root, base, "")
+            # 워킹트리 대상은 스냅숏 위에서 판정한다 (task 7.5.25) — 스냅숏이 이 이름을 날 바이트로 싣고, 가드가 거절한다.
+            with self.assertRaisesRegex(RuntimeError, "cannot be represented losslessly"), \
+                    check_analysis._worktree_snapshot(root) as (environment, _):
+                check_analysis._safe_changed_go_paths(root, base, "", environment)
 
     def test_new_function_in_existing_file_is_not_reported_as_modified_existing(self) -> None:
         diff = subprocess.CompletedProcess(
@@ -973,7 +985,7 @@ evidence
                 return_value=diff,
             ), mock.patch(
                 "check_analysis._safe_changed_go_paths", return_value=[(b"1", b"1", [b"internal/x.go"])],
-            ), mock.patch("check_analysis._git_view_pins", return_value=[]), mock.patch("check_analysis._hidden_by_index_flags", return_value=[]), mock.patch("check_analysis._ident_go_paths", return_value=[]), mock.patch(
+            ), mock.patch("check_analysis._worktree_snapshot", _snapshot_stub({"internal/x.go": b"package x\n"})), mock.patch(
                 "check_analysis.base_file",
                 return_value=Path(base_source.name),
             ), mock.patch(
@@ -1004,7 +1016,7 @@ evidence
             side_effect=(diff, missing),
         ), mock.patch(
             "check_analysis._safe_changed_go_paths", return_value=[(b"1", b"1", [b"internal/x.go"])],
-        ), mock.patch("check_analysis._git_view_pins", return_value=[]), mock.patch("check_analysis._hidden_by_index_flags", return_value=[]), mock.patch("check_analysis._ident_go_paths", return_value=[]):
+        ), mock.patch("check_analysis._worktree_snapshot", _snapshot_stub()):
             with self.assertRaises(RuntimeError):
                 check_analysis.changed_existing_functions(Path("/tmp"), "base")
 
@@ -7335,6 +7347,7 @@ class TheRecheckReadsWhatTheVerdictRead(unittest.TestCase):
             ("_listing_outcome", "iterdir"),
             ("_pattern_outcome", "rglob"),
             ("record_landing", "open"),              # 기록 **쓰기**(`xb`) — 읽기가 아니다
+            ("_write_loose_blob", "open"),           # 임시 저장소에 blob **쓰기**(`wb`) — 읽기가 아니다 (7.5.25)
         }
         primitives = {"read_bytes", "read_text", "open", "iterdir", "rglob", "glob",
                       "scandir", "listdir", "walk"}
@@ -7765,7 +7778,7 @@ class TheGuardAndTheJudgementReadTheSameDiff(unittest.TestCase):
             if isinstance(item, ast.FunctionDef):
                 for inner in ast.walk(item):
                     owners.setdefault(id(inner), item.name)
-        wanted = {"_safe_changed_go_paths": "가드", "changed_existing_functions": "판정"}
+        wanted = {"_safe_changed_go_paths": "가드", "_changed_existing_functions": "판정"}
         seen: dict[str, set[str]] = {}
         for item in ast.walk(source):
             if not isinstance(item, ast.Call):
@@ -7782,32 +7795,37 @@ class TheGuardAndTheJudgementReadTheSameDiff(unittest.TestCase):
                 continue
             seen[where] = {element.value for element in argv.elts
                            if isinstance(element, ast.Constant) and isinstance(element.value, str)}
-            # 두 호출이 **같은 고정**(`pins`)을 펼친다 (task 7.5.27) — 한쪽만 고정하면 두 시야가 갈린다.
-            if any(isinstance(element, ast.Starred)
-                   and any(isinstance(node, ast.Name) and node.id == "pins"
-                           for node in ast.walk(element.value))
-                   for element in argv.elts):
-                seen[where].add("*pins")
+            # 두 호출이 **같은 쌍**(`_compared`)을 **같은 환경**(스냅숏 인덱스)에서 견준다 (task 7.5.25) —
+            # 한쪽만 스냅숏을 보면 두 시야가 갈리고, 대조는 어긋남만 보므로 둘이 함께 틀리면 못 본다.
+            for element in argv.elts:
+                if isinstance(element, ast.Starred):
+                    for node in ast.walk(element.value):
+                        if isinstance(node, ast.Name) and node.id in ("_compared", "SNAPSHOT_PINS"):
+                            seen[where].add("*" + node.id)
+            if any(keyword.arg == "env" and isinstance(keyword.value, ast.Name) and keyword.value.id == "environment"
+                   for keyword in item.keywords):
+                seen[where].add("env=environment")
         for where, label in wanted.items():
             self.assertIn(where, seen, f"{label} 의 git 호출을 못 찾았다")
-            for flag in ("--no-ext-diff", "--no-textconv", "--find-renames", "*pins"):
+            for flag in ("--no-ext-diff", "--no-textconv", "--find-renames", "*_compared", "*SNAPSHOT_PINS",
+                         "env=environment"):
                 self.assertIn(flag, seen[where],
                               f"{label}({where}) 의 git 호출에 `{flag}` 가 없다 — "
                               "가드와 판정이 다른 집합을 보면 교차 검사가 성립하지 않는다")
 
 
 class TheWorktreeIsNotRewrittenUnderTheGate(unittest.TestCase):
-    """워킹트리 대상에서 git 이 **워킹트리 바이트를 다시 쓰면** 두 시야가 **함께** 거짓말한다 (task 7.5.27).
+    """워킹트리 대상에서 git 이 **워킹트리 바이트를 다시 쓰거나 안 읽으면** 두 시야가 **함께** 거짓말한다.
 
-    7.5.23 의 교차 검사는 가드와 판정의 **어긋남**만 본다. `filter.<드라이버>.clean` 은 `git diff` 가
-    비교하는 워킹트리 바이트 자체를 base 로 바꿔서 `--numstat` 이 레코드를 아예 안 낸다 — 어긋남이
-    없으니 거절도 없고 `required` 가 조용히 빈다(게이트의 기본 모드가 워킹트리 대상이다). 거짓말하는
-    `core.fsmonitor` 도 같고, `assume-unchanged`·`skip-worktree` 인덱스 플래그도 편집을 감춘다.
+    7.5.23 의 교차 검사는 가드와 판정의 **어긋남**만 본다. clean·process 필터 · `ident` · `working-tree-encoding`
+    은 `git diff` 가 비교하는 바이트 자체를 바꾸고, fsmonitor · stat 캐시 · 인덱스 플래그는 git 이 파일을 아예
+    안 읽게 한다 — `--numstat` 이 레코드를 안 내니 어긋남도 거절도 없고 `required` 가 조용히 빈다(게이트의 기본
+    모드가 워킹트리 대상이다). 7.5.27 · 7.5.28 은 이 문들을 하나씩 닫았고 재리뷰는 매번 하나를 더 찾았다.
 
-    수리는 둘이다: git 의 시야를 **명령줄에서 고정**해 설정으로 된 문을 끄고(`core.fsmonitor=false`,
-    설정된 모든 필터 드라이버의 `clean`·`process` 를 비우고 `required=false`), 인덱스 플래그로 감춘
-    편집은 **이름 대고 거절**한다. 이것은 알려진 문을 닫는 것이지 class 를 닫는 것이 아니다 —
-    판정하는 바이트를 git 의 투영 없이 직접 대조하는 것은 사람 결정 7.5.25 로 남아 있다.
+    7.5.25 는 class 를 닫는다: 게이트가 git 의 워킹트리 투영을 **안 쓴다**. 추적 `*.go` 의 디스크 바이트를 직접
+    읽어 임시 인덱스에 싣고 두 diff 가 그것을 base 와 견준다(`--cached`). 그래서 아래 시험들은 문마다 **양성
+    대조군**(평범한 git 은 정말 못 본다)과 **판정**(게이트는 본다)을 같이 잰다 — 문의 이름을 대고 거절하던
+    7.5.27 · 7.5.28 의 시험들은 이제 요구가 **서는지**를 단언한다.
     """
 
     BEFORE = "package pkg\n\nfunc Stop() int {\n\treturn 1\n}\n"
@@ -7929,38 +7947,23 @@ while True:
         self.assertEqual(self._numstat(root, base), "", "process 필터가 편집을 안 감췄다 — 픽스처 결함")
         self.assertIn(("x.go", "Stop"), self._required(root, base))
 
-    def test_a_required_filter_with_a_dotted_name_is_neutralized_not_fatal(self) -> None:
-        """`clean` 만 비우면 `required=true` 드라이버에서 git 이 죽는다(rc 128). 셋을 같이 고정한다.
-        드라이버 이름에는 점이 들어갈 수 있다 — 설정 키의 **마지막** 칸만 떼어야 한다."""
+    def test_a_required_filter_with_a_dotted_name_is_neither_fatal_nor_hiding(self) -> None:
+        """`required=true` 드라이버는 필터를 **끄려는** 판정을 죽였다(7.5.27 은 셋을 같이 고정해 막았다). 스냅숏은
+        필터를 끄지 않고 **안 부른다** — 바이트를 게이트가 읽으므로 드라이버 설정이 판정에 닿을 자리가 없다."""
         root, base = self._repo()
         (root / "x.go").write_text(self.AFTER, encoding="utf-8")
         self._hide_with_filter(root, base, "clean", driver="a.b")
         self._run(root, "git", "config", "filter.a.b.required", "true")
         self.assertIn(("x.go", "Stop"), self._required(root, base))
 
-    def test_every_configured_driver_gets_all_three_pins(self) -> None:
-        """고정의 **계약**을 직접 잰다 (task 7.5.27). git 2.43 에서는 `process=` 하나만 비워도 clean 필터가
-        꺼진다 — 빈 `process` 값은 아무것도 띄우지 않고 clean 명령을 끄는 **우연**이다(`GIT_TRACE` 로 확인, 7.5.28 정정).
-        그래서 `clean=` 을 빼는 변이가 행동 시험을 전부 통과했다. 그 우연은 git 판본마다 다를 수 있으므로
-        기대지 않는다: 설정된 드라이버마다 셋이 **다** 있어야 한다."""
-        root, _ = self._repo()
-        self._run(root, "git", "config", "filter.a.b.clean", "cat")
-        self._run(root, "git", "config", "filter.plain.process", "cat")
-        pins = check_analysis._git_view_pins(root)
-        self.assertEqual(pins[:2], ["-c", "core.fsmonitor=false"])
-        for driver in ("a.b", "plain"):
-            for pin in (f"filter.{driver}.clean=", f"filter.{driver}.process=",
-                        f"filter.{driver}.required=false"):
-                self.assertIn(pin, pins, f"드라이버 {driver!r} 에 `{pin}` 이 없다")
-        self.assertNotIn("filter.a.clean=", pins, "드라이버 이름을 점에서 잘랐다")
-
-    def test_a_driver_name_that_cannot_be_pinned_is_refused(self) -> None:
-        """`-c name=value` 는 **첫** `=` 에서 가른다 — 이름에 `=` 가 든 드라이버는 정확히 못 끄므로 거절한다."""
-        root, _ = self._repo()
-        self._run(root, "git", "config", "filter.a=b.clean", "cat")
-        with self.assertRaises(RuntimeError) as caught:
-            check_analysis._git_view_pins(root)
-        self.assertIn("cannot be neutralized", str(caught.exception))
+    def test_a_driver_name_git_cannot_take_on_the_command_line_does_not_matter(self) -> None:
+        """7.5.27 은 이름에 `=` 가 든 드라이버를 `-c` 로 못 끈다며 거절했다. 스냅숏은 드라이버를 부르지 않으므로
+        이름이 무엇이든 판정과 무관하다 — 거절도 감춤도 없다."""
+        root, base = self._repo()
+        (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+        self._hide_with_filter(root, base, "clean", driver="a=b")
+        self.assertEqual(self._numstat(root, base), "", "`a=b` 드라이버가 편집을 안 감췄다 — 픽스처 결함")
+        self.assertIn(("x.go", "Stop"), self._required(root, base))
 
     def test_a_lying_fsmonitor_does_not_hide_a_worktree_edit(self) -> None:
         root, base = self._repo()
@@ -7986,9 +7989,8 @@ while True:
         base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
         self._run(root, "git", "config", "core.checkStat", "minimal")
         # 새 파일을 만들어 **옮겨 놓는다** — 옛 파일이 아직 있을 때 만드므로 inode 가 반드시 다르다.
-        # `unlink` 뒤에 쓰면 inode 가 재사용될 수 있고, 같은 초 안이면 ctime 도 같아서 **기본** stat 검사도
-        # 속는다(설정 없이 20 판 중 17 판 — 이 시험이 흔들린 이유다). 그 구멍은 설정이 아니라 stat 캐시를
-        # 믿는 것 자체라 명령줄 고정으로 못 닫는다 → 사람 결정 7.5.25. 이 시험은 **설정** 문만 잰다.
+        # 설정 없이 **기본** stat 검사가 속는 모양은 아래 `test_the_stat_cache_hides_nothing_without_any_config`
+        # 가 잰다. 이 시험은 **설정** 문(`checkStat=minimal`)만 잰다.
         replacement = root / "x.go.new"
         replacement.write_text(self.AFTER, encoding="utf-8")
         os.utime(replacement, stamp)
@@ -7998,10 +8000,10 @@ while True:
         self.assertEqual(self._numstat(root, base), "", "checkStat 가 편집을 안 감췄다 — 픽스처 결함")
         self.assertIn(("x.go", "Stop"), self._required(root, base))
 
-    def test_the_ident_attribute_is_refused_by_name(self) -> None:
+    def test_the_ident_attribute_does_not_hide_a_worktree_edit(self) -> None:
         """`ident` 는 `$Id: …$` 를 `$Id$` 로 접은 뒤 비교한다 — 그 안에 넣은 논리 변경이 **두 시야 모두**에서
-        사라진다. 속성이라 `-c` 로 못 끈다. 그래서 워킹트리 대상에서 추적 `*.go` 에 `ident` 가 켜져 있으면
-        이름 대고 거절한다 (task 7.5.28, 적대 재리뷰)."""
+        사라진다. 7.5.28 은 이름 대고 거절했다(그리고 `ident=foo` 처럼 git 이 적용하지 않는 값까지 거절했다).
+        스냅숏은 날 바이트를 견주므로 거절할 까닭이 없다 — 요구가 선다 (task 7.5.25)."""
         root, base = self._repo()
         body = self.BEFORE.replace("\treturn 1\n", '\t_ = "$Id$"\n\treturn 1\n')
         (root / "x.go").write_text(body, encoding="utf-8")
@@ -8011,73 +8013,225 @@ while True:
             '"$Id$"', '"$Id: " + func() string { if true { panic(1) }; return "" }() + "$"'), encoding="utf-8")
         (root / ".gitattributes").write_text("*.go ident\n", encoding="utf-8")
         self.assertEqual(self._numstat(root, base), "", "ident 가 편집을 안 감췄다 — 픽스처 결함")
-        with self.assertRaises(RuntimeError) as caught:
-            self._required(root, base)
-        self.assertIn("ident", str(caught.exception))
-        self.assertIn("x.go", str(caught.exception))
-
-    def test_an_explicitly_unset_ident_is_not_refused(self) -> None:
-        """거절의 경계 — `-ident` 는 속성을 **끈다**(`check-attr` 가 `unset` 을 낸다). 켜진 것으로 세면 정상
-        입력을 막는다. 그 갈래를 뒤집는 변이가 시험 전부를 통과했다 (task 7.5.28)."""
-        root, base = self._repo()
-        (root / "x.go").write_text(self.AFTER, encoding="utf-8")
-        (root / ".gitattributes").write_text("*.go -ident\n", encoding="utf-8")
-        said = subprocess.check_output(["git", "check-attr", "ident", "--", "x.go"], cwd=root, text=True)
-        self.assertIn("unset", said, f"픽스처가 unset 을 안 만든다: {said!r}")
         self.assertIn(("x.go", "Stop"), self._required(root, base))
 
-    def test_a_flagged_file_behind_a_filter_is_still_refused(self) -> None:
-        """플래그 검사의 해시도 **고정**을 받아야 한다. 안 받으면 clean 필터가 해시를 인덱스 blob 과 같게
-        만들어 감춘 편집이 통과한다 — `hash-object` 의 고정을 빼는 변이가 339 시험을 전부 통과했다."""
+    def test_a_flagged_file_behind_a_filter_is_still_seen(self) -> None:
+        """두 문을 겹쳐도 — 플래그가 git 을 안 읽게 하고 필터가 해시를 base 와 같게 만든다 — 스냅숏은 바이트를
+        직접 읽으므로 둘 다 무관하다."""
         root, base = self._repo()
         self._run(root, "git", "update-index", "--assume-unchanged", "x.go")
         (root / "x.go").write_text(self.AFTER, encoding="utf-8")
         self._hide_with_filter(root, base, "clean")
-        with self.assertRaises(RuntimeError) as caught:
-            self._required(root, base)
-        self.assertIn("hides", str(caught.exception))
+        self.assertIn(("x.go", "Stop"), self._required(root, base))
 
-    def test_an_executable_flagged_file_is_still_refused(self) -> None:
-        """일반 파일 모드는 둘이다(`100644` · `100755`). 뒤엣것을 빼는 변이가 시험 전부를 통과했다."""
+    def test_an_executable_flagged_file_is_still_seen(self) -> None:
+        """일반 파일 모드는 둘이다(`100644` · `100755`). 뒤엣것을 스냅숏이 거절하면 정상 입력을 막는다."""
         root, base = self._repo()
         (root / "x.go").chmod(0o755)
         self._run(root, "git", "commit", "-qam", "exec")
         base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
         self._run(root, "git", "update-index", "--skip-worktree", "x.go")
         (root / "x.go").write_text(self.AFTER, encoding="utf-8")
-        with self.assertRaises(RuntimeError) as caught:
-            self._required(root, base)
-        self.assertIn("x.go", str(caught.exception))
+        self.assertIn(("x.go", "Stop"), self._required(root, base))
 
-    def test_a_driver_name_with_a_space_is_pinned_not_refused(self) -> None:
-        """7.5.27 은 이름에 공백이 든 드라이버를 거절했는데, `-c 'filter.my drv.clean='` 은 **적힌다**(명령줄
-        값이 이긴다, 재리뷰가 실측). 못 적는 것은 `=` 하나다 — 공백 거절은 정상 입력을 막는 헛거절이었다."""
-        root, _ = self._repo()
-        self._run(root, "git", "config", "filter.my drv.clean", "cat")
-        pins = check_analysis._git_view_pins(root)
-        self.assertIn("filter.my drv.clean=", pins)
+    def test_a_driver_name_with_a_space_does_not_hide_a_worktree_edit(self) -> None:
+        """7.5.27 은 이름에 공백이 든 드라이버를 거절했다(헛거절, 7.5.28 이 고쳤다). 스냅숏에서는 이름이 무관하다."""
+        root, base = self._repo()
+        (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+        self._hide_with_filter(root, base, "clean", driver="my drv")
+        self.assertIn(("x.go", "Stop"), self._required(root, base))
 
-    def test_an_index_flag_that_hides_an_edit_is_refused_by_name(self) -> None:
+    def test_an_index_flag_does_not_hide_an_edit(self) -> None:
         for flag in ("--assume-unchanged", "--skip-worktree"):
             with self.subTest(flag):
                 root, base = self._repo()
                 self._run(root, "git", "update-index", flag, "x.go")
                 (root / "x.go").write_text(self.AFTER, encoding="utf-8")
                 self.assertEqual(self._numstat(root, base), "", f"{flag} 가 편집을 안 감췄다 — 픽스처 결함")
-                with self.assertRaises(RuntimeError) as caught:
-                    self._required(root, base)
-                self.assertIn("x.go", str(caught.exception))
-                self.assertIn("hides", str(caught.exception))
+                self.assertIn(("x.go", "Stop"), self._required(root, base))
 
-    def test_an_index_flag_that_hides_nothing_is_not_refused(self) -> None:
-        """거절의 경계 — sparse-checkout 도 `skip-worktree` 를 쓴다. 플래그만 있고 편집이 없거나
-        파일이 아예 없으면(sparse 모양) 감춘 것이 없으므로 **정상 입력**이다."""
+    def test_a_file_sparse_checkout_left_out_is_not_a_deletion(self) -> None:
+        """경계 — sparse-checkout 은 `skip-worktree` 를 켜고 파일을 **안 꺼낸다**. 없는 파일을 지운 것으로 읽으면
+        base 의 모든 함수가 요구가 된다. 그 자리만 인덱스의 blob 을 쓴다 (task 7.5.25)."""
         root, base = self._repo(("x.go", "y.go", "z.go"))
         self._run(root, "git", "update-index", "--skip-worktree", "y.go")          # 편집 없음
         self._run(root, "git", "update-index", "--skip-worktree", "z.go")
         (root / "z.go").unlink()                                                    # sparse 모양
         (root / "x.go").write_text(self.AFTER, encoding="utf-8")                   # 평범한 편집
         self.assertEqual(sorted(self._required(root, base)), [("x.go", "Stop")])
+
+    def test_assume_unchanged_does_not_hide_a_deletion(self) -> None:
+        """`assume-unchanged` 는 sparse 가 쓰지 않는다 — 그 플래그 뒤에서 파일이 없으면 지운 것이다. 인덱스 blob 으로
+        채우면 삭제가 감춰진다(요구가 빈다). 플래그를 **`S` 만** 보는 까닭이다."""
+        root, base = self._repo(("x.go", "z.go"))
+        self._run(root, "git", "update-index", "--assume-unchanged", "z.go")
+        (root / "z.go").unlink()
+        self.assertEqual(self._numstat(root, base), "", "assume-unchanged 가 삭제를 안 감췄다 — 픽스처 결함")
+        self.assertIn(("z.go", "Stop"), self._required(root, base))
+
+    def test_working_tree_encoding_does_not_hide_a_worktree_edit(self) -> None:
+        """UTF-7 은 같은 글을 여러 바이트로 적는다 — `+AHk-x` 를 해독하면 `yx` 다. git 은 해독한 글을 base 와 견주어
+        **같다**고 하고, Go 는 바이트를 컴파일해 `+AHk - x` 를 계산한다(7.5.28 재리뷰 F1 재현). 추적 안 된
+        `.git/info/attributes` 한 줄이면 된다."""
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        root = Path(holder.name)
+        self._run(root, "git", "init", "-q", ".")
+        self._run(root, "git", "config", "user.email", "fixture@example.com")
+        self._run(root, "git", "config", "user.name", "fixture")
+        (root / "x.go").write_text(
+            "package pkg\n\nvar AHk, x = 5, 3\n\nfunc Stop(yx int) int {\n\treturn yx\n}\n", encoding="utf-8")
+        self._run(root, "git", "add", "-A")
+        self._run(root, "git", "commit", "-qm", "base")
+        base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        (root / ".git" / "info" / "attributes").write_text("*.go working-tree-encoding=UTF-7\n", encoding="utf-8")
+        edited = (root / "x.go").read_text(encoding="utf-8").replace("return yx", "return +AHk-x")
+        (root / "x.go").write_text(edited, encoding="utf-8")
+        self.assertEqual(self._numstat(root, base), "", "UTF-7 이 편집을 안 감췄다 — 픽스처 결함")
+        self.assertIn(("x.go", "Stop"), self._required(root, base))
+
+    def test_the_stat_cache_hides_nothing_without_any_config(self) -> None:
+        """설정이 **하나도** 없어도 git 의 stat 캐시가 편집을 감춘다: 같은 파일(같은 inode)에 같은 크기로 쓰고
+        mtime 을 되돌리면, ctime 이 인덱스가 기록한 것과 **같은 초**인 한 git 은 파일을 다시 안 읽는다(10/10 실측).
+        stat 캐시를 **믿는 것 자체**가 문이라 명령줄 고정으로는 못 닫는다 — 스냅숏은 캐시를 안 쓴다 (task 7.5.25).
+
+        초 경계를 넘으면 픽스처가 문을 못 만든다. 경계 바로 뒤에서 시작하고, 넘었으면 다시 한다."""
+        root, base = self._repo()
+        path = root / "x.go"
+        past = time.time() - 3600
+        for _ in range(3):
+            time.sleep(1 - time.time() % 1 + 0.01)
+            os.utime(path, (past, past))
+            self._run(root, "git", "update-index", "--refresh")
+            recorded = os.stat(path).st_ctime_ns // 10**9
+            path.write_text(self.AFTER, encoding="utf-8")
+            os.utime(path, (past, past))
+            if os.stat(path).st_ctime_ns // 10**9 == recorded:
+                break
+            path.write_text(self.BEFORE, encoding="utf-8")
+        else:
+            self.fail("ctime 이 세 번 모두 초 경계를 넘었다 — 픽스처가 문을 못 만든다")
+        self.assertEqual(self._numstat(root, base), "", "stat 캐시가 편집을 안 감췄다 — 픽스처 결함")
+        self.assertIn(("x.go", "Stop"), self._required(root, base))
+
+    def test_the_current_side_is_judged_from_the_snapshot_bytes(self) -> None:
+        """git 에 건넨 바이트와 함수 지도를 뽑는 바이트가 **같아야** 한다([[a-fingerprint-must-be-the-bytes-judged]]).
+        스냅숏 뒤에 디스크가 바뀌어도 판정의 현재 쪽은 스냅숏을 읽는다 — 디스크를 다시 읽으면 git 이 본 훅의 줄
+        번호를 **다른** 바이트에 댄다. 바뀐 디스크는 끝의 재확인(원장)이 잡는다."""
+        root, base = self._repo()
+        (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+        judged: list[str] = []
+
+        def spy(path: Path, where: Path) -> list[dict]:
+            judged.append(Path(path).read_text(encoding="utf-8"))
+            (root / "x.go").write_text(self.BEFORE.replace("return 1", "return 7"), encoding="utf-8")
+            return self._functions(path, where)
+
+        with mock.patch("check_analysis.go_functions", side_effect=spy):
+            check_analysis.changed_existing_functions(root, base, "")
+        self.assertEqual(judged, [self.BEFORE, self.AFTER])
+
+    def test_the_snapshot_reads_through_the_funnel(self) -> None:
+        """스냅숏의 읽기는 원장에 남아야 끝의 재확인이 다시 읽는다 — 추적 `*.go` 전부, 바뀌지 않은 것도."""
+        root, base = self._repo(("x.go", "y.go"))
+        (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+        with check_analysis._ledger() as book:
+            self._required(root, base)
+        for name in ("x.go", "y.go"):
+            self.assertIn(("file", str(root / name)), book.seen, f"{name} 가 원장에 없다")
+
+    def test_the_snapshot_writes_nothing_into_the_repository_and_runs_nothing_it_configures(self) -> None:
+        """임시 인덱스를 쓰는 git 은 설정에 따라 **실제 저장소로 샌다**: split index 는 `sharedindex.*` 를 `.git`
+        에 쓰고, 인덱스 쓰기는 `post-index-change` 훅을, 인덱스 읽기는 fsmonitor 명령을 띄운다. 셋을 다 켜 두고
+        `.git` 의 모든 파일과 표식 파일을 판정 전후로 견준다."""
+        root, base = self._repo()
+        marks = root.parent / "marks"
+        marks.mkdir()
+        hooks = root.parent / "hooks"
+        hooks.mkdir()
+        (hooks / "post-index-change").write_text(f"#!/bin/sh\ntouch {marks}/hook\n", encoding="utf-8")
+        (hooks / "post-index-change").chmod(0o755)
+        monitor = root.parent / "monitor.sh"
+        monitor.write_text(f"#!/bin/sh\ntouch {marks}/fsmonitor\nprintf '/\\0'\n", encoding="utf-8")
+        monitor.chmod(0o755)
+        self._run(root, "git", "config", "core.splitIndex", "true")
+        self._run(root, "git", "config", "core.hooksPath", str(hooks))
+        self._run(root, "git", "config", "core.fsmonitor", str(monitor))
+        subprocess.run(["git", "status"], cwd=root, capture_output=True)
+        (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+        for mark in marks.iterdir():
+            mark.unlink()
+
+        def state() -> list[tuple[str, bytes]]:
+            return sorted((str(item.relative_to(root)), item.read_bytes())
+                          for item in (root / ".git").rglob("*") if item.is_file())
+
+        before = state()
+        self.assertIn(("x.go", "Stop"), self._required(root, base))
+        self.assertEqual(state(), before, "판정이 실제 저장소에 무언가를 썼다")
+        self.assertEqual(sorted(mark.name for mark in marks.iterdir()), [], "판정이 저장소가 설정한 명령을 띄웠다")
+
+    def test_the_snapshot_refuses_what_it_cannot_represent(self) -> None:
+        """이름 대는 거절 셋 — 충돌 중인 파일 · 인덱스가 일반 파일이라 하지 않는 `*.go`(심링크) · 정규 파일이
+        아닌 것(FIFO). 어느 것도 조용히 건너뛰지 않는다([[a-silent-skip-is-a-door]]). 저장소 전수 0 / 1,762."""
+        root, base = self._repo()
+        oid = subprocess.check_output(["git", "rev-parse", "HEAD:x.go"], cwd=root, text=True).strip()
+        subprocess.run(["git", "update-index", "--index-info"], cwd=root, check=True, capture_output=True,
+                       input=f"0 {'0' * 40}\tx.go\n100644 {oid} 1\tx.go\n100644 {oid} 2\tx.go\n".encode())
+        with self.assertRaisesRegex(RuntimeError, "unmerged: x.go"):
+            self._required(root, base)
+
+        root, base = self._repo()
+        os.symlink("x.go", root / "l.go")
+        self._run(root, "git", "add", "l.go")
+        with self.assertRaisesRegex(RuntimeError, "mode 120000.*l.go"):
+            self._required(root, base)
+
+        root, base = self._repo()
+        (root / "x.go").unlink()
+        os.mkfifo(root / "x.go")
+        with self.assertRaises(check_analysis.NotRegularFile):
+            self._required(root, base)
+
+    def test_an_object_directory_git_cannot_take_as_an_alternate_is_named(self) -> None:
+        """`GIT_ALTERNATE_OBJECT_DIRECTORIES` 는 `:` 로 가른다 — 저장소 경로에 `:` 가 있으면 실제 저장소를 대체
+        저장소로 못 적는다. 조용히 틀린 저장소를 보지 않고 이름을 댄다."""
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        root = Path(holder.name) / "a:b"
+        root.mkdir()
+        self._run(root, "git", "init", "-q", ".")
+        with self.assertRaisesRegex(RuntimeError, "cannot be named as a git alternate"):
+            with check_analysis._worktree_snapshot(root):
+                pass
+
+    def test_every_git_fault_of_the_snapshot_is_named(self) -> None:
+        """스냅숏의 git 호출 셋(`rev-parse` · `ls-files` · `update-index`)이 실패하거나 모양이 틀리면 이름 대고
+        멈춘다 — 빈 스냅숏으로 읽으면 "바뀐 파일 없음" 이다. 호출 순서대로 하나씩 깬다."""
+        def done(code: int, out: bytes = b"") -> subprocess.CompletedProcess:
+            return subprocess.CompletedProcess([], code, out, b"boom")
+
+        described = done(0, b"sha1\n.git/objects\n")
+        cases = {
+            "rev-parse fails": ([done(128)], "boom"),
+            "rev-parse says too little": ([done(0, b"sha1\n")], "cannot read git rev-parse output"),
+            "ls-files fails": ([described, done(128)], "boom"),
+            "ls-files record is short": ([described, done(0, b"100644 " + b"0" * 40 + b"\tx.go\0")],
+                                         "cannot read git ls-files -s -v record"),
+            "update-index fails": ([described, done(0, b""), done(128)], "boom"),
+        }
+        for label, (answers, message) in cases.items():
+            with self.subTest(label), tempfile.TemporaryDirectory() as raw, \
+                    mock.patch("check_analysis.subprocess.run", side_effect=answers):
+                with self.assertRaisesRegex(RuntimeError, message):
+                    with check_analysis._worktree_snapshot(Path(raw)):
+                        pass
+
+    def test_a_worktree_guard_without_the_snapshot_is_refused(self) -> None:
+        """스냅숏 없이 `--cached` 를 부르면 **실제** 인덱스를 견준다 — 워킹트리도 스냅숏도 아닌 셋째 시야다."""
+        root, base = self._repo()
+        with self.assertRaisesRegex(ValueError, "needs the worktree snapshot"):
+            check_analysis._safe_changed_go_paths(root, base, "")
 
     def test_a_commit_target_does_not_read_the_worktree(self) -> None:
         """경계 — 대상이 커밋이면 blob 끼리 견주므로 워킹트리의 플래그는 판정과 무관하다."""
@@ -8086,9 +8240,29 @@ while True:
         self._run(root, "git", "commit", "-qam", "edit")
         self._run(root, "git", "update-index", "--assume-unchanged", "x.go")
         (root / "x.go").write_text(self.BEFORE, encoding="utf-8")                  # 커밋 뒤 되돌림(감춤)
-        with mock.patch("check_analysis.go_functions", side_effect=self._functions):
+        with mock.patch("check_analysis.go_functions", side_effect=self._functions), \
+                check_analysis._ledger() as book:
             required = check_analysis.changed_existing_functions(root, base, "HEAD")
         self.assertIn(("x.go", "Stop"), required)
+        # 스냅숏은 워킹트리 대상에서만 연다 (task 7.5.25). 커밋 대상이 열면 판정은 같지만 워킹트리를 읽어 **원장에
+        # 남기고**, 판정 중 워킹트리 편집이 커밋 대상 판정에 헛 재실행을 요구하게 된다(변이 AH19 가 살아남았다).
+        self.assertNotIn(("file", str(root / "x.go")), book.seen, "커밋 대상 판정이 워킹트리를 읽었다")
+
+    def test_an_untouched_worktree_is_an_empty_comparison(self) -> None:
+        """스냅숏의 blob id 는 git 의 것과 **같아야** 한다 — 다르면 판정은 그대로여도(git 이 내용을 견주어 훅을 안 낸다)
+        안 바뀐 추적 `*.go` 전부가 "바뀐 파일" 로 목록에 오르고, 판정마다 전부를 임시 저장소에 쓴다. 그 둘을 센다:
+        손대지 않으면 목록 0 · 쓴 객체 0, 한 파일을 고치면 목록 1 · 객체 1 (변이 AH16 · AH17 이 살아남았다)."""
+        root, base = self._repo(("x.go", "y.go"))
+
+        def measured() -> tuple[int, int]:
+            with check_analysis._worktree_snapshot(root) as (environment, _):
+                records = check_analysis._safe_changed_go_paths(root, base, "", environment)
+                store = Path(environment["GIT_OBJECT_DIRECTORY"])
+                return len(records), sum(1 for item in store.rglob("*") if item.is_file())
+
+        self.assertEqual(measured(), (0, 0))
+        (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+        self.assertEqual(measured(), (1, 1))
 
 
 class TheNumstatTableIsNeverInvented(unittest.TestCase):

@@ -1,0 +1,34 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "cfe8d08bf1f4ed8e8efc73a69efb3df68a312871",
+  "source_sha256": "898a78bee26845486a44c75ee463624637c8a11f045a1a5ccb59b45813c602a0",
+  "function": "_compared",
+  "signature": "_compared(base, target)",
+  "start": {
+    "line": 227,
+    "column": 1
+  },
+  "end": {
+    "line": 232,
+    "column": 60
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "IfExp",
+      "line": 232,
+      "inherited_line": false,
+      "source": "[base, target] if target else ['--cached', base]"
+    }
+  ],
+  "returns": [
+    {
+      "line": 232,
+      "value": "[base, target] if target else ['--cached', base]"
+    }
+  ],
+  "raises": [],
+  "calls": []
+}

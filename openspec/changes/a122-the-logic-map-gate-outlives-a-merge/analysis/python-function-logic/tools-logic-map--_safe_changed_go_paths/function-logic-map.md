@@ -90,3 +90,16 @@
 교차 검사가 성립한다 — 가드만 고정이 없으면 clean 필터 아래에서 가드는 레코드를 **안** 내고 판정은 내서
 크기가 갈려 거절된다(행동 시험이 잡는다). 분기는 **14 → 15** 다 — `*(pins or [])` 의 `or` 하나가 늘었다
 (`ast.after-7.5.27.json`; 7.5.28 정정: 앞 판본은 "분기 수는 그대로다" 라 적었다).
+
+## task 7.5.25 — 가드도 스냅숏 인덱스를 본다 (2026-09-24)
+
+`ast.before-7.5.25.json`(분기 15) → `ast.after-7.5.25.json`(분기 15). 분기 수는 같고 자리가 바뀌었다:
+편집 전 `BoolOp pins or []` · `IfExp [target] if target else []` 둘이 빠지고, 맨 앞에
+`BoolOp not target and environment is None` · `If` 둘이 들어왔다(raise `ValueError: a worktree comparison needs
+the worktree snapshot`). 넷째 인자는 `pins` 에서 `environment` 로 바뀌었다 — 가드와 판정이 **같은 쌍**
+(`*_compared(base, target)`)을 **같은 환경**에서 견준다.
+
+새 거절이 막는 것: 워킹트리 대상인데 환경이 없으면 `--cached` 가 **실제** 인덱스를 base 와 견준다 — 워킹트리도
+스냅숏도 아닌 셋째 시야다. 오늘 호출자는 하나(`_changed_existing_functions`)이고 늘 환경을 건넨다 — 정상 입력 중
+이 거절에 걸리는 것은 0 이다. 시험이 이 함수를 직접 부르는 자리 하나(`test_newline_changed_go_path_is_rejected_before_unified_diff_parsing`)는
+스냅숏을 열어 건네도록 고쳤다.

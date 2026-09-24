@@ -465,62 +465,83 @@ MUTATIONS = {
     "AE4_only_the_last_section_can_have_a_body": [
         ('            if bodied:\n                bodied[-1] = True',
          '            pass')],
-    # --- task 7.5.27: 워킹트리를 다시 쓰는 문을 명령줄에서 닫는다 ---
-    "AF1_the_fsmonitor_is_trusted": [
-        ('    pins = ["-c", "core.fsmonitor=false", "-c", "core.checkStat=default", "-c", "core.trustctime=true"]',
-         '    pins = ["-c", "core.checkStat=default", "-c", "core.trustctime=true"]')],
-    "AF2_filters_keep_their_clean": [
-        ('        pins += ["-c", f"filter.{driver}.clean=", "-c", f"filter.{driver}.process=",',
-         '        pins += ["-c", f"filter.{driver}.process=",')],
-    "AF3_filters_keep_their_process": [
-        ('        pins += ["-c", f"filter.{driver}.clean=", "-c", f"filter.{driver}.process=",',
-         '        pins += ["-c", f"filter.{driver}.clean=",')],
-    "AF4_a_required_filter_stays_required": [
-        ('                 "-c", f"filter.{driver}.required=false"]', '                 ]')],
-    "AF5_the_driver_name_loses_its_dots": [
-        ('        drivers.add(name[len("filter."):].rsplit(".", 1)[0])',
-         '        drivers.add(name.split(".")[1])')],
-    "AF6_the_guard_is_not_pinned": [
-        ('    records = _safe_changed_go_paths(root, base, target, pins)',
-         '    records = _safe_changed_go_paths(root, base, target)')],
-    "AF7_the_index_is_not_asked": [
-        ('        hidden = _hidden_by_index_flags(root, pins)',
-         '        hidden = []')],
-    "AF8_a_flag_alone_is_refused": [
-        ('    return [path for (path, oid), digest in zip(flagged, digests) if digest != oid]',
-         '    return [path for (path, oid), digest in zip(flagged, digests)]')],
-    "AF9_a_missing_flagged_file_is_hashed": [
-        ('        if (root / path).is_file():', '        if True:')],
-    "AF10_assume_unchanged_is_not_a_flag": [
-        ('        if not (tag == b"S" or tag.islower()) or mode not in (b"100644", b"100755"):',
-         '        if not (tag == b"S") or mode not in (b"100644", b"100755"):')],
-    "AF11_a_commit_target_asks_the_index": [
-        ('    if not target:\n        rewritten = _ident_go_paths(root)',
-         '    if True:\n        rewritten = _ident_go_paths(root)')],
-    # --- task 7.5.28: 줄 경계 · stat 캐시 · ident · 머리 줄의 탭 ---
+    # --- task 7.5.27 의 AF1~AF11 · 7.5.28 의 AG2~AG5 · AG7~AG9 는 뺐다 (task 7.5.25) — 겨누던 코드
+    # (`_git_view_pins` · `_hidden_by_index_flags` · `_ident_go_paths`)가 스냅숏으로 바뀌어 **없다**.
+    # 앵커가 없는 변이를 남기면 하네스가 단언에서 멈춘다. 그 변이들의 결과는 7.5.27 · 7.5.28 의 VERIFY 에 있다.
+    # --- task 7.5.28: 줄 경계 · 머리 줄의 탭 ---
     "AG1_the_diff_splits_on_every_line_break": [
         ('    diff_lines = process.stdout.decode("utf-8", "strict").split("\\n")',
          '    diff_lines = process.stdout.decode("utf-8", "strict").splitlines()')],
-    "AG2_the_stat_check_is_trusted": [
-        ('    pins = ["-c", "core.fsmonitor=false", "-c", "core.checkStat=default", "-c", "core.trustctime=true"]',
-         '    pins = ["-c", "core.fsmonitor=false"]')],
-    "AG3_ident_is_not_asked": [
-        ('        rewritten = _ident_go_paths(root)', '        rewritten = []')],
-    "AG4_an_unset_ident_counts": [
-        ('            if fields[at + 2] not in (b"unspecified", b"unset")]',
-         '            if fields[at + 2] != b"unspecified"]')],
-    "AG5_a_set_ident_is_ignored": [
-        ('            if fields[at + 2] not in (b"unspecified", b"unset")]',
-         '            if fields[at + 2] not in (b"unspecified", b"unset", b"set")]')],
     "AG6_the_header_keeps_its_tab": [
         ('    return value[:-1] if value.endswith("\\t") else value', '    return value')],
-    "AG7_a_space_in_a_driver_is_refused": [
-        ('        if "=" in driver:', '        if "=" in driver or " " in driver:')],
-    "AG8_the_flag_hash_is_not_pinned": [
-        ('        ["git", *pins, "hash-object", "--stdin-paths"],', '        ["git", "hash-object", "--stdin-paths"],')],
-    "AG9_an_executable_flagged_file_is_skipped": [
-        ('        if not (tag == b"S" or tag.islower()) or mode not in (b"100644", b"100755"):',
-         '        if not (tag == b"S" or tag.islower()) or mode not in (b"100644",):')],
+    # --- task 7.5.25: git 의 워킹트리 투영 대신 스냅숏 인덱스 ---
+    "AH1_the_worktree_is_seen_through_git": [
+        ('    return [base, target] if target else ["--cached", base]',
+         '    return [base, target] if target else [base]')],
+    "AH2_the_guard_skips_the_snapshot": [
+        ('         "--numstat", "-z", *_compared(base, target), "--", "*.go"],\n        cwd=root,\n        env=environment,\n',
+         '         "--numstat", "-z", *_compared(base, target), "--", "*.go"],\n        cwd=root,\n')],
+    "AH3_the_judgement_skips_the_snapshot": [
+        ('            "*.go",\n        ],\n        cwd=root,\n        env=environment,\n',
+         '            "*.go",\n        ],\n        cwd=root,\n')],
+    "AH4_the_current_side_rereads_the_disk": [
+        ('                current = _temporary_go(contents[new_source]) if new_source in contents else None',
+         '                current = _temporary_go(_read_regular(root / new_source)) if new_source in contents else None')],
+    "AH5_a_sparse_file_is_a_deletion": [
+        ('                if tag.upper() == b"S":', '                if False:')],
+    "AH6_assume_unchanged_keeps_the_index_blob": [
+        ('                if tag.upper() == b"S":', '                if tag.upper() == b"S" or tag.islower():')],
+    # `(root / path).read_bytes()` 로 바꾸는 판본은 FIFO 시험에서 스위트를 **멈췄다**(`wait_for_partner`, 하네스 시한
+    # 5,400 초) — 깔때기가 막아 주던 바로 그 멈춤이다. 그 판본은 따로 쟀고(review 7.5.25), 여기서는 원장만 비켜 간다.
+    "AH7_reads_skip_the_ledger": [
+        ('                data = _read_regular(root / path)', '                data = _opened_bytes(root / path)')],
+    "AH8_the_split_index_leaks": [
+        ('            ["git", *SNAPSHOT_PINS, "-c", "core.splitIndex=false", "-c", "core.hooksPath=/dev/null",',
+         '            ["git", *SNAPSHOT_PINS, "-c", "core.hooksPath=/dev/null",')],
+    "AH9_the_hooks_run": [
+        ('            ["git", *SNAPSHOT_PINS, "-c", "core.splitIndex=false", "-c", "core.hooksPath=/dev/null",',
+         '            ["git", *SNAPSHOT_PINS, "-c", "core.splitIndex=false",')],
+    "AH10_the_fsmonitor_runs": [
+        ('SNAPSHOT_PINS = ("-c", "core.fsmonitor=false")', 'SNAPSHOT_PINS = ()')],
+    "AH11_the_guard_takes_no_snapshot": [
+        ('    if not target and environment is None:', '    if False:')],
+    "AH12_an_unmerged_file_is_taken": [
+        ('            if stage != b"0":', '            if False:')],
+    "AH13_a_symlink_is_taken": [
+        ('            if mode not in GO_FILE_MODES:', '            if False:')],
+    "AH14_an_executable_is_refused": [
+        ('GO_FILE_MODES = (b"100644", b"100755")', 'GO_FILE_MODES = (b"100644",)')],
+    "AH15_the_real_store_is_not_an_alternate": [
+        ('            "GIT_ALTERNATE_OBJECT_DIRECTORIES": os.pathsep.join(filter(None, (str(objects), inherited))),',
+         '            "GIT_ALTERNATE_OBJECT_DIRECTORIES": inherited,')],
+    "AH16_the_digest_is_not_a_blob_id": [
+        ('            digest = hashlib.new(algorithm, b"blob %d\\0" % len(data) + data).hexdigest()',
+         '            digest = hashlib.new(algorithm, data).hexdigest()')],
+    "AH17_every_blob_is_written": [
+        ('            if digest != oid.decode("ascii"):\n                _write_loose_blob',
+         '            if True:\n                _write_loose_blob')],
+    "AH18_the_loose_header_is_wrong": [
+        ('        handle.write(zlib.compress(b"blob %d\\0" % len(data) + data))',
+         '        handle.write(zlib.compress(b"blob %d \\0" % len(data) + data))')],
+    "AH19_a_commit_target_takes_the_snapshot": [
+        ('    if target:\n        return _changed_existing_functions(root, base, target, None, {})',
+         '    if False:\n        return _changed_existing_functions(root, base, target, None, {})')],
+    "AH20_the_ls_files_runs_the_fsmonitor": [
+        ('        ["git", *SNAPSHOT_PINS, "ls-files", "-s", "-v", "-z", "--", "*.go"],',
+         '        ["git", "ls-files", "-s", "-v", "-z", "--", "*.go"],')],
+    "AH21_a_failed_rev_parse_is_read": [
+        ('    if described.returncode:', '    if False:')],
+    "AH22_a_short_rev_parse_is_read": [
+        ('    if len(answer) < 2 or not answer[0] or not answer[1]:', '    if False:')],
+    "AH23_a_failed_ls_files_is_read": [
+        ('    if listed.returncode:\n        raise RuntimeError(_first_line(listed.stderr.decode("utf-8", "replace"), "git ls-files failed"))',
+         '    if False:\n        raise RuntimeError(_first_line(listed.stderr.decode("utf-8", "replace"), "git ls-files failed"))')],
+    "AH24_a_short_record_is_read": [
+        ('            if len(fields) != 4 or not raw_path:', '            if False:')],
+    "AH25_an_alternate_with_a_colon_is_taken": [
+        ("        if os.pathsep in str(objects) or '\"' in str(objects):", '        if False:')],
+    "AH26_a_failed_update_index_is_ignored": [
+        ('        if built.returncode:', '        if False:')],
     "AD6_the_guard_ignores_renames": [
         ('"--no-ext-diff", "--no-textconv", "--find-renames",',
          '"--no-ext-diff", "--no-textconv",')],
@@ -542,9 +563,17 @@ def setup() -> Path:
     return WORK / "logic-map" / "check_analysis.py"
 
 
+# 스위트는 임시 저장소마다 `go run ./tools/logic-map` 을 부르고, go 의 캐시 키에 **디렉터리 경로**가 들어가서
+# 한 판이 공유 캐시(`~/.cache/go-build`)를 약 375 MB 씩 불렸다 — 판 170 개면 60 GB 가 넘고, 2026-09-24 에 디스크가
+# 두 번 0 이 됐다 (task 7.5.30). `-trimpath` 는 경로를 키에서 빼고(둘째 판 +1 MB), 캐시는 이 하네스 전용으로
+# `_work/` 아래(무시되는 디렉터리)에 둔다 — 사람의 공유 캐시를 건드리지 않는다.
+GO_ENV = {"GOFLAGS": "-trimpath", "GOCACHE": str(SP / "gocache")}
+
+
 def run(names: list[str]) -> tuple[int, str]:
     process = subprocess.run([sys.executable, "-m", "unittest", *names],
-                             cwd=WORK / "logic-map", capture_output=True, text=True, timeout=5400)
+                             cwd=WORK / "logic-map", capture_output=True, text=True, timeout=5400,
+                             env={**os.environ, **GO_ENV})
     return process.returncode, process.stderr
 
 

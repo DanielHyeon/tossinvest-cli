@@ -110,3 +110,29 @@ U+0085(와 `\r`)에서도 잘랐다. 그 글자가 경로에 있으면 `diff --g
 짝짓기는 이 입력을 거절했다). 머리 줄의 이름은 `_header_name` 으로 읽는다: git 은 이름에 공백이 있으면 줄 끝에
 **탭**을 붙이는데 그것을 이름으로 읽어 거짓 차단했다(이 change 이전부터). 워킹트리 대상의 **가장 뒤**에서
 `_ident_go_paths` 를 먼저, 그다음 `_hidden_by_index_flags` 를 묻는다. `ast.after-7.5.28.json`.
+
+## task 7.5.25 — git 의 워킹트리 투영을 안 쓴다 (2026-09-24, 사람이 선택지 1 을 골랐다)
+
+`ast.before-7.5.25.json`(편집 전, `cfe8d08b` 의 `:323-517`, 분기 45 · raise 7) →
+`ast.after-7.5.25.json`(몸통을 떼어 낸 껍데기, 분기 2 · raise 1) + `../tools-logic-map--_changed_existing_functions/ast.after-7.5.25.json`
+(몸통, 분기 39 · raise 4). 옛/새 분기 열을 difflib 로 맞춘 결과(손으로 재번호하지 않았다):
+
+| 편집 전 | 편집 후 | 무엇이 바뀌었나 |
+|---|---|---|
+| B2 `IfExp [target] if target else []` | 껍데기 B2 `if target:` | 대상이 워킹트리면 **스냅숏을 연다**(`_worktree_snapshot`) — 두 diff 가 견주는 쌍은 `_compared` 하나가 준다 |
+| B15 `BoolOp target and new_source` · B16 · B17 (`root / new_source`) | 몸통 B13 `if target:` · B14 · B15 (`_temporary_go(contents[new_source])`) | 현재 쪽이 **디스크를 다시 읽지 않고** 스냅숏의 바이트를 읽는다 |
+| B24 `BoolOp` · B25 `if target and current is not None:` | 몸통 B22 `if current is not None:` | 현재 쪽이 이제 늘 임시 파일이므로 늘 지운다 |
+| B43 `if not target:` · B44 `if rewritten:` · B45 `if hidden:` | — | `ident` · 인덱스 플래그 거절을 **지웠다** — 스냅숏이 그 문들을 원리로 닫는다 |
+| raise 6 `the ident attribute rewrites …` · raise 7 `an index flag … hides …` | — | 같은 이유로 지웠다 |
+
+나머지 분기(편집 전 B1 · B3~B14 · B18~B23 · B26~B42)는 순서와 내용이 그대로 몸통 B1~B12 · B16~B21 · B23~B39 로
+옮겨졌다(첫 `if not base:` 는 껍데기 B1 에 남는다).
+
+**껍데기와 몸통으로 가른 까닭.** 스냅숏은 임시 디렉터리(임시 인덱스 · 임시 객체 저장소)를 두 diff 가 끝날 때까지
+살려 둬야 한다 — `with` 안에 몸통 180 줄을 들여 쓰는 대신 몸통을 떼어 `with` 안에서 부른다. 대상이 커밋이면
+스냅숏 없이 곧장 부른다.
+
+**불변식 (편집 후).** 워킹트리 대상에서 판정이 견주는 바이트 = 깔때기(`_read_regular`)가 읽은 바이트 = git 에 건넨
+blob = `go_functions` 가 지도를 뽑는 바이트. 셋이 한 번의 읽기에서 온다. 편집 전에는 git 이 **자기 시야**로 바이트를
+골랐고(필터 · `ident` · `working-tree-encoding` · stat 캐시 · fsmonitor · 인덱스 플래그) 현재 쪽은 디스크를 **다시**
+읽었다 — 둘이 다를 수 있었다.

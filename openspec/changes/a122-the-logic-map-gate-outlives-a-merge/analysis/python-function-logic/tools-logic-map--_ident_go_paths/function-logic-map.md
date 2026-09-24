@@ -21,3 +21,8 @@
 **비용**: 워킹트리 대상 판정마다 프로세스 둘. 오늘 저장소의 `.gitattributes` 는 0 개다.
 시험 `…the_ident_attribute_is_refused_by_name`(`AG3`·`AG5`) · 경계 `…an_explicitly_unset_ident_is_not_refused`(`AG4` —
 `-ident` 는 **끈** 것이다; 그 갈래를 뒤집는 변이가 첫 판에서 살아남아 더한 시험이다).
+
+## task 7.5.25 — 지웠다 (2026-09-24)
+
+이 함수는 git 의 워킹트리 투영에서 **알려진 문 하나**를 닫았다. 7.5.25 가 투영 자체를 안 쓰게 되면서(`_worktree_snapshot`)
+닫을 문이 판정에 닿을 자리가 없어졌다 — 호출자도 시험도 없다. 이 디렉터리의 `ast.*.json` 은 그 시점의 기록으로 둔다.

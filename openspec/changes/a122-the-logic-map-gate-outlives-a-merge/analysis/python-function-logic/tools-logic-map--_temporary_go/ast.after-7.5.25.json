@@ -1,0 +1,43 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "cfe8d08bf1f4ed8e8efc73a69efb3df68a312871",
+  "source_sha256": "898a78bee26845486a44c75ee463624637c8a11f045a1a5ccb59b45813c602a0",
+  "function": "_temporary_go",
+  "signature": "_temporary_go(data)",
+  "start": {
+    "line": 112,
+    "column": 1
+  },
+  "end": {
+    "line": 117,
+    "column": 22
+  },
+  "branches": [],
+  "returns": [
+    {
+      "line": 117,
+      "value": "Path(name)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 114,
+      "callee": "tempfile.mkstemp"
+    },
+    {
+      "line": 115,
+      "callee": "os.fdopen"
+    },
+    {
+      "line": 116,
+      "callee": "handle.write"
+    },
+    {
+      "line": 117,
+      "callee": "Path"
+    }
+  ]
+}

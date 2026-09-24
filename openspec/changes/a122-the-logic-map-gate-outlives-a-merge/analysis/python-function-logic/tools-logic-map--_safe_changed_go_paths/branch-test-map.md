@@ -55,7 +55,7 @@
 |---|---|---|
 | 판정 diff 를 `\n` 에서만 자름 | `process.stdout.decode("utf-8", "strict").split(…)` | `…a_unicode_line_separator_in_a_path_does_not_split_the_diff`(subTest 셋) · `…a_rename_to_a_name_with_a_line_separator…` |
 | 머리 줄 끝의 탭 | `_header_name` | `…a_name_with_a_space_is_not_refused` |
-| stat 캐시 고정 | `_git_view_pins` 의 `core.checkStat=default` · `core.trustctime=true` | `…a_minimal_stat_check_does_not_hide_a_same_size_edit` |
+| stat 캐시 고정 | `_git_view_pins` 의 `core.checkStat=default` · `core.trustctime=true` | `…a_minimal_stat_check_does_not_hide_a_same_size_edit` — **`checkStat` 만** (7.5.25 정정 F1: `trustctime` 은 아무 시험도 못 박았다 · `AG2` 가 둘을 한꺼번에 뺐다) |
 | `ident` 거절 | `_ident_go_paths` · 판정 끝의 `rewritten` | `…the_ident_attribute_is_refused_by_name`(`AG3`·`AG5`) · 경계 `…an_explicitly_unset_ident_is_not_refused`(`AG4`) |
 | 드라이버 이름은 `=` 만 거절 | `if "=" in driver:` | `…a_driver_name_with_a_space_is_pinned_not_refused` · `…cannot_be_pinned_is_refused` |
 | 플래그 해시의 고정 · `100755` | `["git", *pins, "hash-object", …]` · 모드 조건 | `…a_flagged_file_behind_a_filter…` · `…an_executable_flagged_file…` |
@@ -83,3 +83,13 @@
   `-\t-\t\0old\0new\0` 를 내고 가드는 새 이름을 댄다 — 행동은 쟀지만 못 박지는 않았다.
 - 가드의 `subprocess.run` 에 `timeout=` 이 없다. 같은 결함이 일곱 자리에 걸쳐 있어
   **값 단위로** 한 번에 닫는다 → task 7.5.15 ([[correction-unit-must-be-the-value]]).
+
+## 7.5.25 — 스냅숏 환경
+
+| 갈래 | 변이 | 잡는 시험 |
+|---|---|---|
+| 워킹트리 대상인데 환경이 없으면 거절 | `AH11_the_guard_takes_no_snapshot` | `test_a_worktree_guard_without_the_snapshot_is_refused` |
+| 가드도 스냅숏 환경을 받는다 | `AH2_the_guard_skips_the_snapshot` | 21 시험 |
+| `--find-renames` (구조) | `AD6_the_guard_ignores_renames` | `test_both_git_calls_see_the_same_files` |
+
+7.5.27 · 7.5.28 의 `pins` 행(필터 고정 · stat 고정)은 7.5.25 에서 겨눌 코드가 없어졌다 — 그 행은 기록으로 둔다.

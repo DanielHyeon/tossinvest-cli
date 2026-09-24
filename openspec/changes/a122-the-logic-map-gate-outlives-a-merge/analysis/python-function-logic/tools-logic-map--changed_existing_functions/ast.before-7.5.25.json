@@ -1,0 +1,660 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "cfe8d08bf1f4ed8e8efc73a69efb3df68a312871",
+  "source_sha256": "90b232ab9efd6f522ac52592c7232fe20ce8df0c72e94d07d5d4104d1b34d78d",
+  "function": "changed_existing_functions",
+  "signature": "changed_existing_functions(root, base, target)",
+  "start": {
+    "line": 323,
+    "column": 1
+  },
+  "end": {
+    "line": 517,
+    "column": 20
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 328,
+      "inherited_line": false,
+      "source": "if not base:"
+    },
+    {
+      "id": "B2",
+      "kind": "IfExp",
+      "line": 349,
+      "inherited_line": false,
+      "source": "[target] if target else []"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 358,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 360,
+      "inherited_line": false,
+      "source": "process.stderr.decode('utf-8', 'replace').strip() or f'git diff failed for base {base}'"
+    },
+    {
+      "id": "B5",
+      "kind": "BoolOp",
+      "line": 380,
+      "inherited_line": false,
+      "source": "not old_source or not hunks"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 380,
+      "inherited_line": false,
+      "source": "if not old_source or not hunks:"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 384,
+      "inherited_line": false,
+      "source": "if temporary is None:"
+    },
+    {
+      "id": "B8",
+      "kind": "Try",
+      "line": 389,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B9",
+      "kind": "comprehension",
+      "line": 391,
+      "inherited_line": true,
+      "source": " for function in old_functions"
+    },
+    {
+      "id": "B10",
+      "kind": "For",
+      "line": 392,
+      "inherited_line": false,
+      "source": "for function in old_functions:"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 395,
+      "inherited_line": false,
+      "source": "if any((intersects(start, end, old, old_count) for old, old_count, _, _ in hunks)):"
+    },
+    {
+      "id": "B12",
+      "kind": "comprehension",
+      "line": 395,
+      "inherited_line": true,
+      "source": " for old, old_count, _, _ in hunks"
+    },
+    {
+      "id": "B13",
+      "kind": "BoolOp",
+      "line": 396,
+      "inherited_line": false,
+      "source": "new_source or old_source"
+    },
+    {
+      "id": "B14",
+      "kind": "BoolOp",
+      "line": 398,
+      "inherited_line": false,
+      "source": "new_source or old_source"
+    },
+    {
+      "id": "B15",
+      "kind": "BoolOp",
+      "line": 402,
+      "inherited_line": false,
+      "source": "target and new_source"
+    },
+    {
+      "id": "B16",
+      "kind": "IfExp",
+      "line": 402,
+      "inherited_line": false,
+      "source": "base_file(root, target, new_source) if target and new_source else root / new_source if new_source else None"
+    },
+    {
+      "id": "B17",
+      "kind": "IfExp",
+      "line": 402,
+      "inherited_line": false,
+      "source": "root / new_source if new_source else None"
+    },
+    {
+      "id": "B18",
+      "kind": "BoolOp",
+      "line": 403,
+      "inherited_line": false,
+      "source": "current and current.exists()"
+    },
+    {
+      "id": "B19",
+      "kind": "If",
+      "line": 403,
+      "inherited_line": false,
+      "source": "if current and current.exists():"
+    },
+    {
+      "id": "B20",
+      "kind": "For",
+      "line": 404,
+      "inherited_line": false,
+      "source": "for function in go_functions(current, root):"
+    },
+    {
+      "id": "B21",
+      "kind": "If",
+      "line": 411,
+      "inherited_line": false,
+      "source": "if qualified(function) not in old_qualified:"
+    },
+    {
+      "id": "B22",
+      "kind": "If",
+      "line": 415,
+      "inherited_line": false,
+      "source": "if any((intersects(start, end, new, new_count) for _, _, new, new_count in hunks)):"
+    },
+    {
+      "id": "B23",
+      "kind": "comprehension",
+      "line": 415,
+      "inherited_line": true,
+      "source": " for _, _, new, new_count in hunks"
+    },
+    {
+      "id": "B24",
+      "kind": "BoolOp",
+      "line": 427,
+      "inherited_line": false,
+      "source": "target and current is not None"
+    },
+    {
+      "id": "B25",
+      "kind": "If",
+      "line": 427,
+      "inherited_line": false,
+      "source": "if target and current is not None:"
+    },
+    {
+      "id": "B26",
+      "kind": "If",
+      "line": 442,
+      "inherited_line": false,
+      "source": "if match is None:"
+    },
+    {
+      "id": "B27",
+      "kind": "BoolOp",
+      "line": 447,
+      "inherited_line": false,
+      "source": "match.group(2) or 1"
+    },
+    {
+      "id": "B28",
+      "kind": "BoolOp",
+      "line": 449,
+      "inherited_line": false,
+      "source": "match.group(4) or 1"
+    },
+    {
+      "id": "B29",
+      "kind": "For",
+      "line": 454,
+      "inherited_line": false,
+      "source": "for line in diff_lines:"
+    },
+    {
+      "id": "B30",
+      "kind": "If",
+      "line": 455,
+      "inherited_line": false,
+      "source": "if line.startswith('diff --git '):"
+    },
+    {
+      "id": "B31",
+      "kind": "If",
+      "line": 461,
+      "inherited_line": false,
+      "source": "if in_body:"
+    },
+    {
+      "id": "B32",
+      "kind": "If",
+      "line": 464,
+      "inherited_line": false,
+      "source": "if hunk(line):"
+    },
+    {
+      "id": "B33",
+      "kind": "If",
+      "line": 468,
+      "inherited_line": false,
+      "source": "if bodied:"
+    },
+    {
+      "id": "B34",
+      "kind": "If",
+      "line": 470,
+      "inherited_line": false,
+      "source": "if line.startswith('--- '):"
+    },
+    {
+      "id": "B35",
+      "kind": "IfExp",
+      "line": 472,
+      "inherited_line": false,
+      "source": "'' if value == '/dev/null' else value.removeprefix('a/')"
+    },
+    {
+      "id": "B36",
+      "kind": "If",
+      "line": 473,
+      "inherited_line": false,
+      "source": "if line.startswith('+++ '):"
+    },
+    {
+      "id": "B37",
+      "kind": "IfExp",
+      "line": 475,
+      "inherited_line": false,
+      "source": "'' if value == '/dev/null' else value.removeprefix('b/')"
+    },
+    {
+      "id": "B38",
+      "kind": "If",
+      "line": 486,
+      "inherited_line": false,
+      "source": "if len(bodied) != len(records):"
+    },
+    {
+      "id": "B39",
+      "kind": "For",
+      "line": 491,
+      "inherited_line": false,
+      "source": "for (added, deleted, paths), had_body in zip(records, bodied):"
+    },
+    {
+      "id": "B40",
+      "kind": "BoolOp",
+      "line": 492,
+      "inherited_line": false,
+      "source": "added in (b'-', b'0') and deleted in (b'-', b'0')"
+    },
+    {
+      "id": "B41",
+      "kind": "If",
+      "line": 492,
+      "inherited_line": false,
+      "source": "if added in (b'-', b'0') and deleted in (b'-', b'0'):"
+    },
+    {
+      "id": "B42",
+      "kind": "If",
+      "line": 494,
+      "inherited_line": false,
+      "source": "if not had_body:"
+    },
+    {
+      "id": "B43",
+      "kind": "If",
+      "line": 503,
+      "inherited_line": false,
+      "source": "if not target:"
+    },
+    {
+      "id": "B44",
+      "kind": "If",
+      "line": 505,
+      "inherited_line": false,
+      "source": "if rewritten:"
+    },
+    {
+      "id": "B45",
+      "kind": "If",
+      "line": 511,
+      "inherited_line": false,
+      "source": "if hidden:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 382,
+      "value": null
+    },
+    {
+      "line": 443,
+      "value": "False"
+    },
+    {
+      "line": 452,
+      "value": "True"
+    },
+    {
+      "line": 517,
+      "value": "required"
+    }
+  ],
+  "raises": [
+    {
+      "line": 329,
+      "source": "raise ValueError('Function Logic Map comparison base is required')"
+    },
+    {
+      "line": 359,
+      "source": "raise RuntimeError(process.stderr.decode('utf-8', 'replace').strip() or f'git diff failed for base {base}')"
+    },
+    {
+      "line": 385,
+      "source": "raise RuntimeError(f'cannot load existing base file {base}:{old_source}')"
+    },
+    {
+      "line": 487,
+      "source": "raise RuntimeError(f'git listed {len(records)} changed Go file(s) but the judged diff has {len(bodied)} — the two views of the same diff disagree')"
+    },
+    {
+      "line": 495,
+      "source": "raise RuntimeError('git reported content changes but emitted no diff body for ' + paths[-1].decode('utf-8', 'strict') + ' — an external diff or textconv filter "
+    },
+    {
+      "line": 506,
+      "source": "raise RuntimeError('the ident attribute rewrites ' + ', '.join(rewritten) + ' before git compares it, which can hide an edit — remove `ident` for *.go')"
+    },
+    {
+      "line": 512,
+      "source": "raise RuntimeError('an index flag (assume-unchanged or skip-worktree) hides an edit to ' + ', '.join(hidden) + ' — clear the flag with `git update-index --no-as"
+    }
+  ],
+  "calls": [
+    {
+      "line": 329,
+      "callee": "ValueError"
+    },
+    {
+      "line": 331,
+      "callee": "_git_view_pins"
+    },
+    {
+      "line": 332,
+      "callee": "_safe_changed_go_paths"
+    },
+    {
+      "line": 333,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 359,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 360,
+      "callee": "process.stderr.decode('utf-8', 'replace').strip"
+    },
+    {
+      "line": 360,
+      "callee": "process.stderr.decode"
+    },
+    {
+      "line": 367,
+      "callee": "process.stdout.decode('utf-8', 'strict').split"
+    },
+    {
+      "line": 367,
+      "callee": "process.stdout.decode"
+    },
+    {
+      "line": 383,
+      "callee": "base_file"
+    },
+    {
+      "line": 385,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 390,
+      "callee": "go_functions"
+    },
+    {
+      "line": 391,
+      "callee": "qualified"
+    },
+    {
+      "line": 393,
+      "callee": "int"
+    },
+    {
+      "line": 394,
+      "callee": "int"
+    },
+    {
+      "line": 395,
+      "callee": "any"
+    },
+    {
+      "line": 395,
+      "callee": "intersects"
+    },
+    {
+      "line": 396,
+      "callee": "qualified"
+    },
+    {
+      "line": 399,
+      "callee": "qualified"
+    },
+    {
+      "line": 400,
+      "callee": "function.get"
+    },
+    {
+      "line": 402,
+      "callee": "base_file"
+    },
+    {
+      "line": 403,
+      "callee": "current.exists"
+    },
+    {
+      "line": 404,
+      "callee": "go_functions"
+    },
+    {
+      "line": 411,
+      "callee": "qualified"
+    },
+    {
+      "line": 413,
+      "callee": "int"
+    },
+    {
+      "line": 414,
+      "callee": "int"
+    },
+    {
+      "line": 415,
+      "callee": "any"
+    },
+    {
+      "line": 416,
+      "callee": "intersects"
+    },
+    {
+      "line": 419,
+      "callee": "qualified"
+    },
+    {
+      "line": 422,
+      "callee": "qualified"
+    },
+    {
+      "line": 423,
+      "callee": "function.get"
+    },
+    {
+      "line": 426,
+      "callee": "temporary.unlink"
+    },
+    {
+      "line": 428,
+      "callee": "current.unlink"
+    },
+    {
+      "line": 441,
+      "callee": "HUNK.match"
+    },
+    {
+      "line": 444,
+      "callee": "hunks.append"
+    },
+    {
+      "line": 446,
+      "callee": "int"
+    },
+    {
+      "line": 446,
+      "callee": "match.group"
+    },
+    {
+      "line": 447,
+      "callee": "int"
+    },
+    {
+      "line": 447,
+      "callee": "match.group"
+    },
+    {
+      "line": 448,
+      "callee": "int"
+    },
+    {
+      "line": 448,
+      "callee": "match.group"
+    },
+    {
+      "line": 449,
+      "callee": "int"
+    },
+    {
+      "line": 449,
+      "callee": "match.group"
+    },
+    {
+      "line": 455,
+      "callee": "line.startswith"
+    },
+    {
+      "line": 456,
+      "callee": "flush"
+    },
+    {
+      "line": 460,
+      "callee": "bodied.append"
+    },
+    {
+      "line": 463,
+      "callee": "hunk"
+    },
+    {
+      "line": 464,
+      "callee": "hunk"
+    },
+    {
+      "line": 470,
+      "callee": "line.startswith"
+    },
+    {
+      "line": 471,
+      "callee": "_header_name"
+    },
+    {
+      "line": 472,
+      "callee": "value.removeprefix"
+    },
+    {
+      "line": 473,
+      "callee": "line.startswith"
+    },
+    {
+      "line": 474,
+      "callee": "_header_name"
+    },
+    {
+      "line": 475,
+      "callee": "value.removeprefix"
+    },
+    {
+      "line": 476,
+      "callee": "flush"
+    },
+    {
+      "line": 486,
+      "callee": "len"
+    },
+    {
+      "line": 486,
+      "callee": "len"
+    },
+    {
+      "line": 487,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 488,
+      "callee": "len"
+    },
+    {
+      "line": 489,
+      "callee": "len"
+    },
+    {
+      "line": 491,
+      "callee": "zip"
+    },
+    {
+      "line": 495,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 497,
+      "callee": "paths[-1].decode"
+    },
+    {
+      "line": 504,
+      "callee": "_ident_go_paths"
+    },
+    {
+      "line": 506,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 507,
+      "callee": "', '.join"
+    },
+    {
+      "line": 510,
+      "callee": "_hidden_by_index_flags"
+    },
+    {
+      "line": 512,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 514,
+      "callee": "', '.join"
+    }
+  ]
+}

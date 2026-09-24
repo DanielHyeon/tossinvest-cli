@@ -156,21 +156,36 @@ sha 로 한 번 풀고, 증거 디렉터리를 한 번 읽고, 그 뒤의 역사
 맞춰 본다**: numstat 이 내용이 바뀌었다고 한 파일이 훅을 하나도 안 냈으면 거절한다. 문을 하나씩
 세는 대신 **어긋남**을 보므로 `--no-ext-diff`·`--no-textconv` 가 사라져도 런타임에 잡힌다.
 
-**그리고 워킹트리를 다시 쓰는 문은 두 시야를 **함께** 속인다 (7.5.27).** 게이트의 기본 대상은 워킹트리다.
-`filter.<드라이버>.clean`·`.process` 는 편집을 base 의 바이트로 바꾸고, 거짓말하는 `core.fsmonitor` 는
-git 이 파일을 보지도 않게 한다 — `--numstat` 도 판정 diff 도 아무것도 안 내므로 위의 교차 검사가 원리상
-못 본다(실물 게이트에서 판정 줄 36 → 0). 그래서 판정의 두 `git diff` 가 **같은 명령줄 고정**을 받는다:
-`core.fsmonitor=false`, 설정된 모든 필터 드라이버의 `clean=`·`process=`·`required=false`.
-`assume-unchanged`·`skip-worktree` 인덱스 플래그는 설정이 아니라 고정으로 안 닫히므로, 플래그 붙은
-`*.go` 를 같은 고정으로 해시해 인덱스와 **다를 때만** 이름 대고 거절한다(sparse-checkout 도 `skip-worktree`
-를 쓰므로 플래그만으로는 안 거절한다). **이것은 알려진 문이다** — 판정 바이트를 git 의 투영 없이 직접 대조하는
-근본은 사람 결정(a122 7.5.25)으로 남아 있다. 그리고 `*.go` 에 **정상적인** clean 필터(git-lfs · git-crypt)를
-쓰는 저장소에서는 중화 때문에 판정이 raw 바이트로 바뀐다(오늘 노출 0).
+**그리고 게이트는 git 의 워킹트리 시야를 믿지 않는다 (7.5.25).** 게이트의 기본 대상은 워킹트리다. `git diff <base>`
+는 워킹트리를 **git 의 투영**으로 본다 — clean·process 필터 · `ident` · `working-tree-encoding` 이 비교 전에 바이트를
+다시 쓰고, fsmonitor · stat 캐시 · `assume-unchanged`·`skip-worktree` 는 git 이 파일을 아예 안 읽게 한다. 그러면
+`--numstat` 도 판정 diff 도 아무것도 안 내므로 위의 교차 검사가 원리상 못 본다. 7.5.27 · 7.5.28 은 이 문들을 명령줄
+고정과 이름 댄 거절로 하나씩 닫았는데 재리뷰가 매번 하나를 더 찾았고(마지막은 UTF-7 의 이중 표현), **설정이 하나도
+없어도** stat 캐시만으로 편집이 감춰졌다(같은 inode · 같은 크기 · mtime 되돌림 · 같은 초의 ctime — 10/10 실측).
 
-**7.5.28 이 더한 것**: `core.checkStat=default`·`core.trustctime=true` 고정(같은 크기 편집을 stat 캐시가 감춘다) ·
-내장 속성 `ident` 거절(`$Id: …$` 안의 변경이 사라진다, `-c` 로 못 끈다) · 판정 diff 를 바이트로 받아 **`\n` 에서만**
-자름(`str.splitlines()` 는 U+2028 등에서도 잘라 경로 하나가 diff 를 부쉈다) · 머리 줄 끝에 git 이 붙이는 탭을
-뗌(공백 든 `*.go` 가 거짓 차단됐다).
+그래서 `_worktree_snapshot` 이 투영을 **안 쓴다**. 인덱스가 추적하는 `*.go` 마다 디스크 바이트를 깔때기
+(`_read_regular`, 원장에 남아 끝의 재확인이 다시 읽는다)로 읽고, 그 바이트의 blob 을 **임시** 객체 저장소에 쓰고,
+그 blob 을 가리키는 **임시** 인덱스를 만든다. 가드와 판정의 두 diff 는 `--cached` 로 그 인덱스를 base 와 견준다
+(`_compared` 하나가 쌍을 준다). 판정의 현재 쪽도 디스크를 다시 읽지 않고 **같은 바이트**로 함수 지도를 뽑는다.
+실제 인덱스와 객체 저장소에는 아무것도 쓰지 않는다 — `core.splitIndex=false` · `core.hooksPath=/dev/null` ·
+`core.fsmonitor=false` 를 주는 까닭이다(각각 `sharedindex.*` 쓰기 · `post-index-change` 훅 · fsmonitor 명령을 실측).
+
+**이것이 바꾸는 것.** 판정의 대상이 git 이 정규화한 글이 아니라 **디스크의 바이트**가 된다. CRLF 체크아웃
+(`core.autocrlf=true`)이면 **손대지 않은** 함수까지 요구된다(실측: 함수 둘인 파일을 편집 없이 다시 꺼냈더니 요구 2).
+`*.go` 에 clean 필터를 쓰는 저장소에서는 blob 과 디스크 바이트가 늘 달라 추적 `*.go` 전부가 바뀐 것으로 읽힌다 —
+blob 이 Go 가 아니면(git-crypt) base 쪽 함수 지도를 못 뽑는다. 둘 다 덜 막는 방향이 아니고, 오늘 이 저장소의 노출은
+0 이다(`core.autocrlf` 미설정 · 필터 설정 0 · `.gitattributes`·`.git/info/attributes` 없음 · 추적 `*.go` 중 `\r` 든 것 0).
+비용은 판정마다 추적 `*.go` 전수를 읽고 해시하는 것이다. 그리고 이름 대고 거절하는 것이
+셋 있다: 충돌 중인 `*.go` · 인덱스가 일반 파일이라 하지 않는 `*.go`(심링크 · gitlink, 저장소 전수 0 / 1,762) ·
+실제 객체 디렉터리 경로에 `:`·`"` 가 든 저장소. `skip-worktree` 인데 파일이 없으면 sparse 로 **안 꺼낸** 것으로 읽고
+인덱스 blob 을 쓴다 — 그 자리에서 파일을 지운 것은 sparse 와 구별되지 않는다(7.5.25 의 잔여).
+
+**안 닫는 것.** diff 의 **출력 형식**을 바꾸는 설정(`diff.noprefix` · `diff.mnemonicPrefix` · `color.ui=always`)과
+pathspec 환경 변수는 워킹트리 바이트가 아니라 파서의 문제다 — 7.5.26.
+
+**7.5.28 이 더한 것 중 남은 것**: 판정 diff 를 바이트로 받아 **`\n` 에서만** 자름(`str.splitlines()` 는 U+2028 등에서도
+잘라 경로 하나가 diff 를 부쉈다) · 머리 줄 끝에 git 이 붙이는 탭을 뗌(공백 든 `*.go` 가 거짓 차단됐다). 그 로트의
+stat 고정과 `ident` 거절은 7.5.25 가 지웠다.
 
 ## a063 execution-baseline adoption exception
 

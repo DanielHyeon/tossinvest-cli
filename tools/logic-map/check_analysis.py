@@ -15,8 +15,9 @@ import stat
 import subprocess
 import sys
 import tempfile
+import zlib
 from pathlib import Path
-from typing import NamedTuple
+from typing import Iterator, NamedTuple
 
 from role_check import call_enumeration_in_use, role_errors
 from execution_baseline import AdoptionError, validate as validate_execution_baseline
@@ -104,44 +105,131 @@ def base_file(root: Path, base: str, source: str) -> Path | None:
     return path
 
 
-def _git_view_pins(root: Path) -> list[str]:
-    """판정의 `git diff` 둘이 쓸 **명령줄 고정** (task 7.5.27). 설정으로 여는 문을 끈다.
+# 인덱스의 일반 파일 모드 둘. 그 밖(심링크 `120000` · gitlink `160000`)은 Go 소스가 아니다 — 저장소 전수 0 / 1,762.
+GO_FILE_MODES = (b"100644", b"100755")
 
-    워킹트리 대상(게이트의 기본 모드)에서 git 은 비교하기 전에 워킹트리 바이트를 **다시 쓸 수 있다**.
-    `filter.<드라이버>.clean`·`.process` 는 편집을 base 의 바이트로 바꿔서 `--numstat` 이 레코드를 아예
-    안 내고, 거짓말하는 `core.fsmonitor` 는 git 이 파일을 보지도 않게 한다 — 두 시야가 **함께** 거짓말하므로
-    7.5.23 의 교차 검사가 원리상 못 본다(실측: 편집이 디스크에 있는데 `required` 가 빈다).
 
-    그래서 설정된 **모든** 필터 드라이버의 `clean`·`process` 를 비우고 `required=false` 로 둔다 — `clean` 만
-    비우면 `required=true` 드라이버에서 git 이 죽는다(rc 128, 실측). 드라이버 이름에는 점이 들어갈 수 있으므로
-    키의 **마지막** 칸만 뗀다. 이름에 `=` 이나 공백이 있으면 `-c` 로 정확히 못 적으므로 거절한다.
+def _temporary_go(data: bytes) -> Path:
+    """바이트를 `go_functions` 가 읽을 임시 `.go` 로 쓴다. 호출자가 지운다."""
+    descriptor, name = tempfile.mkstemp(suffix=".go")
+    with os.fdopen(descriptor, "wb") as handle:
+        handle.write(data)
+    return Path(name)
 
-    이것은 **알려진 문**을 닫는다. 판정하는 바이트를 git 의 투영 없이 직접 대조하는 것은 사람 결정 7.5.25 다.
+
+def _write_loose_blob(store: Path, digest: str, data: bytes) -> None:
+    """blob 하나를 **임시** 객체 저장소에 loose 객체로 쓴다 — `"blob <크기>\\0" + 바이트` 를 zlib 로 압축한 것.
+
+    `git hash-object -w` 를 안 쓰는 까닭은 둘이다: git 이 파일을 **다시** 읽지 않아야 판정한 바이트가 git 에
+    건넨 바이트이고(지문 = 판정한 바이트), 편집 파일 수만큼 프로세스를 띄우지 않는다.
     """
-    process = subprocess.run(
-        ["git", "config", "-z", "--name-only", "--get-regexp", r"^filter\."],
+    folder = store / digest[:2]
+    folder.mkdir(parents=True, exist_ok=True)
+    with open(folder / digest[2:], "wb") as handle:
+        handle.write(zlib.compress(b"blob %d\0" % len(data) + data))
+
+
+@contextlib.contextmanager
+def _worktree_snapshot(root: Path) -> Iterator[tuple[dict[str, str], dict[str, bytes]]]:
+    """워킹트리 대상 판정이 견줄 **바이트**를 한 번 읽어 임시 인덱스로 git 에 건넨다 (task 7.5.25).
+
+    `git diff <base>` 는 워킹트리를 **git 의 투영**으로 본다 — 비교 전에 clean·process 필터 · `ident` ·
+    `working-tree-encoding` 이 바이트를 다시 쓰고, stat 캐시 · fsmonitor · 인덱스 플래그는 파일을 아예 안 읽게
+    한다. 그 문들은 `--numstat` 과 판정 diff 를 **함께** 속이므로 두 시야의 대조가 원리상 못 본다. 7.5.27 · 7.5.28
+    은 문을 하나씩 닫았고 재리뷰는 매번 하나를 더 찾았다(마지막은 UTF-7 의 이중 표현). 설정이 전혀 없어도
+    stat 캐시만으로 편집이 감춰졌다(같은 inode · 같은 크기 · mtime 되돌림 · 같은 초의 ctime, 10/10 실측).
+
+    그래서 투영을 **안 쓴다**: 인덱스가 추적하는 `*.go` 마다 디스크 바이트를 깔때기(`_read_regular`)로 읽어
+    — 원장에 남으므로 끝의 재확인이 다시 읽는다 — 그 바이트의 blob 을 **임시** 객체 저장소에 쓰고, 그 blob 을
+    가리키는 **임시** 인덱스를 만든다. 두 diff 는 `--cached` 로 그 인덱스를 base 와 견준다 — 인덱스와 트리를
+    견주는 diff 는 워킹트리도 필터도 stat 도 안 본다. 실제 인덱스와 객체 저장소에는 **아무것도 쓰지 않는다**
+    (실제 저장소는 대체 저장소로 읽기만 한다).
+
+    돌려주는 것: 두 diff 에 줄 환경, 그리고 경로 → 읽은 바이트(판정의 현재 쪽이 **이 바이트**를 읽는다).
+
+    git 의 시야를 그대로 두는 자리는 하나다 — `skip-worktree` 인데 파일이 없으면 sparse-checkout 으로 **안 꺼낸**
+    것이므로 인덱스의 blob 을 쓴다. `assume-unchanged` 인데 없으면 지운 것이다(플래그는 편집을 감추는 데만 쓰인다).
+    """
+    described = subprocess.run(
+        ["git", "rev-parse", "--show-object-format", "--git-path", "objects"],
         cwd=root, capture_output=True, timeout=10, check=False,
     )
-    if process.returncode not in (0, 1):          # 1 = 맞는 키가 없다
-        raise RuntimeError(_first_line(process.stderr.decode("utf-8", "replace"), "git config failed"))
-    # 7.5.28: `core.checkStat=minimal` 은 크기·mtime 만 보므로 같은 크기로 고치고 mtime 을 되돌리면 git 이
-    # 파일을 안 다시 읽는다(재리뷰 재현 — 7.5.27 은 "재현 안 됨" 이라 적었는데 픽스처가 mtime 을 과거로 안
-    # 돌려 racy-git 창에 걸려 있었다). 기본 검사와 ctime 신뢰를 고정한다.
-    pins = ["-c", "core.fsmonitor=false", "-c", "core.checkStat=default", "-c", "core.trustctime=true"]
-    drivers: set[str] = set()
-    for raw in process.stdout.split(b"\0"):
-        name = raw.decode("utf-8", "replace")
-        if not name.startswith("filter.") or name.count(".") < 2:
-            continue
-        drivers.add(name[len("filter."):].rsplit(".", 1)[0])
-    for driver in sorted(drivers):
-        # `-c name=value` 는 **첫** `=` 에서 가르므로 `=` 가 든 이름만 못 적는다. 공백은 적힌다(명령줄 값이
-        # 이긴다, 실측) — 7.5.27 은 공백도 거절해 정상 입력을 막았다 (task 7.5.28).
-        if "=" in driver:
-            raise RuntimeError(f"git filter driver {driver!r} cannot be neutralized on the command line")
-        pins += ["-c", f"filter.{driver}.clean=", "-c", f"filter.{driver}.process=",
-                 "-c", f"filter.{driver}.required=false"]
-    return pins
+    if described.returncode:
+        raise RuntimeError(_first_line(described.stderr.decode("utf-8", "replace"), "git rev-parse failed"))
+    answer = described.stdout.decode("utf-8", "strict").split("\n")
+    if len(answer) < 2 or not answer[0] or not answer[1]:
+        raise RuntimeError("cannot read git rev-parse output")
+    algorithm, objects = answer[0], (root / answer[1]).resolve()
+    listed = subprocess.run(
+        ["git", *SNAPSHOT_PINS, "ls-files", "-s", "-v", "-z", "--", "*.go"],
+        cwd=root, capture_output=True, timeout=30, check=False,
+    )
+    if listed.returncode:
+        raise RuntimeError(_first_line(listed.stderr.decode("utf-8", "replace"), "git ls-files failed"))
+    with tempfile.TemporaryDirectory(prefix="check-analysis-") as scratch:
+        store = Path(scratch) / "objects"
+        store.mkdir()
+        lines: list[bytes] = []
+        contents: dict[str, bytes] = {}
+        for entry in listed.stdout.split(b"\0"):
+            if not entry:
+                continue
+            head, _, raw_path = entry.partition(b"\t")
+            fields = head.split()
+            if len(fields) != 4 or not raw_path:
+                raise RuntimeError("cannot read git ls-files -s -v record")
+            tag, mode, oid, stage = fields
+            path = raw_path.decode("utf-8", "strict")
+            if stage != b"0":
+                raise RuntimeError(f"Go file is unmerged: {path} — resolve the conflict before the gate")
+            if mode not in GO_FILE_MODES:
+                raise RuntimeError(f"tracked Go path is not a regular file in the index (mode {mode.decode()}): {path}")
+            try:
+                data = _read_regular(root / path)
+            except (FileNotFoundError, NotADirectoryError):
+                # `-v` 는 skip-worktree 를 `S` 로, assume-unchanged 를 **소문자**로 적는다(둘 다면 `s`).
+                if tag.upper() == b"S":
+                    lines.append(b"%s %s\t%s\0" % (mode, oid, raw_path))
+                continue
+            digest = hashlib.new(algorithm, b"blob %d\0" % len(data) + data).hexdigest()
+            # 인덱스와 같은 blob 은 실제 저장소에 이미 있다(대체 저장소로 읽는다) — 다른 것만 쓴다.
+            if digest != oid.decode("ascii"):
+                _write_loose_blob(store, digest, data)
+            contents[path] = data
+            lines.append(b"%s %s\t%s\0" % (mode, digest.encode("ascii"), raw_path))
+        inherited = os.environ.get("GIT_ALTERNATE_OBJECT_DIRECTORIES", "")
+        if os.pathsep in str(objects) or '"' in str(objects):
+            raise RuntimeError(f"object directory cannot be named as a git alternate: {objects}")
+        environment = {
+            **os.environ,
+            "GIT_INDEX_FILE": str(Path(scratch) / "index"),
+            "GIT_OBJECT_DIRECTORY": str(store),
+            "GIT_ALTERNATE_OBJECT_DIRECTORIES": os.pathsep.join(filter(None, (str(objects), inherited))),
+        }
+        # 임시 인덱스를 쓸 때 실제 저장소로 새는 것을 끈다 — split index 는 `sharedindex.*` 를 `.git` 에 쓰고,
+        # 인덱스 쓰기는 `post-index-change` 훅을, 인덱스 읽기는 fsmonitor 명령을 띄운다.
+        built = subprocess.run(
+            ["git", *SNAPSHOT_PINS, "-c", "core.splitIndex=false", "-c", "core.hooksPath=/dev/null",
+             "update-index", "-z", "--index-info"],
+            cwd=root, env=environment, input=b"".join(lines), capture_output=True, timeout=30, check=False,
+        )
+        if built.returncode:
+            raise RuntimeError(_first_line(built.stderr.decode("utf-8", "replace"), "git update-index failed"))
+        yield environment, contents
+
+
+# 인덱스를 읽는 git 호출(스냅숏의 `ls-files` · 두 diff)이 모두 받는 고정. `--cached` diff 는 워킹트리를 안
+# 보지만, 인덱스를 **읽는** 순간 설정된 fsmonitor 명령이 뜬다(실제 인덱스를 읽는 `ls-files` 에서 실측) —
+# 판정이 저장소가 설정한 프로그램을 띄울 까닭이 없다.
+SNAPSHOT_PINS = ("-c", "core.fsmonitor=false")
+
+
+def _compared(base: str, target: str) -> list[str]:
+    """두 diff 가 견주는 쪽. 대상이 커밋이면 트리 둘, 워킹트리면 base 대 스냅숏 인덱스다 (task 7.5.25).
+
+    두 호출이 **이 함수 하나**에서 받는다 — 가드와 판정이 다른 쌍을 견주면 두 시야의 대조가 성립하지 않는다.
+    """
+    return [base, target] if target else ["--cached", base]
 
 
 def _header_name(line: str) -> str:
@@ -154,82 +242,6 @@ def _header_name(line: str) -> str:
     """
     value = line[4:]
     return value[:-1] if value.endswith("\t") else value
-
-
-def _ident_go_paths(root: Path) -> list[str]:
-    """`ident` 속성이 켜진 추적 `*.go` 경로 (task 7.5.28, 워킹트리 대상만).
-
-    `ident` 는 `$Id: …$` 를 `$Id$` 로 접은 **뒤에** 비교한다 — 그 안에 넣은 논리 변경이 `--numstat` 에서도
-    판정 diff 에서도 사라진다(두 시야가 함께 거짓말한다, 재리뷰 재현). 속성이라 `-c` 로 못 끄고, 인덱스
-    플래그 검사의 해시도 같은 변환을 거쳐 못 본다. 그래서 켜져 있으면 이름 대고 거절한다 — 오늘 저장소의
-    `.gitattributes` 는 0 개다.
-    """
-    listed = subprocess.run(
-        ["git", "ls-files", "-z", "--", "*.go"],
-        cwd=root, capture_output=True, timeout=30, check=False,
-    )
-    if listed.returncode:
-        raise RuntimeError(_first_line(listed.stderr.decode("utf-8", "replace"), "git ls-files failed"))
-    if not listed.stdout.strip(b"\0"):
-        return []
-    checked = subprocess.run(
-        ["git", "check-attr", "-z", "--stdin", "ident"],
-        cwd=root, input=listed.stdout, capture_output=True, timeout=30, check=False,
-    )
-    if checked.returncode:
-        raise RuntimeError(_first_line(checked.stderr.decode("utf-8", "replace"), "git check-attr failed"))
-    # `-z` 출력은 `경로 \0 속성 \0 값 \0` 이 반복된다.
-    fields = checked.stdout.split(b"\0")
-    if fields and fields[-1] == b"":
-        fields.pop()
-    if len(fields) % 3:
-        raise RuntimeError("cannot read git check-attr output")
-    return [fields[at].decode("utf-8", "strict") for at in range(0, len(fields), 3)
-            if fields[at + 2] not in (b"unspecified", b"unset")]
-
-
-def _hidden_by_index_flags(root: Path, pins: list[str]) -> list[str]:
-    """`assume-unchanged`·`skip-worktree` 로 **편집을 감춘** `*.go` 경로 (task 7.5.27, 워킹트리 대상만).
-
-    두 플래그는 git 이 그 파일을 보지 않게 한다 — 편집이 디스크에 있어도 `git diff` 가 아무것도 안 낸다.
-    그런데 sparse-checkout 도 `skip-worktree` 를 쓰므로 **플래그만으로는 거절하지 않는다**: 파일이 디스크에
-    있고, 판정과 같은 고정(`pins`)으로 해시한 바이트가 인덱스의 blob 과 **다를 때만** 감춘 것이다.
-    플래그만 있고 편집이 없거나 파일이 없으면(sparse 모양) 정상 입력이다.
-    """
-    process = subprocess.run(
-        ["git", "ls-files", "-v", "-s", "-z", "--", "*.go"],
-        cwd=root, capture_output=True, timeout=30, check=False,
-    )
-    if process.returncode:
-        raise RuntimeError(_first_line(process.stderr.decode("utf-8", "replace"), "git ls-files failed"))
-    flagged: list[tuple[str, str]] = []
-    for entry in process.stdout.split(b"\0"):
-        if not entry:
-            continue
-        head, _, raw_path = entry.partition(b"\t")
-        fields = head.split()
-        if len(fields) != 4:
-            raise RuntimeError("cannot read git ls-files -v -s record")
-        tag, mode, oid, _ = fields
-        # `-v` 는 assume-unchanged 를 **소문자**로, skip-worktree 를 `S` 로 적는다.
-        if not (tag == b"S" or tag.islower()) or mode not in (b"100644", b"100755"):
-            continue
-        path = raw_path.decode("utf-8", "strict")
-        if (root / path).is_file():
-            flagged.append((path, oid.decode("ascii")))
-    if not flagged:
-        return []
-    hashed = subprocess.run(
-        ["git", *pins, "hash-object", "--stdin-paths"],
-        cwd=root, input="".join(f"{path}\n" for path, _ in flagged).encode("utf-8"),
-        capture_output=True, timeout=30, check=False,
-    )
-    if hashed.returncode:
-        raise RuntimeError(_first_line(hashed.stderr.decode("utf-8", "replace"), "git hash-object failed"))
-    digests = hashed.stdout.decode("ascii").split()
-    if len(digests) != len(flagged):
-        raise RuntimeError("git hash-object did not answer for every flagged Go file")
-    return [path for (path, oid), digest in zip(flagged, digests) if digest != oid]
 
 
 def _numstat_records(raw_output: bytes) -> list[tuple[bytes, bytes, list[bytes]]]:
@@ -264,7 +276,7 @@ def _numstat_records(raw_output: bytes) -> list[tuple[bytes, bytes, list[bytes]]
 
 
 def _safe_changed_go_paths(
-    root: Path, base: str, target: str, pins: list[str] | None = None
+    root: Path, base: str, target: str, environment: dict[str, str] | None = None
 ) -> list[tuple[bytes, bytes, list[bytes]]]:
     """바뀐 `*.go` 를 **이름**과 **본문 유무** 둘로 거른다.
 
@@ -287,12 +299,17 @@ def _safe_changed_go_paths(
     `textconv` 필터는 `--numstat` 에 `1`/`1` 을 내면서 판정 diff 의 본문을 **통째로 지운다**.
     그래서 호출자가 이 레코드를 판정이 실제로 낸 훅과 **대조**한다(`changed_existing_functions`).
     `--find-renames` 를 여기도 준다 — 판정과 같은 짝을 봐야 대조가 성립한다.
+
+    **워킹트리 대상은 스냅숏 환경이 있어야 한다 (task 7.5.25).** 없으면 `--cached` 가 **실제** 인덱스를
+    견주게 된다 — 워킹트리도 스냅숏도 아닌 셋째 시야다. 그래서 받지 않는다.
     """
+    if not target and environment is None:
+        raise ValueError("a worktree comparison needs the worktree snapshot")
     process = subprocess.run(
-        ["git", *(pins or []), "diff", "--no-ext-diff", "--no-textconv", "--find-renames",
-         "--numstat", "-z", base,
-         *([target] if target else []), "--", "*.go"],
+        ["git", *SNAPSHOT_PINS, "diff", "--no-ext-diff", "--no-textconv", "--find-renames",
+         "--numstat", "-z", *_compared(base, target), "--", "*.go"],
         cwd=root,
+        env=environment,
         capture_output=True,
         check=False,
     )
@@ -327,13 +344,23 @@ def changed_existing_functions(
 ) -> dict[tuple[str, str], dict]:
     if not base:
         raise ValueError("Function Logic Map comparison base is required")
-    # 두 호출이 **같은 고정**을 쓴다 — 가드와 판정이 같은 시야를 봐야 교차 검사가 성립한다 (task 7.5.27).
-    pins = _git_view_pins(root)
-    records = _safe_changed_go_paths(root, base, target, pins)
+    # 워킹트리 대상이면 git 의 워킹트리 투영을 **안 믿는다** — 디스크 바이트를 한 번 읽어 만든 스냅숏
+    # 인덱스를 두 diff 가 같이 본다 (task 7.5.25). 대상이 커밋이면 트리 둘을 견주므로 스냅숏이 없다.
+    if target:
+        return _changed_existing_functions(root, base, target, None, {})
+    with _worktree_snapshot(root) as (environment, contents):
+        return _changed_existing_functions(root, base, target, environment, contents)
+
+
+def _changed_existing_functions(
+    root: Path, base: str, target: str, environment: dict[str, str] | None, contents: dict[str, bytes]
+) -> dict[tuple[str, str], dict]:
+    """`changed_existing_functions` 의 몸통. 스냅숏이 열려 있는 동안 돈다 — 임시 저장소가 두 diff 보다 오래 산다."""
+    records = _safe_changed_go_paths(root, base, target, environment)
     process = subprocess.run(
         [
             "git",
-            *pins,
+            *SNAPSHOT_PINS,
             "-c",
             "core.quotePath=false",
             "diff",
@@ -345,12 +372,12 @@ def changed_existing_functions(
             "--no-textconv",
             "--find-renames",
             "--unified=0",
-            base,
-            *( [target] if target else [] ),
+            *_compared(base, target),
             "--",
             "*.go",
         ],
         cwd=root,
+        env=environment,
         capture_output=True,
         timeout=30,
         check=False,
@@ -399,7 +426,13 @@ def changed_existing_functions(
                         "function": qualified(function),
                         "base_hash": function.get("source_sha256"),
                     }
-            current = base_file(root, target, new_source) if target and new_source else (root / new_source if new_source else None)
+            # 현재 쪽은 **스냅숏의 바이트**를 읽는다 (task 7.5.25) — 디스크를 다시 읽으면 git 에 건넨 바이트와
+            # 판정한 바이트가 갈릴 수 있다([[a-fingerprint-must-be-the-bytes-judged]]). 스냅숏에 없으면(지웠거나
+            # sparse 로 안 꺼냈으면) 현재 논리가 없다.
+            if target:
+                current = base_file(root, target, new_source) if new_source else None
+            else:
+                current = _temporary_go(contents[new_source]) if new_source in contents else None
             if current and current.exists():
                 for function in go_functions(current, root):
                     # Function Logic Maps are required for functions that existed
@@ -424,7 +457,7 @@ def changed_existing_functions(
                         }
         finally:
             temporary.unlink(missing_ok=True)
-            if target and current is not None:
+            if current is not None:
                 current.unlink(missing_ok=True)
         hunks = []
 
@@ -496,23 +529,6 @@ def changed_existing_functions(
                 "git reported content changes but emitted no diff body for "
                 + paths[-1].decode("utf-8", "strict")
                 + " — an external diff or textconv filter is hiding it"
-            )
-    # 인덱스 플래그로 감춘 편집은 **두 시야 모두**에서 사라지므로 위 대조가 못 본다 (task 7.5.27).
-    # 워킹트리 대상만이다 — 커밋 대상은 blob 끼리 견주므로 워킹트리의 플래그와 무관하다.
-    # 가장 뒤에 둔다: 앞의 가드들이 먼저 말해야 그 시험들이 남의 가드를 안 잰다.
-    if not target:
-        rewritten = _ident_go_paths(root)
-        if rewritten:
-            raise RuntimeError(
-                "the ident attribute rewrites " + ", ".join(rewritten)
-                + " before git compares it, which can hide an edit — remove `ident` for *.go"
-            )
-        hidden = _hidden_by_index_flags(root, pins)
-        if hidden:
-            raise RuntimeError(
-                "an index flag (assume-unchanged or skip-worktree) hides an edit to "
-                + ", ".join(hidden)
-                + " — clear the flag with `git update-index --no-assume-unchanged --no-skip-worktree -- <path>`"
             )
     return required
 

@@ -171,13 +171,15 @@ digest 로 읽어야 한다(SHALL). 다른 id 의 디렉터리에 복사된 이�
 - **THEN** gate 는 그 change 를 **거절한다**. 즉 gate 는 앞단 가드가 센 파일 집합과 판정이 본문을 읽은
   파일 집합을 **대조해야** 하며, 한쪽만 믿어서는 안 된다
 
-#### Scenario: 워킹트리를 비교 전에 다시 쓰는 설정이나 인덱스 플래그가 있을 때
+#### Scenario: git 이 워킹트리를 비교 전에 다시 쓰거나 안 읽을 때
 - **WHEN** 판정 대상이 워킹트리이고, git 설정(필터 드라이버의 clean·process, fsmonitor, stat 캐시 검사)이나
-  인덱스 플래그(assume-unchanged, skip-worktree)나 내용을 바꾸는 속성(`ident`)이 바뀐 Go 파일의 편집을 git 의
-  비교에서 감추면
-- **THEN** gate 는 그 설정을 명령줄에서 무력화한 채로 판정하고, 인덱스 플래그가 실제로 편집을 감춘
-  파일과 `ident` 가 켜진 파일은 이름을 대고 거절한다. 플래그만 있고 편집이 없는 파일(sparse-checkout 등)은
-  거절하지 않는다
+  stat 캐시 자체, 인덱스 플래그(assume-unchanged, skip-worktree), 내용을 바꾸는 속성(`ident`,
+  `working-tree-encoding`)이 바뀐 Go 파일의 편집을 git 의 워킹트리 비교에서 감추면
+- **THEN** gate 는 git 의 워킹트리 비교를 쓰지 않고, 추적된 `*.go` 의 디스크 바이트를 직접 읽어 base 와
+  대조해야 한다(SHALL) — 그 편집이 요구하는 Function Logic Map 은 설정이 없을 때와 같다
+- **AND** 그 대조를 위해 gate 는 실제 인덱스와 객체 저장소에 아무것도 쓰지 않는다
+- **AND** skip-worktree 인 파일이 디스크에 없으면 sparse-checkout 이 꺼내지 않은 것으로 보고 인덱스의 내용을
+  쓴다. 충돌 중이거나 인덱스가 일반 파일이라 하지 않는 `*.go` 는 이름을 대고 거절한다
 
 #### Scenario: 바뀐 Go 파일의 경로에 공백이나 유니코드 줄 구분자가 있을 때
 - **WHEN** 바뀐 `*.go` 의 경로에 공백이나 U+2028 · U+2029 · U+0085 가 들어 있으면
