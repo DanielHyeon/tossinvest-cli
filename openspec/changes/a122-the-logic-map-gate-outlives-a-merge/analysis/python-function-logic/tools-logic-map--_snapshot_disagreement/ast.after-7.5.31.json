@@ -1,0 +1,237 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "9bc103fa196cd5fdba61bb4dadd79aa77eaa7a35",
+  "source_sha256": "6ad654a895ea8f23b0234c7cbe44490ab7c72eb5bcca5f80f8de4430bec47138",
+  "function": "_snapshot_disagreement",
+  "signature": "_snapshot_disagreement(root, base, placed, records)",
+  "start": {
+    "line": 372,
+    "column": 1
+  },
+  "end": {
+    "line": 420,
+    "column": 14
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 390,
+      "inherited_line": false,
+      "source": "if listed.returncode:"
+    },
+    {
+      "id": "B2",
+      "kind": "For",
+      "line": 393,
+      "inherited_line": false,
+      "source": "for entry in listed.stdout.split(b'\\x00'):"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 394,
+      "inherited_line": false,
+      "source": "if not entry:"
+    },
+    {
+      "id": "B4",
+      "kind": "BoolOp",
+      "line": 398,
+      "inherited_line": false,
+      "source": "len(fields) != 3 or not raw_path"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 398,
+      "inherited_line": false,
+      "source": "if len(fields) != 3 or not raw_path:"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 402,
+      "inherited_line": false,
+      "source": "if raw_path.endswith(b'.go'):"
+    },
+    {
+      "id": "B7",
+      "kind": "comprehension",
+      "line": 404,
+      "inherited_line": true,
+      "source": " for _, _, paths in records"
+    },
+    {
+      "id": "B8",
+      "kind": "comprehension",
+      "line": 405,
+      "inherited_line": true,
+      "source": " for _, _, paths in records"
+    },
+    {
+      "id": "B9",
+      "kind": "comprehension",
+      "line": 406,
+      "inherited_line": true,
+      "source": " for added, deleted, paths in records if len(paths) == 1"
+    },
+    {
+      "id": "B10",
+      "kind": "For",
+      "line": 407,
+      "inherited_line": false,
+      "source": "for raw_path, oid in sorted(placed.items()):"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 408,
+      "inherited_line": false,
+      "source": "if before.get(raw_path) == oid:"
+    },
+    {
+      "id": "B12",
+      "kind": "BoolOp",
+      "line": 410,
+      "inherited_line": false,
+      "source": "raw_path not in new_names or unmoved.get(raw_path) == (b'0', b'0')"
+    },
+    {
+      "id": "B13",
+      "kind": "If",
+      "line": 410,
+      "inherited_line": false,
+      "source": "if raw_path not in new_names or unmoved.get(raw_path) == (b'0', b'0'):"
+    },
+    {
+      "id": "B14",
+      "kind": "For",
+      "line": 415,
+      "inherited_line": false,
+      "source": "for raw_path in sorted(set(before) - set(placed)):"
+    },
+    {
+      "id": "B15",
+      "kind": "If",
+      "line": 416,
+      "inherited_line": false,
+      "source": "if raw_path not in old_names:"
+    }
+  ],
+  "returns": [],
+  "raises": [
+    {
+      "line": 391,
+      "source": "raise RuntimeError(_first_line(listed.stderr.decode('utf-8', 'replace'), 'git ls-tree failed'))"
+    },
+    {
+      "line": 399,
+      "source": "raise RuntimeError('cannot read git ls-tree record')"
+    },
+    {
+      "line": 411,
+      "source": "raise RuntimeError('the object store answers for ' + os.fsdecode(raw_path) + \" with bytes that are not on disk — git's diff does not show the edit the gate hash"
+    },
+    {
+      "line": 417,
+      "source": "raise RuntimeError('the object store answers for ' + os.fsdecode(raw_path) + \" as if it were still there — git's diff does not show its deletion\")"
+    }
+  ],
+  "calls": [
+    {
+      "line": 386,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 391,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 391,
+      "callee": "_first_line"
+    },
+    {
+      "line": 391,
+      "callee": "listed.stderr.decode"
+    },
+    {
+      "line": 393,
+      "callee": "listed.stdout.split"
+    },
+    {
+      "line": 396,
+      "callee": "entry.partition"
+    },
+    {
+      "line": 397,
+      "callee": "head.split"
+    },
+    {
+      "line": 398,
+      "callee": "len"
+    },
+    {
+      "line": 399,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 402,
+      "callee": "raw_path.endswith"
+    },
+    {
+      "line": 403,
+      "callee": "fields[2].decode"
+    },
+    {
+      "line": 406,
+      "callee": "len"
+    },
+    {
+      "line": 407,
+      "callee": "placed.items"
+    },
+    {
+      "line": 407,
+      "callee": "sorted"
+    },
+    {
+      "line": 408,
+      "callee": "before.get"
+    },
+    {
+      "line": 410,
+      "callee": "unmoved.get"
+    },
+    {
+      "line": 411,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 412,
+      "callee": "os.fsdecode"
+    },
+    {
+      "line": 415,
+      "callee": "set"
+    },
+    {
+      "line": 415,
+      "callee": "set"
+    },
+    {
+      "line": 415,
+      "callee": "sorted"
+    },
+    {
+      "line": 417,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 418,
+      "callee": "os.fsdecode"
+    }
+  ]
+}

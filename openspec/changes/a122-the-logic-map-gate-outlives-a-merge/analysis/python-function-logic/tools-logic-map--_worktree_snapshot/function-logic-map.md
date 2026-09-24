@@ -42,3 +42,11 @@ pathspec 환경 변수 — 그것은 워킹트리 바이트가 아니라 파서�
 `core.hooksPath=/dev/null`(안 그러면 `post-index-change` 훅이 뜬다 — 실측) · `core.fsmonitor=false`(인덱스를 읽는
 순간 fsmonitor 명령이 뜬다 — 실제 인덱스를 읽는 `ls-files` 에서 실측)를 준다. 시험이 셋을 다 켜 두고 `.git` 의
 모든 파일 바이트와 표식 파일을 전후로 견준다.
+
+## task 7.5.31 — 재리뷰 수리 (2026-09-24)
+
+`ast.before-7.5.31.json`(분기 17 · raise 8) → `ast.after-7.5.31.json`(분기 **15** · raise **7**). difflib 정렬: 편집 전
+B15 · B16(`os.pathsep in … or '"' in …` 거절)이 빠졌다 — 대체 저장소 항목을 `_c_quoted` 로 적는다. 나머지 분기는 순서
+그대로다. 분기 밖의 변경 셋: 경로를 `os.fsdecode` 로 읽는다(이름이 UTF-8 이 아닌 **안 바뀐** 파일로 멈추지 않게, F9) ·
+임시 인덱스에 실은 날 경로 → oid 를 `placed` 로 모아 셋째 값으로 돌려준다(sparse 로 안 꺼낸 경로도 인덱스 oid 로
+싣는다) · 모듈이 `GIT_NO_REPLACE_OBJECTS=1` 을 둬 이 함수의 git 도 교체 참조를 안 따른다(F1 · F4).

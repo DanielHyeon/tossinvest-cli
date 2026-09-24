@@ -136,3 +136,10 @@ U+0085(와 `\r`)에서도 잘랐다. 그 글자가 경로에 있으면 `diff --g
 blob = `go_functions` 가 지도를 뽑는 바이트. 셋이 한 번의 읽기에서 온다. 편집 전에는 git 이 **자기 시야**로 바이트를
 골랐고(필터 · `ident` · `working-tree-encoding` · stat 캐시 · fsmonitor · 인덱스 플래그) 현재 쪽은 디스크를 **다시**
 읽었다 — 둘이 다를 수 있었다.
+
+## task 7.5.31 — git 밖의 대조 (2026-09-24)
+
+껍데기(`changed_existing_functions`)는 분기 수가 같다(2) — 스냅숏의 셋째 값 `placed` 를 몸통에 건넬 뿐이다. 몸통
+(`_changed_existing_functions`, `../tools-logic-map--_changed_existing_functions/ast.after-7.5.31.json`)은 분기 39 → **40**:
+맨 뒤에 `if placed is not None:` 하나(B40)가 붙어 `_snapshot_disagreement` 를 부른다 — 가드가 읽은 **같은** 레코드로,
+앞의 모든 가드 **뒤에**. 커밋 대상은 `placed` 가 `None` 이다.

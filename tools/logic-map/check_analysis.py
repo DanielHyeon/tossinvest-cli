@@ -23,6 +23,11 @@ from role_check import call_enumeration_in_use, role_errors
 from execution_baseline import AdoptionError, validate as validate_execution_baseline
 
 ROOT = Path(__file__).resolve().parents[2]
+# 게이트가 띄우는 **모든** git 은 교체 참조(`refs/replace/*`)를 따르지 않는다 (task 7.5.31). 참조 하나로 어떤 blob 이든
+# 다른 blob 으로 읽히게 할 수 있다 — 편집 blob 을 base blob 으로 돌리면 두 diff 가 **함께** 속아 요구가 빈다(7.5.25
+# 적대 재리뷰 F1 · F4 실측, `git status` 는 `M` 인데 `[]`). 자식이 열여섯 자리 넘게 있으므로 자리마다 적지 않고 이
+# 프로세스의 환경에 한 번 둔다 — 새 호출 자리가 저절로 따른다. 판정이 교체 참조를 쓸 까닭은 없다.
+os.environ["GIT_NO_REPLACE_OBJECTS"] = "1"
 REQUIRED = (
     "ast.json",
     "function-logic-map.md",
@@ -129,8 +134,15 @@ def _write_loose_blob(store: Path, digest: str, data: bytes) -> None:
         handle.write(zlib.compress(b"blob %d\0" % len(data) + data))
 
 
+def _c_quoted(text: str) -> str:
+    """git 이 대체 저장소 목록에서 읽는 C 인용 (task 7.5.31). `"` 로 시작하는 항목은 인용을 풀어 읽는다 — 그래서
+    경로에 목록 구분자(`:`)나 `"` 가 있어도 한 항목으로 적힌다(git 2.43 실측)."""
+    escaped = text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n").replace("\t", "\\t")
+    return f'"{escaped}"'
+
+
 @contextlib.contextmanager
-def _worktree_snapshot(root: Path) -> Iterator[tuple[dict[str, str], dict[str, bytes]]]:
+def _worktree_snapshot(root: Path) -> Iterator[tuple[dict[str, str], dict[str, bytes], dict[bytes, str]]]:
     """워킹트리 대상 판정이 견줄 **바이트**를 한 번 읽어 임시 인덱스로 git 에 건넨다 (task 7.5.25).
 
     `git diff <base>` 는 워킹트리를 **git 의 투영**으로 본다 — 비교 전에 clean·process 필터 · `ident` ·
@@ -145,7 +157,8 @@ def _worktree_snapshot(root: Path) -> Iterator[tuple[dict[str, str], dict[str, b
     견주는 diff 는 워킹트리도 필터도 stat 도 안 본다. 실제 인덱스와 객체 저장소에는 **아무것도 쓰지 않는다**
     (실제 저장소는 대체 저장소로 읽기만 한다).
 
-    돌려주는 것: 두 diff 에 줄 환경, 그리고 경로 → 읽은 바이트(판정의 현재 쪽이 **이 바이트**를 읽는다).
+    돌려주는 것: 두 diff 에 줄 환경, 경로 → 읽은 바이트(판정의 현재 쪽이 **이 바이트**를 읽는다), 그리고 임시 인덱스에
+    실은 날 경로 → oid(git 밖의 대조가 쓴다 — `_snapshot_disagreement`, task 7.5.31).
 
     git 의 시야를 그대로 두는 자리는 하나다 — `skip-worktree` 인데 파일이 없으면 sparse-checkout 으로 **안 꺼낸**
     것이므로 인덱스의 blob 을 쓴다. `assume-unchanged` 인데 없으면 지운 것이다(플래그는 편집을 감추는 데만 쓰인다).
@@ -171,6 +184,7 @@ def _worktree_snapshot(root: Path) -> Iterator[tuple[dict[str, str], dict[str, b
         store.mkdir()
         lines: list[bytes] = []
         contents: dict[str, bytes] = {}
+        placed: dict[bytes, str] = {}
         for entry in listed.stdout.split(b"\0"):
             if not entry:
                 continue
@@ -179,7 +193,9 @@ def _worktree_snapshot(root: Path) -> Iterator[tuple[dict[str, str], dict[str, b
             if len(fields) != 4 or not raw_path:
                 raise RuntimeError("cannot read git ls-files -s -v record")
             tag, mode, oid, stage = fields
-            path = raw_path.decode("utf-8", "strict")
+            # 파일 시스템의 해독(`surrogateescape`)으로 읽는다 — 이름이 UTF-8 이 아닌 **안 바뀐** 파일로 판정이 멈추지
+            # 않게(7.5.25 재리뷰 F9). 바뀐 파일의 이름은 가드가 전처럼 엄격히 해독해 거절한다.
+            path = os.fsdecode(raw_path)
             if stage != b"0":
                 raise RuntimeError(f"Go file is unmerged: {path} — resolve the conflict before the gate")
             if mode not in GO_FILE_MODES:
@@ -190,21 +206,22 @@ def _worktree_snapshot(root: Path) -> Iterator[tuple[dict[str, str], dict[str, b
                 # `-v` 는 skip-worktree 를 `S` 로, assume-unchanged 를 **소문자**로 적는다(둘 다면 `s`).
                 if tag.upper() == b"S":
                     lines.append(b"%s %s\t%s\0" % (mode, oid, raw_path))
+                    placed[raw_path] = oid.decode("ascii")
                 continue
             digest = hashlib.new(algorithm, b"blob %d\0" % len(data) + data).hexdigest()
             # 인덱스와 같은 blob 은 실제 저장소에 이미 있다(대체 저장소로 읽는다) — 다른 것만 쓴다.
             if digest != oid.decode("ascii"):
                 _write_loose_blob(store, digest, data)
             contents[path] = data
+            placed[raw_path] = digest
             lines.append(b"%s %s\t%s\0" % (mode, digest.encode("ascii"), raw_path))
         inherited = os.environ.get("GIT_ALTERNATE_OBJECT_DIRECTORIES", "")
-        if os.pathsep in str(objects) or '"' in str(objects):
-            raise RuntimeError(f"object directory cannot be named as a git alternate: {objects}")
         environment = {
             **os.environ,
             "GIT_INDEX_FILE": str(Path(scratch) / "index"),
             "GIT_OBJECT_DIRECTORY": str(store),
-            "GIT_ALTERNATE_OBJECT_DIRECTORIES": os.pathsep.join(filter(None, (str(objects), inherited))),
+            # 인용해 적는다 (task 7.5.31) — 7.5.25 는 경로에 `:`·`"` 가 있으면 거절했다(헛거절, 재리뷰 F10).
+            "GIT_ALTERNATE_OBJECT_DIRECTORIES": os.pathsep.join(filter(None, (_c_quoted(str(objects)), inherited))),
         }
         # 임시 인덱스를 쓸 때 실제 저장소로 새는 것을 끈다 — split index 는 `sharedindex.*` 를 `.git` 에 쓰고,
         # 인덱스 쓰기는 `post-index-change` 훅을, 인덱스 읽기는 fsmonitor 명령을 띄운다.
@@ -215,7 +232,7 @@ def _worktree_snapshot(root: Path) -> Iterator[tuple[dict[str, str], dict[str, b
         )
         if built.returncode:
             raise RuntimeError(_first_line(built.stderr.decode("utf-8", "replace"), "git update-index failed"))
-        yield environment, contents
+        yield environment, contents, placed
 
 
 # 인덱스를 읽는 git 호출(스냅숏의 `ls-files` · 두 diff)이 모두 받는 고정. `--cached` diff 는 워킹트리를 안
@@ -347,15 +364,68 @@ def changed_existing_functions(
     # 워킹트리 대상이면 git 의 워킹트리 투영을 **안 믿는다** — 디스크 바이트를 한 번 읽어 만든 스냅숏
     # 인덱스를 두 diff 가 같이 본다 (task 7.5.25). 대상이 커밋이면 트리 둘을 견주므로 스냅숏이 없다.
     if target:
-        return _changed_existing_functions(root, base, target, None, {})
-    with _worktree_snapshot(root) as (environment, contents):
-        return _changed_existing_functions(root, base, target, environment, contents)
+        return _changed_existing_functions(root, base, target, None, {}, None)
+    with _worktree_snapshot(root) as (environment, contents, placed):
+        return _changed_existing_functions(root, base, target, environment, contents, placed)
+
+
+def _snapshot_disagreement(
+    root: Path, base: str, placed: dict[bytes, str], records: list[tuple[bytes, bytes, list[bytes]]]
+) -> None:
+    """게이트가 **스스로 해시한** oid 와 base 트리의 oid 가 다른 경로는 diff 에 내용 변경으로 나와야 한다 (task 7.5.31).
+
+    스냅숏은 디스크 바이트를 바르게 읽지만, 두 diff 는 그 blob 을 **oid 로** 다시 찾는다 — 실제 저장소에 그 oid 로
+    base 의 바이트를 담은 객체(loose · pack)가 있으면 git 은 그것을 읽는다. git 은 pack 을 먼저 보므로 스냅숏이 객체를
+    늘 써도 못 막는다(7.5.25 적대 재리뷰 F2 · F3 실측 — 7.5.25 가 연 회귀다). 두 diff 가 **함께** 속으므로 대조의
+    한쪽은 git 이 아니어야 한다: 스냅숏의 oid 는 Python 이 바이트에서 계산했다.
+
+    규칙 셋. (1) 스냅숏에 있고 oid 가 base 와 다르거나 base 에 없는 경로는 어떤 레코드의 **새** 이름이어야 한다.
+    (2) base 에 있고 스냅숏에 없는 경로는 어떤 레코드의 **옛** 이름이어야 한다. (3) 이름이 안 바뀐 레코드인데 oid 가
+    다르면 `0`/`0` 이면 안 된다 — git 이 두 쪽 내용이 같다고 본 것이다. base 트리 자체는 믿는다(그 위조는 7.5.33).
+    """
+    listed = subprocess.run(
+        ["git", "ls-tree", "-r", "-z", "--full-tree", base],
+        cwd=root, capture_output=True, timeout=30, check=False,
+    )
+    if listed.returncode:
+        raise RuntimeError(_first_line(listed.stderr.decode("utf-8", "replace"), "git ls-tree failed"))
+    before: dict[bytes, str] = {}
+    for entry in listed.stdout.split(b"\0"):
+        if not entry:
+            continue
+        head, _, raw_path = entry.partition(b"\t")
+        fields = head.split()
+        if len(fields) != 3 or not raw_path:
+            raise RuntimeError("cannot read git ls-tree record")
+        # 종류(blob · commit)로 거르지 않는다 — base 의 `*.go` 가 gitlink · 심링크면 워킹트리에 남아 있을 때는 스냅숏이
+        # 모드로 먼저 거절하고, 지웠을 때는 diff 가 그 삭제를 보여 준다. 거르는 줄을 빼는 변이가 살아남아 지웠다 (7.5.31).
+        if raw_path.endswith(b".go"):
+            before[raw_path] = fields[2].decode("ascii")
+    new_names = {paths[-1] for _, _, paths in records}
+    old_names = {paths[0] for _, _, paths in records}
+    unmoved = {paths[0]: (added, deleted) for added, deleted, paths in records if len(paths) == 1}
+    for raw_path, oid in sorted(placed.items()):
+        if before.get(raw_path) == oid:
+            continue
+        if raw_path not in new_names or unmoved.get(raw_path) == (b"0", b"0"):
+            raise RuntimeError(
+                "the object store answers for " + os.fsdecode(raw_path)
+                + " with bytes that are not on disk — git's diff does not show the edit the gate hashed"
+            )
+    for raw_path in sorted(set(before) - set(placed)):
+        if raw_path not in old_names:
+            raise RuntimeError(
+                "the object store answers for " + os.fsdecode(raw_path)
+                + " as if it were still there — git's diff does not show its deletion"
+            )
 
 
 def _changed_existing_functions(
-    root: Path, base: str, target: str, environment: dict[str, str] | None, contents: dict[str, bytes]
+    root: Path, base: str, target: str, environment: dict[str, str] | None, contents: dict[str, bytes],
+    placed: dict[bytes, str] | None,
 ) -> dict[tuple[str, str], dict]:
-    """`changed_existing_functions` 의 몸통. 스냅숏이 열려 있는 동안 돈다 — 임시 저장소가 두 diff 보다 오래 산다."""
+    """`changed_existing_functions` 의 몸통. 워킹트리 대상이면 스냅숏이 열려 있는 동안 돈다 — 임시 저장소가 두 diff
+    보다 오래 산다. 커밋 대상이면 스냅숏 없이(`environment`·`placed` 가 `None`) 돈다."""
     records = _safe_changed_go_paths(root, base, target, environment)
     process = subprocess.run(
         [
@@ -530,6 +600,10 @@ def _changed_existing_functions(
                 + paths[-1].decode("utf-8", "strict")
                 + " — an external diff or textconv filter is hiding it"
             )
+    # git **밖의** 대조는 가장 뒤에 선다 (task 7.5.31) — 앞의 가드들이 먼저 말해야 그 시험들이 이것을 안 잰다.
+    # 가드가 읽은 **같은** 레코드를 쓴다: 다시 물으면 두 번째 대답과 대조하게 된다.
+    if placed is not None:
+        _snapshot_disagreement(root, base, placed, records)
     return required
 
 

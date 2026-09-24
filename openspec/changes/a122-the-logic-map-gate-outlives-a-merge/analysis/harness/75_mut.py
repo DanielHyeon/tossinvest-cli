@@ -512,7 +512,7 @@ MUTATIONS = {
     "AH14_an_executable_is_refused": [
         ('GO_FILE_MODES = (b"100644", b"100755")', 'GO_FILE_MODES = (b"100644",)')],
     "AH15_the_real_store_is_not_an_alternate": [
-        ('            "GIT_ALTERNATE_OBJECT_DIRECTORIES": os.pathsep.join(filter(None, (str(objects), inherited))),',
+        ('            "GIT_ALTERNATE_OBJECT_DIRECTORIES": os.pathsep.join(filter(None, (_c_quoted(str(objects)), inherited))),',
          '            "GIT_ALTERNATE_OBJECT_DIRECTORIES": inherited,')],
     "AH16_the_digest_is_not_a_blob_id": [
         ('            digest = hashlib.new(algorithm, b"blob %d\\0" % len(data) + data).hexdigest()',
@@ -524,8 +524,8 @@ MUTATIONS = {
         ('        handle.write(zlib.compress(b"blob %d\\0" % len(data) + data))',
          '        handle.write(zlib.compress(b"blob %d \\0" % len(data) + data))')],
     "AH19_a_commit_target_takes_the_snapshot": [
-        ('    if target:\n        return _changed_existing_functions(root, base, target, None, {})',
-         '    if False:\n        return _changed_existing_functions(root, base, target, None, {})')],
+        ('    if target:\n        return _changed_existing_functions(root, base, target, None, {}, None)',
+         '    if False:\n        return _changed_existing_functions(root, base, target, None, {}, None)')],
     "AH20_the_ls_files_runs_the_fsmonitor": [
         ('        ["git", *SNAPSHOT_PINS, "ls-files", "-s", "-v", "-z", "--", "*.go"],',
          '        ["git", "ls-files", "-s", "-v", "-z", "--", "*.go"],')],
@@ -538,10 +538,37 @@ MUTATIONS = {
          '    if False:\n        raise RuntimeError(_first_line(listed.stderr.decode("utf-8", "replace"), "git ls-files failed"))')],
     "AH24_a_short_record_is_read": [
         ('            if len(fields) != 4 or not raw_path:', '            if False:')],
-    "AH25_an_alternate_with_a_colon_is_taken": [
-        ("        if os.pathsep in str(objects) or '\"' in str(objects):", '        if False:')],
+    # AH25(`:`·`"` 경로 거절)는 7.5.31 이 거절을 인용으로 바꿔 겨눌 코드가 없다 — AI2 · AI3 이 그 자리를 잰다.
     "AH26_a_failed_update_index_is_ignored": [
         ('        if built.returncode:', '        if False:')],
+    # --- task 7.5.31: 7.5.25 재리뷰 — 교체 참조 · 거짓말하는 저장소 · 인용 · 해독 ---
+    "AI1_replace_refs_are_followed": [
+        ('os.environ["GIT_NO_REPLACE_OBJECTS"] = "1"\n', '')],
+    "AI2_the_alternate_is_not_quoted": [
+        ('os.pathsep.join(filter(None, (_c_quoted(str(objects)), inherited)))',
+         'os.pathsep.join(filter(None, (str(objects), inherited)))')],
+    "AI3_a_quote_is_not_escaped": [
+        (""".replace('"', '\\\\"')""", '')],
+    "AI4_an_odd_name_is_decoded_strictly": [
+        ('            path = os.fsdecode(raw_path)', '            path = raw_path.decode("utf-8", "strict")')],
+    "AI5_a_sparse_file_is_not_placed": [
+        ('                    placed[raw_path] = oid.decode("ascii")\n', '')],
+    "AI6_the_store_is_not_cross_checked": [
+        ('    if placed is not None:\n        _snapshot_disagreement', '    if False:\n        _snapshot_disagreement')],
+    "AI7_same_content_is_a_change": [
+        ('        if raw_path not in new_names or unmoved.get(raw_path) == (b"0", b"0"):',
+         '        if raw_path not in new_names:')],
+    "AI8_a_missing_record_is_fine": [
+        ('        if raw_path not in new_names or unmoved.get(raw_path) == (b"0", b"0"):',
+         '        if unmoved.get(raw_path) == (b"0", b"0"):')],
+    "AI9_a_hidden_deletion_is_fine": [
+        ('        if raw_path not in old_names:', '        if False:')],
+    # AI10(ls-tree 의 blob 종류 거름을 뺌)은 살아남았다 — 닿을 수 없는 방어라 **코드를 지웠다** (review 7.5.31).
+    "AI11_a_failed_ls_tree_is_read": [
+        ('    if listed.returncode:\n        raise RuntimeError(_first_line(listed.stderr.decode("utf-8", "replace"), "git ls-tree failed"))',
+         '    if False:\n        raise RuntimeError(_first_line(listed.stderr.decode("utf-8", "replace"), "git ls-tree failed"))')],
+    "AI12_an_unchanged_path_is_checked": [
+        ('        if before.get(raw_path) == oid:\n            continue', '        if False:\n            continue')],
     "AD6_the_guard_ignores_renames": [
         ('"--no-ext-diff", "--no-textconv", "--find-renames",',
          '"--no-ext-diff", "--no-textconv",')],

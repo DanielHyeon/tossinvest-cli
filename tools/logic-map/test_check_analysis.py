@@ -14,6 +14,7 @@ import tempfile
 import time
 import traceback
 import unittest
+import zlib
 import shutil
 from contextlib import contextmanager, redirect_stdout
 from pathlib import Path
@@ -109,7 +110,7 @@ def _snapshot_stub(contents: dict[str, bytes] | None = None):
     판정의 현재 쪽은 스냅숏의 바이트를 읽으므로, 현재 논리를 보려는 시험은 그 바이트를 건넨다."""
     @contextmanager
     def stub(root: Path):
-        yield {}, dict(contents or {})
+        yield {}, dict(contents or {}), None
     return stub
 
 class BundleTextCoversEveryProseFileInTheBundle(unittest.TestCase):
@@ -942,7 +943,7 @@ evidence
             path.write_text("package pkg\nfunc X() { println(1) }\n", encoding="utf-8")
             # 워킹트리 대상은 스냅숏 위에서 판정한다 (task 7.5.25) — 스냅숏이 이 이름을 날 바이트로 싣고, 가드가 거절한다.
             with self.assertRaisesRegex(RuntimeError, "cannot be represented losslessly"), \
-                    check_analysis._worktree_snapshot(root) as (environment, _):
+                    check_analysis._worktree_snapshot(root) as (environment, _, _):
                 check_analysis._safe_changed_go_paths(root, base, "", environment)
 
     def test_new_function_in_existing_file_is_not_reported_as_modified_existing(self) -> None:
@@ -8193,17 +8194,112 @@ while True:
         with self.assertRaises(check_analysis.NotRegularFile):
             self._required(root, base)
 
-    def test_an_object_directory_git_cannot_take_as_an_alternate_is_named(self) -> None:
-        """`GIT_ALTERNATE_OBJECT_DIRECTORIES` 는 `:` 로 가른다 — 저장소 경로에 `:` 가 있으면 실제 저장소를 대체
-        저장소로 못 적는다. 조용히 틀린 저장소를 보지 않고 이름을 댄다."""
-        holder = tempfile.TemporaryDirectory()
-        self.addCleanup(holder.cleanup)
-        root = Path(holder.name) / "a:b"
-        root.mkdir()
-        self._run(root, "git", "init", "-q", ".")
-        with self.assertRaisesRegex(RuntimeError, "cannot be named as a git alternate"):
-            with check_analysis._worktree_snapshot(root):
-                pass
+    def test_a_repository_path_with_a_colon_or_a_quote_is_judged(self) -> None:
+        """`GIT_ALTERNATE_OBJECT_DIRECTORIES` 는 `:` 로 가른다 — 7.5.25 는 경로에 `:`·`"` 가 든 저장소를 거절했다.
+        git 은 `"` 로 시작하는 항목을 C 인용으로 읽는다(7.5.25 적대 재리뷰 F10 실측) — 인용해 적으면 헛거절이 없다 (7.5.31)."""
+        for name in ("a:b", 'a"b'):
+            with self.subTest(name):
+                holder = tempfile.TemporaryDirectory()
+                self.addCleanup(holder.cleanup)
+                root = Path(holder.name) / name
+                root.mkdir()
+                self._run(root, "git", "init", "-q", ".")
+                self._run(root, "git", "config", "user.email", "fixture@example.com")
+                self._run(root, "git", "config", "user.name", "fixture")
+                (root / "x.go").write_text(self.BEFORE, encoding="utf-8")
+                self._run(root, "git", "add", "-A")
+                self._run(root, "git", "commit", "-qm", "base")
+                base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+                (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+                self.assertIn(("x.go", "Stop"), self._required(root, base))
+
+    def _forge(self, root: Path, oid: str, data: bytes, packed: bool) -> None:
+        """실제 저장소에 **이름(oid)과 내용이 다른** 객체를 심는다 — loose 로, 또는 pack 으로(`pack-objects` 는 loose
+        객체의 해시를 다시 확인하지 않고 담는다). git 은 객체를 oid 로만 찾으므로 그 oid 로 이 내용을 읽는다."""
+        folder = root / ".git" / "objects" / oid[:2]
+        folder.mkdir(parents=True, exist_ok=True)
+        loose = folder / oid[2:]
+        if loose.exists():
+            loose.chmod(0o644)
+        loose.write_bytes(zlib.compress(b"blob %d\0" % len(data) + data))
+        if packed:
+            subprocess.run(["git", "pack-objects", "-q", str(root / ".git" / "objects" / "pack" / "pack")],
+                           cwd=root, input=oid.encode() + b"\n", check=True, capture_output=True)
+            loose.unlink()
+
+    def test_a_replace_ref_does_not_hide_a_worktree_edit(self) -> None:
+        """`refs/replace/<편집 blob>` 참조 **하나**면 git 이 스냅숏의 blob 대신 base 의 blob 을 읽는다 — 편집 blob 이
+        저장소에 없어도 된다(7.5.25 적대 재리뷰 F1, 7.5.25 가 연 회귀). 게이트의 git 은 교체 참조를 안 따른다 (7.5.31)."""
+        root, base = self._repo()
+        (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+        edited = subprocess.check_output(["git", "hash-object", "x.go"], cwd=root, text=True).strip()
+        original = subprocess.check_output(["git", "rev-parse", f"{base}:x.go"], cwd=root, text=True).strip()
+        self._run(root, "git", "update-ref", f"refs/replace/{edited}", original)
+        self.assertIn(("x.go", "Stop"), self._required(root, base))
+
+    def test_a_replace_ref_does_not_rewrite_the_base(self) -> None:
+        """base 쪽도 같다 — base blob 을 편집 blob 으로 **교체**하면 base 와 워킹트리가 같아 보인다(F4, 이 change 이전부터)."""
+        root, base = self._repo()
+        (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+        edited = subprocess.check_output(["git", "hash-object", "-w", "x.go"], cwd=root, text=True).strip()
+        original = subprocess.check_output(["git", "rev-parse", f"{base}:x.go"], cwd=root, text=True).strip()
+        self._run(root, "git", "replace", "-f", original, edited)
+        self.assertIn(("x.go", "Stop"), self._required(root, base))
+
+    def test_an_object_store_that_lies_about_the_edit_is_refused(self) -> None:
+        """편집 blob 의 oid 에 **base 의 바이트**를 담은 객체가 실제 저장소에 있으면 git 은 스냅숏이 쓴 것 대신 그것을
+        읽는다 — 스테이지한 편집의 loose 객체(F2), 또는 pack(F3 — git 은 pack 을 먼저 보므로 스냅숏이 객체를 늘 써도
+        못 막는다). 두 diff 가 **함께** 속으므로 대조는 git 밖에서 한다: 게이트가 해시한 oid 와 base 트리의 oid 가 다른
+        경로는 diff 에 **내용 변경**으로 나와야 한다 (7.5.31)."""
+        for packed in (False, True):
+            with self.subTest(packed=packed):
+                root, base = self._repo()
+                (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+                if not packed:
+                    self._run(root, "git", "add", "x.go")
+                edited = subprocess.check_output(["git", "hash-object", "x.go"], cwd=root, text=True).strip()
+                self._forge(root, edited, self.BEFORE.encode(), packed)
+                lie = subprocess.check_output(["git", "cat-file", "-p", edited], cwd=root)
+                self.assertEqual(lie, self.BEFORE.encode(), "위조 객체가 안 읽힌다 — 픽스처 결함")
+                with self.assertRaisesRegex(RuntimeError, "object store.*x.go"):
+                    self._required(root, base)
+
+    def test_the_store_cross_check_reads_each_rule_directly(self) -> None:
+        """`_snapshot_disagreement` 의 규칙 셋을 레코드를 직접 건네 잰다. 정직한 git 에서는 "바뀐 경로가 레코드에
+        아예 없음" · "지운 경로가 없음" 이 닿기 어렵다 — 행동 시험만으로는 그 두 갈래를 빼는 변이가 살아남는다."""
+        root, base = self._repo(("x.go", "y.go"))
+        same = subprocess.check_output(["git", "rev-parse", f"{base}:y.go"], cwd=root, text=True).strip()
+        edited = "e" * len(same)
+        both = {b"x.go": edited, b"y.go": same}
+        judge = check_analysis._snapshot_disagreement
+        judge(root, base, both, [(b"1", b"1", [b"x.go"])])                       # 정상: 바뀐 것이 레코드에 있다
+        judge(root, base, {b"x.go": edited, b"y.go": same, b"n.go": edited},    # 정상: 새 파일 · rename 의 새 이름
+              [(b"1", b"1", [b"x.go"]), (b"1", b"0", [b"n.go"])])
+        with self.assertRaisesRegex(RuntimeError, "object store answers for x.go with bytes"):
+            judge(root, base, both, [])                                         # 규칙 1: 레코드에 없다
+        with self.assertRaisesRegex(RuntimeError, "object store answers for x.go with bytes"):
+            judge(root, base, both, [(b"0", b"0", [b"x.go"])])                  # 규칙 3: 내용이 같다고 한다
+        judge(root, base, {b"z.go": same, b"y.go": same},                       # 정상: rename 은 0/0 이어도 된다
+              [(b"0", b"0", [b"x.go", b"z.go"])])
+        with self.assertRaisesRegex(RuntimeError, "object store answers for x.go as if it were still there"):
+            judge(root, base, {b"y.go": same}, [])                              # 규칙 2: 지운 것이 레코드에 없다
+        judge(root, base, {b"y.go": same}, [(b"0", b"5", [b"x.go"])])           # 정상: 삭제가 레코드에 있다
+        with self.assertRaisesRegex(RuntimeError, "ls-tree|Not a valid|not a tree"):
+            judge(root, "0" * len(same), both, [])                              # base 트리를 못 읽으면 결함
+
+    def test_an_unchanged_file_with_a_name_that_is_not_utf8_is_not_refused(self) -> None:
+        """이름이 UTF-8 이 아닌 **안 바뀐** 추적 `*.go` 가 있으면 7.5.25 는 이름 없는 해독 오류로 멈췄다(F9 — 부모는
+        바뀐 파일의 이름만 해독했다). 스냅숏은 이름을 날 바이트로 다룬다; 바뀐 파일의 이름은 가드가 전처럼 거절한다."""
+        root, base = self._repo()
+        try:
+            (root / os.fsdecode(b"\xff.go")).write_text(self.BEFORE, encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            self.skipTest(f"this filesystem refuses non-UTF-8 names: {exc}")
+        self._run(root, "git", "add", "-A")
+        self._run(root, "git", "commit", "-qm", "odd name")
+        base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        (root / "x.go").write_text(self.AFTER, encoding="utf-8")
+        self.assertEqual(sorted(self._required(root, base)), [("x.go", "Stop")])
 
     def test_every_git_fault_of_the_snapshot_is_named(self) -> None:
         """스냅숏의 git 호출 셋(`rev-parse` · `ls-files` · `update-index`)이 실패하거나 모양이 틀리면 이름 대고
@@ -8255,7 +8351,7 @@ while True:
         root, base = self._repo(("x.go", "y.go"))
 
         def measured() -> tuple[int, int]:
-            with check_analysis._worktree_snapshot(root) as (environment, _):
+            with check_analysis._worktree_snapshot(root) as (environment, _, _):
                 records = check_analysis._safe_changed_go_paths(root, base, "", environment)
                 store = Path(environment["GIT_OBJECT_DIRECTORY"])
                 return len(records), sum(1 for item in store.rglob("*") if item.is_file())

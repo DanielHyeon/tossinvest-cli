@@ -89,7 +89,7 @@
 | 갈래 | 변이 | 잡는 시험 |
 |---|---|---|
 | 워킹트리 대상인데 환경이 없으면 거절 | `AH11_the_guard_takes_no_snapshot` | `test_a_worktree_guard_without_the_snapshot_is_refused` |
-| 가드도 스냅숏 환경을 받는다 | `AH2_the_guard_skips_the_snapshot` | 21 시험 |
+| 가드도 스냅숏 환경을 받는다 | `AH2_the_guard_skips_the_snapshot` | 27 시험 (7.5.31 창 `129:171`; 7.5.25 는 21 이라 적었는데 같은 커밋의 뒤 시험으로 22 가 됐다 — 정정) |
 | `--find-renames` (구조) | `AD6_the_guard_ignores_renames` | `test_both_git_calls_see_the_same_files` |
 
 7.5.27 · 7.5.28 의 `pins` 행(필터 고정 · stat 고정)은 7.5.25 에서 겨눌 코드가 없어졌다 — 그 행은 기록으로 둔다.

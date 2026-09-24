@@ -23,9 +23,9 @@
 
 | 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
 |---|---|---|
-| 껍데기 B2 워킹트리만 스냅숏 | `AH19_a_commit_target_takes_the_snapshot` | `test_a_commit_target_does_not_read_the_worktree`(원장 단언; 첫 판 **생존**·"못 쟀다" — 판정은 같고 원장만 달랐다) |
-| `_compared` 워킹트리 = `--cached` | `AH1_the_worktree_is_seen_through_git` | 8 시험 — 문 시험들(clean · sparse · …) |
-| 판정 diff 가 스냅숏 환경을 받는다 | `AH3_the_judgement_skips_the_snapshot` | 20 시험 |
+| 껍데기 B2 워킹트리만 스냅숏 | `AH19_a_commit_target_takes_the_snapshot` | `test_a_commit_target_does_not_read_the_worktree`(원장 단언; 첫 판 **생존**·"못 쟀다" — 판정은 같고 원장만 달랐다) — 7.5.31 뒤 6 시험(커밋 대상이 스냅숏을 열면 git 밖 대조가 커밋 대상에서 돈다) |
+| `_compared` 워킹트리 = `--cached` | `AH1_the_worktree_is_seen_through_git` | 9 시험(7.5.31 창) — 문 시험들(clean · sparse · …) |
+| 판정 diff 가 스냅숏 환경을 받는다 | `AH3_the_judgement_skips_the_snapshot` | 25 시험(7.5.31 창) |
 | 몸통 B13~B15 현재 쪽 = 스냅숏 바이트 | `AH4_the_current_side_rereads_the_disk` | `test_the_current_side_is_judged_from_the_snapshot_bytes` |
 
 지운 갈래(편집 전 B43~B45 · raise 6·7)의 변이 `AF7` · `AF11` · `AG3~AG5` 는 하네스에서 뺐다 — 겨눌 코드가 없다.

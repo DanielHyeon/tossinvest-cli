@@ -1,0 +1,67 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "9bc103fa196cd5fdba61bb4dadd79aa77eaa7a35",
+  "source_sha256": "6ad654a895ea8f23b0234c7cbe44490ab7c72eb5bcca5f80f8de4430bec47138",
+  "function": "changed_existing_functions",
+  "signature": "changed_existing_functions(root, base, target)",
+  "start": {
+    "line": 357,
+    "column": 1
+  },
+  "end": {
+    "line": 369,
+    "column": 94
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 362,
+      "inherited_line": false,
+      "source": "if not base:"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 366,
+      "inherited_line": false,
+      "source": "if target:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 367,
+      "value": "_changed_existing_functions(root, base, target, None, {}, None)"
+    },
+    {
+      "line": 369,
+      "value": "_changed_existing_functions(root, base, target, environment, contents, placed)"
+    }
+  ],
+  "raises": [
+    {
+      "line": 363,
+      "source": "raise ValueError('Function Logic Map comparison base is required')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 363,
+      "callee": "ValueError"
+    },
+    {
+      "line": 367,
+      "callee": "_changed_existing_functions"
+    },
+    {
+      "line": 368,
+      "callee": "_worktree_snapshot"
+    },
+    {
+      "line": 369,
+      "callee": "_changed_existing_functions"
+    }
+  ]
+}

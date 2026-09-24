@@ -102,4 +102,5 @@ the worktree snapshot`). 넷째 인자는 `pins` 에서 `environment` 로 바뀌
 새 거절이 막는 것: 워킹트리 대상인데 환경이 없으면 `--cached` 가 **실제** 인덱스를 base 와 견준다 — 워킹트리도
 스냅숏도 아닌 셋째 시야다. 오늘 호출자는 하나(`_changed_existing_functions`)이고 늘 환경을 건넨다 — 정상 입력 중
 이 거절에 걸리는 것은 0 이다. 시험이 이 함수를 직접 부르는 자리 하나(`test_newline_changed_go_path_is_rejected_before_unified_diff_parsing`)는
-스냅숏을 열어 건네도록 고쳤다.
+스냅숏을 열어 건네도록 고쳤다. (7.5.31 정정: 커밋된 트리에서 직접 부르는 자리는 **셋**이다 — 같은 커밋이 뒤에 더한 `…untouched_worktree…` ·
+`…guard_without_the_snapshot…` 도 부른다. 같은 실수 일곱 번째의 한 사례.)
