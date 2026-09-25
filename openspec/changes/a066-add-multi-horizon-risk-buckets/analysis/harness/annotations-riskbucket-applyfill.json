@@ -1,0 +1,10 @@
+{
+  "B3": {"scenario": "owner-wide multi-decision fill carries per-decision target HELD (Wave 1D)"},
+  "B4": {"scenario": "target HELD bucket count differs from reserved buckets: refuse, state unchanged"},
+  "B5": {"scenario": "iterate reserved buckets to validate every target HELD value"},
+  "B6": {"scenario": "unparseable target HELD: refuse, state unchanged"},
+  "B7": {"scenario": "immutable order_key (not the broker order id) keys the order watermark (Wave 1D)"},
+  "B31": {"scenario": "target HELD present for this bucket"},
+  "B32": {"scenario": "unparseable target HELD at transfer time: refuse, state unchanged"},
+  "B33": {"scenario": "transfer exceeds the decision's own HELD: cap the deduction and latch RISK_OVERAGE instead of consuming another decision's HELD"}
+}

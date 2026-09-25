@@ -14,7 +14,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1-B6 | enumerate sqlite indexes and assert required v24 names | read-only test query | assertion | this test |
+| B1-B6 | enumerate sqlite indexes and assert the required names of the current schema (v32 at HEAD 2026-09-25; a066 owns its v22–v24 names) | read-only test query | assertion | this test |
 
 ## Calls and live bindings
 

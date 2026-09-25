@@ -2,6 +2,9 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | account-wide | account-wide reconcile tests | existing | pending |
-| B2 | global symbol | global scope test | pending | pending |
-| B3 | exact market | cross-market release test | pending | pending |
+| B1 | account-wide | `TestAccountWideAndSymbolScopesAreSeparate` | existing | PASS at HEAD 2026-09-25 |
+| B2 | global symbol | `TestGlobalReconcileScopeBlocksMarketEntryWithoutBeingReleasedByIt` | Wave 1E | PASS at HEAD 2026-09-25 |
+
+Fall-through return (market set → `account, symbol, market`) is not an AST branch; it was listed as
+`B3` until Wave 2A (2026-09-25). Its coverage: `TestMarketScopedReconcilesEnterReadAndReleaseIndependently`,
+`TestAtomicMarketReleaseDoesNotCrossIntoPeerMarket` (both PASS at HEAD 2026-09-25).

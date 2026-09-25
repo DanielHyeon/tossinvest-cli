@@ -16,7 +16,7 @@
 |---|---|---|---|---|
 | B1 | symbol empty | none | account only | account-wide tests |
 | B2 | market empty | none | account + symbol | global symbol tests |
-| B3 | market set | none | account + symbol + market | exact-market tests |
+| fall-through (not an AST branch) | market set | none | account + symbol + market | `TestMarketScopedReconcilesEnterReadAndReleaseIndependently` |
 
 ## Calls and live bindings
 

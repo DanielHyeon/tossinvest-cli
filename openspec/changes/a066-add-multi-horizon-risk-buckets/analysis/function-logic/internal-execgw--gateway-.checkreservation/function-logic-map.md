@@ -16,11 +16,16 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | decision is risk-reducing | none | allow without reservation | existing exit/cancel tests |
-| B2 | legacy reservation read fails | none | Guardian reservation missing | existing reservation tests |
-| B3/B4 | a HELD legacy reservation exists | none | continue | existing reservation tests |
-| B5/B6 | marked q_final admission is missing/divergent or decision disappears during revalidation | none | stable risk-bucket or Guardian-missing refusal | q_final missing-admission and last-moment tests |
-| B4 | legacy or exact marked q_final authority remains HELD | none | allow | q_final issuance and gateway success tests |
+| B1 | decision is not exposure-raising | none | nil — risk-reducing bypass | `TestAnExitNeedsNoReservation` |
+| B2 | legacy reservation read fails | none | Guardian reservation missing | no test executes this body (Wave 2A coverage) |
+| B3 | iterate the decision's aggregate reservations | none | continue | package suite |
+| B4 | a HELD aggregate reservation triggers q_final revalidation | none | continue into `RevalidateQFinalAdmission` | `TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker` |
+| B5 | revalidation returns an error | none | refusal | `TestRevokedDecisionIsRefusedAtTheLastMoment` |
+| B6 | the error is `ErrDecisionNotFound` | none | Guardian-missing reason kept | `TestRevokedDecisionIsRefusedAtTheLastMoment` |
+
+Wave 2A (2026-09-25): AST re-extracted at HEAD (889–918, was 745–774); body text identical to the 2026-08-04
+revision, alignment identical B1–B6. Rows re-described from the AST source lines; the earlier table grouped
+B3/B4 and B5/B6 and listed B4 twice.
 
 ## Calls and live bindings
 

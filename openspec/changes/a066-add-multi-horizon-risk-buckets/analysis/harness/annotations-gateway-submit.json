@@ -1,0 +1,4 @@
+{
+  "B28": {"scenario": "a066 initial q_final/aggregate-hold revalidation refuses before any broker call (true branch entered by both named tests, per-test coverprofile)", "tests": ["TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker", "TestRevokedDecisionIsRefusedAtTheLastMoment"], "red": "q_final checkpoint 2026-08-04: missing admission reached the broker path"},
+  "B36": {"scenario": "a066 last-moment q_final barrier (ordinary plan): hold released after the initial check is refused before send tracking (true branch entered, per-test coverprofile)", "tests": ["TestGatewayLastMomentQFinalBarrierRefusesHoldReleaseAfterInitialAdmissionCheck"], "red": "q_final checkpoint 2026-08-04: last-moment check missing"}
+}

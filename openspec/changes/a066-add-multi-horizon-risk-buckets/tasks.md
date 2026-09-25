@@ -1,7 +1,7 @@
 ## 1. Pre-Edit Evidence and Logic Maps
 
-- [ ] 1.1 Run `make sdd-sync`, record CodeGraph definitions/callers/callees/impact for Guardian evaluation/issuance, reservation transactions, Gateway revalidation, fill apply and mode/loss locks, and pin the current change base commit.
-- [ ] 1.2 Complete Go AST artifacts, Function Logic Maps, Branch Test Maps and risk-pattern reports for every existing Guardian, reservation, Gateway and fill function before editing it, including all fail-closed and risk-reducing bypass branches.
+- [x] 1.1 Run `make sdd-sync`, record CodeGraph definitions/callers/callees/impact for Guardian evaluation/issuance, reservation transactions, Gateway revalidation, fill apply and mode/loss locks, and pin the current change base commit. (Wave 2A 2026-09-25: CodeGraph 1.6.0 phase up to date; CodeGraphContext timed out at 300 s and is recorded as unavailable; `analysis/code-context/` three files; base stays `23794f86`; no loss-lock symbol exists yet.)
+- [x] 1.2 Complete Go AST artifacts, Function Logic Maps, Branch Test Maps and risk-pattern reports for every existing Guardian, reservation, Gateway and fill function before editing it, including all fail-closed and risk-reducing bypass branches. (Wave 2A: all 18 base functions edited by a066 commits have a current bundle — 4 were missing and were added (`Journal.RecordFill`, `riskbucket.ApplyFill`, two fill test helpers), 7 stale/defective bundles refreshed; `check_analysis.py` has 0 findings on a066 bundles, the remaining 372 `missing evidence` lines belong to other changes' commits in the stacked window.)
 - [x] 1.3 Freeze horizon/market/strategy/sector/symbol key ordering, canonical q_candidate/q_final fields, monetary reserve formula, prospective/actual owner lifecycle, protection/sell-clean release, held-to-filled transitions and refusal codes as executable tables.
 
 ## 2. RED Contract Tests
@@ -12,7 +12,7 @@
 - [x] 2.4 Add failing held/filled accounting tests for partial, replacement and predecessor-late fill; require per-fill proportional HELD transfer versus actual price/fee/FX exposure, `filled=max(transfer,actual)`, all-bucket overage, duplicate/retry idempotence, crash atomicity, cancel/expiry, restart replay, orphan reservation and snapshot drift.
 - [x] 2.5 Add failing safety tests proving cap overage or unknown actual price/fee/FX never drops/truncates/rolls back a fill or Position, latches every applicable bucket/owner with `RISK_OVERAGE` or `UNKNOWN_ACTUAL_RISK`, and blocks new exposure only.
 - [x] 2.6 Add failing owner-release tests proving CLOSED alone is insufficient until reconciliation, prior protection order/saga, sell/reduce-only claim/mutation and unresolved fill evidence are all clean.
-- [ ] 2.7 Add failing safety tests proving horizon/market loss locks and all bucket failures block exposure-raising only and cannot delay stop, emergency exit, reconciliation or fill detection.
+- [x] 2.7 Add failing safety tests proving horizon/market loss locks and all bucket failures block exposure-raising only and cannot delay stop, emergency exit, reconciliation or fill detection. ([RED, 5.5 대기] `internal/execgw/a066_entry_loss_lock_red_test.go` behind build tag `a066_red_5_5`; RED at the missing `activateEntryLossLock` seam; with a no-op seam the lock-refusal rows still fail, so the test is not vacuous. 5.5 wires the seam and removes the tag.)
 
 ## 3. Additive Journal Schema
 
@@ -26,7 +26,7 @@
 - [x] 4.2 Implement the exact conservative monetary reserve function and maximum-integer cap search over worst price, fees, FX haircut and minor-unit ceil.
 - [x] 4.3 Implement q_final as the minimum of q_candidate, existing Guardian and every monetary bucket cap with typed zero-quantity refusals and complete preimage.
 - [x] 4.4 Implement tx-scoped monetary usage accounting for every applicable bucket: proportional HELD transfer, persisted actual price/fee/FX exposure, `filled=max(transfer,actual)`, monotonic actual-evidence completion, and durable all-bucket overage/unknown latches without rejecting authoritative fills. (Pure transition plus owner-wide multi-decision authoritative journal accounting are GREEN; production actual-evidence authority remains part of later integration.)
-- [ ] 4.5 Implement prospective-to-actual unique ownership binding and idempotent release only after CLOSED, broker-zero reconciliation and prior protection/sell claim cleanliness. (Journal lifecycle hardening is independently CLEAN, but official broker-zero capability deliberately has no production mint/caller until an immutable official holdings adapter lands.)
+- [x] 4.5 Implement prospective-to-actual unique ownership binding and idempotent release only after CLOSED, broker-zero reconciliation and prior protection/sell claim cleanliness. (Journal lifecycle hardening is independently CLEAN, but official broker-zero capability deliberately has no production mint/caller until an immutable official holdings adapter lands.) (Wave 2A 2026-09-25: checked on the Wave 1E final re-review CLEAN — review.md "Wave 1E follow-up" — plus HEAD re-measurement: `go test -count=1` journal/execgw/riskbucket/officialfx rc 0, focused `-race` rc 0 with 37 owner/bind/release/zero tests, vet rc 0. Production release stays unreachable until the official holdings mint lands — a fail-closed dependency, not an open implementation gap.)
 
 ## 5. Guardian and Gateway Integration
 

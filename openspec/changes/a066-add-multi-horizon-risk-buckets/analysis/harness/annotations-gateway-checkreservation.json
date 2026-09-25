@@ -1,0 +1,6 @@
+{
+  "B1": {"scenario": "risk-reducing decision returns before any reservation read", "tests": ["TestAnExitNeedsNoReservation", "TestACancelNeedsNoReservation"], "red": "pre-a066 existing"},
+  "B4": {"scenario": "HELD aggregate reservation triggers q_final revalidation", "tests": ["TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker"], "red": "q_final checkpoint 2026-08-04"},
+  "B5": {"scenario": "q_final revalidation error refuses", "tests": ["TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker", "TestRevokedDecisionIsRefusedAtTheLastMoment"], "red": "q_final checkpoint 2026-08-04"},
+  "B6": {"scenario": "decision disappeared during revalidation keeps the Guardian-missing reason", "tests": ["TestRevokedDecisionIsRefusedAtTheLastMoment"], "red": "reason regression, q_final checkpoint 2026-08-04"}
+}

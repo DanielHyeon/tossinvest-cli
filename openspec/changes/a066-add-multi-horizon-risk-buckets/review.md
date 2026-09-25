@@ -235,3 +235,85 @@ exposure-raising quantity and must never delay fill, reconciliation, protection 
   focused race repetitions passed in addition to the stable full-journal run; the reviewer confirmed exact
   KR/US coexistence and release isolation, legacy-global precedence, migration rollback and the deliberately
   unreachable production official-zero mint.
+
+## Wave 2A (2026-09-25) — HEAD re-settlement VERIFY
+
+- Voices: Opus implementation teammate (this record); independent verification by the Manager is pending.
+- Production edits: **none**. Added files: one build-tagged test (`internal/execgw/a066_entry_loss_lock_red_test.go`),
+  evidence under `analysis/`. Function Logic Map: `not-applicable` for this lot's code — no existing function body
+  was edited; the test file is a new leaf under a build tag.
+
+### Wave 1E re-measurement
+
+GREEN at HEAD after the a112 merge (schema v32): four packages `go test -count=1` rc 0 (journal 495.5 s), focused
+`-race` rc 0 (125/125, 0 race reports), riskbucket/officialfx `-race` rc 0, vet rc 0. Full numbers in `status.md`.
+No a066 test needed updating for the a112 schema moves.
+
+### Evidence findings
+
+- Wave 1C/1D edited four base functions without writing their bundles (`Journal.RecordFill`,
+  `riskbucket.ApplyFill`, two fill test helpers). The Wave 1C text "the only existing fill-path body edit is ...
+  `RecordFill`" was true, but the bundle it implied never existed. Closed in this lot.
+- Two older maps carried positional drift: `TestSchemaTablesAndColumns` B5/B6 and the old `Gateway.submit`
+  B24/B25 descriptions did not match the branches at those positions; `activeScopeWhere`/`scopeArgs` listed a
+  fall-through return as `B3`. Rewritten from AST source lines.
+- `TestRevokedDecisionIsRefusedAtTheLastMoment`, cited by the old submit map for the last-moment fresh-decision
+  refusal, never enters that branch (submit B30, 0 executions); per-test coverage shows it is refused at the
+  initial `checkReservation` (submit B28 → checkReservation B6). Citations now follow per-test coverage.
+- Measured coverage gaps (statement coverage, not per-branch-arm): submit 16/57 bodies unexecuted — including
+  **B41, the strategy-plan copy of the a066 last-moment q_final barrier**; RecordFill 19/38 — including a066's
+  storage-error exits B32/B35; ApplyFill 19/38 — mostly corrupt-state parse exits, plus B1 (invalid identity/
+  quantity refusal) and B38; checkReservation B2 (reservation read error). None is new in this lot; they are
+  listed for 6.1 ("RED-to-GREEN evidence for every Branch Test Map row").
+
+### 2.7 RED — `internal/execgw/a066_entry_loss_lock_red_test.go`
+
+- Build tag `a066_red_5_5`; no make target sets it, so `make test`, `make test-seams`, `make lint` are unaffected
+  (untagged `go test -run TestA066 ./internal/execgw` → "no tests to run"; `go vet` untagged and with
+  `tossos_testseams` rc 0; `go vet -tags a066_red_5_5` rc 0).
+- Contract: `TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket` (a lock refuses only its own market×horizon
+  q_final entry and writes no decision/hold; MEDIUM does not reach SHORT; US does not reach KR — spec
+  "Medium lock과 short entry") and `TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths` (with KR/US ×
+  SHORT/MEDIUM locked and a q_final bucket failure live: KR stop sell, US exit sell, reduce-only cancel reach the
+  broker once each inside a 5 s deadline, a KR reconcile entry is recorded, the exit's fill is applied with delta
+  2, and a fresh exposure-raising decision is still refused before and after the risk-reducing traffic).
+- RED log (`go test -count=1 -tags a066_red_5_5 -run 'TestA066' -v ./internal/execgw`, rc 1, 4.4 s; abridged — the four failing subtests each print the same message at line 108):
+
+  ```text
+  --- FAIL: TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket
+      --- PASS: .../control:_no_lock_admits_KR_SHORT
+      --- PASS: .../control:_no_lock_admits_KR_MEDIUM
+      --- FAIL: .../KR_MEDIUM_lock_does_not_reach_KR_SHORT
+      --- FAIL: .../KR_SHORT_lock_refuses_KR_SHORT
+      --- FAIL: .../KR_MEDIUM_lock_refuses_KR_MEDIUM
+      --- FAIL: .../US_locks_do_not_reach_KR
+  a066_entry_loss_lock_red_test.go:194: [RED, 5.5 대기] a066 entry loss lock 이 없음: horizon×market 잠금을
+      durable 로 활성화하는 seam(activateEntryLossLock)이 연결되지 않았음 — task 5.5 가 구현해야 함
+  --- FAIL: TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths
+  ```
+
+- Non-vacuity probe (temporary uncommitted file setting the seam to a no-op, deleted after the run): the two
+  lock-refusal rows fail with "locked SHORT/MEDIUM entry was admitted … q_final=10"; the control, isolation and
+  risk-reducing rows pass. So the refusal rows go red for the right reason, and the risk-reducing test is a
+  guard that a real lock must not break (a no-op lock cannot break it, which is expected).
+- The probe also caught a fixture error before commit: a US **market** sell is refused by the trading policy
+  (`live place supports only a narrow subset of orders`) regardless of any lock, so the US exit uses a limit sell.
+
+### Open design points for 5.5 (not user decisions)
+
+- A q_final decision issued **before** a lock activates and submitted after it: the spec blocks "신규
+  EXPOSURE_RAISING decision과 추가 leg"; the conservative reading refuses the submit at Gateway revalidation.
+  2.7 does not pin this — 5.5 should add a row for it.
+- The build tag must be removed in the 5.5 GREEN commit; a tag nobody runs is the failure mode recorded in memory
+  ("tagged tests never ran").
+
+### Environment incident
+
+- The root filesystem reached 100 % during the lot (Go build cache 208 GB, grown 2026-09-22…25). Coverage runs
+  failed with `database or disk is full`; so would anyone else's journal tests. I deleted Go build-cache entries
+  last modified before 2026-09-24 00:00 (Go refreshes an entry's mtime when it is used, so these were unused for
+  over a day), freeing ~122 GB (cache 208 → 86 GB). Cache only; no repository or user file was touched.
+
+### 사용자 결정 대기
+
+- 없음 (this lot needs no human decision; 5.5's relaxation path will).

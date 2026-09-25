@@ -16,7 +16,7 @@
 |---|---|---|---|---|
 | B1 | symbol empty | none | account-wide/global predicate | validation/query tests |
 | B2 | market empty | none | symbol/global predicate | global scope tests |
-| B3 | market set | none | symbol/exact-market predicate | cross-market release test |
+| fall-through (not an AST branch) | market set | none | symbol/exact-market predicate | `TestMarketScopedReconcilesEnterReadAndReleaseIndependently` |
 
 ## Calls and live bindings
 

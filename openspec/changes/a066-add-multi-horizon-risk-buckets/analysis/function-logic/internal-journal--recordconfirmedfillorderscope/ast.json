@@ -1,0 +1,30 @@
+{
+  "file": "internal/journal/fills_test.go",
+  "source_sha256": "bf2abca1fe50da443cee63df5f571160850429173fcb6bb70cf271635fe90675",
+  "package": "journal",
+  "function": "recordConfirmedFillOrderScope",
+  "signature": "recordConfirmedFillOrderScope(params=6, results=0)",
+  "start": {
+    "line": 111,
+    "column": 1
+  },
+  "end": {
+    "line": 114,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 2
+      },
+      "text": "recordConfirmedFillOrderScopeQuantity"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

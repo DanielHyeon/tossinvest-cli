@@ -8,7 +8,7 @@
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| sqlite schema | v24 table/column golden | migration contract | test failure |
+| sqlite schema | current `SchemaVersion` (32 at HEAD 2026-09-25) table/column golden; a066 owns only its v22–v24 rows, later rows belong to the changes that added v25–v32 | migration contract | test failure |
 
 ## Branches and early returns
 
@@ -28,5 +28,5 @@
 
 ## Safety conclusion
 
-- Safe edit boundary: add v24 columns/tables to golden only.
+- Safe edit boundary: add columns/tables to golden only. Wave 2A (2026-09-25) re-extracted the AST at HEAD: the body grew 78–349 → 78–397 because other changes appended v25–v32 golden rows; `difflib` alignment of old/new branches (kind + source line) is identical B1–B7.
 - High-risk impact: no production mutation.

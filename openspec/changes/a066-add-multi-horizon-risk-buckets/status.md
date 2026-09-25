@@ -1,9 +1,58 @@
 # Status — a066-add-multi-horizon-risk-buckets
 
-- Updated: 2026-08-04
-- Overall: IN PROGRESS
-- Current wave: Wave 1E v24 owner-lifecycle hardening GREEN and independently CLEAN; official holdings mint pending
+- Updated: 2026-09-25
+- Overall: IN PROGRESS (tasks 22/30)
+- Current wave: Wave 2A HEAD re-settlement GREEN (evidence refreshed, 4.5 closed, 2.7 RED in place); 5.5 next
 - Runtime authority: dormant q_final Guardian/Gateway seam only; no sealed strategyflow/engine/broker/toggle activation
+
+## Wave 2A (2026-09-25) — re-settlement on HEAD after a112
+
+Scope: evidence (1.1, 1.2), Wave 1E re-measurement, 4.5 verdict, 2.7 RED. No production code changed; the only
+Go file added is a build-tagged RED test. HEAD moved during the lot because other sessions committed
+(`d72bc401` → `648df8ef` → `0233d776`); each measurement names the commit it ran on.
+
+### Wave 1E re-measurement at HEAD (journal schema v32)
+
+| Check | Result |
+|---|---|
+| `go test -count=1 ./internal/journal/... ./internal/execgw/... ./internal/riskbucket/... ./internal/officialfx/...` at `d72bc401` | rc 0 — journal 495.5 s, execgw 97.0 s, riskbucket 0.3 s, officialfx 0.3 s (wall 503 s) |
+| focused `-race -run 'RiskBucket\|QFinal\|Reconcile\|MigrationV2[1-4]\|OfficialZero\|OwnerRelease\|OwnerBind'` journal + execgw | rc 0 — 125 RUN / 125 PASS (85 top-level, 37 owner/bind/release/zero), 0 race reports, 312 s |
+| `go test -race ./internal/riskbucket ./internal/officialfx` | rc 0 (3.5 s / 1.2 s) |
+| `go vet` journal, execgw, riskbucket, officialfx | rc 0 |
+| coverage runs at `648df8ef` | execgw untagged 71.8 % (rc 0, 55 s), execgw `tossos_testseams` 81.3 % (rc 0, 153 s), journal 75.2 % (rc 0, 641 s), riskbucket 58.2 % (rc 0) |
+| per-test coverage, all 875 journal tests (`-coverpkg` journal+riskbucket) + 42 riskbucket tests | 0 failures (85 s, 8-way parallel) |
+
+No failure was observed, so nothing is attributed to the a112 merge. An earlier coverage attempt failed with
+`database or disk is full` — the root filesystem was at 100 % (Go build cache 208 GB); that run is discarded and
+re-run after the cache was trimmed.
+
+### Bundle refresh against HEAD
+
+| Bundle | vs HEAD | Action |
+|---|---|---|
+| 16 reconcile/admission/test bundles | MATCH | kept; `activeScopeWhere`, `scopeArgs` had a phantom `B3` row (fall-through return, not an AST branch) — rewritten |
+| `Gateway.checkReservation`, `Journal.runApplyHooks`, `loadRiskBucketState` | SHIFT (body identical) | AST + risk report re-extracted; rows kept (alignment identical); checkReservation rows re-described |
+| `TestReEnteringAnActiveScopeKeepsTheFirstObservation` | SHIFT, `revision: base` | kept as is (the checker requires the base revision) |
+| `Gateway.submit` | DIFF 25 → 57 branches (`8022f578`) | re-extracted; `difflib` alignment keeps all 25; maps rebuilt from measured rows |
+| `CommitRiskBucketAdmission` | DIFF, 44 → 44 (`8022f578` snapshot window) | re-extracted; change noted |
+| `TestSchemaIndexes`, `TestSchemaTablesAndColumns` | DIFF (v25–v32 golden rows by other changes) | re-extracted; two mis-described rows fixed |
+| `Journal.RecordFill`, `riskbucket.ApplyFill`, `recordConfirmedFillOrder`, `recordConfirmedFillOrderScope` | **missing since Wave 1C/1D** | new bundles |
+
+`check_analysis.py --change a066-…`: before 14 a066-bundle findings (9 stale/phantom-row + 5 revision-hash) and 376 missing (4 of them a066-edited functions); after **0** a066-bundle findings;
+372 `missing evidence` remain, none of them an a066-edited function (stacked-window artifact, see
+`analysis/code-context/evidence-reconciliation.md`). Branch rows for the six rebuilt maps come from
+`analysis/harness/branch_coverage_rows.py` + `render_branch_tables.py` (condition text, blame commit, measured
+coverage, per-test attribution).
+
+### 4.5 and 2.7
+
+- 4.5 checked: Wave 1E final re-review CLEAN + the re-measurement above. Production release remains unreachable
+  until an official holdings adapter mints the broker-zero capability (fail-closed dependency).
+- 2.7 RED: `internal/execgw/a066_entry_loss_lock_red_test.go` (`//go:build a066_red_5_5`) — see review.md.
+
+### Next
+
+5.5 entry loss lock (wire `activateEntryLossLock`, drop the build tag), then 5.6/5.7, 6.x.
 
 ## Read-only KR/US snapshot-authority checkpoint
 

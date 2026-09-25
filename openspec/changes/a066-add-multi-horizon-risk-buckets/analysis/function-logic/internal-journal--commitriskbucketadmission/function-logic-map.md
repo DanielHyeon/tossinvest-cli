@@ -42,6 +42,15 @@
 - The new gate is before active-owner lookup, first-owner INSERT, and every scale-in decision/reservation insert.
 - There is no fallback that clears a latch or reconcile state.
 
+## Wave 2A re-extraction (2026-09-25)
+
+- AST re-extracted at HEAD (88–263, previously 72–246). Old/new branch alignment by `(kind, source line)` is
+  identical B1–B44.
+- The only body change since the bundle was written is commit `8022f578`: the immutable snapshot insert now
+  stores `ref.snapshotWindow()` (snapshot-specific observed/fresh times, falling back to the shared
+  `ObservedAt`/`FreshUntil`) instead of the shared window. No branch, return or refusal changed; the matching
+  `validateRiskBucketAdmission` check compares policy and snapshot evidence against their own windows.
+
 ## Safety conclusion
 
 - Safe edit boundary: add fail-closed journal cleanliness checks immediately after verifying the reused-owner digest.

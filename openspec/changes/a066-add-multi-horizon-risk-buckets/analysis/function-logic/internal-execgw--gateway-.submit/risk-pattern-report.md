@@ -2,6 +2,6 @@
 
 | Rule | Location | Message |
 |---|---|---|
-| go-panic | `internal/execgw/gateway.go:953` | panic can bypass normal error and shutdown handling; map the recovery boundary. |
+| go-panic | `internal/execgw/gateway.go:1108` | panic can bypass normal error and shutdown handling; map the recovery boundary. |
 
 > Findings are review candidates, not automatic defect verdicts.
