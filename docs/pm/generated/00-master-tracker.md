@@ -8,7 +8,7 @@
     - STORY-TOS-a040 — Adopt StockOS OpenSpec numbering and Story mapping [archived] → `a040-adopt-stockos-openspec-naming`
     - STORY-TOS-a116 — Codex saves its own session context [archived] → `a116-install-codex-session-save-hook`
     - STORY-TOS-a118 — A sealed test still runs [archived] → `a118-a-sealed-test-still-runs`
-    - STORY-TOS-a119 — Codex keeps its handoff fresh and starts GBrain once [implemented] → `a119-codex-session-handoff-and-gbrain-startup`
+    - STORY-TOS-a119 — Codex keeps its handoff fresh and starts GBrain once [archived] → `a119-codex-session-handoff-and-gbrain-startup`
     - STORY-TOS-a120 — Audit legacy execution-baseline adoption [archived] → `a120-audit-legacy-execution-baseline`
     - STORY-TOS-a121 — Reconcile stale verification artifacts from authoritative reads [in_progress] → `a121-reconcile-stale-verification-artifacts`
     - STORY-TOS-a122 — Keep the Function Logic Map gate answerable after a merge [in_progress] → `a122-the-logic-map-gate-outlives-a-merge`

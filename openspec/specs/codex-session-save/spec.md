@@ -4,7 +4,14 @@
 TBD - created by archiving change a116-install-codex-session-save-hook. Update Purpose after archive.
 ## Requirements
 ### Requirement: Codex PostToolUse session capture
-The repository SHALL configure a Codex `PostToolUse` command hook for `Bash` and `apply_patch`. The new handler SHALL coexist with the existing SDD agent-save handler and SHALL execute asynchronously without changing normal tool results.
+The repository SHALL configure a Codex `PostToolUse` command hook for `Bash`,
+`apply_patch`, and the additional tool-event names established by sanitized
+fixtures from the supported Codex host. The accepted event fixtures and matcher
+configuration SHALL be tested together before claiming host coverage. The handler
+SHALL coexist with the existing SDD agent-save handler and SHALL execute
+asynchronously without changing normal tool results. Session persistence SHALL
+continue to satisfy the existing agent-specific storage isolation, bounded
+handoff, redaction, and failure-safe atomic persistence requirements.
 
 #### Scenario: Codex completes a shell command
 - **WHEN** Codex completes a tool call whose hook name is `Bash`
@@ -13,6 +20,14 @@ The repository SHALL configure a Codex `PostToolUse` command hook for `Bash` and
 #### Scenario: Codex applies a file patch
 - **WHEN** Codex completes a tool call whose hook name is `apply_patch`
 - **THEN** the same Codex session saver is scheduled
+
+#### Scenario: Supported host emits an additional tool name
+- **WHEN** a PostToolUse event uses an additional name established by a sanitized supported-host fixture
+- **THEN** the configured matcher schedules the existing isolated saver and the fixture regression verifies the match
+
+#### Scenario: Host coverage has not been observed
+- **WHEN** only a configuration or synthetic matcher test has passed and no supported-host event has been observed
+- **THEN** runtime event delivery remains unverified and the change cannot claim that an ordinary host tool call refreshed the handoff
 
 ### Requirement: Agent-specific storage isolation
 The Codex session saver SHALL write generated summaries and backups only below the repository-local `.codex-context/` root. It SHALL NOT read from or write to `.claude/`, `.ai-context/`, or the Claude `save-session.sh`, and `.codex-context/` SHALL be excluded from Git.
@@ -53,3 +68,4 @@ The change SHALL NOT modify `.claude/settings.json` or the root `save-session.sh
 #### Scenario: Codex saver installation is reviewed
 - **WHEN** the implementation diff is compared with the captured change base and the pre-existing working tree
 - **THEN** no change authored by this change appears in either Claude-owned file
+
