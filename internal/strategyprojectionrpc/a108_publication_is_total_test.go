@@ -439,17 +439,24 @@ func TestStartPublishesWhereTheFinalSocketPathIsAtTheLimit(t *testing.T) {
 	a108StartServes(t, dir)
 }
 
-// TestProjectionLivenessClausesEachDecideOnTheirOwn은 생존 판정 네 절의 핀이다.
+// TestProjectionLivenessClausesEachDecideOnTheirOwn은 **순수 probe** 의 판정 절 핀이다.
 //
 // `Start` 를 통해 재면 verifyStaleSocketShape 가 먼저 걸리는 모양이 있어서 절 하나를
 // 따로 죽여 볼 수 없다. 판정 함수를 직접 부른다 — 검사를 약하게 만든 것이 아니라
 // **죽여 볼 수 있게** 만든 것이고, 호출부의 조건은 이 함수를 부르는 그대로다.
 //
-// owner 쓰기 절이 이 라운드에 새로 생겼다(gstack). `net.Listen` 이 만드는 권한은
-// umask 가 정하므로 `UMask=0277` 로 도는 배포에서는 pre-chmod 잔재가 **0500** 으로
-// 남는다. 그 socket 에 connect 하면 커널은 EACCES 를 주는데(실측), 옛 판정은 그것을
-// 「답이 안 왔으니 살아 있다」로 읽어 영구 거부를 만들었다. 발행은 항상 chmod 0600
-// 뒤에 최종 이름을 주므로, owner 쓰기가 없는 socket 은 **산 endpoint 일 수 없다.**
+// # owner 쓰기 절은 a113 이 지웠다
+//
+// a108 gstack 라운드는 「owner 쓰기 비트가 없으면 죽었다」를 세 번째 사망 판정으로
+// 넣었다. 그것은 묻는 대신 **추정**하는 것이었고, 쓰기 비트가 외부 chmod 로 깎인 socket 이
+// **수락 중일 수도 있다** — 그때 회수는 산 주인의 socket 을 지운다(a109 A1 P1-A 의 원형판,
+// a109 issues I1). 그래서 이 함수는 이제 연결 거부·파일 부재만 사망으로 읽고, EACCES 는
+// 「답이 안 왔다」= 생존이다.
+//
+// 그 대가(죽은 0500 잔재가 EACCES 로 영구 거부될 위험)는 회수 전용
+// `staleProjectionSocketAccepts` 가 진다 — probe 전에 0600 으로 chmod 해서 EACCES 자체를
+// 없앤다(`TestTheStaleProbeAsksInsteadOfGuessing`). 이 함수는 조회 클라이언트(`Dial`)도
+// 부르므로 여기에는 chmod 를 두지 않는다.
 func TestProjectionLivenessClausesEachDecideOnTheirOwn(t *testing.T) {
 	for _, test := range []struct {
 		name  string
@@ -469,14 +476,29 @@ func TestProjectionLivenessClausesEachDecideOnTheirOwn(t *testing.T) {
 			a108LiveSocket(t, dir)
 			return SocketPath(dir)
 		}, true},
-		{"owner 쓰기 비트가 없다", func(t *testing.T, dir string) string {
+		// ⛔ a113 의 핵심. 권한 비트는 주인의 생사를 말해 주지 않는다 — 쓰기 비트가 깎인
+		// 산 socket 을 「죽었다」로 읽으면 회수가 그것을 지우고 두 번째 서버를 세운다.
+		{"쓰기 비트가 깎여도 수락 중이면 생존", func(t *testing.T, dir string) string {
+			if os.Geteuid() == 0 {
+				t.Skip("root 는 DAC 를 우회하므로 EACCES 를 만들 수 없다")
+			}
+			a108MakeControlDir(t, dir)
+			a108LiveSocket(t, dir)
+			if err := os.Chmod(SocketPath(dir), 0o400); err != nil {
+				t.Fatal(err)
+			}
+			return SocketPath(dir)
+		}, true},
+		// 같은 EACCES 를 죽은 socket 에서도 만든다. 순수 probe 는 둘을 가를 수 없으므로
+		// 모르는 것은 생존으로 읽는다 — 이 잔재의 사망은 chmod 로 묻는 회수 전용 함수가 증명한다.
+		{"쓰기 비트가 깎인 죽은 socket 은 묻지 못한다", func(t *testing.T, dir string) string {
 			if os.Geteuid() == 0 {
 				t.Skip("root 는 DAC 를 우회하므로 EACCES 를 만들 수 없다")
 			}
 			a108MakeControlDir(t, dir)
 			a108DeadSocketWithMode(t, dir, 0o500)
 			return SocketPath(dir)
-		}, false},
+		}, true},
 		// 보수 기본값의 대조군이다. 이것이 없으면 "전부 사망으로 읽는다"는 구현이
 		// 위 셋을 통과한다 — 그리고 그 구현은 남의 socket 을 지운다.
 		{"죽었다는 증거가 아닌 오류", func(t *testing.T, dir string) string {

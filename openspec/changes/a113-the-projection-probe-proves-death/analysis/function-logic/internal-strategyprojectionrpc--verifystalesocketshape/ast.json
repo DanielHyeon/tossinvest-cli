@@ -1,0 +1,148 @@
+{
+  "file": "internal/strategyprojectionrpc/transport_unix.go",
+  "source_sha256": "dc2653c67f1bcd208ec81e1c375f1b9ba72499e5615a2f6fe15bc79904da7559",
+  "package": "strategyprojectionrpc",
+  "function": "verifyStaleSocketShape",
+  "signature": "verifyStaleSocketShape(params=1, results=2)",
+  "start": {
+    "line": 361,
+    "column": 1
+  },
+  "end": {
+    "line": 371,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 363,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 367,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 364,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 368,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 370,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 362,
+        "column": 15
+      },
+      "text": "os.Lstat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 363,
+        "column": 19
+      },
+      "text": "info.Mode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 363,
+        "column": 53
+      },
+      "text": "info.Mode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 363,
+        "column": 88
+      },
+      "text": "Perm"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 363,
+        "column": 88
+      },
+      "text": "info.Mode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 364,
+        "column": 15
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 366,
+        "column": 20
+      },
+      "text": "info.Sys"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 367,
+        "column": 13
+      },
+      "text": "ownedByEffectiveUser"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 15
+      },
+      "text": "errors.New"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 362,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 366,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

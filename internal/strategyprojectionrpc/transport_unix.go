@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection"
@@ -287,10 +288,13 @@ func reclaimStaleControlDirectory(engineDir string) error {
 	// 파일을 지우게 된다.
 	socketPath := SocketPath(engineDir)
 	if seen[SocketFileName] {
-		if err := verifyStaleSocketShape(socketPath); err != nil {
+		socketInfo, err := verifyStaleSocketShape(socketPath)
+		if err != nil {
 			return err
 		}
-		if projectionSocketAccepts(socketPath) {
+		// 생사는 **묻는다** — 권한 비트로 추정하지 않는다(a113). 검증한 그 inode 를 넘겨야
+		// probe 가 chmod 앞뒤로 「아직 그 파일인가」를 확인할 수 있다.
+		if staleProjectionSocketAccepts(socketPath, socketInfo) {
 			return errors.New("strategy projection runtime: projection owner is still alive")
 		}
 	}
@@ -350,40 +354,42 @@ func ownedByEffectiveUser(uid uint32) bool {
 // 이 완화가 안전한 것은 나머지 조건이 전부 성립할 때뿐이고, 그 전부를 여기와
 // 호출부에서 확인한다: 우리 uid 소유 · 0700 디렉터리 안 · symlink 아님 ·
 // hard link 없음 · 그리고 아무도 수락하지 않음(주인의 사망 입증).
-func verifyStaleSocketShape(socketPath string) error {
+//
+// 돌려주는 FileInfo 는 **검증한 그 inode** 다(a113). 회수의 probe 가 chmod 앞뒤로 「아직
+// 그 파일인가」를 물을 때 이 값과 비교한다. 그래서 uid·nlink 도 같은 Lstat 의 `Sys()` 에서
+// 읽는다 — 두 번 stat 하면 돌려주는 inode 와 소유를 본 inode 가 다를 수 있다(freeze P2-1).
+func verifyStaleSocketShape(socketPath string) (os.FileInfo, error) {
 	info, err := os.Lstat(socketPath)
 	if err != nil || info.Mode()&os.ModeSocket == 0 || info.Mode()&os.ModeSymlink != 0 || info.Mode().Perm()&0o077 != 0 {
-		return errors.New("strategy projection runtime: stale socket is unsafe")
+		return nil, errors.New("strategy projection runtime: stale socket is unsafe")
 	}
-	var socketStat unix.Stat_t
-	if err := unix.Lstat(socketPath, &socketStat); err != nil || !ownedByEffectiveUser(socketStat.Uid) || socketStat.Nlink != 1 {
-		return errors.New("strategy projection runtime: stale socket ownership is unsafe")
+	socketStat, ok := info.Sys().(*syscall.Stat_t)
+	if !ok || !ownedByEffectiveUser(socketStat.Uid) || socketStat.Nlink != 1 {
+		return nil, errors.New("strategy projection runtime: stale socket ownership is unsafe")
 	}
-	return nil
+	return info, nil
 }
 
-// projectionSocketAccepts는 이 socket 경로에서 연결을 받아 주는 자가 있는지 본다.
+// projectionSocketAccepts는 이 socket 경로에서 연결을 받아 주는 자가 있는지 **묻기만** 한다.
 //
 // Start는 listen이 성공한 뒤에야 descriptor를 쓰므로, 수락하지 않는 socket 파일은
 // 죽은 주인의 것이다. 반대로 수락한다면 그게 누구든 이 디렉터리는 남의 것이다.
 //
-// 죽었다고 읽는 것은 세 가지뿐이다: 연결 거부(listener 없음), 파일 부재, 그리고
-// **owner 쓰기 비트가 없는 socket**. 그 밖의 오류(타임아웃 등)는 죽었다는 증거가
-// 아니므로 살아 있다고 본다 — 잘못 살아 있다고 보면 이번 기동만 실패하지만, 잘못
-// 죽었다고 보면 남의 socket을 지운다.
+// 죽었다고 읽는 것은 **두 가지뿐**이다: 연결 거부(listener 없음)와 파일 부재. 그 밖의
+// 오류(타임아웃·EACCES 등)는 죽었다는 증거가 아니므로 살아 있다고 본다 — 잘못 살아 있다고
+// 보면 이번 기동만 실패하지만, 잘못 죽었다고 보면 남의 socket을 지운다.
 //
-// # 왜 owner 쓰기 비트가 판정인가
+// # owner 쓰기 비트 절은 a113 이 지웠다
 //
-// unix socket 에 connect 하려면 그 파일에 쓰기 권한이 있어야 하고, 없으면 커널은
-// EACCES 를 준다(실측). 그 오류를 "답이 안 왔다 = 살아 있다"로 읽으면 아무도 없는
-// socket 하나가 **영구 거부**를 만든다 — 이 change 가 지우려는 모양 그대로다.
+// a108 gstack 라운드는 「owner 쓰기 비트가 없으면 죽었다」를 셋째 사망 판정으로 썼다.
+// 그것은 묻는 대신 **추정**한 것이었고, 쓰기 비트가 외부 chmod 로 깎인 socket 도 **수락
+// 중일 수 있다** — 그때 회수는 산 주인의 socket 을 지우고 두 번째 서버를 세운다(a109 A1
+// P1-A 의 원형판, a109 issues I1).
 //
-// 그렇게 읽어도 되는 근거는 우리 발행 수명주기다. 최종 이름을 가진 socket 은 반드시
-// chmod 0600 을 지난 뒤 rename 된 것이고(listenPrivateSocket), 구버전이 최종 이름에
-// 바로 bind 하고 남긴 pre-chmod 잔재도 `net.Listen` 이 umask 로 만든 권한이라
-// `UMask=0277` 같은 배포에서만 owner 쓰기가 깎인다. 어느 쪽이든 **owner 가 쓸 수 없는
-// socket 은 우리가 발행한 산 endpoint 일 수 없다.** 그리고 회수 경로에서 이 함수에
-// 닿으려면 이미 우리 uid 소유 · 0700 디렉터리 안 · 비symlink · nlink 1 을 통과했다.
+// 그 절이 지키던 것(UMask=0277 배포의 죽은 0500 잔재가 EACCES 로 영구 거부되지 않는 것)은
+// 회수 전용 `staleProjectionSocketAccepts` 가 진다: probe 전에 0600 으로 되돌려 EACCES 자체를
+// 없앤다. 그 권한 복원을 **여기** 두지 않는 이유는 이 함수를 조회 클라이언트 `Dial` 도
+// 부르기 때문이다 — 소비자가 엔진 socket 의 권한을 바꾸면 안 된다(design D1).
 func projectionSocketAccepts(socketPath string) bool {
 	conn, err := net.DialTimeout("unix", socketPath, projectionProbeTimeout)
 	if err == nil {
@@ -391,9 +397,6 @@ func projectionSocketAccepts(socketPath string) bool {
 		return true
 	}
 	if errors.Is(err, unix.ECONNREFUSED) || errors.Is(err, os.ErrNotExist) {
-		return false
-	}
-	if info, statErr := os.Lstat(socketPath); statErr == nil && info.Mode().Perm()&0o200 == 0 {
 		return false
 	}
 	return true
@@ -413,7 +416,8 @@ func Dial(_ context.Context, descriptorPath string) (*Client, error) {
 	// socket 파일이 그대로 남는데(design D1의 S3 — 전원 단절의 기본 모양), 그 위에서
 	// lazy client를 돌려주면 실패는 **첫 Read**에서야 나타난다. 그때는 소비자가 이미
 	// "붙었다"고 판단한 뒤라 강등할 기회를 놓치고, httpapi에서는 집계 스냅샷 전체가
-	// 함께 죽었다(A2 F3 실측). 회수와 같은 원시로 지금 묻는다(design D4-2).
+	// 함께 죽었다(A2 F3 실측). 회수와 같은 원시로 지금 묻는다(design D4-2) — 단 회수는
+	// 그 원시 앞에 권한 복원을 두고, 조회 클라이언트인 여기는 **묻기만** 한다(a113 design D1).
 	if !projectionSocketAccepts(socketPath) {
 		return nil, errors.New("strategy projection runtime: socket has no listener")
 	}

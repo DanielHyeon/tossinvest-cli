@@ -1,0 +1,669 @@
+{
+  "file": "internal/strategyprojectionrpc/transport_unix.go",
+  "source_sha256": "dc2653c67f1bcd208ec81e1c375f1b9ba72499e5615a2f6fe15bc79904da7559",
+  "package": "strategyprojectionrpc",
+  "function": "reclaimStaleControlDirectory",
+  "signature": "reclaimStaleControlDirectory(params=1, results=1)",
+  "start": {
+    "line": 244,
+    "column": 1
+  },
+  "end": {
+    "line": 334,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 247,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 251,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 255,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 262,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "switch",
+      "at": {
+        "line": 264,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 265,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 267,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 278,
+        "column": 4
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "case",
+      "at": {
+        "line": 282,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 290,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 292,
+        "column": 3
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 297,
+        "column": 3
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 308,
+        "column": 2
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 310,
+        "column": 3
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "range",
+      "at": {
+        "line": 325,
+        "column": 2
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 326,
+        "column": 3
+      }
+    },
+    {
+      "id": "B17",
+      "kind": "if",
+      "at": {
+        "line": 330,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 248,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 252,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 256,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 279,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 283,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 293,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 298,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 311,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 327,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 331,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 333,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 245,
+        "column": 16
+      },
+      "text": "ControlDirectory"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 15
+      },
+      "text": "os.Lstat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 20
+      },
+      "text": "controlDirectoryModeIsSafe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 47
+      },
+      "text": "info.Mode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 12
+      },
+      "text": "unix.Lstat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 251,
+        "column": 67
+      },
+      "text": "ownedByEffectiveUser"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 18
+      },
+      "text": "os.ReadDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 10
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 32
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 30
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
+        "column": 11
+      },
+      "text": "entry.Name"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 8
+      },
+      "text": "strings.HasPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 12
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 277,
+        "column": 21
+      },
+      "text": "os.Lstat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 27
+      },
+      "text": "IsRegular"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 27
+      },
+      "text": "info.Mode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 278,
+        "column": 54
+      },
+      "text": "info.Mode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 12
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 281,
+        "column": 13
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 283,
+        "column": 11
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 16
+      },
+      "text": "SocketPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 22
+      },
+      "text": "verifyStaleSocketShape"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
+        "column": 6
+      },
+      "text": "staleProjectionSocketAccepts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 298,
+        "column": 11
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 16
+      },
+      "text": "openVerifiedDescriptor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 39
+      },
+      "text": "DescriptorPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 311,
+        "column": 11
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 313,
+        "column": 7
+      },
+      "text": "file.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 23
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 38
+      },
+      "text": "DescriptorPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 13
+      },
+      "text": "os.Remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 45
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 11
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 330,
+        "column": 12
+      },
+      "text": "os.Remove"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 330,
+        "column": 50
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 331,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 245,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 251,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 254,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 260,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 261,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 263,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 266,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 276,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 277,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 281,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 289,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 291,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 309,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 313,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 326,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 330,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

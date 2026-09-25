@@ -1,6 +1,6 @@
 # a113 — projection probe도 사망을 증명한다
 
-> **상태: 등록만 먼저 했다(2026-08-16).** a109 A1 적대 리뷰가 실측으로 연 change다
+> **상태: 착수 2026-09-25**(design.md·review.md §0). 등록 2026-08-16. a109 A1 적대 리뷰가 실측으로 연 change다
 > (a109 issues I1). **착수 선행 조건은 없다** — a108 확정 코드의 소유권 문제로 a109가
 > 형제 기계만 고쳤을 뿐, 계약(chmod-then-probe)은 이미 spec에 있다.
 
@@ -20,13 +20,16 @@ socket을 죽었다고 읽고 지운다**(a109 review.md §1). 그 절의 원형
 
 ## What Changes
 
-- `projectionSocketAccepts`의 owner-write 추정 절을 삭제하고 형제와 같은
-  chmod-then-probe(0600 복원 → dial → 재-Lstat SameFile 검증)로 교체한다.
+- `projectionSocketAccepts`의 owner-write 추정 절을 삭제하고, 회수 경로의 생존 질문을 형제와
+  같은 chmod-then-probe(0600 복원 → 재-Lstat SameFile 검증 → dial)로 교체한다. 그 probe 는
+  조회 클라이언트 `Dial` 도 쓰므로 chmod 는 **회수 전용 새 함수**에만 둔다(design D1).
 - a109 F1-N1 뮤테이션의 원형판(추정 절 재도입 시 실패하는 핀)을 이식한다.
 - 이 밖의 a108 회수·발행 의례는 무변경이다.
 
 ## Impact
 
-- engine-safety spec: 사망 검증 요구를 "권한 비트 추정 금지"로 명시(MODIFIED).
-- 코드: `internal/strategyprojectionrpc/transport_unix.go` 한 함수 + 테스트.
+- engine-safety spec: strategy projection 잔재 회수 요구에 "권한 비트 추정 금지·회수 경로에서만
+  권한 복원"을 명시(MODIFIED — freeze P1-1 로 형제 요구가 아니라 projection 요구를 고친다).
+- 코드: `internal/strategyprojectionrpc/transport_unix.go` 의 세 함수(`projectionSocketAccepts` 절
+  삭제·`verifyStaleSocketShape` 반환 확장·회수 두 줄) + 새 파일 `transport_probe_unix.go` + 테스트.
 - High-risk: 엔진 boot 경로의 회수 기계 — Function Logic Map 필수(착수 task 0).
