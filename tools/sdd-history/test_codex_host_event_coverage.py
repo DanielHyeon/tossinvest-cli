@@ -6,8 +6,10 @@
 "Host coverage has not been observed").
 """
 
+import fcntl
 import json
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -24,6 +26,18 @@ FIXTURE_KEYS = {"schema", "host", "post_tool_use_names"}
 EVIDENCE_KINDS = {"delivery-inferred", "binary-constant"}
 TOOL_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 UUID_LIKE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", re.I)
+# 픽스처로 확립되지 않은 이름의 대표: host-evidence §2.2 의 모델 쪽 도구 이름과 SDD 핸들러 이름.
+# 픽스처에 새로 확립되면 그 이름은 자동으로 이 음성 표본에서 빠짐.
+UNESTABLISHED_PROBES = (
+    "exec",
+    "send_message",
+    "spawn_agent",
+    "mcp__codegraph__codegraph_explore",
+    "Write",
+    "Edit",
+    "MultiEdit",
+    "NotebookEdit",
+)
 
 
 def load_fixture() -> dict:
@@ -82,13 +96,30 @@ class CodexHostEventCoverageTests(unittest.TestCase):
         self.assertEqual(uncovered_names(self.matcher, self.names), [])
 
     def test_matcher_is_anchored_so_host_match_mode_cannot_widen_it(self):
-        # 호스트가 부분 일치로 판정해도 전체 일치와 같은 결과가 나오도록 양끝 고정을 요구함.
-        self.assertTrue(self.matcher.startswith("^"), self.matcher)
-        self.assertTrue(self.matcher.endswith("$"), self.matcher)
+        # 호스트가 부분 일치(search)로 판정해도 전체 일치와 같은 결과가 나오는지 의미로 확인함.
+        # 글자로 `^`·`$` 만 보면 `^Bash|apply_patch$`(우선순위로 고정이 풀림)나 `.*` 추가가 통과함.
+        pattern = re.compile(self.matcher)
+        for name in self.names:
+            for probe in (f"x{name}", f"{name}x"):
+                with self.subTest(probe=probe):
+                    self.assertIsNone(pattern.search(probe), self.matcher)
+
+    def test_matcher_admits_no_name_the_fixture_has_not_established(self):
+        # 비목표 "픽스처로 확립되지 않은 이름 추가 금지"의 고정: 미확립 이름은 부분 일치로도 안 걸려야 함.
+        pattern = re.compile(self.matcher)
+        for name in UNESTABLISHED_PROBES:
+            if name in self.names:
+                continue
+            with self.subTest(name=name):
+                self.assertIsNone(pattern.search(name), self.matcher)
 
 
 class CodexSaverToolResultTests(unittest.TestCase):
-    """PostToolUse 훅의 stdout 은 호스트가 판정 JSON 으로 읽으므로 저장기는 비워 둬야 함."""
+    """저장기는 세 출구(성공·예외 경고·락 경합) 모두에서 stdout 을 비워 둬야 함.
+
+    PostToolUse 훅의 stdout 을 호스트가 판정으로 읽을 수 있다는 것은 예방적 가정임(Codex 의
+    async 훅에서 관측된 적 없음). 비어 있는 stdout 은 어느 경우에도 도구 결과를 바꾸지 않음.
+    """
 
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -123,6 +154,8 @@ class CodexSaverToolResultTests(unittest.TestCase):
     def test_saver_writes_nothing_to_stdout_for_each_established_name(self):
         for entry in load_fixture()["post_tool_use_names"]:
             with self.subTest(name=entry["name"]):
+                # 이름마다 저장소를 비워서 파일 존재 확인이 앞 반복의 산출물로 통과하지 않게 함.
+                shutil.rmtree(self.project / ".codex-context", ignore_errors=True)
                 result = self.run_saver(
                     json.dumps(
                         {
@@ -149,6 +182,18 @@ class CodexSaverToolResultTests(unittest.TestCase):
         self.assertEqual(result.stdout, "")
         self.assertIn("save skipped", result.stderr)
         self.assertEqual(list(target.iterdir()), [])
+
+    def test_lock_contention_exit_leaves_stdout_empty(self):
+        # 락 경합 출구: async 훅이 겹치면 뒤의 저장기는 저장 없이 즉시 끝나고 stdout 도 비워야 함.
+        context = self.project / ".codex-context"
+        context.mkdir()
+        with (context / ".save-session.lock").open("a+b") as lock:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            result = self.run_saver(json.dumps({"cwd": str(self.project)}))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "")
+        # 경합 출구를 실제로 탔음을 확인함: 저장 산출물이 생기지 않아야 함.
+        self.assertFalse((context / "session-summary.md").exists())
 
 
 if __name__ == "__main__":

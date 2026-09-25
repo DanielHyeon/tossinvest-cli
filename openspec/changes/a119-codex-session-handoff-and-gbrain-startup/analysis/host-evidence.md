@@ -11,7 +11,7 @@
 
 | 대상 | 값 | 비고 |
 | --- | --- | --- |
-| Codex Desktop 번들 CLI | `codex-cli 0.155.0-alpha.16.3` (앱 `26.917.62051`) | `/usr/lib/chatgpt/resources/codex` |
+| Codex Desktop 번들 CLI | `codex-cli 0.155.0-alpha.16.3` (앱 `26.917.62051`) | Desktop 앱 번들 경로(시스템 경로, 절대 경로는 살균 규칙에 따라 생략) |
 | 사용자 PATH CLI | `codex-cli 0.154.0` | `~/.local/bin/codex` |
 | 세션 기록 | `~/.codex/sessions/2026/**/rollout-*.jsonl` | TossOS cwd 세션 2026-08-20 이후 64개 |
 | 로그 DB | `~/.codex/logs_2.sqlite` (읽기 전용 열람) | 12,228행, 2026-09-17~09-25 만 보존 |

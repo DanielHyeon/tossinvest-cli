@@ -30,11 +30,13 @@ therefore pins the measured facts as regressions and changes no configuration.
 - Add regression tests that pin today's facts:
   1. every sanitized fixture event name is matched by the configured PostToolUse matcher, and the
      fixture and matcher are tested together;
-  2. the saver writes nothing to stdout on either its success or its failure path (a PostToolUse
-     hook's stdout is read by the host as a decision);
+  2. the saver writes nothing to stdout on any of its three exits — success, exception warning and
+     lock contention. This is a precaution: a PostToolUse hook's stdout may be read by the host as a
+     decision, which has not been observed for Codex `async` hooks;
   3. the Codex-effective configuration has exactly one enabled TossOS GBrain wrapper registration
      and no raw `gbrain serve`.
-  Drafts exist on branch `wip/a119-3.1` (10 tests, mutation harness M1–M5 all caught, control green).
+  Landed in task 3.1 (`c202b804`) from branch `wip/a119-3.1`, and hardened after the task 3.4 review
+  (12 tests; mutation harness M1–M8 all caught; control green and non-empty).
 - Change no configuration file. `.codex/hooks.json`, `.codex/config.toml`, `.mcp.json`,
   `save-session.sh` and Claude-owned stores stay byte-identical to the implementation baseline
   `54004f44`.
@@ -49,7 +51,9 @@ therefore pins the measured facts as regressions and changes no configuration.
   thread is the wrapper's busy exit. Removing it needs a decision the canonical spec forbids here:
   (a) change the wrapper's busy behavior, (b) disable the Codex registration, (c) an HTTP broker or
   shared backend (issues I-1). "Exactly once" in the 2026-08-29 text is read as an observation,
-  "at most once per thread", not a promise of this change.
+  "at most once per thread", not a promise of this change. It also carries the observations left open
+  here: how many times the wrapper starts per interactive-host thread, and whether the workspace
+  `.mcp.json` is loaded through executor capability discovery (`analysis/host-evidence.md` §4 U5, U6).
 - **SDD agent-save handler on Codex.** Its matcher `Write|Edit|MultiEdit|NotebookEdit` never matches
   the names Codex is known to emit (issues I-2).
 

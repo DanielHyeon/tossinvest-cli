@@ -163,8 +163,9 @@ a119 디렉터리 `git status` 빈 출력(리뷰어 쓰기 0).
 | Isolation, redaction, atomic persistence | `tools/sdd-history/test_codex_session_save.py` `:76` Codex store only · `:134` bounded text + redaction · `:217` malformed stdin fails open · `:226` atomic publish, 5 backups · `:256` concurrent no-wait/no-overwrite | 5 tests, RC=0 (whole file: 7 tests, RC=0) |
 | Unchanged tool result | `test_codex_host_event_coverage.CodexSaverToolResultTests` — stdout empty on success (per fixture name) and on the failure path | 2 tests, RC=0 |
 
-Isolation of the runs themselves: every test above works in a `tempfile` repository with a fake `gbrain` binary or a
-copied saver. Measured around the run: the real project lock owner (`.sdd/gbrain-home/.gbrain/tossos-process.lock`,
+Isolation of the runs themselves: every test above works in a `tempfile` repository — the `gbrain` tests with a copied wrapper
+and a fake `gbrain` binary, the saver tests by running the real `.codex/hooks/save_session.py` against a temporary
+git repository (wording corrected after the task 3.4 review, finding A10). Measured around the run: the real project lock owner (`.sdd/gbrain-home/.gbrain/tossos-process.lock`,
 `pid`/`command`) was identical before and after and the owner process was still alive; the real
 `.codex-context/session-summary.md` mtime was unchanged.
 
@@ -180,3 +181,61 @@ Byte identity against `54004f44` (sha256 of `git show 54004f44:<f>`, `git show H
 
 Function Logic Map: not-applicable — no existing Go or Python function body changed; the change adds two test modules,
 two JSON fixtures and one harness script under the change directory (`analysis/code-context/evidence-reconciliation.md`).
+
+---
+
+# Post-implementation review (task 3.4) — 2026-09-26
+
+- Scope: `c202b804` (3.1), `2fd6dfc3` (3.2), `d76d9e18` (3.3); base `54004f44`.
+- Voices, each a separate read-only sub-agent context (Claude Opus), apart from the implementing teammate:
+  - **A — independent adversarial review.** It re-ran every committed claim and ran its own mutations E1–E12 on temp copies,
+    one at a time.
+  - **G — gstack `review` pre-landing lens, as a substitute.** `autoplan`/`review` are interactive pipelines and cannot ask
+    questions in this autonomous session. Voice G read `~/.agents/skills/gstack/review/checklist.md` and applied Pass 1
+    (critical) and Pass 2 (informational). This follows the a114 precedent (`archive/2026-09-25-a114-…/review.md` §1).
+  - Codex was not used; this is not `[codex-unavailable]`. Codex model calls are a side effect this change does not take (as in 2.3).
+- Verdicts: A **PASS-with-fixes** (blocking 0 · should-fix 3 · note 8); G **PASS** (critical 0 · informational 4).
+  Both reproduced the committed numbers and confirmed that neither wrote to the repository.
+
+| id | sev | finding | disposition |
+| --- | --- | --- | --- |
+| A1 | should-fix | The saver has three exits. The lock-contention exit (`save_session.py` `if lock is None: return 0`) had no stdout pin; mutation E9 survived. The paths had been read by hand; logic-map is Go-only. | **Accepted.** New test `test_lock_contention_exit_leaves_stdout_empty` holds the lock with `fcntl` and asserts empty stdout and no summary written (proves the exit was taken). Harness M6 added. |
+| A2 / G1 | should-fix / info | The anchoring test was lexical: `^Bash\|apply_patch$` (E2) and `^(Bash\|apply_patch\|.*)$` (E1) passed. The non-goal "no name not established by a fixture" had no pin. | **Accepted.** The anchoring test now probes `x<name>` and `<name>x` under `re.search`. New `test_matcher_admits_no_name_the_fixture_has_not_established` checks §2.2 model-side names and the SDD handler names; any name later established by the fixture drops out of the probes automatically. Harness M7 (`.*`) and M8 (precedence) added. |
+| A3 | should-fix (doc) | "A PostToolUse hook's stdout is read by the host as a decision" was stated as fact without a source. | **Accepted.** `proposal.md`, `design.md` and the test docstring now call it a precaution, unobserved for Codex `async` hooks. |
+| A4 / G2 | note / info | The registration classifier misses shell and launcher forms (`bash -lc`, `/usr/bin/env gbrain`, `python3 -m`). | **Recorded, no change.** Speculative. The realistic raw form (`$GBRAIN_BIN serve`) and `/usr/bin/env python3 <wrapper>` are caught. The pin covers the direct form only. |
+| A5 | note | The raw-`gbrain` pin covers the project layer only; the user-global layer is not pinned; `outside_repository_wrapper_registrations` is never asserted. | **Recorded.** User-global config is outside the repository and this change (§3.1 counted 0 there on 2026-09-25). Left for follow-up 2. |
+| A6 | note | Fixture sanitization is partial: free-text host fields; `~`, backslashes and 8-character session prefixes pass; the registration fixture has no sanitization test. | **Recorded, no change.** Both fixtures are committed and reviewed; their content is clean (leak scan by A). A stricter schema is a follow-up. |
+| A7 | note | In the per-name subTest loop, the file-exists assertion was vacuous after the first name. | **Accepted.** `.codex-context` is removed before each name. |
+| A8 / G3 | note / info | The harness never asserted `testsRun > 0`, and it leaked a `/dev/null` handle. | **Accepted.** `failures()` returns the run count, the harness stops when it is 0, and it uses `with open(os.devnull)`. |
+| A9 | note | U5 and U6 map to follow-up 2, but the proposal text did not carry them. | **Accepted.** One sentence added to proposal follow-up 2. |
+| A10 | note | review.md 3.2 said "or a copied saver"; the saver tests run the real saver against a temp repo. | **Accepted.** Wording corrected in place. |
+| A11 | note | `host-evidence.md:14` kept an absolute system path, against the document's own rule. | **Accepted.** Replaced with a description. |
+| G4 | info | §4 and the 3.2 block are English inside mostly Korean documents. | **No change.** a119 documents are kept in English by instruction; the Korean parts date from 2.2/2.3. |
+
+Proposal and design edits are wording only. They reflect review decisions, which the WORKFLOW exempts from re-review; no
+spec-delta Requirement changed.
+
+## Verification after the fixes (2026-09-26, raw output via `rtk proxy`)
+
+| Command | Result |
+| --- | --- |
+| `python3 -m unittest tools/sdd-history/test_codex_host_event_coverage.py tools/sdd/test_codex_gbrain_registration.py` | 12 tests OK (7 + 5), RC=0 |
+| `TMPDIR=<scratchpad> python3 -W default analysis/harness/mutate_codex_config.py` | M0 control 0 failing (ran 12); M1–M8 failing 1·4·3·4·4·1·12·2 (subTests counted one by one); SURVIVED none; RC=0; no ResourceWarning; real `.codex/*` sha256 and `.codex-context/` listing unchanged |
+| `make sdd-test` | RC=0 — 15 · 452 (skip 1) · 76 · 29 · 16 · 18, go ok |
+| `openspec validate a119-… --strict --no-interactive` (installed 1.4.1) | valid |
+| `openspec validate --all --strict --no-interactive` | 58 passed, 0 failed |
+| `python3 tools/sdd/check_agent_config_sync.py` | RC=0, synchronized |
+| `make sdd-sync` (before the fixes, at `d76d9e18`) | RC=2. The CodeGraph step completed; the CodeGraphContext step failed on a kuzu `Could not set lock on file` (another process holds the DB; advisory, the same failure as in a114); GBrain was busy (owned by a live session) and kept its previous freshness |
+| `make sdd-check` (right after) | RC=0 — the CodeGraph hard-evidence index matches the worktree; the CGC and GBrain advisory indexes are warned as stale |
+
+**Open for the Manager — gate step 5 is expected to fail.** `python3 tools/logic-map/check_analysis.py --change a119-…`
+returned RC=1 at `d76d9e18`. The window runs from base `54004f44` to the working tree and holds 27 commits from other
+changes. It requires 8 Go functions that a119 never touched: `cmd/tossctl/console.go:runConsole`, two
+`cmd/tossctl/console_test.go` tests, one `a108_publication_is_total_test.go` test, and
+`internal/strategyprojectionrpc/transport_unix.go` `reclaimStaleControlDirectory`, `verifyStaleSocketShape`,
+`projectionSocketAccepts` and `Dial` (a113/a114 work). a119 has no `revision: current` bundle, so `--record-landing`
+cannot narrow the window. This is the same step-5 policy block that the pending archive candidates hit (base behind
+later work, zero bundles). It is not fixable inside a119 without rewriting its base or borrowing other changes' evidence.
+The Manager decides.
+
+Task 3.4 stays **unchecked**: the final gate and Manager acceptance are still to come.

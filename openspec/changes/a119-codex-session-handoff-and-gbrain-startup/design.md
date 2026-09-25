@@ -68,8 +68,9 @@ Draft regressions (kept on branch `wip/a119-3.1` until the freeze is granted):
 2. `tools/sdd-history/test_codex_host_event_coverage.py`:
    - matcher anchoring;
    - a fixture schema with no free text, paths or session ids;
-   - saver stdout stays empty on both the success and the failure path. This is new: a PostToolUse
-     hook's stdout is read by the host as a decision.
+   - saver stdout stays empty on all three exits (success, exception warning, lock contention). This is
+     new and precautionary: a PostToolUse hook's stdout may be read by the host as a decision, which is
+     unobserved for Codex `async` hooks.
 3. `tools/sdd/fixtures/codex_gbrain_registration.json` and `tools/sdd/test_codex_gbrain_registration.py`:
    - exactly one enabled wrapper entry;
    - no Codex server launches raw `gbrain` (flock bypass);
@@ -84,6 +85,9 @@ RED is defined by mutating copies of the real files
 - add a second wrapper;
 - replace the wrapper with a raw `gbrain`;
 - make the saver print to stdout.
+
+Added after the task 3.4 review (2026-09-26): M6 prints only on the lock-contention exit, M7 adds `.*` to
+the matcher, M8 splits the anchors by precedence (`^Bash|apply_patch$`).
 
 Task 3.2 evidence map:
 
