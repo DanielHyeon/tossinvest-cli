@@ -1,6 +1,6 @@
 {
   "file": "internal/strategyprojectionrpc/transport_unix.go",
-  "source_sha256": "dc2653c67f1bcd208ec81e1c375f1b9ba72499e5615a2f6fe15bc79904da7559",
+  "source_sha256": "177e64f9b820e6f760f77363c172e04d2bb4afdcb44983f0ff6dbbbb0890c3e6",
   "package": "strategyprojectionrpc",
   "function": "reclaimStaleControlDirectory",
   "signature": "reclaimStaleControlDirectory(params=1, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 334,
+    "line": 337,
     "column": 2
   },
   "branches": [
@@ -113,7 +113,7 @@
       "id": "B13",
       "kind": "if",
       "at": {
-        "line": 308,
+        "line": 311,
         "column": 2
       }
     },
@@ -121,7 +121,7 @@
       "id": "B14",
       "kind": "if",
       "at": {
-        "line": 310,
+        "line": 313,
         "column": 3
       }
     },
@@ -129,7 +129,7 @@
       "id": "B15",
       "kind": "range",
       "at": {
-        "line": 325,
+        "line": 328,
         "column": 2
       }
     },
@@ -137,7 +137,7 @@
       "id": "B16",
       "kind": "if",
       "at": {
-        "line": 326,
+        "line": 329,
         "column": 3
       }
     },
@@ -145,7 +145,7 @@
       "id": "B17",
       "kind": "if",
       "at": {
-        "line": 330,
+        "line": 333,
         "column": 2
       }
     }
@@ -196,35 +196,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 298,
+        "line": 300,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 311,
+        "line": 314,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 327,
+        "line": 330,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 331,
+        "line": 334,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 333,
+        "line": 336,
         "column": 2
       }
     }
@@ -441,7 +441,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 298,
+        "line": 300,
         "column": 11
       },
       "text": "errors.New"
@@ -449,7 +449,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 309,
+        "line": 312,
         "column": 16
       },
       "text": "openVerifiedDescriptor"
@@ -457,7 +457,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 309,
+        "line": 312,
         "column": 39
       },
       "text": "DescriptorPath"
@@ -465,7 +465,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 311,
+        "line": 314,
         "column": 11
       },
       "text": "fmt.Errorf"
@@ -473,7 +473,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 313,
+        "line": 316,
         "column": 7
       },
       "text": "file.Close"
@@ -481,7 +481,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 325,
+        "line": 328,
         "column": 23
       },
       "text": "append"
@@ -489,7 +489,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 325,
+        "line": 328,
         "column": 38
       },
       "text": "DescriptorPath"
@@ -497,7 +497,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 326,
+        "line": 329,
         "column": 13
       },
       "text": "os.Remove"
@@ -505,7 +505,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 326,
+        "line": 329,
         "column": 45
       },
       "text": "errors.Is"
@@ -513,7 +513,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 327,
+        "line": 330,
         "column": 11
       },
       "text": "fmt.Errorf"
@@ -521,7 +521,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 330,
+        "line": 333,
         "column": 12
       },
       "text": "os.Remove"
@@ -529,7 +529,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 330,
+        "line": 333,
         "column": 50
       },
       "text": "errors.Is"
@@ -537,7 +537,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 331,
+        "line": 334,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -638,28 +638,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 309,
+        "line": 312,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 313,
+        "line": 316,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 326,
+        "line": 329,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 330,
+        "line": 333,
         "column": 5
       }
     }

@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyprojectionrpc/transport_unix.go",
-  "source_sha256": "dc2653c67f1bcd208ec81e1c375f1b9ba72499e5615a2f6fe15bc79904da7559",
+  "source_sha256": "177e64f9b820e6f760f77363c172e04d2bb4afdcb44983f0ff6dbbbb0890c3e6",
   "package": "strategyprojectionrpc",
   "function": "verifyStaleSocketShape",
   "signature": "verifyStaleSocketShape(params=1, results=2)",
   "start": {
-    "line": 361,
+    "line": 364,
     "column": 1
   },
   "end": {
-    "line": 371,
+    "line": 374,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 363,
+        "line": 366,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 367,
+        "line": 370,
         "column": 2
       }
     }
@@ -34,21 +34,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 364,
+        "line": 367,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 368,
+        "line": 371,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 370,
+        "line": 373,
         "column": 2
       }
     }
@@ -57,7 +57,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 362,
+        "line": 365,
         "column": 15
       },
       "text": "os.Lstat"
@@ -65,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 363,
+        "line": 366,
         "column": 19
       },
       "text": "info.Mode"
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 363,
+        "line": 366,
         "column": 53
       },
       "text": "info.Mode"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 363,
+        "line": 366,
         "column": 88
       },
       "text": "Perm"
@@ -89,7 +89,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 363,
+        "line": 366,
         "column": 88
       },
       "text": "info.Mode"
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 364,
+        "line": 367,
         "column": 15
       },
       "text": "errors.New"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 366,
+        "line": 369,
         "column": 20
       },
       "text": "info.Sys"
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 367,
+        "line": 370,
         "column": 13
       },
       "text": "ownedByEffectiveUser"
@@ -121,7 +121,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 368,
+        "line": 371,
         "column": 15
       },
       "text": "errors.New"
@@ -131,14 +131,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 362,
+        "line": 365,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 366,
+        "line": 369,
         "column": 2
       }
     }

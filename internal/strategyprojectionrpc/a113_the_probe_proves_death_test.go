@@ -18,8 +18,11 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
+	"syscall"
 	"testing"
+	"time"
 )
 
 // TestTheReclaimRefusesALiveSocketWhoseOwnerWriteBitWasStripped 는 a109
@@ -77,11 +80,18 @@ func TestTheReclaimRefusesALiveSocketWhoseOwnerWriteBitWasStripped(t *testing.T)
 		t.Fatalf("주인의 socket 이 더는 수락하지 않는다: %v", err)
 	}
 	_ = conn.Close()
-	accepted, err := listener.Accept()
-	if err != nil {
-		t.Fatalf("연결이 주인의 listener 에 도착하지 않았다: %v", err)
+	// 대기열 맨 앞에는 회수 probe 가 남긴 연결이 있다(post-review P2-2). 우리 연결은 그
+	// 다음이므로 둘 다 받아야 「우리 연결이 주인의 listener 에 도착했다」가 된다.
+	if err := listener.(*net.UnixListener).SetDeadline(time.Now().Add(2 * time.Second)); err != nil {
+		t.Fatal(err)
 	}
-	_ = accepted.Close()
+	for i := 0; i < 2; i++ {
+		accepted, err := listener.Accept()
+		if err != nil {
+			t.Fatalf("연결 %d/2 가 주인의 listener 에 도착하지 않았다: %v", i+1, err)
+		}
+		_ = accepted.Close()
+	}
 }
 
 // a113ProbeInfo 는 회수가 넘기는 것과 같은 값 — 검증 시점의 FileInfo — 을 만든다.
@@ -308,13 +318,12 @@ func TestTheReclaimHandsTheProbeTheInodeItVerified(t *testing.T) {
 	}
 }
 
-// TestTheStaleProbeChecksTheNameOnBothSidesOfTheChmod 는 뮤테이션 N3 이 살아남은 자리의 구조 핀이다.
+// TestTheStaleProbeChecksTheNameOnBothSidesOfTheChmod 는 두 재확인의 구조 핀이다.
 //
-// chmod **뒤**의 재확인은 이름이 chmod 와 connect 사이에 바뀌는 경합에서만 일을 한다. 그
-// 경합은 결정적으로 만들 수 없고, 바뀐 파일 테스트(`TestTheStaleProbeRefusesASocketThatChangedUnderIt`)는
-// chmod **앞**의 재확인에서 먼저 걸린다 — 앞의 확인이 뒤의 확인을 가린다. 그래서 행동으로는
-// 뒤의 확인을 지워도 초록이다(원장 N3). 순서를 구문으로 못 박는다:
-// nil 검사 → 재확인 → chmod → 재확인 → 묻기.
+// chmod **앞**의 재확인은 행동으로 못 가린다 — 바뀐 파일은 뒤의 재확인이 받아도 결과가 같다
+// (원장 N3b). 그리고 호출만 세는 핀은 결과를 버리는 변이(`_, _ = sameVerifiedSocket(…)`)를
+// 통과시켰다(post-review P1-1, 원장 R1·R2). 그래서 순서와 함께 **각 재확인이 반환을 가르는가**를
+// 본다: 재확인은 `if dead, answered := sameVerifiedSocket(…); !answered { return !dead }` 모양이어야 한다.
 func TestTheStaleProbeChecksTheNameOnBothSidesOfTheChmod(t *testing.T) {
 	file, err := parser.ParseFile(token.NewFileSet(), "transport_probe_unix.go", nil, 0)
 	if err != nil {
@@ -330,25 +339,138 @@ func TestTheStaleProbeChecksTheNameOnBothSidesOfTheChmod(t *testing.T) {
 		t.Fatal("staleProjectionSocketAccepts 를 찾지 못했다")
 	}
 	var order []string
+	gated := 0
 	ast.Inspect(probe.Body, func(node ast.Node) bool {
+		if stmt, ok := node.(*ast.IfStmt); ok && a113IsGatingRecheck(stmt) {
+			gated++
+		}
 		call, ok := node.(*ast.CallExpr)
 		if !ok {
 			return true
 		}
-		switch fun := call.Fun.(type) {
-		case *ast.Ident:
-			if fun.Name == "sameVerifiedSocket" || fun.Name == "projectionSocketAccepts" {
+		if fun, ok := call.Fun.(*ast.Ident); ok {
+			switch fun.Name {
+			case "sameVerifiedSocket", "chmodStaleSocket", "projectionSocketAccepts":
 				order = append(order, fun.Name)
-			}
-		case *ast.SelectorExpr:
-			if pkg, ok := fun.X.(*ast.Ident); ok && pkg.Name == "os" && fun.Sel.Name == "Chmod" {
-				order = append(order, "os.Chmod")
 			}
 		}
 		return true
 	})
-	want := []string{"sameVerifiedSocket", "os.Chmod", "sameVerifiedSocket", "projectionSocketAccepts"}
+	want := []string{"sameVerifiedSocket", "chmodStaleSocket", "sameVerifiedSocket", "projectionSocketAccepts"}
 	if strings.Join(order, " → ") != strings.Join(want, " → ") {
 		t.Fatalf("probe 의 순서 = %v, want %v", order, want)
+	}
+	if gated != 2 {
+		t.Fatalf("반환을 가르는 재확인 = %d개, want 2 — 결과를 버리는 재확인은 재확인이 아니다", gated)
+	}
+}
+
+// a113IsGatingRecheck 는 `if dead, answered := sameVerifiedSocket(…); !answered { return !dead }` 인가.
+func a113IsGatingRecheck(stmt *ast.IfStmt) bool {
+	init, ok := stmt.Init.(*ast.AssignStmt)
+	if !ok || len(init.Lhs) != 2 || len(init.Rhs) != 1 {
+		return false
+	}
+	call, ok := init.Rhs[0].(*ast.CallExpr)
+	if !ok {
+		return false
+	}
+	if fun, ok := call.Fun.(*ast.Ident); !ok || fun.Name != "sameVerifiedSocket" {
+		return false
+	}
+	dead, ok1 := init.Lhs[0].(*ast.Ident)
+	answered, ok2 := init.Lhs[1].(*ast.Ident)
+	if !ok1 || !ok2 {
+		return false
+	}
+	cond, ok := stmt.Cond.(*ast.UnaryExpr)
+	if !ok || cond.Op != token.NOT {
+		return false
+	}
+	if x, ok := cond.X.(*ast.Ident); !ok || x.Name != answered.Name {
+		return false
+	}
+	if len(stmt.Body.List) != 1 {
+		return false
+	}
+	ret, ok := stmt.Body.List[0].(*ast.ReturnStmt)
+	if !ok || len(ret.Results) != 1 {
+		return false
+	}
+	not, ok := ret.Results[0].(*ast.UnaryExpr)
+	if !ok || not.Op != token.NOT {
+		return false
+	}
+	x, ok := not.X.(*ast.Ident)
+	return ok && x.Name == dead.Name
+}
+
+// TestTheProductionChmodIsTheRealOne 는 seam 의 운영 값을 못 박는다 — 테스트가 갈아끼우는
+// 자리가 운영에서는 `os.Chmod` 그 자체여야 한다.
+func TestTheProductionChmodIsTheRealOne(t *testing.T) {
+	if reflect.ValueOf(chmodStaleSocket).Pointer() != reflect.ValueOf(os.Chmod).Pointer() {
+		t.Fatal("chmodStaleSocket 의 운영 값이 os.Chmod 가 아니다")
+	}
+}
+
+// a113SwapChmod 는 chmod 자리를 테스트 동안만 갈아끼운다.
+func a113SwapChmod(t *testing.T, chmod func(string, os.FileMode) error) {
+	t.Helper()
+	original := chmodStaleSocket
+	chmodStaleSocket = chmod
+	t.Cleanup(func() { chmodStaleSocket = original })
+}
+
+// TestTheStaleProbeRefusesANameSwappedDuringTheChmod 는 chmod **뒤** 재확인의 행동 핀이다
+// (post-review P1-1 — 원장 N3·R1). chmod 가 끝난 순간 이름이 다른 파일로 바뀌면 그 파일에
+// 연결해 얻은 답은 검증한 파일의 답이 아니다 — 생존으로 읽어야 한다.
+func TestTheStaleProbeRefusesANameSwappedDuringTheChmod(t *testing.T) {
+	dir := shortRuntimeDir(t)
+	a108MakeControlDir(t, dir)
+	a108DeadSocketWithMode(t, dir, 0o600)
+	before := a113ProbeInfo(t, SocketPath(dir))
+	successor := filepath.Join(ControlDirectory(dir), stagingPrefix+"s0000002")
+	a113SwapChmod(t, func(path string, mode os.FileMode) error {
+		if err := os.Chmod(path, mode); err != nil {
+			return err
+		}
+		// 죽은 후계자를 같은 이름에 덮는다 — 연결하면 거부(=사망)라고 답할 파일이다.
+		listener, err := net.Listen("unix", successor)
+		if err != nil {
+			return err
+		}
+		listener.(*net.UnixListener).SetUnlinkOnClose(false)
+		_ = listener.Close()
+		return os.Rename(successor, path)
+	})
+	if !staleProjectionSocketAccepts(SocketPath(dir), before) {
+		t.Error("chmod 중 바뀐 이름의 답을 검증한 파일의 사망으로 읽었다 — 회수는 그 파일을 지운다")
+	}
+}
+
+// TestTheStaleProbeReadsAChmodFailureConservatively 는 chmod 실패 두 갈래다(원장 R3):
+// 이름이 사라졌으면 사망(주인의 Close 와 같다), 그 밖의 실패는 물어보지 못한 것 = 생존.
+func TestTheStaleProbeReadsAChmodFailureConservatively(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"사라졌으면 사망", &os.PathError{Op: "chmod", Err: syscall.ENOENT}, false},
+		{"권한 오류면 생존", &os.PathError{Op: "chmod", Err: syscall.EPERM}, true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			dir := shortRuntimeDir(t)
+			a108MakeControlDir(t, dir)
+			a108DeadSocketWithMode(t, dir, 0o600)
+			before := a113ProbeInfo(t, SocketPath(dir))
+			a113SwapChmod(t, func(path string, _ os.FileMode) error {
+				test.err.(*os.PathError).Path = path
+				return test.err
+			})
+			if got := staleProjectionSocketAccepts(SocketPath(dir), before); got != test.want {
+				t.Errorf("staleProjectionSocketAccepts = %v, want %v", got, test.want)
+			}
+		})
 	}
 }

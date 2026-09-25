@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyprojectionrpc/transport_unix.go",
-  "source_sha256": "dc2653c67f1bcd208ec81e1c375f1b9ba72499e5615a2f6fe15bc79904da7559",
+  "source_sha256": "177e64f9b820e6f760f77363c172e04d2bb4afdcb44983f0ff6dbbbb0890c3e6",
   "package": "strategyprojectionrpc",
   "function": "Dial",
   "signature": "Dial(params=2, results=2)",
   "start": {
-    "line": 405,
+    "line": 408,
     "column": 1
   },
   "end": {
-    "line": 436,
+    "line": 439,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 407,
+        "line": 410,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 412,
+        "line": 415,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 421,
+        "line": 424,
         "column": 2
       }
     }
@@ -42,35 +42,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 408,
+        "line": 411,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 413,
+        "line": 416,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 422,
+        "line": 425,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 433,
+        "line": 436,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 435,
+        "line": 438,
         "column": 2
       }
     }
@@ -79,7 +79,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 406,
+        "line": 409,
         "column": 21
       },
       "text": "readDescriptor"
@@ -87,7 +87,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 406,
+        "line": 409,
         "column": 36
       },
       "text": "strings.TrimSpace"
@@ -95,7 +95,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 413,
         "column": 16
       },
       "text": "filepath.Join"
@@ -103,7 +103,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 410,
+        "line": 413,
         "column": 30
       },
       "text": "filepath.Dir"
@@ -111,7 +111,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 411,
+        "line": 414,
         "column": 15
       },
       "text": "os.Lstat"
@@ -119,7 +119,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 412,
+        "line": 415,
         "column": 19
       },
       "text": "info.Mode"
@@ -127,7 +127,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 412,
+        "line": 415,
         "column": 53
       },
       "text": "Perm"
@@ -135,7 +135,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 412,
+        "line": 415,
         "column": 53
       },
       "text": "info.Mode"
@@ -143,7 +143,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 413,
+        "line": 416,
         "column": 15
       },
       "text": "errors.New"
@@ -151,7 +151,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 421,
+        "line": 424,
         "column": 6
       },
       "text": "projectionSocketAccepts"
@@ -159,7 +159,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 422,
+        "line": 425,
         "column": 15
       },
       "text": "errors.New"
@@ -167,7 +167,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 433,
+        "line": 436,
         "column": 11
       },
       "text": "DialContext"
@@ -177,28 +177,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 406,
+        "line": 409,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 410,
+        "line": 413,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 411,
+        "line": 414,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 431,
+        "line": 434,
         "column": 2
       }
     }

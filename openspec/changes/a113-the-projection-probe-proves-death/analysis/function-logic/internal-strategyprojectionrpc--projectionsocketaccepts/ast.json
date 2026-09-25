@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyprojectionrpc/transport_unix.go",
-  "source_sha256": "dc2653c67f1bcd208ec81e1c375f1b9ba72499e5615a2f6fe15bc79904da7559",
+  "source_sha256": "177e64f9b820e6f760f77363c172e04d2bb4afdcb44983f0ff6dbbbb0890c3e6",
   "package": "strategyprojectionrpc",
   "function": "projectionSocketAccepts",
   "signature": "projectionSocketAccepts(params=1, results=1)",
   "start": {
-    "line": 393,
+    "line": 396,
     "column": 1
   },
   "end": {
-    "line": 403,
+    "line": 406,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 395,
+        "line": 398,
         "column": 2
       }
     },
@@ -25,19 +25,12 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 399,
+        "line": 402,
         "column": 2
       }
     }
   ],
   "returns": [
-    {
-      "kind": "return",
-      "at": {
-        "line": 397,
-        "column": 3
-      }
-    },
     {
       "kind": "return",
       "at": {
@@ -48,7 +41,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 402,
+        "line": 403,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 405,
         "column": 2
       }
     }
@@ -57,7 +57,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 394,
+        "line": 397,
         "column": 15
       },
       "text": "net.DialTimeout"
@@ -65,7 +65,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 396,
+        "line": 399,
         "column": 7
       },
       "text": "conn.Close"
@@ -73,7 +73,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 399,
+        "line": 402,
         "column": 5
       },
       "text": "errors.Is"
@@ -81,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 399,
+        "line": 402,
         "column": 42
       },
       "text": "errors.Is"
@@ -91,14 +91,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 394,
+        "line": 397,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 396,
+        "line": 399,
         "column": 3
       }
     }

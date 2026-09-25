@@ -295,7 +295,10 @@ func reclaimStaleControlDirectory(engineDir string) error {
 		// 생사는 **묻는다** — 권한 비트로 추정하지 않는다(a113). 검증한 그 inode 를 넘겨야
 		// probe 가 chmod 앞뒤로 「아직 그 파일인가」를 확인할 수 있다.
 		if staleProjectionSocketAccepts(socketPath, socketInfo) {
-			return errors.New("strategy projection runtime: projection owner is still alive")
+			// 「살아 있다」에는 「죽었다고 증명하지 못했다」가 함께 든다(다른 inode·chmod 실패·
+			// 모르는 연결 오류). 둘 다 지우지 않는 쪽이므로 한 문장으로 말하되 그 사실을 적는다.
+			return errors.New("strategy projection runtime: projection owner is still alive " +
+				"(or its death could not be proven)")
 		}
 	}
 	// 여기 왔다면 주인은 죽었다: socket이 없으면 listener도 없고(Start는 listen이

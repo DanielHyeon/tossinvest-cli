@@ -21,9 +21,9 @@
   회수 B11·B12 두 줄 · 주석 정정.
 - [x] 1.3 뮤테이션 N1~N6 적용·격추 측정(원장 `mutation-ledger.md`), N6 은 AST 핀.
 - [x] 1.4 FLM 구현 후 재최신화(AST 재생성·분기 재번호) + `check_analysis.py` rc 0.
-- [ ] 1.5 검증: `go test -race -count=1 ./internal/strategyprojectionrpc/...`, cmd/tossctl 재부착 회귀,
+- [x] 1.5 검증: `go test -race -count=1 ./internal/strategyprojectionrpc/...`, cmd/tossctl 재부착 회귀,
   `make vet`, `make lint`, `make test`.
-- [ ] 1.6 구현 후 gstack `review`(또는 독립 서브에이전트) → review.md §1.
+- [x] 1.6 구현 후 gstack `review`(또는 독립 서브에이전트) → review.md §1.
 - [ ] 1.7 착지 기록(`--record-landing`) 커밋.
 
 ## 2. 게이트 (Manager)

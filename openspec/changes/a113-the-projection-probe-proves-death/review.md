@@ -62,3 +62,24 @@ freeze 종결 — 구현 착수.
 - 설정·DB·journal 변경과 rollback: 없음 — 회수 판정만. rollback = 커밋 revert(디스크 형식 무변경)
 - 안전 불변식 §0 위반 여부 검토: 통과 — 주문·손절·원장 무접촉, 사망 판정을 보수 방향(추정 제거)으로만 바꾼다.
   조회 클라이언트는 여전히 디스크를 바꾸지 않는다.
+
+## §1 구현 후 리뷰 (2026-09-25 — ed3cb1d7)
+
+구성: 독립 서브에이전트(Opus, 별도 컨텍스트, 읽기 전용 — gstack `review` 의 pre-landing 관점을
+대체. codex 적대 패스는 이 자율 세션에서 쓰지 않았다). 리뷰어는 저장소 사본에서 뮤테이션을 재현했다
+(대조군 rc=0, 원장 N1~N7 전부 일치).
+
+| id | 발견 | 판결 → 반영 |
+| --- | --- | --- |
+| P1-1 | 순서 핀이 호출만 세서 재확인 **결과를 버리는** 변이 R1·R2 가 생존 | 수용 → chmod seam(`chmodStaleSocket`, 운영 값 `os.Chmod` 포인터 핀) + chmod 중 이름 교체 행동 테스트 + 「재확인이 반환을 가른다」 구조 핀. R1·R2 사망 |
+| P2-1 | chmod ENOENT·post-check `!dead` 분기 미시험(R3 생존) | 수용 → chmod 실패 두 갈래 테스트(ENOENT=사망·EPERM=생존). R3·R3b 사망 |
+| P2-2 | Accept 가 probe 의 연결을 받아 단정이 과장 | 수용 → 두 연결을 받는다 |
+| P2-3 | control 디렉터리 두 번 stat | 기록 → issues R4 (a108 원본, 편집 지점 밖) |
+| P2-4 | "still alive" 가 「증명 못 함」도 포함 | 수용 → 문구에 "(or its death could not be proven)" |
+| P2-5 | socket uid 절은 비root 로 못 죽임 | 기록 → 원장 알려진 생존(a108 이래) |
+
+검증 OK(리뷰어): 9개 unix GOOS `go vet`·windows build clean, `-count=5` 무flake, AST 핀의 상대 경로가
+패키지 디렉터리에서 성립, 산 socket unlink 경로 없음, 죽은 잔재 영구 거부 없음, chmod 가 group/other 를
+넓히지 않음, `Dial` 은 chmod 하지 않음.
+
+2판 뮤테이션: 14/14 사망(`mutation-ledger.md`).

@@ -1,7 +1,7 @@
 # Function Logic Map: `reclaimStaleControlDirectory`
 
 - Source: `internal/strategyprojectionrpc/transport_unix.go`
-- AST evidence: `ast.json` — **구현 후 재생성**(:244–334, 분기 17·반환 11). 편집 전 base `54004f44` 는 :243–330.
+- AST evidence: `ast.json` — **구현 후 재생성**(:244–337, 분기 17·반환 11). 편집 전 base `54004f44` 는 :243–330.
 - 구현 후 AST 대조: 분기 ID·종류·순서 17개 전부 동일(B11 이 `socketInfo, err :=` 대입 뒤의 `err != nil` 이 됐을 뿐), 호출 `projectionSocketAccepts` 가 `staleProjectionSocketAccepts` 로 바뀌었다.
 - Risk scan: `risk-pattern-report.md`
 
@@ -34,7 +34,7 @@ connect probe 이고, **a113 이후 권한 비트로 사망을 추정하지 않�
 | B9 | 낯선 이름 | 없음 | "…unexpected entries" (:282) | `TestStartRefusesControlDirectoryWithUnknownEntry` |
 | B10 | socket 이 있다 | — | — | 아래 두 행 |
 | B11 | `verifyStaleSocketShape` 실패 | 없음 | 그 error (:291) — **a113: FileInfo 를 함께 받는다** | `TestStartRefusesUnsafeLeftoverShapes/socket에_group…`·`/일반_파일`·`/hard_link` |
-| B12 | 생존 probe 가 true | 편집 전: connect 1회. **편집 후: chmod 0600 + Lstat + connect** | "projection owner is still alive" (:294) | `TestStartRefusesLiveSocketWithoutDescriptor`·`…PIDIsDead`·`TestStartRefusesLiveProjectionOwnerWithoutRemovingIt` + a113 신규 `TestTheReclaimRefusesALiveSocketWhoseOwnerWriteBitWasStripped` |
+| B12 | 생존 probe 가 true | 편집 전: connect 1회. **편집 후: chmod 0600 + Lstat + connect** | "projection owner is still alive (or its death could not be proven)" — a113 post-review P2-4 문구 정정 | `TestStartRefusesLiveSocketWithoutDescriptor`·`…PIDIsDead`·`TestStartRefusesLiveProjectionOwnerWithoutRemovingIt` + a113 신규 `TestTheReclaimRefusesALiveSocketWhoseOwnerWriteBitWasStripped` |
 | B13–B14 | descriptor 가 있고 형식 검증 실패 | 없음 | "stale descriptor is unsafe" (:307) | `TestStartRefusesUnsafeLeftoverShapes/descriptor_권한이_0600이_아니다` |
 | B15–B16 | 제거 루프, ErrNotExist 외 제거 실패 | staging·descriptor·socket unlink | "remove stale endpoint" (:323) | 없음(비root 로 결정적 재현 불가) |
 | B17 | rmdir 실패(ErrNotExist 외) | rmdir | "remove stale control directory" (:327) | 없음(같은 사유) |

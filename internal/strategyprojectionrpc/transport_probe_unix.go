@@ -21,6 +21,13 @@ import (
 	"os"
 )
 
+// chmodStaleSocket 은 회수 probe 가 권한을 되돌리는 호출이다. 운영 값은 `os.Chmod` 하나다.
+//
+// package 변수인 이유는 **chmod 와 connect 사이**를 테스트가 밟을 수 있어야 하기 때문이다
+// (a113 post-review P1-1). 그 사이에 이름이 바뀌는 경합, chmod 가 부재·권한 오류로 실패하는
+// 경우는 디스크만으로 결정적으로 만들 수 없고, 못 만드는 분기는 지워도 초록이다(원장 R1·R3).
+var chmodStaleSocket = os.Chmod
+
 // staleProjectionSocketAccepts 는 **회수 전용** 생존 질문이다 — a109 §1-fix F1·§2b.3 G7 원형판.
 //
 // 사망으로 읽는 것은 둘뿐이다: 연결 거부와 파일 부재. 예전 판정은 「owner 쓰기 비트가 없으면
@@ -60,7 +67,7 @@ func staleProjectionSocketAccepts(socketPath string, before os.FileInfo) bool {
 	if dead, answered := sameVerifiedSocket(socketPath, before); !answered {
 		return !dead
 	}
-	if err := os.Chmod(socketPath, 0o600); err != nil {
+	if err := chmodStaleSocket(socketPath, 0o600); err != nil {
 		return !errors.Is(err, os.ErrNotExist)
 	}
 	if dead, answered := sameVerifiedSocket(socketPath, before); !answered {

@@ -1,7 +1,7 @@
 # Function Logic Map: `Dial`
 
 - Source: `internal/strategyprojectionrpc/transport_unix.go`
-- AST evidence: `ast.json` — 구현 후 재생성(:405–436, 분기 3·반환 5). 코드 0줄 변경 — 줄 이동과 주석 정정뿐이다.
+- AST evidence: `ast.json` — 구현 후 재생성(:408–439, 분기 3·반환 5). 코드 0줄 변경 — 줄 이동과 주석 정정뿐이다.
 - Risk scan: `risk-pattern-report.md`
 
 **a113 은 이 함수를 편집하지 않는다.** 이 번들은 design 이 이 함수의 분기를 근거로 쓰기 때문에
@@ -43,6 +43,6 @@ connect(:417) 사이에 권한이 바뀌는 경합에서만 발동할 수 있었
 
 ## Safety conclusion
 
-- Safe edit boundary: 코드 편집 없음. 주석 한 문단(:417–418)만 정정 — 회수는 원시 앞에 권한 복원을 두고 여기는 묻기만 한다.
+- Safe edit boundary: 코드 편집 없음. 주석 한 문단(:420–421)만 정정 — 회수는 원시 앞에 권한 복원을 두고 여기는 묻기만 한다.
 - High-risk impact: no. 행동 차이는 위 경합 창 하나이고, 그때도 결과는 "client 를 주고 첫 Read 가
   실패" — 소비자 재부착(a109 D4)이 받는다.

@@ -32,3 +32,9 @@ a108 회수는 staging 엔트리를 probe 없이 지운다. 이 change 의 범�
 `internal/positionpolicyrpc/private_staging_unix.go:5-8` 는 "a108 확정 코드 — 원형은 수정하지
 않는다"고 적는다. a109 시점의 진술로는 참이지만 이제 원형도 chmod-then-probe 다. 파일 표면 밖이라
 고치지 않았다 — 다음에 그 파일을 만지는 change 가 한 줄 정정한다.
+
+### R4. control 디렉터리도 두 번 stat 한다 (post-review P2-3)
+
+`reclaimStaleControlDirectory` B1·B2 는 `os.Lstat`(모드)과 `unix.Lstat`(uid)를 따로 부른다 —
+socket 쪽에서 이 change 가 지운 모양과 같다. a108 원본 그대로이고 같은 uid 신뢰 경계 안이라
+저위험이며, B1·B2 는 이 change 의 편집 지점(B11·B12)이 아니다. 후속 change 가 `info.Sys()` 로 합친다.

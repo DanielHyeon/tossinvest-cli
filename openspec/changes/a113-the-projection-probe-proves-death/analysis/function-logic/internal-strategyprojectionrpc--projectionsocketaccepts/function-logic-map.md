@@ -1,7 +1,7 @@
 # Function Logic Map: `projectionSocketAccepts`
 
 - Source: `internal/strategyprojectionrpc/transport_unix.go`
-- AST evidence: `ast.json` — **구현 후 재생성**(:393–403, 분기 2·반환 3). 편집 전 base `54004f44` 는 :387–400, 분기 3·반환 4·호출 7 이었다.
+- AST evidence: `ast.json` — **구현 후 재생성**(:396–406, 분기 2·반환 3). 편집 전 base `54004f44` 는 :387–400, 분기 3·반환 4·호출 7 이었다.
 - 구현 후 AST 대조: B3(owner-write 추정, 편집 전 :396)과 그 `os.Lstat`·`Perm` 호출이 사라졌고 B1(성공)·B2(거부·부재)·종단(생존)은 그대로다.
 - Risk scan: `risk-pattern-report.md`
 

@@ -1,7 +1,7 @@
 # Function Logic Map: `verifyStaleSocketShape`
 
 - Source: `internal/strategyprojectionrpc/transport_unix.go`
-- AST evidence: `ast.json` — **구현 후 재생성**(:361–371, 분기 2·반환 3). 편집 전 base `54004f44` 는 :353–363.
+- AST evidence: `ast.json` — **구현 후 재생성**(:364–374, 분기 2·반환 3). 편집 전 base `54004f44` 는 :353–363.
 - 구현 후 AST 대조: 분기 2 동일. B2 의 입력이 두 번째 `unix.Lstat` 에서 같은 Lstat 의 `info.Sys().(*syscall.Stat_t)` 로 바뀌었다(freeze P2-1).
 - Risk scan: `risk-pattern-report.md`
 
@@ -31,7 +31,7 @@ a113 편집: 반환을 `error` 에서 `(os.FileInfo, error)` 로 넓혀 **검증
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
 | `os.Lstat` | 모양·권한 (symlink 안 따라감) | error → B1 | AST :354 |
-| `info.Sys().(*syscall.Stat_t)` + `ownedByEffectiveUser` (편집 전 `unix.Lstat`) | uid·nlink — 돌려주는 inode 와 같은 stat | 타입 단언 실패 → B2 | AST :366 |
+| `info.Sys().(*syscall.Stat_t)` + `ownedByEffectiveUser` (편집 전 `unix.Lstat`) | uid·nlink — 돌려주는 inode 와 같은 stat | 타입 단언 실패 → B2 | AST :369 |
 
 ## State mutations and fallbacks
 
