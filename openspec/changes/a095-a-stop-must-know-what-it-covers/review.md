@@ -529,3 +529,54 @@ proposal 「지금 열린 것들」은 **지금 거짓**이다. `alert_outbox`�
 - **C-3 · 관리 중인 포지션에 무보호 문구가 나갈 수 있다.** `exitwiring.go:107-110`의 본문은 `ExitEligible`와 무관하게 "손절·익절이 자동으로 걸려 있지 않다"고 적는다. 도달 가능성 **미확인**.
 
 **권고: FAIL.** P0 5건(§4 체류 1건 + 거짓 전제 4건). 거짓 전제 넷은 R1·R2·R3와 델타 SHALL 셋의 근거를 무너뜨린다.
+
+## 2.15 보이스 B(소비자·폭발반경 렌즈) 결과 — 지연 도착 (2026-09-25)
+
+> §2.14 와 같은 지위 — 2라운드 판정 뒤 도착, 3판 입력, Manager 재검증 전. 기준 HEAD `634cf3c5`, base `ec29dc72`.
+> 운영 원장 미열람(원장 수치의 현재성은 전부 미확인). review.md 미열람. **두 보이스가 서로 보지 않고 같은 거짓 전제
+> 셋(B2 도달 불가 · 증가분은 보호받는다 · `baseline_price` writer 는 하나가 아니다)에 수렴했다.**
+
+### P0 — freeze 차단
+
+**B-P0-1 · 기본 설정 엔진은 무관리 보유 하나만 있어도 신규 진입이 영구 차단된다.** R1이 들어가면 알림 기본값(off)과 `adoption.enabled=false`(기본값)인 엔진이 손으로 산 보유 하나를 발견하는 순간 durable `ENTRY_BLOCKED`로 올라간다. `exclude_symbols`에 의도적으로 넣은 종목도 똑같이 막힌다. 이 상태를 운영자가 풀 production 표면을 찾지 못했다.
+- 증거: `internal/config/notifications.go:31-34` "the zero value is `Enabled: false` … it wires no publisher" · `notifier.go:429-431` `if n.Publisher == nil { lastErr = …; break }`(재시도 없음) → `:570-572` `Gate.Block` → `:223-228` `owed && !sent → n.escalate` → `:382` `EscalateOperatingMode(…CriticalAlertUndelivered)` · `adoption.go:389-391` "It fires regardless of `adoption.enabled`" · `adoption.go:127-129` exclude 종목도 `unmanaged`, 사유 `:408` "deliberately left unprotected" · 해제: `Acknowledge`(`notifier.go:840-880`)는 `ReasonAlertUndelivered` 래치만 푼다, 운영 모드 완화는 OPERATOR·승인·audit 필요(`operating_mode.go:102-114`), 비테스트 `TransitionOperatingMode` 호출자는 `EscalateOperatingMode`(`:504`) 하나, CLI `engine_alerts.go:233-236` "⚠ 진입은 아직 막혀 있다".
+- 정본 exit-policy "`adoption.enabled`의 기본값은 false이며(SHALL — false에서의 동작은 무관리 보유 알림을 포함한 기존 동작과 동일하다)" 와 충돌, 안전 불변식 3(토글 OFF 동등성)과 충돌. 같은 결정을 명시한 선례: `exitwiring.go:87-89`, a091 `design.md:70-73`.
+- 틀린 문장: design:66, 69(최악을 「transport 가 죽은 동안」으로만) · design:47, tasks:155(「`Acknowledge`로만 해제」— 거짓) · tasks:136-137(6.4 「토글을 도입하지 않는다」— 기존 토글 둘의 OFF 동작 변경을 다루지 않음) · exclude/include 는 계획 전체에 0회.
+- 요구: 등급을 이벤트 종류가 아니라 **사실**로 가를 것. 운영자가 선택한 상태(off·exclude)는 critical 에서 뺄 것. 또는 정본 exit-policy SHALL 을 MODIFIED 로 바꾸고 사람 승인. ENTRY_BLOCKED 를 푸는 실제 경로 명시.
+
+**B-P0-2 · engine-safety 델타가 엔진이 직접 연 모든 포지션에 대해 거짓 critical 을 요구한다. R2-B2 의 전제도 거짓이다.**
+- 델타 `specs/engine-safety/spec.md:28-29` "편입 기록이 없다는 이유로 수량 증가 검사를 건너뛰어서는 안 된다 … 보호 상태가 없는 경우로 보고되어야 한다(SHALL)", 시나리오 `:53-55`. 엔진 진입 포지션은 편입 기록이 없지만 exit_state 와 손절이 있다(정본 exit-policy t0). 문자 그대로 구현하면 엔진이 연 모든 포지션에 거짓 critical, P0-1 과 겹치면 엔진이 자기 진입을 스스로 막는다.
+- 호출 조건 `adoption.go:108-111` `if p.ExitEligible() { if p.Adopted() { d.checkExternalIncrease(ctx, p) } … }`; B2 `:446` 은 `adoption_id` 있는 포지션에서만, `REFERENCES position_adoptions(id)`(`journal/adoption.go:92`) + `foreign_keys(on)`(`journal.go:223`) → 「기록 없음」(`ErrAdoptionNotFound`)은 구조적으로 도달 불가. 010170 은 이미 `adoption.go:135-137 → :152-155` `alertUnmanaged` 와 `exitloop.go:512-518` 로 간다.
+- 틀린 문장: proposal:167-168 · :219-220 · :256-257, design:342-343(「R1만으로는 … 010170은 여전히 안 보인다」— 거짓, R1 만으로도 critical) · design:183-184.
+- 요구: R2-B2 와 해당 SHALL·시나리오 삭제 또는 엔진 진입 포지션 명시 제외. 010170 이 오늘 왜 조용한지 코드로 재확인.
+
+**B-P0-3 · 「넷 다 같은 사실」이 거짓 — 수량 증가 알림의 증가분은 손절 보호를 받는다.** `adoption.go:461` "늘어난 수량은 원래 수량 기준으로 산정된 손절의 보호를 받는다" · 청산 수량은 현재 수량(`exitloop.go:1087` `RemainingQuantity: m.position.Quantity`) · 정본 「편입 후 외부 포지션 … 전량 청산이 RISK_REDUCING 의도로 발의」. 커지는 것은 R 의 크기이지 덮지 못하는 수량이 아니다. 틀린 문장: design:142 · :369, issues:103 · 델타 engine-safety:16-17 · D1(3) · D1(2)(「수동 매매를 아무리 많이 해도 한 번도 더 울지 않는다」는 R2 와 모순 — `event.go:252-255` 가 경고한 기전이 매수 방향으로 재현). 요구: grown 알림 별도 이벤트 종류·등급 별도 판단, tasks 1.11 을 freeze **전에**(결과는 이미 「다르다」).
+
+### P1 — freeze 전 수정 필요
+
+**B-P1-4 · R2 의 「다시 보고」는 정본 재알림 창 SHALL NOT 에 막힌다.** 정본 engine-safety `spec.md:674-676` · `DefaultRemindAfter = time.Hour`(`notifier.go:59`) · `outbox.go` `claimOwed` DELIVERED/ACKNOWLEDGED 창 안 → `ClaimSettled` · 키 `…|grown|<pid>`(`adoption.go:457`) 수량 무관 → 12주 알림 후 1시간 안에 32주면 미전송. 틀린 문장: 델타 engine-safety:24-26, design D2:166-170, tasks 2.4(가짜 notifier 로는 통과). a096~a099 는 계획 전체 0회. 요구: 키 설계를 정본 SHALL NOT 과 대조해 결정, 키를 늘리면 행마다 ack·차단이 붙는 비용도 적을 것.
+
+**B-P1-5 · 두 발신 자리가 같은 키를 써서 사유 행렬 SHALL 이 퇴행한다.** `exitloop.go:1608`·`adoption.go:419` 둘 다 `exit.position_unmanaged|<pid>`; exit 루프(5초)가 일반 문구로 행을 선점 → 대사 쪽 사유 행렬 본문(exclude·include 실패)은 창 안 `ClaimSettled` 미전송. 정본 exit-policy 사유 행렬 SHALL/SHALL NOT 과 충돌. 틀린 문장: design D2 :191-199. 요구: 두 자리의 키·문구 정리, dedupe 결과를 시험으로.
+
+**B-P1-6 · exit 루프 자리는 전이 상태 무알림을 지키지 않는다.** `exitloop.go:512-518` 에 RECONCILE·신선도 판정 없음(대사 쪽 `adoption.go:115-121` 은 "transition states: silent"). `adopt()` 가 시세 실패면 빈 집합(`adoption.go:179-186`) → `:143-150` 후보 전원 `alertUnmanaged`. 편입 성공 뒤에도 PENDING "관리하지 않는다" 행을 a098 배달 루프가 계속 보낸다 → `event.go:241-247` 계약 위반. 요구: 편입 예정·전이 상태의 critical 동작과 편입 뒤 outbox 행 처분을 설계에.
+
+**B-P1-7 · 네 번째 발신 자리(`exitwiring.go:104`)는 production 에서 도달 불가 — tasks 6.2a 전제 거짓.** `IngestExternalPositions` 의 production 호출자는 `reconcileloop.go:424` 하나이고 `:338` `d.ingest.Alert = nil`. 도달 가능한 자리의 오류는 삼켜진다(`reconcileloop.go:552-559`, `exitloop.go:1706-1712`). 어댑터 본문은 `exit_eligible` 을 무시하고 항상 "손절·익절이 자동으로 걸려 있지 않다"(`external.go:85-91` 주석과 어긋남). 틀린 문장: tasks 6.2a(:130-134), proposal:207-208, design:133-140 「발신 자리 4곳」. 요구: 도달 가능성 기준 재계수, 6.2a 삭제/재작성.
+
+**B-P1-8 · 손절 경로 체류와 a092 의존이 문서마다 반대로.** `workingSet`(`exitloop.go:493`) 안 `:518` 동기 `Notify` 가 `observe`(`:441`)보다 먼저; `claimAndDeliver` 는 `n.mu` 잡은 채(`:254-255`) 최대 3×10s(`DefaultPublishTimeout`, `alert_lease.go:17`)+2×2s = 34s → 재시작 직후 transport 죽어 있으면 무관리 N개 × 34s 동안 첫 손절 관측 지연. 대사 goroutine critical 도 같은 `n.mu` 경합. a092 미착지. 틀린 문장: proposal·design 은 a092 선행 미선언(tasks:172-174 만) · design D7:370 · tasks 안전표 :194 ↔ 6.2(:125-127) 모순. 요구: proposal 에 a092 착지를 hard gate 로, 안전표 정정.
+
+**B-P1-9 · a091 과 논리 충돌 — 「논리 의존 없음」 거짓.** a091 `design.md:68` 「`EventExitPositionUnmanaged`는 승격하지 않는다」(근거 `:70-73`); a091 미착지(미체크 30); a091 이 선택지 B 로 착지하면 표가 19종 → a095 tasks 2.2a 「19종(18+1)」 하드코딩이 병합 순서에 따라 틀린다. 틀린 문장: design:124·:372, proposal:290-291 ↔ tasks:180-182 모순; proposal:210-213 은 a091 핵심 반대 근거(게이트 영구 잠금) 미대응. 요구: a091 반대 결정 인용·뒤집는 근거, 19 는 +1 로.
+
+**B-P1-10 · 인용 줄번호·AST 산출물이 HEAD 기준 낡았다.** `source_sha256` 불일치: notifier `d5b3…`→`0bc7…`, event `acf3…`→`7732…`, apply_hook `88af…`→`459f…`. HEAD 위치: event.go `:200→:238`, `:279-298→:317-337`(18종 유지), `:309→:347`, `:190-194→:228-237`, `:212-217→:248-256`; notifier.go `:107/:111→:130/:134`, `:138/:139/:142→:161/:162/:165`, `:216-218→:378-398`, `:283-285→:570-572`, `:343→:840`; exitloop.go `:1501→:1607`, `:515→:518`, `:443→:441`; apply_hook.go `:684→:699`. design D1 도식(:40-48)에 a096 재알림 창·a097 claim 실패 래치·a098 배달 루프·a099 lease·10초 publish timeout 없음. 요구: base 재고정·FLM 재생성.
+
+**B-P1-11 · exit-policy 델타 「유효 손절 쓰기 경로는 하나」 SHALL 거짓.** `baseline_price` 는 래칫(`exit_state.go:553`, `:563`)·관측 refresh(`exit_observation_refresh.go:137`)가 쓴다; `apply_hook.go:694` 는 "the only **reset** writer for the four guarded execution-time columns". 계획이 인용한 475150 의 57,900 도 래칫이 쓴 값. 틀린 문장: 델타 exit-policy:45-46, proposal:240-243, design D4(1):277-281, issues I1(1) — 이대로 SHALL 이면 정본 Baseline Ratchet 과 모순. 요구: 「쓰기」→「reset」 정정, SHALL 문언 수정.
+
+**B-P1-12 · spec 델타와 tasks 불일치.** (a) 평단 불확실성 표기: 델타 exit-policy:17-19·시나리오 :25-27 SHALL ↔ issues I2:81-87 「원장만으로는 가를 수 없다 … 스키마 변경 필요」— 구현·시험 불가한 SHALL. (b) 총위험 보고 범위: Requirement 1 은 모든 보고로 읽히는데 tasks 는 3.1 하나만. (c) 「보호 상태가 고정한 수량」(engine-safety:14): exit_states 에 initial_quantity 없음(`core_domain.go:206-223`), task 없음.
+
+### P2 — 비차단
+
+- **B-P2-13:** 「로그도 없다」(proposal:140, design:104)는 오해 — `Notify` 가 등급 판정 전에 `logEvent`(base `:109`, HEAD `:132`), 콘솔 `console/portfolio.go:39-47` 이 `관리 외(미편입)` 표시. 「durable outbox 와 재시도가 없다」로 적을 것.
+- **B-P2-14:** 「transport 가 있다 — 4/13행 전달 시도」만으로는 성공 불명(`attempts>0` 은 전부 실패여도 성립). 원장 현재성 미확인.
+- **B-P2-15:** tasks 7.2 예측은 7주 전 원장 기반(미확인); 080220(2→12) 도 grown; exit 루프·대사 이중 발화 누락.
+- **B-P2-16:** D6 「outbox 와 재시도가 반복을 대신 책임진다」는 PENDING 행에만 참 — 전달된 행은 프로세스 래치로 재관측 없음.
+
+**권고: FAIL.** P0 셋은 거짓 전제이면서 안전 폭발반경(기본 설정 엔진의 진입 영구 차단 · 보호 중 포지션에 거짓 critical · 정본 SHALL 둘과 충돌). 등급을 이벤트 종류에서 **사실 단위**로 다시 설계하기 전에는 freeze 할 수 없다.
