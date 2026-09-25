@@ -3,7 +3,7 @@
 - Date: 2026-09-06
 - Scope: added `design.md`, `tasks.md`, and both proposed capability deltas;
   original proposal and canonical specifications read as compatibility context.
-- Method: installed `/home/daniel/.agents/skills/gstack/review/SKILL.md` and its
+- Method: installed `~/.agents/skills/gstack/review/SKILL.md` and its
   `review/checklist.md`, applied in one review context after the separate
   adversarial review recorded in `../review.md`.
 - Coverage: single-context specification review. No external model, nested

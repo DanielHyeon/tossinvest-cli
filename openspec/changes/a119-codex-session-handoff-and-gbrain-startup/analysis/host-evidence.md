@@ -24,7 +24,7 @@
 
 | 이름 | 증거 종류 | 내용 |
 | --- | --- | --- |
-| `Bash` | **전달 관측(추론 1단계)** + 바이너리 상수 | 저장기가 쓴 `.codex-context/session-summary.md` 의 Session 필드가 `codex exec` 0.154.0 세션 `01a0bc8a…`(2026-09-20 02:00~02:03Z)이고, 백업 5개가 02:02:42~02:03:33Z 에 생성됨. 그 세션의 도구 항목은 `CommandExecution` 23건·`FileChange` 0건이므로 현 matcher `^(Bash|apply_patch)$` 에 걸린 이름은 `Bash` 로 추론함(`apply_patch` 는 `FileChange` 항목을 남긴다는 전제). 바이너리 0.155 에는 `Bash` 상수가 `command`·`description`(Claude 호환 tool_input 키)과 인접해 여러 번 나타남 |
+| `Bash` | **전달 추론**(`codex exec` 0.154 에서만) + 바이너리 상수 — 페이로드에서 이름을 직접 본 적은 없음 | 저장기가 쓴 `.codex-context/session-summary.md` 의 Session 필드가 `codex exec` 0.154.0 세션 `01a0bc8a…`(2026-09-20 02:00~02:03Z)이고, 백업 5개가 02:02:42~02:03:33Z 에 생성됨. 그 세션의 도구 항목은 `CommandExecution` 23건·`FileChange` 0건이므로 현 matcher `^(Bash|apply_patch)$` 에 걸린 이름은 `Bash` 로 추론함(`apply_patch` 는 `FileChange` 항목을 남긴다는 전제). 바이너리 0.155 에는 `Bash` 상수가 `command`·`description`(Claude 호환 tool_input 키)과 인접해 여러 번 나타남 |
 | `apply_patch` | 바이너리 상수만 | 0.155 바이너리의 한 함수 안에서 `Bash` 와 `apply_patch` 상수가 나란히 비교됨(오프셋 약 101,035,596). **전달은 관측 못 함** — 관측 창의 세션들에 `FileChange` 뒤 저장 흔적을 가를 방법이 없음(백업이 5개로 잘림) |
 
 ### 2.2 관측되지 않은 것 — 이름을 지어내지 않음
@@ -43,17 +43,21 @@
 
 ### 2.3 결론 — matcher
 
-살균 픽스처로 확립된 PostToolUse 이름은 `Bash`·`apply_patch` 둘이고 둘 다 현 matcher 에 이미
-걸린다. **확립된 추가 이름은 0개**이므로 스펙(`codex-session-save` 델타)이 요구하는 추가
-이름 적용 대상이 없다. proposal 의 "matcher 가 현 호스트 이벤트를 못 덮는다"는 원인 가설은
-이 증거로 **지지되지 않는다** — 현 호스트(0.154 exec)에서 저장기는 실제로 돌았다.
-2026-08-29 시점의 정체(08-17 이후 미갱신)는 당시 호스트(VS Code 확장 0.150/0.151 alpha)에서
-code mode 중첩 명령이 `CommandExecution` 항목조차 남기지 않은 세션이 있었다는 점(예: 08-29 13:22Z
-세션 `exec` 115회·`CommandExecution` 0건)과 부합하지만, 그 판본의 훅 전달 여부는 지금 재현할 수 없다.
+살균 픽스처에 담을 수 있는 이름은 `Bash`(전달 추론, `codex exec` 0.154 한정)와 `apply_patch`(바이너리
+상수만)뿐이고 둘 다 현 matcher 에 걸린다. **확립된 추가 이름은 0개**다.
 
-**부수 위험(측정)**: Codex 는 훅 신뢰를 `~/.codex/config.toml` 의
+proposal 의 "matcher 가 현 호스트 이벤트를 못 덮는다"는 원인 가설은 **확립되지도 반박되지도 않았다**.
+증상이 난 호스트는 대화형 VS Code/Desktop 이고, 저장 전달은 **다른 호스트**(`codex exec`)에서만 추론됐다.
+- 반증 자료(2026-09-25 적대 리뷰가 지적): 세션 `01a04daf`(vscode 0.150.0-alpha.8)에는 08-29 14:39~15:24Z 에
+  `FileChange` 10건이 있는데 15:33Z 진단 시점에 핸드오프는 여전히 08-17 이후 미갱신이었다. 당시 훅 신뢰가
+  승인 전이었는지(원 진단 기록은 "초기엔 trust hash 없음, 사용자 정정 뒤 존재")로 설명될 수도 있으나
+  **확인되지 않았다 — 미해명**.
+- 현 대화형 호스트는 **미측정**: vscode 0.153.0(09-05/06, 새 경로) 세션들은 code mode `exec` 1,394회·`FileChange`
+  260건·`CommandExecution` **0건**이다. 여기서 PostToolUse 가 어떤 이름으로(혹은 아예) 나가는지 모른다.
+
+**부수 위험(추론 — 측정 아님)**: Codex 는 훅 신뢰를 `~/.codex/config.toml` 의
 `[hooks.state."<repo>/.codex/hooks.json:post_tool_use:<group>:<handler>"] trusted_hash` 로 기억한다.
-matcher 문자열을 바꾸면 그룹 해시가 바뀌어 사용자가 `/hooks` 에서 다시 승인하기 전까지 저장기가
+해시가 그룹 matcher 까지 덮는지는 확인하지 않았으나, 덮는다면 matcher 문자열을 바꿀 때 해시가 바뀌어 사용자가 `/hooks` 에서 다시 승인하기 전까지 저장기가
 돌지 않을 수 있다(원 진단 세션의 "trust 미승인" 오진 기록과 같은 축). 근거 없는 matcher 확장은
 갱신을 늘리기는커녕 끊을 수 있다.
 
@@ -76,7 +80,9 @@ matcher 문자열을 바꾸면 그룹 해시가 바뀌어 사용자가 `/hooks` 
   워크스페이스 루트에 적용되는지는 미관측이다(`mcp list` 는 세션 시점 capability discovery 를
   돌지 않음) — **잔여 불확실성**으로 남김.
 
-즉 스펙 `gbrain-codex-mcp-startup` 의 "유효 설정에 정확히 하나" 는 **이미 성립**한다.
+즉 **CLI 설정 로더 기준으로는** 스펙 `gbrain-codex-mcp-startup` 의 "유효 설정에 정확히 하나" 가 성립한다
+(app-server 세션 시작 경로의 capability discovery 는 미검증). 출처 층 `.codex/config.toml` 은 `mcp list` 출력에
+없는 값이며 **소거법으로 추론**했다(사용자 층 0개, 저장소 밖 0개; managed/system 층은 열거하지 않음).
 정적 텍스트만 보고 `.mcp.json` 쪽을 지우는 것은 design.md 가 금지한 추론이며 증거로도 불필요하다.
 
 ### 3.2 "두 번 시작"의 실제 원인 — 스레드마다 MCP 기동
@@ -90,7 +96,7 @@ matcher 문자열을 바꾸면 그룹 해시가 바뀌어 사용자가 `/hooks` 
 - 로그 DB(09-20·09-24, 비-TossOS 스레드)에서 **한 app-server 프로세스 안의 서로 다른 스레드
   resume 요청마다** `node_repl`·`cua_repl` MCP 기동이 따로 기록된다(요청 ID 별 그룹: 한 프로세스
   3953 에서 두 요청 각각 기동 시도). 즉 호스트는 MCP 서버를 **스레드(세션) 단위로 기동**한다.
-- 결론: "두 번 시작"은 등록 중복이 아니라 **동시 스레드 N 개 × 스레드당 1회 기동**이고, 두 번째
+- 결론(**추론**; 로그 DB 에 `gbrain` 행 0건, 스레드별 기동은 비-TossOS `node_repl`/`cua_repl` 행을 0.154/0.155 에서 본 것을 0.150/0.151 vscode 에 적용한 것): "두 번 시작"은 등록 중복이 아니라 **동시 스레드 N 개 × 스레드당 1회 기동**이고, 두 번째
   이후 기동은 정본 `sdd-workflow` 계약(단일 writer flock, exit 75 busy)이 의도한 대로 끝난다.
   이는 기억 `EP-TOS-20260730-004`("두 번째 에이전트에 동시 GBrain MCP 를 제공하지 않으며 그 요구는
   HTTP broker 또는 local PostgreSQL backend 를 다루는 별도 change 가 필요")와 일치한다.
@@ -106,6 +112,10 @@ heartbeat 신선), Codex 프로세스는 없었다. 어떤 프로세스도 종�
 - `apply_patch` 이벤트의 실제 전달 — **pending**
 - Desktop 호스트에서 워크스페이스 한 스레드 기동 시 wrapper 기동 횟수(= 1 기대) — **pending**
 - 워크스페이스 `.mcp.json` 이 executor capability discovery 로 로드되는지 — **pending**
+- `~/.codex/config.toml` 의 새 경로 신뢰 항목 `post_tool_use:1:0` 에는 `trusted_hash` 만 있고 `enabled = true` 가 없다
+  (옛 경로 `/mnt/D/project/axipient/TossOS` 항목은 둘 다 있음). exec 0.154 에서는 무해했으나 Desktop 에서는 미확인 — **pending**
+- 대화형 호스트 관측의 한 방법(사람 승인 필요): `.codex-context/` 아래에 `tool_name` 만 적는 임시 probe 훅(matcher `.*`)
+  을 사람이 신뢰 승인하고 한 세션 돌린 뒤 제거
 
 이 세션은 Codex 호스트를 띄우지 않았다: 띄우면 사용자 계정으로 원격 모델 호출이 나가고,
 새 훅 신뢰가 사용자 전역 `~/.codex/config.toml` 에 기록된다. 둘 다 이 change 가 승인받지 않은
