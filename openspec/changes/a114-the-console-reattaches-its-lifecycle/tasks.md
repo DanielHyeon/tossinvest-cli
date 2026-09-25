@@ -20,10 +20,10 @@
   runConsole 블록 한 줄.
 - [x] 1.3 뮤테이션: a109 T2 원장의 wrapper 뮤테이션 중 콘솔 적용판 + 콘솔 고유(원장 `mutation-ledger.md`).
 - [x] 1.4 FLM 구현 후 재최신화 + `check_analysis.py` rc 0.
-- [ ] 1.5 검증: cmd/tossctl `-race` 대상 테스트 · `make vet` · `make lint` · `make test`.
+- [x] 1.5 검증: cmd/tossctl `-race` 대상 테스트 · `make vet` · `make lint` · `make test`.
 - [x] 1.6 콘솔 실측(규칙 13): 격리 config·엔진 없이 콘솔을 띄워 정책 화면 본문 확인(버튼 누르지 않음).
 - [x] 1.7 구현 후 리뷰 → review.md §1.
-- [ ] 1.8 착지 기록 커밋.
+- [x] 1.8 착지 기록 커밋.
 
 ## 2. 게이트 (Manager)
 

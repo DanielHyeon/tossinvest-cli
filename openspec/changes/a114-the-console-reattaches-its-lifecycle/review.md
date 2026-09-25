@@ -81,3 +81,14 @@ freeze 종결 — 구현 착수.
 
 화면 영향(리뷰어 확인): 설정 요약의 정책 행이 「읽지 못함 — <detached 문장>」(의도, 다소 김), 포트폴리오는 탈착 동안
 「관리 여부 불명」(issues R2), 격리 배지는 List 성공 뒤에만 조회되어 새 배너 없음.
+
+## 검증 기록 (2026-09-25)
+
+- `go test -race -count=1 ./cmd/tossctl/` → ok 173.9s (1244be95 워킹트리) · a114 대상 `-race -count=3` ok
+- `make vet` rc 0 · `make lint` rc 0
+- `make test`(`go test -timeout 30m ./...`) → **ok 99 · no test files 9 · FAIL 0** (GOCACHE 를 /mnt/D 로 — 루트
+  파일시스템이 한때 100% 였다; a113 판의 `make test` 에서는 그 때문에 `internal/app/engine`
+  `TestTheDriverFoldsAndAdoptsInOneCycle` 가 "database or disk is full" 로, `tools/a112-mb-us-source` 가 빌드 신원
+  불일치로 실패했고 이번 판에서는 둘 다 ok)
+- `check_analysis.py --change a114-…` rc 0 · 착지 `1244be95`(병행 세션의 더러운 워킹트리 때문에 같은 커밋의 shared
+  clone 에서 도구가 계산한 값을 옮겼다)
