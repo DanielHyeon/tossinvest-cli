@@ -451,3 +451,81 @@ proposal 「지금 열린 것들」은 **지금 거짓**이다. `alert_outbox`�
 같은 인덱스를 커밋했다. 내용은 Teammate가 쓴 그대로다(`git show 7582d1ee -- openspec/changes/a095-…`).
 이력은 다시 쓰지 않는다. 이 주석을 경로 한정 커밋(`git commit -- <경로>`)으로 남겨 a095 라벨을 붙인다.
 **교훈**: 공유 인덱스에서는 `git add` 다음 `git commit`이 원자적이지 않다 — 경로 한정 커밋을 쓸 것.
+
+## 2.14 보이스 A(적대적 Eng) 결과 — 지연 도착, 2라운드 판정 뒤 (2026-09-25)
+
+> 2라운드 판정(§2.3~§2.12)은 보이스 결과 없이 단독 재검증으로 냈다. 그 뒤 보이스 A 의 보고가
+> Manager(tossos-d6)에게 도착했다. **3판 리뷰의 입력**으로 원문 그대로 보존한다(Manager 재검증 전 —
+> 아래 주장은 리뷰어의 것이며 코드·원장 재검증은 3판 저자 몫이다). 보이스 B 는 미도착.
+
+범위: 읽기 전용. 저장소 쓰기 0, 다른 review.md 미열람, 운영 원장·네트워크 접근 0. 코드 근거는 HEAD `634cf3c5`, base `ec29dc72`(2026-08-05).
+
+### P0: 동결을 막는다 (안전 위반 또는 거짓 전제)
+
+**A-1 · §4 손절 즉시성. R1이 늘리는 것은 호출 수가 아니라 exit goroutine이 관측 전에 머무는 시간이다. 최악 체류가 60초 두절 계약을 넘고, 넘어도 감지되지 않는다.**
+- 경로: `ExitObserver.ObserveOnce` → `workingSet`(`exitloop.go:426`) → `!p.ExitEligible()` → `o.alertUnmanaged`(`:518`). 이 호출은 `o.observe`(`:441`)와 `judge`(`:465`)보다 **앞**에 있다. 이어서 `o.alert` → `Notify`(`notifier.go:130`) → `notifyCritical` → `claimAndDeliver`로 가고, 여기서 `n.mu`가 `:254`부터 deliver 전체를 덮는다.
+- Notifier는 인스턴스 하나를 공유한다. `gateway.go:323` 하나를 exit 관측(`exitwiring.go:342`), reconcile(`reconcileloop.go:368`), ingest·converge(`gateway.go:332-338`)가 함께 쓴다.
+- 상수 기준 최악 체류 (publish가 모두 타임아웃, 원장 쓰기마다 busy 대기): claim 5s(`journal.go:36`) · deliver 3×(10s `alert_lease.go:17` + 5s) + 2×2s(`notifier.go:48`) + 5s release = 54s(`alert_lease.go:52-54`, 자기 주석 "54s") · escalate 5s(잠금 밖, 같은 goroutine) → 합계 호출 1건당 약 **64s**. 다른 goroutine이 쥔 `n.mu`를 기다리는 시간(건당 ≤59s)은 여기에 더 붙는다.
+- 원장이 정상이고 네트워크만 블랙홀이어도 3×10+2×2 = 34s. 같은 key의 PENDING 행은 발신자마다 예산 전체를 다시 쓴다(B-2 참조).
+- 오늘은 `publishBestEffort` 1회, 10s, 잠금 없음.
+- 64s는 `DefaultExitObservationOutage = 60s`(`exitloop.go:105`)를 미관측 포지션 **1건**만으로 넘는다. `checkOutage`는 `:422`·`:444`, 즉 관측 실패 경로에서만 불린다. 이 정체는 끝나면 관측이 성공하고 `lastObserved`가 초기화되므로 **조용히 지나간다**.
+- 계획이 기대는 선행 조건은 약속된 속성이 아니다. tasks `:172-182`는 「a095는 a092 뒤」를 세운다. 그러나 a092 design D0.4 `:389-394`는 *"관측 goroutine은 그 뮤텍스를 계속 쥔다 … outbox 트랜잭션에는 여전히 기한이 없다 … 이것을 상한이라고 부르지 않는다"*; a092 tasks 20판 머리 블록 `:60-67`은 20라운드 **FAIL/BLOCK**, P0 2건 열림, 기록 경로 가·나·다 **미선택**. 이 의존은 proposal·design·spec 어디에도 없고, 막는 task도 없다.
+- 계획 내부도 모순된다. tasks 6.2 `:125-129`는 "호출 수 diff로는 볼 수 없다"고 적는데, 같은 파일의 안전표 §4 `:194`는 여전히 "6.2가 제출 경로에 새 호출 0개임을 보인다"고 적는다. 6.2에는 합격 기준(상한 수치)도 없고 "실측"만 있다.
+- **요구:** ① a092 착지와 체류 상한 수치를 spec SHALL과 task 게이트로 둔다. ② 또는 R1을 exit goroutine의 관측 전 발신 자리에서 떼어낸다. ③ 60s 두절 계약과의 관계를 명시한다.
+
+**A-2 · 거짓 전제: 「수량이 늘면 증가분에 손절이 안 걸려 있다」.** 늘어난 수량은 이미 보호받고 있다.
+- 청산 수량은 현재 보유에서 나온다. `snapshotContext`의 `RemainingQuantity: m.position.Quantity`(`exitloop.go:1087`) → `canonicalSnapshotContext`(`snapshot.go:263`) → `ProjectWholeShares(quantity, ratio)`(`:139`) → `submit`(`exitloop.go:1184,1301,1345`).
+- 이벤트 본문도 스스로 그렇게 말한다: *"늘어난 수량은 원래 수량 기준으로 산정된 손절의 보호를 받는다"*(`adoption.go:461`).
+- 틀린 문장: engine-safety 델타 `:14-20`(*"일부에 손절이 걸려 있지 않다"*) · design D1 `:142`·D7 `:369`, issues I3 `:103`(*"넷 다 같은 사실"*).
+- 늘어나는 것은 무보호가 아니라 **총위험**이다. 이것을 `exit.position_unmanaged` critical로 알리면 운영자에게 거짓을 말하게 된다.
+- **요구:** 수량 증가는 별도 이벤트 종류로 분리하고, 등급 근거를 다시 쓴다.
+
+**A-3 · 거짓 전제: R2의 B2가 010170과 엔진이 직접 연 포지션을 삼킨다는 주장.**
+- `checkExternalIncrease`는 `p.ExitEligible() && p.Adopted()`일 때만 불린다(`adoption.go:108-110`, 호출자 가드).
+- `positions.adoption_id`는 `REFERENCES position_adoptions(id)`이고(`journal/adoption.go:92`) `foreign_keys(on)`이다(`journal.go:223`). 따라서 B2(`:446`)가 도달하는 것은 사실상 DB 오류나 ctx 취소뿐이다.
+- 010170(편입 기록도 진입 결정도 없음)은 exit 루프에서 조건 없이 `alertUnmanaged`에 이미 도달한다(`exitloop.go:512-519`). 따라서 *"R1만으로는 010170이 안 보인다"*(proposal `:256-257`, design `:342-343`)와 D5 그림 `:327-329`는 틀렸다.
+- 엔진이 직접 연 포지션에 수동 매수가 붙으면 수량 증가 검사가 **아예 없다**(`Adopted()`=false). R2도 그 구멍을 닫지 못한다.
+- 델타 SHALL `:28-29`(*"그런 보유는 보호 상태가 없는 경우로 보고"*)를 구현하면, exit state가 있어 **보호받는** 엔진 포지션을 무보호라고 critical로 알리게 된다.
+- FLM `checkexternalincrease/function-logic-map.md` Inputs 표의 B2 행도 같은 거짓을 담고 있다.
+- **요구:** B2를 고치는 것을 철회한다. 엔진 개설 포지션의 수량 증가를 범위에 넣을지 명시적으로 결정한다.
+
+**A-4 · 거짓 전제: 「유효 손절가(`baseline_price`)의 쓰기 경로는 하나(`resetExitStateForReadoptTx`)」.**
+- 주석의 "four guarded columns"는 `taken_ratio_total, pending_action, pending_level, pending_intent_id`다(`apply_hook.go:503-505`). 손절 컬럼이 아니다.
+- HEAD에서 `baseline_price`를 쓰는 자리는 **최소 4곳**: `exit_state.go:553`·`:563`(매 판정; 래칫이 475150을 57,900으로 올린 경로) · `exit_observation_refresh.go:136-137` · `apply_hook.go:718-720` · INSERT `exit_state.go:181`.
+- 이 전제 위에 선 문장: exit-policy 델타 `:45-46`의 SHALL(*"오늘 그 경로는 재편입 하나뿐"*)은 오늘부터 거짓 · design D3 `:234-235`, D4(1) `:277-284`, issues I1(1) `:21-29`, tasks 3.5.
+- tasks 3.2의 *"`policy_*`에 어떤 쓰기도 일어나지 않는다 — 구조로 고정"*은 기존 판정 경로와 충돌한다. `exit_state.go:563`과 refresh `:136`이 매번 `policy_id/version/digest`를 쓴다.
+- 덧붙여, 계획이 모범으로 든 재편입 경로 자체가 `baseline`을 새 합성 손절로 **낮출 수 있다**.
+- **요구:** 쓰기 경로를 AST로 열거한 뒤 SHALL을 다시 쓴다.
+
+**A-5 · 거짓 전제: 「평단은 브로커가 원가를 안 주면 이어받을 수 있다」.** 수량 수렴 경로에서 평단은 **결정적으로** 낡는다.
+- `ConvergeQuantities`는 늘 `NewAvgPrice: ""`를 보낸다(`converge.go:219-221`). 이것이 `firstNonEmpty`(`position_adjustments.go:312`)를 거쳐 `UPDATE positions … avg_price`(`:347-349`)가 된다.
+- 외부 수량 변화가 평단을 갱신하는 경로는 없다. `avg_price` 쓰기는 이 자리와 체결 투영(`position_projection.go:322`)뿐이다.
+- 결과: R3의 총위험은 R3가 겨냥한 바로 그 경우(수량 증가)에 **설계상** fold 시점의 평단으로 계산된다 · 475150의 "3,200"과 proposal `:20-58`의 물타기/불타기 표는 낡은 값에서 나왔다 · 사용자 보고 *"추가 구매하면 평균단가가 낮아지는데 반영하지 않는다"*는 원장에서 **문자 그대로 참**이다. proposal `:18` "절반은 반대"는 잘못된 진단이다.
+- 틀린 문장: proposal `:282-285`, design `:246-247`, issues I2 `:79-83`(*"원장만으로는 가를 수 없다"*. 코드로는 가를 수 있다), exit-policy 델타 `:17-19`.
+- tasks 3.3의 조건부 표기는 출처 컬럼이 없어 구현할 수 없다. issues I2가 스키마 변경을 범위 밖으로 둔다.
+- 브로커 평단은 스냅샷에 있다(`Holding.CostBasisRaw`, `adoption.go:333`).
+- **요구:** 평단의 출처를 다시 정하거나, R3를 보류하고 Why를 다시 쓴다.
+
+### P1: 동결 전에 고쳐야 한다
+
+**B-1 · R2 재알림은 전송되지 않는다.** key가 `…|grown|<id>`로 고정(`adoption.go:457`). DELIVERED 뒤 1h(`DefaultRemindAfter`, `notifier.go:59`) 안이면 `recordAlertTx`/`claimOwed`가 not owed → `ClaimSettled`(`notifier.go:284-293`)가 되어 전송도, 행 갱신도 없다. 재무장은 `outbox.go:295-345`에만 있다. `Notify`는 nil을 반환하므로 R2의 메모리 map은 새 수량으로 전진한다 — 창 안에서 늘어난 수량은 다음 증가나 재시작 전까지 **영영 전송되지 않는다**. 델타 `:24-26`과 Scenario `:49-51`은 정본 engine-safety `:674-676`의 SHALL NOT(창 안 재전송 금지)과 충돌. 계획 문서에서 a096·a098·a099·remind·event_key·claim·lease를 grep하면 **0건** — 계획의 Notifier 모형은 base(a096 이전) 상태다.
+
+**B-2 · 발신 자리 셋이 event key를 공유한다.** `adoption.go:419`, `exitloop.go:1608`, `exitwiring.go:105`가 모두 `exit.position_unmanaged|<id>`를 쓴다. outbox 행은 하나이고, 먼저 온 내용만 전달된다. PENDING이면 발신자마다 예산을 따로 소진한다(A-1 누적). tasks 1.11은 문구만 대조한다.
+
+**B-3 · fail-closed의 대가를 덜 열거했다.** design D1(2) `:58-62`의 「수동 매매마다 성립하지 않는다」는 거짓: `exitwiring.go:104`는 latch 없이 적용된 fold마다 발화(`external.go:278-281`) — 새 종목 수동 매수 1건마다 critical 1건 · R2는 수량이 늘 때마다 critical · exit 루프는 전이 상태를 조용히 두는 가드가 없다(`exitloop.go:512-519`, reconcile 쪽 `adoption.go:115-121`과 대조) — adoption 정상 편입에서도 편입 전 한 사이클 동안 critical · Publisher가 nil이면 즉시 `Gate.Block`과 모드 승격(`notifier.go:429-431,570-572,228`), 재시작 뒤 1h 지나면 다시 잠근다 · `adoption.enabled`=OFF 경로의 동작도 바뀐다(진입 게이트)인데 6.4는 "무도입"으로 비켜 간다(§3) · 등급을 normal로 고정하는 기존 시험 `exitloop_test.go:508-510`이 계획에 없다.
+
+**B-4 · 델타와 설계가 모순된다.** 델타 `:24`의 SHALL NOT(*"프로세스 수명당 한 번만 보고해서는 안 된다"*)과 D6 `:361`/tasks 2.5(`d.unmanaged` 프로세스당 1회 유지)가 충돌. D2 `:202-204`의 *"outbox 재시도가 반복을 대신 책임진다"*는 거짓 — latch가 새 `Notify`를 막으므로 remind가 발화하지 않는다.
+
+**B-5 · FLM이 함수 경계에서 멈췄고, 일부는 낡았다.** `source_sha256`이 HEAD와 다른 번들 9개 중 4개(severityof, notify, publishbesteffort, resetexitstateforreadopttx) — 본문은 base와 HEAD가 같아 **SHIFT**. 줄 인용은 모두 낡았다: Notify B1 :111→:134 · SeverityOf :309→:347 · criticalEvents :279-298→:317-337 · 이벤트 선언 :200→:238 · exitloop alertUnmanaged 정의 :1501→:1607 · 호출 :515→:518 · observe :443→:441. 안전 주장이 실제로 기대는 함수 가운데 `notifyCritical`은 base→HEAD **DIFF**(38→56줄). `claimAndDeliver`, `deliver`, `recordAlertTx`, `judgeHoldings`(호출자 가드), `ExitObserver.workingSet`, `IngestExternalPositions`, `ConvergeQuantities`, 판정의 baseline 쓰기는 번들이 **0개**. D1 사슬, D7, 6.2a, D4(1)은 손으로 읽은 주장이다.
+
+**B-6 · SHALL 대상이 불명확하다.** exit-policy `:10`의 *"보고는 현재 총위험을 담아야"*는 어느 보고인지 경계가 없다. engine-safety `:14`의 *"보호 상태가 고정한 수량"*은 `exit_states`에 수량 컬럼이 없어 가리킬 대상이 없다(`core_domain.go:203-235`).
+
+**B-7 · a091과의 합산을 아무도 소유하지 않는다.** tasks `:180-182`는 "먼저 가는 쪽이 측정"뿐. a091이 착지하면 `applyFloor`의 알림(`exitloop.go:1536`)이 `IssueReduction`(`:1357`) **앞**에서 critical `Notify`가 되고, a095의 reconcile goroutine 전달이 쥔 `n.mu`(건당 ≤59s)를 기다린다 → 청산 주문 제출 자체가 늦어진다.
+
+### P2: 차단하지 않는다
+
+- **C-1 · outbox 실측은 낡았고 결론을 뒷받침하지 못한다.** 실측은 2026-08-07로 a096·a098·a099 이전. `attempts=0`인 9/13행은 시도조차 안 된 행(전달 성공도 `attempts`를 올린다, `outbox.go:453`). DELIVERED 행 수가 없으므로 「호출」은 미입증. 운영 원장을 열 수 없어 **미확인**.
+- **C-2 · 배포 직후 critical 수를 적게 셌다.** tasks 7.2는 "최소 2건"이라 적지만 080220(2→12)도 수량 증가 대상이라 최소 3건.
+- **C-3 · 관리 중인 포지션에 무보호 문구가 나갈 수 있다.** `exitwiring.go:107-110`의 본문은 `ExitEligible`와 무관하게 "손절·익절이 자동으로 걸려 있지 않다"고 적는다. 도달 가능성 **미확인**.
+
+**권고: FAIL.** P0 5건(§4 체류 1건 + 거짓 전제 4건). 거짓 전제 넷은 R1·R2·R3와 델타 SHALL 셋의 근거를 무너뜨린다.
