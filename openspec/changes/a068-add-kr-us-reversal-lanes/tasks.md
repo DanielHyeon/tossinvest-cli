@@ -24,5 +24,5 @@
 ## 4. VERIFY
 
 - [x] 4.1 Run targeted KR/US reversal, structural-order/window, allocation property/fuzz and common-exit tests with race detection
-- [ ] 4.2 Run broader evidence/campaign/risk/strategy/exit/scheduler regressions including adversarial price-decline-only and partial-fill cases
-- [ ] 4.3 Run `make sdd-sync`, `make sdd-check` and `make gate CHANGE=a068-add-kr-us-reversal-lanes`, recording both lanes remain OFF with zero live mutation
+- [x] 4.2 Run broader evidence/campaign/risk/strategy/exit/scheduler regressions including adversarial price-decline-only and partial-fill cases — 2026-09-25 HEAD d72bc401 격리 워크트리: 30 패키지 test/seams·app/engine·race 12·vet·fuzz 4 전부 rc 0, 실패 0 + a068 가격 하락만·부분 체결 3개 PASS; 레인 diff 의 hostname/URL/approve 0·토글/승인 쓰기 0, dormant/OFF 가드 13 PASS (review.md `## 4.2 회귀 실측`)
+- [ ] 4.3 Run `make sdd-sync`, `make sdd-check` and `make gate CHANGE=a068-add-kr-us-reversal-lanes`, recording both lanes remain OFF with zero live mutation — 미실행: 게이트 정책 결정 대기 — 5단계 `revision: current` 0 → 남의 함수 required 338 (/tmp/claude-1000/ca-a068-add-kr-us-reversal-lanes.log)
