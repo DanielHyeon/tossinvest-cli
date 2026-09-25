@@ -149,3 +149,34 @@ Codex-store-only · concurrent-no-overwrite 시험의 `def` 줄 — 주장과 �
 a119 디렉터리 `git status` 빈 출력(리뷰어 쓰기 0).
 
 **다음**: 3.1 은 별도 Opus 팀메이트(리셋 뒤). 3.3 은 관측이 아니라 "미관측 기록"이다(scope (a)).
+
+---
+
+# Implementation verification (task 3.2) — 2026-09-26
+
+- Base `54004f44`, HEAD after 3.1 `c202b804`. Teammate (Opus), separate from the Manager context.
+- All runs below were read from raw output (`rtk proxy`), not from summarized output.
+
+| Requirement (design evidence map) | Test run in isolation | Result |
+| --- | --- | --- |
+| Lock-owner preservation | `tools/sdd/test_gbrain_project.py` `:62` duplicate-serve busy · `:93` exit releases without deleting lock · `:118` live legacy owner busy, lock kept · `:154` stale heartbeat left for recovery | 4 tests, RC=0 (whole file: 8 tests, RC=0) |
+| Isolation, redaction, atomic persistence | `tools/sdd-history/test_codex_session_save.py` `:76` Codex store only · `:134` bounded text + redaction · `:217` malformed stdin fails open · `:226` atomic publish, 5 backups · `:256` concurrent no-wait/no-overwrite | 5 tests, RC=0 (whole file: 7 tests, RC=0) |
+| Unchanged tool result | `test_codex_host_event_coverage.CodexSaverToolResultTests` — stdout empty on success (per fixture name) and on the failure path | 2 tests, RC=0 |
+
+Isolation of the runs themselves: every test above works in a `tempfile` repository with a fake `gbrain` binary or a
+copied saver. Measured around the run: the real project lock owner (`.sdd/gbrain-home/.gbrain/tossos-process.lock`,
+`pid`/`command`) was identical before and after and the owner process was still alive; the real
+`.codex-context/session-summary.md` mtime was unchanged.
+
+Byte identity against `54004f44` (sha256 of `git show 54004f44:<f>`, `git show HEAD:<f>` and the working tree):
+
+| File | Result |
+| --- | --- |
+| `.codex/hooks.json` · `.codex/config.toml` · `.mcp.json` · `save-session.sh` · `.codex/hooks/save_session.py` · `tools/sdd/gbrain_project.py` | base = HEAD = working tree for all six |
+
+`git diff --stat 54004f44 -- .mcp.json .claude save-session.sh tools/sdd/gbrain_project.py .codex/hooks.json .codex/config.toml`
+→ 0 lines; `git status --short` on the same paths plus `.codex` → 0 lines. Commits tagged `[a119` since the base touch only
+`openspec/changes/a119-…/**`, the two new test files and the two new fixtures — no trading, account or Claude-owned path.
+
+Function Logic Map: not-applicable — no existing Go or Python function body changed; the change adds two test modules,
+two JSON fixtures and one harness script under the change directory (`analysis/code-context/evidence-reconciliation.md`).

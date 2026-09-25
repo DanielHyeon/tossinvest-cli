@@ -22,8 +22,10 @@
       > no conflict — `tools/sdd`, `tools/sdd-history` and `.codex` have no commit since `54004f44`. New tests 5 + 5 = 10, RC=0.
       > Harness: M0 control 0 failing; M1–M5 failing 1·1·3·4·3; SURVIVED none; real `.codex/*` sha256 unchanged, real
       > `.codex-context/` mtimes unchanged. `make sdd-test` RC=0 — 15 · 452 (skip 1) · 76 · 27 · 16 · 18, go ok.
-- [ ] 3.2 Verify isolation, redaction, atomic persistence, lock-owner preservation and unchanged tool results in isolated tests
+- [x] 3.2 Verify isolation, redaction, atomic persistence, lock-owner preservation and unchanged tool results in isolated tests
       (design evidence map), and that the configuration files are byte-identical to `54004f44`.
+      > 2026-09-26 teammate: 4 + 5 + 2 evidence-map tests RC=0 in temp repositories; real lock owner and handoff mtime
+      > unchanged; six files sha256 base = HEAD = working tree (review.md "Implementation verification (task 3.2)").
 - [ ] 3.3 Record in `analysis/host-evidence.md` §4 what stays unobserved (interactive-host delivery, per-thread startup) and
       that it belongs to the named follow-ups; make no runtime claim here.
 - [ ] 3.4 Complete separate adversarial review, gstack review, required tests and SDD checks, final gate and Manager acceptance
