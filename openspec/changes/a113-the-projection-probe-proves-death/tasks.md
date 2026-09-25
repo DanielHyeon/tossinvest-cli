@@ -24,7 +24,7 @@
 - [x] 1.5 검증: `go test -race -count=1 ./internal/strategyprojectionrpc/...`, cmd/tossctl 재부착 회귀,
   `make vet`, `make lint`, `make test`.
 - [x] 1.6 구현 후 gstack `review`(또는 독립 서브에이전트) → review.md §1.
-- [ ] 1.7 착지 기록(`--record-landing`) 커밋.
+- [x] 1.7 착지 기록(`--record-landing`) 커밋.
 
 ## 2. 게이트 (Manager)
 
