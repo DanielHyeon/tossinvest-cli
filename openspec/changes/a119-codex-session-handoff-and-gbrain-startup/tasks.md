@@ -5,8 +5,8 @@
 
 ## 2. Establish implementation evidence
 
-- [ ] 2.1 Capture the implementation baseline before code changes and record current hard evidence and applicable function analysis.
-- [ ] 2.2 Obtain sanitized supported-host event fixtures and effective configuration-loading evidence; identify one Codex-owned launch path.
+- [x] 2.1 Capture the implementation baseline before code changes and record current hard evidence and applicable function analysis.
+- [x] 2.2 Obtain sanitized supported-host event fixtures and effective configuration-loading evidence; identify one Codex-owned launch path.
 - [ ] 2.3 Complete proposal-freeze gstack review on the evidence-backed implementation plan.
 
 ## 3. Implement and verify
