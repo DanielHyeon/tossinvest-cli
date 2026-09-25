@@ -13,7 +13,10 @@
 - [x] 1.1 CodeGraph: `deliverOne` · `cycle` · `PendingAlerts` · `EntryGate.Block` · `EscalateOperatingMode` 의 callers/callees →
       `analysis/code-context/` (codegraph 1.6.0; CGC kuzu 잠금·GBrain busy 로 not-applicable, 불일치 R1–R5 는 HEAD·AST 로 해소, R6 미해소 = F1)
 - [ ] 1.2 Pre-Edit 선언(High-risk): 대상 심볼 · 호출부 · 기존 시험 · 불변식 · 실패 시험 · rollback
-- [ ] 1.3 편집 대상 함수 `revision: current` 재추출, Branch Test Map 재번호(옛/새 ast diff 정렬)
+- [ ] 1.3 편집 대상 함수 `revision: current` 재추출, Branch Test Map 재번호(옛/새 ast diff 정렬) — 대상 셋:
+      `alertDeliverer.cycle` · `alertDeliverer.deliverOne` · `Journal.settleUnderClaim` · `Notifier.Acknowledge`(세대 증가 한 줄)
+      (뒤의 둘은 base 번들 2026-09-26).
+      `Journal.PendingAlerts` 도 편집 대상이면 base 번들을 **편집 전에** 만든다
 - [ ] 1.4 Branch Test Map 의 기존 시험 실측 — `go test -covermode=set` 으로 분기 도달을 재고 파일 이름을 함수 이름으로
 
 ## 2. RED
@@ -24,17 +27,39 @@
 - [ ] 2.3 한도 도달 뒤 재시작 → 기동 복원이 다시 잠그고 모드는 원장에 있다
 - [ ] 2.4 굶주림: 한도 행 batch 개 + 새 critical 행 → 다음 사이클이 새 행을 먼저 시도한다
 - [ ] 2.5 한도 행은 잔여 자리로 밀려도 사라지지 않고 미전달 수에 세어진다
-- [ ] 2.6 손절 즉시성 불변 — `a098_the_backlog_does_not_delay_protection_test.go` 그대로 초록(보존 시험)
+- [ ] 2.6 손절 즉시성 불변 — `a098_the_backlog_does_not_delay_protection_test.go` 그대로 초록(보존 시험) + 변형:
+      publisher 없음(D3 원장 쓰기 증가, F12) · 실행자의 정산·승격을 인위 지연 → exit 체류 불변 · 원장 연결을 막아도 exit `Notify` 가
+      실행자 때문에 `n.mu` 에서 기다리지 않음 · 비상 청산 `Notify` 도 같음(R1). 늘면 멈추고 보고
+- [ ] 2.7 판정 입력(D1, F1): 나열 뒤 다른 발송자가 attempts 를 올린 행 → 판정은 커밋된 값으로; 재무장된 행은 0 부터;
+      기록 오류의 `SettleResult{}` 가 「적용됨」으로 새지 않는다(F10)
+- [ ] 2.8 발송 중 승인(D7): 전송 중 승인 → 기록 `AlreadySettled` → 잠금·승격 없음. `LeaseLost` 도 없음(재무장 인터리빙 포함).
+      실패 기록의 `NotFound`·모르는 값은 잠금만(승격 없음, N6)
+- [ ] 2.9 승인 세대 울타리(D7): 결정적 인터리빙 여섯(D7 표) — 정산 뒤·울타리 전 승인이면 `Block` 없음, 울타리 뒤 승인이면 해제되고
+      늦은 재잠금 없음, 다른 행만 승인이면 한 사이클 늦게 잠김. 배제 구간 안에 원장·로그·`Notifier` 메서드가 없음을 구조로 확인(R1 · R5)
+- [ ] 2.10 기록 실패 지속(D8, 행별 계수): 한 행의 기록·임차 오류 3 연속 → 잠금(+승격 시도), 최소 ≈ 2 사이클; 그 행의 `Applied` 만
+      지우고 `LeaseLost`·`AlreadySettled`·다른 행의 성공은 지우지 않음(A 영구 실패 + B 성공 교차 → 잠금, R3); 승인이 맵을 비움
+      (승인 → 새 행 B → A 기록 오류 → 재잠금 없음, R4); 같은 id 재무장; 나열 오류 3 사이클 → 잠금; Run ctx 취소는 안 셈, transport timeout 은 발행 실패
+- [ ] 2.11 정제(D9, R2): 잠금 detail 과 새 로그 줄에 행 제목·본문·payload·`last_error`·토큰·계좌 참조·원문 오류가 없다 — 계좌·토큰·원장 오류에
+      sentinel 문자열을 심고 줄 전체를 grep
+- [ ] 2.12 발행 성공 + 전달 기록 실패(D1 전달 정산 표, N3): 오류·`NotFound`·모르는 값 → 즉시 잠금 + 승격, 임차 유지, 다음 사이클 재발행 없음;
+      `AlreadySettled`·`LeaseLost` → 잠금 없음; 기록 오류 직전 승인 → 잠금 없음(세대 울타리); 배치 서비스 중 임차 만료 → 재발행은
+      허용되고 기록된다(R6)
 
 ## 3. GREEN (최소)
 
 - [ ] 3.1 `alertDeliverer` 에 `Gate` · `AccountRef` 배선 (`auxiliary.go`)
 - [ ] 3.2 `deliverOne` 한도 판정(B8 · B9 끝), 상수 하나
 - [ ] 3.3 `PendingAlerts` 선택 순서(한도 아래 먼저)
+- [ ] 3.4 `SettleResult.Attempts` (additive) — `settleUnderClaim` 적용 경로의 같은 트랜잭션 읽기(D1)
+- [ ] 3.5 `obs` 승인 세대(`ackGen` · `AckGeneration` · `LatchUnlessAcknowledgedSince` · `Acknowledge` 한 줄) + 실행자의 차단 적용만 그 아래로(D7),
+      원격 전송·원장·승격·로그는 밖
+- [ ] 3.6 행별 연속 기록 실패 계수 + 나열 계수(D8), 전달 정산 판정(D1), 고정 detail·허용 목록 로그(D9)
 
 ## 4. VERIFY
 
-- [ ] 4.1 뮤테이션(사본 · 무변이 대조군 선행): 판정 제거 · 승격 제거 · 순서 제거 · 행 버림 → 각각 빨강
+- [ ] 4.1 뮤테이션(사본 · 무변이 대조군 선행): 판정 제거 · 승격 제거 · 순서 제거 · 행 버림 · 나열 값으로 판정 ·
+      Outcome 검사 제거 · 세대 비교 제거 · `Acknowledge` 세대 증가 제거 · 기록 실패 계수 제거 · ctx 취소 제외 제거 ·
+      `LeaseLost` 로 계수 지움 · 승인에 맵 비움 제거 · 전달 정산 실패 판정 제거 · 정산을 배제 안으로 → 각각 빨강(마지막은 2.6 이 잡아야 한다)
 - [ ] 4.2 `make test` · `make test-seams` · `make test-race` · `make vet` · `make validate` · `make sdd-sync` · `make sdd-check`
 - [ ] 4.3 gstack 리뷰 + 독립 적대 diff/test 리뷰 + Manager 검증 패스
 - [ ] 4.4 최악 래치 시간 실측(큐 대기 포함) → `review.md` (R3)
@@ -42,4 +67,5 @@
 ## 5. 종결
 
 - [ ] 5.1 `make gate CHANGE=a124-…` · archive · Story 경로 · PM `--check`
-- [ ] 5.2 a092 21판에 착수 조건으로 인용 · a092 델타 「굶주림」 문단 삭제 확인
+- [ ] 5.2 a092 21판에 착수 조건으로 인용 · a092 델타 「굶주림」 문단 삭제 확인 · a092 델타 「운영자의 승인은 … 되살리지 않는다」 문단을
+      이 change 의 요구로 가리키게(정본 사본 둘 방지) · D6 의 「사이클 주기 = 배치 서비스 포함 `C`」 전달

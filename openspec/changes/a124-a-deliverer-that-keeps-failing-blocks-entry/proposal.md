@@ -70,25 +70,34 @@
 ## Non-goals
 
 - `Notifier` 동기 경로(`claimAndDeliver` · `deliver` · `notifyCritical`)를 편집하지 않는다 — a092 의 표면이다.
+  `obs` 에는 승인 세대 진입점 둘과 필드 하나를 더하고, `Acknowledge` 에는 세대 증가 **한 줄**만 넣는다(design D7 — 해제 조건 불변,
+  동기 경로 함수 무편집).
 - 새 사유 코드 · 새 트리거 · 새 토글 · 새 실행자를 만들지 않는다. `ReasonAlertSenderDown`(실행자 정지)의 의미도
   그대로다 — 이것은 「시도가 실패했다」이고 그것은 「시도할 주체가 없다」다(정본 결정 8-1).
 - `Acknowledge` 의 해제 조건 · 운영 모드 완화 경로 · 기동 복원을 바꾸지 않는다.
 - 죽은 실행자를 되살리지 않는다(정본 결정 11-1). exit 관측 루프를 만지지 않는다.
 - 행을 버리는 어떤 형태의 "정리"도 하지 않는다.
 
-## 열린 결정 (freeze 리뷰가 답할 것 — design D2·D3)
+## 결정 (freeze 1판 리뷰 뒤 확정 — design 2판 D2·D3·D7·D8)
 
-- **한도 값.** 동기 경로의 `DefaultCriticalAttempts = 3`(`notifier.go:45`)은 한 `Notify` 안의 3회(약 34 s)다.
-  실행자는 사이클당 1회(2 s 간격)라 같은 3 이면 약 6 s 의 transport 두절이 durable 승격이 된다. 등가 시간으로 잴지
-  횟수로 둘지 — 보수 쪽은 **횟수 3**(정본 시나리오가 「재시도 한도」라고 적는다)이지만 대가(운영자 완화 빈도)를 적는다.
-- **publisher 부재(B8)를 실패 시도로 셀지.** `deliverOne` 은 오늘 이 경우 `attempts` 를 올리지 않는다. 동기 경로는
-  `break` 로 루프를 끝내고 곧장 잠근다(`deliver` B3 → B27). 같은 결과가 되도록 세는 쪽이 보수다.
+- **한도 = 3** (`obs.DefaultCriticalAttempts` 인용, design D2). 1판의 *"같은 3 이면 약 6 s … 동기 경로는 약 34 s"* 는
+  서로 다른 실패 양상을 비교한 **잘못된 문장**이었다(review F11). 같은 양상에서 두 경로는 같은 시간이다 — 즉시 실패 4 s,
+  매번 10 s timeout 34 s.
+- **publisher 부재 = 실패 시도** (design D3). 결과는 동기 경로와 같고 지연만 ≈0 s 대 ≈4~6 s 로 다르다(F13).
+- **승인이 이긴다** (Manager 결정 M1 = C, design D7): 차단 **적용**만 `Acknowledge` 와 같은 `n.mu` 배제 아래(메모리 전용 — 승인 세대 비교 +
+  게이트 map 삽입), 원격 전송·원장 트랜잭션·승격·로그는 밖. 판정 근거를 얻은 뒤 승인이 있었으면 그 판정은 버린다.
+- **기록 자체의 실패도 지속 실패다** (Manager 결정 M2 = (ii), design D8): 한 행에서 원장에 시도를 남기지 못한 연속 횟수가 같은 한도에
+  이르면 잠근다(승인이 연속을 끊는다). 발행 뒤 전달 기록 실패는 동기 경로처럼 즉시 잠근다(D1).
 
 ## Impact
 
-- `internal/app/engine/alertdelivery.go` — `alertDeliverer` 에 게이트·계정 참조 배선, `deliverOne` 한도 판정,
-  `cycle`/`PendingAlerts` 선택 순서. FLM 은 편집 뒤 `revision: current` 재추출.
-- `internal/journal/outbox.go` — `PendingAlerts` 의 정렬 또는 한도 인지 조회 하나.
-- `internal/app/engine/auxiliary.go` · `gateway.go` — 실행자 생성 시 배선(가능하면 배선만).
+- `internal/app/engine/alertdelivery.go` — `alertDeliverer` 에 게이트·계정 참조·배제 배선, `deliverOne` 한도 판정(D1)과
+  연속 기록 실패 계수(D8), `cycle`/`PendingAlerts` 선택 순서. FLM 은 편집 뒤 `revision: current` 재추출.
+- `internal/journal/outbox.go` — `PendingAlerts` 의 정렬(한도 인자).
+- `internal/journal/alert_claim.go` — `SettleResult.Attempts` (additive 필드), `settleUnderClaim` 적용 경로에서 같은 트랜잭션
+  읽기(D1). 스키마 무변경. FLM `internal-journal--journal.settleunderclaim`.
+- `internal/obs/notifier.go` — `ackGen` 필드, `AckGeneration` · `LatchUnlessAcknowledgedSince`(새 leaf), `Acknowledge` 에 세대 증가 한 줄(D7).
+  FLM `internal-obs--notifier.acknowledge`(편집 대상, 1.3 재추출).
+- `internal/app/engine/auxiliary.go` — 실행자 생성 시 배선만.
 - 시험: `a098_*` 는 그대로 초록이어야 한다(특히 `a098_the_backlog_does_not_delay_protection_test.go`). 새 RED 는 tasks 2.x.
 - 스펙: `engine-safety` ADDED 2. a092 델타의 「굶주림」 문단은 a092 21판이 지운다.

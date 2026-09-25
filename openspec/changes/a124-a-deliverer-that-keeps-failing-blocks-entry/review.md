@@ -101,3 +101,89 @@ Teammate 권고는 (ii). 둘 다 보수 방향이라 사람 결정 대상은 아
 
 F1·F2·F3·F4·F8 을 design(과 spec 시나리오: 발송 중 승인 · 승인 직후 늦은 실패 · 기록 실패 지속)에 반영하고, F5·F6·F7·F9·F10·F11·F12·F13 을
 기록·교정한 뒤 같은 두 보이스로 재리뷰한다. 그때까지 tasks 0.4 는 열어 두고 1.2 이후는 착수하지 않는다.
+
+## §0.2 proposal-freeze 2판 (2026-09-26) — 판정 **REJECT** → design 3판
+
+- 입력: Manager 결정 **M1 = C · M2 = (ii)** (2026-09-26, coordinator 메시지). design 2판 = D1 판정 입력 · D2/D3 확정 · D6 재유도 · D7 배제 ·
+  D8 기록 실패 · D9 정제 + 1판 발견 처분표. spec 에 「승인이 이긴다」 · 「기록 실패도 지속 실패」 · 시나리오 3, tasks 2.7~2.11 · 3.4~3.6.
+- 2판이 새로 기대는 함수의 AST 번들을 **문서보다 먼저** 추출: `Journal.settleUnderClaim`(편집 대상) · `Notifier.Acknowledge` ·
+  `Journal.TransitionOperatingMode`(대조), base `4798d399`. `check_analysis.py` 에서 이 셋의 형식 오류 0.
+- 보이스: codex 2회차(`analysis/freeze-review/codex-r2-prompt.md` · `codex-r2-output.md`, 같은 설정 · 독립 프롬프트 — 1판 발견은 「검증할 주장」으로만
+  줬다) + Teammate 적대 Eng.
+- codex 2회차: 1판 발견 F1·F7·F9·F10·F11·F12·F13 **RESOLVED**, F2·F3·F4·F5·F6·F8 **PARTIAL**. 새 발견:
+
+| id | 심각도 | 발견 | 판정 → design 3판 |
+|---|---|---|---|
+| N1 | P1 | 배제 구간에 승격 트랜잭션·로그까지 넣어 exit `Notify` 가 그만큼 기다린다; 「연결 대기가 옮겨 갈 뿐」은 거짓 | 수용 → 배제 = 정산 트랜잭션 하나, 승격·로그 밖; 승격을 밖에 둬도 최종 상태가 같다는 논증(승인은 모드를 풀지 않는다); exit 몫은 결정적 시험 2.6 |
+| N2 | P1 | 승인 뒤 기록이 원장 **오류**로 끝나면 결과를 몰라 D8 이 승인 뒤 재잠금 | 수용 → 한도 도달 시 배제 안 울타리 읽기(`UndeliveredCount`) — 0 이면 잠그지 않음, 읽기 오류면 잠금(원장 불가독 = 감시 실패, a092 :66 이 겨냥한 사실과 다름을 기록) |
+| N3 | P1 | 발행 성공 + 전달 정산 실패(`deliverOne` B11)가 판정 밖 — 동기 경로는 즉시 잠근다(`notifier.go:465-491`) | 수용 → 전달 정산 표: 오류·`NotFound`·모르는 값 → 즉시 잠금 + 승격, 임차 유지. Teammate 추가: 오류는 발행~정산 사이 승인을 가리므로 **같은 울타리** |
+| N4 | P1 | 행별 계수의 수명(재무장 같은 id · 가득 찬 배치 · 반납 성공 초기화) 미정 | 수용 → 계수를 **실행자 단위 하나**로; 초기화는 정산 쓰기 성공만. 한계(간헐 실패 · 한 행만 영구 실패)는 기록 — 기동 복원이 덮는다 |
+| N5 | P1 | D6 가 조건부 예시를 일반 상한처럼 썼다 | 수용 → 일반 상한 없음 명시, 전제 H(동질 두절) 조건부 식, 이질 실패의 `K` 항, 무계 경우 명명, 781 s 철회 |
+| N6 | P2 | 실패 기록 `NotFound` 의 「승격 parity」는 틀렸다(`lost` → `owed=false`) | 수용 → 잠금만 |
+| N7 | P1 | spec/tasks 가 새 실패 정책을 다 싣지 않았다 | 수용 → spec: 나열 오류 · 정산 성공만 초기화 · 울타리 · 전달 기록 실패 · 배제 범위 · 로그 정제 + 시나리오 2; tasks 2.6·2.8~2.12, 뮤테이션 목록 확장 |
+| N8 | P2 | 배포 첫 사이클 승격은 조건부 | 수용 → Risks 문장 교정 |
+
+- F8 부분 해소 지적(로그의 `err.Error()` 에 계좌): 2판의 「계좌 필드 없이」는 기존 로그 관례(`Notifier.escalate` 가 `FieldAccount` 를 쓴다)와
+  어긋나 **철회**했다. 게이트 detail 정제(불변식 8의 노출 자리)는 유지. 로그 규약 자체의 강화는 이 change 범위 밖.
+- Teammate 적대 Eng 추가 발견(3판 반영): 전달 정산 오류의 승인 가림(위 N3 행) · a092 착지 전 `M ≤ 54 s` 가 81 s 임차 안에 드는지(D6 주석) ·
+  역순 잠금(연결을 쥔 채 `n.mu`) 부재를 `Notify` 호출 7 자리와 journal 콜백 메서드 0 으로 확인(D7).
+
+## §0.3 proposal-freeze 3판 (2026-09-26) — 판정 **REJECT** → design 4판
+
+- 보이스: codex 3회차(`codex-r3-prompt.md` · `codex-r3-output.md`, 같은 설정 · 독립 프롬프트, 이전 발견은 「검증할 주장」) + Teammate 적대 Eng.
+  3회차 실행 중 Teammate 가 design D4 의 한 칸(`HeldElsewhere` 유계 조건)을 고쳤다 — codex 가 어느 판을 읽었는지 확정할 수 없어 그 칸은 4회차가 다시 본다.
+- codex 3회차: F1·F4·F6·F7·F9·F10·F11·F12·F13·N6·N8 **RESOLVED**, F2·F3·F5·N1·N2·N3·N4·N5·N7 **PARTIAL**, F8 **NOT RESOLVED**. 새 발견:
+
+| id | 심각도 | 발견 | 판정 → design 4판 |
+|---|---|---|---|
+| R1 | **P0** | 3판은 정산 트랜잭션을 `n.mu` 안에 넣었다 — exit `Notify`(`exitloop.go:1710`)와 비상 청산(`flatten.go:694`, `context.Background()`)이 잡는 뮤텍스를 실행자가 원장 대기 동안 쥔다. `sync.Mutex` 는 ctx 를 보지 않아 **취소 불가 대기**. 「트랜잭션 하나」는 시간을 묶지 않는다 | **수용** → 배제를 **메모리 전용**으로: `Notifier.ackGen`(원자) + `AckGeneration()` + `LatchUnlessAcknowledgedSince(gen, Block)`. 원장·승격·로그·반납 전부 배제 밖. 대가: `Acknowledge` 에 세대 증가 **한 줄**(해제 조건 불변) |
+| R2 | P1 | D9 가 기존 관례를 들어 새 로그에 계좌·원문 오류를 허용 — 불변식 8 위반 | **수용** → 새 줄은 허용 목록 필드만, 승격 오류는 `err` 대신 고정 분류, sentinel 시험. 3판 문장 철회 |
+| R3 | P1 | 실행자 단위 계수는 `LeaseLost`/`AlreadySettled`(0 행 쓰기)와 다른 행 성공이 지운다 → 한 행 영구 실패를 놓친다 | **수용** → 행별 계수로 되돌리고 그 행의 `Applied` 만 지움 |
+| R4 | P1 | 전역 `UndeliveredCount` 울타리는 오류 난 에피소드가 남았는지 모른다(승인 → 새 행 B → A 오류 → B 때문에 재잠금) | **수용** → 원장 읽기 울타리 폐기, 승인 세대 울타리. 승인은 계수 맵 전체를 비운다 |
+| R5 | P1 | spec 이 승격을 배제 안과 밖에 동시에 요구, tasks 3.5 와 4.1 이 모순 | **수용** → 배제 계약 하나(메모리 전용)로 spec·tasks·처분표 정렬 |
+| R6 | P1 | 「임차 유지 → 다음 사이클 재발행 없음」은 거짓 — 배치가 81 s 를 넘기면 만료 후 재발행 | **수용** → 보장을 「임차가 살아 있고 교체되지 않은 동안」으로, 동기 경로도 같다(`notifier.go:486-490`), 만료 시험 추가 |
+| R7 | P2 | D6 의 `M ≤ 54 s` 는 근거 없음, 만료는 `LeaseLost` 를 만들지 않는다(토큰 교체만) | **수용** → 철회, 문장 교정. 4판의 `M` 은 판정만 늦춘다 |
+| R8 | P2 | 실행자 단위 계수는 한 배치 안에서 3 을 채워 「최소 ≈ 4 s」가 거짓 | **수용** → 행별 계수로 최소 ≈ 2 사이클 복원 |
+
+- codex 지적 교정 두 가지: gate OFF 경계의 인용을 `cmd/tossctl/engine.go:220-221`(`errEngineGateOff`)로; 「journal 에 콜백 없음」은 틀렸다(`TransitionOperatingMode`
+  가 트랜잭션 안에서 `Auditor.RecordAction` — FLM B23). 4판은 원장을 배제 밖에만 두므로 교착 논증이 그것에 기대지 않는다.
+- **Manager 확인 필요**: 4판의 R1 해법은 M1 = C 의 「Notifier 배제」 안이지만 `Acknowledge` 에 **한 줄**(세대 증가)을 넣는다. 해제 조건(승인 + 미전달 0)은
+  바뀌지 않는다. 비목표 「`Acknowledge` 의 해제 조건을 바꾸지 않는다」와 충돌하지 않는다고 판단했고 proposal Impact 에 적었다.
+- Teammate 적대 Eng 추가(4판 반영): 반납을 울타리 **전**으로(실행자가 `n.mu` 를 기다리는 동안 임차를 쥐지 않게), 세대 비교 시점(사이클 시작 · 울타리)을 명시.
+
+## §0.4 proposal-freeze 4판 (2026-09-26) — 판정 **REJECT** · **Manager 재결정 필요 (M1)**
+
+- 보이스: codex 4회차(`codex-r4-prompt.md` · `codex-r4-output.md`, 같은 설정 · 독립 프롬프트) + Teammate 적대 Eng(아래 재확인).
+- codex 4회차: F1·F4·F6~F13 · N6 · N8 · R2 · R3 · R6 · R7 · R8 **RESOLVED**; F2 · F3 · F5 · N1~N5 · N7 · R1 · R4 · R5 **PARTIAL**. 새 발견:
+
+| id | 심각도 | 발견 | Teammate 재확인 |
+|---|---|---|---|
+| Q1 | **P0** | 4판의 「메모리 전용」 배제도 손절 경로에 원격 대기를 들인다: 실행자가 `n.mu` 를 쥔 채 `Gate.Block` → `g.mu` 를 기다리는데, 전략 진입 dispatch 는 `g.mu` 를 **브로커 전송 콜백 동안** 쥔다 | **확인** — `execgw/strategy_entry_gate_authority.go:60-72` (`g.entry.mu.Lock(); defer Unlock(); … return fn()`), `fn` 은 `gateway.go:692-708` 에서 `plan.call(tctx, …)` 로 전송. exit `Notify`(`exitloop.go:1710`)·비상 청산(`flatten.go:694`)이 `n.mu` 를 기다린다 |
+| Q2 | P1 | 세대를 `Acknowledge` **시작**에 올리면, 진행 중인 승인 안에서 스냅숏한 실행자가 같은 세대로 울타리를 통과해 해제 뒤 재잠금 | 확인 — 증가 지점과 `Clear` 지점(:875) 사이에 원장 연산이 있다 |
+| Q3 | P1 | 무관한(또는 실패한) 승인이 세대를 바꿔 필요한 판정을 버리고, 그 행이 다음에 성공하면 **영영 잠기지 않는다**; 반복 승인이 D8 계수를 계속 지운다 | 확인 — 4판의 「다음 실패가 다시 판정」은 보장이 아니다(전달 성공 시 PENDING 을 떠남, `outbox.go:453-456`) |
+| Q4 | P2 | 정산 `Applied` 뒤 · 울타리 전의 전달+재무장은 옛 판정을 새 에피소드에 적용(보수 방향) | 수용(기록 예정) |
+| Q5 | P2 | 남이 정산한 행의 계수가 승인·재시작까지 남는다 | 수용(기록 예정) |
+| Q6 | P2 | D6 전제 H 가 공식에 불충분, a092 식에 `C` 를 넣으면 발행 시간을 이중 계산(`Q + L·T + (L−1)·C`) — a092 식은 재정의가 아니라 교체해야 | 수용(기록 예정) |
+| Q7 | P3 | 처분표 F2 행이 D7 과 모순 | 반영(표 교정) |
+
+### 기존 결함 (a124 범위 밖, 보고)
+
+Q1 의 경로는 **HEAD 동기 경로에 이미 있다**: `Notifier.deliver` 와 `claimAndDeliver` 가 `n.mu` 를 쥔 채 `n.Gate.Block`(`notifier.go:280·484·520·571`)을 부른다 →
+전략 dispatch 가 `g.mu` 를 전송 동안 쥐면, 전달 실패를 겪은 동기 `Notify`(exit 루프 포함)와 그 뒤의 모든 `n.mu` 대기자가 브로커 전송을 기다린다.
+전략 진입은 이 빌드에서 휴면이라(`cmd/tossctl/engine_strategy_entry_dormant_test.go`) 오늘 발현하지 않지만, **전략 진입을 켜기 전에** 닫혀야 한다.
+`EntryGate` 의 `g.mu` 를 전송 콜백 동안 쥐는 설계(a061 계열 ABA 봉인)의 문제이며 a124 가 고칠 표면이 아니다.
+
+### M1 재결정 요청 — 선택지
+
+C(`Notifier` 배제)는 두 형태 모두 떨어졌다: 3판(원장 대기를 `n.mu` 안에, R1) · 4판(`g.mu` 대기를 `n.mu` 안에, Q1). **`n.mu` 안에서 `Gate.Block` 을
+부르는 모든 형태는 Q1 을 물려받는다** — 동기 경로의 기존 결함과 같은 모양이다.
+
+| 안 | 내용 | Q1 | Q2 | Q3 | 표면 |
+|---|---|---|---|---|---|
+| **B′ (권고)** | `EntryGate` 에 사유별 **해제 세대**: `Clear(reason)` 가 실제로 지웠을 때만 그 사유의 세대를 올린다(`g.mu` 아래, 이미 `revision++` 하는 자리 — `retry.go:537-543`). 새 메서드 `ClearEpoch(reason)` · `BlockUnlessClearedSince(reason, epoch, detail)`(둘 다 `g.mu` 만). 실행자는 정산 **전**에 세대를 읽고, 판정 뒤 `BlockUnlessClearedSince`. `n.mu` 를 잡지 않는다. `Acknowledge` 무편집 | 해소 — 실행자는 손절 경로가 기다리는 뮤텍스를 쥐지 않는다(`g.mu` 대기는 실행자 자신의 것) | 해소 — 세대가 **해제 순간**에 오른다 | 해소 — 해제는 미전달 0 일 때만 일어나므로(FLM acknowledge B10), 세대가 바뀐 판정은 그 행이 이미 승인·전달된 것. 실패한·부분 승인은 세대를 안 바꾼다 | **execgw(High-risk)** 필드 1 · 메서드 2, `Clear` 한 줄 |
+| C″ | C 유지, `Block` 을 `n.mu` 밖으로 빼고 `n.mu` 안에서는 「해제 예약」만 | Q1 해소 | 해제~`Block` 사이 창이 다시 열린다(F2 재발) | — | obs |
+| A | 원장 트랜잭션으로 판정 + 게이트를 원장에서 유도 | 해소 | 해소 | 해소 | 게이트 래치를 원장 파생으로 — 기동 복원·`Acknowledge` 해제 경로 변경 = **사람 결정** 대상 |
+
+Teammate 권고는 **B′**. 1판 M1 표에서 B 를 「execgw 표면 추가 — Non-goal 밖」이라 낮게 봤으나, C 가 Q1 을 피할 수 없다는 것이 드러났다.
+B′ 는 `Acknowledge` 의 해제 조건과 `Notifier` 를 건드리지 않는다. 결정되면 design 5판(D7 · D8 · spec 「승인이 이긴다」 · tasks 2.9 · 2.10 · 3.5 ·
+proposal Non-goals/Impact)을 쓰고 Q4~Q6 을 반영해 5회차 재freeze 한다. **tasks 0.4 는 체크하지 않는다.**
