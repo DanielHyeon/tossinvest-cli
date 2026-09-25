@@ -764,5 +764,76 @@ func TestTheBootResolutionLeavesTheFirstWakeFree(t *testing.T) {
 	a109WaitFor(t, "첫 wake 가 막히지 않고 붙기", func() bool { return a114ListedBy(commander) == "first" })
 }
 
+// ---- 구현 후 리뷰 (post-review) --------------------------------------------------------
+
+// TestAnInternalListErrorDoesNotFlapTheSeat — post-review N7: position policy decoder 의 문구도 답이다.
+func TestAnInternalListErrorDoesNotFlapTheSeat(t *testing.T) {
+	var calls atomic.Int64
+	log := &a109SyncWriter{}
+	live := &a114FakeLifecycle{}
+	attachment := a114Attachment(t, a114Clock(), log,
+		func(context.Context) (positionPolicyLifecycleClient, error) {
+			calls.Add(1)
+			return &a114FakeLifecycle{}, nil
+		})
+	attachment.interval = 0
+	attachment.attach(live)
+	live.fail(fmt.Errorf("%s: database is locked", positionPolicyRemoteFailurePhrase))
+	for range 5 {
+		_, _ = attachment.List(context.Background())
+	}
+	time.Sleep(50 * time.Millisecond)
+	if calls.Load() != 0 || strings.TrimSpace(log.String()) != "" {
+		t.Fatalf("엔진의 내부 오류 답(List)이 재-dial %d번·로그 %q 를 만들었다", calls.Load(), log.String())
+	}
+}
+
+// TestAReasonlessRemoteFailureIsNotOurEngine — post-review P2-1. 사유 없는 JSON 거절은 우리 엔진의 답이
+// 아니다(옛 포트에 다른 서버). 답으로 읽으면 자리가 죽은 client 에 영구히 묶인다.
+func TestAReasonlessRemoteFailureIsNotOurEngine(t *testing.T) {
+	var calls atomic.Int64
+	live := &a114FakeLifecycle{}
+	attachment := a114Attachment(t, a114Clock(), io.Discard,
+		func(context.Context) (positionPolicyLifecycleClient, error) {
+			calls.Add(1)
+			return &a114FakeLifecycle{}, nil
+		})
+	attachment.interval = 0
+	attachment.attach(live)
+	live.fail(fmt.Errorf("%s: ", positionPolicyRemoteFailurePhrase))
+	_, _ = attachment.List(context.Background())
+	a109WaitFor(t, "사유 없는 거절 뒤 재부착 시도", func() bool { return calls.Load() >= 1 })
+}
+
+// TestARecoveredSeatStopsAsking — post-review N2. 한 번 실패한 뒤 **같은 client** 로 회복하면 시도 대상에서
+// 빠져야 한다. 아니면 멀쩡한 자리가 간격마다 재-dial·교체된다(로그 없이).
+func TestARecoveredSeatStopsAsking(t *testing.T) {
+	var calls atomic.Int64
+	live := &a114FakeLifecycle{}
+	attachment := a114Attachment(t, a114Clock(), io.Discard,
+		func(context.Context) (positionPolicyLifecycleClient, error) {
+			calls.Add(1)
+			return nil, errors.New("잠깐 못 붙음")
+		})
+	attachment.interval = 0
+	attachment.attach(live)
+	live.fail(&url.Error{Op: "Get", URL: "http://127.0.0.1:1/v1/positions", Err: syscall.ECONNRESET})
+	_, _ = attachment.List(context.Background())
+	a109WaitFor(t, "실패 뒤 시도 1회", func() bool { return calls.Load() == 1 && !attachment.inFlight() })
+	live.fail(nil)
+	// 회복 뒤 첫 호출은 성공을 알기 **전에** 입구에서 한 번 더 깨울 수 있다(자리가 아직 시도 대상이다).
+	// 그 호출의 성공이 자리를 시도 대상에서 빼야 하므로, 그 뒤로는 시도 수가 늘지 않아야 한다.
+	_, _ = attachment.List(context.Background())
+	a109WaitFor(t, "시도 종료", func() bool { return !attachment.inFlight() })
+	settled := calls.Load()
+	for range 5 {
+		_, _ = attachment.List(context.Background())
+		a109WaitFor(t, "시도 종료", func() bool { return !attachment.inFlight() })
+	}
+	if got := calls.Load(); got != settled {
+		t.Fatalf("회복한 자리가 계속 시도 대상이다: 회복 뒤 시도 %d번 더, want 0", got-settled)
+	}
+}
+
 // a114UnusedGuard 는 filepath 를 쓰는 테스트가 빠져도 import 가 깨지지 않게 한다.
 var _ = filepath.Join

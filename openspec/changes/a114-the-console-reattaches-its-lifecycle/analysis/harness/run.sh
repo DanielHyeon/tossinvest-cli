@@ -18,5 +18,11 @@ GOFLAGS=-trimpath go test -count=1 -run "$(cat "$H/tests.txt")" ./cmd/tossctl/ >
 rc=$?
 set -e
 rm -rf "$W"
-echo "$name rc=$rc"
-grep -E "^(--- FAIL|    --- FAIL)" "${TMPDIR:-/tmp}/a114-mut-$name.log" | head -6 || true
+# 판정은 rc 가 아니라 출력이다(post-review P2-3): TMPDIR 정리 실패(`unlinkat … directory not empty`)가
+# 무변이 대조군도 rc=1 로 만든 적이 있다. FAIL 줄이 있으면 CAUGHT, `ok` 줄이 있으면 SURVIVED, 둘 다 없으면 BROKEN.
+log="${TMPDIR:-/tmp}/a114-mut-$name.log"
+if grep -qE "^(--- FAIL|    --- FAIL)" "$log"; then verdict=CAUGHT
+elif grep -qE "^ok[[:space:]]" "$log"; then verdict=SURVIVED
+else verdict=BROKEN; fi
+echo "$name rc=$rc verdict=$verdict"
+grep -E "^(--- FAIL|    --- FAIL)" "$log" | head -6 || true

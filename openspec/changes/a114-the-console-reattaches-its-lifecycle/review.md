@@ -62,3 +62,22 @@ freeze 종결 — 구현 착수.
   콘솔 재시작 없이 다시 붙는다` · 「배선되지 않아」 notice **없음**.
 - base 바이너리(`634cf3c5`, 같은 config): `engine-owned PositionPolicyCommander가 배선되지 않아 조회만 가능하다.`
 - 버튼·폼은 누르지 않았다(GET 두 번뿐). 부착 절반은 issues R3.
+
+## §1 구현 후 리뷰 (2026-09-25 — 648df8ef)
+
+구성: 독립 서브에이전트(Opus, 별도 컨텍스트, 읽기 전용 — gstack `review` pre-landing 관점 대체; codex 적대 패스는
+이 자율 세션에서 쓰지 않았다). `-race -count=3` 통과·잠금 중첩 없음·펌프 종료·부팅 시간 불변·재전송 경로 없음을 확인했고,
+새 변이 7개 중 2개 생존을 찾았다.
+
+| id | 발견 | 판결 → 반영 |
+| --- | --- | --- |
+| P2-1 | 사유 없는 JSON 거절도 「remote failure」 문구라 답으로 읽혀 자리가 죽은 client 에 묶일 수 있다 | 수용 → 사유가 비면 탈착(`engineRemoteFailure`) + 시험 + 변이 P21. 타입 도입은 issues S1 후속 |
+| P2-2 | 펌프 틱 = 간격이라 지터로 15~19% 틱이 건너뛰어져 60s 공백 | 수용 → 틱을 간격의 절반으로. 결정적 시험 없음(원장 명기) |
+| P2-3 | 하네스가 rc 로만 판정 — TMPDIR 정리 실패가 대조군을 rc=1 로 만듦 | 수용 → FAIL/ok 줄로 판정(CAUGHT/SURVIVED/BROKEN) |
+| P2-4 | 밀려난 client 를 강제로 닫으면 진행 중인 명령을 끊는다(오늘 no-op) | 수용 → 코드 주석·issues S2 에 「유휴 연결만」 |
+| N2 생존 | 성공이 `failed` 를 안 지워도 초록 | 수용 → `TestARecoveredSeatStopsAsking` |
+| N7 생존 | position policy 문구 제거가 초록 | 수용 → `TestAnInternalListErrorDoesNotFlapTheSeat` |
+| N4 생존 | wake 의 ctx 검사 제거 | 수용(기록) — 종료 뒤 시도는 즉시 실패, 무해 |
+
+화면 영향(리뷰어 확인): 설정 요약의 정책 행이 「읽지 못함 — <detached 문장>」(의도, 다소 김), 포트폴리오는 탈착 동안
+「관리 여부 불명」(issues R2), 격리 배지는 List 성공 뒤에만 조회되어 새 배너 없음.

@@ -39,4 +39,18 @@ C5 가 잰다. **M33**(빈 자리 sentinel) — lifecycle 에는 unavailable sen
 | C7 | runConsole 안에 부팅 1회 `positionpolicyrpc.Dial` 재도입 | **사망** | `TestRunConsoleNeverDialsTheLifecycleItself` |
 | C8 | 격리 해제 전달 제거(항상 ErrUnwired) | **사망** | `…NeverResendsACommand` · `TestTheQuarantineSurfaceRidesTheAttachment` |
 
-합계 **20/20 사망**, 생존 0. 이 수는 **내가 고른 변이 집합**에 대한 진술이다(a113 교훈 — 구현 후 리뷰가 추가 변이를 낼 수 있다).
+1판 합계 **20/20 사망**(648df8ef). 이 수는 내가 고른 변이 집합에 대한 진술이었다 — 구현 후 독립 리뷰가 새 변이
+일곱을 냈고 그중 **둘이 생존**했다(아래 N2·N7).
+
+## 구현 후 리뷰의 변이 (2판)
+
+| id | 변이 | 1판 | 2판 | 죽인 테스트(2판) |
+| --- | --- | --- | --- | --- |
+| P2 (리뷰 N2) | observe 의 성공·답 경로가 `failed` 를 지우지 않음 — 같은 client 로 회복한 자리가 간격마다 재-dial·교체(로그 없이) | **생존** | **사망** | `TestARecoveredSeatStopsAsking` |
+| P7 (리뷰 N7) | position policy decoder 의 remote failure 문구를 답에서 뺌 | **생존** | **사망** | `TestAnInternalListErrorDoesNotFlapTheSeat` |
+| P21 | 사유 없는 remote failure 도 답으로(리뷰 P2-1) | — | **사망** | `TestAReasonlessRemoteFailureIsNotOurEngine` |
+| 리뷰 N1·N3·N5·N6 | 격리 문구 제거·실패 경로 wake 제거·seat 증가 제거·토큰 검사 제거 | 사망 | — | 리뷰어 실측 |
+| 리뷰 N4 | wake 가 `ctx.Err()` 를 무시 | 생존 | 생존(수용) | 종료 뒤 시도는 즉시 실패한다 — 등가에 가까운 무해 변이 |
+
+2판 재측정(하네스 판정을 rc 가 아니라 FAIL/ok 줄로 바꾼 뒤 — 리뷰 P2-3): 대조군 green, P2·P7·P21·C1·C2 CAUGHT.
+펌프의 절반 틱(리뷰 P2-2)은 시험으로 고정하지 않았다 — 지터 의존이라 결정적 시험이 없다(원장에 명기).

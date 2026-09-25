@@ -11,11 +11,19 @@
 것이고 그 패키지는 이 change 의 파일 표면 밖이다. 문구는 한 곳(상수 셋)에 두고
 `TestTheAnswerPhrasesAreTheSourcesOwn` 이 원본 파일의 문자열 리터럴로 고정한다. **후속 후보**: 타입 도입 후 문구 판정 삭제.
 
+### S1a. 사유 없는 remote failure 는 답이 아니다 (post-review P2-1)
+
+decoder 는 코드가 비어 있어도 JSON 이면 같은 문구로 감싼다. 우리 엔진은 거절에 언제나 `err.Error()` 를 싣으므로,
+문구 뒤 사유가 비면 탈착으로 본다(`engineRemoteFailure`). 옛 포트에 다른 JSON 서버가 사유를 붙여 답하면 여전히
+답으로 읽힌다 — 에페메럴 포트 충돌 + 사유 있는 JSON 이라는 이중 우연이며, S1 의 타입 도입이 닫는다.
+
 ### S2. 밀려난 `positionpolicyrpc.Client` 는 닫을 수 없다
 
 그 client 에는 Close 가 없다. wrapper 의 `io.Closer` 분기는 오늘 운영에서 no-op 이고, 유휴 연결은 엔진 서버
 `IdleTimeout: 15s` 또는 엔진 사망 시 커널이 닫는다(얼어붙은 엔진이면 그보다 길 수 있다 — freeze P2). a109 가
 strategyprojectionrpc 에 한 것(`Client.Close` = `CloseIdleConnections`)을 positionpolicyrpc 에 하는 것이 후속 후보.
+⛔ 그 Close 는 **유휴 연결만** 닫아야 한다 — 요청은 잠금 밖에서 옛 client 를 쥐므로 강제 종료는 진행 중인
+Apply·격리 해제를 끊어 적용 여부를 모르게 만든다(post-review P2-4, 코드 주석에도 적음).
 
 ### S3. 기존 소스 핀 두 개가 console.go 만 읽었다
 

@@ -162,7 +162,9 @@ func (a *positionPolicyLifecycleAttachment) attempt() {
 
 // closeEvictedLifecycleClient 는 자리에서 밀려난 client 를 놓아 준다.
 //
-// io.Closer 면 닫는다. `positionpolicyrpc.Client` 는 오늘 Close 가 없다 — 그 client 의 유휴
+// io.Closer 면 닫는다. ⛔ 그 Close 는 **유휴 연결만** 닫아야 한다(`CloseIdleConnections`) — 요청은 잠금
+// 밖에서 옛 client 를 쥐고 있으므로, 연결을 강제로 끊는 Close 는 진행 중인 Apply·격리 해제를 끊어
+// 「엔진이 적용했는가」를 모르게 만든다(post-review P2-4). `positionpolicyrpc.Client` 는 오늘 Close 가 없다 — 그 client 의 유휴
 // 연결은 엔진 서버의 IdleTimeout(15s, internal/app/engine/position_policy_transport.go)이
 // 닫거나, 엔진이 죽었으면 커널이 닫는다. 그래서 밀려난 값이 쥔 것은 길어야 15초다
 // (issues.md — Close 추가는 이 change 의 파일 표면 밖).
@@ -174,6 +176,10 @@ func closeEvictedLifecycleClient(client positionPolicyLifecycleClient) {
 
 // pump 는 **화면 요청이 없어도** 시도를 깨운다 — a114 freeze P1-2.
 //
+// 틱은 간격의 **절반**이다(post-review P2-2). 틱이 간격과 같으면 스케줄 지터로 `now-lastTry < interval`
+// 이 되는 틱이 건너뛰어져 재시도 간격이 두 배(60s)로 벌어졌다(리뷰어 실측 15~19%). rate limit 이
+// 실제 빈도를 간격당 1회로 막으므로 절반 틱의 비용은 wake 의 잠금 한 번이다.
+//
 // 콘솔에는 httpapi 의 publisher 같은 상시 구동원이 없다. 화면이 안 열려 있으면 엔진이 떠도 아무도
 // wake 를 부르지 않고, 콘솔 자신이 autostart 한 엔진도 그렇다. 그래서 간격마다 한 번, 자리가 시도
 // 대상일 때만 깨운다. 과빈도는 wake 의 rate limit·single-flight 가 막는다. 간격이 0 이하면(테스트)
@@ -182,7 +188,7 @@ func (a *positionPolicyLifecycleAttachment) pump() {
 	if a.interval <= 0 {
 		return
 	}
-	ticker := time.NewTicker(a.interval)
+	ticker := time.NewTicker(max(a.interval/2, time.Millisecond))
 	defer ticker.Stop()
 	for {
 		select {
@@ -256,8 +262,22 @@ func endpointAnswered(err error) bool {
 			return true
 		}
 	}
-	return strings.Contains(text, positionPolicyRemoteFailurePhrase) ||
-		strings.Contains(text, exitQuarantineRemoteFailurePhrase)
+	return engineRemoteFailure(text, positionPolicyRemoteFailurePhrase) ||
+		engineRemoteFailure(text, exitQuarantineRemoteFailurePhrase)
+}
+
+// engineRemoteFailure 는 「우리 엔진이 코드와 **사유**를 붙여 답한 실패」인가다 — a114 post-review P2-1.
+//
+// decoder 는 JSON 본문이 해석되기만 하면 코드가 비어 있어도 같은 문구로 감싼다. 우리 엔진은 거절할 때
+// 언제나 `err.Error()` 를 message 로 싣는다(engine position_policy_transport.go `writePositionPolicyRPCError`).
+// 그래서 문구 뒤의 사유가 **비어 있으면** 우리 엔진의 답이 아니다 — 옛 포트에 다른 JSON 서버가 앉은
+// 모양(예: 사유 없는 `{"code":"unauthorized"}`)이고, 그것을 답으로 읽으면 자리가 죽은 client 에 묶인다.
+func engineRemoteFailure(text, phrase string) bool {
+	at := strings.Index(text, phrase+":")
+	if at < 0 {
+		return false
+	}
+	return strings.TrimSpace(text[at+len(phrase)+1:]) != ""
 }
 
 // observe 는 방금 호출의 결과로 자리 상태를 갱신하고 **전이**만 보고한다.

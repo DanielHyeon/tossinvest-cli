@@ -22,7 +22,7 @@
 - [x] 1.4 FLM 구현 후 재최신화 + `check_analysis.py` rc 0.
 - [ ] 1.5 검증: cmd/tossctl `-race` 대상 테스트 · `make vet` · `make lint` · `make test`.
 - [x] 1.6 콘솔 실측(규칙 13): 격리 config·엔진 없이 콘솔을 띄워 정책 화면 본문 확인(버튼 누르지 않음).
-- [ ] 1.7 구현 후 리뷰 → review.md §1.
+- [x] 1.7 구현 후 리뷰 → review.md §1.
 - [ ] 1.8 착지 기록 커밋.
 
 ## 2. 게이트 (Manager)
