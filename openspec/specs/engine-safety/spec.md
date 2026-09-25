@@ -1145,7 +1145,7 @@ critical 알림의 outbox 기록 시도 자체가 실패하면, 신규 진입을
 
 ### Requirement: strategy projection endpoint의 잔재 회수는 자기 수명주기가 만드는 모든 상태를 다룬다
 
-엔진의 strategy projection endpoint(control 디렉터리·descriptor·socket)의 기동 시 잔재 회수는 그 생성·종료·회수 시퀀스가 만들 수 있는 모든 부분 상태(빈 디렉터리, descriptor만, socket만, 둘 다, 쓰다 만 산출물과 staging 잔재)를 소유자 사망 검증 후 사람 개입 없이 회수해야 하며(SHALL), 산출물 발행은 부분 상태가 최종 이름에 나타나지 않도록 stage+rename으로 해야 하고(SHALL), 소유자 생존 판정은 프로세스 ID 재사용에 오판되지 않는 수단이어야 하며(SHALL) kill-0 단독 판정은 금지되고(SHALL NOT), 소유권·symlink 검증과 낯선 엔트리의 거부는 유지되어야 한다(SHALL).
+엔진의 strategy projection endpoint(control 디렉터리·descriptor·socket)의 기동 시 잔재 회수는 그 생성·종료·회수 시퀀스가 만들 수 있는 모든 부분 상태(빈 디렉터리, descriptor만, socket만, 둘 다, 쓰다 만 산출물과 staging 잔재)를 소유자 사망 검증 후 사람 개입 없이 회수해야 하며(SHALL), 산출물 발행은 부분 상태가 최종 이름에 나타나지 않도록 stage+rename으로 해야 하고(SHALL), 소유자 생존 판정은 프로세스 ID 재사용에 오판되지 않는 수단이어야 하며(SHALL) kill-0 단독 판정은 금지되고(SHALL NOT), 최종 이름 socket의 소유자 사망 판정은 관측된 권한 비트로 추정해서는 안 되며(SHALL NOT) 검증한 그 socket에 발행 계약 권한(0600)을 복원한 뒤의 connect probe로 증명해야 하고(SHALL), 그 권한 복원은 회수 경로에서만 일어나야 하며 조회 클라이언트는 endpoint의 권한을 바꿔서는 안 되고(SHALL NOT), 소유권·symlink 검증과 낯선 엔트리의 거부는 유지되어야 한다(SHALL).
 
 #### Scenario: 반쪽 잔재에서의 재기동 (2026-08-13 사고)
 
@@ -1170,6 +1170,14 @@ critical 알림의 outbox 기록 시도 자체가 실패하면, 신규 진입을
 
 - **WHEN** 잔재의 socket이 연결을 수락하면
 - **THEN** 회수하지 않고 이번 기동 시도를 거부한다
+
+#### Scenario: 쓰기 비트가 깎인 산 socket은 죽은 것이 아니다
+
+- **WHEN** 수락 중인 최종 이름 socket의 권한에서 소유자 쓰기 비트가 외부 chmod로 깎인
+  상태에서 엔진이 기동하면
+- **THEN** 회수는 권한 비트로 사망을 추정하지 않고 0600 복원 후 probe로 생존을 확인해
+  그 socket을 제거하지 않고 기동 시도를 거부한다
+- **AND** 그 socket의 group/other 권한은 넓어지지 않는다
 
 #### Scenario: 선임자의 늦은 정리가 후계자를 지우지 않는다
 
