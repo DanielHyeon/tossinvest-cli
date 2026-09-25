@@ -5,7 +5,7 @@
 - 살균 규칙: 세션 본문·절대 홈 경로·시크릿·계정 식별자·계좌 정보는 옮기지 않음.
   세션 ID 는 8자 접두어만, 경로는 `~` 또는 저장소 상대경로로만 적음.
 - 이 문서는 **정적 산출물·로그의 판독**이다. 이 세션은 Codex 호스트를 띄우지 않았다
-  (3.3 관측은 pending — 아래 §4).
+  (what stays unobserved and which named follow-up owns it: §4, task 3.3).
 
 ## 1. 조사한 호스트와 산출물
 
@@ -106,17 +106,28 @@ proposal 의 "matcher 가 현 호스트 이벤트를 못 덮는다"는 원인 �
 2026-09-25 측정 시 TossOS 홈의 `gbrain serve` 소유자는 Claude 세션의 자식이었고(락 JSON pid 일치,
 heartbeat 신선), Codex 프로세스는 없었다. 어떤 프로세스도 종료·락 삭제하지 않았다.
 
-## 4. 관측하지 못한 것 (3.3 으로 넘김)
+## 4. Unobserved — owned by named follow-ups, not by this change (task 3.3, 2026-09-26)
 
-- 현 Desktop 호스트(0.155 alpha)에서 일반 도구 호출 뒤 `.codex-context/session-summary.md` 갱신 — **pending**
-- `apply_patch` 이벤트의 실제 전달 — **pending**
-- Desktop 호스트에서 워크스페이스 한 스레드 기동 시 wrapper 기동 횟수(= 1 기대) — **pending**
-- 워크스페이스 `.mcp.json` 이 executor capability discovery 로 로드되는지 — **pending**
-- `~/.codex/config.toml` 의 새 경로 신뢰 항목 `post_tool_use:1:0` 에는 `trusted_hash` 만 있고 `enabled = true` 가 없다
-  (옛 경로 `/mnt/D/project/axipient/TossOS` 항목은 둘 다 있음). exec 0.154 에서는 무해했으나 Desktop 에서는 미확인 — **pending**
-- 대화형 호스트 관측의 한 방법(사람 승인 필요): `.codex-context/` 아래에 `tool_name` 만 적는 임시 probe 훅(matcher `.*`)
-  을 사람이 신뢰 승인하고 한 세션 돌린 뒤 제거
+Scope decision (a) (issues I-1, 2026-09-25) removed runtime observation from a119. Every item below stays
+**unobserved**. This change makes no runtime claim about any of them. The regression pins landed in 3.1
+(`c202b804`) are static: they check the repository configuration against sanitized fixtures. They do not observe
+host delivery or host startup (spec scenarios "Host coverage has not been observed" and "Concurrent threads
+start the workspace").
 
-이 세션은 Codex 호스트를 띄우지 않았다: 띄우면 사용자 계정으로 원격 모델 호출이 나가고,
-새 훅 신뢰가 사용자 전역 `~/.codex/config.toml` 에 기록된다. 둘 다 이 change 가 승인받지 않은
-부작용이다.
+The follow-ups are the ones named in `proposal.md` "Follow-ups". They get numbers when they are opened.
+
+| # | Unobserved item | Owning follow-up |
+| --- | --- | --- |
+| U1 | On the interactive VS Code/Desktop host (0.155 alpha), whether an ordinary tool call refreshes `.codex-context/session-summary.md` | 1 — interactive-host handoff refresh |
+| U2 | Whether an `apply_patch` event is actually delivered to the PostToolUse hook (binary constant only, §2.1) | 1 — interactive-host handoff refresh |
+| U3 | Which `tool_name` (if any) the interactive host sends for code-mode `exec` / `FileChange` calls (§2.3) | 1 — interactive-host handoff refresh; the same observation is the prerequisite of follow-up 3 |
+| U4 | The new-path trust entry `post_tool_use:1:0` in `~/.codex/config.toml` has `trusted_hash` but no `enabled = true`. The entry for the pre-rename repository path has both. Saver delivery on `exec` 0.154 was inferred with this entry (§2.1, an inference); its effect on the interactive host is unknown | 1 — interactive-host handoff refresh |
+| U5 | How many times the wrapper starts when one workspace thread starts on the interactive host (expected 1 per thread, §3.2 — an inference) | 2 — per-thread MCP startup warning |
+| U6 | Whether the workspace `.mcp.json` is loaded through the app-server's executor capability discovery (§3.1 residual uncertainty) | 2 — per-thread MCP startup warning |
+| U7 | Whether Codex emits any name matched by the SDD agent-save matcher `Write\|Edit\|MultiEdit\|NotebookEdit` (issues I-2) | 3 — SDD agent-save handler on Codex |
+
+Observation route for follow-up 1 (needs human approval; not run here): a temporary probe hook with matcher `.*`
+that writes only `tool_name` under `.codex-context/`. A human approves its trust, runs one session, and then removes it.
+
+This session did not start a Codex host. Starting one sends remote model calls on the user's account and writes a
+new hook trust into the user-global `~/.codex/config.toml`. This change is not approved for either side effect.

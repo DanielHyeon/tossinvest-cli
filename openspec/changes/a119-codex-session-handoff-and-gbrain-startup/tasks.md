@@ -26,7 +26,9 @@
       (design evidence map), and that the configuration files are byte-identical to `54004f44`.
       > 2026-09-26 teammate: 4 + 5 + 2 evidence-map tests RC=0 in temp repositories; real lock owner and handoff mtime
       > unchanged; six files sha256 base = HEAD = working tree (review.md "Implementation verification (task 3.2)").
-- [ ] 3.3 Record in `analysis/host-evidence.md` §4 what stays unobserved (interactive-host delivery, per-thread startup) and
+- [x] 3.3 Record in `analysis/host-evidence.md` §4 what stays unobserved (interactive-host delivery, per-thread startup) and
       that it belongs to the named follow-ups; make no runtime claim here.
+      > 2026-09-26 teammate: §4 rewritten as a table U1–U7, each item mapped to proposal follow-up 1, 2 or 3; no host was
+      > started and no item is marked observed. The pre-rename absolute repository path in the old §4 text was dropped (the document's own sanitization rule).
 - [ ] 3.4 Complete separate adversarial review, gstack review, required tests and SDD checks, final gate and Manager acceptance
       before PM synchronization and archive.
