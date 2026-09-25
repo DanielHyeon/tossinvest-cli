@@ -272,6 +272,11 @@ func TestTheConsoleStrategyScreenReattachesAfterTheEngineRestarts(t *testing.T) 
 	if got := a115SeatReads(attachment); got != strategyprojection.RefusalEvidenceStale {
 		t.Fatalf("부팅 때 떠 있는 엔진에 즉시 붙지 않았다: %q", got)
 	}
+	// 부팅 live 는 **붙었다고 보고된 상태**로 출발해야 한다(구현 후 리뷰 P2-4): 아니면 첫 읽기가 거짓
+	// 「다시 붙었다」를 찍고, 첫 렌더 전에 엔진이 죽으면 탈착 로그가 사라진다(announce := a.attached).
+	if _, _, attached := a115Seat(attachment); !attached {
+		t.Fatal("live 부팅의 자리가 attached=false 로 출발했다")
+	}
 	if err := first.Close(); err != nil {
 		t.Fatal(err)
 	}
@@ -325,6 +330,41 @@ func TestRunConsoleNeverDialsTheStrategyProjectionItself(t *testing.T) {
 	if wires != 1 {
 		t.Errorf("runConsole 이 consoleStrategyRuntimeReaderFor 를 %d번 부른다, want 1", wires)
 	}
+	// 자리도 센다(구현 후 리뷰 P2-3): 배선은 `if engineDir != "" {` 의 본문 안이어야 한다. 밖으로 나가면
+	// engineDir 를 풀지 못한 콘솔이 cwd 기준 `.strategy-runtime-read/endpoint.json` 을 펌프로 두드리고,
+	// 진짜 미배선(nil interface → dormant)이 사라진다.
+	gated := 0
+	ast.Inspect(run.Body, func(node ast.Node) bool {
+		stmt, ok := node.(*ast.IfStmt)
+		if !ok || !a115IsEngineDirGate(stmt.Cond) {
+			return true
+		}
+		for _, inner := range stmt.Body.List {
+			ast.Inspect(inner, func(n ast.Node) bool {
+				if call, ok := n.(*ast.CallExpr); ok {
+					if id, ok := call.Fun.(*ast.Ident); ok && id.Name == "consoleStrategyRuntimeReaderFor" {
+						gated++
+					}
+				}
+				return true
+			})
+		}
+		return true
+	})
+	if gated != 1 {
+		t.Errorf("consoleStrategyRuntimeReaderFor 가 `if engineDir != \"\"` 본문 안에 %d번 있다, want 1", gated)
+	}
+}
+
+// a115IsEngineDirGate 는 조건이 정확히 `engineDir != ""` 인가다.
+func a115IsEngineDirGate(cond ast.Expr) bool {
+	binary, ok := cond.(*ast.BinaryExpr)
+	if !ok || binary.Op != token.NEQ {
+		return false
+	}
+	left, ok := binary.X.(*ast.Ident)
+	right, ok2 := binary.Y.(*ast.BasicLit)
+	return ok && ok2 && left.Name == "engineDir" && right.Value == `""`
 }
 
 // a115Shape 은 해석 결과의 모양이다 — 판정 동치는 값이 아니라 모양(부재·sentinel·client)과 live 로 본다.
@@ -539,5 +579,92 @@ func TestTheConsoleStrategyPumpReturnsWhenTheConsoleEnds(t *testing.T) {
 	case <-done:
 	case <-time.After(time.Second):
 		t.Fatal("콘솔 ctx 가 끝났는데 펌프가 돌아오지 않는다 — goroutine·ticker 누수")
+	}
+}
+
+// ---- 구현 후 리뷰 (review.md §1) ------------------------------------------------------------
+
+// TestTheConsoleBootLeavesTheFirstWakeFree 는 「부팅 해석은 lastTry 를 찍지 않는다」의 핀이다(리뷰 P2-2, a114 C4 판).
+// 간격을 1시간으로 두면 펌프 틱이 없다. 부팅 해석이 lastTry 를 찍었다면 엔진이 뜬 뒤 첫 화면 질문의 wake 가
+// rate limit 에 막혀 1시간 동안 아무도 붙이지 않는다.
+func TestTheConsoleBootLeavesTheFirstWakeFree(t *testing.T) {
+	dir := a108HTTPAPIDir(t)
+	a115Interval(t, time.Hour)
+	attachment, _ := a115Boot(t, dir, io.Discard)
+	a115StartEngine(t, dir, strategyprojection.RefusalEvidenceStale)
+	_ = attachment.StrategyRuntimeConfigured() // 첫 화면의 presence 질문 — 시도를 깨운다
+	a109WaitFor(t, "첫 wake 가 막히지 않고 붙기", func() bool {
+		return a115SeatReads(attachment) == strategyprojection.RefusalEvidenceStale
+	})
+}
+
+// TestAnAttachedConsoleShowsACleanStopAsUnreachable 은 선언된 한계의 핀이다(리뷰 P2-1, issues R6).
+// 붙어 있던 콘솔은 엔진이 **깨끗이** 멈춰(descriptor 삭제) 도 dormant 로 내려가지 않는다 — wrapper 는
+// live 자리를 부재로 격하하지 않는다(a109 attempt B1). 화면은 엔진이 돌아올 때까지 도달 불가다. 같은 디스크를
+// 새로 부팅한 콘솔은 dormant 다. 이 비대칭은 설계가 받아들인 것이고, 바뀌면 이 시험이 알린다.
+func TestAnAttachedConsoleShowsACleanStopAsUnreachable(t *testing.T) {
+	dir := a108HTTPAPIDir(t)
+	a115Interval(t, 20*time.Millisecond)
+	first := a115StartEngine(t, dir, strategyprojection.RefusalEvidenceStale)
+	attachment, _ := a115Boot(t, dir, io.Discard)
+	screen := a115Console(t, attachment)
+	if got := screen.verdict(t); got != "live:EVIDENCE_STALE" {
+		t.Fatalf("live 부팅의 화면 = %q", got)
+	}
+	if err := first.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(strategyprojectionrpc.DescriptorPath(dir)); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("깨끗한 정지가 descriptor 를 지우지 않았다: %v", err)
+	}
+	for range 5 {
+		if got := screen.verdict(t); got != "unavailable" {
+			t.Fatalf("붙어 있던 콘솔의 깨끗한 정지 뒤 화면 = %q, want unavailable(선언된 한계)", got)
+		}
+		time.Sleep(30 * time.Millisecond)
+	}
+	fresh, _ := a115Boot(t, dir, io.Discard)
+	if got := a115Console(t, fresh).verdict(t); got != "dormant" {
+		t.Fatalf("같은 디스크의 새 부팅 화면 = %q, want dormant", got)
+	}
+}
+
+// TestTheConsoleStrategyPumpTicksAtHalfTheInterval 은 절반 틱의 구조 핀이다(리뷰 P2-5). 지터 의존이라 행동으로
+// 못 재는 것을 AST 로 고정한다: 틱이 간격과 같으면 스케줄 지터로 틱이 건너뛰어져 재시도 간격이 두 배가 된다.
+func TestTheConsoleStrategyPumpTicksAtHalfTheInterval(t *testing.T) {
+	file, err := parser.ParseFile(token.NewFileSet(), "console_strategy_attach.go", nil, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	halves := 0
+	for _, decl := range file.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Name.Name != "pumpConsoleStrategyRuntime" {
+			continue
+		}
+		ast.Inspect(fn.Body, func(node ast.Node) bool {
+			call, ok := node.(*ast.CallExpr)
+			if !ok {
+				return true
+			}
+			sel, ok := call.Fun.(*ast.SelectorExpr)
+			if !ok || sel.Sel.Name != "NewTicker" || len(call.Args) != 1 {
+				return true
+			}
+			ast.Inspect(call.Args[0], func(n ast.Node) bool {
+				if b, ok := n.(*ast.BinaryExpr); ok && b.Op == token.QUO {
+					if lit, ok := b.Y.(*ast.BasicLit); ok && lit.Value == "2" {
+						if s, ok := b.X.(*ast.SelectorExpr); ok && s.Sel.Name == "interval" {
+							halves++
+						}
+					}
+				}
+				return true
+			})
+			return true
+		})
+	}
+	if halves != 1 {
+		t.Fatalf("펌프 ticker 인자에 `interval/2` 가 %d번 있다, want 1", halves)
 	}
 }
