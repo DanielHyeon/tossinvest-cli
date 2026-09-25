@@ -83,3 +83,14 @@ freeze 종결 — 구현 착수.
 넓히지 않음, `Dial` 은 chmod 하지 않음.
 
 2판 뮤테이션: 14/14 사망(`mutation-ledger.md`).
+
+## 검증 기록 (2026-09-25)
+
+- `go test -race -count=1 -v ./internal/strategyprojectionrpc/...` → ok, 최상위 47 · PASS 줄 71 · FAIL/SKIP 0 (36237b22)
+- `go test -race -count=1 -run 'A108|A109|Strategy|Reattach|Daemon|Projection' ./cmd/tossctl/` ok · `internal/console -run Strategy` ok
+- `make vet` · `make lint` rc 0
+- `make test` 1판(ed3cb1d7): FAIL 2 — `internal/app/engine TestTheDriverFoldsAndAdoptsInOneCycle`("database or disk is
+  full" — 루트 파일시스템 100%, 여유 968M→72M 실측)·`tools/a112-mb-us-source` 빌드 신원 불일치. 둘 다
+  strategyprojectionrpc 에 의존하지 않는다(`go list -deps` 0). 전자는 GOCACHE 를 옮겨 단독 재실행 ok.
+  2판(a114 의 1244be95 — a113 코드 포함): **ok 99 · FAIL 0**.
+- `check_analysis.py` rc 0(착지 `36237b22`, 새 clone 에서 재확인).
