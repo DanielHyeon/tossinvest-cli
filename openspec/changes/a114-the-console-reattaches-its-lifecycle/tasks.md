@@ -27,4 +27,4 @@
 
 ## 2. 게이트 (Manager)
 
-- [ ] 2.1 `make gate CHANGE=a114-the-console-reattaches-its-lifecycle` 후 archive.
+- [x] 2.1 `make gate CHANGE=a114-the-console-reattaches-its-lifecycle` 후 archive.

@@ -109,8 +109,8 @@
 | `a110-only-the-same-dispute-becomes-permanent` | STORY-TOS-a110 | archived |
 | `a111-exit-lines-stay-actionable-with-flat-quotes` | STORY-TOS-a111 | archived |
 | `a112-run-four-strategy-families-independently` | STORY-TOS-a112 | in_progress |
-| `a113-the-projection-probe-proves-death` | STORY-TOS-a113 | in_progress |
-| `a114-the-console-reattaches-its-lifecycle` | STORY-TOS-a114 | in_progress |
+| `a113-the-projection-probe-proves-death` | STORY-TOS-a113 | implemented |
+| `a114-the-console-reattaches-its-lifecycle` | STORY-TOS-a114 | implemented |
 | `a115-the-console-strategy-screen-reattaches` | STORY-TOS-a115 | in_progress |
 | `a116-install-codex-session-save-hook` | STORY-TOS-a116 | archived |
 | `a117-the-minute-timestamp-is-the-bars-close` | STORY-TOS-a117 | archived |

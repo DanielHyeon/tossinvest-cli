@@ -28,4 +28,4 @@
 
 ## 2. 게이트 (Manager)
 
-- [ ] 2.1 `make gate CHANGE=a113-the-projection-probe-proves-death` 후 archive.
+- [x] 2.1 `make gate CHANGE=a113-the-projection-probe-proves-death` 후 archive. — 2026-09-25 Manager 가 격리 워크트리(TossOS-worktrees/archive-batch1)에서 실행, 결과는 review.md 「완료 게이트」 절; archive 는 게이트 통과 뒤 수행
