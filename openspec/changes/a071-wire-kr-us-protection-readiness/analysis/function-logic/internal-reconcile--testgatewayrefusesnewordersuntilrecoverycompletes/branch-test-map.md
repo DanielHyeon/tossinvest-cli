@@ -1,17 +1,20 @@
-# Branch Test Map: `TestGatewayRefusesNewOrdersUntilRecoveryCompletes`
+# Branch Test Map: TestGatewayRefusesNewOrdersUntilRecoveryCompletes
 
-| Branch | Scenario | Test | RED observed | GREEN observed |
-|---|---|---|---|---|
-| B1 | reviewed removed or renamed legacy branch | affected package regression | yes | yes |
-| B2 | reviewed removed or renamed legacy branch | affected package regression | yes | yes |
-| B3 | reviewed removed or renamed legacy branch | affected package regression | yes | yes |
-| B4 | reviewed removed or renamed legacy branch | affected package regression | yes | yes |
-| B5 | reviewed removed or renamed legacy branch | affected package regression | yes | yes |
-| B6 | reviewed removed or renamed legacy branch | affected package regression | yes | yes |
-| B7 | reviewed removed or renamed legacy branch | affected package regression | yes | yes |
-| B8 | reviewed removed or renamed legacy branch | affected package regression | yes | yes |
-| B9 | reviewed removed or renamed legacy branch | affected package regression | yes | yes |
-| B10 | reviewed removed or renamed legacy branch | affected package regression | yes | yes |
-| B11 | reviewed removed or renamed legacy branch | affected package regression | yes | yes |
-| B12 | reviewed removed or renamed legacy branch | affected package regression | yes | yes |
-| B13 | reviewed removed or renamed legacy branch | affected package regression | yes | yes |
+- Source: `internal/reconcile/recovery_test.go` (420-538); base `775c37cb` (HEAD 에 함수 없음)
+- 시험 칸은 측정값: 무태그 `go test -c -cover` 바이너리를 시험 함수마다 따로 돌린 커버 프로필에서 그 분기 본문 블록을 실행한 시험(`analysis/harness/51_matrix.sh`). `_test.go` 함수와 base 함수는 계측 밖이라 그 사실을 행에 적음.
+
+| Branch | AST anchor | Scenario (source text) | Test | RED observed | GREEN observed |
+|---|---|---|---|---|---|
+| B1 | if at 439:2 | `if err != nil {` | `TestEntryGateRefusesEntriesUntilRecoveryCompletes` · `TestProductionDefaultRefusesKRAndUSBuyBeforeBroker` | 5.1 에서 재실행 안 함 | 대체 시험 PASS at HEAD 648df8ef (시험별 실행). 171739a4 가 같은 자리에서 이 시험을 복구 래치만 격리하는 시험으로 바꾸고 게이트웨이 준비 상태는 별도 경계로 뺌 |
+| B2 | if at 444:2 | `if err != nil {` | `TestEntryGateRefusesEntriesUntilRecoveryCompletes` · `TestProductionDefaultRefusesKRAndUSBuyBeforeBroker` | 5.1 에서 재실행 안 함 | 대체 시험 PASS at HEAD 648df8ef (시험별 실행). 171739a4 가 같은 자리에서 이 시험을 복구 래치만 격리하는 시험으로 바꾸고 게이트웨이 준비 상태는 별도 경계로 뺌 |
+| B3 | if at 467:3 | `if err != nil {` | `TestEntryGateRefusesEntriesUntilRecoveryCompletes` · `TestProductionDefaultRefusesKRAndUSBuyBeforeBroker` | 5.1 에서 재실행 안 함 | 대체 시험 PASS at HEAD 648df8ef (시험별 실행). 171739a4 가 같은 자리에서 이 시험을 복구 래치만 격리하는 시험으로 바꾸고 게이트웨이 준비 상태는 별도 경계로 뺌 |
+| B4 | if at 477:3 | `if err != nil {` | `TestEntryGateRefusesEntriesUntilRecoveryCompletes` · `TestProductionDefaultRefusesKRAndUSBuyBeforeBroker` | 5.1 에서 재실행 안 함 | 대체 시험 PASS at HEAD 648df8ef (시험별 실행). 171739a4 가 같은 자리에서 이 시험을 복구 래치만 격리하는 시험으로 바꾸고 게이트웨이 준비 상태는 별도 경계로 뺌 |
+| B5 | if at 480:3 | `if _, err := j.Reserve(context.Background(), journal.ReserveRequest{` | `TestEntryGateRefusesEntriesUntilRecoveryCompletes` · `TestProductionDefaultRefusesKRAndUSBuyBeforeBroker` | 5.1 에서 재실행 안 함 | 대체 시험 PASS at HEAD 648df8ef (시험별 실행). 171739a4 가 같은 자리에서 이 시험을 복구 래치만 격리하는 시험으로 바꾸고 게이트웨이 준비 상태는 별도 경계로 뺌 |
+| B6 | if at 508:2 | `if err == nil {` | `TestEntryGateRefusesEntriesUntilRecoveryCompletes` · `TestProductionDefaultRefusesKRAndUSBuyBeforeBroker` | 5.1 에서 재실행 안 함 | 대체 시험 PASS at HEAD 648df8ef (시험별 실행). 171739a4 가 같은 자리에서 이 시험을 복구 래치만 격리하는 시험으로 바꾸고 게이트웨이 준비 상태는 별도 경계로 뺌 |
+| B7 | if at 511:2 | `if out.Reason != execgw.ReasonRecoveryIncomplete {` | `TestEntryGateRefusesEntriesUntilRecoveryCompletes` · `TestProductionDefaultRefusesKRAndUSBuyBeforeBroker` | 5.1 에서 재실행 안 함 | 대체 시험 PASS at HEAD 648df8ef (시험별 실행). 171739a4 가 같은 자리에서 이 시험을 복구 래치만 격리하는 시험으로 바꾸고 게이트웨이 준비 상태는 별도 경계로 뺌 |
+| B8 | if at 514:2 | `if !strings.Contains(out.Detail, "recovery") {` | `TestEntryGateRefusesEntriesUntilRecoveryCompletes` · `TestProductionDefaultRefusesKRAndUSBuyBeforeBroker` | 5.1 에서 재실행 안 함 | 대체 시험 PASS at HEAD 648df8ef (시험별 실행). 171739a4 가 같은 자리에서 이 시험을 복구 래치만 격리하는 시험으로 바꾸고 게이트웨이 준비 상태는 별도 경계로 뺌 |
+| B9 | if at 517:2 | `if broker.places != 0 {` | `TestEntryGateRefusesEntriesUntilRecoveryCompletes` · `TestProductionDefaultRefusesKRAndUSBuyBeforeBroker` | 5.1 에서 재실행 안 함 | 대체 시험 PASS at HEAD 648df8ef (시험별 실행). 171739a4 가 같은 자리에서 이 시험을 복구 래치만 격리하는 시험으로 바꾸고 게이트웨이 준비 상태는 별도 경계로 뺌 |
+| B10 | if at 520:2 | `if out.State != journal.StateNotDispatched {` | `TestEntryGateRefusesEntriesUntilRecoveryCompletes` · `TestProductionDefaultRefusesKRAndUSBuyBeforeBroker` | 5.1 에서 재실행 안 함 | 대체 시험 PASS at HEAD 648df8ef (시험별 실행). 171739a4 가 같은 자리에서 이 시험을 복구 래치만 격리하는 시험으로 바꾸고 게이트웨이 준비 상태는 별도 경계로 뺌 |
+| B11 | if at 525:2 | `if _, err := r.Run(context.Background()); err != nil {` | `TestEntryGateRefusesEntriesUntilRecoveryCompletes` · `TestProductionDefaultRefusesKRAndUSBuyBeforeBroker` | 5.1 에서 재실행 안 함 | 대체 시험 PASS at HEAD 648df8ef (시험별 실행). 171739a4 가 같은 자리에서 이 시험을 복구 래치만 격리하는 시험으로 바꾸고 게이트웨이 준비 상태는 별도 경계로 뺌 |
+| B12 | if at 530:2 | `if _, err := gw.Place(context.Background(), execgw.PlaceRequest{` | `TestEntryGateRefusesEntriesUntilRecoveryCompletes` · `TestProductionDefaultRefusesKRAndUSBuyBeforeBroker` | 5.1 에서 재실행 안 함 | 대체 시험 PASS at HEAD 648df8ef (시험별 실행). 171739a4 가 같은 자리에서 이 시험을 복구 래치만 격리하는 시험으로 바꾸고 게이트웨이 준비 상태는 별도 경계로 뺌 |
+| B13 | if at 535:2 | `if broker.places != 1 {` | `TestEntryGateRefusesEntriesUntilRecoveryCompletes` · `TestProductionDefaultRefusesKRAndUSBuyBeforeBroker` | 5.1 에서 재실행 안 함 | 대체 시험 PASS at HEAD 648df8ef (시험별 실행). 171739a4 가 같은 자리에서 이 시험을 복구 래치만 격리하는 시험으로 바꾸고 게이트웨이 준비 상태는 별도 경계로 뺌 |

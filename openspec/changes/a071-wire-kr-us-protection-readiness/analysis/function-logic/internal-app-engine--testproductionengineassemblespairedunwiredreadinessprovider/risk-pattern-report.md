@@ -1,13 +1,11 @@
-# Risk Pattern Report: `TestProductionEngineAssemblesPairedUnwiredReadinessProvider`
+# Risk Pattern Report: `internal/app/engine/a071_readiness_assembly_test.go`
 
-Run:
+| Rule | Location | Message |
+|---|---|---|
+| — | — | No configured risk pattern matched |
 
-```bash
-ast-grep scan -c tools/logic-map/sgconfig.yml internal/app/engine/a071_readiness_assembly_test.go
-```
+> Findings are review candidates, not automatic defect verdicts.
 
-## Findings
+## 함수 범위 대조 (task 5.1, 10-25)
 
-| Rule | Location | Classification | Function Logic Map link |
-|---|---|---|---|
-| none | test-only production assembly assertion | reviewed-safe | no live transport; isolated official stub |
+- 범위 안 결과 0건 — 위 결과는 모두 같은 파일의 다른 함수임.

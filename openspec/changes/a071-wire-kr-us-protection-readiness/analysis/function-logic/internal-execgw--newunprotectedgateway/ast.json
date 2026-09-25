@@ -1,1 +1,132 @@
-{"file":"internal/execgw/protection_test.go","source_sha256":"14894b5dae3d64fc2c12b8242f85410b611bb6b2dc90515ca67d9270eccb4def","package":"execgw_test","function":"newUnprotectedGateway","signature":"newUnprotectedGateway(params=2, results=3)","start":{"line":40,"column":1},"end":{"line":56,"column":2},"branches":[{"id":"B1"}]}
+{
+  "file": "internal/execgw/protection_test.go",
+  "source_sha256": "14894b5dae3d64fc2c12b8242f85410b611bb6b2dc90515ca67d9270eccb4def",
+  "package": "execgw_test",
+  "function": "newUnprotectedGateway",
+  "signature": "newUnprotectedGateway(params=2, results=3)",
+  "start": {
+    "line": 40,
+    "column": 1
+  },
+  "end": {
+    "line": 56,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 43,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 45,
+        "column": 7
+      },
+      "text": "openJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 24
+      },
+      "text": "trading.NewService"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 47,
+        "column": 43
+      },
+      "text": "openPolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 2
+      },
+      "text": "opts.UseReadinessAdapterForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 13
+      },
+      "text": "execgw.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 53,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 46,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 51,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

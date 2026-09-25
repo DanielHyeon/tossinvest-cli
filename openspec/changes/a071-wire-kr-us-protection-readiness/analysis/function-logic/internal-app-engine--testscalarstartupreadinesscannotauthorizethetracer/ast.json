@@ -1,1 +1,157 @@
-{"file":"internal/app/engine/tracer_test.go","source_sha256":"55a7908bf7ab60e77a68a7dac1ebb5ff42348bafda7a5f0b4b1cb5bbd695568d","package":"engine_test","function":"TestScalarStartupReadinessCannotAuthorizeTheTracer","signature":"TestScalarStartupReadinessCannotAuthorizeTheTracer(params=1, results=0)","start":{"line":116,"column":1},"end":{"line":128,"column":2},"branches":[{"id":"B1"},{"id":"B2"}]}
+{
+  "file": "internal/app/engine/tracer_test.go",
+  "source_sha256": "55a7908bf7ab60e77a68a7dac1ebb5ff42348bafda7a5f0b4b1cb5bbd695568d",
+  "package": "engine_test",
+  "function": "TestScalarStartupReadinessCannotAuthorizeTheTracer",
+  "signature": "TestScalarStartupReadinessCannotAuthorizeTheTracer(params=1, results=0)",
+  "start": {
+    "line": 116,
+    "column": 1
+  },
+  "end": {
+    "line": 128,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 122,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 125,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 7
+      },
+      "text": "newEntryCapableE2EStack"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 2
+      },
+      "text": "s.broker.quote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 12
+      },
+      "text": "newTracer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 28
+      },
+      "text": "tracerParams"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 17
+      },
+      "text": "tracer.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 28
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 6
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 50
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 67
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 83
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 126,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

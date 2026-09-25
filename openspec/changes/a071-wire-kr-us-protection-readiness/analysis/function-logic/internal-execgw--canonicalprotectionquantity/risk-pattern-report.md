@@ -1,13 +1,11 @@
-# Risk Pattern Report: `canonicalProtectionQuantity`
+# Risk Pattern Report: `internal/execgw/protection.go`
 
-Run:
+| Rule | Location | Message |
+|---|---|---|
+| go-float64-cast | `internal/execgw/protection.go:119` | float64 conversion in money or quantity paths needs precision evidence. |
 
-```bash
-ast-grep scan -c tools/logic-map/sgconfig.yml internal/execgw/protection.go
-```
+> Findings are review candidates, not automatic defect verdicts.
 
-## Findings
+## 함수 범위 대조 (task 5.1, 112-123)
 
-| Rule | Location | Classification | Function Logic Map link |
-|---|---|---|---|
-| float-to-integer authority boundary | `canonicalProtectionQuantity` | reviewed-safe | canonical round-trip and 2^53-1 ceiling |
+- 범위 안: `go-float64-cast` at internal/execgw/protection.go:119

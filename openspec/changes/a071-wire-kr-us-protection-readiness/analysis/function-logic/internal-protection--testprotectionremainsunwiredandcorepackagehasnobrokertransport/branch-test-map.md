@@ -1,21 +1,27 @@
-# Branch Test Map: `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport`
+# Branch Test Map: TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport
 
-| Branch | Scenario | Test | RED observed | GREEN observed |
-|---|---|---|---|---|
-| B1 | reviewed current branch | affected package regression | yes | yes |
-| B2 | reviewed current branch | affected package regression | yes | yes |
-| B3 | reviewed current branch | affected package regression | yes | yes |
-| B4 | reviewed current branch | affected package regression | yes | yes |
-| B5 | reviewed current branch | affected package regression | yes | yes |
-| B6 | reviewed current branch | affected package regression | yes | yes |
-| B7 | reviewed current branch | affected package regression | yes | yes |
-| B8 | reviewed current branch | affected package regression | yes | yes |
-| B9 | reviewed current branch | affected package regression | yes | yes |
-| B10 | reviewed current branch | affected package regression | yes | yes |
-| B11 | reviewed current branch | affected package regression | yes | yes |
-| B12 | reviewed current branch | affected package regression | yes | yes |
-| B13 | reviewed current branch | affected package regression | yes | yes |
-| B14 | reviewed current branch | affected package regression | yes | yes |
-| B15 | reviewed current branch | affected package regression | yes | yes |
-| B16 | reviewed current branch | affected package regression | yes | yes |
-| B17 | reviewed current branch | affected package regression | yes | yes |
+- Source: `internal/protection/dormant_test.go` (14-88); current — HEAD `648df8ef`
+- 시험 칸은 측정값: 무태그 `go test -c -cover` 바이너리를 시험 함수마다 따로 돌린 커버 프로필에서 그 분기 본문 블록을 실행한 시험(`analysis/harness/51_matrix.sh`). `_test.go` 함수와 base 함수는 계측 밖이라 그 사실을 행에 적음.
+
+| Branch | AST anchor | Scenario (source text) | Test | RED observed | GREEN observed |
+|---|---|---|---|---|---|
+| B1 | if at 15:2 | `if execgw.ProfileProtection != execgw.ProtectionUnwired {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B2 | if at 22:2 | `if err != nil {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B3 | range at 25:2 | `for _, entry := range entries {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B4 | if at 26:3 | `if entry.IsDir() \|\| !strings.HasSuffix(entry.Name(), ".go") \|\| strings.HasSuffix(entry.Name(), "_test.g...` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B5 | if at 31:3 | `if err != nil {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B6 | range at 34:3 | `for _, imp := range file.Imports {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B7 | if at 36:4 | `if name == "net/http" \|\| strings.Contains(name, "/internal/official") \|\| strings.Contains(name, "/inter...` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B8 | range at 45:2 | `for _, dir := range []string{filepath.Join(root, "cmd"), filepath.Join(root, "internal", "app")} {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B9 | if at 47:4 | `if walkErr != nil {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B10 | if at 50:4 | `if d.IsDir() \|\| !strings.HasSuffix(path, ".go") \|\| strings.HasSuffix(path, "_test.go") {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B11 | if at 54:4 | `if parseErr != nil {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B12 | range at 57:4 | `for _, imp := range file.Imports {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B13 | if at 59:5 | `if name == "github.com/JungHoonGhae/tossinvest-cli/internal/protection" {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B14 | if at 62:6 | `if !allowed[filepath.ToSlash(rel)] {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B15 | if at 69:3 | `if err != nil {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B16 | if at 74:2 | `if err != nil {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B17 | range at 78:2 | `for _, required := range []string{"protectionreadiness.NewProductionProvider", "protection.NewPairedReadine...` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B18 | if at 79:3 | `if !strings.Contains(text, required) {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B19 | range at 83:2 | `for _, forbidden := range []string{"protection.NewSupervisor", "protectionofficial.New", "protection.db", "...` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |
+| B20 | if at 84:3 | `if strings.Contains(text, forbidden) {` | `TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport` | 5.1 에서 재실행 안 함 | 시험 자신; TestProtectionRemainsUnwiredAndCorePackageHasNoBrokerTransport PASS (시험별 실행) |

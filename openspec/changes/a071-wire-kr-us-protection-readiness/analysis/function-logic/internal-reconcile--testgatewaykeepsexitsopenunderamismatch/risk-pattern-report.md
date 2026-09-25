@@ -1,7 +1,11 @@
-# Risk Pattern Report: `TestGatewayKeepsExitsOpenUnderAMismatch`
+# Risk Pattern Report: `internal/reconcile/mismatch_test.go`
 
-Source scan: `internal/reconcile/mismatch_test.go` with `tools/logic-map/sgconfig.yml`.
+| Rule | Location | Message |
+|---|---|---|
+| — | — | No configured risk pattern matched |
 
-| Rule | Location | Classification | Function Logic Map link |
-|---|---|---|---|
-| live transport or unsafe bypass | reviewed function | reviewed-safe | `function-logic-map.md` |
+> Findings are review candidates, not automatic defect verdicts.
+
+## 함수 범위 대조 (task 5.1, 498-564)
+
+- 범위 안 결과 0건 — 위 결과는 모두 같은 파일의 다른 함수임.

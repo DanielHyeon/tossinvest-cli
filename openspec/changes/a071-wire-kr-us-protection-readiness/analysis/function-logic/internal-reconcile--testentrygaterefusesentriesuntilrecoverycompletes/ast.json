@@ -1,1 +1,217 @@
-{"file":"internal/reconcile/recovery_test.go","source_sha256":"28ddf9c8e7dbad7bec48eee2f540f5ec0a53257c25ec3daea65b854669545c2c","package":"reconcile_test","function":"TestEntryGateRefusesEntriesUntilRecoveryCompletes","signature":"TestEntryGateRefusesEntriesUntilRecoveryCompletes(params=1, results=0)","start":{"line":418,"column":1},"end":{"line":439,"column":2},"branches":[{"id":"B1"},{"id":"B2"},{"id":"B3"},{"id":"B4"}]}
+{
+  "file": "internal/reconcile/recovery_test.go",
+  "source_sha256": "28ddf9c8e7dbad7bec48eee2f540f5ec0a53257c25ec3daea65b854669545c2c",
+  "package": "reconcile_test",
+  "function": "TestEntryGateRefusesEntriesUntilRecoveryCompletes",
+  "signature": "TestEntryGateRefusesEntriesUntilRecoveryCompletes(params=1, results=0)",
+  "start": {
+    "line": 418,
+    "column": 1
+  },
+  "end": {
+    "line": 439,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 424,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 427,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 433,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 436,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 419,
+        "column": 7
+      },
+      "text": "openJournal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 420,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 421,
+        "column": 10
+      },
+      "text": "execgw.NewEntryGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 12
+      },
+      "text": "reconcile.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 26
+      },
+      "text": "recoveryOptions"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 51
+      },
+      "text": "recoveryCollector"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 425,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 427,
+        "column": 17
+      },
+      "text": "gate.CheckEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 428,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 433,
+        "column": 15
+      },
+      "text": "r.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 433,
+        "column": 21
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 434,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
+        "column": 17
+      },
+      "text": "gate.CheckEntry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 437,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 419,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 420,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 421,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 423,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 427,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 433,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 436,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,1 +1,197 @@
-{"file":"internal/app/engine/tracer_test.go","source_sha256":"6d50eb9c3d64746ce4b3430c56a3b714fe00cf852325806b2bdc1cf73014e582","package":"engine_test","function":"TestTheTracerDrivesEntryRatchetAndExit","signature":"TestTheTracerDrivesEntryRatchetAndExit(params=1, results=0)","start":{"line":116,"column":1},"end":{"line":144,"column":2},"branches":[{"id":"B1"},{"id":"B2"},{"id":"B3"},{"id":"B4"},{"id":"B5"},{"id":"B6"}],"revision":"base"}
+{
+  "file": "internal/app/engine/tracer_test.go",
+  "source_sha256": "6d50eb9c3d64746ce4b3430c56a3b714fe00cf852325806b2bdc1cf73014e582",
+  "package": "engine_test",
+  "function": "TestTheTracerDrivesEntryRatchetAndExit",
+  "signature": "TestTheTracerDrivesEntryRatchetAndExit(params=1, results=0)",
+  "start": {
+    "line": 116,
+    "column": 1
+  },
+  "end": {
+    "line": 144,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 126,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 129,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 135,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 138,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 141,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 7
+      },
+      "text": "newEntryCapableE2EStack"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 2
+      },
+      "text": "s.broker.quote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 12
+      },
+      "text": "newTracer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 119,
+        "column": 28
+      },
+      "text": "tracerParams"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 17
+      },
+      "text": "runTracerWithFills"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 127,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 133,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 139,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 125,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

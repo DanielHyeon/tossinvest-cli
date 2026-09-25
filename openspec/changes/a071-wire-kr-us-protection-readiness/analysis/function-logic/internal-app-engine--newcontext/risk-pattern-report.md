@@ -1,13 +1,11 @@
-# Risk Pattern Report: `NewContext`
+# Risk Pattern Report: `internal/app/engine/engine.go`
 
-Run:
+| Rule | Location | Message |
+|---|---|---|
+| — | — | No configured risk pattern matched |
 
-```bash
-ast-grep scan -c tools/logic-map/sgconfig.yml internal/app/engine/engine.go
-```
+> Findings are review candidates, not automatic defect verdicts.
 
-## Findings
+## 함수 범위 대조 (task 5.1, 432-602)
 
-| Rule | Location | Classification | Function Logic Map link |
-|---|---|---|---|
-| raw mutator exposure | supervisor owns official conditional gateway | reviewed-safe | keep pointer unexported and expose only execgw Gateway |
+- 범위 안 결과 0건 — 위 결과는 모두 같은 파일의 다른 함수임.
