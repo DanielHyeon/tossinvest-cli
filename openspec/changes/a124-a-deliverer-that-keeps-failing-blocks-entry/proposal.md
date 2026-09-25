@@ -29,8 +29,8 @@
 | `restoreAlertEntryLatch` :164 | **기동 시 1회** 미전달 수로 잠금 복원 | FLM `internal-app-engine--restorealertentrylatch` 종단; 호출자 `gateway.go:269` 하나 |
 
 **a098 의 배달 실행자에는 하나도 없다.** `internal/app/engine/alertdelivery.go` 에 `Gate` · `Escalate` 는 0 회(grep).
-`deliverOne` 의 전송 실패(B9)와 publisher 부재(B8)는 `attempts+1`(`outbox.go:471`) · 임차 반납 · 로그 한 줄로
-끝나고(:205-212 · :221-226), `cycle` 은 `deliverOne` 의 결과를 받지 않아 배치 전부가 실패해도 `nil` 을 돌려준다
+`deliverOne` 의 전송 실패(B9)는 `attempts+1`(`outbox.go:471`) · 임차 반납으로, publisher 부재(B8)는 로그 한 줄과 임차 반납으로만
+(attempts 불변) 끝나고(:221-226 · :205-212), `cycle` 은 `deliverOne` 의 결과를 받지 않아 배치 전부가 실패해도 `nil` 을 돌려준다
 (:163). `deliverOne` 은 행의 `attempts` 를 **읽지 않는다**(`Attempts` 0 회, grep). a098 설계 D8.4 는 이것을 스스로
 적었다 — *"배달 실행자가 매 주기 publish 에 실패하면서 계속 도는 상태는 a098 이 자동으로 안 잡는다 … 그때 진입을
 막는 것은 오늘의 다섯 자리 중 `deliver` 의 실패 경로이고, 그것은 동기 알림이 한 번이라도 시도될 때만 돈다.
@@ -84,10 +84,11 @@
   서로 다른 실패 양상을 비교한 **잘못된 문장**이었다(review F11). 같은 양상에서 두 경로는 같은 시간이다 — 즉시 실패 4 s,
   매번 10 s timeout 34 s.
 - **publisher 부재 = 실패 시도** (design D3). 결과는 동기 경로와 같고 지연만 ≈0 s 대 ≈4~6 s 로 다르다(F13).
-- **승인이 이긴다** (Manager 결정 M1 = **B′**, 2026-09-26 재결정 — C 는 freeze 3·4판에서 손절 경로 대기로 떨어졌다, design D7): `EntryGate` 의
-  사유별 **해제 세대**. 실행자는 임차 전후에 세대를 읽어 다르면 보내지 않고, 세대가 그대로일 때만 잠근다(바뀌었으면 원장에서 그 행이
-  **승인됐는지** 확인해, 승인됐을 때만 버리고 아니면 다시 잠근다 — 전달은 승인이 아니다). 실행자는 `n.mu` 를 잡지 않는다. 해제 세대는 해제 **요청**마다
-  오른다(래치 유무 무관 — Manager 지시 「실제로 지웠을 때만」과 다름, 근거 design D7 ㉣, Manager 확인 요청).
+- **승인이 이긴다 → 원칙 E** (Manager 결정 M1 = **B′** · 원칙 E 채택, 2026-09-26 — C 는 freeze 3·4판에서 손절 경로 대기로 떨어졌다, design D7):
+  `EntryGate` 의 사유별 **해제 세대**. 「늦은 적용은 제때 적용과 같아야 한다」 — 실행자는 정산이 돌아온 직후 세대를 읽고, 세대가 그대로일 때만
+  잠근다. 바뀌었으면 해제가 판정 근거 **뒤**이므로 차단은 적용하지 않는다(제때 선 차단도 그 해제가 지웠다) — 승격은 적용한다(제때 된 승격은 해제로
+  풀리지 않는다). 원장 상태로 판정을 버리지 않는다. 판정별 행동은 design D7 「판정 → 행동 표」. 원칙 E 는 사람 결정 「승인이 이긴다」(a092 델타 `spec.md:66-68`, 2026-08-10)를 실행자의 지연에 옮긴 것이다.
+  실행자는 `n.mu` 를 잡지 않는다. 해제 세대는 해제 **요청**마다 오른다(래치 유무 무관 — Manager 승인 2026-09-26, 반례 design D7 ㉣).
 - **기록 자체의 실패도 지속 실패다** (Manager 결정 M2 = (ii), design D8): 한 행에서 원장에 시도를 남기지 못한 연속 횟수가 같은 한도에
   이르면 잠근다(해제 세대가 바뀌면 연속이 끊긴다 — 해제로 이어지지 않은 승인은 끊지 않는다). 발행 뒤 전달 기록 실패는 동기 경로처럼 즉시
   잠근다(D1).
@@ -96,7 +97,7 @@
 
 - `internal/app/engine/alertdelivery.go` — `alertDeliverer` 에 게이트·계정 참조·배제 배선, `deliverOne` 한도 판정(D1)과
   연속 기록 실패 계수(D8), `cycle`/`PendingAlerts` 선택 순서. FLM 은 편집 뒤 `revision: current` 재추출.
-- `internal/journal/outbox.go` — `PendingAlerts` 의 정렬(한도 인자).
+- `internal/journal/outbox.go` — 새 메서드 `PendingAlertsForDelivery`(한도 인자). `PendingAlerts` 는 불변(obs 호출자 무편집).
 - `internal/journal/alert_claim.go` — `SettleResult.Attempts` (additive 필드), `settleUnderClaim` 적용 경로에서 같은 트랜잭션
   읽기(D1). 스키마 무변경. FLM `internal-journal--journal.settleunderclaim`.
 - `internal/execgw/retry.go` — `EntryGate.clearEpochs`, `ClearEpoch` · `BlockUnlessClearedSince`(새 leaf), `Clear` 에 세대 증가 한 줄(D7).
@@ -116,5 +117,5 @@
   a061 계열 봉인 설계). freeze 4판 §0.4 에서 발견, Manager 가 세 자리를 실측 재확인(2026-09-26).
 - **`Notifier.Acknowledge` 의 셈~해제 구간은 `n.mu` 를 거치지 않는 기록자를 막지 못한다** (a092 소유). 미전달 수를 센 뒤(:870) 해제하기 전(:875)에
   `execgw/replay.go:551` 의 `EnqueueAlert` 가 새 critical 행을 넣으면, 그 행이 미전달인 채 게이트가 열린다. a092 델타가 「무엇이 그 구간을 지키는지
-  change 에 적혀야 한다」(`a092…/spec.md:72`)로 이미 요구한다. a124 는 그 행의 판정을 잃지 않는 것까지만 진다(design D7 (P2) — 한도에 닿으면 다시
-  잠근다). freeze 5회차 §0.5 V2 에서 발견.
+  change 에 적혀야 한다」(`a092…/spec.md:72`)로 이미 요구한다. a124 의 원칙 E 는 이 경합을 **고치지도 넓히지도 않는다**: 그 행의 판정 근거가 확정된 **뒤에** 그 해제가 오면, 제때 적용했어도 그
+  해제가 차단을 지웠을 것이므로 차단은 적용하지 않고 승격만 적용한다(design D7 ㉩ · ㉪). 이 경합이 닫히면 그 판정도 자동으로 선다. freeze 5회차 §0.5 V2 · 6회차 W1 에서 발견.
