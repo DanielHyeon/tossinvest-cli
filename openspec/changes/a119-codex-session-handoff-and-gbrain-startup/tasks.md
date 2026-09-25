@@ -16,8 +16,12 @@
 
 ## 3. Implement and verify
 
-- [ ] 3.1 Land the regression pins from `wip/a119-3.1` through a separate teammate: fixture × matcher test, saver stdout test,
+- [x] 3.1 Land the regression pins from `wip/a119-3.1` through a separate teammate: fixture × matcher test, saver stdout test,
       one-effective-registration test, mutation harness with a green no-mutation control.
+      > 2026-09-26 teammate (Opus): the five files of `5e151b97` restored byte-for-byte (`git checkout 5e151b97 -- <5 paths>`);
+      > no conflict — `tools/sdd`, `tools/sdd-history` and `.codex` have no commit since `54004f44`. New tests 5 + 5 = 10, RC=0.
+      > Harness: M0 control 0 failing; M1–M5 failing 1·1·3·4·3; SURVIVED none; real `.codex/*` sha256 unchanged, real
+      > `.codex-context/` mtimes unchanged. `make sdd-test` RC=0 — 15 · 452 (skip 1) · 76 · 27 · 16 · 18, go ok.
 - [ ] 3.2 Verify isolation, redaction, atomic persistence, lock-owner preservation and unchanged tool results in isolated tests
       (design evidence map), and that the configuration files are byte-identical to `54004f44`.
 - [ ] 3.3 Record in `analysis/host-evidence.md` §4 what stays unobserved (interactive-host delivery, per-thread startup) and
