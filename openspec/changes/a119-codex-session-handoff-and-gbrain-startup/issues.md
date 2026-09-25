@@ -42,3 +42,7 @@ Teammate 는 이 결정 전에는 3.x 구현 커밋을 하지 않는다. 회귀 
 알려진 이름(`Bash`·`apply_patch`) 어느 것에도 걸리지 않는다. Codex 에서는 SDD agent-save 이벤트가 아마 생기지
 않는다(`.sdd/history/events/agent-saves.jsonl` 의 actor `codex` 는 6,003건 중 3건). 기존 시험은 핸들러 **존재**만
 본다. 스펙의 "coexist" 의도와 어긋날 수 있으나 이 change 에서 고치지 않는다 — 후속 change 후보.
+
+후속을 열 때의 결정 축(2026-09-25 재freeze 리뷰 note 2): ① matcher 를 Codex 가 실제로 내는 이름(살균 픽스처로 확립된 것만)에
+맞춘다, 또는 ② Codex 아래서 SDD agent-save 이벤트를 만들지 않는다고 스펙의 "coexist" 를 좁힌다. 어느 쪽이든 먼저 Codex
+훅 페이로드의 `tool_name` 을 관측해야 한다 — 후속 1(대화형 호스트 프로브)과 같은 관측이다.

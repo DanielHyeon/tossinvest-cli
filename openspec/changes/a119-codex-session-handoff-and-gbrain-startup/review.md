@@ -119,3 +119,33 @@ Function Logic Map: not-applicable — 기존 Go/Python 함수 본문을 바꾸�
 - Requirement-level edits → the freeze review re-runs on the rewritten deltas (adversarial voice 1, lightweight tool change;
   after the Opus reset 2026-09-26 19:00 KST). `openspec validate --strict` result is recorded in the round that runs it.
 - Not done here: no 3.x implementation, no host observation, no configuration edit. Draft tests remain on `wip/a119-3.1`.
+
+---
+
+# Re-freeze review (task 2.3, second pass) — 2026-09-25 — **PASS (frozen under scope (a))**
+
+- 기준: HEAD `dc289a7a`(a119 문서는 `2fbdcd78` 상태), base `54004f44`, 초안 `wip/a119-3.1` (5e151b97).
+- 보이스: 독립 적대 리뷰 서브에이전트 1개 — **Claude Sonnet**, 읽기 전용, 구현 컨텍스트와 분리. 1차(거부)와 같은 형태이고
+  모델만 다르다: Opus 주간 한도(리셋 09-26 19:00) 중이라 Manager 가 **의도적으로 조기 실행**했다 — 도구 change 의
+  WORKFLOW 최소치는 validate + Manager 셀프리뷰이고, Manager 가 재작성 저자라 셀프리뷰 대신 독립 보이스를 세웠다.
+  위 "Scope decision" 절의 "after the Opus reset" 문장은 이 결정으로 대체된다. `[codex-unavailable]` 아님 — Codex 는
+  이 change 에서 쓰지 않는다(1차와 같음).
+- 판정: **PASS**. blocking 0 · should-fix 0 · note 3.
+
+| # | 심각도 | 위치 | 발견 | 처분 |
+| --- | --- | --- | --- | --- |
+| 1 | note | review.md "Scope decision" | 재리뷰 시점이 "Opus 리셋 뒤"로 적혀 있는데 09-25 에 실행됨 | **수용** — 위 문단에 조기 실행 사유 기록 |
+| 2 | note | proposal Follow-ups 3 / issues I-2 | 후속 3(SDD agent-save 핸들러)에 결정 축이 없음 | **수용** — issues I-2 에 한 줄 추가(matcher 를 Codex 실제 이름에 맞출지 · coexist 의도를 포기할지) |
+| 3 | note | codex-session-save 델타 :4-7 | "추가 이름" 요구가 오늘은 공집합 | **조치 없음** — 1차 리뷰 4번이 "이름이 추가될 때 문다"로 이미 수용, 은폐된 전칭-공집합 아님 |
+
+리뷰어가 확인해 깨끗하다고 보고한 것(인용 포함): 문서 일관성(proposal ↔ 두 델타 ↔ tasks 3.x ↔ design 계획 ↔ host-evidence) ·
+미확립 호스트 주장 0(긍정문 grep) · 정본 `sdd-workflow` :162-206 GBrain 소유권·contention·복구 요구 보존 · 정본
+`codex-session-save` 4개 요구 유지 · 세 pin 이 `wip/a119-3.1` 실제 코드와 일치 · design "Task 3.2 evidence map" 인용 줄 실재 ·
+baseline 대비 설정 파일 5개 diff 0 · 뮤테이션 하네스가 사본만 변이하고 대조군 실패 시 중단 · 안전 불변식 자명.
+
+**Manager 재검증(스팟체크)**: `wip/a119-3.1` 시험 수 5 + 5 = 10 (`grep -c 'def test_'`) · evidence map 인용 줄
+`test_gbrain_project.py:62·:154`, `test_codex_session_save.py:76·:256` 이 각각 duplicate-serve busy · stale heartbeat ·
+Codex-store-only · concurrent-no-overwrite 시험의 `def` 줄 — 주장과 일치 · `openspec validate a119 --strict` valid(Manager 도 실행) ·
+a119 디렉터리 `git status` 빈 출력(리뷰어 쓰기 0).
+
+**다음**: 3.1 은 별도 Opus 팀메이트(리셋 뒤). 3.3 은 관측이 아니라 "미관측 기록"이다(scope (a)).

@@ -7,11 +7,12 @@
 
 - [x] 2.1 Capture the implementation baseline before code changes and record current hard evidence and applicable function analysis.
 - [x] 2.2 Obtain sanitized supported-host event fixtures and effective configuration-loading evidence; identify one Codex-owned launch path.
-- [ ] 2.3 Complete proposal-freeze gstack review on the evidence-backed plan.
+- [x] 2.3 Complete proposal-freeze gstack review on the evidence-backed plan.
       > 2026-09-25 first pass: **REJECT** (review.md) — plan no longer matched the 2026-08-29 Why; scope decision handed to the user.
       > 2026-09-25 user decision **(a)**: proposal rewritten to evidence + regression pins; symptoms to named follow-ups
-      > (proposal "Follow-ups", issues I-1). Re-review of the rewritten proposal and spec deltas is pending (adversarial
-      > voice, after the Opus reset). No 3.x commit before it passes.
+      > (proposal "Follow-ups", issues I-1). Second pass 2026-09-25: **PASS** — independent adversarial voice (Claude Sonnet,
+      > read-only; run early on purpose during the Opus limit), blocking 0 · should-fix 0 · note 3, Manager spot-checked (review.md
+      > "Re-freeze review"). Frozen under scope (a). 3.x may start (separate teammate).
 
 ## 3. Implement and verify
 
