@@ -214,3 +214,231 @@ proposal의 「불타기 방향」 절과 `issues.md` I1을 그에 맞게 고쳤
 - 수량 억제의 fold 수 기준 재계수(§1.6)는 tasks에 반영만 하고 **수를 다시 세지 않았다**
 - `deliver` 1회의 **실 체류 시간** 미측정 (구조만 확인)
 - FLM·AST 재생성 안 함 — a095는 이번 판에서 대상 함수가 늘지 않았다
+
+---
+
+## 2라운드 (proposal-freeze, 2판) — **FAIL**
+
+- **날짜**: 2026-09-25 · 측정 HEAD `634cf3c5`(브랜치 `feat/a112-four-family-runtime`) · base `ec29dc72`(HEAD 뒤 313커밋)
+- **실행**: Opus Teammate(리뷰·기록만 — production 코드·테스트·proposal/design/specs 본문 무변경)
+- **보이스 구성**: (A) 적대적 Eng — §4 손절 즉시성·부작용 예산·경합·fail-closed,
+  (B) 소비자·폭발반경 — 운영자 화면·알림·원장·다른 change. 둘 다 Claude 서브에이전트, 서로의 결과와
+  §1 판정을 보지 않게 격리(review.md 읽기 금지)·읽기 전용·`set -euo pipefail`·절대경로·toplevel 단언.
+- **교차 보이스 미충족.** 두 보이스를 띄웠으나 **판정 기록 시점까지 결과가 도착하지 않았다**
+  (둘 다 살아서 도구 호출 중이었다). Manager 지시로 보이스 결과 없이 **Teammate 단독 재검증**으로
+  판정한다. 아래 발견은 전부 Teammate가 HEAD 코드·원장·AST로 직접 확인한 것이며 보이스 발견은 0건
+  포함이다. 보이스 결과는 3판 리뷰 입력으로 넘긴다.
+- **교차 모델**: `[codex-unavailable: Manager 지시]` — Codex는 사용자 계정으로 모델 호출을 하므로 쓰지 않았다.
+  **a095 두 라운드 연속 미충족.**
+
+### 2.3 게이트 명령 (판정은 rc, 파이프 없음)
+
+| 명령 | rc | 비고 |
+| --- | --- | --- |
+| `openspec validate a095-a-stop-must-know-what-it-covers --strict --no-interactive` | **0** | valid |
+| `python3 tools/logic-map/check_analysis.py --change a095-a-stop-must-know-what-it-covers` | **1** | ① AST 번들 4개 stale ② base가 313커밋 뒤라 working-tree 창에서 missing evidence 255건. **tasks 0.4의 "통과"는 HEAD에서 거짓**(그 라운드에는 참). 단 `tools/logic-map`은 다른 세션이 편집 중인 dirty 상태였다 — 도구 쪽 변화 몫은 가르지 않았다 |
+| `sha256sum` 대조(AST 9개 `source_sha256`) | — | **MATCH 5 · STALE 4** (아래) |
+
+**AST 산출물 stale 4개** — 구조(분기 수)는 같고 줄만 밀렸다(SHIFT). 좌표를 인용하는 문서 문장은 전부 낡았다.
+
+| 번들 | 원인 커밋 | 문서 좌표 → HEAD |
+| --- | --- | --- |
+| `obs.Notifier.Notify` | a096/a097/a099·`a30eb35a` | `:107`/B1 `:111` → `:130`/B1 `:134` |
+| `obs.Notifier.publishBestEffort` | 같음 | `:138`/B1 `:139` → `:161`/B1 `:162` |
+| `obs.SeverityOf` | a099·a102 | `:309`/`:310` → `:347`/`:348`; `criticalEvents` `:279-298` → `:317-337`(여전히 18종); 이벤트 `:200` → `:238`; 인용 주석 `:190-194` → `:231-232`, `:212-217` → `:252-255` |
+| `journal.resetExitStateForReadoptTx` | a111 `882a0b49` | `684-731` → `699-745` (호출자 여전히 1: `position_policy.go:145`) |
+
+design D1의 `notifier.go:216-218`·`:283-285`·`:343`도 전부 다른 줄을 가리킨다. **재추출은 저자 몫이다(3판).**
+
+### 2.4 §1.11 지시 여섯 항목의 반영 — 반영 기록(§2)을 믿지 않고 문서와 대조
+
+| §1.11 | §2가 적은 반영 | 대조 결과 |
+| --- | --- | --- |
+| 1 총위험을 `baseline_price`로 · 값의 사본 전부 | 네 곳 모두 | **대체로 참.** 5행 산술 재계산 일치(3,200 · 19,128 · −7,220 · 5,060). 그러나 **475150 편입 수량 "3"이 틀렸다** — inst2의 편입 수량은 **2**(원장 `position_adoptions`; 3은 이미 닫힌 inst1). "3→32, 10.7배"는 실제 2→32(16배). proposal·D3·(tasks 5.1) 사본에 남았다(P2-1) |
+| 2 `event.go` 주석 인용 + 명시적 뒤집기 | D1 새 절 | **부분.** 같은 이벤트에 대한 **셋째 주석** `exitwiring.go:87-89`(*"Normal, not critical: a person trading their own account by hand is not a malfunction, and a critical grade would make an undelivered alert about it block entries"*)를 지나쳤다. 반론의 정확한 시나리오(**transport 미설정·비활성**)에 답하지 않았다(P1-1) |
+| 3 §0.3을 체류 시간으로 | tasks 6.2 재작성 | **부분.** 6.2만 고쳤다. **같은 약속의 사본**이 tasks 2.8(*"diff로 보인다"*)·안전 불변식 표 §4 행(*"6.2가 제출 경로에 새 호출 0개임을 보인다"*)·design D7 행에 그대로다. 선행 조건 a092는 그 속성을 약속하지 않는다(P0-4) |
+| 4 `ExternalPositionFound` 오류 전파·latch | tasks 6.2a | **결정 없음.** 문제를 task로 옮겨 적었을 뿐 설계 결정이 없다. proposal Impact는 여전히 *"map에 한 줄. 함수 본문 무변화"*(P1-4) |
+| 5 수량 억제 재발화 예산을 fold 수로 | 「2라운드 대상」 | **저자 미실행.** 이번 라운드가 쟀다(§2.7) — 그리고 재발화가 **outbox dedupe에 삼켜진다**는 것이 드러났다(P0-2) |
+| 6 선후 관계 — a092 → a095, a091 합산 | tasks 재작성 | **부분.** *"논리 의존 없음/병합 순서만"*이 design `:124`·`:372`, proposal `:291`, tasks `:55`·`:166`에 살아 있고 tasks `:180`의 「합산」과 모순된다. proposal·design에 a092 언급 **0회**(P1-5) |
+
+**정정의 단위가 또 값이 아니라 자리였다** — 1라운드와 같은 형태다(지시 1·3·6).
+
+### 2.5 차단 — P0 4건
+
+**P0-1 · FLM이 함수 경계에서 멈췄다 — R2-B2의 서사와 델타 SHALL이 거짓 전제 위에 있다**
+
+`checkExternalIncrease`의 **유일한 호출자**는 `judgeHoldings`(`adoption.go:108-110`)이고
+`if p.ExitEligible() { if p.Adopted() { d.checkExternalIncrease(ctx, p) } }`로 **편입된 포지션만** 부른다.
+- FLM(`…checkexternalincrease/function-logic-map.md`)의 *"B2 — 없으면 조용히 반환한다. 엔진이 직접 연 포지션과
+  미편입 보유가 여기로 온다"*는 **거짓**. 둘 다 이 함수에 도달하지 않는다.
+- **010170**(adoption_id·entry_decision_id 모두 없음)은 `ExitEligible()`이 거짓이라 `alertUnmanaged`로 간다 —
+  `exitloop.go:512-518`(무조건)과 `adoption.go:152-154`(fresh·비차단 시). 따라서 proposal·D5의
+  *"R1만으로는 010170이 그대로 안 보인다"*도 **거짓**이다. R1만으로 010170은 critical·durable이 된다.
+- B2가 실제로 받는 것은 **adoption_id는 있는데 JOIN 행이 없는 무결성 결함 또는 DB 오류**다
+  (`journal/adoption.go:294-311`). 이것을 `alertUnmanaged`로 보내면 **exit state를 가진 포지션을 「무보호」로
+  거짓 보고**한다.
+- 진짜 구멍은 다른 곳이다: **엔진이 직접 연 포지션(entry decision)의 수량 증가는 어디서도 검사되지 않는다.**
+  R2는 그것을 덮지 않는데 engine-safety 델타는 *"보호 상태가 고정한 수량보다 실제 보유 수량이 많으면
+  critical"*로 **모든** 보호 포지션을 약속한다 — 델타가 설계보다 넓다.
+
+**P0-2 · R2의 재알림은 outbox dedupe가 삼킨다 — 설계가 이벤트 키를 다루지 않는다**
+
+base 이후 착지한 a096의 재알림 창이 R2를 무력화한다.
+- `checkExternalIncrease`의 Key는 `exit.position_unmanaged|grown|<posID>` — **수량이 없다**(`adoption.go:457`).
+- 같은 키의 전달된 행은 `DefaultRemindAfter = 1h`(`notifier.go:59`) 안에서 `claimOwed`가 not-owed →
+  `ClaimSettled` → **전송도 본문 갱신도 없다**(`outbox.go:294-346`, `notifier.go:285-293`). 본문 UPDATE는 재무장
+  (rearm) 때만 일어난다(`outbox.go:334-344`).
+- **원장 실측**(inst2, 편입 수량 2): 증가 폴드 00:08:58(3) · 00:21:33(4) · 00:30:57(5) · 00:54:58(8) ·
+  03:32:39(26) · 03:42:02(32). 키가 그대로면 전송되는 것은 3과 26 두 건이고 **「32」는 한 번도 나가지 않는다.**
+  080220의 6건은 17분 안에 4건, 2분 안에 2건이다. 델타가 적은 *"한 번만 우는 보고는 32주를 말한 적이 없다"*가
+  R2 후에도 그대로 성립한다.
+
+**P0-3 · exit-policy 델타의 SHALL 전제가 HEAD에서 거짓이다 — 1라운드 정정 값의 사본이 남았다**
+
+2판은 「유효 손절 = `baseline_price`」로 정정했다. 그런데 델타 `specs/exit-policy/spec.md`의
+*"유효 손절가를 갱신하는 쓰기 경로가 하나임이 유지되어야 한다(SHALL — 오늘 그 경로는 재편입 하나뿐이고
+운영자 행동에서만 불린다)"*, design D4 (1), issues I1 (1)은 옛 정의(네 기준 컬럼)로 쓰여 있다.
+`baseline_price`의 writer는 **셋**이다:
+
+| writer | 자리 |
+| --- | --- |
+| 래칫 판정 `recordExitJudgementTx` | `internal/journal/exit_state.go:553`·`:563` (`judgement.Baseline = effective.Line.CurrentProtection` `:541`) |
+| 관측 갱신 | `internal/journal/exit_observation_refresh.go:137` |
+| 재편입 `resetExitStateForReadoptTx` | `internal/journal/apply_hook.go:718-720` |
+
+그리고 「하향 거부」는 이미 있다 — `notBelow("baseline", …)`(`exit_state.go:491`), snapshot 경로는
+`SelectRecoverySnapshot`의 monotone 선택. 475150이 57,900으로 올라간 것 자체가 첫째 writer의 작동이다.
+**델타가 SHALL로 적는 현재 상태가 거짓이면, 그 SHALL은 만족 불가이거나 무의미하다.**
+
+**P0-4 · §0.3/§4 — critical 승격이 exit 루프의 손절 판정 앞에 최악 54s 체류를 넣는다. 선행 조건 a092는 그것을 약속하지 않는다**
+
+- `ExitObserver.workingSet`이 `!p.ExitEligible()`인 보유마다 `o.alertUnmanaged`를 부른다(`exitloop.go:518`)
+  — `observe`(`:441`)와 `judge` 루프(`:451-468`) **앞**이다.
+- critical이면 `notifyCritical` → `claimAndDeliver`가 `n.mu`를 잡고(`notifier.go:254-255`) **같은
+  goroutine에서** `deliver`의 재시도 예산 전체를 돈다(`:309`, `:420-574`).
+- **최악 체류는 코드 상수로 54s다**(도출값): `AlertDeliveryBound` = 3 × (10s publish timeout + 5s busy) +
+  2 × 2s + 5s release (`alert_lease.go:39-67`, `DefaultPublishTimeout` `:17`, `journal.DefaultBusyTimeout`
+  `journal.go:36`). `Ntfy`는 `notifications.go:101`에서 Timeout 없이 만들어져 10s 기본을 쓴다.
+- 무보호 보유가 N개면 첫 사이클에서 **N × 54s가 직렬로** 쌓인다. `c.Notifier`는 reconcile driver와
+  공유되므로(`exitwiring.go:341-342`, `reconcileloop.go:367-368`) 상대편 deliver를 기다리면 **최대 +54s**.
+- 비교 기준: exit 관측 주기 5s(`exitloop.go:98`), 청산 지연 상한 30s(`:116`), 관측 두절 60s(`:105`).
+- **tasks 선후 관계는 「a092 → a095」라고 적지만** a092 20판 머리 블록은 *"8.7 … 발송이 exit goroutine에
+  남는다 — 그대로 열림"*이고 기록 경로 선택(D0.3d 3번, 세 안)을 **고르지 않았다.** a095가 필요로 하는 속성 —
+  「exit goroutine의 critical Notify는 deliver 없이 유계 시간에 반환한다」 — 을 a092가 **약속하지 않는다.**
+  순서만 적은 의존은 이 체류를 막지 못한다.
+- 같은 약속의 옛 사본(tasks 2.8, 안전 불변식 §4 행, design D7 「총위험 계산이 손절을 늦추는가」 행)은 여전히
+  *"새 호출 0개를 diff로 보인다"* — 1라운드가 구조적으로 볼 수 없다고 한 그 약속이다.
+
+### 2.6 P1 6건 (freeze 전 수정)
+
+**P1-1 · 반론에 대한 답이 반론의 시나리오를 비켜 간다.** D1 (2) *"수동 매매마다 성립하지 않는다 — 억제는
+상태를 따른다"*는 ① 재시작마다 메모리 latch가 재무장되고(`adoption.go:385-387` 주석 스스로), ② 수동으로 산
+**새 종목**은 새 포지션 ID라 새 알림이며, ③ `ExternalPositionFound`는 latch가 없어서 막히지 않는다.
+D1 (3)은 *"transport가 죽은 동안"*만 다룬다. `notifications.enabled=false`면 Publisher가 nil이고
+(`notifications.go:83-88`), `deliver`는 즉시 `"no notification publisher is configured"`로 실패하고
+(`notifier.go:429-431`) Gate.Block + `ModeEntryBlocked`로 승격한다. **알림을 끈 엔진은 수동 보유가 하나라도
+있으면 진입이 막힌다** — 인용한 주석(`event.go:252-255`)이 말하는 바로 그 시나리오다.
+
+**P1-2 · 정본과 충돌한다 — ADDED만으로는 부족하다.** 정본 `openspec/specs/exit-policy/spec.md:81`:
+*"`adoption.enabled`의 기본값은 false이며(SHALL — … **false에서의 동작은 무관리 보유 알림을 포함한 기존
+동작과 동일하다**)"*. R1은 false에서도 무관리 보유 알림의 등급과 그 결과(진입 차단)를 바꾼다. 델타가 이
+문장을 MODIFIED하지 않으면 gate가 모순을 정본에 넣는다(안전 불변식 3 · WORKFLOW §0.2). 운영자가 **의도적으로**
+`exclude_symbols`에 넣은 종목(`adoption.go:407-408` *"deliberately left unprotected"*)도 critical이 된다 —
+이 교환도 적혀 있지 않다.
+
+**P1-3 · 발신 네 자리가 「같은 사실」이 아니다(D7·I3의 판단이 틀렸다).** `notifierAlerter.ExternalPositionFound`
+(`exitwiring.go:103-120`)는 `ExitEligible=true`인 **편입된(보호 중인) 포지션**의 재대사 폴드에도
+*"관리 대상은 아니다 … 손절·익절이 자동으로 걸려 있지 않다"*로 발화한다(필드 `exit_eligible`만 참).
+R1 뒤에는 **보호 중인 포지션에 대한 거짓 critical**이 된다. 또 세 자리(`adoption.go:419`,
+`exitloop.go:1608`, `exitwiring.go:105-106`)가 같은 Key `exit.position_unmanaged|<posID>`를 써서 outbox의
+**한 행으로 합쳐진다** — 원인 구분(델타 *"원인은 세부 정보로 구분해 담아야 한다"*)이 행 단위로 사라진다.
+tasks 1.11은 미실행이다.
+
+**P1-4 · `ExternalPositionFound`의 오류 전파에 결정이 없다.** 실측: ingest 오류는 `cycle.Err`로 기록되고
+사이클은 **계속된다**(`reconcileloop.go:420-455`) — 1라운드 §1.5의 *"대사를 실패시킨다"*는 과장이다.
+그러나 `note`의 연속 실패 계수에 들어가고(`reconcileloop.go:281-296`), 정본 engine-safety `:205`는 reconcile
+연속 5주기 실패에 critical + ENTRY_BLOCKED를 건다. a095가 새 결합을 만드는지·받아들이는지 설계가 답해야 한다.
+또 원장상 편입 후 증가는 **converge 경로**(kind `UNKNOWN`, `converge.go:213`)로 들어왔다 —
+`ExternalPositionFound`는 EXTERNAL 폴드(0→N, `external.go:226`)에서만 운다. §1.6이 이 자리의 반복 발화로
+적은 475150 예는 이 자리에 해당하지 않는다.
+
+**P1-5 · 선후 관계의 옛 값이 다섯 자리에 살아 있다**(§2.4 지시 6). 또한 a091은 `EventExitProposalCapped`를
+통째로 올리는 것을 **기각**하고(a091 proposal `:108`) 0주 경로만 critical로 올린다 — proposal·design의
+*"a091은 `EventExitProposalCapped`를 등재한다"*도 틀렸다.
+
+**P1-6 · 측정 시점이 지났다 — 동기 포지션이 전부 닫혔다.** 원장 재조회(2026-09-25, 읽기 전용):
+010170 inst2 CLOSED 2026-08-13 · 475150 inst2·080220·066570 CLOSED 2026-08-11 · 272210 inst2 CLOSED
+2026-08-13. **현재 OPEN은 TSLA 먼지 1건뿐.** tasks 7.2(*"6건 중 최소 2건 즉시 critical"*), 7.3, issues I5,
+proposal 「지금 열린 것들」은 **지금 거짓**이다. `alert_outbox`는 현재 16행이 전부 critical이고
+`exit.position_unmanaged`는 여전히 **0행**이다 — 결함 계열은 남아 있다. 동기는 유지되지만 예측·배포 서술은
+측정 시각을 달고 다시 써야 한다.
+
+### 2.7 §2.2 미완 항목 — 이번 라운드가 잰 것
+
+| 항목 | 결과 | 성격 |
+| --- | --- | --- |
+| 수량 억제의 fold 수 재계수(§1.6) | 원장 전체에서 **편입 후 수량 증가 폴드 38건 / 포지션 15개**. 포지션당 최대 7(272210 inst5), 6(080220 · 466100 inst6 · 475150 inst2). 오늘 코드는 프로세스당 1건(≤15 + 재시작), R2 후 이론상 최대 38건 — **단 P0-2 때문에 실제 전송은 훨씬 적다** | **실측** (journal `mode=ro`, `position_adjustments` ⋈ `position_adoptions`, `created_at ≥ observed_at` · `new > prev` · `new > adopted`) |
+| `deliver` 1회 체류 | 최악 **54s** (`DefaultAlertDeliveryBound`) | **코드 상수로 도출** — 실 운영 체류는 **미측정**(실 POST는 사람 승인 사안) |
+
+### 2.8 비차단 P2
+
+- **P2-1** 475150 편입 수량 3 → 실제 2 (§2.4 지시 1 행)
+- **P2-2** proposal *"손절은 전부 `entry_price` 대비 정확히 −3.00%다"* — `initial_stop`에 대한 진술이다. 유효 손절은 5개 중 3개가 −3%가 아니다
+- **P2-3** proposal *"그때 커지는 것은 주당 위험이 아니라 총위험"* vs issues I1 *"그때 커지는 것은 주당 위험"* — 서로 반대
+- **P2-4** I2 보강: 272210 inst4 `avg_price = 81922.222222` — 브로커가 평단을 실제로 갱신하는 사례가 있다. 「stale일 수 있다」의 반대 사례도 보고 설계에 넣을 것
+- **P2-5** 델타가 요구하지 않는 task(3.4 「미측정」, 3.4a 「고정된 이익」)가 있다 — 요구사항이면 델타로, 아니면 tasks에서 빼기
+
+### 2.9 재검증 표 (Teammate 단독, HEAD `634cf3c5`)
+
+| # | 주장(출처) | 판정 | 근거 |
+| --- | --- | --- | --- |
+| 1 | 5행 총위험 3,200/19,128/−7,220/5,060 (proposal·D3·3.1·I5) | 참 | 산술 재계산 |
+| 2 | 475150 편입 3주, 10.7배 (proposal·D3) | **거짓** | `position_adoptions` inst2 = 2 |
+| 3 | `criticalEvents` 18종·미등재 | 참 | `event.go:317-337` |
+| 4 | 좌표 `:107/:111/:138/:139/:309/:310/:279-298/:200` | **거짓(stale)** | §2.3 표 |
+| 5 | B2가 미편입·엔진 개설 포지션을 삼킨다 (proposal ⑤·D2·D5·FLM) | **거짓** | 호출자 가드 `adoption.go:108-110` |
+| 6 | R1만으로 010170은 안 보인다 (proposal·D5) | **거짓** | `exitloop.go:512-518` |
+| 7 | R2 재알림이 늘어난 만큼 보인다 (D2) | **거짓** | 키에 수량 없음 + 1h 재알림 창 |
+| 8 | 유효 손절 writer는 재편입 하나 (델타 exit-policy·D4·I1) | **거짓** | writer 셋, §2.5 P0-3 |
+| 9 | `resetExitStateForReadoptTx` 호출자 1 | 참 | `position_policy.go:145` |
+| 10 | `alertUnmanaged`가 observe 앞 (tasks 선후·6.2) | 참 | `exitloop.go:518` vs `:441` |
+| 11 | deliver가 `n.mu`를 잡고 재시도 예산을 돈다 | 참 (최악 54s) | `notifier.go:254-309`, `alert_lease.go:39-67` |
+| 12 | a092가 선행 조건으로 체류를 유계로 만든다 (tasks 선후) | **거짓(미약속)** | a092 tasks 20판 머리 블록 8.7 「열림」 |
+| 13 | 넷 다 같은 사실 (D1·D7·I3) | **거짓** | `exitwiring.go:103-120` 보호 중 포지션에도 발화 |
+| 14 | a091과 논리 의존 없음 (design `:124`·`:372`, proposal `:291`, tasks `:55`·`:166`) | **거짓** | tasks `:180` 자신의 「합산」 |
+| 15 | `ModeEntryBlocked`는 신규 진입만 막는다 (D1 (3)) | 참 | `notifier.go:397` 문구 |
+| 16 | 교환은 「transport가 죽은 동안」뿐 (D1 (3)) | **거짓(불완전)** | 비활성 → Publisher nil → 즉시 실패 |
+| 17 | `ExternalPositionFound` 오류가 대사를 실패시킨다 (§1.5) | **부분 거짓** | 사이클은 계속, 건강 계수만 |
+| 18 | `ExternalPositionFound`가 475150 증가 폴드마다 운다 (§1.6) | **거짓** | 증가는 converge(UNKNOWN) 경로 |
+| 19 | 열린 포지션 6건 · 010170 무보호 (proposal·7.2·7.3·I5) | **거짓(지금)** | 원장: OPEN = TSLA 1건 |
+| 20 | outbox에 `exit.position_unmanaged` 0행 | 참 | 16행 전부 critical, 해당 0 |
+| 21 | `check_analysis` 통과 (tasks 0.4) | **거짓(HEAD)** | rc=1 |
+
+**참 7 · 거짓 14**(부분·stale 포함). 보이스 발견의 재검증은 0건(미도착).
+
+### 2.10 3판이 받는 것
+
+1. **FLM을 호출자까지 다시 뽑는다** — `judgeHoldings`·`ExitObserver.workingSet`·`notifierAlerter.ExternalPositionFound`의 AST를 더하고 stale 4개를 HEAD로 재추출한 뒤 base를 재고정한다. R2-B2를 폐기하거나 「무결성 결함」으로 다시 정의한다. **엔진 개설 포지션의 수량 증가 미검사**를 범위에 넣을지 결정하고, 델타 SHALL을 설계 범위와 같게 좁히거나 넓힌다
+2. **R2에 이벤트 키 설계를 넣는다** — 수량을 키에 넣을지, 재무장 규칙을 쓸지 정하고, 475150 원장 순서(3·4·5·8·26·32)를 재생하는 시험으로 「32가 나간다」를 못 박는다
+3. **exit-policy 델타의 「writer 하나」 전제를 고친다** — 유효 손절의 writer 셋과 이미 있는 하향 거부를 인용하고, 래칫 선행 조건 셋을 참인 문장으로 다시 쓴다(D4·I1 사본 포함, 값 단위로)
+4. **§4 체류의 소유자를 정한다** — ① a092가 「exit goroutine의 critical Notify는 deliver 없이 유계 반환」을 **약속하고 착지한 뒤에만** R1을 착지(그 속성을 a095 tasks의 착수 조건·시험으로 인용), 또는 ② a095가 자체 완화(exit 루프 발신 자리를 normal로 두고 reconcile 쪽만 critical로 하거나, 발신을 judge 뒤로 옮기기)를 설계한다. 옛 약속 사본(tasks 2.8, §4 행, D7)을 제거한다
+5. 셋째 주석 `exitwiring.go:87-89` 인용, **알림 비활성·미설정 엔진**과 `exclude_symbols` 종목에 대한 교환의 명시적 결정(P1-1)
+6. 정본 exit-policy `:81`을 MODIFIED로 다루거나 R1을 `adoption.enabled`·알림 설정과 정합하게 좁힌다(P1-2)
+7. 네 자리의 문구·키 분리(`ExternalPositionFound`가 편입된 포지션에서 「관리 대상 아님」이라 말하지 않게) — tasks 1.11을 실행해 증거로(P1-3)
+8. `ExternalPositionFound` 오류 전파의 결정(P1-4), 선후 관계 옛 값 다섯 자리 제거와 a091 서술 정정(P1-5)
+9. 원장 서술·배포 예측에 측정 시각을 달고 다시 쓴다(P1-6, P2-1~P2-5)
+10. 3판 리뷰는 **두 보이스 결과를 실제로 받아** 교차 보이스를 충족한다
+
+### 2.11 사용자 결정 대기
+
+1. **a095의 착지를 a092에 묶을지.** a092가 「exit goroutine에서 동기 deliver 없음」을 약속·착지할 때까지 a095 R1을 동결할지, 아니면 a095가 자체 완화를 설계할지(3판 입력 4)
+2. **알림 비활성·미설정 엔진과 `adoption.enabled=false`(기본값) 엔진에서 무관리 보유가 ENTRY_BLOCKED를 부르는 교환을 받아들일지.** 받아들이면 정본 exit-policy `:81`의 「false = 기존 동작」 SHALL을 바꾸는 결정이다(안전 불변식 3)
+3. **범위를 옮길지.** 동기 포지션이 전부 닫힌 지금, 실측으로 드러난 진짜 구멍 — **엔진이 직접 연 포지션의 수량 증가 미검사**와 R2의 키 설계 — 으로 초점을 옮길지
+
+### 2.12 이번 라운드가 하지 않은 것 (침묵한 생략 아님)
+
+- 보이스 A·B 결과 수합 — 기록 시점에 미도착. 교차 보이스 미충족
+- 교차 모델 — `[codex-unavailable: Manager 지시]`
+- AST 재추출·문서 수정 — 저자 몫(3판). 이번 라운드는 판정과 지시만 남긴다
+- `go test`·`make sdd-sync`·`make gate` — 문서 리뷰 단계, Go diff 0
+- `deliver`의 실 운영 체류 — 54s는 도출값이다

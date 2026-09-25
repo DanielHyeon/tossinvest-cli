@@ -12,8 +12,13 @@
 - [x] 0.4 `check_analysis.py --change a095-…` — **통과**(`evidence complete`).
       두 Markdown은 **측정으로** 채웠다: 조건은 소스 원문, 창의 호출·return은
       `ast.json` 좌표, 진입 여부는 `go test -covermode=set` 프로파일이다
+      > **정정(2라운드, 2026-09-25, HEAD `634cf3c5`)**: 이 체크는 그 라운드에 참이었다. HEAD에서는
+      > `check_analysis.py` **rc=1** — AST 번들 4개 stale(Notify·publishBestEffort·SeverityOf·
+      > resetExitStateForReadoptTx) + base가 313커밋 뒤라 missing evidence 255건. 재추출·base 재고정은 3판.
 - [ ] 0.5 **proposal-freeze 리뷰**(적대적 Eng 필수) → `review.md`.
       **교차 모델을 여기서 지킨다** — a092가 여섯 라운드, a094가 한 라운드 미충족이다
+      > **2라운드(2026-09-25) 실행 — FAIL**(`review.md` 「2라운드」). 차단 P0 4 · P1 6.
+      > 교차 보이스·교차 모델 미충족이라 **체크하지 않는다** — freeze가 성립하지 않았다.
 
 ## 1. 산출물 (완료 — 문서보다 먼저)
 
