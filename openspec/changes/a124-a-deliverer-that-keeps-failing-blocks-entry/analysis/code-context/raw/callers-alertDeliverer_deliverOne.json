@@ -1,0 +1,11 @@
+{
+  "symbol": "alertDeliverer.deliverOne",
+  "callers": [
+    {
+      "name": "cycle",
+      "kind": "method",
+      "filePath": "internal/app/engine/alertdelivery.go",
+      "startLine": 145
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "symbol": "EscalateOperatingMode",
+  "callees": [
+    {
+      "name": "TargetModeForTrigger",
+      "kind": "function",
+      "filePath": "internal/journal/operating_mode.go",
+      "startLine": 537
+    },
+    {
+      "name": "AutomaticTriggers",
+      "kind": "function",
+      "filePath": "internal/journal/operating_mode.go",
+      "startLine": 514
+    },
+    {
+      "name": "TransitionOperatingMode",
+      "kind": "method",
+      "filePath": "internal/journal/operating_mode.go",
+      "startLine": 346
+    },
+    {
+      "name": "OperatingModeRecord",
+      "kind": "struct",
+      "filePath": "internal/journal/operating_mode.go",
+      "startLine": 245
+    },
+    {
+      "name": "TransitionModeRequest",
+      "kind": "struct",
+      "filePath": "internal/journal/operating_mode.go",
+      "startLine": 315
+    },
+    {
+      "name": "Context",
+      "kind": "struct",
+      "filePath": "internal/app/app.go",
+      "startLine": 62
+    },
+    {
+      "name": "ModeAnnouncer",
+      "kind": "interface",
+      "filePath": "internal/journal/operating_mode.go",
+      "startLine": 140
+    },
+    {
+      "name": "EscalateOperatingMode",
+      "kind": "method",
+      "filePath": "internal/app/engine/a098_the_sender_dying_locks_the_gate_test.go",
+      "startLine": 43
+    },
+    {
+      "name": "EscalateOperatingMode",
+      "kind": "method",
+      "filePath": "internal/app/engine/runtime_test.go",
+      "startLine": 73
+    },
+    {
+      "name": "EscalateOperatingMode",
+      "kind": "method",
+      "filePath": "internal/execgw/escalation_test.go",
+      "startLine": 172
+    },
+    {
+      "name": "EscalateOperatingMode",
+      "kind": "method",
+      "filePath": "internal/journal/operating_mode.go",
+      "startLine": 496
+    }
+  ]
+}

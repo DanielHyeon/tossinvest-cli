@@ -1,0 +1,305 @@
+{
+  "symbol": "Block",
+  "callers": [
+    {
+      "name": "TestTheAcknowledgedNameIsTheOneTheOperatorTyped",
+      "kind": "function",
+      "filePath": "cmd/tossctl/a098_the_operator_command_names_a_person_test.go",
+      "startLine": 175
+    },
+    {
+      "name": "TestAcknowledgingWithoutANameChangesNothing",
+      "kind": "function",
+      "filePath": "cmd/tossctl/a098_the_operator_command_names_a_person_test.go",
+      "startLine": 208
+    },
+    {
+      "name": "TestAcknowledgingAsksForNothingElse",
+      "kind": "function",
+      "filePath": "cmd/tossctl/a098_the_operator_command_names_a_person_test.go",
+      "startLine": 240
+    },
+    {
+      "name": "TestAcknowledgingSaysEntryIsStillBlocked",
+      "kind": "function",
+      "filePath": "cmd/tossctl/a098_the_operator_command_names_a_person_test.go",
+      "startLine": 302
+    },
+    {
+      "name": "TestTheRestoreNeverClearsALatchItDidNotSet",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_restart_does_not_release_the_gate_test.go",
+      "startLine": 155
+    },
+    {
+      "name": "TestAcknowledgingClearsTheBacklogLatchAndNamesTheOperator",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_the_operator_reads_and_acknowledges_test.go",
+      "startLine": 179
+    },
+    {
+      "name": "TestAcknowledgingEverythingLeavesTheSenderDownLatch",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_the_operator_reads_and_acknowledges_test.go",
+      "startLine": 226
+    },
+    {
+      "name": "TestAcknowledgingRefusesABlankOperator",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_the_operator_reads_and_acknowledges_test.go",
+      "startLine": 271
+    },
+    {
+      "name": "TestTheOperatorSocketListsAndAcknowledges",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_the_operator_socket_is_the_engines_test.go",
+      "startLine": 175
+    },
+    {
+      "name": "TestTheAcknowledgeRouteRefusesMalformedCalls",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_the_operator_socket_is_the_engines_test.go",
+      "startLine": 224
+    },
+    {
+      "name": "blockEntryOnDeliveryStop",
+      "kind": "function",
+      "filePath": "internal/app/engine/auxiliary.go",
+      "startLine": 202
+    },
+    {
+      "name": "restoreAlertEntryLatch",
+      "kind": "function",
+      "filePath": "internal/app/engine/gateway.go",
+      "startLine": 153
+    },
+    {
+      "name": "TestTheSenderDownReasonHasADeterministicLatchPrecedence",
+      "kind": "function",
+      "filePath": "internal/execgw/a098_sender_down_reason_test.go",
+      "startLine": 82
+    },
+    {
+      "name": "TestEveryEntryBlockingConditionReachesTheChain",
+      "kind": "function",
+      "filePath": "internal/execgw/entrylatch_test.go",
+      "startLine": 35
+    },
+    {
+      "name": "TestTheLatchClearsThroughTheGatesOwnRules",
+      "kind": "function",
+      "filePath": "internal/execgw/entrylatch_test.go",
+      "startLine": 151
+    },
+    {
+      "name": "TestTheLatchSurfaceNeverDisagreesWithTheGate",
+      "kind": "function",
+      "filePath": "internal/execgw/entrylatch_test.go",
+      "startLine": 198
+    },
+    {
+      "name": "park",
+      "kind": "method",
+      "filePath": "internal/execgw/indoubt.go",
+      "startLine": 372
+    },
+    {
+      "name": "ProjectOperatingMode",
+      "kind": "method",
+      "filePath": "internal/execgw/modegate.go",
+      "startLine": 35
+    },
+    {
+      "name": "TestTheProjectionReplacesRatherThanMerges",
+      "kind": "function",
+      "filePath": "internal/execgw/reconcile_projection_test.go",
+      "startLine": 97
+    },
+    {
+      "name": "TestTheProjectionLeavesOtherProducersAlone",
+      "kind": "function",
+      "filePath": "internal/execgw/reconcile_projection_test.go",
+      "startLine": 115
+    },
+    {
+      "name": "parkAlert",
+      "kind": "method",
+      "filePath": "internal/execgw/replay.go",
+      "startLine": 534
+    },
+    {
+      "name": "Query",
+      "kind": "method",
+      "filePath": "internal/execgw/retry.go",
+      "startLine": 335
+    },
+    {
+      "name": "TestStrategyGatewayRechecksEntryGateAfterSubmittingFencePairedKRUS",
+      "kind": "function",
+      "filePath": "internal/execgw/strategy_gateway_account_base_test.go",
+      "startLine": 99
+    },
+    {
+      "name": "BlockSymbol",
+      "kind": "method",
+      "filePath": "internal/execgw/symbolgate.go",
+      "startLine": 64
+    },
+    {
+      "name": "RebuildReconcileProjection",
+      "kind": "method",
+      "filePath": "internal/execgw/symbolgate.go",
+      "startLine": 183
+    },
+    {
+      "name": "TestCheckEntryStaysAccountWide",
+      "kind": "function",
+      "filePath": "internal/execgw/symbolgate_test.go",
+      "startLine": 53
+    },
+    {
+      "name": "TestAccountBlockCoversEveryTradableSymbol",
+      "kind": "function",
+      "filePath": "internal/execgw/symbolgate_test.go",
+      "startLine": 69
+    },
+    {
+      "name": "TestAccountReasonWinsOverSymbolReason",
+      "kind": "function",
+      "filePath": "internal/execgw/symbolgate_test.go",
+      "startLine": 84
+    },
+    {
+      "name": "evaluateSLO",
+      "kind": "method",
+      "filePath": "internal/filldetect/detect.go",
+      "startLine": 640
+    },
+    {
+      "name": "blockSymbol",
+      "kind": "method",
+      "filePath": "internal/filldetect/detect.go",
+      "startLine": 669
+    },
+    {
+      "name": "blockEntries",
+      "kind": "method",
+      "filePath": "internal/flatten/flatten.go",
+      "startLine": 635
+    },
+    {
+      "name": "claimAndDeliver",
+      "kind": "method",
+      "filePath": "internal/obs/notifier.go",
+      "startLine": 251
+    },
+    {
+      "name": "deliver",
+      "kind": "method",
+      "filePath": "internal/obs/notifier.go",
+      "startLine": 420
+    },
+    {
+      "name": "syncGate",
+      "kind": "method",
+      "filePath": "internal/reconcile/mismatch.go",
+      "startLine": 1448
+    },
+    {
+      "name": "writeRemoteTestCertificate",
+      "kind": "function",
+      "filePath": "internal/console/remote_test.go",
+      "startLine": 92
+    },
+    {
+      "name": "Observe",
+      "kind": "method",
+      "filePath": "internal/reconcile/mismatch.go",
+      "startLine": 618
+    },
+    {
+      "name": "blockFromReconcileState",
+      "kind": "function",
+      "filePath": "internal/reconcile/mismatch.go",
+      "startLine": 1361
+    },
+    {
+      "name": "blocksFor",
+      "kind": "function",
+      "filePath": "internal/reconcile/mismatch.go",
+      "startLine": 1402
+    },
+    {
+      "name": "New",
+      "kind": "function",
+      "filePath": "internal/reconcile/recovery.go",
+      "startLine": 164
+    },
+    {
+      "name": "Run",
+      "kind": "method",
+      "filePath": "internal/reconcile/recovery.go",
+      "startLine": 238
+    },
+    {
+      "name": "Blocks",
+      "kind": "method",
+      "filePath": "internal/app/engine/position_policy_command_test.go",
+      "startLine": 20
+    },
+    {
+      "name": "hasBlockFor",
+      "kind": "function",
+      "filePath": "internal/reconcile/mismatch.go",
+      "startLine": 545
+    },
+    {
+      "name": "pendingBlocksForPersistence",
+      "kind": "method",
+      "filePath": "internal/reconcile/mismatch.go",
+      "startLine": 1103
+    },
+    {
+      "name": "persistencePriority",
+      "kind": "function",
+      "filePath": "internal/reconcile/mismatch.go",
+      "startLine": 1121
+    },
+    {
+      "name": "unrepresentableOrdinaryQuantityBlock",
+      "kind": "function",
+      "filePath": "internal/reconcile/mismatch.go",
+      "startLine": 1131
+    },
+    {
+      "name": "scopeLabel",
+      "kind": "function",
+      "filePath": "internal/reconcile/mismatch.go",
+      "startLine": 1217
+    },
+    {
+      "name": "Blocks",
+      "kind": "method",
+      "filePath": "internal/reconcile/mismatch.go",
+      "startLine": 1259
+    },
+    {
+      "name": "hasPermanentQuantityAccountBlock",
+      "kind": "function",
+      "filePath": "internal/reconcile/mismatch.go",
+      "startLine": 1389
+    },
+    {
+      "name": "snapshotBlocks",
+      "kind": "method",
+      "filePath": "internal/reconcile/mismatch.go",
+      "startLine": 1507
+    },
+    {
+      "name": "sortBlocks",
+      "kind": "function",
+      "filePath": "internal/reconcile/mismatch.go",
+      "startLine": 1515
+    }
+  ]
+}

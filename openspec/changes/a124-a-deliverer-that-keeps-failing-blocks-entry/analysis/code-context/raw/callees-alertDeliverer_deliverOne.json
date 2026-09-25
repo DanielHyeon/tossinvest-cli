@@ -1,0 +1,47 @@
+{
+  "symbol": "alertDeliverer.deliverOne",
+  "callees": [
+    {
+      "name": "forgetHeld",
+      "kind": "method",
+      "filePath": "internal/app/engine/alertdelivery.go",
+      "startLine": 274
+    },
+    {
+      "name": "reportHeld",
+      "kind": "method",
+      "filePath": "internal/app/engine/alertdelivery.go",
+      "startLine": 263
+    },
+    {
+      "name": "Format",
+      "kind": "type_alias",
+      "filePath": "internal/output/format.go",
+      "startLine": 10
+    },
+    {
+      "name": "EventType",
+      "kind": "type_alias",
+      "filePath": "internal/obs/event.go",
+      "startLine": 38
+    },
+    {
+      "name": "Notification",
+      "kind": "struct",
+      "filePath": "internal/obs/ntfy.go",
+      "startLine": 50
+    },
+    {
+      "name": "Context",
+      "kind": "struct",
+      "filePath": "internal/app/app.go",
+      "startLine": 62
+    },
+    {
+      "name": "Alert",
+      "kind": "struct",
+      "filePath": "internal/journal/outbox.go",
+      "startLine": 86
+    }
+  ]
+}

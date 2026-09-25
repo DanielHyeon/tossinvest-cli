@@ -1,0 +1,23 @@
+{
+  "symbol": "Journal.EscalateOperatingMode",
+  "callers": [
+    {
+      "name": "escalateFor",
+      "kind": "method",
+      "filePath": "internal/execgw/riskguardian.go",
+      "startLine": 640
+    },
+    {
+      "name": "escalate",
+      "kind": "method",
+      "filePath": "internal/obs/notifier.go",
+      "startLine": 378
+    },
+    {
+      "name": "EscalateOperatingMode",
+      "kind": "method",
+      "filePath": "internal/execgw/retry.go",
+      "startLine": 299
+    }
+  ]
+}

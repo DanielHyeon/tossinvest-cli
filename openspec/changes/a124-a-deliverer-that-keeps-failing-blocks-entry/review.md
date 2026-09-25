@@ -1,0 +1,103 @@
+# a124 리뷰 기록
+
+## §0 proposal-freeze 1판 (2026-09-26) — 판정 **REJECT** (design 개정 후 재freeze)
+
+- 대상: proposal · design · tasks · `specs/engine-safety/spec.md` (개설 커밋 `2fbdcd78`), base `4798d399`.
+  AST 번들은 `463cc895` 추출이고 두 커밋 사이 Go 소스 diff 는 0 이다(`git diff --stat 463cc895 4798d399 -- '*.go'` 빈 출력).
+- 위험 등급: **High-risk** (진입 게이트 · 운영 모드 · 원장 outbox).
+- 보이스
+  1. **적대적 Eng** — Teammate(Opus, 작성자 Manager Fable 과 분리된 컨텍스트). HEAD 파일을 직접 읽고 AST 번들의
+     열거만 분기 근거로 썼다.
+  2. **교차 모델** — codex-cli 0.154.0, `codex exec -s read-only --ephemeral`, model `gpt-6-astra`, reasoning medium.
+     프롬프트는 Teammate 의 발견을 주지 않은 독립 지시다. 원문: `analysis/freeze-review/codex-r1-prompt.md`,
+     출력: `analysis/freeze-review/codex-r1-output.md` (실행 전후 `git status` 에서 이 change 밖 변경 0 — codex 는 쓰지 않았다).
+  3. `autoplan` 대화형 4관점은 자율 세션에서 돌릴 수 없어 위 두 독립 패스로 대체했다(a114 §0 선례). CEO/보안/QA 관점은 아래 셀프 요약.
+- 셀프 요약: **범위** — 사용자 결정 20-1 ⓒ 그대로(래치·승격·굶주림). **보안** — 새 게이트 detail·로그에 행 본문·계좌·토큰이
+  들어갈 자리가 생긴다(F8). **QA** — RED 2.1~2.6 은 F1·F2·F3 의 경합·실패 경로를 아직 담지 않는다.
+
+### 손절 즉시성 (규칙 7)
+
+- `go test ./internal/app/engine/ -run 'TestTheExitCycleDoesNotLengthenWhileTheSenderIsStuckInTheTransport|TestAStopAlertDoesNotWaitBehindTheBacklog' -count=1 -v`
+  → **rc 0** (exit 사이클 체류 5.91 ms 기준 / 5.54 ms 발송자 갇힘 · 정지 알림 체류 5.20 ms(10행) / 5.38 ms(1000행)).
+  이 수치는 **base 의 기준선**이며 a124 편집 뒤의 증거가 아니다.
+- 구조 근거: 진입 게이트는 노출을 늘리는 변이에만 묻는다(`execgw/gateway.go:855-859`), 트리거는 `ENTRY_BLOCKED` 로만 간다
+  (`journal/operating_mode.go:537-545`). 단, 원장 연결이 하나(`journal/journal.go:174`)라서 실행자가 더하는 쓰기는 exit 루프와
+  같은 연결을 기다린다 — 「다른 goroutine 이니 무관」은 증거가 아니다(F12).
+
+### 발견 표
+
+출처: T = Teammate 적대 Eng, C = codex. 심각도는 두 보이스 중 높은 쪽을 적되 다르면 병기한다.
+
+| id | 출처 | 심각도 | 발견 | 증거 | 판정 → 요구 |
+|---|---|---|---|---|---|
+| F1 | T·C | **P0** | D1 의 판정 입력 「`MarkAlertAttemptFailed` 가 돌려주는 갱신된 행의 attempts」가 **API 에 없다**. `SettleResult` 는 `Outcome·ClaimedBy·ClaimedAt·ExpiresAt` 뿐이고, 구현이 실제로 쓸 수 있는 `alert.Attempts` 는 **나열 시점 스냅숏**이다 — 배치 뒤쪽 행은 나열 뒤 최대 ~10×10 s 에 임차되고 그 사이 다른 발송자가 올리거나 재무장이 0 으로 되돌린다 | `alert_claim.go:140-145` · `outbox.go:467-474` · `alertdelivery.go:150·168·222` · 재무장 `outbox.go:337` | 수용. design D1 은 **같은 트랜잭션에서 커밋된 증가 후 값**(토큰·PENDING CAS 아래)을 판정 입력으로 명시하고, 그 journal API(예: `SettleResult` 에 attempts, `RETURNING attempts`)를 Impact·tasks 3.x 에 넣는다. RED 에 「나열 뒤 값이 바뀐 행」 추가. modernc sqlite v1.54.0 의 `RETURNING` 지원은 1.2 에서 실측 |
+| F2 | T·C | **P0** | 승인과 래치·승격이 원자적이지 않다. (a) 발송 중 승인 → 실패 기록이 `SettleAlreadySettled` — 여기서 잠그면 안 된다. (b) 실패 기록 `SettleApplied` 직후 운영자가 승인·게이트 해제(·모드 완화)하고 그 뒤 실행자가 `Block`·`Escalate` → **빈 backlog 에 잠긴 게이트와 되살아난 모드**. 실행자는 뮤텍스를 안 잡고(`alertdelivery.go:19-20`), `Acknowledge` 는 `n.mu` 로 동기 경로만 배제한다 | `notifier.go:851-876` · `alert_claim.go:330-334` · `operating_mode.go:410-421` | 수용. 이것은 새 취향이 아니라 **이미 사람이 정한 규칙**이다: a092 델타 「운영자의 승인은 … 전송의 성공 여부는 그 사유를 되살리지 않는다(SHALL NOT)」(사용자 결정 2026-08-10 결정 2 = 안 1, `a092…/specs/engine-safety/spec.md:66-68`). a124 가 래치의 주인이 되므로 그 SHALL 도 a124 가 진다 → spec delta 에 시나리오로, design 에 **배제 수단**으로. 수단 선택은 아래 「Manager 결정 M1」 |
+| F3 | T·C | P0(C) / P1(T) | FLM `deliverOne` B10(실패 기록 자체 오류)에 정책이 없다. 기록이 계속 실패하면 attempts 가 안 올라 한도 판정이 영원히 안 선다 — a092 뒤 동기 경로가 없으면 진입이 계속 열린다. 오늘도 같은 분기지만 오늘은 동기 경로가 가린다 | FLM deliverOne B10 · `alertdelivery.go:221-226` · 동기 대응 B13·B15 는 로그 후 계속, 소진 시 잠금(`notifier.go:494-497·565-571`) | 수용. design 에 B10 정책을 적는다. 「Manager 결정 M2」 |
+| F4 | T·C | P1 | D6 의 최악 래치 식이 **틀렸다**. 행 하나의 재시도 사이에 같은 배치의 나머지 행 서비스가 끼는 것을 빠뜨렸다. 반례: 10 행 전부 10 s timeout → 사이클 = 10×10+2 = 102 s, 첫 행의 셋째 실패 = 2×102+10 = **214 s** (D6 식 = 100+3×2+3×10 = 136 s) | `alertdelivery.go:122-136·154-162` · `obs/alert_lease.go:17` · `obs/ntfy.go:95-100` | 수용. 식을 `(L−1)×(B×T_pub + I) + T_pub` (배치 포화) 와 큐 대기 항으로 다시 쓰고, 원장·임차·반납 대기는 **전제 조건**으로 밝힌다. 무한한 backlog·원장 정지에는 유한 상한이 없다고 적는다(a092 델타 「보장이 아니다」와 같은 결). a092 델타 식의 「사이클 주기」는 **배치 서비스 시간을 포함한 주기**라고 a092 21판에 전한다 |
+| F5 | C (T 부분 동의) | P1(C) / P2(T) | R2 가 막는 굶주림은 한 형태뿐이다: ① 한도 아래 `HeldElsewhere` 행 10 개가 선택을 채우면 시도 없이 한 사이클이 빈다 — **임차 만료(81 s)까지로 유계**(`DefaultAlertLease`, 만료 뒤 탈취) ② 한도 층 안에서 오래된 10 행이 영구 실패(독 행)하면 그 뒤 한도 행은 재시도되지 않는다 — 게이트는 이미 잠겨 있으므로 안전 결과는 같고 전달만 늦다 ③ 한도 아래 행이 계속 들어오면 한도 행은 잔여 자리를 못 얻는다 — 설계 의도 | `outbox.go:518-521` · `alertdelivery.go:178-192` · `alert_claim.go:13-34·162-165` | 부분 수용(P2). spec 문구는 유지하되 design D4 에 세 경우와 유계·비유계를 적는다. 임차 가능 여부를 정렬에 넣을지(`claim_token = ''` 먼저)는 선택 — YAGNI 로 기록만 |
+| F6 | C | P1(C) / P2(T) | 배포 첫 사이클: 이미 `attempts ≥ 3` 인 PENDING 행은 즉시 한도 층으로 내려가고, 다음 실패에서 durable 승격한다. 기동 복원은 메모리 래치만 복원한다 | `gateway.go:153-167·269` | 수용(P2). design Risks 에 「배포 직후 기대 동작」 — 게이트는 기동 복원으로 이미 잠김, 첫 실패 사이클에서 `ENTRY_BLOCKED` 기록 1 행 — 을 적는다. 운영 원장 조회는 이 로트에서 하지 않았다(사람 몫) |
+| F7 | T·C | P1(C) / P2(T) | design 「안전 불변식 대조」의 *"알림 게이트 OFF 면 Notifier 자체가 없다"* 는 **틀렸다**. Notifier 는 엔진에서 무조건 생성된다. 실제 OFF 경계는 `engine run` 이 gate OFF 에서 기동을 거부하는 것이다 | `gateway.go:323` · `engine.go:528-530` · `TestAGateOffEngineRefusesWithoutEnumeratingClauses` **rc 0** (2026-09-26) | 수용. 문장을 교정하고 근거를 이 시험으로 바꾼다 |
+| F8 | C | P1 | D5 가 게이트 detail · 로그 · 승격 실패 처리를 정하지 않았다. 동기 경로의 detail 형식을 베끼면 원문 오류가 들어가고(`notifier.go:563-571`), 모드 전이 오류는 계좌 참조를 담을 수 있다(`operating_mode.go:394·449`) | `auxiliary.go:206-211`(고정 문구 선례) · `gateway.go:161-166`(수만 쓰는 선례) | 수용. detail 은 고정 문구 또는 수만(불변식 8), 승격 실패는 error 로그(행 내용·토큰 없이)이고 메모리 래치는 남는다(`Notifier.escalate` 계약과 같음) |
+| F9 | T·C | P3 | D1 「`Block` 재호출은 같은 사유의 갱신」 — 실제는 **없을 때만 삽입**, detail 은 처음 것이 남는다 | `execgw/retry.go:526-533` | 수용. 문구 교정 |
+| F10 | T·C | P2 | `SettleOutcome` 의 영값이 `SettleApplied` 다. 오류 반환의 `SettleResult{}` 가 「적용됨」으로 읽힌다 — 판정은 `err` 를 먼저 봐야 한다 | `alert_claim.go:107-109·322-324` | 수용. Pre-Edit 불변식 + RED(기록 오류 시 잠금 판정이 「적용됨」으로 새지 않는다) |
+| F11 | T·C | P2 | proposal 열린 결정의 *"같은 3 이면 약 6 s … 동기 경로는 약 34 s"* 는 **서로 다른 실패 양상을 비교**했다. 같은 양상에서는 둘이 같다(아래 D2 표) | 아래 D2 | 수용. proposal 문장 교정 |
+| F12 | T·C | P2 | 원장 연결이 하나라 D3(publisher 없음도 기록)은 사이클마다 행당 쓰기 1 회를 더한다 — 10 행이면 2 s 마다 쓰기 10 회(정산 1 회 5.584 ms 실측값 기준 ≈ 56 ms). 보존 시험은 「transport 에 갇힘」만 재고 「publisher 없음」 은 안 잰다 | `journal.go:174` · `alertdelivery.go:67-69` | 수용. tasks 2.6 에 publisher 없음 변형의 exit 체류 측정을 더한다 |
+| F13 | T·C | P2 | D3 을 받아도 **지연은 같지 않다**: 동기 경로는 publisher 가 없으면 첫 반복에서 `break` 후 곧장 잠근다(≈0 s), 실행자는 한도 3 이면 ≈4~6 s | `notifier.go:429-431·565-571` · `alertdelivery.go:205-212` | 기록. 결과(잠금·승격)는 같고 지연만 다르다. 규칙을 하나로 두기 위해 「사이클당 1 시도」를 유지하는 쪽을 권고, 즉시 소진을 원하면 Manager 가 바꾼다 |
+
+### 열린 결정의 답
+
+**D2 — 한도 값: ㄱ `attempts ≥ 3` (증거로 답함, 사람 결정 불필요).**
+
+계산값(측정 아님). 기본값: `DefaultCriticalAttempts = 3` (`notifier.go:45`) · `DefaultRetryDelay = 2 s` (`:48`) ·
+`DefaultPublishTimeout = 10 s` (`alert_lease.go:17`) · `alertDeliveryInterval = 2 s` · 배치 10 (`alertdelivery.go:63·74`).
+실행자는 사이클 먼저, 대기 뒤(`:122-136`). 원장 쓰기·반납 대기는 뺐다(동기 경로 문서상 상한은 그것까지 넣어 54 s, `alert_claim.go:21`).
+
+| 상황 (한도 3) | 동기 경로 | 실행자 |
+|---|---:|---:|
+| 행 하나, 즉시 실패 | 4 s (0·2·4) | 4 s (0·2·4) |
+| 행 하나, 매번 10 s timeout | 34 s | 34 s (0–10 · 12–22 · 24–34) |
+| 배치 10 행 전부 timeout | — | 첫 행 214 s · 끝 행 304 s |
+
+- 같은 양상에서 **한도 3 = 동기 경로와 같은 시간**이다. ㄴ(「등가 시간」)은 한 값으로 정의되지 않는다 — 34 s ÷ 2 s = 17 회로 잡으면
+  즉시 실패 32 s 지만 timeout 이면 12×17−2 = 202 s 가 되어, 동기 경로보다 **덜 보수적**이다. ㄷ 도 같은 식을 따른다.
+- a092 델타가 이미 「전송 시도 횟수는 다시 계약이다 — 줄이지 않는다(SHALL NOT)」 고 적는다(`a092…/spec.md:74`).
+- 대가: `Notify` 를 거친 행에서는 오늘과 같다(동기 경로가 이미 4~34 s 에 잠그고 승격한다). **새로 생기는 대가**는 `Notify` 없이
+  기록되는 행(`execgw/replay.go:551` `parkAlert`)과 a092 뒤의 모든 행이 durable 승격을 만든다는 것 — 보수 방향이다.
+- 사람 결정이 필요한 경우는 ㄴ·ㄷ 처럼 한도를 **늘리는** 쪽을 고를 때뿐이다(진입 차단 완화).
+
+**D3 — publisher 부재를 실패 시도로 센다 (증거로 답함, 사람 결정 불필요).**
+
+- `newNotifier` 문서가 이미 *"nil publisher … outbox row is written and stays PENDING, the entry gate latches, and sustained failure
+  escalates to ENTRY_BLOCKED. That is the specified direction"* 라고 적는다(`exitwiring.go:60-70`).
+- 동기 경로: `deliver` B3(`notifier.go:429-431`) → B26·B27 잠금(`:565-571`), `notifyCritical` B4 승격(`:223-228`).
+- a092 델타 「전송 수단이 구성되지 않은 배선에서도 시도는 실패로 세어져야 한다(SHALL)」 + 시나리오 「전송 수단이 없는 배선」
+  (`a092…/spec.md:76·108-110`).
+- 세지 않는 안은 무설정 엔진이 영구히 진입을 열어 두는 구멍이다. 지연 차이는 F13.
+
+### Manager 결정 (재freeze 전에 design 에 적을 것)
+
+**M1 — F2 의 배제 수단.** 사람의 규칙(승인이 이긴다)은 이미 있다. 남은 것은 수단이다.
+
+| 안 | 내용 | 완결성 | 표면 | 비용 |
+|---|---|---|---|---|
+| A | 시도 기록 + 한도 판정 + 모드 승격을 **원장 트랜잭션 하나**로(새 journal 메서드). 게이트 `Block` 은 커밋 뒤, 직전에 행 상태 재확인 | 모드: 완결(승인 tx 와 SQLite 가 직렬화) · 게이트: 재확인~`Block` 사이 잔여 창 | journal 1 메서드 | 잔여 창의 결과는 보수 방향(빈 backlog 에 잠긴 게이트 — 빈 목록 `Acknowledge` 로 풀림, `notifier.go:854-876`) |
+| B | `EntryGate` 에 사유별 해제 세대 — 「그 뒤 해제되지 않았으면 잠금」 | 게이트 완결 | **execgw(High-risk) 표면 추가** — Non-goal 밖 | 모드는 A 가 따로 필요 |
+| C | 실행자의 정산~판정~`Block`~`Escalate` 를 `Notifier` 의 배제 아래(원격 전송은 밖) — a092 델타가 허용하는 형태(「잠금은 고를 때와 정산할 때만」, `a092…/spec.md:60`) | 완결(`Acknowledge` 가 같은 배제 아래 세고-푼다) | `obs` 에 배제 진입점 1 개(동기 경로 함수 무편집) | 원장 로컬 연산 두 개(~10 ms)만큼 동기 `Notify` 가 기다릴 수 있다 → 2.6 보존 시험으로 잰다. 역으로 a092 착지 전에는 동기 `deliver` 가 원격 전송 동안 `n.mu` 를 쥐므로(`notifier.go:251-255`) 실행자가 최대 한 동기 예산(54 s)만큼 기다린다 — 손절 무관, 배달 지연. `escalate` 가 `n.mu` 밖인 이유(announcer 재진입)는 실행자가 announcer nil 이라 해당 없음 |
+
+Teammate 권고는 **C**(잔여 창 없음, Non-goal 「동기 경로 편집 없음」 유지, `Acknowledge` 조건 불변). A 는 잔여 창을 「보수 방향이라 수용」으로
+적을 때만. **어느 안도 `Acknowledge` 의 해제 조건(승인 + 미전달 0)을 바꾸지 않는다** — 바꾸는 안이 필요해지면 그때 사람 결정으로 올린다.
+
+**M2 — F3(B10) 정책.** 기록 실패는 attempts 를 못 올리므로 원장 밖 판정이 필요하다.
+
+| 안 | 내용 | 방향 |
+|---|---|---|
+| (i) | B10 즉시 `Block`(고정 detail) + 승격 시도 | 가장 보수 — 일시적 busy 한 번이 운영자 승인을 부른다 |
+| (ii) | 행별 **연속 B10** 을 메모리로 세어 같은 한도(3)에서 `Block` + 승격 시도, 성공 기록이면 0 으로 | 보수 — 재시작하면 계수는 지워지나 기동 복원이 PENDING 으로 잠근다 |
+| (iii) | 오늘과 같이 로그만 | a092 뒤 구멍 — **권고하지 않음** |
+
+Teammate 권고는 (ii). 둘 다 보수 방향이라 사람 결정 대상은 아니다(Manager 선택). spec 은 「기록 실패도 지속 실패다」 한 문장을 요구에 더한다.
+
+### 재freeze 조건
+
+F1·F2·F3·F4·F8 을 design(과 spec 시나리오: 발송 중 승인 · 승인 직후 늦은 실패 · 기록 실패 지속)에 반영하고, F5·F6·F7·F9·F10·F11·F12·F13 을
+기록·교정한 뒤 같은 두 보이스로 재리뷰한다. 그때까지 tasks 0.4 는 열어 두고 1.2 이후는 착수하지 않는다.

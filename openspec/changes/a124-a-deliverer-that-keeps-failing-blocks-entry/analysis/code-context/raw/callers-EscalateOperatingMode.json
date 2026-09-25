@@ -1,0 +1,41 @@
+{
+  "symbol": "EscalateOperatingMode",
+  "callers": [
+    {
+      "name": "escalateFor",
+      "kind": "method",
+      "filePath": "internal/execgw/riskguardian.go",
+      "startLine": 640
+    },
+    {
+      "name": "escalate",
+      "kind": "method",
+      "filePath": "internal/obs/notifier.go",
+      "startLine": 378
+    },
+    {
+      "name": "EscalateOperatingMode",
+      "kind": "method",
+      "filePath": "internal/execgw/retry.go",
+      "startLine": 299
+    },
+    {
+      "name": "escalateCredentialFailure",
+      "kind": "method",
+      "filePath": "internal/execgw/retry.go",
+      "startLine": 409
+    },
+    {
+      "name": "checkOutage",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 817
+    },
+    {
+      "name": "escalate",
+      "kind": "method",
+      "filePath": "internal/app/engine/runtime.go",
+      "startLine": 442
+    }
+  ]
+}

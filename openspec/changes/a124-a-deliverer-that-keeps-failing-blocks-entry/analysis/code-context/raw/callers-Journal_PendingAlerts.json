@@ -1,0 +1,137 @@
+{
+  "symbol": "Journal.PendingAlerts",
+  "callers": [
+    {
+      "name": "BenchmarkA098EmptyCycleRead",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_cycle_cost_bench_test.go",
+      "startLine": 71
+    },
+    {
+      "name": "BenchmarkA098BatchRead",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_cycle_cost_bench_test.go",
+      "startLine": 89
+    },
+    {
+      "name": "BenchmarkA098ClaimSettleRoundTrip",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_cycle_cost_bench_test.go",
+      "startLine": 120
+    },
+    {
+      "name": "TestThePendingListingTakesTheOldestNFirst",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_one_cycle_takes_a_batch_test.go",
+      "startLine": 56
+    },
+    {
+      "name": "TestAcknowledgingOneAlertLeavesTheOthers",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_the_production_executor_carries_its_stop_handler_test.go",
+      "startLine": 172
+    },
+    {
+      "name": "TestTheExecutorHoldsTheRowAndTheSynchronousSenderStandsDown",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_two_senders_one_row_test.go",
+      "startLine": 168
+    },
+    {
+      "name": "Pending",
+      "kind": "method",
+      "filePath": "internal/app/engine/alertops.go",
+      "startLine": 116
+    },
+    {
+      "name": "TestPendingAlertsProjectTheLeaseButNeverTheToken",
+      "kind": "function",
+      "filePath": "internal/journal/a099_lease_lifecycle_test.go",
+      "startLine": 391
+    },
+    {
+      "name": "TestARowBeingSentIsStillUndelivered",
+      "kind": "function",
+      "filePath": "internal/journal/a099_regression_pins_test.go",
+      "startLine": 67
+    },
+    {
+      "name": "TestEnqueueAlertIsIdempotentOnTheEventKey",
+      "kind": "function",
+      "filePath": "internal/journal/outbox_test.go",
+      "startLine": 30
+    },
+    {
+      "name": "TestClaimingWithoutANameIsRefused",
+      "kind": "function",
+      "filePath": "internal/journal/outbox_test.go",
+      "startLine": 240
+    },
+    {
+      "name": "TestAcknowledgeCannotClearTheGateMidSend",
+      "kind": "function",
+      "filePath": "internal/obs/a096_one_send_per_condition_test.go",
+      "startLine": 380
+    },
+    {
+      "name": "TestASenderThatSpendsItsBudgetReleasesTheRow",
+      "kind": "function",
+      "filePath": "internal/obs/a099_lease_events_test.go",
+      "startLine": 61
+    },
+    {
+      "name": "TestAPublishedButUnsettledRowKeepsItsLease",
+      "kind": "function",
+      "filePath": "internal/obs/a099_regression_pins_test.go",
+      "startLine": 48
+    },
+    {
+      "name": "TestACancelledSenderStillHandsTheLeaseBack",
+      "kind": "function",
+      "filePath": "internal/obs/a099_round4_test.go",
+      "startLine": 86
+    },
+    {
+      "name": "TestFlushHandsTheLeaseBackWhenThePublishFails",
+      "kind": "function",
+      "filePath": "internal/obs/a099_round4_test.go",
+      "startLine": 275
+    },
+    {
+      "name": "Flush",
+      "kind": "method",
+      "filePath": "internal/obs/notifier.go",
+      "startLine": 727
+    },
+    {
+      "name": "Acknowledge",
+      "kind": "method",
+      "filePath": "internal/obs/notifier.go",
+      "startLine": 840
+    },
+    {
+      "name": "TestPersistentDeliveryFailureBlocksEntries",
+      "kind": "function",
+      "filePath": "internal/obs/obs_test.go",
+      "startLine": 384
+    },
+    {
+      "name": "TestAcknowledgeWhileStillPendingKeepsTheBlock",
+      "kind": "function",
+      "filePath": "internal/obs/obs_test.go",
+      "startLine": 470
+    },
+    {
+      "name": "TestTheSameConditionEnqueuesOnce",
+      "kind": "function",
+      "filePath": "internal/obs/obs_test.go",
+      "startLine": 502
+    },
+    {
+      "name": "TestCriticalAlertSurvivesAProcessRestart",
+      "kind": "function",
+      "filePath": "internal/obs/obs_test.go",
+      "startLine": 551
+    }
+  ]
+}

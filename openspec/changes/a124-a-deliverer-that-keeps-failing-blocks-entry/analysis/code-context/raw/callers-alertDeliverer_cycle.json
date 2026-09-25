@@ -1,0 +1,71 @@
+{
+  "symbol": "alertDeliverer.cycle",
+  "callers": [
+    {
+      "name": "TestOneCycleTakesTheBatchAndTheNextTakesTheRest",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_one_cycle_takes_a_batch_test.go",
+      "startLine": 100
+    },
+    {
+      "name": "TestAnExpiredLeaseIsTakenOverWithoutTheConditionHappeningAgain",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_one_cycle_takes_a_batch_test.go",
+      "startLine": 155
+    },
+    {
+      "name": "TestTheDelivererHoldsNoLeaseAfterASuccessfulSend",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_the_outbox_gets_emptied_test.go",
+      "startLine": 148
+    },
+    {
+      "name": "TestTheDelivererNeverPublishesTheSameRowTwiceInACycle",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_the_outbox_gets_emptied_test.go",
+      "startLine": 189
+    },
+    {
+      "name": "TestTheSynchronousSenderStandsDownWhileTheExecutorHoldsTheRow",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_two_senders_one_row_test.go",
+      "startLine": 111
+    },
+    {
+      "name": "TestTheExecutorHoldsTheRowAndTheSynchronousSenderStandsDown",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_two_senders_one_row_test.go",
+      "startLine": 168
+    },
+    {
+      "name": "TestAFailedSettlementKeepsTheLeaseSoTheNextCycleDoesNotResend",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_two_senders_one_row_test.go",
+      "startLine": 238
+    },
+    {
+      "name": "TestAHeldRowIsReportedOncePerLeaseAndNotOncePerCycle",
+      "kind": "function",
+      "filePath": "internal/app/engine/a098_two_senders_one_row_test.go",
+      "startLine": 297
+    },
+    {
+      "name": "invokeStrategyCycle",
+      "kind": "function",
+      "filePath": "internal/app/engine/strategy_entry_supervisor.go",
+      "startLine": 1019
+    },
+    {
+      "name": "TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently",
+      "kind": "function",
+      "filePath": "internal/app/engine/strategy_entry_supervisor_test.go",
+      "startLine": 37
+    },
+    {
+      "name": "TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive",
+      "kind": "function",
+      "filePath": "internal/app/engine/strategy_entry_supervisor_test.go",
+      "startLine": 168
+    }
+  ]
+}

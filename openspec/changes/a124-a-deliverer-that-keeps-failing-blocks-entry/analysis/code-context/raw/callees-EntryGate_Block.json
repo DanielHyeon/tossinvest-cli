@@ -1,0 +1,35 @@
+{
+  "symbol": "EntryGate.Block",
+  "callees": [
+    {
+      "name": "Block",
+      "kind": "method",
+      "filePath": "internal/execgw/retry.go",
+      "startLine": 526
+    },
+    {
+      "name": "symbolKey",
+      "kind": "function",
+      "filePath": "internal/execgw/symbolgate.go",
+      "startLine": 53
+    },
+    {
+      "name": "Now",
+      "kind": "method",
+      "filePath": "internal/clock/clock.go",
+      "startLine": 37
+    },
+    {
+      "name": "SymbolBlock",
+      "kind": "struct",
+      "filePath": "internal/execgw/symbolgate.go",
+      "startLine": 42
+    },
+    {
+      "name": "ReasonCode",
+      "kind": "type_alias",
+      "filePath": "internal/execgw/reason.go",
+      "startLine": 11
+    }
+  ]
+}
