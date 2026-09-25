@@ -1,0 +1,77 @@
+{
+  "file": "internal/httpapi/strategy_runtime.go",
+  "source_sha256": "8f2c4ce0bda329fc880e9aec4d4f728fbb2879e33cdc77c412cc397a6311b3d3",
+  "package": "httpapi",
+  "function": "StrategyRuntimeAbsent",
+  "signature": "StrategyRuntimeAbsent(params=1, results=1)",
+  "start": {
+    "line": 56,
+    "column": 1
+  },
+  "end": {
+    "line": 66,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 57,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 58,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 61,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 65,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 11
+      },
+      "text": "presence.StrategyRuntimeConfigured"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

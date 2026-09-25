@@ -62,7 +62,6 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/optimization"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/version"
 	"github.com/spf13/cobra"
@@ -394,17 +393,10 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 		// a114: lifecycle client 는 부팅 1회 dial 로 굳지 않는다. 엔진이 콘솔보다 늦게 뜨거나 가동 중
 		// 재시작해도 백그라운드 재부착이 다시 붙인다(console_lifecycle_attach.go). 요청 경로는 dial 하지 않는다.
 		positionPolicyCommander = consolePositionPolicyCommanderFor(ctx, engineDir, cmd.ErrOrStderr())
-		strategyDescriptor := strategyprojectionrpc.DescriptorPath(engineDir)
-		if _, statErr := os.Stat(strategyDescriptor); statErr == nil {
-			client, dialErr := strategyprojectionrpc.Dial(ctx, strategyDescriptor)
-			if dialErr != nil {
-				fmt.Fprintf(cmd.ErrOrStderr(), "엔진 전략 runtime projection에 연결할 수 없다 (%v). 전략 화면은 dormant로 뜬다.\n", dialErr)
-			} else {
-				strategyRuntime = client
-			}
-		} else if !errors.Is(statErr, os.ErrNotExist) {
-			fmt.Fprintf(cmd.ErrOrStderr(), "엔진 전략 runtime endpoint를 확인할 수 없다 (%v). 전략 화면은 dormant로 뜬다.\n", statErr)
-		}
+		// a115: 전략 projection 도 부팅 1회 dial 로 굳지 않고 실패를 nil 로 접지 않는다. 도달 불가는 화면에
+		// 도달 불가로 가고, 엔진이 늦게 뜨거나 재시작해도 백그라운드 재부착이 다시 붙인다
+		// (console_strategy_attach.go). 요청 경로는 dial 하지 않는다.
+		strategyRuntime = consoleStrategyRuntimeReaderFor(ctx, engineDir, cmd.ErrOrStderr())
 	}
 
 	serveErr := console.ListenAndServe(ctx, console.Options{

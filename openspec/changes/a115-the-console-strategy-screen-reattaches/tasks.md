@@ -17,7 +17,7 @@
 
 ## 1. 구현 (Teammate)
 
-- [ ] 1.1 RED — internal/console: 부재 신호 false 인 non-nil reader → dormant(Read 0회) · 신호 true + Read
+- [x] 1.1 RED — internal/console: 부재 신호 false 인 non-nil reader → dormant(Read 0회) · 신호 true + Read
       실패 → 도달 불가(NOT_CONFIGURED 아님) · 요약도 같은 판정 · 신호 없는 reader 는 오늘처럼 wired.
       cmd/tossctl: 진짜 `strategyprojectionrpc.Start` 로 ① 구성·엔진 다운(죽은 descriptor+socket) → 도달
       불가 → 엔진 기동 후 회복 ② 미구성 → dormant → 늦은 엔진 → 회복 ③ 렌더 없이 펌프로 부착 ④ 재시작
@@ -25,7 +25,7 @@
       추가(freeze 리뷰): 판정 동치(strategyprojection 판정 vs httpapi 위임, 세 상태 + 신호 없는 reader) ·
       콘솔 해석과 httpapi `resolveStrategyRuntimeReader` 의 판정 동치 · 재시도 경고 discard · 새 부팅 문구가
       dormant 를 말하지 않음 · 펌프 interval≤0 가드 · 펌프 goroutine 정리(cancel + inFlight 대기).
-- [ ] 1.2 GREEN — 새 파일 `cmd/tossctl/console_strategy_attach.go`(`resolveConsoleStrategyRuntime` +
+- [x] 1.2 GREEN — 새 파일 `cmd/tossctl/console_strategy_attach.go`(`resolveConsoleStrategyRuntime` +
       `consoleStrategyRuntimeReaderFor`, wrapper 재사용 + 무조건 wake 펌프·콘솔 전용 간격 변수) + runConsole
       블록 교체. 부재 판정·presence 를 `internal/strategyprojection` 으로 이동(httpapi 는 alias·위임 — 판정
       한 벌, design D2) + `internal/console` 두 소비자의 nil 판정 교체 + `cmd/tossctl` 컴파일 결속 `var _`.

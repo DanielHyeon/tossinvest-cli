@@ -10,6 +10,14 @@ nil 판정 한 줄씩, 그리고 부재 판정·presence 인터페이스의 `int
 P1-1 — 판정은 한 벌, `internal/httpapi` 는 type alias + 위임으로 기존 표면 유지). 등록 문서보다 넓지만
 스펙 시나리오가 요구하는 최소이며, 화면 구조·문구는 무변경이다. design D2·「파일 표면 해석」 참조.
 
+## S2 — 열한 번째 FLM 번들: `httpapi.StrategyRuntimeAbsent` (구현 착수 시 발견)
+
+design D2 는 판정을 `internal/strategyprojection` 으로 옮기고 httpapi 이름을 위임으로 남긴다. 위임으로
+바꾸는 것은 **기존 함수 본문 편집**이다(분기 2 → 0). freeze 의 열 벌에는 이 함수가 없었다 — Pre-Edit 로
+`analysis/function-logic/internal-httpapi--strategyruntimeabsent/` 를 편집 **전에** base 에서 만들었다
+(1.1–1.2 커밋에 함께 착지). 옮겨 간 세 갈래는 새 잎 함수 `strategyprojection.StrategyRuntimeAbsent`
+(새 파일 `presence.go` — 새 leaf, FLM not-applicable)에 그대로 있다.
+
 ## R1 — wrapper 전이 로그의 「데몬」 문구 (표면 밖)
 
 `httpapi_strategy_attach.go` 의 `observe` 전이 로그는 「데몬은 그대로 돈다」를 말한다(a109 코드).
