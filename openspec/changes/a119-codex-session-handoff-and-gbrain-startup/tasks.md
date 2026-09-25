@@ -7,11 +7,19 @@
 
 - [x] 2.1 Capture the implementation baseline before code changes and record current hard evidence and applicable function analysis.
 - [x] 2.2 Obtain sanitized supported-host event fixtures and effective configuration-loading evidence; identify one Codex-owned launch path.
-- [ ] 2.3 Complete proposal-freeze gstack review on the evidence-backed implementation plan.
+- [ ] 2.3 Complete proposal-freeze gstack review on the evidence-backed plan.
+      > 2026-09-25 first pass: **REJECT** (review.md) — plan no longer matched the 2026-08-29 Why; scope decision handed to the user.
+      > 2026-09-25 user decision **(a)**: proposal rewritten to evidence + regression pins; symptoms to named follow-ups
+      > (proposal "Follow-ups", issues I-1). Re-review of the rewritten proposal and spec deltas is pending (adversarial
+      > voice, after the Opus reset). No 3.x commit before it passes.
 
 ## 3. Implement and verify
 
-- [ ] 3.1 Add matcher and duplicate-registration regressions and implement the smallest reviewed correction through a separate teammate.
-- [ ] 3.2 Verify isolation, redaction, atomic persistence, lock-owner preservation and unchanged tool results in isolated tests.
-- [ ] 3.3 Observe supported-host event delivery and single startup; keep unavailable runtime proof explicitly pending.
-- [ ] 3.4 Complete separate adversarial review, gstack review, required tests and SDD checks, final gate and Manager acceptance before PM synchronization and archive.
+- [ ] 3.1 Land the regression pins from `wip/a119-3.1` through a separate teammate: fixture × matcher test, saver stdout test,
+      one-effective-registration test, mutation harness with a green no-mutation control.
+- [ ] 3.2 Verify isolation, redaction, atomic persistence, lock-owner preservation and unchanged tool results in isolated tests
+      (design evidence map), and that the configuration files are byte-identical to `54004f44`.
+- [ ] 3.3 Record in `analysis/host-evidence.md` §4 what stays unobserved (interactive-host delivery, per-thread startup) and
+      that it belongs to the named follow-ups; make no runtime claim here.
+- [ ] 3.4 Complete separate adversarial review, gstack review, required tests and SDD checks, final gate and Manager acceptance
+      before PM synchronization and archive.

@@ -42,8 +42,10 @@ and real acceptance evidence, not merely strict document validation.
 
 ## Evidence-backed implementation plan (2026-09-25, task 2.3 — NOT FROZEN)
 
-Status: the proposal-freeze review of 2026-09-25 rejected this plan (review.md). It stays a draft
-until the scope decision in issues.md I-1 is made. Evidence: `analysis/host-evidence.md` (sanitized).
+Status: the proposal-freeze review of 2026-09-25 rejected the first plan (review.md). The user then chose
+scope (a) — evidence and regression pins only — and the proposal was rewritten to match; the plan below is
+that scope. Runtime observation (interactive-host delivery, per-thread startup) is no longer a task here: it
+belongs to the follow-ups named in the proposal. Re-freeze review pending. Evidence: `analysis/host-evidence.md`.
 
 "Supported host" in this change means the hosts actually measured: Codex CLI `exec` 0.154.0 for
 hook delivery (inferred), and the Codex Desktop bundled CLI 0.155.0-alpha.16.3 plus CLI 0.154.0 for
@@ -92,5 +94,6 @@ Task 3.2 evidence map:
 | Unchanged tool result | the new stdout tests |
 | Claude-owned and trading files unchanged | `git diff --stat 54004f44 -- .mcp.json .claude save-session.sh tools/sdd/gbrain_project.py .codex/hooks.json .codex/config.toml` must be empty |
 
-Runtime delivery and single startup stay pending (task 3.3). One observation route needs a human to
-approve it: a temporary probe hook that records only `tool_name` under `.codex-context/`.
+Runtime delivery and single startup are **out of scope** (decision (a)); task 3.3 records them as unobserved.
+The observation route stays documented for the follow-up: a human-approved probe hook that records only
+`tool_name` under `.codex-context/`.

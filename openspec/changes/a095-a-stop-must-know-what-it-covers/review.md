@@ -580,3 +580,13 @@ proposal 「지금 열린 것들」은 **지금 거짓**이다. `alert_outbox`�
 - **B-P2-16:** D6 「outbox 와 재시도가 반복을 대신 책임진다」는 PENDING 행에만 참 — 전달된 행은 프로세스 래치로 재관측 없음.
 
 **권고: FAIL.** P0 셋은 거짓 전제이면서 안전 폭발반경(기본 설정 엔진의 진입 영구 차단 · 보호 중 포지션에 거짓 critical · 정본 SHALL 둘과 충돌). 등급을 이벤트 종류에서 **사실 단위**로 다시 설계하기 전에는 freeze 할 수 없다.
+
+## 2.16 사용자 결정 (2026-09-25) — 3판의 입력
+
+| §2.11 | 결정 | 3판이 받는 것 |
+|---|---|---|
+| 1 | **묶지 않는다** — a095 는 a092 와 독립 | 2.10 항목 4 의 ②: exit goroutine 에 critical Notify 를 **새로 두지 않는다**. 발신은 reconcile 쪽(`adoption.go` 경로)에서만 critical, exit 루프 자리(`exitloop.go:518` `alertUnmanaged`)는 normal 로 둔다. 옛 약속 사본(tasks 2.8 · §4 행 · D7) 제거 |
+| 2 | **거부** | 알림 off · `adoption.enabled=false` · `exclude_symbols` 에서 ENTRY_BLOCKED 를 부르지 않는다. 등급은 이벤트 종류가 아니라 **사실**로 — 운영자가 고른 상태는 critical 에서 뺀다. 정본 exit-policy `:81` SHALL 은 그대로(MODIFIED 아님, 안전 불변식 3) |
+| 3 | **수용 — 범위를 옮긴다** | (i) 엔진이 직접 연 포지션의 수량 증가 검사 — `adoption.go:108-111` 이 `Adopted()` 일 때만 `checkExternalIncrease` 를 부른다 (ii) R2 키 설계를 재알림 창 SHALL NOT 과 대조(B-P1-4) (iii) 두 발신 자리의 키 분리(B-P1-5). R2-B2 와 「편입 기록 없음 = 보호 없음」 SHALL·시나리오 삭제. 제목은 유지 |
+
+3판 순서: FLM 재추출(호출자 `judgeHoldings` · `ExitObserver.workingSet` · `notifierAlerter.ExternalPositionFound` 추가, stale 4 재추출, base 재고정) → 문서 → 3라운드(두 보이스 결과 실제 수합 + 교차 모델). 저자 로트는 Opus 리셋(2026-09-26 19:00) 뒤.

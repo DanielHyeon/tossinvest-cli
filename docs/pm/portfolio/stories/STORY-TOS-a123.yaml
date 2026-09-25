@@ -1,0 +1,23 @@
+{
+  "id": "STORY-TOS-a123",
+  "title": "An empty window is derived, not declared",
+  "feature": "FEAT-TOS-001",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a123-an-empty-window-is-derived-not-declared",
+    "path": "openspec/changes/a123-an-empty-window-is-derived-not-declared"
+  },
+  "found_by": {
+    "date": "2026-09-25",
+    "how": "Running the completion gate for the archive candidates in an isolated worktree at 54004f44: step 5 demanded 546/338/338 foreign functions from align, a067 and a068 (no revision: current bundle pins a landing) and refused a landing for a077 and a079 (base moved past their work by the 840b3377 rebaseline). a122 tasks 5.6 and 5.7 had declared both shapes a limit and named the direction: derive the empty window from history so an author cannot choose it.",
+    "record": "openspec/changes/a071-wire-kr-us-protection-readiness/review.md"
+  },
+  "acceptance": [
+    "A change whose base was moved past its Go work by a non-merge rebaseline commit that also re-extracted its bundles is compared against an empty window, and the verdict names that commit",
+    "A change with no revision: current bundle is required to cover only the existing Go functions modified by the commits attributed to it, and a merge-only attribution still requires the whole window",
+    "Neither derivation reads an author-declared value: no new file, flag or gate.sh change",
+    "A commit that moved base-commit.txt without re-extracting bundles does not produce an empty window",
+    "A census over every active and archived change shows no change losing coverage it has today, and the gains match the measured table",
+    "The landing rules of a122 (K2 and rules 1-8) are unchanged for changes whose bundles differ from base"
+  ]
+}

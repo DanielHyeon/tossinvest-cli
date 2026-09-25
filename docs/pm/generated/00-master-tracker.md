@@ -12,6 +12,7 @@
     - STORY-TOS-a120 — Audit legacy execution-baseline adoption [archived] → `a120-audit-legacy-execution-baseline`
     - STORY-TOS-a121 — Reconcile stale verification artifacts from authoritative reads [in_progress] → `a121-reconcile-stale-verification-artifacts`
     - STORY-TOS-a122 — Keep the Function Logic Map gate answerable after a merge [in_progress] → `a122-the-logic-map-gate-outlives-a-merge`
+    - STORY-TOS-a123 — An empty window is derived, not declared [in_progress] → `a123-an-empty-window-is-derived-not-declared`
 - EPIC-TOS-005 — Secure delivery and engineering operations [active]
   - FEAT-TOS-007 — Secure remote access and signed releases [active]
     - STORY-TOS-031 — Enable trusted-network VPN console access [archived] → `enable-vpn-console-access`
@@ -107,6 +108,7 @@
     - STORY-TOS-a098 — Nobody sends what the outbox keeps [archived] → `a098-nobody-sends-what-the-outbox-keeps`
     - STORY-TOS-a099 — A claim excludes the second sender [archived] → `a099-a-claim-excludes-the-second-sender`
     - STORY-TOS-a111 — Exit lines stay actionable with flat quotes [archived] → `a111-exit-lines-stay-actionable-with-flat-quotes`
+    - STORY-TOS-a124 — A deliverer that keeps failing blocks entry [in_progress] → `a124-a-deliverer-that-keeps-failing-blocks-entry`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`

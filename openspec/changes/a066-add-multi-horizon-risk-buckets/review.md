@@ -317,3 +317,8 @@ No a066 test needed updating for the a112 schema moves.
 ### 사용자 결정 대기
 
 - 없음 (this lot needs no human decision; 5.5's relaxation path will).
+- **5.5 설계점 확정 (2026-09-25, 사용자 결정 ⑤ = 거절)**: 락 **전**에 나온 q_final 결정이 락 **뒤**에 제출되면
+  Gateway 재검증이 제출을 **거절**한다. 근거 — 스펙이 막는 것은 「신규 EXPOSURE_RAISING decision 과 추가 leg」이고
+  노출은 제출 시점의 상태다; 락 상태와 제출을 둘 다 보는 자리는 Gateway 뿐; 불변식 6(사이징은 보수 방향만);
+  a112 관문이 조정자 Submit 앞에 서는 것과 같은 자리. 5.5 는 이 행을 2.7 의 RED 표에 먼저 더하고 `a066_red_5_5`
+  태그를 GREEN 커밋에서 뗀다. 완화 경로(사람 승인·audit 되는 relaxation)는 5.5 로트가 설계를 들고 올 때 사용자에게 묻는다.

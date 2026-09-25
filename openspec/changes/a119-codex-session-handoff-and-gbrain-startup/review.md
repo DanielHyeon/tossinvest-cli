@@ -106,3 +106,16 @@ stage. Host/runtime assertions and all implementation acceptance remain explicit
 
 Function Logic Map: not-applicable — 기존 Go/Python 함수 본문을 바꾸지 않음(신규 시험·픽스처만, 그것도 wip 브랜치).
 `make sdd-check`·`make gate`·호스트 관측(3.3)은 실행하지 않음 — 동결 거부 상태이며 3.3 은 **pending**.
+
+---
+
+# Scope decision and rewrite (2026-09-25) — re-freeze pending
+
+- User decision on issues I-1: **(a)** — evidence and regression pins only; both symptoms to named follow-ups.
+- Rewritten: `proposal.md` (Why/What/Follow-ups/Non-goals), `tasks.md` 2.3 note and 3.x, `specs/gbrain-codex-mcp-startup/spec.md`
+  (dropped "Workspace startup is observed"; added raw-`gbrain` and concurrent-thread scenarios; "correction" wording removed
+  since no configuration changes), `design.md` status paragraphs. `specs/codex-session-save/spec.md` unchanged — its
+  requirement already conditions additional names on sanitized fixtures.
+- Requirement-level edits → the freeze review re-runs on the rewritten deltas (adversarial voice 1, lightweight tool change;
+  after the Opus reset 2026-09-26 19:00 KST). `openspec validate --strict` result is recorded in the round that runs it.
+- Not done here: no 3.x implementation, no host observation, no configuration edit. Draft tests remain on `wip/a119-3.1`.

@@ -1,0 +1,24 @@
+{
+  "id": "STORY-TOS-a124",
+  "title": "A deliverer that keeps failing blocks entry",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a124-a-deliverer-that-keeps-failing-blocks-entry",
+    "path": "openspec/changes/a124-a-deliverer-that-keeps-failing-blocks-entry"
+  },
+  "found_by": {
+    "date": "2026-09-25",
+    "how": "a092 round 20: two independent reviewers found that once a092 removes the synchronous deliver from notifyCritical, nothing latches the entry gate or escalates the operating mode on persistent delivery failure. At HEAD the only such sites are in the synchronous Notifier path (notifier.go:280/484/520/571, escalate at :383) and the a098 delivery executor has none; a098's own design D8.4 left this as an unassigned follow-up. The same executor lists PENDING rows oldest-first with LIMIT 10, so ten exhausted rows starve a new critical alert of its first attempt.",
+    "record": "openspec/changes/a092-an-alert-does-not-hold-the-stop/review.md"
+  },
+  "acceptance": [
+    "When a row's delivery attempts reach the retry budget in the delivery executor, new entries are blocked with the canonical undelivered reason and the operating mode escalates with the canonical CRITICAL_ALERT_UNDELIVERED trigger, in a configuration where the synchronous path never attempted a send",
+    "The judgement stands on the durable attempt count of the row, so a restart re-latches from the ledger and the mode is already there",
+    "Operator acknowledgement to zero undelivered clears the undelivered latch as today; the mode stays until a human relaxes it",
+    "A cycle tries rows below the budget before rows at it; rows at the budget are never dropped and stay counted as undelivered",
+    "No new reason code, trigger, toggle or executor; the exit observation dwell is unchanged (a098 test reused)",
+    "The worst time to latch, including queue wait, is stated in the change from measurement",
+    "a092 cites this change as a precondition for removing the synchronous deliver and deletes its own no-starvation paragraph"
+  ]
+}

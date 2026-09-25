@@ -31,6 +31,11 @@ Manager·사람이 정한다.
 넘김, 또는 (b) 범위를 유지하고 두 증상이 해소될 때까지 보관을 막음(대화형 호스트 관측·사람 승인 probe 필요).
 Teammate 는 이 결정 전에는 3.x 구현 커밋을 하지 않는다. 회귀 시험 초안은 `wip/a119-3.1` 브랜치에 보존했다.
 
+**2026-09-25 사용자 결정: (a).** proposal 을 「증거 + 회귀 고정」으로 다시 썼고, 대화형 호스트 핸드오프 정체 ·
+스레드별 경고 · I-2 는 이름 붙인 후속으로 넘겼다(proposal 「Follow-ups」). `gbrain-codex-mcp-startup` 델타에서
+「Workspace startup is observed」 시나리오를 뺐고 스레드별 busy 종료를 이 change 가 없애지 않는다고 적었다.
+동결 재리뷰(적대 보이스 1)는 Opus 리셋 뒤. 그 전에는 3.x 커밋 없음.
+
 ## I-2 (2026-09-25, 분류: 기록만 — 이 change 범위 밖)
 
 `.codex/hooks.json:5` 의 SDD agent-save 핸들러 matcher `Write|Edit|MultiEdit|NotebookEdit` 는 Codex 가 낸다고
