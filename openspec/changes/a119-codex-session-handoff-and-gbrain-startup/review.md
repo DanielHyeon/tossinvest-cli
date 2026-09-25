@@ -270,3 +270,10 @@ stdout pins cover the saver only).
 The fingerprint above covers the worktree *before* this record was written. Parallel sessions keep committing, so the
 Manager re-runs `make sdd-sync` and `make sdd-check` right before `make gate`.
 Task 3.4 stays **unchecked**: the final gate and Manager acceptance are still to come.
+
+## Manager acceptance (2026-09-26, tossos-5c)
+
+- Independent re-verification: the 12 new tests RC=0; config-surface diff vs `54004f44` is 0 lines; strict validate valid; **no `.go` file appears in any a119 commit** (`git show --stat c202b804 2fd6dfc3 d76d9e18 24433404 51249b5c` — measured, 0 hits outside openspec/).
+- **Base re-pinned to `4798d3992c95f8dcd0fdf7faf812203910bbf9e3`** (the a119 2.3 commit, parent of the first implementation commit `c202b804`). Reason: the old base `54004f44` predated a113/a108 landings, so gate step 5 demanded 8 functions **other changes** edited; a119 edits no Go (measured above), and the new base still precedes every a119 implementation commit — this is the a114/a115 re-pin pattern, not a base-after-work waiver. With the new base `check_analysis` reports `required 0 function(s) … evidence complete or diff-proven exempt`, RC=0.
+- Function Logic Map: not-applicable — no existing Go/Python function body changed by this change (the harness and tests are new files; measured above).
+- Gate runs in an isolated worktree pinned at this change's completion commit, per house procedure.

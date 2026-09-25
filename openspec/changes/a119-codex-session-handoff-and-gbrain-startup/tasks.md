@@ -30,5 +30,5 @@
       that it belongs to the named follow-ups; make no runtime claim here.
       > 2026-09-26 teammate: §4 rewritten as a table U1–U7, each item mapped to proposal follow-up 1, 2 or 3; no host was
       > started and no item is marked observed. The pre-rename absolute repository path in the old §4 text was dropped (the document's own sanitization rule).
-- [ ] 3.4 Complete separate adversarial review, gstack review, required tests and SDD checks, final gate and Manager acceptance
+- [x] 3.4 Complete separate adversarial review, gstack review, required tests and SDD checks, final gate and Manager acceptance
       before PM synchronization and archive.
