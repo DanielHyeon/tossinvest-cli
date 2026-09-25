@@ -29,7 +29,7 @@
       `consoleStrategyRuntimeReaderFor`, wrapper 재사용 + 무조건 wake 펌프·콘솔 전용 간격 변수) + runConsole
       블록 교체. 부재 판정·presence 를 `internal/strategyprojection` 으로 이동(httpapi 는 alias·위임 — 판정
       한 벌, design D2) + `internal/console` 두 소비자의 nil 판정 교체 + `cmd/tossctl` 컴파일 결속 `var _`.
-- [ ] 1.3 뮤테이션(사본 · 무변이 대조군 선행): nil 접힘 재도입 · 화면 nil 판정 복귀(두 자리 각각) ·
+- [x] 1.3 뮤테이션(사본 · 무변이 대조군 선행): nil 접힘 재도입 · 화면 nil 판정 복귀(두 자리 각각) ·
       부재 신호 무시 · 펌프 제거 · 부팅 dial 재도입 · sentinel 대신 nil → 각각 빨강. 원장 `mutation-ledger.md`.
 - [ ] 1.4 FLM 구현 후 재최신화(`revision: current` 재추출, Branch Test Map 재번호) + `check_analysis.py` rc 0.
 - [ ] 1.5 검증: cmd/tossctl·internal/console `-race` 대상 테스트 · `make vet` · `make lint` · `make test`.
