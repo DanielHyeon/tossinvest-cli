@@ -33,8 +33,8 @@
 ## 5. VERIFY and review gates
 
 - [ ] 5.1 Refresh post-edit AST, Function Logic Maps and Branch Test Maps for every changed existing function and pass the repository analysis checker
-- [ ] 5.2 Run targeted protection/attestation/execgw/engine tests, race tests for affected packages, journal crash/restart suites, full tests and vet, and strict OpenSpec/PM validation
-- [ ] 5.3 Run `make sdd-sync`, `make sdd-check`, and `make gate CHANGE=a071-wire-kr-us-protection-readiness`, then complete adversarial independent review before marking the high-risk change complete
+- [x] 5.2 (2026-09-25 Manager 실측, review.md 「5.2 실측」 — 표적 7·seams·정본 race·crash/restart·make test 99·vet·validate·PM 전부 rc 0) Run targeted protection/attestation/execgw/engine tests, race tests for affected packages, journal crash/restart suites, full tests and vet, and strict OpenSpec/PM validation
+- [ ] 5.3 (미실행: 게이트 5단계가 창 정책으로 남의 함수 374 를 요구 — 정책 결정 대기, `/tmp/claude-1000/a071-52/04-ca.log`) Run `make sdd-sync`, `make sdd-check`, and `make gate CHANGE=a071-wire-kr-us-protection-readiness`, then complete adversarial independent review before marking the high-risk change complete
 - [x] 5.4 Verify the built default remains lane/autostart/automation/LIVE OFF or unapproved, missing attestation remains `UNWIRED`, and protection/exit/reconciliation/fill paths remain available without any live broker mutation
 - [x] 5.5 Run isolated-core unit, race, vet, fuzz, coverage, static dependency and strict OpenSpec validation; preserve the production integration gates above as pending
 

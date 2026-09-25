@@ -136,3 +136,22 @@ Two facts a100 measured against this change's code, recorded here because they b
   therefore build-bound: a rebuild invalidates it. a100 must state how that is operated.
 
 Rescinding this addendum restores task 3.5 to this change.
+
+## 5.2 실측 — Manager 실행 (2026-09-25, HEAD d6644e17, 격리 워크트리 TossOS-worktrees/archive-batch1)
+
+작성자(Opus 팀메이트, 5.1 을 0233d776 으로 닫은 뒤 API 한도로 중단)와 분리된 검증 패스. 코드 변경 0. 로그 `/tmp/claude-1000/a071-52/`.
+
+| 항목 | 명령 | rc | 결과 |
+|---|---|---:|---|
+| 표적 패키지 | `go test -count=1` attest·protection·protectionlifecycle·protectionofficial·protectionreadiness·execgw·app/engine (7) | 0 | ok 7 (`01-test.log`) |
+| seams | 같은 7 + `-tags tossos_testseams` | 0 | ok 7 (`02-seams.log`) |
+| race(표적) | 같은 7 `-race -tags tossos_testseams` | 1 | protection 계열 5 ok · **app/engine·execgw 는 `test timed out after 10m0s`(DATA RACE 0)** — 두 패키지 전체 -race 는 저장소 정본 밖(`make test-race` 는 이름 목록만 돈다) (`06-race.log`) |
+| race(정본) | `make test-race` | 0 | ok 8, DATA RACE 0 (`11-make-test-race.log`) |
+| journal crash/restart | `-run 'Crash\|Restart\|Recover'` app/engine·execgw·journal, seams 태그 | 0 | ok 3 (`07-crash-restart.log`) |
+| vet | `make vet` | 0 | (`08-vet-all.log`) |
+| 전체 test | `make test` | 0 | ok 99 (`09-make-test.log`) |
+| OpenSpec | `openspec validate a071-… --strict --no-interactive` | 0 | (`05-validate.log`) |
+| PM | `generate_master_tracker.py --check` | 0 | current (`10-pm-check.log`) |
+| 5단계 | `check_analysis.py --change a071-…` | 1 | **남의 함수 374 요구**(weeklyvaluelane 등, 창 정책 — a122 5.6/5.7·후속 a123 초안) (`04-ca.log`) |
+
+5.2 는 위 표로 닫는다. 5.3(`make gate`)은 5단계가 창 정책으로 성립하지 않아 미실행 — 정책 결정 뒤. 출하 상태(Addendum C1/C2/M7) 재확인은 Opus 팀메이트 로트에 남긴다(이 패스는 시험 실행만).
