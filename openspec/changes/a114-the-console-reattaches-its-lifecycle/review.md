@@ -92,3 +92,12 @@ freeze 종결 — 구현 착수.
   불일치로 실패했고 이번 판에서는 둘 다 ok)
 - `check_analysis.py --change a114-…` rc 0 · 착지 `1244be95`(병행 세션의 더러운 워킹트리 때문에 같은 커밋의 shared
   clone 에서 도구가 계산한 값을 옮겼다)
+
+## 완료 게이트 — Manager 실행 (2026-09-25)
+
+- 실행자: Manager(Fable, 세션 tossos-d6). 작성자(Opus 팀메이트)와 분리된 검증 패스.
+- 대상 커밋: `692adef3`(2.1 gate 줄 체크 + tracker 재생성) — 착지 기록은 `landed-commit.txt` 그대로.
+- 장소: 저장소 밖 격리 워크트리 `TossOS-worktrees/archive-batch1`(detached `692adef3`, 실행 전후 `git status` 0줄) — 주 워크트리는 병행 세션·팀메이트의 미커밋 편집이 있어 판정을 오염시킨다.
+- `make sdd-sync` rc 2 ×2: CodeGraph 단계는 완료(`Done`), CodeGraphContext 갱신이 kuzu `Could not set lock on file`(다른 프로세스가 DB 보유)로 실패 — advisory. fingerprint 는 기록됐다: `make sdd-check` **rc 0**(`/tmp/claude-1000/gate-sdd-check.log`).
+- `make gate CHANGE=a114-the-console-reattaches-its-lifecycle` → **GATE PASS, 11/11, rc 0** (`/tmp/claude-1000/gate-a114.log`, 445줄): 1 tasks.md · 2 미완료 0 · 3 짝 없음 · 4 review.md · 5 Function Logic Map(착지 창) · 6 sdd-check · 7 make test · 8 make test-seams · 9 make test-race · 10 make vet · 11 make validate — 전부 OK.
+- archive: 게이트 통과 뒤 수행 예정(사용자 지시로 Opus 팀메이트가 — 2026-09-25 Opus 주간 한도로 대기). archive 전까지 tasks 2.1 의 "후 archive" 는 미수행 상태다.
