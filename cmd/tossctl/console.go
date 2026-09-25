@@ -61,7 +61,6 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/localupdate"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/optimization"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/soak"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/verifylive"
@@ -392,22 +391,9 @@ func runConsole(cmd *cobra.Command, root *rootOptions, opts *consoleOptions) err
 	var positionPolicyCommander console.PositionPolicyCommander
 	var strategyRuntime console.MultiMarketStrategyRuntimeReader
 	if engineDir != "" {
-		descriptorPath := positionpolicyrpc.DescriptorPath(engineDir)
-		if _, statErr := os.Stat(descriptorPath); statErr == nil {
-			client, dialErr := positionpolicyrpc.Dial(ctx, descriptorPath)
-			if dialErr != nil {
-				fmt.Fprintf(cmd.ErrOrStderr(), "엔진 포지션 정책 control plane에 연결할 수 없다 (%v). 정책 화면은 조회 전용으로 뜬다.\n", dialErr)
-			} else {
-				positionPolicyCommander = &consolePositionPolicyCommander{
-					lifecycle: client,
-					runtime: positionPolicyRuntimeDescriptorReader{
-						descriptorPath: positionpolicyrpc.RuntimeDescriptorPath(engineDir),
-					},
-				}
-			}
-		} else if !errors.Is(statErr, os.ErrNotExist) {
-			fmt.Fprintf(cmd.ErrOrStderr(), "엔진 포지션 정책 endpoint를 확인할 수 없다 (%v). 정책 화면은 조회 전용으로 뜬다.\n", statErr)
-		}
+		// a114: lifecycle client 는 부팅 1회 dial 로 굳지 않는다. 엔진이 콘솔보다 늦게 뜨거나 가동 중
+		// 재시작해도 백그라운드 재부착이 다시 붙인다(console_lifecycle_attach.go). 요청 경로는 dial 하지 않는다.
+		positionPolicyCommander = consolePositionPolicyCommanderFor(ctx, engineDir, cmd.ErrOrStderr())
 		strategyDescriptor := strategyprojectionrpc.DescriptorPath(engineDir)
 		if _, statErr := os.Stat(strategyDescriptor); statErr == nil {
 			client, dialErr := strategyprojectionrpc.Dial(ctx, strategyDescriptor)

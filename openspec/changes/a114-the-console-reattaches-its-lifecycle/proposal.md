@@ -1,6 +1,6 @@
 # a114 — 콘솔이 자기 lifecycle에 재부착한다
 
-> **상태: 등록만 먼저 했다(2026-08-16).** a109 proposal-freeze P2-7이 기록하고 design
+> **상태: 착수 2026-09-25**(design.md·review.md). 등록 2026-08-16. 합본하지 않음(design 0.1). a109 proposal-freeze P2-7이 기록하고 design
 > "선언된 생략"이 후속으로 미룬 항목이다. **착수 선행 조건 없음** — 단 a115(콘솔 전략
 > 화면 재부착)와 같은 파일(`cmd/tossctl/console.go`)의 부팅 경로를 편집하므로 동시
 > 착수 시 한 change로 합치는 판단을 먼저 한다.

@@ -1,0 +1,54 @@
+{
+  "file": "cmd/tossctl/exit_quarantine_commander.go",
+  "source_sha256": "ffec130fb5773b9c6f673f1ba53b0aa4ceecac62b82844275b2f5228a97ea37f",
+  "package": "main",
+  "function": "quarantineClient",
+  "receiver": "consolePositionPolicyCommander",
+  "signature": "consolePositionPolicyCommander.quarantineClient(params=0, results=2)",
+  "start": {
+    "line": 26,
+    "column": 1
+  },
+  "end": {
+    "line": 32,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 28,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 29,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 27,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
