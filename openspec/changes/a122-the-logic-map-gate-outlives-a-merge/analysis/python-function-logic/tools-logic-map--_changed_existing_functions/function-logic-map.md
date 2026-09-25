@@ -19,3 +19,12 @@
 
 나머지(B1–B4 · B6–B12 · 편집 전 B18–B39 = 편집 후 B15–B36)는 순서 그대로다. 분기 밖: 판정 diff 가
 `*comparison.trees` 를 `env=comparison.environment` 에서 견주고 pathspec 을 안 받는다.
+
+## task 7.5.35 — 판정 diff 의 형식을 게이트가 정한다 (2026-09-25)
+
+`ast.before-7.5.35.json` → `ast.after-7.5.35.json`: 분기 36 · raise 4 · 반환 4 **그대로**, difflib 정렬도 전부 같다 — 바뀐
+것은 분기 밖, 판정 diff 의 명령줄이다: `--src-prefix=a/` · `--dst-prefix=b/`(파서가 떼는 글자를 우리가 정한다 —
+`diff.noprefix` 면 `b/x.go` 의 요구가 `x.go` 로 가고 `a/x.go` 는 헛거절이었다) · `--no-color`(색 설정은 머리 줄을 못 읽게
+해 교차 검사가 헛거절했다) · `--inter-hunk-context=0`(`diff.interHunkContext` 가 훅을 합쳐 편집 안 한 함수까지 요구했다).
+접두사와 훅 합치기는 이 change 이전부터(7.5.26); 색은 이 change 의 base 에서 요구를 **조용히** 비웠고(`[]`) 7.5.23 의 교차
+검사가 헛거절로 바꿨다(7.5.35 정정 — 첫 판은 "넷 다 이 change 이전부터" 라 적었다). `--unified=0` 을 이기는 `GIT_DIFF_OPTS` 는 `_isolated_comparison` 이 자식 환경에서 지운다.

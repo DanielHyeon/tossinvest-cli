@@ -46,3 +46,10 @@ rename 뒤의 위조(#2) + base 쪽 blob · 하위 트리 위조(7.5.33) + 물�
 부분 클론(`--filter=blob:none`)에서 base blob 이 없으면 `cat-file` 이 promisor 로 **fetch** 한다 — 판정은 맞지만 실제
 `.git/objects/pack` 에 쓴다(7.5.33 의 남은 절반). diff 의 **출력 형식**을 바꾸는 설정(`diff.noprefix` 등, 7.5.26).
 판정 도구 자체를 워킹트리에서 빌드하는 것(7.5.32).
+
+## task 7.5.35 — `GIT_DIFF_OPTS` 도 물려받지 않는다 (2026-09-25)
+
+`ast.before-7.5.35.json` → `ast.after-7.5.35.json`: 분기 24 · raise 3 · 반환 0 그대로. 바뀐 것은 B24 의 조건 하나다 —
+`key != "GIT_ALTERNATE_OBJECT_DIRECTORIES"` → `key not in ("GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_DIFF_OPTS")`.
+`GIT_DIFF_OPTS=-u3` 은 판정 diff 의 `--unified=0` 을 **이겨** 문맥 줄이 편집 안 한 함수까지 요구하게 했다(2.43 실측, 이
+change 이전부터). 앞의 "안 닫는 것" 의 출력 형식(7.5.26)은 7.5.35 가 판정 diff 의 명령줄에서 닫았다.

@@ -7823,6 +7823,10 @@ class TheGuardAndTheJudgementReadTheSameDiff(unittest.TestCase):
             # 가 그 뜻을 바꿔 두 시야를 **함께** 비운다(`GIT_LITERAL_PATHSPECS=1` 이면 `'*.go'` 가 글자 그대로의 이름).
             for spelling in ("--", "*.go"):
                 self.assertNotIn(spelling, seen[where], f"{label}({where}) 의 git 호출이 pathspec 을 받는다")
+        # 판정 diff 의 **형식**은 게이트가 정한다 (task 7.5.35) — 파서가 떼는 접두사, 색 없는 줄, 문맥도 합치기도 없는 훅.
+        # 오늘의 기본 설정에서는 깃발이 빠져도 행동이 같으므로 행동 시험(설정을 바꾼다)과 함께 구조로도 못 박는다.
+        for flag in ("--src-prefix=a/", "--dst-prefix=b/", "--no-color", "--unified=0", "--inter-hunk-context=0"):
+            self.assertIn(flag, seen["_changed_existing_functions"], f"판정 diff 에 `{flag}` 가 없다")
 
 
 class TheWorktreeIsNotRewrittenUnderTheGate(unittest.TestCase):
@@ -8372,6 +8376,170 @@ while True:
         self._run(root, "git", "rm", "-q", "--cached", "sub.go")
         with self.assertRaisesRegex(RuntimeError, "cannot load existing base file .*:sub.go"):
             self._required(root, base)
+
+    @staticmethod
+    def _literal_tree(root: Path, *entries: tuple[bytes, bytes, str]) -> str:
+        """git 이 **안 쓰는** 모양의 트리를 해시만 맞게 싣는다(`hash-object --literally`) — 검증은 통과하는 트리다."""
+        raw = b"".join(mode + b" " + name + b"\0" + bytes.fromhex(oid) for mode, name, oid in entries)
+        return subprocess.check_output(["git", "hash-object", "-t", "tree", "--literally", "-w", "--stdin"],
+                                       cwd=root, input=raw).decode().strip()
+
+    @staticmethod
+    def _commit_tree(root: Path, tree: str) -> str:
+        return subprocess.check_output(["git", "commit-tree", tree, "-m", "literal"], cwd=root, text=True).strip()
+
+    def _non_canonical_roots(self, root: Path) -> dict[str, str]:
+        """`sub/x.go` 저장소에서 뿌리 트리를 git 이 쓰지 않는 모양으로 바꾼 것들 (7.5.34 적대 재리뷰 P0-1 · P1-2).
+        워킹트리 `sub/x.go` 는 AFTER 다. 해시는 다 맞으므로 7.5.34 의 검증이 못 잡고, 앞의 넷은 그 코드에서 `[]` 였다."""
+        sub = self._oid(root, "HEAD:sub")
+        before = self._oid(root, "HEAD:sub/x.go")
+        (root / "sub" / "x.go").write_text(self.AFTER, encoding="utf-8")
+        after = subprocess.check_output(["git", "hash-object", "-w", "sub/x.go"], cwd=root, text=True).strip()
+        edited = self._literal_tree(root, (b"100644", b"x.go", after))
+        return {
+            # git 은 `040000` 을 디렉터리로 읽는다(`canon_mode`), fsck 는 경고(`zeroPaddedFilemode`)뿐이다.
+            "zero-padded tree mode": self._literal_tree(root, (b"040000", b"sub", sub)),
+            # 같은 이름 둘 — 편집 전 걷기는 뒤의 것만 남겼다(이 순서에서 `[]`). git 도 순서에 따라 다르게 낸다(`ls-tree -r` 은 둘 다).
+            "duplicate tree": self._literal_tree(root, (b"40000", b"sub", edited), (b"40000", b"sub", sub)),
+            "file and tree of one name": self._literal_tree(root, (b"100644", b"sub", before), (b"40000", b"sub", sub)),
+            # 이름에 `/` — git 은 평평한 `sub/x.go` 와 하위 트리의 `sub/x.go` 를 둘 다 낸다; 편집 전 걷기는 하나로 모아 이 순서에서 `[]`.
+            "slash in a name": self._literal_tree(root, (b"40000", b"sub", edited), (b"100644", b"sub/x.go", before)),
+            "empty name": self._literal_tree(root, (b"100644", b"", before), (b"40000", b"sub", sub)),
+            # 빈 이름의 **트리**는 열쇠가 `/` 라 순서 검사를 지난다 — 이름 검사만 잡는다(7.5.35 변이 AK6 가 살아남은 까닭:
+            # 빈 이름의 파일은 열쇠 `b""` 가 첫 `last` 와 같아 순서 검사가 대신 잡았다).
+            "empty tree name": self._literal_tree(root, (b"40000", b"", sub), (b"40000", b"sub", sub)),
+            "dot name": self._literal_tree(root, (b"100644", b".", before), (b"40000", b"sub", sub)),
+            "dot-dot name": self._literal_tree(root, (b"100644", b"..", before), (b"40000", b"sub", sub)),
+            # 기본 fsck 도 `badFilemode` 로 적는 모드. (`100664` 는 받는다 — `test_a_tree_from_early_git_is_accepted`.)
+            "unknown file mode": self._literal_tree(
+                root, (b"40000", b"sub", self._literal_tree(root, (b"100600", b"x.go", before)))),
+            # 붙어 있지 않은 같은 이름: 열쇠 `x.go` < `x.go-` < `x.go/` 는 엄격히 오르므로 순서 검사를 지난다. 편집 전
+            # 걷기는 트리 `x.go/` 아래 파일의 삭제를 조용히 잃었다(7.5.35 적대 재리뷰 P2-2 — 옆 항목만 보는 중복 검사면 산다).
+            "non-adjacent duplicate": self._literal_tree(
+                root, (b"100644", b"x.go", before), (b"100644", b"x.go-", before), (b"40000", b"x.go", sub)),
+            "out of order": self._literal_tree(root, (b"40000", b"sub", sub), (b"100644", b"a.go", before)),
+        }
+
+    def test_a_tree_git_would_read_differently_is_refused_by_name(self) -> None:
+        """트리는 해시가 맞아도 **모양**이 git 과 다르게 읽힐 수 있다 (7.5.34 적대 재리뷰 P0-1 · P1-2, 7.5.34 가 연 회귀).
+        7.5.34 의 걷기는 정확히 `40000` 만 하위 트리로 따라가고 같은 이름은 뒤의 것만 남겼다 — git 은 `040000` 도
+        디렉터리로 읽고, 같은 이름 둘은 git 도 순서에 따라 다르게 낸다(`ls-tree -r` 은 둘 다). 그래서 base 의 `sub/` 가 판정에서 통째로
+        사라졌다. 게이트는 git 이 **쓰는** 모양(기본 fsck 가 받는 모드 · 엄격한 순서 · 유일한 이름 · `/` 없는 이름)이 아닌
+        트리를 이름 대고 거절한다."""
+        real = subprocess.run
+
+        def silent_listing(argv, *args, **kwargs):
+            # 목록은 물을 트리만 정한다. 말없는 목록이어도 뿌리 트리는 `rev-parse` 힌트로 물으므로 걷기가 그 항목을 본다.
+            if argv[:2] == ["git", "ls-tree"]:
+                return subprocess.CompletedProcess(argv, 0, b"", b"")
+            return real(argv, *args, **kwargs)
+
+        # 모양마다 **어느 갈래가** 거절했는지까지 본다 (7.5.35 변이 AK6). "canonical form" 만 보면 갈래 하나를 지워도 다른
+        # 갈래가 같은 문장으로 대신 거절해 시험이 초록이다 — 빈 이름의 파일은 순서 검사가 대신 잡고 있었다.
+        reasons = {
+            "zero-padded tree mode": "mode 040000",
+            "duplicate tree": "duplicate entry b'sub'",
+            "file and tree of one name": "duplicate entry b'sub'",
+            "slash in a name": "entry name b'sub/x.go'",
+            "empty name": "entry name b''",
+            "empty tree name": "entry name b''",
+            "dot name": "entry name b'.'",
+            "dot-dot name": "entry name b'..'",
+            "unknown file mode": "mode 100600",
+            "non-adjacent duplicate": "duplicate entry b'x.go'",
+            "out of order": "entry b'a.go' out of order",
+        }
+        for label, reason in reasons.items():
+            with self.subTest(label):
+                root, _ = self._repo(("sub/x.go",))
+                base = self._commit_tree(root, self._non_canonical_roots(root)[label])
+                refusal = re.escape(f"canonical form ({reason})")
+                if label in ("empty name", "empty tree name"):
+                    # git 의 `ls-tree` 가 먼저 죽는다(`empty filename in tree entry`) — 그것도 이름 댄 거절이지만 **걷기**의
+                    # 거절을 재려고 목록을 비운다.
+                    with self.assertRaisesRegex(RuntimeError, "empty filename in tree entry"):
+                        self._required(root, base)
+                    with mock.patch("check_analysis.subprocess.run", side_effect=silent_listing), \
+                            self.assertRaisesRegex(RuntimeError, refusal):
+                        self._required(root, base)
+                    continue
+                with self.assertRaisesRegex(RuntimeError, refusal):
+                    self._required(root, base)
+
+    def test_a_commit_target_tree_git_would_read_differently_is_refused_by_name(self) -> None:
+        """커밋 대상(착지 · 이관 감사)의 트리도 같은 걷기를 지난다."""
+        for label in ("zero-padded tree mode", "duplicate tree"):
+            with self.subTest(label):
+                root, base = self._repo(("sub/x.go",))
+                target = self._commit_tree(root, self._non_canonical_roots(root)[label])
+                with mock.patch("check_analysis.go_functions", side_effect=self._functions), \
+                        self.assertRaisesRegex(RuntimeError, "canonical form"):
+                    check_analysis.changed_existing_functions(root, base, target)
+
+    def test_every_tree_git_writes_is_accepted(self) -> None:
+        """거절이 **정상 트리**를 안 건드린다: 실행 파일(`100755`) · 심링크(`120000`) · gitlink(`160000`) · 하위 트리, 그리고
+        git 의 정렬 — 트리 이름은 뒤에 `/` 를 붙여 견주므로 `a.go` 가 디렉터리 `a` **앞에** 온다(이름만 견주면 뒤). gitlink 는
+        파일처럼 견준다 — gitlink `b` 가 `b-.go` **앞**이다(`/` 를 붙이면 뒤, 7.5.35 적대 재리뷰 P3-1)."""
+        root, _ = self._repo(("a.go", "a/x.go", "run.go", "b-.go"))
+        (root / "run.go").chmod(0o755)
+        (root / "link").symlink_to("a.go")
+        self._run(root, "git", "add", "-A")
+        self._run(root, "git", "commit", "-qm", "modes")
+        self._gitlink(root, "vendor/lib")
+        self._gitlink(root, "b")
+        base = self._oid(root, "HEAD")
+        listed = subprocess.check_output(["git", "ls-tree", base], cwd=root, text=True)
+        self.assertLess(listed.index("\ta.go\n"), listed.index("\ta\n"), "git 의 정렬이 픽스처와 다르다")
+        self.assertLess(listed.index("\tb\n"), listed.index("\tb-.go\n"), "git 의 gitlink 정렬이 픽스처와 다르다")
+        for mode in ("100755", "120000", "040000", "160000"):
+            self.assertIn(mode, listed + subprocess.check_output(["git", "ls-tree", "-r", base], cwd=root, text=True))
+        (root / "a" / "x.go").write_text(self.AFTER, encoding="utf-8")
+        self.assertEqual(sorted(self._required(root, base)), [("a/x.go", "Stop")])
+
+    def test_a_tree_from_early_git_is_accepted(self) -> None:
+        """`100664` 는 초기 git 이 쓴 모드다 — 기본 `git fsck` 가 받고(`--strict` 만 `badFilemode`) git 도 게이트도 일반 파일로
+        읽는다. 첫 판은 이것을 거절해 옛 저장소를 헛거절했다(7.5.35 적대 재리뷰 P2-1, 7.5.34 는 요구를 바르게 세웠다)."""
+        root, _ = self._repo(("sub/x.go",))
+        before = self._oid(root, "HEAD:sub/x.go")
+        base = self._commit_tree(root, self._literal_tree(
+            root, (b"40000", b"sub", self._literal_tree(root, (b"100664", b"x.go", before)))))
+        (root / "sub" / "x.go").write_text(self.AFTER, encoding="utf-8")
+        self.assertEqual(sorted(self._required(root, base)), [("sub/x.go", "Stop")])
+
+    THREE = "package pkg\n\nfunc A() int {\n\treturn 1\n}\n\nfunc B() int {\n\treturn 1\n}\n\nfunc C() int {\n\treturn 1\n}\n"
+
+    def test_the_judged_diff_format_does_not_follow_the_user_config(self) -> None:
+        """판정 diff 의 **형식**은 게이트가 정한다 (7.5.26 · 7.5.34 적대 재리뷰 P0-3). 파서는 `a/` · `b/` 접두사를 떼고
+        훅 범위를 함수와 겹쳐 본다 — 사용자 설정이 그 형식을 바꾸면 요구가 엉뚱한 경로로 가거나(`diff.noprefix` 의
+        `b/x.go` → `x.go`) 헛거절하거나(`a/x.go`, 색) 편집 안 한 함수까지 요구한다(`-u3` · `interHunkContext`)."""
+        cases = [
+            ({"diff.noprefix": "true"}, {}, "a/x.go"),
+            ({"diff.noprefix": "true"}, {}, "b/x.go"),
+            ({"diff.mnemonicPrefix": "true"}, {}, "a/x.go"),
+            ({"color.ui": "always"}, {}, "x.go"),
+            ({"color.diff": "always"}, {}, "x.go"),
+        ]
+        for config, environment, name in cases:
+            with self.subTest(config=config, name=name):
+                root, base = self._repo((name,))
+                (root / name).write_text(self.AFTER, encoding="utf-8")
+                for key, value in config.items():
+                    self._run(root, "git", "config", key, value)
+                self.assertEqual(sorted(self._required(root, base)), [(name, "Stop")])
+        # 훅 모양: A 와 C 만 고치면 B 는 요구가 아니다 — 문맥 줄(`GIT_DIFF_OPTS=-u3`)과 훅 합치기
+        # (`diff.interHunkContext`)는 B 의 줄을 훅 범위에 넣는다.
+        for config, environment in (({"diff.interHunkContext": "9"}, {}), ({}, {"GIT_DIFF_OPTS": "-u3"})):
+            with self.subTest(config=config, environment=environment):
+                root, _ = self._repo()
+                (root / "x.go").write_text(self.THREE, encoding="utf-8")
+                self._run(root, "git", "commit", "-qam", "three")
+                base = self._oid(root, "HEAD")
+                (root / "x.go").write_text(self.THREE.replace("A() int {\n\treturn 1", "A() int {\n\treturn 2")
+                                           .replace("C() int {\n\treturn 1", "C() int {\n\treturn 2"), encoding="utf-8")
+                for key, value in config.items():
+                    self._run(root, "git", "config", key, value)
+                with mock.patch.dict(os.environ, environment):
+                    self.assertEqual(sorted(self._required(root, base)), [("x.go", "A"), ("x.go", "C")])
 
     def test_the_commit_target_is_verified_too(self) -> None:
         """대상이 커밋이어도 두 쪽 모두 검증한 바이트다 (7.5.34) — 착지 판정(`landed-commit.txt`)과 이관 감사가 이 모드로

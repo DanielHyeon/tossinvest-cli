@@ -598,8 +598,7 @@ MUTATIONS = {
     "AJ44_the_disk_bytes_are_not_tabled": [
         ('    blobs.update((after[path][1], data) for path, data in disk.items())\n', '')],
     "AJ45_an_inherited_alternate_is_kept": [
-        ('        environment = {key: value for key, value in os.environ.items() if key != "GIT_ALTERNATE_OBJECT_DIRECTORIES"}',
-         '        environment = dict(os.environ)')],
+        ('if key not in ("GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_DIFF_OPTS")}', 'if key not in ("GIT_DIFF_OPTS",)}')],
     "AJ46_the_store_is_the_real_one": [
         ('        environment["GIT_OBJECT_DIRECTORY"] = str(store)\n', '')],
     # AJ47(두 diff 의 `GIT_INDEX_FILE` 을 뺌)은 살아남았다 — 트리 둘을 견주는 diff 는 인덱스를 안 쓴다. **줄을 지웠다.**
@@ -615,6 +614,67 @@ MUTATIONS = {
     "AJ51_the_current_side_is_empty": [
         ('            current = _temporary_go(comparison.new[new_source]) if new_source in comparison.new else None',
          '            current = None')],
+    # --- 7.5.35: 검증한 트리도 git 이 **쓰는** 모양이어야 한다 · 판정 diff 의 형식은 게이트가 정한다 ---
+    # `_verified_go_entries`
+    "AK1_any_mode_is_walked": [
+        ('                if mode not in CANONICAL_TREE_MODES:', '                if False:')],
+    "AK2_the_executable_mode_is_refused": [
+        ('CANONICAL_TREE_MODES = (TREE_MODE, b"100644", b"100664", b"100755", b"120000", GITLINK_MODE)',
+         'CANONICAL_TREE_MODES = (TREE_MODE, b"100644", b"100664", b"120000", GITLINK_MODE)')],
+    "AK3_a_symlink_is_refused": [
+        ('CANONICAL_TREE_MODES = (TREE_MODE, b"100644", b"100664", b"100755", b"120000", GITLINK_MODE)',
+         'CANONICAL_TREE_MODES = (TREE_MODE, b"100644", b"100664", b"100755", GITLINK_MODE)')],
+    "AK4_a_gitlink_is_refused": [
+        ('CANONICAL_TREE_MODES = (TREE_MODE, b"100644", b"100664", b"100755", b"120000", GITLINK_MODE)',
+         'CANONICAL_TREE_MODES = (TREE_MODE, b"100644", b"100664", b"100755", b"120000")')],
+    "AK5_names_are_not_checked": [
+        ('                elif not name or b"/" in name or name in (b".", b".."):', '                elif False:')],
+    "AK6_an_empty_name_passes": [
+        ('                elif not name or b"/" in name or name in (b".", b".."):',
+         '                elif b"/" in name or name in (b".", b".."):')],
+    "AK7_a_slash_in_a_name_passes": [
+        ('                elif not name or b"/" in name or name in (b".", b".."):',
+         '                elif not name or name in (b".", b".."):')],
+    "AK8_dot_passes": [
+        ('                elif not name or b"/" in name or name in (b".", b".."):',
+         '                elif not name or b"/" in name or name in (b"..",):')],
+    "AK9_dot_dot_passes": [
+        ('                elif not name or b"/" in name or name in (b".", b".."):',
+         '                elif not name or b"/" in name or name in (b".",):')],
+    "AK10_duplicates_pass": [
+        ('                elif name in names:', '                elif False:')],
+    "AK11_order_is_not_checked": [
+        ('                elif key <= last:', '                elif False:')],
+    "AK12_order_ignores_the_tree_slash": [
+        ('                key = name + b"/" if mode == TREE_MODE else name', '                key = name')],
+    "AK13_the_order_does_not_advance": [
+        ('                names.add(name)\n                last = key\n', '                names.add(name)\n')],
+    "AK14_names_are_not_remembered": [
+        ('                names.add(name)\n', '')],
+    "AK15_the_refusal_is_silent": [
+        ('                if why:\n                    raise RuntimeError(NOT_CANONICAL',
+         '                if False:\n                    raise RuntimeError(NOT_CANONICAL')],
+    # 7.5.35 적대 재리뷰가 더한 셋: 초기 git 의 `100664`(P2-1) · 붙어 있지 않은 같은 이름(P2-2, 리뷰어 M11) · gitlink 의 정렬 열쇠(P3-1, M1)
+    "AK21_early_git_mode_is_refused": [
+        ('CANONICAL_TREE_MODES = (TREE_MODE, b"100644", b"100664", b"100755", b"120000", GITLINK_MODE)',
+         'CANONICAL_TREE_MODES = (TREE_MODE, b"100644", b"100755", b"120000", GITLINK_MODE)')],
+    "AK22_duplicates_only_next_to_each_other": [
+        ('                elif name in names:', '                elif key.rstrip(b"/") == last.rstrip(b"/"):')],
+    "AK23_a_gitlink_sorts_like_a_tree": [
+        ('                key = name + b"/" if mode == TREE_MODE else name',
+         '                key = name + b"/" if mode in (TREE_MODE, GITLINK_MODE) else name')],
+    # `_changed_existing_functions` · `_isolated_comparison`
+    "AK16_the_source_prefix_is_the_users": [
+        ('            "--src-prefix=a/",\n', '')],
+    "AK17_the_destination_prefix_is_the_users": [
+        ('            "--dst-prefix=b/",\n', '')],
+    "AK18_the_colour_is_the_users": [
+        ('            "--no-color",\n', '')],
+    "AK19_hunks_are_merged_as_the_user_says": [
+        ('            "--inter-hunk-context=0",\n', '')],
+    "AK20_git_diff_opts_is_passed_on": [
+        ('if key not in ("GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_DIFF_OPTS")}',
+         'if key not in ("GIT_ALTERNATE_OBJECT_DIRECTORIES",)}')],
     "AD6_the_guard_ignores_renames": [
         ('"--no-ext-diff", "--no-textconv", "--find-renames",',
          '"--no-ext-diff", "--no-textconv",')],

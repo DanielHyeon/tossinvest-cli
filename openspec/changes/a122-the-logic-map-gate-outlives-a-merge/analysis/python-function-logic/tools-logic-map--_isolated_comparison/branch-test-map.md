@@ -16,3 +16,12 @@
 | 격리한 저장소(`GIT_OBJECT_DIRECTORY`) | `AJ46_the_store_is_the_real_one` | 33 시험 |
 
 B1 · B2 · B4 · B5 · B9 · B10 · B13 · B15 · B20–B23(리비전 조립 · 순회 · 문장 이름)은 따로 잴 값이 없다 — 빠지면 모든 판정이 바뀌거나 문장만 바뀐다. B22·B23 의 gitlink 건너뛰기는 AJ43 의 짝이다(물으면 `has no blob`, 쓰면 `KeyError`).
+
+## task 7.5.35 (창 `157:209`, 대조군 양끝 GREEN `Ran 376`)
+
+| 갈래 | 변이 | 잡는 시험 |
+|---|---|---|
+| B24 물려받은 대체 저장소를 지운다(앵커를 새 조건에 맞춰 옮김) | `AJ45_an_inherited_alternate_is_kept` | `test_an_inherited_alternate_does_not_reach_the_comparison` |
+| B24 `GIT_DIFF_OPTS` 를 지운다 | `AK20_git_diff_opts_is_passed_on` | `test_the_judged_diff_format_does_not_follow_the_user_config` |
+
+나머지 AJ38–AJ46 은 다시 잡혔다(같은 시험; AJ42 · AJ46 은 7.5.34 의 33 → 이 절의 판(재리뷰 전 코드 · `Ran 376`) 35 → 최종 판(`Ran 377`) 36 시험).

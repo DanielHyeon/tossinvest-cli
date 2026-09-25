@@ -99,6 +99,15 @@ GO_FILE_MODES = (b"100644", b"100755")
 # 트리의 하위 트리 모드와 gitlink 모드. gitlink 는 다른 저장소의 커밋이라 이 저장소에 객체가 없다 — 읽지 않는다.
 TREE_MODE = b"40000"
 GITLINK_MODE = b"160000"
+# 기본 `git fsck` 가 받는 트리 모드 여섯 (task 7.5.35). 해시가 맞아도 모양이 다르면 git 이 게이트와 다르게 읽을 수 있다 —
+# `040000` 은 git 에게 디렉터리지만(`canon_mode`) 게이트의 걷기에는 아니었다(fsck: `zeroPaddedFilemode`). `100664` 는 초기
+# git 이 쓴 모드라 기본 fsck 가 받고(`--strict` 만 `badFilemode`) git 도 게이트도 일반 파일로 읽는다 — 첫 판이 이것을 거절해
+# 옛 저장소를 헛거절했다(7.5.35 적대 재리뷰 P2-1). 그 밖의 모드는 기본 fsck 도 `badFilemode` 로 적는다(2.43 실측).
+CANONICAL_TREE_MODES = (TREE_MODE, b"100644", b"100664", b"100755", b"120000", GITLINK_MODE)
+NOT_CANONICAL = (
+    "tree {oid} at {where} of {commit} is not in git's canonical form ({why}) — "
+    "git may read such a tree differently from the gate, so the gate will not judge from it"
+)
 # 실제 저장소가 준 객체가 자기 이름(oid)으로 해시되지 않는다는 문장 (task 7.5.34). 교체 참조 · 위조 loose · 위조 pack ·
 # 다시 쓴 트리나 커밋이 모두 여기로 온다 — 그 바이트로는 판정하지 않는다.
 STORE_LIES = (
@@ -204,6 +213,9 @@ def _verified_go_entries(
     `ls-tree -r -d` 와 `rev-parse <커밋>^{tree}`(`hints`)는 **어느 트리를 물을지**만 정한다 — 한 프로세스로 전부 받으려는
     것이다. 걷기는 검증한 커밋의 `tree` 줄에서 시작해 검증한 트리의 항목만 따라간다. 그래서 목록이 거짓이면 걷기가
     받지 못한 트리를 만나 이름 대고 멈출 뿐, 거짓 트리가 판정에 들어오지는 않는다.
+
+    검증한 트리도 git 이 **쓰는** 모양이어야 받는다 (task 7.5.35) — 기본 fsck 가 받는 모드 여섯 · 엄격한 git 정렬 · 유일한
+    이름 · 비지 않고 `/` 가 들지 않고 `.` · `..` 가 아닌 이름. 모양이 다르면 git 이 그 트리를 이 걷기와 다르게 읽을 수 있다.
     """
     width = hashlib.new(algorithm).digest_size
     wanted: dict[str, tuple[bytes, str]] = {}
@@ -243,6 +255,13 @@ def _verified_go_entries(
                     "the object store's listing does not match the verified commit"
                 )
             data, position = objects[tree], 0
+            # git 이 쓰는 모양인지 항목마다 본다 (task 7.5.35). 해시 검증은 "이 바이트가 그 트리다" 만 말한다 — git 은
+            # `040000` 을 디렉터리로 읽는데 이 걷기는 건너뛰었고, 같은 이름이 둘이면 git 도 순서에 따라 다르게 내는데(`ls-tree -r`
+            # 은 둘 다 낸다) 이 걷기는 뒤의 것만 남겨 한 순서에서 편집이 사라졌다(7.5.34 적대 재리뷰 P0-1 · P1-2). 모양이 다른 트리는
+            # 읽는 법을 맞추지 않고 **이름 대고** 멈춘다. 같은 이름은 붙어 있지 않을 수 있다(`x.go` · `x.go-` · 트리 `x.go`
+            # 의 열쇠는 `x.go` < `x.go-` < `x.go/`) — 그래서 옆 항목이 아니라 **본 이름 전부**와 견준다.
+            names: set[bytes] = set()
+            last = b""
             while position < len(data):
                 space = data.find(b" ", position)
                 nul = data.find(b"\0", space + 1)
@@ -250,6 +269,23 @@ def _verified_go_entries(
                     raise RuntimeError(f"cannot read tree {tree[:12]}")
                 mode, name, oid = data[position:space], data[space + 1:nul], data[nul + 1:nul + 1 + width].hex()
                 position = nul + 1 + width
+                # git 의 정렬 열쇠: 하위 트리는 이름 뒤에 `/` 를 붙여 견준다(그래서 `a.go` 가 디렉터리 `a` 앞이다).
+                key = name + b"/" if mode == TREE_MODE else name
+                if mode not in CANONICAL_TREE_MODES:
+                    why = f"mode {mode.decode('ascii', 'replace')}"
+                elif not name or b"/" in name or name in (b".", b".."):
+                    why = f"entry name {name!r}"
+                elif name in names:
+                    why = f"duplicate entry {name!r}"
+                elif key <= last:
+                    why = f"entry {name!r} out of order"
+                else:
+                    why = ""
+                if why:
+                    raise RuntimeError(NOT_CANONICAL.format(
+                        oid=tree[:12], where=os.fsdecode(prefix) or "/", commit=commit[:12], why=why))
+                names.add(name)
+                last = key
                 if mode == TREE_MODE:
                     pending.append((prefix + name + b"/", oid))
                 elif name.endswith(b".go"):
@@ -399,7 +435,10 @@ def _isolated_comparison(root: Path, base: str, target: str) -> Iterator[Compari
                 oid = side[path][1]
                 into[os.fsdecode(path)] = blobs[oid]
                 _write_loose_blob(store, oid, blobs[oid])
-        environment = {key: value for key, value in os.environ.items() if key != "GIT_ALTERNATE_OBJECT_DIRECTORIES"}
+        # 물려받지 않는 둘: 대체 저장소(7.5.34 — 위조 pack 이 격리를 이긴다)와 `GIT_DIFF_OPTS`(7.5.35 — 판정 diff 의
+        # `--unified=0` 을 이겨 문맥 줄이 편집 안 한 함수까지 요구하게 한다, 2.43 실측).
+        environment = {key: value for key, value in os.environ.items()
+                       if key not in ("GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_DIFF_OPTS")}
         environment["GIT_OBJECT_DIRECTORY"] = str(store)
         trees = (
             _isolated_tree(root, environment, Path(scratch) / "old.index", before),
@@ -539,7 +578,14 @@ def _changed_existing_functions(root: Path, base: str, comparison: Comparison) -
             "--no-ext-diff",
             "--no-textconv",
             "--find-renames",
+            # 파서가 읽는 **형식**은 게이트가 정한다 (task 7.5.35). 접두사는 아래 파서가 `a/` · `b/` 를 떼므로
+            # 그 글자를 우리가 정하고(`diff.noprefix` 면 `b/x.go` 가 `x.go` 로, `a/x.go` 는 헛거절이었다), 색 코드는
+            # 머리 줄을 못 읽게 하며, 훅 합치기(`diff.interHunkContext`)는 편집 안 한 함수의 줄을 훅 범위에 넣는다.
+            "--src-prefix=a/",
+            "--dst-prefix=b/",
+            "--no-color",
             "--unified=0",
+            "--inter-hunk-context=0",
             *comparison.trees,
         ],
         cwd=root,

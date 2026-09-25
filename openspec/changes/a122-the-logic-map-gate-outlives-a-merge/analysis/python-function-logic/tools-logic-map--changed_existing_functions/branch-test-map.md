@@ -46,3 +46,16 @@
 | 훅의 옛 쪽 · 새 쪽 좌표 | `AC5_the_hunk_reads_the_base_side_twice` | `test_the_hunk_keeps_the_new_side_coordinates_apart_from_the_base_side` (창 `143:190`) |
 
 편집 전 B40(git 밖 대조)과 그 변이 AI6 은 없어졌다. 편집 전 AH3 · AH4 가 재던 자리는 AJ49 · AJ51 이 새 코드에서 잰다.
+
+### 몸통 `_changed_existing_functions` — task 7.5.35 (창 `157:209`, 대조군 양끝 GREEN `Ran 376`)
+
+분기는 바뀌지 않았다 — 판정 diff 의 명령줄에 넣은 네 깃발을 하나씩 뺀다. 넷 다 행동 시험과 구조 시험이 **같이** 잡는다.
+
+| 깃발 | 변이 | 잡는 시험 |
+|---|---|---|
+| `--src-prefix=a/` | `AK16_the_source_prefix_is_the_users` | `test_the_judged_diff_format_does_not_follow_the_user_config` · `test_both_git_calls_see_the_same_files` |
+| `--dst-prefix=b/` | `AK17_the_destination_prefix_is_the_users` | 같은 둘 |
+| `--no-color` | `AK18_the_colour_is_the_users` | 같은 둘 |
+| `--inter-hunk-context=0` | `AK19_hunks_are_merged_as_the_user_says` | 같은 둘 |
+
+AJ49 · AJ50 · AJ51 · AC5 는 다시 잡혔다(AJ49 — 이 절의 판(재리뷰 전 코드 · `Ran 376`) 150, 최종 판(`Ran 377`) 151 시험). 최종 판에서 AK16–AK19 는 같은 두 시험이 잡았다.

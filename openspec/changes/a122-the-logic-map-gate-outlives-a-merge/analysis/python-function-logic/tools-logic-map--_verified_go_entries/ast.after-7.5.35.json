@@ -1,0 +1,395 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "463cc895ee6a4e99289acb79328a0887291f6fc4",
+  "source_sha256": "c7d6504ca7047ec5d8d32f1922940a57361b7c919b1fa2eae507f86ce603c05d",
+  "function": "_verified_go_entries",
+  "signature": "_verified_go_entries(root, algorithm, commits, hints)",
+  "start": {
+    "line": 208,
+    "column": 1
+  },
+  "end": {
+    "line": 294,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 222,
+      "inherited_line": false,
+      "source": "for commit, tree in zip(commits, hints):"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 229,
+      "inherited_line": false,
+      "source": "if listed.returncode:"
+    },
+    {
+      "id": "B3",
+      "kind": "For",
+      "line": 231,
+      "inherited_line": false,
+      "source": "for entry in listed.stdout.split(b'\\x00'):"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 232,
+      "inherited_line": false,
+      "source": "if not entry:"
+    },
+    {
+      "id": "B5",
+      "kind": "BoolOp",
+      "line": 236,
+      "inherited_line": false,
+      "source": "len(fields) != 3 or not raw_path or (not FULL_OID.fullmatch(fields[2]))"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 236,
+      "inherited_line": false,
+      "source": "if len(fields) != 3 or not raw_path or (not FULL_OID.fullmatch(fields[2])):"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 240,
+      "inherited_line": false,
+      "source": "if fields[1] == b'tree':"
+    },
+    {
+      "id": "B8",
+      "kind": "For",
+      "line": 244,
+      "inherited_line": false,
+      "source": "for commit in commits:"
+    },
+    {
+      "id": "B9",
+      "kind": "BoolOp",
+      "line": 246,
+      "inherited_line": false,
+      "source": "not first.startswith(b'tree ') or not FULL_OID.fullmatch(first[5:])"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 246,
+      "inherited_line": false,
+      "source": "if not first.startswith(b'tree ') or not FULL_OID.fullmatch(first[5:]):"
+    },
+    {
+      "id": "B11",
+      "kind": "While",
+      "line": 250,
+      "inherited_line": false,
+      "source": "while pending:"
+    },
+    {
+      "id": "B12",
+      "kind": "If",
+      "line": 252,
+      "inherited_line": false,
+      "source": "if wanted.get(tree, (b'',))[0] != b'tree':"
+    },
+    {
+      "id": "B13",
+      "kind": "BoolOp",
+      "line": 254,
+      "inherited_line": false,
+      "source": "os.fsdecode(prefix) or '/'"
+    },
+    {
+      "id": "B14",
+      "kind": "While",
+      "line": 265,
+      "inherited_line": false,
+      "source": "while position < len(data):"
+    },
+    {
+      "id": "B15",
+      "kind": "BoolOp",
+      "line": 268,
+      "inherited_line": false,
+      "source": "space < 0 or nul < 0 or nul + 1 + width > len(data)"
+    },
+    {
+      "id": "B16",
+      "kind": "If",
+      "line": 268,
+      "inherited_line": false,
+      "source": "if space < 0 or nul < 0 or nul + 1 + width > len(data):"
+    },
+    {
+      "id": "B17",
+      "kind": "IfExp",
+      "line": 273,
+      "inherited_line": false,
+      "source": "name + b'/' if mode == TREE_MODE else name"
+    },
+    {
+      "id": "B18",
+      "kind": "If",
+      "line": 274,
+      "inherited_line": false,
+      "source": "if mode not in CANONICAL_TREE_MODES:"
+    },
+    {
+      "id": "B19",
+      "kind": "BoolOp",
+      "line": 276,
+      "inherited_line": false,
+      "source": "not name or b'/' in name or name in (b'.', b'..')"
+    },
+    {
+      "id": "B20",
+      "kind": "If",
+      "line": 276,
+      "inherited_line": false,
+      "source": "if not name or b'/' in name or name in (b'.', b'..'):"
+    },
+    {
+      "id": "B21",
+      "kind": "If",
+      "line": 278,
+      "inherited_line": false,
+      "source": "if name in names:"
+    },
+    {
+      "id": "B22",
+      "kind": "If",
+      "line": 280,
+      "inherited_line": false,
+      "source": "if key <= last:"
+    },
+    {
+      "id": "B23",
+      "kind": "If",
+      "line": 284,
+      "inherited_line": false,
+      "source": "if why:"
+    },
+    {
+      "id": "B24",
+      "kind": "BoolOp",
+      "line": 286,
+      "inherited_line": false,
+      "source": "os.fsdecode(prefix) or '/'"
+    },
+    {
+      "id": "B25",
+      "kind": "If",
+      "line": 289,
+      "inherited_line": false,
+      "source": "if mode == TREE_MODE:"
+    },
+    {
+      "id": "B26",
+      "kind": "If",
+      "line": 291,
+      "inherited_line": false,
+      "source": "if name.endswith(b'.go'):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 294,
+      "value": "sides"
+    }
+  ],
+  "raises": [
+    {
+      "line": 230,
+      "source": "raise RuntimeError(_first_line(listed.stderr, 'git ls-tree failed'))"
+    },
+    {
+      "line": 237,
+      "source": "raise RuntimeError('cannot read git ls-tree record')"
+    },
+    {
+      "line": 247,
+      "source": "raise RuntimeError(f'cannot read commit {commit[:12]}')"
+    },
+    {
+      "line": 253,
+      "source": "raise RuntimeError(f\"git did not list tree {tree[:12]} under {os.fsdecode(prefix) or '/'} of {commit[:12]} — the object store's listing does not match the verif"
+    },
+    {
+      "line": 269,
+      "source": "raise RuntimeError(f'cannot read tree {tree[:12]}')"
+    },
+    {
+      "line": 285,
+      "source": "raise RuntimeError(NOT_CANONICAL.format(oid=tree[:12], where=os.fsdecode(prefix) or '/', commit=commit[:12], why=why))"
+    }
+  ],
+  "calls": [
+    {
+      "line": 220,
+      "callee": "hashlib.new"
+    },
+    {
+      "line": 222,
+      "callee": "zip"
+    },
+    {
+      "line": 224,
+      "callee": "wanted.setdefault"
+    },
+    {
+      "line": 225,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 230,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 230,
+      "callee": "_first_line"
+    },
+    {
+      "line": 231,
+      "callee": "listed.stdout.split"
+    },
+    {
+      "line": 234,
+      "callee": "entry.partition"
+    },
+    {
+      "line": 235,
+      "callee": "head.split"
+    },
+    {
+      "line": 236,
+      "callee": "FULL_OID.fullmatch"
+    },
+    {
+      "line": 236,
+      "callee": "len"
+    },
+    {
+      "line": 237,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 241,
+      "callee": "fields[2].decode"
+    },
+    {
+      "line": 241,
+      "callee": "os.fsdecode"
+    },
+    {
+      "line": 241,
+      "callee": "wanted.setdefault"
+    },
+    {
+      "line": 242,
+      "callee": "_verified_objects"
+    },
+    {
+      "line": 245,
+      "callee": "objects[commit].split"
+    },
+    {
+      "line": 246,
+      "callee": "FULL_OID.fullmatch"
+    },
+    {
+      "line": 246,
+      "callee": "first.startswith"
+    },
+    {
+      "line": 247,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 249,
+      "callee": "first[5:].decode"
+    },
+    {
+      "line": 251,
+      "callee": "pending.pop"
+    },
+    {
+      "line": 252,
+      "callee": "wanted.get"
+    },
+    {
+      "line": 253,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 254,
+      "callee": "os.fsdecode"
+    },
+    {
+      "line": 263,
+      "callee": "set"
+    },
+    {
+      "line": 265,
+      "callee": "len"
+    },
+    {
+      "line": 266,
+      "callee": "data.find"
+    },
+    {
+      "line": 267,
+      "callee": "data.find"
+    },
+    {
+      "line": 268,
+      "callee": "len"
+    },
+    {
+      "line": 269,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 270,
+      "callee": "data[nul + 1:nul + 1 + width].hex"
+    },
+    {
+      "line": 275,
+      "callee": "mode.decode"
+    },
+    {
+      "line": 285,
+      "callee": "NOT_CANONICAL.format"
+    },
+    {
+      "line": 285,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 286,
+      "callee": "os.fsdecode"
+    },
+    {
+      "line": 287,
+      "callee": "names.add"
+    },
+    {
+      "line": 290,
+      "callee": "pending.append"
+    },
+    {
+      "line": 291,
+      "callee": "name.endswith"
+    },
+    {
+      "line": 293,
+      "callee": "sides.append"
+    }
+  ]
+}
