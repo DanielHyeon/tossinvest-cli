@@ -1,0 +1,128 @@
+{
+  "file": "internal/app/engine/runtime.go",
+  "source_sha256": "a80916efecb93578947ceae10f9e1ee4f8315affdb63913573e59da0f7da237c",
+  "package": "engine",
+  "function": "alert",
+  "receiver": "Runtime",
+  "signature": "Runtime.alert(params=2, results=0)",
+  "start": {
+    "line": 491,
+    "column": 1
+  },
+  "end": {
+    "line": 503,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 492,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 500,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 493,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 22
+      },
+      "text": "context.WithTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 498,
+        "column": 42
+      },
+      "text": "context.WithoutCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 8
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 500,
+        "column": 12
+      },
+      "text": "r.opts.Alerts.Notify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 501,
+        "column": 3
+      },
+      "text": "r.log"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 501,
+        "column": 59
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 501,
+        "column": 81
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 498,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 500,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 499,
+        "column": 2
+      },
+      "text": "cancel"
+    }
+  ]
+}

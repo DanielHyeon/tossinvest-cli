@@ -5,6 +5,11 @@
 - **Spec**: `exit-policy` (MODIFIED 1) · `engine-safety` (MODIFIED 1)
 - **위험 등급**: **High-risk** (§0.3·§0.5 — 손절 경로의 동기 체류와 알림 배선)
 
+> **20판 (2026-09-25)** — a098·a099가 착지·아카이브됐다(§20의 순서 a099 → a098 → a092).
+> 이 문서의 낡은 문장에 ⛔ 표지를 달았고 본문은 고치지 않았다. 무엇이 바뀌었는지는
+> `design.md` D0.3d, 정정 목록은 `review.md` §22.1. **HEAD에서 a092의 제목 결함은 그대로 살아
+> 있다** — `notifyCritical` → `claimAndDeliver`가 `n.mu`를 쥔 채 `deliver`를 부른다(D0.3d 2번).
+
 > **작성 순서**: 이 문서의 분기 주장은 전부 `analysis/function-logic/`의 AST 산출물에서
 > 나왔다. 산출물이 문서보다 **먼저** 만들어졌다 (`.claude/CLAUDE.md`「단계 건너뛰기 금지」).
 > 17판이 더한 함수 9개(`Journal.ClaimAlertForDelivery`·`claimOwed`·`Journal.PendingAlerts`·
@@ -28,6 +33,11 @@
 > **그리고 그 기계는 이미 있다.** `Notifier.Flush`(`internal/obs/notifier.go:427`)가
 > 자기 주석에 *"It is what a supervising loop calls periodically"*라고 적혀 있고,
 > 프로덕션 호출자가 **0**이다(테스트 3곳뿐). 재설계는 만드는 것이 아니라 **배선하는 것**이다.
+>
+> > **⛔ 20판** — 밀린 행을 보내는 기계는 `Flush`가 아니라 a098의 `alertDeliverer`로 착지했다
+> > (`internal/app/engine/alertdelivery.go:81`). `Flush`는 HEAD에서도 프로덕션 호출자 0이고
+> > 줄이 `:727`로 밀렸다. 이 블록 아래의 *"`replay.go:107`의 주석은 거짓이다"*는 **여전히 참이다**
+> > — 그 주석은 아직 `Flush`를 적는다. design D0.3d 1번.
 >
 > **그 부재는 오늘 살아 있는 결함이다.** `Gateway.parkAlert`(`internal/execgw/replay.go:534`)가
 > outbox에 넣는 `order.unresolved_in_doubt`는 기록되고 **전송되지 않는다.** 도달 경로는
@@ -108,7 +118,7 @@
 > | 결정 | 답 | 어디에 |
 > |---|---|---|
 > | 세고-푸는 구간의 배제 (A-P1) | **잠금을 남기되 원격 전송 위에서는 안 잡는다** | design D0.3a · engine-safety 델타 |
-> | 배달 루프가 죽으면 (A-P5) | **엔진을 내리지 않는다.** 게이트 래치 + 모드 승격 | design D0.9 · engine-safety 델타 |
+> | 배달 루프가 죽으면 (A-P5) | **엔진을 내리지 않는다.** ~~게이트 래치 + 모드 승격~~ → **⛔ 20판: `ReasonAlertSenderDown` 래치만, 승격 없음**(결정 8-1·11-1, a098 착지) | design D0.9 · engine-safety 델타 |
 > | a092의 범위 (A-P7) | **끝까지 구현한다.** non-goal 넷 철회 | design D0.10 · 아래 목록의 취소선 |
 >
 > 저자가 결정 없이 고친 것: **A-P4**(두 델타가 일반 등급의 내구 기록에서 모순 —
@@ -252,6 +262,15 @@ change였고 *"`obs` 패키지의 함수는 한 줄도 바꾸지 않는다"*가 
 | `internal/app/engine/notifications.go` | 상수 집합이 D0.6으로 교체된다 | 변화 없음 |
 | 엔진 조립부 | 알림 배달 `SupervisedLoop`을 등록한다 | 추가 |
 | `internal/execgw/replay.go:107` | 주석이 **참이 된다**. 편집이 아니라 검증 대상이다 | 변화 없음 |
+
+> **⛔ 20판 — 위 표의 네 행이 a098·a099 착지로 낡았다** (design D0.3d).
+>
+> | 행 | 무엇이 낡았나 |
+> |---|---|
+> | `notifyCritical` *"claim까지 하고 반환한다"* | HEAD의 claim은 **81초 임차**를 잡는다. claim만 하고 안 보내면 배달 실행자가 그 행을 임차 만료까지 못 집는다 — D0.3d 3번. **기록 경로의 모양이 열린 설계 선택이다** |
+> | `Flush` *"배치 상한 · 행당 1시도 · 시도 소진 시 래치와 승격 · nil publisher를 실패 시도로 기록"* | 프로덕션 배달 경로는 `Flush`가 아니라 a098의 `alertDeliverer`다. 이 네 성질을 **어디에** 넣을지 다시 정해야 한다 |
+> | `deliver` · `wait` *"인라인 재시도가 배달 루프로 간다"* | 방향은 그대로다. 받는 쪽이 `alertDeliverer`로 바뀌었다 |
+> | 엔진 조립부 *"알림 배달 `SupervisedLoop`을 등록한다 · 추가"* | a098이 **보조 실행자**로 이미 등록했다(`cmd/tossctl/engine.go:701`, 결정 9-2). a092가 더할 것이 없다 |
 
 **`obs`의 공개 계약은 유지된다.** `Notify`는 여전히 durable 기록 실패에서만 오류를
 반환하고(`notifier.go:118-123`), 전달 실패의 결과 셋(outbox 행 보존 · 신규 진입 차단 ·
@@ -542,6 +561,11 @@ PENDING 9행이면 9 × 3.5s = **31.5초**다.
 **그러므로 a089와 a092는 같은 미배정 항 하나를 함께 기다린다.** 어느 쪽도 그것을
 자기 안에서 갚지 못하고, 그 사실이 두 change 어디에도 안 적혀 있었다.
 
+> **⛔ 20판 — 그 미배정 항은 a098이 갚았다.** `alertDeliverer.cycle`이
+> `PendingAlerts(ctx, d.batch())`를 부르고(`internal/app/engine/alertdelivery.go:150`, 한 사이클 10행),
+> `Flush`는 안 부른다. 위 표의 a089 행 *"`Flush`가 불리는 것이 아니다"*는 HEAD에서도 참이지만
+> 결론(*아무도 안 부르는 함수의 입력을 고친다*)은 더 이상 참이 아니다 — 그 입력을 읽는 주체가 생겼다.
+
 ## 미배정 후속 — a092가 남기는 의무 (소유자 없음)
 
 **이 목록에는 change ID가 없다.** 12·13판은 이것들을 `a093`으로 위임했는데
@@ -562,6 +586,12 @@ PENDING 9행이면 9 × 3.5s = **31.5초**다.
 | 6 | **`Notify` 호출 전체에 기한 씌우기** | 미배정 유지 → **불필요해진다** | D1 안 B가 기각한 길이고, 17판에서는 씌울 대상이 로컬 쓰기뿐이다 |
 | 7 | **`EventExitProposalCapped` 승격** | 미배정 유지 | a091이 명시적으로 기각. 다만 17판은 이 이벤트가 **루프를 붙잡던 것**을 고친다 (D0.8) |
 | 8 | **`Notifier.Acknowledge` 배선** | **a092 안으로** | 배달 루프가 게이트를 걸면 그것을 푸는 경로가 같은 change에 있어야 한다. 오늘 호출자 0이고, 없으면 **재시작만이 해제 수단이다** |
+
+> **⛔ 20판 — 위 표의 1번과 8번은 a098이 착지시켰다.** 1번(루프 밖 유계 재전송기)은
+> `alertDeliverer`(보조 실행자, 사이클 10행 · 주기 2초)이고, 8번은 `Notifier.Acknowledge`의
+> 프로덕션 호출자가 이제 1이다(`internal/app/engine/alertops.go:172`, a098 `10e80875` —
+> 운영자 표면은 `tossctl engine alerts`). **a092에 남는 것**은 1번의 *"사이클당 1시도·공정성·
+> nil publisher 계수"* 중 a098이 안 한 것이고, 그것을 `Flush`가 아니라 어디에 넣을지는 열려 있다.
 
 > **⚠ 1번은 "`Flush`를 부른다"가 아니다 — 그렇게 하면 같은 버그를 다시 만든다.**
 > 15라운드 보이스 B N3이 이것을 짚었고 17판이 소스와 AST로 재확인했다.

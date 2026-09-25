@@ -1,4 +1,8 @@
-# a092 설계 — 전송을 루프 밖으로 옮긴다 (19판)
+# a092 설계 — 전송을 루프 밖으로 옮긴다 (20판)
+
+> **20판(2026-09-25)은 이 문서의 결정을 바꾸지 않는다.** a098·a099 착지로 낡은 문장에
+> ⛔ 표지를 달고, 무엇이 바뀌었는지를 **D0.3d**에 모았다. 본문은 고치지 않는다 — D0.3c와
+> 같은 규칙이다(고치면 왜 그 결론에 이르렀는지가 사라진다). 정정 목록은 `review.md` §22.1.
 
 > **이 문서가 상수 유도의 정본이다.** proposal은 7판부터 수치를 복제하지 않고 여기를
 > 가리킨다 — 6라운드 차단 2건이 그 복제에서 나왔다. 값이 문서마다 같은지는
@@ -15,7 +19,7 @@
 >
 > **D0이 그 재설계이고, D1~D7은 그 앞의 설계다.** D0 끝에 무엇이 무효가 되는지 적는다.
 
-## D0 — 전송을 exit 관측 루프 밖으로 옮긴다 (19판)
+## D0 — 전송을 exit 관측 루프 밖으로 옮긴다 (20판)
 
 ### D0.1 — 발견: 루프 밖 전송 기계가 이미 있고 프로덕션이 아무도 부르지 않는다
 
@@ -81,6 +85,11 @@ a092가 감독 루프를 배선하면 이 주석이 참이 된다. 17판이 그�
 배달 실패의 등급화는 이미 outbox의 `attempts`와 진입 게이트가 하고 있고, 감독자 임계를
 하나 더 두면 "알림이 안 나간다"의 정의가 둘이 된다(`runtime.go:118-121`이 exit observer에
 대해 같은 판단을 이미 적었다).
+
+> **⛔ 20판 — 위 문단은 무효다 (사용자 결정 9-2, a098 착지).** 배달 실행자는 `SupervisedLoop`가
+> **아니라** 보조 실행자로 착지했다(`cmd/tossctl/engine.go:701` `Auxiliary: []engine.AuxiliaryExecutor{alertDelivery}`).
+> 위 표의 「알림 배달 루프」 열도 a098의 `alertDeliverer`(`internal/app/engine/alertdelivery.go:81`)로
+> 읽는다 — 그 실행자가 이미 하는 것과 a092가 더 옮겨야 하는 것의 경계는 D0.3d.
 
 ### D0.3 — `n.mu`가 지키던 것을 다시 읽는다 — publish가 나가면 배제가 필요 없어진다
 
@@ -299,6 +308,74 @@ D0.3b의 각주가 *"R17-3은 여전히 돌지만 증명 대상이 아니라 회
 a099가 `internal/obs/notifier.go`의 `claimAndDeliver`(분기 4 → 9)·`deliver`(12 → 24)·
 `Flush`(6 → 11)를 바꿨다. **a092의 Pre-Edit 선언은 그 세 함수의 지금 모양을
 근거로 다시 써야 한다** — 옛 분기 번호로 적힌 선언은 편집 경계를 안 가리킨다.
+
+### D0.3d — a098이 착지했다. **D0.2·D0.9·D0.10·D7이 기대던 전제가 바뀌었다** (20판, 2026-09-25)
+
+a098은 `3851824b`(2026-08-13 병합)로 착지했고 2026-08-29 아카이브됐다. a099는 2026-09-09
+아카이브됐다(§20의 순서 a099 → a098 → a092 그대로). D0.3c의 규칙대로 위 절은 안 고치고
+여기서 대조한다. 값과 좌표는 **HEAD `8d9731c1`에서 쟀다.** 함수 내부 분기를 근거로 쓰는 줄은
+`analysis/head-ast-20/`의 HEAD 추출물을 인용한다(아래 ⑤).
+
+**1. 배달 실행자가 생겼다 — 그리고 D0.10이 그린 모양이 아니다.**
+
+| 사실 (HEAD) | 근거 | 이 문서가 기대던 것 |
+|---|---|---|
+| 배달 실행자는 `alertDeliverer`이고 **보조 실행자**다 | `internal/app/engine/alertdelivery.go:81` · 등록 `cmd/tossctl/engine.go:701` | D0.2 끝 문단·D0.9 *"`SupervisedLoop`로 등록"* |
+| 그 실행자는 **`Flush`를 안 부른다** | `alertdelivery.go` 머리 주석 절 *"Why it does not call Flush"*. `Notifier.Flush`의 프로덕션 호출자는 **여전히 0**이다 — 비테스트 `.Flush(` 일치 54건은 `writer` 19 · `cw` 31 · `flusher`(`http.Flusher`) 3 · `table` 1이고 `Notifier` 수신자는 0 | D0.10 *"a098은 `Flush`를 얼마나 자주 부르는가를 정하고 … 순서 의존이 없다"* |
+| 그 실행자는 **`n.mu`를 안 잡는다** | `alertdelivery.go`에 `Notifier`·`mu` 참조 0(주석 한 줄 제외). 배제는 원장 임차 — `ClaimAlertByID` | D0.3a·D7 *"배달 실행자는 고를 때와 정산할 때만 잠금을 잡는다"* |
+| 한 사이클은 **10행**, 주기는 **2초** | `alertDeliveryBatch`(`:74`) · `alertDeliveryInterval`(`:63`) | D0.6의 `alertFlushBatch`·`alertFlushInterval` 칸 — 소유가 a098로 갔다는 19판 기록은 맞고, **값은 이제 여기서 읽는다** |
+| 실행자 사망 → `ReasonAlertSenderDown` 래치, **승격 없음** | `blockEntryOnDeliveryStop` — HEAD AST `extra--blockentryondeliverystop.json`의 호출은 `gate.Block`·`log.Error`·`string` 셋뿐, `EscalateOperatingMode` 없음 | D0.9 1·2단계 (`ReasonAlertUndelivered` + `ENTRY_BLOCKED` 승격) |
+| 운영자 승인 경로가 **배선됐다** | `Notifier.Acknowledge` 프로덕션 호출자 1 — `internal/app/engine/alertops.go:172`(a098 `10e80875`), 그 위로 `alert_control_transport_unix.go:222`·`cmd/tossctl/engine_alerts.go:139` | proposal 미배정 8번 *"오늘 호출자 0 → a092 안으로"* |
+| 기동 복원이 있다 | `restoreAlertEntryLatch`(`internal/app/engine/gateway.go:153`, 호출 `:269`) | — |
+| **nil publisher는 시도로 안 센다** | HEAD AST `extra--alertdeliverer.deliverone.json`: B8 `if`(`:205`) 갈래의 호출은 `d.logf`(`:209`)·`d.release`(`:211`)이고 `return`(`:212`)으로 나간다. `MarkAlertAttemptFailed`(`:222`)는 그 뒤 갈래(B9 `:221`)에 있다 | engine-safety 델타 *"전송기의 부재는 전송의 실패"* · §8.11 (대상이 `Flush`로 적혀 있다) |
+
+**2. a092의 제목 결함은 HEAD에서 그대로 살아 있다.** a098은 밀린 행을 **따로** 보내는
+주체를 세웠을 뿐, exit 관측이 올리는 critical 알림의 동기 경로를 안 건드렸다.
+HEAD AST `internal-obs--notifier.notifycritical.json`: `n.claimAndDeliver` 호출(`:200`).
+`internal-obs--notifier.claimanddeliver.json`: `n.mu.Lock`(`:254`) · `defer n.mu.Unlock`(`:255`) ·
+`n.deliver`(`:309`) — **잠금이 원격 발송(`deliver`)을 덮는다.** `notifyCritical`의 구조는
+base와 같다(census `SHIFT` — 줄만 밀렸다). 그러므로 a092는 여전히 필요하고, §21의 네 자리를
+고쳐도 **제목이 약속하는 것은 아직 한 줄도 구현되지 않았다.**
+
+**3. 20판이 새로 찾은 충돌 — 「claim까지 하고 반환」이 a099의 임차와 맞지 않는다 (열림).**
+proposal의 17판 Impact 표는 `notifyCritical`이 *"claim까지 하고 반환한다"*고 적는다. HEAD에서
+`ClaimAlertForDelivery`는 `acquireAlertClaimTx`를 부른다(HEAD AST
+`internal-journal--journal.claimalertfordelivery.json`, 호출 `:259`) — **claim은 임차를 잡는다**
+(`DefaultAlertLease = 81 * time.Second`, `internal/journal/alert_claim.go:34`).
+claim만 하고 안 보내면 그 행은 임차가 끝날 때까지 배달 실행자에게 `ClaimHeldElsewhere`로 보인다
+(`deliverOne` B4 `case`(`:178`) → `return`(`:192`)). **첫 발송이 최대 81초 늦는다.**
+원장 자신의 주석이 이것을 이름 붙여 적는다(`outbox.go:127-130` — *"A recorder that claimed would leave
+every row it wrote behind a lease nobody will ever release"*). 임차 없는 기록 경로
+`EnqueueAlert`는 있다(HEAD AST 호출에 `acquireAlertClaimTx` 없음) — 그러나
+`remindAfter`를 0으로 넘기므로(`outbox.go:142-146`) **정착한 행을 다시 무장하지 않는다.**
+a096의 재알림 창은 `notifyCritical`이 `n.remindAfter()`로 claim할 때만 동작한다.
+
+| 안 | 무엇 | 대가 |
+|---|---|---|
+| 가 | claim 직후 같은 잠금 안에서 임차를 반납한다 | 로컬 쓰기 하나가 는다. `internal/journal`은 안 건드린다 |
+| 나 | 원장에 「재무장하되 임차 없는 기록」 진입점을 더한다 | D7 *"`internal/journal` 전부 안 건드린다"*가 거짓이 된다 — High-risk 표면 확대 |
+| 다 | `EnqueueAlert`가 `remindAfter`를 받게 한다 | 나와 같다. 그리고 `replay.go`의 기록 전용 호출자 계약이 바뀐다 |
+
+**20판은 고르지 않는다.** 셋 다 exit 관측 goroutine이 원격 왕복을 안 기다리게 하는 것은 같고
+(안전 방향 같음), 갈리는 것은 편집 표면이다. §8.7의 GREEN 문장은 이 선택 뒤에 다시 쓴다.
+
+**4. D0.3c 5번의 분기 수는 HEAD에서 또 바뀌었다.** D0.3c는 a099 `757550f1` 시점에
+`claimAndDeliver` 4 → 9 · `deliver` 12 → 24 · `Flush` 6 → 11을 적었다. HEAD 추출은
+`claimAndDeliver` **7** · `deliver` **27** · `Flush` **19**다(census). D0.3c의 수는 그 시점의 기록으로 둔다.
+
+**5. 이 change의 FLM 번들 36개는 base `285c7619`에 고정돼 있다 — HEAD와 대조했다.**
+`python3 openspec/changes/a092-an-alert-does-not-hold-the-stop/analysis/head-ast-20/census.py <출력 디렉터리>`
+(커밋됨, 추출물도 같은 디렉터리에 커밋). 결과:
+
+| 분류 | 수 | 무엇 |
+|---|---|---|
+| `MATCH` (파일 sha 동일) | 7 | 그대로 증거다 |
+| `SHIFT` (파일은 바뀌고 함수 구조는 같다 — 줄만 밀림) | 19 | 분기 **구조** 주장은 유효, **줄번호** 주장은 낡음 |
+| `DIFF` (함수 구조가 바뀜) | 10 | `ObserveOnce`·`NewRuntime`·`Runtime.Run`·`ClaimAlertForDelivery`·`EnqueueAlert`·`MarkAlertAttemptFailed`·`MarkAlertDelivered`·`claimAndDeliver`·`deliver`·`Flush` — **이 열 함수의 번들을 근거로 쓴 분기 주장은 HEAD에서 미검증이다** |
+
+번들 자체는 20판이 다시 뽑지 않았다 — `ast.json`을 갈아 끼우면 FLM·Branch Test Map의 분기
+번호가 전부 다른 분기를 가리키게 되고(위치 번호), 그것을 재번호하는 일은 base 재고정과
+한 로트다. **21판 대상**으로 tasks 20판 블록에 적었다.
 
 ### D0.4 — 없애는 것과 못 없애는 것
 
@@ -535,6 +612,13 @@ durability를 주는 것은 이 change의 범위가 아니고, 주면 outbox가 
 
 ### D0.9 — 18판이 더한 것 — 배달 루프가 죽어도 엔진은 내려가지 않는다
 
+> **⛔ 20판 — 이 절의 결론 하나는 살고 둘은 무효다.** 산 것: *엔진을 내리지 않는다*(정본
+> 「배달 실행자의 정지가 다른 루프를 내려서는 안 된다」가 됐다). 무효: 아래 1·2단계 —
+> 래치 사유는 `ReasonAlertUndelivered`가 아니라 **`ReasonAlertSenderDown`**(결정 8-1)이고
+> **운영 모드는 승격하지 않는다**(결정 11-1). `SupervisedLoop`에 필드를 더하는 것도 아니다 —
+> 감독 밖 보조 실행자다(결정 9-2). 착지한 형태는 D0.3d 1번 표. 3단계(critical 알림을 행으로
+> 남긴다)는 a098이 구조화 로그 한 줄로 착지시켰다(`runAuxiliary`, `internal/app/engine/auxiliary.go:87`).
+
 **사용자 결정 (2026-08-10)**: 결정 2 = 안 1.
 
 `Runtime.Run`은 **첫 정지가 전부를 내린다**(`runtime.go:293-301`). 배달 루프를
@@ -596,6 +680,12 @@ does"*).
 >
 > **순서 의존이 없다**: a098은 `Flush`의 현재 시그니처만 쓰고, a092는 본문을 바꾸되
 > 시그니처를 안 바꾼다. 어느 쪽이 먼저 들어가도 된다.
+>
+> **⛔ 20판 — 이 인용 블록의 두 문장은 거짓이다.** 19라운드 A-P3 = B-P1이 *"어느 쪽이 먼저
+> 들어가도 된다"*를 반증했고(`review.md` §19.3), a098 D1.2가 `Flush` 호출을 철회했다 —
+> 착지한 실행자는 `Flush`를 부르지 않는다(D0.3d 1번). 순서는 §20이 a099 → a098 → a092로
+> 해소했고 앞의 둘은 착지했다. 그러므로 경계 문장 *"a098은 `Flush`를 얼마나 자주 부르는가를
+> 정한다"*도 무효다 — a092의 §8.9·§8.11이 `Flush`를 과녁으로 적은 것이 그 사본이다(tasks 20판 블록).
 >
 > 이 표를 여기서 고치는 이유는 16라운드 B-8이다 — *"형제 change 목록이 불완전하다"*.
 > 두 change가 같은 일을 청구한 채로 두면 그것이 다음 라운드의 지적이 된다.
@@ -1928,6 +2018,12 @@ const alertDeliveryBound = 30 * time.Second
 > **같은 거짓이 High-risk 선언 안에 남았을 것이다** — 그리고 그것이 남은 자리는
 > 제안서의 non-goal 목록이 아니라 **폭발 반경을 선언하는 표**다. 리뷰가 준
 > file:line이 아니라 **값**을 쫓아서 찾았다(사본 셋 중 셋째).
+
+> **⛔ 20판 — 아래 표의 세 칸이 a098·a099 착지로 낡았다. Pre-Edit 선언은 §8 재조준과 함께 21판에서 다시 쓴다.**
+> (a) 「안 건드리는 것」의 *"배달 루프 등록과 `SupervisedLoop` 배선은 a098이 진다"* — a098은 **보조 실행자**로 등록했다(결정 9-2).
+> (b) 「편집 성격」 ②의 *"claim 아래에서 release → publish → 재취득 → 정산"* — 19라운드 A-P2 = B-P2가 막은 문장이고(발송이 exit goroutine에 남는다) **열려 있다.**
+> (c) 「안 건드리는 것」의 *"`internal/journal` 전부"* — D0.3d 3번의 안 나·다를 고르면 거짓이 된다.
+> ②의 대상 `Flush`는 프로덕션 배달 경로가 아니다(D0.3d 1번).
 
 | 항목 | 내용 |
 |---|---|

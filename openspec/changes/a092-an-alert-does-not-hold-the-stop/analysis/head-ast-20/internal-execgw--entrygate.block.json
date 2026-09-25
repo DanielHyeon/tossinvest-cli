@@ -1,0 +1,79 @@
+{
+  "file": "internal/execgw/retry.go",
+  "source_sha256": "15d3f65344f978a6241aef5418ab1eac564a173b1b26523c39ca0239cfbcdcd9",
+  "package": "execgw",
+  "function": "Block",
+  "receiver": "EntryGate",
+  "signature": "EntryGate.Block(params=2, results=0)",
+  "start": {
+    "line": 526,
+    "column": 1
+  },
+  "end": {
+    "line": 533,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 529,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 527,
+        "column": 2
+      },
+      "text": "g.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 528,
+        "column": 8
+      },
+      "text": "g.mu.Unlock"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 529,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 530,
+        "column": 3
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 531,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 528,
+        "column": 2
+      },
+      "text": "g.mu.Unlock"
+    }
+  ]
+}

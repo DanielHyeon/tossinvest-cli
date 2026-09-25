@@ -1,0 +1,102 @@
+{
+  "file": "internal/execgw/replay.go",
+  "source_sha256": "bb4e9308ac668e38227bceea0aa6934c6d688578d15c7e8afe28018d155dfcdd",
+  "package": "execgw",
+  "function": "parkAlert",
+  "receiver": "Gateway",
+  "signature": "Gateway.parkAlert(params=4, results=0)",
+  "start": {
+    "line": 534,
+    "column": 1
+  },
+  "end": {
+    "line": 559,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 535,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 548,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 536,
+        "column": 3
+      },
+      "text": "g.entry.Block"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 536,
+        "column": 42
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 539,
+        "column": 18
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 551,
+        "column": 9
+      },
+      "text": "g.journal.EnqueueAlert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 557,
+        "column": 13
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 539,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 549,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 551,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

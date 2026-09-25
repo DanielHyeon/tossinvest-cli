@@ -1,4 +1,4 @@
-# `obs.Notifier.Notify`에 도달하는 프로덕션 경로 전수 (19판)
+# `obs.Notifier.Notify`에 도달하는 프로덕션 경로 전수 (20판)
 
 - 기준: `ec29dc72`
 - 방법: `grep -rn "\.Notify(" --include=*.go internal/ cmd/ | grep -v _test.go` 전수 +
