@@ -192,8 +192,9 @@ class CodexSaverToolResultTests(unittest.TestCase):
             result = self.run_saver(json.dumps({"cwd": str(self.project)}))
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, "")
-        # 경합 출구를 실제로 탔음을 확인함: 저장 산출물이 생기지 않아야 함.
+        # 경합 출구를 실제로 탔음을 확인함: 저장 산출물이 없고, 예외 경고 출구(stderr 경고)도 아니어야 함.
         self.assertFalse((context / "session-summary.md").exists())
+        self.assertEqual(result.stderr, "")
 
 
 if __name__ == "__main__":

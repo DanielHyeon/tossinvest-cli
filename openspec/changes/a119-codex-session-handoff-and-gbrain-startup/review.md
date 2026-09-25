@@ -199,12 +199,12 @@ two JSON fixtures and one harness script under the change directory (`analysis/c
 
 | id | sev | finding | disposition |
 | --- | --- | --- | --- |
-| A1 | should-fix | The saver has three exits. The lock-contention exit (`save_session.py` `if lock is None: return 0`) had no stdout pin; mutation E9 survived. The paths had been read by hand; logic-map is Go-only. | **Accepted.** New test `test_lock_contention_exit_leaves_stdout_empty` holds the lock with `fcntl` and asserts empty stdout and no summary written (proves the exit was taken). Harness M6 added. |
+| A1 | should-fix | The saver has three exits. The lock-contention exit (`save_session.py` `if lock is None: return 0`) had no stdout pin; mutation E9 survived. The paths had been read by hand; logic-map is Go-only. | **Accepted.** New test `test_lock_contention_exit_leaves_stdout_empty` holds the lock with `fcntl` and asserts empty stdout and no summary written; harness M6 added. Round 2 (R1) showed that "no summary" alone does not prove the exit was taken (E13 diverts to the exception exit), so the test also asserts empty stderr. |
 | A2 / G1 | should-fix / info | The anchoring test was lexical: `^Bash\|apply_patch$` (E2) and `^(Bash\|apply_patch\|.*)$` (E1) passed. The non-goal "no name not established by a fixture" had no pin. | **Accepted.** The anchoring test now probes `x<name>` and `<name>x` under `re.search`. New `test_matcher_admits_no_name_the_fixture_has_not_established` checks §2.2 model-side names and the SDD handler names; any name later established by the fixture drops out of the probes automatically. Harness M7 (`.*`) and M8 (precedence) added. |
 | A3 | should-fix (doc) | "A PostToolUse hook's stdout is read by the host as a decision" was stated as fact without a source. | **Accepted.** `proposal.md`, `design.md` and the test docstring now call it a precaution, unobserved for Codex `async` hooks. |
 | A4 / G2 | note / info | The registration classifier misses shell and launcher forms (`bash -lc`, `/usr/bin/env gbrain`, `python3 -m`). | **Recorded, no change.** Speculative. The realistic raw form (`$GBRAIN_BIN serve`) and `/usr/bin/env python3 <wrapper>` are caught. The pin covers the direct form only. |
-| A5 | note | The raw-`gbrain` pin covers the project layer only; the user-global layer is not pinned; `outside_repository_wrapper_registrations` is never asserted. | **Recorded.** User-global config is outside the repository and this change (§3.1 counted 0 there on 2026-09-25). Left for follow-up 2. |
-| A6 | note | Fixture sanitization is partial: free-text host fields; `~`, backslashes and 8-character session prefixes pass; the registration fixture has no sanitization test. | **Recorded, no change.** Both fixtures are committed and reviewed; their content is clean (leak scan by A). A stricter schema is a follow-up. |
+| A5 | note | The raw-`gbrain` pin covers the project layer only; the user-global layer is not pinned; `outside_repository_wrapper_registrations` is never asserted. | **Recorded.** User-global config is outside the repository and this change (§3.1 counted 0 there on 2026-09-25). Not pinned and not carried to a follow-up (round 2 R2 corrected the earlier "left for follow-up 2"). |
+| A6 | note | Fixture sanitization is partial: free-text host fields; `~`, backslashes and 8-character session prefixes pass; the registration fixture has no sanitization test. | **Recorded, no change.** Both fixtures are committed and reviewed; their content is clean (leak scan by A). A stricter schema is not planned. |
 | A7 | note | In the per-name subTest loop, the file-exists assertion was vacuous after the first name. | **Accepted.** `.codex-context` is removed before each name. |
 | A8 / G3 | note / info | The harness never asserted `testsRun > 0`, and it leaked a `/dev/null` handle. | **Accepted.** `failures()` returns the run count, the harness stops when it is 0, and it uses `with open(os.devnull)`. |
 | A9 | note | U5 and U6 map to follow-up 2, but the proposal text did not carry them. | **Accepted.** One sentence added to proposal follow-up 2. |
@@ -229,8 +229,8 @@ spec-delta Requirement changed.
 | `make sdd-check` (right after) | RC=0 — the CodeGraph hard-evidence index matches the worktree; the CGC and GBrain advisory indexes are warned as stale |
 
 **Open for the Manager — gate step 5 is expected to fail.** `python3 tools/logic-map/check_analysis.py --change a119-…`
-returned RC=1 at `d76d9e18`. The window runs from base `54004f44` to the working tree and holds 27 commits from other
-changes. It requires 8 Go functions that a119 never touched: `cmd/tossctl/console.go:runConsole`, two
+returned RC=1 at `d76d9e18`. The window runs from base `54004f44` to the working tree and held 27 commits from other
+changes when judged at `d76d9e18` (the count grows as parallel commits land; 30 at `9f4a7aa1`). It requires 8 Go functions that a119 never touched: `cmd/tossctl/console.go:runConsole`, two
 `cmd/tossctl/console_test.go` tests, one `a108_publication_is_total_test.go` test, and
 `internal/strategyprojectionrpc/transport_unix.go` `reclaimStaleControlDirectory`, `verifyStaleSocketShape`,
 `projectionSocketAccepts` and `Dial` (a113/a114 work). a119 has no `revision: current` bundle, so `--record-landing`
@@ -238,4 +238,35 @@ cannot narrow the window. This is the same step-5 policy block that the pending 
 later work, zero bundles). It is not fixable inside a119 without rewriting its base or borrowing other changes' evidence.
 The Manager decides.
 
+## Round 2 — verification of fix `24433404` (voice A, same read-only rules)
+
+Verdict: **PASS-with-fixes** — blocking 0 · should-fix 0 · note 4.
+- E1, E2 and E9 are now caught.
+- The real matcher raises no false positive: the control ran 7 + 5 + 7 with 0 failing.
+- The committed harness reproduced M0 = 0 (ran 12) and M1–M8 = 1·4·3·4·4·1·12·2.
+- Every disposition was confirmed except A1.
+- The lock test is not timing-dependent: it takes a non-blocking `flock` on its own handle.
+
+| id | finding | disposition |
+| --- | --- | --- |
+| R1 | "No summary written" does not prove the contention exit was taken. E13 turns that exit into `raise OSError`: stdout stays empty, no summary is written, and only a stderr warning appears. E13 survived. | **Accepted.** The lock test also asserts `stderr == ""`, and the A1 wording is corrected. Harness M9 (= E13) added. Teammate check on a copy: E13 now fails `test_lock_contention_exit_leaves_stdout_empty`; the control ran 7 with 0 failing. |
+| R2 | A5 said the user-global gap was "left for follow-up 2", but follow-up 2 does not carry it. | **Accepted.** A5 reworded: not pinned, not carried. |
+| R3 | A6 said "a follow-up" without naming one. | **Accepted.** Reworded to "not planned". |
+| R4 | The step-5 commit count drifts (27 at `d76d9e18`, 30 at `9f4a7aa1`), and the sdd-sync/sdd-check rows predate the fix. | **Accepted.** The count is dated. Both commands were re-run after the fixes (below). |
+
+Still surviving and recorded: E3, E4, E5, E11 (launcher/shell forms, A4) and E10 (an extra handler in the saver group; the
+stdout pins cover the saver only).
+
+## Verification after round 2 (2026-09-26)
+
+| Command | Result |
+| --- | --- |
+| `python3 -m unittest tools/sdd-history/test_codex_host_event_coverage.py tools/sdd/test_codex_gbrain_registration.py` | 12 tests OK, RC=0 |
+| harness (`TMPDIR=<scratchpad>`, `-W default`) | M0 0 failing (ran 12); M1–M9 failing 1·4·3·4·4·1·12·2·1; SURVIVED none; RC=0; real `.codex/*` sha256 and `.codex-context/` listing unchanged |
+| `make sdd-sync` | RC=2. The CodeGraph step completed. CodeGraphContext hit the kuzu lock again (advisory). GBrain was busy with a live owner and kept its previous freshness |
+| `make sdd-check` (right after) | RC=0 — the CodeGraph hard-evidence index matches the worktree. `sdd-test` inside it: 15 · 452 (skip 1) · 76 · 29 · 16 · 18, go ok |
+| `openspec validate a119-… --strict` / `--all --strict` (1.4.1) | valid / 58 passed, 0 failed |
+
+The fingerprint above covers the worktree *before* this record was written. Parallel sessions keep committing, so the
+Manager re-runs `make sdd-sync` and `make sdd-check` right before `make gate`.
 Task 3.4 stays **unchecked**: the final gate and Manager acceptance are still to come.

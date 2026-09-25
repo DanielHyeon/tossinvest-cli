@@ -107,6 +107,14 @@ def main() -> int:
              "        if lock is None:\n            print('{}')\n            return 0"),
         ),
         (
+            # 락 경합 출구가 예외 경고 출구로 새어 나감 — stdout 은 비지만 출구가 바뀜(2차 리뷰 E13).
+            "M9-lock-contention-diverts-to-exception-exit",
+            None,
+            None,
+            ("        if lock is None:\n            return 0",
+             "        if lock is None:\n            raise OSError('diverted')"),
+        ),
+        (
             # 고정은 글자로 남지만 `.*` 가 모든 이름을 받음(적대 리뷰 E1).
             "M7-matcher-admits-any-name",
             hooks.replace("^(Bash|apply_patch)$", "^(Bash|apply_patch|.*)$"),
