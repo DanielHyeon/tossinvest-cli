@@ -62,9 +62,25 @@ wake 가 빈 자리를 sentinel 로 승격(a109 G1)하기 전에 화면을 그�
 
 2판: **17/17 포획**(CAUGHT 16 · 컴파일 포획 1), 누수 0.
 
+## 3판 — `ed80453b` (구현 후 독립 리뷰의 생존 변이)
+
+리뷰어가 자기 사본에서 새 변이 19개(R1–R19)를 돌렸고 넷이 생존했다(R1·R2b·R6·R17; R16·R19 는 등가 변이 — 결함 아님).
+넷을 하네스로 옮겨 시험을 더한 뒤 재측정했다(생산 코드 무변경).
+
+| id | 변이 | 리뷰 사본 | 3판 | 죽인 테스트 |
+| --- | --- | --- | --- | --- |
+| none | 무변이 대조군 | green | green(`rc=0`) | — |
+| K19 (R2b) | 부팅 해석이 `lastTry` 를 찍는다(간격>0) | SURVIVED | **CAUGHT** | `TestTheConsoleBootLeavesTheFirstWakeFree` |
+| K20 (R17) | 배선이 `if engineDir != ""` 밖으로 | SURVIVED | **CAUGHT** | `TestRunConsoleNeverDialsTheStrategyProjectionItself`(게이트 자리 세기) |
+| K21 (R6) | 부팅 live 플래그를 버림(attached=false 출발) | SURVIVED | **CAUGHT** | `…ReattachesAfterTheEngineRestarts`(attached 단언) |
+| K22 (R1) | 펌프 틱 = 간격(절반 아님) | SURVIVED(원장 선언) | **CAUGHT** | `TestTheConsoleStrategyPumpTicksAtHalfTheInterval`(AST 구조 핀) |
+
+누계: 하네스 변이 21개(K1–K22, K15 결번) 전부 포획(K17 은 컴파일 포획). 리뷰 사본의 R3·R4·R5·R8·R11·R13·R14·R15·R18 은
+리뷰어 실측 CAUGHT, R16·R19 등가.
+
 ## not-applicable (침묵한 생략 아님)
 
 - **요청 경로 dial·single-flight·rate limit·전이 1회 로그·취소·늦은 실패·밀려난 client Close** — wrapper
   (`httpapi_strategy_attach.go`)는 a115 가 편집하지 않고 재사용한다. 그 변이는 a109 T2 원장(M8–M38)이 이미 잰다.
-- **펌프의 절반 틱** — 지터 의존이라 결정적 시험이 없다(a114 원장과 같은 한계, 명기).
+- **펌프의 절반 틱의 행동** — 지터 의존이라 행동 시험은 없다. 3판에서 AST 구조 핀으로 대신했다(K22).
 - **wrapper 전이 로그 「데몬」 문구** — 표면 밖(issues R1).

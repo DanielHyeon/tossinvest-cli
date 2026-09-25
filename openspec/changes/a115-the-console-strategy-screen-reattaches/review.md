@@ -70,3 +70,30 @@ base 는 같은 잔재를 미구성으로 접었다(병의 재현 = 대조군). 
 - `make vet` rc 0 · `make lint` rc 0(`go vet ./...` + `go vet -tags tossos_testseams ./...`)
 - `make test`(`go test -timeout 30m ./...`) rc 0 → **ok 99 · no test files 9 · FAIL 0**
 - `check_analysis.py --change a115-…` rc 0(required 4, evidence complete)
+
+## §1 구현 후 리뷰 (2026-09-26 — 900d7582..d92b4414)
+
+구성: 독립 적대 Eng 서브에이전트 1(Opus, 별도 컨텍스트, 저장소 읽기 전용 — 실험은 `git archive` 사본
+`/mnt/D/tmp-a115-review-*` 에서만, 전후 `git status --short -- cmd internal` 공백 확인, 사본 삭제). gstack `review`
+pre-landing 관점의 대체(a114 와 같은 자율 세션 대체 경로). 리뷰어 실측: 네 패키지 `-race -count=3` 통과, 새 변이 19개
+(생존 4 · 등가 2), `check_analysis` rc 0·AST 해시 HEAD 일치, 사본 cmd/tossctl 전체 실행의 FAIL 7 은 사본에 없는
+`Dockerfile`·`tools/engine-autostart.sh` 탓(a115 무관).
+
+**판정: PASS — P0 0 · P1 0 · P2 5.** 코드 결함 없음. 다섯 모두 수용했고 반영은 전부 시험·문서다(생산 Go 편집 0 →
+FLM 재추출 불요, `check_analysis` rc 0 재확인).
+
+| id | 발견 | 판결 → 반영 |
+| --- | --- | --- |
+| P2-1 | design 「깨끗한 정지 뒤 dormant」는 정지 뒤 부팅한 콘솔만 참 — live 로 붙어 있던 콘솔은 wrapper 가 격하하지 않아 엔진 복귀까지 도달 불가. 같은 디스크가 이력 따라 두 값 | 수용(기록) → design 정정 문단 · issues R6(선언된 한계, wrapper 편집은 표면 밖) · 핀 `TestAnAttachedConsoleShowsACleanStopAsUnreachable`. spec 시나리오 3 은 부팅 시점이라 무변경(Requirement 수정 없음) |
+| P2-2 | 「부팅 해석은 lastTry 를 안 찍는다」 무핀 — R2b 생존 | 수용 → `TestTheConsoleBootLeavesTheFirstWakeFree`(간격 1h, 첫 presence 질문이 즉시 붙임) · K19 CAUGHT |
+| P2-3 | 배선의 `if engineDir != ""` 자리 무핀 — 밖으로 나가면 cwd 상대 descriptor 를 두드리고 진짜 미배선이 사라짐, R17 생존 | 수용 → `TestRunConsoleNeverDialsTheStrategyProjectionItself` 가 게이트 본문 안의 호출을 센다 · K20 CAUGHT |
+| P2-4 | 부팅 live 플래그 무핀 — R6 생존(거짓 「다시 붙었다」, 첫 렌더 전 사망 시 탈착 로그 소실) | 수용 → 재시작 시험에 live 부팅 `attached==true` 단언 · K21 CAUGHT |
+| P2-5 | 절반 틱 not-applicable 선언 — R1 생존 | 수용 → AST 구조 핀 `TestTheConsoleStrategyPumpTicksAtHalfTheInterval` · K22 CAUGHT |
+
+리뷰어가 공격했으나 무너지지 않은 것: 시나리오 넷(부팅 sentinel 결정적·부재 조용한 dormant·늦은 기동·렌더 없는 재시작)
+· typed-nil(반환 언제나 non-nil, engineDir=="" 는 진짜 nil interface) · 요청 경로(잠금 없이 presence, wake 는 goroutine만,
+Dial 의 200ms probe 는 ctx 무시하지만 한정) · 동시성(-race ×3, 펌프 종료, 정리 순서) · stat 오류 문구의 진실성(ENOTDIR →
+dormant+경고, 경로 고치면 콘솔 재시작 없이 live — 실측) · httpapi alias·위임 회귀 없음 · static_test seam(`Read` 하나) 유지.
+잔존(선언 유지): EACCES/ENOTDIR 에서 「runtime endpoint 미기동」 표기는 freeze 리뷰 P2-2 의 선언된 접힘.
+
+재검증(3판 뒤): `go test -race -count=3` a115 대상 cmd/tossctl ok · 하네스 대조군 green · K19–K22 CAUGHT.

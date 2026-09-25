@@ -43,3 +43,11 @@ wrapper 의 `observe` 는 **답한** 실패(코드 붙은 rpcError — 엔진 Va
 
 http-api-service spec :206–208 은 「반쪽 잔재 → descriptor 부재 기동과 동일」을 말하는데 현 코드는
 dial 실패 시 sentinel(도달 불가)이다. a115 이전부터 있던 spec-코드 불일치 — 후속에서 spec 정정.
+
+## R6 — 붙어 있던 콘솔의 깨끗한 정지는 도달 불가로 보인다 (선언된 한계, 구현 후 리뷰 P2-1)
+
+design 「구성」의 뜻 문단은 깨끗한 정지 뒤 dormant 를 말하지만, 그것은 정지 **뒤에 부팅한** 콘솔 이야기다. live 로
+붙어 있던 콘솔은 wrapper 가 live 자리를 부재로 격하하지 않으므로(a109 `attempt` B1 — 「붙어 있다가 잠깐 못 읽는 중」을
+「안 쓴다」로 바꾸지 않는다는 의도된 규칙) 엔진이 돌아올 때까지 「runtime projection을 읽지 못했다」를 그린다. 문구는
+엔진 부재를 단정하지 않고 회복은 저절로 온다. 고치려면 wrapper 편집(a109 표면)이 필요해 이 change 밖이다. 동작은
+`TestAnAttachedConsoleShowsACleanStopAsUnreachable` 이 고정한다 — 바뀌면 시험이 알린다.

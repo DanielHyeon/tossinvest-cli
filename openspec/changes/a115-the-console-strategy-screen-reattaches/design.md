@@ -32,6 +32,12 @@ dial, 같은 Teammate 순차 구현). a115 의 base 는 a114 착지(`1244be95`)�
 descriptor)이 갈라질 수 있고, dormant 표기가 이미 사실을 말하므로 기계를 늘릴 이유가 없다. spec 시나리오는
 이 경계로 적는다(descriptor 잔존 다운 → 도달 불가 · descriptor 부재 → dormant, 둘 다 재부착으로 회복).
 
+**구현 후 정정(review §1 P2-1)**: 위 「깨끗한 정지 뒤에는 dormant 가 뜬다」는 **정지 뒤 부팅한** 콘솔에만 참이다.
+이미 live 로 붙어 있던 콘솔은 깨끗한 정지(descriptor 삭제)에도 dormant 로 내려가지 않는다 — wrapper 는 live 자리를
+부재로 격하하지 않으므로(a109 `attempt` B1, 무편집 재사용) 엔진이 돌아올 때까지 도달 불가(「읽지 못했다」)다. 그
+문구도 엔진 부재를 단정하지 않으므로 spec SHALL 위반은 아니고(시나리오 3 은 부팅 시점), 같은 디스크가 이력에 따라
+두 값으로 보이는 비대칭은 선언된 한계로 둔다 — 핀 `TestAnAttachedConsoleShowsACleanStopAsUnreachable`, issues R6.
+
 비부재 stat 오류(EACCES·ENOTDIR)가 nil → dormant 로 접히는 것도 같은 자리의 **선언된 접힘**이다 — httpapi 의
 판정과 동일하게 유지한다(리뷰 P2-2). httpapi spec 의 「반쪽 잔재」 문장과 현 코드(sentinel)의 불일치는 이
 change 밖 — issues R5.
