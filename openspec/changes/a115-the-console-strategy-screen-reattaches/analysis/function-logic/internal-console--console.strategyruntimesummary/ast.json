@@ -1,6 +1,6 @@
 {
   "file": "internal/console/settings_tabs.go",
-  "source_sha256": "5abac9cbe0b3d228ee01082c40909c08b2c107333d6e5db252e1c2f5420cd98b",
+  "source_sha256": "01d5b99fb447ca538eb4007362ff02dcdddc32d67c02d57975567b1259bf26f9",
   "package": "console",
   "function": "strategyRuntimeSummary",
   "receiver": "Console",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 301,
+    "line": 303,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 291,
+        "line": 293,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 295,
+        "line": 297,
         "column": 2
       }
     }
@@ -35,21 +35,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 292,
+        "line": 294,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 296,
+        "line": 298,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 299,
+        "line": 301,
         "column": 2
       }
     }
@@ -58,7 +58,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 294,
+        "line": 293,
+        "column": 5
+      },
+      "text": "strategyprojection.StrategyRuntimeAbsent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 296,
         "column": 19
       },
       "text": "c.opts.StrategyRuntime.Read"
@@ -66,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 294,
+        "line": 296,
         "column": 47
       },
       "text": "r.Context"
@@ -74,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 295,
+        "line": 297,
         "column": 19
       },
       "text": "strategyprojection.Validate"
@@ -82,7 +90,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 298,
+        "line": 300,
         "column": 13
       },
       "text": "strategyprojection.OrderedMarkets"
@@ -90,7 +98,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 299,
+        "line": 301,
         "column": 17
       },
       "text": "string"
@@ -98,7 +106,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 299,
+        "line": 301,
         "column": 59
       },
       "text": "string"
@@ -106,7 +114,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 299,
+        "line": 301,
         "column": 102
       },
       "text": "string"
@@ -114,7 +122,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 300,
+        "line": 302,
         "column": 11
       },
       "text": "string"
@@ -122,7 +130,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 300,
+        "line": 302,
         "column": 53
       },
       "text": "string"
@@ -130,7 +138,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 300,
+        "line": 302,
         "column": 96
       },
       "text": "string"
@@ -140,14 +148,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 294,
+        "line": 296,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 298,
+        "line": 300,
         "column": 2
       }
     }

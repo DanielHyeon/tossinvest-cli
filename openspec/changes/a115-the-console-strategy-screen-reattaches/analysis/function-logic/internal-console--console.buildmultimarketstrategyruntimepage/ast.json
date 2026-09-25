@@ -1,6 +1,6 @@
 {
   "file": "internal/console/strategy_runtime_multimarket.go",
-  "source_sha256": "11b5fff5a3b5eb90a71c7cda8176666fc6ed583263c62292d3446082d79f3417",
+  "source_sha256": "dd84f3074d2fd14f67c369050bb42e78c55403b044d36c1aa4e45168acb155f5",
   "package": "console",
   "function": "buildMultiMarketStrategyRuntimePage",
   "receiver": "Console",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 60,
+    "line": 64,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 49,
+        "line": 53,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 51,
+        "line": 55,
         "column": 3
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "else",
       "at": {
-        "line": 54,
+        "line": 58,
         "column": 10
       }
     }
@@ -43,7 +43,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 59,
+        "line": 63,
         "column": 2
       }
     }
@@ -76,7 +76,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 47,
+        "line": 50,
+        "column": 12
+      },
+      "text": "strategyprojection.StrategyRuntimeAbsent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
         "column": 49
       },
       "text": "c.chromeOnRequest"
@@ -84,7 +92,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 50,
+        "line": 54,
         "column": 17
       },
       "text": "c.opts.StrategyRuntime.Read"
@@ -92,7 +100,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 50,
+        "line": 54,
         "column": 45
       },
       "text": "r.Context"
@@ -100,7 +108,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 51,
+        "line": 55,
         "column": 20
       },
       "text": "strategyprojection.Validate"
@@ -108,7 +116,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 53,
+        "line": 57,
         "column": 15
       },
       "text": "strategyprojection.UnavailableSnapshot"
@@ -116,7 +124,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 55,
+        "line": 59,
         "column": 15
       },
       "text": "strategyprojection.Clone"
@@ -124,7 +132,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 58,
+        "line": 62,
         "column": 2
       },
       "text": "page.project"
@@ -148,35 +156,42 @@
     {
       "kind": ":=",
       "at": {
-        "line": 47,
+        "line": 50,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 50,
+        "line": 51,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 54,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 52,
+        "line": 56,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 53,
+        "line": 57,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 55,
+        "line": 59,
         "column": 4
       }
     }
