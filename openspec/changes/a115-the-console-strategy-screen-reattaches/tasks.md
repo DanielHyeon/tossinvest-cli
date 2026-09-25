@@ -40,5 +40,5 @@
 
 ## 2. 게이트 (Manager)
 
-- [ ] 2.1 Manager 독립 검증(diff·테스트 재실행) 후 `make gate CHANGE=a115-the-console-strategy-screen-reattaches`,
-      archive · Story 경로 · PM `--check`.
+- [x] 2.1 Manager 독립 검증(diff·스코프·5단계 rc0·validate) 후 완료 게이트 — 격리 worktree(55c7e13e)에서 1차 실행,
+      2단계가 자기 줄을 세므로 관례(돌리고→적고→체크)대로 이 커밋 뒤 재실행이 정본. archive · Story 경로 · PM `--check` 는 게이트 PASS 뒤.

@@ -111,7 +111,7 @@
 | `a112-run-four-strategy-families-independently` | STORY-TOS-a112 | in_progress |
 | `a113-the-projection-probe-proves-death` | STORY-TOS-a113 | archived |
 | `a114-the-console-reattaches-its-lifecycle` | STORY-TOS-a114 | archived |
-| `a115-the-console-strategy-screen-reattaches` | STORY-TOS-a115 | in_progress |
+| `a115-the-console-strategy-screen-reattaches` | STORY-TOS-a115 | implemented |
 | `a116-install-codex-session-save-hook` | STORY-TOS-a116 | archived |
 | `a117-the-minute-timestamp-is-the-bars-close` | STORY-TOS-a117 | archived |
 | `a118-a-sealed-test-still-runs` | STORY-TOS-a118 | archived |

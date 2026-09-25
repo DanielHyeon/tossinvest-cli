@@ -78,7 +78,7 @@
     - STORY-TOS-a085 — Say which stock, in Korean, in the alert and on the position screen [archived] → `a085-an-alert-says-which-stock`
     - STORY-TOS-a101 — The capability survey outlives a deploy [archived] → `a101-the-soak-outlives-a-deploy`
     - STORY-TOS-a114 — The console reattaches its lifecycle [archived] → `a114-the-console-reattaches-its-lifecycle`
-    - STORY-TOS-a115 — The console strategy screen reattaches [in_progress] → `a115-the-console-strategy-screen-reattaches`
+    - STORY-TOS-a115 — The console strategy screen reattaches [implemented] → `a115-the-console-strategy-screen-reattaches`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [archived] → `add-common-exit-optimization`

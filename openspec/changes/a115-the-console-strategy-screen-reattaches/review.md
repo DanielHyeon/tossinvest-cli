@@ -97,3 +97,10 @@ dormant+경고, 경로 고치면 콘솔 재시작 없이 live — 실측) · htt
 잔존(선언 유지): EACCES/ENOTDIR 에서 「runtime endpoint 미기동」 표기는 freeze 리뷰 P2-2 의 선언된 접힘.
 
 재검증(3판 뒤): `go test -race -count=3` a115 대상 cmd/tossctl ok · 하네스 대조군 green · K19–K22 CAUGHT.
+
+## §2 Manager 완료 검증 (2026-09-26)
+
+- Manager 독립 재검증: `check_analysis` rc 0(base 8688f74f → landed d4d667f4, required 4) · strict validate valid ·
+  구현 커밋 10개 스코프 전수 확인(외부 파일 0) · 생산 diff 직접 리뷰(판정 한 벌·무조건 펌프·non-nil·discard·컴파일 결속 — design 그대로).
+- 완료 게이트 1차(격리 worktree, 완료 커밋 55c7e13e): ①~⑥ 통과 후 ②에서 자기 게이트 줄(2.1)만 미완료로 FAIL —
+  알려진 관례(돌리고→적고→체크). 이 커밋에서 2.1 을 체크하고 새 완료 커밋에서 재실행한 결과가 정본이며 아래에 기록한다.
