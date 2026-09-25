@@ -47,7 +47,7 @@
 
 ## State mutations and fallbacks
 
-- **B8·B9 의 결과는 로그 한 줄과 `attempts+1` 뿐이다.** `execgw.EntryGate` 도 `EscalateOperatingMode` 도
+- **B8 의 결과는 로그 한 줄과 임차 반납뿐이고(`attempts` 불변), B9 의 결과는 `attempts+1` · 반납뿐이다.** (2026-09-26 교정 — freeze 7회차 X5) `execgw.EntryGate` 도 `EscalateOperatingMode` 도
   이 함수에 없다 — `alertdelivery.go` 전체에서 `Gate`·`Escalate` 는 0 회(grep, HEAD `463cc895`).
   동기 경로 `Notifier.deliver` 의 같은 실패는 세 자리에서 게이트를 잠근다(`notifier.go:484·:520·:571`).
   이 비대칭이 a124 R1 의 근거다.

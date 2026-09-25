@@ -5,9 +5,8 @@
   source_sha256 `0bc75668ff17…`, 추출 base `4798d399` (2026-09-26, Teammate — 재freeze 로트).
 - Risk scan: `risk-pattern-report.md`
 
-**a124 4판은 이 함수에 한 줄을 넣는다** — `n.mu.Lock` (:851) 직후 승인 세대 `ackGen` 증가(design D7). 분기·해제 조건(B4~B10)은 그대로다.
-이 번들은 design 2판 D7 이 「승인은 `n.mu` 아래에서 세고-푼다」를 근거로 쓰기 때문에 문서보다 먼저 만들었고, 편집 뒤 `revision: current`
-로 재추출한다(tasks 1.3).
+**a124 는 이 함수를 편집하지 않는다**(5판, M1 = B′ — 4판이 넣으려던 세대 증가 한 줄은 제거). design D7 이 「게이트 해제는 B10(미전달 0)과
+B2·B3(무원장)에서만 `Gate.Clear` 로 일어난다」를 근거로 쓰기 때문에 문서보다 먼저 만들었다.
 
 ## Inputs and invariants
 
@@ -50,6 +49,6 @@
 
 ## Safety conclusion
 
-- Safe edit boundary: `n.mu.Lock`/`defer Unlock` 뒤에 원자 증가 한 줄. B1~B10 의 조건·순서·반환은 불변. 실행자는 같은 `n.mu` 를 메모리 전용 울타리
-  (`LatchUnlessAcknowledgedSince`, 새 leaf)로만 빌린다.
-- High-risk impact: yes — 진입 게이트 해제 경로.
+- Safe edit boundary: 편집하지 않는다. 해제 세대는 이 함수가 부르는 `EntryGate.Clear` 안에서 오른다(B3 · B10). 실패한 승인(B5 · B8 · B9)과
+  미전달이 남은 승인(B10 거짓)은 `Clear` 를 부르지 않으므로 세대를 바꾸지 않는다.
+- High-risk impact: yes — 진입 게이트 해제 경로(읽기 전용 근거).

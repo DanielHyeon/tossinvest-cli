@@ -2,7 +2,7 @@
 
 - **Feature**: `FEAT-TOS-009` — Exit line truth and position policy lifecycle
 - **Story**: `STORY-TOS-a124`
-- **Spec**: `engine-safety` (ADDED 2)
+- **Spec**: `engine-safety` (ADDED 3)
 - **위험 등급**: **High-risk** — 진입 게이트·운영 모드(Guardian·kill switch·운영 모드 경로). 적대적 Eng 리뷰 + 교차 모델 + Pre-Edit 선언.
 - **출처**: a092 20라운드 사용자 결정 20-1 **ⓒ**(2026-09-25) — a098 설계 D8.4 가 「미배정 후속」으로 남긴 것을 별도 change 로 먼저 낸다.
 - 작성 2026-09-25, Manager(Fable, tossos-d6). HEAD `463cc895`.
@@ -69,9 +69,9 @@
 
 ## Non-goals
 
-- `Notifier` 동기 경로(`claimAndDeliver` · `deliver` · `notifyCritical`)를 편집하지 않는다 — a092 의 표면이다.
-  `obs` 에는 승인 세대 진입점 둘과 필드 하나를 더하고, `Acknowledge` 에는 세대 증가 **한 줄**만 넣는다(design D7 — 해제 조건 불변,
-  동기 경로 함수 무편집).
+- `Notifier`(`claimAndDeliver` · `deliver` · `notifyCritical` · `Acknowledge`)를 편집하지 않는다 — a092 의 표면이다.
+- `EntryGate` 에는 해제 세대 필드 하나 · 메서드 둘 · `Clear` 한 줄만 더한다(design D7, M1 = B′). `revision`(전략 ABA 봉인)의 의미,
+  `Block` · `BlockSymbol` · 투영 · 점검 경로는 바꾸지 않는다.
 - 새 사유 코드 · 새 트리거 · 새 토글 · 새 실행자를 만들지 않는다. `ReasonAlertSenderDown`(실행자 정지)의 의미도
   그대로다 — 이것은 「시도가 실패했다」이고 그것은 「시도할 주체가 없다」다(정본 결정 8-1).
 - `Acknowledge` 의 해제 조건 · 운영 모드 완화 경로 · 기동 복원을 바꾸지 않는다.
@@ -84,10 +84,13 @@
   서로 다른 실패 양상을 비교한 **잘못된 문장**이었다(review F11). 같은 양상에서 두 경로는 같은 시간이다 — 즉시 실패 4 s,
   매번 10 s timeout 34 s.
 - **publisher 부재 = 실패 시도** (design D3). 결과는 동기 경로와 같고 지연만 ≈0 s 대 ≈4~6 s 로 다르다(F13).
-- **승인이 이긴다** (Manager 결정 M1 = C, design D7): 차단 **적용**만 `Acknowledge` 와 같은 `n.mu` 배제 아래(메모리 전용 — 승인 세대 비교 +
-  게이트 map 삽입), 원격 전송·원장 트랜잭션·승격·로그는 밖. 판정 근거를 얻은 뒤 승인이 있었으면 그 판정은 버린다.
+- **승인이 이긴다** (Manager 결정 M1 = **B′**, 2026-09-26 재결정 — C 는 freeze 3·4판에서 손절 경로 대기로 떨어졌다, design D7): `EntryGate` 의
+  사유별 **해제 세대**. 실행자는 임차 전후에 세대를 읽어 다르면 보내지 않고, 세대가 그대로일 때만 잠근다(바뀌었으면 원장에서 그 행이
+  **승인됐는지** 확인해, 승인됐을 때만 버리고 아니면 다시 잠근다 — 전달은 승인이 아니다). 실행자는 `n.mu` 를 잡지 않는다. 해제 세대는 해제 **요청**마다
+  오른다(래치 유무 무관 — Manager 지시 「실제로 지웠을 때만」과 다름, 근거 design D7 ㉣, Manager 확인 요청).
 - **기록 자체의 실패도 지속 실패다** (Manager 결정 M2 = (ii), design D8): 한 행에서 원장에 시도를 남기지 못한 연속 횟수가 같은 한도에
-  이르면 잠근다(승인이 연속을 끊는다). 발행 뒤 전달 기록 실패는 동기 경로처럼 즉시 잠근다(D1).
+  이르면 잠근다(해제 세대가 바뀌면 연속이 끊긴다 — 해제로 이어지지 않은 승인은 끊지 않는다). 발행 뒤 전달 기록 실패는 동기 경로처럼 즉시
+  잠근다(D1).
 
 ## Impact
 
@@ -96,8 +99,22 @@
 - `internal/journal/outbox.go` — `PendingAlerts` 의 정렬(한도 인자).
 - `internal/journal/alert_claim.go` — `SettleResult.Attempts` (additive 필드), `settleUnderClaim` 적용 경로에서 같은 트랜잭션
   읽기(D1). 스키마 무변경. FLM `internal-journal--journal.settleunderclaim`.
-- `internal/obs/notifier.go` — `ackGen` 필드, `AckGeneration` · `LatchUnlessAcknowledgedSince`(새 leaf), `Acknowledge` 에 세대 증가 한 줄(D7).
-  FLM `internal-obs--notifier.acknowledge`(편집 대상, 1.3 재추출).
+- `internal/execgw/retry.go` — `EntryGate.clearEpochs`, `ClearEpoch` · `BlockUnlessClearedSince`(새 leaf), `Clear` 에 세대 증가 한 줄(D7).
+  **High-risk 표면** — Pre-Edit 대상(1.2). FLM `internal-execgw--entrygate.clear`(편집 대상) · `.block`(대조).
+- `internal/obs` — 편집 없음.
 - `internal/app/engine/auxiliary.go` — 실행자 생성 시 배선만.
 - 시험: `a098_*` 는 그대로 초록이어야 한다(특히 `a098_the_backlog_does_not_delay_protection_test.go`). 새 RED 는 tasks 2.x.
-- 스펙: `engine-safety` ADDED 2. a092 델타의 「굶주림」 문단은 a092 21판이 지운다.
+- 스펙: `engine-safety` ADDED 3(해제 세대 계약 포함). a092 델타의 「굶주림」 문단은 a092 21판이 지운다.
+
+## Follow-ups (이 change 범위 밖 — 사람에게 올라갈 항목)
+
+- **전략 진입 활성화 전 필수 선행 — 동기 알림 경로가 `n.mu` 를 쥔 채 진입 게이트를 잠근다.** `Notifier.claimAndDeliver` :280 과
+  `Notifier.deliver` :484 · :520 · :571 이 `n.mu` 아래에서 `Gate.Block` 을 부르고, 전략 진입 dispatch 는 게이트 잠금(`g.mu`)을 **브로커 전송
+  동안** 쥔다(`execgw/strategy_entry_gate_authority.go:60-72` → `gateway.go:692-708`). 둘이 겹치면 전달 실패를 겪은 동기 `Notify` 와 그 뒤의 모든
+  `n.mu` 대기자 — exit 관측 루프(`exitloop.go:1710`)와 비상 청산(`flatten.go:694`) 포함 — 가 브로커 전송을 기다린다(안전 불변식 4). 전략 진입이
+  이 빌드에서 휴면이라(`cmd/tossctl/engine_strategy_entry_dormant_test.go`) 오늘은 발현하지 않는다. a124 는 이 경로를 만지지 않는다(a092 표면 ·
+  a061 계열 봉인 설계). freeze 4판 §0.4 에서 발견, Manager 가 세 자리를 실측 재확인(2026-09-26).
+- **`Notifier.Acknowledge` 의 셈~해제 구간은 `n.mu` 를 거치지 않는 기록자를 막지 못한다** (a092 소유). 미전달 수를 센 뒤(:870) 해제하기 전(:875)에
+  `execgw/replay.go:551` 의 `EnqueueAlert` 가 새 critical 행을 넣으면, 그 행이 미전달인 채 게이트가 열린다. a092 델타가 「무엇이 그 구간을 지키는지
+  change 에 적혀야 한다」(`a092…/spec.md:72`)로 이미 요구한다. a124 는 그 행의 판정을 잃지 않는 것까지만 진다(design D7 (P2) — 한도에 닿으면 다시
+  잠근다). freeze 5회차 §0.5 V2 에서 발견.
