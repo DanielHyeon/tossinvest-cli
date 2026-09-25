@@ -41,3 +41,23 @@ presence→Read TOCTOU 안전 · single-flight/rate limit · 취소 비판정 ·
 engineDir 해석 동일.
 
 **판정: PASS with P1 — P1 여섯 전부 반영 완료(이 커밋), freeze 성립.** 구현(1.x)은 별도 Teammate.
+
+## 콘솔 실측 (규칙 13, tasks 1.6 — 2026-09-26)
+
+하네스 `analysis/console-measure/measure.sh <bin> <clean|dead> 18475`. 바이너리 둘: a115(`d4d667f4` 트리의 `git archive`
+빌드)와 base(`8688f74f` 같은 방식). 격리 config(`mktemp -d /tmp/a115-console-XXXX`, 0700), 엔진 없음. `dead` 는 같은
+config 에 잔재 descriptor(`.strategy-runtime-read/endpoint.json` 0600, 필드 유효) + 죽은 socket(`runtime.sock` 0600 —
+bind 뒤 close, listener 없음). 요청은 GET 셋뿐(세션 링크 303 · `/strategy-runtime` 200 · `/settings/strategy` 200) —
+버튼·폼·POST 없음. 매 판 엔진 프로세스 없음·config 에 새 descriptor 없음 확인(`dead` 잔재는 콘솔이 지우지 않음 — 조회 전용).
+
+| 바이너리 / config | 전략 화면 안내 줄 | 시장 코드(본문 출현 수) | 설정 요약 | 콘솔 stderr(전략) |
+| --- | --- | --- | --- | --- |
+| a115 / clean | 「runtime endpoint 미기동 — … dormant … truth」 | NOT_CONFIGURED ×10 | 「… — dormant 미배선」 | 없음 |
+| a115 / **dead** | **「runtime projection을 읽지 못했다. …」** | **RUNTIME_UNAVAILABLE ×8** | **「읽지 못함 — …」** | 「…지금 연결할 수 없다 (socket has no listener). 전략 화면은 붙기 전까지 도달 불가를 표시하고, 엔진이 돌아오면 콘솔 재시작 없이 다시 붙는다.」 |
+| base / clean | 「runtime endpoint 미기동 …」 | NOT_CONFIGURED ×10 | 「… — dormant 미배선」 | 없음 |
+| base / dead | 「runtime endpoint 미기동 …」 — **오귀속** | NOT_CONFIGURED ×10 | 「… — dormant 미배선」 | 「…연결할 수 없다 (…). 전략 화면은 dormant로 뜬다.」 |
+
+판정: 두 절반 다 spec 대로다 — 깨끗한 config 는 미구성 그대로(오귀속 없음), 잔재 descriptor + 죽은 socket 은 도달 불가.
+base 는 같은 잔재를 미구성으로 접었다(병의 재현 = 대조군). 측정은 curl 본문 대조다 — 템플릿·JS 무변경이라 브라우저 콘솔
+오류 판정은 not-applicable(서버 렌더 문구만 바뀐 값). 엔진 기동 후 회복 절반은 실엔진 없이 못 재므로 시험
+(`TestTheConsoleStrategyScreenShowsADeadDescriptorAsUnreachable` 등 진짜 `strategyprojectionrpc.Start`)이 진다.

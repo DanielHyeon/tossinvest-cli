@@ -33,7 +33,7 @@
       부재 신호 무시 · 펌프 제거 · 부팅 dial 재도입 · sentinel 대신 nil → 각각 빨강. 원장 `mutation-ledger.md`.
 - [x] 1.4 FLM 구현 후 재최신화(`revision: current` 재추출, Branch Test Map 재번호) + `check_analysis.py` rc 0.
 - [ ] 1.5 검증: cmd/tossctl·internal/console `-race` 대상 테스트 · `make vet` · `make lint` · `make test`.
-- [ ] 1.6 콘솔 실측(규칙 13): 엔진 없이 두 절반 — ① 깨끗한 config → dormant 표기 ② 잔재 descriptor +
+- [x] 1.6 콘솔 실측(규칙 13): 엔진 없이 두 절반 — ① 깨끗한 config → dormant 표기 ② 잔재 descriptor +
       죽은 socket → 도달 불가 표기. 버튼 누르지 않음. issues R2.
 - [ ] 1.7 구현 후 리뷰(gstack/독립 적대) → review.md §1.
 - [ ] 1.8 착지 기록 커밋(`--record-landing`).
