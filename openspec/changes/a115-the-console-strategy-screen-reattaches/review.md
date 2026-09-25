@@ -61,3 +61,12 @@ bind 뒤 close, listener 없음). 요청은 GET 셋뿐(세션 링크 303 · `/st
 base 는 같은 잔재를 미구성으로 접었다(병의 재현 = 대조군). 측정은 curl 본문 대조다 — 템플릿·JS 무변경이라 브라우저 콘솔
 오류 판정은 not-applicable(서버 렌더 문구만 바뀐 값). 엔진 기동 후 회복 절반은 실엔진 없이 못 재므로 시험
 (`TestTheConsoleStrategyScreenShowsADeadDescriptorAsUnreachable` 등 진짜 `strategyprojectionrpc.Start`)이 진다.
+
+## 검증 기록 (tasks 1.5 — 2026-09-26, 워킹트리 = `d4d667f4` + 병행 세션의 비-Go 문서뿐)
+
+- `go test -race -count=1 ./cmd/tossctl/ ./internal/console/ ./internal/httpapi/ ./internal/strategyprojection/` →
+  ok 176.4s · ok 503.0s · ok 1.4s · ok 4.5s
+- a115·a109·a114 대상 시험 `-race -count=5` → ok(cmd/tossctl 7.8s · internal/console 1.9s)
+- `make vet` rc 0 · `make lint` rc 0(`go vet ./...` + `go vet -tags tossos_testseams ./...`)
+- `make test`(`go test -timeout 30m ./...`) rc 0 → **ok 99 · no test files 9 · FAIL 0**
+- `check_analysis.py --change a115-…` rc 0(required 4, evidence complete)
