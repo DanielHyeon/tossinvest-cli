@@ -1,0 +1,157 @@
+{
+  "file": "internal/console/settings_tabs.go",
+  "source_sha256": "5abac9cbe0b3d228ee01082c40909c08b2c107333d6e5db252e1c2f5420cd98b",
+  "package": "console",
+  "function": "strategyRuntimeSummary",
+  "receiver": "Console",
+  "signature": "Console.strategyRuntimeSummary(params=1, results=1)",
+  "start": {
+    "line": 290,
+    "column": 1
+  },
+  "end": {
+    "line": 301,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 291,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 295,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 292,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 296,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 299,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 294,
+        "column": 19
+      },
+      "text": "c.opts.StrategyRuntime.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 294,
+        "column": 47
+      },
+      "text": "r.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 19
+      },
+      "text": "strategyprojection.Validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 298,
+        "column": 13
+      },
+      "text": "strategyprojection.OrderedMarkets"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 17
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 59
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 102
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 300,
+        "column": 11
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 300,
+        "column": 53
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 300,
+        "column": 96
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 294,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 298,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

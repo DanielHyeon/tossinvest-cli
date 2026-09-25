@@ -1,0 +1,43 @@
+# a115 리뷰 기록
+
+## §0 proposal-freeze (2026-09-26)
+
+위험 등급: 경량(콘솔 화면 — 주문·위험·원장 경로 무관, 읽기 전용 projection 소비) + 독립 적대 보이스 1.
+보이스: Manager 셀프 4관점 + **독립 적대 Eng 리뷰어 1**(Opus 서브에이전트, 별도 컨텍스트, 읽기 전용).
+`autoplan` 은 대화형 파이프라인이라 자율 세션에서 독립 서브에이전트로 대체했다(a114 와 같은 대체 경로).
+
+### 셀프 4관점 (Manager)
+
+- **CEO/Product** — 범위: a109 A2 P1-1 한 건의 이행. 합본 안 함(tasks 0.1). 화면 구조·문구 무변경, UI 마찰 0.
+- **Eng** — httpapi 원형(a109 D4)·a114 선례 재사용. 판정 동치는 옮겨 적지 않고 테스트로 고정.
+- **Security** — 읽기 전용 projection. client 권한 불변(같은 descriptor 검증·loopback). 주문·토글 경로 접촉 0.
+- **QA** — 진짜 `strategyprojectionrpc.Start` 로 늦은 기동·재시작·펌프, 소비자 판정은 단위 시험 + 콘솔 실측 두 절반.
+
+### 독립 적대 Eng 리뷰 — P0 0 · P1 6 · P2 10
+
+AST 번들 5벌의 source_sha256 이 HEAD·base `8688f74f` 모두와 일치함을 리뷰어가 확인했다.
+
+| id | 발견 | 판결 → 반영 |
+| --- | --- | --- |
+| P1-1 | 판정 두 벌 — `httpapi.StrategyRuntimeAbsent` 가 이미 「유일한 판정」(⛔ 주석)인데 design 이 콘솔에 `strategyRuntimeWired` 를 새로 만들었다. 구조적 인터페이스뿐이면 메서드 이름 변경이 조용한 회귀가 된다 | 수용 → 판정·presence 를 `internal/strategyprojection` 으로 이동, httpapi 는 alias·위임, 콘솔은 한 벌을 사용, `var _` 컴파일 결속 + 동치 시험(design D2 재작성) |
+| P1-2 | 「시도 대상일 때만 wake」 펌프는 a109 G2 가 기각한 `failed` 게이트의 재도입 — live 로 보이는 죽은 자리가 안 드러나 첫 렌더가 「읽지 못했다」를 그린다 | 수용 → 무조건 wake(비용은 wake 안 rate limit·single-flight 가 간격당 1회로 고정, AST wake B1) |
+| P1-3 | spec 의 「구성」에 운영상 대응물이 없다 — 엔진은 깨끗이 종료하면 descriptor 를 지우므로 가장 흔한 다운 모양에서 시나리오 1 이 충족 불가 | 수용 → 시나리오 1 WHEN 을 「descriptor 잔존 + 연결 불수락」으로 좁히고, descriptor 부재 → dormant 선언된 한계 시나리오·재시작 시나리오·요청 경로 dial 금지 SHALL NOT 추가. 양의 신호 대안은 기각 사유와 함께 design 에 기록 |
+| P1-4 | design 의 재사용·펌프 논거가 wrapper 분기(attach·attempt·observe·Read·wake)에 기대는데 AST 번들이 없다 | 수용 → 인용 전용 번들 5벌 생성(`analysis/function-logic/cmd-tossctl--strategyruntimeattachment.*`) |
+| P1-5 | evidence-reconciliation 의 「B38–B42(:397–407)」가 AST(B33–B37, :398–405)와 모순 | 수용 → 정정 |
+| P1-6 | review.md 없이 tasks 0.4 가 [x] — 거짓 완료 표시 | 수용 → 이 기록과 같은 커밋에서 체크 유지(산출물 동시 착지) |
+| P2-1 | 답한 실패(503·decode 거절)도 탈착 — 깜빡임 병을 콘솔이 물려받는다 | 기록 → issues R4(표면 밖) |
+| P2-2 | 비부재 stat 오류 nil 접힘 · http-api spec 「반쪽 잔재」 문장과 코드 불일치 | 선언된 접힘으로 design 에 기록 · issues R5 |
+| P2-3 | 재시도 경고 출력 대상 미명시(2880줄 위험) · 부팅 문구 「dormant로 뜬다」가 a115 뒤 거짓 | 수용 → design(io.Discard·문구 교체 + 시험) |
+| P2-4 | nil wrapper 가 interface 에 담기면 presence 질문이 패닉 | 수용 → design 「반환은 언제나 non-nil」 |
+| P2-5 | 간격 변수 공유(a109 시험이 30s 고정)·interval≤0 ticker 패닉·시험 goroutine 누수 | 수용 → design(콘솔 전용 변수·가드·정리) |
+| P2-6 | 과도 창(발행 전·재시작 사이)이 시나리오에 없음 · 요청 경로 dial 금지 SHALL NOT 부재 | 수용 → spec 추가(P1-3 과 함께) |
+| P2-7 | 규칙 13 실측이 dormant 절반만 | 수용 → tasks 1.6 두 절반 |
+| P2-8 | issues 의 tasks 참조 오기 · proposal 낡은 좌표 · codegraph-baseline 의 `MarketScheduleReader` implements 오탐 | 수용 → 셋 다 정정 |
+| P2-9 | 「건강한 자리는 깨우지 않는다」 문장이 부정확(소비자 presence 질문은 매 렌더 wake) | 수용 → design 문장 교체(P1-2 재작성에 포함) |
+| P2-10 | console seam 은 `Read` 하나여야 한다(static_test:1010) — presence 를 seam 에 넣으면 깨진다 | 수용 → design 구현자 주의 |
+
+리뷰어가 공격했으나 무너지지 않은 것: 기존 시험 회귀 없음(스텁·raw client 는 presence 없음 → 판정 불변) ·
+presence→Read TOCTOU 안전 · single-flight/rate limit · 취소 비판정 · design 분기 주장과 AST 일치 ·
+engineDir 해석 동일.
+
+**판정: PASS with P1 — P1 여섯 전부 반영 완료(이 커밋), freeze 성립.** 구현(1.x)은 별도 Teammate.

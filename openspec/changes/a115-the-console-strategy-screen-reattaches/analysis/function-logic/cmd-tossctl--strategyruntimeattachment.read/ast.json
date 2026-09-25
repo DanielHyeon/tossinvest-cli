@@ -1,0 +1,126 @@
+{
+  "file": "cmd/tossctl/httpapi_strategy_attach.go",
+  "source_sha256": "7a6962132af59674fe31123a8f51ea60aa2f02cdbd322460b809dc06b21f0e00",
+  "package": "main",
+  "function": "Read",
+  "receiver": "strategyRuntimeAttachment",
+  "signature": "strategyRuntimeAttachment.Read(params=1, results=2)",
+  "start": {
+    "line": 119,
+    "column": 1
+  },
+  "end": {
+    "line": 137,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 124,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 127,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 136,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 120,
+        "column": 26
+      },
+      "text": "a.state"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 3
+      },
+      "text": "a.wake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 128,
+        "column": 4
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 19
+      },
+      "text": "reader.Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 5
+      },
+      "text": "a.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 3
+      },
+      "text": "a.wake"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 130,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

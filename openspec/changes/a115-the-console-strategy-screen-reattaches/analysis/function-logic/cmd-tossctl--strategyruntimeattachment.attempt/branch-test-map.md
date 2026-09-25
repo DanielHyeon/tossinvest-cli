@@ -1,0 +1,1 @@
+# Branch Test Map: `strategyRuntimeAttachment.attempt` — B1·B3: `TestTheAttachmentReportsOnlyTransitions`, B2: a109 G1 시험(부재→unavailable 승격), 경합: `TestALateReadFailureDoesNotUnseatTheNewAttachment` (cmd/tossctl/a109_the_request_path_never_dials_test.go).

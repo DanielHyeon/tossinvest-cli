@@ -1,0 +1,168 @@
+{
+  "file": "cmd/tossctl/httpapi_strategy_attach.go",
+  "source_sha256": "7a6962132af59674fe31123a8f51ea60aa2f02cdbd322460b809dc06b21f0e00",
+  "package": "main",
+  "function": "attempt",
+  "receiver": "strategyRuntimeAttachment",
+  "signature": "strategyRuntimeAttachment.attempt(params=0, results=0)",
+  "start": {
+    "line": 180,
+    "column": 1
+  },
+  "end": {
+    "line": 215,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 184,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 197,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 202,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 18
+      },
+      "text": "a.resolve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 2
+      },
+      "text": "a.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 3
+      },
+      "text": "a.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 2
+      },
+      "text": "a.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 2
+      },
+      "text": "closeEvictedStrategyReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 3
+      },
+      "text": "a.reportAttached"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 198,
+        "column": 4
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 199,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 205,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 206,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 207,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 208,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 209,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

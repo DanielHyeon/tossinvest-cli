@@ -1,0 +1,1 @@
+# Branch Test Map: `strategyRuntimeAttachment.observe` — B1: 취소 시험, B2: `TestALateReadFailureDoesNotUnseatTheNewAttachment`, B3–B5: `TestTheAttachmentReportsOnlyTransitions` (cmd/tossctl/a109_the_request_path_never_dials_test.go).

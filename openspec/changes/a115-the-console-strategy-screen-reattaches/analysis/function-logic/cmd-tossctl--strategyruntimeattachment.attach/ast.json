@@ -1,0 +1,63 @@
+{
+  "file": "cmd/tossctl/httpapi_strategy_attach.go",
+  "source_sha256": "7a6962132af59674fe31123a8f51ea60aa2f02cdbd322460b809dc06b21f0e00",
+  "package": "main",
+  "function": "attach",
+  "receiver": "strategyRuntimeAttachment",
+  "signature": "strategyRuntimeAttachment.attach(params=2, results=0)",
+  "start": {
+    "line": 158,
+    "column": 1
+  },
+  "end": {
+    "line": 163,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 2
+      },
+      "text": "a.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 8
+      },
+      "text": "a.mu.Unlock"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 162,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 160,
+        "column": 2
+      },
+      "text": "a.mu.Unlock"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+# Branch Test Map: `strategyRuntimeAttachment.Read` — B1·B3: `TestTheRequestPathNeverWaitsForADial`, B2: 부재 오류 시험, 경합: `TestALateReadFailureDoesNotUnseatTheNewAttachment` (cmd/tossctl/a109_the_request_path_never_dials_test.go).

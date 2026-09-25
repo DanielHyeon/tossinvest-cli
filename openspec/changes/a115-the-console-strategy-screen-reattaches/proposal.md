@@ -1,8 +1,8 @@
 # a115 — 콘솔 전략 화면도 재부착한다
 
-> **상태: 등록만 먼저 했다(2026-08-16).** a109 A2 P1-1이 기록하고 design "선언된
-> 생략"이 후속으로 미룬 항목이다. **착수 선행 조건 없음** — 단 a114와 같은
-> `cmd/tossctl/console.go` 부팅 경로를 편집하므로 동시 착수 시 합본 판단을 먼저 한다.
+> **상태: 착수(2026-09-25 설계 · 2026-09-26 freeze).** a109 A2 P1-1이 기록하고 design "선언된
+> 생략"이 후속으로 미룬 항목이다. a114와의 합본은 하지 않는다(tasks 0.1). 병의 현재 좌표는
+> `console.go:398–405`(AST B33–B37 — a109 기록 당시 :411–421).
 
 ## Why
 
@@ -24,5 +24,7 @@ httpapi 쪽 같은 병은 a109 D4가 고쳤고 그 오귀속 금지는 http-api-
 ## Impact
 
 - operator-console spec: 전략 화면의 상태 구분·재부착 요구 ADDED.
-- 코드: `cmd/tossctl/console.go` 부팅 경로 + 테스트. a114와 표면 공유.
-- 착수 시 Function Logic Map 필수: 등록 문서의 분기 주장은 a109 기록 인용이다.
+- 코드: `cmd/tossctl/console.go` 부팅 경로 + 새 attach 파일 + 테스트(a114와 표면 공유),
+  `internal/console` 두 소비자의 부재 판정 교체, 부재 판정·presence 의
+  `internal/strategyprojection` 이동(httpapi 는 alias·위임 — 판정은 한 벌, issues S1).
+- Function Logic Map: `analysis/function-logic/` 10벌(편집 대상 5 + wrapper 인용 전용 5).

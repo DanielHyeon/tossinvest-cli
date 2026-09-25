@@ -1,0 +1,55 @@
+{
+  "file": "cmd/tossctl/httpapi_strategy_attach.go",
+  "source_sha256": "7a6962132af59674fe31123a8f51ea60aa2f02cdbd322460b809dc06b21f0e00",
+  "package": "main",
+  "function": "StrategyRuntimeConfigured",
+  "receiver": "strategyRuntimeAttachment",
+  "signature": "strategyRuntimeAttachment.StrategyRuntimeConfigured(params=0, results=1)",
+  "start": {
+    "line": 113,
+    "column": 1
+  },
+  "end": {
+    "line": 117,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 114,
+        "column": 18
+      },
+      "text": "a.state"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 2
+      },
+      "text": "a.wake"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 114,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
