@@ -499,3 +499,45 @@ func TestTheProductionConsoleStrategyRedialIntervalIsThirtySeconds(t *testing.T)
 		t.Errorf("콘솔 전략 재부착 간격 = %s, want 30s", consoleStrategyRuntimeRedialInterval)
 	}
 }
+
+// ---- 뮤테이션 1판 생존자 (mutation-ledger.md) --------------------------------------------
+
+// TestTheConsoleBootKeepsAnUnreachableEndpointUnreachable 은 부팅 nil 접힘의 **결정적** 핀이다(K1).
+//
+// 결과 시험(`…ShowsADeadDescriptorAsUnreachable`)도 K1 을 잡았지만 그것은 경합에 기댄다: 펌프의 첫 틱이나
+// 첫 렌더의 wake 가 빈 자리를 sentinel 로 **승격**(a109 G1)하기 전에 화면을 그려야 빨개진다. 여기서는 간격을
+// 1시간으로 두어 틱이 없게 하고, 렌더 없이 부팅 직후의 자리를 본다 — 부팅 해석이 접으면 자리는 nil 이다.
+func TestTheConsoleBootKeepsAnUnreachableEndpointUnreachable(t *testing.T) {
+	dir := a108HTTPAPIDir(t)
+	a108DeadSocketLeftover(t, dir)
+	a115Interval(t, time.Hour)
+	attachment, _ := a115Boot(t, dir, io.Discard)
+	reader, _, attached := a115Seat(attachment)
+	if _, ok := reader.(unavailableStrategyRuntime); !ok || attached {
+		t.Fatalf("죽은 descriptor 부팅의 자리 = %T(attached=%v), want sentinel — 부팅이 도달 불가를 부재로 접었다",
+			reader, attached)
+	}
+}
+
+// TestTheConsoleStrategyPumpReturnsWhenTheConsoleEnds 는 펌프 goroutine 의 종료다(K12).
+//
+// ctx 종료를 무시하는 펌프는 wake 가 ctx 를 보므로 **시도는** 멈춘다 — 그래서 시도 수로는 누수가 안 보였다.
+// 콘솔이 내려가도 goroutine 과 ticker 가 남는다. 펌프를 직접 돌려 돌아오는지 본다.
+func TestTheConsoleStrategyPumpReturnsWhenTheConsoleEnds(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	attachment := &strategyRuntimeAttachment{
+		resolve: func(context.Context) (httpapi.StrategyRuntimeReader, bool) { return nil, false },
+		ctx:     ctx, now: time.Now, interval: 10 * time.Millisecond, log: io.Discard,
+	}
+	done := make(chan struct{})
+	go func() {
+		pumpConsoleStrategyRuntime(attachment)
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("콘솔 ctx 가 끝났는데 펌프가 돌아오지 않는다 — goroutine·ticker 누수")
+	}
+}
