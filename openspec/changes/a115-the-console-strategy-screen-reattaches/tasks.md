@@ -36,7 +36,7 @@
 - [x] 1.6 콘솔 실측(규칙 13): 엔진 없이 두 절반 — ① 깨끗한 config → dormant 표기 ② 잔재 descriptor +
       죽은 socket → 도달 불가 표기. 버튼 누르지 않음. issues R2.
 - [x] 1.7 구현 후 리뷰(gstack/독립 적대) → review.md §1.
-- [ ] 1.8 착지 기록 커밋(`--record-landing`).
+- [x] 1.8 착지 기록 커밋(`--record-landing`).
 
 ## 2. 게이트 (Manager)
 
