@@ -1948,7 +1948,7 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       7.5.2.3 의 README·VERIFY 가 "깔때기 넷뿐" 이라고 적은 것이 이것 때문에 거짓이었다(7.5.2.4 가 문장은 고쳤다).
       (2026-09-24, 7.5.25 가 좁혔다: **워킹트리 대상의 현재 쪽** Go 바이트는 이제 스냅숏이 깔때기로 읽어 원장에 남고,
       `go run` 은 그 바이트를 쓴 임시 파일을 읽는다. base 쪽(`git show`) · 커밋 대상 · 나머지 자식 프로세스는 그대로다.)
-- [ ] 7.5.9 **P1 — `test_index` 가 추적되지 않는 파일을 색인한다 (같은 재리뷰, 정확성).** `test_index` 가
+- [x] 7.5.9 **P1 — `test_index` 가 추적되지 않는 파일을 색인한다 (같은 재리뷰, 정확성).** `test_index` 가
       `*_test.go` 전수에서 `.git` 만 거른다. 시험 인용이 **머지에 영원히 안 들어갈 파일**로 충족될 수 있다.
       덤: `resolve_test_file` 의 맨이름 갈래가 사본이 생기면 `len(matches)!=1` 이라 **없던 거절**을 만든다.
       수: 추적 **953** 만 안정이고 디스크 수는 **움직인다**. 차이는 전부
@@ -1956,15 +1956,26 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       늘었다 준다** — 같은 날 실측으로 정지 상태 **963**(차이 10), 변이 하네스가 도는 중 **964**(차이 11,
       열한째가 그 판의 `75_mut_work.<pid>/`). (7.5.22 정정: 앞 판본은 이 수를 고정값처럼 적었다.
       오염원이 **이 change 자신의 하네스**이고, 세는 순간이 답을 바꾼다.)
-- [ ] 7.5.10 **P1 — 목록·순회 지문이 충돌한다 (같은 재리뷰, 정확성 — 충돌쌍 실제로 만듦).** `_listing_outcome` 이
+      (2026-09-26 확인: `1d1e5ca7` 에서 추적 **959** · 디스크 **971** · 차이 12 전부 `_work/**/extract_go_ast_test.go` (glob 표기 정정: `*` 는 한 단계라 한 단계 깊은 `75_mut_work.*/logic-map/` 둘을 놓친다 — 12 = 10 + 2).)
+      **닫음(2026-09-26).** 색인 · 인용 해소가 `git ls-files -z`(새 깔때기 `_tracked`, 원장 `tracked`)의 추적 파일만 본다 —
+      `check_analysis.py` `test_index` · `resolve_test_file`(세 갈래 모두) · 거절 문장 `in any tracked file`. `_globbed` · `_pattern_outcome` 은 호출자 0 이 되어 지웠다.
+      덤 **정정**: 맨이름 갈래는 사본이 생기면 "없던 거절을 만드는" 것이 아니라 해소를 포기해 **있던 거절을 지웠다**(permissive).
+      거부하는 정상 입력: 번들 3,084 · 인용 6,121 **0**(`759_census.py`) · 시험 픽스처 5(`run_check` 가 인덱스에 올리게 고침).
+      보수(독립 리뷰 둘, 2026-09-26): 이름 붙은 좌표의 `..` · 심링크 디렉터리를 풀어서 대조(첫 판의 회귀) · 아카이브는 이름 먼저 · `ls-files` 에 `SNAPSHOT_PINS`. 기록 review.md `## VERIFY — task 7.5.9 · 7.5.10 · 7.5.11 · 7.5.15 · 7.5.16`.
+- [x] 7.5.10 **P1 — 목록·순회 지문이 충돌한다 (같은 재리뷰, 정확성 — 충돌쌍 실제로 만듦).** `_listing_outcome` 이
       `name\t{d|f}` 를 `\n` 으로 잇고 `_pattern_outcome` 이 경로를 `\n` 으로 잇는다. 탭·개행은 POSIX 이름에 합법이라
       서로 다른 두 목록이 같은 지문을 낸다. 아이러니: 같은 파일의 `_safe_changed_go_paths` 가 그 문자들을 거절한다.
-- [ ] 7.5.11 **P1 — 깔때기 **안**에 조용한 건너뛰기가 둘 남았다 (같은 재리뷰, 정확성 · 시험품질).**
+      **닫음(2026-09-26).** 목록 지문 = 항목마다 이름 길이(8바이트) · 이름 · 종류 — 단사(`_listing_outcome`). 순회 지문은 함수째 없어졌고
+      추적 목록 지문은 git `-z` 바이트의 해시다. RED: 충돌쌍 둘이 `1d1e5ca7` 에서 같은 지문(`7510_collide.py` `COLLIDE`).
+- [x] 7.5.11 **P1 — 깔때기 **안**에 조용한 건너뛰기가 둘 남았다 (같은 재리뷰, 정확성 · 시험품질).**
       `_listing_outcome` 의 `child.is_dir()` 가 `OSError` 를 삼켜 stat 안 되는 항목을 파일로 분류하고
       (`_read_evidence` 는 **이미 디렉터리로 분류된** 것만 `unlistable` 에 넣는다 — 그 함수 docstring 이 바로 그
       위험을 한 층 위에서만 고쳤다고 적고 있다), `_pattern_outcome` 의 `Path.rglob` 이 못 읽는 하위 트리의
       `OSError` 를 삼킨다. 뒤엣것은 결과가 보수적이라 재확인 구멍은 아니지만 시험이 0 이다.
       (`is_dir()` 가 삼키는 것은 판본 의존이다 — 이 저장소의 3.12 에서 실측할 것, [[python-behaviour-differs-by-version]].)
+      **닫음(2026-09-26).** 3.12.3 실측(`7511_isdir.py`): `is_dir()` 이 끊긴 링크 · 고리 · 사라진 이름을 `False` 로 삼키고(3.14 는 권한까지),
+      `rglob` 은 네 판본 모두 못 읽는 하위 트리를 건너뛴다. 종류를 `os.stat` 으로 묻고 못 물으면 `UnstatableEntry` 로 이름을 댄다
+      (`FileNotFoundError` 가 아니라서 면제 경로로 안 샌다). `rglob` 절반은 7.5.9 가 순회를 없애 닫았다. 거부하는 정상 입력 0(디렉터리 3,183 · 항목 15,428).
 - [ ] 7.5.12 **P1 — realpath ABA (같은 재리뷰, 적대).** 원장 키가 `normalized_source` 의 `os.path.realpath`
       뒤 경로라, 판정 중 심링크 디렉터리를 갈아끼우면 바이트가 같아 재확인이 통과한다. 저장소 노출 0.
 - [ ] 7.5.13 **P1 — `_safe_changed_go_paths` 가 git 이 인용하는 나머지를 놓친다 (7.5.2.3 재리뷰, 보안).**
@@ -1985,17 +1996,23 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       보였다** — Y13(`evidence.present` → `evidence.directory.exists()`)이 구조 시험을 그냥 지나갔다.
       덤: `owner.setdefault` 라 `("record_landing","open")` 면제가 그 함수 안의 **미래의 모든** `open` 을 함께 면제한다.
       `execution_baseline.py`(stat 16자리)는 아예 범위 밖이다.
-- [ ] 7.5.15 **P2 — 판정 경로 subprocess 에 `timeout=` 이 없다 (같은 재리뷰, 정확성).** `check_analysis.py` 의
+- [x] 7.5.15 **P2 — 판정 경로 subprocess 에 `timeout=` 이 없다 (같은 재리뷰, 정확성).** `check_analysis.py` 의
       `subprocess.run` **열여섯 자리 중 둘** — `base_file` 의 `git show` 와 `_safe_changed_go_paths` 의
       `git diff --numstat` — 에 `timeout=` 이 없다(7.5.22 재측정, 나머지 열넷은 있다). `execution_baseline.py` 는
       다섯 자리다. 멎으면 판정 줄이 없다 — `subprocess.SubprocessError` 를 `GATE_FAULTS` 에 넣은 그 파일의
       계약과 어긋난다.
-- [ ] 7.5.16 **P2 — `record_landing` 이 더러운 트리를 재확인 **앞**에서 묻는다 (같은 재리뷰, 정확성).**
+      **닫음(2026-09-26).** `1d1e5ca7` 실측: `check_analysis.py` 22 자리 중 1(`_safe_changed_go_paths`; `base_file` 은 7.5.34 가 지웠다) · `execution_baseline.py` 5 전부.
+      값은 같거나 비슷한 부류의 명령을 부르는 이웃의 값(30 · 120 · 10 · 60 · 10 · 30 — 같은 명령은 `merge-base` 와 두 `diff --quiet` 셋뿐, 보수 때 정정). 구조 시험이 두 파일의 **모든** `subprocess.` 호출에, 행동 시험이 판정 · 기록 한 판이 띄운 자식 전부에 시한을 요구한다.
+- [x] 7.5.16 **P2 — `record_landing` 이 더러운 트리를 재확인 **앞**에서 묻는다 (같은 재리뷰, 정확성).**
       `record_landing` 이 head → refusal → replay 순서다. 순서를 바꾸면 공짜로 닫힌다.
+      **닫음(2026-09-26).** `_recording_moved` 가 말하는 순서를 역사 → 원장 → 거절로(거절은 여전히 먼저 계산 — 그 읽기가 원장에 든다).
+      재현 `7516_order.py`: `5a54f78d` 더러운 트리 · `1d1e5ca7` 6.4(b) base 거절 · 편집 뒤 `base-commit.txt changed …`. 이 수리가 맨 앞 역사 물음을 못에서 뽑아(AA8 생존) 구조 시험으로 못 박았다.
 - [ ] 7.5.17 **P2 — 저자가 판정을 **판정 줄 0개로** 무한히 늘릴 수 있다 (같은 재리뷰, 보안).**
       `resolve_test_file` 의 맨이름 갈래가 전체 트리 `rglob` 을 인용마다 돌고(메모 없음) 해소 실패는 오류 줄을
       안 낸다. 원장이 그 패턴을 재확인에서 다시 돈다. 실측: 엉터리 맨이름 20개 → 판정 16.55s + 재확인 15.78s,
       **판정 줄 0**. `branch-test-map.md` 300 KB ≈ 4.5시간이고 `gate.sh:321` 에 timeout 이 없다.
+      (2026-09-26, 7.5.9 뒤: 맨이름 해소는 더 이상 트리를 돌지 않는다 — 색인이 한 번 받은 추적 목록에서 고르고 원장의
+       `glob` 항목도 없어졌다. 이 공격의 비용을 **다시 재지는 않았다**. 해소 실패가 판정 줄을 안 내는 절반은 그대로 열려 있다.)
 - [ ] 7.5.18 **P2 — `_bundle_text` 배관 시험이 이름만큼 못 박지 않는다 (같은 재리뷰, 시험품질).**
       `test_the_bundle_text_is_built_from_the_bytes_the_command_read` 의 픽스처가 판정 바이트와 디스크 바이트가
       **다른 순간을 안 만든다** — 호출부를 "그 자리에서 새로 읽기" 로 바꿔도 그 시험은 통과한다(스위트는 다른 둘로 잡는다).
@@ -2010,6 +2027,22 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       안 찍히고** traceback 만 나간다 — 바로 위 주석이 그 경계가 있는 이유를 적어 놨다. 잔챙이: 원장 divergence
       메시지가 `_raise_if_inputs_moved` 에서 glob 키를 뭉갠다 · `moved` 판정 아래에서 `main` 이 사라진 상태의
       창 줄과 권유를 찍는다 · 같은 거절이 두 문장으로 나간다.
+- [ ] 7.5.36 **P2 — 재확인 때만 추적 목록을 못 물으면 사유 이름이 틀린다 (7.5.9 로트 독립 적대 리뷰 P2-1, 2026-09-26).**
+      판정 중 `git ls-files -z` 는 성공하고 끝의 재확인에서만 실패하면 원장 대조가 실패 지문과 성공 지문을 견줘
+      "the tracked file list changed" 라고 말한다 — 움직인 것이 아니라 못 물은 것이다. 막는 쪽이라 판정은 맞다.
+- [ ] 7.5.37 **P2 — 이름 인용은 거절, 좌표 인용은 건너뜀 — 그리고 작성 중인 미추적 시험 파일 (같은 리뷰 P2-3).**
+      추적 안 된 파일의 시험 **이름**은 "in any tracked file" 로 거절되고 **좌표**는 해소 못 함(오류 아님)으로 건너뛴다 — 비대칭이다.
+      그리고 TDD 흐름에서 저자가 아직 `git add` 안 한 시험 파일은 **머지에 들어간다** — "미추적 = 머지에 없음" 전제가 깨지는
+      정상 입력이고 7.5.9 의 센서스(저장소 번들 · 시험 픽스처) 밖이었다. 거절 문장이 `git add` 를 말하지 않는다.
+- [ ] 7.5.38 **P2 — `UnstatableEntry` 의 실패 지문에 이름이 없다 · 편집기 임시 파일이 결함 문장이 된다 (같은 리뷰 P2-4 · P2-5).**
+      `_failed` 는 `종류:errno` 만 적어서 판정 중 **다른** 항목이 stat 불가가 돼도 재확인은 같다고 본다(판정은 이미 빨갛다).
+      목록 뒤 stat 전에 사라진 편집기 임시 파일(vim 의 `4913`)이 `cannot tell what \`4913\` is` 결함 문장이 된다 — 재실행으로 풀리지만 사유가 오해를 부른다.
+- [ ] 7.5.39 **P2 — AA8b 생존: "HEAD moved" 판정이 두 집에 산다 (같은 리뷰 P2-6).** `_head_moved` 를 `if False` 로 죽여도
+      스위트 408 이 초록이다 — `_recording_moved` 의 B1 과 `_judged_state_moved` 가 같은 판정을 두 자리에서 내서 서로의 시험을
+      통과시킨다([[two-judgements-cover-for-each-other]]). 합칠지 · 갈라 시험할지는 측정 뒤 결정. (7.5.16 이 B1 을 구조 시험으로
+      못 박았지만 그것은 **순서**이지 판정의 집이 아니다.)
+- [ ] 7.5.40 **P3 — `_recording_refusal` 의 `git diff --quiet` 에 `SNAPSHOT_PINS` 가 없다 (7.5.9 로트 주장정확성 리뷰 F9 부수, 이 로트 전부터).**
+      `core.fsmonitor` 에 적힌 프로그램이 기록 명령 · 조언 줄에서 뜰 수 있다. 7.5.9 보수는 새 `ls-files` 만 고정했다.
 - [x] 7.6 **P2 — 규칙 한 집 (I2 · I3 · I4 · I5 · I6 · I7).** `compute_landing` 과 `resolve_landing`
       의 수락 조건 두 벌 · `validate` 의 지역 `canonical` 이 모듈 함수를 가림 · 디렉터리 해소 두 벌과
       없는 id 의 엉뚱한 조언 · 이관 거절 문장 두 벌(이미 갈렸다) · `_pre_archive_path` 가 아카이브

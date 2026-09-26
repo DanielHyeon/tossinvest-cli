@@ -1,0 +1,73 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "ff590b79db6ed6a8cd7101e47f8df6a9b4841310b5320a398730eadf6a8a02e5",
+  "function": "check",
+  "signature": "check(change, root, context)",
+  "start": {
+    "line": 2627,
+    "column": 1
+  },
+  "end": {
+    "line": 2669,
+    "column": 45
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "IfExp",
+      "line": 2657,
+      "inherited_line": false,
+      "source": "{} if context is None else context"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 2665,
+      "inherited_line": false,
+      "source": "if not judged:"
+    },
+    {
+      "id": "B3",
+      "kind": "IfExp",
+      "line": 2669,
+      "inherited_line": false,
+      "source": "[moved] if moved else verdict"
+    }
+  ],
+  "returns": [
+    {
+      "line": 2666,
+      "value": "verdict"
+    },
+    {
+      "line": 2669,
+      "value": "[moved] if moved else verdict"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 2662,
+      "callee": "facts.clear"
+    },
+    {
+      "line": 2663,
+      "callee": "_ledger"
+    },
+    {
+      "line": 2664,
+      "callee": "_judged"
+    },
+    {
+      "line": 2668,
+      "callee": "_judged_state_moved"
+    },
+    {
+      "line": 2668,
+      "callee": "str"
+    }
+  ]
+}

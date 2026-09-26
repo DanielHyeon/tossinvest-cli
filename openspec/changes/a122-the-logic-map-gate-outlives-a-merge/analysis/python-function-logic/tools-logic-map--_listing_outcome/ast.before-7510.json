@@ -1,0 +1,99 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "b28398e26f3dec1a404698b1995c0daae865653ac88ee6dab692eafa77cb881b",
+  "function": "_listing_outcome",
+  "signature": "_listing_outcome(path)",
+  "start": {
+    "line": 1392,
+    "column": 1
+  },
+  "end": {
+    "line": 1399,
+    "column": 81
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 1394,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "comprehension",
+      "line": 1395,
+      "inherited_line": true,
+      "source": " for child in path.iterdir()"
+    },
+    {
+      "id": "B3",
+      "kind": "ExceptHandler",
+      "line": 1396,
+      "inherited_line": false,
+      "source": "except OSError as exc:"
+    },
+    {
+      "id": "B4",
+      "kind": "IfExp",
+      "line": 1398,
+      "inherited_line": false,
+      "source": "'d' if is_dir else 'f'"
+    },
+    {
+      "id": "B5",
+      "kind": "comprehension",
+      "line": 1398,
+      "inherited_line": true,
+      "source": " for name, is_dir in entries"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1397,
+      "value": "(_failed(exc), exc)"
+    },
+    {
+      "line": 1399,
+      "value": "('list:' + hashlib.sha256(joined.encode('utf-8')).hexdigest(), entries)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1395,
+      "callee": "child.is_dir"
+    },
+    {
+      "line": 1395,
+      "callee": "path.iterdir"
+    },
+    {
+      "line": 1395,
+      "callee": "sorted"
+    },
+    {
+      "line": 1397,
+      "callee": "_failed"
+    },
+    {
+      "line": 1398,
+      "callee": "'\\n'.join"
+    },
+    {
+      "line": 1399,
+      "callee": "hashlib.sha256(joined.encode('utf-8')).hexdigest"
+    },
+    {
+      "line": 1399,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 1399,
+      "callee": "joined.encode"
+    }
+  ]
+}

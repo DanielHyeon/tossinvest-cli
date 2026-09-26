@@ -112,3 +112,34 @@ B1 · B2(`if not target and environment is None: raise ValueError`)가 빠졌다
 워킹트리 비교를 **만들 수 없다**. 편집 전 B5 → 편집 후 B3 은 결함 문장만 바뀌었다(`for base {base}` 를 뗐다 — base 인자가
 없다). 나머지 B3–B4 · B6–B15 는 편집 후 B1–B2 · B4–B13 과 같다. 분기 밖: diff 가 `*comparison.trees` 를
 `env=comparison.environment` 에서 견주고 **pathspec 을 안 받는다**(`"--", "*.go"` 를 뗐다 — 두 트리에 `*.go` 만 있다).
+
+## task 7.5.15 — 시한 (2026-09-26)
+
+> 편집 전 `ast.before-7515.json`(revision `1d1e5ca7`) · 편집 후 `ast.after-7515.json` — 분기 13 → 13, 정렬 결과 전부 같음.
+
+편집 후 `tools/logic-map/check_analysis.py:493-550` · 분기 13 · 반환 1 · raise 4 · 호출 13 (`ast.after-7515.json`, source sha `ae8931c3f577`)
+편집 전 `tools/logic-map/check_analysis.py:493-548` · 분기 13 · 반환 1 · raise 4 · 호출 13 (`ast.before-7515.json`, revision `1d1e5ca7`, source sha `b28398e26f3d`)
+
+| 옛 id | 새 id | 새 줄 | 종류 | 소스(새) | 바뀐 것 |
+|---|---|---|---|---|---|
+| B1 | B1 | 529 | If | `if process.returncode:` | 같음 |
+| B2 | B2 | 530 | IfExp | `process.stderr.decode('utf-8', 'replace') if isinstance(process.stderr, bytes) else process.stderr` | 같음 |
+| B3 | B3 | 531 | BoolOp | `stderr.strip() or 'git diff failed'` | 같음 |
+| B4 | B4 | 532 | IfExp | `process.stdout if isinstance(process.stdout, bytes) else process.stdout.encode('utf-8')` | 같음 |
+| B5 | B5 | 534 | For | `for _, _, paths in records:` | 같음 |
+| B6 | B6 | 535 | For | `for raw in paths:` | 같음 |
+| B7 | B7 | 536 | Try | `try:` | 같음 |
+| B8 | B8 | 538 | ExceptHandler | `except UnicodeDecodeError as error:` | 같음 |
+| B9 | B9 | 542 | BoolOp | `'\n' in path or '\r' in path or '\t' in path` | 같음 |
+| B10 | B10 | 542 | If | `if '\n' in path or '\r' in path or '\t' in path:` | 같음 |
+| B11 | B11 | 544 | For | `for added, deleted, paths in records:` | 같음 |
+| B12 | B12 | 545 | BoolOp | `added == b'-' and deleted == b'-'` | 같음 |
+| B13 | B13 | 545 | If | `if added == b'-' and deleted == b'-':` | 같음 |
+
+`git diff --numstat` 에 `timeout=30` — 판정 diff(`_changed_existing_functions`, 같은 두 트리)와 같은 값. 멎으면 `TimeoutExpired` 가
+`GATE_FAULTS` 로 판정 줄이 된다. 분기 · 반환 · raise 불변. `branch-test-map.md` 의 "`timeout=` 이 없다 → 7.5.15" 는 이것으로 닫혔다.
+
+## 보수 — 최종 파일로 다시 열거 (독립 주장정확성 리뷰 F11, 2026-09-26)
+
+최종 `tools/logic-map/check_analysis.py:495-552` · 분기 13 · 반환 1 · raise 4 · 호출 13 · source sha `ff590b79db6e` (비교 기준 `ast.after-7515.json`, 그 판 `ae8931c3f577` `:493-550`).
+위 절들이 "최종" 이라 적은 sha 는 **중간판**이었다(리뷰 지적 — 표기를 고쳤다). 최종 파일에서 `ast.after-759r.json` 을 다시 뽑아 앞 절의 편집 후 열거와 대조했다 — 분기(종류 · 소스) · 반환 · raise · 호출 수가 **같다**(구조 동일). 바뀐 것은 sha 와 줄 좌표다.

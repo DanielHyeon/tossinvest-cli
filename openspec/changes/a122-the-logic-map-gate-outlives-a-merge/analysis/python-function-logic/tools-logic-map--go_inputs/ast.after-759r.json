@@ -1,0 +1,380 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/execution_baseline.py",
+  "revision": "worktree",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "d17ea317f78c750260ba0a2a87a2e6dcd0526e4b62d6dfed141308e31210d7ec",
+  "function": "go_inputs",
+  "signature": "go_inputs(root, tags)",
+  "start": {
+    "line": 230,
+    "column": 1
+  },
+  "end": {
+    "line": 282,
+    "column": 18
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 232,
+      "inherited_line": false,
+      "source": "if tags:"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 239,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 240,
+      "inherited_line": false,
+      "source": "process.stderr.strip() or 'go package enumeration failed'"
+    },
+    {
+      "id": "B4",
+      "kind": "While",
+      "line": 243,
+      "inherited_line": false,
+      "source": "while offset < len(process.stdout):"
+    },
+    {
+      "id": "B5",
+      "kind": "BoolOp",
+      "line": 244,
+      "inherited_line": false,
+      "source": "offset < len(process.stdout) and process.stdout[offset].isspace()"
+    },
+    {
+      "id": "B6",
+      "kind": "While",
+      "line": 244,
+      "inherited_line": false,
+      "source": "while offset < len(process.stdout) and process.stdout[offset].isspace():"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 246,
+      "inherited_line": false,
+      "source": "if offset >= len(process.stdout):"
+    },
+    {
+      "id": "B8",
+      "kind": "Try",
+      "line": 248,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B9",
+      "kind": "ExceptHandler",
+      "line": 250,
+      "inherited_line": false,
+      "source": "except ValueError as error:"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 252,
+      "inherited_line": false,
+      "source": "if not isinstance(package, dict):"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 255,
+      "inherited_line": false,
+      "source": "if not isinstance(directory, str):"
+    },
+    {
+      "id": "B12",
+      "kind": "If",
+      "line": 256,
+      "inherited_line": false,
+      "source": "if any((field in package for field in fields)):"
+    },
+    {
+      "id": "B13",
+      "kind": "comprehension",
+      "line": 256,
+      "inherited_line": true,
+      "source": " for field in fields"
+    },
+    {
+      "id": "B14",
+      "kind": "Try",
+      "line": 260,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B15",
+      "kind": "ExceptHandler",
+      "line": 262,
+      "inherited_line": false,
+      "source": "except ValueError:"
+    },
+    {
+      "id": "B16",
+      "kind": "For",
+      "line": 264,
+      "inherited_line": false,
+      "source": "for field in fields:"
+    },
+    {
+      "id": "B17",
+      "kind": "If",
+      "line": 266,
+      "inherited_line": false,
+      "source": "if value is None:"
+    },
+    {
+      "id": "B18",
+      "kind": "BoolOp",
+      "line": 268,
+      "inherited_line": false,
+      "source": "not isinstance(value, list) or not all((isinstance(name, str) for name in value))"
+    },
+    {
+      "id": "B19",
+      "kind": "If",
+      "line": 268,
+      "inherited_line": false,
+      "source": "if not isinstance(value, list) or not all((isinstance(name, str) for name in value)):"
+    },
+    {
+      "id": "B20",
+      "kind": "comprehension",
+      "line": 268,
+      "inherited_line": true,
+      "source": " for name in value"
+    },
+    {
+      "id": "B21",
+      "kind": "For",
+      "line": 270,
+      "inherited_line": false,
+      "source": "for name in value:"
+    },
+    {
+      "id": "B22",
+      "kind": "If",
+      "line": 272,
+      "inherited_line": false,
+      "source": "if candidate.is_absolute():"
+    },
+    {
+      "id": "B23",
+      "kind": "Try",
+      "line": 273,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B24",
+      "kind": "ExceptHandler",
+      "line": 275,
+      "inherited_line": false,
+      "source": "except ValueError:"
+    },
+    {
+      "id": "B25",
+      "kind": "If",
+      "line": 279,
+      "inherited_line": false,
+      "source": "if '..' in candidate.parts:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 282,
+      "value": "result"
+    }
+  ],
+  "raises": [
+    {
+      "line": 240,
+      "source": "raise AdoptionError(process.stderr.strip() or 'go package enumeration failed')"
+    },
+    {
+      "line": 251,
+      "source": "raise AdoptionError(f'invalid go package enumeration JSON: {error}') from error"
+    },
+    {
+      "line": 253,
+      "source": "raise AdoptionError('go package enumeration entry is not an object')"
+    },
+    {
+      "line": 257,
+      "source": "raise AdoptionError('go package enumeration entry has no directory')"
+    },
+    {
+      "line": 269,
+      "source": "raise AdoptionError(f'go package enumeration {field} is malformed')"
+    },
+    {
+      "line": 280,
+      "source": "raise AdoptionError(f'go package enumeration {field} path escapes package')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 233,
+      "callee": "command.extend"
+    },
+    {
+      "line": 234,
+      "callee": "command.append"
+    },
+    {
+      "line": 238,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 240,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 240,
+      "callee": "process.stderr.strip"
+    },
+    {
+      "line": 241,
+      "callee": "json.JSONDecoder"
+    },
+    {
+      "line": 241,
+      "callee": "set"
+    },
+    {
+      "line": 243,
+      "callee": "len"
+    },
+    {
+      "line": 244,
+      "callee": "len"
+    },
+    {
+      "line": 244,
+      "callee": "process.stdout[offset].isspace"
+    },
+    {
+      "line": 246,
+      "callee": "len"
+    },
+    {
+      "line": 249,
+      "callee": "decoder.raw_decode"
+    },
+    {
+      "line": 251,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 252,
+      "callee": "isinstance"
+    },
+    {
+      "line": 253,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 254,
+      "callee": "package.get"
+    },
+    {
+      "line": 255,
+      "callee": "isinstance"
+    },
+    {
+      "line": 256,
+      "callee": "any"
+    },
+    {
+      "line": 257,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 259,
+      "callee": "Path"
+    },
+    {
+      "line": 261,
+      "callee": "base.resolve"
+    },
+    {
+      "line": 261,
+      "callee": "base.resolve().relative_to"
+    },
+    {
+      "line": 261,
+      "callee": "root.resolve"
+    },
+    {
+      "line": 265,
+      "callee": "package.get"
+    },
+    {
+      "line": 268,
+      "callee": "all"
+    },
+    {
+      "line": 268,
+      "callee": "isinstance"
+    },
+    {
+      "line": 268,
+      "callee": "isinstance"
+    },
+    {
+      "line": 269,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 271,
+      "callee": "Path"
+    },
+    {
+      "line": 272,
+      "callee": "candidate.is_absolute"
+    },
+    {
+      "line": 274,
+      "callee": "candidate.resolve"
+    },
+    {
+      "line": 274,
+      "callee": "candidate.resolve().relative_to"
+    },
+    {
+      "line": 274,
+      "callee": "candidate.resolve().relative_to(root.resolve()).as_posix"
+    },
+    {
+      "line": 274,
+      "callee": "result.add"
+    },
+    {
+      "line": 274,
+      "callee": "root.resolve"
+    },
+    {
+      "line": 280,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 281,
+      "callee": "(relative_base / candidate).as_posix"
+    },
+    {
+      "line": 281,
+      "callee": "result.add"
+    }
+  ]
+}

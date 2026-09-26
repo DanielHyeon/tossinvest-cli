@@ -137,8 +137,10 @@ def _write_loose_blob(store: Path, digest: str, data: bytes) -> None:
         handle.write(zlib.compress(b"blob %d\0" % len(data) + data))
 
 
-# 인덱스를 읽는 git 호출(워킹트리 목록 · 트리 짓기 · 두 diff)이 모두 받는 고정. 인덱스를 **읽는** 순간 설정된
+# 인덱스를 읽는 git 호출(워킹트리 목록 · 트리 짓기 · 두 diff · 추적 목록)이 받는 고정. 인덱스를 **읽는** 순간 설정된
 # fsmonitor 명령이 뜬다(실제 인덱스를 읽는 `ls-files` 에서 실측) — 판정이 저장소가 설정한 프로그램을 띄울 까닭이 없다.
+# **전부는 아니다**: `_recording_refusal` 의 `git diff --quiet` 는 아직 이 고정이 없다(열린 task 7.5.40, 이 줄 이전부터).
+# 추적 목록(`_tracked_outcome`)은 task 7.5.9 첫 판이 빠뜨렸다가 보수에서 더했다(독립 주장정확성 리뷰 F9 실측).
 SNAPSHOT_PINS = ("-c", "core.fsmonitor=false")
 # 임시 인덱스를 **쓰는** git 이 받는 고정. split index 는 `sharedindex.*` 를 실제 `.git` 에 쓰고, 인덱스 쓰기는
 # `post-index-change` 훅을 띄운다.
@@ -522,6 +524,8 @@ def _safe_changed_go_paths(root: Path, comparison: Comparison) -> list[tuple[byt
         cwd=root,
         env=comparison.environment,
         capture_output=True,
+        # 시한은 판정 diff(`_changed_existing_functions`)와 같은 값이다 (task 7.5.15) — 같은 두 트리를 견준다.
+        timeout=30,
         check=False,
     )
     if process.returncode:
@@ -789,12 +793,22 @@ def resolve_referenced_change(root: Path, change: str) -> Path:
     direct = changes / change
     open_here = _kind(direct) == "dir"
     archive = changes / "archive"
+    # 이름을 **먼저** 거르고 맞는 이름만 종류를 묻는다 (보수 — 독립 적대 리뷰 P1-2). 모든 판정이 이 디렉터리를 연다 —
+    # 종류까지 묻는 목록(`_listed`)이면 **무관한** 항목 하나가 끊긴 링크 · 고리일 때 모든 change 의 게이트가 멈췄다.
     try:
-        entries = _listed(archive)
+        names = _named(archive)
     except (FileNotFoundError, NotADirectoryError):
-        entries = []
-    archived = [archive / name for name, is_dir in entries
-                if is_dir and _archived_change_id(name) == change]
+        names = []
+    archived: list[Path] = []
+    for name in names:
+        if _archived_change_id(name) != change:
+            continue
+        kind = _kind(archive / name)
+        if not kind:
+            # 이 change 의 id 를 단 항목인데 무엇인지 못 묻는다 — 조용히 "아카이브 아님" 으로 두지 않는다.
+            raise UnstatableEntry(errno.EIO, f"cannot tell what `{name}` is", str(archive / name))
+        if kind == "dir":
+            archived.append(archive / name)
     found = ([direct] if open_here else []) + archived
     if not found:
         # 이 해소기는 빌린 증거만이 아니라 **게이트 대상**도 찾는다 (task 7.6, I4).
@@ -1282,6 +1296,16 @@ class NotUtf8Text(OSError):
     """
 
 
+class UnstatableEntry(OSError):
+    """목록의 한 항목이 **무엇인지**(디렉터리인가) 못 물었다 — 끊긴 심링크 · 심링크 고리 · 목록과 stat 사이에 사라진
+    이름 · 권한 (task 7.5.11). 판정 줄이 그 이름을 댄다.
+
+    `FileNotFoundError` 로 두지 않는 까닭: 목록의 실패는 `_read_evidence` 가 "증거 디렉터리가 없다" 로 읽는 모양
+    (`FileNotFoundError` · `NotADirectoryError`)과 섞이면 안 된다 — 증거 디렉터리 안의 끊긴 링크 하나가 디렉터리 전체를
+    "없음" 으로, 곧 면제 경로로 만든다. 별도 타입이면 그 `except` 에 안 걸리고 결함으로 올라간다.
+    """
+
+
 class ReadLedger:
     """판정이 디스크에서 읽은 것의 **원장**. 끝의 재확인이 이 목록을 그대로 다시 읽는다 (task 7.5.2.3).
 
@@ -1390,13 +1414,59 @@ def _read_regular(path: Path) -> bytes:
 
 
 def _listing_outcome(path: Path) -> tuple[str, list[tuple[str, bool]] | OSError]:
-    """`(지문, [(이름, 디렉터리인가)] 또는 실패)`. 종류까지 지문에 넣는다 — 같은 이름의 파일↔폴더 교체도 변화다."""
+    """`(지문, [(이름, 디렉터리인가)] 또는 실패)`. 종류까지 지문에 넣는다 — 같은 이름의 파일↔폴더 교체도 변화다.
+
+    지문은 **단사**여야 한다 (task 7.5.10). 옛 판본은 `이름\\t{d|f}` 를 `\\n` 으로 이었는데 탭과 개행은 POSIX 이름에
+    합법이라 파일 둘 `a` · `b` 와 파일 하나 `a\\tf\\nb` 가 같은 글자를 냈다 — 판정 중 그 사이를 오가면 재확인이 못 봤다.
+    이제 항목마다 **이름 길이(8바이트) · 이름 · 종류 한 글자**를 잇는다. 길이를 먼저 읽으면 어디서 이름이 끝나는지가
+    정해지므로 이음을 푸는 길이 하나뿐이다 — 이름에 어떤 글자가 들어도(NUL 이 못 든다는 사실에도) 기대지 않는다.
+    이름을 바이트로 바꾸는 규칙은 옛 판본 그대로(엄격한 UTF-8)다 — 그 실패가 결함이 되던 동작을 바꾸지 않는다.
+
+    종류는 `os.stat` 으로 **직접** 묻는다 (task 7.5.11). 옛 `child.is_dir()` 은 `OSError` 를 삼켜 "파일" 이라 답했다 —
+    이 저장소의 3.12.3 에서 끊긴 심링크 · 심링크 고리 · 사라진 이름이 그랬고 3.14 는 권한 오류까지 삼킨다
+    (`analysis/harness/7511_isdir.py` 영수증). 따라가서 디렉터리면 디렉터리라는 뜻은 같다. 못 물으면 그 이름을 담은
+    `UnstatableEntry` 로 목록 **전체**가 실패다 — 종류를 모르는 항목을 한쪽으로 지어 넣지 않는다.
+    """
     try:
-        entries = sorted((child.name, child.is_dir()) for child in path.iterdir())
+        entries: list[tuple[str, bool]] = []
+        for child in path.iterdir():
+            try:
+                mode = os.stat(child).st_mode
+            except OSError as exc:
+                raise UnstatableEntry(
+                    exc.errno, f"cannot tell what `{child.name}` is: {exc.strerror}", str(child)) from exc
+            entries.append((child.name, stat.S_ISDIR(mode)))
+        entries.sort()
     except OSError as exc:
         return _failed(exc), exc
-    joined = "\n".join(f"{name}\t{'d' if is_dir else 'f'}" for name, is_dir in entries)
-    return "list:" + hashlib.sha256(joined.encode("utf-8")).hexdigest(), entries
+    encoded = b"".join(
+        len(raw).to_bytes(8, "big") + raw + (b"d" if is_dir else b"f")
+        for raw, is_dir in ((name.encode("utf-8"), is_dir) for name, is_dir in entries)
+    )
+    return "list:" + hashlib.sha256(encoded).hexdigest(), entries
+
+
+def _names_outcome(path: Path) -> tuple[str, list[str] | OSError]:
+    """`(지문, 이름들 또는 실패)` — 종류는 **안 묻는다** (보수, 독립 적대 리뷰 P1-2). `os.listdir` 은 이름만 읽는다(stat 0).
+
+    지문은 `_listing_outcome` 과 같은 단사 인코딩(이름 길이 8바이트 · 이름)이다 (task 7.5.10).
+    """
+    try:
+        names = sorted(os.listdir(path))
+    except OSError as exc:
+        return _failed(exc), exc
+    encoded = b"".join(len(raw).to_bytes(8, "big") + raw for raw in (name.encode("utf-8") for name in names))
+    return "names:" + hashlib.sha256(encoded).hexdigest(), names
+
+
+def _named(path: Path) -> list[str]:
+    """이름만 필요한 목록의 **유일한 자리**(아카이브에서 id 고르기). 결과를 원장에 적는다 — 판정 중 이름이 생기거나
+    사라지면 끝의 재확인이 본다. 종류가 필요한 이름은 호출자가 `_kind` 로 하나씩 묻는다."""
+    outcome, value = _names_outcome(path)
+    _remember("names", str(path), outcome)
+    if isinstance(value, OSError):
+        raise value
+    return value
 
 
 def _listed(path: Path) -> list[tuple[str, bool]]:
@@ -1408,18 +1478,40 @@ def _listed(path: Path) -> list[tuple[str, bool]]:
     return value
 
 
-def _pattern_outcome(root: Path, pattern: str) -> tuple[str, list[Path]]:
-    """`(지문, 맞은 경로들)`. 트리 순회는 **집합**이 판정의 입력이다 — 파일 하나가 생겨도 달라진다."""
-    matches = sorted(root.rglob(pattern))
-    joined = "\n".join(str(path) for path in matches)
-    return "glob:" + hashlib.sha256(joined.encode("utf-8")).hexdigest(), matches
+def _tracked_outcome(root: Path) -> tuple[str, list[Path] | BaseException]:
+    """`(지문, 추적 파일들 또는 실패)` — `git ls-files -z` 의 대답 (task 7.5.9).
+
+    시험 색인과 인용 해소가 보는 **집합**이다. 디스크 전수 순회(`rglob`)였던 판본은 추적되지 않는 파일
+    (gitignore 된 하네스 사본 · `git add` 안 한 파일)로 인용이 충족됐고, 못 읽는 하위 트리를 `OSError` 째 **조용히**
+    건너뛰었다(task 7.5.11 — 이 저장소의 3.12.3 실측, `analysis/harness/7511_isdir.py`). 추적 목록은 인덱스 하나에서 온다.
+
+    지문은 git 이 낸 **바이트 그대로**의 해시다 (task 7.5.10). `-z` 출력은 NUL 로 끝나는 경로의 이음이고 경로에는 NUL 이
+    못 들어가므로 출력이 같으면 목록이 같다 — 경로를 `\\n` 으로 다시 이은 옛 순회 지문은 두 상태가 같은 글자를 냈다.
+    시한은 이웃 `_worktree_entries` 의 `ls-files` 와 같은 값이다.
+    """
+    try:
+        # 인덱스를 읽는 다른 호출과 같은 고정(보수 — 주장정확성 리뷰 F9): 없으면 저장소가 `core.fsmonitor` 에 적은
+        # 프로그램이 판정 중에 뜬다(리뷰어 실측 · 이 보수의 시험이 재현).
+        process = subprocess.run(["git", *SNAPSHOT_PINS, "ls-files", "-z"], cwd=root, capture_output=True, timeout=30,
+                                 check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        return f"{type(exc).__name__}", exc
+    if process.returncode:
+        return f"rc:{process.returncode}", RuntimeError(
+            "cannot list the tracked files: " + _first_line(process.stderr, "git ls-files failed"))
+    listed = [root / os.fsdecode(raw) for raw in process.stdout.split(b"\0") if raw]
+    return "tracked:" + hashlib.sha256(process.stdout).hexdigest(), listed
 
 
-def _globbed(root: Path, pattern: str) -> list[Path]:
-    """트리를 **순회하는 유일한 자리**(시험 함수 색인 · 인용 해소). 결과를 원장에 적는다."""
-    outcome, matches = _pattern_outcome(root, pattern)
-    _remember("glob", f"{root}\n{pattern}", outcome)
-    return matches
+def _tracked(root: Path) -> list[Path]:
+    """추적 파일 목록을 **묻는 유일한 자리**(시험 함수 색인 · 인용 해소). 결과를 원장에 적는다 — 판정 도중의
+    `git add` · `git rm --cached` 도 끝의 재확인이 본다. 못 물으면 결함이다: 빈 목록으로 두면 모든 인용이 "없는 시험" 이
+    되어 이유가 사라진다."""
+    outcome, value = _tracked_outcome(root)
+    _remember("tracked", str(root), outcome)
+    if isinstance(value, BaseException):
+        raise value
+    return value
 
 
 def _kind_outcome(path: Path) -> tuple[str, str]:
@@ -1466,7 +1558,8 @@ def _why(exc: BaseException) -> str:
 _PROBE_NOW = {
     "file": lambda key: _file_outcome(Path(key))[0],
     "dir": lambda key: _listing_outcome(Path(key))[0],
-    "glob": lambda key: _pattern_outcome(Path(key.split("\n")[0]), key.split("\n")[1])[0],
+    "tracked": lambda key: _tracked_outcome(Path(key))[0],
+    "names": lambda key: _names_outcome(Path(key))[0],
     "kind": lambda key: _kind_outcome(Path(key))[0],
 }
 
@@ -1482,7 +1575,7 @@ def _reads_moved(root: Path, book: ReadLedger) -> str:
     try:
         for (kind, key), before in sorted(book.seen.items()):
             if _PROBE_NOW[kind](key) != before:
-                return f"{key.split(chr(10))[1] if kind == 'glob' else _shown(root, key)} changed"
+                return f"{'the tracked file list' if kind == 'tracked' else _shown(root, key)} changed"
     finally:
         book.recording = True
     return ""
@@ -2143,18 +2236,35 @@ def test_spans(path: Path) -> dict[str, tuple[int, int]]:
     return spans
 
 
-def test_index(root: Path) -> dict[str, list[tuple[Path, int, int]]]:
-    """Every Test function in the tree, by name. Built once per check() run."""
-    index: dict[str, list[tuple[Path, int, int]]] = {}
-    for path in _globbed(root, "*_test.go"):
-        if ".git" in path.parts:
-            continue
+class TestIndex(dict):
+    """시험 이름 → `[(파일, 시작, 끝)]`. `files` 는 색인이 읽은 **추적** `*_test.go` 전부다 (task 7.5.9).
+
+    인용 해소(`resolve_test_file`)가 같은 목록으로 고른다 — 색인과 해소가 각자 트리를 물으면 두 대답이 갈릴 수 있고,
+    해소가 인용마다 트리를 다시 돌았다(task 7.5.17 의 비용). 사전이라 이름을 묻는 쪽은 그대로다.
+    """
+
+    def __init__(self, files: frozenset[Path]) -> None:
+        super().__init__()
+        self.files = files
+
+
+def test_index(root: Path) -> TestIndex:
+    """Every Test function in a **tracked** `*_test.go`, by name. Built once per check() run.
+
+    추적되지 않는 파일은 색인하지 않는다 (task 7.5.9). 디스크 전수로 색인하던 판본은 추적되지 않는 파일로 인용이
+    충족됐다 — 1d1e5ca7 에서 추적 959 · 디스크 971, 차이 12 가 전부 이 change 의 gitignore 된 하네스 사본
+    (`_work/**/extract_go_ast_test.go`)이었고 하네스가 도는 동안 수가 움직였다. 인덱스에 올린(staged) 파일은 추적된다.
+    **멤버십은 인덱스, 바이트는 워킹트리**다 — 이 색인은 머지된 트리의 답이 아니다(인덱스에 올린 빈 스텁 + 워킹트리의
+    시험 이름이면 통과한다. 편집 전에도 통과 — 보수 때 독립 주장정확성 리뷰가 잰 것).
+    """
+    index = TestIndex(frozenset(path for path in _tracked(root) if path.name.endswith("_test.go")))
+    for path in sorted(index.files):
         for name, (start, end) in test_spans(path).items():
             index.setdefault(name, []).append((path, start, end))
     return index
 
 
-def resolve_test_file(cited: str, package_dir: Path, root: Path) -> Path | None:
+def resolve_test_file(cited: str, package_dir: Path, root: Path, files: frozenset[Path]) -> Path | None:
     """Resolve a cited test file: a qualified path wins, then the package, then the tree.
 
     A citation that carries a directory means it, and honouring that is the
@@ -2164,28 +2274,41 @@ def resolve_test_file(cited: str, package_dir: Path, root: Path) -> Path | None:
     is useless if the qualification is then discarded.
 
     An ambiguous bare name resolves to nothing rather than to a guess.
+
+    세 갈래 모두 **추적** 파일(`files` — 색인이 읽은 목록)로만 고른다 (task 7.5.9). 멤버십은 인덱스, 줄 수는 워킹트리
+    바이트다(머지된 트리의 답이 아니다 — `test_index` docstring). 편집 전에는 추적 안 된 사본이 있으면 맨이름이 둘을 찾아 해소를 포기했고(있던 거절이 사라졌다), 패키지 안의 추적 안 된
+    파일이 추적된 파일의 좌표를 가로챘다.
     """
     # 고르기도 깔때기로 (task 7.5.2.3) — 어느 파일을 읽을지 고르는 것이 판정의 입력이다. 그 고르기가 원장에
-    # 없으면 "그때 없던 파일이 지금 있다" 를 재확인이 못 본다.
+    # 없으면 "그때 없던 파일이 지금 있다" 를 재확인이 못 본다. 목록은 `_tracked` 가 원장에 적었다.
     if "/" in cited:
-        qualified = root / cited
-        return qualified if _kind(qualified) == "reg" else None
+        # 경로를 **풀어서** 대조한다 (보수 — 독립 적대 리뷰 P1-1). `root / cited` 는 `..` 도 심링크 디렉터리도 안 풀어서
+        # `internal/../internal/x_test.go` · `alias/x_test.go` 가 추적 목록 밖 → 해소 못 함 → 조용히 통과했다(이 로트의
+        # 첫 판이 만든 회귀 — 편집 전은 디스크의 정규 파일로 골라 거절했다). 풀린 경로가 저장소 밖이면 추적 파일이 아니다.
+        # `realpath` 의 lstat 들은 원장 밖이다 — `normalized_source` 와 같은 부류(열린 task 7.5.12).
+        try:
+            qualified = root / Path(os.path.realpath(root / cited)).relative_to(os.path.realpath(root))
+        except ValueError:
+            return None
+        return qualified if qualified in files and _kind(qualified) == "reg" else None
     local = package_dir / cited
-    if _kind(local) == "reg":
+    if local in files and _kind(local) == "reg":
         return local
-    matches = [path for path in _globbed(root, cited) if ".git" not in path.parts]
+    matches = [path for path in files if path.name == cited]
     return matches[0] if len(matches) == 1 else None
 
 
 def test_citation_errors(
-    target: str, text: str, package_dir: Path, root: Path, index: dict
+    target: str, text: str, package_dir: Path, root: Path, index: TestIndex
 ) -> list[str]:
     errors: list[str] = []
     for name in sorted(set(CITED_TEST.findall(text))):
         if name not in index:
+            # "tracked" 를 문장에 적는다 (task 7.5.9) — 저자의 디스크에만 있는 시험은 여기서 "없다" 이므로,
+            # "트리 어디에도 없다" 고 말하면 파일을 보고 있는 저자가 틀린 곳을 찾는다.
             errors.append(
                 f"{target}: branch test map cites {name}, which is not a Go test "
-                f"function anywhere in the tree"
+                f"function in any tracked file"
             )
     # What is NOT checked, and why -- because a check nobody can satisfy gets
     # worked around, and a check that fires on true rows is worse than none.
@@ -2205,7 +2328,7 @@ def test_citation_errors(
     # be wrong about on its own: pointing past the end of the file it names.
     for line in text.splitlines():
         for basename, raw in CITED_TEST_LINE.findall(line):
-            path = resolve_test_file(basename, package_dir, root)
+            path = resolve_test_file(basename, package_dir, root, index.files)
             if path is None:
                 continue
             number = int(raw)
@@ -2510,8 +2633,8 @@ def check(
     남고, 끝의 재확인이 다시 읽는 집합은 손으로 고른 것이 아니라 그 원장이다.
     7.5.2.2 는 그 집합을 손으로 골라(`HEAD` + `Evidence`) 판정이 읽는 1,739 중 149 만 봤다(a112 실측).
 
-    **범위를 정확히 적는다 (task 7.5.2.4 · 7.5.22 정정).** 원장은 자식 프로세스가 읽는 것을 **하나도**
-    못 본다. 이 파일의 `subprocess.run` 은 **열여섯 자리**이고 원장에 남는 것은 **0** 이다 — 앞 로트가
+    **범위를 정확히 적는다 (task 7.5.2.4 · 7.5.22 정정 · 7.5.9 갱신).** 원장이 보는 자식 프로세스 읽기는 **하나**다
+    (추적 목록 `git ls-files -z`). 7.5.22 에 센 이 파일의 `subprocess.run` 은 **열여섯 자리**였고 원장에 남는 것은 **0** 이었다 — 앞 로트가
     넷(`git diff` · `git show` · `go run` · `execution_baseline`)만 대고 그친 것은 열거가 아니라 예시였다.
     판정 입력을 읽는 것만 꼽아도 `changed_existing_functions` 의 `git diff` · `base_file` 의 `git show`(7.5.34 에서
     없어졌다 — 옛 쪽도 `_verified_objects` 의 `git cat-file` 이 읽는다) ·
@@ -2519,7 +2642,9 @@ def check(
     `_committed_many` 의 `git cat-file` · `_recording_refusal` 의 `git diff --quiet` · 역사를 걷는 **열**
     자리 · 그리고 `execution_baseline.validate` 다 (7.5.23 정정: 앞 판본은 "아홉" 이라 적었다 —
     6 + 9 = 15 라 자기가 바로 앞에 적은 16 과 안 맞았다. 열거를 고치면서 열거를 틀렸다). 자리 수는 그 뒤로
-    움직였다 — AST 로 센 `subprocess.run` 은 ff19be01 **20**, 7.5.34 **21**(`go run` 하나 포함)이다.
+    움직였다 — AST 로 센 `subprocess.run` 은 ff19be01 **20**, 7.5.34 **21**(`go run` 하나 포함), 1d1e5ca7 **22** 다.
+    task 7.5.9 가 **23** 째(`_tracked_outcome` 의 `git ls-files -z`)를 더했고 그 하나는 대답을 원장에 적는다(`tracked`) —
+    "원장에 남는 자식 프로세스 0" 은 그 하나만큼 좁아졌다. 나머지 22 는 그대로 원장 밖이다.
     그것들이 판정 도중 바뀌면 재확인이 통과한다.
     a112 실측(7.5.22): `required` 를 정하는 Go 파일 **32** 중 **13** 은 원장에 이름조차 없고, 나머지 19 도
     **인용·시험 색인 때문에** 있는 것이지 `go run` 이 읽어서가 아니다. 7.5.2.3 의 README·VERIFY 가
@@ -3071,8 +3196,14 @@ def _recording_moved(
     분기가 창 밖에 남는다 — 보수는 사람 손이다(재리뷰 보안 · 적대).
 
     **순서가 곧 사유다.** 역사를 먼저 묻는다: 실행 중 커밋이 서면 워킹트리는 그 커밋과 견주어 "더럽다" 로도
-    보이는데, 그때 할 말은 "커밋하라" 가 아니라 "역사가 움직였다" 다. 그다음 거절 집합, 마지막으로 원장
-    전체 — 뒤로 갈수록 넓게 본다.
+    보이는데, 그때 할 말은 "커밋하라" 가 아니라 "역사가 움직였다" 다. **같은 이유로 원장이 거절보다 앞선다**
+    (task 7.5.16): 걷는 동안 판정이 읽은 추적 파일(`base-commit.txt`)이 바뀌면 그 편집이 트리를 더럽히고 거절도
+    그 새 바이트로 사유를 만든다 — 옮겨진 입력으로 판정한 사유이고, 할 말은 "입력이 움직였다, 다시 돌려라" 다.
+    편집 전 순서(역사 → 거절 → 원장)는 그때 거절을 먼저 말했다: 6.4 이전에는 "더러운 트리 — 먼저 커밋하라",
+    1d1e5ca7 에서는 6.4(b) 의 base 대조(`analysis/harness/7516_order.py` 가 두 리비전의 코드로 재현한다).
+
+    거절은 여전히 **먼저 계산한다** — 그 읽기(증거 · `base-commit.txt`)도 원장에 들어가야 마지막 대조가 본다.
+    바뀐 것은 **말하는 순서**다: 역사 → 원장 → 거절.
     """
     moved = _head_moved(root, head)
     if moved:
@@ -3080,7 +3211,7 @@ def _recording_moved(
     # 거절은 **쓰는 순간의** 디스크에 대한 질문이므로 증거를 다시 읽어서 묻는다. 두 읽기가 갈리면 원장이 본다.
     refusal, _ = _recording_refusal(
         change, change_dir, root, head, _read_evidence(change_dir / "analysis" / "function-logic"))
-    return refusal or _judged_state_moved(root, head, book)
+    return _judged_state_moved(root, head, book) or refusal
 
 
 def record_landing(change: str, root: Path = ROOT) -> tuple[int, list[str]]:

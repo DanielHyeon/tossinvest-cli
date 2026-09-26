@@ -103,3 +103,13 @@
 
 편집 전 B1·B2(스냅숏 없는 워킹트리 비교 거절)와 그 변이 AH11 은 없어졌다 — 서명이 `Comparison` 을 받아 그 입력을 만들 수 없다.
 pathspec 이 없다는 것은 `test_both_git_calls_see_the_same_files`(구조)와 `test_pathspec_variables_do_not_change_the_judgement`(행동)가 본다.
+
+## task 7.5.15 (2026-09-26)
+
+짝은 손으로 고르지 않았다 — 갈래마다 변이를 걸어 실제로 빨개진 시험을 옮겼다(`analysis/harness/75_mut.py` 창 `228:246` · `97:98` · `99:100` · `101:102` · `102:103` · `112:113` · `239:240` · `244:246`(재실행), `7515_mut.py`; 사본 `A122_HARNESS_WORK` · pid 별 · 무변이 대조군 창 양끝 GREEN `Ran 407`, 구조 시험을 더한 뒤 창 `102:103` · `244:246` 은 `Ran 408`). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 | 잡는 시험 |
+|---|---|---|
+| `git diff --numstat` 의 `timeout=30` | AP1 | `test_every_child_process_in_the_gate_modules_names_a_timeout`(구조) · `test_every_child_the_verdict_starts_is_given_a_timeout`(행동 — 판정 · 기록 한 판이 실제로 띄운 자식 전부) |
+
+위 "안 닫은 것" 의 `timeout=` 줄은 이것으로 닫혔다.

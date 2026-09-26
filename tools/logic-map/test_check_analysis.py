@@ -85,15 +85,21 @@ evidence
     return target
 
 
-def run_check(root: Path) -> list[str]:
+def run_check(root: Path, *, untracked: tuple[Path, ...] = ()) -> list[str]:
     """git 을 mock 하고 번들 검증만 잰다. 루트는 **커밋 하나뿐인 저장소**다 (task 7.5.1 · 7.5.2.1).
 
     이 헬퍼는 `resolve_base` · `changed_existing_functions` 를 mock 해서 git 을 빼는데
     `_landing_record` 만 빠뜨렸다 — 저장소가 아닌 곳에서 git 이 rc≠0 으로 죽어도 예전에는
     조용히 `None`("기록 없음")이라 무해해 보였다. 이제 rc≠0 은 결함이다. 빈 저장소는 같은 전제를
     진짜로 만든다(실측: `HEAD:x missing` rc 0). 7.5.2.1 부터 명령이 먼저 `HEAD` 를 sha 로 풀므로
-    빈 커밋 하나를 둔다 — 태어나지 않은 `HEAD` 는 결함이다."""
+    빈 커밋 하나를 둔다 — 태어나지 않은 `HEAD` 는 결함이다.
+
+    픽스처 파일은 **인덱스에 올린다** (task 7.5.9). 시험 색인과 인용 해소는 추적 파일만 본다 — 머지에 안
+    들어갈 파일은 증거가 아니다. `untracked` 로 준 경로만 인덱스에서 뺀다(저자의 디스크에만 있는 파일)."""
     _empty_repo(root)
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True)
+    for path in untracked:
+        subprocess.run(["git", "rm", "-q", "--cached", "--", str(path.relative_to(root))], cwd=root, check=True)
     with mock.patch(
         "check_analysis.resolve_base",
         return_value="base",
@@ -7008,8 +7014,26 @@ class TheRecheckReadsWhatTheVerdictRead(unittest.TestCase):
             self.assertIn("base-commit.txt changed " + self.MOVED, errors[0])
 
     def test_a_test_file_that_appears_after_the_index_was_built_asks_for_a_rerun(self) -> None:
-        """시험 함수 색인은 트리 전체 `*_test.go` 를 읽어 만든다(a112 실측 962 파일) — 인용 판정의 입력이다.
-        색인을 만든 뒤 생긴 시험 파일은 그 판정을 낡게 만든다."""
+        """시험 함수 색인은 **추적** `*_test.go` 전부를 읽어 만든다(task 7.5.9 — 전에는 디스크 전수) — 인용 판정의
+        입력이다. 색인을 만든 뒤 **추적되기 시작한** 시험 파일은 그 판정을 낡게 만든다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+
+            def a_test_file_is_added() -> None:
+                (root / "internal" / "late_test.go").write_text("package internal\nfunc TestLate(t *testing.T) {}\n")
+                subprocess.run(["git", "add", "internal/late_test.go"], cwd=root, check=True)
+
+            with _after_the_reads(a_test_file_is_added) as fired:
+                errors = check_analysis.check("mine", root)
+            self.assertTrue(fired, "주입이 닿지 않았다")
+            self.assertEqual(len(errors), 1, errors)
+            self.assertIn(self.MOVED, errors[0])
+            self.assertIn("the tracked file list changed", errors[0])
+
+    def test_an_untracked_test_file_that_appears_while_judged_is_not_an_input(self) -> None:
+        """짝 (task 7.5.9). 추적되지 않은 시험 파일은 판정의 입력이 **아니다** — 생겨도 재실행을 부르지 않는다.
+        편집 전에는 트리 전수 순회가 이 파일을 원장에 넣어서 하네스 사본 하나가 생길 때마다 판정이 낡았다."""
         raw = tempfile.TemporaryDirectory()
         with raw:
             root, _ = _own_work_fixture(raw)
@@ -7017,9 +7041,7 @@ class TheRecheckReadsWhatTheVerdictRead(unittest.TestCase):
                     "package internal\nfunc TestLate(t *testing.T) {}\n")) as fired:
                 errors = check_analysis.check("mine", root)
             self.assertTrue(fired, "주입이 닿지 않았다")
-            self.assertEqual(len(errors), 1, errors)
-            self.assertIn(self.MOVED, errors[0])
-            self.assertIn("_test.go", errors[0])
+            self.assertEqual(errors, [])
 
     def test_a_bundle_that_appears_after_the_evidence_was_read_asks_for_a_rerun(self) -> None:
         """**출처 레드팀 · 시험 품질(독립).** 재확인의 `present`/`targets` 절반을 못 박는다 — `ast.json` 바이트만
@@ -7052,6 +7074,11 @@ class TheRecheckReadsWhatTheVerdictRead(unittest.TestCase):
         raw = tempfile.TemporaryDirectory()
         with raw:
             root, _ = _own_work_fixture(raw)
+            # 이웃의 커밋은 **이미 추적되는** 파일을 고친다 (task 7.5.9). 추적 목록이 원장에 든 뒤로는 새 파일을 더하는
+            # 커밋이 그 목록으로 **먼저** 잡혀 "the tracked file list changed" 가 나온다(실측) — 이 시험이 재는 것은 원장을
+            # 다시 읽은 **뒤의** `HEAD` 물음(변이 AA5)이므로, 원장이 못 보는 커밋이어야 그 물음만 남는다.
+            (root / "notes.txt").write_text("before the neighbour\n")
+            _commit_all(root, "notes.txt is tracked before the judgement")
             before = check_analysis._head_commit(root)
             real = check_analysis._reads_moved
             fired = []
@@ -7361,7 +7388,7 @@ class TheRecheckReadsWhatTheVerdictRead(unittest.TestCase):
         allowed = {
             ("_opened_bytes", "open"),
             ("_listing_outcome", "iterdir"),
-            ("_pattern_outcome", "rglob"),
+            ("_names_outcome", "listdir"),          # 이름만 — 아카이브 id 고르기 (보수 P1-2)
             ("record_landing", "open"),              # 기록 **쓰기**(`xb`) — 읽기가 아니다
             ("_write_loose_blob", "open"),           # 임시 저장소에 blob **쓰기**(`wb`) — 읽기가 아니다 (7.5.25)
         }
@@ -9365,6 +9392,477 @@ class TheTwoChangeResolversAgree(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertEqual(check_analysis._archived_change_id(name), "")
         self.assertEqual(check_analysis._archived_change_id("2026-09-11-mine"), "mine")
+
+
+def _is_the_tracked_listing(args, kwargs) -> bool:
+    """`_tracked_outcome` 의 `git … ls-files -z` 인가 — 고정(`-c …`)이 앞에 붙어도, `_worktree_entries` 의 `ls-files -s -v -z` 는 아니다."""
+    argv = args[0] if args else kwargs.get("args")
+    return isinstance(argv, list) and argv[-2:] == ["ls-files", "-z"]
+
+
+class ATestCitationIsAnsweredByTrackedFilesOnly(unittest.TestCase):
+    """시험 인용은 **추적되는** 파일로만 충족된다 (task 7.5.9, 7.5.2.3 재리뷰 정확성).
+
+    편집 전 `test_index` 는 `*_test.go` 를 디스크 전수로 색인해서, 추적되지 않는 파일(gitignore 된
+    하네스 사본 · 저자가 `git add` 안 한 파일)이 인용을 충족했다. 저장소의 디스크 수는 이 change 자신의 하네스가
+    도는 동안 늘었다 줄었다(1d1e5ca7: 추적 959 · 디스크 971 — 차이 12 가 전부 `_work/**/extract_go_ast_test.go`,
+    둘은 한 단계 깊은 `75_mut_work.*/logic-map/`).
+    `resolve_test_file` 의 세 갈래도 같은 모양이었다 — 사본이 생기면 맨이름 갈래가 **둘**을 찾아 해소를 포기했고,
+    패키지 안의 추적 안 된 파일이 추적된 파일의 좌표 판정을 가렸다. 둘 다 **거절을 지웠다**(permissive).
+
+    추적 안 된 파일은 없는 파일로 친다. 인덱스에 올린(staged) 파일은 추적된다. **멤버십은 인덱스, 바이트는 워킹트리**다 —
+    머지된 트리의 답이 아니다(인덱스에 올린 빈 스텁 + 워킹트리의 시험 이름이면 통과한다, 편집 전에도 — 보수 때 잰 것).
+    """
+
+    def test_a_test_only_in_an_untracked_file_is_not_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_test_file(root, "sample_test.go", {"TestRunLeaf": 3})
+            stray = write_test_file(root, "stray_test.go", {"TestOnlyOnThisDisk": 3})
+            write_bundle(root, branches=None, branch_rows="| B1 | leaf | `TestOnlyOnThisDisk` | yes | yes |")
+            errors = run_check(root, untracked=(stray,))
+        self.assertEqual(
+            errors,
+            ["pkg--run: branch test map cites TestOnlyOnThisDisk, which is not a Go test function "
+             "in any tracked file"],
+        )
+
+    def test_a_staged_test_file_is_evidence(self) -> None:
+        """양성 대조 — 추적은 **인덱스**다. 커밋 전이라도 `git add` 한 파일은 머지에 들어간다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_test_file(root, "stray_test.go", {"TestOnlyOnThisDisk": 3})
+            write_bundle(root, branches=None, branch_rows="| B1 | leaf | `TestOnlyOnThisDisk` | yes | yes |")
+            self.assertEqual(run_check(root), [])
+
+    def test_an_untracked_copy_does_not_hide_a_bare_name_coordinate(self) -> None:
+        """**덤 (Manager 지시 · 정정).** 맨이름 갈래가 사본이 생기면 `len(matches) != 1` 로 해소를 포기한다 — tasks.md 는
+        그것을 "없던 거절을 만든다" 로 적었지만 해소 실패는 `continue` 라 **있던 거절이 사라진다**. 대조군이 거절을 보인다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            far = root / "other" / "far_test.go"
+            far.parent.mkdir(parents=True)
+            far.write_text("package other\n" + "\n".join("// pad" for _ in range(4)) + "\n", encoding="utf-8")
+            write_bundle(root, branches=None, branch_rows="| B1 | leaf | `far_test.go:900` | yes | yes |")
+            expected = ["pkg--run: branch test map cites far_test.go:900, past the end of a 5-line file"]
+            with tempfile.TemporaryDirectory() as control:
+                shutil.copytree(root, control, dirs_exist_ok=True)
+                self.assertEqual(run_check(Path(control)), expected)            # 대조군 — 사본 없음
+            copy = root / "copy" / "far_test.go"
+            copy.parent.mkdir(parents=True)
+            copy.write_bytes(far.read_bytes())
+            self.assertEqual(run_check(root, untracked=(copy,)), expected)
+
+    def test_an_untracked_file_in_the_package_does_not_answer_for_the_tracked_one(self) -> None:
+        """패키지 안 갈래. 추적 안 된 긴 `x_test.go` 가 패키지에 있으면 편집 전에는 그것이 좌표를 받았다 —
+        머지 뒤에는 그 파일이 없고 좌표는 추적된 짧은 파일로 해소되어 끝을 넘는다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            far = root / "other" / "far_test.go"
+            far.parent.mkdir(parents=True)
+            far.write_text("package other\n" + "\n".join("// pad" for _ in range(4)) + "\n", encoding="utf-8")
+            local = root / "internal" / "far_test.go"
+            local.parent.mkdir(parents=True)
+            local.write_text("package sample\n" + "\n".join("// pad" for _ in range(1000)) + "\n", encoding="utf-8")
+            write_bundle(root, branches=None, branch_rows="| B1 | leaf | `far_test.go:900` | yes | yes |")
+            self.assertEqual(
+                run_check(root, untracked=(local,)),
+                ["pkg--run: branch test map cites far_test.go:900, past the end of a 5-line file"],
+            )
+
+    def test_a_qualified_coordinate_into_an_untracked_file_is_unresolved(self) -> None:
+        """이름 붙은 갈래. 추적 안 된 파일로 가는 좌표는 **해소되지 않는다** — 해소 못 한 좌표는 오늘
+        오류가 아니다(`test_a_qualified_path_that_does_not_exist_is_not_silently_skipped` 가 그 정책을 못 박는다).
+        편집 전에는 추적 안 된 그 파일의 줄 수로 거절했다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            stray = root / "nowhere" / "sample_test.go"
+            stray.parent.mkdir(parents=True)
+            stray.write_text("package nowhere\n", encoding="utf-8")
+            write_bundle(root, branches=None, branch_rows="| B1 | leaf | `nowhere/sample_test.go:4` | yes | yes |")
+            self.assertEqual(run_check(root, untracked=(stray,)), [])
+
+    def test_a_tracked_file_list_that_cannot_be_read_is_a_fault_not_an_empty_index(self) -> None:
+        """추적 목록을 못 물으면 **결함**이다 — 빈 색인이면 모든 인용이 "없는 시험" 이 되어 이유가 사라진다
+        ([[a-fault-must-become-a-verdict]])."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            real = subprocess.run
+
+            def refuses(*args, **kwargs):
+                if _is_the_tracked_listing(args, kwargs):
+                    argv = args[0] if args else kwargs.get("args")
+                    return subprocess.CompletedProcess(argv, 128, b"", b"fatal: index file corrupt\n")
+                return real(*args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", refuses):
+                code, output = _cli(root)
+            self.assertEqual(code, 1, output)
+            self.assertIn("cannot judge this change: cannot list the tracked files: fatal: index file corrupt", output)
+
+    def test_a_tracked_listing_that_cannot_start_or_times_out_is_a_fault(self) -> None:
+        """**보수 (독립 적대 리뷰 P1-3).** 자식을 못 띄움 · 시한 두 결함 갈래에 행동 시험이 0 이었다 — 그 갈래가 빈 목록과
+        빈 해시를 돌려주는 변이 MZ1 이 스위트 408 을 초록으로 통과했다(빈 색인 + 인용 없는 픽스처 = `[]`)."""
+        for raised, said in ((subprocess.TimeoutExpired(["git", "ls-files", "-z"], 30), "timed out after 30 seconds"),
+                             (FileNotFoundError(errno.ENOENT, "No such file or directory", "git"),
+                              "No such file or directory: 'git'")):
+            raw = tempfile.TemporaryDirectory()
+            with raw, self.subTest(raised=type(raised).__name__):
+                root, _ = _own_work_fixture(raw)
+                real = subprocess.run
+
+                def fails(*args, **kwargs):
+                    if _is_the_tracked_listing(args, kwargs):
+                        raise raised
+                    return real(*args, **kwargs)
+
+                with mock.patch.object(check_analysis.subprocess, "run", fails):
+                    code, output = _cli(root)
+                self.assertEqual(code, 1, output)
+                self.assertIn("cannot judge this change: ", output)
+                self.assertIn(said, output)
+
+    def test_a_dot_dot_or_doubled_slash_coordinate_names_the_tracked_file(self) -> None:
+        """**보수 (독립 적대 리뷰 P1-1 — 이 로트가 만든 회귀).** 이름 붙은 인용을 `root / cited` 그대로 추적 목록과 대조해서
+        `internal/../internal/near_test.go` 가 목록 밖 → 해소 못 함 → **조용히 통과**했다. 편집 전(1d1e5ca7)은 디스크의
+        정규 파일로 골라 `past the end` 로 거절했다. 경로를 풀어서 대조한다. 오늘 코퍼스의 `..` · `//` 좌표는 0 건(리뷰어 측정)."""
+        for cited in ("internal/../internal/near_test.go", "internal//near_test.go", "./internal/near_test.go"):
+            with tempfile.TemporaryDirectory() as tmp, self.subTest(cited=cited):
+                root = Path(tmp)
+                near = root / "internal" / "near_test.go"
+                near.parent.mkdir(parents=True)
+                near.write_text("package sample\n", encoding="utf-8")
+                write_bundle(root, branches=None, branch_rows=f"| B1 | leaf | `{cited}:4000` | yes | yes |")
+                self.assertEqual(
+                    run_check(root),
+                    [f"pkg--run: branch test map cites {cited}:4000, past the end of a 1-line file"],
+                )
+
+    def test_a_coordinate_through_a_tracked_directory_link_names_the_tracked_file(self) -> None:
+        """같은 부류 — 추적되는 디렉터리 심링크(`alias -> internal`)를 거치는 인용. 편집 전에는 링크를 따라 정규 파일로
+        골라 거절했다. 경로를 **실제 경로**로 풀어 추적 목록과 대조한다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            near = root / "internal" / "near_test.go"
+            near.parent.mkdir(parents=True)
+            near.write_text("package sample\n", encoding="utf-8")
+            (root / "alias").symlink_to("internal", target_is_directory=True)
+            write_bundle(root, branches=None, branch_rows="| B1 | leaf | `alias/near_test.go:4000` | yes | yes |")
+            self.assertEqual(
+                run_check(root),
+                ["pkg--run: branch test map cites alias/near_test.go:4000, past the end of a 1-line file"],
+            )
+
+    def test_a_coordinate_that_leaves_the_repository_is_unresolved(self) -> None:
+        """풀린 경로가 저장소 **밖**이면 추적 파일이 아니다 — 해소 못 함(오류 아님, 기존 정책)."""
+        with tempfile.TemporaryDirectory() as outside, tempfile.TemporaryDirectory() as tmp:
+            (Path(outside) / "far_test.go").write_text("package x\n", encoding="utf-8")
+            root = Path(tmp)
+            relative = os.path.relpath(Path(outside) / "far_test.go", root)
+            write_bundle(root, branches=None, branch_rows=f"| B1 | leaf | `{relative}:4000` | yes | yes |")
+            self.assertEqual(run_check(root), [])
+
+    def test_the_tracked_listing_does_not_start_the_repositorys_fsmonitor(self) -> None:
+        """**보수 (독립 주장정확성 리뷰 F9).** `git ls-files -z` 에 `SNAPSHOT_PINS` 가 없어서 저장소의 `core.fsmonitor` 에
+        적힌 프로그램이 판정 중에 **실제로 떴다**(리뷰어 실측, 핀을 주면 0 회). 판정이 저장소가 설정한 프로그램을 띄울
+        까닭이 없다 — 다른 인덱스 읽기(`_worktree_entries`)와 같은 고정을 준다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            marker = Path(raw.name).parent / f"fsmonitor-ran.{os.getpid()}.{Path(raw.name).name}"
+            hook = root / ".git" / "fsmonitor-hook"
+            hook.write_text(f"#!/bin/sh\necho ran >> {marker}\nexit 1\n")
+            hook.chmod(0o755)
+            subprocess.run(["git", "config", "core.fsmonitor", str(hook)], cwd=root, check=True)
+            try:
+                self.assertEqual(check_analysis.check("mine", root), [])
+                self.assertFalse(marker.exists(), "판정이 저장소의 fsmonitor 프로그램을 띄웠다")
+            finally:
+                marker.unlink(missing_ok=True)
+
+
+class AnArchiveEntryIsAskedOnlyWhenItsNameMatches(unittest.TestCase):
+    """아카이브 항목은 **이름이 맞을 때만** 종류를 묻는다 (보수 — 독립 적대 리뷰 P1-2, 폭발 반경).
+
+    7.5.11 이 목록의 종류를 `os.stat` 으로 묻게 하자 `resolve_referenced_change` 의 아카이브 목록(모든 판정이 연다)에서
+    **무관한** 항목 하나가 끊긴 링크 · 고리면 **모든 change** 의 게이트와 `--record-landing` 이 rc 1 이 됐다(리뷰어 재현:
+    `cannot tell what \`2026-01-01-ghost\` is`). 7.5.11 의 센서스(증거 디렉터리 3,183)는 이 공유 디렉터리가 모집단 밖이었다.
+    이름은 `os.listdir` 로 받고(종류를 안 묻는다) id 가 맞는 이름만 `_kind` 로 묻는다.
+    """
+
+    def _archive(self, root: Path) -> Path:
+        archive = root / "openspec" / "changes" / "archive"
+        archive.mkdir(parents=True, exist_ok=True)
+        return archive
+
+    def test_an_unrelated_broken_link_in_the_archive_does_not_stop_the_gate(self) -> None:
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            archive = self._archive(root)
+            (archive / "2026-01-01-ghost").symlink_to(archive / "nowhere")
+            (archive / "2026-01-02-loop").symlink_to(archive / "2026-01-02-loop")
+            self.assertEqual(check_analysis.check("mine", root), [])
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 0, lines)
+
+    def test_a_broken_link_under_the_changes_own_id_is_named(self) -> None:
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            archive = self._archive(root)
+            (archive / "2026-01-01-mine").symlink_to(archive / "nowhere")
+            code, output = _cli(root)
+            self.assertEqual(code, 1, output)
+            self.assertIn("cannot tell what `2026-01-01-mine` is", output)
+            code, output = _cli(root, "--record-landing")
+            self.assertEqual(code, 1, output)
+            self.assertIn("cannot tell what `2026-01-01-mine` is", output)
+
+    def test_an_archived_copy_that_appears_while_judged_asks_for_a_rerun(self) -> None:
+        """이름 목록은 여전히 원장에 든다 — 판정 중 같은 id 의 아카이브 사본이 생기면 다음 판정은 "열려 있고 아카이브도 됐다"
+        로 거절한다. 그 갈림이 재확인에 보여야 한다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            archive = self._archive(root)
+            with _after_the_reads(lambda: (archive / "2026-01-01-mine").mkdir()) as fired:
+                errors = check_analysis.check("mine", root)
+            self.assertTrue(fired, "주입이 닿지 않았다")
+            self.assertEqual(len(errors), 1, errors)
+            self.assertIn("while this change was being judged", errors[0])
+
+
+class AReadFingerprintIsInjective(unittest.TestCase):
+    """서로 다른 두 읽기는 같은 지문을 내지 않는다 (task 7.5.10, 7.5.2.3 재리뷰 정확성 — 리뷰어가 충돌쌍을 만들었다).
+
+    편집 전 `_listing_outcome` 은 `name\\t{d|f}` 를 `\\n` 으로 이었다. 탭과 개행은 POSIX 이름에 합법이라 파일 둘
+    `a` · `b` 와 파일 하나 `a\\tf\\nb` 가 **같은 글자**를 냈다 — 판정 중 그렇게 바꾸면 재확인이 못 본다. 같은 파일의
+    `_safe_changed_go_paths` 가 바로 그 글자들을 거절한다. (`_pattern_outcome` 의 같은 결함은 7.5.9 가 그 함수를
+    없애며 닫았다 — 영수증은 `analysis/harness/7510_collide.py`.)
+    """
+
+    # 앞 둘은 옛 인코딩(`\\t` · `\\n` 으로 잇기)의 충돌쌍이고, 셋째는 **구분자 없이 잇는** 인코딩의 충돌쌍이다 —
+    # `a`+`f` · `b`+`f` 와 `afb`+`f` 는 같은 바이트다. 길이 접두가 빠지면 셋째가 빨갛다.
+    PAIRS = (
+        (("a", "f"), ("b", "f")), (("a\tf\nb", "f"),),
+        (("a", "f"), ("b", "d")), (("a\tf\nb", "d"),),
+        (("a", "f"), ("b", "f")), (("afb", "f"),),
+    )
+
+    @staticmethod
+    def _make(where: Path, entries) -> Path:
+        where.mkdir()
+        for name, kind in entries:
+            (where / name).mkdir() if kind == "d" else (where / name).write_text("")
+        return where
+
+    def test_the_known_collisions_have_different_fingerprints(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            for number in range(0, len(self.PAIRS), 2):
+                left = self._make(Path(raw) / f"left{number}", self.PAIRS[number])
+                right = self._make(Path(raw) / f"right{number}", self.PAIRS[number + 1])
+                with self.subTest(left=self.PAIRS[number], right=self.PAIRS[number + 1]):
+                    self.assertNotEqual(check_analysis._listing_outcome(left)[0],
+                                        check_analysis._listing_outcome(right)[0])
+
+    def test_a_listing_that_becomes_its_collision_while_judged_asks_for_a_rerun(self) -> None:
+        """원장 수준에서 — 판정이 `a` · `b` 를 읽은 뒤 디렉터리가 `a\\tf\\nb` 하나가 되면 재확인이 본다."""
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            where = self._make(root / "bundle", self.PAIRS[0])
+            with check_analysis._ledger() as book:
+                check_analysis._listed(where)
+            for name, _ in self.PAIRS[0]:
+                (where / name).unlink()
+            (where / "a\tf\nb").write_text("")
+            self.assertIn("bundle changed", check_analysis._reads_moved(root, book))
+
+    def test_the_tracked_list_fingerprint_is_the_bytes_git_said(self) -> None:
+        """추적 목록의 지문은 `git ls-files -z` 가 낸 **바이트 그대로**의 해시다 — 경로에 NUL 은 못 들어가므로
+        출력이 같으면 목록이 같다. 경로를 `\\n` 으로 다시 잇는 판본이면 아래 **한 저장소의 두 상태**가 같은 지문을 낸다 —
+        A 는 `a_test.go` · `b_test.go`, B 는 파일 하나인데 그 절대경로의 **글자**가 A 의 두 절대경로를 `\\n` 으로 이은 것과 같다
+        (디렉터리 `a_test.go\\n` 아래에 뿌리의 절대경로를 다시 세운다). 첫 판은 저장소 **둘**을 견줘서 뿌리가 달라 변이
+        AN3 에서도 지문이 갈렸다(생존 — 시험이 충돌을 만들지 못했다)."""
+        with tempfile.TemporaryDirectory() as raw:
+            repo = Path(raw)
+            subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+            for name in ("a_test.go", "b_test.go"):
+                (repo / name).write_text("package x\n")
+            subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+            before, listed_before = check_analysis._tracked_outcome(repo)
+            subprocess.run(["git", "rm", "-q", "--cached", "a_test.go", "b_test.go"], cwd=repo, check=True)
+            (repo / "a_test.go").unlink()
+            (repo / "b_test.go").unlink()
+            deep = repo / "a_test.go\n" / str(repo).lstrip("/")
+            deep.mkdir(parents=True)
+            (deep / "b_test.go").write_text("package x\n")
+            subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+            after, listed_after = check_analysis._tracked_outcome(repo)
+            self.assertEqual("\n".join(map(str, listed_before)), "\n".join(map(str, listed_after)),
+                             "두 상태가 옛 이음에서 같은 글자가 아니다 — 충돌쌍을 못 만들었다")
+            self.assertNotEqual(before, after)
+
+
+class AnEntryWhoseKindCannotBeReadIsNamed(unittest.TestCase):
+    """목록의 **종류**를 못 읽는 항목은 이름 댄 결함이다 (task 7.5.11, 7.5.2.3 재리뷰 정확성 · 시험품질).
+
+    편집 전 `_listing_outcome` 은 `child.is_dir()` 로 종류를 정했다. 그 원시는 판본에 따라 `OSError` 를 **삼킨다** —
+    이 저장소의 3.12.3 에서 끊긴 심링크 · 심링크 고리 · 사라진 이름(ENOENT · ELOOP)은 `False`, 즉 "파일" 이다
+    (3.14 는 권한 오류까지 삼킨다 — `analysis/harness/7511_isdir.py` 가 판본마다 찍는 영수증). 증거 디렉터리의 그런
+    항목은 번들 목록에서 조용히 빠졌다. `_read_evidence` 가 "있는데 못 여는 증거 디렉터리" 를 한 층 위에서만 고쳤다고
+    적은 바로 그 위험의 한 층 아래다. 이제 종류를 `os.stat` 으로 직접 묻고, 못 물으면 그 이름을 댄다.
+    """
+
+    def _judged_with(self, make) -> list[str]:
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            analysis = _own_ast(root).parent.parent
+            self.assertEqual(check_analysis.check("mine", root), [])                  # 대조군
+            make(analysis)
+            return check_analysis.check("mine", root)
+
+    def test_a_dangling_link_among_the_bundles_is_named(self) -> None:
+        errors = self._judged_with(lambda analysis: (analysis / "ghost").symlink_to(analysis / "nowhere"))
+        self.assertEqual(len(errors), 1, errors)
+        self.assertTrue(errors[0].startswith("cannot derive modified Go functions: "), errors)
+        self.assertIn("cannot tell what `ghost` is", errors[0])
+
+    def test_a_link_loop_among_the_bundles_is_named(self) -> None:
+        errors = self._judged_with(lambda analysis: (analysis / "loop").symlink_to(analysis / "loop"))
+        self.assertEqual(len(errors), 1, errors)
+        self.assertTrue(errors[0].startswith("cannot derive modified Go functions: "), errors)
+        self.assertIn("cannot tell what `loop` is", errors[0])
+
+    def test_a_link_to_a_bundle_is_still_a_bundle(self) -> None:
+        """양성 대조 — 따라가서 디렉터리면 번들이다(`is_dir()` 과 같은 뜻). 링크된 번들이 같은 함수를 한 번 더
+        적으므로 판정은 중복을 댄다 — 번들로 **셌다**는 증거다."""
+        errors = self._judged_with(
+            lambda analysis: (analysis / "linked").symlink_to(analysis / "internal--own", target_is_directory=True))
+        self.assertTrue(any("duplicate evidence for internal/own.go:Own" in error for error in errors), errors)
+
+    def test_a_dangling_link_inside_a_bundle_names_that_bundle(self) -> None:
+        """번들 **안**의 목록도 같은 깔때기다 — 실패는 그 번들의 이름 댄 줄이다(`unlistable`). 편집 전(1d1e5ca7)에는
+        목록이 그 이름을 "파일" 로 넣었고 `_bundle_text` 가 못 여는 것을 "사라진 파일" 로 건너뛰어 판정이 **`[]`** 였다
+        (실측) — 조용한 건너뛰기 둘이 겹친 자리다. 저장소의 번들 안 심링크는 0 이다(3,183 디렉터리 · 항목 15,428)."""
+        errors = self._judged_with(
+            lambda analysis: (analysis / "internal--own" / "ghost.md").symlink_to(analysis / "nowhere.md"))
+        self.assertIn("internal--own: cannot read every file in the bundle "
+                      "(cannot tell what `ghost.md` is: No such file or directory: internal--own)", errors)
+
+    def test_the_kind_is_not_read_through_is_dir(self) -> None:
+        """구조 — 종류를 정하는 원시가 판본마다 삼키는 것이 다른 `is_dir()` 로 돌아가지 않는다."""
+        tree = ast.parse(Path(check_analysis.__file__).read_text(encoding="utf-8"))
+        listing = next(item for item in ast.walk(tree)
+                       if isinstance(item, ast.FunctionDef) and item.name == "_listing_outcome")
+        calls = {ast.unparse(call.func).split(".")[-1] for call in ast.walk(listing) if isinstance(call, ast.Call)}
+        self.assertNotIn("is_dir", calls)
+        self.assertIn("stat", calls)
+
+
+class EveryGateSubprocessHasATimeout(unittest.TestCase):
+    """판정 경로의 자식 프로세스는 전부 시한을 받는다 (task 7.5.15, 7.5.2.3 재리뷰 정확성).
+
+    `GATE_FAULTS` 에 `subprocess.SubprocessError` 가 든 까닭은 `TimeoutExpired` 가 판정 줄이 되게 하려는 것이다 —
+    시한이 없는 자리는 멎으면 그 계약이 닿지 않는다(판정 줄도 traceback 도 없이 멎는다). 1d1e5ca7 에서
+    `check_analysis.py` 22 자리 중 1(`_safe_changed_go_paths` 의 `git diff --numstat`) · `execution_baseline.py` 5 자리
+    전부가 시한이 없었다(tasks 의 "`base_file` 의 `git show`" 는 7.5.34 가 그 함수를 지워 없어졌다). 값은 **값 단위로**
+    한 번에 못 박는다 — 한 자리만 고치면 나머지의 시험이 그 한 자리로 초록이 된다([[correction-unit-must-be-the-value]]).
+    """
+
+    def test_every_child_process_in_the_gate_modules_names_a_timeout(self) -> None:
+        for module in (check_analysis, adoption):
+            path = Path(module.__file__)
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            spawns = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
+                      and ast.unparse(node.func).startswith("subprocess.")]
+            with self.subTest(module=path.name):
+                self.assertTrue(spawns, "자식 프로세스를 하나도 못 셌다 — 계측기부터 의심할 것")
+                self.assertEqual(sorted({ast.unparse(node.func) for node in spawns}), ["subprocess.run"],
+                                 "`subprocess.run` 밖의 진입점은 시한 규칙을 비켜 간다")
+                missing = [node.lineno for node in spawns
+                           if not any(keyword.arg == "timeout" for keyword in node.keywords)]
+                self.assertEqual(missing, [], f"{path.name}: 시한 없는 자식 프로세스")
+
+    def test_every_child_the_verdict_starts_is_given_a_timeout(self) -> None:
+        """행동 — 한 번의 판정이 **실제로** 띄운 자식을 전부 본다(구조 시험이 못 보는 우회: `**kwargs` 로 넘긴 인자)."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            real = subprocess.run
+            unbounded = []
+
+            def watching(*args, **kwargs):
+                if kwargs.get("timeout") is None:
+                    unbounded.append(args[0] if args else kwargs.get("args"))
+                return real(*args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", watching):
+                self.assertEqual(check_analysis.check("mine", root), [])
+                code, _ = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 0)
+            self.assertEqual(unbounded, [])
+
+
+class ARecordNamesAMovedInputBeforeARefusal(unittest.TestCase):
+    """기록 명령은 쓰기 직전에 **역사 → 원장 → 거절** 순서로 말한다 (task 7.5.16, 7.5.2.3 재리뷰 정확성).
+
+    편집 전 `_recording_moved` 는 역사 → 거절 → 원장이었다. 걷는 동안 판정이 읽은 추적 파일이 바뀌면 거절 쪽이 먼저 그
+    새 바이트로 사유를 만들어 냈다 — 옮겨진 입력으로 판정한 사유이고, 할 말은 "그 사이 입력이 움직였다, 다시 돌려라" 다.
+    역사를 거절보다 먼저 묻는 이유(docstring)와 같은 이유다. 거절은 여전히 **계산된다** — 그 읽기도 원장에 들어가 마지막
+    대조가 본다. 순서는 **보고의 우선순위**다([[a-new-guard-unpins-the-guards-behind-it]]).
+
+    겨누는 입력은 `base-commit.txt` 다 — 기록 경로의 원장에서 증거 밖의 **유일한** 읽기다(증거의 움직임은 `compute_landing`
+    의 `_raise_if_inputs_moved` 가 먼저 잡는다). 그 편집은 트리를 더럽히고 원장도 움직인다. 1d1e5ca7 에서 먼저 나오는
+    거절은 6.4(b) 의 base 대조이고, 6.4 이전(5a54f78d)에는 리뷰가 적은 **더러운 트리**였다 — 둘 다
+    `analysis/harness/7516_order.py` 가 그 리비전의 코드로 재현한다.
+    """
+
+    def test_an_input_that_moved_during_the_walk_is_named_before_the_refusal_it_causes(self) -> None:
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, marks = _own_work_fixture(raw)
+            base_file = root / "openspec" / "changes" / "mine" / "base-commit.txt"
+            with _on_walk(lambda: base_file.write_text(marks["W"] + "\n")) as fired:
+                code, lines = check_analysis.record_landing("mine", root)
+            self.assertTrue(fired, "주입이 닿지 않았다")
+            self.assertEqual(code, 1, lines)
+            self.assertEqual(len(lines), 1, lines)
+            self.assertIn("base-commit.txt changed while this change was being judged", lines[0])
+            self.assertFalse((root / "openspec" / "changes" / "mine" / check_analysis.LANDING_FILE).exists())
+
+    def test_the_history_is_asked_before_the_refusal_is_computed(self) -> None:
+        """구조 — 맨 앞의 역사 물음(B1)은 이 로트 뒤로 **행동으로는 못 박힌다**: `_judged_state_moved` 도 역사를 먼저 묻고
+        이제 거절보다 먼저 말하므로, B1 을 지운 변이 AA8 은 같은 문장을 내며 살아남았다(첫 판 생존, 도달 계측 "못 쟀다").
+        B1 이 하는 일은 역사가 움직였을 때 거절을 **계산하지 않는 것**(움직인 역사 위에서 증거 · base 를 다시 읽고 걷기 전
+        하한을 푸는 일)이라 출력으로 안 갈린다. 그래서 순서를 AST 로 못 박는다 — 역사 → 거절 계산 → 원장 대조, 그리고
+        돌려주는 식에서 원장이 거절보다 앞이다([[surviving-mutant-may-mean-accidental-safety]])."""
+        tree = ast.parse(Path(check_analysis.__file__).read_text(encoding="utf-8"))
+        moved = next(item for item in ast.walk(tree)
+                     if isinstance(item, ast.FunctionDef) and item.name == "_recording_moved")
+        order = [ast.unparse(call.func)
+                 for call in sorted((item for item in ast.walk(moved) if isinstance(item, ast.Call)),
+                                    key=lambda call: (call.lineno, call.col_offset))
+                 if ast.unparse(call.func) in ("_head_moved", "_recording_refusal", "_judged_state_moved")]
+        self.assertEqual(order, ["_head_moved", "_recording_refusal", "_judged_state_moved"], ast.unparse(moved))
+        final = moved.body[-1]
+        self.assertIsInstance(final, ast.Return)
+        self.assertEqual(ast.unparse(final.value), "_judged_state_moved(root, head, book) or refusal")
+
+    def test_a_refusal_with_no_moved_input_is_still_said(self) -> None:
+        """짝 — 원장 밖의 편집(추적 Go 파일)은 원장이 못 본다. 그때는 거절이 말한다(기존 시험의 모양을 여기서 한 번 더
+        두는 것은 **순서**를 재기 위해서다: 원장을 앞에 세운 판본이 거절을 지우면 이 시험이 빨갛다)."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            own = root / "internal" / "own.go"
+            with _on_walk(lambda: own.write_text("package internal\nfunc Own() int { return 9 }\n")) as fired:
+                code, lines = check_analysis.record_landing("mine", root)
+            self.assertTrue(fired, "주입이 닿지 않았다")
+            self.assertEqual(code, 1, lines)
+            self.assertTrue(any("uncommitted changes to tracked files" in line for line in lines), lines)
 
 
 if __name__ == "__main__":

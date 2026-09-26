@@ -1,0 +1,96 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "194ec1a2994162a2cd035455d3532c4fe0cef9f1bad4a2e86a583d343947ecbb",
+  "function": "_tracked_outcome",
+  "signature": "_tracked_outcome(root)",
+  "start": {
+    "line": 1411,
+    "column": 1
+  },
+  "end": {
+    "line": 1430,
+    "column": 75
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 1422,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 1424,
+      "inherited_line": false,
+      "source": "except (OSError, subprocess.SubprocessError) as exc:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 1426,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B4",
+      "kind": "comprehension",
+      "line": 1429,
+      "inherited_line": true,
+      "source": " for raw in process.stdout.split(b'\\x00') if raw"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1425,
+      "value": "(f'{type(exc).__name__}', exc)"
+    },
+    {
+      "line": 1427,
+      "value": "(f'rc:{process.returncode}', RuntimeError('cannot list the tracked files: ' + _first_line(process.stderr, 'git ls-files failed')))"
+    },
+    {
+      "line": 1430,
+      "value": "('tracked:' + hashlib.sha256(process.stdout).hexdigest(), listed)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1423,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 1425,
+      "callee": "type"
+    },
+    {
+      "line": 1427,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 1428,
+      "callee": "_first_line"
+    },
+    {
+      "line": 1429,
+      "callee": "os.fsdecode"
+    },
+    {
+      "line": 1429,
+      "callee": "process.stdout.split"
+    },
+    {
+      "line": 1430,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 1430,
+      "callee": "hashlib.sha256(process.stdout).hexdigest"
+    }
+  ]
+}

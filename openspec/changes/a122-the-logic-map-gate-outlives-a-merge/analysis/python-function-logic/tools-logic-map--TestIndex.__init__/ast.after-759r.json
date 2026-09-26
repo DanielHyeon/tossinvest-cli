@@ -1,0 +1,30 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "ff590b79db6ed6a8cd7101e47f8df6a9b4841310b5320a398730eadf6a8a02e5",
+  "function": "TestIndex.__init__",
+  "signature": "TestIndex.__init__(self, files)",
+  "start": {
+    "line": 2246,
+    "column": 5
+  },
+  "end": {
+    "line": 2248,
+    "column": 27
+  },
+  "branches": [],
+  "returns": [],
+  "raises": [],
+  "calls": [
+    {
+      "line": 2247,
+      "callee": "super"
+    },
+    {
+      "line": 2247,
+      "callee": "super().__init__"
+    }
+  ]
+}

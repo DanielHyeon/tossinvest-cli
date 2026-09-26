@@ -219,3 +219,66 @@ M2 의 CAUGHT 는 이 질문에 답하지 못한다 — 복사 시험의 바늘�
 | | 종류 | 소스 |
 |---|---|---|
 | — | — | (소스 한 줄 단위로 같다) |
+
+## task 7.5.15 — 시한 (2026-09-26)
+
+> 편집 전 `ast.before-7515.json`(revision `1d1e5ca7`) · 편집 후 `ast.after-7515.json` — 분기 42 → 42, 반환 · raise · 호출 수 불변. 중간판(`execution_baseline.py` source sha `22ea8c60964f` — **최종이 아니다**, 보수 절 정정) 에서 `:407-516`.
+
+편집 후 `tools/logic-map/execution_baseline.py:407-516` · 분기 42 · 반환 2 · raise 24 · 호출 94 (`ast.after-7515.json`, source sha `22ea8c60964f`)
+편집 전 `tools/logic-map/execution_baseline.py:395-501` · 분기 42 · 반환 2 · raise 24 · 호출 94 (`ast.before-7515.json`, revision `1d1e5ca7`, source sha `504ec55c505a`)
+
+| 옛 id | 새 id | 새 줄 | 종류 | 소스(새) | 바뀐 것 |
+|---|---|---|---|---|---|
+| B1 | B1 | 409 | Try | `try:` | 같음 |
+| B2 | B2 | 411 | ExceptHandler | `except FileNotFoundError:` | 같음 |
+| B3 | B3 | 413 | If | `if not stat.S_ISREG(record_mode):` | 같음 |
+| B4 | B4 | 419 | BoolOp | `change_id != CHANGE or persisted != P` | 같음 |
+| B5 | B5 | 419 | If | `if change_id != CHANGE or persisted != P:` | 같음 |
+| B6 | — | — | If | `if subprocess.run(['git', 'symbolic-ref', '-q', 'HEAD'], cwd=root, capture_output=True, check=False).returncode == 0:` (옛) | **빠짐** |
+| — | B6 | 423 | If | `if subprocess.run(['git', 'symbolic-ref', '-q', 'HEAD'], cwd=root, capture_output=True, timeout=10, check=False).returnc` | **새** |
+| B7 | B7 | 428 | If | `if _regular_committed(root, base_relative, head) != (P + '\n').encode('ascii'):` | 같음 |
+| B8 | B8 | 432 | If | `if set(record) != required:` | 같음 |
+| B9 | B9 | 443 | If | `if not all((isinstance(record[key], str) for key in required - {'schema'})):` | 같음 |
+| B10 | B10 | 443 | comprehension | `for key in required - {'schema'}` | 같음 |
+| B11 | B11 | 445 | BoolOp | `record['change'] != CHANGE or record['planning_base'] != P or record['execution_base'] != E or (record['pre_edit_provena` | 같음 |
+| B12 | B12 | 445 | If | `if record['change'] != CHANGE or record['planning_base'] != P or record['execution_base'] != E or (record['pre_edit_prov` | 같음 |
+| B13 | B13 | 447 | If | `if record['inherited_history_disposition'] != 'committed historical work; missing original analysis remains debt':` | 같음 |
+| B14 | B14 | 450 | For | `for field in ('ledger_path', 'adversarial_review_path', 'gstack_review_path'):` | 같음 |
+| B15 | B15 | 452 | For | `for field in ('ledger_sha256', 'adversarial_review_sha256', 'gstack_review_sha256'):` | 같음 |
+| B16 | B16 | 454 | If | `if record['adversarial_review_path'] == record['gstack_review_path']:` | 같음 |
+| B17 | B17 | 457 | BoolOp | `not isinstance(record['source_tree'], str) or len(record['source_tree']) != 40 or any((char not in '0123456789abcdef' fo` | 같음 |
+| B18 | B18 | 457 | If | `if not isinstance(record['source_tree'], str) or len(record['source_tree']) != 40 or any((char not in '0123456789abcdef'` | 같음 |
+| B19 | B19 | 457 | comprehension | `for char in record['source_tree']` | 같음 |
+| B20 | B20 | 462 | If | `if _git(root, 'rev-parse', source + '^{tree}').stdout.strip() != record['source_tree']:` | 같음 |
+| B21 | B21 | 465 | For | `for args in (('diff', '--quiet'), ('diff', '--cached', '--quiet')):` | 같음 |
+| B22 | — | — | If | `if subprocess.run(['git', *args], cwd=root, capture_output=True, check=False).returncode:` (옛) | **빠짐** |
+| — | B22 | 466 | If | `if subprocess.run(['git', *args], cwd=root, capture_output=True, timeout=30, check=False).returncode:` | **새** |
+| B23 | B23 | 468 | For | `for path in nul_paths(root, 'diff', '--name-only', source, head):` | 같음 |
+| B24 | B24 | 469 | BoolOp | `path.startswith('openspec/') or path.startswith('docs/pm/')` | 같음 |
+| B25 | B25 | 469 | If | `if not (path.startswith('openspec/') or path.startswith('docs/pm/')):` | 같음 |
+| B26 | B26 | 472 | For | `for path in sorted(candidates):` | 같음 |
+| B27 | B27 | 474 | BoolOp | `not _allowed_metadata(path) or not stat.S_ISREG(item.lstat().st_mode) or os.access(item, os.X_OK)` | 같음 |
+| B28 | B28 | 474 | If | `if not _allowed_metadata(path) or not stat.S_ISREG(item.lstat().st_mode) or os.access(item, os.X_OK):` | 같음 |
+| B29 | B29 | 479 | If | `if overlap:` | 같음 |
+| B30 | B30 | 482 | If | `if hashlib.sha256(ledger_raw).hexdigest() != record['ledger_sha256']:` | 같음 |
+| B31 | B31 | 484 | For | `for name in ('adversarial_review', 'gstack_review'):` | 같음 |
+| B32 | B32 | 485 | If | `if hashlib.sha256(_regular_committed(root, located[name + '_path'], head)).hexdigest() != record[name + '_sha256']:` | 같음 |
+| B33 | B33 | 489 | If | `if set(ledger) != ledger_required:` | 같음 |
+| B34 | B34 | 492 | If | `if ledger['inherited_history_disposition'] != 'committed historical work; missing original analysis remains debt':` | 같음 |
+| B35 | B35 | 494 | BoolOp | `not isinstance(ledger['planning_to_execution'], dict) or not isinstance(ledger['execution_to_source'], dict)` | 같음 |
+| B36 | B36 | 494 | If | `if not isinstance(ledger['planning_to_execution'], dict) or not isinstance(ledger['execution_to_source'], dict):` | 같음 |
+| B37 | B37 | 497 | If | `if ledger['planning_to_execution'] != expected_planning:` | 같음 |
+| B38 | B38 | 500 | comprehension | `for path in nul_paths(root, 'diff', '--name-only', E, source) if path.endswith('.go')` | 같음 |
+| B39 | B39 | 501 | If | `if recorded_paths != expected_paths:` | 같음 |
+| B40 | B40 | 503 | If | `if any((path not in {'cmd/tossctl/soak.go', 'cmd/tossctl/soak_test.go', 'internal/soak/attest.go', 'internal/soak/attest` | 같음 |
+| B41 | B41 | 503 | comprehension | `for path in expected_paths` | 같음 |
+| B42 | B42 | 512 | If | `if ledger.get('execution_to_source') != expected_execution:` | 같음 |
+
+B6 · B22 는 **조건식 안의** 자식 프로세스라 정렬이 "바뀜" 으로 본다 — 갈래는 같고 `timeout=` 인자만 늘었다: `symbolic-ref -q HEAD` 10
+(이웃 `_head_commit` 의 rev-parse), 두 `diff --quiet` 30(이웃 `_recording_refusal` 의 같은 명령). `go_inputs` · `_git` · `ancestry` 의 시한은
+각 함수의 FLM.
+
+## 보수 — 최종 파일로 다시 열거 (독립 주장정확성 리뷰 F11, 2026-09-26)
+
+최종 `tools/logic-map/execution_baseline.py:410-519` · 분기 42 · 반환 2 · raise 24 · 호출 94 · source sha `d17ea317f78c` (비교 기준 `ast.after-7515.json`, 그 판 `22ea8c60964f` `:407-516`).
+위 절들이 "최종" 이라 적은 sha 는 **중간판**이었다(리뷰 지적 — 표기를 고쳤다). 최종 파일에서 `ast.after-759r.json` 을 다시 뽑아 앞 절의 편집 후 열거와 대조했다 — 분기(종류 · 소스) · 반환 · raise · 호출 수가 **같다**(구조 동일). 바뀐 것은 sha 와 줄 좌표다.

@@ -7,3 +7,17 @@
 | 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
 |---|---|---|
 | 지문에 이름과 **종류**가 든다 | AA19 | `test_a_name_that_turns_into_a_bundle_while_judged_asks_for_a_rerun` (이 시험이 없을 때 **살아남았다**) |
+
+## task 7.5.10 · 7.5.11 (2026-09-26)
+
+짝은 손으로 고르지 않았다 — 갈래마다 변이를 걸어 실제로 빨개진 시험을 옮겼다(`analysis/harness/75_mut.py` 창 `228:246` · `97:98` · `99:100` · `101:102` · `102:103` · `112:113` · `239:240` · `244:246`(재실행), `7515_mut.py`; 사본 `A122_HARNESS_WORK` · pid 별 · 무변이 대조군 창 양끝 GREEN `Ran 407`, 구조 시험을 더한 뒤 창 `102:103` · `244:246` 은 `Ran 408`). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 | 잡는 시험 |
+|---|---|---|
+| 지문이 단사 — `\n` · `\t` 이음이 아니다 (7.5.10) | AN1 | `test_the_known_collisions_have_different_fingerprints` · `test_a_listing_that_becomes_its_collision_while_judged_asks_for_a_rerun` |
+| 길이 접두 (7.5.10) | AN2 | `test_the_known_collisions_have_different_fingerprints`(셋째 쌍 `{a, b}` 대 `{afb}`) |
+| 종류 한 글자 (B7) | AA19(재조준) | `test_a_name_that_turns_into_a_bundle_while_judged_asks_for_a_rerun` |
+| B2~B4 종류를 `os.stat` 으로 (7.5.11) | AO1(`is_dir()`) | 4 — 끊긴 링크 둘 · 고리 · 구조 `test_the_kind_is_not_read_through_is_dir` |
+| B4 못 물으면 결함 | AO2("파일" 로 삼킴) | 3 — 끊긴 링크(번들 사이 · 번들 안) · 고리 |
+| B4 결함의 타입이 `UnstatableEntry` | AO3(원래 `OSError` 를 그대로 — 번들 사이면 면제 경로로 샌다) | 3 — 같은 셋 |
+| 따라가서 디렉터리면 디렉터리 | — | `test_a_link_to_a_bundle_is_still_a_bundle`(양성 대조, 편집 전에도 초록) |

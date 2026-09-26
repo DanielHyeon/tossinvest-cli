@@ -25,6 +25,14 @@
 | `64r_census.py` | 6.4 보수의 새 가드(옮긴 change 의 base 를 같은 id 의 다른 자리와 대조)가 거절할 정상 입력 — 저장소 change 디렉터리 전수, git 으로 직접 | `python3 64r_census.py` |
 | `64r_head_calls.py` | `check` 한 번의 `_head_commit` 호출 수, 활성 change 전수 (`_head_commit` docstring 의 근거) | `python3 64r_head_calls.py` |
 | `7521_main_ab.py` | `main()` 출력 전체 A/B · 순서를 번갈아 · 결정적 계수(git 수 · `ast.json` 읽기 수) (7.5.2.1) | `python3 7521_main_ab.py [<before-sha>] [<초 예산>]` |
+| `759_census.py` | 시험 색인 · 인용 해소를 추적 파일로 좁히면 달라지는 번들 — 저장소 번들 **전수**의 인용 판정을 디스크 · 추적 거름 입힌 편집 전 · 편집 뒤 세 판으로 (7.5.9 — 거부하는 정상 입력) | `python3 759_census.py [<before-rev>]` |
+| `759_ab_verify.py` | `7521_main_ab.py` 가 DIFFERENT 로 찍은 change 를 전체 출력으로 다시 돌려, 7.5.9 의 거절 문장 꼬리만 정규화하고 견준다 | `python3 759_ab_verify.py <before-rev> <done.json>` |
+| `759_flm_rows.py` | FLM 표의 행을 `ast.before-*/after-*` 열거에서 `difflib` 정렬로 찍는다(손 재번호 금지) | `python3 759_flm_rows.py <함수> <전 꼬리표\|-> <후 꼬리표>` |
+| `7510_collide.py` | 원장 지문이 서로 다른 두 디스크 상태에 같은 값을 내는가 — 목록 · 순회(편집 전) · 추적 목록(편집 뒤) (7.5.10) | `python3 7510_collide.py [<rev>]` |
+| `7511_isdir.py` | `Path.is_dir()` · `rglob` 이 **이 인터프리터에서** 무엇을 삼키는가 — 판본 영수증 (7.5.11) | `python3 7511_isdir.py` · `uv run --no-project --python 3.14 7511_isdir.py` |
+| `7515_mut.py` | `execution_baseline.py` 시한 다섯 자리의 변이 EB1~EB5 — `75_mut.py` 의 헬퍼와 규율을 빌린다 (7.5.15) | `A122_HARNESS_WORK=<ext4> python3 7515_mut.py` |
+| `7516_order.py` | 기록 명령이 "움직인 입력" 과 "그 편집이 부른 거절" 중 무엇을 먼저 말하는가 — 같은 모양을 `5a54f78d` · `1d1e5ca7` · 워킹트리의 코드로 (7.5.16) | `python3 7516_order.py [<rev> ...]` |
+| `759r_resolver_ab.py` | 보수 P1-2(아카이브 이름 먼저)의 해소기 A/B — 활성 + 아카이브 change id 전수, 기준 리비전의 세 모듈 대 워킹트리 | `python3 759r_resolver_ab.py [<before-rev>]` |
 
 A/B 셋의 이어 달리기 기록(`_work/*_done.*.json`)은 **양쪽 소스**에 묶는다 — 기준만으로 묶으면 워킹트리가
 바뀐 뒤 옛 after 와 새 after 의 줄이 한 표에 섞인다(7.5.2 에서 `751`, 7.5.2.1 에서 `75_ab` 를 고쳤다).
@@ -61,3 +69,11 @@ ca = Path("tools/logic-map/check_analysis.py").read_text()
 **작업 자리 (6.4 보수).** `75_mut.py` · `64_gate_mut.py` 는 `A122_HARNESS_WORK=<디렉터리>` 가 있으면 사본과 전용 `GOCACHE` 를 거기에
 둔다(없으면 `_work/`). 이 저장소는 /mnt/D(ntfs-3g) 위라 `_work/` 에서는 스위트 한 판이 8~10 분이었다 — ext4 스크래치에서 잰
 판의 시간은 review.md 6.4 보수 절에 있다. 사본 · 캐시 자리만 바뀌고 판정 규율(무변이 대조군 창 양끝 · 사본에 pid · 한 번에 한 판)은 같다.
+
+**앵커 재조준 (7.5.9 · 7.5.10 · 7.5.16, 2026-09-26).** `75_mut.py` 의 AA3 · AA7 · AA19 는 겨누던 줄이 바뀌어 앵커가 0 회가 됐다 — 같은 뜻의
+새 줄로 다시 걸었다(원장이 트리 목록을 잊는다 → 추적 목록을 잊는다 · 기록 직전 거절을 다시 안 묻는다 · 목록 지문에서 종류가 빠진다). 이 로트의
+새 변이는 AM1~AM9 · AN1~AN3 · AO1~AO3 · AP1 · AQ1~AQ2(창 `228:246`)이고 `execution_baseline.py` 쪽은 `7515_mut.py` 다.
+
+**`7521_main_ab.py` 의 기준 사본은 `check_analysis.py` 만 그 리비전이다 (보수 정정, 2026-09-26).** `build()` 가 다른 모듈(`execution_baseline.py` ·
+`role_check.py`)은 워킹트리에서 복사한다 — 그 두 파일을 바꾼 로트의 A/B 는 "before `<rev>`" 가 아니다. 세 모듈을 다 그 리비전에서 꺼내는 것은
+`759_ab_verify.py` · `759r_resolver_ab.py` · `7516_order.py` 다. 보수 변이 창은 `246:253`(MZ1 · MR1~MR6)이다.

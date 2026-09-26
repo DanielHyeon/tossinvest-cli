@@ -362,8 +362,10 @@ MUTATIONS = {
          '    _remember("file", str(path), outcome) if not isinstance(value, OSError) else None')],
     "AA2_ledger_forgets_listings": [
         ('    _remember("dir", str(path), outcome)', '    pass')],
+    # AA3 · AA7 · AA19 는 task 7.5.9 · 7.5.10 · 7.5.16 이 겨누던 줄을 바꿔 다시 걸었다 — 뜻은 같다(원장이 트리 목록을
+    # 잊는다 · 기록 직전 거절을 다시 안 묻는다 · 목록 지문에서 종류가 빠진다). 트리 순회(`rglob`)는 추적 목록으로 바뀌었다.
     "AA3_ledger_forgets_tree_walks": [
-        ('    _remember("glob", f"{root}\\n{pattern}", outcome)', '    pass')],
+        ('    _remember("tracked", str(root), outcome)', '    pass')],
     "AA4_ledger_forgets_what_it_chose": [
         ('    outcome, kind = _kind_outcome(path)\n    _remember("kind", str(path), outcome)\n    return kind',
          '    outcome, kind = _kind_outcome(path)\n    return kind')],
@@ -376,7 +378,7 @@ MUTATIONS = {
     "AA7_record_does_not_reask_the_refusals": [
         ('    refusal, _ = _recording_refusal(\n'
          '        change, change_dir, root, head, _read_evidence(change_dir / "analysis" / "function-logic"))\n'
-         '    return refusal or _judged_state_moved(root, head, book)',
+         '    return _judged_state_moved(root, head, book) or refusal',
          '    return _judged_state_moved(root, head, book)')],
     "AA8_record_asks_the_refusals_before_history": [
         ('    moved = _head_moved(root, head)\n    if moved:\n        return moved\n'
@@ -408,8 +410,8 @@ MUTATIONS = {
         ('    if previous is not None and previous != outcome and not book.diverged:',
          '    if False:')],
     "AA19_listing_fingerprint_drops_the_kind": [
-        ('    joined = "\\n".join(f"{name}\\t{\'d\' if is_dir else \'f\'}" for name, is_dir in entries)',
-         '    joined = "\\n".join(name for name, is_dir in entries)')],
+        ('        len(raw).to_bytes(8, "big") + raw + (b"d" if is_dir else b"f")',
+         '        len(raw).to_bytes(8, "big") + raw')],
     # --- 통합 diff 문법의 상태 (7.5.2.4) ---
     # 본문 줄이 파일 이름을 정하면 그 파일의 요구가 사라지거나 편집 전 리비전으로 내려앉는다.
     "AB1_body_lines_name_the_file_again": [
@@ -730,6 +732,92 @@ MUTATIONS = {
         ('        change_dir = resolve_referenced_change(root, change)\n    except ValueError as exc:\n        return 1, [str(exc)]',
          '        change_dir = resolve_referenced_change(root, change)\n    except ValueError as exc:\n'
          '        change_dir = root / "openspec" / "changes" / change')],
+    # --- task 7.5.9 — 시험 인용은 추적 파일로만 충족된다 ---
+    "AM1_the_index_reads_the_disk": [
+        ('    index = TestIndex(frozenset(path for path in _tracked(root) if path.name.endswith("_test.go")))',
+         '    index = TestIndex(frozenset(root.rglob("*_test.go")))')],
+    "AM2_a_qualified_path_ignores_tracking": [
+        ('        return qualified if qualified in files and _kind(qualified) == "reg" else None',
+         '        return qualified if _kind(qualified) == "reg" else None')],
+    "AM3_the_package_ignores_tracking": [
+        ('    if local in files and _kind(local) == "reg":', '    if _kind(local) == "reg":')],
+    "AM4_a_bare_name_walks_the_disk": [
+        ('    matches = [path for path in files if path.name == cited]',
+         '    matches = [path for path in root.rglob(cited) if ".git" not in path.parts]')],
+    "AM5_a_failed_listing_is_read_as_empty": [
+        ('    if process.returncode:\n        return f"rc:{process.returncode}", RuntimeError(',
+         '    if False:\n        return f"rc:{process.returncode}", RuntimeError(')],
+    "AM6_committed_files_only": [
+        ('["git", *SNAPSHOT_PINS, "ls-files", "-z"]', '["git", *SNAPSHOT_PINS, "ls-tree", "-r", "-z", "--name-only", "HEAD"]')],
+    "AM7_the_recheck_names_a_path": [
+        ("'the tracked file list' if kind == 'tracked' else _shown(root, key)", "_shown(root, key)")],
+    "AM8_the_message_says_the_tree": [
+        ('                f"function in any tracked file"', '                f"function anywhere in the tree"')],
+    "AM9_a_failed_listing_is_swallowed": [
+        ('    if isinstance(value, BaseException):\n        raise value\n    return value',
+         '    if isinstance(value, BaseException):\n        return []\n    return value')],
+    # --- task 7.5.10 — 지문은 단사다 ---
+    "AN1_the_listing_joins_with_newlines": [
+        ('    encoded = b"".join(\n'
+         '        len(raw).to_bytes(8, "big") + raw + (b"d" if is_dir else b"f")\n'
+         '        for raw, is_dir in ((name.encode("utf-8"), is_dir) for name, is_dir in entries)\n'
+         '    )',
+         '    encoded = "\\n".join(f"{name}\\t{\'d\' if is_dir else \'f\'}" for name, is_dir in entries).encode("utf-8")')],
+    "AN2_no_length_prefix": [
+        ('        len(raw).to_bytes(8, "big") + raw + (b"d" if is_dir else b"f")',
+         '        raw + (b"d" if is_dir else b"f")')],
+    "AN3_the_tracked_fingerprint_rejoins_paths": [
+        ('    return "tracked:" + hashlib.sha256(process.stdout).hexdigest(), listed',
+         '    return "tracked:" + hashlib.sha256("\\n".join(map(str, listed)).encode("utf-8", "surrogateescape"))'
+         '.hexdigest(), listed')],
+    # --- task 7.5.11 — 종류를 못 물은 항목은 이름 댄 결함이다 ---
+    "AO1_the_kind_through_is_dir": [
+        ('            try:\n                mode = os.stat(child).st_mode\n            except OSError as exc:\n'
+         '                raise UnstatableEntry(\n'
+         '                    exc.errno, f"cannot tell what `{child.name}` is: {exc.strerror}", str(child)) from exc\n'
+         '            entries.append((child.name, stat.S_ISDIR(mode)))',
+         '            entries.append((child.name, child.is_dir()))')],
+    "AO2_an_unknown_kind_is_a_file": [
+        ('            except OSError as exc:\n                raise UnstatableEntry(\n'
+         '                    exc.errno, f"cannot tell what `{child.name}` is: {exc.strerror}", str(child)) from exc',
+         '            except OSError as exc:\n                mode = 0')],
+    "AO3_the_raw_error_escapes": [
+        ('                raise UnstatableEntry(\n'
+         '                    exc.errno, f"cannot tell what `{child.name}` is: {exc.strerror}", str(child)) from exc',
+         '                raise')],
+    # --- task 7.5.15 — 판정 경로의 자식 프로세스는 시한을 받는다 (execution_baseline.py 쪽은 7515_mut.py) ---
+    "AP1_the_guard_diff_has_no_timeout": [
+        ('        # 시한은 판정 diff(`_changed_existing_functions`)와 같은 값이다 (task 7.5.15) — 같은 두 트리를 견준다.\n'
+         '        timeout=30,\n', '')],
+    # --- task 7.5.16 — 기록 직전: 역사 → 원장 → 거절 ---
+    "AQ1_the_refusal_speaks_before_the_ledger": [
+        ('    return _judged_state_moved(root, head, book) or refusal',
+         '    return refusal or _judged_state_moved(root, head, book)')],
+    "AQ2_the_ledger_is_not_asked_before_writing": [
+        ('    return _judged_state_moved(root, head, book) or refusal', '    return refusal')],
+    # --- task 7.5.9~7.5.16 보수 (독립 리뷰 둘) ---
+    "MZ1_a_failed_start_is_an_empty_listing": [
+        ('        return f"{type(exc).__name__}", exc',
+         '        return "tracked:" + hashlib.sha256(b"").hexdigest(), []')],
+    "MR1_the_qualified_path_is_not_resolved": [
+        ('            qualified = root / Path(os.path.realpath(root / cited)).relative_to(os.path.realpath(root))',
+         '            qualified = root / cited')],
+    "MR2_every_archive_entry_is_asked_its_kind": [
+        ('    for name in names:\n        if _archived_change_id(name) != change:\n            continue\n'
+         '        kind = _kind(archive / name)\n',
+         '    for name in names:\n        kind = _kind(archive / name)\n'
+         '        if kind and _archived_change_id(name) != change:\n            continue\n')],
+    "MR3_the_tracked_listing_is_not_pinned": [
+        ('["git", *SNAPSHOT_PINS, "ls-files", "-z"]', '["git", "ls-files", "-z"]')],
+    "MR4_the_ledger_forgets_the_archive_names": [
+        ('    _remember("names", str(path), outcome)', '    pass')],
+    "MR5_an_unknown_own_entry_is_not_archived": [
+        ('        if not kind:\n            # 이 change 의 id 를 단 항목인데', '        if False:\n            # 이 change 의 id 를 단 항목인데')],
+    # (첫 판에 적은 "밖의 경로를 `root / cited` 로 둔다" 는 동등 변이다 — 추적 목록은 전부 뿌리 아래라 어차피 None.
+    #  돌리기 전에 그렇게 판단해 바꿨다: 밖의 경로가 **결함**으로 올라가는 모양이 이 갈래가 막는 것이다.)
+    "MR6_a_path_outside_raises": [
+        ('        except ValueError:\n            return None\n        return qualified if qualified in files',
+         '        except ValueError:\n            raise\n        return qualified if qualified in files')],
 }
 
 

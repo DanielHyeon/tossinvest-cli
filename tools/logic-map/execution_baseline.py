@@ -27,8 +27,18 @@ def digest(value: object) -> str:
     return hashlib.sha256(canonical(value)).hexdigest()
 
 
+# 판정 경로의 자식 프로세스는 전부 시한을 받는다 (a122 task 7.5.15). `check_analysis.GATE_FAULTS` 가
+# `subprocess.SubprocessError` 를 담는 까닭이 `TimeoutExpired` 를 판정 줄로 만드는 것이라, 시한이 없는 자리는
+# 멎으면 판정 줄도 traceback 도 없이 멎는다. 값은 새로 정하지 않고 `check_analysis.py` 에서 **같거나 비슷한 부류**의
+# 명령을 부르는 이웃의 값을 옮겼다 — 같은 명령은 셋(`merge-base --is-ancestor` · 두 `diff --quiet`)이고, 나머지 셋은 부류가
+# 비슷한 이웃이다(`go list` ↔ `go run` · `symbolic-ref` ↔ `rev-parse` · `_git` 의 여러 명령 ↔ 가장 무거운 `rev-list`/`log`).
+# 자리마다 어느 이웃인지는 그 줄의 주석이 말한다.
+
+
 def _git(root: Path, *args: str, text: bool = True) -> subprocess.CompletedProcess:
-    process = subprocess.run(["git", *args], cwd=root, capture_output=True, text=text, check=False)
+    # 이 도우미는 rev-parse 부터 범위 rev-list · diff-tree 까지 싣는다 — 가장 무거운 이웃(`_repairs_after` 의
+    # rev-list · `_self_repair_commits` 의 log)의 값 120 이다.
+    process = subprocess.run(["git", *args], cwd=root, capture_output=True, text=text, timeout=120, check=False)
     if process.returncode:
         error = process.stderr if text else process.stderr.decode("utf-8", "replace")
         raise AdoptionError(error.strip() or "git command failed")
@@ -83,7 +93,9 @@ def _change_analysis_path(value: object, analysis: str, field: str) -> str:
 
 
 def ancestry(root: Path, older: str, newer: str, *, strict: bool = False) -> None:
-    result = subprocess.run(["git", "merge-base", "--is-ancestor", older, newer], cwd=root, capture_output=True, check=False)
+    # 이웃: `check_analysis._is_ancestor` 의 같은 명령(10).
+    result = subprocess.run(["git", "merge-base", "--is-ancestor", older, newer], cwd=root, capture_output=True,
+                            timeout=10, check=False)
     if result.returncode or (strict and older == newer):
         raise AdoptionError("required commit ancestry is absent")
 
@@ -220,7 +232,10 @@ def go_inputs(root: Path, tags: str = "") -> set[str]:
     if tags:
         command.extend(["-tags", tags])
     command.append("./...")
-    process = subprocess.run(command, cwd=root, capture_output=True, text=True, check=False)
+    # 이웃(비슷한 부류): `check_analysis.go_functions` 의 `go run`(60). 잰 값(2026-09-26 19시 전후, HEAD 1d1e5ca7, 셸 `time`
+    # 한 번씩 — 하네스 영수증 없음): 이 세션의 첫 `-tags tossos_testseams` 호출 49.3초(캐시가 차가웠는지는 확인 안 함),
+    # 이어서 7.97~13.3초. 독립 리뷰의 재측정(병행 부하 아래) 7.54 · 7.78초. 넘으면 판정 줄이 된다(막는 쪽으로 틀린다).
+    process = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=60, check=False)
     if process.returncode:
         raise AdoptionError(process.stderr.strip() or "go package enumeration failed")
     decoder = json.JSONDecoder(); offset = 0; result: set[str] = set()
@@ -406,7 +421,10 @@ def validate(change_dir: Path, root: Path, persisted: str, change_id: str) -> di
     # 다시 배우면 같은 규칙이 사는 집이 셋이 된다.
     if change_id != CHANGE or persisted != P:
         raise AdoptionError("execution-baseline adoption is not allowed for this change/base")
-    if subprocess.run(["git", "symbolic-ref", "-q", "HEAD"], cwd=root, capture_output=True, check=False).returncode == 0:
+    # 시한의 이웃: `symbolic-ref` 는 `check_analysis._head_commit` 의 rev-parse(10), 두 `diff --quiet` 는
+    # `check_analysis._recording_refusal` 의 같은 명령(30).
+    if subprocess.run(["git", "symbolic-ref", "-q", "HEAD"], cwd=root, capture_output=True, timeout=10,
+                      check=False).returncode == 0:
         raise AdoptionError("adoption requires detached HEAD")
     head = full_commit(root, _git(root, "rev-parse", "HEAD").stdout.strip())
     base_relative = (change_dir.relative_to(root) / "base-commit.txt").as_posix()
@@ -448,7 +466,7 @@ def validate(change_dir: Path, root: Path, persisted: str, change_id: str) -> di
         raise AdoptionError("source tree mismatch")
     verify_source_go_lock(root, source, head)
     for args in (("diff", "--quiet"), ("diff", "--cached", "--quiet")):
-        if subprocess.run(["git", *args], cwd=root, capture_output=True, check=False).returncode:
+        if subprocess.run(["git", *args], cwd=root, capture_output=True, timeout=30, check=False).returncode:
             raise AdoptionError("adoption requires a clean worktree")
     for path in nul_paths(root, "diff", "--name-only", source, head):
         if not (path.startswith("openspec/") or path.startswith("docs/pm/")):

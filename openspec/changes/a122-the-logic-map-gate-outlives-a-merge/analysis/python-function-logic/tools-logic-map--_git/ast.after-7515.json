@@ -1,0 +1,70 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/execution_baseline.py",
+  "revision": "worktree",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "22ea8c60964f35dc526e8b79a1cbcd125de8ff81d45d9f77c0ea198f27f81592",
+  "function": "_git",
+  "signature": "_git(root)",
+  "start": {
+    "line": 36,
+    "column": 1
+  },
+  "end": {
+    "line": 43,
+    "column": 19
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 40,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B2",
+      "kind": "IfExp",
+      "line": 41,
+      "inherited_line": false,
+      "source": "process.stderr if text else process.stderr.decode('utf-8', 'replace')"
+    },
+    {
+      "id": "B3",
+      "kind": "BoolOp",
+      "line": 42,
+      "inherited_line": false,
+      "source": "error.strip() or 'git command failed'"
+    }
+  ],
+  "returns": [
+    {
+      "line": 43,
+      "value": "process"
+    }
+  ],
+  "raises": [
+    {
+      "line": 42,
+      "source": "raise AdoptionError(error.strip() or 'git command failed')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 39,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 41,
+      "callee": "process.stderr.decode"
+    },
+    {
+      "line": 42,
+      "callee": "AdoptionError"
+    },
+    {
+      "line": 42,
+      "callee": "error.strip"
+    }
+  ]
+}

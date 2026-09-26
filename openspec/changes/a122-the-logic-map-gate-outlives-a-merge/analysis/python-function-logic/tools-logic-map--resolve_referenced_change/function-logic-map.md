@@ -101,3 +101,39 @@ CI 는 이 경로를 돌지 않는다(`.github/workflows/ci.yml:94`). 실패 방
 | B9 | 293 | comprehension | ` for path in found` |
 | B10 | 295 | If | `if len(archived) > 1:` |
 | B11 | 299 | comprehension | ` for path in archived` |
+
+## 보수 — 아카이브는 이름을 먼저 거른다 (독립 적대 리뷰 P1-2 — 7.5.11 의 폭발 반경, 2026-09-26)
+
+> 편집 전 `ast.before-759r.json`(워킹트리 판, source sha `22c1e10e9d94`) · 편집 후 `ast.after-759r.json`(최종 `tools/logic-map/check_analysis.py:777-831` · 분기 13 · 반환 1 · raise 4 · 호출 16 · source sha `ff590b79db6e`), `759_flm_rows.py` 로 정렬.
+
+편집 후 `tools/logic-map/check_analysis.py:777-831` · 분기 13 · 반환 1 · raise 4 · 호출 16 (`ast.after-759r.json`, source sha `ff590b79db6e`)
+편집 전 `tools/logic-map/check_analysis.py:775-819` · 분기 11 · 반환 1 · raise 3 · 호출 12 (`ast.before-759r.json`, revision `worktree`, source sha `22c1e10e9d94`)
+
+| 옛 id | 새 id | 새 줄 | 종류 | 소스(새) | 바뀐 것 |
+|---|---|---|---|---|---|
+| B1 | B1 | 798 | Try | `try:` | 같음 |
+| B2 | B2 | 800 | ExceptHandler | `except (FileNotFoundError, NotADirectoryError):` | 같음 |
+| B3 | — | — | comprehension | `for name, is_dir in entries if is_dir and _archived_change_id(name) == change` (옛) | **빠짐** |
+| B4 | — | — | BoolOp | `is_dir and _archived_change_id(name) == change` (옛) | **빠짐** |
+| — | B3 | 803 | For | `for name in names:` | **새** |
+| — | B4 | 804 | If | `if _archived_change_id(name) != change:` | **새** |
+| — | B5 | 807 | If | `if not kind:` | **새** |
+| — | B6 | 810 | If | `if kind == 'dir':` | **새** |
+| B5 | B7 | 812 | IfExp | `[direct] if open_here else []` | 번호만 |
+| B6 | B8 | 813 | If | `if not found:` | 번호만 |
+| B7 | B9 | 817 | BoolOp | `open_here and archived` | 번호만 |
+| B8 | B10 | 817 | If | `if open_here and archived:` | 번호만 |
+| B9 | B11 | 823 | comprehension | `for path in found` | 번호만 |
+| B10 | B12 | 825 | If | `if len(archived) > 1:` | 번호만 |
+| B11 | B13 | 829 | comprehension | `for path in archived` | 번호만 |
+
+**결함.** 편집 전 B3·B4 는 `_listed(archive)` — 종류까지 묻는 목록 — 를 거른 것이다. 7.5.11 이 그 목록의 종류를 `os.stat` 으로 묻고 못 물으면 결함으로
+만들자, **모든 판정이 여는** 아카이브에서 **무관한** 항목 하나(끊긴 링크 · 고리)가 모든 change 의 게이트와 `--record-landing` 을 rc 1 로 만들었다(리뷰어 재현
+`cannot tell what \`2026-01-01-ghost\` is`; 이 보수의 RED 가 재현 — 수리 전 `check` 가 `UnstatableEntry` 를 올렸다). 7.5.11 의 센서스(증거 디렉터리 3,183)는
+이 공유 디렉터리가 모집단 밖이었다.
+
+**수리.** 이름만 읽는 새 깔때기 `_named`(`os.listdir`, stat 0 — 원장 종류 `names`)로 받고(새 B3), id 가 맞는 이름만(B4) `_kind` 로 묻는다. 못 물으면(B5)
+`UnstatableEntry(EIO, "cannot tell what \`<이름>\` is")` — 이 change 의 id 를 단 항목을 조용히 "아카이브 아님" 으로 두지 않는다. 디렉터리면(B6) 사본이다.
+id 가 맞는 **파일**은 편집 전처럼 사본이 아니다. `UnstatableEntry` 는 `ValueError` 가 아니라서 `_judged` · `record_landing` 의 해소 `except` 를 지나 `main` 의
+`GATE_FAULTS` 경계에서 `cannot judge this change: …` · `no landing recorded — …` 가 된다(시험 `test_a_broken_link_under_the_changes_own_id_is_named`).
+**남는 것**: 활성 자리 `changes/<id>` 가 끊긴 링크면 `_kind(direct) == "dir"` 이 거짓이라 "안 열림" 이다(편집 전부터 · 이 보수가 안 건드림).

@@ -1,0 +1,136 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "194ec1a2994162a2cd035455d3532c4fe0cef9f1bad4a2e86a583d343947ecbb",
+  "function": "test_citation_errors",
+  "signature": "test_citation_errors(target, text, package_dir, root, index)",
+  "start": {
+    "line": 2218,
+    "column": 1
+  },
+  "end": {
+    "line": 2263,
+    "column": 18
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "For",
+      "line": 2222,
+      "inherited_line": false,
+      "source": "for name in sorted(set(CITED_TEST.findall(text))):"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 2223,
+      "inherited_line": false,
+      "source": "if name not in index:"
+    },
+    {
+      "id": "B3",
+      "kind": "For",
+      "line": 2246,
+      "inherited_line": false,
+      "source": "for line in text.splitlines():"
+    },
+    {
+      "id": "B4",
+      "kind": "For",
+      "line": 2247,
+      "inherited_line": false,
+      "source": "for basename, raw in CITED_TEST_LINE.findall(line):"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 2249,
+      "inherited_line": false,
+      "source": "if path is None:"
+    },
+    {
+      "id": "B6",
+      "kind": "Try",
+      "line": 2252,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B7",
+      "kind": "ExceptHandler",
+      "line": 2254,
+      "inherited_line": false,
+      "source": "except OSError:"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 2258,
+      "inherited_line": false,
+      "source": "if number > total:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 2263,
+      "value": "errors"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 2222,
+      "callee": "CITED_TEST.findall"
+    },
+    {
+      "line": 2222,
+      "callee": "set"
+    },
+    {
+      "line": 2222,
+      "callee": "sorted"
+    },
+    {
+      "line": 2226,
+      "callee": "errors.append"
+    },
+    {
+      "line": 2246,
+      "callee": "text.splitlines"
+    },
+    {
+      "line": 2247,
+      "callee": "CITED_TEST_LINE.findall"
+    },
+    {
+      "line": 2248,
+      "callee": "resolve_test_file"
+    },
+    {
+      "line": 2251,
+      "callee": "int"
+    },
+    {
+      "line": 2253,
+      "callee": "_read_regular(path).decode('utf-8', 'replace').splitlines"
+    },
+    {
+      "line": 2253,
+      "callee": "_read_regular"
+    },
+    {
+      "line": 2253,
+      "callee": "_read_regular(path).decode"
+    },
+    {
+      "line": 2253,
+      "callee": "len"
+    },
+    {
+      "line": 2259,
+      "callee": "errors.append"
+    }
+  ]
+}

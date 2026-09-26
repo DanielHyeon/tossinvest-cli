@@ -1,0 +1,56 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "194ec1a2994162a2cd035455d3532c4fe0cef9f1bad4a2e86a583d343947ecbb",
+  "function": "_tracked",
+  "signature": "_tracked(root)",
+  "start": {
+    "line": 1433,
+    "column": 1
+  },
+  "end": {
+    "line": 1441,
+    "column": 17
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 1439,
+      "inherited_line": false,
+      "source": "if isinstance(value, BaseException):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1441,
+      "value": "value"
+    }
+  ],
+  "raises": [
+    {
+      "line": 1440,
+      "source": "raise value"
+    }
+  ],
+  "calls": [
+    {
+      "line": 1437,
+      "callee": "_tracked_outcome"
+    },
+    {
+      "line": 1438,
+      "callee": "_remember"
+    },
+    {
+      "line": 1438,
+      "callee": "str"
+    },
+    {
+      "line": 1439,
+      "callee": "isinstance"
+    }
+  ]
+}

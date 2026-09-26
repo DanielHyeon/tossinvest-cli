@@ -1,0 +1,114 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "da96c341fb2a538ae4c669b698101d744771cf4a8c006ea929d7116d1cb57ffa",
+  "function": "_listing_outcome",
+  "signature": "_listing_outcome(path)",
+  "start": {
+    "line": 1392,
+    "column": 1
+  },
+  "end": {
+    "line": 1409,
+    "column": 66
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 1401,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "comprehension",
+      "line": 1402,
+      "inherited_line": true,
+      "source": " for child in path.iterdir()"
+    },
+    {
+      "id": "B3",
+      "kind": "ExceptHandler",
+      "line": 1403,
+      "inherited_line": false,
+      "source": "except OSError as exc:"
+    },
+    {
+      "id": "B4",
+      "kind": "comprehension",
+      "line": 1405,
+      "inherited_line": true,
+      "source": " for raw, is_dir in ((name.encode('utf-8'), is_dir) for name, is_dir in entries)"
+    },
+    {
+      "id": "B5",
+      "kind": "IfExp",
+      "line": 1406,
+      "inherited_line": false,
+      "source": "b'd' if is_dir else b'f'"
+    },
+    {
+      "id": "B6",
+      "kind": "comprehension",
+      "line": 1407,
+      "inherited_line": true,
+      "source": " for name, is_dir in entries"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1404,
+      "value": "(_failed(exc), exc)"
+    },
+    {
+      "line": 1409,
+      "value": "('list:' + hashlib.sha256(encoded).hexdigest(), entries)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1402,
+      "callee": "child.is_dir"
+    },
+    {
+      "line": 1402,
+      "callee": "path.iterdir"
+    },
+    {
+      "line": 1402,
+      "callee": "sorted"
+    },
+    {
+      "line": 1404,
+      "callee": "_failed"
+    },
+    {
+      "line": 1405,
+      "callee": "b''.join"
+    },
+    {
+      "line": 1406,
+      "callee": "len"
+    },
+    {
+      "line": 1406,
+      "callee": "len(raw).to_bytes"
+    },
+    {
+      "line": 1407,
+      "callee": "name.encode"
+    },
+    {
+      "line": 1409,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 1409,
+      "callee": "hashlib.sha256(encoded).hexdigest"
+    }
+  ]
+}

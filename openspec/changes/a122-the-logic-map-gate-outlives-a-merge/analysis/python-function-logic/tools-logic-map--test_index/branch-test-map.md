@@ -7,3 +7,13 @@
 | 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
 |---|---|---|
 | 색인의 순회가 원장에 남는다 | AA3 | `test_a_test_file_that_appears_after_the_index_was_built_asks_for_a_rerun` |
+
+## task 7.5.9 (2026-09-26)
+
+짝은 손으로 고르지 않았다 — 갈래마다 변이를 걸어 실제로 빨개진 시험을 옮겼다(`analysis/harness/75_mut.py` 창 `228:246` · `97:98` · `99:100` · `101:102` · `102:103` · `112:113` · `239:240` · `244:246`(재실행), `7515_mut.py`; 사본 `A122_HARNESS_WORK` · pid 별 · 무변이 대조군 창 양끝 GREEN `Ran 407`, 구조 시험을 더한 뒤 창 `102:103` · `244:246` 은 `Ran 408`). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 | 잡는 시험 |
+|---|---|---|
+| B1 추적 목록에서 `*_test.go` 만 | AM1(디스크 `rglob`) | 7 — `test_a_test_only_in_an_untracked_file_is_not_evidence` · `test_a_qualified_coordinate_into_an_untracked_file_is_unresolved` · `test_a_test_file_that_appears_after_the_index_was_built_asks_for_a_rerun` 외 |
+| B1 인덱스(staged)까지 추적 | AM6(`ls-tree HEAD` — 커밋된 것만) | 13 — `test_a_staged_test_file_is_evidence` · `TestNamedTestsAreOpened` 다섯 외 |
+| B2 · B3 색인 만들기 | (기존) | `test_a_cited_test_that_exists_is_accepted` 외 |

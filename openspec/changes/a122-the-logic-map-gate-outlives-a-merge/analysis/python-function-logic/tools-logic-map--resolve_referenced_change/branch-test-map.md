@@ -67,3 +67,14 @@ B1 의 early return 을 없애고 활성·아카이브를 **한 목록으로 모
 | 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
 |---|---|---|
 | 고르기가 깔때기를 지난다 | AA4 | `test_a_change_that_becomes_open_while_judged_asks_for_a_rerun` |
+
+## 보수 (독립 리뷰 둘, 2026-09-26)
+
+짝은 변이로 잡았다(`75_mut.py` 창 `246:253` · `233:234`, 사본 `A122_HARNESS_WORK` · pid 별 · 무변이 대조군 창 양끝 GREEN `Ran 416`; 사본은 최종 파일과 주석 한 덩이만 다르고 AST 가 같다 — 실측).
+
+| 갈래 | 변이 | 잡는 시험 |
+|---|---|---|
+| 새 B3 이름만 읽는 깔때기 | MR4(원장이 이름 목록을 잊음) | `test_an_archived_copy_that_appears_while_judged_asks_for_a_rerun` |
+| 새 B4 이름이 먼저, 종류는 뒤 | MR2(모든 항목의 종류를 먼저) | `test_an_unrelated_broken_link_in_the_archive_does_not_stop_the_gate` |
+| 새 B5 이 id 의 못 묻는 항목은 결함 | MR5(`if False`) | `test_a_broken_link_under_the_changes_own_id_is_named` |
+| B6 디렉터리면 사본 · B7~B13 | (기존) | 해소기 시험들(`TheTwoChangeResolversAgree` 외) |

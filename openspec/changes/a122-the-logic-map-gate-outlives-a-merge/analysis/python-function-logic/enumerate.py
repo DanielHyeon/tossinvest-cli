@@ -28,6 +28,12 @@ BRANCHING = (ast.If, ast.For, ast.While, ast.Try, ast.ExceptHandler, ast.IfExp,
 
 
 def find(tree: ast.AST, name: str) -> ast.AST:
+    # `Class.method` 은 그 클래스 안에서만 찾는다 (task 7.5.9 보수) — 이름만으로 찾으면 파일의 **첫** `__init__` 이 잡힌다.
+    if "." in name:
+        owner, _, name = name.partition(".")
+        tree = next((node for node in ast.walk(tree) if isinstance(node, ast.ClassDef) and node.name == owner), None)
+        if tree is None:
+            raise SystemExit(f"class not found: {owner}")
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name:
             return node

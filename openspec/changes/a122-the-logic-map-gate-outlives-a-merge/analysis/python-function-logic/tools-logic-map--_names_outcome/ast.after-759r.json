@@ -1,0 +1,96 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "1d1e5ca781d7716e1d5c2afbeb5a127ceb953425",
+  "source_sha256": "ff590b79db6ed6a8cd7101e47f8df6a9b4841310b5320a398730eadf6a8a02e5",
+  "function": "_names_outcome",
+  "signature": "_names_outcome(path)",
+  "start": {
+    "line": 1449,
+    "column": 1
+  },
+  "end": {
+    "line": 1459,
+    "column": 65
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 1454,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 1456,
+      "inherited_line": false,
+      "source": "except OSError as exc:"
+    },
+    {
+      "id": "B3",
+      "kind": "comprehension",
+      "line": 1458,
+      "inherited_line": true,
+      "source": " for raw in (name.encode('utf-8') for name in names)"
+    },
+    {
+      "id": "B4",
+      "kind": "comprehension",
+      "line": 1458,
+      "inherited_line": true,
+      "source": " for name in names"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1457,
+      "value": "(_failed(exc), exc)"
+    },
+    {
+      "line": 1459,
+      "value": "('names:' + hashlib.sha256(encoded).hexdigest(), names)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 1455,
+      "callee": "os.listdir"
+    },
+    {
+      "line": 1455,
+      "callee": "sorted"
+    },
+    {
+      "line": 1457,
+      "callee": "_failed"
+    },
+    {
+      "line": 1458,
+      "callee": "b''.join"
+    },
+    {
+      "line": 1458,
+      "callee": "len"
+    },
+    {
+      "line": 1458,
+      "callee": "len(raw).to_bytes"
+    },
+    {
+      "line": 1458,
+      "callee": "name.encode"
+    },
+    {
+      "line": 1459,
+      "callee": "hashlib.sha256"
+    },
+    {
+      "line": 1459,
+      "callee": "hashlib.sha256(encoded).hexdigest"
+    }
+  ]
+}

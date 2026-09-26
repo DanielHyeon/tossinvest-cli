@@ -8,3 +8,11 @@
 |---|---|---|
 | 원장 전체를 다시 읽어 견준다 | Z7 | `test_prose_rewritten_after_it_was_judged_asks_for_a_rerun` 외 14 |
 | 갈린 읽기를 먼저 본다 | AA17 | `test_a_path_read_twice_with_different_bytes_is_caught_where_it_diverges` |
+
+## task 7.5.9 (2026-09-26)
+
+짝은 손으로 고르지 않았다 — 갈래마다 변이를 걸어 실제로 빨개진 시험을 옮겼다(`analysis/harness/75_mut.py` 창 `228:246` · `97:98` · `99:100` · `101:102` · `102:103` · `112:113` · `239:240` · `244:246`(재실행), `7515_mut.py`; 사본 `A122_HARNESS_WORK` · pid 별 · 무변이 대조군 창 양끝 GREEN `Ran 407`, 구조 시험을 더한 뒤 창 `102:103` · `244:246` 은 `Ran 408`). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 | 잡는 시험 |
+|---|---|---|
+| B5 추적 목록은 "the tracked file list" 로 댄다 | AM7 | `test_a_test_file_that_appears_after_the_index_was_built_asks_for_a_rerun` |

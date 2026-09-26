@@ -5544,3 +5544,233 @@ Python 편집은 위 `enumerate.py` 열거로 FLM.
 (i) 심링크 change 디렉터리 · (j) 해소기 표 밖 불일치(아카이브 이름의 줄바꿈 · 못 읽는 아카이브 디렉터리의 `PermissionError`) · (k) `root` ≠
 git toplevel · 커밋된 재기록 차단(사람 결정). id 를 바꿔 옮기면 대조할 자리가 없다 — 새 change 와 같은 모양이다. **7.5.5 는 열린 채다**(Manager
 판정).
+
+## VERIFY — task 7.5.9 · 7.5.10 · 7.5.11 · 7.5.15 · 7.5.16 (2026-09-26)
+
+범위: 7.5.2.3 재리뷰가 연 **결정 불필요** 다섯 — `tools/logic-map/check_analysis.py` 의 원장 · 깔때기 기계와
+`execution_baseline.py` 의 시한. 사람 결정 표시(7.5.3 · 7.5.4 · 7.5.6 · 7.5.7 · 7.5.32)와 6.4(a)(g)(h)(i)(j)(k)는 안 건드렸다.
+생산 트레이딩 코드 · Go 변경 0 — 게이트 도구 두 파일 · 그 시험 · README · 기록 · 하네스만. HEAD `1d1e5ca7` 는 작업 내내 안 움직였다.
+**커밋 안 함** — Manager 검증 뒤 커밋.
+
+### FLM 먼저 (~~Python 내부 편집 13 함수 + 새 함수 2~~ — 보수 정정: 로직 변경 11(check 7 + EB 4) · docstring 만 1(`check`) · 삭제 2 · 신규 3(`_tracked_outcome` · `_tracked` · `TestIndex.__init__`) + 클래스 2)
+
+편집 **전** 열거를 HEAD `1d1e5ca7` 에서 `enumerate.py` 로 뽑았다(`ast.before-759/7510/7515/7516.json`), 편집 뒤 `ast.after-*.json`. 표는
+`analysis/harness/759_flm_rows.py` 가 `difflib` 으로 정렬해 찍었다(손 재번호 없음). 같은 함수의 두 task(`_listing_outcome` 7.5.10 → 7.5.11)는
+차례로 편집하고 `ast.before-7511.json` = `ast.after-7510.json` 으로 영수증을 갈랐다.
+
+| 함수 | task | 분기 · 반환 · raise 전 → 후 | 바뀐 것 |
+|---|---|---|---|
+| `test_index` | 7.5.9 | 3·1·0 → 3·1·0 | 순회 `_globbed` · `.git` 거름 → 추적 목록 comprehension · 정렬 순회. 반환 `TestIndex`(사전 + `files`) |
+| `resolve_test_file` | 7.5.9 | 5·3·0 → 7·3·0 | 세 갈래 모두 `files`(추적) 안에서 — `in files and _kind(...)` BoolOp 둘, 맨이름은 목록에서 |
+| `test_citation_errors` | 7.5.9 | 8·1·0 → 같음 | 문장 `in any tracked file` · `index.files` 를 넘김 |
+| `_reads_moved` | 7.5.9 | 5·3·0 → 같음 | 라벨 `glob` → `tracked`("the tracked file list") |
+| `_tracked_outcome` · `_tracked` | 7.5.9 | 새 4·3·0 · 1·1·1 | `git ls-files -z`, 지문 = 출력 바이트 해시, 실패는 값/올림 |
+| `_globbed` · `_pattern_outcome` | 7.5.9 | 지움 | 호출자 0 |
+| `_listing_outcome` | 7.5.10 | 5·2·0 → 6·2·0 | 길이 접두 인코딩 |
+| `_listing_outcome` | 7.5.11 | 6·2·0 → 8·2·1 | `is_dir()` → `os.stat` 루프, `UnstatableEntry` |
+| `_safe_changed_go_paths` | 7.5.15 | 13·1·4 → 같음 | `timeout=30` |
+| `_git` · `ancestry` · `go_inputs` · `validate` | 7.5.15 | 3·1·1 · 3·0·1 · 25·1·6 · 42·2·24 → 같음 | `timeout=120 · 10 · 60 · 10/30` |
+| `_recording_moved` | 7.5.16 | 2·2·0 → 같음 | B2 `refusal or …` → `_judged_state_moved(...) or refusal` |
+
+`check` 의 docstring 은 문장만 고쳤다(자식 프로세스 자리 수 22 → 23, 그 하나는 원장에 든다) — `main()` A/B 를 돈 판(`ff6142a5`)과 최종
+(`22c1e10e`)은 docstring 을 뺀 AST 가 같다(실측).
+
+### 판본 영수증 먼저 (7.5.11)
+
+`analysis/harness/7511_isdir.py`(euid 1000): `Path.is_dir()` 은 3.11.15 · **3.12.3(`/usr/bin/python3`)** · 3.13.13 에서 끊긴 심링크 · 고리 ·
+사라진 이름을 `False` 로 삼키고 `EACCES` 는 올린다. **3.14.5 는 `EACCES` 까지 `False`**. `rglob('*_test.go')` 은 네 판본 모두 x 없는 디렉터리 아래와
+목록 못 여는 하위 트리를 조용히 뺐다(`['plain_test.go']` 만).
+
+### 거부하는 정상 입력 — 편집 전에 셌다 (HEAD `1d1e5ca7`)
+
+| task | 모집단 | 새로 거절 |
+|---|---|---|
+| 7.5.9 | 추적 `*_test.go` 959 · 디스크 971(차이 12 전부 `_work/**/extract_go_ast_test.go` — 10 은 `_work/*/`, 2 는 `_work/75_mut_work.*/logic-map/`) · 번들 **3,084** · 인용 **6,121** — `759_census.py` 세 판(디스크 · 추적 거름 입힌 편집 전 · 편집 뒤) | **0** 번들이 다름 |
+| 7.5.9 | 시험 픽스처(스위트 전체, 스테이징 없는 `run_check` 로 사본에서 실행) | **5** — `TestNamedTestsAreOpened` 의 `…exists_is_accepted` · `…past_the_end…` · `…doc_comment…` · `…shared_harness…` · `…named_in_one_file…`. `run_check` 가 `git add -A` 하게 고쳤다(`untracked=` 로 뺄 것만 뺀다) |
+| 7.5.11 | 목록 깔때기가 여는 디렉터리 3,183 · 항목 15,428(활성 · 아카이브의 `analysis/function-logic` 과 번들) | 심링크 0 · `stat` 실패 **0** |
+| 7.5.15 | — (시한은 거절이 아니다) | `go list` 는 ~~차가운~~ 이 세션의 첫 `-tags` 호출 **49.3초**(셸 `time` 한 번 · 영수증 없음 · 차가웠는지 확인 안 함 — 보수 정정) / 시한 60 — 아래 남긴 것 |
+| 7.5.16 | — (말하는 순서만) | 0 |
+
+### RED → GREEN
+
+새 시험 **20**(7.5.9: 6 + `TheRecheck…` 1 · 7.5.10: 3 · 7.5.11: 5 · 7.5.15: 2 · 7.5.16: 3) · 고친 기존 시험 2(`…appears_after_the_index…` 는 파일을
+`git add` 하게, `…commit_during_the_recheck…` 는 이웃 커밋이 이미 추적되는 파일을 고치게 — 새 파일을 더하는 커밋은 추적 목록으로 **먼저** 잡혀
+그 시험이 재는 뒤의 `HEAD` 물음을 못 쟀다). 편집 전 코드(`1d1e5ca7` 의 세 모듈 + 이 시험 파일, 스크래치)에서 **17 시험이 빨갛다**(실패 18 subTest ·
+오류 1 — `_tracked_outcome` 없음, 21 개 중). 초록 넷: 양성 대조 · 짝 `…staged…` · `…link_to_a_bundle…` · `…no_moved_input…` 과 기존
+`…commit_during_the_recheck…`. 셋째 충돌쌍 subTest 도 초록이다(구분자 없는 이음을 못 박는 용도). 구조 시험 `…history_is_asked_before_the_refusal…` 은 변이 뒤에 더했다(아래).
+
+| task | RED(편집 전 코드) | GREEN |
+|---|---|---|
+| 7.5.9 | 추적 안 된 파일의 시험이 인용을 충족 `[]` · 사본이 맨이름 좌표 거절을 **지움** `[]`(대조군은 `past the end`) · 패키지 안 추적 안 된 긴 파일이 거절을 가림 `[]` · 추적 안 된 파일로 거절을 지어냄 · ls-files 결함 시험 rc 0 | 이름 댄 거절 `… in any tracked file` · `past the end` · `[]` · `cannot judge this change: cannot list the tracked files: …` |
+| 7.5.10 | `{a,b}` 대 `{a\tf\nb}` 두 쌍 같은 지문 · 원장 재확인 `''` | 다른 지문 · `bundle changed` |
+| 7.5.11 | 끊긴 링크 · 고리(번들 사이) `[]` · 번들 안 끊긴 링크 `[]`(목록이 "파일" + `_bundle_text` 가 사라진 파일로 건너뜀 — 겹친 건너뛰기, 이 로트에서 재서 알았다) | `cannot derive modified Go functions: … cannot tell what \`ghost\` is: …` · 번들 `unlistable` 줄 |
+| 7.5.15 | 구조: `check_analysis.py:519` · `execution_baseline.py:31,86,223,409,451` · 행동: 판정 한 판에서 `git diff --numstat` 이 시한 없이 떴다 | 둘 다 빈 목록 |
+| 7.5.16 | `cannot resolve the comparison base: … not the one committed in HEAD …`(거절이 먼저) | `…/base-commit.txt changed while this change was being judged — …` |
+
+**tasks 7.5.9 의 덤은 정정한다.** "맨이름 갈래가 사본이 생기면 **없던 거절**을 만든다" 는 틀렸다 — `resolve_test_file` 의 `None` 은
+`test_citation_errors` 에서 `continue` 이므로 사본은 **있던 거절을 지운다**(permissive). 이 로트의 RED 가 그 모양이다.
+**tasks 7.5.15 의 자리 수도 낡았다** — `base_file` 은 7.5.34 가 지웠고 `1d1e5ca7` 에서 `check_analysis.py` 는 22 자리 중 1 이 비었다.
+**7.5.16 의 "더러운 트리"** 는 6.4 이전 모양이다 — `7516_order.py` 가 같은 픽스처를 세 리비전 코드로 돌린다: `5a54f78d` "uncommitted changes to tracked
+files — commit them first" · `1d1e5ca7` 6.4(b) base 거절 · 편집 뒤 원장 문장(셋 다 `written=False` — 결함은 틀린 사유였다).
+
+### 설계 결정 둘 (결정 불필요 범위 안에서 내가 고른 것 — Manager 검증 대상)
+
+1. **색인과 해소를 추적 목록 하나로.** 디스크 순회에 추적 거름을 얹지 않고 순회를 `git ls-files -z` 로 **바꿨다**. 그래서 `_globbed` ·
+   `_pattern_outcome` 이 호출자 0 이 되어 지워졌고, 7.5.10 의 순회 절반 · 7.5.11 의 `rglob` 절반은 **함수째 없어져서** 닫혔다(영수증
+   `7510_collide.py` · `7511_isdir.py` 가 `1d1e5ca7` 에서 결함을 보인다). 새 깔때기의 대답은 원장(`tracked`)에 적혀 재확인이 다시 묻는다 —
+   원장에 남는 자식 프로세스가 0 → 1(7.5.8 의 나머지 22 는 그대로 밖). 부수: 색인이 디스크 순회를 안 하므로 `/mnt/D` 에서 `rglob` 7.0초 →
+   `ls-files` 0.01초(~~실측~~ 첫 호출 한 번 — 보수 정정: 따뜻한 재측정은 `rglob` 1.7~2.8초 · `ls-files` 0.008~0.011초, 아래 절), 인용마다 돌던 맨이름 순회도 없어졌다(7.5.17 의 비용 쪽 — **재지 않았다**, tasks 에 적었다).
+2. **이름 붙은 · 패키지 갈래도 추적 파일만.** 리뷰가 댄 것은 맨이름 갈래였지만 같은 규칙(~~"머지된 트리가 낼 답"~~ 보수 정정: "추적 경로만 고르고 바이트는 워킹트리" — 머지된 트리의 답이 아니다)을 세 갈래에 한 번 적용했다.
+   이름 붙은 갈래는 이 때문에 **덜 거절한다** — 추적 안 된 파일의 줄 수로 지어내던 거절이 "해소 못 함(오류 아님)" 이 된다. 번들 전수에서 차이 0.
+
+### 변이 (사본 `A122_HARNESS_WORK` ext4 · pid 별 · 무변이 대조군 창 양끝 GREEN · 한 번에 한 판)
+
+| 변이 | task | 첫 판 | 최종 | 잡은 시험(수) |
+|---|---|---|---|---|
+| AM1 색인이 디스크 `rglob` | 7.5.9 | CAUGHT | | 7 |
+| AM2 이름 붙은 갈래가 추적 무시 | 〃 | CAUGHT | | 1 |
+| AM3 패키지 갈래가 추적 무시 | 〃 | CAUGHT | | 1 |
+| AM4 맨이름이 디스크 순회 | 〃 | CAUGHT | | 3 |
+| AM5 rc≠0 을 빈 목록으로 | 〃 | CAUGHT | | 1 |
+| AM6 커밋된 것만(`ls-tree HEAD`) | 〃 | CAUGHT | | 13 |
+| AM7 재확인 라벨이 경로 | 〃 | CAUGHT | | 1 |
+| AM8 문장 "anywhere in the tree" | 〃 | CAUGHT | | 1 |
+| AM9 `_tracked` 가 실패를 삼킴 | 〃 | CAUGHT | | 1 |
+| AA3(재조준) 원장이 추적 목록을 잊음 | 〃 | CAUGHT | | 1 |
+| AN1 `\n` · `\t` 이음 | 7.5.10 | CAUGHT | | 2 |
+| AN2 길이 접두 없음 | 〃 | CAUGHT | | 1 |
+| AN3 추적 지문이 경로를 `\n` 으로 | 〃 | **SURVIVED**(도달함) | CAUGHT | 1 |
+| AA19(재조준) 종류가 빠짐 | 〃 | CAUGHT | | 1 |
+| AO1 `is_dir()` 로 되돌림 | 7.5.11 | CAUGHT | | 4 |
+| AO2 못 물으면 "파일" | 〃 | CAUGHT | | 3 |
+| AO3 원래 `OSError` 가 샘 | 〃 | CAUGHT | | 3 |
+| AP1 numstat 시한 없음 | 7.5.15 | CAUGHT | | 2 |
+| EB1~EB5 `execution_baseline.py` 시한 없음(`7515_mut.py`) | 〃 | CAUGHT ×5 | | 1 씩 — **구조 시험 하나뿐** |
+| AQ1 거절이 원장보다 먼저 | 7.5.16 | CAUGHT | | 1 → 2 |
+| AQ2 원장을 안 물음 | 〃 | CAUGHT | | 2 → 3 |
+| AA7(재조준) 거절을 다시 안 물음 | 〃 | CAUGHT | | 3 |
+| AA5 재확인 뒤 `HEAD` 안 물음(시험 픽스처를 고쳐서 재실행) | 〃 | CAUGHT | | 2 |
+| AA8 맨 앞 역사 물음 삭제 | 〃 | **SURVIVED**(못 쟀다) | CAUGHT | 1 |
+
+창: `75_mut.py 228:246`(대조군 `Ran 407`) · `97:98` · `101:102` · `112:113` · `99:100` · `239:240`(AN3 재실행) · `102:103` · `244:246`(구조 시험 뒤, `Ran 408`) ·
+`7515_mut.py`(`Ran 407`). 전부 창 양끝 대조군 GREEN.
+
+**생존 둘이 코드 · 시험을 바꿨다.**
+- **AN3** — 시험이 저장소 **둘**을 견줘서 뿌리가 달랐다: 옛 이음으로도 두 지문이 갈렸으니 충돌쌍을 못 만든 시험이었다. **한 저장소의 두 상태**
+  (A = `a_test.go` · `b_test.go`, B = 디렉터리 `a_test.go\n` 아래에 뿌리의 절대경로를 다시 세운 파일 하나 — 옛 이음으로 같은 글자임을 시험이 먼저
+  단언한다)로 고쳐 CAUGHT. 같은 결함이 영수증 `7510_collide.py` 의 추적 줄에도 있었다(공허한 "distinct") — 같이 고쳤다.
+- **AA8** — 이 로트의 7.5.16 수리가 만든 생존이다([[a-new-guard-unpins-the-guards-behind-it]]): `_judged_state_moved` 도 역사를 먼저 묻고 이제 거절보다
+  먼저 말하므로 맨 앞 역사 물음(B1)을 지워도 같은 "HEAD moved" 가 나온다. B1 이 남아서 하는 일은 움직인 역사 위에서 거절을 **계산하지 않는** 것이라
+  출력으로 안 갈린다. 지우지 않고 순서를 AST 로 못 박았다(`test_the_history_is_asked_before_the_refusal_is_computed`) — 재실행 CAUGHT.
+  tasks 의 "순서를 바꾸면 공짜로 닫힌다" 는 **공짜가 아니었다**.
+
+### A/B — `main()` 출력 전체 (`7521_main_ab.py`, before `1d1e5ca7` **의 `check_analysis.py` 만** · after `ff6142a5` — 보수 정정: before 사본의 `execution_baseline.py` 는 워킹트리판 `22ea8c60` 이었다)
+
+change 디렉터리 **128**(활성 + 아카이브) 전부: **SAME 97 · DIFFERENT 31**. DIFFERENT 31 은 `759_ab_verify.py` 로 전체 출력을 다시 돌려 7.5.9 의 거절
+문장 꼬리(`anywhere in the tree` → `in any tracked file`)만 정규화해 견줬다 — 결과는 아래 줄. 결정적 계수: git 프로세스 2,763 → **2,959**(+196 —
+증거가 있는 판정마다 `ls-files` 한 번 + 재확인 한 번) · `ast.json` 읽기 9,180 → 9,180. 벽시계(참고, 순서 번갈아): before 먼저 1,452.5s → 1,144.4s ·
+after 먼저 1,486.5s → 1,182.5s(~~−21~23%~~ 보수 정정: −21.2% · −20.5%, 합계 −20.8% — 디스크 순회가 없어진 몫으로 **추정**, 분해는 안 했다).
+a122 자신의 게이트는 편집 전후 **바이트까지 같다**(`cmp` IDENTICAL): **rc 1 · required 11**(병행 착지 몫 — 이 로트가 안 바꿨다).
+
+`759_ab_verify.py`(before `1d1e5ca7` 의 세 모듈 · after 워킹트리 `22c1e10e`, 각자 CLI): DIFFERENT **31 전부 문장 꼬리만 다르다** —
+정규화 뒤 줄 단위로 같다(`SAME-AFTER-WORDING` 31 · verdict changed **0**). 판정(거절 집합 · rc · 창 줄)이 바뀐 change 는 **0** 이다.
+
+### 로트 검증 (전부 rc 직접)
+
+`make lint` **rc 0** · `make sdd-test` **rc 0**(scripts 15 · logic-map **483**(463 → 483) · sdd 76 · sdd-history 29 · pm 16 · deploy 18 ·
+`go test ./tools/logic-map` ok) · `python3 -m unittest discover -s tools/logic-map -p 'test_check_analysis.py'` **408 OK**(388 → 408, skipped 1) ·
+`tools/sdd/test_gate_resolves_archived_changes.py` **10 OK** · `openspec validate --all --strict`(1.4.1) **57/57 rc 0** ·
+`check_analysis --change a122-…` **rc 1 · required 11**(기대값 — 편집 전과 출력 바이트 동일). 전부 HEAD `1d1e5ca7` 위의 워킹트리.
+
+### not-applicable
+
+- `make test` · `make test-seams` — 이 로트는 Go 변경 0(태그 시험 대상 없음).
+- CodeGraph · CodeGraphContext · Go AST — Go 함수 편집 0. Python 편집은 위 `enumerate.py` 열거로 FLM.
+- `make gate CHANGE=a122-…` — change 완료 게이트라 진행 중 로트에 적용 불가(tasks 에 열린 항목이 남아 있다).
+- 독립 리뷰 — 이 세션이 작성자다. Manager · 분리된 리뷰 패스의 몫.
+
+### 남긴 것
+
+- **`go list` 시한의 여유.** `go_inputs` 의 60(비슷한 부류의 이웃 `go_functions` 의 값)에 대해 이 세션의 첫 `-tags tossos_testseams` 호출 49.3초(영수증 없음), 이어서 8~13초(보수 정정 — 아래 절).
+  이관 경로(a063, detached HEAD)에서만 닿는다. 넘으면 판정 줄이 되고 막는 쪽으로 틀린다.
+- **기안 CLI** `execution_baseline.main` 은 `(AdoptionError, OSError, ValueError)` 만 받아 시한이 나면 traceback 이다 — 판정 경로 밖이라 안 건드렸다.
+- **EB1~EB5 는 구조 시험 하나만 잡는다** — 행동 시험(`…verdict_starts…`)의 픽스처는 이관 경로를 안 탄다.
+- **`test_spans` 의 건너뛰기** — 못 읽는 **추적** 시험 파일은 빈 것으로 두어 그 시험이 "추적 파일 어디에도 없다" 로 거절된다(막는 쪽, 사유가 틀린다).
+  좌표 해소는 `except OSError: continue` 로 그 줄을 건너뛴다(7.5.2.3 부터).
+- **`_tracked_outcome` 의 B1 · B2**(자식을 못 띄움 · 시한) — 행동 시험 없음.
+- 7.5.17(맨이름 비용 공격)은 비용 쪽이 7.5.9 로 바뀌었지만 **재지 않았다** — tasks 에 적고 열어 둠. 7.5.8 · 7.5.12 · 7.5.13 · 7.5.14 · 7.5.18~7.5.21 그대로.
+- 하네스: `75_mut.py` 의 AA3 · AA7 · AA19 앵커를 재조준했다. 지운 함수를 **이름으로** 부르는 옛 하네스는 0 이다(`grep` — `7521_inputs.py` ·
+  `7523_inputs.py` 는 원시 호출 **이름** 집합에 `rglob` 을 담을 뿐).
+
+## 정정 · VERIFY — task 7.5.9~7.5.16 보수 (독립 리뷰 둘, 2026-09-26)
+
+독립 리뷰 둘(적대 · 주장정확성)이 위 로트에서 P0 없이 P1 넷(적대 P1-1 · P1-2 · P1-3, 주장정확성 F9)과 기록 정정 여럿을 냈다. 같은 로트에서 고쳤다.
+HEAD `1d1e5ca7` 은 내내 안 움직였다. 생산 트레이딩 코드 · Go 변경 0. **커밋 안 함.**
+최종 파일: `check_analysis.py` `ff590b79db6e` · `execution_baseline.py` `d17ea317f78c` · `test_check_analysis.py` `20ff62d91c59`.
+
+### 코드 수리 넷 — FLM 먼저 · RED → GREEN
+
+편집 전 열거 `ast.before-759r.json`(워킹트리 판 `22c1e10e`), 편집 뒤 `ast.after-759r.json`(최종). 표는 각 함수의 FLM `## 보수 — …` 절.
+
+| # | 결함 | 수리 | RED(수리 전 `22c1e10e`) | GREEN |
+|---|---|---|---|---|
+| P1-1 (적대, **이 로트의 회귀**) | 이름 붙은 좌표를 `root / cited` 그대로 대조 — `..` · 추적 심링크 디렉터리를 안 풀어 목록 밖 → 조용히 통과. 편집 전 `1d1e5ca7` 은 `past the end` 로 거절했다 | `resolve_test_file` 새 B2·B3: `realpath` 로 풀어 `realpath(root)` 상대경로로 대조, 밖이면 `None` | `..` subTest · 심링크 시험 `[]`. `//` · `./` subTest 는 수리 전에도 초록(`pathlib` 이 접는다) | `past the end of a 1-line file` 문장 단언 |
+| P1-2 (적대, 폭발 반경) | `resolve_referenced_change` 의 `_listed(archive)` 가 모든 항목의 종류를 물어 **무관한** 끊긴 링크 하나로 모든 change 의 게이트 · 기록이 rc 1 | 새 깔때기 `_named`(`os.listdir` — stat 0, 원장 `names`) · id 가 맞는 이름만 `_kind`, 못 물으면 `UnstatableEntry` | 무관한 끊긴 링크 · 고리에서 `check` 가 `UnstatableEntry` 를 올림 | `[]` · 기록 rc 0 · 같은 id 의 끊긴 링크는 `cannot tell what \`2026-01-01-mine\` is`(판정 · 기록 둘 다) |
+| P1-3 (적대, 생존 변이) | `_tracked_outcome` 의 두 결함 갈래에 행동 시험 0 — MZ1 이 408 초록 | 코드 변경 없음 — 시험 한 벌(`TimeoutExpired` · `FileNotFoundError`) | 행동이 이미 맞아 **수리 전에도 초록** — 영수증은 RED 가 아니라 MZ1 CAUGHT | rc 1 · `timed out after 30 seconds` · `No such file or directory: 'git'` |
+| F9 (주장정확성) | `git ls-files -z` 에 `SNAPSHOT_PINS` 없음 — 저장소의 `core.fsmonitor` 프로그램이 판정 중 떴다 | `["git", *SNAPSHOT_PINS, "ls-files", "-z"]`, 모듈 머리 주석을 실제 범위로 좁힘 | 표식 파일이 생김 | 표식 없음 |
+
+새 시험 **8**(P1-1: 3 · P1-2: 3 · P1-3: 1 · F9: 1)과 공유 헬퍼 `_is_the_tracked_listing`(핀이 붙은 argv 를 가린다 — 기존 결함 시험의 `len(argv) == 3` 매칭은 핀 뒤로 못 맞는다). 이 8 을 수리 전 코드에 돌리면(시험을 먼저 쓰고 구현 전에 돌렸다) 시험 넷이 빨갛다 — 3 FAIL(`..` subTest · 심링크 · fsmonitor) + 1 ERROR(무관한 아카이브 링크). 초록 넷은 저장소 밖 · P1-3(subTest 둘) · 같은 id 링크 · 아카이브 사본 재확인이고, 빨간 `..` 시험 안의 `//` · `./` subTest 도 초록이다 — 못 박기용이다. `test_check_analysis` **408 → 416**.
+
+**거부하는 정상 입력.** P1-1 은 편집 전 동작(거절)으로 **되돌리는** 쪽이다 — 오늘 코퍼스의 `..` · `//` 좌표 0 건(독립 적대 리뷰 측정, 이 세션이 다시 재지 않음). 인용 센서스
+(`759_census.py`, 수리 뒤 다시): 번들 3,084 · 인용 6,121 · **다른 번들 0**. P1-2 는 덜 막는 쪽이고 해소기 A/B(`759r_resolver_ab.py`, before `1d1e5ca7` 세 모듈): change id **128 · SAME 128 · DIFFERENT 0**.
+
+### 변이 (창 `246:253` · `233:234`, 사본 ext4 · pid 별 · 무변이 대조군 양끝 GREEN `Ran 416`)
+
+| 변이 | 대상 | 결과 | 잡은 시험 |
+|---|---|---|---|
+| **MZ1** 결함 갈래가 빈 목록 + 빈 해시 | `_tracked_outcome` | CAUGHT | `test_a_tracked_listing_that_cannot_start_or_times_out_is_a_fault` |
+| MR1 정규화 삭제(`root / cited`) | `resolve_test_file` | CAUGHT 2 | `..` · 심링크 시험 |
+| MR2 이름 거름 삭제(모든 항목의 종류를 먼저) | `resolve_referenced_change` | CAUGHT | 무관한 끊긴 링크 시험 |
+| MR3 핀 삭제 | `_tracked_outcome` | CAUGHT | fsmonitor 시험 |
+| MR4 원장이 이름 목록을 잊음 | `_named` | CAUGHT | 판정 중 아카이브 사본 시험 |
+| MR5 이 id 의 못 묻는 항목을 삼킴 | `resolve_referenced_change` | CAUGHT | 같은 id 끊긴 링크 시험 |
+| MR6 저장소 밖 경로가 `ValueError` 로 샘 | `resolve_test_file` | CAUGHT | 저장소 밖 시험 |
+| AM6 재조준(`ls-tree HEAD`) | `_tracked_outcome` | CAUGHT 16 | — |
+
+MR6 은 돌리기 전에 바꿨다 — 첫 정의("밖의 경로를 `root / cited` 로 둔다")는 추적 목록이 전부 뿌리 아래라 **동등 변이**였다. 이 창의 사본은 최종 파일과 주석 한 덩이
+(`SNAPSHOT_PINS` 머리 주석)만 다르다 — 그 주석을 되돌린 판의 sha 가 사본 판 `8bd773b97a4d` 이고 AST 는 최종과 같다(실측).
+
+### 기록 정정 (주장정확성 리뷰 실측 — 이 세션이 다시 잰 것은 그렇게 적는다)
+
+| # | 쓴 것 | 실제 · 고친 곳 |
+|---|---|---|
+| 5 | "판정은 머지된 트리가 낼 답을 낸다"(README · 시험 docstring · `resolve_test_file` docstring · review 설계 결정 2) · "머지에 영원히 안 들어갈 파일"(내 새 docstring 셋) | **멤버십은 인덱스, 바이트는 워킹트리**다 — 인덱스에 올린 빈 스텁 + 워킹트리의 `TestFabricated` 가 통과한다(편집 전에도 통과, 회귀 아님). "추적되지 않는 파일" 로 좁혔다. 작성 중인 미추적 시험은 머지에 **들어간다** — 열린 7.5.37 |
+| 6 | README · `check` docstring 의 "`subprocess.run` 열여섯 자리 · 원장 항목 0" **현재형** | 과거형(7.5.22 의 수)으로 — 지금은 23 자리이고 하나(`ls-files`)는 원장에 든다 |
+| 7 | `execution_baseline.py` 머리 주석 · tasks 7.5.15 "**같은 명령**을 부르는 이웃" | 같은 명령은 셋(`merge-base` · 두 `diff --quiet`), 셋은 비슷한 부류(`go list`↔`go run` · `symbolic-ref`↔`rev-parse` · `_git`↔`rev-list`/`log`) — "같거나 비슷한 부류" |
+| 8 | 벽시계 "−21~23%" | −21.2%(before 먼저) · −20.5%(after 먼저) · 합계 **−20.8%**(같은 A/B 기록에서 다시 셈). "디스크 순회가 없어진 몫" 은 **추정**(분해 안 함) |
+| 8 | "`rglob` 7.0초 · `ls-files` 0.01초(실측)" | 7.0초는 첫 호출 한 번이었다. 이 세션 재측정(22:23, HEAD `1d1e5ca7`, 셸에서 세 번, 병행 부하 확인 안 함): `rglob` 2.76 · 1.68 · 2.43초 · `ls-files` 0.0085 · 0.0111 · 0.0081초. 리뷰어 값 2.43초 · 0.009초 |
+| 8 | "`go list` 차가운 첫 판 49.3초 · 따뜻 8~13초" | 이 세션의 첫 `-tags tossos_testseams` 호출이 49.3초였다(셸 `time` 한 번 · **영수증 없음** · 차가웠는지 확인 안 함). 리뷰어 재측정(병행 부하) 7.54 · 7.78초. `execution_baseline.py` 줄 주석도 같이 |
+| 9 | "A/B(`7521_main_ab`, before `1d1e5ca7`)" | before 사본의 `execution_baseline.py` 는 워킹트리판(`22ea8c60`)이었다 — `build()` 가 `check_analysis.py` 만 바꿔 넣는다. `check_analysis.py` 의 A/B 로는 유효하고, 세 모듈을 다 `1d1e5ca7` 에서 꺼낸 것은 `759_ab_verify.py` 다(DIFFERENT 31 → 판정 변화 0). 하네스 README 에 적었다 |
+| 10 | "Python 내부 편집 13 함수 + 새 함수 2" | 로직 변경 11(check 7 + EB 4) · docstring 만 1(`check`) · 삭제 2 · 신규 3(`_tracked_outcome` · `_tracked` · `TestIndex.__init__`) + 클래스 2(`TestIndex` · `UnstatableEntry`). `TestIndex.__init__` FLM 번들을 더했다(`enumerate.py` 가 `Class.method` 를 받게 — 이름만이면 첫 `__init__` 이 잡힌다). 보수가 더한 것: 로직 변경 +1(`resolve_referenced_change`) · 신규 +2(`_names_outcome` · `_named`) |
+| 11 | FLM 여덟의 "최종 파일 sha `ff6142a5`" | 중간판이었다 — 표기를 "중간판" 으로 고치고, **최종 파일에서 `ast.after-759r.json` 을 다시 뽑아** 각 FLM 에 `## 보수 — 최종 파일로 다시 열거` 절을 더했다(구조는 11 함수 전부 같음을 스크립트가 단언; `_recording_moved` 는 `:3138` → `:3188`) |
+| 12 | `7515_mut.py` docstring "생존하면 도달 계측" | 그 스크립트는 `mut.reached` 를 안 부른다 — 지웠다 |
+| 12 | "차이 12 전부 `_work/*/extract_go_ast_test.go`" | `*` 는 한 단계다 — 10 은 `_work/*/`, 2 는 `_work/75_mut_work.*/logic-map/`. `_work/**/…` 로(tasks · review · 시험 · FLM · `test_index` docstring) |
+
+### tasks.md 에 열린 항목으로만 (안 고쳤다)
+
+7.5.36(재확인 때만 `ls-files` 가 실패하면 "changed" 로 잘못 이름 댐, 적대 P2-1) · 7.5.37(이름 거절 / 좌표 건너뜀 비대칭 + TDD 흐름의 미추적 시험, P2-3) ·
+7.5.38(`UnstatableEntry` 지문에 이름 없음 · 편집기 임시 파일 `4913` 이 결함 문장, P2-4 · P2-5) · 7.5.39(**AA8b 생존** — "HEAD moved" 판정이 두 집에, P2-6) ·
+7.5.40(`_recording_refusal` 의 `git diff --quiet` 에 핀 없음, 이 로트 전부터).
+
+### 로트 검증 (최종 트리, rc 직접)
+
+`make lint` **rc 0** · `make sdd-test` **rc 0**(scripts 15 · logic-map **491** · sdd 76 · sdd-history 29 · pm 16 · deploy 18 · `go test ./tools/logic-map` ok) ·
+`test_check_analysis` **416 OK**(skipped 1) rc 0 · `test_gate_resolves_archived_changes` **10 OK** rc 0 · `openspec validate --all --strict` **57/57** rc 0 ·
+`check_analysis --change a122-…` **rc 1 · required 11** — 출력이 로트 전(`1d1e5ca7`)과 같다(`judged at HEAD` 꼬리 뺀 `cmp`).
+
+### not-applicable · 못 한 것
+
+- `make test` · `make test-seams`: Go 변경 0. CodeGraph · Go AST: Go 함수 편집 0(Python FLM 은 `enumerate.py`).
+- `main()` 전수 A/B 를 **보수 뒤에 다시 돌리지 않았다** — 대신 판정 입구(해소기 128)와 인용(번들 3,084)을 전수로 쟀다. 조언 줄 · 창 줄의 전수 대조는 없다.
+- `_names_outcome` 의 지문 인코딩을 겨눈 변이 · `_named` 의 실패 갈래 변이는 안 돌렸다(BTM 에 적음).
+- P1-1 의 "오늘 코퍼스 `..` · `//` 0 건" 은 리뷰어의 수를 옮겼다 — 이 세션이 다시 재지 않았다.
