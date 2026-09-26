@@ -29,3 +29,12 @@
 | 새 B2 · B3 경로를 풀어서 대조(`..` · 심링크) | MR1(`root / cited` 그대로) | 2 — `test_a_dot_dot_or_doubled_slash_coordinate_names_the_tracked_file` · `test_a_coordinate_through_a_tracked_directory_link_names_the_tracked_file` |
 | 새 B3 저장소 밖이면 `None` | MR6(`ValueError` 를 올림) | `test_a_coordinate_that_leaves_the_repository_is_unresolved` |
 | 추적 목록 멤버십(B4 이하 — 7.5.9 표) | AM6 재조준(`ls-tree HEAD`) | 16 |
+
+## task 7.5.12 (2026-09-27)
+
+짝은 변이로 잡았다(`75_mut.py` 창 `267:276` · 재조준 `87:88` · `240:242` · `247:248`, 사본 ext4 · pid 별 · 무변이 대조군 창 양끝 GREEN `Ran 454`).
+
+| 갈래 | 변이 | 잡는 시험(수) |
+|---|---|---|
+| B2 의 풀이는 깔때기로 | MW9 | 1 — 구조 **하나뿐** |
+| B2 경로를 푼다 | MR1(재조준) | 2 — `..` · 심링크 디렉터리 |

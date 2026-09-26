@@ -1,0 +1,126 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "5406cac16a439266f3d3cdee90728df5b9d90a66",
+  "source_sha256": "463982f421512a1bced22420952a6a4521239b63274c9536e4488818e2236b25",
+  "function": "_reads_moved",
+  "signature": "_reads_moved(root, book)",
+  "start": {
+    "line": 1646,
+    "column": 1
+  },
+  "end": {
+    "line": 1668,
+    "column": 14
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 1651,
+      "inherited_line": false,
+      "source": "if book.diverged:"
+    },
+    {
+      "id": "B2",
+      "kind": "Try",
+      "line": 1654,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B3",
+      "kind": "For",
+      "line": 1655,
+      "inherited_line": false,
+      "source": "for (kind, key), before in sorted(book.seen.items()):"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 1656,
+      "inherited_line": false,
+      "source": "if kind == 'tracked':"
+    },
+    {
+      "id": "B5",
+      "kind": "If",
+      "line": 1660,
+      "inherited_line": false,
+      "source": "if isinstance(value, BaseException):"
+    },
+    {
+      "id": "B6",
+      "kind": "If",
+      "line": 1664,
+      "inherited_line": false,
+      "source": "if now != before:"
+    },
+    {
+      "id": "B7",
+      "kind": "IfExp",
+      "line": 1665,
+      "inherited_line": false,
+      "source": "'the tracked file list' if kind == 'tracked' else _shown(root, key)"
+    }
+  ],
+  "returns": [
+    {
+      "line": 1652,
+      "value": "f'{_shown(root, book.diverged)} changed'"
+    },
+    {
+      "line": 1665,
+      "value": "f'{('the tracked file list' if kind == 'tracked' else _shown(root, key))} changed'"
+    },
+    {
+      "line": 1668,
+      "value": "''"
+    }
+  ],
+  "raises": [
+    {
+      "line": 1661,
+      "source": "raise RuntimeError(f'cannot re-read the tracked file list to confirm the verdict: {value}') from value"
+    }
+  ],
+  "calls": [
+    {
+      "line": 1652,
+      "callee": "_shown"
+    },
+    {
+      "line": 1655,
+      "callee": "book.seen.items"
+    },
+    {
+      "line": 1655,
+      "callee": "sorted"
+    },
+    {
+      "line": 1659,
+      "callee": "Path"
+    },
+    {
+      "line": 1659,
+      "callee": "_tracked_outcome"
+    },
+    {
+      "line": 1660,
+      "callee": "isinstance"
+    },
+    {
+      "line": 1661,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 1663,
+      "callee": "_PROBE_NOW[kind]"
+    },
+    {
+      "line": 1665,
+      "callee": "_shown"
+    }
+  ]
+}

@@ -68,3 +68,20 @@ a071 이 27.84s → **10.97s**.
 | raise 줄 | 소스 |
 |---|---|
 | 1260 | `raise ValueError('AST source escapes repository')` |
+
+## task 7.5.12 — 풀이를 원장에 (2026-09-27)
+
+> 편집 전 `ast.before-7512.json`(HEAD `5406cac1`) · 편집 후 `ast.after-7512.json`(최종 `check_analysis.py` `463982f42151`) — 분기 2 → 2(정렬 결과 전부 같음), 호출 10 → 8.
+
+편집 후 `tools/logic-map/check_analysis.py:2259-2278` · 분기 2 · 반환 1 · raise 1 · 호출 8 (`ast.after-7512.json`, source sha `463982f42151`)
+편집 전 `tools/logic-map/check_analysis.py:2221-2239` · 분기 2 · 반환 1 · raise 1 · 호출 10 (`ast.before-7512.json`, revision `5406cac1`, source sha `8d2a3338fdab`)
+
+| 옛 id | 새 id | 새 줄 | 종류 | 소스(새) | 바뀐 것 |
+|---|---|---|---|---|---|
+| B1 | B1 | 2267 | IfExp | `raw if raw.is_absolute() else root / raw` | 같음 |
+| B2 | B2 | 2276 | If | `if not resolved.is_relative_to(anchor):` | 같음 |
+
+`os.path.realpath` 두 자리(기준점 `root` · 대상 경로)를 새 깔때기 `_resolved` 로. 원장 키는 **주어진** 경로, 지문은 풀린 경로다. **결함(RED, 편집 전 코드)**:
+판정 중 `link -> internal` 을 `link -> other`(같은 바이트의 사본)로 갈아끼우면 원장은 풀린 `internal/own.go` 만 알아 재확인이 같다고 답했다 — 종단 판정 `[]`,
+다음 실행은 `other/own.go` 를 판정해 `missing evidence`. 원장 수준 시험도 `''`. 편집 뒤 둘 다 `link/own.go changed …`. 저장소 노출 0(번들의 `file` 이 심링크를
+거치는 것 — 7.5.12 가 셌다). 판정 값은 안 바뀐다(풀이 결과가 같다) — 원장 항목만 는다.

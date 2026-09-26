@@ -317,8 +317,9 @@ MUTATIONS = {
     "T14_unheld_merged_guard_flipped": [(
         '        if committed is None and before:', '        if committed is None or before:')],
     "T15_anchor_is_not_the_root": [
-        ('    anchor = Path(os.path.realpath(root))',
-         '    anchor = Path(os.path.realpath(root / "openspec"))')],
+        # 7.5.12 가 풀이를 깔때기(`_resolved`)로 옮겨 다시 걸었다 — 뜻은 같다(기준점이 뿌리가 아니다).
+        ('    anchor = _resolved(root)\n',
+         '    anchor = _resolved(root / "openspec")\n')],
     "T16_committed_bytes_is_a_second_spelling": [(
         '    return _committed_many(root, ref, [relative])[relative]',
         '    process = subprocess.run(\n'
@@ -774,14 +775,21 @@ MUTATIONS = {
     # --- task 7.5.11 — 종류를 못 물은 항목은 이름 댄 결함이다 ---
     "AO1_the_kind_through_is_dir": [
         ('            try:\n                mode = os.stat(child).st_mode\n            except OSError as exc:\n'
+         '                # 이름조차 없으면(`lstat` 도 ENOENT) 목록 뒤에 **사라진** 것이다 — 결함이 아니라 움직임 (task 7.5.38).\n'
+         '                if exc.errno == errno.ENOENT and not os.path.lexists(child):\n'
+         '                    raise ListingMoved(\n'
+         '                        exc.errno, f"`{child.name}` disappeared while the directory was being listed — run it again",\n'
+         '                        str(child)) from exc\n'
          '                raise UnstatableEntry(\n'
          '                    exc.errno, f"cannot tell what `{child.name}` is: {exc.strerror}", str(child)) from exc\n'
          '            entries.append((child.name, stat.S_ISDIR(mode)))',
          '            entries.append((child.name, child.is_dir()))')],
     "AO2_an_unknown_kind_is_a_file": [
-        ('            except OSError as exc:\n                raise UnstatableEntry(\n'
+        ('                        str(child)) from exc\n'
+         '                raise UnstatableEntry(\n'
          '                    exc.errno, f"cannot tell what `{child.name}` is: {exc.strerror}", str(child)) from exc',
-         '            except OSError as exc:\n                mode = 0')],
+         '                        str(child)) from exc\n'
+         '                mode = 0')],
     "AO3_the_raw_error_escapes": [
         ('                raise UnstatableEntry(\n'
          '                    exc.errno, f"cannot tell what `{child.name}` is: {exc.strerror}", str(child)) from exc',
@@ -801,7 +809,7 @@ MUTATIONS = {
         ('        return f"{type(exc).__name__}", exc',
          '        return "tracked:" + hashlib.sha256(b"").hexdigest(), []')],
     "MR1_the_qualified_path_is_not_resolved": [
-        ('            qualified = root / Path(os.path.realpath(root / cited)).relative_to(os.path.realpath(root))',
+        ('            qualified = root / _resolved(root / cited).relative_to(_resolved(root))',
          '            qualified = root / cited')],
     "MR2_every_archive_entry_is_asked_its_kind": [
         ('    for name in names:\n        if _archived_change_id(name) != change:\n            continue\n'
@@ -861,6 +869,29 @@ MUTATIONS = {
     "MV1_the_bundle_text_reads_again": [
         ('                target, evidence.held.get(target / "ast.json"), names=names)',
          '                target, _read_regular(target / "ast.json"), names=names)')],
+    # --- task 7.5.12 · 7.5.36 · 7.5.38 · 7.5.44 ---
+    "MW1_the_source_is_resolved_outside_the_ledger": [
+        ('    resolved = _resolved(path)\n', '    resolved = Path(os.path.realpath(path))\n')],
+    "MW2_the_resolution_is_not_remembered": [
+        ('    _remember("resolved", str(path), outcome)', '    pass')],
+    "MW3_a_failed_recheck_listing_is_called_a_change": [
+        ('                if isinstance(value, BaseException):\n                    raise RuntimeError(f"cannot re-read',
+         '                if False:\n                    raise RuntimeError(f"cannot re-read')],
+    "MW4_a_failure_fingerprint_has_no_name": [
+        ('    return f"{type(exc).__name__}:{exc.errno}:{exc.filename!r}"', '    return f"{type(exc).__name__}:{exc.errno}"')],
+    "MW5_a_vanished_entry_is_a_fault": [
+        ('                if exc.errno == errno.ENOENT and not os.path.lexists(child):',
+         '                if False:')],
+    "MW6_a_dangling_link_is_called_vanished": [
+        ('                if exc.errno == errno.ENOENT and not os.path.lexists(child):',
+         '                if exc.errno == errno.ENOENT:')],
+    "MW7_a_failed_write_escapes": [
+        ('    except OSError as exc:\n        # 쓰기의 다른 결함', '    except NotADirectoryError as exc:\n        # 쓰기의 다른 결함')],
+    "MW8_the_root_is_resolved_outside_the_ledger": [
+        ('    anchor = _resolved(root)\n', '    anchor = Path(os.path.realpath(root))\n')],
+    "MW9_a_cited_path_is_resolved_outside_the_ledger": [
+        ('            qualified = root / _resolved(root / cited).relative_to(_resolved(root))',
+         '            qualified = root / Path(os.path.realpath(root / cited)).relative_to(os.path.realpath(root))')],
 }
 
 

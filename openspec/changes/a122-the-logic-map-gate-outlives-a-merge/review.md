@@ -6065,3 +6065,11 @@ rc 1. 주석을 사실로 고치고 열린 task **7.5.44**. (e) `7514_test_mut.p
 **로트 검증(수리 뒤, rc 직접)**: `make lint` **rc 0** · `test_check_analysis` **445 OK**(skipped 1) rc 0 · `make sdd-test` **rc 0**(logic-map **520**) · gate resolver
 **10 OK** rc 0 · `openspec validate --all --strict` **57/57** rc 0 · `check_analysis --change a122-…` **rc 1 · required 11**(HEAD 코드와 출력 바이트 동일, `cmp`).
 거절 A/B(`7514_refusal_ab.py`, 수리 뒤 다시) **128 · SAME 128**. 적대 전역 설정 셋에서 `test_check_analysis` + `test_execution_baseline` **472 OK**.
+
+## VERIFY — task 7.5.12 · 7.5.36 · 7.5.38 · 7.5.44 (2026-09-27)
+
+사용자 지시("게이트는 코드 안전에 집중, 부가 항목에 리소스 낭비 금지")로 **축약 마감**. 넷 다 새 분류로 비-blocker(전부 rc 1 유지 — 이름/사유 표기이거나 노출 0
+edge)이고, 코드와 시험이 이미 초록이라 그대로 두고 닫았다: 7.5.12 경로 풀이를 원장에(`_resolved` — 키는 주어진 경로, 지문은 풀린 경로) · 7.5.36 재확인의 추적
+목록 조회 실패를 결함 문장으로 · 7.5.38 실패 지문에 이름 + 목록 뒤 사라진 항목을 `ListingMoved`("run it again") · 7.5.44 기록 쓰기의 `OSError` 를 판정 줄로.
+새 시험 9(편집 전 HEAD `5406cac1` 코드에서 빨강 8 + 대조 1), 변이 MW1~MW9 CAUGHT(창 `267:276`). `main()` 전수 A/B 는 **도중에 멈췄다**(128 중 96 비교 · SAME 96) —
+완주하지 않았다. 확인: `test_check_analysis` 454 OK rc 0 · `check_analysis --change a122-…` rc 1 · required 11(HEAD 코드와 출력 바이트 동일). 하다 만 항목 없음.

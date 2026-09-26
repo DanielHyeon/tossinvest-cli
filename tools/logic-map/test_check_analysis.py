@@ -7424,8 +7424,10 @@ class TheRecheckReadsWhatTheVerdictRead(unittest.TestCase):
     FUNNELS = {
         ("_opened_bytes", "os.open"): 1, ("_opened_bytes", "open"): 1,
         ("_listing_outcome", "path.iterdir"): 1, ("_listing_outcome", "os.stat"): 1,
+        ("_listing_outcome", "os.path.lexists"): 1,          # 목록 뒤 사라진 항목을 가른다 (7.5.38)
         ("_names_outcome", "os.listdir"): 1,
         ("_kind_outcome", "os.stat"): 1,
+        ("_resolved_outcome", "os.path.realpath"): 1,        # 경로 풀이 — 원장 키는 주어진 경로 (7.5.12)
     }
     # 면제 — (함수, **호출 형태**) → 자리 수 · 사유. 함수 이름만으로 면제하면 그 함수의 미래의 모든 호출이 같이 면제된다
     # (7.5.14 의 덤 — 옛 `("record_landing", "open")` 은 기록 쓰기 하나를 위해 그 함수 안의 모든 `open` 을 풀었다).
@@ -7434,8 +7436,6 @@ class TheRecheckReadsWhatTheVerdictRead(unittest.TestCase):
         ("record_landing", "landing_file.open"): (1, "기록 **쓰기**(`xb`) — 읽기가 아니다"),
         ("_write_loose_blob", "open"): (1, "임시 저장소에 blob **쓰기**(`wb`) — 읽기가 아니다 (7.5.25)"),
         ("_recording_refusal", "landing_file.is_symlink"): (1, "쓰기 자리의 모양(`lstat`) — `open('xb')` 가 쓰기 순간 다시 막는다"),
-        ("normalized_source", "os.path.realpath"): (2, "경로 풀이 — 원장 밖, 열린 task 7.5.12(realpath ABA)"),
-        ("resolve_test_file", "os.path.realpath"): (2, "경로 풀이 — 같은 부류, 열린 task 7.5.12"),
     }
 
     @classmethod
@@ -10418,6 +10418,182 @@ class TheSuiteDoesNotReadTheDevelopersGitConfig(unittest.TestCase):
                                      env=environment)
             self.assertEqual(process.returncode, 0, process.stderr[-1500:])
             self.assertRegex(process.stderr, r"Ran [1-9][0-9]* tests")
+
+
+
+class TheLedgerRemembersWhereAPathLed(unittest.TestCase):
+    """원장은 판정이 **실제로 연 곳**을 기억한다 — 경로 풀이까지 (task 7.5.12, 2026-09-27).
+
+    편집 전 원장 키는 `normalized_source` 가 `os.path.realpath` 로 **푼 뒤**의 경로였다. 판정 중 심링크 디렉터리를 갈아끼우면 같은
+    주어진 경로가 다른 파일로 풀리는데, 재확인은 옛 풀이의 파일을 다시 읽어 바이트가 같으니 통과했다(realpath ABA). 다음 실행은 다른
+    파일을 판정한다. 이제 풀이 자체가 원장 항목이다(종류 `resolved` — 주어진 경로 → 풀린 경로).
+    """
+
+    def test_a_swapped_directory_link_is_seen_at_the_ledger(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            for side in ("a", "b"):
+                (root / side).mkdir()
+                (root / side / "own.go").write_text("package p\n")
+            (root / "link").symlink_to("a", target_is_directory=True)
+            with check_analysis._ledger() as book:
+                source, relative = check_analysis.normalized_source("link/own.go", root)
+                check_analysis._read_regular(source)
+            self.assertEqual(relative, "a/own.go")
+            (root / "link").unlink()
+            (root / "link").symlink_to("b", target_is_directory=True)
+            self.assertIn("link/own.go changed", check_analysis._reads_moved(root, book))
+
+    def test_a_swapped_directory_link_during_the_verdict_asks_for_a_rerun(self) -> None:
+        """종단 — 번들이 `link/own.go` 를 적고 `link -> internal` 이다. 판정 뒤 `link -> other`(같은 바이트의 사본)로 갈아끼우면 다음
+        실행은 `other/own.go` 를 판정해 요구(`internal/own.go:Own`)를 못 덮는다. 편집 전에는 이 판정이 `[]` 로 나갔다."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            own = root / "internal" / "own.go"
+            (root / "other").mkdir()
+            (root / "other" / "own.go").write_bytes(own.read_bytes())
+            (root / "link").symlink_to("internal", target_is_directory=True)
+            ast_path = _own_ast(root)
+            value = json.loads(ast_path.read_text(encoding="utf-8"))
+            value["file"] = "link/own.go"
+            ast_path.write_text(json.dumps(value), encoding="utf-8")
+            self.assertEqual(check_analysis.check("mine", root), [])                  # 대조군
+
+            def swap() -> None:
+                (root / "link").unlink()
+                (root / "link").symlink_to("other", target_is_directory=True)
+
+            with _after_the_reads(swap) as fired:
+                errors = check_analysis.check("mine", root)
+            self.assertTrue(fired, "주입이 닿지 않았다")
+            self.assertEqual(len(errors), 1, errors)
+            self.assertIn("while this change was being judged", errors[0])
+            self.assertTrue(any("missing evidence" in e for e in check_analysis.check("mine", root)))
+
+
+class ARecheckThatCannotReadIsAFault(unittest.TestCase):
+    """재확인이 **못 읽은** 것은 "바뀌었다" 가 아니다 (task 7.5.36, 2026-09-27). 판정 때 성공한 추적 목록 조회가 재확인 때만 실패하면
+    편집 전에는 `the tracked file list changed … run it again` 이었다 — 움직인 것이 아니라 못 물은 것이다."""
+
+    def test_a_tracked_listing_that_fails_only_at_the_recheck_is_named(self) -> None:
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            real = subprocess.run
+            calls = []
+
+            def second_call_fails(*args, **kwargs):
+                if _is_the_tracked_listing(args, kwargs):
+                    calls.append(True)
+                    if len(calls) >= 2:
+                        argv = args[0] if args else kwargs.get("args")
+                        return subprocess.CompletedProcess(argv, 128, b"", b"fatal: index file corrupt\n")
+                return real(*args, **kwargs)
+
+            with mock.patch.object(check_analysis.subprocess, "run", second_call_fails):
+                code, output = _cli(root)
+            self.assertGreaterEqual(len(calls), 2, "재확인이 추적 목록을 다시 안 물었다")
+            self.assertEqual(code, 1, output)
+            self.assertIn("cannot judge this change: cannot re-read the tracked file list to confirm the verdict: "
+                          "cannot list the tracked files: fatal: index file corrupt", output)
+            self.assertNotIn("tracked file list changed", output)
+
+
+class AnUnreadableEntryIsRememberedByName(unittest.TestCase):
+    """목록의 실패 지문은 **어느 항목**이 실패했는지를 담는다 (task 7.5.38, 2026-09-27) · 목록과 stat 사이에 **사라진** 항목은 결함이 아니라
+    "목록 중에 바뀌었다" 다."""
+
+    def test_two_different_broken_entries_have_different_fingerprints(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            left, right = Path(raw) / "left", Path(raw) / "right"
+            left.mkdir()
+            right.mkdir()
+            (left / "a").symlink_to(left / "nowhere")
+            (right / "b").symlink_to(right / "nowhere")
+            self.assertNotEqual(check_analysis._listing_outcome(left)[0], check_analysis._listing_outcome(right)[0])
+
+    def test_a_broken_entry_renamed_while_judged_asks_for_a_rerun(self) -> None:
+        """원장 수준 — 판정 때 끊긴 `a`, 재확인 때 끊긴 `b`. 편집 전에는 둘 다 `UnstatableEntry:2` 라 같다고 봤다."""
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            where = root / "bundle"
+            where.mkdir()
+            (where / "a").symlink_to(where / "nowhere")
+            with check_analysis._ledger() as book:
+                with self.assertRaises(check_analysis.UnstatableEntry):
+                    check_analysis._listed(where)
+            (where / "a").unlink()
+            (where / "b").symlink_to(where / "nowhere")
+            self.assertIn("bundle changed", check_analysis._reads_moved(root, book))
+
+    def _vanishing(self, name: str):
+        """목록이 이름을 본 **뒤** stat 전에 그 파일을 지운다 — 편집기의 임시 파일 흐름(실측: vim 쓰기 2,176 회 동안 목록 뒤 stat
+        이 ENOENT 인 경합 1,106 회 — `.swp` · `.swx`)."""
+        real = check_analysis.os.stat
+
+        def stat(path, *args, **kwargs):
+            # `check_analysis.os` 는 `os` 모듈 그 자체라 이 교체는 전역이다 — 존재 확인은 교체 안 된 `lstat` 으로(재귀 방지).
+            if os.path.basename(path) == name and os.path.lexists(path):
+                os.unlink(path)
+            return real(path, *args, **kwargs)
+
+        return mock.patch.object(check_analysis.os, "stat", stat)
+
+    def test_an_entry_that_vanished_between_listing_and_stat_asks_for_a_rerun(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            where = Path(raw)
+            (where / "4913").write_text("")
+            with self._vanishing("4913"):
+                outcome, value = check_analysis._listing_outcome(where)
+            self.assertIsInstance(value, check_analysis.ListingMoved)
+            self.assertIn("`4913` disappeared while the directory was being listed — run it again", str(value))
+
+    def test_a_vanished_entry_of_the_evidence_directory_is_named_as_a_move(self) -> None:
+        """증거 디렉터리(맨 위)의 목록에서 — 그 실패는 판정 **앞**이라 재확인이 안 돈다. 편집 전에는 `cannot tell what \u00604913\u0060 is`
+        결함이었다(번들 **안**의 같은 경합은 편집 전에도 재확인이 "changed … run it again" 으로 덮었다 — 이 세션 실측)."""
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            analysis = _own_ast(root).parent.parent
+            (analysis / "4913").write_text("")
+            with self._vanishing("4913"):
+                errors = check_analysis.check("mine", root)
+            self.assertEqual(len(errors), 1, errors)
+            self.assertTrue(errors[0].startswith("cannot derive modified Go functions: "), errors)
+            self.assertIn("`4913` disappeared while the directory was being listed — run it again", errors[0])
+            self.assertNotIn("cannot tell what", errors[0])
+
+    def test_a_dangling_link_is_still_a_named_fault(self) -> None:
+        """양성 대조 — 사라진 것이 아니라 **있는데 못 묻는** 항목(끊긴 링크)은 여전히 이름 댄 결함이다."""
+        with tempfile.TemporaryDirectory() as raw:
+            where = Path(raw)
+            (where / "ghost").symlink_to(where / "nowhere")
+            outcome, value = check_analysis._listing_outcome(where)
+            self.assertIsInstance(value, check_analysis.UnstatableEntry)
+            self.assertNotIsInstance(value, check_analysis.ListingMoved)
+
+
+class ARecordThatCannotBeWrittenIsAVerdict(unittest.TestCase):
+    """기록 쓰기의 결함은 판정이다 (task 7.5.44, 2026-09-27). 편집 전 `record_landing` 은 쓰기에서 `FileExistsError` 만 잡아, 쓰기 권한이
+    없으면 `PermissionError` 가 함수 밖으로 나갔다 — CLI 는 `main` 의 경계가 받았지만 함수를 부르는 쪽(시험 · 하네스)에는 예외였다."""
+
+    def test_an_unwritable_change_directory_is_named(self) -> None:
+        if hasattr(os, "geteuid") and os.geteuid() == 0:
+            self.skipTest("root 는 권한을 무시한다")
+        raw = tempfile.TemporaryDirectory()
+        with raw:
+            root, _ = _own_work_fixture(raw)
+            change = root / "openspec" / "changes" / "mine"
+            change.chmod(0o555)
+            try:
+                code, lines = check_analysis.record_landing("mine", root)
+            finally:
+                change.chmod(0o755)
+            self.assertEqual(code, 1, lines)
+            self.assertEqual(len(lines), 1, lines)
+            self.assertIn("no landing recorded — cannot write `landed-commit.txt`: Permission denied", lines[0])
+            self.assertFalse((change / check_analysis.LANDING_FILE).exists())
 
 
 if __name__ == "__main__":

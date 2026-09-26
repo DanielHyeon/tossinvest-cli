@@ -183,3 +183,28 @@ B4·B5 는 **이 로트가 찾은 둘째 자리**다. 4.4 는 `check` 의 probe 
 | B8 | 2514 | If | `if moved:` |
 | B9 | 2516 | Try | `try:` |
 | B10 | 2519 | ExceptHandler | `except FileExistsError:` |
+
+## task 7.5.44 — 쓰기의 결함은 판정이다 (2026-09-27)
+
+> 편집 전 `ast.before-7544.json`(HEAD `5406cac1`) · 편집 후 `ast.after-7544.json`(최종 `check_analysis.py` `463982f42151`), `759_flm_rows.py` 로 정렬.
+
+편집 후 `tools/logic-map/check_analysis.py:3329-3394` · 분기 11 · 반환 8 · raise 0 · 호출 13 (`ast.after-7544.json`, source sha `463982f42151`)
+편집 전 `tools/logic-map/check_analysis.py:3290-3351` · 분기 10 · 반환 7 · raise 0 · 호출 12 (`ast.before-7544.json`, revision `5406cac1`, source sha `8d2a3338fdab`)
+
+| 옛 id | 새 id | 새 줄 | 종류 | 소스(새) | 바뀐 것 |
+|---|---|---|---|---|---|
+| B1 | B1 | 3344 | Try | `try:` | 같음 |
+| B2 | B2 | 3347 | ExceptHandler | `except ValueError as exc:` | 같음 |
+| B3 | B3 | 3351 | Try | `try:` | 같음 |
+| B4 | B4 | 3362 | If | `if refusal:` | 같음 |
+| B5 | B5 | 3366 | IfExp | `_recording_moved(change, change_dir, root, head, book) if landing else ''` | 같음 |
+| B6 | B6 | 3367 | ExceptHandler | `except GATE_FAULTS as exc:` | 같음 |
+| B7 | B7 | 3371 | If | `if not landing:` | 같음 |
+| B8 | B8 | 3373 | If | `if moved:` | 같음 |
+| B9 | B9 | 3375 | Try | `try:` | 같음 |
+| B10 | B10 | 3378 | ExceptHandler | `except FileExistsError:` | 같음 |
+| — | B11 | 3387 | ExceptHandler | `except OSError as exc:` | **새** |
+
+새 B11 `except OSError` — 쓰기(`open("xb")`)의 `FileExistsError` 밖 결함(권한 · 읽기 전용 · 자리가 디렉터리)을 `(1, ["… no landing recorded — cannot write \`landed-commit.txt\`:
+<사유>"])` 로. RED(편집 전): change 디렉터리 `0555` 에서 함수가 `PermissionError` 를 올렸다(CLI 는 `main` 경계가 받았다). "3.12 는 `is_symlink` 가 먼저 `PermissionError`" 는
+이 함수의 `try` **안**이라 이미 이름 댄 줄이었다 — x 없는 디렉터리에서는 증거 목록이 더 먼저 실패한다(이 세션 실측 `0666`).

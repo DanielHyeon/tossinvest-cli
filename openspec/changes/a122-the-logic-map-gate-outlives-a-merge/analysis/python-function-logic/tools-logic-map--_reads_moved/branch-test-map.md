@@ -16,3 +16,11 @@
 | 갈래 | 변이 | 잡는 시험 |
 |---|---|---|
 | B5 추적 목록은 "the tracked file list" 로 댄다 | AM7 | `test_a_test_file_that_appears_after_the_index_was_built_asks_for_a_rerun` |
+
+## task 7.5.36 (2026-09-27)
+
+짝은 변이로 잡았다(`75_mut.py` 창 `267:276` · 재조준 `87:88` · `240:242` · `247:248`, 사본 ext4 · pid 별 · 무변이 대조군 창 양끝 GREEN `Ran 454`).
+
+| 갈래 | 변이 | 잡는 시험(수) |
+|---|---|---|
+| 새 B4 · B5 추적 목록 재조회 실패는 결함 | MW3 | 1 — `test_a_tracked_listing_that_fails_only_at_the_recheck_is_named` |

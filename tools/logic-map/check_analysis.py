@@ -1355,6 +1355,12 @@ class UnstatableEntry(OSError):
     """
 
 
+class ListingMoved(OSError):
+    """목록이 이름을 본 **뒤** 그 항목이 사라졌다 — `stat` 도 `lstat` 도 ENOENT (task 7.5.38). 편집기의 임시 파일 흐름이 이 모양을 낸다
+    (실측: vim 쓰기 2,176 회를 도는 동안 목록 뒤 stat 이 ENOENT 인 경합 1,106 회 — `.swp` · `.swx`). "무엇인지 못 묻는다" 결함이 아니라
+    "목록 중에 바뀌었다 — 다시 돌려라" 다. `UnstatableEntry` 의 하위형이 **아니다** — 끊긴 링크(있는데 못 묻는 것)와 갈라 말한다."""
+
+
 class ReadLedger:
     """판정이 디스크에서 읽은 것의 **원장**. 끝의 재확인이 이 목록을 그대로 다시 읽는다 (task 7.5.2.3).
 
@@ -1402,8 +1408,11 @@ def _remember(kind: str, key: str, outcome: str) -> None:
 
 
 def _failed(exc: OSError) -> str:
-    """실패의 지문. 종류와 errno 로 — 권한이 풀린 것도 파일이 생긴 것도 "달라졌다" 다."""
-    return f"{type(exc).__name__}:{exc.errno}"
+    """실패의 지문. 종류 · errno · **실패한 이름** — 권한이 풀린 것도 파일이 생긴 것도 "달라졌다" 다.
+
+    이름을 넣는 까닭 (task 7.5.38): 목록의 실패(`UnstatableEntry`)는 목록 **안의 한 항목**의 실패라, 이름이 없으면 판정 중 끊긴 항목이
+    `a` 에서 `b` 로 바뀌어도 두 지문이 같았다. 파일 실패는 키가 곧 그 이름이라 달라질 것이 없다."""
+    return f"{type(exc).__name__}:{exc.errno}:{exc.filename!r}"
 
 
 def _opened_bytes(path: Path) -> bytes:
@@ -1482,6 +1491,11 @@ def _listing_outcome(path: Path) -> tuple[str, list[tuple[str, bool]] | OSError]
             try:
                 mode = os.stat(child).st_mode
             except OSError as exc:
+                # 이름조차 없으면(`lstat` 도 ENOENT) 목록 뒤에 **사라진** 것이다 — 결함이 아니라 움직임 (task 7.5.38).
+                if exc.errno == errno.ENOENT and not os.path.lexists(child):
+                    raise ListingMoved(
+                        exc.errno, f"`{child.name}` disappeared while the directory was being listed — run it again",
+                        str(child)) from exc
                 raise UnstatableEntry(
                     exc.errno, f"cannot tell what `{child.name}` is: {exc.strerror}", str(child)) from exc
             entries.append((child.name, stat.S_ISDIR(mode)))
@@ -1580,6 +1594,21 @@ def _kind(path: Path) -> str:
     return kind
 
 
+def _resolved_outcome(path: Path) -> tuple[str, Path]:
+    """`(지문, 풀린 경로)` — `os.path.realpath` 의 대답. 풀이는 실패하지 않는다(고리는 풀리지 않은 채 돌려준다)."""
+    resolved = Path(os.path.realpath(path))
+    return "resolved:" + os.fsdecode(resolved), resolved
+
+
+def _resolved(path: Path) -> Path:
+    """경로를 **푸는 유일한 자리** (task 7.5.12). 원장 키는 **주어진** 경로이고 지문은 풀린 경로다 — 판정 중 심링크 디렉터리를 갈아끼우면
+    재확인이 같은 주어진 경로를 다시 풀어 다른 곳에 닿고 지문이 갈린다. 편집 전에는 풀린 경로만 원장에 남아(그 파일의 바이트) 재확인이
+    옛 풀이의 파일을 다시 읽고 같다고 답했다(realpath ABA) — 판정이 실제로 연 **곳**이 지문에 없었다([[a-fingerprint-must-be-the-bytes-judged]])."""
+    outcome, resolved = _resolved_outcome(path)
+    _remember("resolved", str(path), outcome)
+    return resolved
+
+
 def _worktree_digest(path: Path) -> str | None:
     """워킹트리 파일의 sha256 — 없거나 못 읽으면 `None`. 깔때기로 읽으므로 원장에 남는다."""
     try:
@@ -1610,6 +1639,7 @@ _PROBE_NOW = {
     "tracked": lambda key: _tracked_outcome(Path(key))[0],
     "names": lambda key: _names_outcome(Path(key))[0],
     "kind": lambda key: _kind_outcome(Path(key))[0],
+    "resolved": lambda key: _resolved_outcome(Path(key))[0],
 }
 
 
@@ -1623,7 +1653,15 @@ def _reads_moved(root: Path, book: ReadLedger) -> str:
     book.recording = False
     try:
         for (kind, key), before in sorted(book.seen.items()):
-            if _PROBE_NOW[kind](key) != before:
+            if kind == "tracked":
+                # 추적 목록을 **못 물은** 것은 "바뀌었다" 가 아니다 (task 7.5.36) — 판정 때 성공한 조회가 여기서만 실패하면 옛 판본은
+                # `the tracked file list changed … run it again` 이라고 원인을 지어냈다. 결함으로 올린다(경계가 이름 댄 줄로 받는다).
+                now, value = _tracked_outcome(Path(key))
+                if isinstance(value, BaseException):
+                    raise RuntimeError(f"cannot re-read the tracked file list to confirm the verdict: {value}") from value
+            else:
+                now = _PROBE_NOW[kind](key)
+            if now != before:
                 return f"{'the tracked file list' if kind == 'tracked' else _shown(root, key)} changed"
     finally:
         book.recording = True
@@ -2224,7 +2262,7 @@ def normalized_source(value: str, root: Path) -> tuple[Path, str]:
     # (2026-09-18 프로파일: 이 함수가 `_pinning_bundles` 안에서 resolve 를 호출당 3회,
     # a071 의 walk 하나에 35,805회 · lstat 216,876회).
     # 기준점도 `realpath` 다 (task 7.5.2.2) — 두 경로를 같은 도구로 풀어야 비교가 같은 규칙이다.
-    anchor = Path(os.path.realpath(root))
+    anchor = _resolved(root)
     raw = Path(value)
     path = raw if raw.is_absolute() else root / raw
     # `Path.resolve()` 가 아니라 `os.path.realpath` 다 (task 7.5.2.1, 재리뷰 보안 전문가). 둘은 같은 풀이인데
@@ -2233,7 +2271,8 @@ def normalized_source(value: str, root: Path) -> tuple[Path, str]:
     # `ValueError` 만 대상 이름을 붙여 받으므로, 고리 하나가 판정 전체를 한 줄로 바꾸고 다른 대상의 오류를
     # 지웠다. 판정이 파이썬 판본의 함수여서는 안 된다. 고리는 풀리지 않은 채 남고, 그 경로에는 읽을
     # 소스가 없으므로 "AST source is missing" 이 된다 — 사실 그대로다.
-    resolved = Path(os.path.realpath(path))
+    # 풀이는 깔때기로 (task 7.5.12) — 원장 키는 주어진 경로, 지문은 풀린 경로.
+    resolved = _resolved(path)
     if not resolved.is_relative_to(anchor):
         raise ValueError("AST source escapes repository")
     return resolved, resolved.relative_to(anchor).as_posix()
@@ -2344,9 +2383,9 @@ def resolve_test_file(cited: str, package_dir: Path, root: Path, files: frozense
         # 경로를 **풀어서** 대조한다 (보수 — 독립 적대 리뷰 P1-1). `root / cited` 는 `..` 도 심링크 디렉터리도 안 풀어서
         # `internal/../internal/x_test.go` · `alias/x_test.go` 가 추적 목록 밖 → 해소 못 함 → 조용히 통과했다(이 로트의
         # 첫 판이 만든 회귀 — 편집 전은 디스크의 정규 파일로 골라 거절했다). 풀린 경로가 저장소 밖이면 추적 파일이 아니다.
-        # `realpath` 의 lstat 들은 원장 밖이다 — `normalized_source` 와 같은 부류(열린 task 7.5.12).
+        # 풀이는 깔때기로 (task 7.5.12 — `normalized_source` 와 같다): 판정 중 인용 경로의 심링크를 갈아끼우면 재확인이 본다.
         try:
-            qualified = root / Path(os.path.realpath(root / cited)).relative_to(os.path.realpath(root))
+            qualified = root / _resolved(root / cited).relative_to(_resolved(root))
         except ValueError:
             return None
         return qualified if qualified in files and _kind(qualified) == "reg" else None
@@ -3345,6 +3384,10 @@ def record_landing(change: str, root: Path = ROOT) -> tuple[int, list[str]]:
             f"{change}: `{LANDING_FILE}` appeared while the landing was being computed "
             "— not overwritten"
         ]
+    except OSError as exc:
+        # 쓰기의 다른 결함(권한 · 읽기 전용 파일시스템 · 자리가 디렉터리)도 판정이다 (task 7.5.44). 옛 판본은 `FileExistsError` 만 잡아
+        # 함수 밖으로 예외가 나갔다 — CLI 는 `main` 의 경계가 받았지만 함수를 부르는 쪽에는 traceback 이었다.
+        return 1, [f"{change}: no landing recorded — cannot write `{LANDING_FILE}`: {_why(exc)}"]
     return 0, [
         f"{change}: recorded `{LANDING_FILE}` = {landing} (base {base[:12]}) — computed "
         "from this change's own evidence, not chosen; commit it with the change"

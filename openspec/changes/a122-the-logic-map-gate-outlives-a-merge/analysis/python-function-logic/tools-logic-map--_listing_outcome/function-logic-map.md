@@ -83,3 +83,30 @@
 
 최종 `tools/logic-map/check_analysis.py:1416-1446` · 분기 8 · 반환 2 · raise 1 · 호출 14 · source sha `ff590b79db6e` (비교 기준 `ast.after-7511.json`, 그 판 `b088352ac906` `:1402-1432`).
 위 절들이 "최종" 이라 적은 sha 는 **중간판**이었다(리뷰 지적 — 표기를 고쳤다). 최종 파일에서 `ast.after-759r.json` 을 다시 뽑아 앞 절의 편집 후 열거와 대조했다 — 분기(종류 · 소스) · 반환 · raise · 호출 수가 **같다**(구조 동일). 바뀐 것은 sha 와 줄 좌표다.
+
+## task 7.5.38 덤 — 목록 뒤 사라진 항목 (2026-09-27)
+
+> 편집 전 `ast.before-7538.json`(HEAD `5406cac1`) · 편집 후 `ast.after-7538.json`(최종 `check_analysis.py` `463982f42151`), `759_flm_rows.py` 로 정렬.
+
+편집 후 `tools/logic-map/check_analysis.py:1474-1509` · 분기 10 · 반환 2 · raise 2 · 호출 17 (`ast.after-7538.json`, source sha `463982f42151`)
+편집 전 `tools/logic-map/check_analysis.py:1465-1495` · 분기 8 · 반환 2 · raise 1 · 호출 14 (`ast.before-7538.json`, revision `5406cac1`, source sha `8d2a3338fdab`)
+
+| 옛 id | 새 id | 새 줄 | 종류 | 소스(새) | 바뀐 것 |
+|---|---|---|---|---|---|
+| B1 | B1 | 1488 | Try | `try:` | 같음 |
+| B2 | B2 | 1490 | For | `for child in path.iterdir():` | 같음 |
+| B3 | B3 | 1491 | Try | `try:` | 같음 |
+| B4 | B4 | 1493 | ExceptHandler | `except OSError as exc:` | 같음 |
+| — | B5 | 1495 | BoolOp | `exc.errno == errno.ENOENT and (not os.path.lexists(child))` | **새** |
+| — | B6 | 1495 | If | `if exc.errno == errno.ENOENT and (not os.path.lexists(child)):` | **새** |
+| B5 | B7 | 1503 | ExceptHandler | `except OSError as exc:` | 번호만 |
+| B6 | B8 | 1505 | comprehension | `for raw, is_dir in ((name.encode('utf-8'), is_dir) for name, is_dir in entries)` | 번호만 |
+| B7 | B9 | 1506 | IfExp | `b'd' if is_dir else b'f'` | 번호만 |
+| B8 | B10 | 1507 | comprehension | `for name, is_dir in entries` | 번호만 |
+
+새 B5 · B6: `stat` 이 ENOENT 이고 `lstat` 도 없으면(`os.path.lexists` 거짓) 목록 뒤에 **사라진** 것 — 새 `ListingMoved(OSError)` 로 "`<이름>` disappeared while the directory
+was being listed — run it again". 끊긴 링크(있는데 못 묻는 것)는 그대로 `UnstatableEntry`(양성 대조 시험 · 변이 MW6). **빈도 논거(실측, 2026-09-27)**: 스크래치 디렉터리에서
+vim(`-u NONE -es`)으로 파일을 2,176 번 쓰는 동안 옆 스레드가 목록 → stat 을 돌려 목록 뒤 stat 이 ENOENT 인 경합 **1,106** 회(이름 `.notes.md.swp` · `.swx` — 이 설정의
+vim 은 `4913` 대신 스왑 파일을 만들었다). 게이트가 증거 디렉터리를 여는 순간과 겹칠 확률은 작지만 편집 중 흔한 흐름이다. **어디서 달라지나**: 증거 디렉터리(맨 위)의
+목록이면 판정 **앞**이라 재확인이 안 돌아서 편집 전에는 `cannot tell what \`4913\` is` 결함이었다 → 이제 "disappeared … run it again". 번들 **안**의 같은 경합은
+편집 전에도 끝의 재확인이 "changed … run it again" 으로 덮었다(이 세션 실측). 둘 다 rc 1 — 바뀐 것은 문장이다.

@@ -1,0 +1,185 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "5406cac16a439266f3d3cdee90728df5b9d90a66",
+  "source_sha256": "463982f421512a1bced22420952a6a4521239b63274c9536e4488818e2236b25",
+  "function": "record_landing",
+  "signature": "record_landing(change, root)",
+  "start": {
+    "line": 3329,
+    "column": 1
+  },
+  "end": {
+    "line": 3394,
+    "column": 6
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 3344,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 3347,
+      "inherited_line": false,
+      "source": "except ValueError as exc:"
+    },
+    {
+      "id": "B3",
+      "kind": "Try",
+      "line": 3351,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 3362,
+      "inherited_line": false,
+      "source": "if refusal:"
+    },
+    {
+      "id": "B5",
+      "kind": "IfExp",
+      "line": 3366,
+      "inherited_line": false,
+      "source": "_recording_moved(change, change_dir, root, head, book) if landing else ''"
+    },
+    {
+      "id": "B6",
+      "kind": "ExceptHandler",
+      "line": 3367,
+      "inherited_line": false,
+      "source": "except GATE_FAULTS as exc:"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 3371,
+      "inherited_line": false,
+      "source": "if not landing:"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 3373,
+      "inherited_line": false,
+      "source": "if moved:"
+    },
+    {
+      "id": "B9",
+      "kind": "Try",
+      "line": 3375,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B10",
+      "kind": "ExceptHandler",
+      "line": 3378,
+      "inherited_line": false,
+      "source": "except FileExistsError:"
+    },
+    {
+      "id": "B11",
+      "kind": "ExceptHandler",
+      "line": 3387,
+      "inherited_line": false,
+      "source": "except OSError as exc:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 3348,
+      "value": "(1, [str(exc)])"
+    },
+    {
+      "line": 3363,
+      "value": "(1, [f'{change}: {refusal}'])"
+    },
+    {
+      "line": 3370,
+      "value": "(1, [f'{change}: no landing recorded — {exc}'])"
+    },
+    {
+      "line": 3372,
+      "value": "(1, [f'{change}: no landing recorded — {why}'])"
+    },
+    {
+      "line": 3374,
+      "value": "(1, [f'{change}: no landing recorded — {moved}'])"
+    },
+    {
+      "line": 3383,
+      "value": "(1, [f'{change}: `{LANDING_FILE}` appeared while the landing was being computed — not overwritten'])"
+    },
+    {
+      "line": 3390,
+      "value": "(1, [f'{change}: no landing recorded — cannot write `{LANDING_FILE}`: {_why(exc)}'])"
+    },
+    {
+      "line": 3391,
+      "value": "(0, [f\"{change}: recorded `{LANDING_FILE}` = {landing} (base {base[:12]}) — computed from this change's own evidence, not chosen; commit it with the change\"])"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 3346,
+      "callee": "resolve_referenced_change"
+    },
+    {
+      "line": 3348,
+      "callee": "str"
+    },
+    {
+      "line": 3352,
+      "callee": "_ledger"
+    },
+    {
+      "line": 3356,
+      "callee": "_head_commit"
+    },
+    {
+      "line": 3357,
+      "callee": "_read_evidence"
+    },
+    {
+      "line": 3361,
+      "callee": "_recording_refusal"
+    },
+    {
+      "line": 3364,
+      "callee": "_measure_landing_inputs"
+    },
+    {
+      "line": 3364,
+      "callee": "compute_landing"
+    },
+    {
+      "line": 3366,
+      "callee": "_recording_moved"
+    },
+    {
+      "line": 3376,
+      "callee": "landing_file.open"
+    },
+    {
+      "line": 3377,
+      "callee": "(landing + '\\n').encode"
+    },
+    {
+      "line": 3377,
+      "callee": "output.write"
+    },
+    {
+      "line": 3390,
+      "callee": "_why"
+    }
+  ]
+}

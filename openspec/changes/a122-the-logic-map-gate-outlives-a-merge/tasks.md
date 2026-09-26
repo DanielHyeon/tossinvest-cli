@@ -1991,8 +1991,12 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       **닫음(2026-09-26).** 3.12.3 실측(`7511_isdir.py`): `is_dir()` 이 끊긴 링크 · 고리 · 사라진 이름을 `False` 로 삼키고(3.14 는 권한까지),
       `rglob` 은 네 판본 모두 못 읽는 하위 트리를 건너뛴다. 종류를 `os.stat` 으로 묻고 못 물으면 `UnstatableEntry` 로 이름을 댄다
       (`FileNotFoundError` 가 아니라서 면제 경로로 안 샌다). `rglob` 절반은 7.5.9 가 순회를 없애 닫았다. 거부하는 정상 입력 0(디렉터리 3,183 · 항목 15,428).
-- [ ] 7.5.12 **P1 — realpath ABA (같은 재리뷰, 적대).** 원장 키가 `normalized_source` 의 `os.path.realpath`
+- [x] 7.5.12 **P1 — realpath ABA (같은 재리뷰, 적대).** 원장 키가 `normalized_source` 의 `os.path.realpath`
       뒤 경로라, 판정 중 심링크 디렉터리를 갈아끼우면 바이트가 같아 재확인이 통과한다. 저장소 노출 0.
+      **닫음(2026-09-27).** 지문 확장: 풀이를 새 깔때기 `_resolved` 로 — 원장 키는 **주어진** 경로, 지문은 풀린 경로(종류 `resolved`). `normalized_source` 의 두
+      자리 · `resolve_test_file` 의 두 자리. 키 교체(원장 키를 풀기 전 경로로) 대신 이것을 고른 까닭: 판정이 **연 곳**(풀린 경로의 바이트)과 **간 길**(풀이)이 둘 다
+      입력이고, 풀이를 따로 적으면 옛 파일 항목은 그대로 둔 채 하나를 더할 뿐이다. RED: 판정 중 `link -> internal` → `link -> other`(같은 바이트)에서 원장 `''` ·
+      종단 `[]`(다음 실행은 `missing evidence`). 구조 시험의 면제 넷(realpath)이 깔때기 소속 하나로 바뀌었다. 변이 MW1 · MW2 · MW8 · MW9 CAUGHT.
 - [x] 7.5.13 **P1 — `_safe_changed_go_paths` 가 git 이 인용하는 나머지를 놓친다 (7.5.2.3 재리뷰, 보안).**
       그 가드는 `\n\r\t` 만 거절하는데 git 은 `"` · `\` · 나머지 제어 문자도 인용한다(`core.quotePath=false`
       로도 안 꺼진다). `x"y.go` → `--- "a/x\"y.go"` → `removeprefix("a/")` 무효.
@@ -2070,16 +2074,23 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       안 찍히고** traceback 만 나간다 — 바로 위 주석이 그 경계가 있는 이유를 적어 놨다. 잔챙이: 원장 divergence
       메시지가 `_raise_if_inputs_moved` 에서 glob 키를 뭉갠다 · `moved` 판정 아래에서 `main` 이 사라진 상태의
       창 줄과 권유를 찍는다 · 같은 거절이 두 문장으로 나간다.
-- [ ] 7.5.36 **P2 — 재확인 때만 추적 목록을 못 물으면 사유 이름이 틀린다 (7.5.9 로트 독립 적대 리뷰 P2-1, 2026-09-26).**
+- [x] 7.5.36 **P2 — 재확인 때만 추적 목록을 못 물으면 사유 이름이 틀린다 (7.5.9 로트 독립 적대 리뷰 P2-1, 2026-09-26).**
       판정 중 `git ls-files -z` 는 성공하고 끝의 재확인에서만 실패하면 원장 대조가 실패 지문과 성공 지문을 견줘
       "the tracked file list changed" 라고 말한다 — 움직인 것이 아니라 못 물은 것이다. 막는 쪽이라 판정은 맞다.
+      **닫음(2026-09-27).** 재확인이 추적 목록을 **못 물으면** `RuntimeError("cannot re-read the tracked file list to confirm the verdict: …")` — 판정은
+      `cannot judge this change: …`, 기록은 `no landing recorded — …`. RED(편집 전): 판정 때 성공 · 재확인 때 rc 128 에서 `the tracked file list changed … run it
+      again`. 변이 MW3 CAUGHT.
 - [ ] 7.5.37 **P2 — 이름 인용은 거절, 좌표 인용은 건너뜀 — 그리고 작성 중인 미추적 시험 파일 (같은 리뷰 P2-3).**
       추적 안 된 파일의 시험 **이름**은 "in any tracked file" 로 거절되고 **좌표**는 해소 못 함(오류 아님)으로 건너뛴다 — 비대칭이다.
       그리고 TDD 흐름에서 저자가 아직 `git add` 안 한 시험 파일은 **머지에 들어간다** — "미추적 = 머지에 없음" 전제가 깨지는
       정상 입력이고 7.5.9 의 센서스(저장소 번들 · 시험 픽스처) 밖이었다. 거절 문장이 `git add` 를 말하지 않는다.
-- [ ] 7.5.38 **P2 — `UnstatableEntry` 의 실패 지문에 이름이 없다 · 편집기 임시 파일이 결함 문장이 된다 (같은 리뷰 P2-4 · P2-5).**
+- [x] 7.5.38 **P2 — `UnstatableEntry` 의 실패 지문에 이름이 없다 · 편집기 임시 파일이 결함 문장이 된다 (같은 리뷰 P2-4 · P2-5).**
       `_failed` 는 `종류:errno` 만 적어서 판정 중 **다른** 항목이 stat 불가가 돼도 재확인은 같다고 본다(판정은 이미 빨갛다).
       목록 뒤 stat 전에 사라진 편집기 임시 파일(vim 의 `4913`)이 `cannot tell what \`4913\` is` 결함 문장이 된다 — 재실행으로 풀리지만 사유가 오해를 부른다.
+      **닫음(2026-09-27).** (1) `_failed` 의 지문에 `repr(filename)` — 끊긴 항목이 `a` → `b` 로 바뀌면 재확인이 본다(RED: 두 지문 `UnstatableEntry:2` 로 같음).
+      (2) 덤 — **갈랐다**: `stat` ENOENT 이고 `lstat` 도 없으면 새 `ListingMoved` 로 "`<이름>` disappeared while the directory was being listed — run it again".
+      빈도 실측: vim 쓰기 2,176 번 동안 목록 뒤 stat ENOENT 경합 1,106 회(`.swp` · `.swx`). 증거 디렉터리 맨 위에서만 문장이 바뀐다(판정 앞이라 재확인이 안 돈다) —
+      번들 안은 편집 전에도 재확인이 "changed … run it again" 으로 덮었다. 둘 다 rc 1. 변이 MW4 · MW5 · MW6 CAUGHT.
 - [ ] 7.5.39 **P2 — AA8b 생존: "HEAD moved" 판정이 두 집에 산다 (같은 리뷰 P2-6).** `_head_moved` 를 `if False` 로 죽여도
       스위트 408 이 초록이다 — `_recording_moved` 의 B1 과 `_judged_state_moved` 가 같은 판정을 두 자리에서 내서 서로의 시험을
       통과시킨다([[two-judgements-cover-for-each-other]]). 합칠지 · 갈라 시험할지는 측정 뒤 결정. (7.5.16 이 B1 을 구조 시험으로
@@ -2100,11 +2111,13 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
 - [ ] 7.5.43 **P3 — `log.showSignature=true` 와 서명 커밋이면 자기 수리 목록이 멈춘다 (같은 리뷰, 이 로트 전부터).**
       `_self_repair_commits` 의 `touching`(`git log --format=%H -- <경로>`) 출력에 `No signature` 같은 서명 줄이 섞여 다음 명령이
       `fatal: bad revision 'No'` 로 멈춘다 — 막는 쪽(결함 문장)이다. 고정(`-c log.showSignature=false`)은 같은 원칙이나 이 로트는 재지 않았다.
-- [ ] 7.5.44 **P3 — 기록 쓰기의 권한 오류를 `record_landing` 이 안 잡는다 (7.5.14 로트 적대 리뷰, 2026-09-27).**
+- [x] 7.5.44 **P3 — 기록 쓰기의 권한 오류를 `record_landing` 이 안 잡는다 (7.5.14 로트 적대 리뷰, 2026-09-27).**
       `record_landing` 의 쓰기(`open("xb")`)는 `FileExistsError` 만 잡는다. change 디렉터리에 쓰기 권한이 없으면 `PermissionError` 가 함수 밖으로
       나간다 — CLI(`main`)는 `GATE_FAULTS` 경계에서 `no landing recorded — [Errno 13] …` 로 이름 대지만(실측 rc 1), 함수를 직접 부르는 호출자
       (시험 · 하네스)에게는 예외다. 판정 줄의 원칙([[a-fault-must-become-a-verdict]])으로는 함수 안에서 `(1, [...])` 가 맞다. 막는 쪽이고 노출은 사람의
       권한 실수뿐이라 이 로트는 주석만 사실로 고쳤다.
+      **닫음(2026-09-27).** 쓰기에 `except OSError` — `(1, ["… no landing recorded — cannot write \`landed-commit.txt\`: Permission denied"])`. RED(편집 전):
+      `0555` change 디렉터리에서 함수가 `PermissionError`. "`is_symlink` 가 먼저" 는 이미 함수의 `try` 안이었다(실측). 변이 MW7 CAUGHT.
 - [x] 7.6 **P2 — 규칙 한 집 (I2 · I3 · I4 · I5 · I6 · I7).** `compute_landing` 과 `resolve_landing`
       의 수락 조건 두 벌 · `validate` 의 지역 `canonical` 이 모듈 함수를 가림 · 디렉터리 해소 두 벌과
       없는 id 의 엉뚱한 조언 · 이관 거절 문장 두 벌(이미 갈렸다) · `_pre_archive_path` 가 아카이브

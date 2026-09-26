@@ -24,3 +24,11 @@
 |---|---|---|
 | 원장 안에서 돈다 | Z8 | `test_a_commit_landing_mid_record_writes_nothing` 외 2 |
 | 증거는 한 번 읽는다 | Y19 | `test_the_landing_inputs_read_each_bundle_once` 외 3 |
+
+## task 7.5.44 (2026-09-27)
+
+짝은 변이로 잡았다(`75_mut.py` 창 `267:276` · 재조준 `87:88` · `240:242` · `247:248`, 사본 ext4 · pid 별 · 무변이 대조군 창 양끝 GREEN `Ran 454`).
+
+| 갈래 | 변이 | 잡는 시험(수) |
+|---|---|---|
+| 새 B11 쓰기의 결함은 판정 | MW7(`NotADirectoryError` 만) | 1 — `test_an_unwritable_change_directory_is_named` |
