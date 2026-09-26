@@ -11,7 +11,7 @@
     - STORY-TOS-a119 — Codex keeps its handoff fresh and starts GBrain once [archived] → `a119-codex-session-handoff-and-gbrain-startup`
     - STORY-TOS-a120 — Audit legacy execution-baseline adoption [archived] → `a120-audit-legacy-execution-baseline`
     - STORY-TOS-a121 — Reconcile stale verification artifacts from authoritative reads [in_progress] → `a121-reconcile-stale-verification-artifacts`
-    - STORY-TOS-a122 — Keep the Function Logic Map gate answerable after a merge [implemented] → `a122-the-logic-map-gate-outlives-a-merge`
+    - STORY-TOS-a122 — Keep the Function Logic Map gate answerable after a merge [archived] → `a122-the-logic-map-gate-outlives-a-merge`
     - STORY-TOS-a123 — An empty window is derived, not declared [in_progress] → `a123-an-empty-window-is-derived-not-declared`
 - EPIC-TOS-005 — Secure delivery and engineering operations [active]
   - FEAT-TOS-007 — Secure remote access and signed releases [active]
