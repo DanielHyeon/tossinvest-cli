@@ -699,8 +699,11 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
 
       **생산 코드는 이 리뷰에서 한 줄도 바꾸지 않았다.** 리뷰가 잰 HEAD 와 기록이
       가리키는 HEAD 가 같아야 재현되기 때문이다. 나온 것은 전부 §6 으로 연다.
-- [ ] 4.5 PM 동기화 후 `make gate CHANGE=a122-the-logic-map-gate-outlives-a-merge` 를
+- [x] 4.5 PM 동기화 후 `make gate CHANGE=a122-the-logic-map-gate-outlives-a-merge` 를
       돌리고 성공한 뒤에만 아카이브한다.
+      **(2026-09-27) 돌리고 → 적고 → 체크.** 1차 gate(격리 워크트리 `TossOS-worktrees/a122-gate` · `8e894058`)는 2/11 에서 **이 줄 하나**를
+      미완료로 세어 멈췄다(`미완료 태스크 1 건` — 1 · 2 단계 외 판정 없음). 이 체크를 근거로 2차 gate 를 새 완료 커밋에서 돈다 — 결과는
+      review.md `## 종결 시퀀스 — 완료 게이트`. 2차가 실패하면 이 체크를 되돌린다. 아카이브는 Manager 검증 뒤.
 
       **4.4 가 이 task 를 막았다.** §6 의 P0 둘이 닫히기 전에는 돌리지 않는다 —
       아카이브하는 순간 spec 본문이 저장소의 상설 규칙이 되고, 그 본문이 지금
