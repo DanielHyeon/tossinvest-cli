@@ -149,3 +149,73 @@ git 의 말 첫 줄을 `_first_line` 한 벌로(손으로 적은 사본 둘 — 
 | 935 | `raise RuntimeError(f"cannot name this change's directory under the repository: {exc}") fro` |
 | 959 | `raise RuntimeError(f'cannot list the commits that touched {change_dir}: {_first_line(touch` |
 | 980 | `raise RuntimeError('cannot read the files those commits changed: ' + _first_line(listing.s` |
+
+## task 7.5.29 — `-z` 로 읽는다 (2026-09-27)
+
+> 편집 전 `ast.before-7529.json`(HEAD `26e5bb3f`) · 편집 후 `ast.after-7529.json`, `759_flm_rows.py` 로 정렬.
+
+편집 후 `tools/logic-map/check_analysis.py:1869-1967` · 분기 14 · 반환 2 · raise 4 · 호출 30 (`ast.after-7529.json`, source sha `c9a58a69af03`)
+편집 전 `tools/logic-map/check_analysis.py:1820-1910` · 분기 13 · 반환 2 · raise 3 · 호출 23 (`ast.before-7529.json`, revision `26e5bb3f`, source sha `ff590b79db6e`)
+
+| 옛 id | 새 id | 새 줄 | 종류 | 소스(새) | 바뀐 것 |
+|---|---|---|---|---|---|
+| B1 | B1 | 1896 | Try | `try:` | 같음 |
+| B2 | B2 | 1898 | ExceptHandler | `except ValueError as exc:` | 같음 |
+| B3 | B3 | 1905 | If | `if change_dir.startswith(ARCHIVE_PREFIX):` | 같음 |
+| B4 | B4 | 1909 | If | `if before:` | 같음 |
+| B5 | B5 | 1922 | If | `if touching.returncode:` | 같음 |
+| B6 | B6 | 1931 | If | `if not hashes:` | 같음 |
+| B7 | B7 | 1950 | If | `if listing.returncode:` | 같음 |
+| B8 | — | — | For | `for block in listing.stdout.split('\x00'):` (옛) | **빠짐** |
+| B9 | — | — | comprehension | `for line in block.splitlines() if line` (옛) | **빠짐** |
+| B10 | — | — | BoolOp | `lines and any((name.endswith('.go') for name in lines[1:]))` (옛) | **빠짐** |
+| B11 | — | — | If | `if lines and any((name.endswith('.go') for name in lines[1:])):` (옛) | **빠짐** |
+| B12 | — | — | comprehension | `for name in lines[1:]` (옛) | **빠짐** |
+| — | B8 | 1959 | For | `for block in listing.stdout.strip(b'\x00').split(b'\x00\x00'):` | **새** |
+| — | B9 | 1961 | BoolOp | `names and (not names.startswith(b'\n'))` | **새** |
+| — | B10 | 1961 | BoolOp | `not re.fullmatch(b'[0-9a-f]{40}\|[0-9a-f]{64}', commit) or (names and (not names.startswith(b'\n')))` | **새** |
+| — | B11 | 1961 | If | `if not re.fullmatch(b'[0-9a-f]{40}\|[0-9a-f]{64}', commit) or (names and (not names.startswith(b'\n'))):` | **새** |
+| — | B12 | 1963 | If | `if any((name.endswith(b'.go') for name in names[1:].split(b'\x00'))):` | **새** |
+| — | B13 | 1963 | comprehension | `for name in names[1:].split(b'\x00')` | **새** |
+| B13 | B14 | 1967 | comprehension | `for commit in reversed(hashes) if commit in flagged` | 번호만 |
+
+**먼저 쟀다(7.5.29 가 "재지 않았다" 고 적은 것).** 판정을 **바꾼다** — 두 방향으로(RED, 편집 전 코드):
+- `.go` 가 **아닌** `note.go<U+2028|U+2029|U+0085>txt` 를 고친 커밋에 깃발이 선다 — `str.splitlines()` 가 그 글자에서 잘라 `note.go` 가 된다(git 은 비ASCII 를 인용
+  안 한다). 거절이 **늘어나는** 쪽.
+- git 이 **인용하는** `*.go`(`"` · `\\` · `\x01`)를 고친 커밋에 깃발이 **안** 선다 — 줄이 `"we\\"ird.go"` 라 `.go` 로 안 끝난다. 거절이 **사라지는** 쪽 —
+  7.5.29 가 안 센 반대편이고 7.5.13 과 같은 뿌리다.
+
+**수리.** `git log -z` 로 받아 바이트로 읽는다(`text=True` 를 뗐다). git 2.43.0 모양: 커밋마다 `\0<sha>\0\n<이름>\0…` — 형식 `%x00` 이 앞 커밋의 마지막 이름 끝
+NUL 과 만나 경계가 NUL **둘**이고, 이름은 비지 않으므로 NUL 둘은 경계에서만 난다(새 B8). 머리가 40/64 hex 가 아니거나 이름 목록이 `\n` 으로 시작하지 않으면
+지어내지 않고 결함(새 B9~B11). 이름은 인용되지 않으므로 `endswith(b".go")` 가 그대로 맞다(새 B12 · B13).
+
+**전수 A/B**(`analysis/harness/7529_repairs_ab.py`, before `26e5bb3f` 세 모듈 · after 워킹트리): change 디렉터리 **128**, 깃발 합계 392, **SAME 128 · DIFFERENT 0**
+— 이 저장소에는 그 모양의 이름이 없다(위 센서스 0 과 같은 사실).
+
+## task 7.5.42 — `log.showRoot` 고정 (마감 수리, 적대 리뷰, 2026-09-27)
+
+> 편집 전 `ast.before-7542.json`(워킹트리 `c9a58a69`) · 편집 후 `ast.after-7542.json` — 분기 · 반환 · raise · 호출 수 같음(정렬 결과 전부 같음).
+
+편집 후 `tools/logic-map/check_analysis.py:1869-1969` · 분기 14 · 반환 2 · raise 4 · 호출 30 (`ast.after-7542.json`, source sha `12beb79433de`)
+편집 전 `tools/logic-map/check_analysis.py:1869-1967` · 분기 14 · 반환 2 · raise 4 · 호출 30 (`ast.before-7542.json`, revision `worktree`, source sha `c9a58a69af03`)
+
+| 옛 id | 새 id | 새 줄 | 종류 | 소스(새) | 바뀐 것 |
+|---|---|---|---|---|---|
+| B1 | B1 | 1896 | Try | `try:` | 같음 |
+| B2 | B2 | 1898 | ExceptHandler | `except ValueError as exc:` | 같음 |
+| B3 | B3 | 1905 | If | `if change_dir.startswith(ARCHIVE_PREFIX):` | 같음 |
+| B4 | B4 | 1909 | If | `if before:` | 같음 |
+| B5 | B5 | 1922 | If | `if touching.returncode:` | 같음 |
+| B6 | B6 | 1931 | If | `if not hashes:` | 같음 |
+| B7 | B7 | 1952 | If | `if listing.returncode:` | 같음 |
+| B8 | B8 | 1961 | For | `for block in listing.stdout.strip(b'\x00').split(b'\x00\x00'):` | 같음 |
+| B9 | B9 | 1963 | BoolOp | `names and (not names.startswith(b'\n'))` | 같음 |
+| B10 | B10 | 1963 | BoolOp | `not re.fullmatch(b'[0-9a-f]{40}\|[0-9a-f]{64}', commit) or (names and (not names.startswith(b'\n')))` | 같음 |
+| B11 | B11 | 1963 | If | `if not re.fullmatch(b'[0-9a-f]{40}\|[0-9a-f]{64}', commit) or (names and (not names.startswith(b'\n'))):` | 같음 |
+| B12 | B12 | 1965 | If | `if any((name.endswith(b'.go') for name in names[1:].split(b'\x00'))):` | 같음 |
+| B13 | B13 | 1965 | comprehension | `for name in names[1:].split(b'\x00')` | 같음 |
+| B14 | B14 | 1969 | comprehension | `for commit in reversed(hashes) if commit in flagged` | 같음 |
+
+목록 명령에 `-c log.showRoot=true`. `false` 면 루트 커밋의 `-z` 목록이 `\0<sha>\0`(이름 없음)이라 모양 검사를 지나고 그 커밋의 깃발이 **조용히** 빈다 —
+RED(편집 전, 스크래치): 루트 커밋이 change 디렉터리와 `a.go` 를 만들어도 `[]`. GREEN `[<root>]`. `diff.renames` 와 같은 원칙. 노출 0 — 이 저장소의 루트 커밋은
+change 디렉터리를 안 만든다.

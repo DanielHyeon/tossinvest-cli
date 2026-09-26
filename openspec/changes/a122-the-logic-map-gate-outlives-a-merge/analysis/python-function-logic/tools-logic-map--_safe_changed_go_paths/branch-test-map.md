@@ -113,3 +113,11 @@ pathspec 이 없다는 것은 `test_both_git_calls_see_the_same_files`(구조)�
 | `git diff --numstat` 의 `timeout=30` | AP1 | `test_every_child_process_in_the_gate_modules_names_a_timeout`(구조) · `test_every_child_the_verdict_starts_is_given_a_timeout`(행동 — 판정 · 기록 한 판이 실제로 띄운 자식 전부) |
 
 위 "안 닫은 것" 의 `timeout=` 줄은 이것으로 닫혔다.
+
+## task 7.5.13 (2026-09-27)
+
+짝은 변이로 잡았다(`75_mut.py` 창 `253:262` · `117:118` · 재실행 `257:258` · `261:262`, 사본 `A122_HARNESS_WORK` ext4 · pid 별 · 무변이 대조군 창 양끝 GREEN `Ran 427` / 재실행 `Ran 429`). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 | 잡는 시험 |
+|---|---|---|
+| (주석만 — 로직 변경 0) | — | — |

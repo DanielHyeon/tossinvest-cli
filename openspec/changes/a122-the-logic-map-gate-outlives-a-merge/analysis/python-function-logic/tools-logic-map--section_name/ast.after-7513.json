@@ -1,0 +1,82 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "26e5bb3f825e148516ca5c15b1e035f511044b9b",
+  "source_sha256": "c9a58a69af033eaae558b1b81b65299a08bbffe6aa67e90d9f1928d4452f10e9",
+  "function": "section_name",
+  "signature": "section_name(header, prefix, which)",
+  "start": {
+    "line": 654,
+    "column": 5
+  },
+  "end": {
+    "line": 669,
+    "column": 20
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "BoolOp",
+      "line": 658,
+      "inherited_line": false,
+      "source": "index < 0 or index >= len(named)"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 658,
+      "inherited_line": false,
+      "source": "if index < 0 or index >= len(named):"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 664,
+      "inherited_line": false,
+      "source": "if header != _git_header_path(prefix + name):"
+    }
+  ],
+  "returns": [
+    {
+      "line": 669,
+      "value": "name"
+    }
+  ],
+  "raises": [
+    {
+      "line": 659,
+      "source": "raise RuntimeError(f'git listed {len(named)} changed Go file(s) but the judged diff has more sections — the two views of the same diff disagree')"
+    },
+    {
+      "line": 665,
+      "source": "raise RuntimeError(f'the judged diff names {header!r} where git listed {name!r} — the two views of the same diff disagree')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 657,
+      "callee": "len"
+    },
+    {
+      "line": 658,
+      "callee": "len"
+    },
+    {
+      "line": 659,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 660,
+      "callee": "len"
+    },
+    {
+      "line": 664,
+      "callee": "_git_header_path"
+    },
+    {
+      "line": 665,
+      "callee": "RuntimeError"
+    }
+  ]
+}

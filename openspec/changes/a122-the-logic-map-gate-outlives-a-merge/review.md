@@ -5774,3 +5774,133 @@ MR6 은 돌리기 전에 바꿨다 — 첫 정의("밖의 경로를 `root / cite
 - `main()` 전수 A/B 를 **보수 뒤에 다시 돌리지 않았다** — 대신 판정 입구(해소기 128)와 인용(번들 3,084)을 전수로 쟀다. 조언 줄 · 창 줄의 전수 대조는 없다.
 - `_names_outcome` 의 지문 인코딩을 겨눈 변이 · `_named` 의 실패 갈래 변이는 안 돌렸다(BTM 에 적음).
 - P1-1 의 "오늘 코퍼스 `..` · `//` 0 건" 은 리뷰어의 수를 옮겼다 — 이 세션이 다시 재지 않았다.
+
+## VERIFY — task 7.5.13 · 7.5.26 · 7.5.29 · 7.5.17 (2026-09-27)
+
+범위: git 출력 해석 가족 — 판정 diff 의 머리 줄 인용(7.5.13 · 7.5.26 잔여), 자기 수리 신호의 줄 자르기(7.5.29), 인용 해소 비용 재측정(7.5.17).
+HEAD `26e5bb3f`(앞 로트 커밋) 위의 워킹트리, 내내 안 움직였다. 생산 트레이딩 코드 · Go 변경 0 — `tools/logic-map/check_analysis.py`(최종 `c9a58a69af03`) ·
+그 시험(`bb8c69ec4fb6`) · 기록 · 하네스. `execution_baseline.py` 는 안 건드렸다. **커밋 안 함.**
+
+### FLM 먼저
+
+편집 전 열거 `ast.before-7513/7529.json`(HEAD `26e5bb3f`), 편집 뒤 `ast.after-*.json`, 표는 `759_flm_rows.py` 의 `difflib` 정렬(각 FLM 의 새 절).
+
+| 함수 | 분기 · 반환 · raise 전 → 후 | 바뀐 것 |
+|---|---|---|
+| `_changed_existing_functions` | 36·4·4 → 41·5·6 | 이름을 레코드에서(`named` · 안쪽 `section_name`), 옛 `removeprefix` IfExp 둘 → `section_name` IfExp 둘 |
+| `section_name`(안쪽, 새) | — → 3·1·2 | 구역 번호로 레코드 고르기 · 머리 줄 대조 |
+| `_git_header_path`(새) | — → 7·2·0 | git 의 C-인용 렌더러(대조 전용) |
+| `_self_repair_commits` | 13·2·3 → 14·2·4 | `-z` · 바이트 · NUL 둘 경계 · 모양 검사 |
+| `_safe_changed_go_paths` | 13·1·4 → 같음 | 주석만 |
+
+### 먼저 잰 것
+
+- **인용 표**(`analysis/harness/7513_quoted.py`, git 2.43.0): ASCII 1~127(`/` 제외) 이름 126 + 비ASCII 둘을 판정 diff 와 같은 깃발로 견줘, 인용된 이름 **34** =
+  예측(`< 0x20` · `"` · `\` · `0x7f`) 과 일치, `é` · U+2028 은 안 인용. `_git_header_path` 가 머리 값 128 개를 전부 같게 만든다(`True`).
+- **센서스**(같은 하네스, HEAD `26e5bb3f`): 역사 전부(`git log --all --name-only -z`) + 추적의 고유 `*.go` 이름 **1,816** 중 인용되는 바이트가 든 것 **0**.
+- **`git log -z --name-only` 모양**(스크래치, 이 세션): 커밋마다 `\0<sha>\0\n<이름>\0…`, 커밋 경계는 NUL 둘. 줄 단위 출력에서는 `"`·`\`·제어 문자 이름이
+  `"…"` 로 인용되고 U+2028 은 그대로다.
+- **7.5.29 가 "재지 않았다" 고 적은 것**: 판정을 바꾼다 — 두 방향(아래 RED).
+
+### 7.5.13 · 7.5.26 — 방향 (c)
+
+`--numstat -z` 레코드(날 바이트)를 구역의 이름으로 쓰고, 머리 줄은 그 이름의 렌더링과 **같아야** 받는다. (a) 인용 해독기는 틀리면 조용히 다른 이름을 판정하고,
+(b) 이름 대고 거절하면 7.5.24 가 받게 한 정상 입력(인용되는 이름의 새 파일)을 새로 거절한다 — 둘 다 안 골랐다. 새 코드(렌더러)는 대조에만 쓰여 틀리면 이름 댄
+결함(막는 쪽)이다. 7.5.24 의 순서 짝은 이제 구역마다 이름으로도 대조된다.
+
+| 모양(인용되는 이름) | 편집 전(`26e5bb3f`) | 편집 뒤 |
+|---|---|---|
+| 편집(`"` · `\` · `\x01` · `\x7f`) | `cannot load existing base file <base>:"a/we\"ird.go"` — 헛거절 | `(이름, F)` · 현재 쪽 해시 |
+| 삭제 · 인용된 이름**에서의** rename | 같은 헛거절 | base 쪽 요구 |
+| 인용된 이름**으로의** rename | 키 `('"b/we\"ird.go"', 'F')` · **현재 쪽을 안 봄**(permissive — tasks 에 없던 모양, 이 로트 실측) | `('we"ird.go', 'F')` · 현재 쪽 해시 |
+| 새 파일 | `{}` | `{}` |
+| numstat 순서 주입(뒤집음) | 결함 없음 | `the two views of the same diff disagree` |
+
+`\n` · `\r` · `\t` 의 가드 거절은 **그대로 둔다** — 이제 사유는 파서가 아니라 판정 줄 출력(이름에 줄바꿈)이다. 받을지는 새 열린 task 7.5.41. 7.5.26 이 닫는 범위:
+그 셋을 뺀 git 이 인용하는 바이트 전부, 그리고 접두사를 글자로 믿던 것(렌더링과 통째 대조).
+
+### 7.5.29 — `-z`
+
+RED(편집 전 코드): `.go` 가 아닌 `note.go<U+2028|U+2029|U+0085>txt` 에 **깃발이 섰다**(거절 늘어남 — 세 subTest), git 이 인용하는 `we"ird.go` · `back\slash.go` ·
+`ctl\x01x.go` 에 **깃발이 안 섰다**(거절 사라짐 — 7.5.29 가 안 센 반대편, 7.5.13 과 같은 뿌리). 수리: `git log -z` 를 바이트로 읽고, 경계는 NUL 둘, 머리가 40/64 hex 가
+아니거나 목록이 `\n` 으로 시작하지 않으면 결함. 전수 A/B(`7529_repairs_ab.py`, before `26e5bb3f` 세 모듈): change 디렉터리 **128** · 깃발 합계 392 · **SAME 128 · DIFFERENT 0**.
+
+### RED → GREEN
+
+새 시험 **13**(클래스 둘): 7.5.13 · 7.5.26 **8**(편집(4 subTest) · 삭제 · rename 두 방향 · 새 파일 · 렌더러 · 순서 대조 · 구역 초과) · 7.5.29 **5**(구분자(3 subTest) ·
+인용 Go(3 subTest) · 양성 대조 · 커밋 둘 · 모양(2 subTest)). 구현 **전에** 먼저 쓴 11 을 편집 전 코드로 돌려 **8 FAIL + 7 ERROR**(subTest 포함; 위 표의 편집 전 칸), 초록은 새 파일 · 양성 대조 ·
+커밋 둘. 구역 초과 · 모양 시험 둘은 변이 뒤에 더한 못 박기용이다(아래). `test_check_analysis` **416 → 429**.
+
+### 변이 (창 `253:262` · `117:118` · 재실행 `257:258` · `261:262`, 사본 ext4 · pid 별 · 무변이 대조군 양끝 GREEN `Ran 427` / `Ran 429`)
+
+| 변이 | 첫 판 | 최종 | 잡은 시험(수) |
+|---|---|---|---|
+| MQ1 머리 줄 대조 안 함 | CAUGHT | | 1 — 순서 대조 |
+| MQ2 이름을 다시 머리 줄에서 | CAUGHT | | 5 |
+| MQ3 글자 탈출을 8진수로 | CAUGHT | | 7 |
+| MQ4 `0x7f` 를 안 인용 | CAUGHT | | 2 |
+| MQ5 구역 초과 경계 삭제 | **SURVIVED**(도달함 — ~~정상 git 은 수를 맞춘다~~ 정정: typechange 가 수를 어긋낸다, 아래 마감 수리) | CAUGHT | 1 — `test_a_section_beyond_the_listed_files_is_named`(주입) · 마감 수리 뒤 진짜 git typechange 시험 |
+| MQ6 새 쪽이 옛 이름 | CAUGHT | | 4 |
+| AB5(재조준) `/dev/null` 을 이름으로 | CAUGHT | | 4 |
+| MS1 `-z` 뗌 | CAUGHT | | 104 |
+| MS2 `.go` 가 들어 있으면 | CAUGHT | | 1 |
+| MS3 모양 검사 삭제 | **SURVIVED**(도달함 — 정상 git 은 늘 그 모양) | CAUGHT | 1 — `test_a_listing_of_an_unexpected_shape_is_a_fault` |
+
+생존 둘은 둘 다 "정상 git 은 결코 안 내는 모양" 의 방어였다 — 주입(레코드 자르기 · git 대답 바꿔 치우기)으로 닿게 해 못 박았다. **정정(마감 수리)**:
+MQ5 쪽은 거짓이었다 — 정상 git 의 typechange 가 그 모양을 낸다(아래).
+
+### A/B — `main()` 출력 전체 (`7521_main_ab.py`, before `26e5bb3f` 의 `check_analysis.py` · after 워킹트리 `c9a58a69`)
+
+이 로트는 `execution_baseline.py` 를 안 바꿨으므로 그 하네스의 before 사본(워킹트리의 `execution_baseline.py`)이 그대로 유효하다. change 디렉터리 **128**:
+**SAME 128 · DIFFERENT 0** · git 프로세스 2,959 → 2,959 · `ast.json` 읽기 9,180 → 9,180. 벽시계(참고 — 병행으로 변이 하네스 · 7.5.17 재측정이 돌았다):
+before 먼저 1,481.2s → 1,510.4s · after 먼저 1,469.7s → 1,518.6s. a122 자신의 게이트: HEAD 코드와 워킹트리 코드의 출력이 **바이트까지 같다**(`cmp`) — **rc 1 · required 11**.
+
+### 7.5.17 — 재측정 (닫지 않고 좁힘)
+
+`analysis/harness/7517_cost.py`(2026-09-26 23:04, HEAD `26e5bb3f`, 실제 저장소 읽기만, **병행 A/B 가 도는 중**):
+
+| 코드 | N(바이트) | 색인 | 판정 | 재확인 | 판정 줄 |
+|---|---|---|---|---|---|
+| `1d1e5ca7`(트리 순회) | 20 (997 B) | 16.20s | 263.15s | 109.71s | 0 |
+| 워킹트리(추적 목록) | 20 | 0.44s | 0.00s | 0.26s | 0 |
+| 〃 | 1,000 (52 KB) | 0.47s | 0.08s | 0.29s | 0 |
+| 〃 | 10,000 (538 KB) | 0.46s | 0.69s | 0.69s | 0 |
+
+옛 값("판정 16.55s + 재확인 15.78s")보다 기준 판이 훨씬 크다 — 병행 부하 아래라 절대값은 비교용이 아니다. 비용 절반은 닫혔다(538 KB 에서 1.4초). 남은 것은
+항목을 그 잔여로 다시 적었다: 해소 못 한 좌표가 판정 줄을 안 내는 것(오늘의 정책 · 7.5.37 과 같은 결정) · `gate.sh:330` 에 시한이 없는 것(값을 정해야 하고 —
+change 한 판의 최대는 a071 37.0s(1d1e5ca7 A/B) — `timeout(1)` 이 macOS 기본에 없다). 한 줄이지만 사람 결정으로 둔다.
+
+### 로트 검증 (최종 트리, rc 직접)
+
+`make lint` **rc 0** · `make sdd-test` **rc 0**(scripts 15 · logic-map **504** · sdd 76 · sdd-history 29 · pm 16 · deploy 18 · `go test ./tools/logic-map` ok) ·
+`test_check_analysis` **429 OK**(skipped 1) rc 0 · `test_gate_resolves_archived_changes` **10 OK** rc 0 · `openspec validate --all --strict` **57/57** rc 0 ·
+`check_analysis --change a122-…` **rc 1 · required 11**(HEAD 코드와 출력 동일).
+
+### not-applicable · 남긴 것
+
+- `make test` · `make test-seams` · CodeGraph · Go AST: Go 변경 0.
+- 사람 결정 둘: 7.5.41(`\n\r\t` 이름을 받을지 — 판정 줄 표기를 먼저 정해야 한다) · 7.5.17 잔여(`gate.sh` 시한의 값과 이식성). 멈춘 항목은 없다.
+- 렌더러의 대조는 **git 2.43.0** 에서 잰 것이다 — 다른 판본의 git 이 인용 규칙을 바꾸면 이름 댄 결함으로 멈춘다(막는 쪽).
+
+### 마감 수리 (적대 리뷰 뒤)
+
+독립 적대 리뷰(수치 대조 겸임): P0 0 · P1 1 · P2 4. 같은 로트에서 닫았다. HEAD `26e5bb3f` 그대로 · 최종 `check_analysis.py` `12beb79433de` ·
+시험 `dc1083579a6a` · **커밋 안 함**.
+
+| # | 발견 | 한 것 | 영수증 |
+|---|---|---|---|
+| P1-1 | 변이 **MX1**(대조가 `a/` · `b/` 접두사를 무시)이 429 전부 초록으로 생존(리뷰어 실측) — 판정 diff 의 `--src-prefix=a/ --dst-prefix=b/` 고정이 **대신** 막던 우연한 안전 | 판정 diff 의 `--src-prefix` 를 `c/` 로 바꿔 치우는 주입 시험 `test_the_prefix_is_part_of_the_comparison` | MX1 **CAUGHT**(창 `262:264`, `Ran 433`) — 이 시험 하나가 잡는다 |
+| P2-1 | 기록 "정상 git 은 (레코드와 구역의) 수를 맞춘다" 는 **거짓** — typechange(일반 → 심링크)는 레코드 1 · 구역 2(리뷰어 실측, 이 세션이 스크래치에서 다시 쟀다: `1\t2\tx.go\0` 대 `--- a/x.go`/`+++ /dev/null` · `--- /dev/null`/`+++ b/x.go`) | (i) 위 변이 표 · 생존 문단 · 시험 docstring · `section_name` BTM 의 문장 정정, (ii) 진짜 git typechange 픽스처 시험 둘 — typechange 만(B1 · B2 가 `more sections` 로) · typechange 뒤 `y.go`(B3 이 `names 'b/x.go' where git listed 'y.go'` 로), (iii) `section_name` FLM 에 거부하는 정상 입력으로 typechange 를 적음 — `*.go` 심링크화, 저장소 노출 0(`git ls-files -s` 의 `120000` 인 `*.go` 0) | MQ5 재실행 CAUGHT 2(주입 · 진짜 git) · MQ1 재실행 CAUGHT 3. 생산 코드는 편집 전(끝의 수 대조) · 뒤 모두 이름 댄 거절이라 회귀 아님 — 두 시험은 편집 뒤 코드에서 처음부터 초록(못 박기용) |
+| 기록 | 7.5.13 이 새로 받게 된 VT · FF · ESC · RS(과 U+0085 · U+2028 · U+2029) 이름이 `f"{source}:{function}"` 로 가공 없이 찍힌다(리뷰어 실측) | tasks 7.5.41 에 더함 | — |
+| 7.5.42 | `log.showRoot=false` 면 루트 커밋 목록이 `\0<sha>\0` 로 비어 모양 검사를 지나고 깃발이 조용히 빈다 | **이 로트에서 닫았다**: 목록 명령에 `-c log.showRoot=true`. FLM `ast.before/after-7542.json`(분기 · 호출 수 같음) | RED(편집 전 `c9a58a69`) `[]` → GREEN `[<root>]` · 변이 MX8 CAUGHT |
+| 7.5.43 | `log.showSignature=true` + 서명 커밋이면 `touching` 출력에 서명 줄이 섞여 `fatal: bad revision 'No'`(막는 쪽, 이 로트 전부터) | 열린 항목으로만 | — |
+| 기록 | `_git_header_path` BTM "B6 · B7 은 MQ3 가 대신 잰다" | 렌더러 시험이 **직접** 잡는다(리뷰어 MX6 · MX7)로 정정 | — |
+
+새 시험 **4**(접두사 · typechange 둘 · showRoot) — `test_check_analysis` 429 → **433**. 편집 전 코드에서 빨간 것은 showRoot 하나(나머지 셋은 이미 맞는 행동의 못 박기 —
+영수증은 MX1 · MQ5 · MQ1 CAUGHT). 변이 창 `262:264`(MX1 · MX8) · `257:258` · `253:254`, 사본 ext4 · pid 별 · 무변이 대조군 양끝 GREEN `Ran 433`.
+MX1 이 **이 시험 없이** 생존한다는 것은 리뷰어의 실측이다 — 이 세션은 시험을 넣은 뒤의 CAUGHT 만 쟀다.
+
+**로트 검증(마감 수리 뒤, rc 직접)**: `make lint` **rc 0** · `test_check_analysis` **433 OK** rc 0 · `make sdd-test` **rc 0**(logic-map **508**) · gate resolver **10 OK**
+rc 0 · `openspec validate --all --strict` **57/57** rc 0 · `check_analysis --change a122-…` **rc 1 · required 11**(마감 수리 전 출력과 바이트 동일, `cmp`).
+`main()` 전수 A/B 는 마감 수리 뒤 **다시 돌리지 않았다** — 코드 변경은 자기 수리 목록 명령의 `-c log.showRoot=true` 한 줄이다. 그 함수의 전수 A/B
+(`7529_repairs_ab.py`, before `26e5bb3f`)는 다시 돌렸다: change 128 · 깃발 392 · **SAME 128 · DIFFERENT 0**.

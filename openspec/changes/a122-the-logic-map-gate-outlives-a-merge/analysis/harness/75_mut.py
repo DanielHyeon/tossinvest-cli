@@ -424,9 +424,10 @@ MUTATIONS = {
     "AB4_only_the_first_hunk_of_a_file_counts": [
         ('            # 본문이다. 여기서 `--- `·`+++ ` 는 소스 줄이지 파일 이름이 아니다.\n            hunk(line)',
          '            # 본문이다. 여기서 `--- `·`+++ ` 는 소스 줄이지 파일 이름이 아니다.\n            pass')],
+    # AB5 는 task 7.5.13 이 이름을 레코드에서 고르게 바꿔 다시 걸었다 — 뜻은 같다(`/dev/null` 을 보통 이름처럼 읽는다).
     "AB5_dev_null_is_an_ordinary_name": [
-        ('            old_source = "" if value == "/dev/null" else value.removeprefix("a/")',
-         '            old_source = value.removeprefix("a/")')],
+        ('            old_source = "" if value == "/dev/null" else section_name(value, "a/", 0)',
+         '            old_source = section_name(value, "a/", 0)')],
     # --- task 7.5.22: 본문 없는 `*.go` 는 조용히 비지 않는다 ---
     "AC1_a_suppressed_body_is_ordinary": [
         ('        if added == b"-" and deleted == b"-":',
@@ -818,6 +819,38 @@ MUTATIONS = {
     "MR6_a_path_outside_raises": [
         ('        except ValueError:\n            return None\n        return qualified if qualified in files',
          '        except ValueError:\n            raise\n        return qualified if qualified in files')],
+    # --- task 7.5.13 · 7.5.26 — 이름은 numstat 레코드에서, 머리 줄은 대조만 ---
+    "MQ1_the_header_is_not_compared": [
+        ('        if header != _git_header_path(prefix + name):', '        if False:')],
+    "MQ2_the_name_comes_from_the_header_again": [
+        ('            old_source = "" if value == "/dev/null" else section_name(value, "a/", 0)',
+         '            old_source = "" if value == "/dev/null" else value.removeprefix("a/")'),
+        ('            new_source = "" if value == "/dev/null" else section_name(value, "b/", -1)',
+         '            new_source = "" if value == "/dev/null" else value.removeprefix("b/")')],
+    "MQ3_letter_escapes_become_octal": [
+        ('        if byte in _C_LETTER:\n', '        if False:\n')],
+    "MQ4_delete_is_not_quoted": [
+        ('    if not any(byte < 0x20 or byte in (0x22, 0x5C, 0x7F) for byte in raw):',
+         '    if not any(byte < 0x20 or byte in (0x22, 0x5C) for byte in raw):')],
+    "MQ5_extra_sections_are_not_counted": [
+        ('        if index < 0 or index >= len(named):', '        if index < 0:')],
+    "MQ6_the_new_side_takes_the_old_name": [
+        ('section_name(value, "b/", -1)', 'section_name(value, "b/", 0)')],
+    # --- task 7.5.29 — 자기 수리 신호는 `-z` 로 읽는다 ---
+    "MS1_no_nul_framing": [
+        ('         "log", "-z", "--no-walk",', '         "log", "--no-walk",')],
+    "MS2_a_substring_counts_as_go": [
+        ('        if any(name.endswith(b".go") for name in names[1:].split(b"\\0")):',
+         '        if any(b".go" in name for name in names[1:].split(b"\\0")):')],
+    "MS3_the_shape_is_not_checked": [
+        ('        if not re.fullmatch(rb"[0-9a-f]{40}|[0-9a-f]{64}", commit) or (names and not names.startswith(b"\\n")):',
+         '        if False:')],
+    # --- 마감 수리 (적대 리뷰) — 리뷰어의 변이 MX1 그대로 · 7.5.42 ---
+    "MX1_the_prefix_is_ignored": [
+        ('        if header != _git_header_path(prefix + name):',
+         '        if header.strip(\'"\').split("/", 1)[-1] != _git_header_path(name).strip(\'"\'):')],
+    "MX8_show_root_is_not_pinned": [
+        ('"-c", "diff.renames=false", "-c", "log.showRoot=true",', '"-c", "diff.renames=false",')],
 }
 
 

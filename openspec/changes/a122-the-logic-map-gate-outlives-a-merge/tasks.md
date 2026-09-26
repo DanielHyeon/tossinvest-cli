@@ -1800,11 +1800,14 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       **남은 절반**: 부분 클론(`--filter=blob:none`)에서 base blob 이 없으면 git 이 promisor 로 **fetch** 하고 실제
       `.git/objects/pack` 에 pack 이 생긴다(2 → 3, 판정은 맞다). 7.5.34 뒤로 base blob 을 읽는 호출은 `_verified_objects` 의
       `cat-file --batch` 하나다. 이 기계의 git 2.43 은 `--no-lazy-fetch` 를 모른다(`git --no-lazy-fetch version` rc 129 실측) — 막는 방법을 따로 재야 한다.
-- [ ] 7.5.29 **P2 — `_self_repair_commits` 도 git 출력을 `str.splitlines()` 로 자른다 (7.5.28 에서 셈).**
+- [x] 7.5.29 **P2 — `_self_repair_commits` 도 git 출력을 `str.splitlines()` 로 자른다 (7.5.28 에서 셈).**
       7.5.28 이 판정 diff 에서 고친 것과 같은 값이다: `git log` 의 커밋 덩이를 `block.splitlines()` 로 잘라
       커밋 sha 와 경로를 가른다. 경로에 U+2028 등이 있으면 한 경로가 여럿으로 갈린다. 그 결과가 자기 수리
       판정을 바꾸는지는 **재지 않았다** — 다른 판정이라 FLM 없이 고치면 절차 위반이므로 task 로 연다.
-- [ ] 7.5.26 **P2 — 파서가 `a/`·`b/` 접두사를 글자로 믿는다 (7.5.23 재리뷰 2026-09-23, 적대).**
+      **닫음(2026-09-27).** 먼저 쟀다 — 판정을 **바꾼다**, 두 방향: `.go` 가 아닌 `note.go<U+2028>txt` 에 깃발이 서고(거절 늘어남), git 이 인용하는
+      `*.go`(`"` · `\` · 제어 문자)에는 깃발이 안 섰다(거절 사라짐 — 이 항목이 안 센 반대편). `git log -z` 로 받아 바이트로 읽고 모양이 다르면 결함.
+      행동 시험 넷(RED 빨강) + 모양 시험. 전수 A/B(`7529_repairs_ab.py`) change 128 · 깃발 392 · SAME 128.
+- [x] 7.5.26 **P2 — 파서가 `a/`·`b/` 접두사를 글자로 믿는다 (7.5.23 재리뷰 2026-09-23, 적대).**
       `changed_existing_functions` 가 `--- a/<이름>` 에서 `removeprefix("a/")` 로 이름을 정한다.
       `diff.noprefix=true` 면 헤더가 `--- <이름>` 이라 무해하지만, 경로가 **정말** `a/`·`b/` 로
       시작하면 실제 구성요소를 잘라 낸다(`--- a/a/hot.go` → `a/hot.go` 가 되어야 하는데 `noprefix`
@@ -1837,6 +1840,9 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       않는다(시험 `test_the_judged_diff_format_does_not_follow_the_user_config`). pathspec 쪽은 7.5.34 가 닫았다.
       `diff.mnemonicPrefix` 는 트리 둘을 견주는 diff 에서 접두사를 안 바꾼다(이 로트에서 실측). **남은 것**: 이름에 `"` 나 `\`
       가 든 `*.go` 의 헛거절(git 이 머리 줄을 인용한다) — 저장소 노출 0.
+      **닫음(2026-09-27, 잔여).** 7.5.13 과 같은 수리로 닫혔다 — `"` · `\` 가 든 `*.go` 는 이제 제 이름으로 판정된다(헛거절 없음). 닫힌 범위:
+      git 이 인용하는 바이트 전부(`< 0x20` · `"` · `\` · `0x7f`, 단 `\n` · `\r` · `\t` 은 가드가 **이름 대고** 거절 — 7.5.41). 머리 줄의 접두사도 이제 글자로
+      믿지 않고 렌더링과 통째로 대조한다.
 - [ ] 7.5.30 **P2 — 시험 스위트가 공유 go 빌드 캐시를 판마다 약 375 MB 씩 불린다 (7.5.25 변이 중 실측, 2026-09-24).**
       `go_functions` 가 임시 저장소마다 `go run ./tools/logic-map` 을 부르고, go 의 캐시 키에 **디렉터리 경로**가
       들어가서 같은 코드가 경로마다 새 항목이 된다. 전용 `GOCACHE` 에서 잰 값: 스위트 한 판 +423 MB, 데운 뒤 둘째
@@ -1978,7 +1984,7 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       (`FileNotFoundError` 가 아니라서 면제 경로로 안 샌다). `rglob` 절반은 7.5.9 가 순회를 없애 닫았다. 거부하는 정상 입력 0(디렉터리 3,183 · 항목 15,428).
 - [ ] 7.5.12 **P1 — realpath ABA (같은 재리뷰, 적대).** 원장 키가 `normalized_source` 의 `os.path.realpath`
       뒤 경로라, 판정 중 심링크 디렉터리를 갈아끼우면 바이트가 같아 재확인이 통과한다. 저장소 노출 0.
-- [ ] 7.5.13 **P1 — `_safe_changed_go_paths` 가 git 이 인용하는 나머지를 놓친다 (7.5.2.3 재리뷰, 보안).**
+- [x] 7.5.13 **P1 — `_safe_changed_go_paths` 가 git 이 인용하는 나머지를 놓친다 (7.5.2.3 재리뷰, 보안).**
       그 가드는 `\n\r\t` 만 거절하는데 git 은 `"` · `\` · 나머지 제어 문자도 인용한다(`core.quotePath=false`
       로도 안 꺼진다). `x"y.go` → `--- "a/x\"y.go"` → `removeprefix("a/")` 무효.
       **7.5.22 정정 — 앞 판본이 적은 사유가 틀렸다** (7.5.23 에서 다시 정정: 그 정정 자체가 앞뒤가 안 맞았다).
@@ -1990,6 +1996,11 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       그 증거로 들어서 두 문장이 서로를 부정했다. 7.5.22 가 rename 의 **양쪽 이름**을 가드 범위에 넣어
       우회 쪽을 닫았다 — 남은 것은 `"`·`\`·나머지 제어 문자이고, 그 결과는 **거짓 차단**이다.
       저장소 노출 0(117 change · 이름 97,235 실측).
+      **닫음(2026-09-27).** 방향 (c): 판정의 이름을 머리 줄에서 유도하지 않고 `--numstat -z` 레코드(날 바이트)에서 고른다. 머리 줄은
+      그 이름을 git 의 규칙으로 인용한 글자(`_git_header_path`)와 **대조**만 한다 — 틀리면 이름 댄 결함(막는 쪽). (a) 해독기는 틀리면 조용히 다른
+      이름을 판정하고, (b) 거절은 7.5.24 가 받게 한 정상 입력(인용되는 이름의 새 파일)을 새로 거절해서 안 골랐다. RED: 편집 · 삭제 · 인용된 이름
+      에서의 rename 은 헛거절, 인용된 이름**으로의** rename 은 새 쪽을 조용히 안 봤다(permissive — 이 로트에서 실측). 렌더러는 git 2.43.0 과 ASCII
+      전수로 대조(`7513_quoted.py` · 시험). 센서스: 역사 전부 + 추적 `*.go` 1,816 중 인용되는 바이트 **0**(26e5bb3f). `\n\r\t` 거절은 그대로 — 7.5.41.
 - [ ] 7.5.14 **P2 — 구조 시험이 stat 계열을 안 본다 (같은 재리뷰, 정확성).** `test_check_analysis.py` 의 원시 집합 9개에
       `stat/lstat/exists/is_file/is_dir/is_symlink/access` 가 없어 네 번째 깔때기 `_kind` 를 아무것도 안 지킨다.
       살아 있는 우회: `changed_existing_functions` 의 `Path.exists` · `_recording_refusal` 셋. **7.5.2.4 에서 이 결함이 행동으로
@@ -2013,6 +2024,12 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       **판정 줄 0**. `branch-test-map.md` 300 KB ≈ 4.5시간이고 `gate.sh:321` 에 timeout 이 없다.
       (2026-09-26, 7.5.9 뒤: 맨이름 해소는 더 이상 트리를 돌지 않는다 — 색인이 한 번 받은 추적 목록에서 고르고 원장의
        `glob` 항목도 없어졌다. 이 공격의 비용을 **다시 재지는 않았다**. 해소 실패가 판정 줄을 안 내는 절반은 그대로 열려 있다.)
+      **(2026-09-27 재측정 — 비용 절반은 닫혔다, 이 항목은 잔여로 좁힌다.)** `analysis/harness/7517_cost.py`(HEAD `26e5bb3f`, 실제 저장소 읽기만,
+      병행 A/B 가 도는 중): 기준 `1d1e5ca7` N=20 색인 16.2s · 판정 263.2s · 재확인 109.7s(병행 부하로 옛 16.55s 보다 크다) → 워킹트리 N=20 판정 0.00s ·
+      재확인 0.26s, N=1,000(52 KB) 0.08s · 0.29s, N=10,000(538 KB) 0.69s · 0.69s. 판정 줄은 모든 판에서 **0**. **남은 것**: (i) 해소 못 한 좌표가
+      판정 줄을 안 낸다(오늘의 정책 — `test_a_qualified_path_that_does_not_exist_is_not_silently_skipped` 가 못 박는다; 7.5.37 의 비대칭과 같은 결정),
+      (ii) `gate.sh:330` 의 `check_analysis.py` 호출에 시한이 없다 — 한 줄이지만 값을 정해야 하고(오늘 change 한 판의 최대는 a071 37.0s, 1d1e5ca7 A/B)
+      `timeout(1)` 이 macOS 기본에 없어 게이트를 그 기계에서 깬다. 비용 쪽 동기가 사라져 급하지 않으므로 사람 결정으로 둔다.
 - [ ] 7.5.18 **P2 — `_bundle_text` 배관 시험이 이름만큼 못 박지 않는다 (같은 재리뷰, 시험품질).**
       `test_the_bundle_text_is_built_from_the_bytes_the_command_read` 의 픽스처가 판정 바이트와 디스크 바이트가
       **다른 순간을 안 만든다** — 호출부를 "그 자리에서 새로 읽기" 로 바꿔도 그 시험은 통과한다(스위트는 다른 둘로 잡는다).
@@ -2043,6 +2060,20 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       못 박았지만 그것은 **순서**이지 판정의 집이 아니다.)
 - [ ] 7.5.40 **P3 — `_recording_refusal` 의 `git diff --quiet` 에 `SNAPSHOT_PINS` 가 없다 (7.5.9 로트 주장정확성 리뷰 F9 부수, 이 로트 전부터).**
       `core.fsmonitor` 에 적힌 프로그램이 기록 명령 · 조언 줄에서 뜰 수 있다. 7.5.9 보수는 새 `ls-files` 만 고정했다.
+- [ ] 7.5.41 **P3 — `_safe_changed_go_paths` 의 `\n` · `\r` · `\t` 거절을 받을지 (7.5.13 에서 연다, 2026-09-27).**
+      7.5.13 뒤로 판정의 이름은 머리 줄이 아니라 레코드에서 오고 렌더러가 탭 · 개행도 git 과 같이 인용한다 — 이 세 글자의 거절은 이제 파서 때문이
+      아니다. 남은 사유는 출력이다: 이름 댄 판정 줄(`missing evidence for modified function …`)에 줄바꿈이 들어가면 한 판정이 여러 줄로 찍힌다.
+      받으려면 판정 줄의 이름 표기(예: `repr`)를 먼저 정해야 한다. 저장소 노출 0(1,816 이름).
+      **(마감 수리 — 적대 리뷰 실측, 2026-09-27) 같은 사유가 7.5.13 이 새로 받게 된 글자에도 이미 있다**: VT(0x0b) · FF(0x0c) · ESC(0x1b) ·
+      RS(0x1e) 가 든 이름의 편집이 이제 `(이름, 'F')` 요구로 서고, 그 이름이 `_verdict` 의 `f"{source}:{function}"` 를 거쳐 가공 없이 찍힌다 — 단말에서
+      판정 줄이 여러 줄로 갈리거나 지워져 보인다. U+0085 · U+2028 · U+2029(git 이 인용 안 함)도 같다. 표기를 정하면 이 글자들까지 한 번에.
+- [x] 7.5.42 **P2 — `_self_repair_commits` 에 `log.showRoot` 고정이 없다 (7.5.13 로트 적대 리뷰, 2026-09-27).**
+      `log.showRoot=false` 면 루트 커밋의 `-z` 목록이 `\0<sha>\0` 이 되어 모양 검사를 통과하고 그 커밋의 깃발이 조용히 빈다. 노출 0 — 이 저장소의
+      루트 커밋은 change 디렉터리를 안 만든다. **닫음(2026-09-27, 같은 로트 마감 수리).** 목록 명령에 `-c log.showRoot=true`(`diff.renames` 명령줄 고정과
+      같은 원칙). RED(편집 전 코드) `[]` → GREEN `[<root>]`(`test_the_root_commit_is_read_whatever_log_show_root_says`) · 변이 MX8 CAUGHT.
+- [ ] 7.5.43 **P3 — `log.showSignature=true` 와 서명 커밋이면 자기 수리 목록이 멈춘다 (같은 리뷰, 이 로트 전부터).**
+      `_self_repair_commits` 의 `touching`(`git log --format=%H -- <경로>`) 출력에 `No signature` 같은 서명 줄이 섞여 다음 명령이
+      `fatal: bad revision 'No'` 로 멈춘다 — 막는 쪽(결함 문장)이다. 고정(`-c log.showSignature=false`)은 같은 원칙이나 이 로트는 재지 않았다.
 - [x] 7.6 **P2 — 규칙 한 집 (I2 · I3 · I4 · I5 · I6 · I7).** `compute_landing` 과 `resolve_landing`
       의 수락 조건 두 벌 · `validate` 의 지역 `canonical` 이 모듈 함수를 가림 · 디렉터리 해소 두 벌과
       없는 id 의 엉뚱한 조언 · 이관 거절 문장 두 벌(이미 갈렸다) · `_pre_archive_path` 가 아카이브

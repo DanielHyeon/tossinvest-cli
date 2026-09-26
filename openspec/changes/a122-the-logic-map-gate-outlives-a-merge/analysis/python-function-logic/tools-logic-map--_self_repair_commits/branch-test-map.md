@@ -80,3 +80,21 @@
 | 갈래 | 변이 (`75_mut.py`) | 잡는 시험 |
 |---|---|---|
 | 분기 변화 0 — git 의 말 첫 줄이 `_first_line` 한 벌로 | V2 | `test_a_one_sided_git_failure_cannot_land_a_pre_edit_commit` |
+
+## task 7.5.29 (2026-09-27)
+
+짝은 변이로 잡았다(`75_mut.py` 창 `253:262` · `117:118` · 재실행 `257:258` · `261:262`, 사본 `A122_HARNESS_WORK` ext4 · pid 별 · 무변이 대조군 창 양끝 GREEN `Ran 427` / 재실행 `Ran 429`). '—' 는 변이 대신 직접 시험이다.
+
+| 갈래 | 변이 | 잡는 시험 |
+|---|---|---|
+| `-z` 로 받는다 | MS1(`-z` 뗌) | 104 — 자기 수리를 거치는 시험 전부 |
+| 새 B12 이름이 `.go` 로 **끝난다** | MS2(`.go` 가 들어 있으면) | `test_a_non_go_name_with_a_line_separator_raises_no_flag` |
+| 새 B9~B11 모양이 다르면 결함 | MS3 — **첫 판 생존**(정상 git 은 늘 그 모양). git 대답을 바꿔 치우는 시험을 더해 재실행 CAUGHT | `test_a_listing_of_an_unexpected_shape_is_a_fault` |
+| 새 B8 커밋 경계는 NUL 둘 | — | `test_two_repairs_are_each_read`(커밋 둘 — 하나는 Go, 하나는 아님) |
+| 인용되는 Go 이름도 깃발 | — | `test_a_go_name_git_quotes_raises_the_flag`(편집 전 빨강) |
+
+## task 7.5.42 (마감 수리, 2026-09-27)
+
+| 갈래 | 변이 | 잡는 시험 |
+|---|---|---|
+| `log.showRoot=true` | MX8(고정 삭제) | `test_the_root_commit_is_read_whatever_log_show_root_says` |

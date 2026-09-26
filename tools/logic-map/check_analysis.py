@@ -461,6 +461,32 @@ def _header_name(line: str) -> str:
     return value[:-1] if value.endswith("\t") else value
 
 
+# git 의 C-인용에서 글자 하나로 쓰는 탈출 (`quote.c` 의 표 — 아래 함수가 git 2.43.0 과 같은 글자를 내는지는 시험이 ASCII 전수로 잰다).
+_C_LETTER = {0x07: b"a", 0x08: b"b", 0x09: b"t", 0x0A: b"n", 0x0B: b"v", 0x0C: b"f", 0x0D: b"r", 0x22: b'"', 0x5C: b"\\"}
+
+
+def _git_header_path(path: str) -> str:
+    """`core.quotePath=false` 인 git 이 통합 diff 머리 줄에 적을 글자 (task 7.5.13 · 7.5.26).
+
+    **이름을 여기서 풀지 않는다 — 대조에만 쓴다.** 이름은 `--numstat -z` 의 날 바이트에서 오고, 이 함수는 그 이름을 git 의
+    규칙으로 인용해 머리 줄과 **같은지** 본다. 인용을 푸는 해독기는 틀리면 조용히 다른 이름을 판정하지만, 이 렌더러가 틀리면
+    두 글자가 달라 이름 댄 결함이 된다(막는 쪽). 인용되는 바이트는 `< 0x20` · `"` · `\\` · `0x7f` 이고(`analysis/harness/
+    7513_quoted.py` 실측 34 개), 그중 하나라도 있으면 전체를 `"` 로 감싼다. `0x80` 이상은 `core.quotePath=false` 라 그대로다.
+    """
+    raw = path.encode("utf-8")
+    if not any(byte < 0x20 or byte in (0x22, 0x5C, 0x7F) for byte in raw):
+        return path
+    out = bytearray(b'"')
+    for byte in raw:
+        if byte in _C_LETTER:
+            out += b"\\" + _C_LETTER[byte]
+        elif byte < 0x20 or byte == 0x7F:
+            out += b"\\%03o" % byte
+        else:
+            out.append(byte)
+    return (out + b'"').decode("utf-8")
+
+
 def _numstat_records(raw_output: bytes) -> list[tuple[bytes, bytes, list[bytes]]]:
     """`git diff --numstat -z` 의 레코드를 (더함, 지움, 경로들)로 읽는다 (task 7.5.22).
 
@@ -541,6 +567,9 @@ def _safe_changed_go_paths(root: Path, comparison: Comparison) -> list[tuple[byt
                 raise RuntimeError("modified Go path is not UTF-8") from error
             # Git quotes tab/newline headers; do not silently parse that quoted form
             # as a different path. Ordinary Unicode names remain supported.
+            # (task 7.5.13 · 7.5.26, 2026-09-27) 판정의 이름은 이제 머리 줄이 아니라 이 레코드에서 오고 머리 줄은 대조만 한다 —
+            # 그래서 `"` · `\` · 나머지 제어 문자는 받는다. 이 세 글자는 **거절을 그대로 둔다**: 받으면 이름 댄 판정 줄에 줄바꿈 ·
+            # 복귀 · 탭이 들어가 한 판정 줄이 여러 줄로 찍힌다. 받을지는 이 로트가 정하지 않았다(열린 task 7.5.41).
             if "\n" in path or "\r" in path or "\t" in path:
                 raise RuntimeError("modified Go path cannot be represented losslessly in unified diff")
     for added, deleted, paths in records:
@@ -609,14 +638,35 @@ def _changed_existing_functions(root: Path, base: str, comparison: Comparison) -
     # UTF-8 이 아닌 diff 는 전처럼 결함이다.
     diff_lines = process.stdout.decode("utf-8", "strict").split("\n")
     required: dict[tuple[str, str], dict] = {}
-    # 판정 diff 의 **구역마다** 본문(훅)이 있었는지. numstat 레코드와 **순서로** 짝짓는다 —
-    # 이름으로 짝지으면 안 된다 (task 7.5.24): 이 파서가 아는 이름은 `removeprefix` 를 거친
-    # **유도된** 것이고 git 이 인용한 것(`"a/we\"ird.go"`)일 수도 있는데, numstat 의 이름은
-    # `-z` 라 날 바이트다. 두 이름 공간을 교집합으로 견주면 정상 입력이 거절된다(실측).
+    # 판정 diff 의 **구역마다** 본문(훅)이 있었는지. numstat 레코드와 **순서로** 짝짓는다 (task 7.5.24) —
+    # 7.5.24 때 이 파서의 이름은 머리 줄에서 `removeprefix` 로 유도한 것이라 git 이 인용한 글자(`"a/we\"ird.go"`)일 수
+    # 있어서 이름으로 못 짝지었다. 7.5.13 부터 이름은 레코드에서 오고 머리 줄은 그 이름을 인용한 글자와 **대조**된다
+    # (`section_name`) — 순서 짝이 틀리면 거기서 이름 댄 결함이 된다.
     bodied: list[bool] = []
     old_source = ""
     new_source = ""
     hunks: list[tuple[int, int, int, int]] = []
+    # 구역마다의 이름은 **numstat 레코드**에서 온다 (task 7.5.13 · 7.5.26). 머리 줄은 git 이 이름을 인용한 글자일 수 있어서
+    # (`"a/we\\"ird.go"`) 거기서 이름을 유도하면 인용된 글자가 이름이 됐다 — 편집 · 삭제는 헛거절, 인용된 이름으로의 rename 은
+    # 새 쪽을 조용히 안 봤다. 레코드의 이름은 `-z` 라 날 바이트이고 가드가 UTF-8 임을 확인했다.
+    named = [[raw.decode("utf-8") for raw in paths] for _, _, paths in records]
+
+    def section_name(header: str, prefix: str, which: int) -> str:
+        """이 구역의 이름 — 레코드에서 고르고 머리 줄과 **대조한다**. 짝은 순서이므로(7.5.24), 순서가 틀리면 다른 파일의
+        이름이 훅에 붙는다. 머리 줄이 그 이름을 git 의 규칙으로 인용한 글자와 같아야 받는다."""
+        index = len(bodied) - 1
+        if index < 0 or index >= len(named):
+            raise RuntimeError(
+                f"git listed {len(named)} changed Go file(s) but the judged diff has more sections "
+                "— the two views of the same diff disagree"
+            )
+        name = named[index][which]
+        if header != _git_header_path(prefix + name):
+            raise RuntimeError(
+                f"the judged diff names {header!r} where git listed {name!r} "
+                "— the two views of the same diff disagree"
+            )
+        return name
 
     def flush() -> None:
         nonlocal hunks
@@ -717,10 +767,10 @@ def _changed_existing_functions(root: Path, base: str, comparison: Comparison) -
                 bodied[-1] = True
         elif line.startswith("--- "):
             value = _header_name(line)
-            old_source = "" if value == "/dev/null" else value.removeprefix("a/")
+            old_source = "" if value == "/dev/null" else section_name(value, "a/", 0)
         elif line.startswith("+++ "):
             value = _header_name(line)
-            new_source = "" if value == "/dev/null" else value.removeprefix("b/")
+            new_source = "" if value == "/dev/null" else section_name(value, "b/", -1)
     flush()
     # **가드가 센 것과 판정이 읽은 것을 맞춰 본다** (task 7.5.23). numstat 이 내용이 바뀌었다고
     # (`0`/`0` 도 `-`/`-` 도 아니라고) 말한 파일은 본문을 내야 한다. 안 냈으면 무언가가 본문을
@@ -728,9 +778,8 @@ def _changed_existing_functions(root: Path, base: str, comparison: Comparison) -
     # 사라진다. 문을 하나씩 세는 대신 **두 투영이 어긋났다**는 것을 본다.
     #
     # 짝은 **순서**로 짓는다 (task 7.5.24). 두 호출은 같은 `git diff` 에 형식만 다르므로 파일을
-    # 같은 순서로 낸다(섞인 픽스처 여섯 모양으로 실측). 이름으로 짝지으려던 앞 판본은 정상
-    # 입력을 거절했다 — 이 파서의 이름은 `removeprefix` 를 거친 유도값이고 git 이 인용한 것일
-    # 수도 있는데 numstat 의 이름은 날 바이트라, 두 이름 공간이 안 만난다.
+    # 같은 순서로 낸다(섞인 픽스처 여섯 모양으로 실측). 7.5.13 부터는 순서만 믿지 않는다 — 구역의 이름을
+    # 레코드에서 고르면서 머리 줄과 대조한다(`section_name`). 여기서 세는 것은 수다.
     if len(bodied) != len(records):
         raise RuntimeError(
             f"git listed {len(records)} changed Go file(s) but the judged diff has "
@@ -1890,21 +1939,31 @@ def _self_repair_commits(root: Path, analysis: Path, head: str) -> list[str]:
         # 비-`.go` 이름으로 옮긴 커밋의 옛 이름이 목록에서 사라져 **깃발이 안 선다** — 판정이
         # 사람의 git 설정의 함수가 된다. `_evidence_floor` 가 `-M100% --no-follow` 로 지킨
         # 원칙과 같다: 하한도 이 신호도 저장소의 함수여야 한다. 끄는 쪽이 더 세는 방향이다.
-        ["git", "-c", "core.quotePath=false", "-c", "diff.renames=false",
-         "log", "--no-walk", "--no-merges", "--stdin", "--format=%x00%H", "--name-only"],
-        cwd=root, capture_output=True, text=True, timeout=120, check=False,
-        input="\n".join(hashes) + "\n",
+        # **`-z` 로 받는다** (task 7.5.29). 줄 단위로 받던 판본은 `str.splitlines()` 가 U+2028 · U+2029 · U+0085 에서도
+        # 잘라 `.go` 가 아닌 `note.go\u2028txt` 에 깃발을 세웠고, git 이 **인용하는** 이름(`"we\\"ird.go"`)은 `"` 로 끝나
+        # `.go` 로 안 끝나서 그 커밋의 깃발을 안 세웠다(거절이 사라지는 쪽). `-z` 면 이름은 인용되지 않고 NUL 로 끝난다.
+        # `log.showRoot` 도 명령줄에서 못 박는다 (task 7.5.42) — `false` 면 루트 커밋의 목록이 비어(`\0<sha>\0`) 모양 검사를
+        # 지나고 그 커밋의 깃발이 조용히 빈다. `diff.renames` 와 같은 원칙: 이 신호는 사람의 git 설정의 함수가 아니다.
+        ["git", "-c", "core.quotePath=false", "-c", "diff.renames=false", "-c", "log.showRoot=true",
+         "log", "-z", "--no-walk", "--no-merges", "--stdin", "--format=%x00%H", "--name-only"],
+        cwd=root, capture_output=True, timeout=120, check=False,
+        input=("\n".join(hashes) + "\n").encode("ascii"),
     )
     if listing.returncode:
         raise RuntimeError(
             "cannot read the files those commits changed: "
             + _first_line(listing.stderr, "git log --no-walk failed")
         )
+    # 모양(git 2.43.0 실측): 커밋마다 `\0<sha>\0\n<이름>\0<이름>\0…` — 형식의 `%x00` 이 앞 커밋의 마지막 이름 끝 NUL 과
+    # 만나 커밋 사이가 NUL **둘**이다. 이름은 빈 문자열일 수 없으므로 NUL 둘은 커밋 경계에서만 난다. 모양이 다르면 지어내지
+    # 않고 결함이다 — 못 읽은 목록을 "Go 를 안 고쳤다" 로 읽으면 거절이 조용히 사라진다.
     flagged: set[str] = set()
-    for block in listing.stdout.split("\0"):
-        lines = [line for line in block.splitlines() if line]
-        if lines and any(name.endswith(".go") for name in lines[1:]):
-            flagged.add(lines[0])
+    for block in listing.stdout.strip(b"\0").split(b"\0\0"):
+        commit, _, names = block.partition(b"\0")
+        if not re.fullmatch(rb"[0-9a-f]{40}|[0-9a-f]{64}", commit) or (names and not names.startswith(b"\n")):
+            raise RuntimeError("cannot read the files those commits changed: unexpected git log -z output")
+        if any(name.endswith(b".go") for name in names[1:].split(b"\0")):
+            flagged.add(commit.decode("ascii"))
     # `git log` 는 새 것부터 준다. 거절 문장이 **가장 오래된** 것을 이름으로 대야 저자가
     # 고칠 첫 자리를 가리킨다 — 뒤의 것들은 그 뒤에 쌓인 작업이다.
     return [commit for commit in reversed(hashes) if commit in flagged]

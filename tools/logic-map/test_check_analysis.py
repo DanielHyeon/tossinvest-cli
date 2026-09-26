@@ -9865,5 +9865,292 @@ class ARecordNamesAMovedInputBeforeARefusal(unittest.TestCase):
             self.assertTrue(any("uncommitted changes to tracked files" in line for line in lines), lines)
 
 
+
+class ANameGitQuotesIsJudgedByItsRealName(unittest.TestCase):
+    """git 이 인용하는 이름의 `*.go` 도 제 이름으로 판정한다 (task 7.5.13 · 7.5.26 잔여, 2026-09-27).
+
+    판정 diff 의 머리 줄(`--- a/…` · `+++ b/…`)은 이름에 `< 0x20` · `"` · `\\` · `0x7f` 바이트가 있으면 C-인용된다
+    (`core.quotePath=false` 로도 안 꺼진다 — `analysis/harness/7513_quoted.py` 가 git 2.43.0 에서 ASCII 전수로 잰 34 개).
+    편집 전 파서는 그 머리 값에서 `removeprefix` 로 이름을 **유도**해서, 인용된 글자가 이름이 됐다: 편집 · 삭제 · 인용된
+    이름에서의 rename 은 `cannot load existing base file` 로 **헛거절**, 인용된 이름**으로의** rename 은 새 쪽 바이트를 못 찾아
+    현재 논리를 **조용히** 안 봤다(요구가 base 쪽만 남는다 — permissive). 새 파일만 우연히 통과했다.
+
+    이제 이름은 `--numstat -z` 레코드(날 바이트)에서 오고, 머리 줄은 그 이름을 git 의 규칙으로 인용한 글자와 **같아야** 한다 —
+    짝(순서)을 믿는 대신 대조한다. 이 저장소의 역사 전부 + 추적 `*.go` 1,816 이름 중 그런 바이트가 든 것 0(26e5bb3f).
+    """
+
+    GO = "package pkg\n\nfunc F() int {\n\treturn %d\n}\n"
+    NAMES = ('we"ird.go', "back\\slash.go", "ctl\x01x.go", "del\x7fx.go")
+
+    def _repo(self, before: dict[str, int], after: dict[str, int]) -> tuple[Path, str]:
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        root = Path(holder.name)
+        environment = {**os.environ, "GIT_CONFIG_GLOBAL": "/dev/null"}
+
+        def run(*args: str) -> None:
+            subprocess.run(args, cwd=root, check=True, capture_output=True, env=environment)
+
+        run("git", "init", "-q", ".")
+        run("git", "config", "user.email", "fixture@example.com")
+        run("git", "config", "user.name", "fixture")
+        for name, value in before.items():
+            (root / name).write_text(self.GO % value, encoding="utf-8")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "base")
+        base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        for name in before:
+            if name not in after:
+                (root / name).unlink()
+        for name, value in after.items():
+            (root / name).write_text(self.GO % value, encoding="utf-8")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "after")
+        return root, base
+
+    def _required(self, root: Path, base: str) -> dict:
+        with mock.patch("check_analysis.go_functions", side_effect=TheGuardAndTheJudgementReadTheSameDiff._functions):
+            return check_analysis.changed_existing_functions(root, base, "HEAD")
+
+    def test_an_edited_file_with_a_quoted_name_is_required_by_its_name(self) -> None:
+        for name in self.NAMES:
+            with self.subTest(name=name):
+                root, base = self._repo({name: 1}, {name: 2})
+                required = self._required(root, base)
+                self.assertEqual(sorted(required), [(name, "F")])
+                self.assertIn("current_hash", required[(name, "F")])
+
+    def test_a_deleted_file_with_a_quoted_name_requires_its_base_logic(self) -> None:
+        root, base = self._repo({'we"ird.go': 1, "keep.go": 1}, {"keep.go": 1})
+        self.assertEqual(self._required(root, base), {
+            ('we"ird.go', "F"): {"file": 'we"ird.go', "function": "F", "base_hash": mock.ANY}})
+
+    def test_a_rename_into_a_quoted_name_still_reads_the_new_side(self) -> None:
+        """permissive 였던 모양 — 새 이름의 바이트를 못 찾아 현재 논리를 안 봤다."""
+        root, base = self._repo({"plain.go": 1}, {'we"ird.go': 2})
+        required = self._required(root, base)
+        self.assertEqual(sorted(required), [('we"ird.go', "F")])
+        self.assertIn("current_hash", required[('we"ird.go', "F")])
+
+    def test_a_rename_out_of_a_quoted_name_reads_the_old_side(self) -> None:
+        root, base = self._repo({'we"ird.go': 1}, {"plain.go": 2})
+        self.assertEqual(sorted(self._required(root, base)), [("plain.go", "F")])
+
+    def test_a_new_file_with_a_quoted_name_still_requires_nothing(self) -> None:
+        root, base = self._repo({"keep.go": 1}, {"keep.go": 1, 'we"ird.go': 2})
+        self.assertEqual(self._required(root, base), {})
+
+    def test_the_header_renderer_matches_git_for_every_ascii_byte(self) -> None:
+        """대조의 기준이 git 과 같은지 — 스크래치 저장소에서 ASCII 1~127(`/` 제외)과 비ASCII 둘로 머리 값을 git 에게 받아
+        `_git_header_path` 가 만든 글자와 견준다. 규칙을 틀리게 옮기면 정상 입력이 헛거절된다(막는 쪽)."""
+        names = ["q" + chr(byte) + "q.go" for byte in range(1, 128) if chr(byte) != "/"] + ["qéq.go", "q q.go"]
+        root, base = self._repo({name: 1 for name in names}, {name: 2 for name in names})
+        out = subprocess.run(
+            ["git", "-c", "core.quotePath=false", "diff", "--no-ext-diff", "--src-prefix=a/", "--dst-prefix=b/",
+             "--no-color", "--unified=0", base, "HEAD"], cwd=root, capture_output=True, check=True,
+        ).stdout.decode("utf-8").split("\n")
+        headers = sorted(check_analysis._header_name(line) for line in out if line.startswith("--- "))
+        self.assertEqual(len(headers), len(names))
+        self.assertEqual(sorted(check_analysis._git_header_path("a/" + name) for name in names), headers)
+        self.assertEqual(sum(header.startswith('"') for header in headers), 34, "인용 표가 git 2.43.0 실측과 다르다")
+
+    def test_a_section_beyond_the_listed_files_is_named(self) -> None:
+        """구역이 레코드보다 많으면(짝이 어긋났다) 이름을 고를 레코드가 없다 — `IndexError` 가 아니라 이름 댄 결함이어야 한다.
+        이 경계를 지운 변이 MQ5 가 첫 판에서 살아남았다. ~~정상 git 은 수를 맞춘다~~ — **정정(마감 수리)**: typechange 에서 git 은
+        레코드 하나에 구역 둘을 낸다. 진짜 git 모양은 `test_a_typechange_has_more_sections_than_records_and_is_named` 가 잰다."""
+        root, base = self._repo({"a.go": 1, "b.go": 1}, {"a.go": 2, "b.go": 2})
+        real = check_analysis._numstat_records
+        with mock.patch.object(check_analysis, "_numstat_records", lambda raw: real(raw)[:1]):
+            with self.assertRaises(RuntimeError) as caught:
+                self._required(root, base)
+        self.assertIn("the two views of the same diff disagree", str(caught.exception))
+
+    def _typechange(self, *, later: bool) -> tuple[Path, str]:
+        """진짜 git 의 typechange — 일반 파일 `x.go` 가 심링크가 된다. numstat 은 **한** 레코드, 판정 diff 는 구역 **둘**
+        (`--- a/x.go`/`+++ /dev/null` · `--- /dev/null`/`+++ b/x.go`)이다. `later` 면 그 뒤에 보통 편집 `y.go` 가 하나 더."""
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        root = Path(holder.name)
+        environment = {**os.environ, "GIT_CONFIG_GLOBAL": "/dev/null"}
+
+        def run(*args: str) -> None:
+            subprocess.run(args, cwd=root, check=True, capture_output=True, env=environment)
+
+        run("git", "init", "-q", ".")
+        run("git", "config", "user.email", "fixture@example.com")
+        run("git", "config", "user.name", "fixture")
+        (root / "x.go").write_text(self.GO % 1, encoding="utf-8")
+        (root / "y.go").write_text(self.GO % 1, encoding="utf-8")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "base")
+        base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        (root / "x.go").unlink()
+        (root / "x.go").symlink_to("y.go")
+        if later:
+            (root / "y.go").write_text(self.GO % 2, encoding="utf-8")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "typechange")
+        records = subprocess.run(["git", "diff", "--numstat", "-z", base, "HEAD"], cwd=root, capture_output=True,
+                                 check=True, env=environment).stdout
+        self.assertEqual(records.count(b"\0"), 2 if later else 1, f"typechange 가 레코드 하나가 아니다: {records!r}")
+        return root, base
+
+    def test_a_typechange_has_more_sections_than_records_and_is_named(self) -> None:
+        """**정정 (마감 수리, 적대 리뷰 P2-1).** MQ5 를 못 박은 첫 시험은 주입(레코드 자르기)을 썼고 기록은 "정상 git 은 수를 맞춘다"
+        고 적었다 — **거짓**이다. typechange(일반 파일 → 심링크)에서 git 은 레코드 하나에 구역 둘을 낸다(리뷰어 실측 · 이 픽스처가
+        단언한다). 판정은 편집 전후 모두 이름 댄 거절이다(편집 전: 끝의 수 대조) — 여기서는 `section_name` 의 경계(B1 · B2)가 말한다."""
+        root, base = self._typechange(later=False)
+        with self.assertRaises(RuntimeError) as caught:
+            self._required(root, base)
+        self.assertIn("but the judged diff has more sections", str(caught.exception))
+
+    def test_a_typechange_before_another_file_is_named_by_the_header(self) -> None:
+        """같은 모양 뒤에 파일이 하나 더 있으면 구역 번호는 레코드 안에 있지만 **다른 파일**의 레코드다 — 머리 줄 대조(B3)가 말한다."""
+        root, base = self._typechange(later=True)
+        with self.assertRaises(RuntimeError) as caught:
+            self._required(root, base)
+        self.assertIn("the judged diff names 'b/x.go' where git listed 'y.go'", str(caught.exception))
+
+    def test_the_prefix_is_part_of_the_comparison(self) -> None:
+        """**마감 수리 (적대 리뷰 P1-1, 변이 MX1).** 대조가 머리 줄의 접두사(`a/` · `b/`)를 무시해도 429 가 초록이었다 — 판정 diff 의
+        `--src-prefix=a/ --dst-prefix=b/` 고정이 **대신** 막는 우연한 안전이었다([[surviving-mutant-may-mean-accidental-safety]]).
+        판정 diff 의 접두사를 바꿔 치우면 이름이 같아도 대조가 거절해야 한다."""
+        root, base = self._repo({"a.go": 1}, {"a.go": 2})
+        real = subprocess.run
+
+        def other_prefix(argv, *args, **kwargs):
+            if isinstance(argv, list) and "--unified=0" in argv:
+                argv = [("--src-prefix=c/" if item == "--src-prefix=a/" else item) for item in argv]
+            return real(argv, *args, **kwargs)
+
+        with mock.patch("check_analysis.subprocess.run", side_effect=other_prefix):
+            with self.assertRaises(RuntimeError) as caught:
+                self._required(root, base)
+        self.assertIn("the judged diff names 'c/a.go' where git listed 'a.go'", str(caught.exception))
+
+    def test_the_two_views_are_compared_name_by_name(self) -> None:
+        """이름을 numstat 에서 가져오면 짝(순서)이 틀릴 때 **다른 파일**의 이름이 훅에 붙는다 — 그래서 머리 줄과 대조한다.
+        numstat 의 순서를 뒤집으면 이름 댄 결함이어야 한다(조용히 이름이 바뀌면 안 된다)."""
+        root, base = self._repo({"a.go": 1, "b.go": 1}, {"a.go": 2, "b.go": 2})
+        real = check_analysis._numstat_records
+        with mock.patch.object(check_analysis, "_numstat_records", lambda raw: list(reversed(real(raw)))):
+            with self.assertRaises(RuntimeError) as caught:
+                self._required(root, base)
+        self.assertIn("the two views of the same diff disagree", str(caught.exception))
+        self.assertIn("a/a.go", str(caught.exception))
+
+
+class ASelfRepairCommitIsReadFromRawNames(unittest.TestCase):
+    """자기 수리 신호는 커밋이 고친 이름을 **날 바이트**로 읽는다 (task 7.5.29, 2026-09-27).
+
+    편집 전 `_self_repair_commits` 는 `--name-only` 출력을 `str.splitlines()` 로 잘랐다. 그 함수는 U+2028 · U+2029 · U+0085
+    에서도 자르고 git 은 그 글자를 인용하지 않으므로(`core.quotePath=false`), `.go` 가 **아닌** `note.go txt` 가
+    `note.go` 로 읽혀 깃발이 섰다(거절이 늘어나는 쪽). 그리고 git 이 **인용하는** 이름(`"we\\"ird.go"`)은 `"` 로 끝나 `.go` 로
+    안 끝나서 그 커밋의 깃발이 **안 섰다**(거절이 사라지는 쪽 — 7.5.29 가 안 센 반대편, 이 로트에서 실측).
+    이제 `-z` 로 받아 NUL 에서만 자르고 이름은 인용되지 않는다.
+    """
+
+    def _repo(self, repair_files: dict[str, str]) -> tuple[Path, Path, str, str]:
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        root = Path(holder.name)
+        environment = {**os.environ, "GIT_CONFIG_GLOBAL": "/dev/null"}
+
+        def run(*args: str) -> None:
+            subprocess.run(args, cwd=root, check=True, capture_output=True, env=environment)
+
+        run("git", "init", "-q", ".")
+        run("git", "config", "user.email", "fixture@example.com")
+        run("git", "config", "user.name", "fixture")
+        analysis = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+        analysis.mkdir(parents=True)
+        (analysis.parent.parent / "review.md").write_text("mine\n")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "start")
+        for name, text in repair_files.items():
+            (root / name).write_text(text, encoding="utf-8")
+        (analysis.parent.parent / "review.md").write_text("mine — repair\n")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "repair")
+        head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        return root, analysis, head, head
+
+    def test_a_non_go_name_with_a_line_separator_raises_no_flag(self) -> None:
+        for separator in (" ", " ", "\u0085"):
+            with self.subTest(separator=repr(separator)):
+                root, analysis, head, _ = self._repo({f"note.go{separator}txt": "x\n"})
+                self.assertEqual(check_analysis._self_repair_commits(root, analysis, head), [])
+
+    def test_a_go_name_git_quotes_raises_the_flag(self) -> None:
+        for name in ('we"ird.go', "back\\slash.go", "ctl\x01x.go"):
+            with self.subTest(name=name):
+                root, analysis, head, commit = self._repo({name: "package pkg\n"})
+                self.assertEqual(check_analysis._self_repair_commits(root, analysis, head), [commit])
+
+    def test_an_ordinary_go_repair_still_raises_the_flag(self) -> None:
+        """양성 대조 — 편집 전에도 초록."""
+        root, analysis, head, commit = self._repo({"plain.go": "package pkg\n"})
+        self.assertEqual(check_analysis._self_repair_commits(root, analysis, head), [commit])
+
+    def test_a_listing_of_an_unexpected_shape_is_a_fault(self) -> None:
+        """모양 검사 — 못 읽은 목록을 "Go 를 안 고쳤다" 로 읽으면 거절이 조용히 사라진다. 이 검사를 지운 변이 MS3 가 첫 판에서
+        살아남았다(정상 git 은 늘 그 모양이다). git 의 대답을 바꿔 치워 잰다: sha 가 아닌 머리 · 첫 이름 앞 `\n` 이 없는 목록."""
+        root, analysis, head, _ = self._repo({"plain.go": "package pkg\n"})
+        real = subprocess.run
+        for forged in (b"\0not-a-commit\0\nplain.go\0", b"\0" + head.encode() + b"\0plain.go\0"):
+            with self.subTest(forged=forged):
+                def answers(*args, **kwargs):
+                    argv = args[0] if args else kwargs.get("args")
+                    if isinstance(argv, list) and "--no-walk" in argv:
+                        return subprocess.CompletedProcess(argv, 0, forged, b"")
+                    return real(*args, **kwargs)
+
+                with mock.patch.object(check_analysis.subprocess, "run", answers):
+                    with self.assertRaises(RuntimeError) as caught:
+                        check_analysis._self_repair_commits(root, analysis, head)
+                self.assertIn("unexpected git log -z output", str(caught.exception))
+
+    def test_the_root_commit_is_read_whatever_log_show_root_says(self) -> None:
+        """**마감 수리 (적대 리뷰 — task 7.5.42).** `log.showRoot=false` 면 루트 커밋의 `-z` 목록이 `\\0<sha>\\0` 로 비어 모양 검사를
+        통과하고 깃발이 **조용히** 빈다(편집 전 실측 `[]`). `diff.renames` 처럼 명령줄에서 못 박는다. 이 저장소의 노출은 0 이다 —
+        루트 커밋이 change 디렉터리를 안 만든다."""
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        root = Path(holder.name)
+        environment = {**os.environ, "GIT_CONFIG_GLOBAL": "/dev/null"}
+
+        def run(*args: str) -> None:
+            subprocess.run(args, cwd=root, check=True, capture_output=True, env=environment)
+
+        run("git", "init", "-q", ".")
+        run("git", "config", "user.email", "fixture@example.com")
+        run("git", "config", "user.name", "fixture")
+        run("git", "config", "log.showRoot", "false")
+        analysis = root / "openspec" / "changes" / "mine" / "analysis" / "function-logic"
+        analysis.mkdir(parents=True)
+        (analysis.parent.parent / "review.md").write_text("mine\n")
+        (root / "a.go").write_text("package pkg\n")
+        run("git", "add", "-A")
+        run("git", "commit", "-qm", "root")
+        head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        self.assertEqual(check_analysis._self_repair_commits(root, analysis, head), [head])
+
+    def test_two_repairs_are_each_read(self) -> None:
+        """`-z` 출력은 커밋 사이를 NUL 둘로 가른다 — 커밋이 둘이면 둘 다 제 이름 목록으로 읽힌다(하나는 Go, 하나는 아님)."""
+        root, analysis, head, first = self._repo({"plain.go": "package pkg\n"})
+        environment = {**os.environ, "GIT_CONFIG_GLOBAL": "/dev/null"}
+        (root / "notes.txt").write_text("x\n")
+        (analysis.parent.parent / "review.md").write_text("mine — notes\n")
+        subprocess.run(["git", "add", "-A"], cwd=root, check=True, env=environment)
+        subprocess.run(["git", "commit", "-qm", "notes"], cwd=root, check=True, capture_output=True, env=environment)
+        head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        (root / "later.go").write_text("package pkg\n")
+        (analysis.parent.parent / "review.md").write_text("mine — later\n")
+        subprocess.run(["git", "add", "-A"], cwd=root, check=True, env=environment)
+        subprocess.run(["git", "commit", "-qm", "later"], cwd=root, check=True, capture_output=True, env=environment)
+        last = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        self.assertEqual(check_analysis._self_repair_commits(root, analysis, last), [first, last])
+
+
 if __name__ == "__main__":
     unittest.main()

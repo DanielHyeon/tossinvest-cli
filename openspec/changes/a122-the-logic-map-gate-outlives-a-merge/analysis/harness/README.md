@@ -33,6 +33,9 @@
 | `7515_mut.py` | `execution_baseline.py` 시한 다섯 자리의 변이 EB1~EB5 — `75_mut.py` 의 헬퍼와 규율을 빌린다 (7.5.15) | `A122_HARNESS_WORK=<ext4> python3 7515_mut.py` |
 | `7516_order.py` | 기록 명령이 "움직인 입력" 과 "그 편집이 부른 거절" 중 무엇을 먼저 말하는가 — 같은 모양을 `5a54f78d` · `1d1e5ca7` · 워킹트리의 코드로 (7.5.16) | `python3 7516_order.py [<rev> ...]` |
 | `759r_resolver_ab.py` | 보수 P1-2(아카이브 이름 먼저)의 해소기 A/B — 활성 + 아카이브 change id 전수, 기준 리비전의 세 모듈 대 워킹트리 | `python3 759r_resolver_ab.py [<before-rev>]` |
+| `7513_quoted.py` | git 이 판정 diff 머리 줄에서 무엇을 인용하는가(ASCII 전수 + 비ASCII 둘) · `_git_header_path` 가 같은 글자를 내는가 · 저장소 역사 전부의 `*.go` 이름 센서스 (7.5.13 · 7.5.26) | `python3 7513_quoted.py` |
+| `7529_repairs_ab.py` | 자기 수리 신호 A/B — change 디렉터리 전수, 기준 리비전의 세 모듈 대 워킹트리 (7.5.29) | `python3 7529_repairs_ab.py [<before-rev>]` |
+| `7517_cost.py` | 엉터리 맨이름 좌표 N 개의 판정 · 재확인 시간과 판정 줄 수 — 기준 리비전(트리 순회) 대 워킹트리(추적 목록) (7.5.17 재측정) | `python3 7517_cost.py [<before-rev>] [N …]` |
 
 A/B 셋의 이어 달리기 기록(`_work/*_done.*.json`)은 **양쪽 소스**에 묶는다 — 기준만으로 묶으면 워킹트리가
 바뀐 뒤 옛 after 와 새 after 의 줄이 한 표에 섞인다(7.5.2 에서 `751`, 7.5.2.1 에서 `75_ab` 를 고쳤다).
