@@ -569,7 +569,9 @@ def _safe_changed_go_paths(root: Path, comparison: Comparison) -> list[tuple[byt
             # as a different path. Ordinary Unicode names remain supported.
             # (task 7.5.13 · 7.5.26, 2026-09-27) 판정의 이름은 이제 머리 줄이 아니라 이 레코드에서 오고 머리 줄은 대조만 한다 —
             # 그래서 `"` · `\` · 나머지 제어 문자는 받는다. 이 세 글자는 **거절을 그대로 둔다**: 받으면 이름 댄 판정 줄에 줄바꿈 ·
-            # 복귀 · 탭이 들어가 한 판정 줄이 여러 줄로 찍힌다. 받을지는 이 로트가 정하지 않았다(열린 task 7.5.41).
+            # 복귀 · 탭이 들어가 한 판정 줄이 여러 줄로 찍힌다.
+            # **제어 문자가 든 파일 이름은 unsupported 다** (사용자 결정 2026-09-27, task 7.5.41) — 처리 로직을 만들지 않는다. 이 세 글자는
+            # 이름 대고 거절하고, 나머지 제어 문자(VT · FF · ESC · RS 등)는 판정은 되지만 판정 줄에 가공 없이 찍힌다.
             if "\n" in path or "\r" in path or "\t" in path:
                 raise RuntimeError("modified Go path cannot be represented losslessly in unified diff")
     for added, deleted, paths in records:

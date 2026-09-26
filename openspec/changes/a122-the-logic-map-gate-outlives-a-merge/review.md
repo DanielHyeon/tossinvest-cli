@@ -6073,3 +6073,50 @@ edge)이고, 코드와 시험이 이미 초록이라 그대로 두고 닫았다:
 목록 조회 실패를 결함 문장으로 · 7.5.38 실패 지문에 이름 + 목록 뒤 사라진 항목을 `ListingMoved`("run it again") · 7.5.44 기록 쓰기의 `OSError` 를 판정 줄로.
 새 시험 9(편집 전 HEAD `5406cac1` 코드에서 빨강 8 + 대조 1), 변이 MW1~MW9 CAUGHT(창 `267:276`). `main()` 전수 A/B 는 **도중에 멈췄다**(128 중 96 비교 · SAME 96) —
 완주하지 않았다. 확인: `test_check_analysis` 454 OK rc 0 · `check_analysis --change a122-…` rc 1 · required 11(HEAD 코드와 출력 바이트 동일). 하다 만 항목 없음.
+
+## 사용자 결정 기록 (2026-09-27)
+
+사용자가 내린 결정 여덟(Manager 전달, 취지 그대로)과 그것으로 닫은 항목:
+
+1. **6.4(a)** — hard gate 는 추가하지 않는다. 필요하면 warning 만 — 오늘 코드에 그 게이트가 없으므로 "추가 안 함" 으로 닫는다. warning 도 만들지 않는다(필요해지면 그때).
+2. **7.5.3** — pure rename/move 는 기존 상태를 유지한다. 규칙을 바꾸지 않는다.
+3. **7.5.4** — 기존 `ast.json` 을 쓰고 자동 재생성하지 않는다. 구조를 다시 유도하지 않는다.
+4. **7.5.6** — 커밋된 번들 전수에서 실제 오판정 사례가 있으면 그것만 고치고, 없으면 backlog. **먼저 쟀다**(`analysis/harness/756_census.py`, 2026-09-27 06:46,
+   HEAD `a1248b98`, rc 0): change 디렉터리 128 · 번들 3,084 · 번들 파일 12,337 — UTF-8 BOM 0 · UTF-16 BOM 0 · NUL 0 · UTF-8 아님 0. 감사가 켜진 change 1(a112,
+   계측기 대조). BOM 을 지우고 좌표 없는 행을 뺀 관대한 판과 감사 스위치가 갈리는 change **0** → 사례 없음, backlog.
+5. **7.5.7** — source hash 를 의무로 하지 않고 commit + path 만 쓴다. 결속을 더하지 않는다(기존 18 건을 새로 거절하지 않는다).
+6. **7.5.32** — current parser 를 쓰고 historical parser 를 다시 빌드하지 않는다.
+7. **7.5.41** — 제어 문자 파일명은 **unsupported**, 처리 로직을 만들지 않는다. `_safe_changed_go_paths` 가드 주석에 명시했다(코드 변경은 이 주석 넷 줄뿐). `\n` · `\r` · `\t` 거절은 그대로.
+8. **base history** — git history 가 정본이고 별도의 immutable-history subsystem 을 만들지 않는다. 커밋된 base 재기록 잠금은 "안 만든다" 로 닫는다 — 7.5.5 의 커밋된 재기록 절반도 이것으로 닫힌다.
+
+### 재분류 — tasks.md 의 미결 전부 (분류 기준: 런타임 오류 = 열어 둠 · 개발 편의 = backlog · 감사·재현성 = 과거 이력 재현 전용이면 제외 · 극단 edge = unsupported)
+
+| 항목 | 분류 | 처리 |
+|---|---|---|
+| 3.2.3 시험 색인의 탐색 범위 | 감사·재현성 | 착지 시점 재현 제외 — 범위는 7.5.9(추적 목록 · 워킹트리 바이트)로 정해졌다. 닫음 |
+| 5.1 a074 · a077 · a079 배포 후 실측 | 다른 change 몫 | 각자의 change 가 닫는다. 닫음 |
+| 5.2 a075 · a076 면제 소급 안 함 | 기록 | 결정 그대로. 닫음 |
+| 5.3 고정의 세기 | 개발 편의 | backlog(좁힘을 못 할 뿐, 판정을 틀리게 하지 않음) |
+| 5.4 `revision: base` 번들만 있는 change | 극단 edge | unsupported(저장소 0 건, 선언 거절 — 막는 쪽) |
+| 5.6 번들 0 인 change | 개발 편의 | backlog(넓은 창으로 판정 — 막는 쪽) |
+| 5.7 base 가 작업 뒤 | 다른 change 몫 | base 배치는 각 change 의 결과. 닫음 |
+| 6.4(a) | 결정 1 | 추가 안 함. 닫음 |
+| 6.4(g) blob 이중 해싱 | 개발 편의 | backlog |
+| 6.4(i) 심링크 change 디렉터리 · (j) 해소기 표 밖 불일치 · (k) root ≠ toplevel | 극단 edge | unsupported |
+| 6.4 커밋된 base 재기록 잠금 | 결정 8 | 안 만든다 → **6.4 부모 닫음** |
+| 7.5.3 · 7.5.4 · 7.5.7 · 7.5.32 · 7.5.41 | 결정 2 · 3 · 5 · 6 · 7 | 닫음 |
+| 7.5.5 base 를 워킹트리에서 읽음 | 결정 8 + 극단 edge | 커밋 안 한 편집 · 이동은 6.4(b) 가 막는다, 커밋된 재기록은 결정 8, 심링크 · root ≠ toplevel 은 unsupported. 닫음 |
+| 7.5.6 BOM · UTF-16 · 좌표 없는 행 | 개발 편의 | 측정 0 → backlog(결정 4) |
+| 7.5.8 원장 밖 자식 프로세스 | 감사·재현성 | backlog — 동시 변경 모양, 7.5.25 · 7.5.9 가 좁혔다 |
+| 7.5.17 판정 줄 0 · `gate.sh` 시한 | 개발 편의 | backlog — 비용은 7.5.9 로 닫혔다 |
+| 7.5.19 · 7.5.20 | 개발 편의(시험품질) | backlog |
+| 7.5.21 `main` 의 git 호출이 경계 밖 | 개발 편의 | backlog — 멎으면 traceback(rc ≠ 0, 막는 쪽) |
+| 7.5.30 go 캐시 성장 | 개발 편의 | backlog — 하네스는 이미 `-trimpath` |
+| 7.5.33 부분 클론 fetch | 극단 edge | unsupported(판정은 맞다) |
+| 7.5.37 이름 거절 · 좌표 건너뜀 · 미추적 시험 | 개발 편의 | backlog — `git add` 로 풀린다 |
+| 7.5.39 "HEAD moved" 두 집 | 개발 편의(시험품질) | backlog — 판정은 맞다 |
+| 7.5.40 기록 명령의 `diff --quiet` 핀 없음 | 개발 편의 | backlog — 판정 경로는 고정됐다 |
+| 7.5.43 `log.showSignature` + 서명 커밋 | 극단 edge | unsupported(막는 쪽) |
+
+**[런타임 오류] 로 분류한 항목: 0.** 남은 미결은 **4.5**(PM 동기화 후 `make gate` · 아카이브) 하나다. 확인(rc 직접): `make lint` · `test_check_analysis` ·
+`openspec validate --all --strict` · `check_analysis --change a122-…` — 값은 아래 보고와 같다.
