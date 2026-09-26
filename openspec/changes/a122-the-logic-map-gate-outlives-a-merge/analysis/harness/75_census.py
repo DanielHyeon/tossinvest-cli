@@ -35,7 +35,7 @@ for name in names:
     cid = m.group("change") if m else name
     d = changes / "archive" / name if (changes / "archive" / name).is_dir() else changes / name
     try:
-        base = ca.resolve_base(d, ROOT, {}, change_id=cid)
+        base = ca.resolve_base(d, ROOT, {}, change_id=cid, head=ca._head_commit(ROOT))
     except Exception as exc:                      # 재는 스크립트다 — 못 재면 사유를 적는다
         rows.append({"change": name, "skip": f"base: {type(exc).__name__}: {exc}"[:120]})
         continue

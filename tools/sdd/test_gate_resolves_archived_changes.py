@@ -14,7 +14,9 @@
 같은 모양의 결함을 이 저장소는 이미 두 번 고쳤다(`f6965ebb`, a122 task 3.2.2).
 둘 다 Python 이라 `resolve_referenced_change` 한 함수를 공유했다. gate.sh 는 shell 이라
 그 함수를 부를 수 없어 규칙을 **옮겨 적는다**. 그러면 정본이 둘이 되므로 여기서
-shell 쪽을, `test_check_analysis.py` 가 Python 쪽을 각각 못 박는다.
+shell 쪽을, `test_check_analysis.py` 가 Python 쪽을 각각 못 박는다. 각자 자기 사본만 재면
+한쪽만 고쳐도 둘 다 초록이므로(a122 task 6.4(f)), 두 해소기를 **한 표**로 같이 돌리는 시험이
+`test_check_analysis.py` 의 `TheTwoChangeResolversAgree` 에 있다.
 
 무엇을 관찰하는가
 -----------------

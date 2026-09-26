@@ -19,6 +19,11 @@
 | `751_check_ab.py` | `check()` 반환 A/B 전수 (7.5.1) | `python3 751_check_ab.py [<before-sha>] [<초 예산>]` |
 | `752_reads.py` | a099 `check()` 한 번의 `ast.json` 읽기 수 · git 수 (7.5.2) | `python3 752_reads.py` |
 | `7521_inputs.py` | 진입점에서 닿는 **모든 I/O** 를 AST 로 센다 — "묶었다" 고 적기 전의 입력 목록 (7.5.2.1) | `python3 7521_inputs.py [check record_landing main]` |
+| `61_forgeries.py` | 4.4 의 위조 셋(+ (c) 의 선언 값 셋 P · L · E)을 지금 코드에서 — 대조군 · 기록 명령 · 선언 뒤 (6.1 부모 · 6.4 보수가 L 행 추가) | `python3 61_forgeries.py` |
+| `64_base_ab.py` | 해소기 · base 해소의 답을 저장소 **모든** change 디렉터리에서 before/after 로 (6.4(b)(c)) | `python3 64_base_ab.py [<before-rev>]` |
+| `64_gate_mut.py` | `tools/gate.sh` 해소기 변이 G1~G5 — 두 스위트(`test_check_analysis` 전체 + shell 자기 시험) (6.4(f) · 6.4 보수가 G5 추가) | `python3 64_gate_mut.py` |
+| `64r_census.py` | 6.4 보수의 새 가드(옮긴 change 의 base 를 같은 id 의 다른 자리와 대조)가 거절할 정상 입력 — 저장소 change 디렉터리 전수, git 으로 직접 | `python3 64r_census.py` |
+| `64r_head_calls.py` | `check` 한 번의 `_head_commit` 호출 수, 활성 change 전수 (`_head_commit` docstring 의 근거) | `python3 64r_head_calls.py` |
 | `7521_main_ab.py` | `main()` 출력 전체 A/B · 순서를 번갈아 · 결정적 계수(git 수 · `ast.json` 읽기 수) (7.5.2.1) | `python3 7521_main_ab.py [<before-sha>] [<초 예산>]` |
 
 A/B 셋의 이어 달리기 기록(`_work/*_done.*.json`)은 **양쪽 소스**에 묶는다 — 기준만으로 묶으면 워킹트리가
@@ -48,3 +53,11 @@ ca = Path("tools/logic-map/check_analysis.py").read_text()
 ```
 
 그리고 **소스를 고치면 A/B 와 변이를 다시 돌린다** — 둘 다 그 소스의 증거이지 이름의 증거가 아니다.
+
+**`resolve_base` 에 `head=` 가 필수가 된 뒤 (6.4(b), 2026-09-26)** `75_ab.py` · `75_attrib.py` · `75_census.py` · `75_time.py` 는
+각자 `head=<모듈>._head_commit(ROOT)` 를 넘기게 한 줄씩 고쳤다(배관만 — 무엇을 재는지는 안 바뀌었다). 안 고치면 네 스크립트가
+`TypeError` 로 전부 "base 못 풂" 을 찍는다 — 위 "하네스는 도구를 따라 낡는다" 의 한 예다.
+
+**작업 자리 (6.4 보수).** `75_mut.py` · `64_gate_mut.py` 는 `A122_HARNESS_WORK=<디렉터리>` 가 있으면 사본과 전용 `GOCACHE` 를 거기에
+둔다(없으면 `_work/`). 이 저장소는 /mnt/D(ntfs-3g) 위라 `_work/` 에서는 스위트 한 판이 8~10 분이었다 — ext4 스크래치에서 잰
+판의 시간은 review.md 6.4 보수 절에 있다. 사본 · 캐시 자리만 바뀌고 판정 규율(무변이 대조군 창 양끝 · 사본에 pid · 한 번에 한 판)은 같다.

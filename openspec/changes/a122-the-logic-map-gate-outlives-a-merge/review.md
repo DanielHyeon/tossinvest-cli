@@ -5282,3 +5282,265 @@ base 는 고정된 이력이라 막힘이 오래가지만 노출 0 이고 덜 �
 열째의 모양: **첫 판의 값을 최종이라 적었다**(F3 — 표를 첫 판에서 옮기고 최종 판에서 다시 대조하지 않았다), **앞 정정을 되풀이했다**
 (F4 — 7.5.31 이 이미 고친 색의 이력), **정정이 또 틀렸다**(F1 · 두 순서 문장 — 고치는 문장도 재지 않고 적었다). 이번 정정의 새
 값은 전부 이 세션이 다시 쟀다. 코드는 주석 · docstring 셋만 바뀌었다(잰 판본과 docstring 을 뺀 AST 가 같다).
+
+## VERIFY — task 6.4 (b)~(f) · 6.1 부모 (2026-09-26)
+
+범위: 6.4 의 **결정 불필요** 다섯과 6.1 부모 체크박스. 6.4(a)(사람 결정) · (g) · (h) · 7.5.x · 3.2.3 · 4.5 는 건드리지 않았다.
+시작 HEAD `2ee9adea` → 작업 중 병행 세션이 `0023fd12` · `5a54f78d`(a115 아카이브)를 올렸다. FLM 편집 전 열거는 `0023fd12` 에서 뽑았다.
+
+### FLM 먼저 (Python 내부 편집 넷)
+
+`enumerate.py` 로 편집 **전** `ast.before-6.4.json`(revision `0023fd12`), 편집 뒤 `ast.after-6.4.json` 을 뽑아 대조했다.
+
+| 함수 | 분기 · 반환 · raise · 호출 | 바뀐 것 |
+|---|---|---|
+| `resolve_base` | 12·2·5·20 → **16·2·8·31** | 더해진 갈래 셋(모양 · HEAD 대조 · 태그), 지워진 것 0 |
+| `_judged` | 32·13·0·32 → 같음 | 한 `try` 안에서 `_head_commit` 을 `resolve_base` 앞으로 · `head=` 인자 둘 |
+| `_recording_refusal` | 10·9·1·13 → 같음 | `head=` 인자 하나 |
+| `_archived_change_id` | 1·1·0·2 → 같음 | 본문 불변 — 모듈 상수 `ARCHIVED_CHANGE` 에 `re.ASCII` |
+
+`_landing_refusal` 은 안 건드렸다(가드 순서 불변).
+
+### (b) 창의 시작을 잠근다
+
+**먼저 셌다 — 거절하는 정상 입력.** 저장소의 `base-commit.txt` **119** 개(활성 · 아카이브): 전부 `[0-9a-f]{40}\n` · 전부 자기
+자신이 커밋 id(`rev-parse --verify <v>^{commit}` = v) · 전부 HEAD 에 있고 바이트가 같다 → 오늘 거절 **0**. 거절하는 모양은 넷:
+이름(`HEAD`) · 짧은/대문자 id · 태그 객체 id · 커밋된 값과 다른 커밋 안 한 편집. **HEAD 에 없는 새 base 는 받는다**(freeze 직후 커밋
+전 실행은 개발 중 정상 — 6.4(a) 와 같은 이유로 막지 않는다). 시험 픽스처에서도 셌다: 둘이 모양에 걸렸다 —
+`test_real_archived_reference_still_requires_the_same_base`(커밋된 빌린 base 를 커밋 없이 바꿔 "공유 base" 를 재던 것 → 편집을 커밋) ·
+`test_environment_base_cannot_override_persisted_change_base`(`persisted` 라는 글자라 새 모양 검사에서 먼저 멈춰 **다른 이유로** 통과하던
+것 → 40자리 + `SDD_BASE_REF` 문장 단언). 순서 변경 하나가 픽스처 하나를 건드렸다: `test_invalid_base_fails_closed` 는 저장소가 아닌
+곳에서 base 거절을 쟀는데 이제 `cannot read HEAD` 가 먼저다 → 커밋 하나짜리 저장소로.
+
+**RED**(편집 전 코드, 새 시험 7 · 실패 11): 이름 `HEAD` · 12자리 · 대문자 40자리 · 태그 객체 id · 커밋된 base 의 커밋 안 한 편집 ·
+빌려주는 쪽 base 의 편집 → 전부 `[]` 또는 다른 문장. **GREEN** 뒤 문장은 `comparison base must be a full 40-hex commit id, not …` ·
+`comparison base is not a commit in this repository: …` · `` `<경로>` on disk (…) is not the one committed in HEAD (…) — the comparison base
+is frozen at proposal freeze; restore the committed value``.
+
+**7.5.5(INVESTIGATE — 같은 구멍)는 열어 둔 채다.** ~~이 수리가 그 질문의 답이 되는지는 Manager 가 가른다.~~ **Manager 판정(2026-09-26):
+7.5.5 는 열린 채다** — 독립 적대 리뷰의 이동 공격(아래 정정 절 P0-A)이 그 질문의 답을 "예" 로 유지했고, 보수 뒤에도 심링크 ·
+`root` 기준 · 커밋된 재기록이 남는다.
+
+> **정정 (6.4 보수, 적대 리뷰 P1-C).** 바로 위 GREEN 의 셋째 문장(`… — the comparison base is frozen at proposal freeze; restore the committed
+> value`)은 불변 보장처럼 읽혀서 `… — an uncommitted edit does not move the comparison base; restore the committed value` 로 좁혔다. 막는 것은
+> 커밋 안 한 편집(과 보수의 이동)이고 base 를 고쳐 **커밋**하는 재기록은 막지 않는다. "오늘 거절 **0**" 의 측정 순간은 이 절에 없었다 —
+> 보수가 HEAD `5a54f78d` 에서 다시 쟀다(`64r_census.py`: base 119 전부 40자리 + LF · 자기 id 가 커밋 · 자기 경로로 HEAD 와 바이트가 같다).
+> "RED 새 시험 7 · 실패 11" 은 (b) **6**(이름 `HEAD` · 12자리 · 대문자 · 태그 객체 id · 커밋된 base 의 편집 · 빌려주는 쪽 base 의 편집) +
+> (c)/(f) **5**(표 두 행 · 해독기 세 이름)다.
+
+### (c) `re.ASCII` · (f) 두 해소기를 한 표로
+
+~~bash 5.2.21(`globasciiranges` 켜짐)에서 `[0-9]` 도 `[[:digit:]]` 도 전각 `２` · 아라비아-인도 `٢` 를 안 먹는다(`en_US.UTF-8` ·
+`C.UTF-8` 둘 다 실측).~~ **정정(6.4 보수, 주장정확성 리뷰 P0-F1) — 로케일에 따라 거짓이었다**: bash 5.2.21 · `en_US.UTF-8` 에서 범위
+`[0-9]` 는 콜레이션으로 `０…８` · `٠…٨` · `𝟎…𝟖` 를 먹고 각 벌의 `９` 만 안 먹는다. `C.UTF-8` · `ko_KR.utf8` 에서는 안 먹는다.
+`[[:digit:]]` 와 나열 `[0123456789]` 는 세 로케일 모두 안 먹는다. 아래 RED 의 두 행은 월 `０９` 의 `９` 덕에 **우연히** 떨어졌다.
+`gate.sh` 는 이제 나열이라 로케일과 무관하다 — 아래 정정 절. Python `\d` 는 먹었다(수학 굵은 `𝟐` 까지). `TheTwoChangeResolversAgree` 가 12 행 표를
+`resolve_referenced_change` 와 **복사한 실제 `gate.sh`**(4단계에서 멈추는 픽스처, 1단계의 `OK:` 줄 · 사유 문장으로 고른 것을 읽는다)에
+같이 돌린다. RED: 유니코드 숫자 두 행에서 Python `found` · shell `missing`. 저장소 아카이브 이름 중 비 ASCII 는 0 → 거절하는 정상 입력 0.
+
+### (d) 이미 닫혀 있었다 — 실행으로 확인
+
+4.4 P2-4 의 삼킴(`except ValueError` → 없는 경로로 fallback → `missing base-commit.txt`)은 7.6(I4)이 지웠다. 되살리는 변이 둘이
+빨갛다: AL7(`_judged`) CAUGHT 4 · AL8(`record_landing`) CAUGHT 3 — 둘 다 `test_two_archived_copies_are_named_on_both_paths` 가 포함된다
+(`archive holds 2 copies of mine: …` 를 두 경로에서 단언). 생산 코드 변경 0.
+
+### (e) 낡은 인용
+
+`gate.sh` 해소기 주석의 "여기가 Python 보다 엄격하다"(3.2.4 이후 거짓)를 과거형으로 · `test_check_analysis.py` docstring 둘
+(`return direct` 현재형 · `:689-692` 좌표)을 과거형 + 함수 이름 + 열거 파일(`…resolve_referenced_change/ast.json`, `1f2a2d6d`)로.
+`tools/sdd/test_gate_resolves_archived_changes.py` 와 `_archived_change_id` docstring 이 "각자 못 박는다" 뒤에 공유 표를 가리키게 했다.
+
+### 변이 (사본 · 무변이 대조군 창 양끝 GREEN · 한 번에 한 판)
+
+| 변이 | 대상 | 결과 | 잡은 시험 |
+|---|---|---|---|
+| AL1 `re.ASCII` 삭제 | `check_analysis.py` | CAUGHT | 표 · 해독기 |
+| AL2 모양 검사 삭제 | 〃 | CAUGHT | `test_a_name_or_a_short_id_is_not_a_base` |
+| AL3 HEAD 대조 삭제 | 〃 | CAUGHT | 편집 · 빌린 base 둘 |
+| AL4 새 base 도 커밋 요구 | 〃 | CAUGHT | 11 |
+| AL5 태그 검사 삭제 | 〃 | CAUGHT | `test_the_id_of_a_tag_object_is_not_a_commit_id` |
+| AL6 대조를 상징 `HEAD` 에서 | 〃 | CAUGHT | 구조 시험 둘(행동은 같다) |
+| AL7 · AL8 해소기 실패 삼킴 | 〃 | CAUGHT | 위 (d) |
+| G1 날짜에 아무 글자 | `gate.sh` | CAUGHT | shell 자기 시험 + 표 |
+| G2 사본 둘 통과 | 〃 | CAUGHT | 4(표 포함) |
+| G3 활성 디렉터리 안 봄 | 〃 | CAUGHT | 6(표 포함) |
+| G4 접미사 일치 | 〃 | CAUGHT | shell 자기 시험 + 표 |
+
+Python 8/8 (`75_mut.py 212:214` · `214:220`, 대조군 `Ran 384`) · shell 4/4 (`64_gate_mut.py`, 대조군 `Ran 394` = 384 + shell 10).
+G1~G4 는 전부 표도 잡는다 — 한쪽만 고치면 표가 갈린다는 것이 (f) 의 주장이다. AL1 과 같은 코드에서 편집 전 스위트(377)는 초록이었다.
+
+**측정 사고 하나.** 첫 창(`212:216`)을 띄운 뒤 `ps | grep` 이 0 을 내서(rtk 가 걸렀다 — [[missing-tool-reports-clean]]) 죽은 줄 알고
+그 사본 디렉터리를 지웠다. 그 판은 첫 변이 도중 `FileNotFoundError` 로 끝났고 결과는 0 줄이라 버렸다. 이 뒤로 프로세스는 `rtk proxy ps`
+로 셌고 판은 하나씩 돌렸다. 또 이 기계에서 스위트 한 판이 `_work/` 사본(/mnt/D, ntfs-3g) 위에서 ~8~10 분이다(직접 실행 66~76 초).
+
+### A/B — 판정의 입구
+
+6.4 는 판정의 입구 둘(id → 디렉터리 · 디렉터리 → base)만 바꿨다. `64_base_ab.py`(before `HEAD`, after 워킹트리): 저장소의 change
+디렉터리 **128**(활성 + 아카이브) 전부에서 해독 · 해소 · base(예외면 타입 + 문장) **SAME 128 · DIFFERENT 0**. a122 자신의 게이트는
+편집 전후 **바이트까지 같다**(`cmp` IDENTICAL) — 둘 다 **rc 1**, `required 11`(a113 · a114 · a115 · a066 이 base `7f8b1ae7` 뒤에 올린
+Go 작업; a122 는 고정 번들 0 이라 창을 못 좁힌다 — 5.6/5.7 의 한계 그대로). 앞 로트의 "a122 게이트 rc 0" 은 그 커밋들 전의 값이다.
+
+### 6.1 부모 — 위조 표 셋을 지금 코드로
+
+6.1.2.4 가 돌린 "4.4 의 스크립트" 는 저장소에 없다. 같은 세 모양을 스위트의 픽스처 헬퍼로 다시 만들었다(`61_forgeries.py`, HEAD `5a54f78d`).
+
+| 위조 | 대조군(선언 없음) | 기록 명령 | 선언 뒤 | 6.1.2.4 기록 |
+|---|---|---|---|---|
+| (a) base 상태 증거 + landed = base | `AST source hash is stale` | rc 1 · `is not the revision this evidence describes` | **거절** `precedes the evidence that pins it` | 같은 문장 |
+| (b) 미끼 번들 + landed = base | `missing evidence … Own` · required 1 | rc 1 · `changes none of the sources its evidence pins` | **거절** `precedes the evidence that pins it` | 같은 문장 |
+| (c) relabel `base` + landed = base | `AST revision must be current` · required 2 | rc 0 · 정직한 번들의 커밋 | **거절** `is not the revision this evidence describes` | "같은 문장"(`precedes …`) — **다르다** |
+| (c') relabel + landed = 증거 커밋 | 같음 | 같음 | **빨강** `AST revision must be current` · required 2 | (4.4: `[]`) |
+
+셋 다 빨갛다. ~~(c) 의 문장이 6.1.2.4 와 다른 것은 원 픽스처를 못 되살린 탓이다 — 이 픽스처는 relabel 안 한 번들이 `L` 을 기술해서
+`_landing_refusal` 의 불일치 판정(하한보다 앞)이 먼저 선다. (c') 는 4.4 가 `[]` 를 얻은 모양이고~~ **정정(6.4 보수, 주장정확성 리뷰
+P1-F2)**: (c) 의 문장이 다른 것은 **스크립트가 고른 선언 값(P = base)** 탓이다 — 같은 픽스처에 Go 작업 커밋 `L` 을 선언하면 6.1.2.4 와
+글자 그대로 같은 `precedes the evidence that pins it` 이 나온다(아래 정정 절의 (c") 행). (c') 는 4.4 의 모양이 **아니다** — 4.4 는
+required 1, (c') 는 2 다. (c') 는 이제 착지와 무관하게 `_verdict` 의 revision 기대값이 막는다. 6.1 부모를 닫는다(판단 불변).
+
+### 로트 검증
+
+`make lint` rc 0 · `make test` rc 0(ok 99 · 시험 없음 9 = 108, FAIL 0) · `make test-seams` rc 0(ok 100 · 시험 없음 8 = 108, FAIL 0) ·
+`make sdd-test` rc 0(scripts 15 · logic-map **459** · sdd 76 · sdd-history 29 · pm 16 · deploy 18 · `go test ./tools/logic-map` ok) · `test_check_analysis` 377 → **384** OK · `tools/sdd/test_gate_resolves_archived_changes` 10 OK ·
+`openspec validate --all --strict`(1.4.1) **57/57**(a115 아카이브로 58 → 57) · `check_analysis --change a122` rc 1(편집 전과 바이트 동일, 위).
+
+## 정정 · VERIFY — task 6.4 보수 (독립 리뷰 둘: 적대 · 주장정확성, 2026-09-26)
+
+범위: 위 절(6.4 (b)~(f) · 6.1 부모) 로트에 독립 리뷰 둘이 세운 발견의 보수. 코드 회귀는 0 이었고 수치 영수증은 재현 일치 — 막힌 것은 P0 둘.
+HEAD `5a54f78d` 는 이 보수 동안 안 움직였다(시작 · 끝 확인). 생산 트레이딩 코드 · Go 변경 0 — 게이트 도구(`check_analysis.py` · `gate.sh`)와
+그 시험 · 기록만.
+
+### P0-A (적대) — 옮긴 뒤 편집하면 HEAD 대조가 꺼졌다
+
+**결함.** 6.4(b) 의 HEAD 대조는 경로를 **지금 디스크 경로**로 계산했다. 디렉터리를 옮기면 HEAD 의 그 경로에 blob 이 없어 `None` →
+"HEAD 에 없는 새 base" 로 받았다. **수리**: 지금 경로가 HEAD 에 없으면 새 잎 `_committed_elsewhere` 가 같은 id 의 다른 자리 — 활성
+`openspec/changes/<id>/base-commit.txt` 와 **HEAD 트리에서** `git ls-tree -z -d` 로 연 `openspec/changes/archive/<날짜>-<id>/` (해독은
+`_archived_change_id` 한 곳, 셋째 정규식 없음) — 를 `_committed_many` 한 번으로 읽는다. 값이 다르면 거절, 같으면 받고, 어디에도 없으면
+받는다(freeze 직후 커밋 전 — 6.4(a) 와 같은 이유). `ls-tree` 가 못 답하면 결함(`RuntimeError`)이다.
+
+**먼저 셌다 — 거절하는 정상 입력**(`analysis/harness/64r_census.py`, git 으로 직접 · HEAD `5a54f78d` · 모집단 change 디렉터리 128):
+
+| 항목 | 수 |
+|---|---|
+| base 있는 디렉터리 | 119 (없음 9) |
+| 자기 경로로 HEAD 에 있고 바이트가 같다 | **119** |
+| 자기 경로로 HEAD 에 있는데 다르다 · 자기 경로가 HEAD 에 없다 | 0 · **0** |
+| 같은 id 가 HEAD 에 두 자리 이상 | 0 |
+| 40자리 + LF 밖 · 자기 id 가 커밋이 아님 | 0 · 0 |
+| **새 갈래가 거절** | **0** (새 갈래에 닿는 것부터 0) |
+
+시험 픽스처에서 **하나**가 닿았다: `test_environment_base_cannot_override_persisted_change_base` 는 `subprocess.run` 을 차례표 mock 으로
+막아서 새 `ls-tree` 호출이 `persisted` 응답을 먹었다(ERROR, 첫 스위트 판 387 중 1). 그 시험이 재는 모양(HEAD 에 없는 새 base)대로
+`_committed_elsewhere` 도 `[]` 로 막았다.
+
+**RED → GREEN.** 새 클래스 `AMovedChangeKeepsItsCommittedBase`. RED(편집 전 코드): 옮긴 네 모양 — A1 커밋 안 한 `mv`(활성 → 아카이브) ·
+A2 staged `git mv` · A3 아카이브 날짜만 바꾼 이동(`2026-09-11-mine` → `2026-09-12-mine`) · 반대 방향(아카이브 → 활성) — 이 전부 `[]`
+(4 subTest FAIL). 리뷰어의 A3 원 픽스처는 없어서 "커밋된 아카이브를 날짜만 바꿔 옮기고 커밋 전에 편집" 으로 재구성했다. GREEN 문장
+(`check` 와 `record_landing` 둘 다 단언): `` `<지금 경로>` on disk (…) is not in HEAD, but `<HEAD 의 자리>` is and holds … — moving the change
+directory does not move its comparison base; restore the committed value``. 양성 대조(옮기기만 · 값 같음 → `[]`, 네 모양), 다른 id 무시
+(`…-other-mine` 아카이브가 HEAD 에 있어도 `mine` 은 새 base), `ls-tree` 결함 시험을 같이 세웠다. 스위트 384 → **388**.
+
+**FLM.** 편집 전 열거는 워킹트리 판이고 `ast.after-6.4.json` 과 source sha(`a88c966b`)가 같음을 편집 **전에** 확인해 `ast.before-64r.json`
+으로 옮겼다. 편집 뒤 `ast.after-64r.json`(`b28398e2`): 분기 16 → **18** · 반환 2 → 2 · raise 8 → **9**. `difflib` 정렬: 옛 B5·B6 → 새
+B5(IfExp 다른 자리) · B6(For) · B7(같으면 continue) · B8(제자리/이동 문장), 옛 B7~B16 → 새 B9~B18. 새 잎 `_committed_elsewhere` 는
+`tools-logic-map--_committed_elsewhere/`(분기 5 · 반환 1 · raise 1).
+
+### P0-F1 (주장정확성) — (c) 의 로케일 근거가 거짓이었다
+
+bash 5.2.21, 한 글자씩(이 세션):
+
+| 로케일 | 범위 `[0-9]` | `[[:digit:]]` | 나열 `[0123456789]` |
+|---|---|---|---|
+| `en_US.UTF-8`(이 기계 `LANG`) | `０…８` · `٠…٨` · `𝟎…𝟖` **먹음**, 각 `９` 만 안 먹음 | 안 먹음 | 안 먹음 |
+| `C.UTF-8` | 안 먹음 | 안 먹음 | 안 먹음 |
+| `ko_KR.utf8` | 안 먹음 | 안 먹음 | 안 먹음 |
+
+첫 판 표의 유니코드 두 행은 월 `０９` 의 `９` 덕에 우연히 떨어졌고, 표는 shell 을 기본 로케일 하나로만 돌렸다. `gate.sh` 도 `Makefile` 도
+로케일을 고정하지 않는다. **RED**(수리 전 `gate.sh`, 표에 9 없는 날짜 세 행 + shell 을 `C.UTF-8` · `en_US.UTF-8` 둘에서): 새 세 행이
+`en_US.UTF-8` 에서만 `('missing', 'found:…')` 로 빨갛다(3 FAIL). **수리**: `gate.sh` 의 날짜 검사를 나열 `[0123456789]` 로(최소 수리).
+**GREEN**: 표 15 행 × 로케일 2 전부 일치. `en_US` 가 없는 기계에서는 건너뛰지 않고 stderr 에 사유를 적고 `C.UTF-8` + 현재 로케일로 돈다.
+기록 보수: 위 절의 해당 문장(취소선 + 정정) · `check_analysis.py` 의 `ARCHIVED_CHANGE` 주석 · `TheTwoChangeResolversAgree` docstring ·
+`gate.sh` 주석 · `_archived_change_id` FLM(정정 인용 블록).
+
+### P1-C (적대) — 과잉 주장 좁히기
+
+`resolve_base` docstring 의 "시작도 끝처럼 잠근다" · "spec 이 불변(SHALL)" 을 지우고 보장 범위를 적었다: 디스크 = HEAD 대조와 이동 탐지까지,
+**커밋된 재기록은 막지 않는다**(역사 잠금은 열린 사람 결정). 끝(`landed-commit.txt`)은 도구가 계산하고 게이트가 같은 계산으로 대조해
+저자가 못 고른다는 대비를 남겼다. 제자리 오류 문장: `… — the comparison base is frozen at proposal freeze; restore the committed value` →
+`… — an uncommitted edit does not move the comparison base; restore the committed value`. 시험 클래스 docstring 도 같이.
+
+### P1-F2 (주장정확성) — 6.1 부모 (c) 설명
+
+`61_forgeries.py` 에 (c) 의 선언 값 `L`(Go 작업 커밋) 행을 더해 다시 돌렸다(HEAD `5a54f78d`):
+
+| 위조 | 선언 값 | 선언 뒤 |
+|---|---|---|
+| (c) relabel + landed = base | P | `is not the revision this evidence describes` |
+| (c") relabel + landed = Go 작업 커밋 | L | **`precedes the evidence that pins it`** — 6.1.2.4 와 글자 그대로 같다 |
+| (c') relabel + landed = 증거 커밋 | E | `AST revision must be current` · required 2 |
+
+그러므로 (c) 문장이 달랐던 원인은 "원 픽스처를 못 되살림" 이 아니라 **스크립트가 고른 선언 값**이다. (c') 는 4.4 의 모양이 아니다(4.4
+required 1 · (c') 2) — 더한 모양이다. 셋 다 빨갛다는 판단과 6.1 부모 닫음은 그대로다. 위 절 · tasks.md 6.1 을 정정했다.
+
+### P2
+
+- **X1 살아남은 변이.** `FULL_SHA.fullmatch` → `.match` 가 첫 판 스위트를 통과했다(태그 가드가 `<sha>~1` 류를 다른 문장으로 우연히 막음).
+  `test_a_name_or_a_short_id_is_not_a_base` 에 `<q>~1` 행 → AL9 **CAUGHT**.
+- **`_head_commit` docstring.** "0회 3건" 은 순서 변경으로 틀렸다. `64r_head_calls.py`(HEAD `5a54f78d` · 활성 25): **3회 22건 · 1회 3건**
+  (a063 · a123 · verify-execution-capability — base 해소에서 거절). 그 값으로 고쳤다.
+- **`64_gate_mut.py`.** docstring 의 `rg … --include` 는 ripgrep 14.1.0 에 없는 플래그(rc 2, 실측) → `rg -l 'gate\.sh' -g 'test_*.py'`
+  (같은 셋이 나온다). 창 끝 대조군의 `Ran` 을 시작과 비교해 다르면 멈춘다.
+- **(F3) 측정 순간.** "119 전수 · 거절 0" 류 주장에 HEAD `5a54f78d`(재측정)를 달았다(위 절 · tasks.md · FLM · 시험 docstring). docstring 의
+  "오늘" 은 지웠다.
+- **(F4) 재동결 흐름.** 역사의 재동결은 이제 "쓰고 커밋하기 전" 에 **거절된다** — 모양: 제자리면 `… is not the one committed in HEAD (…) — an
+  uncommitted edit does not move the comparison base; restore the committed value`, 디렉터리까지 옮겼으면 위 이동 문장. 커밋하면 받는다(커밋된
+  재기록은 안 막는다). 규모는 이 세션이 다른 방법으로 쟀다(HEAD `5a54f78d` 역사): 제자리 재기록 커밋(`--no-renames --diff-filter=M`)
+  **16개 · id 13개**(a112 3회 · a064 · a080 · a084 · a085 · a092 · a098 · a099 · a100 · a109 · a113 · a114 · a115 · a119), 삭제 · 재생성 ·
+  이동을 포함한 값 변화는 id 47개 · 56회. 리뷰어의 "8건(a112 3회 · a066 · a071 · a074 · a077 · a079 · a092 · a100)" 은 방법이 달라 이 수로
+  재현하지 않았다 — 모집단이 다르다는 것만 적는다.
+- **(F5)** 위 절의 "RED 11" = (b) **6** + (c)/(f) **5**(표 두 행 · 해독기 세 이름)로 갈라 적었다.
+- **(F6)** `75_ab.py` · `75_attrib.py` · `75_census.py` · `75_time.py` 의 `head=` 배관 한 줄씩은 6.4(b) 가 `head` 를 필수로 만든 결과다 —
+  harness `README.md` 에 한 문단.
+
+### 변이 (사본 · pid · 무변이 대조군 창 양끝 · 한 번에 한 판)
+
+사본 자리를 ext4 스크래치로 옮겼다(`A122_HARNESS_WORK`, 하네스에 한 줄 — `_work/` 가 /mnt/D ntfs-3g 라 판당 8~10 분이었다). 이번 판은
+**판당 약 63 초**(18 판 18분 50초).
+
+| 변이 | 대상 | 결과 | 잡은 시험 |
+|---|---|---|---|
+| AL1 `re.ASCII` 삭제 | `check_analysis.py` | CAUGHT 2 | 표 · 해독기 |
+| AL2 모양 검사 삭제 | 〃 | CAUGHT 1 | `test_a_name_or_a_short_id_is_not_a_base` |
+| AL3 대조 삭제(앵커 재설정) | 〃 | CAUGHT 3 | 편집 · 빌린 base · 이동 |
+| AL4 없는 base 도 거절(앵커 재설정) | 〃 | CAUGHT 10 | 새 base · 다른 id 외 |
+| AL5 태그 검사 삭제 | 〃 | CAUGHT 1 | 태그 |
+| AL6 상징 `HEAD` | 〃 | CAUGHT 2 | 구조 시험 둘 |
+| AL7 · AL8 해소기 실패 삼킴 | 〃 | CAUGHT 4 · 3 | 6.4(d) |
+| **AL9** `fullmatch` → `match` | 〃 | **CAUGHT 1** | `~1` 행(첫 판 생존) |
+| **AL10** 다른 자리 탐색 삭제 | 〃 | **CAUGHT 1** | 이동 |
+| **AL11** 이동의 불일치를 수용 | 〃 | **CAUGHT 1** | 이동 |
+| **AL12** HEAD 아카이브 열거 끔 | 〃 | **CAUGHT 1** | 이동(A3 · 반대 방향) |
+| **AL13** 활성 자리 안 봄 | 〃 | **CAUGHT 1** | 이동(A1 · A2) |
+| **AL14** id 를 접미사로 | 〃 | **CAUGHT 1** | 다른 id 무시 |
+| **AL15** 모든 불일치를 이동 문장으로 | 〃 | **CAUGHT 2** | 제자리 편집 · 빌린 base |
+| **AL16** `ls-tree` 결함을 빈 목록으로 | 〃 | **CAUGHT 1** | 결함 시험 |
+| G1 날짜에 아무 글자 | `gate.sh` | CAUGHT 2 | shell 자기 시험 + 표 |
+| **G5** 나열 → 범위 `[0-9]` | 〃 | **CAUGHT 1** | 표(`en_US.UTF-8` 행) |
+| G2 · G3 · G4 | 〃 | CAUGHT 4 · 6 · 2 | 위 절과 같음 |
+
+Python **16/16**(`75_mut.py 212:228`, 대조군 `Ran 388` 양끝 GREEN · 사본에서 skipped 2) · shell **5/5**(`64_gate_mut.py`, 대조군 `Ran 398`
+= 388 + shell 10, 양끝 같은 수).
+
+### A/B · 로트 검증
+
+`64_base_ab.py`(before `HEAD` = 6.4 이전, after 워킹트리): change 디렉터리 128 **SAME 128 · DIFFERENT 0**. `make lint` rc 0 ·
+`make sdd-test` rc 0(scripts 15 · logic-map **463** · sdd 76 · sdd-history 29 · pm 16 · deploy 18 · `go test ./tools/logic-map` ok) ·
+`python3 -m unittest discover -s tools/logic-map -p 'test_check_analysis.py'` **388** OK · `tools/sdd/test_gate_resolves_archived_changes` 10 OK ·
+`openspec validate --all --strict`(1.4.1) **57/57** · `check_analysis --change a122` **rc 1 · required 11**(기대값 — 병행 착지 몫).
+**not-applicable**: `make test-seams` · `make test` — 이 보수는 Go 변경 0(태그 시험 대상 없음). CodeGraph · Go AST — Go 함수 편집 0,
+Python 편집은 위 `enumerate.py` 열거로 FLM.
+
+### 남긴 것 (tasks 6.4 에 열린 항목으로)
+
+(i) 심링크 change 디렉터리 · (j) 해소기 표 밖 불일치(아카이브 이름의 줄바꿈 · 못 읽는 아카이브 디렉터리의 `PermissionError`) · (k) `root` ≠
+git toplevel · 커밋된 재기록 차단(사람 결정). id 를 바꿔 옮기면 대조할 자리가 없다 — 새 change 와 같은 모양이다. **7.5.5 는 열린 채다**(Manager
+판정).

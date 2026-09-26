@@ -41,7 +41,7 @@ for name in sys.argv[1:]:
     d = changes / "archive" / name if (changes / "archive" / name).is_dir() else changes / name
     m = ca.ARCHIVED_CHANGE.fullmatch(name)
     cid = m.group("change") if m else name
-    base = ca.resolve_base(d, ROOT, {}, change_id=cid)
+    base = ca.resolve_base(d, ROOT, {}, change_id=cid, head=ca._head_commit(ROOT))
     analysis = d / "analysis" / "function-logic"
     COUNT["n"] = 0
     COUNT["argv0"] = {}

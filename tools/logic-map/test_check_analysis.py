@@ -207,7 +207,8 @@ class CheckAnalysisTests(unittest.TestCase):
             (change / "review.md").write_text("Function Logic Map: not-applicable\n")
             self._commit(root, "ordinary evidence")
             source.write_text("package internal\nfunc Run() int { return 2 }\n")
-            self.assertEqual(check_analysis.resolve_base(change, root, change_id=change.name), p)
+            head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            self.assertEqual(check_analysis.resolve_base(change, root, change_id=change.name, head=head), p)
             errors = check_analysis.check("ordinary", root)
             self.assertTrue(any("missing Function Logic Map" in error or "missing evidence for modified function" in error for error in errors), errors)
             bundle = change / "analysis" / "function-logic" / "internal--run"; bundle.mkdir(parents=True)
@@ -310,6 +311,9 @@ class CheckAnalysisTests(unittest.TestCase):
             (root / "marker").write_text("Q")
             q = self._commit(root, "Q")
             (archived / "base-commit.txt").write_text(q + "\n")
+            # 어긋낸 base 를 **커밋한다** (task 6.4(b)) — 커밋 안 한 편집은 이제 base 해소가 먼저 거절해서, 이 시험이
+            # 재려는 "같은 base 를 공유하는가" 에 닿지 않는다. 그 거절은 `TheComparisonBaseIsAFrozenFullCommitId` 가 잰다.
+            self._commit(root, "the lender's base moves")
             self.assertEqual(
                 check_analysis.check("ordinary", root),
                 ["function-logic reference must share the exact comparison base"],
@@ -349,11 +353,10 @@ class CheckAnalysisTests(unittest.TestCase):
     def test_real_reference_refuses_when_open_and_archived_collide(self) -> None:
         """빌린 증거의 id 가 활성과 아카이브에 동시에 있으면 고르지 않고 멈춘다.
 
-        오늘은 활성이 조용히 이긴다 — `resolve_referenced_change` 가
-        `if direct.is_dir(): return direct` 로 아카이브를 열어 보지도 않기 때문이다
-        (`analysis/python-function-logic` 열거의 B1/L239-240). 고르면 어느 증거로
-        게이트가 열렸는지 기록에 남지 않는다. 아카이브 **안**의 중복은 이미
-        멈추는데 활성+아카이브만 안 멈추는 것은 세는 범위가 좁아서다.
+        이 시험을 쓴 때(task 3.2.4)는 활성이 조용히 이겼다 — 그때의 `resolve_referenced_change` 는
+        활성 디렉터리를 찾으면 바로 돌려줘서 아카이브를 열어 보지도 않았다(`analysis/python-function-logic/
+        tools-logic-map--resolve_referenced_change/ast.json` — `1f2a2d6d` 의 열거, 반환 `direct`). 고르면 어느 증거로 게이트가 열렸는지 기록에
+        남지 않는다. 지금은 활성을 찾아도 아카이브를 마저 세고 둘 다 있으면 멈춘다 — 이 시험이 그것을 잰다.
         """
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
@@ -370,10 +373,10 @@ class CheckAnalysisTests(unittest.TestCase):
     def test_real_gate_target_refuses_when_open_and_archived_collide(self) -> None:
         """게이트 **대상 자신**이 활성과 아카이브에 동시에 있어도 멈춘다.
 
-        해소기만 고치면 이 경로는 안 바뀐다. `check` 가 `:689-692` 에서
-        `except ValueError` 로 그 실패를 **삼키고** `openspec/changes/<id>` 로
-        되돌아가기 때문이다 — 삼킨 결과가 정확히 "활성이 조용히 이긴다"이다.
-        그래서 이 시험이 따로 있다.
+        이 시험을 쓴 때(task 3.2.4)는 해소기만 고쳐서는 이 경로가 안 바뀌었다. 그때의 `check` 는
+        해소기의 `ValueError` 를 **삼키고** `openspec/changes/<id>` 로 되돌아갔다 — 삼킨 결과가 정확히
+        "활성이 조용히 이긴다"였다. 그 fallback 은 task 7.6(I4)이 지웠고, 지금은 `_judged` 가 해소기의 문장을
+        그대로 판정 줄로 낸다. 그래서 이 시험이 따로 있다 — fallback 을 되살리면 여기가 빨개진다.
         """
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
@@ -902,6 +905,9 @@ evidence
     def test_invalid_base_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            # 커밋 하나짜리 저장소다 (task 6.4(b)): `HEAD` 는 이제 base **앞에서** 풀리므로(base 를 그 커밋의 값과
+            # 대조한다) 저장소가 아니면 `cannot read HEAD` 가 먼저 나와 이 시험이 base 거절에 닿지 않는다.
+            _empty_repo(root)
             change = root / "openspec" / "changes" / "change"
             change.mkdir(parents=True)
             (change / "review.md").write_text(
@@ -1025,7 +1031,9 @@ evidence
             root = Path(tmp)
             change = root / "openspec" / "changes" / "change"
             change.mkdir(parents=True)
-            (change / "base-commit.txt").write_text("persisted\n", encoding="utf-8")
+            # 적힌 값은 40자리여야 한다 (task 6.4(b)) — 옛 픽스처의 `persisted` 는 이제 모양 검사에서 먼저 멈춰서,
+            # 이 시험이 재려는 `SDD_BASE_REF` 거절에 닿지 않고 **다른 이유로** 통과했다. 그래서 문장까지 본다.
+            (change / "base-commit.txt").write_text("a" * 40 + "\n", encoding="utf-8")
             persisted = subprocess.CompletedProcess([], 0, "a" * 40 + "\n", "")
             override = subprocess.CompletedProcess([], 0, "b" * 40 + "\n", "")
             with mock.patch.dict(
@@ -1035,9 +1043,12 @@ evidence
             ), mock.patch(
                 "check_analysis.subprocess.run",
                 side_effect=(persisted, override),
-            ):
-                with self.assertRaises(ValueError):
-                    check_analysis.resolve_base(change, root, change_id=change.name)
+            ), mock.patch("check_analysis._committed_bytes", return_value=None), \
+                    mock.patch("check_analysis._committed_elsewhere", return_value=[]):
+                # HEAD 에 없는 새 base 모양이다 — 6.4 보수가 더한 다른 자리 탐색(`git ls-tree`)도 "없음" 으로 막는다.
+                # 안 막으면 그 호출이 `subprocess.run` 의 차례표에서 `persisted` 를 먹는다.
+                with self.assertRaisesRegex(ValueError, "SDD_BASE_REF must resolve"):
+                    check_analysis.resolve_base(change, root, change_id=change.name, head="c" * 40)
 
 
     # The three checks below exist because ten of thirty-six a092 artifacts
@@ -9064,6 +9075,297 @@ class AGoFileWithNoTextualDiffIsNotSilentlyEmpty(unittest.TestCase):
             self._required(root, base)
         self.assertIn("losslessly", str(caught.exception),
                       "본문 거절이 **다른 파일**의 이름 가드를 가렸다")
+
+
+class TheComparisonBaseIsAFrozenFullCommitId(unittest.TestCase):
+    """창의 **시작**의 모양과 커밋된 값을 대조한다 (task 6.4(b)).
+
+    끝(`landed-commit.txt`)은 40자리 커밋 id 여야 하고 HEAD 커밋에서 읽는다. 시작(`base-commit.txt`)은
+    `rev-parse` 가 받는 무엇이든 받았고 디스크에서만 읽었다 — `HEAD` 한 단어면 창이 비고, 커밋 안 한 편집 한 줄이
+    창의 시작을 옮겼다. 이 대조가 막는 것은 **커밋 안 한** 편집(과 6.4 보수의 이동)까지다 — base 를 고쳐 커밋하는
+    재기록은 막지 않고, 그것을 역사에 묶을지는 열린 사람 결정이다(a122 tasks 6.4).
+
+    거절하는 정상 입력을 먼저 셌다: 저장소의 `base-commit.txt` **119** 개(활성 · 아카이브, HEAD `5a54f78d` 에서 재측정 —
+    `analysis/harness/64r_census.py`)가 전부 40자리 + LF 이고, 자기 자신이 커밋 id 이며, HEAD 의 것과 바이트가 같다 — 거절 0.
+    거절하는 **모양**은 넷이다: 이름 · 짧은 id · 커밋이 아닌 객체의 id · 커밋된 값과 다른 커밋 안 한 편집. 커밋 안 된 **새**
+    base(HEAD 에 없다)는 그대로 받는다 — proposal freeze 직후 커밋 전에 게이트를 도는 것은 개발 중 정상이다.
+    """
+
+    def setUp(self) -> None:
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        self.root = root = Path(holder.name)
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        for key, value in (("user.email", "a122@example.invalid"), ("user.name", "a122")):
+            subprocess.run(["git", "config", key, value], cwd=root, check=True)
+        (root / "go.mod").write_text("module fixture\ngo 1.23\n")
+        (root / "marker").write_text("P")
+        self.p = _commit_all(root, "P")
+        (root / "marker").write_text("Q")
+        self.q = _commit_all(root, "Q")
+        self.change = root / "openspec" / "changes" / "mine"
+        self.change.mkdir(parents=True)
+        (self.change / "review.md").write_text("Function Logic Map: not-applicable\n")
+        self.base_file = self.change / "base-commit.txt"
+
+    def _check(self) -> list[str]:
+        return check_analysis.check("mine", self.root)
+
+    def test_an_uncommitted_new_base_is_read_from_disk(self) -> None:
+        """양성 대조: HEAD 에 없는 base 는 오늘처럼 디스크의 값을 쓴다 — 아래 거절들이 이것까지 막으면 안 된다."""
+        self.base_file.write_text(self.p + "\n")
+        self.assertEqual(self._check(), [])
+        _commit_all(self.root, "freeze")
+        self.assertEqual(self._check(), [], "커밋한 뒤에도 같은 값이면 통과한다")
+
+    def test_a_name_or_a_short_id_is_not_a_base(self) -> None:
+        # `~1` 행은 모양 검사가 `fullmatch` 여야 하는 이유다 (6.4 보수, P2 X1): `match` 면 앞 40자리가 맞아 통과하고
+        # 뒤의 태그 검사(`^{commit}` 이 벗긴 값 ≠ 적힌 값)가 **우연히** 다른 문장으로 막았다 — 변이가 살아남았다.
+        for value in ("HEAD", self.p[:12], self.p.upper(), self.q + "~1"):
+            with self.subTest(value=value):
+                self.base_file.write_text(value + "\n")
+                self.assertEqual(self._check(), [
+                    "cannot derive modified Go functions: comparison base must be a full 40-hex "
+                    f"commit id, not {value!r}"
+                ])
+
+    def test_the_id_of_a_tag_object_is_not_a_commit_id(self) -> None:
+        """`^{commit}` 은 태그를 벗겨 **다른** id 를 낸다 — 적힌 값이 곧 base 여야 한다(착지 기록과 같은 규칙)."""
+        subprocess.run(["git", "tag", "-a", "-m", "t", "frozen", self.p], cwd=self.root, check=True)
+        tag = subprocess.check_output(["git", "rev-parse", "frozen"], cwd=self.root, text=True).strip()
+        self.assertNotEqual(tag, self.p)
+        self.base_file.write_text(tag + "\n")
+        self.assertEqual(self._check(), [
+            f"cannot derive modified Go functions: comparison base is not a commit in this repository: {tag}"
+        ])
+
+    def test_an_uncommitted_edit_cannot_move_a_committed_base(self) -> None:
+        self.base_file.write_text(self.p + "\n")
+        _commit_all(self.root, "freeze")
+        self.base_file.write_text(self.q + "\n")
+        self.assertEqual(self._check(), [
+            "cannot derive modified Go functions: `openspec/changes/mine/base-commit.txt` on disk "
+            f"({self.q[:12]}) is not the one committed in HEAD ({self.p[:12]}) — an uncommitted edit does "
+            "not move the comparison base; restore the committed value"
+        ])
+        code, lines = check_analysis.record_landing("mine", self.root)
+        self.assertEqual(code, 1, lines)
+        self.assertTrue(any("cannot resolve the comparison base: `openspec/changes/mine/base-commit.txt` on disk"
+                            in line for line in lines), lines)
+
+    def test_a_borrowed_base_is_frozen_too(self) -> None:
+        """빌려주는 쪽의 base 도 같은 해소를 탄다 — 그쪽의 커밋 안 한 편집이 비교 기준의 등식을 비틀지 못한다."""
+        self.base_file.write_text(self.p + "\n")
+        (self.change / "analysis").mkdir()
+        (self.change / "analysis" / "function-logic-reference.txt").write_text("lender\n")
+        lender = self.root / "openspec" / "changes" / "lender"
+        lender.mkdir(parents=True)
+        (lender / "base-commit.txt").write_text(self.p + "\n")
+        _commit_all(self.root, "freeze both")
+        self.assertEqual(self._check(), [])
+        (lender / "base-commit.txt").write_text(self.q + "\n")
+        self.assertEqual(self._check(), [
+            "function-logic reference base is invalid: `openspec/changes/lender/base-commit.txt` on disk "
+            f"({self.q[:12]}) is not the one committed in HEAD ({self.p[:12]}) — an uncommitted edit does "
+            "not move the comparison base; restore the committed value"
+        ])
+
+
+class AMovedChangeKeepsItsCommittedBase(unittest.TestCase):
+    """디렉터리를 옮겨도 커밋된 base 대조를 벗지 못한다 (task 6.4 보수, 독립 적대 리뷰 P0-A).
+
+    6.4(b) 의 HEAD 대조는 **지금 디스크 경로**로 HEAD 를 물었다. change 디렉터리를 옮기면(커밋 안 한 `mv` · staged
+    `git mv` · 아카이브 날짜만 바꾼 이동) HEAD 의 그 경로에 blob 이 없어 "HEAD 에 없는 새 base" 로 받았고, 커밋 안 한
+    편집이 창의 시작을 옮겼다(리뷰어 재현: 대조군 거절 · 옮긴 셋 전부 `[]`). 지금은 같은 id 의 **다른 자리**(활성
+    `changes/<id>/` · HEAD 트리의 `changes/archive/<날짜>-<id>/`)를 HEAD 에서 찾아 견준다.
+
+    거절하는 정상 입력을 먼저 셌다(`analysis/harness/64r_census.py`, HEAD `5a54f78d`): change 디렉터리 128 중 base 가
+    있는 119 전부가 **자기 경로로** HEAD 에 있고 바이트가 같다 — 새 갈래에 닿는 것 0 · 거절 0.
+    """
+
+    P_REL = "openspec/changes/{}/base-commit.txt"
+
+    def _fixture(self, before: str) -> tuple[Path, str, str]:
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        root = Path(holder.name)
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        for key, value in (("user.email", "a122@example.invalid"), ("user.name", "a122"),
+                           ("commit.gpgsign", "false")):
+            subprocess.run(["git", "config", key, value], cwd=root, check=True)
+        (root / "go.mod").write_text("module fixture\ngo 1.23\n")
+        (root / "marker").write_text("P")
+        p = _commit_all(root, "P")
+        (root / "marker").write_text("Q")
+        q = _commit_all(root, "Q")
+        change = root / "openspec" / "changes" / before
+        change.mkdir(parents=True)
+        (change / "review.md").write_text("Function Logic Map: not-applicable\n")
+        (change / "base-commit.txt").write_text(p + "\n")
+        _commit_all(root, "freeze")
+        return root, p, q
+
+    def _move(self, root: Path, before: str, after: str, *, staged: bool) -> Path:
+        source = root / "openspec" / "changes" / before
+        target = root / "openspec" / "changes" / after
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if staged:
+            subprocess.run(["git", "mv", str(source), str(target)], cwd=root, check=True)
+        else:
+            source.rename(target)
+        return target
+
+    # (옮기기 전 · 옮긴 뒤 · staged 인가) — A1 · A2 · A3 은 리뷰어의 세 모양, 넷째는 반대 방향(아카이브 → 활성).
+    MOVES = (
+        ("mine", "archive/2026-09-26-mine", False),
+        ("mine", "archive/2026-09-26-mine", True),
+        ("archive/2026-09-11-mine", "archive/2026-09-12-mine", False),
+        ("archive/2026-09-11-mine", "mine", False),
+    )
+
+    def test_a_moved_directory_keeps_its_committed_base(self) -> None:
+        for before, after, staged in self.MOVES:
+            with self.subTest(before=before, after=after, staged=staged):
+                root, p, q = self._fixture(before)
+                moved = self._move(root, before, after, staged=staged)
+                (moved / "base-commit.txt").write_text(q + "\n")
+                expected = (
+                    f"`{self.P_REL.format(after)}` on disk ({q[:12]}) is not in HEAD, but "
+                    f"`{self.P_REL.format(before)}` is and holds {p[:12]} — moving the change directory does not "
+                    "move its comparison base; restore the committed value"
+                )
+                self.assertEqual(check_analysis.check("mine", root),
+                                 [f"cannot derive modified Go functions: {expected}"])
+                code, lines = check_analysis.record_landing("mine", root)
+                self.assertEqual(code, 1, lines)
+                self.assertEqual(lines, [f"mine: cannot resolve the comparison base: {expected}"])
+
+    def test_a_moved_directory_with_the_same_base_passes(self) -> None:
+        """양성 대조: 옮기기만 하고 값이 같으면 받는다 — 아카이브 이동은 개발 중 정상이다."""
+        for before, after, staged in self.MOVES:
+            with self.subTest(before=before, after=after, staged=staged):
+                root, _, _ = self._fixture(before)
+                self._move(root, before, after, staged=staged)
+                self.assertEqual(check_analysis.check("mine", root), [])
+
+    def test_another_id_elsewhere_in_head_is_not_consulted(self) -> None:
+        """다른 자리 탐색은 **같은 id** 만 본다 — 접미사가 같은 남의 아카이브(`…-other-mine`)는 대조 대상이 아니다."""
+        root, p, q = self._fixture("archive/2026-09-11-other-mine")
+        change = root / "openspec" / "changes" / "mine"
+        change.mkdir(parents=True)
+        (change / "review.md").write_text("Function Logic Map: not-applicable\n")
+        (change / "base-commit.txt").write_text(q + "\n")
+        self.assertEqual(check_analysis.check("mine", root), [])
+
+    def test_a_failed_listing_is_a_fault_not_an_empty_archive(self) -> None:
+        """`git ls-tree` 가 못 답하면 결함이다 — 빈 목록으로 읽으면 아카이브 자리를 못 보고 이동이 대조를 벗는다
+        ([[a-fault-must-become-a-verdict]])."""
+        root, _, _ = self._fixture("mine")
+        with self.assertRaisesRegex(RuntimeError, "not a tree object"):
+            check_analysis._committed_elsewhere(root, "0" * 40, "mine", "openspec/changes/x/base-commit.txt")
+
+
+class TheTwoChangeResolversAgree(unittest.TestCase):
+    """id → 디렉터리 규칙은 두 언어에 산다 — `resolve_referenced_change`(Python)와 `tools/gate.sh` 의
+    `resolve_change_dir`(shell). shell 은 Python 함수를 부를 수 없어 규칙을 옮겨 적었고, 각 스위트가 **자기 사본만**
+    못 박아서 한쪽만 고쳐도 둘 다 초록이었다 (task 6.4(f)). 이 표 하나를 **두 해소기에 같이** 돌린다 — 한쪽을 고치면
+    다른 쪽과 갈라지는 행이 빨개진다.
+
+    6.4(c) 가 이 표의 첫 발견이다: Python 의 `\\d` 는 유니코드 숫자(전각 `２` · 아라비아-인도 `٢`)를 먹었다(`re.ASCII`
+    로 고쳤다). shell 쪽은 **로케일에 달려 있었다** (task 6.4 보수, 주장정확성 리뷰 P0-F1) — bash 5.2.21 실측:
+    `en_US.UTF-8` 에서 범위 `[0-9]` 는 콜레이션으로 `０…８` · `٠…٨` · `𝟎…𝟖` 를 먹고 각 벌의 `９` 만 안 먹는다.
+    `C.UTF-8` · `ko_KR.utf8` 에서는 안 먹는다. `[[:digit:]]` 와 범위 없는 나열 `[0123456789]` 는 세 로케일 모두 안
+    먹는다. 첫 판 표의 유니코드 행은 월 `０９` 의 `９` 덕에 우연히 떨어졌고, 그 판은 shell 을 기본 로케일 하나로만 돌렸다.
+    그래서 `gate.sh` 를 나열로 고치고, 표에 **9 없는 날짜** 행을 넣고, shell 을 로케일 여럿에서 돌린다.
+    """
+
+    GATE = Path(check_analysis.__file__).resolve().parents[1] / "gate.sh"
+
+    @staticmethod
+    def _locales() -> tuple[str, ...]:
+        """shell 을 돌릴 로케일. `C.UTF-8` 과 `en_US.UTF-8`(콜레이션 범위가 유니코드 숫자를 먹는 곳)이 기본이다.
+        `en_US` 가 설치되지 않은 기계에서는 건너뛰지 않고 **사유를 적고** 현재 로케일로 대신 돈다."""
+        listed = subprocess.run(["locale", "-a"], capture_output=True, text=True, check=False).stdout
+        have = {name.lower().replace("-", "") for name in listed.split()}
+        if "en_us.utf8" in have:
+            return ("C.UTF-8", "en_US.UTF-8")
+        current = os.environ.get("LC_ALL") or os.environ.get("LANG") or "C.UTF-8"
+        sys.stderr.write(f"TheTwoChangeResolversAgree: en_US.UTF-8 not installed — shell runs under C.UTF-8 and {current}\n")
+        return tuple(dict.fromkeys(("C.UTF-8", current)))
+
+    # (디렉터리들, 물을 id, 기대 결과) — 결과는 "found:<상대경로>" · "missing" · "ambiguous".
+    TABLE = (
+        (("mine",), "mine", "found:openspec/changes/mine"),
+        (("archive/2026-09-11-mine",), "mine", "found:openspec/changes/archive/2026-09-11-mine"),
+        (("mine", "archive/2026-09-11-mine"), "mine", "ambiguous"),
+        (("archive/2026-09-11-mine", "archive/2026-09-12-mine"), "mine", "ambiguous"),
+        ((), "mine", "missing"),
+        (("archive/2026-09-11-other-mine",), "mine", "missing"),
+        (("archive/2026-09-11-other-mine",), "other-mine", "found:openspec/changes/archive/2026-09-11-other-mine"),
+        (("archive/abcd-ef-gh-mine",), "mine", "missing"),
+        (("archive/2026-9-11-mine",), "mine", "missing"),
+        (("archive/２０２６-０９-１１-mine",), "mine", "missing"),
+        (("archive/٢٠٢٦-٠٩-١١-mine",), "mine", "missing"),
+        # 9 가 없는 날짜 (task 6.4 보수) — `en_US.UTF-8` 의 범위 `[0-9]` 가 전부 먹는 모양이다.
+        (("archive/２０２６-０８-１１-mine",), "mine", "missing"),
+        (("archive/٢٠٢٦-٠٨-١١-mine",), "mine", "missing"),
+        (("archive/𝟐𝟎𝟐𝟔-𝟎𝟖-𝟏𝟏-mine",), "mine", "missing"),
+        (("archive/2026-09-11-mine",), "2026-09-11-mine", "missing"),
+    )
+
+    def _layout(self, directories: tuple[str, ...]) -> Path:
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        root = Path(holder.name)
+        (root / "openspec" / "changes").mkdir(parents=True)
+        for relative in directories:
+            (root / "openspec" / "changes" / relative).mkdir(parents=True)
+            (root / "openspec" / "changes" / relative / "tasks.md").write_text("- [x] 1.1 끝났다\n", encoding="utf-8")
+        (root / "tools").mkdir()
+        shutil.copy2(self.GATE, root / "tools" / "gate.sh")
+        return root
+
+    @staticmethod
+    def _python(root: Path, change: str) -> str:
+        try:
+            found = check_analysis.resolve_referenced_change(root, change)
+        except ValueError as exc:
+            return "missing" if "neither open nor archived" in str(exc) else "ambiguous"
+        return "found:" + found.relative_to(root).as_posix()
+
+    @staticmethod
+    def _shell(root: Path, change: str, locale: str) -> str:
+        """`gate.sh` 를 **그대로** 돌려 1단계가 무엇을 골랐는지 읽는다 — 함수를 오려 내면 게이트가 실제로 부르는
+        자리가 아니라 사본을 잰다. 픽스처에 `review.md` 가 없어 4단계에서 멈춘다. 로케일은 `LC_ALL` 로 준다 —
+        `gate.sh` 도 `Makefile` 도 로케일을 고정하지 않으므로 사람의 셸 로케일이 곧 게이트의 로케일이다."""
+        result = subprocess.run(["bash", str(root / "tools" / "gate.sh"), change],
+                                capture_output=True, text=True, check=False,
+                                env={**os.environ, "LC_ALL": locale})
+        out = result.stdout + result.stderr
+        if "활성·아카이브 어디에도 없음" in out:
+            return "missing"
+        if "같은 id 의 change 디렉터리가" in out:
+            return "ambiguous"
+        chosen = re.search(r"^OK: (.+)/tasks\.md$", out, re.MULTILINE)
+        return "found:" + chosen.group(1) if chosen else "unreadable:\n" + out
+
+    def test_one_table_through_both_resolvers(self) -> None:
+        locales = self._locales()
+        for directories, change, expected in self.TABLE:
+            root = self._layout(directories)
+            python = self._python(root, change)
+            for locale in locales:
+                with self.subTest(directories=directories, change=change, locale=locale):
+                    self.assertEqual((python, self._shell(root, change, locale)), (expected, expected))
+
+    def test_the_archive_name_reader_takes_ascii_digits_only(self) -> None:
+        """해독기 자신도 잰다 — 해소기 표는 해독 결과가 id 와 **같을 때만** 차이를 본다."""
+        for name in ("２０２６-０９-１１-mine", "٢٠٢٦-٠٩-١١-mine", "𝟐𝟎𝟐𝟔-𝟎𝟗-𝟏𝟏-mine",
+                     "２０２６-０８-１１-mine", "٢٠٢٦-٠٨-١١-mine", "𝟐𝟎𝟐𝟔-𝟎𝟖-𝟏𝟏-mine"):
+            with self.subTest(name=name):
+                self.assertEqual(check_analysis._archived_change_id(name), "")
+        self.assertEqual(check_analysis._archived_change_id("2026-09-11-mine"), "mine")
+
 
 if __name__ == "__main__":
     unittest.main()

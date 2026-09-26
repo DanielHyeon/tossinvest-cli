@@ -40,3 +40,11 @@
 | B30 | 2055 | If | `if not landing:` |
 | B31 | 2060 | Try | `try:` |
 | B32 | 2062 | ExceptHandler | `except GATE_FAULTS as exc:` |
+
+## task 6.4(b) — `head` 를 base 앞에서 푼다 (2026-09-26)
+
+`ast.before-6.4.json`(revision `0023fd12`, L2470-2597) → `ast.after-6.4.json`(워킹트리, L2502-2630). 분기 32 → 32 · 반환 13 → 13 ·
+raise 0 → 0 · 호출 32 → 32, 열거 diff 의 갈래 변화 **0**. 바뀐 것은 한 `try` 안 두 줄의 **순서**(`_head_commit` 이 `resolve_base` 앞)와
+`resolve_base` 두 호출에 `head=head` 인자뿐이다. 순서가 바뀌어 달라지는 판정은 하나다: HEAD 도 base 도 못 읽는 입력(저장소가
+아닌 곳)에서 이제 `cannot read HEAD` 가 먼저 나온다 — 둘 다 같은 `cannot derive modified Go functions:` 결함이고 막는 방향이 같다.
+시험 하나(`test_invalid_base_fails_closed`)가 저장소가 아닌 픽스처로 base 거절을 재고 있어서 커밋 하나짜리 저장소로 바꿨다.

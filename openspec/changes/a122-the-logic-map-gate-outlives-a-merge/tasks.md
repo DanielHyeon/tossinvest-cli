@@ -770,7 +770,7 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
 
 ## 6. 독립 적대 리뷰가 연 것 (task 4.4)
 
-- [ ] 6.1 **P0 — 착지 고정을 그 change 의 작업에 묶는다.** 오늘 `resolve_landing` 은
+- [x] 6.1 **P0 — 착지 고정을 그 change 의 작업에 묶는다.** 오늘 `resolve_landing` 은
       "선언된 커밋에서 저자의 `revision: current` 번들 해시가 맞는가"만 묻고, 그 번들이
       **창 안에서 바뀐 파일을 기술하는가**는 묻지 않는다. 저자가 만든 값으로 저자가
       고른 값을 검증하는 순환이다. 실측 위조 셋:
@@ -798,6 +798,18 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       즉 6.1 은 "위조를 막는다"와 "base 가 작업 뒤에 놓인 change 를 푼다"를 **동시에**
       만족해야 하고, 그 둘이 한 판정 안에서 양립하는지가 이 task 의 진짜 질문이다.
       숫자·규칙을 지어내지 말고 13건 전체에 대해 실데이터로 가른 뒤 정한다.
+      **닫음(2026-09-26) — 자식 여덟이 전부 `[x]`, 위조 표 셋을 지금 코드로 다시 돌렸다.** 기록은 review.md
+      `## VERIFY — task 6.4 (b)~(f) · 6.1 부모`. 6.1.2.4 가 돌렸다는 "4.4 의 스크립트" 는 저장소에 없어서 같은 세 모양을
+      스위트의 픽스처 헬퍼로 다시 만들었다(`analysis/harness/61_forgeries.py`, HEAD `5a54f78d`). **셋 다 빨갛다**: (a) · (b) 는
+      6.1.2.4 와 같은 문장(`precedes the evidence that pins it`). (c) 는 **선언 값에 따라** 문장이 다르다 — base(P) 를 선언하면
+      `is not the revision this evidence describes`(불일치 판정이 하한보다 앞에 서서 먼저 거절), Go 작업 커밋(L)을 선언하면 6.1.2.4 와
+      **글자 그대로 같은** `precedes the evidence that pins it` 이다. **정정(6.4 보수, 주장정확성 리뷰 P1-F2)**: 첫 판은 "(c) 문장이 다른
+      것은 원 픽스처를 못 되살린 탓" 이라 적었다 — 거짓이다. 같은 픽스처에 L 을 넘기면 같은 문장이 나오므로 다른 원인은 스크립트가 고른
+      선언 값(P)이었다(`61_forgeries.py` 에 L 행을 더해 다시 돌렸다, HEAD `5a54f78d`). (c') 는 **정직한 증거 커밋**(E)을 선언한 추가 모양이고
+      이제 `AST revision must be current` · required 2 로 빨갛다 — relabel 은 착지와 무관하게 `_verdict` 의 revision 기대값이 막는다.
+      첫 판은 (c') 를 "4.4 가 `[]` 를 얻은 모양" 이라 적었는데 그것도 맞지 않는다: 4.4 는 required **1**, (c') 는 **2** 다 — 4.4 의 정확한
+      선언 값은 스크립트가 저장소에 없어 되살릴 수 없고, (c') 는 재현이 아니라 더한 모양이다. 기록 명령은 (a)(b) 를 거절하고 (c) 는
+      정직한 번들이 고정하는 커밋을 기록한다(그 뒤 판정이 relabel 로 빨갛다). 셋 다 빨갛다는 판단은 그대로다.
 - [x] 6.1.1 **측정 — 활성 13건 전수, 네 축을 실데이터로 걸었다.** HEAD `508f8b46`,
       생산 코드 변경 0. 결과는 review.md `VERIFY — task 6.1 (측정 단계)`.
       (1) 오늘의 고정은 **어느 change 에 대해서도** 착지를 결정하지 못한다 — 후보가
@@ -1009,6 +1021,42 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       전역에 있으면 새 클래스 전부가 `gpg: signing failed` 로 **에러**가 된다(실측).
       `GIT_CONFIG_GLOBAL=/dev/null` 을 주거나 `_init_fixture` 에서 명시적으로 끈다.
       같은 노출: `core.hooksPath` · `gpg.format` · `core.autocrlf`.
+      **(b)~(f) 닫음(2026-09-26)** — 기록은 review.md `## VERIFY — task 6.4 (b)~(f) · 6.1 부모`. 부모는 (a)(사람 결정) ·
+      (g) · (h) 가 남아 열려 있다.
+      (b) `resolve_base` 가 적힌 값이 **40자리 소문자 커밋 id 자신**인지(이름 · 짧은 id · 대문자 · 태그 객체 id 거절) 보고, 명령이 한 번
+      푼 `head` 커밋에 같은 파일이 있으면 **그 값과 같아야** 받는다(커밋 안 한 편집이 창의 시작을 못 옮긴다). HEAD 에 없는 새 base 는
+      디스크의 값 — freeze 직후 커밋 전 실행은 정상이다. 거절하는 정상 입력 0(HEAD `5a54f78d` 재측정: 저장소 `base-commit.txt` 119 전부
+      40자리 + LF · 자기 id 가 커밋 · 자기 경로로 HEAD 와 바이트가 같다 — `analysis/harness/64r_census.py`).
+      **보수(2026-09-26, 독립 리뷰 둘 — 적대 · 주장정확성).** 첫 판의 HEAD 대조는 **지금 디스크 경로**로 HEAD 를 물어서, 디렉터리를
+      옮기면(커밋 안 한 `mv` · staged `git mv` · 아카이브 날짜 변경) "HEAD 에 없는 새 base" 로 받았다(P0-A). 이제 지금 경로가 HEAD 에
+      없으면 같은 id 의 다른 자리(활성 `changes/<id>/` · HEAD 트리의 `changes/archive/<날짜>-<id>/`)를 찾아 값이 다르면 이동을 이름 대고
+      거절한다(새 잎 `_committed_elsewhere`). 새 갈래가 거절하는 정상 입력 0(같은 측정 — 새 갈래에 닿는 디렉터리 0). **보장 범위를
+      좁혀 적었다**(P1-C): 막는 것은 커밋 안 한 편집과 이동이다. base 를 고쳐 **커밋**하는 재기록은 어느 가드도 막지 않는다 — 이 저장소의
+      재동결(HEAD 역사에서 `base-commit.txt` 제자리 재기록 커밋 16개 · id 13개, `--diff-filter=M`)은 "쓰고 커밋하기 전" 에
+      `… an uncommitted edit does not move the comparison base; restore the committed value` 로 거절되고 커밋하면 받는다.
+      **7.5.5 는 열린 채다(Manager 판정 2026-09-26)** — 이동 공격이 그 질문의 답을 "예" 로 유지했고, 이 보수 뒤에도 심링크 · `root`
+      기준 · 커밋된 재기록이 남는다(아래 (i) · (k) · 사람 결정).
+      (c) `ARCHIVED_CHANGE` 에 `re.ASCII`. **정정(보수, P0-F1)**: 첫 판은 shell 의 `[0-9]` 가 유니코드 숫자를 "안 먹는다" 고 적었지만
+      bash 5.2.21 · `en_US.UTF-8` 에서 범위 `[0-9]` 는 콜레이션으로 `０…８` · `٠…٨` · `𝟎…𝟖` 를 먹는다(`９` 만 제외, `C.UTF-8` 에서는 안
+      먹음). 9 없는 날짜면 그 로케일에서 두 해소기가 갈렸다. `gate.sh` 를 나열 `[0123456789]` 로(로케일 무관), 표에 9 없는 날짜 세 행,
+      shell 을 `C.UTF-8` · `en_US.UTF-8` 둘에서. (d) **이미 닫혀 있었다** — 7.6(I4)이 fallback 을 지워 `_judged` · `record_landing` 이 해소기의
+      문장을 그대로 낸다. 삼킴을 되살리는 변이 AL7 · AL8 이 CAUGHT(시험 `test_two_archived_copies_are_named_on_both_paths` 외).
+      (e) `gate.sh` 해소기 주석과 `test_check_analysis.py` 의 docstring 둘을 과거형 + 함수 이름으로 고쳤다(줄 좌표 없음).
+      (f) 시험 `TheTwoChangeResolversAgree` — 한 표(12 행)를 `resolve_referenced_change` 와 **실제 `gate.sh`** 에 같이 돌린다. (c) 는 그
+      표의 첫 발견이다(RED: 전각 · 아라비아-인도 숫자 두 행). 시험 377 → **384** · Python 변이 AL1~AL8 **8/8 CAUGHT** · shell 변이 G1~G4
+      (`64_gate_mut.py`) — 결과는 review.md. **보수 뒤**: 표 15 행을 로케일 둘(`C.UTF-8` · `en_US.UTF-8`)에서, 시험 **388**, Python 변이
+      AL1~AL16 **16/16 CAUGHT**(새 AL9~AL16 — `fullmatch`→`match` 생존을 `<sha>~1` 행으로 닫았다), shell G1~G5 **5/5 CAUGHT**. 기록은 review.md
+      `## 정정 · VERIFY — task 6.4 보수 (독립 리뷰 둘: 적대 · 주장정확성, 2026-09-26)`.
+      **보수가 연 것 — 고치지 않고 열어 둔다:**
+      (i) 심링크 change 디렉터리: untracked 대상을 가리키는 심링크를 커밋하면 `base-commit.txt` 가 HEAD 에 **영원히** 없는 모양이 되어 대조가
+      안 선다([[a-silent-skip-is-a-door]] 계열). 적대 리뷰 보고, 이 세션 재현 안 함.
+      (j) 해소기 표 밖 불일치: 아카이브 이름의 줄바꿈(Python missing · shell found), 아카이브 디렉터리를 못 읽을 때 Python 은 `PermissionError` 가
+      `_judged` 의 `except ValueError` 밖으로 샌다. 적대 리뷰 보고, 이 세션 재현 안 함.
+      (k) `_committed_bytes`(와 보수의 `_committed_elsewhere`)의 경로 기준이 git toplevel 이 아니라 `root` 다 — `root` ≠ toplevel 이면 가드 ②가
+      조용히 꺼진다. 착지 기록 읽기도 같은 노출이고 a122 이전부터다.
+      **사람 결정 — 커밋된 재기록 차단(역사 잠금).** base 를 고쳐 **커밋**하면 어느 가드도 막지 않는다(그 값이 곧 HEAD 의 값). 역사에 묶어
+      잠글지는 사람이 정한다([[author-supplied-evidence-cannot-pin-an-author-choice]]). 부모 6.4 는 (a) · (g) · (h) · (i) · (j) · (k) · 이 결정이
+      남아 열려 있다.
 
 ## 7. §6 로트 독립 리뷰가 연 것 (gstack /review, 2026-09-12)
 

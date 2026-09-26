@@ -101,7 +101,7 @@ for name in names:
     cid = m.group("change") if m else name
     analysis = d / "analysis" / "function-logic"
     try:
-        base = after.resolve_base(d, ROOT, {}, change_id=cid)
+        base = after.resolve_base(d, ROOT, {}, change_id=cid, head=after._head_commit(ROOT))
     except Exception:
         skipped += 1
         done[name] = {"change": name, "skip": "base"}

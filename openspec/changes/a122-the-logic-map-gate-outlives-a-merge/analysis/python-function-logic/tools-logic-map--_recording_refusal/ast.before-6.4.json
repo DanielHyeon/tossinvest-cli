@@ -1,0 +1,187 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "0023fd1219785fb025c06819bef1ee60276b7e0f",
+  "head_commit": "0023fd1219785fb025c06819bef1ee60276b7e0f",
+  "source_sha256": "c7d6504ca7047ec5d8d32f1922940a57361b7c919b1fa2eae507f86ce603c05d",
+  "function": "_recording_refusal",
+  "signature": "_recording_refusal(change, change_dir, root, head, evidence)",
+  "start": {
+    "line": 2896,
+    "column": 1
+  },
+  "end": {
+    "line": 2980,
+    "column": 20
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 2921,
+      "inherited_line": false,
+      "source": "if landing_file.is_symlink():"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 2931,
+      "inherited_line": false,
+      "source": "if _landing_record(change_dir, root, head) is not None:"
+    },
+    {
+      "id": "B3",
+      "kind": "If",
+      "line": 2935,
+      "inherited_line": false,
+      "source": "if landing_file.exists():"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 2945,
+      "inherited_line": false,
+      "source": "if (change_dir / 'analysis' / 'function-logic-reference.txt').exists():"
+    },
+    {
+      "id": "B5",
+      "kind": "Try",
+      "line": 2950,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B6",
+      "kind": "ExceptHandler",
+      "line": 2952,
+      "inherited_line": false,
+      "source": "except GATE_FAULTS as exc:"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 2954,
+      "inherited_line": false,
+      "source": "if facts.get('execution_baseline_adoption'):"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 2957,
+      "inherited_line": false,
+      "source": "if why:"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 2967,
+      "inherited_line": false,
+      "source": "if dirty.returncode not in (0, 1):"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 2974,
+      "inherited_line": false,
+      "source": "if dirty.returncode:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 2926,
+      "value": "(f'`{LANDING_FILE}` is a symlink — not followed: the record must be a regular file in the change directory, or the value the gate reads back is not the value it wrote', '')"
+    },
+    {
+      "line": 2934,
+      "value": "(f'`{LANDING_FILE}` already exists — not overwritten; {LANDING_RECOVERY}', '')"
+    },
+    {
+      "line": 2941,
+      "value": "(f'`{relative}` already exists on disk but not in HEAD — not overwritten: the gate reads the record from the commit, so commit it', '')"
+    },
+    {
+      "line": 2948,
+      "value": "(BORROWED_REFUSES_A_LANDING, '')"
+    },
+    {
+      "line": 2953,
+      "value": "(f'cannot resolve the comparison base: {exc}', '')"
+    },
+    {
+      "line": 2955,
+      "value": "(ADOPTION_REFUSES_A_LANDING, '')"
+    },
+    {
+      "line": 2958,
+      "value": "(f'no landing recorded — {why}', '')"
+    },
+    {
+      "line": 2975,
+      "value": "('the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits', '')"
+    },
+    {
+      "line": 2980,
+      "value": "('', base)"
+    }
+  ],
+  "raises": [
+    {
+      "line": 2970,
+      "source": "raise RuntimeError(f'cannot tell whether the working tree matches {head[:12]}: ' + _first_line(dirty.stderr, 'git diff failed'))"
+    }
+  ],
+  "calls": [
+    {
+      "line": 2921,
+      "callee": "landing_file.is_symlink"
+    },
+    {
+      "line": 2931,
+      "callee": "_landing_record"
+    },
+    {
+      "line": 2935,
+      "callee": "landing_file.exists"
+    },
+    {
+      "line": 2940,
+      "callee": "landing_file.relative_to"
+    },
+    {
+      "line": 2940,
+      "callee": "landing_file.relative_to(root).as_posix"
+    },
+    {
+      "line": 2945,
+      "callee": "(change_dir / 'analysis' / 'function-logic-reference.txt').exists"
+    },
+    {
+      "line": 2951,
+      "callee": "resolve_base"
+    },
+    {
+      "line": 2954,
+      "callee": "facts.get"
+    },
+    {
+      "line": 2956,
+      "callee": "_select_pinning"
+    },
+    {
+      "line": 2956,
+      "callee": "_walk_floor"
+    },
+    {
+      "line": 2963,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 2970,
+      "callee": "RuntimeError"
+    },
+    {
+      "line": 2972,
+      "callee": "_first_line"
+    }
+  ]
+}

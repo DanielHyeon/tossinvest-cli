@@ -154,3 +154,9 @@ B6 이 **사유 문장**으로 받고, 나머지(`_walk_floor` 의 `ValueError`,
 | raise 줄 | 소스 |
 |---|---|
 | 1992 | `raise RuntimeError(f'cannot tell whether the working tree matches {head[:12]}: ' + _first_` |
+
+## task 6.4(b) — `resolve_base` 에 `head` 를 넘긴다 (2026-09-26)
+
+`ast.before-6.4.json`(revision `0023fd12`) → `ast.after-6.4.json`. 분기 10 → 10 · 반환 9 → 9 · raise 1 → 1 · 호출 13 → 13, 갈래 변화 0.
+바뀐 것은 `resolve_base(..., head=head)` 인자 하나다 — 이 함수가 이미 받은 sha 다. base 의 새 거절(모양 · HEAD 대조 · 태그)은 기존
+`cannot resolve the comparison base: …` 사유로 나간다(시험 `test_an_uncommitted_edit_cannot_move_a_committed_base` 가 기록 경로에서 잰다).

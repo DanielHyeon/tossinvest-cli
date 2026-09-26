@@ -1,0 +1,428 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "worktree",
+  "head_commit": "5a54f78de85c7ff90bde7fef221e1feed75bad23",
+  "source_sha256": "a88c966bbcf57e109278e7c29d8e051da0a2acc1652c6e3d83845308e2e59ede",
+  "function": "_judged",
+  "signature": "_judged(change, root, facts)",
+  "start": {
+    "line": 2502,
+    "column": 1
+  },
+  "end": {
+    "line": 2630,
+    "column": 89
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 2520,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 2522,
+      "inherited_line": false,
+      "source": "except ValueError as exc:"
+    },
+    {
+      "id": "B3",
+      "kind": "Try",
+      "line": 2530,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B4",
+      "kind": "ExceptHandler",
+      "line": 2532,
+      "inherited_line": false,
+      "source": "except FileNotFoundError:"
+    },
+    {
+      "id": "B5",
+      "kind": "ExceptHandler",
+      "line": 2534,
+      "inherited_line": false,
+      "source": "except (OSError, UnicodeDecodeError) as exc:"
+    },
+    {
+      "id": "B6",
+      "kind": "Try",
+      "line": 2536,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B7",
+      "kind": "ExceptHandler",
+      "line": 2545,
+      "inherited_line": false,
+      "source": "except GATE_FAULTS as exc:"
+    },
+    {
+      "id": "B8",
+      "kind": "Try",
+      "line": 2552,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B9",
+      "kind": "ExceptHandler",
+      "line": 2554,
+      "inherited_line": false,
+      "source": "except FileNotFoundError:"
+    },
+    {
+      "id": "B10",
+      "kind": "ExceptHandler",
+      "line": 2556,
+      "inherited_line": false,
+      "source": "except OSError as exc:"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 2558,
+      "inherited_line": false,
+      "source": "if reference_raw is not None:"
+    },
+    {
+      "id": "B12",
+      "kind": "Try",
+      "line": 2561,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B13",
+      "kind": "comprehension",
+      "line": 2562,
+      "inherited_line": true,
+      "source": " for name, is_dir in _listed(analysis) if is_dir"
+    },
+    {
+      "id": "B14",
+      "kind": "ExceptHandler",
+      "line": 2563,
+      "inherited_line": false,
+      "source": "except (FileNotFoundError, NotADirectoryError):"
+    },
+    {
+      "id": "B15",
+      "kind": "If",
+      "line": 2565,
+      "inherited_line": false,
+      "source": "if any((_listed(bundle) for bundle in local)):"
+    },
+    {
+      "id": "B16",
+      "kind": "comprehension",
+      "line": 2565,
+      "inherited_line": true,
+      "source": " for bundle in local"
+    },
+    {
+      "id": "B17",
+      "kind": "BoolOp",
+      "line": 2569,
+      "inherited_line": false,
+      "source": "not re.fullmatch('[a-z0-9][a-z0-9-]*', referenced_change) or referenced_change == change"
+    },
+    {
+      "id": "B18",
+      "kind": "If",
+      "line": 2569,
+      "inherited_line": false,
+      "source": "if not re.fullmatch('[a-z0-9][a-z0-9-]*', referenced_change) or referenced_change == change:"
+    },
+    {
+      "id": "B19",
+      "kind": "Try",
+      "line": 2571,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B20",
+      "kind": "ExceptHandler",
+      "line": 2574,
+      "inherited_line": false,
+      "source": "except GATE_FAULTS as exc:"
+    },
+    {
+      "id": "B21",
+      "kind": "If",
+      "line": 2576,
+      "inherited_line": false,
+      "source": "if referenced_base != base:"
+    },
+    {
+      "id": "B22",
+      "kind": "If",
+      "line": 2586,
+      "inherited_line": false,
+      "source": "if _landing_record(change_dir, root, head) is not None:"
+    },
+    {
+      "id": "B23",
+      "kind": "Try",
+      "line": 2593,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B24",
+      "kind": "ExceptHandler",
+      "line": 2595,
+      "inherited_line": false,
+      "source": "except GATE_FAULTS as exc:"
+    },
+    {
+      "id": "B25",
+      "kind": "BoolOp",
+      "line": 2598,
+      "inherited_line": false,
+      "source": "adopted and _landing_record(change_dir, root, head) is not None"
+    },
+    {
+      "id": "B26",
+      "kind": "If",
+      "line": 2598,
+      "inherited_line": false,
+      "source": "if adopted and _landing_record(change_dir, root, head) is not None:"
+    },
+    {
+      "id": "B27",
+      "kind": "Try",
+      "line": 2604,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B28",
+      "kind": "IfExp",
+      "line": 2612,
+      "inherited_line": false,
+      "source": "str(facts.get('adoption_source', '')) if adopted else resolve_landing(change_dir, root, base, head, evidence)"
+    },
+    {
+      "id": "B29",
+      "kind": "ExceptHandler",
+      "line": 2615,
+      "inherited_line": false,
+      "source": "except GATE_FAULTS as exc:"
+    },
+    {
+      "id": "B30",
+      "kind": "If",
+      "line": 2619,
+      "inherited_line": false,
+      "source": "if not landing:"
+    },
+    {
+      "id": "B31",
+      "kind": "Try",
+      "line": 2624,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B32",
+      "kind": "ExceptHandler",
+      "line": 2626,
+      "inherited_line": false,
+      "source": "except GATE_FAULTS as exc:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 2523,
+      "value": "([str(exc)], False)"
+    },
+    {
+      "line": 2535,
+      "value": "([UNREADABLE.format(what='review.md', why=_why(exc))], False)"
+    },
+    {
+      "line": 2546,
+      "value": "([f'cannot derive modified Go functions: {exc}'], False)"
+    },
+    {
+      "line": 2557,
+      "value": "([UNREADABLE.format(what='function-logic-reference.txt', why=_why(exc))], False)"
+    },
+    {
+      "line": 2566,
+      "value": "(['function-logic reference cannot coexist with local function-logic evidence'], False)"
+    },
+    {
+      "line": 2570,
+      "value": "(['function-logic reference names an invalid or recursive change'], False)"
+    },
+    {
+      "line": 2575,
+      "value": "([f'function-logic reference base is invalid: {exc}'], False)"
+    },
+    {
+      "line": 2577,
+      "value": "(['function-logic reference must share the exact comparison base'], False)"
+    },
+    {
+      "line": 2587,
+      "value": "([BORROWED_REFUSES_A_LANDING], False)"
+    },
+    {
+      "line": 2596,
+      "value": "([f'cannot derive modified Go functions: {exc}'], False)"
+    },
+    {
+      "line": 2603,
+      "value": "([ADOPTION_REFUSES_A_LANDING], False)"
+    },
+    {
+      "line": 2616,
+      "value": "([f'cannot derive modified Go functions: {exc}'], False)"
+    },
+    {
+      "line": 2630,
+      "value": "(_verdict(root, base, landing, adopted, required, evidence, review_text), True)"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 2521,
+      "callee": "resolve_referenced_change"
+    },
+    {
+      "line": 2523,
+      "callee": "str"
+    },
+    {
+      "line": 2531,
+      "callee": "_decoded"
+    },
+    {
+      "line": 2531,
+      "callee": "_read_regular"
+    },
+    {
+      "line": 2535,
+      "callee": "UNREADABLE.format"
+    },
+    {
+      "line": 2535,
+      "callee": "_why"
+    },
+    {
+      "line": 2543,
+      "callee": "_head_commit"
+    },
+    {
+      "line": 2544,
+      "callee": "resolve_base"
+    },
+    {
+      "line": 2553,
+      "callee": "_read_regular"
+    },
+    {
+      "line": 2557,
+      "callee": "UNREADABLE.format"
+    },
+    {
+      "line": 2557,
+      "callee": "_why"
+    },
+    {
+      "line": 2562,
+      "callee": "_listed"
+    },
+    {
+      "line": 2565,
+      "callee": "_listed"
+    },
+    {
+      "line": 2565,
+      "callee": "any"
+    },
+    {
+      "line": 2568,
+      "callee": "reference_raw.decode('utf-8', 'replace').strip"
+    },
+    {
+      "line": 2568,
+      "callee": "reference_raw.decode"
+    },
+    {
+      "line": 2569,
+      "callee": "re.fullmatch"
+    },
+    {
+      "line": 2572,
+      "callee": "resolve_referenced_change"
+    },
+    {
+      "line": 2573,
+      "callee": "resolve_base"
+    },
+    {
+      "line": 2586,
+      "callee": "_landing_record"
+    },
+    {
+      "line": 2594,
+      "callee": "_read_evidence"
+    },
+    {
+      "line": 2597,
+      "callee": "bool"
+    },
+    {
+      "line": 2597,
+      "callee": "facts.get"
+    },
+    {
+      "line": 2598,
+      "callee": "_landing_record"
+    },
+    {
+      "line": 2612,
+      "callee": "facts.get"
+    },
+    {
+      "line": 2612,
+      "callee": "str"
+    },
+    {
+      "line": 2613,
+      "callee": "resolve_landing"
+    },
+    {
+      "line": 2614,
+      "callee": "changed_existing_functions"
+    },
+    {
+      "line": 2618,
+      "callee": "len"
+    },
+    {
+      "line": 2625,
+      "callee": "_base_shaped_bundles"
+    },
+    {
+      "line": 2627,
+      "callee": "str"
+    },
+    {
+      "line": 2630,
+      "callee": "_verdict"
+    }
+  ]
+}

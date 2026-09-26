@@ -16,8 +16,11 @@ from pathlib import Path
 # ([[renamed-checkout-strands-absolute-path-state]]).
 REPO = next(parent for parent in Path(__file__).resolve().parents
             if (parent / "tools" / "logic-map").is_dir())
-SP = Path(__file__).resolve().parent / "_work"
-SP.mkdir(exist_ok=True)
+# 작업 자리는 기본 `_work/`(무시되는 디렉터리)다. `A122_HARNESS_WORK` 로 다른 파일시스템을 줄 수 있다 (task 6.4 보수) —
+# 이 저장소는 /mnt/D(ntfs-3g) 위라 사본과 전용 GOCACHE 가 거기 있으면 스위트 한 판이 8~10 분, ext4 스크래치면 직접 실행과
+# 비슷하다. 산출물의 뜻은 같다 — 사본 · 캐시 자리만 바뀐다.
+SP = Path(os.environ.get("A122_HARNESS_WORK") or Path(__file__).resolve().parent / "_work")
+SP.mkdir(parents=True, exist_ok=True)
 # 사본은 **프로세스별**이다 (task 7.5.2.3): 두 판이 한 사본을 쓰면 한쪽의 변이가 다른 쪽의 기준이 되고,
 # 그러면 CAUGHT/SURVIVED 가 뒤섞인다 — 2026-09-20 에 배경 판과 전경 창이 실제로 그렇게 됐다.
 WORK = SP / f"75_mut_work.{os.getpid()}"
@@ -683,6 +686,50 @@ MUTATIONS = {
                 int(match.group(4) or 1),''',
          '''                int(match.group(1)),
                 int(match.group(2) or 1),''')],
+    # --- task 6.4 (b)(c)(d) — 창의 시작을 잠근다 · 아카이브 날짜는 ASCII 숫자 · 해소기의 실패는 판정이다 ---
+    "AL1_archive_digits_are_unicode": [
+        ('ARCHIVED_CHANGE = re.compile(r"\\d{4}-\\d{2}-\\d{2}-(?P<change>.+)", re.ASCII)',
+         'ARCHIVED_CHANGE = re.compile(r"\\d{4}-\\d{2}-\\d{2}-(?P<change>.+)")')],
+    "AL2_the_base_shape_is_not_checked": [
+        ('    if not FULL_SHA.fullmatch(candidate):\n        # 이름(`HEAD`', '    if False:\n        # 이름(`HEAD`')],
+    # AL3 · AL4 앵커는 6.4 보수(P0-A)에서 대조가 `held` 순회로 바뀌어 다시 걸었다 — 뜻은 같다.
+    "AL3_an_uncommitted_edit_moves_the_base": [
+        ('        if shown == candidate:\n            continue', '        if True:\n            continue')],
+    "AL4_a_new_base_must_be_committed": [
+        ('    for place, value in held:', '    for place, value in held or [(relative, b"")]:')],
+    "AL5_a_tag_id_is_a_base": [
+        ('    if persisted != candidate:\n        # `^{commit}`', '    if False:\n        # `^{commit}`')],
+    "AL6_the_base_is_read_at_the_live_head": [
+        ('    committed = _committed_bytes(root, head, relative)', '    committed = _committed_bytes(root, "HEAD", relative)')],
+    "AL7_the_judged_target_swallows_the_resolver": [
+        ('        change_dir = resolve_referenced_change(root, change)\n    except ValueError as exc:\n        return [str(exc)], False',
+         '        change_dir = resolve_referenced_change(root, change)\n    except ValueError as exc:\n'
+         '        change_dir = root / "openspec" / "changes" / change')],
+    # --- task 6.4 보수 (독립 리뷰 둘) — 이동이 대조를 벗지 못한다 · 모양은 전체 일치 ---
+    "AL9_the_base_shape_is_a_prefix_match": [
+        ('    if not FULL_SHA.fullmatch(candidate):\n        # 이름(`HEAD`', '    if not FULL_SHA.match(candidate):\n        # 이름(`HEAD`')],
+    "AL10_no_search_elsewhere": [
+        ('else _committed_elsewhere(root, head, change_id, relative)', 'else []')],
+    "AL11_a_moved_mismatch_is_accepted": [
+        ('        if shown == candidate:\n            continue',
+         '        if shown == candidate or place != relative:\n            continue')],
+    "AL12_the_head_archive_is_not_listed": [
+        ('        if _archived_change_id(entry.removeprefix(ARCHIVE_PREFIX)) == change_id',
+         '        if False')],
+    "AL13_the_open_place_is_not_asked": [
+        ('    places = [f"openspec/changes/{change_id}/base-commit.txt"] + [', '    places = [] + [')],
+    "AL14_a_suffix_names_the_same_change": [
+        ('        if _archived_change_id(entry.removeprefix(ARCHIVE_PREFIX)) == change_id',
+         '        if entry.endswith(change_id)')],
+    "AL15_every_mismatch_is_called_a_move": [
+        ('        if place == relative:\n            raise ValueError(', '        if False:\n            raise ValueError(')],
+    "AL16_a_failed_listing_is_an_empty_archive": [
+        ('    if listed.returncode:\n        raise RuntimeError(_first_line(listed.stderr, "git ls-tree failed"))',
+         '    if False:\n        raise RuntimeError(_first_line(listed.stderr, "git ls-tree failed"))')],
+    "AL8_the_record_path_swallows_the_resolver": [
+        ('        change_dir = resolve_referenced_change(root, change)\n    except ValueError as exc:\n        return 1, [str(exc)]',
+         '        change_dir = resolve_referenced_change(root, change)\n    except ValueError as exc:\n'
+         '        change_dir = root / "openspec" / "changes" / change')],
 }
 
 
@@ -693,6 +740,9 @@ def setup() -> Path:
                     ignore=shutil.ignore_patterns("__pycache__"))
     (WORK / "sdd").mkdir(parents=True)
     shutil.copy(REPO / "tools" / "sdd" / "sdd_doctor.py", WORK / "sdd")
+    # 두 해소기를 한 표로 도는 시험(task 6.4(f))이 `check_analysis.py` 옆 디렉터리의 `gate.sh` 를 부른다 — 사본에 없으면
+    # 무변이 대조군부터 빨갛다.
+    shutil.copy(REPO / "tools" / "gate.sh", WORK / "gate.sh")
     return WORK / "logic-map" / "check_analysis.py"
 
 

@@ -747,7 +747,13 @@ def _changed_existing_functions(root: Path, base: str, comparison: Comparison) -
 # `openspec archive` 는 끝난 change 를 `archive/<YYYY-MM-DD>-<id>` 로 옮긴다.
 # 접미사로 고르면 `2026-08-29-other-reference` 가 `reference` 로 통과하므로
 # 날짜 접두사를 벗긴 나머지를 **전부** 맞춘다.
-ARCHIVED_CHANGE = re.compile(r"\d{4}-\d{2}-\d{2}-(?P<change>.+)")
+# `re.ASCII` 인 이유 (task 6.4(c)): 글자 패턴의 `\d` 는 유니코드 숫자(전각 `２` · 아라비아-인도 `٢` ·
+# 수학 굵은 `𝟐`)까지 먹는다. shell 쪽(`tools/gate.sh`)은 ASCII 숫자만 받아야 두 해소기가 같은 디렉터리를 같게 읽는다.
+# 첫 판은 "`[0-9]` 는 안 먹는다" 고 적었는데 **로케일에 따라 거짓**이었다(6.4 보수, 주장정확성 리뷰 P0-F1): bash 5.2.21 ·
+# `en_US.UTF-8` 에서 범위 `[0-9]` 는 콜레이션으로 `０…８` · `٠…٨` · `𝟎…𝟖` 를 먹는다(각 벌의 `９` 만 제외, `C.UTF-8` 에서는
+# 안 먹음). 그래서 `gate.sh` 는 범위 대신 나열 `[0123456789]` 를 쓴다 — 나열은 로케일과 무관하다(세 로케일 실측).
+# 두 해소기를 로케일 둘에서 같은 표로 도는 시험이 `TheTwoChangeResolversAgree` 다.
+ARCHIVED_CHANGE = re.compile(r"\d{4}-\d{2}-\d{2}-(?P<change>.+)", re.ASCII)
 ARCHIVE_PREFIX = "openspec/changes/archive/"
 
 
@@ -757,7 +763,8 @@ def _archived_change_id(name: str) -> str:
     이 해독은 **여기 한 곳**에 산다 (task 7.6, 리뷰 I6). 해소기(id → 디렉터리)와
     `_pre_archive_path`(아카이브 경로 → 옮기기 전 경로)가 각자 정규식을 들고 있었고,
     6.2 가 `validate` 에 "셋째를 만들지 않는다"고 적은 바로 그 모양이었다. shell 쪽
-    사본(`tools/gate.sh`)은 언어가 달라 합칠 수 없어 자기 시험이 따로 못 박는다.
+    사본(`tools/gate.sh` 의 `resolve_change_dir`)은 언어가 달라 합칠 수 없다 — 그래서 두 해소기를
+    **한 표**로 같이 돌리는 시험(`TheTwoChangeResolversAgree`, task 6.4(f))이 둘을 묶는다.
     """
     matched = ARCHIVED_CHANGE.fullmatch(name)
     return matched.group("change") if matched else ""
@@ -810,10 +817,54 @@ def resolve_referenced_change(root: Path, change: str) -> Path:
     return found[0]
 
 
+def _committed_elsewhere(root: Path, head: str, change_id: str, relative: str) -> list[tuple[str, bytes]]:
+    """`relative` 가 아닌 **같은 id 의 자리**에 `head` 가 커밋한 `base-commit.txt` 들 — `(경로, 바이트)` (6.4 보수, P0-A).
+
+    자리는 둘 종류다: 활성 `openspec/changes/<id>/` 와 `head` 트리의 `openspec/changes/archive/<날짜>-<id>/`. 아카이브는
+    **`head` 트리에서** 열거한다 — 디스크를 보면 옮겨 버린 옛 자리를 못 본다. 날짜 해독은 `_archived_change_id` 한 곳이다
+    (셋째 정규식을 만들지 않는다, 6.2 · 7.6). 읽기는 `_committed_many` 한 프로세스다. git 이 못 답하면 결함이다.
+
+    경로 기준은 `root` 다 — `_committed_bytes` 와 같은 노출(`root` 가 git toplevel 이 아니면 조용히 못 찾는다)을
+    공유하고, 그것은 a122 tasks 6.4(k) 로 열어 두었다.
+    """
+    listed = subprocess.run(
+        ["git", "ls-tree", "-z", "-d", "--name-only", head, "--", ARCHIVE_PREFIX],
+        cwd=root, capture_output=True, timeout=10, check=False,
+    )
+    if listed.returncode:
+        raise RuntimeError(_first_line(listed.stderr, "git ls-tree failed"))
+    places = [f"openspec/changes/{change_id}/base-commit.txt"] + [
+        f"{entry}/base-commit.txt"
+        for entry in (os.fsdecode(raw) for raw in listed.stdout.split(b"\0") if raw)
+        if _archived_change_id(entry.removeprefix(ARCHIVE_PREFIX)) == change_id
+    ]
+    found = _committed_many(root, head, [place for place in places if place != relative])
+    return [(place, value) for place, value in found.items() if value is not None]
+
+
 def resolve_base(
     change_dir: Path, root: Path, context: dict[str, object] | None = None,
-    *, change_id: str,
+    *, change_id: str, head: str,
 ) -> str:
+    """이 change 의 비교 기준(창의 **시작**). a063 이관이면 `E`, 아니면 `base-commit.txt` 의 커밋이다.
+
+    **디스크의 값을 커밋된 값과 대조한다** (task 6.4(b) · 6.4 보수). 시작은 `rev-parse` 가 받는 무엇이든 받았고
+    (`HEAD` 한 단어면 창이 빈다) 디스크에서만 읽었다(커밋 안 한 편집 한 줄이 창의 시작을 옮겼다). 그래서 적힌 값이
+    **40자리 소문자 커밋 id 자신**이어야 하고, `head` 커밋에 같은 파일이 있으면 **그 값과 같아야** 한다. 디렉터리를
+    옮겨서(커밋 안 한 `mv` · staged `git mv` · 아카이브 날짜 변경) 지금 경로가 `head` 에 없으면 같은 id 의 **다른
+    자리**(활성 `changes/<id>/` · `head` 트리의 `changes/archive/<날짜>-<id>/`)를 대조한다 — 이동이 대조를 벗기지
+    못한다(독립 적대 리뷰 P0-A). 어느 자리에도 없는 새 base 는 디스크의 값을 그대로 쓴다: freeze 직후 커밋 전에
+    게이트를 도는 것은 개발 중 정상이다.
+
+    **보장하는 범위는 여기까지다.** 막는 것은 "커밋 안 한 편집 · 이동" 이고, base 를 고쳐 **커밋**하는 재기록은
+    어느 가드도 막지 않는다 — 그 값이 곧 `head` 의 값이 되기 때문이다. 역사에 묶어 잠글지는 열린 **사람 결정**이다
+    (a122 tasks 6.4, [[author-supplied-evidence-cannot-pin-an-author-choice]]). 창의 **끝**(`landed-commit.txt`)은
+    다르다: 값을 도구가 계산하고 게이트가 같은 계산으로 대조하며 기록은 한 번만 쓰인다 — 저자가 고른 값이 못 선다.
+    시작은 아직 그만큼 잠겨 있지 않다.
+
+    `head` 는 명령이 **한 번** 푼 sha 다 (task 7.5.2.1) — 필수 인자인 이유는 `change_id` 와 같다: 기본값이 있으면
+    그것을 잊은 호출자가 조용히 잠금 없는 옛 판정으로 떨어진다.
+    """
     path = change_dir / "base-commit.txt"
     try:
         # 깔때기로 (task 7.5.2.3) — 옛 `read_text` 는 그 자리의 FIFO 에 영원히 멎었고, 창의 **시작**을 정하는
@@ -827,6 +878,29 @@ def resolve_base(
         ) from exc
     except (OSError, UnicodeDecodeError) as exc:
         raise ValueError(UNREADABLE.format(what="base-commit.txt", why=_why(exc))) from exc
+    if not FULL_SHA.fullmatch(candidate):
+        # 이름(`HEAD` · 브랜치 · 태그)은 리뷰 시점과 게이트 시점 사이에 뜻이 바뀌고, 짧은 id 는 객체가 늘면
+        # 모호해진다. `capture_change_base.py` 가 쓰는 모양도 이것 하나다.
+        raise ValueError(f"comparison base must be a full 40-hex commit id, not {candidate!r}")
+    relative = path.relative_to(root).as_posix()
+    committed = _committed_bytes(root, head, relative)
+    # 지금 경로가 `head` 에 없으면 같은 id 의 다른 자리를 본다 (6.4 보수, P0-A) — 없으면 새 base 다.
+    held = [(relative, committed)] if committed is not None else _committed_elsewhere(root, head, change_id, relative)
+    for place, value in held:
+        shown = value.decode("utf-8", "replace").strip()
+        if shown == candidate:
+            continue
+        # 커밋된 값과 디스크의 값이 다르다 — 커밋 안 한 편집이 창의 시작을 옮기려는 것이다. 어느 쪽도 고르지
+        # 않는다: 디스크를 고르면 편집이 이기고, HEAD 를 고르면 저자가 보는 파일과 게이트가 쓴 값이 갈린다.
+        if place == relative:
+            raise ValueError(
+                f"`{relative}` on disk ({candidate[:12]}) is not the one committed in HEAD ({shown[:12]}) — "
+                "an uncommitted edit does not move the comparison base; restore the committed value"
+            )
+        raise ValueError(
+            f"`{relative}` on disk ({candidate[:12]}) is not in HEAD, but `{place}` is and holds {shown[:12]} — "
+            "moving the change directory does not move its comparison base; restore the committed value"
+        )
 
     def resolve(value: str) -> str:
         process = subprocess.run(
@@ -844,6 +918,9 @@ def resolve_base(
         return process.stdout.strip()
 
     persisted = resolve(candidate)
+    if persisted != candidate:
+        # `^{commit}` 은 태그 객체를 벗겨 **다른** id 를 낸다 — 적힌 값이 곧 base 여야 한다(착지 기록과 같은 규칙).
+        raise ValueError(f"comparison base is not a commit in this repository: {candidate}")
     try:
         # 이관 신원은 디렉터리 이름이 아니라 요청받은 id 로 가른다 — 아카이브가 이름을
         # 바꾼다(task 6.2). 필수 인자인 이유: 기본값이 있으면 id 를 잊은 호출자가 조용히
@@ -2502,13 +2579,14 @@ def _judged(
     except (OSError, UnicodeDecodeError) as exc:
         return [UNREADABLE.format(what="review.md", why=_why(exc))], False
     try:
-        base = resolve_base(change_dir, root, facts, change_id=change)
         # 역사는 **여기서 한 번** 푼다 (task 7.5.2.1 — 재리뷰 적대 · 레드팀 · 이 세션이 재현). 7.5.2 는 상징
         # `HEAD` 를 열 자리에서 따로 읽고 지문에 표본 하나를 넣었다: 기록은 표본 **전에** 읽혔고 뒤의 git
         # 호출은 살아 있는 `HEAD` 를 다시 읽어서, 가지 전환 한 번도 떠났다 돌아온 `HEAD` 도 rc 0 이었다.
         # 이 뒤의 역사 읽기는 전부 이 sha 다 — 비교할 표본이 없으면 섞일 것도 없다. 태어나지 않은
         # `HEAD`(첫 커밋 전 고아 가지)는 여기서 결함이 된다(옛 판본은 워킹트리 창으로 판정했다 — 막는 쪽).
+        # base **앞에서** 푼다 (task 6.4(b)) — base 도 이 sha 의 커밋된 값과 대조한다.
         head = _head_commit(root)
+        base = resolve_base(change_dir, root, facts, change_id=change, head=head)
     except GATE_FAULTS as exc:
         return [f"cannot derive modified Go functions: {exc}"], False
     facts["head"] = head
@@ -2537,7 +2615,7 @@ def _judged(
             return ["function-logic reference names an invalid or recursive change"], False
         try:
             referenced_dir = resolve_referenced_change(root, referenced_change)
-            referenced_base = resolve_base(referenced_dir, root, change_id=referenced_change)
+            referenced_base = resolve_base(referenced_dir, root, change_id=referenced_change, head=head)
         except GATE_FAULTS as exc:
             return [f"function-logic reference base is invalid: {exc}"], False
         if referenced_base != base:
@@ -2721,9 +2799,11 @@ class LandingInputs(NamedTuple):
 def _head_commit(root: Path) -> str:
     """지금 `HEAD` 의 커밋. 판정이 쓰는 역사 sha 는 `_judged` 가 **한 번** 푼 그것이고 그 뒤의 역사 읽기는
     전부 그 sha 다 (task 7.5.2.1). **판정이 끝까지 간 경로**에서 이 함수는 `check` 한 번에 셋 불린다:
-    판정 앞에 한 번, 재확인의 **앞뒤**로 한 번씩(`_head_moved`). 더 앞에서 거절이 나면 그보다 적다 —
-    활성 change 27건 실측(7.5.22): **3회 24건 · 0회 3건**(head 를 묻기 전에 거절). 앞 로트가 적은
-    "셋 불린다" 는 조건 없이 쓰여 있어서 거짓이었다. 기록 명령은 쓰기 직전에 자기 몫을 또 묻는다.
+    판정 앞에 한 번, 재확인의 **앞뒤**로 한 번씩(`_head_moved`). 더 앞에서 거절이 나면 그보다 적다.
+    6.4(b) 가 `head` 를 `resolve_base` **앞에서** 풀게 순서를 바꿔서, base 에서 멈추는 change 도 한 번은 묻는다 —
+    활성 change 25건 실측(HEAD `5a54f78d`, `analysis/harness/64r_head_calls.py`): **3회 22건 · 1회 3건**(a063 · a123 ·
+    verify-execution-capability — base 해소에서 거절). 그 전 7.5.22 실측은 27건 중 "3회 24건 · 0회 3건" 이었다.
+    기록 명령은 쓰기 직전에 자기 몫을 또 묻는다.
 
     못 읽으면 결함이다 — 빈 값은 "못 물었다" 를 "같다" 로 만든다.
     """
@@ -2948,7 +3028,7 @@ def _recording_refusal(
         return BORROWED_REFUSES_A_LANDING, ""
     facts: dict[str, object] = {}
     try:
-        base = resolve_base(change_dir, root, facts, change_id=change)
+        base = resolve_base(change_dir, root, facts, change_id=change, head=head)
     except GATE_FAULTS as exc:
         return f"cannot resolve the comparison base: {exc}", ""
     if facts.get("execution_baseline_adoption"):
