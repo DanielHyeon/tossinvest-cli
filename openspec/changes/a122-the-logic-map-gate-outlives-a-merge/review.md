@@ -6120,3 +6120,15 @@ edge)이고, 코드와 시험이 이미 초록이라 그대로 두고 닫았다:
 
 **[런타임 오류] 로 분류한 항목: 0.** 남은 미결은 **4.5**(PM 동기화 후 `make gate` · 아카이브) 하나다. 확인(rc 직접): `make lint` · `test_check_analysis` ·
 `openspec validate --all --strict` · `check_analysis --change a122-…` — 값은 아래 보고와 같다.
+
+## 종결 시퀀스 — base 재고정 (2026-09-27, a119 선례)
+
+**먼저 쟀다**(2026-09-27 07:04, HEAD `844315f5`): base `7f8b1ae7..844315f5` 의 커밋 119 개 중 a122 디렉터리 · `tools/logic-map` · `tools/gate.sh` · `tools/sdd` 를
+만진 것 **50** 개(전부 a122 디렉터리를 만진다 — 병합 0)에서 `.go` 편집 **0**(`git show --no-renames --name-only` 전수). 5단계의 required 11 은 전부 base 뒤에 착지한
+**형제** change 의 Go 작업이다 — 파일별 `git log`: `cmd/tossctl/console.go` · `console_test.go` · `internal/console/*` · `internal/httpapi/strategy_runtime.go` 는 a114
+(`648df8ef`) · a115(`900d7582`), `internal/strategyprojectionrpc/*` 는 a113(`ed3cb1d7` · `36237b22`). 넷 다 a122 디렉터리를 안 만진다. (Manager 전달의 a066 은 이
+11 에 없다 — 측정 기준.) a122 는 고정 번들 0 이라 창을 못 좁힌다(5.6 · 5.7, backlog 분류).
+
+**재고정.** `base-commit.txt` 를 `844315f5646fdf4f50183be6f9008c6d7444b46d` 로 바꾸고 **그 파일만** 커밋했다 — `a4bd3ed2`(6.4(b) 가드는 디스크 = HEAD 를 요구하므로
+편집 + 커밋이 한 번이다). 사유: 자기 Go 편집 0 · 형제 착지 몫 · a119 선례(`18cb9fa0`) · 사용자 결정 8(git history 가 정본 — 이 재기록은 커밋으로 남는다).
+`check_analysis --change a122-…` **rc 0** · `base 844315f5646f → working tree … required 0` · `evidence complete or diff-proven exempt`(review.md 의 면제 표지).

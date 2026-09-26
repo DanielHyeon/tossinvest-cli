@@ -705,6 +705,8 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       **4.4 가 이 task 를 막았다.** §6 의 P0 둘이 닫히기 전에는 돌리지 않는다 —
       아카이브하는 순간 spec 본문이 저장소의 상설 규칙이 되고, 그 본문이 지금
       위조를 허용하는 판정을 SHALL 로 적고 있다.
+      (2026-09-27) §6 · §7 의 항목은 전부 닫혔거나 사용자 결정으로 재분류됐다(review.md `## 사용자 결정 기록`). base 를 `844315f5` 로
+      재고정했다(`a4bd3ed2` — 자기 Go 편집 0, review.md `## 종결 시퀀스 — base 재고정`). PM: `generate_master_tracker.py --check` 가 현재다.
 
 ## 5. 이 change 가 열어 두는 것
 
