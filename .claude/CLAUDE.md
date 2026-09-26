@@ -74,7 +74,10 @@ TossOS는 실제 돈을 다루는 자동매매 제품이다. 아래 규칙은 �
 3. memory recall → OpenSpec → CodeGraph hard evidence → CodeGraphContext 보조 문맥 →
    Go AST/Function Logic Map → RED/GREEN/REFACTOR/VERIFY 순서를 따른다.
 4. 기존 함수 내부 로직을 바꾸면 Function Logic Map과 Branch Test Map을 먼저 만든다.
-   High-risk 기존 함수는 면제할 수 없다.
+   High-risk 기존 함수는 면제할 수 없다. **비례 원칙(2026-09-27 사용자 지시)**: 이 의무와
+   변이 원장·다중 적대 리뷰는 High-risk 경로·게이트 판정을 직접 바꾸는 변경에만이고,
+   그 외 도구·시험·문서는 `not-applicable` 사유 한 줄 + 시험·경량 리뷰가 기본이다
+   (docs/WORKFLOW.md 「비례 원칙」).
 5. 함수 내부의 분기·early return·side effect를 **근거로 삼는 문서**는 그 근거를 손으로
    읽어서 만들지 않는다. proposal·design·review가 그런 주장을 담으면 대상 함수의
    `tools/logic-map` AST 산출물을 **먼저** 만들고 그 열거를 근거로 쓴다.

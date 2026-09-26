@@ -155,6 +155,16 @@ production 편집을 허용하지 않는다. GBrain은 식별자를 모르는 �
 기존 함수 내부 분기·early return·mutation·side effect·fallback을 바꾸는 작업은 구현 전에
 다음 산출물을 만든다. High-risk 기존 함수에는 면제가 없다.
 
+**비례 원칙 (2026-09-27 사용자 지시).** 게이트의 목적은 트레이딩 코드의 안전이다. FLM/BTM
+선행·변이 원장·다중 보이스 적대 리뷰 같은 무거운 규율은 **High-risk 경로와 게이트 판정
+결과를 직접 바꾸는 변경**에만 의무다. 그 외(도구 내부 품질·시험 전용·문서·개발 편의)는
+`not-applicable` 사유 한 줄이 기본이고 시험 + lint + 경량 리뷰로 충분하다. 백로그 항목은
+「실제 런타임 오류 / 개발 편의 / 감사·재현성 / 극단 edge case」 넷으로 분류해 **첫째만**
+change 의 blocker 로 잡는다 — 과거 이력 재현 전용 작업은 하지 않고, 극단 edge 는
+`unsupported` 로 명시해 닫는다. 게이트 계층은 SOURCE→PARSE→VALIDATE→PASS/FAIL→ARCHIVE 로
+단순하게 유지한다(historical parser reconstruction·provenance chain·semantic version
+migration·evidence capsule 계층을 만들지 않는다).
+
 ```text
 openspec/changes/<change-id>/analysis/function-logic/<package>--<function>/
   ast.json
