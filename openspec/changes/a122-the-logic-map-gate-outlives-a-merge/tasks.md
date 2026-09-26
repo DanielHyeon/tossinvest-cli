@@ -1021,6 +1021,15 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       전역에 있으면 새 클래스 전부가 `gpg: signing failed` 로 **에러**가 된다(실측).
       `GIT_CONFIG_GLOBAL=/dev/null` 을 주거나 `_init_fixture` 에서 명시적으로 끈다.
       같은 노출: `core.hooksPath` · `gpg.format` · `core.autocrlf`.
+      **(h) 닫음(2026-09-27).** 기록은 review.md `## VERIFY — task 7.5.14 · 7.5.18 · 6.4(h)`. 시험 모듈이 import 때 `GIT_CONFIG_GLOBAL` ·
+      `GIT_CONFIG_SYSTEM` 을 `os.devnull` 로 둔다(지역에서 따로 끄는 헬퍼는 그대로). 실측(HEAD `3bb11b2d`, 스위트 433): 전역에 `commit.gpgsign=true` +
+      실패하는 `gpg.program` → **409** 에러, 실패하는 `pre-commit` 을 가진 `core.hooksPath` → **419**, `gpg.format=ssh` + 서명 → **409**, `core.autocrlf=true`
+      → 0(픽스처 바이트에 CR 없음). 고친 뒤(439) 넷 다 **0**. 빈 전역 설정으로 돌려도 433 전부 초록 — 전역 `user.*` 에 기대는 픽스처 0.
+      시험 `TheSuiteDoesNotReadTheDevelopersGitConfig`(자식 프로세스에 적대 설정을 주고 픽스처를 세운다), 변이 TM1 · TM2 CAUGHT.
+      **보수(적대 리뷰 뒤, 2026-09-27)**: 막는 범위를 **설정 파일**에서 설정의 출처 셋으로 넓혔다 — 전역 · 시스템 파일과 환경 변수
+      (`GIT_CONFIG_PARAMETERS` · `GIT_CONFIG_COUNT/KEY_<n>/VALUE_<n>` — 파일 고정은 이것을 못 막았다: `GIT_CONFIG_COUNT` 로 서명을 켜면 445 중
+      실패 4 · 에러 448). 규칙은 `tools/logic-map/fixture_git_env.py` 한 곳이고 `test_execution_baseline.py` 도 부른다 — 그 모듈은 `discover` 에서
+      이 모듈 뒤에 import 되어 **우연히** 보호받았다(단독 실행은 적대 설정에서 27 중 21 에러). 고친 뒤 둘 다 0. 변이 TM2b · TM2c CAUGHT.
       **(b)~(f) 닫음(2026-09-26)** — 기록은 review.md `## VERIFY — task 6.4 (b)~(f) · 6.1 부모`. 부모는 (a)(사람 결정) ·
       (g) · (h) 가 남아 열려 있다.
       (b) `resolve_base` 가 적힌 값이 **40자리 소문자 커밋 id 자신**인지(이름 · 짧은 id · 대문자 · 태그 객체 id 거절) 보고, 명령이 한 번
@@ -1056,7 +1065,7 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       조용히 꺼진다. 착지 기록 읽기도 같은 노출이고 a122 이전부터다.
       **사람 결정 — 커밋된 재기록 차단(역사 잠금).** base 를 고쳐 **커밋**하면 어느 가드도 막지 않는다(그 값이 곧 HEAD 의 값). 역사에 묶어
       잠글지는 사람이 정한다([[author-supplied-evidence-cannot-pin-an-author-choice]]). 부모 6.4 는 (a) · (g) · (h) · (i) · (j) · (k) · 이 결정이
-      남아 열려 있다.
+      남아 열려 있다. (2026-09-27: (h) 닫음 — 남은 것은 (a) · (g) · (i) · (j) · (k) · 이 결정.)
 
 ## 7. §6 로트 독립 리뷰가 연 것 (gstack /review, 2026-09-12)
 
@@ -2001,12 +2010,26 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       이름을 판정하고, (b) 거절은 7.5.24 가 받게 한 정상 입력(인용되는 이름의 새 파일)을 새로 거절해서 안 골랐다. RED: 편집 · 삭제 · 인용된 이름
       에서의 rename 은 헛거절, 인용된 이름**으로의** rename 은 새 쪽을 조용히 안 봤다(permissive — 이 로트에서 실측). 렌더러는 git 2.43.0 과 ASCII
       전수로 대조(`7513_quoted.py` · 시험). 센서스: 역사 전부 + 추적 `*.go` 1,816 중 인용되는 바이트 **0**(26e5bb3f). `\n\r\t` 거절은 그대로 — 7.5.41.
-- [ ] 7.5.14 **P2 — 구조 시험이 stat 계열을 안 본다 (같은 재리뷰, 정확성).** `test_check_analysis.py` 의 원시 집합 9개에
+- [x] 7.5.14 **P2 — 구조 시험이 stat 계열을 안 본다 (같은 재리뷰, 정확성).** `test_check_analysis.py` 의 원시 집합 9개에
       `stat/lstat/exists/is_file/is_dir/is_symlink/access` 가 없어 네 번째 깔때기 `_kind` 를 아무것도 안 지킨다.
       살아 있는 우회: `changed_existing_functions` 의 `Path.exists` · `_recording_refusal` 셋. **7.5.2.4 에서 이 결함이 행동으로
       보였다** — Y13(`evidence.present` → `evidence.directory.exists()`)이 구조 시험을 그냥 지나갔다.
       덤: `owner.setdefault` 라 `("record_landing","open")` 면제가 그 함수 안의 **미래의 모든** `open` 을 함께 면제한다.
       `execution_baseline.py`(stat 16자리)는 아예 범위 밖이다.
+      **닫음(2026-09-27).** 먼저 셌다(HEAD `3bb11b2d` AST): `changed_existing_functions` 의 `Path.exists` 는 7.5.34 가 이미 지웠고, 남은 우회는
+      `_recording_refusal` 셋. 둘(`landing_file.exists()` → `_kind` · 빌림 표지 `.exists()` → 판정과 같은 `_read_regular` 갈래)은 깔때기로 옮기고, 하나
+      (`landing_file.is_symlink()` — 쓰기 자리의 모양, `open("xb")` 가 다시 막는다)는 사유 달아 면제. 원시 집합에 stat 계열 · 경로 풀이를 더했고
+      (이름 호출은 내장 `open` 만 — 지역 함수 `resolve` 가 걸리지 않게), 분류를 **깔때기 소속**(6 자리: `_opened_bytes` 둘 · `_listing_outcome` 둘 ·
+      `_names_outcome` · `_kind_outcome`)과 **면제**(사유 · 자리 수)로 갈랐다. 덤: 면제는 (함수, **호출 형태**) · 자리 수 단위 — 같은 모양이 하나 더
+      생기면 위반(시험). RED: 구조 시험 · 권한 없는 표지 · FIFO 표지가 편집 전 코드에서 빨강. 변이 MU1 · MU2 CAUGHT, 시험 쪽 TM3 · TM4 CAUGHT.
+      **범위 밖(열린 채)**: `execution_baseline.py` 의 stat 계열 16 자리 — 이관 경로의 원장이 따로 없다. `normalized_source` · `resolve_test_file` 의
+      `os.path.realpath` 는 면제로 적었다 — 7.5.12(realpath ABA) 의 부류.
+      **수리(적대 리뷰 뒤, 2026-09-27).** (1) 계측기 대조 시험이 계측기를 안 부르고 규칙을 제 안에서 다시 구현했다 — `_disk_calls` 에서 `exists` 만
+      빼는 변이 TM6 이 생존(Y13 모양 MU2 와 겹쳐도). `_disk_calls(source)` 로 갈라 탐침을 **그 함수로** 센다(탐침 이름은 글자 목록 — 원시 집합에서
+      만든 첫 수리 판은 TM3 이 생존했다). (2) 원시 집합에 적대 리뷰의 이름 17 을 더하고(`group` 은 `re.Match.group` 16 자리와 못 갈라 뺐다),
+      이름 호출을 `from … import` · 이름 대입 · 기본 인자 별칭까지(고정점) 푼다. 우회 탐침 31 모양 중 잡힘 24 · 한계 7(`Path.group` · `getattr` ·
+      `eval` · `__builtins__[…]` · `map(open, …)` · 자식 프로세스 둘) — 한계는 `_disk_calls` docstring 에 적었다(`7514_probe_bypass.py`).
+      (3) 깔때기 자리 수 대조 시험(TM5 생존). (4) second_site 를 "그 위반이 있다" 로 독립시켰다. TM3~TM7 · TM6+MU2 CAUGHT.
 - [x] 7.5.15 **P2 — 판정 경로 subprocess 에 `timeout=` 이 없다 (같은 재리뷰, 정확성).** `check_analysis.py` 의
       `subprocess.run` **열여섯 자리 중 둘** — `base_file` 의 `git show` 와 `_safe_changed_go_paths` 의
       `git diff --numstat` — 에 `timeout=` 이 없다(7.5.22 재측정, 나머지 열넷은 있다). `execution_baseline.py` 는
@@ -2030,9 +2053,12 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
       판정 줄을 안 낸다(오늘의 정책 — `test_a_qualified_path_that_does_not_exist_is_not_silently_skipped` 가 못 박는다; 7.5.37 의 비대칭과 같은 결정),
       (ii) `gate.sh:330` 의 `check_analysis.py` 호출에 시한이 없다 — 한 줄이지만 값을 정해야 하고(오늘 change 한 판의 최대는 a071 37.0s, 1d1e5ca7 A/B)
       `timeout(1)` 이 macOS 기본에 없어 게이트를 그 기계에서 깬다. 비용 쪽 동기가 사라져 급하지 않으므로 사람 결정으로 둔다.
-- [ ] 7.5.18 **P2 — `_bundle_text` 배관 시험이 이름만큼 못 박지 않는다 (같은 재리뷰, 시험품질).**
+- [x] 7.5.18 **P2 — `_bundle_text` 배관 시험이 이름만큼 못 박지 않는다 (같은 재리뷰, 시험품질).**
       `test_the_bundle_text_is_built_from_the_bytes_the_command_read` 의 픽스처가 판정 바이트와 디스크 바이트가
       **다른 순간을 안 만든다** — 호출부를 "그 자리에서 새로 읽기" 로 바꿔도 그 시험은 통과한다(스위트는 다른 둘로 잡는다).
+      **닫음(2026-09-27).** 증거를 읽은 **뒤**, 번들 산문을 모으기 **전**(`_verdict` 의 `test_index` 호출 자리)에 디스크의 `ast.json` 을 다른 바이트로
+      바꾸는 픽스처로 강화했다. 반증 변이 MV1(호출부가 `_read_regular` 로 다시 읽음)을 그 시험 **하나만** 돌려 쟀다(`7514_test_mut.py`): `3bb11b2d` 의
+      시험 판은 MV1 아래 **초록**, 새 판은 **빨강**. 스위트 전체로는 MV1 CAUGHT 3.
 - [ ] 7.5.19 **P3 — `AA6`(재확인이 HEAD 를 먼저 묻지 않는다)이 구조로만 못 박혔다 (같은 재리뷰, 시험품질).**
       순서는 **관찰 가능**하다 — 원장 경로가 바뀌고 이웃 커밋이 같이 서면 HEAD 문장 대 경로 문장으로 갈린다.
       기록 경로는 이미 행동으로 못 박혀 있고 판정 경로만 없다.
@@ -2074,6 +2100,11 @@ GREEN 뒤 10/10. `tools/logic-map` 129개 · `tools/sdd` 57개 · `make lint` �
 - [ ] 7.5.43 **P3 — `log.showSignature=true` 와 서명 커밋이면 자기 수리 목록이 멈춘다 (같은 리뷰, 이 로트 전부터).**
       `_self_repair_commits` 의 `touching`(`git log --format=%H -- <경로>`) 출력에 `No signature` 같은 서명 줄이 섞여 다음 명령이
       `fatal: bad revision 'No'` 로 멈춘다 — 막는 쪽(결함 문장)이다. 고정(`-c log.showSignature=false`)은 같은 원칙이나 이 로트는 재지 않았다.
+- [ ] 7.5.44 **P3 — 기록 쓰기의 권한 오류를 `record_landing` 이 안 잡는다 (7.5.14 로트 적대 리뷰, 2026-09-27).**
+      `record_landing` 의 쓰기(`open("xb")`)는 `FileExistsError` 만 잡는다. change 디렉터리에 쓰기 권한이 없으면 `PermissionError` 가 함수 밖으로
+      나간다 — CLI(`main`)는 `GATE_FAULTS` 경계에서 `no landing recorded — [Errno 13] …` 로 이름 대지만(실측 rc 1), 함수를 직접 부르는 호출자
+      (시험 · 하네스)에게는 예외다. 판정 줄의 원칙([[a-fault-must-become-a-verdict]])으로는 함수 안에서 `(1, [...])` 가 맞다. 막는 쪽이고 노출은 사람의
+      권한 실수뿐이라 이 로트는 주석만 사실로 고쳤다.
 - [x] 7.6 **P2 — 규칙 한 집 (I2 · I3 · I4 · I5 · I6 · I7).** `compute_landing` 과 `resolve_landing`
       의 수락 조건 두 벌 · `validate` 의 지역 `canonical` 이 모듈 함수를 가림 · 디렉터리 해소 두 벌과
       없는 id 의 엉뚱한 조언 · 이관 거절 문장 두 벌(이미 갈렸다) · `_pre_archive_path` 가 아카이브

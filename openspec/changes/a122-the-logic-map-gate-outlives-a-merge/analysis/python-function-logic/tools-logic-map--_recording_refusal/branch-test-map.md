@@ -34,3 +34,13 @@
 |---|---|---|
 | `head` 와 비교 | Y7 | `test_every_history_read_uses_the_one_resolved_commit` |
 | 0 · 1 말고는 결함 | Y12 | `test_a_cleanliness_check_git_cannot_answer_is_not_called_dirty` |
+
+## task 7.5.14 (2026-09-27)
+
+짝은 변이로 잡았다(`75_mut.py` 창 `264:267`, 사본 ext4 · pid 별 · 무변이 대조군 창 양끝 GREEN `Ran 439`).
+
+| 갈래 | 변이 | 잡는 시험 |
+|---|---|---|
+| 새 B3 디스크의 기록은 깔때기로 | MU2(`exists()` 로 되돌림) | `test_no_read_primitive_lives_outside_the_funnels`(구조 **하나뿐** — 행동은 같다. 첫 판 표의 1 은 second_site 시험을 더하기 **전**의 판에서 잰 값이었다 — 그 시험이 들어간 파일에서는 2(적대 리뷰 실측: second_site 가 위반 목록 전체를 단언해 같이 빨개졌다). 그 시험을 독립시킨 최종 파일에서 재실측 1) |
+| 새 B4~B6 빌림 표지는 판정과 같게 | MU1(`exists()` 로 되돌림) | ~~3~~ **5**(첫 판 3 은 second_site 추가 전 판의 값 — 추가 뒤 4(리뷰어); 수리 뒤 최종 파일 재실측 5, `Ran 445`) — 권한 없는 · FIFO · **심링크 고리** · **폴더** 표지 · 구조 시험 |
+| 읽히는 표지는 빌림 | — | `test_a_readable_mark_is_still_a_borrow`(양성 대조, 편집 전에도 초록) |

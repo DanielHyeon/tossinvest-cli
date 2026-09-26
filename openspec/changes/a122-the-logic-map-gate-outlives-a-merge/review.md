@@ -5722,7 +5722,7 @@ HEAD `1d1e5ca7` 은 내내 안 움직였다. 생산 트레이딩 코드 · Go �
 새 시험 **8**(P1-1: 3 · P1-2: 3 · P1-3: 1 · F9: 1)과 공유 헬퍼 `_is_the_tracked_listing`(핀이 붙은 argv 를 가린다 — 기존 결함 시험의 `len(argv) == 3` 매칭은 핀 뒤로 못 맞는다). 이 8 을 수리 전 코드에 돌리면(시험을 먼저 쓰고 구현 전에 돌렸다) 시험 넷이 빨갛다 — 3 FAIL(`..` subTest · 심링크 · fsmonitor) + 1 ERROR(무관한 아카이브 링크). 초록 넷은 저장소 밖 · P1-3(subTest 둘) · 같은 id 링크 · 아카이브 사본 재확인이고, 빨간 `..` 시험 안의 `//` · `./` subTest 도 초록이다 — 못 박기용이다. `test_check_analysis` **408 → 416**.
 
 **거부하는 정상 입력.** P1-1 은 편집 전 동작(거절)으로 **되돌리는** 쪽이다 — 오늘 코퍼스의 `..` · `//` 좌표 0 건(독립 적대 리뷰 측정, 이 세션이 다시 재지 않음). 인용 센서스
-(`759_census.py`, 수리 뒤 다시): 번들 3,084 · 인용 6,121 · **다른 번들 0**. P1-2 는 덜 막는 쪽이고 해소기 A/B(`759r_resolver_ab.py`, before `1d1e5ca7` 세 모듈): change id **128 · SAME 128 · DIFFERENT 0**.
+(`759_census.py`, 수리 뒤 다시): 번들 3,084 · 인용 6,121 · **다른 번들 0**. P1-2 는 덜 막는 쪽이고 해소기 A/B(`759r_resolver_ab.py`, before `1d1e5ca7` 의 `check_analysis.py` — ~~세 모듈~~ 2026-09-27 정정: 다른 둘은 워킹트리였다; 해소기는 그 둘을 안 부른다): change id **128 · SAME 128 · DIFFERENT 0**.
 
 ### 변이 (창 `246:253` · `233:234`, 사본 ext4 · pid 별 · 무변이 대조군 양끝 GREEN `Ran 416`)
 
@@ -5823,7 +5823,7 @@ HEAD `26e5bb3f`(앞 로트 커밋) 위의 워킹트리, 내내 안 움직였다.
 
 RED(편집 전 코드): `.go` 가 아닌 `note.go<U+2028|U+2029|U+0085>txt` 에 **깃발이 섰다**(거절 늘어남 — 세 subTest), git 이 인용하는 `we"ird.go` · `back\slash.go` ·
 `ctl\x01x.go` 에 **깃발이 안 섰다**(거절 사라짐 — 7.5.29 가 안 센 반대편, 7.5.13 과 같은 뿌리). 수리: `git log -z` 를 바이트로 읽고, 경계는 NUL 둘, 머리가 40/64 hex 가
-아니거나 목록이 `\n` 으로 시작하지 않으면 결함. 전수 A/B(`7529_repairs_ab.py`, before `26e5bb3f` 세 모듈): change 디렉터리 **128** · 깃발 합계 392 · **SAME 128 · DIFFERENT 0**.
+아니거나 목록이 `\n` 으로 시작하지 않으면 결함. 전수 A/B(`7529_repairs_ab.py`, before `26e5bb3f` 의 `check_analysis.py` — ~~세 모듈~~ 2026-09-27 정정: 다른 둘은 워킹트리였고 두 리비전 사이 안 바뀌었다): change 디렉터리 **128** · 깃발 합계 392 · **SAME 128 · DIFFERENT 0**.
 
 ### RED → GREEN
 
@@ -5904,3 +5904,164 @@ MX1 이 **이 시험 없이** 생존한다는 것은 리뷰어의 실측이다 �
 rc 0 · `openspec validate --all --strict` **57/57** rc 0 · `check_analysis --change a122-…` **rc 1 · required 11**(마감 수리 전 출력과 바이트 동일, `cmp`).
 `main()` 전수 A/B 는 마감 수리 뒤 **다시 돌리지 않았다** — 코드 변경은 자기 수리 목록 명령의 `-c log.showRoot=true` 한 줄이다. 그 함수의 전수 A/B
 (`7529_repairs_ab.py`, before `26e5bb3f`)는 다시 돌렸다: change 128 · 깃발 392 · **SAME 128 · DIFFERENT 0**.
+
+## VERIFY — task 7.5.14 · 7.5.18 · 6.4(h) (2026-09-27)
+
+범위: 시험 스위트 자체의 품질 — 구조 시험이 stat 계열을 안 보던 것(7.5.14) · 배관 시험이 두 바이트가 갈리는 순간을 안 만들던 것(7.5.18) · 픽스처가 개발자의
+전역 git 설정을 상속하던 것(6.4(h)). HEAD `3bb11b2d` 위 워킹트리, 안 움직였다. 생산 판정 코드 변경은 `_recording_refusal` 하나(깔때기 밖 stat 둘을
+깔때기로) — 최종 `check_analysis.py` `c74f69b35ae6` · 시험 `e7bba335ddbe`. Go · `execution_baseline.py` 변경 0. **커밋 안 함.**
+
+### 7.5.14 — 원시 집합에 stat 계열 · 깔때기 소속과 면제를 가름
+
+**먼저 셌다**(HEAD `3bb11b2d`, AST 전수 — 속성 호출 + 내장 `open`): 원시 25 종(옛 9 + stat 계열 `stat` · `lstat` · `exists` · `lexists` · `is_file` · `is_dir` ·
+`is_symlink` · `access` · `isfile` · `isdir` · `islink` + 경로 풀이 `resolve` · `realpath` · `readlink` · `samefile` + 옛 `scandir` 등)로 센 자리:
+
+| 자리 | 분류 |
+|---|---|
+| `_opened_bytes` 의 `os.open` · `open` · `_listing_outcome` 의 `path.iterdir` · `os.stat` · `_names_outcome` 의 `os.listdir` · `_kind_outcome` 의 `os.stat` | **깔때기 소속**(6) — 이번 로트들이 넣은 `os.stat` · `os.listdir` 도 여기다 |
+| `_recording_refusal` 의 `landing_file.exists()` · 빌림 표지 `.exists()` | **우회 → 깔때기로 옮김**(아래) |
+| `_recording_refusal` 의 `landing_file.is_symlink()` | 면제 1 — 쓰기 자리의 모양(`lstat`), 판정 입력 아님, `open("xb")` 가 쓰기 순간 다시 막는다 |
+| `record_landing` 의 `landing_file.open` · `_write_loose_blob` 의 `open` | 면제 각 1 — 쓰기 |
+| 모듈의 `Path(__file__).resolve` | 면제 1 — ROOT 유도 |
+| `normalized_source` · `resolve_test_file` 의 `os.path.realpath` | 면제 각 2 — 경로 풀이, 열린 7.5.12 의 부류 |
+
+7.5.14 가 적은 "`changed_existing_functions` 의 `Path.exists`" 는 **이미 없었다** — 7.5.34 가 그 함수를 다시 썼다. `resolve_base` 의 `resolve(...)` 는 지역 함수(git
+rev-parse)라 이름 호출은 원시로 안 센다(내장 `open` 만). **범위 밖으로 열린 채**: `execution_baseline.py` 의 stat 계열(이관 경로 — 원장이 따로 없다).
+
+**옮긴 것** — FLM `tools-logic-map--_recording_refusal/ast.before/after-7514.json`(분기 10 → 12): `landing_file.exists()` → `_kind(landing_file)`, 빌림 표지 `.exists()`
+→ 판정(`_judged`)과 같은 `_read_regular` 갈래(없으면 빌림 아님 · 못 읽으면 `UNREADABLE` · 읽히면 빌림). **RED**(편집 전 코드): 권한 없는 표지 · FIFO 표지에서 기록
+명령이 **빌림 문장**을 냈다(판정은 같은 입력에 `could not be read`) — 두 명령이 다른 이유를 댔다. GREEN 은 둘 다 `function-logic-reference.txt could not be read`.
+거부하는 정상 입력: 저장소의 빌림 표지는 a073 하나, 정규 파일 — 노출 0.
+
+**구조 시험.** `test_no_read_primitive_lives_outside_the_funnels` 가 분류를 `FUNNELS`(깔때기 소속 · 자리 수)와 `EXEMPT`(사유 · 자리 수)로 가르고, 열쇠는 (함수,
+**호출 형태**) — 옛 `("record_landing", "open")` 은 그 함수의 미래의 모든 `open` 을 면제했다(7.5.14 의 덤). 면제 **수**도 맞아야 한다(`test_a_second_site_of_an_exempt_form_is_not_exempt`).
+계측기 대조 `test_the_census_sees_the_stat_family`(옛 우회 모양 조각을 같은 규칙으로 세면 전부 잡힌다). RED: 구조 시험이 편집 전 코드에서
+`_recording_refusal:[3209] (change_dir / …).exists` 를 댄다.
+
+### 7.5.18 — 두 바이트가 갈리는 순간
+
+증거를 읽은 **뒤**, `_verdict` 가 번들 산문을 모으기 **전**(그 사이에 `test_index` 가 불린다)에 디스크의 `ast.json` 을 다른 바이트로 바꾸는 픽스처로 강화했다 — 시험이
+그 갈림이 실제로 생겼는지 먼저 단언한다. `analysis/harness/7514_test_mut.py`, 반증 변이 MV1(호출부가 `_read_regular(target / "ast.json")` 로 다시 읽음)을 **그 시험 하나만**:
+
+| 시험 판 | 무변이 | MV1 |
+|---|---|---|
+| `3bb11b2d`(옛 픽스처) | OK | **OK** — 살아남음 |
+| 워킹트리(새 픽스처) | OK | **FAILED** |
+
+스위트 전체로는 MV1 CAUGHT 3(`test_a_bundle_that_appears_after_the_verdict_read_is_missing` · `test_every_evidence_read_goes_through_the_one_reader` · 이 시험).
+
+### 6.4(h) — 픽스처가 개발자의 git 설정을 안 읽는다
+
+`test_check_analysis.py` 가 import 때 `GIT_CONFIG_GLOBAL` · `GIT_CONFIG_SYSTEM` 을 `os.devnull` 로 둔다. 개별 시험이 지역에서 끄던 자리(`GIT_CONFIG_GLOBAL` 을 넘기는
+헬퍼 다섯 · `commit.gpgsign=false` 지역 설정)는 그대로 두었다. **실측**(스크래치 설정 파일을 전역 · 시스템 자리로 주고 스위트 전체):
+
+| 전역 설정 | 편집 전(`3bb11b2d`, 433) | 편집 뒤(439) |
+|---|---|---|
+| `commit.gpgsign=true` + `gpg.program=/bin/false` | **409 에러**(`gpg failed to sign the data`) | 0 |
+| `core.hooksPath` → 실패하는 `pre-commit` | **419 에러** | 0 |
+| `gpg.format=ssh` + 서명 | **409 에러** | 0 |
+| `core.autocrlf=true` | 0 | 0 |
+| 빈 설정(`/dev/null`) | 0 — 전역 `user.*` 에 기대는 픽스처 0(거부하는 정상 입력 0) | 0 |
+
+`core.autocrlf` 가 0 인 까닭: 픽스처 바이트에 CR 이 없다(판정 바이트가 안 바뀐다) — 노출은 이론적이다. 시험 `TheSuiteDoesNotReadTheDevelopersGitConfig`: 자식 프로세스에
+적대 설정(서명 + 훅)을 전역 · 시스템 둘 다로 주고 `_own_work_fixture` 를 세운다 + 두 변수가 고정됐는지.
+
+### 변이
+
+| 변이 | 대상 | 결과 | 잡은 시험 |
+|---|---|---|---|
+| MU1 빌림 표지를 `exists()` 로 | `check_analysis.py`(`75_mut.py` 창 `264:267`) | CAUGHT 3 | 권한 · FIFO · 구조 |
+| MU2 디스크의 기록을 `exists()` 로 | 〃 | CAUGHT 1 | 구조 **하나뿐**(행동은 같다) |
+| MV1 번들 산문이 `ast.json` 을 다시 읽음 | 〃 | CAUGHT 3 | 위 7.5.18 |
+| TM1 전역 고정 삭제 | 시험 파일(`7514_test_mut.py`) | CAUGHT 2 | 적대 설정 · 고정 확인 |
+| TM2 시스템 고정 삭제 | 〃 | CAUGHT 2 | 〃 |
+| TM3 원시 집합에서 `exists` 삭제 | 〃 | CAUGHT 1 | 계측기 대조 |
+| TM4 면제 **수** 대조 삭제 | 〃 | CAUGHT 1 | `test_a_second_site_of_an_exempt_form_is_not_exempt` |
+
+무변이 대조군: `75_mut.py` 창 양끝 GREEN `Ran 439` · `7514_test_mut.py` 는 변이마다 같은 시험 묶음으로 대조군을 먼저 돈다. **측정 사고 하나**: TM4 첫 판은 면제 대조
+줄을 **지우는** 변이라 루프 몸통이 비어 문법 오류가 났고 하네스가 그것을 CAUGHT 로 적었다(시험 0 개 돈 판). 변이를 `if False` 로 바꾸고, 하네스가 `Ran` 이 없는
+판을 "못 쟀다" 로 적게 고친 뒤 다시 쟀다. 그 고침과 **같은 편집에서** 면제 수 대조를 재는 시험(`test_a_second_site_of_an_exempt_form_is_not_exempt`)을
+더했다 — 그 시험 없이 `if False` 판이 생존했을지는 **재지 않았다**(자리 수가 오늘 맞으므로 생존했을 것으로 보지만 추정이다).
+
+### 로트 검증 (rc 직접)
+
+`make lint` **rc 0** · `test_check_analysis` **440 OK**(skipped 1) rc 0 · `make sdd-test` **rc 0**(logic-map **515**) · gate resolver **10 OK** rc 0 ·
+`openspec validate --all --strict` **57/57** rc 0 · `check_analysis --change a122-…` **rc 1 · required 11**(HEAD 코드와 출력 바이트 동일, `cmp`).
+
+### not-applicable · 남긴 것
+
+- `make test` · `make test-seams` · CodeGraph · Go AST: Go 변경 0.
+- `main()` 전수 A/B 는 안 돌렸다 — 판정 코드 변경은 기록 명령의 걷기 전 거절(`_recording_refusal`) 하나이고(판정 `check` 는 그 함수를 안 부른다), 그 함수를
+  직접 전수로 견줬다: `analysis/harness/7514_refusal_ab.py`(before `3bb11b2d` 의 `check_analysis.py` — ~~세 모듈~~ 정정: 다른 둘은 워킹트리였고 이 로트는 그 둘을 안 바꿨다) change 디렉터리 **128 · SAME 128 · DIFFERENT 0**. 저장소의 빌림 표지는
+  아카이브 a073 하나이고 정규 파일이다(`stat`).
+- `execution_baseline.py` 의 stat 계열 · realpath 부류(7.5.12)는 열린 채.
+- 사람 결정 없음.
+
+### 수리 (적대 리뷰 뒤)
+
+독립 적대 리뷰: 생산 수리(`_recording_refusal`)와 7.5.18 은 버텼고 **구조 시험 체계가 막혔다** — P1 둘 · P2 넷. 같은 로트에서 고쳤다. HEAD `3bb11b2d` 그대로 ·
+최종 `check_analysis.py` `8d2a3338fdab`(주석만 더 바뀜 — AST 분기 · 호출 같음) · `test_check_analysis.py` `126d1b80a493` · `test_execution_baseline.py` `c167ba34bfb2` ·
+새 `tools/logic-map/fixture_git_env.py` `cbfc7b8b9d77`. **커밋 안 함.**
+
+**위 절에서 거짓이던 것(먼저 적는다).** (a) "계측기 대조" 시험은 계측기를 안 불렀다 — 규칙을 제 안에서 다시 구현해서 계측기 자신의 결함을 못 봤다(TM6 생존, 리뷰어 실측).
+(b) 변이 표의 MU1 3 · MU2 1 은 second_site 시험을 더하기 **전**의 판에서 잰 값이었다 — 그 시험이 들어간 최종 파일에서는 4 · 2(리뷰어 실측; second_site 가 위반 목록
+**전체**를 단언해 구조 시험의 사본이었다). (c) `7514_refusal_ab.py`(와 앞 로트의 `759r_resolver_ab.py` · `7529_repairs_ab.py` · `7517_cost.py`)의 "기준 리비전의 세 모듈"
+— 같은 프로세스라 옛것은 `check_analysis.py` 하나였다(`sys.modules`). 판정은 안 바뀐다: 해소기 · 자기 수리 · 거절 A/B 가 부르는 경로에서 다른 두 모듈은 그 리비전들
+사이에 안 바뀌었거나(7.5.29 · 7.5.14) 불리지 않는다(해소기). 문장을 전부 고쳤다. (d) `_recording_refusal` 새 주석 "못 물으면 쓰기가 이름 대고 멈춘다" — 쓰기의
+`PermissionError` 를 `record_landing` 은 안 잡는다. 실측: 쓰기 권한 없는 change 디렉터리에서 직접 호출은 예외, CLI 는 `main` 의 경계가 `no landing recorded — [Errno 13] …`
+rc 1. 주석을 사실로 고치고 열린 task **7.5.44**. (e) `7514_test_mut.py` 는 rc 만 봐서 없는 시험 이름(`_FailedTest`)도 CAUGHT 로 적을 수 있었다. (f) "설정 파일" — 막은
+범위는 파일뿐이었다.
+
+| # | 발견 | 한 것 | 영수증 |
+|---|---|---|---|
+| P1-1 | 계측기 대조가 계측기를 안 부름 — TM6(`_disk_calls` 에서 `exists` 빼기) 생존, TM6+MU2(Y13) 도 생존 | `_disk_calls(source)` 로 갈라 탐침을 **그 함수로** 센다. 탐침: 원시 42 의 속성 호출 · 이름 별칭 여덟(`from os import stat as _st` · `FileIO` · `_o = open` · `_s = os.stat` · 사슬 `_b = _o` · 기본 인자 둘 · 내장 `open`) · 세면 안 되는 대조 둘(지역 `resolve` · `match.group`). 탐침 이름은 **글자 목록**이고 원시 집합과 같아야 한다 — 원시 집합에서 탐침을 만든 첫 수리 판은 TM3(원시에서 `exists` 삭제)이 **생존**했다(이 세션 실측) | TM6 · TM6+MU2 · TM3 CAUGHT |
+| P1-2 | 원시 공백 — 리뷰어가 심어 통과한 26 종 | (i) 원시에 17 을 더함(`getsize` · `getmtime` · `getatime` · `getctime` · `is_fifo` · `is_socket` · `is_block_device` · `is_char_device` · `is_mount` · `owner` · `statvfs` · `fwalk` · `iglob` · `FileIO` · `listxattr` · `getxattr` + `copyfile` · `getline`). `group` 은 **뺐다** — `re.Match.group` 이 이 모듈에 16 자리이고 AST 로 못 가른다. (ii) 이름 호출: `from … import`(별칭 포함) · 이름 대입(`Assign` · `AnnAssign` · `NamedExpr`) · 기본 인자(위치 · 키워드 전용)로 원시에 묶인 이름을 **고정점**까지 푼다. (iii) 한계를 `_disk_calls` docstring 에 적었다 | 아래 탐침 표 · TM7(별칭 풀이 끔) CAUGHT |
+| P2 TM5 | 깔때기 자리 수 대조를 재는 시험 0 | `test_a_second_site_of_a_funnel_form_is_counted` | TM5 CAUGHT |
+| P2 수치 | second_site 가 목록 전체를 단언 | "그 위반이 **있다**" 로 독립 · 표를 최종 파일에서 재실측 | MU1 **5** · MU2 **1**(창 `264:267`, `Ran 445`) |
+| P2 6.4(h) | (a) `test_execution_baseline` 이 import 순서로 **우연히** 보호 — 단독 실행은 적대 설정에서 27 중 21 에러(HEAD 판, 이 세션 재현). (b) 환경 변수 설정(`GIT_CONFIG_COUNT/KEY/VALUE` · `GIT_CONFIG_PARAMETERS`)은 파일 고정이 못 막음 | 규칙 한 곳 `fixture_git_env.isolate()` — 파일 둘 `os.devnull` + 환경 변수 넷 부류 삭제. 두 시험 모듈이 부른다. 시험 둘: 두 통로 각각 · `test_execution_baseline` 을 적대 설정의 자식에서 **단독**으로 | (b) 실측: 변수 삭제를 끈 판 + `GIT_CONFIG_COUNT` 서명 → 445 중 실패 4 · **에러 448**, 켠 판 → 445 OK. 적대 파일 설정 셋(서명 · 훅 · ssh 서명)에서 두 모듈 472 OK. TM1 · TM2 · TM2b · TM2c CAUGHT |
+| P2 (iv) | 빌림 표지 **심링크 고리**: HEAD 코드에서 기록 명령 rc 0 으로 착지가 **기록됐다**(판정은 `could not be read`) — 이 로트가 고친 가장 무거운 옛 모양인데 RED 표에 없었다 | 시험 둘(고리 · 폴더) | 아래 RED 표 · MU1 CAUGHT 5 에 포함 |
+| P2 (v) | 7.5.18 픽스처가 순서를 못 박지 않음 | 스파이가 `_bundle_text` 가 불리는 **그 순간** 디스크를 읽어 새 바이트임을 단언 | 7.5.18 단독 측정 그대로(옛 판 OK · 새 판 FAILED) |
+
+**빌림 표지 RED — HEAD `3bb11b2d` 코드 재현(스크래치, `_own_work_fixture` + 표지 한 모양):**
+
+| 표지 | HEAD 기록 명령 | HEAD 판정 | 편집 뒤 기록 명령 |
+|---|---|---|---|
+| 심링크 고리(ELOOP) | **rc 0 · 착지 기록됨** — `exists()` 가 ELOOP 를 삼켜 "빌리지 않음" | `could not be read: Too many levels of symbolic links` | rc 1 · `could not be read` · 기록 없음 |
+| 폴더 | rc 1 · 빌림 문장 | `could not be read: Is a directory` | rc 1 · `could not be read` |
+| 권한 없음 | rc 1 · 빌림 문장 | `could not be read: Permission denied` | rc 1 · `could not be read` |
+| FIFO | rc 1 · 빌림 문장 | `could not be read: not a regular file` | rc 1 · `could not be read` |
+
+**우회 탐침 — 수리 뒤 재실측**(`analysis/harness/7514_probe_bypass.py`: 리뷰어의 `probe_bypass.py` 는 저장소에 없어 보고된 모양을 **다시 만들었다** — 모양마다
+`check_analysis.py` 소스 끝에 함수 하나를 붙여 워킹트리의 계측기로 센다):
+
+| 잡힘 (24) | 한계로 명기 (7) |
+|---|---|
+| `os.path.getsize` · `getmtime` · `getatime` · `getctime` · `Path.is_fifo` · `is_socket` · `is_block_device` · `is_char_device` · `is_mount` · `owner` · `os.statvfs` · `os.listxattr` · `os.getxattr` · `io.FileIO` · `glob.iglob` · `os.fwalk` · `shutil.copyfile` · `linecache.getline` · `from os import stat as _st` · `from os.path import getsize` · `_o = open` · `_s = os.stat` · 기본 인자 `reader=open` · `builtins.open` | `Path.group`(`re.Match.group` 과 못 가름) · `getattr(os, "stat")` · `eval("open")` · `__builtins__["open"]` · `map(open, …)` · 자식 프로세스 `cat` · `git hash-object` |
+
+한계의 사유(docstring 과 같은 말): 이 가드는 **실수를 막는** AST 센서스이지 악의를 막는 가드가 아니다 — 동적 호출과 함수 객체 넘기기는 이름으로 안 보이고, 자식
+프로세스의 읽기는 7.5.8 과 `_judged` docstring 이 이미 인정한 원장의 경계다.
+
+**변이 — 최종 파일 재실측(전부 CAUGHT)**:
+
+| 변이 | 대상 | 잡은 시험(수) |
+|---|---|---|
+| MU1 빌림 표지를 `exists()` 로 | `check_analysis.py` (`75_mut.py` 창 `264:267`, 대조군 양끝 `Ran 445`) | 5 — 고리 · 폴더 · 권한 · FIFO · 구조 |
+| MU2 디스크의 기록을 `exists()` 로 | 〃 | 1 — 구조 |
+| MV1 번들 산문이 `ast.json` 을 다시 읽음 | 〃 | 3 |
+| TM1 · TM2 파일 고정 삭제 | `fixture_git_env.py` (`7514_test_mut.py`) | 각 3(git 설정 클래스 넷 중) |
+| TM2b 환경 변수 삭제 끔 | 〃 | 3 |
+| TM2c `test_execution_baseline` 의 고정 삭제 | `test_execution_baseline.py` | 1 — 단독 자식 실행 |
+| TM3 원시에서 `exists` 삭제 | `test_check_analysis.py` | 1 — 계측기 대조 |
+| TM4 면제 수 대조 끔 | 〃 | 1 — `test_a_second_site_of_an_exempt_form_is_not_exempt` |
+| TM5 깔때기 수 대조 끔 | 〃 | 1 — `test_a_second_site_of_a_funnel_form_is_counted` |
+| TM6 `_disk_calls` 가 `exists` 를 건너뜀 | 〃 | 1 — 계측기 대조 |
+| TM6 + MU2(Y13 모양) | 시험 + 생산 | 1 — 계측기 대조 |
+| TM7 별칭 풀이 끔 | 〃 | 1 — 계측기 대조 |
+
+`7514_test_mut.py` 는 이제 `-v` 로 **기대한 시험 이름이 실제로 돌았는지** 본다 — 대조군에서 안 돌았으면 멈추고, 변이 판이 그 시험을 못 돌렸으면 "못 쟀다" 다(없는 이름으로
+확인: rc 1 · 돈 시험 0 · `covers=False`). 무변이 대조군은 변이마다 같은 시험 묶음으로 먼저 돈다(전부 OK). TM5 · TM6 가 **수리 전** 판에서 생존했다는 것은 리뷰어 실측이다 —
+이 세션은 TM3 의 생존(첫 수리 판)만 직접 쟀다.
+
+**로트 검증(수리 뒤, rc 직접)**: `make lint` **rc 0** · `test_check_analysis` **445 OK**(skipped 1) rc 0 · `make sdd-test` **rc 0**(logic-map **520**) · gate resolver
+**10 OK** rc 0 · `openspec validate --all --strict` **57/57** rc 0 · `check_analysis --change a122-…` **rc 1 · required 11**(HEAD 코드와 출력 바이트 동일, `cmp`).
+거절 A/B(`7514_refusal_ab.py`, 수리 뒤 다시) **128 · SAME 128**. 적대 전역 설정 셋에서 `test_check_analysis` + `test_execution_baseline` **472 OK**.

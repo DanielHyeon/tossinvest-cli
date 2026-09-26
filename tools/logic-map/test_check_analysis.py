@@ -26,6 +26,14 @@ import execution_baseline as adoption
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "sdd"))
 import sdd_doctor
 
+# 시험 픽스처는 개발자의 git 설정을 **안 읽는다** (task 6.4(h)) — 전역 · 시스템 설정 파일과 환경 변수로 주는 설정
+# (`GIT_CONFIG_PARAMETERS` · `GIT_CONFIG_COUNT/KEY_<n>/VALUE_<n>`) 둘 다. `commit.gpgsign` · `core.hooksPath` · `gpg.format` 이 그 자리에
+# 있으면 픽스처의 `git commit` 이 스위트 대부분을 에러로 만들었다(실측 — `TheSuiteDoesNotReadTheDevelopersGitConfig`). 규칙은
+# `fixture_git_env.isolate` 한 곳이고 `test_execution_baseline.py` 도 같은 것을 부른다. 개별 시험이 따로 끄는 자리(`GIT_CONFIG_GLOBAL`
+# 을 넘기는 헬퍼들)는 그대로 둔다 — 시험에서 방어 이중은 무해하다.
+import fixture_git_env  # noqa: E402
+fixture_git_env.isolate()
+
 
 def write_bundle(
     root: Path,
@@ -7213,23 +7221,41 @@ class TheRecheckReadsWhatTheVerdictRead(unittest.TestCase):
     def test_the_bundle_text_is_built_from_the_bytes_the_command_read(self) -> None:
         """`_bundle_text(target, None)` 변이가 273 을 초록으로 통과했다 — 배관을 재는 시험이 0 이다. 그 변이는
         `ast.json` 의 표를 판정에서 빼므로 열거형 호출 감사를 끌 수 있다([[two-judgements-cover-for-each-other]] 의
-        "호출자가 넘기는 인자를 변이할 것")."""
+        "호출자가 넘기는 인자를 변이할 것").
+
+        **강화 (task 7.5.18).** 옛 픽스처는 판정 바이트와 디스크 바이트가 **다른 순간**을 안 만들었다 — 호출부를 "그 자리에서
+        새로 읽기" 로 바꾼 변이도 같은 바이트를 넘겨 이 시험을 통과했다(스위트는 다른 둘로 잡았다). 이제 증거를 읽은 **뒤**,
+        `_verdict` 가 번들 산문을 모으기 **전**(`test_index` 가 그 사이에 불린다)에 디스크의 `ast.json` 을 다른 바이트로 바꾼다.
+        호출부가 한 번 읽은 바이트를 넘기면 옛 바이트, 다시 읽으면 새 바이트다 — 둘이 갈린다."""
         raw = tempfile.TemporaryDirectory()
         with raw:
             root, _ = _own_work_fixture(raw)
             ast_path = _own_ast(root)
             judged = ast_path.read_bytes()
+            rewritten = judged + b"\n"
             seen = []
             real = check_analysis._bundle_text
+            real_index = check_analysis.test_index
+
+            on_disk_at_the_call = []
 
             def spy(target, ast_raw, *args, **kwargs):
                 seen.append(ast_raw)
+                # 순서를 못 박는다 (보수 — 적대 리뷰 (v)): `_bundle_text` 가 불리는 **그 순간** 디스크가 이미 바뀌어 있어야 이 시험이
+                # 두 바이트를 가른다. 디스크가 나중에 바뀌면 재읽기 변이도 옛 바이트를 넘겨 초록이다.
+                on_disk_at_the_call.append(ast_path.read_bytes())
                 return real(target, ast_raw, *args, **kwargs)
 
-            with mock.patch.object(check_analysis, "_bundle_text", spy):
-                with _after_the_reads(lambda: None):
-                    check_analysis.check("mine", root)
+            def rewrites_then_indexes(where):
+                ast_path.write_bytes(rewritten)
+                return real_index(where)
+
+            with mock.patch.object(check_analysis, "_bundle_text", spy), \
+                    mock.patch.object(check_analysis, "test_index", rewrites_then_indexes):
+                check_analysis.check("mine", root)
             self.assertTrue(seen, "`_bundle_text` 가 안 불렸다")
+            self.assertEqual(on_disk_at_the_call[0], rewritten,
+                             "`_bundle_text` 가 불릴 때 디스크가 아직 안 바뀌었다 — 두 바이트가 갈리는 순간이 없다")
             self.assertEqual(seen[0], judged, "명령이 한 번 읽은 바이트가 아니다")
 
     def test_one_command_reads_head_in_one_place(self) -> None:
@@ -7382,36 +7408,146 @@ class TheRecheckReadsWhatTheVerdictRead(unittest.TestCase):
             self.assertEqual(len(errors), 1, errors)
             self.assertIn(self.MOVED, errors[0])
 
-    def test_no_read_primitive_lives_outside_the_funnels(self) -> None:
-        """재확인의 집합이 판정의 집합인 것은 **깔때기를 비켜 갈 수 없다**는 데서 온다. 새 읽기 자리가 원시 호출을
-        직접 쓰면 원장에 안 남고, 7.5.2.2 의 실패(손으로 고른 집합)가 그대로 되살아난다 — 구조로 막는다."""
-        allowed = {
-            ("_opened_bytes", "open"),
-            ("_listing_outcome", "iterdir"),
-            ("_names_outcome", "listdir"),          # 이름만 — 아카이브 id 고르기 (보수 P1-2)
-            ("record_landing", "open"),              # 기록 **쓰기**(`xb`) — 읽기가 아니다
-            ("_write_loose_blob", "open"),           # 임시 저장소에 blob **쓰기**(`wb`) — 읽기가 아니다 (7.5.25)
-        }
-        primitives = {"read_bytes", "read_text", "open", "iterdir", "rglob", "glob",
-                      "scandir", "listdir", "walk"}
-        tree = ast.parse(Path(check_analysis.__file__).read_text(encoding="utf-8"))
+    # 디스크를 묻는 원시 (task 7.5.14 — stat 계열과 경로 풀이를 더했고, 보수에서 적대 리뷰가 심어 본 이름들을 더했다).
+    # **속성 호출**로 센다. 뺀 것 하나: `group` — `Path.group()` 이지만 이 모듈의 `re.Match.group` 16 자리와 AST 로 못 가른다.
+    PRIMITIVES = {"read_bytes", "read_text", "open", "iterdir", "rglob", "glob", "iglob", "scandir", "listdir", "walk", "fwalk",
+                  "stat", "lstat", "statvfs", "exists", "lexists", "is_file", "is_dir", "is_symlink", "is_fifo", "is_socket",
+                  "is_block_device", "is_char_device", "is_mount", "owner", "access",
+                  "isfile", "isdir", "islink", "getsize", "getmtime", "getatime", "getctime",
+                  "listxattr", "getxattr", "FileIO", "copyfile", "getline",
+                  "resolve", "realpath", "readlink", "samefile"}
+    # **이름 호출**로 부를 수 있는 원시. 이 모듈의 지역 함수 `resolve`(git rev-parse)처럼 같은 철자의 이름은 원시가 아니다 —
+    # 이름 호출은 이 집합이거나, 모듈이 원시에 **묶은** 이름일 때만 센다(`from os import stat as _st` · `_o = open` · `_s = os.stat` ·
+    # 기본 인자 `reader=open`, 사슬 포함).
+    NAME_PRIMITIVES = {"open"}
+    # 깔때기 **소속** — 원장에 적는 자리 자신. 면제가 아니다.
+    FUNNELS = {
+        ("_opened_bytes", "os.open"): 1, ("_opened_bytes", "open"): 1,
+        ("_listing_outcome", "path.iterdir"): 1, ("_listing_outcome", "os.stat"): 1,
+        ("_names_outcome", "os.listdir"): 1,
+        ("_kind_outcome", "os.stat"): 1,
+    }
+    # 면제 — (함수, **호출 형태**) → 자리 수 · 사유. 함수 이름만으로 면제하면 그 함수의 미래의 모든 호출이 같이 면제된다
+    # (7.5.14 의 덤 — 옛 `("record_landing", "open")` 은 기록 쓰기 하나를 위해 그 함수 안의 모든 `open` 을 풀었다).
+    EXEMPT = {
+        ("<module>", "Path(__file__).resolve"): (1, "ROOT 유도 — import 때 한 번, 판정 입력 아님"),
+        ("record_landing", "landing_file.open"): (1, "기록 **쓰기**(`xb`) — 읽기가 아니다"),
+        ("_write_loose_blob", "open"): (1, "임시 저장소에 blob **쓰기**(`wb`) — 읽기가 아니다 (7.5.25)"),
+        ("_recording_refusal", "landing_file.is_symlink"): (1, "쓰기 자리의 모양(`lstat`) — `open('xb')` 가 쓰기 순간 다시 막는다"),
+        ("normalized_source", "os.path.realpath"): (2, "경로 풀이 — 원장 밖, 열린 task 7.5.12(realpath ABA)"),
+        ("resolve_test_file", "os.path.realpath"): (2, "경로 풀이 — 같은 부류, 열린 task 7.5.12"),
+    }
+
+    @classmethod
+    def _is_disk(cls, node: ast.AST, aliases: set[str]) -> bool:
+        return (isinstance(node, ast.Name) and node.id in aliases) or \
+            (isinstance(node, ast.Attribute) and node.attr in cls.PRIMITIVES)
+
+    @classmethod
+    def _disk_calls(cls, source: str | None = None) -> dict[tuple[str, str], list[int]]:
+        """(함수, 호출 형태) → 줄들. `source` 를 주면 그 글을 센다(계측기 대조 · 우회 탐침), 안 주면 `check_analysis.py`.
+
+        **한계(적어 둔다 — 실수를 막는 가드이지 악의를 막는 가드가 아니다).** AST 가 **이름**으로 볼 수 있는 것만 센다: 동적 호출
+        (`getattr(os, "stat")` · `eval` · `__builtins__["open"]`), 자식 프로세스의 읽기(`cat` · `git hash-object` — 7.5.8 과 `_judged`
+        docstring 이 이미 적은 경계), 함수 객체를 인자로 넘기기(`map(open, …)`)는 못 본다. 우회 탐침 표는 review.md
+        `## VERIFY — task 7.5.14 · 7.5.18 · 6.4(h)` 의 수리 절."""
+        tree = ast.parse(source if source is not None else Path(check_analysis.__file__).read_text(encoding="utf-8"))
         owner = {}
         for item in ast.walk(tree):
-            if isinstance(item, ast.FunctionDef):
+            if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 for inner in ast.walk(item):
                     owner.setdefault(id(inner), item.name)
-        offenders = []
+        # 원시에 묶인 이름 — 고정점까지(`_b = _a` · `_a = open` 사슬).
+        aliases = set(cls.NAME_PRIMITIVES)
+        while True:
+            bound: set[str] = set()
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom):
+                    bound |= {alias.asname or alias.name for alias in node.names
+                              if alias.name in cls.PRIMITIVES or alias.name in cls.NAME_PRIMITIVES}
+                elif isinstance(node, (ast.Assign, ast.AnnAssign, ast.NamedExpr)) and node.value is not None \
+                        and cls._is_disk(node.value, aliases):
+                    targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+                    bound |= {target.id for target in targets if isinstance(target, ast.Name)}
+                elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+                    positional = node.args.posonlyargs + node.args.args
+                    pairs = list(zip(positional[len(positional) - len(node.args.defaults):], node.args.defaults))
+                    pairs += [(arg, default) for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults)
+                              if default is not None]
+                    bound |= {arg.arg for arg, default in pairs if cls._is_disk(default, aliases)}
+            if bound <= aliases:
+                break
+            aliases |= bound
+        found: dict[tuple[str, str], list[int]] = {}
         for item in ast.walk(tree):
             if not isinstance(item, ast.Call):
                 continue
-            name = item.func.attr if isinstance(item.func, ast.Attribute) else \
-                item.func.id if isinstance(item.func, ast.Name) else ""
-            if name not in primitives:
-                continue
-            where = owner.get(id(item), "<module>")
-            if (where, name) not in allowed:
-                offenders.append(f"{where}:{item.lineno} {name}")
-        self.assertEqual(offenders, [], "깔때기 밖에서 디스크를 읽는다")
+            counted = (isinstance(item.func, ast.Attribute) and item.func.attr in cls.PRIMITIVES) or \
+                (isinstance(item.func, ast.Name) and item.func.id in aliases)
+            if counted:
+                found.setdefault((owner.get(id(item), "<module>"), ast.unparse(item.func)), []).append(item.lineno)
+        return found
+
+    def test_no_read_primitive_lives_outside_the_funnels(self) -> None:
+        """재확인의 집합이 판정의 집합인 것은 **깔때기를 비켜 갈 수 없다**는 데서 온다. 새 읽기 자리가 원시 호출을
+        직접 쓰면 원장에 안 남고, 7.5.2.2 의 실패(손으로 고른 집합)가 그대로 되살아난다 — 구조로 막는다.
+
+        (task 7.5.14) 원시 집합에 stat 계열과 경로 풀이를 더했다 — 옛 집합 9 개는 네 번째 깔때기 `_kind` 를 아무것도 안 지켜서
+        Y13(`evidence.directory.exists()`)이 그냥 지나갔다. 면제는 (함수, 호출 형태) 단위이고 **자리 수까지** 맞아야 한다.
+        한계는 `_disk_calls` docstring."""
+        self.assertEqual(self._violations(self._disk_calls()), [], "깔때기 밖에서 디스크를 읽는다")
+
+    @classmethod
+    def _violations(cls, found: dict[tuple[str, str], list[int]]) -> list[str]:
+        """목록에 없는 자리 · 자리 수가 다른 깔때기 · 자리 수가 다른 면제. 면제의 **수**를 보는 까닭: 같은 함수 안에 같은 모양의
+        읽기가 하나 더 생기면 (함수, 형태) 열쇠는 같아도 면제가 넓어진 것이다."""
+        problems = [f"{where}:{lines} {form}" for (where, form), lines in sorted(found.items())
+                    if (where, form) not in cls.FUNNELS and (where, form) not in cls.EXEMPT]
+        counts = {key: len(lines) for key, lines in found.items()}
+        problems += [f"funnel {key}: {counts.get(key, 0)} != {expected}"
+                     for key, expected in cls.FUNNELS.items() if counts.get(key, 0) != expected]
+        problems += [f"exempt {key}: {counts.get(key, 0)} != {expected}"
+                     for key, (expected, _) in cls.EXEMPT.items() if counts.get(key, 0) != expected]
+        return problems
+
+    def test_a_second_site_of_an_exempt_form_is_not_exempt(self) -> None:
+        """면제는 자리 단위다 — 기록 쓰기와 **같은 모양**의 호출이 그 함수에 하나 더 생기면 위반이다(7.5.14 의 덤).
+        (보수: 위반 목록 **전체**를 단언하던 첫 판은 파일의 다른 위반에도 같이 빨개져 구조 시험의 사본이었다 — 그 위반이 **있다**만 본다.)"""
+        found = self._disk_calls()
+        widened = {**found, ("record_landing", "landing_file.open"): found[("record_landing", "landing_file.open")] + [0]}
+        self.assertIn("exempt ('record_landing', 'landing_file.open'): 2 != 1", self._violations(widened))
+
+    def test_a_second_site_of_a_funnel_form_is_counted(self) -> None:
+        """깔때기 자리 수도 센다 — 깔때기 안에 같은 원시가 하나 더 생기면(예: `_kind_outcome` 의 둘째 `os.stat`) 원장에 안 남는
+        읽기일 수 있다. 이 대조를 끈 변이 TM5 가 첫 판에서 살아남았다(독립 적대 리뷰)."""
+        found = self._disk_calls()
+        widened = {**found, ("_kind_outcome", "os.stat"): found[("_kind_outcome", "os.stat")] + [0]}
+        self.assertIn("funnel ('_kind_outcome', 'os.stat'): 2 != 1", self._violations(widened))
+
+    def test_the_census_sees_every_primitive_and_its_aliases(self) -> None:
+        """계측기 대조 — **계측기 자신**(`_disk_calls`)으로 탐침 조각을 센다(보수 — 독립 적대 리뷰 P1-1: 첫 판은 규칙을 시험 안에서
+        다시 구현해서, `_disk_calls` 에서 `exists` 만 빼는 변이 TM6 이 그대로 초록이었다 — Y13 모양 MU2 와 겹쳐도 초록).
+        탐침: 원시 전부의 속성 호출 · 이름 별칭 여섯 모양 · 세면 안 되는 대조 둘(지역 함수 `resolve` · `re.Match.group`)."""
+        # 탐침의 이름은 **글자로** 적는다 — `PRIMITIVES` 에서 만들면 집합에서 이름을 빼는 변이가 탐침에서도 같이 빠져 공허해진다
+        # (보수 실측: 그렇게 만든 첫 판에서 TM3 이 생존했다).
+        expected = ["FileIO", "access", "copyfile", "exists", "fwalk", "getatime", "getctime", "getline", "getmtime",
+                    "getsize", "getxattr", "glob", "iglob", "is_block_device", "is_char_device", "is_dir", "is_fifo",
+                    "is_file", "is_mount", "is_socket", "is_symlink", "isdir", "isfile", "islink", "iterdir", "lexists",
+                    "listdir", "listxattr", "lstat", "open", "owner", "read_bytes", "read_text", "readlink", "realpath",
+                    "resolve", "rglob", "samefile", "scandir", "stat", "statvfs", "walk"]
+        lines = ["import os", "from os import stat as _st", "from io import FileIO", "_o = open", "_s = os.stat", "_b = _o",
+                 "def attributes(p):"]
+        lines += [f"    p.{name}()" for name in expected]
+        lines += ["def names(p, reader=open, *, lister=os.listdir):",
+                  "    _st(p); FileIO(p); _o(p); _s(p); _b(p); reader(p); lister(p); open(p)",
+                  "def controls(p, match):", "    resolve(p); match.group(1)"]
+        found = self._disk_calls("\n".join(lines) + "\n")
+        attributes = sorted(form.split(".", 1)[1] for (where, form) in found if where == "attributes")
+        self.assertEqual(attributes, sorted(expected))
+        self.assertEqual(sorted(self.PRIMITIVES), sorted(expected), "원시 집합과 탐침의 글자 목록이 갈렸다 — 둘 다 고칠 것")
+        self.assertEqual(sorted(form for (where, form) in found if where == "names"),
+                         ["FileIO", "_b", "_o", "_s", "_st", "lister", "open", "reader"])
+        self.assertNotIn("controls", {where for where, _ in found})
 
 
 class TheDiffBodyDoesNotNameTheFileUnderJudgement(unittest.TestCase):
@@ -9587,7 +9723,7 @@ class AnArchiveEntryIsAskedOnlyWhenItsNameMatches(unittest.TestCase):
 
     7.5.11 이 목록의 종류를 `os.stat` 으로 묻게 하자 `resolve_referenced_change` 의 아카이브 목록(모든 판정이 연다)에서
     **무관한** 항목 하나가 끊긴 링크 · 고리면 **모든 change** 의 게이트와 `--record-landing` 이 rc 1 이 됐다(리뷰어 재현:
-    `cannot tell what \`2026-01-01-ghost\` is`). 7.5.11 의 센서스(증거 디렉터리 3,183)는 이 공유 디렉터리가 모집단 밖이었다.
+    `cannot tell what <2026-01-01-ghost> is` (이름은 역따옴표로 감싸 찍힌다)). 7.5.11 의 센서스(증거 디렉터리 3,183)는 이 공유 디렉터리가 모집단 밖이었다.
     이름은 `os.listdir` 로 받고(종류를 안 묻는다) id 가 맞는 이름만 `_kind` 로 묻는다.
     """
 
@@ -10150,6 +10286,138 @@ class ASelfRepairCommitIsReadFromRawNames(unittest.TestCase):
         subprocess.run(["git", "commit", "-qm", "later"], cwd=root, check=True, capture_output=True, env=environment)
         last = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
         self.assertEqual(check_analysis._self_repair_commits(root, analysis, last), [first, last])
+
+
+
+class TheBorrowMarkIsReadLikeTheVerdictReadsIt(unittest.TestCase):
+    """기록 명령의 빌림 표지 물음은 판정과 같은 깔때기 · 같은 갈래다 (task 7.5.14, 2026-09-27).
+
+    편집 전 `_recording_refusal` 은 `function-logic-reference.txt` 를 `Path.exists()` 로 물었다 — 원장 밖이고, 못 읽는 표지
+    (권한 · FIFO)를 "빌린다" 로 읽었다. 판정(`_judged`)은 같은 파일을 `_read_regular` 로 읽어 `could not be read` 라고 한다.
+    두 명령이 같은 입력에 다른 이유를 댔다."""
+
+    def _with_mark(self, make) -> tuple[Path, tempfile.TemporaryDirectory]:
+        raw = tempfile.TemporaryDirectory()
+        root, _ = _own_work_fixture(raw)
+        make(root / "openspec" / "changes" / "mine" / "analysis" / "function-logic-reference.txt")
+        return root, raw
+
+    def test_an_unreadable_mark_is_named_not_called_a_borrow(self) -> None:
+        if hasattr(os, "geteuid") and os.geteuid() == 0:
+            self.skipTest("root 는 권한을 무시한다")
+
+        def unreadable(mark: Path) -> None:
+            mark.write_text("reference\n")
+            mark.chmod(0)
+
+        root, raw = self._with_mark(unreadable)
+        with raw:
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertIn("function-logic-reference.txt could not be read", lines[0])
+            self.assertIn("function-logic-reference.txt could not be read", check_analysis.check("mine", root)[0])
+
+    def test_a_fifo_mark_is_named_not_waited_on(self) -> None:
+        root, raw = self._with_mark(lambda mark: os.mkfifo(mark))
+        with raw:
+            code, out, err = _in_child(
+                f"import check_analysis, pathlib; print(check_analysis.record_landing('mine', pathlib.Path({str(root)!r})))",
+                seconds=30)
+            self.assertEqual(code, 0, err[-400:])
+            self.assertIn("function-logic-reference.txt could not be read", out)
+
+    def test_a_looping_mark_is_named_not_recorded_past(self) -> None:
+        """**가장 무거운 옛 모양 (보수 — 독립 적대 리뷰).** 심링크 고리인 표지에 옛 `exists()` 는 ELOOP 를 삼켜 `False` — "빌리지 않음"
+        으로 걷기가 이어져 착지가 **기록됐다**(rc 0). 판정은 같은 표지에 `could not be read` 다."""
+        root, raw = self._with_mark(lambda mark: mark.symlink_to(mark))
+        with raw:
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertIn("function-logic-reference.txt could not be read", lines[0])
+            self.assertFalse((root / "openspec" / "changes" / "mine" / check_analysis.LANDING_FILE).exists())
+
+    def test_a_directory_mark_is_named_not_called_a_borrow(self) -> None:
+        """폴더인 표지 — 옛 `exists()` 는 `True` 라 빌림 문장이었다."""
+        root, raw = self._with_mark(lambda mark: mark.mkdir())
+        with raw:
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual(code, 1, lines)
+            self.assertIn("function-logic-reference.txt could not be read", lines[0])
+
+    def test_a_readable_mark_is_still_a_borrow(self) -> None:
+        """양성 대조 — 편집 전에도 초록."""
+        root, raw = self._with_mark(lambda mark: mark.write_text("reference\n"))
+        with raw:
+            code, lines = check_analysis.record_landing("mine", root)
+            self.assertEqual((code, lines), (1, [f"mine: {check_analysis.BORROWED_REFUSES_A_LANDING}"]))
+
+
+class TheSuiteDoesNotReadTheDevelopersGitConfig(unittest.TestCase):
+    """시험 픽스처는 개발자의 전역 · 시스템 git 설정을 안 읽는다 (task 6.4(h), 2026-09-27).
+
+    이 모듈이 import 될 때 `GIT_CONFIG_GLOBAL` · `GIT_CONFIG_SYSTEM` 을 `os.devnull` 로 둔다. 그 전에는 `commit.gpgsign=true`
+    (+ 서명 실패) 가 전역에 있으면 스위트 433 중 **409** 가 `gpg failed to sign` 로 에러였고, `core.hooksPath` 에 실패하는
+    `pre-commit` 이 있으면 **419**, `gpg.format=ssh` + 서명이면 **409** 였다(`core.autocrlf=true` 는 0 — 이 저장소의 픽스처
+    바이트에 CR 이 없다). 실측은 review.md `## VERIFY — task 7.5.14 · 7.5.18 · 6.4(h)`.
+    """
+
+    def test_a_fixture_commits_under_a_hostile_global_config(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            hostile = Path(raw) / "hostile.gitconfig"
+            hooks = Path(raw) / "hooks"
+            hooks.mkdir()
+            (hooks / "pre-commit").write_text("#!/bin/sh\nexit 1\n")
+            (hooks / "pre-commit").chmod(0o755)
+            hostile.write_text(
+                "[user]\n\temail = dev@example.invalid\n\tname = dev\n"
+                "[commit]\n\tgpgsign = true\n[gpg]\n\tprogram = /bin/false\n"
+                f"[core]\n\thooksPath = {hooks}\n", encoding="utf-8")
+            program = (f"import sys; sys.path.insert(0, {str(Path(__file__).resolve().parent)!r}); "
+                       "import tempfile, test_check_analysis as t; raw = tempfile.TemporaryDirectory(); "
+                       "root, marks = t._own_work_fixture(raw); print(len(marks)); raw.cleanup()")
+            environment = {**os.environ, "GIT_CONFIG_GLOBAL": str(hostile), "GIT_CONFIG_SYSTEM": str(hostile)}
+            process = subprocess.run([sys.executable, "-c", program], capture_output=True, text=True, timeout=300,
+                                     env=environment)
+            self.assertEqual(process.returncode, 0, process.stderr[-800:])
+            self.assertEqual(process.stdout.strip(), "3")
+
+    def test_the_module_pins_both_scopes(self) -> None:
+        self.assertEqual(os.environ.get("GIT_CONFIG_GLOBAL"), os.devnull)
+        self.assertEqual(os.environ.get("GIT_CONFIG_SYSTEM"), os.devnull)
+
+    def _fixture_in_a_child(self, environment: dict[str, str]) -> subprocess.CompletedProcess:
+        program = (f"import sys; sys.path.insert(0, {str(Path(__file__).resolve().parent)!r}); "
+                   "import tempfile, test_check_analysis as t; raw = tempfile.TemporaryDirectory(); "
+                   "root, marks = t._own_work_fixture(raw); print(len(marks)); raw.cleanup()")
+        return subprocess.run([sys.executable, "-c", program], capture_output=True, text=True, timeout=300,
+                              env=environment)
+
+    def test_a_fixture_commits_under_hostile_config_variables(self) -> None:
+        """**보수 (독립 적대 리뷰 5(b)).** 파일 고정은 **환경 변수로 주는 설정**을 못 막는다 — `GIT_CONFIG_COUNT/KEY/VALUE` ·
+        `GIT_CONFIG_PARAMETERS` 로 서명을 켜면 전체 스위트가 에러 446(리뷰어 실측). 두 통로를 각각 준다."""
+        for label, extra in (
+            ("count", {"GIT_CONFIG_COUNT": "2", "GIT_CONFIG_KEY_0": "commit.gpgsign", "GIT_CONFIG_VALUE_0": "true",
+                       "GIT_CONFIG_KEY_1": "gpg.program", "GIT_CONFIG_VALUE_1": "/bin/false"}),
+            ("parameters", {"GIT_CONFIG_PARAMETERS": "'commit.gpgsign'='true' 'gpg.program'='/bin/false'"}),
+        ):
+            with self.subTest(channel=label):
+                process = self._fixture_in_a_child({**os.environ, **extra})
+                self.assertEqual(process.returncode, 0, process.stderr[-800:])
+                self.assertEqual(process.stdout.strip(), "3")
+
+    def test_the_execution_baseline_suite_pins_itself(self) -> None:
+        """**보수 (독립 적대 리뷰 5(a)).** `test_execution_baseline` 은 `discover` 에서 이 모듈 **뒤에** import 되어 우연히 보호받았다 —
+        단독 실행은 적대 전역 설정에서 에러가 났다. 그 모듈을 적대 설정의 자식 프로세스에서 **단독으로** 돌린다."""
+        with tempfile.TemporaryDirectory() as raw:
+            hostile = Path(raw) / "hostile.gitconfig"
+            hostile.write_text("[commit]\n\tgpgsign = true\n[gpg]\n\tprogram = /bin/false\n", encoding="utf-8")
+            environment = {**os.environ, "GIT_CONFIG_GLOBAL": str(hostile), "GIT_CONFIG_SYSTEM": str(hostile),
+                           "GIT_CONFIG_PARAMETERS": "'commit.gpgsign'='true' 'gpg.program'='/bin/false'"}
+            process = subprocess.run([sys.executable, "-m", "unittest", "test_execution_baseline"],
+                                     cwd=Path(__file__).resolve().parent, capture_output=True, text=True, timeout=900,
+                                     env=environment)
+            self.assertEqual(process.returncode, 0, process.stderr[-1500:])
+            self.assertRegex(process.stderr, r"Ran [1-9][0-9]* tests")
 
 
 if __name__ == "__main__":

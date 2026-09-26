@@ -189,7 +189,7 @@ git 의 말 첫 줄을 `_first_line` 한 벌로(손으로 적은 사본 둘 — 
 NUL 과 만나 경계가 NUL **둘**이고, 이름은 비지 않으므로 NUL 둘은 경계에서만 난다(새 B8). 머리가 40/64 hex 가 아니거나 이름 목록이 `\n` 으로 시작하지 않으면
 지어내지 않고 결함(새 B9~B11). 이름은 인용되지 않으므로 `endswith(b".go")` 가 그대로 맞다(새 B12 · B13).
 
-**전수 A/B**(`analysis/harness/7529_repairs_ab.py`, before `26e5bb3f` 세 모듈 · after 워킹트리): change 디렉터리 **128**, 깃발 합계 392, **SAME 128 · DIFFERENT 0**
+**전수 A/B**(`analysis/harness/7529_repairs_ab.py`, before `26e5bb3f` 의 `check_analysis.py`(다른 두 모듈은 워킹트리 — 2026-09-27 정정; 두 리비전 사이 그 둘은 안 바뀌었다) · after 워킹트리): change 디렉터리 **128**, 깃발 합계 392, **SAME 128 · DIFFERENT 0**
 — 이 저장소에는 그 모양의 이름이 없다(위 센서스 0 과 같은 사실).
 
 ## task 7.5.42 — `log.showRoot` 고정 (마감 수리, 적대 리뷰, 2026-09-27)

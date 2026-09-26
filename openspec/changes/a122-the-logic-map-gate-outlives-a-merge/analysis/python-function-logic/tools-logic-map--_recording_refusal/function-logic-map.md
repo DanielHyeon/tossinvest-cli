@@ -160,3 +160,47 @@ B6 이 **사유 문장**으로 받고, 나머지(`_walk_floor` 의 `ValueError`,
 `ast.before-6.4.json`(revision `0023fd12`) → `ast.after-6.4.json`. 분기 10 → 10 · 반환 9 → 9 · raise 1 → 1 · 호출 13 → 13, 갈래 변화 0.
 바뀐 것은 `resolve_base(..., head=head)` 인자 하나다 — 이 함수가 이미 받은 sha 다. base 의 새 거절(모양 · HEAD 대조 · 태그)은 기존
 `cannot resolve the comparison base: …` 사유로 나간다(시험 `test_an_uncommitted_edit_cannot_move_a_committed_base` 가 기록 경로에서 잰다).
+
+## task 7.5.14 — 깔때기 밖 stat 둘을 깔때기로 (2026-09-27)
+
+> 편집 전 `ast.before-7514.json`(HEAD `3bb11b2d`) · 편집 후 `ast.after-7514.json`, `759_flm_rows.py` 로 정렬.
+
+편집 후 `tools/logic-map/check_analysis.py:3160-3256` · 분기 12 · 반환 10 · raise 1 · 호출 15 (`ast.after-7514.json`, source sha `c74f69b35ae6`)
+편집 전 `tools/logic-map/check_analysis.py:3160-3244` · 분기 10 · 반환 9 · raise 1 · 호출 13 (`ast.before-7514.json`, revision `3bb11b2d`, source sha `12beb79433de`)
+
+| 옛 id | 새 id | 새 줄 | 종류 | 소스(새) | 바뀐 것 |
+|---|---|---|---|---|---|
+| B1 | B1 | 3187 | If | `if landing_file.is_symlink():` | 같음 |
+| B2 | B2 | 3197 | If | `if _landing_record(change_dir, root, head) is not None:` | 같음 |
+| B3 | — | — | If | `if landing_file.exists():` (옛) | **빠짐** |
+| B4 | — | — | If | `if (change_dir / 'analysis' / 'function-logic-reference.txt').exists():` (옛) | **빠짐** |
+| — | B3 | 3203 | If | `if _kind(landing_file):` | **새** |
+| — | B4 | 3215 | Try | `try:` | **새** |
+| — | B5 | 3217 | ExceptHandler | `except FileNotFoundError:` | **새** |
+| — | B6 | 3219 | ExceptHandler | `except OSError as exc:` | **새** |
+| B5 | B7 | 3226 | Try | `try:` | 번호만 |
+| B6 | B8 | 3228 | ExceptHandler | `except GATE_FAULTS as exc:` | 번호만 |
+| B7 | B9 | 3230 | If | `if facts.get('execution_baseline_adoption'):` | 번호만 |
+| B8 | B10 | 3233 | If | `if why:` | 번호만 |
+| B9 | B11 | 3243 | If | `if dirty.returncode not in (0, 1):` | 번호만 |
+| B10 | B12 | 3250 | If | `if dirty.returncode:` | 번호만 |
+
+**먼저 셌다(7.5.14 가 적은 "살아 있는 우회").** `changed_existing_functions` 의 `Path.exists` 는 **이미 없다**(7.5.34 가 그 함수를 다시 썼다 — HEAD `3bb11b2d`
+AST 전수). 남은 것은 이 함수의 셋이다: `landing_file.is_symlink()` · `landing_file.exists()` · 빌림 표지의 `.exists()`.
+
+- 옛 B3(`landing_file.exists()`) → 새 B3 `_kind(landing_file)` — 따라가서 묻는 뜻은 같고(끊긴 링크는 B1 이 먼저 멈춘다) 원장에 남는다. 못 물으면(권한)
+  "" 로 "없다" 이고 쓰기(`open("xb")`)가 이름 대고 멈춘다.
+- 옛 B4(빌림 표지 `.exists()`) → 새 B4~B6 `_read_regular` — 판정(`_judged`)과 **같은 깔때기 · 같은 갈래**: 없으면 빌림 아님, 못 읽으면(권한 · FIFO · 폴더)
+  `UNREADABLE` 문장, 읽히면 빌림. RED(편집 전): 권한 없는 표지 · FIFO 표지에서 기록 명령이 **빌림 문장**을 냈다(판정은 `could not be read`).
+- `landing_file.is_symlink()`(B1)는 **면제**로 남긴다 — 쓰기 자리의 모양(`lstat`)이고 판정 입력이 아니며, 쓰기 순간 `open("xb")` 가 같은 것을 다시 막는다.
+  깔때기 `_kind` 는 따라가서 묻는 `os.stat` 이라 이 물음을 못 대신한다. 구조 시험이 이 호출 형태 **하나**만 면제한다.
+
+**거부하는 정상 입력**: 저장소의 빌림 표지는 a073 하나이고 정규 파일이다(읽히면 옛 판본과 같은 문장). 새로 달라지는 것은 못 읽는 표지뿐 — 노출 0.
+
+## task 7.5.14 수리 (적대 리뷰 뒤, 2026-09-27) — 주석만
+
+`ast.after-7514r.json`(최종 `check_analysis.py` `8d2a3338fdab`, `:3160-3258`) — 분기 · 반환 · raise · 호출이 `ast.after-7514.json` 과 같다(스크립트 대조).
+바뀐 것은 새 B3 옆 주석 하나: "못 물으면 쓰기(`open("xb")`)가 이름 대고 멈춘다" 는 **거짓**이었다(적대 리뷰 코드 읽기 · 이 세션 실측). 쓰기의 `PermissionError` 를
+`record_landing` 은 잡지 않는다(`FileExistsError` 만) — CLI(`main`)의 `GATE_FAULTS` 경계가 `no landing recorded — [Errno 13] …` 로 이름 대고, 함수를 직접
+부르면 예외다. 실측: change 디렉터리 `0555` → 직접 호출 `PermissionError`, CLI rc 1 + 그 문장. 열린 task 7.5.44. (x 없는 `0666` 이면 그 전에 증거 목록
+`_listed(analysis)` 가 권한으로 실패해 이름 댄 줄이 된다.)

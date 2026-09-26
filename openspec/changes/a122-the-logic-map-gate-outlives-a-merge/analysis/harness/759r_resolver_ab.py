@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """task 7.5.9~7.5.16 보수 A/B — 아카이브를 "이름 먼저" 로 고른 해소기가 저장소의 **모든** change 디렉터리에서 같은 답을 내는가.
 
-`resolve_referenced_change` 는 모든 판정의 첫 입력이다(보수 P1-2 가 바꿨다). 기준 리비전의 세 모듈과 워킹트리를 각자 불러
+`resolve_referenced_change` 는 모든 판정의 첫 입력이다(보수 P1-2 가 바꿨다). 기준 리비전의 `check_analysis.py`(아래 정정)과 워킹트리를 각자 불러
 활성 + 아카이브의 change id 전부를 해소하고 답(경로 또는 예외 타입 + 문장)을 견준다.
 
     python3 759r_resolver_ab.py [<before-rev>]     # 기본 1d1e5ca7
+
+**모듈 하나만 기준 리비전이다 (2026-09-27 정정 — 독립 적대 리뷰).** 이 스크립트는 워킹트리의 `check_analysis` 를 먼저 import 하고, 옛 판을 같은 프로세스에서 불러서 옛 판의 `import execution_baseline` · `from role_check import …` 는 **이미 불린 워킹트리 모듈**을 받는다(`sys.modules`). 기준 리비전의 파일 셋을 임시 디렉터리에 쓰지만 쓰이는 것은 `check_analysis.py` 하나다. 세 모듈을 다 그 리비전으로 돌리는 것은 자식 프로세스를 쓰는 `759_ab_verify.py` · `7516_order.py` 다.
 """
 import importlib.util
 import subprocess

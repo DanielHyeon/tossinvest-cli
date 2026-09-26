@@ -10,6 +10,11 @@ from pathlib import Path
 from unittest import mock
 
 import execution_baseline as adoption
+import fixture_git_env
+
+# 픽스처의 git 이 개발자의 설정을 안 읽는다 (a122 task 6.4(h) 보수). 이 모듈은 `discover` 에서 `test_check_analysis` 뒤에 import 되어
+# **우연히** 보호받았다 — 단독 실행은 적대 전역 설정에서 에러가 났다(독립 적대 리뷰 · 이 보수의 실측). 규칙은 한 곳이다.
+fixture_git_env.isolate()
 
 
 class ExecutionBaselineUnitTests(unittest.TestCase):

@@ -6,6 +6,8 @@
 같은 방식으로 돈다. 판정 줄 수도 센다(해소 실패는 오늘 오류 줄을 안 낸다 — 7.5.37 과 겹친다).
 
     python3 7517_cost.py [<before-rev>] [N ...]      # 기본 1d1e5ca7 · 20 1000 10000 (before 는 20 만)
+
+**모듈 하나만 기준 리비전이다 (2026-09-27 정정 — 독립 적대 리뷰).** 이 스크립트는 워킹트리의 `check_analysis` 를 먼저 import 하고, 옛 판을 같은 프로세스에서 불러서 옛 판의 `import execution_baseline` · `from role_check import …` 는 **이미 불린 워킹트리 모듈**을 받는다(`sys.modules`). 기준 리비전의 파일 셋을 임시 디렉터리에 쓰지만 쓰이는 것은 `check_analysis.py` 하나다. 세 모듈을 다 그 리비전으로 돌리는 것은 자식 프로세스를 쓰는 `759_ab_verify.py` · `7516_order.py` 다. 이 측정(인용 해소 비용)이 닿는 `execution_baseline` · `role_check` 는 두 리비전 사이에 판정 비용과 무관하게만 바뀌었다(시한 인자).
 """
 import importlib.util
 import subprocess

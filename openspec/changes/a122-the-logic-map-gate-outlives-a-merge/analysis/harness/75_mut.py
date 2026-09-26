@@ -851,6 +851,16 @@ MUTATIONS = {
          '        if header.strip(\'"\').split("/", 1)[-1] != _git_header_path(name).strip(\'"\'):')],
     "MX8_show_root_is_not_pinned": [
         ('"-c", "diff.renames=false", "-c", "log.showRoot=true",', '"-c", "diff.renames=false",')],
+    # --- task 7.5.14 · 7.5.18 ---
+    "MU1_the_borrow_mark_is_asked_by_exists": [
+        ('    try:\n        _read_regular(change_dir / "analysis" / "function-logic-reference.txt")\n    except FileNotFoundError:\n        pass\n'
+         '    except OSError as exc:\n        return UNREADABLE.format(what="function-logic-reference.txt", why=_why(exc)), ""\n    else:\n',
+         '    if (change_dir / "analysis" / "function-logic-reference.txt").exists():\n')],
+    "MU2_the_disk_record_is_asked_by_exists": [
+        ('    if _kind(landing_file):\n', '    if landing_file.exists():\n')],
+    "MV1_the_bundle_text_reads_again": [
+        ('                target, evidence.held.get(target / "ast.json"), names=names)',
+         '                target, _read_regular(target / "ast.json"), names=names)')],
 }
 
 

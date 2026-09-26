@@ -3182,6 +3182,8 @@ def _recording_refusal(
     안 맞음)은 조언이 예측하지 않고, 대신 약속하지도 않는 문장으로 권한다.
     """
     landing_file = change_dir / LANDING_FILE
+    # 이 링크 물음(`lstat`)은 깔때기 밖이다 — **쓰기 자리의 모양**을 묻는 것이고 판정 입력이 아니다. 쓰기 순간에는 `open("xb")`
+    # 가 같은 것을 다시 막는다(`O_EXCL` 은 끊긴 링크에도 실패한다). 구조 시험이 이 호출 형태 **하나**만 면제한다 (task 7.5.14).
     if landing_file.is_symlink():
         # `exists()` 는 링크를 **따라가서** 답한다. 끊긴 링크면 거짓이므로 존재 확인을
         # 그대로 통과하고, 그 뒤의 쓰기가 링크를 따라 저장소 **밖에** 기록을 만든다
@@ -3196,7 +3198,11 @@ def _recording_refusal(
         # 복구 경로를 **여기서도** 말한다 (task 7.2.6). 번들을 갱신한 저자가 5단계에서 빨간
         # 문장을 받고 이 명령을 부르면, 예전에는 "이미 있다"만 듣고 두 문장 사이에 갇혔다.
         return f"`{LANDING_FILE}` already exists — not overwritten; {LANDING_RECOVERY}", ""
-    if landing_file.exists():
+    # 있는지는 깔때기(`_kind`)로 묻는다 (task 7.5.14) — 옛 `exists()` 는 원장 밖이라 판정 중 생긴 기록을 재확인이 못 봤다.
+    # 따라가서 묻는 뜻은 같다(끊긴 링크는 위에서 이미 멈췄다). 못 물으면(권한) "없다" 로 간다. 그 권한이 쓰기도 막으면 쓰기
+    # (`open("xb")`)가 `PermissionError` 를 올린다 — `record_landing` 은 `FileExistsError` 만 잡으므로 CLI(`main`)의 `GATE_FAULTS`
+    # 경계가 `no landing recorded — [Errno 13] …` 로 이름 대고, 함수를 직접 부르면 예외다(보수 실측; 열린 task 7.5.44).
+    if _kind(landing_file):
         # HEAD 에 없는데 디스크에 있다 — 커밋 전이거나 아카이브 이동이 아직 staged 다.
         # "이미 있다"만 말하면 게이트가 "기록이 없다"고 말하는 것과 고리를 이룬다. 둘이
         # 갈리는 이유(게이트는 커밋에서 읽는다)가 곧 할 일이다. 경로를 적는 이유: staged
@@ -3206,7 +3212,15 @@ def _recording_refusal(
             f"`{relative}` already exists on disk but not in HEAD — not overwritten: "
             "the gate reads the record from the commit, so commit it"
         ), ""
-    if (change_dir / "analysis" / "function-logic-reference.txt").exists():
+    # 빌림 표지는 판정(`_judged`)과 **같은 깔때기 · 같은 갈래**로 읽는다 (task 7.5.14). 옛 `exists()` 는 원장 밖이었고, 못 읽는
+    # 표지(권한 · FIFO · 폴더)를 "빌린다" 로 읽어 판정이 `could not be read` 라고 할 입력에 빌림 문장을 냈다.
+    try:
+        _read_regular(change_dir / "analysis" / "function-logic-reference.txt")
+    except FileNotFoundError:
+        pass
+    except OSError as exc:
+        return UNREADABLE.format(what="function-logic-reference.txt", why=_why(exc)), ""
+    else:
         # 5단계와 같은 문장이다 (task 7.2.3). 예전 문장은 "빌려주는 쪽의 착지를 복사하라"였고
         # 그 복사가 리뷰 C4 의 구멍이었다.
         return BORROWED_REFUSES_A_LANDING, ""
