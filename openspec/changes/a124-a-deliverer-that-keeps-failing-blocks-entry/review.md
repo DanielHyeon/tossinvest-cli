@@ -811,3 +811,11 @@ a092 는 현재 20판이다(21판 미작성). 다음을 a092 21판의 작업으�
 
 - 4.2 체크(돌리고 → 적고 → 체크). 4.3 체크: gstack `/review` · 독립 적대 Eng(APPROVE) · codex 구현 1~4회차(4회차 PASS) 완료 — **Manager 검증 배터리는
   아카이브 전에 따로 돈다; 그것이 실패하면 이 체크를 되돌린다**. 5.2 체크: 「5.2 a092 전달 목록」을 Manager 에게 전달했다(수행은 a092 21판 몫).
+
+### 완료 게이트
+
+- 1차: gate FAIL 2/11 — 미완료 1 건(5.1 자기 줄) · 격리 worktree `TossOS-worktrees/a124-gate` @ `d2b07522` · `/tmp/claude-1000/a124-lot/gate1.log`.
+- 5.1 체크(`77e76470`) → tracker 재생성(`bdf965bb`, STORY-TOS-a124 in_progress → implemented).
+- **gate PASS bdf965bb, gate2.log, 11/11** (격리 worktree `TossOS-worktrees/a124-gate`, 2026-09-28; 로그 `/tmp/claude-1000/a124-lot/gate2.log`; 직전 `make sdd-sync`
+  rc 2 는 advisory codegraphcontext 미완 — 6/11 sdd-check 의 hard fingerprint 는 통과).
+- 아카이브 · Story 경로는 Manager 검증 배터리 뒤. 아카이브 커밋에는 「§6 배포 · 운영 재측정은 미실행, 사람 몫」과 이 영수증 줄을 넣는다.
