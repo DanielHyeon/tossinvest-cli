@@ -806,3 +806,24 @@ park 해제 철회/조건화, 소급 대상을 원 발주 응답으로 한정, �
 
 - codex 권고: **소급 재분류를 미룬다** — 0.5h 뒤 사건 두 행에 이득이 없고, 전략 PLACE 행까지 바꾼다.
 - **판정: REJECT. 반영하지 않았다.** N1(Q4-4 재결정) · N4 · N6 · 재분류 연기 여부는 Manager 결정 사항이다.
+
+## 5판 (2026-09-27) — 4라운드 반영 · 판정 아님
+
+Manager 방향(2026-09-27)대로 썼다. 정본 `design.md` D−3. **5라운드는 a089 처분(사용자 답) 뒤**(D−3.9, task 0.5j).
+
+| id | 처분 | 반영 자리 |
+|---|---|---|
+| N1 (P0) | Q4-4 **번복** — 살아 있을 수 있는 attempt 의 발의는 비우지 않음, `clear=false`, park 원인은 포지션 key critical, 해동은 Q4-1·종결 증거. 좁힘(평범한 IN_DOUBT 는 `checkSymbolFree` 가 이미 막음)을 D−2.11 에 반영 | D−3.2 · D−2.11 Q4-4 줄 · exit-policy delta 요구 1 + 시나리오 1 · tasks 3.0a·3.N1~3.N1d · 안전표 §4 |
+| N4 (P1) | D−2.5 정정 + 기동 ACKED 정산 설계(기존 전이 `ResolveConfirmed`·`MarkInDoubt`, 판정은 `confirmCreatedOrder` 와 한 곳). 원장 쓰기 실패는 `Recovery.Run` 의 기존 규약(`ErrRecoveryIncomplete`), 주문 읽기 실패는 모호 경로. 정지 조건: PLACE 해소가 기존 주문 번호를 못 쓰면 멈춤 | D−3.3 · order-execution 요구 1 + 시나리오 1 · tasks 4.0b·4.N4~4.N4d · 7.2·7.3·8.2 |
+| 재분류 | 이연(선택 후속) | D−3.4 · delta 에서 요구 1·시나리오 4 삭제 · tasks §4bis 강등 · 4.4 ① 삭제 |
+| N3 (P1) | 3상 분류기, 422 모순 code 반례를 계약 시험으로 | D−3.5 · order-execution 요구 문장 + 시나리오 1 · tasks 2.5e~2.5g·2.8 |
+| N5 (P1) | fixture 를 5판 의미론으로 | tasks 6.1·6.1a·6.2 · 4b.6 이동 |
+| N7 (P2) | "감싸이면 거절 쪽" 정정, 이연 절의 구조적 강화 요구 | D−3.6 · §4bis 머리말 |
+| N2 (P1) | 이름 붙인 잔여, a092/a124 교차 인용 | D−3.7 · tasks 선후 관계 |
+| N8 (P2) | 유지 + "관례 일관성이지 증거 아님" | D−3.8 |
+| N6/F7 | freeze 미충족 전제 | D−3.9 · tasks 0.5j·선후 관계 |
+| F10 잔여 | `record` FLM 「Branches」 표 16분기 재번호(BTM 은 앞서 재번호) | FLM · tasks 0.5g 현황 |
+
+**작성 중 정정 1건**: 초안 D−3.3-5 는 ACKED 정산의 행 실패를 D−2.6-4(흡수·critical)로 보냈다. `Recovery.Run` 의 이웃(재생·해소)은 행 실패를
+`ErrRecoveryIncomplete` 로 반환한다(`internal/reconcile/recovery.go:276-289`) — 복구 본문 안에 두 번째 실패 규약을 만들지 않도록 고쳤다.
+

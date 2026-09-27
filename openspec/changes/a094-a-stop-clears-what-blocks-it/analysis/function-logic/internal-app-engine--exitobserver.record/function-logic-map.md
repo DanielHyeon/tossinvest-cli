@@ -23,24 +23,28 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
 |---|---|---|---|---|---|
-| B1 | if | `:1095` `if quote.FetchedAt.IsZero() {` | `quote.FetchedAt.IsZero` | — | 예 |
-| B2 | else | `:1097` `} else {` | — | — | 예 |
-| B3 | if | `:1117` `if orderable && (snapshot.CancelPendingFirst \|\| isFullExit(proposal)) {` | `isFullExit` | — | 예 |
-| B4 | if | `:1118` `if m.reJudge && !isProtective(proposal) {` | `isProtective` | — | 예 |
-| B5 | else | `:1140` `} else {` | `o.clearTheSymbol` | — | 예 |
-| B6 | if | `:1142` `if err != nil {` | — | :1143 | 아니오 |
-| B7 | if | `:1145` `if !cleared {` | `o.noteDelay` | — | 예 |
-| B8 | else | `:1149` `} else {` | `o.clearDelay` | — | 예 |
-| B9 | if | `:1156` `if orderable {` | `exitIntentID` | — | 예 |
-| B10 | if | `:1158` `if intentID == "" {` | `o.opts.Journal.RecordExitJudgementResult`, `o.opts.NewID`, `string` | — | 아니오 |
-| B11 | if | `:1170` `if err != nil {` | — | — | 예 |
-| B12 | if | `:1171` `if errors.Is(err, journal.ErrProposalPending) {` | `errors.Is` | :1175 | 예 |
-| B13 | if | `:1177` `if errors.Is(err, journal.ErrExitSnapshotQuarantined) {` | `errors.Is`, `fmt.Errorf`, `o.announceQuarantineFromLedger` | :1188 | 예 |
-| B14 | if | `:1190` `if recorded.ArmedProposal == nil \|\| recorded.ArmOutcome != journal.ExitArmArmed {` | `o.submit` | :1191, :1195 | 예 |
+| B1 | if | `:1180` `if !o.quoteUsable(quote) {` | `o.quoteUsable` | :1181 | — (a111 이 더한 분기, base 실측 대상 아님) |
+| B2 | if | `:1199` `if judgement.ObservationSource == "" {` | — | — | — (a111 이 더한 분기, base 실측 대상 아님) |
+| B3 | if | `:1200` `if quote.FetchedAt.IsZero() {` | `quote.FetchedAt.IsZero` | — | 예 |
+| B4 | else | `:1202` `} else {` | — | — | 예 |
+| B5 | if | `:1223` `if orderable && (snapshot.CancelPendingFirst \|\| isFullExit(proposal)) {` | `isFullExit` | — | 예 |
+| B6 | if | `:1224` `if m.reJudge && !isProtective(proposal) {` | `isProtective` | — | 예 |
+| B7 | else | `:1246` `} else {` | `o.clearTheSymbol` | — | 예 |
+| B8 | if | `:1248` `if err != nil {` | — | :1143 | 아니오 |
+| B9 | if | `:1251` `if !cleared {` | `o.noteDelay` | — | 예 |
+| B10 | else | `:1255` `} else {` | `o.clearDelay` | — | 예 |
+| B11 | if | `:1262` `if orderable {` | `exitIntentID` | — | 예 |
+| B12 | if | `:1264` `if intentID == "" {` | `o.opts.Journal.RecordExitJudgementResult`, `o.opts.NewID`, `string` | — | 아니오 |
+| B13 | if | `:1276` `if err != nil {` | — | — | 예 |
+| B14 | if | `:1277` `if errors.Is(err, journal.ErrProposalPending) {` | `errors.Is` | :1175 | 예 |
+| B15 | if | `:1283` `if errors.Is(err, journal.ErrExitSnapshotQuarantined) {` | `errors.Is`, `fmt.Errorf`, `o.announceQuarantineFromLedger` | :1188 | 예 |
+| B16 | if | `:1296` `if recorded.ArmedProposal == nil \|\| recorded.ArmOutcome != journal.ExitArmArmed {` | `o.submit` | :1191, :1195 | 예 |
+
+> **4판·5판 재번호(2026-09-27).** 이 표는 현재 AST(16 분기, `exitloop.go` 는 `3937e341` 이후 무변)의 번호와 줄이다. base 의 B1..B14 는 B3..B16 이 됐고 새 B1·B2 는 a111 `882a0b49` 이 더했다(difflib 대응, BTM 과 같다). 「창의 호출/return」 열의 줄 번호(`:1143` 등)는 base 좌표 그대로이며 「진입 실측」 은 base 에서 잰 값이다 — 재측정 안 함.
 
 ## Calls and live bindings
 
-`o.clearTheSymbol`(**B5 안, `:1141`**) · `o.opts.Journal.RecordExitObservation` 계열 · `errors.Is`(B12·B13).
+`o.clearTheSymbol`(**B7 안**, base `:1141`) · `o.opts.Journal.RecordExitObservation` 계열 · `errors.Is`(B14·B15) · `o.quoteUsable`(B1, a111).
 
 브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
 

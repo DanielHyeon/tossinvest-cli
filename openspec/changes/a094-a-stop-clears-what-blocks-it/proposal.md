@@ -23,6 +23,15 @@
 >   무장된 채다. 4판의 소급 재분류는 그 행을 건드리지 않는다. 두 포지션의 해동은 운영자가 `OperatorResolve` 로 비수용을 정하고 같은 해제
 >   판정이 즉시 발의를 푸는 **운영자 도구 경로**(design D−2.11 Q4-1, 도구는 미래 작업)로만 일어난다.
 
+> **5판 (2026-09-27) — 4라운드(codex, REJECT) 반영.** 정본은 `design.md` D−3 — D−2 와 충돌하면 D−3 이 이긴다.
+>
+> - **R1 소급은 이연한다**(선택 후속, D−3.4). 사건 두 행은 이미 park 라 이득이 없다. 사건 경로는 운영자 도구(Q4-1)로 일원화.
+> - **청소는 주문이 살아 있을 수 있는 발의를 비우지 않는다**(D−3.2, 4판 Q4-4 번복). park 된 익절 위에서는 손절이 나가지 않고,
+>   그 attempt 를 원인으로 명명한 critical 이 포지션 key 로 나간다 — 손절 즉시성의 양보는 이 상태·이 알림과 함께만이다.
+> - **ACKED 로 남은 attempt 는 기동에서 정산한다**(D−3.3). 4판의 "재시작이 IN_DOUBT 로 만든다" 는 ACKED 에 거짓이었다.
+> - **코드 분류기는 3상**(확정 거절 · 모호 강제 · 판정 없음, D−3.5). 두 자리 code 모순은 422 여도 확정 거절이 아니다.
+> - **freeze 는 a089 처분 뒤**(D−3.9). 5라운드는 사용자 답 뒤에 돈다.
+
 ## Why
 
 **2026-08-07, 475150(SK이터닉스). 손절이 발동했고, 발동한 채로 30분 넘게 멈춰 있었다.
@@ -408,7 +417,7 @@ R3의 산출은 대개 `FAILED_CONFIRMED`가 아니라 **park**이며, 그 park�
 | R1 | `internal/execgw/failclosed.go`(신설 `classifyRefusalCode`) · `reason.go` · `testdata/reason_codes.golden` | **새 함수 하나** + reason code 하나 + golden 재생성. 기존 switch는 그대로 |
 | R2 | `internal/app/engine/exitloop.go` `clearTheSymbol`·`ExitObserverOptions` · `exitwiring.go` · `cmd/tossctl/engine.go` · `internal/filldetect`(`Snapshot`에 2필드) | 목록 원천을 **detector의 기존 스냅샷**으로 넓힌다. **새 브로커 호출 0건**, 새 파서 없음 (3판 정정 — 2판의 동기 조회·`ParseWorkingOrder`는 폐기) |
 | R3 | attempt 종결 후처리 1곳 → `Journal.ResolveExitProposal` | **종결된 attempt가 무장한 발의를 푼다.** 새 루프도 주기도 브로커 호출도 없다 (3판 교체 — 「세션 중 해소」는 별도 change) |
-| R1 소급 | 기동 경로 1곳 | 저장된 IN_DOUBT를 **같은 code 증거로** 재분류. **475150·080220을 녹이는 부분** |
+| ~~R1 소급~~ | — | **5판에서 이연**(D−3.4). 대신 `Recovery.Run` 의 ACKED 건너뛰기 1곳 — 기동 ACKED 정산(D−3.3) |
 | ~~R4~~ | — | **철회** |
 
 spec: `order-execution`(code 필드 분류 · 재생 경계 · 세션 중 해소 진입점 · 매도 부재

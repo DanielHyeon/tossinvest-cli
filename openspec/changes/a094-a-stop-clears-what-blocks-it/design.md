@@ -3,7 +3,139 @@
 > 분기 인용은 전부 `analysis/function-logic/`의 AST 산출물에서 온다
 > (함수 **15개** · 분기 **180개** — 3판이 6개 101분기를 더했다; 2026-09-27 refresh 후 HEAD 기준 **182개**, `record` 14→16).
 >
-> **4판(2026-09-27)**: 바로 아래 **D−2** 가 3라운드(codex) 반영이며 이 문서의 나머지와 충돌하면 D−2 가 이긴다.
+> **5판(2026-09-27)**: 바로 아래 **D−3** 이 4라운드 반영이며 D−2 를 이긴다. **D−2** 는 3라운드 반영이며 그 아래 3판 본문을 이긴다.
+
+## D−3. 5판 — 4라운드(codex) 반영 (2026-09-27)
+
+> **이 절이 D−2 를 이긴다.** D−2 와 충돌하는 자리는 이 절을 따른다. 4라운드 원문: `review.md` 「4라운드」,
+> `analysis/freeze-review/codex-r4-output.md`. 방향은 Manager 판정(2026-09-27). 근거 줄은 HEAD 기준 — 인용하는 파일은
+> a094 base `3937e341` 이후 바뀌지 않았다. **5라운드는 a089 처분(사용자 답) 뒤에 돈다**(D−3.9).
+
+### D−3.1 한눈에
+
+| 4판 | 5판 | 발견 |
+|---|---|---|
+| Q4-4 현행 유지 — 청소의 `withPending` 해제가 park 된 익절 위에서 발의를 비워도 손절을 낸다 | **번복.** 발의의 주문이 살아 있을 수 있으면 비우지 않고, 손절은 나가지 않으며, 원인을 명명한 critical 을 낸다 | N1 |
+| "재시작 복구가 그 attempt 를 IN_DOUBT 로 만든다" | **거짓(ACKED).** ACKED 는 재시작에서 그대로 남고 복구가 건너뛴다 — 기동 시 ACKED 정산 경로를 설계한다 | N4 |
+| 소급 재분류(D−2.3) | **이연(선택 후속).** 사건 두 행은 이미 park — 이득 없음, 전략 PLACE 행 변이 위험만 남는다. 사건 경로는 Q4-1 도구로 일원화 | codex 권고·Manager |
+| 코드 분류기 `(ReasonCode, bool)` | **3상**: 확정 거절 · 모호 강제 · 판정 없음 | N3 |
+| fixture 4b.6·6.2 가 4판이 못 내는 결말 요구 | 4판·5판 의미론으로 고친다 | N5 |
+| "오류가 한 겹 감싸이면 모양이 바뀌어 거절 쪽" | **거짓** — 이연된 절에 정정과 구조적 강화 요구로 남긴다 | N7 |
+| 새 critical 들의 전달 비용 무언급 | 이름 붙인 잔여 — `n.mu` 동기 전달은 a092/a124 소관 | N2 |
+| N = `obs.DefaultCriticalAttempts` | 유지 — "관례 일관성이지 증거가 아니다" 를 명기 | N8 |
+
+### D−3.2 N1 — 살아 있을 수 있는 주문의 발의는 비우지 않는다 (Q4-4 번복)
+
+**코드가 주는 것.**
+
+- 청소는 `withPending && m.state.Pending()` 이면 끝에서 무장된 발의를 `ProposalCancelled` 로 푼다(`internal/app/engine/exitloop.go:1492-1495`).
+  청소 목록은 `CONFIRMED` 주문뿐이다(`internal/journal/fills.go:1862` 부근 `WHERE a.state = ?` = `StateConfirmed`). 그 발의의 주문
+  attempt 가 모호·park 면 목록에 없어 `clear` 는 참이고 해제가 일어난다.
+- **평범한 `IN_DOUBT`(·`ACKED`·기록·전송 중) attempt 는 이미 막힌다** — `checkSymbolFree` 는 같은 종목에 미종결(`PendingAttempts`)
+  attempt 가 있으면 방향과 무관하게 모든 mutation 을 `SymbolInFlight` 로 거절한다(`internal/execgw/gateway.go:804-813`). 매도가 unresolved
+  검사를 건너뛰는 우회(`:815-816`)에 닿는 것은 **park(`UNRESOLVED_IN_DOUBT`, 종결 상태)** 뿐이다. 4판 D−2.11 Q4-4 는 두 경로를 섞었다.
+- 발의 attempt 는 `exit_states.pending_intent_id` → `mutation_attempts.intent_id` 로 찾는다(`apply_hook.go:669-673`, `schema.go:216-218`).
+
+**결정(Manager 번복).**
+
+1. 청소가 무장된 발의를 해제하기 **전에** 그 발의 intent 의 attempt 를 본다. 하나라도 주문이 살아 있을 수 있는 상태
+   (`RECORDED`·`DISPATCH_STARTED`·`ACKED`·`IN_DOUBT`·`UNRESOLVED_IN_DOUBT`)이면 **해제하지 않고** `clear=false` 로 끝낸다 — 손절은
+   그 주기에 나가지 않는다(`armExitProposalTx` 가 두 번째 발의를 거절한다, `apply_hook.go:666-668`). 모든 attempt 가 `CONFIRMED` 면 그 주문은
+   청소 목록에 있으므로 종전대로 취소 확정 뒤 해제하고, 비수용 종결뿐이면 D−2.5 의 판정 함수로 해제한다.
+2. **침묵하지 않는다.** 그 원인이 **park 된** attempt 면 "무보호 + 차단" critical 을 낸다 — 이벤트는 그 attempt(id·종목·운영자 해소 필요)를
+   원인으로 명명하고 key 는 포지션 단위다. 모호·전송 중이면 기존 지연 타이머와 새 트리거(D−2.7)가 그대로 동작한다(그 상태는 재시작 복구가
+   종결시킨다).
+3. **해동**은 Q4-1 의 운영자 도구(같은 해제 판정 함수) 또는 종결 증거(해소가 비수용·접수로 닫음)뿐이다.
+
+**안전 불변식 §4 와의 관계(정직하게).** 이 규칙은 손절 즉시성을 **양보한다** — 다만 **사람이 에스컬레이션된 park 상태에서만, 그리고
+원인을 명명한 critical 과 함께만**이다. 대가로 지키는 것은 넘길 수 없는 규칙 "주문이 살아 있을 수 있는 동안 발의를 비우지 않는다" 다
+(F1 에서 철회한 park 해제의 다른 문을 닫는다). 모호·전송 중 상태에서는 오늘도 `checkSymbolFree` 가 손절을 막으므로 5판이 새로 양보하는 것은
+없다. 브로커가 보유 초과 매도를 거절하는지는 여전히 **미검증**이며 이 규칙은 그것에 기대지 않는다.
+
+### D−3.3 N4 — ACKED 로 남은 attempt 의 기동 정산
+
+**4판 정정.** D−2.5 의 "재시작 복구가 그 attempt 를 IN_DOUBT 로 만든다" 는 `DISPATCH_STARTED` 에만 참이다. **`ACKED` 는 그대로 남는다** —
+`RecoverPending` 은 ACKED·IN_DOUBT 를 "left as they are, still blocking" 으로 두고(`internal/journal/recovery.go:81-83`·`:116-120`),
+`Recovery.Run` 은 IN_DOUBT 가 아닌 것을 건너뛴다(`internal/reconcile/recovery.go:262-272` — "ACKED … is not ambiguous, it is unfinished").
+`Resolver.Resolve` 도 IN_DOUBT 가 아니면 `ErrNotResolvable` 이다(`internal/execgw/indoubt.go:258-260`). 그래서 D−2.5·4.3c 가 무장을
+유지한 ACKED 발의는 **재시작마다 얼어 있다** — 설계가 그것을 허용하면 안 된다(Manager).
+
+**코드가 주는 것 — 기계는 이미 있다.**
+
+- ACKED → CONFIRMED: `ResolveConfirmed` 는 `IN_DOUBT`·`ACKED` 에서 전이한다(`internal/journal/resolution.go:48-60`).
+- ACKED → IN_DOUBT: `MarkInDoubt` 는 `DISPATCH_STARTED`·`ACKED` 에서 전이한다(`durability.go:510-516`; 전이표 `lifecycle.go:45`).
+- 주문 번호로 읽어 확인: 발주 직후 확인은 `Gateway.confirmCreatedOrder` — `OrderRaw` → `parseOrderFacts` → 주문 번호 **바이트 일치** + 종목
+  일치(`internal/execgw/roundtrip.go:86-123`). 같은 읽기 도구를 `Resolver` 도 가진다(`Resolver.Order OrderReader`, `indoubt.go:196-198` —
+  주석상 "Required for CANCEL/AMEND resolution; PLACE resolution does not use it"; `resolveAmend` 가 `r.Order.OrderRaw` 를 쓴다,
+  `amend_indoubt.go:374`). 생산 배선은 그것을 채운다(`internal/app/engine/gateway.go:276-283` `Order: orders`).
+- `Recovery.Run` 은 IN_DOUBT 를 재생 → 해소로 보낸다(`reconcile/recovery.go` 2단계).
+
+**결정 — 기동 ACKED 정산.** `Recovery.Run` 의 미종결 순회에서 ACKED 를 건너뛰는 자리(`reconcile/recovery.go:262-272`)를 바꾼다.
+
+1. **PLACE** ACKED: `broker_order_id` 로 `Resolver.Order.OrderRaw` 를 읽어 `confirmCreatedOrder` 와 **같은 판정**(번호 바이트 일치 · 종목
+   일치)을 한다. 확인되면 `ResolveConfirmed`(ACKED → CONFIRMED). 확인되지 않으면(읽기 실패 포함) `MarkInDoubt`(ACKED → IN_DOUBT,
+   `ack_round_trip_unconfirmed`) 한 뒤 **같은 순회에서** 종전 IN_DOUBT 경로(재생 → 해소)로 넘긴다. 판정 로직은 `confirmCreatedOrder` 와
+   **한 곳**에 둔다(둘로 베끼지 않는다).
+2. **CANCEL·AMEND** ACKED: 읽기 확인 규칙이 없다(`roundTripFor` 가 PLACE 만, `roundtrip.go:72-75`). `MarkInDoubt` 로 IN_DOUBT 에 올려
+   기존 `resolveCancel`·`resolveAmend` 절차(`indoubt.go` 갈래)에 맡긴다.
+3. 그 뒤 D−2.5 의 기동 따라잡기가 종결 결과(비수용이면 해제, 접수면 체결 경로)를 처리한다. 발의는 **종결 증거가 생긴 뒤에만** 풀린다 —
+   ACKED 를 풀기 위해 발의를 비우지 않는다.
+4. **정지 조건.** `Resolver` 의 IN_DOUBT 해소가 ACKED 에서 온 PLACE(주문 번호가 이미 있음)를 목록 대조로 처리할 수 없다는 사실이 편집 전
+   FLM 에서 드러나면(예: matcher 가 번호를 쓰지 않아 다른 주문과 섞임) 멈추고 보고한다.
+5. 이 정산은 `Recovery.Run` 의 순서(재시작 규칙 → 재생·해소) 안에서 돈다. **주문 읽기 실패는 정산 실패가 아니다** — 확인되지 않음이므로 1 의 모호 경로로 간다. 정산의 **원장 쓰기 실패**는 같은 순회의 이웃(재생·해소 실패)과 같은 규약을 따른다 — `ErrRecoveryIncomplete` 반환(`reconcile/recovery.go:276-289`). D−2.6-4 의 흡수·critical 규칙은 `Recovery.Run` **밖**의 기동 단계(따라잡기)에만 적용된다 — 복구 본문 안에 두 번째 실패 규약을 만들지 않는다.
+
+이것은 재시작 규칙("ACKED 는 그대로")을 **증거 없이** 바꾸는 것이 아니다 — 확인 읽기라는 증거를 먼저 얻고, 얻지 못하면 모호로 올려 해소
+절차가 증거를 찾게 한다. 둘 다 이미 있는 전이다.
+
+### D−3.4 소급 재분류 — 이연(선택 후속)
+
+0.5h 가 보였듯 사건 두 행은 이미 park 이고(D−2.2) 재분류 조건 1 을 못 채운다 — **이득이 없다.** 남는 것은 전략 PLACE 행까지 바꾸는 High-risk
+원장 변이뿐이다(YAGNI). 5판은 D−2.3 을 **구현 범위에서 뺀다**: spec delta 의 재분류 요구·시나리오를 지우고, tasks §4bis 를 「선택 후속」 으로
+강등한다. D−2.3 본문은 후속 change 가 다시 열 때의 설계 기록으로 남기되 D−3.6(N7 정정)을 함께 읽는다. **사건 경로는 Q4-1 운영자 도구로
+일원화한다.** D−2.6 의 기동 순서 ①(재분류)은 사라지고 ②(따라잡기)와 D−3.3(ACKED 정산)이 남는다.
+
+### D−3.5 N3 — 코드 분류기는 3상
+
+**코드가 주는 것.** `classifyMutation` 은 `policyRefusal` → `ClassifyBrokerRefusal`(B3 `internal/execgw/classify.go:46`) → `statusOf` →
+`journal.ClassifyHTTPMutation` 순이다(`classify.go:21-79`). 상태 코드 분기에서 422 는 확정 거절이다(`journal/dispatch.go:323-327`·`:351`).
+`ClassifyBrokerRefusal` 안의 본문 부분문자열 분류(`classifyRefusalBody`, `failclosed.go:182-183`·`:220-237`)도 먼저 가로챌 수 있다.
+
+**결정.** R1 의 코드 분류기(`classifyRefusalCode`, 3판 D1)는 세 결과를 낸다:
+
+- **확정 거절** — code 가 확정 거절 목록에 있고 두 자리(최상위 `code`·`error.code`)가 모순되지 않음 → `DispatchRejected`.
+- **모호 강제** — 두 자리가 **다른 값**으로 모두 있음 → 즉시 `DispatchAmbiguous` 로 반환하고 **뒤의 분류(`ClassifyBrokerRefusal`·상태 코드)를
+  타지 않는다.** 그래서 422 본문에 모순 code 가 있어도 확정 거절로 떨어지지 않는다.
+- **판정 없음** — JSON 아님 · code 없음 · 목록 밖 → 종전 경로(`ClassifyBrokerRefusal` → 상태 코드).
+
+거절 본문에서 "확정 성공" 은 나오지 않는다 — 분류기의 셋째 상태는 성공이 아니라 판정 없음이다. 분류기는 `classifyMutation` 에서
+`ClassifyBrokerRefusal` **앞**에 선다(3판 D1 과 같은 자리).
+
+### D−3.6 N7 — "감싸이면 거절 쪽" 정정 (이연된 절의 요구로)
+
+D−2.3 조건 4 의 "오류가 한 겹 더 감싸이면 모양이 바뀌므로 거절 쪽으로 틀린다" 는 **거짓**이다 — `fmt.Errorf("…: %w", apiErr)` 는 표식
+`official: API error <n>: ` 를 정확히 한 번 남기고 그 뒤 JSON 도 그대로다. `statusOf` 는 `errors.As` 로 감싼 오류에서도 상태를 꺼내고
+(`classify.go:105-108`) `detail` 에는 감싼 전체가 붙는다(`:70`). 재분류가 다시 열리면 조건 4 는 표식 부분문자열이 아니라 **구조**로 강화한다 —
+`detail` 이 `ClassifyHTTPMutation` 의 상태 코드 문장 + `": "` + `APIError.Error()` 로 **정확히** 구성됐는지(앞·뒤 덧붙임 없음), 그리고 감싼
+오류(앞·뒤 문맥 덧붙임, 표식 둘) 픽스처가 거절됨을 시험으로 고정한다. 이연 중이므로 5판에서는 요구로만 남긴다.
+
+### D−3.7 N2 — 새 critical 들의 전달 비용 (이름 붙인 잔여)
+
+5판이 더하는 critical(청소의 새 트리거 D−2.7 · park 원인 알림 D−3.2 · 기동 행 실패 D−2.6-4)은 오늘의 알림 경로를 탄다 — 관측 루프에 주입된
+notifier(`internal/app/engine/exitwiring.go:341-342`)가 동기로 부르고(`exitloop.go:1710`) 포지션을 차례로 처리하며(`:451-465`) 전달은
+`n.mu` 아래 동기 발행·재시도다(`internal/obs/notifier.go:254-255`·`:309`·`:428-433`·`:525-527`). 그래서 전달이 막힌 동안 **다른 포지션의 손절이
+지연될 수 있다.** 그 뮤텍스와 동기 전달의 제거는 **a092(동기 deliver 제거)와 a124(실행자)** 의 소관이다 — 5판은 그것을 고치지 않고 **잔여로
+명명**하며, tasks 「선후 관계」 에서 a092 를 "독립" 이 아니라 **이 잔여의 해소자**로 적는다.
+
+### D−3.8 N8 — N = `obs.DefaultCriticalAttempts` 는 관례 일관성
+
+유지한다. 다만 명기한다: a124 는 **전달 시도** 실패를 세고 a094 는 **청소 주기** 실패를 센다. 같은 상수를 쓰는 것은 두 "계속 실패" 판정을
+한 값으로 맞추는 **관례 일관성**이지, 청소 실패 셋이 일시적이라는 **증거가 아니다.** 알림 튜닝이 그 상수를 바꾸면 청소 정책도 함께
+바뀐다(결합). 두 정책이 따로 움직여야 한다는 요구가 생기면 청소 전용 상수로 분리한다.
+
+### D−3.9 N6/F7 — a089 처분은 freeze 의 미충족 전제
+
+D−2.8 의 두 결말은 그대로지만 **어느 쪽도 아직 실행되지 않았다.** a094 는 a089 처분 전에 freeze 할 수 없다. 5판은 작성하되 **5라운드는 사용자 답
+뒤에** 돈다(Manager). a089 결정의 긴급도는 사용자 큐에서 한 단계 올라갔다(a094 freeze 의 직접 차단자).
 
 ## D−2. 4판 — 3라운드(codex) 반영 (2026-09-27)
 
@@ -284,7 +416,7 @@ BTM 미진입 요약). 다른 자리의 같은 논증은 이 절대로 읽는다
   `ProposalCancelled` 로 푼다(`exitloop.go:1491-1495`). `withPending` 은 `CancelPendingFirst` — 익절이 무장된 채 손절 선을 넘은 경우다
   (`internal/exitpolicy/ladder.go:447`, `ratchet.go:432`). 그 익절의 attempt 가 `IN_DOUBT`·park 면 `LiveOrdersForSymbol`(CONFIRMED 만)에
   안 보이므로 `clear` 는 참이고 발의가 풀린다 — 그 위에 전량 손절이 나가며, 매도는 unresolved 검사를 건너뛴다(`gateway.go:815-816`).
-  D−2.2 와 같은 위험이다. 반대로 무장을 유지하면 손절이 막힌다(§4). **결정(Manager, 2026-09-27): 현행 유지 — 손절을 낸다.** 트레이드오프의
+  D−2.2 와 같은 위험이다. 반대로 무장을 유지하면 손절이 막힌다(§4). **5판에서 번복됨 — D−3.2.** (4판 당시 기록:) **결정(Manager, 2026-09-27): 현행 유지 — 손절을 낸다.** 트레이드오프의
   이름: 「보이지 않는 익절 위에 손절이 나가는 중복 위험」 대 「손절 차단」. TossOS 는 손절 지연 쪽을 늘 기각한다(안전 불변식 §4
   "손절·비상 청산의 즉시성을 약화하거나 지연하지 않는다"). **미검증 잔여**: 그 중복 매도를 브로커가 보유 초과로 거절하는지는 측정되지
   않았다 — 이 문서는 그 한계를 주장하지 않는다.
