@@ -23,7 +23,7 @@
 | B15 | `:1283` `if errors.Is(err, journal.ErrExitSnapshotQuarantined) {` | 예 | 기존 — a094는 이 함수를 바꾸지 않는다 | no | no |
 | B16 | `:1296` `if recorded.ArmedProposal == nil \|\| recorded.ArmOutcome != journal.ExitArmArmed {` | 예 | 기존 — a094는 이 함수를 바꾸지 않는다 | no | no |
 
-**미진입 분기 2개**: B6, B10
+**미진입 분기 2개**: B8, B12 (base 번호 B6, B10 — 4판 재번호; 진입 실측은 base 값이다. a111 이 더한 B1·B2 는 이 실측의 대상이 아니었다)
 **자체 블록 없는 분기 0개**: 없음 — 컴파일러가 별도 블록을 만들지 않는 형태(빈 `default:` 등)이며 미커버와 다르다.
 
 **Refresh (2026-09-27, HEAD ddd39a83).** `ast.json` 을 현재 소스에서 `go run ./tools/logic-map` 로 재생성했다(옛 파일은 base `ec29dc72` 소스를 기술). 행의 `:줄` 은 새 AST 의 줄로 옮겼다. 분기 대응은 옛/새 AST 를 (kind, 소스 줄)로 difflib 정렬한 결과다 — B1->B3, B2->B4, B3->B5, B4->B6, B5->B7, B6->B8, B7->B9, B8->B10, B9->B11, B10->B12, B11->B13, B12->B14, B13->B15, B14->B16; 새 분기 B1, B2. 「진입 실측」 열은 base 에서 잰 값 그대로다(재측정 안 함). 이 함수를 바꾼 이웃 커밋: 882a0b49 (a111).

@@ -81,5 +81,11 @@ ModeTriggerCriticalAlertUndelivered)` 로 원장에 모드를 쓰지만(`interna
 프로세스 안 latch 로는 참이고, 재시작을 건넌 durable 집행으로는 AC1 때문에 거짓이다. 3판의 결론(정상 취소를 계수에서 뺀다)은
 어느 쪽이든 유지될 수 있으나, 근거 문장이 둘 중 무엇을 뜻하는지는 리뷰가 판정한다.
 
+**정정 (3라운드 F9, 2026-09-27).** 위 "재시작 뒤 그 모드를 진입 게이트로 되돌리는 경로가 없다" 는 **운영 모드에 한해서만** 참이다.
+재시작 시 진입 차단은 따로 복원된다 — `internal/app/engine/gateway.go:269` 가 `restoreAlertEntryLatch`(`:153-168`)를 부르고,
+그 함수는 미전달 critical 알림이 있으면(`UndeliveredCount > 0`) `ReasonAlertUndelivered` 로 게이트를 막는다. 배선되지 않은 것은
+durable 운영 모드의 투영(`SetModeProjector`·`RestoreOperatingModeProjection`)뿐이며, 그래서 전달이 **성공한 뒤**에는 모드의 사람
+해제 요구가 재시작을 건너지 못한다(a124 AC1 과 같은 사실, a124 D10 대조 중). 4판의 처리: `design.md` D−2.9.
+
 `design.md:543` "park는 그 자체로 계정 전역 진입을 막는다(`indoubt.go:379-382`)" 는 **다른 기전**이다 — `EntryGate.Block`
 (`internal/execgw/indoubt.go:379-381`, 프로세스 안)이지 운영 모드 투영이 아니다. AC1 과 무관한지 리뷰어가 확인한다.

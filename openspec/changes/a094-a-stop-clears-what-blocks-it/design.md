@@ -1,7 +1,238 @@
 # a094 · 설계
 
 > 분기 인용은 전부 `analysis/function-logic/`의 AST 산출물에서 온다
-> (함수 **15개** · 분기 **180개** — 3판이 6개 101분기를 더했다).
+> (함수 **15개** · 분기 **180개** — 3판이 6개 101분기를 더했다; 2026-09-27 refresh 후 HEAD 기준 **182개**, `record` 14→16).
+>
+> **4판(2026-09-27)**: 바로 아래 **D−2** 가 3라운드(codex) 반영이며 이 문서의 나머지와 충돌하면 D−2 가 이긴다.
+
+## D−2. 4판 — 3라운드(codex) 반영 (2026-09-27)
+
+> **이 절이 이긴다.** 아래 D−1~D7 은 3판 본문이며, 이 절과 충돌하는 자리는 이 절을 따른다.
+> 근거 줄은 HEAD 기준(3라운드 트리 base `3937e341` 과 Go 동일). 3판 본문의 옛 좌표는
+> `analysis/third-round-errata.md` 로 옮겨 읽는다. 코드 영수증이 없는 결정은 만들지 않고
+> 「열린 질문」 으로 남긴다. 3라운드 판정·발견 원문: `review.md` 「3라운드」, `analysis/freeze-review/codex-r3-output.md`.
+
+### D−2.1 무엇이 바뀌었나 — 한눈에
+
+| 3판 | 4판 | 발견 |
+|---|---|---|
+| park(`UNRESOLVED_IN_DOUBT`)에서도 발의를 해제한다 | **해제하지 않는다.** 해제는 **입증된 비수용** 종결(`FAILED_CONFIRMED`·`NOT_DISPATCHED`)에서만 | F1 |
+| 소급 재분류: 저장된 IN_DOUBT 본문에 확정 거절 code 가 있으면 종결 | **원 발주 응답임이 전이 기록으로 양성 식별되는** attempt 로 한정 | F2 |
+| R2: 청소가 브로커 미체결(엔진 밖 주문 포함)을 보고 취소한다 | **엔진 귀속 주문만.** 사람이 넣은 외부 주문의 취소는 4판에서 **빼고 사용자 결정 대기**(D−2.4) | F3 |
+| 종결 → 해제 후처리, position 기준 해제 | **기대 intent 대조** + **기동 시 따라잡기**(충돌 완결성) | F4 |
+| detector 스냅샷 재사용 | 4판 R2 는 브로커를 읽지 않으므로 **불요.** 스냅샷 공표·신선도 계약은 D−2.4 가 R2 를 다시 넓힐 때의 **선행 조건**으로 적는다 | F5 |
+| tasks 4.4 「`cmd/tossctl/engine.go:374` 무변화」 | 실재 좌표의 **기동 순서 요구**로 재핀 | F6 |
+| a089 와의 관계 「독립」 | **규범 충돌**로 기록, a089 처분의 두 결말별 처리 | F7 |
+| `PENDING_CANCEL` 제외 | **엔진이 낸 미종결 취소 attempt** 로 정의, 새 계수에만 적용, 기존 지연 타이머는 그대로 | F8 |
+| critical 전달 실패 → `ENTRY_BLOCKED` | 프로세스 안 latch + 재시작 시 미전달 알림 재차단은 참, durable 운영 모드 투영은 미배선(AC1) | F9 |
+
+### D−2.2 F1 — 발의 해제는 입증된 비수용에서만
+
+**코드가 주는 것.**
+
+- 종결 상태의 뜻은 `internal/journal/durability.go:37-45` 가 정한다 — `StateConfirmed` "the mutation exists at the broker",
+  `StateNotDispatched` "never left the process", `StateFailedConfirmed` "broker definitively rejected it",
+  `StateUnresolvedInDoubt` "we could not prove either way".
+- `FAILED_CONFIRMED` 에 이르는 길은 둘뿐이다 — dispatch 가 확정 거절로 분류한 경우(`dispatch.go` `DispatchRejected` →
+  `Settle(StateFailedConfirmed, …)`, `dispatch.go:158-163`)와, 해소가 부재를 증명한 경우(`ResolveFailed`, `resolution.go:63-70`
+  "the mutation was proven not to have happened"). `NOT_DISPATCHED` 는 `DispatchNotSent`(`dispatch.go:151-156`)와 재시작 규칙의
+  RECORDED 종결(`journal/recovery.go` — 전송 시작 기록이 없는 attempt).
+- 이중 매도의 실제 방벽은 발의 자체다 — `armExitProposalTx` 는 `pending_action` 이 차 있을 때만 두 번째 발의를 거절한다
+  (`apply_hook.go:666-668`). 매도(노출 축소)는 gateway 의 unresolved 검사를 건너뛴다(`internal/execgw/gateway.go:815-816`
+  — `!plan.raisesExposure` 면 반환). 따라서 park 에서 발의를 비우면 **원 매도가 살아 있어도** 다음 발의가 무장되고 제출된다.
+  3판의 근거 1("1차 방벽은 `armExitProposalTx`")은 그 방벽을 해제가 치운다는 사실을 놓쳤다(3라운드 F1).
+
+**결정.**
+
+- 해제 대상은 `FAILED_CONFIRMED`·`NOT_DISPATCHED` 종결뿐이다. `CONFIRMED` 는 3판대로 해제하지 않는다.
+- **`UNRESOLVED_IN_DOUBT`(park)에서는 해제하지 않는다.** 원 주문의 존재가 미지인 동안 발의는 무장된 채 남는다.
+  이것은 3판이 막으려던 「영구 무보호」를 park 된 포지션에 되살린다 — 그 비용은 park 가 이미 요구하는 **사람의 해소**로만
+  푼다(정본 spec order-execution 「해소 불능」: "운영자 해소만 허용"). park 의 유일한 출구는 `Journal.OperatorResolve` 다
+  (`internal/journal/resolution.go:114-150` — "the only exit from UNRESOLVED_IN_DOUBT", 대상은 `CONFIRMED`·`FAILED_CONFIRMED`,
+  운영자 이름과 메모 필수). **다만 그 함수의 비시험 호출자는 0 이다** — 운영자가 그것을 부를 도구 경로가 저장소에 없다
+  (2026-09-27 전수 grep). 운영자가 `FAILED_CONFIRMED` 로 닫으면 그것은 입증된 비수용이 되고 D−2.5 의 기동 따라잡기가 다음
+  기동에서 발의를 푼다. 그 **세션 안에서** 곧바로 풀지(도구 경로에서 해제를 부를지)는 코드에 근거가 없다 — **열린 질문 Q4-1**.
+- 4판에서 이 사건(475150·080220)의 해동은 park 해제가 아니라 **D−2.3 의 소급 재분류 → `FAILED_CONFIRMED` → 해제**로만
+  일어난다. 3판도 이 사건은 그 경로라고 적었다(D3 「단, 이 결정은…」). 272210 은 3판 기록상 `PROPOSAL_CANCELLED` 라이브락이며
+  (`tasks.md` 6.2) 이 절과 무관하다.
+
+### D−2.3 F2 — 소급 재분류는 원 발주 응답만
+
+**코드가 주는 것 — provenance 는 이미 원장에 있다(스키마 추가 없음).**
+
+- `mutation_attempts` 는 `broker_order_id`("assigned once the broker acks", `internal/journal/schema.go:223`)를 갖고,
+  `attempt_transitions` 는 **추가 전용** 전이 기록(`from_state`·`to_state`·`reason_code`·`detail`, `schema.go:236-245`)이다.
+- 발주 응답의 본문이 `detail` 에 들어가는 길은 하나다 — `classifyMutation` 이 **상태 코드를 받은** 오류를
+  `journal.ClassifyHTTPMutation` 으로 분류하고 `detail` 에 `": " + err.Error()` 를 붙인다(`internal/execgw/classify.go:64-72`;
+  `APIError.Error()` = `"official: API error %d: %s"` 로 본문을 담는다, `internal/official/errors.go:27-28`). 그 분류가 모호면
+  `DispatchAmbiguous` → `MarkInDoubt` 이고 이때 전이는 **`DISPATCH_STARTED → IN_DOUBT`**, `reason_code = "dispatch_outcome_unknown"`
+  (`dispatch.go:204-209`, `lifecycle.go:96`).
+- 반대로 접수 뒤 readback 실패는 **`MarkAcked`(broker_order_id 기록) 다음** `ACKED → IN_DOUBT`, `reason_code =
+  "ack_round_trip_unconfirmed"` 이다(`dispatch.go:181-195`, `:71`). 그 `detail` 의 오류는 readback 의 것이지 발주의 것이 아니다.
+
+**결정 — 재분류 대상은 다음을 모두 만족하는 attempt 로 한정한다(하나라도 아니면 그대로 둔다).**
+
+1. `kind = 'PLACE'`, 현재 `state = 'IN_DOUBT'`, `broker_order_id = ''`.
+2. 전이 기록에 `to_state = 'ACKED'` 행이 **없다**.
+3. `IN_DOUBT` 로 가는 전이 행이 **정확히 하나**이고 그 행이 `from_state = 'DISPATCH_STARTED'`,
+   `reason_code = 'dispatch_outcome_unknown'` 이다.
+4. 그 행의 `detail` 이 상태 코드 분기의 모양 — `"HTTP <n> does not prove whether the mutation executed: official: API error <n>: <본문>"`
+   (`dispatch.go:337-341` + `classify.go:67-70`) — 이고, 두 `<n>` 이 같으며, `<본문>` 이 JSON 으로 읽힌다.
+   전송 실패 분기(`"transport failed with the request …"`, `dispatch.go:310-316`)와 상태 없음 분기(`:328-333`)는 대상이 아니다.
+5. 본문의 최상위 `code` 와 `error.code` 가 **둘 다 있으면 같아야 하고**, 하나만 있으면 그것을 쓴다. 둘이 다르면 **모호 —
+   그대로 둔다**(3라운드 F2 "conflicting top-level/nested-code handling; ambiguity must remain IN_DOUBT").
+6. 그 code 가 확정 거절 목록(4판 = `opposite-pending-order-exists` 하나)에 있다.
+
+**규칙 문장으로 고정한다 — `MarkAcked` 뒤 readback 실패의 `detail` 은 재분류 근거가 될 수 없다**(2·3 이 구조로 배제).
+재생 응답도 대상이 아니다 — 재생은 전이를 `IN_DOUBT` 에서 다시 쓰지 않고 원장 해소 기록으로 남는다(spec §1); 3 의 "정확히
+하나" 가 재생 뒤의 모양을 배제하는지는 **task 1.x 의 FLM 으로 확인한다**(재생 경로의 전이 쓰기, `internal/execgw/replay.go`).
+
+**정지 조건.** 위 여섯은 기존 컬럼만 읽는다 — 스키마 변경이 필요해지면(예: 4 의 문자열 모양이 다른 판본에서 달랐음이
+원장에서 확인되면) 그 자리에서 멈추고 보고한다.
+
+### D−2.4 F3 — R2 는 엔진 귀속 주문으로 축소, 외부 주문 취소는 사용자 결정 대기
+
+**코드가 주는 것.**
+
+- 오늘 청소의 목록은 `Journal.LiveOrdersForSymbol`(`internal/journal/fills.go:1849-`)이다 — `CONFIRMED` 인 `PLACE`/`AMEND`
+  attempt 로 `broker_order_id` 가 있고, 소유 intent 가 유일하며, 종결 체결 스냅숏이 없는 주문을 lineage 로 현재 번호까지
+  따라간 것이다. **이것이 엔진 귀속(positive attribution)의 정본이다.**
+- 청소는 `withPending` 이면 같은 종목의 **모든** 매도를 치운다(`exitloop.go:1448-1450` `if !buy && !withPending`). 목록이
+  원장뿐인 오늘은 그 "모든" 이 엔진 매도로 닫혀 있다. 3판처럼 목록을 브로커 미체결로 넓히면 다른 포지션·사람의 보호 매도까지
+  들어온다 — `withPending` 조건에 귀속 경계가 없다(3라운드 F3). detector 의 비추적 주문 파싱도 범위를 다 채우지 않는다
+  (`internal/filldetect/detect.go:407-420`).
+
+**결정.**
+
+- **4판 R2 의 목록은 엔진 귀속 주문뿐이다 — 곧 오늘의 `LiveOrdersForSymbol` 이다.** 브로커 미체결 목록을 청소 대상에 더하지
+  않는다. 그러면 3판 R2 의 배선(`ExitObserverOptions` 새 필드 · 스냅샷 주입 · `Snapshot` 필드 추가)과 dedup·감사 요구는
+  **필요 없어진다.**
+- 4판 R2 에 남는 것: (a) 빈 가격을 치우기 실패로 읽지 않는다(3판 D2 결정, `floatOf`·`exitloop.go:1779-1785`, a087 대비),
+  (b) 연속 치우기 실패의 새 알림 트리거와 그 `PENDING_CANCEL` 제외(D−2.7), (c) 발행·수량/가격 해석·취소 실패를 `clear=false`
+  로 흡수하는 기존 규칙(`exitloop.go:1465`·`:1471`·`:1485-1486`) 유지. 원장 목록 읽기 실패는 오늘처럼 오류로 반환된다(`:1443-1445`).
+- **이 사건에 대한 귀결을 숨기지 않는다.** 475150·080220·272210 의 반대 매수는 엔진이 낸 것이 아니다(proposal 「Why」 —
+  세 종목 `intents` 에 BUY 0건). 4판은 그것을 **치우지 않는다.** 그래서 4판 뒤 이 모양은 「영구 동결」 에서 「매 주기 거절되고
+  보이는 반복」 으로 바뀐다 — R1 이 409 를 종결로 분류 → 해제(`submit` B10, 오늘 경로) → 다음 관측이 다시 발의 → 같은 409.
+  그 반복은 `alertProposalRefused` 로 보고되고(`exitloop.go:1654-`) 전송은 a096 의 재알림 창이 묶는다. **손절은 사람이 반대
+  주문을 치울 때까지 나가지 않는다.**
+
+**사용자 결정 대기 — 엔진 밖(사람이 넣은) 주문의 취소.** 확대는 사용자 몫이다(Manager 방향). 결정이 "넓힌다" 로 나면 그
+change(또는 5판)는 다음을 **모두** 선행 조건으로 가져야 한다 — 3라운드 F3·F5 가 요구한 것:
+
+1. 외부 주문의 **귀속 규칙** — 무엇이 "이 포지션의 보호를 막는 주문" 인지(방향·수량·식별자 완결성), 불완전하거나 모르는 주문은 거절.
+2. 다른 포지션·사람의 **보호 매도는 취소하지 않는다**는 경계(`withPending` 매도 청소를 발의에 연결된 매도로 제한).
+3. **공표된 OPEN 스냅숏 계약**(F5): 계정 범위의 완전한 OPEN 세대를 불변으로 공표, 수집 **시작** 시각 기준 신선도, 「비어 있음」
+   과 「읽지 못함」 의 구분, 실패 처리, 청소 쪽 비차단 읽기. 오늘 detector 에는 그것이 없다 — 스냅숏은 한 주기 안에서 소비되고
+   (`detect.go:293-352`) 추적 주문 보조 읽기가 섞이며(`:423-455`) 주기는 조회 시간 **더하기** 3초 잠(`:515-525`,
+   `PollInterval = 3s` `:128`)이라 "최대 3초 전" 이 성립하지 않는다. 신선도 상한 값은 코드에 근거가 없다 — **열린 질문 Q4-2**.
+4. 취소 사실의 감사 기록(3판 D2 「감사」).
+
+### D−2.5 F4 — 종결 → 해제 이양의 충돌 완결성과 기대 intent
+
+**코드가 주는 것.**
+
+- `exit_states.pending_intent_id` 는 발의를 무장할 때 쓰이고(`apply_hook.go:669-673`), attempt 는 `intent_id` 로 intent 에
+  묶인다(`schema.go:216-218`). 연결은 이미 있다.
+- `ResolveExitProposal` 은 position 으로 찾아 세 컬럼을 비운다 — `pending_intent_id` 를 **읽기만 하고 대조하지 않는다**
+  (`apply_hook.go:839-864`). 늦게 도착한 해제가 그 사이 재무장된 **새** 발의를 지울 수 있다.
+- attempt 종결과 발의 해제는 다른 트랜잭션이다. 종결된 attempt 는 `PendingAttempts` 에서 빠지므로(`journal/recovery.go:30-33`)
+  두 쓰기 사이의 충돌은 재시작 복구가 다시 찾지 못한다.
+
+**결정.**
+
+- **기대 intent 대조.** 해제는 "이 attempt 의 `intent_id` = 현재 `pending_intent_id`" 일 때만 비운다. 다르면 아무것도 하지
+  않는다(다른 발의다). `ResolveExitProposal` 의 호출 형태를 바꾸는 편집이며(Function Logic Map 대상, High-risk).
+- **기동 시 따라잡기.** 기동 복구에서, `pending_intent_id` 가 찬 `exit_states` 마다 그 intent 의 **마지막** attempt 가
+  `FAILED_CONFIRMED`·`NOT_DISPATCHED` 로 종결돼 있으면 기대 intent 대조로 해제한다. 따라잡기는 멱등이다(`ResolveExitProposal`
+  B8 — 이미 비었으면 무동작). 두 쓰기 사이의 충돌은 다음 기동이 닫는다. 세션 중 새로 생기는 비수용 종결은 오늘처럼 `submit`
+  B9/B10 이 같은 자리에서 해제한다.
+
+### D−2.6 F6 — 기동 순서를 실재 좌표로
+
+**코드가 주는 것.** 기동 복구는 `recoverThenReady(engineRecoverySequence(recovery), ready, …)`(`cmd/tossctl/engine.go:677`)이고
+`engineRecoverySequence` 는 `r.Run` 을 돌려준다(`:604-606`). `Recovery.Run`(`internal/reconcile/recovery.go:238-`)은
+① `RecoverPending`(재시작 규칙) → ② `PendingAttempts` → 재생 → `Resolver.Resolve` 순이다. 3판 tasks 4.4 가 가리킨
+`cmd/tossctl/engine.go:374` 의 호출은 a102 `6cd643ca` 이후 없다(정오표 §2·§4).
+
+**결정 — 순서 요구로 재핀한다(좌표 단언 대신).**
+
+1. **재분류(D−2.3)는 `Resolver.Resolve` 가 IN_DOUBT 후보를 소비하기 전에** 돈다 — `engineRecoverySequence` 이음매에서 `r.Run`
+   앞. 해소가 먼저 돌면 후보를 park 하거나 다른 증거로 종결해 원 발주 응답의 증거 자리를 지나간다.
+2. **따라잡기(D−2.5)는 `Recovery.Run` 뒤, `ready` 앞**에 돈다 — 준비 신호 전에 해제가 끝나야 첫 관측 주기가 무장된 채 시작하지 않는다.
+3. `Recovery.Run` 본문(재시작 규칙 → 재생 → 해소)과 인터록 의미는 바꾸지 않는다.
+
+### D−2.7 F8 — `PENDING_CANCEL` 을 엔진이 낸 미종결 취소로 정의
+
+**코드가 주는 것.**
+
+- `mutation_attempts.kind = 'CANCEL'` 과 `target_order_id` 가 엔진이 낸 취소를 그 대상 주문에 묶는다(`schema.go:219-222`).
+- 청소는 취소 결과가 `StateConfirmed` 일 때만 치운 것으로 본다(`exitloop.go:1485-1486`). 취소의 `CONFIRMED` 는 **인수(ack)** 다 —
+  dispatch 는 접수를 `CONFIRMED` 로 종결하고(`dispatch.go:198-202`) 취소에는 readback 확인이 없다(3라운드 F8 인용
+  `internal/execgw/roundtrip.go:72-75`). 인수와 호가 이탈은 다르다.
+- 기존 지연 타이머: 치우지 못하면 `noteDelay` 가 시작되고(`exitloop.go:1252`) 한계 30초(`DefaultExitLiquidationDelayBound`,
+  `:116`)를 넘으면 `EventExitLiquidationDelayed` 를 한 번 낸다(`:1675-`). 그 이벤트는 **이미 critical** 이다
+  (`internal/obs/event.go:336`).
+
+**결정.**
+
+- 3판의 "연속 3회 → critical 로 올린다" 는 틀린 서술이다 — 이벤트는 이미 critical 이다. 4판은 이것을 **새 트리거**로 적는다:
+  같은 포지션의 청소가 연속 3회 `clear=false` 로 끝나면, 기존 30초 타이머와 **별도로** 같은 이벤트를 한 번 더 낸다(더 이른 신호).
+  **기존 타이머는 바꾸지 않는다** — 타이머의 시작·해제·한계·중복 방지 무변화.
+- **`PENDING_CANCEL` 의 정의**: 그 주기에 치우지 못한 주문 중 **엔진이 낸 `CANCEL` attempt 가 그 `target_order_id` 로 미종결
+  (`PendingAttempts` 에 있음)** 인 주문. 판정은 원장만 읽는다 — 브로커 상태(`brokerstate.StateCancelPending`)를 쓰지 않는다
+  (4판 R2 는 브로커를 읽지 않는다).
+- **제외는 새 트리거의 계수에서만.** 그 주기에 치우지 못한 주문이 **전부** 위 정의에 들면 계수를 늘리지 않는다. 하나라도 다른
+  이유로 못 치웠으면 센다. 기존 30초 타이머에는 어떤 제외도 적용하지 않는다(지연 경보의 약화 금지 — 안전 불변식 §4).
+- 인수(`CONFIRMED`)를 호가 이탈로 믿는 오늘의 청소 규칙은 **바꾸지 않는다.** 이탈 관측을 요구하려면 브로커 읽기가 필요하고
+  그것은 D−2.4 의 사용자 결정에 딸린다 — **열린 질문 Q4-3**.
+
+### D−2.8 F7 — a089 R2 와의 규범 충돌: 두 결말
+
+충돌 문장은 정오표 §5. a089 의 처분은 사용자 큐에 있다(2026-09-27, "a089 불구현 아카이브 + a090 신설" 제안). 4판은 별도 작업
+없이 그 결말을 따른다.
+
+- **a089 가 아카이브되면**: a089 R2 의 SHALL NOT("이 기록에 따라 … 동작을 분기해서는 안 된다")은 main spec 에 들어가지 않는다.
+  a094 R1 의 SHALL(`code` 로 종결)은 그대로 둔다. a094 쪽 "a089 와 겹치지 않는다" 류 문장(proposal 「관계」·tasks 도식)은
+  **4판에서 이미 "규범 충돌" 로 고쳤다** — 아카이브 뒤에는 그 문장에 "a089 아카이브로 해소" 만 덧붙인다.
+- **a089 가 유지되면**: a089 R2 의 금지를 **기록 기능에 한정**하도록 a089 쪽 문장을 좁혀야 한다 — "이 기록 필드에 따라 동작을
+  분기해서는 안 된다; 별도 요구로 명세된 증거 기반 실행 분류기는 이 금지의 대상이 아니다"(3라운드 F7 권고). 재생·주문 신원
+  보호는 완화하지 않는다. 두 delta 를 함께 조정하기 전에는 둘 중 어느 것도 freeze 하지 않는다.
+
+### D−2.9 F9 — AC1 의 정확한 범위
+
+- 전달 실패한 critical 알림은 프로세스 안에서 진입 게이트를 잠그고(`internal/obs/notifier.go:570-572`) durable 운영 모드를
+  승격한다(`:378-383`). 재시작 시에는 **미전달 알림이 따로 진입을 막는다** — `restoreAlertEntryLatch`
+  (`internal/app/engine/gateway.go:153-168`, 호출 `:269`)가 `UndeliveredCount > 0` 이면 `ReasonAlertUndelivered` 로 차단한다.
+- 배선되지 않은 것은 **durable 운영 모드의 투영**뿐이다 — `SetModeProjector`(`operating_mode.go:294`)·
+  `RestoreOperatingModeProjection`(`:574`) 비시험 호출자 0(a124 AC1). 그래서 전달이 성공한 뒤에는 모드의 사람 해제 요구가
+  재시작을 건너지 못한다.
+- 3판의 "critical 전달 실패는 `ENTRY_BLOCKED`까지 간다" 는 **부분적으로 참**이다(프로세스 안 latch + 재시작 시 미전달 알림
+  재차단). 거짓 critical 의 차단 비용은 실재하므로 D−2.7 의 **좁은** 제외는 유지된다. 제외를 넓히거나 무기한 억제하는 근거는
+  되지 않는다.
+
+### D−2.10 F10 — 낡은 논증을 현재 코드로
+
+아래 넷은 **4판에서 본문을 고쳤다**(D2 「경계」 표 두 행 · D2 「결정: (a)…」 문단 · `record` 번들의 FLM Safety conclusion 과
+BTM 미진입 요약). 다른 자리의 같은 논증은 이 절대로 읽는다.
+
+- **`record` 의 게이트 논증**(3판 D2 「경계」 표 `record` B3). 현 번호는 **B5**(`exitloop.go:1223` —
+  `orderable && (snapshot.CancelPendingFirst || isFullExit(proposal))`). 그 **앞에** a111 의 B1(`:1180-1182`,
+  `!o.quoteUsable(quote)` → `return nil`)이 있다 — 쓸 수 있는 시세가 없는 주기에는 청소·기록·지연 처리 어느 것도 일어나지
+  않는다. 따라서 3판의 "다음 관측에서 다시 제안된다" 류 문장은 전부 **"쓸 수 있는 시세가 있는 다음 관측에서"** 로 읽는다.
+- **「경계」 표의 "자기 방향(SELL)은 부재 확인" 행**은 3판 스스로 철회한 규칙이다(D2 「자기 방향 미체결의 부재 확인 — 3판에서
+  철회했다」). 4판에서는 그 행을 "자기 방향은 오늘과 같이 `withPending` 일 때만 치운다(엔진 귀속 매도뿐)" 로 읽는다.
+- **"critical 로 올린다"** 는 D−2.7 대로 "이미 critical 인 이벤트의 새 트리거" 로 읽는다.
+- `record` 번들의 Function Logic Map·Branch Test Map 요약 문장(미진입 분기 요약)은 refresh 가 줄만 옮긴 자리다 — 4판 편집 전
+  산출물 재작성(task 1.x)에서 현재 AST 기준으로 다시 쓴다.
+
+### D−2.11 열린 질문 (코드에 근거 없음 — 지어내지 않는다)
+
+- **Q4-1 — park 된 attempt 의 발의.** 4판은 park 에서 해제하지 않는다. 운영자가 `OperatorResolve` 로 `FAILED_CONFIRMED` 를
+  정한 뒤 발의를 **다음 기동**까지 기다리게 할지(D−2.5 따라잡기만), 그 도구 경로에서 기대 intent 대조로 곧바로 풀지 — 운영 절차 결정.
+- **Q4-2 — 브로커 OPEN 스냅숏의 신선도 상한**(D−2.4 를 넓힐 때만). 값과 근거.
+- **Q4-3 — 취소 인수와 호가 이탈.** 청소가 취소 `CONFIRMED`(인수)만으로 치운 것으로 보는 오늘 규칙을 이탈 관측으로 바꿀지 —
+  브로커 읽기를 요구하므로 D−2.4 결정에 딸린다.
+- **사용자 결정 대기 — 엔진 밖 주문의 취소(D−2.4).**
 
 ## D−1. 3판이 고친 것 — **잠금을 잘못 지목하고 있었다**
 
@@ -228,6 +459,10 @@ HTTP 409 does not prove whether the mutation executed: official: API error 409:
 
 ## D2. R2 — 청소가 브로커를 본다
 
+> **4판**: 이 절의 「넓히는 방식」·「배선」·「파싱」·「§0.4 — 스냅샷」·「감사」 는 **엔진 밖 주문 취소**를 전제로 한 3판 설계다.
+> 4판 R2 는 엔진 귀속 주문만 다루므로(D−2.4) 그 부분은 **사용자 결정 대기**이며 구현 대상이 아니다. 남는 것은 빈 가격 규칙,
+> 연속 실패의 새 트리거(D−2.7), 기존 흡수 규칙이다.
+
 ### 지금의 눈
 
 `engine.clearTheSymbol`(`exitloop.go:1334-1392`, 분기 9)
@@ -431,7 +666,7 @@ overwritten."* **엔진 자신의 두 번째 매도는 여기서 거부된다.**
 식별에 쓰이지 않으므로 안전하다. **이것으로 a087 선후 관계 제약이 사라진다.**
 
 **결정: (a)는 보류하되 무한 보류하지 않는다.** 같은 종목에서 청소가 **연속 3회**
-`clear=false`로 끝나면 `EventExitLiquidationDelayed`를 **critical**로 올린다.
+`clear=false`로 끝나면 `EventExitLiquidationDelayed`(**이미 critical**, `event.go:336`)를 **새 트리거로 한 번 더** 낸다 — 기존 30초 타이머는 그대로다(4판 D−2.7).
 그 뒤에도 자동으로 제출하지는 않는다 — 「못 치우면 팔지 않는다」(B7)를 뒤집는 것은
 초과 매도 방향이고 §6에 걸린다. **바꾸는 것은 침묵의 길이지 규칙이 아니다.**
 
@@ -446,9 +681,9 @@ overwritten."* **엔진 자신의 두 번째 매도는 여기서 거부된다.**
 
 | 조건 | 이유 |
 | --- | --- |
-| `clearTheSymbol`이 불릴 때만 | `record` **B3** `:1117`이 이미 게이트다 — `orderable && (CancelPendingFirst \|\| isFullExit)` |
+| `clearTheSymbol`이 불릴 때만 | `record` **B5** `:1223`(base 번호 B3)이 이미 게이트다 — `orderable && (CancelPendingFirst \|\| isFullExit)`. 그 앞에 a111 **B1** `:1180-1182`(쓸 수 있는 시세 없음 → 반환) |
 | 같은 계좌·시장·종목 | 충돌의 정의. 종목 필터는 서버측 |
-| 반대 방향(`buy`)은 취소, 자기 방향(SELL)은 **부재 확인** | **B3** `:1343` + 위 절 |
+| 반대 방향(`buy`)은 취소, 자기 방향(SELL)은 `withPending` 일 때만 치운다 — **4판: 엔진 귀속 주문만**(D−2.4). 3판이 철회한 부재 확인은 없다 | `clearTheSymbol` **B3** `:1449`(base `:1343`) + 위 절 |
 | 취소만. 신규·정정 없음 | 청소는 노출을 늘리지 않는다 |
 | 취소 확정 실패 → `clear=false` | **B6** `:1379`의 기존 규칙 그대로. **못 치우면 팔지 않는다** |
 | 브로커 조회 실패 → `clear=false` | 새 실패 모드가 아니라 기존 모드로의 낙하 |
