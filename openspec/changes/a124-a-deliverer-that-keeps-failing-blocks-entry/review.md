@@ -744,3 +744,16 @@ D1 · D7 · D8 · D10 · spec SHALL 대조 일치, fail-open 경로 · 데이터
   `if !seen` 을 `if run.count == 0` 으로(gstack 유지보수 · 단순화 전문가). 의미는 같다고 판단하고 변이 원장(M14 · M19 · M20 · M34 · M35 CAUGHT)과
   D8 시험이 통과하지만, 규칙에 따라 **이 부분(`countRecordFailure` · `countListFailure` · `advanceFailureRun`)만 codex 4회차 재리뷰 대상**이다 — 착지 뒤
   codex 슬롯을 받아 좁혀 돌린다.
+
+### 착지 (2026-09-28, 착지 슬롯 — a066 Go 동결 중)
+
+- 커밋: ① `d752c4e9` base 재고정 4798d399 → cf381447 · ② `4e5f7e83` 분석 · 리뷰 기록 · ③ `22fecb76` production + 시험.
+- ④ 격리 워크트리 프로브(HEAD `22fecb76`, 병행 로트의 미커밋 편집 없음) `python3 tools/logic-map/check_analysis.py --change a124-…` → **rc 0**. 출력 원문:
+
+```text
+[logic-map] a124-a-deliverer-that-keeps-failing-blocks-entry: base cf38144771ac → working tree (no landed-commit.txt in HEAD) required 6 function(s) — judged at HEAD 22fecb763a38
+[logic-map] a124-a-deliverer-that-keeps-failing-blocks-entry: the target is the working tree, so this window also holds 3 commit(s) that landed after the base and every existing function they changed is required here too — run `python3 tools/logic-map/check_analysis.py --change a124-a-deliverer-that-keeps-failing-blocks-entry --record-landing` to let the gate compute `landed-commit.txt` from this change's evidence and record it, which narrows it to this change's own work; if no commit on this history is accepted as the landing, the command says so instead of recording
+[logic-map] a124-a-deliverer-that-keeps-failing-blocks-entry: evidence complete or diff-proven exempt
+```
+
+- `--record-landing` 은 **실행하지 않았다** — Manager 조건(일반 프로브가 rc 1 로 남을 때만)에 해당하지 않음. 창의 3 커밋은 이 change 자신의 ①~③ 이다.
