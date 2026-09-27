@@ -1,7 +1,7 @@
 ## 0. 계약과 증거
 
-- [ ] 0.1 `base-commit.txt` 고정 — **a122 아카이브 뒤**, proposal-freeze 직전 (`capture_change_base.py`)
-- [ ] 0.2 `openspec validate a123-an-empty-window-is-derived-not-declared --strict` 통과
+- [x] 0.1 `base-commit.txt` 고정 — **a122 아카이브 뒤**, proposal-freeze 직전 (`capture_change_base.py`)
+- [x] 0.2 `openspec validate a123-an-empty-window-is-derived-not-declared --strict` 통과
 - [ ] 0.3 Python FLM **편집 전**: `_landing_refusal` · `compute_landing` · `_self_repair_commits` · `check` ·
       `changed_existing_functions` (a122 `enumerate.py`) → `analysis/python-function-logic/`
 - [ ] 0.4 proposal-freeze 리뷰 → `review.md` (도구 change 경량 + 적대 보이스 1 — 게이트가 받는 것을 늘리는 편집)
