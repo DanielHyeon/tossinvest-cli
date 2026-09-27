@@ -10,3 +10,6 @@ CONTROL	GREEN
 S06 switch-default storage exit returns nil (CRA)	CAUGHT	a066_storage_exit_structure_test.go:186: risk_bucket.go:163:2: CommitRiskBucketAdmission storage error exit returns a nil error
 S07 gateway checkReservation storage exit returns nil	CAUGHT	a066_storage_exit_structure_test.go:193: ../execgw/gateway.go:894:2: checkReservation storage error exit returns a nil error
 S08 production reader ping exit returns nil	CAUGHT	a066_storage_exit_structure_test.go:193: ../riskbucket/production_snapshot_authority.go:357:2: loadProductionRiskEntries storage error exit returns a 
+TREE	HEAD 63818553	uncommitted: internal/journal/a066_storage_exit_structure_test.go (not-ErrNoRows exits + else-if chain source)
+CONTROL	GREEN	
+S09 else-if not-ErrNoRows exit returns nil (RegisterRiskBucketOrder)	CAUGHT	a066_storage_exit_structure_test.go:202: risk_bucket_fill.go:104:9: RegisterRiskBucketOrder storage error exit returns a nil error

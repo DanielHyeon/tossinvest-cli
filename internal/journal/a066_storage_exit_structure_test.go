@@ -31,7 +31,7 @@ import (
 // 세기만 함(범위가 조용히 줄지 않게).
 var a066StorageExitCensus = struct {
 	files, funcs, exits, others, txOpeners int
-}{files: 10, funcs: 116, exits: 301, others: 84, txOpeners: 10}
+}{files: 10, funcs: 116, exits: 305, others: 84, txOpeners: 10}
 
 func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 	names, err := filepath.Glob("risk_bucket*.go")
@@ -120,9 +120,18 @@ func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 					}
 					stmt, ok := s.(*ast.IfStmt)
 					// `} else if err := f(); err != nil {` 사슬도 출구임 — else 쪽 IfStmt 는 블록 목록에 없으므로 사슬을 따라감.
+					// 사슬의 else-if 가 자기 init 없이 앞 if 의 init 이 만든 err 를 다시 보면(`if err := q.Scan(); err == nil {…}
+					// else if !errors.Is(err, sql.ErrNoRows) {…}`) 그 init 이 출처임.
+					var chainInit ast.Stmt
 					for first := true; ok; stmt, ok = stmt.Else.(*ast.IfStmt) {
+						if stmt.Init != nil {
+							chainInit = stmt.Init
+						}
 						if isErrNotNil(stmt.Cond) {
 							var source ast.Stmt = stmt.Init
+							if source == nil && !first {
+								source = chainInit
+							}
 							// init 이 없으면 err 를 마지막으로 대입한 앞 문장을 거슬러 찾음 — 사이에 `if errors.Is(err, sql.ErrNoRows)`
 							// 같은 갈래가 끼어도 err 의 출처는 그 앞의 대입임.
 							for k := i - 1; source == nil && first && k >= 0; k-- {
@@ -264,8 +273,20 @@ func assignsErrFromStorageCall(stmt ast.Stmt) bool {
 	return storage
 }
 
-// isErrNotNil 은 조건이 정확히 `err != nil` 인지 봄(`if x, err := f(); err != nil` 포함 — Cond 만 봄).
+// isErrNotNil 은 조건이 `err != nil` 이거나 `!errors.Is(err, sql.ErrNoRows)`(행 없음 밖의 저장 오류)인지 봄
+// (`if x, err := f(); err != nil` 포함 — Cond 만 봄).
 func isErrNotNil(cond ast.Expr) bool {
+	if un, ok := cond.(*ast.UnaryExpr); ok && un.Op == token.NOT {
+		if call, ok := un.X.(*ast.CallExpr); ok && len(call.Args) == 2 {
+			if sel, ok := call.Fun.(*ast.SelectorExpr); ok && sel.Sel.Name == "Is" {
+				if id, ok := call.Args[0].(*ast.Ident); ok && id.Name == "err" {
+					if target, ok := call.Args[1].(*ast.SelectorExpr); ok && target.Sel.Name == "ErrNoRows" {
+						return true
+					}
+				}
+			}
+		}
+	}
 	bin, ok := cond.(*ast.BinaryExpr)
 	if !ok || bin.Op != token.NEQ {
 		return false
