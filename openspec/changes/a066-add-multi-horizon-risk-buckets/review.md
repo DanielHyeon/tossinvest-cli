@@ -797,3 +797,55 @@ crash-pure tests (`TestApplyFill*CrashPure`) failed because `cloneFillState` tur
 empty map. Fixed so nil stays nil. Mutation ledger: `analysis/mutation-5.7/ledger-shared.tsv` (6/6 CAUGHT). FLM:
 post-edit tables for `recomputeOverageLatches`, `cloneFillState` and `loadRiskBucketFillTransition`, with pre-edit
 tables in `analysis/pre-edit/5.7/`. Four bundles whose files shifted were re-extracted with the same branch shapes.
+
+## 6.3 measurement — dormant, no loosened limit, no toggle, unresolved US FX (2026-09-28, partial)
+
+Measured at `d78f3f4a` (`git grep`, `git show -U0`). **6.3 is not checked yet.** The removals from the 2026-08-04
+waves listed below are described but have not been re-reviewed in this lot. 6.5's independent review must confirm
+them.
+
+**Dormant by default.**
+- `ActivateEntryLossLock` has 0 non-test callers. The only hit is its definition
+  (`internal/journal/risk_bucket_entry_loss_lock.go:72`).
+- The q_final entry points in non-test code are reached only through the Guardian's own chain:
+  `PrecheckQFinalEntry` (`riskguardian_qfinal.go:307`, `riskguardian_first_leg.go:50`) and
+  `IssuePrecheckedQFinalEntry` (`riskguardian_qfinal.go:311`).
+- `CommitRiskBucketAdmission` has no non-test caller.
+- The strategy first-leg path stays closed in production: the snapshot reader's `productionRiskJournalSchema = 27`
+  pin refuses every current journal (named residual above).
+
+**No toggle flipped.** The a066 lot's production commits since the base (`0004536c`, `7aa158bb`, `b8211926`,
+`bb44e7af`, `2b36ae44`) touch 13 non-test Go files: execgw failclosed/gateway/reason, journal risk_bucket*/schema,
+and riskbucket fill/production_snapshot_authority/types. None is a config or toggle file. Their added lines contain
+no toggle, enabled, automation or live identifier.
+
+**No limit loosened — deletions in those five commits, classified.**
+
+| Commit | Removed | Classification |
+|---|---|---|
+| `0004536c`, `b8211926` | `SchemaVersion` 32→33→34 | additive migrations |
+| `7aa158bb` | `TrimSpace(account) != ""` | stricter: a padded account is now refused |
+| `b8211926` | "immutable policy collision" refusal (two sites) | **the one removed refusal.** It was replaced by per-admission policy record binding (F2, Manager-approved 5.6.1 contract). Caps and snapshot-ID collision checks are unchanged. |
+| `b8211926`, `2b36ae44` | production usage reader rewritten (`ReadJournalBucketUsage`) | still refuses invalid rows (`ErrJournalUsageInvalid`) and latched rows (`Latched` → refused in `loadProductionRiskEntries`) |
+| `bb44e7af` | `ErrRiskBucketUsageStale` no longer wraps `ErrSnapshotStale` | stricter: not retried in the same cycle |
+
+No numeric cap or limit constant was deleted or changed.
+
+**Earlier a066 waves (2026-08-04) — removals found, not re-reviewed here.**
+- `4a364caf` removed two interim refusals, "scale-in while risk order accounting is active" and "multi-decision owner
+  fill aggregation is not active". The same commit ships multi-decision aggregation, which those refusals stood in for.
+- `ff857fae` replaced the US FX `Source != official-fx` check with the sealed FX authority.
+- `a37d97f5` removed a comment block in `gateway.go`.
+- `9bf1a3a6` added a market scope to reconcile states. `activeEntryScopeWhere` still blocks both markets on a legacy
+  NULL-market row. A market-scoped row blocks only its own market; release is exact.
+- `ff857fae` moved the `official/client.go` HTTP client to an explicit transport with the same `defaultTimeout`.
+
+**Unresolved US FX → q_final 0.** Existing tests cover this.
+- `TestQFinalAccountBaseFXRefusalMatrixKRUS`: missing/stale/wrong-pair/cross-market for both markets. Each is refused
+  with zero recollections and no decision row.
+- `TestQFinalPrecheckUSUSDWithKRWGuardianFailsCurrencyUnresolvedAndCollectsNothing`
+- `TestQFinalPrecheckRejectsCrossedMarketCurrencyPairs`
+
+These tests have not been re-run in this lot yet; that is part of 6.1.
+
+`openspec validate a066-add-multi-horizon-risk-buckets --strict --no-interactive`: rc 0 at `d78f3f4a` (part of 6.4).
