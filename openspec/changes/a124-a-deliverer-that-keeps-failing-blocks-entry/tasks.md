@@ -109,8 +109,11 @@
       「이미 정산됨」 거름 제거 · 전달 정산 실패 판정 제거 · 승격을 게이트 잠금 안으로(2.6 (a) 가 잡음) → 각각 빨강
       — 원장 `analysis/harness/mutation-ledger.tsv` 39/39 CAUGHT(무변이 대조군 GREEN). 「승격을 게이트 잠금 안으로」는 B′ 에서 engine 이 g.mu 아래
         코드를 돌릴 API 가 없어 그대로는 표현 불가 — 구조 핀 `TestTheEpochMethodsCallNothingUnderTheLock` + M28 로 대신(review §1)
-- [ ] 4.2 `make test` · `make test-seams` · `make test-race` · `make vet` · `make validate` · `make sdd-sync` · `make sdd-check`
-- [ ] 4.3 gstack 리뷰 + 독립 적대 diff/test 리뷰 + Manager 검증 패스
+- [x] 4.2 `make test` · `make test-seams` · `make test-race` · `make vet` · `make validate` · `make sdd-sync` · `make sdd-check`
+      — 2026-09-28 격리 워크트리 `TossOS-worktrees/a124-gate` @ `dfdd6d9a`: test 99 · test-seams 100 · test-race · vet · validate · sdd-check rc 0,
+        sdd-sync advisory 미완만(review §1 「4.2 재실행」)
+- [x] 4.3 gstack 리뷰 + 독립 적대 diff/test 리뷰 + Manager 검증 패스
+      — gstack `/review` · 독립 Eng APPROVE · codex 구현 1~4회차(4회차 PASS). Manager 검증 배터리는 아카이브 전 — 실패하면 이 체크를 되돌림(review §1)
 - [x] 4.4 최악 래치 시간 실측(큐 대기 포함) → `review.md` (R3)
       — 가짜 시계, 전제 H: 4 s · 34 s · 214 s(D6 일치), Q = I 판 36 s · 216 s(review §1 4.4). 원장 · 게이트 비용과 Q ≤ C 상한은 흉내 내지 않음
 
@@ -119,11 +122,12 @@
 - [ ] 5.1 `make gate CHANGE=a124-…` · archive · Story 경로 · PM `--check`
       — **종결 조건(Manager 판정 2026-09-28)**: review.md 종결 절과 아카이브 커밋 메시지에 「§6 배포 · 운영 재측정은 미실행, 사람 몫」 한 줄을
       반드시 남긴다(§6 은 게이트가 안 세므로 아카이브 영수증에서 보이게 — a112 「배포 미완」 선례)
-- [ ] 5.2 a092 21판에 착수 조건으로 인용 · a092 델타 「굶주림」 문단 삭제 확인 · a092 델타 「운영자의 승인은 … 되살리지 않는다」 문단을
+- [x] 5.2 a092 21판에 착수 조건으로 인용 · a092 델타 「굶주림」 문단 삭제 확인 · a092 델타 「운영자의 승인은 … 되살리지 않는다」 문단을
       이 change 의 요구로 가리키게(정본 사본 둘 방지) · **운영 효과 선행 조건 전달(AC1)**: `SetModeProjector` 생산 배선 + 기동 `RestoreOperatingModeProjection`
       을 a092 축소판의 명명된 후속으로(현재 「미배정 후속」, a092 proposal :499 · :582) — AC2(`modegate.go:35-50` 지움→재삽입 창 · 커밋 뒤 투영 순서) 동봉 ·
       a092 델타의 래치 지연 **식을 교체**(`Q + (L−1)·C + I_list + (T + S + M)` + 전제 H —
       「사이클 주기」 재정의는 발행 시간을 이중 계산) · `Acknowledge` 셈~해제 구간의 독립 기록자 경합(Follow-ups)을 a092 소유로 전달
+      — 전달 완료(2026-09-28, Manager 경유) — review §1 「5.2 a092 전달 목록」. 수행은 a092 21판 몫
 
 ## 6. 배포 (사람 승인 — 완료 게이트 밖, 체크박스 아님)
 

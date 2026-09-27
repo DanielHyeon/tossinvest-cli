@@ -794,3 +794,20 @@ a092 는 현재 20판이다(21판 미작성). 다음을 a092 21판의 작업으�
 | `make validate` | 0 | |
 
 - **4.2 는 체크하지 않는다** — test-seams 가 빨강이고 완료 게이트 8/11 단계가 같은 것을 돈다. 게이트 시퀀스를 여기서 멈추고 Manager 에게 올렸다.
+
+### 4.2 make 타깃 — 재실행 (2026-09-28, a066 5.7 · a112 시험 수리 d78f3f4a 착지 뒤, base 재고정 `dfdd6d9a`, 격리 워크트리 `TossOS-worktrees/a124-gate` @ `dfdd6d9a`, 로그 `/tmp/claude-1000/a124-lot/42-r2-*.log`)
+
+- 격리 프로브(같은 커밋): check_analysis **rc 0** — "base d78f3f4a14dd … required 0 function(s) … evidence complete or diff-proven exempt"(`probe2.log`).
+
+| 타깃 | rc | 비고 |
+|---|---:|---|
+| `make sdd-sync` | 2 | advisory 미완(codegraphcontext) — 선례상 허용 |
+| `make sdd-check` | 0 | CodeGraph hard-evidence index matches the worktree(hard fingerprint 통과) |
+| `make test` | 0 | ok 99, FAIL 0 (592 s) |
+| `make test-seams` | 0 | ok 100, FAIL 0 (666 s) — 앞 판의 전략 dispatch 시험은 a066 수리(d78f3f4a)로 초록 |
+| `make test-race` | 0 | 43 s |
+| `make vet` | 0 | |
+| `make validate` | 0 | |
+
+- 4.2 체크(돌리고 → 적고 → 체크). 4.3 체크: gstack `/review` · 독립 적대 Eng(APPROVE) · codex 구현 1~4회차(4회차 PASS) 완료 — **Manager 검증 배터리는
+  아카이브 전에 따로 돈다; 그것이 실패하면 이 체크를 되돌린다**. 5.2 체크: 「5.2 a092 전달 목록」을 Manager 에게 전달했다(수행은 a092 21판 몫).
