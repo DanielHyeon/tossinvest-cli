@@ -322,3 +322,28 @@ No a066 test needed updating for the a112 schema moves.
   노출은 제출 시점의 상태다; 락 상태와 제출을 둘 다 보는 자리는 Gateway 뿐; 불변식 6(사이징은 보수 방향만);
   a112 관문이 조정자 Submit 앞에 서는 것과 같은 자리. 5.5 는 이 행을 2.7 의 RED 표에 먼저 더하고 `a066_red_5_5`
   태그를 GREEN 커밋에서 뗀다. 완화 경로(사람 승인·audit 되는 relaxation)는 5.5 로트가 설계를 들고 올 때 사용자에게 묻는다.
+
+## 5.5 lot (2026-09-27) — 결정 ⑤ RED 행 · 스키마 정지점
+
+- Voice: Opus implementation teammate. Production edits: **none**. Function Logic Map: `not-applicable` for this step —
+  only the build-tagged test file gained a new test function; no existing function body was edited.
+- 결정 ⑤ RED 행: `TestA066DecisionIssuedBeforeLockIsRefusedAtSubmit` (same tag `a066_red_5_5`). A KR SHORT q_final
+  decision is issued with no lock, then a lock is activated, then the decision is submitted through a Gateway on the
+  same journal. Rows: control (no lock → broker place 1, PASS today), KR MEDIUM lock (must still submit),
+  KR SHORT lock (must be refused, `StateNotDispatched`, broker places 0). The reason code is deliberately not pinned —
+  a new enum is a contract choice for 5.5 GREEN.
+  - RED (`go test -count=1 -tags a066_red_5_5 -run TestA066 -v ./internal/execgw`, rc 1): the two lock rows stop at the
+    missing seam; the control row PASSes.
+  - Non-vacuity probe (temporary pid-named file setting the seam to a no-op, deleted after the run, rc 1): the refusal
+    row fails with `pre-lock decision submitted under its own lock: … state=CONFIRMED places=1`; control and the
+    MEDIUM-lock isolation row PASS.
+  - `go vet` untagged and `-tags a066_red_5_5` rc 0; gofmt clean.
+  - Commit of the test file is held: Manager froze Go commits during the a071 gate sequence (2026-09-27).
+- **정지점 — journal schema 변경 필요 (SchemaVersion 32 → 33, main=HEAD=32)**. The seam contract
+  `activateEntryLossLock(ctx, *journal.Journal, account, market, horizon, at)` needs durable market×horizon state that
+  the Gateway revalidation can read. No existing table can hold it without a DDL change (measured on HEAD `9494e0e6`):
+  `risk_bucket_scope_latches` has `CHECK(latch IN ('RISK_OVERAGE','UNKNOWN_ACTUAL_RISK','REPLAY_MISMATCH','ORPHAN_FILL'))`
+  and a per-symbol/prospective-generation key with no horizon column; `operating_modes` has
+  `CHECK(mode IN ('NORMAL','ENTRY_BLOCKED','HALT_ALL'))` and is account-wide; `risk_bucket_events` is owner-scoped and is
+  read by the owner-release cleanliness checks. Per the lot's rule the work stops here and the questions go to the
+  Manager; the relaxation flow (user decision pending since ⑤) is part of the same question set.
