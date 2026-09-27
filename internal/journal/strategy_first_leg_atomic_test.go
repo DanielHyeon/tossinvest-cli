@@ -72,36 +72,67 @@ func TestFirstLegAtomicAdmissionDeliversKRAndUSTogether(t *testing.T) {
 }
 
 func TestFirstLegAtomicAdmissionSameAccountKRUSRecollectsTheSerializedLoser(t *testing.T) {
+	// a066 5.6.1 개정(2026-09-28, Manager 승인 교차 change 편집): KR·US 는 horizon·strategy·sector bucket 을 공유함.
+	// 생산처럼 bucket snapshot 은 wave 앞에서 한 번 모으고(둘 다 사용량 0), 예약 버전만 시도마다 새로 읽음. 공유 한도는
+	// 둘이 들어가는 값(US fixture 와 같은 1000000). 그러면 이 wave 에서 한 시장만 성립하고, 다른 하나는 직렬화 뒤
+	// BUCKET_USAGE_STALE 로 거절되며(재시도 없음), 다음 wave(원장에서 새로 모은 snapshot)에서 성립함 — 두 시장이 모두
+	// 결속된다는 원래 단언은 그대로임. 예전 판본은 KR 한도 100 에 US 73500 이 한 wave 에 함께 admit 됐음(F1 위에서만 성립).
 	j := openTestJournal(t)
 	type marketCase struct{ suffix, market, symbol string }
 	cases := []marketCase{{"same-account-kr", "KR", "005930"}, {"same-account-us", "US", "AAPL"}}
-	results := make(chan error, len(cases))
+	wave := func(market marketCase) QFinalCampaignFirstLegRequest {
+		request := firstLegAtomicFixture(t, j, market.suffix, "acct-shared", market.market, market.symbol)
+		for i := range request.Issue.Admission.Admission.Buckets {
+			rebindRiskBucketLimit(t, &request.Issue.Admission, i, request.Issue.Admission.Admission.Buckets[i].Key, "1000000")
+		}
+		return request
+	}
+	snapshots := map[string]QFinalCampaignFirstLegRequest{}
+	for _, market := range cases {
+		snapshots[market.suffix] = wave(market) // wave 시작 시 고정
+	}
+	results := make(chan struct {
+		market marketCase
+		err    error
+	}, len(cases))
 	var wait sync.WaitGroup
 	for _, market := range cases {
 		market := market
 		wait.Add(1)
 		go func() {
 			defer wait.Done()
-			_, err := j.RecordQFinalCampaignFirstLegWithRecollection(context.Background(), func(context.Context, int) (QFinalCampaignFirstLegRequest, error) {
-				request := firstLegAtomicFixture(t, j, market.suffix, "acct-shared", market.market, market.symbol)
-				// a066 5.6.1: 두 시장은 horizon·strategy·sector bucket 을 공유함. 이 시험은 직렬화와 패자의 재수집을 재므로
-				// 공유 한도를 둘이 들어가는 값(US fixture 와 같은 1000000)으로 맞추고, 재수집마다 사용량을 원장에서 다시 모음
-				// (생산 snapshot reader 와 같은 함수). 이전에는 KR 한도 100 에 US 73500 이 함께 admit 됐음 — F1 결함 위에서만 성립.
-				for i := range request.Issue.Admission.Admission.Buckets {
-					rebindRiskBucketLimit(t, &request.Issue.Admission, i, request.Issue.Admission.Admission.Buckets[i].Key, "1000000")
-				}
-				refreshSnapshotUsageFromLedger(t, j, &request.Issue.Admission)
-				return request, nil
+			_, err := j.RecordQFinalCampaignFirstLegWithRecollection(context.Background(), func(ctx context.Context, _ int) (QFinalCampaignFirstLegRequest, error) {
+				request := snapshots[market.suffix]
+				version, err := j.ReservationVersion(ctx, "acct-shared")
+				request.Issue.Issue.Reserve.ObservedVersion = version
+				return request, err
 			}, RecollectPolicy{MaxAttempts: 3})
-			results <- err
+			results <- struct {
+				market marketCase
+				err    error
+			}{market, err}
 		}()
 	}
 	wait.Wait()
 	close(results)
-	for err := range results {
-		if err != nil {
-			t.Fatal(err)
+	var losers []marketCase
+	for result := range results {
+		switch {
+		case result.err == nil:
+		case errors.Is(result.err, ErrRiskBucketUsageStale):
+			losers = append(losers, result.market)
+		default:
+			t.Fatalf("%s: unexpected error %v", result.market.market, result.err)
 		}
+	}
+	if len(losers) != 1 {
+		t.Fatalf("this wave: %d markets refused as stale, want exactly one serialized loser", len(losers))
+	}
+	// 다음 wave: 패자는 원장에서 새로 모은 snapshot 으로 성립함.
+	next := wave(losers[0])
+	refreshSnapshotUsageFromLedger(t, j, &next.Issue.Admission)
+	if _, err := j.RecordQFinalCampaignFirstLeg(context.Background(), next); err != nil {
+		t.Fatalf("next wave for %s: %v", losers[0].market, err)
 	}
 	var paired int
 	if err := j.db.QueryRow(`SELECT count(DISTINCT market) FROM strategy_first_leg_bindings WHERE account_ref='acct-shared'`).Scan(&paired); err != nil || paired != 2 {

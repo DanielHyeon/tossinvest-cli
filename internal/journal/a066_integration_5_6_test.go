@@ -17,6 +17,7 @@ package journal
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
@@ -127,7 +128,9 @@ func TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice(t *testing.T) {
 			if err == nil {
 				t.Fatalf("stale snapshot admitted: q_final=%d, strategy usage %s against limit %s", result.Admission.QFinal, usage, sharedBucketLimit)
 			}
-			if !errors.Is(err, ErrRiskBucketUsageStale) || !errors.Is(err, ErrSnapshotStale) || !riskbucket.IsRefusal(err, riskbucket.RefusalBucketUsageStale) {
+			// 재시도 대상이 아님: ErrSnapshotStale/ErrSnapshotSuperseded 로 보이면 재수집 루프가 같은 snapshot 으로 헛돎.
+			if !errors.Is(err, ErrRiskBucketUsageStale) || errors.Is(err, ErrSnapshotStale) || errors.Is(err, ErrSnapshotSuperseded) ||
+				!riskbucket.IsRefusal(err, riskbucket.RefusalBucketUsageStale) {
 				t.Fatalf("stale snapshot refused for another reason: %v", err)
 			}
 			if usage != "50" || countRiskBucketRows(t, j, "decisions") != decisionsBefore {
@@ -189,62 +192,46 @@ func TestA066SharedBucketSecondEntryReadsItsOwnPolicyRecord(t *testing.T) {
 	}
 }
 
-// TestA066StaleUsageRecollectionTerminates 는 stale 거절의 재수집 경로가 끝남을 고정함(Manager 조건 2026-09-27).
-// 재수집 루프는 recollectLoop(reservations.go)이고 상한은 둘임: policy.MaxAttempts 회("for attempt := 1; attempt <=
-// policy.MaxAttempts") 와 policy.Budget 시간("now.After(deadline)"). ErrRiskBucketUsageStale 은 ErrSnapshotStale 을 감싸므로
-// 그 루프의 재시도 갈래("errors.Is(err, ErrSnapshotStale)")를 탐.
-func TestA066StaleUsageRecollectionTerminates(t *testing.T) {
-	t.Run("stale then fresh snapshot is admitted within the cap", func(t *testing.T) {
-		j := openTestJournal(t)
-		first, second := sharedBucketPair(t, j, riskbucket.MarketKR, "5")
-		if _, err := j.RecordQFinalDecisionAndReserve(context.Background(), first); err != nil {
-			t.Fatal(err)
-		}
-		calls := 0
-		result, err := j.RecordQFinalDecisionAndReserveWithRecollection(context.Background(), func(ctx context.Context, attempt int) (QFinalIssueRequest, error) {
-			calls++
-			request := second
-			request.Admission.Admission.Buckets = append([]riskbucket.BucketSnapshot(nil), second.Admission.Admission.Buckets...)
-			request.Admission.Snapshots = append([]RiskBucketSnapshotReference(nil), second.Admission.Snapshots...)
-			if attempt > 1 {
-				// 재수집: 원장과 맞는 snapshot(공유 bucket held 50) → 남은 30 / 가격 5 = q 6.
-				withSnapshotUsage(t, &request.Admission, true, "50")
-				intent := request.Issue.Decision.Preimage.(RiskIntent)
-				intent.Quantity = "6"
-				request.Issue.Decision.Preimage = intent
-			}
-			version, err := j.ReservationVersion(ctx, "acct-1")
-			request.Issue.Reserve.ObservedVersion = version
-			return request, err
-		}, RecollectPolicy{MaxAttempts: 3})
-		if err != nil || calls != 2 || result.Admission.QFinal != 6 {
-			t.Fatalf("recollection: calls=%d q_final=%d err=%v, want 2 calls and q_final 6", calls, result.Admission.QFinal, err)
-		}
-		if usage := sharedBucketUsage(t, j, riskbucket.DimensionStrategy, "strategy-alpha"); usage != "80" {
-			t.Fatalf("strategy usage %s, want 80", usage)
-		}
-	})
-	t.Run("a ledger that keeps moving ends at the attempt bound", func(t *testing.T) {
-		j := openTestJournal(t)
-		first, second := sharedBucketPair(t, j, riskbucket.MarketKR, "5")
-		if _, err := j.RecordQFinalDecisionAndReserve(context.Background(), first); err != nil {
-			t.Fatal(err)
-		}
-		calls := 0
-		_, err := j.RecordQFinalDecisionAndReserveWithRecollection(context.Background(), func(ctx context.Context, attempt int) (QFinalIssueRequest, error) {
-			calls++
-			version, err := j.ReservationVersion(ctx, "acct-1")
-			request := second
-			request.Issue.Reserve.ObservedVersion = version
-			return request, err // snapshot 은 늘 첫 진입 이전(held 0) — 원장이 계속 앞서 있는 모양
-		}, RecollectPolicy{MaxAttempts: 4})
-		if !errors.Is(err, ErrRecollectionExhausted) || !errors.Is(err, ErrRiskBucketUsageStale) || calls != 4 {
-			t.Fatalf("moving ledger: calls=%d err=%v, want exactly 4 attempts then ErrRecollectionExhausted wrapping the stale refusal", calls, err)
-		}
-		if usage := sharedBucketUsage(t, j, riskbucket.DimensionStrategy, "strategy-alpha"); usage != "50" {
-			t.Fatalf("exhausted recollection wrote: strategy usage %s", usage)
-		}
-	})
+// TestA066StaleUsageIsRefusedOnceAndReEvaluatedOnTheNextWave 는 stale 거절의 생산 모양을 고정함(Manager 판정 2026-09-28).
+// 생산 collect 는 bucket snapshot 을 wave 앞에서 고정하고 예약 버전만 다시 읽음 — 그 모양 그대로 collect 를 두면 재수집
+// 루프(recollectLoop, reservations.go)는 **재시도하지 않고** 한 번에 끝남(재시도 갈래는 ErrSnapshotStale/Superseded 뿐).
+// 다음 wave 는 snapshot 을 원장에서 새로 모으므로 그 진입이 남은 한도 안에서 성립함.
+func TestA066StaleUsageIsRefusedOnceAndReEvaluatedOnTheNextWave(t *testing.T) {
+	j := openTestJournal(t)
+	first, second := sharedBucketPair(t, j, riskbucket.MarketKR, "5")
+	if _, err := j.RecordQFinalDecisionAndReserve(context.Background(), first); err != nil {
+		t.Fatal(err)
+	}
+	// 이 wave: snapshot 은 첫 진입 이전(held 0)으로 고정, 버전만 시도마다 새로 읽음.
+	calls := 0
+	_, err := j.RecordQFinalDecisionAndReserveWithRecollection(context.Background(), func(ctx context.Context, attempt int) (QFinalIssueRequest, error) {
+		calls++
+		version, err := j.ReservationVersion(ctx, "acct-1")
+		request := second
+		request.Issue.Reserve.ObservedVersion = version
+		return request, err
+	}, RecollectPolicy{MaxAttempts: 4})
+	if !errors.Is(err, ErrRiskBucketUsageStale) || errors.Is(err, ErrRecollectionExhausted) || calls != 1 {
+		t.Fatalf("this wave: calls=%d err=%v, want exactly one collection refused as stale (no retry)", calls, err)
+	}
+	if usage := sharedBucketUsage(t, j, riskbucket.DimensionStrategy, "strategy-alpha"); usage != "50" {
+		t.Fatalf("refused wave wrote: strategy usage %s", usage)
+	}
+	// 다음 wave: snapshot 을 원장에서 새로 모음 → 남은 30 / 가격 5 = q 6.
+	next := second
+	next.Admission.Admission.Buckets = append([]riskbucket.BucketSnapshot(nil), second.Admission.Admission.Buckets...)
+	next.Admission.Snapshots = append([]RiskBucketSnapshotReference(nil), second.Admission.Snapshots...)
+	refreshSnapshotUsageFromLedger(t, j, &next.Admission)
+	intent := next.Issue.Decision.Preimage.(RiskIntent)
+	intent.Quantity = "6"
+	next.Issue.Decision.Preimage = intent
+	result, err := issueSecondWithFreshVersion(t, j, next)
+	if err != nil || result.Admission.QFinal != 6 {
+		t.Fatalf("next wave: q_final=%d err=%v, want 6", result.Admission.QFinal, err)
+	}
+	if usage := sharedBucketUsage(t, j, riskbucket.DimensionStrategy, "strategy-alpha"); usage != "80" {
+		t.Fatalf("strategy usage %s, want 80", usage)
+	}
 }
 
 // refreshSnapshotUsageFromLedger 는 fixture 의 bucket snapshot 사용량을 **원장 그대로**(생산 reader 와 같은 함수) 채우고
@@ -252,16 +239,25 @@ func TestA066StaleUsageRecollectionTerminates(t *testing.T) {
 // 여러 진입을 쌓는 fixture 는 각 진입의 snapshot 을 생산처럼 원장에서 모아야 함.
 func refreshSnapshotUsageFromLedger(t *testing.T, j *Journal, plan *RiskBucketAdmissionPlan) {
 	t.Helper()
+	if err := ledgerTrueSnapshotUsage(t, j, plan); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// ledgerTrueSnapshotUsage 는 refreshSnapshotUsageFromLedger 의 오류 반환판 — 시험 goroutine 이 아닌 곳(collect 콜백을
+// 다른 goroutine 이 부르는 경우)에서 t.Fatal 대신 오류를 돌려줌.
+func ledgerTrueSnapshotUsage(t *testing.T, j *Journal, plan *RiskBucketAdmissionPlan) error {
 	for i := range plan.Admission.Buckets {
 		key := plan.Admission.Buckets[i].Key
 		usage, err := riskbucket.ReadJournalBucketUsage(context.Background(), j.db, plan.Owner.Key.AccountID, key.Dimension, key.Value)
 		if err != nil {
-			t.Fatalf("ledger usage for %s/%s: %v", key.Dimension, key.Value, err)
+			return fmt.Errorf("ledger usage for %s/%s: %w", key.Dimension, key.Value, err)
 		}
 		plan.Admission.Buckets[i].FilledMinor = usage.FilledMinor
 		plan.Admission.Buckets[i].HeldMinor = usage.HeldMinor
 		rebindRiskBucket(t, plan, i, key)
 	}
+	return nil
 }
 
 // TestA066StaleUsageRuleEdgesAtBothAdmissionSites 는 F1 규칙의 경계를 두 admission 자리에서 각각 잼(변이 1회차가 보인
@@ -332,8 +328,138 @@ func TestA066StaleUsageRuleEdgesAtBothAdmissionSites(t *testing.T) {
 		t.Run(s.name+"/ledger-true claim is admitted", func(t *testing.T) {
 			j := openTestJournal(t)
 			firstAdmission(t, j)
-			if err := s.admit(t, j, "50"); err != nil && !riskbucket.IsRefusal(err, riskbucket.RefusalBucketCapExhausted) {
-				t.Fatalf("ledger-true claim refused for a reason other than the cap: %v", err)
+			// 한도 80, 원장 50 → 남은 30 / 가격 5 = q 6 으로 admit 되어야 함(cap 거절도 실패로 봄 — 여유 계산 오류를 가림).
+			if err := s.admit(t, j, "50"); err != nil {
+				t.Fatalf("ledger-true claim was refused: %v", err)
+			}
+			if q := lastQFinal(t, j); q != 6 {
+				t.Fatalf("ledger-true claim q_final=%d, want 6", q)
+			}
+		})
+	}
+}
+
+func lastQFinal(t *testing.T, j *Journal) int {
+	t.Helper()
+	var q int
+	if err := j.db.QueryRow(`SELECT q_final FROM risk_bucket_final_decisions ORDER BY rowid DESC LIMIT 1`).Scan(&q); err != nil {
+		t.Fatal(err)
+	}
+	return q
+}
+
+// TestA066StaleUsageIsJudgedPerDimension 는 F1 규칙이 **각** bucket 을 따로 대조함을 고정함(적대 리뷰 5.6.1: 이전 fixture 는
+// 공유 bucket 넷을 한꺼번에 과소 주장해 한 곳만 봐도 거절됐음). 한 dimension 만 과소 주장하고 나머지는 원장 그대로 두며,
+// 두 admission 자리에서 각각 잼. 원장 사용량은 filled 로 둬서(held 0) 주장 쪽 filled 합산도 잼.
+func TestA066StaleUsageIsJudgedPerDimension(t *testing.T) {
+	shared := []riskbucket.Dimension{riskbucket.DimensionHorizon, riskbucket.DimensionMarket, riskbucket.DimensionStrategy, riskbucket.DimensionSector}
+	type site struct {
+		name  string
+		admit func(t *testing.T, j *Journal, understated riskbucket.Dimension) error
+	}
+	claim := func(t *testing.T, plan *RiskBucketAdmissionPlan, understated riskbucket.Dimension) {
+		t.Helper()
+		for i := range plan.Admission.Buckets {
+			dimension := plan.Admission.Buckets[i].Key.Dimension
+			if dimension == riskbucket.DimensionSymbol {
+				continue
+			}
+			// 원장 그대로(filled 50) — 단, 과소 주장하는 한 dimension 만 filled 49.
+			plan.Admission.Buckets[i].HeldMinor = "0"
+			plan.Admission.Buckets[i].FilledMinor = "50"
+			if dimension == understated {
+				plan.Admission.Buckets[i].FilledMinor = "49"
+			}
+			rebindRiskBucket(t, plan, i, plan.Admission.Buckets[i].Key)
+		}
+	}
+	sites := []site{
+		{"CommitRiskBucketAdmission", func(t *testing.T, j *Journal, understated riskbucket.Dimension) error {
+			seedExistingRiskReservation(t, j, "existing-dim-b", "acct-1")
+			plan := riskBucketAdmissionFixture(t, "dim-b", "acct-1", "lane-b", "campaign-dim-b", "prospective-dim-b", sharedBucketLimit, "0")
+			plan.Owner.Key.Symbol = "000660"
+			rebindRiskBucket(t, &plan, 4, riskbucket.BucketKey{Dimension: riskbucket.DimensionSymbol, Value: "000660", PolicyVersion: "policy-v1"})
+			claim(t, &plan, understated)
+			_, err := j.CommitRiskBucketAdmission(context.Background(), plan)
+			return err
+		}},
+		{"RecordQFinalDecisionAndReserve", func(t *testing.T, j *Journal, understated riskbucket.Dimension) error {
+			_, second := sharedBucketPair(t, j, riskbucket.MarketKR, "5")
+			claim(t, &second.Admission, understated)
+			intent := second.Issue.Decision.Preimage.(RiskIntent)
+			intent.Quantity = "6"
+			if understated != "" {
+				// 과소 주장한 bucket 의 여유는 31 → q 6 그대로(5×6=30 ≤ 31); 수량이 거절 사유가 되지 않게 함.
+				intent.Quantity = "6"
+			}
+			second.Issue.Decision.Preimage = intent
+			_, err := issueSecondWithFreshVersion(t, j, second)
+			return err
+		}},
+	}
+	for _, s := range sites {
+		for _, dimension := range append(shared, "") {
+			name := s.name + "/" + string(dimension)
+			if dimension == "" {
+				name = s.name + "/all ledger-true (filled only)"
+			}
+			t.Run(name, func(t *testing.T) {
+				j := openTestJournal(t)
+				seedExistingRiskReservation(t, j, "existing-dim-a", "acct-1")
+				first := riskBucketAdmissionFixture(t, "dim-a", "acct-1", "lane-a", "campaign-dim-a", "prospective-dim-a", sharedBucketLimit, "0")
+				if _, err := j.CommitRiskBucketAdmission(context.Background(), first); err != nil {
+					t.Fatal(err)
+				}
+				if _, err := j.db.Exec(`UPDATE risk_bucket_reservations SET held_minor='0',filled_minor='50',state='FILLED'`); err != nil {
+					t.Fatal(err)
+				}
+				err := s.admit(t, j, dimension)
+				if dimension == "" {
+					if err != nil {
+						t.Fatalf("ledger-true snapshot with filled usage was refused: %v", err)
+					}
+					return
+				}
+				if !errors.Is(err, ErrRiskBucketUsageStale) || !riskbucket.IsRefusal(err, riskbucket.RefusalBucketUsageStale) {
+					t.Fatalf("understated %s alone was not refused as stale: %v", dimension, err)
+				}
+				var refusal *riskbucket.RefusalError
+				if !errors.As(err, &refusal) || refusal.Field != string(dimension) {
+					t.Fatalf("stale refusal names %+v, want the understated %s", refusal, dimension)
+				}
+			})
+		}
+	}
+}
+
+// TestA066LatchedUsageInASharedBucketBlocksNewEntry 는 적대 리뷰(codex, 2026-09-28)가 보인 P0 를 고정함: 다른 종목의
+// 예약이 UNKNOWN_ACTUAL_RISK 로 latch 되면 그 filled 는 실제 노출의 하한일 뿐이라, 원장 합이 cap 안이어도 공유 bucket 에
+// 새 노출을 더하면 실제로는 넘을 수 있음. 그 공유 bucket 에 들어가는 진입은 원장과 맞는 snapshot 을 들고 와도 거절됨.
+func TestA066LatchedUsageInASharedBucketBlocksNewEntry(t *testing.T) {
+	for _, latch := range []string{"unknown_actual_latched", "risk_overage_latched"} {
+		t.Run(latch, func(t *testing.T) {
+			j := openTestJournal(t)
+			first, second := sharedBucketPair(t, j, riskbucket.MarketKR, "5")
+			if _, err := j.RecordQFinalDecisionAndReserve(context.Background(), first); err != nil {
+				t.Fatal(err)
+			}
+			// 첫 진입이 전부 체결됐지만 실제 가격을 모르는 모양(filled 는 이전 하한 50).
+			if _, err := j.db.Exec(`UPDATE risk_bucket_reservations SET held_minor='0',filled_minor='50',state='FILLED',` + latch + `=1`); err != nil {
+				t.Fatal(err)
+			}
+			withSnapshotUsage(t, &second.Admission, true, "0")
+			for i := range second.Admission.Admission.Buckets {
+				if second.Admission.Admission.Buckets[i].Key.Dimension != riskbucket.DimensionSymbol {
+					second.Admission.Admission.Buckets[i].FilledMinor = "50"
+					rebindRiskBucket(t, &second.Admission, i, second.Admission.Admission.Buckets[i].Key)
+				}
+			}
+			intent := second.Issue.Decision.Preimage.(RiskIntent)
+			intent.Quantity = "6"
+			second.Issue.Decision.Preimage = intent
+			_, err := issueSecondWithFreshVersion(t, j, second)
+			if !errors.Is(err, ErrRiskBucketEntryBlocked) || errors.Is(err, ErrRiskBucketUsageStale) {
+				t.Fatalf("entry into a shared bucket with %s usage was not blocked: %v", latch, err)
 			}
 		})
 	}

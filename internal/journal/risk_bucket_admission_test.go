@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -178,7 +179,8 @@ func TestRiskBucketAdmissionRejectsImmutablePolicyAndSnapshotCollision(t *testin
 	seedExistingRiskReservation(t, j, "existing-collision-c", "acct-1")
 	second = riskBucketAdmissionFixture(t, "collision-c", "acct-1", "lane-short", "campaign-1", "prospective-1", "200", "100")
 	second.Snapshots[0].SnapshotID = first.Snapshots[0].SnapshotID
-	if _, err := j.CommitRiskBucketAdmission(context.Background(), second); !errors.Is(err, ErrRiskBucketSnapshotMismatch) {
+	// 공유 sentinel 이 아니라 **이** 가드의 문장으로 단언함(다섯 가드가 ErrRiskBucketSnapshotMismatch 를 감쌈).
+	if _, err := j.CommitRiskBucketAdmission(context.Background(), second); !errors.Is(err, ErrRiskBucketSnapshotMismatch) || !strings.Contains(err.Error(), "immutable snapshot collision") {
 		t.Fatalf("snapshot collision error=%v", err)
 	}
 }

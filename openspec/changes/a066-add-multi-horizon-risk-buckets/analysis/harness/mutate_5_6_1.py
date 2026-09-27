@@ -32,9 +32,10 @@ MUTANTS = [
     ("N03 CRA stale check account<-LaneID", CRA, F1_CALL, F1_CALL.replace("plan.Owner.Key.AccountID,", "plan.Owner.LaneID,")),
     ("N04 fresh stale check account<-LaneID", ISS, F1_CALL, F1_CALL.replace("plan.Owner.Key.AccountID,", "plan.Owner.LaneID,")),
     ("N05 comparison accepts understated usage", USAGE, "if claimed.Cmp(ledger) < 0 {", "if claimed.Cmp(ledger) < -1000000 {"),
-    ("N06 comparison ignores held", USAGE, "claimed, ok := sumMinor(bucket.FilledMinor, bucket.HeldMinor)", "claimed, ok := sumMinor(bucket.FilledMinor, bucket.HeldMinor+\"0\")"),
+    ("N06 held claim inflated tenfold", USAGE, "claimed, ok := sumMinor(bucket.FilledMinor, bucket.HeldMinor)", "claimed, ok := sumMinor(bucket.FilledMinor, bucket.HeldMinor+\"0\")"),
     ("N07 ledger read error admits", USAGE, "\t\tif err != nil {\n\t\t\treturn fmt.Errorf(\"%w: %s bucket %q ledger usage unreadable", "\t\tif err != nil {\n\t\t\treturn nil\n\t\t\treturn fmt.Errorf(\"%w: %s bucket %q ledger usage unreadable"),
-    ("N08 stale error not wrapping ErrSnapshotStale", CRA, "ErrRiskBucketUsageStale = fmt.Errorf(\"%w: risk bucket usage snapshot is behind the ledger\", ErrSnapshotStale)", "ErrRiskBucketUsageStale = fmt.Errorf(\"%w: risk bucket usage snapshot is behind the ledger\", ErrSnapshotSuperseded)"),
+    # 2026-09-28 비재시도 판정 뒤: 센티널이 ErrSnapshotStale 을 감싸면(재시도 대상이 되면) 잡혀야 함.
+    ("N08 stale refusal becomes retryable", CRA, "ErrRiskBucketUsageStale = errors.New(\"journal: risk bucket usage snapshot is behind the ledger; refused for this cycle and re-evaluated on the next snapshot wave\")", "ErrRiskBucketUsageStale = fmt.Errorf(\"%w: risk bucket usage snapshot is behind the ledger\", ErrSnapshotStale)"),
     ("N09 refusal code wrong", USAGE, "Code: riskbucket.RefusalBucketUsageStale,", "Code: riskbucket.RefusalStaleBucket,"),
     ("N10 shared sum drops filled", RB, "\t\tfilled.Add(filled, rowFilled)\n", "\t\t_ = rowFilled\n"),
     ("N11 shared sum drops held", RB, "\t\theld.Add(held, rowHeld)\n", "\t\t_ = rowHeld\n"),
@@ -44,14 +45,24 @@ MUTANTS = [
     ("N14 policy record not stored", REC, "`INSERT OR IGNORE INTO risk_bucket_policy_records(`+columns", "`INSERT OR IGNORE INTO risk_bucket_policies(`+columns"),
     ("N15 key-only collision reinstated", REC, "\treturn recordDigest, nil\n}", "\tvar parent string\n\tif err := tx.QueryRowContext(ctx, `SELECT record_digest FROM risk_bucket_policies WHERE bucket_dimension=? AND bucket_value=? AND policy_version=?`, string(key.Dimension), key.Value, key.PolicyVersion).Scan(&parent); err != nil || parent != recordDigest {\n\t\treturn \"\", fmt.Errorf(\"%w: immutable policy collision\", ErrRiskBucketSnapshotMismatch)\n\t}\n\treturn recordDigest, nil\n}"),
     ("N16 fill loader joins by key only", FILL, "AND p.record_digest=r.policy_record_digest WHERE r.decision_id=? AND r.policy_record_digest IS NOT NULL", "WHERE r.decision_id=? AND r.policy_record_digest IS NOT NULL"),
-    ("N17 v34 required-record trigger removed", SQL34, "WHEN NEW.policy_record_digest IS NULL OR NOT EXISTS (", "WHEN 0 AND (NEW.policy_record_digest IS NULL OR NOT EXISTS ("),
+    # 1회차 N17 은 괄호가 안 맞아 migration 자체가 SQL 오류로 실패했음(닿지 않음 — 적대 리뷰 2026-09-28). 균형 맞춤.
+    ("N17 v34 required-record trigger disabled", SQL34, "WHEN NEW.policy_record_digest IS NULL OR NOT EXISTS (", "WHEN 0 AND NOT EXISTS ("),
+    ("N17b v34 trigger ignores bucket_value", SQL34, "WHERE r.bucket_dimension=NEW.bucket_dimension AND r.bucket_value=NEW.bucket_value\n", "WHERE r.bucket_dimension=NEW.bucket_dimension\n"),
+    ("N17c v34 trigger ignores policy_version", SQL34, "   AND r.policy_version=NEW.policy_version AND r.record_digest=NEW.policy_record_digest)", "   AND r.record_digest=NEW.policy_record_digest)"),
+    ("N17d v34 trigger ignores key", SQL34, "WHERE r.bucket_dimension=NEW.bucket_dimension AND r.bucket_value=NEW.bucket_value\n   AND r.policy_version=NEW.policy_version AND r.record_digest=NEW.policy_record_digest)", "WHERE r.record_digest=NEW.policy_record_digest)"),
+    ("N18b immutability guards only NULL to value", SQL34, "WHEN OLD.policy_record_digest IS NOT NEW.policy_record_digest", "WHEN OLD.policy_record_digest IS NULL AND NEW.policy_record_digest IS NOT NULL"),
+    ("N22 claim side ignores filled", USAGE, "claimed, ok := sumMinor(bucket.FilledMinor, bucket.HeldMinor)", "claimed, ok := sumMinor(\"0\", bucket.HeldMinor)"),
+    ("N23 only the first bucket is judged", USAGE, "\tfor _, bucket := range buckets {", "\tfor _, bucket := range buckets[:1] {"),
+    ("N24 sector bucket skipped", USAGE, "\tfor _, bucket := range buckets {", "\tfor _, bucket := range buckets {\n\t\tif bucket.Key.Dimension == riskbucket.DimensionSector {\n\t\t\tcontinue\n\t\t}"),
+    ("N25 market bucket skipped", USAGE, "\tfor _, bucket := range buckets {", "\tfor _, bucket := range buckets {\n\t\tif bucket.Key.Dimension == riskbucket.DimensionMarket {\n\t\t\tcontinue\n\t\t}"),
     ("N18 v34 immutable binding trigger removed", SQL34, "WHEN OLD.policy_record_digest IS NOT NEW.policy_record_digest", "WHEN 0"),
     ("N19 schema version not bumped", J + "schema.go", "const SchemaVersion = 34", "const SchemaVersion = 33"),
+    ("N21 admission ignores latched shared usage", USAGE, "\t\tif usage.Latched {\n\t\t\treturn fmt.Errorf(", "\t\tif false && usage.Latched {\n\t\t\treturn fmt.Errorf("),
     ("N20 legacy branch of fill loader dropped", FILL, "WHERE r.decision_id=? AND r.policy_record_digest IS NULL`, decisionID, decisionID)", "WHERE r.decision_id=? AND 0`, decisionID, decisionID)"),
 ]
 
 TESTS = [
-    ["go", "test", "-count=1", "-run", "SharedBucket|StaleUsage|MigrationV33ToV34|TestSchemaTablesAndColumns|TestRiskBucketAdmission|TestFirstLegAtomic|TestRiskBucketActualAndRelease|TestStrategyDispatch|LossLock", "./internal/journal"],
+    ["go", "test", "-count=1", "-run", "SharedBucket|StaleUsage|LatchedUsage|SameAccountKRUS|PartialFillCrash|LateFillOverage|MigrationV33ToV34|TestSchemaTablesAndColumns|TestRiskBucketAdmission|TestFirstLegAtomic|TestRiskBucketActualAndRelease|TestStrategyDispatch|LossLock", "./internal/journal"],
     ["go", "test", "-count=1", "-tags", "tossos_testseams", "./internal/riskbucket"],
     ["go", "test", "-count=1", "-run", "TestA066LedgerUsageHasOneComputation", "./internal/execgw"],
 ]

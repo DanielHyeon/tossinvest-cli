@@ -643,3 +643,44 @@ exactly `MaxAttempts` collections with `ErrRecollectionExhausted` wrapping the s
 
 Deployment note: this branch is now **schema v34**, main is v32. The rule "SchemaVersion differs from main → do not
 build the image" still applies.
+
+### 5.6.1 review round 1 (2026-09-28) — Codex, Claude semantics, Claude tests
+
+| # | Finding (source) | Sev | Disposition |
+|---|---|---|---|
+| 1 | Shared-bucket usage latched on another symbol (UNKNOWN_ACTUAL_RISK / RISK_OVERAGE) was ignored by the admission comparison, so B could add exposure on top of a lower-bound `filled` (Codex) | P0 | **Fixed**: `refuseStaleBucketUsage` blocks entry (`ErrRiskBucketEntryBlocked`, not retryable) when `usage.Latched`. This matches design D5 (a latch blocks new exposure in every applicable bucket) and the production reader. Test `TestA066LatchedUsageInASharedBucketBlocksNewEntry`; mutant N21 CAUGHT. With the block in place the full journal suite passes (827 s), so no existing test depended on the old behaviour |
+| 2 | `BUCKET_USAGE_STALE` was retryable, but production collect keeps the bucket snapshot fixed for the whole wave and re-reads only the reservation version. A retry therefore replays the same snapshot, and the second market in a shared bucket always loses after three wasted transactions. Two tests had modelled a re-collection that production does not do (Claude semantics — measured) | P1 | **Manager (a) — made non-retryable.** The sentinel no longer wraps `ErrSnapshotStale`, and its message now reads "refused for this cycle and re-evaluated on the next snapshot wave". This also removes the P2 "broker snapshot is older" wording. The name `BUCKET_USAGE_STALE` stays accurate: the snapshot is behind the ledger. The two tests now use production-shaped collection: the snapshot is fixed and the version re-read; the refusal comes after one collection; the next wave collects from the ledger and admits. Mutant N08 (make it retryable again) CAUGHT |
+| 3 | No index on `(account_ref, bucket_dimension, bucket_value)`: five full scans inside BEGIN IMMEDIATE (Codex P1, Claude P2) | P1/P2 | **Named residual** (Manager): the path is dormant, so traffic today is 0. The activation-wiring lot decides whether to add a v35 index after measuring lock length inside BEGIN IMMEDIATE. Coordinate: `readProductionRiskUsage` query, `internal/riskbucket/production_snapshot_authority.go`; called five times per admission. Possible interaction: a124 assumes a journal transaction takes at most 16 ms, and this scan grows with history |
+| 4 | Production reader takes `PolicyRecordDigest` from the key-level parent row, so a v34 row binds the first entry's record (Claude semantics) | P2 | **Merged into the schema-pin residual** (Manager): the fix needs v34 columns in the reader SQL, which conflicts with the v27 pin and the reader's test DDL. The sum is unaffected |
+| 5 | "ledger-true claim is admitted" also accepted a cap refusal; `t.Fatalf` was called from collect goroutines (Claude semantics) | P2 | **Fixed**: the test now requires admission; collect uses a non-fatal helper |
+
+Design sentence (Manager 2026-09-28): **within one snapshot wave, the second market entering a shared bucket is refused
+in that wave and admitted on the next wave**. This delays entries by one cycle, fails closed, and never applies to
+stops or exits.
+
+### 5.7 (non-shared-bucket part)
+
+`internal/journal/a066_integration_5_7_test.go`:
+- `TestA066PartialFillCrashThenRetryCommitsEverythingExactlyOnce`: a crash inside the fill transaction leaves nothing (no fill row, no allocation, no event, no latch, no watermark, position unchanged). The retry then commits once (+1 fill, +5 allocations, watermark 4, position 4, HELD 30 / filled 20 with UNKNOWN latched). A redelivery writes nothing and leaves the state digest unchanged. Actual evidence completes `filled=max(20, 48)` once, and repeating it is a duplicate.
+- `TestA066LateFillOverageLatchesEveryBucketOnceAndTheExitStaysOpen`: a predecessor-late fill after replacement and a successor-late fill after cancel latch RISK_OVERAGE on all 5 buckets. Redelivering both writes nothing. A SELL fill on the same account and symbol is recorded under the latch without touching bucket accounting, and a new entry is blocked.
+
+Claude tests voice (independent; `git archive b8211926` copy; 25 of its own mutants):
+
+| # | Finding | Sev | Disposition |
+|---|---|---|---|
+| T1 | The v34 required-record trigger had no behavioural test. `migration_v34_test`'s "no record" INSERT was refused by `UNIQUE(decision_id, bucket_dimension)`, not by the trigger. Ledger N17 "CAUGHT" was an SQL syntax error: unbalanced parenthesis, migration 34 failed. With the trigger disabled correctly, all tests stayed GREEN. Mutants that dropped key columns from the trigger (R16–R19) and the NULL→value-only immutability variant (R20) survived | P1 | **Fixed**: a fresh decision/reservation per row; six rows (no record, unknown digest, another dimension's record, another value, another policy version, own record), each refusal asserted by the trigger's own text; binding change refused for a v34 row (value→value) and a legacy row (NULL→value); a fill-accounting update is still accepted. N17 rebalanced. Added N17b/c/d (trigger ignores value, policy version, whole key) and N18b (guards only NULL→value). **The earlier "20/20 CAUGHT" was overstated: N17 did not reach its target** |
+| T2 | Fixtures understated all four shared buckets at once, so a check on any single bucket refused them. Skipping sector (R07) or market (R08) survived | P1 | **Fixed**: `TestA066StaleUsageIsJudgedPerDimension` understates one dimension at a time (filled 49 vs ledger 50) at both admission sites, asserts that the refusal names that dimension, and adds an all-ledger-true case where the usage is filled only (held 0). Added N23 (first bucket only), N24 (sector skipped), N25 (market skipped) |
+| T3 | Claim side ignoring `filled` survived (R05) | P2 | **Fixed** by T2's filled-only cases; added N22 |
+| T4 | "ledger-true claim is admitted" had slack | P2 | Already fixed; now also asserts q_final 6 |
+| T5 | The snapshot-collision half asserted only the shared sentinel | P2 | **Fixed**: also asserts the "immutable snapshot collision" text |
+| T6 | Latched rows left out of the admission sum (R24) survived | P2 | Superseded: since the P0 fix, latched shared usage blocks entry before the sum is compared (N21) |
+| T7 | Mutation ledgers ran on HEAD plus a peer's uncommitted files; N06 was mislabelled | P2 | Recorded (each ledger's first line names the tree). N06 renamed "held claim inflated tenfold" |
+| T8 | Step 0 of the RED→GREEN sequence cannot be reproduced from the committed test (the sentinels did not exist at `b8211926^`) | P2 | Recorded. The step logs from the measurement run are committed as `analysis/mutation-5.6.1/red-step{0,1,2}.log` |
+| T9 | a072 serialized-loser never asserted a recollection happened; the lease fixture compares column names only | P2 | The serialized-loser test was rewritten in production shape (one loser per wave, admitted on the next wave). The lease fixture's column-subset check is accepted: inserts into the v25 target still enforce v25 constraints, and the post-copy dump is compared column by column |
+
+Final verification (2026-09-28, sequential, isolated copy): `internal/journal`, `internal/riskbucket`, `internal/execgw`
+untagged rc 0 (journal 465 s), `tossos_testseams` rc 0, focused `-race` rc 0. Mutation run 3
+(`analysis/mutation-5.6.1/ledger-run3.tsv`, tree `HEAD 56f107cc` + this lot's uncommitted files): **29/29 CAUGHT**,
+N17 now refused by the trigger itself (the failing test is `TestMigrationV33ToV34KeepsLegacyReservationsReadable`,
+not a migration SQL error).
+

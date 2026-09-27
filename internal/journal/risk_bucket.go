@@ -23,8 +23,10 @@ var (
 	ErrRiskBucketReplayMismatch   = errors.New("journal: risk bucket replay mismatch")
 	ErrRiskBucketStateUnknown     = errors.New("journal: risk bucket state unknown")
 	// ErrRiskBucketUsageStale: admission 의 bucket snapshot 이 원장보다 적은 사용량을 주장함(a066 5.6.1 F1).
-	// ErrSnapshotStale 을 감싸 기존 재수집 루프가 재시도함.
-	ErrRiskBucketUsageStale = fmt.Errorf("%w: risk bucket usage snapshot is behind the ledger", ErrSnapshotStale)
+	// **재시도 대상이 아님**(Manager 판정 2026-09-28): 생산 collect 는 bucket snapshot 을 wave 앞에서 고정하고 예약 버전만
+	// 다시 읽으므로 같은 wave 안의 재수집은 같은 snapshot 을 다시 들고 옴. 그래서 ErrSnapshotStale 을 감싸지 않음 — 이 진입은
+	// 이 wave 에서 거절되고, 다음 wave 가 원장에서 새로 모은 snapshot 으로 다시 평가함.
+	ErrRiskBucketUsageStale = errors.New("journal: risk bucket usage snapshot is behind the ledger; refused for this cycle and re-evaluated on the next snapshot wave")
 )
 
 // RiskBucketSnapshotReference identifies the immutable authority record whose
