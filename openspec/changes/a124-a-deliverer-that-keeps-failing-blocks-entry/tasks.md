@@ -19,13 +19,17 @@
 
 - [x] 1.1 CodeGraph: `deliverOne` · `cycle` · `PendingAlerts` · `EntryGate.Block` · `EscalateOperatingMode` 의 callers/callees →
       `analysis/code-context/` (codegraph 1.6.0; CGC kuzu 잠금·GBrain busy 로 not-applicable, 불일치 R1–R5 는 HEAD·AST 로 해소, R6 미해소 = F1)
-- [ ] 1.2 Pre-Edit 선언(High-risk): 대상 심볼 · 호출부 · 기존 시험 · 불변식 · 실패 시험 · rollback — 대상에 **`execgw.EntryGate`**(`Clear` ·
+- [x] 1.2 Pre-Edit 선언(High-risk): 대상 심볼 · 호출부 · 기존 시험 · 불변식 · 실패 시험 · rollback — 대상에 **`execgw.EntryGate`**(`Clear` ·
       새 `ClearEpoch` · `BlockUnlessClearedSince`)를 포함하고, `Clear(ReasonAlertUndelivered)` 호출자 둘과 `revision` 소비자(전략 봉인)를 다시 잰다
-- [ ] 1.3 편집 대상 함수 `revision: current` 재추출, Branch Test Map 재번호(옛/새 ast diff 정렬) — 대상 셋:
+      — review §1 「Pre-Edit Gate」. ⚠ 선언문은 편집 **뒤**에 적었다(증거 입력은 편집 전 — 과정 이탈 기록, Manager 수용)
+- [x] 1.3 편집 대상 함수 `revision: current` 재추출, Branch Test Map 재번호(옛/새 ast diff 정렬) — 대상 셋:
       `alertDeliverer.cycle` · `alertDeliverer.deliverOne` · `Journal.settleUnderClaim` · `EntryGate.Clear`
       (뒤의 둘은 base 번들 2026-09-26; `Notifier.Acknowledge` 는 5판에서 편집 대상이 아니다).
       `Journal.PendingAlerts` 도 편집 대상이면 base 번들을 **편집 전에** 만든다
-- [ ] 1.4 Branch Test Map 의 기존 시험 실측 — `go test -covermode=set` 으로 분기 도달을 재고 파일 이름을 함수 이름으로
+      — 편집 번들 7(`alertDeliverer.release` · `EntryGate.Block`(줄만 이동) 포함) 재추출 + 편집 전→후 분기 대응(difflib, `analysis/harness/flm_a124.py`).
+        `PendingAlerts` 는 편집하지 않음(새 메서드)
+- [x] 1.4 Branch Test Map 의 기존 시험 실측 — `go test -covermode=set` 으로 분기 도달을 재고 파일 이름을 함수 이름으로
+      — `analysis/harness/branch_coverage.py` 시험별 실행, 원장 `coverage-*.json`(엔진 493 · journal 158 · execgw 59 · obs 81)
 
 ## 2. RED
 
@@ -110,8 +114,27 @@
 ## 5. 종결
 
 - [ ] 5.1 `make gate CHANGE=a124-…` · archive · Story 경로 · PM `--check`
+      — **종결 조건(Manager 판정 2026-09-28)**: review.md 종결 절과 아카이브 커밋 메시지에 「§6 배포 · 운영 재측정은 미실행, 사람 몫」 한 줄을
+      반드시 남긴다(§6 은 게이트가 안 세므로 아카이브 영수증에서 보이게 — a112 「배포 미완」 선례)
 - [ ] 5.2 a092 21판에 착수 조건으로 인용 · a092 델타 「굶주림」 문단 삭제 확인 · a092 델타 「운영자의 승인은 … 되살리지 않는다」 문단을
       이 change 의 요구로 가리키게(정본 사본 둘 방지) · **운영 효과 선행 조건 전달(AC1)**: `SetModeProjector` 생산 배선 + 기동 `RestoreOperatingModeProjection`
       을 a092 축소판의 명명된 후속으로(현재 「미배정 후속」, a092 proposal :499 · :582) — AC2(`modegate.go:35-50` 지움→재삽입 창 · 커밋 뒤 투영 순서) 동봉 ·
       a092 델타의 래치 지연 **식을 교체**(`Q + (L−1)·C + I_list + (T + S + M)` + 전제 H —
       「사이클 주기」 재정의는 발행 시간을 이중 계산) · `Acknowledge` 셈~해제 구간의 독립 기록자 경합(Follow-ups)을 a092 소유로 전달
+
+## 6. 배포 (사람 승인 — 완료 게이트 밖, 체크박스 아님)
+
+배포는 사람이 승인하고 실행한다. 아래는 그 절차에 넣을 항목이며, 이 change 의 완료 게이트가 세는 작업이 아니다.
+
+- **운영 환경에서 2.6 전제 재측정** — 실행자 원장 트랜잭션 길이(실패 기록 · 반납 · 승격)와 그 옆 exit 사이클 체류를 운영 디스크에서 잰다. 전제는
+  「트랜잭션 하나(실제 비용 포함) ≈25 ms 이내 → 고정 여유 250 ms 안」(design D7 「측정된 전제」; **개발 ext4 NVMe 측정, 운영 fsync 미측정** — 2026-09-28: 실패 기록 평균 11.1 / p99
+  19.3 ms, 반납 11.1 / 14.8 ms, 10 ms 주입 수락 중앙값 96~199 ms, 기준선 15~18 ms). 넘으면 배포를 멈추고 Manager 에게 올린다.
+  1. 트랜잭션 길이(평균 · p99): `TMPDIR=<운영 원장과 같은 파일시스템의 디렉터리> go test ./internal/app/engine/ -run '^$' -bench
+     A124JudgementTransactions -benchtime 200x` — 판정 경로의 세 트랜잭션을 하나씩 잰다(codex 3회차 T3; `A098ClaimSettleRoundTrip` 은 임차 +
+     전달의 합이라 이 전제를 직접 재지 못한다).
+  2. 체류: 같은 `TMPDIR` 로 `go test ./internal/app/engine/ -run 'TestJudgingTransactionsDelayTheExitCycle|TestTheSelectionScales' -count=1 -v`.
+  시험 원장은 `t.TempDir()`(= `$TMPDIR` 아래)에 생기므로 작업 디렉터리를 옮기는 것으로는 디스크가 바뀌지 않는다(codex 2회차 R4); 실행 전
+  `df "$TMPDIR"` 로 그 파일시스템이 운영 원장과 같은지 확인한다. 운영 원장 **사본**의 크기를 흉내 내려면 시험 원장이 아니라 사본 위에서 따로 잰다 —
+  이 도구들은 빈 새 원장을 쓴다.
+- **운영 원장의 `attempts ≥ 3` PENDING 행 수 조회** — 배포 직후 첫 실패 사이클의 승격 여부를 예측한다(design Risks 「배포 직후」, 사람 몫).
+

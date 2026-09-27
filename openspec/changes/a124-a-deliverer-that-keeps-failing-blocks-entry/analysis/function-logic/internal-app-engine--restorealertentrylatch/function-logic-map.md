@@ -36,3 +36,8 @@
   남으면 「지속 실패 → 차단」은 재시작해야 성립한다. a124 R1 이 그 사이를 배달 실행자로 메운다.
 - 운영 모드는 여기서 건드리지 않는다 — 모드 행은 원장에 남지만 게이트 투영은 여기서 복원하지 않는다(모드 투영 복원 `RestoreOperatingModeProjection` 은
   생산 호출자 0 — a124 design D10, AE3).
+
+## Safety conclusion
+
+- Safe edit boundary: a124 는 편집하지 않음 — 기동 때 PENDING 수로 알림 래치를 복원하는 기존 경로. 모드 투영은 복원하지 않음(D10).
+- High-risk impact: yes — 진입 게이트 복원. 대조 근거로만 씀.

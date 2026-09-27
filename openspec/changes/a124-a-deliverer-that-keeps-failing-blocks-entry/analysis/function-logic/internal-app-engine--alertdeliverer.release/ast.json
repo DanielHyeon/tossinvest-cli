@@ -1,0 +1,104 @@
+{
+  "file": "internal/app/engine/alertdelivery.go",
+  "source_sha256": "5791a31af9d2407935ea71edbdbf9a14cbd2025fce5da9866b1d586f8e8da0cf",
+  "package": "engine",
+  "function": "release",
+  "receiver": "alertDeliverer",
+  "signature": "alertDeliverer.release(params=3, results=0)",
+  "start": {
+    "line": 600,
+    "column": 1
+  },
+  "end": {
+    "line": 606,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 603,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 601,
+        "column": 20
+      },
+      "text": "context.WithTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 601,
+        "column": 40
+      },
+      "text": "context.WithoutCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 602,
+        "column": 8
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 603,
+        "column": 15
+      },
+      "text": "ReleaseAlertClaim"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 603,
+        "column": 15
+      },
+      "text": "d.led"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 604,
+        "column": 3
+      },
+      "text": "d.logf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 601,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 603,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 602,
+        "column": 2
+      },
+      "text": "cancel"
+    }
+  ]
+}

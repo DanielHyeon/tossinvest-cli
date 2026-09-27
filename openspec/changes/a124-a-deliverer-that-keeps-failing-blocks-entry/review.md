@@ -518,3 +518,229 @@ proposal Non-goals/Impact)을 쓰고 Q4~Q6 을 반영해 5회차 재freeze 한�
 - 기록: 이 시점 `check_analysis.py --change a124…` 는 rc 1 — a124 자신의 base 번들 형식 결함(`## Safety conclusion` 부재 5 · BTM 누락 분기: `deliverOne` B2/B4/B5,
   `Notifier.deliver` 25 개, `notifyCritical` B1/B2)과, working tree 대상이라 병행 로트의 수정 함수 다수가 섞인 결과다. 앞의 것은 구현 로트 1.3 · 1.4 가 채운다(0.4 와 무관 —
   freeze 는 문서 계약 판정).
+
+## §1 구현 로트 (2026-09-27, Teammate Opus — Manager 판정 §0.20 로 전환)
+
+### 1.2 Pre-Edit Gate — ⚠ 선언문은 편집 **뒤**에 적었다 (과정 이탈, 숨기지 않음)
+
+증거 입력(아래 CodeGraph/rg 재대조 R2′ · R6′ · R8~R11, base 번들 5 + `Context.AlertDeliverer` base 번들)은 production 편집 **전**에
+모았고 커밋 전 트리에 있었다. 그러나 이 선언문 자체는 GREEN 편집 뒤에 적었다 — WORKFLOW 「Pre-Edit 선언 … 통과한 뒤 production 파일을
+편집한다」의 순서 위반이다. 내용은 편집 전에 가진 증거만으로 썼다.
+
+```text
+Pre-Edit Gate:
+- change id / task id: a124 / 3.1~3.6 (RED 2.1~2.14)
+- 대상 심볼: engine.alertDeliverer.cycle · .deliverOne(→ recordFailedAttempt · recordDelivery 로 분할) · engine.Context.AlertDeliverer ·
+  journal.Journal.settleUnderClaim · journal.SettleResult(필드) · journal.Journal.PendingAlertsForDelivery(새) · execgw.EntryGate.Clear ·
+  execgw.EntryGate.ClearEpoch/BlockUnlessClearedSince(새)
+- CodeGraph/rg: analysis/code-context/evidence-reconciliation.md R1~R11 — settleUnderClaim 호출자 3, Context.AlertDeliverer 호출자 1
+  (cmd/tossctl/engine.go:659), Clear(ReasonAlertUndelivered) 비시험 호출자 2(Notifier.Acknowledge), revision 소비자 2(전략 봉인)
+- CodeGraphContext: 1.1 에서 kuzu 잠금으로 not-applicable, 이번 로트도 재실행하지 않음(HEAD rg + AST 로 대체 — 권위 경계)
+- 기존 동작 근거: base 번들(analysis/function-logic) + 분기 커버 실측(analysis/harness/branch_coverage.py, HEAD c0e08767 연결 워크트리)
+- FLM/BTM: 편집 대상 5 함수 모두 편집 전 번들 존재(4 는 proposal 단계, Context.AlertDeliverer 는 편집 직전 추출). 편집 뒤 revision current 재추출은 1.3
+- upstream 상속 시험 영향: 있음 가능(a098 실행자 시험) → 전체 스위트로 확인(아래)
+- 실패 시험 선행: 예 — 아래 RED
+- 설정·DB·journal 변경: 스키마 무변경(SELECT 한 줄 · 새 읽기 메서드), 새 토글 없음. rollback = 이 커밋 되돌리기
+- 안전 불변식 §0: 통과 — 실행자는 n.mu 를 잡지 않음, g.mu 안에서는 map 연산만, 손절·청산 경로 무편집, 새 차단은 보수 방향뿐
+```
+
+### RED (2026-09-27)
+
+- **행동 RED (HEAD `c0e08767`, 연결 워크트리, 이 시험 파일만 얹음)**: `TestTheProductionExecutorLatchesWithoutTheSynchronousPath` —
+  `transport fails` · `no publisher` 둘 다 FAIL *"after 3 failed cycles the gate is open — the executor does not own sustained failure"*.
+- **컴파일 RED**: journal(`SettleResult.Attempts` · `readSettledAttemptsTx` · `PendingAlertsForDelivery` 없음) · execgw(`ClearEpoch` ·
+  `BlockUnlessClearedSince` · `clearEpochs` 없음) · engine 내부(`Gate` · `AccountRef` · `ledger` · `judgeHook` · `alertAttemptLimit` 없음).
+  새 API 를 요구하는 시험은 컴파일 실패가 RED 다 — 행동 RED 는 위 한 파일이 담는다.
+
+### GREEN (2026-09-27, 공유 워크트리 — 편집 대상 파일은 병행 로트와 겹침 0)
+
+- journal a124 6 시험(원자성 3×2 포함) PASS · execgw a124 6 시험 `-race` PASS · engine a124 내부 45 행(시험+부분시험) PASS ·
+  경계 핀 5 PASS · 2.6 (a) 행동(태그) · 구조 PASS · `-race` 로 a124 engine · journal 시험 PASS.
+- 공유 워크트리의 journal 전체 스위트에서 8 시험 FAIL(`TestRiskBucket*` · `TestQFinalIssuance*` · `TestStrategyDispatch*`) — **HEAD + a124
+  journal 변경만 얹은 연결 워크트리에서는 8/8 PASS**. 원인은 병행 로트(a066)의 미커밋 journal 편집(`risk_bucket_policy_records`)이다. a124 무관.
+
+### 2.6 측정 — 1 판 (2026-09-27, 공유 워크트리, 고정 여유 `a098ExitCycleDwellMargin` = 250 ms) · ⚠ codex I2 로 대체됨(아래 2 판)
+
+| 측정 | 값 |
+|---|---|
+| (b) 기준선 — 실행자 없는 exit 사이클 체류 | 23.9 ms |
+| (b) 수락 — 실행자 트랜잭션마다 15.1 ms 주입(연결을 쥔 채) | **167.3 ms** ≤ 273.9 ms (기준선 + 250) |
+| (b) 대조 — 트랜잭션마다 493.6 ms 주입 | 2 727 ms > 273.9 ms — 계측기가 경합을 **본다** |
+| (c) 선택 쿼리 연결 점유 P = 10 · 1 000 · 10 000 | 0.18 ms · 0.30 ms · **2.65 ms** / 호출 |
+| (c) 그 backlog 위 실행자 옆 exit 체류 P = 10 · 1 000 · 10 000 | 104 · 97 · 106 ms (기준선 24.2 ms, 상한 274 ms) |
+| (a) 실행자가 g.mu 를 기다리는 동안 손절 쪽 Notify | 12.2 ms 에 반환, 실행자는 그때 여전히 대기 중 |
+
+- AB1 의 「넘으면 멈추고 보고」는 발동하지 않았다 — P = 10 000 에서 선택은 여유의 1% 다. 가산 색인(스키마 변경) 불필요.
+- 수락 변형의 +143 ms 는 exit 사이클 원장 연산 하나가 진행 중인 실행자 트랜잭션 하나까지 기다린 합이다(15 ms × 약 9). 실측 정산 왕복
+  5.584 ms(a098 3.2)의 약 세 배를 넣은 값이며, 트랜잭션이 ~28 ms 를 넘으면 이 여유를 넘을 수 있다 — 기록한다.
+- 지연 주입은 시험 전용 트리거(둘째 연결로 같은 파일에 생성, 교차 조인 CPU 시간)다. 원장 스키마 편집이 아니다.
+
+### 설계에서 벗어난 자리 (safe local — issues.md 대신 여기 기록)
+
+- ~~전달 정산 오류가 엔진 종료 취소로 온 경우 판정하지 않는다~~ — **철회(codex 구현 1회차 I1 P1, 2026-09-28)**. 이 오류가 취소 때문인지
+  원장 결함 뒤 취소인지 가를 수 없고, 그 사이 승인 · 남의 발송이 행을 PENDING 에서 빼면 기동 복원이 덮지 못한다 — 보수적이지 않았다.
+  이제 D1 그대로 판정하고, 취소된 ctx 의 승격 쓰기가 실패하면 무조건 차단으로 대신한다. 회귀 시험 2 판 + 뮤테이션 M27.
+- 승격 계정(`AccountRef`)이 비어 있으면 승격하지 않는다 — `Notifier.escalate` 와 같은 규칙. 게이트가 nil 이면 잠그지 않는다. codex I1 판정:
+  일반 동작으로는 보수적이지 않으나 **생산 조립이 배제한다** — `Context.AlertDeliverer` 가 nil 게이트를 거절하고(`auxiliary.go:157`) 계정 해석이
+  빈 값을 거절한다(`interlock.go:684-687`). 조립 전제로 기록한다. 공장에서 AccountRef 를 검증하는 안은 a098 시험 다수가 계정 없는 Context 로
+  실행자를 짓기 때문에 이 로트에서 하지 않았다(P2 기록).
+
+### 구현 리뷰 — codex 1회차 (2026-09-28) · **REJECT → 반영**
+
+- 실행: codex-cli 0.154.0, `gpt-6-astra`, read-only, session **`01a0e365-c6d1-71d0-b0cd-dfdc0d9f5b4d`**, 00:04~00:08 KST, rc 0, 178,712 토큰.
+  프롬프트 `analysis/impl-review/codex-i1-prompt.md`(sha 일치), diff `analysis/impl-review/a124-impl.patch`, 트리 = HEAD `8ddc5a38` export + 작업트리 a124 파일.
+  출력 `analysis/impl-review/codex-i1-output.md`. 트리 안 새 파일 0.
+- 적합성: D1 두 표 · D7 표와 순서 · D8 AA2 · 거름 규칙 · D2 · D3 · D4 · D9 · D10 전부 CONFORMS, 단 전달 정산 오류의 취소 예외만 DEVIATES(I1).
+  뮤테이션 30 은 「이름 붙은 시험 실패, 빌드 실패 아님」으로 확인. 구조 스캔의 뿌리 · 양성 대조 확인.
+
+| id | 심각도 | 발견 | 처분 |
+|---|---|---|---|
+| I1 | P1 | 전달 정산 오류 + 취소 → 판정 없음(계약 위반, 보수적이지 않음) | **수정** — 예외 삭제, 시험 2 판(PENDING · 승인 먼저), 뮤테이션 M27 |
+| I2 | P1 | 2.6 측정이 판정 · 승격 몫을 안 잼(0 으로 시드, 겹침 증거 없음) | **수정** — 한도 − 1 로 시드, 트리거 발화 시각으로 측정 창 겹침 단언(기록 · 반납 5/6, 승격 1/1), publisher 없음 변형, 대조군 유지. 수락 지연 10 ms(정산 왕복의 약 두 배)로 — 15 ms 에서 +231 ms 로 여유를 거의 소진한 것을 한계로 기록 |
+| I3 | P1 | 약속한 적대 순서 누락 | **수정** — ㉫(전달 뒤 빈 목록 승인) · ㉩/㉪ · 실패한 승인 · 나열 계수 한도 + 해제 두 순서 · 같은 id 재무장 이월(V5) · 게이트 대기 중 임차 만료(R6·Y5, 태그) · 2.1 기한 초과 · 2.3 실제 닫고 다시 열기 · 2.8 실제 임차 탈취 · 2.11 임차 토큰 sentinel. 잠금 범위 변이는 B′ 에서 engine 이 g.mu 아래 코드를 돌릴 API 가 없으므로 **구조 핀**(`TestTheEpochMethodsCallNothingUnderTheLock`)과 변이 M28 로 대신 |
+| I4 | P2 | 원자성 스트레스가 「래치 있음 · 세대 > e」를 못 잡음 | **수정** — 그 모양을 실패로, split-lock 변이 M29 |
+| I5 | P2 | 커밋 실패 시험이 아무 오류나 받음 | **수정** — 주입이 끝까지 걸렸는지 표시 + 커밋 오류 문구 · 읽기 오류 문구를 구분 |
+
+### 2.6 측정 — 2 판 (2026-09-28, codex I2 · Eng F1/F2/F7 반영 뒤)
+
+1 판은 backlog 를 attempts 0 으로 시드해 측정 창에 판정 · 승격이 들지 않았다(codex I2). 2 판은 **한도 − 1 로 시드**해 첫 실패부터 판정 · 승격이
+돌게 하고, 시험 전용 트리거가 지연 뒤 발화 시각을 남겨 **측정 창과 겹쳤는지**를 단언한다. 수락은 세 번 잰 중앙값(Eng F7).
+
+| 측정 | 값 |
+|---|---|
+| 기준선(실행자 없음) | 15~18 ms |
+| 수락 — 실행자 트랜잭션마다 10 ms 주입, transport 실패 | 중앙값 **192 ms**(161 · 192 · 202) ≤ 기준선 + 250 |
+| 수락 — 같은 주입, publisher 없음(D3) | 중앙값 **199 ms**(192 · 199 · 224) |
+| 겹침 | 기록 · 반납 트리거 5/6 창 안, 승격 쓰기 1/1 창 안 |
+| 대조 — 트랜잭션마다 485 ms 주입 | 3 109 ms > 상한 — 계측기가 경합을 본다 |
+| (c) 선택 점유 P = 10 · 1 000 · 10 000 | 0.11 · 0.37 · 2.33 ms / 호출 |
+| (c) 실행자(판정 포함, 주입 없음) 옆 exit 체류 | 95 · 91 · 100 ms (기준선 23 ms) |
+
+**한계 (Eng F1 — 숨기지 않는다).** 수락 지연은 1 판의 15 ms 에서 10 ms 로 **내렸다**. 15 ms(정산 왕복 5.584 ms 의 약 세 배)에서 exit 체류는
++231 ms 로 고정 여유를 거의 다 썼다. 체류 증가는 대략 「실행자 트랜잭션 길이 × 한 exit 사이클과 겹치는 실행자 트랜잭션 수(~15)」다. 그러니 이 여유는
+**실행자 원장 트랜잭션이 ~16 ms 안쪽일 때만** 선다 — 원장 연결 하나(`journal.go:174`)의 성질이고, 운영 디스크의 fsync 지연은 이 로트가 재지 않았다.
+design D7 · Risks 에 이 전제를 적을지는 Manager 판단(아래 요청). 같은 조건에서 여러 번 재서 흔들림(120~200 ms)이 있다 — 공유 기계 부하.
+
+### 구현 리뷰 — 적대 Eng 보이스 (2026-09-28, 독립 서브에이전트, 읽기 전용) · **APPROVE (조건부)**
+
+스냅숏 md5: `alertdelivery.go` 70d6ae3e… · `retry.go` b2f9f928… · `alert_claim.go` 21dbbb28… · `outbox.go` 50942b3f… · `auxiliary.go` 0d6f0b12….
+D1 · D7 · D8 · D10 · spec SHALL 대조 일치, fail-open 경로 · 데이터 경합 · 발행/원장 대기를 쥔 잠금 없음, 새 줄 · 게이트 detail 정제 확인. P0/P1 없음.
+
+| id | 심각도 | 발견 | 처분 |
+|---|---|---|---|
+| F1 | P2 | 수락 지연을 잰 뒤 내렸다 — 여유가 ~16 ms/트랜잭션 전제에서만 선다 | **기록**(위 한계) + design 기재 여부 Manager 요청 |
+| F2 | P3 | 승격 쓰기의 창 겹침을 단언하지 않음 | **수정** — `modeInside > 0` 단언 |
+| F3 | P3 | review §1 의 취소 예외 문장이 코드와 어긋남 | **수정** — 철회 표기(codex I1) |
+| F4 | P3 | 래치 줄이 이미 있던 래치에도 한 번 찍힘(세대당 한 번) | **기록** — D9 의 「바뀐 때만」을 「세대당 한 번」으로 읽음. 소음이지 누출 아님 |
+| F5 | P3 | 고위험 원장 파일의 패키지 변수 시험 이음새 | **수정** — 생산 코드가 그 변수에 대입하지 않음을 구조 시험으로(`TestOnlyTestsReassignTheAttemptsRead`) |
+| F6 | P3 | 구조 스캔이 파싱 실패 파일을 건너뜀 | **수정** — 파싱 실패면 멈춤(두 워커) |
+| F7 | P3 | 시간 시험의 여유가 좁아 흔들릴 수 있음 | **수정** — 수락을 세 번 잰 중앙값으로 |
+
+### 전제 기재 (Manager 판정 2026-09-28)
+
+- Eng F1 의 측정된 전제를 **design D7(「측정된 전제」 문단)과 Risks** 에 값 · 순간 · 모집단과 함께 적었다. 15 → 10 ms 조정은 Manager 가 승인했다(사유:
+  여유 소진 실측). 재측정 트리거로 **tasks §6 「배포 (사람 승인 — 완료 게이트 밖, 체크박스 아님)」** 를 새로 두었다 — 체크박스로 두면 완료 게이트
+  ②(미완료 체크박스 0)가 배포 전 항목에 막히므로 목록으로 적었다.
+
+### 구현 리뷰 — codex 2회차 (2026-09-28, 수정분으로 좁힘) · **REJECT → 반영**
+
+- 실행: `gpt-6-astra`, read-only, session **`01a0e39d-0b6c-7410-bafd-d0dbbb2e9055`**, 01:05~01:08 KST, rc 0, 130,778 토큰. 프롬프트
+  `analysis/impl-review/codex-i2-prompt.md`, diff `a124-impl-i2.patch`, 트리 = HEAD `56f107cc` export + 작업트리 a124 파일. 출력 `codex-i2-output.md`.
+- I1 · I4 · I5 · Eng F1(기재로) · F2 · F3 · F5 · F6 RESOLVED. I2 · I3 · F4 · F7 PARTIAL. M27~M29 는 실제 시험 실패로 확인.
+
+| id | 심각도 | 발견 | 처분 |
+|---|---|---|---|
+| R1 (I3) | P1 | 새 순서 시험이 그 사건 없이도 통과할 수 있다 — ㉪ 가 ㉩ 로 떨어져도, 실패한 승인이 아예 없어도 통과; 모드 · 계수 단언 누락 | **수정** — ㉪ 는 전달 성공과 DELIVERED 를 훅 안에서 단언하고 훅 발화를 단언; 실패한 승인은 **시험 전용 트리거로 실제로 실패**시키고(한 행은 승인됨 · 다음 행에서 원장 오류) 세대 불변 · 차단 + 승격을 단언; 같은 실패한 승인이 기록 실패 연속을 지우지 않음을 따로(연속 수를 직접 확인); V5 · 게이트 대기 중 임차 만료에 모드 단언 |
+| R2 | P2 | 취소 회귀가 무조건 차단 대체를 증명하지 않음 | **수정** — 해제로 조건부 차단을 뺏은 판에서 승격 시도 있음 · 모드 커밋 없음 · 대체 차단 있음을 단언 + 변이 M30(취소면 승격 건너뜀) |
+| R3 | P2 | 측정 표본이 앞 실행자를 남김 · 보정 지연을 확인 안 함 · 확장 시험에 겹침 단언 없음 | **수정** — 표본마다 실행자를 함수 안에서 멈추고 기다림, 보정 값이 목표의 ½~2 배 밖이면 멈춤, (c) 에도 겹침 단언 |
+| R4 | P2 | 배포 재측정 절차가 운영 디스크를 보장하지 않음 | **수정** — tasks §6 에 `TMPDIR` 지정 · `df` 확인 · 정산 왕복 벤치로 트랜잭션 길이를 따로 재는 법 |
+| F4 | P3 | 래치 줄이 「처음 잠근 때만」이 아니라 세대당 한 번 | **수정** — `BlockUnlessClearedSince` 가 `(applied, inserted)` 를 돌려주고 실행자는 새로 세웠을 때만 한 줄 + 시험 + 변이 M31 |
+| F7 | P3 | 중앙값이 앞 표본의 실행자에 오염 | R3 로 해소 |
+
+- **§6 형식 — Manager 승인(2026-09-28), 조건 하나**: 게이트에 안 보이는 대신 아카이브 영수증에 보여야 한다 — review.md 종결 절과 아카이브 커밋
+  메시지에 「§6 배포 · 운영 재측정은 미실행, 사람 몫」 한 줄을 남기는 것을 종결 조건으로 tasks 5.1 에 적었다.
+
+### 4.4 래치 시간 — 가짜 시계 실측 (2026-09-28, `a124_the_worst_latch_time_internal_test.go`)
+
+전제 H(동질 두절) 아래 첫 사이클 시작부터 래치까지. 발행기가 가짜 시계를 T 만큼 전진시킨 뒤 실패를 돌려준다. 이 계측에서 원장 · 게이트 비용
+(S · M · E · I_list)은 0 이고 큐 대기 Q 는 넣지 않았다 — D6 표의 첫 열과 같은 모집단이다.
+
+| 경우 | 실측 | design D6 |
+|---|---:|---:|
+| 행 1, 즉시 실패 | 4 s | 4 s |
+| 행 1, 매번 10 s timeout | 34 s | 34 s |
+| 배치 10 행 전부 10 s timeout (첫 래치) | 214 s | 214 s |
+
+실제 원장 비용(정산 왕복 5.584 ms × 행 · 사이클)과 Q(≤ C) 는 D6 식의 항으로 더해진다 — 이 표는 식의 구조(사이클 먼저 · 대기 뒤, 한 행의
+재시도 사이에 같은 사이클의 나머지 행)를 실행으로 확인한 것이지 운영 상한이 아니다.
+
+### 구현 리뷰 — codex 3회차 (2026-09-28, 수정분으로 좁힘) · **REJECT(T1 P1) → 반영**
+
+- 실행: `gpt-6-astra`, read-only, session **`01a0e3ec-c790-72e3-b6fc-c3dd06a6b5e7`**, 02:32~02:35 KST, rc 0, 118,367 토큰. 프롬프트
+  `codex-i3-prompt.md`, diff `a124-impl-i3.patch`, 트리 = HEAD `56f107cc` export + 작업트리 a124 파일. 출력 `codex-i3-output.md`.
+- R1(㉪ · 실패한 승인 둘) · R2 · F4 · F7 RESOLVED. API 변경이 spec 시나리오 「세대가 바뀐 뒤의 조건부 잠금은 아무것도 하지 않는다」를 지킴 확인. M30 · M31 실제.
+
+| id | 심각도 | 발견 | 처분 |
+|---|---|---|---|
+| T1 | P1 | V5 가 전달 · 재무장 없이도 통과(PENDING 인 채 임차 만료로 다시 잡혀도 Acquired) | **수정** — 전달 `Applied` · DELIVERED 상태 단언, 재무장이 새 에피소드인지(PENDING · attempts 0 · delivered_at 없음 · `!Stole`) 단언, 반납 `Applied` 단언. 같은 모양의 Y3 시험(승인 뒤 재무장)도 같게 |
+| T2 | P2 | 중앙값의 모든 표본 · 대조군의 겹침 미검증, (c) 는 승격 미확인 | **수정** — 세 표본 각각 기록 · 승격 겹침 단언, 대조군 겹침 단언, (c) 는 승격 발생 단언(창 겹침은 (b) 몫이라고 적음) |
+| T3 | P2 | 배포 벤치가 판정 트랜잭션을 따로 재지 못함 | **수정** — `BenchmarkA124JudgementTransactions`(실패 기록 · 반납 · 승격 각각 평균 · p99). **개발 환경 실측이 전제 수치를 바꿨다**: 실패 기록 평균 11.1 / p99 19.3 ms, 반납 11.1 / 14.8 ms, 승격 0.19 / 0.44 ms. 1 판 「≈16 ms」는 주입 지연만 센 과소 진술 → design D7 · Risks · tasks §6 를 「실제 비용 포함 ≈25 ms」로 교정(아래 Manager 확인 요청) |
+| T4 | P2 | 4.4 가 큐 대기를 포함하지 않음 | **수정** — Q = I(두절이 대기 시작 순간) 두 판: 행 1 · 10 s → 36 s, 배치 10 · 10 s → 216 s. Q 의 상한 C(진행 중 배치의 나머지)는 흉내 내지 않았다고 적음 |
+| T5 | P2 | 임차 만료 뒤 재발행이 「가능」만 증명 | **수정** — 탈취한 발송자가 실제로 다시 보내고 정산 `Applied` 까지 단언 |
+
+- **Manager 확인 요청**: 승인받은 전제 문구의 수치를 실측으로 교정했다(≈16 ms → 실제 비용 포함 ≈25 ms, 개발 디스크의 실제 비용 p99 19.3 ms 병기).
+  방향은 「기준이 느슨해진 것」이 아니라 「1 판이 실제 비용을 빠뜨렸다」이다 — 개발 디스크가 이미 여유의 절반 이상을 쓴다는 사실이 더 드러났다.
+
+### 구현 리뷰 — gstack `/review` (2026-09-28, Manager 지시: Eng · codex 로 대체 불가)
+
+- 범위: a124 미커밋 diff 만(`a124-impl-*.patch` 와 같은 파일 집합 — 브랜치 전체 diff 가 아님). 체크리스트 1 차(CRITICAL: SQL · 경합 · 열거 완전성 등)는
+  Teammate 가 직접: **발견 0** — 새 SQL 은 전부 매개변수(`PendingAlertsForDelivery` · 가산 SELECT), 새 열거값 없음, `SettleResult` 새 칸은 가산이고
+  동등 비교 소비자 없음(Eng 보이스 확인), 실행자 상태는 Run goroutine 하나 · 게이트 세대는 `g.mu` 아래.
+- Review Army 5 전문가(병렬, 읽기 전용): testing 5 · maintainability 6 · performance 2 · security **0** · simplification 1(advisory). 전부 INFORMATIONAL.
+  Red Team · 적대 단계(5.7)는 이 로트에서 이미 돈 독립 Eng 보이스와 codex 3 회로 갈음했다 — 따로 반복하지 않았다(기록).
+
+| 출처 | 발견 | 처분 |
+|---|---|---|
+| maintainability | `recordDelivery` 가 NotFound · 모르는 값에도 「settled by somebody else」를 찍음 | **AUTO-FIX** — 그 줄은 AlreadySettled · LeaseLost 에만, 나머지는 「could not be matched to its row」 |
+| maint · simplification | `listSeen` · `seen` 인자가 `count > 0` 과 같은 정보 | **AUTO-FIX** — 제거, `advanceFailureRun` 은 `run.count == 0` 으로(AA2 전이 불변 — 변이 원장 재실행) |
+| maintainability | 나열 판정의 `alert_id=0` 이 실제 id 처럼 읽힘 | **AUTO-FIX** — `alertNoRow` 상수, 새 줄은 그때 `alert_id` 칸을 쓰지 않음 |
+| maintainability | 파일 머리 주석이 a124 의 판정 책임을 말하지 않음 | **AUTO-FIX** — 「지속 실패의 주인 (a124)」 절 |
+| maintainability | 원자성 시험이 생산 SQL 을 베낌 | **AUTO-FIX** — 주입 전 참 읽기를 저장해 되돌림, 사본 삭제 |
+| maintainability | `PendingAlertsForDelivery` 가 `PendingAlerts` 의 배관을 복제 | **하지 않음** — 공통 헬퍼로 뽑으면 `PendingAlerts`(편집하지 않기로 한 기존 함수, AA4)를 편집하게 된다. 기록 |
+| testing | 그 행의 실패 기록 `Applied` 가 연속을 지우는지 시험 없음 | **AUTO-FIX** — `TestAnAppliedRecordOnTheRowEndsItsRun` + 변이 M32 |
+| testing | 완전한 나열의 거름(Q5 양의 절반) 시험 없음 | **AUTO-FIX** — `TestACompleteListingForgetsARowThatLeftPending` + M33 |
+| testing | 판정 뒤 계수 0(W2) 시험 없음 | **AUTO-FIX** — `TestTheRunRestartsAfterItsJudgement`(기록 · 나열) + M34 · M35 |
+| testing · performance | 2.6 시간 시험이 기본 스위트에서 흔들릴 수 있음, 기준선이 한 번 잰 값 | **AUTO-FIX** — 기준선도 세 번 잰 중앙값, (b) 에 `-short` 건너뛰기(게이트는 `-short` 를 쓰지 않으므로 계속 돈다). 전용 태그로 빼는 안은 2.6 을 게이트 밖으로 내므로 하지 않음 |
+| testing | execgw 원자성 시험 주석이 「`-race` 아래」라 하나 `make test-race` 목록에 execgw 가 없음 | **AUTO-FIX(주석)** — 게이트가 경합 검출기로 돈다는 주장을 뺌. Makefile 목록 편집은 공유 게이트 표면이라 이 로트에서 하지 않음 — Manager 판단 |
+| performance | D3(publisher 없음)가 무설정 엔진에 행당 기록 + 반납 트랜잭션을 더함 | 기록 — design Risks F12 · tasks §6 운영 재측정이 덮음 |
+
+### Manager 판정 (2026-09-28) — 전제 수치 교정 승인 · Makefile 경합 목록은 로트 밖
+
+- **교정 승인**: 「실제 비용 포함 ≈25 ms」. 조건 문구(개발 ext4 NVMe 측정 · 운영 fsync 미측정 · §6 배포 시 재측정)가 design D7 「측정된 전제」 · Risks ·
+  tasks §6 교정판에 남아 있음을 확인했다.
+- **영수증 대응**: `BenchmarkA124JudgementTransactions`(개발 디스크 200 회: 실패 기록 11.1 / 19.3 ms · 반납 11.1 / 14.8 ms · 승격 0.19 / 0.44 ms) →
+  design D7 「실제 비용」 수치 · Risks 「p99 19.3 ms」 · `a124AcceptedDelay` 주석 · tasks §6 재측정 1 단계.
+- **잔여(로트 밖)**: execgw 를 `make test-race` 에 넣는 것은 이름 목록 + 완전성 가드와 함께 별도 도구 change 몫이다(기억 「경합 검출기는 여기서 돈 적이
+  없었다」의 선례 — 무거운 패키지는 이름 목록 + 완전성 가드로). a124 는 주석의 「`-race` 아래」 주장만 뺐다.
+
+### 착지 전 검증 — 파이프라인 2 판 (2026-09-28, 연결 워크트리 = HEAD `56f107cc` + a124 파일)
+
+- 뮤테이션 원장 **39/39 CAUGHT**(M01~M35 · 변형), 무변이 대조군 3 패키지 GREEN(`analysis/harness/mutation-ledger.tsv`).
+- FLM/BTM 재생성(편집 번들 7 · 대조 번들 3) — 분기 커버는 `analysis/harness/coverage-*.json`(시험별 실행, 엔진 493 · journal 158 · execgw 59 · obs 81;
+  엔진의 실패 2 는 `-trimpath` 로 소스 경로를 못 여는 a111 시험 둘 — 측정 도구의 부작용이고 기본 스위트에서는 통과). check_analysis 에서 a124 번들의
+  오류는 「인용한 시험이 추적 파일에 없음」뿐(커밋하면 사라짐).
+- test-seams rc 0, a124 시험 `-race` rc 0. **untagged 는 rc 1** — `TestJudgingTransactionsDelayTheExitCycleOnlyWithinTheFixedMargin` 의 지연 보정이
+  전체 스위트의 병렬 부하에서 목표의 ½ 배 밖으로 떨어져(4.94 ms / 목표 10 ms) Fatal. 보정을 「세 번 잰 중앙값으로 0.7~1.5 배에 들 때까지 최대 여섯
+  번 다시 맞춤」으로 고치고, 같은 워크트리에서 **`go test ./internal/...` 를 다른 부하와 겹쳐 다시 돌려 95 패키지 ok · FAIL 0**(엔진 301 s). cmd/ 는
+  직전 판 ok. 착지 직전 전체 스위트를 한 번 더 돈다(게이트 슬롯).
+- **2.6(b) 보정 수정의 성격 (Manager 조건)**: 3 회 중앙값 + 최대 6 회 재조정은 **측정 하네스 수정이지 판정 완화가 아니다** — 수락선(기준선 +
+  고정 여유 250 ms), 주입 목표(10 ms), 허용 보정 폭(½~2 배)은 그대로이고, 바뀐 것은 주입 지연을 목표에 맞추는 방법뿐이다.
+
+### codex 3회차 뒤 수정분의 재리뷰 범위 (Manager 판정 2026-09-28)
+
+- 판정: 3회차 뒤 T1~T5 · gstack AUTO-FIX 분은 시험 · 하네스 · 문서 · 주석에 한정되면 codex 4회차 불요, 판정 코드가 바뀐 부분만 재리뷰 대상.
+- **diff 스캔 결과**(3회차 트리 `a124-i3/tree` 대비, 주석 줄 제외): `retry.go` · `alert_claim.go` · `outbox.go` · `auxiliary.go` 변화 0. `alertdelivery.go` 는
+  로그 줄(문구 · `withAlertID`) · `alertNoRow` 상수 외에 **D8 계수 코드가 바뀌었다** — `listSeen` 필드와 `advanceFailureRun` 의 `seen` 인자를 없애고
+  `if !seen` 을 `if run.count == 0` 으로(gstack 유지보수 · 단순화 전문가). 의미는 같다고 판단하고 변이 원장(M14 · M19 · M20 · M34 · M35 CAUGHT)과
+  D8 시험이 통과하지만, 규칙에 따라 **이 부분(`countRecordFailure` · `countListFailure` · `advanceFailureRun`)만 codex 4회차 재리뷰 대상**이다 — 착지 뒤
+  codex 슬롯을 받아 좁혀 돌린다.

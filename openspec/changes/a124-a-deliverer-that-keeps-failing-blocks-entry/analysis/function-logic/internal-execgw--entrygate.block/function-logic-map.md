@@ -1,36 +1,36 @@
 # Function Logic Map: `EntryGate.Block`
 
-- Source: `internal/execgw/retry.go`
-- AST evidence: `ast.json` — **편집 전**, :526–533, 분기 1 · 반환 0 · 호출 2 · defer 1.
-  source_sha256 `15d3f65344f9…`, 추출 base `4798d399` (2026-09-26, Teammate — design 5판 로트).
+- Source: `internal/execgw/retry.go` (532-539)
+- Revision: current — a124 구현 로트(2026-09-27) (편집 없음, 줄만 이동) 재추출; source_sha256 `a9612c2f35817471eee506ee2cfa3686fb297c3326bf1215eacbd162c2574f4c`
+- AST evidence: `ast.json` (`tools/logic-map` 추출기 출력, `analysis/harness/flm_a124.py` 가 다시 만듦)
 - Risk scan: `risk-pattern-report.md`
-
-**a124 는 이 함수를 편집하지 않는다.** 새 `BlockUnlessClearedSince` 가 이 함수와 같은 삽입 규칙을 따른다는 주장의 근거로 만들었다.
+- Extractor counts: AST branches 1 · returns 0 · calls 2
+- Exact AST return positions: (none)
+- 편집 전 판(base `4798d399`)의 분석은 이 파일의 git 이력에 있고, 분기 대응은 아래 표다.
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| `reason` · `detail` | — | 호출자 | — |
+| `reason` · `detail` | 사유 · 설명 | 호출자 | 이미 있으면 삽입 없음 |
 
 ## Branches and early returns
 
-| Branch | Condition | Mutation/side effect | Return/error | Required test |
-|---|---|---|---|---|
-| B1 | 그 사유의 래치가 없음 (:529) | `g.latches[reason] = detail` :530 · `g.revision++` :531 | 종단 | execgw 게이트 시험 (1.4) |
-| (B1 거짓) | 이미 있음 | 무변화 — **처음 detail 이 남는다** | 종단 | 1.4 |
+| Branch | AST anchor | Source text at anchor |
+|---|---|---|
+| B1 | if at 535:2 | `if _, exists := g.latches[reason]; !exists {` |
 
 ## Calls and live bindings
 
-| Callee | Why called | Error/timeout/retry contract | Evidence |
-|---|---|---|---|
-| `g.mu.Lock` :527 / `defer g.mu.Unlock` :528 | 래치 map 보호 — 밖을 부르지 않는다 | — | AST |
+| Callee | Why called | Error/timeout/retry contract |
+|---|---|---|
+| `g.mu.Lock/Unlock` | 게이트 잠금 | map 연산뿐 |
 
 ## State mutations and fallbacks
 
-- 없을 때만 삽입. 재호출은 무변화(design D1 F9).
+- 없을 때만 삽입하고 그때만 `revision++` — 처음 설명이 남는다(F9). a124 는 이 함수를 편집하지 않았다(위 필드 추가로 줄만 옮겨짐).
 
 ## Safety conclusion
 
-- Safe edit boundary: 편집하지 않는다. 새 메서드는 같은 잠금 아래 세대 비교를 앞에 둔 같은 삽입이다.
-- High-risk impact: yes — 진입 게이트(읽기 전용 근거).
+- Safe edit boundary: 대조 근거 — 편집 없음.
+- High-risk impact: yes — 진입 게이트.

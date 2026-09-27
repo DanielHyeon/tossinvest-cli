@@ -59,3 +59,8 @@
 - 이 함수는 `claimAndDeliver` 가 `n.mu` 를 쥔 채 부른다(a092 D0.3d 2번). a092 가 이 호출을 엔진 루프 밖으로 빼면
   위 세 잠금 자리는 **루프 경로에서 도달 불가**가 된다 — 그 뒤에 지속 실패로 잠그는 자리는
   `restoreAlertEntryLatch` (기동 시 1회) 뿐이다. a124 는 그 빈자리를 배달 실행자에 만든다.
+
+## Safety conclusion
+
+- Safe edit boundary: a124 는 편집하지 않음(a092 표면) — 실행자의 판정 표(D1)가 대응시킨 동기 경로의 기준선.
+- High-risk impact: yes — 동기 알림 경로가 n.mu 아래에서 Gate.Block 을 부르는 기존 결함은 proposal Follow-ups.

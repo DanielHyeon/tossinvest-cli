@@ -1,16 +1,16 @@
 {
   "file": "internal/execgw/retry.go",
-  "source_sha256": "15d3f65344f978a6241aef5418ab1eac564a173b1b26523c39ca0239cfbcdcd9",
+  "source_sha256": "a9612c2f35817471eee506ee2cfa3686fb297c3326bf1215eacbd162c2574f4c",
   "package": "execgw",
   "function": "Clear",
   "receiver": "EntryGate",
   "signature": "EntryGate.Clear(params=1, results=0)",
   "start": {
-    "line": 537,
+    "line": 543,
     "column": 1
   },
   "end": {
-    "line": 544,
+    "line": 555,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,15 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 540,
+        "line": 547,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 551,
         "column": 2
       }
     }
@@ -28,7 +36,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 538,
+        "line": 544,
         "column": 2
       },
       "text": "g.mu.Lock"
@@ -36,7 +44,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 539,
+        "line": 545,
         "column": 8
       },
       "text": "g.mu.Unlock"
@@ -44,7 +52,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 541,
+        "line": 548,
+        "column": 19
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 552,
         "column": 3
       },
       "text": "delete"
@@ -52,16 +68,30 @@
   ],
   "assignments": [
     {
+      "kind": "=",
+      "at": {
+        "line": 548,
+        "column": 3
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 550,
+        "column": 2
+      }
+    },
+    {
       "kind": ":=",
       "at": {
-        "line": 540,
+        "line": 551,
         "column": 5
       }
     },
     {
       "kind": "++",
       "at": {
-        "line": 542,
+        "line": 553,
         "column": 3
       }
     }
@@ -71,7 +101,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 539,
+        "line": 545,
         "column": 2
       },
       "text": "g.mu.Unlock"

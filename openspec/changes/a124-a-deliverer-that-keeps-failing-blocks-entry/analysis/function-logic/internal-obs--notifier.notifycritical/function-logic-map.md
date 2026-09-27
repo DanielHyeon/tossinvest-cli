@@ -41,3 +41,8 @@ B4 에서만 일어난다」를 근거로 쓰기 때문에 만들었다.
   오늘 동기 경로에서만 일어난다.**
 - a092 가 `claimAndDeliver` 에서 `deliver` 를 빼면 B4 의 `owed && !sent` 는 「시도했으나 못 보냄」이 아니라
   「시도하지 않음」이 되고, 승격은 B3(기록 실패)에서만 남는다. 전송 실패의 승격 주체가 사라지는 자리가 여기다.
+
+## Safety conclusion
+
+- Safe edit boundary: a124 는 편집하지 않음 — 승격(escalate) parity 의 기준선.
+- High-risk impact: yes — 운영 모드 승격 경로. 대조 근거로만 씀.

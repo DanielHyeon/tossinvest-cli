@@ -1,13 +1,11 @@
 # Branch Test Map: `alertDeliverer.cycle`
 
-proposal 단계 — 시험은 **이름만** 매핑했고 분기 도달은 재지 않았다(tasks 1.4 에서 `go test -covermode=set` 으로 잰다).
-a124 가 더하는 행은 「a124 RED」로 표시한다.
+- Source: `internal/app/engine/alertdelivery.go` (235-264); current
+- 시험 칸은 측정값: `analysis/harness/branch_coverage.py` 가 `github.com/JungHoonGhae/tossinvest-cli/internal/app/engine` 의 시험 498 개를 하나씩 돌린 커버 프로필(-covermode=set)에서 그 분기 본문 블록을 실행한 시험. 「합집합」은 패키지 전체 한 판.
 
-| Branch | Scenario | Test | RED observed | GREEN observed |
-|---|---|---|---|---|
-| B1 | 원장 나열 실패 → 사이클 오류, 루프 지속 | `a098_the_outbox_gets_emptied_test.go` (파일 단위) | no(회귀 핀) | 미측정(1.4) |
-| B2 | 배치의 행마다 `deliverOne` | `a098_one_cycle_takes_a_batch_test.go` | no(회귀 핀) | 미측정(1.4) |
-| B3 | 행 사이 취소 → 남은 행 미처리, `nil` | a098 취소 전파 시험 (1.4 에서 이름 확정) | no(회귀 핀) | 미측정(1.4) |
-| 종단 | 배치 소진 → `nil` | 위와 같음 | — | 미측정(1.4) |
-| **a124 RED** | 죽은 행 batch 개 + 새 critical 행 → 다음 사이클이 새 행을 먼저 시도 | tasks 2.4 | 예정 | 예정 |
-| **a124 RED** | 한도에 이른 행이 잔여 자리로 밀려도 사라지지 않는다 | tasks 2.5 | 예정 | 예정 |
+| Branch | AST anchor | Scenario (source text) | Test | RED observed | GREEN observed |
+|---|---|---|---|---|---|
+| B1 | if at 243:2 | `if err != nil {` | `TestACancelledEngineIsNotALedgerFault` · `TestAClearAroundTheLimitthListingFailureStillEscalates` · `TestASuccessfulListingBreaksTheListingRun` (+2) | a124 RED — 편집 전에 없던 분기 | 블록 243.16-247.3 을 시험 5 개가 실행, 전부 PASS |
+| B2 | if at 249:2 | `if len(pending) < d.batch() {` | `TestAClaimThatFindsTheRowSettledEndsItsRun` · `TestAClearAfterTheEvidenceLeavesWhatAnOnTimeLatchWouldHave` · `TestAClearAfterTheLimitthRecordFailureStillEscalates` (+59) | a124 RED — 편집 전에 없던 분기 | 블록 249.30-253.3 을 시험 62 개가 실행, 전부 PASS |
+| B3 | range at 254:2 | `for _, alert := range pending {` | `TestAClaimThatFindsTheRowSettledEndsItsRun` · `TestAClearAfterTheEvidenceLeavesWhatAnOnTimeLatchWouldHave` · `TestAClearAfterTheLimitthRecordFailureStillEscalates` (+60) | a124 RED — 편집 전에 없던 분기 | 블록 254.32-258.23 을 시험 63 개가 실행, 전부 PASS |
+| B4 | if at 258:3 | `if ctx.Err() != nil {` | `TestAStopAlertDoesNotWaitBehindTheBacklog` · `TestJudgingTransactionsDelayTheExitCycleOnlyWithinTheFixedMargin` · `TestTheExitCycleDoesNotLengthenWhileTheSenderIsStuckInTheTransport` (+1) | a124 RED — 편집 전에 없던 분기 | 블록 258.23-260.4 을 시험 4 개가 실행, 전부 PASS |

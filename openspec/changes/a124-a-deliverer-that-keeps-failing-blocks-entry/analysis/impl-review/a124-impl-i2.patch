@@ -1,0 +1,3359 @@
+diff --git a/internal/app/engine/alertdelivery.go b/internal/app/engine/alertdelivery.go
+index abcc3761..6cdb3bd8 100644
+--- a/internal/app/engine/alertdelivery.go
++++ b/internal/app/engine/alertdelivery.go
+@@ -41,10 +41,13 @@ package engine
+ 
+ import (
+ 	"context"
++	"errors"
+ 	"fmt"
++	"strings"
+ 	"time"
+ 
+ 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+ 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+ 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
+ )
+@@ -77,6 +80,60 @@ const alertDeliveryBatch = 10
+ // already done.
+ const alertReleaseTimeout = 5 * time.Second
+ 
++// alertAttemptLimit 는 전달 실패를 「지속」으로 보는 시도 수임 (a124 design D2 — 동기 경로의 기본 예산을 그대로 인용).
++// 숫자를 복사하지 않음: 동기 경로와 같은 실패 양상에서 같은 시간에 잠그는 것이 이 값의 근거라서, 한쪽만
++// 바뀌면 그 등가가 조용히 깨짐. 이 값을 **늘리는** 것은 진입 차단 완화이므로 사람 결정 대상임.
++const alertAttemptLimit = obs.DefaultCriticalAttempts
++
++// alertNoPublisherCause 는 전송 수단이 없을 때 원장에 남기는 고정 원인 문구임 (D3 — 없는 전송 수단도 실패 시도로 셈).
++const alertNoPublisherCause = "no publisher is configured"
++
++// alertJudgementLogMarker 는 이 change 가 새로 쓰는 판정 줄의 scope 값임.
++// 새 줄은 허용 목록 필드만 씀(사건 종류 · 고정 detail · alert_id · 사유 · 수) — 정제 시험(2.11)이 이 표식으로 새 줄을 가려냄.
++const alertJudgementLogMarker = "alert_delivery_judgement"
++
++// 게이트 detail 은 고정 문구 + 수뿐임 (불변식 8, design D9). 행의 제목 · 본문 · payload · 원문 오류 · 계좌 · 토큰을
++// 넣지 않음 — 게이트 상태는 그것을 읽는 모든 곳에 노출됨.
++const (
++	alertLatchAttemptLimit     = "a critical alert reached the delivery attempt limit (%d) without being delivered; an operator has to acknowledge the backlog"
++	alertLatchUnrecorded       = "a critical alert was sent but its delivery could not be recorded; an operator has to acknowledge the backlog"
++	alertLatchUnaccounted      = "a failed delivery attempt of a critical alert could not be matched to its row; an operator has to acknowledge the backlog"
++	alertLatchRecordRun        = "the delivery attempts of a critical alert could not be recorded %d times in a row; an operator has to acknowledge the backlog"
++	alertLatchListRun          = "the critical alert backlog could not be read %d cycles in a row; an operator has to acknowledge the backlog"
++	alertLatchEscalationFailed = "an undelivered critical alert could not tighten the operating mode; an operator has to acknowledge the backlog"
++)
++
++// alertLedger 는 실행자가 원장에서 쓰는 것 전부임. 생산에서는 *journal.Journal 그대로이고, 시험이 원장 결함을
++// 주입할 때만 감쌈(alertDeliverer.ledger).
++type alertLedger interface {
++	PendingAlertsForDelivery(ctx context.Context, limit, attemptLimit int) ([]journal.Alert, error)
++	ClaimAlertByID(ctx context.Context, id int64, claimant string) (journal.ClaimResult, error)
++	MarkAlertAttemptFailed(ctx context.Context, id int64, token, cause string) (journal.SettleResult, error)
++	MarkAlertDelivered(ctx context.Context, id int64, token string) (journal.SettleResult, error)
++	ReleaseAlertClaim(ctx context.Context, id int64, token string) (journal.SettleResult, error)
++	EscalateOperatingMode(ctx context.Context, accountRef, trigger string,
++		announcer journal.ModeAnnouncer) (journal.OperatingModeRecord, bool, error)
++}
++
++// alertJudgeStage 는 판정 한 건이 지나는 단계임. 시험 훅(judgeHook)이 해제를 정확한 자리에 끼워 원칙 E 의
++// 인터리빙을 결정적으로 재기 위해 있음 — 생산에서는 훅이 nil 이라 아무 일도 없음.
++type alertJudgeStage int
++
++const (
++	// alertStageSettled: 정산이 돌아온 뒤(실패 기록 경로는 반납까지 끝난 뒤), 해제 세대를 읽기 전.
++	alertStageSettled alertJudgeStage = iota
++	// alertStageEpochRead: 해제 세대를 읽은 뒤, 조건부 잠금 전.
++	alertStageEpochRead
++	// alertStageLatched: 조건부 잠금 뒤, 승격 전.
++	alertStageLatched
++)
++
++// alertFailureRun 은 원장에 쓰지 못한 **연속** 횟수와, 직전 증가 직후 읽은 해제 세대임 (D8, AA2).
++type alertFailureRun struct {
++	count int
++	epoch uint64
++}
++
+ // alertDeliverer drains the critical-alert outbox.
+ type alertDeliverer struct {
+ 	Journal   *journal.Journal
+@@ -97,6 +154,28 @@ type alertDeliverer struct {
+ 	// lease even expires. That is not observation, it is a log storm that buries
+ 	// the line an operator needs (a098 R21).
+ 	heldReported map[int64]time.Time
++
++	// Gate 는 전달 실패 사유(ReasonAlertUndelivered)를 거는 진입 게이트임 (a124). 실행자가 잡는 잠금은 이
++	// 게이트의 잠금뿐이고 그 안에서는 map 연산만 함 — Notifier 의 뮤텍스는 잡지 않음(design D7, Q1).
++	// nil 이면 잠그지 않음(시험 조립 전용; 생산 조립 Context.AlertDeliverer 는 항상 넘김).
++	Gate *execgw.EntryGate
++	// AccountRef 는 운영 모드를 승격할 계정임. 비어 있으면 승격하지 않음 — Notifier.escalate 와 같은 규칙.
++	AccountRef string
++
++	// ledger 는 시험이 원장 결함을 주입할 때만 채움. nil 이면 Journal 을 씀.
++	ledger alertLedger
++	// judgeHook 은 판정 단계마다 불리는 시험 훅임. 생산에서는 nil.
++	judgeHook func(stage alertJudgeStage, alertID int64)
++
++	// recordRuns 는 행별 연속 기록 실패(D8)이고, listRun 은 나열 실패의 연속임. 둘 다 Run 의 goroutine
++	// 에서만 쓰므로 잠금이 없음(heldReported 와 같은 이유). 재시작이 비우지만 기동 복원이 PENDING 으로 다시 잠금.
++	recordRuns map[int64]alertFailureRun
++	listRun    alertFailureRun
++	listSeen   bool
++
++	// latchReported · latchReportedEpoch 는 래치 줄을 「바뀐 때만」 한 번 쓰기 위함(D9 — 매 사이클 재확인은 조용함).
++	latchReported      bool
++	latchReportedEpoch uint64
+ }
+ 
+ // Run cycles until ctx ends.
+@@ -147,10 +226,20 @@ func (d *alertDeliverer) cycle(ctx context.Context) error {
+ 	// lapsed ones here is what keeps the map bounded by *currently contended*
+ 	// rows rather than by every row this engine has ever seen contended.
+ 	d.forgetLapsedHeld(d.Clock.Now())
+-	pending, err := d.Journal.PendingAlerts(ctx, d.batch())
++	// 한도 아래 행을 먼저 고름 — 한도에 이른 행 열이 배치를 채워 새 critical 행이 첫 시도조차 못 하는
++	// 굶주림을 막음(a124 R2). 한도 행은 버리지 않고 잔여 자리에만 들어감.
++	pending, err := d.led().PendingAlertsForDelivery(ctx, d.batch(), alertAttemptLimit)
+ 	if err != nil {
++		// 나열 실패도 지속 실패임(D8) — 행이 없으므로 실행자 단위 계수 하나로 셈.
++		d.countListFailure(ctx)
+ 		return fmt.Errorf("listing the critical alert backlog: %w", err)
+ 	}
++	d.listRun, d.listSeen = alertFailureRun{}, false
++	if len(pending) < d.batch() {
++		// 잘리지 않은(완전한) 나열에 없는 행은 PENDING 을 떠났음 — 그 행의 기록 실패 계수를 지움.
++		// 잘린 나열에 없다는 것은 그 증거가 아니므로 거르지 않음(Q5).
++		d.pruneRecordRuns(pending)
++	}
+ 	for _, alert := range pending {
+ 		// Between rows, not only between cycles: with a dead transport this loop
+ 		// spends a publish timeout per row, and a batch of them is far longer
+@@ -164,10 +253,15 @@ func (d *alertDeliverer) cycle(ctx context.Context) error {
+ }
+ 
+ // deliverOne is one row's whole life in this cycle.
++//
++// a124: 이 행의 시도가 원장에 남긴 결과로 지속 실패를 판정함 — 판정 입력은 정산이 커밋한 attempts 뿐이고
++// (D1), 늦은 적용은 원칙 E(judge)를 따름. 원격 전송 · 원장 연산 동안 어떤 잠금도 쥐지 않음.
+ func (d *alertDeliverer) deliverOne(ctx context.Context, alert journal.Alert) {
+-	claim, err := d.Journal.ClaimAlertByID(ctx, alert.ID, d.claimant())
++	claim, err := d.led().ClaimAlertByID(ctx, alert.ID, d.claimant())
+ 	if err != nil {
+ 		d.logf(obs.EventAlertUndelivered, err, "claiming an alert failed", "alert_id", alert.ID)
++		// 임차 요청 실패도 이 행의 시도를 원장에 남기지 못한 것임(D8).
++		d.countRecordFailure(ctx, alert.ID)
+ 		return
+ 	}
+ 	switch claim.Disposition {
+@@ -193,6 +287,8 @@ func (d *alertDeliverer) deliverOne(ctx context.Context, alert journal.Alert) {
+ 	default:
+ 		// Settled between the listing and here. Normal.
+ 		d.forgetHeld(alert.ID)
++		// PENDING 을 떠난 것이 관측됨 — 이 행의 기록 실패 계수도 끝(D8).
++		d.forgetRecordRun(alert.ID)
+ 		return
+ 	}
+ 	if claim.Stole {
+@@ -202,43 +298,279 @@ func (d *alertDeliverer) deliverOne(ctx context.Context, alert journal.Alert) {
+ 			"alert_id", alert.ID, "stole_from", claim.StoleBy)
+ 	}
+ 
++	var perr error
++	cause := ""
+ 	if d.Publisher == nil {
+ 		// No transport at all. The row stays PENDING and the lease goes back;
+ 		// saying so once per cycle is what keeps a silently unconfigured engine
+ 		// from looking like a working one.
++		//
++		// a124 D3: 없는 전송 수단도 실패 시도로 셈 — 세지 않으면 무설정 엔진에 전달 실패 래치가 영구히
++		// 서지 않음(newNotifier 문서의 「specified direction」). 원인은 고정 문구.
+ 		d.logf(obs.EventAlertUndelivered, nil, "no publisher is configured, so nothing can be sent",
+ 			"alert_id", alert.ID)
+-		d.release(ctx, alert.ID, claim.Token)
++		perr, cause = errors.New(alertNoPublisherCause), alertNoPublisherCause
++	} else {
++		perr = d.Publisher.Publish(ctx, obs.Notification{
++			Type:     obs.EventType(alert.Type),
++			Severity: obs.SeverityCritical,
++			Title:    alert.Title,
++			Body:     alert.Body,
++		})
++		if perr != nil {
++			cause = perr.Error()
++		}
++	}
++	if perr != nil {
++		d.recordFailedAttempt(ctx, alert.ID, claim.Token, cause)
+ 		return
+ 	}
++	d.recordDelivery(ctx, alert.ID, claim.Token)
++}
+ 
+-	perr := d.Publisher.Publish(ctx, obs.Notification{
+-		Type:     obs.EventType(alert.Type),
+-		Severity: obs.SeverityCritical,
+-		Title:    alert.Title,
+-		Body:     alert.Body,
+-	})
+-	if perr != nil {
+-		if _, err := d.Journal.MarkAlertAttemptFailed(ctx, alert.ID, claim.Token, perr.Error()); err != nil {
+-			d.logf(obs.EventAlertUndelivered, err, "recording a failed attempt failed", "alert_id", alert.ID)
+-		}
+-		d.release(ctx, alert.ID, claim.Token)
++// recordFailedAttempt 는 실패한 시도를 기록하고, 임차를 돌려준 **뒤에** 판정함.
++//
++// 반납이 먼저인 이유(Y5): 판정은 게이트 잠금을 기다릴 수 있는데, 그동안 임차를 쥐고 있으면 이 행이 다음
++// 사이클에서 빠질 이유가 없는데도 빠짐. 판정 표는 design D1 「실패 기록」.
++func (d *alertDeliverer) recordFailedAttempt(ctx context.Context, id int64, token, cause string) {
++	res, err := d.led().MarkAlertAttemptFailed(ctx, id, token, cause)
++	if err != nil {
++		d.logf(obs.EventAlertUndelivered, err, "recording a failed attempt failed", "alert_id", id)
++	}
++	d.release(ctx, id, token)
++	d.hook(alertStageSettled, id)
++	if err != nil {
++		// 오류의 SettleResult{} 는 Outcome 영값이 Applied 라 결과를 읽으면 안 됨(F10) — err 가 먼저.
++		// attempts 가 안 올랐으니 한도 판정이 설 수 없음 → 행별 연속 기록 실패로 셈(D8).
++		d.countRecordFailure(ctx, id)
+ 		return
+ 	}
++	switch res.Outcome {
++	case journal.SettleApplied:
++		// 원장이 이 행에 썼음 — 기록 실패의 연속은 끝.
++		d.forgetRecordRun(id)
++		if res.Attempts < alertAttemptLimit {
++			return
++		}
++		d.judge(ctx, id, d.readEpoch(id), true, fmt.Sprintf(alertLatchAttemptLimit, alertAttemptLimit))
++	case journal.SettleAlreadySettled, journal.SettleLeaseLost:
++		// 승인(또는 남의 발송)이 먼저였음 — 잠그지도 승격하지도 않음. 0 행을 썼으므로 계수도 그대로(R3).
++	default:
++		// 행을 못 찾음 · 모르는 결과 → 잠금만(동기 경로 parity: lost → 승격 없음, N6). 모르는 값은
++		// 동기 경로보다 한 칸 보수적(fail-safe).
++		d.judge(ctx, id, d.readEpoch(id), false, alertLatchUnaccounted)
++	}
++}
+ 
+-	settled, err := d.Journal.MarkAlertDelivered(ctx, alert.ID, claim.Token)
++// recordDelivery 는 발행이 성공한 행을 정산함. 정산이 안 되면 임차를 쥔 채 **즉시** 잠그고 승격함(D1 전달
++// 정산 표, 동기 경로 parity) — 반납하면 다음 사이클이 이미 나간 알림을 곧장 다시 보냄(2026-08-08 폭풍).
++func (d *alertDeliverer) recordDelivery(ctx context.Context, id int64, token string) {
++	settled, err := d.led().MarkAlertDelivered(ctx, id, token)
++	d.hook(alertStageSettled, id)
+ 	if err != nil {
+ 		// Published but not settled, and the write failed rather than being
+ 		// refused. The lease stays: see the file comment.
+-		d.logf(obs.EventAlertUndelivered, err, "settling a delivered alert failed", "alert_id", alert.ID)
++		d.logf(obs.EventAlertUndelivered, err, "settling a delivered alert failed", "alert_id", id)
++		// 취소 중이어도 판정함 — 이 오류가 취소 때문인지 원장 결함 때문인지 여기서 가를 수 없고, 그 사이 승인 ·
++		// 남의 발송이 행을 PENDING 에서 뺄 수 있어 「기동 복원이 덮는다」도 보장이 아님(codex 구현 1회차 I1).
++		// 취소된 ctx 의 승격 쓰기는 실패하고, 그러면 judge 가 무조건 차단으로 대신함(보수 방향).
++		d.judge(ctx, id, d.readEpoch(id), true, alertLatchUnrecorded)
++		return
++	}
++	if settled.Outcome == journal.SettleApplied {
++		d.forgetRecordRun(id)
++		return
++	}
++	// Published, but somebody else's row to settle. It is out; the holder
++	// records it. Still no release.
++	d.logf(obs.EventAlertUndelivered, nil, "a delivered alert was settled by somebody else",
++		"alert_id", id, "outcome", settled.Outcome.String())
++	switch settled.Outcome {
++	case journal.SettleAlreadySettled, journal.SettleLeaseLost:
++		// 승인 · 남의 임차가 먼저 — 게이트 사건 아님(동기 경로 B8).
++	default:
++		// 발행은 됐는데 행이 없거나 모르는 결과 — 정산되지 않은 것(동기 경로 B9·B10 → 즉시 잠금 + 승격).
++		d.judge(ctx, id, d.readEpoch(id), true, alertLatchUnrecorded)
++	}
++}
++
++// readEpoch 는 판정 근거가 확정된 **직후** 해제 세대를 한 번 읽음(원칙 E). 그 뒤의 해제는 「근거 뒤」로
++// 판정을 버리게 하고, 근거와 이 읽기 사이의 해제는 「앞」으로 보여 다시 잠금 — 틀리는 방향은 잠그는 쪽뿐(AB2).
++func (d *alertDeliverer) readEpoch(id int64) uint64 {
++	var epoch uint64
++	if d.Gate != nil {
++		epoch = d.Gate.ClearEpoch(execgw.ReasonAlertUndelivered)
++	}
++	d.hook(alertStageEpochRead, id)
++	return epoch
++}
++
++// judge 는 판정 하나를 원칙 E 로 적용함 — 「늦은 적용은 제때 적용과 같아야 한다」 (design D7 판정 → 행동 표).
++//
++// 제때 적용은 차단과 승격을 함께 하고 그 뒤의 운영자 해제는 차단만 지움(모드는 사람 완화로만 풀림). 그래서
++// epoch 뒤로 해제가 있었으면 차단은 버리고(제때 선 차단도 그 해제가 지웠음) 승격은 적용함. 승격 쓰기가
++// 실패하면 조건부 차단 결과와 무관하게 무조건 차단함(Z2 · AA1 — 둘 다 잃지 않게).
++//
++// 잡는 잠금은 게이트 잠금 하나이고 그 안에서는 map 연산뿐임. 승격 · 로그는 잠금 밖.
++func (d *alertDeliverer) judge(ctx context.Context, id int64, epoch uint64, escalate bool, detail string) {
++	if d.Gate != nil && d.Gate.BlockUnlessClearedSince(execgw.ReasonAlertUndelivered, epoch, detail) {
++		d.reportLatch(id, epoch, detail)
++	}
++	d.hook(alertStageLatched, id)
++	if !escalate {
++		return
++	}
++	if err := d.escalate(ctx, id); err != nil && d.Gate != nil {
++		d.Gate.Block(execgw.ReasonAlertUndelivered, alertLatchEscalationFailed)
++	}
++}
++
++// escalate 는 운영 모드를 ENTRY_BLOCKED 로 승격함 — Notifier.escalate 와 같은 호출, announcer 는 nil
++// (전달 수단이 막 실패한 참이라 알림을 다시 낼 이유가 없음).
++//
++// 새 줄에는 계좌 · 원문 오류를 넣지 않음(R2): 모드 전이 오류는 계좌를 담을 수 있으므로 err 대신 고정 분류만.
++// 이 모드 행은 원장 기록이며, 생산에서 진입을 막는 것은 위의 게이트 래치임(design D10 — 투영기 미배선).
++func (d *alertDeliverer) escalate(ctx context.Context, id int64) error {
++	if strings.TrimSpace(d.AccountRef) == "" {
++		return nil
++	}
++	_, changed, err := d.led().EscalateOperatingMode(ctx, d.AccountRef,
++		journal.ModeTriggerCriticalAlertUndelivered, nil)
++	if err != nil {
++		if d.Log != nil {
++			class := "ledger"
++			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
++				class = "context"
++			}
++			d.Log.Error(obs.EventOperatingMode, nil,
++				obs.FieldScope, alertJudgementLogMarker,
++				obs.FieldReason, "escalation_failed:"+class,
++				obs.FieldDetail, "an undelivered critical alert could not tighten the operating mode; the entry latch stands instead",
++				"alert_id", id)
++		}
++		return err
++	}
++	if changed && d.Log != nil {
++		d.Log.Warn(obs.EventOperatingMode,
++			obs.FieldScope, alertJudgementLogMarker,
++			obs.FieldToState, journal.ModeEntryBlocked,
++			obs.FieldReason, journal.ModeTriggerCriticalAlertUndelivered,
++			obs.FieldDetail, "an undelivered critical alert tightened the operating mode",
++			"alert_id", id)
++	}
++	return nil
++}
++
++// reportLatch 는 래치 줄을 해제 세대마다 한 번만 씀 — 매 사이클 재확인은 조용함(R21 선례).
++func (d *alertDeliverer) reportLatch(id int64, epoch uint64, detail string) {
++	if d.latchReported && d.latchReportedEpoch == epoch {
++		return
++	}
++	d.latchReported, d.latchReportedEpoch = true, epoch
++	if d.Log == nil {
++		return
++	}
++	d.Log.Warn(obs.EventAlertUndelivered,
++		obs.FieldScope, alertJudgementLogMarker,
++		obs.FieldReason, string(execgw.ReasonAlertUndelivered),
++		obs.FieldDetail, detail,
++		"alert_id", id)
++}
++
++// countRecordFailure 는 한 행의 원장 쓰기 실패 하나를 셈(D8 「오류 하나의 전이」).
++//
++// 기록되지 않는 시도는 attempts 를 못 올리므로, 이 규칙이 없으면 원장 결함이 차단의 면제가 됨. 엔진 종료로
++// 인한 취소는 세지 않음(취소는 원장 결함이 아님 — transport timeout 은 ntfy 의 자식 ctx 라 발행 실패로 옴).
++func (d *alertDeliverer) countRecordFailure(ctx context.Context, id int64) {
++	if ctx.Err() != nil {
++		return
++	}
++	epoch := d.readEpoch(id)
++	if d.recordRuns == nil {
++		d.recordRuns = make(map[int64]alertFailureRun)
++	}
++	run, seen := d.recordRuns[id]
++	next, judged, blockEpoch := advanceFailureRun(run, seen, epoch)
++	if !judged {
++		d.recordRuns[id] = next
++		return
++	}
++	delete(d.recordRuns, id)
++	d.judge(ctx, id, blockEpoch, true, fmt.Sprintf(alertLatchRecordRun, alertAttemptLimit))
++}
++
++// countListFailure 는 미전달 나열 실패 하나를 셈 — 행이 없으므로 실행자 단위 계수 하나(D8).
++func (d *alertDeliverer) countListFailure(ctx context.Context) {
++	if ctx.Err() != nil {
++		return
++	}
++	epoch := d.readEpoch(0)
++	next, judged, blockEpoch := advanceFailureRun(d.listRun, d.listSeen, epoch)
++	if !judged {
++		d.listRun, d.listSeen = next, true
+ 		return
+ 	}
+-	if settled.Outcome != journal.SettleApplied {
+-		// Published, but somebody else's row to settle. It is out; the holder
+-		// records it. Still no release.
+-		d.logf(obs.EventAlertUndelivered, nil, "a delivered alert was settled by somebody else",
+-			"alert_id", alert.ID, "outcome", settled.Outcome.String())
++	d.listRun, d.listSeen = alertFailureRun{}, false
++	d.judge(ctx, 0, blockEpoch, true, fmt.Sprintf(alertLatchListRun, alertAttemptLimit))
++}
++
++// advanceFailureRun 은 오류 하나가 연속을 어떻게 바꾸는지 정함 (D8 AA2 — 위에서 아래 우선).
++//
++//  1. 이번 오류가 한도째 → 판정(리셋 판단보다 **먼저**). 차단은 직전 증가 직후의 세대로 조건부 — 해제가
++//     직전 증가와 한도째 사이였든(연속이 끊겼어야 함) 한도째 뒤였든(제때 선 차단도 지워졌음) 차단 쪽 답은
++//     「없음」으로 같음. 승격 쪽은 모호하므로 보수(승격)로 기움(Z1).
++//  2. 아니고 직전 증가 뒤 해제가 있었음 → 연속이 끊김, 1 부터 다시.
++//  3. 그 밖 → +1.
++func advanceFailureRun(run alertFailureRun, seen bool, epoch uint64) (next alertFailureRun, judged bool, blockEpoch uint64) {
++	if !seen {
++		if alertAttemptLimit <= 1 {
++			return alertFailureRun{}, true, epoch
++		}
++		return alertFailureRun{count: 1, epoch: epoch}, false, 0
++	}
++	if run.count+1 >= alertAttemptLimit {
++		return alertFailureRun{}, true, run.epoch
++	}
++	if epoch != run.epoch {
++		return alertFailureRun{count: 1, epoch: epoch}, false, 0
++	}
++	return alertFailureRun{count: run.count + 1, epoch: epoch}, false, 0
++}
++
++// forgetRecordRun 은 원장이 이 행에 정산을 **적용**했거나 행이 PENDING 을 떠난 것이 관측됐을 때 부름.
++// 반납의 Applied · LeaseLost · AlreadySettled 는 정산 쓰기가 아니므로 부르지 않음(R3 · X3).
++func (d *alertDeliverer) forgetRecordRun(id int64) {
++	delete(d.recordRuns, id)
++}
++
++// pruneRecordRuns 는 완전한 나열에 없는 행의 계수를 지움 — PENDING 전체를 봤고 그 행은 없음.
++func (d *alertDeliverer) pruneRecordRuns(pending []journal.Alert) {
++	if len(d.recordRuns) == 0 {
++		return
++	}
++	present := make(map[int64]struct{}, len(pending))
++	for _, a := range pending {
++		present[a.ID] = struct{}{}
++	}
++	for id := range d.recordRuns {
++		if _, ok := present[id]; !ok {
++			delete(d.recordRuns, id)
++		}
++	}
++}
++
++func (d *alertDeliverer) hook(stage alertJudgeStage, id int64) {
++	if d.judgeHook != nil {
++		d.judgeHook(stage, id)
++	}
++}
++
++// led 는 실행자가 쓰는 원장임 — 생산에서는 Journal.
++func (d *alertDeliverer) led() alertLedger {
++	if d.ledger != nil {
++		return d.ledger
+ 	}
++	return d.Journal
+ }
+ 
+ // release hands a lease back for a row this cycle is done with.
+@@ -249,7 +581,7 @@ func (d *alertDeliverer) deliverOne(ctx context.Context, alert journal.Alert) {
+ func (d *alertDeliverer) release(ctx context.Context, id int64, token string) {
+ 	relCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), alertReleaseTimeout)
+ 	defer cancel()
+-	if _, err := d.Journal.ReleaseAlertClaim(relCtx, id, token); err != nil {
++	if _, err := d.led().ReleaseAlertClaim(relCtx, id, token); err != nil {
+ 		d.logf(obs.EventAlertUndelivered, err, "releasing an alert lease failed", "alert_id", id)
+ 	}
+ }
+diff --git a/internal/app/engine/auxiliary.go b/internal/app/engine/auxiliary.go
+index 679dbcad..57e02fd7 100644
+--- a/internal/app/engine/auxiliary.go
++++ b/internal/app/engine/auxiliary.go
+@@ -170,6 +170,10 @@ func (c *Context) AlertDeliverer(clk clock.Clock) (AuxiliaryExecutor, error) {
+ 		Publisher: publisher,
+ 		Log:       c.Log,
+ 		Clock:     clk,
++		// a124: 지속 실패의 주인은 이 실행자임 — 전달 실패 사유를 거는 게이트와 승격할 계정을 넘김.
++		// Notifier 는 넘기지 않음(실행자는 n.mu 와 무관 — design D5 · D7).
++		Gate:       c.Entry,
++		AccountRef: c.AccountRef,
+ 	}
+ 	gate, log := c.Entry, c.Log
+ 	return AuxiliaryExecutor{
+diff --git a/internal/execgw/retry.go b/internal/execgw/retry.go
+index bc7cff04..74e5d57d 100644
+--- a/internal/execgw/retry.go
++++ b/internal/execgw/retry.go
+@@ -475,6 +475,12 @@ type EntryGate struct {
+ 	// so zero remains the unavailable sentinel and advances on every effective
+ 	// gate-state mutation, preventing allowed/blocked/allowed ABA reuse.
+ 	revision uint64
++	// clearEpochs 는 사유별 **해제 세대**임 (a124 design D7, M1 = B′). 그 사유의 해제 **요청**마다 +1 —
++	// 래치가 있었는지와 무관(반례 ㉣: 래치가 서기 전 전체 승인도 사람 승인의 표식임). 늦게 판정을 적용하는
++	// 배달 실행자가 「해제가 판정 근거 뒤였는가」를 가르는 유일한 증거라서, 그 사유의 Clear 말고는 아무것도
++	// 이 값을 바꾸지 않음. revision 과 별도 필드인 이유: revision 은 실제 상태 변화 때만 올라야 함(전략 봉인).
++	// 지연 생성, g.mu 아래에서만 읽고 씀.
++	clearEpochs map[ReasonCode]uint64
+ }
+ 
+ // SetAuthorityRefresh binds the durable RECONCILE recheck used by the sealed
+@@ -537,12 +543,43 @@ func (g *EntryGate) Block(reason ReasonCode, detail string) {
+ func (g *EntryGate) Clear(reason ReasonCode) {
+ 	g.mu.Lock()
+ 	defer g.mu.Unlock()
++	// 해제 요청마다 세대 +1 (래치 유무 무관 — 위 clearEpochs 주석). revision 은 아래처럼 실제 삭제 때만.
++	if g.clearEpochs == nil {
++		g.clearEpochs = make(map[ReasonCode]uint64)
++	}
++	g.clearEpochs[reason]++
+ 	if _, exists := g.latches[reason]; exists {
+ 		delete(g.latches, reason)
+ 		g.revision++
+ 	}
+ }
+ 
++// ClearEpoch 는 그 사유의 해제 세대를 돌려줌 — 배달 실행자가 판정 근거를 얻은 직후 읽는 값임.
++// g.mu 아래 map 읽기뿐이라 이 잠금 안에서 다른 무엇도 기다리지 않음.
++func (g *EntryGate) ClearEpoch(reason ReasonCode) uint64 {
++	g.mu.Lock()
++	defer g.mu.Unlock()
++	return g.clearEpochs[reason]
++}
++
++// BlockUnlessClearedSince 는 epoch 뒤로 그 사유의 해제 요청이 **없었을 때만** 잠금 (원칙 E 의 적용 단계).
++//
++// 세대 비교와 삽입을 한 잠금 안에서 함 — 둘 사이에 해제가 끼면 「해제 뒤에 늦은 래치가 남는」 모양이 됨.
++// 세대가 다르면 아무것도 바꾸지 않고 false. 같으면 Block 과 같은 규칙(없을 때만 삽입 · 처음 설명 유지 ·
++// 삽입했을 때만 revision++)이고 true.
++func (g *EntryGate) BlockUnlessClearedSince(reason ReasonCode, epoch uint64, detail string) bool {
++	g.mu.Lock()
++	defer g.mu.Unlock()
++	if g.clearEpochs[reason] != epoch {
++		return false
++	}
++	if _, exists := g.latches[reason]; !exists {
++		g.latches[reason] = detail
++		g.revision++
++	}
++	return true
++}
++
+ // CheckEntry reports why new exposure is refused anywhere on the account, or nil
+ // when it is allowed.
+ //
+diff --git a/internal/journal/alert_claim.go b/internal/journal/alert_claim.go
+index 95cdcb66..583b7be1 100644
+--- a/internal/journal/alert_claim.go
++++ b/internal/journal/alert_claim.go
+@@ -142,6 +142,10 @@ type SettleResult struct {
+ 	ClaimedBy string
+ 	ClaimedAt time.Time
+ 	ExpiresAt time.Time
++	// Attempts 는 적용된(SettleApplied) 정산이 **같은 트랜잭션에서 커밋한** 시도 수임 (a124 design D1).
++	// 나열 시점의 Alert.Attempts 는 그 사이 다른 발송자·재무장이 바꿀 수 있어 판정에 못 씀 — 이 값만
++	// 「이 에피소드 · 이 임차」의 것임. 적용되지 않은 결과와 오류에서는 0 이며 판정에 쓰지 않음.
++	Attempts int
+ }
+ 
+ // alertClaimCleared is the one spelling of "this row holds no lease". It is
+@@ -328,10 +332,16 @@ func (j *Journal) settleUnderClaim(
+ 		return SettleResult{}, fmt.Errorf("journal: %s alert %d: %w", what, id, err)
+ 	}
+ 	if n == 1 {
++		// 커밋 **전에** 같은 트랜잭션으로 읽음 — 원장 연결이 하나라(journal.go:174) j.db 로 읽으면 이
++		// 트랜잭션이 쥔 연결을 기다림. 읽기가 실패하면 롤백(defer)되어 정산은 없던 일이 됨(a124 Z4).
++		attempts, err := readSettledAttemptsTx(ctx, tx, id)
++		if err != nil {
++			return SettleResult{}, fmt.Errorf("journal: reading the attempts %s alert %d committed: %w", what, id, err)
++		}
+ 		if err := tx.Commit(); err != nil {
+ 			return SettleResult{}, fmt.Errorf("journal: committing %s of alert %d: %w", what, id, err)
+ 		}
+-		return SettleResult{Outcome: SettleApplied}, nil
++		return SettleResult{Outcome: SettleApplied, Attempts: attempts}, nil
+ 	}
+ 
+ 	out, err := explainSettleTx(ctx, tx, id)
+@@ -344,6 +354,15 @@ func (j *Journal) settleUnderClaim(
+ 	return out, nil
+ }
+ 
++// readSettledAttemptsTx 는 방금 적용된 정산이 남긴 attempts 를 그 트랜잭션 안에서 읽음.
++//
++// 패키지 변수인 것은 원자성 시험(a124 Z4)이 읽기 · 커밋 실패를 주입하기 위함 — 생산 값은 이 한 SQL 뿐임.
++var readSettledAttemptsTx = func(ctx context.Context, tx *sql.Tx, id int64) (int, error) {
++	var attempts int
++	err := tx.QueryRowContext(ctx, `SELECT attempts FROM alert_outbox WHERE id = ?`, id).Scan(&attempts)
++	return attempts, err
++}
++
+ // explainSettleTx reads the row once more, in the transaction that just wrote
+ // nothing, and turns "zero rows" into the reason the sender has to act on.
+ func explainSettleTx(ctx context.Context, tx *sql.Tx, id int64) (SettleResult, error) {
+diff --git a/internal/journal/outbox.go b/internal/journal/outbox.go
+index abe942bf..5f534cf1 100644
+--- a/internal/journal/outbox.go
++++ b/internal/journal/outbox.go
+@@ -512,6 +512,28 @@ const alertSelect = `SELECT id, event_key, event_type, severity, title, body, pa
+        claimed_by, claimed_at, claim_expires_at
+   FROM alert_outbox`
+ 
++// PendingAlertsForDelivery 는 배달 실행자의 선택임 — 재시도 한도 아래 행을 **먼저**, 그 안에서 오래된 것
++// 먼저 고름(a124 design D4, R2). 한도에 이른 행은 잔여 자리에만 들어가고 버려지지 않음(미전달로 남아 계속 셈).
++//
++// PendingAlerts 의 정렬을 바꾸지 않고 따로 둔 것은 그 호출자(Flush · Acknowledge · 운영자 목록)를 건드리지
++// 않기 위함(AA4). 식 정렬 `(attempts >= ?)` 는 idx_outbox_state(state, id) 로 풀리지 않아 PENDING 전부를
++// 정렬함 — 연결 점유가 backlog 크기에 비례(AB1). 그 비용은 tasks 2.6 (c) 가 잼.
++// limit 0 은 전부. attemptLimit 은 호출자가 가진 한도 상수를 그대로 받음 — SQL 에 값을 박지 않음.
++func (j *Journal) PendingAlertsForDelivery(ctx context.Context, limit, attemptLimit int) ([]Alert, error) {
++	query := alertSelect + ` WHERE state = ? ORDER BY (attempts >= ?), id`
++	args := []any{AlertPending, attemptLimit}
++	if limit > 0 {
++		query += ` LIMIT ?`
++		args = append(args, limit)
++	}
++	rows, err := j.db.QueryContext(ctx, query, args...)
++	if err != nil {
++		return nil, fmt.Errorf("journal: selecting pending alerts for delivery: %w", err)
++	}
++	defer rows.Close()
++	return scanAlerts(rows)
++}
++
+ // PendingAlerts lists undelivered alerts, oldest first. A limit of zero means all
+ // of them.
+ func (j *Journal) PendingAlerts(ctx context.Context, limit int) ([]Alert, error) {
+diff --git a/internal/app/engine/a124_judging_does_not_delay_protection_test.go b/internal/app/engine/a124_judging_does_not_delay_protection_test.go
+new file mode 100755
+index 00000000..e94edee8
+--- /dev/null
++++ b/internal/app/engine/a124_judging_does_not_delay_protection_test.go
+@@ -0,0 +1,398 @@
++package engine_test
++
++// a124 tasks 2.6 (b) · (c) — 판정하는 실행자가 손절 쪽(exit 관측 사이클)을 얼마나 늦추는가.
++//
++// a124 는 실행자에 원장 쓰기(정산의 가산 읽기 · 승격)와 선택 쿼리의 정렬을 더한다. 원장 연결은 하나라
++// (`journal.go:174`) 그 몫은 exit 사이클과 같은 연결을 기다린다 — 「exit 체류 불변」은 주장하지 않는다
++// (design D7, X4). 대신 **잰다**:
++//
++//	(b) 실행자의 트랜잭션 **안**에 지연을 넣어(연결을 쥔 채) exit 사이클 체류를 잰다. 수락선은 같은 일을 한
++//	    무실행자 기준선 + a098 의 **고정** 여유 `a098ExitCycleDwellMargin`(AA3) — 측정값을 따라 늘어나는
++//	    예산이 아니다. 여유보다 큰 지연을 넣은 대조에서는 **넘어야** 한다 — 계측기가 눈멀지 않았다는 증거.
++//	(c) PENDING P = 10 · 1 000 · 10 000 에서 선택 쿼리의 연결 점유와, 그 backlog 위를 도는 실행자 옆의
++//	    exit 체류(같은 고정 여유). 넘으면 멈추고 보고한다(대안 = 가산 색인 = 스키마 변경, Manager 결정 — AB1).
++//
++// 지연 주입은 원장 스키마 밖의 **시험 전용 트리거**다(둘째 연결로 같은 파일에 만든다). SQLite 트리거
++// 본문에는 CTE 를 못 쓰므로 교차 조인의 행 수로 CPU 시간을 조절하고, 목표 지연에 맞게 먼저 잰다.
++
++import (
++	"context"
++	"database/sql"
++	"errors"
++	"fmt"
++	"math"
++	"sort"
++	"sync"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
++)
++
++// a124JudgedTransport 는 exit 사이클의 알림은 즉답하고, 실행자의 backlog 행은 즉시 실패시킨다 —
++// 실행자가 매 행 실패 기록 · 반납 · 판정 트랜잭션을 연달아 돌게 한다.
++type a124JudgedTransport struct {
++	mu      sync.Mutex
++	entered chan struct{}
++	opened  bool
++	other   int
++}
++
++func (p *a124JudgedTransport) Publish(_ context.Context, n obs.Notification) error {
++	p.mu.Lock()
++	defer p.mu.Unlock()
++	if string(n.Type) != a098BacklogEvent {
++		p.other++
++		return nil
++	}
++	if !p.opened {
++		p.opened = true
++		close(p.entered)
++	}
++	return errors.New("the backlog transport is down")
++}
++
++// a124SideHandle 은 같은 원장 파일에 여는 둘째 연결 — 시험 전용 트리거를 만들고 지연을 잰다.
++func a124SideHandle(t *testing.T, path string) *sql.DB {
++	t.Helper()
++	db, err := sql.Open("sqlite", "file:"+path+"?_pragma=busy_timeout(10000)")
++	if err != nil {
++		t.Fatalf("side handle: %v", err)
++	}
++	t.Cleanup(func() { _ = db.Close() })
++	return db
++}
++
++// a124DelayRows 는 교차 조인 `count(*)` 가 target 에 가깝게 걸리는 행 수를 정한다. 비용은 행 수의 제곱에
++// 비례하므로 한 번 재고 외삽한 뒤, 그 행 수로 한 번 더 재서 실제 값을 돌려준다(기록용).
++func a124DelayRows(t *testing.T, db *sql.DB, target time.Duration) (int, time.Duration) {
++	t.Helper()
++	probe := func(rows int) time.Duration {
++		tx, err := db.Begin()
++		if err != nil {
++			t.Fatalf("delay fill: %v", err)
++		}
++		for _, stmt := range []string{`CREATE TABLE IF NOT EXISTS a124_delay (n INTEGER)`, `DELETE FROM a124_delay`} {
++			if _, err := tx.Exec(stmt); err != nil {
++				t.Fatalf("delay table: %v", err)
++			}
++		}
++		ins, err := tx.Prepare(`INSERT INTO a124_delay VALUES (?)`)
++		if err != nil {
++			t.Fatalf("delay prepare: %v", err)
++		}
++		for i := 0; i < rows; i++ {
++			if _, err := ins.Exec(i); err != nil {
++				t.Fatalf("delay insert: %v", err)
++			}
++		}
++		_ = ins.Close()
++		if err := tx.Commit(); err != nil {
++			t.Fatalf("delay commit: %v", err)
++		}
++		start := time.Now()
++		var n int
++		if err := db.QueryRow(`SELECT count(*) FROM a124_delay a, a124_delay b`).Scan(&n); err != nil {
++			t.Fatalf("delay probe: %v", err)
++		}
++		return time.Since(start)
++	}
++	const seed = 1000
++	took := probe(seed)
++	rows := int(float64(seed) * math.Sqrt(float64(target)/float64(took)))
++	if rows < 10 {
++		rows = 10
++	}
++	actual := probe(rows)
++	t.Logf("delay calibration: %d rows → %v per trigger (target %v)", rows, actual, target)
++	return rows, actual
++}
++
++// a124SeedBacklogFast 는 backlog 행 n 개를 둘째 연결의 트랜잭션 하나로 넣는다 — EnqueueAlert 한 행마다
++// fsync 하면 10 000 행이 분 단위라 측정이 게이트를 잡아먹는다. 행 모양은 a098SeedBacklog 와 같고, attempts 를
++// 정할 수 있다 — 한도 − 1 로 넣으면 실행자의 **첫 실패가 곧 판정**이라 측정 창에 판정 · 승격이 든다(codex I2).
++func a124SeedBacklogFast(t *testing.T, db *sql.DB, n, attempts int) {
++	t.Helper()
++	tx, err := db.Begin()
++	if err != nil {
++		t.Fatalf("seed begin: %v", err)
++	}
++	ins, err := tx.Prepare(`INSERT INTO alert_outbox (event_key, event_type, severity, title, body, state, attempts, created_at)
++		VALUES (?, ?, 'critical', '밀린 알림', '실행자가 보낼 행', 'PENDING', ?, ?)`)
++	if err != nil {
++		t.Fatalf("seed prepare: %v", err)
++	}
++	now := time.Date(2026, 9, 27, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
++	for i := 0; i < n; i++ {
++		if _, err := ins.Exec(fmt.Sprintf("%s|fast|%d", a098BacklogEvent, i), a098BacklogEvent, attempts, now); err != nil {
++			t.Fatalf("seed insert: %v", err)
++		}
++	}
++	_ = ins.Close()
++	if err := tx.Commit(); err != nil {
++		t.Fatalf("seed commit: %v", err)
++	}
++}
++
++// a124InjectDelay 는 실행자의 쓰기에만 지연을 건다 — backlog 행의 UPDATE(실패 기록 · 반납)와 이 사유의 모드 승격.
++// exit 사이클의 자기 알림 행은 event_type 이 달라 걸리지 않는다. 트리거는 지연 **뒤** 발화 시각을 남긴다 —
++// 측정 창과 겹쳤는지를 사후에 확인한다(codex I2: 판정 · 승격이 측정 창 밖이면 그 몫을 안 잰 것이다).
++func a124InjectDelay(t *testing.T, db *sql.DB) {
++	t.Helper()
++	for _, stmt := range []string{
++		`CREATE TABLE IF NOT EXISTS a124_fired (kind TEXT, at REAL)`,
++		`CREATE TRIGGER a124_delay_outbox BEFORE UPDATE ON alert_outbox WHEN OLD.event_type = '` + a098BacklogEvent + `'
++		   BEGIN SELECT count(*) FROM a124_delay a, a124_delay b;
++		         INSERT INTO a124_fired VALUES ('outbox', (julianday('now') - 2440587.5) * 86400.0); END`,
++		`CREATE TRIGGER a124_delay_mode BEFORE INSERT ON operating_modes WHEN NEW.cause = '` +
++			journal.ModeTriggerCriticalAlertUndelivered + `'
++		   BEGIN SELECT count(*) FROM a124_delay a, a124_delay b;
++		         INSERT INTO a124_fired VALUES ('mode', (julianday('now') - 2440587.5) * 86400.0); END`,
++	} {
++		if _, err := db.Exec(stmt); err != nil {
++			t.Fatalf("delay trigger: %v", err)
++		}
++	}
++}
++
++// a124Fires 는 [from, to] 창 안에서 발화한 트리거 수와 전체 수를 종류별로 센다.
++func a124Fires(t *testing.T, db *sql.DB, kind string, from, to time.Time) (inside, total int) {
++	t.Helper()
++	lo, hi := float64(from.UnixNano())/1e9, float64(to.UnixNano())/1e9
++	if err := db.QueryRow(`SELECT count(*) FROM a124_fired WHERE kind = ? AND at BETWEEN ? AND ?`, kind, lo, hi).Scan(&inside); err != nil {
++		t.Fatalf("fires: %v", err)
++	}
++	if err := db.QueryRow(`SELECT count(*) FROM a124_fired WHERE kind = ?`, kind).Scan(&total); err != nil {
++		t.Fatalf("fires: %v", err)
++	}
++	return inside, total
++}
++
++type a124Measurement struct {
++	dwell        time.Duration
++	cycle        engine.ExitCycle
++	outboxInside int
++	outboxTotal  int
++	modeInside   int
++	modeTotal    int
++}
++
++// a124MeasureCycleBesideAJudgingExecutor 는 critical 알림을 한 번 내는 exit 사이클 하나를 잰다.
++// withExecutor 면 그 옆에서 판정하는 실행자가 backlog 를 돈다(한도 − 1 로 시드 → 첫 실패부터 판정 · 승격,
++// 판정 트랜잭션에 delay 만큼 지연). noPublisher 면 실행자에게 전송 수단이 없다(D3 변형).
++func a124MeasureCycleBesideAJudgingExecutor(t *testing.T, withExecutor bool, delay time.Duration, backlog int, noPublisher bool) a124Measurement {
++	t.Helper()
++	notifier := &obs.Notifier{}
++	ladder := exitpolicy.DefaultLadderPolicy()
++	ladder.Rungs[0] = exitpolicy.Rung{TargetPct: "0.5", StopPct: "0", PartialRatio: "1"}
++	ladder.PolicyDigest = ""
++	h := newExitHarness(t, func(opts *engine.ExitObserverOptions) {
++		opts.Ladder = &ladder
++		opts.Alerts = notifier
++	})
++	transport := &a124JudgedTransport{entered: make(chan struct{})}
++	*notifier = *a098Notifier(h.journal, h.gate, transport, h.clk)
++
++	p := h.entry("005930", "10", "10000", "9800", "10000")
++	if _, err := h.journal.OpenExitState(context.Background(), journal.ExitStateSeed{
++		PositionID: p.ID, PolicyKind: journal.ExitPolicyLadder, PolicyID: "default_v1",
++		EntryPrice: "10000", InitialStop: "9800",
++	}); err != nil {
++		t.Fatalf("OpenExitState: %v", err)
++	}
++	h.quote("005930", 10100)
++
++	var side *sql.DB
++	if withExecutor {
++		side = a124SideHandle(t, h.dbPath)
++		if delay > 0 {
++			a124DelayRows(t, side, delay)
++		} else {
++			a124DelayRows(t, side, time.Microsecond)
++		}
++		a124InjectDelay(t, side)
++		a124SeedBacklogFast(t, side, backlog, obs.DefaultCriticalAttempts-1)
++		execNotifier := notifier
++		if noPublisher {
++			execNotifier = &obs.Notifier{Journal: h.journal, Gate: h.gate, AccountRef: exitAccount, Clock: h.clk}
++		}
++		// 실제 시계 — 실행자가 측정 동안 스스로 돈다(주기 대기 2s 는 한 배치보다 길다).
++		aux, err := (&engine.Context{Journal: h.journal, Entry: h.gate, Notifier: execNotifier, AccountRef: exitAccount}).
++			AlertDeliverer(clock.System())
++		if err != nil {
++			t.Fatalf("AlertDeliverer: %v", err)
++		}
++		ctx, cancel := context.WithCancel(context.Background())
++		done := make(chan struct{})
++		go func() { defer close(done); _ = aux.Run(ctx) }()
++		t.Cleanup(func() {
++			cancel()
++			select {
++			case <-done:
++			case <-time.After(60 * time.Second):
++				t.Error("the executor did not stop")
++			}
++		})
++		if noPublisher {
++			deadline := time.Now().Add(20 * time.Second)
++			for {
++				if _, total := a124Fires(t, side, "outbox", time.Time{}, time.Now().Add(time.Hour)); total > 0 {
++					break
++				}
++				if time.Now().After(deadline) {
++					t.Fatal("the executor never wrote a backlog row")
++				}
++				time.Sleep(time.Millisecond)
++			}
++		} else {
++			select {
++			case <-transport.entered:
++			case <-time.After(20 * time.Second):
++				t.Fatal("the executor never reached a backlog publish")
++			}
++		}
++	}
++
++	type measured struct {
++		cycle      engine.ExitCycle
++		start, end time.Time
++	}
++	out := make(chan measured, 1)
++	go func() {
++		start := time.Now()
++		cycle := h.observer.ObserveOnce(context.Background())
++		out <- measured{cycle, start, time.Now()}
++	}()
++	var got measured
++	select {
++	case got = <-out:
++	case <-time.After(60 * time.Second):
++		t.Fatal("the exit cycle did not finish within 60s beside the judging executor")
++	}
++	if got.cycle.Err != nil {
++		t.Fatalf("exit cycle: %v", got.cycle.Err)
++	}
++	transport.mu.Lock()
++	other := transport.other
++	transport.mu.Unlock()
++	if other != 1 {
++		t.Fatalf("the cycle published %d critical alerts, want 1 — it did not pass through the ledger-backed Notifier", other)
++	}
++	m := a124Measurement{dwell: got.end.Sub(got.start), cycle: got.cycle}
++	if side != nil {
++		m.outboxInside, m.outboxTotal = a124Fires(t, side, "outbox", got.start, got.end)
++		m.modeInside, m.modeTotal = a124Fires(t, side, "mode", got.start, got.end)
++	}
++	return m
++}
++
++// a124AcceptedDelay 는 수락 변형이 실행자 트랜잭션마다 넣는 지연이다 — 실측 정산 왕복 5.584 ms(a098 3.2)의
++// 약 두 배. exit 사이클의 원장 연산 하나는 진행 중인 실행자 트랜잭션 하나까지 기다리므로 체류 증가는 대략
++// 「트랜잭션 길이 × 겹친 실행자 트랜잭션 수(측정에서 ~15)」다: 15 ms 를 넣으면 +231 ms 로 고정 여유 250 ms 에
++// 거의 닿는다(2026-09-28 실측, review §1). 이 값을 올리는 것은 여유를 소진하는 것이고, 실행자 트랜잭션이 실제로
++// ~16 ms 를 넘는 환경은 이 여유 밖이다 — 기록된 한계.
++const a124AcceptedDelay = 10 * time.Millisecond
++
++// TestJudgingTransactionsDelayTheExitCycleOnlyWithinTheFixedMargin 는 2.6 (b) 다.
++func TestJudgingTransactionsDelayTheExitCycleOnlyWithinTheFixedMargin(t *testing.T) {
++	base := a124MeasureCycleBesideAJudgingExecutor(t, false, 0, 0, false)
++	if base.cycle.Judged == 0 {
++		t.Fatalf("baseline judged nothing (%+v)", base.cycle)
++	}
++	t.Logf("baseline exit cycle dwell (no executor) = %v", base.dwell)
++	bound := base.dwell + a098ExitCycleDwellMargin
++
++	for _, noPublisher := range []bool{false, true} {
++		name := map[bool]string{false: "transport fails", true: "no publisher"}[noPublisher]
++		// 수락: 판정 트랜잭션마다 a124AcceptedDelay 를 연결을 쥔 채 쓴다. 세 번 재서 **중앙값**을 수락선에 댄다 —
++		// 공유 기계의 한 번 튐으로 빨개지지 않게(Eng 리뷰 F7). 여유(고정)는 그대로다.
++		runs := make([]a124Measurement, 0, 3)
++		for i := 0; i < 3; i++ {
++			runs = append(runs, a124MeasureCycleBesideAJudgingExecutor(t, true, a124AcceptedDelay, 10, noPublisher))
++		}
++		sort.Slice(runs, func(i, j int) bool { return runs[i].dwell < runs[j].dwell })
++		acc := runs[1]
++		t.Logf("%s: three runs %v · %v · %v — median used", name, runs[0].dwell, runs[1].dwell, runs[2].dwell)
++		t.Logf("%s: exit cycle dwell beside a judging executor (target %v/tx) = %v; executor writes inside the window: record/release %d of %d, escalation %d of %d",
++			name, a124AcceptedDelay, acc.dwell, acc.outboxInside, acc.outboxTotal, acc.modeInside, acc.modeTotal)
++		if acc.cycle.Judged != base.cycle.Judged {
++			t.Fatalf("%s: the two cycles did different work: baseline judged=%d, measured judged=%d", name, base.cycle.Judged, acc.cycle.Judged)
++		}
++		// 계측이 판정 쪽 쓰기와 **겹쳤는지** — 겹치지 않았으면 이 측정은 판정의 몫을 안 잰 것이다.
++		if acc.outboxInside == 0 {
++			t.Fatalf("%s: no executor record/release overlapped the measured exit cycle — nothing was measured", name)
++		}
++		// 승격 쓰기(모드 행 INSERT)는 모드가 처음 바뀔 때 한 번뿐이다 — 그 뒤의 승격은 같은 모드라 쓰지 않는다(F12).
++		// 그 한 번이 측정 창 안에 있었는지를 단언한다(Eng 리뷰 F2).
++		if acc.modeInside == 0 {
++			t.Fatalf("%s: the escalation write did not overlap the measured exit cycle (fired %d) — the judgement's share was not measured", name, acc.modeTotal)
++		}
++		if acc.dwell > bound {
++			t.Errorf("%s: exit cycle took %v beside a judging executor; bound %v (= baseline %v + fixed margin %v)",
++				name, acc.dwell, bound, base.dwell, a098ExitCycleDwellMargin)
++		}
++	}
++
++	// 대조: 여유보다 긴 지연 — 계측기가 경합을 **본다면** 넘어야 한다.
++	control := a124MeasureCycleBesideAJudgingExecutor(t, true, 2*a098ExitCycleDwellMargin, 10, false)
++	t.Logf("control: exit cycle dwell with %v per executor transaction = %v", 2*a098ExitCycleDwellMargin, control.dwell)
++	if control.dwell <= bound {
++		t.Errorf("the control stayed within the margin (%v ≤ %v) — the measurement cannot see ledger contention, so the acceptance above proves nothing",
++			control.dwell, bound)
++	}
++}
++
++// TestTheSelectionScalesWithinTheMarginUpToTenThousandPending 는 2.6 (c) 다.
++func TestTheSelectionScalesWithinTheMarginUpToTenThousandPending(t *testing.T) {
++	if testing.Short() {
++		t.Skip("seeds 10 000 rows")
++	}
++	base := a124MeasureCycleBesideAJudgingExecutor(t, false, 0, 0, false)
++	for _, pending := range []int{10, 1000, 10000} {
++		pending := pending
++		t.Run(fmt.Sprintf("P=%d", pending), func(t *testing.T) {
++			// 선택 쿼리의 연결 점유(원장 하나 · 실행자 없음)
++			clk := clock.NewFake(time.Date(2026, 9, 27, 0, 0, 0, 0, time.UTC))
++			dir := t.TempDir()
++			j, err := journal.Open(context.Background(), journal.Options{
++				Path:     dir + "/" + journal.DBFileName,
++				Clock:    clk,
++				FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
++			})
++			if err != nil {
++				t.Fatalf("journal.Open: %v", err)
++			}
++			t.Cleanup(func() { _ = j.Close() })
++			a124SeedBacklogFast(t, a124SideHandle(t, dir+"/"+journal.DBFileName), pending, 0)
++			const reps = 20
++			start := time.Now()
++			for i := 0; i < reps; i++ {
++				rows, err := j.PendingAlertsForDelivery(context.Background(), 10, obs.DefaultCriticalAttempts)
++				if err != nil || len(rows) != min(10, pending) {
++					t.Fatalf("selection: %d rows, %v", len(rows), err)
++				}
++			}
++			occupancy := time.Since(start) / reps
++			t.Logf("P=%d: PendingAlertsForDelivery connection occupancy = %v per call", pending, occupancy)
++			if occupancy > a098ExitCycleDwellMargin {
++				t.Errorf("P=%d: one selection holds the ledger connection for %v, past the fixed margin %v — "+
++					"STOP and report: the alternative is an additive index, a schema change (Manager decision, AB1)",
++					pending, occupancy, a098ExitCycleDwellMargin)
++			}
++
++			// 그 backlog 위를 도는(판정하는) 실행자 옆의 exit 체류
++			m := a124MeasureCycleBesideAJudgingExecutor(t, true, 0, pending, false)
++			t.Logf("P=%d: exit cycle dwell beside the executor = %v (baseline %v)", pending, m.dwell, base.dwell)
++			if m.cycle.Judged != base.cycle.Judged {
++				t.Fatalf("different work: baseline judged=%d, measured=%d", base.cycle.Judged, m.cycle.Judged)
++			}
++			if bound := base.dwell + a098ExitCycleDwellMargin; m.dwell > bound {
++				t.Errorf("P=%d: exit cycle took %v; bound %v — STOP and report (AB1)", pending, m.dwell, bound)
++			}
++		})
++	}
++}
+diff --git a/internal/app/engine/a124_the_deliverer_judges_internal_test.go b/internal/app/engine/a124_the_deliverer_judges_internal_test.go
+new file mode 100755
+index 00000000..7abc8fde
+--- /dev/null
++++ b/internal/app/engine/a124_the_deliverer_judges_internal_test.go
+@@ -0,0 +1,1176 @@
++package engine
++
++// a124 — 계속 실패하는 배달 실행자는 진입을 막는다 (tasks 2.1 · 2.2 · 2.3 · 2.4 · 2.5 · 2.8 · 2.9 · 2.10 · 2.11 · 2.12).
++//
++// HEAD 의 실행자는 행을 몇 번 실패해도 게이트도 모드도 건드리지 않는다(`alertdelivery.go` 에 Gate ·
++// Escalate 0 회). 동기 경로 `Notifier.deliver` 가 그 일을 하는데, a092 가 그 시도를 엔진 루프에서
++// 빼면 주인이 사라진다. 이 파일은 실행자가 그 주인이 되었는지를 **동기 경로가 한 번도 시도하지 않는
++// 구성**에서 잰다 — 어떤 시험도 Notifier 의 발송을 거치지 않는다.
++//
++// 결정적 순서가 필요한 시험(원칙 E)은 실행자의 판정 단계 훅(`judgeHook`)으로 해제를 끼워 넣는다.
++// 원장 결함은 원장 래퍼(`ledger`)로 주입한다 — 원장 자체의 결함 주입은 journal 패키지 시험(2.7)이 잰다.
++
++import (
++	"bytes"
++	"context"
++	"database/sql"
++	"errors"
++	"path/filepath"
++	"strings"
++	"sync"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
++)
++
++const a124Account = "acct-a124"
++
++// a124Ledger 는 실제 원장을 감싸고 원하는 호출만 실패시키거나 결과를 바꾼다.
++type a124Ledger struct {
++	*journal.Journal
++
++	mu             sync.Mutex
++	failList       int // 남은 나열 실패 수 (-1 = 끝없이)
++	failClaim      int
++	failRecord     int
++	failRecordFor  map[int64]bool // 이 행들의 실패 기록만 오류
++	failDeliver    int
++	recordOutcome  *journal.SettleOutcome // 설정되면 실제 기록 없이 이 결과
++	deliverOutcome *journal.SettleOutcome
++	failEscalate   bool
++	escalations    int
++	faultErr       error
++	beforeClaim    func(id int64) // 나열 뒤 · 임차 전에 끼는 일(다른 발송자 · 승인)
++	beforeRecord   func(id int64) // 발행 뒤 · 실패 기록 전에 끼는 일
++	beforeDeliver  func(id int64) // 발행 뒤 · 전달 정산 전에 끼는 일
++}
++
++func (l *a124Ledger) take(n *int) bool {
++	l.mu.Lock()
++	defer l.mu.Unlock()
++	switch {
++	case *n < 0:
++		return true
++	case *n > 0:
++		*n--
++		return true
++	}
++	return false
++}
++
++func (l *a124Ledger) fault() error {
++	if l.faultErr != nil {
++		return l.faultErr
++	}
++	return errors.New("a124 synthetic ledger fault")
++}
++
++func (l *a124Ledger) PendingAlertsForDelivery(ctx context.Context, limit, attemptLimit int) ([]journal.Alert, error) {
++	if l.take(&l.failList) {
++		return nil, l.fault()
++	}
++	return l.Journal.PendingAlertsForDelivery(ctx, limit, attemptLimit)
++}
++
++func (l *a124Ledger) ClaimAlertByID(ctx context.Context, id int64, claimant string) (journal.ClaimResult, error) {
++	if l.beforeClaim != nil {
++		hook := l.beforeClaim
++		l.beforeClaim = nil
++		hook(id)
++	}
++	if l.take(&l.failClaim) {
++		return journal.ClaimResult{ID: id}, l.fault()
++	}
++	return l.Journal.ClaimAlertByID(ctx, id, claimant)
++}
++
++func (l *a124Ledger) MarkAlertAttemptFailed(ctx context.Context, id int64, token, cause string) (journal.SettleResult, error) {
++	if l.beforeRecord != nil {
++		hook := l.beforeRecord
++		l.beforeRecord = nil
++		hook(id)
++	}
++	if l.take(&l.failRecord) || l.failRecordFor[id] {
++		return journal.SettleResult{}, l.fault()
++	}
++	if l.recordOutcome != nil {
++		return journal.SettleResult{Outcome: *l.recordOutcome}, nil
++	}
++	return l.Journal.MarkAlertAttemptFailed(ctx, id, token, cause)
++}
++
++func (l *a124Ledger) MarkAlertDelivered(ctx context.Context, id int64, token string) (journal.SettleResult, error) {
++	if l.beforeDeliver != nil {
++		hook := l.beforeDeliver
++		l.beforeDeliver = nil
++		hook(id)
++	}
++	if l.take(&l.failDeliver) {
++		return journal.SettleResult{}, l.fault()
++	}
++	if l.deliverOutcome != nil {
++		return journal.SettleResult{Outcome: *l.deliverOutcome}, nil
++	}
++	return l.Journal.MarkAlertDelivered(ctx, id, token)
++}
++
++func (l *a124Ledger) EscalateOperatingMode(ctx context.Context, accountRef, trigger string,
++	announcer journal.ModeAnnouncer) (journal.OperatingModeRecord, bool, error) {
++	l.mu.Lock()
++	l.escalations++
++	fail := l.failEscalate
++	l.mu.Unlock()
++	if fail {
++		return journal.OperatingModeRecord{}, false, l.fault()
++	}
++	return l.Journal.EscalateOperatingMode(ctx, accountRef, trigger, announcer)
++}
++
++func (l *a124Ledger) escalationCount() int {
++	l.mu.Lock()
++	defer l.mu.Unlock()
++	return l.escalations
++}
++
++type a124Fixture struct {
++	t    *testing.T
++	path string
++	j    *journal.Journal
++	clk  *clock.Fake
++	gate *execgw.EntryGate
++	led  *a124Ledger
++	d    *alertDeliverer
++	logs *bytes.Buffer
++}
++
++func a124Setup(t *testing.T, pub obs.Publisher) *a124Fixture {
++	t.Helper()
++	clk := clock.NewFake(time.Date(2026, 9, 27, 0, 0, 0, 0, time.UTC))
++	path := filepath.Join(t.TempDir(), journal.DBFileName)
++	j, err := journal.Open(context.Background(), journal.Options{
++		Path:     path,
++		Clock:    clk,
++		FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
++	})
++	if err != nil {
++		t.Fatalf("journal.Open: %v", err)
++	}
++	t.Cleanup(func() { _ = j.Close() })
++	gate := execgw.NewEntryGate(clk, map[execgw.RequiredQuery]time.Duration{})
++	led := &a124Ledger{Journal: j}
++	logs := &bytes.Buffer{}
++	d := &alertDeliverer{
++		Journal: j, Publisher: pub, Clock: clk,
++		Interval: alertDeliveryInterval, Batch: alertDeliveryBatch, Claimant: "a124-test",
++		Log:  obs.NewLogger(obs.LogOptions{Writer: logs, JSON: true, Clock: clk}),
++		Gate: gate, AccountRef: a124Account, ledger: led,
++	}
++	return &a124Fixture{t: t, path: path, j: j, clk: clk, gate: gate, led: led, d: d, logs: logs}
++}
++
++func (f *a124Fixture) row(t *testing.T, key string) int64 {
++	t.Helper()
++	id, err := f.j.EnqueueAlert(context.Background(), journal.Alert{
++		EventKey: key, Type: "execgw.order_unresolved", Severity: "critical",
++		Title: "UNRESOLVED_IN_DOUBT", Body: "an attempt is unresolved",
++	})
++	if err != nil {
++		t.Fatalf("EnqueueAlert: %v", err)
++	}
++	return id
++}
++
++// exhaust 는 행의 attempts 를 n 으로 올리고 임차를 돌려준다(실행자 밖의 발송자가 실패한 것처럼).
++func (f *a124Fixture) exhaust(t *testing.T, id int64, n int) {
++	t.Helper()
++	ctx := context.Background()
++	claim, err := f.j.ClaimAlertByID(ctx, id, "a124-other")
++	if err != nil || claim.Disposition != journal.ClaimAcquired {
++		t.Fatalf("claim for exhaust: %+v %v", claim, err)
++	}
++	for i := 0; i < n; i++ {
++		if _, err := f.j.MarkAlertAttemptFailed(ctx, id, claim.Token, "earlier failure"); err != nil {
++			t.Fatalf("exhaust attempt: %v", err)
++		}
++	}
++	if _, err := f.j.ReleaseAlertClaim(ctx, id, claim.Token); err != nil {
++		t.Fatalf("exhaust release: %v", err)
++	}
++}
++
++func (f *a124Fixture) cycles(t *testing.T, n int) {
++	t.Helper()
++	for i := 0; i < n; i++ {
++		_ = f.d.cycle(context.Background())
++	}
++}
++
++func (f *a124Fixture) latched() bool {
++	_, ok := f.gate.Blocks()[execgw.ReasonAlertUndelivered]
++	return ok
++}
++
++func (f *a124Fixture) mode(t *testing.T) string {
++	t.Helper()
++	snap, err := f.j.CurrentOperatingMode(context.Background(), a124Account)
++	if err != nil {
++		t.Fatalf("CurrentOperatingMode: %v", err)
++	}
++	return snap.Mode
++}
++
++func (f *a124Fixture) attempts(t *testing.T, id int64) int {
++	t.Helper()
++	row, err := f.j.LookupAlert(context.Background(), id)
++	if err != nil {
++		t.Fatalf("LookupAlert: %v", err)
++	}
++	return row.Attempts
++}
++
++func a124Failing() *a098RecordingPublisher {
++	return &a098RecordingPublisher{fail: errors.New("transport is down")}
++}
++
++// --- 2.1 ---------------------------------------------------------------------------------------
++
++func TestTheExecutorLatchesAndEscalatesAtTheAttemptLimit(t *testing.T) {
++	for _, tc := range []struct {
++		name string
++		pub  obs.Publisher
++	}{{"transport fails", a124Failing()}, {"no publisher", nil}} {
++		t.Run(tc.name, func(t *testing.T) {
++			f := a124Setup(t, tc.pub)
++			id := f.row(t, "a124-2.1")
++			f.cycles(t, alertAttemptLimit-1)
++			if f.latched() || f.mode(t) != journal.ModeNormal {
++				t.Fatalf("latched=%v mode=%s below the limit (attempts=%d)", f.latched(), f.mode(t), f.attempts(t, id))
++			}
++			f.cycles(t, 1)
++			if got := f.attempts(t, id); got != alertAttemptLimit {
++				t.Fatalf("attempts = %d, want %d — every cycle is one attempt, a missing publisher included (D3)", got, alertAttemptLimit)
++			}
++			if !f.latched() {
++				t.Fatal("the gate is open after the attempt limit — nobody latched it without the synchronous path")
++			}
++			if got := f.mode(t); got != journal.ModeEntryBlocked {
++				t.Fatalf("mode = %s, want %s", got, journal.ModeEntryBlocked)
++			}
++		})
++	}
++}
++
++// --- 2.2 · 2.3 ---------------------------------------------------------------------------------
++
++func TestAnAcknowledgementClearsTheLatchAndTheModeRowStays(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.row(t, "a124-2.2")
++	f.cycles(t, alertAttemptLimit)
++	if !f.latched() {
++		t.Fatal("arrangement: not latched")
++	}
++	n := &obs.Notifier{Journal: f.j, Gate: f.gate}
++	if err := n.Acknowledge(context.Background(), "operator"); err != nil {
++		t.Fatalf("Acknowledge: %v", err)
++	}
++	if f.latched() {
++		t.Fatal("the latch survived an acknowledgement that emptied the backlog")
++	}
++	if got := f.mode(t); got != journal.ModeEntryBlocked {
++		t.Fatalf("mode row = %s after acknowledgement, want %s (acknowledgement never relaxes a mode)", got, journal.ModeEntryBlocked)
++	}
++}
++
++func TestARestartRelatchesFromThePendingRow(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.row(t, "a124-2.3")
++	f.cycles(t, alertAttemptLimit)
++	fresh := execgw.NewEntryGate(f.clk, map[execgw.RequiredQuery]time.Duration{})
++	if err := restoreAlertEntryLatch(context.Background(), f.j, fresh); err != nil {
++		t.Fatalf("restoreAlertEntryLatch: %v", err)
++	}
++	if _, ok := fresh.Blocks()[execgw.ReasonAlertUndelivered]; !ok {
++		t.Fatal("the restarted gate is open with the exhausted row still PENDING")
++	}
++	if got := f.mode(t); got != journal.ModeEntryBlocked {
++		t.Fatalf("mode row = %s after restart, want it still in the ledger", got)
++	}
++}
++
++// --- 2.4 · 2.5 ---------------------------------------------------------------------------------
++
++type a124TitlePublisher struct {
++	mu   sync.Mutex
++	sent []string
++}
++
++func (p *a124TitlePublisher) Publish(_ context.Context, n obs.Notification) error {
++	p.mu.Lock()
++	defer p.mu.Unlock()
++	p.sent = append(p.sent, n.Title)
++	return errors.New("still down")
++}
++
++func TestANewRowIsTriedBeforeExhaustedOnes(t *testing.T) {
++	pub := &a124TitlePublisher{}
++	f := a124Setup(t, pub)
++	ctx := context.Background()
++	for i := 0; i < alertDeliveryBatch; i++ {
++		id := f.row(t, "a124-2.4-old-"+string(rune('a'+i)))
++		f.exhaust(t, id, alertAttemptLimit)
++	}
++	if _, err := f.j.EnqueueAlert(ctx, journal.Alert{EventKey: "a124-2.4-new", Type: "x", Severity: "critical", Title: "NEW"}); err != nil {
++		t.Fatalf("EnqueueAlert: %v", err)
++	}
++	f.cycles(t, 1)
++	pub.mu.Lock()
++	first := ""
++	if len(pub.sent) > 0 {
++		first = pub.sent[0]
++	}
++	pub.mu.Unlock()
++	if first != "NEW" {
++		t.Fatalf("the first row tried this cycle was %q, want the new one — exhausted rows are starving it", first)
++	}
++	pending, err := f.j.UndeliveredCount(ctx)
++	if err != nil || pending != alertDeliveryBatch+1 {
++		t.Fatalf("undelivered = %d (%v), want every exhausted row still counted", pending, err)
++	}
++}
++
++// --- 2.8 ---------------------------------------------------------------------------------------
++
++type a124AckingPublisher struct {
++	j  *journal.Journal
++	id int64
++}
++
++func (p *a124AckingPublisher) Publish(ctx context.Context, _ obs.Notification) error {
++	_ = p.j.AcknowledgeAlert(ctx, p.id, "operator")
++	return errors.New("down, and the operator acknowledged meanwhile")
++}
++
++func TestAnAcknowledgementDuringTheSendDoesNotLatch(t *testing.T) {
++	f := a124Setup(t, nil)
++	id := f.row(t, "a124-2.8")
++	f.exhaust(t, id, alertAttemptLimit-1)
++	f.d.Publisher = &a124AckingPublisher{j: f.j, id: id}
++	f.cycles(t, 1)
++	if f.latched() || f.led.escalationCount() != 0 {
++		t.Fatalf("latched=%v escalations=%d after an acknowledgement that beat the failure", f.latched(), f.led.escalationCount())
++	}
++}
++
++func TestOutcomesThatWroteNothingNeverJudge(t *testing.T) {
++	for _, out := range []journal.SettleOutcome{journal.SettleLeaseLost, journal.SettleAlreadySettled} {
++		t.Run(out.String(), func(t *testing.T) {
++			f := a124Setup(t, a124Failing())
++			id := f.row(t, "a124-2.8-"+out.String())
++			f.exhaust(t, id, alertAttemptLimit+2)
++			o := out
++			f.led.recordOutcome = &o
++			f.cycles(t, 2)
++			if f.latched() || f.led.escalationCount() != 0 {
++				t.Fatalf("%s latched=%v escalations=%d", out, f.latched(), f.led.escalationCount())
++			}
++		})
++	}
++}
++
++func TestARecordThatFindsNoRowLatchesButNeverEscalates(t *testing.T) {
++	for _, out := range []journal.SettleOutcome{journal.SettleNotFound, journal.SettleOutcome(97)} {
++		t.Run(out.String(), func(t *testing.T) {
++			f := a124Setup(t, a124Failing())
++			f.row(t, "a124-2.8-nf-"+out.String())
++			o := out
++			f.led.recordOutcome = &o
++			f.cycles(t, 1)
++			if !f.latched() {
++				t.Fatalf("%s did not latch (fail-safe: an unaccountable record is a latch)", out)
++			}
++			if f.led.escalationCount() != 0 || f.mode(t) != journal.ModeNormal {
++				t.Fatalf("%s escalated (escalations=%d mode=%s) — the synchronous path does not (N6)", out, f.led.escalationCount(), f.mode(t))
++			}
++		})
++	}
++}
++
++// --- 2.9 원칙 E ----------------------------------------------------------------------------------
++
++// a124AtStage 는 판정 단계 훅에서 한 번만 fn 을 부른다.
++func a124AtStage(d *alertDeliverer, stage alertJudgeStage, fn func()) {
++	var once sync.Once
++	d.judgeHook = func(s alertJudgeStage, _ int64) {
++		if s == stage {
++			once.Do(fn)
++		}
++	}
++}
++
++func (f *a124Fixture) acknowledgeAll(t *testing.T) {
++	t.Helper()
++	if err := (&obs.Notifier{Journal: f.j, Gate: f.gate}).Acknowledge(context.Background(), "operator"); err != nil {
++		t.Fatalf("Acknowledge: %v", err)
++	}
++}
++
++// (a) 해제가 근거 **앞** (㉬): 옛 해제 뒤에 새 행이 한도에 이른다 → 차단 + 승격.
++func TestAClearBeforeTheEvidenceDoesNotDropTheJudgement(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.row(t, "a124-2.9a")
++	f.cycles(t, alertAttemptLimit-1)
++	f.gate.Clear(execgw.ReasonAlertUndelivered) // 옛 승인의 해제 — 근거보다 앞
++	f.cycles(t, 1)
++	if !f.latched() || f.mode(t) != journal.ModeEntryBlocked {
++		t.Fatalf("latched=%v mode=%s — a clear that came before the evidence dropped it", f.latched(), f.mode(t))
++	}
++}
++
++// (b) 해제가 **뒤** (㉫ · 「세대 읽기 → 해제 → 적용」) → 차단 없음 + 승격, 그리고 제때 적용 대조와 같은 상태.
++func TestAClearAfterTheEvidenceLeavesWhatAnOnTimeLatchWouldHave(t *testing.T) {
++	late := a124Setup(t, a124Failing())
++	late.row(t, "a124-2.9b")
++	late.cycles(t, alertAttemptLimit-1)
++	a124AtStage(late.d, alertStageEpochRead, func() { late.acknowledgeAll(t) })
++	late.cycles(t, 1)
++
++	onTime := a124Setup(t, a124Failing())
++	onTime.row(t, "a124-2.9b")
++	onTime.cycles(t, alertAttemptLimit) // 제때: 차단 + 승격
++	onTime.acknowledgeAll(t)            // 그 뒤 같은 해제
++
++	if late.latched() != onTime.latched() || late.mode(t) != onTime.mode(t) {
++		t.Fatalf("late: latched=%v mode=%s · on time: latched=%v mode=%s — principle E broken",
++			late.latched(), late.mode(t), onTime.latched(), onTime.mode(t))
++	}
++	if late.latched() || late.mode(t) != journal.ModeEntryBlocked {
++		t.Fatalf("late: latched=%v mode=%s, want no latch and the escalation kept (Y1)", late.latched(), late.mode(t))
++	}
++}
++
++// ㉣ 래치가 서기 전 전체 승인 — 지울 래치가 없어도 해제 요청은 세대를 올린다 → 빈 backlog 재잠금 없음, 승격은 제때처럼 남음.
++func TestAFullAcknowledgementBeforeTheLatchLeavesNoLatchOnAnEmptyBacklog(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.row(t, "a124-2.9d")
++	f.cycles(t, alertAttemptLimit-1)
++	a124AtStage(f.d, alertStageEpochRead, func() { f.acknowledgeAll(t) })
++	f.cycles(t, 1)
++	if n, _ := f.j.UndeliveredCount(context.Background()); n != 0 {
++		t.Fatalf("arrangement: backlog = %d, want 0", n)
++	}
++	if f.latched() {
++		t.Fatal("the gate latched over an empty backlog the operator had just cleared")
++	}
++	if f.mode(t) != journal.ModeEntryBlocked {
++		t.Fatalf("mode = %s — the on-time escalation would have stayed", f.mode(t))
++	}
++}
++
++// AB2 허용 예외: 「정산 → 해제 → 세대 읽기 → 적용」 은 해제를 「앞」 으로 본다 → 보수적 재잠금.
++func TestAClearBetweenTheEvidenceAndTheEpochReadRelatchesConservatively(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.row(t, "a124-2.9-window")
++	f.cycles(t, alertAttemptLimit-1)
++	a124AtStage(f.d, alertStageSettled, func() { f.gate.Clear(execgw.ReasonAlertUndelivered) })
++	f.cycles(t, 1)
++	if !f.latched() {
++		t.Fatal("a clear inside the evidence-to-epoch window dropped the latch — the permitted error runs the other way")
++	}
++}
++
++// ㉢ 무관한 승인(다른 행만, 미전달 남음)은 해제 요청이 아니다 → 잠금.
++func TestAnUnrelatedAcknowledgementDoesNotDropTheJudgement(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.row(t, "a124-2.9c")
++	other := f.row(t, "a124-2.9c-other")
++	f.exhaust(t, other, 0)
++	f.cycles(t, alertAttemptLimit-1)
++	a124AtStage(f.d, alertStageEpochRead, func() {
++		if err := (&obs.Notifier{Journal: f.j, Gate: f.gate}).Acknowledge(context.Background(), "operator", other); err != nil {
++			t.Errorf("Acknowledge(other): %v", err)
++		}
++	})
++	f.cycles(t, 1)
++	if !f.latched() {
++		t.Fatal("an acknowledgement that left rows undelivered dropped the judgement")
++	}
++}
++
++// 실패 기록 NotFound 는 「뒤」 해제에서도 승격하지 않는다.
++func TestALatchOnlyJudgementNeverEscalatesEvenAfterAClear(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.row(t, "a124-2.9-nf")
++	nf := journal.SettleNotFound
++	f.led.recordOutcome = &nf
++	a124AtStage(f.d, alertStageEpochRead, func() { f.gate.Clear(execgw.ReasonAlertUndelivered) })
++	f.cycles(t, 1)
++	if f.latched() || f.led.escalationCount() != 0 {
++		t.Fatalf("latched=%v escalations=%d", f.latched(), f.led.escalationCount())
++	}
++}
++
++// Z2 · AA1: 승격 쓰기 실패면 조건부 차단 결과와 무관하게 무조건 차단 — 「차단 성공 → 해제 → 승격 실패」 포함.
++func TestAFailedEscalationLeavesTheLatch(t *testing.T) {
++	for _, tc := range []struct {
++		name  string
++		stage alertJudgeStage
++	}{{"block rejected by a clear", alertStageEpochRead}, {"block applied then cleared", alertStageLatched}} {
++		t.Run(tc.name, func(t *testing.T) {
++			f := a124Setup(t, a124Failing())
++			f.row(t, "a124-2.9-z2")
++			f.led.failEscalate = true
++			f.cycles(t, alertAttemptLimit-1)
++			a124AtStage(f.d, tc.stage, func() { f.gate.Clear(execgw.ReasonAlertUndelivered) })
++			f.cycles(t, 1)
++			if f.led.escalationCount() == 0 {
++				t.Fatal("no escalation was attempted")
++			}
++			if !f.latched() {
++				t.Fatal("escalation failed and the latch is gone — neither consequence survived")
++			}
++		})
++	}
++}
++
++// ㉨/㉧ 오류 판정은 원장의 승인 상태로 버리지 않는다(Y2).
++func TestAnErrorJudgementIsNotDroppedByTheLedgersAcknowledgementState(t *testing.T) {
++	f := a124Setup(t, &a098RecordingPublisher{})
++	id := f.row(t, "a124-2.9-y2")
++	other := f.row(t, "a124-2.9-y2-other")
++	f.exhaust(t, other, 0)
++	f.led.failDeliver = 1
++	a124AtStage(f.d, alertStageSettled, func() { _ = f.j.AcknowledgeAlert(context.Background(), id, "operator") })
++	f.cycles(t, 1)
++	if !f.latched() || f.mode(t) != journal.ModeEntryBlocked {
++		t.Fatalf("latched=%v mode=%s — the error hid an acknowledgement but that is no reason to drop it", f.latched(), f.mode(t))
++	}
++}
++
++// --- 2.10 D8 기록 실패 지속 ------------------------------------------------------------------------
++
++func TestConsecutiveRecordFailuresOnARowLatch(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.row(t, "a124-2.10")
++	f.led.failRecord = -1
++	f.cycles(t, alertAttemptLimit-1)
++	if f.latched() {
++		t.Fatal("latched before the limit")
++	}
++	f.cycles(t, 1)
++	if !f.latched() || f.mode(t) != journal.ModeEntryBlocked {
++		t.Fatalf("latched=%v mode=%s after %d consecutive record failures", f.latched(), f.mode(t), alertAttemptLimit)
++	}
++}
++
++func TestClaimFailuresCountAsRecordFailures(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.row(t, "a124-2.10-claim")
++	f.led.failClaim = -1
++	f.cycles(t, alertAttemptLimit)
++	if !f.latched() {
++		t.Fatal("claim failures on one row never latched")
++	}
++}
++
++func TestAnotherRowsSuccessDoesNotResetTheCount(t *testing.T) {
++	f := a124Setup(t, &a124SelectivePublisher{failTitle: "A-row"})
++	ra := f.rowTitled(t, "a124-2.10-a", "A-row")
++	f.led.failRecordFor = map[int64]bool{ra: true}
++	for i := 0; i < alertAttemptLimit; i++ {
++		// 매 사이클 새 B 가 성공해 원장에서 빠진다 — 다른 행의 Applied 가 끼는 사이클.
++		f.rowTitled(t, "a124-2.10-b-"+string(rune('a'+i)), "B-row")
++		f.cycles(t, 1)
++	}
++	if !f.latched() {
++		t.Fatal("another row's success reset the failing row's record-failure count (R3)")
++	}
++}
++
++// a124SelectivePublisher 는 제목이 failTitle 인 행만 실패시킨다.
++type a124SelectivePublisher struct{ failTitle string }
++
++func (p *a124SelectivePublisher) Publish(_ context.Context, n obs.Notification) error {
++	if n.Title == p.failTitle {
++		return errors.New("that row cannot be sent")
++	}
++	return nil
++}
++
++func (f *a124Fixture) rowTitled(t *testing.T, key, title string) int64 {
++	t.Helper()
++	id, err := f.j.EnqueueAlert(context.Background(), journal.Alert{EventKey: key, Type: "x", Severity: "critical", Title: title})
++	if err != nil {
++		t.Fatalf("EnqueueAlert: %v", err)
++	}
++	return id
++}
++
++func TestAClearBetweenRecordFailuresRestartsTheCount(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.row(t, "a124-2.10-clear")
++	f.led.failRecord = -1
++	f.cycles(t, 1)
++	f.gate.Clear(execgw.ReasonAlertUndelivered)
++	f.cycles(t, alertAttemptLimit-1)
++	if f.latched() {
++		t.Fatal("a clear request did not break the run of record failures")
++	}
++	f.cycles(t, 1)
++	if !f.latched() {
++		t.Fatal("after the clear the run never reached the limit again")
++	}
++}
++
++func TestAClearAfterTheLimitthRecordFailureStillEscalates(t *testing.T) {
++	for _, tc := range []struct {
++		name        string
++		stage       alertJudgeStage
++		cycleBefore bool
++	}{
++		{"clear after the limit-th error", alertStageSettled, false},
++		{"clear between the previous error and the limit-th", 0, true},
++	} {
++		t.Run(tc.name, func(t *testing.T) {
++			f := a124Setup(t, a124Failing())
++			f.row(t, "a124-2.10-z1")
++			f.led.failRecord = -1
++			f.cycles(t, alertAttemptLimit-1)
++			if tc.cycleBefore {
++				f.gate.Clear(execgw.ReasonAlertUndelivered)
++			} else {
++				a124AtStage(f.d, tc.stage, func() { f.gate.Clear(execgw.ReasonAlertUndelivered) })
++			}
++			f.cycles(t, 1)
++			if f.latched() {
++				t.Fatal("latched although a clear followed the last counted error (AA2)")
++			}
++			if f.mode(t) != journal.ModeEntryBlocked {
++				t.Fatalf("mode = %s — at the limit the escalation stands regardless of the clear (Z1)", f.mode(t))
++			}
++		})
++	}
++}
++
++func TestLeaseLostAndReleaseDoNotResetTheCount(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.row(t, "a124-2.10-lost")
++	f.led.failRecord = 1
++	f.cycles(t, 1) // 오류 1
++	lost := journal.SettleLeaseLost
++	f.led.recordOutcome = &lost
++	f.cycles(t, 1) // 0 행 기록 + 반납 Applied — 계수 불변
++	f.led.recordOutcome = nil
++	f.led.failRecord = alertAttemptLimit - 1
++	f.cycles(t, alertAttemptLimit-1)
++	if !f.latched() {
++		t.Fatal("a lease-lost result or a successful release wiped the record-failure run (R3 · X3)")
++	}
++}
++
++func TestListingFailuresLatchAfterTheLimit(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.led.failList = -1
++	f.cycles(t, alertAttemptLimit-1)
++	if f.latched() {
++		t.Fatal("latched before the listing limit")
++	}
++	f.cycles(t, 1)
++	if !f.latched() || f.mode(t) != journal.ModeEntryBlocked {
++		t.Fatalf("latched=%v mode=%s after %d listing failures", f.latched(), f.mode(t), alertAttemptLimit)
++	}
++}
++
++func TestASuccessfulListingBreaksTheListingRun(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.led.failList = alertAttemptLimit - 1
++	f.cycles(t, alertAttemptLimit) // 2 실패 + 1 성공
++	f.led.failList = alertAttemptLimit - 1
++	f.cycles(t, alertAttemptLimit-1)
++	if f.latched() {
++		t.Fatal("a successful listing did not break the run")
++	}
++}
++
++func TestACancelledEngineIsNotALedgerFault(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.row(t, "a124-2.10-cancel")
++	f.led.failRecord = -1
++	f.led.faultErr = context.Canceled
++	listed, err := f.j.PendingAlerts(context.Background(), 0)
++	if err != nil || len(listed) != 1 {
++		t.Fatalf("arrangement: %v %v", listed, err)
++	}
++	ctx, cancel := context.WithCancel(context.Background())
++	cancel()
++	for i := 0; i < alertAttemptLimit+1; i++ {
++		_ = f.d.cycle(ctx)             // 나열이 취소로 실패 — 세지 않는다
++		f.d.deliverOne(ctx, listed[0]) // 임차 · 기록이 취소로 실패 — 세지 않는다
++	}
++	if f.latched() {
++		t.Fatal("a shutdown's cancelled writes were counted as a ledger fault")
++	}
++}
++
++// --- 2.11 정제 ----------------------------------------------------------------------------------
++
++func TestNewLinesAndTheGateDetailCarryNoSecrets(t *testing.T) {
++	const sentinel = "SENTINEL-7731"
++	f := a124Setup(t, &a098RecordingPublisher{fail: errors.New("transport " + sentinel)})
++	f.d.AccountRef = "acct-" + sentinel
++	if _, err := f.j.EnqueueAlert(context.Background(), journal.Alert{
++		EventKey: "a124-2.11", Type: "x", Severity: "critical",
++		Title: "title " + sentinel, Body: "body " + sentinel, Payload: `{"account":"` + sentinel + `"}`,
++	}); err != nil {
++		t.Fatalf("EnqueueAlert: %v", err)
++	}
++	f.led.failEscalate = true
++	f.led.faultErr = errors.New("ledger " + sentinel)
++	f.cycles(t, alertAttemptLimit)
++	if !f.latched() {
++		t.Fatal("arrangement: not latched")
++	}
++	if d := f.gate.Blocks()[execgw.ReasonAlertUndelivered]; strings.Contains(d, sentinel) {
++		t.Fatalf("gate detail leaks: %q", d)
++	}
++	for _, line := range strings.Split(f.logs.String(), "\n") {
++		if !strings.Contains(line, alertJudgementLogMarker) {
++			continue
++		}
++		if strings.Contains(line, sentinel) {
++			t.Fatalf("a new line leaks: %s", line)
++		}
++	}
++	if !strings.Contains(f.logs.String(), alertJudgementLogMarker) {
++		t.Fatal("no judgement line was written — the scan measured nothing")
++	}
++}
++
++// --- 2.12 전달 정산 실패 -------------------------------------------------------------------------
++
++func TestAPublishedButUnrecordedAlertLatchesAtOnceAndKeepsTheLease(t *testing.T) {
++	pub := &a098RecordingPublisher{}
++	f := a124Setup(t, pub)
++	id := f.row(t, "a124-2.12")
++	f.led.failDeliver = 1
++	f.cycles(t, 1)
++	if !f.latched() || f.mode(t) != journal.ModeEntryBlocked {
++		t.Fatalf("latched=%v mode=%s after a publish whose delivery write failed", f.latched(), f.mode(t))
++	}
++	row, _ := f.j.LookupAlert(context.Background(), id)
++	if row.ClaimedBy == "" {
++		t.Fatal("the lease was let go — the next cycle would resend an alert that already went out")
++	}
++	f.cycles(t, 1)
++	if n := pub.count(); n != 1 {
++		t.Fatalf("published %d times while the lease was live, want 1", n)
++	}
++	// 만료 뒤의 재발행은 허용된다(R6) — 여기서는 잠그지 않고 기록만.
++	f.clk.Advance(journal.DefaultAlertLease + time.Second)
++	f.cycles(t, 1)
++	if n := pub.count(); n != 2 {
++		t.Fatalf("after the lease expired the row was published %d times, want the permitted resend (2)", n)
++	}
++}
++
++func TestADeliveryRecordOutcomeDecidesTheJudgement(t *testing.T) {
++	for _, tc := range []struct {
++		out   journal.SettleOutcome
++		latch bool
++	}{
++		{journal.SettleNotFound, true},
++		{journal.SettleOutcome(98), true},
++		{journal.SettleAlreadySettled, false},
++		{journal.SettleLeaseLost, false},
++	} {
++		t.Run(tc.out.String(), func(t *testing.T) {
++			f := a124Setup(t, &a098RecordingPublisher{})
++			f.row(t, "a124-2.12-"+tc.out.String())
++			o := tc.out
++			f.led.deliverOutcome = &o
++			f.cycles(t, 1)
++			if f.latched() != tc.latch {
++				t.Fatalf("%s: latched=%v, want %v", tc.out, f.latched(), tc.latch)
++			}
++			if tc.latch && f.mode(t) != journal.ModeEntryBlocked {
++				t.Fatalf("%s: mode=%s, want escalation", tc.out, f.mode(t))
++			}
++		})
++	}
++}
++
++// --- 뮤테이션이 요구한 직접 시험 (tasks 4.1) ------------------------------------------------------
++
++// 판정 입력은 커밋된 값이다(D1, F1): 나열이 0 이라 말한 뒤 다른 발송자가 두 번 실패를 기록하면, 실행자의
++// 첫 실패 기록이 커밋한 3 으로 곧장 한도 판정이 선다. 「나열 값 + 1」로 판정하면 1 이라 서지 않는다.
++func TestAStaleListingDoesNotDelayTheJudgement(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	id := f.row(t, "a124-4.1-stale")
++	f.led.beforeClaim = func(int64) { f.exhaust(t, id, alertAttemptLimit-1) }
++	f.cycles(t, 1)
++	if !f.latched() || f.mode(t) != journal.ModeEntryBlocked {
++		t.Fatalf("latched=%v mode=%s — the judgement read the stale listing instead of the committed attempts", f.latched(), f.mode(t))
++	}
++}
++
++// ㉬ 의 사이클 안 판: 발행 도중의 해제는 근거(실패 기록 커밋) **앞**이다 → 잠금. 세대를 정산 전에 읽으면
++// 이 해제가 「뒤」로 보여 판정을 버린다.
++type a124ClearingPublisher struct{ gate *execgw.EntryGate }
++
++func (p *a124ClearingPublisher) Publish(context.Context, obs.Notification) error {
++	p.gate.Clear(execgw.ReasonAlertUndelivered)
++	return errors.New("down")
++}
++
++func TestAClearDuringThePublishIsBeforeTheEvidence(t *testing.T) {
++	f := a124Setup(t, nil)
++	id := f.row(t, "a124-4.1-publish-clear")
++	f.exhaust(t, id, alertAttemptLimit-1)
++	f.d.Publisher = &a124ClearingPublisher{gate: f.gate}
++	f.cycles(t, 1)
++	if !f.latched() {
++		t.Fatal("a clear that came before the failed attempt was committed dropped the judgement — the epoch was read too early")
++	}
++}
++
++// Y3: 임차가 「이미 정산됨」을 돌려주면 그 행의 기록 실패 연속은 끝난다. 같은 id 가 새 에피소드로 돌아와도
++// 옛 연속을 물려받지 않는다(이 경우는 PENDING 이탈이 관측됐다 — V5 의 해제 없는 재무장과 다르다).
++func TestAClaimThatFindsTheRowSettledEndsItsRun(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	alert := journal.Alert{EventKey: "a124-4.1-settled", Type: "execgw.order_unresolved", Severity: "critical", Title: "t"}
++	id, err := f.j.EnqueueAlert(context.Background(), alert)
++	if err != nil {
++		t.Fatalf("EnqueueAlert: %v", err)
++	}
++	f.led.failRecord = alertAttemptLimit - 1
++	f.cycles(t, alertAttemptLimit-1) // 연속 2
++	f.led.beforeClaim = func(int64) {
++		if err := f.j.AcknowledgeAlert(context.Background(), id, "operator"); err != nil {
++			t.Errorf("AcknowledgeAlert: %v", err)
++		}
++	}
++	f.cycles(t, 1) // 나열에는 있었으나 임차가 「이미 정산됨」
++	// 같은 id 를 새 에피소드로 되살린다(재무장) — 다음 나열 전에.
++	f.clk.Advance(2 * time.Hour)
++	again, err := f.j.ClaimAlertForDelivery(context.Background(), alert, time.Hour, "a124-rearm")
++	if err != nil || again.ID != id || again.Disposition != journal.ClaimAcquired {
++		t.Fatalf("re-arm: %+v %v", again, err)
++	}
++	if _, err := f.j.ReleaseAlertClaim(context.Background(), id, again.Token); err != nil {
++		t.Fatalf("release: %v", err)
++	}
++	f.led.failRecord = 1
++	f.cycles(t, 1)
++	if f.latched() {
++		t.Fatal("a row whose claim found it settled kept its old record-failure run into the new episode")
++	}
++}
++
++// Q5: 잘린 나열에 없다는 것은 PENDING 이탈의 증거가 아니다 — 거기서 계수를 지우면 한도 층으로 밀린 행의
++// 연속이 사라진다.
++func TestATruncatedListingDoesNotForgetARun(t *testing.T) {
++	f := a124Setup(t, &a124SelectivePublisher{failTitle: "A-row"})
++	f.d.Batch = 1
++	a := f.rowTitled(t, "a124-4.1-trunc-a", "A-row")
++	f.exhaust(t, a, alertAttemptLimit) // A 는 한도 층
++	f.led.failRecordFor = map[int64]bool{a: true}
++	f.cycles(t, alertAttemptLimit-1) // A 만 나열 — 기록 실패 연속 2
++	f.rowTitled(t, "a124-4.1-trunc-b", "B-row")
++	f.cycles(t, 1) // 나열 = [B] (잘림), B 는 전달됨
++	f.cycles(t, 1) // 나열 = [A] — 기록 실패 3 번째
++	if !f.latched() {
++		t.Fatal("a truncated listing wiped the run of a row it merely did not show")
++	}
++}
++
++// 세대는 근거(실패 기록 커밋) **뒤**에 읽는다: 기록 직전의 해제는 근거 앞이므로 잠근다. 세대를 기록 전에
++// 읽으면 이 해제가 「뒤」로 보여 판정을 버린다(4.1 「세대 읽기를 정산 전으로」).
++func TestAClearJustBeforeTheRecordIsBeforeTheEvidence(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.row(t, "a124-4.1-record-clear")
++	f.cycles(t, alertAttemptLimit-1)
++	f.led.beforeRecord = func(int64) { f.gate.Clear(execgw.ReasonAlertUndelivered) }
++	f.cycles(t, 1)
++	if !f.latched() {
++		t.Fatal("a clear just before the failed attempt was committed dropped the judgement — the epoch was read before the evidence")
++	}
++}
++
++// --- codex 구현 1회차 반영 (I1 · I3 · 2.1/2.3/2.8/2.11 보강) ---------------------------------------
++
++// I1: 전달 정산 오류 뒤 취소가 와도 판정은 선다. 취소된 ctx 의 승격 쓰기는 실패하고 → 무조건 차단.
++// 승인이 먼저 와서 행이 PENDING 이 아니게 된 판(기동 복원이 덮지 못하는 모양)도 같다.
++func TestADeliveryRecordErrorFollowedByCancellationStillLatches(t *testing.T) {
++	for _, acknowledged := range []bool{false, true} {
++		t.Run(map[bool]string{false: "pending row", true: "row acknowledged first"}[acknowledged], func(t *testing.T) {
++			f := a124Setup(t, &a098RecordingPublisher{})
++			id := f.row(t, "a124-i1")
++			listed, err := f.j.PendingAlerts(context.Background(), 0)
++			if err != nil || len(listed) != 1 {
++				t.Fatalf("arrangement: %v %v", listed, err)
++			}
++			ctx, cancel := context.WithCancel(context.Background())
++			defer cancel()
++			f.led.failDeliver = 1
++			f.led.beforeDeliver = func(int64) {
++				if acknowledged {
++					_ = f.j.AcknowledgeAlert(context.Background(), id, "operator")
++				}
++				cancel()
++			}
++			f.d.deliverOne(ctx, listed[0])
++			if !f.latched() {
++				t.Fatal("a delivery-record error followed by cancellation produced neither latch nor escalation")
++			}
++		})
++	}
++}
++
++// ㉫ 판정 대기 중 남이 전달 → 운영자가 빈 backlog 를 승인 · 해제 → 차단 없음, 승격은 남음.
++func TestADeliveryAndAnEmptyAcknowledgementAfterTheEvidenceDropOnlyTheBlock(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	id := f.row(t, "a124-2.9-x2")
++	f.cycles(t, alertAttemptLimit-1)
++	a124AtStage(f.d, alertStageEpochRead, func() {
++		ctx := context.Background()
++		claim, err := f.j.ClaimAlertByID(ctx, id, "a124-other-sender")
++		if err != nil || claim.Disposition != journal.ClaimAcquired {
++			t.Errorf("other sender claim: %+v %v", claim, err)
++			return
++		}
++		if res, err := f.j.MarkAlertDelivered(ctx, id, claim.Token); err != nil || res.Outcome != journal.SettleApplied {
++			t.Errorf("other sender delivery: %+v %v", res, err)
++		}
++		f.acknowledgeAll(t) // 빈 목록 승인 → Clear
++	})
++	f.cycles(t, 1)
++	if got := a124State(t, f, id); got != journal.AlertDelivered {
++		t.Fatalf("arrangement: row state %s, want DELIVERED", got)
++	}
++	if f.latched() || f.mode(t) != journal.ModeEntryBlocked {
++		t.Fatalf("latched=%v mode=%s — want no block (manual clear after delivery) and the escalation kept", f.latched(), f.mode(t))
++	}
++}
++
++func a124State(t *testing.T, f *a124Fixture, id int64) string {
++	t.Helper()
++	row, err := f.j.LookupAlert(context.Background(), id)
++	if err != nil {
++		t.Fatalf("LookupAlert: %v", err)
++	}
++	return row.State
++}
++
++// ㉩ 옛 승인의 늦은 해제(셈~해제 경합의 해제 반쪽)가 근거 뒤에 온다 → 차단 없음 · 승격.
++func TestAStaleClearAfterTheEvidenceDropsOnlyTheBlock(t *testing.T) {
++	for _, delivered := range []bool{false, true} { // true = ㉪: 그 사이 남이 B 를 전달
++		t.Run(map[bool]string{false: "㉩", true: "㉪"}[delivered], func(t *testing.T) {
++			f := a124Setup(t, a124Failing())
++			id := f.row(t, "a124-2.9-v2")
++			f.cycles(t, alertAttemptLimit-1)
++			a124AtStage(f.d, alertStageEpochRead, func() {
++				if delivered {
++					ctx := context.Background()
++					claim, err := f.j.ClaimAlertByID(ctx, id, "a124-other-sender")
++					if err == nil && claim.Disposition == journal.ClaimAcquired {
++						_, _ = f.j.MarkAlertDelivered(ctx, id, claim.Token)
++					}
++				}
++				f.gate.Clear(execgw.ReasonAlertUndelivered) // 옛 승인의 늦은 해제
++			})
++			f.cycles(t, 1)
++			if f.latched() || f.mode(t) != journal.ModeEntryBlocked {
++				t.Fatalf("latched=%v mode=%s", f.latched(), f.mode(t))
++			}
++		})
++	}
++}
++
++// ㉢ 중간에 실패한 승인(행은 승인됐으나 해제에 닿지 못함)은 해제 요청이 아니다 → 잠금, 기록 실패 계수도 그대로.
++func TestAnAcknowledgementThatFailedBeforeItsClearDoesNotDropTheJudgement(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.row(t, "a124-2.9-failed-ack")
++	other := f.row(t, "a124-2.9-failed-ack-other")
++	f.exhaust(t, other, 0)
++	f.cycles(t, alertAttemptLimit-1)
++	a124AtStage(f.d, alertStageEpochRead, func() {
++		_ = f.j.AcknowledgeAlert(context.Background(), other, "operator") // 원장 쓰기만 되고 Clear 전에 멈춘 승인
++	})
++	f.cycles(t, 1)
++	if !f.latched() {
++		t.Fatal("an acknowledgement that never reached its clear dropped the judgement")
++	}
++}
++
++// AA2 를 나열 계수에도: 한도째 나열 오류 뒤의 해제 · 직전 오류와 한도째 사이의 해제 → 차단 없음 · 승격.
++func TestAClearAroundTheLimitthListingFailureStillEscalates(t *testing.T) {
++	for _, between := range []bool{false, true} {
++		t.Run(map[bool]string{false: "after the limit-th", true: "between"}[between], func(t *testing.T) {
++			f := a124Setup(t, a124Failing())
++			f.led.failList = -1
++			f.cycles(t, alertAttemptLimit-1)
++			if between {
++				f.gate.Clear(execgw.ReasonAlertUndelivered)
++			} else {
++				a124AtStage(f.d, alertStageEpochRead, func() { f.gate.Clear(execgw.ReasonAlertUndelivered) })
++			}
++			f.cycles(t, 1)
++			if f.latched() {
++				t.Fatal("latched although a clear followed the last counted listing failure")
++			}
++			if f.mode(t) != journal.ModeEntryBlocked {
++				t.Fatalf("mode = %s — the escalation stands at the limit", f.mode(t))
++			}
++		})
++	}
++}
++
++// V5: 해제 없이 전달 → 재무장(같은 id)이 실행자의 두 나열 사이에 일어나면 계수는 id 에 남는다 — 새 에피소드가
++// 더 일찍 잠길 수 있다(보수 방향, 기대값으로 고정).
++func TestARearmWithoutAClearCarriesTheRecordFailureRun(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	alert := journal.Alert{EventKey: "a124-2.10-carry", Type: "execgw.order_unresolved", Severity: "critical", Title: "t"}
++	id, err := f.j.EnqueueAlert(context.Background(), alert)
++	if err != nil {
++		t.Fatalf("EnqueueAlert: %v", err)
++	}
++	f.led.failRecord = alertAttemptLimit - 1
++	f.cycles(t, alertAttemptLimit-1) // 연속 2
++	ctx := context.Background()
++	claim, err := f.j.ClaimAlertByID(ctx, id, "a124-other-sender")
++	if err != nil || claim.Disposition != journal.ClaimAcquired {
++		t.Fatalf("other claim: %+v %v", claim, err)
++	}
++	if _, err := f.j.MarkAlertDelivered(ctx, id, claim.Token); err != nil {
++		t.Fatalf("other delivery: %v", err)
++	}
++	f.clk.Advance(2 * time.Hour)
++	again, err := f.j.ClaimAlertForDelivery(ctx, alert, time.Hour, "a124-rearm")
++	if err != nil || again.ID != id || again.Disposition != journal.ClaimAcquired {
++		t.Fatalf("re-arm: %+v %v", again, err)
++	}
++	if _, err := f.j.ReleaseAlertClaim(ctx, id, again.Token); err != nil {
++		t.Fatalf("release: %v", err)
++	}
++	f.led.failRecord = 1
++	f.cycles(t, 1)
++	if !f.latched() {
++		t.Fatal("the re-armed episode did not inherit the run — the documented V5 expectation (latch on the 3rd error) failed")
++	}
++}
++
++// 2.1 응답 없는 publisher — transport 의 기한 초과도 실패 시도다.
++type a124TimeoutPublisher struct{}
++
++func (a124TimeoutPublisher) Publish(context.Context, obs.Notification) error {
++	time.Sleep(5 * time.Millisecond)
++	return context.DeadlineExceeded
++}
++
++func TestAPublisherThatTimesOutCountsAsFailedAttempts(t *testing.T) {
++	f := a124Setup(t, a124TimeoutPublisher{})
++	f.row(t, "a124-2.1-timeout")
++	f.cycles(t, alertAttemptLimit)
++	if !f.latched() || f.mode(t) != journal.ModeEntryBlocked {
++		t.Fatalf("latched=%v mode=%s after %d timed-out publishes", f.latched(), f.mode(t), alertAttemptLimit)
++	}
++}
++
++// 2.3 실제로 원장을 닫고 다시 연 재시작.
++func TestARestartFromAReopenedLedgerRelatches(t *testing.T) {
++	dir := t.TempDir()
++	path := filepath.Join(dir, journal.DBFileName)
++	clk := clock.NewFake(time.Date(2026, 9, 27, 0, 0, 0, 0, time.UTC))
++	open := func() *journal.Journal {
++		j, err := journal.Open(context.Background(), journal.Options{Path: path, Clock: clk,
++			FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt})})
++		if err != nil {
++			t.Fatalf("journal.Open: %v", err)
++		}
++		return j
++	}
++	j := open()
++	gate := execgw.NewEntryGate(clk, map[execgw.RequiredQuery]time.Duration{})
++	if _, err := j.EnqueueAlert(context.Background(), journal.Alert{EventKey: "a124-2.3-reopen", Type: "x", Severity: "critical"}); err != nil {
++		t.Fatalf("EnqueueAlert: %v", err)
++	}
++	d := &alertDeliverer{Journal: j, Publisher: a124Failing(), Clock: clk, Claimant: "a124", Gate: gate, AccountRef: a124Account}
++	for i := 0; i < alertAttemptLimit; i++ {
++		_ = d.cycle(context.Background())
++	}
++	if err := j.Close(); err != nil {
++		t.Fatalf("Close: %v", err)
++	}
++	j2 := open()
++	t.Cleanup(func() { _ = j2.Close() })
++	fresh := execgw.NewEntryGate(clk, map[execgw.RequiredQuery]time.Duration{})
++	if err := restoreAlertEntryLatch(context.Background(), j2, fresh); err != nil {
++		t.Fatalf("restoreAlertEntryLatch: %v", err)
++	}
++	if _, ok := fresh.Blocks()[execgw.ReasonAlertUndelivered]; !ok {
++		t.Fatal("after a real close/reopen the gate is open with the exhausted row PENDING")
++	}
++	snap, err := j2.CurrentOperatingMode(context.Background(), a124Account)
++	if err != nil || snap.Mode != journal.ModeEntryBlocked {
++		t.Fatalf("mode row after reopen = %+v %v", snap, err)
++	}
++}
++
++// 2.8 실제 LeaseLost: 발행 도중 임차가 만료되고 다른 발송자가 가져간다 → 실행자의 기록은 0 행 → 판정 없음.
++type a124StealingPublisher struct {
++	f  *a124Fixture
++	id int64
++}
++
++func (p *a124StealingPublisher) Publish(context.Context, obs.Notification) error {
++	p.f.clk.Advance(journal.DefaultAlertLease + time.Second)
++	claim, err := p.f.j.ClaimAlertByID(context.Background(), p.id, "a124-thief")
++	if err != nil || claim.Disposition != journal.ClaimAcquired || !claim.Stole {
++		p.f.t.Errorf("steal: %+v %v", claim, err)
++	}
++	return errors.New("down")
++}
++
++func TestARealLeaseLossNeverJudges(t *testing.T) {
++	f := a124Setup(t, nil)
++	f.t = t
++	id := f.row(t, "a124-2.8-steal")
++	f.exhaust(t, id, alertAttemptLimit-1)
++	f.d.Publisher = &a124StealingPublisher{f: f, id: id}
++	f.cycles(t, 1)
++	if f.latched() || f.led.escalationCount() != 0 {
++		t.Fatalf("a lease lost to another sender still judged: latched=%v escalations=%d", f.latched(), f.led.escalationCount())
++	}
++}
++
++// 2.11 임차 토큰 sentinel: 발행 뒤 정산 실패로 임차를 쥔 채 둔 행의 실제 토큰이 어느 로그 줄에도 없다.
++func TestNoLineCarriesTheLeaseToken(t *testing.T) {
++	f := a124Setup(t, &a098RecordingPublisher{})
++	id := f.row(t, "a124-2.11-token")
++	f.led.failDeliver = 1
++	f.cycles(t, 1)
++	var token string
++	if err := a124Side(t, f).QueryRow(`SELECT claim_token FROM alert_outbox WHERE id = ?`, id).Scan(&token); err != nil || token == "" {
++		t.Fatalf("reading the held token: %q %v", token, err)
++	}
++	if strings.Contains(f.logs.String(), token) {
++		t.Fatal("a log line carries the lease token")
++	}
++	if strings.Contains(f.gate.Blocks()[execgw.ReasonAlertUndelivered], token) {
++		t.Fatal("the gate detail carries the lease token")
++	}
++}
++
++// a124Side 는 같은 원장 파일의 둘째 연결(읽기 전용 확인용).
++func a124Side(t *testing.T, f *a124Fixture) *sql.DB {
++	t.Helper()
++	db, err := sql.Open("sqlite", "file:"+f.path+"?_pragma=busy_timeout(10000)")
++	if err != nil {
++		t.Fatalf("side handle: %v", err)
++	}
++	t.Cleanup(func() { _ = db.Close() })
++	return db
++}
+diff --git a/internal/app/engine/a124_the_enforcement_boundary_internal_test.go b/internal/app/engine/a124_the_enforcement_boundary_internal_test.go
+new file mode 100755
+index 00000000..2c47911d
+--- /dev/null
++++ b/internal/app/engine/a124_the_enforcement_boundary_internal_test.go
+@@ -0,0 +1,215 @@
++package engine
++
++// a124 tasks 2.14 — 집행 경계 핀 (design D10, freeze 12·13회차 AC1 · AD1 · AD2).
++//
++// 이 change 가 쓰는 운영 모드 승격은 **원장 행**이다. 생산에서 그 행을 진입 게이트로 투영하는 투영기
++// (`Journal.SetModeProjector`)와 기동 복원(`Journal.RestoreOperatingModeProjection`)은 호출자가 0 이라,
++// 모드 행은 오늘 아무것도 막지 않는다. 이 파일은 그 사실을 **문서와 같게** 못 박는다 — 안전 주장이 아니라
++// 문서의 참/거짓 핀이다:
++//
++//	(a) 이 change 의 시험은 픽스처에서 투영기를 묶지 않는다 — 묶으면 생산에 없는 집행을 시험이 만든다
++//	(b) 두 함수의 비시험 호출자 = 0 — 배선(a092 축소판)이 착지하면 빨강이 되고, 그때 D10 · spec 경계 문장 ·
++//	    이 핀을 함께 고친다(정상 경로)
++//	(c) 생산 조립(buildGateway)의 게이트에서, 승인 뒤와 미전달 0 재시작 뒤 알림 · 모드 사유가 둘 다 없고
++//	    모드 행은 원장에 있다. 허용·강제 재잠금 두 변형은 알림 사유가 **있다**(행복 경로 핀을 보편 주장으로
++//	    읽지 않게). CheckEntryFor == nil 은 필수 조회에 정당한 관측을 준 통제된 경우에서만 단언한다.
++
++import (
++	"context"
++	"go/ast"
++	"go/parser"
++	"go/token"
++	"os"
++	"path/filepath"
++	"strings"
++	"testing"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
++)
++
++var a124ProjectionBinders = map[string]bool{"SetModeProjector": true, "RestoreOperatingModeProjection": true}
++
++// a124ProjectionCalls 는 파일들에서 두 함수를 **부르는** 자리를 센다(문자열 · 주석은 세지 않는다).
++func a124ProjectionCalls(t *testing.T, root string, keep func(path string) bool) []string {
++	t.Helper()
++	var sites []string
++	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
++		if err != nil {
++			return err
++		}
++		if d.IsDir() {
++			switch d.Name() {
++			case ".git", "vendor", "node_modules", "openspec", ".sdd":
++				return filepath.SkipDir
++			}
++			return nil
++		}
++		if !strings.HasSuffix(path, ".go") || !keep(path) {
++			return nil
++		}
++		fset := token.NewFileSet()
++		f, perr := parser.ParseFile(fset, path, nil, 0)
++		if perr != nil {
++			// 못 읽는 파일을 건너뛰면 그 안의 호출이 조용히 빠진다 — 멈춘다(Eng 리뷰 F6).
++			return perr
++		}
++		ast.Inspect(f, func(n ast.Node) bool {
++			call, ok := n.(*ast.CallExpr)
++			if !ok {
++				return true
++			}
++			if sel, ok := call.Fun.(*ast.SelectorExpr); ok && a124ProjectionBinders[sel.Sel.Name] {
++				sites = append(sites, fset.Position(call.Pos()).String())
++			}
++			return true
++		})
++		return nil
++	})
++	if err != nil {
++		t.Fatalf("walking %s: %v", root, err)
++	}
++	return sites
++}
++
++// (a)
++func TestA124FixturesNeverBindTheModeProjector(t *testing.T) {
++	root := filepath.Join("..", "..", "..")
++	sites := a124ProjectionCalls(t, root, func(p string) bool {
++		base := filepath.Base(p)
++		return strings.HasPrefix(base, "a124_") && strings.HasSuffix(base, "_test.go")
++	})
++	if len(sites) != 0 {
++		t.Fatalf("an a124 test binds or restores the mode projector %v — it would test enforcement production does not have", sites)
++	}
++}
++
++// (b)
++func TestTheModeProjectorHasNoProductionCaller(t *testing.T) {
++	root := filepath.Join("..", "..", "..")
++	// 양성 대조: 같은 걸음이 시험 파일의 호출자는 찾아야 한다 — 못 찾으면 계측기가 눈먼 것이다.
++	if tests := a124ProjectionCalls(t, root, func(p string) bool { return strings.HasSuffix(p, "_test.go") }); len(tests) == 0 {
++		t.Fatal("the walk found no test caller either — it is not looking at the tree")
++	}
++	sites := a124ProjectionCalls(t, root, func(p string) bool { return !strings.HasSuffix(p, "_test.go") })
++	if len(sites) != 0 {
++		t.Fatalf("the mode projector is now wired in production %v — the a124 boundary (design D10, spec) "+
++			"says the ledger mode row enforces nothing; revisit D10, the spec boundary sentence and this pin together", sites)
++	}
++}
++
++// a124ProductionFixture 는 생산 조립의 게이트 위에 실행자를 세운다.
++func a124ProductionFixture(t *testing.T) (*journal.Journal, engineWiring, *alertDeliverer, *a124Ledger) {
++	t.Helper()
++	ctx := context.Background()
++	j := openTestJournal(t)
++	if err := bindApplyHooks(j); err != nil {
++		t.Fatalf("bindApplyHooks: %v", err)
++	}
++	wiring := a098BuildGateway(t, ctx, j)
++	led := &a124Ledger{Journal: j}
++	d := &alertDeliverer{
++		Journal: j, Publisher: a124Failing(), Clock: clock.System(), Claimant: "a124-boundary",
++		Gate: wiring.entry, AccountRef: "123-45", ledger: led,
++	}
++	if _, err := j.EnqueueAlert(ctx, journal.Alert{EventKey: "a124-boundary", Type: "x", Severity: "critical", Title: "t"}); err != nil {
++		t.Fatalf("EnqueueAlert: %v", err)
++	}
++	return j, wiring, d, led
++}
++
++func a124Reasons(gate *execgw.EntryGate) (alert, mode bool) {
++	blocks := gate.Blocks()
++	_, alert = blocks[execgw.ReasonAlertUndelivered]
++	_, mode = blocks[execgw.ReasonOperatingModeBlocked]
++	return alert, mode
++}
++
++func a124ModeRow(t *testing.T, j *journal.Journal) string {
++	t.Helper()
++	snap, err := j.CurrentOperatingMode(context.Background(), "123-45")
++	if err != nil {
++		t.Fatalf("CurrentOperatingMode: %v", err)
++	}
++	return snap.Mode
++}
++
++// a124ObserveEverything 는 생산 임계값을 그대로 둔 채 필수 조회에 정당한 관측을 준다.
++func a124ObserveEverything(gate *execgw.EntryGate) {
++	for kind := range execgw.DefaultStaleness() {
++		gate.RecordSuccess(kind)
++	}
++}
++
++// (c) 승인 뒤 · 미전달 0 재시작 뒤.
++func TestTheLedgerModeRowAddsNoEntryEnforcementBeforeProjectionIsWired(t *testing.T) {
++	ctx := context.Background()
++	j, wiring, d, _ := a124ProductionFixture(t)
++	for i := 0; i < alertAttemptLimit; i++ {
++		_ = d.cycle(ctx)
++	}
++	if alert, _ := a124Reasons(wiring.entry); !alert || a124ModeRow(t, j) != journal.ModeEntryBlocked {
++		t.Fatalf("arrangement: the executor did not latch and escalate (alert=%v mode=%s)", alert, a124ModeRow(t, j))
++	}
++
++	if err := (&obs.Notifier{Journal: j, Gate: wiring.entry}).Acknowledge(ctx, "operator"); err != nil {
++		t.Fatalf("Acknowledge: %v", err)
++	}
++	// ① 사유 단언
++	if alert, mode := a124Reasons(wiring.entry); alert || mode {
++		t.Fatalf("after acknowledgement: alert reason=%v mode reason=%v — the boundary changed; revisit design D10", alert, mode)
++	}
++	// ② 원장 행
++	if got := a124ModeRow(t, j); got != journal.ModeEntryBlocked {
++		t.Fatalf("mode row = %s, want %s kept in the ledger", got, journal.ModeEntryBlocked)
++	}
++	// ③ 통제된 허용 경우: 정당한 관측을 준 뒤에만 CheckEntryFor 를 읽는다. nil 이 아니면 그 사유를 댄다.
++	a124ObserveEverything(wiring.entry)
++	if rejected := wiring.entry.CheckEntryFor("KR", "005930"); rejected != nil {
++		t.Fatalf("with every required query observed, entry is refused for %s (%s) — "+
++			"the ledger mode row is not supposed to enforce anything today", rejected.Reason, rejected.Detail)
++	}
++
++	// 미전달 0 재시작
++	restarted := a098BuildGateway(t, ctx, j)
++	if alert, mode := a124Reasons(restarted.entry); alert || mode {
++		t.Fatalf("after a restart with nothing pending: alert reason=%v mode reason=%v", alert, mode)
++	}
++	if got := a124ModeRow(t, j); got != journal.ModeEntryBlocked {
++		t.Fatalf("mode row after restart = %s", got)
++	}
++}
++
++// (c) 허용 재잠금: 「정산 → 해제 → 세대 읽기 → 적용」 = 알림 사유 있음.
++func TestThePermittedRelatchHoldsOnTheProductionGate(t *testing.T) {
++	ctx := context.Background()
++	_, wiring, d, _ := a124ProductionFixture(t)
++	for i := 0; i < alertAttemptLimit-1; i++ {
++		_ = d.cycle(ctx)
++	}
++	a124AtStage(d, alertStageSettled, func() { wiring.entry.Clear(execgw.ReasonAlertUndelivered) })
++	_ = d.cycle(ctx)
++	if alert, _ := a124Reasons(wiring.entry); !alert {
++		t.Fatal("the permitted conservative relatch did not hold on the production gate")
++	}
++}
++
++// (c) 강제 재잠금: 「차단 → 해제 → 승격 쓰기 실패」 = 알림 사유 있음. 실패한 쓰기는 모드 행을 만들지 않는다.
++func TestTheMandatedRelatchHoldsOnTheProductionGate(t *testing.T) {
++	ctx := context.Background()
++	j, wiring, d, led := a124ProductionFixture(t)
++	led.failEscalate = true
++	for i := 0; i < alertAttemptLimit-1; i++ {
++		_ = d.cycle(ctx)
++	}
++	a124AtStage(d, alertStageLatched, func() { wiring.entry.Clear(execgw.ReasonAlertUndelivered) })
++	_ = d.cycle(ctx)
++	if alert, _ := a124Reasons(wiring.entry); !alert {
++		t.Fatal("a failed escalation after a clear left no latch on the production gate")
++	}
++	if got := a124ModeRow(t, j); got != journal.ModeNormal {
++		t.Fatalf("mode row = %s after a failed escalation write", got)
++	}
++}
+diff --git a/internal/app/engine/a124_the_executor_holds_no_stop_lock_internal_test.go b/internal/app/engine/a124_the_executor_holds_no_stop_lock_internal_test.go
+new file mode 100755
+index 00000000..7e4d22d0
+--- /dev/null
++++ b/internal/app/engine/a124_the_executor_holds_no_stop_lock_internal_test.go
+@@ -0,0 +1,37 @@
++package engine
++
++// a124 tasks 2.6 (a) — 격리 단언(구조). 배달 실행자는 Notifier 를 들고 있지 않고 부르지도 않는다 —
++// 그래서 손절 경로(exit 루프 · 비상 청산의 Notify)가 기다리는 n.mu 를 잡을 길이 없다(design D5 · D7, Q1).
++// 행동 쪽 단언은 태그 파일 `a124_the_executor_holds_no_stop_lock_testseams_test.go`.
++
++import (
++	"go/ast"
++	"go/parser"
++	"go/token"
++	"testing"
++)
++
++func TestTheExecutorCarriesNoNotifier(t *testing.T) {
++	fset := token.NewFileSet()
++	file, err := parser.ParseFile(fset, "alertdelivery.go", nil, 0)
++	if err != nil {
++		t.Fatalf("parse alertdelivery.go: %v", err)
++	}
++	var seen []string
++	ast.Inspect(file, func(n ast.Node) bool {
++		switch x := n.(type) {
++		case *ast.SelectorExpr:
++			if x.Sel.Name == "Notifier" {
++				seen = append(seen, fset.Position(x.Pos()).String())
++			}
++		case *ast.Ident:
++			if x.Name == "Notifier" {
++				seen = append(seen, fset.Position(x.Pos()).String())
++			}
++		}
++		return true
++	})
++	if len(seen) != 0 {
++		t.Fatalf("alertdelivery.go names the Notifier at %v — the executor must not reach the mutex the stop path waits on", seen)
++	}
++}
+diff --git a/internal/app/engine/a124_the_executor_holds_no_stop_lock_testseams_test.go b/internal/app/engine/a124_the_executor_holds_no_stop_lock_testseams_test.go
+new file mode 100755
+index 00000000..77bc5f4b
+--- /dev/null
++++ b/internal/app/engine/a124_the_executor_holds_no_stop_lock_testseams_test.go
+@@ -0,0 +1,108 @@
++//go:build tossos_testseams
++
++package engine
++
++// a124 tasks 2.6 (a) — 격리 단언(행동). 배달 실행자가 게이트 잠금(g.mu)을 기다리는 동안 — 전략 진입
++// dispatch 가 브로커 전송 동안 그 잠금을 쥔 모양 — 손절 쪽의 동기 Notify 는 실행자를 기다리지 않는다.
++// 실행자는 Notifier 의 뮤텍스(n.mu)를 잡지 않기 때문이다(design D7, freeze Q1). 구조 쪽 단언은 태그 없는
++// `a124_the_executor_holds_no_stop_lock_internal_test.go` 에 있다.
++
++import (
++	"context"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
++)
++
++func TestAStopNotifyDoesNotWaitWhileTheExecutorWaitsForTheGate(t *testing.T) {
++	f := a124Setup(t, a124Failing())
++	f.row(t, "a124-2.6a")
++	f.cycles(t, alertAttemptLimit-1)
++
++	waiting := make(chan struct{})
++	a124AtStage(f.d, alertStageSettled, func() { close(waiting) })
++
++	release := execgw.HoldEntryGateLockForTest(f.gate) // 전략 dispatch 가 전송 동안 g.mu 를 쥔다
++	defer release()
++	executorDone := make(chan struct{})
++	go func() { defer close(executorDone); _ = f.d.cycle(context.Background()) }()
++	select {
++	case <-waiting:
++	case <-time.After(10 * time.Second):
++		t.Fatal("the executor never reached its judgement")
++	}
++	// 실행자는 이제 세대 읽기에서 g.mu 를 기다린다(판정 직전).
++
++	// 손절 쪽의 동기 알림 — 같은 원장 · 같은 게이트를 쓰는 Notifier, 즉답하는 전송 수단.
++	stop := &obs.Notifier{Publisher: &a098RecordingPublisher{}, Journal: f.j, Gate: f.gate,
++		AccountRef: a124Account, Clock: f.clk, Attempts: 1}
++	notified := make(chan error, 1)
++	start := time.Now()
++	go func() {
++		notified <- stop.Notify(context.Background(), obs.Event{
++			Type: obs.EventExitProposalRefused, Key: "a124-2.6a-stop",
++			Title: "청산 주문이 제출되지 않았다", Body: "손절이 나가지 않았다",
++		})
++	}()
++	select {
++	case err := <-notified:
++		if err != nil {
++			t.Fatalf("stop Notify: %v", err)
++		}
++	case <-time.After(5 * time.Second):
++		t.Fatal("the stop alert waited on the executor, which is itself waiting on the gate lock")
++	}
++	t.Logf("stop Notify returned in %v while the executor waited on the gate lock", time.Since(start))
++	select {
++	case <-executorDone:
++		t.Fatal("the executor finished while the gate lock was held — it was not waiting where this test says")
++	default:
++	}
++	release()
++	select {
++	case <-executorDone:
++	case <-time.After(10 * time.Second):
++		t.Fatal("the executor did not finish after the gate lock was released")
++	}
++	if !f.latched() {
++		t.Fatal("the delayed judgement did not latch after the lock came back")
++	}
++}
++
++// R6 · Y5 (2.12): 전달 정산 오류 경로는 임차를 쥔 채 세대를 읽는다. 그 읽기가 게이트 잠금을 기다리는 동안
++// 임차가 만료되면 다른 발송자가 가져가 다시 보낼 수 있다 — 허용되고 기록된 성질이다(재발행 억제는 임차가 살아
++// 있고 교체되지 않은 동안뿐). 판정은 잠금이 돌아온 뒤 그대로 선다.
++func TestALeaseCanLapseWhileTheJudgementWaitsForTheGate(t *testing.T) {
++	f := a124Setup(t, &a098RecordingPublisher{})
++	id := f.row(t, "a124-2.12-lapse")
++	f.led.failDeliver = 1
++	waiting := make(chan struct{})
++	a124AtStage(f.d, alertStageSettled, func() { close(waiting) })
++
++	release := execgw.HoldEntryGateLockForTest(f.gate)
++	defer release()
++	done := make(chan struct{})
++	go func() { defer close(done); _ = f.d.cycle(context.Background()) }()
++	select {
++	case <-waiting:
++	case <-time.After(10 * time.Second):
++		t.Fatal("the executor never reached its judgement")
++	}
++	f.clk.Advance(journal.DefaultAlertLease + time.Second)
++	claim, err := f.j.ClaimAlertByID(context.Background(), id, "a124-other-sender")
++	if err != nil || claim.Disposition != journal.ClaimAcquired || !claim.Stole {
++		t.Fatalf("after the lease lapsed another sender could not take the row: %+v %v", claim, err)
++	}
++	release()
++	select {
++	case <-done:
++	case <-time.After(10 * time.Second):
++		t.Fatal("the executor did not finish")
++	}
++	if !f.latched() {
++		t.Fatal("the delayed judgement did not latch")
++	}
++}
+diff --git a/internal/app/engine/a124_the_production_executor_latches_test.go b/internal/app/engine/a124_the_production_executor_latches_test.go
+new file mode 100755
+index 00000000..84c91304
+--- /dev/null
++++ b/internal/app/engine/a124_the_production_executor_latches_test.go
+@@ -0,0 +1,84 @@
++package engine_test
++
++// a124 tasks 2.1 — 생산 생성자(`Context.AlertDeliverer`)로 세운 실행자가, 동기 알림 경로가 한 번도
++// 시도하지 않는 구성에서 재시도 한도에 이르면 진입을 막고 운영 모드를 승격한다.
++//
++// 이 파일은 HEAD 의 공개 표면만 쓴다 — 그래서 HEAD 에서 컴파일되고 **행동으로** 빨갛다(a098 의 실행자는
++// 게이트도 모드도 부르지 않는다). 내부 판정 순서는 `a124_the_deliverer_judges_internal_test.go` 가 잰다.
++
++import (
++	"context"
++	"errors"
++	"path/filepath"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
++)
++
++type a124DeadTransport struct{}
++
++func (a124DeadTransport) Publish(context.Context, obs.Notification) error {
++	return errors.New("transport is down")
++}
++
++func TestTheProductionExecutorLatchesWithoutTheSynchronousPath(t *testing.T) {
++	for _, tc := range []struct {
++		name string
++		pub  obs.Publisher
++	}{{"transport fails", a124DeadTransport{}}, {"no publisher", nil}} {
++		t.Run(tc.name, func(t *testing.T) {
++			ctx := context.Background()
++			clk := clock.NewFake(time.Date(2026, 9, 27, 0, 0, 0, 0, time.UTC))
++			j, err := journal.Open(ctx, journal.Options{
++				Path:     filepath.Join(t.TempDir(), journal.DBFileName),
++				Clock:    clk,
++				FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
++			})
++			if err != nil {
++				t.Fatalf("journal.Open: %v", err)
++			}
++			t.Cleanup(func() { _ = j.Close() })
++			gate := execgw.NewEntryGate(clk, map[execgw.RequiredQuery]time.Duration{})
++			// Notifier 는 전송 수단의 출처일 뿐 — 이 시험에서 Notify 는 한 번도 불리지 않는다.
++			n := &obs.Notifier{Publisher: tc.pub, Journal: j, Gate: gate, AccountRef: exitAccount, Clock: clk}
++			if _, err := j.EnqueueAlert(ctx, journal.Alert{
++				EventKey: "a124-production", Type: "execgw.order_unresolved", Severity: "critical", Title: "t",
++			}); err != nil {
++				t.Fatalf("EnqueueAlert: %v", err)
++			}
++			aux, err := (&engine.Context{Journal: j, Entry: gate, Notifier: n, AccountRef: exitAccount}).AlertDeliverer(clk)
++			if err != nil {
++				t.Fatalf("AlertDeliverer: %v", err)
++			}
++			runCtx, cancel := context.WithCancel(ctx)
++			done := make(chan struct{})
++			go func() { defer close(done); _ = aux.Run(runCtx) }()
++			t.Cleanup(func() { cancel(); <-done })
++
++			const limit = obs.DefaultCriticalAttempts
++			for cycle := 0; cycle < limit; cycle++ {
++				if !clk.WaitForSleepers(1, 10*time.Second) {
++					t.Fatalf("cycle %d: the executor never slept", cycle)
++				}
++				if cycle < limit-1 {
++					clk.Advance(2 * time.Second)
++				}
++			}
++			if _, latched := gate.Blocks()[execgw.ReasonAlertUndelivered]; !latched {
++				t.Fatalf("after %d failed cycles the gate is open — the executor does not own sustained failure", limit)
++			}
++			snap, err := j.CurrentOperatingMode(ctx, exitAccount)
++			if err != nil {
++				t.Fatalf("CurrentOperatingMode: %v", err)
++			}
++			if snap.Mode != journal.ModeEntryBlocked {
++				t.Fatalf("mode = %s, want %s", snap.Mode, journal.ModeEntryBlocked)
++			}
++		})
++	}
++}
+diff --git a/internal/execgw/a124_clear_epoch_internal_test.go b/internal/execgw/a124_clear_epoch_internal_test.go
+new file mode 100755
+index 00000000..266471e4
+--- /dev/null
++++ b/internal/execgw/a124_clear_epoch_internal_test.go
+@@ -0,0 +1,273 @@
++package execgw
++
++// a124 tasks 2.13 — 진입 게이트의 사유별 **해제 세대** 계약 (design D7, M1 = B′).
++//
++// 배달 실행자는 판정 근거를 얻은 뒤 잠금 없이 여러 일을 하고 나서 차단을 적용한다. 그 사이
++// 운영자의 해제가 끼면, 해제가 근거 **뒤**였는지를 실행자가 알아야 원칙 E(늦은 적용 = 제때
++// 적용)를 지킬 수 있다. 그 순서의 증거가 이 세대다. 그래서 계약이 셋이다:
++//
++//   - 해제 **요청**마다 정확히 +1 (래치가 있었는지와 무관 — 반례 ㉣, Manager 승인)
++//   - 그 사유의 해제 요청 없이는 **불변** (다른 사유의 해제 · 잠금 · 종목 단위 · 모드 투영 · 대사 재구성)
++//   - 조건부 잠금은 세대 비교와 삽입을 **한 잠금 안에서** 한다
++//
++// 기존 `revision`(전략 진입 봉인)의 의미는 그대로다 — 실제로 상태가 바뀐 때만 오른다.
++
++import (
++	"go/ast"
++	"go/parser"
++	"go/token"
++	"os"
++	"path/filepath"
++	"strings"
++	"sync"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++)
++
++func a124Gate() *EntryGate {
++	return NewEntryGate(nil, map[RequiredQuery]time.Duration{})
++}
++
++func TestEveryClearRequestAdvancesTheReasonsEpoch(t *testing.T) {
++	g := a124Gate()
++	if got := g.ClearEpoch(ReasonAlertUndelivered); got != 0 {
++		t.Fatalf("fresh epoch = %d, want 0", got)
++	}
++	rev := g.revision
++
++	// 래치가 없는 게이트에 해제 요청 — 세대는 오르고 revision 은 그대로(실제 변화 없음).
++	g.Clear(ReasonAlertUndelivered)
++	if got := g.ClearEpoch(ReasonAlertUndelivered); got != 1 {
++		t.Fatalf("epoch after a clear with no latch = %d, want 1 (a request is the operator's mark, ㉣)", got)
++	}
++	if g.revision != rev {
++		t.Fatalf("revision moved on a clear that removed nothing: %d → %d", rev, g.revision)
++	}
++
++	// 래치가 있는 해제 — 세대 +1, revision +1(기존 의미).
++	g.Block(ReasonAlertUndelivered, "x")
++	rev = g.revision
++	g.Clear(ReasonAlertUndelivered)
++	if got := g.ClearEpoch(ReasonAlertUndelivered); got != 2 {
++		t.Fatalf("epoch = %d, want 2", got)
++	}
++	if g.revision != rev+1 {
++		t.Fatalf("revision after a real clear = %d, want %d", g.revision, rev+1)
++	}
++}
++
++func TestNothingButThatReasonsClearMovesItsEpoch(t *testing.T) {
++	g := a124Gate()
++	g.Clear(ReasonAlertUndelivered)
++	before := g.ClearEpoch(ReasonAlertUndelivered)
++
++	g.Block(ReasonAlertUndelivered, "latched")
++	g.Block(ReasonBrokerAuthRejected, "auth")
++	g.Clear(ReasonBrokerAuthRejected)
++	g.Clear(ReasonAlertSenderDown)
++	g.BlockSymbol("KR", "005930", ReasonAlertUndelivered, "symbol")
++	g.ClearSymbol("KR", "005930", ReasonAlertUndelivered)
++	g.ClearSymbolReason(ReasonAlertUndelivered)
++	g.ProjectOperatingMode(journal.OperatingModeRecord{Mode: journal.ModeEntryBlocked})
++	g.ProjectOperatingMode(journal.OperatingModeRecord{Mode: journal.ModeNormal})
++	g.RebuildReconcileProjection(nil)
++	g.RecordSuccess(QueryPrice)
++	_ = g.BlockUnlessClearedSince(ReasonAlertUndelivered, before, "conditional")
++
++	if got := g.ClearEpoch(ReasonAlertUndelivered); got != before {
++		t.Fatalf("epoch moved without a clear request of its reason: %d → %d", before, got)
++	}
++}
++
++func TestAConditionalBlockAfterAClearChangesNothing(t *testing.T) {
++	g := a124Gate()
++	epoch := g.ClearEpoch(ReasonAlertUndelivered)
++	g.Clear(ReasonAlertUndelivered)
++	rev := g.revision
++	if g.BlockUnlessClearedSince(ReasonAlertUndelivered, epoch, "late") {
++		t.Fatal("a conditional block on a stale epoch reported that it latched")
++	}
++	if _, latched := g.Blocks()[ReasonAlertUndelivered]; latched || g.revision != rev {
++		t.Fatalf("a stale conditional block changed the gate: latched=%v revision %d→%d", latched, rev, g.revision)
++	}
++}
++
++func TestAConditionalBlockOnTheCurrentEpochFollowsTheBlockRule(t *testing.T) {
++	g := a124Gate()
++	epoch := g.ClearEpoch(ReasonAlertUndelivered)
++	rev := g.revision
++	if !g.BlockUnlessClearedSince(ReasonAlertUndelivered, epoch, "first") {
++		t.Fatal("a conditional block on the current epoch did not report success")
++	}
++	if g.Blocks()[ReasonAlertUndelivered] != "first" || g.revision != rev+1 {
++		t.Fatalf("block rule not followed: detail=%q revision %d→%d", g.Blocks()[ReasonAlertUndelivered], rev, g.revision)
++	}
++	// 이미 있으면 삽입하지 않는다 — 처음 설명 유지, revision 불변(F9).
++	if !g.BlockUnlessClearedSince(ReasonAlertUndelivered, epoch, "second") {
++		t.Fatal("a repeated conditional block on the current epoch did not report success")
++	}
++	if g.Blocks()[ReasonAlertUndelivered] != "first" || g.revision != rev+1 {
++		t.Fatalf("a repeated block rewrote the gate: detail=%q revision=%d", g.Blocks()[ReasonAlertUndelivered], g.revision)
++	}
++}
++
++// TestTheEpochComparisonAndTheLatchAreOneStep — `-race` 아래 해제와 조건부 잠금이 겹친다.
++// 불변식: 조건부 잠금이 true 를 돌려준 뒤 **그 세대로는** 해제가 없었다 → 래치가 서 있거나,
++// 그 뒤 해제가 있었다면 세대가 올라 있다. 「비교는 통과했는데 삽입 전에 해제가 끼어
++// 해제 뒤에 래치가 남았는데 세대는 그대로」 는 나올 수 없다.
++func TestTheEpochComparisonAndTheLatchAreOneStep(t *testing.T) {
++	g := a124Gate()
++	var wg sync.WaitGroup
++	stop := make(chan struct{})
++	wg.Add(1)
++	go func() {
++		defer wg.Done()
++		for {
++			select {
++			case <-stop:
++				return
++			default:
++				g.Clear(ReasonAlertUndelivered)
++			}
++		}
++	}()
++	for i := 0; i < 2000; i++ {
++		e := g.ClearEpoch(ReasonAlertUndelivered)
++		if g.BlockUnlessClearedSince(ReasonAlertUndelivered, e, "race") {
++			g.mu.Lock()
++			_, latched := g.latches[ReasonAlertUndelivered]
++			now := g.clearEpochs[ReasonAlertUndelivered]
++			g.mu.Unlock()
++			if !latched && now == e {
++				t.Fatalf("a successful conditional block left no latch and no newer clear (epoch %d)", e)
++			}
++			// 이 goroutine 만 삽입한다. 그러니 「래치가 있는데 세대가 e 보다 크다」는 삽입이 그 해제 **뒤**에
++			// 일어났다는 뜻 — 비교와 삽입이 한 잠금이 아닐 때만 나오는 모양이다(codex 구현 1회차 I4).
++			if latched && now != e {
++				t.Fatalf("a latch survived a clear that came after the epoch comparison (compared %d, now %d)", e, now)
++			}
++		}
++	}
++	close(stop)
++	wg.Wait()
++}
++
++// TestOnlyTheAcknowledgementClearsTheUndeliveredReason — 구조 핀. 해제 세대의 의미(「해제 요청은
++// 사람 승인의 표식」)는 이 사유를 푸는 비시험 호출자가 `Notifier.Acknowledge` 의 두 자리뿐이라는
++// 사실에 선다(design D7, evidence R8). 새 호출자가 생기면 빨강 — 그 편집은 세대 의미를 다시 증명해야 한다.
++func TestOnlyTheAcknowledgementClearsTheUndeliveredReason(t *testing.T) {
++	root := filepath.Join("..", "..")
++	type site struct{ file, fn string }
++	var found []site
++	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
++		if err != nil {
++			return err
++		}
++		if d.IsDir() {
++			name := d.Name()
++			if name == ".git" || name == "vendor" || name == "node_modules" || name == "openspec" || name == ".sdd" {
++				return filepath.SkipDir
++			}
++			return nil
++		}
++		if !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
++			return nil
++		}
++		fset := token.NewFileSet()
++		file, perr := parser.ParseFile(fset, path, nil, 0)
++		if perr != nil {
++			return perr // 못 읽는 파일을 건너뛰면 그 안의 호출이 조용히 빠진다(Eng 리뷰 F6)
++		}
++		for _, decl := range file.Decls {
++			fn, ok := decl.(*ast.FuncDecl)
++			if !ok || fn.Body == nil {
++				continue
++			}
++			ast.Inspect(fn.Body, func(n ast.Node) bool {
++				call, ok := n.(*ast.CallExpr)
++				if !ok || len(call.Args) != 1 {
++					return true
++				}
++				sel, ok := call.Fun.(*ast.SelectorExpr)
++				if !ok || sel.Sel.Name != "Clear" {
++					return true
++				}
++				arg := call.Args[0]
++				name := ""
++				switch a := arg.(type) {
++				case *ast.SelectorExpr:
++					name = a.Sel.Name
++				case *ast.Ident:
++					name = a.Name
++				}
++				if name == "ReasonAlertUndelivered" {
++					recv := ""
++					if fn.Recv != nil && len(fn.Recv.List) == 1 {
++						switch rt := fn.Recv.List[0].Type.(type) {
++						case *ast.StarExpr:
++							if id, ok := rt.X.(*ast.Ident); ok {
++								recv = id.Name + "."
++							}
++						case *ast.Ident:
++							recv = rt.Name + "."
++						}
++					}
++					found = append(found, site{filepath.ToSlash(path), recv + fn.Name.Name})
++				}
++				return true
++			})
++		}
++		return nil
++	})
++	if err != nil {
++		t.Fatalf("walking the tree: %v", err)
++	}
++	if len(found) != 2 {
++		t.Fatalf("non-test Clear(ReasonAlertUndelivered) sites = %v, want exactly the two in Notifier.Acknowledge", found)
++	}
++	for _, s := range found {
++		if s.fn != "Notifier.Acknowledge" || !strings.HasSuffix(s.file, "internal/obs/notifier.go") {
++			t.Fatalf("Clear(ReasonAlertUndelivered) called from %s in %s — a new caller must re-prove the clear epoch's meaning", s.fn, s.file)
++		}
++	}
++}
++
++// 게이트 잠금 안에서는 map 연산만 한다 — 해제 세대 두 메서드가 잠금 말고 아무것도 부르지 않음을 구조로 못 박는다.
++// 이것이 「배달 실행자가 잡는 잠금은 게이트 잠금뿐이고 그 안에서 밖을 부르지 않는다」(spec, design D7)의 받침이다:
++// 실행자 쪽 코드는 g.mu 아래에서 무엇을 돌릴 API 가 없고(B′), 이 두 메서드가 그 안을 채운다.
++func TestTheEpochMethodsCallNothingUnderTheLock(t *testing.T) {
++	fset := token.NewFileSet()
++	file, err := parser.ParseFile(fset, "retry.go", nil, 0)
++	if err != nil {
++		t.Fatalf("parse retry.go: %v", err)
++	}
++	want := map[string]bool{"ClearEpoch": false, "BlockUnlessClearedSince": false}
++	for _, decl := range file.Decls {
++		fn, ok := decl.(*ast.FuncDecl)
++		if !ok || fn.Recv == nil {
++			continue
++		}
++		if _, tracked := want[fn.Name.Name]; !tracked {
++			continue
++		}
++		want[fn.Name.Name] = true
++		ast.Inspect(fn.Body, func(n ast.Node) bool {
++			call, ok := n.(*ast.CallExpr)
++			if !ok {
++				return true
++			}
++			if sel, ok := call.Fun.(*ast.SelectorExpr); ok && (sel.Sel.Name == "Lock" || sel.Sel.Name == "Unlock") {
++				return true
++			}
++			t.Errorf("%s calls %s under the gate lock — only map operations may run there", fn.Name.Name, fset.Position(call.Pos()))
++			return true
++		})
++	}
++	for name, seen := range want {
++		if !seen {
++			t.Fatalf("%s not found in retry.go — the pin is looking at the wrong file", name)
++		}
++	}
++}
+diff --git a/internal/execgw/a124_entry_gate_testseam.go b/internal/execgw/a124_entry_gate_testseam.go
+new file mode 100755
+index 00000000..7ffc5616
+--- /dev/null
++++ b/internal/execgw/a124_entry_gate_testseam.go
+@@ -0,0 +1,18 @@
++//go:build tossos_testseams
++
++package execgw
++
++// HoldEntryGateLockForTest 는 전략 진입 dispatch 가 브로커 전송 동안 게이트 잠금(g.mu)을 쥐는 모양을
++// 흉내 냄 (`strategy_entry_gate_authority.go` 의 withStrategyEntryGateAuthority). a124 tasks 2.6 (a) 가
++// 「배달 실행자가 g.mu 를 기다리는 동안에도 손절 쪽 Notify 는 실행자를 기다리지 않는다」를 재는 데 씀.
++// 돌려준 release 를 한 번 부르면 잠금을 놓음.
++func HoldEntryGateLockForTest(g *EntryGate) (release func()) {
++	g.mu.Lock()
++	done := false
++	return func() {
++		if !done {
++			done = true
++			g.mu.Unlock()
++		}
++	}
++}
+diff --git a/internal/journal/a124_settle_reads_the_committed_attempts_test.go b/internal/journal/a124_settle_reads_the_committed_attempts_test.go
+new file mode 100755
+index 00000000..3642896d
+--- /dev/null
++++ b/internal/journal/a124_settle_reads_the_committed_attempts_test.go
+@@ -0,0 +1,374 @@
++package journal
++
++// a124 tasks 2.7 · 2.4/2.5(원장 절반) — 판정 입력은 **정산 트랜잭션이 커밋한** attempts 다.
++//
++// 배달 실행자가 「이 행이 재시도 한도에 이르렀다」를 판정할 때 쓸 수 있는 값은 둘이었다.
++// 나열 시점의 `Alert.Attempts` 와 정산이 방금 쓴 값. 앞의 것은 낡는다 — 배치 뒤쪽 행은
++// 나열 뒤 한참 뒤에 임차되고, 그 사이 다른 발송자가 올리거나 재무장이 0 으로 되돌린다
++// (design D1, freeze F1). 그래서 판정은 CAS(id · PENDING · 토큰) 아래 **같은 트랜잭션**에서
++// 읽은 값에 서야 하고, HEAD 의 `SettleResult` 에는 그 값을 담을 칸이 없다(`alert_claim.go:140-145`).
++//
++// 가산 읽기의 원자성(Z4): 읽기나 커밋이 실패하면 정산은 없던 일이어야 하고, 돌아온 결과는
++// 판정에 쓸 수 없어야 한다(영값 `SettleResult{}` 의 Outcome 은 `SettleApplied` 다 — F10,
++// 그래서 호출자는 err 를 먼저 본다; 여기서는 원장이 err 를 돌려주는지와 저장 상태가 그대로인지를 잰다).
++
++import (
++	"context"
++	"database/sql"
++	"errors"
++	"go/ast"
++	"go/parser"
++	"go/token"
++	"os"
++	"strings"
++	"testing"
++	"time"
++)
++
++func a124Row(t *testing.T, j *Journal, key string) int64 {
++	t.Helper()
++	id, err := j.EnqueueAlert(context.Background(), Alert{EventKey: key, Type: "order.in_doubt", Severity: "critical"})
++	if err != nil {
++		t.Fatalf("EnqueueAlert: %v", err)
++	}
++	return id
++}
++
++func a124Claim(t *testing.T, j *Journal, id int64) string {
++	t.Helper()
++	claim, err := j.ClaimAlertByID(context.Background(), id, testClaimant)
++	if err != nil {
++		t.Fatalf("ClaimAlertByID(%d): %v", id, err)
++	}
++	if claim.Disposition != ClaimAcquired {
++		t.Fatalf("claim disposition = %v, want acquired", claim.Disposition)
++	}
++	return claim.Token
++}
++
++func a124Stored(t *testing.T, j *Journal, id int64) Alert {
++	t.Helper()
++	row, err := j.LookupAlert(context.Background(), id)
++	if err != nil {
++		t.Fatalf("LookupAlert(%d): %v", id, err)
++	}
++	return row
++}
++
++// TestAFailedAttemptReturnsTheAttemptsItCommitted — 한 임차 아래 세 번의 실패 기록이
++// 1 · 2 · 3 을 돌려준다.
++func TestAFailedAttemptReturnsTheAttemptsItCommitted(t *testing.T) {
++	j, clk := outboxJournal(t)
++	ctx := context.Background()
++	id := a124Row(t, j, "a124-committed")
++	token := a124Claim(t, j, id)
++	for want := 1; want <= 3; want++ {
++		clk.Advance(time.Second)
++		res, err := j.MarkAlertAttemptFailed(ctx, id, token, "transport is down")
++		if err != nil {
++			t.Fatalf("MarkAlertAttemptFailed #%d: %v", want, err)
++		}
++		if res.Outcome != SettleApplied || res.Attempts != want {
++			t.Fatalf("attempt #%d: outcome=%v attempts=%d, want applied %d", want, res.Outcome, res.Attempts, want)
++		}
++	}
++}
++
++// TestTheJudgementIgnoresAListingThatWentStale — 나열은 0 이라고 말했지만 그 사이 다른
++// 발송자가 두 번 실패를 기록했다. 정산이 돌려주는 값은 커밋된 3 이다(나열 값 + 1 = 1 이 아니다).
++func TestTheJudgementIgnoresAListingThatWentStale(t *testing.T) {
++	j, _ := outboxJournal(t)
++	ctx := context.Background()
++	id := a124Row(t, j, "a124-stale-listing")
++
++	listed, err := j.PendingAlerts(ctx, 10)
++	if err != nil || len(listed) != 1 || listed[0].Attempts != 0 {
++		t.Fatalf("arrangement: listed=%+v err=%v", listed, err)
++	}
++
++	other := a124Claim(t, j, id)
++	for i := 0; i < 2; i++ {
++		if _, err := j.MarkAlertAttemptFailed(ctx, id, other, "other sender"); err != nil {
++			t.Fatalf("other sender's attempt: %v", err)
++		}
++	}
++	if res, err := j.ReleaseAlertClaim(ctx, id, other); err != nil || res.Outcome != SettleApplied {
++		t.Fatalf("other sender's release: %+v %v", res, err)
++	}
++
++	mine := a124Claim(t, j, id)
++	res, err := j.MarkAlertAttemptFailed(ctx, id, mine, "mine")
++	if err != nil {
++		t.Fatalf("MarkAlertAttemptFailed: %v", err)
++	}
++	if res.Attempts != 3 {
++		t.Fatalf("attempts = %d, want the committed 3 (the stale listing said %d)", res.Attempts, listed[0].Attempts)
++	}
++}
++
++// TestARearmedRowCountsFromZero — 재무장은 새 에피소드다. attempts 는 0 부터 다시 센다.
++func TestARearmedRowCountsFromZero(t *testing.T) {
++	j, clk := outboxJournal(t)
++	ctx := context.Background()
++	alert := Alert{EventKey: "a124-rearm", Type: "order.in_doubt", Severity: "critical"}
++	claim, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind, testClaimant)
++	if err != nil || claim.Disposition != ClaimAcquired {
++		t.Fatalf("first claim: %+v %v", claim, err)
++	}
++	for i := 0; i < 3; i++ {
++		if _, err := j.MarkAlertAttemptFailed(ctx, claim.ID, claim.Token, "down"); err != nil {
++			t.Fatalf("attempt: %v", err)
++		}
++	}
++	if res, err := j.MarkAlertDelivered(ctx, claim.ID, claim.Token); err != nil || res.Outcome != SettleApplied {
++		t.Fatalf("deliver: %+v %v", res, err)
++	}
++	clk.Advance(claimRemind + time.Minute)
++	again, err := j.ClaimAlertForDelivery(ctx, alert, claimRemind, testClaimant)
++	if err != nil || again.Disposition != ClaimAcquired || again.ID != claim.ID {
++		t.Fatalf("re-arm claim: %+v %v", again, err)
++	}
++	res, err := j.MarkAlertAttemptFailed(ctx, again.ID, again.Token, "down again")
++	if err != nil {
++		t.Fatalf("MarkAlertAttemptFailed: %v", err)
++	}
++	if res.Attempts != 1 {
++		t.Fatalf("attempts after re-arm = %d, want 1 (a new episode counts from zero)", res.Attempts)
++	}
++}
++
++// TestAResultThatWroteNothingCarriesNoAttempts — 적용되지 않은 결과는 판정에 쓰지 않는다.
++// 값이 0 인 것을 못 박아, 호출자가 실수로 읽어도 한도에 닿지 않게 한다.
++func TestAResultThatWroteNothingCarriesNoAttempts(t *testing.T) {
++	j, _ := outboxJournal(t)
++	ctx := context.Background()
++	id := a124Row(t, j, "a124-not-applied")
++	token := a124Claim(t, j, id)
++	for i := 0; i < 3; i++ {
++		if _, err := j.MarkAlertAttemptFailed(ctx, id, token, "down"); err != nil {
++			t.Fatalf("attempt: %v", err)
++		}
++	}
++	lost, err := j.MarkAlertAttemptFailed(ctx, id, "not-my-token", "down")
++	if err != nil || lost.Outcome != SettleLeaseLost || lost.Attempts != 0 {
++		t.Fatalf("lease lost: %+v %v", lost, err)
++	}
++	if err := j.AcknowledgeAlert(ctx, id, "operator"); err != nil {
++		t.Fatalf("AcknowledgeAlert: %v", err)
++	}
++	settled, err := j.MarkAlertAttemptFailed(ctx, id, token, "down")
++	if err != nil || settled.Outcome != SettleAlreadySettled || settled.Attempts != 0 {
++		t.Fatalf("already settled: %+v %v", settled, err)
++	}
++	missing, err := j.MarkAlertAttemptFailed(ctx, 999, token, "down")
++	if err != nil || missing.Outcome != SettleNotFound || missing.Attempts != 0 {
++		t.Fatalf("not found: %+v %v", missing, err)
++	}
++}
++
++// a124SettleCaller 는 settleUnderClaim 을 지나는 세 호출자다(evidence R9).
++type a124SettleCaller struct {
++	name string
++	call func(j *Journal, id int64, token string) (SettleResult, error)
++}
++
++var a124SettleCallers = []a124SettleCaller{
++	{"MarkAlertAttemptFailed", func(j *Journal, id int64, token string) (SettleResult, error) {
++		return j.MarkAlertAttemptFailed(context.Background(), id, token, "down")
++	}},
++	{"MarkAlertDelivered", func(j *Journal, id int64, token string) (SettleResult, error) {
++		return j.MarkAlertDelivered(context.Background(), id, token)
++	}},
++	{"ReleaseAlertClaim", func(j *Journal, id int64, token string) (SettleResult, error) {
++		return j.ReleaseAlertClaim(context.Background(), id, token)
++	}},
++}
++
++// a124FailTheAttemptsRead 는 가산 읽기를 실패시킨다(Z4 첫째 주입).
++func a124FailTheAttemptsRead(t *testing.T) {
++	t.Helper()
++	orig := readSettledAttemptsTx
++	readSettledAttemptsTx = func(context.Context, *sql.Tx, int64) (int, error) {
++		return 0, errors.New("a124 synthetic attempts read failure")
++	}
++	t.Cleanup(func() { readSettledAttemptsTx = orig })
++}
++
++// a124FailTheCommit 은 읽기는 성공시키고 **커밋**을 실패시킨다(Z4 둘째 주입).
++//
++// 같은 트랜잭션 안에 지연 외래 키 위반 하나를 남긴다 — 커밋 순간에만 검사되므로 UPDATE ·
++// SELECT 는 성공하고 COMMIT 만 실패한다. 원장은 foreign_keys(on) 으로 열린다(journal.go:223).
++// a124CommitFaultArmed 는 커밋 주입이 끝까지 걸렸는지(읽기 성공 + 위반 행 삽입)를 기록한다 — 아니면 시험이
++// 「아무 오류」로 통과해 커밋 단계에 닿았다는 증거가 없다(codex 구현 1회차 I5).
++var a124CommitFaultArmed bool
++
++func a124FailTheCommit(t *testing.T) {
++	t.Helper()
++	orig := readSettledAttemptsTx
++	a124CommitFaultArmed = false
++	readSettledAttemptsTx = func(ctx context.Context, tx *sql.Tx, id int64) (int, error) {
++		n, err := orig(ctx, tx, id)
++		if err != nil {
++			return n, err
++		}
++		for _, stmt := range []string{
++			`CREATE TEMP TABLE IF NOT EXISTS a124_parent (id INTEGER PRIMARY KEY)`,
++			`CREATE TEMP TABLE IF NOT EXISTS a124_child (pid INTEGER REFERENCES a124_parent(id) DEFERRABLE INITIALLY DEFERRED)`,
++			`INSERT INTO a124_child (pid) VALUES (1)`,
++		} {
++			if _, xerr := tx.ExecContext(ctx, stmt); xerr != nil {
++				return 0, xerr
++			}
++		}
++		a124CommitFaultArmed = true
++		return n, nil
++	}
++	t.Cleanup(func() { readSettledAttemptsTx = orig })
++}
++
++// TestAFailedAttemptsReadLeavesTheLedgerAsItWas — 세 호출자 × 두 주입. 실패하면 오류가
++// 돌아오고, 저장된 attempts · 상태 · 임차는 그대로이며, 같은 토큰으로 다시 정산할 수 있다.
++func TestAFailedAttemptsReadLeavesTheLedgerAsItWas(t *testing.T) {
++	for _, inject := range []struct {
++		name string
++		do   func(*testing.T)
++	}{{"read", a124FailTheAttemptsRead}, {"commit", a124FailTheCommit}} {
++		for _, caller := range a124SettleCallers {
++			t.Run(inject.name+"/"+caller.name, func(t *testing.T) {
++				j, _ := outboxJournal(t)
++				id := a124Row(t, j, "a124-atomic")
++				token := a124Claim(t, j, id)
++				if _, err := j.MarkAlertAttemptFailed(context.Background(), id, token, "first"); err != nil {
++					t.Fatalf("arrangement attempt: %v", err)
++				}
++				before := a124Stored(t, j, id)
++
++				inject.do(t)
++				res, err := caller.call(j, id, token)
++				if err == nil {
++					t.Fatalf("%s returned %+v with no error while the injected fault fired", caller.name, res)
++				}
++				if res != (SettleResult{}) {
++					t.Fatalf("%s returned a populated result %+v alongside its error", caller.name, res)
++				}
++				if inject.name == "commit" {
++					if !a124CommitFaultArmed || !strings.Contains(err.Error(), "committing") {
++						t.Fatalf("%s: the commit fault did not reach the commit (armed=%v, err=%v)", caller.name, a124CommitFaultArmed, err)
++					}
++				} else if !strings.Contains(err.Error(), "reading the attempts") {
++					t.Fatalf("%s: the error is not the attempts read's (%v)", caller.name, err)
++				}
++				after := a124Stored(t, j, id)
++				if after.State != before.State || after.Attempts != before.Attempts ||
++					after.ClaimedBy != before.ClaimedBy || after.LastError != before.LastError {
++					t.Fatalf("%s changed the row despite failing: before=%+v after=%+v", caller.name, before, after)
++				}
++				// 임차(토큰)가 살아 있다 — 같은 토큰의 정산이 다시 적용된다.
++				readSettledAttemptsTx = func(ctx context.Context, tx *sql.Tx, id int64) (int, error) {
++					return a124ReadAttempts(ctx, tx, id)
++				}
++				again, err := j.MarkAlertAttemptFailed(context.Background(), id, token, "retry")
++				if err != nil || again.Outcome != SettleApplied || again.Attempts != before.Attempts+1 {
++					t.Fatalf("the lease did not survive the failed %s: %+v %v", caller.name, again, err)
++				}
++			})
++		}
++	}
++}
++
++// a124ReadAttempts 는 주입을 되돌린 뒤 쓰는 참 읽기다 — 생산 읽기와 같은 SQL.
++func a124ReadAttempts(ctx context.Context, tx *sql.Tx, id int64) (int, error) {
++	var n int
++	err := tx.QueryRowContext(ctx, `SELECT attempts FROM alert_outbox WHERE id = ?`, id).Scan(&n)
++	return n, err
++}
++
++// TestDeliverySelectionPutsRowsBelowTheLimitFirst — 한도 아래 행이 먼저, 그 안에서 오래된 것 먼저,
++// 한도 행은 잔여 자리에만(2.4 원장 절반). 한도 행을 버리지 않는다(2.5).
++func TestDeliverySelectionPutsRowsBelowTheLimitFirst(t *testing.T) {
++	j, _ := outboxJournal(t)
++	ctx := context.Background()
++	var exhausted []int64
++	for i := 0; i < 3; i++ {
++		id := a124Row(t, j, "a124-exhausted-"+string(rune('a'+i)))
++		token := a124Claim(t, j, id)
++		for k := 0; k < 3; k++ {
++			if _, err := j.MarkAlertAttemptFailed(ctx, id, token, "down"); err != nil {
++				t.Fatalf("attempt: %v", err)
++			}
++		}
++		if _, err := j.ReleaseAlertClaim(ctx, id, token); err != nil {
++			t.Fatalf("release: %v", err)
++		}
++		exhausted = append(exhausted, id)
++	}
++	fresh1 := a124Row(t, j, "a124-fresh-1")
++	fresh2 := a124Row(t, j, "a124-fresh-2")
++
++	got, err := j.PendingAlertsForDelivery(ctx, 3, 3)
++	if err != nil {
++		t.Fatalf("PendingAlertsForDelivery: %v", err)
++	}
++	want := []int64{fresh1, fresh2, exhausted[0]}
++	if len(got) != len(want) {
++		t.Fatalf("selected %d rows, want %d", len(got), len(want))
++	}
++	for i := range want {
++		if got[i].ID != want[i] {
++			t.Fatalf("selection order = %v, want %v", a124IDs(got), want)
++		}
++	}
++	all, err := j.PendingAlertsForDelivery(ctx, 0, 3)
++	if err != nil || len(all) != 5 {
++		t.Fatalf("an exhausted row went missing from the full selection: %v %v", a124IDs(all), err)
++	}
++	// PendingAlerts 는 그대로다 — 오래된 것 먼저(AA4, 호출자 무편집).
++	legacy, err := j.PendingAlerts(ctx, 0)
++	if err != nil || len(legacy) != 5 || legacy[0].ID != exhausted[0] {
++		t.Fatalf("PendingAlerts order changed: %v %v", a124IDs(legacy), err)
++	}
++}
++
++func a124IDs(alerts []Alert) []int64 {
++	out := make([]int64, 0, len(alerts))
++	for _, a := range alerts {
++		out = append(out, a.ID)
++	}
++	return out
++}
++
++// readSettledAttemptsTx 는 시험이 결함을 주입하려고 바꾸는 패키지 변수다(Z4). 생산 코드가 그것을 바꾸면 원장
++// 정산의 판정 입력이 조용히 다른 함수가 된다 — 비시험 파일에서의 대입은 선언 하나뿐이어야 한다(Eng 리뷰 F5).
++func TestOnlyTestsReassignTheAttemptsRead(t *testing.T) {
++	entries, err := os.ReadDir(".")
++	if err != nil {
++		t.Fatalf("ReadDir: %v", err)
++	}
++	var assigned []string
++	for _, e := range entries {
++		name := e.Name()
++		if e.IsDir() || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
++			continue
++		}
++		fset := token.NewFileSet()
++		f, err := parser.ParseFile(fset, name, nil, 0)
++		if err != nil {
++			t.Fatalf("parse %s: %v", name, err)
++		}
++		ast.Inspect(f, func(n ast.Node) bool {
++			as, ok := n.(*ast.AssignStmt)
++			if !ok {
++				return true
++			}
++			for _, lhs := range as.Lhs {
++				if id, ok := lhs.(*ast.Ident); ok && id.Name == "readSettledAttemptsTx" {
++					assigned = append(assigned, fset.Position(as.Pos()).String())
++				}
++			}
++			return true
++		})
++	}
++	if len(assigned) != 0 {
++		t.Fatalf("production code reassigns readSettledAttemptsTx at %v", assigned)
++	}
++}

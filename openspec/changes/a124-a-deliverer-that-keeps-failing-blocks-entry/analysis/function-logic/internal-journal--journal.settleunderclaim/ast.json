@@ -1,16 +1,16 @@
 {
   "file": "internal/journal/alert_claim.go",
-  "source_sha256": "3d0b70b889d8c8ef4abd61d8d68309952ae2b9a8acf3ebf451507140fbae0750",
+  "source_sha256": "b123231116301de8e6a2270a3061c91a75db20c34bc355c38184af7cabf55577",
   "package": "journal",
   "function": "settleUnderClaim",
   "receiver": "Journal",
   "signature": "Journal.settleUnderClaim(params=6, results=2)",
   "start": {
-    "line": 310,
+    "line": 314,
     "column": 1
   },
   "end": {
-    "line": 345,
+    "line": 355,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 313,
+        "line": 317,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 317,
+        "line": 321,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 323,
+        "line": 327,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 327,
+        "line": 331,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 330,
+        "line": 334,
         "column": 2
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 331,
+        "line": 338,
         "column": 3
       }
     },
@@ -66,27 +66,28 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 338,
-        "column": 2
+        "line": 341,
+        "column": 3
       }
     },
     {
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 341,
+        "line": 348,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 351,
         "column": 2
       }
     }
   ],
   "returns": [
-    {
-      "kind": "return",
-      "at": {
-        "line": 314,
-        "column": 3
-      }
-    },
     {
       "kind": "return",
       "at": {
@@ -97,7 +98,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 324,
+        "line": 322,
         "column": 3
       }
     },
@@ -112,13 +113,6 @@
       "kind": "return",
       "at": {
         "line": 332,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 334,
         "column": 3
       }
     },
@@ -126,20 +120,41 @@
       "kind": "return",
       "at": {
         "line": 339,
-        "column": 3
+        "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
         "line": 342,
-        "column": 3
+        "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
         "line": 344,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 349,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 352,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 354,
         "column": 2
       }
     }
@@ -148,26 +163,10 @@
     {
       "kind": "call",
       "at": {
-        "line": 313,
+        "line": 317,
         "column": 5
       },
       "text": "strings.TrimSpace"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 314,
-        "column": 26
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 316,
-        "column": 13
-      },
-      "text": "j.db.BeginTx"
     },
     {
       "kind": "call",
@@ -181,22 +180,14 @@
       "kind": "call",
       "at": {
         "line": 320,
-        "column": 8
+        "column": 13
       },
-      "text": "tx.Rollback"
+      "text": "j.db.BeginTx"
     },
     {
       "kind": "call",
       "at": {
         "line": 322,
-        "column": 14
-      },
-      "text": "tx.ExecContext"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 324,
         "column": 26
       },
       "text": "fmt.Errorf"
@@ -204,10 +195,18 @@
     {
       "kind": "call",
       "at": {
-        "line": 326,
-        "column": 12
+        "line": 324,
+        "column": 8
       },
-      "text": "res.RowsAffected"
+      "text": "tx.Rollback"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 14
+      },
+      "text": "tx.ExecContext"
     },
     {
       "kind": "call",
@@ -220,31 +219,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 331,
-        "column": 13
+        "line": 330,
+        "column": 12
       },
-      "text": "tx.Commit"
+      "text": "res.RowsAffected"
     },
     {
       "kind": "call",
       "at": {
         "line": 332,
-        "column": 27
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 337,
-        "column": 14
-      },
-      "text": "explainSettleTx"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 339,
         "column": 26
       },
       "text": "fmt.Errorf"
@@ -252,8 +235,24 @@
     {
       "kind": "call",
       "at": {
+        "line": 337,
+        "column": 20
+      },
+      "text": "readSettledAttemptsTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 339,
+        "column": 27
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
         "line": 341,
-        "column": 12
+        "column": 13
       },
       "text": "tx.Commit"
     },
@@ -261,6 +260,38 @@
       "kind": "call",
       "at": {
         "line": 342,
+        "column": 27
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 347,
+        "column": 14
+      },
+      "text": "explainSettleTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 349,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 12
+      },
+      "text": "tx.Commit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 352,
         "column": 26
       },
       "text": "fmt.Errorf"
@@ -270,14 +301,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 316,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 322,
+        "line": 320,
         "column": 2
       }
     },
@@ -291,21 +315,35 @@
     {
       "kind": ":=",
       "at": {
-        "line": 331,
-        "column": 6
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 337,
+        "line": 330,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
+        "line": 337,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
         "line": 341,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 347,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 351,
         "column": 5
       }
     }
@@ -315,7 +353,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 320,
+        "line": 324,
         "column": 2
       },
       "text": "tx.Rollback"

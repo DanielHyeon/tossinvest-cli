@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/alertdelivery.go",
-  "source_sha256": "89a491c9c259cfeec2afb5095cd1037db0ad97b58f4689d1aaeba9ff82dab5bf",
+  "source_sha256": "5791a31af9d2407935ea71edbdbf9a14cbd2025fce5da9866b1d586f8e8da0cf",
   "package": "engine",
   "function": "deliverOne",
   "receiver": "alertDeliverer",
   "signature": "alertDeliverer.deliverOne(params=2, results=0)",
   "start": {
-    "line": 167,
+    "line": 270,
     "column": 1
   },
   "end": {
-    "line": 242,
+    "line": 340,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 169,
+        "line": 272,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "switch",
       "at": {
-        "line": 173,
+        "line": 278,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "case",
       "at": {
-        "line": 174,
+        "line": 279,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "case",
       "at": {
-        "line": 178,
+        "line": 283,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 187,
+        "line": 292,
         "column": 3
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "case",
       "at": {
-        "line": 193,
+        "line": 298,
         "column": 2
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 198,
+        "line": 305,
         "column": 2
       }
     },
@@ -74,23 +74,23 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 205,
+        "line": 314,
         "column": 2
       }
     },
     {
       "id": "B9",
-      "kind": "if",
+      "kind": "else",
       "at": {
-        "line": 221,
-        "column": 2
+        "line": 324,
+        "column": 9
       }
     },
     {
       "id": "B10",
       "kind": "if",
       "at": {
-        "line": 222,
+        "line": 331,
         "column": 3
       }
     },
@@ -98,15 +98,7 @@
       "id": "B11",
       "kind": "if",
       "at": {
-        "line": 230,
-        "column": 2
-      }
-    },
-    {
-      "id": "B12",
-      "kind": "if",
-      "at": {
-        "line": 236,
+        "line": 335,
         "column": 2
       }
     }
@@ -115,42 +107,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 171,
+        "line": 276,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 192,
+        "line": 297,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 196,
+        "line": 303,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 212,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 226,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 234,
+        "line": 337,
         "column": 3
       }
     }
@@ -159,23 +137,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 168,
+        "line": 271,
         "column": 16
       },
-      "text": "d.Journal.ClaimAlertByID"
+      "text": "ClaimAlertByID"
     },
     {
       "kind": "call",
       "at": {
-        "line": 168,
-        "column": 56
+        "line": 271,
+        "column": 16
+      },
+      "text": "d.led"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 54
       },
       "text": "d.claimant"
     },
     {
       "kind": "call",
       "at": {
-        "line": 170,
+        "line": 273,
         "column": 3
       },
       "text": "d.logf"
@@ -183,7 +169,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 177,
+        "line": 275,
+        "column": 3
+      },
+      "text": "d.countRecordFailure"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
         "column": 3
       },
       "text": "d.forgetHeld"
@@ -191,7 +185,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 187,
+        "line": 292,
         "column": 6
       },
       "text": "d.reportHeld"
@@ -199,7 +193,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 188,
+        "line": 293,
         "column": 4
       },
       "text": "d.logf"
@@ -207,7 +201,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 190,
+        "line": 295,
         "column": 25
       },
       "text": "Format"
@@ -215,7 +209,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 190,
+        "line": 295,
         "column": 25
       },
       "text": "claim.ExpiresAt.UTC"
@@ -223,7 +217,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 195,
+        "line": 300,
         "column": 3
       },
       "text": "d.forgetHeld"
@@ -231,7 +225,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 201,
+        "line": 302,
+        "column": 3
+      },
+      "text": "d.forgetRecordRun"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 308,
         "column": 3
       },
       "text": "d.logf"
@@ -239,7 +241,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 209,
+        "line": 321,
         "column": 3
       },
       "text": "d.logf"
@@ -247,15 +249,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 211,
-        "column": 3
+        "line": 323,
+        "column": 17
       },
-      "text": "d.release"
+      "text": "errors.New"
     },
     {
       "kind": "call",
       "at": {
-        "line": 215,
+        "line": 325,
         "column": 10
       },
       "text": "d.Publisher.Publish"
@@ -263,103 +265,70 @@
     {
       "kind": "call",
       "at": {
-        "line": 216,
-        "column": 13
+        "line": 326,
+        "column": 14
       },
       "text": "obs.EventType"
     },
     {
       "kind": "call",
       "at": {
-        "line": 222,
-        "column": 16
-      },
-      "text": "d.Journal.MarkAlertAttemptFailed"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 222,
-        "column": 77
+        "line": 332,
+        "column": 12
       },
       "text": "perr.Error"
     },
     {
       "kind": "call",
       "at": {
-        "line": 223,
-        "column": 4
-      },
-      "text": "d.logf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 225,
+        "line": 336,
         "column": 3
       },
-      "text": "d.release"
+      "text": "d.recordFailedAttempt"
     },
     {
       "kind": "call",
       "at": {
-        "line": 229,
-        "column": 18
+        "line": 339,
+        "column": 2
       },
-      "text": "d.Journal.MarkAlertDelivered"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 233,
-        "column": 3
-      },
-      "text": "d.logf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 239,
-        "column": 3
-      },
-      "text": "d.logf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 240,
-        "column": 37
-      },
-      "text": "settled.Outcome.String"
+      "text": "d.recordDelivery"
     }
   ],
   "assignments": [
     {
       "kind": ":=",
       "at": {
-        "line": 168,
+        "line": 271,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 215,
+        "line": 313,
         "column": 2
       }
     },
     {
-      "kind": ":=",
+      "kind": "=",
       "at": {
-        "line": 222,
-        "column": 6
+        "line": 323,
+        "column": 3
       }
     },
     {
-      "kind": ":=",
+      "kind": "=",
       "at": {
-        "line": 229,
-        "column": 2
+        "line": 325,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 332,
+        "column": 4
       }
     }
   ],

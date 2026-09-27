@@ -1,44 +1,56 @@
 # Function Logic Map: `alertDeliverer.cycle`
 
-- Source: `internal/app/engine/alertdelivery.go`
-- AST evidence: `ast.json` — **편집 전**(base 논리), :145–164, 분기 3 · 반환 3 · 호출 7.
-  source_sha256 `89a491c9c259…`, 추출 HEAD `463cc895` (2026-09-25).
+- Source: `internal/app/engine/alertdelivery.go` (235-264)
+- Revision: current — a124 구현 로트(2026-09-27) 편집 뒤 재추출; source_sha256 `5791a31af9d2407935ea71edbdbf9a14cbd2025fce5da9866b1d586f8e8da0cf`
+- AST evidence: `ast.json` (`tools/logic-map` 추출기 출력, `analysis/harness/flm_a124.py` 가 다시 만듦)
 - Risk scan: `risk-pattern-report.md`
-
-**이 번들은 proposal 이 이 함수의 분기를 근거로 쓰기 때문에 문서보다 먼저 만들었다**
-(FLM-before-claiming). a124 는 이 함수를 편집한다 — 편집 뒤 `revision: current` 로 재추출한다(tasks 1.3).
+- Extractor counts: AST branches 4 · returns 3 · calls 12
+- Exact AST return positions: 246:3, 259:4, 263:2
+- 편집 전 판(base `4798d399`)의 분석은 이 파일의 git 이력에 있고, 분기 대응은 아래 표다.
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| `ctx` | 취소 가능 | `Run` :122 이 넘긴다 | B3 |
-| `d.Journal` | non-nil | `NewRuntime` 배선 | nil 이면 패닉 — 배선이 보장, 이 함수는 검사하지 않음 |
-| `d.batch()` | `Batch > 0` 이면 그 값, 아니면 `alertDeliveryBatch` = 10 (:74) | :150 | — |
-| `d.heldReported` | 현재 경합 중인 행만 | `forgetLapsedHeld` :149 | — |
+| `ctx` | Run 의 수명 ctx | Run | 행 사이에서 취소를 봄 — 끝나면 조용히 반환 |
+| `d.led().PendingAlertsForDelivery(ctx, batch, alertAttemptLimit)` | PENDING 행, 한도 아래 먼저 · 오래된 것 먼저 | 원장(`outbox.go` 새 메서드) | 오류 → 나열 실패 계수(D8) 뒤 오류 반환 |
+| `d.batch()` | > 0 (기본 10) | `alertDeliveryBatch` | 잘림 판정의 기준 |
 
 ## Branches and early returns
 
-| Branch | Condition | Mutation/side effect | Return/error | Required test |
-|---|---|---|---|---|
-| B1 | `PendingAlerts` 오류 (:151) | 없음 | `fmt.Errorf("listing the critical alert backlog: %w")` (:152) — `Run` :124-128 이 로그만 남기고 계속 돈다 | `a098_the_outbox_gets_emptied_test.go` (파일 단위) |
-| B2 | `range pending` (:154) | 행마다 `deliverOne` (:161) | — | `a098_one_cycle_takes_a_batch_test.go` |
-| B3 | 행 사이 `ctx.Err() != nil` (:158) | 남은 행 미처리 | `nil` (:159) | a098 취소 전파 시험 |
-| 종단 | 배치 소진 | — | `nil` (:163) | — |
+| Branch | AST anchor | Source text at anchor |
+|---|---|---|
+| B1 | if at 243:2 | `if err != nil {` |
+| B2 | if at 249:2 | `if len(pending) < d.batch() {` |
+| B3 | range at 254:2 | `for _, alert := range pending {` |
+| B4 | if at 258:3 | `if ctx.Err() != nil {` |
+
+### 편집 전 → 편집 뒤 분기 대응 (difflib — 분기 줄 소스 텍스트 정렬)
+
+| Base branch | Base anchor | Base source | Current branch |
+|---|---|---|---|
+| b1 | if at 243·2 | `` | — (없어짐 · 하위 함수로 옮김) |
+| b2 | if at 249·2 | `func (d *alertDeliverer) release(ctx context.Context, id int64, token string) {` | — (없어짐 · 하위 함수로 옮김) |
+| b3 | range at 254·2 | `}` | — (없어짐 · 하위 함수로 옮김) |
+| b4 | if at 258·3 | `// answered yes.` | — (없어짐 · 하위 함수로 옮김) |
 
 ## Calls and live bindings
 
-| Callee | Why called | Error/timeout/retry contract | Evidence |
-|---|---|---|---|
-| `d.forgetLapsedHeld(d.Clock.Now())` :149 | 만료된 경합 기록 제거 | 없음 | AST |
-| `d.Journal.PendingAlerts(ctx, d.batch())` :150 | 미전달 행 나열 — `WHERE state = ? ORDER BY id` + `LIMIT ?` (`internal/journal/outbox.go:518-521`) | 오류 → B1 | AST + 소스 원문 |
-| `d.deliverOne(ctx, alert)` :161 | 행 하나의 전달 | **반환값 없음** — 결과가 이 함수에 돌아오지 않는다 | AST |
+| Callee | Why called | Error/timeout/retry contract |
+|---|---|---|
+| `d.forgetLapsedHeld` | 만료된 「남이 쥠」 보고 기록 정리 | 메모리 |
+| `d.led().PendingAlertsForDelivery` | 굶주림 없는 선택(R2, AA4 — `PendingAlerts` 불변) | 오류 → `countListFailure` |
+| `d.countListFailure` | 나열 실패의 연속(D8 AA2) | ctx 취소면 세지 않음 |
+| `d.pruneRecordRuns` | 완전한 나열에 없는 행의 기록 실패 계수 삭제(Q5) | 잘린 나열에서는 부르지 않음 |
+| `d.deliverOne` | 행 하나의 생애 | 행 실패는 사이클 실패가 아님 |
 
 ## State mutations and fallbacks
 
-- 이 함수는 `deliverOne` 의 결과를 받지 않는다. 배치 전부가 실패한 사이클과 전부 성공한 사이클이
-  같은 `nil` (:163) 로 끝난다 — **지속 실패를 셀 자리가 이 함수에 없다** (a124 R1 의 근거).
-- 행 선택은 `id` 오름차순 `LIMIT batch` 뿐이다. 시도를 다 쓴 오래된 미전달 행이 batch 개 이상 쌓이면
-  새 행은 이 함수에 **도달하지 않는다** (a124 R2 의 근거, a092 20라운드 B-2).
-- `Run` :122 는 사이클 오류를 로그로만 다루고 루프를 계속 돈다 — 실행자 정지 판정은 `Run` 의 반환값이고
-  이 함수의 `nil` 은 그것을 절대 만들지 않는다.
+- 나열이 성공하면 나열 실패 연속을 지움(`listRun`, `listSeen`).
+- 완전한 나열(`len < batch`)일 때만 기록 실패 계수를 거름 — 잘린 나열은 PENDING 이탈의 증거가 아님.
+- 어떤 잠금도 쥐지 않음. 원장 연산 · 발행은 전부 `deliverOne` 과 그 아래에서.
+
+## Safety conclusion
+
+- Safe edit boundary: 선택 순서와 나열 실패 계수만 더함 — 행을 버리는 길은 없음(한도 행도 선택에 남음).
+- High-risk impact: yes — 진입 차단(전달 실패 사유)의 판정 입력을 만든다. 차단 방향으로만 틀림.

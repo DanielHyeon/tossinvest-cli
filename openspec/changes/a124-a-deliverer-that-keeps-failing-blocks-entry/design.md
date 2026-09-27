@@ -251,9 +251,10 @@ func (g *EntryGate) Clear(reason ReasonCode) {
 	}
 }
 func (g *EntryGate) ClearEpoch(reason ReasonCode) uint64                                   // g.mu, 읽기만
-func (g *EntryGate) BlockUnlessClearedSince(reason ReasonCode, epoch uint64, detail string) bool // g.mu
-	// clearEpochs[reason] != epoch 이면 아무것도 안 하고 false.
-	// 같으면 Block 과 같은 규칙(없을 때만 삽입 + revision++, FLM entrygate.block B1)으로 true.
+func (g *EntryGate) BlockUnlessClearedSince(reason ReasonCode, epoch uint64, detail string) (applied, inserted bool) // g.mu
+	// clearEpochs[reason] != epoch 이면 아무것도 안 하고 (false, false).
+	// 같으면 Block 과 같은 규칙(없을 때만 삽입 + revision++, FLM entrygate.block B1)으로 applied=true,
+	// 이 호출이 새로 삽입했으면 inserted=true — D9 「처음 잠근 때만 한 줄」에 씀(구현 로트, Eng F4 · codex 2회차)
 ```
 
 두 메서드는 `g.mu` 만 잡고 밖을 부르지 않는다(FLM `internal-execgw--entrygate.block` · `.clear` — map 연산뿐).
@@ -326,6 +327,14 @@ R = `ReasonAlertUndelivered`. 오류 판정(전달 정산 오류 · `NotFound` �
 그 map 연산 하나로 **경계가 있다**. 원격 전송 · 다른 잠금에 대한 대기는 전파되지 않는다. **원장 연결은 다르다**: 실행자의 정산 · 승격
 트랜잭션은 exit 루프와 같은 연결 하나(`journal.go:174`)를 점유한다 — 오늘 실행자와 같은 성질이지만 판정마다 읽기·쓰기가 늘므로 **측정** 대상이다(2.6).
 「exit 체류 불변」은 주장하지 않는다.
+
+**측정된 전제 (구현 로트, Manager 판정 2026-09-28; 수치 교정 codex 구현 3회차 T3).** 고정 여유 `a098ExitCycleDwellMargin` 250 ms 는 **실행자
+원장 트랜잭션 하나(실제 비용 + 주입)가 ≈25 ms 이내일 때만** 선다 — 한 exit 사이클이 진행 중인 실행자 트랜잭션을 ~10~15 개까지 기다리므로 체류
+증가는 대략 「트랜잭션 길이 × 그 수」이고, 이것은 원장 연결 하나의 성질이다. 값 · 순간 · 모집단(2026-09-28, 개발 환경 = 공유 기계의 ext4 NVMe
+`/tmp`): 판정 경로 트랜잭션 **실제 비용** 실패 기록 평균 11.1 ms / p99 19.3 ms · 반납 11.1 / 14.8 ms · 승격(같은 모드 확인) 0.19 / 0.44 ms
+(`BenchmarkA124JudgementTransactions`, 200 회); 그 위에 트랜잭션마다 10 ms 를 주입한 수락 중앙값 96~199 ms(여러 판, 부하에 따라 흔들림), 기준선
+15~18 ms; 15 ms 를 주입하면(합 ≈26 ms) +231 ms 로 여유를 거의 다 쓴다. 1 판의 「≈16 ms」는 주입 지연만 센 값이라 실제 비용을 빠뜨린 과소
+진술이었다. **운영 디스크의 fsync 지연은 측정하지 않았다**(review §1 2.6 2 판 · codex 3회차 기록). 운영 환경 재측정은 배포 절차(tasks §6)가 못 박는다.
 
 **승격은 차단 판정이면 `BlockUnlessClearedSince` 결과와 무관하게, 잠금 밖에서(Y1).** 승인은 모드를 풀지 않는다(완화는 사람 승인 — FLM
 `transitionoperatingmode` B17~B19). 사람이 모드를 `t_j` ~ 승격 사이에 완화하면 모드가 다시 막힌다 — 제때라면 완화가 이겼을 자리라 보수 방향 잔여다. 다시 완화하면 된다. 운영 순서는 **승인 먼저, 완화 뒤**(Risks).
@@ -514,6 +523,9 @@ a124 의 코드는 투영기 없이 착지해도 된다 — 모든 규칙이 알
 - **배포 직후(F6 · N8)**: 기존 PENDING 행은 기동 복원이 게이트를 이미 잠근다. `attempts ≥ 3` 인 행은 한도 층으로 내려가고, **그 행이 다음에
   선택되어 실패하면** 승격을 시도한다 — 모드가 실제로 바뀔 때만 `operating_modes` 행이 생긴다(같거나 더 엄하면 없음, FLM `transitionoperatingmode`
   B15·B16). 새 행에 밀리거나 다음 발행이 성공하면 승격은 없다. **운영 원장의 해당 행 수는 이 change 가 조회하지 않았다 — 사람 몫**(배포 전 확인).
+- **손절 쪽 체류 여유의 전제 (구현 로트 2.6)**: exit 사이클 체류의 고정 여유 250 ms 는 실행자 원장 트랜잭션 하나가(실제 비용 포함) ≈25 ms 이내에서만
+  선다(D7 「측정된 전제」). 개발 환경 실측: 실패 기록 p99 19.3 ms · 반납 p99 14.8 ms — 이미 여유의 절반을 넘게 쓰는 디스크다. 운영 fsync 는 미측정이다.
+  운영에서 트랜잭션이 그보다 길면 실행자의 판정 쓰기가 exit 사이클을 여유 밖으로 늦출 수 있다 — 배포 전 운영 재측정(tasks §6)이 트리거다.
 - **원장 쓰기 증가(F12)**: D3 로 publisher 없는 엔진은 사이클마다 행당 기록 1 회(10 행이면 2 s 마다 10 회, 정산 1 회 5.584 ms 실측 기준
   ≈ 56 ms)를 더 쓴다. 같은 연결을 exit 루프가 쓴다 → tasks 2.6.
 - **D8 의 오탐 비용**: 원장 쓰기 3 연속 실패가 승인 요구로 이어진다(D8 표 첫 줄) — 목적 안이라고 판단했다.
