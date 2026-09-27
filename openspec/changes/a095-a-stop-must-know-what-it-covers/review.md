@@ -590,3 +590,61 @@ proposal 「지금 열린 것들」은 **지금 거짓**이다. `alert_outbox`�
 | 3 | **수용 — 범위를 옮긴다** | (i) 엔진이 직접 연 포지션의 수량 증가 검사 — `adoption.go:108-111` 이 `Adopted()` 일 때만 `checkExternalIncrease` 를 부른다 (ii) R2 키 설계를 재알림 창 SHALL NOT 과 대조(B-P1-4) (iii) 두 발신 자리의 키 분리(B-P1-5). R2-B2 와 「편입 기록 없음 = 보호 없음」 SHALL·시나리오 삭제. 제목은 유지 |
 
 3판 순서: FLM 재추출(호출자 `judgeHoldings` · `ExitObserver.workingSet` · `notifierAlerter.ExternalPositionFound` 추가, stale 4 재추출, base 재고정) → 문서 → 3라운드(두 보이스 결과 실제 수합 + 교차 모델). 저자 로트는 Opus 리셋(2026-09-26 19:00) 뒤.
+
+---
+
+## 3판 — 사용자 결정 (1)~(3)과 2라운드 P0의 반영 (판정 아님, 2026-09-27)
+
+**판정이 아니라 반영 기록이다.** 3라운드(적대 보이스 · 교차 모델)는 Manager 가 따로 지시한다.
+
+- **저자**: Opus 문서 팀메이트(Manager 배정). production Go · 시험 · 도구 코드 변경 0. 변경은 a095 디렉터리뿐
+- **순서**(§2.16 「3판 순서」): base 재고정(`0b17784e`, `ec29dc72` → `02716357`) → FLM 재추출 → 문서
+- **결정 원문**: `proposal.md` §0에 §2.11 물음 · §2.16 표 · 커밋 `2fbdcd78` 메시지 ③을 글자 그대로 옮겼다(스크립트로
+  원문과 대조). 사용자의 대화 원문은 저장소에 없다 — 기록본이 출처다
+
+### 3.1 FLM (문서보다 먼저)
+
+| 구분 | 번들 |
+| --- | --- |
+| stale 4 재추출 | `SeverityOf` · `Notifier.Notify` · `Notifier.publishBestEffort` · `resetExitStateForReadoptTx` — 분기 수 무변화, 줄만 이동 |
+| 호출자 3(§2.16) | `ReconcileDriver.judgeHoldings`(분기 15) · `ExitObserver.workingSet`(22) · `notifierAlerter.ExternalPositionFound`(1) |
+| 3판 주장의 근거 | `ExitObserver.ObserveOnce` · `ExitObserver.alertUnmanaged` · `ReconcileDriver.adopt` · `Notifier.notifyCritical` · `Notifier.claimAndDeliver` · `Notifier.deliver` · `Ingestor.IngestExternalPositions` · `Journal.recordExitJudgementTx` · `Journal.RefreshExitObservation` |
+| 해시 일치(산문만 갱신) | `checkExternalIncrease` · `ReconcileDriver.alertUnmanaged` · `OpenExitState` · `ApplyPositionAdjustment` · `EvaluateLadder` |
+
+분기 표는 `analysis/harness/render_bundles.py`가 `ast.json` 좌표와 커버리지 프로파일(`analysis/harness/coverage/`,
+대상 파일 줄만 남김)에서 만든다. 잘라 낸 프로파일로 다시 돌려 번들 전체가 **바이트 동일**함을 확인했다.
+생성기는 옛 `checkExternalIncrease` 표를 그대로 재현한다(같은 규칙의 증거).
+
+### 3.2 P0 넷 → 3판
+
+| P0 | 해소 | 자리 |
+| --- | --- | --- |
+| P0-1 | R2-B2 · 그 SHALL · 시나리오 삭제(결정 (3)). `judgeHoldings` B7/B8로 호출자 가드 고정. 엔진 개설 포지션 수량 증가는 범위에 넣고 기준은 Q3 | proposal §1 · design D2 · engine-safety 델타 머리 |
+| P0-2 | 이 P0는 수량 증가 사실이 critical일 때만 성립(`claimAndDeliver` B5). 그 사실은 본문 스스로 「보호받는다」 — 종류·등급·키를 Q4로 | design D2 (ii) · tasks 3.3 · 3.4 |
+| P0-3 | 거짓 전제 삭제. `baseline_price` 쓰기 자리 넷을 분기로 열거(issues I1). 선행 조건의 SHALL 재진술은 Q6 | exit-policy 델타 · design D4 · issues I1 |
+| P0-4 | exit 관측 자리 normal 유지(결정 (1)) — `ObserveOnce` 호출 순서와 `Notify` B1 창으로 고정. 옛 약속 사본 셋(tasks 2.8 · 안전표 §4 행 · D7 행) 삭제. 기존 exit 발신의 `n.mu` 대기는 Q7 | proposal §1 · design D1 · tasks 6.2 |
+
+tasks.md 2판 `:178`의 *"a095는 a092 뒤에 간다"*는 결정 (1)과 모순 — 결정 원문 인용과 함께 「독립」으로 고쳤다.
+
+### 3.3 3판이 새로 찾은 것 (분기 근거)
+
+- `deliver` B3 `:429` `if n.Publisher == nil {`은 **어떤 시험도 밟지 않는다** — 결정 (2)의 근거 경로가 무시험이다
+- `adopt` B2 · B6 · B7(시세 읽기 오류 · 관측 없음 · 관측 묵음)로 연기된 후보가 `judgeHoldings` B14 → `alertUnmanaged`
+  B5 사유(「enabled 시도 실패」)로 모인다 — B5를 critical로 올리면 일시적 시세 실패가 critical이 된다(Q2(c))
+- `RefreshExitObservation`은 `baseline_price`를 UPDATE하지만 B23이 보호가 변화를 거절 — 값이 움직이는 쓰기는 판정과
+  재편입 reset 둘이다. reset에는 이전 기준선과 비교하는 분기가 없다
+- `Notifier`의 `n.mu` 잠금 자리는 `claimAndDeliver` 외에 `Flush`(`notifier.go:734`) · `Acknowledge`(`:851`)도 있다
+
+### 3.4 열린 질문 (Manager 에게)
+
+`proposal.md` 「열린 질문」 Q1~Q7. 결정이 덮지 않는 절은 비워 두었다(`[비움 — Qn]`).
+
+### 3.5 게이트 명령 — 아래 3.6에 결과
+
+### 3.6 이번 판이 하지 않은 것
+
+- 3라운드 리뷰(적대 보이스 · 교차 모델) — Manager 지시 대기
+- P1 가운데 결정·P0와 겹치지 않는 것의 전수 반영: P1-6 · P2-1은 반영, P2-2 · P2-3(2판 서사의 문장)은 해당 절을 3판에서
+  지워 소멸, P2-5(R3 task)는 R3 보류로 이월
+- 운영 원장 재조회 — 하지 않았다. 원장 수치는 2라운드 측정(2026-09-25)을 시각과 함께 인용
+- `ConvergeQuantities` 번들(보이스 A A-5) — R3 지위(Q5) 뒤

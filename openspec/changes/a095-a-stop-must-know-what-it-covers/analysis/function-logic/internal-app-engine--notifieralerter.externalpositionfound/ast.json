@@ -1,0 +1,79 @@
+{
+  "file": "internal/app/engine/exitwiring.go",
+  "source_sha256": "43dcca8f37b748962f5e066706a887c40f694d189fc81f7b7697949e084cb020",
+  "package": "engine",
+  "function": "ExternalPositionFound",
+  "receiver": "notifierAlerter",
+  "signature": "notifierAlerter.ExternalPositionFound(params=2, results=1)",
+  "start": {
+    "line": 98,
+    "column": 1
+  },
+  "end": {
+    "line": 121,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 101,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 9
+      },
+      "text": "a.notifier.Notify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 8
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 4
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 10
+      },
+      "text": "a.names.Label"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

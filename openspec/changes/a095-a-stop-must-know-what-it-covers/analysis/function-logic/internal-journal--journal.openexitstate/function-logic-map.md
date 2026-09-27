@@ -55,5 +55,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **a095는 이 함수의 t0 동결을 바꾸지 않는다.** 여기서 쓴 값을 나중에 낮추는 경로를 만드는 것이 위험한 방향이다. a095는 **높이는 방향만** 다루고, 그것도 이 함수가 아니라 별도 경로에서 한다.
+- **Safe edit boundary**: **a095는 이 함수의 t0 동결을 바꾸지 않는다.** 이 INSERT는 `baseline_price`의 최초 쓰기이며, 이후의 쓰기 자리(판정 `recordExitJudgementTx` · 관측 갱신 `RefreshExitObservation` · 재편입 `resetExitStateForReadoptTx`)는 각 번들에 있다(3판 issues I1). 3판은 손절가를 올리지도 내리지도 않는다.
 - **High-risk impact**: yes — R의 분모와 손절선의 원천.

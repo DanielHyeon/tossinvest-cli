@@ -1,204 +1,147 @@
-# a095 · tasks
+# a095 · tasks — 3판
 
 - **Change**: `a095-a-stop-must-know-what-it-covers`
-- **위험 등급**: **High-risk** — 손절 관련 알림 등급과 총위험 보고. §0.3 적용.
-- **base-commit**: `ec29dc72c0fd589daa2069ccf26bad26baeb2a04`
+- **위험 등급**: **High-risk** — 무보호 보고의 등급과 진입 차단 도달. §0.3 적용.
+- **base-commit**: `027163575e78482cdd4d8129f027e928b769ae87` (3판 재고정 `0b17784e`)
+- 결정 (1)~(3) 원문은 `proposal.md` §0. `[비움 — Qn]`은 결정이 덮지 않아 Manager 에게 올린 질문이다
+  (`proposal.md` 「열린 질문」). 비운 task는 답이 오기 전에 착수하지 않는다.
 
 ## 0. 게이트 선행
 
-- [x] 0.1 `base-commit.txt` 고정
-- [x] 0.2 `openspec validate a095-a-stop-must-know-what-it-covers --strict` — **통과**
-- [x] 0.3 **AST 산출물이 문서보다 먼저** — 함수 9개, 분기 98개
-- [x] 0.4 `check_analysis.py --change a095-…` — **통과**(`evidence complete`).
-      두 Markdown은 **측정으로** 채웠다: 조건은 소스 원문, 창의 호출·return은
-      `ast.json` 좌표, 진입 여부는 `go test -covermode=set` 프로파일이다
-      > **정정(2라운드, 2026-09-25, HEAD `634cf3c5`)**: 이 체크는 그 라운드에 참이었다. HEAD에서는
-      > `check_analysis.py` **rc=1** — AST 번들 4개 stale(Notify·publishBestEffort·SeverityOf·
-      > resetExitStateForReadoptTx) + base가 313커밋 뒤라 missing evidence 255건. 재추출·base 재고정은 3판.
-- [ ] 0.5 **proposal-freeze 리뷰**(적대적 Eng 필수) → `review.md`.
-      **교차 모델을 여기서 지킨다** — a092가 여섯 라운드, a094가 한 라운드 미충족이다
-      > **2라운드(2026-09-25) 실행 — FAIL**(`review.md` 「2라운드」). 차단 P0 4 · P1 6.
-      > **사용자 결정(2026-09-25)**: §2.11 1 **독립**(a092 와 묶지 않음) · 2 **거부** · 3 **수용**(범위 이동). 3판 입력은 `review.md` §2.16.
-      > 교차 보이스·교차 모델 미충족이라 **체크하지 않는다** — freeze가 성립하지 않았다.
+- [x] 0.1 `base-commit.txt` 고정 — **3판 재고정** `ec29dc72` → `02716357`(`0b17784e`). a095 디렉터리를 만진
+      커밋 중 `.go`를 고친 것은 `a30eb35a` 하나이고 새 base 앞이다
+- [x] 0.2 `openspec validate a095-a-stop-must-know-what-it-covers --strict` — 3판에서 다시 통과(`review.md` 3판 기록)
+- [x] 0.3 **AST 산출물이 문서보다 먼저** — 3판 번들 21개(새로·다시 뽑음 18 · 해시 일치 확인 3).
+      생성기 `analysis/harness/render_bundles.py`, 커버리지 `analysis/harness/coverage/`
+- [x] 0.4 `check_analysis.py --change a095-…` — 3판 판정은 `review.md` 3판 기록(격리 worktree, 완료 커밋 기준)
+- [ ] 0.5 **proposal-freeze 리뷰**(적대적 Eng 필수) → `review.md`. 교차 보이스 · 교차 모델을 여기서 지킨다
+      > **2라운드(2026-09-25) FAIL**(`review.md` 「2라운드」). **사용자 결정(2026-09-25)**: §2.11 1 **독립** ·
+      > 2 **거부** · 3 **수용**(범위 이동). 3판이 그것을 반영했다. 3라운드는 Manager 가 따로 지시한다
+- [ ] 0.6 **열린 질문 Q1~Q7의 답** — 답이 온 뒤 비운 절을 채우고 3라운드 전에 다시 뽑을 번들을 정한다
 
-## 1. 산출물 (완료 — 문서보다 먼저)
+## 1. 산출물 (3판 — 문서보다 먼저)
 
-- [x] 1.1 `obs.SeverityOf` (분기 1 · return 2)
-- [x] 1.2 `obs.Notifier.Notify` (분기 1 · return 2)
-- [x] 1.3 `obs.Notifier.publishBestEffort` (분기 2 · return 1)
-- [x] 1.4 `engine.ReconcileDriver.checkExternalIncrease` (분기 3 · return 3)
-- [x] 1.5 `engine.ReconcileDriver.alertUnmanaged` (분기 6 · return 1)
-- [x] 1.6 `journal.Journal.OpenExitState` (분기 20 · return 15)
-- [x] 1.7 `journal.resetExitStateForReadoptTx` (분기 6 · return 7)
-- [x] 1.8 `journal.Journal.ApplyPositionAdjustment` (분기 27 · return 17)
-- [x] 1.9 `exitpolicy.EvaluateLadder` (분기 32 · return 23)
-- [x] 1.10 **Branch Test Map** — 위 9개. **분기 98개 중 진입 62 · 미진입 27 · 자체 블록 없음 9**
-      (`go test ./internal/{obs,app/engine,journal,exitpolicy}/... -count=1 -covermode=set`)
+- [x] 1.1 다시 뽑음(소스 줄 이동): `obs.SeverityOf` · `obs.Notifier.Notify` · `obs.Notifier.publishBestEffort` ·
+      `journal.resetExitStateForReadoptTx`
+- [x] 1.2 호출자(2라운드 §2.16 지시): `engine.ReconcileDriver.judgeHoldings` · `engine.ExitObserver.workingSet` ·
+      `engine.notifierAlerter.ExternalPositionFound`
+- [x] 1.3 3판 주장의 근거로 새로 뽑음: `engine.ExitObserver.ObserveOnce` · `engine.ExitObserver.alertUnmanaged` ·
+      `engine.ReconcileDriver.adopt` · `obs.Notifier.notifyCritical` · `obs.Notifier.claimAndDeliver` ·
+      `obs.Notifier.deliver` · `reconcile.Ingestor.IngestExternalPositions` · `journal.Journal.recordExitJudgementTx` ·
+      `journal.Journal.RefreshExitObservation`
+- [x] 1.4 해시 일치 확인(산문만 3판으로): `engine.ReconcileDriver.checkExternalIncrease` ·
+      `engine.ReconcileDriver.alertUnmanaged` · `journal.Journal.OpenExitState` ·
+      `journal.Journal.ApplyPositionAdjustment` · `exitpolicy.EvaluateLadder`
+      (앞의 둘은 생성기로 다시 씀 — 2판 FLM의 「B2 — 미편입 보유가 여기로 온다」 거짓 정정)
+- [x] 1.5 **발신 자리 넷의 대조**(2판 1.11) — 결과: **같은 사실이 아니다.** exit 관측 · reconcile 무관리 ·
+      수량 증가(보호 중) · fold(생산 도달 불가)로 갈린다. `design.md` D1 「발신 자리 넷의 3판 처분」
+- [ ] 1.6 **a091과의 병합 확인** — 둘 다 등급 표를 건드릴 수 있다. 3판은 표 크기를 시험에 적지 않는다
 
-      | 함수 | 분기 | 미진입 | 블록없음 |
-      | --- | --- | --- | --- |
-      | `obs.SeverityOf` | 1 | 0 | 0 |
-      | `obs.Notifier.Notify` | 1 | 0 | 0 |
-      | `obs.Notifier.publishBestEffort` | 2 | 0 | 0 |
-      | `engine.ReconcileDriver.checkExternalIncrease` | 3 | **2** | 0 |
-      | `engine.ReconcileDriver.alertUnmanaged` | 6 | 0 | 1 |
-      | `journal.Journal.OpenExitState` | 20 | 4 | 1 |
-      | `journal.resetExitStateForReadoptTx` | 6 | **4** | 1 |
-      | `journal.Journal.ApplyPositionAdjustment` | 27 | 6 | 5 |
-      | `exitpolicy.EvaluateLadder` | 32 | 11 | 1 |
+## 2. R1′ — 등급을 사실로 (결정 (1)·(2), design D1)
 
-      **가장 무거운 실측**: `checkExternalIncrease`는 분기 3개 중 **2개가 미진입**이다 —
-      `B1 :442`(프로세스당 1회 억제)와 `B2 :446`(편입 기록 없음의 조용한 반환).
-      **a095의 R2가 정확히 그 둘 위에 얹힌다.** 2.3·2.4가 먼저 덮는다.
+- [ ] 2.0 **Pre-Edit 선언** — 대상은 Q1의 답이 정한다
+- [ ] 2.1 **RED** — exit 관측 자리(`workingSet` B6 → `ExitObserver.alertUnmanaged`)의 사실은 **normal**이고
+      `Notify` B1 창(`publishBestEffort`)으로 간다: outbox 행 0 · `n.mu` 미획득. 기존
+      `TestAPositionWithNoEntryDecisionIsSkippedAndAlertedOnce`의 normal 단언을 유지한다
+- [ ] 2.2 **RED** — reconcile `alertUnmanaged` B5(편입 켜짐 · 편입 실패)의 사실은 **critical**이고 outbox 행을
+      만든다. 싣는 방식은 `[비움 — Q1]`
+- [ ] 2.3 **RED** — exclude(`judgeHoldings` B11 · `alertUnmanaged` B4)는 **normal** — outbox 행 0 · 진입 게이트
+      래치 0 · 운영 모드 승격 0
+- [ ] 2.4 **RED** — `adoption.enabled=false` ∧ 미지정(`judgeHoldings` B12 · 기본 사유)은 **normal** — 2.3과 같은
+      단언. 정본 exit-policy 「false에서의 동작은 무관리 보유 알림을 포함한 기존 동작과 동일」의 동등성 시험
+- [ ] 2.5 **RED** — **알림 off**(`notifications.enabled=false`) 엔진에서 B5 사실이 발생해도 `deliver` B3 ·
+      `notifyCritical` B4 사슬에 닿지 않는다 — 진입 게이트 래치 0 · 승격 0. 방식은 `[비움 — Q1]`
+- [ ] 2.6 `[비움 — Q2]` 설정 거부(B3) · include 지정 시도 실패(B6) · `adopt` B2 · B6 · B7 연기분 · 알림 on에
+      transport 죽음 — 답에 따라 RED를 쓴다
+- [ ] 2.7 **RED** — 키 분리(결정 (3)(iii)): exit 관측 자리와 reconcile 자리의 event key가 다르다
+- [ ] 2.8 **RED** — 전이 상태 무알림 유지: `judgeHoldings` B9(RECONCILE) · B10(묵은 스냅샷)에서 알림 0
+- [ ] 2.9 **RED** — `notifierAlerter.ExternalPositionFound`의 등급은 normal로 남고, 생산 배선에서
+      `IngestExternalPositions`의 알림 어댑터가 nil이다(B12). 2판 6.2a는 이것으로 대체된다
+- [ ] 2.10 **GREEN** — Q1의 방식대로. `SeverityOf` · `Notify` · `publishBestEffort` · `notifyCritical` ·
+      `claimAndDeliver` · `deliver` 본문은 바꾸지 않는다
 
-      **둘째로 무거운 것**: `resetExitStateForReadoptTx`는 분기 6개 중 **4개 미진입**이고
-      넷 다 오류 처리다. 손절가를 덮어쓰는 유일한 자리의 오류 경로가 거의 시험되지
-      않았다 — **D4가 자동 갱신 경로를 지금 붙이지 않는 이유의 하나다**
-- [ ] 1.11 **발신 자리 넷의 문구 대조** — `adoption.go:418`·`:456`,
-      `exitloop.go:1501`, `exitwiring.go:104`가 실제로 **같은 사실**을 말하는지.
-      다른 사실이면 등급을 함께 올리는 것이 틀렸다(design D7)
-- [ ] 1.12 **a091과의 텍스트 충돌 확인** — 둘 다 `criticalEvents` map을 늘린다.
-      논리 의존은 없으나 병합 순서를 정한다
+## 3. R2′ — 수량 증가 (결정 (3), design D2)
 
-## 2. R1·R2 — 등급과 억제 (D1·D2)
+- [ ] 3.1 **RED** — `checkExternalIncrease` B2 **무변화**(R2-B2 삭제): 조회 오류에서 조용히 반환하고
+      무관리 알림으로 보내지 않는다
+- [ ] 3.2 `[비움 — Q3]` 엔진 개설 포지션(`judgeHoldings` B7, 편입 기록 없음)의 수량 증가 검사 — 비교 기준이
+      정해지면 RED를 쓴다
+- [ ] 3.3 `[비움 — Q4]` 수량 증가 사실의 종류 · 등급 · 키. critical이면 정본 engine-safety 재알림 창 SHALL NOT과
+      대조한 키로, normal이면 `d.grown`(B1) 래치의 기준만
+- [ ] 3.4 `[비움 — Q4]` 475150 원장 순서(편입 2 → 3 · 4 · 5 · 8 · 26 · 32) 재생 시험 — 「32가 운영자에게
+      전해진다」를 Q4의 답에 맞는 형태로 못 박는다
+- [ ] 3.5 **GREEN**
 
-- [ ] 2.0 **Pre-Edit 선언** — `internal/obs/event.go`(map only),
-      `internal/app/engine/adoption.go` `checkExternalIncrease`
-- [ ] 2.1 **RED** — `SeverityOf(EventExitPositionUnmanaged)` == `SeverityCritical`
-- [ ] 2.2 **RED** — 그 이벤트가 `Notify`에서 **B1 `:111`을 타지 않고** `notifyCritical`로
-      가서 `alert_outbox` 행을 만든다. 전달 실패 시 재시도가 붙는다
-- [ ] 2.2a **RED** — `CriticalEvents()`의 고정 목록이 19종이 된다(기존 18 + 1).
-      **다른 18종의 등급은 무변화**
-- [ ] 2.3 **RED (미진입 분기 B2 `:446`)** — 편입 기록이 **없는** 포지션에서
-      `checkExternalIncrease`가 조용히 반환하지 않는다. 그 포지션은 **보호 상태 없음**으로
-      보고된다. **오늘 이 분기를 밟는 시험이 하나도 없다**
-- [ ] 2.3a **RED** — 진짜 조회 오류(DB 오류)는 종전대로 조용히 반환한다.
-      **「기록 없음」과 「조회 실패」를 가른다** — 후자를 알리면 DB 장애가 알림 폭주가 된다
-- [ ] 2.4 **RED (미진입 분기 B1 `:442`)** — 수량 증가를 알린 뒤 **같은 프로세스에서**
-      수량이 또 늘면 **다시 알린다**. 수량이 그대로면 다시 알리지 않는다.
-      **오늘 이 분기를 밟는 시험이 하나도 없다**
-- [ ] 2.5 **RED** — `alertUnmanaged`의 `d.unmanaged` 억제는 **무변화**(프로세스당 1회).
-      무보호는 수량과 무관한 상태이고 critical의 outbox 재시도가 반복을 대신 책임진다
-      (design D6의 결정을 시험으로 고정)
-- [ ] 2.6 **RED** — `alertUnmanaged`의 사유 switch(B3~B6) **무변화**
-- [ ] 2.7 **GREEN** — `criticalEvents`에 `EventExitPositionUnmanaged` 한 줄 +
-      `checkExternalIncrease`의 억제 키를 수량 기준으로 + B2 분기 분리
-- [ ] 2.8 **§0.3 확인** — 이 change는 판정·제출 경로에 새 호출을 넣지 않는다.
-      diff로 보인다
+## 4. R3 — 총위험 `[보류 — Q5]`
 
-## 3. R3 — 총위험 (D3)
+- [ ] 4.1 `[비움 — Q5]` R3의 지위(유지 · 보류 · 삭제). 유지면 평단 출처(보이스 A A-5)를 번들로 먼저 재검증한다.
+      2판 3.1~3.6은 이력(`2fbdcd78`의 tasks.md)
 
-- [ ] 3.1 **RED** — 알림이 `(평단 − **유효손절**) × 현재수량`을 담는다.
-      **유효손절은 `baseline_price`이지 `initial_stop`이 아니다.**
-      475150 형태(평단 58,000 · 유효손절 57,900 · 32주)에서 **3,200**이 나온다.
-      **`initial_stop`(56,163)을 쓰면 58,784가 나오고 그것은 18.4배 과대다** — 1판이
-      그렇게 적었고 1라운드가 잡았다
-- [ ] 3.2 **RED** — `exit_states`의 `entry_price`·`initial_stop`·`initial_risk`·
-      `policy_*`에 **어떤 쓰기도 일어나지 않는다.** 구조로 고정
-- [ ] 3.3 **RED** — 평단이 `firstNonEmpty`(`position_adjustments.go:312`)로 이어받은
-      값이면 그 불확실성이 보고에 담긴다
-- [ ] 3.4 **RED** — 평단이나 손절가를 읽지 못하면 총위험을 **추측하지 않는다.**
-      "미측정"으로 보고하고 알림 자체는 계속 나간다
-      (수를 못 만든 것이 알림을 막으면 안 된다)
-- [ ] 3.4a **RED** — 유효 손절이 평단 **위**면 그 수는 음수다. **「위험」이 아니라
-      「고정된 이익」으로 보고한다.** 272210(−7,220)·TSLA가 그 경우다.
-      음수를 위험으로 적으면 운영자가 정반대로 읽는다
-- [ ] 3.5 **RED** — `resetExitStateForReadoptTx`의 호출자는 **여전히 하나**다
-      (`positionpolicy.ActionReadopt`). a095는 새 호출자를 만들지 않는다.
-      **구조로 고정** — D4가 자동 갱신을 미루는 근거가 이 불변식이다
-- [ ] 3.6 **GREEN** — 산출과 필드 추가. 읽기와 산술뿐
+## 5. 하지 않는 것을 고정한다 (design D4 · D6)
 
-## 4. 하지 않는 것을 고정한다 (D4·D6)
-
-- [ ] 4.1 **RED (§6)** — 평단이 **내려간** 포지션에서 유효 손절가가 **내려가지 않는다.**
-      실측 3종목(066570·080220·272210)이 그 경우다
-- [ ] 4.2 **RED** — `EvaluateLadder`의 산출이 **무변화**. 모든 선은 계속 `entry_price`에서 나온다
-- [ ] 4.3 `issues.md`에 **래칫의 선행 조건 셋** 기록 — 쓰기 경로 단일성 · 하향 거부의
-      기록 · 진입 기준 이동의 사다리 파급 계측. **StockOS의 SHALL과 그것이 dormant라는
-      사실을 함께 적는다**
-
-## 5. 실측 재생
-
-- [ ] 5.1 2026-08-07 원장 상태를 fixture로 재생 — 010170(무보호 30주)이 critical로
-      보고되는지, 475150(3→32주)이 총위험 **3,200**(유효손절 57,900 기준)과 함께 보고되는지
-- [ ] 5.2 `alert_outbox`에 `exit.position_unmanaged` 행이 **생기는지**
-      (오늘 0행인 것이 이 change의 출발점이다)
-- [ ] 5.3 결과를 `issues.md`에 기록. **a091·a094와의 상호작용**을 명시한다
+- [ ] 5.1 **RED (§6)** — 평단이 내려간 포지션에서 유효 손절가가 내려가지 않는다
+- [ ] 5.2 **RED** — `EvaluateLadder`의 산출 무변화 — 모든 선은 계속 `entry_price`에서 나온다
+- [x] 5.3 `issues.md` I1에 **`baseline_price` 쓰기 자리 넷의 사실**을 번들 분기로 기록 — 판정(B25 `notBelow` ·
+      B29 창 선택) · 관측 갱신(B23 거절, 값 무변화) · 재편입 reset(비교 분기 없음) · 최초 INSERT
+- [ ] 5.4 `[비움 — Q6]` 래칫 선행 조건을 SHALL로 다시 세울지
 
 ## 6. 게이트
 
 - [ ] 6.1 `go test ./... -count=1 -race` 회귀 0
-- [ ] 6.2 **§0.3 확인 — 호출 수가 아니라 체류 시간으로 잰다**(1라운드 §1.4).
-      1판은 *"제출 경로에 새 호출이 0개임을 diff로 보인다"*고 약속했고 **호출 수 diff는
-      이것을 구조적으로 볼 수 없다** — 호출이 늘지 않고 **기존 호출의 등급이 바뀔** 뿐이다.
-      `alertUnmanaged`가 `observe` **전에** 있다는 사실(`exitloop.go:515` vs `:443`)과
-      `deliver`가 `n.mu`를 잡는 구간을 **실측**한다
-- [ ] 6.2a **RED** — `notifierAlerter.ExternalPositionFound`(`exitwiring.go:98-103`)의
-      오류 전파를 다룬다. `Notify`는 critical outbox 쓰기 실패에서만 오류를 반환하므로
-      (`notifier.go:104-107`) **`EnqueueAlert` 실패가 이제 외부 포지션 대사를 실패시킨다**
-      (`internal/reconcile/external.go:278-295`). 종전에는 불가능했다.
-      **그리고 그 발신 자리만 latch가 없다** — 적용되는 fold마다 발화한다(`external.go:277-281`)
-- [ ] 6.3 **§0.4 확인** — 새 브로커 조회 **0건**. 총위험은 이미 읽은 값의 산술이다
-- [ ] 6.4 **토글 OFF 동등성** — 이 change는 토글을 도입하지 않는다.
-      도입하지 않았음을 명시한다(`not-applicable` 아님 — 무도입)
-- [ ] 6.5 **`openspec validate --strict`의 한계** — ADDED만 쓰므로 이 change에는
-      정본 치환 위험이 없다. **그 사실을 확인하고 적는다**(a094 1라운드 차단 1의 교훈)
-- [ ] 6.6 FLM·AST **재생성** (구현 후) + `check_analysis.py` 통과
+- [ ] 6.2 **§0.3** — exit goroutine에 **새** critical Notify가 없음을 구조로 보인다: `workingSet` B6 경로의
+      사실이 normal(2.1). 기존 exit 발신의 `n.mu` 대기 증가는 `[비움 — Q7]`
+- [ ] 6.3 **§0.4** — 새 브로커 조회 0건
+- [ ] 6.4 **토글 OFF 동등성** — 기존 토글 둘(`notifications.enabled` · `adoption.enabled`)의 OFF에서 동작이
+      이 change 전과 같다(2.4 · 2.5). 새 토글은 도입하지 않는다
+- [ ] 6.5 `openspec validate --strict`의 한계 — 델타가 ADDED만 쓰는지 확인하고 적는다
+- [ ] 6.6 FLM · AST **재생성**(구현 후) + `check_analysis.py` 통과
 - [ ] 6.7 `make sdd-sync` → `make sdd-check`
 - [ ] 6.8 **격리 worktree에서** `make gate CHANGE=a095-a-stop-must-know-what-it-covers`
-- [ ] 6.9 **독립 리뷰**(구현과 분리된 컨텍스트). **교차 모델을 지킨다**
+- [ ] 6.9 **독립 리뷰**(구현과 분리된 컨텍스트) · 교차 모델
 - [ ] 6.10 PM 동기화 → `openspec archive`
 
 ## 7. 배포와 운영 — 사람이 승인한다
 
-- [ ] 7.1 배포 전 `main`과 **SchemaVersion 대조** (낮으면 엔진이 조용히 죽는다)
-- [ ] 7.1a **공시** — alert transport가 죽고 무보호 보유가 있으면 **엔진이 신규 진입을
-      멈춘다**(`ModeEntryBlocked`, `notifier.go:216-218`, `Acknowledge`로만 해제).
-      **손절·익절·취소는 막지 않는다.** 그것이 a095가 선택하는 교환임을 운영자가
-      미리 알아야 한다(design D1의 근거 셋)
-- [ ] 7.2 **배포 직후 알림 폭주 여부를 실측한다.** 열린 포지션 6건 중 최소 2건이
-      즉시 critical로 울린다(010170 무보호 · 475150 수량 증가). 그것이 **의도한 동작**임을
-      미리 적어 두고, 그 이상이 울면 억제 키를 재검토한다
-- [ ] 7.3 **이 change는 현재 열린 포지션을 소급 보호하지 않는다.**
-      **010170의 30주는 배포 후에도 무보호이며, 배포가 하는 일은 그것을 보이게 하는 것뿐이다.**
-      배포 전까지 사람이 처리한다
-- [ ] 7.4 배포 후 `alert_outbox`에 `exit.position_unmanaged` 행이 실제로 생기는지 확인
+- [ ] 7.1 배포 전 `main`과 SchemaVersion 대조
+- [ ] 7.2 **배포 직전에 원장을 다시 잰다.** 2026-09-25 재조회(2라운드 P1-6)의 OPEN은 TSLA 먼지 1건이었다.
+      배포 직후 critical로 울 것의 예측은 **그 시점의 측정**으로 쓴다 — 2판의 「6건 중 최소 2건」은 거짓이
+      되었으므로 지웠다
+- [ ] 7.3 **공시** — 편입 켜짐(`adoption.enabled=true`)이고 알림 on인 엔진에서 편입 실패(B5)가 critical이 되고,
+      전달 실패 시 진입이 막힌다. 알림 off · 편입 off · exclude에서는 막히지 않는다(결정 (2)). Q2(d)의 답을 함께 적는다
+- [ ] 7.4 배포 후 `alert_outbox`에 B5 사실의 행이 생기는지 확인
 
 ## 선후 관계
 
 ```text
 a095 (이 change) ── 보호 범위의 보고
    │
-   ├─ a091 한 주도 못 판 손절      **같은 map을 늘린다.** 논리 의존 없음. 병합 순서만
-   ├─ a094 손절이 길을 치운다       독립. 같은 종목이 등장하나 원인이 다르다(409 오분류)
-   ├─ a089 나가지 못한 손절을 센다  독립. 계측
-   └─ a092 알림이 손절을 잡지 않는다 **선행 조건.** 아래 참조
+   ├─ a092 알림이 손절을 잡지 않는다   **독립**(결정 (1)). exit 관측 자리는 normal로 남는다
+   ├─ a124 배달 실행자의 지속 실패     독립. Q7(n.mu 경합)의 소유 후보
+   ├─ a091 한 주도 못 판 손절          경계가 같다(「엔진이 보호하기로 했는가」). 등급 표 병합 순서만 확인(1.6)
+   ├─ a094 손절이 길을 치운다          독립
+   └─ a089 나가지 못한 손절을 센다     독립
 ```
 
-**a095는 a092 뒤에 간다(1라운드 §1.7 정정).** a092가 존재하는 이유가 손절 경로의
-**동기 알림 체류를 유계로 만드는 것**이고, a095 R1은 **그 경로를 타는 알림의 모집단을
-늘린다.** 1판은 *"a092와 겹치지 않는다 — 알림 체류"*라고 적었고 **거꾸로였다.**
+**a095는 a092와 독립이다.** 2판의 이 자리는 *"a095는 a092 뒤에 간다(1라운드 §1.7 정정)"*였고,
+사용자 결정 (1)과 모순된다. 결정 원문(`review.md` §2.16):
 
-`alertUnmanaged`는 `workingSet` 안 `exitloop.go:515`에서 불린다 — **`observe`(`:443`)와
-포지션 판정(`:453-465`) 전이다.** critical이 되면 `deliver`가 `n.mu`를 잡은 채
-재시도 예산(`DefaultCriticalAttempts=3` × `DefaultRetryDelay=2s`)을 돈다.
+> | 1 | **묶지 않는다** — a095 는 a092 와 독립 | 2.10 항목 4 의 ②: exit goroutine 에 critical Notify 를 **새로 두지 않는다**. 발신은 reconcile 쪽(`adoption.go` 경로)에서만 critical, exit 루프 자리(`exitloop.go:518` `alertUnmanaged`)는 normal 로 둔다. 옛 약속 사본(tasks 2.8 · §4 행 · D7) 제거 |
 
-**a091과는 합산된다.** 둘 다 같은 `criticalEvents` map에 행을 더하고, 그것은 텍스트
-충돌이 아니라 **직렬화된 `deliver` 예산에 두 종류가 더 들어오는 것**이다.
-어느 계획도 그 합을 소유하지 않으므로 **먼저 가는 쪽이 합을 측정한다.**
+2판이 a092를 선행 조건으로 둔 이유(exit 루프의 관측 전 동기 critical 체류)는 결정 (1)이 그 자리를 normal로
+두는 것으로 사라진다(design D1 「exit 관측 자리가 normal이어야 하는 이유」). 남는 것은 기존 exit 발신의 `n.mu`
+대기이고, 그것은 순서 의존이 아니라 Q7이다.
 
-**후속(별도 change)**: 불타기 방향의 손절 상향 래칫. 선행 조건 셋은 `issues.md`와
-`specs/exit-policy/spec.md`에 SHALL로 있다.
+**후속(별도 change)**: 불타기 방향의 손절 상향 래칫 — 선행 사실은 `issues.md` I1, 선행 조건의 SHALL 여부는 Q6.
 
 ## 안전 불변식 확인
 
 | 불변식 | 이 change에서 |
 | --- | --- |
-| §1 사람 승인 없는 LIVE 주문 side effect 금지 | 이 change는 **주문을 내지 않는다.** 알림과 산술뿐. 배포는 7절에서 사람이 승인 |
+| §1 사람 승인 없는 LIVE 주문 side effect 금지 | 주문을 내지 않는다. 알림 등급과 검사뿐. 배포는 7절에서 사람이 승인 |
 | §2 `mutating: true` 자동 실행 금지 | 준수 |
-| §3 토글 OFF는 upstream과 동일 | **토글을 도입하지 않는다** |
-| §4 손절 즉시성을 약화·지연하지 않는다 | 6.2가 제출 경로에 새 호출 0개임을 보인다. 알림 경로만 건드린다 |
-| §5 High-risk 경로 | 손절 알림·보호 범위. Pre-Edit 선언은 2.0 |
-| §6 보수 방향만 | **손절가를 내리는 변경을 명시적으로 거부한다**(4.1). 등급은 올리는 방향, 알림은 늘리는 방향, 총위험은 **과소보고를 없애는** 방향 |
+| §3 토글 OFF는 upstream과 동일 | 알림 off · 편입 off에서 동작 무변화(결정 (2), 6.4) |
+| §4 손절 즉시성을 약화·지연하지 않는다 | exit goroutine에 새 critical Notify 없음(결정 (1), 6.2). 기존 발신의 `n.mu` 대기 증가는 Q7 |
+| §5 High-risk 경로 | 무보호 보고 · 진입 차단 도달. Pre-Edit 선언은 2.0 |
+| §6 보수 방향만 | 손절가를 바꾸지 않는다(5.1). 등급은 결정이 정한 사실에서만 올린다 |
 | §7 운영 토글 flip과 live 검증은 사람이 | 7절 |
-| §8 시크릿·계좌 개인정보 저장 금지 | 원장 인용은 종목코드·수량·가격·시각까지. 계좌번호·잔고 절대액 없음 |
+| §8 시크릿·계좌 개인정보 저장 금지 | 원장 인용은 종목코드·수량·가격·시각까지 |

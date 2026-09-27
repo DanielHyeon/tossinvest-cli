@@ -1,16 +1,16 @@
 {
   "file": "internal/obs/notifier.go",
-  "source_sha256": "d5b3004c638690fb94ffbfaeb4caac4ea1300684b98e325485214b7114bae990",
+  "source_sha256": "0bc75668ff17c3d6dec1c8191e24f00b80a700c091ed33fe80c1acbd4b9a5bd8",
   "package": "obs",
   "function": "Notify",
   "receiver": "Notifier",
   "signature": "Notifier.Notify(params=2, results=1)",
   "start": {
-    "line": 107,
+    "line": 130,
     "column": 1
   },
   "end": {
-    "line": 116,
+    "line": 139,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 111,
+        "line": 134,
         "column": 2
       }
     }
@@ -27,14 +27,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 113,
+        "line": 136,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 115,
+        "line": 138,
         "column": 2
       }
     }
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 108,
+        "line": 131,
         "column": 14
       },
       "text": "SeverityOf"
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 109,
+        "line": 132,
         "column": 2
       },
       "text": "n.logEvent"
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 112,
+        "line": 135,
         "column": 3
       },
       "text": "n.publishBestEffort"
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 115,
+        "line": 138,
         "column": 9
       },
       "text": "n.notifyCritical"
@@ -77,7 +77,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 108,
+        "line": 131,
         "column": 2
       }
     }

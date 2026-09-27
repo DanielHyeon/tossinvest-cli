@@ -68,5 +68,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **a095는 이 함수를 바꾸지 않는다.** `lockPrice(entry, pct)`(`:503-509`)가 `entry × (1 + pct/100)`이고 그것이 설계다. 평단을 여기 넣으면 이미 보고된 R의 분모가 바뀐다 — `checkExternalIncrease` 주석이 금지한 바로 그것이다. a095가 손절을 올린다면 **이 함수의 산출을 바꾸는 것이 아니라 `entry_price` 자체를 다시 세우는 경로**로 해야 하고, 그것은 `resetExitStateForReadoptTx`의 형제다.
+- **Safe edit boundary**: **a095는 이 함수를 바꾸지 않는다.** `lockPrice(entry, pct)`(`:503-509`)가 `entry × (1 + pct/100)`이고 그것이 설계다. 평단을 여기 넣으면 이미 보고된 R의 분모가 바뀐다 — `checkExternalIncrease` 주석이 금지한 바로 그것이다. 3판은 손절을 올리지 않는다(래칫 상향은 후속 change의 주제이고 선행 사실은 issues I1).
 - **High-risk impact**: yes — 손절가와 익절선을 계산한다.

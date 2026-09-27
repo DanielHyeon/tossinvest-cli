@@ -1,16 +1,16 @@
 {
   "file": "internal/obs/notifier.go",
-  "source_sha256": "d5b3004c638690fb94ffbfaeb4caac4ea1300684b98e325485214b7114bae990",
+  "source_sha256": "0bc75668ff17c3d6dec1c8191e24f00b80a700c091ed33fe80c1acbd4b9a5bd8",
   "package": "obs",
   "function": "publishBestEffort",
   "receiver": "Notifier",
   "signature": "Notifier.publishBestEffort(params=3, results=0)",
   "start": {
-    "line": 138,
+    "line": 161,
     "column": 1
   },
   "end": {
-    "line": 150,
+    "line": 173,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 139,
+        "line": 162,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 142,
+        "line": 165,
         "column": 2
       }
     }
@@ -35,7 +35,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 140,
+        "line": 163,
         "column": 3
       }
     }
@@ -44,7 +44,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 142,
+        "line": 165,
         "column": 12
       },
       "text": "n.Publisher.Publish"
@@ -52,7 +52,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 142,
+        "line": 165,
         "column": 37
       },
       "text": "notificationFor"
@@ -60,7 +60,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 145,
+        "line": 168,
         "column": 3
       },
       "text": "n.Log.Warn"
@@ -68,7 +68,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 146,
+        "line": 169,
         "column": 16
       },
       "text": "string"
@@ -76,7 +76,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 147,
+        "line": 170,
         "column": 19
       },
       "text": "string"
@@ -84,7 +84,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 148,
+        "line": 171,
         "column": 16
       },
       "text": "err.Error"
@@ -94,7 +94,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 142,
+        "line": 165,
         "column": 5
       }
     }
