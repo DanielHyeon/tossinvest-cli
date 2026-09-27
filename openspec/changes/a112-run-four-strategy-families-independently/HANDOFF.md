@@ -189,6 +189,10 @@ safety context 를 분리한다"와 spec 의 "lane worker 가 safety loop 를 �
      (기존 경로 승인이 살아 있으면 거래가 계속된다 — docs/operations.md 정정). 남긴 잔여 넷: 세대 래칫(재시작 넘어,
      원장 필요 — 5.3.3 선례), 프로세스 안 파일 폐기는 다음 파도부터 보임, 미선언과 "넷 다 ON" 이 화면에서 같아 보임
      (8.8.4 와 함께), 가족 만료 거절이 게이트웨이에서 "scheduler authority changed" 로 찍힘(execgw 는 a066 영역).
+   - **a066 로트가 전달한 잔여 (2026-09-27, 이 로트 범위 밖).** 전략 경로에서 entry loss lock 거절이
+     `ATOMIC_ADMISSION_FAILED` 로 뭉개져 시장 워커 전체가 latch 된다(KR SHORT 잠금이 KR MEDIUM 도 차단 — 안전 방향의
+     과차단, 레인이 dormant 라 생산 영향 0). 수리 자리는 `strategy_first_leg_admission`·supervisor 이고, 수리 소유는
+     **활성화 호출자를 배선하는 후속 로트**로 명명됐다.
    - **5.3.3 이 닫혔다 (2026-09-03).** 레인 잠금이 원장에 남는다(schema v32, append-only
      두 테이블). 레인은 열린 채로 태어나지 않고 **기록에서** 태어나며, 복구는 성공한
      사이클이 아니라 **엄격히 더 큰 서명 활성화 세대**(`scheduler.Activation.Generation()`,
