@@ -76,6 +76,14 @@ var (
 	// 일이고, 폐기는 사람의 결정이며, 만료는 다시 발급하는 일이다. 하나로
 	// 뭉치면 "왜 안 켜지는가" 에 답할 수 없다.
 	ErrProductionFamilyActivationExpired = errors.New("strategyrouter: four-family activation expired")
+	// ErrProductionFamilyActivationUndeclared 는 배포가 이 시장에 4-가족 활성화를
+	// **선언하지 않았다**는 뜻이다 — 핀 env 가 비어 있다 (태스크 8.7.2).
+	//
+	// 위 셋과 방향이 반대다. 셋은 "선언은 했는데 쓸 수 없다" 이고 엔진은 그 시장의
+	// 네 가족을 OFF 로 되돌린다. 이것은 "4-가족 런타임이 배포되지 않았다" 이고 엔진은
+	// 기존 시장 단위 경로를 그대로 쓴다 — 토글 OFF = upstream 동작이다. 둘을 한
+	// 값으로 뭉치면 사람이 끈 가족이 활성화 만료·폐기 뒤 기존 경로로 되살아난다.
+	ErrProductionFamilyActivationUndeclared = errors.New("strategyrouter: four-family activation undeclared")
 )
 
 // ProductionFamilyActivationFileName 은 닫힌 대응이다. 매니페스트나 호출자가 준
@@ -343,6 +351,42 @@ func (activation FamilyActivation) ProtectionReadyMinGeneration() uint64 {
 	return activation.protectionReadyMinGeneration
 }
 
+// LeaseCeiling 은 주문 lease 의 수명 상한을 이 활성화의 남은 수명으로 깎는다 (태스크 8.7.2).
+//
+// **줄이기만 한다.** 검증되지 않은 값(영값 = 4-가족 런타임이 판정하지 않는 시장)은
+// 상한을 그대로 돌려주고, 검증된 값은 `min(상한, 남은 수명)` 을 돌려준다. 늘리는 길은
+// 없다 — 이 함수가 늘릴 수 있으면 활성화가 오히려 주문을 오래 살리는 권한이 된다.
+//
+// 수명이 다 됐으면 만료 오류다. 그 판정은 적재가 쓰는 바로 그 함수
+// (`familyActivationRemaining`)이므로 두 자리가 같은 순간에 같은 답을 낸다.
+//
+// 왜 필요한가: 활성화는 파도 시각에 검증되고 주문 lease 는 그 뒤에 발급된다. 상한을
+// 깎지 않으면 만료 직전에 검증된 활성화가 만료 뒤 최대 30초까지 SUBMITTING 을 허락한다.
+// 스케줄 활성화는 같은 이유로 이미 lease 를 자기 수명으로 깎는다(`strategyDispatchCycle.dispatch`).
+func (activation FamilyActivation) LeaseCeiling(now time.Time, ceiling time.Duration) (time.Duration, error) {
+	if !activation.Verified() {
+		return ceiling, nil
+	}
+	remaining, err := familyActivationRemaining(activation.expiresAt, now)
+	if err != nil {
+		return 0, err
+	}
+	return min(ceiling, remaining), nil
+}
+
+// familyActivationRemaining 은 이 패키지의 **유일한** 만료 판정이다.
+//
+// 만료 시각에 정확히 닿은 순간부터 만료다(`!now.Before(expires)`). 적재
+// (`validateProductionFamilyActivation`)와 lease 상한(`LeaseCeiling`)이 둘 다 이것을
+// 부른다 — 판정을 두 곳에 적으면 경계 1ns 에서 둘이 갈릴 수 있고, 각자가 상대의
+// 시험을 통과시킨다.
+func familyActivationRemaining(expires, now time.Time) (time.Duration, error) {
+	if !now.Before(expires) {
+		return 0, ErrProductionFamilyActivationExpired
+	}
+	return expires.Sub(now), nil
+}
+
 // Desired 와 Effective 는 매니페스트가 이 레인에 대해 말한 상태다.
 //
 // 시장을 인자로 받아 이 활성화의 시장과 대조한다. 받지 않고 값의 시장을 그냥
@@ -381,6 +425,13 @@ func (activation FamilyActivation) lookup(market Market, family Family,
 // 서명 검증을 하나 더 두었다 — 사람이 그것을 뺐고, digest 핀이 파일 치환을 막는
 // 역할은 그대로다.
 func LoadProductionFamilyActivation(ctx context.Context, config FamilyActivationConfig) (FamilyActivation, error) {
+	// 미선언을 **맨 먼저** 본다 (태스크 8.7.2). ctx 나 다른 결속 값보다 앞인 이유:
+	// 핀이 없는 시장(오늘 생산)의 답이 주기의 사정 — 취소된 ctx, 비어 있는 보정 값 —
+	// 에 따라 "선언했는데 쓸 수 없다" 로 바뀌면, 엔진이 그 시장의 네 가족을 OFF 로
+	// 되돌려 기존 경로를 닫는다. 미배포 여부는 설정 사실 하나로만 정한다.
+	if strings.TrimSpace(config.ManifestDigest) == "" {
+		return FamilyActivation{}, ErrProductionFamilyActivationUndeclared
+	}
 	if ctx == nil {
 		return FamilyActivation{}, ErrProductionFamilyActivationUnavailable
 	}
@@ -489,8 +540,9 @@ func validateProductionFamilyActivation(body productionFamilyActivationBody,
 		!issued.Before(expires) || expires.Sub(issued) > productionFamilyActivationMaximumLife {
 		return nil, ErrProductionFamilyActivationUnavailable
 	}
-	if !now.Before(expires) {
-		return nil, ErrProductionFamilyActivationExpired
+	// 만료 판정은 lease 상한과 같은 함수 하나다 (태스크 8.7.2).
+	if _, err := familyActivationRemaining(expires, now); err != nil {
+		return nil, err
 	}
 	// 표가 비어 있는 시장을 여기서 다시 막지 않는다. 그 문은 위에서 이미
 	// 닫혀 있다(`ProductionFamilyActivationFileName` 이 "" 를 주면 곧바로 거절).

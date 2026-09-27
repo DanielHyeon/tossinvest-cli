@@ -36,6 +36,12 @@ type strategyDispatchCycle struct {
 	// (태스크 8.8.2). 제안 목록은 봉투가 이미 들고 오므로 읽지 않는다.
 	proposals          strategyProposalAuthorityPair
 	revalidateSchedule func(context.Context, StrategyMarket, strategyScheduleMarketAuthority) error
+	// now 는 실시계다 (태스크 8.7.2). 4-가족 활성화의 만료를 파도 시각이 아니라 **지금**
+	// 으로 잰다 — admission 앞 한 번, 그리고 게이트웨이가 브로커 바이트 전에 부르는 최종
+	// 검사에서 한 번. 생산 조립(`NewPairedStrategyEntryProductionAssembly`)이 `clk.Now` 를
+	// 넣는다. nil 이면 검증된 가족 활성화를 가진 시장의 주문은 거절이다(fail-closed);
+	// 검증 안 된 시장(미선언·기존 경로)은 시각을 보지 않으므로 영향이 없다.
+	now func() time.Time
 
 	owner *strategyDispatchOwnerCoordinator
 }
@@ -112,6 +118,28 @@ func (cycle *strategyDispatchCycle) dispatch(ctx context.Context, delivered stra
 				protection.Generation(), activation.ProtectionReadyMinGeneration())
 		}
 	}
+	// 4-가족 활성화의 만료를 **실시계로** 잰다 (태스크 8.7.2).
+	//
+	// 활성화는 파도 시각에 검증되고 주문은 그 뒤에 나간다. 두 자리에서 잰다: 여기
+	// (q_final admission **앞** — 위 머리 주석의 "admission 이 커밋하기 전에 실패할 수 있는
+	// 읽기 전용 경계를 전부 끝낸다"), 그리고 아래 `FinalAuthorityCheck` 안(게이트웨이가
+	// 브로커 바이트 **전**에 부른다). 규칙(검증 안 된 시장은 상한 그대로 · 남은 수명 0
+	// 이하면 만료 · 결과는 상한을 넘지 않음)은 strategyrouter 한 곳에 있고 여기는 배관이다.
+	//
+	// lease TTL 은 상대 시간이고 원장이 자기 시각에 더하므로, lease 행의 명목 만료는
+	// 여기서 발급까지 걸린 δ 만큼 활성화 만료를 넘을 수 있다. 그래도 SUBMITTING 은 만료
+	// 뒤 최종 검사를 통과할 수 없다 — 그것이 이 불변식의 정확한 형태다.
+	//
+	// 실시계가 없는데 가족 활성화가 검증돼 있으면 거절한다(fail-closed). 생산 조립은
+	// 언제나 시계를 넣고, 검증 안 된 시장(미선언·기존 경로)은 시각을 보지 않는다.
+	family := cycle.proposals.forMarket(market).familyActivation()
+	if family.Verified() && cycle.now == nil {
+		return execgw.Outcome{}, errors.New("engine: four-family activation lifetime cannot be measured without a clock")
+	}
+	leaseCeiling, err := family.LeaseCeiling(cycle.clockNow(), 30*time.Second)
+	if err != nil {
+		return execgw.Outcome{}, err
+	}
 	reconciliation, err := cycle.gateway.ObserveStrategyEntryGate(ctx, strings.ToLower(string(market)), accepted.result.Lineage.Symbol)
 	if err != nil {
 		return execgw.Outcome{}, err
@@ -147,7 +175,7 @@ func (cycle *strategyDispatchCycle) dispatch(ctx context.Context, delivered stra
 		ProtectionGeneration: protection.Generation(), ProtectionSerial: strconv.FormatUint(protection.Generation(), 10), ProtectionDigest: protection.Digest(),
 		ReconciliationGeneration: reconciliation.Generation(), ReconciliationDigest: reconciliation.Digest(),
 		RiskPolicyGeneration: riskGeneration, GuardianGeneration: guardianGeneration, BuildDigest: strategyRuntimeBuildDigest()}
-	ttl := min(30*time.Second, activationExpiresAt.Sub(now))
+	ttl := min(leaseCeiling, activationExpiresAt.Sub(now))
 	lease, err := cycle.journal.IssueVerifiedFirstLegStrategyDispatchLease(ctx, journal.VerifiedFirstLegStrategyDispatchLeaseRequest{
 		Receipt: admitted.Receipt, Owner: owner, Evidence: evidence, TTL: ttl,
 	})
@@ -171,8 +199,25 @@ func (cycle *strategyDispatchCycle) dispatch(ctx context.Context, delivered stra
 		FXAuthority: fx.read.evidence, IntentID: admitted.Receipt.AttemptID,
 		EntryGateAuthority: reconciliation,
 		FinalAuthorityCheck: func(checkCtx context.Context) error {
-			return cycle.revalidateSchedule(checkCtx, market, schedule)
+			// 스케줄 재검증이 **먼저**다. 그 재검증은 달력을 다시 읽는 I/O 이므로, 가족 만료를
+			// 앞에서 보면 그 I/O 동안 만료가 지나가도 이 클로저가 통과를 돌려준다(Codex 재리뷰
+			// P1). 가족 만료는 이 클로저가 돌려주기 **직전**, 브로커 바이트 전에 본다 (태스크 8.7.2).
+			if err := cycle.revalidateSchedule(checkCtx, market, schedule); err != nil {
+				return err
+			}
+			_, err := family.LeaseCeiling(cycle.clockNow(), 30*time.Second)
+			return err
 		}})
+}
+
+// clockNow 는 실시계의 지금이다. 시계가 없으면 영값을 준다 — 그 값은 검증 안 된 가족
+// 활성화(시각을 보지 않는다)에만 닿는다. 검증된 활성화가 시계 없이 여기 오는 길은
+// dispatch 의 첫 가족 검사가 막는다.
+func (cycle *strategyDispatchCycle) clockNow() time.Time {
+	if cycle.now == nil {
+		return time.Time{}
+	}
+	return cycle.now()
 }
 
 func (cycle *strategyDispatchCycle) dispatchOwner(ctx context.Context) (journal.StrategyDispatchOwner, error) {

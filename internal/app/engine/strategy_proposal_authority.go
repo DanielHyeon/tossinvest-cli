@@ -148,7 +148,8 @@ type strategyProposalMarketAuthority struct {
 	entries  []strategyProposalEntryAuthority
 	snapshot StrategyProposalMarketSnapshot
 	// activation 은 이 시장의 조정 앞에 선 4-가족 관문이 쓴 서명 활성화다
-	// (태스크 5.1.2.2). 영값이면 관문이 서지 않았다는 뜻이다.
+	// (태스크 5.1.2.2). 영값이면 관문이 서지 않았거나(미선언) 되돌린 채로 섰다
+	// (선언했는데 쓸 수 없음, 태스크 8.7.2) — 어느 쪽이든 승격은 없다.
 	//
 	// 권위와 함께 실어 보내는 이유: 새로 고침 뒤 도는 레인 관측 사이클이 관문과
 	// **같은** 승격을 봐야 한다. 두 자리에서 따로 읽으면 만료가 그 사이에

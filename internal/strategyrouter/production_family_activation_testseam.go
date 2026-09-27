@@ -28,6 +28,17 @@ func FamilyActivationForTest(market Market, generation uint64, promoted map[stri
 func FamilyActivationWithBindingsForTest(market Market, generation uint64, promoted map[string]bool,
 	protectionReadyMinGeneration uint64,
 ) FamilyActivation {
+	return FamilyActivationExpiringForTest(market, generation, promoted, protectionReadyMinGeneration,
+		time.Now().UTC().Add(time.Hour))
+}
+
+// FamilyActivationExpiringForTest 는 만료 시각까지 지정한다 (태스크 8.7.2).
+//
+// 주문 lease 가 활성화의 남은 수명으로 깎이는지를 재려면 그 수명을 시험이 골라야 한다.
+// 벽시계에 기대면 시험의 "남은 10초" 가 실행 속도에 따라 흔들린다.
+func FamilyActivationExpiringForTest(market Market, generation uint64, promoted map[string]bool,
+	protectionReadyMinGeneration uint64, expiresAt time.Time,
+) FamilyActivation {
 	want := productionRouteDescriptors(market)
 	if len(want) == 0 || generation == 0 || protectionReadyMinGeneration == 0 {
 		return FamilyActivation{}
@@ -43,7 +54,7 @@ func FamilyActivationWithBindingsForTest(market Market, generation uint64, promo
 				LaneVersion: table.LaneVersion, Desired: desired, Effective: effective}
 	}
 	return FamilyActivation{market: market, generation: generation, actor: "test-seam",
-		expiresAt:                    time.Now().UTC().Add(time.Hour),
+		expiresAt:                    expiresAt.UTC(),
 		protectionReadyMinGeneration: protectionReadyMinGeneration, state: state}
 }
 

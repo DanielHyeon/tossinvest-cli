@@ -54,6 +54,15 @@ func collectUnderGate(t *testing.T, activation strategyrouter.FamilyActivation,
 	lanes *strategyLaneRuntime, symbol string, laneIDs ...string,
 ) strategyProposalMarketAuthority {
 	t.Helper()
+	return collectUnderLoad(t, activation, nil, lanes, symbol, laneIDs...)
+}
+
+// collectUnderLoad 는 활성화 적재가 낸 **오류까지** 골라 수집을 돌린다 (태스크 8.7.2).
+// 관문은 오류의 종류로 갈린다 — 미선언만 기존 경로이고 나머지는 되돌림이다.
+func collectUnderLoad(t *testing.T, activation strategyrouter.FamilyActivation, loadErr error,
+	lanes *strategyLaneRuntime, symbol string, laneIDs ...string,
+) strategyProposalMarketAuthority {
+	t.Helper()
 	now := time.Date(2026, 9, 3, 1, 2, 3, 0, time.UTC)
 	loader := testStrategyProposalLoader(t)
 	loader.load = func(_ context.Context, config strategyproposal.ProductionConfig,
@@ -64,7 +73,7 @@ func collectUnderGate(t *testing.T, activation strategyrouter.FamilyActivation,
 	loader.loadActivation = func(context.Context, StrategyMarket, strategyScheduleMarketAuthority,
 		strategyRouteMarketAuthority, time.Time,
 	) (strategyrouter.FamilyActivation, error) {
-		return activation, nil
+		return activation, loadErr
 	}
 	pair := loader.withStrategyLanes(lanes).collect(context.Background(), routeReadySchedulePair(now),
 		arbitrationRoutePair(t, now, familyScoresForTest(strategyrouter.MarketKR), symbol, laneIDs...),
@@ -113,6 +122,9 @@ func TestTheProductionActivationLoaderRunsAndFindsNoManifest(t *testing.T) {
 	// 축이 바뀐다.
 	env := map[string]string{
 		strategyFamilyActivationKRManifestDigestEnv: "sha256:" + strings.Repeat("c", 64),
+		// 위험 정책 핀도 채운다 (8.7.2 적대 리뷰 B 의 P2-4). 비워 두면 적재기가 결속 형식
+		// 검사에서 멈춰 "파일이 없다" 축에 닿지 않는다 — 위 문단이 경고한 바로 그 축 바꿈이다.
+		strategyRiskKRManifestDigestEnv: "sha256:" + strings.Repeat("e", 64),
 	}
 	dir := t.TempDir()
 	loader := newStrategyProposalAuthorityLoader(dir, filepath.Join(dir, "evidence.db"),
@@ -141,8 +153,14 @@ func TestTheProductionActivationLoaderRunsAndFindsNoManifest(t *testing.T) {
 	}
 	gate := loader.familyGateFor(context.Background(), StrategyMarketKR,
 		routeReadySchedulePair(now).forMarket(StrategyMarketKR), routes, now)
-	if gate.installed() {
-		t.Fatal("서명된 매니페스트가 없는데 관문이 섰다 — 오늘 생산에는 그 파일이 없다")
+	// **핀이 있는데 파일이 없으면 관문이 되돌린 채로 선다** (태스크 8.7.2 가 이 기대를
+	// 뒤집었다). 앞 판본은 여기서 "관문이 서지 않는다" 를 단언했고, 그것은 선언된
+	// 활성화의 부재를 기존 경로 통과로 읽는 구멍을 못 박고 있었다 — 사람이 끈 가족이
+	// 활성화가 사라지는 순간 되살아난다. 핀이 **없는** 시장(오늘 생산)의 "관문 없음" 은
+	// `TestADeclaredActivationThatLapsesRollsItsMarketBackInsteadOfWidening` 이 잰다.
+	if !gate.installed() || !gate.rolledBack || gate.activation.Verified() {
+		t.Fatalf("핀이 선언한 활성화가 없는데 관문이 되돌린 채로 서지 않았다: installed=%v rolledBack=%v",
+			gate.installed(), gate.rolledBack)
 	}
 }
 
@@ -153,7 +171,10 @@ func TestTheProductionActivationLoaderRunsAndFindsNoManifest(t *testing.T) {
 // 하나가 그대로 선택되어야 한다.
 func TestWithoutAVerifiedActivationCoordinationIsUnchanged(t *testing.T) {
 	runtime, _ := familyGateFixture(t)
-	authority := collectUnderGate(t, strategyrouter.FamilyActivation{}, runtime, "005930",
+	// "활성화 없음" 은 이제 **미선언**을 뜻한다 (태스크 8.7.2). 선언했는데 쓸 수 없는
+	// 활성화는 관문을 되돌린 채로 세우므로 이 시험의 상태가 아니다.
+	authority := collectUnderLoad(t, strategyrouter.FamilyActivation{},
+		strategyrouter.ErrProductionFamilyActivationUndeclared, runtime, "005930",
 		continuationlane.KRContinuationLaneID, reversallane.KRReversalLaneID)
 	// 점수는 REVERSAL 900_000 > CONTINUATION 400_000 이다. 관문이 서지 않았으니
 	// 그 순위가 그대로여야 한다.

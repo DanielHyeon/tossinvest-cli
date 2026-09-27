@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -20,10 +21,15 @@ import (
 // 5.1.2.1 은 "오늘 여덟을 관문으로 세우면 생산 진입이 0 이 되고 그것은 토글 OFF
 // 불변식(§0-2, OFF = upstream 동작)에 어긋난다" 고 적었다. 스펙은 반대로
 // "required activation authority 가 missing 이면 broker exposure-raising request
-// 는 0건이어야 한다 (SHALL)" 고 적었다. 둘을 함께 만족시키는 유일한 모양이
-// **관문을 활성화된 런타임 안에만 세우는 것**이다: 활성화가 없으면 기존 시장
-// 단위 경로가 그대로 돌고(= upstream 동작 보존), 활성화가 있으면 그 시장의
-// 넷이 각자 판정한다.
+// 는 0건이어야 한다 (SHALL)" 고 적었다. 둘을 함께 만족시키는 모양이
+// **관문을 선언된 런타임 안에만 세우는 것**이다: 배포가 활성화를 선언하지 않았으면
+// (핀 없음) 기존 시장 단위 경로가 그대로 돌고(= upstream 동작 보존), 선언했으면 그
+// 시장의 넷이 각자 판정한다.
+//
+// **선언했는데 쓸 수 없으면 넷 다 OFF 다** (태스크 8.7.2). 파일이 없거나 핀과 다르거나
+// 만료·폐기됐으면 관문은 되돌린 채로 서고(`rolledBack`), 그 시장의 신규 진입은
+// FAMILY_GATE_CLOSED 로 닫힌다. 8.7.1 의 첫 판본은 그 경우를 "관문 없음" 으로 접었고,
+// 그래서 사람이 끈 가족이 활성화가 사라지는 순간 기존 경로로 되살아났다.
 //
 // design 이 partial 3-of-4 를 시장 전체 OFF 로 못 박았으므로(`design.md:208`),
 // 활성화된 시장의 서술자는 언제나 정확히 넷이다. 그래서 관문이 실제로 막는 것은
@@ -47,15 +53,31 @@ const (
 type strategyFamilyGate struct {
 	activation strategyrouter.FamilyActivation
 	lanes      []*strategyworker.Lane
+	// rolledBack 는 배포가 이 시장에 4-가족 활성화를 **선언했는데**(핀 있음) 검증된
+	// 활성화가 없다는 뜻이다 — 파일이 없거나, 핀과 다르거나, 만료·폐기됐거나 (태스크 8.7.2).
+	//
+	// 그때 관문은 서고 네 가족은 OFF 다. 관문이 서지 않으면 기존 시장 단위 경로가
+	// 돌고, 그러면 사람이 매니페스트에서 끈 가족이 활성화가 사라지는 순간 되살아난다 —
+	// 만료가 진입을 **넓히는** 방향이다. 되돌린 관문은 영값 활성화로 레인에게 물으므로
+	// 모든 가족이 DORMANT(잠긴 레인은 LATCHED)를 내고, 범위가 전부 지워져 그 시장은
+	// FAMILY_GATE_CLOSED 로 신규 진입만 닫힌다. 레인 잠금·원장·safety 루프는 이 값이
+	// 건드리지 않는다 — 이 값은 제안을 조정자에 넣을지만 정한다.
+	rolledBack bool
 }
 
 // installed 는 이 관문이 실제로 판정하는지다.
 //
-// 활성화와 레인 **둘 다** 있어야 한다. 하나만 보면 다른 하나가 조용히 빠졌을 때
-// 관문이 통과 도장으로 바뀐다 — 레인이 비면 아무 제안도 자기 주인을 못 찾으므로
-// 아래 admit 이 전부 거절하게 되고, 그것은 fail-closed 가 아니라 기능 정지다.
+// **선언된 시장에서는 언제나 선다** (태스크 8.7.2). 검증된 활성화가 있거나(승격 판정),
+// 선언했는데 쓸 수 없거나(`rolledBack`, 넷 다 OFF). 어느 쪽도 레인 수를 보지 않는다.
+//
+// 8.7.1 의 첫 판본은 "검증된 활성화 && 레인이 있다" 였고, 레인이 비면 관문을 내려 기존
+// 경로를 돌렸다 — "전부 거절은 fail-closed 가 아니라 기능 정지" 라는 이유였다. 그런데 그
+// 갈래에서는 사람이 매니페스트에서 끈 가족이 기존 경로로 통과한다(8.7.2 적대 리뷰 A 가
+// 레인 nil + 지속형만 ON 으로 역전형 선택을 재현). 핀이 있는 시장이 기존 경로를 도는 길은
+// 없어야 한다. 레인이 없으면 admit 이 주인 없는 제안으로 REFUSED 를 내고 시장이 닫힌다 —
+// 생산에서는 닿지 않는다(레인은 시계가 있는 한 언제나 여덟이다).
 func (gate strategyFamilyGate) installed() bool {
-	return gate.activation.Verified() && len(gate.lanes) != 0
+	return gate.rolledBack || gate.activation.Verified()
 }
 
 // admit 는 이 봉인된 제안이 조정자에 닿는지를 그 가족의 레인에게 묻는다.
@@ -96,19 +118,27 @@ func (loader *strategyProposalAuthorityLoader) familyGateFor(ctx context.Context
 	if loader == nil {
 		return strategyFamilyGate{}
 	}
-	// 레인이 없는 경우를 여기서 또 막지 않는다. 그 판정은 아래 `installed` 하나에
-	// 있다 — 첫 판본은 `loader.lanes == nil` 을 여기 달고 있었고 반증이 그것을
-	// 지워도 아무 색도 안 바뀌었다(레인이 없으면 관문이 서지 않으므로). 같은
-	// 규칙을 두 곳에 두면 각자가 상대의 시험을 통과시킨다.
+	// 레인이 없는 경우를 여기서 따로 다루지 않는다. 레인이 없으면 선 관문의 admit 이
+	// 모든 제안을 주인 없음(REFUSED)으로 멈추고 시장이 닫힌다(태스크 8.7.2) — 첫 판본은
+	// `loader.lanes == nil` 을 여기 달고 있었고 반증이 그것을 지워도 아무 색도 안 바뀌었다.
 	load := loader.loadActivation
 	if load == nil {
 		load = loader.loadFamilyActivation
 	}
 	activation, err := load(ctx, market, schedule, routes, observedAt)
-	if err != nil || !activation.Verified() {
+	// 판별은 하나다 (태스크 8.7.2): **미선언만** 기존 경로다. 배포가 핀을 두지 않은
+	// 시장은 4-가족 런타임이 배포되지 않은 것이고, 토글 OFF = upstream 동작이다(오늘
+	// 생산: 핀 0 건, 측정). 무엇이 미선언인지는 strategyrouter 한 곳이 정한다.
+	if errors.Is(err, strategyrouter.ErrProductionFamilyActivationUndeclared) {
 		return strategyFamilyGate{}
 	}
-	return strategyFamilyGate{activation: activation, lanes: loader.lanes.lanesFor(market)}
+	lanes := loader.lanes.lanesFor(market)
+	// 선언했는데 쓸 수 없으면 — 오류의 종류를 가리지 않고 — 네 가족을 OFF 로
+	// 되돌린다. 종류(만료·폐기·어긋남)를 운영자에게 보이는 일은 태스크 8.8.4 다.
+	if err != nil || !activation.Verified() {
+		return strategyFamilyGate{lanes: lanes, rolledBack: true}
+	}
+	return strategyFamilyGate{activation: activation, lanes: lanes}
 }
 
 // loadFamilyActivation 은 이 시장의 4-가족 활성화를 읽는다.
@@ -128,10 +158,14 @@ func (loader *strategyProposalAuthorityLoader) loadFamilyActivation(ctx context.
 	if market == StrategyMarketUS {
 		digestEnv = strategyFamilyActivationUSManifestDigestEnv
 	}
-	calibration, agreed := strategyMarketCalibrationDigest(routes)
-	if !agreed {
-		return strategyrouter.FamilyActivation{}, strategyrouter.ErrProductionFamilyActivationUnavailable
-	}
+	// 보정이 합의되지 않으면 빈 값을 넘기고 판정은 strategyrouter 가 한다 (태스크 8.7.2).
+	//
+	// 앞 판본은 여기서 곧바로 Unavailable 을 돌려줬다. 그 반환은 **핀을 보기 전**이라,
+	// 핀이 없는 시장(미배포)에서도 "선언했는데 쓸 수 없다" 로 읽혀 그 시장의 기존 경로를
+	// 닫는다 — 생산 동작 변화다. 미선언이 먼저이고 빈 보정 값은 그다음에 거절된다
+	// (`productionRouteIdentity("")` 는 거짓 — 파일을 열기 전이다). 합의가 안 되면
+	// `strategyMarketCalibrationDigest` 는 언제나 빈 값을 준다.
+	calibration, _ := strategyMarketCalibrationDigest(routes)
 	// 위험은 **정책 매니페스트** digest 로 결속한다 (태스크 8.8.2).
 	//
 	// 앞 판본은 per-cycle 위험 스냅샷 봉인에 걸었고 그 값은 종목과 파도 벽시계를

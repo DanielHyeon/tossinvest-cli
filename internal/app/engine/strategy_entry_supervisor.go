@@ -325,6 +325,13 @@ func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context, 
 	firstLegBridge := newStrategyFirstLegAdmissionBridge(guardian, firstLegLoader)
 	dispatchCycle := newStrategyDispatchCycle(c.Journal, c.Gateway, firstLegBridge, scheduleAuthority, fxAuthority, riskAuthority,
 		proposalAuthority, c.strategyDispatchOwner)
+	// 4-가족 활성화의 만료를 실시계로 재게 한다 (태스크 8.7.2). 이 대입이 빠지면 검증된 가족
+	// 활성화를 가진 시장의 주문이 전부 거절된다 — 넓힘이 아니라 fail-closed 다. 시계가 nil 이면
+	// 메서드 값을 만들지 않는다(nil 인터페이스의 `clk.Now` 는 그 자리에서 panic 이다); 그때
+	// now 는 nil 로 남고 dispatch 가 검증된 가족 활성화를 거절한다.
+	if clk != nil {
+		dispatchCycle.now = clk.Now
+	}
 	dispatchCycle.revalidateSchedule = func(checkCtx context.Context, market StrategyMarket, expected strategyScheduleMarketAuthority) error {
 		fresh := newStrategyScheduleAuthorityLoader(c.Paths.ConfigDir, clk, c.official, os.Getenv).collectMarket(checkCtx, market)
 		if !fresh.snapshot.Ready || fresh.restore.Activation == nil || expected.restore.Activation == nil ||

@@ -273,6 +273,8 @@ func pairedStrategyDispatchCycleFixture(t *testing.T) (*strategyDispatchCycle, s
 	spy := &strategyDispatchGatewaySpy{observed: map[string]int{}}
 	cycle := newStrategyDispatchCycle(j, spy, firstLeg, schedule, riskFixture.fx, riskPair, proposals, &strategyDispatchOwnerCoordinator{})
 	cycle.revalidateSchedule = func(context.Context, StrategyMarket, strategyScheduleMarketAuthority) error { return nil }
+	// 생산 조립과 같은 모양으로 실시계를 넣는다 (태스크 8.7.2).
+	cycle.now = fakeClock.Now
 	return cycle, proposals, j, spy
 }
 
