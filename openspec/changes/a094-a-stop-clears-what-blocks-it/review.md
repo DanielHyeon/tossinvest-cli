@@ -679,4 +679,4 @@ Manager 과제: 3판 이후 387+ 커밋이 쌓인 HEAD 에 맞춰 증거만 재�
   이웃이 바꾼 것 셋, a094 R1 ↔ a089 R2 문장 대조(같은 `error.code` 를 읽고 동작 분기에서 정반대 — main spec 충돌).
 - 검토 자료 목록: `analysis/third-round-review-materials.md` — 교차 모델 요구, 대상 문서, 2라운드 차단 8건의 3판 답
   위치, 사람 몫.
-- 교차 모델은 여전히 충족 수단이 없다(codex 인증 401 — a124 기록). 3라운드는 Manager 지시 뒤.
+- 교차 모델: codex CLI 가 2026-09-27 재가동 확인됐다(세션 id 3건 — `analysis/third-round-review-materials.md` §A). 3라운드는 Manager 지시 뒤.
