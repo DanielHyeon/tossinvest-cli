@@ -30,7 +30,7 @@ import (
 // 세기만 함(범위가 조용히 줄지 않게).
 var a066StorageExitCensus = struct {
 	files, funcs, exits, others, txOpeners int
-}{files: 8, funcs: 93, exits: 283, others: 62, txOpeners: 10}
+}{files: 8, funcs: 93, exits: 283, others: 63, txOpeners: 10}
 
 func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 	names, err := filepath.Glob("risk_bucket*.go")
@@ -102,6 +102,9 @@ func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 							}
 							if assignsErrFromStorageCall(source) {
 								exits++
+								if os.Getenv("A066_LIST_STORAGE_EXITS") != "" {
+									t.Logf("storage exit %s %s", fset.Position(stmt.Pos()), fn.Name.Name)
+								}
 								checkStorageExit(t, fset, fn.Name.Name, stmt)
 							} else {
 								others++

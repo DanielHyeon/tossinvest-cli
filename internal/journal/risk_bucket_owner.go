@@ -492,12 +492,19 @@ func (j *Journal) applyRiskBucketOwnerBindingInTx(ctx context.Context, tx *sql.T
 	if strings.ToUpper(strings.TrimSpace(fill.Side)) != "BUY" {
 		return nil
 	}
+	// a066 6.x: 증분을 해석하지 못하는 BUY 체결은 의미 갭임 — 형제 갭(다중 활성 scope·결속 거절)과 같이 이 주문의 활성
+	// owner scope 를 REPLAY_MISMATCH 로 latch 하고 nil 을 돌려줌(진입만 막고 체결·exit 는 막지 않음). 등록된 위험 주문이
+	// 아니면 latch 할 owner 가 없으므로 예전과 같이 아무것도 안 함.
 	delta, err := campaignQuantity(fill.Delta)
 	if err != nil {
-		return nil
+		return latchRiskBucketFillFailureForScope(ctx, tx, fill, "owner bind: fill delta unreadable: "+err.Error())
 	}
 	positive, err := riskcalc.CompareDecimal(delta, "0")
-	if err != nil || positive <= 0 {
+	if err != nil {
+		return latchRiskBucketFillFailureForScope(ctx, tx, fill, "owner bind: fill delta unreadable: "+err.Error())
+	}
+	// 증분 0 은 같은 누적량의 재관측 — 결속할 새 수량이 없음.
+	if positive <= 0 {
 		return nil
 	}
 	rows, err := tx.QueryContext(ctx, `SELECT DISTINCT d.account_ref,d.market,d.symbol,d.owner_prospective_generation

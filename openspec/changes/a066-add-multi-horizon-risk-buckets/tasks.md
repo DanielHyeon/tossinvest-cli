@@ -42,6 +42,7 @@
 ## 6. Verify and Gate
 
 - [ ] 6.1 Run monetary calculator property tests, migration/journal integration tests and races for prospective owner, q_final decision ordering, all-bucket acquisition and protected release; record RED-to-GREEN evidence for every Branch Test Map row.
+- [x] 6.1.1 (6.1 finding, Manager 2026-09-28) `applyRiskBucketOwnerBindingInTx` returned nil with no owner bind and no latch when a registered risk order's BUY fill delta was unreadable or negative. Repaired to latch the order's active owner scopes (`latchRiskBucketFillFailureForScope`, REPLAY_MISMATCH + unknown-actual + FILL_UNACCOUNTED). The fill still commits, and a zero delta stays a no-op. FLM first (`analysis/pre-edit/6.x-owner-bind/`); RED at `47b48ae4`; mutation `analysis/mutation-6.1/owner-bind-ledger.tsv`: 4 CAUGHT, O2 unreachable with its premise pinned by `FuzzA066CampaignQuantityIsComparable`.
 - [ ] 6.2 Run broker spies and timing assertions proving all bucket/loss-lock failures cause zero exposure-raising live requests while risk-reducing, stop, emergency exit, reconciliation and fill detection remain callable without evidence/FX waits.
 - [ ] 6.3 Verify the feature is dormant by default, does not loosen any existing limit, does not flip lane/automation/live toggles and treats unresolved US FX as q_final 0.
 - [ ] 6.4 Refresh Function Logic Maps, Branch Test Maps and risk reports after edits, then run `openspec validate a066-add-multi-horizon-risk-buckets --strict --no-interactive`, `make sdd-check`, `make test`, `make vet` and `make validate`.
