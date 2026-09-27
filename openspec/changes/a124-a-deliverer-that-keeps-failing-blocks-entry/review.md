@@ -473,3 +473,34 @@ proposal Non-goals/Impact)을 쓰고 Q4~Q6 을 반영해 5회차 재freeze 한�
 - **2.14 (c)**: 단언을 셋으로 나눴다 — ① 알림 · 모드 사유 둘 다 없음, ② 원장 모드 행, ③ `CheckEntryFor == nil` 은 필수 조회에 정당한 관측을 준 통제된
   허용 경우에서만. 재잠금 두 변형(허용 · 강제)은 알림 사유가 **있음**으로 단언한다.
 - 처분표에 AD1~AD4 행을 넣었다. tasks 0.4 에 13회차 주석을 달았다. 판정 규칙(D1 · D7 표와 순서 · D8 전이) 편집은 0 이다.
+
+## §0.19 proposal-freeze 14회차 (2026-09-27) — design 8판 **PASS** (codex) · P2 2 · P3 1 기록, 반영 없음 · 0.4 는 Manager 검증 뒤
+
+- 실행: codex-cli 0.154.0, `gpt-6-astra`, reasoning medium, `codex exec -s read-only --ephemeral --skip-git-repo-check -C <트리>`, session
+  **`01a0e2e8-6156-7ea2-abe9-552bdc7809cb`**, 21:47~21:52 KST, rc 0, 196,558 토큰. 프롬프트는 `codex-r14-prompt.md` 원문이다(sha256 `eb31ddf8…b38b`, 실행 사본과 일치).
+  트리는 base `4798d399` export 에 HEAD `fe3db326` 의 이 change 디렉터리를 겹친 것이다(워크트리와 `diff -r` 0). 실행 뒤 트리 안 새 파일은 0 이다.
+  출력: `analysis/freeze-review/codex-r14-output.md`.
+- 시작 직전 coordinator 에 슬롯 신호를 보냈다(지시대로).
+- codex 판정: **`VERDICT: PASS — No P0/P1 remains in the scoped proposal; W1 protection remains explicitly unresolved, and implementation,
+  contention measurements, and downstream mode enforcement remain unproven.`**
+- 이전 발견:
+  - **PARTIAL 3** — V2(셈~해제 경합은 정직하게 a092 몫으로 남음), AD1 · AD3(요약 문장 두 곳 — 아래 AE1 · AE2).
+  - **W1(b) NOT RESOLVED** — 「정직하게 미해소」로 판정받았고, 좁힌 닫는 조건 (i)(ii)는 「exact」로 판정받았다.
+  - 나머지는 전부 RESOLVED 다(W1(a) · AC1 · AC2 · AD2 · AD4 포함).
+- 그 밖의 판정:
+  - 판정 규칙 변경 없음(의미 대조 — export 에 판본 스냅숏이 없어 byte diff 는 Teammate 가 커밋 전에 확인했다, §0.18).
+  - spec 교체 문장은 시험 가능하고 「늦은 적용」 예외와 일관된다.
+  - 2.14 (c) 는 구현 가능하다(`EntryGate.Blocks()` `retry.go:597-604` · `CurrentOperatingMode` · 기존 생산 빌더 시험 기반 `a098_restart_does_not_release_the_gate_test.go`).
+    단 승격 실패 변형은 「실패한 쓰기가 모드 행을 만들었다」고 단언하지 말 것.
+  - D10 의 다른 검사 목록은 **예시로서** 맞다(전수 허용 체크리스트가 아님).
+  - D2 · D3 는 유지다.
+- 새 발견 (Teammate 가 해당 줄을 직접 확인했다 — 분류는 codex 와 같다):
+
+| id | 심각도 | 발견 | 자리 |
+|---|---|---|---|
+| AE1 | P2 | 좁히기가 문자 그대로 전부는 아니다: D3 「세지 않는 안은 무설정 엔진이 영구히 진입을 열어 두는 구멍이다」, 안전 불변식 대조 「생산에서 진입을 막는 수단은 알림 래치 하나」. D10 이 지배하므로 실행 가능한 모순은 아니다 | design :106 · :505 — 「전달 실패 래치를 더하지 않는다」 · 「**a124 가 더하는** 유일한 차단 수단」으로 |
+| AE2 | P2 | 처분표 W1 행의 요약이 아직 「셈~해제 수리 **또는** 투영기 배선이 닫는다」 — 좁힌 궤적 · 전제가 빠졌다. D10 본문은 맞다 | design :578 — 「D10 전제 아래 적힌 궤적을 줄인다」로 |
+| AE3 | P3 | 기동 복원 FLM 주석 「승격은 원장에 남아 있으므로 복원할 것이 없다」가 AC1 의 잘못된 추론을 되살릴 수 있다(분기 열거는 맞음) | `analysis/function-logic/internal-app-engine--restorealertentrylatch/function-logic-map.md:37` — 「모드 행은 남지만 게이트 투영은 여기서 복원하지 않는다」로 |
+
+- **판정: PASS (codex, 교차 모델).** P2 · P3 는 기록만 했고 반영하지 않았다 — 반영 여부는 Manager 가 정한다. **tasks 0.4 는 체크하지 않는다**(Manager 검증 뒤).
+  PASS 의 범위는 codex 가 적은 대로 「scoped proposal」이다. W1 보호 · 구현 · 원장 경합 측정 · 모드 집행은 미증명으로 남는다.
