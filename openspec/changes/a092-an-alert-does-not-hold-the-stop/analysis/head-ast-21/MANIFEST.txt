@@ -1,0 +1,19 @@
+HEAD c1e34dc4ba44177b7663e8da5d90a8a40517b9da
+internal-obs-notifier--notifier.notify internal/obs/notifier.go:130-139 sha=0bc75668ff17 branches=1 returns=2 calls=4 defers=0
+internal-obs-notifier--notifier.notifycritical internal/obs/notifier.go:176-231 sha=0bc75668ff17 branches=4 returns=3 calls=11 defers=0
+internal-obs-notifier--notifier.claimanddeliver internal/obs/notifier.go:251-317 sha=0bc75668ff17 branches=7 returns=5 calls=15 defers=1
+internal-obs-notifier--notifier.acknowledge internal/obs/notifier.go:840-878 sha=0bc75668ff17 branches=10 returns=6 calls=12 defers=1
+internal-obs-notifier--notifier.logclaimheld internal/obs/notifier.go:636-646 sha=0bc75668ff17 branches=1 returns=1 calls=4 defers=0
+internal-app-engine-exitloop--exitobserver.alert internal/app/engine/exitloop.go:1706-1713 sha=522d5d81c499 branches=2 returns=1 calls=2 defers=0
+internal-app-engine-runtime--runtime.run internal/app/engine/runtime.go:288-379 sha=a80916efecb9 branches=5 returns=3 calls=34 defers=4
+internal-app-engine-runtime--runtime.alert internal/app/engine/runtime.go:491-503 sha=a80916efecb9 branches=2 returns=1 calls=7 defers=1
+internal-app-engine-alertdelivery--alertdeliverer.cycle internal/app/engine/alertdelivery.go:235-264 sha=5791a31af9d2 branches=4 returns=3 calls=12 defers=0
+internal-app-engine-alertdelivery--alertdeliverer.deliverone internal/app/engine/alertdelivery.go:270-340 sha=5791a31af9d2 branches=11 returns=4 calls=20 defers=0
+internal-app-engine-alertdelivery--alertdeliverer.judge internal/app/engine/alertdelivery.go:427-440 sha=5791a31af9d2 branches=4 returns=1 calls=5 defers=0
+internal-app-engine-gateway--restorealertentrylatch internal/app/engine/gateway.go:153-168 sha=cf4833845140 branches=2 returns=3 calls=4 defers=0
+internal-execgw-modegate--entrygate.projectoperatingmode internal/execgw/modegate.go:35-51 sha=029961389516 branches=3 returns=1 calls=5 defers=0
+internal-journal-operating_mode--journal.setmodeprojector internal/journal/operating_mode.go:294-306 sha=ed35ea67c26b branches=2 returns=3 calls=4 defers=1
+internal-journal-operating_mode--journal.transitionoperatingmode internal/journal/operating_mode.go:346-485 sha=ed35ea67c26b branches=28 returns=20 calls=39 defers=1
+internal-journal-operating_mode--journal.restoreoperatingmodeprojection internal/journal/operating_mode.go:574-589 sha=ed35ea67c26b branches=2 returns=2 calls=3 defers=0
+internal-journal-alert_claim--journal.releasealertclaim internal/journal/alert_claim.go:394-399 sha=b12323111630 branches=0 returns=1 calls=1 defers=0
+internal-journal-outbox--journal.claimalertfordelivery internal/journal/outbox.go:231-267 sha=ad74f6c9b295 branches=8 returns=9 calls=13 defers=1

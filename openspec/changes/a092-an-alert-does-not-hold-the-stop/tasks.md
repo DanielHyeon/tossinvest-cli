@@ -1,6 +1,45 @@
-# a092 tasks (20판)
+# a092 tasks (21판)
 
 base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
+
+> **21판 (2026-09-28) — 축소. 문서만, 코드 0줄.** 사용자 결정 20-1 ⓒ: *"a092 21판은 「exit goroutine 에서 동기 deliver 제거」로
+> 좁히고 a124 를 착수 조건으로 인용한다."* 착수 조건 a124 착지 `22fecb76` · 아카이브 `c1e34dc4`. 측정 HEAD `c1e34dc4`.
+> 무엇을 바꿨는지는 design D0.3e, 20라운드 P0 판정은 `review.md` §23.3, 열린 질문은 `proposal.md` 「열린 질문」 Q1~Q6.
+>
+> **아래 「21. 21판 작업」이 21판의 작업 목록이다.** §6·§8·§9의 20판 이전 미체크 task는 21판 범위를 정하지 않는다 — 절 머리에
+> ⛔ 21판 표지를 달았다(20라운드 B-5·B-6(T): 그 절들의 좌표·FLM 수 주장은 21판에서 근거로 쓰지 않는다). 옛 task는 21.4가
+> 대체 여부를 하나씩 판정할 때까지 지우지 않는다.
+
+## 21. 21판 작업 (2026-09-28)
+
+- [x] 21.0 21판 문서 초안 — engine-safety 델타 축소(전달 목록 ①~⑥ 반영, ADDED 요구 하나) · exit-policy 델타 셋째 항 이름(A-8 = B-9) ·
+      design D0.3e · proposal 21판 표와 「열린 질문」 · `analysis/head-ast-21/`(HEAD `c1e34dc4` 추출 18개, `extract.py` 커밋) ·
+      `review.md` §23 · `check_values.py` `DRAFT = 21`. 검증: `openspec validate --strict` rc 0, `check_values.py` 실패 목록 대조(§23.4).
+      **적대 리뷰(21라운드)는 이 체크에 들지 않는다** — Manager 지시 뒤 21.8.
+- [ ] 21.1 **열린 질문 Q1~Q6의 답** — 답이 온 뒤 21.3 이하를 확정한다. Q3·Q4의 답 전에는 21.6·21.7에 착수하지 않는다.
+- [ ] 21.2 **FLM 먼저 (구현 전).** (a) `Notifier.deliver`(분기 27)의 HEAD AST로 잠금 밖으로 옮겨질 갈래(정산 · 래치 `:484`·`:520`·`:571` ·
+      반납)를 열거하고 `Acknowledge` 셈~해제와의 겹침 표를 쓴다(design D0.3e 5번이 주장하지 않은 것). (b) 20판 블록 ①: base 재고정 +
+      `DIFF` 번들 재추출 + Branch Test Map 재번호(difflib 정렬). (c) 편집 대상 `notifyCritical`·`claimAndDeliver`·`logClaimHeld`·
+      `ExitObserver.alert` 배선 자리의 FLM·Branch Test Map. (d) `Acknowledge`가 `n.mu`를 쥐는 시간을 backlog 크기별로 재고 그 옆의
+      exit 기록 체류를 잰다(a124 2.6(c) 하네스 재사용) — 21판에서 exit 기록이 그 잠금에 줄 서므로 셋째 항의 크기가 측정 대상이 된다(문서 리뷰 R6).
+- [ ] 21.3 **RED — 기록 전용 exit 경로 (안 가).** 막힌 publisher로: (a) exit 관측 사이클이 publish 없이 반환한다 (b) 반환 직후 그 행에
+      발송 임차가 없다 — 배달 실행자가 `ClaimAlertByID`로 집는다 (c) 재알림 창이 지난 정착 행이 다시 무장된다 (d) 그 반환이
+      `ReasonAlertUndelivered` 래치도 승격도 만들지 않는다 (e) 기록 자체의 실패는 그 자리에서 래치 + 승격(그대로) (f) 다른 호출자의
+      동기 발송이 원격 전송 중일 때 exit 기록이 그 전송을 기다리지 않는다(잠금 범위) (g) 반납 실패는 래치하지 않고 로그로 남는다
+      (h) `logClaimHeld`가 산 배달 실행자의 임차를 경보로 부르지 않는다(A-9) (i) claim이 「이미 정산됨」·「남의 임차」로 끝나면
+      반납을 부르지 않는다 — 남의 임차를 풀지 않는다(21판 문서 리뷰 R4) (j) **회귀 핀**: 범위 밖 호출자의 동기 발송은 그대로다 —
+      런타임의 루프 비정상 반환 알림(`runtime.go:363` → `:500`)이 배수 뒤에도 publish를 시도한다(20라운드 A-3, Q1 문자 해석의 전제).
+      각 RED는 뮤테이션으로 실패시켜 본 뒤 근거로 쓴다.
+- [ ] 21.4 **GREEN** — 기록 전용 어댑터 · `claimAndDeliver` 잠금 범위 · `logClaimHeld` 등급과 주석 · `replay.go:107` 주석 대조(D0.1).
+      §6·§8 옛 task를 하나씩 「21.x로 대체 / 철회 / 유지」로 판정해 표지를 단다.
+- [ ] 21.5 **A-4 재측정** — `a096_one_send_per_condition_test.go`·`a097_exclusion_is_an_event_test.go`가 잠금 범위 변경 뒤에도 초록인지
+      잰다. 초록이면 무엇이 그것을 지키는지(임차 · 잠금)를 뮤테이션으로 가른다.
+- [ ] 21.6 **셈~해제 (Q4 답 뒤)** — 덮이지 않는 기록자(`parkAlert` → `EnqueueAlert`)의 처분과 결정적 시험. a124 D10 (i) 경계는 문서로만.
+- [ ] 21.7 **투영기 배선 (Q3 답 뒤)** — 생산 `SetModeProjector` · 기동 `RestoreOperatingModeProjection`(첫 진입 점검 전) · AC2(원자 교체 ·
+      커밋 순서 투영) 결정적 시험 · 사람의 완화 경로 · a124 구조 핀 둘 갱신 · 배포 전 운영 원장 현재 모드 조회(사람 몫).
+      **Q3이 「21판 밖」으로 답하면 델타의 ADDED 요구를 지운다** — 구현 없는 SHALL이 archive로 정본에 들어가면 안 된다(문서 리뷰 R5).
+- [ ] 21.8 **21라운드 적대 리뷰** — Manager 지시 뒤. 교차 모델은 Codex(결정 20-2).
+- [ ] 21.9 `check_values.py` FAIL — 9.6.1이 그대로 진다(21판은 새 FAIL을 만들지 않았다 — `review.md` §23.4).
 
 > **20판 (2026-09-25) — a098·a099 착지에 맞춰 델타를 정합하게 고치고 5.1을 돌린다.**
 > 코드는 한 줄도 안 바뀐다. 측정 HEAD는 `8d9731c1`이다.
@@ -457,7 +496,7 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 
       ```bash
       # 16판까지의 채택 토큰 — 17판은 이 집합을 쓰지 않는다 (design D0.6)
-      # 채택 토큰 (20판): 3.5s · 3500 · 2s · 2000 · 750ms · 5.0s
+      # 채택 토큰 (21판): 3.5s · 3500 · 2s · 2000 · 750ms · 5.0s
       rg -n '3\.5\s*s|3500|1500\s*ms|5\.0(00)?\s*s' \
          openspec/changes/a092-an-alert-does-not-hold-the-stop/tasks.md
       # 폐기 토큰 (12·13판): 이 출력은 전부 E1이어야 한다
@@ -1343,6 +1382,8 @@ AnExplicitSequenceThatDoesNotMatchTheFirstRecord}`.
 
 ## 6. RED — `internal/app/engine/a092_alert_budget_test.go` (`package engine`)
 
+> **⛔ 21판** — 이 절의 과녁은 21판 작업 21.3이 대체한다. 이 절의 좌표·not-applicable 근거(예: 6.11의 `exitloop.go:1517-1520` — HEAD에서 확정 하한 캡 코드, 20라운드 B-6)는 21판에서 근거로 쓰지 않는다. task별 판정은 21.4.
+
 ### 6.0 — 17판이 이 절의 과녁을 바꾼다
 
 **16라운드 A-6이 이 절 전체를 막았다**: R5·R6이 `newNotifier(...).Notify`를 **직접**
@@ -2218,6 +2259,8 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
 
 ## 8. GREEN
 
+> **⛔ 21판** — 이 절의 과녁은 21판 작업 21.4가 대체한다. 8.8(정산 해석)·8.9·8.11(`Flush`)은 축소로 a092 밖이다(정본 a099·a124 요구). task별 판정은 21.4.
+
 - [ ] 8.1 `notifications.go`에 **`import "time"` 추가** (현재 `os`·`strings`·`config`·`obs`)
 - [ ] 8.2 `notifications.go`에 상수 **5개** + 유도 주석 + **컴파일 타임 단언 6줄**
 
@@ -2540,6 +2583,8 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
 > **이 빈칸은 이름이 붙어 있으므로 침묵한 생략이 아니다.**
 
 ## 9. REFACTOR / VERIFY
+
+> **⛔ 21판** — 9.2의 *"FLM 재생성은 2건 … 나머지 20개는 유효"*는 20판 census(DIFF 10)와 모순이다(20라운드 B-5(T)). 재생성 범위는 21.2(b)가 정한다.
 
 - [ ] 9.1 편집 후 AST 재생성 — `newNotifier` branches 0/returns 1/calls 0,
       `resolveNotificationPublisher` branches 5/returns 4 **무변화 확인**

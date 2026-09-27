@@ -1,0 +1,39 @@
+{
+  "file": "internal/journal/alert_claim.go",
+  "source_sha256": "b123231116301de8e6a2270a3061c91a75db20c34bc355c38184af7cabf55577",
+  "package": "journal",
+  "function": "ReleaseAlertClaim",
+  "receiver": "Journal",
+  "signature": "Journal.ReleaseAlertClaim(params=3, results=2)",
+  "start": {
+    "line": 394,
+    "column": 1
+  },
+  "end": {
+    "line": 399,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 395,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 395,
+        "column": 9
+      },
+      "text": "j.settleUnderClaim"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}
