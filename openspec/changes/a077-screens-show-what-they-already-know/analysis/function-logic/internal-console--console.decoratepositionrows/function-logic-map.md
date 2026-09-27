@@ -68,3 +68,21 @@ No broker call, journal write, order or config save is reachable from this path.
 - Safe edit boundary: one added argument at one call site.
 - High-risk impact: no. Display decoration only.
 - Safety invariant 0.3 untouched.
+
+## Refresh (2026-09-27, HEAD fcc60aa0)
+
+`ast.json` was regenerated from the current source with `go run ./tools/logic-map`; the previous
+file described the source at 448dfeb1. Two neighbour commits changed this function since then.
+The branch sequence is unchanged: a difflib alignment of old and new branches by kind and source
+line maps every `Bn` to the same `Bn` (B1..B12), so the Branch Test Map keeps its IDs.
+
+- a081 `df4407ed` — the policy reads now come from one shared, cached engine reading:
+  `reading := c.enginePolicy.read(ctx, asOf)`, `runtime = reading.Runtime`. B2's condition is now
+  `reading.StatesErr == nil` and B3 ranges over `reading.States`. A failed listing still leaves
+  `policyByID` nil, so the row still reads as unverified (the cache serves a failed attempt as a
+  failure).
+- a111 `882a0b49` — the liveness verdict is computed here: `c.readProtectionMarker(markerReadAt)`
+  then `protectionLivenessAt(…, responseAt)`, and `responseAt` (taken after the reads) replaces
+  `asOf` in the reconcile block view and in the tail call to `attachPositionExitLines`.
+
+Neither change adds a branch, a broker call, a journal write or a config save.
