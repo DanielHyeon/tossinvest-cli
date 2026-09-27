@@ -71,7 +71,7 @@
 | `a065-add-position-campaign-leg-core` | STORY-TOS-a065 | archived |
 | `a066-add-multi-horizon-risk-buckets` | STORY-TOS-a066 | in_progress |
 | `a067-add-kr-us-continuation-lanes` | STORY-TOS-a067 | archived |
-| `a068-add-kr-us-reversal-lanes` | STORY-TOS-a068 | implemented |
+| `a068-add-kr-us-reversal-lanes` | STORY-TOS-a068 | archived |
 | `a069-add-kr-us-weekly-value-lanes` | STORY-TOS-a069 | archived |
 | `a070-add-multi-market-horizon-router` | STORY-TOS-a070 | in_progress |
 | `a071-wire-kr-us-protection-readiness` | STORY-TOS-a071 | in_progress |
