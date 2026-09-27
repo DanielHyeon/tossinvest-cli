@@ -7,6 +7,7 @@
 - [ ] 0.4 proposal-freeze 리뷰(**적대적 Eng 필수 + 교차 모델**) → `review.md`. 열린 결정 D2 · D3 를 답한다
       — 1판 실행(2026-09-26, Teammate 적대 Eng + codex): **REJECT**. D2 = ㄱ(3) · D3 = 센다로 답함. F1·F2·F3·F4·F8 과
       Manager 결정 M1·M2 를 design 에 반영한 뒤 재freeze (`review.md` §0)
+      — 12회차(2026-09-27 codex): **REJECT**, AC1 = freeze 차단(Manager §0.15) → 7판(논거 교정 + 운영 효과 선행 조건), 13회차 대기
 
 ## 1. 증거와 Pre-Edit
 
@@ -24,8 +25,8 @@
 
 - [ ] 2.1 한도 도달 → `Gate.Block(ReasonAlertUndelivered)` + `EscalateOperatingMode(CRITICAL_ALERT_UNDELIVERED)`,
       **동기 경로가 한 번도 시도하지 않은 구성**(publisher 응답 없음 · publisher 없음 둘 다)
-- [ ] 2.2 승인으로 미전달 0 → 차단 해제, 모드는 남는다
-- [ ] 2.3 한도 도달 뒤 재시작 → 기동 복원이 다시 잠그고 모드는 원장에 있다
+- [ ] 2.2 승인으로 미전달 0 → 차단 해제, 모드는 원장에 남는다(모드 단언은 2.14 (a) 규칙)
+- [ ] 2.3 한도 도달 뒤 재시작 → 기동 복원이 다시 잠그고 모드는 원장에 있다 — 이 시험의 차단은 **PENDING 복원**이 만든다(모드가 아니다, AC1); PENDING 0 변형은 2.14 (c)
 - [ ] 2.4 굶주림: 한도 행 batch 개 + 새 critical 행 → 다음 사이클이 새 행을 먼저 시도한다
 - [ ] 2.5 한도 행은 잔여 자리로 밀려도 사라지지 않고 미전달 수에 세어진다
 - [ ] 2.6 손절 즉시성 불변 — `a098_the_backlog_does_not_delay_protection_test.go` 그대로 초록(보존 시험) + 둘로 나눈 변형(Y4):
@@ -41,7 +42,7 @@
 - [ ] 2.8 발송 중 승인(D7): 전송 중 승인 → 기록 `AlreadySettled` → 잠금·승격 없음. `LeaseLost` 도 없음(재무장 인터리빙 포함).
       실패 기록의 `NotFound`·모르는 값은 잠금만(승격 없음, N6) — 원칙 E 적용 단계를 거쳐도 승격 없음(W4)
 - [ ] 2.9 원칙 E(D7, spec 「늦은 적용은 제때 적용과 같아야 한다」) — 결정적 인터리빙(세대 읽기·울타리 직전 훅). 모든 단언은 **게이트 사유와
-      durable 운영 모드 둘 다**(모드 완화 승인 없음). 세대 읽기 창(AB2): 「세대 읽기 → 해제 → 적용」 = 차단 없음, 「정산 → 해제 → 세대 읽기 → 적용」 =
+      durable 운영 모드 둘 다**(모드 완화 승인 없음; 모드 단언은 원장 행으로 — 2.14 (a)). 세대 읽기 창(AB2): 「세대 읽기 → 해제 → 적용」 = 차단 없음, 「정산 → 해제 → 세대 읽기 → 적용」 =
       보수적 재잠금(허용 예외)을 각각 단언:
       (a) 해제가 근거 확정 **앞**(옛 승인의 `Clear` → 새 행 B 한도, ㉬) → 차단 + 승격;
       (b) 해제가 **뒤**(한도 커밋 → 남이 전달 → 운영자 빈 목록 승인·해제, ㉫) → 차단 없음 + **승격 있음**, 그리고 같은 시험에서 대조 경로
@@ -70,6 +71,12 @@
       `Clear` · 모든 `Block` · `BlockSymbol`/`ClearSymbol` · `ProjectOperatingMode` · `RebuildReconcileProjection` 이 이 세대를 안 바꿈 · `revision`
       은 기존대로 실제 변화 때만 · `BlockUnlessClearedSince` 세대 불일치면 무변화·false, 일치면 `Block` 규칙 · `-race` 동시 해제/조건부 잠금 ·
       구조 시험: `Clear(ReasonAlertUndelivered)` 비테스트 호출자 = `Notifier.Acknowledge` 둘뿐(새 호출자면 빨강)
+- [ ] 2.14 집행 경계 핀(AC1, design D10): (a) 이 change 의 시험은 픽스처에서 `SetModeProjector` · `RestoreOperatingModeProjection` 을 부르지 않는다 —
+      부르면 생산에 없는 집행을 시험이 만든다; 모드 단언은 `CurrentOperatingMode`(원장 행)로만. (b) 구조 시험: 두 함수의 비시험 호출자 수 = 0 을
+      세어 고정 — 배선(a092 축소판)이 착지하면 빨강이 되고, 그때 D10 · spec 경계 문장 · 이 핀을 함께 고친다(정상 경로). (c) 생산 빌더로 조립한 엔진에서
+      「한도 → 승격 → 승인(미전달 0)」 뒤와 「PENDING 0 재시작」 뒤 진입 점검 결과를 단언해 **경계를 문서와 같게** 고정한다(오늘 = 게이트에 알림 사유 · 모드 사유 래치
+      둘 다 없음, 모드 행은 원장에 있음) — 안전 주장이 아니라 문서의 참/거짓 핀이다
+
 ## 3. GREEN (최소)
 
 - [ ] 3.1 `alertDeliverer` 에 `Gate` · `AccountRef` 배선 (`auxiliary.go`)
@@ -95,5 +102,7 @@
 
 - [ ] 5.1 `make gate CHANGE=a124-…` · archive · Story 경로 · PM `--check`
 - [ ] 5.2 a092 21판에 착수 조건으로 인용 · a092 델타 「굶주림」 문단 삭제 확인 · a092 델타 「운영자의 승인은 … 되살리지 않는다」 문단을
-      이 change 의 요구로 가리키게(정본 사본 둘 방지) · a092 델타의 래치 지연 **식을 교체**(`Q + (L−1)·C + I_list + (T + S + M)` + 전제 H —
+      이 change 의 요구로 가리키게(정본 사본 둘 방지) · **운영 효과 선행 조건 전달(AC1)**: `SetModeProjector` 생산 배선 + 기동 `RestoreOperatingModeProjection`
+      을 a092 축소판의 명명된 후속으로(현재 「미배정 후속」, a092 proposal :499 · :582) — AC2(`modegate.go:35-50` 지움→재삽입 창 · 커밋 뒤 투영 순서) 동봉 ·
+      a092 델타의 래치 지연 **식을 교체**(`Q + (L−1)·C + I_list + (T + S + M)` + 전제 H —
       「사이클 주기」 재정의는 발행 시간을 이중 계산) · `Acknowledge` 셈~해제 구간의 독립 기록자 경합(Follow-ups)을 a092 소유로 전달
