@@ -131,7 +131,7 @@
     - STORY-TOS-a064 — Establish authoritative KR and US strategy evidence [archived] → `a064-add-multi-market-strategy-evidence`
     - STORY-TOS-a065 — Add the strategy-neutral position campaign and leg core [archived] → `a065-add-position-campaign-leg-core`
     - STORY-TOS-a066 — Cap multi-horizon risk and enforce single-lane ownership [in_progress] → `a066-add-multi-horizon-risk-buckets`
-    - STORY-TOS-a067 — Add concurrent KR and US short continuation lanes [implemented] → `a067-add-kr-us-continuation-lanes`
+    - STORY-TOS-a067 — Add concurrent KR and US short continuation lanes [archived] → `a067-add-kr-us-continuation-lanes`
     - STORY-TOS-a068 — Add concurrent KR and US short reversal lanes [in_progress] → `a068-add-kr-us-reversal-lanes`
     - STORY-TOS-a069 — Add concurrent KR and US weekly value repricing lanes [archived] → `a069-add-kr-us-weekly-value-lanes`
     - STORY-TOS-a070 — Route candidates across markets, horizons and owning lanes [in_progress] → `a070-add-multi-market-horizon-router`
