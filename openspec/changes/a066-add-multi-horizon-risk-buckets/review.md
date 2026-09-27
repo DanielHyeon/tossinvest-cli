@@ -849,3 +849,42 @@ No numeric cap or limit constant was deleted or changed.
 These tests have not been re-run in this lot yet; that is part of 6.1.
 
 `openspec validate a066-add-multi-horizon-risk-buckets --strict --no-interactive`: rc 0 at `d78f3f4a` (part of 6.4).
+
+### F2 framing check — is policy immutability actually carried over? (2026-09-28, measured; Manager decision pending)
+
+The Manager accepted removing "immutable policy collision" on one condition. A test must show that when a policy's
+**content** really changes under the same `policy_version`, the admission is still refused. **No such test exists,
+and the behavior is the opposite.** Probe (`analysis/harness/probe_policy_version_digest_test.go.txt`, not
+committed as Go):
+
+| Tree | Second admission: same keys and `policy-v1`, every policy digest changed (`NewPolicyProvenance` resealed, `ref.PolicyDigest` matched) | Distinct `policy_digest` under `policy-v1` (horizon) |
+|---|---|---|
+| `b8211926^` (pre-F2) | refused: `immutable policy collision` | 0 (`risk_bucket_policy_records` absent) |
+| `d78f3f4a` (HEAD code) | **admitted** (`err=<nil>`) | 2 |
+
+Logs: `analysis/mutation-5.6.1/probe-policy-version-{pre-f2,head}.log`.
+
+Why the pre-F2 refusal cannot simply come back, and why the journal cannot tell the two cases apart:
+- The production policy digest mixes pricing into policy identity. `production_snapshot_authority.go:391` computes
+  `policyDigest = H(ManifestDigest, body.PolicyVersion, dimension, value, StrategyRiskVersion, Price.Digest, FX.Digest,
+  Fee.Digest)`, so every entry at a new price has a new "policy digest" under the same version.
+- The old collision refusal therefore also fired on legitimate price changes; that was F2. It never isolated a
+  content change.
+- `CommitRiskBucketAdmission` (`risk_bucket.go:308`) checks only that the evidence digest equals `ref.PolicyDigest`
+  within one admission. Nothing compares a later admission's policy content with the first one for the same version.
+- The limit itself sits in the snapshot (`limit_minor`). No journal check compares it across snapshots of the same
+  version, and none did before F2 either.
+
+So "immutable policy per version" is currently guarded only upstream: signed manifest → `ManifestDigest`, and
+`StrategyRiskVersion` → `PolicyVersion`. It is not guarded in the journal. Whether one version can bind two manifests
+has not been measured.
+
+Options, for the Manager:
+- (a) The production reader emits a separate content digest (`H(ManifestDigest, body.PolicyVersion, dimension,
+  value, StrategyRiskVersion)`, no pricing). The journal refuses a different content digest under the same key. This
+  needs a new column (schema v35), so it stops at the schema rule.
+- (b) Record it as a named residual. Content immutability is an upstream (manifest) property, to be proven where the
+  version is minted.
+
+Until decided, the framing "the v34 record binding carries policy immutability with the right identity" is **not
+written**, because the measurement contradicts it.

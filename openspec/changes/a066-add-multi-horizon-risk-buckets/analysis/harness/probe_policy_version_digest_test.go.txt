@@ -1,0 +1,36 @@
+package journal
+
+import (
+	"context"
+	"testing"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
+)
+
+// 탐침(커밋 안 함): 같은 policy_version 에서 정책 digest(정책 내용)가 바뀐 두 번째 admission 이 거절되는가.
+func TestProbeSamePolicyVersionDifferentPolicyDigest(t *testing.T) {
+	j := openTestJournal(t)
+	seedExistingRiskReservation(t, j, "existing-p-a", "acct-1")
+	first := riskBucketAdmissionFixture(t, "p-a", "acct-1", "lane-short", "campaign-1", "prospective-1", "100", "0")
+	if _, err := j.CommitRiskBucketAdmission(context.Background(), first); err != nil {
+		t.Fatal(err)
+	}
+	seedExistingRiskReservation(t, j, "existing-p-b", "acct-1")
+	second := riskBucketAdmissionFixture(t, "p-b", "acct-1", "lane-short", "campaign-1", "prospective-1", "100", "50")
+	for i := range second.Admission.Buckets {
+		b := &second.Admission.Buckets[i]
+		ev := b.BoundEvidence().PolicyEvidence
+		ev.Digest = "policy-CHANGED-" + string(b.Key.Dimension)
+		pp, err := riskbucket.NewPolicyProvenance(b.Key, ev)
+		if err != nil {
+			t.Fatal(err)
+		}
+		b.PolicyProvenance = pp
+		second.Snapshots[i].PolicyDigest = ev.Digest
+	}
+	_, err := j.CommitRiskBucketAdmission(context.Background(), second)
+	t.Logf("PROBE same policy_version, different policy digest: err=%v", err)
+	var digests int
+	_ = j.db.QueryRow(`SELECT count(DISTINCT policy_digest) FROM risk_bucket_policy_records WHERE bucket_dimension='horizon' AND policy_version='policy-v1'`).Scan(&digests)
+	t.Logf("PROBE distinct policy_digest under policy-v1 (horizon) = %d", digests)
+}
