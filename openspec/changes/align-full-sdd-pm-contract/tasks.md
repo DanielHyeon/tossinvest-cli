@@ -27,5 +27,5 @@
 
 - [x] 5.1 Run PM generator unit tests and confirm RED-to-GREEN evidence
 - [x] 5.2 Run strict OpenSpec validation for all changes and regenerate trackers without drift
-- [ ] 5.3 Run make sdd-sync, make sdd-check, and make gate CHANGE=align-full-sdd-pm-contract
+- [ ] 5.3 Run make sdd-sync, make sdd-check, and make gate CHANGE=align-full-sdd-pm-contract — (2026-09-27) base 재고정 4d413cf1(자기 Go 0, c0619279 의 Go 는 squash 의 형제 4 change 몫), review.md 「종결 시퀀스」에 영수증·not-applicable 마커. 돌리고 → 적고 → 체크.
 - [x] 5.4 Complete an independent review, update PM-derived evidence, and record the final completion report

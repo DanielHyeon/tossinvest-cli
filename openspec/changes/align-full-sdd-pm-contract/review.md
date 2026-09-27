@@ -125,3 +125,29 @@ This change must be gated in a clean worktree containing only its own diff, or a
 the owning changes have landed and this change's base has been legitimately rebased.
 Until then it must remain active and must not be archived or reported as Full SDD
 complete.
+
+## 종결 시퀀스 (2026-09-27, a122·a067·a068 선례 · Manager 2단계 승인과 귀속 결정)
+
+### Function Logic Map: not-applicable
+
+**사유.** 이 change 의 범위에 Go 가 없다 — proposal Impact: "production trading code, runtime config,
+주문·위험·원장 동작: 영향 없음", 편집 대상은 `docs/WORKFLOW.md` · PM portfolio · `tools/pm/`(Python) ·
+`openspec/specs/sdd-workflow` 뿐이다. 번들 0 이 맞다.
+
+### base 재고정 영수증 (4d413cf1)
+
+- 잰 순간: HEAD f098105b, 모집단 = `git log --full-history -- openspec/changes/align-full-sdd-pm-contract` 커밋 2.
+  - c0619279(2026-07-31, "ship automated portfolio operations console") — 5 change 를 한 커밋에 담은 squash, 886 파일,
+    go 52 · `changed_existing_functions(c0619279^, c0619279)` = 53.
+    **c0619279 의 align 몫 13파일에 .go 0 (docs/WORKFLOW.md · change dir 10 · tools/pm 2), proposal Impact 는
+    '영향 없음' — 그 커밋의 기존 함수 수정 53건은 같은 squash 에 든 형제 4 change 몫**
+    (add-common-exit-optimization 166 · enable-engine-autostart-menu 314 · enable-vpn-console-access 267 ·
+    console-adoption-controls 9 파일; 넷 다 아카이브됨 — 2026-08-29 셋, 2026-07-31 하나).
+  - 7b0dd0c9(2026-09-09, Full SDD 계약 복원 문서) go 0
+- 옛 base 1dbef864 에서 5단계 rc 1 · required 546 · 창에 착지 커밋 604 — 전부 다른 change 의 기존 함수
+  (`/tmp/claude-1000/a122-lot/audit/ca-align-full-sdd-pm-contract.log`).
+- 재고정 1dbef864 → f098105b, `base-commit.txt` 만 커밋(4d413cf1). 재고정 뒤 check_analysis:
+  required 0, 남은 사유는 이 마커뿐.
+- 위 절이 적은 조건 — "after the owning changes have landed and this change's base has been legitimately
+  rebased" — 이 성립했다: 그 Go 를 소유한 넷이 모두 아카이브됐고, 재고정은 사용자 결정(a122, base history 는
+  git 이 정본)과 Manager 귀속 결정에 따른 것이다. 남의 작업을 숨기거나 남의 FLM 을 복사하지 않았다.
