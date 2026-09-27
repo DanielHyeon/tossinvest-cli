@@ -886,5 +886,15 @@ Options, for the Manager:
 - (b) Record it as a named residual. Content immutability is an upstream (manifest) property, to be proven where the
   version is minted.
 
-Until decided, the framing "the v34 record binding carries policy immutability with the right identity" is **not
-written**, because the measurement contradicts it.
+**Manager decision (2026-09-28): (b), a named residual.**
+- The journal never guaranteed "one version = one policy content", before F2 or after. The old collision refusal
+  hashed a digest that includes pricing, so it wrongly refused legitimate price changes and never singled out a
+  content change (measured: `probe-policy-version-{pre-f2,head}.log`).
+- Content immutability is an upstream property. It is to be proven where the version is minted, along the chain
+  signed manifest → `ManifestDigest` → `StrategyRiskVersion`.
+- Named residual, not measured: whether one version can be bound to two manifests. The place to verify it is the
+  version-minting path.
+- Why (a) was rejected: a new content guard in the journal would copy the upstream judgement (with two judgements,
+  neither can be disproven), and it needs schema v35.
+- The framing "the v34 record binding carries policy immutability with the right identity" is withdrawn, because the
+  measurement contradicts it.
