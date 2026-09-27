@@ -475,6 +475,12 @@ type EntryGate struct {
 	// so zero remains the unavailable sentinel and advances on every effective
 	// gate-state mutation, preventing allowed/blocked/allowed ABA reuse.
 	revision uint64
+	// clearEpochs 는 사유별 **해제 세대**임 (a124 design D7, M1 = B′). 그 사유의 해제 **요청**마다 +1 —
+	// 래치가 있었는지와 무관(반례 ㉣: 래치가 서기 전 전체 승인도 사람 승인의 표식임). 늦게 판정을 적용하는
+	// 배달 실행자가 「해제가 판정 근거 뒤였는가」를 가르는 유일한 증거라서, 그 사유의 Clear 말고는 아무것도
+	// 이 값을 바꾸지 않음. revision 과 별도 필드인 이유: revision 은 실제 상태 변화 때만 올라야 함(전략 봉인).
+	// 지연 생성, g.mu 아래에서만 읽고 씀.
+	clearEpochs map[ReasonCode]uint64
 }
 
 // SetAuthorityRefresh binds the durable RECONCILE recheck used by the sealed
@@ -537,10 +543,43 @@ func (g *EntryGate) Block(reason ReasonCode, detail string) {
 func (g *EntryGate) Clear(reason ReasonCode) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
+	// 해제 요청마다 세대 +1 (래치 유무 무관 — 위 clearEpochs 주석). revision 은 아래처럼 실제 삭제 때만.
+	if g.clearEpochs == nil {
+		g.clearEpochs = make(map[ReasonCode]uint64)
+	}
+	g.clearEpochs[reason]++
 	if _, exists := g.latches[reason]; exists {
 		delete(g.latches, reason)
 		g.revision++
 	}
+}
+
+// ClearEpoch 는 그 사유의 해제 세대를 돌려줌 — 배달 실행자가 판정 근거를 얻은 직후 읽는 값임.
+// g.mu 아래 map 읽기뿐이라 이 잠금 안에서 다른 무엇도 기다리지 않음.
+func (g *EntryGate) ClearEpoch(reason ReasonCode) uint64 {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return g.clearEpochs[reason]
+}
+
+// BlockUnlessClearedSince 는 epoch 뒤로 그 사유의 해제 요청이 **없었을 때만** 잠금 (원칙 E 의 적용 단계).
+//
+// 세대 비교와 삽입을 한 잠금 안에서 함 — 둘 사이에 해제가 끼면 「해제 뒤에 늦은 래치가 남는」 모양이 됨.
+// 세대가 다르면 아무것도 바꾸지 않고 applied=false. 같으면 Block 과 같은 규칙(없을 때만 삽입 · 처음 설명 유지 ·
+// 삽입했을 때만 revision++)이고 applied=true. inserted 는 이 호출이 래치를 **새로** 세웠는지 — 호출자가 「처음
+// 잠근 때만」 한 줄을 쓰는 데 씀(design D9).
+func (g *EntryGate) BlockUnlessClearedSince(reason ReasonCode, epoch uint64, detail string) (applied, inserted bool) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if g.clearEpochs[reason] != epoch {
+		return false, false
+	}
+	if _, exists := g.latches[reason]; !exists {
+		g.latches[reason] = detail
+		g.revision++
+		return true, true
+	}
+	return true, false
 }
 
 // CheckEntry reports why new exposure is refused anywhere on the account, or nil

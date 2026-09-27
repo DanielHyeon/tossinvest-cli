@@ -170,6 +170,10 @@ func (c *Context) AlertDeliverer(clk clock.Clock) (AuxiliaryExecutor, error) {
 		Publisher: publisher,
 		Log:       c.Log,
 		Clock:     clk,
+		// a124: 지속 실패의 주인은 이 실행자임 — 전달 실패 사유를 거는 게이트와 승격할 계정을 넘김.
+		// Notifier 는 넘기지 않음(실행자는 n.mu 와 무관 — design D5 · D7).
+		Gate:       c.Entry,
+		AccountRef: c.AccountRef,
 	}
 	gate, log := c.Entry, c.Log
 	return AuxiliaryExecutor{

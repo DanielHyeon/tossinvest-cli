@@ -142,6 +142,10 @@ type SettleResult struct {
 	ClaimedBy string
 	ClaimedAt time.Time
 	ExpiresAt time.Time
+	// Attempts 는 적용된(SettleApplied) 정산이 **같은 트랜잭션에서 커밋한** 시도 수임 (a124 design D1).
+	// 나열 시점의 Alert.Attempts 는 그 사이 다른 발송자·재무장이 바꿀 수 있어 판정에 못 씀 — 이 값만
+	// 「이 에피소드 · 이 임차」의 것임. 적용되지 않은 결과와 오류에서는 0 이며 판정에 쓰지 않음.
+	Attempts int
 }
 
 // alertClaimCleared is the one spelling of "this row holds no lease". It is
@@ -328,10 +332,16 @@ func (j *Journal) settleUnderClaim(
 		return SettleResult{}, fmt.Errorf("journal: %s alert %d: %w", what, id, err)
 	}
 	if n == 1 {
+		// 커밋 **전에** 같은 트랜잭션으로 읽음 — 원장 연결이 하나라(journal.go:174) j.db 로 읽으면 이
+		// 트랜잭션이 쥔 연결을 기다림. 읽기가 실패하면 롤백(defer)되어 정산은 없던 일이 됨(a124 Z4).
+		attempts, err := readSettledAttemptsTx(ctx, tx, id)
+		if err != nil {
+			return SettleResult{}, fmt.Errorf("journal: reading the attempts %s alert %d committed: %w", what, id, err)
+		}
 		if err := tx.Commit(); err != nil {
 			return SettleResult{}, fmt.Errorf("journal: committing %s of alert %d: %w", what, id, err)
 		}
-		return SettleResult{Outcome: SettleApplied}, nil
+		return SettleResult{Outcome: SettleApplied, Attempts: attempts}, nil
 	}
 
 	out, err := explainSettleTx(ctx, tx, id)
@@ -342,6 +352,15 @@ func (j *Journal) settleUnderClaim(
 		return SettleResult{}, fmt.Errorf("journal: committing %s of alert %d: %w", what, id, err)
 	}
 	return out, nil
+}
+
+// readSettledAttemptsTx 는 방금 적용된 정산이 남긴 attempts 를 그 트랜잭션 안에서 읽음.
+//
+// 패키지 변수인 것은 원자성 시험(a124 Z4)이 읽기 · 커밋 실패를 주입하기 위함 — 생산 값은 이 한 SQL 뿐임.
+var readSettledAttemptsTx = func(ctx context.Context, tx *sql.Tx, id int64) (int, error) {
+	var attempts int
+	err := tx.QueryRowContext(ctx, `SELECT attempts FROM alert_outbox WHERE id = ?`, id).Scan(&attempts)
+	return attempts, err
 }
 
 // explainSettleTx reads the row once more, in the transaction that just wrote
