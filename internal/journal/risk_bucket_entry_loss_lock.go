@@ -49,6 +49,12 @@ type EntryLossLock struct {
 // validEntryLossLockScope 는 잠금 범위(계좌·시장·horizon)가 이 스키마가 받는 값인지 판정함.
 // 스키마의 CHECK 와 같은 값이어야 함 — 갈라지면 Go 는 통과시키고 SQLite 가 거절함.
 //
+// 계좌 저장 형태 계약(비교하는 쪽 코드에서 읽음, 2026-09-27): 결정·예약 builder 는 AccountRef 를
+// strings.TrimSpace 만 하고(DecisionRequest.build, ReserveRequest.build) 대소문자는 바꾸지 않음. admission 과
+// Gateway 재검증은 그 값을 SQL `=` 로 **정확히** 비교함. 그래서 이 잠금의 정본형은 "trim 된 그대로"이고,
+// 대소문자만 다른 id 는 원장에서 **다른 계좌**임 — 여기서 맞춰 주지 않음(맞추면 원장에 없는 규칙을 지어냄).
+// "그 계좌가 실재하는가"는 실계좌 문맥을 가진 활성화 호출자(트리거 로트)의 몫임.
+//
 // 계좌 앞뒤 공백은 거절함(정규화하지 않음): 결정·예약은 계좌를 trim 해서 쓰므로(decision.go·reservations.go)
 // " acct-7 " 로 기록된 잠금은 "acct-7" 진입과 끝내 일치하지 않는 **효력 없는 잠금**이 됨. 잠갔다고 믿게
 // 두느니 활성화를 실패시킴(적대 리뷰 codex P1, 2026-09-27).

@@ -536,3 +536,30 @@ The peer's edits were committed during/after the run as `272b715c` (a112 8.7.2, 
 `0004536c` is docs-only. None of those Go files is a mutated file or an import of `internal/journal`/`internal/execgw`
 tests; the census reads their source and pinned the same sites. `check_analysis.py --change a066-…`: 0 a066-bundle
 findings; the 371 `missing evidence` lines are the stacked-window set, none of them a function this lot edited.
+
+### Manager rulings on the open review items (2026-09-27)
+
+- **(a) account identity — canonical form checked at the API boundary; existence left to the trigger lot.** The
+  comparing side is the contract: `DecisionRequest.build` and `ReserveRequest.build` apply `strings.TrimSpace` to
+  `AccountRef` and keep its case, and admission and Gateway revalidation compare that value exactly (SQL `=`). The
+  lock uses the same form: surrounding whitespace is rejected (`7aa158bb`). A case-variant id is a **different
+  account** in the journal, so it is not folded. `TestEntryLossLockAccountFormIsTheDecisionBuildersForm` pins both
+  the builder form and the exact-match behaviour (`ACCT-1`/`Acct-1` locks do not refuse `acct-1`; an `acct-1` lock
+  does). **Named residual:** "is this account real" is for the caller that wires activation (the trigger lot), which
+  has the live-account context.
+- **(b) named residual:** on the strategy path a lock refusal is flattened to `ATOMIC_ADMISSION_FAILED`
+  (`internal/app/engine/strategy_first_leg_admission.go:88-90`), then goes through
+  `strategy_dispatch_cycle.go` `dispatch` → supervisor → `latchMarket` (`strategy_entry_supervisor.go`), which latches the
+  whole market worker. That over-blocks in the safe direction (a KR SHORT lock also stops KR MEDIUM), and the lanes are
+  dormant. The fix is a typed refusal through those a112 files. It belongs to whichever lot wires activation (5.6/5.7 or
+  later); the Manager relays this to the a112 HANDOFF.
+- **(c) accepted:** the window between the last `checkReservation` and the broker call is the same one every durable
+  latch recheck in the Gateway leaves open.
+
+### Relaxation (pending user decision) — constraint to carry
+
+The v33 trigger `risk_bucket_entry_loss_lock_first_cause_wins` allows **one row per account×market×horizon, ever**.
+Once a relaxation record exists, locking the same scope again would hit `RAISE(ABORT)`. The relaxation migration must
+therefore replace this trigger with "at most one **open** lock per scope" (DROP/CREATE TRIGGER, as the v23 step did).
+The same migration must also switch `activeEntryLossLock` to "no relaxation record". This constraint is merged into
+the user question about the relaxation flow.

@@ -379,3 +379,27 @@ func TestEntryLossLockSchemaRefusesValuesTheRuleCannotMatch(t *testing.T) {
 		}
 	}
 }
+
+// TestEntryLossLockAccountFormIsTheDecisionBuildersForm 는 잠금의 계좌 정본형이 결정·예약 builder 의 형태(trim,
+// 대소문자 보존)와 같고 비교가 정확 일치임을 고정함. 대소문자만 다른 id 는 원장에서 다른 계좌이므로 그 잠금은
+// "acct-1" 진입을 막지 않고, "acct-1" 잠금은 막음 — 계약이 바뀌면(예: 한쪽만 소문자화) 여기서 빨개짐.
+func TestEntryLossLockAccountFormIsTheDecisionBuildersForm(t *testing.T) {
+	ctx := context.Background()
+	built, err := DecisionRequest{ID: "d", AccountRef: "  Acct-1 ", SafetyClass: SafetyClassExposureRaising, Kind: KindPlace,
+		Preimage:   RiskIntent{AccountRef: "Acct-1", Market: "kr", Symbol: "005930", Side: "BUY", Quantity: "1", EntryPrice: "5", StopPrice: "4", TargetPrice: "7", PolicyVersion: "p"},
+		LimitsJSON: `{}`, Nonce: "n", IssuedAt: lossLockAt, ExpiresAt: lossLockAt.Add(time.Minute)}.build()
+	if err != nil || built.AccountRef != "Acct-1" {
+		t.Fatalf("decision builder account form changed (want trim, case kept): %q err=%v", built.AccountRef, err)
+	}
+	for _, tc := range []struct {
+		lockAccount string
+		refused     bool
+	}{{"ACCT-1", false}, {"Acct-1", false}, {"acct-1", true}} {
+		j := openTestJournal(t)
+		activateLossLockForTest(t, j, tc.lockAccount, riskbucket.MarketKR, riskbucket.HorizonShort)
+		err := refuseEntryUnderLossLock(ctx, j.db, "acct-1", riskbucket.MarketKR, riskbucket.HorizonShort)
+		if got := errors.Is(err, ErrRiskBucketEntryLossLocked); got != tc.refused {
+			t.Fatalf("lock on %q vs entry on \"acct-1\": refused=%v want %v (err=%v)", tc.lockAccount, got, tc.refused, err)
+		}
+	}
+}
