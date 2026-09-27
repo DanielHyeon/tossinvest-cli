@@ -108,7 +108,7 @@
     - STORY-TOS-a098 — Nobody sends what the outbox keeps [archived] → `a098-nobody-sends-what-the-outbox-keeps`
     - STORY-TOS-a099 — A claim excludes the second sender [archived] → `a099-a-claim-excludes-the-second-sender`
     - STORY-TOS-a111 — Exit lines stay actionable with flat quotes [archived] → `a111-exit-lines-stay-actionable-with-flat-quotes`
-    - STORY-TOS-a124 — A deliverer that keeps failing blocks entry [implemented] → `a124-a-deliverer-that-keeps-failing-blocks-entry`
+    - STORY-TOS-a124 — A deliverer that keeps failing blocks entry [archived] → `a124-a-deliverer-that-keeps-failing-blocks-entry`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`

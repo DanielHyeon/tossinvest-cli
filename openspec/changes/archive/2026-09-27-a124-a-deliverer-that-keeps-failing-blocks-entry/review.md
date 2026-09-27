@@ -819,3 +819,10 @@ a092 는 현재 20판이다(21판 미작성). 다음을 a092 21판의 작업으�
 - **gate PASS bdf965bb, gate2.log, 11/11** (격리 worktree `TossOS-worktrees/a124-gate`, 2026-09-28; 로그 `/tmp/claude-1000/a124-lot/gate2.log`; 직전 `make sdd-sync`
   rc 2 는 advisory codegraphcontext 미완 — 6/11 sdd-check 의 hard fingerprint 는 통과).
 - 아카이브 · Story 경로는 Manager 검증 배터리 뒤. 아카이브 커밋에는 「§6 배포 · 운영 재측정은 미실행, 사람 몫」과 이 영수증 줄을 넣는다.
+
+### 종결 (2026-09-28)
+
+- Manager 검증 배터리 통과(게이트 워크트리 `bdf965bb` 독립 check_analysis rc 0 · 커밋 경로 대조 · GATE PASS 확인 · 미체크 태스크 0) → 아카이브 승인.
+- gate PASS bdf965bb, gate2.log, 11/11.
+- **§6 배포 · 운영 재측정은 미실행, 사람 몫** — 운영 디스크의 판정 트랜잭션 길이(평균 · p99)와 exit 체류 재측정, 운영 원장의 `attempts ≥ 3` PENDING 행 수 조회.
+- a092 21판 전달 목록(「5.2 a092 전달 목록」)은 a092 몫. 운영 효과 선행 조건(투영기 배선 + 모드 기동 복원)은 a092 축소판의 명명된 후속.
