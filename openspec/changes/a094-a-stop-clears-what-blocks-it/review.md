@@ -722,3 +722,41 @@ R2↔R3 · §0.4 스냅숏 · 좌표/FLM. 분할 권고 PARTIAL. canonical 「IN
 **판정: REJECT.** 차단 셋(F1·F2·F3)은 3판 설계의 핵심 규칙(park 해제 · 소급 재분류 · 외부 주문 취소)을 겨눈다. 반영 방향 —
 park 해제 철회/조건화, 소급 대상을 원 발주 응답으로 한정, 외부 취소의 귀속 경계 — 과 a089 처분(F7)은 Manager·사용자 결정
 사항이다. **반영하지 않았다.**
+
+---
+
+## 4판 (2026-09-27) — 3라운드 반영 + gstack 문서 리뷰 1회 · 판정 아님
+
+- 4판 초안 **2fd09cce**: `design.md` D−2(이 절이 이긴다), spec delta 2, tasks §0.5d~0.5h·§3·§4·§4bis·6.1·7.2·7.3, proposal 4판 박스,
+  materials §G F9 정정. 방향은 Manager 지시(F1 park 해제 철회 · F2 원 발주 응답 한정 · F3 R2 엔진 귀속 축소, 외부 취소는 사용자 결정 대기 ·
+  F4/F5/F8 설계 추가 · F6 재핀 · F7 두 결말 · F9 · F10).
+- 격리 detached 워크트리 @2fd09cce 에서 `check_analysis --change a094` rc 0(required 0).
+- **gstack 문서 리뷰 1회**(code-reviewer 서브에이전트, 읽기 전용): **P0 1 · P1 10 · P2 8**. 좌표는 두 곳 외 전부 일치.
+  Teammate 가 P0(`gateway.go:747` 빈 상태 반환 → `submit` `default:` 해제, `exitloop.go:1410-1416`)와 replay 컬럼(`execution_contract.go:265-266`,
+  `journal/replay.go:123`·`:146-151`), 전이표(`lifecycle.go:40-46`)를 재확인했다.
+
+| # | 등급 | 지적 | 처리 |
+|---|---|---|---|
+| 1 | P0 | 결과를 쓰지 못한 제출(`State==""`, attempt 기록됨)에서 `submit` 이 발의를 푼다 | D−2.5 세션 중 해제 조건 좁힘, spec SHALL NOT + 시나리오, RED 4.3c |
+| 2 | P1 | `clearTheSymbol` 의 `withPending` 해제가 IN_DOUBT·park 익절 위에 손절을 얹는다 | 트레이드오프 → **Q4-4**(4판은 동작 불변) |
+| 3 | P1 | 조건 3 은 재생을 가르지 못한다 | 조건 7(`replay_count`·`last_replay_at`), RED 4b.2d |
+| 4 | P1 | 조건 4 가 엔진 산문을 매칭(spec 금지와 모순) | `official: API error <n>: ` 표식 1회 + JSON, RED 4b.2e |
+| 5 | P1 | 전방 R1 에 code 두 자리 불일치 규칙 없음 | spec SHALL NOT, RED 2.5e |
+| 6 | P1 | 사건 두 행이 지금도 IN_DOUBT 라는 전제가 7주 묵음 | D−2.2 전제 명기, task 0.5h(읽기 전용 재측정, 사람 승인) |
+| 7 | P1 | 기동 단계 실패 의미 없음(Recover 실패 → 루프 0) | 행 단위 흡수 규칙(D−2.6-4, spec), 알림 여부 **Q4-5**, RED 4.3d |
+| 8 | P1 | 새 트리거와 30초 타이머의 알림 key 충돌 | 다른 key · `delayAlerted` 무접촉(D−2.7, spec, RED 3.E4) |
+| 9 | P1 | IN_DOUBT 취소를 제외하면 새 트리거가 세션 내내 꺼짐 | 제외를 RECORDED·DISPATCH_STARTED·ACKED 로 한정, 시나리오 추가 |
+| 10 | P1 | 스냅숏 전제 잔재(tasks 7.2·7.3·안전 표) | 원장만 읽음으로 재서술, 3.E1·3.E3 는 3.X |
+| 11 | P1 | "매 주기 거절" 반복의 제출률·park 전락 | D−2.4 「그 반복의 비용」, **Q4-6** |
+| 12 | P2 | 따라잡기가 attempt 없는 무장·"마지막" 만 봄 | "모두" + attempt 0 개도 해제(D−2.5, spec, RED 4.3b) |
+| 13 | P2 | 재분류 범위·예약 해제 부수 효과 미기재 | PLACE 전체, 예약 해제 명기, reason code task 4b.8, RED 4b.7 |
+| 14 | P2 | "유일한 경로" 서술 두 곳 오류 | 경로 넷 · `ClassifyBrokerRefusal` 갈래 명기 |
+| 15 | P2 | "연속 3회" 근거 없음 | **Q4-7** |
+| 16 | P2 | 따라잡기 순서의 이유가 틀림(`ready` 아닌 Recover 반환) | `engineRecoverySequence` 클로저 안 `r.Run` 뒤(`runtime.go:289-295`) |
+| 17 | P2 | tasks 2.9 좌표 낡음 | `:1410-1416` |
+| 18 | P2 | a089 관계 자기모순 | "a089 처분에 의존" 으로 정정(tasks · D−2.8) |
+| 19 | P2 | exit-policy delta 머리말 3판식 | 재서술 |
+| — | 좌표 | `dispatch.go:328-333` · `apply_hook.go:839-864` | `:330-336` · `:825-884` |
+
+남은 사람·Manager 결정: Q4-1(park 발의) · Q4-4(`withPending` 해제) · Q4-5 · Q4-6 · Q4-7 · 외부 주문 취소(사용자) · 0.5h 재측정 승인.
+4라운드 codex 는 Manager 대기열 순서대로.

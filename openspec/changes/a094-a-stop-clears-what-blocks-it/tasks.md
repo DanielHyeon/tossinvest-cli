@@ -31,6 +31,9 @@
       결정 대기 · F4 기대 intent·기동 따라잡기 · F5 스냅숏 계약은 선행 조건으로 · F6 기동 순서 재핀 · F7 두 결말 · F8
       PENDING_CANCEL 정의 · F9 AC1 범위 · F10 낡은 논증), spec delta 2 · tasks §3·§4·§4bis 개정. **판정 아님**
 - [ ] 0.5f **proposal-freeze 리뷰 4라운드**(codex 교차 모델) — Manager 대기열 순서대로
+- [ ] 0.5h **사건 두 행의 현재 상태 재측정**(문서 리뷰 P1) — 475150·080220 의 attempt(`034e5b79…`·`8f68e7c3…`)가 지금도 `IN_DOUBT`
+      인지 운영 원장에서 **읽기 전용**으로 잰다(사람 승인). `UNRESOLVED_IN_DOUBT` 면 4판의 해동 경로가 없고 Q4-1 에 막힌다는 사실을
+      design D−2.2 에 적는다. 4라운드 전에
 - [ ] 0.5g **4판 편집 전 산출물 재작성**(F10) — `record` 번들의 FLM 「Branches」 논증과 BTM 미진입 요약을 현재 AST(16분기)
       기준으로 다시 쓰고, 4판이 편집하는 기존 함수(`ResolveExitProposal` 호출 형태 · 기동 이음매)의 FLM 을 편집 전에 갖춘다
 
@@ -91,6 +94,7 @@
 - [ ] 2.5c **RED** — code 값 비교는 **대소문자 무시 + 전체 일치**다.
       `opposite-pending-order-exists-v2` 같은 값은 **잡히지 않는다**(substring 아님)
 - [ ] 2.5d **RED** — JSON이 아닌 본문 · code 필드 부재 · 빈 code → **분류하지 않음**
+- [ ] 2.5e **RED (4판)** — 최상위 `code` 와 `error.code` 가 둘 다 있고 값이 다르면 **분류하지 않음**(모호) — 소급 재분류(4b.2c)와 같은 규칙
       (fail-closed: 모르면 종전 경로)
 - [ ] 2.6 **RED** — `isDefinitiveRejection`의 상태 목록 **무변화**를 표로 고정
 - [ ] 2.7 **RED** — 기존 세 code(`trade_auth_required`·`fx_consent`·`funding_required`)의
@@ -99,7 +103,7 @@
       **`classifyRefusalCode(body string) (ReasonCode, bool)` 신설**.
       `code`와 `error.code`만 읽고, `classifyRefusalBody`보다 **먼저** 부른다.
       **기존 세 항목의 substring 매칭은 건드리지 않는다**(D0)
-- [ ] 2.9 `submit`이 B10 `:1304`로 가는 것을 확인 — `alertProposalRefused` + 레벨 재무장
+- [ ] 2.9 `submit`이 `default:` 갈래(`exitloop.go:1410-1416`, base 번호 B10 `:1304`)로 가는 것을 확인 — `alertProposalRefused` + 레벨 재무장
 - [ ] 2.10 **golden 갱신** — `internal/execgw/testdata/reason_codes.golden`에 새 code 한 줄.
       `TOSSOS_UPDATE_GOLDEN=1 go test -run TestWriteReasonCodeGolden`으로 만든다.
       **손으로 고치지 않는다**
@@ -125,12 +129,13 @@
 - [ ] 3.7 **RED (§0.3 회귀)** — 취소·해석 실패는 `clearTheSymbol` **내부에서 흡수**되어 `clear=false` 가 된다
       (`:1465`·`:1471`·`:1485-1486`). 원장 목록 읽기 실패는 오늘처럼 오류로 반환된다(`:1443-1445`) — 무변화 고정
 - [ ] 3.E2 **RED (§0.4)** — 이 경로에서 나가는 **새 브로커 조회가 0건**임을 고정
-- [ ] 3.E4 **RED (4판 D−2.7)** — 같은 포지션의 청소가 **연속 3회** `clear=false` 로 끝나면 `EventExitLiquidationDelayed`
-      (이미 critical, `internal/obs/event.go:336`)를 **새 트리거로 한 번** 낸다. **기존 30초 타이머**(`noteDelay` `:1252`·
-      `:1675-`, 한계 `:116`)의 시작·해제·한계·중복 방지는 **무변화**. 그 뒤에도 자동 제출하지 않는다(§6)
-- [ ] 3.E5 **RED (4판 D−2.7)** — 그 주기에 치우지 못한 주문이 **모두** 엔진의 미종결 `CANCEL` attempt(같은 `target_order_id`,
-      `PendingAttempts` 에 있음)의 대상이면 새 계수를 늘리지 않는다. 하나라도 다른 이유면 센다. **기존 타이머에는 이 제외가
-      적용되지 않는다** — 둘을 따로 단언한다
+- [ ] 3.E4 **RED (4판 D−2.7)** — 같은 포지션의 청소가 **연속 N회**(Q4-7, 3판 값 3) `clear=false` 로 끝나면
+      `EventExitLiquidationDelayed`(이미 critical, `internal/obs/event.go:336`)를 **새 트리거로, 타이머와 다른 알림 key 로 한 번** 낸다.
+      `delayAlerted` 를 건드리지 않는다. **기존 30초 타이머**(`noteDelay` `:1252`·`:1675-`, 한계 `:116`, key `type|positionID` `:1688`)의
+      시작·해제·한계·중복 방지는 **무변화** — 두 경보가 모두 나가는 것을 단언한다. 그 뒤에도 자동 제출하지 않는다(§6)
+- [ ] 3.E5 **RED (4판 D−2.7)** — 그 주기에 치우지 못한 주문이 **모두** 엔진의 `CANCEL` attempt(같은 `target_order_id`)가
+      `RECORDED`·`DISPATCH_STARTED`·`ACKED` 인 주문이면 새 계수를 늘리지 않는다. **`IN_DOUBT` 취소는 센다.** 하나라도 다른 이유면 센다.
+      **기존 타이머에는 이 제외가 적용되지 않는다** — 둘을 따로 단언한다
 
 ### 3.D 자기 방향 부재 확인 — **철회** (2라운드 §2.2)
 
@@ -162,12 +167,18 @@
       발의는 무장된 채 남고, 원 매도가 살아 있다고 가정한 반례(park + 살아 있는 SELL)에서 두 번째 매도가 무장되지 않음을 단언한다
 - [ ] 4.3a **RED (4판 F4)** — 해제는 attempt 의 `intent_id` = 현재 `pending_intent_id` 일 때만 비운다. 다르면 무변화
       (늦게 도착한 해제 · 재무장 뒤의 옛 해제)
-- [ ] 4.3b **RED (4판 F4)** — 기동 따라잡기: `pending_intent_id` 가 찬 발의마다 그 intent 의 **마지막** attempt 가
-      `FAILED_CONFIRMED`·`NOT_DISPATCHED` 면 해제. 종결과 해제 사이 충돌 fixture 가 다음 기동에서 풀린다. 멱등
+- [ ] 4.3b **RED (4판 F4)** — 기동 따라잡기: `pending_intent_id` 가 찬 발의마다 그 intent 의 attempt 가 **모두**
+      `FAILED_CONFIRMED`·`NOT_DISPATCHED` 이거나 **하나도 없으면** 해제. 종결과 해제 사이 충돌 · 무장 뒤 `Prepare` 전 충돌 fixture 가
+      다음 기동에서 풀린다. attempt 하나라도 `CONFIRMED`·park·미종결이면 해제하지 않는다. 멱등
+- [ ] 4.3c **RED (4판, 문서 리뷰 P0)** — 세션 중 `submit` 은 `out.State ∈ {NOT_DISPATCHED, FAILED_CONFIRMED}` 이거나
+      `out.AttemptID == ""` 일 때만 해제한다. dispatch 뒤 `MarkAcked`(또는 `Settle`·`MarkInDoubt`) 쓰기를 실패시킨 fixture
+      (`gateway.go:747` — `State==""`, `AttemptID!=""`)에서 발의가 **무장된 채** 남음을 단언한다
+- [ ] 4.3d **RED (4판, 문서 리뷰 P1)** — 기동 단계(재분류·따라잡기)의 한 행 실패는 그 행을 바꾸지 않고 다음 행으로 가며 Recover 가
+      nil 을 돌려준다(루프 시작 — `runtime.go:289-295`)
 - [ ] 4.4 **RED (4판 F6 — 재핀)** — 기동 순서: ① 재분류(§4bis)가 `Recovery.Run` 의 해소(`internal/reconcile/recovery.go` —
       `Resolver.Resolve`)보다 **먼저**, ② 따라잡기(4.3b)가 `Recovery.Run` 뒤·`ready` 앞, ③ `Recovery.Run` 본문(재시작 규칙 →
       재생 → 해소)과 인터록 의미 **무변화**. 좌표 단언이 아니라 순서 단언이다(`engineRecoverySequence` `:604-606`,
-      `recoverThenReady` `:677`)
+      `recoverThenReady` `:677`). ②의 자리는 **`engineRecoverySequence` 클로저 안 `r.Run` 뒤** — 루프는 Recover 반환 뒤에만 시작한다
 - [ ] 4.4a **RED (핵심)** — 이 경로는 `Journal.RecoverPending`을 **세션 중에 부르지 않는다**(`journal/recovery.go:95-109`)
 - [ ] 4.5 **RED (§6)** — 발의 해제가 **손절 가격을 바꾸지 않는다.** `entry_price`·`initial_stop`·`baseline_price` 쓰기 0건
 - [ ] 4.5a **RED** — `pending_level`이 음수면 rung 되돌림 없이 해제된다(`RungIndex` 거부). **080220이 그 경우다**
@@ -189,11 +200,16 @@
       `ack_round_trip_unconfirmed`, `broker_order_id` 있음)는 그 detail 에 확정 거절 code 가 있어도 **재분류하지 않는다**
 - [ ] 4b.2b **RED (안전, 4판)** — 전송 실패 분기(`transport failed with the request …`) · 상태 없음 분기 · 출처 불명 기록은 대상이 아니다
 - [ ] 4b.2c **RED (안전, 4판)** — 최상위 `code` 와 `error.code` 가 다르면 재분류하지 않는다
-- [ ] 4b.2d **확인(FLM)** — 재생 경로(`internal/execgw/replay.go`)가 원장 전이를 어떻게 쓰는지 편집 전 FLM 으로 열거하고, 조건 3
-      ("모호 전이 하나")이 재생 뒤 모양을 배제하는지 단언으로 고정
+- [ ] 4b.2d **RED (4판, 문서 리뷰 P1)** — 한 번이라도 재생된 attempt(`replay_count > 0` 또는 `last_replay_at` 있음 — `RefundReplay`
+      뒤에도 시각은 남는다)는 원 409 본문이 조건을 모두 채워도 **재분류하지 않는다**
+- [ ] 4b.2e **RED (4판, 문서 리뷰 P1)** — code 는 `official: API error <n>: ` 표식이 **정확히 한 번** 있을 때 그 뒤 JSON 에서만 읽는다.
+      표식 0개·2개 이상·JSON 아님 → 그대로 둔다. 엔진 산문(`HTTP <n> does not prove …`)을 매칭하지 않는다
 - [ ] 4b.3 **RED (안전)** — 확정 거절 code가 **없는** IN_DOUBT는 건드리지 않는다. `request-in-progress`를 포함
 - [ ] 4b.4 **RED (안전)** — 재분류는 **attempt 상태만** 바꾼다. 발의 해제는 §4가 한다
 - [ ] 4b.5 **RED** — **기동 시 1회.** 주기적으로 돌지 않는다
+- [ ] 4b.7 **RED (4판)** — 매수 PLACE attempt 도 같은 조건이면 재분류되고, `FAILED_CONFIRMED` 전이가 그 결정의 예약을 푼다
+      (`durability.go:653-663`) — 부수 효과를 단언한다
+- [ ] 4b.8 **GREEN** — 재분류용 reason code 하나를 더하고 `testdata/reason_codes.golden`·`AllReasonCodes` 를 생성기로 갱신한다
 - [ ] 4b.6 **실측 재생** — 원장의 두 행(`034e5b79…`·`8f68e7c3…`)을 fixture로, 재분류 → 발의 해제 → 다음 주기 발의 → 청소 →
       제출까지 관통시킨다. **4판에서 기대 결말은 「같은 409 로 다시 거절되고 보고된다」 이다** — 반대 매수가 엔진 밖 주문이라
       청소가 치우지 않는다(D−2.4). 손절이 나가는 결말은 3.X 의 사용자 결정에 딸린다
@@ -230,10 +246,10 @@
       **따라서 검사는 「기존 요구 본문과 시나리오가 delta 안에 그대로 있는지」를
       문자열 대조로 따로 한다.** validate 통과는 그 증거가 아니다
 - [ ] 7.1 `go test ./... -count=1 -race` 회귀 0
-- [ ] 7.2 **§0.3 확인** — 3판은 스냅샷 읽기이므로 **새 브로커 왕복이 0건**이다(3.E2).
-      제출 시각 차를 3.E3으로 측정하고, **2판의 「상한 2초」 약속은 폐기됐음을 적는다**
+- [ ] 7.2 **§0.3 확인** — 4판 R2 는 원장만 읽으므로(`LiveOrdersForSymbol`) **새 브로커 왕복이 0건**이다(3.E2).
+      **2판의 「상한 2초」 약속은 폐기됐음을 적는다**. 3판 3.E1·3.E3(스냅샷 신선도·시각 차)은 3.X 로 옮겼다
 - [ ] 7.3 **§0.4 확인** — **이 change가 더하는 브로커 호출은 0건**임을 FLM calls 표로 보인다.
-      R2는 detector 스냅샷을 읽고, R3의 고리는 원장 쓰기이며, R1 소급은 원장 읽기다
+      R2는 원장만 읽고, R3의 고리는 원장 쓰기이며, R1 소급은 원장 읽기다
 - [ ] 7.4 **토글 OFF 동등성** — 이 change는 토글을 도입하지 않는다.
       도입하지 않았음을 명시한다(`not-applicable` 아님 — 해당 없음이 아니라 무도입)
 - [ ] 7.5 FLM·AST **재생성** (구현 후) + `check_analysis.py` 통과
@@ -262,7 +278,8 @@ a094 (이 change) ── 409 동결과 충돌 해소
    └─ a092 알림이 손절을 잡지 않는다 독립. 알림 체류
 ```
 
-**a094는 넷 중 어느 것에도 의존하지 않고, 넷 중 어느 것도 a094를 대신하지 않는다.**
+**4판 정정: a094 는 a089 의 처분에 의존한다**(design D−2.8 — 두 delta 를 함께 조정하기 전에는 어느 것도 freeze 하지 않는다).
+a087·a091·a092 에는 의존하지 않는다. 넷 중 어느 것도 a094를 대신하지 않는다.
 a089가 세는 "나가지 못한 손절"에 이 사건이 포함되지만, a089는 기록만 하고 원인을
 제거하지 않는다.
 
@@ -273,7 +290,7 @@ a089가 세는 "나가지 못한 손절"에 이 사건이 포함되지만, a089�
 | §1 사람 승인 없는 LIVE 주문 side effect 금지 | 구현·테스트는 fixture. 배포·재시작은 8절에서 사람이 승인 |
 | §2 `mutating: true` 자동 실행 금지 | 준수 |
 | §3 토글 OFF는 upstream과 동일 | **토글을 도입하지 않는다** |
-| §4 손절 즉시성을 약화·지연하지 않는다 | 3.7·3.E1·3.E2·3.E3·7.2. **3판은 새 동기 왕복이 0건**이다. 그리고 **§4의 더 큰 위반은 영구 억제였다** — D3의 고리가 그것을 푼다 |
+| §4 손절 즉시성을 약화·지연하지 않는다 | 3.7·3.E2·3.E4·3.E5·7.2. **4판은 새 동기 왕복이 0건**이고 기존 30초 지연 경보를 바꾸지 않는다. **4판은 park 의 영구 억제를 풀지 않는다**(D−2.2 — 이중 매도 위험이 더 크다) — 그 비용은 Q4-1 과 운영자 해소에 남긴다 |
 | §5 High-risk 경로 | 주문·손절·대사 전부 해당. Pre-Edit 선언은 2.0·3.0·4.0·4b.0. **4bis는 저장된 원장 행의 상태를 바꾸므로 사람 승인 아래에서만 배포한다**(8절) |
 | §6 보수 방향만 | R1~R3 전부 **손절이 더 잘 나가는** 방향. 사이징·손절가·레벨은 안 바꾼다. **뒤집지 않는 것 둘**: 「못 치우면 팔지 않는다」(B7, 3.E4)와 「미정산은 그 종목을 막는다」(D6) |
 | §7 운영 토글 flip과 live 검증은 사람이 | 8절 |
