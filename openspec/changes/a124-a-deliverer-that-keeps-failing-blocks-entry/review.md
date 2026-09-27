@@ -427,3 +427,27 @@ proposal Non-goals/Impact)을 쓰고 Q4~Q6 을 반영해 5회차 재freeze 한�
   좌표 `internal/execgw/gateway.go:153-168,269` 는 틀렸고, 실제 자리는 `internal/app/engine/gateway.go:269` → `restoreAlertEntryLatch` :153-167 이다
   (`UndeliveredCount > 0` 일 때만). D10 은 이 경로를 이미 정확히 담고 있다 — 사실 단락 · 집행 표 「재시작 뒤」 칸(PENDING > 0 이면 다시 잠금, 0 이면 없음) ·
   「PENDING 이 남은 채 재시작 → 막힌다」 행. 보정 없이 13회차를 실행한다.
+
+## §0.17 proposal-freeze 13회차 (2026-09-27) — design 7판 **REJECT** (codex) · 반영 없음, Manager 결정 대기
+
+- 실행: codex-cli 0.154.0, `gpt-6-astra`, reasoning medium, `codex exec -s read-only --ephemeral --skip-git-repo-check -C <트리>`, session
+  **`01a0e2db-a929-75a2-867a-ec325d15c84d`**, 21:33~21:39 KST, rc 0, 201,036 토큰. 프롬프트 = `codex-r13-prompt.md` 원문(sha256 `7a74a9c1…b691`, 실행 사본 일치).
+  트리 = base `4798d399` export + HEAD `d447bc79` 의 이 change 디렉터리(워크트리와 `diff -r` 0), 실행 뒤 트리 안 새 파일 0. 출력: `analysis/freeze-review/codex-r13-output.md`.
+- 이전 발견: **PARTIAL 5** — F2 · N7 · V2 · AC1(모두 AD1/AD2 때문), **W1(b) NOT RESOLVED**(7판이 정직하게 미해소로 적었다는 판정은 받음). **W1(a) RESOLVED**,
+  **Y1 RESOLVED**(집행 추론 철회 확인), **AC2 RESOLVED**(좌표 맞음; 발현 조건 문구만 「동시 커밋」이 아니라 「겹친 전이 호출의 커밋 뒤 투영 순서 뒤바뀜」으로).
+  나머지 전부 RESOLVED. 판정 규칙(D1 · D7 표와 순서 · D8 전이)의 변경은 찾지 못했다(단 export 에 git 이 없어 판본 간 diff 는 codex 가 직접 못 했다 — Teammate 는
+  7판 커밋 전 diff 의 삭제 줄이 논거 문장뿐임을 확인했다, §0.15). D2 · D3 유지. 「코드 착지 조건이 아닌 운영 효과 선행 조건」 이름은 **defensible** 로 판정.
+- 새 발견 (심각도는 codex 그대로 — Teammate 재확인 결과를 증거 칸에):
+
+| id | 심각도 | 발견 | 증거 (Teammate 재확인) |
+|---|---|---|---|
+| AD1 | **P1** | D10 이 「a124 의 알림 래치가 없음」을 「생산 진입이 열린다」로 합쳤다. ㉩/㉪ 의 예 `parkAlert` 는 B 를 넣기 **전에** `ReasonUnresolvedInDoubt` 를 잠그고 알림 승인은 그 사유를 풀지 않는다. 새 게이트는 관측 전 필수 조회로도 막는다. 그러므로 「생산에서 B 이후 진입은 열린다」와 「HEAD 에서 B 는 기동 복원 외에 아무도 판정하지 않는다」는 인용 경로로 성립하지 않는다 | **확인** — `execgw/replay.go:534-538`(`g.entry.Block(ReasonUnresolvedInDoubt, …)` 가 :551 `EnqueueAlert` 앞), 진입 점검은 모든 래치 + 신선도(`execgw/retry.go:565-590`). 대상 문장: design D7 ㉩ · ㉪ 칸, D10 「지금 참」 표의 「진입 열림」 칸들 · 「논거 재정립」 ㉩/㉪ · W1 ② · HEAD 대조, proposal Follow-ups 7판 문장, Risks 새 항목. 제안: 「a124 가 여기서 알림·모드 차단을 더하지 않는다; 다른 검사(미해결 · 발송자 정지 · 대사 · 신선도)는 그대로 권위」로 |
+| AD2 | **P1** | 7판 spec 새 문장 「모드 투영이 배선되기 전에는 운영자의 해제 뒤와 미전달 0 인 재시작 뒤에 이 요구로 막히는 진입이 없으며」는 같은 요구가 허용·강제하는 재잠금(정산 → 해제 → 세대 읽기 재잠금, 차단 → 해제 → 승격 실패 무조건 차단)과 **모순**이다. 투영기와 무관 | **확인** — spec delta 7판 문단 vs 같은 파일의 「확정 순간과 세대 읽기 사이의 해제를 앞으로 보는 것은 허용」 · 「승격 쓰기 실패면 … 차단을 적용해야 한다」, 시나리오 「한도 도달 직후 운영자가 승인한다」. 제안: 「원장의 모드 행은 진입 집행을 더하지 않는다」로 바꾸고 무조건 결과 문장을 빼기; 2.14 (c) 에 두 재잠금 변형 |
+| AD3 | P2 | W1 을 닫는 두 조건의 충분성이 넓게 적혔다. 셈~해제 원자화는 「셈과 해제 사이 유입」 한 궤적만 막는다 — 승인의 id 스냅숏(:854-855) 뒤 들어와 실패하고 원자 셈~해제 전에 전달된 B 는 여전히 승인에 덮이지 않는다. 투영기 배선도 AC2 수리와 「허용 전 복원」 순서가 있어야 보호가 된다 | 확인(논증) — `obs/notifier.go:854-875`, `journal/outbox.go:453-456 · 494-503`. 제안: 각 조건이 없애는 궤적을 명시, 일반 보호는 승인·생산자 세대 커버리지, 운영 집행 = 배선 **+** 안전한 투영·기동 순서 |
+| AD4 | P3 | 「비시험 판독자 0」은 부정확 — 전이 자체가 트랜잭션 안에서 `operating_modes` 를 읽는다(`currentModeTx` · `modeRowCount`). 정본 인용 `engine-safety/spec.md:1030-1037` 은 **HEAD 좌표**이고 base 에서는 :995-1000 (a071 아카이브 +42) | **확인** — `journal/operating_mode.go:398 · 676-685`; base 파일 :994-1001 에 같은 문단. 제안: 「진입 허용·기동 소비자 0」으로, 좌표를 base 기준으로 통일 |
+
+- codex 의 2.14 (c) 지적(P 등급 없음, 본문): 생산 빌더 게이트는 필수 조회 미관측으로 막혀 있으므로 「`CheckEntryFor == nil`」과 「알림 · 모드 사유 둘 다 없음」을
+  구별해야 한다 — 사유 단언과 원장 행 단언을 따로, 허용 경우는 정당한 관측을 주고.
+- **Teammate 분류: AD1 · AD2 는 P1 로 동의**(둘 다 7판이 새로 쓴 문장의 참/거짓 문제 — 판정 규칙이 아니라 경계 서술). AD3 P2 · AD4 P3 동의. 판정 규칙은 건드릴 필요가
+  없어 보인다 — 수정은 D10 · ㉩/㉪ · spec 7판 문단 · 2.14 (c) 의 문장 범위다. **반영하지 않았다 — Manager 결정.**
+- **판정: REJECT (codex).** tasks 0.4 는 체크하지 않는다.
