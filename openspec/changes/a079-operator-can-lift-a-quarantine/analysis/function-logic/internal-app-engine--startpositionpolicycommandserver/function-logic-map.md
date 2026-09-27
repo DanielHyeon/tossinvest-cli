@@ -78,3 +78,11 @@ B17~B19는 새 라우트 각각의 method 검사다.
   같은 bearer 인증·사설 descriptor·loopback 바인드 안에 들어간다.
 - §0.2: 격리 capability가 없으면 mux는 현재와 같은 라우트 집합을 갖는다.
 - §0.7: 새 라우트는 사람이 콘솔에서 승인한 capability만 소비한다. 자동 호출자가 없다.
+
+## Refresh (2026-09-27, HEAD f1e82e79)
+
+`ast.json` 을 현재 소스에서 `go run ./tools/logic-map` 로 재생성했다(옛 파일은 448dfeb1 소스를 기술).
+그 뒤 이 함수를 바꾼 이웃 커밋: a108 `da61838c`, a109 `5f285c52`(`git log -L`). 본문에 더해진 것은 분기 없는 호출
+둘이다 — 소유 검증 뒤 죽은 run 의 descriptor 를 지우는 `dropStalePositionPolicyDescriptor(…)`(a109 §2b.3 G4)와
+자기 staging 잔재를 치우는 `positionpolicyrpc.SweepPrivateStagingLeftovers(…)`. 분기 16 은 difflib 정렬로 B1..B16 →
+B1..B16 항등이라 Branch Test Map 번호는 그대로다. 격리 capability 분기(a079)의 조건과 동작은 바뀌지 않았다.

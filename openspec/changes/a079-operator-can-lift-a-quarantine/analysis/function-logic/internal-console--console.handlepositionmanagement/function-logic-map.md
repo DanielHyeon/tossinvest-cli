@@ -78,3 +78,14 @@
   담당하고 그것은 신규 파일이다.
 - §0.4 rate budget: 신규 broker 호출 없음. 격리 조회는 엔진 loopback RPC이며
   공식 API가 아니다.
+
+## Refresh (2026-09-27, HEAD f1e82e79)
+
+`ast.json` 을 현재 소스에서 `go run ./tools/logic-map` 로 재생성했다(옛 파일은 448dfeb1 소스를 기술).
+그 뒤 이 함수를 바꾼 이웃 커밋은 a111 `882a0b49` 하나다(`git log -L`). 그 커밋이 넣은 것:
+청산 원장 읽기(`c.livePositions`)와 position id 색인(새 B10·B11), 원장을 못 읽을 때의 불명 사유(새 B16),
+MANAGED·청산 적격 행에 저장된 청산 줄을 신선도 판정해 붙이는 경로(새 B17·B18), 그리고 격리 조회 **뒤**
+marker 를 한 번 읽고 그 뒤 시각(`asOf`)으로 liveness 와 모든 청산 줄을 판정하는 순서.
+분기 번호 대응(difflib, kind+소스 줄): B1..B9 → B1..B9, B10..B13 → B12..B15, B14..B20 → B19..B25.
+위 「Branches and early returns」 표는 a079 구현 **전** 소스의 번호(B1..B16)로 쓴 것이라 그대로 둔다 —
+번호의 정본은 `ast.json` 과 Branch Test Map 이다. a079 가 넣은 격리 분기(B12·B13·B14·B20)의 조건과 동작은 바뀌지 않았다.
