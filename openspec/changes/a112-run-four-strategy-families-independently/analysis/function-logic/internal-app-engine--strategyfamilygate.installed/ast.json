@@ -1,0 +1,47 @@
+{
+  "file": "internal/app/engine/strategy_family_activation.go",
+  "source_sha256": "4a1ac0a98c8a7c598c5850a3c006e81821c56bb9e11aad113d9b943b4ec59022",
+  "package": "engine",
+  "function": "installed",
+  "receiver": "strategyFamilyGate",
+  "signature": "strategyFamilyGate.installed(params=0, results=1)",
+  "start": {
+    "line": 57,
+    "column": 1
+  },
+  "end": {
+    "line": 59,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 9
+      },
+      "text": "gate.activation.Verified"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 39
+      },
+      "text": "len"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

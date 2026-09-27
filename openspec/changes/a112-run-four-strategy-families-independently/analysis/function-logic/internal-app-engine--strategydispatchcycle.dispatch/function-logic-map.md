@@ -118,3 +118,39 @@ B6 (`activation.Verified()`, 108:2) 과 B7 (`protection.Generation() < 하한`, 
 빨개지고, `if true || …` 로 항상 거절하게 만들면 "하한과 같으면 나간다" 행이
 빨개진다. 서로 다른 행이 빨개지므로 이 시험은 양방향으로 판별한다 — 한쪽만
 빨개지는 시험은 "항상 거절" 판본도 통과시킨다.
+
+## 2026-09-27 — 태스크 8.7.2 편집 전 측정과 계획
+
+`ast.json` 의 SHA-256 `12f578d4…` 는 편집 전 이 워크트리 파일과 같다(재확인). 아래 표는 **몸통 진입** regime 이다
+(분기 좌표 뒤 첫 커버리지 블록). 위 8.8.2 절의 수(예: B2 19x)는 조건 평가를 센 다른 regime 이므로 섞지 않는다.
+하네스: `analysis/harness/a872_pertest_cover.sh`(엔진 전체 시험 494 개를 하나씩) + `a872_attribute.py`. 모든 행에서
+시험별 합 == 스위트(ATTRIBUTION MISMATCH 0).
+
+| Branch | AST kind | Position | Measured disposition |
+|---|---|---|---|
+| B1 | if | 72:2 | arm entered 1x (engine tagged suite, pre-edit); `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall` |
+| B2 | if | 75:2 | arm not entered (engine tagged suite, pre-edit); no per-test profile entered it |
+| B3 | if | 80:2 | arm not entered (engine tagged suite, pre-edit); no per-test profile entered it |
+| B4 | if | 87:2 | arm not entered (engine tagged suite, pre-edit); no per-test profile entered it |
+| B5 | if | 91:2 | arm entered 4x (engine tagged suite, pre-edit); `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS` |
+| B6 | if | 108:2 | arm entered 2x (engine tagged suite, pre-edit); `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor` |
+| B7 | if | 109:3 | arm entered 1x (engine tagged suite, pre-edit); `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor` |
+| B8 | if | 116:2 | arm entered 4x (engine tagged suite, pre-edit); `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS` |
+| B9 | if | 120:2 | arm entered 2x (engine tagged suite, pre-edit); `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral` |
+| B10 | if | 124:2 | arm entered 1x (engine tagged suite, pre-edit); `TestTheSameEnvelopeCannotPlaceASecondOrder` |
+| B11 | if | 128:2 | arm not entered (engine tagged suite, pre-edit); no per-test profile entered it |
+| B12 | if | 135:2 | arm not entered (engine tagged suite, pre-edit); no per-test profile entered it |
+| B13 | if | 141:2 | arm not entered (engine tagged suite, pre-edit); no per-test profile entered it |
+| B14 | if | 154:2 | arm not entered (engine tagged suite, pre-edit); no per-test profile entered it |
+| B15 | if | 160:2 | arm not entered (engine tagged suite, pre-edit); no per-test profile entered it |
+| B16 | if | 164:2 | arm not entered (engine tagged suite, pre-edit); no per-test profile entered it |
+
+**편집 계획 (Manager 승인 2026-09-27, 조건 ①~⑤).** lease TTL 의 상한 `30*time.Second`(150:2)를 가족 활성화가 깎은
+상한으로 바꾼다. 계산 규칙(검증 안 된 활성화는 상한을 그대로 돌려줌 · 남은 수명 0 이하는 만료 오류 · 결과는 입력 상한을
+넘지 않음 = **min 결합만**)은 strategyrouter 의 메서드 하나(`FamilyActivation.LeaseCeiling`)에 두고, 이 함수는 파도 시각과
+30초 상한을 넘기고 결과를 `min(…, 스케줄 활성화 남은 수명)` 에 쓰는 배관만 한다.
+
+부르는 자리는 보호 하한 결속(108:2) **바로 뒤, q_final admission(123:2) 앞**이다. 이 함수 머리의 "admission 이 커밋하기 전에
+실패할 수 있는 읽기 전용 경계를 전부 끝낸다"(84행 주석)를 따른다. 새 분기는 하나(`err != nil` → 오류 반환)다. 생산에서는
+넘기는 시각이 활성화를 검증한 바로 그 파도 시각이라 이 갈래가 닿지 않는다(시험 seam 으로만 닿는다) — 실질적인 보호는 TTL
+결합이다: lease 가 가족 활성화 만료를 넘어 살지 못한다.

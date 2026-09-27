@@ -1,0 +1,163 @@
+{
+  "file": "internal/app/engine/strategy_family_activation.go",
+  "source_sha256": "4a1ac0a98c8a7c598c5850a3c006e81821c56bb9e11aad113d9b943b4ec59022",
+  "package": "engine",
+  "function": "loadFamilyActivation",
+  "receiver": "strategyProposalAuthorityLoader",
+  "signature": "strategyProposalAuthorityLoader.loadFamilyActivation(params=5, results=2)",
+  "start": {
+    "line": 124,
+    "column": 1
+  },
+  "end": {
+    "line": 156,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 128,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 132,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 133,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 149,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 131,
+        "column": 25
+      },
+      "text": "strategyMarketCalibrationDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 149,
+        "column": 9
+      },
+      "text": "strategyrouter.LoadProductionFamilyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 40
+      },
+      "text": "strategyRouterMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 19
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 37
+      },
+      "text": "loader.getenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 60
+      },
+      "text": "strategyRuntimeBuildDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 21
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 39
+      },
+      "text": "loader.getenv"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 129,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 131,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 145,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 147,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
