@@ -1,7 +1,9 @@
 # Branch Test Map: `aggregateProductionRiskUsage`
 
+Measured at HEAD `b8211926` with `go test -coverpkg ./internal/journal,./internal/riskbucket (journal untagged + riskbucket tossos_testseams, isolated copy)` (statement coverage; `covered` = the branch body ran at least once in the package suite, it does not say which test). Named tests are attributed per test with a single-test `-coverprofile` run. Harness: `analysis/harness/branch_coverage_rows.py`.
+
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | range at 448:2 — `for _, row := range rows {` | package suites (pre-edit) | n/a (pre-edit map) | covered at `f2decd0a` |
-| B2 | if at 451:3 — `if !filledOK \ | package suites (pre-edit) | n/a (pre-edit map) | \ at `f2decd0a` |
-| B3 | if at 459:3 — `if filled.BitLen() > 256 \ | package suites (pre-edit) | n/a (pre-edit map) | \ at `f2decd0a` |
+| B1 | range at 473:2 — `for _, row := range rows {`; then `rowFilled, filledOK := new(big.Int).SetString(row.FilledMinor, 10)` (line last changed by `8022f578`) | package suite `go test -coverpkg ./internal/journal,./internal/riskbucket (journal untagged + riskbucket tossos_testseams, isolated copy)` | n/a — branch line last changed by `8022f578`, not an a066 commit | covered at `b8211926` |
+| B2 | if at 476:3 — `if !filledOK \|\| !heldOK \|\| rowFilled.Sign() < 0 \|\| rowHeld.Sign() < 0 \|\| rowFilled.BitLen() > 256 \|\| rowHeld.BitLen() > 256 \|\|`; then `return JournalBucketUsage{}, errors.New("risk bucket: invalid or latched journal usage")` (line last changed by `8022f578`) | package suite `go test -coverpkg ./internal/journal,./internal/riskbucket (journal untagged + riskbucket tossos_testseams, isolated copy)` | n/a — branch line last changed by `8022f578`, not an a066 commit | covered at `b8211926` |
+| B3 | if at 486:3 — `if filled.BitLen() > 256 \|\| held.BitLen() > 256 {`; then `return JournalBucketUsage{}, errors.New("risk bucket: journal usage overflow")` (line last changed by `8022f578`) | package suite `go test -coverpkg ./internal/journal,./internal/riskbucket (journal untagged + riskbucket tossos_testseams, isolated copy)` | n/a — branch line last changed by `8022f578`, not an a066 commit | NOT covered at `b8211926` |

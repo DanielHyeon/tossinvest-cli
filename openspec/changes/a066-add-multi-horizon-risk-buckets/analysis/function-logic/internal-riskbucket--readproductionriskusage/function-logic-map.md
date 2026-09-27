@@ -13,11 +13,13 @@
 
 ## Branches and early returns
 
-| Branch | Position | Condition (AST source line at `f2decd0a`) | Coverage (pre-edit) |
-|---|---|---|---|
-| B1 | if at 429:2 | `if err != nil {` | NOT covered |
-| B2 | for at 434:2 | `for rows.Next() {` | covered |
-| B3 | if at 436:3 | `if err := rows.Scan(&row.ReservationID, &row.PolicyVersion, &row.HeldMinor, &row.FilledMinor, &row.State,` | NOT covered |
+| Branch | Position | Condition and first body statement (AST source line) | a066 relevance | Coverage (5.6.1 post-edit) |
+|---|---|---|---|---|
+| B1 | if at 453:2 | `if err != nil {`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B2 | for at 458:2 | `for rows.Next() {`; then `var row productionRiskUsageRow` (line last changed by `8022f578`) | not a066 | covered |
+| B3 | if at 460:3 | `if err := rows.Scan(&row.ReservationID, &row.PolicyVersion, &row.HeldMinor, &row.FilledMinor, &row.State,`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
+
+5.6.1 post-edit (HEAD `b8211926`): 3 → 3; parameter type `*sql.DB` → `UsageQueryer`. Pre-edit table: `analysis/pre-edit/5.6.1/internal-riskbucket--readproductionriskusage.md`.
 
 ## Calls and live bindings
 

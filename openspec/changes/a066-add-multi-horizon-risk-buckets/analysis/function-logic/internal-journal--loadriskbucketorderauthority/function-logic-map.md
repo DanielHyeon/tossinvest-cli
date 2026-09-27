@@ -13,18 +13,20 @@
 
 ## Branches and early returns
 
-| Branch | Position | Condition (AST source line at `f2decd0a`) | Coverage (pre-edit) |
-|---|---|---|---|
-| B1 | if at 462:2 | `if err != nil {` | NOT covered |
-| B2 | range at 468:2 | `for _, dimension := range riskbucket.RequiredDimensionOrder() {` | covered |
-| B3 | for at 472:2 | `for rows.Next() {` | covered |
-| B4 | if at 475:3 | `if err := rows.Scan(&binding.Dimension, &binding.Value, &binding.PolicyVersion, &binding.ReservationID, &binding.ReservedMinor, &binding.SnapshotID, &binding.SnapshotDige` | NOT covered |
-| B5 | if at 479:3 | `if _, duplicate := byDimension[dimension]; !required[dimension] \|\| duplicate \|\| binding.PolicyDigest != policyDigest \|\| rowQuote == "" \|\| rowBase == "" \|\| (quot` | NOT covered |
-| B6 | if at 485:2 | `if err := rows.Err(); err != nil {` | NOT covered |
-| B7 | if at 488:2 | `if len(byDimension) != len(required) {` | NOT covered |
-| B8 | range at 492:2 | `for _, dimension := range riskbucket.RequiredDimensionOrder() {` | covered |
-| B9 | if at 494:3 | `if !ok {` | NOT covered |
-| B10 | if at 500:2 | `if err != nil {` | NOT covered |
+| Branch | Position | Condition and first body statement (AST source line) | a066 relevance | Coverage (5.6.1 post-edit) |
+|---|---|---|---|---|
+| B1 | if at 467:2 | `if err != nil {`; then `return riskBucketOrderAuthority{}, err` (line last changed by `c60fee07`) | a066: 5.6.1 F2 query: v34 rows join their own record (UNION ALL legacy key join for NULL rows); query error returns | NOT covered |
+| B2 | range at 473:2 | `for _, dimension := range riskbucket.RequiredDimensionOrder() {`; then `required[dimension] = true` (line last changed by `c60fee07`) | a066 commit | covered |
+| B3 | for at 477:2 | `for rows.Next() {`; then `var binding riskBucketOrderAuthorityBinding` (line last changed by `c60fee07`) | a066 commit | covered |
+| B4 | if at 480:3 | `if err := rows.Scan(&binding.Dimension, &binding.Value, &binding.PolicyVersion, &binding.ReservationID, &binding.ReservedMinor, &binding.SnapshotID, &binding.SnapshotDigest, &binding.PolicyDigest, &policyDigest, &binding.PolicyRecordDigest, &rowQuote, &rowBase); err != nil {`; then `return riskBucketOrderAuthority{}, fmt.Errorf("%w: order authority scan: %v", ErrRiskBucketReplayMismatch, err)` (line last changed by `c60fee07`) | a066 commit | NOT covered |
+| B5 | if at 484:3 | `if _, duplicate := byDimension[dimension]; !required[dimension] \|\| duplicate \|\| binding.PolicyDigest != policyDigest \|\| rowQuote == "" \|\| rowBase == "" \|\| (quote != "" && quote != rowQuote) \|\| (base != "" && base != rowBase) {`; then `return riskBucketOrderAuthority{}, fmt.Errorf("%w: non-canonical order authority", ErrRiskBucketSnapshotMismatch)` (line last changed by `c60fee07`) | a066 commit | NOT covered |
+| B6 | if at 490:2 | `if err := rows.Err(); err != nil {`; then `return riskBucketOrderAuthority{}, err` (line last changed by `c60fee07`) | a066 commit | NOT covered |
+| B7 | if at 493:2 | `if len(byDimension) != len(required) {`; then `return riskBucketOrderAuthority{}, fmt.Errorf("%w: order authority dimension set", ErrRiskBucketSnapshotMismatch)` (line last changed by `c60fee07`) | a066 commit | NOT covered |
+| B8 | range at 497:2 | `for _, dimension := range riskbucket.RequiredDimensionOrder() {`; then `binding, ok := byDimension[dimension]` (line last changed by `c60fee07`) | a066 commit | covered |
+| B9 | if at 499:3 | `if !ok {`; then `return riskBucketOrderAuthority{}, fmt.Errorf("%w: missing %s order authority", ErrRiskBucketSnapshotMismatch, dimension)` (line last changed by `c60fee07`) | a066 commit | NOT covered |
+| B10 | if at 505:2 | `if err != nil {`; then `return riskBucketOrderAuthority{}, err` (line last changed by `c60fee07`) | a066 commit | NOT covered |
+
+5.6.1 post-edit (HEAD `b8211926`): 10 → 10 branches; only the query changed (own record for v34 rows, legacy key join for NULL rows). Pre-edit table: `analysis/pre-edit/5.6.1/internal-journal--loadriskbucketorderauthority.md`.
 
 ## Calls and live bindings
 

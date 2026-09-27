@@ -13,21 +13,23 @@
 
 ## Branches and early returns
 
-| Branch | Position | Condition (AST source line at `f2decd0a`) | Coverage (pre-edit) |
-|---|---|---|---|
-| B1 | if at 340:2 | `if !ok {` | NOT covered |
-| B2 | if at 343:2 | `if err := validateProductionRiskJournalFile(config.JournalPath, owner); err != nil {` | NOT covered |
-| B3 | if at 352:2 | `if err != nil {` | NOT covered |
-| B4 | if at 357:2 | `if err := db.PingContext(ctx); err != nil {` | NOT covered |
-| B5 | if at 361:2 | `if err := db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil \|\| version != productionRiskJournalSchema {` | NOT covered |
-| B6 | if at 365:2 | `if err := db.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_scope_latches WHERE account_ref=? AND market=? AND symbol=?`,` | NOT covered |
-| B7 | if at 376:2 | `if authorityObserved.After(scope.AsOf) \|\| authorityFresh.Before(scope.AsOf) {` | NOT covered |
-| B8 | range at 380:2 | `for _, dimension := range requiredDimensions {` | covered |
-| B9 | if at 382:3 | `if err != nil {` | NOT covered |
-| B10 | if at 386:3 | `if err != nil {` | covered |
-| B11 | if at 395:3 | `if err != nil {` | NOT covered |
-| B12 | if at 405:3 | `if err != nil {` | NOT covered |
-| B13 | if at 414:3 | `if err != nil {` | NOT covered |
+| Branch | Position | Condition and first body statement (AST source line) | a066 relevance | Coverage (5.6.1 post-edit) |
+|---|---|---|---|---|
+| B1 | if at 340:2 | `if !ok {`; then `return nil, ErrProductionRiskSnapshotUnavailable` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B2 | if at 343:2 | `if err := validateProductionRiskJournalFile(config.JournalPath, owner); err != nil {`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B3 | if at 352:2 | `if err != nil {`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B4 | if at 357:2 | `if err := db.PingContext(ctx); err != nil {`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B5 | if at 361:2 | `if err := db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil \|\| version != productionRiskJournalSchema {`; then `return nil, errors.New("risk bucket: exact journal schema unavailable")` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B6 | if at 365:2 | `if err := db.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_scope_latches WHERE account_ref=? AND market=? AND symbol=?`,`; then `return nil, errors.New("risk bucket: scope latch present")` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B7 | if at 376:2 | `if authorityObserved.After(scope.AsOf) \|\| authorityFresh.Before(scope.AsOf) {`; then `return nil, errors.New("risk bucket: authority window unavailable")` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B8 | range at 380:2 | `for _, dimension := range requiredDimensions {`; then `usage, err := ReadJournalBucketUsage(ctx, db, scope.AccountID, dimension, values[dimension])` (line last changed by `8022f578`) | not a066 | covered |
+| B9 | if at 382:3 | `if err != nil {`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B10 | if at 386:3 | `if usage.Latched {`; then `return nil, errors.New("risk bucket: invalid or latched journal usage")` (line last changed by `b8211926`) | not a066 | covered |
+| B11 | if at 396:3 | `if err != nil {`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B12 | if at 406:3 | `if err != nil {`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B13 | if at 415:3 | `if err != nil {`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
+
+5.6.1 post-edit (HEAD `b8211926`): 13 → 13; B9/B10 now `ReadJournalBucketUsage` error and `usage.Latched`. Pre-edit table: `analysis/pre-edit/5.6.1/internal-riskbucket--loadproductionriskentries.md`.
 
 ## Calls and live bindings
 
