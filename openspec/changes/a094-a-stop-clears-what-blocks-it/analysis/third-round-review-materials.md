@@ -62,3 +62,24 @@ CLI 인증 오류(`401 Unauthorized`)는 **2026-09-27 재가동이 확인됐다*
 - `tasks.md` §8 배포와 운영 — 8.2 「엔진 재시작은 사람이 직접 승인한다」, 8.3 첫 409 사건의 실물 확인,
   8.4 현재 열린 세 포지션(475150·080220·272210)은 사람이 처리
 - `make sdd-sync`·`make gate` 실행 승인(`review.md` §2.6)
+
+## G. a124 12회차가 찾은 AC1 — 3판의 논거에 닿는 자리 (Manager 지시로 추가, 2026-09-27)
+
+a124 codex 12회차(`01a0e2b7-a927-7522-8c27-2847fc08c6ae`, a124 review §0.14)의 AC1: durable 운영 모드 투영이
+생산에 배선돼 있지 않다 — `Journal.SetModeProjector`(`internal/journal/operating_mode.go:294`)와
+`Journal.RestoreOperatingModeProjection`(`:574`)의 **비시험 호출자가 0** 이다(이 로트에서 재측정: `internal`·`cmd` 비시험
+Go 에서 정의 외 출현 0). 전달 실패한 critical 알림은 `Notifier.escalate` 가 `EscalateOperatingMode(…,
+ModeTriggerCriticalAlertUndelivered)` 로 원장에 모드를 쓰지만(`internal/obs/notifier.go:378-383`), 재시작 뒤 그 모드를
+진입 게이트로 되돌리는 경로가 없다. 같은 주석(`notifier.go:370-377`)이 적듯 프로세스 안 차단(게이트 latch)은 선다.
+
+3판이 이 집행을 전제한 문장 — 리뷰어가 AC1 을 알고 읽어야 할 자리:
+
+- `design.md:441` · `tasks.md:169` — "critical 전달 실패는 `ENTRY_BLOCKED`까지 간다(`notifier.go:216-218`)"
+  (현재 줄은 `:381-383`, 정오표 §2). 이 문장은 PENDING_CANCEL 제외의 **근거**(거짓 critical 의 비용)로 쓰인다.
+- `specs/exit-policy/spec.md:79` — "등급이 오른 알림의 전달 실패는 신규 진입을 막는다" (같은 SHALL 의 이유절).
+
+프로세스 안 latch 로는 참이고, 재시작을 건넌 durable 집행으로는 AC1 때문에 거짓이다. 3판의 결론(정상 취소를 계수에서 뺀다)은
+어느 쪽이든 유지될 수 있으나, 근거 문장이 둘 중 무엇을 뜻하는지는 리뷰가 판정한다.
+
+`design.md:543` "park는 그 자체로 계정 전역 진입을 막는다(`indoubt.go:379-382`)" 는 **다른 기전**이다 — `EntryGate.Block`
+(`internal/execgw/indoubt.go:379-381`, 프로세스 안)이지 운영 모드 투영이 아니다. AC1 과 무관한지 리뷰어가 확인한다.
