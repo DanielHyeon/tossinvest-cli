@@ -20,21 +20,36 @@ artifact's identifier SHALL NOT by itself be accepted. The operation SHALL appen
 only when all of the following hold for the artifact's symbol, and SHALL refuse
 otherwise:
 
-- the complete OPEN group for the symbol contains no conditional order at all
-  (a modify issues a new identifier and invalidates the old one, so a live
-  successor would appear there under a different identifier);
-- the complete CLOSED group for the symbol does not contain the artifact's
-  identifier (an identifier found there is a terminal state, not absence);
-- a conditional that fired and left the lists is excluded by the rule chosen in
-  design Revision 1 Q1 `[비움 — Q1]`; until that rule exists the operation SHALL
-  refuse;
-- the complete OPEN+CLOSED read set, performed twice in succession, yields the
-  same (group, identifier, status) set both times, within the bound chosen in
-  design Revision 1 Q3 `[비움 — Q3]`.
+- the complete OPEN conditional-order group for the symbol contains no
+  conditional order at all (a modify issues a new identifier and invalidates the
+  old one, so a live successor would appear there under a different identifier);
+  any exception for a successor the record can prove it owns is chosen in design
+  Revision 1 Q4 `[비움 — Q4]`;
+- the complete CLOSED conditional-order group for the symbol does not contain the
+  artifact's identifier, and contains no row of any identifier whose triggered
+  order identifier is non-empty or whose status is `COMPLETED` (a successor that
+  fired is listed under its own identifier); an artifact found there as
+  `EXPIRED` is refused unless design Revision 1 Q6 `[비움 — Q6]` decides otherwise;
+- the complete OPEN plain-order group for the symbol contains no order (a fired
+  child that has not filled rests there);
+- a conditional that fired and has left the lists is excluded by the rule chosen
+  in design Revision 1 Q1 `[비움 — Q1]`; until that rule exists the operation
+  SHALL refuse;
+- every row read carries the artifact's symbol, and every row read carries the
+  requested market;
+- the complete read set above, performed twice in succession, yields the same
+  sorted (group, identifier, status, triggered order identifier) set both times,
+  within the bound chosen in design Revision 1 Q3 `[비움 — Q3]`.
 
-The operation SHALL select exactly one outstanding conditional artifact from the
-record without accepting a caller-supplied identifier, and SHALL refuse when zero
-or more than one is eligible or when the only candidate is held for a later step.
+The operation SHALL select exactly one candidate without accepting a
+caller-supplied identifier: a conditional artifact that the record's cleanup
+selection would currently offer for cleanup (so its hold is released and it is
+not an unresolved M0 measurement). It SHALL refuse when zero or more than one
+candidate exists.
+
+The operation SHALL hold the same execution exclusion and rate budget a live
+verification holds, and SHALL re-read the record immediately before appending
+and refuse if it changed since the candidate was selected.
 
 #### Scenario: DELETE 404 remains nonterminal
 
@@ -42,12 +57,34 @@ or more than one is eligible or when the only candidate is held for a later step
 - **THEN** the artifact remains outstanding and a later resume cannot treat the
   404 itself as cleanup success
 
-#### Scenario: complete official read proves absence
+#### Scenario: every condition of authoritative absence holds
 
-- **WHEN** the selected record-owned conditional is absent from a fresh,
-  complete official OPEN and CLOSED read for the same profile/account and symbol
+- **WHEN** every condition listed above holds for the selected candidate,
+  including the rule chosen for design Revision 1 Q1
 - **THEN** the tool appends one distinct `reconciled-absent` event and does not
   schedule a new cleanup mutation for that artifact
+
+#### Scenario: Q1 is unanswered
+
+- **WHEN** every other condition holds but no rule for design Revision 1 Q1
+  exists
+- **THEN** no reconciliation event is appended
+
+#### Scenario: a successor fired under a different identifier
+
+- **WHEN** the symbol's CLOSED group holds a row of another identifier with a
+  non-empty triggered order identifier or status `COMPLETED`
+- **THEN** no reconciliation event is appended
+
+#### Scenario: a fired child rests as a plain order
+
+- **WHEN** the symbol's OPEN plain-order group holds any order
+- **THEN** no reconciliation event is appended
+
+#### Scenario: concurrent change to the record
+
+- **WHEN** the record changed between candidate selection and the append
+- **THEN** no reconciliation event is appended
 
 #### Scenario: absence evidence is incomplete
 
@@ -84,13 +121,14 @@ or more than one is eligible or when the only candidate is held for a later step
 
 Before any official read or local append, the reconciliation operation SHALL
 require that every record line mentioning the selected artifact carries the same
-masked account reference and that it equals the reference resolved for the
-current credentials; that the selected account sequence is known rather than
-lazily resolved; that the record path is derived from the same profile root as
-the credentials rather than supplied as an override; and that the requested
-market names the record file and matches the market of every official row read
-for the symbol. Any missing, mixed, or mismatched value SHALL refuse without
-reading or appending.
+masked account reference and that it equals the masked form of the reference
+resolved for the current credentials (this compares the retained last digits,
+not full identity); that the selected account sequence is known rather than
+lazily resolved; that an explicit profile directory is given, credentials are not
+supplied through the environment, and the record path is derived from that
+profile directory rather than supplied as an override; and that the market is
+given explicitly, which selects the record file. Any missing, mixed, or
+mismatched value SHALL refuse without reading or appending.
 
 #### Scenario: mixed or mismatched account reference
 
@@ -104,6 +142,12 @@ reading or appending.
   credentials' profile
 - **THEN** the operation refuses before any official read
 
+#### Scenario: credentials from the environment or no explicit profile
+
+- **WHEN** the credentials come from environment variables, or no explicit
+  profile directory is given
+- **THEN** the operation refuses before any official read
+
 #### Scenario: market mismatch
 
 - **WHEN** an official row for the symbol reports a market other than the
@@ -114,7 +158,9 @@ reading or appending.
 
 `reconciled-absent` SHALL be append-only, idempotent, and attributable to a
 bounded official-read basis recorded only as a versioned, domain-tagged digest.
-It SHALL NOT retain a raw account identifier. Its representation of the broker
+It SHALL NOT retain a raw account identifier and SHALL NOT carry request call
+records, so the reads it made cannot become successful-endpoint evidence. Its
+representation of the broker
 identifier it reconciles is chosen in design Revision 1 Q2 `[비움 — Q2]`; in
 either choice it SHALL NOT add a broker identifier that the reconciled artifact's
 own record line does not already carry.

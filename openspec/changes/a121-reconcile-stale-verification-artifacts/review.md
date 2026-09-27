@@ -21,14 +21,30 @@ check now pass. a063 remains operationally blocked and unarchived.
 
 ## Revision 1 (2026-09-27) — 설계 갭 해소 초안, 재리뷰 전
 
-적대 리뷰의 차단 갭 셋을 design.md 「Revision 1」 이 코드 영수증으로 다룬다. 분기 근거는
-`analysis/ast-evidence/`(HEAD `cb378a63`)의 AST 로 인용했다.
+초안 3cf64d5d 뒤 gstack 문서 리뷰 1회(읽기 전용, HEAD cb378a63, `analysis/ast-evidence/` 12개의 source_sha256 이
+HEAD blob 과 일치)를 반영했다. 판정은 "적대 재리뷰 전 개정" — P0 1 · P1 8 · P2 6.
 
-| 갭 | 초안의 처리 | 남은 사람 결정 |
-|---|---|---|
-| G1 부재 증명(컷 토큰 없음 · 후속/child 모호) | 컷 토큰 부재를 코드로 확인(`conditional_reads.go:44-48`). id 부재 대신 "심볼의 OPEN 0건 + CLOSED 에 id 없음 + 두 번 읽기 동일" 을 요구, 그 밖은 전부 거절 | Q1(발동 후 소멸 배제 — 미측정), Q3(경과 한도), Q4(같은 심볼의 다른 조건주문) |
-| G2 신원 표현 | 새 줄 종류 `reconcile` + `Artifact.terminal()` 셋째 종결. 키는 기록이 이미 쓰는 `Kind\x00ID`, 근거는 버전·도메인 태그 지문. 구 바이너리는 여전히 outstanding 으로 읽는다(안전 쪽) | Q2(spec 의 원문 id 경계 문구 수정 vs 태그 표현) |
-| G3 계좌·프로필·시장 | `AccountRef` 전 줄 일치 + 현재 참조 일치, seq 0 거절, `--record` override 거절, `--market` 필수 + 행 시장 일치 | Q5(계좌 여럿) |
+| # | 등급 | 지적 | 처리 |
+|---|---|---|---|
+| 1 | P0 | 정정으로 id 가 바뀐 후속이 발동하면 다른 id 로 CLOSED 에 남아 규칙이 통과시킨다; resting child 가 안 보인다; Q1(a) 가 과대 | G1-2 를 "심볼의 CLOSED 에 어떤 id 든 `triggeredOrderId`·`COMPLETED` 가 있으면 거절" 로, G1-3(OPEN 일반 주문 0건) 신설, Q1(a)(b) 문구 수정(보존 기간 측정 필요 · `Artifact` 에 방향·수량 없음), RED 2.2.1 추가 |
+| 2 | P1 | "HeldUntil 이 걸린 artifact 제외" 가 a063 의 artifact 자체를 뺀다; M0 수동 대사 제외 누락 | 후보 = `PendingCleanup` 의 조건주문 − `M0Unsettled` 대상. spec·RED 2.2.2 동반 수정 |
+| 3 | P1 | 현재 참조는 원문 계좌번호(`reads.go:93`), 기록은 `attest.Mask` — 문자열 비교는 늘 거절 | `attest.Mask(TrimSpace(ref)) == entry.AccountRef`, 끝 4자리 한계를 Q5 에 묶음 |
+| 4 | P1 | 환경 변수 자격 증명·기본 경로가 달라 "구성으로 프로필 결속" 이 거짓 | `--config-dir` 필수 + 환경 변수 자격 증명 거절 + override 거절, RED 추가 |
+| 5 | P1 | 시장 대조가 수락 경로(행 0건)에서 비어 있다; 파일 이름 대조는 동어반복 | 시장 결속 = 파일 이름 + 심볼뿐임을 명시, 행의 심볼 불일치 거절 추가 |
+| 6 | P1 | proposal 이 막는 기전을 trigger 모드의 B9 로 잘못 적었다 | 보통 `verify run` 의 재개 정리 재선택 + 조건주문 상한(`MaxLiveConditionals = 1`)으로 고치고 B9 는 trigger 모드 한정으로 |
+| 7 | P1 | 대사 줄의 `Calls` 가 성공 endpoint 가 된다(구 바이너리 포함) | 대사 줄은 `Calls` 를 싣지 않는다(design·spec·RED 2.4.1) |
+| 8 | P1 | 잠금·동시성 규칙 없음 | 실행 flock + rate-budget lease, 추가 직전 기록 재대조(design·spec·RED) |
+| 9 | P1 | spec 옛 수락 시나리오가 부재만으로 수락; Q4 미표기; task 1.2 에 report/status 누락; "Q1 미답 → 거절" RED 없음 | 시나리오 교체 + "Q1 is unanswered" 시나리오, `[비움 — Q4]`, 1.2 에 `BuildReport`·`BuildProgress`, RED 추가 |
+| 10 | P2 | 구 바이너리 주장은 맞음 — 다만 다시 보유 상태도 됨; 시뮬레이션 방법 | design 에 "다시 보유" 추가, 2.4.1 에 방법 명시 |
+| 11 | P2 | "B12·B13 빈 커서" 오인용 | B13 만(README·design) |
+| 12 | P2 | `Market` 줄·kinds 범위 인용 오차 | `:111`, `record.go:65-88` |
+| 13 | P2 | 읽기 도구 미지정 | `ProtectionConditionalOrdersRaw` + `OrdersPageRaw` 로 지정 |
+| 14 | P2 | 두 읽기를 `Digest` 로 비교하면 순서 의존 | 정렬 집합 비교, 지문은 정규 순서 직렬화 |
+| 15 | P2 | `EXPIRED` 거절·페이지 상한의 결과 미기재 | 「치르는 값」 절 + Q6 신설 |
+| 16 | P2 | "required commit ancestry is absent" 출처 없음 | `tools/logic-map/execution_baseline.py:100` 인용 |
+
+반영 뒤 분기 근거 AST 4개를 더했다(`checkConditionalCap`·`holdGate`·`cleanupFrom`·`SucceededEndpoints`, HEAD `0004536c`).
+남은 사람 결정은 Q1~Q6 이다(design 「열린 질문」).
 
 상태는 그대로 **BLOCKED** 다 — 이 초안은 RED·구현·계좌 읽기·라이브 명령을 허가하지 않는다. 적대 재리뷰는
 Manager 지시 뒤에 돈다. `make sdd-check` 차단(위 절)도 그대로 구현 차단 조건이다.

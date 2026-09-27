@@ -1,0 +1,93 @@
+{
+  "file": "internal/verifylive/mutate.go",
+  "source_sha256": "e458ab76ccefd18ca4cd8cf4330fc6f12a9863d42618d10d99e276aa360b3a9a",
+  "package": "verifylive",
+  "function": "checkConditionalCap",
+  "receiver": "Runner",
+  "signature": "Runner.checkConditionalCap(params=1, results=1)",
+  "start": {
+    "line": 657,
+    "column": 1
+  },
+  "end": {
+    "line": 667,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 659,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 662,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 663,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 666,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 662,
+        "column": 10
+      },
+      "text": "r.liveCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 663,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 658,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 660,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 662,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

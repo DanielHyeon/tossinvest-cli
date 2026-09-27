@@ -59,23 +59,35 @@ interlock, or treating a 404 as success.
 
 그리고 이 문서의 Why 가 그것을 받는다: "This blocks a063 operational acceptance."
 
-**막히는 기전(코드).** 기록에 outstanding artifact 가 남아 있는 동안 M0 trigger 검증은 시작되지 않는다 —
-`validateM0TriggerMode` B9(`cmd/tossctl/verify.go:427`: "prior verification record has outstanding artifacts;
-inspect with `tossctl verify status` and reconcile manually before any cleanup")와 `verifylive.New` B9
-(`internal/verifylive/runner.go:346`). outstanding 은 노출 상한에도 셈해진다(`Runner.liveCount` B2·B3,
-`mutate.go:679-681`). a063 의 엔진 진단(`analysis/adoption/task-4.2-engine-interlock-diagnosis-2026-09-06.md`)은
-엔진이 "attest: capability-attestation coverage incomplete" 로 시작을 거절했고, 그 좁은 다음 행동이 사람의
-`verify run` 으로 커버리지를 얻는 것이라고 적는다.
+**막히는 기전(코드).** a063 이 필요로 하는 것은 **보통의** `verify run` 이다 — 엔진 진단
+(`analysis/adoption/task-4.2-engine-interlock-diagnosis-2026-09-06.md`)은 엔진이 "attest: capability-attestation
+coverage incomplete" 로 시작을 거절했고, 좁은 다음 행동이 사람의 `verify run` 으로 주문·취소 수명주기 커버리지를
+얻는 것이라고 적는다. 그 경로에서 stale artifact 가 하는 일은 둘이다.
+
+- 재개의 정리 prologue 가 그것을 다시 정리 대상으로 고른다 — `Runner.cleanupTargets`(`internal/verifylive/cleanup.go:103-108`)
+  → hard-evidence 3 이 적듯 그 대상은 `runCleanup` 으로 가고 그것은 `CancelConditionalOrder` 를 부를 수 있다 — 같은
+  DELETE 의 재시도다(이 분기는 이 개정에서 AST 로 열거하지 않았다; task 1.2 의 몫). a063 의 진단은 바로 그것을
+  금지한다("Do **not** retry, cancel, resume …").
+- 그것은 살아 있는 조건주문 하나로 셈해진다 — `Runner.liveCount`(AST B2·B3, `mutate.go:679-681`)가 조건주문
+  상한 `MaxLiveConditionals = 1`(`mutate.go:84`)과 비교되므로(`checkConditionalCap`, `mutate.go:657-667`) 새 조건주문
+  단계가 노출 상한에 걸린다. 일반 주문 상한은 `"order"` 만 센다(`mutate.go:650`).
+
+`--include-trigger` 경로에서는 추가로 `validateM0TriggerMode` B9(`cmd/tossctl/verify.go:427`)와 `verifylive.New` B9
+(`internal/verifylive/runner.go:346`)가 outstanding 이 있으면 시작을 거절한다. 두 B9 는 trigger 모드에만 선다
+(`validateM0TriggerMode` B1 `:406`, `New` B7 `:341`). 그 경로에는 `M0Unsettled`·`M0ExactPrerequisites` 검사도 따로
+있다(`verify.go:414-425`).
 
 **a121 이 여는 것과 열지 않는 것.**
 
-- 연다: stale 조건주문 artifact 를 기록에서 종결시키는 **유일한 비-변이 경로**. 그러면 위 두 거절(B9)이
-  풀리고 사람이 승인하는 검증 재실행이 가능해진다. 그 재실행은 엔진 진단이 적은 "Human authorization required:
+- 연다: stale 조건주문 artifact 를 기록에서 종결시키는 **유일한 비-변이 경로**. 그러면 재개 정리가 그 DELETE 를
+  다시 고르지 않고, 조건주문 상한이 그것을 세지 않으며, trigger 모드의 B9 두 자리도 그 artifact 때문에는
+  거절하지 않는다. 사람이 승인하는 검증 재실행이 그때 가능해진다. 그 재실행은 엔진 진단이 적은 "Human authorization required:
   a human may run `tossctl verify run`" 단계이고, 엔진 인터록이 요구하는 주문·취소 수명주기 커버리지를 채우는
   경로다 — a063 **4.4**(엔진 프로필에 새 attestation 이 쓰이는지 확인)가 확인할 커버리지가 거기서 온다.
   a121 은 그 재실행을 **허가하지 않는다**(사람 승인 몫). 막힌 문 하나를 여는 것뿐이다.
 - 열지 않는다: a063 **4.2** 의 서비스 정의 설치·systemd reload, **4.3** 의 3일 연속 survey — 둘 다 사람 승인
   운영 작업이고 a121 과 무관하다. a063 의 도구 결함(execution-baseline 채택 경로의 "required commit ancestry
-  is absent", source snapshot `c727ad12` 이 이 브랜치 역사에 없음)도 a121 과 무관하다.
+  is absent" — `tools/logic-map/execution_baseline.py:100`, 기록된 source snapshot `c727ad12` 이 이 브랜치 역사의
+  조상이 아님)도 a121 과 무관하다.
 - 그리고 G1 이 Q1 에 걸려 있는 한, a121 이 구현돼도 대사 명령은 **거절만** 할 수 있다(design Revision 1 G1-3).
   그 경우 a063 은 계속 막힌다 — 이것은 숨기지 않고 Q1 의 선택지 (c) 로 적었다.
