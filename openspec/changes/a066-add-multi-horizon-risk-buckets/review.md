@@ -347,3 +347,135 @@ No a066 test needed updating for the a112 schema moves.
   `CHECK(mode IN ('NORMAL','ENTRY_BLOCKED','HALT_ALL'))` and is account-wide; `risk_bucket_events` is owner-scoped and is
   read by the owner-release cleanliness checks. Per the lot's rule the work stops here and the questions go to the
   Manager; the relaxation flow (user decision pending since ⑤) is part of the same question set.
+
+## 5.5 lot (2026-09-27, continued) — entry side GREEN, relaxation not implemented
+
+Manager rulings applied (2026-09-27): v33 additive migration approved; relaxation (approval flow, API and callers)
+stays **unimplemented** until the user answers — only its place is marked in `risk_bucket_entry_loss_lock.go`; dormant
+activation API with zero production callers; one rule function called at every enforcement site; reason code
+`ENTRY_LOSS_LOCK_ACTIVE` approved with both layers distinct (riskbucket refusal + Gateway reason, mapped by type);
+fixture repair option A (fail-closed stays) with cross-change test edits approved.
+
+### What landed (production)
+
+| File | Change |
+|---|---|
+| `internal/journal/risk_bucket_entry_loss_lock_v33.sql` | v33: `risk_bucket_entry_loss_locks` (append-only; triggers no-update, no-delete, first-cause-wins per account×market×horizon). No existing table touched. |
+| `internal/journal/schema.go` | `SchemaVersion` 32 → 33, migration step 33. |
+| `internal/journal/risk_bucket_entry_loss_lock.go` | `ActivateEntryLossLock` (tightening only, idempotent, first cause wins); the single rule `refuseEntryUnderLossLock`; `admissionHorizon`/`decisionHorizon`. Relaxation: placeholder comment only. |
+| `internal/journal/risk_bucket.go` `CommitRiskBucketAdmission` (new B13) | rule call inside the admission tx, after the existing entry-scope gate. |
+| `internal/journal/risk_bucket_issuance.go` `commitFreshRiskBucketAdmissionTx` (new B7) | same rule inside the tx shared by q_final issuance and strategy first leg. |
+| `internal/journal/risk_bucket_issuance.go` `RevalidateQFinalAdmission` (new B18, B19) | last check before `return true, nil`: reads the decision's horizon reservation and calls the same rule (user decision ⑤). |
+| `internal/riskbucket/types.go` | `RefusalEntryLossLockActive = "ENTRY_LOSS_LOCK_ACTIVE"`. |
+| `internal/execgw/reason.go`, `gateway.go` `checkReservation` (new B7), `failclosed.go` `AllReasonCodes`, `testdata/reason_codes.golden` | `ReasonEntryLossLockActive = "entry_loss_lock_active"`, chosen by `errors.Is(err, journal.ErrRiskBucketEntryLossLocked)` after the Guardian-missing check; registered in the enumeration and golden (generator). |
+
+**Three enforcement sites, not two** — the correction the Manager accepted: AST shows two admission transactions
+(`CommitRiskBucketAdmission` and `commitFreshRiskBucketAdmissionTx`, the latter shared by q_final issuance and
+`strategy_first_leg_atomic.go:174`) plus the Gateway revalidation. One rule function serves all three.
+
+Lower-case spelling receipt: the comparing side is `TestReasonCodeEnumIsStable` against `testdata/reason_codes.golden`
+(lowercase snake, subject_state: `operating_mode_blocked`, `flatten_in_progress`); `entry_loss_lock_active` is the
+lowercase form of the approved `ENTRY_LOSS_LOCK_ACTIVE`. `strategyPreTransportReason` was not edited: the new code
+falls to its default `GATEWAY_POLICY_REFUSED` (record-only classification, `strategy_dispatch_refusal.go:10-12`).
+
+Risk-reducing paths: no function on the stop / emergency-exit / reconcile / fill path calls the rule.
+`RevalidateQFinalAdmission` is reached only through `checkReservation`, whose B1 returns before it for every
+non-EXPOSURE_RAISING decision. `TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths` (KR+US × SHORT+MEDIUM
+locked) PASS untagged.
+
+### Tests
+
+- 2.7 file `internal/execgw/a066_entry_loss_lock_red_test.go`: build tag removed, seam wired to
+  `journal.ActivateEntryLossLock`; expectations unchanged except the two approved additions — refusals must carry
+  `ErrRiskBucketEntryLossLocked` + `ENTRY_LOSS_LOCK_ACTIVE`, and the ⑤ refusal must carry `entry_loss_lock_active`.
+- `internal/journal/risk_bucket_entry_loss_lock_test.go`: 3 sites × {KR/SHORT, US/MEDIUM} × {no lock, own scope, other
+  horizon, other market, other account} (30 rows); first cause wins + invalid input + raw UPDATE/DELETE/duplicate
+  INSERT refused while another scope is accepted; survives reopen; 8 concurrent writers leave one lock; rule fails
+  closed on unknown scope and on a read error; v32→v33 starts with zero locks.
+- `internal/execgw/a066_legacy_entry_census_test.go` (see "legacy residual" below).
+
+### Verification (sequential, one run at a time)
+
+| Run | Result |
+|---|---|
+| `make lint` (gofmt + vet untagged + vet `tossos_testseams`) | rc 0 |
+| `make test` (whole repo, before the a098 fix) | 98 ok, 1 FAIL: `TestTheSenderDownReasonIsRegisteredInTheEnumeration` (count pin, fixed below); journal ok 518 s |
+| `make test-seams` (same checkout) | same single failure |
+| `go test ./internal/execgw/...` untagged and `-tags tossos_testseams` after the a098 fix | rc 0 / rc 0 |
+| `go test -race -run 'LossLock\|MigrationV32ToV33\|QFinal\|RiskBucketAdmission' ./internal/journal` | rc 0 |
+| `go test -race -run 'TestA066\|QFinal' ./internal/execgw` | rc 0 |
+
+Note: the checkout is shared; a peer session had uncommitted `internal/app/engine` and `internal/strategyrouter` edits
+during these runs, so the repo-wide numbers include them.
+
+### Mutation (copy at `<scratch>/mut-<pid>`, no-mutation control GREEN first; `analysis/harness/mutate_5_5.py`)
+
+- run1 (`analysis/mutation-5.5/ledger-run1.tsv`): 26/29 CAUGHT; **three did not reach** — M12 was "caught" by a compile
+  error (`horizon` unused), M19/M20 SURVIVED because the journal `-run` regex (`EntryLossLock`) did not select
+  `TestRefuseEntryUnderLossLock…`. Harness fixed (compiling M12, regex `LossLock`), recorded in the harness comments.
+- run2 (`ledger-run2.tsv`, 36 mutants incl. reason-code layers and census positive controls): 35 CAUGHT, M15
+  NOT-APPLIED (its text predated the typed refusal).
+- run3 (`ledger-run3.tsv`, sites + M15 + reason layers, failing test names recorded): all CAUGHT, and **each site's
+  plumbing mutant fails that site's own rows** — M01–M04 only `…/CommitRiskBucketAdmission/…` (+ reopen test),
+  M05–M08 only `…/RecordQFinalDecisionAndReserve/…` + the 2.7 issuance rows, M09–M12 only `…/RevalidateQFinalAdmission/…`
+  + the ⑤ submit row; market/horizon constants fail exactly the US/MEDIUM `own scope` + `other market`/`other horizon`
+  rows. M30/M31 (Gateway mapping removed / mapped to mismatch) fail the ⑤ row; M34–M36 (production `NewTracer` call,
+  `GuardianAdapter` literal, new EXPOSURE_RAISING producer) fail the census.
+
+### Cross-change fixture repair (option A, Manager-approved)
+
+Mechanism: five tests opened a v25 journal (`migrationOverride`) and wrote q_final rows into it with the **current**
+writer; v33's lock read then hit a missing table and failed closed — a latent fixture mismatch that v33 exposed.
+Fix in `prepareStrategyDispatchLease` (`strategy_dispatch_runtime_test.go`, a072): rows are produced by the current
+writer on a current-schema scratch journal and copied into the older journal. Before copying, the helper asserts
+(a) the set of tables the writer touched equals the fixture's list and (b) each table's `sqlite_master.sql` is byte-equal
+in both journals — so the row shape is the older migration's own DDL, not memory; after copying it asserts the tables
+are row-for-row equal.
+
+| Test | What it asserts (unchanged) | Setup before | Setup after |
+|---|---|---|---|
+| `TestStrategyDispatchLeaseSchemaRequiresExactQFinalAuthorityAndHolds` (4 subtests) | v25 lease triggers accept an exact sealed row and refuse a fabricated decision, a released monetary hold and a substituted authority digest | q_final rows written into the v25 journal by the current writer | same rows produced on a v33 scratch journal, DDL-equality checked, copied |
+| `TestStrategyDispatchBrokerOrderIDCannotCrossKRUSWithinAccount` | one broker order ID cannot be bound in KR and US | same | same |
+| `TestStrategyDispatchColdRestartDiscoversOldIssuedClaimedAndSubmitting` (3 subtests) | recovery discovery per state is read-only and fenced | same | same |
+| `TestMigrationV26AddsPairedFirstLegAuthorityWithoutChangingV25Rows` | v25→v26 preserves rows and appends columns only | same | same |
+
+No assertion line in these tests was edited; the diff is confined to the helper and its new support functions.
+
+Second cross-change edit: `TestTheSenderDownReasonIsRegisteredInTheEnumeration` (a098) pinned the absolute enumeration
+length (29 + 1). It now expects `29 + 1 + len(reasonCodesRegisteredAfterA098)` and separately asserts each later code's
+membership; "a098 added exactly one" still holds.
+
+### Legacy residual — measured, not assumed
+
+Entry decisions without the q_final marker have no horizon and are outside the lock (`RevalidateQFinalAdmission`
+returns `(false, nil)`). Measured over non-test sources in `internal/` and `cmd/` (2026-09-27): EXPOSURE_RAISING
+decision producers are exactly four — `Issuer.IssueEntry`, `RiskGuardian.IssueEntry` (legacy) and
+`RiskGuardian.IssuePrecheckedQFinalEntry`, `RiskGuardian.IssuePrecheckedQFinalCampaignFirstLeg` (q_final). Legacy
+`RiskGuardian.IssueEntry` is called only from `Tracer.submitEntry` and `RiskGuardian.IssueStrategyEntry`; `NewTracer`
+has **0** non-test callers and `strategydispatch.GuardianAdapter` (the only `IssueStrategyEntry` caller) is constructed
+**0** times; `Issuer.IssueEntry` has no caller (flatten uses `IssueReduction`). The production strategy path is the
+q_final first-leg bridge (`strategy_entry_supervisor.go:322-325`). **Reachable legacy entry paths from production
+assembly: 0.** `TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly` re-parses the tree on every run, so the
+census fails the moment the sample fills (positive controls M34–M36 CAUGHT).
+
+### Function Logic Map
+
+Pre-edit bundles (HEAD `406e54de`): `commitFreshRiskBucketAdmissionTx`, `Journal.RevalidateQFinalAdmission`,
+`AllReasonCodes` (new); `CommitRiskBucketAdmission`, `Gateway.checkReservation` (existing, AST matched). Post-edit:
+all five re-extracted with measured rows (`pertest_cover_5_5.sh`, 111 tests; execgw package coverprofile);
+`TestSchemaTablesAndColumns` (+2 lines, same 7 branches), `Gateway.submit`, `loadRiskBucketState`,
+`TestSchemaIndexes` re-extracted because their files changed (bodies identical). `prepareStrategyDispatchLease` and the
+a098 test are not base functions (their files postdate base `23794f86`).
+
+### Open
+
+- Relaxation (task 5.5's "human-approved audited relaxation"): user decision pending; Manager carries the recommended
+  shape (AUTO tightens only; relaxation = OPERATOR + approval reference + audit line before commit; tossctl mutating
+  command, no console button). 5.5 stays unchecked until then.
+- Deployment note: this branch is now **schema v33, main is v32** — the rule "SchemaVersion differs from main → do not
+  build the image" is in force from this commit. Production behaviour change before deploy: none — the table starts
+  empty on migration (`TestMigrationV32ToV33StartsWithNoEntryLossLock`), `ActivateEntryLossLock` has zero production
+  callers, and with no lock the rule admits exactly what it admitted before (control rows of every site).
+- `RevalidateQFinalAdmission` B18 (horizon reservation read error) is not executed by any test — a storage-error exit
+  after B16/B17 proved all five HELD rows exist.
+- Independent adversarial review + gstack review: pending (next step of this lot).

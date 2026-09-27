@@ -1,6 +1,39 @@
 {
-  "B1": {"scenario": "risk-reducing decision returns before any reservation read", "tests": ["TestAnExitNeedsNoReservation", "TestACancelNeedsNoReservation"], "red": "pre-a066 existing"},
-  "B4": {"scenario": "HELD aggregate reservation triggers q_final revalidation", "tests": ["TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker"], "red": "q_final checkpoint 2026-08-04"},
-  "B5": {"scenario": "q_final revalidation error refuses", "tests": ["TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker", "TestRevokedDecisionIsRefusedAtTheLastMoment"], "red": "q_final checkpoint 2026-08-04"},
-  "B6": {"scenario": "decision disappeared during revalidation keeps the Guardian-missing reason", "tests": ["TestRevokedDecisionIsRefusedAtTheLastMoment"], "red": "reason regression, q_final checkpoint 2026-08-04"}
+ "B1": {
+  "scenario": "risk-reducing decision returns before any reservation read",
+  "tests": [
+   "TestAnExitNeedsNoReservation",
+   "TestACancelNeedsNoReservation"
+  ],
+  "red": "pre-a066 existing"
+ },
+ "B4": {
+  "scenario": "HELD aggregate reservation triggers q_final revalidation",
+  "tests": [
+   "TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker"
+  ],
+  "red": "q_final checkpoint 2026-08-04"
+ },
+ "B5": {
+  "scenario": "q_final revalidation error refuses",
+  "tests": [
+   "TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker",
+   "TestRevokedDecisionIsRefusedAtTheLastMoment"
+  ],
+  "red": "q_final checkpoint 2026-08-04"
+ },
+ "B6": {
+  "scenario": "decision disappeared during revalidation keeps the Guardian-missing reason",
+  "tests": [
+   "TestRevokedDecisionIsRefusedAtTheLastMoment"
+  ],
+  "red": "reason regression, q_final checkpoint 2026-08-04"
+ },
+ "B7": {
+  "scenario": "entry loss lock refusal is reported as its own reason (entry_loss_lock_active), chosen by errors.Is on the journal sentinel type, not by text",
+  "tests": [
+   "TestA066DecisionIssuedBeforeLockIsRefusedAtSubmit"
+  ],
+  "red": "mutants M30 (mapping removed) and M31 (mapped to mismatch) CAUGHT (analysis/mutation-5.5/ledger-run3.tsv)"
+ }
 }

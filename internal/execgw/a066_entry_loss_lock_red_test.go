@@ -1,16 +1,9 @@
-//go:build a066_red_5_5
-
-// [RED, 5.5 대기] a066 task 2.7 — horizon/market 진입 손실 잠금(loss lock)과 bucket 실패는
+// a066 task 2.7 → 5.5 GREEN — horizon/market 진입 손실 잠금(loss lock)과 bucket 실패는
 // 노출 증가(EXPOSURE_RAISING)만 막고 손절·비상 청산·대사·체결 감지를 막거나 지연시키지 못함을 고정함.
 //
-// 왜 빌드 태그 뒤에 있는가: loss lock 은 아직 없음(구현은 task 5.5). 이 파일은 5.5 가 채울 seam 하나
-// (`activateEntryLossLock`)만 참조하고, 그 seam 이 nil 인 동안 시험은 반드시 빨갛게 멈춤. 기본 스위트
-// (`make test`)와 `make test-seams`(태그 `tossos_testseams`)는 이 태그를 켜지 않으므로 스위트를 깨지 않음.
-//
-// 실행: go test -count=1 -tags a066_red_5_5 -run 'TestA066' ./internal/execgw
-//
-// 5.5 GREEN 조건: (1) seam 을 durable 잠금 활성화 API 로 연결, (2) 이 파일의 빌드 태그 제거,
-// (3) 아래 두 시험이 태그 없이 통과. 시험의 기대값을 약하게 고쳐 통과시키는 것은 GREEN 이 아님.
+// 2.7 에서 빌드 태그 `a066_red_5_5` 뒤의 RED 로 들어왔고, 5.5 가 seam(`activateEntryLossLock`)을
+// journal 의 durable 잠금 활성화 API 로 연결하면서 태그를 뗌 — 이제 기본 스위트(`make test`)에서 돎.
+// 시험의 기대값은 2.7 그대로임(약하게 고쳐 통과시킨 것이 아님).
 package execgw_test
 
 import (
@@ -24,13 +17,19 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
 )
 
-// activateEntryLossLock 는 5.5 가 채울 유일한 seam 임.
+// activateEntryLossLock 는 2.7 이 정한 seam 이고, 5.5 가 journal 의 durable 잠금 활성화 API 로 연결함.
 // 요구하는 것은 보수 방향(잠금 활성화)의 durable 기록 하나뿐임 — 완화(해제)는 사람 승인·audit 경로라
 // 이 시험의 범위가 아님. 잠금의 판정은 journal 에 영속된 상태를 exposure-raising 경로가 읽어서 내려야 함.
-var activateEntryLossLock func(ctx context.Context, j *journal.Journal, account string,
-	market riskbucket.Market, horizon riskbucket.Horizon, at time.Time) error
+var activateEntryLossLock = func(ctx context.Context, j *journal.Journal, account string,
+	market riskbucket.Market, horizon riskbucket.Horizon, at time.Time) error {
+	_, _, err := j.ActivateEntryLossLock(ctx, journal.EntryLossLock{
+		AccountRef: account, Market: market, Horizon: horizon, Cause: "a066 2.7 contract test", ActivatedAt: at,
+	})
+	return err
+}
 
 // requireEntryLossLockSeam 은 seam 부재를 RED 사유로 명시하고 시험을 멈춤.
 func requireEntryLossLockSeam(t *testing.T) {
@@ -122,12 +121,85 @@ func TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket(t *testing.T) {
 			if err == nil {
 				t.Fatalf("locked %s entry was admitted: decision=%s q_final=%d", tc.horizon, issued.Decision.ID, issued.RiskBucketReceipt.QFinal)
 			}
+			// 거절 원인은 타입으로 드러나야 함 — 다른 거절(mismatch 등)로 보고되면 이 기능이 숨음.
+			if !errors.Is(err, journal.ErrRiskBucketEntryLossLocked) || !riskbucket.IsRefusal(err, riskbucket.RefusalEntryLossLockActive) {
+				t.Fatalf("locked %s entry was refused for another reason: %v", tc.horizon, err)
+			}
 			// 거절은 기록 권한을 남기지 않아야 함 — 결정 행도, owner 도, 예약도 없음.
 			if _, lookupErr := rig.journal.LookupDecision(ctx, "lossl-decision"); !errors.Is(lookupErr, journal.ErrDecisionNotFound) {
 				t.Fatalf("refused entry left a decision row: lookup err=%v", lookupErr)
 			}
 			if held, heldErr := rig.journal.HeldReservations(ctx, "acct-7"); heldErr != nil || len(held) != 0 {
 				t.Fatalf("refused entry left holds: %+v err=%v", held, heldErr)
+			}
+		})
+	}
+}
+
+// TestA066DecisionIssuedBeforeLockIsRefusedAtSubmit 는 사용자 결정 ⑤(2026-09-25, review.md "5.5 설계점
+// 확정" = 거절)를 고정함: 잠금 **전**에 발급된 q_final 결정이 잠금 **뒤**에 제출되면 Gateway 재검증이
+// broker 전에 거절함. 노출은 제출 시점의 상태이고, 잠금 상태와 제출을 둘 다 보는 자리는 Gateway 뿐임.
+// 다른 horizon 의 잠금은 이 결정의 제출을 막지 않음(대조군 — 거절이 잠금 범위 때문임을 보임).
+func TestA066DecisionIssuedBeforeLockIsRefusedAtSubmit(t *testing.T) {
+	cases := []struct {
+		name    string
+		locked  []lockScope
+		refused bool
+	}{
+		{name: "control: no lock submits the pre-issued KR SHORT decision"},
+		{name: "KR MEDIUM lock does not refuse a KR SHORT decision", locked: []lockScope{{riskbucket.MarketKR, riskbucket.HorizonMedium}}},
+		{name: "KR SHORT lock after issuance refuses the KR SHORT submit", locked: []lockScope{{riskbucket.MarketKR, riskbucket.HorizonShort}}, refused: true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			rig := newGuardian(t, func(options *execgw.RiskGuardianOptions) {
+				options.NewID = fixedIDs("lossl-pre-decision", "lossl-pre-nonce")
+			})
+			ctx := context.Background()
+			// 잠금 없는 상태에서 발급 — 발급 시점에는 정당한 결정임.
+			issued, err := rig.guardian.IssueQFinalEntry(ctx, lossLockQFinalRequest(t, rig, "lossl-pre", riskbucket.HorizonShort))
+			if err != nil || issued.RiskBucketReceipt.QFinal != 10 {
+				t.Fatalf("pre-lock issuance: q_final=%d err=%v", issued.RiskBucketReceipt.QFinal, err)
+			}
+			if len(tc.locked) > 0 {
+				requireEntryLossLockSeam(t)
+			}
+			for _, scope := range tc.locked {
+				if err := activateEntryLossLock(ctx, rig.journal, "acct-7", scope.market, scope.horizon, rig.clock.Now()); err != nil {
+					t.Fatalf("activate %s/%s: %v", scope.market, scope.horizon, err)
+				}
+			}
+			broker := &fakeBroker{result: domain.MutationResult{Kind: "place", Status: "accepted", OrderID: "O-lossl-pre"}}
+			opts := execgw.Options{
+				Journal: rig.journal, Trading: trading.NewService(openPolicy(), broker), Clock: rig.clock,
+				AccountRef: "acct-7", Source: "a066-lossl-pre-issued-test",
+			}
+			opts.SetMarketProtectionForTest(func(market string, _ int) (bool, string) {
+				return true, market + ":stable-protection"
+			})
+			gw, err := execgw.New(opts)
+			if err != nil {
+				t.Fatal(err)
+			}
+			intent, err := orderintent.NormalizePlace(orderintent.PlaceInput{Symbol: "005930", Market: "kr", Side: "buy", OrderType: "limit", Quantity: 10, Price: 70000, CurrencyMode: "KRW"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			out, err := gw.Place(ctx, execgw.PlaceRequest{Intent: intent, Decision: issued.Decision})
+			places, _, _ := broker.totals()
+			if !tc.refused {
+				if err != nil || places != 1 {
+					t.Fatalf("unlocked scope must submit: state=%s places=%d err=%v", out.State, places, err)
+				}
+				return
+			}
+			var rejected *execgw.RejectedError
+			if !errors.As(err, &rejected) || places != 0 || out.State != journal.StateNotDispatched {
+				t.Fatalf("pre-lock decision submitted under its own lock: rejected=%+v state=%s places=%d err=%v", rejected, out.State, places, err)
+			}
+			// 사유 코드는 Manager 승인(2026-09-27) 값 — mismatch 로 오보되지 않아야 함.
+			if rejected.Reason != execgw.ReasonEntryLossLockActive {
+				t.Fatalf("pre-lock decision refused with reason %q, want %q", rejected.Reason, execgw.ReasonEntryLossLockActive)
 			}
 		})
 	}

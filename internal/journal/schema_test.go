@@ -116,6 +116,8 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"protection_sagas",
 		"reconcile_states",
 		"risk_bucket_broker_zero_observations",
+		// a066 5.5 (v33): horizon×market 진입 손실 잠금 이력. append-only.
+		"risk_bucket_entry_loss_locks",
 		"risk_bucket_events",
 		"risk_bucket_fill_actual_evidence",
 		"risk_bucket_fill_allocations",

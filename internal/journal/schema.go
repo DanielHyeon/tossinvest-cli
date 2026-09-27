@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 32
+const SchemaVersion = 33
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -161,6 +161,10 @@ var migrations = []migration{
 	// append-only record that a strictly newer signed activation generation must
 	// justify (a112 task 5.3.3).
 	{Version: 32, SQL: schemaV32},
+	// schemaV33 lives in risk_bucket_entry_loss_lock_v33.sql: a066 task 5.5's
+	// account×market×horizon entry loss lock as append-only history. Additive
+	// only; an upgraded journal starts with no lock in force.
+	{Version: 33, SQL: schemaV33},
 }
 
 // schemaV1 is the initial schema.

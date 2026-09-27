@@ -415,6 +415,10 @@ func commitFreshRiskBucketAdmissionTx(ctx context.Context, tx *sql.Tx, plan Risk
 	if err := ensureRiskBucketEntryScopeClean(ctx, tx, plan.Owner.Key); err != nil {
 		return RiskBucketAdmissionReceipt{}, err
 	}
+	// a066 5.5: 진입 손실 잠금 판정 — q_final 발급·전략 첫 leg 가 공유하는 트랜잭션 안에서 읽음.
+	if err := refuseEntryUnderLossLock(ctx, tx, plan.Owner.Key.AccountID, plan.Owner.Key.Market, admissionHorizon(decision)); err != nil {
+		return RiskBucketAdmissionReceipt{}, err
+	}
 
 	ownerReused := false
 	var prospective, lane, campaign string
@@ -621,6 +625,15 @@ func (j *Journal) RevalidateQFinalAdmission(ctx context.Context, decisionID stri
 	}
 	if len(seen) != len(riskbucket.RequiredDimensionOrder()) {
 		return true, fmt.Errorf("%w: q_final reservation dimension set", ErrRiskBucketReplayMismatch)
+	}
+	// a066 5.5 / 사용자 결정 ⑤: 잠금 전에 발급된 결정도 잠금 뒤 제출이면 거절함 — 노출은 제출 시점의
+	// 상태임. 모든 기존 검사 뒤에 둬서 기존 가드의 시험이 이 가드에 가려지지 않게 함.
+	horizon, err := decisionHorizon(ctx, j.db, decision.ID)
+	if err != nil {
+		return true, err
+	}
+	if err := refuseEntryUnderLossLock(ctx, j.db, account, riskbucket.Market(market), horizon); err != nil {
+		return true, err
 	}
 	return true, nil
 }

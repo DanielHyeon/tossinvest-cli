@@ -133,6 +133,10 @@ func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucket
 	if err := ensureRiskBucketEntryScopeClean(ctx, tx, plan.Owner.Key); err != nil {
 		return RiskBucketAdmissionReceipt{}, err
 	}
+	// a066 5.5: 진입 손실 잠금 판정 — 잠금 읽기가 이 admission 트랜잭션 안이라 TOCTOU 없음.
+	if err := refuseEntryUnderLossLock(ctx, tx, plan.Owner.Key.AccountID, plan.Owner.Key.Market, admissionHorizon(decision)); err != nil {
+		return RiskBucketAdmissionReceipt{}, err
+	}
 
 	ownerReused := false
 	var prospective, lane, campaign string

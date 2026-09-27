@@ -1,6 +1,6 @@
 {
   "file": "internal/execgw/gateway.go",
-  "source_sha256": "9601d6562e363a2a5c70f69eccd02e24b5c8d5e216412b8fb9ea6d213ef36832",
+  "source_sha256": "6e587b7df573272dc3e54c8c17b29aa9b8b15613635f007a811ea0a8d06a5c38",
   "package": "execgw",
   "function": "checkReservation",
   "receiver": "Gateway",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 918,
+    "line": 923,
     "column": 2
   },
   "branches": [
@@ -61,6 +61,14 @@
         "line": 903,
         "column": 5
       }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 908,
+        "column": 5
+      }
     }
   ],
   "returns": [
@@ -88,21 +96,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 907,
+        "line": 909,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 912,
         "column": 5
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 911,
+        "line": 916,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 914,
+        "line": 919,
         "column": 2
       }
     }
@@ -175,7 +190,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 907,
+        "line": 908,
+        "column": 8
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 909,
+        "column": 13
+      },
+      "text": "reject"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 910,
+        "column": 73
+      },
+      "text": "short"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 912,
         "column": 12
       },
       "text": "reject"
@@ -183,7 +222,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 909,
+        "line": 914,
         "column": 6
       },
       "text": "short"
@@ -191,7 +230,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 914,
+        "line": 919,
         "column": 9
       },
       "text": "reject"
@@ -199,7 +238,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 917,
+        "line": 922,
         "column": 32
       },
       "text": "short"
@@ -207,7 +246,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 917,
+        "line": 922,
         "column": 47
       },
       "text": "len"

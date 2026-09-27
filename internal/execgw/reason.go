@@ -249,6 +249,14 @@ const (
 	// exact owner, aggregate HELD reservation and five monetary HELD
 	// reservations committed with its GuardianDecision.
 	ReasonGuardianRiskBucketMismatch ReasonCode = "guardian_risk_bucket_mismatch"
+	// ReasonEntryLossLockActive: a q_final entry targets an account×market×horizon
+	// scope whose entry loss lock is in force (a066 5.5). It is also returned for a
+	// decision issued before the lock and submitted after it (user decision ⑤,
+	// 2026-09-25): exposure is the state at submission. Risk-reducing decisions
+	// never reach the check. The spelling is the lowercase form of the approved
+	// riskbucket refusal code ENTRY_LOSS_LOCK_ACTIVE, in the golden's
+	// lowercase subject_state shape (operating_mode_blocked, flatten_in_progress).
+	ReasonEntryLossLockActive ReasonCode = "entry_loss_lock_active"
 	// ReasonStrategyDispatchAuthorityMissing: a q_final first-leg decision was
 	// presented through ordinary Place or without its opaque FX/claimed lease.
 	ReasonStrategyDispatchAuthorityMissing ReasonCode = "strategy_dispatch_authority_missing"

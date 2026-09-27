@@ -296,6 +296,9 @@ func AllReasonCodes() []ReasonCode {
 
 		// Operating mode (add-core-domain task 3.1).
 		ReasonOperatingModeBlocked,
+
+		// a066 5.5 entry loss lock.
+		ReasonEntryLossLockActive,
 	}
 	sort.Slice(codes, func(i, j int) bool { return codes[i] < codes[j] })
 	return codes

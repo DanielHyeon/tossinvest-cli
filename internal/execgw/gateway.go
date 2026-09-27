@@ -904,6 +904,11 @@ func (g *Gateway) checkReservation(ctx context.Context, dec journal.Decision) *R
 					return reject(ReasonGuardianMissing,
 						"decision %s was revoked before its reservation authority could be revalidated", short(dec.ID))
 				}
+				// a066 5.5: 진입 손실 잠금 거절은 타입으로 가름 — mismatch 로 보고하면 운영자가 원인을 오독함.
+				if errors.Is(err, journal.ErrRiskBucketEntryLossLocked) {
+					return reject(ReasonEntryLossLockActive,
+						"decision %s enters a scope whose entry loss lock is active: %v", short(dec.ID), err)
+				}
 				return reject(ReasonGuardianRiskBucketMismatch,
 					"decision %s carries q_final authority that no longer has an exact active owner, aggregate hold and five monetary holds: %v",
 					short(dec.ID), err)

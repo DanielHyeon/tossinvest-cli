@@ -1,9 +1,10 @@
 # Status — a066-add-multi-horizon-risk-buckets
 
-- Updated: 2026-09-25
+- Updated: 2026-09-27
 - Overall: IN PROGRESS (tasks 22/30)
-- Current wave: Wave 2A HEAD re-settlement GREEN (evidence refreshed, 4.5 closed, 2.7 RED in place); 5.5 next
+- Current wave: 5.5 entry side GREEN (schema v33, three enforcement sites + Gateway ⑤ refusal); relaxation awaits a user decision
 - Runtime authority: dormant q_final Guardian/Gateway seam only; no sealed strategyflow/engine/broker/toggle activation
+- Schema: **v33 on this branch, v32 on main** — do not build an image from this branch until main carries v33
 
 ## Wave 2A (2026-09-25) — re-settlement on HEAD after a112
 

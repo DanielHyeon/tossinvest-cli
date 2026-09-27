@@ -3,8 +3,10 @@ package journal
 import (
 	"context"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -176,7 +178,7 @@ func TestStrategyDispatchColdRestartDiscoversOldIssuedClaimedAndSubmitting(t *te
 
 func prepareStrategyDispatchLease(t *testing.T, j *Journal, suffix string, owner StrategyDispatchOwner, market StrategyDispatchMarket, symbol string) StrategyDispatchLeasePlan {
 	t.Helper()
-	request := qFinalIssueFixture(t, j, suffix)
+	request := qFinalIssueFixture(t, qFinalScratchJournal(t, j), suffix)
 	if market == StrategyDispatchMarketUS {
 		request.Admission.Owner.Key.Market = riskbucket.MarketUS
 		request.Admission.Owner.Key.Symbol = symbol
@@ -193,9 +195,7 @@ func prepareStrategyDispatchLease(t *testing.T, j *Journal, suffix string, owner
 		intent.Symbol = symbol
 		request.Issue.Decision.Preimage = intent
 	}
-	if _, err := j.RecordQFinalDecisionAndReserve(context.Background(), request); err != nil {
-		t.Fatalf("record q_final %s: %v", suffix, err)
-	}
+	recordQFinalIntoOlderSchema(t, j, request, suffix)
 	recordDigest := "sealed-authority-record-" + suffix
 	if _, err := j.db.Exec(`INSERT INTO strategy_dispatch_market_authorities(
 		authority_id,account_ref,market,symbol,activation_generation,activation_digest,calendar_generation,
@@ -270,4 +270,173 @@ func openStrategyDispatchTestJournal(t *testing.T, path string) *Journal {
 func openStrategyDispatchV25Journal(t *testing.T) *Journal {
 	t.Helper()
 	return openStrategyDispatchTestJournal(t, filepath.Join(t.TempDir(), "journal.db"))
+}
+
+// a066 5.5 fixture 수리(Manager 승인 2026-09-27, 교차 change 시험 편집).
+//
+// 이 파일의 시험들은 v25 저널(migrationOverride)에 q_final 행을 두고 lease 스키마를 잼. 예전 fixture 는
+// **현재 코드의 writer 로 옛 스키마에 직접** 썼음 — v33 의 진입 손실 잠금 읽기가 그 저널에 없는 테이블을
+// 읽고 fail-closed 로 막으면서 그 잠재 불일치가 드러남. 이제 q_final 행은 현재 스키마의 scratch 저널에서
+// 현재 writer 로 만들고, 그 행을 v25 저널에 그대로 옮김. 옮기기 전에 각 테이블의 DDL(sqlite_master.sql)이
+// 두 저널에서 같음을 단언함 — 행 모양은 그 버전의 마이그레이션 정의에서 온 것이지 기억에서 온 것이 아님.
+
+// qFinalIssuanceTables 는 RecordQFinalDecisionAndReserve 가 쓰는 테이블을 FK 순서로 적은 것임.
+// 실제로 바뀐 테이블 집합과 같지 않으면 recordQFinalIntoOlderSchema 가 멈춤 — writer 가 새 테이블을
+// 쓰기 시작하면 이 fixture 가 조용히 빠뜨리지 않게 함.
+var qFinalIssuanceTables = []string{
+	"decisions", "risk_reservations", "risk_bucket_owners", "risk_bucket_final_decisions",
+	"risk_bucket_policies", "risk_bucket_snapshots", "risk_bucket_reservations",
+	"risk_bucket_state_snapshots", "risk_bucket_events",
+}
+
+var qFinalScratchJournals sync.Map // *Journal(대상) → *Journal(현재 스키마 scratch)
+
+// qFinalScratchJournal 은 대상 저널 하나에 대응하는 현재 스키마 저널임. 같은 대상에 여러 번 발급하면
+// 같은 scratch 를 써서 예약 버전 등 앞선 행에 의존하는 값이 대상과 같게 이어짐.
+func qFinalScratchJournal(t *testing.T, target *Journal) *Journal {
+	t.Helper()
+	if scratch, ok := qFinalScratchJournals.Load(target); ok {
+		return scratch.(*Journal)
+	}
+	scratch := openTestJournal(t)
+	qFinalScratchJournals.Store(target, scratch)
+	t.Cleanup(func() { qFinalScratchJournals.Delete(target) })
+	return scratch
+}
+
+func recordQFinalIntoOlderSchema(t *testing.T, target *Journal, request QFinalIssueRequest, suffix string) {
+	t.Helper()
+	ctx := context.Background()
+	scratch := qFinalScratchJournal(t, target)
+	tables := allJournalTables(t, scratch)
+	before := make(map[string]int64, len(tables))
+	for _, table := range tables {
+		before[table] = maxRowID(t, scratch, table)
+	}
+	if _, err := scratch.RecordQFinalDecisionAndReserve(ctx, request); err != nil {
+		t.Fatalf("record q_final %s: %v", suffix, err)
+	}
+	var changed []string
+	for _, table := range tables {
+		if maxRowID(t, scratch, table) != before[table] {
+			changed = append(changed, table)
+		}
+	}
+	if strings.Join(sortedCopy(changed), ",") != strings.Join(sortedCopy(qFinalIssuanceTables), ",") {
+		t.Fatalf("q_final writer touched %v, fixture copies %v", changed, qFinalIssuanceTables)
+	}
+	tx, err := target.db.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	for _, table := range qFinalIssuanceTables {
+		var scratchDDL, targetDDL string
+		if err := scratch.db.QueryRow(`SELECT sql FROM sqlite_master WHERE type='table' AND name=?`, table).Scan(&scratchDDL); err != nil {
+			t.Fatal(err)
+		}
+		if err := tx.QueryRow(`SELECT sql FROM sqlite_master WHERE type='table' AND name=?`, table).Scan(&targetDDL); err != nil {
+			t.Fatalf("older journal has no %s: %v", table, err)
+		}
+		if scratchDDL != targetDDL {
+			t.Fatalf("%s shape differs between the older schema and the current writer; rows cannot be copied as-is", table)
+		}
+		rows, err := scratch.db.Query(fmt.Sprintf(`SELECT * FROM %s WHERE rowid > ? ORDER BY rowid`, table), before[table])
+		if err != nil {
+			t.Fatal(err)
+		}
+		columns, err := rows.Columns()
+		if err != nil {
+			t.Fatal(err)
+		}
+		insert := fmt.Sprintf(`INSERT INTO %s(%s) VALUES(%s)`, table, strings.Join(columns, ","),
+			strings.TrimSuffix(strings.Repeat("?,", len(columns)), ","))
+		for rows.Next() {
+			values := make([]any, len(columns))
+			pointers := make([]any, len(columns))
+			for i := range values {
+				pointers[i] = &values[i]
+			}
+			if err := rows.Scan(pointers...); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := tx.Exec(insert, values...); err != nil {
+				t.Fatalf("copy %s row into the older journal: %v", table, err)
+			}
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+		rows.Close()
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	// 옮긴 뒤 두 저널의 해당 테이블이 행 단위로 같아야 함 — 대상에는 q_final 발급 말고 이 테이블을 쓰는
+	// 다른 setup 이 없으므로 불일치는 복사 결함임.
+	for _, table := range qFinalIssuanceTables {
+		if got, want := tableDump(t, target, table), tableDump(t, scratch, table); got != want {
+			t.Fatalf("%s differs after copy:\n got %s\nwant %s", table, got, want)
+		}
+	}
+}
+
+func allJournalTables(t *testing.T, j *Journal) []string {
+	t.Helper()
+	rows, err := j.db.Query(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+	var names []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			t.Fatal(err)
+		}
+		names = append(names, name)
+	}
+	return names
+}
+
+func maxRowID(t *testing.T, j *Journal, table string) int64 {
+	t.Helper()
+	var id int64
+	if err := j.db.QueryRow(fmt.Sprintf(`SELECT coalesce(max(rowid),0) FROM %s`, table)).Scan(&id); err != nil {
+		t.Fatal(err)
+	}
+	return id
+}
+
+func tableDump(t *testing.T, j *Journal, table string) string {
+	t.Helper()
+	rows, err := j.db.Query(fmt.Sprintf(`SELECT * FROM %s ORDER BY rowid`, table))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+	columns, _ := rows.Columns()
+	var out strings.Builder
+	for rows.Next() {
+		values := make([]any, len(columns))
+		pointers := make([]any, len(columns))
+		for i := range values {
+			pointers[i] = &values[i]
+		}
+		if err := rows.Scan(pointers...); err != nil {
+			t.Fatal(err)
+		}
+		fmt.Fprintf(&out, "%v;", values)
+	}
+	return out.String()
+}
+
+func sortedCopy(values []string) []string {
+	out := append([]string(nil), values...)
+	for i := 1; i < len(out); i++ {
+		for k := i; k > 0 && out[k] < out[k-1]; k-- {
+			out[k], out[k-1] = out[k-1], out[k]
+		}
+	}
+	return out
 }

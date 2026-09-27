@@ -8,7 +8,7 @@
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| sqlite schema | current `SchemaVersion` (32 at HEAD 2026-09-25) table/column golden; a066 owns only its v22–v24 rows, later rows belong to the changes that added v25–v32 | migration contract | test failure |
+| sqlite schema | current `SchemaVersion` (33 after a066 5.5, 2026-09-27; was 32 at HEAD 2026-09-25) table/column golden; a066 owns only its v22–v24 rows, later rows belong to the changes that added v25–v32 | migration contract | test failure |
 
 ## Branches and early returns
 

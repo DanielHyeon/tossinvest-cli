@@ -14,18 +14,17 @@
 
 ## Branches and early returns
 
-| Branch | Condition | Mutation/side effect | Return/error | Required test |
+| Branch | Position | Condition and first body statement (AST source line) | a066 relevance | Coverage (5.5 post-edit) |
 |---|---|---|---|---|
-| B1 | decision is not exposure-raising | none | nil — risk-reducing bypass | `TestAnExitNeedsNoReservation` |
-| B2 | legacy reservation read fails | none | Guardian reservation missing | no test executes this body (Wave 2A coverage) |
-| B3 | iterate the decision's aggregate reservations | none | continue | package suite |
-| B4 | a HELD aggregate reservation triggers q_final revalidation | none | continue into `RevalidateQFinalAdmission` | `TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker` |
-| B5 | revalidation returns an error | none | refusal | `TestRevokedDecisionIsRefusedAtTheLastMoment` |
-| B6 | the error is `ErrDecisionNotFound` | none | Guardian-missing reason kept | `TestRevokedDecisionIsRefusedAtTheLastMoment` |
+| B1 | if at 890:2 | `if dec.SafetyClass != journal.SafetyClassExposureRaising {`; then `return nil` (line last changed by `a6a396ab`) | a066: risk-reducing decision returns before any reservation read | covered |
+| B2 | if at 894:2 | `if err != nil {`; then `return reject(ReasonGuardianReservationMissing,` (line last changed by `a6a396ab`) | not a066 | NOT covered |
+| B3 | range at 899:2 | `for _, reservation := range reservations {`; then `if reservation.Held() {` (line last changed by `a6a396ab`) | not a066 | covered |
+| B4 | if at 900:3 | `if reservation.Held() {`; then `_, err := g.journal.RevalidateQFinalAdmission(ctx, dec.ID)` (line last changed by `a6a396ab`) | a066: HELD aggregate reservation triggers q_final revalidation | covered |
+| B5 | if at 902:4 | `if err != nil {`; then `if errors.Is(err, journal.ErrDecisionNotFound) {` (line last changed by `a37d97f5`) | a066: q_final revalidation error refuses | covered |
+| B6 | if at 903:5 | `if errors.Is(err, journal.ErrDecisionNotFound) {`; then `return reject(ReasonGuardianMissing,` (line last changed by `a37d97f5`) | a066: decision disappeared during revalidation keeps the Guardian-missing reason | covered |
+| B7 | if at 908:5 | `if errors.Is(err, journal.ErrRiskBucketEntryLossLocked) {`; then `return reject(ReasonEntryLossLockActive,` (line last changed by `00000000`) | a066: entry loss lock refusal is reported as its own reason (entry_loss_lock_active), chosen by errors.Is on the journal sentinel type, not by text | covered |
 
-Wave 2A (2026-09-25): AST re-extracted at HEAD (889–918, was 745–774); body text identical to the 2026-08-04
-revision, alignment identical B1–B6. Rows re-described from the AST source lines; the earlier table grouped
-B3/B4 and B5/B6 and listed B4 twice.
+5.5 post-edit (2026-09-27, HEAD `eecc5fe7` + working tree): AST 889–923, 6 → 7 branches. B1–B6 unchanged; new B7 maps the journal sentinel `ErrRiskBucketEntryLossLocked` (by `errors.Is`) to `entry_loss_lock_active` after the Guardian-missing check and before the mismatch fallback.
 
 ## Calls and live bindings
 
@@ -33,6 +32,7 @@ B3/B4 and B5/B6 and listed B4 twice.
 |---|---|---|---|
 | `ReservationsForDecision` | preserve legacy aggregate hold gate | fail closed | current AST |
 | `RevalidateQFinalAdmission` | detect the durable q_final marker and verify exact q_final/owner/aggregate/all-bucket authority | fail closed; no repair; unmarked legacy decisions return `(false, nil)` | current AST and journal contract |
+| `errors.Is(err, journal.ErrRiskBucketEntryLossLocked)` | a066 5.5: name the entry-loss-lock refusal instead of reporting it as a bucket mismatch | type, never message text; checked after `ErrDecisionNotFound` | AST B7 + mutants M30/M31 |
 
 ## State mutations and fallbacks
 
