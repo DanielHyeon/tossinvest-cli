@@ -630,3 +630,53 @@ to yet."* **빌드는 만들고 넘긴다. 주석이 stale이고 D2가 그 위�
 
 **분할 권고**: R3은 이 사건의 인과 경로에 없다(proposal 자신이 인정). R1 + 축소된 R2로
 줄이고 R3은 자기 §0.4 계측을 가진 별도 change로 낸다.
+
+---
+
+## 증거 재생성 (2026-09-27, 3라운드 전 — 판정 아님)
+
+Manager 과제: 3판 이후 387+ 커밋이 쌓인 HEAD 에 맞춰 증거만 재생성한다. **3판 본문은 고치지 않았다**(리뷰 전 초안 개정 금지).
+
+### 번들 refresh (3937e341)
+
+- HEAD `ddd39a83` 에서 `check_analysis` 가 stale 로 찍은 `revision: current` 번들 7개를 `go run ./tools/logic-map` 로
+  재생성했다. 옛 ast 는 모두 base `ec29dc72` 의 파일 sha 와 일치했다.
+- 분기 대응(옛/새 AST 를 (kind, 소스 줄)로 difflib 정렬):
+
+| 번들 | 줄 | 분기 | 대응 | 이웃 |
+|---|---|---|---|---|
+| `exitobserver.clearthesymbol` | 1334-1392 → 1440-1498 | 9 → 9 | 항등, 본문 바이트 동일 | — |
+| `exitobserver.record` | 1077-1197 → 1177-1303 | 14 → 16 | B1..B14 → B3..B16, 새 B1·B2 | a111 `882a0b49` |
+| `exitobserver.submit` | 1237-1312 → 1343-1418 | 11 → 11 | 항등, 본문 동일 | — |
+| `gateway.checksymbolfree` | 799-834 | 9 → 9 | 항등, 본문 동일 | — |
+| `armexitproposaltx` | 655-677 | 4 → 4 | 항등, 본문 동일 | — |
+| `journal.resolveexitproposal` | 810-869 → 825-884 | 14 → 14 | 항등, 본문 동일 | — |
+| `recovery.run` | 207-296 → 238-329 | 12 → 12 | 항등(본문은 바뀜) | a102 `1c76a580` |
+
+- `record` 의 새 B1·B2 행은 a111 의 Branch Test Map(같은 소스 sha `522d5d81` 의 AST 로 번호를 매긴 표)이 인용한 기존
+  시험 `TestA111LeaseIsRecheckedAtTheRecordOrRefreshBoundary`(`internal/app/engine/a111_flat_exit_observation_test.go`)를
+  인용했다. 새 시험 저술 0.
+- BTM 행의 `:줄` 을 새 AST 줄로 옮겼고 「진입 실측」 열은 base 에서 잰 값 그대로라고 적었다. FLM 에는 Refresh 절을 붙였다
+  (본문 줄 번호는 base 기준 그대로). risk report 는 발견 줄만 바뀐 4개를 재생성했다.
+- 신선한 번들 8개는 바이트 불변(파일 60개 sha256 전후 대조, 바뀐 것은 stale 7 번들의 파일뿐).
+- refresh 뒤 stale·해시 불일치 0.
+
+### base 재고정 (d2f5d3f1)
+
+- 잰 순간: HEAD 3937e341, 모집단 = `git log --full-history -- openspec/changes/a094-…` 커밋 3.
+  - a30eb35a(2026-08-09, 7-change 계획 묶음) go 6 — 전부 a096 의 파일(`journal/outbox.go`·`obs/notifier.go`·a096 시험 4),
+    `changed_existing_functions` 5 = a096 함수(`EnqueueAlert`·`Acknowledge`·`Flush`·`deliver`·`notifyCritical`)
+  - 5bb3b8f9(병합) go 0 · 3937e341(refresh) go 0
+  - a094 는 구현 전이므로 **자기 Go 커밋 0**.
+- 옛 base ec29dc72 에서 5단계 rc 1 · required 265 · 창에 착지 커밋 406 — 전부 다른 change 의 기존 함수.
+- 재고정 ec29dc72 → 3937e341, `base-commit.txt` 만 커밋(d2f5d3f1). 판정은 **격리 detached 워크트리 @d2f5d3f1** 에서:
+  `check_analysis` rc 0, required 0, "evidence complete or diff-proven exempt". 공유 워크트리는 병행 로트(a112·a066)의
+  미커밋 Go 편집 때문에 required 19 로 오염돼 있어 쓰지 않았다.
+
+### 3라운드 입력
+
+- 정오표: `analysis/third-round-errata.md` — 인용 91건(맞음 57 · 이동 32 · 내용 변경 2), `record` 분기 재번호,
+  이웃이 바꾼 것 셋, a094 R1 ↔ a089 R2 문장 대조(같은 `error.code` 를 읽고 동작 분기에서 정반대 — main spec 충돌).
+- 검토 자료 목록: `analysis/third-round-review-materials.md` — 교차 모델 요구, 대상 문서, 2라운드 차단 8건의 3판 답
+  위치, 사람 몫.
+- 교차 모델은 여전히 충족 수단이 없다(codex 인증 401 — a124 기록). 3라운드는 Manager 지시 뒤.
