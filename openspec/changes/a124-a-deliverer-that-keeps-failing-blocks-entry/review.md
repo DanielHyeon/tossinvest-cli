@@ -757,3 +757,10 @@ D1 · D7 · D8 · D10 · spec SHALL 대조 일치, fail-open 경로 · 데이터
 ```
 
 - `--record-landing` 은 **실행하지 않았다** — Manager 조건(일반 프로브가 rc 1 로 남을 때만)에 해당하지 않음. 창의 3 커밋은 이 change 자신의 ①~③ 이다.
+
+### 구현 리뷰 — codex 4회차 (2026-09-28, D8 계수 코드로 좁힘) · **PASS**
+
+- 실행: `gpt-6-astra`, read-only, session **`01a0e45c-f6c3-7862-b062-2f56b9ec7746`**, 04:34~04:36 KST, rc 0, 76,432 토큰. 트리 = 착지 커밋 `22fecb76` export +
+  a124 디렉터리. 프롬프트 `codex-i4-prompt.md`, diff `a124-impl-i4-alertdelivery.patch`(3회차 트리 대비 alertdelivery.go), 출력 `codex-i4-output.md`.
+- 판정: `run.count == 0` 은 제거한 `!seen` 과 도달 가능한 모든 경로에서 같다(행 map 에 count 0 저장 경로 없음, 나열 계수의 0 은 옛 `listSeen=false` 자리와
+  일치), AA2(한도 판정이 세대 리셋보다 먼저) · Z1(직전 증가의 세대로 차단) 유지, 새 발견 0. **`VERDICT: PASS`**.
