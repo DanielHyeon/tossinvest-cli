@@ -94,7 +94,7 @@
     - STORY-TOS-a052 — Explain reconcile-blocked position adoption [archived] → `a052-reconcile-aware-position-management`
     - STORY-TOS-a053 — Restore visible exit-line references across markets [archived] → `a053-restore-visible-exit-line-references`
     - STORY-TOS-a078 — Stop quarantining a ladder position for activating its first rung [archived] → `a078-first-rung-keeps-its-judgement`
-    - STORY-TOS-a079 — Let an operator lift an exit-snapshot quarantine without rebuilding the baseline [implemented] → `a079-operator-can-lift-a-quarantine`
+    - STORY-TOS-a079 — Let an operator lift an exit-snapshot quarantine without rebuilding the baseline [archived] → `a079-operator-can-lift-a-quarantine`
     - STORY-TOS-a074 — Make the moment protection stops visible, and let critical alerts actually leave the machine [in_progress] → `a074-critical-events-reach-the-operator`
     - STORY-TOS-a084 — Re-judge a quarantine once when the recovery selector that made it has changed [archived] → `a084-a-quarantine-outlives-its-cause`
     - STORY-TOS-a087 — A protective exit is a market order, not a limit order [in_progress] → `a087-a-protective-exit-is-a-market-order`

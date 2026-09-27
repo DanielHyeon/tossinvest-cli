@@ -274,3 +274,7 @@ worktree에 체크아웃하고 `check_analysis.py --change`를 실행해
 ### 11.2
 
 실제 격리 해제 실행은 사용자 몫이다(§0.7) — 에이전트 태스크가 아니며 이 종결 시퀀스는 그것을 건드리지 않았다.
+
+### 완료 게이트
+
+- gate PASS 9485212d, gate1.log, 11/11 (격리 worktree `TossOS-worktrees/a079-gate`, 2026-09-27; 로그 `/tmp/claude-1000/a079-lot/gate1.log`).
