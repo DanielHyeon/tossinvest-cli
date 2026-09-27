@@ -1,9 +1,9 @@
 # Function Logic Map: `NewPairedStrategyEntryProductionAssembly`
 
 - Source: `internal/app/engine/strategy_entry_supervisor.go`
-- Current-base source SHA-256: `627c647d087032586c4b63ca315a30fd9fad6b51af329fa4e8bf4fecd7104e08`
+- Current-base source SHA-256: `9d97e59cf36590ade76b3e4804134b9ee66b3af1f8efa409e2f41222d5579b4f`
 - Signature: `Context.NewPairedStrategyEntryProductionAssembly(params=2, results=2)`
-- Source range: `266:1`–`334:2`
+- Source range: `283:1`–`370:2`
 - AST evidence: `ast.json`, generated from frozen base `016da6245feb60e13971388be386c2c2041469a8`.
 - Risk scan: `risk-pattern-report.md`.
 
@@ -29,81 +29,78 @@
 
 ## Branches and early returns
 
-- Exact AST return nodes: `285:3, 312:3, 335:4, 337:3, 353:3, 360:3, 362:2`.
+- Measurement regime (8.7.2 편집 뒤): 몸통 진입 count. engine tagged suite 바이너리(`-coverpkg=./internal/app/engine,./internal/strategyrouter`, -trimpath 없이)를 `systemd-run … MemoryMax=16G` 안에서 실행, 스위트 PASS; 전체 시험 509 개를 하나씩 돈 per-test 프로파일(하네스 `analysis/harness/a872_pertest_cover.sh` · `a872_attribute.py`). 모든 행에서 시험별 합 == 스위트(ATTRIBUTION MISMATCH 0).
 
-| Branch | AST kind | Source location | Required test disposition |
+Exact AST return positions: 285:3, 312:3, 342:4, 344:3, 360:3, 367:3, 369:2.
+
+| Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if| 284:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B2 | if| 290:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B3 | if| 301:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B4 | if| 311:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B5 | if| 330:3 | no coverage block for this arm (engine tagged suite); no coverage block for this arm (engine untagged suite); no per-test profile in the attribution set entered it |
-| B6 | range| 347:2 | arm entered 2x (engine tagged suite); arm entered 2x (engine untagged suite); `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
-| B7 | if| 352:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B8 | if | 359:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B1 | if | 284:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
+| B2 | if | 290:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
+| B3 | if | 301:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
+| B4 | if | 311:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
+| B5 | if | 332:2 | arm entered 1x (engine tagged suite, post-edit); `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
+| B6 | if | 337:3 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
+| B7 | range | 354:2 | arm entered 2x (engine tagged suite, post-edit); `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
+| B8 | if | 359:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
+| B9 | if | 366:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
 
-
-**태스크 5.1.2.2 가 분기 하나를 더했고 그래서 옛 B4~B7 이 B5~B8 이 되었다.**
-새 B4(311:2)는 `c.productionStrategyLanes` 의 오류다. 레인을 **제안 수집 앞**에
-세우는 것이 이 태스크가 옮긴 순서이고, 그 순서가 안전이다 — 관문이 레인의 잠금을
-읽어 판정하므로(5.3.3 의 durable latch), 뒤에 세우면 재시작 뒤 첫 주기에 잠긴 레인이
-열린 것으로 읽힌다. 그 창은 한 주기뿐이라 행동 시험이 우연히 잡지 못하므로 순서는
-`TestTheLanesAreBuiltBeforeTheProposalsAreCollected` 가 구조로 못 박는다.
+8.7.2 가 더한 것: `if clk != nil { dispatchCycle.now = clk.Now }` 한 분기(Codex 재리뷰 P2 — nil 인터페이스의 메서드 값은 그 자리에서 panic). 그 뒤 분기들은 한 칸씩 밀렸다. 대입 한 줄은 `TestTheProductionAssemblyGivesTheDispatchCycleTheRealClock` 이 구조로 못 박는다(조립 전체를 행동으로 세우려면 원장·게이트웨이·권한 여덟이 필요하다) — 변이 M23 CAUGHT.
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Current-base evidence/requirement |
-|---|---|---|
-| errors.New | 285:45 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| collect | 287:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| newStrategyScheduleAuthorityLoader | 287:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.TrimSpace | 290:25 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.Journal.Path | 290:43 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.Journal.Path | 291:17 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| filepath.Join | 292:24 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| filepath.Dir | 292:38 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| collect | 294:24 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| newStrategyCandidateAuthorityLoader | 294:24 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| collect | 295:20 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| newStrategyRouteAuthorityLoader | 295:20 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.ToUpper | 297:21 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.TrimSpace | 297:37 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| collect | 298:17 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| newStrategyFXAuthorityLoader | 298:17 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| filepath.Join | 302:18 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| filepath.Dir | 302:32 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.productionStrategyLanes | 310:16 | 태스크 5.1.2.2 — 이 프로세스의 여덟 레인을 **제안 수집 앞**에 세운다. 원장에서 durable latch 를 읽으므로 오류를 낼 수 있고, 그 오류가 B4 다 |
-| collect | 314:23 | 태스크 5.1.2.2 — 그 레인을 제안 로더에 붙인다. 붙이지 않으면 4-가족 관문이 서지 않고 조정은 오늘과 같은 경로로 돈다 |
-| withStrategyLanes | 314:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| newStrategyProposalAuthorityLoader | 314:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| proposalAuthority.ResultAuthority | 317:21 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| collect | 318:19 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| newStrategyRiskAuthorityLoader | 318:19 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| collect | 320:22 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| newStrategyAccountAuthorityLoader | 320:22 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| newProductionStrategyFirstLegAuthorityLoader | 323:20 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| newStrategyFirstLegAdmissionBridge | 325:20 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| newStrategyDispatchCycle | 326:19 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| collectMarket | 329:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| newStrategyScheduleAuthorityLoader | 329:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fresh.restore.Activation.Generation | 333:4 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| expected.restore.Activation.Generation | 333:45 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| Equal | 334:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fresh.restore.Activation.ExpiresAt | 334:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| expected.restore.Activation.ExpiresAt | 334:48 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 335:11 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| scheduleAuthority.Snapshot | 344:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 346:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| append | 348:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.productionStrategyWorker | 348:29 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| NewStrategyEntrySupervisor | 351:21 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| candidateAuthority.Snapshot | 356:14 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| routeAuthority.Snapshot | 356:52 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fxAuthority.Snapshot | 356:83 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| proposalAuthority.Snapshot | 356:117 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| riskAuthority.Snapshot | 357:9 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| accountAuthority.Snapshot | 357:44 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.publishStrategyRuntime | 359:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| Callee expression | Position |
+|---|---|
+| `errors.New` | 285:45 |
+| `collect` | 287:23 |
+| `newStrategyScheduleAuthorityLoader` | 287:23 |
+| `strings.TrimSpace` | 290:25 |
+| `c.Journal.Path` | 290:43 |
+| `c.Journal.Path` | 291:17 |
+| `filepath.Join` | 292:24 |
+| `filepath.Dir` | 292:38 |
+| `collect` | 294:24 |
+| `newStrategyCandidateAuthorityLoader` | 294:24 |
+| `collect` | 295:20 |
+| `newStrategyRouteAuthorityLoader` | 295:20 |
+| `strings.ToUpper` | 297:21 |
+| `strings.TrimSpace` | 297:37 |
+| `collect` | 298:17 |
+| `newStrategyFXAuthorityLoader` | 298:17 |
+| `filepath.Join` | 302:18 |
+| `filepath.Dir` | 302:32 |
+| `c.productionStrategyLanes` | 310:16 |
+| `collect` | 314:23 |
+| `withStrategyLanes` | 314:23 |
+| `newStrategyProposalAuthorityLoader` | 314:23 |
+| `proposalAuthority.ResultAuthority` | 317:21 |
+| `collect` | 318:19 |
+| `newStrategyRiskAuthorityLoader` | 318:19 |
+| `collect` | 320:22 |
+| `newStrategyAccountAuthorityLoader` | 320:22 |
+| `newProductionStrategyFirstLegAuthorityLoader` | 323:20 |
+| `newStrategyFirstLegAdmissionBridge` | 325:20 |
+| `newStrategyDispatchCycle` | 326:19 |
+| `collectMarket` | 336:12 |
+| `newStrategyScheduleAuthorityLoader` | 336:12 |
+| `fresh.restore.Activation.Generation` | 340:4 |
+| `expected.restore.Activation.Generation` | 340:45 |
+| `Equal` | 341:5 |
+| `fresh.restore.Activation.ExpiresAt` | 341:5 |
+| `expected.restore.Activation.ExpiresAt` | 341:48 |
+| `errors.New` | 342:11 |
+| `scheduleAuthority.Snapshot` | 351:23 |
+| `make` | 353:13 |
+| `append` | 355:13 |
+| `c.productionStrategyWorker` | 355:29 |
+| `NewStrategyEntrySupervisor` | 358:21 |
+| `candidateAuthority.Snapshot` | 363:14 |
+| `routeAuthority.Snapshot` | 363:52 |
+| `fxAuthority.Snapshot` | 363:83 |
+| `proposalAuthority.Snapshot` | 363:117 |
+| `riskAuthority.Snapshot` | 364:9 |
+| `accountAuthority.Snapshot` | 364:44 |
+| `c.publishStrategyRuntime` | 366:12 |
 
 ## State mutations and fallbacks
 

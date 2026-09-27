@@ -215,6 +215,8 @@ production manifest는 각 market의 exact four descriptors와 family identity, 
 
 이 개정이 바꾸지 않는 것: 정확히 네 서술자, partial 3-of-4 거부, legacy 3-family 자동 승격 금지, 다섯 결속 값, 24시간 수명, `0400`·소유자 검사, 그리고 승격을 얻는 길이 검증된 매니페스트 하나뿐이라는 것. spec의 SHALL은 활성화 서명을 요구한 적이 없으므로(`spec.md`에서 "signed"는 SHADOW manifest에만 붙는다) spec 델타는 바뀌지 않는다. 아래 SHADOW manifest의 `signed`는 이 개정의 범위가 아니며 그대로 둔다.
 
+**개정 2026-09-27 [a112 결정 62] — 활성화의 부재·만료·폐기는 "선언" 여부로 가른다 (태스크 8.7.2).** 배포가 이 시장에 활성화 핀(`TOSSOS_STRATEGY_FAMILY_ACTIVATION_<MARKET>_MANIFEST_SHA256`)을 두지 않았으면 4-가족 런타임이 **배포되지 않은** 것이고, 그 시장은 기존 시장 단위 경로를 그대로 쓴다(토글 OFF = upstream, 오늘 생산은 핀 0 건). 핀을 두었는데 활성화를 쓸 수 없으면 — 파일 없음·핀 불일치·만료·폐기·결속 불일치 — 그 시장의 네 가족은 전부 OFF 이고 신규 진입이 닫힌다(`FAMILY_GATE_CLOSED`). 기존 경로로 돌아가지 않는다: 돌아가면 사람이 매니페스트에서 끈 가족이 만료·폐기 순간 되살아난다. 공유 safety 루프·원장 계보·레인 잠금은 이 판정이 건드리지 않는다. spec 의 "required activation authority 가 missing 이면 exposure-raising request 0 (SHALL)" 은 **선언된** 4-가족 활성화에 대해 이 형태로 만족되고, 미선언 시장의 기존 경로는 5.1.2.1·8.7.1 이 이미 적은 대로 "토글 OFF = upstream" 쪽이 가진다. 주문 lease 는 가족 활성화의 남은 수명으로 깎이고(min 결합만), 게이트웨이가 브로커 바이트 전에 부르는 최종 검사가 실시계로 만료를 다시 본다 — lease 행의 명목 만료는 파도→발급 사이 δ 만큼 넘을 수 있으나 SUBMITTING 은 만료 뒤 최종 검사를 통과할 수 없다. 재시작을 넘는 세대 래칫은 없다(잔여, 원장 기록이 필요 — 선례 5.3.3).
+
 `OFF/OFF/UNOBSERVED`와 `SHADOW`는 다른 상태다. 새 설치·migration·restart는 전자를 유지한다. SHADOW는 server-owned signed shadow manifest가 명시된 경우에만 read-only evaluation/counterfactual projection을 허용하며 desired/effective/activation을 ON으로 만들거나 dispatch capability를 가질 수 없다. Restart는 과거 process-local shadow 상태를 복원하지 않는다.
 
 ### 9. 구현은 다음 모듈 경계를 따른다

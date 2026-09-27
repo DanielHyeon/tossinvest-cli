@@ -5027,3 +5027,222 @@ M8 은 골든 등식이 **저작 경로**를 재는지 확인한다(정렬만 �
 리뷰어도 **P0 은 0**이라고 판정했고 나도 재확인했다. 생산 동작 변화는 여전히 0 이다
 — 생산에 매니페스트가 없고 핀도 없다. 세 P1 은 전부 "산출물이 결함" 이지 "런타임이
 위험" 이 아니었다. US 골든이 없다는 것과 8.7.2 가 열려 있다는 것도 그대로다.
+
+## 2026-09-27 태스크 8.7.2 — 선언된 활성화가 사라지면 넓히지 않고 닫는다 [a112 결정 62]
+
+### 착수 시점에 잰 구멍 (AST 먼저)
+
+`familyGateFor` B3(108:2, 편집 전) 는 로드 오류를 **종류 없이** 영값 관문으로 접었고, `admit` B1(72:2) 은 영값 관문에서
+묻지 않고 통과시켰다(편집 전 번들 `c1d1e295`). 그래서 만료·폐기·파일 없음·핀 불일치는 전부 "관문 없음" 이었고 기존
+시장 단위 경로가 돌았다. RED 가 그것을 값으로 보였다: 지속형만 켠 매니페스트가 만료·폐기·파일 없음·바이트 변경인
+네 행 전부 "시장 열림, 선택 2 건"(사람이 끈 역전형이 점수 1 위로 되살아남). 같은 fixture 의 "핀 + 검증됨" 대조군은
+편집 전에도 초록이었다 — 결속 값이 맞다는 증거이고, 그래서 네 행은 결속 불일치가 아니라 정말로 만료·폐기로 거절됐다.
+docs/operations.md 의 "폐기 → 그 시장을 OFF" 는 그때 코드와 달랐다.
+
+생산 측정(편집 전): 운영 컨테이너 env 에 `TOSSOS_STRATEGY_FAMILY_ACTIVATION_*` 0 건(이름만 셌다, 값은 읽지 않음),
+`~/.config/tossctl`·컨테이너 설정 디렉터리에 `strategy-family-activation*` 0 건.
+
+### 사람 결정 62 (Manager 승인 2026-09-27, 사람 보고는 Manager 가 올림)
+
+1. **판별자 = 배포 핀의 존재.** 빈 핀 → `ErrProductionFamilyActivationUndeclared` → 기존 경로(오늘 생산). 핀이 있으면
+   무엇이 틀렸든 `rolledBack` 관문 → 네 가족 OFF → `FAMILY_GATE_CLOSED`. 대안 (b)(한 번 활성화된 시장을 재시작 넘어
+   계속 닫음)는 원장 스키마(v34)가 필요해 이 로트 밖 — 잔여.
+2. **lease TTL 을 가족 활성화 수명으로 min 결합**, 규칙은 strategyrouter 한 곳(`FamilyActivation.LeaseCeiling`).
+   Codex 가 연 P1 뒤 **실시계 최종 검사**까지(아래).
+3. **세대 래칫은 잔여.** 열린 공격 모양: 운영자가 옛 세대 매니페스트로 핀을 바꾸고 재시작하면 옛 세대가 수명 안에서
+   받아들여진다. 프로세스 안에서는 핀이 바이트를 고정해 세대가 바뀔 수 없으므로 프로세스 래칫은 공허하다(시험을
+   만들지 않았다). 재시작을 넘는 래칫의 템플릿은 5.3.3 레인 잠금(SQLite 트리거가 엄격히 더 큰 세대를 요구)이다.
+
+### 편집 (FLM 먼저 — 순서 기록)
+
+| 함수 | 편집 전 증거 | 편집 |
+|---|---|---|
+| `strategyrouter.LoadProductionFamilyActivation` | `c1d1e295` | 맨 앞(ctx 보다도 앞) 빈 핀 → Undeclared |
+| `strategyrouter.validateProductionFamilyActivation` | `cb378a63` (HEAD blob AST) | 만료 판정을 `familyActivationRemaining` 호출로 |
+| `strategyrouter.FamilyActivation.LeaseCeiling`·`familyActivationRemaining` | 신규 | min 결합 · 유일한 만료 판정 |
+| `engine.strategyFamilyGate.installed` | `c1d1e295` | `rolledBack \|\| Verified()` (레인 조건 제거 — 아래 리뷰 A) |
+| `engine.familyGateFor` | `c1d1e295` | Undeclared 만 영값 관문, 그 밖은 `rolledBack` |
+| `engine.loadFamilyActivation` | `c1d1e295` | 보정 조기 반환 제거(아래) |
+| `engine.strategyDispatchCycle.dispatch` | `c1d1e295`·`eecc5fe7` | admission 앞 `LeaseCeiling(실시계)`·최종 검사 클로저에 가족 만료 |
+| `engine.NewPairedStrategyEntryProductionAssembly` | `eecc5fe7` | `dispatchCycle.now = clk.Now` 한 줄 |
+| `pairedStrategyDispatchCycleFixture`(시험) | `eecc5fe7` | 같은 한 줄(`fakeClock.Now`) |
+
+**FLM 누락 하나와 교정.** `validateProductionFamilyActivation` 을 편집한 뒤에야 그 함수가 대상 목록에 없다는 것을 알았다.
+편집을 되돌리고, 같은 파일의 다른 편집이 워크트리 좌표를 밀었으므로 **HEAD blob** 에서 AST 를 떠 번들을 커밋(`cb378a63`)한
+뒤 재적용했다.
+
+### 보정 조기 반환 제거 — 그 가드가 막던 입력과 지금 그 입력이 가는 자리 (Manager 초점 2)
+
+편집 전 `loadFamilyActivation` B2(132:2) 는 `strategyMarketCalibrationDigest` 가 거짓이면 **핀을 보기 전에** Unavailable 을
+돌려줬다. 거짓이 되는 입력은 셋이다: (a) 경로 항목 하나라도 보정 digest 가 빈 값, (b) 항목들이 서로 다른 보정, (c) 항목
+0 개(`collectMarket` 은 그 전에 닫으므로 직접 호출로만 닿는다). 편집 전 측정: 이 arm 은 엔진 스위트에서 진입 0.
+
+| 입력 | 편집 전 | 편집 후 | 막는 자리 |
+|---|---|---|---|
+| 핀 없음 + (a)(b)(c) | Unavailable → 영값 관문 → 기존 경로 | Undeclared → 영값 관문 → 기존 경로 (**같은 결과**) | router 첫 줄 |
+| 핀 있음 + (a)(b)(c) | Unavailable → 영값 관문 → **기존 경로(넓힘)** | router B3 `productionRouteIdentity("")` 거짓 → Unavailable → `rolledBack` | router B3, 파일 열기 **전** |
+
+부수 효과: env 두 개(가족 핀·위험 정책 핀)와 `strategyRuntimeBuildDigest()` 를 더 읽는다(순수 읽기). 파일 I/O 는 늘지
+않는다(B3 가 `readProductionRouteFile` 앞에서 단락). 가드를 들어내며 **뒤의 가드가 짐을 지게 된** 자리가 router B3 의
+보정 형식 검사다 — 그 검사를 지우면 보정 값이 빈 매니페스트가 빈 결속과 등식으로 맞아 **검증되어 버린다**.
+`TestADeclaredMarketWhoseCalibrationDoesNotAgreeIsRolledBack` 가 그 매니페스트를 실제로 써서 재고, 변이 M18 이 그것을 잡는다.
+보호 목적 외 부수 효과가 없음은 M12(조기 반환 복원 → `TestAnUndeclaredMarketStaysUndeclaredWhateverItsCalibrationSays`
+빨강)와 M18 이 양쪽에서 잰다.
+
+### 뒤집은 기존 시험 둘 (Manager 초점 1)
+
+1. `TestTheProductionActivationLoaderRunsAndFindsNoManifest` — 옛 단언: 핀을 두고 파일이 없을 때
+   `if gate.installed() { t.Fatal("서명된 매니페스트가 없는데 관문이 섰다 …") }`. 이것은 "선언된 활성화의 부재 = 기존 경로
+   통과" 를 **못 박고 있었다** — 사람이 끈 가족이 부재 순간 되살아나는 바로 그 넓힘. 새 단언: `installed && rolledBack &&
+   !Verified`. 지운 단언 없음(`loadFamilyActivation` 이 Unavailable · 활성화 미검증 두 단언은 그대로). 그리고 적대 리뷰 B 가
+   이 시험이 **통과 이유가 달랐다**는 것을 찾았다: env 에 위험 정책 핀이 없어 적재기가 결속 형식 검사에서 멈췄고 "파일 없음"
+   축에 닿지 않았다. 위험 핀을 더해 그 축을 재게 했다.
+2. `TestWithoutAVerifiedActivationCoordinationIsUnchanged` — 옛: seam 이 `(영값, nil)` 을 주면 기존 경로(REVERSAL 선택).
+   이것은 "검증 안 된 활성화 = 기존 경로" 를 못 박았다. 새: seam 이 `(영값, Undeclared)` 를 주면 기존 경로 — REVERSAL 단언은
+   그대로. 옛 `(영값, nil)` 은 반대 방향으로 `TestAnUnverifiedActivationWithoutAnErrorStillRollsBack` 가 못 박는다(M17).
+   나머지 seam 사용 시험(검증된 활성화를 주는 다섯)은 되돌림 때문에 통과하게 된 것이 없다(리뷰 B 대조).
+
+### lease 와 최종 검사 — Codex P1 과 그 수정
+
+첫 판본은 admission 앞에서 **파도 시각**으로 `LeaseCeiling` 을 불렀다. Codex·리뷰 B·리뷰 A 가 같은 사실을 찾았다: TTL 은
+상대 시간이고 원장은 그것을 자기 시각에 더하므로(`journal/strategy_dispatch_issuance.go:66,85`) lease 행의 만료가 파도→발급
+δ 만큼 가족 만료를 넘는다. 리뷰 A 가 사본 프로브로 재현했다(만료 +3s, 발급 지연 5s → 주문 1 건, lease 만료 +8s). 스케줄
+활성화는 같은 상대 TTL 이지만 게이트웨이 최종 검사(`execgw.Gateway` 의 `call` 클로저 — 브로커 바이트 전, 오류면 브로커 0 건:
+`TestStrategyGatewayRechecksSourceBackedActivationAfterSubmittingFencePairedKRUS`)가 실시계 재적재로 막는다. 가족 활성화에는
+그 검사가 없었다. 수정(Manager 승인 조건 1~5):
+
+- `strategyDispatchCycle.now`(실시계). 생산 조립이 `clk.Now` 를 넣는다. 생산에서 `newStrategyDispatchCycle` 을 부르는 자리는
+  `NewPairedStrategyEntryProductionAssembly` **하나**(비시험 grep 1 건), 그 함수의 유일한 호출자
+  `refreshPairedStrategyEntryProductionAssembly` 는 nil 시계를 먼저 거절한다. 그래서 "now nil + 검증된 활성화 → 거절" 이
+  거부하는 정상 입력은 **0** 이고 닿는 것은 시험과 부분 조립뿐이다. 검증 안 된 시장(미선언·기존 경로)은 `LeaseCeiling` 이
+  시각을 보지 않으므로 시계 유무와 무관하다.
+- admission 앞: `family.LeaseCeiling(cycle.clockNow(), 30s)`. 최종 검사 클로저: 같은 호출의 만료 오류를 스케줄 재검증보다 먼저.
+- 불변식은 이 형태다: **lease 행은 명목상 만료를 최대 δ 넘을 수 있으나, SUBMITTING 은 만료 뒤 최종 검사를 통과할 수 없다.**
+- 시험: 같은 최종 검사 클로저가 파도+9s·+10s−1ns 에서 통과, +10s·+11s 에서 Expired
+  (`TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`); 수집 때 유효·admission 때 만료 → 주문 0·캠페인 FLAT;
+  시계 없음 + 검증 → 주문 0; 시계 없음 + 미검증 → 주문 1(생산 동작 그대로); 구조 단언(admission 앞 `LeaseCeiling` 위치 <
+  `cycle.firstLeg.admit` 위치, 최종 검사 클로저 안 `LeaseCeiling` 존재); 생산 조립의 대입 한 줄 구조 단언.
+
+### 안전·계보 보존 — 측정
+
+- 되돌림 경로 허용 목록 census(`TestTheRollbackPathOnlyReads`): `installed`·`admit`·`familyGateFor`·`loadFamilyActivation` 의
+  모든 호출이 읽기(`Verified`·`Owns`·`Run`·`lanesFor`·env·적재)뿐이다. 원장·게이트웨이·레인 `Fail`/`Succeed`·취소 함수 0.
+  (리뷰 B 가 `admit` 을 빠뜨린 것을 찾았고 `lane.Succeed()` 삽입 변이가 살아남았다 → `admit` 추가, RB7 로 잰다.)
+- 잠긴 레인은 되돌림 동안 잠긴 채이고(GatedOutcomes `[DORMANT LATCHED]`), 검증된 활성화가 다시 서도 잠금이 그대로다
+  (`TestRollingBackLeavesALatchedLaneLatched`).
+- lease·`PlaceClaimedStrategy`·`FamilyActivation` 참조: exitpolicy·exitquarantine·filldetect·flatten·protection·
+  protectionlifecycle·protectionofficial·protectionreadiness·reconcile 9 패키지에서 **0**. `PlaceClaimedStrategy` 의 생산
+  호출자는 dispatch 하나. 즉 손절·청산·대사·체결 감지는 이 로트의 판정·lease 를 지나지 않는다(즉시성 불변).
+
+### 독립 적대 리뷰 — 네 보이스
+
+| 보이스 | 판정 | 요지 |
+|---|---|---|
+| Codex (다른 모델) | HOLD → 수정 | P1 δ 초과 · P2 lease 시험이 δ=0 에서만 잰다 |
+| A 실패-개방 사냥 | 현재 트리 APPROVE | P1(위와 같음, 사본 프로브로 재현·수정 확인) · P2 검증된 관문+레인 nil → 기존 경로(지속형만 켠 활성화에서 역전형 선택 재현, 생산 미도달) · P2 셋은 잔여 |
+| B 시험 적합성 | P1 만 HOLD → 수정 | 생존 변이 B1(30s→60s)·B2(시장 KR 고정)·B3(취소 ctx→기존 경로)·B7(admit 에서 레인 상태 씀) · P2-4 통과 이유가 다른 시험 |
+| C 계약·문서 | HOLD | P0 "간헐 실패" · P1 spec/design 에 판별 규칙 기록 없음 · P1 결정 기록 없음 |
+
+C 의 P0 "간헐 실패" 는 flake 가 아니었다. C 가 잡은 실패 줄이 내 RED 실행의 실패 줄과 **바이트가 같고**(diff 0), C 의 그
+실행은 19:08~19:12 로 내 RED 창(시험을 먼저 쓰고 GREEN 전) 안이었다 — C 는 편집 도중의 워크트리를 컴파일했다. GREEN 뒤
+`-count=30` 으로 네 시험 120 회 전부 초록. C 의 두 P1 은 design.md §8 개정 블록 [결정 62] 과 이 절로 닫았다.
+
+반영한 것: `installed()` 에서 레인 조건 제거(리뷰 A), 기준 TTL 30s 를 숫자로 단언(B1), US lease 행(B2), 핀 + 취소 ctx →
+rolledBack 시험(B3), census 에 `admit`(B7), 위험 핀 추가(B P2-4).
+
+이름만 붙여 남긴 것(이 로트 밖):
+- 최종 검사는 **만료만** 실시계로 본다. 프로세스 안에서 파일을 지우거나 바꾸는 폐기는 다음 파도부터 보인다(창 = 파도 시간 +
+  캐시 1 초). 핀 교체는 재시작이 필요하므로 이것이 프로세스 안 폐기의 유일한 길이다.
+- 핀이 공백이거나 compose 의 미정의 변수 보간이면 "미선언" 이고 기존 경로가 돈다. 스냅샷은 미선언 시장과 넷 다 ON 인
+  검증 시장을 구별하지 못한다(둘 다 `GatedCount=0`) — 8.8.4 의 이유 노출과 함께 다룰 것.
+- 가족 만료로 최종 검사가 거절하면 게이트웨이가 "strategy scheduler authority changed before transport" 로 감싼다
+  (`internal/execgw/gateway.go`, a066 로트 영역이라 손대지 않았다).
+- 세대 래칫(위 결정 62-3). 재시작을 넘어 "한 번 활성화된 시장은 계속 닫힘" (결정 62-1 대안 b, v34 필요).
+
+### Codex 재리뷰 (수정 뒤 두 번째 판) — HOLD → 수정
+
+- **P1 (타당).** 최종 검사 클로저가 가족 만료를 스케줄 재검증 **앞**에서 봤다. 재검증은 달력을 다시 읽는 I/O
+  (`strategy_schedule_authority.go` 의 collectMarket)라서 그 동안 만료가 지나가도 클로저가 nil 을 돌려줄 수 있었다. 순서를
+  뒤집었다: 재검증 → 가족 만료(클로저가 돌려주기 직전). 시험
+  `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder` 는 재검증이 시계를 만료 너머로 옮기게 하고
+  Expired 를 요구한다. 옛 순서는 변이 M24 로 잰다.
+- **P2 (타당).** 생산 조립의 `dispatchCycle.now = clk.Now` 는 nil 시계에서 메서드 값을 만드는 순간 panic 이다. 유일한 호출자가
+  nil 을 먼저 거절하지만 조립 함수 자체는 nil 을 막지 않았다. `if clk != nil` 로 감쌌다 — nil 이면 now 가 nil 로 남고 dispatch 가
+  검증된 가족 활성화를 거절한다(fail-closed).
+- **P3.** 시험 주석 하나가 고친 `installed()` 와 반대를 말했다 — 정정.
+- 확인된 것(Codex): 미선언 시장은 기존 경로 그대로, 시계 없음 + 검증된 활성화는 admission 앞 거절, 레인 없는 선언 시장은 닫힘,
+  새 P0 없음.
+
+### 사본 뮤테이션 (최종 판, 코드 확정 뒤)
+
+하네스 `analysis/harness/a872_mutate.py`(사본 `sandbox.<pid>`, `GOFLAGS=-trimpath`, 전용 `GOCACHE`, 태그 스위트 두 패키지,
+-trimpath 아래 자기 소스를 못 읽는 a111 시험 둘은 건너뜀). **무변이 대조군 exit 0 을 먼저** 확인했고, 끝에 저장소 대상 파일
+해시 불변 **True**. 결과 원본 `analysis/harness/a872_mutate.result.txt`. **29 / 29 CAUGHT.** 첫 번째 잡은 시험:
+
+| 변이 | 판정 | 처음 빨개진 시험 |
+|---|---|---|
+| M1 미선언 판정 삭제 | CAUGHT | `TestOnlyAnEmptyPinMeansTheActivationWasNeverDeclared` |
+| M2 미선언 판정을 ctx 검사 뒤로 | CAUGHT | `TestOnlyAnEmptyPinMeansTheActivationWasNeverDeclared` |
+| M3 LeaseCeiling 이 상한을 그대로 | CAUGHT | `TestTheLeaseCeilingOnlyEverShrinks` |
+| M4 LeaseCeiling 이 수명을 그대로 | CAUGHT | `TestTheLeaseCeilingOnlyEverShrinks` |
+| M5 미검증 활성화가 상한을 0 으로 | CAUGHT | `TestTheLeaseCeilingOnlyEverShrinks` |
+| M6 만료 경계를 1ns 뒤로 | CAUGHT | `TestTheLeaseCeilingOnlyEverShrinks` |
+| M7 적재가 만료를 따로 판정(동치 사본) | CAUGHT | `TestExpiryIsJudgedInExactlyOnePlace` |
+| M8 모든 적재 오류를 기존 경로로(편집 전 동작) | CAUGHT | `TestTheProductionActivationLoaderRunsAndFindsNoManifest` |
+| M9 되돌림 표식 빠짐 | CAUGHT | `TestTheProductionActivationLoaderRunsAndFindsNoManifest` |
+| M10 installed 가 되돌림을 안 봄 | CAUGHT | `TestTheProductionActivationLoaderRunsAndFindsNoManifest` |
+| M11 검증된 관문에 레인 조건 복원(8.7.1 모양) | CAUGHT | `TestTheRollbackPathOnlyReads` |
+| M11b 되돌림에도 레인 조건 | CAUGHT | `TestTheRollbackPathOnlyReads` |
+| M12 보정 조기 반환 복원 | CAUGHT | `TestAnUndeclaredMarketStaysUndeclaredWhateverItsCalibrationSays` |
+| M13 dispatch 가 상한을 안 씀 | CAUGHT | `TestTheOrderLeaseCannotOutliveTheFamilyActivation` |
+| M14 dispatch 가 만료 오류를 버림 | CAUGHT | `TestTheOrderLeaseCannotOutliveTheFamilyActivation` |
+| M15 admission 앞 검사가 벽시계를 넘김 | CAUGHT | `TestTheOrderLeaseCannotOutliveTheFamilyActivation` |
+| M16 dispatch 가 admission 뒤에서 판정 | CAUGHT | `TestTheOrderLeaseCannotOutliveTheFamilyActivation` |
+| M17 무오류·미검증을 기존 경로로 | CAUGHT | `TestAnUnverifiedActivationWithoutAnErrorStillRollsBack` |
+| M18 보정 결속의 형식 검사 삭제(조기 반환 제거 뒤 그 입력을 막는 문) | CAUGHT | `TestADeclaredMarketWhoseCalibrationDoesNotAgreeIsRolledBack` |
+| M19 최종 검사에서 가족 검사 제거 | CAUGHT | `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires` |
+| M20 최종 검사가 파도 시각을 넘김 | CAUGHT | `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires` |
+| M21 admission 앞 검사가 파도 시각을 넘김 | CAUGHT | `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission` |
+| M22 시계 없음 거절 삭제 | CAUGHT | `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission` |
+| M23 생산 조립이 시계를 안 넣음 | CAUGHT | `TestTheProductionAssemblyGivesTheDispatchCycleTheRealClock` |
+| M24 가족 검사를 스케줄 재검증 앞으로(Codex 재리뷰 P1 이전 모양) | CAUGHT | `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder` |
+| RB1 admission 앞 상한 30초→60초 | CAUGHT | `TestTheOrderLeaseCannotOutliveTheFamilyActivation` |
+| RB2 가족 활성화를 KR 로 고정 | CAUGHT | `TestTheOrderLeaseCannotOutliveTheFamilyActivation` |
+| RB3 취소된 주기를 기존 경로로 | CAUGHT | `TestADeclaredMarketWhoseCycleIsCancelledRollsBack` |
+| RB7 되돌림 경로가 레인 상태를 씀 | CAUGHT | `TestTheRollbackPathOnlyReads` |
+
+앞 판들: 1판 18/18 CAUGHT(코드가 그 뒤 바뀌어 대체), 2·3판은 코드가 다시 바뀌어 중간에 멈췄다(부분 결과는 전부 CAUGHT). 리뷰 B 가
+독립 하네스로 자기 변이 13 개(1판 생존 4 포함)를 현재 트리에서 돌려 13/13 CAUGHT.
+
+### 검증 (코드 확정 뒤)
+
+| 항목 | 결과 |
+|---|---|
+| engine·strategyrouter·strategyworker 태그 스위트 | ok (exit 0) |
+| engine·strategyrouter·strategyworker·cmd/tossctl 무태그 | ok (exit 0) |
+| δ 시험 넷 `-count=30` | 120 회 초록 |
+| `go vet` 두 태그 구성 · `gofmt -l` | 무출력 |
+| per-test 커버리지 | 엔진 509 · 라우터 71 시험, 모든 행 시험별 합 == 스위트 |
+| `check_analysis --change a112` (이 로트 번들만 걸러 봄) | 남은 줄은 새 시험 파일이 아직 추적되지 않아 생기는 "not a Go test in any tracked file" 뿐 — 커밋 뒤 재확인 |
+| 경합 목록 | 새 시험에 goroutine·sync·Parallel 0 — `RACE_ENGINE_FILES` 완전성 가드 대상 아님(리뷰 B 확인) |
+
+**생산 동작 변화 0 — 측정.** 운영 컨테이너 env 에 가족 핀 0 건, 설정 디렉터리에 매니페스트 0 건(착수 때 측정, 이름만 셈). 핀이
+없으면 적재기 첫 줄이 Undeclared → 영값 관문 → 기존 경로이고, `LeaseCeiling` 은 검증 안 된 값에서 상한 30 초를 그대로 돌려주며
+(`ttl = min(30s, 스케줄 잔여)` 편집 전과 같음), 최종 검사 추가분도 검증 안 된 값에서는 오류를 내지 않는다. `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`
+의 "실시계 없음 + 활성화 없음 → 주문 1" 행과 기준 TTL 30s 단언이 그 등식을 값으로 잰다. 파일 I/O 증가 0(미선언은 첫 줄에서 끝).
+
+### gstack /review (Pre-Landing, 이 로트 diff 만)
+
+범위 점검: 의도(8.7.2) 대비 편집 파일 전부 이 태스크 또는 리뷰가 연 수정 — 이탈 없음. 체크리스트 CRITICAL 범주 적용: SQL·셸·LLM 경계
+해당 없음; 동시성 — 최종 검사 클로저가 잡는 `family` 는 값 타입(불변), `cycle.now` 는 조립 때 한 번 쓰이고 이후 읽기만, 두 시장
+dispatch 는 읽기 공유; 열거 완전성 — 새 sentinel `ErrProductionFamilyActivationUndeclared` 의 소비자는 엔진 `familyGateFor` 하나이고
+다른 세 sentinel 을 가르는 소비자는 없다(grep). 정보성 하나: dispatch 에 `30*time.Second` 리터럴이 두 번(admission 앞·최종 검사)
+나온다 — 최종 검사 쪽은 오류만 쓰므로 값이 갈려도 행동이 안 바뀐다. 그대로 둔다. P0/P1 0.
+
+### 리뷰 최종 판정
+
+Codex(실제 CLI, gpt-6-astra, read-only) 3판 **APPROVE** · A **APPROVE**(현재 트리) · B 재검 **APPROVE**(현재 트리 해시 고정, 자기
+변이 13/13 CAUGHT) · C 재검 **APPROVE**(P0 철회를 stat 으로 독립 확인, `-count=30`·`-race` 재실행). P0/P1 남은 것 0. 남은 P2 는
+위 "이름만 붙여 남긴 것" 목록 그대로다. **통과 이유가 바뀐 시험**: 핀을 두지 않는 엔진 시험들이 편집 전엔 적재기 형식 검사(B3)로,
+편집 뒤엔 미선언(B1)으로 영값 관문을 받는다(엔진 스위트 B1 41 회) — 결과는 같고 되돌림 판별이 정확히 그 이유에 기댄다. 번들
+`internal-strategyrouter--loadproductionfamilyactivation` 에 적었다.

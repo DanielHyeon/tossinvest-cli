@@ -54,28 +54,28 @@ goroutine 이 **하나**이고, 사이클은 `<-worker.queue` 를 다시 읽기 
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `ctx.Done` | 856:9 | 배리어 전 취소 |
-| `ctx.Done` | 862:10 | 루프마다 취소 확인 |
-| `s.mu.RLock` | 866:4 | `refreshOnly` 를 읽기 위한 공유 잠금 |
-| `s.mu.RUnlock` | 868:4 | 같은 잠금 해제 |
-| `s.evaluationState` | 869:24 | 이 사이클을 돌려도 되는지 + 권한 만료 여부 |
-| `s.latchMarket` | 871:30 | 권한 만료로 시장 진입 잠금 |
-| `s.signalCentral` | 873:6 | 잠금 자체가 실패하면 중앙 고장 |
-| `s.waitMarketRestart` | 876:15 | backoff 만큼 대기 |
-| `ctx.Err` | 877:9 | 그 대기 실패가 취소 때문인지 |
-| `s.signalCentral` | 880:6 | 아니면 중앙 고장 |
-| `invokeBoundedStrategyCycle` | 888:43 | **마감 시한 아래 사이클 한 번.** 이 함수의 유일한 호출자다(CodeGraph) |
-| `s.markAbandoned` | 890:5 | 마감 시한을 넘긴 사이클을 버려진 것으로 표시 |
-| `s.recordSwallowedCycleError` | 909:5 | **버리기 전에 센다** (8.8.4). `continue` 도 갈래 순서도 바꾸지 않는다 — 더한 것은 기록뿐이다 |
-| `isCentralStrategyIntegrity` | 912:7 | 원장·게이트웨이·펜스·소유자 무결성 오류인지 |
-| `s.signalCentral` | 913:5 | 그러면 모든 신규 진입을 멈춘다 |
-| `s.latchMarket` | 916:29 | 보통 오류로 시장 진입 잠금 |
-| `s.signalCentral` | 918:5 | 잠금 자체가 실패하면 중앙 고장 |
-| `s.waitMarketRestart` | 921:14 | backoff 만큼 대기 |
-| `ctx.Err` | 922:8 | 그 대기 실패가 취소 때문인지 |
-| `s.signalCentral` | 925:5 | 아니면 중앙 고장 |
+| `ctx.Done` | 863:9 | 배리어 전 취소 |
+| `ctx.Done` | 869:10 | 루프마다 취소 확인 |
+| `s.mu.RLock` | 873:4 | `refreshOnly` 를 읽기 위한 공유 잠금 |
+| `s.mu.RUnlock` | 875:4 | 같은 잠금 해제 |
+| `s.evaluationState` | 876:24 | 이 사이클을 돌려도 되는지 + 권한 만료 여부 |
+| `s.latchMarket` | 878:30 | 권한 만료로 시장 진입 잠금 |
+| `s.signalCentral` | 880:6 | 잠금 자체가 실패하면 중앙 고장 |
+| `s.waitMarketRestart` | 883:15 | backoff 만큼 대기 |
+| `ctx.Err` | 884:9 | 그 대기 실패가 취소 때문인지 |
+| `s.signalCentral` | 887:6 | 아니면 중앙 고장 |
+| `invokeBoundedStrategyCycle` | 895:43 | **마감 시한 아래 사이클 한 번.** 이 함수의 유일한 호출자다(CodeGraph) |
+| `s.markAbandoned` | 897:5 | 마감 시한을 넘긴 사이클을 버려진 것으로 표시 |
+| `s.recordSwallowedCycleError` | 916:5 | **버리기 전에 센다** (8.8.4). `continue` 도 갈래 순서도 바꾸지 않는다 — 더한 것은 기록뿐이다 |
+| `isCentralStrategyIntegrity` | 919:7 | 원장·게이트웨이·펜스·소유자 무결성 오류인지 |
+| `s.signalCentral` | 920:5 | 그러면 모든 신규 진입을 멈춘다 |
+| `s.latchMarket` | 923:29 | 보통 오류로 시장 진입 잠금 |
+| `s.signalCentral` | 925:5 | 잠금 자체가 실패하면 중앙 고장 |
+| `s.waitMarketRestart` | 928:14 | backoff 만큼 대기 |
+| `ctx.Err` | 929:8 | 그 대기 실패가 취소 때문인지 |
+| `s.signalCentral` | 932:5 | 아니면 중앙 고장 |
 
-Exact AST return positions: 857:3, 863:4, 874:6, 878:7, 881:6, 893:5, 914:5, 919:5, 923:6, 926:5.
+Exact AST return positions: 864:3, 870:4, 881:6, 885:7, 888:6, 900:5, 921:5, 926:5, 930:6, 933:5.
 
 
 ## State mutations and fallbacks

@@ -1,13 +1,13 @@
 # Function Logic Map: `newStrategyDispatchCycle`
 
-- Source: `internal/app/engine/strategy_dispatch_cycle.go` (48-57)
+- Source: `internal/app/engine/strategy_dispatch_cycle.go` (54-63)
 - Function: `newStrategyDispatchCycle` in package `engine`
 - File SHA-256: `c872acdb342ec44f87ab70114e36c7dafd042c90ac0b0c5dcd3668288101a625`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 1.
 - Risk scan: `risk-pattern-report.md`.
 
-Exact AST return nodes: `55:2`.
+Exact AST return nodes: `61:2`.
 
 ## Inputs and invariants
 
@@ -31,7 +31,7 @@ Exact AST return nodes: `55:2`.
 
 | Branch | AST kind | Source location | Required test disposition |
 |---|---|---|---|
-| B1 | if | 52:2 | `owner` 가 nil 인 경우의 유일한 기본값 처리. 생산은 언제나 owner 를 준다 |
+| B1 | if | 58:2 | `owner` 가 nil 인 경우의 유일한 기본값 처리. 생산은 언제나 owner 를 준다 |
 
 ## Calls and live bindings
 

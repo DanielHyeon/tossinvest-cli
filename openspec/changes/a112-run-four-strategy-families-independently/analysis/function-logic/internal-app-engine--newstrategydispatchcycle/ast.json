@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/strategy_dispatch_cycle.go",
-  "source_sha256": "12f578d46efe7d948095f1c7d62b89a3b91cad09d7e2270b291d537ac1121ea6",
+  "source_sha256": "9610abb34ee350fa3f19ad06cb41d279ebe3c19df44f0a60336dd83276c6c289",
   "package": "engine",
   "function": "newStrategyDispatchCycle",
   "signature": "newStrategyDispatchCycle(params=8, results=1)",
   "start": {
-    "line": 48,
+    "line": 54,
     "column": 1
   },
   "end": {
-    "line": 57,
+    "line": 63,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 52,
+        "line": 58,
         "column": 2
       }
     }
@@ -26,7 +26,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 55,
+        "line": 61,
         "column": 2
       }
     }
@@ -36,7 +36,7 @@
     {
       "kind": "=",
       "at": {
-        "line": 53,
+        "line": 59,
         "column": 3
       }
     }

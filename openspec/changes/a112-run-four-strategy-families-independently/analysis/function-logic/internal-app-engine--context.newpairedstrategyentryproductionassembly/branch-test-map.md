@@ -1,24 +1,23 @@
 # Branch Test Map: `NewPairedStrategyEntryProductionAssembly`
 
-- Source SHA-256: `627c647d087032586c4b63ca315a30fd9fad6b51af329fa4e8bf4fecd7104e08`; AST branch locations are authoritative.
-- L5 5.3.3 이 이 함수에서 바꾼 것은 반환 리터럴 한 줄이다(assembly 가 서명된 일정
-  **권위**를 함께 싣는다). **분기는 하나도 바뀌지 않았고 개수도 그대로 7 이다** —
-  아래 좌표는 그 한 줄이 만든 이동만 반영한다.
-- 그 한 줄이 하는 일을 재는 것은 이 함수의 분기가 아니라
-  `TestTheRecoveryGenerationComesFromTheVerifiedActivationAndNothingElse`(복구 세대를
-  읽는 식의 패키지 전체 열거)와 `TestALatchOnlyReopensForAStrictlyNewerVerifiedActivation`
-  (그 값으로 실제로 잠금이 열리고 닫히는지)이다.
-- 그 밖에는 L0 와 같다: 이 함수의 분기를 실행하는 시험은 없다.
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (283-370); file SHA-256 `9d97e59cf36590ade76b3e4804134b9ee66b3af1f8efa409e2f41222d5579b4f`. AST branch positions are authoritative.
 
-| Branch | Scenario anchor | Required test disposition | RED observed | GREEN observed |
-|---|---|---|---|---|
-| B1 | if at 284:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B2 | if at 290:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B3 | if at 301:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B4 | if at 311:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B5 | if at 330:3 | planned targeted RED before any edit; not run by L0 | no | no |
-| B6 | range at 347:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B7 | if at 352:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B8 | if at 359:2 | planned targeted RED before any edit; not run by L0 | no | no |
+- Measurement regime (8.7.2 편집 뒤): 몸통 진입 count. engine tagged suite 바이너리(`-coverpkg=./internal/app/engine,./internal/strategyrouter`, -trimpath 없이)를 `systemd-run … MemoryMax=16G` 안에서 실행, 스위트 PASS; 전체 시험 509 개를 하나씩 돈 per-test 프로파일(하네스 `analysis/harness/a872_pertest_cover.sh` · `a872_attribute.py`). 모든 행에서 시험별 합 == 스위트(ATTRIBUTION MISMATCH 0).
 
-A lot may replace a planned row only after recording its exact test name and actual RED/GREEN command result.
+| Branch | AST kind | Position | Measured disposition |
+|---|---|---|---|
+| B1 | if | 284:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
+| B2 | if | 290:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
+| B3 | if | 301:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
+| B4 | if | 311:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
+| B5 | if | 332:2 | arm entered 1x (engine tagged suite, post-edit); `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
+| B6 | if | 337:3 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
+| B7 | range | 354:2 | arm entered 2x (engine tagged suite, post-edit); `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
+| B8 | if | 359:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
+| B9 | if | 366:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
+
+8.7.2 가 더한 것: `if clk != nil { dispatchCycle.now = clk.Now }` 한 분기(Codex 재리뷰 P2 — nil 인터페이스의 메서드 값은 그 자리에서 panic). 그 뒤 분기들은 한 칸씩 밀렸다. 대입 한 줄은 `TestTheProductionAssemblyGivesTheDispatchCycleTheRealClock` 이 구조로 못 박는다(조립 전체를 행동으로 세우려면 원장·게이트웨이·권한 여덟이 필요하다) — 변이 M23 CAUGHT.
+
+옛 표(8.8.2 까지의 조건-평가 regime 과 편집 전 좌표)는 이 번들의 git 이력에 있다 — 이 파일은 현재 소스만 적는다.
+
+A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.

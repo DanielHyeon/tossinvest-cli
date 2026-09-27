@@ -365,7 +365,30 @@
 
   **이 태스크가 주장하지 않는 것.** 서명된 매니페스트를 실제로 만들어 배포하는 절차는 여기 없다. 생산에는 그 파일이 하나도 없고(측정: `find ~/.config/tossctl -maxdepth 2 -name 'strategy*'` → 0 건), 그래서 오늘 생산 동작 변화는 0 이다. 활성화가 없거나 만료·폐기됐을 때의 운영 rollback 자세는 8.7.2 다.
 
-- [ ] 8.7.2 Rollback entry workers to OFF when that activation is missing, expired or revoked, while retaining shared safety and lineage state.
+- [x] 8.7.2 Rollback entry workers to OFF when that activation is missing, expired or revoked, while retaining shared safety and lineage state. **(Landed 2026-09-27, [a112 결정 62].)**
+
+  **닫은 구멍.** 8.7.1 의 관문은 로드 오류를 종류 없이 "관문 없음" 으로 접었고, 관문이 없으면 기존 시장 단위 경로가
+  돌았다. 그래서 사람이 매니페스트에서 끈 가족이 활성화가 만료·폐기되는 순간 기존 경로로 **되살아났다** — RED 가
+  네 행(만료·폐기·파일 없음·핀 뒤 바뀐 바이트)에서 그 넓힘을 값으로 보였다.
+
+  **판별자 = 배포 핀의 존재 (결정 62).** 빈 핀 → `ErrProductionFamilyActivationUndeclared` → 기존 경로(= 오늘 생산, 핀 0 건
+  측정 → 생산 동작 변화 0). 핀이 있으면 무엇이 틀렸든 관문이 `rolledBack` 으로 서고, 네 레인은 영값 활성화로 DORMANT(잠긴
+  레인은 LATCHED)를 내고, 범위가 전부 지워져 그 시장은 `FAMILY_GATE_CLOSED` — **신규 진입만** 닫힌다. 판별 규칙은
+  strategyrouter 한 곳(적재기 첫 줄), 만료 판정도 한 곳(`familyActivationRemaining`).
+
+  **lease 와 최종 검사.** 주문 lease TTL 은 가족 활성화의 남은 수명으로 min 결합만 된다(`FamilyActivation.LeaseCeiling`,
+  q_final admission 앞). Codex·적대 리뷰가 연 P1 뒤 dispatch 주기가 실시계(`now`, 생산 조립이 `clk.Now`)를 갖고, 게이트웨이가
+  브로커 바이트 전에 부르는 최종 검사가 가족 만료를 다시 본다. 불변식은 이 형태다: lease 행은 명목상 만료를 최대 δ(파도→발급)
+  넘을 수 있으나 SUBMITTING 은 만료 뒤 최종 검사를 통과할 수 없다. 시계가 없는데 가족 활성화가 검증돼 있으면 거절한다 —
+  생산에서 그 조합에 닿는 조립은 0(측정).
+
+  **보존.** 되돌림 경로(`installed`·`admit`·`familyGateFor`·`loadFamilyActivation`)의 모든 호출은 허용 목록 census 가 읽기로
+  못 박는다. 잠긴 레인은 되돌림 동안·그 뒤에도 잠긴 채다. lease·`PlaceClaimedStrategy`·가족 활성화 참조는 손절·청산·대사·
+  체결 감지·보호 9 패키지에서 0 이다.
+
+  **이 태스크가 주장하지 않는 것.** 재시작을 넘는 세대 래칫(원장 기록 필요, 선례 5.3.3), 한 번 활성화된 시장을 재시작 넘어
+  계속 닫는 것(v34 필요), 프로세스 안 파일 폐기의 최종 검사 반영(다음 파도부터), 미선언/검증을 화면에서 가르는 것(8.8.4 인접).
+  상세·측정·리뷰 네 보이스·뒤집은 기존 시험 둘은 review.md 의 2026-09-27 절.
 
 ## 8.8 8.5 독립 적대 리뷰가 연 수정 (2026-09-04, 결정 60)
 

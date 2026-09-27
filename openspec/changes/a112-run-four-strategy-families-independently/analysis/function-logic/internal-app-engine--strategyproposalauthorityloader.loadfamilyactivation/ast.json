@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_family_activation.go",
-  "source_sha256": "4a1ac0a98c8a7c598c5850a3c006e81821c56bb9e11aad113d9b943b4ec59022",
+  "source_sha256": "230cc4c84bc3ff2bec2b98caaed10cdec7fd18e46181e3ce995899bbb0ee3492",
   "package": "engine",
   "function": "loadFamilyActivation",
   "receiver": "strategyProposalAuthorityLoader",
   "signature": "strategyProposalAuthorityLoader.loadFamilyActivation(params=5, results=2)",
   "start": {
-    "line": 124,
+    "line": 154,
     "column": 1
   },
   "end": {
-    "line": 156,
+    "line": 190,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 128,
+        "line": 158,
         "column": 2
       }
     },
@@ -26,15 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 132,
-        "column": 2
-      }
-    },
-    {
-      "id": "B3",
-      "kind": "if",
-      "at": {
-        "line": 146,
+        "line": 180,
         "column": 2
       }
     }
@@ -43,14 +35,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 133,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 149,
+        "line": 183,
         "column": 2
       }
     }
@@ -59,15 +44,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 131,
-        "column": 25
+        "line": 168,
+        "column": 20
       },
       "text": "strategyMarketCalibrationDigest"
     },
     {
       "kind": "call",
       "at": {
-        "line": 149,
+        "line": 183,
         "column": 9
       },
       "text": "strategyrouter.LoadProductionFamilyActivation"
@@ -75,7 +60,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 150,
+        "line": 184,
         "column": 40
       },
       "text": "strategyRouterMarket"
@@ -83,7 +68,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 151,
+        "line": 185,
         "column": 19
       },
       "text": "strings.TrimSpace"
@@ -91,7 +76,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 151,
+        "line": 185,
         "column": 37
       },
       "text": "loader.getenv"
@@ -99,7 +84,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 153,
+        "line": 187,
         "column": 60
       },
       "text": "strategyRuntimeBuildDigest"
@@ -107,7 +92,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 154,
+        "line": 188,
         "column": 21
       },
       "text": "strings.TrimSpace"
@@ -115,7 +100,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 154,
+        "line": 188,
         "column": 39
       },
       "text": "loader.getenv"
@@ -125,35 +110,35 @@
     {
       "kind": ":=",
       "at": {
-        "line": 127,
+        "line": 157,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 129,
+        "line": 159,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 131,
+        "line": 168,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 145,
+        "line": 179,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 147,
+        "line": 181,
         "column": 3
       }
     }

@@ -38,16 +38,16 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (`1035:2`) | 실패 문구가 빈 문자열 | 지역 `reason` 만 | — | `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive`(음의 갈래) |
-| B2 (`1039:2`) | `abnormal` | 지역 `refusal` 만 | — | `TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive` |
-| B3 (`1042:2`) | 실패가 `ErrStrategyAuthorityExpired` | 지역 `refusal` 만 | — | `TestExpiredAuthorityLatchesBeforeEvaluation` |
-| B4 (`1046:2`) | 관측 시각이 0 | **없음 — 잠금 전에 반환한다** | `errors.New("strategy fault observation time is unavailable")` (`965:3`) | `TestTheFourEscalationsThatStopTheEngine…`/"관측 시각이 없으면…" |
-| B5 (`1050:2`) | `worker.latchRevision == math.MaxUint64` | 잠금 mutex 를 풀고 **아무것도 바꾸지 않는다** | `errors.New("strategy latch revision exhausted")` (`970:3`) | 같은 시험의 "latch revision 이 소진되면…"·"권한 만료의 잠금도…" |
-| B6 (`1056:2`) | 첫 refusal 이 비어 있음 | `worker.firstRefusal` | — | `TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal` |
-| B7 (`1059:2`) | 첫 실패 문구가 비어 있음 | `firstFailure`·`firstAbnormal`·`latchID`·`latchRevision++` | — | 같은 시험 |
-| B8 (`1065:2`) | 재시작 시도 수가 상한 미만 | `restartAttempt++` | — | 같은 시험(포화 갈래 포함) |
-| B9-a (`1079:2`) | fault 를 스트림에 건넴 | 없음 | `fault.RestartNotBefore, nil` (`999:3`) | `TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining` |
-| B9-b (`1000:2`) | 스트림 포화 | 없음 — **잠금은 이미 일어났다** | `errors.New("strategy fault handoff saturated …")` (`1052:3`) | **없음 — 오늘은 도달 불가(아래)** |
+| B1 (`1042:2`) | 실패 문구가 빈 문자열 | 지역 `reason` 만 | — | `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive`(음의 갈래) |
+| B2 (`1046:2`) | `abnormal` | 지역 `refusal` 만 | — | `TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive` |
+| B3 (`1049:2`) | 실패가 `ErrStrategyAuthorityExpired` | 지역 `refusal` 만 | — | `TestExpiredAuthorityLatchesBeforeEvaluation` |
+| B4 (`1053:2`) | 관측 시각이 0 | **없음 — 잠금 전에 반환한다** | `errors.New("strategy fault observation time is unavailable")` (`965:3`) | `TestTheFourEscalationsThatStopTheEngine…`/"관측 시각이 없으면…" |
+| B5 (`1057:2`) | `worker.latchRevision == math.MaxUint64` | 잠금 mutex 를 풀고 **아무것도 바꾸지 않는다** | `errors.New("strategy latch revision exhausted")` (`970:3`) | 같은 시험의 "latch revision 이 소진되면…"·"권한 만료의 잠금도…" |
+| B6 (`1063:2`) | 첫 refusal 이 비어 있음 | `worker.firstRefusal` | — | `TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal` |
+| B7 (`1066:2`) | 첫 실패 문구가 비어 있음 | `firstFailure`·`firstAbnormal`·`latchID`·`latchRevision++` | — | 같은 시험 |
+| B8 (`1072:2`) | 재시작 시도 수가 상한 미만 | `restartAttempt++` | — | 같은 시험(포화 갈래 포함) |
+| B9-a (`1086:2`) | fault 를 스트림에 건넴 | 없음 | `fault.RestartNotBefore, nil` (`999:3`) | `TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining` |
+| B9-b (`1000:2`) | 스트림 포화 | 없음 — **잠금은 이미 일어났다** | `errors.New("strategy fault handoff saturated …")` (`1059:3`) | **없음 — 오늘은 도달 불가(아래)** |
 
 ## Calls and live bindings
 
@@ -55,23 +55,23 @@
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `strings.TrimSpace` | 1034:12 | 실패 문구 정규화 |
-| `failure.Error` | 1034:30 | 잠금 이유의 원문 |
-| `errors.Is` | 1042:5 | 권한 만료를 별도 refusal 로 분류 |
-| `s.clk.Now` | 1045:16 | **관측 시각.** 주입 시계이지 `time.Now` 가 아니다 |
-| `observedAt.IsZero` | 1046:5 | B4 — 시각 없이 잠금을 기록하지 않는다 |
-| `errors.New` | 1047:23 | B4 의 오류 |
-| `s.mu.Lock` | 1049:2 | 상태 변경 구간 시작 |
-| `s.mu.Unlock` | 1051:3 | B5 의 조기 반환이 잠금을 푼다 |
-| `errors.New` | 1052:23 | B5 의 오류 |
-| `fmt.Sprintf` | 1062:20 | `latchID` — market·generation·revision+1 |
-| `strategyRestartBackoff` | 1068:18 | 5s 계단, 30s 상한 |
-| `strategyRestartNotBefore` | 1069:28 | 절대 기한. 9999 년으로 포화 |
-| `observedAt.UTC` | 1075:119 | fault 의 관측 시각 |
-| `s.mu.Unlock` | 1078:2 | 상태 변경 구간 끝 |
-| `errors.New` | 1083:23 | B9-b 의 오류 |
+| `strings.TrimSpace` | 1041:12 | 실패 문구 정규화 |
+| `failure.Error` | 1041:30 | 잠금 이유의 원문 |
+| `errors.Is` | 1049:5 | 권한 만료를 별도 refusal 로 분류 |
+| `s.clk.Now` | 1052:16 | **관측 시각.** 주입 시계이지 `time.Now` 가 아니다 |
+| `observedAt.IsZero` | 1053:5 | B4 — 시각 없이 잠금을 기록하지 않는다 |
+| `errors.New` | 1054:23 | B4 의 오류 |
+| `s.mu.Lock` | 1056:2 | 상태 변경 구간 시작 |
+| `s.mu.Unlock` | 1058:3 | B5 의 조기 반환이 잠금을 푼다 |
+| `errors.New` | 1059:23 | B5 의 오류 |
+| `fmt.Sprintf` | 1069:20 | `latchID` — market·generation·revision+1 |
+| `strategyRestartBackoff` | 1075:18 | 5s 계단, 30s 상한 |
+| `strategyRestartNotBefore` | 1076:28 | 절대 기한. 9999 년으로 포화 |
+| `observedAt.UTC` | 1082:119 | fault 의 관측 시각 |
+| `s.mu.Unlock` | 1085:2 | 상태 변경 구간 끝 |
+| `errors.New` | 1090:23 | B9-b 의 오류 |
 
-Exact AST return positions: 1047:3, 1052:3, 1081:3, 1083:3.
+Exact AST return positions: 1054:3, 1059:3, 1088:3, 1090:3.
 
 ## State mutations and fallbacks
 

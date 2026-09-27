@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_family_activation.go",
-  "source_sha256": "4a1ac0a98c8a7c598c5850a3c006e81821c56bb9e11aad113d9b943b4ec59022",
+  "source_sha256": "230cc4c84bc3ff2bec2b98caaed10cdec7fd18e46181e3ce995899bbb0ee3492",
   "package": "engine",
   "function": "familyGateFor",
   "receiver": "strategyProposalAuthorityLoader",
   "signature": "strategyProposalAuthorityLoader.familyGateFor(params=5, results=1)",
   "start": {
-    "line": 93,
+    "line": 115,
     "column": 1
   },
   "end": {
-    "line": 112,
+    "line": 142,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 96,
+        "line": 118,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 104,
+        "line": 125,
         "column": 2
       }
     },
@@ -34,7 +34,15 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 108,
+        "line": 132,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 138,
         "column": 2
       }
     }
@@ -43,21 +51,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 97,
+        "line": 119,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 109,
+        "line": 133,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 111,
+        "line": 139,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 141,
         "column": 2
       }
     }
@@ -66,7 +81,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 107,
+        "line": 128,
         "column": 21
       },
       "text": "load"
@@ -74,39 +89,54 @@
     {
       "kind": "call",
       "at": {
-        "line": 108,
-        "column": 20
+        "line": 132,
+        "column": 5
       },
-      "text": "activation.Verified"
+      "text": "errors.Is"
     },
     {
       "kind": "call",
       "at": {
-        "line": 111,
-        "column": 59
+        "line": 135,
+        "column": 11
       },
       "text": "loader.lanes.lanesFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 20
+      },
+      "text": "activation.Verified"
     }
   ],
   "assignments": [
     {
       "kind": ":=",
       "at": {
-        "line": 103,
+        "line": 124,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 105,
+        "line": 126,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 107,
+        "line": 128,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 135,
         "column": 2
       }
     }

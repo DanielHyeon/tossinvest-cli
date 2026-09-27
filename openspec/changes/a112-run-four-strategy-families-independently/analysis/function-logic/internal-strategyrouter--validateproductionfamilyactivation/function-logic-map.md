@@ -1,54 +1,73 @@
 # Function Logic Map: `validateProductionFamilyActivation`
 
-- Source: `internal/strategyrouter/production_family_activation.go` (471-532)
+- Source: `internal/strategyrouter/production_family_activation.go` (522-584)
 - Function: `validateProductionFamilyActivation` in package `strategyrouter`
-- File SHA-256: `411d612f7444c31744585b53c6128ccb71d0406a3e708efe9b7aee6232ca67d7`
-- Pinned revision: `HEAD` (c1d1e295) — 편집 **전** 커밋된 파일의 AST 다. 같은 로트의 다른 함수 편집이 워크트리에 먼저 올라 좌표가 밀렸으므로, 이 함수의 편집 전 증거는 HEAD blob 에서 떴다. GREEN 뒤 `current` 로 다시 만든다.
+- File SHA-256: `c8e2efb9b1a8243bcec000f0c2fa9e96bd8576c97aa35a694a1e6c053407288f`
+- Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file (post-edit).
 - AST evidence: `ast.json` — AST branches 8.
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
-**편집 전 기록 (태스크 8.7.2, 2026-09-27).** 입력: 복호한 몸통, 적재 config(시장·다섯 결속·관측 시각). 결속·수명·서술자
-집합을 본다. 만료 판정은 B3(492:2) `!now.Before(expires)` → `ErrProductionFamilyActivationExpired` 한 줄이다.
+**편집 뒤 (태스크 8.7.2, 2026-09-27).** 편집 전 번들은 커밋 `c1d1e295`(validate 는 `cb378a63`) 에 있다 — 이 파일은 GREEN 뒤 현재 소스의 AST 와 측정이다.
+
+편집: 만료 판정(B3)을 `familyActivationRemaining(expires, now)` 호출로 바꿨다 — 같은 함수를 `FamilyActivation.LeaseCeiling`
+이 쓰므로 패키지의 만료 규칙이 한 곳이다. 경계 의미(만료 시각에 닿은 순간부터 만료)는 그대로.
 
 ## Branches and early returns
 
-- Measurement regime: 몸통 진입 count (하네스 `analysis/harness/a872_attribute.py`), strategyrouter 태그 스위트 전체 시험 67 개 per-test. 시험별 합 == 스위트(MISMATCH 0). 엔진 스위트에서는 여덟 분기 모두 진입 0 이다(엔진 시험은 매니페스트를 쓰지 않았다).
+- Measurement regime: Go coverage profiles, count mode. arm = 분기 좌표 **뒤에서 처음 시작하는** 커버리지 블록(`if`/`range` 몸통)이며, "arm entered Nx" 는 그 몸통이 N 번 실행됐다는 뜻이다.
+- engine tagged suite (and the strategyrouter tagged suite for the two router bundles, same flags): `go test -c -tags tossos_testseams -covermode=count -coverpkg=./internal/app/engine,./internal/strategyrouter ./internal/app/engine/` 바이너리를 `systemd-run --user --scope -p MemoryMax=16G -p MemorySwapMax=0` 안에서 실행(-trimpath 없이 — 소스를 읽는 시험 둘이 깨진다). 스위트 전체 PASS.
+- Per-test attribution set: 같은 바이너리의 **전체 시험 목록**을 `-test.run '^<Test>$'` 로 하나씩 돈 프로파일(하네스 `analysis/harness/a872_pertest_cover.sh`, 표 생성 `analysis/harness/a872_attribute.py`).
+- **귀속 완전성은 등식이다**: 모든 행에서 시험별 진입 수의 합 == 스위트 진입 수. 깨진 행은 `ATTRIBUTION MISMATCH` 로 찍히며 아래에는 하나도 없다.
+- 이 regime 은 **몸통 진입**을 센다. 같은 change 의 옛 번들 일부(예: dispatch 의 5.x 표)는 조건 평가를 센 값이라 수가 다르다 — 섞어 읽지 말 것.
+
+Exact AST return positions: 533:3, 541:3, 545:3, 567:4, 572:4, 576:4, 581:3, 583:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 474:2 | arm entered 12x (strategyrouter tagged suite, pre-edit); `TestAnActivationWhoseBindingsDoNotMatchPromotesNothing`, `TestTheOtherMarketsWholeManifestInThisMarketsFilePromotesNothing` |
-| B2 | if | 488:2 | arm entered 4x (strategyrouter tagged suite, pre-edit); `TestAnActivationOutsideItsApprovedLifetimePromotesNothing` |
-| B3 | if | 492:2 | arm entered 1x (strategyrouter tagged suite, pre-edit); `TestAnActivationOutsideItsApprovedLifetimePromotesNothing` |
-| B4 | range | 510:2 | arm entered 41x (strategyrouter tagged suite, pre-edit); `TestAVerifiedActivationCarriesTheProtectionFloorTheOrderPathMustBind`, `TestAVerifiedFourFamilyActivationPromotesExactlyTheLanesItNames`, `TestAnActivationPromotesOnlyTheFamiliesItTurnsOn`, `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing`, `TestTheCommittedGoldenManifestMatchesItsPinAndPromotesTheFourLanes` |
-| B5 | if | 512:3 | arm entered 5x (strategyrouter tagged suite, pre-edit); `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing` |
-| B6 | if | 519:3 | arm entered 1x (strategyrouter tagged suite, pre-edit); `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing` |
-| B7 | if | 523:3 | arm entered 2x (strategyrouter tagged suite, pre-edit); `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing` |
-| B8 | if | 528:2 | arm entered 1x (strategyrouter tagged suite, pre-edit); `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing` |
+| B1 | if | 525:2 | arm entered 12x (strategyrouter tagged suite, post-edit); `TestAnActivationWhoseBindingsDoNotMatchPromotesNothing`, `TestTheOtherMarketsWholeManifestInThisMarketsFilePromotesNothing` |
+| B2 | if | 539:2 | arm entered 4x (strategyrouter tagged suite, post-edit); `TestAnActivationOutsideItsApprovedLifetimePromotesNothing` |
+| B3 | if | 544:2 | arm entered 4x (strategyrouter tagged suite, post-edit); `TestAnActivationOutsideItsApprovedLifetimePromotesNothing`, `TestLoadingAndLeasingJudgeExpiryAtTheSameInstant`, `TestOnlyAnEmptyPinMeansTheActivationWasNeverDeclared` |
+| B4 | range | 562:2 | arm entered 53x (strategyrouter tagged suite, post-edit); `TestAVerifiedActivationCarriesTheProtectionFloorTheOrderPathMustBind`, `TestAVerifiedFourFamilyActivationPromotesExactlyTheLanesItNames`, `TestAnActivationPromotesOnlyTheFamiliesItTurnsOn`, `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing`, `TestLoadingAndLeasingJudgeExpiryAtTheSameInstant`, `TestTheCommittedGoldenManifestMatchesItsPinAndPromotesTheFourLanes`, `TestTheLeaseCeilingOnlyEverShrinks` |
+| B5 | if | 564:3 | arm entered 5x (strategyrouter tagged suite, post-edit); `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing` |
+| B6 | if | 571:3 | arm entered 1x (strategyrouter tagged suite, post-edit); `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing` |
+| B7 | if | 575:3 | arm entered 2x (strategyrouter tagged suite, post-edit); `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing` |
+| B8 | if | 580:2 | arm entered 1x (strategyrouter tagged suite, post-edit); `TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing` |
+
+엔진 스위트에서의 진입(전체 509 개 per-test):
+
+- 엔진 B1: arm not entered (engine tagged suite, post-edit); no per-test profile entered it
+- 엔진 B2: arm not entered (engine tagged suite, post-edit); no per-test profile entered it
+- 엔진 B3: arm entered 2x (engine tagged suite, post-edit); `TestADeclaredActivationThatLapsesRollsItsMarketBackInsteadOfWidening`
+- 엔진 B4: arm entered 8x (engine tagged suite, post-edit); `TestADeclaredActivationThatLapsesRollsItsMarketBackInsteadOfWidening`
+- 엔진 B5: arm not entered (engine tagged suite, post-edit); no per-test profile entered it
+- 엔진 B6: arm not entered (engine tagged suite, post-edit); no per-test profile entered it
+- 엔진 B7: arm not entered (engine tagged suite, post-edit); no per-test profile entered it
+- 엔진 B8: arm not entered (engine tagged suite, post-edit); no per-test profile entered it
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `validMarket` | 475:60 |
-| `productionRouteIdentity` | 481:4 |
-| `productionRouteTime` | 484:26 |
-| `productionRouteTime` | 485:22 |
-| `productionRouteTime` | 486:24 |
-| `config.ObservedAt.UTC` | 487:9 |
-| `issued.Before` | 488:47 |
-| `issued.After` | 488:74 |
-| `issued.Before` | 489:4 |
-| `expires.Sub` | 489:30 |
-| `now.Before` | 492:6 |
-| `productionRouteDescriptors` | 501:10 |
-| `make` | 509:11 |
-| `len` | 509:72 |
-| `validDesiredState` | 514:5 |
-| `validDesiredState` | 514:47 |
-| `len` | 528:5 |
-| `len` | 528:19 |
+| `validMarket` | 526:60 |
+| `productionRouteIdentity` | 532:4 |
+| `productionRouteTime` | 535:26 |
+| `productionRouteTime` | 536:22 |
+| `productionRouteTime` | 537:24 |
+| `config.ObservedAt.UTC` | 538:9 |
+| `issued.Before` | 539:47 |
+| `issued.After` | 539:74 |
+| `issued.Before` | 540:4 |
+| `expires.Sub` | 540:30 |
+| `familyActivationRemaining` | 544:15 |
+| `productionRouteDescriptors` | 553:10 |
+| `make` | 561:11 |
+| `len` | 561:72 |
+| `validDesiredState` | 566:5 |
+| `validDesiredState` | 566:47 |
+| `len` | 580:5 |
+| `len` | 580:19 |
 
 ## State mutations and fallbacks
 
@@ -56,7 +75,6 @@
 
 ## Safety conclusion
 
-- **편집 계획:** B3 의 조건을 `familyActivationRemaining(expires, now)` 호출로 바꾼다. 같은 판정을 `FamilyActivation.LeaseCeiling`
-  이 쓰므로, 만료 규칙이 패키지 안에 **한 곳**만 남는다(Manager 조건 ①). 경계 의미(만료 시각에 닿은 순간부터 만료)는 그대로다 —
-  `TestLoadingAndLeasingJudgeExpiryAtTheSameInstant` 가 경계 세 점(−1ns · 0 · +1ns)에서 두 판정이 같은 답을 내는지 잰다.
-- High-risk impact: yes (활성화 발급 경로). 승격을 넓히는 편집이 아니다 — 거절 조건의 표현만 바뀐다.
+- `TestLoadingAndLeasingJudgeExpiryAtTheSameInstant` 가 경계 세 점에서 적재와 lease 가 같은 답을 내는지 잰다.
+- `TestExpiryIsJudgedInExactlyOnePlace` 가 만료 오류를 **내는** 자리를 비시험 파일 전체에서 세어 하나(`familyActivationRemaining`)로 못 박는다 — 동치 사본 변이 M7 CAUGHT.
+- High-risk impact: yes.
