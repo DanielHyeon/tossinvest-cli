@@ -81,6 +81,9 @@ const (
 	// RefusalEntryLossLockActive: 계좌×시장×horizon 진입 손실 잠금이 효력 있는 범위의 신규 진입 거절(a066 5.5).
 	// 철자는 골든 거절 enum 관례(UPPER_SNAKE, 주체_상태)에서 읽음 — Manager 승인 2026-09-27.
 	RefusalEntryLossLockActive RefusalCode = "ENTRY_LOSS_LOCK_ACTIVE"
+	// RefusalBucketUsageStale: admission 의 bucket snapshot 이 원장 사용량(held+filled)보다 적게 주장함 —
+	// 다른 진입이 snapshot 뒤에 같은 bucket 을 썼다는 뜻(a066 5.6.1 F1). 시각 만료(STALE_BUCKET)와 다른 원인임.
+	RefusalBucketUsageStale RefusalCode = "BUCKET_USAGE_STALE"
 )
 
 type RefusalError struct {

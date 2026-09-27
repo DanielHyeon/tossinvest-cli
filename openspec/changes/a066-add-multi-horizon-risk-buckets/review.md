@@ -563,3 +563,83 @@ Once a relaxation record exists, locking the same scope again would hit `RAISE(A
 therefore replace this trigger with "at most one **open** lock per scope" (DROP/CREATE TRIGGER, as the v23 step did).
 The same migration must also switch `activeEntryLossLock` to "no relaxation record". This constraint is merged into
 the user question about the relaxation flow.
+
+## 5.6.1 (2026-09-27/28) — shared-bucket consistency repair exposed by the 5.6 measurement
+
+Manager rulings: v34 additive (committed v33 untouched); F2 keys the reservation-policy record by the digest the
+writers already compute; F1 option (a) — recompute ledger usage inside the admission transaction with the production
+reader's own function and refuse an understated snapshot as a retryable stale; refusal code `BUCKET_USAGE_STALE`
+(golden `SUBJECT_STATE` form; distinct from the time-expiry `STALE_BUCKET`), sentinel wraps `ErrSnapshotStale`, no new
+Gateway reason (the refusal happens at issuance). Attribution: 5.6.1 under 5.6, not a 5.2 reopening.
+
+### RED → GREEN, one defect at a time (the masking made visible)
+
+Contract tests: `internal/journal/a066_integration_5_6_test.go` (promoted from the measurement file; the adaptation
+record is at the top of the file). Runs in an isolated copy (`analysis/harness/test_in_copy.sh`) because a peer
+lot's untracked RED file in `internal/journal` does not compile in the shared worktree.
+
+| Step | F2 contract (`…SecondAdmissionAtAnotherPriceIsCappedNotCollided` KR/US) | F1 contract (`…StaleSnapshotIsRefusedAtAnyPrice`) |
+|---|---|---|
+| 0 — before any fix | FAIL: `immutable policy collision` | KR same price: FAIL, **admitted, strategy usage 100 > 80**; KR/US other price: FAIL, refused for the wrong reason (`immutable policy collision`) — F2 masks F1 |
+| 1 — F2 fixed (v34) | PASS (q_final 5, usage 80) | all three FAIL, **admitted, usage 100/110/110 > 80** — the mask is gone and F1 is live at every price |
+| 2 — F1 fixed | PASS | PASS (refused `BUCKET_USAGE_STALE`, nothing written, usage stays 50) |
+
+### What changed
+
+| File | Change |
+|---|---|
+| `internal/journal/risk_bucket_policy_records_v34.sql`, `schema.go` | v34: `risk_bucket_policy_records` (PK key + record digest, immutable); `risk_bucket_reservations.policy_record_digest` (nullable; required and must name a record of the same key for v34 inserts; immutable once set). v22–v33 rows keep NULL and keep reading `risk_bucket_policies`. No existing table's rows touched. |
+| `risk_bucket_policy_records.go` | `storeRiskBucketPolicyRecord`: same digest as before (`riskBucketRecordDigest{Key, PolicyEvidence, ReservePolicy}` — read from both writers), parent row INSERT OR IGNORE (FK parent of snapshots), record stored and re-read. The key-only collision check (the F2 defect) is gone. |
+| `CommitRiskBucketAdmission`, `insertFreshRiskBucketReservations` | call the helper; reservations carry `policy_record_digest`. |
+| `loadRiskBucketOrderAuthority` | v34 rows join their own record; NULL rows keep the key join. |
+| `internal/riskbucket/production_snapshot_authority.go` | `ReadJournalBucketUsage` (read + sum, the only computation) over a `UsageQueryer` (*sql.DB or *sql.Tx); `aggregateProductionRiskUsage` reports `Latched` instead of erroring; `loadProductionRiskEntries` refuses `Latched` with the unchanged message — production behaviour unchanged. |
+| `risk_bucket_usage.go` | `refuseStaleBucketUsage`: per bucket, ledger held+filled via `ReadJournalBucketUsage` inside the admission tx; claimed < ledger → `RefusalError{BUCKET_USAGE_STALE}` wrapping `ErrRiskBucketUsageStale` (wraps `ErrSnapshotStale`); unreadable ledger → non-retryable `ErrRiskBucketSnapshotMismatch`. Latch is not judged here (it stays with `ensureRiskBucketEntryScopeClean`). Called in both admission transactions after the owner/scale-in checks and before any write. |
+
+"Same sum as the production reader" is proven by the call graph, not prose: `TestA066LedgerUsageHasOneComputation`
+pins that `readProductionRiskUsage`/`aggregateProductionRiskUsage` are called only by `ReadJournalBucketUsage`, which
+is called only by `loadProductionRiskEntries` and `refuseStaleBucketUsage`, which is called only by the two admission
+transactions.
+
+Recollection termination (Manager condition): `TestA066StaleUsageRecollectionTerminates` — a stale refusal followed by
+a ledger-true recollection is admitted at q_final 6 after exactly 2 collections; a ledger that stays ahead ends after
+exactly `MaxAttempts` collections with `ErrRecollectionExhausted` wrapping the stale refusal. The bounds are
+`recollectLoop` (`reservations.go`): `for attempt := 1; attempt <= policy.MaxAttempts` and `now.After(deadline)` on
+`policy.Budget`.
+
+### Test fixtures that encoded the defects (a066 and cross-change)
+
+| Test | Before | After (assertion target unchanged unless stated) |
+|---|---|---|
+| `TestRiskBucketAdmissionRejectsImmutablePolicyAndSnapshotCollision` (a066) | asserted the F2 defect: a different policy record under the same key must be refused | **contract changed by 5.6.1**: the second record is admitted and each admission binds its own record; the snapshot-ID collision half is unchanged |
+| `TestFirstLegAtomicAdmissionSameAccountKRUSRecollectsTheSerializedLoser` (a072) | KR limit 100 and US reservation 73500 were both admitted into the shared horizon/strategy/sector buckets — true only on top of F1 | shared limit set to 1000000 (the US fixture's value) and each recollection reads ledger usage; still asserts serialisation + both markets admitted |
+| `prepareStrategyDispatchLease` (a072) | DDL-equality between v25 and current tables | column-level check: old columns ⊆ new, the only differences are those declared by migrations after v25 (`schemaAdditionsAfterV25`); rows copied by the old journal's columns; post-copy equality over those columns |
+| `TestRiskBucketActualAndReleaseRequireExactOwnerDecisionScopeForCollidingOrderID`, lease fixture | stacked admissions claimed usage 0 | snapshot usage read from the ledger (`refreshSnapshotUsageFromLedger`, same function) |
+| `TestRiskBucketAmbiguousSidecar…` | corrupt-duplicate copy omitted the new column | copies `policy_record_digest` too |
+
+### Named residual — production snapshot reader schema pin (Manager ruling 2026-09-28: not raised in this lot)
+
+- Coordinate: `productionRiskJournalSchema = 27`, `internal/riskbucket/production_snapshot_authority.go:33`, checked by
+  `loadProductionRiskEntries` (`PRAGMA user_version` must equal it exactly).
+- Consequence: **until this pin is changed, production q_final strategy entry cannot open.** On every current journal
+  (v32 on main, v34 on this branch) the production bucket snapshot is refused, so the strategy path never reaches
+  admission. It is fail-closed, it predates this lot, and no function is lost today because the lanes are dormant.
+- Why not raised here: raising it is a verdict change that opens a fail-closed production state, and "exact version"
+  needs a designed replacement.
+- Replacement design candidate: the column-level check used in the a072 fixture repair. Assert that every column the
+  reader selects exists (`pragma_table_info`) and that the only differences from the reader's verified schema are
+  declared additive migrations. Do not pin one number.
+- Owner: the lot that wires the activation caller (the same place as real-account validation and the trigger). This
+  also goes into the user report.
+
+### Record — what worked in this lot (Manager, 2026-09-28)
+
+- The masking was undone step by step and measured (step 0 → 1 → 2 above). Each defect was shown RED on its own
+  before its fix, not only the first failure.
+- A call-graph test proves that the two sums are identical (`TestA066LedgerUsageHasOneComputation`). This is the
+  structure itself, not a claim in prose.
+- Round 1 mutation left three SURVIVED (CRA-site plumbing, held ignored, ledger read error admitted), and N14 was
+  "caught" only by a compile error. Test additions (`TestA066StaleUsageRuleEdgesAtBothAdmissionSites`) plus a compiling
+  N14 closed them. Round 2: 20/20 CAUGHT (`analysis/mutation-5.6.1/ledger-run1.tsv`, `ledger-run2.tsv`).
+
+Deployment note: this branch is now **schema v34**, main is v32. The rule "SchemaVersion differs from main → do not
+build the image" still applies.

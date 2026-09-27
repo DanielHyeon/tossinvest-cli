@@ -22,6 +22,9 @@ var (
 	ErrRiskBucketSnapshotMismatch = errors.New("journal: risk bucket snapshot mismatch")
 	ErrRiskBucketReplayMismatch   = errors.New("journal: risk bucket replay mismatch")
 	ErrRiskBucketStateUnknown     = errors.New("journal: risk bucket state unknown")
+	// ErrRiskBucketUsageStale: admission 의 bucket snapshot 이 원장보다 적은 사용량을 주장함(a066 5.6.1 F1).
+	// ErrSnapshotStale 을 감싸 기존 재수집 루프가 재시도함.
+	ErrRiskBucketUsageStale = fmt.Errorf("%w: risk bucket usage snapshot is behind the ledger", ErrSnapshotStale)
 )
 
 // RiskBucketSnapshotReference identifies the immutable authority record whose
@@ -188,6 +191,12 @@ func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucket
 		}
 	}
 
+	// a066 5.6.1 F1: snapshot 이 원장보다 적은 사용량을 주장하면 stale — 같은 트랜잭션에서 생산 reader 와 같은 함수로 대조.
+	// owner·scale-in 판정 **뒤**, 이 진입의 예약을 쓰기 **앞**: 기존 가드(owner 충돌 등)가 이 가드에 가려지지 않고,
+	// 대조하는 원장 합에 이 진입 자신의 예약이 섞이지 않음.
+	if err := refuseStaleBucketUsage(ctx, tx, plan.Owner.Key.AccountID, plan.Admission.Buckets); err != nil {
+		return RiskBucketAdmissionReceipt{}, err
+	}
 	var ownerSequence int64
 	if err := tx.QueryRowContext(ctx, `SELECT COALESCE(MAX(owner_sequence),0)+1 FROM risk_bucket_final_decisions WHERE account_ref=? AND market=? AND symbol=? AND owner_prospective_generation=?`, plan.Owner.Key.AccountID, string(plan.Owner.Key.Market), plan.Owner.Key.Symbol, plan.Owner.Key.ProspectiveGeneration).Scan(&ownerSequence); err != nil {
 		return RiskBucketAdmissionReceipt{}, err
@@ -206,21 +215,9 @@ func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucket
 		bucket := plan.Admission.Buckets[i]
 		ref := plan.Snapshots[i]
 		bound := bucket.BoundEvidence()
-		policyRecordDigest, err := riskBucketRecordDigest(struct {
-			Key      riskbucket.BucketKey
-			Evidence riskbucket.Evidence
-			Policy   riskbucket.ReservePolicy
-		}{bound.Key, bound.PolicyEvidence, p})
+		policyRecordDigest, err := storeRiskBucketPolicyRecord(ctx, tx, cap.Key, ref.PolicyDigest, bound, p, plan.CreatedAt)
 		if err != nil {
 			return RiskBucketAdmissionReceipt{}, err
-		}
-		_, err = tx.ExecContext(ctx, `INSERT OR IGNORE INTO risk_bucket_policies(bucket_dimension,bucket_value,policy_version,policy_digest,policy_source,policy_observed_at,policy_fresh_until,record_digest,account_currency,quote_currency,evaluated_at,worst_price_quote,price_source,price_version,price_digest,price_observed_at,price_fresh_until,fee_fixed_base_minor,fee_per_unit_base_minor,fee_minimum_base_minor,fee_version,fee_digest,fx_rate_quote_to_base,fx_haircut,fx_source,fx_version,fx_digest,fx_observed_at,fx_fresh_until,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion, ref.PolicyDigest, bound.PolicyEvidence.Source, canonicalRiskTime(bound.PolicyEvidence.ObservedAt), canonicalRiskTime(bound.PolicyEvidence.FreshUntil), policyRecordDigest, p.AccountCurrency, p.QuoteCurrency, canonicalRiskTime(p.EvaluatedAt), p.Price.WorstExecutableQuote, p.Price.Source, p.Price.Version, p.Price.Digest, canonicalRiskTime(p.Price.ObservedAt), canonicalRiskTime(p.Price.FreshUntil), p.Fee.FixedBaseMinor, p.Fee.PerUnitBaseMinor, p.Fee.MinimumBaseMinor, p.Fee.Version, p.Fee.Digest, p.FX.RateQuoteToBase, p.FX.Haircut, p.FX.Source, p.FX.Version, p.FX.Digest, canonicalRiskTime(p.FX.ObservedAt), canonicalRiskTime(p.FX.FreshUntil), canonicalRiskTime(plan.CreatedAt))
-		if err != nil {
-			return RiskBucketAdmissionReceipt{}, err
-		}
-		var storedPolicyDigest string
-		if err := tx.QueryRowContext(ctx, `SELECT record_digest FROM risk_bucket_policies WHERE bucket_dimension=? AND bucket_value=? AND policy_version=?`, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion).Scan(&storedPolicyDigest); err != nil || storedPolicyDigest != policyRecordDigest {
-			return RiskBucketAdmissionReceipt{}, fmt.Errorf("%w: immutable policy collision", ErrRiskBucketSnapshotMismatch)
 		}
 		snapshotRecordDigest, err := riskBucketRecordDigest(struct {
 			Reference           RiskBucketSnapshotReference
@@ -239,7 +236,7 @@ func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucket
 			return RiskBucketAdmissionReceipt{}, fmt.Errorf("%w: immutable snapshot collision", ErrRiskBucketSnapshotMismatch)
 		}
 		reservationID := riskBucketReservationID(plan.TransactionID, cap.Key.Dimension)
-		_, err = tx.ExecContext(ctx, `INSERT INTO risk_bucket_reservations(reservation_id,decision_id,existing_reservation_id,account_ref,market,symbol,owner_prospective_generation,bucket_dimension,bucket_value,policy_version,snapshot_id,reserved_minor,held_minor,filled_minor,overage_minor,state,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'0','0','HELD',?,?)`, reservationID, plan.DecisionID, plan.ExistingReservationID, plan.Owner.Key.AccountID, string(plan.Owner.Key.Market), plan.Owner.Key.Symbol, plan.Owner.Key.ProspectiveGeneration, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion, ref.SnapshotID, cap.ReservationAtFinal, cap.ReservationAtFinal, canonicalRiskTime(plan.CreatedAt), canonicalRiskTime(plan.CreatedAt))
+		_, err = tx.ExecContext(ctx, `INSERT INTO risk_bucket_reservations(reservation_id,decision_id,existing_reservation_id,account_ref,market,symbol,owner_prospective_generation,bucket_dimension,bucket_value,policy_version,snapshot_id,reserved_minor,held_minor,filled_minor,overage_minor,state,created_at,updated_at,policy_record_digest) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'0','0','HELD',?,?,?)`, reservationID, plan.DecisionID, plan.ExistingReservationID, plan.Owner.Key.AccountID, string(plan.Owner.Key.Market), plan.Owner.Key.Symbol, plan.Owner.Key.ProspectiveGeneration, string(cap.Key.Dimension), cap.Key.Value, cap.Key.PolicyVersion, ref.SnapshotID, cap.ReservationAtFinal, cap.ReservationAtFinal, canonicalRiskTime(plan.CreatedAt), canonicalRiskTime(plan.CreatedAt), policyRecordDigest)
 		if err != nil {
 			return RiskBucketAdmissionReceipt{}, fmt.Errorf("journal: insert %s risk bucket reservation: %w", cap.Key.Dimension, err)
 		}

@@ -83,7 +83,15 @@ func TestFirstLegAtomicAdmissionSameAccountKRUSRecollectsTheSerializedLoser(t *t
 		go func() {
 			defer wait.Done()
 			_, err := j.RecordQFinalCampaignFirstLegWithRecollection(context.Background(), func(context.Context, int) (QFinalCampaignFirstLegRequest, error) {
-				return firstLegAtomicFixture(t, j, market.suffix, "acct-shared", market.market, market.symbol), nil
+				request := firstLegAtomicFixture(t, j, market.suffix, "acct-shared", market.market, market.symbol)
+				// a066 5.6.1: 두 시장은 horizon·strategy·sector bucket 을 공유함. 이 시험은 직렬화와 패자의 재수집을 재므로
+				// 공유 한도를 둘이 들어가는 값(US fixture 와 같은 1000000)으로 맞추고, 재수집마다 사용량을 원장에서 다시 모음
+				// (생산 snapshot reader 와 같은 함수). 이전에는 KR 한도 100 에 US 73500 이 함께 admit 됐음 — F1 결함 위에서만 성립.
+				for i := range request.Issue.Admission.Admission.Buckets {
+					rebindRiskBucketLimit(t, &request.Issue.Admission, i, request.Issue.Admission.Admission.Buckets[i].Key, "1000000")
+				}
+				refreshSnapshotUsageFromLedger(t, j, &request.Issue.Admission)
+				return request, nil
 			}, RecollectPolicy{MaxAttempts: 3})
 			results <- err
 		}()

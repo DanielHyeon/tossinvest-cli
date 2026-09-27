@@ -457,8 +457,13 @@ type riskBucketOrderAuthority struct {
 	bindings                            []riskBucketOrderAuthorityBinding
 }
 
+// loadRiskBucketOrderAuthority 는 결정의 다섯 예약이 **자기** 예약 가격 정책 record 와 함께 묶인 권위를 읽음.
+// v34 예약은 policy_record_digest 로 자기 record(risk_bucket_policy_records)를, v34 이전 예약(NULL)은 key 당 하나뿐이던
+// risk_bucket_policies 를 읽음(a066 5.6.1 F2). 공유 bucket 의 두 번째 진입이 첫 진입의 record 를 읽으면 통화·digest 가
+// 어긋나 주문 등록이 막히므로 key 로만 조인하면 안 됨.
 func loadRiskBucketOrderAuthority(ctx context.Context, tx *sql.Tx, decisionID string) (riskBucketOrderAuthority, error) {
-	rows, err := tx.QueryContext(ctx, `SELECT r.bucket_dimension,r.bucket_value,r.policy_version,r.reservation_id,r.reserved_minor,s.snapshot_id,s.snapshot_digest,s.policy_digest,p.policy_digest,p.record_digest,p.quote_currency,p.account_currency FROM risk_bucket_reservations r JOIN risk_bucket_snapshots s ON s.snapshot_id=r.snapshot_id AND s.bucket_dimension=r.bucket_dimension AND s.bucket_value=r.bucket_value AND s.policy_version=r.policy_version JOIN risk_bucket_policies p ON p.bucket_dimension=r.bucket_dimension AND p.bucket_value=r.bucket_value AND p.policy_version=r.policy_version WHERE r.decision_id=?`, decisionID)
+	rows, err := tx.QueryContext(ctx, `SELECT r.bucket_dimension,r.bucket_value,r.policy_version,r.reservation_id,r.reserved_minor,s.snapshot_id,s.snapshot_digest,s.policy_digest,p.policy_digest,p.record_digest,p.quote_currency,p.account_currency FROM risk_bucket_reservations r JOIN risk_bucket_snapshots s ON s.snapshot_id=r.snapshot_id AND s.bucket_dimension=r.bucket_dimension AND s.bucket_value=r.bucket_value AND s.policy_version=r.policy_version JOIN risk_bucket_policy_records p ON p.bucket_dimension=r.bucket_dimension AND p.bucket_value=r.bucket_value AND p.policy_version=r.policy_version AND p.record_digest=r.policy_record_digest WHERE r.decision_id=? AND r.policy_record_digest IS NOT NULL
+		UNION ALL SELECT r.bucket_dimension,r.bucket_value,r.policy_version,r.reservation_id,r.reserved_minor,s.snapshot_id,s.snapshot_digest,s.policy_digest,p.policy_digest,p.record_digest,p.quote_currency,p.account_currency FROM risk_bucket_reservations r JOIN risk_bucket_snapshots s ON s.snapshot_id=r.snapshot_id AND s.bucket_dimension=r.bucket_dimension AND s.bucket_value=r.bucket_value AND s.policy_version=r.policy_version JOIN risk_bucket_policies p ON p.bucket_dimension=r.bucket_dimension AND p.bucket_value=r.bucket_value AND p.policy_version=r.policy_version WHERE r.decision_id=? AND r.policy_record_digest IS NULL`, decisionID, decisionID)
 	if err != nil {
 		return riskBucketOrderAuthority{}, err
 	}

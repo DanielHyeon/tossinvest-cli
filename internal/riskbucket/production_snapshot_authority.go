@@ -378,14 +378,15 @@ func loadProductionRiskEntries(ctx context.Context, config ProductionRiskSnapsho
 	}
 	entries := make([]riskSnapshotAuthorityMaterialEntry, 0, len(requiredDimensions))
 	for _, dimension := range requiredDimensions {
-		rows, err := readProductionRiskUsage(ctx, db, scope.AccountID, dimension, values[dimension])
+		usage, err := ReadJournalBucketUsage(ctx, db, scope.AccountID, dimension, values[dimension])
 		if err != nil {
 			return nil, err
 		}
-		filled, held, rowDigest, err := aggregateProductionRiskUsage(rows)
-		if err != nil {
-			return nil, err
+		// 생산 snapshot 은 latch 된 사용량 위에 서지 않음(수리 전과 같은 거절·같은 문구).
+		if usage.Latched {
+			return nil, errors.New("risk bucket: invalid or latched journal usage")
 		}
+		filled, held, rowDigest := usage.FilledMinor, usage.HeldMinor, usage.RowDigest
 		key := BucketKey{Dimension: dimension, Value: values[dimension], PolicyVersion: scope.StrategyRiskVersion}
 		policyDigest := productionRiskDigest([]byte(strings.Join([]string{config.ManifestDigest, body.PolicyVersion, string(dimension), values[dimension],
 			scope.StrategyRiskVersion, reserve.Price.Digest, reserve.FX.Digest, reserve.Fee.Digest}, "\x00")))
@@ -419,7 +420,30 @@ func loadProductionRiskEntries(ctx context.Context, config ProductionRiskSnapsho
 	return entries, nil
 }
 
-func readProductionRiskUsage(ctx context.Context, db *sql.DB, account string, dimension Dimension, value string) ([]productionRiskUsageRow, error) {
+// UsageQueryer 는 *sql.DB 와 *sql.Tx 가 함께 만족하는 읽기 면임 — 같은 사용량 함수를 생산 snapshot reader(읽기 전용 DB)와
+// journal admission(쓰기 트랜잭션 안)이 함께 부르게 함.
+type UsageQueryer interface {
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+}
+
+// JournalBucketUsage 는 계좌 하나의 bucket(dimension, value) 원장 사용량임.
+type JournalBucketUsage struct {
+	FilledMinor, HeldMinor, RowDigest string
+	// Latched 는 합에 든 예약 중 RISK_OVERAGE/UNKNOWN_ACTUAL_RISK latch 가 있다는 뜻. 합은 latch 와 무관하게 셈.
+	Latched bool
+}
+
+// ReadJournalBucketUsage 는 원장 사용량(held+filled)의 **유일한** 계산임(a066 5.6.1 F1). 생산 snapshot reader
+// (loadProductionRiskEntries)와 journal admission 의 stale 대조가 둘 다 이 함수를 부름 — 두 쪽의 합이 갈라질 수 없음.
+func ReadJournalBucketUsage(ctx context.Context, q UsageQueryer, account string, dimension Dimension, value string) (JournalBucketUsage, error) {
+	rows, err := readProductionRiskUsage(ctx, q, account, dimension, value)
+	if err != nil {
+		return JournalBucketUsage{}, err
+	}
+	return aggregateProductionRiskUsage(rows)
+}
+
+func readProductionRiskUsage(ctx context.Context, db UsageQueryer, account string, dimension Dimension, value string) ([]productionRiskUsageRow, error) {
 	rows, err := db.QueryContext(ctx, `SELECT r.reservation_id,r.policy_version,r.held_minor,r.filled_minor,r.state,
 		r.risk_overage_latched,r.unknown_actual_latched,COALESCE(s.snapshot_id,''),COALESCE(p.record_digest,'')
 		FROM risk_bucket_reservations r
@@ -442,27 +466,31 @@ func readProductionRiskUsage(ctx context.Context, db *sql.DB, account string, di
 	return result, rows.Err()
 }
 
-func aggregateProductionRiskUsage(rows []productionRiskUsageRow) (string, string, string, error) {
+func aggregateProductionRiskUsage(rows []productionRiskUsageRow) (JournalBucketUsage, error) {
 	filled, held := new(big.Int), new(big.Int)
+	latched := false
 	parts := make([]string, 0, len(rows)*9)
 	for _, row := range rows {
 		rowFilled, filledOK := new(big.Int).SetString(row.FilledMinor, 10)
 		rowHeld, heldOK := new(big.Int).SetString(row.HeldMinor, 10)
 		if !filledOK || !heldOK || rowFilled.Sign() < 0 || rowHeld.Sign() < 0 || rowFilled.BitLen() > 256 || rowHeld.BitLen() > 256 ||
 			(row.State != "HELD" && row.State != "FILLED" && row.State != "RELEASED") || (row.State == "RELEASED" && rowHeld.Sign() != 0) ||
-			row.OverageLatched != 0 || row.UnknownLatched != 0 || row.SnapshotID == "" || row.PolicyRecordDigest == "" ||
+			row.SnapshotID == "" || row.PolicyRecordDigest == "" ||
 			!canonicalIdentity(row.ReservationID) || !canonicalIdentity(row.PolicyVersion) {
-			return "", "", "", errors.New("risk bucket: invalid or latched journal usage")
+			return JournalBucketUsage{}, errors.New("risk bucket: invalid or latched journal usage")
 		}
+		// latch 는 합에서 빼지 않고 호출자에게 알림 — 생산 snapshot 은 거절하고, admission 대조는 합만 씀.
+		latched = latched || row.OverageLatched != 0 || row.UnknownLatched != 0
 		filled.Add(filled, rowFilled)
 		held.Add(held, rowHeld)
 		if filled.BitLen() > 256 || held.BitLen() > 256 {
-			return "", "", "", errors.New("risk bucket: journal usage overflow")
+			return JournalBucketUsage{}, errors.New("risk bucket: journal usage overflow")
 		}
 		parts = append(parts, row.ReservationID, row.PolicyVersion, row.HeldMinor, row.FilledMinor, row.State,
 			fmt.Sprint(row.OverageLatched), fmt.Sprint(row.UnknownLatched), row.SnapshotID, row.PolicyRecordDigest)
 	}
-	return filled.String(), held.String(), productionRiskDigest([]byte(strings.Join(parts, "\x00"))), nil
+	return JournalBucketUsage{FilledMinor: filled.String(), HeldMinor: held.String(),
+		RowDigest: productionRiskDigest([]byte(strings.Join(parts, "\x00"))), Latched: latched}, nil
 }
 
 func exactProductionRiskStrategy(values []productionRiskStrategyPolicy, laneID, laneVersion string, horizon Horizon) (productionRiskStrategyPolicy, bool) {

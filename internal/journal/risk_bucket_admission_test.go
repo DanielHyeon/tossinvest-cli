@@ -161,16 +161,22 @@ func TestRiskBucketAdmissionRejectsImmutablePolicyAndSnapshotCollision(t *testin
 	if _, err := j.CommitRiskBucketAdmission(context.Background(), first); err != nil {
 		t.Fatal(err)
 	}
+	// a066 5.6.1 F2 계약 변경(2026-09-27): 같은 bucket key 에 **다른** 예약 가격 정책 record 가 오는 것은 더 이상 충돌이
+	// 아님 — 공유 bucket 의 두 번째 진입·새 가격 scale-in 이 정확히 이 모양이고, v34 부터 예약은 자기 record 를 가리킴.
+	// 이 시험은 원래 그것을 거절로 고정했었음(그 거절이 F2 결함). 지금은 받아들이고 **자기 record 에 결속됨**을 고정함.
 	seedExistingRiskReservation(t, j, "existing-collision-b", "acct-1")
-	second := riskBucketAdmissionFixture(t, "collision-b", "acct-1", "lane-short", "campaign-1", "prospective-1", "100", "0")
+	second := riskBucketAdmissionFixture(t, "collision-b", "acct-1", "lane-short", "campaign-1", "prospective-1", "100", "50")
 	second.Admission.Policy.Price.Digest = "different-price-digest"
-	if _, err := j.CommitRiskBucketAdmission(context.Background(), second); !errors.Is(err, ErrRiskBucketSnapshotMismatch) {
-		t.Fatalf("policy collision error=%v", err)
+	receipt, err := j.CommitRiskBucketAdmission(context.Background(), second)
+	if err != nil {
+		t.Fatalf("a second policy record under the same bucket keys was refused: %v", err)
 	}
-	if got := countRiskBucketRows(t, j, "risk_bucket_final_decisions"); got != 1 {
-		t.Fatalf("decisions=%d", got)
+	var distinctRecords int
+	if err := j.db.QueryRow(`SELECT count(DISTINCT policy_record_digest) FROM risk_bucket_reservations WHERE bucket_dimension='horizon'`).Scan(&distinctRecords); err != nil || distinctRecords != 2 || receipt.QFinal == 0 {
+		t.Fatalf("each admission must bind its own policy record: distinct=%d q_final=%d err=%v", distinctRecords, receipt.QFinal, err)
 	}
-	second = riskBucketAdmissionFixture(t, "collision-b", "acct-1", "lane-short", "campaign-1", "prospective-1", "100", "0")
+	seedExistingRiskReservation(t, j, "existing-collision-c", "acct-1")
+	second = riskBucketAdmissionFixture(t, "collision-c", "acct-1", "lane-short", "campaign-1", "prospective-1", "200", "100")
 	second.Snapshots[0].SnapshotID = first.Snapshots[0].SnapshotID
 	if _, err := j.CommitRiskBucketAdmission(context.Background(), second); !errors.Is(err, ErrRiskBucketSnapshotMismatch) {
 		t.Fatalf("snapshot collision error=%v", err)

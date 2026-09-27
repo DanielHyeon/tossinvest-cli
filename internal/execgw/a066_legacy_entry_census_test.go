@@ -254,3 +254,31 @@ func TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly(t *testing.T) 
 		})
 	}
 }
+
+// TestA066LedgerUsageHasOneComputation 는 a066 5.6.1 F1 의 "생산 reader 와 같은 합" 을 산문이 아니라 호출 그래프로 고정함:
+// 원장 사용량을 읽고 더하는 두 내부 함수는 ReadJournalBucketUsage 만 부르고, 그 함수를 부르는 자리는 생산 snapshot
+// reader 와 journal admission 의 stale 대조 둘뿐이며, 그 대조는 두 admission 트랜잭션에서만 불림.
+func TestA066LedgerUsageHasOneComputation(t *testing.T) {
+	cases := []struct {
+		name string
+		want []string
+	}{
+		{"readProductionRiskUsage", []string{"internal/riskbucket/production_snapshot_authority.go:ReadJournalBucketUsage"}},
+		{"aggregateProductionRiskUsage", []string{"internal/riskbucket/production_snapshot_authority.go:ReadJournalBucketUsage"}},
+		{"ReadJournalBucketUsage", []string{
+			"internal/journal/risk_bucket_usage.go:refuseStaleBucketUsage",
+			"internal/riskbucket/production_snapshot_authority.go:loadProductionRiskEntries",
+		}},
+		{"refuseStaleBucketUsage", []string{
+			"internal/journal/risk_bucket.go:Journal.CommitRiskBucketAdmission",
+			"internal/journal/risk_bucket_issuance.go:commitFreshRiskBucketAdmissionTx",
+		}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := enclosingSites(t, calls(tc.name)); strings.Join(got, "\n") != strings.Join(tc.want, "\n") {
+				t.Fatalf("callers of %s changed:\n got: %v\nwant: %v", tc.name, got, tc.want)
+			}
+		})
+	}
+}

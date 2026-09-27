@@ -131,6 +131,8 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"risk_bucket_owner_release_receipts",
 		"risk_bucket_owners",
 		"risk_bucket_policies",
+		// a066 5.6.1 (v34): 예약 가격 정책 record — (key, record digest) 불변.
+		"risk_bucket_policy_records",
 		"risk_bucket_reservations",
 		"risk_bucket_scope_latches",
 		"risk_bucket_snapshots",

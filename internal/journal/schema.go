@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 33
+const SchemaVersion = 34
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -165,6 +165,9 @@ var migrations = []migration{
 	// account×market×horizon entry loss lock as append-only history. Additive
 	// only; an upgraded journal starts with no lock in force.
 	{Version: 33, SQL: schemaV33},
+	// schemaV34 lives in risk_bucket_policy_records_v34.sql: a066 task 5.6.1 F2 — each reservation names the exact
+	// reservation-policy record it was sized with, so a shared bucket accepts entries at different prices. Additive.
+	{Version: 34, SQL: schemaV34},
 }
 
 // schemaV1 is the initial schema.

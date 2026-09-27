@@ -238,7 +238,7 @@ func TestRiskBucketAmbiguousSidecarLatchesAllApplicableReservationsWithoutDroppi
 	if _, err := j.db.Exec(`INSERT INTO risk_bucket_final_decisions(decision_id,transaction_id,account_ref,market,symbol,q_candidate,q_existing_guardian,q_final,existing_reservation_id,request_digest,request_preimage,snapshot_set_digest,owner_prospective_generation,owner_lane_id,owner_campaign_id,owner_sequence,created_at) SELECT ?,transaction_id||':corrupt',account_ref,market,symbol,q_candidate,q_existing_guardian,q_final,existing_reservation_id,request_digest,request_preimage,snapshot_set_digest,owner_prospective_generation,owner_lane_id,owner_campaign_id,owner_sequence+1,created_at FROM risk_bucket_final_decisions WHERE decision_id=?`, secondDecision, decisionID); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := j.db.Exec(`INSERT INTO risk_bucket_reservations(reservation_id,decision_id,existing_reservation_id,account_ref,market,symbol,owner_prospective_generation,bucket_dimension,bucket_value,policy_version,snapshot_id,reserved_minor,held_minor,filled_minor,overage_minor,state,risk_overage_latched,unknown_actual_latched,created_at,updated_at) SELECT reservation_id||':corrupt',?,existing_reservation_id,account_ref,market,symbol,owner_prospective_generation,bucket_dimension,bucket_value,policy_version,snapshot_id,reserved_minor,held_minor,filled_minor,overage_minor,state,risk_overage_latched,unknown_actual_latched,created_at,updated_at FROM risk_bucket_reservations WHERE decision_id=?`, secondDecision, decisionID); err != nil {
+	if _, err := j.db.Exec(`INSERT INTO risk_bucket_reservations(reservation_id,decision_id,existing_reservation_id,account_ref,market,symbol,owner_prospective_generation,bucket_dimension,bucket_value,policy_version,snapshot_id,reserved_minor,held_minor,filled_minor,overage_minor,state,risk_overage_latched,unknown_actual_latched,created_at,updated_at,policy_record_digest) SELECT reservation_id||':corrupt',?,existing_reservation_id,account_ref,market,symbol,owner_prospective_generation,bucket_dimension,bucket_value,policy_version,snapshot_id,reserved_minor,held_minor,filled_minor,overage_minor,state,risk_overage_latched,unknown_actual_latched,created_at,updated_at,policy_record_digest FROM risk_bucket_reservations WHERE decision_id=?`, secondDecision, decisionID); err != nil {
 		t.Fatal(err)
 	}
 	secondOrderKey := riskBucketOrderKey(secondDecision, "risk-ambiguous")
@@ -403,6 +403,7 @@ func TestRiskBucketActualAndReleaseRequireExactOwnerDecisionScopeForCollidingOrd
 		key.PolicyVersion = "policy-kr-v1"
 		rebindRiskBucket(t, &krPlan, i, key)
 	}
+	refreshSnapshotUsageFromLedger(t, j, &krPlan) // a066 5.6.1: 공유 bucket 사용량은 원장 그대로
 	krReceipt, err := j.CommitRiskBucketAdmission(context.Background(), krPlan)
 	if err != nil {
 		t.Fatal(err)

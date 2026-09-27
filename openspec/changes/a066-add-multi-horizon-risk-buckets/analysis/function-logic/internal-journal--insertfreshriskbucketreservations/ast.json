@@ -1,0 +1,337 @@
+{
+  "file": "internal/journal/risk_bucket_issuance.go",
+  "source_sha256": "08f0eedb38a9d87641c04a5cb5cf5e23da07c2d43995a9585b83a2a6b25f30bc",
+  "package": "journal",
+  "function": "insertFreshRiskBucketReservations",
+  "signature": "insertFreshRiskBucketReservations(params=4, results=1)",
+  "start": {
+    "line": 521,
+    "column": 1
+  },
+  "end": {
+    "line": 551,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 523,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 527,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 534,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 538,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 542,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 546,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 528,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 535,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 539,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 543,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 547,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 550,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 525,
+        "column": 12
+      },
+      "text": "bucket.BoundEvidence"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 526,
+        "column": 30
+      },
+      "text": "storeRiskBucketPolicyRecord"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 530,
+        "column": 32
+      },
+      "text": "riskBucketRecordDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 537,
+        "column": 38
+      },
+      "text": "ref.snapshotWindow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 538,
+        "column": 15
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 538,
+        "column": 415
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 538,
+        "column": 576
+      },
+      "text": "canonicalRiskTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 538,
+        "column": 613
+      },
+      "text": "canonicalRiskTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 538,
+        "column": 647
+      },
+      "text": "canonicalRiskTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 542,
+        "column": 13
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 542,
+        "column": 13
+      },
+      "text": "tx.QueryRowContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 543,
+        "column": 11
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 545,
+        "column": 20
+      },
+      "text": "riskBucketReservationID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 546,
+        "column": 15
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 546,
+        "column": 482
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 546,
+        "column": 574
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 546,
+        "column": 703
+      },
+      "text": "canonicalRiskTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 546,
+        "column": 738
+      },
+      "text": "canonicalRiskTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 547,
+        "column": 11
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 522,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 524,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 525,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 526,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 530,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 537,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 538,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 542,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 545,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 546,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
