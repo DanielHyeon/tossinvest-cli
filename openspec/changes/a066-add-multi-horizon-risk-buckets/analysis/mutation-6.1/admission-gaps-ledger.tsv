@@ -1,0 +1,10 @@
+TREE	HEAD 306bc872	uncommitted: internal/journal/a066_admission_gap_test.go (new)
+CONTROL	GREEN	
+CRA B1 refusal ignored	CAUGHT	TestA066AdmissionCalculatorRefusalWritesNothing
+CRA B19 UNIQUE not mapped to owner conflict	CAUGHT	TestA066ReleasedProspectiveGenerationCannotBeReacquired/CommitRiskBucketAdmission
+fresh B13 UNIQUE not mapped to owner conflict	CAUGHT	TestA066ReleasedProspectiveGenerationCannotBeReacquired/RecordQFinalDecisionAndReserve
+recover call moved after commitFresh in first leg	SURVIVED	
+CONTROL(backstop pin v2)	GREEN	
+first-leg straight-path recover removed (the replayCandidate-branch recover remains)	CAUGHT	a066_admission_gap_test.go:139: strategy_first_leg_atomic.go:101:1: RecordQFinalCampaignFirstLeg — commitFreshRiskBucketAdmissionTx (top-level stmt 20) is not p
+issuance recover removed	CAUGHT	a066_admission_gap_test.go:139: risk_bucket_issuance.go:70:1: RecordQFinalDecisionAndReserve — commitFreshRiskBucketAdmissionTx (top-level stmt 28) is not prece
+NOTE	the first backstop pin counted any earlier recover call; the replayCandidate-branch recover hid the straight-path removal (SURVIVED). v2 counts only top-level straight-path statements and catches both removals.
