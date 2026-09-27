@@ -615,6 +615,39 @@ exactly `MaxAttempts` collections with `ErrRecollectionExhausted` wrapping the s
 | `prepareStrategyDispatchLease` (a072) | DDL-equality between v25 and current tables | column-level check: old columns ⊆ new, the only differences are those declared by migrations after v25 (`schemaAdditionsAfterV25`); rows copied by the old journal's columns; post-copy equality over those columns |
 | `TestRiskBucketActualAndReleaseRequireExactOwnerDecisionScopeForCollidingOrderID`, lease fixture | stacked admissions claimed usage 0 | snapshot usage read from the ledger (`refreshSnapshotUsageFromLedger`, same function) |
 | `TestRiskBucketAmbiguousSidecar…` | corrupt-duplicate copy omitted the new column | copies `policy_record_digest` too |
+| `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` (a112, `internal/app/engine/strategy_dispatch_cycle_test.go`) | both markets `CONFIRMED` in one wave on the shared SHORT horizon bucket — true only on top of F1 | see the next section (Manager ruling 2026-09-28, cross-change edit) |
+
+### Cross-change edit — a112 paired dispatch cycle test (Manager ruling 2026-09-28)
+
+Cause. The test failed **deterministically** at `2b36ae44` (3/3 with `-tags tossos_testseams`; the loser alternated
+KR/US): `ATOMIC_ADMISSION_FAILED: … BUCKET_USAGE_STALE (horizon): horizon bucket "SHORT" snapshot claims 0 used, the
+ledger holds 882006`. Its fixture (`pairedStrategyDispatchCycleFixture` → `newStrategyRiskLoaderFixture`) gives both
+continuation lanes horizon SHORT (from the lane lineage), the same strategy and the same sector, on one account. Its
+risk snapshot source is a static fixture journal, so both dispatches claim usage 0. Under the 5.6.1 semantics the second
+admission of one wave on a shared bucket is refused as stale and admitted on the next wave. The fixture encoded the old
+(F1) meaning. Disabling `refuseStaleBucketUsage` in a copy makes both markets `CONFIRMED` again (mutant below), which
+confirms the cause.
+
+Why not "different horizons per market": the horizon comes from the lane lineage/descriptor, and strategy and sector
+are shared too. Splitting them would change the fixture's lanes, not its buckets. The test was rewritten to the new
+contract instead (Manager option 2). "Admitted on the next wave" cannot be expressed here because the snapshot source
+is static. It is measured at journal level by `TestA066KRUSConcurrentContract` and
+`TestFirstLegAtomicAdmissionSameAccountKRUSRecollectsTheSerializedLoser`.
+
+| Old assertion | New assertion | Preservation |
+|---|---|---|
+| both dispatches start together (`start` channel, no pre-ordering) | unchanged | concurrency kept verbatim |
+| every result `err == nil && State == CONFIRMED` | exactly one `CONFIRMED`; the other refused with `engine: first-leg admission ATOMIC_ADMISSION_FAILED` **and** `BUCKET_USAGE_STALE`; any other outcome fails | **replaced** — "both confirmed" is exactly what approved 5.6.1 forbids on a shared bucket. It is the one assertion changed in meaning. |
+| `seen[KR] && seen[US]` | `admitted.market != refused.market`, one each | both markets' results must still arrive |
+| `len(calls) == 2` | `len(calls) == 1` and its market is the admitted one | stronger: the refused market must not reach the Gateway |
+| the two leases have equal `OwnerEpoch`/`FencingToken` | the admitted lease equals `cycle.owner.owner`, and that owner's `Epoch == 1` (acquired once); the refused error carries the `first-leg admission` prefix, which `dispatch` emits only after `dispatchOwner` (`strategy_dispatch_cycle.go:147` before `admit` at `:151`) | single central owner: both dispatches passed the one cached owner, and it was acquired once. The refused side holds no lease, so this equality replaces the lease-to-lease one. |
+
+No turn-taking: the old test had no timing assertion beyond the shared start; none was added or removed.
+
+Verification (isolated copy, HEAD `2b36ae44` plus this edit): the test alone `-count=10 -tags tossos_testseams` PASS;
+`-count=50 -race` 50/50 PASS; full `internal/app/engine` with `tossos_testseams` PASS (873), `go vet` clean. Mutant
+"`refuseStaleBucketUsage` returns nil" → 3/3 FAIL (both markets `CONFIRMED`, `refused=[]`). The unmutated control was
+GREEN first.
 
 ### Named residual — production snapshot reader schema pin (Manager ruling 2026-09-28: not raised in this lot)
 
