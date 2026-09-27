@@ -240,3 +240,37 @@ worktree에 체크아웃하고 `check_analysis.py --change`를 실행해
 "병합 시점 이후로 이 change가 더 고친 함수가 없다"를 확인하는 것이고, "이 change가
 고친 함수에 증거가 있다"는 위의 원래 base 재검사가 확인한다. 한 명령으로 둘 다
 재도출되지는 않는다.
+
+## 종결 시퀀스 (2026-09-27, a122·a077 선례 · Manager 2단계 승인, refresh 경로)
+
+### stale 번들 refresh 영수증 (7dddd067)
+
+- 옛 번들 셋의 `ast.json` 은 **448dfeb1** 소스를 기술했다(source sha256 앞 12자리 · 재생성 시점 HEAD f1e82e79 의 파일):
+  - `internal-app-engine--startpositionpolicycommandserver` — `internal/app/engine/position_policy_transport.go` 5e6b7ede5d17 → 9ea26bf990d0
+  - `internal-console--console.handlepositionmanagement` — `internal/console/position_policy.go` 2fd0870bbfe8 → 287825beeac9
+  - `internal-console--console.routes` — `internal/console/console.go` 53c566d3dd35 → 49e1a88df141
+- 그 뒤 함수를 바꾼 이웃 커밋(`git log -L`, 448dfeb1..f1e82e79):
+  - `StartPositionPolicyCommandServer`: a108 `da61838c` · a109 `5f285c52` — 분기 없는 호출 둘 추가, 분기 16 → 16, difflib 항등.
+  - `Console.handlePositionManagement`: a111 `882a0b49` — 분기 다섯 추가(새 B10·B11·B16·B17·B18), 20 → 25.
+    difflib 대응 B1..B9 → B1..B9 · B10..B13 → B12..B15 · B14..B20 → B19..B25 로 Branch Test Map 을 재번호했다(손 재번호 없음).
+    새 분기 행은 a111 의 Branch Test Map — 같은 소스(sha 287825be)의 AST 로 번호를 매긴 표 — 이 인용한 기존 시험
+    `TestA111PositionManagementSamplesResponseTimeAfterMarkerRead` · `TestA111PositionManagementNeverResurrectsAStoppedMarkerAfterClockRollback`
+    (`internal/console/a111_exit_freshness_test.go`)을 인용한다. 새 시험 저술 0.
+  - `Console.routes`: 바꾼 커밋 0 — 본문 바이트 동일, 위치만 722-852 → 733-863, 분기 2 → 2 항등.
+- 재생성: HEAD f1e82e79 에서 `go run ./tools/logic-map`, `revision: current` 유지. handle·start 의 function-logic-map.md 에
+  「Refresh」 절을 붙였다. 세 번들의 Branch Test Map 이 이름으로 인용한 시험 15개는 현재 트리에 전부 있다.
+- 신선한 번들 `internal-console--testeverystatechangingroutealsogoesthroughthecsrfgate` 는 바이트 불변(sha256 전후 대조).
+- refresh 뒤 check_analysis 에서 stale·해시 불일치 오류 0.
+
+### base 재고정 영수증 (f85e8c1e)
+
+- 잰 순간: HEAD 7dddd067, 모집단 = `git log --full-history -- openspec/changes/a079-…` 커밋 5.
+  d42e42e9 · 448dfeb1 은 옛 base 의 조상(자기 Go 작업은 base 앞 — 840b3377 이 base 를 작업 뒤 통합 병합으로 옮겼다),
+  base 뒤 840b3377 · 421c1927 · 7dddd067 은 go 0.
+- 옛 base 448dfeb1 에서 5단계 rc 1 · required 323 · 창에 착지 커밋 408 — 전부 다른 change 의 기존 함수.
+- 재고정 448dfeb1 → 7dddd067, `base-commit.txt` 만 커밋(f85e8c1e). 재고정 뒤 check_analysis rc 0
+  (required 0, evidence complete or diff-proven exempt). `--record-landing` 은 쓰지 않았다(Manager 결정).
+
+### 11.2
+
+실제 격리 해제 실행은 사용자 몫이다(§0.7) — 에이전트 태스크가 아니며 이 종결 시퀀스는 그것을 건드리지 않았다.
