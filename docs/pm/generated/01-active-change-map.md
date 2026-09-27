@@ -3,7 +3,7 @@
 | Change | Story | Status |
 |---|---|---|
 | `adopt-stockos-full-sdd` | STORY-TOS-001 | archived |
-| `align-full-sdd-pm-contract` | STORY-TOS-002 | in_progress |
+| `align-full-sdd-pm-contract` | STORY-TOS-002 | implemented |
 | `verify-execution-capability` | STORY-TOS-003 | in_progress |
 | `add-net-rr-measurement` | STORY-TOS-004 | archived |
 | `verify-us-market` | STORY-TOS-005 | archived |
