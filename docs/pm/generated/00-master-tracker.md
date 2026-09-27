@@ -4,7 +4,7 @@
 - EPIC-TOS-001 — Full SDD adoption [active]
   - FEAT-TOS-001 — StockOS SDD toolchain adaptation [active]
     - STORY-TOS-001 — Adopt the full StockOS SDD workflow in TossOS [archived] → `adopt-stockos-full-sdd`
-    - STORY-TOS-002 — Align TossOS Full SDD and enforce Story-to-OpenSpec one-to-one [implemented] → `align-full-sdd-pm-contract`
+    - STORY-TOS-002 — Align TossOS Full SDD and enforce Story-to-OpenSpec one-to-one [archived] → `align-full-sdd-pm-contract`
     - STORY-TOS-a040 — Adopt StockOS OpenSpec numbering and Story mapping [archived] → `a040-adopt-stockos-openspec-naming`
     - STORY-TOS-a116 — Codex saves its own session context [archived] → `a116-install-codex-session-save-hook`
     - STORY-TOS-a118 — A sealed test still runs [archived] → `a118-a-sealed-test-still-runs`

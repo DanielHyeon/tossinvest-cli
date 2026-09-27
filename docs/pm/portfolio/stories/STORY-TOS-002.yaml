@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "align-full-sdd-pm-contract",
-    "path": "openspec/changes/align-full-sdd-pm-contract"
+    "path": "openspec/changes/archive/2026-09-27-align-full-sdd-pm-contract"
   },
   "acceptance": [
     "docs/WORKFLOW.md follows the StockOS Full SDD sequence while preserving TossOS-specific safety and Go tooling",
