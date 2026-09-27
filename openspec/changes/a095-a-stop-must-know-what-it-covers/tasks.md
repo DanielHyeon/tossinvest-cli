@@ -11,7 +11,7 @@
 - [x] 0.1 `base-commit.txt` 고정 — **3판 재고정** `ec29dc72` → `02716357`(`0b17784e`). a095 디렉터리를 만진
       커밋 중 `.go`를 고친 것은 `a30eb35a` 하나이고 새 base 앞이다
 - [x] 0.2 `openspec validate a095-a-stop-must-know-what-it-covers --strict` — 3판에서 다시 통과(`review.md` 3판 기록)
-- [x] 0.3 **AST 산출물이 문서보다 먼저** — 3판 번들 21개(새로·다시 뽑음 18 · 해시 일치 확인 3).
+- [x] 0.3 **AST 산출물이 문서보다 먼저** — 3판 번들 21개(새로 12 · 다시 뽑음 4 · 해시 일치로 산문만 5).
       생성기 `analysis/harness/render_bundles.py`, 커버리지 `analysis/harness/coverage/`
 - [x] 0.4 `check_analysis.py --change a095-…` — 3판 판정은 `review.md` 3판 기록(격리 worktree, 완료 커밋 기준)
 - [ ] 0.5 **proposal-freeze 리뷰**(적대적 Eng 필수) → `review.md`. 교차 보이스 · 교차 모델을 여기서 지킨다

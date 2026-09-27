@@ -639,7 +639,12 @@ tasks.md 2판 `:178`의 *"a095는 a092 뒤에 간다"*는 결정 (1)과 모순 �
 
 `proposal.md` 「열린 질문」 Q1~Q7. 결정이 덮지 않는 절은 비워 두었다(`[비움 — Qn]`).
 
-### 3.5 게이트 명령 — 아래 3.6에 결과
+### 3.5 게이트 명령 (판정은 rc, 파이프 없음)
+
+| 명령 | 자리 | rc | 비고 |
+| --- | --- | --- | --- |
+| `openspec validate a095-a-stop-must-know-what-it-covers --strict --no-interactive` | 격리 worktree `03c689be` | **0** | valid |
+| `python3 tools/logic-map/check_analysis.py --change a095-a-stop-must-know-what-it-covers` | 격리 worktree `03c689be` | **0** | required 0 function(s), evidence complete. 공유 워킹트리에서는 rc 1 — 병행 로트(a066)의 미커밋 `internal/execgw/a066_entry_loss_lock_red_test.go` 편집이 창에 들어온 것이고 a095 몫이 아니다 |
 
 ### 3.6 이번 판이 하지 않은 것
 
@@ -648,3 +653,41 @@ tasks.md 2판 `:178`의 *"a095는 a092 뒤에 간다"*는 결정 (1)과 모순 �
   지워 소멸, P2-5(R3 task)는 R3 보류로 이월
 - 운영 원장 재조회 — 하지 않았다. 원장 수치는 2라운드 측정(2026-09-25)을 시각과 함께 인용
 - `ConvergeQuantities` 번들(보이스 A A-5) — R3 지위(Q5) 뒤
+
+### 3.7 gstack 문서 리뷰 1회 (`plan-eng-review`, 2026-09-27, 대상 `03c689be`의 3판 문서)
+
+- **구성**: 저자 컨텍스트의 단일 패스(네 절: 구조 · 문서 품질 · 시험 · 성능). **독립 보이스가 아니다** — 3라운드
+  적대 리뷰와 교차 모델은 Manager 지시 대기라 이 패스에서 돌리지 않았다(outside voice 생략, Codex 미사용)
+- **질문 방식**: 서브에이전트라 사용자에게 물을 수 없다. 설계를 바꾸는 발견은 적용하지 않고 열린 질문에 제약으로
+  덧붙였다. 편집 수준(수치·참조)만 바로 고쳤다
+
+| # | 절 | 발견 (confidence) | 처분 |
+| --- | --- | --- | --- |
+| R1 | 구조 | [P1] (8/10) 정본 engine-safety 「등급화된 알림」 `spec.md:179`: critical은 *"전달 실패가 지속되면 신규 진입을 차단한다(SHALL)"*. 알림 off에서 차단을 막으려면(결정 (2)) 그 상태에서 a095 사실이 **critical로 매겨지지 않아야** 한다 — 매긴 뒤 거르면 MODIFIED가 필요하다 | Q1에 제약으로 추가 |
+| R2 | 성능 | [P2] (7/10) `judgeHoldings` B15가 무관리 보유마다 `alertUnmanaged`를 차례로 부른다. transport가 죽은 채 B5 사실이 N건이면 대사 사이클이 N × 배달 예산만큼 멈춘다(손절 경로 아님) | Q7에 둘째 면으로 추가 |
+| R3 | 시험 | [P2] (9/10) `deliver` B3(`n.Publisher == nil`)은 **미진입** — 알림 off 엔진의 critical 경로 자체를 밟는 시험이 없다. a095는 호출자 쪽(2.5)에서만 고정한다 | a124 · a092 쪽 후속 후보로 Manager 에게 보고. a095 범위 밖 |
+| R4 | 문서 품질 | [P2] (10/10) 번들 수 표기 불일치(proposal 「18 + 3」 · tasks 「18 · 3」 · review 「해시 일치 5」). 실제는 새로 12 · 다시 뽑음 4 · 산문만 5 = 21 | proposal · tasks 수정 |
+| R5 | 문서 품질 | [P3] (10/10) review §3.5가 없는 절을 가리켰다 | §3.5에 게이트 표를 넣음 |
+| R6 | 문서 품질 | [P2] (7/10) exit-policy 델타의 R3 요구(평단 불확실성 SHALL 포함)가 보류 상태로 델타에 남아 있다 — Q5 답 없이 archive되면 논쟁 중인 SHALL이 정본에 들어간다 | Q5가 답할 때까지 freeze · archive 금지로 머리말에 적혀 있음. 추가 처분 없음 |
+| R7 | 시험 | [P3] (6/10) B5 사실의 재시작 뒤 동작(메모리 래치 재무장 + outbox 재알림 창) 시험이 계획에 없다 — 중간 신뢰, 확인 필요 | Q1 답 뒤 tasks 2.2에 포함 여부 결정 |
+
+**시험 지도(계획된 경로)**:
+
+```text
+reconcile judgeHoldings
+  ├─ B7 적격 · 편입 안 됨 ── [GAP·Q3] 3.2
+  ├─ B8 → checkExternalIncrease ── B2 무변화 3.1 · B1/B3 [GAP·Q4] 3.3 · 3.4
+  ├─ B9/B10 전이 상태 ── 2.8
+  ├─ B11 exclude ── 2.3 (normal · 래치 0 · 승격 0)
+  ├─ B12 off∧미지정 ── 2.4 (정본 동등)
+  └─ B14 편입 안 됨 → alertUnmanaged
+        ├─ B5 ── 2.2 (critical, 방식 Q1) · 알림 off 2.5 · 재시작 [R7]
+        ├─ B3/B6 ── [GAP·Q2] 2.6
+        └─ adopt B2/B6/B7 연기분 ── [GAP·Q2(c)] 2.6
+exit ObserveOnce → workingSet B6 → ExitObserver.alertUnmanaged ── 2.1 · 6.2 (기존 exitloop_test.go:508 유지)
+키 분리 ── 2.7 · ExternalPositionFound/IngestExternalPositions B12 ── 2.9
+손절 불변 ── 5.1 · 5.2
+```
+
+**판정**: 이 패스는 **CLEAR가 아니다** — 결정 대기 Q1~Q7(리뷰가 Q1 · Q7에 제약을 더함)이 열려 있고, freeze는
+3라운드가 정한다.

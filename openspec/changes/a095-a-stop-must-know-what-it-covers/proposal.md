@@ -8,9 +8,9 @@
 - **판**: 3판(2026-09-27). 1판·2판 본문은 git 이력에 있다(2판 = `2fbdcd78` 시점).
 
 > **작성 순서.** 이 문서의 분기 주장은 전부 `analysis/function-logic/`의 AST 산출물에서 왔다.
-> 3판은 base `02716357`에서 번들 **18개를 새로 뽑거나 다시 뽑고**(호출자 `judgeHoldings` ·
-> `ExitObserver.workingSet` · `notifierAlerter.ExternalPositionFound`를 포함), 소스가 그대로인 **3개는
-> 해시 일치를 확인**한 뒤 이 문서를 썼다. 분기 표는 `analysis/harness/render_bundles.py`가
+> 3판은 base `02716357`에서 번들 **21개**를 이 문서보다 먼저 갖췄다 — 새로 뽑음 12(호출자 `judgeHoldings` ·
+> `ExitObserver.workingSet` · `notifierAlerter.ExternalPositionFound` 포함) · 줄 이동으로 다시 뽑음 4 ·
+> 소스 해시가 그대로여서 산문만 고침 5. 분기 표는 `analysis/harness/render_bundles.py`가
 > `ast.json`과 커버리지 프로파일(`analysis/harness/coverage/`)에서 기계로 만든다.
 > 손으로 적은 분기 주장은 없다. 결정이 덮지 않는 지점은 **`[비움 — Qn]`**으로 비워 두고
 > 끝의 「열린 질문」에 올린다.
@@ -152,6 +152,10 @@ Q5로 올린다. 델타의 R3 요구사항은 그 답까지 **그대로 두되 �
    만드는 방식은 (a) 그 사실에 새 이벤트 종류를 주고 `criticalEvents`에 등재, (b) `Event`에 등급을 싣고
    `SeverityOf`의 계약을 바꿈, (c) 다른 방식 — 어느 것인가? 그리고 발신 자리가 「알림 off」를 어떻게
    아는가(`Notifier.Publisher`가 nil인지를 읽을지, 설정값을 `ReconcileDriver` 옵션으로 넘길지)?
+   **제약(3판 문서 리뷰가 더함)**: 정본 engine-safety 「등급화된 알림」은 critical의 *"전달 실패가
+   지속되면 신규 진입을 차단한다(SHALL)"*고 적는다. 따라서 알림 off에서 진입 차단을 막으려면 그 상태에서
+   a095의 사실이 **critical로 매겨지지 않아야** 한다 — critical로 매긴 뒤 차단만 거르면 정본과 어긋나고
+   MODIFIED가 필요하다(결정 (2)는 MODIFIED를 금한다).
 2. **Q2 — 결정 (2)가 이름 대지 않은 사유.** (a) 설정 거부(`alertUnmanaged` B3) (b) include 지정 시도 실패
    (B6) — 특히 `adoption.enabled=false`에 include 목록이 있을 때 정본 「false = 기존 동작」과의 관계
    (c) `adopt` B2(시세 읽기 오류) · B6(관측 없음) · B7(관측 묵음)로 **연기된** 후보가 B5 사유로 알려진다 —
@@ -170,6 +174,10 @@ Q5로 올린다. 델타의 R3 요구사항은 그 답까지 **그대로 두되 �
    `EventExitObservationOutage` · `:1633` `EventExitJudgementRefused` · `:1657` `EventExitProposalRefused` ·
    `:1687` `EventExitLiquidationDelayed`)이 같은 뮤텍스를 기다린다. a095가 이 경합의 모집단을 늘리는 것을
    받아들이고 a092 · a124의 소유로 두는가, a095 안에서 상한을 두는가?
+   **같은 뿌리의 둘째 면(3판 문서 리뷰가 더함)**: 그 배달은 reconcile goroutine 자신도 붙잡는다.
+   `judgeHoldings` B15가 무관리 보유마다 `alertUnmanaged`를 **차례로** 부르므로, transport가 죽은 채
+   B5 사실이 N건이면(예: 시세 경로 장애로 `adopt` B2가 후보 전원을 연기) 대사 사이클이 N × 배달 예산만큼
+   멈춘다. 손절 경로는 아니지만 대사 주기가 늦어진다.
 
 ## Impact
 
