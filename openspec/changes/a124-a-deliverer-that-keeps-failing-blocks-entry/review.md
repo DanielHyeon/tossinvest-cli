@@ -764,3 +764,33 @@ D1 · D7 · D8 · D10 · spec SHALL 대조 일치, fail-open 경로 · 데이터
   a124 디렉터리. 프롬프트 `codex-i4-prompt.md`, diff `a124-impl-i4-alertdelivery.patch`(3회차 트리 대비 alertdelivery.go), 출력 `codex-i4-output.md`.
 - 판정: `run.count == 0` 은 제거한 `!seen` 과 도달 가능한 모든 경로에서 같다(행 map 에 count 0 저장 경로 없음, 나열 계수의 0 은 옛 `listSeen=false` 자리와
   일치), AA2(한도 판정이 세대 리셋보다 먼저) · Z1(직전 증가의 세대로 차단) 유지, 새 발견 0. **`VERDICT: PASS`**.
+
+### 5.2 a092 전달 목록 (2026-09-28 — 수행은 a092 21판 몫, a124 는 a092 파일을 편집하지 않는다)
+
+a092 는 현재 20판이다(21판 미작성). 다음을 a092 21판의 작업으로 넘긴다(Manager 경유):
+
+1. **착수 조건**: a092 21판(「exit goroutine 에서 동기 deliver 제거」)은 a124 착지(`22fecb76`)를 착수 조건으로 인용한다 — a124 착지 전에 동기 시도를 빼면
+   정본 「전달 실패가 지속되면 신규 진입을 차단」 SHALL 이 빈다.
+2. **「굶주림」 문단 삭제**: a092 델타 `specs/engine-safety/spec.md:56` — 같은 성질을 a124 델타 「배달 실행자의 행 선택은 굶주림을 만들지 않는다」가 싣는다.
+3. **「운영자의 승인은 … 되살리지 않는다」 문단**: a092 델타 `:66` — a124 델타 「늦은 적용은 제때 적용과 같아야 한다」를 가리키게(정본 사본 둘 방지).
+4. **래치 지연 식 교체**: a092 델타의 `다음 배달 사이클까지의 시간 + 시도 횟수 × 1회 상한 + (시도 횟수 − 1) × 사이클 주기` →
+   `Q + (L−1)·C + I_list + (T + S + M)` + 전제 H(a124 design D6). 「사이클 주기」 재정의는 발행 시간을 이중으로 센다(Q6).
+5. **운영 효과 선행 조건(AC1)**: `Journal.SetModeProjector` 생산 배선 + 기동 `RestoreOperatingModeProjection` 을 a092 축소판의 **명명된 후속**으로
+   (현재 a092 proposal :499 · :582 「미배정 후속」). **AC2 동봉**: `execgw/modegate.go:35-50` 지움→재삽입 창 · 커밋 뒤 투영 순서(겹친 전이 호출).
+   배선이 착지하면 a124 의 구조 핀 `TestTheModeProjectorHasNoProductionCaller` 가 빨강이 되는 것이 정상 경로다(a124 design D10 · spec 경계 문장 · 그 핀을 함께 고친다).
+6. **`Acknowledge` 셈~해제 구간의 독립 기록자 경합**(a124 proposal Follow-ups): a092 델타 `:72` 가 요구한 「무엇이 그 구간을 지키는지」. a124 design D10
+   (i) 의 범위 한정(「셈과 해제 사이 유입」 궤적만 닫힘, id 스냅숏 뒤 유입은 승인 · 생산자 세대 커버리지가 필요)을 함께 넘긴다.
+
+### 4.2 make 타깃 — 게이트 슬롯 (2026-09-28, 격리 워크트리 `TossOS-worktrees/a124-gate` @ `54e67495`, 로그 `/tmp/claude-1000/a124-lot/42-*.log`)
+
+| 타깃 | rc | 비고 |
+|---|---:|---|
+| `make sdd-sync` | 2 | advisory 미완(codegraphcontext · gbrain busy) — 선례상 허용. 워크트리에 `.sdd/.venv` 가 없어 `make sdd-infra` 로 만든 뒤 재실행(`42-sdd-sync-2.log`) |
+| `make sdd-check` | 0 | 재실행(`42-sdd-check-2.log`) — CodeGraph hard-evidence index matches the worktree. 첫 판 rc 2 는 venv 부재(sdd-doctor) |
+| `make test` | 0 | 703 s |
+| `make test-seams` | **2** | **`TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` FAIL** — `BUCKET_USAGE_STALE (horizon): … snapshot claims 0 used, the ledger holds 882006`. a124 전 base `cf381447` 격리 워크트리에서 단독 재실행 1 ok · 2 FAIL(흔들리는 실패), `54e67495` 에서 단독 3/3 FAIL. a124 가 만지지 않은 전략 dispatch 시험(a112 · a066 risk bucket 표면) — **a124 귀속 아님** |
+| `make test-race` | 0 | 44 s |
+| `make vet` | 0 | |
+| `make validate` | 0 | |
+
+- **4.2 는 체크하지 않는다** — test-seams 가 빨강이고 완료 게이트 8/11 단계가 같은 것을 돈다. 게이트 시퀀스를 여기서 멈추고 Manager 에게 올렸다.
