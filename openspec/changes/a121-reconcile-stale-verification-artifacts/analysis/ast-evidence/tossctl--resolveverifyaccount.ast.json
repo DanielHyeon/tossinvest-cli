@@ -1,0 +1,223 @@
+{
+  "file": "cmd/tossctl/verify.go",
+  "source_sha256": "77d33e4d7375aa6857e0ff69dda5ad4d083ace0f62878a9b1db152967435d4f7",
+  "package": "main",
+  "function": "resolveVerifyAccount",
+  "signature": "resolveVerifyAccount(params=3, results=3)",
+  "start": {
+    "line": 922,
+    "column": 1
+  },
+  "end": {
+    "line": 953,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "for",
+      "at": {
+        "line": 929,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 931,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 934,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 938,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 941,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 943,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 947,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 939,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 950,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 952,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 930,
+        "column": 19
+      },
+      "text": "client.Accounts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 931,
+        "column": 21
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 934,
+        "column": 18
+      },
+      "text": "sleep"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 934,
+        "column": 29
+      },
+      "text": "verifylive.ReadRetryBackoff"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 939,
+        "column": 17
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 942,
+        "column": 10
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 946,
+        "column": 19
+      },
+      "text": "strconv.Atoi"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 946,
+        "column": 32
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 952,
+        "column": 16
+      },
+      "text": "errors.New"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 929,
+        "column": 6
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 929,
+        "column": 20
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 930,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 934,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 942,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 946,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 948,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

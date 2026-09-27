@@ -1,0 +1,164 @@
+{
+  "file": "internal/verifylive/steps.go",
+  "source_sha256": "154d16990e0aeef4989afd73643b5e5d16d1cdc0ecadeb4349635539e3d5d172",
+  "package": "verifylive",
+  "function": "stepConditionalCancel",
+  "receiver": "Runner",
+  "signature": "Runner.stepConditionalCancel(params=2, results=1)",
+  "start": {
+    "line": 778,
+    "column": 1
+  },
+  "end": {
+    "line": 795,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 780,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 784,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 789,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "else",
+      "at": {
+        "line": 791,
+        "column": 9
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 782,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 785,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 794,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 779,
+        "column": 20
+      },
+      "text": "r.liveConditional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 781,
+        "column": 3
+      },
+      "text": "sr.skip"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 784,
+        "column": 12
+      },
+      "text": "r.cancelConditional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 787,
+        "column": 2
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 789,
+        "column": 16
+      },
+      "text": "r.readConditional"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 790,
+        "column": 3
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 792,
+        "column": 3
+      },
+      "text": "sr.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 792,
+        "column": 75
+      },
+      "text": "orDash"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 779,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 784,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 789,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
