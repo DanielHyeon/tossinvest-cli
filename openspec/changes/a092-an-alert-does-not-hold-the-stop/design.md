@@ -493,6 +493,9 @@ HEAD의 답:
 완화를 사람 승인 + audit로 요구하므로 그 경로는 정본의 전제다. 그리고 운영 원장에 이미 강화된 모드 행이 있으면 배포 직후 기동
 복원이 진입을 막는다 — 운영 원장의 현재 모드는 이 문서가 잴 수 없다(계좌 데이터, 사람 몫).
 
+**운영 원장 프로브(2026-09-27T22:16:56Z, 읽기 전용, Manager 승인)**: `operating_modes` 행 1 — `ENTRY_BLOCKED` · `AUTO` ·
+`BROKER_AUTH_REJECTED` · `2026-07-31T09:55:49Z`. 이대로 배선하면 첫 기동이 진입을 막고 풀 경로가 없다. 상세·한계는 `proposal.md` Q3.
+
 그래서 델타의 ADDED 요구는 **완화 경로를 선행 조건으로** 적고, 이 배정이 축소 결정 20-1에 드는지와 완화 표면을 어떻게 채울지를
 `proposal.md` 「열린 질문」 Q3으로 올린다. **Q3의 답 전에는 투영 배선에 착수하지 않는다.** 배선이 착지하면 a124의 구조 핀
 `TestTheModeProjectorHasNoProductionCaller`·`TestTheLedgerModeRowAddsNoEntryEnforcementBeforeProjectionIsWired`

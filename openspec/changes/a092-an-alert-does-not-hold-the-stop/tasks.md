@@ -16,7 +16,11 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
       design D0.3e · proposal 21판 표와 「열린 질문」 · `analysis/head-ast-21/`(HEAD `c1e34dc4` 추출 18개, `extract.py` 커밋) ·
       `review.md` §23 · `check_values.py` `DRAFT = 21`. 검증: `openspec validate --strict` rc 0, `check_values.py` 실패 목록 대조(§23.4).
       **적대 리뷰(21라운드)는 이 체크에 들지 않는다** — Manager 지시 뒤 21.8.
-- [ ] 21.1 **열린 질문 Q1~Q6의 답** — 답이 온 뒤 21.3 이하를 확정한다. Q3·Q4의 답 전에는 21.6·21.7에 착수하지 않는다.
+- [x] 21.0a **Manager 판정 반영 + 운영 원장 읽기 전용 프로브** (2026-09-28) — Q1 문자 해석 유지(a095 Q7 교차 인용) · Q2 유지 ·
+      Q4·Q6 21라운드 이연 · Q5 조건부(삭제 항목별 소유 정본 인용 — `review.md` §23.6, 정산 선점 문단은 되살림) · Q3 사용자행.
+      프로브: `operating_modes` 행 1 = `ENTRY_BLOCKED`/`AUTO`/`BROKER_AUTH_REJECTED`/`2026-07-31T09:55:49Z`(proposal Q3). 브로커 호출 0.
+- [ ] 21.1 **열린 질문의 남은 답** — Q3(사용자) · Q4·Q6(21라운드). Q3·Q4의 답 전에는 21.6·21.7에 착수하지 않는다.
+      **a092는 Q3 사용자 답까지 파킹**(Manager 2026-09-28) — 21라운드도 그 뒤다.
 - [ ] 21.2 **FLM 먼저 (구현 전).** (a) `Notifier.deliver`(분기 27)의 HEAD AST로 잠금 밖으로 옮겨질 갈래(정산 · 래치 `:484`·`:520`·`:571` ·
       반납)를 열거하고 `Acknowledge` 셈~해제와의 겹침 표를 쓴다(design D0.3e 5번이 주장하지 않은 것). (b) 20판 블록 ①: base 재고정 +
       `DIFF` 번들 재추출 + Branch Test Map 재번호(difflib 정렬). (c) 편집 대상 `notifyCritical`·`claimAndDeliver`·`logClaimHeld`·
