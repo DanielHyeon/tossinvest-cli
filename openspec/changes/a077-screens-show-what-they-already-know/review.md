@@ -211,3 +211,35 @@ RED/GREEN까지 관측한 증거가
 있다. a079의 표를 여기로 복사하면 a079가 관측한 RED를 a077의 관측인 것처럼 만드는
 것이므로 하지 않았다. a077 시점의 16분기 증거는
 `321cf78e8b63` 커밋에 그대로 남아 있다.
+
+## 종결 시퀀스 (2026-09-27, a122 선례 · Manager 2단계 승인, refresh 경로)
+
+### stale 번들 refresh 영수증 (47b25444)
+
+- 옛 번들 둘(`internal-console--attachpositionexitlines`, `internal-console--console.decoratepositionrows`)의
+  `ast.json` 은 **448dfeb1** 의 `internal/console/portfolio_pages.go`(sha256 16975cd7…)를 기술했다.
+  HEAD fcc60aa0 의 그 파일은 sha256 82009617… 이다.
+- 그 뒤 이 파일을 바꾼 이웃 커밋 3(`git log --full-history 448dfeb1..fcc60aa0 -- internal/console/portfolio_pages.go`):
+  a081 `df4407ed` · a080 `aaa7638d` · a111 `882a0b49`. 함수 단위(`git log -L`):
+  - `attachPositionExitLines`: 바꾼 커밋 0 — 본문 바이트 동일, 위치만 142-237 → 174-269.
+  - `Console.decoratePositionRows`: a081 `df4407ed`(공유·캐시 엔진 읽기) · a111 `882a0b49`(liveness 계산과 `responseAt`).
+- 재생성: HEAD fcc60aa0 에서 `go run ./tools/logic-map --file internal/console/portfolio_pages.go --func …`,
+  `revision: current` 유지. 분기 수 11→11 · 12→12, 옛/새 분기를 (kind, 소스 줄) 로 difflib 정렬한 결과 두 함수 모두
+  Bn → Bn 항등 — Branch Test Map 재번호 없음(decorate 의 B2·B3 는 같은 자리·같은 kind 에서 조건 글자만 바뀜).
+  새 분기 0 이라 새 시험 저술 0. BTM 이 이름으로 인용한 시험 8개는 현재 트리에 전부 있다
+  (`internal/console/a077_live_protection_test.go` 3 · `a053_exit_line_reference_test.go` 4 ·
+  `exit_lines_trading_views_test.go` 1).
+- `risk-pattern-report.md` 는 재생성 결과가 바이트 동일이라 그대로 두었다. decorate 의 function-logic-map.md 에
+  「Refresh」 절을 붙여 두 이웃 편집을 적었다. attach 의 prose 는 본문이 같아 그대로다(줄 번호 인용은 +32 이동).
+- 신선한 번들 5개(`joinpositions` · `readonly.accountactivequarantines` · `readonly.livepositionexits` ·
+  `operatorview--buildexitline` · `operatorview--reasontext`)는 바이트 불변.
+- refresh 뒤 check_analysis 에서 stale·해시 불일치 오류 0(남은 것은 옛 base 의 형제 required 뿐).
+
+### base 재고정 영수증 (3aae0a79)
+
+- 잰 순간: HEAD 47b25444, 모집단 = `git log --full-history -- openspec/changes/a077-…` 커밋 5.
+  d42e42e9 · 448dfeb1 은 옛 base 의 조상(자기 Go 작업은 base 앞 — 840b3377 이 base 를 작업 뒤 통합 병합으로 옮겼다),
+  base 뒤 840b3377 · 421c1927 · 47b25444 는 go 0.
+- 옛 base 448dfeb1 에서 5단계 rc 1 · required 323 · 창에 착지 커밋 404 — 전부 다른 change 의 기존 함수.
+- 재고정 448dfeb1 → 47b25444, `base-commit.txt` 만 커밋(3aae0a79). 재고정 뒤 check_analysis rc 0
+  (required 0, evidence complete or diff-proven exempt). 도구가 권하는 `--record-landing` 은 쓰지 않았다(Manager 결정).
