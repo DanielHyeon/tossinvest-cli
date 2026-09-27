@@ -103,7 +103,7 @@ B3 과 같은 결과). 시험(Z4): 트랜잭션 안 SELECT 실패 · 커밋 실�
 B8(`Publisher == nil`)도 `MarkAlertAttemptFailed(…, "no publisher is configured")` 를 거쳐 D1 판정을 탄다(고정 원인 문구 — D9).
 근거: `newNotifier` 문서 *"nil publisher … the entry gate latches, and sustained failure escalates to ENTRY_BLOCKED. That is the
 specified direction"* (`exitwiring.go:60-70`), 동기 경로 `deliver` B3 → B26·B27, `notifyCritical` B4, a092 델타 :76 · 시나리오 :108.
-세지 않는 안은 무설정 엔진이 영구히 진입을 열어 두는 구멍이다.
+세지 않는 안은 무설정 엔진에 전달 실패 래치를 영구히 더하지 않는 구멍이다(다른 진입 검사는 그대로 — D10).
 
 지연은 같지 않다(F13): 동기 경로는 publisher 가 없으면 첫 반복에서 `break` 후 곧장 잠근다(≈0 s), 실행자는 한 사이클 한 시도라
 ≈4~6 s. 규칙을 하나(「사이클당 한 행 한 시도」, a092 델타 :74)로 두기 위해 이 차이를 받아들인다.
@@ -502,7 +502,7 @@ a124 의 코드는 투영기 없이 착지해도 된다 — 모든 규칙이 알
 - **토글 OFF = upstream**: 새 토글 없음. 1판의 *"알림 게이트 OFF 면 Notifier 자체가 없다"* 는 **틀렸다**(F7) — Notifier 는 엔진에서
   무조건 생성된다(`gateway.go:323`). 실제 OFF 경계는 automation gate OFF 에서 `engine run` 이 기동을 거부하는 것이다
   (`cmd/tossctl/engine.go:220-221` `errEngineGateOff`, `TestAGateOffEngineRefusesWithoutEnumeratingClauses` rc 0, 2026-09-26). 엔진이 없으면 실행자도 없다.
-- **보수 방향**: 이 change 가 여는 문은 없다 — 오늘 안 잠기던 자리가 잠긴다. 생산에서 진입을 막는 수단은 알림 래치 하나이고, 모드 승격은 원장 기록이다(D10 —
+- **보수 방향**: 이 change 가 여는 문은 없다 — 오늘 안 잠기던 자리가 잠긴다. a124 가 생산에서 진입에 **더하는** 차단 수단은 알림 래치 하나이고, 모드 승격은 원장 기록이다(D10 —
   투영기 미배선은 a124 이전부터의 사실이고, 모드의 진입 집행은 a124 의 운영 효과 선행 조건이다). 한도는 동기 경로와 같고(D2), `Acknowledge` 는 편집하지 않으며 해제
   조건(승인 + 미전달 0)은 그대로다. 새 execgw 기계는 잠그는 쪽으로만 틀린다(D7). `revision`(전략 ABA 봉인)의 의미는 바꾸지 않는다.
 - **audit**: 모드 승격은 `operating_modes` 행으로 남는다(자동·보수 — 정본 「보수 방향은 자동·즉시·durable」).
@@ -575,7 +575,7 @@ a124 의 코드는 투영기 없이 착지해도 된다 — 모든 규칙이 알
 | V4 P1 | 수용 — 「경계 있는 게이트 구간 허용, 그 안 외부 작업 금지」로 spec 교정 | D7 · spec |
 | V5 P2 | 수용 — 에피소드 carryover 는 보수 방향으로 수용·시험 기대값, 나열 계수 초기화 순서 명시 | D8 · tasks 2.10 |
 | V6 P2 | 수용 — `I_list` 항, 「조건부 상한」 표현, tasks 5.2 문장 교체 | D6 · tasks 5.2 |
-| W1 P0 | 5판 3쇄에서 수용했다가 6판에서 **논증으로 거절 — Manager 승인**(근거: a092 사람 결정 「승인이 이긴다」, 원칙 E; ㉪). **7판: 등가 다리만 유지, 보호 다리(「운영 모드로 남는다」) 철회 → 보호로서는 미해소**, 닫는 것은 a092 셈~해제 수리 또는 투영기 배선(D10 「W1 재논증」, review §0.15) | D7 · D10 · spec · tasks 2.9 · 2.14 |
+| W1 P0 | 5판 3쇄에서 수용했다가 6판에서 **논증으로 거절 — Manager 승인**(근거: a092 사람 결정 「승인이 이긴다」, 원칙 E; ㉪). **7판: 등가 다리만 유지, 보호 다리(「운영 모드로 남는다」) 철회 → 보호로서는 미해소**. a092 셈~해제 수리 · 투영기 배선은 각자 D10 전제 아래 적힌 궤적만 줄인다(8판 AD3 · AE2; D10 「W1 재논증」, review §0.15) | D7 · D10 · spec · tasks 2.9 · 2.14 |
 | W2 P1 | 수용 — 나열 계수는 세대만으로 원칙 E 적용(원장 확인 없음) | D8 · tasks 2.10 |
 | W3 P1 | 수용 — 무조건 잠금 폐기. 6판은 재시도 자체가 없다(울타리 실패 = 「뒤」) | D7 · spec · tasks 2.9 |
 | W4 P2 | 수용 — 적용 단계가 「잠금만」 판정을 운반 | D7 · tasks 2.8 |

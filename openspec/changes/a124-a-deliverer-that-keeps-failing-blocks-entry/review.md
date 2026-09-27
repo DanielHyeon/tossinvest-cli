@@ -504,3 +504,17 @@ proposal Non-goals/Impact)을 쓰고 Q4~Q6 을 반영해 5회차 재freeze 한�
 
 - **판정: PASS (codex, 교차 모델).** P2 · P3 는 기록만 했고 반영하지 않았다 — 반영 여부는 Manager 가 정한다. **tasks 0.4 는 체크하지 않는다**(Manager 검증 뒤).
   PASS 의 범위는 codex 가 적은 대로 「scoped proposal」이다. W1 보호 · 구현 · 원장 경합 측정 · 모드 집행은 미증명으로 남는다.
+
+## §0.20 Manager 검증 · 판정 (2026-09-27) — AE1~AE3 반영, tasks 0.4 체크, 구현 로트 전환
+
+- Manager 독립 검증: `codex-r14-output.md:121` 의 PASS 원문, `fe3db326` · `cf8e539a` 경로 청정, `openspec validate --strict` rc 0.
+- **AE1 · AE2 · AE3 반영 — D10 정렬, 규칙 무변, 재리뷰 불요(Manager 판정, 비례 원칙).** design :106(D3 → 「전달 실패 래치를 영구히 더하지 않는 구멍, 다른 진입 검사는
+  그대로」) · 안전 불변식 대조(「a124 가 더하는 차단 수단은 알림 래치 하나」) · 처분표 W1 행(「각자 D10 전제 아래 적힌 궤적만 줄인다」) · 기동 복원 FLM 주석
+  (「모드 행은 남지만 게이트 투영은 여기서 복원하지 않는다」).
+- **tasks 0.4 체크 (Manager 승인).** 영수증: 14회차 PASS(session `01a0e2e8-6156-7ea2-abe9-552bdc7809cb`, 21:52 KST) + Manager 독립 검증. 체크 줄에 W1(b) 미해소 조건
+  (i)(ii)와 「운영 효과 선행 조건」을 계약으로 인용했다.
+- 구현 로트로 전환(담당 Teammate 유지): freeze 된 8판(+AE 정렬)대로 tasks 1.2 이후. journal 스키마 필요 시 정지 · 보고(a066 이 v33 선점), 병행 로트와 겹치는 파일 발견 시
+  정지 · 보고.
+- 기록: 이 시점 `check_analysis.py --change a124…` 는 rc 1 — a124 자신의 base 번들 형식 결함(`## Safety conclusion` 부재 5 · BTM 누락 분기: `deliverOne` B2/B4/B5,
+  `Notifier.deliver` 25 개, `notifyCritical` B1/B2)과, working tree 대상이라 병행 로트의 수정 함수 다수가 섞인 결과다. 앞의 것은 구현 로트 1.3 · 1.4 가 채운다(0.4 와 무관 —
+  freeze 는 문서 계약 판정).

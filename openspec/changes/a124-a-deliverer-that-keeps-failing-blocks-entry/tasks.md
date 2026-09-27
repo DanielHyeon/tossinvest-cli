@@ -4,11 +4,16 @@
 - [x] 0.2 `openspec validate a124-a-deliverer-that-keeps-failing-blocks-entry --strict` 통과 (openspec 1.4.1, rc 0, 2026-09-26)
 - [x] 0.3 **AST 산출물이 문서보다 먼저** — 함수 5개(`cycle` · `deliverOne` · `Notifier.deliver` · `Notifier.notifyCritical` ·
       `restoreAlertEntryLatch`), 분기 48, HEAD `463cc895` (2026-09-25, Manager). 편집 대상 둘은 편집 뒤 재추출(1.3)
-- [ ] 0.4 proposal-freeze 리뷰(**적대적 Eng 필수 + 교차 모델**) → `review.md`. 열린 결정 D2 · D3 를 답한다
+- [x] 0.4 proposal-freeze 리뷰(**적대적 Eng 필수 + 교차 모델**) → `review.md`. 열린 결정 D2 · D3 를 답한다
       — 1판 실행(2026-09-26, Teammate 적대 Eng + codex): **REJECT**. D2 = ㄱ(3) · D3 = 센다로 답함. F1·F2·F3·F4·F8 과
       Manager 결정 M1·M2 를 design 에 반영한 뒤 재freeze (`review.md` §0)
       — 12회차(2026-09-27 codex): **REJECT**, AC1 = freeze 차단(Manager §0.15) → 7판(논거 교정 + 운영 효과 선행 조건)
-      — 13회차: **REJECT**, AD1 · AD2 P1(7판 신설 문장 정밀도) → 8판(Manager 승인 §0.18), 14회차 대기
+      — 13회차: **REJECT**, AD1 · AD2 P1(7판 신설 문장 정밀도) → 8판(Manager 승인 §0.18)
+      — **14회차: PASS**(codex gpt-6-astra, session `01a0e2e8-6156-7ea2-abe9-552bdc7809cb`, 2026-09-27 21:52 KST, `codex-r14-output.md` 「VERDICT: PASS」) +
+      **Manager 독립 검증**(PASS 원문 · 커밋 경로 청정 · `openspec validate --strict` rc 0) → 체크(2026-09-27, Manager 승인). AE1~AE3 는 D10 정렬로 반영(재리뷰 불요,
+      Manager 판정 §0.20). **freeze 계약으로 남는 것**: W1(b) 미해소 — B 의 알림 사유 보호는 (i) a092 의 `Acknowledge` 셈~해제 원자화(「셈과 해제 사이 유입」 궤적만)
+      또는 (ii) 투영기 배선 + 모드 기동 복원(AC2 수리 · 진입 허용 전 복원 순서 동반)이 각자의 궤적 범위에서만 세운다(design D10); 「운영 효과 선행 조건」 — 모드의
+      진입 집행은 `SetModeProjector` 생산 배선 + 기동 `RestoreOperatingModeProjection` 착지 뒤에만 참(소유 a092 축소판, 코드 착지 조건 아님, proposal)
 
 ## 1. 증거와 Pre-Edit
 
