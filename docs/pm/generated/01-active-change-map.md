@@ -80,7 +80,7 @@
 | `a074-critical-events-reach-the-operator` | STORY-TOS-a074 | in_progress |
 | `a075-alerts-turn-on-with-one-button` | STORY-TOS-a075 | archived |
 | `a076-the-subscribe-address-is-scannable` | STORY-TOS-a076 | archived |
-| `a077-screens-show-what-they-already-know` | STORY-TOS-a077 | implemented |
+| `a077-screens-show-what-they-already-know` | STORY-TOS-a077 | archived |
 | `a078-first-rung-keeps-its-judgement` | STORY-TOS-a078 | archived |
 | `a079-operator-can-lift-a-quarantine` | STORY-TOS-a079 | implemented |
 | `a080-line-refreshes-on-engine-cadence` | STORY-TOS-a080 | archived |

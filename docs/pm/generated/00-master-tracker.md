@@ -70,7 +70,7 @@
     - STORY-TOS-a060 — Make the console's soak restart use the profile the console is on [archived] → `a060-soak-restart-uses-this-profile`
     - STORY-TOS-a061 — Show instrument codes and names together in trade history [archived] → `a061-show-history-instrument-names`
     - STORY-TOS-a063 — Renew capability attestation from the console profile [in_progress] → `a063-align-attestation-renewal-profile`
-    - STORY-TOS-a077 — Make the trading screens show the protection line and the stock name they already hold [implemented] → `a077-screens-show-what-they-already-know`
+    - STORY-TOS-a077 — Make the trading screens show the protection line and the stock name they already hold [archived] → `a077-screens-show-what-they-already-know`
     - STORY-TOS-a075 — Turn critical alert delivery on with one button, with no hand-edited config and no token to paste [archived] → `a075-alerts-turn-on-with-one-button`
     - STORY-TOS-a076 — Move the subscribe address to a phone by scanning it instead of typing it [archived] → `a076-the-subscribe-address-is-scannable`
     - STORY-TOS-a080 — Refresh the protection line on the engine's cadence instead of the broker cache TTL [archived] → `a080-line-refreshes-on-engine-cadence`

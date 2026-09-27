@@ -243,3 +243,7 @@ RED/GREEN까지 관측한 증거가
 - 옛 base 448dfeb1 에서 5단계 rc 1 · required 323 · 창에 착지 커밋 404 — 전부 다른 change 의 기존 함수.
 - 재고정 448dfeb1 → 47b25444, `base-commit.txt` 만 커밋(3aae0a79). 재고정 뒤 check_analysis rc 0
   (required 0, evidence complete or diff-proven exempt). 도구가 권하는 `--record-landing` 은 쓰지 않았다(Manager 결정).
+
+### 완료 게이트
+
+- gate PASS c3427311, gate1.log, 11/11 (격리 worktree `TossOS-worktrees/a077-gate`, 2026-09-27; 로그 `/tmp/claude-1000/a077-lot/gate1.log`).

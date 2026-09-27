@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a077-screens-show-what-they-already-know",
-    "path": "openspec/changes/a077-screens-show-what-they-already-know"
+    "path": "openspec/changes/archive/2026-09-27-a077-screens-show-what-they-already-know"
   },
   "acceptance": [
     "A managed position whose stored effective snapshot has not changed for hours still renders 익절/손절/추적 회수/기준/고점 while an engine is running against this console's journal",
