@@ -41,3 +41,7 @@
 
 - **Safe edit boundary**: **a094는 이 함수를 바꾸지 않는다.** 주석이 논거를 갖는다 — *"A second proposal while one is outstanding is refused rather than overwritten."* **엔진 자신의 초과 매도는 여기서 이미 막힌다**(3판 R2 축소의 근거). 이 함수가 막지 못하는 것은 사용자가 앱에 넣은 매도이며, 그것을 막으려던 검사가 손절을 영구 보류시켰다.
 - **High-risk impact**: yes — 초과 매도의 1차 방벽이다.
+
+## Refresh (2026-09-27, HEAD ddd39a83)
+
+`ast.json` 을 현재 소스로 재생성했다(옛 파일은 base `ec29dc72` 소스). 위 본문의 줄 번호는 base 기준이며 현재 위치는 655-677 → 655-677 이다. 분기 번호의 정본은 `ast.json`·Branch Test Map 이다. 본문은 base 와 바이트가 같다.

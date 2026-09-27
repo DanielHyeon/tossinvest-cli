@@ -46,3 +46,7 @@
 
 - **Safe edit boundary**: **a094는 이 함수를 바꾸지 않는다.** B2–B4에 위험 비증가 면제를 주는 것은 spec의 SHALL(*심볼당 in-flight mutation 1개 제한은 모든 safety class에*)을 깨고, archive `2026-07-26-extend-execution-contract/design.md:63`이 그 carve-out을 이미 검토·폐기했다. a094는 attempt를 **종결시켜서**(R1) B2가 애초에 매칭하지 않게 한다.
 - **High-risk impact**: yes — 이 함수가 손절의 통과 여부를 정한다.
+
+## Refresh (2026-09-27, HEAD ddd39a83)
+
+`ast.json` 을 현재 소스로 재생성했다(옛 파일은 base `ec29dc72` 소스). 위 본문의 줄 번호는 base 기준이며 현재 위치는 799-834 → 799-834 이다. 분기 번호의 정본은 `ast.json`·Branch Test Map 이다. 본문은 base 와 바이트가 같다.

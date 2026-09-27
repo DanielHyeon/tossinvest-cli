@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/apply_hook.go",
-  "source_sha256": "88afd376da87b9b3e741b5ce2d47864185c0b0ce4e54c0b351788bf92aa8de00",
+  "source_sha256": "459f1791fa91a6c7d108804c4c67374bce7a715ccf4874f1ebb4f31a4114a5ee",
   "package": "journal",
   "function": "armExitProposalTx",
   "signature": "armExitProposalTx(params=5, results=1)",

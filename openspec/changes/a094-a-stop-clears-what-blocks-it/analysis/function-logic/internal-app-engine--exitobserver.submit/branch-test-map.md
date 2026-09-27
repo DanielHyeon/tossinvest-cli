@@ -6,17 +6,19 @@
 
 | Branch | 조건 | 진입 실측 | Test (a094 요구) | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:1240` `if err != nil {` | 아니오 | 기존 | no | no |
-| B2 | `:1243` `if isZeroQuantity(submitQuantity) {` | 예 | 기존 (a091이 다룸) | no | no |
-| B3 | `:1263` `if err != nil {` | 아니오 | 기존 | no | no |
-| B4 | `:1272` `if err := o.opts.Journal.AttachExitIntent(ctx, m.position.ID, intentID); err != nil {` | 예 | 기존 | no | no |
-| B5 | `:1277` `if err != nil {` | 아니오 | 기존 | no | no |
-| B6 | `:1287` `switch {` | — | **a094 2.9** | no | no |
-| B7 | `:1288` `case out.State == journal.StateConfirmed:` | 예 | 기존 | no | no |
-| B8 | `:1296` `case out.State == journal.StateInDoubt \|\| out.State == journal.StateUnresolvedInDoubt:` | 예 | **a094 2.1** — 409가 더 이상 여기로 오지 않는다 | no | no |
-| B9 | `:1301` `case out.Reason == execgw.ReasonSymbolInFlight:` | 아니오 | **a094 6.2** — 272210 라이브락 | no | no |
-| B10 | `:1304` `default:` | 예 | **a094 2.9** — 409가 이제 여기로 온다 | no | no |
-| B11 | `:1306` `if detail == "" && err != nil {` | 아니오 | 기존 | no | no |
+| B1 | `:1346` `if err != nil {` | 아니오 | 기존 | no | no |
+| B2 | `:1349` `if isZeroQuantity(submitQuantity) {` | 예 | 기존 (a091이 다룸) | no | no |
+| B3 | `:1369` `if err != nil {` | 아니오 | 기존 | no | no |
+| B4 | `:1378` `if err := o.opts.Journal.AttachExitIntent(ctx, m.position.ID, intentID); err != nil {` | 예 | 기존 | no | no |
+| B5 | `:1383` `if err != nil {` | 아니오 | 기존 | no | no |
+| B6 | `:1393` `switch {` | — | **a094 2.9** | no | no |
+| B7 | `:1394` `case out.State == journal.StateConfirmed:` | 예 | 기존 | no | no |
+| B8 | `:1402` `case out.State == journal.StateInDoubt \|\| out.State == journal.StateUnresolvedInDoubt:` | 예 | **a094 2.1** — 409가 더 이상 여기로 오지 않는다 | no | no |
+| B9 | `:1407` `case out.Reason == execgw.ReasonSymbolInFlight:` | 아니오 | **a094 6.2** — 272210 라이브락 | no | no |
+| B10 | `:1410` `default:` | 예 | **a094 2.9** — 409가 이제 여기로 온다 | no | no |
+| B11 | `:1412` `if detail == "" && err != nil {` | 아니오 | 기존 | no | no |
 
 **미진입 분기 5개**: B1, B3, B5, B9, B11
 **자체 블록 없는 분기 1개**: B6 — 컴파일러가 별도 블록을 만들지 않는 형태(빈 `default:` 등)이며 미커버와 다르다.
+
+**Refresh (2026-09-27, HEAD ddd39a83).** `ast.json` 을 현재 소스에서 `go run ./tools/logic-map` 로 재생성했다(옛 파일은 base `ec29dc72` 소스를 기술). 행의 `:줄` 은 새 AST 의 줄로 옮겼다. 분기 대응은 옛/새 AST 를 (kind, 소스 줄)로 difflib 정렬한 결과다 — 항등(번호 무변). 「진입 실측」 열은 base 에서 잰 값 그대로다(재측정 안 함). 본문은 base 와 바이트가 같다(위치만 이동).

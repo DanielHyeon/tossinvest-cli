@@ -52,3 +52,7 @@
 
 - **Safe edit boundary**: **a094 3판이 새 호출자를 더한다** — attempt가 비-CONFIRMED 종결에 이르면 그 intent를 가리키는 발의를 해제한다. **함수 본문은 바꾸지 않는다.** 안전 확인 둘: (1) `rollBackRungTx`는 `active_rung`만 쓰고 **손절 가격은 건드리지 않는다**(§6 무관), (2) B8이 멱등을 보장하므로 중복 호출이 무해하다. `RungIndex`는 음수 label을 거부하므로(`ladder.go:536-538`) `pending_level="-1"`인 행은 rung 되돌림 없이 해제된다.
 - **High-risk impact**: yes — 발의 해제는 다음 주기의 재제출을 허용한다.
+
+## Refresh (2026-09-27, HEAD ddd39a83)
+
+`ast.json` 을 현재 소스로 재생성했다(옛 파일은 base `ec29dc72` 소스). 위 본문의 줄 번호는 base 기준이며 현재 위치는 810-869 → 825-884 이다. 분기 번호의 정본은 `ast.json`·Branch Test Map 이다. 본문은 base 와 바이트가 같다.

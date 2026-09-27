@@ -46,3 +46,7 @@
 
 - **Safe edit boundary**: **a094가 바꾸는 것은 `live`의 원천 하나다.** B3의 술어(`!buy && !withPending → continue`), B6의 확정 규칙, B7의 `!clear → 제출 안 함`은 **전부 그대로 둔다.** 새 권한이 아니라 기존 권한의 눈을 넓히는 것이다(design D2).
 - **High-risk impact**: yes — 브로커 취소를 내고, 그 실패가 손절 제출을 막는다.
+
+## Refresh (2026-09-27, HEAD ddd39a83)
+
+`ast.json` 을 현재 소스로 재생성했다(옛 파일은 base `ec29dc72` 소스). 위 본문의 줄 번호는 base 기준이며 현재 위치는 1334-1392 → 1440-1498 이다. 분기 번호의 정본은 `ast.json`·Branch Test Map 이다. 본문은 base 와 바이트가 같다.

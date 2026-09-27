@@ -50,3 +50,7 @@
 
 - **Safe edit boundary**: **a094는 이 함수의 본문을 바꾸지 않는다.** R3은 이 순회를 **다른 시점에도** 돌게 하는 배선을 더한다. 재시작 순회 자체는 그대로다(spec delta의 '재시작 복구는 계속 미종결 attempt를 순회한다(SHALL — 변경 없음)').
 - **High-risk impact**: yes — 시작 시 상태 재구성 전체를 소유한다.
+
+## Refresh (2026-09-27, HEAD ddd39a83)
+
+`ast.json` 을 현재 소스로 재생성했다(옛 파일은 base `ec29dc72` 소스). 위 본문의 줄 번호는 base 기준이며 현재 위치는 207-296 → 238-329 이다. 분기 번호의 정본은 `ast.json`·Branch Test Map 이다. 이웃 커밋 1c76a580 (a102) 이 이 함수를 바꿨다 — 3판 문서에 미치는 인용 영향은 `analysis/third-round-errata.md` 에 적는다.

@@ -52,3 +52,7 @@
 
 - **Safe edit boundary**: **a094는 이 함수를 바꾸지 않는다.** B3의 게이트 조건은 그대로다 — a094는 그 안에서 불리는 `clearTheSymbol`이 **무엇을 볼 수 있는지**만 바꾼다. 475150은 `pending_action`이 `STOP_LOSS_LADDER`였으므로 B3은 **이미 참이었다.**
 - **High-risk impact**: yes — 청산 판단의 기록과 청소의 진입점.
+
+## Refresh (2026-09-27, HEAD ddd39a83)
+
+`ast.json` 을 현재 소스로 재생성했다(옛 파일은 base `ec29dc72` 소스). 위 본문의 줄 번호는 base 기준이며 현재 위치는 1077-1197 → 1177-1303 이다. 분기 번호의 정본은 `ast.json`·Branch Test Map 이다. 이웃 커밋 882a0b49 (a111) 이 이 함수를 바꿨다 — 3판 문서에 미치는 인용 영향은 `analysis/third-round-errata.md` 에 적는다.
