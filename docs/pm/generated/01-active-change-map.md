@@ -70,7 +70,7 @@
 | `a064-add-multi-market-strategy-evidence` | STORY-TOS-a064 | archived |
 | `a065-add-position-campaign-leg-core` | STORY-TOS-a065 | archived |
 | `a066-add-multi-horizon-risk-buckets` | STORY-TOS-a066 | in_progress |
-| `a067-add-kr-us-continuation-lanes` | STORY-TOS-a067 | in_progress |
+| `a067-add-kr-us-continuation-lanes` | STORY-TOS-a067 | implemented |
 | `a068-add-kr-us-reversal-lanes` | STORY-TOS-a068 | in_progress |
 | `a069-add-kr-us-weekly-value-lanes` | STORY-TOS-a069 | archived |
 | `a070-add-multi-market-horizon-router` | STORY-TOS-a070 | in_progress |
