@@ -5,7 +5,7 @@
    "tests": [
     "TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice",
     "TestA066StaleUsageRuleEdgesAtBothAdmissionSites",
-    "TestA066StaleUsageRecollectionTerminates"
+    "TestA066StaleUsageIsRefusedOnceAndReEvaluatedOnTheNextWave"
    ],
    "red": "step 1 (F2 fixed): admitted, usage 100/110 > 80; mutants N02, N04 CAUGHT"
   }
@@ -36,6 +36,34 @@
     "TestMigrationV33ToV34KeepsLegacyReservationsReadable"
    ],
    "red": "mutants N16, N20 CAUGHT"
+  }
+ },
+ "internal-riskbucket--recomputeoveragelatches": {
+  "B6": {
+   "scenario": "5.7: other entries' ledger usage in a shared bucket is added before comparing with the limit (design D5 bucket sum)",
+   "tests": [
+    "TestA066SharedBucketOverageFromOneOwnersActualFillIsLatched"
+   ],
+   "red": "measured: shared usage 128 > 100 with zero RISK_OVERAGE (shared-overage-measure.log); mutants S01, S03 CAUGHT"
+  }
+ },
+ "internal-riskbucket--clonefillstate": {
+  "B5": {
+   "scenario": "5.7: shared usage map copied when present; nil stays nil (crash-pure DeepEqual contract)",
+   "tests": [
+    "TestA066SharedBucketOverageFromOneOwnersActualFillIsLatched",
+    "TestApplyFillErrorIsCrashPure"
+   ],
+   "red": "mutant S04 CAUGHT; first draft (always non-nil) failed three crash-pure tests"
+  }
+ },
+ "internal-journal--loadriskbucketfilltransition": {
+  "B21": {
+   "scenario": "5.7: shared usage unreadable → semantic error (fill kept, REPLAY_MISMATCH) or storage error",
+   "tests": [
+    "TestA066SharedUsageUnreadableKeepsTheFillAndLatches"
+   ],
+   "red": "mutants S02, S05, S06 CAUGHT"
   }
  }
 }

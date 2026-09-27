@@ -13,7 +13,7 @@
 
 ## Branches and early returns
 
-| Branch | Position | Condition and first body statement (AST source line) | a066 relevance | Coverage (5.6.1 post-edit) |
+| Branch | Position | Condition and first body statement (AST source line) | a066 relevance | Coverage (5.7 post-edit) |
 |---|---|---|---|---|
 | B1 | if at 340:2 | `if !ok {`; then `return nil, ErrProductionRiskSnapshotUnavailable` (line last changed by `8022f578`) | not a066 | NOT covered |
 | B2 | if at 343:2 | `if err := validateProductionRiskJournalFile(config.JournalPath, owner); err != nil {`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
@@ -29,7 +29,7 @@
 | B12 | if at 406:3 | `if err != nil {`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
 | B13 | if at 415:3 | `if err != nil {`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
 
-5.6.1 post-edit (HEAD `b8211926`): 13 → 13; B9/B10 now `ReadJournalBucketUsage` error and `usage.Latched`. Pre-edit table: `analysis/pre-edit/5.6.1/internal-riskbucket--loadproductionriskentries.md`.
+5.7 post-edit (HEAD `54e67495` + 5.7 working tree): 13 → 13; body unchanged (file lines shifted).
 
 ## Calls and live bindings
 

@@ -426,6 +426,10 @@ type UsageQueryer interface {
 	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 }
 
+// ErrJournalUsageInvalid 는 원장 사용량 행이 계약을 벗어났다는(값·상태·결속이 잘못됐다는) 답임. 저장소 읽기 실패와 가르기
+// 위한 타입 — 체결 경로는 이것을 의미 오류(체결은 보존, latch)로, 읽기 실패는 저장 오류(트랜잭션 되돌림)로 다룸(a066 5.7).
+var ErrJournalUsageInvalid = errors.New("risk bucket: invalid or latched journal usage")
+
 // JournalBucketUsage 는 계좌 하나의 bucket(dimension, value) 원장 사용량임.
 type JournalBucketUsage struct {
 	FilledMinor, HeldMinor, RowDigest string
@@ -477,14 +481,14 @@ func aggregateProductionRiskUsage(rows []productionRiskUsageRow) (JournalBucketU
 			(row.State != "HELD" && row.State != "FILLED" && row.State != "RELEASED") || (row.State == "RELEASED" && rowHeld.Sign() != 0) ||
 			row.SnapshotID == "" || row.PolicyRecordDigest == "" ||
 			!canonicalIdentity(row.ReservationID) || !canonicalIdentity(row.PolicyVersion) {
-			return JournalBucketUsage{}, errors.New("risk bucket: invalid or latched journal usage")
+			return JournalBucketUsage{}, ErrJournalUsageInvalid
 		}
 		// latch 는 합에서 빼지 않고 호출자에게 알림 — 생산 snapshot 은 거절하고, admission 대조는 합만 씀.
 		latched = latched || row.OverageLatched != 0 || row.UnknownLatched != 0
 		filled.Add(filled, rowFilled)
 		held.Add(held, rowHeld)
 		if filled.BitLen() > 256 || held.BitLen() > 256 {
-			return JournalBucketUsage{}, errors.New("risk bucket: journal usage overflow")
+			return JournalBucketUsage{}, fmt.Errorf("%w: journal usage overflow", ErrJournalUsageInvalid)
 		}
 		parts = append(parts, row.ReservationID, row.PolicyVersion, row.HeldMinor, row.FilledMinor, row.State,
 			fmt.Sprint(row.OverageLatched), fmt.Sprint(row.UnknownLatched), row.SnapshotID, row.PolicyRecordDigest)

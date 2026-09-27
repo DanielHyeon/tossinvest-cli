@@ -705,3 +705,62 @@ not a migration SQL error).
 - Contract mutants (`mutate_5_6_1.py --set 5.6`, ledger `analysis/mutation-5.6/ledger-contract.tsv`), each making one part of the sentence false: usage summed over every bucket value (C01) or every account (C02), owner conflict ignored (C03), reconcile scope ignoring market (C04), loss lock ignoring market (C05), stale check skipping strategy (C06), latched shared usage ignored (C07). **7/7 CAUGHT.**
   - Two earlier drafts let mutants survive, and the fixture was fixed each time. C02 survived because only one account was used. C06 survived while horizon and sector were shared (they caught what strategy should). C05 survived while the US isolation entry used a different horizon.
 
+
+## 5.7 shared part — late/actual fill overage across owners of a shared bucket (2026-09-28)
+
+Manager ruling: repair in 5.7 scope. The latch goes on the owner whose fill caused the overage; other owners are
+already blocked by the single 5.6.1 rule (latched shared usage blocks entry). No second copy of the verdict is written.
+
+**Measured defect** (`analysis/mutation-5.6.1/shared-overage-measure.log`, before the repair): owners A (US AAPL) and B
+(US MSFT) each fill 50 of the shared horizon, US-market, strategy and sector buckets (limit 100). A's actual fill price
+then raises A to 78, so the bucket sum is 128 > 100. **Zero** RISK_OVERAGE latches were set. The cause: fill accounting
+(`loadRiskBucketFillTransition` → `riskbucket.recomputeOverageLatches`) compared only the owner's own usage with the
+snapshot limit, while design D5 and the 5.6.1 admission use the bucket sum.
+
+**Repair**
+- `FillState.SharedUsedMinor` holds, per bucket, the other entries' ledger usage. It is not persisted and not part of
+  the state digest.
+- `loadRiskBucketFillTransition` fills it through `riskBucketSharedUsage`: ledger total via
+  `riskbucket.ReadJournalBucketUsage` (the same function as the admission check and the production reader) minus this
+  owner's sum.
+- `recomputeOverageLatches` adds it to `used`.
+- An invalid ledger row (`riskbucket.ErrJournalUsageInvalid`, a new typed sentinel with the same message text)
+  becomes a semantic error: the fill is kept, and REPLAY_MISMATCH plus FILL_UNACCOUNTED are recorded. A read failure
+  stays a storage error, handled as before.
+- The call-graph test now pins the third caller: `riskBucketSharedUsage` ← `loadRiskBucketFillTransition`.
+
+**Contract** (`internal/journal/a066_integration_5_7_shared_test.go`, promoted from the measurement):
+- After A's actual fill, A's horizon, market, strategy and sector reservations carry overage 28 and RISK_OVERAGE.
+  A's own symbol bucket (78 of 100) has no overage. The A owner is latched, and B's reservations carry no copy.
+- A new entry C, even with a ledger-true snapshot, is blocked by the 5.6.1 shared-latch rule.
+- **Falsification scenario (Manager):** B's order is cancelled and its hold released, so the shared sum drops to 78,
+  below the limit. A's latch and overage stay, and a new entry D is still blocked. B shrinking does not reopen entry.
+- An unreadable shared row keeps the fill and watermark and latches REPLAY_MISMATCH / FILL_UNACCOUNTED.
+
+**Mutation** (`mutate_5_6_1.py --set 5.7`): shared usage not added (S01), loader skips it (S02), owner counted twice
+(S03), clone drops the map (S04), invalid usage counted as zero (S05), invalid usage treated as a storage error (S06).
+All **6/6 CAUGHT**.
+- The first S05 draft targeted the storage-error return, which the invalid-row test never reaches, so it SURVIVED.
+  It was re-targeted at the invalid-usage branch, and S06 was added for the opposite misclassification.
+
+**Release participation — cited from existing code, not designed here.** The new latch is the owner's existing
+`risk_overage_latched` flag and the reservations' `risk_overage_latched`. `releaseRiskBucketOwner`
+(`internal/journal/risk_bucket_owner.go:807`) refuses release while `"owner_latch"` counts a latched owner
+(`risk_overage_latched=1 OR unknown_actual_latched=1`, line 923). **No code anywhere clears RISK_OVERAGE**: grep finds
+no write of `risk_overage_latched=0` and no reset of `LatchRiskOverage`. So an owner that ever records overage, the
+single-owner case that predates this lot included, can never be released under current code. Per the Manager's
+condition, the release/clearing design stops here and is reported as a named residual. It belongs with the relaxation
+decision: human-approved and audited clearing, like the entry loss lock.
+
+**Relaxation question — merged (Manager 2026-09-28).** The pending user decision now covers two items with the same
+shape: human-approved, audited clearing for (1) the entry loss lock and (2) the RISK_OVERAGE latch, which no code in the
+repository clears today (`releaseRiskBucketOwner` refuses release while `owner_latch` is set). Both clearing flows are
+unimplemented until the user answers.
+
+5.7 shared-part verification (sequential, isolated copy): `internal/journal`, `internal/riskbucket` and
+`internal/execgw` pass untagged (journal 460 s), the `tossos_testseams` runs of riskbucket and execgw pass, and
+`-race` passes on the journal focus set and on riskbucket. One regression was caught along the way: three riskbucket
+crash-pure tests (`TestApplyFill*CrashPure`) failed because `cloneFillState` turned a nil `SharedUsedMinor` into an
+empty map. Fixed so nil stays nil. Mutation ledger: `analysis/mutation-5.7/ledger-shared.tsv` (6/6 CAUGHT). FLM:
+post-edit tables for `recomputeOverageLatches`, `cloneFillState` and `loadRiskBucketFillTransition`, with pre-edit
+tables in `analysis/pre-edit/5.7/`. Four bundles whose files shifted were re-extracted with the same branch shapes.

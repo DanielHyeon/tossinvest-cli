@@ -72,6 +72,21 @@ CONTRACT_MUTANTS = [
     ("C06 stale check skips strategy", USAGE, "\tfor _, bucket := range buckets {", "\tfor _, bucket := range buckets {\n\t\tif bucket.Key.Dimension == riskbucket.DimensionStrategy {\n\t\t\tcontinue\n\t\t}"),
     ("C07 latched shared usage ignored", USAGE, "\t\tif usage.Latched {\n\t\t\treturn fmt.Errorf(", "\t\tif false && usage.Latched {\n\t\t\treturn fmt.Errorf("),
 ]
+# 5.7 공유 bucket overage 전파 — `--set 5.7`.
+FILL_MUTANTS = [
+    ("S01 shared usage not added to overage", "internal/riskbucket/fill.go", "\t\tif shared, ok := state.SharedUsedMinor[key]; ok {", "\t\tif shared, ok := state.SharedUsedMinor[key]; ok && false {"),
+    ("S02 loader skips shared usage", FILL, "\tstate.SharedUsedMinor = shared\n", "\t_ = shared\n"),
+    ("S03 shared usage counts the owner twice", FILL, "\t\tshared[key] = new(big.Int).Sub(total, own).String()", "\t\tshared[key] = total.String()"),
+    ("S04 clone drops shared usage", "internal/riskbucket/fill.go", "\t\tout.SharedUsedMinor = cloneMinorMap(in.SharedUsedMinor)\n", ""),
+    ("S05 invalid shared usage counted as zero", FILL, "\t\t\t\treturn nil, fmt.Errorf(\"%w: shared %s bucket usage: %v\", ErrRiskBucketReplayMismatch, key.Dimension, err)", "\t\t\t\tcontinue"),
+    ("S06 invalid shared usage treated as a storage error", FILL, "\t\t\t\treturn nil, fmt.Errorf(\"%w: shared %s bucket usage: %v\", ErrRiskBucketReplayMismatch, key.Dimension, err)", "\t\t\t\treturn nil, err"),
+]
+FILL_TESTS = [
+    ["go", "test", "-count=1", "./internal/riskbucket"],
+    ["go", "test", "-count=1", "-run", "TestA066SharedBucketOverage|TestA066SharedUsageUnreadable|TestA066LateFillOverage|TestA066PartialFillCrash|TestRiskBucketFill|TestRiskBucketAuthoritativePartialFill|TestRiskBucketOwnerAggregate|TestRiskBucketLateFill", "./internal/journal"],
+    ["go", "test", "-count=1", "-run", "TestA066LedgerUsageHasOneComputation", "./internal/execgw"],
+]
+
 CONTRACT_TESTS = [
     ["go", "test", "-count=1", "-run", "TestA066KRUSConcurrentContract|TestA066KRUSFailureIsolation", "./internal/journal"],
 ]
@@ -111,6 +126,8 @@ def main() -> None:
         i = args.index("--set")
         if args[i + 1] == "5.6":
             MUTANTS, TESTS = CONTRACT_MUTANTS, CONTRACT_TESTS
+        elif args[i + 1] == "5.7":
+            MUTANTS, TESTS = FILL_MUTANTS, FILL_TESTS
         args = args[:i] + args[i + 2:]
     scratch, own = Path(args[0]), args[1:]
     copy = scratch / f"mut561-{os.getpid()}"

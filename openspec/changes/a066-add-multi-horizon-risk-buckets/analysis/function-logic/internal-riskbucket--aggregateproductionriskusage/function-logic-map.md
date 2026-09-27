@@ -13,13 +13,13 @@
 
 ## Branches and early returns
 
-| Branch | Position | Condition and first body statement (AST source line) | a066 relevance | Coverage (5.6.1 post-edit) |
+| Branch | Position | Condition and first body statement (AST source line) | a066 relevance | Coverage (5.7 post-edit) |
 |---|---|---|---|---|
-| B1 | range at 473:2 | `for _, row := range rows {`; then `rowFilled, filledOK := new(big.Int).SetString(row.FilledMinor, 10)` (line last changed by `8022f578`) | not a066 | covered |
-| B2 | if at 476:3 | `if !filledOK \|\| !heldOK \|\| rowFilled.Sign() < 0 \|\| rowHeld.Sign() < 0 \|\| rowFilled.BitLen() > 256 \|\| rowHeld.BitLen() > 256 \|\|`; then `return JournalBucketUsage{}, errors.New("risk bucket: invalid or latched journal usage")` (line last changed by `8022f578`) | not a066 | covered |
-| B3 | if at 486:3 | `if filled.BitLen() > 256 \|\| held.BitLen() > 256 {`; then `return JournalBucketUsage{}, errors.New("risk bucket: journal usage overflow")` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B1 | range at 477:2 | `for _, row := range rows {`; then `rowFilled, filledOK := new(big.Int).SetString(row.FilledMinor, 10)` (line last changed by `8022f578`) | not a066 | covered |
+| B2 | if at 480:3 | `if !filledOK \|\| !heldOK \|\| rowFilled.Sign() < 0 \|\| rowHeld.Sign() < 0 \|\| rowFilled.BitLen() > 256 \|\| rowHeld.BitLen() > 256 \|\|`; then `return JournalBucketUsage{}, ErrJournalUsageInvalid` (line last changed by `8022f578`) | not a066 | covered |
+| B3 | if at 490:3 | `if filled.BitLen() > 256 \|\| held.BitLen() > 256 {`; then `return JournalBucketUsage{}, fmt.Errorf("%w: journal usage overflow", ErrJournalUsageInvalid)` (line last changed by `8022f578`) | not a066 | NOT covered |
 
-5.6.1 post-edit (HEAD `b8211926`): 3 → 3; returns `JournalBucketUsage`; latched rows set `Latched` instead of failing (the production caller refuses them with the same text). Pre-edit table: `analysis/pre-edit/5.6.1/internal-riskbucket--aggregateproductionriskusage.md`.
+5.7 post-edit (HEAD `54e67495` + 5.7 working tree): 3 → 3; the invalid-row and overflow returns now carry the typed `ErrJournalUsageInvalid` (same message text).
 
 ## Calls and live bindings
 

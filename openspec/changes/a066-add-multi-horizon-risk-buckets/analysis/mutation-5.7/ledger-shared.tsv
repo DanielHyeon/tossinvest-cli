@@ -1,0 +1,8 @@
+TREE	HEAD cf38144771ac66131e388dfe1eb931044e06134a	uncommitted tracked: internal/app/engine/alertdelivery.go,internal/app/engine/auxiliary.go,internal/execgw/a066_legacy_entry_census_test.go,internal/execgw/retry.go,internal/journal/alert_claim.go,internal/journal/outbox.go,internal/journal/risk_bucket_fill.go,internal/riskbucket/fill.go,internal/riskbucket/production_snapshot_authority.go	own untracked: internal/journal/a066_integration_5_7_shared_test.go
+CONTROL	GREEN	
+S01 shared usage not added to overage	CAUGHT	1 failing: TestA066SharedBucketOverageFromOneOwnersActualFillIsLatched
+S02 loader skips shared usage	CAUGHT	1 failing: TestA066SharedBucketOverageFromOneOwnersActualFillIsLatched
+S03 shared usage counts the owner twice	CAUGHT	4 failing: TestA066SharedBucketOverageFromOneOwnersActualFillIsLatched, TestA066PartialFillCrashThenRetryCommitsEverythingExactlyOnce, TestRiskBucketAuthoritativePartialFillCommitsWithPositionAndCompletesActualEvidence, TestRiskBucketOwnerAggregateAccountsTwoDecisionOrdersAcrossRestart
+S04 clone drops shared usage	CAUGHT	1 failing: TestA066SharedBucketOverageFromOneOwnersActualFillIsLatched
+S05 invalid shared usage counted as zero	CAUGHT	1 failing: TestA066SharedUsageUnreadableKeepsTheFillAndLatches
+S06 invalid shared usage treated as a storage error	CAUGHT	1 failing: TestA066SharedUsageUnreadableKeepsTheFillAndLatches

@@ -1,15 +1,15 @@
 {
   "file": "internal/journal/risk_bucket.go",
-  "source_sha256": "4a4929aa9500c11e67d10a24446f1bbf785ab8a08a24c5e794107d89562c6623",
+  "source_sha256": "b3e9f0919c32fc6fbf218db836708184a7cd1ba2b93353d654075aa6e594aa38",
   "package": "journal",
   "function": "loadRiskBucketState",
   "signature": "loadRiskBucketState(params=3, results=3)",
   "start": {
-    "line": 399,
+    "line": 401,
     "column": 1
   },
   "end": {
-    "line": 401,
+    "line": 403,
     "column": 2
   },
   "branches": null,
@@ -17,7 +17,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 400,
+        "line": 402,
         "column": 2
       }
     }
@@ -26,7 +26,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 400,
+        "line": 402,
         "column": 9
       },
       "text": "loadRiskBucketStateLifecycle"

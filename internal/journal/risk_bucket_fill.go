@@ -735,6 +735,28 @@ func riskBucketOrderRemaining(ctx context.Context, tx *sql.Tx, orderKey string) 
 	return out, rows.Err()
 }
 
+// riskBucketSharedUsage 는 owner 의 bucket 마다 **다른 진입**의 원장 사용량을 셈. 원장 행이 계약을 벗어나면 의미 오류
+// (ErrRiskBucketReplayMismatch — 체결은 보존하고 latch)로, 읽기 실패는 그대로(저장 오류) 돌려줌.
+func riskBucketSharedUsage(ctx context.Context, tx *sql.Tx, account string, owner map[riskbucket.BucketKey]riskbucket.BucketUsage) (map[riskbucket.BucketKey]string, error) {
+	shared := make(map[riskbucket.BucketKey]string, len(owner))
+	for key, usage := range owner {
+		ledger, err := riskbucket.ReadJournalBucketUsage(ctx, tx, account, key.Dimension, key.Value)
+		if err != nil {
+			if errors.Is(err, riskbucket.ErrJournalUsageInvalid) {
+				return nil, fmt.Errorf("%w: shared %s bucket usage: %v", ErrRiskBucketReplayMismatch, key.Dimension, err)
+			}
+			return nil, err
+		}
+		total, okTotal := sumMinor(ledger.FilledMinor, ledger.HeldMinor)
+		own, okOwn := sumMinor(usage.FilledMinor, usage.HeldMinor)
+		if !okTotal || !okOwn || total.Cmp(own) < 0 {
+			return nil, fmt.Errorf("%w: shared %s bucket usage %v is below this owner's %v", ErrRiskBucketReplayMismatch, key.Dimension, total, own)
+		}
+		shared[key] = new(big.Int).Sub(total, own).String()
+	}
+	return shared, nil
+}
+
 func loadRiskBucketFillTransition(ctx context.Context, tx *sql.Tx, target riskBucketOrderRecord, cumulativeRaw string, actual *riskbucket.ActualFillEvidence) (riskbucket.FillState, riskbucket.FillEvent, error) {
 	cumulative, err := strconv.ParseUint(strings.TrimSpace(cumulativeRaw), 10, 64)
 	if err != nil || cumulative == 0 {
@@ -820,6 +842,13 @@ func loadRiskBucketFillTransition(ctx context.Context, tx *sql.Tx, target riskBu
 	if len(decisionBuckets) == 0 || len(state.Buckets) != len(riskbucket.RequiredDimensionOrder()) {
 		return state, riskbucket.FillEvent{}, fmt.Errorf("%w: fill bucket count", ErrRiskBucketReplayMismatch)
 	}
+	// a066 5.7: 공유 bucket 의 overage 는 bucket 을 쓰는 모든 진입의 합으로 판정함. 이 owner 밖의 사용량 = 원장 합
+	// (riskbucket.ReadJournalBucketUsage — admission 대조·생산 snapshot reader 와 같은 함수) - 이 owner 의 합.
+	shared, err := riskBucketSharedUsage(ctx, tx, target.account, state.Buckets)
+	if err != nil {
+		return state, riskbucket.FillEvent{}, err
+	}
+	state.SharedUsedMinor = shared
 	orders, err := tx.QueryContext(ctx, `SELECT o.order_key,o.order_id,o.order_quantity,o.cumulative_fill,o.quote_currency,o.base_currency,o.reservation_policy_digest FROM risk_bucket_orders o JOIN risk_bucket_final_decisions d ON d.decision_id=o.decision_id WHERE d.account_ref=? AND d.market=? AND d.symbol=? AND d.owner_prospective_generation=? ORDER BY d.owner_sequence,o.order_key`, target.account, target.market, target.symbol, target.prospective)
 	if err != nil {
 		return state, riskbucket.FillEvent{}, err

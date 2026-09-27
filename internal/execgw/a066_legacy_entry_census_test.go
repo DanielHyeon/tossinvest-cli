@@ -255,7 +255,7 @@ func TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly(t *testing.T) 
 	}
 }
 
-// TestA066LedgerUsageHasOneComputation 는 a066 5.6.1 F1 의 "생산 reader 와 같은 합" 을 산문이 아니라 호출 그래프로 고정함:
+// TestA066LedgerUsageHasOneComputation 는 a066 5.6.1 F1(과 5.7 체결 overage)의 "생산 reader 와 같은 합" 을 산문이 아니라 호출 그래프로 고정함:
 // 원장 사용량을 읽고 더하는 두 내부 함수는 ReadJournalBucketUsage 만 부르고, 그 함수를 부르는 자리는 생산 snapshot
 // reader 와 journal admission 의 stale 대조 둘뿐이며, 그 대조는 두 admission 트랜잭션에서만 불림.
 func TestA066LedgerUsageHasOneComputation(t *testing.T) {
@@ -265,9 +265,14 @@ func TestA066LedgerUsageHasOneComputation(t *testing.T) {
 	}{
 		{"readProductionRiskUsage", []string{"internal/riskbucket/production_snapshot_authority.go:ReadJournalBucketUsage"}},
 		{"aggregateProductionRiskUsage", []string{"internal/riskbucket/production_snapshot_authority.go:ReadJournalBucketUsage"}},
+		// a066 5.7: 체결 계상의 공유 bucket overage 도 같은 함수로 다른 진입의 사용량을 읽음.
 		{"ReadJournalBucketUsage", []string{
+			"internal/journal/risk_bucket_fill.go:riskBucketSharedUsage",
 			"internal/journal/risk_bucket_usage.go:refuseStaleBucketUsage",
 			"internal/riskbucket/production_snapshot_authority.go:loadProductionRiskEntries",
+		}},
+		{"riskBucketSharedUsage", []string{
+			"internal/journal/risk_bucket_fill.go:loadRiskBucketFillTransition",
 		}},
 		{"refuseStaleBucketUsage", []string{
 			"internal/journal/risk_bucket.go:Journal.CommitRiskBucketAdmission",

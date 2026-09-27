@@ -13,13 +13,13 @@
 
 ## Branches and early returns
 
-| Branch | Position | Condition and first body statement (AST source line) | a066 relevance | Coverage (5.6.1 post-edit) |
+| Branch | Position | Condition and first body statement (AST source line) | a066 relevance | Coverage (5.7 post-edit) |
 |---|---|---|---|---|
-| B1 | if at 453:2 | `if err != nil {`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
-| B2 | for at 458:2 | `for rows.Next() {`; then `var row productionRiskUsageRow` (line last changed by `8022f578`) | not a066 | covered |
-| B3 | if at 460:3 | `if err := rows.Scan(&row.ReservationID, &row.PolicyVersion, &row.HeldMinor, &row.FilledMinor, &row.State,`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B1 | if at 457:2 | `if err != nil {`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B2 | for at 462:2 | `for rows.Next() {`; then `var row productionRiskUsageRow` (line last changed by `8022f578`) | not a066 | covered |
+| B3 | if at 464:3 | `if err := rows.Scan(&row.ReservationID, &row.PolicyVersion, &row.HeldMinor, &row.FilledMinor, &row.State,`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
 
-5.6.1 post-edit (HEAD `b8211926`): 3 → 3; parameter type `*sql.DB` → `UsageQueryer`. Pre-edit table: `analysis/pre-edit/5.6.1/internal-riskbucket--readproductionriskusage.md`.
+5.7 post-edit (HEAD `54e67495` + 5.7 working tree): 3 → 3; body unchanged (file lines shifted).
 
 ## Calls and live bindings
 
