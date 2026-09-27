@@ -332,3 +332,36 @@ proposal Non-goals/Impact)을 쓰고 Q4~Q6 을 반영해 5회차 재freeze 한�
 - Teammate 적대 Eng 패스(6판 5쇄): 새 P0/P1 없음. 남는 것은 전부 측정 의무로 적혀 있다 — 2.6 (b) 원장 경합(고정 여유), 2.6 (c) backlog 크기(넘으면 스키마 변경
   = Manager), 4.4 래치 시간. 11회차까지의 발견(F~AB)은 처분표와 이 기록에 모두 있다.
 - **판정: 없음.** 두 보이스 중 교차 모델이 없으므로 PASS 로 적지 않는다. tasks 0.4 는 체크하지 않는다. codex 인증이 복구되면 `codex-r12-prompt.md` 그대로 재실행.
+
+## §0.14 proposal-freeze 12회차 재실행 (2026-09-27) — design 6판 5쇄 **REJECT** (codex) · 반영 없음, Manager 결정 대기
+
+- 실행: 리뷰 팀메이트(Opus, 작성자와 분리된 컨텍스트)가 돌렸다. 가동 확인 먼저 — 2026-09-27 20:44 KST, 사소한 프롬프트, session `01a0e2ad-e633-74e1-88f2-e4f0a66e4d7a`,
+  rc 0, 401 없음. 자격 증명 · `~/.codex` 는 읽지도 고치지도 않았다.
+- 본 실행: codex-cli 0.154.0, model `gpt-6-astra`, reasoning medium, `codex exec -s read-only --ephemeral --skip-git-repo-check -C <트리>`,
+  session **`01a0e2b7-a927-7522-8c27-2847fc08c6ae`**, 20:44~21:00 KST, rc 0, tokens 178,869. 프롬프트 = `codex-r12-prompt.md` **원문 그대로**
+  (sha256 `12d7da6a…6387`, 실행 사본과 일치). 출력: `analysis/freeze-review/codex-r12-output.md` (최종 메시지 원문, stdout 과 byte 동일).
+- **실행 트리 편차 (기록).** 프롬프트는 「working tree Go code is identical to base」를 전제하지만 2026-09-27 라이브 트리에서는 거짓이다 — base..HEAD Go 23 파일
+  (`execgw/gateway.go` +5 @904, a066 5.5 `0004536c`), 정본 `engine-safety/spec.md` +42(a071 아카이브 `523a8dda`), 병행 로트의 미커밋 Go. 그래서 세션 스크래치패드에
+  `git archive 4798d399` 를 풀고 HEAD 의 이 change 디렉터리(워크트리와 `diff -r` 0)를 겹친 트리에서 돌렸다. 저장소 변경 0, codex 실행 뒤 트리 안 새 파일 0.
+  아래 AC1 의 핵심 사실(생산 호출자 0)은 **HEAD 워크트리에서도** 같다(Teammate 재확인).
+- codex 판정: 이전 발견 중 **PARTIAL 5** — F2 · N7 · V2 · W1 · Y1 (전부 AC1 하나 때문), 나머지 **전부 RESOLVED**(AB1 · AB2 포함). D2 · D3 는 충분히 정당화됨,
+  D1 가산 읽기 구현 가능, D6 수치(214 / 304 / 316 s) 확인, D7 에 실행자 `n.mu` 대기 사슬 없음, D8 계수 규칙에 fail-open 인터리빙 없음. 새 발견:
+
+| id | codex 심각도 | Teammate 분류 | 발견 | 증거 (Teammate 재확인) |
+|---|---|---|---|---|
+| AC1 | **P0** | **P1** (아래) | durable 승격이 **생산의 진입 판정에 닿지 않고 기동 때 복원되지도 않는다.** 원칙 E 의 「뒤」 해제(㉡ · ㉣ · ㉩ · ㉪ · ㉫)는 차단을 버리고 승격만 남기는데, 생산에서는 그 모드가 진입을 막지 않는다 — 해제 뒤 진입이 열린다. 전부 전달·승인된 뒤 재시작해도 모드 래치가 복원되지 않는다. 시험 2.3 의 PENDING 재시작은 backlog 복원이 따로 잠그므로 이 공백을 가린다 | `SetModeProjector` · `RestoreOperatingModeProjection` **비시험 호출자 0** — base export 와 HEAD 워크트리 양쪽 rg. 투영은 선택(`journal/operating_mode.go:475-476`), 엔진 게이트 생성 `app/engine/gateway.go:249`, 기동 복원은 알림 backlog 만(:269). risk chain 의 모드 검사(`risk/chain.go:260-275`)에 생산에서 들어가는 값은 tracer 의 `risk.ModeNormal` 고정뿐(`app/engine/tracer.go:473`). 기지(旣知): a092 proposal :499 · :582 「미배정 후속」, 정본 `engine-safety/spec.md:1032-1037`(a098 이 같은 이유로 「게이트 래치는 `Block` 으로 직접, 승격에 기대지 않는다」) |
+| AC2 | P2 | P2 | 기존 `ProjectOperatingMode` 는 모드 래치를 지운 뒤 잠금을 다시 잡아 세운다 — 그 사이 진입 판정이 끼면 모드 래치가 없다. 커밋 뒤 투영이라 동시 투영의 도착 순서도 커밋 순서가 아니다. 투영기가 묶일 때만 발현 | `execgw/modegate.go:35-50`(`delete` → `Unlock` → `g.Block`), `journal/operating_mode.go:468-476` |
+
+**Teammate 분류 근거 (AC1 = P1, P0 아님).** ① 공백은 a124 가 만든 것이 아니다 — base 와 HEAD 모두, 오늘의 동기 경로 `Notifier.escalate` 도 같은 모드 행을 쓰고
+같은 이유로 진입에 닿지 않는다. ② 원칙 E 의 **등가성 자체는 깨지지 않는다** — 제때 적용해도 「차단 + 승격 → 해제가 차단을 지움 → 집행되지 않는 모드」로 같은
+결과다. ③ 깨지는 것은 등가성이 아니라 **W1 거절 · Y1 · ㉩/㉪ 의 안전 논거**다: design D7 ㉪ 「durable 승격이 남으므로 B 의 사건은 운영 모드로 계속 드러난다」와
+§0.8 거절 근거는 모드가 진입을 막는다는 전제에 기대는데, 이 change 의 어느 문서도 투영기 미배선을 적지 않는다(`rg` — 이 절을 쓰기 전 이 디렉터리의 `*.md` 에 `SetModeProjector` ·
+`RestoreOperatingModeProjection` 0 건, codex 출력 제외). 그래서 freeze 전에 최소한 그 논거를 「모드 행은 남지만 생산 진입은 막지 않는다(미배정 후속)」로 고쳐야 한다(P1).
+④ **P0 로 올릴 이유도 있다** — W1 거절(Manager 승인)이 「모드로 남는다」를 보호로 읽고 받아들여진 것이라면, 그 승인의 전제가 거짓이다. 그리고 a092 가 동기
+경로를 빼면 차단을 버리는 판정의 주인은 a124 다. 어느 쪽인지는 Manager 몫이다.
+
+**Manager 결정이 필요한 것 (반영하지 않았다).** (a) AC1 심각도 P0/P1. (b) 처분: 투영기 배선 · 기동 복원을 a124 범위로 넣을지(High-risk, 생산 배선), a124 착지의
+**선행 조건**으로 둘지(a092 의 「미배정 후속」을 배정), 아니면 W1/Y1 논거만 교정하고 기록할지. 어느 경우든 codex 가 요구한 생산 빌더 시험(승인 뒤 · PENDING 0
+재시작 뒤 `CheckEntryFor` 가 모드로 거절)은 배선이 있어야만 성립한다. (c) AC2 는 배선을 할 때의 선행 결함으로 기록.
+
+- **판정: REJECT (codex).** Teammate 도 PASS 로 보지 않는다 — AC1 을 P1 로 분류해도 freeze 전 반영이 필요하다. tasks 0.4 는 체크하지 않는다.
