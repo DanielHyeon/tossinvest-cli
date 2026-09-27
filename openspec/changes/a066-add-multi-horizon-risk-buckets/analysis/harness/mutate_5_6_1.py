@@ -87,6 +87,30 @@ FILL_TESTS = [
     ["go", "test", "-count=1", "-run", "TestA066LedgerUsageHasOneComputation", "./internal/execgw"],
 ]
 
+# 6.2 위험 감소 경로 개방 — `--set 6.2`. 잠금·bucket 실패가 손절·비상 청산·취소·대사·체결 감지를 막거나 늦추게
+# 만드는 변이. 잡혀야 6.2 의 "zero exposure-raising + 위험 감소는 대기 없이 호출 가능" 이 시험으로 서 있음.
+GW = "internal/execgw/gateway.go"
+LOCK_COUNT = ("var a066Locks int\n\tif err := tx.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_entry_loss_locks WHERE account_ref=?`, "
+              "%s).Scan(&a066Locks); err == nil && a066Locks > 0 {\n\t\treturn %s, fmt.Errorf(\"a066 mutant: blocked by entry loss lock\")\n\t}\n\t")
+EXIT_MUTANTS = [
+    ("X01 risk-reducing decisions consult bucket authority", GW,
+     "\tif dec.SafetyClass != journal.SafetyClassExposureRaising {\n\t\treturn nil\n\t}\n\treservations, err := g.journal.ReservationsForDecision(ctx, dec.ID)",
+     "\treservations, err := g.journal.ReservationsForDecision(ctx, dec.ID)"),
+    ("X02 risk-reducing path waits 6s (evidence/FX wait stand-in)", GW,
+     "\tif dec.SafetyClass != journal.SafetyClassExposureRaising {\n\t\treturn nil\n\t}\n\treservations, err := g.journal.ReservationsForDecision(ctx, dec.ID)",
+     "\tif dec.SafetyClass != journal.SafetyClassExposureRaising {\n\t\ttime.Sleep(6 * time.Second)\n\t\treturn nil\n\t}\n\treservations, err := g.journal.ReservationsForDecision(ctx, dec.ID)"),
+    ("X03 reconcile entry blocked by loss lock", J + "reconcile_states.go",
+     "\t\treturn ReconcileState{}, false, fmt.Errorf(\"journal: starting the RECONCILE transaction: %w\", err)\n\t}\n\tdefer tx.Rollback()\n\n\t",
+     "\t\treturn ReconcileState{}, false, fmt.Errorf(\"journal: starting the RECONCILE transaction: %w\", err)\n\t}\n\tdefer tx.Rollback()\n\n\t" + LOCK_COUNT % ("account", "ReconcileState{}, false")),
+    ("X04 fill detection blocked by loss lock", J + "fills.go",
+     "\t\treturn res, fmt.Errorf(\"journal: starting the fill transaction for %s: %w\", orderID, err)\n\t}\n\tdefer tx.Rollback()\n\n\t",
+     "\t\treturn res, fmt.Errorf(\"journal: starting the fill transaction for %s: %w\", orderID, err)\n\t}\n\tdefer tx.Rollback()\n\n\t" + LOCK_COUNT % ("obs.AccountRef", "res")),
+]
+EXIT_TESTS = [
+    ["go", "test", "-count=1", "-run", "TestA066", "./internal/execgw"],
+    ["go", "test", "-count=1", "-run", "TestA066", "./internal/journal"],
+]
+
 CONTRACT_TESTS = [
     ["go", "test", "-count=1", "-run", "TestA066KRUSConcurrentContract|TestA066KRUSFailureIsolation", "./internal/journal"],
 ]
@@ -128,6 +152,8 @@ def main() -> None:
             MUTANTS, TESTS = CONTRACT_MUTANTS, CONTRACT_TESTS
         elif args[i + 1] == "5.7":
             MUTANTS, TESTS = FILL_MUTANTS, FILL_TESTS
+        elif args[i + 1] == "6.2":
+            MUTANTS, TESTS = EXIT_MUTANTS, EXIT_TESTS
         args = args[:i] + args[i + 2:]
     scratch, own = Path(args[0]), args[1:]
     copy = scratch / f"mut561-{os.getpid()}"

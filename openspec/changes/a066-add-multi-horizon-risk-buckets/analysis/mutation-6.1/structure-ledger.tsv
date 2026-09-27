@@ -1,0 +1,7 @@
+TREE	HEAD c1e34dc4	uncommitted: internal/journal/a066_storage_exit_structure_test.go (new)
+CONTROL	GREEN	
+S01 storage exit returns nil	CAUGHT	a066_storage_exit_structure_test.go:160: risk_bucket_usage.go:32:3: refuseStaleBucketUsage storage error exit returns a nil error
+S02 storage exit writes before returning	CAUGHT	a066_storage_exit_structure_test.go:137: risk_bucket_usage.go:32:3: refuseStaleBucketUsage storage error exit writes (ExecContext) before returning
+S03 RecordFill loses defer Rollback	CAUGHT	a066_storage_exit_structure_test.go:73: fills.go:313:1: RecordFill opens a transaction without `defer tx.Rollback()` right after BeginTx
+S05 new storage exit changes the census	CAUGHT	a066_storage_exit_structure_test.go:122: walked scope changed: got files=8 funcs=93 exits=284 others=62 txOpeners=10, census {files:8 funcs:93 exits:2
+S04 else-if storage exit (RecordFill ambiguous-owner latch) returns nil	CAUGHT	a066_storage_exit_structure_test.go:160: fills.go:536:9: RecordFill storage error exit returns a nil error
