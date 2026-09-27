@@ -155,3 +155,42 @@ Rescinding this addendum restores task 3.5 to this change.
 | 5단계 | `check_analysis.py --change a071-…` | 1 | **남의 함수 374 요구**(weeklyvaluelane 등, 창 정책 — a122 5.6/5.7·후속 a123 초안) (`04-ca.log`) |
 
 5.2 는 위 표로 닫는다. 5.3(`make gate`)은 5단계가 창 정책으로 성립하지 않아 미실행 — 정책 결정 뒤. 출하 상태(Addendum C1/C2/M7) 재확인은 Opus 팀메이트 로트에 남긴다(이 패스는 시험 실행만).
+
+## 종결 시퀀스 (2026-09-27, a122·a077·a079 선례 · Manager 1차 로트 배정)
+
+### 5.1 — 0233d776 재결속의 현재 HEAD 유효성
+
+- HEAD 9494e0e6 에서 check_analysis: stale 0 · 해시 불일치 0 · 번들 형식 오류 0
+  (`/tmp/claude-1000/audit19/ca-a071-wire-kr-us-protection-readiness.log` — 남은 것은 옛 base 창의 required 뿐).
+  그래서 refresh 대상 번들은 **0** 이고, 번들 40(`revision: current` 35 · `base` 5, 파일 160)은 바이트 불변이다
+  (sha256 전후 대조 일치, `/tmp/claude-1000/a071-lot/`).
+- 자기 Go 커밋 둘의 기존 함수 수정: 171739a4 19 · 6aec9791 19, 합집합 **33** — 33 전부 이 change 의 번들이
+  덮는다(`changed_existing_functions(c^, c)` 와 번들 `ast.json` 의 (file, function) 대조, 누락 0).
+
+### base 재고정 영수증 (77e36cca)
+
+- 잰 순간: HEAD 9494e0e6, 모집단 = `git log --full-history -- openspec/changes/a071-…` 커밋 13.
+  옛 base 775c37cb 뒤 go 를 가진 커밋: 171739a4 · 6aec9791(자기 작업, 위 33 전부 번들로 덮임) ·
+  8022f578(a072/a073 squash, 이 디렉터리 파일 1) · 4c6927ea(a100) · 448dfeb1(통합 병합) — 뒤의 셋은 자기 작업 아님.
+  0233d776 이후 자기 Go 커밋 0.
+- 옛 base 775c37cb 에서 5단계 rc 1 · required 396 · missing 372 · 창에 착지 커밋 457 — missing 은 전부 다른 change 의 기존 함수.
+- 재고정 775c37cb → 9494e0e6, `base-commit.txt` 만 커밋(77e36cca). 재고정 뒤 check_analysis rc 0
+  (required 0, evidence complete or diff-proven exempt). 번들 40 은 창 밖이 되어도 매 판정에서 해시가 대조된다.
+  `--record-landing` 은 쓰지 않았다(Manager 결정).
+
+### 3.5
+
+a100 으로 이관 — tasks.md 「## 6. Supersession — task 3.5 → a100」(195dd972, 2026-08-11)과
+`openspec/changes/a100-wire-fill-to-broker-protection/proposal.md` 「## Supersession — a071 task 3.5 (분할)」.
+변경 집합은 3.4 까지로 확정되고 a100 의 변경분은 a100 의 게이트가 본다. 되돌림 조건(a100 취소·배선 제외)은 tasks.md §6 그대로다.
+
+### 출하 상태(Addendum C1/C2/M7) 재확인 — 5.2 절이 이 로트에 남긴 것 (HEAD 9494e0e6, 읽기만)
+
+- 두 생산 assembly 가 `Wired: false` — `internal/app/engine/protection_wiring.go:41-42`(KR·US, component 에 "fill-lifecycle-unwired").
+- 엔진 구성에 공식 보호 gateway 없음 — `internal/protectionofficial` 을 import 하는 비시험 파일 0(자기 패키지 제외).
+- `internal/protection` 을 import 하는 app 코드는 `internal/app/engine/gateway.go` 하나이고, 쓰는 것은 readiness 어댑터
+  `protection.NewPairedReadinessAdapter`(`gateway.go:292`) 뿐이다 — controller minter · `GatewayFactory` · `protection.db`
+  는 `internal/app`·`cmd` 비시험 코드에 0.
+- `Wired: true` 비시험 출현 셋(`internal/console/protection_liveness.go:58` · `orders.go:312` · `holdings.go:220`)은 콘솔의
+  다른 타입(liveness·화면 view)이며 `protectionreadiness.SupervisorAssembly` 가 아니다.
+- 결론: Addendum 의 출하 상태가 현재 HEAD 에서 그대로다. 이 확인은 저자(Opus 팀메이트)의 사실 대조이지 독립 적대 리뷰가 아니다.

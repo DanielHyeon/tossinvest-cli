@@ -20,7 +20,7 @@
 - [x] 3.2 Replace the production-global readiness constant at the decision boundary with immutable KR/US readiness snapshots derived from exact attestation scope plus actual supervisor wiring, while preserving the shipped `UNWIRED` default
 - [x] 3.3 Implement exact broker identity/query/dedup capability parsing and durable generation/revision operation identity plus desired/observed/unknown broker state needed for registration, safer replacement, cancellation, restart recovery and reconciliation
 - [x] 3.4 Enforce attested replace semantics, continuous coverage, broker-reserved/local sell-claim bounds and entry-latch closure without weakening current ACTIVE protection
-- [ ] 3.5 **SUPERSEDED by `a100-wire-fill-to-broker-protection` (2026-08-11).** Not delivered here and not counted against this change. See `## 6. Supersession` below. Original text: Wire the official protection gateway and supervisor into production engine assembly without exposing a second mutation path or changing lane, autostart, automation gate or LIVE approval settings
+- [x] 3.5 (2026-09-27 체크: 이관 — 195dd972 §6 · a100 proposal 「Supersession — a071 task 3.5」, review.md 「종결 시퀀스」) **SUPERSEDED by `a100-wire-fill-to-broker-protection` (2026-08-11).** Not delivered here and not counted against this change. See `## 6. Supersession` below. Original text: Wire the official protection gateway and supervisor into production engine assembly without exposing a second mutation path or changing lane, autostart, automation gate or LIVE approval settings
 - [x] 3.6 Implement submit/cancel unknown and orphan reconciliation so resubmission occurs only under attested broker idempotency, otherwise remains no-resubmit/entry-latched until exact reconciliation or human resolution
 
 ## 4. Isolated integration and failure recovery
@@ -32,9 +32,9 @@
 
 ## 5. VERIFY and review gates
 
-- [ ] 5.1 Refresh post-edit AST, Function Logic Maps and Branch Test Maps for every changed existing function and pass the repository analysis checker
+- [x] 5.1 Refresh post-edit AST, Function Logic Maps and Branch Test Maps for every changed existing function and pass the repository analysis checker — 0233d776 재결속, HEAD 9494e0e6 에서 stale 0 · 자기 수정 33 전부 덮임 · 재고정(77e36cca) 뒤 check_analysis rc 0 (review.md 「종결 시퀀스」)
 - [x] 5.2 (2026-09-25 Manager 실측, review.md 「5.2 실측」 — 표적 7·seams·정본 race·crash/restart·make test 99·vet·validate·PM 전부 rc 0) Run targeted protection/attestation/execgw/engine tests, race tests for affected packages, journal crash/restart suites, full tests and vet, and strict OpenSpec/PM validation
-- [ ] 5.3 (미실행: 게이트 5단계가 창 정책으로 남의 함수 374 를 요구 — 정책 결정 대기, `/tmp/claude-1000/a071-52/04-ca.log`) Run `make sdd-sync`, `make sdd-check`, and `make gate CHANGE=a071-wire-kr-us-protection-readiness`, then complete adversarial independent review before marking the high-risk change complete
+- [ ] 5.3 (2026-09-27: 정책 결정은 a122 에서 내려졌다 — base 재고정 77e36cca, review.md 「종결 시퀀스」. 돌리고 → 적고 → 체크.) Run `make sdd-sync`, `make sdd-check`, and `make gate CHANGE=a071-wire-kr-us-protection-readiness`, then complete adversarial independent review before marking the high-risk change complete
 - [x] 5.4 Verify the built default remains lane/autostart/automation/LIVE OFF or unapproved, missing attestation remains `UNWIRED`, and protection/exit/reconciliation/fill paths remain available without any live broker mutation
 - [x] 5.5 Run isolated-core unit, race, vet, fuzz, coverage, static dependency and strict OpenSpec validation; preserve the production integration gates above as pending
 
