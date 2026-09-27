@@ -1,0 +1,8 @@
+TREE	HEAD 4773eb56	uncommitted: internal/journal/a066_fill_transition_limit_test.go (new)
+CONTROL	GREEN	
+B3 skipped (non-RiskIntent falls through)	SURVIVED	
+B3 answers required	CAUGHT	TestA066RevalidateReportsNotRequiredForNonQFinalDecisions/reduction_preimage
+B4 skipped (legacy decision judged as q_final)	CAUGHT	TestA066RevalidateReportsNotRequiredForNonQFinalDecisions/legacy_risk_intent
+B4 answers required	CAUGHT	TestA066RevalidateReportsNotRequiredForNonQFinalDecisions/legacy_risk_intent
+B3-backstop empty version marked q_final	CAUGHT
+NOTE	B3 skipped SURVIVED: shadowed by B4 (zero-value RiskIntent has an empty policy version, which carries no q_final marker); the backstop premise is pinned in the test and its mutant is CAUGHT
