@@ -34,8 +34,8 @@
 | B15 | range at 621:2 | `for _, dimension := range riskbucket.RequiredDimensionOrder() {`; then `if !seen[dimension] {` (line last changed by `a37d97f5`) | a066 commit | covered |
 | B16 | if at 622:3 | `if !seen[dimension] {`; then `return true, fmt.Errorf("%w: missing %s q_final reservation", ErrRiskBucketReplayMismatch, dimension)` (line last changed by `a37d97f5`) | a066 commit | NOT covered |
 | B17 | if at 626:2 | `if len(seen) != len(riskbucket.RequiredDimensionOrder()) {`; then `return true, fmt.Errorf("%w: q_final reservation dimension set", ErrRiskBucketReplayMismatch)` (line last changed by `a37d97f5`) | a066 commit | NOT covered |
-| B18 | if at 632:2 | `if err != nil {`; then `return true, err` (line last changed by `00000000`) | a066: decision's horizon reservation cannot be read (storage error only: B16/B17 already proved all five HELD rows) — refuses | NOT covered |
-| B19 | if at 635:2 | `if err := refuseEntryUnderLossLock(ctx, j.db, account, riskbucket.Market(market), horizon); err != nil {`; then `return true, err` (line last changed by `00000000`) | a066: user decision ⑤: a decision issued before the lock is refused at revalidation once its account×market×horizon lock is active (a066 5.5) | covered |
+| B18 | if at 632:2 | `if err != nil {`; then `return true, err` (line last changed by `0004536c`) | a066: decision's horizon reservation cannot be read (storage error only: B16/B17 already proved all five HELD rows) — refuses | NOT covered |
+| B19 | if at 635:2 | `if err := refuseEntryUnderLossLock(ctx, j.db, account, riskbucket.Market(market), horizon); err != nil {`; then `return true, err` (line last changed by `0004536c`) | a066: user decision ⑤: a decision issued before the lock is refused at revalidation once its account×market×horizon lock is active (a066 5.5) | covered |
 
 5.5 post-edit (2026-09-27, HEAD `eecc5fe7` + working tree): AST 562–639, 17 → 19 branches. B1–B17 unchanged; new B18 (horizon reservation read) and B19 (`refuseEntryUnderLossLock`) are the last checks before `return true, nil`.
 

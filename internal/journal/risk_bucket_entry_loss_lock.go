@@ -48,8 +48,12 @@ type EntryLossLock struct {
 
 // validEntryLossLockScope 는 잠금 범위(계좌·시장·horizon)가 이 스키마가 받는 값인지 판정함.
 // 스키마의 CHECK 와 같은 값이어야 함 — 갈라지면 Go 는 통과시키고 SQLite 가 거절함.
+//
+// 계좌 앞뒤 공백은 거절함(정규화하지 않음): 결정·예약은 계좌를 trim 해서 쓰므로(decision.go·reservations.go)
+// " acct-7 " 로 기록된 잠금은 "acct-7" 진입과 끝내 일치하지 않는 **효력 없는 잠금**이 됨. 잠갔다고 믿게
+// 두느니 활성화를 실패시킴(적대 리뷰 codex P1, 2026-09-27).
 func validEntryLossLockScope(account string, market riskbucket.Market, horizon riskbucket.Horizon) bool {
-	return strings.TrimSpace(account) != "" &&
+	return account != "" && account == strings.TrimSpace(account) &&
 		(market == riskbucket.MarketKR || market == riskbucket.MarketUS) &&
 		(horizon == riskbucket.HorizonShort || horizon == riskbucket.HorizonMedium)
 }
@@ -92,7 +96,8 @@ func (j *Journal) ActivateEntryLossLock(ctx context.Context, lock EntryLossLock)
 		return EntryLossLock{}, false, fmt.Errorf("journal: commit entry loss lock: %w", err)
 	}
 	lock.Seq = seq
-	lock.ActivatedAt = lock.ActivatedAt.UTC()
+	// 돌려주는 시각은 저장된 값(초 단위, formatJournalTime)과 같아야 함 — 다시 읽은 기록과 어긋나면 audit 값이 둘이 됨.
+	lock.ActivatedAt = lock.ActivatedAt.UTC().Truncate(time.Second)
 	return lock, true, nil
 }
 

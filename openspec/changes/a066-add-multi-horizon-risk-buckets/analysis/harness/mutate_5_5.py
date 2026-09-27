@@ -65,6 +65,24 @@ MUTANTS = [
     ("M31 gateway maps lock to mismatch", GW, GW_MAP, GW_MAP.replace("return reject(ReasonEntryLossLockActive,", "return reject(ReasonGuardianRiskBucketMismatch,", 1)),
     ("M32 refusal code wrong", LOCK, "Code: riskbucket.RefusalEntryLossLockActive,", "Code: riskbucket.RefusalBucketCapExhausted,"),
     ("M33 reason code not registered", "internal/execgw/failclosed.go", "\t\tReasonEntryLossLockActive,\n", ""),
+    # 적대 리뷰(codex P1) 수리: 앞뒤 공백 계좌 거절.
+    ("M37 scope accepts padded account", LOCK, "account != \"\" && account == strings.TrimSpace(account) &&", "strings.TrimSpace(account) != \"\" &&"),
+    # 적대 리뷰 P2 수리(2026-09-27): 마지막 순간 검사를 재는 시험, 반환 시각 정밀도, 참조 census.
+    ("M38 gateway last-moment check removed", GW, "\t\tif plan.strategy == nil {\n\t\t\tif rejected := g.checkReservation(dctx, fresh); rejected != nil {", "\t\tif false && plan.strategy == nil {\n\t\t\tif rejected := g.checkReservation(dctx, fresh); rejected != nil {"),
+    ("M39 returned ActivatedAt not truncated", LOCK, "lock.ActivatedAt = lock.ActivatedAt.UTC().Truncate(time.Second)", "lock.ActivatedAt = lock.ActivatedAt.UTC()"),
+    ("M40 production method value of IssueEntry", "internal/app/engine/guardian_wiring.go", "func defaultProductionGuardianFactory(", "func a066CensusProbeMethodValue(g *execgw.RiskGuardian) any { return g.IssueEntry }\n\nfunc defaultProductionGuardianFactory("),
+    ("M41 production new(GuardianAdapter)", "internal/strategydispatch/adapters.go", "func (a *GuardianAdapter) IssueAndPlan(", "func a066CensusProbeNew() any { return new(GuardianAdapter) }\n\nfunc (a *GuardianAdapter) IssueAndPlan("),
+    # 적대 리뷰 2차(2026-09-27) 수리의 대조군.
+    ("M42 first-leg site skips the lock", [
+        (J + "strategy_first_leg_atomic.go", "\tqFinalReceipt, err := commitFreshRiskBucketAdmissionTx(", "\ta066SkipLossLock = true\n\tqFinalReceipt, err := commitFreshRiskBucketAdmissionTx("),
+        (LOCK, "func refuseEntryUnderLossLock(ctx context.Context, q riskBucketQueryer, account string, market riskbucket.Market, horizon riskbucket.Horizon) error {\n", "var a066SkipLossLock bool\n\nfunc refuseEntryUnderLossLock(ctx context.Context, q riskBucketQueryer, account string, market riskbucket.Market, horizon riskbucket.Horizon) error {\n\tif a066SkipLossLock {\n\t\ta066SkipLossLock = false\n\t\treturn nil\n\t}\n"),
+    ], None, None),
+    ("M43 schema market CHECK removed", SQL, " market TEXT NOT NULL CHECK(market IN ('KR','US')),", " market TEXT NOT NULL,"),
+    ("M44 schema horizon CHECK removed", SQL, " horizon TEXT NOT NULL CHECK(horizon IN ('SHORT','MEDIUM')),", " horizon TEXT NOT NULL,"),
+    ("M45 producer via field assignment", "internal/execgw/issue.go", "func (i *Issuer) record(", "func a066CensusProbeAssign(r *journal.DecisionRequest) { r.SafetyClass = journal.SafetyClassExposureRaising }\n\nfunc (i *Issuer) record("),
+    ("M46 producer via string literal", "internal/execgw/issue.go", "func (i *Issuer) record(", "func a066CensusProbeString() journal.DecisionRequest {\n\treturn journal.DecisionRequest{SafetyClass: \"EXPOSURE_RAISING\"}\n}\n\nfunc (i *Issuer) record("),
+    ("M47 census walker drops cmd and tools", "internal/execgw/a066_legacy_entry_census_test.go", "censusRoots     = []string{\"internal\", \"cmd\", \"tools\"}", "censusRoots     = []string{\"internal\"}"),
+    ("M49 census walker skips cmd files", "internal/execgw/a066_legacy_entry_census_test.go", "if entry.IsDir() || !strings.HasSuffix(path, \".go\")", "if entry.IsDir() || strings.HasPrefix(filepath.ToSlash(path), filepath.ToSlash(filepath.Join(root, \"cmd\"))) || !strings.HasSuffix(path, \".go\")"),
     # legacy 잔여 census 양성 대조군 — 표본이 채워지면 빨개져야 함.
     ("M34 production NewTracer call", "internal/app/engine/guardian_wiring.go", "func defaultProductionGuardianFactory(", "func a066CensusProbeTracer() { _, _ = NewTracer(TracerOptions{}) }\n\nfunc defaultProductionGuardianFactory("),
     ("M35 production GuardianAdapter", "internal/strategydispatch/adapters.go", "func (a *GuardianAdapter) IssueAndPlan(", "var a066CensusProbeAdapter = &GuardianAdapter{}\n\nfunc (a *GuardianAdapter) IssueAndPlan("),
@@ -104,10 +122,16 @@ def main() -> None:
     for name in ("go.mod", "go.sum"):
         shutil.copy2(ROOT / name, copy / name)
     # cmd/ 도 복사함 — legacy census 시험이 internal/ 과 cmd/ 의 비시험 소스를 전수로 읽음.
-    for tree in ("internal", "cmd"):
+    for tree in ("internal", "cmd", "tools"):
         shutil.copytree(ROOT / tree, copy / tree, symlinks=True)
     env = dict(os.environ, GOFLAGS="-trimpath")
     ledger = open(copy / "ledger.tsv", "w", encoding="utf-8")
+    # 증거를 커밋에 묶음: 원본의 HEAD 와, 사본에 딸려 들어간 미커밋 추적 파일 목록을 첫 줄에 적음
+    # (적대 리뷰 2026-09-27: 원장이 어느 트리를 쟀는지 말하지 않았음).
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
+    dirty = subprocess.run(["git", "diff", "--name-only", "HEAD", "--", "go.mod", "go.sum", "internal", "cmd", "tools"],
+                           cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
+    ledger.write(f"TREE\tHEAD {head}\tuncommitted tracked: {','.join(dirty) or 'none'}\n")
     ok, why = run_tests(copy, env)
     ledger.write(f"CONTROL\t{'GREEN' if ok else 'RED'}\t{why}\n")
     ledger.flush()
@@ -118,19 +142,27 @@ def main() -> None:
     for ident, rel, old, new in MUTANTS:
         if only and not only.search(ident):
             continue
-        target = copy / rel
-        pristine = (ROOT / rel).read_text(encoding="utf-8")
-        if pristine.count(old) != 1:
-            ledger.write(f"{ident}\tNOT-APPLIED\told occurs {pristine.count(old)} times\n")
-            continue
-        target.write_text(pristine.replace(old, new, 1), encoding="utf-8")
-        if new not in target.read_text(encoding="utf-8"):
-            ledger.write(f"{ident}\tNOT-APPLIED\tmutant text absent after write\n")
-            continue
-        green, why = run_tests(copy, env)
-        ledger.write(f"{ident}\t{'SURVIVED' if green else 'CAUGHT'}\t{why}\n")
-        ledger.flush()
-        target.write_text(pristine, encoding="utf-8")
+        # rel 이 목록이면 여러 파일을 한 변이로 바꿈(각 항목 (rel, old, new)).
+        edits = rel if isinstance(rel, list) else [(rel, old, new)]
+        pristines, applied = {}, True
+        for edit_rel, edit_old, edit_new in edits:
+            pristine = pristines.setdefault(edit_rel, (ROOT / edit_rel).read_text(encoding="utf-8"))
+            current = (copy / edit_rel).read_text(encoding="utf-8")
+            if current.count(edit_old) != 1:
+                ledger.write(f"{ident}\tNOT-APPLIED\t{edit_rel}: old occurs {current.count(edit_old)} times\n")
+                applied = False
+                break
+            (copy / edit_rel).write_text(current.replace(edit_old, edit_new, 1), encoding="utf-8")
+            if edit_new not in (copy / edit_rel).read_text(encoding="utf-8"):
+                ledger.write(f"{ident}\tNOT-APPLIED\t{edit_rel}: mutant text absent after write\n")
+                applied = False
+                break
+        if applied:
+            green, why = run_tests(copy, env)
+            ledger.write(f"{ident}\t{'SURVIVED' if green else 'CAUGHT'}\t{why}\n")
+            ledger.flush()
+        for edit_rel, pristine in pristines.items():
+            (copy / edit_rel).write_text(pristine, encoding="utf-8")
     ledger.close()
     print((copy / "ledger.tsv").read_text(encoding="utf-8"))
 

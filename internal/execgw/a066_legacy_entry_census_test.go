@@ -25,6 +25,13 @@ import (
 
 // enclosingSites 는 비시험 Go 소스에서 match 가 참인 노드를 "파일:수신자.함수" 좌표로 모음.
 // 좌표는 줄 번호가 아니라 감싼 선언이라 남의 편집에 흔들리지 않음.
+// censusRoots 는 걷는 최상위 디렉터리이고 censusRootFiles 는 마지막 걷기에서 각 root 가 준 비시험 Go 파일 수임.
+// 걷기 범위가 줄면(root 가 빠지거나 비면) census 는 공허하게 통과하므로 그 수를 따로 단언함.
+var (
+	censusRoots     = []string{"internal", "cmd", "tools"}
+	censusRootFiles = map[string]int{}
+)
+
 func enclosingSites(t *testing.T, match func(ast.Node) bool) []string {
 	t.Helper()
 	root, err := filepath.Abs(filepath.Join("..", ".."))
@@ -32,7 +39,9 @@ func enclosingSites(t *testing.T, match func(ast.Node) bool) []string {
 		t.Fatal(err)
 	}
 	seen := map[string]bool{}
-	for _, top := range []string{"internal", "cmd"} {
+	// tools/ 도 같은 모듈의 main 패키지들이라 셈(적대 리뷰 2026-09-27).
+	for _, top := range censusRoots {
+		censusRootFiles[top] = 0
 		err := filepath.WalkDir(filepath.Join(root, top), func(path string, entry fs.DirEntry, walkErr error) error {
 			if walkErr != nil {
 				return walkErr
@@ -44,6 +53,7 @@ func enclosingSites(t *testing.T, match func(ast.Node) bool) []string {
 			if err != nil {
 				return err
 			}
+			censusRootFiles[top]++
 			rel, _ := filepath.Rel(root, path)
 			for _, decl := range file.Decls {
 				fn, ok := decl.(*ast.FuncDecl)
@@ -108,6 +118,21 @@ func calls(name string) func(ast.Node) bool {
 	}
 }
 
+// references 는 이름 하나를 가리키는 모든 식별자(호출·메서드 값·타입 참조·new(T)·var x T·&T{})를 셈.
+// 적대 리뷰(2026-09-27)가 calls·literalOf 만으로는 메서드 값(f := g.IssueEntry)·new(GuardianAdapter)·
+// var a GuardianAdapter·&Tracer{} 가 빠진다고 지적함 — 이 판정은 그 모양 전부를 잡음.
+func references(name string) func(ast.Node) bool {
+	return func(node ast.Node) bool {
+		switch n := node.(type) {
+		case *ast.Ident:
+			return n.Name == name
+		case *ast.SelectorExpr:
+			return n.Sel.Name == name
+		}
+		return false
+	}
+}
+
 func literalOf(typeName string) func(ast.Node) bool {
 	return func(node ast.Node) bool {
 		lit, ok := node.(*ast.CompositeLit)
@@ -124,22 +149,36 @@ func literalOf(typeName string) func(ast.Node) bool {
 	}
 }
 
+// exposureRaisingProducer 는 결정의 SafetyClass 를 **정하는** 자리를 셈 — 복합 리터럴 필드(SafetyClass: v)와
+// 대입(x.SafetyClass = v) 둘 다, 값이 RISK_REDUCING 상수가 아니면 전부. 값이 상수가 아닌 변수·문자열
+// 리터럴("EXPOSURE_RAISING")이어도 셈(적대 리뷰 2026-09-27: 대입·문자열 모양이 빠졌었음).
 func exposureRaisingProducer(node ast.Node) bool {
-	kv, ok := node.(*ast.KeyValueExpr)
-	if !ok {
+	var key, value ast.Expr
+	switch n := node.(type) {
+	case *ast.KeyValueExpr:
+		key, value = n.Key, n.Value
+	case *ast.AssignStmt:
+		if len(n.Lhs) != 1 || len(n.Rhs) != 1 {
+			return false
+		}
+		selector, ok := n.Lhs[0].(*ast.SelectorExpr)
+		if !ok {
+			return false
+		}
+		key, value = selector.Sel, n.Rhs[0]
+	default:
 		return false
 	}
-	key, ok := kv.Key.(*ast.Ident)
-	if !ok || key.Name != "SafetyClass" {
+	if ident, ok := key.(*ast.Ident); !ok || ident.Name != "SafetyClass" {
 		return false
 	}
-	switch value := kv.Value.(type) {
+	switch v := value.(type) {
 	case *ast.Ident:
-		return value.Name == "SafetyClassExposureRaising"
+		return v.Name != "SafetyClassRiskReducing"
 	case *ast.SelectorExpr:
-		return value.Sel.Name == "SafetyClassExposureRaising"
+		return v.Sel.Name != "SafetyClassRiskReducing"
 	}
-	return false
+	return true
 }
 
 func TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly(t *testing.T) {
@@ -159,13 +198,52 @@ func TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly(t *testing.T) 
 		// 두 legacy 경로의 조립 지점 — 0 이 잔여의 격을 "생산 도달 0"으로 정함.
 		{"NewTracer callers", calls("NewTracer"), nil},
 		{"GuardianAdapter construction", literalOf("GuardianAdapter"), nil},
+		// 모양을 가리지 않는 참조 전수 — 자기 선언 자리만 남아야 함.
+		// tracer.go 패키지 수준 = EntryIssuer 인터페이스의 메서드 선언.
+		{"any reference to IssueEntry", references("IssueEntry"), []string{
+			"internal/app/engine/tracer.go:<package-level>",
+			"internal/app/engine/tracer.go:Tracer.submitEntry",
+			"internal/execgw/riskguardian.go:RiskGuardian.IssueStrategyEntry",
+		}},
+		{"any reference to IssueStrategyEntry", references("IssueStrategyEntry"), []string{
+			"internal/strategydispatch/adapters.go:GuardianAdapter.IssueAndPlan",
+		}},
+		{"any reference to NewTracer", references("NewTracer"), nil},
+		// 타입 선언 자신과 생성자 NewTracer 안의 &Tracer{} 뿐 — NewTracer 호출이 0 이므로 생성 0.
+		{"any reference to Tracer", references("Tracer"), []string{
+			"internal/app/engine/tracer.go:<package-level>",
+			"internal/app/engine/tracer.go:NewTracer",
+		}},
+		// 타입 선언 자신뿐(수신자 선언은 FuncDecl.Recv 라 세지 않음).
+		{"any reference to GuardianAdapter", references("GuardianAdapter"), []string{
+			"internal/strategydispatch/adapters.go:<package-level>",
+		}},
 		// EXPOSURE_RAISING 결정을 짓는 자리 전부. q_final 둘(IssuePrechecked*)과 legacy 둘.
+		// 넷에 더해 **이미 정해진 class 를 옮기는** 자리 넷이 잡힘(2026-09-27 실측, 각 자리 원문):
+		// gateway.go prepareRequest `req.SafetyClass = decision.SafetyClass`(기존 결정 복사),
+		// decision.go DecisionRequest.build `SafetyClass: class`(요청에 이미 정해진 값의 검증 후 저장),
+		// durability.go scanAttempt `rec.SafetyClass = safetyClass.String`(DB 읽기),
+		// risk_bucket_issuance.go qFinalIssueDigest `SafetyClass: decision.SafetyClass`(digest 입력).
 		{"exposure-raising decision producers", exposureRaisingProducer, []string{
+			"internal/execgw/gateway.go:Gateway.prepareRequest",
 			"internal/execgw/issue.go:Issuer.IssueEntry",
 			"internal/execgw/riskguardian.go:RiskGuardian.IssueEntry",
 			"internal/execgw/riskguardian_first_leg.go:RiskGuardian.IssuePrecheckedQFinalCampaignFirstLeg",
 			"internal/execgw/riskguardian_qfinal.go:RiskGuardian.IssuePrecheckedQFinalEntry",
+			"internal/journal/decision.go:DecisionRequest.build",
+			"internal/journal/durability.go:scanAttempt",
+			"internal/journal/risk_bucket_issuance.go:qFinalIssueDigest",
 		}},
+	}
+	// 걷기 범위 자체의 단언 — 세 root 가 모두 걸리고 각각 비시험 Go 파일을 줌.
+	enclosingSites(t, func(ast.Node) bool { return false })
+	if strings.Join(censusRoots, ",") != "internal,cmd,tools" {
+		t.Fatalf("census roots changed: %v", censusRoots)
+	}
+	for _, top := range censusRoots {
+		if censusRootFiles[top] == 0 {
+			t.Fatalf("census walked no non-test Go file under %s/ (%v)", top, censusRootFiles)
+		}
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

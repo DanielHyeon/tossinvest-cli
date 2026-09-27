@@ -424,7 +424,7 @@ during these runs, so the repo-wide numbers include them.
 
 ### Cross-change fixture repair (option A, Manager-approved)
 
-Mechanism: five tests opened a v25 journal (`migrationOverride`) and wrote q_final rows into it with the **current**
+Mechanism: four top-level tests (nine leaf tests; the earlier "five" miscounted) opened a v25 journal (`migrationOverride`) and wrote q_final rows into it with the **current**
 writer; v33's lock read then hit a missing table and failed closed — a latent fixture mismatch that v33 exposed.
 Fix in `prepareStrategyDispatchLease` (`strategy_dispatch_runtime_test.go`, a072): rows are produced by the current
 writer on a current-schema scratch journal and copied into the older journal. Before copying, the helper asserts
@@ -444,6 +444,17 @@ No assertion line in these tests was edited; the diff is confined to the helper 
 Second cross-change edit: `TestTheSenderDownReasonIsRegisteredInTheEnumeration` (a098) pinned the absolute enumeration
 length (29 + 1). It now expects `29 + 1 + len(reasonCodesRegisteredAfterA098)` and separately asserts each later code's
 membership; "a098 added exactly one" still holds.
+
+| Test | What it asserts (unchanged) | Before | After |
+|---|---|---|---|
+| `TestTheSenderDownReasonIsRegisteredInTheEnumeration` (a098, Manager ratified 2026-09-27) | the enumeration grew by exactly the codes someone decided to add, and `ReasonAlertSenderDown` is a member | `len == 29 + 1` (absolute; any later legitimate code turned it red) | `len == 29 + 1 + len(reasonCodesRegisteredAfterA098)` + each listed code is a member |
+
+Why this shape: the named list `reasonCodesRegisteredAfterA098` is the **only** path for registering a new legitimate
+entry against this frozen count — a later change must name its code there, so an unnamed addition still turns the test
+red. Measured on a copy (`<scratch>/a098probe-<pid>`, deleted afterwards): control GREEN; then
+`ReasonGuardianRiskBucketMismatch` added to `AllReasonCodes` **and** the golden regenerated with the sanctioned
+generator (so `TestReasonCodeEnumIsStable` passes) → `TestTheSenderDownReasonIsRegisteredInTheEnumeration` FAIL
+"AllReasonCodes() has 32 codes, want 31". The golden alone does not catch an unnamed addition; this count does.
 
 ### Legacy residual — measured, not assumed
 
@@ -479,3 +490,49 @@ a098 test are not base functions (their files postdate base `23794f86`).
 - `RevalidateQFinalAdmission` B18 (horizon reservation read error) is not executed by any test — a storage-error exit
   after B16/B17 proved all five HELD rows exist.
 - Independent adversarial review + gstack review: pending (next step of this lot).
+
+## 5.5 review round 1 (2026-09-27) — three voices, findings and dispositions
+
+Voices: Claude `code-reviewer` (lock semantics), Claude `code-inspector-tester` (tests/fixtures, 17 own mutants on a
+`git archive` copy), Codex CLI 0.154.0 `exec --sandbox read-only` (static). Verdict of all three: **no P0** — no q_final
+path admits or submits exposure inside a locked scope, and no risk-reducing path waits on or is refused by the lock.
+
+| # | Finding (source) | Sev | Disposition |
+|---|---|---|---|
+| 1 | Activation stores the raw account; `" acct-7 "` lock never matches the trimmed entry account (Codex, reviewer 1 — probed) | P1 | **Fixed**: `validEntryLossLockScope` rejects surrounding whitespace (no silent normalisation); test rows + mutant M37 |
+| 1b | Case variants / unknown account ids are still accepted (reviewer 1) | P1 | **Open → Manager/trigger lot**: canonical account identity belongs to the caller that wires activation (0 callers today); binding activation to a journal-known account would refuse a first-trade lock and is a design choice |
+| 2 | First-leg site (production strategy path) untested — a first-leg-only skip survived every test (reviewer 2, R04) | P1 | **Fixed**: `TestEntryLossLockRefusesTheStrategyFirstLegAdmission` (KR/US, own/other horizon/market); M42 (two-file skip) CAUGHT |
+| 3 | Strategy path: a lock refusal becomes `ATOMIC_ADMISSION_FAILED` and latches the whole market worker (KR SHORT lock also stops KR MEDIUM; counted as worker failure) (reviewer 1) | P1 | **Open → Manager**: over-blocks in the safe direction; strategy lanes are dormant; the fix is a typed refusal through `strategy_first_leg_admission.go` / `strategy_entry_supervisor.go`, files a peer (a112) session is editing now |
+| 4 | Lock committed between the last `checkReservation` and `plan.call` is not seen (Codex P1, reviewer 1 P2) | P1/P2 | **Accepted residual**: closing it needs a DB tx held across the broker call; same window as every other durable-latch recheck in the Gateway. The last-moment check itself is now measured (#5) |
+| 5 | No lock test activated the lock after the initial Gateway check (reviewer 1) | P2 | **Fixed**: `TestA066LockActivatedAfterInitialCheckIsRefusedAtTheLastMoment`; M38 (remove last-moment check) CAUGHT |
+| 6 | Census holes: method values, `new(T)`, `var x T`, `&Tracer{}`, `SafetyClass` by assignment or string literal, `tools/` not walked, root coverage unasserted (reviewers 1, 2) | P2 | **Fixed**: identifier-level `references(...)` cases, producer matcher covers key-value and assignment with any non-RISK_REDUCING value (four class-copying sites measured and pinned with their source lines), roots `internal,cmd,tools` with per-root file-count assertion; M40, M41, M45, M46, M47, M49 CAUGHT |
+| 7 | `assertRaisingRefused` after risk-reducing traffic is refused by bucket mismatch regardless of the lock, so "the lock is not consumed" was unproven (reviewer 2) | P2 | **Fixed**: the test now re-activates all four scopes after the traffic and requires `changed=false` with the original cause |
+| 8 | v33 CHECK constraints unpinned (R06/R07) (reviewer 2) | P2 | **Fixed**: `TestEntryLossLockSchemaRefusesValuesTheRuleCannotMatch`; M43, M44 CAUGHT |
+| 9 | Returned `ActivatedAt` keeps nanoseconds, stored value is seconds (reviewer 1 — probed) | P2 | **Fixed**: truncated to the stored precision; test compares the returned lock to the re-read one; M39 CAUGHT |
+| 10 | Mutation ledgers not bound to a tree (reviewer 2) | P2 | **Fixed**: harness writes `TREE HEAD <sha> uncommitted tracked: …` as the first ledger line; it now also copies `tools/`. Runs 1–4 predate this: they ran on the working tree that carried a peer's uncommitted `internal/app/engine` and `internal/strategyrouter` edits (not in any mutated file; the census reads those sources and pinned the same sites) |
+| 11 | Replay branches return before the lock check (`risk_bucket_issuance.go` replay, first-leg replay, `CommitRiskBucketAdmission` replay) (reviewers 1, 2) | P2 | **Accepted, recorded**: a replay creates no new authority, and the Gateway revalidation refuses the submit (single layer, measured by the ⑤ rows). `CommitRiskBucketAdmission` has 0 non-test callers |
+| 12 | Gateway typed mapping has only a positive test; an unknown-scope/read-error Blocked is reported as `guardian_risk_bucket_mismatch`; on the strategy path the final in-`call()` refusal is wrapped as `strategy_dispatch_fenced` (reviewers 1, 2, Codex) | P2 | **Accepted, recorded**: all refuse; only the operator-visible reason differs. The fenced wrapping is pre-existing a112/a072 code |
+| 13 | `first_cause_wins` allows one row per scope forever — after a future relaxation, re-locking the same scope would abort (reviewer 1) | P2 | **Carried to the relaxation decision**: the relaxation migration must replace this trigger (DROP/CREATE TRIGGER, as v23 did) with "one *open* lock per scope" |
+| 14 | `IssueQFinalEntry` returns the lock error raw, not as an `IssueRefusal` (reviewer 1) | P2 | Recorded; typed by `errors.Is` + `riskbucket.IsRefusal`, which the tests pin |
+| 15 | Equivalent / clean mutants: lock check moved after owner insert (tx rollback), Revalidate check order, `ToUpper` market (reviewer 2 R01, R03, R16) | — | Equivalent; noted |
+
+Re-verification after the fixes (sequential, one run at a time) and mutation run 6 (all mutants, tree-bound):
+see the next block.
+
+
+### Re-verification after the review fixes (sequential)
+
+| Run | Result |
+|---|---|
+| `make lint` | rc 0 |
+| `go test ./internal/execgw/...` untagged / `-tags tossos_testseams` | rc 0 / rc 0 |
+| `go test -timeout 60m ./internal/journal/...` | rc 0 (697 s) |
+| `-race` journal `LossLock\|MigrationV32ToV33\|QFinal\|RiskBucketAdmission\|FirstLeg` / execgw `TestA066\|QFinal` | rc 0 / rc 0 |
+| mutation run 6 (`analysis/mutation-5.5/ledger-run6.tsv`, all 48 mutants M01–M47, M49; no-mutation control GREEN) | **48/48 CAUGHT** |
+
+run 6 tree line: `HEAD fe3db326` plus uncommitted tracked files — the peer a112 edits in `internal/app/engine`,
+`internal/strategyrouter` and this lot's own uncommitted fixes (committed right after as the review-fix commit).
+The peer's edits were committed during/after the run as `272b715c` (a112 8.7.2, 22:07); every other commit since
+`0004536c` is docs-only. None of those Go files is a mutated file or an import of `internal/journal`/`internal/execgw`
+tests; the census reads their source and pinned the same sites. `check_analysis.py --change a066-…`: 0 a066-bundle
+findings; the 371 `missing evidence` lines are the stacked-window set, none of them a function this lot edited.

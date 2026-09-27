@@ -325,6 +325,62 @@ func TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths(t *testing.T) {
 		t.Fatalf("fill detection under lock: delta=%q failClosed=%v reason=%s err=%v", fill.Delta, fill.FailClosed, fill.Reason, err)
 	}
 
-	// 위험 감소가 전부 지난 뒤에도 노출 증가는 여전히 막혀 있어야 함 — 잠금이 한 번 쓰이고 풀리면 안 됨.
+	// 위험 감소가 전부 지난 뒤에도 노출 증가는 여전히 막혀 있어야 함. assertRaisingRefused 의 거절은 bucket
+	// 불일치로도 나므로(잠금 여부와 무관 — 적대 리뷰 2026-09-27) 그것만으로는 잠금이 남아 있음을 증명하지
+	// 못함. 그래서 네 범위의 잠금이 원장에 **그대로** 남았는지(다시 활성화해도 changed=false, 같은 seq)를
+	// 따로 잼 — 위험 감소 경로가 잠금을 소비·해제하면 여기서 빨개짐.
 	assertRaisingRefused("after-risk-reducing")
+	for _, market := range []riskbucket.Market{riskbucket.MarketKR, riskbucket.MarketUS} {
+		for _, horizon := range []riskbucket.Horizon{riskbucket.HorizonShort, riskbucket.HorizonMedium} {
+			held, changed, err := j.ActivateEntryLossLock(ctx, journal.EntryLossLock{
+				AccountRef: "acct-7", Market: market, Horizon: horizon, Cause: "a066 probe: still locked?", ActivatedAt: clk.Now(),
+			})
+			if err != nil || changed || held.Cause != "a066 2.7 contract test" {
+				t.Fatalf("%s/%s lock did not survive risk-reducing traffic: lock=%+v changed=%v err=%v", market, horizon, held, changed, err)
+			}
+		}
+	}
+}
+
+// TestA066LockActivatedAfterInitialCheckIsRefusedAtTheLastMoment 는 잠금이 Gateway 의 초기 검사 **뒤**,
+// broker 호출 직전 검사 **앞**에 켜져도 제출이 거절됨을 고정함(적대 리뷰 P2 2026-09-27: 다른 lock 시험은
+// 전부 Place 전에 잠가서 초기 검사만 쟀음). 보호 판정 seam 의 두 번째 호출이 마지막 검사 직전임
+// (TestGatewayLastMomentQFinalBarrierRefusesHoldReleaseAfterInitialAdmissionCheck 와 같은 자리).
+func TestA066LockActivatedAfterInitialCheckIsRefusedAtTheLastMoment(t *testing.T) {
+	rig := newGuardian(t, func(options *execgw.RiskGuardianOptions) {
+		options.NewID = fixedIDs("lossl-late-decision", "lossl-late-nonce")
+	})
+	ctx := context.Background()
+	issued, err := rig.guardian.IssueQFinalEntry(ctx, lossLockQFinalRequest(t, rig, "lossl-late", riskbucket.HorizonShort))
+	if err != nil {
+		t.Fatal(err)
+	}
+	broker := &fakeBroker{result: domain.MutationResult{Kind: "place", Status: "accepted", OrderID: "O-lossl-late"}}
+	checks := 0
+	var lockErr error
+	opts := execgw.Options{
+		Journal: rig.journal, Trading: trading.NewService(openPolicy(), broker), Clock: rig.clock,
+		AccountRef: "acct-7", Source: "a066-lossl-last-moment-test",
+	}
+	opts.SetMarketProtectionForTest(func(market string, check int) (bool, string) {
+		checks = check
+		if check == 2 {
+			lockErr = activateEntryLossLock(ctx, rig.journal, "acct-7", riskbucket.MarketKR, riskbucket.HorizonShort, rig.clock.Now())
+		}
+		return true, market + ":stable-protection"
+	})
+	gw, err := execgw.New(opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	intent, err := orderintent.NormalizePlace(orderintent.PlaceInput{Symbol: "005930", Market: "kr", Side: "buy", OrderType: "limit", Quantity: 10, Price: 70000, CurrencyMode: "KRW"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = gw.Place(ctx, execgw.PlaceRequest{Intent: intent, Decision: issued.Decision})
+	var rejected *execgw.RejectedError
+	places, _, _ := broker.totals()
+	if lockErr != nil || checks != 2 || !errors.As(err, &rejected) || rejected.Reason != execgw.ReasonEntryLossLockActive || places != 0 {
+		t.Fatalf("lockErr=%v checks=%d rejected=%+v places=%d err=%v", lockErr, checks, rejected, places, err)
+	}
 }

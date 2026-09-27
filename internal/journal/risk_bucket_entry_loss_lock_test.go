@@ -171,9 +171,13 @@ func TestEntryLossLockRefusesEveryEntrySiteOnlyInItsOwnScope(t *testing.T) {
 func TestEntryLossLockActivationKeepsTheFirstCauseAndIsImmutable(t *testing.T) {
 	j := openTestJournal(t)
 	ctx := context.Background()
-	first, changed, err := j.ActivateEntryLossLock(ctx, EntryLossLock{AccountRef: "acct-1", Market: riskbucket.MarketKR, Horizon: riskbucket.HorizonShort, Cause: "first", ActivatedAt: lossLockAt})
+	first, changed, err := j.ActivateEntryLossLock(ctx, EntryLossLock{AccountRef: "acct-1", Market: riskbucket.MarketKR, Horizon: riskbucket.HorizonShort, Cause: "first", ActivatedAt: lossLockAt.Add(123456789 * time.Nanosecond)})
 	if err != nil || !changed || first.Seq <= 0 {
 		t.Fatalf("first activation: %+v changed=%v err=%v", first, changed, err)
+	}
+	// 반환된 기록은 다시 읽은 기록과 같아야 함(저장 정밀도는 초).
+	if stored, found, err := activeEntryLossLock(ctx, j.db, "acct-1", riskbucket.MarketKR, riskbucket.HorizonShort); err != nil || !found || stored != first {
+		t.Fatalf("returned lock %+v differs from the stored one %+v (found=%v err=%v)", first, stored, found, err)
 	}
 	again, changed, err := j.ActivateEntryLossLock(ctx, EntryLossLock{AccountRef: "acct-1", Market: riskbucket.MarketKR, Horizon: riskbucket.HorizonShort, Cause: "second", ActivatedAt: lossLockAt.Add(time.Hour)})
 	if err != nil || changed || again.Seq != first.Seq || again.Cause != "first" || !again.ActivatedAt.Equal(lossLockAt) {
@@ -185,6 +189,9 @@ func TestEntryLossLockActivationKeepsTheFirstCauseAndIsImmutable(t *testing.T) {
 
 	invalid := []EntryLossLock{
 		{Market: riskbucket.MarketKR, Horizon: riskbucket.HorizonShort, Cause: "c", ActivatedAt: lossLockAt},
+		// 앞뒤 공백 계좌: 기록되면 trim 된 계좌의 진입과 일치하지 않는 효력 없는 잠금이 됨.
+		{AccountRef: " acct-1 ", Market: riskbucket.MarketKR, Horizon: riskbucket.HorizonMedium, Cause: "c", ActivatedAt: lossLockAt},
+		{AccountRef: "acct-1\t", Market: riskbucket.MarketKR, Horizon: riskbucket.HorizonMedium, Cause: "c", ActivatedAt: lossLockAt},
 		{AccountRef: "acct-1", Market: "JP", Horizon: riskbucket.HorizonShort, Cause: "c", ActivatedAt: lossLockAt},
 		{AccountRef: "acct-1", Market: riskbucket.MarketKR, Horizon: "WEEKLY", Cause: "c", ActivatedAt: lossLockAt},
 		{AccountRef: "acct-1", Market: riskbucket.MarketKR, Horizon: riskbucket.HorizonMedium, Cause: " ", ActivatedAt: lossLockAt},
@@ -308,4 +315,67 @@ func TestMigrationV32ToV33StartsWithNoEntryLossLock(t *testing.T) {
 		t.Fatalf("migrated journal refuses entry with no lock: %v", err)
 	}
 	activateLossLockForTest(t, j, "acct-1", riskbucket.MarketKR, riskbucket.HorizonShort)
+}
+
+// TestEntryLossLockRefusesTheStrategyFirstLegAdmission 는 생산 전략 경로(첫 leg 원자 admission,
+// strategy_first_leg_atomic.go 가 commitFreshRiskBucketAdmissionTx 를 부르는 자리)가 잠금에 막힘을 고정함.
+// 적대 리뷰(2026-09-27)가 이 호출 자리만 잠금을 건너뛰는 변이가 모든 시험을 통과한다고 보였음.
+func TestEntryLossLockRefusesTheStrategyFirstLegAdmission(t *testing.T) {
+	cases := []struct {
+		name    string
+		market  string
+		symbol  string
+		lock    []lossLockVariant
+		refused bool
+	}{
+		{"KR no lock", "KR", "005930", nil, false},
+		{"KR SHORT lock refuses KR", "KR", "005930", []lossLockVariant{{riskbucket.MarketKR, riskbucket.HorizonShort}}, true},
+		{"KR MEDIUM lock does not reach KR SHORT", "KR", "005930", []lossLockVariant{{riskbucket.MarketKR, riskbucket.HorizonMedium}}, false},
+		{"US SHORT lock refuses US", "US", "AAPL", []lossLockVariant{{riskbucket.MarketUS, riskbucket.HorizonShort}}, true},
+		{"KR locks do not reach US", "US", "AAPL", []lossLockVariant{{riskbucket.MarketKR, riskbucket.HorizonShort}, {riskbucket.MarketKR, riskbucket.HorizonMedium}}, false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			j := openTestJournal(t)
+			account := "acct-" + strings.ToLower(tc.market)
+			request := firstLegAtomicFixture(t, j, "lossl-first-leg", account, tc.market, tc.symbol)
+			for _, lock := range tc.lock {
+				activateLossLockForTest(t, j, account, lock.market, lock.horizon)
+			}
+			_, err := j.RecordQFinalCampaignFirstLeg(context.Background(), request)
+			if !tc.refused {
+				if err != nil {
+					t.Fatalf("first leg outside the locked scope was refused: %v", err)
+				}
+				return
+			}
+			if !errors.Is(err, ErrRiskBucketEntryLossLocked) || !riskbucket.IsRefusal(err, riskbucket.RefusalEntryLossLockActive) {
+				t.Fatalf("first leg inside the locked scope was not refused by the loss lock: %v", err)
+			}
+			for _, table := range []string{"decisions", "risk_reservations", "risk_bucket_final_decisions", "risk_bucket_owners", "strategy_first_leg_bindings", "campaign_legs"} {
+				if n := countRiskBucketRows(t, j, table); n != 0 {
+					t.Fatalf("refused first leg left %d rows in %s", n, table)
+				}
+			}
+		})
+	}
+}
+
+// TestEntryLossLockSchemaRefusesValuesTheRuleCannotMatch 는 v33 CHECK 제약을 고정함: 소문자 시장·horizon 이나
+// 모르는 값이 원장에 들어가면 대문자로 묻는 규칙과 영영 일치하지 않는 **효력 없는 잠금**이 됨.
+func TestEntryLossLockSchemaRefusesValuesTheRuleCannotMatch(t *testing.T) {
+	j := openTestJournal(t)
+	for _, row := range [][2]string{{"kr", "SHORT"}, {"KR", "short"}, {"JP", "SHORT"}, {"KR", "WEEKLY"}} {
+		if _, err := j.db.Exec(`INSERT INTO risk_bucket_entry_loss_locks(account_ref,market,horizon,cause,activated_at) VALUES('acct-1',?,?,'raw','2026-03-30T00:30:00Z')`, row[0], row[1]); err == nil {
+			t.Fatalf("schema accepted market=%q horizon=%q", row[0], row[1])
+		}
+	}
+	for _, statement := range []string{
+		`INSERT INTO risk_bucket_entry_loss_locks(account_ref,market,horizon,cause,activated_at) VALUES('','KR','SHORT','raw','2026-03-30T00:30:00Z')`,
+		`INSERT INTO risk_bucket_entry_loss_locks(account_ref,market,horizon,cause,activated_at) VALUES('acct-1','KR','SHORT','','2026-03-30T00:30:00Z')`,
+	} {
+		if _, err := j.db.Exec(statement); err == nil {
+			t.Fatalf("schema accepted an empty account or cause: %s", statement)
+		}
+	}
 }
