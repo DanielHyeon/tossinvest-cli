@@ -680,3 +680,45 @@ Manager 과제: 3판 이후 387+ 커밋이 쌓인 HEAD 에 맞춰 증거만 재�
 - 검토 자료 목록: `analysis/third-round-review-materials.md` — 교차 모델 요구, 대상 문서, 2라운드 차단 8건의 3판 답
   위치, 사람 몫.
 - 교차 모델: codex CLI 가 2026-09-27 재가동 확인됐다(세션 id 3건 — `analysis/third-round-review-materials.md` §A). 3라운드는 Manager 지시 뒤.
+
+---
+
+## 3라운드 (codex 교차 모델, task 0.5d) — **REJECT** · 분류만, 반영은 Manager 결정 뒤
+
+### 3.0 실행 기록
+
+- **교차 모델 충족** — codex-cli 0.154.0, model `gpt-6-astra`, `codex exec -s read-only --ephemeral --skip-git-repo-check -C <트리>`,
+  session **`01a0e2d0-a6e1-7322-a506-c5dbde92c8e9`**, 2026-09-27 21:21:59~21:30:55 KST, rc 0, tokens 288,334, 401 없음.
+  자격 증명·`~/.codex` 는 읽지도 고치지도 않았다. a124 12회차 종료 뒤 Manager 신호로 시작(동시 실행 금지).
+- 프롬프트 = `analysis/freeze-review/codex-r3-prompt.md` 원문(sha256 `04946d6f145b8562…`, 실행 사본과 일치).
+  출력 = `analysis/freeze-review/codex-r3-output.md` (최종 메시지, stdout 과 끝 개행 1바이트 외 동일).
+- **실행 트리 편차 (기록).** 공유 워크트리에는 병행 로트(a066·a112)의 미커밋 Go 가 있어 a124 방식을 따랐다 — 세션 스크래치에
+  `git archive 3937e341`(a094 base; `git diff 3937e341 HEAD -- '*.go'` 0)을 풀고 **워킹트리**의 a094 디렉터리를 겹쳤다
+  (`diff -r` 0). 워킹트리를 쓴 것은 세 번째 stale index.lock(21:17:16) 때문에 입력 두 파일을 커밋할 수 없었기 때문이다 —
+  Manager 승인, 그 두 파일은 뒤에 바이트 동일로 커밋됐다(093f9f10). 트리 파일 수 17047 → 17047(codex 가 만든 파일 0),
+  저장소 변경 0.
+
+### 3.1 2라운드 차단 8건의 판정 (codex)
+
+RESOLVED 3 — spec 모순 쌍 · a087/`floatOf` · R3 `Context.Resolver`(범위 분리로). PARTIAL 5 — 잠금 재지목/B8 · R2 자기 방향 ·
+R2↔R3 · §0.4 스냅숏 · 좌표/FLM. 분할 권고 PARTIAL. canonical 「IN_DOUBT 해소」 본문과 시나리오 6은 **그대로 재현됨**(텍스트 보존
+통과), 의미 일관성은 park 해제 때문에 실패.
+
+### 3.2 새 발견 — 분류 (Teammate 가 핵심 증거를 재확인, 반영 없음)
+
+| id | codex | 분류 | 요지 | Teammate 재확인 |
+|---|---|---|---|---|
+| F1 | P0 | **차단 — 설계** | park 해제가 이중 매도의 실제 방벽을 치운다 | `armExitProposalTx` 는 `pending_action` 이 차 있을 때만 거절(`apply_hook.go:666-668`) — 그것을 비우면 원 매도가 살아 있어도 재무장된다. 축소 방향은 unresolved 검사를 건너뛴다(`gateway.go:815-816`). **확인** |
+| F2 | P0 | **차단 — 설계** | 소급 재분류가 저장 본문이 **원 발주 응답**인지 증명하지 않는다 | 접수(`MarkAcked`) 뒤 readback 실패도 IN_DOUBT 와 오류 detail 을 남긴다(`dispatch.go:181-195`). **확인** |
+| F3 | P0 | **차단 — 설계** | R2 의 취소 확대에 귀속·포지션 소유 경계가 없다 | 미확인(Manager 결정 뒤 FLM 으로 확인할 몫) |
+| F4 | P1 | 설계 보완 | 종결→해제 이양이 충돌 완결적이지 않고 기대 intent 대조가 없다 | 미확인 |
+| F5 | P1 | 설계 보완 | 재사용할 OPEN 스냅숏의 공개·신선도 계약이 현재 detector 에 없다 | 미확인 |
+| F6 | P1 | 문서·설계 | tasks 4.4 고정 대상이 사라졌고(정오표 §4 와 같은 사실) 마이그레이션 순서 미정 | 정오표 §2·§4 와 일치 |
+| F7 | P1 | **교차 change** | a094 R1 ↔ a089 R2 규범 충돌 — codex 권고: a089 의 금지를 텔레메트리로 좁힘 | 정오표 §5 와 일치. a089 처분(불구현 아카이브 제안)이 사용자 큐에 있다 |
+| F8 | P1 | 설계 보완 | PENDING_CANCEL·"확인된 취소" 미정의, 인수(ack)와 호가 이탈 구분 없음 | 미확인 |
+| F9 | P2 | 기록 | AC1 은 실재하나 "프로세스 안 latch 뿐" 은 불완전 — 재시작 시 미전달 알림이 따로 진입을 막는다 | `restoreAlertEntryLatch`(`internal/app/engine/gateway.go:153-168`). **확인** — 검토 자료 §G 의 "재시작 뒤 되돌리는 경로가 없다" 는 운영 모드에 한해 참 |
+| F10 | P2 | 문서 | 좌표는 갱신됐으나 추론(FLM·BTM 요약·산문)이 낡았다 | record FLM `:53`·BTM `:26` 은 refresh 가 본문을 고치지 않은 자리(정오표 방침) |
+
+**판정: REJECT.** 차단 셋(F1·F2·F3)은 3판 설계의 핵심 규칙(park 해제 · 소급 재분류 · 외부 주문 취소)을 겨눈다. 반영 방향 —
+park 해제 철회/조건화, 소급 대상을 원 발주 응답으로 한정, 외부 취소의 귀속 경계 — 과 a089 처분(F7)은 Manager·사용자 결정
+사항이다. **반영하지 않았다.**
