@@ -34,7 +34,7 @@
 
 - [x] 5.1 Refresh post-edit AST, Function Logic Maps and Branch Test Maps for every changed existing function and pass the repository analysis checker — 0233d776 재결속, HEAD 9494e0e6 에서 stale 0 · 자기 수정 33 전부 덮임 · 재고정(77e36cca) 뒤 check_analysis rc 0 (review.md 「종결 시퀀스」)
 - [x] 5.2 (2026-09-25 Manager 실측, review.md 「5.2 실측」 — 표적 7·seams·정본 race·crash/restart·make test 99·vet·validate·PM 전부 rc 0) Run targeted protection/attestation/execgw/engine tests, race tests for affected packages, journal crash/restart suites, full tests and vet, and strict OpenSpec/PM validation
-- [ ] 5.3 (2026-09-27: 정책 결정은 a122 에서 내려졌다 — base 재고정 77e36cca, review.md 「종결 시퀀스」. 돌리고 → 적고 → 체크.) Run `make sdd-sync`, `make sdd-check`, and `make gate CHANGE=a071-wire-kr-us-protection-readiness`, then complete adversarial independent review before marking the high-risk change complete
+- [x] 5.3 (2026-09-27: 정책 결정은 a122 에서 내려졌다 — base 재고정 77e36cca, review.md 「종결 시퀀스」. 돌리고 → 적고 → 체크. 1차 gate(격리 워크트리 TossOS-worktrees/a071-gate · f8ef27b9)는 2/11 에서 이 줄 하나를 미완료로 세어 멈췄다. 적대 독립 리뷰 충족 판정은 review.md 「5.3 의 adversarial independent review 충족 판정」(Manager). 2차가 실패하면 이 체크를 되돌린다. 아카이브는 Manager 검증 뒤.) Run `make sdd-sync`, `make sdd-check`, and `make gate CHANGE=a071-wire-kr-us-protection-readiness`, then complete adversarial independent review before marking the high-risk change complete
 - [x] 5.4 Verify the built default remains lane/autostart/automation/LIVE OFF or unapproved, missing attestation remains `UNWIRED`, and protection/exit/reconciliation/fill paths remain available without any live broker mutation
 - [x] 5.5 Run isolated-core unit, race, vet, fuzz, coverage, static dependency and strict OpenSpec validation; preserve the production integration gates above as pending
 

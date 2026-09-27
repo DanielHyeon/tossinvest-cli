@@ -194,3 +194,15 @@ a100 으로 이관 — tasks.md 「## 6. Supersession — task 3.5 → a100」(1
 - `Wired: true` 비시험 출현 셋(`internal/console/protection_liveness.go:58` · `orders.go:312` · `holdings.go:220`)은 콘솔의
   다른 타입(liveness·화면 view)이며 `protectionreadiness.SupervisorAssembly` 가 아니다.
 - 결론: Addendum 의 출하 상태가 현재 HEAD 에서 그대로다. 이 확인은 저자(Opus 팀메이트)의 사실 대조이지 독립 적대 리뷰가 아니다.
+
+### 5.3 의 "adversarial independent review" 충족 판정 (Manager, 2026-09-27)
+
+별도 적대 리뷰는 요구하지 않는다. 근거:
+1. 독립 적대 리뷰는 이미 있다(2026-08-04). 그 유일한 차단 사유는 3.5 였고, 3.5 는 문서화된 supersession
+   (a100 proposal 「Supersession — a071 task 3.5 (분할)」, tasks.md §6 195dd972)으로 해소됐으며 08-11 Addendum 이
+   "verdict stands as the shipped state" 라 명시한다.
+2. 이 종결 로트의 편집은 Go 0 줄이다(base-commit.txt · review.md · tasks.md, 번들은 무변 검증뿐) — 새 리뷰 대상 코드가 없다.
+3. 출하 상태는 위 C1/C2/M7 재확인으로 불활성이 입증됐다(Wired:false 양쪽, protectionofficial 비시험 importer 0,
+   internal/protection 사용은 gateway.go:292 의 NewPairedReadinessAdapter 뿐).
+4. Manager 검증 배터리가 종결 편집 자체를 아카이브 전에 따로 검증한다.
+비례 원칙(2026-09-27 사용자 지시): 이미 독립 리뷰를 통과 상태로 가진 무변경·비활성 코드에 새 다중 보이스 리뷰를 돌리는 것은 낭비다.
