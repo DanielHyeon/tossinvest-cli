@@ -5,3 +5,8 @@ S02 storage exit writes before returning	CAUGHT	a066_storage_exit_structure_test
 S03 RecordFill loses defer Rollback	CAUGHT	a066_storage_exit_structure_test.go:73: fills.go:313:1: RecordFill opens a transaction without `defer tx.Rollback()` right after BeginTx
 S05 new storage exit changes the census	CAUGHT	a066_storage_exit_structure_test.go:122: walked scope changed: got files=8 funcs=93 exits=284 others=62 txOpeners=10, census {files:8 funcs:93 exits:2
 S04 else-if storage exit (RecordFill ambiguous-owner latch) returns nil	CAUGHT	a066_storage_exit_structure_test.go:160: fills.go:536:9: RecordFill storage error exit returns a nil error
+TREE	HEAD 9ba1c783	uncommitted: internal/journal/a066_storage_exit_structure_test.go (switch default + riskbucket reader + gateway scope)
+CONTROL	GREEN	
+S06 switch-default storage exit returns nil (CRA)	CAUGHT	a066_storage_exit_structure_test.go:186: risk_bucket.go:163:2: CommitRiskBucketAdmission storage error exit returns a nil error
+S07 gateway checkReservation storage exit returns nil	CAUGHT	a066_storage_exit_structure_test.go:193: ../execgw/gateway.go:894:2: checkReservation storage error exit returns a nil error
+S08 production reader ping exit returns nil	CAUGHT	a066_storage_exit_structure_test.go:193: ../riskbucket/production_snapshot_authority.go:357:2: loadProductionRiskEntries storage error exit returns a 

@@ -10,7 +10,8 @@ package journal
 //	P2 오류 출구 안에서 쓰기(ExecContext·Exec·Commit)가 없음 — 실패한 뒤 절반만 쓴 상태를 커밋하지 않음. 트랜잭션을
 //	   직접 여는 함수는 BeginTx 바로 뒤 `defer tx.Rollback()` 을 가져야 함(출구가 롤백에 맡기는 근거).
 //
-// 대상: internal/journal/risk_bucket*.go(비시험)의 모든 함수 + (*Journal).RecordFill. 대상 집합과 출구 수를 census 로
+// 대상: internal/journal/risk_bucket*.go(비시험)의 모든 함수 + (*Journal).RecordFill + riskbucket 생산 snapshot reader 파일
+// 전체 + execgw Gateway.checkReservation·submit. 대상 집합과 출구 수를 census 로
 // 고정함 — 새 파일·새 출구가 생기면 숫자가 달라져 빨개지고, 새 출구는 같은 두 성질로 자동 검사됨.
 
 import (
@@ -30,7 +31,7 @@ import (
 // 세기만 함(범위가 조용히 줄지 않게).
 var a066StorageExitCensus = struct {
 	files, funcs, exits, others, txOpeners int
-}{files: 8, funcs: 93, exits: 283, others: 63, txOpeners: 10}
+}{files: 10, funcs: 116, exits: 301, others: 84, txOpeners: 10}
 
 func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 	names, err := filepath.Glob("risk_bucket*.go")
@@ -45,6 +46,9 @@ func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 	}
 	files = append(files, "fills.go")
 	sort.Strings(files)
+	// BTM 의 저장 출구 행이 있는 다른 패키지 두 파일도 같은 두 성질로 걸음: 생산 snapshot reader 전체와 Gateway 의
+	// a066 번들 함수 둘(checkReservation · submit).
+	files = append(files, "../riskbucket/production_snapshot_authority.go", "../execgw/gateway.go")
 
 	fset := token.NewFileSet()
 	var funcs, exits, others, txOpeners int
@@ -64,6 +68,9 @@ func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 			}
 			// fills.go 에서는 a066 이 계상 경로를 붙인 RecordFill 하나만 봄(나머지는 이 change 의 함수가 아님).
 			if name == "fills.go" && fn.Name.Name != "RecordFill" {
+				continue
+			}
+			if name == "../execgw/gateway.go" && fn.Name.Name != "checkReservation" && fn.Name.Name != "submit" {
 				continue
 			}
 			funcs++
@@ -88,6 +95,29 @@ func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 					return true
 				}
 				for i, s := range list {
+					// `switch { case err == nil: … default: return …, err }` 의 default 도 저장소 오류 출구임 — err 출처는
+					// switch 앞에서 err 를 마지막으로 대입한 문장.
+					if sw, ok := s.(*ast.SwitchStmt); ok && sw.Tag == nil {
+						for _, clause := range sw.Body.List {
+							cc, ok := clause.(*ast.CaseClause)
+							if !ok || cc.List != nil {
+								continue
+							}
+							var source ast.Stmt = sw.Init
+							for k := i - 1; source == nil && k >= 0; k-- {
+								if assignsErr(list[k]) {
+									source = list[k]
+								}
+							}
+							if assignsErrFromStorageCall(source) {
+								exits++
+								if os.Getenv("A066_LIST_STORAGE_EXITS") != "" {
+									t.Logf("storage exit %s %s (switch default)", fset.Position(cc.Pos()), fn.Name.Name)
+								}
+								checkStorageExit(t, fset, fn.Name.Name, cc.Pos(), &ast.BlockStmt{List: cc.Body})
+							}
+						}
+					}
 					stmt, ok := s.(*ast.IfStmt)
 					// `} else if err := f(); err != nil {` 사슬도 출구임 — else 쪽 IfStmt 는 블록 목록에 없으므로 사슬을 따라감.
 					for first := true; ok; stmt, ok = stmt.Else.(*ast.IfStmt) {
@@ -105,7 +135,7 @@ func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 								if os.Getenv("A066_LIST_STORAGE_EXITS") != "" {
 									t.Logf("storage exit %s %s", fset.Position(stmt.Pos()), fn.Name.Name)
 								}
-								checkStorageExit(t, fset, fn.Name.Name, stmt)
+								checkStorageExit(t, fset, fn.Name.Name, stmt.Pos(), stmt.Body)
 							} else {
 								others++
 								if os.Getenv("A066_LIST_OTHER_EXITS") != "" {
@@ -128,11 +158,11 @@ func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 }
 
 // checkStorageExit 는 저장소 오류 출구 하나에 P1·P2 를 단언함.
-func checkStorageExit(t *testing.T, fset *token.FileSet, fn string, stmt *ast.IfStmt) {
+func checkStorageExit(t *testing.T, fset *token.FileSet, fn string, pos token.Pos, body ast.Node) {
 	t.Helper()
-	where := fset.Position(stmt.Pos())
+	where := fset.Position(pos)
 	// P2: 출구 본문 안의 쓰기 호출.
-	ast.Inspect(stmt.Body, func(m ast.Node) bool {
+	ast.Inspect(body, func(m ast.Node) bool {
 		if call, ok := m.(*ast.CallExpr); ok {
 			if sel, ok := call.Fun.(*ast.SelectorExpr); ok {
 				switch sel.Sel.Name {
@@ -145,7 +175,7 @@ func checkStorageExit(t *testing.T, fset *token.FileSet, fn string, stmt *ast.If
 	})
 	// P1: 출구 본문의 모든 return 이 nil 아닌 오류를 돌려줌. 중첩 함수 리터럴의 return 은 이 함수의 출구가 아님.
 	returns := 0
-	ast.Inspect(stmt.Body, func(m ast.Node) bool {
+	ast.Inspect(body, func(m ast.Node) bool {
 		if _, ok := m.(*ast.FuncLit); ok {
 			return false
 		}
