@@ -206,3 +206,7 @@ a100 으로 이관 — tasks.md 「## 6. Supersession — task 3.5 → a100」(1
    internal/protection 사용은 gateway.go:292 의 NewPairedReadinessAdapter 뿐).
 4. Manager 검증 배터리가 종결 편집 자체를 아카이브 전에 따로 검증한다.
 비례 원칙(2026-09-27 사용자 지시): 이미 독립 리뷰를 통과 상태로 가진 무변경·비활성 코드에 새 다중 보이스 리뷰를 돌리는 것은 낭비다.
+
+### 완료 게이트
+
+- gate PASS 4fd400ea, gate3.log, 11/11 (격리 worktree `TossOS-worktrees/a071-gate`, 2026-09-27; 로그 `/tmp/claude-1000/a071-lot/gate3.log`. gate2 는 같은 커밋에서 6단계 codegraph status 프로브 15s 타임아웃 — 일시적).
