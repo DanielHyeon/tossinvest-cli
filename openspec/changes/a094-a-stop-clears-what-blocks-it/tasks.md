@@ -31,9 +31,9 @@
       결정 대기 · F4 기대 intent·기동 따라잡기 · F5 스냅숏 계약은 선행 조건으로 · F6 기동 순서 재핀 · F7 두 결말 · F8
       PENDING_CANCEL 정의 · F9 AC1 범위 · F10 낡은 논증), spec delta 2 · tasks §3·§4·§4bis 개정. **판정 아님**
 - [ ] 0.5f **proposal-freeze 리뷰 4라운드**(codex 교차 모델) — Manager 대기열 순서대로
-- [ ] 0.5h **사건 두 행의 현재 상태 재측정**(문서 리뷰 P1) — 475150·080220 의 attempt(`034e5b79…`·`8f68e7c3…`)가 지금도 `IN_DOUBT`
-      인지 운영 원장에서 **읽기 전용**으로 잰다(사람 승인). `UNRESOLVED_IN_DOUBT` 면 4판의 해동 경로가 없고 Q4-1 에 막힌다는 사실을
-      design D−2.2 에 적는다. 4라운드 전에
+- [x] 0.5h **사건 두 행의 현재 상태 재측정**(문서 리뷰 P1, Manager 조건부 승인) — 운영 원장 읽기 전용(`mode=ro`, `query_only`),
+      브로커 호출 0. 결과: 두 행 모두 **2026-08-08 에 이미 `UNRESOLVED_IN_DOUBT`**, 발의 무장 유지. 모호 전이는 재분류 조건 2~7 을 채우나
+      조건 1 을 못 채운다 → 사건의 해동은 Q4-1 운영자 도구 경로. design D−2.2 에 기록
 - [ ] 0.5g **4판 편집 전 산출물 재작성**(F10) — `record` 번들의 FLM 「Branches」 논증과 BTM 미진입 요약을 현재 AST(16분기)
       기준으로 다시 쓰고, 4판이 편집하는 기존 함수(`ResolveExitProposal` 호출 형태 · 기동 이음매)의 FLM 을 편집 전에 갖춘다
 
@@ -129,7 +129,7 @@
 - [ ] 3.7 **RED (§0.3 회귀)** — 취소·해석 실패는 `clearTheSymbol` **내부에서 흡수**되어 `clear=false` 가 된다
       (`:1465`·`:1471`·`:1485-1486`). 원장 목록 읽기 실패는 오늘처럼 오류로 반환된다(`:1443-1445`) — 무변화 고정
 - [ ] 3.E2 **RED (§0.4)** — 이 경로에서 나가는 **새 브로커 조회가 0건**임을 고정
-- [ ] 3.E4 **RED (4판 D−2.7)** — 같은 포지션의 청소가 **연속 N회**(Q4-7, 3판 값 3) `clear=false` 로 끝나면
+- [ ] 3.E4 **RED (4판 D−2.7)** — 같은 포지션의 청소가 **연속 N회**(`N = obs.DefaultCriticalAttempts` — a124 관례, 시험은 상수를 인용) `clear=false` 로 끝나면
       `EventExitLiquidationDelayed`(이미 critical, `internal/obs/event.go:336`)를 **새 트리거로, 타이머와 다른 알림 key 로 한 번** 낸다.
       `delayAlerted` 를 건드리지 않는다. **기존 30초 타이머**(`noteDelay` `:1252`·`:1675-`, 한계 `:116`, key `type|positionID` `:1688`)의
       시작·해제·한계·중복 방지는 **무변화** — 두 경보가 모두 나가는 것을 단언한다. 그 뒤에도 자동 제출하지 않는다(§6)
@@ -173,8 +173,12 @@
 - [ ] 4.3c **RED (4판, 문서 리뷰 P0)** — 세션 중 `submit` 은 `out.State ∈ {NOT_DISPATCHED, FAILED_CONFIRMED}` 이거나
       `out.AttemptID == ""` 일 때만 해제한다. dispatch 뒤 `MarkAcked`(또는 `Settle`·`MarkInDoubt`) 쓰기를 실패시킨 fixture
       (`gateway.go:747` — `State==""`, `AttemptID!=""`)에서 발의가 **무장된 채** 남음을 단언한다
-- [ ] 4.3d **RED (4판, 문서 리뷰 P1)** — 기동 단계(재분류·따라잡기)의 한 행 실패는 그 행을 바꾸지 않고 다음 행으로 가며 Recover 가
-      nil 을 돌려준다(루프 시작 — `runtime.go:289-295`)
+- [ ] 4.3d **RED (4판, 문서 리뷰 P1 · Q4-5)** — 기동 단계(재분류·따라잡기)의 한 행 실패는 그 행을 바꾸지 않고 다음 행으로 가며 Recover 가
+      nil 을 돌려준다(루프 시작 — `runtime.go:289-295`). 그 실패는 **포지션 단위 key 의 critical** 로 발송된다
+- [ ] 4.3e **설계만(Q4-1)** — 운영자 해소 도구(미래 작업)가 `OperatorResolve` 뒤 **같은 해제 판정 함수**를 그 자리에서 부른다는 계약을
+      4.7 의 판정 함수 시그니처에 반영한다(판정 함수 하나 — 세션 중 `submit` · 기동 따라잡기 · 운영자 도구가 공유). 도구 구현은 범위 밖
+- [ ] 4.3f **정지 조건(Q4-6)** — 구현이 「rate-limit 으로 park 된 attempt」 를 타입으로 가려야 하게 되면(원장 reason 수준에서 429 가
+      `dispatch_outcome_unknown` 과 구별되지 않는다 — `classify.go:114-117`) 새 reason code 추가를 Manager 에게 올리고 멈춘다
 - [ ] 4.4 **RED (4판 F6 — 재핀)** — 기동 순서: ① 재분류(§4bis)가 `Recovery.Run` 의 해소(`internal/reconcile/recovery.go` —
       `Resolver.Resolve`)보다 **먼저**, ② 따라잡기(4.3b)가 `Recovery.Run` 뒤·`ready` 앞, ③ `Recovery.Run` 본문(재시작 규칙 →
       재생 → 해소)과 인터록 의미 **무변화**. 좌표 단언이 아니라 순서 단언이다(`engineRecoverySequence` `:604-606`,

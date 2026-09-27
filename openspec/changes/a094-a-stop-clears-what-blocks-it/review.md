@@ -760,3 +760,23 @@ park 해제 철회/조건화, 소급 대상을 원 발주 응답으로 한정, �
 
 남은 사람·Manager 결정: Q4-1(park 발의) · Q4-4(`withPending` 해제) · Q4-5 · Q4-6 · Q4-7 · 외부 주문 취소(사용자) · 0.5h 재측정 승인.
 4라운드 codex 는 Manager 대기열 순서대로.
+
+### Manager 판정 (2026-09-27) · 0.5h 재측정
+
+| Q | 판정 | 반영 |
+|---|---|---|
+| Q4-1 | 운영자 도구 경로에서 **즉시 해제**, 해제 판정 함수는 하나(기동 따라잡기는 백스톱). 도구는 미래 작업 — 설계 문장만 | D−2.11 · spec(park 시나리오·SHALL) · task 4.3e |
+| Q4-4 | **현행 유지(손절 발신)**. 트레이드오프를 안전 불변식 §4 로 명명, 브로커의 보유 초과 거절은 미검증 잔여 | D−2.11 |
+| Q4-5 | 행별 실패는 **critical**, key 포지션 단위(흡수하되 침묵 안 함) | D−2.6-4 · spec SHALL·시나리오 · task 4.3d |
+| Q4-6 | **새 간격 없음**. 「429 류 거절 → park」 를 이름 붙인 위험으로. 영수증: 429 는 전송 층 sentinel(`official.ErrRateLimited`)이나 분류가 `dispatch_outcome_unknown` 으로 합쳐 원장 reason 에서 구별 불가 → **구현 로트 정지 조건** | D−2.11 · task 4.3f |
+| Q4-7 | **a124 관례**: `N = obs.DefaultCriticalAttempts`(`notifier.go:45` = 3), 시험은 상수 인용(a124 `design.md:84-86`, freeze 14회차 PASS) | D−2.7 · D−2.11 · task 3.E4 |
+| 외부 주문 취소 | 사용자 큐(Manager 등재) | — |
+
+**0.5h — 운영 원장 읽기 전용 재측정(Manager 조건부 승인).** `~/.config/tossctl/journal.db` 를 `mode=ro` + `PRAGMA query_only` 로 열었다.
+짧은 SELECT 몇 개, 브로커 호출 0. 읽은 것은 두 attempt 의 상태·전이·id·reason 과 연결된 발의 상태뿐이다. 계좌 정보는 읽지도 기록하지도 않았다.
+
+- `034e5b79…`(475150): PLACE · attempt_no 1 · broker 주문 번호 없음 · replay 0 · `DISPATCH_STARTED → IN_DOUBT`(00:17:46Z,
+  `dispatch_outcome_unknown`, 공식 오류 표식 1회, code 있음) → **`UNRESOLVED_IN_DOUBT` 2026-08-08T01:10:40Z**(`in_doubt_unresolved`).
+  발의 `STOP_LOSS_LADDER` level `0` 무장.
+- `8f68e7c3…`(080220): 같은 모양, park **2026-08-08T01:09:53Z**. 발의 `STOP_LOSS_LADDER` level `-1` 무장.
+- 결론: 재분류 조건 2~7 은 채우고 조건 1(현재 IN_DOUBT)은 못 채운다 → **이 사건의 해동 경로는 Q4-1 운영자 도구 경로**다(design D−2.2).
