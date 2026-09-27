@@ -23,13 +23,13 @@ otherwise:
 - the complete OPEN conditional-order group for the symbol contains no
   conditional order at all (a modify issues a new identifier and invalidates the
   old one, so a live successor would appear there under a different identifier);
-  any exception for a successor the record can prove it owns is chosen in design
-  Revision 1 Q4 `[비움 — Q4]`;
+  no exception is made for a successor the record might prove it owns;
 - the complete CLOSED conditional-order group for the symbol does not contain the
   artifact's identifier, and contains no row of any identifier whose triggered
   order identifier is non-empty or whose status is `COMPLETED` (a successor that
   fired is listed under its own identifier); an artifact found there as
-  `EXPIRED` is refused unless design Revision 1 Q6 `[비움 — Q6]` decides otherwise;
+  `EXPIRED` is refused, and the refusal SHALL state that an expired artifact
+  cannot be reconciled through this operation at all;
 - the complete OPEN plain-order group for the symbol contains no order (a fired
   child that has not filled rests there);
 - a conditional that fired and has left the lists is excluded by the rule chosen
@@ -124,7 +124,9 @@ require that every record line mentioning the selected artifact carries the same
 masked account reference and that it equals the masked form of the reference
 resolved for the current credentials (this compares the retained last digits,
 not full identity); that the selected account sequence is known rather than
-lazily resolved; that an explicit profile directory is given, credentials are not
+lazily resolved; that the credentials list exactly one account with a non-empty
+display reference (several accounts, including two sharing the retained last
+digits, refuse); that an explicit profile directory is given, credentials are not
 supplied through the environment, and the record path is derived from that
 profile directory rather than supplied as an override; and that the market is
 given explicitly, which selects the record file. Any missing, mixed, or
