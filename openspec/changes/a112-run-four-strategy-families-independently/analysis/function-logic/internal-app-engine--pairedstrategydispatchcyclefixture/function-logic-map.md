@@ -82,3 +82,8 @@ Exact AST return nodes: `275:108, 276:2`.
 - Safe edit boundary: 시험 전용. 생산 바이너리에 들어가지 않는다.
 - High-risk impact: no — 다만 이 픽스처가 재는 대상은 High-risk 경로이므로,
   배선의 상수를 바꾸면 그것을 인용하는 시험이 다른 것을 재게 된다.
+
+## 2026-09-27 — 태스크 8.7.2 편집 전 (현재 AST 와 SHA 일치 확인)
+
+편집은 한 줄: 생산 조립과 같은 모양으로 `cycle.now = fakeClock.Now` 를 둔다. 시험이 fake clock 을 파도 뒤로 전진시켜 "수집 때 유효 ·
+SUBMITTING 때 만료" 를 재려면 dispatch 주기가 그 시계를 봐야 한다. 분기는 바뀌지 않는다.

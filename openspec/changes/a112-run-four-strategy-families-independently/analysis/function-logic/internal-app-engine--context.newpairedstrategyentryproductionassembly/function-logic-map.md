@@ -113,3 +113,10 @@
 
 - L0 status: pre-edit evidence only; no production function was edited and no branch test is claimed as run by L0.
 - A named targeted RED or explicit evidence-backed not-applicable rationale is required for every edited branch before GREEN.
+
+## 2026-09-27 — 태스크 8.7.2 편집 전 (현재 AST 와 SHA 일치 확인)
+
+`ast.json` 의 SHA-256 은 편집 전 이 워크트리 파일과 같다(재확인). 편집은 한 줄이다: `dispatchCycle.revalidateSchedule = …`
+대입 **옆**에 `dispatchCycle.now = clk.Now` 를 둔다 — 분기·호출 순서·반환은 바뀌지 않고 대입 하나가 는다. 이 함수가 dispatch
+주기에 실시계를 건네는 유일한 생산 조립이다(생산에서 `newStrategyDispatchCycle` 을 부르는 자리는 이 함수 하나 — grep 으로 확인해
+review.md 에 적는다). 이 대입이 빠지면 검증된 가족 활성화를 가진 시장의 주문이 전부 거절된다(fail-closed) — 넓힘이 아니다.

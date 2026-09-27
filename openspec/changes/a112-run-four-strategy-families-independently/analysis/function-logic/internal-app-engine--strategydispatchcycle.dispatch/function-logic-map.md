@@ -154,3 +154,21 @@ B6 (`activation.Verified()`, 108:2) 과 B7 (`protection.Generation() < 하한`, 
 실패할 수 있는 읽기 전용 경계를 전부 끝낸다"(84행 주석)를 따른다. 새 분기는 하나(`err != nil` → 오류 반환)다. 생산에서는
 넘기는 시각이 활성화를 검증한 바로 그 파도 시각이라 이 갈래가 닿지 않는다(시험 seam 으로만 닿는다) — 실질적인 보호는 TTL
 결합이다: lease 가 가족 활성화 만료를 넘어 살지 못한다.
+
+## 2026-09-27 — 8.7.2 두 번째 편집 전 (Codex P1 수정, Manager 승인)
+
+첫 편집(미커밋, 워크트리 SHA-256 `fc5f6721…`) 뒤의 AST 는 분기 17 개다: B1 72:2 · B2 75:2 · B3 80:2 · B4 87:2 · B5 91:2 ·
+B6 108:2 · B7 109:3 · **B8 125:2(새 것: `LeaseCeiling` 오류 → admission 앞 거절)** · B9 129:2 · B10 133:2 · B11 137:2 · B12 141:2 ·
+B13 148:2 · B14 154:2 · B15 167:2 · B16 173:2 · B17 177:2. 첫 편집 전의 B8~B16 이 B9~B17 로 밀렸다 — 조건을 소스와 하나씩
+대조했다(옛 116:2 `ObserveStrategyEntryGate` 오류 → 새 129:2, …, 옛 164:2 → 새 177:2).
+
+**Codex 가 연 P1.** `LeaseCeiling` 은 파도 시각 기준 **상대** TTL 이고 journal 은 그 TTL 을 **자기 현재 시각**에 더한다. 파도→발급
+사이 δ 만큼 lease 행의 명목 만료가 가족 활성화 만료를 넘는다. 스케줄 활성화는 같은 상대 TTL 을 쓰지만 `FinalAuthorityCheck`
+(게이트웨이가 브로커 바이트 **전** 에 부른다, `internal/execgw/gateway.go` 의 `call` 클로저)가 실시계로 다시 적재해 막는다. 가족
+활성화에는 그 최종 검사가 없었다.
+
+**두 번째 편집 계획.** (1) `strategyDispatchCycle` 에 `now func() time.Time` 필드. (2) admission 앞 `LeaseCeiling` 호출의 시각을
+파도 시각에서 `cycle.now()` 로. (3) `FinalAuthorityCheck` 클로저가 스케줄 재검증에 더해 `LeaseCeiling(cycle.now(), …)` 의 만료
+오류를 돌려준다 — 규칙은 여전히 strategyrouter 한 곳. (4) `now` 가 nil 인데 가족 활성화가 검증돼 있으면 거절(fail-closed);
+검증 안 된 활성화(미선언·기존 경로)는 `LeaseCeiling` 이 시각을 보지 않으므로 생산 변화 0.
+불변식은 이렇게 적는다: **lease 행은 명목상 만료를 최대 δ 넘을 수 있으나, SUBMITTING 은 만료 뒤 최종 검사를 통과할 수 없다.**
