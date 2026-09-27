@@ -114,3 +114,36 @@ rc 0, `--- PASS` 1(`07b-a067-partial.log`).
 남의 기존 함수 338개의 Function Logic Map 을 요구함(`/tmp/claude-1000/ca-a067-add-kr-us-continuation-lanes.log`).
 이 change 가 편집한 기존 함수는 0 이므로 레인 코드의 결함이 아니라 창 정의의 문제임. 두 레인은
 이 측정 시점에도 기본 OFF(위 (b)).
+
+## 종결 시퀀스 (2026-09-27, a122 선례 · Manager 2단계 승인)
+
+### Function Logic Map: not-applicable
+
+**사유.** 이 change 의 Go 작업은 새 패키지 `internal/continuationlane/` 의 새 파일 11개(75cc736f)이고,
+그 커밋이 수정한 **기존** 함수는 0 이다 — `check_analysis.changed_existing_functions(75cc736f^, 75cc736f)`
+실측 0(2026-09-27, HEAD 4df72ed8). 새 함수는 Function Logic Map 대상이 아니므로 번들 0 이 맞다.
+
+### base 재고정 영수증 (0de27fab)
+
+- 잰 순간: HEAD 4df72ed8, 모집단 = `git log --full-history -- openspec/changes/a067-…` 커밋 4.
+  - 38c616be(2026-08-03, 명세) go 0
+  - 75cc736f(2026-08-04, 레인 코어) go 11 — 전부 새 파일, 기존 함수 수정 0
+  - 448dfeb1(2026-08-04, 통합 병합) combined diff go 9 = `cmd/tossctl/console.go` · `internal/app/engine/{engine,interlock}.go`
+    · `internal/config/engine.go` · `internal/console/*` 5 — a074~a079 충돌 해소, continuationlane 0
+  - 51345e12(2026-09-25, 4.2 회귀 기록) go 0
+- 옛 base c57915dd 에서 5단계 rc 1 · required 340 · 창에 착지 커밋 451 — 전부 다른 change 의 기존 함수
+  (`/tmp/claude-1000/a122-lot/audit/ca-a067-add-kr-us-continuation-lanes.log`).
+- 재고정 c57915dd → 4df72ed8, `base-commit.txt` 만 커밋(0de27fab). 재고정 뒤 check_analysis:
+  required 0, 남은 사유는 이 마커뿐.
+
+### 4.3 두 레인 OFF 기록 (코드 인용만, LIVE·운영 접근 0)
+
+- `internal/continuationlane/registry.go:20-21` — KR·US 서술자 둘 다 `DesiredState: StateOff, EffectiveState: StateOff`.
+- `registry.go:33-35` — `ValidateRegistry` 는 OFF 가 아닌 서술자를 거절한다.
+- `internal/continuationlane/dependency_test.go:12-34` — 패키지 비시험 파일이 `/broker` · `/journal` · `/exit` ·
+  `/gateway` · `/operating` · `/toggle` · `/registry` 를 import 하면 실패한다.
+- **정정:** "runtime 배선 0" 은 이 패키지 안에서만 참이다. a112 가 뒤에 두 레인을 생산 경로에 DORMANT 로 세웠다 —
+  `internal/strategyworker/worker.go:136-138` 이 레인 ID 를 워커 키로 쓰고, `worker.go:193-195` 의 `Run` 은
+  `Effective(activation) != StateOn` 이면 `OutcomeDormant` 로 끝난다. `worker.go:182-183`: activation 은
+  `strategyrouter.FamilyActivation`(필드 전부 비공개)라 패키지 밖에서 영값만 만들 수 있고, 영값은 아무것도 켜지 않는다.
+  그래서 두 레인은 여전히 OFF 다.
