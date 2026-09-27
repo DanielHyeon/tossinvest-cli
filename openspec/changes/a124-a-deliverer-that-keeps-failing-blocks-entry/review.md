@@ -423,3 +423,7 @@ proposal Non-goals/Impact)을 쓰고 Q4~Q6 을 반영해 5회차 재freeze 한�
   뒤집는다. 운영자의 해제를 기계가 무시하는 방향은 진입에는 보수적이어도 사람 승인이 지배한다는 불변식에는 역행한다. 재설계는 a092 축소판(셈~해제 수리 ·
   투영기 배선의 소유자)의 범위다. 공백의 귀결과 닫는 조건 (i)(ii)는 §0.15 · D10 에 이미 있다.
 - 13회차 codex 는 대기한다 — a094 3라운드 codex 가 끝나면 coordinator 가 신호를 준다. tasks 0.4 는 체크하지 않는다.
+- **13회차 선검증 (2026-09-27, coordinator 지시):** a094 3라운드 codex F9 「pending 알림이 재시작 때 진입 차단을 별도 경로로 복원한다」는 사실이다. 다만 F9 가 적은
+  좌표 `internal/execgw/gateway.go:153-168,269` 는 틀렸고, 실제 자리는 `internal/app/engine/gateway.go:269` → `restoreAlertEntryLatch` :153-167 이다
+  (`UndeliveredCount > 0` 일 때만). D10 은 이 경로를 이미 정확히 담고 있다 — 사실 단락 · 집행 표 「재시작 뒤」 칸(PENDING > 0 이면 다시 잠금, 0 이면 없음) ·
+  「PENDING 이 남은 채 재시작 → 막힌다」 행. 보정 없이 13회차를 실행한다.
