@@ -780,3 +780,29 @@ park 해제 철회/조건화, 소급 대상을 원 발주 응답으로 한정, �
   발의 `STOP_LOSS_LADDER` level `0` 무장.
 - `8f68e7c3…`(080220): 같은 모양, park **2026-08-08T01:09:53Z**. 발의 `STOP_LOSS_LADDER` level `-1` 무장.
 - 결론: 재분류 조건 2~7 은 채우고 조건 1(현재 IN_DOUBT)은 못 채운다 → **이 사건의 해동 경로는 Q4-1 운영자 도구 경로**다(design D−2.2).
+
+---
+
+## 4라운드 (codex 교차 모델, task 0.5f) — **REJECT** · 분류만, 반영은 Manager 결정 뒤
+
+- 실행: codex-cli 0.154.0, gpt-6-astra, `codex exec -s read-only --ephemeral --skip-git-repo-check -C <트리>`,
+  session **`01a0e308-7099-7283-b840-358c484b24fe`**, 2026-09-27 22:22:55~22:27:27 KST, rc 0, tokens 167,944, 401 없음.
+  트리 = `git archive d3aa309a`(커밋된 코드 그대로 — 공유 워크트리의 이웃 미커밋 Go 없음), 파일 수 17060 → 17060.
+  프롬프트 `analysis/freeze-review/codex-r4-prompt.md`(sha256 `cedbfeac1f08e786…`, 47a61244), 출력 `codex-r4-output.md`.
+- 3라운드 발견 판정: RESOLVED 6(F2·F3·F4·F5·F6·F9) · PARTIAL 3(F1 — Q4-4 경로 하나 · F8 — 인수가 호가 이탈을 대신함 ·
+  F10 — record FLM 「Branches」 표 옛 번호, task 0.5g 미완) · NOT RESOLVED 1(F7 — a089 처분 미실행).
+  canonical 본문 재현 통과, AST 해시 15 일치(182 분기), R2 브로커 읽기 잔재 없음, Q4-6 reason 주장 정확.
+
+| id | codex | 분류 | 요지 | Teammate 재확인 |
+|---|---|---|---|---|
+| N1 | P0 | **Manager 재결정 필요** | Q4-4 가 "살아 있을 수 있는 주문 위에서 발의를 비우지 않는다" 를 어긴다 | 좁혀서 **확인** — 평범한 IN_DOUBT 익절은 `checkSymbolFree` 가 같은 종목의 모든 mutation 을 막아(`gateway.go:804-813`) 손절이 못 나간다. 우회는 **park 된** 익절에서만(`:815-816`). D−2.11 Q4-4 서술이 두 경로를 섞었다 |
+| N2 | P1 | 설계 — a092 의존 | 새 critical(청소 트리거·기동 행)이 notifier 뮤텍스 아래 동기 전달 → 다른 포지션 손절 지연 가능 | 미확인(구조상 a092 가 다루는 주제) |
+| N3 | P1 | 설계 | 코드 불일치의 "모호 강제" 를 `(code,bool)` 분류기가 표현 못 함; 422 면 폴백이 확정 거절 | 미확인 |
+| N4 | P1 | **설계 결함 — 확인** | ACK 커밋 뒤 settle 실패로 무장 유지된 발의는 재시작 때 ACKED 가 그대로 남고(`journal/recovery.go:81-83`·`:116-120`) `Recovery.Run` 이 건너뛰며(`reconcile/recovery.go:262-272`) 따라잡기도 제외 → 재시작마다 얼어 있다. D−2.5 의 "재시작 복구가 IN_DOUBT 로 만든다" 는 ACKED 에 대해 거짓 | **확인** |
+| N5 | P1 | 문서 | fixture 4b.6·6.2 가 4판이 못 내는 결말을 요구 | 0.5h·D−2.4 와 일치 — 확인 |
+| N6 | P1 | 교차 change | a089 처분이 freeze 선결 조건으로 남음 | 사용자 큐 |
+| N7 | P2 | 문서 | `fmt.Errorf("…: %w", apiErr)` 은 표식 1회 + JSON 을 유지 → "감싸이면 거절 쪽" 서술 거짓 | 미확인(논리상 참) |
+| N8 | P2 | 기록 | a124 상수 차용은 일관성이지 근거가 아니며 notifier 튜닝과 결합 | — |
+
+- codex 권고: **소급 재분류를 미룬다** — 0.5h 뒤 사건 두 행에 이득이 없고, 전략 PLACE 행까지 바꾼다.
+- **판정: REJECT. 반영하지 않았다.** N1(Q4-4 재결정) · N4 · N6 · 재분류 연기 여부는 Manager 결정 사항이다.
