@@ -1,0 +1,9 @@
+TREE	HEAD bb44e7afd7fee425af430084c169daad7c92cf2a	uncommitted tracked: internal/app/engine/alertdelivery.go,internal/app/engine/auxiliary.go,internal/execgw/retry.go,internal/journal/alert_claim.go,internal/journal/outbox.go	own untracked: internal/journal/a066_integration_5_6_contract_test.go
+CONTROL	GREEN	
+C01 usage sums every value of a dimension	CAUGHT	2 failing: TestA066KRUSConcurrentContract, TestA066KRUSFailureIsolation/KR_market_bucket_exhausted
+C02 usage sums every account	CAUGHT	1 failing: TestA066KRUSConcurrentContract
+C03 owner conflict ignored	CAUGHT	1 failing: TestA066KRUSConcurrentContract
+C04 reconcile scope ignores market	CAUGHT	1 failing: TestA066KRUSFailureIsolation/KR-scoped_reconcile
+C05 loss lock ignores market	CAUGHT	1 failing: TestA066KRUSFailureIsolation/KR_entry_loss_lock
+C06 stale check skips strategy	CAUGHT	2 failing: TestA066KRUSConcurrentContract, TestA066KRUSFailureIsolation/a_latch_in_a_shared_bucket_blocks_both_markets_(not_isolated,_by_design_D5)
+C07 latched shared usage ignored	CAUGHT	1 failing: TestA066KRUSFailureIsolation/a_latch_in_a_shared_bucket_blocks_both_markets_(not_isolated,_by_design_D5)

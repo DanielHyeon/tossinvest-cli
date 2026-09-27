@@ -684,3 +684,24 @@ untagged rc 0 (journal 465 s), `tossos_testseams` rc 0, focused `-race` rc 0. Mu
 N17 now refused by the trigger itself (the failing test is `TestMigrationV33ToV34KeepsLegacyReservationsReadable`,
 not a migration SQL error).
 
+## 5.6 — KR/US concurrent contract (2026-09-28)
+
+`internal/journal/a066_integration_5_6_contract_test.go` takes the task 5.6 sentence as its contract. No operating toggle is used; the tests exercise the journal admission authority only.
+
+- `TestA066KRUSConcurrentContract` builds one flow in one account:
+  - Another account's entry sits in the same bucket values and must never show up in this account's buckets.
+  - Wave 1: KR and US arrive concurrently with the same wave-start snapshot. Exactly one is admitted and the other is refused `BUCKET_USAGE_STALE`. Wave 2 admits the loser.
+  - US uses a different horizon and sector, so **strategy is the only bucket the two markets share**.
+  - **Independent market buckets**: KR 50, US 50.
+  - **Shared strategy cap**: strategy holds 100.
+  - **One symbol, one owner**: a rival lane on KR 005930 or US AAPL gets an owner conflict and writes no decision. There is one active owner per market.
+  - **Monetary scale-in aggregation**: the same owner's second decision reuses the owner and is capped by the shared strategy headroom (120 − 100 → q 4). Usage becomes symbol 70, KR 70, US 50, strategy 120. After that, new KR and US entries are cap-refused.
+- `TestA066KRUSFailureIsolation` covers **failure isolation**. Both markets use the same symbol string and horizon, so only the market scope separates them. Each KR-only failure blocks KR and leaves US open:
+  - a KR loss lock;
+  - a KR-scoped reconcile;
+  - an exhausted KR market bucket.
+
+  The contrast case is also pinned: a latch in a shared bucket blocks both markets (design D5), so it is not isolated.
+- Contract mutants (`mutate_5_6_1.py --set 5.6`, ledger `analysis/mutation-5.6/ledger-contract.tsv`), each making one part of the sentence false: usage summed over every bucket value (C01) or every account (C02), owner conflict ignored (C03), reconcile scope ignoring market (C04), loss lock ignoring market (C05), stale check skipping strategy (C06), latched shared usage ignored (C07). **7/7 CAUGHT.**
+  - Two earlier drafts let mutants survive, and the fixture was fixed each time. C02 survived because only one account was used. C06 survived while horizon and sector were shared (they caught what strategy should). C05 survived while the US isolation entry used a different horizon.
+

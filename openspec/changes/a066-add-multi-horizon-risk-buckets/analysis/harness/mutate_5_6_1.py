@@ -61,6 +61,21 @@ MUTANTS = [
     ("N20 legacy branch of fill loader dropped", FILL, "WHERE r.decision_id=? AND r.policy_record_digest IS NULL`, decisionID, decisionID)", "WHERE r.decision_id=? AND 0`, decisionID, decisionID)"),
 ]
 
+# 5.6 계약 문장("independent market buckets, shared strategy caps, one symbol/one owner, monetary scale-in aggregation,
+# failure isolation")을 거짓으로 만드는 변이 — `--set 5.6` 으로 고름.
+CONTRACT_MUTANTS = [
+    ("C01 usage sums every value of a dimension", RB, "WHERE r.account_ref=? AND r.bucket_dimension=? AND r.bucket_value=? ORDER BY", "WHERE r.account_ref=? AND r.bucket_dimension=? AND ?<>'' ORDER BY"),
+    ("C02 usage sums every account", RB, "WHERE r.account_ref=? AND r.bucket_dimension=? AND r.bucket_value=? ORDER BY", "WHERE ?<>'' AND r.bucket_dimension=? AND r.bucket_value=? ORDER BY"),
+    ("C03 owner conflict ignored", ISS, "if prospective != plan.Owner.Key.ProspectiveGeneration || lane != plan.Owner.LaneID || campaign != plan.Owner.CampaignID {", "if false && (prospective != plan.Owner.Key.ProspectiveGeneration || lane != plan.Owner.LaneID || campaign != plan.Owner.CampaignID) {"),
+    ("C04 reconcile scope ignores market", CRA, "AND (symbol IS NULL OR symbol=?) AND (scope_market IS NULL OR scope_market=?)`,", "AND (symbol IS NULL OR symbol=?) AND (scope_market IS NULL OR ?<>'')`,"),
+    ("C05 loss lock ignores market", J + "risk_bucket_entry_loss_lock.go", "FROM risk_bucket_entry_loss_locks WHERE account_ref=? AND market=? AND horizon=?", "FROM risk_bucket_entry_loss_locks WHERE account_ref=? AND ?<>'' AND horizon=?"),
+    ("C06 stale check skips strategy", USAGE, "\tfor _, bucket := range buckets {", "\tfor _, bucket := range buckets {\n\t\tif bucket.Key.Dimension == riskbucket.DimensionStrategy {\n\t\t\tcontinue\n\t\t}"),
+    ("C07 latched shared usage ignored", USAGE, "\t\tif usage.Latched {\n\t\t\treturn fmt.Errorf(", "\t\tif false && usage.Latched {\n\t\t\treturn fmt.Errorf("),
+]
+CONTRACT_TESTS = [
+    ["go", "test", "-count=1", "-run", "TestA066KRUSConcurrentContract|TestA066KRUSFailureIsolation", "./internal/journal"],
+]
+
 TESTS = [
     ["go", "test", "-count=1", "-run", "SharedBucket|StaleUsage|LatchedUsage|SameAccountKRUS|PartialFillCrash|LateFillOverage|MigrationV33ToV34|TestSchemaTablesAndColumns|TestRiskBucketAdmission|TestFirstLegAtomic|TestRiskBucketActualAndRelease|TestStrategyDispatch|LossLock", "./internal/journal"],
     ["go", "test", "-count=1", "-tags", "tossos_testseams", "./internal/riskbucket"],
@@ -90,6 +105,12 @@ def main() -> None:
     if "--only" in args:
         i = args.index("--only")
         only = re.compile(args[i + 1])
+        args = args[:i] + args[i + 2:]
+    global MUTANTS, TESTS
+    if "--set" in args:
+        i = args.index("--set")
+        if args[i + 1] == "5.6":
+            MUTANTS, TESTS = CONTRACT_MUTANTS, CONTRACT_TESTS
         args = args[:i] + args[i + 2:]
     scratch, own = Path(args[0]), args[1:]
     copy = scratch / f"mut561-{os.getpid()}"
