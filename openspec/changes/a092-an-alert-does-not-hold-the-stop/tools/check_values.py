@@ -65,7 +65,7 @@ import re
 import sys
 
 CHANGE = pathlib.Path(__file__).resolve().parent.parent
-FLM_ROOT = CHANGE / "analysis" / "function-logic"
+FLM_ROOT = CHANGE / "analysis" / "function-logic-base-285c7619"  # 구현 로트(25.2): 옛 base 번들을 역사 자리로 옮김
 
 # ---------------------------------------------------------------------------
 # 선언 — 사람이 고른 값. 이 파일이 유일한 선언 자리다.

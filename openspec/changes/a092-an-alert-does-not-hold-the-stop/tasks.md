@@ -18,7 +18,8 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 
 - [x] 25.0 **base 재고정 승인 기록** — Manager 배정 메시지(2026-09-29)가 승인. 귀속 실측 `analysis/harness/repin_receipt.tsv`(자기 Go 커밋이 고친 기존 함수 0,
       형제 착지 몫 300). `review.md` §24.1.
-- [ ] 25.1 base 재고정 단독 커밋(`base-commit.txt` 285c7619 → 721d0338).
+- [x] 25.1 base 재고정 단독 커밋(`base-commit.txt` 285c7619 → 721d0338) — `aea8553b`.
+- [x] 25.2 옛 base 번들 36개를 `analysis/function-logic-base-285c7619/`로 옮김(재고정 뒤 stale 29 — 게이트 밖 역사 자리, README). a092 문서 도구 셋의 경로를 같이 옮김(`check_values.py` 실패 60 불변).
 
 ## 24. 24판 작업 (2026-09-29) — 23라운드 처분 반영 (design D0.3i · `review.md` §23.13)
 

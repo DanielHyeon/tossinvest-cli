@@ -361,7 +361,7 @@ SITES: dict[str, str] = {
     "tasks": "tasks.md",
     "spec": "specs/engine-safety/spec.md",
     "analysis": "analysis/delivery-latency.md",
-    "FLM": ("analysis/function-logic/internal-obs--notifier.deliver/"
+    "FLM": ("analysis/function-logic-base-285c7619/internal-obs--notifier.deliver/"
             "function-logic-map.md"),
 }
 

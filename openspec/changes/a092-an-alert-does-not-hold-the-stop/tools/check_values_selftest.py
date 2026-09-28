@@ -498,7 +498,7 @@ CASES: list[tuple[str, object, str]] = [
     (
         "축1 — 표가 인용하지 않는 비표준 절이 생긴다",
         lambda r: edit(r,
-                       "analysis/function-logic/internal-obs--notifier.deliver/"
+                       "analysis/function-logic-base-285c7619/internal-obs--notifier.deliver/"
                        "function-logic-map.md",
                        "### 최악 예산의 산술",
                        "### 아무도 인용하지 않는 새 절 제목"),
