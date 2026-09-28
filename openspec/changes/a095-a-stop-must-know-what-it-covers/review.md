@@ -726,3 +726,41 @@ Q2(d)·Q7 = a092·a124 영역 이관(a092 21판이 그 소유를 인수했고 a1
 | Q7 | proposal 이관 표 · design 「남는 경합」 · tasks 6.2 / 선후 관계. 첫째 면은 a092 21판 engine-safety 델타(잠금의 모든 보유자는 원격 전송 동안 잠금을 놓는다)와 a092 review 21판 Manager 판정 Q1이 닫는다. 둘째 면(대사 goroutine 자신의 대기)은 a092 21판 밖의 **이름 붙은 잔여** |
 
 **열림 그대로 — 구현 로트행**: Q1 · Q2(a)(b)(c) · Q3(정지 조건) · Q4 · Q6.
+
+## 3라운드 (proposal-freeze, 3판) — **REJECT** · 4판 반영 (2026-09-28)
+
+### 3.10 두 보이스
+
+| 보이스 | 실행 | 판정 |
+| --- | --- | --- |
+| **교차 모델 — codex** | codex-cli 0.154.0 · gpt-6-astra · medium · `codex exec -s read-only --ephemeral --skip-git-repo-check`, session `01a0e80d-b6d0-7fe0-8bba-48354fd02a40`, 21:46:47~21:52:00 KST, rc 0, 216,933 토큰, 401 없음. 트리 = HEAD `2b3b2115` export + a095 오버레이(`diff -r` 0, 대상 Go 12파일 base `02716357`과 동일 — base 대신 HEAD 를 쓴 이유: 문서가 a124 정본 · a092 21판을 인용하는데 base 에 없다). 프롬프트 `analysis/freeze-review/r3-prompt.md` sha256 `79a11adc…40bf7`(실행 사본 일치), 출력 `codex-r3-output.md`(원문, `0c12844a`) | **REJECT** — N1 P0 · N2~N4 P1 · N5 · N6 P2 · N7 P3 |
+| **독립 보이스 — Claude(Opus) 서브에이전트** | 같은 트리 · 같은 프롬프트, 읽기 전용, codex 결과 비열람. **실행 도중 트리가 지워졌다**(세션 재시작 때 스크래치패드 정리) — 보이스가 스스로 적은 미완: ast.json 대조(e) · `baseline_price` writer 전수 grep(d) · a092 review-21 인용 대조(f 일부). 그 항목은 UNVERIFIED 로 남겼고 통과로 세지 않는다 | **REJECT** — V-N1 P0 · V-N2 P1 · V-N3 P2 · V-N4 P2/P3 · V-N5 P2 · V-N6 UNVERIFIED |
+
+**교차 보이스 수렴**: 두 보이스가 서로 보지 않고 **N1(알림 off SHALL NOT 과 무조건 critical SHALL 의 충족 불가)** 과
+**N2(델타가 Q2(c)에 이미 답함)** 에 수렴했다. N3(편입 성공 뒤 남는 critical 행)도 둘 다 냈다(codex P1 · Claude P2).
+
+### 3.11 발견과 처분 (Manager 처분 2026-09-28 — 반영은 이 4판)
+
+| id | 출처 | 등급 | 내용 | Manager 처분 | 4판 반영 자리 |
+| --- | --- | --- | --- | --- | --- |
+| N1 | codex · Claude V-N1 | P0 | 알림 off 요구와 critical 요구가 동시에 충족 불가(정본 「등급화된 알림」 · a124 정본이 전송 수단 부재도 실패로 셈) | **승인** — 알림 켜짐을 critical 전제로, off 사실은 non-critical | engine-safety 델타 첫 문단 · 알림 off 문단 · 시나리오 둘 · design D1(등급 표 · 「알림 off에서 무엇이 막혀야 하는가」 4판 문단 — §3.7 R1 · Q1 제약과 같은 뿌리로 인용) · proposal R1′ 표 · tasks 2.2 · 2.5 |
+| N2 | codex · Claude V-N2 | P1 | 델타가 연기 후보를 critical 에 넣어 Q2(c)에 이미 답함 | **승인** — SHALL 에서 제외, Q2(c) 열림 | engine-safety 델타(연기분은 이 요구가 정하지 않음) · design D1 표 · D7 · proposal R1′ 표 · tasks 2.2 · 2.6 |
+| N3 | codex(P1) · Claude V-N3(P2) | P1 | 편입 실패 critical 행이 편입 성공 뒤에도 「지금 무보호」로 배달됨 | **설계 지시(조건부)** — outbox 기존 기계로 표현 가능하면 설계, 없으면 번호 질문 | **기계 없음** → design D1 「사실이 해소된 뒤의 행」(검사 표: 재무장은 `claimOwed` B2 창 return `:381`로 PENDING 제외 · a089 R1 계보는 a096~a099 로 대체 · 해소 정산 연산 없음 · 실행자는 저장 문구 전송) · proposal **Q8**(정지 조건) · tasks 2.11 |
+| N4 | codex | P1 | Q1 선택지 (b)가 「`SeverityOf` · `Notify` 본문 불변」과 충돌 | **승인** — 경계를 Q1 답 조건부, (b) 삭제 금지 | tasks 2.10 · proposal Impact · severityof · notify 번들 결론(생성기) |
+| N5 | codex | P2 | 쓰기 자리 넷의 하향 보장 과대 서술 — refresh 는 effective JSON 과 비교, 선택기는 저장 스냅샷 없으면 비교 없음, 옛 판정은 스칼라만 씀 | **승인** | issues I1 표 · design D4 표 · recordexitjudgementtx · refreshexitobservation 번들 결론 · 새 번들 `selectrecoverysnapshot` |
+| N6 | codex | P2 | 「모든 선이 entry_price」 과대 — runner 는 워터마크, 이전 기준선은 max 합성(`ladder.go:391-403`) | **승인** | issues I1 · tasks 5.2 · evaluateladder 번들 역할 |
+| N7 | codex | P3 | 이관된 Q2(d)가 design 표 · tasks 2.6 에 남음, adopt 번들 Q2(b)→Q2(c) | **승인** | design D1 표 · tasks 2.6 · adopt 번들(생성기) |
+| V-N4 | Claude | P2/P3 | exit-policy 델타의 「이 change가 도입하지 않는다(SHALL NOT)」는 정본에 들어가면 뜻이 없어지거나 영구 금지가 됨 · 머리말과 proposal Q6 의 「둘째 요구」는 R3 삭제 뒤 낡음 | **미처분 — 분류만** | 반영 안 함 |
+| V-N5 | Claude | P2 | exit-policy 델타 「평단 하락으로 유효 손절을 낮추지 않는다(SHALL NOT)」는 운영자 재편입 경로(비교 없는 reset)에서 거짓일 수 있음 — 합성 손절 유도 분기 미확인 | **미처분 — 분류만** | 반영 안 함. 4판 issues I1 이 reset 을 「낮출 수 있다」로 적었으므로 두 문장의 관계가 r4 쟁점이다 |
+| V-N6 | Claude | — | (d)(e)(f) 미검증 | 기록 | r4 에서 codex 가 같은 항목을 이미 대조(N5 · cross-citation 정확) |
+
+**2라운드 발견 처분(두 보이스 합)**: NOT RESOLVED 0. PARTIAL 은 전부 N1 · N2 · N3 · N5 로 수렴했고 이 4판이 그 넷을
+처분했다(N3 은 Q8 로). MOVED 는 Q3 · Q4 · a092 Q7 · R3 후속.
+
+### 3.12 4판 게이트와 남은 것
+
+- 새 근거 번들 5개는 HEAD `04a0dd25` 깨끗한 연결 worktree 에서 뽑았다(공유 워킹트리에 병행 로트 미커밋 편집이
+  있다). 기존 번들 5개의 산문 변경은 옛 커버리지로 다시 그려 **의도한 5파일만** 달라짐을 `diff -rq` 로 확인했다
+- r4 재리뷰: codex 대기열(a094 r5 → a125 → a090 → **a095 r4**) — Manager 신호 대기. r4 프롬프트는 V-N4 · V-N5 를
+  미처분 쟁점으로 넘긴다
+- tasks 0.5 미체크 유지

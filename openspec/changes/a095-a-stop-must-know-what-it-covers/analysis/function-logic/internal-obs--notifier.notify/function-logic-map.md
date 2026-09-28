@@ -35,5 +35,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **a095는 이 함수를 바꾸지 않는다.** 결정 (1)의 요구 「exit goroutine 에 critical Notify 를 새로 두지 않는다」는 exit 관측 자리의 사실이 B1 창(`publishBestEffort`)으로 가는 것으로 성립한다 — 그 경로에는 `n.mu`도 outbox도 재시도 대기도 없다.
+- **Safe edit boundary**: **편집 경계는 Q1의 답에 달렸다(4판, r3 N4)** — (a)면 본문 불변, (b)면 `SeverityOf` 계약 변경과 함께 경계 재선언. 어느 답이든 결정 (1)의 요구 「exit goroutine 에 critical Notify 를 새로 두지 않는다」는 exit 관측 자리의 사실이 B1 창(`publishBestEffort`)으로 가는 것으로 성립한다 — 그 경로에는 `n.mu`도 outbox도 재시도 대기도 없다(네트워크 발행 1회는 동기다).
 - **High-risk impact**: yes — 알림이 원장에 남는지, 진입 차단에 닿는지가 여기서 갈린다.

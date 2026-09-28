@@ -7,12 +7,12 @@
 | Branch | 조건 | 진입 실측 | Test (a095 요구) | RED observed | GREEN observed |
 |---|---|---|---|---|---|
 | B1 | `:175` `if len(candidates) == 0 {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B2 | `:180` `if err != nil {` | 아니오 | **a095 2.6** — [비움 — Q2(b)] 연기된 후보의 등급 | no | no |
+| B2 | `:180` `if err != nil {` | 아니오 | **a095 2.6** — [비움 — Q2(c)] 연기된 후보의 등급 | no | no |
 | B3 | `:182` `if cycle.Err == nil {` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
 | B4 | `:189` `if bound <= 0 {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
 | B5 | `:192` `for _, c := range candidates {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B6 | `:195` `if !ok {` | 예 | **a095 2.6** — [비움 — Q2(b)] 연기된 후보의 등급 | no | no |
-| B7 | `:201` `if age := d.clk.Now().Sub(readAt); age > bound {` | 예 | **a095 2.6** — [비움 — Q2(b)] 연기된 후보의 등급 | no | no |
+| B6 | `:195` `if !ok {` | 예 | **a095 2.6** — [비움 — Q2(c)] 연기된 후보의 등급 | no | no |
+| B7 | `:201` `if age := d.clk.Now().Sub(readAt); age > bound {` | 예 | **a095 2.6** — [비움 — Q2(c)] 연기된 후보의 등급 | no | no |
 | B8 | `:210` `if d.adoptOne(ctx, c, observed) {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
 
 **미진입 분기 2개**: B2, B3

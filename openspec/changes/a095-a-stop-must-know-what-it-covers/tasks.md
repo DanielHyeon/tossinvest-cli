@@ -1,4 +1,4 @@
-# a095 · tasks — 3판
+# a095 · tasks — 4판
 
 - **Change**: `a095-a-stop-must-know-what-it-covers`
 - **위험 등급**: **High-risk** — 무보호 보고의 등급과 진입 차단 도달. §0.3 적용.
@@ -39,6 +39,9 @@
       (앞의 둘은 생성기로 다시 씀 — 2판 FLM의 「B2 — 미편입 보유가 여기로 온다」 거짓 정정)
 - [x] 1.5 **발신 자리 넷의 대조**(2판 1.11) — 결과: **같은 사실이 아니다.** exit 관측 · reconcile 무관리 ·
       수량 증가(보호 중) · fold(생산 도달 불가)로 갈린다. `design.md` D1 「발신 자리 넷의 3판 처분」
+- [x] 1.7 **4판 근거 번들 5개**(r3 N3 · N5 처분의 분기 근거): `journal.Journal.recordAlertTx` · `journal.claimOwed` ·
+      `engine.alertDeliverer.cycle` · `engine.alertDeliverer.deliverOne` · `exitpolicy.SelectRecoverySnapshot`.
+      HEAD `04a0dd25` 깨끗한 연결 worktree에서 AST · 커버리지(`analysis/harness/coverage/r4-*.out`)
 - [ ] 1.6 **a091과의 병합 확인** — 둘 다 등급 표를 건드릴 수 있다. 3판은 표 크기를 시험에 적지 않는다
 
 ## 2. R1′ — 등급을 사실로 (결정 (1)·(2), design D1)
@@ -47,22 +50,30 @@
 - [ ] 2.1 **RED** — exit 관측 자리(`workingSet` B6 → `ExitObserver.alertUnmanaged`)의 사실은 **normal**이고
       `Notify` B1 창(`publishBestEffort`)으로 간다: outbox 행 0 · `n.mu` 미획득. 기존
       `TestAPositionWithNoEntryDecisionIsSkippedAndAlertedOnce`의 normal 단언을 유지한다
-- [ ] 2.2 **RED** — reconcile `alertUnmanaged` B5(편입 켜짐 · 편입 실패)의 사실은 **critical**이고 outbox 행을
-      만든다. 싣는 방식은 `[비움 — Q1]`
+- [ ] 2.2 **RED** — **알림 켜짐** · 편입 켜짐 · 편입 시도 실패(`adopt` B8 거짓)의 reconcile `alertUnmanaged` B5
+      사실은 **critical**이고 outbox 행을 만든다. 연기분(`adopt` B2 · B6 · B7)은 이 단언에 넣지 않는다(r3 N2,
+      Q2(c) 열림). 싣는 방식은 `[비움 — Q1]`. **생산 배선**(실 `Notifier` · outbox · 배달 실행자)으로 잰다 —
+      발신 가짜로만 재면 안 된다(r3 N1 codex 제안)
 - [ ] 2.3 **RED** — exclude(`judgeHoldings` B11 · `alertUnmanaged` B4)는 **normal** — outbox 행 0 · 진입 게이트
       래치 0 · 운영 모드 승격 0
 - [ ] 2.4 **RED** — `adoption.enabled=false` ∧ 미지정(`judgeHoldings` B12 · 기본 사유)은 **normal** — 2.3과 같은
       단언. 정본 exit-policy 「false에서의 동작은 무관리 보유 알림을 포함한 기존 동작과 동일」의 동등성 시험
-- [ ] 2.5 **RED** — **알림 off**(`notifications.enabled=false`) 엔진에서 B5 사실이 발생해도 `deliver` B3 ·
-      `notifyCritical` B4 사슬에 닿지 않는다 — 진입 게이트 래치 0 · 승격 0. 방식은 `[비움 — Q1]`
-- [ ] 2.6 `[비움 — Q2]` 설정 거부(B3) · include 지정 시도 실패(B6) · `adopt` B2 · B6 · B7 연기분 · 알림 on에
-      transport 죽음 — 답에 따라 RED를 쓴다
+- [ ] 2.5 **RED** — **알림 off**(`notifications.enabled=false`) 엔진에서 B5 사실은 **critical로 기록되지 않는다**
+      — outbox critical 행 0, 따라서 `deliver` B3 · `notifyCritical` B4 · 배달 실행자 `deliverOne` B8 사슬에 닿지
+      않고 진입 게이트 래치 0 · 승격 0(r3 N1). 이미 원장에 남은 critical 행의 재시작 차단은 정본대로 유지됨을 함께
+      단언한다. 방식은 `[비움 — Q1]`
+- [ ] 2.6 `[비움 — Q2(a)(b)(c)]` 설정 거부(B3) · include 지정 시도 실패(B6) · `adopt` B2 · B6 · B7 연기분 — 답에
+      따라 RED를 쓴다. (알림 on에 transport 죽음은 Q2(d)로 a124 정본에 이관됨 — 여기 없음, r3 N7)
 - [ ] 2.7 **RED** — 키 분리(결정 (3)(iii)): exit 관측 자리와 reconcile 자리의 event key가 다르다
 - [ ] 2.8 **RED** — 전이 상태 무알림 유지: `judgeHoldings` B9(RECONCILE) · B10(묵은 스냅샷)에서 알림 0
 - [ ] 2.9 **RED** — `notifierAlerter.ExternalPositionFound`의 등급은 normal로 남고, 생산 배선에서
       `IngestExternalPositions`의 알림 어댑터가 nil이다(B12). 2판 6.2a는 이것으로 대체된다
-- [ ] 2.10 **GREEN** — Q1의 방식대로. `SeverityOf` · `Notify` · `publishBestEffort` · `notifyCritical` ·
-      `claimAndDeliver` · `deliver` 본문은 바꾸지 않는다
+- [ ] 2.10 **GREEN** — Q1의 방식대로. `publishBestEffort` · `notifyCritical` · `claimAndDeliver` · `deliver` 본문은
+      바꾸지 않는다. **`SeverityOf` · `Notify`의 경계는 Q1 답에 조건부**(r3 N4): (a) 새 종류 등재면 본문 불변,
+      (b) `SeverityOf` 계약 변경이면 경계를 다시 선언하고 두 번들을 다시 뽑아 재리뷰한다
+- [ ] 2.11 `[비움 — Q8]` **사실이 해소된 뒤의 critical 행**(r3 N3) — 편입 실패 → 다음 사이클 편입 성공 → 지연 배달 ·
+      재시작의 시험. 기존 outbox 기계로는 PENDING 행을 갱신 · 정산할 수 없다(design D1). **답 전에는 구현 착수
+      금지 — 정지 조건**
 
 ## 3. R2′ — 수량 증가 (결정 (3), design D2)
 
@@ -84,7 +95,8 @@
 ## 5. 하지 않는 것을 고정한다 (design D4 · D6)
 
 - [ ] 5.1 **RED (§6)** — 평단이 내려간 포지션에서 유효 손절가가 내려가지 않는다
-- [ ] 5.2 **RED** — `EvaluateLadder`의 산출 무변화 — 모든 선은 계속 `entry_price`에서 나온다
+- [ ] 5.2 **RED** — `EvaluateLadder`의 산출 무변화 — rung 잠금가 · 수익률 기준 · R 분모는 계속 `entry_price`에서,
+      runner 보호는 관측 워터마크에서, 이전 기준선은 최댓값 합성에 그대로(`ladder.go:391-403`, r3 N6)
 - [x] 5.3 `issues.md` I1에 **`baseline_price` 쓰기 자리 넷의 사실**을 번들 분기로 기록 — 판정(B25 `notBelow` ·
       B29 창 선택) · 관측 갱신(B23 거절, 값 무변화) · 재편입 reset(비교 분기 없음) · 최초 INSERT
 - [ ] 5.4 `[비움 — Q6]` 래칫 선행 조건을 SHALL로 다시 세울지

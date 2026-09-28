@@ -1,4 +1,4 @@
-# a095 · issues — 3판
+# a095 · issues — 4판
 
 > 이 파일은 a095가 **고치지 않고 남기는 것**과 **다른 change의 선행 사실이 되는 것**을 기록한다.
 > 분기 인용은 `analysis/function-logic/`의 번들(base `02716357`)에서 온다.
@@ -9,10 +9,10 @@
 
 | 자리 | 번들 | 값을 바꾸는가 | 하향에 대한 분기 |
 | --- | --- | --- | --- |
-| `Journal.OpenExitState` INSERT | `internal-journal--journal.openexitstate` | 최초 값(진입 손절) | — |
-| `Journal.recordExitJudgementTx` UPDATE | `internal-journal--journal.recordexitjudgementtx` | **예** — 판정마다 | 옛 경로 B23 `:487` → B25 `:491` `notBelow("baseline", …)`가 하향을 거부. 스냅샷 경로 B28 `:506` → B29 창 `exitpolicy.SelectRecoverySnapshot` |
-| `Journal.RefreshExitObservation` UPDATE | `internal-journal--journal.refreshexitobservation` | **아니오** — B23 `:127`이 `sameExitOperationalLine` 거짓이면 거절하므로 저장된 effective 보호가와 같은 값 | B23 |
-| `resetExitStateForReadoptTx` UPDATE | `internal-journal--resetexitstateforreadopttx` | **예** — 재편입 관측의 합성 손절로 | **없음** — 분기 B1~B6 전부 오류·행 수 검사. 운영자 행동(`positionpolicy.ActionReadopt`)에서만 불린다 |
+| `Journal.OpenExitState` INSERT | `internal-journal--journal.openexitstate` | 최초 값(진입 손절) | — 행을 만든다(기존 값을 낮추는 쓰기가 아니다) |
+| `Journal.recordExitJudgementTx` UPDATE | `internal-journal--journal.recordexitjudgementtx` | **예** — 판정마다 | 옛 경로 B23 `:487` → B25 `:491` `notBelow("baseline", …)`가 **스칼라** 기준 하향을 거부하고, B37 `:557`이 거짓이라 스칼라 열만 쓴다(effective JSON은 안 씀). 스냅샷 경로 B28 `:506` → B29 창 `exitpolicy.SelectRecoverySnapshot`은 **저장된 effective 스냅샷**과 비교하며, 저장 스냅샷이 없으면 비교 없이 재계산값을 받는다(`internal-exitpolicy--selectrecoverysnapshot` B2 `:138`) — 스칼라와는 비교하지 않는다 |
+| `Journal.RefreshExitObservation` UPDATE | `internal-journal--journal.refreshexitobservation` | **조건부** — B23 `:127`이 `sameExitOperationalLine`으로 **effective JSON**과 비교해 거짓이면 거절한다. 스칼라와 effective 스냅샷이 일치하면 값이 움직이지 않고, 갈라져 있으면 스칼라를 스냅샷 보호가로 되돌린다(낮출 수 있다). 생산 도달은 재지 않았다 | B23 |
+| `resetExitStateForReadoptTx` UPDATE | `internal-journal--resetexitstateforreadopttx` | **예** — 재편입 관측의 합성 손절로 | **없음 — 낮출 수 있다.** 분기 B1~B6 전부 오류·행 수 검사. 운영자 행동(`positionpolicy.ActionReadopt`)에서만 불린다 |
 
 - 주석 *"the only reset writer for the four guarded execution-time columns"*의 네 열은 `guardedColumns` —
   `taken_ratio_total` · `pending_action` · `pending_level` · `pending_intent_id`(apply_hook.go `:503-505`)이고
@@ -21,8 +21,11 @@
 - 정본 exit-policy 「Baseline Ratchet」과 「복구된 기준선은 낮아질 수 없다」가 판정 · 복구 경로의 단조를
   이미 요구한다.
 
-**래칫 상향(불타기 방향)을 도입할 후속 change가 받는 사실**: 판정 경로에는 하향 거부가 있고, reset 경로에는
-없다. 모든 선이 `entry_price`에서 파생된다(`EvaluateLadder`, 2판 이래 유지). 이 사실을 a095 델타에 SHALL로
+**래칫 상향(불타기 방향)을 도입할 후속 change가 받는 사실**: 판정 경로에는 하향 거부가 있되 경로마다 비교 대상이
+다르고(스칼라 · effective 스냅샷 · 비교 없음), reset 경로에는 없다. `EvaluateLadder`에서 **rung 잠금가와 수익률 기준,
+그리고 R의 분모는 `entry_price`에서 나온다.** 그러나 마지막 rung의 runner 보호는 관측 워터마크 × (1 − trail%)이고
+이전 기준선도 최댓값 합성에 들어간다(`ladder.go:391-403` — `internal-exitpolicy--evaluateladder` B16 `:386` 창의
+`lockPrice(entry, …)` · B18 `:392` 창의 runner 후보 · `ComputeProtectedStop`). 2판~3판의 「모든 선이 `entry_price`에서 파생된다」는 과대 서술이었다(r3 N6). 이 사실을 a095 델타에 SHALL로
 다시 세울지는 **Q6**(`proposal.md`).
 
 StockOS `position-campaign-core` spec의 「하향 거부와 기록」 SHALL은 **라이브에 배선되지 않은 검토된

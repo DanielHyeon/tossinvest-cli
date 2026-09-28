@@ -43,9 +43,11 @@ BUNDLES: list[dict] = [
         ],
         "calls": "없다.",
         "mutations": "없다.",
-        "boundary": "**3판은 이 함수의 입력이 종류뿐이라는 사실을 설계 제약으로 받는다.** 결정 (2)는 등급을 "
-                    "「이벤트 종류가 아니라 사실로」 가르라고 한다. B1은 종류만 보므로 같은 종류의 두 발신 자리"
-                    "(exit 관측 · reconcile 대사)에 다른 등급을 줄 수 없다 — 그것을 어떻게 싣는지가 Q1이다.",
+        "boundary": "**이 함수의 편집 경계는 Q1의 답에 달렸다(4판, r3 N4).** 결정 (2)는 등급을 「이벤트 종류가 아니라 "
+                    "사실로」 가르라고 한다. B1은 종류만 보므로 같은 종류의 두 발신 자리(exit 관측 · reconcile 대사)에 "
+                    "다른 등급을 줄 수 없다. Q1이 (a) 새 이벤트 종류 등재면 이 함수 **본문은 불변**이고 map만 늘어난다. "
+                    "(b) 등급을 `Event`에 싣고 이 함수의 계약을 바꾸면 **경계를 다시 선언**해야 한다 — 번들 재생성과 "
+                    "재리뷰가 필요하다.",
         "high_risk": "yes — 이 답이 알림의 durable 여부와 진입 차단 도달 여부를 정한다.",
         "tests": {"B1": "**a095 2.1 · 2.2** — exit 관측 자리의 사실은 normal, reconcile 자리의 비선택 사실은 critical. "
                         "싣는 방식은 [비움 — Q1]"},
@@ -62,9 +64,10 @@ BUNDLES: list[dict] = [
                  "`n.notifyCritical`(B1 뒤).",
         "mutations": "없다 — 두 경로가 각자 부작용을 갖는다. `n.mu`는 이 함수가 잡지 않는다"
                      "(`claimAndDeliver` 번들 참조).",
-        "boundary": "**a095는 이 함수를 바꾸지 않는다.** 결정 (1)의 요구 「exit goroutine 에 critical Notify 를 "
-                    "새로 두지 않는다」는 exit 관측 자리의 사실이 B1 창(`publishBestEffort`)으로 가는 것으로 "
-                    "성립한다 — 그 경로에는 `n.mu`도 outbox도 재시도 대기도 없다.",
+        "boundary": "**편집 경계는 Q1의 답에 달렸다(4판, r3 N4)** — (a)면 본문 불변, (b)면 `SeverityOf` 계약 변경과 "
+                    "함께 경계 재선언. 어느 답이든 결정 (1)의 요구 「exit goroutine 에 critical Notify 를 새로 두지 "
+                    "않는다」는 exit 관측 자리의 사실이 B1 창(`publishBestEffort`)으로 가는 것으로 성립한다 — 그 "
+                    "경로에는 `n.mu`도 outbox도 재시도 대기도 없다(네트워크 발행 1회는 동기다).",
         "high_risk": "yes — 알림이 원장에 남는지, 진입 차단에 닿는지가 여기서 갈린다.",
         "tests": {"B1": "**a095 2.1** — exit 관측 자리의 사실은 B1 창으로 간다 · **2.2** — reconcile 자리의 "
                         "비선택 사실은 B1을 지나 `notifyCritical`로 간다"},
@@ -171,6 +174,86 @@ BUNDLES: list[dict] = [
         },
     },
     {
+        "stem": "outbox--Journal.recordAlertTx",
+        "dir": "internal-journal--journal.recordalerttx",
+        "role": "critical 알림을 outbox에 기록하고 전송 의무를 판정한다. 같은 event key의 행이 있으면 `claimOwed`에 묻고, "
+                "재무장(rearm)일 때만 그 행의 제목 · 본문 · payload를 새 발생으로 바꾼다.",
+        "inputs": [
+            ("기존 행의 `state`", "PENDING · DELIVERED · ACKNOWLEDGED · 기타", "원장 `alert_outbox`", "B3 창 — `claimOwed`가 owed · rearm을 답함"),
+            ("`rearm`", "`claimOwed`의 둘째 답", "아래 번들", "B4 — 참일 때만 본문 교체 UPDATE(B5)"),
+        ],
+        "calls": "`tx.QueryRowContext`(기존 행) · `claimOwed`(B3 창) · `tx.ExecContext`(B5 — 재무장 UPDATE, 또는 B6 창 — 새 행 INSERT).",
+        "mutations": "재무장 시 기존 행을 PENDING으로 되돌리고 제목 · 본문 · payload · 시도 · 승인 · 임차를 새 발생으로 교체. 새 key면 INSERT.",
+        "boundary": "**a095는 이 함수를 바꾸지 않는다.** r3 N3(편입 성공 뒤 남는 PENDING 「무보호」 행)의 사실: 본문 교체는 "
+                    "B4(`rearm`)가 참일 때만 일어나고, `claimOwed`는 PENDING 행에 rearm을 주지 않는다(그 번들 B2). 따라서 "
+                    "**PENDING 행은 같은 key의 새 발생으로 본문이 바뀌지 않는다.** 사실이 해소되어 그 행을 정산하는 연산도 "
+                    "이 함수에 없다. N3의 처리는 `design.md` D1 「사실이 해소된 뒤의 행」과 Q8.",
+        "high_risk": "yes — critical 알림의 durable 기록 자리다.",
+        "tests": {"B4": "**a095 2.11** — [비움 — Q8] 편입 성공 뒤 남는 PENDING 행의 처분"},
+    },
+    {
+        "stem": "outbox--claimOwed",
+        "dir": "internal-journal--claimowed",
+        "role": "기존 outbox 행의 상태와 재알림 창으로 「이 관측이 전송을 빚졌나」와 「행을 새 발생으로 재무장하나」를 답한다.",
+        "inputs": [
+            ("`state`", "PENDING · DELIVERED · ACKNOWLEDGED · 기타", "원장", "B2(PENDING) · B3(정착) · B8(기타)"),
+            ("`remindAfter`", "재알림 창", "`Notifier` 구성", "B4 — 0 이하이면 정착 행은 빚지지 않음"),
+        ],
+        "calls": "`latestStamp`(B3 창) · `now.Sub`.",
+        "mutations": "없다 — 순수 판정.",
+        "boundary": "**a095는 이 함수를 바꾸지 않는다.** B2(`case AlertPending:`)의 창 return `:381`은 owed=참 · rearm=거짓이다 — "
+                    "PENDING 행은 재무장되지 않는다. 재무장은 정착 행이 창을 지났을 때(B7 창 `:410`)와 날짜를 매길 수 없는 · "
+                    "미래 · 모르는 상태(B5 · B6 · B8)뿐이다. a089 R1의 「최신 발생 반영」은 a096~a099가 이 형태(창 뒤 재무장)로 "
+                    "대체했다(a089 archive `review.md:471`).",
+        "high_risk": "yes — 재알림 창의 판정이다.",
+        "tests": {"B2": "**a095 2.11** — [비움 — Q8] PENDING 행이 새 발생을 반영하지 않는다는 사실의 영향"},
+    },
+    {
+        "stem": "alertdelivery--alertDeliverer.cycle",
+        "dir": "internal-app-engine--alertdeliverer.cycle",
+        "role": "배달 실행자의 한 사이클 — PENDING 행을 한도 아래 먼저 골라 행마다 `deliverOne`을 부른다.",
+        "inputs": [("`PendingAlertsForDelivery`의 답", "PENDING 행", "원장", "B1 — 나열 실패는 지속 실패로 셈")],
+        "calls": "`d.led().PendingAlertsForDelivery` · `d.countListFailure`(B1) · `d.pruneRecordRuns`(B2) · `d.deliverOne`(B4 창).",
+        "mutations": "실패 계수 · 행 배달(`deliverOne` 경유).",
+        "boundary": "**a095는 이 함수를 바꾸지 않는다.** 이 실행자는 PENDING 행을 원장에서 읽어 보낸다 — 사실이 해소됐는지 묻지 "
+                    "않는다(r3 N3).",
+        "high_risk": "yes — critical 배달의 실행자다.",
+        "tests": {"B3": "**a095 2.11** — [비움 — Q8]"},
+    },
+    {
+        "stem": "alertdelivery--alertDeliverer.deliverOne",
+        "dir": "internal-app-engine--alertdeliverer.deliverone",
+        "role": "PENDING 행 하나를 임차하고 보내며 결과를 원장에 정산한다.",
+        "inputs": [
+            ("`alert.Title` · `alert.Body`", "행에 저장된 문구", "원장 `alert_outbox`", "B9 창 — 그대로 `Publish`"),
+            ("`d.Publisher`", "전송기", "배선", "B8 — nil이면 전송 수단 부재를 실패 시도로 셈"),
+        ],
+        "calls": "`ClaimAlertByID` · `d.Publisher.Publish`(B9 창) · `d.recordDelivery` · `d.recordFailedAttempt`(B11).",
+        "mutations": "임차 · 정산 · 실패 계수.",
+        "boundary": "**a095는 이 함수를 바꾸지 않는다.** B9 창이 보내는 것은 **행에 저장된** 제목 · 본문이다 — 발생 시점의 문구가 "
+                    "배달 시점까지 그대로 간다(r3 N3). B8은 전송기가 없을 때 실패 시도로 센다 — 알림 off 엔진에서 critical 행이 "
+                    "a124 정본의 지속 실패로 이어지는 경로이며, r3 N1(알림 켜짐을 critical의 전제로)의 근거다.",
+        "high_risk": "yes — critical 배달과 실패 판정의 자리다.",
+        "tests": {"B8": "**a095 2.5** — 알림 off에서 a095의 사실이 critical 행을 만들지 않으므로 이 창에 오지 않는다",
+                  "B9": "**a095 2.11** — [비움 — Q8]"},
+    },
+    {
+        "stem": "recovery--SelectRecoverySnapshot",
+        "dir": "internal-exitpolicy--selectrecoverysnapshot",
+        "role": "저장된 effective 스냅샷과 재계산 스냅샷 중 더 안전한 하나를 통째로 고른다.",
+        "inputs": [
+            ("`saved`", "저장된 effective 스냅샷 또는 nil", "원장 effective JSON", "B2 — nil이면 재계산값을 그대로 받음"),
+            ("`recomputed`", "재계산 스냅샷", "판정", "B9 · B10 — 보호가 · 워터마크 · 단계를 저장값과 비교"),
+        ],
+        "calls": "`validateRecoverySnapshot` · `sameRecoveryPolicy` · `compareRecoveryDecimal` · `compareRecoveryStage`.",
+        "mutations": "없다 — 순수 선택.",
+        "boundary": "**a095는 이 함수를 바꾸지 않는다.** B2(`saved == nil`)의 창 return `:139`은 비교 없이 재계산값을 받는다. "
+                    "B9 · B10의 비교 대상은 `saved.CurrentProtection` — effective JSON의 보호가이지 스칼라 `baseline_price`가 "
+                    "아니다(r3 N5).",
+        "high_risk": "yes — 복구 시 손절선 선택이다.",
+        "tests": {"B2": "**a095 5.3** — issues I1에 「저장 스냅샷이 없으면 비교 없음」으로 인용"},
+    },
+    {
         "stem": "adoption--ReconcileDriver.adopt",
         "dir": "internal-app-engine--reconciledriver.adopt",
         "role": "후보를 한 번의 묶음 시세 읽기로 값 매기고 편입할 수 있는 것을 편입한다. 편입된 id 집합을 돌려준다.",
@@ -186,9 +269,9 @@ BUNDLES: list[dict] = [
                     "「enabled 시도 실패」 사유(`alertUnmanaged` B5)로 알려진다. 그 사유를 critical로 올리면 일시적 "
                     "시세 실패가 critical 알림이 된다 — 결정이 덮지 않는 귀결이다(Q2(b)).",
         "high_risk": "yes — 편입의 유일한 입구다.",
-        "tests": {"B2": "**a095 2.6** — [비움 — Q2(b)] 연기된 후보의 등급",
-                  "B6": "**a095 2.6** — [비움 — Q2(b)] 연기된 후보의 등급",
-                  "B7": "**a095 2.6** — [비움 — Q2(b)] 연기된 후보의 등급"},
+        "tests": {"B2": "**a095 2.6** — [비움 — Q2(c)] 연기된 후보의 등급",
+                  "B6": "**a095 2.6** — [비움 — Q2(c)] 연기된 후보의 등급",
+                  "B7": "**a095 2.6** — [비움 — Q2(c)] 연기된 후보의 등급"},
     },
     {
         "stem": "adoption--ReconcileDriver.alertUnmanaged",
@@ -324,10 +407,12 @@ BUNDLES: list[dict] = [
         ],
         "calls": "`notBelow`(B24 · B25) · `exitpolicy.SelectRecoverySnapshot`(B29 창) · `tx.ExecContext`(B39 — UPDATE).",
         "mutations": "`exit_states.baseline_price` 외 판정 열 · 제안 무장 · `exit_events`.",
-        "boundary": "**a095는 이 함수를 바꾸지 않는다.** 이 함수가 2판의 「유효 손절 쓰기 경로는 재편입 하나」를 "
-                    "반증한다: 판정마다 `baseline_price`를 UPDATE하며(B39), 옛 경로는 B25의 `notBelow`가 하향을 "
-                    "거부하고 스냅샷 경로는 B29 창의 `SelectRecoverySnapshot`이 고른다. 475150의 57,900은 이 "
-                    "경로의 산물이다.",
+        "boundary": "**a095는 이 함수를 바꾸지 않는다.** 판정마다 `baseline_price`를 UPDATE한다(B39). 하향에 대한 "
+                    "보장은 경로마다 **전제가 다르다(4판, r3 N5)**: 옛 경로(B23 `recomputed == nil`)는 B25의 "
+                    "`notBelow`가 **스칼라** `baseline_price`와 비교하고, B37(`effective != nil`)이 거짓이면 스칼라 열만 "
+                    "쓰고 effective JSON은 다시 쓰지 않는다. 스냅샷 경로는 B29 창의 `SelectRecoverySnapshot`이 "
+                    "**저장된 effective 스냅샷**과 비교하며, 저장 스냅샷이 없으면(그 함수 B2) 비교 없이 재계산값을 "
+                    "받는다 — 스칼라와 비교하지 않는다. 475150의 57,900은 이 함수의 산물이다.",
         "high_risk": "yes — 손절선의 정상 갱신 자리다.",
         "tests": {"B25": "**a095 5.3** — 하향 거부가 이미 있다는 사실을 issues I1에 인용",
                   "B29": "**a095 5.3** — 스냅샷 경로의 선택을 issues I1에 인용"},
@@ -341,8 +426,10 @@ BUNDLES: list[dict] = [
         "mutations": "`exit_states` 관측 열 — `baseline_price`는 B23을 통과한 스냅샷의 `CurrentProtection`.",
         "boundary": "**a095는 이 함수를 바꾸지 않는다.** B23이 `sameExitOperationalLine`(보호가 · 워터마크 · 레벨 포함)이 "
                     "거짓이면 거절하므로, 이 함수가 `baseline_price`에 쓰는 값은 **저장된 effective 스냅샷의 "
-                    "보호가와 같다**(B12가 그 스냅샷의 존재를 요구한다). 2판 리뷰가 이것을 「writer」로 셌다 — "
-                    "UPDATE 문으로는 맞고 값의 이동으로는 아니다.",
+                    "보호가와 같다**(B12가 그 스냅샷의 존재를 요구한다). 비교 대상은 스칼라 `baseline_price`가 아니라 "
+                    "effective JSON이다 — 따라서 「값이 움직이지 않는다」는 **스칼라와 effective 스냅샷이 일치할 때만** "
+                    "참이고, 둘이 갈라져 있으면 스칼라를 스냅샷의 보호가로 (낮출 수도 있게) 되돌린다(4판, r3 N5). "
+                    "그 갈라짐에 생산이 도달하는지는 측정하지 않았다.",
         "high_risk": "yes — 손절선 열을 쓰는 자리다.",
         "tests": {"B23": "**a095 5.3** — issues I1에 「값 무변화 재기록」으로 인용"},
     },
@@ -471,7 +558,10 @@ def render(bundle: dict, ast_dir: Path, profiles: list[str]) -> None:
 
 def main() -> int:
     ast_dir, profiles = Path(sys.argv[1]), sys.argv[2:]
+    # 판마다 커버리지 프로파일이 다를 수 있으므로, 주어진 AST 디렉터리에 있는 stem만 그림(4판: 새 번들은 HEAD 프로파일)
     for bundle in BUNDLES:
+        if not (ast_dir / f"{bundle['stem']}.json").is_file():
+            continue
         render(bundle, ast_dir, profiles)
         print(f"rendered {bundle['dir']}")
     return 0

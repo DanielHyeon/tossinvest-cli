@@ -6,7 +6,7 @@
 - Risk scan: `risk-pattern-report.md`
 - 분기 32 · return 23 · 호출 54
 
-**역할.** 관측 하나를 사다리 전이로 바꾼다. **모든 선이 `EntryPrice`에서 나온다** — 수익률도 잠금가도.
+**역할.** 관측 하나를 사다리 전이로 바꾼다. **rung 잠금가와 수익률 기준은 `EntryPrice`에서 나온다.** 마지막 rung의 runner 보호는 관측 워터마크 × (1 − trail%)이고(`:392` 분기 창), 이전 기준선도 `ComputeProtectedStop`의 최댓값 합성에 들어간다(`ladder.go:391-403`, 4판 r3 N6 정정).
 
 ## Inputs and invariants
 

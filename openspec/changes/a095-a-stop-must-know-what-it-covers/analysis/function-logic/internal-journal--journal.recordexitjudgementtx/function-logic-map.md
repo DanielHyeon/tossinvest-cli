@@ -85,5 +85,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **a095는 이 함수를 바꾸지 않는다.** 이 함수가 2판의 「유효 손절 쓰기 경로는 재편입 하나」를 반증한다: 판정마다 `baseline_price`를 UPDATE하며(B39), 옛 경로는 B25의 `notBelow`가 하향을 거부하고 스냅샷 경로는 B29 창의 `SelectRecoverySnapshot`이 고른다. 475150의 57,900은 이 경로의 산물이다.
+- **Safe edit boundary**: **a095는 이 함수를 바꾸지 않는다.** 판정마다 `baseline_price`를 UPDATE한다(B39). 하향에 대한 보장은 경로마다 **전제가 다르다(4판, r3 N5)**: 옛 경로(B23 `recomputed == nil`)는 B25의 `notBelow`가 **스칼라** `baseline_price`와 비교하고, B37(`effective != nil`)이 거짓이면 스칼라 열만 쓰고 effective JSON은 다시 쓰지 않는다. 스냅샷 경로는 B29 창의 `SelectRecoverySnapshot`이 **저장된 effective 스냅샷**과 비교하며, 저장 스냅샷이 없으면(그 함수 B2) 비교 없이 재계산값을 받는다 — 스칼라와 비교하지 않는다. 475150의 57,900은 이 함수의 산물이다.
 - **High-risk impact**: yes — 손절선의 정상 갱신 자리다.

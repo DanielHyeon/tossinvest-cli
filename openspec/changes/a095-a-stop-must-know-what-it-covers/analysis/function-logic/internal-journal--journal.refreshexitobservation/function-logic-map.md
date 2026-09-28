@@ -59,5 +59,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **a095는 이 함수를 바꾸지 않는다.** B23이 `sameExitOperationalLine`(보호가 · 워터마크 · 레벨 포함)이 거짓이면 거절하므로, 이 함수가 `baseline_price`에 쓰는 값은 **저장된 effective 스냅샷의 보호가와 같다**(B12가 그 스냅샷의 존재를 요구한다). 2판 리뷰가 이것을 「writer」로 셌다 — UPDATE 문으로는 맞고 값의 이동으로는 아니다.
+- **Safe edit boundary**: **a095는 이 함수를 바꾸지 않는다.** B23이 `sameExitOperationalLine`(보호가 · 워터마크 · 레벨 포함)이 거짓이면 거절하므로, 이 함수가 `baseline_price`에 쓰는 값은 **저장된 effective 스냅샷의 보호가와 같다**(B12가 그 스냅샷의 존재를 요구한다). 비교 대상은 스칼라 `baseline_price`가 아니라 effective JSON이다 — 따라서 「값이 움직이지 않는다」는 **스칼라와 effective 스냅샷이 일치할 때만** 참이고, 둘이 갈라져 있으면 스칼라를 스냅샷의 보호가로 (낮출 수도 있게) 되돌린다(4판, r3 N5). 그 갈라짐에 생산이 도달하는지는 측정하지 않았다.
 - **High-risk impact**: yes — 손절선 열을 쓰는 자리다.

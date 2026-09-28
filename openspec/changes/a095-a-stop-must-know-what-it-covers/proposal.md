@@ -1,4 +1,4 @@
-# a095 · 손절은 자기가 무엇을 덮는지 알아야 한다 — 3판
+# a095 · 손절은 자기가 무엇을 덮는지 알아야 한다 — 4판
 
 - **Feature**: `FEAT-TOS-009` — Exit line truth and position policy lifecycle
 - **Story**: `STORY-TOS-a095`
@@ -106,9 +106,9 @@
 | exit 관측 자리(`workingSet` B6 → `ExitObserver.alertUnmanaged`) | **normal — 무변화** | (1) |
 | exclude 종목(`judgeHoldings` B11 → `alertUnmanaged` B4) | **normal — 무변화** | (2) |
 | 편입 off ∧ 미지정(`judgeHoldings` B12 → 기본 사유) | **normal — 무변화** | (2) — 정본 exit-policy「`adoption.enabled` … false에서의 동작은 … 기존 동작과 동일」 유지 |
-| 알림 off 엔진의 모든 a095 사실 | **ENTRY_BLOCKED에 닿지 않는다** | (2) |
-| 편입하라 했는데 못 했다(`judgeHoldings` B14 → `alertUnmanaged` B5) | **critical** | (1) 「발신은 reconcile 쪽에서만 critical」 + (2) 「운영자가 고른 상태는 critical 에서 뺀다」의 귀결 |
-| 설정 거부(B3) · include 지정 시도 실패(B6) · 시세 연기로 편입 안 된 후보 | `[비움 — Q2]` | 결정이 이름 대지 않음 |
+| 알림 off 엔진에서 생긴 모든 a095 사실 | **critical로 매기지 않는다**(→ ENTRY_BLOCKED에 닿지 않음) | (2). 4판 r3 N1 — critical 요구의 전제가 「알림 켜짐」이다 |
+| 알림 켜짐 · 편입하라 했는데 **편입 시도가 실패**했다(`adopt` B8 거짓 → `judgeHoldings` B14 → `alertUnmanaged` B5) | **critical** | (1) 「발신은 reconcile 쪽에서만 critical」 + (2) 「운영자가 고른 상태는 critical 에서 뺀다」의 귀결 |
+| 설정 거부(B3) · include 지정 시도 실패(B6) · 시세 연기로 편입 안 된 후보(`adopt` B2 · B6 · B7) | `[비움 — Q2(a)(b)(c)]` — 연기분은 4판 델타의 critical 요구에서 **뺐다**(r3 N2) | 결정이 이름 대지 않음 |
 
 **싣는 방식**은 `[비움 — Q1]`. `SeverityOf`는 종류만 보므로(B1) 같은 종류의 두 자리에 다른 등급을
 줄 수 없다. 방식이 정해지기 전에는 이 change가 `criticalEvents`에 무엇을 더하는지 적지 않는다.
@@ -198,18 +198,27 @@ critical로 올리는 것은 `adoption.enabled`가 참이어서 **엔진이 보�
 | Q2(d) — transport 사망 시 ENTRY_BLOCKED 교환 | **a124**(archive `c1e34dc4`) → 정본 | 정본 engine-safety 「배달 실행자는 지속 실패를 진입 차단과 운영 모드 승격으로 잇는다」 |
 
 **아직 열림 — 구현 로트행**(Manager 분류 2026-09-27, a095가 스케줄될 때 코드 영수증으로 확정): Q1 · Q2(a)(b)(c) ·
-Q3(정지 조건 — `exit_states`에 수량 열이 없다는 스키마 질문) · Q4 · Q6.
+Q3(정지 조건 — `exit_states`에 수량 열이 없다는 스키마 질문) · Q4 · Q6 · **Q8(정지 조건, 4판)**.
+
+8. **Q8 — 사실이 해소된 뒤의 critical 행 (4판, r3 N3 · Manager 설계 지시의 조건 검사).** 알림 켜짐 · 편입 실패로
+   만든 critical 행이 PENDING인 채 다음 사이클에 편입이 성공하면, 그 행은 나중에 「지금 무보호」 문구로 배달되고
+   운영자 승인 전에는 PENDING을 떠나지 않는다. Manager 지시는 「기존 재개방/본문 갱신 기계로 갱신 또는
+   해소-정산」이었고, **그 기계는 PENDING 행에 쓸 수 없다** — 재무장은 `claimOwed`가 정착 행에만 준다
+   (`claimowed` B2 창 return `:381` owed=참 · rearm=거짓), 해소 정산 연산은 outbox에 없다(design D1 「사실이
+   해소된 뒤의 행」 표). 무엇으로 처리하는가 — (a) 새 outbox 연산(해소 정산 또는 PENDING 본문 갱신), (b) 행 문구를
+   「그 시각의 실패 사건」으로 바꿔 해소 뒤 배달도 참이 되게, (c) 기타? **구현 로트의 정지 조건이다.** 사람 소유
+   래치를 자동으로 푸는 답은 제외한다.
 
 ## Impact
 
 | | 자리 | 성격 |
 | --- | --- | --- |
-| R1′ | reconcile 쪽 무관리 보고(`adoption.go` `alertUnmanaged` · 그 호출자) · 등급 표 | 방식 Q1. exit 관측 자리 · `Notify` · `publishBestEffort` · `notifyCritical` · `deliver` 본문은 무변화 |
+| R1′ | reconcile 쪽 무관리 보고(`adoption.go` `alertUnmanaged` · 그 호출자) · 등급 표 | 방식 Q1. exit 관측 자리 · `publishBestEffort` · `notifyCritical` · `deliver` 본문은 무변화. **`SeverityOf` · `Notify`의 편집 경계는 Q1의 답에 달렸다**(4판 r3 N4) — (a) 새 종류 등재면 본문 불변, (b) 등급을 `Event`에 싣고 `SeverityOf` 계약을 바꾸면 경계 재선언 · 번들 재생성 · 재리뷰 |
 | R2′ | `adoption.go` `judgeHoldings` B7 창 · 발신 키 | Q3 · Q4 |
 | R3 | **보류 — 델타에서 지움, 후속 change 후보** | 결정 Q5 |
 
 spec: `engine-safety`(사실별 등급 · 진입 차단 비도달 · 키 분리), `exit-policy`(R3 요구 삭제 · 래칫 요구의
 거짓 전제 삭제).
 
-**기존 함수 내부를 고치므로 Function Logic Map 면제는 없다.** 3판 번들 21개가 base `02716357`에
-묶여 있고, 구현 후 다시 뽑는다.
+**기존 함수 내부를 고치므로 Function Logic Map 면제는 없다.** 번들 26개(3판 21 + 4판 5 — `recordAlertTx` · `claimOwed` ·
+`alertDeliverer.cycle` · `alertDeliverer.deliverOne` · `SelectRecoverySnapshot`)가 있고, 구현 후 다시 뽑는다.
