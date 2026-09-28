@@ -124,13 +124,18 @@ func TestMutatingAnnotationOnTradeCommands(t *testing.T) {
 		// itself even though interlock clause 6 makes a verified gate unreachable
 		// in this build: the annotation describes what the command is, not what
 		// this build happens to permit.
-		"tossctl engine run":               true,
-		"tossctl order place":              true,
-		"tossctl order cancel":             true,
-		"tossctl order amend":              true,
-		"tossctl order conditional place":  true,
-		"tossctl order conditional cancel": true,
-		"tossctl order conditional modify": true,
+		"tossctl engine run": true,
+		// a066 5.5(design D8): 진입 손실 잠금 · RISK_OVERAGE latch 의 운영자 해제. 주문은 내지 않지만
+		// 노출 증가를 다시 여는 완화이고, 사용자 결정(2026-09-28)이 "tossctl mutating 명령(자동 실행 불가)"을
+		// 진입점으로 정했다. 읽기 전용 `engine risk-latch-show` 는 여기 없다.
+		"tossctl engine entry-lock-release": true,
+		"tossctl engine risk-latch-release": true,
+		"tossctl order place":               true,
+		"tossctl order cancel":              true,
+		"tossctl order amend":               true,
+		"tossctl order conditional place":   true,
+		"tossctl order conditional cancel":  true,
+		"tossctl order conditional modify":  true,
 	}
 	for _, c := range leafCommands(newRootCmd()) {
 		path := c.CommandPath()

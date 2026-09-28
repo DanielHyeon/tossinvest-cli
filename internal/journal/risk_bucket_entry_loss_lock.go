@@ -10,8 +10,8 @@ package journal
 //
 // 손절·비상 청산·대사·체결 감지 경로는 이 파일의 어떤 함수도 부르지 않음.
 //
-// 완화(relaxation)는 없음. 승인 흐름이 사용자 결정 대기 중이라 API 모양 자체가 그 답에
-// 종속됨 — 여기에는 자리만 남김(아래 주석). 이 로트의 생산 호출자는 0 임(dormant).
+// 완화(해제)는 이 파일에 없음 — risk_bucket_relaxation.go 의 ReleaseEntryLossLock(OPERATOR·승인 참조·audit,
+// a066 5.5 D8)만이 잠금을 닫음. 자동 경로는 조이기만 함. 이 로트의 생산 활성화 호출자는 0 임(dormant).
 
 import (
 	"context"
@@ -66,9 +66,9 @@ func validEntryLossLockScope(account string, market riskbucket.Market, horizon r
 
 // ActivateEntryLossLock 은 잠금을 기록하고 **지금 효력 있는** 잠금을 돌려줌.
 //
-// 보수 방향이라 즉시 영속함. 같은 범위에 이미 잠금이 있으면 아무것도 쓰지 않고 그 첫 잠금과
-// changed=false 를 돌려줌 — 반복 트리거가 첫 원인을 덮지 않고, 동시 활성화는 순서와 무관하게
-// 잠김으로 끝남(보수 쪽 승리).
+// 보수 방향이라 즉시 영속함. 같은 범위에 이미 열린 잠금이 있으면 새 잠금을 쓰지 않고 REAFFIRM 사건만 남긴 뒤
+// 그 열린 잠금과 changed=false 를 돌려줌 — 반복 트리거가 첫 원인을 덮지 않고, 동시 활성화는 순서와 무관하게
+// 잠김으로 끝나며, REAFFIRM 이 그 전에 승인된 해제를 stale 로 만듦(보수 쪽 승리, a066 5.5 D8).
 func (j *Journal) ActivateEntryLossLock(ctx context.Context, lock EntryLossLock) (EntryLossLock, bool, error) {
 	if j == nil || j.db == nil {
 		return EntryLossLock{}, false, fmt.Errorf("%w: journal unavailable", ErrInvalidRequest)
@@ -87,6 +87,15 @@ func (j *Journal) ActivateEntryLossLock(ctx context.Context, lock EntryLossLock)
 		return EntryLossLock{}, false, err
 	}
 	if found {
+		// a066 5.5(D8): 열린 잠금이 있으면 새 잠금을 쓰지 않고 REAFFIRM 사건으로 남김 — 운영자가 이 사건 **전에** 본
+		// 상태로 승인한 해제는 stale 로 거절됨(동시 조이기는 보수 쪽 승리). 반환은 예전처럼 열린 잠금 · changed=false.
+		if _, err := tx.ExecContext(ctx, `INSERT INTO risk_bucket_entry_loss_lock_events(lock_seq,kind,cause,recorded_at) VALUES(?,'REAFFIRM',?,?)`,
+			existing.Seq, lock.Cause, formatJournalTime(lock.ActivatedAt)); err != nil {
+			return EntryLossLock{}, false, fmt.Errorf("journal: recording entry loss lock reaffirmation: %w", err)
+		}
+		if err := tx.Commit(); err != nil {
+			return EntryLossLock{}, false, fmt.Errorf("journal: commit entry loss lock reaffirmation: %w", err)
+		}
 		return existing, false, nil
 	}
 	result, err := tx.ExecContext(ctx, `INSERT INTO risk_bucket_entry_loss_locks(account_ref,market,horizon,cause,activated_at)
@@ -107,17 +116,15 @@ func (j *Journal) ActivateEntryLossLock(ctx context.Context, lock EntryLossLock)
 	return lock, true, nil
 }
 
-// 완화(relaxation) 자리: 사람 승인·audit 되는 해제는 사용자 결정 뒤에 이 테이블 옆의 별도
-// append-only 기록으로 들어옴. 그때 activeEntryLossLock 의 "효력 있음"은 "해제 기록이 없음"으로
-// 바뀜. 지금은 기록된 잠금 전부가 효력 있음.
-
-// activeEntryLossLock 은 범위 하나의 효력 있는 잠금을 읽음.
+// activeEntryLossLock 은 범위 하나의 효력 있는 잠금을 읽음 — 효력 있음 = 해제 기록이 없음(a066 5.5, D8). 범위마다
+// 열린 잠금은 v35 트리거로 최대 한 건.
 func activeEntryLossLock(ctx context.Context, q riskBucketQueryer, account string, market riskbucket.Market, horizon riskbucket.Horizon) (EntryLossLock, bool, error) {
 	var lock EntryLossLock
 	var marketText, horizonText, activatedAt string
 	err := q.QueryRowContext(ctx, `SELECT lock_seq,account_ref,market,horizon,cause,activated_at
-		FROM risk_bucket_entry_loss_locks WHERE account_ref=? AND market=? AND horizon=?
-		ORDER BY lock_seq LIMIT 1`, account, string(market), string(horizon)).
+		FROM risk_bucket_entry_loss_locks l WHERE account_ref=? AND market=? AND horizon=?
+		AND NOT EXISTS (SELECT 1 FROM risk_bucket_entry_loss_lock_releases r WHERE r.lock_seq=l.lock_seq)
+		ORDER BY lock_seq DESC LIMIT 1`, account, string(market), string(horizon)).
 		Scan(&lock.Seq, &lock.AccountRef, &marketText, &horizonText, &lock.Cause, &activatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return EntryLossLock{}, false, nil

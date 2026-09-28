@@ -1,10 +1,10 @@
 # Status — a066-add-multi-horizon-risk-buckets
 
-- Updated: 2026-09-27
+- Updated: 2026-09-29
 - Overall: IN PROGRESS (tasks 22/30)
-- Current wave: 5.5 entry side GREEN (schema v33, three enforcement sites + Gateway ⑤ refusal); relaxation awaits a user decision
+- Current wave: 5.5 relaxation mechanism (design D8, user decision 2026-09-28) — journal API + v35 + `tossctl engine entry-lock-release` / `risk-latch-release` (mutating) / `risk-latch-show`; mechanism only, never run on the operating journal
 - Runtime authority: dormant q_final Guardian/Gateway seam only; no sealed strategyflow/engine/broker/toggle activation
-- Schema: **v34 on this branch, v32 on main** — do not build an image from this branch until main carries v34
+- Schema: **v35 on this branch, v32 on main** — do not build an image from this branch until main carries v35. v35 is additive except one trigger swap (`risk_bucket_entry_loss_lock_first_cause_wins` → `risk_bucket_entry_loss_lock_one_open`, v33 file unchanged). The release commands open the journal with `journal.Open` (migrating), so the CLI and the running engine must come from the same image
 - Production q_final strategy entry stays closed until `productionRiskJournalSchema` (=27) is replaced (named residual, 5.6.1)
 
 ## Wave 2A (2026-09-25) — re-settlement on HEAD after a112

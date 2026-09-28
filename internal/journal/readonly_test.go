@@ -144,6 +144,12 @@ func TestTheReadOnlyHandleHasNoWriteMethods(t *testing.T) {
 		// reservation through the same query-only connection. Reservation creation
 		// remains available only on the engine-owned Journal writer.
 		"WeeklyMarketReservation": true,
+		// a066 5.5(design D8)'s `engine risk-latch-show`: the values an operator
+		// release binds to (open lock + last REAFFIRM event, owner latches + state
+		// digest). Both are SELECT-only and share the readers the writer uses; the
+		// releases themselves exist only on the engine-owned Journal writer.
+		"ReadEntryLossLocks":   true,
+		"ReadRiskOwnerLatches": true,
 	}
 	typ := reflect.TypeOf(&ReadOnly{})
 	for i := 0; i < typ.NumMethod(); i++ {

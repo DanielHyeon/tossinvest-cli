@@ -69,13 +69,70 @@ daily/horizon loss lock과 bucket snapshot 장애는 EXPOSURE_RAISING decision/l
 
 별도 entry-only port를 둬 위험 감소 호출자가 실수로 bucket admission을 거칠 수 없게 한다.
 
+### D8. 완화(해제)는 사람 승인·audit 된 별도 기록이고, 자동은 조이기만 한다 (5.5, 사용자 결정 2026-09-28)
+
+사용자가 승인한 원칙:
+- 자동 경로는 조이기만 한다.
+- 완화와 해제는 actor `OPERATOR`만 할 수 있다. 사람 승인 참조 문자열이 있어야 하고, Auditor audit 줄이 commit **앞**에 쓰여야 한다.
+- 동시에 들어온 조이기는 보수 쪽이 이긴다.
+- 진입점은 journal API와 tossctl `mutating: true` 명령뿐이다. 대화형 에이전트는 이 명령을 자동 실행하지 않는다. 콘솔 버튼은 두지 않는다.
+
+이 change 는 메커니즘까지만 만든다. 실제 해제는 별도의 사람 행위이고, 운영 원장에서는 실행하지 않는다.
+형태는 `TransitionOperatingMode`(operating_mode.go:346–470)를 따른다.
+- AUTO 는 완화를 요청할 수 없다.
+- 방향은 트랜잭션 안에서 현재 상태에 대해 판정한다.
+- approval 과 Auditor 가 둘 다 있어야 한다.
+- audit 는 commit 앞에 쓴다.
+
+**진입 손실 잠금 해제.**
+- v35 는 additive 다. v33 파일은 커밋된 기록이므로 바꾸지 않는다.
+  - `risk_bucket_entry_loss_lock_events`(append-only)를 둔다. 잠금이 열려 있을 때 들어온 활성화는 `REAFFIRM` 행(원인, 시각)으로 남긴다. 예전에는 아무것도 쓰지 않았다.
+  - `risk_bucket_entry_loss_lock_releases`(append-only)를 둔다. `lock_seq UNIQUE`, actor `OPERATOR`, approval, reason, released_at 를 갖는다.
+  - v33 의 first-cause-wins 트리거는 v35 migration 안에서 DROP/CREATE 로 "열린 잠금 1건" 트리거로 바꾼다. 해제 기록이 없는 잠금이 있으면 같은 범위의 새 잠금 INSERT 를 거절한다.
+- 효력 있는 잠금은 해제 기록이 없는 잠금이다. 범위(account×market×horizon)마다 열린 잠금은 최대 한 건이다.
+- 해제 요청은 두 값을 결속한다.
+  - `LockSeq`: 해제할 잠금.
+  - `ExpectedLastEvent`: 운영자가 본 그 잠금의 마지막 REAFFIRM seq. REAFFIRM 이 없으면 0.
+- 트랜잭션 안에서 다음 중 하나라도 맞지 않으면 stale 로 거절한다.
+  - 그 잠금이 열려 있다.
+  - 그 범위의 열린 잠금이 바로 그 잠금이다.
+  - 마지막 REAFFIRM seq 가 기대값과 같다.
+- 그래서 운영자가 본 뒤에 새로 들어온 조이기가 해제를 이긴다(동시 조이기는 보수 쪽 승리).
+- 해제 뒤의 활성화는 새 잠금을 연다.
+
+**RISK_OVERAGE latch 해제.**
+- 해제 대상은 owner generation 하나다. 그 owner 의 `risk_bucket_owners.risk_overage_latched` 와, 같은 generation 의 `risk_bucket_reservations.risk_overage_latched` 를 0 으로 되돌린다.
+- 해제하지 않는 것:
+  - `overage_minor` 수치. 이력으로 남는다.
+  - `UNKNOWN_ACTUAL_RISK`. 실제 증거가 완성되면 스스로 풀린다(`clearResolvedUnknownLatches`).
+  - scope latch 행.
+- 요청은 `ExpectedStateDigest` 를 결속한다. 운영자가 읽기 전용 `risk-latch-show` 로 본 마지막 상태 봉인 digest 다.
+  - 사이에 체결이나 latch 가 끼면 봉인이 다시 찍혀 digest 가 바뀌고, 해제는 stale 로 거절된다.
+  - 이것이 ABA 방지다. 결속하는 값이 판정한 바이트다.
+- 같은 트랜잭션 안에서 세 가지를 한다.
+  - append-only 해제 기록(`risk_bucket_latch_releases`)을 쓴다.
+  - 상태를 다시 봉인한다(`recordRiskBucketStateTx`).
+  - commit 앞에 audit 를 쓴다.
+- 해제 직후 다음 체결이 여전히 한도를 넘으면 `recomputeOverageLatches` 가 다시 latch 한다(보수).
+- **순서.** latch 해제(운영자 승인)가 먼저이고, 기존 owner 해제(`releaseRiskBucketOwner`: broker zero 등의 검사)가 그 뒤다. owner 해제의 `owner_latch` 검사(owner.go:930)는 latch 해제 뒤에야 열린다.
+
+**engine lock 을 잡지 않는 이유.**
+- 해제 명령은 journal 의 BEGIN IMMEDIATE 로 직렬화된다. 판정도 트랜잭션 안에서 현재 상태에 대해 다시 한다. 직렬성은 이것으로 충분하다.
+- engine lock 을 잡으려면 엔진을 멈춰야 한다. 엔진이 멈추면 보호가 UNWIRED 인 동안 손절이 없다.
+- 해제가 손절의 연속성을 깨는 조건이 되면 안 된다. 그래서 reconcile-resolve 선례와 달리 lock 을 잡지 않는다.
+
+**audit.** action 두 종을 둔다(동결 census 에 등록한다).
+- `risk_bucket.entry_lock_release`: setting 은 `entry_loss_lock:<account>/<market>/<horizon>`.
+- `risk_bucket.overage_latch_release`: setting 은 `risk_owner:<account>/<market>/<symbol>/<generation>`.
+- Auditor 가 실패하면 아무것도 바뀌지 않는다.
+
 ## Risks / Trade-offs
 
 - [다차원 예약 deadlock] → 정규화된 bucket key 정렬 후 하나의 journal transaction에서 획득한다.
 - [price/fee/FX/strategy/sector evidence stale] → 진입만 fail closed하고 risk-reducing 경로는 독립시킨다.
 - [partial/replacement/late fill 이중 계상 또는 cap 초과] → fill identity watermark와 tx-scoped proportional transfer/actual max를 사용하고 overage·unknown은 fill을 버리지 않고 신규 entry latch로 보존한다.
 - [owner가 영구 잔존] → CLOSED generation과 protection/sell claim clean을 증명하는 idempotent release를 제공하며 unknown이면 보수적으로 유지한다.
-- [보수 cap으로 기회 감소] → 안전한 의도이며 완화는 별도 사람 승인·audit change로만 수행한다.
+- [보수 cap으로 기회 감소] → 안전한 의도이며 완화는 사람 승인·audit 된 해제 기록으로만 수행한다(D8).
 
 ## Migration Plan
 

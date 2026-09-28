@@ -3,7 +3,7 @@ package journal
 // SchemaVersion is the schema version this build writes and understands. It is
 // stored in the database's PRAGMA user_version and mirrored, as text, in
 // schema_meta for human inspection.
-const SchemaVersion = 34
+const SchemaVersion = 35
 
 // migration is one forward step. The additive rules are not negotiable, because a
 // live account's order history is the thing being migrated:
@@ -168,6 +168,10 @@ var migrations = []migration{
 	// schemaV34 lives in risk_bucket_policy_records_v34.sql: a066 task 5.6.1 F2 — each reservation names the exact
 	// reservation-policy record it was sized with, so a shared bucket accepts entries at different prices. Additive.
 	{Version: 34, SQL: schemaV34},
+	// schemaV35 lives in risk_bucket_relaxation_v35.sql: a066 task 5.5 relaxation (design D8) — REAFFIRM events and
+	// release records for the entry loss lock, RISK_OVERAGE latch release records, and the v33 first-cause-wins trigger
+	// replaced by "at most one open lock per scope". Additive apart from that trigger swap; v33's file is unchanged.
+	{Version: 35, SQL: schemaV35},
 }
 
 // schemaV1 is the initial schema.

@@ -116,6 +116,9 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"protection_sagas",
 		"reconcile_states",
 		"risk_bucket_broker_zero_observations",
+		// a066 5.5 (v35): 잠금 REAFFIRM 사건 · 운영자 해제 기록. append-only.
+		"risk_bucket_entry_loss_lock_events",
+		"risk_bucket_entry_loss_lock_releases",
 		// a066 5.5 (v33): horizon×market 진입 손실 잠금 이력. append-only.
 		"risk_bucket_entry_loss_locks",
 		"risk_bucket_events",
@@ -125,6 +128,8 @@ func TestSchemaTablesAndColumns(t *testing.T) {
 		"risk_bucket_fills",
 		"risk_bucket_fills_v22",
 		"risk_bucket_final_decisions",
+		// a066 5.5 (v35): RISK_OVERAGE latch 운영자 해제 기록. append-only.
+		"risk_bucket_latch_releases",
 		"risk_bucket_order_reservations",
 		"risk_bucket_orders",
 		"risk_bucket_orders_v22",

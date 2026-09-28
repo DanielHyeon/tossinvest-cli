@@ -40,6 +40,14 @@ short/medium horizon 및 market별 손실 lock은 해당 범위의 신규 EXPOSU
 - **WHEN** US entry loss lock이 활성인 상태에서 US emergency exit가 발급된다
 - **THEN** RISK_REDUCING decision은 lock 평가 없이 진행되고 broker exit 경로가 지연되지 않는다
 
+#### Scenario: 잠금 해제는 운영자 승인과 audit 뒤에만
+- **WHEN** 운영자가 승인 참조와 함께 자신이 본 열린 잠금의 해제를 요청한다
+- **THEN** audit 줄이 commit 앞에 기록되고 해제는 append-only 기록으로 남으며 자동 경로는 해제를 요청할 수 없다
+
+#### Scenario: 해제 앞의 새 조이기가 이긴다
+- **WHEN** 운영자가 잠금을 본 뒤 같은 범위에 새 활성화(REAFFIRM)가 기록된다
+- **THEN** 운영자가 본 상태에 결속된 해제는 stale 로 거절되고 잠금은 유지된다
+
 ### Requirement: fill 사실은 risk overage 또는 valuation unknown보다 우선 보존된다
 
 Guardian과 bucket projection은 이미 발생한 authoritative fill과 Position apply를 cap overage, missing actual price/fee/FX 또는 stale risk snapshot을 이유로 거부해서는 안 된다(MUST NOT). Fill transaction은 모든 적용 bucket의 proportional HELD transfer, actual monetary exposure 또는 explicit unknown, `max(transfer, actual)` filled amount 및 overage를 Position과 원자적으로 기록해야 한다(SHALL). `RISK_OVERAGE`와 `UNKNOWN_ACTUAL_RISK`는 신규 exposure만 차단하고 stop, emergency exit, reconciliation, fill detection과 Position apply를 차단해서는 안 된다(MUST NOT).
@@ -51,3 +59,7 @@ Guardian과 bucket projection은 이미 발생한 authoritative fill과 Position
 #### Scenario: 모든 bucket의 overage 기록
 - **WHEN** 하나의 fill 뒤 여러 적용 bucket usage가 동시에 cap을 초과한다
 - **THEN** fill/Position은 한 번 보존되고 horizon, market, strategy, sector와 symbol 각각의 overage와 RISK_OVERAGE latch가 같은 transaction에 기록된다
+
+#### Scenario: RISK_OVERAGE latch 해제는 본 상태에 결속된다
+- **WHEN** 운영자가 읽은 owner 상태 digest 로 승인된 latch 해제를 요청하는데 그 사이 체결이나 latch 가 기록됐다
+- **THEN** 해제는 stale 로 거절되고, 결속이 맞으면 RISK_OVERAGE 만 해제되며 UNKNOWN_ACTUAL_RISK 와 overage 수치는 남고 다음 초과 체결은 다시 latch 한다

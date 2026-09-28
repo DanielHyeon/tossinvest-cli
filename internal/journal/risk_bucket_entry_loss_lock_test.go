@@ -311,6 +311,12 @@ func TestMigrationV32ToV33StartsWithNoEntryLossLock(t *testing.T) {
 	if n := countRiskBucketRows(t, j, "risk_bucket_entry_loss_locks"); n != 0 {
 		t.Fatalf("migrated journal starts with %d locks", n)
 	}
+	// 판정 코드는 현재 스키마의 것이므로(a066 5.5 v35: 해제 기록 표를 읽음) 현재 버전으로 다시 열어 잼.
+	if err := j.Close(); err != nil {
+		t.Fatal(err)
+	}
+	j = openJournalAtSchema(t, path, SchemaVersion)
+	defer j.Close()
 	if err := refuseEntryUnderLossLock(context.Background(), j.db, "acct-1", riskbucket.MarketKR, riskbucket.HorizonShort); err != nil {
 		t.Fatalf("migrated journal refuses entry with no lock: %v", err)
 	}

@@ -121,6 +121,8 @@ func newEngineCmd(root *rootOptions) *cobra.Command {
 	// `engineJournalDir` 를 쓰므로, 격리 프로파일은 자기 엔진의 알림만 본다.
 	cmd.AddCommand(newEngineRunCmd(root), newEngineReconcileResolveCmd(root),
 		newEngineAlertsCmd(root))
+	// a066 5.5(D8): 진입 손실 잠금 · RISK_OVERAGE latch 의 운영자 해제(mutating) 와 읽기 전용 확인.
+	cmd.AddCommand(newEngineRiskRelaxationCmds(root)...)
 	return cmd
 }
 
