@@ -1,4 +1,4 @@
-# a095 · 손절은 자기가 무엇을 덮는지 알아야 한다 — 5판
+# a095 · 손절은 자기가 무엇을 덮는지 알아야 한다 — 6판
 
 - **Feature**: `FEAT-TOS-009` — Exit line truth and position policy lifecycle
 - **Story**: `STORY-TOS-a095`
@@ -224,12 +224,12 @@ Q3(정지 조건 — `exit_states`에 수량 열이 없다는 스키마 질문) 
 | --- | --- | --- |
 | R1′ | reconcile 쪽 무관리 보고(`adoption.go` `alertUnmanaged` · 그 호출자) · 등급 표 | 방식 Q1. exit 관측 자리 · `publishBestEffort` · `notifyCritical` · `deliver` 본문은 무변화. **`SeverityOf` · `Notify`의 편집 경계는 Q1의 답에 달렸다**(4판 r3 N4) — (a) 새 종류 등재면 본문 불변, (b) 등급을 `Event`에 싣고 `SeverityOf` 계약을 바꾸면 경계 재선언 · 번들 재생성 · 재리뷰 |
 | R2′ | `adoption.go` `judgeHoldings` B7 창 · 발신 키 | Q3 · Q4 |
-| 억제 · 결과 형태(5판) | `adoption.go` `alertUnmanaged` B1 래치 · `adopt`의 결과 형태 | r4 R4-1 — 억제 키는 (사실, 등급)이거나 등급 상승 시 해제. `adoptOne` 본문은 무변화(실패 세 범주를 경계로만 기록) |
+| 억제 · 결과 형태(5판) | `adoption.go` `alertUnmanaged` B1 래치 · `adopt`의 결과 형태 | r4 R4-1 · r5 R5-1 · R5-2 — **메모리 래치는 normal 전용, critical은 래치를 지나 정본 재알림 창이 중복을 맡는다**(6판). 사실은 (포지션, 조건). `adoptOne` · `ReconcileDriver.alert` 본문은 무변화 |
 | R3 | **보류 — 델타에서 지움, 후속 change 후보** | 결정 Q5 |
 
 spec: `engine-safety`(사실별 등급 · 진입 차단 비도달 · 키 분리), `exit-policy`(R3 요구 삭제 · 래칫 요구의
 거짓 전제 삭제).
 
-**기존 함수 내부를 고치므로 Function Logic Map 면제는 없다.** 번들 28개(3판 21 + 4판 5 — `recordAlertTx` · `claimOwed` ·
+**기존 함수 내부를 고치므로 Function Logic Map 면제는 없다.** 번들 29개(3판 21 + 4판 5 — `recordAlertTx` · `claimOwed` ·
 `alertDeliverer.cycle` · `alertDeliverer.deliverOne` · `SelectRecoverySnapshot` + 5판 2 — `adoptOne` ·
-`resolveNotificationPublisher`)가 있고, 구현 후 다시 뽑는다.
+`resolveNotificationPublisher` + 6판 1 — `ReconcileDriver.alert`)가 있고, 구현 후 다시 뽑는다.

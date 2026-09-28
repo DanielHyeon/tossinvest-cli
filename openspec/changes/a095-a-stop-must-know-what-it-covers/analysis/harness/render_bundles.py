@@ -60,7 +60,7 @@ BUNDLES: list[dict] = [
             ("`e`", "이벤트", "호출자", "`SeverityOf(e.Type)`가 등급을 정한다"),
             ("`severity`", "`SeverityOf`의 답", "위 함수", "critical이 아니면 B1 창의 `n.publishBestEffort`"),
         ],
-        "calls": "`SeverityOf` · `n.logEvent`(등급 판정 **앞**, 두 경로 공통) · `n.publishBestEffort`(B1 창) · "
+        "calls": "`SeverityOf` · `n.logEvent`(`SeverityOf` 뒤 · 경로 분기 B1 **앞**, 두 경로 공통) · `n.publishBestEffort`(B1 창) · "
                  "`n.notifyCritical`(B1 뒤).",
         "mutations": "없다 — 두 경로가 각자 부작용을 갖는다. `n.mu`는 이 함수가 잡지 않는다"
                      "(`claimAndDeliver` 번들 참조).",
@@ -83,7 +83,7 @@ BUNDLES: list[dict] = [
         "calls": "`n.Publisher.Publish`(B2 조건 안) · `notificationFor` · `n.Log.Warn`(B2 창).",
         "mutations": "외부 전송뿐. 원장에 쓰지 않고 뮤텍스를 잡지 않는다.",
         "boundary": "**a095는 이 함수를 바꾸지 않는다.** 2판은 B1을 「로그도 없다」로 적었으나 구조 로그는 "
-                    "`Notify`가 등급 판정 전에 `logEvent`로 이미 남긴다(보이스 B B-P2-13). 이 경로의 부재는 "
+                    "`Notify`가 경로 분기(B1) 전에 `logEvent`로 이미 남긴다(보이스 B B-P2-13; 순서는 `SeverityOf` → `logEvent` → B1, 6판 r5 R5-4 정정). 이 경로의 부재는 "
                     "「durable outbox와 재시도가 없다」이다.",
         "high_risk": "no — 이 함수 자체는 설계대로다.",
         "tests": {},
@@ -271,6 +271,7 @@ BUNDLES: list[dict] = [
                     "답도 막지 않으려면 후보별 결과(편입 · 연기 · 시도 실패)를 호출자에 전해야 한다. 형태는 구현 로트가 "
                     "정한다(design D1 「후보별 결과와 억제 키」).",
         "high_risk": "yes — 편입의 유일한 입구다.",
+        "default_test": "이 분기 자체는 무변화 — 함수의 **결과 형태**만 편집 경계 안(r4 R4-1, 6판 r5 R5-4)",
         "tests": {"B2": "**a095 2.6** — [비움 — Q2(c)] 연기된 후보의 등급",
                   "B6": "**a095 2.6** — [비움 — Q2(c)] 연기된 후보의 등급",
                   "B7": "**a095 2.6** — [비움 — Q2(c)] 연기된 후보의 등급"},
@@ -317,6 +318,23 @@ BUNDLES: list[dict] = [
                   "B5": "**a095 2.5a** — 켜짐 + topic 없음: a095 사실은 critical이고 a124 정본대로 처리된다"},
     },
     {
+        "stem": "reconcileloop--ReconcileDriver.alert",
+        "dir": "internal-app-engine--reconciledriver.alert",
+        "role": "대사 루프의 알림 발신 — `Notify`를 부르고, 오류는 로그로만 남긴다.",
+        "inputs": [
+            ("`d.opts.Alerts`", "알림기", "배선", "B1 — nil이면 return"),
+            ("`Notify`의 오류", "critical의 durable 기록 실패", "`Notifier`", "B2 — 로그만 남기고 호출자에 돌려주지 않음"),
+        ],
+        "calls": "`d.opts.Alerts.Notify`(B2 조건) · `d.opts.Log.Error`(B2 창).",
+        "mutations": "없다 — 알림 발신과 로그.",
+        "boundary": "**a095는 이 함수를 바꾸지 않는다.** B2가 `Notify`의 오류(critical outbox 기록 실패)를 로그로만 남기므로 "
+                    "호출자 `alertUnmanaged`는 기록이 실패했는지 모른다. 오늘은 B1 래치가 `d.alert` 앞에 걸려 있어 기록 실패가 "
+                    "다음 주기에 다시 시도되지 않는다(r5 R5-1). 6판 원칙 — critical은 래치를 지나므로 다음 관측이 다시 기록을 "
+                    "시도한다 — 은 이 함수를 바꾸지 않고 성립한다.",
+        "high_risk": "yes — 대사 쪽 critical 발신의 통로다.",
+        "tests": {"B2": "**a095 2.16** — 기록 실패 → 저장소 회복 → 같은 실패가 다음 관측에서 기록된다"},
+    },
+    {
         "stem": "adoption--ReconcileDriver.alertUnmanaged",
         "dir": "internal-app-engine--reconciledriver.alertunmanaged",
         "role": "엔진이 관리하지 않는 보유를 알린다. why-matrix(B2 switch)가 사유를 고른다.",
@@ -331,12 +349,14 @@ BUNDLES: list[dict] = [
                     "B6(include 지정 시도 실패) · 기본(off∧미지정). 결정 (2)는 B4와 기본을 normal로 두라 하고, "
                     "B5는 운영자가 고른 상태가 아니다. B3 · B6의 분류는 결정이 덮지 않는다(Q2). 이 함수의 키는 "
                     "결정 (3)(iii)에 따라 exit 관측 자리와 갈라야 한다. **5판: B1 래치가 편집 경계 안이다(r4 R4-1, "
-                    "Manager 처분).** 오늘 B1은 포지션 id만으로 억제해, 앞 사이클의 normal 보고(예: 연기)가 뒤 사이클의 "
-                    "critical 사실(시도 실패)을 등급 판정 전에 삼킨다. 억제 키는 (사실, 등급)이거나 등급이 오르면 "
-                    "풀려야 한다 — design D1 「후보별 결과와 억제 키」.",
+                    "Manager 처분).** 오늘 B1은 포지션 id만으로, `d.alert`(→ `Notify`) **앞**에서 억제해 앞 사이클의 normal "
+                    "보고(예: 연기)가 뒤 사이클의 critical 사실(시도 실패)을 삼키고, 기록이 실패해도 다음 주기 재시도를 "
+                    "막는다. **6판 원칙(r5 R5-1)**: 메모리 래치는 **normal 보고 전용**이고 critical 보고는 래치를 무조건 "
+                    "지난다 — 중복은 outbox 키와 정본 재알림 창이 맡는다. normal 래치의 키는 사실 식별자(R5-2)다 — design D1 "
+                    "「후보별 결과와 억제 키」.",
         "high_risk": "yes — reconcile 쪽 무보호 보고의 자리다.",
         "tests": {
-            "B1": "**a095 2.12** — 연기(normal) 뒤 같은 포지션의 시도 실패(critical)가 재시작 없이 critical로 기록된다 · 같은 사실 · 같은 등급의 반복은 계속 억제된다",
+            "B1": "**a095 2.12 · 2.15 · 2.16** — 연기(normal) 뒤 시도 실패(critical)가 재시작 없이 기록된다 · critical은 래치를 거치지 않는다(배달 뒤 창 경과 재알림 · 기록 실패 뒤 재시도) · normal은 같은 사실 반복만 억제",
             "B3": "**a095 2.6** — [비움 — Q2] 설정 거부의 등급",
             "B4": "**a095 2.3** — exclude는 normal",
             "B5": "**a095 2.2** — enabled 시도 실패는 critical",
@@ -534,7 +554,7 @@ def render(bundle: dict, ast_dir: Path, profiles: list[str]) -> None:
         rows.append(f"| {branch['id']} | {branch['kind']} | {condition} | "
                     f"{', '.join(f'`{cell(c)}`' for c in window_calls) or '—'} | "
                     f"{', '.join(window_returns) or '—'} | {entered} |")
-        test = bundle["tests"].get(branch["id"], DEFAULT_TEST)
+        test = bundle["tests"].get(branch["id"], bundle.get("default_test", DEFAULT_TEST))
         test_rows.append(f"| {branch['id']} | {condition} | {entered} | {test} | no | no |")
     if not branches:
         test_rows.append("| B1 | branchless happy path | — | " + DEFAULT_TEST + " | no | no |")

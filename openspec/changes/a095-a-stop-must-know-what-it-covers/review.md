@@ -815,3 +815,28 @@ Go 파일 전부 추출 시점과 동일). 프롬프트 `analysis/freeze-review/
   **의도한 4파일**(adopt · alertunmanaged 두 파일 · refresh B23)만 달라짐을 `diff -rq`로 확인했다
 - r5 재리뷰: codex 대기열(a090 → a094 r6 → a092 r22 → **a095 r5**) — Manager 신호 대기
 - tasks 0.5 미체크 유지
+
+## 5라운드 (proposal-freeze, 5판) — **REJECT** · 6판 반영 (2026-09-29)
+
+### 3.17 실행
+
+codex-cli 0.154.0 · gpt-6-astra · medium · `codex exec -s read-only --ephemeral --skip-git-repo-check`, session
+`01a0e911-7387-7961-bc8d-b520a5e66d71`, 2026-09-29 02:30:29~02:35:07 KST, rc 0, 219,095 토큰, 401 없음. 트리 = HEAD `09465697`
+export + a095 오버레이(5판 `93870b29`, diff 0). 프롬프트 `analysis/freeze-review/r5-prompt.md` sha256 `df298050…7b2f6`(실행 사본 일치),
+출력 `codex-r5-output.md`(`1aaf4f04`). 실행 뒤 트리 새 파일 0. codex가 번들 28개의 해시 · 좌표 일치를 확인했다.
+
+4라운드 처분: RESOLVED R4-2 · R4-3 · R4-4 · R4-5 · R4-6 · 전이 행렬(계획) / PARTIAL R4-1(→ R5-1) / 회귀 0.
+
+### 3.18 발견과 처분 (Manager 처분 2026-09-29 — 반영은 이 6판)
+
+| id | 등급 | 내용 | Manager 처분 | 6판 반영 자리 |
+| --- | --- | --- | --- | --- |
+| R5-1 | P1 | 5판 원칙의 만료 없는 래치가 계속되는 critical을 영구 억제 — 배달 뒤 재알림 창 미도달, 래치가 `Notify` 앞이라 기록 실패 뒤 재기록 불가 | **승인 — codex 방향.** 메모리 래치는 normal 전용, critical은 래치를 무조건 지나 매 관측이 기록 시도, 중복은 outbox 키 · 정본 재알림 창. 근거(판정이 둘이면 반증이 죽는다) 명시. 두 시험 필수, 사람 소유 래치 불변 | design D1 「설계 원칙 — 6판」(5판 원칙 대체, 근거 · 귀결 — Q7 둘째 면과 같은 실체) · 델타 SHALL 둘(critical 무억제 · 기록 실패 재시도) + 시나리오 둘 · 새 번들 `reconciledriver.alert`(B2 — `Notify` 오류를 로그로만) · alertunmanaged 번들 결론 · tasks 2.12 · 2.15 · 2.16 · proposal Impact |
+| R5-2 | P2 | 「다른 사실」의 동일성 계약 없음 — 같은 등급 · 같은 key 공유, 오류 문구를 사실로 치면 폭주 | **승인** — 사실 식별자(조건 vs 진단 원인) + outbox 키 정렬 + 시험 셋, Q2 등급 열어 둠 | design D1 「사실 식별자」 · 델타 SHALL / SHALL NOT + 시나리오 「진단 원인만 바뀐 반복」 · tasks 2.17 |
+| R5-3 | P2 | I7이 범주 ③의 공백(성공 문구 · 재시도 비보장)을 과소 서술 | **승인** — I7 보강, 제외 + 후속 후보 유지. Manager가 사용자 보고의 후속 후보 목록에 올림 | issues I7 6판 보강(성공 알림 본문 인용 · exit 루프 `workingSet` B7 → `openState` 실패 → `:531` `continue` · 사이클 오류는 로그) |
+| R5-4 | P3 | adopt 행 「무변화」 기본값 · 「로그가 등급 판정 앞」 오기 | **승인** | 생성기 번들별 `default_test`(adopt: 분기 무변화 · 결과 형태만 경계 안) · notify · publishBestEffort 문구(`SeverityOf` → `logEvent` → B1) |
+| (보강) | — | 전이 행렬은 로드된 실효 설정으로 | **승인** | tasks 2.14 |
+
+번들 산문 변경은 옛 커버리지로 다시 그려 **의도한 5파일**(adopt BTM · alertunmanaged 두 파일 · notify · publishbesteffort)만 달라짐을
+`diff -rq`로 확인했다. 새 번들 `reconciledriver.alert`(분기 2, B1 미진입)는 `coverage/r6-app-engine.out`(HEAD `f69a3dab` 실행,
+`reconcileloop.go`는 base 이래 무변화). `openspec validate --strict` rc 0. r6: codex 대기열 — Manager 신호 대기. tasks 0.5 미체크.

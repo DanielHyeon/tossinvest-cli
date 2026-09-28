@@ -40,5 +40,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **사유 분기는 이미 사실별로 갈려 있다** — B3(설정 거부) · B4(exclude) · B5(enabled 시도 실패) · B6(include 지정 시도 실패) · 기본(off∧미지정). 결정 (2)는 B4와 기본을 normal로 두라 하고, B5는 운영자가 고른 상태가 아니다. B3 · B6의 분류는 결정이 덮지 않는다(Q2). 이 함수의 키는 결정 (3)(iii)에 따라 exit 관측 자리와 갈라야 한다. **5판: B1 래치가 편집 경계 안이다(r4 R4-1, Manager 처분).** 오늘 B1은 포지션 id만으로 억제해, 앞 사이클의 normal 보고(예: 연기)가 뒤 사이클의 critical 사실(시도 실패)을 등급 판정 전에 삼킨다. 억제 키는 (사실, 등급)이거나 등급이 오르면 풀려야 한다 — design D1 「후보별 결과와 억제 키」.
+- **Safe edit boundary**: **사유 분기는 이미 사실별로 갈려 있다** — B3(설정 거부) · B4(exclude) · B5(enabled 시도 실패) · B6(include 지정 시도 실패) · 기본(off∧미지정). 결정 (2)는 B4와 기본을 normal로 두라 하고, B5는 운영자가 고른 상태가 아니다. B3 · B6의 분류는 결정이 덮지 않는다(Q2). 이 함수의 키는 결정 (3)(iii)에 따라 exit 관측 자리와 갈라야 한다. **5판: B1 래치가 편집 경계 안이다(r4 R4-1, Manager 처분).** 오늘 B1은 포지션 id만으로, `d.alert`(→ `Notify`) **앞**에서 억제해 앞 사이클의 normal 보고(예: 연기)가 뒤 사이클의 critical 사실(시도 실패)을 삼키고, 기록이 실패해도 다음 주기 재시도를 막는다. **6판 원칙(r5 R5-1)**: 메모리 래치는 **normal 보고 전용**이고 critical 보고는 래치를 무조건 지난다 — 중복은 outbox 키와 정본 재알림 창이 맡는다. normal 래치의 키는 사실 식별자(R5-2)다 — design D1 「후보별 결과와 억제 키」.
 - **High-risk impact**: yes — reconcile 쪽 무보호 보고의 자리다.

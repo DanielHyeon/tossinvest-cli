@@ -1,4 +1,4 @@
-# a095 · tasks — 5판
+# a095 · tasks — 6판
 
 - **Change**: `a095-a-stop-must-know-what-it-covers`
 - **위험 등급**: **High-risk** — 무보호 보고의 등급과 진입 차단 도달. §0.3 적용.
@@ -45,6 +45,8 @@
 - [x] 1.8 **5판 근거 번들 2개**(r4 R4-1 · R4-2 · R4-3): `engine.ReconcileDriver.adoptOne` ·
       `engine.resolveNotificationPublisher` — HEAD `f69a3dab` 깨끗한 연결 worktree의 AST · 커버리지
       (`analysis/harness/coverage/r5-app-engine.out`). `alertUnmanaged` · `adopt` 번들 결론을 편집 경계로 갱신
+- [x] 1.9 **6판 근거 번들 1개**(r5 R5-1): `engine.ReconcileDriver.alert`(B2 — `Notify` 오류를 로그로만) — 커버리지
+      `analysis/harness/coverage/r6-app-engine.out`(HEAD `f69a3dab` 실행, `reconcileloop.go` base 이래 무변화)
 - [ ] 1.6 **a091과의 병합 확인** — 둘 다 등급 표를 건드릴 수 있다. 3판은 표 크기를 시험에 적지 않는다
 
 ## 2. R1′ — 등급을 사실로 (결정 (1)·(2), design D1)
@@ -79,13 +81,22 @@
       바꾸지 않는다. **`SeverityOf` · `Notify`의 경계는 Q1 답에 조건부**(r3 N4): (a) 새 종류 등재면 본문 불변,
       (b) `SeverityOf` 계약 변경이면 경계를 다시 선언하고 두 번들을 다시 뽑아 재리뷰한다
 - [ ] 2.12 **RED** — **연기(normal) → 같은 프로세스의 다음 사이클에서 시도 실패(critical)**: 재시작 없이 critical로
-      기록된다. 같은 사실 · 같은 등급의 반복은 계속 억제된다. Q2(c)의 두 답(연기 = normal · critical) 모두에서 통과하는
-      형태로 쓴다. 생산 배선(실 `Notifier` · outbox · 배달 실행자)으로(r4 R4-1)
+      기록된다. Q2(c)의 두 답(연기 = normal · critical) 모두에서 통과하는 형태로 쓴다. 생산 배선(실 `Notifier` · outbox ·
+      배달 실행자)으로(r4 R4-1). **6판**: critical은 메모리 래치를 거치지 않는다 · normal은 같은 사실의 반복만 억제한다(r5 R5-1)
 - [ ] 2.13 **RED** — `adoptOne` 범주 ③(편입 커밋 뒤 exit state 미개설, B3 창 → true)은 critical 요구 밖임을 명명된
       경계로 고정한다 — 후속 후보 `issues.md` I7(r4 R4-3)
 - [ ] 2.14 **전이 행렬**(r4 codex 권고, Manager 수용) — 「새 critical 0」은 「기존 행 · 래치 0」이 아니다. 알림
       켜짐→PENDING 행 생성→꺼짐, 꺼짐→켜짐, 각 경우 재시작 전후에서: 새 a095 사실의 등급 · 기존 PENDING 행의 존속 ·
-      정본 「재시작이 진입 차단을 푸는 우회로가 되어서는 안 된다」의 재차단을 표로 단언한다
+      정본 「재시작이 진입 차단을 푸는 우회로가 되어서는 안 된다」의 재차단을 표로 단언한다. **6판(r5)**: 토글은 **로드된
+      실효 설정**으로 바꾼다 — 설정 파일만 고친 것은 실행 중 전환의 증거가 아니다. 지연 배달 성공을 운영자 승인으로 세지
+      않는다
+- [ ] 2.15 **RED** — **배달됨 → 재알림 창 경과 → 여전히 시도 실패**(같은 프로세스): 정본 재알림 규칙대로 다시 전송된다.
+      메모리 래치가 막지 않음을 단언한다(r5 R5-1). 생산 배선으로
+- [ ] 2.16 **RED** — **outbox 기록 실패 → 저장소 회복 → 같은 시도 실패**(같은 프로세스): 그 관측에서 기록된다 —
+      `ReconcileDriver.alert` B2가 오류를 로그로만 남겨도 다음 관측이 다시 시도한다. 사람 소유 진입 게이트 래치는 이 과정에서
+      풀리지 않는다(r5 R5-1). 생산 배선으로
+- [ ] 2.17 **RED** — **사실 식별자**(r5 R5-2): 같은 등급의 연기 → 시도 실패가 서로 다른 event key로 기록된다(Q2(c)=critical
+      가정) · 창 안에서 A → B → A는 A의 재전송을 창 규칙대로 흡수한다 · 오류 문구만 바뀐 반복은 같은 key다
 - [ ] 2.11 `[비움 — Q8]` **사실이 해소된 뒤의 critical 행**(r3 N3) — 편입 실패 → 다음 사이클 편입 성공 → 지연 배달 ·
       재시작의 시험. 기존 outbox 기계로는 PENDING 행을 갱신 · 정산할 수 없다(design D1). **답 전에는 구현 착수
       금지 — 정지 조건**

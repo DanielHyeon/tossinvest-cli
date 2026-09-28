@@ -36,5 +36,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **a095는 이 함수를 바꾸지 않는다.** 2판은 B1을 「로그도 없다」로 적었으나 구조 로그는 `Notify`가 등급 판정 전에 `logEvent`로 이미 남긴다(보이스 B B-P2-13). 이 경로의 부재는 「durable outbox와 재시도가 없다」이다.
+- **Safe edit boundary**: **a095는 이 함수를 바꾸지 않는다.** 2판은 B1을 「로그도 없다」로 적었으나 구조 로그는 `Notify`가 경로 분기(B1) 전에 `logEvent`로 이미 남긴다(보이스 B B-P2-13; 순서는 `SeverityOf` → `logEvent` → B1, 6판 r5 R5-4 정정). 이 경로의 부재는 「durable outbox와 재시도가 없다」이다.
 - **High-risk impact**: no — 이 함수 자체는 설계대로다.
