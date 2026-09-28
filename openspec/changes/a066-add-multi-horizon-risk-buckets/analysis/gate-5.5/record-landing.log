@@ -1,0 +1,2 @@
+# check_analysis --record-landing, gate worktree /mnt/D/Axipient/workspace/TossOS-worktrees/a066-gate @ 8d51bc9e, 2026-09-29
+[logic-map] a066-add-multi-horizon-risk-buckets: recorded `landed-commit.txt` = e9355a821010bfd7a2b3e6245065410a55b99768 (base 23794f8626a2) — computed from this change's own evidence, not chosen; commit it with the change
