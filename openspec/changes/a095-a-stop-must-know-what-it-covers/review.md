@@ -859,3 +859,23 @@ a095 오버레이(6판, diff 0). 프롬프트 `r6-prompt.md` sha256 `712e9692…
 `internal-app-engine--reconciledriver.alert/function-logic-map.md` 1파일뿐. `openspec validate --strict` rc 0.
 
 **freeze 전 마지막 요건(Manager 지시)**: Claude 독립 보이스 1회를 7판에(R4~R6 처분의 정합 + 새 기전 유무, 읽기 전용) — 아래 §3.20.
+
+### 3.20 freeze 전 Claude 독립 보이스(7판) — 두 실행, 판정이 갈렸다 · **freeze 미성립** (2026-09-29)
+
+- 프롬프트 `analysis/freeze-review/claude-r7-prompt.md`(sha256 `f633fda9…375da`), 트리 HEAD `90ce43b1` export + a095 오버레이(diff 0).
+  결과 요지 원문: `analysis/freeze-review/claude-r7-outputs.md`
+- **r7a**(첫 실행, 보고 지연 → Manager 지시로 재실행 뒤 도착) — **APPROVE**, P2 2 · P3 3. 번들 8개만 해시 대조
+- **r7b**(재실행) — **REJECT**, **P1 2** · P2 4 · P3 2. 번들 29개 해시 전부 대조
+
+두 보이스가 서로 보지 않고 겹친 발견: **R5-1이 Q7 첫째 면 빈도를 키운다**(r7a F1 · r7b F5, P2) · **R6-2가 1개 번들에만 번졌다**(r7a F3 · r7b F7, P3)
+· 거부된 알림 블록의 등급 미명시(r7a F4 P3 · r7b F3 P2).
+
+**r7b의 P1 둘 — 저자 확인(델타 원문 대조)**:
+- **F1**: 델타 「운영자가 고른 상태」 정의(`adoption.enabled` 거짓 ∧ include 없음)는 **거부된 편입 블록**(0으로 만들어짐)에도 맞는다 —
+  정본 exit-policy는 거부가 `enabled` 참이거나 include가 있을 때만 일어난다고 적는다(「범위 검증은 … enabled가 참이거나 include 목록이
+  비어 있지 않을 때 요구된다 … 거부된 블록은 전면 zeroing」). 그래서 열린 Q2(a)(설정 거부 등급)를 「non-critical」로 정해 버린다. **확인됨**
+- **F2**: 시나리오 「앞선 normal 보고 뒤의 시도 실패」의 WHEN에 `notifications.enabled ∧ adoption.enabled` 전제가 없다(델타 원문 확인 —
+  시나리오 「편입이 켜진 엔진의 편입 실패」는 두 전제를 적는다). 같은 결함이 시나리오 「알림이 켜졌지만 전송 수단이 없는 엔진」의
+  `adoption.enabled` 전제 누락에도 있다(저자 추가 발견). **확인됨**
+
+반영은 Manager 처분 뒤. tasks 0.5 미체크.
