@@ -1313,3 +1313,16 @@ committed release. The state_mismatch and audit_unavailable errors are produced 
   part of those is the one gap above (1). The rest are sibling landings in the stacked window: `8022f578` and other
   changes' commits, measured by the file intersection in "5.5 gate" above.
 
+### Completion gate PASS (2026-09-29)
+
+- After the re-pin (`a286a0f5`), the `check_analysis` probe refused the recorded landing `e9355a82`: "landing point
+  precedes the evidence that pins it (`1413f175`)" (`probe-after-repin.log`). Following the tool's path,
+  `landed-commit.txt` was removed in a commit (`6e3da80f`). `--record-landing` then declined to record, because the
+  window `e9355a82..` contains no `.go` change (0 measured). So step 5 targets the working tree: **required 0, "evidence
+  complete"**, rc 0 (`probe-no-landing.log`).
+- In the gate worktree at `6e3da80f`: `make sdd-sync` rc 2. Only the codegraphcontext advisory failed (300 s timeout
+  under load); the CodeGraph hard evidence synced. Then `make gate CHANGE=a066-add-multi-horizon-risk-buckets`:
+  **GATE PASS, 11/11, rc 0** (`analysis/gate-5.5/gate3.log`). Step 6 `make sdd-check` passed, and steps 7–11 (test,
+  test-seams, test-race, vet, validate) all passed.
+- Archive waits for Manager verification.
+
