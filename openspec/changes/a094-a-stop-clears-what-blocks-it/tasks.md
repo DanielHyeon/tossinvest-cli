@@ -43,7 +43,7 @@
 - [x] 0.5j **proposal-freeze 리뷰 5라운드**(codex) — **REJECT**(P0 2 · P1 5), `review.md` 「5라운드」 · `codex-r5-output.md`.
 - [x] 0.5k **6판 반영** — `design.md` D−4(R5-1 기동 정산 철회·알림만 · R5-7 취소 ACK≠치움(형태 B) · R5-2 park 알림 판정 경로로 ·
       R5-3 해동 명령 1급 요구 · R5-4 enqueue-only · R5-5 셋째 기전 확인·제안 · R5-6 §0.4 재계수 0), spec delta 2, `record` FLM 정정. **판정 아님**
-- [ ] 0.5l **proposal-freeze 리뷰 6라운드**(codex) — 대기열(a125 → a090 → a095 r4 → **a094 r6**) — **a089 처분(사용자 답) 뒤에만**(D−3.9). 그 전에는 freeze 하지 않는다.
+- [x] 0.5l **proposal-freeze 리뷰 6라운드**(codex) — **REJECT**(P0 0 · P1 5 · P2 1 · P3 1), `review.md` 「6라운드」 · `codex-r6-output.md` — **a089 처분(사용자 답) 뒤에만**(D−3.9). 그 전에는 freeze 하지 않는다.
       전제 충족: a089 아카이브(`64a1b2b3`, 2026-09-28) — codex 슬롯 대기열(a092 r21 → a095 r3 → a094 r5)
 
 ## 1. 산출물 (완료 — 문서보다 먼저)
