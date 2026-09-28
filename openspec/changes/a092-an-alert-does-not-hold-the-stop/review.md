@@ -4606,3 +4606,43 @@ Manager 판정 요지:
 **전수가 드러낸 새 잔여 하나 — 프로세스 밖 기록자.** flatten CLI는 별도 프로세스의 게이트를 만든다(`flatten.go:232`). 그 `parkAlert`가 먼저 잠그는 것은 그 프로세스의 게이트다. 엔진 프로세스의 셈~해제 창에 그 행이 들어오면 엔진 게이트는 그 사유로 잠기지 않는다. 창은 한 번뿐이고, 그 뒤로는 행이 미전달로 세어져 배달 실행자의 판정과 기동 복원이 다시 잠근다. flatten 경로가 `parkAlert`에 닿는지는 구현 전 FLM(tasks 23.2)으로 잰다. **22라운드 어느 보이스도 짚지 않은 형태라 23라운드 판정 대상으로 적었다.**
 
 **측정**: `openspec validate --strict` rc 0 · `check_values.py` rc 1 · 실패 60 — 21판 최종 목록과 줄번호 제외 diff rc 0(새 실패 0). `DRAFT = 23`.
+
+## 23.12 23라운드 (task 23.1) — 세 보이스 · **BLOCK (셋 다)** (2026-09-29) — 처분은 Manager 판정 뒤
+
+| 보이스 | 렌즈 | 모델 · 실행 | 판정 | 원문 |
+|---|---|---|---|---|
+| codex | 전 범위 교차 모델 | codex-cli 0.154.0 · gpt-6-astra · read-only · tree = `git archive a88e7079` · session `01a0e981…` · 2026-09-29 04:32~04:36 KST · rc 0 | **BLOCK** (P0(T) 1 · P1(T) 1 · P2(T) 1) | `analysis/review-23/codex-r23-output.md` · `codex-r23-run.txt` |
+| A | 생산·안전 | Claude `code-reviewer` | **BLOCK** (P0 0 · P1 2 · P2 9) | `analysis/review-23/voiceA-r23-output.md` |
+| B | 산출물 무기화 | Claude `code-inspector-tester` | **BLOCK** (P1 4 · P2 10) | `analysis/review-23/voiceB-r23-output.md` |
+
+**공통 판정**:
+- **안전 불변식과 exit goroutine 원격 대기 0은 선다**(A 명시, codex·B 동의). **게이트를 잘못 여는 경로는 세 보이스 모두 찾지 못했다.**
+- K1(신원) · K2·K4(규범) · K3(해석) · K5(생성자 둘 — 세 보이스가 독립으로 같은 수) · K6·K7(입구 정의)은 규범으로 섰다.
+- 남은 것은 **전부 문서다**: 전칭 SHALL의 범위, 핀 문언, 수단의 위치, 교차 change 선행 조건, 좌표.
+- 독립성: 셋 다 금지 원문을 열지 않았고, A·B의 저장소 상태는 `?? analysis/review-23/` 한 줄이었다.
+
+### 23.12.1 합친 발견 — 저자 처분 **제안** (적용 전, Manager 판정 대기)
+
+| # | 등급(최고) | 발견 | 보이스 | 저자 처분 제안 |
+|---|---|---|---|---|
+| **M1** | **P0(T)** | ADDED의 전칭 「운영 모드 전이의 통지는 상태를 바꾼 전이마다 한 번」이 착지 코드와 모순된다 — `CRITICAL_ALERT_UNDELIVERED` 승격은 동기 경로(`notifier.go:382-383`)와 a124 실행자(`alertdelivery.go:451-452`) **둘 다 announcer nil**이다. 23판 예외(durable 기록 실패)는 그 하나만 덮는다. 새 Scenario 「재알림 창 안의 재강화도 통지된다」도 트리거가 그 승격이면 거짓이다 | codex #1 · A #1 · B #2 — **3/3** | **수용.** SHALL을 「announcer를 받는 전이」(사람 완화 · 관측 두절 · 자격증명 거절 등)로 한정한다. 전달 실패에 따른 승격(두 경로)은 **무통지 예외**로 근거와 함께 명시한다 — 방금 전송에 실패한 수단으로 그 사실을 다시 알리지 않는다(`notifier.go:360-368` 주석). Scenario는 트리거 이름(관측 두절)을 적는다 |
+| **M2** | P1(T) | K3 구조 핀 「Commit과 Project 사이에 반환 없음」이 정상적인 커밋 실패 반환(`:469`, B25 안)까지 금지해 HEAD 양성 대조군에서 실패한다. 투영기 몸체의 `go`는 덮지 않는다 | codex #2 · A #6 · B #5 — **3/3** | **수용** — 「**커밋 성공 경로**에서 Commit 문 다음 ~ Project 호출 사이에 반환 · `go` 없음」 + 투영기 몸체 `go` 0 핀. 커밋 실패는 투영 0 · 통지 0의 양성 조건. nil 투영기 갈래는 생산 배선 핀이 진다 |
+| **M3** | P1 | **a066 `notifyRelaxation`이 착지한 HEAD에서 이미 23판 SHALL(먼저 잠금)을 어긴다** — 먼저 잠그지 않고 `repo.EnqueueAlert`로 critical 행을 넣는다(`risk_relaxation_command.go:151-173` · `:158`). K6·K7 핀은 HEAD에서 빨강이다. 완화 통지에는 먼저 세울 「자기 사유」가 없어 「먼저 잠금」은 실현 불가다 → 길은 입구로 옮기는 것뿐이다 | A #2 · B #4 · codex 판정 5 | **Manager 판정 요청.** 저자 권고: 「a066 기록자가 입구(알림기 기록 전용 입구)로 옮겨진 커밋을 인용하기 전에는 a092를 archive하지 않는다」를 **archive 선행 조건**으로 적는다(tasks 23.4 → 게이트). a066 교차 통지에서 「먼저 잠금」 선택지를 뺀다 |
+| **M4** | P1 | 23판이 부류를 「알림기를 거치는」 → 「그 입구를 거치는」으로 바꾸면서 **동기 claim 경로**(`n.mu` 아래 `ClaimAlertForDelivery`, `notifier.go:254` · `:262`)가 「나눌 수 없는 하나」의 대상에서 빠지고, 문자대로는 「먼저 잠금」 대상이 된다. census가 `ClaimAlertForDelivery`를 안 센다. 같은 요구의 Scenario는 여전히 「알림기를 거치지 않는」이라 부류 이름이 둘이다 | B #1 | **수용** — 부류를 「알림기 배제 잠금 아래에서 기록하는 모든 경로(기록 전용 입구 + 동기 claim)」로 정의하고, census에 `ClaimAlertForDelivery`(비시험 호출자 1)를 더한다. 문구를 통일한다 |
+| **M5** | P1 | K2 수단의 위치가 틀렸다. 승격은 `deliver` 안이 아니라 `claimAndDeliver`가 돌아온 뒤 `notifyCritical :228`에서 일어난다. `:520`(시도 기록 NotFound)은 `lost` → `owed=false`라 승격이 없다 → 「세 래치 자리 각각」 RED는 `:520`에서 성립하지 않고, 억지로 맞추면 a124 「승격 미포함 판정은 승격 금지」를 어긴다. 델타가 그 SHALL NOT과 「승인 시각으로 순서 추정 금지」를 옮기지 않았다 | B #3 · A #3 | **수용** — (ii)는 `notifyCritical`에서 `escalate` 실패를 받아 `Block`한다. RED는 `:484` · `:571`만. a124 조항 둘을 델타에 이식한다. `AccountRef` 빈값 = 승격 미포함으로 정의한다 |
+| M6 | P2(T) | **flatten 잔여는 공집합이다(3/3).** `ReplayInDoubt`의 비시험 호출은 `reconcile/recovery.go:351` 하나이고, Replayer 주입은 엔진 `runtime_wiring.go:184`뿐이다. flatten CLI에는 Recovery · Replay · Notifier가 없다(`flatten.go:199-272`). 게다가 엔진도 `Attested: nil`이라 `parkAlert`는 생산 어디서도 도달 0이다(`replay.go:249-259`). codex: 「다음 승인은 미전달 0을 만족하지 않는다」는 틀렸다(전체 승인이 새 행도 승인한다). A: `Saga.Notifier`를 누가 배선하면 둘째 프로세스의 알림기가 census를 우회한다 | codex #3 · A #4 · B #6 | **수용** — 잔여를 「도달 0」으로 정정하고 정적 핀 둘로 고정한다: 「flatten 조립에 Recovery · Replayer · Replay · Notifier 없음」 · 「비시험 `obs.Notifier` 생성은 엔진 `newNotifier` 하나」. 입구 · 셈~해제 조항을 「엔진 프로세스」로 한정하고, 틀린 문장은 지운다. 23.2의 flatten FLM 항목은 핀으로 대체한다 |
+| M7 | P2 | K5 핀이 역할을 안 센다 — 엔진 `Entry`가 **알림기와 같은 게이트**인지(인라인 `NewEntryGate` 변이가 산다) | A #5 | 수용 — 「`execgw.New`의 `Entry` 식별자 == `newNotifier`의 게이트 인자」 동일성 핀 |
+| M8 | P2(T) | 「게이트를 넘기지 않는 조립은 생산 조립이 아니다」는 순환 정의다 | B #7 | 수용 — 생산 조립 = 「`tossctl` main에서 도달하는 비시험 경로」 |
+| M9 | P2(T) | 「임차 없는 재무장 기록은 입구만」은 문자대로는 거짓이다 — `EnqueueAlert`도 모르는 상태의 행을 PENDING으로 복구한다(`outbox.go:411-416`). 실제 도달은 0(키 유일) | A #7 | 수용 — 「재알림 창에 의한 재무장」으로 한정 |
+| M10 | P2(T) | 통지 신원에 rowid를 쓰면 `VACUUM INTO` 재번호에 기댄다. 전이 행에는 안정된 유일 신원 `id`(TEXT PRIMARY KEY, `core_domain.go:185`)가 있다 | A #8 | **수용** — 통지 키는 `rec.ID`, rowid는 울타리 순서에만 쓴다 |
+| M11 | P2(T) | 좌표: 22판 D0.3g의 `engine_risk_relaxation.go:136,194` → `:130,184`(정정표 누락) · MODIFIED 블록에 `risk-management :102-108`이 한 곳 남음 · `OperatingModeHistory` ORDER BY `:597` · a066 `:158`은 작업 트리에서 `:168`(census는 이름으로) · 정본에 들어갈 블록에 새 HEAD 좌표(`engine.go :680` · `retry.go:532-539`)를 넣지 말고 이름으로. 그리고 `engine.go:636`은 `c1e34dc4`에서도 이미 `:637`이었다 | A #9 · B #8 · #14 · codex 판정 7 | 수용 |
+| M12 | P2(T) | 「통지 실패를 함께 보인다」: `Notify`는 **전송** 실패에 nil을 돌려주므로 드러나는 것은 기록 실패뿐이다 | A #10 · B #13 | 수용 — 「통지 실패 = 통지 기록 실패」로 정의하고, 명령 출력에 통지 행의 PENDING 여부(재읽기)를 보인다 |
+| M13 | P2(T) | K8 「풀 경로 = 원장 수리 뒤 재시작」은 너무 좁다 — 원장이 ENTRY_BLOCKED로 읽히면 이어진 성공 투영(`mode-release` · 자동 강화)이 복원 실패 래치를 교체한다(사람 승인이라 안전). tasks 머리의 「22.3 C15 좁힘」이 본문에 반영되지 않았고, K8 · K12 RED가 없다 | A #11 · B #10 | 수용 — 서술 정정 + RED |
+| M14 | P2(T) | 정본 「엔진 런타임 수명주기」의 주석(`:221-224`, *"… 그 문장의 정리는 a092가 진다"*)이 archive 뒤에도 남는다. 델타는 그 요구를 안 건드린다고 선언한다 | B #9 | **Manager 판정 요청** — 저자 권고: 잔여로 적는다. MODIFIED로 그 긴 요구를 싣는 것은 비례 원칙상 과하다 |
+| M15 | P2 | 커버리지: K12(무통지) RED · 입구 `remindAfter = 0` 무재무장 RED · `runAuxiliary` 이벤트 타입 변경의 FLM | B #11 | 수용 |
+| M16 | P2(T) | exit-policy 한정어가 「버퍼」라는 수단을 정본 문장에 넣는다. 발행 실패로 버려지는 경우도 덮지 못한다 | B #12 | 수용 — 「버려지면 버렸다는 사실이 기록된다」로 |
+
+**라운드 추세**: 21라운드 P0 5(C1 입구 누락) → 22라운드 P0 2(새로 연 자리) → 23라운드 P0(T) 1(전칭 SHALL의 범위, 문서).
+세 보이스가 행동상 안전 손실이 없다고 판정했다. 남은 결함은 archive 때 정본에 들어갈 문장 정합성이다.
+
+**상태**: 반영 0. 판정 대기 둘 — M3(a066 archive 선행 조건), M14(잔여 처분).
