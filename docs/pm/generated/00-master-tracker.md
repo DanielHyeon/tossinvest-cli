@@ -98,7 +98,7 @@
     - STORY-TOS-a074 — Make the moment protection stops visible, and let critical alerts actually leave the machine [in_progress] → `a074-critical-events-reach-the-operator`
     - STORY-TOS-a084 — Re-judge a quarantine once when the recovery selector that made it has changed [archived] → `a084-a-quarantine-outlives-its-cause`
     - STORY-TOS-a087 — A protective exit is a market order, not a limit order [in_progress] → `a087-a-protective-exit-is-a-market-order`
-    - STORY-TOS-a089 — An unserved stop is counted, recorded and visible [in_progress] → `a089-an-unserved-stop-is-counted`
+    - STORY-TOS-a089 — An unserved stop is counted, recorded and visible [archived] → `a089-an-unserved-stop-is-counted`
     - STORY-TOS-a091 — A stop that sold nothing is critical [in_progress] → `a091-a-stop-that-sold-nothing-is-critical`
     - STORY-TOS-a092 — An alert does not hold the stop [in_progress] → `a092-an-alert-does-not-hold-the-stop`
     - STORY-TOS-a094 — A stop clears what blocks it [in_progress] → `a094-a-stop-clears-what-blocks-it`

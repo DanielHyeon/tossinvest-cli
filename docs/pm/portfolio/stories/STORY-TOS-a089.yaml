@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a089-an-unserved-stop-is-counted",
-    "path": "openspec/changes/a089-an-unserved-stop-is-counted"
+    "path": "openspec/changes/archive/2026-09-28-a089-an-unserved-stop-is-counted"
   },
   "acceptance": [
     "A protective exit proposal that ends an observation cycle without a live order increments a consecutive-unserved count for that position, whatever stopped it, so the fifth failure of the same stop is distinguishable from the first",

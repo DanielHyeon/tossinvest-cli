@@ -458,3 +458,42 @@ C2("전수가 아니다")는 맞았고 과소평가였다.
 네 번째는 앞의 셋과 다르다. 앞의 셋은 규율이 없어서 틀렸고, 이번엔 **규율을 문서에 적어
 놓고 그 규율이 겨냥한 자리를 비켜 갔다.** 다음 조회는 "흔적이 남는 곳"이 아니라
 **"흔적이 남지 않는 경로가 무엇인가"**부터 연다.
+
+## 처분 — 불구현 종결 (2026-09-28, 사용자 승인)
+
+**사용자 결정(2026-09-28, Manager 경유)**: a089 처분 추천안 수용 — **불구현 아카이브 + a090 신설 + a087 D2 분리 재작성.**
+근거는 2026-09-27 대체(supersession) 조사(HEAD `cb378a63`, 읽기 전용)이며 아래 인용은 HEAD `1a0027d2` 에서 재확인했다.
+
+### 요구별 처분
+
+| 요구 | 처분 | 근거 |
+| --- | --- | --- |
+| **R1** (engine-safety) 재발하는 critical 을 outbox 에 재발로 기록 | **대체됨 — a096~a099, 다른(정본) 형태로.** 2차 리뷰가 남긴 부분은 전부 충족했고, 충족하지 않은 부분은 지금 정본 spec 에 반한다 | 창이 지난 뒤 재개방: `internal/journal/outbox.go:294` (`rearm := claimOwed(…)`) → DELIVERED·ACKNOWLEDGED 행을 PENDING 으로 되돌리며 제목·본문·payload 를 바꾸고 시도·`acknowledged_*` 를 비운다(H1 은 a097 — "재무장은 새 episode"). 창 = `claimOwed` `outbox.go:372-`, 기본 `obs.DefaultRemindAfter = time.Hour`(`internal/obs/notifier.go:59`). C6(`parkAlert` 재생 경로 제외): `outbox.go:142-146` `recordAlertTx(ctx, tx, a, 0)` — "must not re-arm a settled row on somebody else's behalf". 실패 전달 = 미전달: PENDING 은 항상 owed(`claimOwed`), 전달 루프 a098, 이중 전송(H2)은 a099 claim lease. **창 안의 재발을 행에 쓰지 않는 것은 설계다** — a096 정본(`archive/2026-08-29-a096-one-condition-is-one-alert/specs/engine-safety/spec.md:10-12`·`:36-38`): "재알림 창이 지나기 전에 … 다시 전송해서는 안 된다(SHALL NOT)", "억제되는 것은 **전송뿐**이며 관측 사실의 기록이 아니다 … 구조화 로그는 관측마다 한 줄을 남긴다". a089 의 전제("발송은 현재도 발생마다")는 a096 이후 거짓이다 |
+| **R2** (engine-safety) 브로커 거절 code·field 를 질의 가능한 필드로 기록, 동작 분기 금지 | **a094 로 이관.** 미충족(`internal/official/errors.go` `APIError{Code int; Body string}` — HTTP status 와 원문뿐). 409 code 분류는 a094 R1 이 소유한다 | **a094 R1 ↔ a089 R2 의 규범 충돌은 이 아카이브로 소멸한다.** a094 `design.md` D−2.8(5판 유지): "**a089 가 아카이브되면**: a089 R2 의 SHALL NOT(「이 기록에 따라 … 동작을 분기해서는 안 된다」)은 main spec 에 들어가지 않는다. a094 R1 의 SHALL(`code` 로 종결)은 그대로 둔다." — 그래서 이 아카이브는 `--skip-specs` 로 한다(아래) |
+| **R3** (exit-policy) 포지션별 연속 미제출 계수 | **백로그 — C5 정의 대기** | 2차 리뷰 "보류 (C5 해소까지)". 「살아 있는 보호 주문」 의 판정 소스(C5 — `pending_action`·IN_DOUBT 는 「보호 주문 없음」 을 뜻하지 않는다)가 정의되기 전에는 계수의 분모가 없다. 계수기는 코드에 없다(`o.refused` `exitloop.go` 는 판정 거절 dedupe 불리언 — 다른 것) |
+| **R4** (exit-policy) 지연 시계는 접수된 보호 주문·포지션 종료로만 해제 | **백로그 — C5 정의 대기** | 같은 보류. 현재 `clearTheSymbol` 성공 시 `clearDelay`(`exitloop.go:1255-1257`)가 R4 가 금한 해제 조건 그대로이며, 그것이 B7 이 시작한 시계의 유일한 해제라 단순 제거 불가(3라운드 FLM) |
+| **2차 리뷰 P0 — 「a090(신설, 선행)」** | **신설 change 로 승계 예고**(Manager 과제 2) | 이 문서 「권고하는 재범위」: "**a090(신설, 선행)** — P0 계측. 「이번 주기에 관측되지 않은 보유 포지션」을 종목 단위로 세고, 연속 미관측이 한계를 넘으면 critical". a090 디렉터리는 활성·아카이브 어디에도 없고, 코드는 그대로다 — `internal/app/engine/exitloop.go:453-462` 의 두 무음 `continue`(시세 미응답 · `!o.quoteUsable`). RED 후보 R1~R6 은 a092 FLM(`internal-app-engine--exitobserver.observeonce/branch-test-map.md` 「필요한 RED (a090 후보)」)에 준비돼 있다 |
+
+### 완료 게이트 — 해당 없음(불구현)
+
+a089 가 바꾼 코드는 **0줄**이다. a089 디렉터리를 만든 커밋 `a30eb35a` 는 일곱 change 를 한 커밋에 담았고, 그 비시험 `.go`
+두 파일(`internal/journal/outbox.go`·`internal/obs/notifier.go`)은 a096 것이다 — `fafc4665` 가 그 경계를 기록했다
+("a089 … | 33 | 47 | 없음 | 계획"). 그 뒤 `a089` 를 언급한 커밋의 비문서 파일은 a122 의 `tools/logic-map/` 뿐이다(a089 를 측정 대상으로 쓴 것).
+구현이 없으므로 `make gate`(2단계 미완료 태스크에서 실패)·독립 리뷰·변이는 대상이 없다.
+
+### 아카이브 방식
+
+- **`openspec archive --yes --skip-specs`.** 델타 spec(R1~R4)은 구현되지 않았으므로 main spec 에 넣지 않는다. 특히 R2 의 SHALL NOT 이
+  들어가면 a094 R1 과의 충돌이 main spec 에서 되살아난다(D−2.8).
+- **미체크 태스크 47개는 체크하지 않는다** — 구현되지 않은 것을 완료로 표시하지 않는다. `tasks.md` 머리에 불구현 종결 표기를 둔다.
+  실측: openspec 1.4.1 은 미체크에 막지 않는다("Warning: 47 incomplete task(s) found. Continuing due to --yes flag." — 스크래치 사본에서 확인).
+  PM 트래커는 아카이브 경로면 태스크와 무관하게 `archived` 로 유도한다(`tools/pm/generate_master_tracker.py` `derive_story_status`).
+
+### 이 아카이브가 넘기는 것
+
+- **a090** — 미관측 보유 포지션 P0 계측(High-risk, 손절 관측 경로). 신설 proposal 은 Manager 과제 2.
+- **a094** — D−2.8 의 "a089 가 아카이브되면" 갈래가 성립했다. a094 문서의 해당 문장에 「a089 아카이브로 해소」 를 덧붙이는 편집은
+  a094 경로의 별도 커밋이다(이 커밋은 a089 경로만).
+- **a087** — 순서 모순은 두 문서가 서로 다른 a089(재작성 전 재가격·에스컬레이션 범위 vs 현재 계측 범위)를 가리킨 것이었다.
+  a087 은 D2 분리(읽을 가격이 없다고 보호 청산을 거절하지 않기 · 거래소 하한가) 선행으로 재작성한다(사용자 결정). 재가격·에스컬레이션은 무소유다.
+- **R3/R4** — C5(「살아 있는 보호 주문」 판정 소스) 정의가 서면 그 change 의 백로그로 다시 연다.
