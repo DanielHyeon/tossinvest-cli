@@ -5,8 +5,8 @@ and grep/rg are fine. Do not run Go tests.
 
 Repository root: the current directory. It is an export of commit f478ddc6 (all code and documents are exactly that commit).
 Every Go file this change cites is byte-identical to its base `d3bd1843` except `cmd/tossctl/engine.go`, which gained 2 lines at
-:121-122 (a066 operator command registration, unrelated) — so engine.go lines the change cites after :121 are +2 here (the exit
-observer options the change cites as :634-640 are at :636-642).
+:121-122 (a066 operator command registration, unrelated). The change's engine.go citations (:634-640, :639, :671) were taken from
+this later layout and are already correct in this tree (at the base they are 2 lines lower).
 
 Change under review — `openspec/changes/a090-an-unobserved-position-is-counted/` (THIRD draft, 3판). Earlier rounds: Claude adversarial
 voice 1 (F1–F16) and codex round 1 (N1–N10, analysis/freeze-review/codex-r1-output.md); their dispositions are in review.md 「1라운드」,
