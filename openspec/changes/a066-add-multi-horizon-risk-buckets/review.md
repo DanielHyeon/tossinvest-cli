@@ -1263,4 +1263,19 @@ committed release. The state_mismatch and audit_unavailable errors are produced 
 - Gate run 1 at `dd55d755` stopped at **2/11** because 6.5, the line that runs this gate, was still unchecked
   (`analysis/gate-5.5/gate1.log`). Per the run → record → check convention, 6.5 is checked in the next commit and the
   gate is rerun.
+- Gate run 2 at `c1b26ed4` passed 1–4/11 and **stopped at 5/11** (`analysis/gate-5.5/gate2.log`). The landing narrowed
+  the window's end (`base 23794f86 → landed-commit e9355a82`, 395 functions required), but not its start. Two kinds
+  of failure line:
+  - **a066's own (1): repaired.** The `cmd-tossctl--newenginecmd` BTM had no B1 happy-path row for a branchless
+    function. The row was added in the next commit.
+  - **The stacked window (367 "missing evidence" lines, 161 files): not a066's.** Measured by intersecting the files of
+    all 44 `(a066)` commits between base and landing with the 161 files named. Only three files overlap:
+    `cmd/tossctl/engine.go`, `internal/app/engine/position_policy_transport.go`, `internal/execgw/gateway.go`. Every a066
+    hunk in them sits in a function that has a bundle (`newEngineCmd` `bce793a7` @124, `StartPositionPolicyCommandServer`
+    `90e5170d` @151, `checkReservation` `0004536c` @907). The functions named there (`runEngineRun`, `engineRuntime`,
+    `writePositionPolicyDescriptor`, `Gateway.New/Place/refuse`) were changed by other changes' commits in the window.
+    This is the same artifact as the 6.4 probe (371 lines) and Wave 2A. It is the step-5 policy question already in
+    the user queue (archive candidates blocked by "base before the work"); the landing record cannot fix a window
+    **start**. It is not re-pinned here, because moving the base forward would drop a066's own early commits from
+    the judgement.
 
