@@ -86,8 +86,9 @@ func TestA066FillTransitionBucketCountGuardsAreLayered(t *testing.T) {
 	perDecision, total := false, false
 	for _, stmt := range loader.Body.List {
 		if rng, ok := stmt.(*ast.RangeStmt); ok {
-			if id, ok := rng.X.(*ast.Ident); ok && id.Name == "decisionBuckets" {
-				for _, inner := range rng.Body.List {
+			if id, ok := rng.X.(*ast.Ident); ok && id.Name == "decisionBuckets" && !hasBranchStmtJ(rng.Body) && len(rng.Body.List) > 0 {
+				// 모든 결정을 걸어야 함: 첫 문장이 비교-거절이고 분기문이 없어야 함.
+				for _, inner := range rng.Body.List[:1] {
 					// 조건은 정확히 `len(seen) != …` 이어야 함(`false && …` 로 꺼진 조건은 가드가 아님).
 					if ifs, ok := inner.(*ast.IfStmt); ok && isNeqOfLen(ifs.Cond, "seen") && bodyReturns(ifs.Body) {
 						perDecision = true

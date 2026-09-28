@@ -898,3 +898,165 @@ Options, for the Manager:
   neither can be disproven), and it needs schema v35.
 - The framing "the v34 record binding carries policy immutability with the right identity" is withdrawn, because the
   measurement contradicts it.
+
+## 6.1 / 6.2 verification lot (2026-09-28)
+
+All runs are sequential, in isolated copies (`analysis/harness/test_in_copy.sh`). Every mutation run was preceded
+by a GREEN no-mutation control. Ledgers: `analysis/mutation-6.1/`, `analysis/mutation-6.2/`. Scope, per Manager
+ruling (B), 2026-09-28:
+
+- (1) Mutation RED→GREEN for the covered rows that had no RED.
+- (2) For every not-covered logic or parse row: a new test, or one line saying why it is unreachable, with the
+  scope walked.
+- (3) A committed structural test for storage-error exits instead of per-row RED. Per-row RED is
+  **not-applicable**: it would need a production fault-injection seam.
+
+The 2026-08-04 "no RED recorded" cells stay as historical fact. The RED→GREEN below is today's, recorded separately.
+
+### Suites (`analysis/harness/run_6_1.sh`, `df` checked first; ledgers `mutation-6.1/run61-ledger-*.tsv`)
+
+| Step | rc | s |
+|---|---|---|
+| untagged journal/execgw/riskbucket/officialfx | 0 | 466 |
+| `tossos_testseams` execgw/riskbucket/officialfx | 0 | 67 |
+| property tests + fuzz seeds (riskbucket) | 0 | 1 |
+| `FuzzReservationIsMonotone` / `FuzzApplyFillRetryIsPure`, 60 s each | 0 / 0 | 62 / 61 |
+| race riskbucket, officialfx | 0 | 5 |
+| race execgw focus (untagged / seams) | 0 / 0 | 102 / 196 |
+| race journal focus | first run hit the 10 min default timeout (no race report, no test failure); rerun with `-timeout 60m`: **0** | 984 |
+| vet (untagged / seams) | 0 / 0 | — |
+
+### (3) Storage-error exits — `TestA066StorageErrorExitsFailClosed`
+
+This AST test asserts two properties for every storage-error exit in its scope:
+
+- P1: the exit returns a non-nil error.
+- P2: the exit performs no write (ExecContext, Exec or Commit).
+
+It also asserts that every function which opens a transaction runs `defer tx.Rollback()` right after BeginTx.
+
+Scope:
+
+- every `internal/journal/risk_bucket*.go` file, plus `RecordFill`;
+- `internal/riskbucket/production_snapshot_authority.go`;
+- `Gateway.checkReservation` and `Gateway.submit`.
+
+An exit counts as a storage-error exit when:
+
+- its condition is `err != nil`, or `!errors.Is(err, sql.ErrNoRows)`;
+- it sits in an if, an else-if chain (the source is that chain's init), or a `switch { … default: }`;
+- and its `err` comes from a database/sql method, or from a helper that takes `tx`, `q`, `db`, `j.db` or `ctx`.
+
+The walked scope is pinned by a census: files 10 · funcs 116 · exits 305 · others 84 (counted, not checked) ·
+txOpeners 10. The census was re-counted honestly three times as the recognizer grew:
+
+- switch default exits added: 283 → 286;
+- two files added: → 301;
+- not-ErrNoRows exits and else-if sources added: → 305.
+
+Mutation: 9/9 CAUGHT (`structure-ledger.tsv`).
+
+### 6.1.1 — owner-bind delta gap (repaired, Manager ruling 2026-09-28)
+
+`applyRiskBucketOwnerBindingInTx` returned nil when `campaignQuantity(fill.Delta)` failed, with no owner bind and
+no latch. The census surfaced it as an "other" exit.
+
+- FLM came first (`analysis/pre-edit/6.x-owner-bind/`); RED at `47b48ae4`.
+- The fix calls `latchRiskBucketFillFailureForScope`, the same latch as the sibling gaps. The fill and the exit
+  hook are untouched, and a zero delta stays a no-op.
+- Release semantics are unchanged.
+- Mutation `owner-bind-ledger.tsv`: 4 CAUGHT. The `CompareDecimal` error branch cannot be reached; its premise is
+  pinned by `FuzzA066CampaignQuantityIsComparable` (60 s, 2.5M execs, 0 failures).
+
+### (1) Row mutation — `mutate_rows_6_1.py`, 63 rows at `a22a2c05`
+
+Result: 52 CAUGHT, 3 CAUGHT(full), **8 SURVIVED** (`btm-rows-ledger.tsv`). Every survivor was closed
+(`btm-rows-dispositions.tsv`); the re-run at the current tip is recorded below.
+
+| Survivor | Why it survived | Closed by |
+|---|---|---|
+| commitFresh B15 (owner-reuse checks) | no issuance-path scale-in test | `bfaeb2bf` behavior test, 3/3 |
+| Revalidate B15 (dimension loop) | three guards shadow each other (state digest / loop / `len(seen)`) | `4e5edffd` layer pin + behavior |
+| fillTransition B10 (limit min) | no test with a tighter decision | `306bc872` |
+| fillTransition B18 (per-decision count) | four guards shadow each other (state digest / per-decision / total / `validateFillBuckets`) | `1b46dc40` layer pin |
+| ApplyFill B2 (`validateFillBuckets`) | later parse guards refused the same inputs under another reason | `53cef064`, reason field pinned |
+| ApplyFill B5 (B6 loop) | B6/B32 pair; layer pin v1 accepted a head `continue` | `53cef064`, pin v2 |
+| ApplyFill B25 (evidence copy) | write-only field (no production reader: `git grep` shows assignments and clone only) | `7023779d`, return contract |
+| ApplyFill B36 (first-apply overflow) | `"<nil>"` stored, then refused as `overage_filled` | `e5ad6f9b`, reason field pinned |
+
+Re-run of the 8 survivors at the tip (`btm-rows-recheck-ledger.tsv`): 6 CAUGHT at `e5ad6f9b`. Revalidate B15 and
+fillTransition B18 still SURVIVED, because the row mutant injects `if true { continue }` at the loop head and both
+layer pins only looked for the guard somewhere in the loop. Both pins now require the refusal to be the loop's first
+statement and forbid branch statements in the loop. Recheck 2: 2/2 CAUGHT.
+
+Pins were added only where a mutation showed shadowing (Manager rule). Two of my own pins were first too weak and
+were fixed before being counted:
+
+- the `commitFresh` B2 straight-path pin;
+- the fill bucket-count pin, which v1 let `false &&` through.
+
+### (2) Not-covered rows (158 at the 5.7 measurement)
+
+- **81** are storage exits; the structural test above covers them.
+- **Tested now:**
+  - ApplyFill B4, B6, B13, B15, B17, B18, B22, B23, B24, B34, B38, and recomputeOverageLatches B5, B7, B8 —
+    `47b48ae4`;
+  - fillTransition B12, and Revalidate B3/B4 (B3 is a backstop whose premise `splitQFinalPolicyVersion("")` is
+    pinned) — `306bc872`;
+  - CRA B1, CRA B19, fresh B13 — `9ba1c783`;
+  - Revalidate B16/B17 — `4e5edffd` (layered);
+  - fillTransition B19 — `1b46dc40` (layered);
+  - submit **B41** (a066 `a37d97f5`) — `4773eb56`.
+- **Declared backstops (behavior test plus AST pin):**
+  - fresh B2, behind `recoverQFinalIssueReplayTx` (same predicate, called first on the straight path by both
+    callers);
+  - ApplyFill B32, behind B6.
+- **Unreachable, with the scope walked:**
+  - ApplyFill B21/B27/B29/B30 and recomputeOverageLatches B2/B3/B4/B10: `validateFillBuckets`
+    (`fill.go:279-307`) parses limit/held/filled/overage of every bucket and every reserved amount on entry. The
+    bucket and reserved key sets are equal (equal length, containment, no duplicate dimension).
+    `recomputeOverageLatches` has 2 callers (`fill.go:189`, `:272`, per `git grep internal/`), both after
+    validation, and the values written in between are `big.Int.String()`.
+  - fresh B4: both callers require `ExistingReservationID == soleReservationID(reserve.Reservations)`
+    (`risk_bucket_issuance.go:97-98`, `strategy_first_leg_atomic.go:279-280`), and `reserveRows` inserts that row in
+    the same transaction before `commitFreshRiskBucketAdmissionTx`.
+  - CRA B27: the owner's reservation keys are written only by CRA/insertFresh after the identity check, and the
+    state digest (a CRA scale-in precondition) comes before it. Backstop, not pinned: no mutation showed shadowing.
+  - fillTransition B6: the CHECK on `bucket_dimension` (`risk_bucket.go:682`).
+  - fillTransition B8: `UNIQUE(decision_id,bucket_dimension)` (`:685`), and the key includes the dimension.
+  - fillTransition B27: `RegisterRiskBucketOrder` refuses the collision first
+    (`TestRiskBucketOrderRegistrationRejectsBrokerOrderIDCollisionAcrossOwnerDecisions`).
+  - fillTransition B32: fill rows are joined to this owner's orders, and `orderKeys` holds all of them.
+  - fillTransition B13–B15, B36: stored minor strings are written only by journal code from `big.Int.String()`.
+    Corruption becomes a semantic error, and the fill path latches instead of rejecting.
+  - fillTransition B39: registration requires the five-dimension authority (orderAuthority B7).
+  - orderAuthority B9: implied once B7 passes (`byDimension ⊆ required`, else refused at scan, and equal length).
+  - Revalidate B2: `ParsePreimage` reads back the journal's own canonical preimage (written by `insertDecisionRow`).
+  - JSON-digest errors — CRA B3/B32/B36, fresh B19/B21, insertFresh B3, orderAuthority B10: they marshal
+    structs of string, integer, map and time fields. The times are validated fresh (year in range), so
+    `json.Marshal` cannot fail.
+- **Not an a066 branch** — owner commit from `git log --full-history -S'<condition text>'`; for generic
+  `if err != nil` lines, from `git blame -w -M -C`, which is move/copy aware:
+  - gateway.submit B2, B3, B5, B16, B27, B39, B42, B48, B52 — owner `8022f578`;
+  - B30 — `9dfbfd03`; B32 — `658d4b0a`; B54 — `122985d9`; B6 — `d295555a`;
+  - loadProductionRiskEntries B1, B2, B3, B6, B11, B12, B13 — `8022f578`;
+  - RecordFill B10, B13 — `c93f5f4a`.
+
+### 6.2 — exit paths (`mutate_5_6_1.py --set 6.2`, `mutation-6.2/exit-ledger.tsv`): 4/4 CAUGHT
+
+- X01: risk-reducing decisions go through bucket authority.
+- X02: a 6 s wait on the risk-reducing path (stand-in for an evidence/FX wait); the 5 s deadline bites.
+- X03: reconcile entry blocked by the lock.
+- X04: fill detection blocked by the lock.
+
+The structural fact is `checkReservation`'s non-raising early return (`gateway.go:890`). X01 removes it.
+
+### Residuals added in this lot
+
+- **Strategy-path diagnosis flattening.** Every `call()` error on the strategy path becomes
+  `ReasonStrategyDispatchFenced` (`gateway.go:715/720`, owner `8022f578`). The `entry_loss_lock_active` cause
+  survives only in Detail. This is the same family as the worker-wide latch residual, and joins the follow-up batch
+  of the activation-wiring lot (Manager 2026-09-28).
+- **Bundle correction.** `readProductionRiskUsage` and `aggregateProductionRiskUsage` were **not** deleted in 5.6.1
+  (they are at `production_snapshot_authority.go:450/473` with new signatures). The earlier "retire" was withdrawn;
+  they are refresh targets in 6.4.

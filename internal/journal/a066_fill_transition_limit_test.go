@@ -168,7 +168,11 @@ func TestA066RevalidateDimensionGuardsAreLayered(t *testing.T) {
 		if !ok || !callsAnywhere(rng.X, "RequiredDimensionOrder") && !selectorCall(rng.X, "RequiredDimensionOrder") {
 			continue
 		}
-		for _, inner := range rng.Body.List {
+		// 루프는 모든 차원을 걸어야 함: 첫 문장이 누락-거절 if 이고 본문에 분기문(continue 등)이 없어야 함.
+		if hasBranchStmtJ(rng.Body) || len(rng.Body.List) == 0 {
+			continue
+		}
+		for _, inner := range rng.Body.List[:1] {
 			if ifs, ok := inner.(*ast.IfStmt); ok {
 				if un, ok := ifs.Cond.(*ast.UnaryExpr); ok && un.Op == token.NOT {
 					if idx, ok := un.X.(*ast.IndexExpr); ok {
@@ -217,4 +221,19 @@ func selectorCall(e ast.Expr, name string) bool {
 	}
 	sel, ok := call.Fun.(*ast.SelectorExpr)
 	return ok && sel.Sel.Name == name
+}
+
+// hasBranchStmtJ 는 블록 안에 continue·break·goto 가 있는지 봄(중첩 함수 리터럴 제외).
+func hasBranchStmtJ(block *ast.BlockStmt) bool {
+	found := false
+	ast.Inspect(block, func(n ast.Node) bool {
+		if _, ok := n.(*ast.FuncLit); ok {
+			return false
+		}
+		if _, ok := n.(*ast.BranchStmt); ok {
+			found = true
+		}
+		return !found
+	})
+	return found
 }
