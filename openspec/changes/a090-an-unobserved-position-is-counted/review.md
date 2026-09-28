@@ -62,3 +62,8 @@ Manager 판정(2026-09-29): 2판 먼저 — F1~F4 전부, F2 는 enqueue-only(a0
 | F10 (P2) | 격리 포지션은 관측됨 | design D1 표 · tasks 2.14 |
 | F11~F16 (P3) | 인용 `:40-41` 정정 · 하네스가 머리줄을 쓰고 커밋의 `ast.json` 을 읽음(eac13df1) · FLM 에 `continue` 유도 방식 · tracer 도달 불가 · B7 의 현실 원인(클라이언트 시한 15초 = 임대 15초) · 게이트 신선도는 범위 밖 명시 | proposal · 하네스 · FLM · design D1·D6 · proposal Non-goals |
 
+### Manager 판정 (2026-09-29) — base 재고정 시점
+
+- `check_analysis.py --change a090-…` rc 1(깨끗한 worktree, 39dd5d38) — **원인 = 이웃 a066 v35 착지(journal 함수 4개가 base `d3bd1843` 뒤 창에 듦) · 자기 Go 0
+  · 재고정은 구현 로트의 첫 행위(WORKFLOW 사람 절차·영수증)**. 설계 단계 rc 1 은 게이트 요건이 아니다 — 지금 고정하면 a066 착지로 곧 낡는다(a125 (나) 원리).
+

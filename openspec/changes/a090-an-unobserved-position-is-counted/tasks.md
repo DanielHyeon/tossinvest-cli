@@ -10,7 +10,7 @@
 - [x] 0.2 `openspec validate a090-an-unobserved-position-is-counted --strict --no-interactive`
 - [x] 0.3 **AST 산출물이 문서보다 먼저** — `ExitObserver.ObserveOnce`(분기 8 · return 5), FLM · BTM · 진입 실측
       (`analysis/harness/observeonce_entry.sh` → `observeonce.blocks`, commit `b0a202b8`, 깨끗한 detached worktree)
-- [ ] 0.4 `check_analysis.py --change a090-…` 통과
+- [ ] 0.4 `check_analysis.py --change a090-…` 통과 — **설계 단계 rc 1(이웃 a066 v35 착지, 자기 Go 0)**. 구현 로트 첫 행위로 사람 승인 base 재고정(영수증) 뒤 통과(Manager 2026-09-29)
 - [x] 0.5 **proposal-freeze 리뷰 — 적대 보이스 1**(Claude, 구현과 분리된 컨텍스트) → `review.md` 「1라운드」 — **REJECT**(P1 4 · P2 6 · P3 6)
 - [x] 0.5a **2판 반영**(Manager 2026-09-29: F1~F4 전부, F2 enqueue-only) — design 전면 개정 · `workingSet` AST·FLM·BTM(분기 22) · spec delta 개정 ·
       tasks §2 개정 · 진입 하네스 두 번들. **판정 아님**

@@ -63,10 +63,11 @@ recorded in the outbox" 로 **진입만** 잠근다(`internal/obs/notifier.go:26
 실패하면 `BlockUnlessClearedSince(ReasonAlertUndelivered, epoch, detail)` 로 진입을 잠그고, 알림 내용이 없는 구조화 로그 한 줄(`EventAlertUndelivered`,
 사유만)을 쓴다. **관측 루프는 계속 돈다**(D−4.2-2 유지 — 루프를 세우지 않는다). 청산은 건드리지 않는다.
 
-- **범위: 계정 단위다 — Manager 처분의 「그 종목만」 은 7판에서 쓰지 못했다(Q7-1).** 종목 단위 래치 `BlockSymbol`(`internal/execgw/symbolgate.go:64`)에는
-  해제 세대가 없고(원칙 E 의 비교가 불가), 그것을 푸는 생산 호출자는 대사 경로 하나뿐이다(`internal/reconcile/mismatch.go:1482`) — 적재 실패 래치를 풀
-  경로가 코드에 없다. 계정 단위는 기존 생산자 래치와 **같은 사유·같은 해제**(운영자 승인으로 미전달 0 이 되면 `Clear`, `notifier.go:874-876`)를 쓴다.
-  종목 단위로 좁히려면 종목 래치의 해제 세대와 해제 경로를 새로 만들어야 한다 — 코드 영수증이 없어 **비우고 묻는다**.
+- **범위: 계정 단위 — Manager 승인(Q7-1, 2026-09-29), 편의가 아니라 정확한 범위다.** 적재 실패는 **원장의 알림 쓰기 자체가 실패**하는 상태라 고장의
+  범위가 종목이 아니라 계정(저널)이다 — 종목 한정은 오히려 **과소 차단**이다. 해제는 원칙 E 와 기존 생산자 래치와 같은 경로(운영자 승인으로 미전달 0 이
+  되면 `Clear`, `notifier.go:874-876`)를 유지한다. 종목 단위로 좁히려면 새 설계가 필요하다는 영수증 둘: 종목 래치 `BlockSymbol`
+  (`internal/execgw/symbolgate.go:64`)에는 해제 세대가 없어 원칙 E 비교가 불가하고, 그것을 푸는 생산 호출자는 대사 경로 하나뿐이다
+  (`internal/reconcile/mismatch.go:1482`).
 
 ### D−5.4 R6-4 — 형태 B 는 무기한 증거 대기다 (시간 상한 주장 삭제)
 

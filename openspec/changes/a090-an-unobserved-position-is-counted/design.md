@@ -75,7 +75,7 @@ position—including an emergency breach—is recorded/armed/submitted before al
   보내지 않는다 — **같은 연속은 한 번**, 새 연속은 새 행(F5 해소). 재시작 뒤 같은 포지션은 `seenAt` 이 새로 찍혀 **새 에피소드**가 된다(D2 한계와 짝) — a094 의 park attempt(원장 행이라 재시작에도 같은 에피소드)와 **다른 점**이며, 원장에 판정 시각의 믿을 만한 기록이 없어서다(D2).
 - **적재 실패(a094 D−5.3 과 같은 형태)**: 적재 전에 `ClearEpoch(ReasonAlertUndelivered)` 를 읽고, `EnqueueAlert` 가 실패하면
   `o.opts.Retrier.Gate.BlockUnlessClearedSince(ReasonAlertUndelivered, epoch, detail)`(`execgw/retry.go:571`; `Retrier.Gate` 필드 `:310` — 새 배선 없음)
-  로 진입을 잠그고 내용 없는 로그 한 줄. 관측 루프·청산 무영향. 범위(계정 단위)는 a094 Q7-1 과 같이 따른다.
+  로 진입을 잠그고 내용 없는 로그 한 줄. 관측 루프·청산 무영향. 범위는 **계정 단위**다 — 적재 실패는 원장의 알림 쓰기 자체의 실패라 고장 범위가 계정(저널)이다(a094 Q7-1 Manager 승인과 같은 근거).
 - **필드**: `account`, `symbol`, `position_id`, `unobserved_seconds`, `cause`. 본문이 **포지션을 명명**해 계정 두절 경보와 구별된다(F6). 계좌번호·잔고·가격 없음.
 - **연속당 1회**. 판정에 닿으면 연속이 끝난다.
 
