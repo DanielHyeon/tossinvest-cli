@@ -187,3 +187,8 @@ Manager 처분(2026-09-29). **설계 freeze 는 a092 와 독립, 구현은 a092 
 | R3-8 | tracer B7 도달 가능 · "여덟째 `o.alert` 호출자" 정정 | tasks 1.0 · ObserveOnce FLM · codegraph-baseline |
 | 부수 | 세대 읽은 뒤·적용 전 해제 RED 추가 | tasks 2.3g ⑦ |
 
+### a094 7라운드 R7-4 교차 (Manager 2026-09-29)
+
+- a092 재무장 요구의 대상 = a092 D0.3h 의 창 기반 exit 기록자, a090 의 에피소드 key · 창 0 기록자는 대상 밖(정합 해석, a092 델타 `:44` · D0.3h 4 표 인용). → design D14.
+  a090 codex 4라운드(좁은 확인)는 이 문언이 a090·a094 두 change 에 착지한 뒤 돈다.
+
