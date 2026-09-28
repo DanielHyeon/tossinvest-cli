@@ -208,22 +208,15 @@ change 의 커밋이었다.
 `revision: current` 증거의 source hash 대조 대상은 비교 대상 쪽 끝과 같아야 한다
 (SHALL). 착지 지점이 기록된 change 의 증거를 워킹트리와 대조해서는 안 된다(SHALL NOT).
 
-명시적 legacy 실행 기준선 이관 경로의 비교 대상 쪽 끝은 그 이관 기록이 감사한
-`source_commit` 이어야 한다(SHALL). 그 경로에서 착지 지점 기록을 받아들여서는 안 된다
-(SHALL NOT) — 이관 예외의 정당성은 판정에 들어가는 입력을 빠짐없이 열거하고 digest 로
-묶은 데 있는데, 착지 지점 기록은 그 열거 어디에도 없으면서 비교 대상을 고르기 때문이다.
-비교 대상을 이관 기록이 아닌 워킹트리로 삼아서도 안 된다(SHALL NOT).
-
 완료 게이트는 아카이브된 change 의 함수 분석도 그 id 로 재검사할 수 있어야 한다(SHALL).
-실행 기준선 이관 예외도 같다. 이관의 신원은 디렉터리 이름이 아니라 완료 게이트가 요청받은
-id 로 판정해야 하고(SHALL), 이관 기록이 적은 옮기기 전 증거 경로는 지금 자리에서 같은
-digest 로 읽어야 한다(SHALL). 다른 id 의 디렉터리에 복사된 이관 기록이 그 id 를 이관 대상으로
-만들어서는 안 된다(SHALL NOT). 해독할 수 없는 착지 지점 기록도 기록이며, 그것 때문에 완료
-게이트가 판정 없이 중단되어서는 안 된다(SHALL NOT).
+해독할 수 없는 착지 지점 기록도 기록이며, 그것 때문에 완료 게이트가 판정 없이 중단되어서는
+안 된다(SHALL NOT).
 
-아래 명시적 legacy 실행 기준선 이관의 모든 조건을 만족하는 a063만 고정된 실행
-기준 E로 판정할 수 있으며, 원래 구현 전 증거 규칙을 소급 충족했다고 보고해서는
-안 된다(SHALL NOT). 원래 계획 기준 P는 계속 보존해야 한다(SHALL).
+비교 기준은 모든 change 에서 `base-commit.txt` 의 커밋 하나여야 한다(SHALL). 그 값을 옮기는 것은 `docs/WORKFLOW.md`
+「사람 승인 base 재고정」 절차(귀속 실측 · 승인 기록 · 단독 커밋)로만 하며, 게이트는 커밋된 값을 쓴다. 어떤 change 도
+이관 기록(`execution-baseline.json`)이나 환경 변수로 다른 기준을 고를 수 없다(SHALL NOT) —
+`SDD_BASE_REF` 는 그 커밋으로 풀릴 때만 받는다. 과거의 a063 전용 실행 기준선 이관 예외는
+폐기되었고(a125), 그 기록이 저장소에 남아 있어도 게이트는 읽지 않는다.
 
 #### Scenario: 보조 문맥과 현재 HEAD 충돌
 - **WHEN** CodeGraphContext 또는 기억 결과가 현재 HEAD와 다르면
@@ -292,9 +285,9 @@ digest 로 읽어야 한다(SHALL). 다른 id 의 디렉터리에 복사된 이�
 - **WHEN** 바뀐 `*.go` 의 경로에 공백이나 U+2028 · U+2029 · U+0085 가 들어 있으면
 - **THEN** gate 는 그 파일의 수정 함수 요구를 그대로 세고, diff 의 줄 경계는 `\n` 하나로만 읽는다
 
-#### Scenario: 실행 기준선 이관 기록이 없는 변경
-- **WHEN** 변경에 execution-baseline 이관 기록이 없으면
-- **THEN** 기존 불변 기준과 전체 수정 함수 분석 규칙을 그대로 적용한다
+#### Scenario: 실행 기준선 이관 기록이 남은 변경
+- **WHEN** 변경 디렉터리에 `execution-baseline.json` 이 있으면(a063 의 옛 기록과 같은 모양이어도)
+- **THEN** 게이트는 그 기록을 읽지 않고 `base-commit.txt` 기준과 전체 수정 함수 분석 규칙을 그대로 적용한다
 
 #### Scenario: 병합 뒤에 닫히는 배포 후 실측 태스크
 
@@ -520,36 +513,11 @@ digest 로 읽어야 한다(SHALL). 다른 id 의 디렉터리에 복사된 이�
 - **WHEN** 증거를 빌리는 change 와 빌려주는 change 가 둘 다 착지 지점을 기록하지 않으면
 - **THEN** 5단계는 그 이유로 새 오류를 더하지 않고 워킹트리를 대상으로 판정한다
 
-#### Scenario: 실행 기준선 이관 경로의 비교 대상
+#### Scenario: 이관 예외가 없는 a063
 
-- **WHEN** 실행 기준선 이관 예외로 5단계를 실행하면
-- **THEN** 비교 대상은 워킹트리가 아니라 이관 기록이 감사한 `source_commit` 이고,
-  출력이 그 값과 그것을 고정한 것이 이관 감사임을 이름으로 말한다
-
-#### Scenario: 이관 경로에 있는 착지 지점 기록
-
-- **WHEN** 실행 기준선 이관 예외를 쓰는 change 에 착지 지점 기록이 있으면
-- **THEN** 5단계는 통과하지 않고, 이관 경로가 그 기록을 받지 않는다는 것과 창의 끝이
-  감사된 source commit 이라는 것을 이름으로 말한다
-
-#### Scenario: 이관 경로의 해독할 수 없는 착지 지점 기록
-
-- **WHEN** 실행 기준선 이관 예외를 쓰는 change 에 UTF-8 로 읽을 수 없는 착지 지점 기록이
-  있으면
-- **THEN** 5단계는 도구 오류로 중단되지 않고, 이관 경로가 그 기록을 받지 않는다는 것을
-  이름으로 말한다
-
-#### Scenario: 아카이브된 이관 change 의 재검사
-
-- **WHEN** 실행 기준선 이관 예외를 쓰는 change 를 아카이브하고 그 id 로 다시 판정하면
-- **THEN** 이관 예외로 판정하고, 비교 대상 쪽 끝은 아카이브 전과 같은 감사된 source
-  commit 이다
-
-#### Scenario: 다른 id 로 복사한 이관 기록
-
-- **WHEN** 이관 예외를 쓰는 change 의 디렉터리를 다른 id 로 통째로 복사하고 그 id 로
-  판정하면
-- **THEN** 5단계는 그 id 에 이관 예외를 적용하지 않고 그 사유를 이름으로 말한다
+- **WHEN** a063 을 그 id 로 5단계에 판정하면
+- **THEN** 비교 기준은 그 change 의 `base-commit.txt` 이고, 착지 지점 기록 규칙과 워킹트리 대상 규칙이
+  다른 change 와 똑같이 적용되며, 출력에 이관·감사 라벨이 없다
 
 ### Requirement: SDD 도구의 실재와 동기 검증
 에이전트 규칙에 등재된 SDD 도구와 경로는 저장소의 `make sdd-check`로 검증 가능해야 한다(SHALL).
@@ -684,112 +652,6 @@ PM 검증기는 신규 change의 3자리 번호 중복, 빈 intent, 대문자·u
 - **WHEN** 서로 다른 두 active change가 같은 `a047` 번호를 사용한다
 - **THEN** 검증은 두 경로를 모두 지목하며 실패한다
 
-### Requirement: 고정된 legacy 실행 기준선 예외
-The checker SHALL permit execution-baseline adoption only for
-`a063-align-attestation-renewal-profile` with planning base
-`da80ce31b6a1ab5d443016768f970a82bab102db` and execution base
-`e65e394bf84b3c6e4559a219e816af96d341d75d`. It SHALL preserve the planning
-base file, verify its regular committed bytes contain the full fixed P, and reject another change, base pair, malformed record or moving
-snapshot reference. Invalid adoption SHALL fail closed rather than fall back.
-The result SHALL be labeled `execution-baseline adoption exception` with
-`retrospective-exception` provenance. The environment SHALL NOT select a base:
-`SDD_BASE_REF` SHALL match only the valid record-derived effective base.
-
-#### Scenario: 나중 기준으로 구현 변경을 숨기려는 시도
-- **WHEN** 이관 기록이 허용된 E보다 뒤의 커밋이나 다른 변경 ID를 지정하면
-- **THEN** 검사는 실패하고 원래 P를 덮어쓰거나 환경 변수로 우회하지 않는다
-
-#### Scenario: 유효한 예외의 CI 기준
-- **WHEN** 유효한 이관 기록의 E와 다른 커밋으로 SDD_BASE_REF를 설정하면
-- **THEN** 검사는 기준 불일치로 실패한다
-
-### Requirement: 이관 이력의 전수 회계와 독립 검토
-An adoption SHALL retain a strict versioned ledger containing the complete
-topologically ordered P..E reachable commit range, each commit's full parent
-list and path/status differences against every parent (including merge parents
-and root changes), and the net P-to-E modified-existing Go function
-inventory, and the complete E..S Go path/function inventory. The validator SHALL
-recompute these from immutable Git objects and reject missing, duplicate or
-altered entries, ambiguous JSON, invalid schemas or digest mismatches. The
-inherited range SHALL be identified as committed historical work with any
-missing original analysis still outstanding; it SHALL NOT be labeled completed
-FLM or a waiver. A committed adoption record SHALL bind the ledger and two
-distinct, actually performed adversarial and subsequent gstack review documents
-by repository-contained regular paths and SHA-256. The draft generator SHALL NOT
-create approval claims, overwrite output or change a baseline or checkout.
-
-#### Scenario: 과거 함수 한 개가 원장에서 빠짐
-- **WHEN** 기록의 요약 건수와 해시가 있더라도 재계산한 P..E 함수가 원장에 없으면
-- **THEN** 검사는 이력 누락으로 실패한다
-
-#### Scenario: 소급 준수 주장
-- **WHEN** 과거 누락 분석을 완료 또는 면제로 표시하거나 구현 전 작성된 증거라고 주장하면
-- **THEN** 해당 이관 기록은 유효한 예외 증거로 인정되지 않는다
-
-#### Scenario: 검토 자료 교체
-- **WHEN** 원장이나 검토 문서가 지정 해시 또는 커밋된 내용과 다르거나 심볼릭 링크이면
-- **THEN** 검사는 자료 교체로 실패한다
-
-### Requirement: 커밋된 소스 스냅샷과 전체 함수 의무
-Adoption acceptance SHALL run at clean detached HEAD H with full-commit source
-snapshot S and verified P <= E <= S < H ancestry. H SHALL differ from S only
-within `openspec/` and `docs/pm/`; staged or unstaged tracked changes SHALL fail.
-All tracked Go paths, modes and bytes SHALL match S, and additional untracked or
-ignored Go files and symlink substitutions SHALL fail. Other untracked/ignored
-files SHALL also fail except fixed generated SDD/index/cache data locations
-specified by the reviewed design. Such exceptions SHALL be regular,
-non-executable, non-source files and SHALL NOT be actual Go/test/embed inputs
-reported by successful untagged and `tossos_testseams` Go package enumeration;
-enumeration failure SHALL block adoption. E..S Go changes SHALL be
-limited to the a063 CLI soak, soak attestation/renewal diagnostic and console
-files enumerated in the reviewed design. Every modified-existing E..H function
-SHALL still satisfy the ordinary full bundle/hash/revision/branch/call/test
-checks, with a recomputed inventory matching E..S. This exception SHALL NOT
-waive operational evidence, other change tasks, full tests, or the final gate.
-
-#### Scenario: 검토 이후 소스 추가 또는 수정
-- **WHEN** H의 소스가 S와 다르거나 추적되지 않은 또는 ignored Go 파일이 존재하면
-- **THEN** 이관 검사는 실패하고 검토 스냅샷의 테스트를 현재 소스의 성공으로 사용하지 않는다
-
-#### Scenario: 실행 기준 이후 삭제된 기존 함수
-- **WHEN** E에 있던 Go 함수가 S에서 삭제되고 해당 base-revision 번들이 없으면
-- **THEN** 일반 함수 분석 검사가 실패한다
-
-#### Scenario: 소스 확장자가 아닌 빌드 입력을 숨김
-- **WHEN** 추적되지 않은 C/assembly/header 파일이나 embedded asset이 생기거나 허용 메타데이터 파일이 실제 Go 테스트 입력으로 사용되면
-- **THEN** 확장자나 ignore 규칙으로 면제하지 않고 이관 검사를 실패시킨다
-
-#### Scenario: 정상 SDD 인덱스가 존재함
-- **WHEN** 고정된 허용 위치에 실행 불가능한 일반 인덱스 데이터만 있고 실제 빌드 입력과 겹치지 않으면
-- **THEN** 그 생성 데이터 자체는 소스 오염으로 간주하지 않으며 다른 이관 조건은 모두 계속 검사한다
-
-#### Scenario: 이관 증거만 뒤에 기록
-- **WHEN** 소스 S 이후 원장과 검토 문서를 커밋한 깨끗한 detached H에서 모든 이관 조건과 함수 번들이 검증되면
-- **THEN** E를 비교 기준으로 사용할 수 있지만 a063의 남은 운영 및 최종 수용 조건은 계속 검사한다
-
-### Requirement: 이관 소스 밖의 명시적 SDD 인터프리터
-The SDD doctor SHALL support an optional `SDD_PYTHON` absolute external
-interpreter while preserving its existing local-venv behavior when the variable
-is absent. An explicit interpreter SHALL be outside the repository both by its
-path and resolved target, executable, and able to probe the repository-pinned
-TypeDB driver version. Invalid explicit values or failed/mismatched dependency
-probes SHALL fail without falling back to a local environment. An external
-interpreter symlink to another external executable MAY be used. This option
-SHALL NOT relax adoption source validation, choose an execution baseline or
-create a repository-local environment. The doctor SHALL report the selected
-interpreter and dependency result.
-
-#### Scenario: 이관 작업 공간에서 외부 도구 환경 사용
-- **WHEN** 소스 스냅샷 밖의 유효한 SDD_PYTHON으로 고정된 드라이버를 검사하면
-- **THEN** 저장소 안에 가상환경을 만들지 않고 의존성을 확인하며 이관 소스 검사를 그대로 적용한다
-
-#### Scenario: 잘못된 외부 인터프리터 지정
-- **WHEN** SDD_PYTHON이 비어 있거나 상대 경로, 저장소 내부 경로, 실행 불가능한 파일 또는 잘못된 드라이버 환경을 가리키면
-- **THEN** doctor는 실패하고 기존 로컬 가상환경으로 조용히 대체하지 않는다
-
-#### Scenario: 기존 일반 작업 공간
-- **WHEN** SDD_PYTHON을 지정하지 않으면
-
 ### Requirement: Full SDD 단계의 완전한 실행
 비자명 변경은 다음 Full SDD 순서를 준수해야 한다(MUST): 기억 회고, Story와 승인된 OpenSpec 계약, CodeGraph hard evidence,
 CodeGraphContext 보조 문맥, evidence reconciliation, 기존 함수 의존 시 Function Logic
@@ -828,4 +690,27 @@ generated tracker는 수동 편집되어서는 안 된다(MUST NOT).
 #### Scenario: archive된 change
 - **WHEN** Story의 change가 archive 아래로 이동하면
 - **THEN** generator는 Story 상태를 archived로 파생한다
+
+### Requirement: 저장소 밖의 명시적 SDD 인터프리터
+The SDD doctor SHALL support an optional `SDD_PYTHON` absolute external
+interpreter while preserving its existing local-venv behavior when the variable
+is absent. An explicit interpreter SHALL be outside the repository both by its
+path and resolved target, executable, and able to probe the repository-pinned
+TypeDB driver version. Invalid explicit values or failed/mismatched dependency
+probes SHALL fail without falling back to a local environment. An external
+interpreter symlink to another external executable MAY be used. This option
+SHALL NOT choose a comparison base or create a repository-local environment.
+The doctor SHALL report the selected interpreter and dependency result.
+
+#### Scenario: 저장소 밖의 도구 환경 사용
+- **WHEN** 저장소 밖의 유효한 SDD_PYTHON으로 고정된 드라이버를 검사하면
+- **THEN** 저장소 안에 가상환경을 만들지 않고 의존성을 확인한다
+
+#### Scenario: 잘못된 외부 인터프리터 지정
+- **WHEN** SDD_PYTHON이 비어 있거나 상대 경로, 저장소 내부 경로, 실행 불가능한 파일 또는 잘못된 드라이버 환경을 가리키면
+- **THEN** doctor는 실패하고 기존 로컬 가상환경으로 조용히 대체하지 않는다
+
+#### Scenario: 기존 일반 작업 공간
+- **WHEN** SDD_PYTHON을 지정하지 않으면
+- **THEN** doctor는 기존 로컬 가상환경 동작을 그대로 쓴다
 

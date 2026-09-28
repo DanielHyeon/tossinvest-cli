@@ -13,7 +13,7 @@
     - STORY-TOS-a121 — Reconcile stale verification artifacts from authoritative reads [in_progress] → `a121-reconcile-stale-verification-artifacts`
     - STORY-TOS-a122 — Keep the Function Logic Map gate answerable after a merge [archived] → `a122-the-logic-map-gate-outlives-a-merge`
     - STORY-TOS-a123 — An empty window is derived, not declared [archived] → `a123-an-empty-window-is-derived-not-declared`
-    - STORY-TOS-a125 — a063 is judged against its own base like every change [implemented] → `a125-the-a063-exception-retires`
+    - STORY-TOS-a125 — a063 is judged against its own base like every change [archived] → `a125-the-a063-exception-retires`
 - EPIC-TOS-005 — Secure delivery and engineering operations [active]
   - FEAT-TOS-007 — Secure remote access and signed releases [active]
     - STORY-TOS-031 — Enable trusted-network VPN console access [archived] → `enable-vpn-console-access`
