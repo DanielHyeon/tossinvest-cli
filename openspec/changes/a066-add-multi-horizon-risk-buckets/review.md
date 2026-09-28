@@ -1103,3 +1103,37 @@ The structural fact is `checkReservation`'s non-raising early return (`gateway.g
   from other changes' commits in the stacked window from base to worktree (the same artifact recorded in Wave 2A).
 - `make test` rc 0 (658 s) and `make vet` / `make validate` rc 0 were measured on the same commit in the main
   worktree (6.4 above).
+
+## 6.5 independent adversarial review (2026-09-28, final tree `f1094a62`)
+
+Four voices ran read-only against the final tree. Probes ran in throwaway copies, which are now deleted, and each
+voice checked that the repo state was unchanged afterwards.
+
+- **R1** — Claude `code-reviewer`: atomicity, monotonicity, owner races.
+- **R2** — Claude `code-security-auditor`: exit bypass and the lock.
+- **R3** — Claude `general-purpose`: the old-wave removals and whether anything loosens a limit.
+- **CX** — Codex (`gpt-6-astra`, challenge mode, read-only sandbox, about 2.4M tokens).
+
+No voice found a way for a066 to refuse, delay, or abort a stop, an emergency exit, a reduce-only cancel, a
+reconcile entry, or a SELL fill on a healthy journal. Probes confirmed this. The exception is the corruption-only
+fill abort in row 4. R3 found no a066 commit that loosens an existing limit.
+
+| # | Finding | Voices | Severity (max) | Proposed disposition |
+|---|---|---|---|---|
+| 1 | `RevalidateQFinalAdmission` does not re-check latches: owner, scope, and shared-bucket `Latched`. An already-issued q_final entry is submitted after its owner (resealed digest) or a shared bucket latched, while a fresh admission is refused. Probe-confirmed by R1 and R2. | CX1 · R1-2 · R2-1 | P1 | **Fix in this lot (proposed)**: add a latch check as the last step of revalidation, next to the lock check (the same "exposure is the state at submit time" rule as decision ⑤). Entry path only. |
+| 2 | `filled_minor` is never released. Every bucket becomes a lifetime cumulative cap, and released owners still count. The owner-lifecycle fixture hides this with `filled_minor='0'`. Probe-confirmed by R1. | CX7 · R1-1 | P1 (fails closed) | **Stop and report**: this is release semantics (design D5, "filled exposure attributed to the Position projection"). A user or Manager design decision. |
+| 3 | A shared bucket's limit is per-admission (each entering snapshot's own limit). Two manifests can declare different sector or strategy limits, and horizon limits come from separate KR and US manifests. The effective cap is then the largest one. Probe-confirmed by R1. | CX5 · R1-3 | P1/P2 | **Decision needed**: (a) at admission, cap by the smallest limit recorded on the bucket's existing reservations; or (b) upstream manifest validation fixes one limit per shared bucket value. The same family as the upstream policy-immutability residual. |
+| 4 | Missing state-snapshot seal: `verifyRiskBucketStateDigest` returns a raw `sql.ErrNoRows`, which is not classified as semantic, so the whole fill transaction aborts. R2 found a few more corruption-only raw returns (`riskBucketFillEventDigest`, `releaseRiskBucketOrderInTx` held read). | CX6 · R2-4 | P1 (CX) / P3 (R2) | **Fix in this lot (proposed)**: classify these reconstruction gaps as semantic, so they latch and the fill commits (the 2.7 contract: fill detection is never blocked). |
+| 5 | Owners that never filled, and strategy-dispatch releases, which break the state digest because they don't reseal: the owner can never be released, and the symbol stays locked. | CX4 · R1-4 | P1/P2 (latent) | Residual → activation-wiring lot. Owner release is unreachable in production today. |
+| 6 | Production `PolicyVersion` is unique per collection, so same-owner scale-in always fails "scale-in bucket identity". The fresh-scale-in control uses a fixed version. | CX3 · R1-6 | P1/P3 (fails closed) | Residual → activation lot. The control test gets a note: its fixed version is not a production shape. |
+| 7 | Production snapshot reader pinned to schema 27. | CX2 | — | Already a named residual (5.6.1). |
+| 8 | A late fill on a released owner does not latch the shared buckets. | R1-5 | P2 (latent) | Residual → activation lot (owner release). |
+| 9 | Reconcile: `EnterReconcile` for a global row fails (v24 trigger) when a market-scoped row is active, and `Tracker.persist` stops at the first error. The legacy writer's dedup ignores `scope_market`. | R2-2 · R3-1 | P2/P3 (latent) | Residual → activation lot. The only production writer of market-scoped rows needs owner release. |
+| 10 | The non-strategy q_final path has no production order registration. | R1-7 | P3 (latent) | Residual → the lot that wires it. |
+| 11 | The non-owned-fill latch matches order id without side or day (a conservative false positive). | R2-3 | P3 | Record only. |
+| 12 | The strategy path flattens the loss-lock reason (Detail keeps it; nonce spent; no retry to send). | R2-5 | P3 | Already a residual (activation-lot follow-up). |
+| 13 | `official.New` uses a private transport, identical to `http.DefaultTransport`. That escapes `testenv.InstallGuard`, which has 0 callers. | R3-2 | P3 (latent) | Record only (not a066 code risk). |
+| 14 | Stale comment `symbolgate.go:180`; market-scoped rows cannot be released by production callers (they over-block). | R3-3 | P3 | Record only. |
+
+Outside a066: Amend's `raisesExposure` ignores side (`gateway.go:447`, R2) — recorded for its owner. `8022f578`
+removed the a090 mixed-currency refusal, replaced by account-base FX, and does not loosen anything (R3).
