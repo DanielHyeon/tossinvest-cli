@@ -1,0 +1,7 @@
+TREE	HEAD 1b46dc40	uncommitted: riskbucket a066_fill_branch_gaps_test.go (+shape test), a066_fill_target_held_layering_test.go (v2)
+ORIGIN	BTM row mutations applyfill B2 if@108 and B5 range@115 SURVIVED (mutrows run)
+CONTROL	GREEN	ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	0.004s
+B2 validateFillBuckets skipped	CAUGHT	TestA066ApplyFillValidatesBucketShapeBeforeAnyArithmetic
+CONTROL(layer v2)	GREEN	ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	0.004s
+B5 early loop skips every key (continue at head)	CAUGHT	TestA066ApplyFillTargetHeldGuardsAreLayered
+NOTE	layer pin v1 accepted a `continue` injected at the loop head (row B5 survived); v2 requires the refusal to be the first statement and no branch statement in the loop

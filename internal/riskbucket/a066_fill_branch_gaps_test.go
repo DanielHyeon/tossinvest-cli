@@ -8,6 +8,7 @@ import (
 	"errors"
 	"math/big"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -182,5 +183,57 @@ func TestA066ApplyFillHeldDeductionIsCappedAtHeldAndLatchesOverage(t *testing.T)
 	}
 	if !next.OwnerLatches[LatchRiskOverage] {
 		t.Fatal("owner RISK_OVERAGE latch not set")
+	}
+}
+
+// TestA066ApplyFillValidatesBucketShapeBeforeAnyArithmetic 는 ApplyFill B2(validateFillBuckets)가 저장 상태·예약의 모양을
+// **산술 전에** 거절함을 사유 칸으로 고정함. BTM 행 변이에서 B2 를 꺼도 초록이었음 — 뒤의 해석 가드(overage_limit 등)가
+// 같은 입력을 다른 사유로 막았기 때문. 사유 칸이 validateFillBuckets 의 것이어야 통과함.
+func TestA066ApplyFillValidatesBucketShapeBeforeAnyArithmetic(t *testing.T) {
+	anyKey := func(m map[BucketKey]string) BucketKey {
+		for key := range m {
+			return key
+		}
+		return BucketKey{}
+	}
+	for _, tc := range []struct {
+		name, reason string
+		corrupt      func(*FillState, *FillEvent)
+	}{
+		{"bucket count", "bucket_count", func(s *FillState, e *FillEvent) { delete(s.Buckets, anyKey(e.ReservedMinor)) }},
+		{"reservation outside the state", "reservation_bucket", func(s *FillState, e *FillEvent) {
+			key := anyKey(e.ReservedMinor)
+			amount := e.ReservedMinor[key]
+			delete(e.ReservedMinor, key)
+			key.Value += "-other"
+			e.ReservedMinor[key] = amount
+		}},
+		{"unparseable stored limit", "", func(s *FillState, e *FillEvent) {
+			key := anyKey(e.ReservedMinor)
+			usage := s.Buckets[key]
+			usage.LimitMinor = "corrupt"
+			s.Buckets[key] = usage
+		}},
+	} {
+		state, event := fillFixture("100", "50")
+		tc.corrupt(&state, &event)
+		original := cloneFillStateForTest(state)
+		next, _, err := ApplyFill(state, event)
+		var refused *RefusalError
+		if !errors.As(err, &refused) || refused.Code != RefusalFillEvidenceInconsistent {
+			t.Fatalf("%s: err=%v", tc.name, err)
+		}
+		want := tc.reason
+		if want == "" {
+			// 사유 칸은 "<차원>_limit" — 뒤의 recomputeOverageLatches 는 "overage_limit" 을 씀.
+			if !strings.HasSuffix(refused.Field, "_limit") || refused.Field == "overage_limit" {
+				t.Fatalf("%s: refused by %q, want validateFillBuckets' <dimension>_limit", tc.name, refused.Field)
+			}
+		} else if refused.Field != want {
+			t.Fatalf("%s: refused by %q, want %q", tc.name, refused.Field, want)
+		}
+		if !reflect.DeepEqual(next, original) {
+			t.Fatalf("%s: refused fill mutated state", tc.name)
+		}
 	}
 }

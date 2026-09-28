@@ -37,8 +37,9 @@ func TestA066ApplyFillTargetHeldGuardsAreLayered(t *testing.T) {
 		// ① 최상위 `if len(event.TargetHeldMinor) != 0 { … for key := range event.ReservedMinor { parse → return } }`.
 		if ifs, ok := stmt.(*ast.IfStmt); ok && exprString(ifs.Cond) == "len(event.TargetHeldMinor) != 0" && ifs.Init == nil {
 			for _, inner := range ifs.Body.List {
+				// "모든 key 를 걷는다": 루프 본문의 첫 문장이 해석-거절이고 본문 어디에도 continue/break 가 없어야 함.
 				if rng, ok := inner.(*ast.RangeStmt); ok && exprString(rng.X) == "event.ReservedMinor" && rng.Value == nil &&
-					refusesUnparsedTargetHeld(rng.Body) {
+					refusesUnparsedTargetHeld(rng.Body) && firstStmtRefuses(rng.Body) && !hasBranchStmt(rng.Body) {
 					early = i
 				}
 			}
@@ -134,6 +135,29 @@ func returnsInside(block *ast.BlockStmt) bool {
 	found := false
 	ast.Inspect(block, func(n ast.Node) bool {
 		if _, ok := n.(*ast.ReturnStmt); ok {
+			found = true
+		}
+		return !found
+	})
+	return found
+}
+
+// firstStmtRefuses 는 블록의 첫 문장이 target HELD 해석-거절 if 인지 봄.
+func firstStmtRefuses(block *ast.BlockStmt) bool {
+	if len(block.List) == 0 {
+		return false
+	}
+	return refusesUnparsedTargetHeld(&ast.BlockStmt{List: block.List[:1]})
+}
+
+// hasBranchStmt 는 블록 안에 continue·break·goto 가 있는지 봄(중첩 함수 리터럴 제외).
+func hasBranchStmt(block *ast.BlockStmt) bool {
+	found := false
+	ast.Inspect(block, func(n ast.Node) bool {
+		if _, ok := n.(*ast.FuncLit); ok {
+			return false
+		}
+		if _, ok := n.(*ast.BranchStmt); ok {
 			found = true
 		}
 		return !found
