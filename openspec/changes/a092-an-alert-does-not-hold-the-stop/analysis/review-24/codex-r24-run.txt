@@ -1,0 +1,8 @@
+start 2026-09-29 05:33:16 KST
+end 2026-09-29 05:35:14 KST
+rc 0, 인증 오류 없음
+codex-cli 0.154.0, model gpt-6-astra, codex exec -s read-only --ephemeral --skip-git-repo-check -C <tree>
+session 01a0e9b8-cc81-7372-8c98-54909c2384d3
+tokens used 98,113
+tree = git archive 9fa0bb90 (files 17502)
+prompt prompt-codex.md sha256 8718851aa5091d7c
