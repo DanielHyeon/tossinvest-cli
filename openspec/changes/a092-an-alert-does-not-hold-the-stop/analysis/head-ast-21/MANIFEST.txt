@@ -1,4 +1,4 @@
-HEAD 1a0027d23d677cae67068982d431159dc48fc2e4
+HEAD bce793a78284c67b8a3acb360689ef5a68d19047
 internal-obs-notifier--notifier.notify internal/obs/notifier.go:130-139 sha=0bc75668ff17 branches=1 returns=2 calls=4 defers=0
 internal-obs-notifier--notifier.notifycritical internal/obs/notifier.go:176-231 sha=0bc75668ff17 branches=4 returns=3 calls=11 defers=0
 internal-obs-notifier--notifier.claimanddeliver internal/obs/notifier.go:251-317 sha=0bc75668ff17 branches=7 returns=5 calls=15 defers=1
@@ -19,3 +19,22 @@ internal-journal-alert_claim--journal.releasealertclaim internal/journal/alert_c
 internal-journal-outbox--journal.claimalertfordelivery internal/journal/outbox.go:231-267 sha=ad74f6c9b295 branches=8 returns=9 calls=13 defers=1
 internal-execgw-retry--entrygate.block internal/execgw/retry.go:532-539 sha=a9612c2f3581 branches=1 returns=0 calls=2 defers=1
 internal-app-engine-gateway--buildgateway internal/app/engine/gateway.go:234-355 sha=cf4833845140 branches=5 returns=7 calls=20 defers=0
+internal-obs-mode--notifier.announceoperatingmode internal/obs/mode.go:49-74 sha=95d6a3417808 branches=2 returns=2 calls=7 defers=0
+internal-obs-notifier--notifier.deliver internal/obs/notifier.go:420-574 sha=0bc75668ff17 branches=27 returns=6 calls=30 defers=0
+internal-obs-notifier--notifier.publishbesteffort internal/obs/notifier.go:161-173 sha=0bc75668ff17 branches=2 returns=1 calls=6 defers=0
+internal-obs-notifier--notifier.escalate internal/obs/notifier.go:378-399 sha=0bc75668ff17 branches=4 returns=1 calls=5 defers=0
+internal-execgw-retry--retrier.query internal/execgw/retry.go:335-389 sha=a9612c2f3581 branches=15 returns=8 calls=16 defers=0
+internal-execgw-retry--retrier.escalatecredentialfailure internal/execgw/retry.go:409-419 sha=a9612c2f3581 branches=2 returns=3 calls=3 defers=0
+internal-execgw-retry--entrygate.clear internal/execgw/retry.go:543-555 sha=a9612c2f3581 branches=2 returns=0 calls=4 defers=1
+internal-execgw-retry--entrygate.clearepoch internal/execgw/retry.go:559-563 sha=a9612c2f3581 branches=0 returns=1 calls=2 defers=1
+internal-execgw-retry--entrygate.blockunlessclearedsince internal/execgw/retry.go:571-583 sha=a9612c2f3581 branches=2 returns=3 calls=2 defers=1
+internal-execgw-replay--gateway.parkalert internal/execgw/replay.go:534-559 sha=bb4e9308ac66 branches=2 returns=0 calls=5 defers=0
+internal-app-engine-alertdelivery--alertdeliverer.escalate internal/app/engine/alertdelivery.go:447-476 sha=5791a31af9d2 branches=5 returns=3 calls=9 defers=0
+internal-app-engine-exitwiring--context.exitobserver internal/app/engine/exitwiring.go:319-348 sha=43dcca8f37b7 branches=6 returns=4 calls=3 defers=0
+internal-app-engine-exitwiring--reconcilefloor.confirmedfloor internal/app/engine/exitwiring.go:192-258 sha=43dcca8f37b7 branches=11 returns=11 calls=19 defers=0
+internal-app-engine-exitloop--exitobserver.checkoutage internal/app/engine/exitloop.go:817-854 sha=522d5d81c499 branches=5 returns=4 calls=19 defers=0
+internal-app-engine-exitloop--exitobserver.observe internal/app/engine/exitloop.go:743-814 sha=522d5d81c499 branches=15 returns=6 calls=28 defers=0
+internal-journal-outbox--journal.enqueuealert internal/journal/outbox.go:131-154 sha=ad74f6c9b295 branches=4 returns=5 calls=7 defers=1
+internal-journal-outbox--journal.recordalerttx internal/journal/outbox.go:276-364 sha=ad74f6c9b295 branches=8 returns=7 calls=14 defers=0
+internal-journal-outbox--claimowed internal/journal/outbox.go:372-418 sha=ad74f6c9b295 branches=8 returns=7 calls=2 defers=0
+internal-journal-operating_mode--journal.currentoperatingmode internal/journal/operating_mode.go:553-562 sha=ed35ea67c26b branches=1 returns=2 calls=4 defers=0

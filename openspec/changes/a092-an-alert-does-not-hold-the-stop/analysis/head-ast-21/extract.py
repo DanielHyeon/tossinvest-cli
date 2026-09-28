@@ -40,6 +40,26 @@ TARGETS = [
     # 21판 Q3 답(2026-09-28) 뒤 추가 — 투영 배선 순서 · AC2 교체 근거
     ("internal/execgw/retry.go", "EntryGate.Block"),
     ("internal/app/engine/gateway.go", "buildGateway"),
+    # 22판(2026-09-29) — 21라운드 C1 측정 · C2 · C3 · C4 · C6 · C8 · C21 근거
+    ("internal/obs/mode.go", "Notifier.AnnounceOperatingMode"),
+    ("internal/obs/notifier.go", "Notifier.deliver"),
+    ("internal/obs/notifier.go", "Notifier.publishBestEffort"),
+    ("internal/obs/notifier.go", "Notifier.escalate"),
+    ("internal/execgw/retry.go", "Retrier.Query"),
+    ("internal/execgw/retry.go", "Retrier.escalateCredentialFailure"),
+    ("internal/execgw/retry.go", "EntryGate.Clear"),
+    ("internal/execgw/retry.go", "EntryGate.ClearEpoch"),
+    ("internal/execgw/retry.go", "EntryGate.BlockUnlessClearedSince"),
+    ("internal/execgw/replay.go", "Gateway.parkAlert"),
+    ("internal/app/engine/alertdelivery.go", "alertDeliverer.escalate"),
+    ("internal/app/engine/exitwiring.go", "Context.ExitObserver"),
+    ("internal/app/engine/exitwiring.go", "reconcileFloor.ConfirmedFloor"),
+    ("internal/app/engine/exitloop.go", "ExitObserver.checkOutage"),
+    ("internal/app/engine/exitloop.go", "ExitObserver.observe"),
+    ("internal/journal/outbox.go", "Journal.EnqueueAlert"),
+    ("internal/journal/outbox.go", "Journal.recordAlertTx"),
+    ("internal/journal/outbox.go", "claimOwed"),
+    ("internal/journal/operating_mode.go", "Journal.CurrentOperatingMode"),
 ]
 
 

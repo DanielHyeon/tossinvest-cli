@@ -2,8 +2,22 @@
 
 - **Feature**: `FEAT-TOS-009` — Exit line truth and position policy lifecycle
 - **Story**: `STORY-TOS-a092`
-- **Spec**: `exit-policy` (MODIFIED 1) · `engine-safety` (MODIFIED 1 · ADDED 1 — 21판, Q3 사용자 결정으로 범위 확정)
+- **Spec**: `exit-policy` (MODIFIED 1) · `engine-safety` (MODIFIED 2 · ADDED 1 — 22판: 정본 「배달 실행자의 정지가 …」 MODIFIED 추가)
 - **위험 등급**: **High-risk** (§0.3·§0.5 — 손절 경로의 동기 체류와 알림 배선)
+
+> **22판 (2026-09-29) — 21라운드(BLOCK 3/3) 처분 반영.** 상세는 design D0.3g, Manager 판정은 `review.md` §23.9.
+>
+> | 21라운드 | 22판 |
+> |---|---|
+> | C1 (P0, 3/3) exit goroutine의 **모드 전이 통지** 입구가 동기 `deliver`로 남음 | 측정: 공유 Retrier는 설정값만 가진 구조체이고 소비자별로 포인터를 대입받는다 → exit 쪽 주입 지점 셋(관측 두절 · 가격 조회 · 청산 상한 조회)에만 기록 전용 announcer. **Q1 안에서 닫힘** |
+> | C3 · C24 · C25 임차 창 · 반납 실패 · 트랜잭션 둘 | 기록 경로 **안 가 → 안 나**: 원장 공개 래퍼 `RecordAlert`(기존 `recordAlertTx`, 임차 없음, 재무장 유지) |
+> | C2 · C27 범위 밖 동기 발송자가 승인 뒤 다시 잠금 | 원칙 E를 동기 경로에도 — `BlockUnlessClearedSince` · 델타 「모든 발송자」 문단 |
+> | C4 · C5 · C20 현재 모드의 순서 둘 · AC2 문구 | 커밋 순서(rowid) 하나 · 적용 세대 역행 금지 · 상태 세대 규칙 |
+> | C6(Q4) | (c) + 순서 구조 핀(금지 형태 셋) + SHALL 정밀화 |
+> | C9 | 잔여 수용 + 보상 통제 인용 |
+> | C10 | 정본 「배달 실행자의 정지가 …」를 MODIFIED로(근거 ① 정정) |
+> | C14 · C12 · C13 · C15 · C17 | `tossctl engine mode-release` · 모드 전용 엔드포인트 · 완화 통지 · 복원 실패는 래치 + 기동 계속 · `alerts ack`에 `mutating` |
+> | Q6 | 기록만 |
 
 > **21판 (2026-09-28) — 축소.** 사용자 결정 20-1 ⓒ(원문 `review.md` §22.5.5 · design D0.3e 1번):
 > *"a092 21판은 「exit goroutine 에서 동기 deliver 제거」로 좁히고 a124 를 착수 조건으로 인용한다."*

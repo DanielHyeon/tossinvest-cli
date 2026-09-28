@@ -1,4 +1,4 @@
-# a092 tasks (21판)
+# a092 tasks (22판)
 
 base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 
@@ -9,6 +9,36 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 > **아래 「21. 21판 작업」이 21판의 작업 목록이다.** §6·§8·§9의 20판 이전 미체크 task는 21판 범위를 정하지 않는다 — 절 머리에
 > ⛔ 21판 표지를 달았다(20라운드 B-5·B-6(T): 그 절들의 좌표·FLM 수 주장은 21판에서 근거로 쓰지 않는다). 옛 task는 21.4가
 > 대체 여부를 하나씩 판정할 때까지 지우지 않는다.
+
+## 22. 22판 작업 (2026-09-29) — 21라운드 처분 반영 (design D0.3g · `review.md` §23.9)
+
+> 21.x 가운데 22판이 대체한 것: 21.3(b)(g)(h)(i)(임차 반납 갈래 — 기록 경로가 안 나로 바뀌어 사라짐) · 21.7(c)의 명령 이름(`mode relax` → `mode-release`)
+> · 21.7(e)(정본 근거 ① — 델타 MODIFIED로 해소). 나머지 21.x는 유효하다.
+
+- [x] 22.0 22판 문서 — 델타 두 개(입구 규칙 · 임차 없는 기록 · 선점 한정 · :58 정밀화 · 「모든 발송자」 · 커밋 순서 · AC2 문구 · 완화 통지 · 정본
+      「배달 실행자의 정지가 …」 MODIFIED) · design D0.3g · proposal 22판 표 · `review.md` §23.9 · 추출 19개 추가(모두 39, `head-ast-21/MANIFEST.txt`) ·
+      `check_values.py` `DRAFT = 22`. 검증: `openspec validate --strict` rc 0, `check_values.py` 실패 목록 대조(§23.9).
+- [ ] 22.1 **22라운드** — codex 대기열 등록(Manager 배분: a125 → a090 → a095 r4 → a094 r6 → **a092 r22**) + Claude 독립 보이스 둘.
+- [ ] 22.2 **FLM 먼저 (구현 전)** — `Notifier.deliver`(분기 27 — C2 세 래치 자리) · `recordAlertTx` · `claimOwed`(C3 래퍼) · `TransitionOperatingMode` ·
+      `CurrentOperatingMode` · `currentModeTx`(C4 순서) · `EntryGate.ProjectOperatingMode`(AC2 · C20) · `Context.ExitObserver` · `buildGateway`와 생산 조립
+      `cmd/tossctl/engine.go`의 exit observer 옵션(C1 배선) · `Gateway.parkAlert`(C6 핀). High-risk 규율 전부(Pre-Edit · BTM · 변이 원장).
+- [ ] 22.3 **RED** (각 RED는 뮤테이션으로 실패시켜 본 뒤 근거로 쓴다):
+      - **C1**: NORMAL 계정 + 막힌 publisher에서 (k1) 관측 두절 강화 (k2) 가격 조회 401 (k3) 청산 상한 조회 401 — exit 사이클이 publish 없이 반환하고
+        모드 전이의 통지 행이 outbox에 남는다. (k4) 대사 루프의 공유 Retrier는 동기 통지를 그대로 한다(Q1 문자 해석 회귀 핀).
+      - **C3**: `RecordAlert`가 임차를 잡지 않는다 · 재알림 창이 지난 정착 행을 재무장한다 · 다른 발송자가 쥔 임차를 건드리지 않는다 · 알림 하나에 트랜잭션 하나.
+      - **C2 · C27**: 근거 확정 뒤 해제를 결정적으로 끼워 넣으면 세 래치 자리(`:484` · `:520` · `:571`) 모두 다시 잠그지 않는다 · 승격은 선다 ·
+        근거 확정 **앞**의 해제는 판정을 바꾸지 않는다.
+      - **C6 핀**: 금지 형태 셋(삽입이 잠금보다 앞 · 사이에 해제 호출 · 잠금을 건너뛴 삽입 경로)을 각각 변이로 만들어 핀이 잡는지 잰다.
+        양성 대조군: 오늘의 `parkAlert`는 통과.
+      - **C4 · C5 · C20**: 벽시계 되감김 뒤 재시작 복원이 커밋 순서의 최신을 세운다 · 복원 직후 첫 강화가 적용된다 · 같은 초의 두 전이 ·
+        역순 도착한 옛 투영은 적용되지 않는다 · 모드 사유 존재가 바뀔 때만 상태 세대 +1.
+      - **C8**: 일반 등급 버퍼가 차면 버리고 기록한다 · 이관 실행자가 죽으면 로그만 · critical 배달 실행자의 사이클 길이에 일반 등급 발행이 들어가지 않는다.
+      - **C12 · C13 · C14 · C17**: `tossctl engine mode-release`의 필수 플래그 넷(기본값 없음) · `mutating: "true"` 표지 · 모드 전용 엔드포인트 ·
+        커밋 뒤 통지 실패를 성공 + 통지 실패로 보고 · `tossctl engine alerts ack`의 `mutating: "true"` 표지.
+      - **C15**: 모드 복원 실패 → 모드 사유 래치 + 기동 계속(손절 산다).
+      - **C16**: 어댑터는 `Journal == nil`에서 동기 publish 갈래(`notifyCritical` B1 `:177` → `:186`)를 쓰지 않는다.
+- [ ] 22.4 **GREEN** — 위 RED를 통과시키는 최소 구현. 원장 편집 둘(`RecordAlert` 래퍼 · 커밋 순서)은 High-risk이므로 Pre-Edit 선언 뒤에 한다.
+- [ ] 22.5 **배포 절차 보완**(21.10에 합침, 사람 몫) — 완화 전에 전송 수단 동작 확인(C18). 기존 `ENTRY_BLOCKED` 행의 처분은 여전히 사람이 결정하고 사람이 실행한다.
 
 ## 21. 21판 작업 (2026-09-28)
 
@@ -509,7 +539,7 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 
       ```bash
       # 16판까지의 채택 토큰 — 17판은 이 집합을 쓰지 않는다 (design D0.6)
-      # 채택 토큰 (21판): 3.5s · 3500 · 2s · 2000 · 750ms · 5.0s
+      # 채택 토큰 (22판): 3.5s · 3500 · 2s · 2000 · 750ms · 5.0s
       rg -n '3\.5\s*s|3500|1500\s*ms|5\.0(00)?\s*s' \
          openspec/changes/a092-an-alert-does-not-hold-the-stop/tasks.md
       # 폐기 토큰 (12·13판): 이 출력은 전부 E1이어야 한다

@@ -4476,3 +4476,54 @@ a092는 a066 파일을 편집하지 않는다. 이 표는 Manager가 a066 로트
 **재확인한 사실(저자)**: C1의 호출 사슬을 HEAD에서 다시 읽었다 — `engine.go:636` `Announcer: ectx.Notifier` · `exitloop.go:846-847` · `exitwiring.go:45-55` · `retry.go:405-418` · `obs/mode.go:49-57` · `event.go:328`. 세 보이스의 주장과 같다.
 
 **상태**: 반영 0. Manager가 처분표를 판정한 뒤 22판에서 반영한다. 사용자행 후보: C1의 범위(Q1과 묶임)와 C4의 원장 편집(High-risk).
+
+### 23.9 Manager 판정 (2026-09-29)과 22판 반영
+
+Manager 판정 요지(coordinator 메시지):
+1. *"C6 Q4 = 저자 권고 승인 — (c) + 순서 AST 핀 + `:58` SHALL 정밀화 … 핀은 금지 형태 명명"*
+2. *"C9 = 잔여 수용 — 보상 통제 인용 조건"*
+3. *"C14 = `tossctl engine mode-release` 승인 — a066 의 `*-release` 가족과 통일. a066 로트에 이름 계약 공유를 교차 통지"*
+4. *"C17 = mutating 표지 승인"*
+5. *"C27 = 「모든 발송자」 일반화 승인"*
+6. *"C1 — 측정 분기로 처리 … 공유 Retrier: announcer 가 소비자별로 결속 가능한 구조인지 측정하라. 가능하면 exit 인스턴스만 기록 전용 → Q1 안에서 닫힌다. 구조적으로 단일이면 정지"*
+7. *"C4 = 22판 요구로 수용 — 보수 방향이라 사용자행 불요"*
+8. *"C2 · C3(A의 공개 래퍼 안을 후보로 저자가 영수증으로 선택) · C5 · C7 · C8 · C10 · Q6 기록만 · P2 17건 처분 제안 전부 승인"*
+
+r22는 codex 대기열에 등록한다(a125 → a090 → a095 r4 → a094 r6 → **a092 r22**).
+
+**C1 측정 결과 — 소비자별로 묶인다(정지 아님).** `execgw.Retrier`(`retry.go:305-328`)는 설정값만 가진 구조체이고 인스턴스 상태가 없다. 소비자는
+포인터를 대입받는다(exit observer `exitwiring.go:333` · exit floor `gateway.go:350-353` · 대사 `reconcileloop.go:360` · 그 밖 셋). 그래서 exit 쪽 두 주입
+지점에 `Announcer`만 기록 전용으로 바꾼 값 복사본을 주면 되고, 관측 두절 강화의 announcer는 생산 조립 `cmd/tossctl/engine.go:636`에서 준다.
+**Q1 안에서 닫힌다** — 사용자행 아님. 상세는 design D0.3g 1번.
+
+**C3 저자 선택 — 안 나(임차 없는 기록), 영수증**: `recordAlertTx`(`outbox.go:276-364`) *"It takes no lease"* · `EnqueueAlert`는 같은 함수를
+`remindAfter = 0`으로 감싼다(`:140-146`, 재무장 안 함 — 그래서 그대로는 못 쓴다) → 공개 래퍼 `RecordAlert(ctx, a, remindAfter)`를 더한다. 임차 창 · 반납 실패 ·
+「남의 임차」 갈래가 exit 경로에서 사라지고 트랜잭션이 하나가 된다(C24). 전제 H ③도 깨지지 않는다(C25). design D0.3g 2번.
+
+**반영 표(22판)**
+
+| # | 반영 자리 |
+|---|---|
+| C1 | 델타 engine-safety 「알림 입구는 전부 이 요구의 대상」 문단 + Scenario 「모드 전이의 통지도 기다리지 않는다」 · exit-policy 문장 · design D0.3g 1 · tasks 22.3 (k1~k4) |
+| C2 · C27 | 델타 「모든 발송자」 문단(20판 :66 일반화) + Scenario 「승인 뒤 늦게 끝난 동기 전송 실패는 다시 잠그지 않는다」 · design D0.3g 3 |
+| C3 · C24 · C25 | 델타 「기록은 발송 임차를 잡지 않는다 · 남의 임차를 건드리지 않는다」 + 체류 열거 · 두 델타의 「트랜잭션 하나」 · design D0.3g 2 |
+| C4 · C5 · C20 | 델타 ADDED 「현재 모드는 커밋 순서 하나」 · 「적용 세대 역행 금지 · 보장 시점 = 전이 호출 반환」 + Scenario 둘 · design D0.3g 5 |
+| C6 | 델타 :58 정밀화(알림기 기록자 · 직접 기록자는 먼저 잠금 · 금지 형태 셋) + Scenario · design D0.3g 4 · tasks 22.3 핀 |
+| C7 | 델타 선점 문단을 「오류 없는 이미 정산됨 · 임차 상실」로 한정 |
+| C8 | design D0.3g 6(별도 보조 실행자 · 유계 버퍼 · 버림 기록) · tasks 22.3 |
+| C9 | design D0.3g 7(표 행 + 보상 통제 인용 — 소유 정본은 a098 계보, Manager 문구 「a124」와 다름을 적음) |
+| C10 | 델타 MODIFIED 「배달 실행자의 정지가 다른 루프를 내려서는 안 된다」 — 근거 ①만 바꿈(정본과의 diff는 머리 주석 + 그 세 줄) |
+| C11 | 두 델타 잠금 문장의 대상을 「엔진이 조립해 실행하는 발송 경로」로 |
+| C12 · C13 · C14 · C15 · C17 · C18 | design D0.3g 8 · 델타 ADDED 완화 통지 문장 · tasks 22.3 · 22.5 |
+| C19 | design D0.3g 머리(MANIFEST HEAD와 문서 HEAD가 다른 이유 — 파일 sha 동일) · tasks 22.0(추출 39) |
+| C21 | 추출 19개 추가 — `head-ast-21/MANIFEST.txt`(모두 39) |
+| C22 · C23 | 델타에서 정본 사본(보조 실행자 의무 · 실행자 사망 문단과 Scenario · risk-management 표) 제거 · 규범 문장의 HEAD 좌표 제거 |
+| C26 | tasks 22.3 |
+| Q6 | 기록만(design D0.3g 9) |
+
+**C14 교차 통지**: a066 로트에 직접 닿는 주소가 이 세션에 없어(ListAgents 도구 없음) Manager 경유로 전달을 요청했다 — 이름 계약: `tossctl engine <대상>-release`,
+필수 `--operator` · `--approval` · `--reason`(모드는 `--to` 추가), 기본값 없음, `mutating: "true"`, 엔진 제어 소켓(대상별 엔드포인트) 경유, 원장 API는
+`Actor=OPERATOR` · `Approval` · `Auditor`(audit가 commit 앞).
+
+**측정**: `openspec validate --strict` rc 0 · `check_values.py` rc 1 · 실패 60 — 21판 최종(`76b844b2`)의 목록과 줄번호 제외 `rtk proxy diff` rc 0(22판 새 실패 0).
+design의 판 제목 셋(D0.3e · D0.3f · D0.3g)은 `NN판:` 형태가 현재 판 **주장**으로 읽혀 `— NN판 —`로 바꿨다(검사기 규칙).

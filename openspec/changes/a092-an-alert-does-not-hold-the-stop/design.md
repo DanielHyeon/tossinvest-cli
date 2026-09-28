@@ -1,4 +1,7 @@
-# a092 설계 — 전송을 루프 밖으로 옮긴다 (21판)
+# a092 설계 — 전송을 루프 밖으로 옮긴다 (22판)
+
+> **22판(2026-09-29)** — 21라운드(BLOCK 3/3) 처분을 **D0.3g**에 반영했다. 중심은 C1 측정(모드 전이 통지 입구는 소비자별로 묶인다 →
+> Q1 안에서 닫힘), 기록 경로 안 가 → 안 나(임차 없는 기록), 범위 밖 동기 발송자에도 원칙 E, 현재 모드를 커밋 순서 하나로.
 
 > **21판(2026-09-28)은 이 문서를 줄인다 — 사용자 결정 20-1 ⓒ.** a092는 「exit goroutine 에서 동기 deliver 제거」가 되고,
 > 전달 실패의 래치·승격·굶주림은 a124(착지 `22fecb76`, 아카이브 `c1e34dc4`)의 정본 요구가 진다. 무엇이 바뀌었는지는
@@ -24,7 +27,7 @@
 >
 > **D0이 그 재설계이고, D1~D7은 그 앞의 설계다.** D0 끝에 무엇이 무효가 되는지 적는다.
 
-## D0 — 전송을 exit 관측 루프 밖으로 옮긴다 (21판)
+## D0 — 전송을 exit 관측 루프 밖으로 옮긴다 (22판)
 
 ### D0.1 — 발견: 루프 밖 전송 기계가 이미 있고 프로덕션이 아무도 부르지 않는다
 
@@ -382,7 +385,7 @@ a096의 재알림 창은 `notifyCritical`이 `n.remindAfter()`로 claim할 때�
 번호가 전부 다른 분기를 가리키게 되고(위치 번호), 그것을 재번호하는 일은 base 재고정과
 한 로트다. **21판 대상**으로 tasks 20판 블록에 적었다.
 
-### D0.3e — 21판: 축소. exit goroutine에서 동기 deliver를 뺀다 (2026-09-28)
+### D0.3e — 21판 — 축소. exit goroutine에서 동기 deliver를 뺀다 (2026-09-28)
 
 D0.3c의 규칙 그대로 위 절은 안 고치고 여기서 대조한다. 좌표는 **HEAD `c1e34dc4`**에서 쟀다. 함수 내부 분기를
 근거로 쓰는 줄은 `analysis/head-ast-21/`(커밋됨 — `extract.py`가 만들고 `MANIFEST.txt`가 파일 sha와 HEAD를 적는다)을
@@ -505,7 +508,7 @@ HEAD의 답:
 해소(9.6.1 — 21판 전후 목록 대조는 `review.md` §23.4), §6·§8 task 본문 재작성(21판 블록이 대체 목록을 적고 옛 task에는 표지만 단다).
 구현은 0줄이다.
 
-### D0.3f — 21판: Q3 사용자 결정 뒤 — 투영 배선과 사람의 완화 경로 (2026-09-28)
+### D0.3f — 21판 — Q3 사용자 결정 뒤 — 투영 배선과 사람의 완화 경로 (2026-09-28)
 
 **입력 — 사용자 결정(Manager 경유, 2026-09-28)**: *"Q3 확정 — 투영기 배선(SetModeProjector 생산 배선 + 기동
 RestoreOperatingModeProjection + AC2 수리)은 21판 범위 포함, 모드 완화 경로는 승인 원칙(자동은 조이기만 / 완화는 OPERATOR + 승인 참조 +
@@ -589,6 +592,135 @@ YAGNI — 원장 편집을 이 범위에 넣지 않는다(4의 세대 필드는 
 *"`journal.SetModeProjector`가 프로덕션에서 bind되지 않으므로 그 승격은 산 프로세스의 진입 게이트에 닿지 않는다 — a092가 발견했고 배선은 미배정 후속이다"*)은
 이 배선이 착지하면 거짓이 된다. 그 요구의 규범(승격하지 않는다)은 근거 ②로 그대로 선다. a124 정본의 *"모드 투영이 배선되기 전에는 …"*(`:1444-1446`)은
 조건문이라 참으로 남는다. 처분은 tasks 21.7(e)(archive 때 정본 편집) — 21라운드가 MODIFIED로 델타에 넣을지 판정한다.
+
+### D0.3g — 22판 — 21라운드 처분 반영 (2026-09-29)
+
+입력은 21라운드(세 보이스, 셋 다 BLOCK — `review.md` §23.8)와 Manager 판정(§23.9)이다. D0.3e·D0.3f는 D0.3c의 규칙대로 본문을 안 고치고
+여기서 대조한다. 좌표는 `analysis/head-ast-21/MANIFEST.txt`가 적은 HEAD에서 쟀다. 이 절을 위해 추출 19개를 더했다(모두 39개).
+**MANIFEST의 HEAD 표기와 D0.3e·D0.3f의 「HEAD `c1e34dc4`」가 다른 이유**(21라운드 C19): 추출을 다시 돌릴 때마다 그 시점의 HEAD가 적힌다.
+인용한 운영 파일의 sha는 `c1e34dc4` 이후 바뀌지 않았다 — MANIFEST의 파일별 sha가 증거다.
+
+**1. C1 측정 — 모드 전이 통지의 입구는 소비자별로 묶을 수 있다 (Manager 지시 6: 「측정 분기」).**
+
+exit goroutine이 운영 모드를 강화하는 자리는 셋이고, 셋 다 `EscalateOperatingMode(…, announcer)` → `TransitionOperatingMode` B27 `:478` →
+`:479` `AnnounceOperatingMode`(`head-ast-21/…notifier.announceoperatingmode.json` — `n.Notify` `:57`) → 동기 `deliver`로 간다.
+
+| 자리 | announcer가 오는 곳 | 주입 지점 | 묶을 수 있나 |
+|---|---|---|---|
+| 관측 두절 `checkOutage` → `:846` | `o.opts.Announcer` | 생산 조립 `cmd/tossctl/engine.go:636`(`Announcer: ectx.Notifier`) — exit observer 전용 옵션 | **예** — 그 자리에 기록 전용 announcer를 준다 |
+| 가격 조회 `observe` → `Retrier.Query` `:747` → 401/403 B7 `:357` → `Block` `:362` · `escalateCredentialFailure` `:365` → `:413` | `r.Announcer` | `Context.ExitObserver` `opts.Retrier = c.Retrier`(`exitwiring.go:333`) | **예** — 아래 |
+| 청산 수량 상한 `reconcileFloor.ConfirmedFloor` → `f.retrier.Query`(`exitwiring.go:207` · `:231`) | 같은 Retrier | `buildGateway`의 `floor: &reconcileFloor{… retrier: retrier …}`(`gateway.go:350-353`) — 이 floor는 exit observer만 쓴다(`ConfirmedFloor`의 비시험 호출자는 `exitloop.go:1513` 하나) | **예** — 아래 |
+
+- **공유 Retrier의 구조**(Manager가 물은 관건): `execgw.Retrier`(`retry.go:305-328`)는 **설정값만 가진 구조체**다 — 필드는 `Policy` · `Clock` ·
+  `Gate` · `RetryAfter` · `Escalate` · `AccountRef` · `Announcer`이고 뮤텍스·계수기 같은 인스턴스 상태가 없다. 메서드 넷(`Query` · `escalateCredentialFailure` ·
+  `rateLimitWait` · `sleepWithin`)은 필드를 읽기만 한다. 상태(신선도·래치)는 공유 `Gate` 포인터에 있다.
+- **소비자는 포인터를 대입받는다**: exit observer(`exitwiring.go:333`), exit floor(`gateway.go:350-353`), 대사(`reconcileloop.go:360`),
+  tracer, 운영 명령(`position_policy_command.go:94`), 편입(`adoption.go:257-258`). 생성은 한 곳이다(`gateway.go:324` `newRetrier`).
+- **결론: 구조적으로 단일이 아니다.** exit 쪽 두 주입 지점에 `Announcer`만 기록 전용으로 바꾼 **값 복사본**을 준다. 그러면 신선도 기록과
+  401 래치는 같은 `Gate`로 가고, 나머지 소비자의 동작은 그대로다. **Q1 문자 해석 안에서 닫힌다 — 사용자행이 아니다.**
+- **기록 전용 announcer**: `journal.ModeAnnouncer`를 구현한다. 사건의 모양(종류 · 키 · 제목 · 본문 · 필드)은 `Notifier.AnnounceOperatingMode`(`mode.go:49-74`)와
+  같아야 한다 — 사건 구성을 함수 하나로 빼서 둘이 같이 쓴다(구현 로트). 그리고 아래 2의 임차 없는 기록으로 남긴다. `nil`로 두면 안 된다 —
+  정본 risk-management(`:133` · `:137`)가 자동 강화 때 알림 발송을 요구한다.
+- 입구 전수는 호출 자리가 아니라 **도달 경로**로 센다(`analysis/notify-reach.md`의 규칙): `Notify` 입구와 `AnnounceOperatingMode` 입구 두 가지다.
+  21판 D0.3e 4번의 「`ExitObserver.alert`의 호출은 한 자리」는 참이었지만, 셀 단위가 틀려 C1을 놓쳤다.
+
+**2. C3 — 기록 경로를 「안 나」(임차 없는 기록)로 바꾼다 (저자 선택, 영수증).** 21판의 안 가(claim → 반납)는 임차가 생기는 창, 반납 실패 갈래,
+「남의 임차」 갈래(A-9 거짓 경보)를 만들었다. 21라운드 보이스 A가 원장에 이미 있는 것을 짚었다:
+
+- `recordAlertTx`(`outbox.go:276-364`, `head-ast-21/…recordalerttx.json`): 머리 주석 *"the recording half of the outbox: deduplicate on the event key,
+  insert or re-arm, and say whether a send is owed. It takes no lease."* 재무장 판정은 `claimOwed`(`:372-418`)가 하고, `remindAfter`를 인자로 받는다.
+- `EnqueueAlert`(`outbox.go:131-154`)가 이미 그것을 트랜잭션 하나로 감싼다. 다만 `remindAfter`에 **0**을 넘긴다(`:140-146` — *"must not re-arm a settled row on
+  somebody else's behalf"*). 그래서 그대로 쓰면 a096 재알림 창이 죽는다(D0.3d 3번).
+- `ClaimAlertForDelivery`(`:231-267`)는 같은 `recordAlertTx` 뒤에 `acquireAlertClaimTx`로 임차를 붙인다.
+
+**선택**: 원장에 공개 래퍼 하나를 더한다 — `RecordAlert(ctx, a, remindAfter)`는 `recordAlertTx`를 트랜잭션 하나로 감싸고 임차를 잡지 않는다.
+`EnqueueAlert`의 계약(재무장 안 함)은 바꾸지 않는다. 기존 함수의 분기는 하나도 안 바뀌고 exported 함수가 하나 는다(High-risk 원장 표면이지만 몸체가 기존 함수 호출
+하나다). 이렇게 얻는 것:
+
+- 임차가 생기지 않는다 → 델타의 금지가 예외 없이 선다(C3).
+- 알림 하나에 트랜잭션 하나다 → 체류 열거가 17판의 「outbox 트랜잭션 하나」로 돌아간다(C24).
+- 반납 실패 갈래와 `logClaimHeld` 갈래가 exit 경로에서 사라진다(21판 D0.3e 4의 대가 셋째·넷째 줄 폐기).
+- 전제 H ③(임차 경합 없음)을 exit 기록이 깨지 않는다(C25) → **D0.3e 6 「a092가 이 식에 더하는 것은 없다」가 22판에서는 참이다.**
+  21판의 안 가에서는 거짓이었다(보이스 B #12 수용).
+
+어댑터는 `n.mu` 아래에서 `RecordAlert`를 부른다 — 셈~해제 배제(아래 4)의 우산 안에 둔다.
+
+**3. C2 · C27 — 범위 밖 동기 발송자에도 원칙 E.** `claimAndDeliver`가 `deliver`를 잠금 밖에서 부르면 이 순서가 가능해진다: 소진 → 반납 적용 →
+운영자 승인(셈 0 · `Clear`) → `Block :571` → `escalate :228`. 세 보이스가 모두 이것을 짚었다. a124의 수단을 그대로 쓴다:
+
+- `deliver`의 세 래치 자리(`:484` · `:520` · `:571`, `head-ast-21/…notifier.deliver.json` 분기 27)는 **근거가 확정된 순간** 전달 실패 사유의 해제 세대를 읽는다.
+  근거가 확정된 순간은 그 자리 앞의 시도 기록 · 전달 기록 · 반납의 결과가 돌아온 순간이다. 그리고 `Block` 대신 `BlockUnlessClearedSince(reason, epoch, detail)`로 잠근다
+  (`head-ast-21/…blockunlessclearedsince.json` — 잠금 `:572` 아래 세대 비교 B1 `:574` · 삽입 B2 `:577`).
+- 승격(`notifyCritical` B4 `:223` → `:228`)은 a124 정본 「늦은 적용」과 같이 적용한다. 해제가 뒤였어도 승격은 선다.
+- 정본 규범은 델타의 「모든 발송자」 문단이 싣는다(C27 — 이 change가 그 문장의 주인이다).
+- 이 편집은 `deliver`의 갈래를 바꾸므로 Function Logic Map과 Branch Test Map이 먼저다(tasks 22.2).
+
+**4. C6 · Q4 — (c) + 순서 구조 핀 + SHALL 정밀화 (Manager 판정 1).** `parkAlert`(`head-ast-21/…gateway.parkalert.json`)는 B1 `:535` 안에서
+`g.entry.Block`(`:536`, `ReasonUnresolvedInDoubt`)을 먼저 하고, B2 `:548` 안에서 `g.journal.EnqueueAlert`(`:551`)를 한다. `Acknowledge`는
+`ReasonAlertUndelivered`만 푼다(`notifier.go:875`). 그래서 셈~해제 사이에 그 행이 들어와도 진입은 `ReasonUnresolvedInDoubt`로 막혀 있다.
+
+- 델타는 SHALL을 「알림기를 거치는 기록자에 대해 나눌 수 없다」 + 「원장에 직접 쓰는 기록자는 삽입 **전**에 자기 사유를 세운다」로 정밀화했다.
+  codex의 반론(SHALL이 현실보다 넓다)이 이것으로 풀린다.
+- **핀의 금지 형태**(루프 머리 `continue` 교훈 — 존재가 아니라 끼어들 수 없는 형태): ① `EnqueueAlert` 호출이 `Block(ReasonUnresolvedInDoubt, …)` 호출보다
+  앞선다 ② 둘 사이에 `Clear`/`ClearSymbol` 호출이 있다 ③ `Block` 없이 `EnqueueAlert`에 닿는 경로가 있다 — `entry == nil` 갈래, 조기 `return`, 삽입을 감싼 조건이
+  잠금을 감싼 조건보다 넓은 경우. 원장에 직접 `EnqueueAlert`를 부르는 **모든** 비시험 호출자에 같은 핀을 건다(오늘은 `parkAlert` 하나 — 21판 D0.3e 7).
+  새 호출자는 핀에 걸려 이 문단을 다시 읽게 된다.
+
+**5. C4 · C5 — 현재 모드는 커밋 순서 하나로 (Manager 판정 7 — 22판 요구, 보수 방향).**
+
+- 오늘: 방향 판정 `currentModeTx`와 기동 복원 `CurrentOperatingMode`(`head-ast-21/…currentoperatingmode.json`)가 `modeLatestOrder` =
+  `ORDER BY created_at DESC, rowid DESC`(`operating_mode.go:626`)를 쓴다. 시각은 트랜잭션 **전**에 얻는다(`:388` → `BeginTx :391`).
+  그래서 codex 반례가 성립한다 — 늦게 커밋된 강화가 더 이른 시각을 가질 수 있다.
+- 수리: 「현재」를 **rowid 내림차순** 하나로 정한다. 근거는 셋이다.
+  - `operating_modes`는 rowid 테이블이다(`core_domain.go:183-193`, TEXT PRIMARY KEY).
+  - 저장소에 `DELETE FROM operating_modes`·`UPDATE operating_modes`가 0이다(21판 rg).
+  - 전이는 `BEGIN IMMEDIATE`로 직렬화된다(`:391`).
+  - 그래서 rowid 순서가 커밋 순서다. 같은 초 안의 두 전이 문제(`:618-625` 주석)도 rowid가 푼다.
+- 세대 울타리: 전이 기록이 삽입한 행의 rowid를 `OperatingModeRecord`에 싣는다(행 수 `modeRowCount`가 **아니다** — 보이스 B #5).
+  기동 복원은 최신 행의 rowid를 싣는다. 게이트는 마지막으로 적용한 rowid보다 **큰** 투영만 적용한다. 그래서 복원 직후 첫 강화(rowid가 더 크다)는 적용된다.
+- AC2 규범은 「적용 세대가 역행하지 않는다」와 「보장 시점 = 전이 호출의 반환」으로 고쳤다(C5). commit→투영 창을 닫으려고 게이트에 원장 입출력을 넣지 않는다.
+- 게이트 상태 세대(revision) 규칙(C20): 모드 사유 **존재가 바뀔 때만** +1이다(없음→있음 · 있음→없음). 설명만 바뀌는 교체는 +0이다.
+  a124 정본 *"게이트 상태 세대는 실제로 상태가 바뀐 때만 오른다"*와 맞춘다.
+- 이것은 원장 편집(High-risk)이다. 구현은 구현 로트에서 High-risk 규율 전부(Pre-Edit · FLM · BTM · 변이)로 한다.
+
+**6. C8 — 일반 등급의 이관 (Q2 유지).** exit 관측 goroutine의 일반 등급 알림(`EventExitProposalCapped` · `EventExitPositionUnmanaged`)을
+유계 버퍼에 넣고 반환한다. 버퍼가 차 있으면 그 알림을 버리고 버렸다는 사실을 구조화 로그로 남긴다.
+
+- **저자 안**: 버퍼를 비우는 쪽은 **별도 보조 실행자**다. a098 배달 실행자의 사이클에 얹지 않는다 — 얹으면 a124 식의 `C`가 일반 등급 발행 시간만큼 늘어
+  critical 래치가 늦어진다.
+- 새 실행자는 정본 「엔진 런타임 수명주기」의 보조 실행자 의무 셋을 그대로 받는다.
+- 그 실행자가 죽으면 로그만 남긴다. 래치는 없다 — best-effort 등급이다. 21라운드가 검증 대상으로 넘긴다.
+- 캡 알림(exit-policy 정본 *"캡 발생은 알림된다"*)은 버퍼가 비어 있는 동안 전달된다. 버퍼가 가득 찬 경우의 유실은 델타가 허용하고 기록을 요구한다.
+
+**7. C9 — 배달 실행자가 죽었을 때 exit critical의 대체 발송자: 잔여로 수용 (Manager 판정 2).** 책임 대조 표(D0.3e 3번)에 행을 더한다.
+
+| 동기 경로가 지던 것 (HEAD) | 21판 뒤 | 보상 통제 |
+|---|---|---|
+| 배달 실행자가 죽어도 exit critical을 exit goroutine이 직접 보낸다 | 보낼 주체가 없다. 행은 PENDING으로 남는다 | 실행자 사망은 진입 게이트를 `ReasonAlertSenderDown`으로 잠그고 런타임이 구조화 로그로 남긴다(정본 「배달 실행자의 정지가 다른 루프를 내려서는 안 된다」 Scenario 「배달 실행자가 죽는다」 · 「발송 주체의 부재는 발송 실패와 다른 차단 사유다」, a098). 남은 PENDING 행은 재시작 뒤 기동 복원이 다시 잠그고 새 실행자가 보낸다(정본 「재시작이 진입 차단을 푸는 우회로가 되어서는 안 된다」). 발송 주체가 사는 동안의 지속 실패는 진입 차단 + 승격(a124 정본) |
+
+Manager 문구는 「a124 정본」이었다. 실행자 **사망**의 차단을 소유하는 정본 문장은 a098 계보다(위 인용). a124 정본은 실행자가 **살아 있는** 동안의
+지속 실패를 소유한다. 운영자 가시성은 진입 차단 사유 목록(`alerts ack` 출력의 남은 사유)과 런타임 로그로 선다. **발송 채널로 그 사실이 전해지지는 않는다**
+— 그것이 수용한 잔여다.
+
+**8. D0.3f(Q3 설계)의 정정.**
+
+- **C14 이름**: 완화 명령은 `tossctl engine mode-release`다(a066의 `engine entry-lock-release` · `risk-latch-release`와 `*-release` 가족 —
+  `cmd/tossctl/engine_risk_relaxation.go:136,194`, a066 작업). 필수 플래그 `--to` · `--operator` · `--approval` · `--reason`은 그대로다.
+  a066 로트에 이름 계약을 교차 통지했다(§23.9).
+- **C12 엔드포인트**: 알림 제어 소켓에 얹지 않는다. 모드 전용 디렉터리·소켓·토큰을 둔다. `alert_control.go`가 적은 「다른 힘이면 다른 엔드포인트」를 따른다.
+- **C13 통지**: 완화 전이에 `Announcer = Notifier`(제어 소켓 goroutine이므로 C1과 무관 — exit goroutine이 아니다). `ErrModeAnnouncementFailed`는
+  커밋 뒤 `(record, true, err)`로 돌아온다(`operating_mode.go:479-481`). 명령은 「완화됨 · 통지 실패」로 보고한다.
+- **C15 복원 실패**: 21판의 「기동 거부(보수 방향)」는 틀렸다. 기동 거부는 엔진 부재이고, 보호가 배선되지 않은 구성에서는 **손절 부재**다. 두 안을 비교한다.
+  - (ㄱ) 기동 거부 — 알림 래치 복원 실패와 같은 처분(`gateway.go:269-271`).
+  - (ㄴ) 모드 사유를 「복원 실패」로 래치하고 기동을 계속 — 진입은 막히고 손절은 산다.
+  - **저자 선택 (ㄴ)**: 안전 불변식 4(손절 즉시성)가 앞선다. 래치 설명에 원장 오류는 넣지 않는다. 풀 경로는 성공한 재시작 또는 완화 명령이다. 21라운드 판정 대상이다.
+- **C17**: `tossctl engine alerts ack`에 `mutating: "true"`를 단다(Manager 판정 4 — ack는 원장 쓰기다). 명령 분류 변경이다.
+- **C18 배포 순서**: 완화 전에 전송 수단이 동작하는지 확인한다. 죽어 있으면 a124가 실패 시도로 세어 다시 승격한다.
+- **C22 · C23 · C26**: 델타의 정본 사본(보조 실행자 의무 · 실행자 사망 문단과 Scenario · risk-management 표 사본)을 포인터로 줄였다.
+  규범 문장 속 HEAD 사실은 design으로 옮겼다. tasks에 빠진 커버리지를 더했다(22.x).
+
+**9. Q6 — 기록만으로 닫는다 (세 보이스 · Manager 판정 8).** 배달 실행자의 임차당 예산은 시도 1회다. 그래서 정본 「발송자가 예산을 다 쓰면 임차를 놓는다」가 적용되고,
+「한 번의 시도가 실패해도 임차는 유지된다」(예산이 **남은** 발송자에 대한 것)와 모순되지 않는다.
 
 ### D0.4 — 없애는 것과 못 없애는 것
 

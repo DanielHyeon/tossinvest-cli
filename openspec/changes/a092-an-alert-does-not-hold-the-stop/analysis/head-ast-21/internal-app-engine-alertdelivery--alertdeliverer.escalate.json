@@ -1,0 +1,180 @@
+{
+  "file": "internal/app/engine/alertdelivery.go",
+  "source_sha256": "5791a31af9d2407935ea71edbdbf9a14cbd2025fce5da9866b1d586f8e8da0cf",
+  "package": "engine",
+  "function": "escalate",
+  "receiver": "alertDeliverer",
+  "signature": "alertDeliverer.escalate(params=2, results=1)",
+  "start": {
+    "line": 447,
+    "column": 1
+  },
+  "end": {
+    "line": 476,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 448,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 453,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 454,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 456,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 467,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 449,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 465,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 475,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 448,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 451,
+        "column": 21
+      },
+      "text": "EscalateOperatingMode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 451,
+        "column": 21
+      },
+      "text": "d.led"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 456,
+        "column": 7
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 456,
+        "column": 43
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 459,
+        "column": 4
+      },
+      "text": "d.Log.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 459,
+        "column": 45
+      },
+      "text": "withAlertID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 3
+      },
+      "text": "d.Log.Warn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 38
+      },
+      "text": "withAlertID"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 451,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 455,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 457,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
