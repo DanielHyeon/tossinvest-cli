@@ -1,0 +1,6 @@
+TREE	HEAD 53cef064	uncommitted: riskbucket a066_fill_branch_gaps_test.go (+evidence record test)
+ORIGIN	BTM row mutation applyfill B25 if@210 SURVIVED (mutrows run)
+CONTROL	GREEN	
+B25 evidence not kept	CAUGHT	TestA066ApplyFillRecordKeepsTheActualEvidenceItWasValuedWith
+B25 evidence aliased not copied	CAUGHT	TestA066ApplyFillRecordKeepsTheActualEvidenceItWasValuedWith
+NOTE	FillRecord.ActualEvidence has no production reader (git grep internal/ non-test: fill.go:30/186/208/211/455 — assignments and clone only); the test pins the pure-function return contract

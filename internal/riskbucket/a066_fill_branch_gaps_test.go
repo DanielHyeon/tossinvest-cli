@@ -237,3 +237,21 @@ func TestA066ApplyFillValidatesBucketShapeBeforeAnyArithmetic(t *testing.T) {
 		}
 	}
 }
+
+// TestA066ApplyFillRecordKeepsTheActualEvidenceItWasValuedWith 는 ApplyFill B25 를 고정함: 첫 적용에서 실제 체결 증거가
+// 있으면 기록은 그 증거의 사본을 가짐(입력과 같은 값, 다른 포인터). BTM 행 변이에서 이 대입을 꺼도 초록이었음 — 생산
+// 코드에 이 필드를 읽는 곳이 없음(git grep internal/ 비시험: fill.go 의 대입·복제뿐). 그래서 이것은 riskbucket 순수 함수의
+// 반환 계약으로만 서 있고, 그 계약을 여기서 잼.
+func TestA066ApplyFillRecordKeepsTheActualEvidenceItWasValuedWith(t *testing.T) {
+	state, event := fillFixture("100", "50")
+	event.NewCumulativeFill = 4
+	event.Actual = actualEvidence("12", "1", "0")
+	next, _, err := ApplyFill(state, event)
+	if err != nil {
+		t.Fatal(err)
+	}
+	record := next.Orders[event.OrderID].Fills[event.FillID]
+	if !record.ActualKnown || record.ActualEvidence == nil || !reflect.DeepEqual(*record.ActualEvidence, *event.Actual) || record.ActualEvidence == event.Actual {
+		t.Fatalf("record evidence=%+v known=%v, want a copy of the valued evidence", record.ActualEvidence, record.ActualKnown)
+	}
+}
