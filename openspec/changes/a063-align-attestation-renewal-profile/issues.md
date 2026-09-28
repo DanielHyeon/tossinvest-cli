@@ -61,3 +61,9 @@
   package compile is not a successful release binary build.
 - Record final rerun outcomes in `analysis/verification.md`; do not present these commands as passed
   or modify unrelated source merely to obtain a green a063 completion report.
+
+## 2026-09-29 — I1 path chosen (a125)
+
+- The user approved (2026-09-28) retiring the a120 adoption exception and moving a063 to the general path; a125 implemented it.
+  I1's blocker is now handled by the human-approved base re-pin procedure (`docs/WORKFLOW.md`), run once immediately before the
+  final gate (tasks 4.4.1). Operational blockers I2 (tasks 4.2~4.4) remain open and unchanged.

@@ -26,7 +26,7 @@
 
 ## 4. VERIFY and approved operations
 
-- [x] 4.0 Complete the explicitly retrospective execution-baseline adoption using the accepted a120
+- [x] 4.0 *(Retired by a125 on 2026-09-29 — the adoption exception no longer exists; kept as history.)* Complete the explicitly retrospective execution-baseline adoption using the accepted a120
       tools: preserve P and historical maps, bind real independent adversarial and subsequent gstack
       reviews to complete immutable inventories, and verify all E-based maps at clean detached H.
 - [x] 4.1 Run focused tests, `make test`, `make vet`, `make validate`, `make sdd-sync`,
@@ -39,6 +39,11 @@
       has passed; current evidence must not be backdated or replaced by synthetic test records.
 - [ ] 4.4 Verify a fresh attestation is written to the engine profile, renewal failures are visible, and
       no live engine restart or order mutation is used for verification.
+- [ ] 4.4.1 Immediately before the final gate (after 4.2~4.4), re-pin the comparison base by the `docs/WORKFLOW.md`
+      「사람 승인 base 재고정」 procedure: re-measure attribution from P (`da80ce31`) to the then-HEAD (own non-merge Go
+      commits touching this directory, plus a human check for Go commits split from their document commit), re-verify every
+      attributed function's bundle with the positive-assertion receipt of a125 (`analysis/harness/a063_receipt.py`), and if the
+      receipt HEAD differs from the re-pin parent, measure again. Commit `base-commit.txt` alone with the receipt (a125 decision (나)).
 - [ ] 4.5 Complete independent diff/test review, PM synchronization and archive only after all evidence is
       recorded. Run `make gate CHANGE=a063-align-attestation-renewal-profile` after all prerequisite
       tasks are complete; archive is contingent on its success and Manager acceptance, never on task

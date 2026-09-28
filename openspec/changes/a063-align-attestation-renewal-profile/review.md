@@ -175,3 +175,18 @@ post-implementation adversarial review or gstack review.
 - Final acceptance is withheld: global function evidence, all-change validation and the required
   operational proof remain unresolved. Current administrative command outcomes are recorded in
   `analysis/verification.md`. Tasks 4.1–4.5 stay open, and neither archive nor the next a0xx may proceed.
+
+### 2026-09-29 a125 — execution-baseline adoption exception retired
+
+- The user approved (2026-09-28) retiring the a063-only adoption exception; a125 removed `execution_baseline.py` and the gate
+  branches, and this change's `execution-baseline.json` is deleted in the same lot. The gate now judges a063 from
+  `base-commit.txt` (P `da80ce31`) like every change.
+- **Retrospective notice carried over from the deleted record** (it was the only machine record of these facts):
+  `pre_edit_provenance = retrospective-exception`, and "committed historical work; missing original analysis remains debt".
+  Neither the old exception nor the re-pin that will replace it establishes original pre-edit compliance.
+- Bundle correction: `cmd-tossctl--testsoakattest…` two `revision: base` bundles recorded the E blob hash of `soak_test.go`;
+  the P window requires the P blob hash. Branches and coordinates are identical; only `source_sha256` and the source line changed.
+- **Re-pin is deferred** (Manager decision (나), 2026-09-29): the re-pin value is a fact at gate time, meaningful only after
+  the human operations 4.2~4.4 — an intermediate re-pin commits a value that will go stale. Task 4.4.1 carries the procedure.
+  Opening the gate does not archive this change; 4.2~4.4 remain human-approved operations.
+- Condition ① receipt (today's measurement): see a125 `analysis/a063-receipt.md`.

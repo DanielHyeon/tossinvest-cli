@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/soak_test.go",
-  "source_sha256": "562e7914c5b47738c7cd03418e0ae872a56a227fd45776faffbd011e0b96200f",
+  "source_sha256": "158aa423021f8e9143a354acc6e08c8911418dc9274a37890c34df14bde173c2",
   "package": "main",
   "function": "TestSoakAttestWritesAVerifiableAttestation",
   "signature": "TestSoakAttestWritesAVerifiableAttestation(params=1, results=0)",

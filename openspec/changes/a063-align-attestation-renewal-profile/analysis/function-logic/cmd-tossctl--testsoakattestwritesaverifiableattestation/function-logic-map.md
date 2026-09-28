@@ -1,6 +1,6 @@
 # Function Logic Map: `TestSoakAttestWritesAVerifiableAttestation`
 
-- Source: immutable E blob `e65e394bf84b3c6e4559a219e816af96d341d75d:cmd/tossctl/soak_test.go`, revision `base`, SHA-256 `562e7914c5b47738c7cd03418e0ae872a56a227fd45776faffbd011e0b96200f` (retrospective, not pre-edit evidence).
+- Source: immutable P blob `da80ce31b6a1ab5d443016768f970a82bab102db:cmd/tossctl/soak_test.go`, revision `base`, SHA-256 `158aa423021f8e9143a354acc6e08c8911418dc9274a37890c34df14bde173c2` (retrospective, not pre-edit evidence). a125 (2026-09-29): the adoption exception was retired, so the comparison base is P, not E; the E blob hash `562e7914…` was replaced with the P blob hash — branches and coordinates are identical between the two blobs (a125 `analysis/python-function-logic` receipt).
 - This function is deleted from current source. It is immutable E evidence, not a current runtime/execution claim.
 
 ## Inputs and invariants
