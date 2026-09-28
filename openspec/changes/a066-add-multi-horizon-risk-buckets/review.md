@@ -1177,3 +1177,60 @@ removed the a090 mixed-currency refusal, replaced by account-base FX, and does n
   owner/scope-latch branches at the submit site). All three were repaired or tested in `cb16367d`. P3 liveness goes to
   the usage-lifecycle residual. It confirmed there is no exit-path reach, no bypass, and no loosening from the
   typed-seal change.
+
+## 5.5 relaxation lot (2026-09-28/29) — mechanism, review and repairs
+
+User decision 2026-09-28 (relayed by Manager): automatic paths only tighten. Relaxation needs OPERATOR, an approval
+reference, and an audit line before commit. The entry points are the journal API and tossctl `mutating: true` commands;
+there is no console button. This lot builds the mechanism only: nothing runs on the operating journal and nothing is
+activated. Design D8.
+
+### Commits
+
+- `bce793a7` — v35 (REAFFIRM events, lock releases, `one_open` trigger swap, latch releases); journal
+  `ReleaseEntryLossLock` / `ReleaseRiskOverageLatch`; tossctl `entry-lock-release`, `risk-latch-release` (mutating) and
+  `risk-latch-show`; frozen audit-action census.
+- `75d9073b` — analysis debt that the 6.5 repairs left behind: 11 stale ASTs, FLM rows B20–B27, missing sections.
+- `90e5170d` — the a092 command-family contract check found that the CLI wrote the single-writer journal through
+  `journal.Open`, which migrates. The releases now go through the engine control endpoint, discovered as an a079-style
+  optional capability. The engine writes with its own journal and audit log. The CLI refuses when the engine is not
+  running (Manager Q2(a)). A post-commit `engine.risk_relaxation` notice goes out, and its failure is reported as
+  「완화됨·통지 실패」.
+- `48b00df5` — CX-1: a typed-nil `(*audit.Log)(nil)` Auditor was accepted and committed without an audit line (RED,
+  then repaired).
+- The repair commit after this section — review repairs listed below.
+
+### Independent review at `90e5170d` (raw reports: `analysis/review-5.5/`)
+
+Four voices, all read-only, probes in deleted copies: R1 safety (`code-security-auditor`), R2 endpoint/CLI
+(`code-reviewer`), R3 evidence (`general-purpose`), and CX (Codex, read-only sandbox).
+
+No voice found a path that relaxes without OPERATOR + approval + audit before commit. None found anything that delays or
+refuses a stop, an exit, reconciliation, or fill detection. None found a release that clears another owner's latch; R1
+probed the shared bucket. The single writer, auth, and descriptor ordering hold (R2).
+
+| # | Finding | Voices | Sev | Disposition |
+|---|---|---|---|---|
+| 1 | Typed-nil auditor accepted by the journal API → unaudited commit | CX · R1 · R2 | P0 (CX) / P2 | **repaired** `48b00df5` (`nilAuditor`); M08/M23 CAUGHT |
+| 2 | Audit fsync inside the transaction holds the single journal connection | CX · R2 · R1 · R3 | P0 (CX) / P2–P3 | **Manager Q6 (i)**: kept. Measured 4.6 ms audit / 9.1 ms release (p95 10.7 ms); named residual in D8 |
+| 3 | Commit failure after the audit line → audit says "released", journal rolled back | R2 (probe 2) · R1 · R3 | P3 | **repaired** (Q6 (i)): the pre-commit value is `release_attempt`, and a `not_committed` line is written when the commit fails (independent of the request context). Test `TestA066AuditLineBeforeCommitIsAnAttemptAndACommitFailureIsCompensated`; M27/M28 CAUGHT |
+| 4 | Account number in the externally published notice | R2 | P2 | **repaired**: Title/Body carry market/scope only. Same §8 family as a090 r2 (user queue) |
+| 5 | Refusals that change nothing were reported as "outcome unknown" (seal mismatch; audit write failure) | R1 · R2 · R3 | P2/P3 | **repaired**: named `state_mismatch` / `audit_unavailable`; E11/E12/CX19 CAUGHT |
+| 6 | `risk-latch-show` on a pre-v35 journal → raw SQL error | R2 | P3 | **repaired**: `ErrSchemaTooOld` (test `TestReadOnlyRelaxationViewsRefuseAPreV35Journal`) |
+| 7 | Evidence debt: v35 immutability and UNIQUE, route auth, latch-path nil audit, generation filter, overage_minor kept, released/unknown owner, show read-only, ReadOnly values, census bypasses (local shadow, method value, local const), other-scope binding, M19 behavioural | R3 | P2 | **tested**: `a066_relaxation_evidence_test.go`, engine auth / latch audit tests, CLI show test, hardened census. MX01–MX07, MX12, MX17, MX18, MX20, EX13, EX14, EX16, CX21, M24–M26 all CAUGHT |
+| 8 | Harness counted a build failure as CAUGHT (M22) | R3 | P2 | **repaired**: `BUILD-FAILED` verdict; M22 now compiles and is CAUGHT |
+| 9 | Stale `status.md` / `tasks.md` sentences | R3 | P2 | **repaired** |
+| 10 | Notice is a direct recorder outside a092's recording entry | a092 census · Manager | — | **Q5 (a)**, binding after a092 r23: migrate onto `RecordAlert` when a092 lands it (task 5.5.5). Mutual precondition with a092's archive |
+| 11 | REAFFIRM on every activation could make approvals always stale if a trigger fires per cycle | R1 | P3 | residual → trigger lot (cadence and deduplication) |
+| 12 | After releasing one owner's latch on an over-limit shared bucket, entries are refused by the cap, not by the latch | R1 | P3 | record (the safety outcome is unchanged) |
+| 13 | `s.mu` held across the transaction and the notice | R2 | P3 | record (the quarantine release needs the same connection anyway) |
+| 14 | The engine does not log a notice failure | R2 | P3 | record |
+| 15 | "Scope latch rows untouched" is declared only | R3 | P3 | record (the release SQL touches only owners/reservations) |
+
+### Mutation (`analysis/harness/mutate_5_5_relaxation.py`, copies with pid, a no-mutation control per suite)
+
+- `journal-ledger.tsv`: the first run, kept as history. M11/M20/M21 survived and got tests.
+- `ledger.tsv`, `rerun-ledger.tsv`: after the socket switch. E10/C04 survived and got tests.
+- `ledger-r3.tsv` + `ledger-r3-audit-sites.tsv`: after the review repairs. **61/61 CAUGHT** across journal M01–M28 and
+  MX, engine E01–E12 and EX, and CLI C01–C06 and CX. The three control suites are GREEN, with no build failures. M09,
+  M10 and M16 were re-anchored to the attempt line and rerun.

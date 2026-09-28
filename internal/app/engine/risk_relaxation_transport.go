@@ -90,6 +90,8 @@ func writeRiskRelaxationRPCError(w http.ResponseWriter, err error) {
 		status, code = http.StatusBadRequest, "invalid"
 	case errors.Is(err, riskrelaxation.ErrStale):
 		status, code = http.StatusPreconditionFailed, "stale"
+	case errors.Is(err, riskrelaxation.ErrStateMismatch):
+		status, code = http.StatusConflict, "state_mismatch"
 	case errors.Is(err, riskrelaxation.ErrAuditUnavailable):
 		status, code = http.StatusServiceUnavailable, "audit_unavailable"
 	case errors.Is(err, riskrelaxation.ErrUnwired):

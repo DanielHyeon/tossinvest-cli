@@ -47,6 +47,8 @@ var (
 	ErrRiskRelaxationApprovalRequired = errors.New("journal: a risk relaxation names the human approval it rests on")
 	// ErrRiskRelaxationStale 는 승인자가 본 상태 뒤에 상태가 바뀐(더 조여졌을 수 있는) 해제임 — 보수 쪽이 이김.
 	ErrRiskRelaxationStale = errors.New("journal: the state changed after the approver read it; the release is refused and must be re-approved on the current state")
+	// ErrRiskRelaxationAuditFailed 는 audit 줄을 쓰지 못해 커밋 전에 되돌린 해제임 — 아무것도 바뀌지 않았음.
+	ErrRiskRelaxationAuditFailed = errors.New("journal: the relaxation could not be written to the audit log, so nothing was changed")
 )
 
 // RiskRelaxationAuditor 는 완화의 audit 줄을 받음. commit 앞에 불리고, 실패하면 완화는 되돌려짐.
@@ -71,6 +73,14 @@ func validRelaxation(actor, approval, reason string, auditor RiskRelaxationAudit
 	return nil
 }
 
+// relaxationAuditAttempt · relaxationAuditNotCommitted 는 완화 audit 줄의 value 임(Manager 판정 2026-09-29 Q6 (i)).
+// commit 앞 줄은 완료가 아니라 **시도**의 기록이라 롤백돼도 거짓이 아님 — "audit 가 commit 앞" 원칙은 시도 기록이 충족하고,
+// 결과는 원장 상태가 말함. commit 이 실패하면 보상 줄(not_committed)을 남김(요청 문맥과 독립 — 아래 두 commit 자리).
+const (
+	relaxationAuditAttempt      = "release_attempt"
+	relaxationAuditNotCommitted = "not_committed"
+)
+
 // nilAuditor 는 audit 줄을 쓸 수 없는 Auditor 를 가림 — nil 인터페이스와, nil 포인터를 담은 인터페이스 둘 다.
 // (*audit.Log)(nil).RecordAction 은 아무것도 쓰지 않고 nil 을 돌려주므로, 후자를 받으면 audit 줄 없이 커밋됨(CX-1).
 func nilAuditor(auditor RiskRelaxationAuditor) bool {
@@ -84,6 +94,10 @@ func nilAuditor(auditor RiskRelaxationAuditor) bool {
 	}
 	return false
 }
+
+// relaxationSchemaVersion 은 완화 표(v35)가 생긴 판본임 — 읽기 전용 확인(risk-latch-show)은 그보다 옛 저널을
+// "no such table" 대신 ErrSchemaTooOld 로 거절함(읽기 전용 연결은 이주하지 않음).
+const relaxationSchemaVersion = 35
 
 // EntryLossLockView 는 열린 잠금 하나와 그 잠금의 마지막 REAFFIRM 사건 번호(없으면 0)임 — 해제가 결속할 값.
 type EntryLossLockView struct {
@@ -103,6 +117,10 @@ func (j *Journal) ReadEntryLossLocks(ctx context.Context, account string) ([]Ent
 func (r *ReadOnly) ReadEntryLossLocks(ctx context.Context, account string) ([]EntryLossLockView, error) {
 	if r == nil || r.db == nil {
 		return nil, fmt.Errorf("%w: journal unavailable", ErrInvalidRequest)
+	}
+	if r.version < relaxationSchemaVersion {
+		return nil, fmt.Errorf("%w: version %d has no relaxation tables (v%d) — start the engine once so it migrates",
+			ErrSchemaTooOld, r.version, relaxationSchemaVersion)
 	}
 	return readEntryLossLocks(ctx, r.db, account)
 }
@@ -201,10 +219,13 @@ func (j *Journal) ReleaseEntryLossLock(ctx context.Context, req EntryLossLockRel
 	setting := fmt.Sprintf("entry_loss_lock:%s/%s/%s", req.AccountRef, req.Market, req.Horizon)
 	detail := fmt.Sprintf("%s — %s | approved-by: %s (lock %d: %s; last event %d)", RelaxationActorOperator,
 		strings.TrimSpace(req.Reason), strings.TrimSpace(req.Approval), req.LockSeq, open.Cause, lastEvent)
-	if err := req.Auditor.RecordAction(AuditActionEntryLockRelease, setting, "released", detail); err != nil {
-		return EntryLossLockReleaseRecord{}, fmt.Errorf("journal: recording the entry loss lock release in the audit log (nothing was changed): %w", err)
+	if err := req.Auditor.RecordAction(AuditActionEntryLockRelease, setting, relaxationAuditAttempt, detail); err != nil {
+		return EntryLossLockReleaseRecord{}, fmt.Errorf("%w: entry loss lock release: %w", ErrRiskRelaxationAuditFailed, err)
 	}
 	if err := tx.Commit(); err != nil {
+		// 보상 줄: audit 쓰기는 요청 문맥을 받지 않으므로 클라이언트 절단과 무관하게 기록됨(요청 문맥이 끊겨 commit 이
+		// 실패한 바로 그 경우가 대상). 보상 줄마저 실패하면 원장이 정본이고 호출자는 commit 오류를 받음.
+		_ = req.Auditor.RecordAction(AuditActionEntryLockRelease, setting, relaxationAuditNotCommitted, "commit failed after the attempt line: "+err.Error())
 		return EntryLossLockReleaseRecord{}, fmt.Errorf("journal: commit entry loss lock release: %w", err)
 	}
 	return EntryLossLockReleaseRecord{ReleaseSeq: seq, LockSeq: req.LockSeq, ReleasedAt: req.ReleasedAt.UTC().Truncate(time.Second)}, nil
@@ -229,6 +250,10 @@ func (j *Journal) ReadRiskOwnerLatches(ctx context.Context, account string, mark
 func (r *ReadOnly) ReadRiskOwnerLatches(ctx context.Context, account string, market riskbucket.Market) ([]RiskOwnerLatchView, error) {
 	if r == nil || r.db == nil {
 		return nil, fmt.Errorf("%w: journal unavailable", ErrInvalidRequest)
+	}
+	if r.version < relaxationSchemaVersion {
+		return nil, fmt.Errorf("%w: version %d has no relaxation tables (v%d) — start the engine once so it migrates",
+			ErrSchemaTooOld, r.version, relaxationSchemaVersion)
 	}
 	return readRiskOwnerLatches(ctx, r.db, account, market)
 }
@@ -350,10 +375,13 @@ func (j *Journal) ReleaseRiskOverageLatch(ctx context.Context, req RiskOverageLa
 	setting := fmt.Sprintf("risk_owner:%s/%s/%s/%s", key.AccountID, key.Market, key.Symbol, key.ProspectiveGeneration)
 	detail := fmt.Sprintf("%s — %s | approved-by: %s (RISK_OVERAGE; bound state %s)", RelaxationActorOperator,
 		strings.TrimSpace(req.Reason), strings.TrimSpace(req.Approval), persisted)
-	if err := req.Auditor.RecordAction(AuditActionOverageLatchRelease, setting, "released", detail); err != nil {
-		return RiskOverageLatchReleaseRecord{}, fmt.Errorf("journal: recording the overage latch release in the audit log (nothing was changed): %w", err)
+	if err := req.Auditor.RecordAction(AuditActionOverageLatchRelease, setting, relaxationAuditAttempt, detail); err != nil {
+		return RiskOverageLatchReleaseRecord{}, fmt.Errorf("%w: overage latch release: %w", ErrRiskRelaxationAuditFailed, err)
 	}
 	if err := tx.Commit(); err != nil {
+		// 보상 줄: audit 쓰기는 요청 문맥을 받지 않으므로 클라이언트 절단과 무관하게 기록됨(요청 문맥이 끊겨 commit 이
+		// 실패한 바로 그 경우가 대상). 보상 줄마저 실패하면 원장이 정본이고 호출자는 commit 오류를 받음.
+		_ = req.Auditor.RecordAction(AuditActionOverageLatchRelease, setting, relaxationAuditNotCommitted, "commit failed after the attempt line: "+err.Error())
 		return RiskOverageLatchReleaseRecord{}, fmt.Errorf("journal: commit overage latch release: %w", err)
 	}
 	return RiskOverageLatchReleaseRecord{ReleaseSeq: seq, Owner: key, ReleasedAt: req.ReleasedAt.UTC().Truncate(time.Second)}, nil

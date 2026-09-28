@@ -9,7 +9,10 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -154,6 +157,11 @@ func TestA066EntryLockReleaseThroughTheEngineEndpoint(t *testing.T) {
 		alerts[0].Severity != "critical" {
 		t.Fatalf("relaxation notices = %+v", alerts)
 	}
+	// 제목·본문은 외부 전송(notifier)으로 나감 — 계좌 식별자를 싣지 않음(안전 불변식 8, 리뷰 R2 P2). 대상은 시장·horizon 으로 말함.
+	if strings.Contains(alerts[0].Title, "acct-7") || strings.Contains(alerts[0].Body, "acct-7") ||
+		!strings.Contains(alerts[0].Title, "entry_loss_lock:KR/SHORT") {
+		t.Fatalf("published notice text carries the account or loses the target: %q / %q", alerts[0].Title, alerts[0].Body)
+	}
 	// 같은 요청을 다시 보내면 stale — 전송을 건너 타입이 살아남아야 CLI 가 "아무것도 안 바뀜"이라고 말할 수 있음.
 	if _, err := fx.client.ReleaseEntryLossLock(context.Background(), req); !errors.Is(err, riskrelaxation.ErrStale) {
 		t.Fatalf("repeated release: err=%v, want stale", err)
@@ -254,6 +262,9 @@ func TestA066LatchReleaseCarriesTheBindingIntoTheEngine(t *testing.T) {
 	if !result.Notified || result.Target != "risk_owner:acct-7/US/AAPL/gen-3" || len(fx.alerts(t)) != 1 {
 		t.Fatalf("result = %+v notices = %d", result, len(fx.alerts(t)))
 	}
+	if notice := fx.alerts(t)[0]; strings.Contains(notice.Title+notice.Body, "acct-7") || !strings.Contains(notice.Title, "risk_owner:US/AAPL/gen-3") {
+		t.Fatalf("published notice text = %q / %q", notice.Title, notice.Body)
+	}
 }
 
 // TestA066AnEngineWithoutTheCapabilityOffersNoRelease 는 capability 없는 명령 서비스의 endpoint 가 해제 route 를 내지
@@ -306,8 +317,90 @@ func TestA066NoticeSurvivesTheCallerHangingUp(t *testing.T) {
 	fx := a066RelaxEngine(t, true, nil)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	result := notifyRelaxation(ctx, fx.j, "entry_lock", 1, "entry_loss_lock:acct-7/KR/SHORT", "ops", "OPS-1", a066RelaxNow)
+	result := notifyRelaxation(ctx, fx.j, "entry_lock", 1, "entry_loss_lock:acct-7/KR/SHORT", "entry_loss_lock:KR/SHORT", "ops", "OPS-1", a066RelaxNow)
 	if !result.Notified || len(fx.alerts(t)) != 1 {
 		t.Fatalf("result = %+v notices = %d, want the notice recorded after a hang-up", result, len(fx.alerts(t)))
+	}
+}
+
+// a066RefusingRepo 는 journal 판정 하나를 흉내 내는 원장임(오류 어휘 시험용).
+type a066RefusingRepo struct {
+	*journal.Journal
+	err error
+}
+
+func (r a066RefusingRepo) ReleaseEntryLossLock(context.Context, journal.EntryLossLockReleaseRequest) (journal.EntryLossLockReleaseRecord, error) {
+	return journal.EntryLossLockReleaseRecord{}, r.err
+}
+
+// TestA066JournalRefusalsCrossTheWireAsRefusals 는 아무것도 바꾸지 않은 journal 거절이 "결과 불명"(internal)이 아니라
+// 이름 있는 거절로 건너옴을 잼(리뷰 R1 P2: 봉인과 어긋난 상태 · R2 P3: audit 쓰기 실패).
+func TestA066JournalRefusalsCrossTheWireAsRefusals(t *testing.T) {
+	for name, tc := range map[string]struct {
+		journalErr error
+		want       error
+	}{
+		"state does not match its seal":   {fmt.Errorf("%w: state digest drift", journal.ErrRiskBucketReplayMismatch), riskrelaxation.ErrStateMismatch},
+		"audit line could not be written": {fmt.Errorf("%w: disk full", journal.ErrRiskRelaxationAuditFailed), riskrelaxation.ErrAuditUnavailable},
+	} {
+		t.Run(name, func(t *testing.T) {
+			fx := a066RelaxEngine(t, true, func(j *journal.Journal) positionPolicyRepository { return a066RefusingRepo{j, tc.journalErr} })
+			if _, err := fx.client.ReleaseEntryLossLock(context.Background(), fx.request(t)); !errors.Is(err, tc.want) {
+				t.Fatalf("err = %v, want %v", err, tc.want)
+			}
+		})
+	}
+}
+
+// TestA066RelaxationRoutesRequireTheBearerToken 은 두 해제 route 가 토큰 없는·틀린 토큰 요청을 거절함을 잼(리뷰 R3:
+// server.auth 를 뺀 등록이 생존).
+func TestA066RelaxationRoutesRequireTheBearerToken(t *testing.T) {
+	fx := a066RelaxEngine(t, true, nil)
+	raw, err := os.ReadFile(positionpolicyrpc.DescriptorPath(fx.dir))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var descriptor positionpolicyrpc.Descriptor
+	if err := json.Unmarshal(raw, &descriptor); err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{RiskRelaxationEntryLockPath, RiskRelaxationLatchPath} {
+		for name, token := range map[string]string{"no token": "", "wrong token": strings.Repeat("x", len(descriptor.Token))} {
+			req, err := http.NewRequest(http.MethodPost, "http://"+descriptor.Address+path, strings.NewReader(`{}`))
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set("Content-Type", "application/json")
+			if token != "" {
+				req.Header.Set("Authorization", "Bearer "+token)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_ = resp.Body.Close()
+			if resp.StatusCode != http.StatusUnauthorized {
+				t.Errorf("%s %s: status %d, want 401", path, name, resp.StatusCode)
+			}
+		}
+	}
+	if locks := fx.openLocks(t); len(locks) != 1 {
+		t.Fatalf("an unauthenticated request changed the lock: %+v", locks)
+	}
+}
+
+// TestA066LatchReleaseRefusedWithoutAnEngineAuditLog 는 latch 경로도 audit 로그 없는 엔진에서 거절됨을 잼(R3: latch
+// 경로가 relaxationAuditor 를 건너뛰는 변이 생존 — nil *audit.Log 가 audit 없이 커밋될 자리).
+func TestA066LatchReleaseRefusedWithoutAnEngineAuditLog(t *testing.T) {
+	recorder := &a066LatchRecorder{}
+	fx := a066RelaxEngine(t, false, func(j *journal.Journal) positionPolicyRepository { recorder.Journal = j; return recorder })
+	_, err := fx.client.ReleaseRiskOverageLatch(context.Background(), riskrelaxation.LatchReleaseRequest{
+		AccountRef: "acct-7", Market: "US", Symbol: "AAPL", Generation: "gen-3", ExpectedState: "digest-1",
+		Operator: "ops", Approval: "OPS-9", Reason: "why"})
+	if !errors.Is(err, riskrelaxation.ErrAuditUnavailable) {
+		t.Fatalf("err = %v, want audit unavailable", err)
+	}
+	if recorder.got.Auditor != nil || recorder.got.Owner.Symbol != "" {
+		t.Fatalf("the journal was asked to release without an audit log: %+v", recorder.got)
 	}
 }

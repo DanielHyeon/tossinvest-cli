@@ -340,9 +340,38 @@ func TestEngineRiskLatchReleaseCarriesTheBinding(t *testing.T) {
 func TestEngineRelaxationTreatsADialErrorAsNotReached(t *testing.T) {
 	client := &fakeRelaxationClient{result: riskrelaxation.Result{Notified: true}}
 	deps := fakeRelaxationDeps(client)
-	deps.dial = func(context.Context, string) (riskRelaxationClient, error) { return client, errors.New("health check failed") }
+	deps.dial = func(context.Context, string) (riskRelaxationClient, error) {
+		return client, errors.New("health check failed")
+	}
 	_, err := runRelaxationCmd(t, newEngineEntryLockReleaseCmd(&rootOptions{}, deps), lockArgs...)
 	if err == nil || !strings.Contains(err.Error(), "nothing was released") || client.calls != 0 {
 		t.Fatalf("err = %v calls = %d", err, client.calls)
+	}
+}
+
+// TestEngineRiskLatchShowNeverCreatesOrMigratesAJournal 은 show 가 읽기 전용 연결만 씀을 잼(리뷰 R3: openReader 를
+// journal.Open 으로 바꾼 변이 생존 — 90e5170d 가 고친 단일 writer 위험 그 자체). journal.Open 은 없는 원장을 만들고
+// 이주하므로, 빈 디렉터리에서 show 뒤에 원장 파일이 생기면 writer 로 연 것임.
+func TestEngineRiskLatchShowNeverCreatesOrMigratesAJournal(t *testing.T) {
+	dir := t.TempDir()
+	_, err := runRelaxationCmd(t, newEngineRiskLatchShowCmd(&rootOptions{outputFormat: "json", configDir: dir}, productionRiskRelaxationDeps()),
+		"--account", "acct-7")
+	if err == nil || !errors.Is(err, journal.ErrJournalMissing) {
+		t.Fatalf("show on an empty directory: %v, want ErrJournalMissing", err)
+	}
+	if _, statErr := os.Stat(filepath.Join(dir, journal.DBFileName)); !errors.Is(statErr, os.ErrNotExist) {
+		t.Fatalf("show created a journal (stat err %v)", statErr)
+	}
+}
+
+// TestEngineRelaxationNamedRefusalsSayNothingWasReleased 는 엔진의 이름 있는 거절(audit 불가 · 봉인 불일치)이 "결과
+// 불명"이 아니라 "거절, 아무것도 안 풀림"으로 말해짐을 잼(리뷰 R2 P3 · R1 P2 · R3 CX19).
+func TestEngineRelaxationNamedRefusalsSayNothingWasReleased(t *testing.T) {
+	for _, refusal := range []error{riskrelaxation.ErrAuditUnavailable, riskrelaxation.ErrStateMismatch, riskrelaxation.ErrInvalidRequest, riskrelaxation.ErrUnwired} {
+		client := &fakeRelaxationClient{err: refusal}
+		_, err := runRelaxationCmd(t, newEngineEntryLockReleaseCmd(&rootOptions{}, fakeRelaxationDeps(client)), lockArgs...)
+		if err == nil || !strings.Contains(err.Error(), "refused, nothing was released") || strings.Contains(err.Error(), "outcome is unknown") {
+			t.Errorf("%v: err = %v", refusal, err)
+		}
 	}
 }

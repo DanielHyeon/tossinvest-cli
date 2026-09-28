@@ -16,8 +16,12 @@ var (
 	ErrInvalidRequest = errors.New("risk relaxation: invalid request")
 	// ErrStale 는 승인자가 본 상태 뒤에 상태가 바뀐 해제임 — 현재 상태로 다시 승인받아야 함(보수 쪽 승리).
 	ErrStale = errors.New("risk relaxation: the state changed after the approver read it")
-	// ErrAuditUnavailable 는 엔진의 audit 로그가 없어 해제를 기록할 수 없음 — 아무것도 바뀌지 않음.
-	ErrAuditUnavailable = errors.New("risk relaxation: the engine has no audit log, so nothing was changed")
+	// ErrAuditUnavailable 는 해제를 audit 로그에 기록할 수 없음(엔진에 audit 로그가 없거나 쓰기 실패) — 커밋 전이므로
+	// 아무것도 바뀌지 않음.
+	ErrAuditUnavailable = errors.New("risk relaxation: the release could not be audited, so nothing was changed")
+	// ErrStateMismatch 는 owner 원장이 자기 마지막 봉인과 맞지 않아 결속을 검증할 수 없는 해제임 — 아무것도 바뀌지
+	// 않음. 재시도로 풀리지 않음(상태를 다시 봉인하는 사건이 먼저 필요함).
+	ErrStateMismatch = errors.New("risk relaxation: the owner state does not match its seal, so the binding cannot be verified")
 	// ErrUnwired 는 이 해제를 제공하지 않는 엔진(a066 5.5 이전 빌드)임.
 	ErrUnwired = errors.New("risk relaxation: the running engine does not offer this release")
 )

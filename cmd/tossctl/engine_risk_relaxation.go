@@ -253,7 +253,8 @@ func runRiskRelaxation(cmd *cobra.Command, root *rootOptions, deps riskRelaxatio
 	if err != nil {
 		switch {
 		case errors.Is(err, riskrelaxation.ErrStale), errors.Is(err, riskrelaxation.ErrInvalidRequest),
-			errors.Is(err, riskrelaxation.ErrAuditUnavailable), errors.Is(err, riskrelaxation.ErrUnwired):
+			errors.Is(err, riskrelaxation.ErrStateMismatch), errors.Is(err, riskrelaxation.ErrAuditUnavailable),
+			errors.Is(err, riskrelaxation.ErrUnwired):
 			return fmt.Errorf("engine %s: refused, nothing was released: %w", name, err)
 		}
 		return fmt.Errorf("engine %s: the outcome is unknown (%w); run engine risk-latch-show before retrying — "+

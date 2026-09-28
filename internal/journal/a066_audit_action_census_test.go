@@ -42,40 +42,91 @@ func TestJournalAuditActionsAreAFrozenCensus(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		ast.Inspect(file, func(n ast.Node) bool {
-			switch node := n.(type) {
-			case *ast.ValueSpec:
-				for i, id := range node.Names {
+		// 상수는 파일 최상위 선언만 셈 — 함수 안의 같은 이름 상수·변수는 표를 가리는 그림자다(리뷰 R3 P4).
+		topLevel := map[any]bool{}
+		for _, decl := range file.Decls {
+			gen, ok := decl.(*ast.GenDecl)
+			if !ok || gen.Tok != token.CONST {
+				continue
+			}
+			for _, spec := range gen.Specs {
+				vs := spec.(*ast.ValueSpec)
+				topLevel[vs] = true
+				for i, id := range vs.Names {
 					if !strings.HasPrefix(id.Name, "AuditAction") {
 						continue
 					}
-					lit, ok := valueAt(node, i).(*ast.BasicLit)
+					lit, ok := valueAt(vs, i).(*ast.BasicLit)
 					if !ok || lit.Kind != token.STRING {
 						t.Errorf("%s: %s is not a string literal constant", fset.Position(id.Pos()), id.Name)
 						continue
 					}
+					if _, dup := declared[id.Name]; dup {
+						t.Errorf("%s: %s declared twice", fset.Position(id.Pos()), id.Name)
+					}
 					value, _ := strconv.Unquote(lit.Value)
 					declared[id.Name] = value
 				}
-			case *ast.CallExpr:
-				sel, ok := node.Fun.(*ast.SelectorExpr)
-				if !ok || sel.Sel.Name != "RecordAction" {
-					return true
+			}
+		}
+		// RecordAction 은 호출 자리에서만 나타나야 함 — 메서드 값(rec := a.RecordAction)은 이 표를 우회하는 호출을 만든다(R3 P3).
+		called := map[*ast.SelectorExpr]bool{}
+		ast.Inspect(file, func(n ast.Node) bool {
+			if call, ok := n.(*ast.CallExpr); ok {
+				if sel, ok := call.Fun.(*ast.SelectorExpr); ok {
+					called[sel] = true
 				}
-				calls++
-				if len(node.Args) == 0 {
-					t.Errorf("%s: RecordAction without an action", fset.Position(node.Pos()))
-					return true
-				}
-				id, ok := node.Args[0].(*ast.Ident)
-				if !ok || !strings.HasPrefix(id.Name, "AuditAction") {
-					t.Errorf("%s: RecordAction's action is not an AuditAction* constant", fset.Position(node.Pos()))
-					return true
-				}
-				used[id.Name]++
 			}
 			return true
 		})
+		for _, decl := range file.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok || fn.Body == nil {
+				continue
+			}
+			ast.Inspect(fn.Body, func(n ast.Node) bool {
+				switch node := n.(type) {
+				case *ast.ValueSpec:
+					for _, id := range node.Names {
+						if strings.HasPrefix(id.Name, "AuditAction") {
+							t.Errorf("%s: function-local %s shadows the census", fset.Position(id.Pos()), id.Name)
+						}
+					}
+				case *ast.AssignStmt:
+					for _, lhs := range node.Lhs {
+						if id, ok := lhs.(*ast.Ident); ok && strings.HasPrefix(id.Name, "AuditAction") {
+							t.Errorf("%s: local %s shadows the census", fset.Position(id.Pos()), id.Name)
+						}
+					}
+				case *ast.SelectorExpr:
+					if node.Sel.Name == "RecordAction" && !called[node] {
+						t.Errorf("%s: RecordAction used as a method value", fset.Position(node.Pos()))
+					}
+				case *ast.CallExpr:
+					sel, ok := node.Fun.(*ast.SelectorExpr)
+					if !ok || sel.Sel.Name != "RecordAction" {
+						return true
+					}
+					calls++
+					if len(node.Args) == 0 {
+						t.Errorf("%s: RecordAction without an action", fset.Position(node.Pos()))
+						return true
+					}
+					id, ok := node.Args[0].(*ast.Ident)
+					if !ok || !strings.HasPrefix(id.Name, "AuditAction") {
+						t.Errorf("%s: RecordAction's action is not an AuditAction* constant", fset.Position(node.Pos()))
+						return true
+					}
+					// 같은 파일 안에서 해석된 식별자는 최상위 상수여야 함(지역 변수·지역 상수 그림자 거절).
+					if id.Obj != nil && (id.Obj.Kind != ast.Con || !topLevel[id.Obj.Decl]) {
+						t.Errorf("%s: RecordAction's action %s is not the package constant", fset.Position(id.Pos()), id.Name)
+						return true
+					}
+					used[id.Name]++
+				}
+				return true
+			})
+		}
 	}
 	if calls == 0 {
 		t.Fatal("no RecordAction call found — the census measured nothing")

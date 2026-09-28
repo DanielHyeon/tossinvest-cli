@@ -46,6 +46,7 @@ OWN_UNTRACKED = [
     "internal/app/engine/risk_relaxation_command.go",
     "internal/app/engine/risk_relaxation_transport.go",
     "internal/app/engine/a066_risk_relaxation_test.go",
+    "internal/journal/a066_relaxation_evidence_test.go",
 ]
 
 # (id, file, old, new, what it breaks)
@@ -60,10 +61,10 @@ MUTANTS: list[tuple[str, str, str, str, str]] = [
     ("M06", RELAX, "case strings.TrimSpace(approval) == \"\":", "case false:", "blank approval accepted"),
     ("M07", RELAX, "case strings.TrimSpace(reason) == \"\":", "case false:", "blank reason accepted"),
     ("M08", RELAX, "case nilAuditor(auditor):", "case false:", "nil auditor accepted"),
-    ("M09", RELAX, "if err := req.Auditor.RecordAction(AuditActionEntryLockRelease, setting, \"released\", detail); err != nil {",
-     "if err := req.Auditor.RecordAction(AuditActionEntryLockRelease, setting, \"released\", detail); err != nil && false {",
+    ("M09", RELAX, "if err := req.Auditor.RecordAction(AuditActionEntryLockRelease, setting, relaxationAuditAttempt, detail); err != nil {",
+     "if err := req.Auditor.RecordAction(AuditActionEntryLockRelease, setting, relaxationAuditAttempt, detail); err != nil && false {",
      "entry release commits although the audit line failed"),
-    ("M10", RELAX, "RecordAction(AuditActionEntryLockRelease,", "RecordAction(AuditActionOverageLatchRelease,",
+    ("M10", RELAX, "RecordAction(AuditActionEntryLockRelease, setting, relaxationAuditAttempt,", "RecordAction(AuditActionOverageLatchRelease, setting, relaxationAuditAttempt,",
      "entry release audited under the wrong action"),
     ("M11", RELAX, "if overage == 0 {", "if false {", "latch release with no RISK_OVERAGE latch accepted"),
     ("M12", RELAX, "if persisted != strings.TrimSpace(req.ExpectedStateDigest) {", "if false {", "state digest binding dropped (ABA)"),
@@ -73,8 +74,8 @@ MUTANTS: list[tuple[str, str, str, str, str]] = [
      "reservation RISK_OVERAGE flags not cleared"),
     ("M15", RELAX, "if err := j.recordRiskBucketStateTx(ctx, tx, key, \"OVERAGE_LATCH_RELEASED\"", "if err := func(...any) error { return nil }(ctx, tx, key, \"OVERAGE_LATCH_RELEASED\"",
      "state not resealed after the latch release"),
-    ("M16", RELAX, "if err := req.Auditor.RecordAction(AuditActionOverageLatchRelease, setting, \"released\", detail); err != nil {",
-     "if err := req.Auditor.RecordAction(AuditActionOverageLatchRelease, setting, \"released\", detail); err != nil && false {",
+    ("M16", RELAX, "if err := req.Auditor.RecordAction(AuditActionOverageLatchRelease, setting, relaxationAuditAttempt, detail); err != nil {",
+     "if err := req.Auditor.RecordAction(AuditActionOverageLatchRelease, setting, relaxationAuditAttempt, detail); err != nil && false {",
      "latch release commits although the audit line failed"),
     ("M17", V35, "CREATE TRIGGER risk_bucket_entry_loss_lock_one_open BEFORE INSERT ON risk_bucket_entry_loss_locks\nWHEN EXISTS (",
      "CREATE TRIGGER risk_bucket_entry_loss_lock_one_open BEFORE INSERT ON risk_bucket_entry_loss_locks\nWHEN 0 AND EXISTS (",
@@ -87,10 +88,54 @@ MUTANTS: list[tuple[str, str, str, str, str]] = [
      "if false {", "entry release request shape unchecked"),
     ("M21", RELAX, "case at.IsZero():", "case false:", "zero release time accepted"),
     ("M22", RELAX, "\tif errors.Is(err, sql.ErrNoRows) {\n\t\treturn RiskOverageLatchReleaseRecord{}, fmt.Errorf(\"%w: no active owner",
-     "\tif false {\n\t\treturn RiskOverageLatchReleaseRecord{}, fmt.Errorf(\"%w: no active owner",
+     "\tif errors.Is(err, sql.ErrNoRows) && false {\n\t\treturn RiskOverageLatchReleaseRecord{}, fmt.Errorf(\"%w: no active owner",
      "missing owner reported as storage error instead of stale"),
     ("M23", RELAX, "case nilAuditor(auditor):", "case auditor == nil:", "a typed-nil audit log (*audit.Log)(nil) accepted (CX-1)"),
-    ("E01", ECMD, "if s.audit == nil {", "if false {", "engine passes a nil audit log (audit line silently skipped)"),
+       # --- 리뷰 R3(2026-09-29) 생존 변이와 Q6 · 어휘 수리의 변이 ---
+    ("M24", RELAX, "\tif err := req.Auditor.RecordAction(AuditActionEntryLockRelease, setting, relaxationAuditAttempt, detail); err != nil {",
+     "\tAuditActionEntryLockRelease := \"silent\"\n\tif err := req.Auditor.RecordAction(AuditActionEntryLockRelease, setting, relaxationAuditAttempt, detail); err != nil {",
+     "census: a local variable shadows the audit action"),
+    ("M25", RELAX, "\tif err := req.Auditor.RecordAction(AuditActionEntryLockRelease, setting, relaxationAuditAttempt, detail); err != nil {",
+     "\trec := req.Auditor.RecordAction\n\t_ = AuditActionEntryLockRelease\n\tif err := rec(\"silent\", setting, relaxationAuditAttempt, detail); err != nil {",
+     "census: RecordAction called through a method value"),
+    ("M26", RELAX, "\tif err := req.Auditor.RecordAction(AuditActionEntryLockRelease, setting, relaxationAuditAttempt, detail); err != nil {",
+     "\tconst AuditActionEntryLockRelease = \"silent\"\n\tif err := req.Auditor.RecordAction(AuditActionEntryLockRelease, setting, relaxationAuditAttempt, detail); err != nil {",
+     "census: a function-local constant shadows the audit action"),
+    ("M27", RELAX, "_ = req.Auditor.RecordAction(AuditActionEntryLockRelease, setting, relaxationAuditNotCommitted,",
+     "_ = func(...any) error { return nil }(AuditActionEntryLockRelease, setting, relaxationAuditNotCommitted,",
+     "Q6: no compensating audit line after a failed commit"),
+    ("M28", RELAX, "relaxationAuditAttempt      = \"release_attempt\"", "relaxationAuditAttempt      = \"released\"",
+     "Q6: the pre-commit line claims completion"),
+    ("MX01", V35, "BEGIN SELECT RAISE(ABORT,'risk bucket entry loss lock events are immutable'); END;", "BEGIN SELECT 1; END;", "REAFFIRM events updatable"),
+    ("MX02", V35, "BEGIN SELECT RAISE(ABORT,'risk bucket entry loss lock events cannot be deleted'); END;", "BEGIN SELECT 1; END;", "REAFFIRM events deletable"),
+    ("MX03", V35, "BEGIN SELECT RAISE(ABORT,'risk bucket entry loss lock releases are immutable'); END;", "BEGIN SELECT 1; END;", "lock releases updatable"),
+    ("MX04", V35, "BEGIN SELECT RAISE(ABORT,'risk bucket entry loss lock releases cannot be deleted'); END;", "BEGIN SELECT 1; END;", "lock releases deletable"),
+    ("MX05", V35, "BEGIN SELECT RAISE(ABORT,'risk bucket latch releases are immutable'); END;", "BEGIN SELECT 1; END;", "latch releases updatable"),
+    ("MX06", V35, "BEGIN SELECT RAISE(ABORT,'risk bucket latch releases cannot be deleted'); END;", "BEGIN SELECT 1; END;", "latch releases deletable"),
+    ("MX07", V35, "lock_seq INTEGER NOT NULL UNIQUE REFERENCES", "lock_seq INTEGER NOT NULL REFERENCES", "two releases of one lock"),
+    ("MX12", RELAX, "COALESCE((SELECT s.state_digest FROM risk_bucket_state_snapshots s", "COALESCE((SELECT '' FROM risk_bucket_state_snapshots s", "show reports no state digest"),
+    ("MX17", RELAX, "UPDATE risk_bucket_reservations SET risk_overage_latched=0 WHERE account_ref=? AND market=? AND symbol=? AND owner_prospective_generation=?",
+     "UPDATE risk_bucket_reservations SET risk_overage_latched=0 WHERE account_ref=? AND market=? AND symbol=? AND (owner_prospective_generation=? OR 1)",
+     "release clears other generations of the symbol"),
+    ("MX18", RELAX, "UPDATE risk_bucket_reservations SET risk_overage_latched=0 WHERE", "UPDATE risk_bucket_reservations SET risk_overage_latched=0,overage_minor='0' WHERE",
+     "release erases the overage amounts"),
+    ("MX20", RELAX, "prospective_generation=? AND released_at IS NULL`,\n\t\tkey.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration).Scan(&overage)",
+     "prospective_generation=?`,\n\t\tkey.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration).Scan(&overage)",
+     "latch release on a released owner"),
+    ("E11", ECMD, "case errors.Is(err, journal.ErrRiskBucketReplayMismatch):", "case false:", "state mismatch reaches the CLI as outcome unknown"),
+    ("E12", ECMD, "case errors.Is(err, journal.ErrRiskRelaxationAuditFailed):", "case false:", "audit write failure reaches the CLI as outcome unknown"),
+    ("EX13", ETRANS, "mux.HandleFunc(RiskRelaxationEntryLockPath, server.auth(token,\n\t\triskRelaxationRequestHandler(commands.ReleaseEntryLossLock)))",
+     "mux.HandleFunc(RiskRelaxationEntryLockPath, (\n\t\triskRelaxationRequestHandler(commands.ReleaseEntryLossLock)))", "entry route without bearer auth"),
+    ("EX14", ETRANS, "mux.HandleFunc(RiskRelaxationLatchPath, server.auth(token,\n\t\triskRelaxationRequestHandler(commands.ReleaseRiskOverageLatch)))",
+     "mux.HandleFunc(RiskRelaxationLatchPath, (\n\t\triskRelaxationRequestHandler(commands.ReleaseRiskOverageLatch)))", "latch route without bearer auth"),
+    ("EX16", ECMD, "\tauditor, err := s.relaxationAuditor()\n\tif err != nil {\n\t\treturn riskrelaxation.Result{}, err\n\t}\n\toperator, reason, err := relaxationOperator(req.Operator, req.Reason)\n\tif err != nil {\n\t\treturn riskrelaxation.Result{}, err\n\t}\n\towner :=",
+     "\tauditor := journal.RiskRelaxationAuditor(s.audit)\n\toperator, reason, err := relaxationOperator(req.Operator, req.Reason)\n\tif err != nil {\n\t\treturn riskrelaxation.Result{}, err\n\t}\n\towner :=",
+     "latch path skips the engine audit-log check"),
+    ("CX19", CLI, "errors.Is(err, riskrelaxation.ErrStateMismatch), errors.Is(err, riskrelaxation.ErrAuditUnavailable),", "errors.Is(err, riskrelaxation.ErrStateMismatch),",
+     "CLI tells an audit refusal as an unknown outcome"),
+    ("CX21", CLI, "return journal.OpenReadOnly(ctx, journal.ReadOnlyOptions{Path: path})", "return journal.Open(ctx, journal.Options{Path: path})",
+     "risk-latch-show opens the journal as a writer"),
+ ("E01", ECMD, "if s.audit == nil {", "if false {", "engine passes a nil audit log (audit line silently skipped)"),
     ("E02", ECMD, "_, err := repo.EnqueueAlert(context.WithoutCancel(ctx), journal.Alert{", "_, err := func(context.Context, journal.Alert) (int64, error) { return 0, nil }(context.WithoutCancel(ctx), journal.Alert{",
      "no notice is enqueued but the result says notified"),
     ("E03", ECMD, "\tif err != nil {\n\t\tresult.NotifyError = err.Error()", "\tif false {\n\t\tresult.NotifyError = err.Error()",
@@ -175,7 +220,12 @@ def main() -> int:
         finally:
             path.write_bytes(original)
         assert path.read_bytes() == original, f"{mid}: revert failed"
-        verdict = "CAUGHT" if rc != 0 else "SURVIVED"
+        # 컴파일 실패는 시험이 잡은 것이 아님 — 변이가 빌드를 깨면 BUILD-FAILED 로 적고 판정에서 뺌(R3 지적: M22 거짓 CAUGHT).
+        log_text = (base / f"{mid}.log").read_text(errors="replace")
+        if rc != 0 and ("[build failed]" in log_text or "[setup failed]" in log_text):
+            verdict = "BUILD-FAILED"
+        else:
+            verdict = "CAUGHT" if rc != 0 else "SURVIVED"
         rows.append(f"{mid}\t{verdict}\t{rel}\t{what}\trc={rc}")
         print(rows[-1], flush=True)
     ledger.write_text("\n".join(rows) + "\n")

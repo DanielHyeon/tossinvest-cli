@@ -5,6 +5,7 @@ package journal
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -50,5 +51,27 @@ func TestMigrationV34ToV35KeepsExistingLocksInForceAndSwapsTheTrigger(t *testing
 	rows.Close()
 	if got := strings.Join(triggers, ","); got != "risk_bucket_entry_loss_lock_no_delete,risk_bucket_entry_loss_lock_no_update,risk_bucket_entry_loss_lock_one_open" {
 		t.Fatalf("lock triggers after v35: %s", got)
+	}
+}
+
+// TestReadOnlyRelaxationViewsRefuseAPreV35Journal 은 risk-latch-show 가 v35 이전 저널에서 날것의 "no such table"
+// 대신 타입 있는 ErrSchemaTooOld 로 거절함을 잼(리뷰 R2 P3).
+func TestReadOnlyRelaxationViewsRefuseAPreV35Journal(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "journal.db")
+	old := openJournalAtSchema(t, path, 34)
+	if err := old.Close(); err != nil {
+		t.Fatal(err)
+	}
+	ro, err := OpenReadOnly(ctx, ReadOnlyOptions{Path: path})
+	if err != nil {
+		t.Fatalf("OpenReadOnly: %v", err)
+	}
+	defer ro.Close()
+	if _, err := ro.ReadEntryLossLocks(ctx, "acct-1"); !errors.Is(err, ErrSchemaTooOld) {
+		t.Fatalf("locks on v34: %v, want ErrSchemaTooOld", err)
+	}
+	if _, err := ro.ReadRiskOwnerLatches(ctx, "acct-1", riskbucket.MarketKR); !errors.Is(err, ErrSchemaTooOld) {
+		t.Fatalf("latches on v34: %v, want ErrSchemaTooOld", err)
 	}
 }

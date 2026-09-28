@@ -377,3 +377,69 @@ func TestA066OwnerReleaseOpensOnlyAfterTheOverageLatchRelease(t *testing.T) {
 		t.Fatalf("owner release after the latch release: result=%+v err=%v", result, err)
 	}
 }
+
+// cancellingAuditor 는 audit 줄을 쓴 직후 요청 문맥을 끊음 — 클라이언트가 audit 와 commit 사이에 끊긴 모양.
+type cancellingAuditor struct {
+	relaxationAuditor
+	cancel context.CancelFunc
+}
+
+func (a *cancellingAuditor) RecordAction(action, setting, value, detail string) error {
+	err := a.relaxationAuditor.RecordAction(action, setting, value, detail)
+	a.cancel()
+	return err
+}
+
+// TestA066AuditLineBeforeCommitIsAnAttemptAndACommitFailureIsCompensated 는 commit 앞 audit 줄이 "시도"이고, 그 뒤
+// commit 이 실패하면(요청 문맥 끊김) 원장은 그대로이며 audit 에 "미커밋" 보상 줄이 남음을 잼(Manager 판정 Q6 (i),
+// 리뷰 R2 probe 2: "released" 인데 롤백된 거짓 audit).
+func TestA066AuditLineBeforeCommitIsAnAttemptAndACommitFailureIsCompensated(t *testing.T) {
+	t.Run("entry lock", func(t *testing.T) {
+		j := openTestJournal(t)
+		activateTestLock(t, j, "a066 daily loss")
+		ctx, cancel := context.WithCancel(context.Background())
+		auditor := &cancellingAuditor{cancel: cancel}
+		req := releaseRequest(lockStateFor(t, j), nil)
+		req.Auditor = auditor
+		if _, err := j.ReleaseEntryLossLock(ctx, req); err == nil {
+			t.Fatal("release committed on a cancelled request")
+		}
+		if err := refuseEntryUnderLossLock(context.Background(), j.db, "acct-1", riskbucket.MarketKR, riskbucket.HorizonShort); !errors.Is(err, ErrRiskBucketEntryLossLocked) {
+			t.Fatalf("lock not in force after the failed commit: %v", err)
+		}
+		assertAttemptThenNotCommitted(t, auditor.lines, AuditActionEntryLockRelease)
+	})
+	t.Run("overage latch", func(t *testing.T) {
+		j, key, _ := overageLatchedOwner(t)
+		ctx, cancel := context.WithCancel(context.Background())
+		auditor := &cancellingAuditor{cancel: cancel}
+		req := latchRelease(key, ownerLatchView(t, j, key).StateDigest, nil)
+		req.Auditor = auditor
+		if _, err := j.ReleaseRiskOverageLatch(ctx, req); err == nil {
+			t.Fatal("latch release committed on a cancelled request")
+		}
+		if overage, _, _ := ownerFlags(t, j, key); overage != 1 {
+			t.Fatal("latch cleared although the commit failed")
+		}
+		assertAttemptThenNotCommitted(t, auditor.lines, AuditActionOverageLatchRelease)
+	})
+	t.Run("a committed release is an attempt and nothing else", func(t *testing.T) {
+		j := openTestJournal(t)
+		activateTestLock(t, j, "a066 daily loss")
+		auditor := &relaxationAuditor{}
+		if _, err := j.ReleaseEntryLossLock(context.Background(), releaseRequest(lockStateFor(t, j), auditor)); err != nil {
+			t.Fatal(err)
+		}
+		if len(auditor.lines) != 1 || !strings.Contains(auditor.lines[0], " | release_attempt | ") {
+			t.Fatalf("audit = %q, want exactly one attempt line", auditor.lines)
+		}
+	})
+}
+
+func assertAttemptThenNotCommitted(t *testing.T, lines []string, action string) {
+	t.Helper()
+	if len(lines) != 2 || !strings.HasPrefix(lines[0], action+" | ") || !strings.Contains(lines[0], " | release_attempt | ") ||
+		!strings.HasPrefix(lines[1], action+" | ") || !strings.Contains(lines[1], " | not_committed | ") {
+		t.Fatalf("audit = %q, want an attempt line then a not_committed line", lines)
+	}
+}

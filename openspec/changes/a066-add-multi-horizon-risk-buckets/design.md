@@ -137,6 +137,31 @@ daily/horizon loss lock과 bucket snapshot 장애는 EXPOSURE_RAISING decision/l
   「완화됨·통지 실패」로 0 이 아닌 코드로 끝난다.
 - 읽기 전용 `risk-latch-show` 는 `journal.OpenReadOnly`(mode=ro, query_only)로 직접 읽는다. writer 가 아니다.
 - 응답을 못 읽은 경우는 "결과 불명"으로 말한다. 재시도는 안전하다. 이미 풀린 대상의 해제는 결속이 stale 로 거절한다.
+- 아무것도 바꾸지 않은 journal 거절은 이름 있는 거절로 건넌다(리뷰 R1 P2 · R2 P3). 봉인 불일치(`ErrRiskBucketReplayMismatch`,
+  봉인 없이 원장이 움직인 owner)는 `state_mismatch`, audit 쓰기 실패(`ErrRiskRelaxationAuditFailed`)는 `audit_unavailable` 이다.
+  CLI 는 둘 다 "거절, 아무것도 안 풀림"으로 말한다. `internal`(결과 불명)은 이름 없는 실패에만 남는다.
+- 외부 전송으로 나가는 통지 제목·본문에는 계좌 식별자를 싣지 않는다(안전 불변식 8, 리뷰 R2 P2). 대상은 시장·범위로 말하고
+  (`entry_loss_lock:KR/SHORT`, `risk_owner:US/AAPL/<generation>`), 계좌를 포함한 전체 대상은 원장 payload 와 CLI 결과에만 둔다.
+  같은 §8 문제를 a090 r2 가 다른 자리에서 찾았다. 사용자 큐의 해당 항목과 같은 가족이다(Manager 2026-09-29).
+- **통지 적재는 a092 기록 입구 밖의 직접 기록자다 — 명명된 잔여(Manager 판정 2026-09-29 Q5 (a)).** a092 델타(engine-safety)는
+  "입구를 거치지 않고 원장에 직접 쓰는 기록자는 … 행을 넣기 **전에** 자기 진입 차단 사유를 세워야 한다(SHALL)"라고 쓰고,
+  정보성 critical 예외를 두지 않는다. 완화 통지가 자기 진입 차단 사유를 세우는 것은 의미가 맞지 않는다. 그래서 이행으로 규범을
+  충족한다: a092 가 알림기의 기록 전용 입구(`n.mu` 아래 `RecordAlert`, 기록자별 `remindAfter`, 0 허용)를 착지시키면
+  `notifyRelaxation` 의 호출 한 자리를 그리로 옮긴다(task 5.5.5). 그때까지는 `journal.EnqueueAlert` 직접 적재다. a092 쪽
+  census 가 이 자리를 세고 있어 양방향 교차가 성립한다.
+  a092 r23 판정(Manager 승인)으로 이것이 **유일 경로**가 됐다: 완화 통지에는 세울 자기 차단 사유가 없어 「먼저 잠금」 자체가
+  불가능하다. 상호 조건: a092 는 "a066 이행 커밋 인용"을 자기 archive 선행 조건으로 갖고, a066 의 task 5.5.5 는 a092
+  `RecordAlert` 착지를 선행 조건으로 갖는다.
+
+**audit 줄은 시도의 기록이다 (Manager 판정 2026-09-29 Q6 (i)).**
+- commit 앞 audit 줄의 value 는 `release_attempt` 다. 완료가 아니라 의도의 기록이라 롤백돼도 거짓이 아니다. "audit 가 commit 앞"
+  원칙은 이 시도 줄이 충족하고, 결과는 원장 상태가 말한다.
+- 시도 줄 뒤에 commit 이 실패하면(요청 문맥 끊김 등) 같은 action·setting 으로 `not_committed` 보상 줄을 쓴다. audit 쓰기는 요청
+  문맥을 받지 않으므로 클라이언트가 끊겨도 기록된다(리뷰 R2 probe 2 의 "released 인데 롤백" 거짓 audit 를 닫음).
+- 비용(CX-2 · R2 P2 · R1/R3 P3, 명명된 잔여): 해제는 audit fsync 동안 엔진의 단일 journal 연결을 쥔다. 실측(사본, ext4, 50회,
+  2026-09-29): audit `RecordAction` 중앙값 4.6ms · 해제 전체 9.1ms(p95 10.7ms) · 활성화 커밋 4.8ms. fsync 1회 규모로 유계이고,
+  audit 파일은 journal 과 같은 디스크라 같은 실패 영역이다. 선례 `TransitionOperatingMode` · reservation release 도 같은 형태다.
+  트랜잭션은 요청 문맥으로 돌아 클라이언트 절단(5s)이 연결 점유의 상한 노릇을 한다.
 
 **audit.** action 두 종을 둔다(동결 census 에 등록한다).
 - `risk_bucket.entry_lock_release`: setting 은 `entry_loss_lock:<account>/<market>/<horizon>`.

@@ -84,9 +84,10 @@ func (s *PositionPolicyCommandService) ReleaseEntryLossLock(ctx context.Context,
 	if err != nil {
 		return riskrelaxation.Result{}, relaxationError(err)
 	}
-	target := fmt.Sprintf("entry_loss_lock:%s/%s/%s", strings.TrimSpace(req.AccountRef),
-		strings.ToUpper(strings.TrimSpace(req.Market)), strings.ToUpper(strings.TrimSpace(req.Horizon)))
-	return notifyRelaxation(ctx, repo, "entry_lock", record.ReleaseSeq, target, operator, req.Approval, record.ReleasedAt), nil
+	scope := strings.ToUpper(strings.TrimSpace(req.Market)) + "/" + strings.ToUpper(strings.TrimSpace(req.Horizon))
+	target := "entry_loss_lock:" + strings.TrimSpace(req.AccountRef) + "/" + scope
+	return notifyRelaxation(ctx, repo, "entry_lock", record.ReleaseSeq, target, "entry_loss_lock:"+scope, operator,
+		req.Approval, record.ReleasedAt), nil
 }
 
 // ReleaseRiskOverageLatch 는 운영자가 본 상태의 owner generation 에서 RISK_OVERAGE latch 만 해제함.
@@ -116,8 +117,10 @@ func (s *PositionPolicyCommandService) ReleaseRiskOverageLatch(ctx context.Conte
 	if err != nil {
 		return riskrelaxation.Result{}, relaxationError(err)
 	}
-	target := fmt.Sprintf("risk_owner:%s/%s/%s/%s", owner.AccountID, owner.Market, owner.Symbol, owner.ProspectiveGeneration)
-	return notifyRelaxation(ctx, repo, "overage_latch", record.ReleaseSeq, target, operator, req.Approval, record.ReleasedAt), nil
+	scope := fmt.Sprintf("%s/%s/%s", owner.Market, owner.Symbol, owner.ProspectiveGeneration)
+	target := "risk_owner:" + owner.AccountID + "/" + scope
+	return notifyRelaxation(ctx, repo, "overage_latch", record.ReleaseSeq, target, "risk_owner:"+scope, operator,
+		req.Approval, record.ReleasedAt), nil
 }
 
 // relaxationOperator 는 운영자 이름을 요구하고 사유에 붙임 — journal 의 해제 기록에는 운영자 칸이 없고(actor 는
@@ -139,6 +142,10 @@ func relaxationError(err error) error {
 	switch {
 	case errors.Is(err, journal.ErrRiskRelaxationStale):
 		return fmt.Errorf("%w: %w", riskrelaxation.ErrStale, err)
+	case errors.Is(err, journal.ErrRiskRelaxationAuditFailed):
+		return fmt.Errorf("%w: %w", riskrelaxation.ErrAuditUnavailable, err)
+	case errors.Is(err, journal.ErrRiskBucketReplayMismatch):
+		return fmt.Errorf("%w: %w", riskrelaxation.ErrStateMismatch, err)
 	case errors.Is(err, journal.ErrRiskRelaxationRequiresOperator), errors.Is(err, journal.ErrRiskRelaxationApprovalRequired),
 		errors.Is(err, journal.ErrInvalidRequest):
 		return fmt.Errorf("%w: %w", riskrelaxation.ErrInvalidRequest, err)
@@ -148,8 +155,11 @@ func relaxationError(err error) error {
 
 // notifyRelaxation 은 커밋된 해제를 원장 alert 로 enqueue 함. 실패해도 해제는 유효함 — 결과가 「완화됨·통지 실패」를
 // 말함(Notified=false). 요청 문맥이 끊겨도 통지는 기록되도록 취소를 떼어 냄.
-func notifyRelaxation(ctx context.Context, repo riskRelaxationRepository, kind string, seq int64, target, operator,
-	approval string, at time.Time) riskrelaxation.Result {
+//
+// target 은 계좌를 포함한 전체 대상(CLI 결과·원장 payload)이고, published 는 외부 전송으로 나가는 제목·본문용 대상임 —
+// 계좌 식별자를 빼고 시장·범위만 말함(안전 불변식 8; 다른 엔진 alert 제목도 종목만 실음).
+func notifyRelaxation(ctx context.Context, repo riskRelaxationRepository, kind string, seq int64, target, published,
+	operator, approval string, at time.Time) riskrelaxation.Result {
 	result := riskrelaxation.Result{ReleaseSeq: seq, Target: target, ReleasedAt: journal.RFC3339(at)}
 	payload, _ := json.Marshal(map[string]any{
 		"kind": kind, "target": target, "release_seq": seq, "operator": operator,
@@ -159,8 +169,8 @@ func notifyRelaxation(ctx context.Context, repo riskRelaxationRepository, kind s
 		EventKey: EventRiskRelaxation + "|" + kind + "|" + strconv.FormatInt(seq, 10),
 		Type:     EventRiskRelaxation,
 		Severity: "critical",
-		Title:    "RISK RELAXATION: " + target,
-		Body: fmt.Sprintf("operator %s released %s (release %d, approval: %s)", operator, target, seq,
+		Title:    "RISK RELAXATION: " + published,
+		Body: fmt.Sprintf("operator %s released %s (release %d, approval: %s)", operator, published, seq,
 			strings.TrimSpace(approval)),
 		Payload: string(payload),
 	})

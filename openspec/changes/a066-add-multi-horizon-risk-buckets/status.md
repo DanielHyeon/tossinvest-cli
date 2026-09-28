@@ -4,7 +4,7 @@
 - Overall: IN PROGRESS (tasks 22/30)
 - Current wave: 5.5 relaxation mechanism (design D8, user decision 2026-09-28) — journal API + v35 + `tossctl engine entry-lock-release` / `risk-latch-release` (mutating) / `risk-latch-show`; mechanism only, never run on the operating journal
 - Runtime authority: dormant q_final Guardian/Gateway seam only; no sealed strategyflow/engine/broker/toggle activation
-- Schema: **v35 on this branch, v32 on main** — do not build an image from this branch until main carries v35. v35 is additive except one trigger swap (`risk_bucket_entry_loss_lock_first_cause_wins` → `risk_bucket_entry_loss_lock_one_open`, v33 file unchanged). The release commands open the journal with `journal.Open` (migrating), so the CLI and the running engine must come from the same image
+- Schema: **v35 on this branch, v32 on main** — do not build an image from this branch until main carries v35. v35 is additive except one trigger swap (`risk_bucket_entry_loss_lock_first_cause_wins` → `risk_bucket_entry_loss_lock_one_open`, v33 file unchanged). The release commands go through the running engine's control endpoint (90e5170d); the CLI never opens the journal for writing, and `risk-latch-show` reads it read-only (refusing a pre-v35 journal with ErrSchemaTooOld)
 - Production q_final strategy entry stays closed until `productionRiskJournalSchema` (=27) is replaced (named residual, 5.6.1)
 
 ## Wave 2A (2026-09-25) — re-settlement on HEAD after a112

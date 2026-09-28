@@ -76,6 +76,7 @@ func decodeRemoteRiskRelaxationError(remote rpcError) error {
 	base := map[string]error{
 		"invalid":           riskrelaxation.ErrInvalidRequest,
 		"stale":             riskrelaxation.ErrStale,
+		"state_mismatch":    riskrelaxation.ErrStateMismatch,
 		"audit_unavailable": riskrelaxation.ErrAuditUnavailable,
 		"unwired":           riskrelaxation.ErrUnwired,
 	}[remote.Code]
