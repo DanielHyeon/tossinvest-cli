@@ -398,7 +398,8 @@ BUNDLES: list[dict] = [
         "calls": "`normaliseSymbols` · `next.validate`(B3 조건).",
         "mutations": "`cfg.Adoption` — 통과한 블록 또는 `Rejected`만 가진 0 블록.",
         "boundary": "**a095는 이 함수를 바꾸지 않는다.** B3 창이 거부된 블록을 `Adoption{Rejected: why}`로 만든다 — `Enabled` 거짓 · "
-                    "include 없음. 그래서 거부된 편입 블록은 델타의 「운영자가 고른 상태」(편입 꺼짐 ∧ 미지정)와 **모양이 같다** — 8판 델타는 "
+                    "include 없음 · **exclude 없음**(거부된 엔진의 exclude 종목은 `alertUnmanaged` B3 `:405` 「설정 거부」 사유로 가며, 그 case는 "
+                    "B4 exclude보다 앞이다 — 10판 r9 R9-4). 그래서 거부된 편입 블록은 델타의 「운영자가 고른 상태」(편입 꺼짐 ∧ 미지정)와 **모양이 같다** — 8판 델타는 "
                     "정의에 「설정이 거부되지 않았고」를 넣고 거부는 Q2(a)로 남긴다(r7 F1). **거부된 엔진이 모두 보호를 요청한 엔진은 아니다**"
                     "(9판 r8 N3): `Adoption.validate`(`config.adoption.validate`) B1 `:161`은 편입 꺼짐 · include 없음 · `DefaultStopPct == 0`일 "
                     "때만 검증을 건너뛰므로, 의도적으로 끈 블록에 범위 밖 `default_stop_pct`가 남아 있어도 B2 `:164`에서 거부된다. 그 모양은 "
