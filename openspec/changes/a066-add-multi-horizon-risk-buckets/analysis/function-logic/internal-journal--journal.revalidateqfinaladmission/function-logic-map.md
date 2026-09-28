@@ -36,6 +36,14 @@
 | B17 | if at 621:2 | `if len(seen) != len(riskbucket.RequiredDimensionOrder()) {`; then `return true, fmt.Errorf("%w: q_final reservation dimension set", ErrRiskBucketReplayMismatch)` (line last changed by `a37d97f5`) | a066 commit | NOT covered |
 | B18 | if at 627:2 | `if err != nil {`; then `return true, err` (line last changed by `0004536c`) | not a066 | NOT covered |
 | B19 | if at 630:2 | `if err := refuseEntryUnderLossLock(ctx, j.db, account, riskbucket.Market(market), horizon); err != nil {`; then `return true, err` (line last changed by `0004536c`) | not a066 | covered |
+| B20 | if at 635:2 | `if err := ensureRiskBucketEntryScopeClean(ctx, j.db, key); err != nil {`; then `return true, err` (6.5 `28629ec6`) | a066 commit | covered |
+| B21 | if at 639:2 | decision bucket rows `j.db.QueryContext(…decision_id=?…)` `if err != nil {`; then `return true, err` (6.5) | a066 commit | structural (storage exit) |
+| B22 | for at 647:2 | `for bucketRows.Next() {` over the decision's bucket rows (6.5) | a066 commit | covered |
+| B23 | if at 649:3 | `if err := bucketRows.Scan(&ref.dimension, &ref.value); err != nil {`; then close and `return true, err` (6.5) | a066 commit | structural (storage exit) |
+| B24 | if at 655:2 | `if err := bucketRows.Close(); err != nil {`; then `return true, err` (6.5) | a066 commit | structural (storage exit) |
+| B25 | range at 658:2 | `for _, ref := range refs {` (6.5) | a066 commit | covered |
+| B26 | if at 660:3 | `riskbucket.ReadJournalBucketUsage` error → `return true, fmt.Errorf("%w: … ledger usage unreadable at submit …", ErrRiskBucketSnapshotMismatch, …)` (6.5) | a066 commit | structural (storage exit) |
+| B27 | if at 663:3 | `if err := latchedUsageRefusal(ref.dimension, ref.value, usage); err != nil {`; then `return true, err` (6.5) | a066 commit | covered |
 
 5.6.1 post-edit (HEAD `b8211926`): 19 → 19; body unchanged, file lines shifted. Pre-edit table: `analysis/pre-edit/5.6.1/internal-journal--journal.revalidateqfinaladmission.md`.
 

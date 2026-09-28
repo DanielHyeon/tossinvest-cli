@@ -15,9 +15,9 @@
 
 | Branch | Position | Condition and first body statement (AST source line) | a066 relevance | Coverage (5.7 post-edit) |
 |---|---|---|---|---|
-| B1 | if at 457:2 | `if err != nil {`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
-| B2 | for at 462:2 | `for rows.Next() {`; then `var row productionRiskUsageRow` (line last changed by `8022f578`) | not a066 | covered |
-| B3 | if at 464:3 | `if err := rows.Scan(&row.ReservationID, &row.PolicyVersion, &row.HeldMinor, &row.FilledMinor, &row.State,`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B1 | if at 459:2 | `if err != nil {`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B2 | for at 464:2 | `for rows.Next() {`; then `var row productionRiskUsageRow` (line last changed by `8022f578`) | not a066 | covered |
+| B3 | if at 466:3 | `if err := rows.Scan(&row.ReservationID, &row.PolicyVersion, &row.HeldMinor, &row.FilledMinor, &row.State,`; then `return nil, err` (line last changed by `8022f578`) | not a066 | NOT covered |
 
 5.7 post-edit (HEAD `54e67495` + 5.7 working tree): 3 → 3; body unchanged (file lines shifted).
 
@@ -35,3 +35,5 @@
 
 - Safe edit boundary (5.6.1 F1): parameter type `*sql.DB` → `UsageQueryer` (satisfied by *sql.DB and *sql.Tx) so the admission transaction can call the same reader. Body unchanged.
 - High-risk impact: yes — q_final sizing/admission authority.
+
+Positions re-read from the post-edit `ast.json` (2026-09-29): +2 lines each (B1 459:2, B2 464:2, B3 466:3) — the `JournalBucketUsage` field added above by `28629ec6`; this function is unchanged.

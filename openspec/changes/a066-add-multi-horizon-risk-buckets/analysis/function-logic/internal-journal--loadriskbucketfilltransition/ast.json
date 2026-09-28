@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/risk_bucket_fill.go",
-  "source_sha256": "9801dd44e329bda510413456cf0c2b03dc8ff4dff24a9383d5dce59f75cb6bed",
+  "source_sha256": "d8d3cefcb0667911b992d36d7adafd360fbcf49d8c54afa7b5655234527ec309",
   "package": "journal",
   "function": "loadRiskBucketFillTransition",
   "signature": "loadRiskBucketFillTransition(params=5, results=3)",

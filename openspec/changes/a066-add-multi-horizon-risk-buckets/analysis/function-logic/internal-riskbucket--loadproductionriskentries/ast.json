@@ -1,6 +1,6 @@
 {
   "file": "internal/riskbucket/production_snapshot_authority.go",
-  "source_sha256": "087f632570367fd5ba530aa6f83993dbf2cb8e522178421c38b82570b6e84677",
+  "source_sha256": "5f26bf28bbf8207f41772c9a5a079faef80d2f8a6f7fe09d143e0171bad34cd0",
   "package": "riskbucket",
   "function": "loadProductionRiskEntries",
   "signature": "loadProductionRiskEntries(params=6, results=2)",

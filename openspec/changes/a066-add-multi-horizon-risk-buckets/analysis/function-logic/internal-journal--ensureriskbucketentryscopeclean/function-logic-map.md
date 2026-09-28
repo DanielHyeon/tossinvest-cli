@@ -20,11 +20,16 @@
 | B3 | active-reconcile count query error (279) | none | err | storage exit — structural test |
 | B4 | any count ≠ 0 (284) | none | `ErrRiskBucketEntryBlocked` | existing admission latch tests (`TestA066LatchedUsageInASharedBucketBlocksNewEntry`, owner/scope latch admission tests) |
 
-## Calls, callers and the planned edit
+## Calls and live bindings
 
 Callers (grep internal/journal non-test): `CommitRiskBucketAdmission` (risk_bucket.go:138) and `commitFreshRiskBucketAdmissionTx` (risk_bucket_issuance.go:415), both inside the admission transaction.
 
 Planned 6.5 edit (finding 1): the body moves into one rule function that **names** the cause (owner latch kind, scope latch, reconcile cause). This function keeps its signature and sentinel, and `RevalidateQFinalAdmission` calls the same rule at submit. The querier type widens from `*sql.Tx` to `riskBucketQueryer` (the same three SELECTs), so revalidation can run it on `j.db`. Entry path only.
+
+## State mutations and fallbacks
+
+- Read only (three SELECTs on the caller's querier: the admission `*sql.Tx` or `j.db` at submit revalidation). No write.
+- Every read error returns the raw error; every caller refuses on any error (admission aborts, revalidation returns `(true, err)` → Gateway refuses before the broker). No fallback admits.
 
 ## Safety conclusion
 

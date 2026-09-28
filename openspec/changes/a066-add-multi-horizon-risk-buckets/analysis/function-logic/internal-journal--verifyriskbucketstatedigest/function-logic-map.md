@@ -19,11 +19,16 @@
 | B2 | seal query error (1099) — includes `sql.ErrNoRows` when no seal row exists | none | **raw err** | none before 6.5 — `TestA066FillWithAMissingStateSealLatchesAndKeepsTheFill` (RED at 4fb0b26e: the fill transaction aborts) |
 | B3 | digest mismatch (1102) | none | `ErrRiskBucketReplayMismatch` | state digest drift tests |
 
-## Calls, callers and the planned edit
+## Calls and live bindings
 
 Callers (grep internal/journal non-test): admission (CRA :167, commitFresh :443), revalidation (:593, `verifyQFinalAdmissionRows` :363), fill apply (:217), terminal release (:268), actual completion (:312), release (:373), order registration (:114), owner bind (owner.go:393; the caller at :547 latches on semantic **or** `sql.ErrNoRows`), owner release (owner.go:846), and strategy registration (strategy_dispatch_runtime.go:1116). Every non-fill caller refuses on any error. Only the fill callers branch on `isRiskBucketSemanticError`.
 
 Planned 6.5 edit (finding 4): a missing seal (`sql.ErrNoRows`) becomes `ErrRiskBucketReplayMismatch` ("state seal missing"). On the fill path this becomes a latch and the fill commits (the 2.7 contract). Elsewhere it is still a refusal, so the outcome is unchanged there. Other errors stay raw (storage). R2's other two raw returns (`riskBucketFillEventDigest` and the held read in `releaseRiskBucketOrderInTx`) sit behind this check on every path (walked: applyRiskBucketFillInTx :217 before :243; releaseTerminal :268 and ReleaseRiskBucketOrder :373 before `releaseRiskBucketOrderInTx`). They are backstops and not edited.
+
+## State mutations and fallbacks
+
+- Read only. No write.
+- Missing seal → `ErrRiskBucketReplayMismatch` ("state seal missing"); on the fill path `isRiskBucketSemanticError` turns it into a latch while the fill commits (2.7 contract), everywhere else the caller refuses. Other read errors stay raw (storage) and every caller refuses on them.
 
 ## Safety conclusion
 

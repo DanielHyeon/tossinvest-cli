@@ -21,7 +21,7 @@
 | B4/B5 | claimed or ledger sum unparseable (43/47) | none | snapshot mismatch | 5.6.1 rule-edge tests |
 | B6 | claimed < ledger (50) | none | `BUCKET_USAGE_STALE` refusal | `TestA066StaleUsage*` |
 
-## Calls, callers and the planned edit
+## Calls and live bindings
 
 Callers: `CommitRiskBucketAdmission` (risk_bucket.go:199) and `commitFreshRiskBucketAdmissionTx` (risk_bucket_issuance.go:453).
 
@@ -30,6 +30,11 @@ Planned 6.5 edits:
 - (finding 3a) A new sibling check runs right after this function at both call sites: the admission's reservation plus ledger usage must fit under the smallest limit recorded on that bucket's active reservations.
 
 Both edits are conservative: entry refusal only.
+
+## State mutations and fallbacks
+
+- Read only, inside the admission transaction. No write.
+- Ledger read error → `ErrRiskBucketSnapshotMismatch` (refusal). Latched usage → `latchedUsageRefusal` (refusal). Claimed < ledger → `BUCKET_USAGE_STALE`. Over the smallest recorded limit → `BUCKET_CAP_EXHAUSTED`. No fallback admits.
 
 ## Safety conclusion
 

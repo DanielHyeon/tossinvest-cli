@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/risk_bucket.go",
-  "source_sha256": "525656aa81550e7b57f0c11f480d878a2fa8de5776e9cf85539ec13c669df539",
+  "source_sha256": "cdb991bdfd45955ef2c3e6f8d783c76945b835a40d2ae12eb245a9ce615ea597",
   "package": "journal",
   "function": "CommitRiskBucketAdmission",
   "receiver": "Journal",

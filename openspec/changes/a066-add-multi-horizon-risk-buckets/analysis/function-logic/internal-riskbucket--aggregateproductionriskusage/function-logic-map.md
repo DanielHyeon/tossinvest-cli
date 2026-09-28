@@ -15,9 +15,9 @@
 
 | Branch | Position | Condition and first body statement (AST source line) | a066 relevance | Coverage (5.7 post-edit) |
 |---|---|---|---|---|
-| B1 | range at 477:2 | `for _, row := range rows {`; then `rowFilled, filledOK := new(big.Int).SetString(row.FilledMinor, 10)` (line last changed by `8022f578`) | not a066 | covered |
-| B2 | if at 480:3 | `if !filledOK \|\| !heldOK \|\| rowFilled.Sign() < 0 \|\| rowHeld.Sign() < 0 \|\| rowFilled.BitLen() > 256 \|\| rowHeld.BitLen() > 256 \|\|`; then `return JournalBucketUsage{}, ErrJournalUsageInvalid` (line last changed by `8022f578`) | not a066 | covered |
-| B3 | if at 490:3 | `if filled.BitLen() > 256 \|\| held.BitLen() > 256 {`; then `return JournalBucketUsage{}, fmt.Errorf("%w: journal usage overflow", ErrJournalUsageInvalid)` (line last changed by `8022f578`) | not a066 | NOT covered |
+| B1 | range at 479:2 | `for _, row := range rows {`; then `rowFilled, filledOK := new(big.Int).SetString(row.FilledMinor, 10)` (line last changed by `8022f578`) | not a066 | covered |
+| B2 | if at 482:3 | `if !filledOK \|\| !heldOK \|\| rowFilled.Sign() < 0 \|\| rowHeld.Sign() < 0 \|\| rowFilled.BitLen() > 256 \|\| rowHeld.BitLen() > 256 \|\|`; then `return JournalBucketUsage{}, ErrJournalUsageInvalid` (line last changed by `8022f578`) | not a066 | covered |
+| B3 | if at 494:3 | `if filled.BitLen() > 256 \|\| held.BitLen() > 256 {`; then `return JournalBucketUsage{}, fmt.Errorf("%w: journal usage overflow", ErrJournalUsageInvalid)` (line last changed by `8022f578`) | not a066 | NOT covered |
 
 5.7 post-edit (HEAD `54e67495` + 5.7 working tree): 3 → 3; the invalid-row and overflow returns now carry the typed `ErrJournalUsageInvalid` (same message text).
 
@@ -39,3 +39,5 @@
 ## 6.5 fix lot (2026-09-28)
 
 6.5 fix lot: `OverageLatched`/`UnknownLatched` are now set alongside `Latched` (assignments only, shape 3→3). Mutation V07 was CAUGHT.
+
+Positions re-read from the post-edit `ast.json` (2026-09-29): B1 477→479, B2 480→482, B3 490→494 — the new struct field and the two loop lines of `28629ec6` moved them; conditions unchanged. Coverage cells are the historical measurements at the commits they name.
