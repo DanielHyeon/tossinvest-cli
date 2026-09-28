@@ -799,6 +799,9 @@ func seedRiskBucketOwnerLifecycle(t *testing.T, market riskbucket.Market, suffix
 	return j, plan.Owner.Key
 }
 
+// closeRiskBucketOwnerLifecycle 은 owner 해제 시험의 수명주기를 닫음. 주의(a066 6.5 적대 리뷰 R1, 사용자 결정 대기 "사용량
+// 수명주기"): 이 fixture 는 예약을 FILLED 로 두되 filled_minor 를 '0' 으로 남김 — 실제 체결은 filled_minor 를 올리고 그 값은
+// 해제 뒤에도 원장 사용량에 계속 셈(모든 bucket 이 평생 누적 cap). 이 fixture 로 통과하는 해제 시험은 그 갭을 보지 못함.
 func closeRiskBucketOwnerLifecycle(t *testing.T, j *Journal, key riskbucket.OwnerKey, reconcile bool) {
 	t.Helper()
 	if _, err := j.db.Exec(`UPDATE positions SET state='CLOSED',quantity='0',closed_at='2026-03-30T00:35:00Z' WHERE account_ref=? AND market=? AND symbol=? AND instance_seq=1`, key.AccountID, normaliseMarket(string(key.Market)), key.Symbol); err != nil {

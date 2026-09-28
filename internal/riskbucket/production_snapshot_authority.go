@@ -435,6 +435,8 @@ type JournalBucketUsage struct {
 	FilledMinor, HeldMinor, RowDigest string
 	// Latched 는 합에 든 예약 중 RISK_OVERAGE/UNKNOWN_ACTUAL_RISK latch 가 있다는 뜻. 합은 latch 와 무관하게 셈.
 	Latched bool
+	// OverageLatched · UnknownLatched 는 Latched 의 원인을 가름 — 거절이 어떤 latch 인지 이름으로 말하게 함(a066 6.5).
+	OverageLatched, UnknownLatched bool
 }
 
 // ReadJournalBucketUsage 는 원장 사용량(held+filled)의 **유일한** 계산임(a066 5.6.1 F1). 생산 snapshot reader
@@ -472,7 +474,7 @@ func readProductionRiskUsage(ctx context.Context, db UsageQueryer, account strin
 
 func aggregateProductionRiskUsage(rows []productionRiskUsageRow) (JournalBucketUsage, error) {
 	filled, held := new(big.Int), new(big.Int)
-	latched := false
+	latched, overage, unknown := false, false, false
 	parts := make([]string, 0, len(rows)*9)
 	for _, row := range rows {
 		rowFilled, filledOK := new(big.Int).SetString(row.FilledMinor, 10)
@@ -485,6 +487,8 @@ func aggregateProductionRiskUsage(rows []productionRiskUsageRow) (JournalBucketU
 		}
 		// latch 는 합에서 빼지 않고 호출자에게 알림 — 생산 snapshot 은 거절하고, admission 대조는 합만 씀.
 		latched = latched || row.OverageLatched != 0 || row.UnknownLatched != 0
+		overage = overage || row.OverageLatched != 0
+		unknown = unknown || row.UnknownLatched != 0
 		filled.Add(filled, rowFilled)
 		held.Add(held, rowHeld)
 		if filled.BitLen() > 256 || held.BitLen() > 256 {
@@ -494,7 +498,7 @@ func aggregateProductionRiskUsage(rows []productionRiskUsageRow) (JournalBucketU
 			fmt.Sprint(row.OverageLatched), fmt.Sprint(row.UnknownLatched), row.SnapshotID, row.PolicyRecordDigest)
 	}
 	return JournalBucketUsage{FilledMinor: filled.String(), HeldMinor: held.String(),
-		RowDigest: productionRiskDigest([]byte(strings.Join(parts, "\x00"))), Latched: latched}, nil
+		RowDigest: productionRiskDigest([]byte(strings.Join(parts, "\x00"))), Latched: latched, OverageLatched: overage, UnknownLatched: unknown}, nil
 }
 
 func exactProductionRiskStrategy(values []productionRiskStrategyPolicy, laneID, laneVersion string, horizon Horizon) (productionRiskStrategyPolicy, bool) {

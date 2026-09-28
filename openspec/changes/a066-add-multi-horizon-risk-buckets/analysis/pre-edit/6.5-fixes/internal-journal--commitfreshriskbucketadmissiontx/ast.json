@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/risk_bucket_issuance.go",
-  "source_sha256": "8828a2a0d1dba358be2b6b6dc3786b9e318fda91a8a48c9dae621d33f5325568",
+  "source_sha256": "08f0eedb38a9d87641c04a5cb5cf5e23da07c2d43995a9585b83a2a6b25f30bc",
   "package": "journal",
   "function": "commitFreshRiskBucketAdmissionTx",
   "signature": "commitFreshRiskBucketAdmissionTx(params=7, results=2)",

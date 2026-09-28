@@ -30,6 +30,9 @@ func freshScaleInPair(t *testing.T, suffix string) (*Journal, QFinalIssueRequest
 	return j, second
 }
 
+// 주의(a066 6.5 적대 리뷰 CX3·R1-6, 잔여 → 활성화 배선 로트): 대조군은 고정 정책 버전("policy-v1")을 씀. 생산 snapshot 의
+// PolicyVersion 은 수집마다 고유(관측 시각·계보·조건의 digest)라 생산에서 같은 owner scale-in 은 "scale-in bucket identity"
+// 로 늘 거절됨 — 이 대조군은 생산 모양이 아니라 가드 자체의 도달을 보이기 위한 것임.
 func TestA066FreshScaleInReusesTheOwnerOnlyAfterStateAndBucketIdentityMatch(t *testing.T) {
 	t.Run("control", func(t *testing.T) {
 		j, second := freshScaleInPair(t, "scale-ok")

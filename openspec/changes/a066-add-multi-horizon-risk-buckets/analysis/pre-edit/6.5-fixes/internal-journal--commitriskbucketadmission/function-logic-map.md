@@ -93,7 +93,3 @@
 
 - Safe edit boundary: add fail-closed journal cleanliness checks immediately after verifying the reused-owner digest.
 - High-risk impact: yes — it prevents new exposure after a durable late-fill/reconcile signal without affecting exit or protection paths.
-
-## 6.5 fix lot (2026-09-28)
-
-6.5 fix lot: the only change is that `decision.Caps` is passed to `refuseStaleBucketUsage` (argument plumbing). The branch shape is identical (44→44), so rows are unchanged. Mutation L04 (nil caps) was CAUGHT.

@@ -157,8 +157,10 @@ func TestReadRiskBucketStateReturnsStableMismatchInsteadOfRepairingDrift(t *test
 
 func TestRiskBucketAdmissionRejectsImmutablePolicyAndSnapshotCollision(t *testing.T) {
 	j := openTestJournal(t)
+	// a066 6.5: 셋째 진입이 공유 bucket 의 기록된 최소 한도 cap(원장 대조 자리)을 통과해야 뒤의 snapshot 충돌 가드에 닿음 —
+	// 그래서 첫 두 진입의 한도를 300 으로 둠(셋째: 원장 100 + 50 ≤ 300). 이 시험의 주제(snapshot ID 충돌)는 그대로.
 	seedExistingRiskReservation(t, j, "existing-collision-a", "acct-1")
-	first := riskBucketAdmissionFixture(t, "collision-a", "acct-1", "lane-short", "campaign-1", "prospective-1", "100", "0")
+	first := riskBucketAdmissionFixture(t, "collision-a", "acct-1", "lane-short", "campaign-1", "prospective-1", "300", "0")
 	if _, err := j.CommitRiskBucketAdmission(context.Background(), first); err != nil {
 		t.Fatal(err)
 	}
@@ -166,7 +168,7 @@ func TestRiskBucketAdmissionRejectsImmutablePolicyAndSnapshotCollision(t *testin
 	// 아님 — 공유 bucket 의 두 번째 진입·새 가격 scale-in 이 정확히 이 모양이고, v34 부터 예약은 자기 record 를 가리킴.
 	// 이 시험은 원래 그것을 거절로 고정했었음(그 거절이 F2 결함). 지금은 받아들이고 **자기 record 에 결속됨**을 고정함.
 	seedExistingRiskReservation(t, j, "existing-collision-b", "acct-1")
-	second := riskBucketAdmissionFixture(t, "collision-b", "acct-1", "lane-short", "campaign-1", "prospective-1", "100", "50")
+	second := riskBucketAdmissionFixture(t, "collision-b", "acct-1", "lane-short", "campaign-1", "prospective-1", "300", "50")
 	second.Admission.Policy.Price.Digest = "different-price-digest"
 	receipt, err := j.CommitRiskBucketAdmission(context.Background(), second)
 	if err != nil {

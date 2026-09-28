@@ -62,7 +62,3 @@ Callers: `Gateway.checkReservation` only (`gateway.go:901`), which is reached on
   existing guard keeps its own tests (a new guard in front would shadow them). Refusal returns `(true, err)`, which
   the Gateway turns into a pre-broker refusal. Risk-reducing and unmarked legacy decisions never reach it.
 - High-risk impact: yes — final exposure gate before broker transport.
-
-## 6.5 fix lot (2026-09-28)
-
-6.5 fix lot: B20–B27 are appended after B19 (the lock check), so the ID positions of B1–B19 are unchanged. B20 runs the scope rule `ensureRiskBucketEntryScopeClean` (tests: submit-revalidation reconcile case, the Gateway test; mutations V01, V04). B21–B24 are the decision bucket rows (storage exits; structural test). B25–B27 check the ledger latch of every bucket through `latchedUsageRefusal` (tests: the submit-revalidation shared-bucket cases; mutations V02, V03, V05–V07). The pre-edit copy is in `analysis/pre-edit/6.5-fixes/`.

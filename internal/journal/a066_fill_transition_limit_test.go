@@ -30,7 +30,8 @@ func TestA066FillTransitionUsesTheSmallestDecisionLimitPerBucket(t *testing.T) {
 			if err := j.RegisterRiskBucketOrder(ctx, RiskBucketOrderPlan{OrderID: "risk-" + suffix, DecisionID: firstDecision, OrderQuantity: 10, ReservedMinor: firstReserved, CreatedAt: riskFillNow}); err != nil {
 				t.Fatal(err)
 			}
-			commitRiskBucketScaleIn(t, j, key, suffix+"-second", tc.scaleInLimit, "50")
+			// a066 6.5: 앞 결정이 더 좁으면(80) scale-in 은 기록된 최소 한도 안에서만 admit 됨(원장 50 + 30 ≤ 80) — 수량 6.
+			commitRiskBucketScaleInQuantity(t, j, key, suffix+"-second", tc.scaleInLimit, "50", 6)
 			tx, err := j.db.BeginTx(ctx, nil)
 			if err != nil {
 				t.Fatal(err)
@@ -53,6 +54,24 @@ func TestA066FillTransitionUsesTheSmallestDecisionLimitPerBucket(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// commitRiskBucketScaleInQuantity 는 commitRiskBucketScaleIn 과 같되 후보 수량을 정함(기록된 최소 한도 안에 들게 하려고).
+func commitRiskBucketScaleInQuantity(t *testing.T, j *Journal, key riskbucket.OwnerKey, suffix, limit, held string, quantity uint64) {
+	t.Helper()
+	existingID := "existing-fill-" + suffix
+	seedExistingRiskReservation(t, j, existingID, key.AccountID)
+	plan := riskBucketAdmissionFixture(t, "fill-"+suffix, key.AccountID, "lane-short", "campaign-1", key.ProspectiveGeneration, limit, held)
+	plan.ExistingReservationID = existingID
+	plan.Owner.Key = key
+	plan.Admission.QCandidate, plan.Admission.QExistingGuardian = quantity, quantity
+	plan.Admission.Policy.QuoteCurrency = "USD"
+	plan.Admission.Policy.AccountCurrency = "KRW"
+	rebindRiskBucket(t, &plan, 1, riskbucket.BucketKey{Dimension: riskbucket.DimensionMarket, Value: string(key.Market), PolicyVersion: "policy-v1"})
+	rebindRiskBucket(t, &plan, 4, riskbucket.BucketKey{Dimension: riskbucket.DimensionSymbol, Value: key.Symbol, PolicyVersion: "policy-v1"})
+	if _, err := j.CommitRiskBucketAdmission(context.Background(), plan); err != nil {
+		t.Fatal(err)
 	}
 }
 

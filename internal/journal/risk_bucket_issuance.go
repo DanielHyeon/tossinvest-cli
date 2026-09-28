@@ -450,7 +450,7 @@ func commitFreshRiskBucketAdmissionTx(ctx context.Context, tx *sql.Tx, plan Risk
 	// a066 5.6.1 F1: snapshot 이 원장보다 적은 사용량을 주장하면 stale — 같은 트랜잭션에서 생산 reader 와 같은 함수로 대조.
 	// owner·scale-in 판정 **뒤**, 이 진입의 예약을 쓰기 **앞**: 기존 가드(owner 충돌 등)가 이 가드에 가려지지 않고,
 	// 대조하는 원장 합에 이 진입 자신의 예약이 섞이지 않음.
-	if err := refuseStaleBucketUsage(ctx, tx, plan.Owner.Key.AccountID, plan.Admission.Buckets); err != nil {
+	if err := refuseStaleBucketUsage(ctx, tx, plan.Owner.Key.AccountID, plan.Admission.Buckets, decision.Caps); err != nil {
 		return RiskBucketAdmissionReceipt{}, err
 	}
 	storedPreimage, err := encodeQFinalStoredIssuance(preimage, ownerReused, reservationVersion)
@@ -629,6 +629,40 @@ func (j *Journal) RevalidateQFinalAdmission(ctx context.Context, decisionID stri
 	}
 	if err := refuseEntryUnderLossLock(ctx, j.db, account, riskbucket.Market(market), horizon); err != nil {
 		return true, err
+	}
+	// a066 6.5: latch 도 제출 시점의 상태로 봄 — admission 과 같은 규칙 함수 둘(owner 범위, bucket 원장 latch). 발급 뒤에
+	// owner·scope·공유 bucket 이 latch 되면 이미 발급된 결정도 여기서 거절됨(새 admission 과 같은 답).
+	if err := ensureRiskBucketEntryScopeClean(ctx, j.db, key); err != nil {
+		return true, err
+	}
+	bucketRows, err := j.db.QueryContext(ctx, `SELECT bucket_dimension,bucket_value FROM risk_bucket_reservations WHERE decision_id=? ORDER BY bucket_dimension`, decision.ID)
+	if err != nil {
+		return true, err
+	}
+	type bucketRef struct {
+		dimension riskbucket.Dimension
+		value     string
+	}
+	var refs []bucketRef
+	for bucketRows.Next() {
+		var ref bucketRef
+		if err := bucketRows.Scan(&ref.dimension, &ref.value); err != nil {
+			bucketRows.Close()
+			return true, err
+		}
+		refs = append(refs, ref)
+	}
+	if err := bucketRows.Close(); err != nil {
+		return true, err
+	}
+	for _, ref := range refs {
+		usage, err := riskbucket.ReadJournalBucketUsage(ctx, j.db, account, ref.dimension, ref.value)
+		if err != nil {
+			return true, fmt.Errorf("%w: %s bucket %q ledger usage unreadable at submit: %v", ErrRiskBucketSnapshotMismatch, ref.dimension, ref.value, err)
+		}
+		if err := latchedUsageRefusal(ref.dimension, ref.value, usage); err != nil {
+			return true, err
+		}
 	}
 	return true, nil
 }

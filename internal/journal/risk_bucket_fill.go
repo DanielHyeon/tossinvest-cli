@@ -1097,6 +1097,11 @@ func verifyRiskBucketStateDigest(ctx context.Context, q riskBucketQueryer, key r
 	}
 	var persisted string
 	if err := q.QueryRowContext(ctx, `SELECT state_digest FROM risk_bucket_state_snapshots WHERE account_ref=? AND market=? AND symbol=? AND prospective_generation=? ORDER BY event_sequence DESC LIMIT 1`, key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration).Scan(&persisted); err != nil {
+		// a066 6.5: 봉인 행이 없는 것은 저장 오류가 아니라 재구성 갭임 — 의미 오류로 돌려 체결 경로는 latch 하고 체결을
+		// 커밋함(2.7: 체결 감지는 막히지 않음). 다른 호출자는 어느 오류에서나 거절하므로 결과가 같음.
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("%w: state seal missing", ErrRiskBucketReplayMismatch)
+		}
 		return err
 	}
 	if persisted != digest {

@@ -35,7 +35,3 @@
 
 - Safe edit boundary (5.6.1 F1): return a `JournalBucketUsage` and report latched rows as `Latched` instead of an error; the sole production caller turns `Latched` into the same error text, so production behaviour is unchanged. Validation of every other row property stays an error.
 - High-risk impact: yes — q_final sizing/admission authority.
-
-## 6.5 fix lot (2026-09-28)
-
-6.5 fix lot: `OverageLatched`/`UnknownLatched` are now set alongside `Latched` (assignments only, shape 3→3). Mutation V07 was CAUGHT.

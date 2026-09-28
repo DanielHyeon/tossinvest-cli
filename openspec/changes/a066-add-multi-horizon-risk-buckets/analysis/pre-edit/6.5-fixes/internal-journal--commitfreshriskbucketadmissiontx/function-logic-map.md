@@ -73,7 +73,3 @@
   caller's rollback removes the aggregate decision/reservation rows the caller already wrote in the same transaction.
   The horizon it passes is the plan's horizon bucket value (the value the five reservations are written from).
 - High-risk impact: yes — this is the atomic q_final entry issuance used by Guardian and strategy first leg.
-
-## 6.5 fix lot (2026-09-28)
-
-6.5 fix lot: the only change is that `decision.Caps` is passed to `refuseStaleBucketUsage`. The shape is identical (27→27). Mutation L05 was CAUGHT.

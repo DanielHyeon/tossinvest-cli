@@ -196,7 +196,7 @@ func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucket
 	// a066 5.6.1 F1: snapshot 이 원장보다 적은 사용량을 주장하면 stale — 같은 트랜잭션에서 생산 reader 와 같은 함수로 대조.
 	// owner·scale-in 판정 **뒤**, 이 진입의 예약을 쓰기 **앞**: 기존 가드(owner 충돌 등)가 이 가드에 가려지지 않고,
 	// 대조하는 원장 합에 이 진입 자신의 예약이 섞이지 않음.
-	if err := refuseStaleBucketUsage(ctx, tx, plan.Owner.Key.AccountID, plan.Admission.Buckets); err != nil {
+	if err := refuseStaleBucketUsage(ctx, tx, plan.Owner.Key.AccountID, plan.Admission.Buckets, decision.Caps); err != nil {
 		return RiskBucketAdmissionReceipt{}, err
 	}
 	var ownerSequence int64
@@ -265,24 +265,43 @@ func (j *Journal) CommitRiskBucketAdmission(ctx context.Context, plan RiskBucket
 	return riskBucketReceipt(plan, decision, ownerReused, false), nil
 }
 
-func ensureRiskBucketEntryScopeClean(ctx context.Context, tx *sql.Tx, key riskbucket.OwnerKey) error {
-	var ownerLatches, scopeLatches, activeReconciles int
-	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_owners WHERE account_ref=? AND market=?
-		AND symbol=? AND released_at IS NULL AND (risk_overage_latched=1 OR unknown_actual_latched=1)`,
-		key.AccountID, string(key.Market), key.Symbol).Scan(&ownerLatches); err != nil {
+// ensureRiskBucketEntryScopeClean 은 한 owner 범위(account, market, symbol)의 진입을 막는 상태 — 활성 owner 의 latch,
+// scope latch, 활성 대사 — 를 판정하는 **단일 규칙**임. admission(CRA · 발급) 트랜잭션과 제출 재검증
+// (RevalidateQFinalAdmission, a066 6.5)이 같은 함수를 부름. 거절은 원인과 범위를 이름으로 말함(원장 행이 그 이름으로
+// 조회 가능하므로 Gateway 사유 코드를 새로 두지 않음 — Manager 판정 2026-09-28).
+func ensureRiskBucketEntryScopeClean(ctx context.Context, q riskBucketQueryer, key riskbucket.OwnerKey) error {
+	var causes []string
+	var overage, unknown int
+	if err := q.QueryRowContext(ctx, `SELECT COALESCE(MAX(risk_overage_latched),0),COALESCE(MAX(unknown_actual_latched),0)
+		FROM risk_bucket_owners WHERE account_ref=? AND market=? AND symbol=? AND released_at IS NULL`,
+		key.AccountID, string(key.Market), key.Symbol).Scan(&overage, &unknown); err != nil {
 		return err
 	}
-	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_scope_latches WHERE account_ref=?
-		AND market=? AND symbol=?`, key.AccountID, string(key.Market), key.Symbol).Scan(&scopeLatches); err != nil {
+	if overage != 0 {
+		causes = append(causes, "owner RISK_OVERAGE")
+	}
+	if unknown != 0 {
+		causes = append(causes, "owner UNKNOWN_ACTUAL_RISK")
+	}
+	var scopeLatches string
+	if err := q.QueryRowContext(ctx, `SELECT COALESCE(GROUP_CONCAT(latch, ','),'') FROM (SELECT DISTINCT latch FROM risk_bucket_scope_latches
+		WHERE account_ref=? AND market=? AND symbol=? ORDER BY latch)`, key.AccountID, string(key.Market), key.Symbol).Scan(&scopeLatches); err != nil {
 		return err
 	}
-	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM reconcile_states WHERE account_ref=? AND released_at IS NULL
-		AND (symbol IS NULL OR symbol=?) AND (scope_market IS NULL OR scope_market=?)`,
-		key.AccountID, key.Symbol, string(key.Market)).Scan(&activeReconciles); err != nil {
+	if scopeLatches != "" {
+		causes = append(causes, "scope latch "+scopeLatches)
+	}
+	var reconciles string
+	if err := q.QueryRowContext(ctx, `SELECT COALESCE(GROUP_CONCAT(cause, ','),'') FROM (SELECT DISTINCT cause FROM reconcile_states
+		WHERE account_ref=? AND released_at IS NULL AND (symbol IS NULL OR symbol=?) AND (scope_market IS NULL OR scope_market=?) ORDER BY cause)`,
+		key.AccountID, key.Symbol, string(key.Market)).Scan(&reconciles); err != nil {
 		return err
 	}
-	if ownerLatches != 0 || scopeLatches != 0 || activeReconciles != 0 {
-		return ErrRiskBucketEntryBlocked
+	if reconciles != "" {
+		causes = append(causes, "active RECONCILE "+reconciles)
+	}
+	if len(causes) != 0 {
+		return fmt.Errorf("%w: %s/%s: %s", ErrRiskBucketEntryBlocked, key.Market, key.Symbol, strings.Join(causes, "; "))
 	}
 	return nil
 }

@@ -17,6 +17,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 )
@@ -26,8 +27,11 @@ import (
 //
 // 원장을 읽지 못하거나 원장 행이 잘못되면 거절함(진입 경로에서 "모름"은 "막힘"). 공유 bucket 에 latch 된 사용량이
 // 있으면 진입 차단(적대 리뷰 5.6.1: owner 범위만 보던 ensureRiskBucketEntryScopeClean 은 다른 종목의 latch 를 못 봄).
-func refuseStaleBucketUsage(ctx context.Context, tx *sql.Tx, account string, buckets []riskbucket.BucketSnapshot) error {
-	for _, bucket := range buckets {
+func refuseStaleBucketUsage(ctx context.Context, tx *sql.Tx, account string, buckets []riskbucket.BucketSnapshot, caps []riskbucket.BucketCap) error {
+	if len(caps) != len(buckets) {
+		return fmt.Errorf("%w: bucket caps do not align with snapshots", ErrRiskBucketSnapshotMismatch)
+	}
+	for i, bucket := range buckets {
 		usage, err := riskbucket.ReadJournalBucketUsage(ctx, tx, account, bucket.Key.Dimension, bucket.Key.Value)
 		if err != nil {
 			return fmt.Errorf("%w: %s bucket %q ledger usage unreadable: %v", ErrRiskBucketSnapshotMismatch, bucket.Key.Dimension, bucket.Key.Value, err)
@@ -36,8 +40,8 @@ func refuseStaleBucketUsage(ctx context.Context, tx *sql.Tx, account string, buc
 		// UNKNOWN 이면 filled 는 이전 하한일 뿐이고 실제 가격이 더 높을 수 있음. 그 bucket 에 새 노출을 더하면 합이 cap 안이어도
 		// 실제로는 넘을 수 있으므로 거절함(설계 D5: latch 는 모든 적용 bucket 의 신규 노출을 막음; 생산 snapshot reader 도
 		// 같은 행에서 거절함). 재수집으로 풀리지 않으므로 stale 이 아니라 진입 차단으로 돌려줌.
-		if usage.Latched {
-			return fmt.Errorf("%w: %s bucket %q carries latched usage (RISK_OVERAGE or UNKNOWN_ACTUAL_RISK)", ErrRiskBucketEntryBlocked, bucket.Key.Dimension, bucket.Key.Value)
+		if err := latchedUsageRefusal(bucket.Key.Dimension, bucket.Key.Value, usage); err != nil {
+			return err
 		}
 		ledger, ok := sumMinor(usage.FilledMinor, usage.HeldMinor)
 		if !ok {
@@ -52,8 +56,60 @@ func refuseStaleBucketUsage(ctx context.Context, tx *sql.Tx, account string, buc
 				Cause: fmt.Errorf("%w: %s bucket %q snapshot claims %s used, the ledger holds %s", ErrRiskBucketUsageStale,
 					bucket.Key.Dimension, bucket.Key.Value, claimed, ledger)}
 		}
+		// a066 6.5: 공유 bucket 의 한도는 진입마다 자기 snapshot 이 들고 오는 값이라, 더 큰 한도를 선언한 진입이 앞 진입의
+		// 한도를 넘길 수 있었음. 그 bucket 의 활성(HELD·FILLED) 예약이 기록한 snapshot 한도 중 **가장 작은 값**으로 cap 함
+		// (보수 방향). 한도 하나로의 단일화는 상류 매니페스트 검증의 몫(잔여, 정책 불변성 잔여와 같은 가족).
+		if caps[i].Key != bucket.Key {
+			return fmt.Errorf("%w: %s bucket cap does not align with its snapshot", ErrRiskBucketSnapshotMismatch, bucket.Key.Dimension)
+		}
+		recorded, found, err := smallestRecordedBucketLimit(ctx, tx, account, bucket.Key.Dimension, bucket.Key.Value)
+		if err != nil {
+			return err
+		}
+		if !found {
+			continue
+		}
+		after, ok := sumMinor(ledger.String(), caps[i].ReservationAtFinal)
+		if !ok {
+			return fmt.Errorf("%w: %s bucket %q reservation is not an amount", ErrRiskBucketSnapshotMismatch, bucket.Key.Dimension, bucket.Key.Value)
+		}
+		if after.Cmp(recorded) > 0 {
+			return &riskbucket.RefusalError{Code: riskbucket.RefusalBucketCapExhausted, Field: string(bucket.Key.Dimension),
+				Cause: fmt.Errorf("%s bucket %q: ledger %s + reservation %s exceeds the smallest recorded limit %s",
+					bucket.Key.Dimension, bucket.Key.Value, ledger, caps[i].ReservationAtFinal, recorded)}
+		}
 	}
 	return nil
+}
+
+// smallestRecordedBucketLimit 은 계좌 bucket(dimension, value)의 활성(HELD·FILLED) 예약이 기록한 snapshot 한도 중 가장
+// 작은 값을 돌려줌. 활성 예약이 없으면 found=false(첫 진입은 자기 snapshot 한도만 받음). 기록된 한도가 금액이 아니면 거절.
+func smallestRecordedBucketLimit(ctx context.Context, tx *sql.Tx, account string, dimension riskbucket.Dimension, value string) (*big.Int, bool, error) {
+	rows, err := tx.QueryContext(ctx, `SELECT DISTINCT s.limit_minor FROM risk_bucket_reservations r
+		JOIN risk_bucket_snapshots s ON s.snapshot_id=r.snapshot_id AND s.bucket_dimension=r.bucket_dimension AND s.bucket_value=r.bucket_value
+		WHERE r.account_ref=? AND r.bucket_dimension=? AND r.bucket_value=? AND r.state IN ('HELD','FILLED')`, account, string(dimension), value)
+	if err != nil {
+		return nil, false, err
+	}
+	defer rows.Close()
+	var smallest *big.Int
+	for rows.Next() {
+		var raw string
+		if err := rows.Scan(&raw); err != nil {
+			return nil, false, err
+		}
+		limit, ok := new(big.Int).SetString(raw, 10)
+		if !ok || limit.Sign() < 0 {
+			return nil, false, fmt.Errorf("%w: %s bucket %q recorded limit %q is not an amount", ErrRiskBucketSnapshotMismatch, dimension, value, raw)
+		}
+		if smallest == nil || limit.Cmp(smallest) < 0 {
+			smallest = limit
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, false, err
+	}
+	return smallest, smallest != nil, nil
 }
 
 // sumMinor 는 음이 아닌 minor 단위 정수 둘의 합임.
@@ -64,4 +120,21 @@ func sumMinor(a, b string) (*big.Int, bool) {
 		return nil, false
 	}
 	return x.Add(x, y), true
+}
+
+// latchedUsageRefusal 은 bucket 원장 사용량에 latch 가 있으면 진입을 막는 **단일 규칙**임 — admission 의 대조
+// (refuseStaleBucketUsage)와 제출 재검증(RevalidateQFinalAdmission)이 같은 함수를 부름(a066 6.5). 거절은 bucket 과
+// latch 종류를 이름으로 말함.
+func latchedUsageRefusal(dimension riskbucket.Dimension, value string, usage riskbucket.JournalBucketUsage) error {
+	if !usage.Latched {
+		return nil
+	}
+	var kinds []string
+	if usage.OverageLatched {
+		kinds = append(kinds, string(riskbucket.LatchRiskOverage))
+	}
+	if usage.UnknownLatched {
+		kinds = append(kinds, string(riskbucket.LatchUnknownActualRisk))
+	}
+	return fmt.Errorf("%w: %s bucket %q carries latched usage (%s)", ErrRiskBucketEntryBlocked, dimension, value, strings.Join(kinds, ","))
 }

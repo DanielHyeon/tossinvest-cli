@@ -266,8 +266,10 @@ func TestA066LedgerUsageHasOneComputation(t *testing.T) {
 		{"readProductionRiskUsage", []string{"internal/riskbucket/production_snapshot_authority.go:ReadJournalBucketUsage"}},
 		{"aggregateProductionRiskUsage", []string{"internal/riskbucket/production_snapshot_authority.go:ReadJournalBucketUsage"}},
 		// a066 5.7: 체결 계상의 공유 bucket overage 도 같은 함수로 다른 진입의 사용량을 읽음.
+		// a066 6.5: 제출 재검증도 같은 함수로 결정의 bucket latch 를 읽음(latchedUsageRefusal 규칙과 짝).
 		{"ReadJournalBucketUsage", []string{
 			"internal/journal/risk_bucket_fill.go:riskBucketSharedUsage",
+			"internal/journal/risk_bucket_issuance.go:Journal.RevalidateQFinalAdmission",
 			"internal/journal/risk_bucket_usage.go:refuseStaleBucketUsage",
 			"internal/riskbucket/production_snapshot_authority.go:loadProductionRiskEntries",
 		}},
@@ -276,6 +278,16 @@ func TestA066LedgerUsageHasOneComputation(t *testing.T) {
 		}},
 		{"refuseStaleBucketUsage", []string{
 			"internal/journal/risk_bucket.go:Journal.CommitRiskBucketAdmission",
+			"internal/journal/risk_bucket_issuance.go:commitFreshRiskBucketAdmissionTx",
+		}},
+		// a066 6.5: latch 거절 규칙은 admission 대조와 제출 재검증 두 자리에서만 불림(같은 규칙 함수).
+		{"latchedUsageRefusal", []string{
+			"internal/journal/risk_bucket_issuance.go:Journal.RevalidateQFinalAdmission",
+			"internal/journal/risk_bucket_usage.go:refuseStaleBucketUsage",
+		}},
+		{"ensureRiskBucketEntryScopeClean", []string{
+			"internal/journal/risk_bucket.go:Journal.CommitRiskBucketAdmission",
+			"internal/journal/risk_bucket_issuance.go:Journal.RevalidateQFinalAdmission",
 			"internal/journal/risk_bucket_issuance.go:commitFreshRiskBucketAdmissionTx",
 		}},
 	}

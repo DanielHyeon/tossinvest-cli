@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/risk_bucket_issuance.go",
-  "source_sha256": "8828a2a0d1dba358be2b6b6dc3786b9e318fda91a8a48c9dae621d33f5325568",
+  "source_sha256": "08f0eedb38a9d87641c04a5cb5cf5e23da07c2d43995a9585b83a2a6b25f30bc",
   "package": "journal",
   "function": "RevalidateQFinalAdmission",
   "receiver": "Journal",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 668,
+    "line": 634,
     "column": 2
   },
   "branches": [
@@ -165,70 +165,6 @@
         "line": 630,
         "column": 2
       }
-    },
-    {
-      "id": "B20",
-      "kind": "if",
-      "at": {
-        "line": 635,
-        "column": 2
-      }
-    },
-    {
-      "id": "B21",
-      "kind": "if",
-      "at": {
-        "line": 639,
-        "column": 2
-      }
-    },
-    {
-      "id": "B22",
-      "kind": "for",
-      "at": {
-        "line": 647,
-        "column": 2
-      }
-    },
-    {
-      "id": "B23",
-      "kind": "if",
-      "at": {
-        "line": 649,
-        "column": 3
-      }
-    },
-    {
-      "id": "B24",
-      "kind": "if",
-      "at": {
-        "line": 655,
-        "column": 2
-      }
-    },
-    {
-      "id": "B25",
-      "kind": "range",
-      "at": {
-        "line": 658,
-        "column": 2
-      }
-    },
-    {
-      "id": "B26",
-      "kind": "if",
-      "at": {
-        "line": 660,
-        "column": 3
-      }
-    },
-    {
-      "id": "B27",
-      "kind": "if",
-      "at": {
-        "line": 663,
-        "column": 3
-      }
     }
   ],
   "returns": [
@@ -354,49 +290,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 636,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 640,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 651,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 656,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 661,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 664,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 667,
+        "line": 633,
         "column": 2
       }
     }
@@ -689,86 +583,6 @@
         "column": 57
       },
       "text": "riskbucket.Market"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 635,
-        "column": 12
-      },
-      "text": "ensureRiskBucketEntryScopeClean"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 638,
-        "column": 21
-      },
-      "text": "j.db.QueryContext"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 647,
-        "column": 6
-      },
-      "text": "bucketRows.Next"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 649,
-        "column": 13
-      },
-      "text": "bucketRows.Scan"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 650,
-        "column": 4
-      },
-      "text": "bucketRows.Close"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 653,
-        "column": 10
-      },
-      "text": "append"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 655,
-        "column": 12
-      },
-      "text": "bucketRows.Close"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 659,
-        "column": 17
-      },
-      "text": "riskbucket.ReadJournalBucketUsage"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 661,
-        "column": 17
-      },
-      "text": "fmt.Errorf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 663,
-        "column": 13
-      },
-      "text": "latchedUsageRefusal"
     }
   ],
   "assignments": [
@@ -889,55 +703,6 @@
       "at": {
         "line": 630,
         "column": 5
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 635,
-        "column": 5
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 638,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 649,
-        "column": 6
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 653,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 655,
-        "column": 5
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 659,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 663,
-        "column": 6
       }
     }
   ],
