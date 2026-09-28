@@ -840,3 +840,22 @@ export + a095 오버레이(5판 `93870b29`, diff 0). 프롬프트 `analysis/free
 번들 산문 변경은 옛 커버리지로 다시 그려 **의도한 5파일**(adopt BTM · alertunmanaged 두 파일 · notify · publishbesteffort)만 달라짐을
 `diff -rq`로 확인했다. 새 번들 `reconciledriver.alert`(분기 2, B1 미진입)는 `coverage/r6-app-engine.out`(HEAD `f69a3dab` 실행,
 `reconcileloop.go`는 base 이래 무변화). `openspec validate --strict` rc 0. r6: codex 대기열 — Manager 신호 대기. tasks 0.5 미체크.
+
+## 6라운드 (proposal-freeze, 6판) — codex **PASS** · 7판 반영 (2026-09-29)
+
+### 3.19 실행과 처분
+
+codex-cli 0.154.0 · gpt-6-astra · medium · `codex exec -s read-only --ephemeral --skip-git-repo-check`, session
+`01a0e92b-55c3-7750-8ff9-36dc9b8b9e88`, 2026-09-29 02:58:45~03:03:00 KST, rc 0, 235,965 토큰, 401 없음. 트리 = HEAD `43d4ef74` export +
+a095 오버레이(6판, diff 0). 프롬프트 `r6-prompt.md` sha256 `712e9692…31bd8`(실행 사본 일치), 출력 `codex-r6-output.md`(`eccb07cb`).
+**VERDICT: PASS** — P0 0 · P1 0. 5라운드 처분 전부 RESOLVED, 회귀 0, 번들 29개 해시 · 좌표 일치.
+
+| id | 등급 | 내용 | Manager 처분 | 7판 반영 |
+| --- | --- | --- | --- | --- |
+| R6-1 | P2 | 「PENDING 동안 관측마다 동기 배달」 과대 — 다른 발송자가 임차를 쥐면 배달 안 함 · 2.17의 A→B→A 흡수는 A 정착 시에만 | **승인** | design D1 귀결(「claim을 얻으면」 · `claimAndDeliver` B6 `:294` 창 return `:305`) · design 「사실 식별자」 시험 문장 · tasks 2.17(정착 A / PENDING A 분리 · 임차 타처) |
+| R6-2 | P3 | `ReconcileDriver.alert` 맵의 공통 문구 「오류를 되던진다」가 번들 내용과 모순 | **승인** | 생성기에 번들별 `error_contract`(기본값은 종전 문구) · 이 번들은 「되던지지 않는다 — B2가 로그로만」 |
+
+**재생성 영수증**: 생성기를 바꾼 뒤 커밋된 AST · 커버리지로 **번들 29개 전부**를 다시 그렸다 — `diff -rq`로 달라진 것은 의도한
+`internal-app-engine--reconciledriver.alert/function-logic-map.md` 1파일뿐. `openspec validate --strict` rc 0.
+
+**freeze 전 마지막 요건(Manager 지시)**: Claude 독립 보이스 1회를 7판에(R4~R6 처분의 정합 + 새 기전 유무, 읽기 전용) — 아래 §3.20.

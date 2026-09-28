@@ -30,6 +30,9 @@ COVERAGE_COMMAND = (
     "app/engine · reconcile 네 패키지에 각각"
 )
 DEFAULT_TEST = "기존 — a095는 이 함수를 바꾸지 않는다"
+# 번들별로 바꿀 수 있는 오류 계약 문구(7판 r6 R6-2 — 오류를 되던지지 않는 함수가 있다)
+ERROR_CONTRACT = ("브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다"
+                  "(위 표의 return 열이 그 자리다).")
 
 # stem, 번들 디렉터리, 역할, 입력 행들, 호출 문단, 변이 문단, 안전 경계, High-risk, {분기: 시험 요구}
 BUNDLES: list[dict] = [
@@ -331,6 +334,8 @@ BUNDLES: list[dict] = [
                     "호출자 `alertUnmanaged`는 기록이 실패했는지 모른다. 오늘은 B1 래치가 `d.alert` 앞에 걸려 있어 기록 실패가 "
                     "다음 주기에 다시 시도되지 않는다(r5 R5-1). 6판 원칙 — critical은 래치를 지나므로 다음 관측이 다시 기록을 "
                     "시도한다 — 은 이 함수를 바꾸지 않고 성립한다.",
+        "error_contract": "이 함수는 결과값이 없고 오류를 **되던지지 않는다** — B2가 `Notify`의 오류를 로그로만 남긴다. 호출자는 "
+                          "기록 실패를 알 수 없다(7판 r6 R6-2).",
         "high_risk": "yes — 대사 쪽 critical 발신의 통로다.",
         "tests": {"B2": "**a095 2.16** — 기록 실패 → 저장소 회복 → 같은 실패가 다음 관측에서 기록된다"},
     },
@@ -592,7 +597,7 @@ def render(bundle: dict, ast_dir: Path, profiles: list[str]) -> None:
 
 {bundle['calls']}
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+{bundle.get('error_contract', ERROR_CONTRACT)}
 
 ## State mutations and fallbacks
 

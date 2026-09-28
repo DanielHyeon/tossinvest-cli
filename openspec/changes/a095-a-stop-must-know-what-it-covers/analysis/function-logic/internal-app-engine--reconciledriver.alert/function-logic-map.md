@@ -28,7 +28,7 @@
 
 `d.opts.Alerts.Notify`(B2 조건) · `d.opts.Log.Error`(B2 창).
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+이 함수는 결과값이 없고 오류를 **되던지지 않는다** — B2가 `Notify`의 오류를 로그로만 남긴다. 호출자는 기록 실패를 알 수 없다(7판 r6 R6-2).
 
 ## State mutations and fallbacks
 

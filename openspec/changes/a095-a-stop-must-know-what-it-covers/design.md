@@ -1,4 +1,4 @@
-# a095 · 설계 — 6판
+# a095 · 설계 — 7판
 
 > 분기 인용은 전부 `analysis/function-logic/`의 AST 산출물에서 온다(base `02716357`, 번들 21개).
 > 번들 이름은 디렉터리 이름의 뒷부분으로 적는다(예: `reconciledriver.judgeholdings`).
@@ -86,8 +86,10 @@ critical)도 막지 않는 형태여야 한다.
    진입 게이트 래치는 이 원칙과 무관하게 **불변**이다.
 5. **normal 래치의 키는 사실 식별자다**(아래 「사실 식별자」). 같은 종목의 다른 사실은 normal 래치에 삼켜지지 않는다.
 
-**귀결(기록만)**: critical이 매 관측마다 `Notify`를 부르면, 행이 PENDING인 동안 `claimOwed` B2 `:381`이 owed를 주어
-대사 goroutine이 관측마다 동기 배달을 시도한다(`claimAndDeliver` → `n.deliver`). 이것은 이관된 Q7의 **둘째 면**(대사
+**귀결(기록만)**: critical이 매 관측마다 `Notify`를 부르면, 행이 PENDING인 동안 `claimOwed` B2 `:381`이 owed를 주고,
+대사 goroutine은 **claim을 얻으면** 동기 배달을 시도한다(`claimAndDeliver` → `n.deliver`). 다른 발송자가 그 행의 임차를
+쥐고 있으면 `claimAndDeliver` B6 `:294`(`case journal.ClaimHeldElsewhere:`)의 창 return `:305`로 배달 없이 돌아간다(7판
+r6 R6-1 정정 — 6판은 「관측마다 동기 배달을 시도한다」로 과대 서술했다). 이것은 이관된 Q7의 **둘째 면**(대사
 goroutine 자신의 원격 대기 — a092 영역의 이름 붙은 잔여)과 같은 실체이며 a095가 새로 정하지 않는다.
 
 시험(전부 **생산 배선** — 실 `Notifier` · outbox · 배달 실행자): 「연기(normal) → 같은 프로세스에서 시도 실패(critical)」가
@@ -106,7 +108,9 @@ goroutine 자신의 원격 대기 — a092 영역의 이름 붙은 잔여)과 �
 반대로 바뀌는 오류 문구를 새 사실로 치면 매 관측이 새 key가 되어 폭주한다.
 
 시험(tasks 2.17): 같은 등급의 연기 → 시도 실패가 서로 다른 key로 기록된다(Q2(c)=critical 가정) · 창 안에서 A → B → A는
-A의 재전송을 창 규칙대로 흡수한다 · 오류 문구만 바뀐 반복은 같은 key다. Q2의 등급 선택은 열어 둔다.
+**A가 정착(DELIVERED)했으면** A의 재전송을 창 규칙대로 흡수하고, **A가 아직 PENDING이면** A는 재시도 대상이다(정본 — 전송
+실패는 중복이 아니라 미완) · 다른 발송자가 A의 임차를 쥐고 있으면 이 관측은 배달하지 않는다 · 오류 문구만 바뀐 반복은
+같은 key다. Q2의 등급 선택은 열어 둔다(7판 r6 R6-1).
 
 **「시도 실패」의 경계 — `adoptOne`의 실패 세 범주**(`reconciledriver.adoptone`, 분기 3):
 
