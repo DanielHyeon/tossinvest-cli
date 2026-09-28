@@ -3,7 +3,105 @@
 > 분기 인용은 전부 `analysis/function-logic/`의 AST 산출물에서 온다
 > (함수 **15개** · 분기 **180개** — 3판이 6개 101분기를 더했다; 2026-09-27 refresh 후 HEAD 기준 **182개**, `record` 14→16).
 >
-> **6판(2026-09-29)**: 바로 아래 **D−4** 가 5라운드 반영이며 D−3 을 이긴다. **D−3**(5판)은 D−2 를, **D−2**(4판)는 그 아래 3판 본문을 이긴다.
+> **7판(2026-09-29)**: 바로 아래 **D−5** 가 6라운드 반영이며 D−4 를 이긴다. **D−4**(6판)는 D−3 을, **D−3**(5판)은 D−2 를, **D−2**(4판)는 그 아래 3판 본문을 이긴다.
+
+## D−5. 7판 — 6라운드(codex) 반영 (2026-09-29)
+
+> **이 절이 D−4 를 이긴다.** 6라운드 원문: `review.md` 「6라운드」, `analysis/freeze-review/codex-r6-output.md`(P0 0 — D−4.2-2 의 규약 이탈은
+> 「방어 가능」 판정). 방향은 Manager 처분(2026-09-29). 줄 번호는 HEAD `7cf80832` 기준.
+
+### D−5.1 R6-1 — 확정 조건: 공유 판정 하나를 강화한다
+
+**측정(Manager 지시 「측정 먼저」).** 브로커 주문 상세 응답에서 종목 필드가 비는 일이 있는가:
+
+| 원천 | 세는 것 | 결과 |
+|---|---|---|
+| 계약 `docs/migration/openapi.latest.json` | `GET /api/v1/orders/{orderId}` 의 `result` 스키마 `Order` 의 필수 목록 · 예시 | `symbol` **필수**(`required` 에 있음) · 예시 3/3 이 비어 있지 않음(`005930` · `AAPL` · `AAPL`) |
+| 저장소의 실측 기록(goldens · verify-live 기록) | 주문 상세 응답 본문 | **0 건** — 주문 상세 GET 을 바이트로 기록한 산출물이 없다(`analysis/goldens` 는 a112 의 시세만, `verify-execution-capability/measurements.md` 는 재생 결과 서술뿐) |
+| 시험 픽스처(주문 상세 모양 — `orderId` + `status` 가 같은 줄) | 종목 없음 | 40 줄 중 13 — `internal/app/engine/precheck_test.go` 5 · `internal/brokerstate/derive_test.go` 4 · `internal/client/trading_test.go` 2 · `internal/app/engine/wts_isolation_test.go` 1(`:96`) · `internal/console/fake_broker_test.go` 1. **빈 문자열·null 종목은 0.** 발주 직후 확인(`roundtrip_test.go` `orderDetailJSON`)의 픽스처는 전부 종목이 있다 |
+
+**판정: 브로커 증거상 공백 0(계약이 필수로 정한다; 실측 표본은 0 건이라 계약이 유일한 증거다).** 그래서 판정을 **둘로 가르지 않고**
+공유 판정 하나를 강화한다: `confirmCreatedOrder` 의 종목 비교(`internal/execgw/roundtrip.go:118` — 오늘은 `facts.Symbol != "" && plan.symbol != ""`
+일 때만 비교해 **응답 종목이 비면 통과**)를 **「응답 종목이 비었거나 계획 종목과 다르면 확인 실패」** 로 바꾼다. 번호는 종전대로 바이트 일치
+(`orderId` 는 불투명 식별자 — `indoubt.go:601-604`), 종목은 `parseOrderFacts` 의 정규화(`ToUpper(TrimSpace)`, `indoubt.go:606`) 뒤 같음이다.
+
+- **발주 직후 확인도 같이 엄격해진다 — 보수 방향이다.** 종목 없는 읽기는 오늘 ACKED→CONFIRMED 였다가 이제 IN_DOUBT(`ack_round_trip_unconfirmed`)
+  → 해소 절차로 간다. 브로커가 계약대로면 동작 변화 0.
+- **fail-closed 가 거부할 정상 입력**: 계약을 따르는 응답에서는 0. 시험 픽스처는 발주 직후 확인을 **실제로 타는** 것만 고친다 — 후보는
+  `wts_isolation_test.go:96`(실제 게이트웨이 + HTTP). 나머지 열두 줄은 다른 판독기(사전 점검 · 상태 도출 · WTS · 콘솔)로 간다 — 구현 로트가 확인 읽기
+  경로 도달 여부를 재서 고칠 목록을 확정한다(tasks 4.N4e).
+- 반례 시험: 종목 필드 없음 · `null` · 빈 문자열 · 공백만 → 발주 직후 확인과 기동 확정 **둘 다** 거절(같은 함수이므로 한 변이가 둘을 깬다).
+
+### D−5.2 R6-2 — 알림 key 에 에피소드 신원을 넣는다 (outbox 재무장 계약 신설 금지)
+
+**코드가 주는 것.** `Journal.EnqueueAlert` 는 재알림 창 0 으로 기록한다(`internal/journal/outbox.go:142-146`). 창이 0 이면 전달·승인된 행은 다시
+빚이 되지 않는다(`claimOwed` `:382-384`). 그래서 같은 key 를 다시 적재하면 **이미 끝난 옛 행이 조용히 재사용된다** — 6판의 "재시작하면 다시 알린다" ·
+"기동마다 보인다" · 새 연속이 전부 이 모양이었다.
+
+**결정(Manager).** outbox 의미론은 **바꾸지 않는다**(재무장 계약을 새로 만들지 않는다). 대신 **key 에 에피소드 신원을 넣어 새 에피소드 = 새 행**이 되게
+한다. 에피소드 신원은 **유한하고 원장 사실에 결속**된 것만 쓴다(key 폭발 방지):
+
+| 알림 | 에피소드 | key | 유한성·사실 결속 |
+|---|---|---|---|
+| park 원인(D−4.4) | park 된 **attempt id** | `type|position|attempt` | attempt 는 원장 행 — 포지션당 park 된 attempt 수만큼 |
+| 기동 ACKED(D−4.2-2) | 남은 **attempt id** | `type|attempt` | 같음. **attempt 당 1회** — "기동마다 보인다" 는 **정정**: 한 번 적재되고, 전달 뒤에는 운영자 미전달·승인 목록에 남는다 |
+| 청소 연속 실패(D−2.7) | 연속이 시작된 **관측 시각**(그 연속의 첫 실패 주기의 `observation.at`) | `type|position|<RFC3339>` | 연속은 "치움 성공 → 실패" 전이마다 하나 — 그 시각은 한 연속에 하나뿐 |
+| 기동 행 실패(D−2.6-4) | 따라잡으려던 발의의 **intent id** | `type|position|intent` | 원장 행 |
+
+같은 형태를 a090 이 쓴다 — a090 의 에피소드는 **미관측 연속의 시작 시각**이다(a090 design D4, 교차 인용). 재시작 뒤 같은 에피소드(같은 attempt,
+같은 연속 시작 시각)면 같은 행이라 다시 보내지 않는다 — **재시작은 새 에피소드가 아니다.** 관측자 래치(재시작하면 잃는다)는 이제 적재 중복을 줄이는
+최적화일 뿐 전송의 근거가 아니다.
+
+### D−5.3 R6-3 — 적재가 실패하면 진입을 outbox 와 독립으로 잠근다
+
+**코드가 주는 것.** 기존 생산자쪽 래치가 같은 상황을 이미 다룬다 — `Notifier.deliver` 는 outbox 기록 자체가 실패하면 "a critical %s alert could not be
+recorded in the outbox" 로 **진입만** 잠근다(`internal/obs/notifier.go:262-280`, "Entries only. Exits are untouched: no alert failure may slow a stop.").
+직접 `EnqueueAlert` 를 부르면 그 래치를 우회한다(6라운드). a124 원칙 E 의 적용 함수 `EntryGate.BlockUnlessClearedSince(reason, epoch, detail)`
+(`internal/execgw/retry.go:571-584`)가 있고, a092 22판이 동기 래치 세 자리에 같은 형태를 썼다(a092 `design.md` 22판 「3. C2 · C27」).
+
+**결정.** 이 change 의 모든 enqueue-only 알림(D−4.6)은 적재 전에 `ClearEpoch(ReasonAlertUndelivered)`(`retry.go:559`)를 읽고, `EnqueueAlert` 가
+실패하면 `BlockUnlessClearedSince(ReasonAlertUndelivered, epoch, detail)` 로 진입을 잠그고, 알림 내용이 없는 구조화 로그 한 줄(`EventAlertUndelivered`,
+사유만)을 쓴다. **관측 루프는 계속 돈다**(D−4.2-2 유지 — 루프를 세우지 않는다). 청산은 건드리지 않는다.
+
+- **범위: 계정 단위다 — Manager 처분의 「그 종목만」 은 7판에서 쓰지 못했다(Q7-1).** 종목 단위 래치 `BlockSymbol`(`internal/execgw/symbolgate.go:64`)에는
+  해제 세대가 없고(원칙 E 의 비교가 불가), 그것을 푸는 생산 호출자는 대사 경로 하나뿐이다(`internal/reconcile/mismatch.go:1482`) — 적재 실패 래치를 풀
+  경로가 코드에 없다. 계정 단위는 기존 생산자 래치와 **같은 사유·같은 해제**(운영자 승인으로 미전달 0 이 되면 `Clear`, `notifier.go:874-876`)를 쓴다.
+  종목 단위로 좁히려면 종목 래치의 해제 세대와 해제 경로를 새로 만들어야 한다 — 코드 영수증이 없어 **비우고 묻는다**.
+
+### D−5.4 R6-4 — 형태 B 는 무기한 증거 대기다 (시간 상한 주장 삭제)
+
+6판 D−4.3-4 의 "체결 감지 한 주기(≈3초, SLO 10초)" 는 **상한이 아니다** — 체결 감지가 실패하면 수집을 멈추고(`internal/filldetect/detect.go:364-372` ·
+`:428-435`), SLO 는 백분위 목표일 뿐이다(`filldetect/slo.go:50-65`). 종결 스냅숏이 안 오면 **무기한** 기다린다. 정직한 계약:
+
+1. **시간 경과로 해제·제출하지 않는다**(SHALL NOT). 증거가 안 오면 발의는 무장된 채이고 손절은 나가지 않는다.
+2. 그동안 침묵하지 않는다 — 유효 시세가 계속 손절 조건을 주면 `clear=false` 가 `noteDelay` 에 닿아 30초 지연 경보가 나고, D−2.7 계수가 는다(6라운드가
+   확인: "With continued valid breach observations, `clear=false` reaches `noteDelay`").
+3. **사람 복구 경로는 아직 없다** — 해동 명령(D−4.5)은 park 만 다룬다(`resolution.go:144`). 「CONFIRMED 취소인데 종결 증거가 없는 매도」 를 사람이 확인해
+   종결로 기록하는 명령은 **해동 명령 가족의 후속 확장 후보**로 명명한다(이 change 범위 밖).
+4. §4 대가를 다시 쓴다: 무장 익절 매도 위의 손절은 **종결 증거가 올 때까지** 늦는다 — 정상이면 체결 감지 몇 주기, 체결 감지가 멈추면 무기한이며 그때는
+   경보로 드러난다.
+
+### D−5.5 R6-5 — §0.4 완전 계수(인증 요청 포함)
+
+| 요청 | 조건 | 수 |
+|---|---|---|
+| 주문 상세 `GET /api/v1/orders/{id}` | ACKED PLACE 행마다 | 1 + 401 재시도 ≤2 = **≤3**(`internal/official/client.go:344-359`) |
+| 토큰 교환 `POST /oauth2/token` | 401 재시도마다 재발급(`refresh`, `internal/official/token.go:108`)이 교환(`exchange` `:130`)하면; 첫 재발급은 다른 보유자의 토큰을 **채택**할 수 있어 교환이 없을 수 있다(`client.go:333-343` 주석) | 행당 **≤2** |
+| 첫 토큰 획득 | 프로세스의 토큰 캐시가 비었을 때(`token.go:60-78`) — 기동의 다른 조회가 먼저 채우는 것이 보통이다(**가정**) | 프로세스당 **≤1** |
+
+그래서 기동 추가 HTTP 요청은 행당 **≤5**(주문 3 + 토큰 2), 프로세스당 +1. 전부 `roundTripTimeout`(3초) 안이다 — `rows × 3s` 는 **이 확정 읽기가 더하는
+시간의 상한**이지 기동 전체 시간이 아니다. 관측 루프·손절 경로의 새 요청은 0.
+
+### D−5.6 R6-6 — 되살린 30초 경보의 동기 전송 (잔여 수용)
+
+D−4.7 이 되살린 `noteDelay` 경보는 오늘의 동기 경로(`exitloop.go:1685-1710` → `n.mu`)로 나간다 — enqueue-only 는 이 change 가 **새로 더하는** critical
+에만 적용된다(D−4.6). 그 경보가 뒤 포지션의 판정을 늦출 수 있음을 **잔여로 수용**한다. 동기 발송자의 이관은 **a092 소유**다(a092 22판 「범위 밖 동기
+발송자」). D−4.7 의 "다른 손절 무변화" 주장은 이 잔여만큼 좁힌다.
+
+### D−5.7 R6-7 — 옛 문구 정리
+
+tasks 의 6판 이전 문구(기동 ACKED "상태 변경 없음" · 해동 명령 "범위 밖" · 옛 ACKED 정산 참조)와 review 6판 표의 "브로커 호출 0" 은 7판에서 정리하거나
+대체 표시한다.
 
 ## D−4. 6판 — 5라운드(codex) 반영 (2026-09-29)
 
@@ -40,7 +138,7 @@
 2. **그 외 전부 — 상태를 바꾸지 않고 알린다**: 번호 불일치 · 종목 불일치 · 읽기 실패(시한·전송·401 뒤 실패 포함) · 응답 해석 불가 ·
    `broker_order_id` 없음 · CANCEL/AMEND ACKED. 바이트 일치 외의 **어떤 추론도 하지 않는다**(IN_DOUBT 로 올리지도, 해소기로 보내지도 않는다).
    그 attempt 의 id·종류·종목·intent·사유를 명명한 critical 을 attempt 단위 key 로 적재한다(D−4.6 enqueue-only). **읽기 실패는 정산 실패가
-   아니다** — `ErrRecoveryIncomplete` 를 내지 않고(그것은 관측 루프를 하나도 시작시키지 않는다, `cmd/tossctl/engineready.go:70-75`) 알림으로 남는다.
+   아니다** — (7판 D−5.3: 알림 적재가 실패하면 진입을 잠근다) `ErrRecoveryIncomplete` 를 내지 않고(그것은 관측 루프를 하나도 시작시키지 않는다, `cmd/tossctl/engineready.go:70-75`) 알림으로 남는다.
    `ResolveConfirmed` 의 **원장 쓰기 실패**도 같다 — 전이는 커밋되지 않아 ACKED 로 남고 알림으로 남는다. 이것은 5판 D−3.3-5 의 "이웃(재생·해소)과
    같은 `ErrRecoveryIncomplete`" 를 **뒤집는다**: 그 규약은 복구 전체를 실패시켜 **모든 포지션의 루프가 안 뜬다**(5라운드 부수 확인). ACKED 한 행이
    남는 대가가 그보다 작다. 이웃의 규약 자체는 바꾸지 않는다.
