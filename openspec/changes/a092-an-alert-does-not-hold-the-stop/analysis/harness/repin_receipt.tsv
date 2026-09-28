@@ -1,0 +1,4 @@
+# old base 285c7619 -> landing 721d0338; self Go commits 2: 7f3cbb03 b8ad147b
+# required at the old base (gate window) 300; functions touched by self commits 1; NOT-REQUIRED(new-since-base-or-unchanged-at-landing) 1
+file	function	commits	bundle	status
+internal/journal/outbox_test.go	TestSettlingWithoutAClaimIsRefused	b8ad147b	-	NOT-REQUIRED(new-since-base-or-unchanged-at-landing)

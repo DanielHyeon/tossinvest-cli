@@ -10,6 +10,16 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 > ⛔ 21판 표지를 달았다(20라운드 B-5·B-6(T): 그 절들의 좌표·FLM 수 주장은 21판에서 근거로 쓰지 않는다). 옛 task는 21.4가
 > 대체 여부를 하나씩 판정할 때까지 지우지 않는다.
 
+## 25. 구현 로트 (2026-09-29 ~ — Manager 배정, frozen 24판이 스펙)
+
+> 착지 순서(Manager): ① base 재고정 → ② RecordAlert 입구 + 기록 전용 announcer(의존 로트 a090 · a094 · a095 해방) → ③ 잠금 범위(21.4 GREEN — a095 착지 판정 기준)
+> → ④ mode-release 명령 · 완화 경로 → ⑤ K/M 반영 항목. a066 §7 이행(notifyRelaxation → 입구)은 ② 직후 같은 로트. 각 단위는 FLM → RED → GREEN,
+> 변이(무변이 대조군) · `-race`(잠금 · 전송 경로). 정지 조건: 스펙과 코드가 갈리면 임의 해석 없이 보고.
+
+- [x] 25.0 **base 재고정 승인 기록** — Manager 배정 메시지(2026-09-29)가 승인. 귀속 실측 `analysis/harness/repin_receipt.tsv`(자기 Go 커밋이 고친 기존 함수 0,
+      형제 착지 몫 300). `review.md` §24.1.
+- [ ] 25.1 base 재고정 단독 커밋(`base-commit.txt` 285c7619 → 721d0338).
+
 ## 24. 24판 작업 (2026-09-29) — 23라운드 처분 반영 (design D0.3i · `review.md` §23.13)
 
 > 23.x 가운데 24판이 바꾼 것: 23.2의 flatten 도달 FLM → 정적 핀(24.3 M6) · 23.3 K2 RED 범위(`:484` · `:571`만) · 23.3 K3 핀 문언(커밋 성공 경로) ·

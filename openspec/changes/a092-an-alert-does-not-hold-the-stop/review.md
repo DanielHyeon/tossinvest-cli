@@ -4700,3 +4700,22 @@ Manager 판정 요지:
 - archive 게이트 24.4: a066 입구 이행 커밋 인용 뒤에만 archive한다.
 - 잔여 24.5: 정본 `:221-224`의 주석 정리.
 - 배포 절차 21.10 · 22.5(사람 몫): 운영 원장의 기존 `ENTRY_BLOCKED` 행 처분을 사람이 결정한다. 완화 전에 전송 수단을 확인한다.
+
+## 24. 구현 로트 (2026-09-29 ~) — frozen 24판이 스펙
+
+**배정(Manager, 2026-09-29)** 요지: *"a092 구현 로트 배정 — frozen 24판이 스펙이다 … 순서: 1. base 재고정이 첫 행위(WORKFLOW 사람 절차 — 승인 = 이 메시지 …)
+2. 편집 전 FLM → RED → 구현. 우선 착지 단위: RecordAlert 입구 + 기록 전용 announcer → 잠금 범위(21.4 GREEN) → mode-release 명령·완화 경로 → K/M 반영 항목.
+3. a066 §7 이행(notifyRelaxation → 입구)은 RecordAlert 착지 직후 같은 로트에서 … 4. 검증: 변이(무변이 대조군)·4보이스(codex 포함)·gstack … 잠금·전송 경로는 -race 필수.
+5. … 배포 없음 … 정지 조건: 스펙과 코드가 갈리는 지점 발견 시 임의 해석 금지, 보고."*
+
+### 24.1 base 재고정 — 사람 승인 절차 (WORKFLOW 「사람 승인 base 재고정」)
+
+1. **귀속 실측**(`analysis/harness/repin_receipt.py` — a066 영수증 형식 재사용, CHANGE와 제목 grep만 바꿈; 출력 `repin_receipt.tsv`):
+   - 옛 base `285c7619` → 새 base `721d0338`(재고정 시점 HEAD).
+   - 자기 Go 커밋 기준으로 잡힌 것은 2다(`7f3cbb03` · `b8ad147b`). 둘 다 a092의 작업이 아니다 — 이 change 디렉터리를 함께 만진 a099 · SDD 기록 커밋이다.
+   - 그 둘이 고친 Go는 시험 파일뿐이다(`a099_claim_excludes_the_second_sender_test.go` · `outbox_test.go`).
+   - 그 커밋들이 바꾼 **기존** 함수 가운데 게이트가 요구하는 것은 0이다(`TestSettlingWithoutAClaimIsRefused` 1 → `NOT-REQUIRED`, 창에서 새로 생긴 함수).
+   - 그러므로 조건 1은 「자기 Go 커밋이 고친 기존 함수 0」으로 선다.
+2. **승인 기록** — 위 배정 메시지가 승인이다(Manager, 2026-09-29). tasks 25.0에도 적는다.
+3. **형제 착지 몫** — 옛 base에서 게이트가 요구하는 기존 함수는 **300**이다. 전부 a092 밖 change들의 착지(a098 · a099 · a124 · a066 · a112 등)가 만든 몫이다. a092는 그 함수들을 편집하지 않았다.
+4. 단독 커밋(`base-commit.txt` 한 파일)에 옛 → 새 sha와 위 실측을 적는다.
