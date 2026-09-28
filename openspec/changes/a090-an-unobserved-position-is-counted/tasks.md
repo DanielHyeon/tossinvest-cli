@@ -13,8 +13,9 @@
 - [ ] 0.4 `check_analysis.py --change a090-…` 통과
 - [ ] 0.5 **proposal-freeze 리뷰 — 적대 보이스 1**(Claude, 구현과 분리된 컨텍스트) → `review.md`
 - [ ] 0.6 **proposal-freeze 리뷰 — codex 교차 모델**(Manager 슬롯 대기열) → `review.md` · `analysis/freeze-review/`
-- [ ] 0.7 **사용자 결정 Q1**(포지션 단위 두절에 ENTRY_BLOCKED — design D5) 기록. (b) 면 spec delta 를 좁히는 MODIFIED 로 바꾼다
-- [ ] 0.8 **Q2 실측(선택, 사람 승인)** — 정지·0가격 종목의 `/prices` 응답, 읽기 전용 1회. 구현을 막지 않는다(design D6)
+- [x] 0.7 **Q1·Q3 결정 기록**(Manager 2026-09-29, 사용자행 아님) — Q1 = (a) 정본 준수(`exit-policy/spec.md:62`·`:65`), Q3 = 판정 진입 + 하류 5자리 명명 잔여. design 「Q — 결정 기록」
+- [ ] 0.8 **Q2 실측 — 사전 승인됨(Manager 2026-09-29), 구현 로트가 장중 실행** — 정지·0가격 종목 포함 `/prices` 읽기 전용 GET 1회, 쓰기 0.
+      결과로 design D6 의 두 [미측정] 행을 확정한다. 구현을 막지 않는다
 
 ## 1. Pre-Edit
 
@@ -27,7 +28,7 @@
 - [ ] 2.2 **R2** — 1종목이 응답에 **부재**: R1 과 같다
 - [ ] 2.3 **R3** — 같은 포지션이 `OutageAfter` 이상 연속 미관측: `EventExitObservationOutage` 가 **포지션 key**
       (`type|account|positionID`)로 **1회**, 다음 주기에 반복 없음. 필드에 `position_id`·`symbol`·`unobserved_seconds`·`cause`
-- [ ] 2.3a **R3 (Q1=a)** — 같은 순간 `EscalateOperatingMode(…ModeTriggerExitObservationOutage…)` 1회. Q1=b 면 이 task 는 「호출 0」 단언으로 바뀐다
+- [ ] 2.3a **R3 (Q1=a 확정)** — 같은 순간 `EscalateOperatingMode(…ModeTriggerExitObservationOutage…)` 1회, 같은 연속에서 반복 없음
 - [ ] 2.4 **R4** — 미관측 포지션이 다음 주기에 판정에 닿으면 기록 해제. 다시 빠지면 새 연속(새 시작 시각, 경보 래치 해제)
 - [ ] 2.5 **R5** — 전 종목 미응답(B4): 계정 사다리 **무변화**, 그 주기에 포지션 경보 없음
 - [ ] 2.6 **R6** — 양보(B1): **무변화**, `checkOutage` 계속

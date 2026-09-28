@@ -42,7 +42,7 @@ HEAD 에서 코드는 그대로이며 a111 이 같은 모양의 무음 `continue
 | 계수 | `ObserveOnce` B6·B7(`:453`·`:459`)의 두 `continue` 직전 | **포지션 단위 미관측 시각을 적는다.** 판정에 닿으면(`:464`) 지운다. 보유에서 사라지면 정리한다 |
 | 판정 | 새 파일의 새 메서드 | 미관측이 **계정 사다리와 같은 임계**(`outageAfter()`, 기본 60초)를 넘으면 critical 1회 |
 | 알림 | 기존 `o.alert` → `obs.EventExitObservationOutage` | **새 이벤트 타입·전송 경로 없음.** 같은 사실("관측되지 않는 포지션은 보호되지 않는다")을 포지션 key 로 |
-| 모드 강화 | 기존 `EscalateOperatingMode(…ModeTriggerExitObservationOutage…)` | **Q1 — 사용자 결정.** 정본 exit-policy 문장은 두절에 ENTRY_BLOCKED 까지 요구한다(design D5) |
+| 모드 강화 | 기존 `EscalateOperatingMode(…ModeTriggerExitObservationOutage…)` | **정본 준수(Q1 확정)** — 정본 exit-policy 문장(`spec.md:62`·`:65`)이 두절에 ENTRY_BLOCKED 까지 요구한다(design D5) |
 
 **바꾸지 않는 것.** 판정·기준선·워터마크·발의·주문·B1~B4 의 동작·계정 사다리. 새 브로커 호출 0(§0.4). 토글 없음.
 
@@ -54,6 +54,8 @@ HEAD 에서 코드는 그대로이며 a111 이 같은 모양의 무음 `continue
 | a092 (알림이 손절을 잡지 않는다) | 이 change 의 RED 목록(R1~R6)의 출처. 새 critical 은 오늘의 동기 전달을 탄다 — **이름 붙인 잔여**(design D7) |
 | a094 (손절은 자기를 막는 것을 치운다) | 같은 파일(`exitloop.go`)의 다른 함수(`record`·`clearTheSymbol`)를 편집한다. a090 의 편집은 `ObserveOnce` + 새 파일 — 충돌 면 최소 |
 | a112 결정 46 | 장 마감 시 `/prices` 가 두 시장 모두 행 1개를 돌려준 실측(n=1/시장) — fail-closed 정상 입력 열거의 근거(design D6) |
+| (미측정) 정지·0가격 종목 | **[미측정 · 사전 승인된 실측 대기]** — 구현 로트가 장중에 읽기 전용 시세 GET 1회(Manager 사전 승인 2026-09-29, design Q2) |
+| (후속 후보) 하류 무음 5자리 | 판정 진입 뒤 임대 재검사 5자리(`:859` `:956` `:1027` `:1050` `:1180`)의 무음 — 명명된 잔여(design Q3) |
 
 ## Non-goals
 
