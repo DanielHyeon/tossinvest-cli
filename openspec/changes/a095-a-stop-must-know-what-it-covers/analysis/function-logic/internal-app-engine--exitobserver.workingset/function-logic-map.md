@@ -47,7 +47,7 @@
 
 `o.opts.Journal.Positions` · `o.opts.Journal.OpenExitStateResults` · `o.alertUnmanaged`(B6 창) · `o.openState`(B7) · `o.opts.Journal.QuarantineExitSnapshot`.
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과는 `([]managed, error)`다 — 원장 읽기 오류(B1 · B2)는 되던지고, 포지션별 개설 · 격리 실패는 `cycle.Err`에 담고 다음 포지션으로 간다(B8 · B9 · B13 · B16 · B22 창).
 
 ## State mutations and fallbacks
 

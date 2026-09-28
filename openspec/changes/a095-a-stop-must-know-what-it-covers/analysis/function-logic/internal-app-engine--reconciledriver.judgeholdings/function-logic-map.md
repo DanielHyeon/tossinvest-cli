@@ -43,7 +43,7 @@
 
 `d.opts.Journal.CurrentPosition` · `d.checkExternalIncrease`(B8 창) · `d.blocked`(B9) · `d.opts.Adoption.Excludes`(B11) · `d.opts.Adoption.Included`(B12) · `d.adopt` · `d.alertUnmanaged`(B15 창).
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과값이 없다 — 오류를 돌려주지 않는다. `CurrentPosition` 오류는 그 보유를 건너뛰고(B5), 편입 쪽 오류는 `adopt`가 `cycle.Err`에 담는다.
 
 ## State mutations and fallbacks
 

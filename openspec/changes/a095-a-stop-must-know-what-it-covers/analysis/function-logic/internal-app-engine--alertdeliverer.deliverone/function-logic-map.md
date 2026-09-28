@@ -37,7 +37,7 @@
 
 `ClaimAlertByID` · `d.Publisher.Publish`(B9 창) · `d.recordDelivery` · `d.recordFailedAttempt`(B11).
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과값이 없다 — 오류를 돌려주지 않는다. claim 실패는 기록 실패 계수로(B1 창), 전송 실패는 원장의 실패 시도로(B11 창) 처리한다.
 
 ## State mutations and fallbacks
 

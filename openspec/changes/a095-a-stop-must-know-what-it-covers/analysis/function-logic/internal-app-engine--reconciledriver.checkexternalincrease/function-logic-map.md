@@ -30,7 +30,7 @@
 
 `d.opts.Journal.AdoptionOf`(B1 뒤) · `riskcalc.CompareDecimal`(B2 뒤) · `d.alert` · `d.label`.
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과값이 없다 — 오류를 돌려주지 않는다. `AdoptionOf` · `CompareDecimal`의 오류에서 조용히 반환하고(B2 · B3 창 return), `d.alert`는 `Notify`의 오류를 로그로만 남긴다.
 
 ## State mutations and fallbacks
 

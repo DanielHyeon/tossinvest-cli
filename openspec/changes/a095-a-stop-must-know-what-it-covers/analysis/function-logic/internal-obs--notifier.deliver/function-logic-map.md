@@ -53,7 +53,7 @@
 
 `n.Publisher.Publish` · `n.Journal.MarkAlertDelivered` · `n.Journal.MarkAlertAttemptFailed` · `n.wait`(B20) · `n.Journal.ReleaseAlertClaim` · `n.Gate.Block`(B12 · B18 · B27 창).
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과는 `(sent, lost)`다 — 오류를 돌려주지 않는다. 실패는 로그 · 원장의 실패 시도 · 진입 게이트 래치(B12 · B18 · B27 창)로 처리한다.
 
 ## State mutations and fallbacks
 

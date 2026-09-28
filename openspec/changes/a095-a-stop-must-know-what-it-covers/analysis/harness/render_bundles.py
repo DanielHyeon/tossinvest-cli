@@ -30,9 +30,43 @@ COVERAGE_COMMAND = (
     "app/engine · reconcile 네 패키지에 각각"
 )
 DEFAULT_TEST = "기존 — a095는 이 함수를 바꾸지 않는다"
-# 번들별로 바꿀 수 있는 오류 계약 문구(7판 r6 R6-2 — 오류를 되던지지 않는 함수가 있다)
-ERROR_CONTRACT = ("브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다"
-                  "(위 표의 return 열이 그 자리다).")
+# 오류 계약 문구 — 8판(r7 F3/F7, Manager 처분): **번들마다 명시한다.** 기본값은 없다 — 빠진 번들은 생성이 멈춘다.
+# 7판은 기본값 「이 함수는 그것을 되던진다」를 두고 한 번들만 바꿔, 오류를 삼키는 함수 맵 28개에 거짓이 남았다.
+RETHROWS = ("브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다"
+            "(위 표의 return 열이 그 자리다).")
+ERROR_CONTRACTS = {
+    "internal-app-engine--alertdeliverer.cycle": "결과는 `error` 하나다 — 나열 실패(B1)를 지속 실패로 센 뒤 오류로 돌려준다. 행별 배달 실패는 `deliverOne`이 원장에 기록하고 여기로 돌려주지 않는다.",
+    "internal-app-engine--alertdeliverer.deliverone": "결과값이 없다 — 오류를 돌려주지 않는다. claim 실패는 기록 실패 계수로(B1 창), 전송 실패는 원장의 실패 시도로(B11 창) 처리한다.",
+    "internal-app-engine--exitobserver.alertunmanaged": "결과값이 없다 — 오류를 돌려주지 않는다. `o.alert`가 `Notify`의 오류를 로그로만 남긴다.",
+    "internal-app-engine--exitobserver.observeonce": "결과는 `ExitCycle`이다 — 오류를 돌려주지 않고 `cycle.Err`에 담는다(B2 · B8 창).",
+    "internal-app-engine--exitobserver.workingset": "결과는 `([]managed, error)`다 — 원장 읽기 오류(B1 · B2)는 되던지고, 포지션별 개설 · 격리 실패는 `cycle.Err`에 담고 다음 포지션으로 간다(B8 · B9 · B13 · B16 · B22 창).",
+    "internal-app-engine--notifieralerter.externalpositionfound": "결과는 `error`다 — `Notify`의 오류를 그대로 돌려준다(nil 알림기는 B1에서 nil).",
+    "internal-app-engine--reconciledriver.adopt": "결과는 편입된 id 집합뿐이다 — 오류를 돌려주지 않는다. 시세 읽기 오류는 `cycle.Err`에 담고(B3 창) 빈 집합을 돌려준다.",
+    "internal-app-engine--reconciledriver.adoptone": "결과는 `bool`이다 — 오류를 돌려주지 않는다. 범주 ① ②는 `logDeferred` 로그 뒤 false, 범주 ③(B3 창)은 로그 뒤 true.",
+    "internal-app-engine--reconciledriver.alert": "이 함수는 결과값이 없고 오류를 **되던지지 않는다** — B2가 `Notify`의 오류를 로그로만 남긴다. 호출자는 기록 실패를 알 수 없다(7판 r6 R6-2).",
+    "internal-app-engine--reconciledriver.alertunmanaged": "결과값이 없다 — 오류를 돌려주지 않는다. `d.alert`(→ `ReconcileDriver.alert` B2)가 `Notify`의 오류를 로그로만 남긴다.",
+    "internal-app-engine--reconciledriver.checkexternalincrease": "결과값이 없다 — 오류를 돌려주지 않는다. `AdoptionOf` · `CompareDecimal`의 오류에서 조용히 반환하고(B2 · B3 창 return), `d.alert`는 `Notify`의 오류를 로그로만 남긴다.",
+    "internal-app-engine--reconciledriver.judgeholdings": "결과값이 없다 — 오류를 돌려주지 않는다. `CurrentPosition` 오류는 그 보유를 건너뛰고(B5), 편입 쪽 오류는 `adopt`가 `cycle.Err`에 담는다.",
+    "internal-app-engine--resolvenotificationpublisher": "결과는 `(Publisher, notificationResolution)`다 — 오류 대신 해석 결과의 `Refused`에 사유를 담고 전송기를 nil로 돌려준다(B2 · B5 창).",
+    "internal-exitpolicy--evaluateladder": "결과는 `(LadderTransition, error)`다 — 입력 거부와 계산 실패를 오류(판정 거부)로 돌려준다(위 표의 return 열).",
+    "internal-exitpolicy--selectrecoverysnapshot": "결과는 `(ExitLineSnapshot, RecoverySource, error)`다 — 검증 실패 · 신원 불일치 · 모호함을 오류로 돌려준다(B1 · B3 · B4 · B5~B8 · B10 창).",
+    "internal-journal--claimowed": "결과는 `(owed, rearm)`이다 — 오류가 없는 순수 판정이다.",
+    "internal-journal--journal.applypositionadjustment": RETHROWS,
+    "internal-journal--journal.openexitstate": RETHROWS,
+    "internal-journal--journal.recordalerttx": RETHROWS,
+    "internal-journal--journal.recordexitjudgementtx": RETHROWS,
+    "internal-journal--journal.refreshexitobservation": RETHROWS,
+    "internal-journal--resetexitstateforreadopttx": RETHROWS,
+    "internal-obs--notifier.claimanddeliver": "결과는 `(sent, owed, err)`다 — outbox claim 기록 실패만 오류로 돌려주고 그 전에 진입 게이트를 래치한다(B1 · B3 창). 전송 실패는 `deliver`가 처리하고 오류로 올리지 않는다.",
+    "internal-obs--notifier.deliver": "결과는 `(sent, lost)`다 — 오류를 돌려주지 않는다. 실패는 로그 · 원장의 실패 시도 · 진입 게이트 래치(B12 · B18 · B27 창)로 처리한다.",
+    "internal-obs--notifier.notify": "결과는 `error`다 — critical의 durable 기록 실패만 오류로 돌려준다(`notifyCritical`). normal 경로(B1 창)는 항상 nil이다.",
+    "internal-obs--notifier.notifycritical": "결과는 `error`다 — `claimAndDeliver`의 기록 실패만 돌려주고, 그 전에 `escalate`를 시도한다(B3 창). 전송 실패는 오류가 아니다(B4 창에서 승격).",
+    "internal-obs--notifier.publishbesteffort": "결과값이 없다 — 오류를 돌려주지 않는다. 전송 실패는 로그로만 남긴다(B2 창).",
+    "internal-obs--severityof": "오류가 없는 순수 함수다.",
+    "internal-reconcile--ingestor.ingestexternalpositions": "결과는 `(Report, error)`다 — 폴드 · 조정 오류는 되던지고, 알림 오류는 모아 끝에 `errors.Join`으로 돌려준다(B13 창).",
+    "internal-config--mergeadoption": "결과값이 없다 — 오류를 돌려주지 않는다. 검증 실패는 블록 전체를 0으로 만들고 `Rejected`에 사유를 담는다(B3 창 return).",
+    "internal-config--mergenotifications": "결과값이 없다 — 오류를 돌려주지 않는다. 검증 실패는 블록 전체를 0으로 만들고 `Rejected`에 사유를 담는다(B3 창 return) — 그래서 거부된 블록의 `Enabled`는 거짓이다.",
+}
 
 # stem, 번들 디렉터리, 역할, 입력 행들, 호출 문단, 변이 문단, 안전 경계, High-risk, {분기: 시험 요구}
 BUNDLES: list[dict] = [
@@ -334,10 +368,38 @@ BUNDLES: list[dict] = [
                     "호출자 `alertUnmanaged`는 기록이 실패했는지 모른다. 오늘은 B1 래치가 `d.alert` 앞에 걸려 있어 기록 실패가 "
                     "다음 주기에 다시 시도되지 않는다(r5 R5-1). 6판 원칙 — critical은 래치를 지나므로 다음 관측이 다시 기록을 "
                     "시도한다 — 은 이 함수를 바꾸지 않고 성립한다.",
-        "error_contract": "이 함수는 결과값이 없고 오류를 **되던지지 않는다** — B2가 `Notify`의 오류를 로그로만 남긴다. 호출자는 "
-                          "기록 실패를 알 수 없다(7판 r6 R6-2).",
         "high_risk": "yes — 대사 쪽 critical 발신의 통로다.",
         "tests": {"B2": "**a095 2.16** — 기록 실패 → 저장소 회복 → 같은 실패가 다음 관측에서 기록된다"},
+    },
+    {
+        "stem": "engine--mergeAdoption",
+        "dir": "internal-config--mergeadoption",
+        "role": "설정 파일의 편입 블록을 엔진 설정에 옮긴다. 검증에 실패한 블록은 전체를 0으로 만들고 사유를 남긴다.",
+        "inputs": [("`raw`", "파일의 편입 블록", "config.json", "B1 — 없으면 기본값 유지"),
+                   ("`next.validate()`", "범위 검증", "정본 exit-policy 「범위 검증」", "B3 — 실패면 `Adoption{Rejected: why}`")],
+        "calls": "`normaliseSymbols` · `next.validate`(B3 조건).",
+        "mutations": "`cfg.Adoption` — 통과한 블록 또는 `Rejected`만 가진 0 블록.",
+        "boundary": "**a095는 이 함수를 바꾸지 않는다.** B3 창이 거부된 블록을 `Adoption{Rejected: why}`로 만든다 — `Enabled` 거짓 · "
+                    "include 없음. 그래서 거부된 편입 블록은 델타의 「운영자가 고른 상태」(편입 꺼짐 ∧ 미지정)와 **모양이 같다**. "
+                    "정본 exit-policy는 범위 검증이 「enabled가 참이거나 include 목록이 비어 있지 않을 때」 요구된다고 적으므로, 거부된 "
+                    "엔진은 운영자가 보호를 요청한 엔진이다 — 8판 델타는 정의에 「설정이 거부되지 않았고」를 넣고 거부는 Q2(a)로 남긴다(r7 F1).",
+        "high_risk": "yes — 편입 여부를 정한다.",
+        "tests": {"B3": "**a095 2.6a** — 거부된 편입 블록은 「운영자가 고른 상태」로 분류되지 않는다(등급은 Q2(a))"},
+    },
+    {
+        "stem": "notifications--mergeNotifications",
+        "dir": "internal-config--mergenotifications",
+        "role": "설정 파일의 알림 블록을 엔진 설정에 옮긴다. 검증에 실패한 블록은 전체를 0으로 만들고 사유를 남긴다.",
+        "inputs": [("`raw`", "파일의 알림 블록", "config.json", "B1 — 없으면 기본값(꺼짐) 유지"),
+                   ("`next.validate()`", "블록 검증", "`Notifications.validate`", "B3 — 실패면 `Notifications{Rejected: why}`")],
+        "calls": "`strings.TrimSpace` · `next.validate`(B3 조건).",
+        "mutations": "`cfg.Notifications` — 통과한 블록 또는 `Rejected`만 가진 0 블록.",
+        "boundary": "**a095는 이 함수를 바꾸지 않는다.** B3 창이 거부된 블록을 `Notifications{Rejected: why}`로 만든다 — 로드된 "
+                    "`Enabled`는 거짓이다. 그러므로 파일에 `enabled: true`를 적었어도 블록이 거부되면 a095에게는 「꺼짐」이다(8판, "
+                    "r7 F3 · Manager 처분: 「거부 = 꺼짐」을 명시하고 시험). 이 방향은 R4-2(전송 수단 부재를 꺼짐으로 읽지 않는다)와 "
+                    "반대다 — 거부는 전송 수단 부재가 아니라 설정 자체가 무효라는 사실이고, 결과가 critical을 만들지 않는 **안전 방향**이다.",
+        "high_risk": "yes — 알림 켜짐 판정의 원천이다.",
+        "tests": {"B3": "**a095 2.5b** — 거부된 알림 블록(파일에는 `enabled: true`)에서 a095 사실은 critical이 아니다"},
     },
     {
         "stem": "adoption--ReconcileDriver.alertUnmanaged",
@@ -597,7 +659,7 @@ def render(bundle: dict, ast_dir: Path, profiles: list[str]) -> None:
 
 {bundle['calls']}
 
-{bundle.get('error_contract', ERROR_CONTRACT)}
+{ERROR_CONTRACTS[bundle['dir']]}
 
 ## State mutations and fallbacks
 

@@ -38,7 +38,7 @@
 
 `in.Journal.FillWatermark` · `in.Journal.ApplyPositionAdjustment` · `in.Alert.ExternalPositionFound`(B13).
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과는 `(Report, error)`다 — 폴드 · 조정 오류는 되던지고, 알림 오류는 모아 끝에 `errors.Join`으로 돌려준다(B13 창).
 
 ## State mutations and fallbacks
 

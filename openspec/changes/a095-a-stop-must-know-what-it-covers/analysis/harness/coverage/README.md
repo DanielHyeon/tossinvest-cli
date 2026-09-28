@@ -15,3 +15,10 @@
   (생성기는 주어진 디렉터리에 AST 가 있는 stem 만 그림)
 - 셋 다 base `02716357` 와 다를 수 있는 파일이다: `outbox.go`(a124 가 :512 뒤에 함수 하나 추가 — 인용한 두 함수의 줄은
   같음) · `alertdelivery.go`(a124 가 크게 바꿈) · `recovery.go`(base 와 동일). 번들 해시는 HEAD 파일에 묶였다
+
+## 5~8판 추가
+
+- `r5-app-engine.out` — HEAD `f69a3dab` 연결 worktree, `adoption.go` · `notifications.go` 줄 (`adoptOne` · `resolveNotificationPublisher`)
+- `r6-app-engine.out` — 같은 실행의 `reconcileloop.go` 줄 (`ReconcileDriver.alert`)
+- `r8-config.out` — `go test ./internal/config/ -count=1 -covermode=set`, 작업트리의 `internal/config` 무수정 · base `02716357` 이래
+  `engine.go` · `notifications.go` 무변화 확인 뒤 실행. `mergeAdoption` · `mergeNotifications`

@@ -33,7 +33,7 @@
 
 `n.mu.Lock`/`n.mu.Unlock`(defer) · `n.Journal.ClaimAlertForDelivery` · `n.Gate.Block`(B3 창) · `n.logClaimHeld`(B6) · `n.deliver`(switch 뒤, 뮤텍스 안).
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과는 `(sent, owed, err)`다 — outbox claim 기록 실패만 오류로 돌려주고 그 전에 진입 게이트를 래치한다(B1 · B3 창). 전송 실패는 `deliver`가 처리하고 오류로 올리지 않는다.
 
 ## State mutations and fallbacks
 

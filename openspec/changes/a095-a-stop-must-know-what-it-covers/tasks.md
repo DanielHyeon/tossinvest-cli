@@ -1,4 +1,4 @@
-# a095 · tasks — 7판
+# a095 · tasks — 8판
 
 - **Change**: `a095-a-stop-must-know-what-it-covers`
 - **위험 등급**: **High-risk** — 무보호 보고의 등급과 진입 차단 도달. §0.3 적용.
@@ -47,6 +47,9 @@
       (`analysis/harness/coverage/r5-app-engine.out`). `alertUnmanaged` · `adopt` 번들 결론을 편집 경계로 갱신
 - [x] 1.9 **6판 근거 번들 1개**(r5 R5-1): `engine.ReconcileDriver.alert`(B2 — `Notify` 오류를 로그로만) — 커버리지
       `analysis/harness/coverage/r6-app-engine.out`(HEAD `f69a3dab` 실행, `reconcileloop.go` base 이래 무변화)
+- [x] 1.10 **8판 근거 번들 2개**(r7 F1 · F3): `config.mergeAdoption` · `config.mergeNotifications` — 커버리지
+      `analysis/harness/coverage/r8-config.out`(작업트리 `internal/config` 무수정 · base 이래 무변화 확인 뒤 실행). 생성기의 오류
+      계약을 번들별 명시로 바꿔 21개 맵을 정정(아래 review §3.21 영수증)
 - [ ] 1.6 **a091과의 병합 확인** — 둘 다 등급 표를 건드릴 수 있다. 3판은 표 크기를 시험에 적지 않는다
 
 ## 2. R1′ — 등급을 사실로 (결정 (1)·(2), design D1)
@@ -71,6 +74,11 @@
 - [ ] 2.5a **RED** — **켜짐 + topic 없음**(전송기 nil): 판정 근거는 설정 `enabled`이므로 B5 사실은 **critical**이고,
       그 행은 배달 실행자 `deliverOne` B8 · a124 정본대로 처리된다. `Publisher == nil`을 「꺼짐」으로 읽는 구현은
       이 시험에서 실패해야 한다(r4 R4-2). 생산 배선으로
+- [ ] 2.5b **RED** — **거부된 알림 블록**(파일에는 `enabled: true`, 검증 실패): 로드된 값이 거짓이므로 꺼짐 — a095 사실은
+      critical로 기록되지 않는다(8판, `config.mergenotifications` B3). 로드된 실효 설정으로
+- [ ] 2.6a **RED** — **거부된 편입 블록**은 「운영자가 고른 상태」로 분류되지 않는다 — 그 보고의 등급은 이 시험이 정하지
+      않는다(Q2(a) 열림). 거부 블록이 꺼짐 · 미지정 기본 설정과 같은 경로로 normal이 되는 구현은 이 시험에서 실패해야 한다
+      (8판 r7b F1, `config.mergeadoption` B3)
 - [ ] 2.6 `[비움 — Q2(a)(b)(c)]` 설정 거부(B3) · include 지정 시도 실패(B6) · `adopt` B2 · B6 · B7 연기분 — 답에
       따라 RED를 쓴다. (알림 on에 transport 죽음은 Q2(d)로 a124 정본에 이관됨 — 여기 없음, r3 N7)
 - [ ] 2.7 **RED** — 키 분리(결정 (3)(iii)): exit 관측 자리와 reconcile 자리의 event key가 다르다
@@ -81,7 +89,8 @@
       바꾸지 않는다. **`SeverityOf` · `Notify`의 경계는 Q1 답에 조건부**(r3 N4): (a) 새 종류 등재면 본문 불변,
       (b) `SeverityOf` 계약 변경이면 경계를 다시 선언하고 두 번들을 다시 뽑아 재리뷰한다
 - [ ] 2.12 **RED** — **연기(normal) → 같은 프로세스의 다음 사이클에서 시도 실패(critical)**: 재시작 없이 critical로
-      기록된다. Q2(c)의 두 답(연기 = normal · critical) 모두에서 통과하는 형태로 쓴다. 생산 배선(실 `Notifier` · outbox ·
+      기록된다. Q2(c)의 두 답(연기 = normal · critical) 모두에서 통과하는 형태로 쓴다. 픽스처에 **같은 사이클에서 앞선
+      `adoptOne` 실패 뒤 `adopt` B7(관측 묵음)이 남은 후보를 반환하는 묶음**을 넣는다(8판 r7b F8). 생산 배선(실 `Notifier` · outbox ·
       배달 실행자)으로(r4 R4-1). **6판**: critical은 메모리 래치를 거치지 않는다 · normal은 같은 사실의 반복만 억제한다(r5 R5-1)
 - [ ] 2.13 **RED** — `adoptOne` 범주 ③(편입 커밋 뒤 exit state 미개설, B3 창 → true)은 critical 요구 밖임을 명명된
       경계로 고정한다 — 후속 후보 `issues.md` I7(r4 R4-3)
@@ -137,8 +146,9 @@
 - [ ] 6.2 **§0.3** — exit goroutine에 **새** critical Notify가 없음을 구조로 보인다: `workingSet` B6 경로의
       사실이 normal(2.1). 기존 exit 발신의 `n.mu` 대기는 **a092 21판 소유**(Q7 이관, 2026-09-28) — 대사 goroutine 자신의 대기는 a092 21판 밖의 이름 붙은 잔여
 - [ ] 6.3 **§0.4** — 새 브로커 조회 0건
-- [ ] 6.4 **토글 OFF 동등성** — 기존 토글 둘(`notifications.enabled` · `adoption.enabled`)의 OFF에서 동작이
-      이 change 전과 같다(2.4 · 2.5). 새 토글은 도입하지 않는다
+- [ ] 6.4 **토글 OFF 동등성** — 기존 토글 둘(`notifications.enabled` · `adoption.enabled`)의 OFF에서 **등급과 진입 차단
+      결과**가 이 change 전과 같다(2.4 · 2.5). normal 래치 키가 사실 식별자로 바뀌어 normal 보고 횟수 · 로그 줄은 달라질 수
+      있다. `adoption.enabled=false`에 include 지정이 있는 경로는 Q2(b)로 열려 있다(8판 r7a F5). 새 토글은 도입하지 않는다
 - [ ] 6.5 `openspec validate --strict`의 한계 — 델타가 ADDED만 쓰는지 확인하고 적는다
 - [ ] 6.6 FLM · AST **재생성**(구현 후) + `check_analysis.py` 통과
 - [ ] 6.7 `make sdd-sync` → `make sdd-check`
@@ -152,8 +162,13 @@
 - [ ] 7.2 **배포 직전에 원장을 다시 잰다.** 2026-09-25 재조회(2라운드 P1-6)의 OPEN은 TSLA 먼지 1건이었다.
       배포 직후 critical로 울 것의 예측은 **그 시점의 측정**으로 쓴다 — 2판의 「6건 중 최소 2건」은 거짓이
       되었으므로 지웠다
+- [ ] 7.0 **순서 조건 확인**(8판, Manager 처분) — a095 구현 착수 전, a092 「모든 보유자」 요구(exit goroutine이 줄 서는
+      잠금을 원격 전송 동안 쥐지 않는다)가 착지했거나 같은 창에 들어오는지 확인한다. 전제가 깨지면 Q7 첫째 면의 빈도 증가
+      (design 「남는 경합」)는 P1이다
 - [ ] 7.3 **공시** — 편입 켜짐(`adoption.enabled=true`)이고 알림 on인 엔진에서 편입 실패(B5)가 critical이 되고,
-      전달 실패 시 진입이 막힌다. 알림 off · 편입 off · exclude에서는 막히지 않는다(결정 (2)). transport가 죽은 경우의 교환은 정본 「배달 실행자는 지속 실패를 진입 차단과 운영 모드 승격으로 잇는다」(a124)를 따른다고 함께 적는다(Q2(d) 이관)
+      전달 실패 시 진입이 막힌다. 알림 off(거부된 알림 블록 포함) · 편입 off · exclude에서는 막히지 않는다(결정 (2)).
+      critical이 메모리 래치를 지나므로 PENDING 동안 대사 쪽 배달이 늘어 exit goroutine의 기존 critical 발신 대기가 늘 수
+      있음을 함께 적는다(7.0 순서 조건). transport가 죽은 경우의 교환은 정본 「배달 실행자는 지속 실패를 진입 차단과 운영 모드 승격으로 잇는다」(a124)를 따른다고 함께 적는다(Q2(d) 이관)
 - [ ] 7.4 배포 후 `alert_outbox`에 B5 사실의 행이 생기는지 확인
 
 ## 선후 관계

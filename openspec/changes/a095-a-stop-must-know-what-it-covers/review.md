@@ -879,3 +879,30 @@ a095 오버레이(6판, diff 0). 프롬프트 `r6-prompt.md` sha256 `712e9692…
   `adoption.enabled` 전제 누락에도 있다(저자 추가 발견). **확인됨**
 
 반영은 Manager 처분 뒤. tasks 0.5 미체크.
+
+### 3.21 8판 반영 — r7 두 보이스 처분 (Manager 처분 2026-09-29)
+
+| id | 처분 | 8판 반영 |
+| --- | --- | --- |
+| r7b F1 (P1) | 승인 — 정의에 「거부되지 않은」 전제 추가, 거부 등급은 Q2(a)로 남김(정의로 닫지 않음) | 델타 「운영자가 고른 상태」 정의 · 시나리오 「편입을 켜지 않은 기본 설정」 WHEN · design 「거부된 편입 블록은 운영자가 고른 상태가 아니다」 · 새 번들 `config.mergeadoption`(B3 `:279` 창 → `Adoption{Rejected}`) · tasks 2.6a |
+| r7b F2 (P1) + 저자 추가 발견 | 승인 | 시나리오 「앞선 normal 보고 뒤의 시도 실패」 · 「알림이 켜졌지만 전송 수단이 없는 엔진」 WHEN에 `notifications.enabled ∧ adoption.enabled` |
+| r7a F1 · r7b F5 (P2) | **기록 + 순서 조건** | proposal 이관 기록 새 행(「a095 구현은 a092 『모든 보유자』 착지 이후 또는 같은 창 전제, 깨지면 P1」) · design 「남는 경합」 · tasks 7.0 · 7.3 공시 |
+| r7b F4 (P2) | 승인 | 델타: 「기록 실패 뒤 **같은 사실이 다시 관측되면** 그 관측에서 기록 시도 — 해소된 사실의 재시도 대기열을 요구하지 않는다」 |
+| r7b F6 · r7a F5 (P2 · P3) | 승인 | exit-policy 시나리오 THEN 「평균단가 하락으로 인해 낮아지지 않는다」 · engine-safety 알림 off 시나리오 THEN 「그 보고로 인한」 · tasks 6.4를 「등급과 진입 차단 결과」로 한정(include 경로는 Q2(b)) |
+| r7a F2 (P2) | 승인 | 델타: 「무관리 보고」 = 두 `alertUnmanaged` 발신 자리, 수량 증가 보고는 Q4 · design 사실 식별자 계약에 같은 한정 |
+| r7a F4 · r7b F3 | 승인 — 「거부 = 꺼짐」 명시 + 시험, R4-2와의 방향 차이 한 줄 인정 | 델타 SHALL(거부된 알림 블록은 꺼짐) + 시나리오 「거부된 알림 블록」 · design 「거부된 알림 블록 = 꺼짐」 · 새 번들 `config.mergenotifications` · tasks 2.5b |
+| r7b F8 (P3) | 승인 | design 사실 식별자 일곱 칸(연기는 경로마다 하나, 세 원인은 진단 원인) · include 연기의 오늘 사유(B6) 언급 · tasks 2.12 픽스처(같은 사이클 B7 조기 반환) · 머리말(design 번들 수 · 델타 판 표기) |
+| r7a F3 · r7b F7 (P3) — R6-2 전파 | 승인 — 번들별 오류 계약 전수 + 값 단위 grep 영수증 | 생성기: 기본값을 없애고 번들마다 `ERROR_CONTRACTS`에 명시(빠지면 생성이 멈춤) |
+
+**영수증 — 오류 계약(값 단위)**:
+
+```text
+재생성: 커밋된 AST · 커버리지로 생성 번들 전부 다시 그림(+ 새 config 번들 2)
+diff -rq → 맵 21개가 바뀌었고, 각각 정확히 한 줄(오류 계약 줄)만 바뀜 — 스크립트로 21개 전부 확인
+grep "이 함수는 그것을 되던진다" → 7개 맵만 남음: evaluateladder · applypositionadjustment · openexitstate ·
+  recordalerttx · recordexitjudgementtx · refreshexitobservation · resetexitstateforreadopttx
+  — 전부 결과에 error가 있고 원장 · 검증 오류를 되던지는 함수(ast.json signature 확인). 오류를 삼키는 함수 맵에 남은 것 0
+```
+
+**재검증(Manager 지시)**: 좁힌 1회 — r7b(전수 대조를 한 쪽)의 형식으로 8판의 **변경 절 + Q2(a)/(b) 상호작용 한정**. 29번들 전수
+재감사 없음(변경이 델타 문언 · 새 config 번들 2 · 오류 계약 줄뿐). 결과는 §3.22.

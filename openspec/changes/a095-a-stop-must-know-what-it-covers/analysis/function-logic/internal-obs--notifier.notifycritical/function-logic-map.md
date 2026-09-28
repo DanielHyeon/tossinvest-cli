@@ -30,7 +30,7 @@
 
 `n.claimAndDeliver`(뮤텍스 안) · `n.escalate`(B3 창 · B4 창, 뮤텍스 밖) · `n.publishBestEffort`(B1 창).
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과는 `error`다 — `claimAndDeliver`의 기록 실패만 돌려주고, 그 전에 `escalate`를 시도한다(B3 창). 전송 실패는 오류가 아니다(B4 창에서 승격).
 
 ## State mutations and fallbacks
 

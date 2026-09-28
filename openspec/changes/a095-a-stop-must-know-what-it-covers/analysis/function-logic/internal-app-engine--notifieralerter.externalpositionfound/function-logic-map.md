@@ -26,7 +26,7 @@
 
 `a.notifier.Notify` · `a.names.Label` · `strings.TrimSpace`.
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과는 `error`다 — `Notify`의 오류를 그대로 돌려준다(nil 알림기는 B1에서 nil).
 
 ## State mutations and fallbacks
 

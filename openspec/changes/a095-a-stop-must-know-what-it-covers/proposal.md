@@ -1,4 +1,4 @@
-# a095 · 손절은 자기가 무엇을 덮는지 알아야 한다 — 7판
+# a095 · 손절은 자기가 무엇을 덮는지 알아야 한다 — 8판
 
 - **Feature**: `FEAT-TOS-009` — Exit line truth and position policy lifecycle
 - **Story**: `STORY-TOS-a095`
@@ -202,6 +202,7 @@ critical로 올리는 것은 `adoption.enabled`가 참이어서 **엔진이 보�
 | 면 | 소유 | 교차 인용 |
 | --- | --- | --- |
 | Q7 첫째 면 — exit goroutine의 기존 critical 발신이 대사 쪽 배달이 쥔 `n.mu`를 기다림 | **a092 21판** | a092 engine-safety 델타 「exit 관측 goroutine이 기다리는 잠금은 원격 전송을 덮어서는 안 된다(SHALL NOT)」 — 그 잠금의 **모든 보유자**가 원격 전송 동안 잠금을 놓아야 한다(design D0.3e 5번). a092 review(21판 Manager 판정 Q1)가 *"a095 Q7의 첫째 면 … 21판의 잠금 범위가 닫는다"*고 적었다 |
+| Q7 첫째 면의 **빈도 증가**(6판 원칙이 만든 것, 8판 기록) — critical이 메모리 래치를 지나므로 PENDING 행이 claim을 얻는 관측마다 대사 goroutine이 배달 예산 동안 `n.mu`를 쥐고 exit goroutine의 기존 critical 발신이 기다린다 | **a092 21판(모든 보유자)** — **순서 조건** | **a095 구현은 a092 「모든 보유자」 요구의 착지 이후, 또는 같은 창을 전제로 한다. 전제가 깨지면 이 증폭은 P1이다**(Manager 처분 2026-09-29, 7판 Claude 보이스 r7a F1 · r7b F5). 구현 순서는 Manager가 스케줄링 때 이 조건을 읽는다 |
 | Q7 둘째 면 — 대사 goroutine 자신이 무관리 보유마다 원격 왕복을 기다림 | **a092 영역 · 21판 밖의 이름 붙은 잔여** | 같은 판정: *"둘째 면(대사 goroutine 자신이 무관리 보유마다 원격 왕복을 기다림)은 Q1 문자 해석상 21판 밖에 남는다."* a095는 이 잔여를 **이름으로 남기고** 고치지 않는다 |
 | Q2(d) — transport 사망 시 ENTRY_BLOCKED 교환 | **a124**(archive `c1e34dc4`) → 정본 | 정본 engine-safety 「배달 실행자는 지속 실패를 진입 차단과 운영 모드 승격으로 잇는다」 |
 
@@ -230,6 +231,7 @@ Q3(정지 조건 — `exit_states`에 수량 열이 없다는 스키마 질문) 
 spec: `engine-safety`(사실별 등급 · 진입 차단 비도달 · 키 분리), `exit-policy`(R3 요구 삭제 · 래칫 요구의
 거짓 전제 삭제).
 
-**기존 함수 내부를 고치므로 Function Logic Map 면제는 없다.** 번들 29개(3판 21 + 4판 5 — `recordAlertTx` · `claimOwed` ·
+**기존 함수 내부를 고치므로 Function Logic Map 면제는 없다.** 번들 31개(3판 21 + 4판 5 — `recordAlertTx` · `claimOwed` ·
 `alertDeliverer.cycle` · `alertDeliverer.deliverOne` · `SelectRecoverySnapshot` + 5판 2 — `adoptOne` ·
-`resolveNotificationPublisher` + 6판 1 — `ReconcileDriver.alert`)가 있고, 구현 후 다시 뽑는다.
+`resolveNotificationPublisher` + 6판 1 — `ReconcileDriver.alert` + 8판 2 — `config.mergeAdoption` ·
+`config.mergeNotifications`)가 있고, 구현 후 다시 뽑는다.

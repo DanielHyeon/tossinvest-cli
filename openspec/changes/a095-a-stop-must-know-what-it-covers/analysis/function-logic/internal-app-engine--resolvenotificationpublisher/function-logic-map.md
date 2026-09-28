@@ -32,7 +32,7 @@
 
 `getenv` · `strings.TrimSpace` · `ntfy.UsesPublicService`.
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과는 `(Publisher, notificationResolution)`다 — 오류 대신 해석 결과의 `Refused`에 사유를 담고 전송기를 nil로 돌려준다(B2 · B5 창).
 
 ## State mutations and fallbacks
 

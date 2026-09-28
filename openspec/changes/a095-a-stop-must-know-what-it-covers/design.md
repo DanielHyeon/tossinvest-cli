@@ -1,6 +1,7 @@
-# a095 · 설계 — 7판
+# a095 · 설계 — 8판
 
-> 분기 인용은 전부 `analysis/function-logic/`의 AST 산출물에서 온다(base `02716357`, 번들 21개).
+> 분기 인용은 전부 `analysis/function-logic/`의 AST 산출물에서 온다(번들 31개 — 각 번들의 `ast.json`이 묶인 커밋은
+> `analysis/harness/coverage/README.md`).
 > 번들 이름은 디렉터리 이름의 뒷부분으로 적는다(예: `reconciledriver.judgeholdings`).
 > 결정 (1)~(3)의 원문은 `proposal.md` §0에 있다. 결정이 덮지 않는 절은 `[비움 — Qn]`으로 두고
 > 질문은 `proposal.md` 「열린 질문」에 있다.
@@ -98,9 +99,13 @@ goroutine 자신의 원격 대기 — a092 영역의 이름 붙은 잔여)과 �
 
 ### 사실 식별자 (6판, r5 R5-2)
 
-**계약**: 무관리 보고의 사실은 **(포지션, 조건)**으로 식별한다. 조건은 사유 행렬의 칸이다 — 운영자 제외 · 편입 꺼짐∧미지정 ·
-설정 거부 · include 지정 시도 실패 · 편입 켜짐의 시도 실패 · 연기(시세 읽기 오류 · 관측 없음 · 관측 묵음). **진단 원인**(오류
-문구, `adoptOne`이 로그에 남기는 거절 사유 등)은 식별자가 아니다 — 본문 · payload에 싣는다. durable event key는 이 식별자와
+**계약**: 무관리 보고의 사실은 **(포지션, 조건)**으로 식별한다. 조건은 다음 일곱 칸이다(8판 r7b F8 — 모호함 제거):
+운영자 제외 · 편입 꺼짐∧미지정 · 설정 거부 · include 지정 — 시도 실패 · include 지정 — 연기 · 편입 켜짐 — 시도 실패 ·
+편입 켜짐 — 연기. **연기는 경로마다 조건 하나다** — 시세 읽기 오류(`adopt` B2) · 관측 없음(B6) · 관측 묵음(B7)의 셋은 **진단
+원인**이다. 오늘 include 지정 후보의 연기는 `alertUnmanaged` B6(「시도했는데 이번 사이클 실패」) 사유로 알려지므로, 이 계약은
+그 사유 문구와 다른 칸을 연다(문구 정정은 구현 로트). **진단 원인**(오류 문구, 연기의 세 원인, `adoptOne`이 로그에 남기는 거절
+사유 등)은 식별자가 아니다 — 본문 · payload에 싣는다. 이 계약은 두 `alertUnmanaged` 발신 자리의 보고에만 적용되고, 편입 후 수량
+증가 보고(같은 이벤트 종류)는 Q4에 남는다(8판 r7a F2). durable event key는 이 식별자와
 정렬한다(exit 관측 자리와 reconcile 자리의 분리 — 결정 (3)(iii) — 위에 조건을 더한다). 철자는 구현 로트가 정한다.
 
 **왜**: 오늘 연기와 시도 실패는 같은 B5 사유 · 같은 key(`exit.position_unmanaged|<posID>`)를 공유한다. Q2(c)=critical이면
@@ -137,6 +142,18 @@ B1 · B2는 **미진입**이다(커버리지 `analysis/harness/coverage/r5-app-e
 topic 없음). 그러므로 `Publisher == nil`은 「꺼짐」의 대용이 아니다. 켜짐 + topic 없음 엔진의 B5 사실은 critical이고,
 그 행은 배달 실행자 `deliverOne` B8(전송기 nil → 실패 시도)과 a124 정본을 탄다. 시험: 켜짐 + topic 없음(critical) ·
 꺼짐 + topic 유지(critical 아님)를 생산 배선으로(tasks 2.5 · 2.5a).
+
+**거부된 알림 블록 = 꺼짐(8판, r7a F4 · r7b F3, Manager 처분).** `mergeNotifications`(`config.mergenotifications`) B3 `:105`
+창이 검증에 실패한 블록을 `Notifications{Rejected: why}`로 만든다 — 로드된 `Enabled`는 거짓이다. 그러므로 파일에 `enabled:
+true`를 적었어도 블록이 거부되면 a095에게는 「꺼짐」이고 a095 사실은 critical이 아니다(시험 2.5b). **R4-2 논거와의 방향 차이를
+인정한다**: R4-2는 「전송 수단이 없다」를 꺼짐으로 읽지 말라고 했고(그러면 필수 critical이 사라진다), 여기서는 거부를 꺼짐으로
+읽는다 — 거부는 전송 수단의 부재가 아니라 설정 자체가 무효라는 사실이고, 결과가 critical을 만들지 않는 안전 방향이므로 명시가
+우선이다.
+
+**거부된 편입 블록은 「운영자가 고른 상태」가 아니다(8판, r7b F1).** `mergeAdoption`(`config.mergeadoption`) B3 `:279` 창도
+거부된 블록을 `Adoption{Rejected: why}`로 만들어 꺼짐 · 미지정과 모양이 같다. 정본 exit-policy는 범위 검증이 「enabled가
+참이거나 include 목록이 비어 있지 않을 때」 요구된다고 적으므로 거부된 엔진은 보호를 요청한 엔진이다 — 델타는 정의에
+「거부되지 않은」을 넣고 거부의 등급은 Q2(a)로 남긴다(정의로 닫지 않는다).
 
 ### 알림 off에서 무엇이 막혀야 하는가 (결정 (2)의 근거 경로)
 
@@ -183,6 +200,13 @@ exit goroutine의 **기존** critical 발신(`exitloop.go:831` · `:1633` · `:1
 **처분(2026-09-28)**: a092 21판이 소유한다 — 그 engine-safety 델타가 exit goroutine이 줄 서는 잠금의 **모든
 보유자**에게 원격 전송 동안 잠금을 놓으라고 요구한다(SHALL). 대사 goroutine 자신의 대기(둘째 면)는 a092 21판
 밖의 **이름 붙은 잔여**다. a095는 이 경합에 대해 설계하지 않는다. 교차 인용은 `proposal.md` 「이관 기록」.
+
+**6판이 첫째 면을 키운다 — 기록 + 순서 조건(8판, r7a F1 · r7b F5, Manager 처분 2026-09-29).** 6판 원칙(critical은 메모리
+래치를 지난다) 전에는 대사 쪽 critical 배달이 포지션당 프로세스에 약 한 번이었다. 6판 뒤에는 행이 PENDING이고 claim을 얻는
+관측마다 대사 goroutine이 배달 예산 동안 `n.mu`를 쥘 수 있고(`claimAndDeliver` — `n.mu.Lock` `:254` · `n.deliver` `:309`),
+그동안 exit goroutine의 기존 critical 발신(`exitloop.go:831` · `:1633` · `:1657` · `:1687`)이 같은 뮤텍스를 기다린다.
+**순서 조건: a095 구현은 a092 「모든 보유자」 요구의 착지 이후, 또는 같은 창을 전제로 한다. 그 전제가 깨지면 이 증폭은 P1이다**
+(`proposal.md` 「이관 기록」 · tasks 7.3).
 
 ### 사실이 해소된 뒤의 행 — `[비움 — Q8]` (r3 N3, Manager 설계 지시의 조건 검사)
 

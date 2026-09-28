@@ -30,7 +30,7 @@
 
 `exitpolicy.SyntheticStop`(B1 앞) · `d.opts.Journal.AdoptPosition`(B1 창) · `d.opts.Journal.OpenAdoptedExitState`(B3 조건) · `d.alert` · `delete(d.unmanaged, …)`(B3 창 — 반환 앞).
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과는 `bool`이다 — 오류를 돌려주지 않는다. 범주 ① ②는 `logDeferred` 로그 뒤 false, 범주 ③(B3 창)은 로그 뒤 true.
 
 ## State mutations and fallbacks
 

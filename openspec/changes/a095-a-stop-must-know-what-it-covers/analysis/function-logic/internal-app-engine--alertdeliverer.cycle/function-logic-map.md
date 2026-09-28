@@ -29,7 +29,7 @@
 
 `d.led().PendingAlertsForDelivery` · `d.countListFailure`(B1) · `d.pruneRecordRuns`(B2) · `d.deliverOne`(B4 창).
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과는 `error` 하나다 — 나열 실패(B1)를 지속 실패로 센 뒤 오류로 돌려준다. 행별 배달 실패는 `deliverOne`이 원장에 기록하고 여기로 돌려주지 않는다.
 
 ## State mutations and fallbacks
 

@@ -34,7 +34,7 @@
 
 호출 순서(`ast.json` 좌표): `o.workingSet` `:426` → `o.observe` `:441` → `o.judge` `:465`.
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과는 `ExitCycle`이다 — 오류를 돌려주지 않고 `cycle.Err`에 담는다(B2 · B8 창).
 
 ## State mutations and fallbacks
 

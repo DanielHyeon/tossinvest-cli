@@ -36,7 +36,7 @@
 
 `validateRecoverySnapshot` · `sameRecoveryPolicy` · `compareRecoveryDecimal` · `compareRecoveryStage`.
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과는 `(ExitLineSnapshot, RecoverySource, error)`다 — 검증 실패 · 신원 불일치 · 모호함을 오류로 돌려준다(B1 · B3 · B4 · B5~B8 · B10 창).
 
 ## State mutations and fallbacks
 

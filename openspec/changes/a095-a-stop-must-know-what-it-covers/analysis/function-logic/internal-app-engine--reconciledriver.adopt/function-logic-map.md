@@ -35,7 +35,7 @@
 
 `d.observeCandidates`(B1 뒤) · `adoptionQuoteKey` · `d.logDeferred`(B7 창) · `d.adoptOne`(B8).
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과는 편입된 id 집합뿐이다 — 오류를 돌려주지 않는다. 시세 읽기 오류는 `cycle.Err`에 담고(B3 창) 빈 집합을 돌려준다.
 
 ## State mutations and fallbacks
 

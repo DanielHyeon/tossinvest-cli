@@ -32,7 +32,7 @@
 
 `d.opts.Adoption.Excludes`(B4) · `d.opts.Adoption.Included`(B6) · `d.alert` · `d.label`.
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과값이 없다 — 오류를 돌려주지 않는다. `d.alert`(→ `ReconcileDriver.alert` B2)가 `Notify`의 오류를 로그로만 남긴다.
 
 ## State mutations and fallbacks
 
