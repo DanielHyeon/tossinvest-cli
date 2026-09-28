@@ -92,3 +92,14 @@ scratch 사본에서 `openspec archive a125-… --yes` 를 돌렸다. 결과는 
 - 준비: `make sdd-infra`(워크트리 로컬 `.sdd/.venv`) → `make sdd-sync` rc 2 — advisory 만 incomplete(`codegraphcontext index` 300 초 시한,
   gbrain 은 공유 홈의 YAML 실패 6127 건 — 이 change 와 무관). CodeGraph(hard evidence) 는 `codegraph init .` 로 세웠다.
 - 1차 `make gate` @ `e62522ce` — rc 2, **② 에서 5.1 한 줄만 미완료**(예정된 멈춤, `harness/5.1-gate1.log`). 5.1 체크 → tracker 재생성 → 2차.
+
+## 사람 승인 base 재고정 — 2026-09-29
+
+- **Function Logic Map: not-applicable** — 이 change 의 자기 Go 편집은 0 이다(Python 게이트 도구 · 문서만). Python 함수 증거는
+  `analysis/python-function-logic` 에 있다.
+- 사유: 2차 gate(`6baafd5c`) ⑤ 가 base `c2eec627` → 워킹트리 창의 **형제** Go 함수 9 개를 요구했다(`harness/5.1-gate2.log`). a125 는
+  current 번들이 0 이라 착지로 좁힐 수 없다.
+- 절차 조건(`docs/WORKFLOW.md` 「사람 승인 base 재고정」):
+  1. 귀속 실측: base 뒤 a125 디렉터리를 만진 커밋 14 개의 `.go` 편집은 0 이고, `_self_repair_commits` 도 `[]` 이다. 옛 디렉터리명은 없다.
+  2. 승인: 사용자 일괄 승인(2026-09-28, a063 수리안 = 특례 폐기 → 일반 경로)과 Manager 승인(2026-09-29, 이 재고정)이다.
+  3. `base-commit.txt` 를 단독 커밋했고, 영수증은 그 커밋 메시지다.
