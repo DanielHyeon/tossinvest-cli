@@ -1,0 +1,3 @@
+{"function": "TestSoakAttestRefusesAnUnfinishedSoakAndWritesNothing", "branches_same": true, "start_same": true, "end_same": true, "recorded_sha": "562e7914c5b47738c7cd03418e0ae872a56a227fd45776faffbd011e0b96200f", "p_blob_sha": "158aa423021f8e9143a354acc6e08c8911418dc9274a37890c34df14bde173c2"}
+{"function": "TestSoakAttestWritesAVerifiableAttestation", "branches_same": true, "start_same": true, "end_same": true, "recorded_sha": "562e7914c5b47738c7cd03418e0ae872a56a227fd45776faffbd011e0b96200f", "p_blob_sha": "158aa423021f8e9143a354acc6e08c8911418dc9274a37890c34df14bde173c2"}
+SAME EXCEPT HASH
