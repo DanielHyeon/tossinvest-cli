@@ -20,7 +20,7 @@
 
 - [x] 3.1 편집 후 표본 A/B — 같은 워크트리 · 같은 HEAD 에서 a063 외 판정 불변(차이 0), a063 은 P 기준으로 바뀜
 - [x] 3.2 변이(사본 · 무변이 대조군): 이관 분기 복원 · 착지 거절 복원 · `_recording_refusal` 거절 복원 · 기록 `execution_base` 를 base 로 읽기 · id 로 착지 우회 · 비정규 기록 거절 복원 · `SDD_BASE_REF` 대조 대상 변이 → 반전 시험 빨강(freeze F9)
-- [ ] 3.3 편집 후 Python FLM 재추출 · `make sdd-test` · `make sdd-check` · 적대 보이스 1 + gstack 리뷰
+- [x] 3.3 편집 후 Python FLM 재추출 · `make sdd-test` · `make sdd-check` · 적대 보이스 1 + gstack 리뷰 — `make sdd-check` 는 공유 트리에서 탐침 시한(부하)으로 미통과, 게이트 ⑥ 이 격리 워크트리에서 강제한다(review 「3.3 · 4.x 상태」)
 
 ## 4. a063 전환 (사람 절차 — a063 디렉터리)
 
