@@ -229,3 +229,20 @@ class TheA063ExceptionIsRetired(unittest.TestCase):
         self.assertEqual(sorted(name for name in names if "adopt" in name.lower() or "audited" in name.lower()), [])
         strings = [node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)]
         self.assertEqual([text for text in strings if any(word in text for word in ADOPTION_WORDS)], [])
+
+    def test_a_leftover_record_changes_neither_verdict_nor_context_nor_output(self) -> None:
+        # design D2 · 1.1 논증의 제거 뒤 핀: 같은 역사에서 기록만 지웠을 때 판정 줄 · 문맥 · 창 줄이 같다.
+        raw, root, _, _ = _a063_fixture()
+        with raw:
+            def judged() -> tuple[list[str], dict[str, object], int, str]:
+                context: dict[str, object] = {}
+                verdict = check_analysis.check(A063, root, context)
+                context.pop("head", None)
+                head = check_analysis._head_commit(root)
+                code, printed = _a063_cli(root)
+                return verdict, context, code, printed.replace(head[:12], "<head>")
+            with_record = judged()
+            subprocess.run(["git", "rm", "-q", f"openspec/changes/{A063}/execution-baseline.json"], cwd=root, check=True)
+            _recommit_detached(root, "the record is deleted")
+            self.assertEqual(with_record, judged())
+            self.assertEqual(with_record[0], [])
