@@ -1,7 +1,7 @@
 # Branch Test Map: `ExitObserver.ObserveOnce`
 
 AST 분기 8 · return 5 · 무음 `continue` 2(`:457`·`:462`). 진입 실측은 `analysis/harness/observeonce.blocks`
-(commit `b0a202b8`, 깨끗한 detached worktree, `go test ./internal/app/engine/ -count=1 -covermode=set`).
+(commit `eac13df1`, 깨끗한 detached worktree, `go test ./internal/app/engine/ -count=1 -covermode=set`).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
@@ -20,18 +20,7 @@ a092 의 BTM(7 분기판)은 "B6 — **없음, 이 change 의 대상**" 이라�
 시험(:759)과 새 B7 과 그 시험(:833)을 더했다. 다만 두 시험은 **무음이 옳다고** 단언한다(격리·원장 효과 0·게이트 열림).
 **미관측이 셈해지고 보고되는지는 여전히 어느 시험도 묻지 않는다** — a090 의 RED 가 그 자리다.
 
-## 필요한 RED (a092 FLM R1~R6 승계 + a090 추가)
+## 필요한 RED
 
-| # | 출처 | Scenario | 기대 |
-|---|---|---|---|
-| R1 | a092 R1 | 보유 2종목, 1종목만 `Last = 0` | `cycle.Err == nil`, 다른 종목은 정상 판정, 빠진 종목이 **미관측으로 기록된다**(시작 시각) |
-| R2 | a092 R2 | 보유 2종목, 1종목이 응답에 **부재** | R1 과 같다 — 원인이 0가격이든 부재든 결과가 같다 |
-| R3 | a092 R3(개정) | 같은 포지션이 임계 이상 연속 미관측 | 임계(design D3) 초과 시 **포지션 key 의 critical 1회**, 다음 주기에 반복 없음 |
-| R4 | a092 R4 | 미관측 포지션이 다음 주기에 판정에 닿는다 | 기록 해제 — 다시 빠지면 새로 센다 |
-| R5 | a092 R5 | B4(전 종목 미응답) | **무변화** — 계정 사다리 그대로, 포지션 단위 경보는 B4 경로에서 나지 않는다 |
-| R6 | a092 R6 | B1(양보) | **무변화** — `checkOutage` 가 계속 돈다 |
-| R7 | a090 | B7(임대 만료)로 빠진 포지션 | R1 과 같이 기록된다(원인 필드만 다름) — 임계 전 한 번의 B7 은 경보가 **아니다** |
-| R8 | a090 | 미관측 중 포지션이 보유에서 사라진다 | 기록이 정리되고 경보가 나지 않는다 |
-| R9 | a090 | 기존 시험 :759 · :833 | **무변화로 통과**한다(한 주기 만에는 경보·게이트 변화 없음) |
-
-R1·R2·R3 이 RED 로 실패하는 것이 결함의 존재 증명이다. R5·R6·R9 는 회귀 방지.
+2판 목록은 `tasks.md` §2 가 정본이다(a092 R1~R6 승계 + a090 R7~R14). 이 표의 분기와의 대응: B6 → R1·R2 · B7 → R7 · 순회 뒤 → R3·R3a~e·R4·R8 ·
+B3 → R12(보유 대상 전부 탈락) · B4 → R5 · B1 → R6 · B6·B7 기존 시험 → R9.

@@ -1,0 +1,11 @@
+{
+  "symbol": "ExitObserver.workingSet",
+  "callers": [
+    {
+      "name": "ObserveOnce",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 413
+    }
+  ]
+}

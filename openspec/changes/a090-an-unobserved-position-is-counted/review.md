@@ -44,3 +44,21 @@
 - **판정: REJECT(P1 4 · P2 6 · P3 6).** 반영하지 않았다. Teammate 권고: codex 전에 2판(F1~F4 + P2/P3 편집)을 쓰면 codex 라운드 하나를 아낀다 —
   F1·F2 는 교차 모델이 확실히 다시 문다.
 
+## 2판 (2026-09-29) — 1라운드 반영 · 판정 아님
+
+Manager 판정(2026-09-29): 2판 먼저 — F1~F4 전부, F2 는 enqueue-only(a094 와 같은 근거·형태), F4 는 범위 안/명명 잔여 표. 정본 `design.md`(2판 전면 개정).
+
+| id | 처분 | 반영 자리 |
+|---|---|---|
+| F1 (P1) | 기점 = **마지막 판정 시각**(없으면 처음 보유 대상으로 본 시각). B1·B2·B4 주기가 시간에 든다 | design D3 · spec 문장 + 시나리오 「양보와 전 종목 실패도 시간에 든다」 · tasks 2.3b |
+| F2 (P1) | 루프 안은 기록만, 임계·알림·강화는 **순회 뒤**, 알림은 **enqueue-only**(`Journal.EnqueueAlert`), 적재 실패는 `Retrier.Gate.BlockUnlessClearedSince` — a094 D−4.6·D−5.3 과 같은 형태 | design D4·D5 · spec 문장 + 시나리오 · tasks 2.3c·2.3d |
+| F3 (P1) | `ExitCycle.Unobserved` + 연속 시작·해제 normal 로그 | design D7 · spec 문장 · tasks 2.1·2.4 |
+| F4 (P1) | 세는 단위를 **보유 대상 집합**으로(`workingSet` B6 통과 뒤 표시 1자리) — 탈락 다섯 자리(B8·B12·B14·B21 범위 안, B10 명명 잔여) + 미관리 B6(명명 잔여) 표. `workingSet` AST·FLM·BTM(분기 22, 탈락 자리 진입 **전부 0**) 편집 전 산출. B3 조기 반환이 보유 중 전부 탈락을 무보유로 읽는 구멍도 같이 | design D1 표·D2·D8 · `workingSet` 번들 · spec 문장 + 시나리오 「판정 목록에서 빠진 보유 포지션」 · tasks 2.12~2.14 |
+| F5 (P2) | **에피소드 key**(`…|<연속 기점>`) — 같은 연속은 한 행, 새 연속은 새 행. a094 D−5.2 교차 인용. 재시작은 a090 에서는 새 에피소드(원장에 믿을 판정 시각 없음 — `exit_snapshot_integrity.go:9-12`) | design D4·D2 · tasks 2.3e·2.11 |
+| F6 (P2) | Q1 비용 보충: 재시작마다 재강화, 모드 이력으로는 계정 두절과 구별 불가 → 본문에 포지션 명명 | design D5 · Q1 |
+| F7 (P2) | B3 조기 반환 앞에서도 순회-뒤 처리(보유 대상이 있으면 미관측, 없으면 전부 정리) | design D2 · FLM · tasks 2.12 |
+| F8 (P2) | 장 마감 근거를 생산 증거(a096 `proposal.md:173` 토요일 `last_observed_at`)로, a112 는 보조, 혼합 시장 배치 [미측정] | design D6 |
+| F9 (P2) | RED 전 전수 검색 task(1차 표본 2 — 둘 다 60초 미만) | tasks 2.0 |
+| F10 (P2) | 격리 포지션은 관측됨 | design D1 표 · tasks 2.14 |
+| F11~F16 (P3) | 인용 `:40-41` 정정 · 하네스가 머리줄을 쓰고 커밋의 `ast.json` 을 읽음(eac13df1) · FLM 에 `continue` 유도 방식 · tracer 도달 불가 · B7 의 현실 원인(클라이언트 시한 15초 = 임대 15초) · 게이트 신선도는 범위 밖 명시 | proposal · 하네스 · FLM · design D1·D6 · proposal Non-goals |
+

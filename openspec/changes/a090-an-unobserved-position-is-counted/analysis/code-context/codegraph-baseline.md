@@ -12,3 +12,4 @@
 | `callers ExitObserver.quoteUsable` | 6: `ObserveOnce` · `judge` · `judgeRatchet` · `judgeLadder` · `refreshObservation` · `record` | grep 비시험 6 자리(`:459` `:859` `:956` `:1027` `:1050` `:1180`)와 일치 — design D1 |
 | `affected exitloop.go` 기본 | 시험 1(`auth-helper/tests/test_cli.py`) | 하네스 주석의 `isTestPath` 결함 재현 — 결론으로 쓰지 않는다 |
 | `affected exitloop.go --filter '*_test.go'` | 898 줄 | `raw/affected-filter.txt` |
+| `callers ExitObserver.workingSet`(2판 추가) | 1: `ObserveOnce` | HEAD grep `-F '.workingSet('` 비시험 1 자리(`exitloop.go:426`)와 일치 — 2판의 두 번째 편집 함수 |

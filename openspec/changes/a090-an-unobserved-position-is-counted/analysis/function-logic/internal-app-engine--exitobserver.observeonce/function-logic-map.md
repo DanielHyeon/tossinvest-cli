@@ -24,8 +24,9 @@
 
 ## Branches and early returns
 
-> 조건은 소스의 그 줄 원문. 「진입 실측」 은 `analysis/harness/observeonce_entry.sh` 결과(`analysis/harness/observeonce.blocks`) —
-> 그 줄에서 시작하는 블록의 count 가 1 이면 「예」.
+> 조건은 소스의 그 줄 원문. 「진입 실측」 은 `analysis/harness/observeonce_entry.sh` 결과(`analysis/harness/observeonce.blocks`, commit `eac13df1`) —
+> 그 줄에서 시작하는 블록의 count 가 1 이면 「예」. **무음 `continue` 두 개(`:457`·`:462`)는 AST 가 기록하지 않는다** — AST 는 분기·return·호출만 싣는다.
+> 두 줄은 소스 스캔(`grep -n continue`, 413-470 범위)으로 찾았고, 그 분기 창(`:454-457`·`:460-462`)에 호출이 없음은 AST `calls` 로 확인했다.
 
 | Branch | 종류 | 조건 (원문) | 부수 효과 / 이탈 | 진입 실측 |
 |---|---|---|---|---|
@@ -58,7 +59,7 @@
 | `o.judge` | 판정·기록·발의 | 오류는 되던짐 → B8 | AST `:465` |
 
 생산 호출자: `ExitObserver.Run`(`exitloop.go:354-364`)과 tracer `Run`(`internal/app/engine/tracer.go:273`) — CodeGraph 1.6.0
-`codegraph callers ObserveOnce`(나머지 여섯은 시험).
+`codegraph callers ObserveOnce`(나머지 여섯은 시험). tracer 는 비시험 생성자 호출이 0 이고 단일 종목을 요구해 B6·B7 에 닿지 않는다(한 종목 미스는 B4).
 
 ## State mutations and fallbacks
 
@@ -68,7 +69,7 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: a090 은 B6·B7 의 두 `continue` 직전에 "미관측을 적는 호출" 하나씩, 판정에 닿은 포지션(B8 직전 `cycle.Judged++`
-  자리)에서 "미관측 해제" 호출 하나, 순회 뒤 "보유하지 않게 된 포지션의 기록 정리" 호출 하나를 더한다. **분기 조건·이탈·B1~B4 는
-  바꾸지 않는다.** 새 판정 로직은 새 파일의 새 메서드에 둔다(기존 함수 편집 = ObserveOnce 한 곳).
+- **Safe edit boundary(2판)**: B6·B7 의 `continue` 직전에 원인 기록 1개씩, 판정 진입(`:464`) 표시 1개, **B3 조기 반환 앞** 순회-뒤 처리 1개(보유 대상이
+  전부 `workingSet` 에서 탈락한 경우 — 그 주기도 미관측으로 센다), 순회 뒤(`:469` 앞) 처리 1개. 임계 판정·알림(enqueue-only)·강화는 **순회 뒤**에만
+  — 루프 안에서는 기록만(design D4). **분기 조건·이탈·B1·B2·B4 무변화.** 새 판정 로직은 새 파일. 탈락 자리 다섯은 `workingSet` 번들에 있다.
 - **High-risk impact**: yes — 손절 관측 경로. 추가는 관측·알림(과 Q1 결정에 따라 모드 강화)뿐이며 판정·발의·주문을 바꾸지 않는다.
