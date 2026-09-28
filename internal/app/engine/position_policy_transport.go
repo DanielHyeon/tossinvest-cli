@@ -148,6 +148,11 @@ func StartPositionPolicyCommandServer(engineDir string,
 	if quarantines, ok := commands.(exitQuarantineCommands); ok {
 		registerExitQuarantineRoutes(mux, server, token, quarantines)
 	}
+	// a066 5.5 운영자 해제 — 위 a079 와 같은 발견 방식(capability 없는 빌드는 route 집합 불변). descriptor 발행보다
+	// 앞이라 클라이언트가 주소를 읽을 수 있을 때 route 는 이미 있음.
+	if relaxations, ok := commands.(riskRelaxationCommands); ok {
+		registerRiskRelaxationRoutes(mux, server, token, relaxations)
+	}
 	server.server = &http.Server{
 		Handler: mux, ReadHeaderTimeout: 2 * time.Second, ReadTimeout: 5 * time.Second,
 		WriteTimeout: 5 * time.Second, IdleTimeout: 15 * time.Second, MaxHeaderBytes: 8 << 10,

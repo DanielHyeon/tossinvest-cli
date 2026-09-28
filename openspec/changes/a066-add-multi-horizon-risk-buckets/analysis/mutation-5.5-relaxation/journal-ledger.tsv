@@ -1,0 +1,24 @@
+TREE	HEAD f7a891b7	copy /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a066-relax-mut-1315085-7b92s684/tree	tests ^(TestA066|TestEntryLossLock|TestMigrationV3[2-5]|TestJournalAuditActions|TestRefuseEntryUnderLossLock|TestSchemaTablesAndColumns|TestTheReadOnlyHandleHasNoWriteMethods)
+CONTROL	GREEN	
+M01	CAUGHT	internal/journal/risk_bucket_entry_loss_lock.go	REAFFIRM event not written (a release approved before a new tightening would pass)	rc=1
+M02	CAUGHT	internal/journal/risk_bucket_entry_loss_lock.go	open lock ignores the release row (release has no effect on entry)	rc=1
+M03	CAUGHT	internal/journal/risk_bucket_relaxation.go	lock number binding dropped	rc=1
+M04	CAUGHT	internal/journal/risk_bucket_relaxation.go	REAFFIRM staleness binding dropped	rc=1
+M05	CAUGHT	internal/journal/risk_bucket_relaxation.go	non-operator actor accepted	rc=1
+M06	CAUGHT	internal/journal/risk_bucket_relaxation.go	blank approval accepted	rc=1
+M07	CAUGHT	internal/journal/risk_bucket_relaxation.go	blank reason accepted	rc=1
+M08	CAUGHT	internal/journal/risk_bucket_relaxation.go	nil auditor accepted	rc=1
+M09	CAUGHT	internal/journal/risk_bucket_relaxation.go	entry release commits although the audit line failed	rc=1
+M10	CAUGHT	internal/journal/risk_bucket_relaxation.go	entry release audited under the wrong action	rc=1
+M11	SURVIVED	internal/journal/risk_bucket_relaxation.go	latch release with no RISK_OVERAGE latch accepted	rc=0
+M12	CAUGHT	internal/journal/risk_bucket_relaxation.go	state digest binding dropped (ABA)	rc=1
+M13	CAUGHT	internal/journal/risk_bucket_relaxation.go	latch release also clears UNKNOWN_ACTUAL_RISK	rc=1
+M14	CAUGHT	internal/journal/risk_bucket_relaxation.go	reservation RISK_OVERAGE flags not cleared	rc=1
+M15	CAUGHT	internal/journal/risk_bucket_relaxation.go	state not resealed after the latch release	rc=1
+M16	CAUGHT	internal/journal/risk_bucket_relaxation.go	latch release commits although the audit line failed	rc=1
+M17	CAUGHT	internal/journal/risk_bucket_relaxation_v35.sql	one-open trigger never fires	rc=1
+M18	CAUGHT	internal/journal/risk_bucket_relaxation.go	show reports no REAFFIRM event	rc=1
+M19	CAUGHT	internal/journal/risk_bucket_relaxation.go	latch release skips the ledger-vs-seal verification	rc=1
+M20	SURVIVED	internal/journal/risk_bucket_relaxation.go	entry release request shape unchecked	rc=0
+M21	SURVIVED	internal/journal/risk_bucket_relaxation.go	zero release time accepted	rc=0
+M22	CAUGHT	internal/journal/risk_bucket_relaxation.go	missing owner reported as storage error instead of stale	rc=1

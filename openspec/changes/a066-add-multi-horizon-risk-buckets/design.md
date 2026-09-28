@@ -75,7 +75,7 @@ daily/horizon loss lock과 bucket snapshot 장애는 EXPOSURE_RAISING decision/l
 - 자동 경로는 조이기만 한다.
 - 완화와 해제는 actor `OPERATOR`만 할 수 있다. 사람 승인 참조 문자열이 있어야 하고, Auditor audit 줄이 commit **앞**에 쓰여야 한다.
 - 동시에 들어온 조이기는 보수 쪽이 이긴다.
-- 진입점은 journal API와 tossctl `mutating: true` 명령뿐이다. 대화형 에이전트는 이 명령을 자동 실행하지 않는다. 콘솔 버튼은 두지 않는다.
+- 진입점은 journal API와 tossctl `mutating: true` 명령뿐이다(명령은 엔진 제어 endpoint 를 거친다 — 아래 "경로"). 대화형 에이전트는 이 명령을 자동 실행하지 않는다. 콘솔 버튼은 두지 않는다.
 
 이 change 는 메커니즘까지만 만든다. 실제 해제는 별도의 사람 행위이고, 운영 원장에서는 실행하지 않는다.
 형태는 `TransitionOperatingMode`(operating_mode.go:346–470)를 따른다.
@@ -117,9 +117,26 @@ daily/horizon loss lock과 bucket snapshot 장애는 EXPOSURE_RAISING decision/l
 - **순서.** latch 해제(운영자 승인)가 먼저이고, 기존 owner 해제(`releaseRiskBucketOwner`: broker zero 등의 검사)가 그 뒤다. owner 해제의 `owner_latch` 검사(owner.go:930)는 latch 해제 뒤에야 열린다.
 
 **engine lock 을 잡지 않는 이유.**
-- 해제 명령은 journal 의 BEGIN IMMEDIATE 로 직렬화된다. 판정도 트랜잭션 안에서 현재 상태에 대해 다시 한다. 직렬성은 이것으로 충분하다.
+- 해제는 journal 의 BEGIN IMMEDIATE 로 직렬화된다. 판정도 트랜잭션 안에서 현재 상태에 대해 다시 한다. 직렬성은 이것으로 충분하다.
 - engine lock 을 잡으려면 엔진을 멈춰야 한다. 엔진이 멈추면 보호가 UNWIRED 인 동안 손절이 없다.
 - 해제가 손절의 연속성을 깨는 조건이 되면 안 된다. 그래서 reconcile-resolve 선례와 달리 lock 을 잡지 않는다.
+
+**경로: 엔진 제어 endpoint (Manager 판정 2026-09-29, a092 완화 명령 가족 계약).**
+- 원장은 단일 writer(엔진)다(journal.go `DefaultBusyTimeout` 주석, engine.go "두 프로세스가 한 DB 를 마이그레이션"). 첫 구현
+  (bce793a7)의 CLI 는 `journal.Open` 으로 원장을 직접 썼다. `journal.Open` 은 마이그레이션을 하므로, 새 CLI 바이너리가 도는
+  엔진 밑에서 스키마를 올릴 수 있었다. 계약 대조에서 드러나 고쳤다.
+- tossctl 해제 명령은 엔진이 발행한 position-policy 제어 endpoint(같은 listener · bearer 토큰 · private descriptor)의 두 route
+  (`/v1/risk-relaxation/entry-lock-release`, `/v1/risk-relaxation/risk-latch-release`)에 요청한다. a079 격리 해제처럼
+  `PositionPolicyCommandService` 의 선택 capability 로 발견되므로, capability 없는 빌드는 route 집합이 그대로다.
+- 엔진 프로세스가 자기 journal 핸들과 자기 audit 로그(`Context.Audit`)로 journal API 를 부른다. audit 로그가 nil 이면 거절한다.
+  `(*audit.Log)(nil).RecordAction` 이 nil 을 돌려주기 때문이다.
+- 엔진이 돌지 않으면 CLI 는 거절한다(원장을 대신 열지 않는다). 사유는 "엔진이 없으면 진입도 없다"이고, 메시지는 엔진 기동 후
+  재시도를 말한다. 엔진은 latch 가 걸린 채로 안전하게 기동한다.
+- **통지.** 커밋 **뒤** 엔진이 원장 alert(`engine.risk_relaxation`, outbox = critical 전용)를 enqueue 한다. 담는 것은 대상 ·
+  운영자 · 승인 참조 · 해제 번호다. enqueue 가 실패해도 해제는 유효하다. 결과가 `Notified=false` 를 싣고, CLI 는
+  「완화됨·통지 실패」로 0 이 아닌 코드로 끝난다.
+- 읽기 전용 `risk-latch-show` 는 `journal.OpenReadOnly`(mode=ro, query_only)로 직접 읽는다. writer 가 아니다.
+- 응답을 못 읽은 경우는 "결과 불명"으로 말한다. 재시도는 안전하다. 이미 풀린 대상의 해제는 결속이 stale 로 거절한다.
 
 **audit.** action 두 종을 둔다(동결 census 에 등록한다).
 - `risk_bucket.entry_lock_release`: setting 은 `entry_loss_lock:<account>/<market>/<horizon>`.

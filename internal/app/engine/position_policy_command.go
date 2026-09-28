@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
@@ -69,6 +70,9 @@ type PositionPolicyCommandService struct {
 	// untouched. See exit_quarantine_command.go for why it is not shared with
 	// capabilities above.
 	quarantineGrants []exitQuarantineCapability
+	// audit 는 a066 5.5 운영자 해제(risk_relaxation_command.go)가 쓰는 엔진 audit 로그임. nil 이면 해제를 거절함
+	// ((*audit.Log)(nil).RecordAction 이 nil 을 돌려주므로 nil 로그를 Auditor 로 넘기면 audit 줄 없이 커밋됨).
+	audit *audit.Log
 }
 
 type positionPolicyCapability struct {
@@ -95,6 +99,7 @@ func NewPositionPolicyCommandService(ectx *Context, clk clock.Clock) (*PositionP
 		adoption:     ectx.Config.Engine.Adoption,
 		blocks:       ectx.Reconcile,
 		commonPolicy: strings.TrimSpace(ectx.Config.Engine.ExitPolicy.CommonPolicy), clk: clk,
+		audit: ectx.Audit,
 	}, nil
 }
 

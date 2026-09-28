@@ -103,6 +103,12 @@ func TestA066EntryLossLockReleaseRefusals(t *testing.T) {
 		{"auditor required", func(r *EntryLossLockReleaseRequest, _ *relaxationAuditor) { r.Auditor = nil }, ErrInvalidRequest},
 		{"reason required", func(r *EntryLossLockReleaseRequest, _ *relaxationAuditor) { r.Reason = "" }, ErrInvalidRequest},
 		{"a lock the operator did not see", func(r *EntryLossLockReleaseRequest, _ *relaxationAuditor) { r.LockSeq += 99 }, ErrRiskRelaxationStale},
+		// 모양이 틀린 요청은 stale 이 아니라 invalid 임(뮤테이션 M20·M21 생존 → 추가) — 운영자에게 "다시 보라"가 아니라
+		// "요청이 틀렸다"를 말해야 함.
+		{"a scope the schema cannot hold", func(r *EntryLossLockReleaseRequest, _ *relaxationAuditor) { r.Market = "JP" }, ErrInvalidRequest},
+		{"a lock number that is not a lock", func(r *EntryLossLockReleaseRequest, _ *relaxationAuditor) { r.LockSeq = 0 }, ErrInvalidRequest},
+		{"a negative event number", func(r *EntryLossLockReleaseRequest, _ *relaxationAuditor) { r.ExpectedLastEvent = -1 }, ErrInvalidRequest},
+		{"release time required", func(r *EntryLossLockReleaseRequest, _ *relaxationAuditor) { r.ReleasedAt = time.Time{} }, ErrInvalidRequest},
 		{"failing audit changes nothing", func(_ *EntryLossLockReleaseRequest, a *relaxationAuditor) { a.fail = true }, nil},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -275,6 +281,7 @@ func TestA066OverageLatchReleaseRefusals(t *testing.T) {
 		{"automatic actor cannot relax", func(r *RiskOverageLatchReleaseRequest, _ *relaxationAuditor) { r.Actor = "AUTO" }, ErrRiskRelaxationRequiresOperator},
 		{"approval reference required", func(r *RiskOverageLatchReleaseRequest, _ *relaxationAuditor) { r.Approval = "" }, ErrRiskRelaxationApprovalRequired},
 		{"auditor required", func(r *RiskOverageLatchReleaseRequest, _ *relaxationAuditor) { r.Auditor = nil }, ErrInvalidRequest},
+		{"release time required", func(r *RiskOverageLatchReleaseRequest, _ *relaxationAuditor) { r.ReleasedAt = time.Time{} }, ErrInvalidRequest},
 		{"failing audit changes nothing", func(_ *RiskOverageLatchReleaseRequest, a *relaxationAuditor) { a.fail = true }, nil},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -293,6 +300,31 @@ func TestA066OverageLatchReleaseRefusals(t *testing.T) {
 				t.Fatalf("a refused release wrote %d records", got)
 			}
 		})
+	}
+}
+
+// TestA066OverageLatchReleaseWithoutALatchIsStale 는 latch 가 없는 owner 에 대한 해제가 아무것도 쓰지 않음을 고정함
+// (뮤테이션 M11 생존 → 추가). 운영자가 새로 본 digest 에 결속돼 있어도, 풀 latch 가 없으면 해제 기록·재봉인·audit 줄은
+// 거짓 기록임.
+func TestA066OverageLatchReleaseWithoutALatchIsStale(t *testing.T) {
+	j, key, _ := overageLatchedOwner(t)
+	if _, err := j.ReleaseRiskOverageLatch(context.Background(), latchRelease(key, ownerLatchView(t, j, key).StateDigest, &relaxationAuditor{})); err != nil {
+		t.Fatal(err)
+	}
+	fresh := ownerLatchView(t, j, key)
+	if fresh.OverageLatched {
+		t.Fatalf("fixture: latch still set after the release: %+v", fresh)
+	}
+	auditor := &relaxationAuditor{}
+	_, err := j.ReleaseRiskOverageLatch(context.Background(), latchRelease(key, fresh.StateDigest, auditor))
+	if !errors.Is(err, ErrRiskRelaxationStale) {
+		t.Fatalf("release of an owner with no RISK_OVERAGE: err=%v, want stale", err)
+	}
+	if got := countRiskBucketRows(t, j, "risk_bucket_latch_releases"); got != 1 || len(auditor.lines) != 0 {
+		t.Fatalf("a refused release wrote records=%d audit=%v", got, auditor.lines)
+	}
+	if after := ownerLatchView(t, j, key); after.StateDigest != fresh.StateDigest {
+		t.Fatal("a refused release resealed the owner state")
 	}
 }
 
