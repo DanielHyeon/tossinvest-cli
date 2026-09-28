@@ -1137,3 +1137,43 @@ fill abort in row 4. R3 found no a066 commit that loosens an existing limit.
 
 Outside a066: Amend's `raisesExposure` ignores side (`gateway.go:447`, R2) — recorded for its owner. `8022f578`
 removed the a090 mixed-currency refusal, replaced by account-base FX, and does not loosen anything (R3).
+
+### 6.5 dispositions (Manager ruling 2026-09-28) and repairs
+
+- **#1 submit revalidation re-checks latches: repaired** (`28629ec6`).
+  - `RevalidateQFinalAdmission` ends with the same rule functions admission uses:
+    - `ensureRiskBucketEntryScopeClean`: owner latch, scope latch, active reconcile. It now names the cause.
+    - `latchedUsageRefusal` for each of the decision's buckets, naming the bucket and the latch kind.
+  - The reason code `guardian_risk_bucket_mismatch` is reused. The cause is in Detail, as the Manager ruled: unlike
+    ENTRY_LOSS_LOCK, the substance (RISK_OVERAGE and the like) already has its own name in the ledger's latch rows and
+    can be looked up there, so naming it in Detail lets the refusal say its own name without a new Gateway code.
+  - Gateway test `TestA066IssuedEntryIsRefusedAtSubmitWhenItsScopeLatchedAfterIssuance`: broker 0, NOT_DISPATCHED.
+- **#3(a) shared bucket limit: repaired** (`28629ec6`, then `cb16367d`).
+  - At admission, the ledger comparison site caps by the smallest snapshot limit recorded on the bucket's rows. The
+    rows are the ones the ledger counts: HELD, FILLED, and RELEASED with filled usage.
+  - **#3(b)**, one limit per shared value in upstream manifest validation, is a named residual in the same family as
+    the policy-immutability residual.
+- **#4 missing state seal: repaired** (`28629ec6`). `verifyRiskBucketStateDigest` types it as a replay mismatch, so
+  the fill path latches and the fill commits.
+  - The other two raw returns R2 listed sit behind this check on every path, so they are backstops and were not
+    edited.
+- **#2 usage lifecycle: stopped and reported** (user queue). The owner-lifecycle fixture now carries a comment saying
+  that `filled_minor='0'` hides the gap.
+  - The narrowed re-review adds a related liveness residual: because FILLED rows keep their recorded limit forever,
+    raising a limit never takes effect on a bucket that has history. This is part of the same user decision.
+- **#5–#14**: named residuals, as in the table above. For #6, a comment on the fresh-scale-in control says its fixed
+  policy version is not a production shape.
+- **Verification.**
+  - FLM first (`analysis/pre-edit/6.5-fixes/`, `6.5-fixes-2/`).
+  - RED at `4fb0b26e` (journal 3, Gateway 1) and at `28629ec6` (2).
+  - Mutation (`analysis/mutation-6.5/`):
+    - fixes: 18/18 CAUGHT, after two first-pass survivors — V09 (owner overage) and L03 (smallest vs largest) —
+      each got a test;
+    - re-review: 3/3 CAUGHT.
+  - journal/execgw/riskbucket untagged rc 0, seams (execgw, riskbucket, engine) rc 0, vet rc 0.
+  - Census updates: storage exits 305 → 314; the ledger call census now includes the revalidation site.
+- **Narrowed re-review of `28629ec6`** (one voice, `code-reviewer`). It found P2 (RELEASED-with-filled rows missing
+  from the limit population), P3 (a reconcile row with an empty cause did not block) and P3 (no test for the
+  owner/scope-latch branches at the submit site). All three were repaired or tested in `cb16367d`. P3 liveness goes to
+  the usage-lifecycle residual. It confirmed there is no exit-path reach, no bypass, and no loosening from the
+  typed-seal change.
