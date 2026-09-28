@@ -1,0 +1,28 @@
+**No P0/P1 finding remains.** Revision 6 satisfies the freeze decisions; two nonblocking documentation corrections remain.
+
+Read-only review. No files changed, tests run, network calls, or engine execution. All 29 bundle source hashes and generated branch-row coordinates match the supplied source.
+
+References: `C/` = `openspec/changes/a095-a-stop-must-know-what-it-covers/`; `FLM/` = `C/analysis/function-logic/`; `canonical/` = `openspec/specs/`.
+
+| Round-5 item | Status | Verification against documents and code |
+|---|---|---|
+| **R5-1** | **RESOLVED** | Critical bypass and failed-record retry are explicit; tasks cover both continuing failures after delivery and storage recovery. This removes the proposed latch obstruction before `Notify`; existing outbox machinery supports rearming. `C/design.md:73–95`; `C/tasks.md:93–97`; `internal/app/engine/adoption.go:393–417`; `internal/app/engine/reconcileloop.go:552–559`; `internal/journal/outbox.go:379–410`. |
+| **R5-2** | **RESOLVED** | Stable condition categories distinguish deferral from attempted failure; diagnostic causes do not change identity. Durable keys share that identity and retain emit-site separation. `C/design.md:97–109`; `C/specs/engine-safety/spec.md:41–45,62–63`; `internal/obs/notifier.go:285–305`. |
+| **R5-3** | **RESOLVED** | Expanded I7 correctly records unconditional success wording, subsequent reconcile skip, exit-loop recovery attempts and skipped judgement after opening failure. Exclusion remains explicit. `C/issues.md:83–105`; `internal/app/engine/adoption.go:108–112,344–379`; `internal/app/engine/exitloop.go:525–531,710–718`. |
+| **R5-4** | **RESOLVED** | `adopt` annotations now permit result-shape changes; logging order is correctly `SeverityOf → logEvent → routing`. `FLM/internal-app-engine--reconciledriver.adopt/branch-test-map.md:9–16`; `FLM/internal-obs--notifier.notify/function-logic-map.md:28`; `internal/obs/notifier.go:130–138`. Separate boilerplate defect below. |
+| **Task 2.14 running configuration** | **RESOLVED** | Task explicitly requires loaded effective settings and separates delivery from acknowledgement. Necessary because publisher/configuration are assembled and adoption settings copied into driver options. `C/tasks.md:88–92`; `internal/app/engine/engine.go:458,575`; `internal/app/engine/reconcileloop.go:362–373`. |
+
+| ID | Severity | Finding | Evidence | Suggested fix |
+|---|---|---|---|---|
+| **R6-1** | **P2** | **PENDING consequence overstates unconditional delivery.** Every critical observation attempts recording/claiming, but PENDING alone does not guarantee that reconcile performs remote delivery: another sender can hold its lease. Likewise, task 2.17’s A→B→A suppression expectation needs A to have settled inside its window; PENDING A remains retryable. | `C/design.md:89–91`; `C/tasks.md:98–99`; `internal/journal/outbox.go:247–266`; `internal/obs/notifier.go:294–309`; canonical `engine-safety/spec.md:710,726–727`. | Say “synchronously attempts delivery **when the claim is acquired**.” Test settled-A and PENDING-A separately, including a held-elsewhere claim. Keep Q7 ownership unchanged. |
+| **R6-2** | **P3** | **Generated error-propagation boilerplate contradicts the new evidence bundle.** The `ReconcileDriver.alert` map says the function propagates errors, then correctly explains that it only logs them. AST has zero results and only a bare nil-alerter return. | `FLM/internal-app-engine--reconciledriver.alert/function-logic-map.md:31,39`; corresponding `ast.json` signature/returns; `internal/app/engine/reconcileloop.go:552–560`; `C/analysis/harness/render_bundles.py:595`. | Remove or specialize the universal propagation sentence in the generator. |
+
+Additional attack results:
+
+- **Canonical compatibility:** Recording every observation is compatible with suppressing only settled-row transmission. Stable keys preserve A→B→A deduplication; PENDING retries are expressly required. Historical critical rows still restore blocking before loops, independently of current notification settings. `canonical/engine-safety/spec.md:710–736,949–968`; `internal/app/engine/gateway.go:153–167,269`.
+- **Condition identity:** The finite categories in `C/design.md:99–102` are sufficient for a semantic key. Changing error text cannot create unlimited keys. Alternating deferral/failure revisits existing keys; it does not inherently bypass their individual windows.
+- **Timing and entry blocking:** Bypassing the latch increases repeated synchronous delivery opportunities and shared-mutex contention. These are the expressly accepted Q7 faces, not evidence that the hazard is already fixed. Production still holds `n.mu` across delivery (`internal/obs/notifier.go:254–309`); a092 owns the all-holder correction (`a092…/specs/engine-safety/spec.md:52`). I found no additional mechanism requiring a095 to reclaim that transferred scope.
+- **Tasks 2.12/2.15/2.16/2.17:** Implementable through candidate-result propagation, real notifier/journal wiring, controlled clocks and recoverable outbox-write failure injection. Storage recovery must preserve an independently reproducible adoption failure. Q2(c) remains open; equal-grade coverage is conditional on its critical answer.
+- **Earlier dispositions:** No regression found in alerts-off grading, config-based enabled detection, Q1’s conditional edit boundary, Q8’s implementation stop, R3 removal, R2-B2 deletion, automatic-path-only non-lowering, or I7’s exclusion. a124’s executor remains independently wired and handles absent transport (`internal/app/engine/auxiliary.go:164–176`; `alertdelivery.go:314–339`).
+
+VERDICT: PASS — no P0/P1 remains; the two documentation corrections do not prevent implementing the frozen contract.
