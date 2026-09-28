@@ -6,7 +6,7 @@
 
 | Branch | 조건 | 진입 실측 | Test (a095 요구) | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:393` `if d.unmanaged[p.ID] {` | 예 | 기존 — 프로세스당 1회 래치는 유지 | no | no |
+| B1 | `:393` `if d.unmanaged[p.ID] {` | 예 | **a095 2.12** — 연기(normal) 뒤 같은 포지션의 시도 실패(critical)가 재시작 없이 critical로 기록된다 · 같은 사실 · 같은 등급의 반복은 계속 억제된다 | no | no |
 | B2 | `:404` `switch {` | — | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
 | B3 | `:405` `case d.opts.Adoption.Rejected != "":` | 예 | **a095 2.6** — [비움 — Q2] 설정 거부의 등급 | no | no |
 | B4 | `:407` `case d.opts.Adoption.Excludes(p.Symbol):` | 예 | **a095 2.3** — exclude는 normal | no | no |

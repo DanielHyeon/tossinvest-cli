@@ -773,3 +773,45 @@ Q2(d)·Q7 = a092·a124 영역 이관(a092 21판이 그 소유를 인수했고 a1
 | V-N5 | 델타 SHALL을 자동 경로로 한정하고, 운영자 재편입 reset은 비교 없이 낮출 수 있는 명시적 사람 행위로 명명해 뺀다. reset 하향의 승인 · audit 여부는 해제 원칙 가족의 잔여 질문으로 issues에 등록 — 요구로 굳히지 않음 | exit-policy 델타 요구 문장을 「자동 경로(판정 · 관측 갱신 · 복구)」로 한정, 운영자 재편입 명명 문단과 시나리오 「운영자 재편입은 이 요구 밖이다」 추가. issues **I6** 등록. tasks 5.1 한정 |
 
 `openspec validate --strict` rc 0. r4 프롬프트 계획(미처분 쟁점 + 열린 질문 명시)은 Manager 승인. r4 대기열: a125 → a090 → **a095 r4**.
+
+## 4라운드 (proposal-freeze, 4판) — **REJECT** · 5판 반영 (2026-09-29)
+
+### 3.14 실행
+
+codex-cli 0.154.0 · gpt-6-astra · medium · `codex exec -s read-only --ephemeral --skip-git-repo-check`, session
+`01a0e8eb-5e31-72d1-9565-44f172b64038`, 2026-09-29 01:48:53~01:53:47 KST, rc 0, 230,702 토큰, 401 없음(감시가 문서 속 문자열
+「Codex 401 가능성」에 한 번 걸린 오탐 — 확인 뒤 감시 재개). 트리 = HEAD `7e8acdbe` export + a095 오버레이(diff 0, 번들이 묶인
+Go 파일 전부 추출 시점과 동일). 프롬프트 `analysis/freeze-review/r4-prompt.md` sha256 `8dc32ab9…4b15a`(실행 사본 일치), 출력
+`codex-r4-output.md`(`afb45755`). 실행 뒤 트리 새 파일 0.
+
+3라운드 처분: RESOLVED N1 · N4 · N6 · V-N1 · V-N4 · V-N5 · V-N6 / PARTIAL N2 · N5 · N7 · V-N2 / MOVED(Q8) N3 · V-N3 / NOT RESOLVED 0.
+
+### 3.15 발견과 처분 (Manager 처분 2026-09-29 — 반영은 이 5판)
+
+| id | 등급 | 내용 | Manager 처분 | 5판 반영 자리 |
+| --- | --- | --- | --- | --- |
+| R4-1 | P1 | `alertUnmanaged` B1 래치(포지션 id만)가 Q2(c)=normal일 때 뒤의 필수 critical(시도 실패)을 삼킨다 · `adopt` 결과가 연기와 시도 실패를 가르지 않는다 | **승인 — 편집 경계를 연다.** 억제 키는 (사실, 등급)이거나 등급 상승 시 해제. Q2(c) 어느 답도 막지 않는 형태. 「연기 normal → 시도 실패 critical」 생산 배선 시험 | design D1 「후보별 결과와 억제 키」 · 델타 SHALL NOT(앞선 보고가 다른 사실 · 더 높은 등급을 억제하지 않음) + 시나리오 · alertunmanaged · adopt 번들 결론 · tasks 2.12 · proposal Impact |
+| R4-2 | P1 | Q1의 `Publisher == nil` 대용은 틀림 — 켜짐 + topic 없음도 nil | **승인** — 판정 근거는 설정 `enabled`, nil 대용 명시 배제, 두 경우 생산 배선 시험 | 새 번들 `resolvenotificationpublisher`(B2 · B3 · B5) · 델타 SHALL / SHALL NOT + 시나리오 「켜졌지만 전송 수단이 없는 엔진」 · design D1 「알림 켜짐의 판정 근거」 · proposal Q1(선택지 삭제) · tasks 2.5 · 2.5a |
+| R4-3 | P2 | 「시도 실패」의 callee 수준 경계 없음, `adoptOne` 번들 없음 | **승인** — 번들 + 실패 세 범주 경계. 셋째(커밋 뒤 보호 미개설 → true)는 명명된 경계 · 후속 후보 | 새 번들 `adoptone`(B1 · B2 미진입) · design D1 범주 표 · 델타 「정하지 않는다」 문장 · issues **I7** · tasks 2.13 |
+| R4-4 | P2 | Q8의 「운영자 승인 전에는 PENDING을 떠나지 않는다」가 틀림 | **승인** | design D1 · proposal Q8 문장 정정(행 상태와 사람 소유 래치는 다른 수명주기) |
+| R4-5 | P2 | N5 정정이 모든 사본에 안 번짐 | **승인 + 조건: 값 단위 전수 grep, 남김 0 영수증** | proposal `:52` · tasks `:118` · refresh 번들 B23 시험 문구(생성기). 영수증 아래 |
+| R4-6 | P3 | adopt 번들 결론 Q2(b) · design D1 `cycle` 창 좌표 | **승인** | adopt 번들 결론 재작성 · design D1 배달 실행자 행(B3 루프 몸체 = 생성 표 B4 `:258` 창의 `:261` 호출) |
+| (권고) | — | 전이 행렬 — 「새 critical 0 ≠ 기존 행 · 래치 0」 | **수용** | tasks 2.14 |
+
+**R4-5 영수증 — 값 단위 전수 grep**(활성 문서 전부, `review.md` 이력과 `analysis/freeze-review/` 제외, 2026-09-29):
+
+```text
+패턴 1: 값은 그대로|값 무변화|값이 움직이지 않는다|움직이지 않는다|값 불변|preserves? (the )?value|값을 바꾸지 않는 재기록
+  → 2줄: refresh 번들 결론과 그 생성기 줄 — 둘 다 「「값이 움직이지 않는다」는 스칼라와 effective 스냅샷이 일치할 때만 참」
+         이라는 한정문 자체. 무조건 주장 0
+패턴 2: (B23|refresh|관측 갱신|RefreshExitObservation) 주변의 (그대로|유지|불변|무변화)
+  → 4줄: proposal :52 · tasks :118 · refresh B23 시험 문구 · 그 생성기 줄 — 전부 「스칼라와 일치할 때만 … 갈라지면 되돌림」 한정
+결론: 무조건 「refresh 는 값 불변」 사본 남김 0
+```
+
+### 3.16 5판 게이트와 남은 것
+
+- 새 번들 2개는 HEAD `f69a3dab` 깨끗한 연결 worktree에서 뽑았다. 기존 번들 산문 변경은 옛 커버리지로 다시 그려
+  **의도한 4파일**(adopt · alertunmanaged 두 파일 · refresh B23)만 달라짐을 `diff -rq`로 확인했다
+- r5 재리뷰: codex 대기열(a090 → a094 r6 → a092 r22 → **a095 r5**) — Manager 신호 대기
+- tasks 0.5 미체크 유지

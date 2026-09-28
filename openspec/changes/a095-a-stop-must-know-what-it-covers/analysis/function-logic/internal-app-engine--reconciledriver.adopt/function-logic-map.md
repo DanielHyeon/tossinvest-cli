@@ -43,5 +43,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **a095는 이 함수를 바꾸지 않는다.** 이 함수가 돌려준 집합에 없는 후보는 호출자 `judgeHoldings` B14가 무관리로 모은다. 따라서 B2(시세 읽기 오류) · B6(관측 없음) · B7(관측 묵음)로 **연기된** 후보도 「enabled 시도 실패」 사유(`alertUnmanaged` B5)로 알려진다. 그 사유를 critical로 올리면 일시적 시세 실패가 critical 알림이 된다 — 결정이 덮지 않는 귀결이다(Q2(b)).
+- **Safe edit boundary**: **5판: 결과 형태가 편집 경계 안이다(r4 R4-1, Manager 처분).** 오늘 이 함수는 편입된 id 집합만 돌려주고, 집합에 없는 후보는 호출자 `judgeHoldings` B14가 무관리로 모은다 — B2(시세 읽기 오류) · B6(관측 없음) · B7(관측 묵음)로 **연기된** 후보와 B8(`d.adoptOne` 거짓)의 **시도 실패**가 한 사유(`alertUnmanaged` B5)로 합쳐진다. critical 요구(시도 실패만)와 열린 Q2(c)(연기분의 등급)의 어느 답도 막지 않으려면 후보별 결과(편입 · 연기 · 시도 실패)를 호출자에 전해야 한다. 형태는 구현 로트가 정한다(design D1 「후보별 결과와 억제 키」).
 - **High-risk impact**: yes — 편입의 유일한 입구다.

@@ -28,7 +28,7 @@
 | B20 | `:117` `if lifecycleStatus != positionpolicy.StatusManaged \|\| lifecycleGeneration != expectedLifecycle {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
 | B21 | `:121` `if err != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
 | B22 | `:124` `if decision == observationNoop {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B23 | `:127` `if current.PositionGeneration != request.Snapshot.PositionGeneration \|\|` | 예 | **a095 5.3** — issues I1에 「값 무변화 재기록」으로 인용 | no | no |
+| B23 | `:127` `if current.PositionGeneration != request.Snapshot.PositionGeneration \|\|` | 예 | **a095 5.3** — issues I1에 「effective 스냅샷과 비교 — 스칼라와 일치할 때만 값 유지, 갈라지면 되돌림」으로 인용 | no | no |
 | B24 | `:132` `if err != nil {` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
 | B25 | `:148` `if err != nil {` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
 | B26 | `:151` `if err := j.runExitWriteHook("after_refresh_state"); err != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |

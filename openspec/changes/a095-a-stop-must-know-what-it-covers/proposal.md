@@ -1,4 +1,4 @@
-# a095 · 손절은 자기가 무엇을 덮는지 알아야 한다 — 4판
+# a095 · 손절은 자기가 무엇을 덮는지 알아야 한다 — 5판
 
 - **Feature**: `FEAT-TOS-009` — Exit line truth and position policy lifecycle
 - **Story**: `STORY-TOS-a095`
@@ -49,7 +49,7 @@
 | --- | --- | --- | --- |
 | **P0-1** FLM이 함수 경계에서 멈췄다 | R2-B2가 「미편입·엔진 개설 포지션을 삼킨다」고 했으나 그 둘은 `checkExternalIncrease`에 오지 않는다. 엔진 개설 포지션의 수량 증가는 어디서도 검사되지 않는다. 델타가 설계보다 넓다 | **R2-B2와 그 SHALL·시나리오를 삭제**한다. 호출자 `judgeHoldings`의 번들을 새로 뽑아 사실을 고정했다: B7(`p.ExitEligible()`) 창이 `continue`하고 B8(`p.Adopted()`)만 `checkExternalIncrease`를 부른다. 엔진 개설 포지션의 수량 증가 검사를 **범위에 넣는다** — 비교 기준은 `[비움 — Q3]`. 델타는 결정된 것만 싣는다 | `reconciledriver.judgeholdings` · `reconciledriver.checkexternalincrease` · 결정 (3)(i) |
 | **P0-2** R2 재알림을 outbox dedupe가 삼킨다 | 키 `…\|grown\|<posID>`에 수량이 없고, 같은 키의 전달된 행은 재알림 창 안에서 `ClaimSettled` | 이 P0는 **수량 증가 사실이 critical일 때만** 성립한다(`claimAndDeliver` B5는 critical 경로에만 있다). 그 알림의 본문은 스스로 *"늘어난 수량은 원래 수량 기준으로 산정된 손절의 보호를 받는다"*고 쓴다 — 무보호가 아니다. 그 사실의 종류·등급과 키를 `[비움 — Q4]`로 올린다. 결정 (3)(ii) 「재알림 창 SHALL NOT 과 대조」는 Q4의 답이 critical일 때 적용한다 | `notifier.claimanddeliver` · `reconciledriver.checkexternalincrease` · 결정 (3)(ii) |
-| **P0-3** exit-policy 델타의 「쓰기 경로는 하나」가 거짓 | `baseline_price`의 쓰기 자리는 하나가 아니고 하향 거부는 이미 있다 | 거짓 전제를 **지운다.** 쓰기 자리 넷을 AST로 열거해 issues I1에 적는다: 최초 INSERT(`OpenExitState`) · 판정 UPDATE(`recordExitJudgementTx` — 옛 경로는 B25 `notBelow("baseline", …)`, 스냅샷 경로는 B29 창 `SelectRecoverySnapshot`) · 관측 갱신(`RefreshExitObservation` — B23이 보호가가 다르면 거절하므로 값은 그대로) · 재편입 reset(`resetExitStateForReadoptTx` — 분기 여섯 중 이전 기준선과 비교하는 것이 없다). 선행 조건을 참인 문장으로 다시 SHALL로 적을지는 `[비움 — Q6]` | `journal.recordexitjudgementtx` · `journal.refreshexitobservation` · `resetexitstateforreadopttx` · `journal.openexitstate` |
+| **P0-3** exit-policy 델타의 「쓰기 경로는 하나」가 거짓 | `baseline_price`의 쓰기 자리는 하나가 아니고 하향 거부는 이미 있다 | 거짓 전제를 **지운다.** 쓰기 자리 넷을 AST로 열거해 issues I1에 적는다: 최초 INSERT(`OpenExitState`) · 판정 UPDATE(`recordExitJudgementTx` — 옛 경로는 B25 `notBelow("baseline", …)`, 스냅샷 경로는 B29 창 `SelectRecoverySnapshot`) · 관측 갱신(`RefreshExitObservation` — B23이 저장된 effective 스냅샷과 비교해 운영 선이 다르면 거절한다. 스칼라와 스냅샷이 일치할 때만 값이 그대로이고, 갈라져 있으면 스칼라를 스냅샷 보호가로 되돌린다 — 5판 r4 R4-5) · 재편입 reset(`resetExitStateForReadoptTx` — 분기 여섯 중 이전 기준선과 비교하는 것이 없다). 선행 조건을 참인 문장으로 다시 SHALL로 적을지는 `[비움 — Q6]` | `journal.recordexitjudgementtx` · `journal.refreshexitobservation` · `resetexitstateforreadopttx` · `journal.openexitstate` |
 | **P0-4** critical 승격이 exit 루프의 손절 판정 앞에 최악 54s 체류를 넣는다 | `workingSet`이 `observe`·`judge` 앞에서 `alertUnmanaged`를 부르고, critical이면 `n.mu`를 쥔 채 재시도 예산을 돈다. a092는 그것을 약속하지 않는다 | **exit 관측 자리는 normal로 남는다**(결정 (1)). `ObserveOnce`의 호출 순서 `o.workingSet :426 → o.observe :441 → o.judge :465`와 `workingSet` B6 창의 `o.alertUnmanaged`는 그대로이고, 그 사실은 `Notify` B1 창의 `publishBestEffort`로 간다 — `Notify`의 두 경로 중 `n.mu`를 잡는 것은 critical 경로의 `claimAndDeliver`뿐이다(그 밖의 잠금 자리 `Flush` `notifier.go:734` · `Acknowledge` `:851`은 발신 경로가 아니다). a092에 묶지 않는다. 옛 약속 사본(tasks 2.8 · 안전표 §4 행 · design D7 행)을 지웠다. **남는 것**: reconcile 자리의 critical 배달이 쥔 `n.mu`를 exit goroutine의 **기존** critical 발신이 기다리는 경합 — `[비움 — Q7]` | `exitobserver.observeonce` · `exitobserver.workingset` · `notifier.notify` · `notifier.claimanddeliver` · 결정 (1) |
 
 ## Why
@@ -159,8 +159,12 @@ critical로 올리는 것은 `adoption.enabled`가 참이어서 **엔진이 보�
 
 1. **Q1 — 등급을 싣는 방식.** `SeverityOf` B1은 종류만 본다. reconcile 자리의 비선택 사실만 critical로
    만드는 방식은 (a) 그 사실에 새 이벤트 종류를 주고 `criticalEvents`에 등재, (b) `Event`에 등급을 싣고
-   `SeverityOf`의 계약을 바꿈, (c) 다른 방식 — 어느 것인가? 그리고 발신 자리가 「알림 off」를 어떻게
-   아는가(`Notifier.Publisher`가 nil인지를 읽을지, 설정값을 `ReconcileDriver` 옵션으로 넘길지)?
+   `SeverityOf`의 계약을 바꿈, (c) 다른 방식 — 어느 것인가? 그리고 발신 자리가 설정의 `notifications.enabled`
+   값을 어떻게 받는가(예: `ReconcileDriver` 옵션)?
+   **판정 근거는 설정의 `enabled` 값으로 한정한다(5판 r4 R4-2, Manager 처분).** `Notifier.Publisher == nil`은 대용이
+   될 수 없다 — 전송기 nil은 설정 거부 · 알림 꺼짐 · **알림 켜짐 + topic 없음** 세 경우에서 나온다
+   (`resolvenotificationpublisher` B2 · B3 · B5). 켜짐 + topic 없음을 꺼짐으로 읽으면 필수 critical이 사라지고
+   a124 정본의 전송 수단 부재 처리를 우회한다. 3판 이 자리의 「Publisher가 nil인지를 읽을지」 선택지는 뺐다.
    **제약(3판 문서 리뷰가 더함)**: 정본 engine-safety 「등급화된 알림」은 critical의 *"전달 실패가
    지속되면 신규 진입을 차단한다(SHALL)"*고 적는다. 따라서 알림 off에서 진입 차단을 막으려면 그 상태에서
    a095의 사실이 **critical로 매겨지지 않아야** 한다 — critical로 매긴 뒤 차단만 거르면 정본과 어긋나고
@@ -205,8 +209,9 @@ critical로 올리는 것은 `adoption.enabled`가 참이어서 **엔진이 보�
 Q3(정지 조건 — `exit_states`에 수량 열이 없다는 스키마 질문) · Q4 · Q6 · **Q8(정지 조건, 4판)**.
 
 8. **Q8 — 사실이 해소된 뒤의 critical 행 (4판, r3 N3 · Manager 설계 지시의 조건 검사).** 알림 켜짐 · 편입 실패로
-   만든 critical 행이 PENDING인 채 다음 사이클에 편입이 성공하면, 그 행은 나중에 「지금 무보호」 문구로 배달되고
-   운영자 승인 전에는 PENDING을 떠나지 않는다. Manager 지시는 「기존 재개방/본문 갱신 기계로 갱신 또는
+   만든 critical 행이 PENDING인 채 다음 사이클에 편입이 성공하면, 그 행은 나중에 「지금 무보호」 문구로 배달된다.
+   **편입 회복 자체는 그 행을 갱신 · 정산하지 않는다** — 정산하는 것은 배달 성공이나 운영자 승인뿐이고, 행 상태와
+   사람 소유 래치는 다른 수명주기다(5판 r4 R4-4 정정). Manager 지시는 「기존 재개방/본문 갱신 기계로 갱신 또는
    해소-정산」이었고, **그 기계는 PENDING 행에 쓸 수 없다** — 재무장은 `claimOwed`가 정착 행에만 준다
    (`claimowed` B2 창 return `:381` owed=참 · rearm=거짓), 해소 정산 연산은 outbox에 없다(design D1 「사실이
    해소된 뒤의 행」 표). 무엇으로 처리하는가 — (a) 새 outbox 연산(해소 정산 또는 PENDING 본문 갱신), (b) 행 문구를
@@ -219,10 +224,12 @@ Q3(정지 조건 — `exit_states`에 수량 열이 없다는 스키마 질문) 
 | --- | --- | --- |
 | R1′ | reconcile 쪽 무관리 보고(`adoption.go` `alertUnmanaged` · 그 호출자) · 등급 표 | 방식 Q1. exit 관측 자리 · `publishBestEffort` · `notifyCritical` · `deliver` 본문은 무변화. **`SeverityOf` · `Notify`의 편집 경계는 Q1의 답에 달렸다**(4판 r3 N4) — (a) 새 종류 등재면 본문 불변, (b) 등급을 `Event`에 싣고 `SeverityOf` 계약을 바꾸면 경계 재선언 · 번들 재생성 · 재리뷰 |
 | R2′ | `adoption.go` `judgeHoldings` B7 창 · 발신 키 | Q3 · Q4 |
+| 억제 · 결과 형태(5판) | `adoption.go` `alertUnmanaged` B1 래치 · `adopt`의 결과 형태 | r4 R4-1 — 억제 키는 (사실, 등급)이거나 등급 상승 시 해제. `adoptOne` 본문은 무변화(실패 세 범주를 경계로만 기록) |
 | R3 | **보류 — 델타에서 지움, 후속 change 후보** | 결정 Q5 |
 
 spec: `engine-safety`(사실별 등급 · 진입 차단 비도달 · 키 분리), `exit-policy`(R3 요구 삭제 · 래칫 요구의
 거짓 전제 삭제).
 
-**기존 함수 내부를 고치므로 Function Logic Map 면제는 없다.** 번들 26개(3판 21 + 4판 5 — `recordAlertTx` · `claimOwed` ·
-`alertDeliverer.cycle` · `alertDeliverer.deliverOne` · `SelectRecoverySnapshot`)가 있고, 구현 후 다시 뽑는다.
+**기존 함수 내부를 고치므로 Function Logic Map 면제는 없다.** 번들 28개(3판 21 + 4판 5 — `recordAlertTx` · `claimOwed` ·
+`alertDeliverer.cycle` · `alertDeliverer.deliverOne` · `SelectRecoverySnapshot` + 5판 2 — `adoptOne` ·
+`resolveNotificationPublisher`)가 있고, 구현 후 다시 뽑는다.

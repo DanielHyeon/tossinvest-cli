@@ -1,4 +1,4 @@
-# a095 · tasks — 4판
+# a095 · tasks — 5판
 
 - **Change**: `a095-a-stop-must-know-what-it-covers`
 - **위험 등급**: **High-risk** — 무보호 보고의 등급과 진입 차단 도달. §0.3 적용.
@@ -42,6 +42,9 @@
 - [x] 1.7 **4판 근거 번들 5개**(r3 N3 · N5 처분의 분기 근거): `journal.Journal.recordAlertTx` · `journal.claimOwed` ·
       `engine.alertDeliverer.cycle` · `engine.alertDeliverer.deliverOne` · `exitpolicy.SelectRecoverySnapshot`.
       HEAD `04a0dd25` 깨끗한 연결 worktree에서 AST · 커버리지(`analysis/harness/coverage/r4-*.out`)
+- [x] 1.8 **5판 근거 번들 2개**(r4 R4-1 · R4-2 · R4-3): `engine.ReconcileDriver.adoptOne` ·
+      `engine.resolveNotificationPublisher` — HEAD `f69a3dab` 깨끗한 연결 worktree의 AST · 커버리지
+      (`analysis/harness/coverage/r5-app-engine.out`). `alertUnmanaged` · `adopt` 번들 결론을 편집 경계로 갱신
 - [ ] 1.6 **a091과의 병합 확인** — 둘 다 등급 표를 건드릴 수 있다. 3판은 표 크기를 시험에 적지 않는다
 
 ## 2. R1′ — 등급을 사실로 (결정 (1)·(2), design D1)
@@ -50,7 +53,8 @@
 - [ ] 2.1 **RED** — exit 관측 자리(`workingSet` B6 → `ExitObserver.alertUnmanaged`)의 사실은 **normal**이고
       `Notify` B1 창(`publishBestEffort`)으로 간다: outbox 행 0 · `n.mu` 미획득. 기존
       `TestAPositionWithNoEntryDecisionIsSkippedAndAlertedOnce`의 normal 단언을 유지한다
-- [ ] 2.2 **RED** — **알림 켜짐** · 편입 켜짐 · 편입 시도 실패(`adopt` B8 거짓)의 reconcile `alertUnmanaged` B5
+- [ ] 2.2 **RED** — **알림 켜짐** · 편입 켜짐 · 편입 시도 실패(`adopt` B8 거짓 — `adoptOne` 범주 ① 편입 전 거절 ·
+      ② 영속 실패, 두 분기 모두 오늘 미진입)의 reconcile `alertUnmanaged` B5
       사실은 **critical**이고 outbox 행을 만든다. 연기분(`adopt` B2 · B6 · B7)은 이 단언에 넣지 않는다(r3 N2,
       Q2(c) 열림). 싣는 방식은 `[비움 — Q1]`. **생산 배선**(실 `Notifier` · outbox · 배달 실행자)으로 잰다 —
       발신 가짜로만 재면 안 된다(r3 N1 codex 제안)
@@ -61,7 +65,10 @@
 - [ ] 2.5 **RED** — **알림 off**(`notifications.enabled=false`) 엔진에서 B5 사실은 **critical로 기록되지 않는다**
       — outbox critical 행 0, 따라서 `deliver` B3 · `notifyCritical` B4 · 배달 실행자 `deliverOne` B8 사슬에 닿지
       않고 진입 게이트 래치 0 · 승격 0(r3 N1). 이미 원장에 남은 critical 행의 재시작 차단은 정본대로 유지됨을 함께
-      단언한다. 방식은 `[비움 — Q1]`
+      단언한다. 방식은 `[비움 — Q1]`. **꺼짐 + topic 유지**(파일에 topic이 남음) 경우를 포함한다(r4 R4-2)
+- [ ] 2.5a **RED** — **켜짐 + topic 없음**(전송기 nil): 판정 근거는 설정 `enabled`이므로 B5 사실은 **critical**이고,
+      그 행은 배달 실행자 `deliverOne` B8 · a124 정본대로 처리된다. `Publisher == nil`을 「꺼짐」으로 읽는 구현은
+      이 시험에서 실패해야 한다(r4 R4-2). 생산 배선으로
 - [ ] 2.6 `[비움 — Q2(a)(b)(c)]` 설정 거부(B3) · include 지정 시도 실패(B6) · `adopt` B2 · B6 · B7 연기분 — 답에
       따라 RED를 쓴다. (알림 on에 transport 죽음은 Q2(d)로 a124 정본에 이관됨 — 여기 없음, r3 N7)
 - [ ] 2.7 **RED** — 키 분리(결정 (3)(iii)): exit 관측 자리와 reconcile 자리의 event key가 다르다
@@ -71,6 +78,14 @@
 - [ ] 2.10 **GREEN** — Q1의 방식대로. `publishBestEffort` · `notifyCritical` · `claimAndDeliver` · `deliver` 본문은
       바꾸지 않는다. **`SeverityOf` · `Notify`의 경계는 Q1 답에 조건부**(r3 N4): (a) 새 종류 등재면 본문 불변,
       (b) `SeverityOf` 계약 변경이면 경계를 다시 선언하고 두 번들을 다시 뽑아 재리뷰한다
+- [ ] 2.12 **RED** — **연기(normal) → 같은 프로세스의 다음 사이클에서 시도 실패(critical)**: 재시작 없이 critical로
+      기록된다. 같은 사실 · 같은 등급의 반복은 계속 억제된다. Q2(c)의 두 답(연기 = normal · critical) 모두에서 통과하는
+      형태로 쓴다. 생산 배선(실 `Notifier` · outbox · 배달 실행자)으로(r4 R4-1)
+- [ ] 2.13 **RED** — `adoptOne` 범주 ③(편입 커밋 뒤 exit state 미개설, B3 창 → true)은 critical 요구 밖임을 명명된
+      경계로 고정한다 — 후속 후보 `issues.md` I7(r4 R4-3)
+- [ ] 2.14 **전이 행렬**(r4 codex 권고, Manager 수용) — 「새 critical 0」은 「기존 행 · 래치 0」이 아니다. 알림
+      켜짐→PENDING 행 생성→꺼짐, 꺼짐→켜짐, 각 경우 재시작 전후에서: 새 a095 사실의 등급 · 기존 PENDING 행의 존속 ·
+      정본 「재시작이 진입 차단을 푸는 우회로가 되어서는 안 된다」의 재차단을 표로 단언한다
 - [ ] 2.11 `[비움 — Q8]` **사실이 해소된 뒤의 critical 행**(r3 N3) — 편입 실패 → 다음 사이클 편입 성공 → 지연 배달 ·
       재시작의 시험. 기존 outbox 기계로는 PENDING 행을 갱신 · 정산할 수 없다(design D1). **답 전에는 구현 착수
       금지 — 정지 조건**
@@ -100,7 +115,7 @@
 - [ ] 5.2 **RED** — `EvaluateLadder`의 산출 무변화 — rung 잠금가 · 수익률 기준 · R 분모는 계속 `entry_price`에서,
       runner 보호는 관측 워터마크에서, 이전 기준선은 최댓값 합성에 그대로(`ladder.go:391-403`, r3 N6)
 - [x] 5.3 `issues.md` I1에 **`baseline_price` 쓰기 자리 넷의 사실**을 번들 분기로 기록 — 판정(B25 `notBelow` ·
-      B29 창 선택) · 관측 갱신(B23 거절, 값 무변화) · 재편입 reset(비교 분기 없음) · 최초 INSERT
+      B29 창 선택) · 관측 갱신(B23 — effective 스냅샷과 비교, 스칼라와 일치할 때만 값 유지 · 갈라지면 되돌림) · 재편입 reset(비교 분기 없음) · 최초 INSERT
 - [ ] 5.4 `[비움 — Q6]` 래칫 선행 조건을 SHALL로 다시 세울지
 
 ## 6. 게이트

@@ -1,4 +1,4 @@
-# a095 · 설계 — 4판
+# a095 · 설계 — 5판
 
 > 분기 인용은 전부 `analysis/function-logic/`의 AST 산출물에서 온다(base `02716357`, 번들 21개).
 > 번들 이름은 디렉터리 이름의 뒷부분으로 적는다(예: `reconciledriver.judgeholdings`).
@@ -47,7 +47,7 @@ B3 설정 거부 · B4 exclude · B5 enabled 시도 실패 · B6 include 지정 
 | exit 관측 자리 | normal — 무변화 | 결정 (1) |
 | B4 exclude | normal — 무변화 | 결정 (2) |
 | 기본 사유(off ∧ 미지정) | normal — 무변화 | 결정 (2) · 정본 exit-policy `adoption.enabled` false 동등 |
-| B5 enabled 시도 실패 — **알림 켜짐 · 편입 시도(`adopt` B8 `d.adoptOne`)가 거짓** | **critical** | 결정 (1)「발신은 reconcile 쪽에서만 critical」 + (2)「운영자가 고른 상태는 critical 에서 뺀다」 |
+| B5 enabled 시도 실패 — **알림 켜짐 · 편입 시도(`adopt` B8 `d.adoptOne`)가 거짓**(아래 범주 ①②) | **critical** | 결정 (1)「발신은 reconcile 쪽에서만 critical」 + (2)「운영자가 고른 상태는 critical 에서 뺀다」 |
 | 알림 off 엔진에서 생긴 모든 a095 사실 | **critical로 매기지 않는다**(→ ENTRY_BLOCKED에 닿지 않음) | 결정 (2). 4판 r3 N1 — 아래 「알림 off에서 무엇이 막혀야 하는가」 |
 | `adopt` B2 · B6 · B7 연기분(오늘은 B5 사유로 모임) | `[비움 — Q2(c)]` — 델타의 critical 요구에서 **뺐다** | 4판 r3 N2 |
 | B3 설정 거부 · B6 include 시도 실패 | `[비움 — Q2(a)(b)]` | 결정이 이름 대지 않음 |
@@ -57,12 +57,47 @@ B3 설정 거부 · B4 exclude · B5 enabled 시도 실패 · B6 include 지정 
 보호하기로 했는가'이고, 그 술어는 이미 코드에 있다"*고 적는다. B5는 `adoption.enabled`가 참인 — 엔진이
 보호하기로 한 — 보유의 편입 실패다.
 
+### 후보별 결과와 억제 키 (5판, r4 R4-1 · R4-3 — Manager 처분으로 편집 경계를 연다)
+
+**문제**: `adopt`(`reconciledriver.adopt`)는 편입된 id 집합만 돌려주므로, 호출자 `judgeHoldings` B14에서 연기
+(`adopt` B2 · B6 · B7)와 시도 실패(B8 — `d.adoptOne` 거짓)가 구별되지 않는다. 그리고 `alertUnmanaged`
+(`reconciledriver.alertunmanaged`) B1 `:393` `if d.unmanaged[p.ID] {`는 포지션 id만으로 억제한다 — 해제는
+`adoptOne` B3 창의 `delete(d.unmanaged, …)`(편입 성공)뿐이다(`reconciledriver.adoptone`). 그래서 Q2(c)에 「연기 =
+normal」로 답하면, 앞 사이클의 연기 보고가 래치를 걸고 뒤 사이클의 시도 실패(critical)는 등급 판정 전에 B1에서
+반환된다. 필수 critical이 사라지고, 재시작하면 결과가 바뀐다.
+
+**편집 경계(Manager 처분 2026-09-29)**: `alertUnmanaged` B1 래치와 `adopt`의 결과 형태를 편집 경계에 넣는다(둘 다
+번들이 이미 있다). **설계 원칙: 억제 키는 (사실, 등급)이거나, 등급이 오르면 풀린다.** 같은 종목의 다른 사실이나 더
+높은 등급을 과거의 normal 래치가 삼켜서는 안 된다 — 중복 억제가 다른 판정을 억제하는 가족 결함이다. 형태(후보별
+결과 열거, 래치 키 구성)는 구현 로트가 정하되, Q2(c)의 어느 답(연기 = normal · critical)도 막지 않는 형태여야 한다.
+시험: 「연기(normal) → 같은 프로세스에서 시도 실패(critical)」가 재시작 없이 critical로 기록됨을 **생산 배선**(실
+`Notifier` · outbox · 배달 실행자)으로 잰다(tasks 2.12).
+
+**「시도 실패」의 경계 — `adoptOne`의 실패 세 범주**(`reconciledriver.adoptone`, 분기 3):
+
+| 범주 | 분기 | 반환 | 5판 등급 |
+| --- | --- | --- | --- |
+| ① 편입 전 거절 | B1 `:320` — `exitpolicy.SyntheticStop` 실패, `AdoptPosition` 호출 전 | false | 시도 실패 — critical(알림 켜짐) |
+| ② 영속 실패 | B2 `:339` — `AdoptPosition` 거절 · 원장 검증 · 트랜잭션 실패 | false | 시도 실패 — critical(알림 켜짐) |
+| ③ 커밋 뒤 보호 미개설 | B3 `:344` 창 — `OpenAdoptedExitState` 실패에도 로그 뒤 `:379` **true** | true | **critical 요구 밖 — 이름 붙은 경계.** 이 함수가 성공으로 답하고, 주석은 다음 사이클이 개설을 마친다고 적는다. 그 자체가 후속 후보다(`issues.md` I7) |
+
+B1 · B2는 **미진입**이다(커버리지 `analysis/harness/coverage/r5-app-engine.out`). 범주 ①②를 critical로 기록하는
+시험(tasks 2.2)이 두 분기의 첫 진입이 된다.
+
 ### 싣는 방식 — `[비움 — Q1]`
 
 `SeverityOf`(`severityof`, 분기 1)의 B1 `:348` `if criticalEvents[t] {`는 종류만 본다. 따라서 같은 종류
 `EventExitPositionUnmanaged`를 쓰는 exit 관측 자리(normal)와 reconcile B5(critical)를 표 한 줄로 가를 수
 없다. 방식(새 종류 · 등급 필드 · 기타)과 「알림 off」를 발신 자리가 아는 방법이 정해지기 전에는 이 절을
 쓰지 않는다.
+
+### 「알림 켜짐」의 판정 근거 (5판, r4 R4-2)
+
+설정의 `notifications.enabled`로만 판정한다. `resolveNotificationPublisher`(`resolvenotificationpublisher`)가
+전송기 nil을 내는 경우는 셋이다 — B2 `:77`(설정 거부) · B3 `:83` `if !cfg.Enabled {`(꺼짐) · B5 `:94`(켜짐 +
+topic 없음). 그러므로 `Publisher == nil`은 「꺼짐」의 대용이 아니다. 켜짐 + topic 없음 엔진의 B5 사실은 critical이고,
+그 행은 배달 실행자 `deliverOne` B8(전송기 nil → 실패 시도)과 a124 정본을 탄다. 시험: 켜짐 + topic 없음(critical) ·
+꺼짐 + topic 유지(critical 아님)를 생산 배선으로(tasks 2.5 · 2.5a).
 
 ### 알림 off에서 무엇이 막혀야 하는가 (결정 (2)의 근거 경로)
 
@@ -122,10 +157,13 @@ exit goroutine의 **기존** critical 발신(`exitloop.go:831` · `:1633` · `:1
 | 재무장 시 본문 교체(`outbox.go:294-345`) | `journal.recordalerttx` B4 `:295` `if rearm {` → B5 UPDATE(제목 · 본문 · payload 교체) | **아니오** — `rearm`은 `claimOwed`가 준다. `claimOwed` B2 `:379` `case AlertPending:`의 창 return `:381`은 owed=참 · rearm=거짓이다(`claimowed`). 재무장은 정착(DELIVERED · ACKNOWLEDGED) 행이 재알림 창을 지났을 때(B7 창 `:410`)와 날짜 없는 · 미래 · 모르는 상태(B5 · B6 · B8)뿐 |
 | a089 R1 「최신 발생 반영」 계보 | a089 archive `design.md:94` (*"제목·본문·payload를 최신 발생으로 갱신한다"*) | **아니오** — 같은 archive `review.md:471`이 R1을 *"대체됨 — a096~a099, 다른(정본) 형태로"*로 적었다. 착지한 형태는 위의 「창 뒤 재무장」이고 PENDING 행은 대상이 아니다 |
 | 사실 해소 정산 | `outbox.go` 함수 목록 — `MarkAlertDelivered` · `MarkAlertAttemptFailed` · `AcknowledgeAlert` · 임차 연산 | **없다.** 행 상태는 PENDING · DELIVERED · ACKNOWLEDGED이고, PENDING을 떠나는 길은 전달 성공과 운영자 승인뿐이다. 승인은 사람의 행위이며 자동으로 대신할 수 없다(`review.md` §3.8 codex N3 제안의 「사람 소유 래치를 조용히 풀지 말 것」) |
-| 배달 실행자 | `alertdeliverer.cycle` B3 창 `d.deliverOne` · `alertdeliverer.deliverone` B9 창 `Publish(Title: alert.Title, Body: alert.Body)` | 실행자는 PENDING 행을 원장에서 골라 **저장된 문구**를 보낸다 — 사실이 해소됐는지 묻지 않는다 |
+| 배달 실행자 | `alertdeliverer.cycle` B3 `:254`(`for _, alert := range pending {`)의 루프 몸체 — 생성 표의 좌표 창으로는 B4 `:258` 창의 `d.deliverOne`(`:261`) · `alertdeliverer.deliverone` B9 창 `Publish(Title: alert.Title, Body: alert.Body)` | 실행자는 PENDING 행을 원장에서 골라 **저장된 문구**를 보낸다 — 사실이 해소됐는지 묻지 않는다 |
 
 따라서 오늘의 기계로는 편입 실패 critical 행이 PENDING인 채 편입이 성공하면, 그 행은 나중에 「지금 무보호」
-문구로 배달되고(전달 실패면 정본대로 차단으로 이어진다) 운영자 승인 전에는 PENDING을 떠나지 않는다. 이 절은
+문구로 배달된다(전달 실패면 정본대로 차단으로 이어진다). **편입 회복 자체는 그 행을 갱신하지도 정산하지도 않는다**
+— 행을 정산하는 것은 배달 성공(DELIVERED, `MarkAlertDelivered` `outbox.go:449-456`)이나 운영자 승인뿐이고, 행의 상태와
+사람 소유의 진입 게이트 래치는 **서로 다른 수명주기**다(5판 r4 R4-4 정정 — 4판은 「운영자 승인 전에는 PENDING을 떠나지
+않는다」고 잘못 적었다). 이 절은
 설계를 세우지 않고 **Q8**로 비운다. **구현 로트의 정지 조건이다**(`proposal.md` 「열린 질문」 Q8, tasks 2.11).
 
 ### 키 분리 (결정 (3)(iii))

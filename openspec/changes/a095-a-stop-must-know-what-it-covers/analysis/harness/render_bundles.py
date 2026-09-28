@@ -264,21 +264,64 @@ BUNDLES: list[dict] = [
         ],
         "calls": "`d.observeCandidates`(B1 뒤) · `adoptionQuoteKey` · `d.logDeferred`(B7 창) · `d.adoptOne`(B8).",
         "mutations": "편입(`d.adoptOne` 경유) · `cycle.Deferred` · `cycle.Adopted` 계수.",
-        "boundary": "**a095는 이 함수를 바꾸지 않는다.** 이 함수가 돌려준 집합에 없는 후보는 호출자 `judgeHoldings` B14가 "
-                    "무관리로 모은다. 따라서 B2(시세 읽기 오류) · B6(관측 없음) · B7(관측 묵음)로 **연기된** 후보도 "
-                    "「enabled 시도 실패」 사유(`alertUnmanaged` B5)로 알려진다. 그 사유를 critical로 올리면 일시적 "
-                    "시세 실패가 critical 알림이 된다 — 결정이 덮지 않는 귀결이다(Q2(b)).",
+        "boundary": "**5판: 결과 형태가 편집 경계 안이다(r4 R4-1, Manager 처분).** 오늘 이 함수는 편입된 id 집합만 "
+                    "돌려주고, 집합에 없는 후보는 호출자 `judgeHoldings` B14가 무관리로 모은다 — B2(시세 읽기 오류) · "
+                    "B6(관측 없음) · B7(관측 묵음)로 **연기된** 후보와 B8(`d.adoptOne` 거짓)의 **시도 실패**가 한 사유"
+                    "(`alertUnmanaged` B5)로 합쳐진다. critical 요구(시도 실패만)와 열린 Q2(c)(연기분의 등급)의 어느 "
+                    "답도 막지 않으려면 후보별 결과(편입 · 연기 · 시도 실패)를 호출자에 전해야 한다. 형태는 구현 로트가 "
+                    "정한다(design D1 「후보별 결과와 억제 키」).",
         "high_risk": "yes — 편입의 유일한 입구다.",
         "tests": {"B2": "**a095 2.6** — [비움 — Q2(c)] 연기된 후보의 등급",
                   "B6": "**a095 2.6** — [비움 — Q2(c)] 연기된 후보의 등급",
                   "B7": "**a095 2.6** — [비움 — Q2(c)] 연기된 후보의 등급"},
     },
     {
+        "stem": "adoption--ReconcileDriver.adoptOne",
+        "dir": "internal-app-engine--reconciledriver.adoptone",
+        "role": "후보 하나를 편입한다 — 합성 손절 유도, 편입 기록 영속, exit state 개설, 편입 알림. 성공 여부를 bool로 답한다.",
+        "inputs": [
+            ("`exitpolicy.SyntheticStop`의 답", "합성 손절", "관측가 · `DefaultStopPct`", "B1 — 실패면 `AdoptPosition`을 부르기 전에 false"),
+            ("`AdoptPosition`의 답", "편입 기록", "원장", "B2 — 거절 · 영속 실패면 false"),
+            ("`OpenAdoptedExitState`의 답", "exit state 개설", "원장", "B3 — 실패해도 로그만 남기고 **true**를 반환"),
+        ],
+        "calls": "`exitpolicy.SyntheticStop`(B1 앞) · `d.opts.Journal.AdoptPosition`(B1 창) · "
+                 "`d.opts.Journal.OpenAdoptedExitState`(B3 조건) · `d.alert` · `delete(d.unmanaged, …)`(B3 창 — 반환 앞).",
+        "mutations": "편입 기록 · exit state · 편입 알림 · 래치 해제(`d.unmanaged`).",
+        "boundary": "**a095는 이 함수의 본문을 바꾸지 않는다. 실패 세 범주를 경계로 기록한다(r4 R4-3, Manager 처분).** "
+                    "① 편입 전 거절 — B1(합성 손절 유도 실패, `AdoptPosition` 호출 전) ② 영속 실패 — B2(`AdoptPosition` "
+                    "거절 · 원장 검증 · 트랜잭션 실패) ③ 커밋 뒤 보호 미개설 — B3 창: exit state 개설이 실패해도 `true`. "
+                    "「편입을 시도했으나 실패」(critical)는 ①② 즉 `false`이고, ③은 이 함수가 성공으로 답하므로 critical "
+                    "요구 밖이다 — **이름 붙은 경계이며 그 자체가 후속 후보다**(`issues.md` I7). B1 · B2는 **미진입**이다.",
+        "high_risk": "yes — 편입의 쓰기 자리다.",
+        "tests": {"B1": "**a095 2.2** — 편입 전 거절(범주 ①)도 시도 실패 critical에 든다",
+                  "B2": "**a095 2.2** — 영속 실패(범주 ②)는 시도 실패 critical",
+                  "B3": "**a095 2.13** — 커밋 뒤 보호 미개설(범주 ③)은 critical 요구 밖임을 명명된 경계로 고정 — 후속 후보 I7"},
+    },
+    {
+        "stem": "notifications--resolveNotificationPublisher",
+        "dir": "internal-app-engine--resolvenotificationpublisher",
+        "role": "설정의 알림 블록에서 전송기를 만든다. 전송기가 없는 사유를 `notificationResolution`에 남긴다.",
+        "inputs": [
+            ("`cfg.Rejected`", "설정 거부 사유", "`internal/config`", "B2 — 거부된 블록은 이미 0으로 만들어져 있다(nil)"),
+            ("`cfg.Enabled`", "알림 켜짐", "설정", "B3 — 거짓이면 nil(파일에 남은 topic으로 다시 켜지 않음)"),
+            ("topic", "환경변수 또는 설정", "`envNtfyTopic` · `cfg.Topic`", "B5 — 켜졌는데 topic이 없으면 nil + 사유"),
+        ],
+        "calls": "`getenv` · `strings.TrimSpace` · `ntfy.UsesPublicService`.",
+        "mutations": "없다 — 전송기와 해석 결과를 돌려준다.",
+        "boundary": "**a095는 이 함수를 바꾸지 않는다.** 전송기 nil은 **세 경우**에서 나온다: B2 설정 거부 · B3 알림 꺼짐 · "
+                    "B5 **알림 켜짐 + topic 없음**. 그러므로 `Publisher == nil`은 「알림 꺼짐」의 대용이 될 수 없다(r4 R4-2) — "
+                    "Q1의 판정 근거는 설정의 `enabled`(이 함수의 `cfg.Enabled`, B3의 조건)로 한정한다. 켜짐 + topic 없음은 "
+                    "a095에게 「켜짐」이고, 그 critical 행은 a124 정본의 전송 수단 부재 처리를 탄다.",
+        "high_risk": "yes — 알림 켜짐 판정의 근거다.",
+        "tests": {"B3": "**a095 2.5** — 꺼짐 + topic 유지: a095 사실은 critical이 아니다",
+                  "B5": "**a095 2.5a** — 켜짐 + topic 없음: a095 사실은 critical이고 a124 정본대로 처리된다"},
+    },
+    {
         "stem": "adoption--ReconcileDriver.alertUnmanaged",
         "dir": "internal-app-engine--reconciledriver.alertunmanaged",
         "role": "엔진이 관리하지 않는 보유를 알린다. why-matrix(B2 switch)가 사유를 고른다.",
         "inputs": [
-            ("`d.unmanaged[p.ID]`", "이미 알렸나", "프로세스 메모리 map", "B1 — 프로세스당 1회"),
+            ("`d.unmanaged[p.ID]`", "이미 알렸나", "프로세스 메모리 map — 키는 포지션 id뿐", "B1 — 프로세스당 1회. 사실 · 등급을 보지 않는다"),
             ("`d.opts.Adoption`", "편입 설정", "런타임 config", "B3~B6이 사유 문구를 고른다"),
         ],
         "calls": "`d.opts.Adoption.Excludes`(B4) · `d.opts.Adoption.Included`(B6) · `d.alert` · `d.label`.",
@@ -287,10 +330,13 @@ BUNDLES: list[dict] = [
         "boundary": "**사유 분기는 이미 사실별로 갈려 있다** — B3(설정 거부) · B4(exclude) · B5(enabled 시도 실패) · "
                     "B6(include 지정 시도 실패) · 기본(off∧미지정). 결정 (2)는 B4와 기본을 normal로 두라 하고, "
                     "B5는 운영자가 고른 상태가 아니다. B3 · B6의 분류는 결정이 덮지 않는다(Q2). 이 함수의 키는 "
-                    "결정 (3)(iii)에 따라 exit 관측 자리와 갈라야 한다.",
+                    "결정 (3)(iii)에 따라 exit 관측 자리와 갈라야 한다. **5판: B1 래치가 편집 경계 안이다(r4 R4-1, "
+                    "Manager 처분).** 오늘 B1은 포지션 id만으로 억제해, 앞 사이클의 normal 보고(예: 연기)가 뒤 사이클의 "
+                    "critical 사실(시도 실패)을 등급 판정 전에 삼킨다. 억제 키는 (사실, 등급)이거나 등급이 오르면 "
+                    "풀려야 한다 — design D1 「후보별 결과와 억제 키」.",
         "high_risk": "yes — reconcile 쪽 무보호 보고의 자리다.",
         "tests": {
-            "B1": "기존 — 프로세스당 1회 래치는 유지",
+            "B1": "**a095 2.12** — 연기(normal) 뒤 같은 포지션의 시도 실패(critical)가 재시작 없이 critical로 기록된다 · 같은 사실 · 같은 등급의 반복은 계속 억제된다",
             "B3": "**a095 2.6** — [비움 — Q2] 설정 거부의 등급",
             "B4": "**a095 2.3** — exclude는 normal",
             "B5": "**a095 2.2** — enabled 시도 실패는 critical",
@@ -431,7 +477,7 @@ BUNDLES: list[dict] = [
                     "참이고, 둘이 갈라져 있으면 스칼라를 스냅샷의 보호가로 (낮출 수도 있게) 되돌린다(4판, r3 N5). "
                     "그 갈라짐에 생산이 도달하는지는 측정하지 않았다.",
         "high_risk": "yes — 손절선 열을 쓰는 자리다.",
-        "tests": {"B23": "**a095 5.3** — issues I1에 「값 무변화 재기록」으로 인용"},
+        "tests": {"B23": "**a095 5.3** — issues I1에 「effective 스냅샷과 비교 — 스칼라와 일치할 때만 값 유지, 갈라지면 되돌림」으로 인용"},
     },
     {
         "stem": "apply_hook--resetExitStateForReadoptTx",
