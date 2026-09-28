@@ -1283,3 +1283,33 @@ committed release. The state_mismatch and audit_unavailable errors are produced 
   step-5 window-start question is decided; that is Manager's / the user's call, not something this lot can fix
   honestly.
 
+### 재고정 영수증 (base re-pin receipt, 2026-09-29) — WORKFLOW 「사람 승인 base 재고정」, a071 variant
+
+- **Approval.** Manager ruling 2026-09-29 Q8: "대기 불요 — WORKFLOW 「사람 승인 base 재고정」의 a071 변형이 정확히 이 경우다",
+  in the line of the user's batch approval of the re-pin procedure (user decision 2026-09-27: the re-pin takes effect
+  only by commit, and git history is its canonical record). The step-5 policy item that sat in the user queue ("bundles
+  0 / base after the work") has since been resolved by documenting this procedure when a123 closed.
+- **Old → new.** `23794f8626a2` → `e9355a82` (= the landing the tool computed). The window becomes empty, and the
+  bundles are checked at the landing revision.
+- **Condition 1, attribution (census, not a sample).** Harness `analysis/harness/repin_receipt.py`; output
+  `analysis/gate-5.5/repin-receipt.tsv`.
+  - Self Go commits in the old window: every non-merge commit that touched this change's directory (`--full-history`)
+    or carries `(a066)` in its subject, and that changed a `.go` file. There are **39**. One of them is `8022f578`
+    ("ship simultaneous KR and US lanes dormant", the a072/a073 squash). Its only a066 path is 3 lines of `status.md`.
+    It is not a066 work, and the a071 re-pin `77e36cca` classified the same commit the same way.
+  - Existing functions those commits changed that the gate requires at the old base (existing at `23794f86`, changed
+    by the landing), computed per commit with the gate's own `changed_existing_functions`:
+    - **a066's 38 commits: 28 functions, all covered by an a066 bundle that is fresh at the landing** (28/28).
+    - `8022f578`: 63 functions, all its own. Not a066's.
+    - 186 functions the self commits touched are not in the gate's set: they were created in the window, or are
+      unchanged at the landing.
+  - Two gaps the receipt surfaced, both closed before the re-pin:
+    1. `internal/riskbucket/fill_test.go:TestApplyFillRetryIsIdempotent` (`4a364caf`) had no bundle. `4a364caf` inserted
+       a new test right after it (`@@ -48,0 +49,27 @@`), and the body is byte-identical between the base and the landing.
+       A bundle now records exactly that.
+    2. `TestReEnteringAnActiveScopeKeepsTheFirstObservation` had a `revision: base` AST pinned to the old base. It was
+       re-extracted at the landing; the branch positions are identical.
+- **Old base required count.** `check_analysis` at `775e054f` (old base): required 395, missing-evidence 368. The a066
+  part of those is the one gap above (1). The rest are sibling landings in the stacked window: `8022f578` and other
+  changes' commits, measured by the file intersection in "5.5 gate" above.
+
