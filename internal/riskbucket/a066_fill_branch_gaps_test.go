@@ -255,3 +255,17 @@ func TestA066ApplyFillRecordKeepsTheActualEvidenceItWasValuedWith(t *testing.T) 
 		t.Fatalf("record evidence=%+v known=%v, want a copy of the valued evidence", record.ActualEvidence, record.ActualKnown)
 	}
 }
+
+// TestA066ApplyFillFirstApplyOverflowIsRefusedAtTheAddition 는 첫 적용 경로의 filled 합 넘침(B36)이 **덧셈 자리에서**
+// 거절됨을 사유 칸으로 고정함. BTM 행 변이에서 B36 을 꺼도 초록이었음 — nil 합이 문자열 "<nil>" 로 저장된 뒤
+// recomputeOverageLatches 의 해석(overage_filled)이 대신 막았기 때문. 사유는 "filled_usage_overflow" 여야 함.
+func TestA066ApplyFillFirstApplyOverflowIsRefusedAtTheAddition(t *testing.T) {
+	state, event := fillFixture(new(big.Int).Lsh(big.NewInt(1), 255).String(), "1")
+	max256 := new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)).String()
+	for key, usage := range state.Buckets {
+		usage.FilledMinor = max256
+		state.Buckets[key] = usage
+	}
+	event.NewCumulativeFill = event.OrderQuantity
+	refusedUnchanged(t, "first-apply overflow", state, event, "filled_usage_overflow")
+}

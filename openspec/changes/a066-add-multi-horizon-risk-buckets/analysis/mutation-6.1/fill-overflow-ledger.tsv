@@ -1,0 +1,5 @@
+TREE	HEAD 7023779d	uncommitted: riskbucket a066_fill_branch_gaps_test.go (+first-apply overflow reason)
+ORIGIN	BTM row mutation applyfill B36 if@256 SURVIVED (mutrows run)
+CONTROL	GREEN	
+B36 first-apply overflow check skipped	CAUGHT	TestA066ApplyFillFirstApplyOverflowIsRefusedAtTheAddition
+NOTE	with B36 off the nil sum was stored as "<nil>" and recomputeOverageLatches refused it as overage_filled; the reason field now pins the addition site
