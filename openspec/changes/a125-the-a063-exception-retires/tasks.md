@@ -2,7 +2,7 @@
 
 - [x] 0.1 `base-commit.txt` 고정(`capture_change_base.py`) · Story `STORY-TOS-a125` 등록 · tracker `--check`
 - [x] 0.2 `openspec validate a125-the-a063-exception-retires --strict`
-- [ ] 0.3 편집 전 Python FLM — 편집 대상 함수 AST 열거(a122 `enumerate.py`) + 반전 대상 시험 목록(AST 로 셈)
+- [x] 0.3 편집 전 Python FLM — 편집 대상 함수 AST 열거(a122 `enumerate.py`) + 반전 대상 시험 목록(AST 로 셈)
 - [ ] 0.4 proposal-freeze 리뷰 → `review.md` (적대 보이스 1 + codex — 게이트 판정 변경)
 
 ## 1. RED

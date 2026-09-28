@@ -1,0 +1,319 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "c2eec6279cb898f1dc9e34d89775cc1afd9b13b5",
+  "head_commit": "2b3b21150f4c741d8009f13411796f4efcde9463",
+  "source_sha256": "6aa2dfd3fa48662882fa81536a3583fa8a1bdf73a9ab14c3464ca7bd3652274d",
+  "function": "resolve_base",
+  "signature": "resolve_base(change_dir, root, context)",
+  "start": {
+    "line": 910,
+    "column": 1
+  },
+  "end": {
+    "line": 1007,
+    "column": 21
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "Try",
+      "line": 934,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B2",
+      "kind": "ExceptHandler",
+      "line": 938,
+      "inherited_line": false,
+      "source": "except FileNotFoundError as exc:"
+    },
+    {
+      "id": "B3",
+      "kind": "ExceptHandler",
+      "line": 944,
+      "inherited_line": false,
+      "source": "except (OSError, UnicodeDecodeError) as exc:"
+    },
+    {
+      "id": "B4",
+      "kind": "If",
+      "line": 946,
+      "inherited_line": false,
+      "source": "if not FULL_SHA.fullmatch(candidate):"
+    },
+    {
+      "id": "B5",
+      "kind": "IfExp",
+      "line": 953,
+      "inherited_line": false,
+      "source": "[(relative, committed)] if committed is not None else _committed_elsewhere(root, head, change_id, relative)"
+    },
+    {
+      "id": "B6",
+      "kind": "For",
+      "line": 954,
+      "inherited_line": false,
+      "source": "for place, value in held:"
+    },
+    {
+      "id": "B7",
+      "kind": "If",
+      "line": 956,
+      "inherited_line": false,
+      "source": "if shown == candidate:"
+    },
+    {
+      "id": "B8",
+      "kind": "If",
+      "line": 960,
+      "inherited_line": false,
+      "source": "if place == relative:"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 979,
+      "inherited_line": false,
+      "source": "if process.returncode:"
+    },
+    {
+      "id": "B10",
+      "kind": "BoolOp",
+      "line": 981,
+      "inherited_line": false,
+      "source": "process.stderr.strip() or f'invalid Function Logic Map base: {value}'"
+    },
+    {
+      "id": "B11",
+      "kind": "If",
+      "line": 986,
+      "inherited_line": false,
+      "source": "if persisted != candidate:"
+    },
+    {
+      "id": "B12",
+      "kind": "Try",
+      "line": 989,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B13",
+      "kind": "ExceptHandler",
+      "line": 994,
+      "inherited_line": false,
+      "source": "except AdoptionError as exc:"
+    },
+    {
+      "id": "B14",
+      "kind": "IfExp",
+      "line": 996,
+      "inherited_line": false,
+      "source": "str(adoption['effective_base']) if adoption else persisted"
+    },
+    {
+      "id": "B15",
+      "kind": "If",
+      "line": 997,
+      "inherited_line": false,
+      "source": "if context is not None:"
+    },
+    {
+      "id": "B16",
+      "kind": "If",
+      "line": 1000,
+      "inherited_line": false,
+      "source": "if adoption:"
+    },
+    {
+      "id": "B17",
+      "kind": "BoolOp",
+      "line": 1005,
+      "inherited_line": false,
+      "source": "override and resolve(override) != effective"
+    },
+    {
+      "id": "B18",
+      "kind": "If",
+      "line": 1005,
+      "inherited_line": false,
+      "source": "if override and resolve(override) != effective:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 983,
+      "value": "process.stdout.strip()"
+    },
+    {
+      "line": 1007,
+      "value": "effective"
+    }
+  ],
+  "raises": [
+    {
+      "line": 939,
+      "source": "raise ValueError('missing base-commit.txt; run `python3 tools/sdd/capture_change_base.py --change <change-id>` at proposal freeze') from exc"
+    },
+    {
+      "line": 945,
+      "source": "raise ValueError(UNREADABLE.format(what='base-commit.txt', why=_why(exc))) from exc"
+    },
+    {
+      "line": 949,
+      "source": "raise ValueError(f'comparison base must be a full 40-hex commit id, not {candidate!r}')"
+    },
+    {
+      "line": 961,
+      "source": "raise ValueError(f'`{relative}` on disk ({candidate[:12]}) is not the one committed in HEAD ({shown[:12]}) — an uncommitted edit does not move the comparison ba"
+    },
+    {
+      "line": 965,
+      "source": "raise ValueError(f'`{relative}` on disk ({candidate[:12]}) is not in HEAD, but `{place}` is and holds {shown[:12]} — moving the change directory does not move i"
+    },
+    {
+      "line": 980,
+      "source": "raise ValueError(process.stderr.strip() or f'invalid Function Logic Map base: {value}')"
+    },
+    {
+      "line": 988,
+      "source": "raise ValueError(f'comparison base is not a commit in this repository: {candidate}')"
+    },
+    {
+      "line": 995,
+      "source": "raise ValueError(f'invalid execution-baseline adoption: {exc}') from exc"
+    },
+    {
+      "line": 1006,
+      "source": "raise ValueError('SDD_BASE_REF must resolve to the selected effective comparison base')"
+    }
+  ],
+  "calls": [
+    {
+      "line": 937,
+      "callee": "_decoded"
+    },
+    {
+      "line": 937,
+      "callee": "_decoded(_read_regular(path)).strip"
+    },
+    {
+      "line": 937,
+      "callee": "_read_regular"
+    },
+    {
+      "line": 939,
+      "callee": "ValueError"
+    },
+    {
+      "line": 945,
+      "callee": "UNREADABLE.format"
+    },
+    {
+      "line": 945,
+      "callee": "ValueError"
+    },
+    {
+      "line": 945,
+      "callee": "_why"
+    },
+    {
+      "line": 946,
+      "callee": "FULL_SHA.fullmatch"
+    },
+    {
+      "line": 949,
+      "callee": "ValueError"
+    },
+    {
+      "line": 950,
+      "callee": "path.relative_to"
+    },
+    {
+      "line": 950,
+      "callee": "path.relative_to(root).as_posix"
+    },
+    {
+      "line": 951,
+      "callee": "_committed_bytes"
+    },
+    {
+      "line": 953,
+      "callee": "_committed_elsewhere"
+    },
+    {
+      "line": 955,
+      "callee": "value.decode('utf-8', 'replace').strip"
+    },
+    {
+      "line": 955,
+      "callee": "value.decode"
+    },
+    {
+      "line": 961,
+      "callee": "ValueError"
+    },
+    {
+      "line": 965,
+      "callee": "ValueError"
+    },
+    {
+      "line": 971,
+      "callee": "subprocess.run"
+    },
+    {
+      "line": 980,
+      "callee": "ValueError"
+    },
+    {
+      "line": 981,
+      "callee": "process.stderr.strip"
+    },
+    {
+      "line": 983,
+      "callee": "process.stdout.strip"
+    },
+    {
+      "line": 985,
+      "callee": "resolve"
+    },
+    {
+      "line": 988,
+      "callee": "ValueError"
+    },
+    {
+      "line": 993,
+      "callee": "validate_execution_baseline"
+    },
+    {
+      "line": 995,
+      "callee": "ValueError"
+    },
+    {
+      "line": 996,
+      "callee": "str"
+    },
+    {
+      "line": 1003,
+      "callee": "str"
+    },
+    {
+      "line": 1004,
+      "callee": "os.environ.get('SDD_BASE_REF', '').strip"
+    },
+    {
+      "line": 1004,
+      "callee": "os.environ.get"
+    },
+    {
+      "line": 1005,
+      "callee": "resolve"
+    },
+    {
+      "line": 1006,
+      "callee": "ValueError"
+    }
+  ]
+}
