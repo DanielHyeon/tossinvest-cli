@@ -2,7 +2,7 @@
 
 - **Feature**: `FEAT-TOS-009` — Exit line truth and position policy lifecycle
 - **Story**: `STORY-TOS-a092`
-- **Spec**: `exit-policy` (MODIFIED 1) · `engine-safety` (MODIFIED 1 · ADDED 1 — 21판, Q3 답 전 착수 금지)
+- **Spec**: `exit-policy` (MODIFIED 1) · `engine-safety` (MODIFIED 1 · ADDED 1 — 21판, Q3 사용자 결정으로 범위 확정)
 - **위험 등급**: **High-risk** (§0.3·§0.5 — 손절 경로의 동기 체류와 알림 배선)
 
 > **21판 (2026-09-28) — 축소.** 사용자 결정 20-1 ⓒ(원문 `review.md` §22.5.5 · design D0.3e 1번):
@@ -17,7 +17,7 @@
 > | 2 | exit goroutine이 줄 서는 잠금(`n.mu`)을 **원격 전송 위에서 쥐는 보유자가 없게** 한다 — 남는 동기 호출자의 `claimAndDeliver` | D0.3e 5번 |
 > | 3 | 래치 지연 식을 a124 design D6의 식 + 전제 H로 교체 | D0.3e 6번 · 델타 |
 > | 4 | `Acknowledge` 셈~해제 구간 — 무엇이 지키고 무엇이 안 덮이는지 적는다(수단은 Q4) | D0.3e 7번 · 델타 |
-> | 5 | **명명된 범위(Manager 배정)**: `SetModeProjector` 생산 배선 + 기동 `RestoreOperatingModeProjection` + AC2 — **Q3 답 전 착수 금지** | D0.3e 8번 · 델타 ADDED |
+> | 5 | **명명된 범위(Manager 배정)**: `SetModeProjector` 생산 배선 + 기동 `RestoreOperatingModeProjection` + AC2 + **사람의 완화 경로**(`tossctl engine mode relax`, mutating) — **Q3 사용자 결정(2026-09-28)으로 범위 확정** | D0.3e 8번 · 델타 ADDED |
 >
 > 20라운드 P0 둘의 판정은 `review.md` §23.3, 결정이 덮지 않는 지점은 아래 「열린 질문」 Q1~Q6.
 > 이 문서의 17~20판 본문은 D0.3c의 규칙대로 고치지 않았다. **아래 본문이 말하는 `Flush`·「배달 루프」·시도 1회 등은
@@ -644,7 +644,7 @@ PENDING 9행이면 9 × 3.5s = **31.5초**다.
 > |---|---|
 > | Q1 | **문자 해석 유지**(축소 결정의 최소 해석). 대사 루프의 원격 대기는 a095 「열린 질문」 Q7(사용자 큐 — a092·a124 소유)과 **같은 실체**다: 대사 자리의 critical 배달이 `claimAndDeliver`(`n.mu` 보유) 안에서 `n.deliver`를 부르는 동안 exit goroutine의 critical 발신이 같은 잠금을 기다린다. 21판의 잠금 범위(design D0.3e 5번)가 그 첫째 면(exit goroutine의 대기)을 닫고, 둘째 면(대사 goroutine 자신이 원격 왕복을 기다림)은 Q1 문자 해석상 남는다 |
 > | Q2 | **20판 문장 유지** 승인 |
-> | Q3 | **사용자행** — Manager가 큐에 올린다. a066의 완화·overage 해제와 같은 모양의 3종 세트(보수 래치의 사람 승인·audit 해제)로 묶는다. **21라운드는 사용자 답 뒤.** 운영 원장 읽기 전용 프로브 결과를 아래 Q3에 붙였다 |
+> | Q3 | **사용자행** — Manager가 큐에 올린다. a066의 완화·overage 해제와 같은 모양의 3종 세트(보수 래치의 사람 승인·audit 해제)로 묶는다. **21라운드는 사용자 답 뒤.** 운영 원장 읽기 전용 프로브 결과를 아래 Q3에 붙였다 → **사용자 결정(2026-09-28)**: 투영 배선 + AC2 + 완화 경로를 21판 범위로, 완화는 승인 원칙(자동은 조이기만 / OPERATOR + 승인 참조 + commit 전 audit / journal API + tossctl mutating 명령 / 콘솔 없음). 설계 design D0.3f |
 > | Q4 · Q6 | **21라운드 몫으로 이연** — 선택지 기록만 |
 > | Q5 | **조건부 승인** — 삭제 항목마다 그 내용을 소유하는 정본 문장을 인용하고, 인용이 안 서는 항목은 되살린다. 결과: 넷 중 셋 유지 · 정산 선점 문단(:64)은 귀속을 고쳐 **되살림**(§23.6) |
 

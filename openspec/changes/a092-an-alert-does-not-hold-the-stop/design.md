@@ -497,13 +497,98 @@ HEAD의 답:
 `BROKER_AUTH_REJECTED` · `2026-07-31T09:55:49Z`. 이대로 배선하면 첫 기동이 진입을 막고 풀 경로가 없다. 상세·한계는 `proposal.md` Q3.
 
 그래서 델타의 ADDED 요구는 **완화 경로를 선행 조건으로** 적고, 이 배정이 축소 결정 20-1에 드는지와 완화 표면을 어떻게 채울지를
-`proposal.md` 「열린 질문」 Q3으로 올린다. **Q3의 답 전에는 투영 배선에 착수하지 않는다.** 배선이 착지하면 a124의 구조 핀
+`proposal.md` 「열린 질문」 Q3으로 올렸다. **→ Q3은 2026-09-28 사용자 결정으로 답해졌다 — D0.3f.** 배선이 착지하면 a124의 구조 핀
 `TestTheModeProjectorHasNoProductionCaller`·`TestTheLedgerModeRowAddsNoEntryEnforcementBeforeProjectionIsWired`
 (`internal/app/engine/a124_the_enforcement_boundary_internal_test.go`)가 빨강이 되는 것이 정상 경로다 — 함께 고친다(a124 전달 5번).
 
 **9. 이 판이 하지 않는 것.** base 재고정과 `DIFF` 번들 재추출·Branch Test Map 재번호(tasks 20판 블록 ①), `check_values.py` FAIL 60의
 해소(9.6.1 — 21판 전후 목록 대조는 `review.md` §23.4), §6·§8 task 본문 재작성(21판 블록이 대체 목록을 적고 옛 task에는 표지만 단다).
 구현은 0줄이다.
+
+### D0.3f — 21판: Q3 사용자 결정 뒤 — 투영 배선과 사람의 완화 경로 (2026-09-28)
+
+**입력 — 사용자 결정(Manager 경유, 2026-09-28)**: *"Q3 확정 — 투영기 배선(SetModeProjector 생산 배선 + 기동
+RestoreOperatingModeProjection + AC2 수리)은 21판 범위 포함, 모드 완화 경로는 승인 원칙(자동은 조이기만 / 완화는 OPERATOR + 승인 참조 +
+commit 전 audit / journal API + tossctl mutating 명령 / 콘솔 없음)으로 설계한다."* 좌표는 HEAD `c1e34dc4`와 같은 파일 내용(§23.1),
+분기 근거는 `analysis/head-ast-21/`(이 절을 위해 `EntryGate.Block` · `buildGateway` 두 추출을 더했다).
+
+**1. 원장 쪽은 이미 그 원칙이다 — 새 journal API를 만들지 않는다.** `Journal.TransitionOperatingMode`
+(`head-ast-21/…transitionoperatingmode.json`, 분기 28)가 결정의 다섯 조항 중 셋을 이미 강제한다:
+
+| 원칙 | HEAD의 강제 | AST |
+|---|---|---|
+| 자동은 조이기만 | `actor == AUTO`면 `HALT_ALL`·`NORMAL` 거절, 열거 밖 트리거 거절 | B6 `:371` → B7 `:372`(B8 `:373` · B9 `:375`) · B10 `:381` |
+| 완화는 OPERATOR + 승인 참조 | 방향 `< 0`이 AUTO면 변화 없음(B16 `:417`), OPERATOR면 `Approval` 빈 값 거절(B18 `:424`) · `Auditor` 없으면 거절(B19 `:428`) | B14 `:409` 이하 |
+| commit 전 audit | `req.Auditor.RecordAction` `:461`이 `tx.Commit` `:468`보다 앞, 실패하면 반환(B24 `:461`) | B23 `:460` · B24 · B25 `:468` |
+
+그러므로 결정의 「journal API」는 **기존 `TransitionOperatingMode`**다. 새로 만드는 것은 그것을 부르는 생산 호출자(아래 2)와 투영 배선(3·4)이다.
+YAGNI — 원장 편집을 이 범위에 넣지 않는다(4의 세대 필드는 예외 후보, 아래).
+
+**2. 완화 호출자 — 엔진 프로세스 안에서, tossctl mutating 명령으로.**
+
+- **왜 엔진 프로세스 안인가.** 모드 사유 래치는 엔진 프로세스의 `EntryGate` 메모리에 산다. CLI 프로세스가 원장만 고치면 그 프로세스에는
+  투영기가 없으므로(`TransitionOperatingMode` B26 `:475` — 묶인 투영기가 없으면 투영 없음) 산 엔진의 게이트는 재시작 전까지 안 풀린다.
+  정본 「운영자가 밀린 알림을 읽고 승인하는 경로」가 같은 이유로 *"그 해제는 엔진 프로세스 안에서 일어난다 — 원장만 고치면 게이트는 안
+  풀린다"*를 적었고, a098은 그것을 로컬 제어 소켓(`internal/app/engine/alert_control*.go` · `alertops.go`)으로 구현했다.
+- **모양(저자 안 — 21라운드 검증 대상)**: `tossctl engine mode relax --to <NORMAL|ENTRY_BLOCKED> --operator <이름> --approval <참조> --reason <사유>`.
+  - 주석 `Annotations: {"source": "local", "mutating": "true"}` — 계좌의 진입 허용을 바꾸는 명령이다. 대화형 에이전트는 자동 실행하지
+    않는다(안전 불변식 2). `tossctl engine alerts ack`는 `mutating` 표지가 없다 — 그 명령의 분류는 이 change가 고치지 않는다(기록만).
+  - 세 플래그 모두 필수, 기본값 없음(`engine_alerts.go`의 `--operator` 규칙과 같다). 타이핑 확인·추가 확인 단계는 두지 않는다(기억 「확인 문구 금지」).
+  - 전송: a098 제어 소켓에 경로 하나를 더한다(`/v1/mode/relax` — 저자 안). 대안은 모드 전용 엔드포인트다
+    (`alert_control.go`가 *"두 엔드포인트가 디렉터리를 공유하면 … 다른 힘을 준다"*를 이유로 엔드포인트를 가른 선례). 21라운드가 고른다.
+  - 엔진 쪽 처리기: `TransitionOperatingMode{Actor: OPERATOR, Mode: --to, Cause: <사유> + " | operator: " + <이름>, Approval: <참조>,
+    Auditor: <엔진의 audit.Log>}`. 엔진은 이미 `Audit *audit.Log`를 갖는다(`internal/app/engine/engine.go:224`).
+  - `--to`는 현재 모드보다 덜 보수적이어야 한다. 방향은 원장이 트랜잭션 안에서 다시 판정한다(B14) — 읽은 뒤의 경합으로 요청이 조이기가
+    되면 원장이 OPERATOR 조이기로 기록한다(보수 방향이라 허용). `HALT_ALL`로의 조이기는 이 명령의 일이 아니다.
+  - 엔진이 떠 있지 않으면 명령은 실패한다 — 원장 직접 쓰기 경로를 두지 않는다(경로 하나). 엔진을 띄우면 기동 복원이 모드를 세우고(3),
+    그 뒤 이 명령으로 푼다.
+  - 출력은 풀린 사유 하나와 **남은 다른 진입 차단 사유**를 함께 보인다(`alerts ack`의 관례 — 모드가 풀려도 거래가 재개된 것은 아니다).
+- **a066과의 모양 맞춤**(Manager 지시 — 코드 공유는 각 change 몫): a066 5.5 완화 로트가 같은 원칙(`review.md` a066 :484 *"AUTO tightens
+  only; relaxation = OPERATOR + approval reference + audit line before commit; tossctl mutating command, no console button"*)으로 병행 중이다.
+  a066의 완화 API는 HEAD에 아직 없다(`internal/journal/risk_bucket_entry_loss_lock.go:13` *"완화(relaxation)는 없음"*). 맞출 것은 가족 이름·형태다:
+  요청 필드 `Actor`(=OPERATOR) · `Approval` · `Auditor`(`ModeAuditor`/`ReservationAuditor`와 같은 한 메서드 인터페이스) · 원장이 방향을
+  트랜잭션 안에서 판정 · audit가 commit 앞 — 그리고 CLI는 `tossctl engine <대상> relax`, 필수 `--operator`·`--approval`·`--reason`,
+  `mutating: "true"`, 엔진 제어 소켓 경유. 교차 인용과 제안은 `review.md` §23.7.
+
+**3. 배선 순서 — a124 AD3 (ii) 조건 그대로.** a124 design D10 「W1 재논증」 (ii): *"투영기 배선 + 모드 기동 복원 — 모드 사유가 진입을 막는다.
+단 AC2 수리(원자 교체 · 커밋 순서 투영)와 진입 허용 전 복원 순서(기동에서 투영 복원이 첫 진입 점검보다 앞)가 함께 있어야 보호가 된다."*
+
+- 자리: `buildGateway`(`internal/app/engine/gateway.go:234-355`). 게이트를 만든 직후(`execgw.NewEntryGate` `:249`)
+  `in.journal.SetModeProjector(entry)` → `in.journal.RestoreOperatingModeProjection(ctx, in.accountRef)`를 알림 래치 복원
+  (`restoreAlertEntryLatch` `:269`) 옆에 둔다. 둘 중 하나라도 실패하면 `buildGateway`가 오류로 반환한다 — 기동 거부(보수 방향, 알림 래치 복원과 같은 처분).
+- 「진입 허용 전」의 근거는 **아직 반쪽이다**: `buildGateway`의 AST에 직접 `go` 문이 0이다(`head-ast-21/…buildgateway.json` `go_statements` 없음).
+  그러나 AST는 호출된 함수(`newRetrier` · `protection.NewPairedReadinessAdapter` 등)가 띄우는 흐름을 세지 않고, 반환 뒤 루프가 뜨는 순서(호출자
+  `engine.go:504` → 런타임 `Run`)도 이 추출 밖이다. 둘 다 구현 전에 센다(tasks 21.7(a)) — 그 전에는 「첫 진입 점검보다 앞」을 주장하지 않는다.
+- `SetModeProjector`는 재묶기를 거절한다(`operating_mode.go:300-303`). 한 프로세스에 journal이 둘 이상 조립되는 경로가 있는지 구현 전에 센다.
+
+**4. AC2 수리 — 원자 교체와 커밋 순서.**
+
+- **원자 교체**: 오늘 `ProjectOperatingMode`는 `g.mu.Lock` `:36` → `delete` `:37` → `g.mu.Unlock` `:38` 뒤 `g.Block` `:50`으로 다시 잡는다.
+  `Block`은 자기 안에서 `g.mu`를 잡고 **없을 때만** 넣는다(`head-ast-21/…entrygate.block.json` — `g.mu.Lock` `:533` · B1 `if` `:535`).
+  수리: 한 번의 `g.mu` 구간 안에서 지우고 다시 넣는다(삽입 규칙은 「교체」 — 설명은 새 행의 것). a124 요구 「진입 게이트는 사유별 해제 세대를 가진다」의
+  *"운영 모드 투영은 이 세대를 바꾸지 않는다"*와 *"게이트 상태 세대는 실제로 상태가 바뀐 때만 오른다"*를 함께 지킨다(시험 대상).
+- **커밋 순서(저자 안)**: 투영은 커밋 뒤 잠금 없이 불린다(B26 `:475` → `:476`). 겹친 두 전이의 투영이 뒤바뀌어 도착하면 옛 모드가 이긴다.
+  두 안:
+  - (가) **세대 울타리** — 전이 기록이 계좌별 순번(`modeRowCount` — 이미 트랜잭션 안에서 읽는다, `:436`)을 레코드에 싣고, 게이트는
+    마지막으로 적용한 순번보다 큰 투영만 적용한다. 기동 복원은 최신 행의 순번을 싣는다. 새 잠금이 없다. `OperatingModeRecord`에 필드 하나.
+  - (나) 전이 전체(트랜잭션 + 투영)를 journal 쪽 Go 잠금 하나로 직렬화. 단순하지만 그 잠금을 exit goroutine(관측 두절 승격 `exitloop.go:846`)과
+    배달 실행자(a124 승격)가 함께 기다린다 — a124 정본 *"배달 실행자가 잡는 잠금은 진입 게이트 잠금뿐이어야 하며(SHALL)"*와 충돌한다.
+  - **저자 선택 (가)** — (나)는 a124 정본과 충돌한다. 21라운드 검증 대상.
+
+**5. 전개(배포) — 기존 `ENTRY_BLOCKED` 행의 처분은 사람 몫이다.**
+
+- 운영 원장의 현재 모드는 `ENTRY_BLOCKED`다(프로브 2026-09-27T22:16:56Z — `AUTO` · `BROKER_AUTH_REJECTED` · `2026-07-31T09:55:49Z`, `proposal.md` Q3).
+- 이 change를 배포한 **첫 기동에서 신규 진입이 모드 사유로 막힌다.** 이것은 정본 risk-management(*"모드·kill switch·이력은 journal 영속·재시작 유지"*)가
+  요구해 온 동작이 처음으로 집행되는 것이지 결함이 아니다. 청산은 영향이 없다.
+- 그 행을 풀지 말지 — 2026-07-31의 자격증명 거절이 해소됐는지 판단하고 `tossctl engine mode relax`를 실행할지 — 는 **배포하는 사람의 결정이다.**
+  에이전트는 그 명령을 실행하지 않는다(`mutating: true`, 안전 불변식 2·7). 배포 절차에 「배포 전 현재 모드 조회 → 기동 뒤 모드 사유 차단 확인 →
+  사람이 완화 여부 결정」을 넣는다(tasks 21.10).
+- 되돌리기: 이 배선을 되돌리면(이전 이미지) 모드 행은 다시 집행되지 않는다. 완화 행을 쓴 뒤 되돌리는 경우 원장에는 OPERATOR 행이 남고 그것은 참이다.
+
+**6. 정본 문장 하나가 낡는다.** 정본 「배달 실행자의 정지가 다른 루프를 내려서는 안 된다」의 근거 ①(`openspec/specs/engine-safety/spec.md:1032-1034`
+*"`journal.SetModeProjector`가 프로덕션에서 bind되지 않으므로 그 승격은 산 프로세스의 진입 게이트에 닿지 않는다 — a092가 발견했고 배선은 미배정 후속이다"*)은
+이 배선이 착지하면 거짓이 된다. 그 요구의 규범(승격하지 않는다)은 근거 ②로 그대로 선다. a124 정본의 *"모드 투영이 배선되기 전에는 …"*(`:1444-1446`)은
+조건문이라 참으로 남는다. 처분은 tasks 21.7(e)(archive 때 정본 편집) — 21라운드가 MODIFIED로 델타에 넣을지 판정한다.
 
 ### D0.4 — 없애는 것과 못 없애는 것
 

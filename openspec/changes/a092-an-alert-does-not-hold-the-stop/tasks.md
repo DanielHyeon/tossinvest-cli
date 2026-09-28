@@ -19,8 +19,8 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 - [x] 21.0a **Manager 판정 반영 + 운영 원장 읽기 전용 프로브** (2026-09-28) — Q1 문자 해석 유지(a095 Q7 교차 인용) · Q2 유지 ·
       Q4·Q6 21라운드 이연 · Q5 조건부(삭제 항목별 소유 정본 인용 — `review.md` §23.6, 정산 선점 문단은 되살림) · Q3 사용자행.
       프로브: `operating_modes` 행 1 = `ENTRY_BLOCKED`/`AUTO`/`BROKER_AUTH_REJECTED`/`2026-07-31T09:55:49Z`(proposal Q3). 브로커 호출 0.
-- [ ] 21.1 **열린 질문의 남은 답** — Q3(사용자) · Q4·Q6(21라운드). Q3·Q4의 답 전에는 21.6·21.7에 착수하지 않는다.
-      **a092는 Q3 사용자 답까지 파킹**(Manager 2026-09-28) — 21라운드도 그 뒤다.
+- [x] 21.1 **Q3 사용자 결정 반영** (2026-09-28) — 투영 배선 + AC2 + 사람의 완화 경로를 21판 범위로(design D0.3f, 델타 ADDED 갱신).
+      파킹 해제(Manager 2026-09-28: *"a092 21판 완성 → 21라운드"*). Q4·Q6은 21라운드가 판정한다(선택지 유지).
 - [ ] 21.2 **FLM 먼저 (구현 전).** (a) `Notifier.deliver`(분기 27)의 HEAD AST로 잠금 밖으로 옮겨질 갈래(정산 · 래치 `:484`·`:520`·`:571` ·
       반납)를 열거하고 `Acknowledge` 셈~해제와의 겹침 표를 쓴다(design D0.3e 5번이 주장하지 않은 것). (b) 20판 블록 ①: base 재고정 +
       `DIFF` 번들 재추출 + Branch Test Map 재번호(difflib 정렬). (c) 편집 대상 `notifyCritical`·`claimAndDeliver`·`logClaimHeld`·
@@ -39,9 +39,18 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 - [ ] 21.5 **A-4 재측정** — `a096_one_send_per_condition_test.go`·`a097_exclusion_is_an_event_test.go`가 잠금 범위 변경 뒤에도 초록인지
       잰다. 초록이면 무엇이 그것을 지키는지(임차 · 잠금)를 뮤테이션으로 가른다.
 - [ ] 21.6 **셈~해제 (Q4 답 뒤)** — 덮이지 않는 기록자(`parkAlert` → `EnqueueAlert`)의 처분과 결정적 시험. a124 D10 (i) 경계는 문서로만.
-- [ ] 21.7 **투영기 배선 (Q3 답 뒤)** — 생산 `SetModeProjector` · 기동 `RestoreOperatingModeProjection`(첫 진입 점검 전) · AC2(원자 교체 ·
-      커밋 순서 투영) 결정적 시험 · 사람의 완화 경로 · a124 구조 핀 둘 갱신 · 배포 전 운영 원장 현재 모드 조회(사람 몫).
-      **Q3이 「21판 밖」으로 답하면 델타의 ADDED 요구를 지운다** — 구현 없는 SHALL이 archive로 정본에 들어가면 안 된다(문서 리뷰 R5).
+- [ ] 21.7 **투영 배선과 사람의 완화 경로** (design D0.3f — Q3 사용자 결정). FLM 먼저:
+      (a) `buildGateway` 호출 함수들이 띄우는 흐름과 호출자 `engine.go:504` → 런타임 `Run`의 루프 시작 순서를 세어 「복원이 첫 진입 점검보다 앞」을 증명(오늘은 반쪽 — D0.3f 3번);
+      한 프로세스에 journal이 둘 조립되는 경로 유무(`SetModeProjector` 재묶기 거절).
+      (b) RED: 기동 복원 전 진입 점검 0 · 산 프로세스의 자동 강화가 커밋 뒤 진입을 거절 · AC2 원자 교체(겹친 점검이 빈 순간을 못 봄 — 결정적 시험) ·
+      커밋 순서 역전 도착(세대 울타리, D0.3f 4번 안 가) · 투영이 a124 해제 세대와 게이트 상태 세대를 규칙대로만 바꿈.
+      (c) 완화 명령 `tossctl engine mode relax`(`mutating: "true"`, `--to` · `--operator` · `--approval` · `--reason` 필수, 기본값 없음) — RED: 셋 중 하나 빠지면 거절 ·
+      audit 실패면 원장 행 0 · 엔진 밖 원장 쓰기로는 산 게이트가 안 풀림 · 완화 뒤 다른 사유는 남고 출력에 보임 · 엔진 미기동이면 실패 · 자동 완화 거절(기존 원장 규칙 핀).
+      (d) a124 구조 핀 둘(`TestTheModeProjectorHasNoProductionCaller` · `TestTheLedgerModeRowAddsNoEntryEnforcementBeforeProjectionIsWired`) 갱신.
+      (e) 정본 「배달 실행자의 정지가 …」 근거 ①(`spec.md:1032-1034`)이 거짓이 된다 — 21라운드가 MODIFIED로 넣을지 판정, 아니면 archive 때 정본 편집.
+      (f) a066 완화 로트와 가족 이름·형태 대조(`review.md` §23.7) — 코드 공유는 각 change 몫.
+- [ ] 21.10 **배포 절차 (사람 몫 — 완료 게이트 밖)** — 배포 전 운영 원장 현재 모드 조회(읽기 전용) → 배포 → 첫 기동에서 모드 사유 진입 차단 확인 →
+      기존 `ENTRY_BLOCKED` 행(2026-07-31 `BROKER_AUTH_REJECTED`)을 풀지 **사람이 결정하고 사람이 실행**. 에이전트는 완화 명령을 실행하지 않는다.
 - [ ] 21.8 **21라운드 적대 리뷰** — Manager 지시 뒤. 교차 모델은 Codex(결정 20-2).
 - [ ] 21.9 `check_values.py` FAIL — 9.6.1이 그대로 진다(21판은 새 FAIL을 만들지 않았다 — `review.md` §23.4).
 

@@ -37,6 +37,9 @@ TARGETS = [
     ("internal/journal/operating_mode.go", "Journal.RestoreOperatingModeProjection"),
     ("internal/journal/alert_claim.go", "Journal.ReleaseAlertClaim"),
     ("internal/journal/outbox.go", "Journal.ClaimAlertForDelivery"),
+    # 21판 Q3 답(2026-09-28) 뒤 추가 — 투영 배선 순서 · AC2 교체 근거
+    ("internal/execgw/retry.go", "EntryGate.Block"),
+    ("internal/app/engine/gateway.go", "buildGateway"),
 ]
 
 

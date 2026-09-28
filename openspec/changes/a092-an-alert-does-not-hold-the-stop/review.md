@@ -4401,3 +4401,28 @@ Q1 문자 해석상 21판 밖에 남는다. proposal 「열린 질문」 판정 
 **Q2 · Q4 · Q6**: Q2 20판 문장 유지 확정. Q4 · Q6은 21라운드 몫 — 선택지는 proposal에 적힌 그대로 둔다.
 
 **상태**: a092는 Q3 사용자 답까지 **파킹**이다. 21라운드는 그 뒤다.
+
+### 23.7 Q3 사용자 결정 반영 — 투영 배선 · 완화 경로 (2026-09-28)
+
+사용자 결정(Manager 경유): *"Q3 확정 — 투영기 배선(SetModeProjector 생산 배선 + 기동 RestoreOperatingModeProjection + AC2 수리)은 21판 범위 포함,
+모드 완화 경로는 승인 원칙(자동은 조이기만 / 완화는 OPERATOR + 승인 참조 + commit 전 audit / journal API + tossctl mutating 명령 / 콘솔 없음)으로
+설계한다."* Manager 배정: *"a092 21판 완성 → 21라운드"* — Q4·Q6은 21라운드가 판정.
+
+반영: design **D0.3f**(원장 API는 기존 `TransitionOperatingMode`가 원칙 셋을 이미 강제 — B6~B10 · B14~B19 · B23~B25, 새 journal API 없음 ·
+완화 명령 `tossctl engine mode relax` 엔진 제어 소켓 경유 · 배선 순서 a124 AD3 (ii) · AC2 원자 교체 + 세대 울타리 · 전개 절의 기존 행 처분 = 사람 몫 ·
+정본 근거 ① 낡음), 델타 ADDED 요구 갱신(완화 원칙 SHALL 다섯 + Scenario 넷 추가), tasks 21.7 재작성 · 21.10 배포 절차. 추출 둘 추가
+(`EntryGate.Block` · `buildGateway`, `head-ast-21/MANIFEST.txt`).
+
+**a066 완화 로트와의 교차 인용 (Manager 지시 — 가족 이름·형태 맞춤, 코드 공유는 각 change 몫).**
+
+| 축 | a066 (5.5 완화 로트) | a092 21판 |
+|---|---|---|
+| 원칙 원문 | a066 `review.md:484` *"AUTO tightens only; relaxation = OPERATOR + approval reference + audit line before commit; tossctl mutating command, no console button"* | 같은 원칙(사용자 결정 Q3) |
+| 원장 API | HEAD에 없음 — `risk_bucket_entry_loss_lock.go:13` *"완화(relaxation)는 없음"*. 한 scope 한 행 트리거(`first_cause_wins`)를 「열린 잠금 하나」로 바꾸는 마이그레이션이 필요하다고 a066 review 5.5 #13이 적음 | 기존 `TransitionOperatingMode` — 새 API 없음 |
+| 요청 필드 (제안: 맞춤) | `Actor`(=OPERATOR) · `Approval` · `Auditor`(한 메서드 인터페이스, `*audit.Log`가 만족) | `TransitionModeRequest`의 같은 셋(`operating_mode.go:325-333`) |
+| 방향 판정 | 제안: 원장이 트랜잭션 안에서 | 원장이 트랜잭션 안에서(B14 `:409`) |
+| audit 순서 | 제안: commit 앞, 실패하면 전이 없음 | `:461` → `:468` |
+| CLI (제안: 맞춤) | `tossctl engine <대상> relax`, 필수 `--operator` · `--approval` · `--reason`, `mutating: "true"`, 엔진 제어 소켓 경유 | `tossctl engine mode relax --to …` |
+| 콘솔 | 없음 | 없음 |
+
+a092는 a066 파일을 편집하지 않는다. 이 표는 Manager가 a066 로트에 전할 대조표다 — 이름이 갈리면 21.7(f)에서 다시 맞춘다.
