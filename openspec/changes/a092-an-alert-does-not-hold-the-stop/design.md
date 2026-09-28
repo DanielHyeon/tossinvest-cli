@@ -1,4 +1,6 @@
-# a092 설계 — 전송을 루프 밖으로 옮긴다 (23판)
+# a092 설계 — 전송을 루프 밖으로 옮긴다 (24판)
+
+> **24판(2026-09-29)** — 23라운드(문서 결함만) 처분을 **D0.3i**에 반영했다. archive 선행 조건(a066 입구 이행 커밋)이 생겼다.
 
 > **23판(2026-09-29)** — 22라운드(BLOCK 3/3) 처분을 **D0.3h**에 반영했다(모드 통지 신원 · 동기 경로 보수 조항 · critical 기록 단일 입구 · 조립 생성자 전수 · 「동시에」 해석).
 
@@ -29,7 +31,7 @@
 >
 > **D0이 그 재설계이고, D1~D7은 그 앞의 설계다.** D0 끝에 무엇이 무효가 되는지 적는다.
 
-## D0 — 전송을 exit 관측 루프 밖으로 옮긴다 (23판)
+## D0 — 전송을 exit 관측 루프 밖으로 옮긴다 (24판)
 
 ### D0.1 — 발견: 루프 밖 전송 기계가 이미 있고 프로덕션이 아무도 부르지 않는다
 
@@ -823,6 +825,83 @@ MANIFEST 밖 파일(`cmd/tossctl/*.go`, `internal/app/engine/risk_relaxation_com
 - **K17**: 기록 전용 announcer는 입구(`n.mu` 아래)를 쓴다. 기록에 실패하면 다른 durable 기록 실패와 같이 `ReasonAlertUndelivered`로 그 자리에서 잠그고, 구조화 로그를 남긴다. 투영(`:475`)이 통지(`:479`)보다 앞이므로, 모드 강화의 통지 행이 셈~해제 창에 들어와도 진입은 **모드 사유**가 막는다.
 - **K18 · K19**: tasks 23.x에 커버리지를 더했다. `Flush` 비시험 호출자 0 핀도 더했다.
 - **K20**: 기록만 — 비례 원칙.
+
+### D0.3i — 24판 — 23라운드 처분 반영 (2026-09-29)
+
+입력은 23라운드(세 보이스 모두 BLOCK, 남은 결함은 문서 — `review.md` §23.12)와 Manager 판정(§23.13)이다. 세 보이스 모두 안전 불변식이 선다고 판정했다. exit goroutine의 원격 대기 0, 게이트를 잘못 여는 경로 0도 같다. 이 절은 문장 정합성만 고친다.
+
+**1. M1 — 통지 SHALL의 범위.** 델타 ADDED의 통지 SHALL을 **통지자(announcer)를 받는 전이**로 한정했다. 전달 실패에 따른 강화(`CRITICAL_ALERT_UNDELIVERED`)는 무통지 예외로 명시했다.
+- 동기 경로는 `Notifier.escalate` → `EscalateOperatingMode(…, nil)`이다(`notifier.go:382-383`). 근거 주석은 `:360-368`이다.
+- a124 실행자도 announcer에 nil을 넘긴다(`alertdelivery.go:451-452`).
+- durable 기록 실패의 강화(23판 K12)도 같은 예외에 넣었다.
+- Scenario 「재알림 창 안의 재강화도 통지된다」는 트리거를 **관측 두절**로 적었다. 무통지 예외 Scenario를 하나 더했다.
+
+**2. M10 — 통지 신원은 전이 행의 `id`.** 23판 D0.3h 1은 키에 rowid를 붙인다고 적었다. 24판은 **`rec.ID`**(`operating_modes.id` TEXT PRIMARY KEY, `core_domain.go:184-185`)로 바꾼다.
+- rowid는 `VACUUM INTO` 복원 때 다시 매겨질 수 있다(D0.3h 7 K14의 추정). 그래서 rowid는 **울타리 순서에만** 쓴다.
+
+**3. M2 — K3 구조 핀의 문언.** 23판의 「Commit과 Project 사이에 `go` · 반환 없음」은 정상 커밋 실패 반환(`operating_mode.go:469`, B25 안)까지 금지했다. 그래서 HEAD 양성 대조군이 실패했다. 24판은 다음처럼 고친다.
+- 핀 범위: **커밋 성공 경로** — Commit을 담은 `if` 문 다음 문장부터 `ProjectOperatingMode` 호출까지. 그 사이에 반환과 `go` 문이 없어야 한다.
+- 추가 핀: 투영기 몸체(`EntryGate.ProjectOperatingMode`)에 `go` 문 0.
+- 양성 조건: 커밋 실패는 투영 0 · 통지 0.
+- nil 투영기 갈래(`:475`)는 생산 배선 핀(D0.3f 3)이 진다.
+
+**4. M4 · M9 — 기록 부류.** 23판이 부류를 「그 입구를 거치는」으로 바꾸면서 동기 claim 경로(`claimAndDeliver` — `n.mu.Lock` `:254` 아래 `ClaimAlertForDelivery` `:262`)가 빠졌다. 24판은 부류를 다음처럼 정의한다.
+- 부류: 「알림기의 배제 잠금 아래에서 기록하는 모든 경로」 = 기록 전용 입구 + 동기 claim. 한 요구 안에서 문구를 통일했다.
+- census에 `ClaimAlertForDelivery`를 더한다. 오늘 비시험 호출자는 1이다(`notifier.go:262`).
+- 재무장 문장은 「재알림 창에 의한 재무장」으로 한정했다. `EnqueueAlert`도 모르는 상태의 행을 PENDING으로 복구한다(`outbox.go:411-416`). 그것은 재알림 창의 재무장이 아니다.
+
+**5. M5 — K2 수단의 위치.**
+- 승격은 `deliver` 안이 아니다. `claimAndDeliver`가 돌아온 뒤 `notifyCritical`의 `owed && !sent` 갈래(B4 `:223` → `:228`)에서 일어난다.
+- `:520`(시도 기록이 행을 못 찾음)은 `lost`로 나가 `owed = false`가 되므로(`:310-314`) 승격이 없다.
+- 그래서 (ii) 「승격 실패면 무조건 차단」은 **`notifyCritical`이 `escalate` 실패를 받아 `Block`**하는 자리에서 판정한다. RED는 `:484`(발행 뒤 전달 기록 실패)와 `:571`(소진)에만 둔다.
+- a124 정본의 두 조항을 델타 「모든 발송자」 문단에 옮겼다: 「승격을 포함하지 않는 판정은 승격을 만들지 않는다」 · 「승인 시각으로 순서를 추정하지 않는다」.
+- `AccountRef`가 비어 있으면(`notifier.go:379`) 승격 미포함 판정이다.
+
+**6. M6 — 프로세스 밖 기록자: 도달 0 (세 보이스 모두 같은 결론).** 23판 D0.3h 4의 잔여 서술은 측정 전 가정이었다. 도달 0인 근거는 다음과 같다.
+- `ReplayInDoubt`의 비시험 호출은 `internal/reconcile/recovery.go:351`(`r.opts.Replayer`) 하나다.
+- Replayer 주입은 엔진 `internal/app/engine/runtime_wiring.go:184` 하나다.
+- flatten CLI 조립(`cmd/tossctl/flatten.go:199-272`)에는 Recovery · Replay · Notifier가 없다. `Saga.event`는 Notifier가 nil이라 로그만 남기고(`internal/flatten/flatten.go:689-693`), `Resolver.park`는 outbox에 쓰지 않는다(`internal/execgw/indoubt.go:372-383`).
+- 엔진도 `Attested`가 nil이라(`gateway.go:312-315`) `replay.go:257-259`에서 거절된다. 그래서 `parkAlert`(`:358`)는 **오늘 생산 어디서도 도달 0**이다.
+
+codex가 짚은 틀린 문장도 지운다. 23판의 「다음 승인은 미전달 0을 만족하지 않는다」는 틀렸다 — 전체 승인은 그 새 행도 승인한다.
+
+**정적 핀 둘**:
+- (ㄱ) flatten 조립에 Recovery · Replayer · Replay · Notifier가 없다.
+- (ㄴ) 비시험 `obs.Notifier` 생성은 엔진 `newNotifier` 하나다. 둘째 프로세스의 알림기가 `ClaimAlertForDelivery`로 census를 우회하는 길을 막는다.
+
+델타의 입구 · 셈~해제 문단은 **엔진 프로세스**로 한정했다. 23.2의 flatten FLM 항목은 이 핀으로 대체한다.
+
+**7. M7 · M8 — 조립 전수 핀의 역할과 정의.**
+- 엔진 쪽 핀은 「`execgw.New`의 `Entry` 식별자 == `newNotifier`에 넘기는 게이트 인자」의 **동일성**을 센다(`gateway.go:249` → `:302` · `:323`). 인라인 `NewEntryGate` 변이가 이 핀에 걸린다.
+- 생산 조립은 「`tossctl` 실행 파일의 main에서 도달하는 비시험 경로」로 정의했다. 23판의 「게이트를 넘기지 않는 조립은 생산 조립이 아니다」는 순환 정의였다.
+
+**8. M3 — archive 선행 조건 (Manager 판정 1).** a066 `notifyRelaxation`(`internal/app/engine/risk_relaxation_command.go:151-173`)은 먼저 잠그지 않고 원장에 직접 적재한다. 완화 통지에는 세울 자기 사유가 없다. 그래서 길은 알림기의 기록 전용 입구로 옮기는 것 하나다. 델타는 그것을 SHALL로 적었다.
+
+**a092는 a066 기록자가 입구로 옮겨진 커밋을 인용하기 전에는 archive하지 않는다.** 순서: a092 구현이 `RecordAlert`와 입구를 착지 → a066 이행 커밋 → a092 archive. 정본이 참이 되는 순간에만 archive한다. tasks 23.4를 게이트로 바꿨다(24.4).
+
+**9. M11 — 좌표.**
+- MODIFIED 블록에 남아 있던 `risk-management :102-108`을 요구 이름으로 병기했다. 23판이 넣었던 새 코드 좌표(`Loops:` `:680`, `Block` `:532-539`)는 **이름으로 바꿨다** — archive 뒤 정본에 들어갈 문장에 곧 낡을 좌표를 두지 않는다.
+- 설계 좌표 정정:
+
+  | 판 | 적힌 것 | 실제 |
+  |---|---|---|
+  | 22판 D0.3g 8 | `engine_risk_relaxation.go:136,194` | `Use:` `:130` · `:184` |
+  | 23판 D0.3h 7 | `OperatingModeHistory :593-596` | `ORDER BY` `:597` |
+  | 22판 | `engine.go:636` | `c1e34dc4`에서도 이미 `:637`, 지금 `:639` |
+  | 23판 D0.3h 6 | `outbox.go:142-146`「(주석)」 | `:146`은 코드 줄 |
+
+  a066 `:158`은 작업 트리에서 `:168`로 밀린다. census는 이름으로 센다.
+
+**10. M12 · M13 · M15 · M16.**
+- **M12**: 완화 명령의 「통지 실패」는 **통지의 기록 실패**다. `Notify`는 전송 실패에 nil을 돌려준다(`notifier.go:126-129`). 명령은 다시 읽은 통지 행의 상태를 보인다(델타).
+- **M13**: 23판 D0.3h 5의 「풀 경로 = 원장 수리 뒤 재시작」을 고친다. 원장이 막는 모드로 읽히는 경우에는 이어지는 성공 투영이 복원 실패 래치를 교체한다(`mode-release` 또는 자동 강화 — 모드 사유 교체, `modegate.go:35-51`). 사람 승인이 거치므로 안전 방향이다. 모드 행 자체를 읽지 못하는 경우에만 원장 수리 뒤 재시작이 필요하다. K8 · K12 RED를 더했다.
+- **M15**: 커버리지 셋(K12 무통지 RED · 입구 `remindAfter = 0` 무재무장 RED · `runAuxiliary` 이벤트 타입 FLM).
+- **M16**: exit-policy 한정어에서 수단 「버퍼」를 뺐다.
+
+**11. M14 — 잔여 (Manager 판정 2).** 정본 `openspec/specs/engine-safety/spec.md:221-224`(「엔진 런타임 수명주기」 안의 주석, *"… 그 문장의 정리는 a092가 진다"*)가 archive 뒤에도 남는다.
+- **처리 주체: a092 구현 로트.** 착지할 때 그 주석 한 줄 정리를 함께 한다.
+- MODIFIED 델타는 두지 않는다(비례 원칙).
+- tasks 24.5에 적었다.
 
 ### D0.4 — 없애는 것과 못 없애는 것
 

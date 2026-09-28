@@ -1,4 +1,4 @@
-# a092 tasks (23판)
+# a092 tasks (24판)
 
 base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 
@@ -9,6 +9,29 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 > **아래 「21. 21판 작업」이 21판의 작업 목록이다.** §6·§8·§9의 20판 이전 미체크 task는 21판 범위를 정하지 않는다 — 절 머리에
 > ⛔ 21판 표지를 달았다(20라운드 B-5·B-6(T): 그 절들의 좌표·FLM 수 주장은 21판에서 근거로 쓰지 않는다). 옛 task는 21.4가
 > 대체 여부를 하나씩 판정할 때까지 지우지 않는다.
+
+## 24. 24판 작업 (2026-09-29) — 23라운드 처분 반영 (design D0.3i · `review.md` §23.13)
+
+> 23.x 가운데 24판이 바꾼 것: 23.2의 flatten 도달 FLM → 정적 핀(24.3 M6) · 23.3 K2 RED 범위(`:484` · `:571`만) · 23.3 K3 핀 문언(커밋 성공 경로) ·
+> 23.3 K5 핀(역할 동일성 추가) · 23.3 K1 신원(rowid → `rec.ID`) · 23.4 → 24.4 게이트. 나머지 23.x는 유효하다.
+
+- [x] 24.0 24판 문서 — 델타(통지 SHALL 범위 + 무통지 예외 · 기록 부류 = 배제 잠금 아래 모든 경로 · a124 조항 둘 · 엔진 프로세스 한정 · 생산 조립 정의 ·
+      재알림 창 재무장 · 통지 실패 정의 · MODIFIED 블록 좌표를 이름으로) · exit-policy 한정어 · design D0.3i · `review.md` §23.13 · `DRAFT = 24`.
+- [ ] 24.1 **24라운드 — 좁은 확인 1회**(Manager 판정: codex 한 보이스, M 반영분만) → 그 뒤 freeze 판정.
+- [ ] 24.3 **RED · 핀 (23.3 에 더하거나 바꾼다)**:
+      - **M1**: `CRITICAL_ALERT_UNDELIVERED` 강화(동기 · 실행자)는 통지 행을 만들지 않는다 · 관측 두절 강화와 사람 완화는 통지 행을 만든다(키 = `rec.ID`).
+      - **M2 핀**: 커밋 성공 경로에서 Commit 을 담은 `if` 다음 문장 ~ `ProjectOperatingMode` 사이 반환 · `go` 0 · 투영기 몸체 `go` 0 · 커밋 실패 → 투영 0 · 통지 0.
+      - **M4 census**: 비시험 `ClaimAlertForDelivery(` 호출자 = 알림기 `claimAndDeliver` 하나(배제 잠금 아래).
+      - **M5**: (ii)는 `notifyCritical` 에서 `escalate` 실패 → `Block` — RED 는 `:484` · `:571` 판정만 · `:520`(행 없음)은 승격도 차단 추가도 없다 · `AccountRef` 빈값 = 승격 미포함.
+      - **M6 핀**: (ㄱ) flatten 조립에 Recovery · Replayer · Replay · Notifier 없음 (ㄴ) 비시험 `obs.Notifier` 생성은 `newNotifier` 하나.
+      - **M7 핀**: 엔진 조립에서 `execgw.New` 의 `Entry` 식별자 == `newNotifier` 게이트 인자(인라인 `NewEntryGate` 변이가 잡혀야 한다).
+      - **M12**: 완화 명령 출력에 통지 행 상태(재읽기) · 통지 기록 실패 → 「완화됨 · 통지 기록 실패」.
+      - **M13 · M15**: 복원 실패 래치가 이어진 성공 투영에 교체된다 · 모드 행을 못 읽으면 원장 수리 뒤 재시작만 · durable 실패 강화 무통지(K12) ·
+        입구 `remindAfter = 0` 은 정착 행을 재무장하지 않는다 · `runAuxiliary` 이벤트 타입 변경 FLM(22.2 목록에 추가).
+- [ ] 24.4 **archive 게이트 (Manager 판정 M3)** — a066 `notifyRelaxation`(`internal/app/engine/risk_relaxation_command.go`)이 알림기의 기록 전용 입구로 옮겨진
+      **커밋을 인용하기 전에는 a092 를 archive 하지 않는다.** 순서: a092 구현이 `RecordAlert` 와 입구 착지 → a066 이행 커밋 → a092 archive. (23.4 를 대체)
+- [ ] 24.5 **잔여 처리 (Manager 판정 M14)** — a092 구현 로트가 착지할 때 정본 `openspec/specs/engine-safety/spec.md:221-224`(「엔진 런타임 수명주기」 안
+      「… 그 문장의 정리는 a092가 진다」 주석)를 정리한다. MODIFIED 델타 없이, 그 주석 한 줄 수준.
 
 ## 23. 23판 작업 (2026-09-29) — 22라운드 처분 반영 (design D0.3h · `review.md` §23.11)
 
@@ -565,7 +588,7 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 
       ```bash
       # 16판까지의 채택 토큰 — 17판은 이 집합을 쓰지 않는다 (design D0.6)
-      # 채택 토큰 (23판): 3.5s · 3500 · 2s · 2000 · 750ms · 5.0s
+      # 채택 토큰 (24판): 3.5s · 3500 · 2s · 2000 · 750ms · 5.0s
       rg -n '3\.5\s*s|3500|1500\s*ms|5\.0(00)?\s*s' \
          openspec/changes/a092-an-alert-does-not-hold-the-stop/tasks.md
       # 폐기 토큰 (12·13판): 이 출력은 전부 E1이어야 한다
