@@ -14,7 +14,10 @@
 - [x] 0.3 **AST 산출물이 문서보다 먼저** — 3판 번들 21개(새로 12 · 다시 뽑음 4 · 해시 일치로 산문만 5).
       생성기 `analysis/harness/render_bundles.py`, 커버리지 `analysis/harness/coverage/`
 - [x] 0.4 `check_analysis.py --change a095-…` — 3판 판정은 `review.md` 3판 기록(격리 worktree, 완료 커밋 기준)
-- [ ] 0.5 **proposal-freeze 리뷰**(적대적 Eng 필수) → `review.md`. 교차 보이스 · 교차 모델을 여기서 지킨다
+- [x] 0.5 **proposal-freeze 리뷰**(적대적 Eng 필수) → `review.md`. 교차 보이스 · 교차 모델을 여기서 지킨다
+      > **freeze 성립(2026-09-29, 9판 `5d2f1b6e`)**: 교차 모델 codex 6라운드 **PASS**(`eccb07cb`, 6판) → 7판 Claude 독립 보이스 두
+      > 실행(r7a APPROVE · r7b REJECT P1 2) → 8판 반영 → 좁힌 재검증 REJECT(P1 1) → 9판 반영 → 좁은 재검증 Claude 독립 보이스
+      > **APPROVE**(P0 0 · P1 0). 남은 P2 1 · P3 4(r9 R9-1~R9-5)는 기록 — `review.md` §3.24. 구현 착수는 0.7(Manager 스케줄링)을 거친다
       > **2라운드(2026-09-25) FAIL**(`review.md` 「2라운드」). **사용자 결정(2026-09-25)**: §2.11 1 **독립** ·
       > 2 **거부** · 3 **수용**(범위 이동). 3판이 그것을 반영했다. 3라운드는 Manager 가 따로 지시한다
 - [ ] 0.6 **열린 질문 Q1~Q7의 답** — 답이 온 뒤 비운 절을 채우고 3라운드 전에 다시 뽑을 번들을 정한다

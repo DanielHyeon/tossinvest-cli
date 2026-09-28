@@ -963,3 +963,20 @@ evaluateladder: 「순수 계산 · 판정 거부 오류」로 정정(호출 목
 ```
 
 재검증: Manager 지시대로 좁은 1회(선후 관계 절 + 0.7 + N3 문장만) — §3.24.
+
+### 3.24 9판 좁은 재검증 — Claude 독립 보이스 **APPROVE** · **freeze 성립** (2026-09-29)
+
+프롬프트 `analysis/freeze-review/claude-r9-prompt.md`(sha256 `50374920…6bd5`, 실행 사본 일치), 트리 HEAD `5d2f1b6e` export + a095 오버레이(diff 0),
+범위는 Manager 지시대로 선후 관계 절 + 0.7 + N3 문장. 결과 원문 요지 `claude-r9-output.md`. **VERDICT: APPROVE** — P0 0 · P1 0.
+
+- 항목 셋 전부 RESOLVED: 선후 관계는 범위상 독립을 유지하며 순서를 스펙 전제로 적은 문장이 남지 않음 · 0.7이 Manager 문장과 글자 그대로,
+  깨질 때의 행동 명시, 「0. 게이트 선행」에서 2.0 Pre-Edit 앞 · N3 문장은 `Adoption.validate` · `mergeAdoption`에서 참(AST 좌표 일치),
+  2.6a는 관측 가능한 것만 단언
+- **남은 것(분류만, 반영은 Manager 처분 뒤)**: R9-1 (P2) — 0.7이 a092 착지 전 창의 exit goroutine `n.mu` 대기 증가를 Manager 승인만으로
+  수용하게 하는데, 그 대기는 손절 루프 안 `o.alert` 발신(안전 불변식 4)에 닿고 Q7은 원래 사용자행이었다. 제안: 승인 기록이 추가 대기의
+  상한 또는 불변식 4를 약화하지 않는 이유를 적게 하거나, 수용을 사용자에게 보내기. R9-2~R9-5 (P3) — 0.7 확인 기준(착지 산출물 · 기록
+  위치) · §3.23 권한 인용의 정밀도 · mergeadoption 맵의 exclude 누락 · 굵게 표기
+
+**freeze 성립**: 교차 모델(codex) 6라운드 PASS와, 그 뒤 판본에 대한 Claude 독립 보이스의 최종 APPROVE로 tasks 0.5를 체크했다.
+구현 착수는 tasks 0.7(Manager 스케줄링 · 승인 기록)을 거친다. 열린 질문 Q1 · Q2(a)(b)(c) · Q3(정지 조건) · Q4 · Q6 · Q8(정지 조건)은
+구현 로트행 그대로다.
