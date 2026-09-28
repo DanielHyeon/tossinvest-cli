@@ -1076,3 +1076,30 @@ The structural fact is `checkReservation`'s non-raising early return (`gateway.g
 - The 162 split as follows: storage exits (structural test); declared backstops (pinned); unreachable rows with a
   walked-scope line; branches not owned by a066; and the 6.1.1 bundle rows outside the focus set. Each has its line
   in the (B)(2) list above.
+
+### Gate probe (2026-09-28, Manager slot) — isolated worktree `TossOS-worktrees/a066-gate` @ `63c51e00`
+
+- Setup: `make sdd-infra` rc 0 (the venv is local to the worktree).
+- `make sdd-sync` rc 2. The CodeGraph hard-evidence sync completed. The CodeGraphContext advisory could not take
+  its database lock (`~/.codegraphcontext/global/db/kuzudb` is held by a running `cgc mcp start`, not this lot's
+  process, and was left alone).
+- `make sdd-check` rc 0: "CodeGraph hard-evidence index matches the worktree"; the advisory indexes WARN.
+- **`make gate CHANGE=a066-…` rc 2, stopped at step 2/11** with 4 open tasks, as expected:
+  - 5.5: relaxation of the loss lock and of the overage latch waits on the user;
+  - 6.3, 6.4, 6.5: this lot. 6.5 runs after this probe, on the final tree (Manager ruling).
+- Lot verification bundle in the same worktree:
+
+| Command | rc | s |
+|---|---|---|
+| `make lint` | 0 | 23 |
+| `make test-seams` | 0 | 680 |
+| `make sdd-test` | 0 | 139 |
+| `openspec validate --strict` | 0 | — |
+| `check_analysis --change a066` | 1 | 19 |
+
+- The `check_analysis` rc 1 is 371 "missing evidence" lines. None of them is a function changed by an a066
+  production commit since the base (`0004536c 7aa158bb b8211926 bb44e7af 2b36ae44 9f9aa8e3`). The only overlap by
+  file is `gateway.go`, and `0004536c`'s +5 lines there are in `checkReservation`, which has a bundle. The rest come
+  from other changes' commits in the stacked window from base to worktree (the same artifact recorded in Wave 2A).
+- `make test` rc 0 (658 s) and `make vet` / `make validate` rc 0 were measured on the same commit in the main
+  worktree (6.4 above).
