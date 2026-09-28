@@ -91,6 +91,7 @@
 | STORY-TOS-a085 | 6 |
 | STORY-TOS-a087 | 8 |
 | STORY-TOS-a089 | 8 |
+| STORY-TOS-a090 | 5 |
 | STORY-TOS-a091 | 6 |
 | STORY-TOS-a092 | 8 |
 | STORY-TOS-a094 | 7 |

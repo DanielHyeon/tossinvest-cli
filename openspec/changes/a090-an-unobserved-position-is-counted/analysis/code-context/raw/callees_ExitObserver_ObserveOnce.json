@@ -1,0 +1,71 @@
+{
+  "symbol": "ExitObserver.ObserveOnce",
+  "callees": [
+    {
+      "name": "Now",
+      "kind": "method",
+      "filePath": "internal/clock/clock.go",
+      "startLine": 37
+    },
+    {
+      "name": "FillDetectionBehind",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 152
+    },
+    {
+      "name": "checkOutage",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 817
+    },
+    {
+      "name": "workingSet",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 493
+    },
+    {
+      "name": "symbolsOf",
+      "kind": "function",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 1735
+    },
+    {
+      "name": "quoteUsable",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 1068
+    },
+    {
+      "name": "observe",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 743
+    },
+    {
+      "name": "judge",
+      "kind": "method",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 857
+    },
+    {
+      "name": "cycleObservation",
+      "kind": "struct",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 737
+    },
+    {
+      "name": "Context",
+      "kind": "struct",
+      "filePath": "internal/app/app.go",
+      "startLine": 62
+    },
+    {
+      "name": "ExitCycle",
+      "kind": "struct",
+      "filePath": "internal/app/engine/exitloop.go",
+      "startLine": 391
+    }
+  ]
+}

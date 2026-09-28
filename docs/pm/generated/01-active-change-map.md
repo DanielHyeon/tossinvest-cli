@@ -91,6 +91,7 @@
 | `a085-an-alert-says-which-stock` | STORY-TOS-a085 | archived |
 | `a087-a-protective-exit-is-a-market-order` | STORY-TOS-a087 | in_progress |
 | `a089-an-unserved-stop-is-counted` | STORY-TOS-a089 | archived |
+| `a090-an-unobserved-position-is-counted` | STORY-TOS-a090 | in_progress |
 | `a091-a-stop-that-sold-nothing-is-critical` | STORY-TOS-a091 | in_progress |
 | `a092-an-alert-does-not-hold-the-stop` | STORY-TOS-a092 | in_progress |
 | `a094-a-stop-clears-what-blocks-it` | STORY-TOS-a094 | in_progress |

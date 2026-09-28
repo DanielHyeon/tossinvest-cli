@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a090",
+  "title": "An unobserved position is counted and made known",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a090-an-unobserved-position-is-counted",
+    "path": "openspec/changes/a090-an-unobserved-position-is-counted"
+  },
+  "found_by": {
+    "date": "2026-08-06",
+    "how": "a089 round-2 proposal-freeze review, finding C2 (P0): a held position whose quote does not come back is skipped by ExitObserver.ObserveOnce with a silent continue, while any sibling that answers resets the account-level outage clock, so the position drops out of stop-loss judgement indefinitely with no log, alert or ledger row. The review named the fix a090 (new, prerequisite); no change took it. a111 later added a second silent continue for an expired quote lease. a089 was archived without implementation on 2026-09-28 and handed the item to a new change.",
+    "record": "openspec/changes/archive/2026-09-28-a089-an-unserved-stop-is-counted/review.md"
+  },
+  "acceptance": [
+    "A held position that is not judged in a cycle where other held symbols were observed is recorded per position, whether its quote was absent, unusable, or expired before use",
+    "When the same position stays unjudged for the account outage threshold (default 60 seconds), one critical exit observation outage alert names that position under a per-position key, and repeats only after the position is judged again and drops out again",
+    "Automatic entry tightening for a per-position outage follows the canonical observation fail-safe requirement unless the user narrows it (design Q1)",
+    "The account-level outage ladder, fill-detection deference, judgement, proposals and orders are unchanged, and no broker call is added",
+    "A position that stops being held while unobserved is forgotten without an alert, and a restart re-raises rather than loses the alert"
+  ]
+}

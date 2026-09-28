@@ -1,0 +1,5 @@
+
+Affected test files (1):
+
+  auth-helper/tests/test_cli.py
+

@@ -1,0 +1,17 @@
+# commit b0a202b800c7cefccedb55d497f0fa8b72c46635 · go test ./internal/app/engine/ -count=1 -covermode=set · ok   github.com/JungHoonGhae/tossinvest-cli/internal/app/engine 233.105s coverage: 70.3% of statements
+exitloop.go:413.67,417.59 3 1
+exitloop.go:417.59,424.3 3 1
+exitloop.go:426.2,427.16 2 1
+exitloop.go:427.16,430.3 2 0
+exitloop.go:431.2,431.22 1 1
+exitloop.go:431.22,440.3 3 1
+exitloop.go:441.2,442.16 2 1
+exitloop.go:442.16,446.3 3 1
+exitloop.go:447.2,451.31 4 1
+exitloop.go:451.31,453.10 2 1
+exitloop.go:453.10,457.12 1 1
+exitloop.go:459.3,459.28 1 1
+exitloop.go:459.28,462.12 1 1
+exitloop.go:464.3,465.93 2 1
+exitloop.go:465.93,467.4 1 1
+exitloop.go:469.2,469.14 1 1
