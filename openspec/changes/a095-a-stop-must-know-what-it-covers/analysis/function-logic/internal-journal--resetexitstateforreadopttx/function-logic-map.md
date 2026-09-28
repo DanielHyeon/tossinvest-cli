@@ -32,7 +32,7 @@
 
 `exitpolicy.OpenRatchetState` · `tx.QueryRowContext`(B2) · `tx.ExecContext`(UPDATE) · `appendExitEventTx`.
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과에 `error`가 있다 — 원장(트랜잭션 · 질의) 호출의 오류와 입력 검증 실패를 되던진다(위 표의 return 열이 그 자리다). 브로커 호출은 없다(9판 r8 N5 — 값 단위 재전수).
 
 ## State mutations and fallbacks
 

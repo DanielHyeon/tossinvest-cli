@@ -60,7 +60,7 @@
 
 `positive`(`:329` 등) · `fraction` · `percentOf`(`:358`) · `lockPrice`(`:387`) · `PolicyIdentityOf`.
 
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+결과는 `(LadderTransition, error)`다 — 브로커 · 원장 호출이 없는 **순수 계산**이며, 입력 거부와 계산 실패를 판정 거부 오류로 돌려준다(위 표의 return 열, 9판 r8 N5).
 
 ## State mutations and fallbacks
 

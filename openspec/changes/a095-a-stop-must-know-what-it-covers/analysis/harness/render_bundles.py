@@ -32,8 +32,8 @@ COVERAGE_COMMAND = (
 DEFAULT_TEST = "기존 — a095는 이 함수를 바꾸지 않는다"
 # 오류 계약 문구 — 8판(r7 F3/F7, Manager 처분): **번들마다 명시한다.** 기본값은 없다 — 빠진 번들은 생성이 멈춘다.
 # 7판은 기본값 「이 함수는 그것을 되던진다」를 두고 한 번들만 바꿔, 오류를 삼키는 함수 맵 28개에 거짓이 남았다.
-RETHROWS = ("브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다"
-            "(위 표의 return 열이 그 자리다).")
+RETHROWS = ("결과에 `error`가 있다 — 원장(트랜잭션 · 질의) 호출의 오류와 입력 검증 실패를 되던진다(위 표의 return 열이 "
+            "그 자리다). 브로커 호출은 없다(9판 r8 N5 — 값 단위 재전수).")
 ERROR_CONTRACTS = {
     "internal-app-engine--alertdeliverer.cycle": "결과는 `error` 하나다 — 나열 실패(B1)를 지속 실패로 센 뒤 오류로 돌려준다. 행별 배달 실패는 `deliverOne`이 원장에 기록하고 여기로 돌려주지 않는다.",
     "internal-app-engine--alertdeliverer.deliverone": "결과값이 없다 — 오류를 돌려주지 않는다. claim 실패는 기록 실패 계수로(B1 창), 전송 실패는 원장의 실패 시도로(B11 창) 처리한다.",
@@ -48,7 +48,7 @@ ERROR_CONTRACTS = {
     "internal-app-engine--reconciledriver.checkexternalincrease": "결과값이 없다 — 오류를 돌려주지 않는다. `AdoptionOf` · `CompareDecimal`의 오류에서 조용히 반환하고(B2 · B3 창 return), `d.alert`는 `Notify`의 오류를 로그로만 남긴다.",
     "internal-app-engine--reconciledriver.judgeholdings": "결과값이 없다 — 오류를 돌려주지 않는다. `CurrentPosition` 오류는 그 보유를 건너뛰고(B5), 편입 쪽 오류는 `adopt`가 `cycle.Err`에 담는다.",
     "internal-app-engine--resolvenotificationpublisher": "결과는 `(Publisher, notificationResolution)`다 — 오류 대신 해석 결과의 `Refused`에 사유를 담고 전송기를 nil로 돌려준다(B2 · B5 창).",
-    "internal-exitpolicy--evaluateladder": "결과는 `(LadderTransition, error)`다 — 입력 거부와 계산 실패를 오류(판정 거부)로 돌려준다(위 표의 return 열).",
+    "internal-exitpolicy--evaluateladder": "결과는 `(LadderTransition, error)`다 — 브로커 · 원장 호출이 없는 **순수 계산**이며, 입력 거부와 계산 실패를 판정 거부 오류로 돌려준다(위 표의 return 열, 9판 r8 N5).",
     "internal-exitpolicy--selectrecoverysnapshot": "결과는 `(ExitLineSnapshot, RecoverySource, error)`다 — 검증 실패 · 신원 불일치 · 모호함을 오류로 돌려준다(B1 · B3 · B4 · B5~B8 · B10 창).",
     "internal-journal--claimowed": "결과는 `(owed, rearm)`이다 — 오류가 없는 순수 판정이다.",
     "internal-journal--journal.applypositionadjustment": RETHROWS,
@@ -64,6 +64,7 @@ ERROR_CONTRACTS = {
     "internal-obs--notifier.publishbesteffort": "결과값이 없다 — 오류를 돌려주지 않는다. 전송 실패는 로그로만 남긴다(B2 창).",
     "internal-obs--severityof": "오류가 없는 순수 함수다.",
     "internal-reconcile--ingestor.ingestexternalpositions": "결과는 `(Report, error)`다 — 폴드 · 조정 오류는 되던지고, 알림 오류는 모아 끝에 `errors.Join`으로 돌려준다(B13 창).",
+    "internal-config--adoption.validate": "결과는 거부 사유 문자열이다 — 오류를 돌려주지 않고 사유(빈 문자열 = 통과)로 답한다.",
     "internal-config--mergeadoption": "결과값이 없다 — 오류를 돌려주지 않는다. 검증 실패는 블록 전체를 0으로 만들고 `Rejected`에 사유를 담는다(B3 창 return).",
     "internal-config--mergenotifications": "결과값이 없다 — 오류를 돌려주지 않는다. 검증 실패는 블록 전체를 0으로 만들고 `Rejected`에 사유를 담는다(B3 창 return) — 그래서 거부된 블록의 `Enabled`는 거짓이다.",
 }
@@ -372,23 +373,43 @@ BUNDLES: list[dict] = [
         "tests": {"B2": "**a095 2.16** — 기록 실패 → 저장소 회복 → 같은 실패가 다음 관측에서 기록된다"},
     },
     {
+        "stem": "engine--Adoption.validate",
+        "dir": "internal-config--adoption.validate",
+        "coverage_note": "`go test ./internal/config/ -count=1 -covermode=set`로 만든 `analysis/harness/coverage/r8-config.out`",
+        "role": "편입 블록이 쓸 수 있는지 답한다 — 빈 문자열이면 통과, 아니면 거부 사유.",
+        "inputs": [("`a.Enabled` · `a.IncludeSymbols` · `a.DefaultStopPct`", "편입 블록", "config.json", "B1 — 셋 다 비면 검증 없이 통과"),
+                   ("`exitpolicy.ValidateStopPct`의 답", "pct 범위", "exit-policy 범위 규칙", "B2 — 범위 밖이면 거부 사유")],
+        "calls": "`len` · `exitpolicy.ValidateStopPct`(B2 조건) · `err.Error`.",
+        "mutations": "없다 — 순수 판정.",
+        "boundary": "**a095는 이 함수를 바꾸지 않는다.** B1 `:161`(`if !a.Enabled && len(a.IncludeSymbols) == 0 && a.DefaultStopPct == 0 {`)만 "
+                    "검증을 건너뛴다. 그러므로 편입을 끄고 include도 없지만 `default_stop_pct`가 0이 아닌 범위 밖 값이면 B2에서 **거부**된다 — "
+                    "「거부된 엔진 = 보호를 요청한 엔진」은 이 모양에서 거짓이다(9판 r8 N3). 이 모양은 Q2(a)(설정 거부의 등급)의 입력으로 "
+                    "기록한다 — Q2(a)=critical이면 의도적으로 끈 엔진이 critical을 받게 되며, 그것은 안전 불변식 3이 지키는 OFF 동등성과 부딪힌다.",
+        "high_risk": "yes — 편입 여부와 거부를 정한다.",
+        "tests": {"B1": "**a095 2.6a** — 편입 꺼짐 · include 없음 · 범위 밖 pct 블록도 「설정 거부」 칸으로 기록된다(등급 단언 없음)"},
+    },
+    {
         "stem": "engine--mergeAdoption",
         "dir": "internal-config--mergeadoption",
+        "coverage_note": "`go test ./internal/config/ -count=1 -covermode=set`로 만든 `analysis/harness/coverage/r8-config.out`",
         "role": "설정 파일의 편입 블록을 엔진 설정에 옮긴다. 검증에 실패한 블록은 전체를 0으로 만들고 사유를 남긴다.",
         "inputs": [("`raw`", "파일의 편입 블록", "config.json", "B1 — 없으면 기본값 유지"),
                    ("`next.validate()`", "범위 검증", "정본 exit-policy 「범위 검증」", "B3 — 실패면 `Adoption{Rejected: why}`")],
         "calls": "`normaliseSymbols` · `next.validate`(B3 조건).",
         "mutations": "`cfg.Adoption` — 통과한 블록 또는 `Rejected`만 가진 0 블록.",
         "boundary": "**a095는 이 함수를 바꾸지 않는다.** B3 창이 거부된 블록을 `Adoption{Rejected: why}`로 만든다 — `Enabled` 거짓 · "
-                    "include 없음. 그래서 거부된 편입 블록은 델타의 「운영자가 고른 상태」(편입 꺼짐 ∧ 미지정)와 **모양이 같다**. "
-                    "정본 exit-policy는 범위 검증이 「enabled가 참이거나 include 목록이 비어 있지 않을 때」 요구된다고 적으므로, 거부된 "
-                    "엔진은 운영자가 보호를 요청한 엔진이다 — 8판 델타는 정의에 「설정이 거부되지 않았고」를 넣고 거부는 Q2(a)로 남긴다(r7 F1).",
+                    "include 없음. 그래서 거부된 편입 블록은 델타의 「운영자가 고른 상태」(편입 꺼짐 ∧ 미지정)와 **모양이 같다** — 8판 델타는 "
+                    "정의에 「설정이 거부되지 않았고」를 넣고 거부는 Q2(a)로 남긴다(r7 F1). **거부된 엔진이 모두 보호를 요청한 엔진은 아니다**"
+                    "(9판 r8 N3): `Adoption.validate`(`config.adoption.validate`) B1 `:161`은 편입 꺼짐 · include 없음 · `DefaultStopPct == 0`일 "
+                    "때만 검증을 건너뛰므로, 의도적으로 끈 블록에 범위 밖 `default_stop_pct`가 남아 있어도 B2 `:164`에서 거부된다. 그 모양은 "
+                    "Q2(a)에 기록한다.",
         "high_risk": "yes — 편입 여부를 정한다.",
         "tests": {"B3": "**a095 2.6a** — 거부된 편입 블록은 「운영자가 고른 상태」로 분류되지 않는다(등급은 Q2(a))"},
     },
     {
         "stem": "notifications--mergeNotifications",
         "dir": "internal-config--mergenotifications",
+        "coverage_note": "`go test ./internal/config/ -count=1 -covermode=set`로 만든 `analysis/harness/coverage/r8-config.out`",
         "role": "설정 파일의 알림 블록을 엔진 설정에 옮긴다. 검증에 실패한 블록은 전체를 0으로 만들고 사유를 남긴다.",
         "inputs": [("`raw`", "파일의 알림 블록", "config.json", "B1 — 없으면 기본값(꺼짐) 유지"),
                    ("`next.validate()`", "블록 검증", "`Notifications.validate`", "B3 — 실패면 `Notifications{Rejected: why}`")],
@@ -628,7 +649,7 @@ def render(bundle: dict, ast_dir: Path, profiles: list[str]) -> None:
 
     origin = ("> **표의 유래.** 조건은 소스의 그 줄 원문이다. 「창의 호출/return」은 `ast.json`이 기록한 좌표를 "
               "`[분기 줄, 다음 분기 줄)` 창에 넣은 것이며 **분기의 의미가 아니라 위치**다. 「진입 실측」은 "
-              f"{COVERAGE_COMMAND} 돌린 프로파일에서 **그 줄로 시작하는 블록**의 count가 0보다 큰지다 — "
+              f"{bundle.get('coverage_note', COVERAGE_COMMAND + ' 돌린')} 프로파일에서 **그 줄로 시작하는 블록**의 count가 0보다 큰지다 — "
               "자체 블록이 없는 분기는 `—`다. 생성: `analysis/harness/render_bundles.py`.")
     inputs = "\n".join(f"| {a} | {b} | {c} | {d} |" for a, b, c, d in bundle["inputs"])
     logic = f"""# Function Logic Map: `{qualified}`

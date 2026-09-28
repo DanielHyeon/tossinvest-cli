@@ -1,0 +1,94 @@
+{
+  "file": "internal/config/engine.go",
+  "source_sha256": "9d3ab3d2a37da7770a666fa7b1c1079e576ea6100b71569a63155f12d4c890c1",
+  "package": "config",
+  "function": "validate",
+  "receiver": "Adoption",
+  "signature": "Adoption.validate(params=0, results=1)",
+  "start": {
+    "line": 157,
+    "column": 1
+  },
+  "end": {
+    "line": 168,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 164,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 162,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 165,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 19
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 12
+      },
+      "text": "exitpolicy.ValidateStopPct"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 165,
+        "column": 10
+      },
+      "text": "err.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 164,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

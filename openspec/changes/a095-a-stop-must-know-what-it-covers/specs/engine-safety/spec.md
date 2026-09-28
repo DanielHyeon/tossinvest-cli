@@ -1,4 +1,4 @@
-# engine-safety — a095 delta (8판)
+# engine-safety — a095 delta (9판)
 
 > **ADDED만 쓴다.** 기존 「등급화된 알림」과 「같은 조건의 critical 알림은 재알림 창 안에서 한 번만
 > 전송한다」의 본문은 그대로다.
@@ -57,9 +57,11 @@ durable event key는 그 식별을 담아야 한다(SHALL — 발신 자리의 �
 
 운영자가 고른 상태의 무관리 보고는 critical이어서는 안 된다(SHALL NOT). 운영자가 고른 상태는 편입 설정이
 **거부되지 않은** 엔진에서, `adoption.exclude_symbols`에 있는 종목, 그리고 `adoption.enabled`가 거짓이고
-`adoption.include_symbols`에 없는 종목이다. 편입 설정이 거부된 엔진(거부된 블록은 0으로 만들어져 꺼짐 · 미지정과 모양이
-같다)의 보고는 이 정의에 들지 않으며, 그 등급은 이 요구사항이 정하지 않는다(열린 질문 — 설정 거부의 등급). 이 둘의 보고는 이 요구사항 이전과 같은 등급으로 남아야 한다(SHALL — 정본 exit-policy의
-`adoption.enabled` false 동등성과 안전 불변식 3).
+`adoption.include_symbols`에 없는 종목이다. 이 둘의 보고는 이 요구사항 이전과 같은 등급으로 남아야 한다(SHALL — 정본
+exit-policy의 `adoption.enabled` false 동등성과 안전 불변식 3).
+
+편입 설정이 거부된 엔진(거부된 블록은 0으로 만들어져 꺼짐 · 미지정과 모양이 같다)의 보고는 위 정의에 들지 않으며, 그 등급은
+이 요구사항이 정하지 않는다(열린 질문 — 설정 거부의 등급).
 
 알림이 꺼진 엔진(`notifications.enabled`가 거짓)에서 생긴 무관리 보고는 critical이어서는 안 된다(SHALL NOT —
 알림을 끈 것은 운영자가 고른 상태다). 정본 「등급화된 알림」은 critical의 전달 실패가 지속되면 신규 진입을 막고,
@@ -99,7 +101,7 @@ exit 관측 루프가 손절 판정 전에 내는 무관리 보고는 critical�
 - **THEN** 그 무관리 보고는 critical로 기록되고, 그 행의 전달 실패는 정본대로 다루어진다
 
 #### Scenario: 앞선 normal 보고 뒤의 시도 실패
-- **WHEN** `notifications.enabled`와 `adoption.enabled`가 모두 참인 엔진에서, 한 사이클에 연기로 normal 무관리 보고가 나간 포지션이 같은 프로세스의 다음 사이클에서 편입 시도에 실패하면
+- **WHEN** `notifications.enabled`와 `adoption.enabled`가 모두 참인 엔진에서(연기의 등급이 normal로 정해진 경우), 한 사이클에 연기로 normal 무관리 보고가 나간 포지션이 같은 프로세스의 다음 사이클에서 편입 시도에 실패하면
 - **THEN** 그 시도 실패는 critical로 기록된다 — 앞선 normal 보고의 억제가 그것을 삼키지 않는다
 
 #### Scenario: 배달된 뒤에도 실패가 계속된다

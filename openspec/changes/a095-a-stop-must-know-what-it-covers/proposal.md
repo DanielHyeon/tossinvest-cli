@@ -1,4 +1,4 @@
-# a095 · 손절은 자기가 무엇을 덮는지 알아야 한다 — 8판
+# a095 · 손절은 자기가 무엇을 덮는지 알아야 한다 — 9판
 
 - **Feature**: `FEAT-TOS-009` — Exit line truth and position policy lifecycle
 - **Story**: `STORY-TOS-a095`
@@ -169,7 +169,10 @@ critical로 올리는 것은 `adoption.enabled`가 참이어서 **엔진이 보�
    지속되면 신규 진입을 차단한다(SHALL)"*고 적는다. 따라서 알림 off에서 진입 차단을 막으려면 그 상태에서
    a095의 사실이 **critical로 매겨지지 않아야** 한다 — critical로 매긴 뒤 차단만 거르면 정본과 어긋나고
    MODIFIED가 필요하다(결정 (2)는 MODIFIED를 금한다).
-2. **Q2 — 결정 (2)가 이름 대지 않은 사유.** (a) 설정 거부(`alertUnmanaged` B3) (b) include 지정 시도 실패
+2. **Q2 — 결정 (2)가 이름 대지 않은 사유.** (a) 설정 거부(`alertUnmanaged` B3) — **입력(9판 r8 N3)**: 거부된 블록에는 보호를
+   요청한 엔진(편입 켜짐 또는 include 지정의 범위 밖 pct)과 **의도적으로 끈 엔진**(꺼짐 · include 없음이지만 범위 밖
+   `default_stop_pct`가 남은 블록 — `Adoption.validate` B1 `:161` · B2 `:164`)이 섞인다. 뒤쪽을 critical로 매기면 안전
+   불변식 3의 OFF 동등성과 부딪힌다 (b) include 지정 시도 실패
    (B6) — 특히 `adoption.enabled=false`에 include 목록이 있을 때 정본 「false = 기존 동작」과의 관계
    (c) `adopt` B2(시세 읽기 오류) · B6(관측 없음) · B7(관측 묵음)로 **연기된** 후보가 B5 사유로 알려진다 —
    일시적 시세 실패가 critical이 되는 것을 받아들이는가 — **(a)(b)(c) 열림: 구현 로트행**(Manager 분류
@@ -202,7 +205,7 @@ critical로 올리는 것은 `adoption.enabled`가 참이어서 **엔진이 보�
 | 면 | 소유 | 교차 인용 |
 | --- | --- | --- |
 | Q7 첫째 면 — exit goroutine의 기존 critical 발신이 대사 쪽 배달이 쥔 `n.mu`를 기다림 | **a092 21판** | a092 engine-safety 델타 「exit 관측 goroutine이 기다리는 잠금은 원격 전송을 덮어서는 안 된다(SHALL NOT)」 — 그 잠금의 **모든 보유자**가 원격 전송 동안 잠금을 놓아야 한다(design D0.3e 5번). a092 review(21판 Manager 판정 Q1)가 *"a095 Q7의 첫째 면 … 21판의 잠금 범위가 닫는다"*고 적었다 |
-| Q7 첫째 면의 **빈도 증가**(6판 원칙이 만든 것, 8판 기록) — critical이 메모리 래치를 지나므로 PENDING 행이 claim을 얻는 관측마다 대사 goroutine이 배달 예산 동안 `n.mu`를 쥐고 exit goroutine의 기존 critical 발신이 기다린다 | **a092 21판(모든 보유자)** — **순서 조건** | **a095 구현은 a092 「모든 보유자」 요구의 착지 이후, 또는 같은 창을 전제로 한다. 전제가 깨지면 이 증폭은 P1이다**(Manager 처분 2026-09-29, 7판 Claude 보이스 r7a F1 · r7b F5). 구현 순서는 Manager가 스케줄링 때 이 조건을 읽는다 |
+| Q7 첫째 면의 **빈도 증가**(6판 원칙이 만든 것, 8판 기록) — critical이 메모리 래치를 지나므로 PENDING 행이 claim을 얻는 관측마다 대사 goroutine이 배달 예산 동안 `n.mu`를 쥐고 exit goroutine의 기존 critical 발신이 기다린다 | **a092 21판(모든 보유자)** — 구현 순서는 **Manager 스케줄링 사항** | **구현 착수 순서는 Manager 스케줄링 사항이다. a092 「모든 보유자」 착지 **전에** a095를 구현하는 경우, 그 창의 Q7 첫째 면 증폭을 알고 수용한다는 Manager 승인 기록이 착수 전에 있어야 하며(**깨질 때의 행동** = 그 기록 없이 착수 금지), tasks 7.3 공시에 증폭 수용을 명기한다.** 결정 (1)(범위를 a092에 묶지 않음)은 무접촉이다 — 이것은 범위가 아니라 구현 순서다(Manager 처분 2026-09-29, 7판 r7a F1 · r7b F5 · 8판 r8 N1) |
 | Q7 둘째 면 — 대사 goroutine 자신이 무관리 보유마다 원격 왕복을 기다림 | **a092 영역 · 21판 밖의 이름 붙은 잔여** | 같은 판정: *"둘째 면(대사 goroutine 자신이 무관리 보유마다 원격 왕복을 기다림)은 Q1 문자 해석상 21판 밖에 남는다."* a095는 이 잔여를 **이름으로 남기고** 고치지 않는다 |
 | Q2(d) — transport 사망 시 ENTRY_BLOCKED 교환 | **a124**(archive `c1e34dc4`) → 정본 | 정본 engine-safety 「배달 실행자는 지속 실패를 진입 차단과 운영 모드 승격으로 잇는다」 |
 
