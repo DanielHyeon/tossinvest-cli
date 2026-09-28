@@ -69,3 +69,13 @@ tasks 3.1~3.6(`2fbdcd78`)을 이력으로 참조.
 그 동기 포지션은 TSLA 먼지 1건을 빼고 전부 CLOSED였다.** 3판은 소급 보호를 하지 않고, 배포 직전의
 원장 측정을 tasks 7.2에 둔다. `alert_outbox`의 `exit.position_unmanaged` 0행(2026-09-25, 16행 전부
 critical)은 결함 계열이 남아 있다는 증거로 유지한다.
+
+## I6. 운영자 재편입 reset의 비교 없는 하향 — 해제 원칙 가족의 잔여 질문 (4판, 3라운드 V-N5)
+
+`resetExitStateForReadoptTx`(`internal-journal--resetexitstateforreadopttx`)는 분기 B1~B6 전부가 오류 · 행 수
+검사이고 이전 `baseline_price`와 비교하는 분기가 없다 — 운영자 재편입은 유효 손절을 **낮출 수 있다**(I1 표).
+4판 exit-policy 델타는 평단 비하향 요구를 **자동 경로**로 한정하고 이 경로를 명명해 뺐다(Manager 처분 2026-09-28).
+
+**남는 질문**(요구로 굳히지 않는다): 사람 소유의 하향 — 운영자 재편입으로 손절이 내려가는 것 — 에 승인 참조 ·
+audit를 물릴 것인가. 같은 가족의 선례는 a092 21판의 운영 모드 완화(OPERATOR + 승인 참조 + commit 전 audit, 사용자
+결정 2026-09-28)와 a066의 완화 · overage 해제다. a095는 이 질문을 여기 등록만 하고 답하지 않는다.

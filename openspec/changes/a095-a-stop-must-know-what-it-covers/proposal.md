@@ -150,6 +150,10 @@ critical로 올리는 것은 `adoption.enabled`가 참이어서 **엔진이 보�
 - **a092에 묶기** — 결정 (1).
 - **정본 exit-policy의 `adoption.enabled` false 동등성 변경** — 결정 (2), MODIFIED 없음.
 - **`positions.avg_price` 보정 · 수량 상한(사이징)** — 2판과 같다.
+- **평단이 높아졌을 때 유효 손절을 올리는 자동 경로(불타기 래칫)** — 도입하지 않는다. 별도 change의 주제이고
+  선행 사실은 `issues.md` I1. (3판까지 exit-policy 델타에 SHALL NOT으로 있던 문장 — 정본에 병합되면 영구 금지로
+  굳으므로 4판이 여기 범위 문장으로 옮겼다, 3라운드 V-N4)
+- **운영자 재편입 reset의 하향에 승인 · audit를 붙이는 것** — 하지 않는다. `issues.md` I6(해제 원칙 가족의 잔여 질문)
 
 ## 열린 질문 — Manager 에게 (결정 (1)~(3)이 덮지 않는 지점)
 
@@ -177,7 +181,7 @@ critical로 올리는 것은 `adoption.enabled`가 참이어서 **엔진이 보�
    가르는가, 그리고 normal인가 critical인가? critical이면 키에 수량을 넣는가(행마다 ack · 진입 차단
    비용), 재알림 창을 따르는가?
 5. ~~**Q5 — R3의 지위.**~~ → **결정(2026-09-28): 보류 + 델타 SHALL 해제**, 후속 change 후보(위 R3 절).
-6. **Q6 — 래칫 선행 조건.** exit-policy 델타 둘째 요구에서 거짓 전제를 지웠다. 쓰기 자리 넷의 사실로
+6. **Q6 — 래칫 선행 조건.** exit-policy 델타의 남은 요구(평단 하락 비하향)에서 거짓 전제를 지웠다. 쓰기 자리 넷의 사실로
    선행 조건을 다시 SHALL로 적는가, issues I1에만 두고 후속 change에 넘기는가?
 7. ~~**Q7 — `n.mu` 경합.**~~ → **이관(사용자 결정 2026-09-28): a092 영역**(아래 「이관 기록」). 원문: reconcile 자리의 critical 배달은 `claimAndDeliver`가 `n.mu`를 쥔 채
    `n.deliver`를 부른다. 그동안 exit goroutine의 **기존** critical 발신(`exitloop.go:831`
