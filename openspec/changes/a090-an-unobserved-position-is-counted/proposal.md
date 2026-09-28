@@ -54,7 +54,7 @@ HEAD 에서 코드는 그대로이며 a111 이 같은 모양의 무음 `continue
 | --- | --- | --- |
 | 계수(2판) | `workingSet` 이 본 **보유·대상 포지션 집합** 중 그 주기에 판정에 닿지 않은 것 — `ObserveOnce` B6·B7 과 `workingSet` 의 탈락 다섯 자리를 한 규칙으로 | **포지션 단위 기록 · 연속 시작/해제 로그 · `ExitCycle.Unobserved`** |
 | 판정(2판) | 새 파일의 새 메서드, **순회 뒤** | **마지막 판정 시각**부터 계정 사다리와 같은 임계(`outageAfter()`, 기본 60초)를 넘으면 critical 1회 |
-| 알림(2판) | `Journal.EnqueueAlert` → `obs.EventExitObservationOutage` | **enqueue-only**(뒤 포지션의 손절 판정을 기다리게 하지 않는다) · key 에 **미관측 연속** 신원 · 새 이벤트 타입 없음 |
+| 알림(2판 · 5판) | **a092 단일 입구 `RecordAlert`(창 0)** → `obs.EventExitObservationOutage` | **enqueue-only**(뒤 포지션의 손절 판정을 기다리게 하지 않는다) · key 에 **미관측 연속** 신원 · 새 이벤트 타입 없음 |
 | 모드 강화 | 기존 `EscalateOperatingMode(…ModeTriggerExitObservationOutage…)` | **정본 준수(Q1 확정)** — 정본 exit-policy 문장(`spec.md:62`·`:65`)이 두절에 ENTRY_BLOCKED 까지 요구한다(design D5) |
 
 **바꾸지 않는 것.** 판정·기준선·워터마크·발의·주문·B1~B4 의 동작·계정 사다리. 새 브로커 호출 0(§0.4). 토글 없음.

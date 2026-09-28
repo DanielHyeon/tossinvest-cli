@@ -100,7 +100,7 @@ position—including an emergency breach—is recorded/armed/submitted before al
 - **key = 에피소드 신원(3판 N4 · 4판 R2-1)**: `type|positionID|<연속 id>`(계좌 ref 를 빼도 유일하다 — 포지션 id 는 인스턴스마다 유일, `internal/journal/position_adjustments.go:289`). 연속 id 는 연속이 **시작될 때 한 번** `o.opts.NewID()`(128비트 난수, 의도 id 와 같은
   생성기, `exitloop.go:310-312`)로 만든다 — 벽시계 기점을 key 에 쓰면 역행·재시작에서 옛 settled 행과 겹칠 수 있다(codex N4). **유한**(연속당 하나)하고
   **사실에 결속**(그 연속의 기록이 들고 있고, 알림 필드에 기점 벽시계를 싣는다). a094 는 park attempt id 를 에피소드로 쓴다(a094
-  D−5.2 — 교차 인용). outbox 의미론 무변경: `EnqueueAlert` 는 재알림 창 0 이라(`outbox.go:142-146`) 같은 key 를 다시 적재하면 옛 행을 재사용하고
+  D−5.2 — 교차 인용). outbox 의미론 무변경: 창 0 기록(입구 `RecordAlert` 에 0 을 넘김 — `EnqueueAlert` 의 창 0 과 같은 의미, `outbox.go:142-146`)은 같은 key 를 다시 적재하면 옛 행을 재사용하고
   보내지 않는다 — **같은 연속은 한 번**, 새 연속은 새 행(F5 해소). 재시작 뒤 같은 포지션은 새 연속 id 를 받아 **새 에피소드**가 된다(D2 한계와 짝) — a094 의 park attempt(원장 행이라 재시작에도 같은 에피소드)와 **다른 점**이며, 원장에 판정 시각의 믿을 만한 기록이 없어서다(D2).
 - ~~**적재 실패(a094 D−5.3 과 같은 형태)**~~ **4판: 입구의 몫으로 대체** — 기록 실패의 진입 잠금은 입구의 생산자 래치(`internal/obs/notifier.go:262-280`)가 한다.
   아래 3판 문장의 "적재 **전에** 세대를 읽는다" 는 engine-safety 정본 위반이었다(`spec.md:1468-1470` — 확정 순간 = 오류가 돌아온 순간; a094 D−6.2 와 같음).
@@ -119,11 +119,12 @@ position—including an emergency breach—is recorded/armed/submitted before al
 
 **3판 N2 — 공지자 교체.** 생산 관측자의 `Announcer` 는 Notifier 이고(`cmd/tossctl/engine.go:639`) 그 공지는 `n.Notify` 로 **동기 전송**된다(AnnounceOperatingMode
 FLM, 최악 54초). 순회 뒤라도 **다음 주기**의 손절 관측을 늦춘다 — 2판이 스스로 "다음 주기 시작을 늦출 수 있다" 고 적은 바로 그것이다. 그래서 a090 의
-강화 호출에는 관측자 소유의 **enqueue-only 공지자**를 넘긴다: `journal.ModeAnnouncer` 를 구현하고 `Journal.EnqueueAlert` 로 적재만 한다. 내용은
+강화 호출에는 관측자 소유의 **enqueue-only 공지자**를 넘긴다: `journal.ModeAnnouncer` 를 구현하고 **a092 단일 입구(`RecordAlert`, 창 0)** 로 적재만 한다
+(5판 이후 — 3판의 직접 `Journal.EnqueueAlert` 는 폐기). 내용은
 `Notifier.AnnounceOperatingMode` 의 `Event` 를 순수 함수 `obs.OperatingModeEvent(previous, rec)` 로 **추출**해 둘이 같이 쓴다(내용을 두 곳에 두지
 않는다 — 함수의 분기·key·`Notify` 는 무변화). **key 와 필드가 다르다(4판 R2-1)**: key 는 `operating_mode:<mode>:<rec.ID>` — 전이 id 를 넣고 **계좌 ref 를 뺀다**(전이 id 가 유일). 추출된 `Event` 의
   `FieldAccount` 는 이 공지자에서 **지운다**(Notifier 의 기존 공지는 그대로 — 기존 관행은 D12). Notifier 는 재알림 창으로
-같은 key 를 다시 무장하지만(`:58-60` 이 id 를 뺀 이유) `EnqueueAlert` 는 창 0 이라(`outbox.go:142-146`) id 없는 key 는 **두 번째 강화부터 옛 settled 행에
+같은 key 를 다시 무장하지만(`:58-60` 이 id 를 뺀 이유) 창 0 기록(입구에 0 — `outbox.go:142-146` 과 같은 의미)은 id 없는 key 는 **두 번째 강화부터 옛 settled 행에
 흡수돼 안 나간다**(a094 R6-2 와 같은 기전). 공지는 `changed=true` 일 때만 불리므로(`operating_mode.go:411-416`) 전이당 한 행이다. a094 D−5.2·D−5.3 과
 같은 모양(enqueue-only · 에피소드 key · 적재 실패 잠금) — 교차 인용. **5판(R3-2)**: 이 공지자는 **a090 전용 정화 어댑터**이며 a092 입구 **위에서** 기록한다.
   a092 의 기록 전용 announcer 를 **재사용하지 않는다** — a092 는 기존 Notifier 와 같은 이벤트 필드를 요구하고 그 필드에 원문 `FieldAccount` 가 있다(a092
@@ -228,8 +229,8 @@ a090 이 촉발한 기록·승격이 실패하면 그 오류는 a092 입구의 �
 
 | 상태 | 들어가는 조건 | 다음 주기(연속이 이어질 때) |
 |---|---|---|
-| `enqueued` | `EnqueueAlert` 성공(같은 key 재적재는 옛 행 반환 — 멱등) | 다시 적재하지 않는다 |
-| `enqueue_failed` | `EnqueueAlert` 실패 → 진입 잠금(`BlockUnlessClearedSince`, 해제 세대 비교) + 로그 | **재시도**한다(같은 key). 성공하면 `enqueued` |
+| `enqueued` | 입구 기록(`RecordAlert`, 창 0) 성공(같은 key 재적재는 옛 행 반환 — 멱등) | 다시 적재하지 않는다 |
+| `enqueue_failed` | 입구 기록 실패 → 진입 잠금은 **입구의 생산자 래치**(해제 세대 비교는 입구의 몫) + a090 소유 로그(오류 종류만) | **재시도**한다(같은 key). 성공하면 `enqueued` |
 | `tightened` | `EscalateOperatingMode` 가 오류 없이 반환(`changed` 무관 — 이미 그 모드면 조인 것으로 본다) · **또는** `ErrModeAnnouncementFailed`(전이는 커밋됨, `operating_mode.go:144-148`) | 다시 강화하지 않는다 — 운영자가 그 사이 완화했어도 **같은 연속에서는 재강화 없음**(완화는 사람의 결정이다) |
 | `tighten_failed` | 그 밖의 오류(커밋 실패) → 로그 | **재시도**한다 |
 
