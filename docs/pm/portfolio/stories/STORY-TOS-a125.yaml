@@ -1,0 +1,23 @@
+{
+  "id": "STORY-TOS-a125",
+  "title": "a063 is judged against its own base like every change",
+  "feature": "FEAT-TOS-001",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a125-the-a063-exception-retires",
+    "path": "openspec/changes/a125-the-a063-exception-retires"
+  },
+  "found_by": {
+    "date": "2026-09-28",
+    "how": "Scoping the a063 repair after a123 closed: the a120 execution-baseline adoption exception (fixed P/E pair, detached-HEAD audit) never let a063 pass step 5 — on an ordinary worktree resolve_base stops with 'adoption requires detached HEAD'. With the exception switched off a063 requires 340 functions from base da80ce31, while its only own Go commit after the base (676bd4b4) changed 9 existing functions that all carry a063 bundles, which is the shape the new human-approved base repin procedure closes.",
+    "record": "openspec/changes/archive/2026-09-28-a123-an-empty-window-is-derived-not-declared/review.md"
+  },
+  "acceptance": [
+    "Every change, including a063, is compared from its base-commit.txt; no record file or environment variable selects another base",
+    "An execution-baseline.json left in any change directory does not change the verdict, window or output",
+    "a063 receives the landing and working-tree rules exactly like other changes, and no output carries the adoption or audited-source labels",
+    "execution_baseline.py and its test module are removed; the tests that pinned the exception now pin its removal",
+    "A census over every active and archived change shows no verdict change other than a063",
+    "a063 moves to the general path by the documented human-approved repin with a receipt, and its remaining operational tasks stay open"
+  ]
+}

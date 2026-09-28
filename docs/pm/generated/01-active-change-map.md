@@ -121,3 +121,4 @@
 | `a122-the-logic-map-gate-outlives-a-merge` | STORY-TOS-a122 | archived |
 | `a123-an-empty-window-is-derived-not-declared` | STORY-TOS-a123 | archived |
 | `a124-a-deliverer-that-keeps-failing-blocks-entry` | STORY-TOS-a124 | archived |
+| `a125-the-a063-exception-retires` | STORY-TOS-a125 | in_progress |
