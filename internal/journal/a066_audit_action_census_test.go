@@ -79,6 +79,7 @@ func TestJournalAuditActionsAreAFrozenCensus(t *testing.T) {
 			}
 			return true
 		})
+		// 지역 그림자(변수·상수)는 함수 본문에서만 셈 — 최상위 선언은 위에서 셌음.
 		for _, decl := range file.Decls {
 			fn, ok := decl.(*ast.FuncDecl)
 			if !ok || fn.Body == nil {
@@ -98,35 +99,42 @@ func TestJournalAuditActionsAreAFrozenCensus(t *testing.T) {
 							t.Errorf("%s: local %s shadows the census", fset.Position(id.Pos()), id.Name)
 						}
 					}
-				case *ast.SelectorExpr:
-					if node.Sel.Name == "RecordAction" && !called[node] {
-						t.Errorf("%s: RecordAction used as a method value", fset.Position(node.Pos()))
-					}
-				case *ast.CallExpr:
-					sel, ok := node.Fun.(*ast.SelectorExpr)
-					if !ok || sel.Sel.Name != "RecordAction" {
-						return true
-					}
-					calls++
-					if len(node.Args) == 0 {
-						t.Errorf("%s: RecordAction without an action", fset.Position(node.Pos()))
-						return true
-					}
-					id, ok := node.Args[0].(*ast.Ident)
-					if !ok || !strings.HasPrefix(id.Name, "AuditAction") {
-						t.Errorf("%s: RecordAction's action is not an AuditAction* constant", fset.Position(node.Pos()))
-						return true
-					}
-					// 같은 파일 안에서 해석된 식별자는 최상위 상수여야 함(지역 변수·지역 상수 그림자 거절).
-					if id.Obj != nil && (id.Obj.Kind != ast.Con || !topLevel[id.Obj.Decl]) {
-						t.Errorf("%s: RecordAction's action %s is not the package constant", fset.Position(id.Pos()), id.Name)
-						return true
-					}
-					used[id.Name]++
 				}
 				return true
 			})
 		}
+		// 호출과 메서드 값·메서드 식은 **파일 전체**에서 셈 — 함수 본문만 걸으면 패키지 수준 var 초기화식 안의 호출이
+		// 빠짐(재리뷰 2026-09-29: 강화가 옛 판본이 잡던 것을 놓침).
+		ast.Inspect(file, func(n ast.Node) bool {
+			switch node := n.(type) {
+			case *ast.SelectorExpr:
+				if node.Sel.Name == "RecordAction" && !called[node] {
+					t.Errorf("%s: RecordAction used as a method value or expression", fset.Position(node.Pos()))
+				}
+			case *ast.CallExpr:
+				sel, ok := node.Fun.(*ast.SelectorExpr)
+				if !ok || sel.Sel.Name != "RecordAction" {
+					return true
+				}
+				calls++
+				if len(node.Args) == 0 {
+					t.Errorf("%s: RecordAction without an action", fset.Position(node.Pos()))
+					return true
+				}
+				id, ok := node.Args[0].(*ast.Ident)
+				if !ok || !strings.HasPrefix(id.Name, "AuditAction") {
+					t.Errorf("%s: RecordAction's action is not an AuditAction* constant", fset.Position(node.Pos()))
+					return true
+				}
+				// 같은 파일 안에서 해석된 식별자는 최상위 상수여야 함(지역 변수·지역 상수 그림자 거절).
+				if id.Obj != nil && (id.Obj.Kind != ast.Con || !topLevel[id.Obj.Decl]) {
+					t.Errorf("%s: RecordAction's action %s is not the package constant", fset.Position(id.Pos()), id.Name)
+					return true
+				}
+				used[id.Name]++
+			}
+			return true
+		})
 	}
 	if calls == 0 {
 		t.Fatal("no RecordAction call found — the census measured nothing")

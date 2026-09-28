@@ -1234,3 +1234,21 @@ probed the shared bucket. The single writer, auth, and descriptor ordering hold 
 - `ledger-r3.tsv` + `ledger-r3-audit-sites.tsv`: after the review repairs. **61/61 CAUGHT** across journal M01–M28 and
   MX, engine E01–E12 and EX, and CLI C01–C06 and CX. The three control suites are GREEN, with no build failures. M09,
   M10 and M16 were re-anchored to the attempt line and rerun.
+
+### Narrowed re-review of `93f74c79` (one voice, `code-reviewer`, 2026-09-29)
+
+Verdict: the runtime repairs are correct and complete. No path says "nothing was released" for a release that committed.
+Probe: 2000 releases with a random cancel gave 0 violations of err==nil ⇔ released, and 0 `not_committed` lines on a
+committed release. The state_mismatch and audit_unavailable errors are produced strictly before `Commit`.
+
+- **P2 (introduced by the census hardening): repaired.** The census walked only `FuncDecl` bodies and so missed
+  `RecordAction` inside package-level `var` initializers. It now walks the whole file for calls and method values or
+  expressions, and keeps function-body scope only for local shadows. M29 (package var func literal) and M30 (package
+  method expression) are CAUGHT, and M24–M26 are re-CAUGHT (`ledger-rereview-census.tsv`).
+- P3 records:
+  - `nilAuditor` sees one level only; a value wrapper around a nil `*audit.Log` passes. Latent: production passes
+    `*audit.Log` directly.
+  - An attempt line can be left without a compensation line when the audit fsync fails after the write, on a process
+    crash, or when the compensation write itself fails. The ledger is unchanged and the CLI's "refused" is true.
+  - After a WAL fsync error at commit, a `not_committed` line could sit beside a durable commit. The CLI then says
+    "outcome unknown", which is the right direction.

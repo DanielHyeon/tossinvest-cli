@@ -1,0 +1,7 @@
+TREE	HEAD e25d9b36 + working tree	copy /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/a066-relax-mut-3189210-b0gx105a/tree
+CONTROL-M	GREEN	./internal/journal/ ^(TestA066|TestEntryLossLock|TestMigrationV3[2-5]|TestJournalAuditActions|TestRefuseEntryUnderLossLock|TestSchemaTablesAndColumns|TestTheReadOnlyHandleHasNoWriteMethods)
+M24	CAUGHT	internal/journal/risk_bucket_relaxation.go	census: a local variable shadows the audit action	rc=1
+M25	CAUGHT	internal/journal/risk_bucket_relaxation.go	census: RecordAction called through a method value	rc=1
+M26	CAUGHT	internal/journal/risk_bucket_relaxation.go	census: a function-local constant shadows the audit action	rc=1
+M29	CAUGHT	internal/journal/risk_bucket_relaxation.go	census: a package-level var initializer calls RecordAction with a literal (re-review P2)	rc=1
+M30	CAUGHT	internal/journal/risk_bucket_relaxation.go	census: a package-level method expression (re-review P2)	rc=1
