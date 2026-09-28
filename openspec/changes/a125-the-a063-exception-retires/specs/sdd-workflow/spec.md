@@ -128,7 +128,8 @@ change 의 커밋이었다.
 해독할 수 없는 착지 지점 기록도 기록이며, 그것 때문에 완료 게이트가 판정 없이 중단되어서는
 안 된다(SHALL NOT).
 
-비교 기준은 모든 change 에서 `base-commit.txt` 의 커밋 하나여야 한다(SHALL). 어떤 change 도
+비교 기준은 모든 change 에서 `base-commit.txt` 의 커밋 하나여야 한다(SHALL). 그 값을 옮기는 것은 `docs/WORKFLOW.md`
+「사람 승인 base 재고정」 절차(귀속 실측 · 승인 기록 · 단독 커밋)로만 하며, 게이트는 커밋된 값을 쓴다. 어떤 change 도
 이관 기록(`execution-baseline.json`)이나 환경 변수로 다른 기준을 고를 수 없다(SHALL NOT) —
 `SDD_BASE_REF` 는 그 커밋으로 풀릴 때만 받는다. 과거의 a063 전용 실행 기준선 이관 예외는
 폐기되었고(a125), 그 기록이 저장소에 남아 있어도 게이트는 읽지 않는다.

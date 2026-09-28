@@ -2,7 +2,7 @@
 
 - **Feature**: `FEAT-TOS-001` — StockOS SDD toolchain adaptation
 - **Story**: `STORY-TOS-a125`
-- **Spec**: `sdd-workflow` (MODIFIED 1 · RENAMED 1 · REMOVED 3)
+- **Spec**: `sdd-workflow` (MODIFIED 2 · RENAMED 1 · REMOVED 3 — RENAMED 요건은 이름과 본문을 같이 고친다)
 - **위험 등급**: Normal(거래 경로 무관). 다만 **게이트 판정을 직접 바꾸는** 편집이므로 무거운 규율을 적용한다
   (편집 전 Python FLM · RED 선행 · 변이 · 적대 보이스 1 + gstack) — `docs/WORKFLOW.md` 「비례 원칙」.
 - **결정**: 사용자 일괄 승인 2026-09-28(a063 수리안 = 특례 폐기 → 일반 경로(재고정+귀속) 전환, 옵션 ②).

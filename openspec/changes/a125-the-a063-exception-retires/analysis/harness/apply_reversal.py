@@ -90,5 +90,10 @@ swap("        for module in (check_analysis, adoption):\n",
      "        self.assertEqual(spawning, [\"check_analysis.py\", \"risk_pattern_report.py\"],\n"
      "                         \"새로 자식 프로세스를 띄우는 모듈은 판정 모듈인지 가려 아래 목록에 넣어야 한다\")\n"
      "        for module in (check_analysis,):\n")
+swap('''            errors = check_analysis._verdict(
+                root, "b" * 40, "l" * 40, False,
+''', '''            errors = check_analysis._verdict(      # a125: `adopted` 인자가 없어졌다
+                root, "b" * 40, "l" * 40,
+''')
 path.write_text(text, encoding="utf-8")
 print("dropped", len(cuts), "inserted at", insert_at + 1)

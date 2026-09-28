@@ -104,4 +104,9 @@ for function in ast.walk(tree):
         guards = [ast.unparse(node.test) for node in ast.walk(function) if isinstance(node, (ast.If, ast.IfExp))
                   and any(word in ast.unparse(node.test) for word in ("adopt", "audited"))]
         print(f"{function.name}: guards={guards}")
+        # 단언(codex freeze F4): 이관 갈래는 전부 **참일 때만** 선다 — 부정 guard 가 하나라도 있으면 거짓 쪽이 갈래를 탄다.
+        # `is not None` 같은 비교는 부정이 아니다 — 이관 이름 **앞의** `not` 만 센다.
+        import re as _re
+        assert not any(_re.search(r"\bnot\s+\(?\s*(adopt|audited|adoption|facts\.get|context\.get)", guard) for guard in guards), \
+            (function.name, guards)
 print("OK")

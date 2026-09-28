@@ -240,7 +240,9 @@ class TheA063ExceptionIsRetired(unittest.TestCase):
                 context.pop("head", None)
                 head = check_analysis._head_commit(root)
                 code, printed = _a063_cli(root)
-                return verdict, context, code, printed.replace(head[:12], "<head>")
+                # 기록을 지우는 커밋 하나만큼 "base 뒤 착지 커밋 수" 가 는다 — 그 수는 역사의 사실이지 기록의 효과가 아니다.
+                printed = re.sub(r"holds \d+ commit", "holds N commit", printed.replace(head[:12], "<head>"))
+                return verdict, context, code, printed
             with_record = judged()
             subprocess.run(["git", "rm", "-q", f"openspec/changes/{A063}/execution-baseline.json"], cwd=root, check=True)
             _recommit_detached(root, "the record is deleted")
@@ -269,3 +271,36 @@ class TheA063ExceptionIsRetired(unittest.TestCase):
                     context: dict[str, object] = {}
                     self.assertEqual(check_analysis.check(A063, root, context), [])
                     self.assertEqual(context.get("effective_base"), p)
+
+    def test_the_advice_offers_a063_the_landing_command(self) -> None:
+        # 반전: test_the_adoption_path_does_not_advise_a_record_it_would_refuse — 이제 a063 도 기록 명령을 권받는다(codex F3).
+        raw, root, _, _ = _a063_fixture()
+        with raw:
+            code, printed = _a063_cli(root)
+            self.assertEqual(code, 0, printed)
+            self.assertIn(f"check_analysis.py --change {A063} --record-landing", printed)
+
+    def test_a063s_landing_record_is_held_to_the_computed_value(self) -> None:
+        # codex F3 — a063 에서 착지 기록을 검증 없이 받는 변이를 가른다: 유효한 커밋이지만 계산값이 아닌 기록 셋.
+        raw, root, p, e = _a063_fixture()
+        with raw:
+            record = root / "openspec" / "changes" / A063 / check_analysis.LANDING_FILE
+            for value, needle in ((p, "landing point"), (e, "landing point"), ("0" * 40, "not a commit")):
+                with self.subTest(value=value[:12]):
+                    record.write_text(value + "\n")
+                    _recommit_detached(root, f"declare {value[:12]}")
+                    errors = check_analysis.check(A063, root)
+                    self.assertTrue(any(needle in error for error in errors), errors)
+
+    def test_own_go_work_after_a063s_landing_is_refused(self) -> None:
+        # codex F3 — 착지 뒤 자기 Go 수정(디렉터리 + Go 비병합 커밋)은 착지 규칙 8 이 거절한다. a063 도 같다.
+        raw, root, _, _ = _a063_fixture()
+        with raw:
+            code, lines = check_analysis.record_landing(A063, root)
+            self.assertEqual(code, 0, lines)
+            _recommit_detached(root, "record the landing")
+            (root / "internal" / "soak" / "attest.go").write_text("package soak\nfunc Attest() int { return 4 }\n")
+            (root / "openspec" / "changes" / A063 / "tasks.md").write_text("- [x] a review repair\n")
+            _recommit_detached(root, "a review repair after the landing")
+            errors = check_analysis.check(A063, root)
+            self.assertTrue(any("later commit(s) of this change's own Go work" in error for error in errors), errors)

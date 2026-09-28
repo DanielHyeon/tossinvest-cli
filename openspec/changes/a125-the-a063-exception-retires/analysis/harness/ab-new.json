@@ -1,0 +1,41 @@
+{
+ "working-tree": {
+  "verdict": [
+   "missing evidence for modified function internal/other.go:Other"
+  ],
+  "context": {
+   "effective_base": "89d759170c0b93173cbd3b2b737422fa8e24ce03",
+   "head": "079c3b3d3af7d230c6fe0e8997e4190dd4b06d08",
+   "landing": "",
+   "required_count": 2,
+   "base_shaped_bundles": []
+  },
+  "rc": 1,
+  "output": "[logic-map] mine: base 89d759170c0b → working tree (no landed-commit.txt in HEAD) required 2 function(s) — judged at HEAD 079c3b3d3af7\n[logic-map] mine: the target is the working tree, so this window also holds 3 commit(s) that landed after the base and every existing function they changed is required here too — run `python3 tools/logic-map/check_analysis.py --change mine --record-landing` to let the gate compute `landed-commit.txt` from this change's evidence and record it, which narrows it to this change's own work; if no commit on this history is accepted as the landing, the command says so instead of recording\n[logic-map] missing evidence for modified function internal/other.go:Other\n"
+ },
+ "landed": {
+  "verdict": [],
+  "context": {
+   "effective_base": "89d759170c0b93173cbd3b2b737422fa8e24ce03",
+   "head": "d02cf147ed36515b2a813edaca811c9c689a8c06",
+   "landing": "fb5ec7915bd9f84f76cb1917a685d15e1cdd4f27",
+   "required_count": 1
+  },
+  "rc": 0,
+  "output": "[logic-map] mine: base 89d759170c0b → landed-commit fb5ec7915bd9f84f76cb1917a685d15e1cdd4f27 required 1 function(s) — judged at HEAD d02cf147ed36\n[logic-map] mine: evidence complete or diff-proven exempt\n"
+ },
+ "borrowed": {
+  "verdict": [
+   "missing evidence for modified function internal/other.go:Other"
+  ],
+  "context": {
+   "effective_base": "89d759170c0b93173cbd3b2b737422fa8e24ce03",
+   "head": "c9a5f61f9632f5929310bb4f4f81538d5e75bd83",
+   "landing": "",
+   "required_count": 2,
+   "base_shaped_bundles": []
+  },
+  "rc": 1,
+  "output": "[logic-map] mine: base 89d759170c0b → working tree (no landed-commit.txt in HEAD) required 2 function(s) — judged at HEAD c9a5f61f9632\n[logic-map] mine: the target is the working tree, so this window also holds 3 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: a change that borrows its evidence does not accept a `landed-commit.txt` record: a borrowed window is never narrowed, because the lender's evidence cannot pin where this change's own Go work landed\n[logic-map] missing evidence for modified function internal/other.go:Other\n"
+ }
+}
