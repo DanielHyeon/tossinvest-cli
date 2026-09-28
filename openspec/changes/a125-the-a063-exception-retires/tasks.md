@@ -12,9 +12,9 @@
 
 ## 2. GREEN
 
-- [ ] 2.1 `check_analysis.py` 이관 분기 · 문맥 키 · 라벨 · 거절 문장 삭제, `resolve_base` 단순화
-- [ ] 2.2 `execution_baseline.py` · `test_execution_baseline.py` 삭제, `fixture_git_env.py` 설명 갱신
-- [ ] 2.3 README · WORKFLOW 갱신(이관 절 삭제, `SDD_PYTHON` 절 일반화)
+- [x] 2.1 `check_analysis.py` 이관 분기 · 문맥 키 · 라벨 · 거절 문장 삭제, `resolve_base` 단순화
+- [x] 2.2 `execution_baseline.py` · `test_execution_baseline.py` 삭제, `fixture_git_env.py` 설명 갱신
+- [x] 2.3 README · WORKFLOW 갱신(이관 절 삭제, `SDD_PYTHON` 절 일반화)
 
 ## 3. VERIFY
 

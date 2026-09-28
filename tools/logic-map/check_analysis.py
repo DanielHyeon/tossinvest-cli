@@ -20,7 +20,6 @@ from pathlib import Path
 from typing import Iterator, NamedTuple
 
 from role_check import call_enumeration_in_use, role_errors
-from execution_baseline import AdoptionError, validate as validate_execution_baseline
 
 ROOT = Path(__file__).resolve().parents[2]
 # 게이트가 띄우는 **모든** git 은 교체 참조(`refs/replace/*`)를 따르지 않는다 (task 7.5.31). 참조 하나로 어떤 blob 이든
@@ -911,7 +910,7 @@ def resolve_base(
     change_dir: Path, root: Path, context: dict[str, object] | None = None,
     *, change_id: str, head: str,
 ) -> str:
-    """이 change 의 비교 기준(창의 **시작**). a063 이관이면 `E`, 아니면 `base-commit.txt` 의 커밋이다.
+    """이 change 의 비교 기준(창의 **시작**). 모든 change 에서 `base-commit.txt` 의 커밋이다 (a125 — a063 이관 특례 폐기).
 
     **디스크의 값을 커밋된 값과 대조한다** (task 6.4(b) · 6.4 보수). 시작은 `rev-parse` 가 받는 무엇이든 받았고
     (`HEAD` 한 단어면 창이 빈다) 디스크에서만 읽었다(커밋 안 한 편집 한 줄이 창의 시작을 옮겼다). 그래서 적힌 값이
@@ -986,25 +985,14 @@ def resolve_base(
     if persisted != candidate:
         # `^{commit}` 은 태그 객체를 벗겨 **다른** id 를 낸다 — 적힌 값이 곧 base 여야 한다(착지 기록과 같은 규칙).
         raise ValueError(f"comparison base is not a commit in this repository: {candidate}")
-    try:
-        # 이관 신원은 디렉터리 이름이 아니라 요청받은 id 로 가른다 — 아카이브가 이름을
-        # 바꾼다(task 6.2). 필수 인자인 이유: 기본값이 있으면 id 를 잊은 호출자가 조용히
-        # 옛 판정(이름)으로 떨어지고, 그것이 아카이브된 a063 을 막던 바로 그 판정이다.
-        adoption = validate_execution_baseline(change_dir, root, persisted, change_id)
-    except AdoptionError as exc:
-        raise ValueError(f"invalid execution-baseline adoption: {exc}") from exc
-    effective = str(adoption["effective_base"]) if adoption else persisted
+    # 다른 기준을 고르는 입력은 없다 (a125). 변경 디렉터리에 남은 `execution-baseline.json` 은 읽는 코드가 없어
+    # 판정으로 들어가는 문이 아니라 데이터다 — 그 모양을 거절하는 가드는 죽은 가드다(design D2).
     if context is not None:
-        context["execution_baseline_adoption"] = adoption is not None
-        context["effective_base"] = effective
-        if adoption:
-            # `validate` 는 감사된 창의 **끝**을 이미 돌려준다. 옛 판본은 그 값을
-            # 버리고 `landed-commit.txt` 를 찾았고, 없으니 대상이 워킹트리가 됐다.
-            context["adoption_source"] = str(adoption["source"])
+        context["effective_base"] = persisted
     override = os.environ.get("SDD_BASE_REF", "").strip()
-    if override and resolve(override) != effective:
+    if override and resolve(override) != persisted:
         raise ValueError("SDD_BASE_REF must resolve to the selected effective comparison base")
-    return effective
+    return persisted
 
 
 # `git cat-file --batch` 의 `-Z`(입력·출력 **둘 다** NUL 로 끊는다)가 들어온 버전.
@@ -1048,14 +1036,8 @@ JUDGED_STATE_MOVED = (
     "{what} while this change was being judged — the verdict would describe a state that is no longer "
     "the one checked out; run it again"
 )
-# 이관 경로가 착지 기록을 거절하는 문장. 판정 경로(`check`)와 기록 경로(`record_landing`)가
-# 한 벌씩 들고 있던 동안 이미 "ends" / "already ends" 로 갈렸다 (task 7.6, 리뷰 I5).
-ADOPTION_REFUSES_A_LANDING = (
-    f"execution-baseline adoption does not accept a `{LANDING_FILE}` record: "
-    "the window ends at the audited source commit"
-)
 # 증거를 빌리는 change 가 착지 기록을 거절하는 문장 (task 7.2.3, 리뷰 C4). 판정 경로와 기록 경로가
-# **같은 문장**을 쓴다 — 두 벌이면 갈린다(위 이관 문장이 그랬다).
+# **같은 문장**을 쓴다 — 두 벌이면 갈린다(a122 7.6 리뷰 I5 에서 옛 이관 문장이 그랬다).
 BORROWED_REFUSES_A_LANDING = (
     f"a change that borrows its evidence does not accept a `{LANDING_FILE}` record: "
     "a borrowed window is never narrowed, because the lender's evidence cannot pin where "
@@ -1231,18 +1213,14 @@ def _is_ancestor(root: Path, older: str, newer: str) -> bool:
     )
 
 
-def _target_text(landing: str, audited: bool = False) -> str:
-    """비교 대상 쪽 끝을 사람이 읽는 말로. **무엇이** 그 끝을 고정했는지까지 말한다.
-
-    이관 예외의 끝은 저자가 선언한 값이 아니라 `execution-baseline.json` 이 감사한
-    `source_commit` 이다. 둘을 같은 말로 적으면 있지도 않은 파일을 가리키게 된다.
-    """
+def _target_text(landing: str) -> str:
+    """비교 대상 쪽 끝을 사람이 읽는 말로. **무엇이** 그 끝을 고정했는지까지 말한다(착지 기록 또는 워킹트리)."""
     if not landing:
         # "in HEAD" 인 이유 (task 7.7, 리뷰 I8): 게이트는 기록을 **커밋에서** 읽는다. 옛 문장
         # "(no landed-commit.txt)" 는 기록이 디스크에만 있을 때 거짓이었고, 바로 옆 줄이 권한
         # `--record-landing` 은 그 파일이 "이미 있다"고 거절했다.
         return f"working tree (no {LANDING_FILE} in HEAD)"
-    return f"audited source-commit {landing}" if audited else f"landed-commit {landing}"
+    return f"landed-commit {landing}"
 
 
 def _commits_after(root: Path, base: str, head: str) -> str:
@@ -1261,7 +1239,7 @@ def _landing_record(change_dir: Path, root: Path, head: str) -> tuple[str, bytes
     """`head` 커밋에 착지 기록이 **있는가**. 있으면 `(경로, 바이트)`, 없으면 `None`.
 
     해독하지 않는다. "기록이 있는가"와 "기록에 무엇이 적혔나"는 다른 질문이고, 앞의
-    것에 해독하는 함수를 부르면 못 읽는 기록 앞에서 질문 자체가 터진다 — 이관 경로의
+    것에 해독하는 함수를 부르면 못 읽는 기록 앞에서 질문 자체가 터진다 — 옛 이관 경로(a125 에서 폐기)의
     probe 와 `record_landing` 의 덮어쓰기 거절이 그랬다(task 6.2.1). 못 읽는 기록도
     기록이다.
 
@@ -2785,7 +2763,7 @@ def _judged(
     # 오타 난 id 에 새 change 를 만들라는 말이다. 2026-09-13 전수: 게이트가 받을 수 있는
     # id 126개 중 그 갈래로 떨어지는 것 0.
     # 문맥은 **항상** 채운다. 호출자가 안 줘도 판정 자신이 읽어야 하는 사실이 여기
-    # 들어온다(이관인가, 감사된 source 는 무엇인가). 호출자가 문맥을 줬으면 같은
+    # 들어온다(비교 기준 · 역사의 끝). 호출자가 문맥을 줬으면 같은
     # 사전이므로 밖에서 보이는 것은 그대로다.
     try:
         change_dir = resolve_referenced_change(root, change)
@@ -2864,23 +2842,10 @@ def _judged(
         evidence = _read_evidence(analysis)
     except GATE_FAULTS as exc:
         return [f"cannot derive modified Go functions: {exc}"], False
-    adopted = bool(facts.get("execution_baseline_adoption"))
-    if adopted and _landing_record(change_dir, root, head) is not None:
-        # 이관 예외의 정당성은 "판정에 들어가는 입력을 하나도 빠짐없이 열거하고
-        # digest 로 묶었다"이다. `landed-commit.txt` 는 `openspec/` 아래라 drift 검사가
-        # 통과시키고, 추적 파일이라 untracked 감사도 못 보고, 닫힌 키 집합에도 없다.
-        # 그런데 비교 대상을 고른다 — 손잡이는 하나여야 하고 그것은 감사된 쪽이다.
-        return [ADOPTION_REFUSES_A_LANDING], False
     try:
-        # 조상 판정은 `base-commit.txt` 의 글자가 아니라 `resolve_base` 가 **반환한**
-        # 값에 건다. a063 은 그 둘이 다르다(P → E).
-        # 이관이면 착지를 **해소하지 않는다**. `resolve_landing` 의 판정들은 저자가
-        # 고른 값을 위한 것이고, 감사된 source 는 고른 값이 아니다 — `validate` 가
-        # ancestry(P,E)·ancestry(E,source)·ancestry(source,head,strict)·tree 대조·
-        # digest 셋으로 이미 묶는다. 같은 판정을 두 번 하지 않는다.
         # 착지 판정 · 대상 판정 · base 모양 조언은 위에서 **한 번 읽은** 증거를 쓴다 (task 7.5.2 · 7.5.2.1).
-        landing = str(facts.get("adoption_source", "")) if adopted \
-            else resolve_landing(change_dir, root, base, head, evidence)
+        # a063 도 다른 change 와 같이 착지 규칙을 받는다 (a125 — 이관 특례 폐기).
+        landing = resolve_landing(change_dir, root, base, head, evidence)
         required = changed_existing_functions(root, base, landing)
     except GATE_FAULTS as exc:
         return [f"cannot derive modified Go functions: {exc}"], False
@@ -2897,11 +2862,11 @@ def _judged(
             facts["base_shaped_fault"] = str(exc)
     # 스냅숏은 판정을 **내적으로** 일관되게 하고, `check` 의 재확인은 그 판정이 **지금 거기 있는 것**의
     # 판정임을 보인다 — 둘 다 있어야 한다 (task 7.5.2.2 · 7.5.2.3).
-    return _verdict(root, base, landing, adopted, required, evidence, review_text), True
+    return _verdict(root, base, landing, required, evidence, review_text), True
 
 
 def _verdict(
-    root: Path, base: str, landing: str, adopted: bool, required: dict[tuple[str, str], dict],
+    root: Path, base: str, landing: str, required: dict[tuple[str, str], dict],
     evidence: Evidence, review_text: str,
 ) -> list[str]:
     """한 번 읽은 증거로 대상들을 판정한다 — `check` 가 창(base · 착지 · 요구 집합)을 정한 **뒤**의 전부.
@@ -2916,7 +2881,7 @@ def _verdict(
             # a076 은 이름 316개를 이은 21,838자짜리 한 줄이었고 창을 말하는 줄이 0 이었다.
             return [
                 f"missing Function Logic Map for {len(required)} function(s) modified "
-                f"between base {base[:12]} and {_target_text(landing, adopted)}: {names}"
+                f"between base {base[:12]} and {_target_text(landing)}: {names}"
             ]
         return [] if EXEMPTION in review_text else [f"missing analysis or `{EXEMPTION}` review marker"]
     errors: list[str] = []
@@ -2964,8 +2929,9 @@ def _verdict(
     # **매 게이트 실행의 본 판정 경로**(a112 번들 147 → 프로세스 147) — 를 남겼다.
     # 고르는 것은 착지 판정과 **같은 읽기**(`evidence`)다. 저장소 밖 소스처럼 **고를 수 없는** 번들이
     # 있으면 미리 읽기를 건너뛴다 — 그 대상의 오류는 `validate_target` 이 대상 이름과 함께 낸다 (task 7.5.2,
-    # 재리뷰 Codex P2 · 적대 F3). 닿는 것은 착지 판정을 안 거치는 이관 change 다 — 착지 경로는 같은 바이트를
-    # 이미 골랐고(못 고르면 거기서 결함), 여기서 달라질 수 있는 것은 소스 경로의 심링크 풀이뿐이다.
+    # 재리뷰 Codex P2 · 적대 F3). 그 갈래가 닿던 곳은 착지 판정을 안 거치던 이관 change 였고 a125 에서 폐기됐다 —
+    # 착지는 이제 언제나 같은 선별을 먼저 거치므로(못 고르면 거기서 결함) 여기서 달라질 수 있는 것은 소스 경로의
+    # 심링크 풀이뿐이다. 방어로 둔다.
     # git 의 결함은 건너뛰지 않는다 — 대상마다 다시 물으면 멎은 git 을 대상 수만큼 기다린다.
     # 미리 읽기는 **최적화**다 — 빠진 경로는 `validate_target` 이 착지에서 읽는다.
     prefetched: dict[str, bytes | None] | None = None
@@ -3270,8 +3236,6 @@ def _recording_refusal(
         base = resolve_base(change_dir, root, facts, change_id=change, head=head)
     except GATE_FAULTS as exc:
         return f"cannot resolve the comparison base: {exc}", ""
-    if facts.get("execution_baseline_adoption"):
-        return ADOPTION_REFUSES_A_LANDING, ""
     _, why = _walk_floor(root, _select_pinning(root, evidence), head)
     if why:
         return f"no landing recorded — {why}", ""
@@ -3337,8 +3301,6 @@ def record_landing(change: str, root: Path = ROOT) -> tuple[int, list[str]]:
       착지 지점" 시나리오가 그 기록을 거절하므로, 쓰면 반드시 실패할 값을 쓰는 것이다.
     - 증거를 빌리는 change. spec 이 "착지는 그것을 고정하는 증거가 있는 change 에
       기록하고 빌리는 쪽은 값을 복사한다(SHALL)"로 자리를 정했다.
-    - 실행 기준선 이관 change(a063). 그 경로의 창 끝은 감사된 source commit 이고
-      spec 이 이 기록을 받지 않는다(SHALL NOT).
     - 기록이 이미 있는 change. 덮어쓰면 그 값이 무엇이었는지가 아무 데도 안 남는다.
     - 추적 파일이 수정된 워킹트리. 기록은 **커밋된** 지점을 가리키는데 그 상태의
       Go 편집은 어느 커밋에도 없다. 그대로 쓰면 5단계가 못 보는 편집이 생긴다.
@@ -3440,13 +3402,12 @@ def main() -> int:
     # 아래 `cannot derive modified Go functions: …` 줄이 말한다.
     if base and "landing" in context:
         landing = str(context.get("landing", ""))
-        audited = bool(context.get("execution_baseline_adoption"))
         # 창 줄 · 조언은 판정이 푼 **그** 역사를 말한다 (task 7.5.2.1). `landing` 이 채워졌으면 `head` 도
         # 채워졌다 — `check` 가 둘보다 먼저 푼다. 그 sha 를 창 줄 끝에 적는다 (task 7.5.2.2, 재리뷰 적대): 게이트의
         # PASS 가 **어느 역사의** 판정인지 출력에 남아야 한다. 맨 뒤에 붙인다 — 앞의 문구를 읽는 사람 · 시험이 그대로다.
         head = str(context["head"])
         print(
-            f"[logic-map] {args.change}: base {base[:12]} → {_target_text(landing, audited)} "
+            f"[logic-map] {args.change}: base {base[:12]} → {_target_text(landing)} "
             f"required {context.get('required_count', 0)} function(s) — judged at HEAD {head[:12]}"
         )
         if not landing:
@@ -3510,10 +3471,7 @@ def main() -> int:
         for error in errors:
             print(f"[logic-map] {error}")
         return 1
-    if context.get("execution_baseline_adoption"):
-        print(f"[logic-map] {args.change}: execution-baseline adoption exception evidence complete")
-    else:
-        print(f"[logic-map] {args.change}: evidence complete or diff-proven exempt")
+    print(f"[logic-map] {args.change}: evidence complete or diff-proven exempt")
     # 어떤 대상으로 몇 개를 요구해서 통과했는지는 위의 창 줄이 말한다 — 성공·실패
     # 양쪽에서 같은 한 줄이다. 두 줄로 나누면 실패 경로만 조용해진다(task 3.3).
     return 0

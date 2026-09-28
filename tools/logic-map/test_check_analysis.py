@@ -21,7 +21,6 @@ from pathlib import Path
 from unittest import mock
 
 import check_analysis
-import execution_baseline as adoption
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "sdd"))
 import sdd_doctor
@@ -150,49 +149,315 @@ class BundleTextCoversEveryProseFileInTheBundle(unittest.TestCase):
             self.assertIn(f"mark-{index}", text)
 
 
+A063 = "a063-align-attestation-renewal-profile"
+
+
+def _a063_fixture(*, deleted: bool = False) -> tuple[tempfile.TemporaryDirectory, Path, str, str]:
+    """a063 의 옛 이관 모양을 **모듈 없이** 세운다 (a125). P(base) → E → S → H(이관 기록) → map, detached.
+
+    기록(`execution-baseline.json`)은 a120 초안기가 쓰던 키 집합 그대로의 정적 JSON 이다 — 게이트가 그것을 **읽지
+    않는다**는 것이 이 픽스처로 재는 사실이다(design D2). 번들은 일반 규칙이 요구하는 모양으로 둔다: 창은 P → 워킹트리
+    이고, `Attest` 가 살아 있으면 오늘 소스의 `revision: current`, 지워졌으면 P 의 소스를 적은 `revision: base` 다.
+    """
+    raw = tempfile.TemporaryDirectory()
+    root = _init_fixture(raw)
+    change = root / "openspec" / "changes" / A063
+    change.mkdir(parents=True)
+    (change / "base-commit.txt").write_text("pending\n")
+    target = root / "internal" / "soak" / "attest.go"
+    target.parent.mkdir(parents=True)
+    target.write_text("package soak\nfunc Attest() int { return 1 }\n")
+    p = _commit_all(root, "P")
+    at_base = check_analysis.go_functions(target, root)[0]
+    (change / "base-commit.txt").write_text(p + "\n")
+    target.write_text("package soak\nfunc Attest() int { return 2 }\n")
+    e = _commit_all(root, "E")
+    target.write_text("package soak\n" if deleted else "package soak\nfunc Attest() int { return 3 }\n")
+    s = _commit_all(root, "S")
+    record = {
+        "adversarial_review_path": f"openspec/changes/{A063}/analysis/adoption/adversarial-review.md",
+        "adversarial_review_sha256": "0" * 64, "change": A063, "execution_base": e,
+        "gstack_review_path": f"openspec/changes/{A063}/analysis/adoption/gstack-review.md",
+        "gstack_review_sha256": "1" * 64,
+        "inherited_history_disposition": "committed historical work; missing original analysis remains debt",
+        "ledger_path": f"openspec/changes/{A063}/analysis/execution-baseline-ledger.json", "ledger_sha256": "2" * 64,
+        "planning_base": p, "pre_edit_provenance": "retrospective-exception", "schema": 1, "source_commit": s,
+        "source_tree": subprocess.check_output(["git", "rev-parse", f"{s}^{{tree}}"], cwd=root, text=True).strip(),
+    }
+    (change / "execution-baseline.json").write_text(json.dumps(record, sort_keys=True))
+    _commit_all(root, "H: the leftover adoption record")
+    value = dict(at_base) if deleted else check_analysis.go_functions(target, root)[0]
+    value.update({"package": "soak", "signature": "Attest(params=0, results=1)", "branches": []})
+    if deleted:
+        value["revision"] = "base"
+    bundle = change / "analysis" / "function-logic" / "internal-soak--attest"
+    bundle.mkdir(parents=True)
+    (bundle / "ast.json").write_text(json.dumps(value))
+    (bundle / "function-logic-map.md").write_text(
+        "# Function Logic Map: `Attest`\ninternal/soak/attest.go\n## Inputs and invariants\nevidence\n"
+        "## Branches and early returns\nevidence\n## Calls and live bindings\nevidence\n"
+        "## State mutations and fallbacks\nevidence\n## Safety conclusion\nevidence\n")
+    (bundle / "branch-test-map.md").write_text("# Branch Test Map: `Attest`\n| B1 | leaf | test | yes | yes |\n")
+    (bundle / "risk-pattern-report.md").write_text("# Risk Pattern Report\ninternal/soak/attest.go\n")
+    _commit_all(root, "map")
+    subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
+    return raw, root, p, e
+
+
+def _a063_cli(root: Path) -> tuple[int, str]:
+    output = io.StringIO()
+    with mock.patch.object(sys, "argv", ["check_analysis.py", "--change", A063, "--root", str(root)]), \
+            redirect_stdout(output):
+        code = check_analysis.main()
+    return code, output.getvalue()
+
+
+def _recommit_detached(root: Path, subject: str) -> None:
+    _commit_all(root, subject)
+    subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
+
+
+ADOPTION_WORDS = ("adoption", "audited source-commit", "execution-baseline")
+
+
+class TheA063ExceptionIsRetired(unittest.TestCase):
+    """a125 — a120 의 a063 전용 실행 기준선 이관 특례를 지웠다. 특례를 못 박던 시험은 지우지 않고 **반전**했다:
+    같은 픽스처(옛 이관 모양)에서 이제 일반 규칙이 판정한다는 것을 못 박는다(design D3). 옛 판본에서는 전부 빨갛다 —
+    기록이 있으면 이관 판정기가 먼저 불려 `invalid execution-baseline adoption` 으로 멈췄다."""
+
+    def assertNoAdoptionWord(self, text: str) -> None:
+        for word in ADOPTION_WORDS:
+            self.assertNotIn(word, text)
+
+    def test_main_prints_only_the_ordinary_success_line(self) -> None:
+        # 반전: test_main_distinguishes_ordinary_adoption_and_invalid_results — 옛 문맥 키가 들어와도 이관 줄은 없다.
+        output = io.StringIO()
+
+        def fake_check(change: str, root: Path, context: dict[str, object]) -> list[str]:
+            context["execution_baseline_adoption"] = True
+            return []
+        with mock.patch.object(sys, "argv", ["check_analysis.py", "--change", "fixture"]), \
+                mock.patch("check_analysis.check", side_effect=fake_check), redirect_stdout(output):
+            self.assertEqual(check_analysis.main(), 0)
+        self.assertIn("evidence complete or diff-proven exempt", output.getvalue())
+        self.assertNoAdoptionWord(output.getvalue())
+
+    def test_a063_with_a_leftover_record_is_judged_from_its_base_commit(self) -> None:
+        # 반전: test_valid_adoption_uses_e… · test_main_real_adoption_prints_exception_label… ·
+        # test_the_adoption_window_ends_at_the_audited_source_commit · test_the_adoption_path_does_not_advise…
+        raw, root, p, e = _a063_fixture()
+        with raw:
+            context: dict[str, object] = {}
+            self.assertEqual(check_analysis.check(A063, root, context), [])
+            self.assertEqual(context.get("effective_base"), p)
+            self.assertEqual(context.get("landing"), "")
+            self.assertEqual(context.get("required_count"), 1)
+            for key in ("execution_baseline_adoption", "adoption_source"):
+                self.assertNotIn(key, context)
+            code, printed = _a063_cli(root)
+            self.assertEqual(code, 0, printed)
+            self.assertIn(f"base {p[:12]} → working tree", printed)
+            self.assertNoAdoptionWord(printed)
+
+    def test_a063s_modified_function_is_still_required(self) -> None:
+        raw, root, _, _ = _a063_fixture()
+        with raw:
+            shutil.rmtree(root / "openspec" / "changes" / A063 / "analysis" / "function-logic")
+            _recommit_detached(root, "remove the evidence")
+            errors = check_analysis.check(A063, root)
+            self.assertEqual(len(errors), 1, errors)
+            self.assertIn("missing Function Logic Map for 1 function(s)", errors[0])
+            self.assertIn("internal/soak/attest.go:Attest", errors[0])
+
+    def test_a_deleted_function_needs_a_base_revision_bundle_from_the_base_commit(self) -> None:
+        # 반전: test_real_adoption_deleted_function_requires_base_revision — 기준은 E 가 아니라 P 다.
+        raw, root, _, _ = _a063_fixture(deleted=True)
+        with raw:
+            self.assertEqual(check_analysis.check(A063, root), [])
+            path = root / "openspec" / "changes" / A063 / "analysis" / "function-logic" / "internal-soak--attest" / "ast.json"
+            value = json.loads(path.read_text()); value["revision"] = "current"; path.write_text(json.dumps(value))
+            _recommit_detached(root, "wrong deletion revision")
+            self.assertTrue(any("AST revision must be base" in error for error in check_analysis.check(A063, root)))
+
+    def test_sdd_base_ref_accepts_only_the_base_commit(self) -> None:
+        # 반전: test_real_adoption_sdd_base_ref_accepts_only_e_and_invalid_record_never_falls_back.
+        raw, root, p, e = _a063_fixture()
+        with raw:
+            with mock.patch.dict("os.environ", {"SDD_BASE_REF": p}, clear=False):
+                self.assertEqual(check_analysis.check(A063, root), [])
+            for bad in (e, "0" * 40, "HEAD"):
+                with mock.patch.dict("os.environ", {"SDD_BASE_REF": bad}, clear=False):
+                    self.assertTrue(any("cannot derive" in error for error in check_analysis.check(A063, root)), bad)
+            (root / "openspec" / "changes" / A063 / "execution-baseline.json").write_text("{}")
+            _recommit_detached(root, "a broken leftover record")
+            with mock.patch.dict("os.environ", {"SDD_BASE_REF": p}, clear=False):
+                self.assertEqual(check_analysis.check(A063, root), [])
+
+    def test_a_stale_current_hash_fails(self) -> None:
+        raw, root, _, _ = _a063_fixture()
+        with raw:
+            path = root / "openspec" / "changes" / A063 / "analysis" / "function-logic" / "internal-soak--attest" / "ast.json"
+            value = json.loads(path.read_text()); value["source_sha256"] = "0" * 64; path.write_text(json.dumps(value))
+            _recommit_detached(root, "stale map")
+            errors = check_analysis.check(A063, root)
+            self.assertTrue(any("AST source hash is stale" in e or "AST hash does not match" in e for e in errors), errors)
+
+    def test_a_reference_beside_local_maps_is_refused(self) -> None:
+        raw, root, _, _ = _a063_fixture()
+        with raw:
+            (root / "openspec" / "changes" / A063 / "analysis" / "function-logic-reference.txt").write_text("other\n")
+            _recommit_detached(root, "conflicting reference")
+            self.assertIn("function-logic reference cannot coexist with local function-logic evidence",
+                          check_analysis.check(A063, root))
+
+    def test_a063_records_and_is_judged_by_the_landing_rules(self) -> None:
+        # 반전: test_a_landing_record_is_refused_in_the_adoption_path · test_the_recorder_refuses_the_adoption_path_too.
+        raw, root, _, _ = _a063_fixture()
+        with raw:
+            code, lines = check_analysis.record_landing(A063, root)
+            self.assertEqual(code, 0, lines)
+            landing = root / "openspec" / "changes" / A063 / check_analysis.LANDING_FILE
+            self.assertTrue(landing.is_file(), lines)
+            _recommit_detached(root, "record the landing")
+            context: dict[str, object] = {}
+            self.assertEqual(check_analysis.check(A063, root, context), [])
+            self.assertEqual(context.get("landing"), landing.read_text().strip())
+            self.assertNoAdoptionWord("\n".join(lines))
+
+    def test_an_undecodable_landing_record_is_named_by_the_landing_rules(self) -> None:
+        # 반전: test_an_undecodable_landing_record_in_the_adoption_path_is_refused_not_raised.
+        raw, root, _, _ = _a063_fixture()
+        with raw:
+            (root / "openspec" / "changes" / A063 / check_analysis.LANDING_FILE).write_bytes(b"\xff\xfe not utf-8\n")
+            _recommit_detached(root, "an undecodable landing record")
+            errors = check_analysis.check(A063, root)
+            self.assertTrue(any("landing point is not UTF-8" in error for error in errors), errors)
+            code, printed = _a063_cli(root)
+            self.assertEqual(code, 1, printed)
+            self.assertNoAdoptionWord(printed)
+
+    def test_an_archived_a063_is_rechecked_by_its_id_on_the_general_path(self) -> None:
+        # 반전: test_an_archived_adoption_is_rechecked_by_its_id.
+        raw, root, p, _ = _a063_fixture()
+        with raw:
+            archived = root / "openspec" / "changes" / "archive" / f"2026-09-11-{A063}"
+            archived.parent.mkdir(parents=True)
+            subprocess.run(["git", "mv", f"openspec/changes/{A063}", archived.relative_to(root).as_posix()],
+                           cwd=root, check=True)
+            _recommit_detached(root, "archive a063")
+            context: dict[str, object] = {}
+            self.assertEqual(check_analysis.check(A063, root, context), [])
+            self.assertEqual(context.get("effective_base"), p)
+            self.assertNotIn("execution_baseline_adoption", context)
+
+    def test_a_copied_record_changes_nothing_for_another_id(self) -> None:
+        # 반전: test_a_copied_adoption_record_does_not_make_another_change_a063 — 이제 거절할 특례 자체가 없다.
+        raw, root, _, _ = _a063_fixture()
+        with raw:
+            original = root / "openspec" / "changes" / A063
+            shutil.copytree(original, root / "openspec" / "changes" / "a130-copy")
+            shutil.copytree(original, root / "openspec" / "changes" / "archive" / "2026-09-11-a131-copy")
+            _recommit_detached(root, "copy a063 whole under two other ids")
+            for change in (A063, "a130-copy", "a131-copy"):
+                self.assertEqual(check_analysis.check(change, root), [], change)
+
+    def test_the_exception_module_and_its_suite_are_gone(self) -> None:
+        # 반전: test_the_execution_baseline_suite_pins_itself — 판정 모듈이 그 모듈을 부르지도, 저장소에 두지도 않는다.
+        here = Path(check_analysis.__file__).resolve().parent
+        self.assertFalse((here / "execution_baseline.py").exists())
+        self.assertFalse((here / "test_execution_baseline.py").exists())
+        tree = ast.parse(Path(check_analysis.__file__).read_text(encoding="utf-8"))
+        imported = {alias.name for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom))
+                    for alias in node.names} | {node.module for node in ast.walk(tree)
+                                                if isinstance(node, ast.ImportFrom) and node.module}
+        self.assertNotIn("execution_baseline", imported)
+        names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)} | {
+            node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute)} | {
+            node.name for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.ClassDef))} | {
+            target.id for node in ast.walk(tree) if isinstance(node, ast.Assign)
+            for target in node.targets if isinstance(target, ast.Name)}
+        self.assertEqual(sorted(name for name in names if "adopt" in name.lower() or "audited" in name.lower()), [])
+        strings = [node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)]
+        self.assertEqual([text for text in strings if any(word in text for word in ADOPTION_WORDS)], [])
+
+    def test_a_leftover_record_changes_neither_verdict_nor_context_nor_output(self) -> None:
+        # design D2 · 1.1 논증의 제거 뒤 핀: 같은 역사에서 기록만 지웠을 때 판정 줄 · 문맥 · 창 줄이 같다.
+        raw, root, _, _ = _a063_fixture()
+        with raw:
+            def judged() -> tuple[list[str], dict[str, object], int, str]:
+                context: dict[str, object] = {}
+                verdict = check_analysis.check(A063, root, context)
+                context.pop("head", None)
+                head = check_analysis._head_commit(root)
+                code, printed = _a063_cli(root)
+                # 기록을 지우는 커밋 하나만큼 "base 뒤 착지 커밋 수" 가 는다 — 그 수는 역사의 사실이지 기록의 효과가 아니다.
+                printed = re.sub(r"holds \d+ commit", "holds N commit", printed.replace(head[:12], "<head>"))
+                return verdict, context, code, printed
+            with_record = judged()
+            subprocess.run(["git", "rm", "-q", f"openspec/changes/{A063}/execution-baseline.json"], cwd=root, check=True)
+            _recommit_detached(root, "the record is deleted")
+            self.assertEqual(with_record, judged())
+            self.assertEqual(with_record[0], [])
+
+    def test_an_irregular_leftover_record_is_not_read_either(self) -> None:
+        # freeze F9 — "안 읽음" 의 핀. 옛 판정기는 lstat 뒤 정규 파일이 아니면 거절했다. 읽는 코드가 없으면 모양이 무엇이든
+        # 일반 판정이 나와야 한다: FIFO(열면 멎는다) · 디렉터리 · 저장소 밖 심링크 · 해독 불가 바이트.
+        for shape in ("fifo", "directory", "symlink", "undecodable"):
+            with self.subTest(shape=shape):
+                raw, root, p, _ = _a063_fixture()
+                with raw:
+                    record = root / "openspec" / "changes" / A063 / "execution-baseline.json"
+                    record.unlink()
+                    if shape == "fifo":
+                        os.mkfifo(record)
+                    elif shape == "directory":
+                        record.mkdir(); (record / "keep").write_text("x")
+                    elif shape == "symlink":
+                        record.symlink_to("/dev/zero")
+                    else:
+                        record.write_bytes(b"\xff\xfe{")
+                    if shape != "fifo":
+                        _recommit_detached(root, f"a {shape} record")
+                    context: dict[str, object] = {}
+                    self.assertEqual(check_analysis.check(A063, root, context), [])
+                    self.assertEqual(context.get("effective_base"), p)
+
+    def test_the_advice_offers_a063_the_landing_command(self) -> None:
+        # 반전: test_the_adoption_path_does_not_advise_a_record_it_would_refuse — 이제 a063 도 기록 명령을 권받는다(codex F3).
+        raw, root, _, _ = _a063_fixture()
+        with raw:
+            code, printed = _a063_cli(root)
+            self.assertEqual(code, 0, printed)
+            self.assertIn(f"check_analysis.py --change {A063} --record-landing", printed)
+
+    def test_a063s_landing_record_is_held_to_the_computed_value(self) -> None:
+        # codex F3 — a063 에서 착지 기록을 검증 없이 받는 변이를 가른다: 유효한 커밋이지만 계산값이 아닌 기록 셋.
+        raw, root, p, e = _a063_fixture()
+        with raw:
+            record = root / "openspec" / "changes" / A063 / check_analysis.LANDING_FILE
+            for value, needle in ((p, "landing point"), (e, "landing point"), ("0" * 40, "not a commit")):
+                with self.subTest(value=value[:12]):
+                    record.write_text(value + "\n")
+                    _recommit_detached(root, f"declare {value[:12]}")
+                    errors = check_analysis.check(A063, root)
+                    self.assertTrue(any(needle in error for error in errors), errors)
+
+    def test_own_go_work_after_a063s_landing_is_refused(self) -> None:
+        # codex F3 — 착지 뒤 자기 Go 수정(디렉터리 + Go 비병합 커밋)은 착지 규칙 8 이 거절한다. a063 도 같다.
+        raw, root, _, _ = _a063_fixture()
+        with raw:
+            code, lines = check_analysis.record_landing(A063, root)
+            self.assertEqual(code, 0, lines)
+            _recommit_detached(root, "record the landing")
+            (root / "internal" / "soak" / "attest.go").write_text("package soak\nfunc Attest() int { return 4 }\n")
+            (root / "openspec" / "changes" / A063 / "tasks.md").write_text("- [x] a review repair\n")
+            _recommit_detached(root, "a review repair after the landing")
+            errors = check_analysis.check(A063, root)
+            self.assertTrue(any("later commit(s) of this change's own Go work" in error for error in errors), errors)
+
+
 class CheckAnalysisTests(unittest.TestCase):
-    def test_main_distinguishes_ordinary_adoption_and_invalid_results(self) -> None:
-        def run_cli(errors: list[str], adopted: bool) -> tuple[int, str]:
-            output = io.StringIO()
-            def fake_check(change: str, root: Path, context: dict[str, object]) -> list[str]:
-                context["execution_baseline_adoption"] = adopted
-                return errors
-            with mock.patch.object(sys, "argv", ["check_analysis.py", "--change", "fixture"]), \
-                 mock.patch("check_analysis.check", side_effect=fake_check), \
-                 redirect_stdout(output):
-                status = check_analysis.main()
-            return status, output.getvalue()
 
-        ordinary_status, ordinary_output = run_cli([], False)
-        self.assertEqual(ordinary_status, 0)
-        self.assertIn("evidence complete or diff-proven exempt", ordinary_output)
-        adoption_status, adoption_output = run_cli([], True)
-        self.assertEqual(adoption_status, 0)
-        self.assertIn("execution-baseline adoption exception evidence complete", adoption_output)
-        invalid_status, invalid_output = run_cli(["invalid execution-baseline adoption: bad record"], False)
-        self.assertEqual(invalid_status, 1)
-        self.assertIn("invalid execution-baseline adoption: bad record", invalid_output)
-        self.assertNotIn("adoption exception evidence complete", invalid_output)
-
-    def test_main_real_adoption_prints_exception_label_only_after_validation(self) -> None:
-        raw, root, p, e = self._adoption_with_complete_bundle()
-        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            output = io.StringIO()
-            with mock.patch.object(
-                sys, "argv", ["check_analysis.py", "--change", adoption.CHANGE, "--root", str(root)]
-            ), redirect_stdout(output):
-                self.assertEqual(check_analysis.main(), 0)
-            self.assertIn("execution-baseline adoption exception evidence complete", output.getvalue())
-            record = root / "openspec" / "changes" / adoption.CHANGE / "execution-baseline.json"
-            record.write_text("{}")
-            self._commit(root, "invalid record"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-            output = io.StringIO()
-            with mock.patch.object(
-                sys, "argv", ["check_analysis.py", "--change", adoption.CHANGE, "--root", str(root)]
-            ), redirect_stdout(output):
-                self.assertEqual(check_analysis.main(), 1)
-            self.assertIn("invalid execution-baseline adoption", output.getvalue())
-            self.assertNotIn("adoption exception evidence complete", output.getvalue())
 
     def test_ordinary_no_record_uses_p_and_allows_dirty_worktree(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -410,282 +675,21 @@ class CheckAnalysisTests(unittest.TestCase):
         subprocess.run(["git", "commit", "-qm", subject], cwd=root, check=True)
         return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
 
-    def _adoption_with_complete_bundle(self, deleted: bool = False) -> tuple[tempfile.TemporaryDirectory, Path, str, str]:
-        raw = tempfile.TemporaryDirectory(); root = Path(raw.name)
-        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
-        for key, value in (("user.email", "a120@example.invalid"), ("user.name", "a120")):
-            subprocess.run(["git", "config", key, value], cwd=root, check=True)
-        (root / "go.mod").write_text("module fixture\ngo 1.23\n")
-        source = Path(__file__).resolve().parent
-        shutil.copytree(source, root / "tools" / "logic-map", ignore=shutil.ignore_patterns("*.py", "__pycache__"))
-        requirements = root / "tools" / "sdd" / "requirements.txt"; requirements.parent.mkdir(parents=True)
-        requirements.write_text("typedb-driver==3.11.5\n", encoding="utf-8")
-        change = root / "openspec" / "changes" / adoption.CHANGE; change.mkdir(parents=True)
-        (change / "base-commit.txt").write_text("pending\n")
-        target = root / "internal" / "soak" / "attest.go"; target.parent.mkdir(parents=True)
-        target.write_text("package soak\nfunc Attest() int { return 1 }\n")
-        p = self._commit(root, "P")
-        (change / "base-commit.txt").write_text(p + "\n"); target.write_text("package soak\nfunc Attest() int { return 2 }\n")
-        e = self._commit(root, "E"); ast = check_analysis.go_functions(target, root)[0]
-        target.write_text("package soak\n" if deleted else "package soak\nfunc Attest() int { return 3 }\n")
-        s = self._commit(root, "S")
-        if not deleted: ast = check_analysis.go_functions(target, root)[0]
-        with mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            ledger = change / "analysis" / "execution-baseline-ledger.json"; record = change / "execution-baseline.json"
-            adoption.draft(root, adoption.CHANGE, s, ledger, record)
-            for name, body in (("adversary.md", "adversary"), ("gstack.md", "gstack")):
-                path = change / "analysis" / name; path.write_text(body)
-            value = json.loads(record.read_text())
-            for prefix, name in (("adversarial_review", "adversary.md"), ("gstack_review", "gstack.md")):
-                path = change / "analysis" / name
-                value[prefix + "_path"] = path.relative_to(root).as_posix()
-                value[prefix + "_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
-            record.write_bytes(adoption.canonical(value))
-        self._commit(root, "H")
-        ast.update({"package": "soak", "signature": "Attest(params=0, results=1)", "branches": []})
-        if deleted: ast["revision"] = "base"
-        bundle = change / "analysis" / "function-logic" / "internal-soak--attest"; bundle.mkdir(parents=True)
-        (bundle / "ast.json").write_text(json.dumps(ast))
-        (bundle / "function-logic-map.md").write_text("# Function Logic Map: `Attest`\ninternal/soak/attest.go\n## Inputs and invariants\nevidence\n## Branches and early returns\nevidence\n## Calls and live bindings\nevidence\n## State mutations and fallbacks\nevidence\n## Safety conclusion\nevidence\n")
-        (bundle / "branch-test-map.md").write_text("# Branch Test Map: `Attest`\n| B1 | leaf | test | yes | yes |\n")
-        (bundle / "risk-pattern-report.md").write_text("# Risk Pattern Report\ninternal/soak/attest.go\n")
-        self._commit(root, "map"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-        return raw, root, p, e
 
-    @unittest.skipUnless(os.environ.get("SDD_PYTHON"), "requires an explicit external SDD_PYTHON integration environment")
-    def test_real_adoption_without_local_venv_accepts_external_doctor_probe(self) -> None:
-        raw, root, p, e = self._adoption_with_complete_bundle()
-        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            self.assertFalse((root / ".sdd" / ".venv").exists())
-            result = sdd_doctor.report(root)
-            typedb = result["python_modules"]["typedb-driver"]
-            self.assertTrue(typedb["ok"], typedb["detail"])
-            self.assertIn("mode=external", typedb["detail"])
-            self.assertEqual(adoption.validate(root / "openspec" / "changes" / adoption.CHANGE, root, p, adoption.CHANGE)["effective_base"], e)
-            forbidden = root / ".sdd" / ".venv" / "forbidden.py"
-            forbidden.parent.mkdir(parents=True)
-            forbidden.write_text("forbidden\n", encoding="utf-8")
-            with self.assertRaisesRegex(
-                adoption.AdoptionError,
-                r"untracked/ignored input is not allowed: \.sdd/\.venv/forbidden\.py",
-            ):
-                adoption.validate(root / "openspec" / "changes" / adoption.CHANGE, root, p, adoption.CHANGE)
 
-    def test_valid_adoption_uses_e_and_requires_complete_current_bundle(self) -> None:
-        raw, root, p, e = self._adoption_with_complete_bundle()
-        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            self.assertEqual(check_analysis.check(adoption.CHANGE, root), [])
-            bundle = root / "openspec" / "changes" / adoption.CHANGE / "analysis" / "function-logic" / "internal-soak--attest"
-            shutil.rmtree(bundle); self._commit(root, "remove map"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-            errors = check_analysis.check(adoption.CHANGE, root)
-            self.assertTrue(any("analysis directory has no targets" in error or ("missing" in error and "Attest" in error) for error in errors))
 
-    def test_real_adoption_deleted_function_requires_base_revision(self) -> None:
-        raw, root, p, e = self._adoption_with_complete_bundle(deleted=True)
-        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            self.assertEqual(check_analysis.check(adoption.CHANGE, root), [])
-            path = root / "openspec" / "changes" / adoption.CHANGE / "analysis" / "function-logic" / "internal-soak--attest" / "ast.json"
-            value = json.loads(path.read_text()); value["revision"] = "current"; path.write_text(json.dumps(value))
-            self._commit(root, "wrong deletion revision"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-            self.assertTrue(any("AST revision must be base" in error for error in check_analysis.check(adoption.CHANGE, root)))
 
-    def test_real_adoption_sdd_base_ref_accepts_only_e_and_invalid_record_never_falls_back(self) -> None:
-        raw, root, p, e = self._adoption_with_complete_bundle()
-        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            with mock.patch.dict("os.environ", {"SDD_BASE_REF": e}, clear=False):
-                self.assertEqual(check_analysis.check(adoption.CHANGE, root), [])
-            for bad in (p, "0" * 40, "HEAD"):
-                with mock.patch.dict("os.environ", {"SDD_BASE_REF": bad}, clear=False):
-                    self.assertTrue(any("cannot derive" in error for error in check_analysis.check(adoption.CHANGE, root)))
-            record = root / "openspec" / "changes" / adoption.CHANGE / "execution-baseline.json"
-            record.write_text("{}")
-            self._commit(root, "invalid record"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-            with mock.patch.dict("os.environ", {"SDD_BASE_REF": e}, clear=False):
-                self.assertTrue(any("invalid execution-baseline adoption" in error for error in check_analysis.check(adoption.CHANGE, root)))
 
-    def test_real_adoption_stale_current_ast_hash_fails(self) -> None:
-        raw, root, p, e = self._adoption_with_complete_bundle()
-        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            ast_path = root / "openspec" / "changes" / adoption.CHANGE / "analysis" / "function-logic" / "internal-soak--attest" / "ast.json"
-            value = json.loads(ast_path.read_text()); value["source_sha256"] = "0" * 64; ast_path.write_text(json.dumps(value))
-            self._commit(root, "stale map"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-            self.assertTrue(any("AST source hash is stale" in error or "AST hash does not match" in error for error in check_analysis.check(adoption.CHANGE, root)))
 
-    def test_real_adoption_rejects_local_maps_with_function_logic_reference(self) -> None:
-        raw, root, p, e = self._adoption_with_complete_bundle()
-        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            analysis = root / "openspec" / "changes" / adoption.CHANGE / "analysis"
-            (analysis / "function-logic-reference.txt").write_text("some-other-change\n")
-            self._commit(root, "conflicting reference"); subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-            errors = check_analysis.check(adoption.CHANGE, root)
-            self.assertIn("function-logic reference cannot coexist with local function-logic evidence", errors)
 
-    def _adoption_output(self, root: Path) -> tuple[int, str]:
-        output = io.StringIO()
-        with mock.patch.object(
-            sys, "argv",
-            ["check_analysis.py", "--change", adoption.CHANGE, "--root", str(root)],
-        ), redirect_stdout(output):
-            code = check_analysis.main()
-        return code, output.getvalue()
 
-    def test_the_adoption_window_ends_at_the_audited_source_commit(self) -> None:
-        """이관 예외의 창 끝은 워킹트리가 아니라 감사된 `source_commit` 이다 (task 1.12).
 
-        `validate` 는 그 값을 이미 돌려준다(`{"effective_base", "source", "ledger"}`).
-        아무도 읽지 않아서 대상이 워킹트리로 떨어졌고, 그 답이 오늘 맞는 이유는
-        **다른 판정** 하나 때문이다 — source→head 에 `openspec/`·`docs/pm/` 밖 파일이
-        들어오면 `source-to-evidence drift` 로 죽는다. 맞는 답을 우연으로 얻고 있다.
-        실측으로 그 우연은 저장소에서 required **9 대 36** 짜리다(review.md
-        §Pre-Edit 1.12)."""
-        raw, root, p, e = self._adoption_with_complete_bundle()
-        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            change = root / "openspec" / "changes" / adoption.CHANGE
-            # 기대값은 실행 중인 코드가 아니라 **감사된 영수증**에서 읽는다.
-            source = json.loads((change / "execution-baseline.json").read_text())["source_commit"]
-            context: dict[str, object] = {}
-            self.assertEqual(check_analysis.check(adoption.CHANGE, root, context), [])
-            self.assertEqual(
-                context.get("landing"), source,
-                "이관 경로의 대상이 감사된 source_commit 이어야 한다",
-            )
-            code, output = self._adoption_output(root)
-            self.assertEqual(code, 0, output)
-            self.assertIn(f"audited source-commit {source}", output)
-            self.assertNotIn("working tree", output)
 
-    def test_the_adoption_path_does_not_advise_a_record_it_would_refuse(self) -> None:
-        """3.3 의 안내가 이관 감사와 모순됐다 (task 1.12).
 
-        실패·성공 양쪽에서 찍는 그 줄은 "`landed-commit.txt` 를 적어서 창을 좁혀라"
-        라고 말한다. 이관 경로에서 그것은 **감사 어디에도 없는 두 번째 손잡이**를
-        만들라는 말이고, 아래 시험이 거절하는 바로 그 파일이다."""
-        raw, root, p, e = self._adoption_with_complete_bundle()
-        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            code, output = self._adoption_output(root)
-            self.assertEqual(code, 0, output)
-            self.assertNotIn(check_analysis.LANDING_FILE, output)
-            # 양성 대조: 이관 성공 줄은 그대로 있어야 한다. 없으면 이 시험은 출력이
-            # 비었다는 이유로도 초록이 된다.
-            self.assertIn("execution-baseline adoption exception evidence complete", output)
 
-    def test_a_landing_record_is_refused_in_the_adoption_path(self) -> None:
-        """이관 예외의 입력은 전부 열거되고 digest 로 묶인다 — 착지 기록만 빼고.
 
-        `openspec/` 아래라 `source-to-evidence drift` 검사가 통과시키고, 추적 파일이라
-        untracked 감사도 못 보고, 닫힌 키 집합(`execution_baseline.py:410`)에도 없다.
-        그런데 비교 대상을 고른다. 손잡이는 하나여야 하고 그것은 감사된
-        `source_commit` 이다."""
-        raw, root, p, e = self._adoption_with_complete_bundle()
-        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            change = root / "openspec" / "changes" / adoption.CHANGE
-            source = json.loads((change / "execution-baseline.json").read_text())["source_commit"]
-            # 감사된 값과 **같은** 값을 적어도 거절한다 — 값이 아니라 손잡이의 개수가
-            # 문제다. 값으로 가르면 다른 값을 적는 순간 사유가 갈린다.
-            (change / check_analysis.LANDING_FILE).write_text(source + "\n")
-            self._commit(root, "declare a landing point inside the adoption path")
-            subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-            errors = check_analysis.check(adoption.CHANGE, root)
-            # 문장은 **상수 하나**다 (task 7.6, 리뷰 I5). 기록 경로와 한 벌씩 들고 있던
-            # 동안 이미 "ends" / "already ends" 로 갈렸다.
-            self.assertEqual(errors, [check_analysis.ADOPTION_REFUSES_A_LANDING])
 
-    def test_the_recorder_refuses_the_adoption_path_too(self) -> None:
-        """`check` 의 거절만 있고 **기록 경로**의 거절을 재는 시험이 0 이었다(변이 M9).
 
-        판정 둘이 서로를 덮는 모양이다 — 기록 경로가 값을 써 버리면 그 다음 5단계가
-        거절하지만, 그때는 이미 감사 밖의 두 번째 손잡이가 파일로 존재한다."""
-        raw, root, p, e = self._adoption_with_complete_bundle()
-        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            code, lines = check_analysis.record_landing(adoption.CHANGE, root)
-            self.assertEqual(
-                (code, lines),
-                (1, [f"{adoption.CHANGE}: {check_analysis.ADOPTION_REFUSES_A_LANDING}"]),
-            )
-            self.assertFalse(
-                (root / "openspec" / "changes" / adoption.CHANGE
-                 / check_analysis.LANDING_FILE).exists(),
-                "거절했으면 파일도 없어야 한다",
-            )
-
-    def _archive_adoption(self, root: Path) -> Path:
-        """`openspec archive` 가 하듯 a063 디렉터리를 **통째로** 옮기고 커밋한다."""
-        archived = root / "openspec" / "changes" / "archive" / f"2026-09-11-{adoption.CHANGE}"
-        archived.parent.mkdir(parents=True)
-        subprocess.run(
-            ["git", "mv", f"openspec/changes/{adoption.CHANGE}", archived.relative_to(root).as_posix()],
-            cwd=root, check=True,
-        )
-        self._commit(root, "archive a063")
-        subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-        return archived
-
-    def test_an_archived_adoption_is_rechecked_by_its_id(self) -> None:
-        """아카이브된 a063 도 그 id 로 다시 판정할 수 있어야 한다 (task 6.2).
-
-        spec: "완료 게이트는 아카이브된 change 의 함수 분석도 그 id 로 재검사할 수 있어야
-        한다(SHALL)". 이관 경로만 못 갔다. 4.4 는 이름 판정 하나를 쟀는데, 가드를 하나씩
-        풀어 가며 재 보니 막는 자리가 **넷**이었다 — 이름 · 증거 경로의 접두사 · 원장
-        읽기 · 리뷰 읽기. 기록은 옮기기 **전** 경로를 적고(`draft` 가 그렇게 쓴다),
-        아카이브는 내용을 안 바꾸고 자리만 옮긴다."""
-        raw, root, p, e = self._adoption_with_complete_bundle()
-        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            archived = self._archive_adoption(root)
-            # 기대값은 실행 중인 코드가 아니라 **옮겨진 자리의 영수증**에서 읽는다.
-            source = json.loads((archived / "execution-baseline.json").read_text())["source_commit"]
-            context: dict[str, object] = {}
-            self.assertEqual(check_analysis.check(adoption.CHANGE, root, context), [])
-            self.assertTrue(context.get("execution_baseline_adoption"), "이관 경로로 판정해야 한다")
-            self.assertEqual(context.get("landing"), source)
-            code, output = self._adoption_output(root)
-            self.assertEqual(code, 0, output)
-            self.assertIn(f"audited source-commit {source}", output)
-            self.assertIn("execution-baseline adoption exception evidence complete", output)
-
-    def test_a_copied_adoption_record_does_not_make_another_change_a063(self) -> None:
-        """이관 예외는 a063 하나의 것이다. 신원은 **게이트가 요청받은 id** 로 가른다 (task 6.2).
-
-        증거를 지금 자리에서 읽게 되면 경로 판정은 더 이상 "통째로 복사한 디렉터리"를
-        막지 못한다 — 복사본 안에서도 적힌 경로는 a063 의 것이고 digest 도 맞는다. 그 뒤로
-        복사를 막는 것은 신원 판정 **하나**다. 활성 이름과 아카이브 이름 둘 다로 복사한다."""
-        raw, root, p, e = self._adoption_with_complete_bundle()
-        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            original = root / "openspec" / "changes" / adoption.CHANGE
-            shutil.copytree(original, root / "openspec" / "changes" / "a130-copy")
-            shutil.copytree(original, root / "openspec" / "changes" / "archive" / "2026-09-11-a131-copy")
-            self._commit(root, "copy a063 whole under two other ids")
-            subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-            for other in ("a130-copy", "a131-copy"):
-                errors = check_analysis.check(other, root)
-                self.assertTrue(
-                    any("adoption is not allowed for this change/base" in error for error in errors),
-                    f"{other}: {errors}",
-                )
-            # 양성 대조: 원본은 그대로 통과해야 한다. 안 그러면 위 거절은 픽스처가 깨졌다는
-            # 이유로도 성립한다.
-            self.assertEqual(check_analysis.check(adoption.CHANGE, root), [])
-
-    def test_an_undecodable_landing_record_in_the_adoption_path_is_refused_not_raised(self) -> None:
-        """이관 경로의 착지 기록 probe 는 **있느냐**만 묻는다 (task 6.2.1).
-
-        옛 판본은 그 질문에 값을 **해독하는** 함수를 불렀고, 그 호출만 try 밖이었다.
-        비-UTF-8 기록이면 `ValueError` 가 `check()` 를 뚫고 `main()` 이 traceback 으로
-        죽었다. spec 은 이관 경로의 착지 기록에 "이관 경로가 그 기록을 받지 않는다는 것을
-        이름으로 말한다"를 요구한다 — 못 읽는 기록도 기록이다."""
-        raw, root, p, e = self._adoption_with_complete_bundle()
-        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            change = root / "openspec" / "changes" / adoption.CHANGE
-            (change / check_analysis.LANDING_FILE).write_bytes(b"\xff\xfe not utf-8\n")
-            self._commit(root, "an undecodable landing record inside the adoption path")
-            subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-            errors = check_analysis.check(adoption.CHANGE, root)
-            self.assertTrue(
-                any("adoption does not accept" in error for error in errors),
-                f"거절 사유를 이름으로 말해야 한다: {errors}",
-            )
-            code, output = self._adoption_output(root)
-            self.assertEqual(code, 1, output)
-            self.assertIn("[logic-map] execution-baseline adoption does not accept", output)
 
     def test_explicit_exemption_is_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -5771,19 +5775,18 @@ class TheVerdictReadsWhatTheLandingJudged(unittest.TestCase):
     def test_an_adopted_changes_escaping_bundle_keeps_its_name(self) -> None:
         """**이관 change 회귀** (Codex P2 · 적대 F3). 착지 해소를 안 거치는 이관 경로에서 미리 읽기가
         번들을 **처음** 선별하다가 저장소 밖 소스에 멈춰, 대상 이름과 나머지 대상의 오류가 다 사라졌다."""
-        case = CheckAnalysisTests("test_valid_adoption_uses_e_and_requires_complete_current_bundle")
-        raw, root, p, e = case._adoption_with_complete_bundle()
-        with raw, mock.patch.object(adoption, "P", p), mock.patch.object(adoption, "E", e):
-            self.assertEqual(check_analysis.check(adoption.CHANGE, root), [])     # 대조군
-            good = root / "openspec" / "changes" / adoption.CHANGE / "analysis" / "function-logic" / "internal-soak--attest"
+        # a125: 이관 경로가 없어졌다 — 같은 모양의 a063 픽스처를 일반 경로에서 잰다(반전 D3).
+        raw, root, _, _ = _a063_fixture()
+        with raw:
+            self.assertEqual(check_analysis.check(A063, root), [])     # 대조군
+            good = root / "openspec" / "changes" / A063 / "analysis" / "function-logic" / "internal-soak--attest"
             bad = good.parent / "bad-bundle"
             shutil.copytree(good, bad)
             value = json.loads((bad / "ast.json").read_text(encoding="utf-8"))
             value["file"] = "../outside/source.go"
             (bad / "ast.json").write_text(json.dumps(value), encoding="utf-8")
-            case._commit(root, "an escaping bundle")
-            subprocess.run(["git", "checkout", "--detach", "-q"], cwd=root, check=True)
-            errors = check_analysis.check(adoption.CHANGE, root)
+            _recommit_detached(root, "an escaping bundle")
+            errors = check_analysis.check(A063, root)
         self.assertIn("bad-bundle: AST source escapes repository", errors)
 
     def test_advice_that_cannot_be_computed_does_not_replace_the_verdict(self) -> None:
@@ -6563,7 +6566,7 @@ class OneCommandJudgesOneHistoryAndOneRead(unittest.TestCase):
             self.assertNotIn("base_shaped_fault", facts)
             self.assertEqual(facts["landing"], "")
             self.assertEqual(facts["base_shaped_bundles"], [])
-            self.assertFalse(facts["execution_baseline_adoption"])
+            self.assertNotIn("execution_baseline_adoption", facts)      # a125: 옛 키는 채워지지도 남지도 않는다
             self.assertEqual(facts["head"], check_analysis._head_commit(root))
 
 
@@ -9008,8 +9011,8 @@ class TheVerdictJudgesTheEvidenceItWasGiven(unittest.TestCase):
             # 디스크에 **없는** 경로다. 스냅숏은 "증거가 있었다" 고 말한다.
             gone = root / "openspec" / "changes" / "a000-x" / "analysis" / "function-logic"
             evidence = check_analysis.Evidence(gone, True, (), {}, {}, {})
-            errors = check_analysis._verdict(
-                root, "b" * 40, "l" * 40, False,
+            errors = check_analysis._verdict(      # a125: `adopted` 인자가 없어졌다
+                root, "b" * 40, "l" * 40,
                 {("x.go", "F"): {"file": "x.go", "function": "F", "current_hash": "h"}},
                 evidence, "",
             )
@@ -9909,7 +9912,13 @@ class EveryGateSubprocessHasATimeout(unittest.TestCase):
     """
 
     def test_every_child_process_in_the_gate_modules_names_a_timeout(self) -> None:
-        for module in (check_analysis, adoption):
+        # a125(freeze F9): 모듈 목록은 손으로 고른 것이 아니라 디렉터리의 `subprocess` 를 쓰는 비시험 모듈 **전부**와 같아야 한다.
+        spawning = sorted(path.name for path in Path(check_analysis.__file__).resolve().parent.glob("*.py")
+                          if not path.name.startswith("test_") and "subprocess.run(" in path.read_text(encoding="utf-8"))
+        # `risk_pattern_report.py` 는 번들 저작 도구다 — 판정이 import 하지 않는다(판정 모듈 목록 밖).
+        self.assertEqual(spawning, ["check_analysis.py", "risk_pattern_report.py"],
+                         "새로 자식 프로세스를 띄우는 모듈은 판정 모듈인지 가려 아래 목록에 넣어야 한다")
+        for module in (check_analysis,):
             path = Path(module.__file__)
             tree = ast.parse(path.read_text(encoding="utf-8"))
             spawns = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
@@ -10405,19 +10414,6 @@ class TheSuiteDoesNotReadTheDevelopersGitConfig(unittest.TestCase):
                 self.assertEqual(process.returncode, 0, process.stderr[-800:])
                 self.assertEqual(process.stdout.strip(), "3")
 
-    def test_the_execution_baseline_suite_pins_itself(self) -> None:
-        """**보수 (독립 적대 리뷰 5(a)).** `test_execution_baseline` 은 `discover` 에서 이 모듈 **뒤에** import 되어 우연히 보호받았다 —
-        단독 실행은 적대 전역 설정에서 에러가 났다. 그 모듈을 적대 설정의 자식 프로세스에서 **단독으로** 돌린다."""
-        with tempfile.TemporaryDirectory() as raw:
-            hostile = Path(raw) / "hostile.gitconfig"
-            hostile.write_text("[commit]\n\tgpgsign = true\n[gpg]\n\tprogram = /bin/false\n", encoding="utf-8")
-            environment = {**os.environ, "GIT_CONFIG_GLOBAL": str(hostile), "GIT_CONFIG_SYSTEM": str(hostile),
-                           "GIT_CONFIG_PARAMETERS": "'commit.gpgsign'='true' 'gpg.program'='/bin/false'"}
-            process = subprocess.run([sys.executable, "-m", "unittest", "test_execution_baseline"],
-                                     cwd=Path(__file__).resolve().parent, capture_output=True, text=True, timeout=900,
-                                     env=environment)
-            self.assertEqual(process.returncode, 0, process.stderr[-1500:])
-            self.assertRegex(process.stderr, r"Ran [1-9][0-9]* tests")
 
 
 

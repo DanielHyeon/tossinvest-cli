@@ -1,7 +1,7 @@
 """시험 픽스처의 git 이 개발자의 설정을 안 읽게 한다 (a122 task 6.4(h)).
 
-시험 모듈 둘(`test_check_analysis.py` · `test_execution_baseline.py`)이 import 때 `isolate()` 를 부른다 — 규칙을 한 곳에 두어
-두 모듈이 갈리지 않게 한다. 막는 것은 **설정의 출처** 셋이다:
+시험 모듈(`test_check_analysis.py` · a125 에서 짝 모듈 `test_execution_baseline.py` 는 지워졌다)이 import 때 `isolate()` 를
+부른다 — 규칙을 한 곳에 두어 시험 모듈이 늘어도 갈리지 않게 한다. 막는 것은 **설정의 출처** 셋이다:
 
 - 전역 · 시스템 설정 파일 — `GIT_CONFIG_GLOBAL` · `GIT_CONFIG_SYSTEM` 을 `os.devnull` 로.
 - 환경 변수로 주는 설정 — `GIT_CONFIG_PARAMETERS`(`git -c` 가 자식에게 넘기는 것) · `GIT_CONFIG_COUNT` · `GIT_CONFIG_KEY_<n>` ·

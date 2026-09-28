@@ -237,25 +237,14 @@ git add openspec/changes/<change-id>/landed-commit.txt && git commit
 하나다 — 번들을 갱신하고, `landed-commit.txt` 를 **지우는 커밋**을 하고, 다시 기록한다.
 거절 문장이 그 길을 같이 말한다.
 
-받을 수 없는 경우가 셋 있다. 증거를 **빌리는** change(빌려준 쪽 증거는 이쪽 작업이 어디
-착지했는지 못 고정한다), a063 **이관 예외**(창의 끝이 감사된 source commit 이다), 그리고
-고정 번들이 **0** 인 change. 이때 5단계는 워킹트리를 대상으로 삼고 `--record-landing` 을
+받을 수 없는 경우가 둘 있다. 증거를 **빌리는** change(빌려준 쪽 증거는 이쪽 작업이 어디
+착지했는지 못 고정한다)와 고정 번들이 **0** 인 change. 이때 5단계는 워킹트리를 대상으로 삼고 `--record-landing` 을
 권하지 않는다.
 
-### a063 legacy execution-baseline exception
+### a063 legacy execution-baseline exception — 폐기 (a125, 2026-09-29)
 
-`a063-align-attestation-renewal-profile`만 fixed P/E tuple을 쓸 수 있다. record가 없으면 일반 P
-정책을 유지한다. present record의 schema, digest/path, ancestry, source tree, detached/clean H 또는
-Go source path/blob/mode가 틀리면 fail-closed이며 P나 HEAD로 fallback하지 않는다. generator는
-초안만 만들고 approval, commit, baseline rewrite, runtime action을 하지 않는다. rollback은 일반 P
-정책으로 막는 것이며 original base 또는 historical debt를 지우지 않는다.
-
-고정 P는 `da80ce31b6a1ab5d443016768f970a82bab102db`, 고정 E는
-`e65e394bf84b3c6e4559a219e816af96d341d75d`이다. 일반 change에서는 `SDD_BASE_REF`가 persisted
-P와 같아야 한다. 유효한 a063 adoption record가 있을 때만 E가 effective base가 되고,
-`SDD_BASE_REF`도 그 record가 선택한 E와 같아야 한다. 환경변수는 P나 E 어느 것도 선택할 수
-없다. 이 예외는 `execution-baseline adoption exception`이며 inherited history의 pre-edit
-compliance를 소급 증명하거나 historical debt를 완료/면제로 표시하지 않는다.
+a120 의 a063 전용 실행 기준선 이관 특례는 지웠다(사용자 결정 2026-09-28). 모든 change 의 비교 기준은 `base-commit.txt`
+하나이고, 옮겨야 하면 아래 「사람 승인 base 재고정」을 쓴다. 남은 `execution-baseline.json` 은 게이트가 읽지 않는다.
 
 ## 리뷰 게이트 (등급제)
 
@@ -523,10 +512,9 @@ make sdd-check-ci            # 위에서 워크스테이션 전용 둘을 뺀 �
 `make sdd-check`는 CodeGraph hard-evidence fingerprint 불일치를 차단하고,
 CodeGraphContext/GBrain 불일치는 advisory 경고만 출력한다.
 
-### 이관 worktree의 외부 SDD 인터프리터
+### 저장소 밖의 외부 SDD 인터프리터
 
-이관 source guard는 repository-local `.sdd/.venv`의 untracked 실행 파일·소스를 올바르게
-거절한다. 따라서 detached adoption worktree에서는 local venv를 만들지 말고, repository 밖의
+워크트리 안에 local venv 를 두면 안 되는 경우(격리 게이트 워크트리 등)에는 repository 밖의
 도구 환경을 기존 고정 requirements로 준비해 doctor와 뒤따르는 SDD 명령에만 명시적으로 넘긴다.
 
 ```bash
@@ -543,7 +531,7 @@ relative, non-executable, repository-local by lexical path or resolved target, o
 missing/mismatched against the exact `typedb-driver==...` pin in
 `tools/sdd/requirements.txt`, doctor fails without a local fallback. Its diagnostic
 reports `mode`, raw and resolved interpreter paths, and the dependency result. This
-does not relax source validation, select an execution baseline, or alter the advisory
+never selects a comparison base, and does not alter the advisory
 interpreter behavior of `tools/sdd-history/refresh_indexes.py`.
 
 ### CI가 도는 SDD 검사 — `sdd-check-ci`

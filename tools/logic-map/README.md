@@ -73,8 +73,8 @@ python3 tools/logic-map/check_analysis.py --change <change-id> --record-landing
 기록은 **덮어쓰이지 않는다.** 증거를 갱신해 기록이 낡으면: 번들을 갱신 → `landed-commit.txt`
 를 지우는 커밋 → 다시 기록. 거절 문장이 이 길을 같이 말한다.
 
-증거를 **빌리는** change, a063 **이관 예외**, 고정 번들이 **0** 인 change 는 기록을 받지
-않는다. 5단계는 그때 워킹트리를 대상으로 삼고 명령을 권하지 않으며, 왜 못 좁히는지를 적는다.
+증거를 **빌리는** change 와 고정 번들이 **0** 인 change 는 기록을 받지
+않는다(a063 이관 예외는 a125 에서 폐기 — a063 도 이 규칙을 받는다). 5단계는 그때 워킹트리를 대상으로 삼고 명령을 권하지 않으며, 왜 못 좁히는지를 적는다.
 
 **판정은 역사 하나 위에서, 한 번 읽은 바이트로 선다.** 명령(5단계 · `--record-landing`)은 시작할 때 `HEAD` 를
 sha 로 한 번 풀고, 증거 디렉터리를 한 번 읽고, 그 뒤의 역사 읽기는 전부 그 sha다.
@@ -92,7 +92,7 @@ sha 로 한 번 풀고, 증거 디렉터리를 한 번 읽고, 그 뒤의 역사
 넷만 대고 그친 것은 열거가 아니라 예시였다(7.5.22 정정). 판정 입력을 읽는 것만 꼽아도 바뀐 함수를 정하는
 `git diff`, base 소스를 꺼내는 `git show`, 워킹트리 Go 바이트를 읽는 `go run ./tools/logic-map`,
 앞단 가드의 `git diff --numstat`, 커밋된 번들을 꺼내는 `git cat-file`, 더러운 트리를 묻는
-`git diff --quiet`, 역사를 걷는 **열** 자리, 그리고 `execution_baseline.py` 의 읽기가 있다
+`git diff --quiet`, 역사를 걷는 **열** 자리, 그리고 `execution_baseline.py` 의 읽기가 있었다(그 모듈은 a125 에서 삭제)
 (7.5.23 정정: "아홉" 이라고 적었는데 6 + 9 가 16 이 안 된다). 자리 수는 그 뒤로 움직였다 — AST 로 센
 `subprocess.run` 은 1d1e5ca7 **22**, task 7.5.9 뒤 **23** 이고, 더해진 하나(`git ls-files -z`)는 대답을 원장에 적는다.
 판정 도중 나머지 22 가 읽는 것을 건드리면 재확인이 통과한다. a112 실측: `required` 를 정하는 Go 파일 **32** 중
@@ -199,7 +199,7 @@ oid 에 base 도 디스크도 아닌 바이트를 심거나, `git mv` 뒤 새 �
 쪽의 `*.go` 만 담은 트리를 **대체 저장소가 없는** 임시 저장소에 세우고(`_isolated_comparison`, 물려받은
 `GIT_ALTERNATE_OBJECT_DIRECTORIES` 도 지운다) 두 diff 는 그 두 트리를 견준다. 거기 있는 blob 은 게이트가 쓴 것뿐이다.
 위조는 이름 대고 멈추거나(`STORE_LIES` — base 쪽) 판정에 닿지 않는다(워킹트리 쪽). git 밖 대조는 지킬 것이 없어져
-지웠다. 목록과 두 diff 가 pathspec 을 안 받으므로 `GIT_*_PATHSPECS` 도 판정에 안 닿는다. 커밋 대상(착지 · 이관 감사)도
+지웠다. 목록과 두 diff 가 pathspec 을 안 받으므로 `GIT_*_PATHSPECS` 도 판정에 안 닿는다. 커밋 대상(착지)도
 같은 비교를 쓴다.
 
 **해시가 맞는 트리도 git 이 쓰는 모양이어야 받는다 (7.5.35).** 검증은 "이 바이트가 그 트리다" 만 말한다. 7.5.34 의 걷기는
@@ -244,39 +244,17 @@ blob 이 없으면 `cat-file` 이 promisor 로 가져와 실제 저장소에 pac
 잘라 경로 하나가 diff 를 부쉈다) · 머리 줄 끝에 git 이 붙이는 탭을 뗌(공백 든 `*.go` 가 거짓 차단됐다). 그 로트의
 stat 고정과 `ident` 거절은 7.5.25 가 지웠다.
 
-## a063 execution-baseline adoption exception
+## a063 execution-baseline adoption exception — 폐기 (a125)
 
-`execution_baseline.py`는 일반적인 baseline 재설정 도구가 아니다. a063의 고정된
-planning/execution commit 쌍만 검증하며, `execution-baseline.json`이 없으면 기존
-`base-commit.txt` 정책을 그대로 쓴다. 레코드가 있으면 검증 worktree는 detached HEAD여야
-하고, schema는 JSON 정수 `1`(boolean 불가), 정확한 키 집합, SHA-256 digest, change-local
-ledger와 서로 다른 adversarial/gstack review를 모두 가져야 한다. ledger도 정확한 schema,
-키 집합 및 inherited-history debt 문구를 요구한다. 잘못된 레코드는 P로 fallback하지 않는다.
+a120 이 만든 a063 전용 실행 기준선 이관 특례(`execution_baseline.py`, 고정 P/E 쌍, detached HEAD 감사)는 a125 에서
+지웠다. 모든 change 는 `base-commit.txt` 하나로 판정하고, `SDD_BASE_REF` 는 그 커밋과 같을 때만 받는다. 변경 디렉터리에
+남은 `execution-baseline.json` 은 게이트가 읽지 않는다. 기준을 옮겨야 하면 `docs/WORKFLOW.md` 「사람 승인 base 재고정」
+절차를 쓴다.
 
-고정 P는 `da80ce31b6a1ab5d443016768f970a82bab102db`, E는
-`e65e394bf84b3c6e4559a219e816af96d341d75d`이다. 일반 change의 `SDD_BASE_REF`는 persisted
-P와 같아야 하며, 유효한 a063 record가 선택한 경우에만 E와 같아야 한다. `SDD_BASE_REF`는
-effective base를 선택하지 못한다. 이 결과는 `execution-baseline adoption exception`일 뿐,
-inherited history의 pre-edit compliance를 증명하거나 historical debt를 완료/면제로 바꾸지 않는다.
+## External doctor interpreter
 
-검증은 S와 H의 tracked Go path/blob/Git executable mode 및 실제 worktree bytes/mode를 직접
-대조한다. 따라서 `core.filemode=false` 상태의 chmod, symlink, source substitution도 거절한다.
-Unified diff가 losslessly 나타낼 수 없는 탭·개행 Go 파일명도 Function Logic Map inventory
-생성 전에 거절한다.
-
-초안만 만들 때는 다음을 쓴다. 기존 출력은 덮어쓰지 않으며, review digest/approval은 생성하지
-않는다.
-
-```bash
-python3 tools/logic-map/execution_baseline.py \
-  --change a063-align-attestation-renewal-profile --source <full-SHA1>
-```
-
-## External doctor interpreter for adoption worktrees
-
-The adoption source guard intentionally rejects a repository-local `.sdd/.venv`.
-For an adoption worktree, keep that environment outside the checkout and use the
-exact repository pin:
+When a worktree must not hold a repository-local `.sdd/.venv`, keep that environment
+outside the checkout and use the exact repository pin:
 
 ```bash
 uv venv /tmp/tossos-sdd-venv
@@ -287,5 +265,5 @@ SDD_PYTHON=/tmp/tossos-sdd-venv/bin/python make sdd-doctor
 `SDD_PYTHON` affects only the doctor's `typedb-driver` probe. An explicitly supplied
 path must be absolute, executable, and outside the checkout both lexically and after
 resolution; invalid selections and dependency failures do not fall back to a local
-venv. The adoption validator itself remains unchanged, as does the advisory
-`tools/sdd-history/refresh_indexes.py` interpreter behavior.
+venv. It never chooses a comparison base, and the advisory
+`tools/sdd-history/refresh_indexes.py` interpreter behavior is unchanged.
