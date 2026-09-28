@@ -24,13 +24,13 @@
 
 ## 4. a063 전환 (사람 절차 — a063 디렉터리)
 
-- [ ] 4.1 a063 `execution-baseline.json` 삭제 커밋. a063 `review.md` 에 소급 고지(`retrospective-exception` · "missing original analysis remains debt")를 옮겨 적고, a063 `tasks.md` 4.0 에 "a125 에서 폐기" 주석(freeze F5)
-- [ ] 4.2 조건 ① 영수증(재고정 **아님** — Manager 결정 (나)): 귀속 커밋 · 오늘 측정 함수 9 · base 번들의 해시를 창이 요구하는 P 판본으로(F4 실측 정정 — revision 은 base 가 맞다) →
+- [x] 4.1 a063 `execution-baseline.json` 삭제 커밋. a063 `review.md` 에 소급 고지(`retrospective-exception` · "missing original analysis remains debt")를 옮겨 적고, a063 `tasks.md` 4.0 에 "a125 에서 폐기" 주석(freeze F5)
+- [x] 4.2 조건 ① 영수증(재고정 **아님** — Manager 결정 (나)): 귀속 커밋 · 오늘 측정 함수 9 · base 번들의 해시를 창이 요구하는 P 판본으로(F4 실측 정정 — revision 은 base 가 맞다) →
       특례 없는 도구로 옛 base P 에서 판정 — **양성 단언**: 판정이 끝까지 갔고(조기 오류 없음) 실제 P · HEAD · 창이 출력과 같으며,
       귀속 함수마다 `(소스, 함수, 번들)` 대응이 서고, 그 번들들의 **전체** 오류(번들 디렉터리명으로 나오는 해시 · revision ·
       분기 · 호출 · 시험 인용 포함)가 0 이다. 남는 오류는 전부 형제 함수 누락으로만 분류된다(codex F1). renumber · S 사본 사실(F7) ·
       승인 인용(사용자 일괄 2026-09-28 + Manager)
-- [ ] 4.3 a063 `review.md` 에 재고정 연기 사유(재고정 값은 게이트 시점의 사실 — 사람 운영 4.2~4.4 뒤에만 의미)와, a063 `tasks.md` 에
+- [x] 4.3 a063 `review.md` 에 재고정 연기 사유(재고정 값은 게이트 시점의 사실 — 사람 운영 4.2~4.4 뒤에만 의미)와, a063 `tasks.md` 에
       **게이트 직전 재고정 항목**: P → 당시 HEAD 귀속 재실측 · 번들 재검증(4.2 와 같은 양성 단언) · 문서/Go 분리 커밋에 대한 사람 귀속
       확인 · 영수증 HEAD 와 재고정 부모가 다르면 재측정(codex F2). a063 `issues.md` I1 에 승인된 전환과 남은 운영 차단을 날짜로 덧붙임(codex F5)
 

@@ -24,3 +24,4 @@
     - IfExp f'audited source-commit {landing}' if audited else f'landed-commit {landing}'
     - f'audited source-commit {landing}' if audited else f'landed-commit {landing}'
     + f'landed-commit {landing}'
+- 재추출 갱신: `5440edad`(리뷰 P2 의 docstring 두 자리 수정 뒤) — 분기 · 반환 원문이 `9e63b681` 판과 같다. `ast.after.json` 은 `5440edad` 판이다.

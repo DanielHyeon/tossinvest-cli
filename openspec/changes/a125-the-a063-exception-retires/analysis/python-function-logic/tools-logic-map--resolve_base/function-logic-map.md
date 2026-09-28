@@ -52,3 +52,4 @@
   만든 뒤 정규식을 대소문자 무시로 다시 돌리며 고친 목록이 한 줄 어긋났기 때문이다). 그리고 `SDD_BASE_REF` 대조 대상이
   `effective` → `persisted` 로 **바뀐** 분기 둘(BoolOp · If)이 있다 — 기록이 없을 때 `effective == persisted` 였으므로 기록 없는
   change 의 판정은 같다(1.1 논증). 기록 있는 a063 에서만 대조 대상이 E → P 로 바뀐다(반전 시험 `test_sdd_base_ref_accepts_only_the_base_commit`).
+- 재추출 갱신: `5440edad`(리뷰 P2 의 docstring 두 자리 수정 뒤) — 분기 · 반환 원문이 `9e63b681` 판과 같다. `ast.after.json` 은 `5440edad` 판이다.

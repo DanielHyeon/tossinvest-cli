@@ -1,9 +1,9 @@
 {
   "language": "python",
   "file": "tools/logic-map/check_analysis.py",
-  "revision": "9e63b681",
-  "head_commit": "7cf808321001dd830d537a9a90c9f8d94df6ce99",
-  "source_sha256": "e5d26a981c969f7deb27f56a20fbf4ec37f1c3861eb88f1586e228a6da21af1a",
+  "revision": "5440edad",
+  "head_commit": "90ce43b1677844f3f6a2d9a68822dedf2eafbceb",
+  "source_sha256": "1e6a212a703af21be4a6a215f3f04b95096f856f0da7c16e13b573b775547b78",
   "function": "_verdict",
   "signature": "_verdict(root, base, landing, required, evidence, review_text)",
   "start": {

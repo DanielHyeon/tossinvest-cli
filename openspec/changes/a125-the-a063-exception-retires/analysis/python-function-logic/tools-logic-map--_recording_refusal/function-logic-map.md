@@ -33,3 +33,4 @@
 
     - If if facts.get('execution_baseline_adoption'):
     - (ADOPTION_REFUSES_A_LANDING, '')
+- 재추출 갱신: `5440edad`(리뷰 P2 의 docstring 두 자리 수정 뒤) — 분기 · 반환 원문이 `9e63b681` 판과 같다. `ast.after.json` 은 `5440edad` 판이다.

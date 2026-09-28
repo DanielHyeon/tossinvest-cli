@@ -79,3 +79,10 @@ scratch 사본에서 `openspec archive a125-… --yes` 를 돌렸다. 결과는 
   3. 도달하지 않는 방어 갈래 → 위 변이 절에 `not-applicable` 사유를 적었다.
   4. 3.x 미체크 → 이번 로트로 닫는다.
 - 참고: 핀 시험의 `ADOPTION_WORDS` 는 밑줄 표기 `execution_baseline` 을 세지 않는다. docstring 의 과거 기록 두 자리가 그 표기로 남는 것은 의도다.
+
+## 3.3 · 4.x 상태 — 2026-09-29
+
+- 편집 후 Python FLM 7 재추출(`5440edad` 판, 분기 차이는 편집 전 목록 + `resolve_base` 정정 한 줄로 설명됨) — `analysis/python-function-logic/*/function-logic-map.md`.
+- `make sdd-test`(고정 워크트리 `a125-probe@76d0816a`): 스크립트 15 · logic-map 503 · sdd 76 · sdd-history 29 · pm 16 · deploy 18 **전부 OK**(10m52s) — `harness/3.3-sdd-test.txt`.
+- `make sdd-check`(공유 트리): **FAIL — 환경 부하**. `codegraph status .` 가 15 초 탐침 시한을 넘었다(같은 명령 단독 25 초, load 6.3). `make sdd-sync` 도 advisory `codegraphcontext update` 300 초 시한으로 incomplete. 코드 판정 실패가 아니라 탐침 시한 — 두 번 재시도해 같다(`harness/3.3-sdd-check-attempt.txt`). 게이트 ⑥ 에서 격리 워크트리로 다시 잰다. 그 전까지 3.3 은 미체크.
+- 4.1~4.3: a063 전환 커밋 `76d0816a` · 영수증 PASS(`analysis/a063-receipt.md`).
