@@ -4,8 +4,20 @@ Post-edit, from `ast.json` (50–172, 17 branches). B1–B15 are unchanged by a0
 
 | Branch | Line | Test | Kind |
 |---|---|---|---|
-| B1–B11 | 52–112 | `position_policy_transport_test.go`, a109 staging/descriptor tests (existing) | behavioural (owners' suites) |
-| B12–B14 | 123–135 | `position_policy_transport_test.go` (existing) | behavioural |
+| B1 | 52 | commands == nil — `position_policy_transport_test.go` and the a109/a114 endpoint suites (existing; unchanged by a066) | behavioural (owners' suites) |
+| B2 | 56 | engine directory blank — `position_policy_transport_test.go` and the a109/a114 endpoint suites (existing; unchanged by a066) | behavioural (owners' suites) |
+| B3 | 59 | engine directory not private — `position_policy_transport_test.go` and the a109/a114 endpoint suites (existing; unchanged by a066) | behavioural (owners' suites) |
+| B4 | 64 | control directory create error — `position_policy_transport_test.go` and the a109/a114 endpoint suites (existing; unchanged by a066) | behavioural (owners' suites) |
+| B5 | 68 | control directory created (else) — `position_policy_transport_test.go` and the a109/a114 endpoint suites (existing; unchanged by a066) | behavioural (owners' suites) |
+| B6 | 65 | control directory exists (not an error) — `position_policy_transport_test.go` and the a109/a114 endpoint suites (existing; unchanged by a066) | behavioural (owners' suites) |
+| B7 | 71 | control directory validation fails — `position_policy_transport_test.go` and the a109/a114 endpoint suites (existing; unchanged by a066) | behavioural (owners' suites) |
+| B8 | 72 | created by this call → remove — `position_policy_transport_test.go` and the a109/a114 endpoint suites (existing; unchanged by a066) | behavioural (owners' suites) |
+| B9 | 78 | cleanup helper: created by this call — `position_policy_transport_test.go` and the a109/a114 endpoint suites (existing; unchanged by a066) | behavioural (owners' suites) |
+| B10 | 107 | loopback listen fails — `position_policy_transport_test.go` and the a109/a114 endpoint suites (existing; unchanged by a066) | behavioural (owners' suites) |
+| B11 | 112 | token generation fails — `position_policy_transport_test.go` and the a109/a114 endpoint suites (existing; unchanged by a066) | behavioural (owners' suites) |
+| B12 | 123 | /v1/health non-GET — `position_policy_transport_test.go` and the a109/a114 endpoint suites (existing; unchanged by a066) | behavioural (owners' suites) |
+| B13 | 130 | /v1/positions non-GET — `position_policy_transport_test.go` and the a109/a114 endpoint suites (existing; unchanged by a066) | behavioural (owners' suites) |
+| B14 | 135 | List error — `position_policy_transport_test.go` and the a109/a114 endpoint suites (existing; unchanged by a066) | behavioural (owners' suites) |
 | B15 | 148 | `a079_quarantine_transport_test.go` (existing) | behavioural |
 | B16 | 153 | taken: `TestA066EntryLockReleaseThroughTheEngineEndpoint`, `TestA066LatchReleaseCarriesTheBindingIntoTheEngine`, `TestEngineEntryLockReleaseGoesThroughTheRunningEngine` (CLI, production deps); not taken: `TestA066AnEngineWithoutTheCapabilityOffersNoRelease` | behavioural |
 | B17 | 163 | a109 descriptor publication tests (existing; was B16) | behavioural |

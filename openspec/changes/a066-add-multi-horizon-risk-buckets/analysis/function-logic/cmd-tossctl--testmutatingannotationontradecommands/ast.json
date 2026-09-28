@@ -1,0 +1,109 @@
+{
+  "file": "cmd/tossctl/help_convention_test.go",
+  "source_sha256": "c1000ccb1f35947d36a7272877347855f829c081fc96a1b6a851af142f74046a",
+  "package": "main",
+  "function": "TestMutatingAnnotationOnTradeCommands",
+  "signature": "TestMutatingAnnotationOnTradeCommands(params=1, results=0)",
+  "start": {
+    "line": 96,
+    "column": 1
+  },
+  "end": {
+    "line": 150,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 140,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 143,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 146,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 20
+      },
+      "text": "leafCommands"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 33
+      },
+      "text": "newRootCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 141,
+        "column": 11
+      },
+      "text": "c.CommandPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 147,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 141,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 142,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
