@@ -59,7 +59,7 @@
 | `o.judge` | 판정·기록·발의 | 오류는 되던짐 → B8 | AST `:465` |
 
 생산 호출자: `ExitObserver.Run`(`exitloop.go:354-364`)과 tracer `Run`(`internal/app/engine/tracer.go:273`) — CodeGraph 1.6.0
-`codegraph callers ObserveOnce`(나머지 여섯은 시험). tracer 는 비시험 생성자 호출이 0 이고 단일 종목을 요구해 B6·B7 에 닿지 않는다(한 종목 미스는 B4).
+`codegraph callers ObserveOnce`(나머지 여섯은 시험). tracer 는 비시험 생성자 호출이 0 이고 단일 종목이라 B6 에는 닿지 않지만(한 종목 미스는 B4) **B7 에는 닿을 수 있다** — 가격 읽기 뒤 원장 작업(`:793`)이 임대를 태울 수 있다(5판 정정).
 
 ## State mutations and fallbacks
 

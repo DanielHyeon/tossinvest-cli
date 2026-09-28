@@ -149,6 +149,8 @@ Manager 처분(2026-09-29)대로 썼다. 정본 `design.md`(4판).
 - 그중 **critical 경보는 ntfy 외부 전송**을 탄다(알림기 전달 경로).
 - `internal/obs` 에 가림 함수는 **0** 이다. 저장소에는 **선례가 하나** 있다 — `attest.Mask`(`interlock.go:273` `MaskedAccount`) — 가림 설계의 출발점이 될 수 있다.
 - 기존 관행이라 a090 범위 밖. 외부 전송 여부·가림 설계는 **사용자 결정**(Manager 가 사용자 보고에 올림). a090 은 그 관행을 넓히지 않는다.
+- **5판 추가(codex 3라운드 R3-3)**: 공유 실패 경로도 계좌·원문 오류를 싣는다 — `internal/obs/notifier.go:274-280`(기록 실패 로그: 원문 `err`) ·
+  `:385-396`(승격 로그: `FieldAccount, n.AccountRef`). 같은 사용자 큐 항목에 귀속한다.
 
 ## codex 3라운드 (교차 모델, task 0.6d) — **REJECT** · 분류만, 반영은 Manager 결정 뒤
 
@@ -168,4 +170,20 @@ Manager 처분(2026-09-29)대로 썼다. 정본 `design.md`(4판).
 | R3-8 | P3 | 편집 | tasks·ObserveOnce FLM 의 "tracer B7 도달 불가" · code-context 의 "여덟째 `o.alert` 호출자" 잔존 | 정리 |
 
 - **판정: REJECT(P1 4 · P2 3 · P3 1). 반영하지 않았다.** Manager 결정: R3-4(a092 입구를 구현 하드 의존으로 올릴지 — R5-4/K6 판단과의 관계), R3-2·R3-3(정화를 a090 에 둘지 a092 입구 계약에 요구할지).
+
+## 5판 (2026-09-29) — codex 3라운드 반영 · 판정 아님
+
+Manager 처분(2026-09-29). **설계 freeze 는 a092 와 독립, 구현은 a092 `RecordAlert` 착지 뒤(하드 조건)** — 두 층을 가른다.
+
+| id | 처분 | 반영 자리 |
+|---|---|---|
+| R3-1 | 자기 누락 수리 — tasks 2.3·2.3a 의 계좌 포함 key 기대값 → 무계좌 key, 3.1·3.4 의 직접 `EnqueueAlert`·게이트 잠금 → 입구 | tasks 2.3 · 2.3a · 3.1 · 3.4 · 1.0 |
+| R3-2 | a092 announcer 재사용 안 함 — **a090 전용 정화 어댑터**(무계좌 key·필드, 전이 id, 창 0)가 입구 위에서 기록. a092 재개방 없음 | design D5 · tasks 3.4 |
+| R3-3 | a090 데이터는 구성상 무계좌 → 실패 주입 카나리 셋. 공유 경로의 자기 계좌·원문 오류(`notifier.go:274-280`·`:385-396`)는 사용자 큐 항목에 귀속(좌표 추가) | design D13 · D12 · tasks 2.17 · review 「계좌 정보 사실 고정」 |
+| R3-4 | a092 입구 = **구현 하드 의존**, 입구 밖 대안 문안 삭제(비례 원칙) | design D4 · D8 · spec 문장 · tasks 0.9 · proposal |
+| R3-5 | 공지 재시도는 처리 주기에서만 — 문언·시험 | design D10 · tasks 2.3g ⑧ |
+| R3-6 | 이탈 좌표 = 조상 경로 + 같은 조건 출현 순번 + 종류, 다중집합 | tasks 2.15 |
+| R3-7 | 앵커 인식 픽스처 신규 | design D3 · tasks 2.3f |
+| R3-8 | tracer B7 도달 가능 · "여덟째 `o.alert` 호출자" 정정 | tasks 1.0 · ObserveOnce FLM · codegraph-baseline |
+| 부수 | 세대 읽은 뒤·적용 전 해제 RED 추가 | tasks 2.3g ⑦ |
 
