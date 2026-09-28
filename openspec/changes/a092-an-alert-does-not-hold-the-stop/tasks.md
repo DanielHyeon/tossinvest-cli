@@ -1,4 +1,4 @@
-# a092 tasks (22판)
+# a092 tasks (23판)
 
 base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 
@@ -9,6 +9,32 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 > **아래 「21. 21판 작업」이 21판의 작업 목록이다.** §6·§8·§9의 20판 이전 미체크 task는 21판 범위를 정하지 않는다 — 절 머리에
 > ⛔ 21판 표지를 달았다(20라운드 B-5·B-6(T): 그 절들의 좌표·FLM 수 주장은 21판에서 근거로 쓰지 않는다). 옛 task는 21.4가
 > 대체 여부를 하나씩 판정할 때까지 지우지 않는다.
+
+## 23. 23판 작업 (2026-09-29) — 22라운드 처분 반영 (design D0.3h · `review.md` §23.11)
+
+> 22.x 가운데 23판이 바꾼 것: 22.3 C6 핀의 금지 형태 ③ 삭제 → 조립 생성자 전수 핀(23.3) · 22.3 C15 풀 경로 좁힘. 나머지 22.x는 유효하다.
+
+- [x] 23.0 23판 문서 — 델타 두 개(모드 통지 신원 · 동기 경로 보수 조항 둘 · 단일 입구 · 조립 생성자 전수 · 「동시에」 해석 · 이력 순서 · 완화 뒤 재읽기 · 캡 한정어 ·
+      durable 실패 무통지 예외 · MODIFIED 블록 정정 표지와 좌표) · design D0.3h · `review.md` §23.11 · `check_values.py` `DRAFT = 23`.
+- [ ] 23.1 **23라운드** — codex 대기열(Manager 배분) + Claude 독립 보이스 둘.
+- [ ] 23.2 **FLM 먼저** — 22.2 목록에 더한다: `Journal.RestoreOperatingModeProjection` · `Journal.OperatingModeHistory` · `currentModeFromRow`(K14·K18) ·
+      `Notifier.AnnounceOperatingMode`(사건 구성 추출, K1) · `Notifier.escalate`(반환값 추가, K2) · flatten CLI 경로에서 `ReplayInDoubt` → `parkAlert` 도달 여부(프로세스 밖 기록자 잔여).
+- [ ] 23.3 **RED · 구조 핀** (각각 뮤테이션으로 실패시켜 본 뒤 근거로 쓴다):
+      - **K1**: 완화 뒤 재알림 창 안의 재강화 · 두 번째 완화가 각각 새 PENDING 통지 행을 만든다. 변화 없는 재강화는 통지 행을 만들지 않는다.
+      - **K2**: 해제로 조건부 차단이 생략된 판정에서 승격 쓰기가 실패하면 전달 실패 사유로 잠근다(세 래치 자리 각각).
+      - **K3 핀**: `TransitionOperatingMode` 본문에서 `Commit` → `ProjectOperatingMode` 순서이고, 사이에 `go` 문 · 반환이 없다.
+      - **K4**: 근거 확정 ~ 세대 읽기 사이의 해제는 다시 잠글 수 있다. 읽기 뒤의 해제는 잠그지 않는다(결정적으로 끼워 넣기).
+      - **K5 핀**: `execgw.New(` 비시험 호출자 **전수** — 각 `Options`에 `Entry`가 있고, 값이 같은 함수의 `NewEntryGate` 결과다. 호출자를 하나 더한 변이, `Entry`를 뺀 변이가 각각 잡혀야 한다.
+      - **K6 · K7 핀**: 비시험 `EnqueueAlert(` · `RecordAlert(` 호출자 전수(메서드 이름 · 인터페이스 경유 포함). `RecordAlert`는 알림기 입구 하나.
+        입구 밖 `EnqueueAlert` 호출자는 각각 삽입 전에 자기 사유를 잠근다(금지 형태 ① 삽입이 잠금보다 앞 · ② 사이의 해제 호출).
+      - **K13**: 이관 실행자의 정지 이벤트 타입이 `EventAlertUndelivered`가 아니다 · 종료 배수 때 남은 알림을 버림으로 기록한다.
+      - **K14**: 이력 순서 = rowid · `VACUUM INTO` 백업 복원 뒤 현재 모드와 이력 순서가 그대로 · 울타리 초기값 0.
+      - **K16**: 완화 명령 출력이 전이 뒤 모드와 남은 사유를 다시 읽은 값이다(같은 호출 안 재강화 픽스처).
+      - **K17**: 기록 전용 announcer의 기록 실패 → `ReasonAlertUndelivered` 래치 + 로그.
+      - **K18**: ADDED 「자동 강화…」의 「청산 무영향」 AND · 완화 통지 **성공** 경로 · 입구 도달 경로 전수 구조 핀(`Notify` · `AnnounceOperatingMode`) ·
+        선점 기록과 「남은 행 계속」 · 옛 §6에 매달린 Scenario 넷(상한을 읽지 않는 transport · 예산을 줄여도 · 다시 올릴 주기 · 사이클 총 체류)의 처분.
+      - **K19 핀**: `Notifier.Flush` 비시험 호출자 0.
+- [ ] 23.4 **교차 change 확인** — a066(`risk_relaxation_command.go:158` 직접 적재) · a094 · a090의 critical 기록자가 입구를 쓰거나 먼저 잠그는지(Manager 교차 통지 뒤).
 
 ## 22. 22판 작업 (2026-09-29) — 21라운드 처분 반영 (design D0.3g · `review.md` §23.9)
 
@@ -539,7 +565,7 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 
       ```bash
       # 16판까지의 채택 토큰 — 17판은 이 집합을 쓰지 않는다 (design D0.6)
-      # 채택 토큰 (22판): 3.5s · 3500 · 2s · 2000 · 750ms · 5.0s
+      # 채택 토큰 (23판): 3.5s · 3500 · 2s · 2000 · 750ms · 5.0s
       rg -n '3\.5\s*s|3500|1500\s*ms|5\.0(00)?\s*s' \
          openspec/changes/a092-an-alert-does-not-hold-the-stop/tasks.md
       # 폐기 토큰 (12·13판): 이 출력은 전부 E1이어야 한다
