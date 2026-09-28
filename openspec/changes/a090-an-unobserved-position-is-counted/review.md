@@ -67,3 +67,25 @@ Manager 판정(2026-09-29): 2판 먼저 — F1~F4 전부, F2 는 enqueue-only(a0
 - `check_analysis.py --change a090-…` rc 1(깨끗한 worktree, 39dd5d38) — **원인 = 이웃 a066 v35 착지(journal 함수 4개가 base `d3bd1843` 뒤 창에 듦) · 자기 Go 0
   · 재고정은 구현 로트의 첫 행위(WORKFLOW 사람 절차·영수증)**. 설계 단계 rc 1 은 게이트 요건이 아니다 — 지금 고정하면 a066 착지로 곧 낡는다(a125 (나) 원리).
 
+## codex 1라운드 (교차 모델, task 0.6) — **REJECT** · 분류만, 반영은 Manager 결정 뒤
+
+- 실행: session **`01a0e940-56d4-7d60-b426-1e43ad4548f4`**, 2026-09-29 03:21:42~03:25:35 KST, rc 0, tokens 144,693, 401 없음. 트리 = `git archive 356309f9`
+  (17452 = ls-tree), 인용 Go 드리프트 0. 프롬프트 `analysis/freeze-review/codex-r1-prompt.md`(ecd67a44).
+- 보이스 1 발견 판정: RESOLVED 11 · PARTIAL 5(F2 · F3 · F4 · F8 · F14). AST 해시 두 번들 일치, 분기 좌표 8/22 · return 5/3 일치. `Retrier.Gate` 는 생산에서 non-nil
+  (`internal/app/engine/gateway.go:249`·`:324` → `exitwiring.go:50`)이나 생성은 nil 을 허용(`execgw/retry.go:309`).
+
+| id | codex | 분류 | 요지 | Teammate 재확인 |
+|---|---|---|---|---|
+| N1 | P0 | **설계 결함 — 확인(논리)** | B10(완료 정책)은 B6 통과 **뒤**라 표시되고 판정되지 않아 세어진다 — R14(세지 않음)와 모순. 표시를 B10 뒤로 옮기면 B8 실패를 잃는다 | 확인 — `workingSet` 순서 B6 `:512` → B7 `:525` → B8 `:527` → B10 `:533`. 표시 1자리로는 둘 다 못 가른다. B10 에 명시적 제외(표시 해제)가 필요 |
+| N2 | P0 | **설계 결함 — 확인** | 모드 강화의 공지가 생산에서 **동기 critical `Notify`** — 순회 뒤라도 **다음 주기**의 손절 관측을 늦춘다. D5 가 스스로 "다음 주기 시작을 늦출 수 있다" 고 적었다 | 확인 — 생산 `Announcer: ectx.Notifier`(`cmd/tossctl/engine.go:639`) → `Notifier.AnnounceOperatingMode` → `n.Notify(EventOperatingMode …)`(`internal/obs/mode.go:57`). 방향: 이 강화의 공지만 enqueue-only |
+| N3 | P1 | **설계 결함 — 확인** | D7 의 로그는 생산에서 **안 남는다** — 생산 관측자에 `Log` 가 없고(`engine.go:634-640`), `Run` 은 성공 주기의 `ExitCycle` 을 버린다. 또 "로그는 등급 없음" 은 거짓 — 로거가 `SeverityOf(type)` 를 싣는다(`internal/obs/log.go:197`) | 확인(`engine.go` 옵션에 `Log` 없음, `log.go:197`). 방향: 최소 로거 배선을 범위에 넣고 배선 수준 시험, 로그 이벤트 타입 재고 |
+| N4 | P1 | 설계 | 벽시계 역행이 창을 늘리고 에피소드 key 를 재사용할 수 있다 — `now − anchor` 가 벽시계 | 미확인. 방향: 경과는 단조 시계(`clock` 임대 헬퍼)로, 표시·key 는 따로 |
+| N5 | P1 | 설계 | 실패 상태 전이 미정의 — 적재 성공·모드 커밋 실패, 커밋됐으나 공지 실패, 운영자 해제와의 경합 | 미확인. 방향: 적재 성공 · 강화 커밋 성공 · 실패 재시도 상태를 가르기 |
+| N6 | P1 | 문서 | delta 의 "한 번의 미응답은 경보가 아니다" 는 마지막 판정 기점과 모순(그 한 주기가 판정 뒤 60초 이상이면 경보 — R3b 가 바로 그것) · B4 주기의 계수·정리 미정의 | 확인(논리). 방향: 시나리오를 경과 시간으로 한정, 계수/로그와 경보를 가르고 B4 정의 |
+| N7 | P2 | 기록 | 임계 전 재시작 반복·지속 B2 는 탐지를 무기한 막는다 — 무조건 60초 상한 주장 금지 | 조건부 보장으로 명시 |
+| N8 | P2 | 기록 | 장 마감 결론이 증거를 넘는다(한 사례) | "이 사례에서 관측됨" 으로 |
+| N9 | P2 | 증거 | BTM B8 귀속 시험이 틀림(`TestAFailedObservationHoldsTheJudgement` 는 B4) | 정정 |
+| N10 | P2 | 정의 | "관측됨" = 판정 진입 도달 — 선택자 스탬프 실패 등 즉시 오류도 관측됨으로 친다 | 지표 정의를 "판정 진입 도달성" 으로 명시, 즉시 오류 열거 |
+
+- **판정: REJECT(P0 2 · P1 4 · P2 4). 반영하지 않았다.** Manager 결정 사항: N1(B10 제외 방식 — 표시 해제 자리 추가 = `workingSet` 편집 2자리), N2(강화 공지를 enqueue-only 로 — a094 R6-3 과 같은 우회 문제), N3(로거 배선 범위 편입).
+

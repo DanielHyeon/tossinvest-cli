@@ -14,7 +14,7 @@
 - [x] 0.5 **proposal-freeze 리뷰 — 적대 보이스 1**(Claude, 구현과 분리된 컨텍스트) → `review.md` 「1라운드」 — **REJECT**(P1 4 · P2 6 · P3 6)
 - [x] 0.5a **2판 반영**(Manager 2026-09-29: F1~F4 전부, F2 enqueue-only) — design 전면 개정 · `workingSet` AST·FLM·BTM(분기 22) · spec delta 개정 ·
       tasks §2 개정 · 진입 하네스 두 번들. **판정 아님**
-- [ ] 0.6 **proposal-freeze 리뷰 — codex 교차 모델**(Manager 슬롯 대기열) → `review.md` · `analysis/freeze-review/`
+- [x] 0.6 **proposal-freeze 리뷰 — codex 교차 모델** — **REJECT**(P0 2 · P1 4 · P2 4), `review.md` 「codex 1라운드」 · `analysis/freeze-review/codex-r1-output.md`
 - [x] 0.7 **Q1·Q3 결정 기록**(Manager 2026-09-29, 사용자행 아님) — Q1 = (a) 정본 준수(`exit-policy/spec.md:62`·`:65`), Q3 = 판정 진입 + 하류 5자리 명명 잔여. design 「Q — 결정 기록」
 - [ ] 0.8 **Q2 실측 — 사전 승인됨(Manager 2026-09-29), 구현 로트가 장중 실행** — 정지·0가격 종목 포함 `/prices` 읽기 전용 GET 1회, 쓰기 0.
       결과로 design D6 의 두 [미측정] 행을 확정한다. 구현을 막지 않는다
