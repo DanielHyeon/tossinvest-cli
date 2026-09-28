@@ -86,3 +86,9 @@ scratch 사본에서 `openspec archive a125-… --yes` 를 돌렸다. 결과는 
 - `make sdd-test`(고정 워크트리 `a125-probe@76d0816a`): 스크립트 15 · logic-map 503 · sdd 76 · sdd-history 29 · pm 16 · deploy 18 **전부 OK**(10m52s) — `harness/3.3-sdd-test.txt`.
 - `make sdd-check`(공유 트리): **FAIL — 환경 부하**. `codegraph status .` 가 15 초 탐침 시한을 넘었다(같은 명령 단독 25 초, load 6.3). `make sdd-sync` 도 advisory `codegraphcontext update` 300 초 시한으로 incomplete. 코드 판정 실패가 아니라 탐침 시한 — 두 번 재시도해 같다(`harness/3.3-sdd-check-attempt.txt`). 게이트 ⑥ 에서 격리 워크트리로 다시 잰다. 그 전까지 3.3 은 미체크.
 - 4.1~4.3: a063 전환 커밋 `76d0816a` · 영수증 PASS(`analysis/a063-receipt.md`).
+
+## 완료 게이트 — 격리 워크트리 `TossOS-worktrees/a125-gate`
+
+- 준비: `make sdd-infra`(워크트리 로컬 `.sdd/.venv`) → `make sdd-sync` rc 2 — advisory 만 incomplete(`codegraphcontext index` 300 초 시한,
+  gbrain 은 공유 홈의 YAML 실패 6127 건 — 이 change 와 무관). CodeGraph(hard evidence) 는 `codegraph init .` 로 세웠다.
+- 1차 `make gate` @ `e62522ce` — rc 2, **② 에서 5.1 한 줄만 미완료**(예정된 멈춤, `harness/5.1-gate1.log`). 5.1 체크 → tracker 재생성 → 2차.

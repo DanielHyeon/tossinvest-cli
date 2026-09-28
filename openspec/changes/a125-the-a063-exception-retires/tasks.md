@@ -36,4 +36,4 @@
 
 ## 5. 종결
 
-- [ ] 5.1 tracker 재생성 → `make sdd-sync` → Manager 게이트 슬롯 → `make gate CHANGE=a125-…`(격리 워크트리) → Manager 검증 → archive · Story 경로
+- [x] 5.1 tracker 재생성 → `make sdd-sync` → Manager 게이트 슬롯 → `make gate CHANGE=a125-…`(격리 워크트리) → Manager 검증 → archive · Story 경로 — 1차 gate(`e62522ce`)가 이 줄만 미완료로 셌다(`harness/5.1-gate1.log`); archive 는 2차 gate PASS 와 Manager 검증 뒤
