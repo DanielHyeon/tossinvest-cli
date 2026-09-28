@@ -1,0 +1,12 @@
+TREE	HEAD 4e5edffd	uncommitted: internal/journal/a066_fill_transition_layers_test.go (new)
+ORIGIN	BTM row mutation loadriskbucketfilltransition B18 range@837 SURVIVED (mutrows run)
+CONTROL	GREEN	ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.333s
+F1 per-decision loop skipped	SURVIVED	ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.308s	behavior-only: SURVIVED
+F2 total count skipped	SURVIVED	ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.304s	behavior-only: SURVIVED
+F3 apply-path digest check removed	CAUGHT	TestA066FillTransitionBucketCountGuardsAreLayered	behavior-only: SURVIVED
+F4 digest + per-decision + total removed	CAUGHT	TestA066FillTransitionBucketCountGuardsAreLayered	behavior-only: SURVIVED
+CONTROL(v2)	GREEN	ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.648s
+F1v2 per-decision loop skipped	CAUGHT	TestA066FillTransitionBucketCountGuardsAreLayered
+F2v2 total count skipped	CAUGHT	TestA066FillTransitionBucketCountGuardsAreLayered
+F5 total count drops the bucket half	CAUGHT	TestA066FillTransitionBucketCountGuardsAreLayered
+NOTE	first pin (v1) checked only the if/return shape, so `false && …` mutants F1/F2 SURVIVED; v2 requires the exact comparison and catches F1/F2/F5
