@@ -1268,7 +1268,7 @@ committed release. The state_mismatch and audit_unavailable errors are produced 
   of failure line:
   - **a066's own (1): repaired.** The `cmd-tossctl--newenginecmd` BTM had no B1 happy-path row for a branchless
     function. The row was added in the next commit.
-  - **The stacked window (367 "missing evidence" lines, 161 files): not a066's.** Measured by intersecting the files of
+  - **The stacked window (368 "missing evidence" lines, 161 files; `775e054f` wrote 367, a miscount): not a066's.** Measured by intersecting the files of
     all 44 `(a066)` commits between base and landing with the 161 files named. Only three files overlap:
     `cmd/tossctl/engine.go`, `internal/app/engine/position_policy_transport.go`, `internal/execgw/gateway.go`. Every a066
     hunk in them sits in a function that has a bundle (`newEngineCmd` `bce793a7` @124, `StartPositionPolicyCommandServer`
@@ -1278,4 +1278,8 @@ committed release. The state_mismatch and audit_unavailable errors are produced 
     the user queue (archive candidates blocked by "base before the work"); the landing record cannot fix a window
     **start**. It is not re-pinned here, because moving the base forward would drop a066's own early commits from
     the judgement.
+- Re-check after the repair (`check_analysis` at `775e054f`, gate worktree): the only lines left are the window header
+  and the same 368 stacked-window lines. There is no a066 bundle error. The gate cannot pass step 5 until the
+  step-5 window-start question is decided; that is Manager's / the user's call, not something this lot can fix
+  honestly.
 
