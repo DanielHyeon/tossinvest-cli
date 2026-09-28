@@ -103,3 +103,10 @@ scratch 사본에서 `openspec archive a125-… --yes` 를 돌렸다. 결과는 
   1. 귀속 실측: base 뒤 a125 디렉터리를 만진 커밋 14 개의 `.go` 편집은 0 이고, `_self_repair_commits` 도 `[]` 이다. 옛 디렉터리명은 없다.
   2. 승인: 사용자 일괄 승인(2026-09-28, a063 수리안 = 특례 폐기 → 일반 경로)과 Manager 승인(2026-09-29, 이 재고정)이다.
   3. `base-commit.txt` 를 단독 커밋했고, 영수증은 그 커밋 메시지다.
+
+## 완료 게이트 PASS — 3차 `f9a2c8a3` (2026-09-29)
+
+- 격리 워크트리 `TossOS-worktrees/a125-gate`, `make gate CHANGE=a125-the-a063-exception-retires` **rc 0 · 11/11 GATE PASS**, 05:18~06:25 KST(load 4~6).
+  로그 `analysis/harness/5.1-gate3.log`. 직전 `make sdd-sync` rc 2(advisory `codegraphcontext` 시한만 incomplete — ⑥ 의 hard-evidence 신선도는 통과).
+- ⑤: 재고정한 base `573e2fac` → 워킹트리 창, required 0, `Function Logic Map: not-applicable` 표지로 통과.
+- 게이트 경과: 1차 `e62522ce` ② 에서 5.1 한 줄(예정) → 2차 `6baafd5c` ⑤ 형제 9 요구(판정 실패) → 재고정(`f9a2c8a3`) → 3차 PASS.
