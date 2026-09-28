@@ -1,10 +1,14 @@
+> **불구현 종결 (사용자 결정 2026-09-28, 옵션 1).** freeze 적대 리뷰가 STOP 을 권고했고, 수혜 실측·무가드 조건·1.12 반전
+> 필요로 중단했다 — 기록은 `review.md` 「종결 — 불구현」. 0.x 만 수행했고 **1.x~4.x 는 수행하지 않았다**(미체크는 미수행이며
+> 누락이 아니다). base 재고정은 `docs/WORKFLOW.md` 「사람 승인 base 재고정」 사람 절차로 대체한다. 아카이브는 `--skip-specs`.
+
 ## 0. 계약과 증거
 
 - [x] 0.1 `base-commit.txt` 고정 — **a122 아카이브 뒤**, proposal-freeze 직전 (`capture_change_base.py`)
 - [x] 0.2 `openspec validate a123-an-empty-window-is-derived-not-declared --strict` 통과
 - [x] 0.3 Python FLM **편집 전**: `_landing_refusal` · `compute_landing` · `_self_repair_commits` · `check` ·
       `changed_existing_functions` (a122 `enumerate.py`) → `analysis/python-function-logic/`
-- [ ] 0.4 proposal-freeze 리뷰 → `review.md` (도구 change 경량 + 적대 보이스 1 — 게이트가 받는 것을 늘리는 편집)
+- [x] 0.4 proposal-freeze 리뷰 → `review.md` (도구 change 경량 + 적대 보이스 1 — 게이트가 받는 것을 늘리는 편집)
 
 ## 1. RED — census 와 위조 픽스처
 

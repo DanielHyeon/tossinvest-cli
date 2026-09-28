@@ -68,3 +68,21 @@
   이웃의 `make sdd-test` 를 깨지 않도록 스크래치로 옮겨 두었다. GREEN 편집 0, `tools/logic-map/*.py` 변경 0.
 - 수용 측정용 detached 워크트리 5개를 만들어 두었다: `TossOS-worktrees/a123-acc-{a077@fcc60aa0, a079@f1e82e79,
   a067@4df72ed8, a068@8d8968ea, align@f098105b}` — 각 change 의 재고정 직전 커밋이다.
+
+## 종결 — 불구현 (사용자 결정 2026-09-28)
+
+- **결정**: 옵션 1 — a123 은 중단한다. base 재고정은 사람 절차로 문서화한다: `docs/WORKFLOW.md` 「사람 승인 base 재고정」 소절이며, 강제 지점은 `resolve_base` 의 디스크 = HEAD 대조다. Manager(Fable)가 차단 사실 2건을 직접 대조해 확인했다: `resolve_base` docstring 의 자인, `a30eb35a` 의 a096 Go 동승.
+- **사유**
+  - freeze 적대 리뷰가 STOP 을 권고했다.
+  - 수혜를 실측했다. R1 이 서는 곳은 a074 하나다(`840b3377`). a089 · a091 · a094 · a095 는 `a30eb35a` 의 최초 capture 에 Go 가 동승해 C2 · C3 가 거짓이다. a092 는 `7f3cbb03` 의 `_test.go` 때문에 C2 가 거짓이다.
+  - C3 는 무가드다. base 재기록은 어느 가드도 막지 않는다.
+  - R1 은 옛~새 base 사이 커버리지를 검사하지 않는다.
+  - R2 는 a122 1.12("신원은 거절에만")를 뒤집어야 선다.
+- **구현 산출물**: 없다. `tools/logic-map/*.py` 변경 0 · GREEN 편집 0 · Go 커밋 0. 커밋된 것은 0.1 base(`420428e0`), 0.3 편집 전 Python FLM(`cba46268`), 0.4 이 리뷰(`02716357`)다.
+- **초안 3종(커밋 안 함, 세션 스크래치패드)**: `/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/4b178b0a-b918-4419-8142-f266a03d8e82/scratchpad/`
+  - `test_derived_window.py` — 16 픽스처. 8 RED, 8 거절 대조군이다.
+  - `derive_block.py` — R1 · R2 초안이다.
+  - `red-keep.txt` — RED 실행 출력이다.
+  - 재범위(R2 단독 · R1 커버리지판) 시 재사용할 수 있다: 픽스처 모양(rebaselined · bundleless · 병합 · 최초 capture)과 부분집합 교차 설계. 단 스크래치는 휘발성이므로 재개할 때 먼저 옮길 것.
+- **수용 측정 워크트리**: 재고정 직전 커밋 `fcc60aa0` · `f1e82e79` · `4df72ed8` · `8d8968ea` · `f098105b` 로 만들었고 제거했다. sha 로 언제든 재생성할 수 있다.
+- **spec delta**: 적용하지 않는다(아카이브는 `--skip-specs`). `sdd-workflow` 정본에 구현되지 않은 SHALL 이 들어가면 안 된다.

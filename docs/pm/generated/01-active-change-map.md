@@ -119,5 +119,5 @@
 | `a120-audit-legacy-execution-baseline` | STORY-TOS-a120 | archived |
 | `a121-reconcile-stale-verification-artifacts` | STORY-TOS-a121 | in_progress |
 | `a122-the-logic-map-gate-outlives-a-merge` | STORY-TOS-a122 | archived |
-| `a123-an-empty-window-is-derived-not-declared` | STORY-TOS-a123 | in_progress |
+| `a123-an-empty-window-is-derived-not-declared` | STORY-TOS-a123 | archived |
 | `a124-a-deliverer-that-keeps-failing-blocks-entry` | STORY-TOS-a124 | archived |

@@ -12,7 +12,7 @@
     - STORY-TOS-a120 — Audit legacy execution-baseline adoption [archived] → `a120-audit-legacy-execution-baseline`
     - STORY-TOS-a121 — Reconcile stale verification artifacts from authoritative reads [in_progress] → `a121-reconcile-stale-verification-artifacts`
     - STORY-TOS-a122 — Keep the Function Logic Map gate answerable after a merge [archived] → `a122-the-logic-map-gate-outlives-a-merge`
-    - STORY-TOS-a123 — An empty window is derived, not declared [in_progress] → `a123-an-empty-window-is-derived-not-declared`
+    - STORY-TOS-a123 — An empty window is derived, not declared [archived] → `a123-an-empty-window-is-derived-not-declared`
 - EPIC-TOS-005 — Secure delivery and engineering operations [active]
   - FEAT-TOS-007 — Secure remote access and signed releases [active]
     - STORY-TOS-031 — Enable trusted-network VPN console access [archived] → `enable-vpn-console-access`
