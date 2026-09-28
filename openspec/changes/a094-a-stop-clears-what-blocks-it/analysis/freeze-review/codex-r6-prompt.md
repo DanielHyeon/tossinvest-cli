@@ -3,8 +3,12 @@ repository that runs a real-money automated trading engine. You are read-only: d
 do NOT run git commands that write, do NOT run network calls, do NOT run the engine or any command that could place an
 order. Reading files and grep/rg are fine. Do not run Go tests.
 
-Repository root: the current directory. It is an export of commit <TREE_COMMIT> (all code and documents are exactly that
-commit). <GO_DRIFT_NOTE — filled at run time from `git diff --stat 3937e341 <TREE_COMMIT> -- <cited Go files>`>
+Repository root: the current directory. It is an export of commit 7cf80832 (all code and documents are exactly that
+commit). Every Go file the change cites is byte-identical to the change's base `3937e341` except three, all
+additive and unrelated to this change: `internal/journal/schema.go` (a066 schema v34/v35 entries, +7 lines at :165-171 — so
+schema.go lines the change cites after :165 are +7 here), `internal/journal/outbox.go` (a124 `PendingAlertsForDelivery`, +22 lines
+at :512-533 — outbox.go lines after :512 are +22; `EnqueueAlert` at :131 is unchanged), and `cmd/tossctl/engine.go` (+2 lines at
+:121-122 registering a066's operator commands — engine.go lines after :121 are +2).
 
 Change under review — `openspec/changes/a094-a-stop-clears-what-blocks-it/`. The documents are the SIXTH draft (6판).
 **design.md section "D−4. 6판" is normative and overrides D−3 (5판), which overrides D−2 (4판), which overrides the rest.**
