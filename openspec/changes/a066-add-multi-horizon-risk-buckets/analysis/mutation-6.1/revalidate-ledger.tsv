@@ -6,3 +6,14 @@ B4 skipped (legacy decision judged as q_final)	CAUGHT	TestA066RevalidateReportsN
 B4 answers required	CAUGHT	TestA066RevalidateReportsNotRequiredForNonQFinalDecisions/legacy_risk_intent
 B3-backstop empty version marked q_final	CAUGHT
 NOTE	B3 skipped SURVIVED: shadowed by B4 (zero-value RiskIntent has an empty policy version, which carries no q_final marker); the backstop premise is pinned in the test and its mutant is CAUGHT
+TREE	HEAD 6c41f9ea	uncommitted: internal/journal/a066_fill_transition_limit_test.go (missing-dimension + layering pin)
+ORIGIN	BTM row mutation revalidateqfinaladmission B15 range@616 SURVIVED (mutrows run)
+CONTROL	GREEN	ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.276s
+R1 state digest check removed (compiles)	CAUGHT	TestA066RevalidateDimensionGuardsAreLayered
+R2 dimension loop refusal removed	CAUGHT	TestA066RevalidateDimensionGuardsAreLayered
+R3 both removed (compiles)	CAUGHT	TestA066RevalidateDimensionGuardsAreLayered
+R3b digest+loop removed — behavior test only	SURVIVED
+R4 digest+loop+count removed — behavior test only	CAUGHT
+CONTROL(v2)	GREEN	
+R5 dimension-count check removed	CAUGHT	TestA066RevalidateDimensionGuardsAreLayered
+NOTE	first R1/R3 attempts failed to compile (unused key) — discarded as not reaching the target; recompiled forms above

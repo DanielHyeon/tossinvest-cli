@@ -7,6 +7,9 @@ package journal
 
 import (
 	"context"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"testing"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
@@ -114,4 +117,104 @@ func TestA066RevalidateReportsNotRequiredForNonQFinalDecisions(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestA066RevalidateRefusesAMissingDimensionReservation 는 RevalidateQFinalAdmission 이 다섯 차원 예약 중 하나가 빠진
+// q_final 결정을 제출 전 재검증에서 거절함을 고정함(BTM 행 변이: 차원 누락 루프 B15 를 꺼도 스위트가 초록이었음 —
+// 누락을 만드는 시험이 없었음). 어느 가드가 먼저 서는지는 원장 층위의 문제라 여기서는 결과(거절 · 필요함)만 단언함.
+func TestA066RevalidateRefusesAMissingDimensionReservation(t *testing.T) {
+	j := openTestJournal(t)
+	request := qFinalIssueFixture(t, j, "missing-dimension")
+	if _, err := j.RecordQFinalDecisionAndReserve(context.Background(), request); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.db.Exec(`DELETE FROM risk_bucket_reservations WHERE decision_id=? AND bucket_dimension='sector'`, request.Issue.Decision.ID); err != nil {
+		t.Fatal(err)
+	}
+	required, err := j.RevalidateQFinalAdmission(context.Background(), request.Issue.Decision.ID)
+	if err == nil || !required {
+		t.Fatalf("a q_final decision missing its sector reservation must be refused: required=%v err=%v", required, err)
+	}
+	t.Logf("refused by: %v", err)
+}
+
+// TestA066RevalidateDimensionGuardsAreLayered 는 RevalidateQFinalAdmission 의 차원 누락 가드 둘을 선언된 층위로 고정함
+// (Manager 규칙 2026-09-28: 변이가 상호 엄폐를 실증한 쌍만 핀). 누락 차원은 먼저 verifyRiskBucketStateDigest(상태 재구성의
+// "bucket count")가 거절하고, 뒤의 RequiredDimensionOrder 루프(B15/B16)는 백스톱임 — BTM 행 변이에서 루프를 꺼도
+// 앞 가드가 막아 살아남았음(mutation-6.1/revalidate-ledger.tsv). 행동 시험은 먼저 서는 가드만 보므로 위치를 AST 로 봄:
+// ① 상태 digest 대조가 함수 본문 최상위 직선 경로에서 ② 차원 루프보다 앞이고 ③ 루프는 누락 차원에서 return 하며
+// ④ 루프 뒤에 차원 수 대조가 있음.
+func TestA066RevalidateDimensionGuardsAreLayered(t *testing.T) {
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, "risk_bucket_issuance.go", nil, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var body *ast.BlockStmt
+	for _, decl := range file.Decls {
+		if fn, ok := decl.(*ast.FuncDecl); ok && fn.Name.Name == "RevalidateQFinalAdmission" {
+			body = fn.Body
+		}
+	}
+	if body == nil {
+		t.Fatal("RevalidateQFinalAdmission not found")
+	}
+	digestAt, loopAt := -1, -1
+	for i, stmt := range body.List {
+		if digestAt < 0 && callsOnStraightPath(stmt, "verifyRiskBucketStateDigest") {
+			digestAt = i
+		}
+		rng, ok := stmt.(*ast.RangeStmt)
+		if !ok || !callsAnywhere(rng.X, "RequiredDimensionOrder") && !selectorCall(rng.X, "RequiredDimensionOrder") {
+			continue
+		}
+		for _, inner := range rng.Body.List {
+			if ifs, ok := inner.(*ast.IfStmt); ok {
+				if un, ok := ifs.Cond.(*ast.UnaryExpr); ok && un.Op == token.NOT {
+					if idx, ok := un.X.(*ast.IndexExpr); ok {
+						if id, ok := idx.X.(*ast.Ident); ok && id.Name == "seen" && len(ifs.Body.List) > 0 {
+							if _, ok := ifs.Body.List[0].(*ast.ReturnStmt); ok {
+								loopAt = i
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	if digestAt < 0 {
+		t.Fatal("① verifyRiskBucketStateDigest is not on the straight path of RevalidateQFinalAdmission")
+	}
+	if loopAt < 0 {
+		t.Fatal("③ the RequiredDimensionOrder backstop loop no longer refuses a missing dimension")
+	}
+	if digestAt >= loopAt {
+		t.Fatalf("② the state digest check (stmt %d) must precede the dimension backstop loop (stmt %d)", digestAt, loopAt)
+	}
+	// ④ 셋째 층: 루프 뒤의 `len(seen) != len(…)` 차원 수 대조(B17). 셋을 모두 꺼야 행동 시험이 빨개짐(R4) — 둘까지는 남은
+	// 하나가 막음(R3b 생존). 그래서 셋째도 자리로 못 박음.
+	countAt := -1
+	for i, stmt := range body.List {
+		if ifs, ok := stmt.(*ast.IfStmt); ok && i > loopAt {
+			if bin, ok := ifs.Cond.(*ast.BinaryExpr); ok && bin.Op == token.NEQ {
+				if call, ok := bin.X.(*ast.CallExpr); ok && len(call.Args) == 1 {
+					if id, ok := call.Args[0].(*ast.Ident); ok && id.Name == "seen" {
+						countAt = i
+					}
+				}
+			}
+		}
+	}
+	if countAt < 0 {
+		t.Fatal("④ the dimension-count check after the backstop loop is gone")
+	}
+}
+
+func selectorCall(e ast.Expr, name string) bool {
+	call, ok := e.(*ast.CallExpr)
+	if !ok {
+		return false
+	}
+	sel, ok := call.Fun.(*ast.SelectorExpr)
+	return ok && sel.Sel.Name == name
 }
