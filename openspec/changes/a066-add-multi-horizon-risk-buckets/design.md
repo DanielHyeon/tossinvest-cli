@@ -147,11 +147,11 @@ daily/horizon loss lock과 bucket snapshot 장애는 EXPOSURE_RAISING decision/l
   "입구를 거치지 않고 원장에 직접 쓰는 기록자는 … 행을 넣기 **전에** 자기 진입 차단 사유를 세워야 한다(SHALL)"라고 쓰고,
   정보성 critical 예외를 두지 않는다. 완화 통지가 자기 진입 차단 사유를 세우는 것은 의미가 맞지 않는다. 그래서 이행으로 규범을
   충족한다: a092 가 알림기의 기록 전용 입구(`n.mu` 아래 `RecordAlert`, 기록자별 `remindAfter`, 0 허용)를 착지시키면
-  `notifyRelaxation` 의 호출 한 자리를 그리로 옮긴다(task 5.5.5). 그때까지는 `journal.EnqueueAlert` 직접 적재다. a092 쪽
+  `notifyRelaxation` 의 호출 한 자리를 그리로 옮긴다(tasks §7 명명된 인계 — 집행 지점 a092 tasks 24.4). 그때까지는 `journal.EnqueueAlert` 직접 적재다. a092 쪽
   census 가 이 자리를 세고 있어 양방향 교차가 성립한다.
   a092 r23 판정(Manager 승인)으로 이것이 **유일 경로**가 됐다: 완화 통지에는 세울 자기 차단 사유가 없어 「먼저 잠금」 자체가
-  불가능하다. 상호 조건: a092 는 "a066 이행 커밋 인용"을 자기 archive 선행 조건으로 갖고, a066 의 task 5.5.5 는 a092
-  `RecordAlert` 착지를 선행 조건으로 갖는다.
+  불가능하다. 상호 조건: a092 는 "a066 이행 커밋 인용"을 자기 archive 선행 조건으로 갖고(a092 tasks 24.4), a066 의 이행(tasks §7
+  인계)은 a092 `RecordAlert` 착지를 선행 조건으로 갖는다.
 
 **audit 줄은 시도의 기록이다 (Manager 판정 2026-09-29 Q6 (i)).**
 - commit 앞 audit 줄의 value 는 `release_attempt` 다. 완료가 아니라 의도의 기록이라 롤백돼도 거짓이 아니다. "audit 가 commit 앞"

@@ -1220,7 +1220,7 @@ probed the shared bucket. The single writer, auth, and descriptor ordering hold 
 | 7 | Evidence debt: v35 immutability and UNIQUE, route auth, latch-path nil audit, generation filter, overage_minor kept, released/unknown owner, show read-only, ReadOnly values, census bypasses (local shadow, method value, local const), other-scope binding, M19 behavioural | R3 | P2 | **tested**: `a066_relaxation_evidence_test.go`, engine auth / latch audit tests, CLI show test, hardened census. MX01–MX07, MX12, MX17, MX18, MX20, EX13, EX14, EX16, CX21, M24–M26 all CAUGHT |
 | 8 | Harness counted a build failure as CAUGHT (M22) | R3 | P2 | **repaired**: `BUILD-FAILED` verdict; M22 now compiles and is CAUGHT |
 | 9 | Stale `status.md` / `tasks.md` sentences | R3 | P2 | **repaired** |
-| 10 | Notice is a direct recorder outside a092's recording entry | a092 census · Manager | — | **Q5 (a)**, binding after a092 r23: migrate onto `RecordAlert` when a092 lands it (task 5.5.5). Mutual precondition with a092's archive |
+| 10 | Notice is a direct recorder outside a092's recording entry | a092 census · Manager | — | **Q5 (a)**, binding after a092 r23: migrate onto `RecordAlert` when a092 lands it (tasks §7 named hand-over; enforced by a092 tasks 24.4). Mutual precondition with a092's archive |
 | 11 | REAFFIRM on every activation could make approvals always stale if a trigger fires per cycle | R1 | P3 | residual → trigger lot (cadence and deduplication) |
 | 12 | After releasing one owner's latch on an over-limit shared bucket, entries are refused by the cap, not by the latch | R1 | P3 | record (the safety outcome is unchanged) |
 | 13 | `s.mu` held across the transaction and the notice | R2 | P3 | record (the quarantine release needs the same connection anyway) |
