@@ -20,7 +20,7 @@
 - [x] 0.6c **4판 반영**(Manager 2026-09-29 R2 처분 + a092 교차) — design D1·D3·D4·D5·D7·D8·D10·D12 · spec delta · tasks · workingSet FLM. **판정 아님**
 - [x] 0.6d **codex 3라운드** — **REJECT**(P0 0 · P1 4 · P2 3 · P3 1), `review.md` 「codex 3라운드」 · `analysis/freeze-review/codex-r3-output.md`
 - [x] 0.6e **5판 반영**(Manager 2026-09-29) — R3-1 tasks 수리 · R3-2/R3-3 a090 정화 · R3-4 a092 입구 구현 하드 의존 · P2 셋 · P3. **판정 아님**
-- [ ] 0.6f **codex 4라운드(좁은 확인)** — 대기열
+- [x] 0.6f **codex 4라운드(좁은 확인)** — **PASS**(P2 3), `review.md` 「codex 4라운드」 · `analysis/freeze-review/codex-r4-output.md`
 - [ ] 0.9 **구현 하드 조건** — a092 `RecordAlert` 입구가 main 에 착지한 뒤에만 1.x 이후를 시작한다(설계 freeze 는 독립)
 - [x] 0.7 **Q1·Q3 결정 기록**(Manager 2026-09-29, 사용자행 아님) — Q1 = (a) 정본 준수(`exit-policy/spec.md:62`·`:65`), Q3 = 판정 진입 + 하류 5자리 명명 잔여. design 「Q — 결정 기록」
 - [ ] 0.8 **Q2 실측 — 사전 승인됨(Manager 2026-09-29), 구현 로트가 장중 실행** — 정지·0가격 종목 포함 `/prices` 읽기 전용 GET 1회, 쓰기 0.
