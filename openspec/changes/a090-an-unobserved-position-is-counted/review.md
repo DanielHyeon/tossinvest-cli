@@ -123,3 +123,30 @@ Manager 처분(2026-09-29)대로 썼다. 정본 `design.md`(3판).
 
 - **판정: REJECT(P0 1 · P1 2 · P2 3). 반영하지 않았다.** R2-1 은 a090 을 넘는 **기존 관행**(계좌번호가 critical 경보 필드·로그에 실림)을 드러냈다 — a090 범위 처분과 기존 관행 처분을 나눠 Manager/사용자 결정으로 올린다.
 
+## 4판 (2026-09-29) — codex 2라운드 + a092 교차 반영 · 판정 아님
+
+Manager 처분(2026-09-29)대로 썼다. 정본 `design.md`(4판).
+
+| id | 처분 | 반영 자리 |
+|---|---|---|
+| R2-1 (a) | 새 경보·공지·로그에서 계좌 ref 제거(필드·key 모두). D4 의 거짓 서술("계좌번호 없음") 정정. 관측자 전체 `Log` 배선 철회 → **전용 로거 `UnobservedLog`**(새 normal 줄만, 기존 줄 생산 출력 무변화). 카나리 시험 | design D4 · D5 · D7 · D8 · D12 · spec 문장 + 시나리오 · tasks 2.17 · 3.4 |
+| R2-1 (b) | 사용자 큐(Manager). 사실 요약 — 아래 「계좌 정보 사실 고정」 | design D12 |
+| R2-2 | 커밋된 강화의 공지 적재 실패 → 미적재 공지 대기열, 같은 전이 id 로 재시도, 연속 종료 뒤에도, 재시작 손실은 이름 붙인 잔여 | design D10 · spec 문장 + 시나리오 · tasks 2.3g |
+| R2-3 | `go/parser` 이탈 전수 핀 — 얼린 목록(감싼 `if` 조건 원문 + 블록 내 순번), B8 은 **원래 `continue` 노드 하나**만, 변이 다섯 | tasks 2.15 |
+| R2-4 | 해제 보호는 시도 단위 — 해제 뒤 새 실패는 새 증거 | design D10 · tasks 2.3g ⑥ |
+| R2-5 | 주입 시계 계약(`LeaseAnchor` 폴백은 `Now/Since`) — 분리 픽스처 사용, 역행 전후 앵커, 계정 사다리는 벽시계 | design D3 · tasks 2.3f |
+| R2-6 | D1 의 B2 행(어느 사다리도 안 잼) · tracer B7 도달 가능 · 하류 과장 정정 · workingSet FLM Safety conclusion 정정 | design D1 · workingSet FLM |
+| a092 K6 | 새 알림·공지는 a092 **단일 입구**(창 0)로. 직접 `EnqueueAlert` 금지(census 핀). 적재 실패 잠금은 입구의 생산자 래치. 입구 밖 형태면 먼저-잠금 | design D4 · D5 · spec 문장 · proposal 선후 관계 |
+| 세대 읽기 시점 | 3판의 "적재 **전** 세대 읽기" 는 정본(`engine-safety/spec.md:1468-1470`) 위반 — a094 D−6.2 와 같이 정정(입구 밖 형태일 때 오류 반환 직후) | design D4 · spec 문장 · tasks 2.3g ⑤ |
+
+### 계좌 정보 사실 고정 (R2-1 (b) — 사용자 결정 대상, 2026-09-29 측정)
+
+- `AccountRef` 는 **실제 계좌번호**다 — `internal/app/engine/interlock.go:680-686`("DisplayName carries accountNo" · `accountRef := strings.TrimSpace(first.DisplayName)`).
+- `obs.FieldAccount` 의 비시험 사용은 **20 자리**(정의 `internal/obs/log.go:45` 제외; `grep -rn FieldAccount internal cmd --include=*.go`, `_test.go` 제외,
+  2026-09-29 측정 — 3판 대화 보고의 "23" 은 시험 포함 수라 정정). 그중 **19 자리가 원문 `AccountRef`**, **1 자리만 가린 값**이다(`interlock.go:441`
+  `status.MaskedAccount()` → `attest.Mask`, `:273`). 파일별: adoption 4 · exitloop 2(계정 두절 경보 `:838` · 관측자 오류 로그 `:1730`) · exitwiring 4 ·
+  reconcileloop 3 · runtime 3 · notifier 2(`:387`·`:394`) · mode 1(`:67`).
+- 그중 **critical 경보는 ntfy 외부 전송**을 탄다(알림기 전달 경로).
+- `internal/obs` 에 가림 함수는 **0** 이다. 저장소에는 **선례가 하나** 있다 — `attest.Mask`(`interlock.go:273` `MaskedAccount`) — 가림 설계의 출발점이 될 수 있다.
+- 기존 관행이라 a090 범위 밖. 외부 전송 여부·가림 설계는 **사용자 결정**(Manager 가 사용자 보고에 올림). a090 은 그 관행을 넓히지 않는다.
+
