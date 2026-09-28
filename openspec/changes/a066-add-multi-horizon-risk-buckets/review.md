@@ -1252,3 +1252,15 @@ committed release. The state_mismatch and audit_unavailable errors are produced 
     crash, or when the compensation write itself fails. The ledger is unchanged and the CLI's "refused" is true.
   - After a WAL fsync error at commit, a `not_committed` line could sit beside a durable commit. The CLI then says
     "outcome unknown", which is the right direction.
+
+### 5.5 gate (2026-09-29, Manager slot)
+
+- The landing record was computed by the tool, not chosen: `landed-commit.txt` = `e9355a82` (`dd55d755`; raw output
+  `analysis/gate-5.5/record-landing.log`).
+- The isolated worktree `TossOS-worktrees/a066-gate` was moved to `dd55d755`. `make sdd-infra` (venv) was built. The
+  first `make sdd-sync` hit an advisory timeout (codegraphcontext 300 s under load 11), and the retry gave "all indexes
+  current".
+- Gate run 1 at `dd55d755` stopped at **2/11** because 6.5, the line that runs this gate, was still unchecked
+  (`analysis/gate-5.5/gate1.log`). Per the run → record → check convention, 6.5 is checked in the next commit and the
+  gate is rerun.
+
