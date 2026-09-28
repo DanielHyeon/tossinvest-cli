@@ -1,0 +1,331 @@
+{
+  "language": "python",
+  "file": "tools/logic-map/check_analysis.py",
+  "revision": "9e63b681",
+  "head_commit": "7cf808321001dd830d537a9a90c9f8d94df6ce99",
+  "source_sha256": "e5d26a981c969f7deb27f56a20fbf4ec37f1c3861eb88f1586e228a6da21af1a",
+  "function": "main",
+  "signature": "main()",
+  "start": {
+    "line": 3361,
+    "column": 1
+  },
+  "end": {
+    "line": 3477,
+    "column": 13
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "If",
+      "line": 3371,
+      "inherited_line": false,
+      "source": "if reconfigure is not None:"
+    },
+    {
+      "id": "B2",
+      "kind": "If",
+      "line": 3378,
+      "inherited_line": false,
+      "source": "if args.record_landing:"
+    },
+    {
+      "id": "B3",
+      "kind": "Try",
+      "line": 3379,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B4",
+      "kind": "ExceptHandler",
+      "line": 3381,
+      "inherited_line": false,
+      "source": "except GATE_FAULTS as exc:"
+    },
+    {
+      "id": "B5",
+      "kind": "For",
+      "line": 3383,
+      "inherited_line": false,
+      "source": "for line in lines:"
+    },
+    {
+      "id": "B6",
+      "kind": "Try",
+      "line": 3390,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B7",
+      "kind": "ExceptHandler",
+      "line": 3392,
+      "inherited_line": false,
+      "source": "except GATE_FAULTS as exc:"
+    },
+    {
+      "id": "B8",
+      "kind": "BoolOp",
+      "line": 3403,
+      "inherited_line": false,
+      "source": "base and 'landing' in context"
+    },
+    {
+      "id": "B9",
+      "kind": "If",
+      "line": 3403,
+      "inherited_line": false,
+      "source": "if base and 'landing' in context:"
+    },
+    {
+      "id": "B10",
+      "kind": "If",
+      "line": 3413,
+      "inherited_line": false,
+      "source": "if not landing:"
+    },
+    {
+      "id": "B11",
+      "kind": "BoolOp",
+      "line": 3418,
+      "inherited_line": false,
+      "source": "landed_after or '?'"
+    },
+    {
+      "id": "B12",
+      "kind": "BoolOp",
+      "line": 3424,
+      "inherited_line": false,
+      "source": "context.get('base_shaped_bundles') or []"
+    },
+    {
+      "id": "B13",
+      "kind": "comprehension",
+      "line": 3424,
+      "inherited_line": true,
+      "source": " for name in context.get('base_shaped_bundles') or []"
+    },
+    {
+      "id": "B14",
+      "kind": "If",
+      "line": 3426,
+      "inherited_line": false,
+      "source": "if fault:"
+    },
+    {
+      "id": "B15",
+      "kind": "If",
+      "line": 3430,
+      "inherited_line": false,
+      "source": "if base_shaped:"
+    },
+    {
+      "id": "B16",
+      "kind": "If",
+      "line": 3434,
+      "inherited_line": false,
+      "source": "if len(base_shaped) > 3:"
+    },
+    {
+      "id": "B17",
+      "kind": "Try",
+      "line": 3448,
+      "inherited_line": false,
+      "source": "try:"
+    },
+    {
+      "id": "B18",
+      "kind": "ExceptHandler",
+      "line": 3456,
+      "inherited_line": false,
+      "source": "except GATE_FAULTS as exc:"
+    },
+    {
+      "id": "B19",
+      "kind": "If",
+      "line": 3458,
+      "inherited_line": false,
+      "source": "if refusal:"
+    },
+    {
+      "id": "B20",
+      "kind": "If",
+      "line": 3470,
+      "inherited_line": false,
+      "source": "if errors:"
+    },
+    {
+      "id": "B21",
+      "kind": "For",
+      "line": 3471,
+      "inherited_line": false,
+      "source": "for error in errors:"
+    }
+  ],
+  "returns": [
+    {
+      "line": 3385,
+      "value": "code"
+    },
+    {
+      "line": 3473,
+      "value": "1"
+    },
+    {
+      "line": 3477,
+      "value": "0"
+    }
+  ],
+  "raises": [],
+  "calls": [
+    {
+      "line": 3362,
+      "callee": "argparse.ArgumentParser"
+    },
+    {
+      "line": 3363,
+      "callee": "parser.add_argument"
+    },
+    {
+      "line": 3364,
+      "callee": "parser.add_argument"
+    },
+    {
+      "line": 3364,
+      "callee": "str"
+    },
+    {
+      "line": 3365,
+      "callee": "parser.add_argument"
+    },
+    {
+      "line": 3369,
+      "callee": "parser.parse_args"
+    },
+    {
+      "line": 3370,
+      "callee": "getattr"
+    },
+    {
+      "line": 3375,
+      "callee": "reconfigure"
+    },
+    {
+      "line": 3377,
+      "callee": "Path"
+    },
+    {
+      "line": 3380,
+      "callee": "record_landing"
+    },
+    {
+      "line": 3384,
+      "callee": "print"
+    },
+    {
+      "line": 3391,
+      "callee": "check"
+    },
+    {
+      "line": 3397,
+      "callee": "context.get"
+    },
+    {
+      "line": 3397,
+      "callee": "str"
+    },
+    {
+      "line": 3404,
+      "callee": "context.get"
+    },
+    {
+      "line": 3404,
+      "callee": "str"
+    },
+    {
+      "line": 3408,
+      "callee": "str"
+    },
+    {
+      "line": 3409,
+      "callee": "print"
+    },
+    {
+      "line": 3410,
+      "callee": "_target_text"
+    },
+    {
+      "line": 3411,
+      "callee": "context.get"
+    },
+    {
+      "line": 3414,
+      "callee": "_commits_after"
+    },
+    {
+      "line": 3424,
+      "callee": "context.get"
+    },
+    {
+      "line": 3424,
+      "callee": "str"
+    },
+    {
+      "line": 3425,
+      "callee": "context.get"
+    },
+    {
+      "line": 3429,
+      "callee": "print"
+    },
+    {
+      "line": 3433,
+      "callee": "', '.join"
+    },
+    {
+      "line": 3434,
+      "callee": "len"
+    },
+    {
+      "line": 3435,
+      "callee": "len"
+    },
+    {
+      "line": 3436,
+      "callee": "print"
+    },
+    {
+      "line": 3437,
+      "callee": "len"
+    },
+    {
+      "line": 3451,
+      "callee": "resolve_referenced_change"
+    },
+    {
+      "line": 3452,
+      "callee": "_recording_refusal"
+    },
+    {
+      "line": 3454,
+      "callee": "_read_evidence"
+    },
+    {
+      "line": 3459,
+      "callee": "print"
+    },
+    {
+      "line": 3462,
+      "callee": "print"
+    },
+    {
+      "line": 3472,
+      "callee": "print"
+    },
+    {
+      "line": 3474,
+      "callee": "print"
+    }
+  ]
+}

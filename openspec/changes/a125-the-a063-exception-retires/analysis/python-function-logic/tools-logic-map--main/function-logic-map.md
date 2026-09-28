@@ -35,3 +35,10 @@
 | B20 | 3509 | If | `if errors:` |
 | B21 | 3510 | For | `for error in errors:` |
 | B22 | 3513 | If | `if context.get('execution_baseline_adoption'):` |
+
+## 편집 후 재추출 (a125 3.3, `9e63b681`)
+
+- `ast.after.json` — 분기 22→21 · 반환 3→3 · raise 0→0
+- 분기 · 반환 원문 대조(`difflib.ndiff`, 위치가 아니라 원문으로 — 분기 번호는 위치다):
+
+    - If if context.get('execution_baseline_adoption'):

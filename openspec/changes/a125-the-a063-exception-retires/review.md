@@ -11,7 +11,7 @@
 | 1 | P2 | 구멍 없음. 기록 보유는 a063 하나이고 a063 에서 빌리는 change 는 0 이다. `SDD_BASE_REF` 는 persisted 하나로 좁아져 더 엄해진다. 비-a063 에 기록이 생기면 옛 도구는 fail-closed, 새 도구는 무시한다(D2 승인 사항). | 수용 |
 | 2 | P2 | 델타 정합(scenario 48 = 49 − 6 + 2 + 3). RENAMED+MODIFIED 의 archive 적용 순서는 미검증이다. | scratch archive dry-run 으로 확인(아래 「archive dry-run」) |
 | 3 | P2 | 남은 참조: `check_analysis.py` docstring 의 자식 프로세스 자리 수 주장(`execution_baseline.validate`) · README:95 · WORKFLOW:241 · README 247-290 · `fixture_git_env.py:3`. Makefile · CI 는 discover 라 무변경이다. `SDD_PYTHON` 은 `tools/sdd/test_sdd_doctor.py` 가 덮으므로 skip 시험(456) 삭제의 손실은 0 이다. | 2.1 · 2.3 에 포함 |
-| 4 | **P1** | 재고정 조건 ① 이 오늘은 **성립하지 않는다.** base 번들 3 은 E(=`676bd4b4^`)의 파일 해시를 적는데, 세 함수는 오늘 존재하므로 P 기준으로는 current 여야 한다. 재고정 뒤에는 `676bd4b4` 가 창 밖이고, `validate_target` 이 base 번들 해시를 안 보므로 어떤 게이트도 ① 을 다시 재지 않는다. | tasks 4.2 를 바꿨다: base 3 을 current 로 재추출 → 특례 없는 도구로 **옛 base P 에서** `check_analysis` → 출력에서 9 함수 이름의 missing · stale · revision 오류 0 을 필터 영수증으로 남김 → 그다음 재고정. proposal 문구도 "재추출 후 해당" 으로 고침 |
+| 4 | **P1** | *(실측으로 일부 정정 — design D4-2: revision 은 base 가 맞고 결함은 soak_test 두 번들의 E 해시)* 재고정 조건 ① 이 오늘은 **성립하지 않는다.** base 번들 3 은 E(=`676bd4b4^`)의 파일 해시를 적는데, 세 함수는 오늘 존재하므로 P 기준으로는 current 여야 한다. 재고정 뒤에는 `676bd4b4` 가 창 밖이고, `validate_target` 이 base 번들 해시를 안 보므로 어떤 게이트도 ① 을 다시 재지 않는다. | tasks 4.2 를 바꿨다: base 3 을 current 로 재추출 → 특례 없는 도구로 **옛 base P 에서** `check_analysis` → 출력에서 9 함수 이름의 missing · stale · revision 오류 0 을 필터 영수증으로 남김 → 그다음 재고정. proposal 문구도 "재추출 후 해당" 으로 고침 |
 | 5 | **P1** | 소급 고지가 사라진다. `retrospective-exception` · "missing original analysis remains debt" 를 적는 유일한 기계 기록이 삭제되는 `execution-baseline.json` 이다. | tasks 4.1 에 추가: a063 `review.md` 영수증에 그 두 사실을 명시하고, a063 `tasks.md` 4.0 에 "a125 에서 폐기" 주석 |
 | 6 | **P1** | 재고정 시점. a063 의 4.2~4.4(사람 운영, 수 일~수 주)가 끝나기 전에 형제 Go 가 착지하면 창에 다시 요구되고, current 번들 6 의 파일 단위 해시가 낡는다. 둘째 재고정 · 재추출이 거의 확실하다. | **Manager 결정 (나)(2026-09-29)**: a125 는 ① 영수증까지, 재고정은 a063 게이트 직전에 한 번(tasks 4.3 · design D4-3) |
 | 7 | P2 | `c727ad12`(S)는 HEAD 조상이 아니고, `676bd4b4` 가 main 사본이다. `0c563c6c`·`b8f31f27` "[a063]" 은 renumber 전 **다른** a063(현 a069) 것이다. 현재 a063 디렉터리는 `47a7f90a` 에서 태어났고 옛 이름이 없다. | 4.2 영수증에 적는다 |
@@ -42,3 +42,40 @@ change 디렉터리 파일을 전수로 읽는지.
 
 scratch 사본에서 `openspec archive a125-… --yes` 를 돌렸다. 결과는 `sdd-workflow: ~ 2 modified · - 3 removed · → 1 renamed` 이고,
 옛 요건 이름 넷의 잔존은 0 이다. 새 시나리오 둘과 새 요건 이름이 적용됐다(2026-09-29).
+
+## 3.2 변이 — 2026-09-29 (`harness/mutate.py`, 사본 · pid 디렉터리 · 무변이 대조군 선행)
+
+원본은 `9e63b681` 의 `check_analysis.py` 사본이다(sha256 대조). 무변이 대조군이 **GREEN** 인 것을 먼저 확인했다. 변이마다 치환 대상이
+정확히 한 번 있었음을 단언해 "닿았다" 를 확인했고, 시험 묶음은 `TheA063ExceptionIsRetired` · 문맥 재사용 · 시한 시험이다.
+
+| 변이 | 결과 |
+|---|---|
+| M1 기록의 `execution_base` 를 base 로 읽기 | CAUGHT |
+| M2 a063 착지 기록 거절 복원(판정) | CAUGHT |
+| M3 a063 기록 명령 거절 복원(`_recording_refusal`) | CAUGHT |
+| M4 id 로 착지 우회(검증 없이 수락) | CAUGHT |
+| M5 비정규 기록 거절 복원 | CAUGHT |
+| M6 `SDD_BASE_REF` 대조 끔 | CAUGHT |
+| M7 이관 라벨 복원(출력) | CAUGHT |
+| M8 옛 문맥 키 되살림 | CAUGHT |
+
+**8/8 CAUGHT.** 원장은 `harness/3.2-mutate.log` · `3.2-mutate.json` 이다.
+
+- `not-applicable`: `_verdict` 의 prefetch `except ValueError: sources = []` 는 변이 대상에서 뺐다.
+  - 이 갈래는 착지가 있을 때만 서는데, 착지는 같은 `evidence` 로 `_select_pinning` 을 먼저 통과해야 생긴다. 그래서 남는 경우는 두 호출 사이에 심링크 풀이가 바뀌는 경합 하나뿐이다.
+  - 이 갈래를 지우는 변이는 판정이 같은 최적화 생략이라 살아남을 것이 확실하다.
+  - 갈래는 방어로 남긴다. `_verdict` 가 `_judged` 의 try 밖에서 불리기 때문이다(gstack 리뷰 P2-3).
+
+## gstack 코드 리뷰 — 2026-09-29 (독립 서브에이전트, 커밋 `9e63b681`)
+
+- **APPROVE-WITH-FIXES — P0 · P1 없음.**
+- 확인한 것:
+  - 지운 키 · 상수 · 인자를 읽거나 넘기는 코드가 0 이다.
+  - 비-a063 의 창 · 착지 · 빌림 · `SDD_BASE_REF` 문장이 글자까지 같다.
+  - 통째로 지운 시험 하나(`SDD_PYTHON` skip 시험)가 지키던 동작은 `tools/sdd/test_sdd_doctor.py:73-76` 이 덮는다.
+- P2 넷:
+  1. `check()` docstring 두 자리가 지운 모듈을 현재 판정 입력으로 열거했다 → "a125 에서 삭제" 를 달았다.
+  2. 시험 파일 주석(:31)이 지운 모듈을 가리켰다 → 과거형으로 고쳤다.
+  3. 도달하지 않는 방어 갈래 → 위 변이 절에 `not-applicable` 사유를 적었다.
+  4. 3.x 미체크 → 이번 로트로 닫는다.
+- 참고: 핀 시험의 `ADOPTION_WORDS` 는 밑줄 표기 `execution_baseline` 을 세지 않는다. docstring 의 과거 기록 두 자리가 그 표기로 남는 것은 의도다.

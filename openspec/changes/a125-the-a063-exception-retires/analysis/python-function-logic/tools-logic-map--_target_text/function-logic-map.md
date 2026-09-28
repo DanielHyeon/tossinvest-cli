@@ -15,3 +15,12 @@
 |---|---:|---|---|
 | B1 | 1240 | If | `if not landing:` |
 | B2 | 1245 | IfExp | `f'audited source-commit {landing}' if audited else f'landed-commit {landing}'` |
+
+## 편집 후 재추출 (a125 3.3, `9e63b681`)
+
+- `ast.after.json` — 분기 2→1 · 반환 2→2 · raise 0→0
+- 분기 · 반환 원문 대조(`difflib.ndiff`, 위치가 아니라 원문으로 — 분기 번호는 위치다):
+
+    - IfExp f'audited source-commit {landing}' if audited else f'landed-commit {landing}'
+    - f'audited source-commit {landing}' if audited else f'landed-commit {landing}'
+    + f'landed-commit {landing}'

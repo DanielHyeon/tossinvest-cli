@@ -39,3 +39,11 @@
 | B24 | 2995 | If | `if ast_value.get('source_sha256') != expected_hash:` |
 | B25 | 2997 | IfExp | `'current' if expected.get('current_hash') else 'base'` |
 | B26 | 2998 | If | `if ast_value.get('revision', 'current') != expected_revision:` |
+
+## 편집 후 재추출 (a125 3.3, `9e63b681`)
+
+- `ast.after.json` — 분기 26→26 · 반환 4→4 · raise 0→0
+- 분기 · 반환 원문 대조(`difflib.ndiff`, 위치가 아니라 원문으로 — 분기 번호는 위치다):
+
+    - [f'missing Function Logic Map for {len(required)} function(s) modified between base {base[:12]} and {_target_text(landing, adopted)}: {nam
+    + [f'missing Function Logic Map for {len(required)} function(s) modified between base {base[:12]} and {_target_text(landing)}: {names}']

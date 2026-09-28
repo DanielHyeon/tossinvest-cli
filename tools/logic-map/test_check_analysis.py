@@ -28,7 +28,7 @@ import sdd_doctor
 # 시험 픽스처는 개발자의 git 설정을 **안 읽는다** (task 6.4(h)) — 전역 · 시스템 설정 파일과 환경 변수로 주는 설정
 # (`GIT_CONFIG_PARAMETERS` · `GIT_CONFIG_COUNT/KEY_<n>/VALUE_<n>`) 둘 다. `commit.gpgsign` · `core.hooksPath` · `gpg.format` 이 그 자리에
 # 있으면 픽스처의 `git commit` 이 스위트 대부분을 에러로 만들었다(실측 — `TheSuiteDoesNotReadTheDevelopersGitConfig`). 규칙은
-# `fixture_git_env.isolate` 한 곳이고 `test_execution_baseline.py` 도 같은 것을 부른다. 개별 시험이 따로 끄는 자리(`GIT_CONFIG_GLOBAL`
+# `fixture_git_env.isolate` 한 곳이다(짝 모듈 `test_execution_baseline.py` 는 a125 에서 지워졌다). 개별 시험이 따로 끄는 자리(`GIT_CONFIG_GLOBAL`
 # 을 넘기는 헬퍼들)는 그대로 둔다 — 시험에서 방어 이중은 무해하다.
 import fixture_git_env  # noqa: E402
 fixture_git_env.isolate()

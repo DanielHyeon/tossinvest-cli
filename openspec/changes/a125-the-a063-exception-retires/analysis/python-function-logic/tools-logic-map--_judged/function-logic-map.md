@@ -45,3 +45,15 @@
 | B30 | 2889 | If | `if not landing:` |
 | B31 | 2894 | Try | `try:` |
 | B32 | 2896 | ExceptHandler | `except GATE_FAULTS as exc:` |
+
+## 편집 후 재추출 (a125 3.3, `9e63b681`)
+
+- `ast.after.json` — 분기 32→29 · 반환 13→12 · raise 0→0
+- 분기 · 반환 원문 대조(`difflib.ndiff`, 위치가 아니라 원문으로 — 분기 번호는 위치다):
+
+    - BoolOp adopted and _landing_record(change_dir, root, head) is not None
+    - If if adopted and _landing_record(change_dir, root, head) is not None:
+    - IfExp str(facts.get('adoption_source', '')) if adopted else resolve_landing(change_dir, root, base, head, evidence)
+    - ([ADOPTION_REFUSES_A_LANDING], False)
+    - (_verdict(root, base, landing, adopted, required, evidence, review_text), True)
+    + (_verdict(root, base, landing, required, evidence, review_text), True)

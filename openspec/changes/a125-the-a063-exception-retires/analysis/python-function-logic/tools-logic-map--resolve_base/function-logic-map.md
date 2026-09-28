@@ -31,3 +31,24 @@
 | B16 | 1000 | If | `if adoption:` |
 | B17 | 1005 | BoolOp | `override and resolve(override) != effective` |
 | B18 | 1005 | If | `if override and resolve(override) != effective:` |
+
+## 편집 후 재추출 (a125 3.3, `9e63b681`)
+
+- `ast.after.json` — 분기 18→14 · 반환 2→2 · raise 9→8
+- 분기 · 반환 원문 대조(`difflib.ndiff`, 위치가 아니라 원문으로 — 분기 번호는 위치다):
+
+    - Try try:
+    - ExceptHandler except AdoptionError as exc:
+    - IfExp str(adoption['effective_base']) if adoption else persisted
+    - If if adoption:
+    - BoolOp override and resolve(override) != effective
+    + BoolOp override and resolve(override) != persisted
+    - If if override and resolve(override) != effective:
+    + If if override and resolve(override) != persisted:
+    - effective
+    + persisted
+- **편집 전 목록과의 차이(정정)**: 편집 전 「편집 지점」은 정규식으로 B13 · B14 · B16 셋을 골랐는데, 실제로 지운 분기는
+  넷이다 — `IfExp …if adoption else persisted` 가 빠져 있었다(원문에 `adoption` 이 있는데 목록에서 누락된 것은 편집 전 목록을
+  만든 뒤 정규식을 대소문자 무시로 다시 돌리며 고친 목록이 한 줄 어긋났기 때문이다). 그리고 `SDD_BASE_REF` 대조 대상이
+  `effective` → `persisted` 로 **바뀐** 분기 둘(BoolOp · If)이 있다 — 기록이 없을 때 `effective == persisted` 였으므로 기록 없는
+  change 의 판정은 같다(1.1 논증). 기록 있는 a063 에서만 대조 대상이 E → P 로 바뀐다(반전 시험 `test_sdd_base_ref_accepts_only_the_base_commit`).

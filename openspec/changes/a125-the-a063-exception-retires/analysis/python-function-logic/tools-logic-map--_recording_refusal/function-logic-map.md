@@ -25,3 +25,11 @@
 | B10 | 3276 | If | `if why:` |
 | B11 | 3286 | If | `if dirty.returncode not in (0, 1):` |
 | B12 | 3293 | If | `if dirty.returncode:` |
+
+## 편집 후 재추출 (a125 3.3, `9e63b681`)
+
+- `ast.after.json` — 분기 12→11 · 반환 10→9 · raise 1→1
+- 분기 · 반환 원문 대조(`difflib.ndiff`, 위치가 아니라 원문으로 — 분기 번호는 위치다):
+
+    - If if facts.get('execution_baseline_adoption'):
+    - (ADOPTION_REFUSES_A_LANDING, '')

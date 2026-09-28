@@ -1,0 +1,15 @@
+a063-align-attestation-renewal-profile errors=333 required=340 320.1s
+a066-add-multi-horizon-risk-buckets errors=389 required=393 583.6s
+a070-add-multi-market-horizon-router errors=1 required=340 346.8s
+a074-critical-events-reach-the-operator errors=352 required=347 522.5s
+a087-a-protective-exit-is-a-market-order errors=1 required=283 274.2s
+a091-a-stop-that-sold-nothing-is-critical errors=285 required=283 247.6s
+a107-retire-the-second-protection-core errors=1 required=253 184.8s
+a121-reconcile-stale-verification-artifacts errors=1 required=84 84.5s
+a125-the-a063-exception-retires errors=1 required=0 7.0s
+verify-execution-capability errors=1 required=None 0.0s
+verify-observes-the-trigger errors=1 required=543 327.6s
+a099-a-claim-excludes-the-second-sender errors=0 required=32 43.4s
+a122-the-logic-map-gate-outlives-a-merge errors=1 required=48 69.2s
+a123-an-empty-window-is-derived-not-declared errors=1 required=48 87.6s
+done 14

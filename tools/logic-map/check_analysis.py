@@ -2713,12 +2713,12 @@ def check(
 
     **범위를 정확히 적는다 (task 7.5.2.4 · 7.5.22 정정 · 7.5.9 갱신).** 원장이 보는 자식 프로세스 읽기는 **하나**다
     (추적 목록 `git ls-files -z`). 7.5.22 에 센 이 파일의 `subprocess.run` 은 **열여섯 자리**였고 원장에 남는 것은 **0** 이었다 — 앞 로트가
-    넷(`git diff` · `git show` · `go run` · `execution_baseline`)만 대고 그친 것은 열거가 아니라 예시였다.
+    넷(`git diff` · `git show` · `go run` · `execution_baseline` — 마지막 모듈은 a125 에서 삭제)만 대고 그친 것은 열거가 아니라 예시였다.
     판정 입력을 읽는 것만 꼽아도 `changed_existing_functions` 의 `git diff` · `base_file` 의 `git show`(7.5.34 에서
     없어졌다 — 옛 쪽도 `_verified_objects` 의 `git cat-file` 이 읽는다) ·
     `go_functions` 의 `go run`(워킹트리 Go 바이트) · `_safe_changed_go_paths` 의 `git diff --numstat` ·
     `_committed_many` 의 `git cat-file` · `_recording_refusal` 의 `git diff --quiet` · 역사를 걷는 **열**
-    자리 · 그리고 `execution_baseline.validate` 다 (7.5.23 정정: 앞 판본은 "아홉" 이라 적었다 —
+    자리 · 그리고 `execution_baseline.validate` 였다(그 모듈은 a125 에서 삭제 — 지금은 없다) (7.5.23 정정: 앞 판본은 "아홉" 이라 적었다 —
     6 + 9 = 15 라 자기가 바로 앞에 적은 16 과 안 맞았다. 열거를 고치면서 열거를 틀렸다). 자리 수는 그 뒤로
     움직였다 — AST 로 센 `subprocess.run` 은 ff19be01 **20**, 7.5.34 **21**(`go run` 하나 포함), 1d1e5ca7 **22** 다.
     task 7.5.9 가 **23** 째(`_tracked_outcome` 의 `git ls-files -z`)를 더했고 그 하나는 대답을 원장에 적는다(`tracked`) —
