@@ -2,10 +2,12 @@
 
 Measured at HEAD `0004536c` with `go test -count=1 -coverprofile ./internal/execgw (untagged, full package)` (statement coverage; `covered` = the branch body ran at least once in the package suite, it does not say which test). Named tests are attributed per test with a single-test `-coverprofile` run. Harness: `analysis/harness/branch_coverage_rows.py`.
 
+6.4 refresh (2026-09-28): rows measured NOT covered earlier carry, alongside the historical cell, the package-wide statement coverage at `97ea352e` (journal untagged `-coverpkg journal,riskbucket`, riskbucket and execgw `tossos_testseams`; isolated copy). The earlier cell is kept as the record of that moment.
+
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
 | B1 | if at 890:2 — risk-reducing decision returns before any reservation read | `TestAnExitNeedsNoReservation`, `TestACancelNeedsNoReservation` | pre-a066 existing | covered at `0004536c` |
-| B2 | if at 894:2 — `if err != nil {`; then `return reject(ReasonGuardianReservationMissing,` (line last changed by `a6a396ab`) | package suite `go test -count=1 -coverprofile ./internal/execgw (untagged, full package)` | n/a — branch line last changed by `a6a396ab`, not an a066 commit | NOT covered at `0004536c` |
+| B2 | if at 894:2 — `if err != nil {`; then `return reject(ReasonGuardianReservationMissing,` (line last changed by `a6a396ab`) | package suite `go test -count=1 -coverprofile ./internal/execgw (untagged, full package)` | n/a — branch line last changed by `a6a396ab`, not an a066 commit | NOT covered at `0004536c` · package-wide at `97ea352e`: still NOT covered — review.md 6.1 (B)(2) |
 | B3 | range at 899:2 — `for _, reservation := range reservations {`; then `if reservation.Held() {` (line last changed by `a6a396ab`) | package suite `go test -count=1 -coverprofile ./internal/execgw (untagged, full package)` | n/a — branch line last changed by `a6a396ab`, not an a066 commit | covered at `0004536c` |
 | B4 | if at 900:3 — HELD aggregate reservation triggers q_final revalidation | `TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker` | q_final checkpoint 2026-08-04 | covered at `0004536c` |
 | B5 | if at 902:4 — q_final revalidation error refuses | `TestGatewayRefusesQFinalMarkedDecisionWithoutExactAdmissionBeforeBroker`, `TestRevokedDecisionIsRefusedAtTheLastMoment` | q_final checkpoint 2026-08-04 | covered at `0004536c` |

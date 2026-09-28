@@ -1004,10 +1004,14 @@ were fixed before being counted:
   - fillTransition B12, and Revalidate B3/B4 (B3 is a backstop whose premise `splitQFinalPolicyVersion("")` is
     pinned) — `306bc872`;
   - CRA B1, CRA B19, fresh B13 — `9ba1c783`;
-  - Revalidate B16/B17 — `4e5edffd` (layered);
-  - fillTransition B19 — `1b46dc40` (layered);
   - submit **B41** (a066 `a37d97f5`) — `4773eb56`.
 - **Declared backstops (behavior test plus AST pin):**
+  - Revalidate B16/B17, behind `verifyRiskBucketStateDigest` — `4e5edffd`;
+  - fillTransition B19, behind the state digest — `1b46dc40`.
+
+  The 6.4 coverage refresh confirms that both still do **not execute**: the missing-dimension and
+  missing-reservation behavior tests are refused by the state digest first. That is the layering the pins declare.
+  They are not counted as tested.
   - fresh B2, behind `recoverQFinalIssueReplayTx` (same predicate, called first on the straight path by both
     callers);
   - ApplyFill B32, behind B6.
@@ -1060,3 +1064,15 @@ The structural fact is `checkReservation`'s non-raising early return (`gateway.g
 - **Bundle correction.** `readProductionRiskUsage` and `aggregateProductionRiskUsage` were **not** deleted in 5.6.1
   (they are at `production_snapshot_authority.go:450/473` with new signatures). The earlier "retire" was withdrawn;
   they are refresh targets in 6.4.
+
+### 6.4 coverage refresh (2026-09-28, package-wide at `97ea352e`)
+
+- Measurement: journal untagged `-coverpkg journal,riskbucket` (rc 0, 460 s, 72.1 %); riskbucket and execgw with
+  `tossos_testseams` (rc 0).
+- The measured rows appear in the BTMs **alongside** the historical cells (Manager 2026-09-28: add alongside, no
+  replacement), in 15 bundles.
+- Rows that were NOT covered: 188 in total, including the 6.1.1 bundle's focus-set rows. **26** are now covered;
+  **162** are still not covered.
+- The 162 split as follows: storage exits (structural test); declared backstops (pinned); unreachable rows with a
+  walked-scope line; branches not owned by a066; and the 6.1.1 bundle rows outside the focus set. Each has its line
+  in the (B)(2) list above.
