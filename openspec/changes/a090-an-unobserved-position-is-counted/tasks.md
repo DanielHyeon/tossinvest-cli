@@ -18,7 +18,7 @@
 - [x] 0.6a **3판 반영**(Manager 2026-09-29: N1~N6 · P2 넷) — design D1·D2·D3·D4·D5·D7·D8·D10·D11 · `AnnounceOperatingMode` AST·FLM · spec delta · tasks. **판정 아님**
 - [x] 0.6b **codex 2라운드** — **REJECT**(P0 1 · P1 2 · P2 3), `review.md` 「codex 2라운드」 · `analysis/freeze-review/codex-r2-output.md`
 - [x] 0.6c **4판 반영**(Manager 2026-09-29 R2 처분 + a092 교차) — design D1·D3·D4·D5·D7·D8·D10·D12 · spec delta · tasks · workingSet FLM. **판정 아님**
-- [ ] 0.6d **codex 3라운드** — 대기열(a092 r23 뒤)
+- [x] 0.6d **codex 3라운드** — **REJECT**(P0 0 · P1 4 · P2 3 · P3 1), `review.md` 「codex 3라운드」 · `analysis/freeze-review/codex-r3-output.md`
 - [x] 0.7 **Q1·Q3 결정 기록**(Manager 2026-09-29, 사용자행 아님) — Q1 = (a) 정본 준수(`exit-policy/spec.md:62`·`:65`), Q3 = 판정 진입 + 하류 5자리 명명 잔여. design 「Q — 결정 기록」
 - [ ] 0.8 **Q2 실측 — 사전 승인됨(Manager 2026-09-29), 구현 로트가 장중 실행** — 정지·0가격 종목 포함 `/prices` 읽기 전용 GET 1회, 쓰기 0.
       결과로 design D6 의 두 [미측정] 행을 확정한다. 구현을 막지 않는다
