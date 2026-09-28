@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/risk_bucket.go",
-  "source_sha256": "cdb991bdfd45955ef2c3e6f8d783c76945b835a40d2ae12eb245a9ce615ea597",
+  "source_sha256": "525656aa81550e7b57f0c11f480d878a2fa8de5776e9cf85539ec13c669df539",
   "package": "journal",
   "function": "ensureRiskBucketEntryScopeClean",
   "signature": "ensureRiskBucketEntryScopeClean(params=3, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 312,
+    "line": 307,
     "column": 2
   },
   "branches": [
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 297,
+        "line": 295,
         "column": 2
       }
     },
@@ -65,7 +65,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 302,
+        "line": 300,
         "column": 2
       }
     },
@@ -74,14 +74,6 @@
       "kind": "if",
       "at": {
         "line": 303,
-        "column": 3
-      }
-    },
-    {
-      "id": "B9",
-      "kind": "if",
-      "at": {
-        "line": 308,
         "column": 2
       }
     }
@@ -104,21 +96,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 300,
+        "line": 298,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 309,
+        "line": 304,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 311,
+        "line": 306,
         "column": 2
       }
     }
@@ -199,7 +191,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 297,
+        "line": 295,
         "column": 12
       },
       "text": "Scan"
@@ -207,7 +199,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 297,
+        "line": 295,
         "column": 12
       },
       "text": "q.QueryRowContext"
@@ -215,7 +207,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 299,
+        "line": 297,
         "column": 30
       },
       "text": "string"
@@ -223,7 +215,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 306,
+        "line": 301,
         "column": 12
       },
       "text": "append"
@@ -231,7 +223,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 308,
+        "line": 303,
         "column": 5
       },
       "text": "len"
@@ -239,7 +231,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 309,
+        "line": 304,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -247,7 +239,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 309,
+        "line": 304,
         "column": 89
       },
       "text": "strings.Join"
@@ -292,21 +284,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 297,
+        "line": 295,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 304,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 306,
+        "line": 301,
         "column": 3
       }
     }

@@ -195,3 +195,85 @@ func TestA066AdmissionRefusalNamesAnOwnerOverageLatch(t *testing.T) {
 		t.Fatalf("owner overage latch: err=%v", err)
 	}
 }
+
+// TestA066RecordedLimitIncludesReleasedRowsThatStillCountFilledUsage 는 좁힌 재리뷰 P2 를 고정함: 부분 체결 뒤 취소된
+// 예약은 held 0 으로 RELEASED 가 되지만 filled 는 원장 사용량에 계속 셈 — 그 행의 한도도 기록된 최소 한도에 들어가야 함.
+// 모양은 실제 경로(주문 10 등록 → 2 체결 → CANCEL 해제: 다섯 예약 RELEASED held=0 filled>0, 재리뷰 실측)와 같게 둠.
+func TestA066RecordedLimitIncludesReleasedRowsThatStillCountFilledUsage(t *testing.T) {
+	j := openTestJournal(t)
+	first, second := sharedBucketPair(t, j, riskbucket.MarketKR, "6")
+	if _, err := j.RecordQFinalDecisionAndReserve(context.Background(), first); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.db.Exec(`UPDATE risk_bucket_reservations SET state='RELEASED',filled_minor=held_minor,held_minor='0' WHERE decision_id=?`, first.Issue.Decision.ID); err != nil {
+		t.Fatal(err)
+	}
+	for i := range second.Admission.Admission.Buckets {
+		rebindRiskBucketLimit(t, &second.Admission, i, second.Admission.Admission.Buckets[i].Key, "1000")
+	}
+	refreshSnapshotUsageFromLedger(t, j, &second.Admission)
+	_, err := issueSecondWithFreshVersion(t, j, second)
+	if !riskbucket.IsRefusal(err, riskbucket.RefusalBucketCapExhausted) || !strings.Contains(err.Error(), "limit 80") {
+		t.Fatalf("a released row with filled usage must keep its recorded limit 80: err=%v", err)
+	}
+}
+
+// TestA066EntryScopeRuleBlocksOnEveryActiveReconcileRow 는 좁힌 재리뷰 P3 를 고정함: 규칙 함수는 원인 문자열이 아니라
+// 활성 행의 존재로 막아야 함(원인이 빈 문자열인 옛 행에서도 — 예전 count 판정과 같게).
+func TestA066EntryScopeRuleBlocksOnEveryActiveReconcileRow(t *testing.T) {
+	j := openTestJournal(t)
+	if _, err := j.db.Exec(`INSERT INTO reconcile_states (id, account_ref, symbol, cause, evidence, entered_at, released_at, release_cause) VALUES ('legacy-empty-cause','acct-1','005930','','legacy row','2026-03-30T00:00:00Z',NULL,NULL)`); err != nil {
+		t.Fatal(err)
+	}
+	tx, err := j.db.BeginTx(context.Background(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	err = ensureRiskBucketEntryScopeClean(context.Background(), tx, riskBucketOwnerKey("acct-1", "p"))
+	if !errors.Is(err, ErrRiskBucketEntryBlocked) || !strings.Contains(err.Error(), "RECONCILE") {
+		t.Fatalf("an active reconcile row with an empty cause must block: err=%v", err)
+	}
+}
+
+// TestA066SubmitRevalidationRefusesOwnerAndScopeLatches 는 좁힌 재리뷰 P3(시험 공백)를 채움: 제출 재검증의 규칙 함수
+// 자리에서 owner latch 와 scope latch 가 bucket 예약 latch 없이도 막음. owner latch 는 체결 경로처럼 상태 봉인을 다시
+// 찍은 뒤에 둠(그러지 않으면 앞의 상태 digest 대조가 먼저 막아 이 자리에 닿지 않음).
+func TestA066SubmitRevalidationRefusesOwnerAndScopeLatches(t *testing.T) {
+	for _, tc := range []struct {
+		name, want string
+		latch      func(*testing.T, *Journal, riskbucket.OwnerKey)
+	}{
+		{"owner RISK_OVERAGE after a resealed fill", "owner RISK_OVERAGE", func(t *testing.T, j *Journal, key riskbucket.OwnerKey) {
+			tx, err := j.db.BeginTx(context.Background(), nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := tx.Exec(`UPDATE risk_bucket_owners SET risk_overage_latched=1 WHERE account_ref=? AND market=? AND symbol=? AND prospective_generation=?`,
+				key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration); err != nil {
+				t.Fatal(err)
+			}
+			if err := j.recordRiskBucketStateTx(context.Background(), tx, key, "TEST_RESEAL", "a066-6.5-reseal", "reseal", "2026-03-30T00:40:00Z"); err != nil {
+				t.Fatal(err)
+			}
+			if err := tx.Commit(); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{"scope ORPHAN_FILL latch", "scope latch ORPHAN_FILL", func(t *testing.T, j *Journal, key riskbucket.OwnerKey) {
+			if _, err := j.db.Exec(`INSERT INTO risk_bucket_scope_latches(account_ref,market,symbol,prospective_generation,latch,detail,first_seen_at,last_seen_at) VALUES(?,?,?,?,'ORPHAN_FILL','a066 6.5 probe','2026-03-30T00:40:00Z','2026-03-30T00:40:00Z')`,
+				key.AccountID, string(key.Market), key.Symbol, "prior-generation"); err != nil {
+				t.Fatal(err)
+			}
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			j, _, second := issuedSecondOnSharedBuckets(t)
+			tc.latch(t, j, second.Admission.Owner.Key)
+			required, err := j.RevalidateQFinalAdmission(context.Background(), second.Issue.Decision.ID)
+			if !required || !errors.Is(err, ErrRiskBucketEntryBlocked) || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("submit under %s: required=%v err=%v", tc.name, required, err)
+			}
+		})
+	}
+}

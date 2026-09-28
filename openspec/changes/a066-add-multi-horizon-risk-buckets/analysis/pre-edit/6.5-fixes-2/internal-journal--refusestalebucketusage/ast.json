@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/risk_bucket_usage.go",
-  "source_sha256": "8eacbf2fea3f123439abe2d4d402193126661b505ac5e840b44e8869f4e6fcc0",
+  "source_sha256": "3acd6a93b274dce02705e57f3f1439362c9b7936eb9cf150cbcb3681582fc85c",
   "package": "journal",
   "function": "refuseStaleBucketUsage",
   "signature": "refuseStaleBucketUsage(params=5, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 84,
+    "line": 83,
     "column": 2
   },
   "branches": [
@@ -73,7 +73,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 63,
+        "line": 62,
         "column": 3
       }
     },
@@ -81,7 +81,7 @@
       "id": "B9",
       "kind": "if",
       "at": {
-        "line": 67,
+        "line": 66,
         "column": 3
       }
     },
@@ -89,7 +89,7 @@
       "id": "B10",
       "kind": "if",
       "at": {
-        "line": 70,
+        "line": 69,
         "column": 3
       }
     },
@@ -97,7 +97,7 @@
       "id": "B11",
       "kind": "if",
       "at": {
-        "line": 74,
+        "line": 73,
         "column": 3
       }
     },
@@ -105,7 +105,7 @@
       "id": "B12",
       "kind": "if",
       "at": {
-        "line": 77,
+        "line": 76,
         "column": 3
       }
     }
@@ -156,35 +156,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 64,
+        "line": 63,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 68,
+        "line": 67,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 75,
+        "line": 74,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 78,
+        "line": 77,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 83,
+        "line": 82,
         "column": 2
       }
     }
@@ -297,7 +297,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 64,
+        "line": 63,
         "column": 11
       },
       "text": "fmt.Errorf"
@@ -305,7 +305,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 66,
+        "line": 65,
         "column": 27
       },
       "text": "smallestRecordedBucketLimit"
@@ -313,7 +313,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 73,
+        "line": 72,
         "column": 16
       },
       "text": "sumMinor"
@@ -321,7 +321,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 73,
+        "line": 72,
         "column": 25
       },
       "text": "ledger.String"
@@ -329,7 +329,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 75,
+        "line": 74,
         "column": 11
       },
       "text": "fmt.Errorf"
@@ -337,7 +337,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 77,
+        "line": 76,
         "column": 6
       },
       "text": "after.Cmp"
@@ -345,7 +345,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 78,
+        "line": 77,
         "column": 87
       },
       "text": "string"
@@ -353,7 +353,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 79,
+        "line": 78,
         "column": 12
       },
       "text": "fmt.Errorf"
@@ -391,14 +391,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 66,
+        "line": 65,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 73,
+        "line": 72,
         "column": 3
       }
     }

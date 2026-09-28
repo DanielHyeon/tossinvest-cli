@@ -1,0 +1,5 @@
+TREE	HEAD 28629ec6	uncommitted: narrowed re-review repairs (risk_bucket.go reconcile count; risk_bucket_usage.go limit population) + tests
+CONTROL(3)	GREEN	
+R01 reconcile blocks only on a named cause (pre-fix shape)	CAUGHT	TestA066EntryScopeRuleBlocksOnEveryActiveReconcileRow
+R02 recorded limit ignores released rows with filled usage (pre-fix predicate)	CAUGHT	TestA066RecordedLimitIncludesReleasedRowsThatStillCountFilledUsage
+R03 submit scope rule blinded by a wrong market (re-review mutation)	CAUGHT	TestA066SubmitRevalidationRefusesOwnerAndScopeLatches/owner_RISK_OVERAGE_after_a_resealed_fill, TestA066SubmitRevalidationRefusesOwnerAndScopeLatches/scope_ORPHAN_FILL_latch

@@ -291,13 +291,18 @@ func ensureRiskBucketEntryScopeClean(ctx context.Context, q riskBucketQueryer, k
 	if scopeLatches != "" {
 		causes = append(causes, "scope latch "+scopeLatches)
 	}
+	// 막는 근거는 활성 행의 **존재**(count)이고 원인 문자열은 이름일 뿐임 — 원인이 빈 옛 행에서도 막음(좁힌 재리뷰 P3).
+	var activeReconciles int
 	var reconciles string
-	if err := q.QueryRowContext(ctx, `SELECT COALESCE(GROUP_CONCAT(cause, ','),'') FROM (SELECT DISTINCT cause FROM reconcile_states
-		WHERE account_ref=? AND released_at IS NULL AND (symbol IS NULL OR symbol=?) AND (scope_market IS NULL OR scope_market=?) ORDER BY cause)`,
-		key.AccountID, key.Symbol, string(key.Market)).Scan(&reconciles); err != nil {
+	if err := q.QueryRowContext(ctx, `SELECT count(*),COALESCE(GROUP_CONCAT(DISTINCT cause),'') FROM reconcile_states
+		WHERE account_ref=? AND released_at IS NULL AND (symbol IS NULL OR symbol=?) AND (scope_market IS NULL OR scope_market=?)`,
+		key.AccountID, key.Symbol, string(key.Market)).Scan(&activeReconciles, &reconciles); err != nil {
 		return err
 	}
-	if reconciles != "" {
+	if activeReconciles != 0 {
+		if reconciles == "" {
+			reconciles = "(no cause recorded)"
+		}
 		causes = append(causes, "active RECONCILE "+reconciles)
 	}
 	if len(causes) != 0 {

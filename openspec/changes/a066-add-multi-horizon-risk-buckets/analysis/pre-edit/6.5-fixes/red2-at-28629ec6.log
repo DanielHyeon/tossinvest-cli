@@ -1,0 +1,7 @@
+    a066_review_fixes_test.go:217: a released row with filled usage must keep its recorded limit 80: err=<nil>
+--- FAIL: TestA066RecordedLimitIncludesReleasedRowsThatStillCountFilledUsage (0.39s)
+    a066_review_fixes_test.go:235: an active reconcile row with an empty cause must block: err=<nil>
+--- FAIL: TestA066EntryScopeRuleBlocksOnEveryActiveReconcileRow (0.33s)
+--- PASS: TestA066SubmitRevalidationRefusesOwnerAndScopeLatches (0.78s)
+    --- PASS: TestA066SubmitRevalidationRefusesOwnerAndScopeLatches/owner_RISK_OVERAGE_after_a_resealed_fill (0.39s)
+    --- PASS: TestA066SubmitRevalidationRefusesOwnerAndScopeLatches/scope_ORPHAN_FILL_latch (0.39s)
