@@ -4426,3 +4426,53 @@ Q1 문자 해석상 21판 밖에 남는다. proposal 「열린 질문」 판정 
 | 콘솔 | 없음 | 없음 |
 
 a092는 a066 파일을 편집하지 않는다. 이 표는 Manager가 a066 로트에 전할 대조표다 — 이름이 갈리면 21.7(f)에서 다시 맞춘다.
+
+## 23.8 21라운드 (task 21.8) — 세 보이스 · **BLOCK (셋 다)** (2026-09-28~29) — 처분은 Manager 판정 뒤
+
+| 보이스 | 렌즈 | 모델 · 실행 | 판정 | 원문 |
+|---|---|---|---|---|
+| codex | 전 범위 교차 모델 | codex-cli 0.154.0 · gpt-6-astra · read-only · tree = `git archive 8b38de8e` · session `01a0e7fd…` · 2026-09-28 21:29~21:36 KST · rc 0 | **BLOCK** (P0 5 · P1 2 · P2 1) | `analysis/review-21/codex-r21-output.md` · `codex-r21-run.txt` |
+| A | 생산·안전 | Claude `code-reviewer` 서브에이전트(독립 컨텍스트, 같은 하네스) · 세션 재시작으로 첫 실행 유실 → 같은 프롬프트로 재실행 | **BLOCK** (P0 1 · P1 5 · P2 9) | `analysis/review-21/voiceA-r21-output.md` |
+| B | 산출물 무기화 | Claude `code-inspector-tester` 서브에이전트 · 재실행 | **BLOCK** (P0 1 · P1 4 · P2 9) | `analysis/review-21/voiceB-r21-output.md` |
+
+**교차 모델 충족** — codex가 돌았다(결정 20-2). **독립성**: 세 보이스 모두 `review.md`와 서로의 원문을 열지 않았다고 보고했다. A·B는 `review-21/`에서 `prompt-common.md`만 읽었다. 끝의 `git status --short -- <a092>`는 둘 다 빈 출력이었다(`review-21/`는 리뷰 도중 `9fbd8e66`으로 커밋됐다). 리뷰 도중 병행 커밋으로 HEAD가 `7b9df40f`로 움직였다. a092 문서와 인용 코드는 `8b38de8e`와 바이트 동일하다.
+
+### 23.8.1 합친 발견 — 저자 처분 **제안** (적용 전, Manager 판정 대기)
+
+| # | 등급(최고) | 발견 | 보이스 | 저자 처분 제안 |
+|---|---|---|---|---|
+| **C1** | **P0** | **exit goroutine의 두 번째 알림 입구 `ModeAnnouncer`가 남는다.** ① 관측 두절 승격 `exitloop.go:846-847`(Announcer = `ectx.Notifier`, `cmd/tossctl/engine.go:636`) ② 가격 읽기 401/403 `exitloop.go:747` → `retry.go:413-414`(공유 Retrier의 Announcer = notifier, `exitwiring.go:54`) ③(A) 청산 상한 조회 `exitwiring.go:207,231`. 셋 다 `operating_mode.go:478-479` → `obs/mode.go:57` `n.Notify`(critical) → 동기 `deliver`로 간다. 오늘은 모드가 이미 ENTRY_BLOCKED라 `direction == 0`(`:410`)에서 잠들어 있다. **21판이 넣는 완화가 NORMAL로 되돌리는 순간 깨어난다.** D0.3e 4 「호출은 한 자리」는 `Alerts`에 대해서만 참이다(`notify-reach.md`는 입구를 둘로 세라고 적었다) | codex #1 · A A1 · B #1 — **3/3 독립** | **수용.** exit goroutine에서 닿는 `ModeAnnouncer`도 기록 전용으로 바꾼다(`nil`은 불가 — risk-management `:133·:137`이 강화 알림을 요구한다). 공유 Retrier는 exit 전용 인스턴스로 분리할지, announce 자체를 기록 전용으로 할지 결정이 필요하다 — 후자는 대사 루프에도 닿으므로 **Q1 범위 결정과 묶인다(사용자행 후보).** 도달 경로 전수는 `Notify` · `AnnounceOperatingMode` 두 입구 기준으로 다시 센다. RED(k) 두 건 |
+| **C2** | P1 | `deliver`를 `n.mu` 밖으로 빼면 소진 → 반납 → **Acknowledge(셈 0 · Clear)** → `Block :571` → `escalate :228` 순서가 가능하다. 승인 뒤 다시 잠기고, 투영이 배선된 뒤에는 모드 완화를 한 번 더 요구한다. 게이트가 잘못 **열리는** 경로는 없다(A 확인) | codex #2 · A A3 · B #2 | **수용.** 동기 경로의 세 래치 자리(`:484`·`:520`·`:571`)와 승격에 a124 원칙 E를 적용한다 — claim 시점에 `ClearEpoch`를 읽고 `BlockUnlessClearedSince`로 잠근다. B는 20판 :66 SHALL NOT을 「모든 발송자」로 되살리는 안을 더 냈다(전달 3번과 긴장 — 아래 C27) |
+| **C3** | P0(T) | 델타 :32 「임차가 남아 있어서는 안 된다」는 무조건 문장이다. 그러나 설계가 허용하는 반납 실패 · 남의 임차와 모순이다 | codex #3 · B #4 | **수용** — 금지 대상을 「기록자가 새로 얻은 자기 임차의 정상 반환 뒤」로 좁히고 예외를 이름 댄다. **대안(A 판정 2)**: 안 나를 비공개 `recordAlertTx`(`outbox.go:263-275`, *"It takes no lease"*)의 공개 래퍼로 구현하면 임차 창과 반납 실패 갈래가 함께 사라진다. 저자 선택을 다시 연다 |
+| **C4** | P0 | 세대 울타리(행 수 · 커밋 순서)와 복원 · 방향 판정(`created_at DESC, rowid DESC`)의 「최신」이 다르다. 시각은 트랜잭션 **전**에 얻는다(`:388`) → 벽시계 역행 없이도 재시작이 옛 NORMAL을 복원할 수 있다(codex 반례). 행 수를 순번으로 쓰면 복원 직후 첫 전이가 버려질 수 있다(B, 일부 추측) | codex #4 · A A5 · B #5 | **수용.** 「현재 모드」의 순서를 커밋 순서(rowid 또는 단조 순번) 하나로 통일하고, 방향 판정 · 복원 · 울타리가 그것을 쓰게 한다 — **원장 편집(High-risk)이 된다.** RED: 시계 역행 · 복원 직후 첫 강화 |
+| **C5** | P0(T) | AC2 SHALL 「커밋 순서대로 **도착**」은 채택한 울타리(역순 도착을 버림)와 다르다. 「커밋 뒤 진입 점검 거절」은 commit→투영 창을 남긴다 | codex #5 | **수용** — 「적용된 세대가 역행하지 않는다」로 고친다. 보장 시점은 「전이 호출 반환 뒤」로 적는다(게이트에 원장 I/O를 넣지 않는다) |
+| **C6** | P1 | Q4(`parkAlert` → `EnqueueAlert`는 `n.mu` 밖): codex는 델타 :58 SHALL 위반이라 「기록만」 불가, (b) 보완이 필요하다고 본다. A · B는 `parkAlert`가 삽입 **전**에 `ReasonUnresolvedInDoubt`를 잠그므로(`replay.go:535-537` → `:551`) 창이 혼자 진입을 열지 못한다고 보고 (c) + 순서 구조 핀을 권한다 | codex #6 ↔ A 판정 5 · B 판정 5 — **긴장** | **Manager 판정 요청.** 저자 권고: (c) + 「Block이 Enqueue보다 앞」 AST 핀. 그리고 델타 :58의 SHALL을 「진입을 여는 판단」으로 정밀화하거나 덮이지 않는 기록자를 명시적 예외로 적는다(codex 지적대로 SHALL 문자와 (c)는 지금 모순이다) |
+| **C7** | P0(T) | 되살린 :64 「정산이 적용되지 않으면 선점」은 NotFound · 모르는 결과 · 원장 오류까지 삼킨다. 이것은 a124 정본(`:1452-1464`, `:1489-1492`)과 모순이다 | codex #7 | **수용** — 오류 없이 돌아온 `AlreadySettled` · `LeaseLost`로 한정하고, 나머지는 정본 판정에 맡긴다 |
+| C8 | P1 | 일반 등급 SHALL은 유지했는데(Q2) 어댑터 설계 · 21.x에 작업이 0이다. 동기 `publishBestEffort`를 남기면 델타 위반이고, 버리면 정본 「캡 발생은 알림된다」와 긴장이다 | A A2 · B #3 · codex 판정 2 | **수용** — D0.8 유계 이관 버퍼 + 「버림 기록」을 21.3 · 21.4에 넣는다 |
+| C9 | P1 | 책임 대조 표에 한 행이 빠졌다 — 배달 실행자가 죽으면 exit critical(예: `exit.judgement_refused`)을 대신 보낼 주체가 없다. heartbeat 생산 배선도 0이다 | A A4 | **수용(행 추가)** — 처분(다른 발송 경로 · 잔여 수용)은 **Manager 판정 요청** |
+| C10 | P1(T) | 정본 `:1032-1034` 근거 ①이 배선 뒤 거짓이 된다 — 21.7(e)의 「archive 때 편집」은 보장되지 않는다 | A A6 · B #9 · codex 판정 3 | **수용** — 그 요구를 델타에 MODIFIED로 넣는다 |
+| C11 | P2 | `Flush`가 `n.mu`를 쥔 채 Publish한다(`notifier.go:734-735` · `:779`). 델타 「모든 보유자」와 모순이다(생산 호출자 0) | A A7 · B #10 | 수용 — 삭제하거나 범위 문장으로 제외(저자 권고: 삭제는 YAGNI 편집이라 범위 제외 문장) |
+| C12 | P2 | 완화를 알림 제어 소켓에 얹으면 그 소켓이 스스로 적은 권한 계약을 깬다 | A A8 · B #13 · codex 판정 4 | 수용 — 모드 전용 엔드포인트 · 디렉터리 |
+| C13 | P2 | 완화 전이의 Announcer 미정. `ErrModeAnnouncementFailed`는 커밋 뒤 `(record, true, err)`로 돌아온다 | A A9 · B #13 | 수용 — Announcer = Notifier(제어 소켓 goroutine이라 C1과 무관), 그 오류는 「완화됨 + 알림 실패」로 보고 |
+| C14 | P2 | **a066 작업 트리(미커밋)의 명령 모양은 `tossctl engine entry-lock-release` · `risk-latch-release`**(`cmd/tossctl/engine_risk_relaxation.go:136,194`)다. D0.3f 2 · §23.7의 `engine <대상> relax`와 다르다 | B #13 (저자 재확인: 파일 존재, 미커밋) | **Manager 판정 요청** — 가족 이름을 a066 쪽(`engine mode-release`)에 맞출지 결정. 저자 권고: 먼저 쓴 쪽에 맞춘다 → `tossctl engine mode-release` |
+| C15 | P2 | 복원 실패 = 「기동 거부(보수 방향)」 문장은 틀렸다. 기동 거부는 엔진 부재이고, 보호가 없는 구성에서는 손절 부재다 | A A10 | 수용 — 문장 정정, 「모드 사유 래치 후 기동 계속」 안과 비교해 적는다 |
+| C16 | P2 | 어댑터 반납은 분리 ctx(`releaseCtx`)로 해야 한다. `Journal == nil` 갈래(`:176-187`, 동기 publish)를 재사용하면 안 된다 | A A11 · B 판정 1 | 수용 — 21.3 핀 둘 |
+| C17 | P2 | `tossctl engine alerts ack`에 `mutating` 표지가 없다. 재개 절차가 ack + mode 한 쌍이 되면 반쪽이 자동 실행될 수 있다 | A A12 | 수용 — 이 change에서 표지 추가(저자 권고. 명령의 분류 변경이므로 Manager 확인) |
+| C18 | P2(T) | 배포 절: 전송 수단이 죽어 있으면 a124가 다시 승격한다 → 완화 전에 전송 수단 동작을 확인해야 한다 | A A13 | 수용 — 21.10 순서에 넣는다 |
+| C19 | P2(T) | MANIFEST HEAD `1a0027d2` ↔ 문서 `c1e34dc4`(파일 sha 동일). tasks 「추출 18개」 → 실제 20 | A A14 · B #6 · codex 판정 6 | 수용 — 표기 정정 |
+| C20 | P2 | AC2 원자 교체의 게이트 상태 세대(revision) 규칙을 명시해야 한다 | A A15 | 수용 — 「존재가 바뀔 때만 +1」 |
+| C21 | P2(T) | head-ast-21이 문서가 기대는 함수 일부를 안 뽑았다(`AnnounceOperatingMode` · `escalateCredentialFailure` · `alertDeliverer.escalate` · `Clear`/`BlockUnlessClearedSince` · `CurrentOperatingMode` · `recordAlertTx`/`claimOwed` 등) | B #7 | 수용 — 추출 추가 |
+| C22 | P2(T) | 정본 사본이 남아 있다(:44 · :46 · Scenario 「배달 실행자가 죽는다」는 정본 `:1039`와 조항이 다르다 · ADDED :140/:150 ↔ risk-management `:133`) | B #8 | 수용 — 정본 포인터로 줄인다 |
+| C23 | P2(T) | 규범 문장에 HEAD 사실이 들어가 있다(ADDED 「투영기 묶기 호출자 0」, 주석 :50) — archive 뒤 거짓이 된다 | B #9 | 수용 — design으로 옮긴다 |
+| C24 | P2(T) | 비용 열거가 어긋난다(알림 하나에 트랜잭션 둘 · 기록 실패 경로 비용 축소 · exit-policy 「3건」) | codex #8 · B #11 | 수용 |
+| C25 | P2(T) | D0.3e 6 「a092가 이 식에 더하는 것은 없다」는 틀렸다 — 어댑터의 순간 claim이 전제 H ③을 깨고, 반납 실패가 임차 항을 더한다 | B #12 | 수용 |
+| C26 | P2 | tasks에 커버가 빠진 요구가 있다(mutating/콘솔/확인 없음 RED · 되살린 :52 · Scenario 셋 · 복원 실패) | B #14 | 수용 |
+| C27 | — | **전달 3번(승인 문단을 a124로)의 귀결** — 정본 「늦은 적용」의 주어는 배달 실행자뿐이다. 동기 발송자에 대해서는 :66의 규범을 소유하는 정본 문장이 없다(B (e): 「:66만 소유가 서지 않는다」) | B #2 · (e) | **Manager 판정 요청** — C2의 수단으로 동기 발송자에 원칙 E를 적용하면 규범은 델타에 「모든 발송자」 문장으로 남아야 한다. 저자 권고: 20판 :66을 「모든 발송자」로 일반화해 되살린다 |
+
+**Q6**: 세 보이스 모두 「기록만」을 권했다. 실행자의 임차당 예산은 시도 1회이고, 정본 「예산을 다 쓰면 임차를 놓는다」가 적용된다 — 모순이 아니다. **저자 처분 제안: 기록만으로 닫는다.**
+
+**20라운드 P0 재판정**: A-1 = B-1은 닫혔다(3/3). 다만 책임 표에는 C1 · C9 행이 더 필요하다. A-2는 **미해소**다(3/3). `Alerts` 입구에서만 제목이 달성되고 C1이 남는다.
+
+**재확인한 사실(저자)**: C1의 호출 사슬을 HEAD에서 다시 읽었다 — `engine.go:636` `Announcer: ectx.Notifier` · `exitloop.go:846-847` · `exitwiring.go:45-55` · `retry.go:405-418` · `obs/mode.go:49-57` · `event.go:328`. 세 보이스의 주장과 같다.
+
+**상태**: 반영 0. Manager가 처분표를 판정한 뒤 22판에서 반영한다. 사용자행 후보: C1의 범위(Q1과 묶임)와 C4의 원장 편집(High-risk).
