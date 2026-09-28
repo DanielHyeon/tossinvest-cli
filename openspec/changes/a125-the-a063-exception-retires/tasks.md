@@ -19,13 +19,13 @@
 ## 3. VERIFY
 
 - [ ] 3.1 편집 후 표본 A/B — 같은 워크트리 · 같은 HEAD 에서 a063 외 판정 불변(차이 0), a063 은 P 기준으로 바뀜
-- [ ] 3.2 변이(사본 · 무변이 대조군): 이관 분기 복원 · 착지 거절 복원 · `SDD_BASE_REF` 대조 대상 변이 → 반전 시험 빨강
+- [ ] 3.2 변이(사본 · 무변이 대조군): 이관 분기 복원 · 착지 거절 복원 · `_recording_refusal` 거절 복원 · 기록 `execution_base` 를 base 로 읽기 · id 로 착지 우회 · 비정규 기록 거절 복원 · `SDD_BASE_REF` 대조 대상 변이 → 반전 시험 빨강(freeze F9)
 - [ ] 3.3 편집 후 Python FLM 재추출 · `make sdd-test` · `make sdd-check` · 적대 보이스 1 + gstack 리뷰
 
 ## 4. a063 전환 (사람 절차 — a063 디렉터리)
 
-- [ ] 4.1 a063 `execution-baseline.json` 삭제 커밋(기록은 a063 `review.md`)
-- [ ] 4.2 재고정 영수증: 귀속 커밋 · 함수 9 · 번들 대조표 · 신선도 · base 번들 3 처분 근거 · 승인 인용(사용자 일괄 2026-09-28 + Manager)
+- [ ] 4.1 a063 `execution-baseline.json` 삭제 커밋. a063 `review.md` 에 소급 고지(`retrospective-exception` · "missing original analysis remains debt")를 옮겨 적고, a063 `tasks.md` 4.0 에 "a125 에서 폐기" 주석(freeze F5)
+- [ ] 4.2 재고정 영수증: 귀속 커밋 · 함수 9 · 번들 대조표 · base 번들 3 을 current 로 재추출 → 특례 없는 도구로 옛 base P 에서 9 함수 오류 0 필터 영수증(freeze F4) · renumber/S 사본 사실(F7) · 승인 인용(사용자 일괄 2026-09-28 + Manager)
 - [ ] 4.3 `base-commit.txt` 단독 커밋 → `check_analysis` 프로브 결과 기록. a063 tasks 4.2~4.4(사람 운영)는 남는다고 명기
 
 ## 5. 종결

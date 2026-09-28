@@ -1,0 +1,10 @@
+a063-align-attestation-renewal-profile errors=1 required=None 5.1s
+a107-retire-the-second-protection-core errors=1 required=253 745.7s
+a121-reconcile-stale-verification-artifacts errors=1 required=84 273.5s
+a125-the-a063-exception-retires errors=1 required=0 18.4s
+verify-execution-capability errors=1 required=None 0.3s
+verify-observes-the-trigger errors=1 required=543 675.0s
+a099-a-claim-excludes-the-second-sender errors=0 required=32 73.4s
+a122-the-logic-map-gate-outlives-a-merge errors=1 required=48 109.5s
+a123-an-empty-window-is-derived-not-declared errors=1 required=48 125.1s
+done 9

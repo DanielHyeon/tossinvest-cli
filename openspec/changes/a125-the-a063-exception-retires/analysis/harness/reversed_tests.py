@@ -246,3 +246,26 @@ class TheA063ExceptionIsRetired(unittest.TestCase):
             _recommit_detached(root, "the record is deleted")
             self.assertEqual(with_record, judged())
             self.assertEqual(with_record[0], [])
+
+    def test_an_irregular_leftover_record_is_not_read_either(self) -> None:
+        # freeze F9 — "안 읽음" 의 핀. 옛 판정기는 lstat 뒤 정규 파일이 아니면 거절했다. 읽는 코드가 없으면 모양이 무엇이든
+        # 일반 판정이 나와야 한다: FIFO(열면 멎는다) · 디렉터리 · 저장소 밖 심링크 · 해독 불가 바이트.
+        for shape in ("fifo", "directory", "symlink", "undecodable"):
+            with self.subTest(shape=shape):
+                raw, root, p, _ = _a063_fixture()
+                with raw:
+                    record = root / "openspec" / "changes" / A063 / "execution-baseline.json"
+                    record.unlink()
+                    if shape == "fifo":
+                        os.mkfifo(record)
+                    elif shape == "directory":
+                        record.mkdir(); (record / "keep").write_text("x")
+                    elif shape == "symlink":
+                        record.symlink_to("/dev/zero")
+                    else:
+                        record.write_bytes(b"\xff\xfe{")
+                    if shape != "fifo":
+                        _recommit_detached(root, f"a {shape} record")
+                    context: dict[str, object] = {}
+                    self.assertEqual(check_analysis.check(A063, root, context), [])
+                    self.assertEqual(context.get("effective_base"), p)

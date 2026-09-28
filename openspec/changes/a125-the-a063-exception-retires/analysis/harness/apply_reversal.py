@@ -82,6 +82,13 @@ swap('''            case._commit(root, "an escaping bundle")
             errors = check_analysis.check(A063, root)''')
 swap('            self.assertFalse(facts["execution_baseline_adoption"])\n',
      '            self.assertNotIn("execution_baseline_adoption", facts)      # a125: 옛 키는 채워지지도 남지도 않는다\n')
-swap("        for module in (check_analysis, adoption):\n", "        for module in (check_analysis,):\n")
+swap("        for module in (check_analysis, adoption):\n",
+     "        # a125(freeze F9): 모듈 목록은 손으로 고른 것이 아니라 디렉터리의 `subprocess` 를 쓰는 비시험 모듈 **전부**와 같아야 한다.\n"
+     "        spawning = sorted(path.name for path in Path(check_analysis.__file__).resolve().parent.glob(\"*.py\")\n"
+     "                          if not path.name.startswith(\"test_\") and \"subprocess.run(\" in path.read_text(encoding=\"utf-8\"))\n"
+     "        # `risk_pattern_report.py` 는 번들 저작 도구다 — 판정이 import 하지 않는다(판정 모듈 목록 밖).\n"
+     "        self.assertEqual(spawning, [\"check_analysis.py\", \"risk_pattern_report.py\"],\n"
+     "                         \"새로 자식 프로세스를 띄우는 모듈은 판정 모듈인지 가려 아래 목록에 넣어야 한다\")\n"
+     "        for module in (check_analysis,):\n")
 path.write_text(text, encoding="utf-8")
 print("dropped", len(cuts), "inserted at", insert_at + 1)

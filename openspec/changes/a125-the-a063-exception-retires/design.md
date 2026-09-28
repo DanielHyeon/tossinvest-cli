@@ -28,7 +28,11 @@
 
 ## D3 — 시험 반전 규칙
 
-특례를 못 박던 시험은 삭제하지 않고 **같은 픽스처로 반대 사실**을 못 박는다(대상 목록은 편집 전 AST 로 센다 — 0.3).
+특례를 못 박던 시험은 삭제하지 않고 **같은 모양의 픽스처로 반대 사실**을 못 박는다(대상 목록은 편집 전 AST 로 센다 — 0.3).
+옛 픽스처(`_adoption_with_complete_bundle`)는 지울 모듈의 `draft` 를 부르므로, 반전 시험은 모듈 없이 세운
+**정적 기록** 픽스처(`_a063_fixture` — 키 집합은 a120 초안기와 같고 `planning_base`·`execution_base`·`source_commit` 은
+실제 픽스처 커밋)를 쓰고, id 는 리터럴 `a063-align-attestation-renewal-profile` 이다(id 로 우회하는 변이를 잡는다 —
+freeze F8). 기록이 FIFO · 디렉터리 · 심링크 · 해독 불가여도 일반 판정이 나온다(F9 — "안 읽음" 의 핀).
 
 - 유효 a063 기록 + base 파일 → 비교 기준은 `base-commit.txt`(P), 문맥에 이관 키가 없다.
 - a063 에 착지 기록 → 착지 규칙이 판정한다(`ADOPTION_REFUSES_A_LANDING` 이 안 나온다).
@@ -41,9 +45,13 @@
 
 `docs/WORKFLOW.md` 「사람 승인 base 재고정」의 a071 변형이다.
 
-1. 귀속 실측: base 뒤 자기 Go 비병합 커밋과, 그 커밋들이 고친 기존 함수 ↔ a063 번들 대조표. 옛 디렉터리명 없음(renumber 이력 확인).
-2. 번들 신선도: current 6 이 워킹트리 소스와 해시가 맞는가. base 3(`soak_test` 둘 · `console_test` 하나)은 함수가 오늘
-   존재하는가 — 존재하면 일반 규칙에서 `revision: base` 는 틀린 revision 이므로 current 로 재추출하는 근거를 적는다.
+1. 귀속 실측: base 뒤 자기 Go 비병합 커밋과, 그 커밋들이 고친 기존 함수 ↔ a063 번들 대조표. 옛 디렉터리명 없음(현재
+   디렉터리는 `47a7f90a` 에서 태어났다 — `0c563c6c`·`b8f31f27` 의 "[a063]" 은 renumber 전 다른 change, 현 a069). `c727ad12`(S)는
+   HEAD 조상이 아니고 `676bd4b4` 가 main 사본이다(freeze F7).
+2. 번들 신선도(freeze F4): base 번들 3 은 E(=`676bd4b4^`)의 파일 해시를 적는데 세 함수는 오늘 존재한다 — 일반 규칙에서는
+   current 여야 하므로 **current 로 재추출**한다. 그 뒤 특례 없는 도구로 **옛 base P 에서** `check_analysis` 를 돌려, 출력에서
+   9 함수 이름의 missing · stale · revision 오류가 0 임을 필터 영수증으로 남긴다 — 재고정 뒤에는 어떤 게이트도 ① 을 다시
+   재지 않으므로 이 영수증이 유일한 기계 증거다.
 3. 새 base 는 재고정 커밋의 부모(그 시점 HEAD)다. 영수증은 a063 `review.md` 에, `base-commit.txt` 는 단독 커밋.
 4. 프로브: `check_analysis.py --change a063-…` 결과(rc · required · 오류 줄)를 기록한다. 통과해도 a063 의 4.2~4.4 는 남는다.
 
