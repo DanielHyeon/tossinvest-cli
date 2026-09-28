@@ -54,7 +54,7 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **a094는 이 함수를 바꾸지 않는다.** 게이트 조건(현 **B5** `:1223`, base 번호 B3)은 그대로다. 4판 a094 는 그 안에서 불리는 `clearTheSymbol` 의 목록을 넓히지 않는다(엔진 귀속 주문만, design D−2.4). 475150은 `pending_action`이 `STOP_LOSS_LADDER`였으므로 그 게이트는 **이미 참이었다** — 단 그 앞에 a111 의 **B1** `:1180-1182`(`!o.quoteUsable(quote)` → `return nil`)이 있어 쓸 수 있는 시세가 없는 주기에는 게이트에 닿지 않는다.
+- **Safe edit boundary**: **a094는 이 함수를 바꾸지 않는다.** 게이트 조건(현 **B5** `:1223`, base 번호 B3)은 그대로다. 4판 a094 는 그 안에서 불리는 `clearTheSymbol` 의 목록을 넓히지 않는다(엔진 귀속 주문만, design D−2.4). ~~475150은 `pending_action`이 `STOP_LOSS_LADDER`였으므로 그 게이트는 이미 참이었다~~ — **6판 정정(5라운드 R5-2): 거짓.** 무장 발의가 손절 자신이면 `EvaluateLadder` 가 `ladder.go:441-443` 에서 `SuppressedPending` 으로 발의 없이 돌아가고(`CancelPendingFirst` 를 세우는 `:446-447` 에 닿지 않는다), 그래서 `orderable`(`:1185`)이 거짓이라 B5 `:1223` 게이트에 **닿지 않는다.** 475150 의 청소는 이 함수에서 일어나지 않았다. 또 a111 의 **B1** `:1180-1182`(`!o.quoteUsable(quote)` → `return nil`)이 쓸 수 있는 시세가 없는 주기를 먼저 거른다.
 - **High-risk impact**: yes — 청산 판단의 기록과 청소의 진입점.
 
 ## Refresh (2026-09-27, HEAD ddd39a83)

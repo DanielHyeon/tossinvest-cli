@@ -849,3 +849,22 @@ Manager 방향(2026-09-27)대로 썼다. 정본 `design.md` D−3. **5라운드�
 
 - 부수 확인(codex): 게이트 좁힘(평범한 IN_DOUBT 는 `checkSymbolFree` 가 막음)은 **맞다**. N1 의 원장 검사는 브로커 읽기 없이 구현 가능. ACKED 전이는 전이표상 합법. 복구 실패 규약은 이웃과 일치하나 **모든 루프를 세우지 않는다**(`cmd/tossctl/engineready.go:70-75`) — 읽기 실패가 park 로 가면 손절은 이후 재시작마다 얼어 있다.
 - **판정: REJECT. 반영하지 않았다.** P0 둘(R5-1 · R5-7)과 R5-2(설계가 약속한 알림이 사건에서 안 남)·R5-3(해동 경로 실재) 처분은 Manager 결정 사항이다.
+
+## 6판 (2026-09-29) — 5라운드 반영 · 판정 아님
+
+Manager 처분(2026-09-29, 「축소」)대로 썼다. 정본 `design.md` D−4. 6라운드는 codex 대기열(a125 → a090 → a095 r4 → a094 r6).
+
+| id | 처분 | 반영 자리 |
+|---|---|---|
+| R5-1 (P0) | 5판 정지 조건 성립 인정 — 기동 ACKED 정산 철회, **알림만**(상태 변경·브로커 호출 0). 정산은 명명된 후속(선행: matcher 주문 번호 판별자). **후속 기록용 좌표: `internal/execgw/indoubt.go:307` `res.BrokerOrderID = order.OrderID`(단일 일치가 기록 번호를 덮는다), matcher 필드 `:638-650`** | D−4.2 · D−3.3 배너 · order-execution 요구 교체 + 시나리오 · tasks 4.N4·4.N4a, 4.N4b~d 철회 · 선후 관계 |
+| R5-7 (P0) | 두 형태를 코드로 재서 **(B) 청소 게이트 확장** 선택 — (A) 는 취소 상태 판정이 확인 읽기 쪽에 없고(`roundtrip.go:86-123` 은 존재만) 모든 취소에 왕복을 더한다. (B) 는 미체결 목록의 기존 종결 증거(`fills.go:1877-1879` 종결 스냅숏)를 쓴다. 매도 한정, 매수 무변화, 재취소 0, 발의 해제는 intent 의 주문 번호로 종결 확인 | D−4.3 · exit-policy 요구 문단 + 시나리오 2 · tasks 3.R7~3.R7c · 7.2 · 안전표 |
+| R5-2 (P1) | park 원인 판정을 청소에서 떼어 판정 경로로. `record` FLM 의 "게이트는 이미 참" 정정(거짓 — `ladder.go:441-443` 억제가 먼저) | D−4.4 · exit-policy 문단 + 시나리오 · tasks 3.R2·3.R2a · 6.1a · `record` FLM |
+| R5-3 (P1) | 해동 명령 1급 요구(형태: mutating · 운영자·승인 참조·note · audit 선행 · stale 거절 · 같은 해제 판정 · 엔진 무정지 · 콘솔 없음). 「해제 경로 부재」 셋째 사례(a092 모드 · a066 RISK_OVERAGE 다음)로 명기 | D−4.5 · order-execution 요구 + 시나리오 2 · tasks 4.T·4.Ta · 4.3e |
+| R5-4 (P1) | enqueue-only 요구(`Journal.EnqueueAlert`, 선례 `execgw/replay.go:551`). a092 의존 승격 안 함 | D−4.6 · exit-policy 문단 · tasks 3.R4 · 선후 관계 |
+| R5-5 (P1) | **코드 추적으로 확인** — 무장 없음 + 다른 intent 미종결: 청소 `cleared=true` → `clearDelay`(`exitloop.go:1255-1256`) → 무장 → `SymbolInFlight` → `noteDelay` 재시작 → 해제(`:1407-1409`), 매 주기. 지연 경보 영구 미도달. **제안(Manager 확인)**: 청소가 같은 종목 미종결을 `checkSymbolFree` 와 같은 함수로 보고 치움 미완료 | D−4.7 · exit-policy 문단 + 시나리오 · tasks 3.R5·3.R5a · 6.2 |
+| R5-6 (P1) | **전수 재계수 — 새 브로커 호출 0**(정산 철회로 5판의 과소 계수 대상이 사라졌다) | D−4.8 · tasks 7.2·7.3·8.2 |
+
+**Manager 확인 항목 둘**:
+- **Q6-1** — 기동 ACKED 중 **읽기 확인만**(기록 번호 바이트 일치 → CONFIRMED)은 판별자 없이도 안전하다(발주 직후 확인과 같은 판정). 처분 문언("정산 자체는 후속")을 따라 6판은 알림만 쓴다. 이 부분을 남길지.
+- **Q6-2** — R5-5 수리(D−4.7)를 6판 범위로 확정할지(Teammate 제안으로 spec·tasks 에 넣었다).
+

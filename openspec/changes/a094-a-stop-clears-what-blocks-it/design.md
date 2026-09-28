@@ -3,7 +3,157 @@
 > 분기 인용은 전부 `analysis/function-logic/`의 AST 산출물에서 온다
 > (함수 **15개** · 분기 **180개** — 3판이 6개 101분기를 더했다; 2026-09-27 refresh 후 HEAD 기준 **182개**, `record` 14→16).
 >
-> **5판(2026-09-27)**: 바로 아래 **D−3** 이 4라운드 반영이며 D−2 를 이긴다. **D−2** 는 3라운드 반영이며 그 아래 3판 본문을 이긴다.
+> **6판(2026-09-29)**: 바로 아래 **D−4** 가 5라운드 반영이며 D−3 을 이긴다. **D−3**(5판)은 D−2 를, **D−2**(4판)는 그 아래 3판 본문을 이긴다.
+
+## D−4. 6판 — 5라운드(codex) 반영 (2026-09-29)
+
+> **이 절이 D−3 을 이긴다.** 5라운드 원문: `review.md` 「5라운드」, `analysis/freeze-review/codex-r5-output.md`. 방향은 Manager 처분
+> (2026-09-29, "축소"). 줄 번호는 HEAD `0c12844a` 기준(인용 Go 는 a094 base `3937e341` 과 `schema.go` 외 바이트 동일).
+
+### D−4.1 한눈에
+
+| 5판 | 6판 | 발견 |
+|---|---|---|
+| 기동이 ACKED 를 정산한다(PLACE 읽기 → 실패 시 IN_DOUBT → 목록 대조 해소) | **정산을 뺀다.** 기동은 남은 ACKED 행을 명명하는 critical 만. 정산은 **명명된 후속**(선행 조건: 해소기의 주문 번호 판별자) | R5-1 P0 |
+| 취소 ACK(CONFIRMED)면 치움 완료 → 발의 해제 | **매도의 취소 ACK 는 치움의 증거가 아니다.** 그 매도가 원장의 미체결 목록에서 종결 증거로 빠진 뒤에만 치움 완료·발의 해제 | R5-7 P0 |
+| park 원인 critical 은 청소 안에서만 | **청소 자격과 무관하게** 무장 발의의 attempt 가 park 면 관측마다 판정해 critical(포지션 key, 1회) — 무장 발의가 손절 자신이어도 | R5-2 P1 |
+| 해동 도구는 미래 작업(시그니처 계약만) | **1급 요구로 승격** — `tossctl` mutating 명령, 운영자·승인 참조·note, commit 전 audit, 같은 해제 판정 | R5-3 P1 |
+| 새 critical 의 동기 전달은 이름 붙인 잔여 | **enqueue-only 요구** — 이 change 의 새 critical 은 outbox 적재만 하고 관측 루프에서 전송하지 않는다 | R5-4 P1 |
+| 6.2 "반복 PROPOSAL_CANCELLED 0" 무조건 | **셋째 기전 확인(코드 추적)** — 다른 intent 의 미종결 attempt 위에서 치움→무장→`SymbolInFlight`→해제가 매 주기 돈다. 청소가 같은 종목의 미종결 attempt 를 **치움 미완료**로 본다 | R5-5 P1 |
+| §0.4: 기동 정산이 행당 읽기 1회 | **전수 재계수 — 새 브로커 호출 0**(정산을 뺐으므로) | R5-6 P1 |
+
+### D−4.2 R5-1 — 기동 ACKED 정산을 빼고 알리기만 한다
+
+**5판이 스스로 적은 정지 조건(D−3.3-4)이 성립했다.** 해소기의 matcher 에는 주문 번호 판별자가 없다 — `matcher` 필드는 종목·방향·수량·
+가격·시각 창·`targetOrderID`(CANCEL/AMEND 용)뿐이다(`internal/execgw/indoubt.go:638-650`). PLACE 해소에서 단일 일치가 나오면
+`res.BrokerOrderID = order.OrderID` 로 **기록된 번호를 일치한 주문의 번호로 덮는다**(`indoubt.go:307`) — ACKED 에서 온 PLACE 를 이 경로에
+보내면 이미 아는 주문 대신 지문이 같은 다른 주문을 접수 확정으로 기록할 수 있다.
+
+**결정(Manager).** 기동 ACKED 정산은 **이 change 에서 하지 않는다.**
+
+1. 기동(`Recovery.Run` 의 ACKED 건너뛰기 자리, `internal/reconcile/recovery.go:262-272`, 또는 그 뒤의 기동 단계)은 남은 ACKED 행마다
+   **attempt id·종류·종목·intent 를 명명한 critical** 을 attempt 단위 key 로 적재한다(D−4.6 enqueue-only). **상태는 바꾸지 않는다.
+   브로커 호출 0.** 발의는 무장된 채다.
+2. **정산은 명명된 후속**이다. 선행 조건: 해소기 matcher 의 주문 번호 판별자(기록된 `broker_order_id` 와 바이트 일치를 요구) +
+   오답 단일 일치·복수 일치 반례 시험. 덮어쓰기 좌표 `indoubt.go:307` 을 후속 기록에 남긴다(`review.md` 「6판」). **matcher 편집은
+   a094 범위 밖.**
+3. **대가(정직하게)**: N4 의 사실(ACKED 발의는 재시작마다 얼어 있다)은 **남는다** — 다만 이제 기동마다 **보인다**. 해동은 D−4.5 의
+   운영자 명령으로는 안 된다(`OperatorResolve` 는 park 에서만, `resolution.go:144` `from: UNRESOLVED_IN_DOUBT`) — 후속이 올 때까지
+   ACKED 행은 사람이 원장 밖에서 확인하고 후속 change 를 기다린다. **읽기 확인만(주문 번호 바이트 일치 → CONFIRMED)은 판별자 없이도
+   안전하다**(발주 직후 확인과 같은 판정, `roundtrip.go:86-123`) — 이 부분을 남길지는 **Manager 확인 항목**으로 둔다(Q6-1). 6판 본문은
+   Manager 처분 문언대로 알림만이다.
+
+### D−4.3 R5-7 — 매도의 취소 ACK 는 치움이 아니다
+
+**코드가 주는 것.** 취소에는 확인 읽기가 없다 — `roundTripFor` 는 PLACE 만 확인한다(`internal/execgw/roundtrip.go:72-75`). 취소 ACK 는
+CONFIRMED 로 정산되고(`journal/dispatch.go:181-202`), `clearTheSymbol` 은 `out.State == StateConfirmed` 면 그 주문을 치운 것으로 치고
+끝에서 발의를 해제한다(`exitloop.go:1485-1495`). 또 미체결 목록 `LiveOrdersForSymbol` 은 소유 intent 가 유일한 주문만 내므로
+(`journal/fills.go:1866-1872` `1 = COUNT(DISTINCT owner.intent_id)`) 소유가 모호한 CONFIRMED 주문은 **목록에 없어도 살아 있을 수 있다.**
+
+**두 형태를 재서 고른다(Manager 지시).**
+
+| 형태 | 기존 기계 | 대가 |
+|---|---|---|
+| (A) 취소 확인 읽기 — `roundtrip.go` 를 CANCEL 로 넓힌다 | `confirmCreatedOrder`(`:86-123`)는 **존재**(번호·종목)만 본다 — 취소됐는지(상태)를 읽는 판정이 없다. 상태 파싱은 해소기 쪽 `parseOrderFacts`(`indoubt.go:601-607`)에 있다 | 게이트웨이의 **모든 취소**에 브로커 왕복 1회 추가(§0.4) · 손절 경로 한가운데 동기 왕복(§0.3) · 새 판정 |
+| **(B) 청소 게이트 확장 — 종결 증거는 미체결 목록이 이미 쓰는 것** | `LiveOrdersForSymbol` 이 주문을 빼는 유일한 조건이 **종결 체결 스냅숏**이다(`fills.go:1877-1879` `f.terminal = 1`). 종결은 `brokerstate.State.IsTerminal()` — 체결·취소·부분체결 후 취소·대체·거절(`internal/brokerstate/derive.go:94-100`). 체결 감지가 이것을 기록한다(`filldetect/ledger.go:61`, 주기 3초 `filldetect/detect.go:128`, SLO p95 10초 `slo.go:61`) | 새 브로커 호출 0. 손절은 **취소된 매도가 종결로 기록될 때까지**(체결 감지 한 주기 ≈ 3초, SLO 10초) 기다린다 |
+
+**선택: (B).** 기존 증거(종결 스냅숏)를 그대로 쓰고 새 판정·새 호출이 없다. **규칙**:
+
+1. 청소가 **매도** 주문을 취소했다면 그 주기의 치움은 **완료가 아니다**(`clear=false`, 보호 청산 미제출). 다음 주기에 그 주문이 미체결 목록에
+   없으면(= 종결 스냅숏) 완료다. 목록에 남아 있고 그 주문을 대상으로 한 엔진 취소가 이미 CONFIRMED 면 **다시 취소하지 않는다**(원장의
+   취소 attempt 로 판정 — D−2.7 의 PENDING_CANCEL 과 같은 원장 조회를 CONFIRMED 까지 넓힌다) — 종결 증거를 기다리는 중이다.
+2. **발의 해제(`withPending`)는** 발의 intent 의 CONFIRMED 주문이 **모두 종결 스냅숏을 가질 때만** 한다 — 목록 부재가 아니라 **그 intent 의
+   주문 번호로** 종결을 확인한다(소유 모호로 목록에서 빠진 주문이 "없음" 으로 읽히지 않게).
+3. **매수**(진입) 주문의 취소는 종전대로 ACK 로 치운다 — 초과 매도 방향이 아니고(매수 체결은 E31 재조정 경로), 흔한 경로(진입 매수 +
+   손절)의 즉시성을 바꾸지 않는다.
+4. **§4 대가**: 무장 익절(매도)이 걸린 채 손절이 성립하면 손절이 체결 감지 한 주기(≈3초, SLO 10초)만큼 늦는다. 종결 증거가 오지 않으면
+   기존 30초 지연 경보(`noteDelay`)와 D−2.7 트리거가 그대로 돈다 — 침묵하지 않는다. 대가로 지키는 것: **살아 있을 수 있는 매도 위에
+   두 번째 매도를 얹지 않는다.**
+5. 종결 증거를 기다리는 취소(엔진 취소 CONFIRMED · 목록 잔존)는 D−2.7 의 연속 실패 계수에서 **빼지 않는다** — 체결 감지가 SLO 안이면
+   계수 한계(3주기) 전에 끝나고, 넘으면 이른 경보가 맞다. D−2.7 의 제외는 종전대로 기록·전송·인수 단계 취소뿐이다.
+
+### D−4.4 R5-2 — park 원인 알림은 청소 자격과 무관하다
+
+**코드가 주는 것.** 무장 발의가 손절 자신이면 평가가 먼저 억제한다 — `EvaluateLadder` 는 손절 조건에서 `PendingAction == ActionLadderStop`
+이면 `Suppressed = SuppressedPending` 으로 **발의 없이** 돌아간다(`internal/exitpolicy/ladder.go:441-443`; RATCHET 도 같다, `ratchet.go:422-426`).
+그러면 `record` 의 `orderable` 은 거짓이고(`exitloop.go:1185` `snapshot.Orderable && !proposal.Zero()`) 청소 게이트(`:1223`)에 닿지 않는다.
+**5판 D−3.2 의 park 원인 critical 은 사건 두 행(무장 발의 = `STOP_LOSS_LADDER`)에서 한 번도 나지 않는다.**
+
+**결정.** park 원인 판정을 청소에서 떼어 **판정 경로의 앞**에 둔다: 관측에서 판정에 닿은 포지션(`ObserveOnce` → `judge`)이 무장 발의를
+가지면(`m.state.Pending()`, `journal/apply_hook.go:578`) 그 발의 intent 의 attempt 상태를 원장에서 읽고, `UNRESOLVED_IN_DOUBT` 가 있으면
+그 attempt 를 명명한 critical 을 **포지션 key·attempt 당 1회**(관측자 래치 — 재시작하면 다시 알린다) 적재한다. 평가·억제·청소 순서는 바꾸지
+않는다(이 판정은 읽기와 알림뿐). 브로커 호출 0.
+
+**FLM 정정.** `record` FLM 「Safety conclusion」 의 "475150은 `pending_action`이 `STOP_LOSS_LADDER`였으므로 그 게이트는 **이미 참이었다**" 는
+**거짓**이다 — 무장 발의가 손절이면 `CancelPendingFirst` 가 설정되는 갈래(`ladder.go:446-447`)에 가기 전에 `:441-443` 이 억제로 돌아가
+`orderable` 이 거짓이다. 6판에서 그 문장을 고친다.
+
+### D−4.5 R5-3 — park 해동은 운영자 명령(1급 요구)
+
+**코드가 주는 것.** park 의 유일한 출구는 `Journal.OperatorResolve` 이고(`internal/journal/resolution.go:114-150` — 운영자 신원·note 필수,
+CONFIRMED 면 브로커 주문 번호 필수), **비시험 호출자가 0** 이다(grep). 자동 해소는 종결 상태에서 즉시 돌아온다(`indoubt.go:253-257`).
+이것은 a092 의 운영 모드 완화·a066 의 RISK_OVERAGE 해제에 이어 **「해제 경로 부재」 의 셋째 사례**다 — 자동 경로가 조이는 상태를
+사람이 풀 문이 코드에 없다.
+
+**결정 — 요구와 형태(구현은 구현 로트).** 사용자 승인 해제 원칙(2026-09-28: 자동 경로는 조이기만 · 해제는 운영자 + 승인 참조 +
+commit 전 audit · 동시 조이기는 보수 쪽 승리 · 진입점은 journal API + `tossctl` mutating 명령 · 콘솔 버튼 없음)을 그대로 따른다.
+
+1. `tossctl` 명령 하나(가칭 `engine attempt-resolve`), `mutating: true` — 대화형 에이전트는 자동 실행하지 않는다.
+2. 입력: attempt id · 목표(`FAILED_CONFIRMED` 또는 `CONFIRMED`+브로커 주문 번호) · 운영자 신원 · **승인 참조** · note(무엇을 확인했는가).
+3. **audit 줄을 원장 전이 전에** 기록한다 — audit 가 실패하면 아무것도 바꾸지 않는다. 선례: `engine reconcile-resolve`(`cmd/tossctl/
+   engine_reconcile.go:79-105` — `--operator`·`--note` 필수, 원장에 운영자·note 기록).
+4. 결속: 전이 시점에 attempt 가 여전히 `UNRESOLVED_IN_DOUBT` 가 아니면 거절(stale).
+5. `OperatorResolve` 뒤 **그 자리에서** 해제 판정 함수(D−2.5 의 한 곳)를 부른다 — 비수용이면 발의 해제. 두 쓰기 사이 충돌은 기동 따라잡기가
+   닫는다(D−2.5). 엔진을 세우지 않는다(엔진 정지 = 손절 없음).
+6. 콘솔 버튼 없음.
+
+### D−4.6 R5-4 — 새 critical 은 enqueue-only
+
+이 change 가 더하는 critical(청소 트리거 D−2.7 · park 원인 D−4.4 · 기동 행 실패 D−2.6-4 · 기동 ACKED D−4.2)은 **관측 루프에서 전송하지
+않는다.** outbox 에 적재만 하는 기존 경로 `Journal.EnqueueAlert` 를 쓴다(`internal/journal/outbox.go:131` — "Use it when the alert only has
+to be *recorded*"; 선례 호출자 `internal/execgw/replay.go:551`). 전송은 a098 의 전달 실행자가, 계속 실패 시 진입 차단은 a124(아카이브)의
+실행자 판정이 맡는다. 그래서 전달이 막혀도 **다른 포지션의 손절 판정이 늦어지지 않는다.** a092 를 구현 의존으로 올리지 않는다(Manager —
+21판 리뷰 중 결합 금지). 기존 경보(`noteDelay` 등)의 전송 형태는 바꾸지 않는다(범위 밖, a092).
+
+### D−4.7 R5-5 — 셋째 기전: 다른 intent 의 미종결 attempt 위의 반복
+
+**코드 추적(확인).** 무장 발의가 **없는** 포지션에서 손절이 성립하고 같은 종목에 **다른 intent 의** 미종결 attempt(기록·전송·접수·모호)가
+있으면:
+
+1. `record` → 청소 게이트(`exitloop.go:1223`, 손절은 `isFullExit`) → `clearTheSymbol` — 미체결 목록은 CONFIRMED 만이라(`fills.go:1862`)
+   비어 있다 → `cleared=true` → **`clearDelay`**(`:1255-1256`)가 지연 타이머를 지운다.
+2. 무장 → `submit` → 게이트웨이 `checkSymbolFree` 가 같은 종목 미종결을 보고 `SymbolInFlight`(`execgw/gateway.go:804-813`) →
+   `noteDelay` 가 타이머를 **지금부터** 다시 시작 → `release(ProposalCancelled)`(`exitloop.go:1407-1409`).
+3. 다음 주기 1 로 돌아간다. **타이머는 매 주기 지워지므로 30초 경보에 닿지 않고**, 치움은 성공이라 D−2.7 계수도 늘지 않는다.
+   `PROPOSAL_CANCELLED` 가 주기(5초)마다 쌓인다 — 272210 의 기록(1931건 · 중앙값 5.0초)과 모양이 같다(인과 확정은 재생 6.2).
+
+D−3.2 는 **발의 자신의** intent 만 보므로 이것을 못 막는다.
+
+**결정(제안 — Manager 확인).** 청소는 **같은 종목에 미종결 attempt 가 있으면 치움 미완료**로 판정한다(`clear=false`) — 게이트웨이가 어차피
+거절할 제출을 무장·해제하지 않는다. 판정은 **`checkSymbolFree` 와 같은 함수**로 한다(목록 `PendingAttempts` + 대상 판정 `attemptTargets`
+를 게이트웨이의 한 메서드로 내보내 두 곳이 부른다 — 판정 둘 금지). 결과: 무장·해제 반복 0, `clearDelay` 가 안 돌아 **30초 경보가 난다**,
+D−2.7 계수가 는다. 제출 경로 자체의 `SymbolInFlight` 처리(`:1407-1409`)는 경합 대비로 남긴다.
+
+### D−4.8 R5-6 — §0.4 전수 재계수
+
+| 경로 | 브로커 호출 |
+|---|---|
+| R1 3상 분류기(D−3.5) | 0 — 응답 본문 해석 |
+| N1 발의 보존(D−3.2) · park 원인(D−4.4) · 셋째 기전(D−4.7) | 0 — 원장 읽기 |
+| R5-7 종결 증거(D−4.3) | 0 — 체결 감지의 기존 기록을 읽는다 |
+| 기동 ACKED(D−4.2) | 0 — 알림만 |
+| 기동 따라잡기(D−2.5) | 0 — 원장 |
+| 운영자 해동(D−4.5) | 0 — 운영자가 확인한 값을 받는다 |
+| 알림(D−4.6) | 0 — outbox 적재 |
+
+**이 change 가 더하는 브로커 호출은 0 이다.** 5판의 "행당 읽기 1회" 와 그 뒤의 재생·해소·401 재시도(5라운드가 지적한 과소 계수)는
+정산을 뺐으므로 전부 사라진다. 기존 호출(청소가 내는 **취소** mutation)의 수는 바꾸지 않으며, D−4.3-1 의 "재취소 안 함" 은 그것을 줄인다.
+
+### D−4.9 5라운드가 확인한 것(유지)
+
+게이트 좁힘(평범한 IN_DOUBT 는 `checkSymbolFree` 가 막음) · N1 원장 판정의 구현 가능성 · N3 3상의 422 폴백 차단 · 재분류 이연 ·
+canonical 바이트 일치. 복구 실패(`ErrRecoveryIncomplete`)가 모든 루프를 세우지 않는다는 지적(`cmd/tossctl/engineready.go:70-75`)은
+6판에서 정산을 빼며 새 복구 실패 원천이 없어졌다.
 
 ## D−3. 5판 — 4라운드(codex) 반영 (2026-09-27)
 
@@ -25,6 +175,8 @@
 | N = `obs.DefaultCriticalAttempts` | 유지 — "관례 일관성이지 증거가 아니다" 를 명기 | N8 |
 
 ### D−3.2 N1 — 살아 있을 수 있는 주문의 발의는 비우지 않는다 (Q4-4 번복)
+
+> **6판 보강 — D−4.3(취소 ACK 는 치움이 아니다) · D−4.4(park 원인 알림은 청소와 무관) · D−4.7(다른 intent 의 미종결).**
 
 **코드가 주는 것.**
 
@@ -53,6 +205,8 @@
 없다. 브로커가 보유 초과 매도를 거절하는지는 여전히 **미검증**이며 이 규칙은 그것에 기대지 않는다.
 
 ### D−3.3 N4 — ACKED 로 남은 attempt 의 기동 정산
+
+> **6판에서 결정 부분 철회 — D−4.2.** 아래 「결정 — 기동 ACKED 정산」 은 자기 정지 조건(4)이 성립해 빠졌다. 「4판 정정」 과 「코드가 주는 것」 은 사실로 유지한다.
 
 **4판 정정.** D−2.5 의 "재시작 복구가 그 attempt 를 IN_DOUBT 로 만든다" 는 `DISPATCH_STARTED` 에만 참이다. **`ACKED` 는 그대로 남는다** —
 `RecoverPending` 은 ACKED·IN_DOUBT 를 "left as they are, still blocking" 으로 두고(`internal/journal/recovery.go:81-83`·`:116-120`),
@@ -119,6 +273,8 @@ D−2.3 조건 4 의 "오류가 한 겹 더 감싸이면 모양이 바뀌므로 
 오류(앞·뒤 문맥 덧붙임, 표식 둘) 픽스처가 거절됨을 시험으로 고정한다. 이연 중이므로 5판에서는 요구로만 남긴다.
 
 ### D−3.7 N2 — 새 critical 들의 전달 비용 (이름 붙인 잔여)
+
+> **6판에서 해소 — D−4.6 enqueue-only.**
 
 5판이 더하는 critical(청소의 새 트리거 D−2.7 · park 원인 알림 D−3.2 · 기동 행 실패 D−2.6-4)은 오늘의 알림 경로를 탄다 — 관측 루프에 주입된
 notifier(`internal/app/engine/exitwiring.go:341-342`)가 동기로 부르고(`exitloop.go:1710`) 포지션을 차례로 처리하며(`:451-465`) 전달은
