@@ -334,3 +334,15 @@ func TestEngineRiskLatchReleaseCarriesTheBinding(t *testing.T) {
 		t.Errorf("output = %q", out)
 	}
 }
+
+// TestEngineRelaxationTreatsADialErrorAsNotReached 는 dial 오류가 클라이언트와 함께 와도 요청을 보내지 않음을 잼
+// (뮤테이션 C04 생존 → 추가). 오류가 난 연결로 해제를 보내면 결과를 말할 수 없음.
+func TestEngineRelaxationTreatsADialErrorAsNotReached(t *testing.T) {
+	client := &fakeRelaxationClient{result: riskrelaxation.Result{Notified: true}}
+	deps := fakeRelaxationDeps(client)
+	deps.dial = func(context.Context, string) (riskRelaxationClient, error) { return client, errors.New("health check failed") }
+	_, err := runRelaxationCmd(t, newEngineEntryLockReleaseCmd(&rootOptions{}, deps), lockArgs...)
+	if err == nil || !strings.Contains(err.Error(), "nothing was released") || client.calls != 0 {
+		t.Fatalf("err = %v calls = %d", err, client.calls)
+	}
+}

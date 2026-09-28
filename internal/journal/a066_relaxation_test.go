@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 )
 
@@ -101,6 +102,9 @@ func TestA066EntryLossLockReleaseRefusals(t *testing.T) {
 		{"automatic actor cannot relax", func(r *EntryLossLockReleaseRequest, _ *relaxationAuditor) { r.Actor = "AUTO" }, ErrRiskRelaxationRequiresOperator},
 		{"approval reference required", func(r *EntryLossLockReleaseRequest, _ *relaxationAuditor) { r.Approval = "  " }, ErrRiskRelaxationApprovalRequired},
 		{"auditor required", func(r *EntryLossLockReleaseRequest, _ *relaxationAuditor) { r.Auditor = nil }, ErrInvalidRequest},
+		// (*audit.Log)(nil) 는 nil 이 아닌 인터페이스이고 RecordAction 이 아무것도 안 쓰고 nil 을 돌려줌 — 받으면 audit 줄
+		// 없이 커밋됨(교차 모델 리뷰 CX-1, 2026-09-29).
+		{"a nil audit log is no auditor", func(r *EntryLossLockReleaseRequest, _ *relaxationAuditor) { r.Auditor = (*audit.Log)(nil) }, ErrInvalidRequest},
 		{"reason required", func(r *EntryLossLockReleaseRequest, _ *relaxationAuditor) { r.Reason = "" }, ErrInvalidRequest},
 		{"a lock the operator did not see", func(r *EntryLossLockReleaseRequest, _ *relaxationAuditor) { r.LockSeq += 99 }, ErrRiskRelaxationStale},
 		// 모양이 틀린 요청은 stale 이 아니라 invalid 임(뮤테이션 M20·M21 생존 → 추가) — 운영자에게 "다시 보라"가 아니라
@@ -281,6 +285,7 @@ func TestA066OverageLatchReleaseRefusals(t *testing.T) {
 		{"automatic actor cannot relax", func(r *RiskOverageLatchReleaseRequest, _ *relaxationAuditor) { r.Actor = "AUTO" }, ErrRiskRelaxationRequiresOperator},
 		{"approval reference required", func(r *RiskOverageLatchReleaseRequest, _ *relaxationAuditor) { r.Approval = "" }, ErrRiskRelaxationApprovalRequired},
 		{"auditor required", func(r *RiskOverageLatchReleaseRequest, _ *relaxationAuditor) { r.Auditor = nil }, ErrInvalidRequest},
+		{"a nil audit log is no auditor", func(r *RiskOverageLatchReleaseRequest, _ *relaxationAuditor) { r.Auditor = (*audit.Log)(nil) }, ErrInvalidRequest},
 		{"release time required", func(r *RiskOverageLatchReleaseRequest, _ *relaxationAuditor) { r.ReleasedAt = time.Time{} }, ErrInvalidRequest},
 		{"failing audit changes nothing", func(_ *RiskOverageLatchReleaseRequest, a *relaxationAuditor) { a.fail = true }, nil},
 	} {

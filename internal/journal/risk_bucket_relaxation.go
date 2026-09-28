@@ -17,6 +17,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -62,12 +63,26 @@ func validRelaxation(actor, approval, reason string, auditor RiskRelaxationAudit
 		return ErrRiskRelaxationApprovalRequired
 	case strings.TrimSpace(reason) == "":
 		return fmt.Errorf("%w: a relaxation names why; a change nobody can explain afterwards is not auditable", ErrInvalidRequest)
-	case auditor == nil:
+	case nilAuditor(auditor):
 		return fmt.Errorf("%w: a relaxation requires an audit log (§0.5)", ErrInvalidRequest)
 	case at.IsZero():
 		return fmt.Errorf("%w: a relaxation needs its time", ErrInvalidRequest)
 	}
 	return nil
+}
+
+// nilAuditor 는 audit 줄을 쓸 수 없는 Auditor 를 가림 — nil 인터페이스와, nil 포인터를 담은 인터페이스 둘 다.
+// (*audit.Log)(nil).RecordAction 은 아무것도 쓰지 않고 nil 을 돌려주므로, 후자를 받으면 audit 줄 없이 커밋됨(CX-1).
+func nilAuditor(auditor RiskRelaxationAuditor) bool {
+	if auditor == nil {
+		return true
+	}
+	v := reflect.ValueOf(auditor)
+	switch v.Kind() {
+	case reflect.Pointer, reflect.Map, reflect.Slice, reflect.Func, reflect.Chan, reflect.Interface:
+		return v.IsNil()
+	}
+	return false
 }
 
 // EntryLossLockView 는 열린 잠금 하나와 그 잠금의 마지막 REAFFIRM 사건 번호(없으면 0)임 — 해제가 결속할 값.

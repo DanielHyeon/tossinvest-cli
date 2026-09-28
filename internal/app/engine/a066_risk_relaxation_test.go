@@ -299,3 +299,15 @@ func (a066PolicyOnly) Preview(context.Context, positionpolicy.Request) (position
 func (a066PolicyOnly) Apply(context.Context, positionpolicy.ApplyRequest) (positionpolicy.State, error) {
 	return positionpolicy.State{}, positionpolicy.ErrInvalidRequest
 }
+
+// TestA066NoticeSurvivesTheCallerHangingUp 은 요청 문맥이 커밋 뒤 끊겨도 통지가 기록됨을 잼(뮤테이션 E10 생존 → 추가).
+// 해제는 이미 커밋됐으므로, 클라이언트가 끊었다고 통지를 버리면 사람이 모르는 완화가 남음.
+func TestA066NoticeSurvivesTheCallerHangingUp(t *testing.T) {
+	fx := a066RelaxEngine(t, true, nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	result := notifyRelaxation(ctx, fx.j, "entry_lock", 1, "entry_loss_lock:acct-7/KR/SHORT", "ops", "OPS-1", a066RelaxNow)
+	if !result.Notified || len(fx.alerts(t)) != 1 {
+		t.Fatalf("result = %+v notices = %d, want the notice recorded after a hang-up", result, len(fx.alerts(t)))
+	}
+}

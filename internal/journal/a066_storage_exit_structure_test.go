@@ -31,7 +31,7 @@ import (
 // 세기만 함(범위가 조용히 줄지 않게).
 var a066StorageExitCensus = struct {
 	files, funcs, exits, others, txOpeners int
-}{files: 11, funcs: 127, exits: 336, others: 91, txOpeners: 12}
+}{files: 11, funcs: 128, exits: 336, others: 91, txOpeners: 12}
 
 func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 	names, err := filepath.Glob("risk_bucket*.go")
