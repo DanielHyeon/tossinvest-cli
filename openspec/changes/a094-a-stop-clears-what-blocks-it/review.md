@@ -827,3 +827,25 @@ Manager 방향(2026-09-27)대로 썼다. 정본 `design.md` D−3. **5라운드�
 **작성 중 정정 1건**: 초안 D−3.3-5 는 ACKED 정산의 행 실패를 D−2.6-4(흡수·critical)로 보냈다. `Recovery.Run` 의 이웃(재생·해소)은 행 실패를
 `ErrRecoveryIncomplete` 로 반환한다(`internal/reconcile/recovery.go:276-289`) — 복구 본문 안에 두 번째 실패 규약을 만들지 않도록 고쳤다.
 
+## 5라운드 (codex 교차 모델, task 0.5j) — **REJECT** · 분류만, 반영은 Manager 결정 뒤
+
+- 실행: codex-cli 0.154.0, gpt-6-astra, `codex exec -s read-only --ephemeral --skip-git-repo-check -C <트리>`,
+  session **`01a0e857-0cc8-7080-90ee-cd981616d0bf`**, 2026-09-28 23:06:53~23:12:20 KST, rc 0, tokens 170,300, 401 없음.
+  트리 = `git archive 0c12844a`(5판 · D−2.8 보충 62277308 · a089 아카이브 64a1b2b3 포함, 커밋된 것만), 파일 수 17283 = `git ls-tree` 17283.
+  인용 Go 29파일은 base `3937e341` 대비 `schema.go`(a066 v34 +3줄)만 다르다 — 프롬프트에 명시.
+  프롬프트 `analysis/freeze-review/codex-r5-prompt.md`(9a04cb59), 출력 `codex-r5-output.md`.
+- 4라운드 발견 판정: RESOLVED 5(N3 · N6 · N7 · N8 · 3라운드 F7) · PARTIAL 3(N1 · N4 · N5) · NOT RESOLVED 1(N2).
+  canonical order-execution 32–68 = delta 13–49 바이트 일치, AST 해시 15 일치(182분기 — tasks 의 "180" 은 낡음).
+
+| id | codex | 분류 | 요지 | Teammate 재확인 |
+|---|---|---|---|---|
+| R5-1 | P0 | **설계 결함 — 확인** | D−3.3 의 ACKED PLACE 폴백(IN_DOUBT → 해소)은 이미 아는 주문 번호를 안 쓴다 — **5판이 스스로 적은 정지 조건이 지금 성립한다** | 확인 — `matcher` 에 주문 번호 판별자가 없다(`internal/execgw/indoubt.go:638-650`, `targetOrderID` 는 CANCEL/AMEND 용), 단일 일치가 `res.BrokerOrderID = order.OrderID` 로 기록 번호를 덮는다(`:307`) |
+| R5-2 | P1 | **설계 결함 — 확인** | park 원인 critical(D−3.2)은 무장된 발의가 **손절 자신**이면 도달 불가 — 평가가 청소 전에 억제한다. 6.1a 가 요구하는 알림이 사건 fixture 에서 안 난다 | 확인 — `EvaluateLadder` `ladder.go:441-443`(PendingAction==ActionLadderStop → `SuppressedPending`, Proposal 없음) → `record` `orderable=false`(`exitloop.go:1185`) → 청소 게이트(`:1223`) 미도달. `record` FLM 「Safety conclusion」 의 "그 게이트는 이미 참이었다" 는 **거짓** — 정정 대상 |
+| R5-3 | P1 | 설계 — 사용자/Manager | 좁힌 양보의 해동 경로(운영자 도구)가 이 change 밖이라 실재하지 않는다 | 확인 — `OperatorResolve` 비시험 호출자 0 |
+| R5-4 | P1 | 교차 change — Manager | 새 critical 의 동기 전달 지연(N2)을 명명만 했다 — a092 를 구현 의존으로 하거나 enqueue-only 를 요구하라 | 4라운드 N2 와 동일 사실. 처분(의존 승격 여부)은 Manager |
+| R5-5 | P1 | 설계 | 6.2 의 무조건 단언("반복 PROPOSAL_CANCELLED 0")은 거짓 — 무장 안 된 포지션이 다른 intent 의 같은 종목 IN_DOUBT 에 막혀 `SymbolInFlight` → 해제 → 재무장을 반복하는 셋째 기전이 D−3.2 밖에 남는다 | 미확인(논리 경로 `exitloop.go:1407-1409` 인용). 6.2 는 이미 "기전이 두 갈래 밖이면 멈추고 보고" 를 적었으나 codex 는 단언 자체를 좁히라고 한다 |
+| R5-6 | P1 | 문서 | §0.4 계수 과소 — ACKED 정산의 "행당 1회" 는 직접 호출일 뿐, 뒤따르는 재생·해소(PLACE 두 목록 조회 · CANCEL 반복 읽기)와 401 재시도가 빠졌다. 기동 시간·율 예산 필요 | 미확인 |
+| R5-7 | P0 | **설계 결함 — 확인(알려진 F8 계열)** | 유지된 CONFIRMED 경로가 여전히 원 매도가 살아 있을 수 있는 채 발의를 푼다 — 취소 ACK 를 장부 이탈로 받는다(취소엔 readback 없음). 또 소유 필터가 CONFIRMED 행을 빼면 "모두 CONFIRMED → 청소 목록에 있다" 가 거짓 | 확인 — `roundTripFor` 는 PLACE 만(`internal/execgw/roundtrip.go:72-75`), 취소 ACK → CONFIRMED(`journal/dispatch.go:181-202`) → 청소가 해제(`exitloop.go:1485-1495`). 소유 필터 `fills.go:1866-1872` 는 미확인 |
+
+- 부수 확인(codex): 게이트 좁힘(평범한 IN_DOUBT 는 `checkSymbolFree` 가 막음)은 **맞다**. N1 의 원장 검사는 브로커 읽기 없이 구현 가능. ACKED 전이는 전이표상 합법. 복구 실패 규약은 이웃과 일치하나 **모든 루프를 세우지 않는다**(`cmd/tossctl/engineready.go:70-75`) — 읽기 실패가 park 로 가면 손절은 이후 재시작마다 얼어 있다.
+- **판정: REJECT. 반영하지 않았다.** P0 둘(R5-1 · R5-7)과 R5-2(설계가 약속한 알림이 사건에서 안 남)·R5-3(해동 경로 실재) 처분은 Manager 결정 사항이다.

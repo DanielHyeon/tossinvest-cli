@@ -40,7 +40,7 @@
       **5판 현황**: `record` FLM 「Branches」 표를 16분기로 재번호(BTM 은 이미 재번호) — 남은 것은 편집 전 FLM 셋(4.0a · 4.0b · N1 의 3.0a)
 - [x] 0.5i **5판 반영** — `design.md` D−3(N1 Q4-4 번복 · N4 ACKED 기동 정산 · 재분류 이연 · N3 3상 분류기 · N7 정정 · N2 잔여 · N8 · a089
       전제), spec delta 2(재분류 요구·시나리오 삭제, 3상·ACKED 정산·park 위 발의 보존 추가), tasks §2·§3·§4·§4bis·§6 개정. **판정 아님**
-- [ ] 0.5j **proposal-freeze 리뷰 5라운드**(codex) — **a089 처분(사용자 답) 뒤에만**(D−3.9). 그 전에는 freeze 하지 않는다.
+- [x] 0.5j **proposal-freeze 리뷰 5라운드**(codex) — **REJECT**(P0 2 · P1 5), `review.md` 「5라운드」 · `codex-r5-output.md`. — **a089 처분(사용자 답) 뒤에만**(D−3.9). 그 전에는 freeze 하지 않는다.
       전제 충족: a089 아카이브(`64a1b2b3`, 2026-09-28) — codex 슬롯 대기열(a092 r21 → a095 r3 → a094 r5)
 
 ## 1. 산출물 (완료 — 문서보다 먼저)
