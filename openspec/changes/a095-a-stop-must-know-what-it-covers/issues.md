@@ -28,15 +28,20 @@
 StockOS `position-campaign-core` spec의 「하향 거부와 기록」 SHALL은 **라이브에 배선되지 않은 검토된
 계약**이다(2판 I1 인용 유지 — `:52-56`, `:123-126`).
 
-## I2. `positions.avg_price`의 출처 — R3 보류 (Q5)
+## I2. 총위험(R3) — 후속 change 후보 · `positions.avg_price`의 출처
 
 2판은 *"브로커가 원가를 안 주면 직전 값이 이어질 수 있다"*고 적었다(`ApplyPositionAdjustment` `:312`
 `firstNonEmpty(req.NewAvgPrice, target.AvgPrice)`). 보이스 A(A-5)는 더 강하게 주장한다 — 수량 수렴
 경로(`ConvergeQuantities`)가 늘 `NewAvgPrice: ""`를 보내므로 수량 증가 경로에서 평단은 **설계상** 낡는다.
 반대 사례도 있다 — 272210 inst4 `avg_price = 81922.222222`(2라운드 P2-4).
 
-**3판은 이 주장을 재검증하지 않았다**(`ConvergeQuantities`의 번들이 없다). R3의 지위(Q5)가 정해지면 그
-함수의 번들을 먼저 뽑는다.
+**3판은 이 주장을 재검증하지 않았다**(`ConvergeQuantities`의 번들이 없다).
+
+**처분 — 사용자 결정(2026-09-28)**: *"Q5 = R3(총위험) 보류 + delta 의 SHALL 지위 해제(archive 차단 해소, 후속
+change 후보로 기록)"*. a095 exit-policy 델타에서 총위험 요구를 지웠다. **후속 change 후보**:
+「보호는 자기가 덮는 수량과 총위험을 말한다」 — 착수 조건은 (1) `ConvergeQuantities` · `ApplyPositionAdjustment`의
+평단 경로를 AST 번들로 먼저 재검증, (2) 평단 출처를 정할 것(브로커 `Holding.CostBasisRaw` 등), (3) 2판 D3 ·
+tasks 3.1~3.6(`2fbdcd78`)을 이력으로 참조.
 
 ## I3. 발신 자리 넷은 같은 사실이 아니다 (2판 판단 정정)
 

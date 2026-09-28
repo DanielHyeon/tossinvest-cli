@@ -89,13 +89,17 @@ normal이면 `Notify` B1 창의 `n.publishBestEffort`로 간다 — 그 함수(`
 `TestAPositionWithNoEntryDecisionIsSkippedAndAlertedOnce`가 그 등급을 이미 고정한다
 (`exitloop_test.go:508`).
 
-### 남는 경합 — `[비움 — Q7]`
+### 남는 경합 — **a092 영역으로 이관** (사용자 결정 2026-09-28)
 
 `claimAndDeliver`(`notifier.claimanddeliver`)의 호출 목록은 `n.mu.Lock` · `n.mu.Unlock`(defer)로 열고
 `n.deliver`로 끝난다 — 배달 전체가 뮤텍스 안이다. reconcile B5 사실이 critical이 되면 그 배달 동안
 exit goroutine의 **기존** critical 발신(`exitloop.go:831` · `:1633` · `:1657` · `:1687`)이 같은 뮤텍스를
 기다린다. 결정 (1)은 exit goroutine에 **새** critical Notify를 두지 않는 것이고, 이 경합은 새 발신이
-아니라 **기존 발신의 대기 증가**다. 결정이 덮지 않는다.
+아니라 **기존 발신의 대기 증가**다.
+
+**처분(2026-09-28)**: a092 21판이 소유한다 — 그 engine-safety 델타가 exit goroutine이 줄 서는 잠금의 **모든
+보유자**에게 원격 전송 동안 잠금을 놓으라고 요구한다(SHALL). 대사 goroutine 자신의 대기(둘째 면)는 a092 21판
+밖의 **이름 붙은 잔여**다. a095는 이 경합에 대해 설계하지 않는다. 교차 인용은 `proposal.md` 「이관 기록」.
 
 ### 키 분리 (결정 (3)(iii))
 
@@ -142,11 +146,12 @@ exit 관측 자리가 normal인 동안 키는 outbox에 닿지 않지만(normal 
 정해지면: critical이면 키를 정본 engine-safety 「같은 조건의 critical 알림은 재알림 창 안에서 한 번만
 전송한다」와 대조해 정하고, normal이면 재알림 창과 무관하게 `d.grown`(B1) 래치의 기준만 정한다.
 
-## D3. R3 — 총위험 `[보류 — Q5]`
+## D3. R3 — 총위험 — **보류, 델타 SHALL 해제** (사용자 결정 2026-09-28)
 
+a095는 총위험을 구현하지 않고, exit-policy 델타에서 그 요구를 지웠다. 후속 change 후보는 `issues.md` I2.
 2판 D3는 이력으로 남긴다. 보이스 A A-5의 주장 — 수량 수렴 경로(`ConvergeQuantities`)가
 `NewAvgPrice: ""`를 보내 `firstNonEmpty`로 평단이 이어지므로 R3가 겨냥한 바로 그 경우에 평단이 낡는다 —
-은 **3판이 재검증하지 않았다**(그 함수의 번들이 없다). R3의 지위가 정해지면 필요한 번들을 먼저 뽑는다.
+은 **3판이 재검증하지 않았다**(그 함수의 번들이 없다). 후속 change가 그 번들을 먼저 뽑는다.
 
 ## D4. 손절가를 평단 기준으로 다시 계산하지 않는다 — 사실 정정
 
@@ -190,7 +195,7 @@ reconcile 사이클 — judgeHoldings
 exit 관측 사이클 — ObserveOnce
   workingSet :426 ── B6 !ExitEligible → ExitObserver.alertUnmanaged → normal (결정 1, 무변화)
   observe    :441
-  judge      :465   ← 이 앞에 새 critical 체류 없음. 기존 critical 발신의 n.mu 대기는 Q7
+  judge      :465   ← 이 앞에 새 critical 체류 없음. 기존 critical 발신의 n.mu 대기는 a092 영역
 ```
 
 ## D6. 무엇을 하지 않는가 (3판)

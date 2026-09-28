@@ -131,11 +131,16 @@ critical로 올리는 것은 `adoption.enabled`가 참이어서 **엔진이 보�
   `positions.adoption_id REFERENCES position_adoptions(id)` · `foreign_keys(on)` 때문에 B2가 받는 입력은
   조회 오류다. 「편입 기록 없음 = 보호 없음」 SHALL·시나리오도 삭제한다.
 
-### R3 — 총위험 보고 `[보류 — Q5]`
+### R3 — 총위험 보고 — **보류, 델타에서 SHALL 해제 (Q5 결정)**
 
-2판의 R3(`(평단 − 유효 손절) × 현재 수량`)는 결정 (3)이 언급하지 않았고, 보이스 A(A-5)는 수량 증가
-경로에서 평단이 설계상 낡는다고 주장한다(3판 미재검증 — 그 함수의 번들이 없다). 유지·보류·삭제를
-Q5로 올린다. 델타의 R3 요구사항은 그 답까지 **그대로 두되 동결 대상에서 뺀다**.
+> **사용자 결정 (2026-09-28, 일괄 승인 — Manager 전달 원문):** *"Q5 = R3(총위험) 보류 + delta 의 SHALL 지위
+> 해제(archive 차단 해소, 후속 change 후보로 기록) / Q2(d)·Q7 = a092·a124 영역 이관(a092 21판이 그 소유를
+> 인수했고 a124 는 아카이브됨 — 교차 인용 갱신)."*
+
+2판의 R3(`(평단 − 유효 손절) × 현재 수량`)는 a095가 구현하지 않는다. exit-policy 델타의 R3 요구사항
+(「보호는 자기가 덮는 수량과 총위험을 말할 수 있어야 한다」)을 **지웠다** — archive가 논쟁 중인 SHALL을
+정본에 넣지 않게 하기 위해서다. **후속 change 후보**로 `issues.md` I2에 남긴다: 그 후보가 먼저 풀어야 할
+것은 평단의 출처다(보이스 A A-5 — 수량 수렴 경로에서 평단이 설계상 낡는다는 주장, 3판 미재검증).
 
 ### 하지 않는 것
 
@@ -159,17 +164,22 @@ Q5로 올린다. 델타의 R3 요구사항은 그 답까지 **그대로 두되 �
 2. **Q2 — 결정 (2)가 이름 대지 않은 사유.** (a) 설정 거부(`alertUnmanaged` B3) (b) include 지정 시도 실패
    (B6) — 특히 `adoption.enabled=false`에 include 목록이 있을 때 정본 「false = 기존 동작」과의 관계
    (c) `adopt` B2(시세 읽기 오류) · B6(관측 없음) · B7(관측 묵음)로 **연기된** 후보가 B5 사유로 알려진다 —
-   일시적 시세 실패가 critical이 되는 것을 받아들이는가 (d) 알림이 **켜져 있지만** transport가 죽은
-   엔진에서 B5 사실이 ENTRY_BLOCKED를 부르는 교환(2판 D1 (3))을 받아들이는가.
+   일시적 시세 실패가 critical이 되는 것을 받아들이는가 — **(a)(b)(c) 열림: 구현 로트행**(Manager 분류
+   2026-09-27, 코드 영수증으로 확정).
+   ~~(d) 알림이 켜져 있지만 transport가 죽은 엔진에서 B5 사실이 ENTRY_BLOCKED를 부르는 교환~~ →
+   **이관(사용자 결정 2026-09-28): a124 영역.** 그 교환은 a095가 정하지 않는다 — critical 전달 실패의 진입
+   차단 · 운영 모드 승격의 주체와 판정은 a124가 착지시킨 정본 engine-safety 「배달 실행자는 지속 실패를 진입
+   차단과 운영 모드 승격으로 잇는다」(a124 archive `c1e34dc4`)가 소유한다. a095가 B5를 critical로 매기면 그
+   사실은 그 정본을 따른다.
 3. **Q3 — 엔진 개설 포지션 수량 증가의 비교 기준.** `exit_states`에 수량 열이 없다. 진입 fill 합계,
    `position_adjustments` 이력, 마지막으로 보고한 수량(메모리) 중 무엇을 기준으로 하는가?
 4. **Q4 — 수량 증가 사실의 종류·등급.** 증가분은 원래 손절의 보호를 받는다(무보호 아님). 별도 종류로
    가르는가, 그리고 normal인가 critical인가? critical이면 키에 수량을 넣는가(행마다 ack · 진입 차단
    비용), 재알림 창을 따르는가?
-5. **Q5 — R3의 지위.** 유지(평단 출처 재설계)·보류(후속 change)·삭제 중 무엇인가?
+5. ~~**Q5 — R3의 지위.**~~ → **결정(2026-09-28): 보류 + 델타 SHALL 해제**, 후속 change 후보(위 R3 절).
 6. **Q6 — 래칫 선행 조건.** exit-policy 델타 둘째 요구에서 거짓 전제를 지웠다. 쓰기 자리 넷의 사실로
    선행 조건을 다시 SHALL로 적는가, issues I1에만 두고 후속 change에 넘기는가?
-7. **Q7 — `n.mu` 경합.** reconcile 자리의 critical 배달은 `claimAndDeliver`가 `n.mu`를 쥔 채
+7. ~~**Q7 — `n.mu` 경합.**~~ → **이관(사용자 결정 2026-09-28): a092 영역**(아래 「이관 기록」). 원문: reconcile 자리의 critical 배달은 `claimAndDeliver`가 `n.mu`를 쥔 채
    `n.deliver`를 부른다. 그동안 exit goroutine의 **기존** critical 발신(`exitloop.go:831`
    `EventExitObservationOutage` · `:1633` `EventExitJudgementRefused` · `:1657` `EventExitProposalRefused` ·
    `:1687` `EventExitLiquidationDelayed`)이 같은 뮤텍스를 기다린다. a095가 이 경합의 모집단을 늘리는 것을
@@ -179,15 +189,26 @@ Q5로 올린다. 델타의 R3 요구사항은 그 답까지 **그대로 두되 �
    B5 사실이 N건이면(예: 시세 경로 장애로 `adopt` B2가 후보 전원을 연기) 대사 사이클이 N × 배달 예산만큼
    멈춘다. 손절 경로는 아니지만 대사 주기가 늦어진다.
 
+**이관 기록 (Q7 · Q2(d), 2026-09-28).**
+
+| 면 | 소유 | 교차 인용 |
+| --- | --- | --- |
+| Q7 첫째 면 — exit goroutine의 기존 critical 발신이 대사 쪽 배달이 쥔 `n.mu`를 기다림 | **a092 21판** | a092 engine-safety 델타 「exit 관측 goroutine이 기다리는 잠금은 원격 전송을 덮어서는 안 된다(SHALL NOT)」 — 그 잠금의 **모든 보유자**가 원격 전송 동안 잠금을 놓아야 한다(design D0.3e 5번). a092 review(21판 Manager 판정 Q1)가 *"a095 Q7의 첫째 면 … 21판의 잠금 범위가 닫는다"*고 적었다 |
+| Q7 둘째 면 — 대사 goroutine 자신이 무관리 보유마다 원격 왕복을 기다림 | **a092 영역 · 21판 밖의 이름 붙은 잔여** | 같은 판정: *"둘째 면(대사 goroutine 자신이 무관리 보유마다 원격 왕복을 기다림)은 Q1 문자 해석상 21판 밖에 남는다."* a095는 이 잔여를 **이름으로 남기고** 고치지 않는다 |
+| Q2(d) — transport 사망 시 ENTRY_BLOCKED 교환 | **a124**(archive `c1e34dc4`) → 정본 | 정본 engine-safety 「배달 실행자는 지속 실패를 진입 차단과 운영 모드 승격으로 잇는다」 |
+
+**아직 열림 — 구현 로트행**(Manager 분류 2026-09-27, a095가 스케줄될 때 코드 영수증으로 확정): Q1 · Q2(a)(b)(c) ·
+Q3(정지 조건 — `exit_states`에 수량 열이 없다는 스키마 질문) · Q4 · Q6.
+
 ## Impact
 
 | | 자리 | 성격 |
 | --- | --- | --- |
 | R1′ | reconcile 쪽 무관리 보고(`adoption.go` `alertUnmanaged` · 그 호출자) · 등급 표 | 방식 Q1. exit 관측 자리 · `Notify` · `publishBestEffort` · `notifyCritical` · `deliver` 본문은 무변화 |
 | R2′ | `adoption.go` `judgeHoldings` B7 창 · 발신 키 | Q3 · Q4 |
-| R3 | 보류 | Q5 |
+| R3 | **보류 — 델타에서 지움, 후속 change 후보** | 결정 Q5 |
 
-spec: `engine-safety`(사실별 등급 · 진입 차단 비도달 · 키 분리), `exit-policy`(R3 보류 · 래칫 요구의
+spec: `engine-safety`(사실별 등급 · 진입 차단 비도달 · 키 분리), `exit-policy`(R3 요구 삭제 · 래칫 요구의
 거짓 전제 삭제).
 
 **기존 함수 내부를 고치므로 Function Logic Map 면제는 없다.** 3판 번들 21개가 base `02716357`에
