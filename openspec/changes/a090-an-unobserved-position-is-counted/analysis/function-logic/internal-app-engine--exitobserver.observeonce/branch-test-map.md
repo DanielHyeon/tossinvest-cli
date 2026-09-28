@@ -12,7 +12,7 @@ AST 분기 8 · return 5 · 무음 `continue` 2(`:457`·`:462`). 진입 실측�
 | B5 | `:451` 보유 포지션마다 1회 방문 | `TestTheLoopOpensTheExitStateOfANewlyHeldPosition` (`exitloop_test.go:447`) · `TestASuccessfulObservationStampsThePriceFreshness` (`:518`) | no | yes |
 | B6 | `:453` 일부 종목만 미응답 → 그 종목은 **무음으로** 빠진다 | `TestA111ValidSiblingIsJudgedWithoutLendingFreshnessToInvalidSymbol` (`a111_flat_exit_observation_test.go:759`) — 형제 하나가 NaN 이면 그 종목은 Seed 로 남고 **진입 게이트는 열린 채**임을 단언한다(무음을 고정하는 쪽) | no | yes |
 | B7 | `:459` 앞 포지션 처리 동안 임대가 끝난 시세 → **무음으로** 빠진다 | `TestA111SlowFirstPositionExpiresLaterQuoteWithoutAbandoningStartedProtection` (`a111_flat_exit_observation_test.go:833`) — 첫 포지션 제출이 16초 걸리면 뒤 종목은 판정·원장 효과 0 | no | yes |
-| B8 | `:465` 첫 `judge` 오류만 주기에 실린다 | `TestAFailedObservationHoldsTheJudgement` (`exitloop_test.go:560`) | no | yes |
+| B8 | `:465` 첫 `judge` 오류만 주기에 실린다 | **귀속 미측정** — 블록은 진입(패키지 커버리지)했으나 어느 시험인지 재지 않았다. 1·2판의 `TestAFailedObservationHoldsTheJudgement`(`exitloop_test.go:560`) 귀속은 **틀렸다** — 그 시험은 가격 읽기 실패를 주입해 B4 로 돌아간다(codex 1라운드 N9) | no | yes(블록 진입만) |
 
 ## a092 번들 이후 바뀐 것
 

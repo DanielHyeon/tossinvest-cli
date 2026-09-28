@@ -1,9 +1,12 @@
-# a090 · design (2판)
+# a090 · design (3판)
 
+> **3판(2026-09-29) — codex 1라운드(REJECT, P0 2 · P1 4) 반영.** Manager 처분: N1 B10 표시 해제(편집 2자리 + 구조 핀) · N2 강화 공지만 enqueue-only ·
+> N3 최소 로거 배선 편입 · N4~N6 · P2 넷. 바뀐 곳은 「3판」 표시, 새 절 D10(실패 전이)·D11(보장의 조건).
+>
 > **2판(2026-09-29) — 1라운드 적대 보이스 1(REJECT, P1 4) 반영.** Manager 판정(2026-09-29): F1~F4 전부 반영, F2 는 enqueue-only 로, F4 는 범위 안/
 > 명명 잔여를 가른 표로. 1판 대비 바뀐 곳은 각 절 머리의 「2판」 표시. 1판 원문은 git 이력(`101f1d29`·`ceb7801f`)에 있다.
 >
-> 분기 주장은 전부 `analysis/function-logic/` 의 AST 두 번들(`ObserveOnce` 8 분기 · `workingSet` 22 분기, 이 문서보다 먼저)에서 온다.
+> 분기 주장은 전부 `analysis/function-logic/` 의 AST 번들(`ObserveOnce` 8 분기 · `workingSet` 22 분기 · `Notifier.AnnounceOperatingMode` 2 분기, 이 문서보다 먼저)에서 온다.
 > 진입 실측은 `analysis/harness/observeonce.blocks`(commit `eac13df1`). 줄 번호는 base(`d3bd1843`) 기준, `exitloop.go` sha256 `522d5d81…`.
 > 코드에 없는 값·측정되지 않은 사실은 **[미측정]** 으로 적는다.
 
@@ -23,10 +26,15 @@
 | `workingSet` B8 `:527-531` exit state 열기 실패(진입 결정에 손절 없음 `:667-671` 이면 매 주기) | `cycle.Err` 로그뿐 | **센다** — 원인 `not_in_working_set` | 보유·대상인데 판정 안 됨 |
 | `workingSet` B12 `:545-549` · B14 `:556-560` · B21 `:592-596` 격리 쓰기·읽기 실패 | `cycle.Err` 로그뿐 | **센다** — 같은 원인 | 같음 |
 | `workingSet` B6 `:512-519` exit 대상 아님(진입 결정 없음) | 미관리 경보(`EventExitPositionUnmanaged`, 포지션 래치) | **범위 밖 — 명명 잔여** | exit 정책의 대상이 아니다(정본 「exit 대상이 아니며 발견 시 알림」). 그 경보가 normal 등급인 것은 정책 질문 |
-| `workingSet` B10 `:533-537` 보유 중인데 exit state 가 완료 | 무음 | **범위 밖 — 명명 잔여** | 관측 실패가 아니라 정책 수명 문제(완료된 정책은 더 판정하지 않는다, `:534-536`). 후속 후보 |
+| `workingSet` B10 `:533-537` 보유 중인데 exit state 가 완료 | 무음 | **범위 밖 — 명명 잔여. 3판: B10 진입의 첫 문장에서 표시를 해제한다**(N1) | 관측 실패가 아니라 정책 수명 문제(완료된 정책은 더 판정하지 않는다, `:534-536`). 표시는 B6 통과 뒤(`:520`)라 B10 포지션도 표시된다 — 해제하지 않으면 미관측으로 세어져 R14 와 모순. 후속 후보 |
 | 격리 포지션(B11 · B17 · B20 → `refused` → `judge` 가 `alertRefused`) | 자기 critical | **관측됨으로 친다**(F10) | 판정 경로에 닿아 자기 critical(격리 공지·판정 거절)을 낸다 |
 | `ObserveOnce` B1 양보 · B2 작업 집합 오류 · B4 전 종목 미응답 | 계정 사다리 | **무변화** — 그 주기에 포지션 단위 판정을 하지 않는다(보유 집합을 모르거나 계정 사다리가 본다) | 시계는 **마지막 판정 시각**에서 재므로(D3) 그 주기들도 뒤에 가서 세어진다 |
 | 판정 진입 뒤 하류 임대 재검사 5자리(`:859` `:956` `:1027` `:1050` `:1180`) | 무음 | **범위 밖 — 명명 잔여**(Q3 확정) | 판정 진입을 "관측됨" 으로 본다. 그 포지션 **자신의** 판정이 매 주기 15초를 넘길 때만 무음 — 극단 edge `unsupported` |
+
+**표시 자리 두 곳 — 표시 `:520`, 해제 B10 첫 문장(3판, N1).** 표시를 B10 **뒤**로 옮기는 안은 버렸다: 그 자리는 B8(열기 실패, `:527-531`)을 지난 뒤라
+열기 실패 포지션이 표시되지 않아 **범위 안의 탈락(B8)을 잃는다.** 그래서 표시는 exit 대상이 확정된 첫 자리(B6 통과 직후)에 두고, 범위 밖인 완료 정책만
+B10 진입에서 명시적으로 해제한다. 이 쌍은 **구조 핀**으로 고정한다(tasks 2.15): 해제는 B10 블록의 **첫 문장**이고, 표시 `:520` 과 해제 사이에 새
+`continue`·`return` 이 끼면 빨강 — 새 탈락 자리가 표시 앞에 생기면 조용히 안 세어지는 모양(루프 머리 `continue` 교훈)의 쌍 판이다.
 
 **B7 의 현실 원인(F15).** 공식 클라이언트 시한이 15초(`internal/official/client.go:20` `defaultTimeout`)이고 시세 사용 임대도 15초(`execgw/retry.go:192`)
 다 — 앞 포지션의 멈춘 요청 하나가 그 주기의 뒤 포지션 전부를 B7 로 보낸다. 그래서 B7 은 이론이 아니라 확정적으로 재현되는 과도다.
@@ -36,8 +44,9 @@
 
 ## D2. 상태 — 관측자 필드, 포지션 id 단위 (2판: F1 · F3 · F7)
 
-포지션 id → `{seenAt, judgedAt, streakStart, cause, alerted}`. `seenAt` 은 `workingSet` 이 그 포지션을 처음 보유·대상으로 본 시각, `judgedAt` 은
-마지막으로 판정에 닿은 시각, `streakStart` 는 현재 미관측 연속의 기점(D3). 지연 초기화(`quarantineAnnounced` `:245-250` 과 같이) — `NewExitObserver`
+포지션 id → `{seen, judged, streak, cause, state}`. `seen` 은 `workingSet` 이 그 포지션을 처음 보유·대상으로 본 순간, `judged` 는 마지막으로 판정에
+닿은 순간, `streak` 는 현재 미관측 연속(기점 · 에피소드 id), `state` 는 D10 의 실패 전이 상태. **3판(N4)**: 각 순간은 **단조 앵커**(`clock.LeaseAnchor(o.clk)`,
+`exitloop.go:756` 과 같은 헬퍼)와 표시용 벽시계 UTC 를 **따로** 가진다 — 경과는 앵커로만 잰다. 지연 초기화(`quarantineAnnounced` `:245-250` 과 같이) — `NewExitObserver`
 편집 없음.
 
 - **정리는 보유 집합 기준(F4)**: 순회 뒤, 그 주기에 `workingSet` 이 보유·대상으로 표시하지 않은 포지션의 기록은 지운다(보유 종료·대상 제외). 경보 없음.
@@ -53,7 +62,9 @@
 
 1판은 연속 기점을 **첫 미스**로 잡아, 그 앞의 양보(B1)·전 종목 실패(B4) 주기를 빼먹었다 — 무음 창이 최대 약 2×`outageAfter()` 였다(보이스 1 F1).
 
-2판: **연속 기점 = 그 포지션의 `judgedAt`(없으면 `seenAt`).** 순회 뒤 판정 시점에 `now − 기점 ≥ o.outageAfter()` 이면 경보한다. 그래서 B1·B2·B4 주기가
+2판: **연속 기점 = 그 포지션의 `judged`(없으면 `seen`).** 순회 뒤 판정 시점에 `clock.LeaseElapsed(o.clk, 기점 앵커) ≥ o.outageAfter()` 이면 경보한다
+(**3판 N4** — 벽시계 `now − 기점` 이 아니다. 생산 `Clock.Now()` 는 단조 성분을 벗긴다(`internal/clock/clock.go:77`·`:81`)라 벽시계 역행이 창을 늘린다;
+`LeaseElapsed` 는 사용 임대가 이미 역행을 막으려고 쓰는 헬퍼다, `exitloop.go:1076`). 그래서 B1·B2·B4 주기가
 기점 뒤에 끼어도 전부 시간에 들어간다 — 정본 시나리오 "보유 포지션의 가격 관측이 60초 이상 실패하면"(`exit-policy/spec.md:65`)의 문자대로다.
 
 영수증(1판과 같음): 정본 `spec.md:62`(두절 60초 → critical + ENTRY_BLOCKED) · `DefaultExitObservationOutage` 60초(`exitloop.go:105`, "four intervals").
@@ -69,31 +80,42 @@ position—including an emergency breach—is recorded/armed/submitted before al
 - **전송 경로: enqueue-only** — `o.opts.Journal.EnqueueAlert`(`internal/journal/outbox.go:131`, "Use it when the alert only has to be *recorded*"). 전송은
   a098 전달 실행자가, 계속 실패 시 진입 차단은 a124 판정이 한다. 관측 루프는 전송을 기다리지 않는다. a094 D−4.6 과 같은 근거·같은 형태.
 - **이벤트**: 기존 `obs.EventExitObservationOutage`(critical, `event.go:332`) — 새 타입 없음.
-- **key = 에피소드 신원**: `type|account|positionID|<연속 기점 RFC3339>`. 에피소드 = **미관측 연속**, 신원 = 그 연속의 기점(`judgedAt` 또는 `seenAt`) —
-  한 연속에 하나뿐인 원장 밖 사실이지만 **유한**하다(연속은 "판정됨 → 판정 안 됨" 전이마다 하나). a094 는 park attempt id 를 에피소드로 쓴다(a094
+- **key = 에피소드 신원(3판 N4)**: `type|account|positionID|<연속 id>`. 연속 id 는 연속이 **시작될 때 한 번** `o.opts.NewID()`(128비트 난수, 의도 id 와 같은
+  생성기, `exitloop.go:310-312`)로 만든다 — 벽시계 기점을 key 에 쓰면 역행·재시작에서 옛 settled 행과 겹칠 수 있다(codex N4). **유한**(연속당 하나)하고
+  **사실에 결속**(그 연속의 기록이 들고 있고, 알림 필드에 기점 벽시계를 싣는다). a094 는 park attempt id 를 에피소드로 쓴다(a094
   D−5.2 — 교차 인용). outbox 의미론 무변경: `EnqueueAlert` 는 재알림 창 0 이라(`outbox.go:142-146`) 같은 key 를 다시 적재하면 옛 행을 재사용하고
-  보내지 않는다 — **같은 연속은 한 번**, 새 연속은 새 행(F5 해소). 재시작 뒤 같은 포지션은 `seenAt` 이 새로 찍혀 **새 에피소드**가 된다(D2 한계와 짝) — a094 의 park attempt(원장 행이라 재시작에도 같은 에피소드)와 **다른 점**이며, 원장에 판정 시각의 믿을 만한 기록이 없어서다(D2).
+  보내지 않는다 — **같은 연속은 한 번**, 새 연속은 새 행(F5 해소). 재시작 뒤 같은 포지션은 새 연속 id 를 받아 **새 에피소드**가 된다(D2 한계와 짝) — a094 의 park attempt(원장 행이라 재시작에도 같은 에피소드)와 **다른 점**이며, 원장에 판정 시각의 믿을 만한 기록이 없어서다(D2).
 - **적재 실패(a094 D−5.3 과 같은 형태)**: 적재 전에 `ClearEpoch(ReasonAlertUndelivered)` 를 읽고, `EnqueueAlert` 가 실패하면
   `o.opts.Retrier.Gate.BlockUnlessClearedSince(ReasonAlertUndelivered, epoch, detail)`(`execgw/retry.go:571`; `Retrier.Gate` 필드 `:310` — 새 배선 없음)
   로 진입을 잠그고 내용 없는 로그 한 줄. 관측 루프·청산 무영향. 범위는 **계정 단위**다 — 적재 실패는 원장의 알림 쓰기 자체의 실패라 고장 범위가 계정(저널)이다(a094 Q7-1 Manager 승인과 같은 근거).
 - **필드**: `account`, `symbol`, `position_id`, `unobserved_seconds`, `cause`. 본문이 **포지션을 명명**해 계정 두절 경보와 구별된다(F6). 계좌번호·잔고·가격 없음.
 - **연속당 1회**. 판정에 닿으면 연속이 끝난다.
 
-## D5. 모드 강화 — 정본 준수(Q1 확정), 순회 뒤 (2판: F2 · F6)
+## D5. 모드 강화 — 정본 준수(Q1 확정), 순회 뒤, **공지만 enqueue-only**(3판: N2)
 
-`EscalateOperatingMode(ctx, account, ModeTriggerExitObservationOutage, announcer)`(`:846-847` 과 같은 호출·트리거)를 **순회 뒤**, 경보를 적재한
-연속마다 1회. 이미 그 모드면 행도 공지도 없다(`operating_mode.go:409-421` — "Already there. Not an error, and not a row"). 그래서 공지(동기)는 **모드가
-실제로 바뀔 때 한 번**이고, 그 공지는 다음 주기 시작을 늦출 수 있으나 같은 주기의 다른 포지션 판정 앞에는 서지 않는다(순회 뒤).
+`EscalateOperatingMode(ctx, account, ModeTriggerExitObservationOutage, announcer)`(`:846-847` 과 같은 호출·트리거)를 **순회 뒤**, 경보를 적재한 연속마다.
+이미 그 모드면 행도 공지도 없다(`operating_mode.go:409-421`). **모드 커밋은 동기다**(그 호출 안에서 원장에 쓰인다 — 조이기는 늦추지 않는다).
 
-**Q1 의 비용 보충(F6).** 운영자가 완화한 뒤에도 같은 연속이 이어지면 다시 강화하지 않는다(연속당 1회). 그러나 **재시작마다** 새 에피소드라(D2·D4)
-정지 종목을 보유하면 재시작할 때마다 진입이 다시 막힌다. 모드 이력의 트리거는 계정 두절과 같은 `EXIT_OBSERVATION_OUTAGE` 라 이력만으로는 둘을 못
-가른다 — 경보 본문(포지션 명명)으로 가른다. 이 비용은 Q1 의 정본 준수 판단과 같이 기록한다.
+**3판 N2 — 공지자 교체.** 생산 관측자의 `Announcer` 는 Notifier 이고(`cmd/tossctl/engine.go:639`) 그 공지는 `n.Notify` 로 **동기 전송**된다(AnnounceOperatingMode
+FLM, 최악 54초). 순회 뒤라도 **다음 주기**의 손절 관측을 늦춘다 — 2판이 스스로 "다음 주기 시작을 늦출 수 있다" 고 적은 바로 그것이다. 그래서 a090 의
+강화 호출에는 관측자 소유의 **enqueue-only 공지자**를 넘긴다: `journal.ModeAnnouncer` 를 구현하고 `Journal.EnqueueAlert` 로 적재만 한다. 내용은
+`Notifier.AnnounceOperatingMode` 의 `Event` 를 순수 함수 `obs.OperatingModeEvent(previous, rec)` 로 **추출**해 둘이 같이 쓴다(내용을 두 곳에 두지
+않는다 — 함수의 분기·key·`Notify` 는 무변화). **key 만 다르다**: `operating_mode:<account>:<mode>:<rec.ID>` — 전이 id 를 넣는다. Notifier 는 재알림 창으로
+같은 key 를 다시 무장하지만(`:58-60` 이 id 를 뺀 이유) `EnqueueAlert` 는 창 0 이라(`outbox.go:142-146`) id 없는 key 는 **두 번째 강화부터 옛 settled 행에
+흡수돼 안 나간다**(a094 R6-2 와 같은 기전). 공지는 `changed=true` 일 때만 불리므로(`operating_mode.go:411-416`) 전이당 한 행이다. a094 D−5.2·D−5.3 과
+같은 모양(enqueue-only · 에피소드 key · 적재 실패 잠금) — 교차 인용.
+
+- 계정 두절 경로(`checkOutage` `:846-847`)의 공지는 **바꾸지 않는다**(범위 밖, a092 소관).
+
+**Q1 의 비용 보충(F6).** 운영자가 완화한 뒤에도 같은 연속이 이어지면 다시 강화하지 않는다(D10 의 상태). 그러나 **재시작마다** 새 에피소드라 정지 종목을
+보유하면 재시작할 때마다 진입이 다시 막힌다. 모드 이력의 트리거는 계정 두절과 같은 `EXIT_OBSERVATION_OUTAGE` 라 이력만으로는 둘을 못 가른다 —
+경보 본문(포지션 명명)으로 가른다.
 
 ## D6. fail-closed 가 거부할 정상 입력 — 열거 (2판: F8 · F15)
 
 | 입력 | 오늘 | a090 뒤 | 근거 |
 | --- | --- | --- | --- |
-| 장 마감 시장의 보유 종목 | 관측됨 | **변화 없음** | **생산 증거**: 비거래일(토) `exit_states.last_observed_at = 2026-08-08T01:15:19Z`(a096 `proposal.md:173`) — 마감 중에도 exit 배치가 관측했다. 보조: a112 결정 46(2026-08-28, 단일 종목 · L1c 엄격 리더, 배치 경로 아님). 거래소 어댑터는 `FetchedAt` 을 읽은 시각으로 채운다(`official/market_reads.go:175`). **혼합 시장 배치(한 시장만 마감)는 [미측정]** |
+| 장 마감 시장의 보유 종목 | **이 사례에서** 관측됨 | 관측되면 변화 없음 · 마감 중 행이 빠지거나 0가격이면 60초 뒤 경보(보수 쪽 거짓 양성 가능) | **생산 증거(한 사례)**: 비거래일(토) `exit_states.last_observed_at = 2026-08-08T01:15:19Z`(a096 `proposal.md:173`) — 마감 중에도 exit 배치가 그 종목을 관측했다. 전 보유·전 시장에 대한 완전성 증거는 아니다. 보조: a112 결정 46(2026-08-28, 단일 종목 · L1c 엄격 리더, 배치 경로 아님). 거래소 어댑터는 `FetchedAt` 을 읽은 시각으로 채운다(`official/market_reads.go:175`). **혼합 시장 배치(한 시장만 마감)는 [미측정]** |
 | 거래정지·관리·상장폐지 절차 종목 | [미측정 · 사전 승인된 실측 대기] | 응답에서 빠지거나 0가격이면 60초 뒤 경보(+강화), 연속당 1회 | 코드 주석은 정지 종목이 답하지 않는다고 믿는다(`exitloop.go:869-870`) — 측정 아님. Q2 |
 | `Last = 0` 인 보유 종목 | 무음 | 60초 뒤 경보 | [미측정 · 사전 승인된 실측 대기] — Q2 |
 | B7 과도 — 앞 포지션의 멈춘 요청(클라이언트 시한 15초 = 임대 15초) | 무음 | 한두 주기는 경보 아님. 60초 연속이면 경보 | `official/client.go:20` · `execgw/retry.go:192` · 시험 :833(16초 제출) |
@@ -102,34 +124,72 @@ position—including an emergency breach—is recorded/armed/submitted before al
 
 **생산 빈도는 [미측정]이다** — 이 change 가 그 흔적을 처음 만든다(D7).
 
-## D7. 임계 아래의 가시성 (2판: F3)
+## D7. 임계 아래의 가시성 (2판: F3 · 3판: N3)
 
-1판은 임계 아래 미관측을 메모리에만 두어 어디에도 흔적이 없었다 — a089 원문("종목 단위로 **세고**")·a092 R1("미관측으로 **계수된다**")·delta("조용히
-건너뛰어서는 안 된다") 미충족.
-
-- `ExitCycle.Unobserved int` — 그 주기의 미관측 포지션 수(상태 표면·시험이 읽는다). `ExitCycle` 은 구조체 선언이다(함수 편집 아님).
-- **연속 시작**과 **연속 해제** 때 normal 구조화 로그 한 줄씩: `position_id` · `symbol` · `cause` · (해제 시) `unobserved_seconds`. 매 주기 반복하지 않는다
-  (`reportCycle` 의 "One line every five seconds forever is not observability", `exitloop.go:380-381` 와 같은 판단).
-- 이벤트 타입: 기존 `EventExitObservationOutage` 를 **로그**로 쓴다(`o.log`, critical 등급은 알림 경로에서만 적용 — 로그는 등급 없음). 새 타입 없음.
+- `ExitCycle.Unobserved int` — 그 주기의 미관측 포지션 수. **3판 N3**: 생산의 `Run` 은 성공 주기의 `ExitCycle` 을 버리므로(`exitloop.go:359` ·
+  `reportCycle` `:382-388`) 이 필드는 **시험·tracer 표면**이지 생산 증거가 아니다 — 생산 증거는 아래 로그다.
+- **연속 시작**과 **연속 해제** 때 구조화 로그 한 줄씩: `position_id` · `symbol` · `cause` · (해제 시) `unobserved_seconds`. 매 주기 반복하지 않는다.
+- **3판 N3 — 로그 이벤트 타입.** 2판의 "기존 `EventExitObservationOutage` 를 로그로 쓰고, 로그는 등급 없음" 은 **거짓**이었다 — 로거는 모든 줄에
+  `SeverityOf(type)` 를 싣는다(`internal/obs/log.go:197`) — 그 타입이면 연속 시작 한 줄이 **critical** 표지를 단다. 그래서 새 **normal** 타입
+  `obs.EventExitPositionUnobserved = "exit.position_unobserved"` 를 둔다. 등급표(`criticalEvents`)에 넣지 않으므로 normal 이다(`event.go:348` — 없는 타입은
+  normal). 이벤트 타입 등록부·골든은 없다(`AllEventTypes` 류 부재 — grep). critical 은 임계를 넘은 **알림**(`EventExitObservationOutage`)뿐이다.
+- **3판 N3 — 최소 로거 배선(범위 편입, Manager 승인).** 2판의 로그 주장은 **배선 없는 생산에서 허구**다 — 생산 관측자 옵션에 `Log` 가 없다
+  (`cmd/tossctl/engine.go:634-640`). 자기 주장의 성립 조건이므로 범위다. 최소한만: 그 옵션에 `Log: logger`(같은 함수가 이미 쥔 로거, `:671` 이 런타임에
+  넘기는 것과 같은 값) 한 줄. 새 로깅 체계 없음. 배선 수준 시험으로 고정한다(tasks 2.17). 이로써 관측자의 **기존** `o.log` 줄(격리 재판정 등)도 생산에
+  나가기 시작한다 — 그 변화도 기록한다(새 줄이 아니라 이미 코드에 있던 줄의 출력).
 
 ## D8. 무엇을 편집하는가 (2판)
 
 | 편집 | 성격 |
 | --- | --- |
-| `workingSet`(기존) | B6 통과 뒤(`:520`) **"보유·대상으로 표시" 호출 1개.** 탈락 다섯 자리는 무편집. 분기 조건·이탈 무변화 |
+| `workingSet`(기존) | B6 통과 뒤(`:520`) **표시 1개** + B10 진입 첫 문장 **해제 1개**(3판 N1). 다른 탈락 자리는 무편집. 분기 조건·이탈 무변화 |
 | `ObserveOnce`(기존) | B6·B7 의 `continue` 직전 원인 기록 1개씩 · 판정 진입(`:464`) 표시 1개 · B3 조기 반환 앞 순회-뒤 처리 호출 1개 · 순회 뒤(`:469` 앞) 처리 호출 1개. **분기 조건·이탈 무변화** |
 | `ExitCycle`(구조체) | `Unobserved int` 필드 |
 | `ExitObserver`(구조체) | 기록 맵 필드(지연 초기화) |
-| 새 파일 `internal/app/engine/exit_unobserved.go` | 표시·기록·순회 뒤 판정·적재(에피소드 key)·적재 실패 잠금·강화·정리·로그 |
+| 새 파일 `internal/app/engine/exit_unobserved.go` | 표시·해제·기록·순회 뒤 판정·적재(에피소드 key)·적재 실패 잠금·강화(enqueue-only 공지자)·실패 전이(D10)·정리·로그 |
+| `Notifier.AnnounceOperatingMode`(기존, `internal/obs/mode.go`) | `Event` 구성을 순수 함수 `OperatingModeEvent` 로 추출(3판 N2) — 동작 무변화 |
+| `internal/obs/event.go` | 상수 `EventExitPositionUnobserved`(normal) 추가(3판 N3) |
+| `cmd/tossctl/engine.go` `engineRuntime`(기존) | 관측자 옵션에 `Log: logger` 한 줄(3판 N3) |
 
-새 브로커 호출 0 · 원장 스키마 0 · 토글 0 · 새 이벤트 타입 0 · 새 reason/trigger 0 · 새 배선 0(`Retrier.Gate` 사용).
+새 브로커 호출 0 · 원장 스키마 0 · 토글 0 · 새 reason/trigger 0 · 새 **normal** 이벤트 타입 1(로그용) · 배선 1줄(로거) · 게이트는 기존 `Retrier.Gate` —
+생산에서 non-nil(`internal/app/engine/gateway.go:249`·`:324` → `exitwiring.go:50`)이나 `Retrier` 는 nil `Gate` 를 허용하므로(`execgw/retry.go:309`) 잠금 전에 nil 을
+확인하고, nil 이면 로그만 남긴다(시험 구성).
 
 ## D9. 잔여 — 이름 붙임
 
 - **동기 경보 경로의 기존 알림**(`o.alert` 호출자 7 — `noteDelay` 등)은 그대로다(a092 소관). a090 이 더하는 경보만 enqueue-only.
 - **재시작 창**(D2): 재시작 직전의 무관측 시간은 이 기록에서 사라진다.
-- **workingSet B6(미관리)·B10(완료 정책)** — 범위 밖, 후속 후보(D1 표).
+- **workingSet B6(미관리)·B10(완료 정책)** — 범위 밖, 후속 후보(D1 표). B10 은 표시 해제로 명시 제외.
+- **지속 B2**(작업 집합 오류가 계속) — 포지션 단위도 계정 사다리도 재지 않는다(D11-2). 후속 후보.
+- **"관측됨" 의 뜻(3판 N10)**: **판정 진입 도달성**이다 — 손절이 평가됐다는 증명이 아니다. 판정에 들어가 즉시 끝나는 경우(격리 → `alertRefused` ·
+  재판정 선택자 스탬프 실패 `:876-879` → `cycle.Err` · 정책 신원 오류 → `alertRefused` · 하류 임대 재검사 5자리)도 관측됨으로 친다. 앞 둘은 자기 신호
+  (critical 또는 주기 실패 로그)가 있다. tasks 2.16 이 열거를 고정한다.
 - **하류 임대 재검사 5자리** — Q3.
+
+## D10. 실패 전이 (3판: N5)
+
+연속마다 상태 셋을 **따로** 둔다(한 `alerted` 깃발이 아니다):
+
+| 상태 | 들어가는 조건 | 다음 주기(연속이 이어질 때) |
+|---|---|---|
+| `enqueued` | `EnqueueAlert` 성공(같은 key 재적재는 옛 행 반환 — 멱등) | 다시 적재하지 않는다 |
+| `enqueue_failed` | `EnqueueAlert` 실패 → 진입 잠금(`BlockUnlessClearedSince`, 해제 세대 비교) + 로그 | **재시도**한다(같은 key). 성공하면 `enqueued` |
+| `tightened` | `EscalateOperatingMode` 가 오류 없이 반환(`changed` 무관 — 이미 그 모드면 조인 것으로 본다) · **또는** `ErrModeAnnouncementFailed`(전이는 커밋됨, `operating_mode.go:144-148`) | 다시 강화하지 않는다 — 운영자가 그 사이 완화했어도 **같은 연속에서는 재강화 없음**(완화는 사람의 결정이다) |
+| `tighten_failed` | 그 밖의 오류(커밋 실패) → 로그 | **재시도**한다 |
+
+- `ErrModeAnnouncementFailed` 는 공지 **적재**가 실패했다는 뜻이다(공지자가 enqueue-only 라서) — `enqueue_failed` 와 같이 진입 잠금 + 로그, 전이 재시도는 하지 않는다.
+- 강화는 **알림 적재가 끝난 연속**(`enqueued`)에서만 시도한다 — 알림 없는 조임을 만들지 않는다. 알림 적재가 계속 실패하는 동안에도 진입은 잠겨 있다(위).
+- 연속이 끝나면(판정 도달) 상태를 버린다. 새 연속은 새 상태에서 시작한다.
+
+## D11. 보장의 조건 (3판: N7)
+
+"마지막 판정 뒤 60초면 경보" 는 **무조건 상한이 아니다.** 성립 조건:
+
+1. 관측자가 그 60초 동안 **재시작 없이** 살아 있어야 한다(D2 — 재시작하면 기점이 다시 찍힌다). 임계 전에 재시작이 반복되면 탐지가 무기한 미뤄진다.
+2. 그 사이에 **순회 뒤 처리가 도는 주기**가 있어야 한다 — 양보(B1) · 작업 집합 오류(B2) · 전 종목 미응답(B4) 주기는 포지션 단위 처리를 하지 않는다.
+   B1·B4 는 계정 사다리가 시간을 재고, **지속 B2 는 어느 쪽도 재지 않는다**(`checkOutage` 를 부르지 않는다, `exitloop.go:427-430`) — 이 change 의 범위 밖 구멍으로 명명한다.
+3. B4 주기(3판 N6): 보유 대상 표시는 되었으나 가격이 하나도 안 온 주기다. 포지션 단위 **계수·로그는 하지 않고**(계정 사다리가 그 사실의 주인이다, R5 무변화)
+   기록도 지우지 않는다 — 기점이 그대로라 다음 처리 주기에 B4 시간이 경과에 든다(R3b).
 
 ## Q — 결정 기록 (Manager, 2026-09-29 — 셋 다 사용자행 아님)
 

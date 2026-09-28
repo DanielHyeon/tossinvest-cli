@@ -89,3 +89,20 @@ Manager 판정(2026-09-29): 2판 먼저 — F1~F4 전부, F2 는 enqueue-only(a0
 
 - **판정: REJECT(P0 2 · P1 4 · P2 4). 반영하지 않았다.** Manager 결정 사항: N1(B10 제외 방식 — 표시 해제 자리 추가 = `workingSet` 편집 2자리), N2(강화 공지를 enqueue-only 로 — a094 R6-3 과 같은 우회 문제), N3(로거 배선 범위 편입).
 
+## 3판 (2026-09-29) — codex 1라운드 반영 · 판정 아님
+
+Manager 처분(2026-09-29)대로 썼다. 정본 `design.md`(3판).
+
+| id | 처분 | 반영 자리 |
+|---|---|---|
+| N1 (P0) | B10 진입 첫 문장에 표시 해제 — `workingSet` 편집 2자리. 표시를 B10 뒤로 옮기는 안은 B8(범위 안 탈락)을 잃어 버렸다. 쌍을 구조 핀으로(해제 = B10 첫 문장, 표시~해제 사이 새 `continue`/`return` 이면 빨강, B8 은 이름으로 허용) | design D1 · D8 · spec 시나리오 「완료된 exit 정책」 · tasks 2.14·2.15 |
+| N2 (P0) | 강화 **공지만** enqueue-only(모드 커밋은 동기). 공지 내용은 `AnnounceOperatingMode` 에서 순수 함수로 추출해 공유(편집 전 AST·FLM 산출 — 분기 2). **key 에 전이 id** — 창 0 적재는 id 없는 key 를 두 번째 강화부터 흡수한다(a094 R6-2 와 같은 기전). a094 D−5.2·D−5.3 교차 인용 | design D5 · spec 문장 + 시나리오 · tasks 2.3a·2.3c·3.4 |
+| N3 (P1) | 최소 로거 배선 편입(`engineRuntime` 옵션에 `Log: logger` 한 줄) — 로그 주장의 성립 조건. "로그는 등급 없음" 정정(`log.go:197`) → 새 **normal** 타입 `exit.position_unobserved`. 기존 `o.log` 줄도 생산에 나가기 시작함을 기록 | design D7 · D8 · spec 문장 · tasks 2.1·2.17·3.4 |
+| N4 (P1) | 경과는 단조 앵커(`clock.LeaseAnchor`/`LeaseElapsed`), 표시는 벽시계 UTC 따로, key 는 연속 시작 때 만든 **연속 id**(`opts.NewID`) | design D2·D3·D4 · spec 문장 · tasks 2.3f |
+| N5 (P1) | 실패 전이 네 상태(`enqueued` · `enqueue_failed` 재시도 · `tightened` · `tighten_failed` 재시도), `ErrModeAnnouncementFailed` 는 커밋됨 + 잠금, 운영자 완화 뒤 같은 연속 재강화 없음 | design D10 · spec 문장 · tasks 2.3g |
+| N6 (P1) | 시나리오를 「임계 아래」 로 한정(R3b 와 정합), B4 주기는 계수·경보 안 하고 기록 유지 | design D11-3 · spec 문장·시나리오 |
+| N7 (P2) | 조건부 보장 문언(재시작 없음 · 처리 주기 존재), 지속 B2 는 명명 구멍 | design D11 · D9 |
+| N8 (P2) | 장 마감: "이 사례에서 관측됨" · 빠지면 보수 쪽 거짓 양성 | design D6 |
+| N9 (P2) | BTM B8 귀속 정정(틀린 시험 → 귀속 미측정) | ObserveOnce BTM |
+| N10 (P2) | 「관측됨」 = 판정 진입 도달성, 즉시 오류 셋 열거·고정 | design D9 · tasks 2.16 |
+
