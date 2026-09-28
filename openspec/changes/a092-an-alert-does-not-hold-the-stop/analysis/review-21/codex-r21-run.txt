@@ -1,0 +1,8 @@
+start 2026-09-28 21:29:02 KST
+end 2026-09-28 21:36:17 KST
+rc 0 (401/unauthorized 문자열은 리뷰 대상 코드 인용이지 인증 실패가 아님)
+codex-cli 0.154.0, model gpt-6-astra, codex exec -s read-only --ephemeral --skip-git-repo-check -C <tree>
+session 01a0e7fd-75ce-70d1-b0bf-be8a9556a70b
+tokens used 189,434
+tree = git archive 8b38de8e (files 17260)
+prompt prompt-codex.md sha256 db907249bbd51609
