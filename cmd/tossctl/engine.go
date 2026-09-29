@@ -632,11 +632,11 @@ func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, l
 	}
 
 	observer, err := ectx.ExitObserver(engine.ExitObserverOptions{
-		Clock:     clk,
-		Costs:     costs.DefaultModel(),
-		SLO:       detectorPressure{detector: detector},
-		Escalate:  ectx.Journal,
-		Announcer: ectx.Notifier,
+		Clock:    clk,
+		Costs:    costs.DefaultModel(),
+		SLO:      detectorPressure{detector: detector},
+		Escalate: ectx.Journal,
+		// Announcer · Alerts 는 넘기지 않음 — Context.ExitObserver 가 기록 전용으로 묶음(a092 C1).
 	})
 	if err != nil {
 		return nil, err

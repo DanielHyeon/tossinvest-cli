@@ -328,9 +328,14 @@ func (c *Context) ExitObserver(opts ExitObserverOptions) (*ExitObserver, error) 
 		return nil, fmt.Errorf("%w: the injected Guardian does not issue reductions",
 			ErrExitObserverUnavailable)
 	}
+	// exit goroutine 의 알림 경로는 주입 지점별로 기록 전용임(a092 C1): 알림 · 관측 두절 강화 통지 · 가격 조회와
+	// 청산 상한 조회의 401 강화 통지. 동기 통지는 원격 전송을 기다리게 하므로 손절 판정 루프에 둘 수 없음.
+	recordOnly := obs.RecordOnly{N: c.Notifier}
+	exitRetrier := exitSideRetrier(c.Retrier, recordOnly)
+
 	opts.Journal = c.Journal
 	opts.Prices = c.Official
-	opts.Retrier = c.Retrier
+	opts.Retrier = exitRetrier
 	opts.Issuer = issuer
 	opts.Submit = c.Gateway
 	opts.AccountRef = c.AccountRef
@@ -339,10 +344,13 @@ func (c *Context) ExitObserver(opts ExitObserverOptions) (*ExitObserver, error) 
 		opts.Names = c.Names
 	}
 	if opts.Alerts == nil && c.Notifier != nil {
-		opts.Alerts = c.Notifier
+		opts.Alerts = recordOnly
+	}
+	if opts.Announcer == nil && c.Notifier != nil {
+		opts.Announcer = recordOnly
 	}
 	if opts.Floor == nil {
-		opts.Floor = c.exitFloor
+		opts.Floor = exitSideFloor(c.exitFloor, exitRetrier)
 	}
 	return NewExitObserver(opts)
 }

@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 	"testing"
@@ -381,7 +382,8 @@ func TestTheLoopSetIsTheSpecifiedThree(t *testing.T) {
 // exit-policy's 체결 감지 SLO에 양보 reachable.
 func TestTheExitObserverDefersToFillDetection(t *testing.T) {
 	src := readSource(t, "engine.go")
-	if !strings.Contains(src, "SLO:       detectorPressure{detector: detector}") {
+	// 공백 무관 — a092 가 이 리터럴의 Announcer 키를 빼면서 gofmt 정렬 폭이 바뀜(판정 대상은 배선이지 정렬이 아님).
+	if !regexp.MustCompile(`SLO:\s+detectorPressure\{detector: detector\}`).MatchString(src) {
 		t.Error("the exit observer is built with no SLO source; the deference rule is unreachable again")
 	}
 	if !strings.Contains(src, "p.detector.Health().EntryBlocked") {

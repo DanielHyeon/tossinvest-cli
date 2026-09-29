@@ -32,7 +32,6 @@ package obs
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 )
@@ -50,27 +49,8 @@ func (n *Notifier) AnnounceOperatingMode(ctx context.Context, previous string, r
 	if n == nil {
 		return nil
 	}
-	direction := "tightened"
-	if journal.MoreConservativeMode(previous, rec.Mode) == previous && previous != rec.Mode {
-		direction = "relaxed"
-	}
-	return n.Notify(ctx, Event{
-		Type: EventOperatingMode,
-		// The key is the account and the target, so a re-announcement of the
-		// same transition deduplicates while a different one does not. The
-		// transition id would be unique per row and defeat that.
-		Key:   "operating_mode:" + rec.AccountRef + ":" + rec.Mode,
-		Title: fmt.Sprintf("operating mode %s: %s → %s", direction, modeLabel(previous), rec.Mode),
-		Body: fmt.Sprintf("%s by %s — %s. Exposure-raising mutations are %s; risk-reducing ones are unaffected.",
-			rec.Mode, rec.Actor, rec.Cause, permission(rec)),
-		Fields: map[string]any{
-			FieldAccount:   rec.AccountRef,
-			FieldFromState: modeLabel(previous),
-			FieldToState:   rec.Mode,
-			FieldActor:     rec.Actor,
-			FieldReason:    rec.Cause,
-		},
-	})
+	// 사건 구성은 기록 전용 통지(RecordOnly.AnnounceOperatingMode)와 같은 함수를 씀(a092 K1).
+	return n.Notify(ctx, operatingModeEvent(previous, rec))
 }
 
 func modeLabel(mode string) string {
