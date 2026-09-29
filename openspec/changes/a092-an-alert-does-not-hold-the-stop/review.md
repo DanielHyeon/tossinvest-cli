@@ -4798,3 +4798,23 @@ High-risk(운영자 완화 명령의 critical 통지). 편집 전 번들 넷을 
 - 실행: `go test` app/engine · obs · cmd/tossctl ok(cmd 픽스처 `relaxationEngine` 이 알림기 없이 「통지 실패」로 떨어진 것을 실측하고 배선), 태그 시험 ok, `-race`(A066 · A092) ok, `make lint` rc 0.
 - 편집 뒤 FLM: 생산 넷(`analysis/pre-edit/25.6/` 에 편집 전 보존) + 시험 함수 다섯(경량, 비례 원칙 — 하나는 삭제된 `a066FailingNotices.EnqueueAlert`, `revision: base`). `check_analysis`: evidence complete.
 - 비시험 `EnqueueAlert(` 호출자는 이제 `Gateway.parkAlert`(`replay.go`) 하나다(rg 실측) — K6 census 의 입력.
+
+### 24.6 Pre-Edit 선언 — 착지 단위 ③ 잠금 범위 (21.4 GREEN · 22.3 C2/C27 · 23.3 K2/K4 · 24.3 M5)
+
+High-risk(critical 발송 · 진입 차단 · 모드 승격). 편집 전 번들 다섯(`b3f14925`): `internal-obs--notifier.{deliver, claimanddeliver, notifycritical, escalate, logclaimheld}`.
+커버리지 `analysis/harness/coverage-pre-unit3.json`(obs 시험 92개). `deliver` FLM 에 21.2(a) 「Acknowledge 와의 겹침 표」를 실었다.
+
+| 무엇 | 편집 |
+|---|---|
+| `claimAndDeliver` | claim · 판정(B1~B6)만 `n.mu` 안. `logClaimStolen` · `deliver` 는 잠금 밖. `deliver` 의 승격 포함 판정을 반환 |
+| `deliver` | 세 래치 자리에서 근거 확정 직후 `ClearEpoch` 읽기. `:520` 은 자리에서 `BlockUnlessClearedSince`, `:484` · `:571` 은 판정(세대 · 사유) 반환. 시험용 단계 훅(근거 확정 · 세대 읽기) |
+| `notifyCritical` | B4: 조건부 차단 → `escalate` → 승격 포함 && 실패면 무조건 `Block` |
+| `escalate` | `(included bool, err error)` 반환. 분기 · 로그 불변 |
+| `replay.go` `eventOrderUnresolved` 주석 | 「notifier's Flush picks the row up」 → 배달 실행자(a098). 함수 밖 const 주석 |
+| `logClaimHeld` | **보류 — Manager 확인**(아래) |
+
+- **바꾸지 않는 것**: `Acknowledge`(셈~해제가 이미 `n.mu` 아래), `Flush`(비시험 호출자 0 — K19 핀은 단위 ⑤), 기록 전용 입구, 시도 횟수.
+- **확인 요청 — `logClaimHeld` 등급**: 21.4 GREEN 목록은 「등급과 주석」을 고치라고 하나 22판이 21.3(h) RED 를 대체해 **어느 등급으로**가 정해져 있지 않다.
+  잠금을 좁히면 같은 조건의 두 동기 관측이 이 갈래에 닿는다(오늘은 잠금이 직렬화해 둘째가 `ClaimSettled`). 그러면 a099 r4 의 WARN(「죽은 발송자」)이 산 경합에 뜬다.
+  안: (가) WARN 유지 — 산 경합 경보를 받아들임. (나) 정보 등급 + 주석 정정 — 죽은 발송자는 임차 만료 뒤 다음 claimer 의 `logClaimStolen`(WARN)이 드러냄. `TestAHeldRowIsNotWhispered` 의 단언을 바꿔야 함.
+  (다) 임차 나이가 발송 예산(`AlertDeliveryBound`)을 넘으면 WARN, 아니면 정보. 저자 추천: (나). 결정 전에는 등급을 건드리지 않는다.
