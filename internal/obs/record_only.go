@@ -19,6 +19,7 @@ package obs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -62,6 +63,30 @@ func (r RecordOnly) AnnounceOperatingMode(ctx context.Context, previous string, 
 	e := operatingModeEvent(previous, rec)
 	n.logEvent(e, SeverityOf(e.Type))
 	return n.recordCritical(ctx, e, n.remindAfter())
+}
+
+// ErrAlertNotDurable 는 기록 전용 입구가 critical 사건을 원장에 남길 수 없음(알림기 없음 · 원장 없음)을 뜻함.
+// obs 밖 기록자가 「통지됨」을 거짓으로 보고하지 않게 오류로 돌려줌.
+var ErrAlertNotDurable = errors.New("obs: no journal is wired, so the critical record is not durable")
+
+// RecordCritical 은 알림기의 기록 전용 입구를 obs 밖 기록자에게 여는 공개 메서드임(a092 25.6 — a066 완화 통지).
+//
+// 세울 자기 진입 차단 사유가 없는 기록자는 원장에 직접 쓰지 말고 이 입구를 써야 함(정본 「critical 기록 부류」):
+// 알림기의 배제 잠금 아래에서 기록하므로 운영자 승인의 셈~해제 사이에 끼어들지 못함. 등급표와 무관하게 critical 로
+// 기록함 — 호출자가 durable 통지를 원해서 부르는 입구이기 때문임. 원격 전송은 하지 않음(배달 실행자 몫).
+//
+// remindAfter 는 기록자별(0 이면 정착 행을 재무장하지 않음). n 이 nil 이거나 원장이 없으면 ErrAlertNotDurable.
+func (n *Notifier) RecordCritical(ctx context.Context, e Event, remindAfter time.Duration) error {
+	if n == nil || n.Journal == nil {
+		if n != nil && n.Log != nil {
+			n.Log.Warn(EventAlertUndelivered,
+				FieldEvent, string(e.Type),
+				FieldDetail, "no journal is wired, so this critical record is not durable")
+		}
+		return ErrAlertNotDurable
+	}
+	n.logEvent(e, SeverityCritical)
+	return n.recordCritical(ctx, e, remindAfter)
 }
 
 // recordCritical 는 critical 사건 하나를 발송 임차 없이 원장에 기록함 — 알림기의 기록 전용 입구.

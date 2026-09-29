@@ -22,6 +22,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
@@ -63,7 +64,8 @@ func a066RelaxEngine(t *testing.T, withAudit bool, wrap func(*journal.Journal) p
 		Market: riskbucket.MarketKR, Horizon: riskbucket.HorizonShort, Cause: "SHORT_LOSS_LIMIT", ActivatedAt: a066RelaxNow}); err != nil {
 		t.Fatal(err)
 	}
-	ectx := &Context{Journal: j}
+	// 완화 통지는 알림기의 기록 전용 입구로 기록됨(a092 25.6) — 엔진처럼 같은 원장을 쓰는 알림기를 배선함.
+	ectx := &Context{Journal: j, Notifier: &obs.Notifier{Journal: j}}
 	fx := &a066RelaxFixture{dir: dir, j: j, auditLog: filepath.Join(dir, "audit.log")}
 	if withAudit {
 		log, err := audit.Open(audit.Options{Path: fx.auditLog, Subject: "engine"})
@@ -208,16 +210,17 @@ func TestA066RelaxationRequestRefusals(t *testing.T) {
 	}
 }
 
-// a066FailingNotices 는 alert enqueue 만 실패시키는 원장임(나머지는 실제 원장).
-type a066FailingNotices struct{ *journal.Journal }
+// a066FailingNotices 는 통지 기록만 실패시키는 기록자임(a092 25.6 뒤 통지는 원장이 아니라 알림기 입구로 감).
+type a066FailingNotices struct{}
 
-func (a066FailingNotices) EnqueueAlert(context.Context, journal.Alert) (int64, error) {
-	return 0, errors.New("outbox disk full")
+func (a066FailingNotices) RecordCritical(context.Context, obs.Event, time.Duration) error {
+	return errors.New("outbox disk full")
 }
 
 // TestA066ReleaseStandsWhenTheNoticeFails 는 커밋 뒤 통지 실패가 해제를 되돌리지 않고 결과가 그것을 말함을 잼.
 func TestA066ReleaseStandsWhenTheNoticeFails(t *testing.T) {
-	fx := a066RelaxEngine(t, true, func(j *journal.Journal) positionPolicyRepository { return a066FailingNotices{j} })
+	fx := a066RelaxEngine(t, true, nil)
+	fx.service.notices = a066FailingNotices{}
 	result, err := fx.client.ReleaseEntryLossLock(context.Background(), fx.request(t))
 	if err != nil {
 		t.Fatalf("release: %v", err)
@@ -317,7 +320,7 @@ func TestA066NoticeSurvivesTheCallerHangingUp(t *testing.T) {
 	fx := a066RelaxEngine(t, true, nil)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	result := notifyRelaxation(ctx, fx.j, "entry_lock", 1, "entry_loss_lock:acct-7/KR/SHORT", "entry_loss_lock:KR/SHORT", "ops", "OPS-1", a066RelaxNow)
+	result := notifyRelaxation(ctx, fx.service.notices, "entry_lock", 1, "entry_loss_lock:acct-7/KR/SHORT", "entry_loss_lock:KR/SHORT", "ops", "OPS-1", a066RelaxNow)
 	if !result.Notified || len(fx.alerts(t)) != 1 {
 		t.Fatalf("result = %+v notices = %d, want the notice recorded after a hang-up", result, len(fx.alerts(t)))
 	}

@@ -23,6 +23,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskrelaxation"
 	"github.com/spf13/cobra"
@@ -69,7 +70,9 @@ func relaxationEngine(t *testing.T) (dir, auditPath string, j *journal.Journal) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	service, err := engine.NewPositionPolicyCommandService(&engine.Context{Journal: j, Audit: log}, clock.NewFake(relaxationCLINow))
+	service, err := engine.NewPositionPolicyCommandService(
+		// 완화 통지는 알림기의 기록 전용 입구로 기록됨(a092 25.6) — 엔진처럼 같은 원장을 쓰는 알림기를 배선함.
+		&engine.Context{Journal: j, Audit: log, Notifier: &obs.Notifier{Journal: j}}, clock.NewFake(relaxationCLINow))
 	if err != nil {
 		t.Fatal(err)
 	}

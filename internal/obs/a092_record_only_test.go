@@ -383,3 +383,58 @@ func a092AllAlertIDs(t *testing.T, j *journal.Journal) []int64 {
 		ids = append(ids, id)
 	}
 }
+
+// 25.6: obs 밖 기록자(a066 완화 통지)가 쓰는 공개 입구. 등급과 무관하게 critical 로 기록하고, durable 하지 못하면 오류.
+func TestA092RecordCriticalIsTheEntryForOutsideRecorders(t *testing.T) {
+	pub := &stuckPublisher{}
+	n, j, _, clk := a096Notifier(t, pub)
+	ctx := context.Background()
+	e := obs.Event{Type: obs.EventType("engine.risk_relaxation"), Key: "engine.risk_relaxation|entry_lock|1",
+		Title: "RISK RELAXATION: x", Body: "b", Fields: map[string]any{"kind": "entry_lock"}}
+	if obs.SeverityOf(e.Type) == obs.SeverityCritical {
+		t.Fatal("fixture: the type must be normal-grade so the test shows the entry does not grade")
+	}
+	if err := a092Within(t, 5*time.Second, func() error { return n.RecordCritical(ctx, e, 0) }); err != nil {
+		t.Fatalf("RecordCritical: %v", err)
+	}
+	rows, _ := j.PendingAlerts(ctx, 0)
+	if len(rows) != 1 || rows[0].Severity != string(obs.SeverityCritical) || rows[0].EventKey != e.Key || rows[0].Payload != `{"kind":"entry_lock"}` {
+		t.Fatalf("rows = %+v, want one critical row keyed %q", rows, e.Key)
+	}
+	if pub.count() != 0 {
+		t.Errorf("publish calls = %d, want 0", pub.count())
+	}
+	// 재알림 창 0: 정착 행은 재무장하지 않음(M15).
+	claim, err := j.ClaimAlertByID(ctx, rows[0].ID, "deliverer")
+	if err != nil || claim.Disposition != journal.ClaimAcquired {
+		t.Fatalf("claim: %v %v", claim.Disposition, err)
+	}
+	if _, err := j.MarkAlertDelivered(ctx, rows[0].ID, claim.Token); err != nil {
+		t.Fatal(err)
+	}
+	clk.Advance(1000 * time.Hour)
+	if err := n.RecordCritical(ctx, e, 0); err != nil {
+		t.Fatal(err)
+	}
+	if rows, _ := j.PendingAlerts(ctx, 0); len(rows) != 0 {
+		t.Errorf("remindAfter=0 re-armed the settled row")
+	}
+}
+
+func TestA092RecordCriticalRefusesWhenNotDurable(t *testing.T) {
+	var none *obs.Notifier
+	if err := none.RecordCritical(context.Background(), a096Event(), 0); !errors.Is(err, obs.ErrAlertNotDurable) {
+		t.Errorf("nil notifier: err = %v, want ErrAlertNotDurable", err)
+	}
+	pub := &stuckPublisher{}
+	n := &obs.Notifier{Publisher: pub}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	err := a092Within(t, 5*time.Second, func() error { return n.RecordCritical(ctx, a096Event(), 0) })
+	if !errors.Is(err, obs.ErrAlertNotDurable) {
+		t.Errorf("no journal: err = %v, want ErrAlertNotDurable", err)
+	}
+	if pub.count() != 0 {
+		t.Errorf("publish calls = %d, want 0", pub.count())
+	}
+}

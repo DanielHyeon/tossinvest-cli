@@ -16,7 +16,6 @@ package engine
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -24,6 +23,7 @@ import (
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskrelaxation"
 )
@@ -37,7 +37,13 @@ const EventRiskRelaxation = "engine.risk_relaxation"
 type riskRelaxationRepository interface {
 	ReleaseEntryLossLock(context.Context, journal.EntryLossLockReleaseRequest) (journal.EntryLossLockReleaseRecord, error)
 	ReleaseRiskOverageLatch(context.Context, journal.RiskOverageLatchReleaseRequest) (journal.RiskOverageLatchReleaseRecord, error)
-	EnqueueAlert(context.Context, journal.Alert) (int64, error)
+}
+
+// relaxationNoticeRecorder 는 완화 통지를 남기는 알림기의 기록 전용 입구임(a092 25.6). 완화 통지는 세울 자기 진입 차단
+// 사유가 없는 기록자라서 원장에 직접 쓰지 않고 이 입구를 씀 — 알림기의 배제 잠금 아래 기록되어 운영자 승인의
+// 「미전달 셈 ~ 전달 실패 사유 해제」 사이에 끼어들지 못함(a092 델타 「critical 기록 부류」). *obs.Notifier 가 구현함.
+type relaxationNoticeRecorder interface {
+	RecordCritical(ctx context.Context, e obs.Event, remindAfter time.Duration) error
 }
 
 func (s *PositionPolicyCommandService) relaxationRepo() (riskRelaxationRepository, error) {
@@ -86,7 +92,7 @@ func (s *PositionPolicyCommandService) ReleaseEntryLossLock(ctx context.Context,
 	}
 	scope := strings.ToUpper(strings.TrimSpace(req.Market)) + "/" + strings.ToUpper(strings.TrimSpace(req.Horizon))
 	target := "entry_loss_lock:" + strings.TrimSpace(req.AccountRef) + "/" + scope
-	return notifyRelaxation(ctx, repo, "entry_lock", record.ReleaseSeq, target, "entry_loss_lock:"+scope, operator,
+	return notifyRelaxation(ctx, s.notices, "entry_lock", record.ReleaseSeq, target, "entry_loss_lock:"+scope, operator,
 		req.Approval, record.ReleasedAt), nil
 }
 
@@ -119,7 +125,7 @@ func (s *PositionPolicyCommandService) ReleaseRiskOverageLatch(ctx context.Conte
 	}
 	scope := fmt.Sprintf("%s/%s/%s", owner.Market, owner.Symbol, owner.ProspectiveGeneration)
 	target := "risk_owner:" + owner.AccountID + "/" + scope
-	return notifyRelaxation(ctx, repo, "overage_latch", record.ReleaseSeq, target, "risk_owner:"+scope, operator,
+	return notifyRelaxation(ctx, s.notices, "overage_latch", record.ReleaseSeq, target, "risk_owner:"+scope, operator,
 		req.Approval, record.ReleasedAt), nil
 }
 
@@ -153,27 +159,34 @@ func relaxationError(err error) error {
 	return err
 }
 
-// notifyRelaxation 은 커밋된 해제를 원장 alert 로 enqueue 함. 실패해도 해제는 유효함 — 결과가 「완화됨·통지 실패」를
-// 말함(Notified=false). 요청 문맥이 끊겨도 통지는 기록되도록 취소를 떼어 냄.
+// notifyRelaxation 은 커밋된 해제를 알림기의 기록 전용 입구로 기록함(a092 25.6 — 전에는 원장에 직접 enqueue).
+// 실패해도 해제는 유효함 — 결과가 「완화됨·통지 실패」를 말함(Notified=false). 요청 문맥이 끊겨도 통지는 기록되도록
+// 취소를 떼어 냄. 기록 실패 시 입구가 전달 실패 사유로 진입을 잠금(critical 기록 부류의 규칙 — 보수 방향).
+//
+// 재알림 창은 0 — 키에 해제 seq 가 있어 해제마다 새 행이고, 정착한 옛 통지를 다시 무장할 이유가 없음(전의 EnqueueAlert 와 같음).
 //
 // target 은 계좌를 포함한 전체 대상(CLI 결과·원장 payload)이고, published 는 외부 전송으로 나가는 제목·본문용 대상임 —
 // 계좌 식별자를 빼고 시장·범위만 말함(안전 불변식 8; 다른 엔진 alert 제목도 종목만 실음).
-func notifyRelaxation(ctx context.Context, repo riskRelaxationRepository, kind string, seq int64, target, published,
+func notifyRelaxation(ctx context.Context, notices relaxationNoticeRecorder, kind string, seq int64, target, published,
 	operator, approval string, at time.Time) riskrelaxation.Result {
 	result := riskrelaxation.Result{ReleaseSeq: seq, Target: target, ReleasedAt: journal.RFC3339(at)}
-	payload, _ := json.Marshal(map[string]any{
-		"kind": kind, "target": target, "release_seq": seq, "operator": operator,
-		"approval": strings.TrimSpace(approval), "released_at": result.ReleasedAt,
-	})
-	_, err := repo.EnqueueAlert(context.WithoutCancel(ctx), journal.Alert{
-		EventKey: EventRiskRelaxation + "|" + kind + "|" + strconv.FormatInt(seq, 10),
-		Type:     EventRiskRelaxation,
-		Severity: "critical",
-		Title:    "RISK RELAXATION: " + published,
+	if notices == nil {
+		// 알림기가 배선되지 않은 엔진 — 「통지됨」이라고 거짓으로 말하지 않음.
+		result.NotifyError = obs.ErrAlertNotDurable.Error()
+		return result
+	}
+	err := notices.RecordCritical(context.WithoutCancel(ctx), obs.Event{
+		Type:  obs.EventType(EventRiskRelaxation),
+		Key:   EventRiskRelaxation + "|" + kind + "|" + strconv.FormatInt(seq, 10),
+		Title: "RISK RELAXATION: " + published,
 		Body: fmt.Sprintf("operator %s released %s (release %d, approval: %s)", operator, published, seq,
 			strings.TrimSpace(approval)),
-		Payload: string(payload),
-	})
+		// payload 는 기록 입구가 필드를 JSON 으로 직렬화해 만듦(키 정렬) — 이행 전의 json.Marshal(map) 과 같은 바이트.
+		Fields: map[string]any{
+			"kind": kind, "target": target, "release_seq": seq, "operator": operator,
+			"approval": strings.TrimSpace(approval), "released_at": result.ReleasedAt,
+		},
+	}, 0)
 	if err != nil {
 		result.NotifyError = err.Error()
 		return result
