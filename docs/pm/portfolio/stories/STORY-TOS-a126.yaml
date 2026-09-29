@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a126",
+  "title": "Filled exposure leaves the bucket when its position does",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a126-filled-exposure-leaves-the-bucket",
+    "path": "openspec/changes/a126-filled-exposure-leaves-the-bucket"
+  },
+  "found_by": {
+    "date": "2026-09-28",
+    "how": "a066 6.5 four-voice adversarial review: filled_minor is never released, so every risk bucket is a lifetime cumulative cap — closed positions and released owners keep counting against the limit, and raising a limit never takes effect on a bucket with history. Design D5 says usage is filled exposure attributed to the Position; the implementation is cumulative buys. Fail-closed (over-restriction, no money risk). The user chose a separate follow-up change over joining the operator-relaxation set, because this is automatic accounting semantics, not human-approved release.",
+    "record": "openspec/changes/archive/2026-09-28-a066-add-multi-horizon-risk-buckets/review.md"
+  },
+  "acceptance": [
+    "A ledger event that ends a position's attributed exposure removes that share of filled_minor from every bucket it occupied",
+    "No usage decrease happens without a ledger fact bound to it — a mutant that decreases unconditionally is caught",
+    "The leaving event, retroactivity and partial-close attribution are decided at freeze with schema receipts (Q1, Q2, Q4), and a retroactive recalculation, if chosen, is a human-approved item",
+    "Interaction order with overage latch recomputation is specified and tested (Q3)",
+    "The a066 owner-lifecycle fixture no longer hides the gap with filled_minor='0'"
+  ]
+}
