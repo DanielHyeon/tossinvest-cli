@@ -1,0 +1,327 @@
+{
+  "file": "internal/app/engine/risk_relaxation_command.go",
+  "source_sha256": "3f976552ce400d0ce1245e0c72bce0943f252e93335d236d881b76ac20ce47d3",
+  "package": "engine",
+  "function": "ReleaseEntryLossLock",
+  "receiver": "PositionPolicyCommandService",
+  "signature": "PositionPolicyCommandService.ReleaseEntryLossLock(params=2, results=2)",
+  "start": {
+    "line": 61,
+    "column": 1
+  },
+  "end": {
+    "line": 91,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 67,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 71,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 75,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 85,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 2
+      },
+      "text": "s.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 8
+      },
+      "text": "s.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 15
+      },
+      "text": "s.relaxationRepo"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 18
+      },
+      "text": "s.relaxationAuditor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 27
+      },
+      "text": "relaxationOperator"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 8
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 8
+      },
+      "text": "s.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 17
+      },
+      "text": "repo.ReleaseEntryLossLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 15
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 58
+      },
+      "text": "riskbucket.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 76
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 92
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 12
+      },
+      "text": "riskbucket.Horizon"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 31
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 47
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 35
+      },
+      "text": "relaxationError"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 11
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 27
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 66
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 82
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 33
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 9
+      },
+      "text": "notifyRelaxation"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 65,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 69,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 64,
+        "column": 2
+      },
+      "text": "s.mu.Unlock"
+    }
+  ]
+}

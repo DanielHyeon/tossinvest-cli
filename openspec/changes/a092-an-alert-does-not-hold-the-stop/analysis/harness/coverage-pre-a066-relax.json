@@ -1,0 +1,119 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/app/engine",
+ "tests_run": 14,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-app-engine--notifyrelaxation": {
+   "B1": {
+    "kind": "if",
+    "line": 177,
+    "column": 2,
+    "block": "177.16-180.3",
+    "entered_by": [
+     "TestA066ReleaseStandsWhenTheNoticeFails"
+    ],
+    "union": null
+   }
+  },
+  "internal-app-engine--positionpolicycommandservice.releaseentrylosslock": {
+   "B1": {
+    "kind": "if",
+    "line": 66,
+    "column": 2,
+    "block": "66.16-68.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 70,
+    "column": 2,
+    "block": "70.16-72.3",
+    "entered_by": [
+     "TestA066RelaxationRefusedWithoutAnEngineAuditLog"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 74,
+    "column": 2,
+    "block": "74.16-76.3",
+    "entered_by": [
+     "TestA066RelaxationRequestRefusals"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 84,
+    "column": 2,
+    "block": "84.16-86.3",
+    "entered_by": [
+     "TestA066EntryLockReleaseThroughTheEngineEndpoint",
+     "TestA066JournalRefusalsCrossTheWireAsRefusals",
+     "TestA066RelaxationRequestRefusals"
+    ],
+    "union": null
+   }
+  },
+  "internal-app-engine--positionpolicycommandservice.releaseriskoveragelatch": {
+   "B1": {
+    "kind": "if",
+    "line": 99,
+    "column": 2,
+    "block": "99.16-101.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 103,
+    "column": 2,
+    "block": "103.16-105.3",
+    "entered_by": [
+     "TestA066LatchReleaseRefusedWithoutAnEngineAuditLog"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 107,
+    "column": 2,
+    "block": "107.16-109.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 117,
+    "column": 2,
+    "block": "117.16-119.3",
+    "entered_by": [],
+    "union": null
+   }
+  },
+  "internal-app-engine--newpositionpolicycommandservice": {
+   "B1": {
+    "kind": "if",
+    "line": 91,
+    "column": 2,
+    "block": "91.40-93.3",
+    "entered_by": [
+     "TestPositionPolicyCommandServiceRequiresEngineOwnedJournal"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 94,
+    "column": 2,
+    "block": "94.16-96.3",
+    "entered_by": [],
+    "union": null
+   }
+  }
+ }
+}

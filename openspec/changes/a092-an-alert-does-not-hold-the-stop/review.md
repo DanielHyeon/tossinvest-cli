@@ -4771,3 +4771,21 @@ High-risk(알림 · 모드 통지 · 원장 기록 경로). 편집 전 번들 �
 - 일반 등급(C8): exit 의 일반 등급은 아직 동기 최선 발송. 착지 단위 ⑤.
 - k3(청산 상한 조회 401)의 행동 시험은 따로 없다 — floor 가 exit Retrier 를 쓰는 것(배선 시험 · U18/U19)과 Retrier 의 401 경로가 기록만 하는 것(k2)의 합성으로 선다.
 - 4 보이스 · gstack 리뷰: 로트 밀도 기준으로 착지 단위 ③ 뒤 잠금 · 전송 경로와 묶어 돌린다(Manager 판정 대상).
+
+### 24.4 Pre-Edit 선언 — 25.6 a066 완화 통지의 입구 이행 (archive 게이트 24.4)
+
+High-risk(운영자 완화 명령의 critical 통지). 편집 전 번들 넷을 `81934b46` 에서 만들었다:
+`internal-app-engine--{notifyrelaxation, positionpolicycommandservice.releaseentrylosslock, positionpolicycommandservice.releaseriskoveragelatch, newpositionpolicycommandservice}`.
+커버리지 `analysis/harness/coverage-pre-a066-relax.json`.
+
+| 무엇 | 자리 | 종류 |
+|---|---|---|
+| `Notifier.RecordCritical(ctx, e, remindAfter) error` | `internal/obs/record_only.go` | **새 공개 메서드** — 알림기 기록 전용 입구를 `obs` 밖 기록자에게 연다. 등급과 무관하게 critical 로 기록. nil 알림기 · 원장 없음은 `ErrAlertNotDurable`(「통지됨」을 거짓으로 말하지 않게) |
+| `notifyRelaxation` | `risk_relaxation_command.go` | 기존 — `repo.EnqueueAlert` → 기록자 `RecordCritical(WithoutCancel(ctx), e, 0)`. 행 모양(키 · 제목 · 본문 · payload) 불변 |
+| `ReleaseEntryLossLock` · `ReleaseRiskOverageLatch` | 같은 파일 | 기존 — `notifyRelaxation` 둘째 인자만 `s.notices` |
+| `riskRelaxationRepository` | 같은 파일 | 인터페이스에서 `EnqueueAlert` 제거(원장 직접 적재 경로를 타입에서 없앰) |
+| `NewPositionPolicyCommandService` | `position_policy_command.go` | 기존 — `notices` 필드(알림기가 있을 때만, 타입 있는 nil 금지) |
+
+- 재알림 창 0: 키에 해제 seq 가 있어 해제마다 새 행 — 오늘의 `EnqueueAlert` 와 같은 동작(델타: 다른 기록자는 0 허용).
+- 기록 실패의 결과가 바뀐다: 오늘은 결과에 「통지 실패」만 남고 진입은 열려 있다. 편집 뒤에는 입구가 `ReasonAlertUndelivered` 로 잠그고 승격을 시도한다(critical 기록 부류의 규칙 — 보수 방향). 해제는 그대로 유효하다.
+- 시험 편집(비례 원칙 — 경량 번들): `a066RelaxEngine` 픽스처(알림기 배선) · `TestA066ReleaseStandsWhenTheNoticeFails`(실패 주입을 원장이 아닌 기록자로) · `TestA066NoticeSurvivesTheCallerHangingUp`(기록자 인자) · `a066FailingNotices` 제거.
