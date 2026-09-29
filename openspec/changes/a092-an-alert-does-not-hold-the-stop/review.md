@@ -4818,3 +4818,35 @@ High-risk(critical 발송 · 진입 차단 · 모드 승격). 편집 전 번들 
   잠금을 좁히면 같은 조건의 두 동기 관측이 이 갈래에 닿는다(오늘은 잠금이 직렬화해 둘째가 `ClaimSettled`). 그러면 a099 r4 의 WARN(「죽은 발송자」)이 산 경합에 뜬다.
   안: (가) WARN 유지 — 산 경합 경보를 받아들임. (나) 정보 등급 + 주석 정정 — 죽은 발송자는 임차 만료 뒤 다음 claimer 의 `logClaimStolen`(WARN)이 드러냄. `TestAHeldRowIsNotWhispered` 의 단언을 바꿔야 함.
   (다) 임차 나이가 발송 예산(`AlertDeliveryBound`)을 넘으면 WARN, 아니면 정보. 저자 추천: (나). 결정 전에는 등급을 건드리지 않는다.
+
+### 24.7 착지 단위 ③ — 잠금 범위 · 모든 발송자의 원칙 E · claim-held 등급 (2026-09-29)
+
+**착지 `fbc6df5f`**(코드 · 시험). Manager 판정(`logClaimHeld` = (나) 정보 등급 + 주석 정정, 2026-09-29) 반영.
+
+| 요구 | 구현 | RED 관측 | GREEN · 반증 |
+|---|---|---|---|
+| 21.3 (f) · 21.4 — 잠금이 원격 전송을 덮지 않음 | `claimAndDeliver`: claim · 판정만 `n.mu` 안, `deliver` 잠금 밖 | 편집 전(`fd7853b2` + no-op 훅) `TestA092ARecordDoesNotWaitForAnotherSendersTransport` · `…AnAcknowledgementPreemptsASendInFlight` 3s 초과 FAIL(`analysis/mutation-unit3/red-pre-edit-fd7853b2.log`) | PASS. 변이 L01(전송 위 잠금) CAUGHT |
+| 선점 허용 · 기록 · 덮지 않음(18라운드 A-P1 문단) | B8 갈래가 전송 중 승인에서 도달 | 같음 | `TestA092AnAcknowledgementPreemptsASendInFlight`: 래치 없음 · 미전달 0 유지 · `engine.alert_claim_lost` 줄 |
+| C2 · C27 — 세대 읽기 뒤 해제는 차단 안 함, 승격은 섬 | `readVerdict` + `judge` · vanished 자리 조건부 차단 | 편집 전: 세 자리 모두 해제 뒤 재차단(FAIL 3) | 세 자리 PASS. 변이 L02 · L03 · L04 · L08 CAUGHT |
+| K4 — 근거~읽기 사이 해제는 다시 잠금 | 세대를 근거 확정 **뒤** 읽음 | (편집 전에도 무조건 차단이라 PASS — 회귀 가드) | 변이 L05(세대 고정) CAUGHT |
+| C2 — 근거 앞 해제는 판정 불변 | 같음 | 회귀 가드 | `TestA092AReleaseBeforeTheEvidenceDoesNotChangeTheVerdict` |
+| K2 · M5 — 승격 포함 판정의 승격 실패 → 무조건 차단, 미포함은 추가 차단 없음 | `escalate` → `(included, err)`, `judge` | 편집 전 FAIL(훅 없음 · 승격 성공) | 변이 L06 · L07 · L09 · L10 CAUGHT |
+| 세 자리의 래치 자체 | 판정 반환 · 적용 | — | 변이 L13 · L16 · L17 CAUGHT |
+| claim-held 등급(나) | `logClaimHeld` INFO + 주석 | — | 변이 L11(줄 삭제) · L12(WARN 복귀) CAUGHT |
+
+**변이** `--set 25.7`(`analysis/harness/mutate_unit2.py`, 대조군 GREEN): L01~L17 CAUGHT(`ledger-run1.tsv`). L15 는 1회차에서 이름 없는 실패(시험이 `<-pub.entered` 에서 영원히 대기 → 10분 타임아웃)였다 — 닿은 판정이 아니라 멈춘 판정이라, 대기에 10s 한도를 넣고 L01 · L15 를 다시 돌려 이름 있는 실패 45건(`ledger-run2-L01-L15.tsv`). L15 는 이중 claim 이라 구조 핀까지 가지 못하므로, 잠금만 claim 뒤로 옮기는 L18 을 더해 구조 핀이 잡는 것을 확인(`ledger-run3-L18.tsv`). **19/19 CAUGHT**(L01~L18 + 아래 L19).
+
+**21.5 A-4 재측정(귀속)**: 잠금을 좁힌 뒤에도 a096/a097/a099 배제 시험은 초록이다. 무엇이 지키는지: 원장 claim 이 임차를 무시하게 한 변이 L19 가 `TestConcurrentObservationsOfOneConditionSendOnce` · `TestTheSenderThatLosesTheClaimDoesNotPublish` · `TestExclusionHoldsBetweenSendersWithDifferentMutexes` 등 8개를 깼고(`ledger-run4-L19-A4.tsv`), 전송 위 잠금을 되살린 L01 은 그 시험들을 건드리지 않았다 → **배제는 임차가 진다**(정본 「발송 권한은 원장이 준다」).
+
+**교차 change 시험 편집 — 단언 불약화 표**(Manager 조건):
+
+| 시험(소유 change) | 옛 단언 | 새 단언 | 주제 보존 근거 |
+|---|---|---|---|
+| `TestAHeldRowIsNotWhispered`(a099) | 줄 실재 · `level == WARN` · 만료 필드 | 줄 실재 · `level == INFO` · 만료 필드 · **보유자 이름**(추가) | 주제는 「held 행이 무음으로 넘어가지 않는다」. 줄 삭제 변이 L11 → FAIL(반증 1회). 죽은 발송자 경보는 임차 만료 뒤 `logClaimStolen` WARN 이 구조로 소유 — `TestContentionLossAndTakeoverAreThreeEvents` 가 그 줄을 재고 L11 에서도 FAIL |
+| `TestAcknowledgeCannotClearTheGateMidSend`(a096) | 전송이 `Publish` 안에 있는 동안 승인이 행을 못 건드림(잠금이 막음) | (행동) 승인이 전송을 기다리지 않음 · 승인 뒤 미전달 0 · 발송자가 되돌리지 않음 · 래치 없음 (구조) 승인의 셈 · 해제, claim, 기록 전용 입구가 각자 한 `n.mu` 임계 구역 안 | 옛 단언은 frozen 24판이 금지한 형태(전송 위 잠금)를 요구했다. 주제 「셈과 해제 사이에 잠금 아래 기록 경로가 끼지 못한다」는 구조 핀으로 옮겼고 그 핀은 변이 L14(셈을 잠금 밖) · L18(claim 을 잠금 밖)에서 FAIL. 전송 중 발송자는 행을 PENDING 으로 되돌리지 않으므로(정산은 PENDING 에서 나가는 방향뿐) 셈~해제에 새 PENDING 을 만들지 못한다 |
+
+**편집 뒤 FLM**: 생산 다섯(편집 전은 `analysis/pre-edit/unit3/`) + 시험 함수 둘(경량). `deliver` 재번호: 편집 전 B12 · B27 삭제, B13~B26 → B12~B25. 커버리지 `analysis/harness/coverage-post-unit3.json`(`fbc6df5f`, obs 시험 99개). `check_analysis`: evidence complete.
+
+**실행**: `go test` obs · execgw · app/engine · cmd/tossctl 전부 ok, 태그 obs ok, `make lint` rc 0, `-race` obs 최종 `-count=3 -timeout 60m`: 348 PASS · DATA RACE 0(첫 시도는 패키지 전체 10분 기본 한도에 걸려 중단 — 멈춘 시험 없음, 한도만 늘려 재실행).
+
+**남은 것**: 4 보이스 · gstack 리뷰(Manager 승인 타이밍 — 이 단위 뒤). 브리프에 「k3 는 배선 + k2 합성으로만 선다」를 공격 대상으로 명시한다. `Flush` 는 여전히 전송 위에서 `n.mu` 를 쥐지만 비시험 호출자 0 — K19 핀(단위 ⑤)이 그 전제를 고정해야 한다.

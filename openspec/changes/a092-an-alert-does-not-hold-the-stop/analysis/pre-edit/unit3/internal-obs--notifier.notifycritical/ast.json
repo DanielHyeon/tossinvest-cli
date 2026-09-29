@@ -1,16 +1,16 @@
 {
   "file": "internal/obs/notifier.go",
-  "source_sha256": "e790b278b3e642740afca5318eda86fb365924a2ff176e599329973df88c4020",
+  "source_sha256": "0bc75668ff17c3d6dec1c8191e24f00b80a700c091ed33fe80c1acbd4b9a5bd8",
   "package": "obs",
   "function": "notifyCritical",
   "receiver": "Notifier",
   "signature": "Notifier.notifyCritical(params=2, results=1)",
   "start": {
-    "line": 191,
+    "line": 176,
     "column": 1
   },
   "end": {
-    "line": 246,
+    "line": 231,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 192,
+        "line": 177,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 196,
+        "line": 181,
         "column": 3
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 216,
+        "line": 201,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 238,
+        "line": 223,
         "column": 2
       }
     }
@@ -51,21 +51,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 202,
+        "line": 187,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 235,
+        "line": 220,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 245,
+        "line": 230,
         "column": 2
       }
     }
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 197,
+        "line": 182,
         "column": 4
       },
       "text": "n.Log.Warn"
@@ -82,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 198,
+        "line": 183,
         "column": 17
       },
       "text": "string"
@@ -90,7 +90,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 201,
+        "line": 186,
         "column": 3
       },
       "text": "n.publishBestEffort"
@@ -98,7 +98,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 206,
+        "line": 191,
         "column": 13
       },
       "text": "n.eventKey"
@@ -106,7 +106,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 207,
+        "line": 192,
         "column": 13
       },
       "text": "string"
@@ -114,7 +114,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 208,
+        "line": 193,
         "column": 13
       },
       "text": "string"
@@ -122,7 +122,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 211,
+        "line": 196,
         "column": 13
       },
       "text": "encodeFields"
@@ -130,15 +130,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 215,
-        "column": 30
+        "line": 200,
+        "column": 21
       },
       "text": "n.claimAndDeliver"
     },
     {
       "kind": "call",
       "at": {
-        "line": 234,
+        "line": 219,
         "column": 3
       },
       "text": "n.escalate"
@@ -146,7 +146,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 235,
+        "line": 220,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -154,24 +154,24 @@
     {
       "kind": "call",
       "at": {
-        "line": 243,
+        "line": 228,
         "column": 3
       },
-      "text": "n.judge"
+      "text": "n.escalate"
     }
   ],
   "assignments": [
     {
       "kind": ":=",
       "at": {
-        "line": 205,
+        "line": 190,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 215,
+        "line": 200,
         "column": 2
       }
     }

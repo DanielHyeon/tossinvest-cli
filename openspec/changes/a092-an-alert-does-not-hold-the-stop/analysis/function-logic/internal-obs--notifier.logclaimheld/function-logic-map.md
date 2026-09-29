@@ -1,28 +1,28 @@
 # Function Logic Map: `Notifier.logClaimHeld`
 
 - Source: `internal/obs/notifier.go`
-- AST evidence: `ast.json` — **편집 전**, :636–646, 분기 1 · 반환 1 · 호출 4, source_sha256 `0bc75668ff17…`, 추출 HEAD `b3f14925`.
+- AST evidence: `ast.json` — **편집 뒤**, :716–726, 분기 1 · 반환 1 · 호출 4, source_sha256 `e790b278b3e6…`, 추출 커밋 `fbc6df5f`. 편집 전 번들은 `analysis/pre-edit/unit3/`에 보존.
 - Risk scan: `risk-pattern-report.md`
-- 편집 목적: 21.4 GREEN 목록의 「`logClaimHeld` 등급과 주석」. 주석 :626-635 의 전제(*"the only way to arrive here is a lease left behind by a sender that died"*)는 a098 이후 거짓이고, 단위 ③ 뒤에는 **같은 조건의 동시 동기 발송**도 이 갈래에 닿는다. 등급 결정은 a099 r4 시험(`TestAHeldRowIsNotWhispered` — WARN 단언)과 충돌하므로 **Manager 확인 뒤 편집**(review §24.6). 이 번들은 편집 전 증거.
+- 편집(착지 단위 ③ — `fbc6df5f`): Manager 판정 (나): `n.Log.Warn` → `n.Log.Event`(INFO) + 주석 정정(a098 의 산 발송자 · 단위 ③ 의 동시 동기 관측 → 정상 경로, 죽은 발송자 신호는 `logClaimStolen` WARN).
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| `claim` | `ClaimHeldElsewhere` 결과(보유자 · 나이 · 만료) | `claimAndDeliver` B6 · `Flush` | — |
+| `claim` | `ClaimHeldElsewhere` 결과 | `claimAndDeliver` B6 · `Flush` | — |
 
 ## Branches and early returns
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `n.Log == nil` (:637) | — | 반환(:638) | (미실행) |
-| 종단 | — | `n.Log.Warn(EventAlertClaimHeld, …)` | — | `TestAHeldRowIsNotWhispered` |
+| B1 | `n.Log == nil` (:717) | — | 반환 | (미실행) |
+| 종단 | — | `n.Log.Event(EventAlertClaimHeld, 보유자 · 나이 · 만료)` | — | `TestAHeldRowIsNotWhispered`(INFO · 실재 · 보유자) — 변이 L11(줄 삭제) · L12(WARN 복귀) CAUGHT |
 
 ## Calls and live bindings
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `n.Log.Warn` :640 | 보유자 · 나이 · 만료 한 줄 | — | AST |
+| `n.Log.Event` | 한 줄 | — | AST |
 
 ## State mutations and fallbacks
 
@@ -30,5 +30,5 @@
 
 ## Safety conclusion
 
-- Safe edit boundary: 등급 · 주석만(결정 대기).
-- High-risk impact: 낮음 — 관측 등급.
+- Safe edit boundary: 등급 · 주석.
+- High-risk impact: 낮음.

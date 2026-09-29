@@ -7,7 +7,7 @@
 - 원장 첫 줄: HEAD sha 와 사본에 딸려 간 미커밋 추적 파일 목록.
 - 무변이 대조군이 GREEN 이 아니면 멈춤. 변이마다 정확히 한 곳(count==1)을 바꿈.
 - 판정 셋: CAUGHT(시험이 실패 — 실패한 시험 이름을 적음) · SURVIVED · BUILD-FAIL(컴파일 실패 — 닿지 않은 것이지 잡은 것이 아님).
-- `--set 25.6`: a066 완화 통지 입구 이행 변이.
+- `--set 25.6`: a066 완화 통지 입구 이행 변이. `--set 25.7`: 단위 ③ 잠금 범위 · 원칙 E · claim-held 등급.
 - 사본 디렉터리에 pid 를 붙임 — 두 판이 한 사본을 쓰지 않게. 한 번에 한 판.
 """
 import os
@@ -133,6 +133,72 @@ RELAX_TESTS = [
     ["go", "test", "-count=1", "-run", "TestA092", "./internal/obs"],
 ]
 
+# 25.7 — 착지 단위 ③ 잠금 범위 · 원칙 E · logClaimHeld 등급. `--set 25.7`.
+NOT = "internal/obs/notifier.go"
+LOCK_MUTANTS = [
+    ('L01 lock covers the transport again', NOT,
+     '\tn.mu.Unlock()\n\n\tn.logClaimStolen(string(e.Type), claim)\n\tsent, lost, verdict := n.deliver(ctx, claim.ID, claim.Token, e)\n',
+     '\n\tn.logClaimStolen(string(e.Type), claim)\n\tsent, lost, verdict := n.deliver(ctx, claim.ID, claim.Token, e)\n\tn.mu.Unlock()\n'),
+    ('L02 escalating sites latch unconditionally', NOT,
+     '\t\tn.Gate.BlockUnlessClearedSince(execgw.ReasonAlertUndelivered, v.epoch, v.detail)\n\t}\n\tincluded, err := n.escalate(ctx, e)',
+     '\t\tn.Gate.Block(execgw.ReasonAlertUndelivered, v.detail)\n\t}\n\tincluded, err := n.escalate(ctx, e)'),
+    ('L03 vanished site latches unconditionally', NOT,
+     '\t\t\t\tn.Gate.BlockUnlessClearedSince(execgw.ReasonAlertUndelivered, v.epoch, v.detail)\n\t\t\t}\n\t\t\treturn false, true, latchVerdict{}',
+     '\t\t\t\tn.Gate.Block(execgw.ReasonAlertUndelivered, v.detail)\n\t\t\t}\n\t\t\treturn false, true, latchVerdict{}'),
+    ('L04 epoch read after the apply point', NOT,
+     '\t\tepoch = n.Gate.ClearEpoch(execgw.ReasonAlertUndelivered)\n\t}\n\tn.hook("epoch:" + site)',
+     '\t}\n\tn.hook("epoch:" + site)\n\tif n.Gate != nil {\n\t\tepoch = n.Gate.ClearEpoch(execgw.ReasonAlertUndelivered)\n\t}'),
+    ('L05 epoch pinned before any evidence', NOT,
+     '\t\tepoch = n.Gate.ClearEpoch(execgw.ReasonAlertUndelivered)\n\t}\n\tn.hook("epoch:" + site)',
+     '\t\tepoch = 0 * n.Gate.ClearEpoch(execgw.ReasonAlertUndelivered)\n\t}\n\tn.hook("epoch:" + site)'),
+    ('L06 failed escalation does not latch', NOT,
+     '\tif included && err != nil && n.Gate != nil {',
+     '\tif false && included && err != nil && n.Gate != nil {'),
+    ('L07 unconditional latch without an escalation', NOT,
+     '\tif included && err != nil && n.Gate != nil {',
+     '\tif (!included || err != nil) && n.Gate != nil {'),
+    ('L08 escalation skipped when the latch was released', NOT,
+     '\t\tn.Gate.BlockUnlessClearedSince(execgw.ReasonAlertUndelivered, v.epoch, v.detail)\n\t}\n\tincluded, err := n.escalate(ctx, e)',
+     '\t\tif applied, _ := n.Gate.BlockUnlessClearedSince(execgw.ReasonAlertUndelivered, v.epoch, v.detail); !applied {\n\t\t\treturn\n\t\t}\n\t}\n\tincluded, err := n.escalate(ctx, e)'),
+    ('L09 escalate never reports inclusion', NOT,
+     '\treturn true, err\n}',
+     '\treturn false, err\n}'),
+    ('L10 escalate hides its failure', NOT,
+     '\treturn true, err\n}',
+     '\treturn true, nil\n}'),
+    ('L11 claim-held line deleted', NOT,
+     '\tn.Log.Event(EventAlertClaimHeld,\n\t\tFieldTriggerEvent, eventType,',
+     '\tn.Log.Event(EventAlertClaimLost,\n\t\tFieldTriggerEvent, eventType,'),
+    ('L12 claim-held back to WARN', NOT,
+     '\tn.Log.Event(EventAlertClaimHeld,',
+     '\tn.Log.Warn(EventAlertClaimHeld,'),
+    ('L13 vanished site never latches', NOT,
+     '\t\t\t\tn.Gate.BlockUnlessClearedSince(execgw.ReasonAlertUndelivered, v.epoch, v.detail)\n\t\t\t}\n\t\t\treturn false, true, latchVerdict{}',
+     '\t\t\t\t_ = v\n\t\t\t}\n\t\t\treturn false, true, latchVerdict{}'),
+    ('L14 acknowledge counts outside the lock', NOT,
+     '\tremaining, err := n.Journal.UndeliveredCount(ctx)',
+     '\tn.mu.Unlock()\n\tn.mu.Lock()\n\tremaining, err := n.Journal.UndeliveredCount(ctx)'),
+    ('L15 claim taken before the lock', NOT,
+     '\tn.mu.Lock()\n\n\t// Before the first claim',
+     '\tclaim0, _ := n.Journal.ClaimAlertForDelivery(ctx, record, n.remindAfter(), n.claimant())\n\t_ = claim0\n\tn.mu.Lock()\n\n\t// Before the first claim'),
+    ('L16 unrecorded site drops its verdict', NOT,
+     '\t\t\t// eventually; nothing else does.\n\t\t\treturn false, false, verdict',
+     '\t\t\t// eventually; nothing else does.\n\t\t\t_ = verdict\n\t\t\treturn false, false, latchVerdict{}'),
+    ('L17 exhausted site drops its verdict', NOT,
+     '\t\t\t"alert_id", id)\n\t}\n\treturn false, false, verdict\n}',
+     '\t\t\t"alert_id", id)\n\t}\n\t_ = verdict\n\treturn false, false, latchVerdict{}\n}'),
+    ("L18 claim moved outside the lock (pin)", NOT,
+     "\tn.mu.Lock()\n\n\t// Before the first claim, not after: if the lease this ledger issues cannot\n\t// cover this sender's budget, every claim below is already unsound and the\n\t// operator should read that once, here, rather than infer it from a duplicate.\n\tn.checkAlertLease()\n\n\tclaim, err := n.Journal.ClaimAlertForDelivery(ctx, record, n.remindAfter(), n.claimant())\n",
+     "\n\t// Before the first claim, not after: if the lease this ledger issues cannot\n\t// cover this sender's budget, every claim below is already unsound and the\n\t// operator should read that once, here, rather than infer it from a duplicate.\n\tn.checkAlertLease()\n\n\tclaim, err := n.Journal.ClaimAlertForDelivery(ctx, record, n.remindAfter(), n.claimant())\n\tn.mu.Lock()\n"),
+    # 21.5 A-4 귀속: 잠금이 좁아진 뒤 a096/a097 배제 시험을 지키는 것이 임차인지 잰다 — 임차를 무시하게 한 원장.
+    ("L19 lease ignored (A-4 attribution)", "internal/journal/alert_claim.go",
+     "WHERE id = ? AND state = ? AND `+alertClaimable,",
+     "WHERE id = ? AND state = ? AND (1=1 OR `+alertClaimable+`)`,"),
+]
+LOCK_TESTS = [
+    ["go", "test", "-count=1", "./internal/obs"],
+]
+
 TESTS = [
     ["go", "test", "-count=1", "-run", "TestA092|TestEnqueueAlert|TestClaim", "./internal/journal"],
     ["go", "test", "-count=1", "-run", "TestA092|TestA096|TestA097|Mode|Transition|Announc", "./internal/obs"],
@@ -176,6 +242,8 @@ def main() -> None:
         i = args.index("--set")
         if args[i + 1] == "25.6":
             MUTANTS, TESTS = RELAX_MUTANTS, RELAX_TESTS
+        elif args[i + 1] == "25.7":
+            MUTANTS, TESTS = LOCK_MUTANTS, LOCK_TESTS
         args = args[:i] + args[i + 2:]
     scratch, own = Path(args[0]), args[1:]
     copy = scratch / f"mut-a092-u2-{os.getpid()}"
