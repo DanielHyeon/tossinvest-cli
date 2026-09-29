@@ -4735,3 +4735,39 @@ High-risk(알림 · 모드 통지 · 원장 기록 경로). 편집 전 번들 �
 
 - **바꾸지 않는 것**: `Notifier.Notify` · `notifyCritical` · `claimAndDeliver` · `deliver`(범위 밖 동기 호출자는 그대로 — 잠금 범위는 착지 단위 ③), `EnqueueAlert` 계약, 공유 Retrier의 다른 소비자.
 - **일반 등급(exit)**: 이 단위에서는 오늘과 같이 동기 `publishBestEffort`로 둔다(동작 변화 0). 유계 이관(C8)은 착지 단위 ⑤이며, 그 전에는 exit goroutine의 일반 등급 원격 대기가 남는다 — 로트 안의 순서이지 스펙의 생략이 아니다.
+
+### 24.3 착지 단위 ② — GREEN · 검증 (2026-09-29)
+
+**착지**: `c6e2e3ac`(코드 · 시험) + 이 절의 증거 커밋. 무엇이 섰는가:
+
+| 요구 | 구현 | RED 관측(편집 전 또는 반증) | GREEN |
+|---|---|---|---|
+| C3 임차 없는 기록 · 재무장 · 남의 임차 불변 · 트랜잭션 하나 | `Journal.RecordAlert` (새 파일 `internal/journal/record_alert.go`) | 컴파일 RED(심볼 없음) → 변이 U01 · U02 | `TestA092RecordAlert*` 7개 |
+| M15 입구 `remindAfter = 0` 은 재무장 안 함 | 같음 | 같음 | `TestA092RecordAlertZeroWindowNeverRearms` |
+| 21.3 (a)(b)(c)(d) · C16 · K17 | `obs.RecordOnly{N}` · `Notifier.recordCritical` (새 파일 `internal/obs/record_only.go`) | 컴파일 RED → 변이 U03~U12 | `TestA092RecordOnly*` |
+| 21.3 (e) 기록 실패 → 래치 + 로그 + 승격 시도 | `recordCritical` 실패 갈래 | 변이 U07 · U08 · U09 · U10 | `TestA092RecordOnlyFailureLatchesAndEscalates`(notify · announce) |
+| K1 모드 통지 신원 = 전이 하나 | `operatingModeEvent` 공유, 키 `operating_mode:계정:모드:rec.ID` | 키 변경 전 `TestA092EachTransitionIsItsOwnAnnouncement` publish 2 · 행 2(기대 4) | 4 · 4. 변이 U13 · U14 · U15 |
+| C1 배선(주입 지점별) | `Context.ExitObserver` + `exitSideRetrier` · `exitSideFloor`(새 파일 `exit_record_only.go`) · `engineRuntime` 의 `Announcer` 제거 | 편집 전 `Alerts=*obs.Notifier` · `Announcer=<nil>` · 공유 Retrier(시험 FAIL 3줄) | `TestA092ExitObserverGetsRecordOnlyAlertPaths` · `TestA092EngineRuntimeDoesNotHandTheExitLoopASyncAlertPath`. 변이 U16~U24 |
+| C1 행동 (k1 관측 두절 · k2 가격 조회 401) | 위 인스턴스를 받은 루프 | 동기 `*obs.Notifier` 를 꽂은 사본: 두 시험 모두 10s 안에 반환 못 함(FAIL) | 기록 전용: 반환 · publish 0 · 모드 통지 · 두절 알림 PENDING(임차 없음) |
+| C1 (k4) 공유 Retrier 는 동기 통지 유지 | 복사본만 바꿈 | 변이 U24(공유본 변경) | 배선 시험이 공유본 `Announcer == *obs.Notifier` 단언 |
+
+**Pre-Edit 선언(§24.2)과 달라진 것 — 보고**:
+- `RecordAlert` 는 `outbox.go` 가 아니라 새 파일 `record_alert.go`. `outbox.go` 안에 두면 logic-map 이 바로 위 함수 `EnqueueAlert` 를 「수정된 기존 함수」로 요구했다(측정) — 새 코드는 새 파일 규칙.
+- `Notifier.RecordCritical`(공개) 대신 비공개 `recordCritical`. 호출자가 패키지 안(`RecordOnly`)뿐이라 공개할 이유가 없다. a066 이행(25.6)이 `obs` 밖에서 입구를 부를 때는 `RecordOnly` 를 쓴다 — 그때 공개 표면이 부족하면 그 단위에서 보고한다.
+- `exitSideRetrier` · `exitSideFloor` 도우미 둘을 새 파일 `exit_record_only.go` 에 둠(같은 이유).
+- 시험 함수 `TestTheExitObserverDefersToFillDetection`(`cmd/tossctl/engine_test.go`)의 문자열 핀을 공백 무관 정규식으로 — `Announcer` 키를 빼자 gofmt 정렬 폭이 바뀌어 깨졌다. 번들 `cmd-tossctl--testtheexitobserverdeferstofilldetection`, 반증 1회(SLO 줄 삭제 사본에서 FAIL). 비례 원칙상 시험 편집이라 변이 원장 · 다중 리뷰는 `not-applicable`.
+
+**변이** (`analysis/harness/mutate_unit2.py`, 사본 · pid · 무변이 대조군 GREEN, 컴파일 실패는 BUILD-FAIL 로 따로 셈):
+- 1회차 `analysis/mutation-unit2/ledger-run1.tsv`: 24/24 CAUGHT, BUILD-FAIL 0 · NOT-APPLIED 0.
+- **정정**: U08(승격 누락)은 `notify` 부분시험만 잡고 `announce` 부분시험은 통과시켰다. 모드 통지 사건 자신의 로그 줄도 `engine.operating_mode` 라서 「이벤트 이름이 로그에 있다」는 단언이 승격 없이도 참이었다(표본이 우연히 채워진 전칭). 단언을 승격 실패 줄의 문구로 바꾸고 U08 만 재실행 → 두 부분시험 모두 CAUGHT(`ledger-run2-U08.tsv`).
+
+**편집 뒤 FLM/BTM**: 번들 셋을 `c6e2e3ac` 기준으로 재추출(편집 전 번들은 `analysis/pre-edit/unit2/`). 재번호: `AnnounceOperatingMode` B2(완화 판정)는 `operatingModeEvent` 로 옮겨 사라짐 · `ExitObserver` 는 B6(Announcer 기본값) 신설, 옛 B6 → B7 · `engineRuntime` 분기 좌표 불변.
+커버리지 `analysis/harness/coverage-post-*.json`(연결 워크트리 `c6e2e3ac`). `check_analysis`: evidence complete.
+
+**실행**: `go test` journal(535s) · obs · app/engine · execgw · cmd/tossctl 전부 ok. `-race`: obs · journal 의 a092/a096/a097/a099 시험, app/engine 의 a092 시험(`-count=3`). `make lint` rc 0(gofmt · vet 두 태그). 태그 시험(obs · cmd/tossctl 일부) ok.
+
+**이 단위가 닫지 않은 것 (잔여 — 로트 안의 순서)**:
+- 21.3 (f) 잠금 범위: 동기 발송자가 `n.mu` 를 원격 전송 위에서 쥐는 한, exit 기록은 그 전송을 **기다린다**. 이 단위의 기록 전용 입구도 `n.mu` 를 잡으므로, 오늘 exit goroutine 은 **자기** 전송은 안 기다리지만 **남의**(범위 밖 호출자의) 동기 전송은 기다릴 수 있다. 착지 단위 ③(25.7)이 닫는다.
+- 일반 등급(C8): exit 의 일반 등급은 아직 동기 최선 발송. 착지 단위 ⑤.
+- k3(청산 상한 조회 401)의 행동 시험은 따로 없다 — floor 가 exit Retrier 를 쓰는 것(배선 시험 · U18/U19)과 Retrier 의 401 경로가 기록만 하는 것(k2)의 합성으로 선다.
+- 4 보이스 · gstack 리뷰: 로트 밀도 기준으로 착지 단위 ③ 뒤 잠금 · 전송 경로와 묶어 돌린다(Manager 판정 대상).

@@ -1,0 +1,95 @@
+{
+  "file": "cmd/tossctl/engine_test.go",
+  "source_sha256": "3d12ffb196ffa34dcf3e14ac4082185b766415ce2c90a2a6a4c088b9f660c149",
+  "package": "main",
+  "function": "TestTheExitObserverDefersToFillDetection",
+  "signature": "TestTheExitObserverDefersToFillDetection(params=1, results=0)",
+  "start": {
+    "line": 383,
+    "column": 1
+  },
+  "end": {
+    "line": 392,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 386,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 389,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 384,
+        "column": 9
+      },
+      "text": "readSource"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 6
+      },
+      "text": "MatchString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 6
+      },
+      "text": "regexp.MustCompile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 389,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 390,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 384,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

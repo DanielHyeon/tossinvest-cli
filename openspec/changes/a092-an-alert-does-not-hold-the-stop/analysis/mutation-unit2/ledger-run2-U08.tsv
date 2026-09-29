@@ -1,0 +1,3 @@
+TREE	HEAD 0cca8fc37f56755102a52184a17ec5e97fbb5740	uncommitted tracked: cmd/tossctl/engine.go,cmd/tossctl/engine_test.go,internal/app/engine/exitwiring.go,internal/obs/mode.go	own untracked: internal/journal/record_alert.go,internal/journal/a092_record_alert_test.go,internal/obs/record_only.go,internal/obs/a092_record_only_test.go,internal/app/engine/exit_record_only.go,internal/app/engine/a092_export_test.go,internal/app/engine/a092_exit_record_only_wiring_test.go,cmd/tossctl/a092_exit_options_pin_test.go
+CONTROL	GREEN	
+U08 record failure does not escalate	CAUGHT	2 failing: TestA092RecordOnlyFailureLatchesAndEscalates/notify, TestA092RecordOnlyFailureLatchesAndEscalates/announce

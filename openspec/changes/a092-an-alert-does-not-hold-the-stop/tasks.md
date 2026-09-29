@@ -20,6 +20,13 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
       형제 착지 몫 300). `review.md` §24.1.
 - [x] 25.1 base 재고정 단독 커밋(`base-commit.txt` 285c7619 → 721d0338) — `aea8553b`.
 - [x] 25.2 옛 base 번들 36개를 `analysis/function-logic-base-285c7619/`로 옮김(재고정 뒤 stale 29 — 게이트 밖 역사 자리, README). a092 문서 도구 셋의 경로를 같이 옮김(`check_values.py` 실패 60 불변).
+- [x] 25.3 착지 단위 ② 편집 전 FLM 번들 셋 · 커버리지 기준선 · Pre-Edit 선언(`review.md` §24.2) — `0cca8fc3`.
+- [x] 25.4 **착지 단위 ② GREEN** — `c6e2e3ac`. `Journal.RecordAlert`(새 파일 `record_alert.go`) · `obs.RecordOnly`(새 파일 `record_only.go`) · 모드 통지 키 `rec.ID`(K1) ·
+      `Context.ExitObserver` 주입 지점별 기록 전용(C1) · `engineRuntime` 의 `Announcer` 제거. 닫힌 RED: 22.3 C1(배선 + 행동 k1 · k2, k3 은 합성 — §24.3) · C3 · C16 · 23.3 K1 · K17 ·
+      24.3 M15(입구 `remindAfter=0`). 변이 24/24 CAUGHT(`analysis/mutation-unit2/`) · `-race` · `make lint` rc 0. `review.md` §24.3.
+- [x] 25.5 착지 단위 ② 편집 뒤 FLM/BTM(연결 워크트리 `c6e2e3ac` 측정, 편집 전 번들은 `analysis/pre-edit/unit2/`) · `check_analysis` evidence complete.
+- [ ] 25.6 a066 §7 이행 — `notifyRelaxation`(`risk_relaxation_command.go`) → 알림기 기록 전용 입구. FLM 먼저. 이행 커밋을 a066 아카이브 review 에 기록(24.4 인용 요건).
+- [ ] 25.7 착지 단위 ③ 잠금 범위(21.4 GREEN — a095 착지 판정 기준).
 
 ## 24. 24판 작업 (2026-09-29) — 23라운드 처분 반영 (design D0.3i · `review.md` §23.13)
 

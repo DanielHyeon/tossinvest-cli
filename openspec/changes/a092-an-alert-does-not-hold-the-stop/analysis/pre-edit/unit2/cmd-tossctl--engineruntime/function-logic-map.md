@@ -1,8 +1,7 @@
 # Function Logic Map: `engineRuntime`
 
 - Source: `cmd/tossctl/engine.go`
-- AST evidence: `ast.json` — **편집 뒤**, :618–705, 분기 6 · 반환 7 · 호출 13, source_sha256 `9dd4f4532837…`, 추출 커밋 `c6e2e3ac`.
-  편집 전 번들(`cfe57e7c2822…`, `8c390aa6`)은 `analysis/pre-edit/unit2/`에 보존. 분기 · 반환 · 호출의 수와 줄은 편집 전과 같다(리터럴 키 한 줄이 주석 한 줄로 바뀜).
+- AST evidence: `ast.json` — **편집 전**, :618–705, 분기 6 · 반환 7 · 호출 13, source_sha256 `cfe57e7c2822…`, 추출 HEAD `8c390aa6`.
 - Risk scan: `risk-pattern-report.md`
 - 편집 목적(22판 C1): exit observer 옵션에서 `Announcer: ectx.Notifier`(:639)를 뺀다. exit 쪽 announcer는 `Context.ExitObserver`의 기본값(기록 전용)이 진다 — exit 결속을 한 자리에 모은다.
 
@@ -29,7 +28,7 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `ectx.ExitObserver(ExitObserverOptions{…, Escalate: ectx.Journal})` :634-640 | exit 관측기 — 편집 뒤 `Announcer`를 넘기지 않아 `Context.ExitObserver`의 기록 전용 기본값이 선다 | 오류는 B3 | AST · 구조 핀 `TestA092EngineRuntimeDoesNotHandTheExitLoopASyncAlertPath`(변이 U23 CAUGHT) |
+| `ectx.ExitObserver(ExitObserverOptions{…, Escalate: ectx.Journal, Announcer: ectx.Notifier})` :634-640 | exit 관측기 | 오류는 B3 | AST · 21라운드 C1(관측 두절 강화가 이 announcer로 동기 통지) |
 | `engine.NewRuntime(RuntimeOptions{…, Alerts: ectx.Notifier, Announcer: ectx.Notifier})` :666 | 런타임 — 루프 비정상 반환 알림과 감독자 승격 통지는 **동기**로 남는다(Q1 문자 해석) | — | AST |
 
 ## State mutations and fallbacks

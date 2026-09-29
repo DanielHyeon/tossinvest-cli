@@ -1,0 +1,178 @@
+#!/usr/bin/env python3
+"""a092 착지 단위 ② 변이 하네스 — RecordAlert 입구 · 기록 전용 어댑터/통지자 · K1 신원 · exit 배선을 사본에서 변이함.
+
+사용: python3 mutate_unit2.py <scratch-dir> <own-untracked-file>... [--only REGEX]
+
+- 사본: git 추적 파일(작업 트리 내용) + 이 로트의 미추적 파일만 복사함(남의 미추적 RED 파일이 사본에 들어오지 않게).
+- 원장 첫 줄: HEAD sha 와 사본에 딸려 간 미커밋 추적 파일 목록.
+- 무변이 대조군이 GREEN 이 아니면 멈춤. 변이마다 정확히 한 곳(count==1)을 바꿈.
+- 판정 셋: CAUGHT(시험이 실패 — 실패한 시험 이름을 적음) · SURVIVED · BUILD-FAIL(컴파일 실패 — 닿지 않은 것이지 잡은 것이 아님).
+- 사본 디렉터리에 pid 를 붙임 — 두 판이 한 사본을 쓰지 않게. 한 번에 한 판.
+"""
+import os
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True).stdout.strip())
+RA = "internal/journal/record_alert.go"
+RO = "internal/obs/record_only.go"
+MODE = "internal/obs/mode.go"
+EW = "internal/app/engine/exitwiring.go"
+ERO = "internal/app/engine/exit_record_only.go"
+ENG = "cmd/tossctl/engine.go"
+
+MUTANTS = [
+    # 원장 입구
+    ("U01 RecordAlert never re-arms (remindAfter ignored)", RA,
+     "id, owed, err := j.recordAlertTx(ctx, tx, a, remindAfter)", "id, owed, err := j.recordAlertTx(ctx, tx, a, 0)"),
+    ("U02 RecordAlert takes a lease", RA,
+     "\tif err := tx.Commit(); err != nil {\n\t\treturn 0, false, fmt.Errorf(\"journal: committing alert %s: %w\", key, err)",
+     "\tif owed {\n\t\tif _, cerr := acquireAlertClaimTx(ctx, tx, id, \"mutant\", j.clk.Now(), j.alertLease); cerr != nil {\n\t\t\treturn 0, false, cerr\n\t\t}\n\t}\n\tif err := tx.Commit(); err != nil {\n\t\treturn 0, false, fmt.Errorf(\"journal: committing alert %s: %w\", key, err)"),
+    # 기록 전용 어댑터
+    ("U03 critical Notify goes through the sync path", RO,
+     "\treturn n.recordCritical(ctx, e, n.remindAfter())\n}\n\n// AnnounceOperatingMode",
+     "\treturn n.notifyCritical(ctx, e)\n}\n\n// AnnounceOperatingMode"),
+    ("U04 announcer goes through the sync path", RO,
+     "\tn.logEvent(e, SeverityOf(e.Type))\n\treturn n.recordCritical(ctx, e, n.remindAfter())",
+     "\treturn n.Notify(ctx, e)"),
+    ("U05 exit record passes a zero reminder window", RO,
+     "\treturn n.recordCritical(ctx, e, n.remindAfter())\n}\n\n// AnnounceOperatingMode",
+     "\treturn n.recordCritical(ctx, e, 0)\n}\n\n// AnnounceOperatingMode"),
+    ("U06 no journal falls back to a publish", RO,
+     "\t\t\t\tFieldDetail, \"no journal is wired, so this critical alert is neither durable nor sent\")\n\t\t}\n\t\treturn nil",
+     "\t\t\t\tFieldDetail, \"no journal is wired, so this critical alert is neither durable nor sent\")\n\t\t}\n\t\tn.publishBestEffort(ctx, e, SeverityCritical)\n\t\treturn nil"),
+    ("U07 record failure does not latch", RO,
+     "\t\tif n.Gate != nil {\n\t\t\tn.Gate.Block(execgw.ReasonAlertUndelivered",
+     "\t\tif n.Gate != nil && false {\n\t\t\tn.Gate.Block(execgw.ReasonAlertUndelivered"),
+    ("U08 record failure does not escalate", RO,
+     "\t\tn.escalate(ctx, e)\n\t\treturn fmt.Errorf(\"obs: recording a critical alert: %w\", err)",
+     "\t\treturn fmt.Errorf(\"obs: recording a critical alert: %w\", err)"),
+    ("U09 record failure is swallowed", RO,
+     "\t\treturn fmt.Errorf(\"obs: recording a critical alert: %w\", err)\n\t}\n\treturn nil\n}",
+     "\t\treturn nil\n\t}\n\treturn nil\n}"),
+    ("U10 record failure is not logged", RO,
+     "\t\t\tn.Log.Error(EventAlertUndelivered, err, FieldTriggerEvent, string(e.Type))",
+     "\t\t\t_ = err"),
+    ("U11 record outside the notifier lock", RO,
+     "\tn.mu.Lock()\n\t_, _, err := n.Journal.RecordAlert(ctx, record, remindAfter)",
+     "\t_, _, err := n.Journal.RecordAlert(ctx, record, remindAfter)\n\tn.mu.Lock()"),
+    ("U12 nil notifier guard dropped (Notify)", RO,
+     "func (r RecordOnly) Notify(ctx context.Context, e Event) error {\n\tn := r.N\n\tif n == nil {\n\t\treturn nil\n\t}",
+     "func (r RecordOnly) Notify(ctx context.Context, e Event) error {\n\tn := r.N"),
+    # K1 신원 · 사건 구성 공유
+    ("U13 key drops the transition id", RO,
+     "Key:   \"operating_mode:\" + rec.AccountRef + \":\" + rec.Mode + \":\" + rec.ID,",
+     "Key:   \"operating_mode:\" + rec.AccountRef + \":\" + rec.Mode,"),
+    ("U14 the two announcers diverge", RO,
+     "\te := operatingModeEvent(previous, rec)\n",
+     "\te := operatingModeEvent(previous, rec)\n\te.Title += \" (recorded)\"\n"),
+    ("U15 sync announcer keeps the old key", MODE,
+     "\treturn n.Notify(ctx, operatingModeEvent(previous, rec))",
+     "\te := operatingModeEvent(previous, rec)\n\te.Key = \"operating_mode:\" + rec.AccountRef + \":\" + rec.Mode\n\treturn n.Notify(ctx, e)"),
+    # exit 배선
+    ("U16 exit loop shares the engine Retrier", ERO,
+     "\texit := *shared\n\texit.Announcer = announcer\n\treturn &exit", "\t_ = announcer\n\treturn shared"),
+    ("U17 exit Retrier keeps the sync announcer", ERO,
+     "\texit.Announcer = announcer\n", ""),
+    ("U18 exit floor keeps the shared retrier", ERO,
+     "\texit.retrier = retrier\n", ""),
+    ("U19 exit floor is the shared floor", EW,
+     "opts.Floor = exitSideFloor(c.exitFloor, exitRetrier)", "opts.Floor = c.exitFloor"),
+    ("U20 exit alerts are the sync notifier", EW,
+     "\t\topts.Alerts = recordOnly\n", "\t\topts.Alerts = c.Notifier\n"),
+    ("U21 exit announcer default dropped", EW,
+     "\tif opts.Announcer == nil && c.Notifier != nil {\n\t\topts.Announcer = recordOnly\n\t}\n", ""),
+    ("U22 exit retrier is the shared one", EW,
+     "\topts.Retrier = exitRetrier\n", "\topts.Retrier = c.Retrier\n"),
+    ("U23 assembly hands the exit loop the sync notifier", ENG,
+     "\t\tEscalate: ectx.Journal,\n\t\t// Announcer · Alerts",
+     "\t\tEscalate: ectx.Journal,\n\t\tAnnouncer: ectx.Notifier,\n\t\t// Announcer · Alerts"),
+    ("U24 exit retrier copy mutates the shared one", ERO,
+     "\texit := *shared\n\texit.Announcer = announcer\n\treturn &exit",
+     "\tshared.Announcer = announcer\n\treturn shared"),
+]
+
+TESTS = [
+    ["go", "test", "-count=1", "-run", "TestA092|TestEnqueueAlert|TestClaim", "./internal/journal"],
+    ["go", "test", "-count=1", "-run", "TestA092|TestA096|TestA097|Mode|Transition|Announc", "./internal/obs"],
+    ["go", "test", "-count=1", "-run", "TestA092|TestProductionGuardianUsesConfiguredUSDLimitsAndReachesExitObserver", "./internal/app/engine"],
+    ["go", "test", "-count=1", "-run", "TestA092|TestTheExitObserverDefersToFillDetection", "./cmd/tossctl"],
+]
+
+
+def run_tests(copy: Path, env: dict) -> tuple[str, str]:
+    failed, notes, build = [], [], False
+    for command in TESTS:
+        result = subprocess.run(command, cwd=copy, env=env, capture_output=True, text=True)
+        if result.returncode != 0:
+            out = result.stdout + result.stderr
+            if "[build failed]" in out or "[setup failed]" in out:
+                build = True
+                notes.append(next((l for l in out.splitlines() if ".go:" in l), "build failed")[:200])
+                continue
+            names = [line.strip()[len("--- FAIL: "):].split(" ")[0] for line in out.splitlines() if line.strip().startswith("--- FAIL: ")]
+            leaves = [n for n in names if not any(o != n and o.startswith(n + "/") for o in names)]
+            failed.extend(leaves)
+            if not names:
+                notes.append(out.strip().splitlines()[-1][:160] if out.strip() else "no output")
+    why = f"{len(failed)} failing: " + ", ".join(failed[:8]) + (" …" if len(failed) > 8 else "") + (" | " + " | ".join(notes) if notes else "")
+    if build:
+        return "BUILD-FAIL", why
+    if failed or notes:
+        return "RED", why
+    return "GREEN", ""
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    only = None
+    if "--only" in args:
+        i = args.index("--only")
+        only = re.compile(args[i + 1])
+        args = args[:i] + args[i + 2:]
+    scratch, own = Path(args[0]), args[1:]
+    copy = scratch / f"mut-a092-u2-{os.getpid()}"
+    copy.mkdir(parents=True)
+    tracked = subprocess.run(["git", "ls-files", "--", "go.mod", "go.sum", "internal", "cmd", "tools"], cwd=ROOT,
+                             capture_output=True, text=True, check=True).stdout.split()
+    for rel in tracked + own:
+        source = ROOT / rel
+        if source.exists():
+            (copy / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, copy / rel)
+    env = dict(os.environ, GOFLAGS="-trimpath")
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
+    dirty = subprocess.run(["git", "diff", "--name-only", "HEAD", "--", "go.mod", "go.sum", "internal", "cmd", "tools"],
+                           cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
+    ledger = open(copy / "ledger.tsv", "w", encoding="utf-8")
+    ledger.write(f"TREE\tHEAD {head}\tuncommitted tracked: {','.join(dirty) or 'none'}\town untracked: {','.join(own) or 'none'}\n")
+    verdict, why = run_tests(copy, env)
+    ledger.write(f"CONTROL\t{verdict}\t{why}\n")
+    ledger.flush()
+    if verdict != "GREEN":
+        print("control not GREEN — stop:", verdict, why)
+        sys.exit(2)
+    for ident, rel, old, new in MUTANTS:
+        if only and not only.search(ident):
+            continue
+        target = copy / rel
+        pristine = target.read_text(encoding="utf-8")
+        if pristine.count(old) != 1:
+            ledger.write(f"{ident}\tNOT-APPLIED\told occurs {pristine.count(old)} times\n")
+            ledger.flush()
+            continue
+        target.write_text(pristine.replace(old, new, 1), encoding="utf-8")
+        verdict, why = run_tests(copy, env)
+        label = {"RED": "CAUGHT", "GREEN": "SURVIVED"}.get(verdict, verdict)
+        ledger.write(f"{ident}\t{label}\t{why}\n")
+        ledger.flush()
+        target.write_text(pristine, encoding="utf-8")
+    ledger.close()
+    print((copy / "ledger.tsv").read_text(encoding="utf-8"))
+
+
+if __name__ == "__main__":
+    main()
