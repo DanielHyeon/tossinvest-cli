@@ -13,7 +13,27 @@
 - [ ] 0.4 `make sdd-sync` 후 `sellIntent`·`checkOrderShape`·`isProtective`·`buildOrderCreate`의
       definition/callers/impact 확인
 
-## 1. 실행 게이트를 축소 시장가에 연다
+## P1. Phase 1 — 가격 사다리 KR 하한가 단 (선행 · 실측 불요 · design D2a)
+
+- [ ] P1.1 **Pre-Edit 선언 + FLM** — `ExitObserver.sellIntent`(High-risk 손절 경로,
+      WORKFLOW §Pre-Edit 형식, `ast.json`+FLM+BTM)
+- [ ] P1.2 **RED — 모집단 열거 포함**: ① 관측가·기준선이 모두 비는 포지션 유형의 열거
+      (언제 생기는가 — fail-closed 가 거부하던 정상 입력) ② KR 보호 제안에서 두 값이
+      빌 때 하한가 LIMIT 로 제출됨 ③ US 무가격·하한가 null/실패 시 거부 + critical 발행
+      (a090 미관측 계수와 합집합 교차 인용) ④ 익절 경로 무변화
+- [ ] P1.3 **GREEN** — 보호 분기에 한해 셋째 단: 엔진 reader 의 `PriceLimits`(reads.go:72,
+      현재 비시험 호출자 0) 배선. KRX 전용(marketdata.go:97 인용). 폴백 사건에서만 1회
+      읽기(§0.4 사건 한정)
+- [ ] P1.4 하한가 LIMIT 제출이 원장에 정직하게 기록되는지(가격 = 하한가, 유형 = limit)
+- [ ] P1.5 변이(무변이 대조군 선행) + 독립 리뷰 1 + gstack — 비례: 손절 경로라 High-risk
+      규율, 단 범위는 사다리 한 단
+- [ ] P1.6 Phase 2 착지 시 이 단 제거 예약을 design D2b 에 명기했는지 확인(도달 불가
+      증명 조건 포함)
+
+> **아래 §1~§3(Phase 2)의 착수 조건은 §5 실측 기록이다(§0.7 사람 승인).** Phase 1 은
+> 그 실측을 기다리지 않는다.
+
+## 1. 실행 게이트를 축소 시장가에 연다 (Phase 2)
 
 - [ ] 1.1 **RED** — `checkOrderShape` 표 테스트: `sell+market`(통과)·`buy+market`(거부)·
       `sell+market`에 가격 있음(거부)·US fractional 기존 분기 무변화·`limit` 전 분기 무변화
@@ -24,7 +44,7 @@
 - [ ] 1.4 `ReasonUnsupportedOrderType` 메시지 문구 갱신 (지금 "only limit orders (and US
       fractional market orders)"라고 단언한다)
 
-## 2. 보호 청산의 주문 유형 (High-risk 본체)
+## 2. 보호 청산의 주문 유형 (High-risk 본체 · Phase 2)
 
 - [ ] 2.0 **Pre-Edit 선언** — `ExitObserver.sellIntent` (WORKFLOW §Pre-Edit 형식)
 - [ ] 2.1 **Function Logic Map** — `internal/app/engine/exitloop.go` / `ExitObserver.sellIntent`
@@ -39,7 +59,7 @@
       보호 청산을 막지 않아야 한다. **이것이 §0.3의 핵심 개선분이다**
 - [ ] 2.5 익절 경로는 가격 없음에 대해 종전 거부를 유지
 
-## 3. 원장·관측·화면
+## 3. 원장·관측·화면 (Phase 2)
 
 - [ ] 3.1 **RED** — 시장가 청산의 `intents.price`가 비고 `order_type`이 market인지
 - [ ] 3.2 **RED** — 관측가·기준선이 제출가로 기록되지 **않는지** (주문된 적 없는 가격)
