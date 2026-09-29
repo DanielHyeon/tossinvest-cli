@@ -1,0 +1,67 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/app/engine",
+ "tests_run": 10,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-app-engine--context.exitobserver": {
+   "B1": {
+    "kind": "if",
+    "line": 320,
+    "column": 2,
+    "block": "320.14-322.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 323,
+    "column": 2,
+    "block": "323.28-325.3",
+    "entered_by": [
+     "TestTheExitObserverIsUnavailableWithoutAVerifiedGate"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 327,
+    "column": 2,
+    "block": "327.9-330.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 338,
+    "column": 2,
+    "block": "338.23-340.3",
+    "entered_by": [
+     "TestProductionGuardianUsesConfiguredUSDLimitsAndReachesExitObserver"
+    ],
+    "union": null
+   },
+   "B5": {
+    "kind": "if",
+    "line": 341,
+    "column": 2,
+    "block": "341.45-343.3",
+    "entered_by": [
+     "TestProductionGuardianUsesConfiguredUSDLimitsAndReachesExitObserver"
+    ],
+    "union": null
+   },
+   "B6": {
+    "kind": "if",
+    "line": 344,
+    "column": 2,
+    "block": "344.23-346.3",
+    "entered_by": [
+     "TestProductionGuardianUsesConfiguredUSDLimitsAndReachesExitObserver"
+    ],
+    "union": null
+   }
+  }
+ }
+}

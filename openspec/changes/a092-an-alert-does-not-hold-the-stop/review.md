@@ -4719,3 +4719,19 @@ Manager 판정 요지:
 2. **승인 기록** — 위 배정 메시지가 승인이다(Manager, 2026-09-29). tasks 25.0에도 적는다.
 3. **형제 착지 몫** — 옛 base에서 게이트가 요구하는 기존 함수는 **300**이다. 전부 a092 밖 change들의 착지(a098 · a099 · a124 · a066 · a112 등)가 만든 몫이다. a092는 그 함수들을 편집하지 않았다.
 4. 단독 커밋(`base-commit.txt` 한 파일)에 옛 → 새 sha와 위 실측을 적는다.
+
+### 24.2 Pre-Edit 선언 — 착지 단위 ② (RecordAlert 입구 + 기록 전용 announcer + exit 결속)
+
+High-risk(알림 · 모드 통지 · 원장 기록 경로). 편집 전 번들 셋을 새 base에서 만들었다: `analysis/function-logic/{internal-obs--notifier.announceoperatingmode, internal-app-engine--context.exitobserver, cmd-tossctl--engineruntime}`.
+커버리지는 `analysis/harness/coverage-pre-*.json`에 있다(연결 워크트리 `8c390aa6`).
+
+| 무엇 | 자리 | 종류 |
+|---|---|---|
+| `Journal.RecordAlert(ctx, a, remindAfter)` | `internal/journal/outbox.go` | **새 함수** — 기존 `recordAlertTx`를 트랜잭션 하나로 감쌈, 임차 없음 |
+| `Notifier.RecordCritical(ctx, e, remindAfter)` · `RecordOnly{N}` (`Notify` · `AnnounceOperatingMode`) · `operatingModeEvent` | 새 파일 `internal/obs/record_only.go` | **새 코드** |
+| `Notifier.AnnounceOperatingMode` | `internal/obs/mode.go` | 기존 — 사건 구성을 `operatingModeEvent`로 빼고 키에 `rec.ID`(K1 · M10) |
+| `Context.ExitObserver` | `internal/app/engine/exitwiring.go` | 기존 — `Alerts` · `Announcer` 기본값 기록 전용, `Retrier` · `Floor` 복사본(C1) |
+| `engineRuntime` | `cmd/tossctl/engine.go` | 기존 — exit observer 옵션에서 `Announcer` 제거 |
+
+- **바꾸지 않는 것**: `Notifier.Notify` · `notifyCritical` · `claimAndDeliver` · `deliver`(범위 밖 동기 호출자는 그대로 — 잠금 범위는 착지 단위 ③), `EnqueueAlert` 계약, 공유 Retrier의 다른 소비자.
+- **일반 등급(exit)**: 이 단위에서는 오늘과 같이 동기 `publishBestEffort`로 둔다(동작 변화 0). 유계 이관(C8)은 착지 단위 ⑤이며, 그 전에는 exit goroutine의 일반 등급 원격 대기가 남는다 — 로트 안의 순서이지 스펙의 생략이 아니다.
