@@ -1,0 +1,133 @@
+{
+  "file": "internal/app/engine/a066_risk_relaxation_test.go",
+  "source_sha256": "092f36a777f723d77222da915c361b7347d1efab7eedf85dae30996143e8bd61",
+  "package": "engine",
+  "function": "TestA066NoticeSurvivesTheCallerHangingUp",
+  "signature": "TestA066NoticeSurvivesTheCallerHangingUp(params=1, results=0)",
+  "start": {
+    "line": 319,
+    "column": 1
+  },
+  "end": {
+    "line": 327,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 324,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 8
+      },
+      "text": "a066RelaxEngine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 17
+      },
+      "text": "context.WithCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 36
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 2
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 12
+      },
+      "text": "notifyRelaxation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 25
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 29
+      },
+      "text": "fx.alerts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 91
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 95
+      },
+      "text": "fx.alerts"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 320,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 321,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 323,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

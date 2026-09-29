@@ -25,7 +25,8 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
       `Context.ExitObserver` 주입 지점별 기록 전용(C1) · `engineRuntime` 의 `Announcer` 제거. 닫힌 RED: 22.3 C1(배선 + 행동 k1 · k2, k3 은 합성 — §24.3) · C3 · C16 · 23.3 K1 · K17 ·
       24.3 M15(입구 `remindAfter=0`). 변이 24/24 CAUGHT(`analysis/mutation-unit2/`) · `-race` · `make lint` rc 0. `review.md` §24.3.
 - [x] 25.5 착지 단위 ② 편집 뒤 FLM/BTM(연결 워크트리 `c6e2e3ac` 측정, 편집 전 번들은 `analysis/pre-edit/unit2/`) · `check_analysis` evidence complete.
-- [ ] 25.6 a066 §7 이행 — `notifyRelaxation`(`risk_relaxation_command.go`) → 알림기 기록 전용 입구. FLM 먼저. 이행 커밋을 a066 아카이브 review 에 기록(24.4 인용 요건).
+- [x] 25.6 a066 §7 이행 — `notifyRelaxation`(`risk_relaxation_command.go`) → 알림기 기록 전용 입구(`Notifier.RecordCritical`). 편집 전 FLM `efb9389d` →
+      **이행 커밋 `0e4f26af`**(24.4 가 인용할 커밋) → 편집 뒤 FLM · 변이 15/15(`analysis/mutation-25.6/`) · a066 아카이브 review 「§7 hand-over done」. `review.md` §24.4 · §24.5.
 - [ ] 25.7 착지 단위 ③ 잠금 범위(21.4 GREEN — a095 착지 판정 기준).
 
 ## 24. 24판 작업 (2026-09-29) — 23라운드 처분 반영 (design D0.3i · `review.md` §23.13)

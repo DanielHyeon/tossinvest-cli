@@ -1326,3 +1326,28 @@ committed release. The state_mismatch and audit_unavailable errors are produced 
   test-seams, test-race, vet, validate) all passed.
 - Archive waits for Manager verification.
 
+
+### §7 hand-over done — relaxation notice moved to the a092 recording entry (2026-09-29, a092 25.6)
+
+- **Commit `0e4f26af`**: this is the migration commit that a092 tasks 24.4 (archive gate) cites. The pre-edit evidence is
+  in `efb9389d`. The code change landed on a092's side, after a066 was archived.
+- **What changed.**
+  - `notifyRelaxation` no longer calls `repo.EnqueueAlert`, which wrote straight to the journal outside the notifier's
+    exclusion lock and had no block of its own to latch first.
+  - It now calls the notifier's record-only entry, `obs.(*Notifier).RecordCritical(WithoutCancel(ctx), e, 0)`. The
+    record is written under `n.mu`, takes no lease, and uses reminder window 0.
+  - `EnqueueAlert` is removed from `riskRelaxationRepository`, so the direct path no longer exists in the type.
+  - The service takes its recorder from the engine notifier. With no notifier, the result is Notified=false plus a
+    reason; it never claims a notice was sent.
+- **Unchanged.**
+  - The row shape: key `engine.risk_relaxation|kind|seq`, type, severity, title, body and payload bytes. It is pinned by
+    exact-value test `TestA092RelaxationNoticeRowShapeIsUnchanged`.
+  - The release itself: journal verdicts, audit-before-commit, and the result fields.
+- **Changed, in the conservative direction.** A failed notice record now latches `ReasonAlertUndelivered` and attempts
+  the escalation, because it falls under the critical-record rule. The release still stands, and the result still says
+  "완화됨·통지 실패".
+- **Mutation.** 15/15 CAUGHT, with a GREEN no-mutation control. The ledger is
+  `openspec/changes/a092-an-alert-does-not-hold-the-stop/analysis/mutation-25.6/ledger-run1.tsv`.
+- **Test fixtures.** `a066RelaxEngine` and cmd `relaxationEngine` now wire a notifier on the same journal.
+  `TestA066ReleaseStandsWhenTheNoticeFails` injects its failure at the recorder instead of the journal. The a092 change
+  carries evidence bundles for these test functions.

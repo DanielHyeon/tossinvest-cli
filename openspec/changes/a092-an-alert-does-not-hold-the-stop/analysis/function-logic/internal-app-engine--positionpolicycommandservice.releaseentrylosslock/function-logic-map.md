@@ -1,9 +1,9 @@
 # Function Logic Map: `PositionPolicyCommandService.ReleaseEntryLossLock`
 
 - Source: `internal/app/engine/risk_relaxation_command.go`
-- AST evidence: `ast.json` — **편집 전**, :61–91, 분기 4 · 반환 5 · 호출 22, source_sha256 `3f976552ce40…`, 추출 HEAD `81934b46`.
+- AST evidence: `ast.json` — **편집 뒤**, :67–97, 분기 4 · 반환 5 · 호출 22, source_sha256 `1c33bf8704cc…`, 추출 커밋 `0e4f26af`. 편집 전 번들은 `analysis/pre-edit/25.6/`에 보존. 분기 넷의 모양 · 순서 불변(줄만 +6 — 파일 위쪽 인터페이스 선언이 늘어남).
 - Risk scan: `risk-pattern-report.md`
-- 편집 목적(a092 25.6): 마지막 문장의 `notifyRelaxation` 둘째 인자를 원장(`repo`)에서 알림기 기록자(`s.notices`)로 바꾼다. 분기는 건드리지 않는다.
+- 편집(a092 25.6): 마지막 문장의 `notifyRelaxation` 둘째 인자가 원장(`repo`)에서 알림기 기록자(`s.notices`)로 바뀜(변이 R10 — nil 을 넘기면 CAUGHT). 분기 무변화.
 
 ## Inputs and invariants
 
@@ -16,11 +16,11 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | `relaxationRepo` 오류(원장이 해제 면 없음) (:66) | — | ErrUnwired | (미실행) |
-| B2 | `relaxationAuditor` 오류(audit 로그 없음) (:70) | — | ErrAuditUnavailable | `TestA066RelaxationRefusedWithoutAnEngineAuditLog` |
-| B3 | `relaxationOperator` 오류(운영자 이름 없음) (:74) | — | invalid | `TestA066RelaxationRequestRefusals` |
-| B4 | `repo.ReleaseEntryLossLock` 오류 (:84) | — | `relaxationError` 변환 | `TestA066JournalRefusalsCrossTheWireAsRefusals` · `TestA066RelaxationRequestRefusals` |
-| 종단 | — | 종단 :89 `notifyRelaxation(ctx, repo, "entry_lock", …)` — 편집 뒤 둘째 인자만 `s.notices` | 결과, nil | `TestA066EntryLockReleaseThroughTheEngineEndpoint` · `TestA066LatchReleaseCarriesTheBindingIntoTheEngine` |
+| B1 | `relaxationRepo` 오류(원장이 해제 면 없음) (:72) | — | ErrUnwired | (미실행) |
+| B2 | `relaxationAuditor` 오류(audit 로그 없음) (:76) | — | ErrAuditUnavailable | `TestA066RelaxationRefusedWithoutAnEngineAuditLog` |
+| B3 | `relaxationOperator` 오류(운영자 이름 없음) (:80) | — | invalid | `TestA066RelaxationRequestRefusals` |
+| B4 | `repo.ReleaseEntryLossLock` 오류 (:90) | — | `relaxationError` 변환 | `TestA066JournalRefusalsCrossTheWireAsRefusals` · `TestA066RelaxationRequestRefusals` |
+| 종단 | — | 종단 :95 `notifyRelaxation(ctx, repo, "entry_lock", …)` — 둘째 인자 `s.notices` | 결과, nil | `TestA066EntryLockReleaseThroughTheEngineEndpoint` · `TestA066LatchReleaseCarriesTheBindingIntoTheEngine` |
 
 ## Calls and live bindings
 

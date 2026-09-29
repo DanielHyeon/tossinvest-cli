@@ -1,0 +1,17 @@
+TREE	HEAD efb9389d2e074384a424f18e1df1043b0018a69b	uncommitted tracked: internal/app/engine/a066_risk_relaxation_test.go,internal/app/engine/position_policy_command.go,internal/app/engine/risk_relaxation_command.go,internal/obs/a092_record_only_test.go,internal/obs/record_only.go	own untracked: internal/app/engine/a092_relaxation_notice_entry_test.go
+CONTROL	GREEN	
+R01 nil recorder guard dropped	CAUGHT	1 failing: TestA092RelaxationWithoutANotifierIsNotNotified
+R02 no recorder reported as notified	CAUGHT	1 failing: TestA092RelaxationWithoutANotifierIsNotNotified
+R03 reminder window not zero	CAUGHT	1 failing: TestA092NotifyRelaxationCallsOnlyTheEntry
+R04 hang-up cancels the notice	CAUGHT	1 failing: TestA066NoticeSurvivesTheCallerHangingUp
+R05 approval not trimmed in payload	CAUGHT	1 failing: TestA092RelaxationNoticeRowShapeIsUnchanged
+R06 key drops the release seq	CAUGHT	1 failing: TestA092RelaxationNoticeRowShapeIsUnchanged
+R07 repository regains EnqueueAlert	CAUGHT	1 failing: TestA092RelaxationRepositoryCannotEnqueue
+R08 typed-nil notifier stored	CAUGHT	1 failing: TestA092CommandServiceTakesTheEngineNotifier
+R09 constructor drops the recorder	CAUGHT	5 failing: TestA066EntryLockReleaseThroughTheEngineEndpoint, TestA066LatchReleaseCarriesTheBindingIntoTheEngine, TestA066NoticeSurvivesTheCallerHangingUp, TestA092RelaxationNoticeRowShapeIsUnchanged, TestA092CommandServiceTakesTheEngineNotifier
+R10 entry-lock release passes no recorder	CAUGHT	3 failing: TestA066EntryLockReleaseThroughTheEngineEndpoint, TestA066ReleaseStandsWhenTheNoticeFails, TestA092RelaxationNoticeFailureLatchesEntries
+R11 latch release passes no recorder	CAUGHT	1 failing: TestA066LatchReleaseCarriesTheBindingIntoTheEngine
+R12 RecordCritical grades the event	CAUGHT	6 failing: TestA066EntryLockReleaseThroughTheEngineEndpoint, TestA066LatchReleaseCarriesTheBindingIntoTheEngine, TestA066NoticeSurvivesTheCallerHangingUp, TestA092RelaxationNoticeRowShapeIsUnchanged, TestA092RelaxationNoticeFailureLatchesEntries, TestA092RecordCriticalIsTheEntryForOutsideRecorders
+R13 RecordCritical without journal returns nil	CAUGHT	1 failing: TestA092RecordCriticalRefusesWhenNotDurable
+R14 RecordCritical ignores the caller window	CAUGHT	1 failing: TestA092RecordCriticalIsTheEntryForOutsideRecorders
+R15 record failure reported as notified	CAUGHT	2 failing: TestA066ReleaseStandsWhenTheNoticeFails, TestA092RelaxationNoticeFailureLatchesEntries

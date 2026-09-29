@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/position_policy_command.go",
-  "source_sha256": "ddc4d677612550a4dbd209dd7390d033d469ccc5c41ce3b17275e9941cdf9979",
+  "source_sha256": "fbb9d29d47f9c892251161bdabd886c0f6714f83f431d7acc19ad9f3c844f07a",
   "package": "engine",
   "function": "NewPositionPolicyCommandService",
   "signature": "NewPositionPolicyCommandService(params=2, results=2)",
   "start": {
-    "line": 93,
+    "line": 90,
     "column": 1
   },
   "end": {
-    "line": 112,
+    "line": 104,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 94,
+        "line": 91,
         "column": 2
       }
     },
@@ -25,15 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 97,
-        "column": 2
-      }
-    },
-    {
-      "id": "B3",
-      "kind": "if",
-      "at": {
-        "line": 108,
+        "line": 94,
         "column": 2
       }
     }
@@ -42,14 +34,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 95,
+        "line": 92,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 111,
+        "line": 97,
         "column": 2
       }
     }
@@ -58,7 +50,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 95,
+        "line": 92,
         "column": 15
       },
       "text": "errors.New"
@@ -66,7 +58,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 98,
+        "line": 95,
         "column": 9
       },
       "text": "clock.System"
@@ -74,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 104,
+        "line": 101,
         "column": 17
       },
       "text": "strings.TrimSpace"
@@ -84,21 +76,7 @@
     {
       "kind": "=",
       "at": {
-        "line": 98,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 100,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 109,
+        "line": 95,
         "column": 3
       }
     }

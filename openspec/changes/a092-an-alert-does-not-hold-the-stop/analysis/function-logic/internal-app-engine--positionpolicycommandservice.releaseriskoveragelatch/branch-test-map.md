@@ -1,10 +1,11 @@
 # Branch Test Map: `PositionPolicyCommandService.ReleaseRiskOverageLatch`
 
-- Source: `internal/app/engine/risk_relaxation_command.go`; **편집 전** 측정 — `analysis/harness/coverage-pre-a066-relax.json`(연결 워크트리 `81934b46`, `./internal/app/engine` 시험 14개 `TestA066|PositionPolicyCommand` 를 하나씩).
+- Source: `internal/app/engine/risk_relaxation_command.go`; **편집 뒤** 측정 — `analysis/harness/coverage-post-a066-relax.json`(연결 워크트리 `0e4f26af`, `./internal/app/engine` 시험 20개를 하나씩). 편집 전 번들은 `analysis/pre-edit/25.6/`에 보존.
+- 재번호 없음(분기 넷, 줄만 +6).
 
 | Branch | AST anchor | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | if at 99:2 | `relaxationRepo` 오류 | (미실행) | 편집 전(기준선) | 측정 표본의 시험 0개 |
-| B2 | if at 103:2 | `relaxationAuditor` 오류 | `TestA066LatchReleaseRefusedWithoutAnEngineAuditLog` | 편집 전(기준선) | 블록 103.16-105.3, PASS |
-| B3 | if at 107:2 | `relaxationOperator` 오류 | (미실행) | 편집 전(기준선) | 측정 표본의 시험 0개 |
-| B4 | if at 117:2 | `repo.ReleaseRiskOverageLatch` 오류 | (미실행) | 편집 전(기준선) | 측정 표본의 시험 0개 |
+| B1 | if at 105:2 | relaxationRepo 오류 | (미실행) | 해당 없음(분기 불변) | 측정 표본의 시험 0개(편집 전과 같음) |
+| B2 | if at 109:2 | audit 로그 없음 | `TestA066LatchReleaseRefusedWithoutAnEngineAuditLog` | 해당 없음(분기 불변) | 블록 109.16-111.3, PASS |
+| B3 | if at 113:2 | 운영자 이름 없음 | (미실행) | 해당 없음(분기 불변) | 측정 표본의 시험 0개(편집 전과 같음) |
+| B4 | if at 123:2 | 원장 해제 오류 | (미실행) | 해당 없음(분기 불변) | 측정 표본의 시험 0개(편집 전과 같음) |

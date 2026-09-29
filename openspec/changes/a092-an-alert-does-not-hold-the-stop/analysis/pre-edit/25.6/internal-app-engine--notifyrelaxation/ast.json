@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/risk_relaxation_command.go",
-  "source_sha256": "1c33bf8704cca65033ac4211cf53c14320467935412f97aea6c2aa2f95eb1148",
+  "source_sha256": "3f976552ce400d0ce1245e0c72bce0943f252e93335d236d881b76ac20ce47d3",
   "package": "engine",
   "function": "notifyRelaxation",
   "signature": "notifyRelaxation(params=9, results=1)",
   "start": {
-    "line": 170,
+    "line": 161,
     "column": 1
   },
   "end": {
-    "line": 196,
+    "line": 183,
     "column": 2
   },
   "branches": [
@@ -17,15 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 173,
-        "column": 2
-      }
-    },
-    {
-      "id": "B2",
-      "kind": "if",
-      "at": {
-        "line": 190,
+        "line": 177,
         "column": 2
       }
     }
@@ -34,21 +26,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 176,
+        "line": 179,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 192,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 195,
+        "line": 182,
         "column": 2
       }
     }
@@ -57,7 +42,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 172,
+        "line": 163,
         "column": 79
       },
       "text": "journal.RFC3339"
@@ -65,47 +50,47 @@
     {
       "kind": "call",
       "at": {
-        "line": 175,
-        "column": 24
+        "line": 164,
+        "column": 16
       },
-      "text": "obs.ErrAlertNotDurable.Error"
+      "text": "json.Marshal"
     },
     {
       "kind": "call",
       "at": {
-        "line": 178,
-        "column": 9
+        "line": 166,
+        "column": 15
       },
-      "text": "notices.RecordCritical"
+      "text": "strings.TrimSpace"
     },
     {
       "kind": "call",
       "at": {
-        "line": 178,
-        "column": 32
+        "line": 168,
+        "column": 12
+      },
+      "text": "repo.EnqueueAlert"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 30
       },
       "text": "context.WithoutCancel"
     },
     {
       "kind": "call",
       "at": {
-        "line": 179,
-        "column": 10
-      },
-      "text": "obs.EventType"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 180,
-        "column": 51
+        "line": 169,
+        "column": 54
       },
       "text": "strconv.FormatInt"
     },
     {
       "kind": "call",
       "at": {
-        "line": 182,
+        "line": 173,
         "column": 9
       },
       "text": "fmt.Sprintf"
@@ -113,7 +98,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 183,
+        "line": 174,
         "column": 4
       },
       "text": "strings.TrimSpace"
@@ -121,15 +106,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 187,
-        "column": 16
+        "line": 175,
+        "column": 12
       },
-      "text": "strings.TrimSpace"
+      "text": "string"
     },
     {
       "kind": "call",
       "at": {
-        "line": 191,
+        "line": 178,
         "column": 24
       },
       "text": "err.Error"
@@ -139,35 +124,35 @@
     {
       "kind": ":=",
       "at": {
-        "line": 172,
+        "line": 163,
         "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 175,
-        "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 178,
+        "line": 164,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 168,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 191,
+        "line": 178,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 194,
+        "line": 181,
         "column": 2
       }
     }

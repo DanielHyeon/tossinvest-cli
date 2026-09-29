@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/risk_relaxation_command.go",
-  "source_sha256": "1c33bf8704cca65033ac4211cf53c14320467935412f97aea6c2aa2f95eb1148",
+  "source_sha256": "3f976552ce400d0ce1245e0c72bce0943f252e93335d236d881b76ac20ce47d3",
   "package": "engine",
-  "function": "ReleaseRiskOverageLatch",
+  "function": "ReleaseEntryLossLock",
   "receiver": "PositionPolicyCommandService",
-  "signature": "PositionPolicyCommandService.ReleaseRiskOverageLatch(params=2, results=2)",
+  "signature": "PositionPolicyCommandService.ReleaseEntryLossLock(params=2, results=2)",
   "start": {
-    "line": 100,
+    "line": 61,
     "column": 1
   },
   "end": {
-    "line": 130,
+    "line": 91,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 105,
+        "line": 66,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 109,
+        "line": 70,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 113,
+        "line": 74,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 123,
+        "line": 84,
         "column": 2
       }
     }
@@ -51,35 +51,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 106,
+        "line": 67,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 110,
+        "line": 71,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 114,
+        "line": 75,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 124,
+        "line": 85,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 128,
+        "line": 89,
         "column": 2
       }
     }
@@ -88,7 +88,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 102,
+        "line": 63,
         "column": 2
       },
       "text": "s.mu.Lock"
@@ -96,7 +96,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 103,
+        "line": 64,
         "column": 8
       },
       "text": "s.mu.Unlock"
@@ -104,7 +104,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 104,
+        "line": 65,
         "column": 15
       },
       "text": "s.relaxationRepo"
@@ -112,7 +112,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 108,
+        "line": 69,
         "column": 18
       },
       "text": "s.relaxationAuditor"
@@ -120,7 +120,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 112,
+        "line": 73,
         "column": 27
       },
       "text": "relaxationOperator"
@@ -128,79 +128,87 @@
     {
       "kind": "call",
       "at": {
-        "line": 116,
-        "column": 42
-      },
-      "text": "strings.TrimSpace"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 117,
-        "column": 11
-      },
-      "text": "riskbucket.Market"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 117,
-        "column": 29
-      },
-      "text": "strings.ToUpper"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 117,
-        "column": 45
-      },
-      "text": "strings.TrimSpace"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 118,
-        "column": 11
-      },
-      "text": "strings.TrimSpace"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 118,
-        "column": 65
-      },
-      "text": "strings.TrimSpace"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 119,
-        "column": 17
-      },
-      "text": "repo.ReleaseRiskOverageLatch"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 121,
-        "column": 55
+        "line": 77,
+        "column": 8
       },
       "text": "UTC"
     },
     {
       "kind": "call",
       "at": {
-        "line": 121,
-        "column": 55
+        "line": 77,
+        "column": 8
       },
       "text": "s.clk.Now"
     },
     {
       "kind": "call",
       "at": {
-        "line": 124,
+        "line": 78,
+        "column": 17
+      },
+      "text": "repo.ReleaseEntryLossLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 15
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 58
+      },
+      "text": "riskbucket.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 76
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 92
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 12
+      },
+      "text": "riskbucket.Horizon"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 31
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 47
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
         "column": 35
       },
       "text": "relaxationError"
@@ -208,15 +216,47 @@
     {
       "kind": "call",
       "at": {
-        "line": 126,
+        "line": 87,
         "column": 11
       },
-      "text": "fmt.Sprintf"
+      "text": "strings.ToUpper"
     },
     {
       "kind": "call",
       "at": {
-        "line": 128,
+        "line": 87,
+        "column": 27
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 66
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 82
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 33
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
         "column": 9
       },
       "text": "notifyRelaxation"
@@ -226,49 +266,49 @@
     {
       "kind": ":=",
       "at": {
-        "line": 104,
+        "line": 65,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 108,
+        "line": 69,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 112,
+        "line": 73,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 116,
+        "line": 77,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 119,
+        "line": 78,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 126,
+        "line": 87,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 127,
+        "line": 88,
         "column": 2
       }
     }
@@ -278,7 +318,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 103,
+        "line": 64,
         "column": 2
       },
       "text": "s.mu.Unlock"

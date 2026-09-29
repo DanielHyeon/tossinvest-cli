@@ -7,6 +7,7 @@
 - 원장 첫 줄: HEAD sha 와 사본에 딸려 간 미커밋 추적 파일 목록.
 - 무변이 대조군이 GREEN 이 아니면 멈춤. 변이마다 정확히 한 곳(count==1)을 바꿈.
 - 판정 셋: CAUGHT(시험이 실패 — 실패한 시험 이름을 적음) · SURVIVED · BUILD-FAIL(컴파일 실패 — 닿지 않은 것이지 잡은 것이 아님).
+- `--set 25.6`: a066 완화 통지 입구 이행 변이.
 - 사본 디렉터리에 pid 를 붙임 — 두 판이 한 사본을 쓰지 않게. 한 번에 한 판.
 """
 import os
@@ -95,6 +96,43 @@ MUTANTS = [
      "\tshared.Announcer = announcer\n\treturn shared"),
 ]
 
+# 25.6 — a066 완화 통지의 입구 이행. `--set 25.6` 으로 고름.
+RRC = "internal/app/engine/risk_relaxation_command.go"
+PPC = "internal/app/engine/position_policy_command.go"
+RELAX_MUTANTS = [
+    ("R01 nil recorder guard dropped", RRC,
+     "\tif notices == nil {\n\t\t// 알림기가 배선되지 않은 엔진", "\tif false {\n\t\t// 알림기가 배선되지 않은 엔진"),
+    ("R02 no recorder reported as notified", RRC,
+     "\t\tresult.NotifyError = obs.ErrAlertNotDurable.Error()\n\t\treturn result", "\t\tresult.Notified = true\n\t\treturn result"),
+    ("R03 reminder window not zero", RRC, "\t}, 0)\n\tif err != nil {", "\t}, time.Hour)\n\tif err != nil {"),
+    ("R04 hang-up cancels the notice", RRC, "notices.RecordCritical(context.WithoutCancel(ctx), obs.Event{", "notices.RecordCritical(ctx, obs.Event{"),
+    ("R05 approval not trimmed in payload", RRC, "\t\t\t\"approval\": strings.TrimSpace(approval), \"released_at\"", "\t\t\t\"approval\": approval, \"released_at\""),
+    ("R06 key drops the release seq", RRC, "Key:   EventRiskRelaxation + \"|\" + kind + \"|\" + strconv.FormatInt(seq, 10),", "Key:   EventRiskRelaxation + \"|\" + kind + \"|\" + strconv.FormatInt(0*seq, 10),"),
+    ("R07 repository regains EnqueueAlert", RRC,
+     "\tReleaseRiskOverageLatch(context.Context, journal.RiskOverageLatchReleaseRequest) (journal.RiskOverageLatchReleaseRecord, error)\n}",
+     "\tReleaseRiskOverageLatch(context.Context, journal.RiskOverageLatchReleaseRequest) (journal.RiskOverageLatchReleaseRecord, error)\n\tEnqueueAlert(context.Context, journal.Alert) (int64, error)\n}"),
+    ("R08 typed-nil notifier stored", PPC,
+     "\tif ectx.Notifier != nil {\n\t\tservice.notices = ectx.Notifier\n\t}", "\tservice.notices = ectx.Notifier"),
+    ("R09 constructor drops the recorder", PPC,
+     "\tif ectx.Notifier != nil {\n\t\tservice.notices = ectx.Notifier\n\t}", ""),
+    ("R10 entry-lock release passes no recorder", RRC, "notifyRelaxation(ctx, s.notices, \"entry_lock\"", "notifyRelaxation(ctx, nil, \"entry_lock\""),
+    ("R11 latch release passes no recorder", RRC, "notifyRelaxation(ctx, s.notices, \"overage_latch\"", "notifyRelaxation(ctx, nil, \"overage_latch\""),
+    ("R12 RecordCritical grades the event", RO,
+     "\tn.logEvent(e, SeverityCritical)\n\treturn n.recordCritical(ctx, e, remindAfter)",
+     "\tif SeverityOf(e.Type) != SeverityCritical {\n\t\tn.publishBestEffort(ctx, e, SeverityOf(e.Type))\n\t\treturn nil\n\t}\n\treturn n.recordCritical(ctx, e, remindAfter)"),
+    ("R13 RecordCritical without journal returns nil", RO, "\t\treturn ErrAlertNotDurable\n", "\t\treturn nil\n"),
+    ("R14 RecordCritical ignores the caller window", RO,
+     "\tn.logEvent(e, SeverityCritical)\n\treturn n.recordCritical(ctx, e, remindAfter)",
+     "\tn.logEvent(e, SeverityCritical)\n\treturn n.recordCritical(ctx, e, n.remindAfter())"),
+    ("R15 record failure reported as notified", RRC,
+     "\tif err != nil {\n\t\tresult.NotifyError = err.Error()\n\t\treturn result\n\t}",
+     "\tif err != nil {\n\t\tresult.Notified = true\n\t\treturn result\n\t}"),
+]
+RELAX_TESTS = [
+    ["go", "test", "-count=1", "-run", "TestA066|TestA092|PositionPolicyCommand", "./internal/app/engine"],
+    ["go", "test", "-count=1", "-run", "TestA092", "./internal/obs"],
+]
+
 TESTS = [
     ["go", "test", "-count=1", "-run", "TestA092|TestEnqueueAlert|TestClaim", "./internal/journal"],
     ["go", "test", "-count=1", "-run", "TestA092|TestA096|TestA097|Mode|Transition|Announc", "./internal/obs"],
@@ -132,6 +170,12 @@ def main() -> None:
     if "--only" in args:
         i = args.index("--only")
         only = re.compile(args[i + 1])
+        args = args[:i] + args[i + 2:]
+    global MUTANTS, TESTS
+    if "--set" in args:
+        i = args.index("--set")
+        if args[i + 1] == "25.6":
+            MUTANTS, TESTS = RELAX_MUTANTS, RELAX_TESTS
         args = args[:i] + args[i + 2:]
     scratch, own = Path(args[0]), args[1:]
     copy = scratch / f"mut-a092-u2-{os.getpid()}"

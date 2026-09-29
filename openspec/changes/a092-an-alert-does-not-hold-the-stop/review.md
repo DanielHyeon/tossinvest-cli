@@ -4789,3 +4789,12 @@ High-risk(운영자 완화 명령의 critical 통지). 편집 전 번들 넷을 
 - 재알림 창 0: 키에 해제 seq 가 있어 해제마다 새 행 — 오늘의 `EnqueueAlert` 와 같은 동작(델타: 다른 기록자는 0 허용).
 - 기록 실패의 결과가 바뀐다: 오늘은 결과에 「통지 실패」만 남고 진입은 열려 있다. 편집 뒤에는 입구가 `ReasonAlertUndelivered` 로 잠그고 승격을 시도한다(critical 기록 부류의 규칙 — 보수 방향). 해제는 그대로 유효하다.
 - 시험 편집(비례 원칙 — 경량 번들): `a066RelaxEngine` 픽스처(알림기 배선) · `TestA066ReleaseStandsWhenTheNoticeFails`(실패 주입을 원장이 아닌 기록자로) · `TestA066NoticeSurvivesTheCallerHangingUp`(기록자 인자) · `a066FailingNotices` 제거.
+
+### 24.5 25.6 착지 — a066 완화 통지의 입구 이행 (2026-09-29)
+
+- **이행 커밋 `0e4f26af`** — archive 게이트 24.4 가 인용할 커밋. a066 아카이브 review 끝 「§7 hand-over done」에 같은 사실을 적었다.
+- RED: 새 시험 `TestA092Relaxation*` · `TestA092NotifyRelaxationCallsOnlyTheEntry` · `TestA092CommandServiceTakesTheEngineNotifier` · obs `TestA092RecordCritical*` 가 컴파일 RED(심볼 · 필드 없음).
+- 변이 `--set 25.6` 15/15 CAUGHT(대조군 GREEN, `analysis/mutation-25.6/ledger-run1.tsv`). R03(재알림 창 ≠ 0)은 구조 핀만 잡는다 — 해제 키에 seq 가 있어 행동으로는 같은 seq 재기록 + 1h 경과가 필요한데 픽스처 원장이 시스템 시계라, 리터럴 0 을 AST 로 고정했다(obs 쪽 `RecordCritical(…, 0)` 의 무재무장은 행동 시험이 잰다).
+- 실행: `go test` app/engine · obs · cmd/tossctl ok(cmd 픽스처 `relaxationEngine` 이 알림기 없이 「통지 실패」로 떨어진 것을 실측하고 배선), 태그 시험 ok, `-race`(A066 · A092) ok, `make lint` rc 0.
+- 편집 뒤 FLM: 생산 넷(`analysis/pre-edit/25.6/` 에 편집 전 보존) + 시험 함수 다섯(경량, 비례 원칙 — 하나는 삭제된 `a066FailingNotices.EnqueueAlert`, `revision: base`). `check_analysis`: evidence complete.
+- 비시험 `EnqueueAlert(` 호출자는 이제 `Gateway.parkAlert`(`replay.go`) 하나다(rg 실측) — K6 census 의 입력.

@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/risk_relaxation_command.go",
-  "source_sha256": "1c33bf8704cca65033ac4211cf53c14320467935412f97aea6c2aa2f95eb1148",
+  "source_sha256": "3f976552ce400d0ce1245e0c72bce0943f252e93335d236d881b76ac20ce47d3",
   "package": "engine",
   "function": "ReleaseRiskOverageLatch",
   "receiver": "PositionPolicyCommandService",
   "signature": "PositionPolicyCommandService.ReleaseRiskOverageLatch(params=2, results=2)",
   "start": {
-    "line": 100,
+    "line": 94,
     "column": 1
   },
   "end": {
-    "line": 130,
+    "line": 124,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 105,
+        "line": 99,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 109,
+        "line": 103,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 113,
+        "line": 107,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 123,
+        "line": 117,
         "column": 2
       }
     }
@@ -51,35 +51,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 106,
+        "line": 100,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 110,
+        "line": 104,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 114,
+        "line": 108,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 124,
+        "line": 118,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 128,
+        "line": 122,
         "column": 2
       }
     }
@@ -88,7 +88,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 102,
+        "line": 96,
         "column": 2
       },
       "text": "s.mu.Lock"
@@ -96,7 +96,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 103,
+        "line": 97,
         "column": 8
       },
       "text": "s.mu.Unlock"
@@ -104,7 +104,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 104,
+        "line": 98,
         "column": 15
       },
       "text": "s.relaxationRepo"
@@ -112,7 +112,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 108,
+        "line": 102,
         "column": 18
       },
       "text": "s.relaxationAuditor"
@@ -120,7 +120,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 112,
+        "line": 106,
         "column": 27
       },
       "text": "relaxationOperator"
@@ -128,7 +128,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 116,
+        "line": 110,
         "column": 42
       },
       "text": "strings.TrimSpace"
@@ -136,7 +136,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 117,
+        "line": 111,
         "column": 11
       },
       "text": "riskbucket.Market"
@@ -144,7 +144,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 117,
+        "line": 111,
         "column": 29
       },
       "text": "strings.ToUpper"
@@ -152,7 +152,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 117,
+        "line": 111,
         "column": 45
       },
       "text": "strings.TrimSpace"
@@ -160,7 +160,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 118,
+        "line": 112,
         "column": 11
       },
       "text": "strings.TrimSpace"
@@ -168,7 +168,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 118,
+        "line": 112,
         "column": 65
       },
       "text": "strings.TrimSpace"
@@ -176,7 +176,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 119,
+        "line": 113,
         "column": 17
       },
       "text": "repo.ReleaseRiskOverageLatch"
@@ -184,7 +184,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 121,
+        "line": 115,
         "column": 55
       },
       "text": "UTC"
@@ -192,7 +192,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 121,
+        "line": 115,
         "column": 55
       },
       "text": "s.clk.Now"
@@ -200,7 +200,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 124,
+        "line": 118,
         "column": 35
       },
       "text": "relaxationError"
@@ -208,7 +208,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 126,
+        "line": 120,
         "column": 11
       },
       "text": "fmt.Sprintf"
@@ -216,7 +216,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 128,
+        "line": 122,
         "column": 9
       },
       "text": "notifyRelaxation"
@@ -226,49 +226,49 @@
     {
       "kind": ":=",
       "at": {
-        "line": 104,
+        "line": 98,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 108,
+        "line": 102,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 112,
+        "line": 106,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 116,
+        "line": 110,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 119,
+        "line": 113,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 126,
+        "line": 120,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 127,
+        "line": 121,
         "column": 2
       }
     }
@@ -278,7 +278,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 103,
+        "line": 97,
         "column": 2
       },
       "text": "s.mu.Unlock"
