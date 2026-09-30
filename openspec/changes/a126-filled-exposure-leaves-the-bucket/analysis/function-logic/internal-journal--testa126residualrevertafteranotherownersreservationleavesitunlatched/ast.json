@@ -1,0 +1,296 @@
+{
+  "file": "internal/journal/a126_filled_exposure_leaves_the_bucket_test.go",
+  "source_sha256": "5dbfbfb20f10516677234025b0cab14afe5c5e1ee4f1a4583543eca88c4060b8",
+  "package": "journal",
+  "function": "TestA126ResidualRevertAfterAnotherOwnersReservationLeavesItUnlatched",
+  "signature": "TestA126ResidualRevertAfterAnotherOwnersReservationLeavesItUnlatched(params=1, results=0)",
+  "start": {
+    "line": 551,
+    "column": 1
+  },
+  "end": {
+    "line": 578,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 556,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 559,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 562,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 565,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 569,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 573,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 562,
+        "column": 102
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 552,
+        "column": 12
+      },
+      "text": "seedRiskBucketOwnerLifecycle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 553,
+        "column": 7
+      },
+      "text": "a126FilledOwner"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 554,
+        "column": 11
+      },
+      "text": "a126LateOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 555,
+        "column": 2
+      },
+      "text": "a126Release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 556,
+        "column": 12
+      },
+      "text": "a126AdmitSymbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 557,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 559,
+        "column": 15
+      },
+      "text": "j.db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 560,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 562,
+        "column": 12
+      },
+      "text": "j.SetApplyHooks"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 563,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 565,
+        "column": 17
+      },
+      "text": "j.RecordFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 565,
+        "column": 30
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 565,
+        "column": 52
+      },
+      "text": "a126LateFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 566,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 568,
+        "column": 11
+      },
+      "text": "a126Usage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 570,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 573,
+        "column": 12
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 573,
+        "column": 12
+      },
+      "text": "j.db.QueryRow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 576,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 552,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 553,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 554,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 556,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 559,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 562,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 565,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 568,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 573,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}
