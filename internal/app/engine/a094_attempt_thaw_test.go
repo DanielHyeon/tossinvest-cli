@@ -291,3 +291,19 @@ func TestA094TheThawRouteIsSharedAndNotOnTheConsole(t *testing.T) {
 		}
 	}
 }
+
+// codex i1 F3 — audit 쓰기가 실패하면(설정된 로그의 실제 쓰기 실패) 원장 전이도 발의 해제도 없음 — audit 가 전이보다 먼저.
+func TestA094AThawWhoseAuditWriteFailsChangesNothing(t *testing.T) {
+	fx := a094ThawEngine(t, true, journal.StateUnresolvedInDoubt)
+	// audit 로그는 쓰기마다 파일을 연다 — 그 자리를 디렉터리로 막아 쓰기를 실패시킴.
+	if err := os.Mkdir(fx.auditLog, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	_, err := fx.client.ResolveParkedAttempt(context.Background(), fx.req("FAILED_CONFIRMED", ""))
+	if !errors.Is(err, attemptthaw.ErrAuditUnavailable) {
+		t.Fatalf("err = %v, want ErrAuditUnavailable", err)
+	}
+	if state, armed := fx.state(t); state != journal.StateUnresolvedInDoubt || !armed {
+		t.Fatalf("state %s armed %v — the ledger moved although the audit line could not be written", state, armed)
+	}
+}

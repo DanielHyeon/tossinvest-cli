@@ -704,6 +704,8 @@ func TestA094AnInFlightEngineCancelIsNotCountedButAnInDoubtOneIs(t *testing.T) {
 		{"acked", journal.StateAcked, true, false},
 		{"in doubt", journal.StateInDoubt, true, true},
 		{"acked cancel of another order", journal.StateAcked, false, true},
+		{"a bound cancel plus an unrelated in-flight cancel", journal.StateAcked, true, true},
+		{"a second working buy with no cancel", journal.StateAcked, true, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			h, sub, crit := a094Harness(t, nil)
@@ -716,6 +718,14 @@ func TestA094AnInFlightEngineCancelIsNotCountedButAnInDoubtOneIs(t *testing.T) {
 				target = "O-elsewhere"
 			}
 			h.a094RecordCancel(target, tc.state)
+			switch tc.name {
+			case "a bound cancel plus an unrelated in-flight cancel":
+				// 대상 주문은 전부 취소 중이지만, 치울 대상이 아닌 주문을 겨눈 미종결 취소도 있음 — 배제의 근거가 아님(변이 M28).
+				h.a094RecordCancel("O-elsewhere", journal.StateAcked)
+			case "a second working buy with no cancel":
+				// 치울 대상 하나는 취소가 없음 — 전부 취소 중이 아니면 셈(변이 M29).
+				h.workingEntry("005930", "3", "69400")
+			}
 			h.quote("005930", 67900)
 			for i := 0; i < obs.DefaultCriticalAttempts+1; i++ {
 				h.observe()

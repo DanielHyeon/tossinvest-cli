@@ -121,25 +121,28 @@ func workingOrderPrice(price string) (float64, error) {
 // 알림이 손절을 잡게 됨. 예외 하나: 발의 intent 의 attempt 가 **입증된 비수용**으로 종결됐는데 발의가 남아 있으면(해제 쓰기가
 // 실패했던 제출 · 해동 명령) 같은 해제 판정 함수로 여기서 풂 — 「종결 후에는 반드시 푼다」(order-execution)를 다음 기동까지
 // 미루면 그동안 손절이 억제됨. 판정은 원장 한 곳(ReleaseUnacceptedExitProposal)이 다시 함.
-func (o *ExitObserver) noteHeldProposal(ctx context.Context, m managed) {
+//
+// 반환값: 참이면 이 주기에 발의를 풀었음 — 호출자(judge)는 이 주기의 판정을 건너뜀(해제 전 상태 사본으로 평가하지 않게).
+func (o *ExitObserver) noteHeldProposal(ctx context.Context, m managed) bool {
 	if !m.state.Pending() {
-		return
+		return false
 	}
 	if strings.TrimSpace(m.state.PendingIntentID) == "" {
 		// intent 없는 무장 발의(옛 판본의 행)는 attempt 를 찾을 수 없어 청소 · 따라잡기가 풀지 않음 — 침묵하지 않음.
 		o.recordIntentlessProposal(ctx, m)
-		return
+		return false
 	}
 	facts, err := o.opts.Journal.ExitIntentAttempts(ctx, m.state.PendingIntentID)
 	if err != nil {
 		o.warnEpisode(obs.EventExitLiquidationDelayed, err, "reading the attempts of the armed proposal of "+m.position.ID)
-		return
+		return false
 	}
 	if facts.Verdict == journal.ExitIntentUnaccepted {
-		if err := o.release(ctx, m, m.state.PendingIntentID, journal.ProposalRefused); err != nil {
+		_, released, err := o.opts.Journal.ReleaseUnacceptedExitProposal(ctx, m.position.ID, m.state.PendingIntentID, journal.ProposalRefused)
+		if err != nil {
 			o.warnEpisode(obs.EventExitLiquidationDelayed, err, "releasing the unaccepted proposal of "+m.position.ID)
 		}
-		return
+		return released
 	}
 	// park 원인(D−4.4) — 청소 자격과 무관하게, 무장된 발의가 손절 자신이어도.
 	for _, rec := range facts.Parked {
@@ -158,7 +161,7 @@ func (o *ExitObserver) noteHeldProposal(ctx context.Context, m managed) {
 	live, err := o.opts.Journal.LiveOrdersForSymbol(ctx, o.opts.AccountRef, m.position.Market, m.position.Symbol)
 	if err != nil {
 		o.warnEpisode(obs.EventExitLiquidationDelayed, err, "reading the working orders of "+m.position.Symbol)
-		return
+		return false
 	}
 	for _, order := range live {
 		if !strings.EqualFold(strings.TrimSpace(order.Side), "SELL") || seen[order.OrderID] {
@@ -166,6 +169,7 @@ func (o *ExitObserver) noteHeldProposal(ctx context.Context, m managed) {
 		}
 		o.noteAwaitingClose(ctx, m, order.AccountRef, order.Market, order.Symbol, order.OrderID)
 	}
+	return false
 }
 
 // noteAwaitingClose 는 매도 하나에 엔진 취소가 접수 확정된 뒤 청산 지연 한계 이상 지났으면 그 취소를 에피소드로 알림.

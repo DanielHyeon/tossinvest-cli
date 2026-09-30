@@ -902,7 +902,11 @@ func (o *ExitObserver) judge(ctx context.Context, m managed, quote observedQuote
 	}
 	// 무장된 발의가 왜 풀리지 않는지(park · 종결 증거 대기)를 판정 진입에서 알림 — 원장 읽기와 기록만, 평가 · 억제 ·
 	// 청소의 순서와 결과는 바꾸지 않음(a094 D−4.4 · D−9.3). 억제 · 조기 반환보다 앞이어야 손절 자신의 발의에도 닿음.
-	o.noteHeldProposal(ctx, m)
+	// 입증된 비수용 발의를 여기서 풀었으면 이 주기의 판정은 건너뜀 — m.state 는 해제 전 사본이라 그대로 평가하면 되돌린
+	// rung 을 옛 값으로 다시 씀(다음 관측이 새 상태로 판정).
+	if o.noteHeldProposal(ctx, m) {
+		return nil
+	}
 	if m.identityErr != nil {
 		o.alertRefused(ctx, m, m.identityErr)
 		return nil
@@ -1523,11 +1527,9 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 	res := clearResult{cleared: true, countable: true}
 	for _, order := range live {
 		buy := strings.EqualFold(strings.TrimSpace(order.Side), "BUY")
-		if !buy && !withPending {
-			continue
-		}
 		if !buy {
-			// 엔진 취소가 이미 접수 확정된 매도 — 종결 증거를 기다리는 중이며 다시 취소하지 않음.
+			// 엔진 취소가 이미 접수 확정된 매도 — 종결 증거를 기다리는 중이며 다시 취소하지 않음. 발의 유무와 무관함(D−4.3-1):
+			// 발의가 풀린 뒤의 주기(withPending=false)에도 그 매도가 취소 전에 얼마나 체결됐는지 모르는 채 손절을 낼 수 없음.
 			_, waiting, err := o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.Symbol, order.OrderID)
 			if err != nil {
 				o.warnEpisode(obs.EventExitLiquidationDelayed, err, "reading the engine cancel of order "+order.OrderID)
@@ -1536,6 +1538,9 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 			}
 			if waiting {
 				res.cleared, res.awaitingClose = false, true
+				continue
+			}
+			if !withPending {
 				continue
 			}
 		}

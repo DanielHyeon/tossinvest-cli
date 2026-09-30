@@ -112,3 +112,12 @@
 - **3b — M28 · M29 재측정**: 커밋 `cb36caf4` 의 분리 worktree 에 보강 시험 파일만 덮어 두 변이를 다시 돌렸다(Go 착지 동결 중 — 시험 파일 커밋은 동결 해제 뒤).
   결과: **M28 CAUGHT**(`…/a_bound_cancel_plus_an_unrelated_in-flight_cancel`) · **M29 CAUGHT**(`…/a_second_working_buy_with_no_cancel`). 무변이 대조군 GREEN.
 - 최종: 38 변이 CAUGHT 37 · 동등 1(M20b).
+
+## codex i1 수리 되돌림 변이 (2026-10-01, HEAD 위 분리 worktree + 수리 파일)
+
+| id | 변이 | 결과 |
+|---|---|---|
+| F1-revert | 청소에서 `withPending=false` 건너뜀을 확정 취소 검사 **앞**으로 되돌림 | CAUGHT — `TestA094ACancelledSellStillHoldsTheStopAfterTheProposalIsReleased` |
+| F2-revert | 판정 진입이 해제해도 그 주기 판정을 계속 | CAUGHT — `TestA094AReleasedLadderRungIsProposedAgain` |
+
+무변이 대조군(`-run TestA094`) GREEN.
