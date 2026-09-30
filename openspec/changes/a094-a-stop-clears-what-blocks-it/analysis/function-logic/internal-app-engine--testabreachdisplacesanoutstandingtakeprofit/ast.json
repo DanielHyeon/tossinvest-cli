@@ -1,0 +1,283 @@
+{
+  "file": "internal/app/engine/exitloop_test.go",
+  "source_sha256": "f09993a5df74088e2eb3374dee431ce0de2912afc8c1281586e37253f02c23d6",
+  "package": "engine_test",
+  "function": "TestABreachDisplacesAnOutstandingTakeProfit",
+  "signature": "TestABreachDisplacesAnOutstandingTakeProfit(params=1, results=0)",
+  "start": {
+    "line": 842,
+    "column": 1
+  },
+  "end": {
+    "line": 874,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 850,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 853,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 858,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 861,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 864,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 868,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 871,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 843,
+        "column": 7
+      },
+      "text": "newExitHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 844,
+        "column": 7
+      },
+      "text": "h.entry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 845,
+        "column": 2
+      },
+      "text": "h.quote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 846,
+        "column": 2
+      },
+      "text": "h.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 848,
+        "column": 2
+      },
+      "text": "h.quote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 849,
+        "column": 11
+      },
+      "text": "h.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 851,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 853,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 854,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 858,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 859,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 859,
+        "column": 106
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 861,
+        "column": 14
+      },
+      "text": "h.observe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 862,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 864,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 865,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 865,
+        "column": 70
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 867,
+        "column": 11
+      },
+      "text": "h.state"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 868,
+        "column": 28
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 869,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 872,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 843,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 844,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 849,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 861,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 867,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

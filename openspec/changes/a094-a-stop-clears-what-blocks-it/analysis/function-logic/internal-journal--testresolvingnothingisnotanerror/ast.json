@@ -1,0 +1,108 @@
+{
+  "file": "internal/journal/exit_state_test.go",
+  "source_sha256": "0bfab2fe1cdb4370cce3d820b4e1d15ce22ad51c67f3c7625833088369251a12",
+  "package": "journal",
+  "function": "TestResolvingNothingIsNotAnError",
+  "signature": "TestResolvingNothingIsNotAnError(params=1, results=0)",
+  "start": {
+    "line": 422,
+    "column": 1
+  },
+  "end": {
+    "line": 430,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 427,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 7
+      },
+      "text": "exitFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 424,
+        "column": 10
+      },
+      "text": "openedPosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 425,
+        "column": 7
+      },
+      "text": "currentPosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 427,
+        "column": 12
+      },
+      "text": "j.ResolveExitProposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 427,
+        "column": 34
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 428,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 423,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 424,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 425,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 427,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

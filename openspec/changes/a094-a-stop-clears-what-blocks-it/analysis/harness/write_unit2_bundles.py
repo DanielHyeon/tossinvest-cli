@@ -157,7 +157,97 @@ BUNDLES: dict[str, dict] = {
                   "B5": ["TestAWorkingEntryIsCancelledBeforeTheLiquidation"], "B6": ["TestAWorkingEntryIsCancelledBeforeTheLiquidation"],
                   "B7": ["TestAWorkingEntryIsCancelledBeforeTheLiquidation"]},
     },
+    "internal-reconcile--recovery.run": {
+        "pkg": "reconcile",
+        "role": "재시작 복구 순서(재시작 규칙 → 미종결 정산 → 계좌 읽기 → 재구성). a094: ACKED 갈래에서 발주를 기록 번호로 한 번 읽어 바이트 일치면 확정(confirmAcked), 아니면 종전대로 StillPending + 명명 critical.",
+        "inputs": [("`pending`", "미종결 attempt", "`PendingAttempts`", "읽기 실패는 ErrRecoveryIncomplete(종전)"),
+                   ("`rec.State == ACKED`", "접수 뒤 확정 전 죽은 attempt", "원장", "confirmAcked — 실패는 복구를 실패시키지 않음")],
+        "calls": "`RecoverPending` · `PendingAttempts` · **`confirmAcked`**(LookupIntent · `execgw.ConfirmPlacedOrder` · Resume · ResolveConfirmed · RecordCritical 창 0) · `blockedSymbol` · `replay` · `Resolver.Resolve` · `stableSnapshot` · `LocalStateFromJournal` · Comparer · Gate.",
+        "mut": "attempt ACKED→CONFIRMED(바이트 일치일 때만) · 그 밖 종전.",
+        "safety": "ACKED 는 목록 대조 해소로 보내지 않는다(matcher 번호 판별자 부재). 새 오류 반환 경로 0 — 관측 루프가 뜨지 않는 경로를 만들지 않음(D−4.2-2). 브로커 호출은 ACKED PLACE 행마다 읽기 1(§0.4 D−5.5). High-risk: yes.",
+        "tests": {f"B{i}": ["TestRecoveryReleasesTheLatchOnlyWhenItCompletes"] for i in range(1, 14)} | {
+            "B4": ["TestA094AnAckedPlaceIsConfirmedByItsRecordedNumber", "TestA094AnUnconfirmedAckedPlaceStaysAndIsNamed"],
+            "B5": ["TestA094AnAckedPlaceIsConfirmedByItsRecordedNumber"],
+            "B6": ["TestA094AnUnconfirmedAckedPlaceStaysAndIsNamed", "TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed"],
+            "B7": ["TestCrashMidDispatchBecomesInDoubtAndIsResolved"], "B8": ["TestCrashMidDispatchBecomesInDoubtAndIsResolved"]},
+    },
+    "internal-app-engine--context.recovery": {
+        "pkg": "engine",
+        "role": "재시작 복구를 조립한다. a094: Alerts(엔진 알림기)와 CatchUp(기동 따라잡기 클로저)을 호출자 값과 무관하게 덮는다.",
+        "inputs": [("`c.Notifier`", "알림기", "Context", "nil 이면 Alerts 없음 · 따라잡기 critical nil")],
+        "calls": "`reconcile.New` · `catchUpExitProposals`(클로저 — 실행은 복구 뒤).",
+        "mut": "없음(조립).",
+        "safety": "배선 누락은 침묵이므로 역할 시험으로 고정(`CatchUpWired`). High-risk: no(배선).",
+        "tests": {f"B{i}": ["TestA094TheRecoveryCarriesTheBootCatchUp"] for i in range(1, 6)},
+    },
+    "internal-app-engine--startpositionpolicycommandserver": {
+        "pkg": "engine",
+        "role": "엔진 제어 endpoint 를 연다. a094: park 해동 route 를 capability 발견으로 등록(3줄, a066 블록 옆).",
+        "inputs": [("`commands`", "명령 서비스", "engine run", "attemptThawCommands 를 구현하면 route 추가")],
+        "calls": "`registerAttemptThawRoute`(신설) 외 종전.",
+        "mut": "없음(등록).",
+        "safety": "capability 없는 빌드는 route 집합 불변. 콘솔은 route 를 부르지 않음(시험). High-risk: no(등록) — 명령 자체는 attempt_thaw_command.go.",
+        "tests": {f"B{i}": ["TestA094AnOperatorThawClosesTheParkAndReleasesTheProposal"] for i in range(1, 19)},
+    },
 }
+
+TEST_BUNDLES = {
+    "internal-app-engine--testabreachdisplacesanoutstandingtakeprofit": ("engine", "기존 시험 — a094 D−4.3 로 손절이 취소한 주기 다음 주기에 나감(+1 관측). 이름 붙은 대가(design.md:403 · :311)."),
+    "internal-journal--testarefusalrearmsthelevel": ("journal", "기존 시험 — ResolveExitProposal 이 기대 intent 를 요구하므로 발의에 intent 를 달고 그 intent 로 해제(단언 무변)."),
+    "internal-journal--testresolvingnothingisnotanerror": ("journal", "기존 시험 — 기대 intent 인자 추가(단언 무변: 빈 상태의 해제는 오류 아님)."),
+    "internal-journal--testacancelledrungisproposableagain": ("journal", "기존 시험 — 발의에 intent 를 달고 그 intent 로 해제(단언 무변: rung 되돌림 · 기준선 유지)."),
+    "internal-journal--testarefusedproposalisrearmedafterarestart": ("journal", "기존 시험 — 발의에 intent 를 달고 그 intent 로 해제(단언 무변)."),
+}
+
+
+def write_test_bundles(cov_dir: Path) -> None:
+    for name, (pkg, why) in TEST_BUNDLES.items():
+        bundle = FL / name
+        ast = json.loads((bundle / "ast.json").read_text())
+        fn = ast["function"]
+        tests = {b["id"]: [fn] for b in (ast.get("branches") or [])} or {"B1": [fn]}
+        tests_file = bundle / ".tests.json"
+        tests_file.write_text(json.dumps(tests))
+        out = subprocess.run([sys.executable, str(TABLES), str(bundle), str(cov_dir / f"cov_{pkg}.out"), str(tests_file)],
+                             capture_output=True, text=True, check=True).stdout
+        tests_file.unlink()
+        branch_table, btm_rows = out.split("\n\n", 1)
+        (bundle / "function-logic-map.md").write_text(f"""# Function Logic Map: `{fn}`
+
+- Source: `{ast['file']}` (`{ast['start']['line']}`–`{ast['end']['line']}`)
+- Qualified: `{fn}`
+- AST evidence: `ast.json` (`source_sha256` {ast['source_sha256'][:16]}…)
+- Risk scan: `risk-pattern-report.md`
+
+**역할.** {why}
+
+## Inputs and invariants
+
+시험 픽스처(임시 원장). 생산 코드 아님 — 비례 원칙상 이 번들은 게이트의 요구 집합(수정된 기존 함수)을 채우는 기록이다.
+
+## Branches and early returns
+
+{branch_table.strip()}
+
+## Calls and live bindings
+
+시험 대상 API(원장 · 관측 루프)만 부른다. 브로커 호출 0.
+
+## State mutations and fallbacks
+
+임시 원장만.
+
+## Safety conclusion
+
+- High-risk impact: no(시험). 단언은 약화되지 않았다 — 바뀐 것은 새 호출 형태(기대 intent) 또는 이름 붙은 대가의 +1 관측뿐.
+""")
+        (bundle / "branch-test-map.md").write_text(f"""# Branch Test Map: `{fn}`
+
+- Source: `{ast['file']}`
+
+{btm_rows.strip()}
+""")
+        print("wrote", name)
 
 
 def main() -> int:
@@ -224,6 +314,8 @@ def main() -> int:
         (bundle / "function-logic-map.md").write_text(flm)
         (bundle / "branch-test-map.md").write_text(btm)
         print("wrote", name)
+    if not only:
+        write_test_bundles(cov_dir)
     return 0
 
 

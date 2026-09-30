@@ -1,6 +1,6 @@
 {
   "file": "internal/execgw/gateway.go",
-  "source_sha256": "6e587b7df573272dc3e54c8c17b29aa9b8b15613635f007a811ea0a8d06a5c38",
+  "source_sha256": "96264a796aa63f4a0af59746b89b1ee2130add0a23f4bf7b67cf55fce07d2875",
   "package": "execgw",
   "function": "checkSymbolFree",
   "receiver": "Gateway",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 834,
+    "line": 830,
     "column": 2
   },
   "branches": [
@@ -18,15 +18,15 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 801,
+        "line": 802,
         "column": 2
       }
     },
     {
       "id": "B2",
-      "kind": "range",
+      "kind": "if",
       "at": {
-        "line": 804,
+        "line": 805,
         "column": 2
       }
     },
@@ -34,20 +34,12 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 806,
-        "column": 3
+        "line": 811,
+        "column": 2
       }
     },
     {
       "id": "B4",
-      "kind": "if",
-      "at": {
-        "line": 809,
-        "column": 3
-      }
-    },
-    {
-      "id": "B5",
       "kind": "if",
       "at": {
         "line": 815,
@@ -55,34 +47,26 @@
       }
     },
     {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 818,
+        "column": 2
+      }
+    },
+    {
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 819,
-        "column": 2
-      }
-    },
-    {
-      "id": "B7",
-      "kind": "range",
-      "at": {
-        "line": 822,
-        "column": 2
-      }
-    },
-    {
-      "id": "B8",
-      "kind": "if",
-      "at": {
-        "line": 824,
+        "line": 820,
         "column": 3
       }
     },
     {
-      "id": "B9",
+      "id": "B7",
       "kind": "if",
       "at": {
-        "line": 827,
+        "line": 823,
         "column": 3
       }
     }
@@ -91,7 +75,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 802,
+        "line": 803,
         "column": 3
       }
     },
@@ -99,14 +83,14 @@
       "kind": "return",
       "at": {
         "line": 807,
-        "column": 4
+        "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 810,
-        "column": 4
+        "line": 812,
+        "column": 3
       }
     },
     {
@@ -119,28 +103,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 820,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 825,
+        "line": 821,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 828,
+        "line": 824,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 833,
+        "line": 829,
         "column": 2
       }
     }
@@ -149,39 +126,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 800,
-        "column": 18
+        "line": 801,
+        "column": 20
       },
-      "text": "g.journal.PendingAttempts"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 802,
-        "column": 15
-      },
-      "text": "fmt.Errorf"
+      "text": "g.unsettledFor"
     },
     {
       "kind": "call",
       "at": {
         "line": 805,
-        "column": 16
+        "column": 5
       },
-      "text": "g.attemptTargets"
+      "text": "len"
     },
     {
       "kind": "call",
       "at": {
-        "line": 810,
-        "column": 11
+        "line": 807,
+        "column": 10
       },
       "text": "reject"
     },
     {
       "kind": "call",
       "at": {
-        "line": 818,
+        "line": 814,
         "column": 21
       },
       "text": "g.journal.UnresolvedAttempts"
@@ -189,7 +158,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 820,
+        "line": 816,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -197,7 +166,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 823,
+        "line": 819,
         "column": 16
       },
       "text": "g.attemptTargets"
@@ -205,7 +174,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 828,
+        "line": 824,
         "column": 11
       },
       "text": "reject"
@@ -215,28 +184,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 800,
+        "line": 801,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 805,
+        "line": 806,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 818,
+        "line": 814,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 823,
+        "line": 819,
         "column": 3
       }
     }

@@ -1,55 +1,48 @@
 # Function Logic Map: `ExitObserver.submit`
 
-- Source: `internal/app/engine/exitloop.go` (`1237`–`1312`)
+- Source: `internal/app/engine/exitloop.go` (`1365`–`1449`)
 - Qualified: `ExitObserver.submit`
-- AST evidence: `ast.json` (`source_sha256` 6625c92061d5b05f…)
+- AST evidence: `ast.json` (`source_sha256` 9b7d9a800069b100…) — 구현 로트(2026-09-30) 편집 뒤. 편집 전 AST 는 `analysis/implementation/pre-edit/`
 - Risk scan: `risk-pattern-report.md`
-- 분기 11 · return 9 · 호출 24
+- 분기 13
 
-**역할.** 확정된 청산 제안을 주문으로 만들어 제출하고, 결과에 따라 제안을 걸어 두거나 해제한다.
+**역할.** 무장된 발의를 브로커로 보낸다. a094: 해제는 intent 를 넘겨 원장 판정이 하고(4.3c), attempt 가 기록됐는데 비수용 종결이 아니면 무장 유지.
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| `proposal` | 레벨과 동작 | `exitpolicy` | B2가 0수량을 먼저 거른다 |
-| `m.position` | 포지션 | 원장 | B4가 exit intent를 붙인다 |
-| `out.State` | 제출 결과 상태 | `execgw` | **B7~B10이 이것으로 갈린다** |
-| `out.Reason` | 거절 사유 | `execgw` | B9가 `ReasonSymbolInFlight`를 본다 |
+| `intentID` | 무장된 발의의 intent | record | 해제 판정의 기대 intent |
+| `out` | 게이트웨이 결과 | `Submit.Place` | 갈래 B7~B12 |
 
 ## Branches and early returns
 
-> **표의 유래.** 조건은 소스의 그 줄 원문이다. 「창의 호출/return」은 `ast.json`이 기록한 좌표를 `[분기 줄, 다음 분기 줄)` 창에 넣은 것이며 **분기의 의미가 아니라 위치**다. 「진입 실측」은 `go test ./internal/... -count=1 -covermode=set`의 프로파일에서 **그 줄로 시작하는 블록**의 count가 0보다 큰지다 — 자체 블록이 없는 분기는 `—`다.
+> 조건은 소스 원문, 진입 실측은 `go test ./internal/<pkg>/ -count=1 -covermode=set` 프로파일(2026-09-30, `analysis/harness/flm_tables.py`)에서 그 줄로 시작하는 블록의 count.
 
-| Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
-|---|---|---|---|---|---|
-| B1 | if | `:1240` `if err != nil {` | — | :1241 | 아니오 |
-| B2 | if | `:1243` `if isZeroQuantity(submitQuantity) {` | `costs.Market`, `fmt.Sprintf`, `isZeroQuantity`, `o.opts.Issuer.IssueReduction`, `o.release`, `strings.ToLower`, `strings.TrimSpace` | :1248 | 예 |
-| B3 | if | `:1263` `if err != nil {` | `err.Error`, `o.alertProposalRefused`, `o.release` | :1265 | 아니오 |
-| B4 | if | `:1272` `if err := o.opts.Journal.AttachExitIntent(ctx, m.position.ID, intentID); err != nil {` | `fmt.Errorf`, `o.opts.Journal.AttachExitIntent`, `o.sellIntent` | :1273 | 예 |
-| B5 | if | `:1277` `if err != nil {` | `o.alertRefused`, `o.opts.Submit.Place`, `o.release` | :1279 | 아니오 |
-| B6 | switch | `:1287` `switch {` | — | — | — |
-| B7 | case | `:1288` `case out.State == journal.StateConfirmed:` | `o.log`, `string` | :1295 | 예 |
-| B8 | case | `:1296` `case out.State == journal.StateInDoubt \|\| out.State == journal.StateUnresolvedInDoubt:` | — | :1300 | 예 |
-| B9 | case | `:1301` `case out.Reason == execgw.ReasonSymbolInFlight:` | `o.noteDelay`, `o.release` | :1303 | 아니오 |
-| B10 | case | `:1304` `default:` | — | — | 예 |
-| B11 | if | `:1306` `if detail == "" && err != nil {` | `err.Error`, `o.alertProposalRefused`, `o.release` | :1310 | 아니오 |
+| Branch | 종류 | 조건 (원문) | 진입 실측 |
+|---|---|---|---|
+| B1 | if | `:1368` `if err != nil {` | 아니오 |
+| B2 | if | `:1371` `if isZeroQuantity(submitQuantity) {` | 예 |
+| B3 | if | `:1391` `if err != nil {` | 아니오 |
+| B4 | if | `:1400` `if err := o.opts.Journal.AttachExitIntent(ctx, m.position.ID, intentID); err != nil {` | 예 |
+| B5 | if | `:1405` `if err != nil {` | 아니오 |
+| B6 | switch | `:1415` `switch {` | — |
+| B7 | case | `:1416` `case out.State == journal.StateConfirmed:` | 예 |
+| B8 | case | `:1424` `case out.State == journal.StateInDoubt \|\| out.State == journal.StateUnresolvedInDoubt:` | 예 |
+| B9 | case | `:1429` `case out.Reason == execgw.ReasonSymbolInFlight:` | 아니오 |
+| B10 | case | `:1432` `case out.AttemptID != "" && out.State != journal.StateNotDispatched && out.State != journal.StateFailedConfirmed:` | 예 |
+| B11 | if | `:1436` `if err == nil {` | 아니오 |
+| B12 | case | `:1441` `default:` | 예 |
+| B13 | if | `:1443` `if detail == "" && err != nil {` | 아니오 |
 
 ## Calls and live bindings
 
-`o.applyFloor`(B1 앞) · `isZeroQuantity`(B2) · `o.release`(B2·B5·B9·B10) · `o.opts.Issuer.IssueReduction` · `o.opts.Journal.AttachExitIntent`(B4) · `o.sellIntent`(B5 앞) · **`o.opts.Submit.Place`(B6 앞 — 유일한 브로커 mutation)** · `o.log` · `o.alertRefused`/`o.alertProposalRefused`.
-
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+`applyFloor` · `IssueReduction` · `AttachExitIntent` · `sellIntent` · `Submit.Place` · `release`(= `ReleaseUnacceptedExitProposal`) · `noteDelay` · `alertProposalRefused`.
 
 ## State mutations and fallbacks
 
-`AttachExitIntent`(원장) · `Place`(**브로커 주문**) · `release`(제안 해제). B8은 **아무것도 하지 않고 반환한다** — 제안이 걸린 채 남는 것이 그 결과다.
+발의 해제(release — 원장 판정이 허락할 때만). 주문 1(Place).
 
 ## Safety conclusion
 
-- **Safe edit boundary**: a094는 **B8의 판단을 바꾸지 않는다** — 팔렸을지 모르는 주문 위에 두 번째 매도를 올리지 않는 것은 옳다. 바꾸는 것은 (1) R1이 409를 B8이 아니라 **B10**으로 보내는 것, (2) R4가 `:1281`의 `PlaceRequest`에 `Baseline`을 싣는 것이다. **B8 자체는 그대로다.**
-- **High-risk impact**: yes — 손절 주문이 실제로 나가는 자리. §0.3 직접 적용.
-
-## Refresh (2026-09-27, HEAD ddd39a83)
-
-`ast.json` 을 현재 소스로 재생성했다(옛 파일은 base `ec29dc72` 소스). 위 본문의 줄 번호는 base 기준이며 현재 위치는 1237-1312 → 1343-1418 이다. 분기 번호의 정본은 `ast.json`·Branch Test Map 이다. 본문은 base 와 바이트가 같다.
+- B10(a094): `AttemptID != ""` 이고 상태가 NOT_DISPATCHED · FAILED_CONFIRMED 가 아니면 무장 유지 + 오류 — 결과를 못 쓴 제출 위에 두 번째 매도를 얹지 않는다(D−2.5). B12 default 는 R1 의 FAILED_CONFIRMED 가 가는 곳(2.9). High-risk: yes.

@@ -35,7 +35,7 @@
 - [x] 0.5h **사건 두 행의 현재 상태 재측정**(문서 리뷰 P1, Manager 조건부 승인) — 운영 원장 읽기 전용(`mode=ro`, `query_only`),
       브로커 호출 0. 결과: 두 행 모두 **2026-08-08 에 이미 `UNRESOLVED_IN_DOUBT`**, 발의 무장 유지. 모호 전이는 재분류 조건 2~7 을 채우나
       조건 1 을 못 채운다 → 사건의 해동은 Q4-1 운영자 도구 경로. design D−2.2 에 기록
-- [ ] 0.5g **4판 편집 전 산출물 재작성**(F10) — `record` 번들의 FLM 「Branches」 논증과 BTM 미진입 요약을 현재 AST(16분기)
+- [x] 0.5g **4판 편집 전 산출물 재작성**(F10) — `record` 번들의 FLM 「Branches」 논증과 BTM 미진입 요약을 현재 AST(16분기)
       기준으로 다시 쓰고, 4판이 편집하는 기존 함수(`ResolveExitProposal` 호출 형태 · 기동 이음매)의 FLM 을 편집 전에 갖춘다.
       **5판 현황**: `record` FLM 「Branches」 표를 16분기로 재번호(BTM 은 이미 재번호) — 남은 것은 편집 전 FLM 셋(4.0a · 4.0b · N1 의 3.0a)
 - [x] 0.5i **5판 반영** — `design.md` D−3(N1 Q4-4 번복 · N4 ACKED 기동 정산 · 재분류 이연 · N3 3상 분류기 · N7 정정 · N2 잔여 · N8 · a089
@@ -144,7 +144,7 @@
 > 3판의 3.A(스냅샷 주입)·3.B1·3.B2·3.B4·3.B5·3.1·3.4·3.10·3.E1·3.E3 은 3.X 로 옮긴다.
 
 - [x] 3.0 **Pre-Edit 선언** — `internal/app/engine/exitloop.go` `clearTheSymbol`
-- [ ] 3.0a **FLM(편집 전, 5판 N1)** — `clearTheSymbol` 번들을 현재 소스로 재생성하고 해제 자리(`:1492-1495`)의 분기를 AST 로 열거한 뒤 편집한다.
+- [x] 3.0a **FLM(편집 전, 5판 N1)** — `clearTheSymbol` 번들을 현재 소스로 재생성하고 해제 자리(`:1492-1495`)의 분기를 AST 로 열거한 뒤 편집한다.
       발의 intent 의 attempt 상태를 읽는 원장 질의가 없으면 새 함수로 둔다(새 파일)
 - [x] 3.N1 **RED (5판 N1 핵심)** — 무장된 익절 발의의 attempt 가 `UNRESOLVED_IN_DOUBT` 인 종목에서 손절 조건이 서면 청소는 발의를
       **비우지 않고**(`ProposalCancelled` 0건) `clear=false` 이며, 보호 청산 제출 0건이다
@@ -168,7 +168,7 @@
 - [x] 3.R7c **RED (6판)** — 종결 증거를 기다리는 취소는 D−2.7 계수에서 빠지지 않는다(3.E5 의 제외는 기록·전송·인수 단계만)
 - [x] 3.R5 **RED (6판 R5-5 — 셋째 기전)** — 무장 발의 없음 + 같은 종목에 **다른 intent** 의 IN_DOUBT attempt: 청소 `clear=false`, 무장 0,
       `ProposalCancelled` 0, `clearDelay` 호출 0 → 기존 30초 지연 경보가 한계에서 1회. 여러 주기 반복해도 `PROPOSAL_CANCELLED` 0
-- [ ] 3.R5a **RED (6판, 구조 — Q6-2 확정)** — 청소의 미종결 판정과 `checkSymbolFree` 가 **같은 게이트웨이 메서드**를 부른다(AST 구조 단언 + 그 메서드의
+- [x] 3.R5a **RED (6판, 구조 — Q6-2 확정)** — 청소의 미종결 판정과 `checkSymbolFree` 가 **같은 게이트웨이 메서드**를 부른다(AST 구조 단언 + 그 메서드의
       대상 판정을 바꾼 변이가 두 경로 시험을 모두 깨뜨린다)
 - [x] 3.R4 **RED (6판 R5-4 · 9판 R7-8 — enqueue-only)** — 이 change 의 새 critical(3.E4 · 3.R2 · 4.3d · 4.N4)은 **a092 단일 입구(`RecordAlert`, 창 0)** 로
       기록되고 직접 `Journal.EnqueueAlert` 호출은 0(a092 census 핀), 관측 루프의 `ExitAlerter.Notify` 호출도 0. 전송자를 막아 둔 fixture 에서 다른 포지션의 손절 제출 시점 무변화
@@ -209,11 +209,11 @@
 > **4판의 변경(3라운드 F1·F4)**: park(`UNRESOLVED_IN_DOUBT`)에서는 **해제하지 않는다.** 해제는 입증된 비수용
 > (`FAILED_CONFIRMED`·`NOT_DISPATCHED`)에서만, **기대 intent 대조**와 함께. 두 쓰기 사이의 충돌은 **기동 따라잡기**가 닫는다.
 
-- [ ] 4.0 **Pre-Edit 선언** — `Journal.ResolveExitProposal`(호출 형태 변경) · 기동 복구 이음매(`engineRecoverySequence`) ·
+- [x] 4.0 **Pre-Edit 선언** — `Journal.ResolveExitProposal`(호출 형태 변경) · 기동 복구 이음매(`engineRecoverySequence`) ·
       기동 ACKED 확정·알림 자리(D−4.2 — 바이트 일치 확정만 상태 변경) · `Gateway.confirmCreatedOrder` 의 종목 비교(D−5.1 강화) · 운영자 해동 명령(새 파일) · `Gateway.checkSymbolFree`(판정 함수 추출, D−4.7)
-- [ ] 4.0a **FLM(편집 전)** — `ResolveExitProposal` 은 이미 번들이 있다(refresh 됨). `engineRecoverySequence`·`recoverThenReady`
+- [x] 4.0a **FLM(편집 전)** — `ResolveExitProposal` 은 이미 번들이 있다(refresh 됨). `engineRecoverySequence`·`recoverThenReady`
       (`cmd/tossctl/engine.go:604-606`·`:677`)의 AST·FLM·BTM 을 **편집 전에** 만든다
-- [ ] 4.0b **FLM(편집 전, 6판)** — `Recovery.Run`(ACKED 알림을 그 안에 둘 경우)과 `Gateway.checkSymbolFree`(판정 추출) 번들을 현재 소스로
+- [x] 4.0b **FLM(편집 전, 6판)** — `Recovery.Run`(ACKED 알림을 그 안에 둘 경우)과 `Gateway.checkSymbolFree`(판정 추출) 번들을 현재 소스로
       재생성한다. `ExitObserver.judge`/`record`(park 알림 자리) 번들도 편집 전에 갖춘다
 - [x] 4.N4 **RED (6판 D−4.2, Q6-1)** — ACKED PLACE(기록 번호 있음)를 남긴 채 재시작: 가짜 주문 읽기가 **같은 번호 바이트 일치 + 같은 종목**을
       돌려주면 `CONFIRMED`, 알림 0, 읽기 호출 **정확히 1**

@@ -1210,3 +1210,12 @@ audit 줄 뒤 commit 실패 시 보상 줄).
 | 4.N4x · 4.3f | `issues.md` I5(후속 기록 · 정지 조건 미발동) |
 | 3.R9a | **미실행** — a090 미관측 경보 착지 뒤 통합 시험(tasks 3.R9a 문언 그대로). 사람/후속 로트 |
 | 3.X1 | **사람 항목**(사용자 결정 — 엔진 밖 주문 취소). 구현하지 않았다 |
+
+### 6. 증거 — FLM 번들 · 변이 원장
+
+- **FLM**: 이 change 가 편집한 기존 함수 전부(생산 16 · 시험 5)에 편집 뒤 번들 — 분기 표는 `analysis/harness/flm_tables.py` 가 ast.json · 소스 원문 · 전체 패키지
+  `-covermode=set` 프로파일(2026-09-30)로 만들었다(손으로 옮긴 분기 주장 0). `check_analysis.py --change a094…` 의 남은 줄은 **전부 형제 change 의 함수**
+  (a090 adoption/reconcileloop · a112 strategy_*) — 워킹트리가 창 끝이라 요구 집합에 들어온다. 게이트는 격리 worktree 에서 `--record-landing` 으로 창을 좁혀
+  돈다. `engineRecoverySequence` 는 var 클로저라 도구의 함수 단위가 아님 — `Function Logic Map: not-applicable` 사유로 구조 시험이 대신한다(§3).
+- **변이**: `analysis/implementation/mutation-ledger.md` — 29 변이, 최종 CAUGHT 28 · 동등 1(M20b, 메시지 전용 — 근거는 원장). 생존 넷 중 셋이 실제 시험 구멍이었고
+  (M10 다른 intent 의 매도 · M12 보류의 경보 침묵 · M27 거절된 해동의 audit 줄) 시험을 더해 닫았다.

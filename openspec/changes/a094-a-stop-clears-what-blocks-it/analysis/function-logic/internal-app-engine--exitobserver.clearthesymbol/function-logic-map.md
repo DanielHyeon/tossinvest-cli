@@ -1,52 +1,54 @@
 # Function Logic Map: `ExitObserver.clearTheSymbol`
 
-- Source: `internal/app/engine/exitloop.go` (`1334`–`1392`)
+- Source: `internal/app/engine/exitloop.go` (`1482`–`1574`)
 - Qualified: `ExitObserver.clearTheSymbol`
-- AST evidence: `ast.json` (`source_sha256` 6625c92061d5b05f…)
+- AST evidence: `ast.json` (`source_sha256` 9b7d9a800069b100…) — 구현 로트(2026-09-30) 편집 뒤. 편집 전 AST 는 `analysis/implementation/pre-edit/`
 - Risk scan: `risk-pattern-report.md`
-- 분기 9 · return 4 · 호출 16
+- 분기 17
 
-**역할.** 청산과 충돌할 미체결 주문을 책에서 내리고, 종목이 깨끗해졌는지 답한다.
+**역할.** 청산과 충돌할 미체결 주문을 치우고, 보호 청산을 제출해도 되는지(와 왜 아닌지)를 돌려준다.
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| `live` | 치울 후보 목록 | **`Journal.LiveOrdersForSymbol` — 저널이다** | **a094가 바꾸는 지점** |
-| `withPending` | 자기 방향 미체결까지 치우는가 (= `CancelPendingFirst`) | `record` `:1141` | B3·B8 |
-| `order.Side` | 주문 방향 | 목록 | B3이 `buy`를 판별한다 |
+| `live` | 원장의 미체결 목록(엔진 귀속 주문만) | `Journal.LiveOrdersForSymbol` | 읽기 실패는 오류 반환(B1, 종전) |
+| `unsettled` | 같은 종목 미종결 attempt | `Submit.UnsettledOnSymbol` = `Gateway.unsettledFor`(주문 경로와 같은 판정) | 읽기 실패는 오류 반환(B2) |
+| `withPending` | `CancelPendingFirst` | `record` | B5 · B14 |
+| `m.state.PendingIntentID` | 무장된 발의의 intent | `exit_states` | 비면 해제하지 않음(B15) |
 
 ## Branches and early returns
 
-> **표의 유래.** 조건은 소스의 그 줄 원문이다. 「창의 호출/return」은 `ast.json`이 기록한 좌표를 `[분기 줄, 다음 분기 줄)` 창에 넣은 것이며 **분기의 의미가 아니라 위치**다. 「진입 실측」은 `go test ./internal/... -count=1 -covermode=set`의 프로파일에서 **그 줄로 시작하는 블록**의 count가 0보다 큰지다 — 자체 블록이 없는 분기는 `—`다.
+> 조건은 소스 원문, 진입 실측은 `go test ./internal/<pkg>/ -count=1 -covermode=set` 프로파일(2026-09-30, `analysis/harness/flm_tables.py`)에서 그 줄로 시작하는 블록의 count.
 
-| Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
-|---|---|---|---|---|---|
-| B1 | if | `:1337` `if err != nil {` | `fmt.Errorf` | :1338 | 아니오 |
-| B2 | range | `:1341` `for _, order := range live {` | `strings.EqualFold`, `strings.TrimSpace` | — | 예 |
-| B3 | if | `:1343` `if !buy && !withPending {` | `costs.Market`, `fmt.Sprintf`, `o.opts.Issuer.IssueReduction`, `strings.ToLower`, `strings.ToUpper`, `strings.TrimSpace` | — | 아니오 |
-| B4 | if | `:1358` `if err != nil {` | `floatOf` | — | 아니오 |
-| B5 | if | `:1364` `if qerr != nil \|\| perr != nil {` | `o.opts.Submit.Cancel` | — | 아니오 |
-| B6 | if | `:1379` `if err != nil \|\| out.State != journal.StateConfirmed {` | — | — | 예 |
-| B7 | if | `:1383` `if !clear {` | — | :1384 | 예 |
-| B8 | if | `:1386` `if withPending && m.state.Pending() {` | `m.state.Pending` | — | 예 |
-| B9 | if | `:1387` `if err := o.release(ctx, m, journal.ProposalCancelled); err != nil {` | `o.release` | :1388, :1391 | 아니오 |
+| Branch | 종류 | 조건 (원문) | 진입 실측 |
+|---|---|---|---|
+| B1 | if | `:1485` `if err != nil {` | 예 |
+| B2 | if | `:1489` `if err != nil {` | 아니오 |
+| B3 | if | `:1492` `if len(unsettled) > 0 {` | 예 |
+| B4 | range | `:1498` `for _, order := range live {` | 예 |
+| B5 | if | `:1500` `if !buy && !withPending {` | 예 |
+| B6 | if | `:1503` `if !buy {` | 예 |
+| B7 | if | `:1506` `if err != nil {` | 아니오 |
+| B8 | if | `:1510` `if waiting {` | 예 |
+| B9 | if | `:1527` `if err != nil {` | 아니오 |
+| B10 | if | `:1533` `if qerr != nil \|\| perr != nil {` | 아니오 |
+| B11 | if | `:1548` `if err != nil \|\| out.State != journal.StateConfirmed {` | 예 |
+| B12 | if | `:1552` `if !buy {` | 예 |
+| B13 | if | `:1557` `if !res.cleared {` | 예 |
+| B14 | if | `:1560` `if withPending && m.state.Pending() {` | 예 |
+| B15 | if | `:1561` `if strings.TrimSpace(m.state.PendingIntentID) == "" {` | 아니오 |
+| B16 | if | `:1566` `if err != nil {` | 아니오 |
+| B17 | if | `:1569` `if !released {` | 예 |
 
 ## Calls and live bindings
 
-`o.opts.Journal.LiveOrdersForSymbol`(B1 앞) · `strings.EqualFold`(B2 안) · 취소 제출(B6 앞) · `o.release`(B9).
-
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+`LiveOrdersForSymbol` · `Submit.UnsettledOnSymbol` · `Journal.ConfirmedCancelOf`(매도마다) · `Issuer.IssueReduction` · `floatOf` · `workingOrderPrice`(빈 가격 0) · `Submit.Cancel`(유일한 브로커 mutation — 취소만) · `Journal.ReleaseClearedExitProposal`. 새 브로커 **조회**는 0 — 추가된 호출은 전부 원장 읽기다.
 
 ## State mutations and fallbacks
 
-**브로커 취소 주문**(B6 앞) · 제안 해제(B9). 신규 주문도 정정도 내지 않는다.
+브로커 취소(B11 앞) · 발의 해제(B16 뒤 — 원장 판정이 허락할 때만). 신규 · 정정 주문 없음.
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **a094가 바꾸는 것은 `live`의 원천 하나다.** B3의 술어(`!buy && !withPending → continue`), B6의 확정 규칙, B7의 `!clear → 제출 안 함`은 **전부 그대로 둔다.** 새 권한이 아니라 기존 권한의 눈을 넓히는 것이다(design D2).
-- **High-risk impact**: yes — 브로커 취소를 내고, 그 실패가 손절 제출을 막는다.
-
-## Refresh (2026-09-27, HEAD ddd39a83)
-
-`ast.json` 을 현재 소스로 재생성했다(옛 파일은 base `ec29dc72` 소스). 위 본문의 줄 번호는 base 기준이며 현재 위치는 1334-1392 → 1440-1498 이다. 분기 번호의 정본은 `ast.json`·Branch Test Map 이다. 본문은 base 와 바이트가 같다.
+- a094 D−4.3 · D−4.7 · D−3.2. 제출을 여는 `cleared=true` 는 (1) 같은 종목 미종결 0, (2) 치운 주문이 전부 매수이거나 치울 것이 없고, (3) 발의가 없거나 원장 판정이 해제를 허락했을 때만이다. 매도 취소 접수 · 확정 취소 대기 매도 · park/모호/접수 대기 발의는 전부 미완료. High-risk: yes — 그 판정이 손절 제출을 연다/막는다.

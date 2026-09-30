@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/fills.go",
-  "source_sha256": "2d0c2175810b50674cc7c28aaec1bb60f76a713ddc98752a731ab4060b249991",
+  "source_sha256": "6214babe8bfa3047a3bb1a15cb60283df27124179f3e98996be0e2db811321d6",
   "package": "journal",
   "function": "LiveOrdersForSymbol",
   "receiver": "Journal",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 1927,
+    "line": 1914,
     "column": 2
   },
   "branches": [
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 1894,
+        "line": 1881,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "for",
       "at": {
-        "line": 1900,
+        "line": 1887,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 1902,
+        "line": 1889,
         "column": 3
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 1909,
+        "line": 1896,
         "column": 2
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "range",
       "at": {
-        "line": 1913,
+        "line": 1900,
         "column": 2
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 1921,
+        "line": 1908,
         "column": 3
       }
     }
@@ -82,35 +82,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 1895,
+        "line": 1882,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1905,
+        "line": 1892,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1910,
+        "line": 1897,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1922,
+        "line": 1909,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1926,
+        "line": 1913,
         "column": 2
       }
     }
@@ -143,7 +143,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1892,
+        "line": 1879,
         "column": 3
       },
       "text": "string"
@@ -151,7 +151,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1893,
+        "line": 1880,
         "column": 3
       },
       "text": "normaliseMarket"
@@ -159,7 +159,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1893,
+        "line": 1880,
         "column": 28
       },
       "text": "normaliseSymbol"
@@ -167,7 +167,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1895,
+        "line": 1882,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -175,7 +175,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1897,
+        "line": 1884,
         "column": 8
       },
       "text": "rows.Close"
@@ -183,7 +183,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1900,
+        "line": 1887,
         "column": 6
       },
       "text": "rows.Next"
@@ -191,7 +191,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1902,
+        "line": 1889,
         "column": 13
       },
       "text": "rows.Scan"
@@ -199,7 +199,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1905,
+        "line": 1892,
         "column": 16
       },
       "text": "fmt.Errorf"
@@ -207,7 +207,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1907,
+        "line": 1894,
         "column": 9
       },
       "text": "append"
@@ -215,7 +215,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1909,
+        "line": 1896,
         "column": 12
       },
       "text": "rows.Err"
@@ -223,7 +223,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1910,
+        "line": 1897,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -231,7 +231,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1914,
+        "line": 1901,
         "column": 19
       },
       "text": "j.ResolveCurrentOrderIDScoped"
@@ -262,35 +262,35 @@
     {
       "kind": ":=",
       "at": {
-        "line": 1902,
+        "line": 1889,
         "column": 6
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 1907,
+        "line": 1894,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 1909,
+        "line": 1896,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 1914,
+        "line": 1901,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 1924,
+        "line": 1911,
         "column": 3
       }
     }
@@ -300,7 +300,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 1897,
+        "line": 1884,
         "column": 2
       },
       "text": "rows.Close"
