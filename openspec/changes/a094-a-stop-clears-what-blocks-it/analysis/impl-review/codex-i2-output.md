@@ -1,0 +1,10 @@
+| ID | Severity | File:line | Evidence | Fix |
+|---|---|---|---|---|
+| F1 | P0 — fixed for reported case | `internal/app/engine/exitloop.go:1533` | Confirmed cancellation is checked before `withPending=false` skips sells. Regression test at `a094_codex_fixes_test.go:17` checks repeated withholding, then submission after closing evidence. | Implemented; see N1. |
+| F2 | P1 — fixed | `internal/app/engine/exit_held_proposal.go:141`; `exitloop.go:907` | Successful release skips stale-state judgement. Release returns true only after commit (`internal/journal/exit_proposal_release.go:126`); subsequent observations reload state (`exitloop.go:530`). No indefinite skip found. Ladder regression verifies reproposal. | Implemented. |
+| F3 | P2 — fixed | `internal/app/engine/a094_attempt_thaw_test.go:296`; `attempt_thaw_command.go:78` | Directory at audit-file path forces actual write failure; test checks attempt and proposal unchanged. Production returns before `OperatorResolve`. | Implemented. |
+| **N1** | **P1** | `internal/app/engine/exitloop.go:1533`; `internal/journal/exit_proposal_release.go:155` | **New stop delay on reused order IDs.** `ConfirmedCancelOf` matches account/market/symbol/order ID but omits trading day. Yesterday’s confirmed cancellation can therefore classify today’s **uncancelled** sell as awaiting close. With no armed proposal, the new ordering now blocks every cycle until today’s sell closes—worsening exempted 3.D1. Cross-day ID reuse is explicitly supported by `internal/journal/fills_test.go:985`. §8 does not name this delay. | Bind cancellation evidence to the target order’s canonical scope, including trading day. Add regression: prior-day cancelled/closed sell, current-day uncancelled sell reusing ID, no proposal; preserve 3.D1. |
+
+**Verdict: REJECT.** Original F1–F3 repaired, but N1 introduces an additional potentially indefinite stop delay.
+
+Static review only: targeted test command failed before execution because `/tmp/go-build…` creation was denied by the read-only sandbox. No files changed or network used.

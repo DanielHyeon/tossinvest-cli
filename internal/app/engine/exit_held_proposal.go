@@ -156,7 +156,7 @@ func (o *ExitObserver) noteHeldProposal(ctx context.Context, m managed) bool {
 			continue
 		}
 		seen[order.OrderID] = true
-		o.noteAwaitingClose(ctx, m, order.AccountRef, order.Market, order.Symbol, order.OrderID)
+		o.noteAwaitingClose(ctx, m, order.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
 	}
 	live, err := o.opts.Journal.LiveOrdersForSymbol(ctx, o.opts.AccountRef, m.position.Market, m.position.Symbol)
 	if err != nil {
@@ -167,15 +167,15 @@ func (o *ExitObserver) noteHeldProposal(ctx context.Context, m managed) bool {
 		if !strings.EqualFold(strings.TrimSpace(order.Side), "SELL") || seen[order.OrderID] {
 			continue
 		}
-		o.noteAwaitingClose(ctx, m, order.AccountRef, order.Market, order.Symbol, order.OrderID)
+		o.noteAwaitingClose(ctx, m, order.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
 	}
 	return false
 }
 
 // noteAwaitingClose 는 매도 하나에 엔진 취소가 접수 확정된 뒤 청산 지연 한계 이상 지났으면 그 취소를 에피소드로 알림.
 // 종결 기록이 있는 매도는 호출자가 넘기지 않음(발의 intent 는 Awaiting, 다른 intent 는 미체결 목록 — 둘 다 종결 전만).
-func (o *ExitObserver) noteAwaitingClose(ctx context.Context, m managed, account, market, symbol, orderID string) {
-	cancel, found, err := o.opts.Journal.ConfirmedCancelOf(ctx, account, market, symbol, orderID)
+func (o *ExitObserver) noteAwaitingClose(ctx context.Context, m managed, account, market, tradingDay, symbol, orderID string) {
+	cancel, found, err := o.opts.Journal.ConfirmedCancelOf(ctx, account, market, tradingDay, symbol, orderID)
 	if err != nil {
 		o.warnEpisode(obs.EventExitLiquidationDelayed, err, "reading the engine cancel of order "+orderID)
 		return

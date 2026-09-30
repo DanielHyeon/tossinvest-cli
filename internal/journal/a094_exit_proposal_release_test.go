@@ -308,12 +308,16 @@ func TestA094TheConfirmedCancelOfAnOrderIsScoped(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	rec, found, err := j.ConfirmedCancelOf(ctx, "acct-1", "KR", "005930", "o-target")
+	rec, found, err := j.ConfirmedCancelOf(ctx, "acct-1", "KR", "2026-03-30", "005930", "o-target")
 	if err != nil || !found || rec.ID != "c-ok" {
 		t.Fatalf("ConfirmedCancelOf = %s/%v/%v, want c-ok", rec.ID, found, err)
 	}
-	if _, found, err := j.ConfirmedCancelOf(ctx, "acct-1", "kr", "005930", "o-none"); err != nil || found {
+	if _, found, err := j.ConfirmedCancelOf(ctx, "acct-1", "kr", "2026-03-30", "005930", "o-none"); err != nil || found {
 		t.Fatalf("an order with no cancel = %v/%v, want not found", found, err)
+	}
+	// codex i2 N1 — 다른 거래일의 같은 번호는 다른 주문임.
+	if _, found, err := j.ConfirmedCancelOf(ctx, "acct-1", "kr", "2026-03-31", "005930", "o-target"); err != nil || found {
+		t.Fatalf("a cancel from another trading day = %v/%v, want not found", found, err)
 	}
 }
 

@@ -121,3 +121,9 @@
 | F2-revert | 판정 진입이 해제해도 그 주기 판정을 계속 | CAUGHT — `TestA094AReleasedLadderRungIsProposedAgain` |
 
 무변이 대조군(`-run TestA094`) GREEN.
+
+## codex i2 N1 되돌림 변이 (2026-10-01)
+
+| id | 변이 | 결과 |
+|---|---|---|
+| N1-revert | `ConfirmedCancelOf` 의 거래일 조건을 무력화(`OR 1=1`) | CAUGHT — engine `TestA094AYesterdaysCancelDoesNotHoldTodaysReusedOrder` · journal `TestA094TheConfirmedCancelOfAnOrderIsScoped` |

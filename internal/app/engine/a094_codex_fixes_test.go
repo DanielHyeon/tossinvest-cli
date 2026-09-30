@@ -90,3 +90,48 @@ func TestA094AReleasedLadderRungIsProposedAgain(t *testing.T) {
 		t.Fatalf("places = %d, want the same rung proposed again", len(h.submit.places))
 	}
 }
+
+// codex i2 N1 — 주문 번호가 거래일을 건너 재사용되면 어제의 확정 취소가 오늘의 취소되지 않은 매도를 「종결 대기」 로 만들지 않음.
+// 발의 없는 주기에 취소되지 않은 매도는 종전대로 손절을 막지 않음(3.D1 보존).
+func TestA094AYesterdaysCancelDoesNotHoldTodaysReusedOrder(t *testing.T) {
+	h, _, _ := a094Harness(t, nil)
+	ctx := context.Background()
+	h.entry("005930", "10", "70000", "68000", "70000")
+	must := func(err error) {
+		t.Helper()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	sell := func(intent, day string) {
+		a, err := h.journal.Prepare(ctx, journal.PrepareRequest{Intent: journal.Intent{ID: intent, Market: "kr", TradingDay: day,
+			AccountRef: exitAccount, Symbol: "005930", Side: "SELL", OrderType: "LIMIT", TimeInForce: "DAY", Quantity: "3",
+			Price: "71000", Currency: "KRW", Source: "engine/test", Fingerprint: "fp-" + intent},
+			Kind: journal.KindPlace, AttemptID: "a-" + intent, AccountRef: exitAccount})
+		must(err)
+		must(a.MarkDispatchStarted(ctx))
+		must(a.MarkAcked(ctx, "O-reuse"))
+		must(a.Settle(ctx, journal.StateConfirmed, "broker_accepted", ""))
+	}
+	// 어제: 매도 · 엔진 취소 확정 · 종결 기록.
+	sell("sell-yesterday", "2026-03-29")
+	c, err := h.journal.Prepare(ctx, journal.PrepareRequest{Intent: journal.Intent{ID: "cancel-yesterday", Market: "kr",
+		TradingDay: "2026-03-29", AccountRef: exitAccount, Symbol: "005930", Side: "SELL", OrderType: "LIMIT", TimeInForce: "DAY",
+		Quantity: "3", Price: "71000", Currency: "KRW", Source: "engine/test", Fingerprint: "fp-cancel-yesterday"},
+		Kind: journal.KindCancel, AttemptID: "a-cancel-yesterday", TargetOrderID: "O-reuse", AccountRef: exitAccount})
+	must(err)
+	must(c.MarkDispatchStarted(ctx))
+	must(c.MarkAcked(ctx, "O-reuse"))
+	must(c.Settle(ctx, journal.StateConfirmed, "broker_accepted", "cancelled"))
+	_, err = h.journal.RecordFill(ctx, journal.FillObservation{OrderID: "O-reuse", Symbol: "005930", Market: "kr",
+		AccountRef: exitAccount, TradingDay: "2026-03-29", Side: "SELL", State: "CLOSED_CANCELED", Terminal: true,
+		Quantity: "3", FilledQuantity: "0", ObservedAt: h.clk.Now().Format("2006-01-02T15:04:05Z07:00")})
+	must(err)
+	// 오늘: 같은 번호의 취소되지 않은 매도.
+	sell("sell-today", "2026-03-30")
+	h.quote("005930", 67900)
+	h.observe()
+	if len(h.submit.places) != 1 {
+		t.Fatalf("places = %d — yesterday's cancel held today's stop over an uncancelled sell (3.D1 must hold)", len(h.submit.places))
+	}
+}

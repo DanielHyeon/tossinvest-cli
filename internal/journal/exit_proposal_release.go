@@ -56,6 +56,7 @@ type IntentOrderAwaitingClose struct {
 	OrderID    string // 빈 값이면 번호가 기록되지 않은 접수 확정 — 종결을 확인할 방법이 없음
 	AccountRef string
 	Market     string
+	TradingDay string
 	Symbol     string
 	Side       string
 }
@@ -143,9 +144,10 @@ func (j *Journal) ArmedExitProposals(ctx context.Context, accountRef string) ([]
 	return armedExitProposalsQ(ctx, j.db, accountRef)
 }
 
-// ConfirmedCancelOf 는 엔진이 낸 취소 중 그 주문을 대상으로 접수 확정된 첫 attempt 를 돌려줌(계정 · 시장 · 종목 한정).
-// found=false 면 그런 취소가 없음. 청소의 재취소 금지와 종결 증거 대기 알림이 씀.
-func (j *Journal) ConfirmedCancelOf(ctx context.Context, accountRef, market, symbol, orderID string) (AttemptRecord, bool, error) {
+// ConfirmedCancelOf 는 엔진이 낸 취소 중 그 주문을 대상으로 접수 확정된 첫 attempt 를 돌려줌 — 주문의 정규 범위(계좌 · 시장 ·
+// 거래일 · 종목)로 한정함. 주문 번호는 거래일을 건너 재사용될 수 있으므로(fills_test 의 재사용 사례) 거래일 없이 찾으면 어제의 취소가
+// 오늘의 취소되지 않은 매도를 「종결 대기」 로 만들어 손절을 보류시킴(codex i2 N1). found=false 면 그런 취소가 없음.
+func (j *Journal) ConfirmedCancelOf(ctx context.Context, accountRef, market, tradingDay, symbol, orderID string) (AttemptRecord, bool, error) {
 	orderID = strings.TrimSpace(orderID)
 	if orderID == "" {
 		return AttemptRecord{}, false, nil
@@ -153,9 +155,10 @@ func (j *Journal) ConfirmedCancelOf(ctx context.Context, accountRef, market, sym
 	row := j.db.QueryRowContext(ctx, `
 		SELECT a.id FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
 		 WHERE a.kind = 'CANCEL' AND a.state = ? AND a.target_order_id = ?
-		   AND TRIM(i.account_ref) = ? AND LOWER(TRIM(i.market)) = ? AND UPPER(TRIM(i.symbol)) = ?
+		   AND TRIM(i.account_ref) = ? AND LOWER(TRIM(i.market)) = ? AND TRIM(i.trading_day) = ? AND UPPER(TRIM(i.symbol)) = ?
 		 ORDER BY a.settled_at, a.rowid LIMIT 1`,
-		string(StateConfirmed), orderID, strings.TrimSpace(accountRef), normaliseMarket(market), normaliseSymbol(symbol))
+		string(StateConfirmed), orderID, strings.TrimSpace(accountRef), normaliseMarket(market), strings.TrimSpace(tradingDay),
+		normaliseSymbol(symbol))
 	var id string
 	if err := row.Scan(&id); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -250,7 +253,7 @@ func intentOrdersAwaitingCloseQ(ctx context.Context, q queryer, intentID string)
 			  FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
 			 WHERE a.intent_id = ? AND a.state = ? AND a.kind IN ('PLACE','AMEND')
 		)
-		SELECT c.attempt_id, c.order_id, c.account_ref, c.market, c.symbol, c.side
+		SELECT c.attempt_id, c.order_id, c.account_ref, c.market, c.trading_day, c.symbol, c.side
 		  FROM intent_orders c
 		 WHERE c.order_id = '' OR NOT `+confirmedOrderTerminalEvidence+`
 		 ORDER BY c.ownership_at, c.attempt_id`, strings.TrimSpace(intentID), string(StateConfirmed))
@@ -261,7 +264,7 @@ func intentOrdersAwaitingCloseQ(ctx context.Context, q queryer, intentID string)
 	var out []IntentOrderAwaitingClose
 	for rows.Next() {
 		var o IntentOrderAwaitingClose
-		if err := rows.Scan(&o.AttemptID, &o.OrderID, &o.AccountRef, &o.Market, &o.Symbol, &o.Side); err != nil {
+		if err := rows.Scan(&o.AttemptID, &o.OrderID, &o.AccountRef, &o.Market, &o.TradingDay, &o.Symbol, &o.Side); err != nil {
 			return nil, fmt.Errorf("journal: reading the closing evidence of intent %s: %w", intentID, err)
 		}
 		out = append(out, o)

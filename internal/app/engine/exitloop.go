@@ -1530,7 +1530,7 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 		if !buy {
 			// 엔진 취소가 이미 접수 확정된 매도 — 종결 증거를 기다리는 중이며 다시 취소하지 않음. 발의 유무와 무관함(D−4.3-1):
 			// 발의가 풀린 뒤의 주기(withPending=false)에도 그 매도가 취소 전에 얼마나 체결됐는지 모르는 채 손절을 낼 수 없음.
-			_, waiting, err := o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.Symbol, order.OrderID)
+			_, waiting, err := o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
 			if err != nil {
 				o.warnEpisode(obs.EventExitLiquidationDelayed, err, "reading the engine cancel of order "+order.OrderID)
 				res.cleared = false
