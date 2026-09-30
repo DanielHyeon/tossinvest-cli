@@ -5639,3 +5639,18 @@ codex(새 세션 01a0f373, 비-ephemeral, 읽기 전용 — 사본 생성이 rea
 strategyworker · cmd/tossctl ok, 태그 engine · strategyflow · strategyhandoff · strategyworker ok. **실행 증거**(`verify_named_tests.py`, 하위 시험 포함): engine 16/16 ·
 strategyflow 4/4 pass 사건. `openspec validate --strict` 통과.
 `check_analysis`: 기준선 대비 이 로트 몫의 새 발견 **0**(창 머리 두 줄만 — 커밋된 시험을 인용하므로 미추적 인용도 없음; 새로 편집한 생성자 번들 포함).
+
+## 2026-10-01 codex 재확인 #2(e5a335bb, 이 로트 마지막) — APPROVE · 로트 종결
+
+세션 01a0f373 resume(`review-62-seal/prompt-codex-recheck.md` · `codex-recheck-output.md` · `codex-recheck-run.txt`), rc 0, 인증 오류 없음. codex 는 앞선 턴의
+`~/.codex` 검색을 다시 신고했고 이번 재확인에서는 추가 접근이 없다고 적었다. **판정 APPROVE**: #1 공유 배열 CLOSED(생성자의 떼어 내기 · 양 시장 시험), #2 census 간접
+경로 · 빌드 제약 CLOSED(지적 경로 기준), #3 시험 CLOSED, #4 CLOSED(명시한 보장 기준), 새 생산 결함 · 토글 OFF 위반 없음. codex 가 짚은 사실 둘을 그대로 적는다:
+떼어 내기는 **깊은 복사가 아니다**(원소 안의 route slice · `ProductionAuthority.weekly` 포인터는 공유) — 봉인이 비교하는 Result · 계보 · 실행 조건은 값 필드이고
+`WeeklyBinding()` 은 스칼라 구조체를 복사해 돌려주므로 확인된 잔여 공유가 봉인 원본을 바꾸지는 못한다. 그리고 양 시장 발급 RED 는 `red-6.2-seal.log`(재기록판)에 있다.
+**개수 관문 제거의 안전성까지 승인한 것은 아니다**(codex) — 그것은 5.2.2.2 의 몫이다.
+
+**이월(5.2.2.2):** (P2) 변이 하네스 대조군의 JSON 추가 실행이 종료 코드를 보지 않음 — 사건 수와 종료 코드를 함께 볼 것. (T) 시험 파일에 남은 옛 주석 한 줄
+(「entries[0] 이면 identity 거절」, `a112_first_leg_owner_scope_seal_test.go` 기제 시험 몸 안) 삭제.
+
+**라운드 사슬(6.2 봉인 로트).** 686b94e4(봉인) → 세 목소리 BLOCK(공유 배열 발급 실측 등) → e5a335bb(수리) → codex 재확인 #2 APPROVE. 생산 동작 변화 0(판정 조건은
+더 엄격해지기만, 수락 집합은 편집 전과 같음 — 보호 효과는 5.2.2.2 의 개수 관문 제거부터).
