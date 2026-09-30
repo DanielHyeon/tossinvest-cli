@@ -70,76 +70,76 @@
 
 ## 2. R1′ — 등급을 사실로 (결정 (1)·(2), design D1)
 
-- [ ] 2.0 **Pre-Edit 선언** — 대상은 Q1의 답이 정한다(10판: `adopt` 결과 형태 · `judgeHoldings` · `alertUnmanaged` · `checkExternalIncrease` · `NewReconcileDriver` · `Context.ReconcileDriver` + 새 종류 등재 · journal 새 leaf)
-- [ ] 2.1 **RED** — exit 관측 자리(`workingSet` B6 → `ExitObserver.alertUnmanaged`)의 사실은 **normal**이고
+- [x] 2.0 **Pre-Edit 선언** (`review.md` §4.5) — 대상은 Q1의 답이 정한다(10판: `adopt` 결과 형태 · `judgeHoldings` · `alertUnmanaged` · `checkExternalIncrease` · `NewReconcileDriver` · `Context.ReconcileDriver` + 새 종류 등재 · journal 새 leaf)
+- [x] 2.1 **RED** — exit 관측 자리(`workingSet` B6 → `ExitObserver.alertUnmanaged`)의 사실은 **normal**이고
       `Notify` B1 창(`publishBestEffort`)으로 간다: outbox 행 0 · `n.mu` 미획득. 기존
       `TestAPositionWithNoEntryDecisionIsSkippedAndAlertedOnce`의 normal 단언을 유지한다
-- [ ] 2.2 **RED** — **알림 켜짐** · 편입 켜짐 · 편입 시도 실패(`adopt` B8 거짓 — `adoptOne` 범주 ① 편입 전 거절 ·
+- [x] 2.2 **RED** — **알림 켜짐** · 편입 켜짐 · 편입 시도 실패(`adopt` B8 거짓 — `adoptOne` 범주 ① 편입 전 거절 ·
       ② 영속 실패, 두 분기 모두 오늘 미진입)의 reconcile `alertUnmanaged` B5
       사실은 **critical**이고 outbox 행을 만든다. 연기분(`adopt` B2 · B6 · B7)은 이 단언에 넣지 않는다(r3 N2,
       Q2(c) 열림). 싣는 방식은 `[비움 — Q1]`. **생산 배선**(실 `Notifier` · outbox · 배달 실행자)으로 잰다 —
       발신 가짜로만 재면 안 된다(r3 N1 codex 제안)
-- [ ] 2.3 **RED** — exclude(`judgeHoldings` B11 · `alertUnmanaged` B4)는 **normal** — outbox 행 0 · 진입 게이트
+- [x] 2.3 **RED** — exclude(`judgeHoldings` B11 · `alertUnmanaged` B4)는 **normal** — outbox 행 0 · 진입 게이트
       래치 0 · 운영 모드 승격 0
-- [ ] 2.4 **RED** — `adoption.enabled=false` ∧ 미지정(`judgeHoldings` B12 · 기본 사유)은 **normal** — 2.3과 같은
+- [x] 2.4 **RED** — `adoption.enabled=false` ∧ 미지정(`judgeHoldings` B12 · 기본 사유)은 **normal** — 2.3과 같은
       단언. 정본 exit-policy 「false에서의 동작은 무관리 보유 알림을 포함한 기존 동작과 동일」의 동등성 시험
-- [ ] 2.5 **RED** — **알림 off**(`notifications.enabled=false`) 엔진에서 B5 사실은 **critical로 기록되지 않는다**
+- [x] 2.5 **RED** — **알림 off**(`notifications.enabled=false`) 엔진에서 B5 사실은 **critical로 기록되지 않는다**
       — outbox critical 행 0, 따라서 `deliver` B3 · `notifyCritical` B4 · 배달 실행자 `deliverOne` B8 사슬에 닿지
       않고 진입 게이트 래치 0 · 승격 0(r3 N1). 이미 원장에 남은 critical 행의 재시작 차단은 정본대로 유지됨을 함께
       단언한다. 방식은 `[비움 — Q1]`. **꺼짐 + topic 유지**(파일에 topic이 남음) 경우를 포함한다(r4 R4-2)
-- [ ] 2.5a **RED** — **켜짐 + topic 없음**(전송기 nil): 판정 근거는 설정 `enabled`이므로 B5 사실은 **critical**이고,
+- [x] 2.5a **RED** — **켜짐 + topic 없음**(전송기 nil): 판정 근거는 설정 `enabled`이므로 B5 사실은 **critical**이고,
       그 행은 배달 실행자 `deliverOne` B8 · a124 정본대로 처리된다. `Publisher == nil`을 「꺼짐」으로 읽는 구현은
       이 시험에서 실패해야 한다(r4 R4-2). 생산 배선으로
-- [ ] 2.5b **RED** — **거부된 알림 블록**(파일에는 `enabled: true`, 검증 실패): 로드된 값이 거짓이므로 꺼짐 — a095 사실은
+- [x] 2.5b **RED** — **거부된 알림 블록**(파일에는 `enabled: true`, 검증 실패): 로드된 값이 거짓이므로 꺼짐 — a095 사실은
       critical로 기록되지 않는다(8판, `config.mergenotifications` B3). 로드된 실효 설정으로
-- [ ] 2.6a **RED** — **거부된 편입 블록**의 무관리 보고는 사실 칸 · event key가 「설정 거부」이고 「편입 꺼짐∧미지정」이
+- [x] 2.6a **RED** — **거부된 편입 블록**의 무관리 보고는 사실 칸 · event key가 「설정 거부」이고 「편입 꺼짐∧미지정」이
       아니다(관측 가능한 것만 단언). **등급은 단언하지 않는다**(Q2(a) 열림). 픽스처에 두 거부 모양 — 편입 켜짐의 범위 밖 pct ·
       꺼짐 · include 없음이지만 범위 밖 pct가 남은 블록 — 을 둘 다 넣는다(9판 r8 N3 · N4, `config.mergeadoption` B3 ·
       `config.adoption.validate` B1)
-- [ ] 2.6 **RED (Q2 답 — normal)** 설정 거부(B3) · include 지정 시도 실패(B6, 편입 꺼짐) · `adopt` B2 · B6 · B7 연기분 — 셋 다 outbox 행 0,
+- [x] 2.6 **RED (Q2 답 — normal)** 설정 거부(B3) · include 지정 시도 실패(B6, 편입 꺼짐) · `adopt` B2 · B6 · B7 연기분 — 셋 다 outbox 행 0,
       연기와 시도 실패는 다른 key. (알림 on에 transport 죽음은 Q2(d)로 a124 정본에 이관됨 — 여기 없음, r3 N7)
-- [ ] 2.7 **RED** — 키 분리(결정 (3)(iii)): exit 관측 자리와 reconcile 자리의 event key가 다르다
-- [ ] 2.8 **RED** — 전이 상태 무알림 유지: `judgeHoldings` B9(RECONCILE) · B10(묵은 스냅샷)에서 알림 0
-- [ ] 2.9 **RED** — `notifierAlerter.ExternalPositionFound`의 등급은 normal로 남고, 생산 배선에서
+- [x] 2.7 **RED** — 키 분리(결정 (3)(iii)): exit 관측 자리와 reconcile 자리의 event key가 다르다
+- [x] 2.8 **RED** — 전이 상태 무알림 유지: `judgeHoldings` B9(RECONCILE) · B10(묵은 스냅샷)에서 알림 0
+- [x] 2.9 **RED** — `notifierAlerter.ExternalPositionFound`의 등급은 normal로 남고, 생산 배선에서
       `IngestExternalPositions`의 알림 어댑터가 nil이다(B12). 2판 6.2a는 이것으로 대체된다
-- [ ] 2.10 **GREEN** — Q1의 방식대로. `publishBestEffort` · `notifyCritical` · `claimAndDeliver` · `deliver` 본문은
+- [x] 2.10 **GREEN** — Q1의 방식대로. `publishBestEffort` · `notifyCritical` · `claimAndDeliver` · `deliver` 본문은
       바꾸지 않는다. **`SeverityOf` · `Notify`의 경계는 Q1 답에 조건부**(r3 N4): (a) 새 종류 등재면 본문 불변,
       (b) `SeverityOf` 계약 변경이면 경계를 다시 선언하고 두 번들을 다시 뽑아 재리뷰한다
-- [ ] 2.12 **RED** — **연기(normal) → 같은 프로세스의 다음 사이클에서 시도 실패(critical)**: 재시작 없이 critical로
+- [x] 2.12 **RED** — **연기(normal) → 같은 프로세스의 다음 사이클에서 시도 실패(critical)**: 재시작 없이 critical로
       기록된다. Q2(c)의 두 답(연기 = normal · critical) 모두에서 통과하는 형태로 쓴다. 픽스처에 **같은 사이클에서 앞선
       `adoptOne` 실패 뒤 `adopt` B7(관측 묵음)이 남은 후보를 반환하는 묶음**을 넣는다(8판 r7b F8). 생산 배선(실 `Notifier` · outbox ·
       배달 실행자)으로(r4 R4-1). **6판**: critical은 메모리 래치를 거치지 않는다 · normal은 같은 사실의 반복만 억제한다(r5 R5-1)
-- [ ] 2.13 **RED** — `adoptOne` 범주 ③(편입 커밋 뒤 exit state 미개설, B3 창 → true)은 critical 요구 밖임을 명명된
+- [x] 2.13 **RED** — `adoptOne` 범주 ③(편입 커밋 뒤 exit state 미개설, B3 창 → true)은 critical 요구 밖임을 명명된
       경계로 고정한다 — 후속 후보 `issues.md` I7(r4 R4-3)
-- [ ] 2.14 **전이 행렬**(r4 codex 권고, Manager 수용) — 「새 critical 0」은 「기존 행 · 래치 0」이 아니다. 알림
+- [x] 2.14 **전이 행렬**(r4 codex 권고, Manager 수용) — 「새 critical 0」은 「기존 행 · 래치 0」이 아니다. 알림
       켜짐→PENDING 행 생성→꺼짐, 꺼짐→켜짐, 각 경우 재시작 전후에서: 새 a095 사실의 등급 · 기존 PENDING 행의 존속 ·
       정본 「재시작이 진입 차단을 푸는 우회로가 되어서는 안 된다」의 재차단을 표로 단언한다. **6판(r5)**: 토글은 **로드된
       실효 설정**으로 바꾼다 — 설정 파일만 고친 것은 실행 중 전환의 증거가 아니다. 지연 배달 성공을 운영자 승인으로 세지
       않는다
-- [ ] 2.15 **RED** — **배달됨 → 재알림 창 경과 → 여전히 시도 실패**(같은 프로세스): 정본 재알림 규칙대로 다시 전송된다.
+- [x] 2.15 **RED** — **배달됨 → 재알림 창 경과 → 여전히 시도 실패**(같은 프로세스): 정본 재알림 규칙대로 다시 전송된다.
       메모리 래치가 막지 않음을 단언한다(r5 R5-1). 생산 배선으로
-- [ ] 2.16 **RED** — **outbox 기록 실패 → 저장소 회복 → 같은 시도 실패**(같은 프로세스): 그 관측에서 기록된다 —
+- [x] 2.16 **RED** — **outbox 기록 실패 → 저장소 회복 → 같은 시도 실패**(같은 프로세스): 그 관측에서 기록된다 —
       `ReconcileDriver.alert` B2가 오류를 로그로만 남겨도 다음 관측이 다시 시도한다. 사람 소유 진입 게이트 래치는 이 과정에서
       풀리지 않는다(r5 R5-1). 생산 배선으로
-- [ ] 2.17 **RED** — **사실 식별자**(r5 R5-2): 같은 등급의 연기 → 시도 실패가 서로 다른 event key로 기록된다(Q2(c)=critical
+- [x] 2.17 **RED** — **사실 식별자**(r5 R5-2): 같은 등급의 연기 → 시도 실패가 서로 다른 event key로 기록된다(Q2(c)=critical
       가정) · 창 안에서 A → B → A는 **정착한 A**면 A의 재전송을 창 규칙대로 흡수하고 **PENDING인 A**면 재시도한다(둘을 나눠
       시험) · 다른 발송자가 A의 임차를 쥐고 있으면(`ClaimHeldElsewhere`) 그 관측은 배달하지 않는다 · 오류 문구만 바뀐 반복은
       같은 key다(7판 r6 R6-1)
-- [ ] 2.11 **(Q8 답 — (b) 시점 사건 문구)** **사실이 해소된 뒤의 critical 행**(r3 N3) — 편입 실패 → 다음 사이클 편입 성공 → 지연 배달 ·
+- [x] 2.11 **(Q8 답 — (b) 시점 사건 문구)** **사실이 해소된 뒤의 critical 행**(r3 N3) — 편입 실패 → 다음 사이클 편입 성공 → 지연 배달 ·
       재시작의 시험. 기존 outbox 기계로는 PENDING 행을 갱신 · 정산할 수 없다(design D1). ~~답 전에는 구현 착수
       금지 — 정지 조건~~ → 10판 답: 행 문구가 그 시각의 실패 사건을 말하고(해소 뒤 배달도 참), 편입 성공이 진입 게이트 래치를 풀지 않음을 시험한다
 
 ## 3. R2′ — 수량 증가 (결정 (3), design D2)
 
-- [ ] 3.1 **RED** — `checkExternalIncrease` B2 **무변화**(R2-B2 삭제): 조회 오류에서 조용히 반환하고
+- [x] 3.1 **RED** — `checkExternalIncrease` B2 **무변화**(R2-B2 삭제): 조회 오류에서 조용히 반환하고
       무관리 알림으로 보내지 않는다
-- [ ] 3.2 **RED (Q3 답)** 엔진 개설 포지션(`judgeHoldings` B7, 편입 기록 없음)의 수량 증가 검사 — 원장 조정 순증 > 0이면 normal 보고,
+- [x] 3.2 **RED (Q3 답)** 엔진 개설 포지션(`judgeHoldings` B7, 편입 기록 없음)의 수량 증가 검사 — 원장 조정 순증 > 0이면 normal 보고,
       0 · 음수 · 조정 없음이면 보고 없음. journal leaf `NetAdjustedQuantity`의 비교 술어 변이(부등호 방향 · off-by-one · 열 바꿔치기)
-- [ ] 3.3 **(Q4 답 — normal · 종류 · key 유지 · 최대 수량 래치)** 수량 증가 사실의 종류 · 등급 · 키. critical이면 정본 engine-safety 재알림 창 SHALL NOT과
+- [x] 3.3 **(Q4 답 — normal · 종류 · key 유지 · 최대 수량 래치)** 수량 증가 사실의 종류 · 등급 · 키. critical이면 정본 engine-safety 재알림 창 SHALL NOT과
       대조한 키로, normal이면 `d.grown`(B1) 래치의 기준만
-- [ ] 3.4 **(Q4 답)** 475150 원장 순서(편입 2 → 3 · 4 · 5 · 8 · 26 · 32) 재생 시험 — 「32가 운영자에게
+- [x] 3.4 **(Q4 답)** 475150 원장 순서(편입 2 → 3 · 4 · 5 · 8 · 26 · 32) 재생 시험 — 「32가 운영자에게
       전해진다」를 Q4의 답에 맞는 형태로 못 박는다
-- [ ] 3.5 **GREEN**
+- [x] 3.5 **GREEN**
 
 ## 4. R3 — 총위험 — 보류 (Q5 결정)
 
@@ -148,10 +148,10 @@
 
 ## 5. 하지 않는 것을 고정한다 (design D4 · D6)
 
-- [ ] 5.1 **RED (§6)** — 평단이 내려간 포지션에서 **자동 경로**(판정 · 관측 갱신 · 복구)의 유효 손절가가 내려가지
+- [x] 5.1 **RED (§6)** — 평단이 내려간 포지션에서 **자동 경로**(판정 · 관측 갱신 · 복구)의 유효 손절가가 내려가지
       않는다. 운영자 재편입 reset은 이 요구 밖임을 명명한 시나리오로 함께 적는다(델타 4판, 3라운드 V-N5 — 그 하향의
       승인 · audit 여부는 `issues.md` I6)
-- [ ] 5.2 **RED** — `EvaluateLadder`의 산출 무변화 — rung 잠금가 · 수익률 기준 · R 분모는 계속 `entry_price`에서,
+- [x] 5.2 **RED** — `EvaluateLadder`의 산출 무변화 — rung 잠금가 · 수익률 기준 · R 분모는 계속 `entry_price`에서,
       runner 보호는 관측 워터마크에서, 이전 기준선은 최댓값 합성에 그대로(`ladder.go:391-403`, r3 N6)
 - [x] 5.3 `issues.md` I1에 **`baseline_price` 쓰기 자리 넷의 사실**을 번들 분기로 기록 — 판정(B25 `notBelow` ·
       B29 창 선택) · 관측 갱신(B23 — effective 스냅샷과 비교, 스칼라와 일치할 때만 값 유지 · 갈라지면 되돌림) · 재편입 reset(비교 분기 없음) · 최초 INSERT
@@ -160,14 +160,16 @@
 ## 6. 게이트
 
 - [ ] 6.1 `go test ./... -count=1 -race` 회귀 0
-- [ ] 6.2 **§0.3** — exit goroutine에 **새** critical Notify가 없음을 구조로 보인다: `workingSet` B6 경로의
+- [x] 6.2 **§0.3** — exit goroutine에 **새** critical Notify가 없음을 구조로 보인다: `workingSet` B6 경로의
       사실이 normal(2.1). 기존 exit 발신의 `n.mu` 대기는 **a092 21판 소유**(Q7 이관, 2026-09-28) — 대사 goroutine 자신의 대기는 a092 21판 밖의 이름 붙은 잔여
-- [ ] 6.3 **§0.4** — 새 브로커 조회 0건
-- [ ] 6.4 **토글 OFF 동등성** — 기존 토글 둘(`notifications.enabled` · `adoption.enabled`)의 OFF에서 **등급과 진입 차단
+- [x] 6.3 **§0.4** — 새 브로커 조회 0건
+- [x] 6.4 **토글 OFF 동등성** — 기존 토글 둘(`notifications.enabled` · `adoption.enabled`)의 OFF에서 **등급과 진입 차단
       결과**가 이 change 전과 같다(2.4 · 2.5). normal 래치 키가 사실 식별자로 바뀌어 normal 보고 횟수 · 로그 줄은 달라질 수
       있다. `adoption.enabled=false`에 include 지정이 있는 경로는 Q2(b)로 열려 있다(8판 r7a F5). 새 토글은 도입하지 않는다
-- [ ] 6.5 `openspec validate --strict`의 한계 — 델타가 ADDED만 쓰는지 확인하고 적는다
-- [ ] 6.6 FLM · AST **재생성**(구현 후) + `check_analysis.py` 통과
+- [x] 6.5 `openspec validate --strict`의 한계 — 델타가 ADDED만 쓰는지 확인하고 적는다
+- [x] 6.6 FLM · AST **재생성**(구현 후) + `check_analysis.py` 통과
+      > 10판: stale 20 재추출 + 새 번들 2, `check_analysis` rc 0 evidence complete(required 6). RED/GREEN/변이 영수증 `review.md` §4.6.
+      > 6.2 = exit 루프 무편집 + `TestA095TheExitObserverReportStaysNormalAndKeyedApart` · 6.3 = 새 호출은 원장 읽기(`PositionAdjustments`)뿐 · 6.4 = 2.4 · 2.5 · 6.5 = 델타 두 파일 모두 ADDED 만
 - [ ] 6.7 `make sdd-sync` → `make sdd-check`
 - [ ] 6.8 **격리 worktree에서** `make gate CHANGE=a095-a-stop-must-know-what-it-covers`
 - [ ] 6.9 **독립 리뷰**(구현과 분리된 컨텍스트) · 교차 모델

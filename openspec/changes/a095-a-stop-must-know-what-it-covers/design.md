@@ -302,8 +302,10 @@ exit 관측 자리가 normal인 동안 키는 outbox에 닿지 않지만(normal 
   조정된다(`:281` `adjustInPlace`). 그러므로 한 포지션 인스턴스의 조정 행들의 `Σ(new_quantity − prev_quantity)`는 **현재 투영 수량 −
   체결이 설명하는 수량**이다.
 - **술어**: 엔진 개설 포지션(`p.ExitEligible() ∧ ¬p.Adopted()`)은 그 순증이 **0보다 클 때** 수량이 체결로 설명되지 않게 늘었다.
-- **읽기**: journal 읽기 전용 새 leaf `Journal.NetAdjustedQuantity(ctx, positionID)` — 그 인스턴스의 조정 행을 읽어 순증을 십진 문자열로
-  돌려준다. 스키마 무변경, 쓰기 없음, 브로커 호출 없음.
+- **읽기**: 기존 journal 읽기 `Journal.PositionAdjustments(ctx, positionID)`(`position_adjustments.go:575`, 이미 있음 — 구현 착수 때
+  확인)로 그 인스턴스의 조정 행을 읽고, 순증 계산은 engine 쪽 새 leaf `netAdjustedQuantity`가 한다. 판정 당시 제안한 「journal 새 읽기
+  함수」는 **필요 없다**(YAGNI — 같은 행을 같은 순서로 읽는 기존 함수가 있다). 스키마 무변경, 원장 쓰기 없음, 브로커 호출 없음.
+  비교 술어(부등호 방향 · off-by-one · 열 바꿔치기)의 변이는 그 leaf와 호출자에 건다.
 - **이름 붙은 잔여**: 체결 기록이 계좌보다 늦게 들어오면 수렴이 먼저 +조정을 쓰고 뒤의 체결이 −조정을 부른다 — 그 사이의 순증 > 0은
   일시적 오보다. 등급이 normal(Q4)이므로 진입 · 청산에 닿지 않고 보고 한 줄이다.
 

@@ -6,9 +6,9 @@
 
 | Branch | 조건 | 진입 실측 | Test (a095 요구) | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:442` `if d.grown[p.ID] {` | 아니오 | **a095 3.3** — [비움 — Q4] 수량 기준 재알림 여부 | no | no |
-| B2 | `:446` `if err != nil {` | 아니오 | **a095 3.1** — 무변화(R2-B2 삭제) | no | no |
-| B3 | `:450` `if err != nil \|\| cmp <= 0 {` | 예 | **a095 3.3** — [비움 — Q4] 증가 사실의 종류·등급 | no | no |
+| B1 | `:545` `if err != nil {` | 예 | **a095 3.1** `TestA095AnAdoptionLookupFailureStaysSilent` — 무변화(R2-B2 삭제) | yes | yes |
+| B2 | `:549` `if err != nil \|\| cmp <= 0 {` | 예 | **a095 3.3 · 3.4** `TestA095TheAdoptedGrowthReplayReportsEveryNewMaximum` · 기존 `TestAnExternalIncreaseAfterAdoptionIsReported` | yes | yes |
+| B3 | `:552` `if !d.newGrowthMaximum(p) {` | 예 | **a095 3.4** `TestA095TheAdoptedGrowthReplayReportsEveryNewMaximum` — 32 의 반복은 보고하지 않음 | yes | yes |
 
-**미진입 분기 2개**: B1, B2
+**미진입 분기 0개**: 없음
 **자체 블록 없는 분기 0개**: 없음 — 컴파일러가 별도 블록을 만들지 않는 형태(빈 `switch {` 등)이며 미커버와 다르다.

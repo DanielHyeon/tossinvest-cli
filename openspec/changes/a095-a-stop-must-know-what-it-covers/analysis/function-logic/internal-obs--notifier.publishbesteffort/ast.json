@@ -1,16 +1,16 @@
 {
   "file": "internal/obs/notifier.go",
-  "source_sha256": "0bc75668ff17c3d6dec1c8191e24f00b80a700c091ed33fe80c1acbd4b9a5bd8",
+  "source_sha256": "d705f78d68c1eff38216e9dc9791cf737dc9d505bca77b8543aa7b7bc236bd83",
   "package": "obs",
   "function": "publishBestEffort",
   "receiver": "Notifier",
   "signature": "Notifier.publishBestEffort(params=3, results=0)",
   "start": {
-    "line": 161,
+    "line": 179,
     "column": 1
   },
   "end": {
-    "line": 173,
+    "line": 192,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 162,
+        "line": 180,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 165,
+        "line": 183,
         "column": 2
       }
     }
@@ -35,7 +35,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 163,
+        "line": 181,
         "column": 3
       }
     }
@@ -44,7 +44,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 165,
+        "line": 183,
         "column": 12
       },
       "text": "n.Publisher.Publish"
@@ -52,7 +52,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 165,
+        "line": 183,
         "column": 37
       },
       "text": "notificationFor"
@@ -60,7 +60,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 168,
+        "line": 187,
         "column": 3
       },
       "text": "n.Log.Warn"
@@ -68,23 +68,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 169,
-        "column": 16
+        "line": 188,
+        "column": 23
       },
       "text": "string"
     },
     {
       "kind": "call",
       "at": {
-        "line": 170,
-        "column": 19
+        "line": 189,
+        "column": 24
       },
       "text": "string"
     },
     {
       "kind": "call",
       "at": {
-        "line": 171,
+        "line": 190,
         "column": 16
       },
       "text": "err.Error"
@@ -94,7 +94,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 165,
+        "line": 183,
         "column": 5
       }
     }

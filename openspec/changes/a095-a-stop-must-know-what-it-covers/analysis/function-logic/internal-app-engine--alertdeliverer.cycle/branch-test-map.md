@@ -8,7 +8,7 @@
 |---|---|---|---|---|---|
 | B1 | `:243` `if err != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
 | B2 | `:249` `if len(pending) < d.batch() {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B3 | `:254` `for _, alert := range pending {` | 예 | **a095 2.11** — [비움 — Q8] | no | no |
+| B3 | `:254` `for _, alert := range pending {` | 예 | **a095 2.11** — 10판 Q8 답 (b) | no | no |
 | B4 | `:258` `if ctx.Err() != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
 
 **미진입 분기 0개**: 없음

@@ -41,11 +41,11 @@ ERROR_CONTRACTS = {
     "internal-app-engine--exitobserver.observeonce": "결과는 `ExitCycle`이다 — 오류를 돌려주지 않고 `cycle.Err`에 담는다(B2 · B8 창).",
     "internal-app-engine--exitobserver.workingset": "결과는 `([]managed, error)`다 — 원장 읽기 오류(B1 · B2)는 되던지고, 포지션별 개설 · 격리 실패는 `cycle.Err`에 담고 다음 포지션으로 간다(B8 · B9 · B13 · B16 · B22 창).",
     "internal-app-engine--notifieralerter.externalpositionfound": "결과는 `error`다 — `Notify`의 오류를 그대로 돌려준다(nil 알림기는 B1에서 nil).",
-    "internal-app-engine--reconciledriver.adopt": "결과는 편입된 id 집합뿐이다 — 오류를 돌려주지 않는다. 시세 읽기 오류는 `cycle.Err`에 담고(B3 창) 빈 집합을 돌려준다.",
+    "internal-app-engine--reconciledriver.adopt": "결과는 후보별 결과 map(`adoptResult` — 편입됨 · 시도 실패 · 연기, 10판)이다 — 오류를 돌려주지 않는다. 시세 읽기 오류는 `cycle.Err`에 담고 빈 map을 돌려준다(없는 후보 = 영값 연기).",
     "internal-app-engine--reconciledriver.adoptone": "결과는 `bool`이다 — 오류를 돌려주지 않는다. 범주 ① ②는 `logDeferred` 로그 뒤 false, 범주 ③(B3 창)은 로그 뒤 true.",
     "internal-app-engine--reconciledriver.alert": "이 함수는 결과값이 없고 오류를 **되던지지 않는다** — B2가 `Notify`의 오류를 로그로만 남긴다. 호출자는 기록 실패를 알 수 없다(7판 r6 R6-2).",
     "internal-app-engine--reconciledriver.alertunmanaged": "결과값이 없다 — 오류를 돌려주지 않는다. `d.alert`(→ `ReconcileDriver.alert` B2)가 `Notify`의 오류를 로그로만 남긴다.",
-    "internal-app-engine--reconciledriver.checkexternalincrease": "결과값이 없다 — 오류를 돌려주지 않는다. `AdoptionOf` · `CompareDecimal`의 오류에서 조용히 반환하고(B2 · B3 창 return), `d.alert`는 `Notify`의 오류를 로그로만 남긴다.",
+    "internal-app-engine--reconciledriver.checkexternalincrease": "결과값이 없다 — 오류를 돌려주지 않는다. `AdoptionOf` · `CompareDecimal`의 오류에서 조용히 반환하고(표의 return 열), `newGrowthMaximum`의 비교 실패도 보고하지 않는 쪽이며, `d.alert`는 `Notify`의 오류를 로그로만 남긴다.",
     "internal-app-engine--reconciledriver.judgeholdings": "결과값이 없다 — 오류를 돌려주지 않는다. `CurrentPosition` 오류는 그 보유를 건너뛰고(B5), 편입 쪽 오류는 `adopt`가 `cycle.Err`에 담는다.",
     "internal-app-engine--resolvenotificationpublisher": "결과는 `(Publisher, notificationResolution)`다 — 오류 대신 해석 결과의 `Refused`에 사유를 담고 전송기를 nil로 돌려준다(B2 · B5 창).",
     "internal-exitpolicy--evaluateladder": "결과는 `(LadderTransition, error)`다 — 브로커 · 원장 호출이 없는 **순수 계산**이며, 입력 거부와 계산 실패를 판정 거부 오류로 돌려준다(위 표의 return 열, 9판 r8 N5).",
@@ -70,6 +70,19 @@ ERROR_CONTRACTS = {
 }
 
 # stem, 번들 디렉터리, 역할, 입력 행들, 호출 문단, 변이 문단, 안전 경계, High-risk, {분기: 시험 요구}
+# 10판 재추출(구현 로트): a092(`fbc6df5f` 등 — 2026-09-30 아카이브)가 이 파일들을 바꿨고 a095 는 이 함수들을 편집하지 않는다.
+A092_CHANGED = {
+    "internal-app-engine--alertdeliverer.cycle", "internal-app-engine--alertdeliverer.deliverone",
+    "internal-app-engine--exitobserver.alertunmanaged", "internal-app-engine--exitobserver.observeonce",
+    "internal-app-engine--exitobserver.workingset", "internal-app-engine--notifieralerter.externalpositionfound",
+    "internal-obs--notifier.claimanddeliver", "internal-obs--notifier.deliver", "internal-obs--notifier.notify",
+    "internal-obs--notifier.notifycritical", "internal-obs--notifier.publishbesteffort", "internal-obs--severityof",
+}
+A092_NOTE = ("**10판 재추출 주석** — 분기 표 · 좌표 · 진입 실측은 현재 소스(아래 `source_sha256`)에서 기계로 다시 그렸다. "
+             "아래 산문은 3판(base `02716357`)의 판단이며, 그 뒤 a092 가 이 소스를 바꿨다(특히 `claimAndDeliver`는 이제 claim만 "
+             "`n.mu` 아래에서 하고 전송은 잠금 밖 — `fbc6df5f`). a095 는 이 함수를 편집하지 않는다. 산문의 잠금 · 좌표 서술과 "
+             "현재 소스가 어긋나면 표와 `review.md` §4.2 정정이 우선한다.")
+
 BUNDLES: list[dict] = [
     {
         "stem": "event--SeverityOf",
@@ -88,7 +101,7 @@ BUNDLES: list[dict] = [
                     "재리뷰가 필요하다.",
         "high_risk": "yes — 이 답이 알림의 durable 여부와 진입 차단 도달 여부를 정한다.",
         "tests": {"B1": "**a095 2.1 · 2.2** — exit 관측 자리의 사실은 normal, reconcile 자리의 비선택 사실은 critical. "
-                        "싣는 방식은 [비움 — Q1]"},
+                        "싣는 방식: 10판 Q1 답 (a) — 새 종류 `EventExitPositionAdoptionFailed` 등재, 본문 불변(`TestA095AFailedAdoptionIsCriticalAndDurable`)"},
     },
     {
         "stem": "notifier--Notifier.Notify",
@@ -159,7 +172,7 @@ BUNDLES: list[dict] = [
                     "호출자를 기다리게 한다(Q7). ② B5(`ClaimSettled`)가 같은 키의 재전송을 창 안에서 삼킨다 — "
                     "수량 증가 재알림이 critical이라면 키 설계가 이 창과 대조되어야 한다(Q4).",
         "high_risk": "yes — 배달 직렬화와 재알림 억제의 자리다.",
-        "tests": {"B5": "**a095 3.3** — [비움 — Q4] 수량 증가 사실의 키와 재알림 창"},
+        "tests": {"B5": "**a095 3.3** — 10판 Q4 답: 수량 증가는 normal — 이 창(critical 경로)에 닿지 않음"},
     },
     {
         "stem": "notifier--Notifier.deliver",
@@ -182,33 +195,33 @@ BUNDLES: list[dict] = [
         "stem": "adoption--ReconcileDriver.judgeHoldings",
         "dir": "internal-app-engine--reconciledriver.judgeholdings",
         "role": "안정 스냅샷의 보유를 게이트에 통과시키고, 편입하거나 무관리로 모은다. "
-                "**`checkExternalIncrease`와 reconcile 쪽 `alertUnmanaged`의 유일한 호출자다.**",
+                "**`checkExternalIncrease` · `checkEngineOpenedIncrease`와 reconcile 쪽 `alertUnmanaged`의 유일한 호출자다.**",
         "inputs": [
-            ("`p.ExitEligible()`", "진입 결정 또는 편입 기록이 있나", "원장 `positions`", "B7 창 — 참이면 `continue`"),
-            ("`p.Adopted()`", "편입 기록이 있나", "원장 `positions.adoption_id`", "B8 창 — 참일 때만 `checkExternalIncrease`"),
-            ("`d.blocked` · `fresh`", "전이 상태", "RECONCILE 추적기 · 스냅샷 나이", "B9 · B10 — 무알림 `continue`"),
-            ("`d.opts.Adoption`", "편입 설정", "런타임 config", "B11(exclude) · B12(off∧미지정) → `unmanaged`"),
+            ("`p.ExitEligible()`", "진입 결정 또는 편입 기록이 있나", "원장 `positions`", "B7 창 — 참이면 수량 증가만 검사하고 `continue`"),
+            ("`p.Adopted()`", "편입 기록이 있나", "원장 `positions.adoption_id`", "B8 — 참이면 `checkExternalIncrease`, 거짓(엔진 개설)이면 `checkEngineOpenedIncrease`(10판)"),
+            ("`d.blocked` · `fresh`", "전이 상태", "RECONCILE 추적기 · 스냅샷 나이", "무알림 `continue`"),
+            ("`d.opts.Adoption`", "편입 설정", "런타임 config", "exclude · off∧미지정 → `unmanaged`"),
+            ("`d.adopt`의 결과", "후보별 편입됨 · 시도 실패 · 연기", "위 함수", "편입됨이 아니면 `unmanaged`, 결과는 `alertUnmanaged`에 전달"),
         ],
-        "calls": "`d.opts.Journal.CurrentPosition` · `d.checkExternalIncrease`(B8 창) · `d.blocked`(B9) · "
-                 "`d.opts.Adoption.Excludes`(B11) · `d.opts.Adoption.Included`(B12) · `d.adopt` · "
-                 "`d.alertUnmanaged`(B15 창).",
-        "mutations": "`cycle.Unmanaged` 계수 · 편입(`d.adopt` 경유) · 알림(`alertUnmanaged` 경유).",
-        "boundary": "**3판의 사실 셋이 이 함수에서 나온다.** ① B7 창은 `ExitEligible`이면 `continue`하고 B8만 "
-                    "`checkExternalIncrease`를 부른다 — **엔진이 직접 연 포지션(편입 기록 없음)의 수량 증가는 "
-                    "어디서도 검사되지 않는다**(결정 (3)(i)의 대상). ② 편입 기록이 없는 보유는 B8에 오지 않으므로 "
-                    "`checkExternalIncrease` B2가 받는 입력이 아니다 — 2판 R2-B2의 전제가 거짓이었다. "
-                    "③ 무관리 보유는 B11(exclude) · B12(off∧미지정) · B14(편입 실패)로 모여 B15에서 알려진다 — "
-                    "운영자가 고른 상태(B11 · B12)와 고르지 않은 상태(B14)가 **다른 분기**로 이미 갈린다.",
+        "calls": "`d.opts.Journal.CurrentPosition` · `d.checkExternalIncrease` · `d.checkEngineOpenedIncrease`(10판) · `d.blocked` · "
+                 "`d.opts.Adoption.Excludes` · `d.opts.Adoption.Included` · `d.adopt` · `d.alertUnmanaged(ctx, p, results[p.ID])`.",
+        "mutations": "`cycle.Unmanaged` 계수 · 편입(`d.adopt` 경유) · 알림(`alertUnmanaged` · 수량 증가 검사 경유).",
+        "boundary": "**10판 편집(구현 로트)**: B8 에 else 갈래(엔진 개설 포지션의 수량 증가 검사 — 결정 (3)(i), Q3)를 더했고, "
+                    "`adopt`의 결과를 id 집합이 아니라 후보별 결과로 받아 `alertUnmanaged`에 넘긴다(Q1 · Q2(c)). 전이 상태 · 게이트 "
+                    "순서는 그대로다. 후보가 아닌 무관리 보유(제외 · 꺼짐 · 설정 거부)는 결과 map 에 없어 영값(연기)을 받지만 그 셋의 "
+                    "조건 칸은 결과를 읽지 않는다.",
         "high_risk": "yes — 편입과 무관리 보고의 입구다.",
+        "observed": "yes | yes",
         "tests": {
-            "B7": "**a095 3.2** — [비움 — Q3] 엔진 개설 포지션의 수량 증가 검사",
-            "B8": "**a095 3.1** — 편입된 포지션만 `checkExternalIncrease`에 온다(R2-B2 삭제의 근거)",
-            "B9": "**a095 2.8** — 전이 상태 무알림 유지",
-            "B10": "**a095 2.8** — 전이 상태 무알림 유지",
-            "B11": "**a095 2.3** — exclude는 normal, 진입 차단 없음",
-            "B12": "**a095 2.4** — off∧미지정은 normal(정본 exit-policy `adoption.enabled` false 동등)",
-            "B14": "**a095 2.2** — 편입 시도 실패는 운영자가 고른 상태가 아니다 → critical",
-            "B15": "**a095 2.2 · 2.3 · 2.4** — 모인 사유별 등급",
+            "B7": "**a095 3.1 · 3.2** — 적격이면 수량 증가만 검사하고 `continue`(아래 B8 · B9)",
+            "B8": "**a095 3.1 · 3.4** `TestA095AnAdoptionLookupFailureStaysSilent` · `TestA095TheAdoptedGrowthReplayReportsEveryNewMaximum`",
+            "B9": "**a095 3.2 (10판 새 갈래)** `TestA095AnEngineOpenedPositionThatGrewIsReported` · `TestA095AnAdjustmentHistoryThatNetsToZeroIsNotAnIncrease`",
+            "B10": "**a095 2.8** — RECONCILE 무알림(기존 `TestAdoptionIsSilentUnderReconcile`)",
+            "B11": "**a095 2.8** `TestA095AStaleSnapshotStaysSilent`",
+            "B12": "**a095 2.3** `TestA095OperatorChosenStatesStayNormal`",
+            "B13": "**a095 2.4** `TestA095OperatorChosenStatesStayNormal`",
+            "B15": "**a095 2.2 · 2.6 · 2.12** `TestA095AFailedAdoptionIsCriticalAndDurable` · `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`",
+            "B16": "**a095 2.2 · 2.3 · 2.4** — 모인 사유별 등급(위 시험들)",
         },
     },
     {
@@ -227,7 +240,7 @@ BUNDLES: list[dict] = [
                     "**PENDING 행은 같은 key의 새 발생으로 본문이 바뀌지 않는다.** 사실이 해소되어 그 행을 정산하는 연산도 "
                     "이 함수에 없다. N3의 처리는 `design.md` D1 「사실이 해소된 뒤의 행」과 Q8.",
         "high_risk": "yes — critical 알림의 durable 기록 자리다.",
-        "tests": {"B4": "**a095 2.11** — [비움 — Q8] 편입 성공 뒤 남는 PENDING 행의 처분"},
+        "tests": {"B4": "**a095 2.11** — 10판 Q8 답 (b): 시점 사건 문구(`TestA095AResolvedFailureStillSpeaksItsMoment`)"},
     },
     {
         "stem": "outbox--claimOwed",
@@ -244,7 +257,7 @@ BUNDLES: list[dict] = [
                     "미래 · 모르는 상태(B5 · B6 · B8)뿐이다. a089 R1의 「최신 발생 반영」은 a096~a099가 이 형태(창 뒤 재무장)로 "
                     "대체했다(a089 archive `review.md:471`).",
         "high_risk": "yes — 재알림 창의 판정이다.",
-        "tests": {"B2": "**a095 2.11** — [비움 — Q8] PENDING 행이 새 발생을 반영하지 않는다는 사실의 영향"},
+        "tests": {"B2": "**a095 2.11** — 10판 Q8 답 (b): PENDING 행은 첫 실패의 시각을 말함(`TestA095AResolvedFailureStillSpeaksItsMoment`)"},
     },
     {
         "stem": "alertdelivery--alertDeliverer.cycle",
@@ -256,7 +269,7 @@ BUNDLES: list[dict] = [
         "boundary": "**a095는 이 함수를 바꾸지 않는다.** 이 실행자는 PENDING 행을 원장에서 읽어 보낸다 — 사실이 해소됐는지 묻지 "
                     "않는다(r3 N3).",
         "high_risk": "yes — critical 배달의 실행자다.",
-        "tests": {"B3": "**a095 2.11** — [비움 — Q8]"},
+        "tests": {"B3": "**a095 2.11** — 10판 Q8 답 (b)"},
     },
     {
         "stem": "alertdelivery--alertDeliverer.deliverOne",
@@ -273,7 +286,7 @@ BUNDLES: list[dict] = [
                     "a124 정본의 지속 실패로 이어지는 경로이며, r3 N1(알림 켜짐을 critical의 전제로)의 근거다.",
         "high_risk": "yes — critical 배달과 실패 판정의 자리다.",
         "tests": {"B8": "**a095 2.5** — 알림 off에서 a095의 사실이 critical 행을 만들지 않으므로 이 창에 오지 않는다",
-                  "B9": "**a095 2.11** — [비움 — Q8]"},
+                  "B9": "**a095 2.11** — 10판 Q8 답 (b): 실행자는 저장된 문구를 보냄 — 문구가 시점 사건이라 늦게 보내도 참"},
     },
     {
         "stem": "recovery--SelectRecoverySnapshot",
@@ -294,25 +307,22 @@ BUNDLES: list[dict] = [
     {
         "stem": "adoption--ReconcileDriver.adopt",
         "dir": "internal-app-engine--reconciledriver.adopt",
-        "role": "후보를 한 번의 묶음 시세 읽기로 값 매기고 편입할 수 있는 것을 편입한다. 편입된 id 집합을 돌려준다.",
+        "role": "후보를 한 번의 묶음 시세 읽기로 값 매기고 편입할 수 있는 것을 편입한다. **후보별 결과**(편입됨 · 시도 실패 · 연기)를 돌려준다(10판).",
         "inputs": [
-            ("`d.observeCandidates`의 답", "후보 시세", "브로커 시세 경로", "B2 — 오류면 빈 집합을 돌려준다"),
-            ("`quotes[key]`", "종목별 관측", "위 읽기", "B6 — 없으면 `cycle.Deferred`, 그 후보는 편입되지 않는다"),
-            ("시세 나이", "`PriceStaleness`", "config · 기본값(B4)", "B7 — 넘으면 남은 후보 전부를 편입하지 않고 return"),
+            ("`d.observeCandidates`의 답", "후보 시세", "브로커 시세 경로", "오류면 빈 map — 모든 후보가 연기"),
+            ("`quotes[key]`", "종목별 관측", "위 읽기", "없으면 `cycle.Deferred`, 그 후보는 연기"),
+            ("시세 나이", "`PriceStaleness`", "config · 기본값", "넘으면 남은 후보 전부 연기로 return"),
+            ("`d.adoptOne`의 답", "편입 시도", "아래 함수", "참이면 `adoptAdopted`, 거짓이면 `adoptFailed`(10판)"),
         ],
-        "calls": "`d.observeCandidates`(B1 뒤) · `adoptionQuoteKey` · `d.logDeferred`(B7 창) · `d.adoptOne`(B8).",
-        "mutations": "편입(`d.adoptOne` 경유) · `cycle.Deferred` · `cycle.Adopted` 계수.",
-        "boundary": "**5판: 결과 형태가 편집 경계 안이다(r4 R4-1, Manager 처분).** 오늘 이 함수는 편입된 id 집합만 "
-                    "돌려주고, 집합에 없는 후보는 호출자 `judgeHoldings` B14가 무관리로 모은다 — B2(시세 읽기 오류) · "
-                    "B6(관측 없음) · B7(관측 묵음)로 **연기된** 후보와 B8(`d.adoptOne` 거짓)의 **시도 실패**가 한 사유"
-                    "(`alertUnmanaged` B5)로 합쳐진다. critical 요구(시도 실패만)와 열린 Q2(c)(연기분의 등급)의 어느 "
-                    "답도 막지 않으려면 후보별 결과(편입 · 연기 · 시도 실패)를 호출자에 전해야 한다. 형태는 구현 로트가 "
-                    "정한다(design D1 「후보별 결과와 억제 키」).",
+        "calls": "`d.observeCandidates` · `adoptionQuoteKey` · `d.logDeferred`(묵음 창) · `adoptedCount`(10판) · `d.adoptOne`.",
+        "mutations": "편입(`d.adoptOne` 경유) · `cycle.Deferred` · `cycle.Adopted` 계수 · 결과 map.",
+        "boundary": "**10판 편집**: 결과 형태만 바뀌었다 — `map[string]bool`(편입됨) → `map[string]adoptResult`. 시도 실패 자리에 "
+                    "`adoptFailed`를 적고, 묵음 창의 연기 셈은 `adoptedCount`(편입된 수 — 옛 `len(adopted)`와 같은 값)로 셈을 보존한다. "
+                    "분기 조건 · 순서 무변화. 영값이 연기인 것은 의도다 — 중간 반환이 남긴 후보는 시도되지 않았다.",
         "high_risk": "yes — 편입의 유일한 입구다.",
-        "default_test": "이 분기 자체는 무변화 — 함수의 **결과 형태**만 편집 경계 안(r4 R4-1, 6판 r5 R5-4)",
-        "tests": {"B2": "**a095 2.6** — [비움 — Q2(c)] 연기된 후보의 등급",
-                  "B6": "**a095 2.6** — [비움 — Q2(c)] 연기된 후보의 등급",
-                  "B7": "**a095 2.6** — [비움 — Q2(c)] 연기된 후보의 등급"},
+        "observed": "yes | yes",
+        "default_test": "분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다",
+        "tests": {},
     },
     {
         "stem": "adoption--ReconcileDriver.adoptOne",
@@ -426,56 +436,46 @@ BUNDLES: list[dict] = [
     {
         "stem": "adoption--ReconcileDriver.alertUnmanaged",
         "dir": "internal-app-engine--reconciledriver.alertunmanaged",
-        "role": "엔진이 관리하지 않는 보유를 알린다. why-matrix(B2 switch)가 사유를 고른다.",
+        "role": "엔진이 관리하지 않는 보유를 알린다. 사실(조건 칸)을 `unmanagedFact`로 고르고, 알림 켜짐 ∧ 편입 켜짐 — 시도 실패만 "
+                "critical(`alertAdoptionFailed`)로, 그 밖은 normal로 보낸다(10판).",
         "inputs": [
-            ("`d.unmanaged[p.ID]`", "이미 알렸나", "프로세스 메모리 map — 키는 포지션 id뿐", "B1 — 프로세스당 1회. 사실 · 등급을 보지 않는다"),
-            ("`d.opts.Adoption`", "편입 설정", "런타임 config", "B3~B6이 사유 문구를 고른다"),
+            ("`d.opts.NotificationsEnabled`", "로드된 알림 켜짐", "생산 조립 `Context.ReconcileDriver`", "거짓이면 어떤 사실도 critical 아님"),
+            ("`result`", "후보의 편입 결과", "`adopt`", "시도 실패 / 연기를 가른다"),
+            ("`d.unmanaged[p.ID][fact]`", "이 사실을 이미 알렸나", "프로세스 메모리 — (포지션, 조건)", "normal 만 억제, critical 은 거치지 않음"),
         ],
-        "calls": "`d.opts.Adoption.Excludes`(B4) · `d.opts.Adoption.Included`(B6) · `d.alert` · `d.label`.",
-        "mutations": "`d.unmanaged[p.ID] = true`(메모리) · 알림 1건. 키는 `exit.position_unmanaged|<posID>` — "
-                     "exit 관측 자리와 **같은 철자**다.",
-        "boundary": "**사유 분기는 이미 사실별로 갈려 있다** — B3(설정 거부) · B4(exclude) · B5(enabled 시도 실패) · "
-                    "B6(include 지정 시도 실패) · 기본(off∧미지정). 결정 (2)는 B4와 기본을 normal로 두라 하고, "
-                    "B5는 운영자가 고른 상태가 아니다. B3 · B6의 분류는 결정이 덮지 않는다(Q2). 이 함수의 키는 "
-                    "결정 (3)(iii)에 따라 exit 관측 자리와 갈라야 한다. **5판: B1 래치가 편집 경계 안이다(r4 R4-1, "
-                    "Manager 처분).** 오늘 B1은 포지션 id만으로, `d.alert`(→ `Notify`) **앞**에서 억제해 앞 사이클의 normal "
-                    "보고(예: 연기)가 뒤 사이클의 critical 사실(시도 실패)을 삼키고, 기록이 실패해도 다음 주기 재시도를 "
-                    "막는다. **6판 원칙(r5 R5-1)**: 메모리 래치는 **normal 보고 전용**이고 critical 보고는 래치를 무조건 "
-                    "지난다 — 중복은 outbox 키와 정본 재알림 창이 맡는다. normal 래치의 키는 사실 식별자(R5-2)다 — design D1 "
-                    "「후보별 결과와 억제 키」.",
-        "high_risk": "yes — reconcile 쪽 무보호 보고의 자리다.",
+        "calls": "`d.unmanagedFact` · `d.alertAdoptionFailed`(critical 갈래) · `reconcileUnmanagedKey` · `d.alert` · `d.label`.",
+        "mutations": "normal 래치 `d.unmanaged[p.ID][fact] = true`(메모리) · 알림 1건. key 는 `<종류>|reconcile|<조건>|<posID>` — exit 관측 자리와 다르다.",
+        "boundary": "**10판 편집**: 옛 B1 포지션 래치 → (포지션, 조건) 래치이고 critical 은 래치 앞에서 갈라져 거치지 않는다(6판 원칙). "
+                    "why-matrix 의 사유 switch 는 `unmanagedFact`(새 leaf)로 옮겨 조건 칸을 함께 돌려준다 — 순서(설정 거부 → 제외 → 편입 켜짐 → "
+                    "include 지정 → 기본)는 그대로다. 사유 문구는 연기와 시도 실패로 갈렸다(편입 켜짐 · include 지정 각각).",
+        "high_risk": "yes — reconcile 쪽 무보호 보고와 진입 차단 도달의 자리다.",
+        "observed": "yes | yes",
         "tests": {
-            "B1": "**a095 2.12 · 2.15 · 2.16** — 연기(normal) 뒤 시도 실패(critical)가 재시작 없이 기록된다 · critical은 래치를 거치지 않는다(배달 뒤 창 경과 재알림 · 기록 실패 뒤 재시도) · normal은 같은 사실 반복만 억제",
-            "B3": "**a095 2.6** — [비움 — Q2] 설정 거부의 등급",
-            "B4": "**a095 2.3** — exclude는 normal",
-            "B5": "**a095 2.2** — enabled 시도 실패는 critical",
-            "B6": "**a095 2.6** — [비움 — Q2] include 지정 시도 실패의 등급",
+            "B1": "**a095 2.2 · 2.5 · 2.5a · 2.5b** `TestA095AFailedAdoptionIsCriticalAndDurable` · `TestA095NotificationsOffNeverRecordsACritical` · `TestA095OnWithoutATopicIsStillCritical` · `TestA095TheProductionAssemblyReadsTheLoadedSwitch`",
+            "B2": "**a095 2.12 · 2.15 · 2.16 · 2.17** `TestA095ADeliveredFailureIsRemindedAfterTheWindow` · `TestA095ARecordingFailureIsRetriedWhenTheStoreRecovers` · `TestA095TheFactIdentity`",
+            "B3": "**a095 2.17** `TestA095TheFactIdentity` — 다른 사실은 삼키지 않음 · 같은 사실은 억제",
         },
     },
     {
         "stem": "adoption--ReconcileDriver.checkExternalIncrease",
         "dir": "internal-app-engine--reconciledriver.checkexternalincrease",
-        "role": "편입된 포지션의 수량이 편입 기록보다 늘었는지 보고 알린다. 주석이 t0 동결을 의도적 설계(A8)로 "
-                "선언한다.",
+        "role": "편입된 포지션의 수량이 편입 기록보다 늘었는지 보고 알린다. 주석이 t0 동결을 의도적 설계(A8)로 선언한다. "
+                "10판: 새 최대 수량마다 다시 알린다.",
         "inputs": [
-            ("`d.grown[p.ID]`", "이미 알렸나", "프로세스 메모리 map", "B1 창의 return"),
-            ("`AdoptionOf(p.ID)`", "편입 기록", "원장", "B2 창의 return. 호출자 가드(`judgeHoldings` B8)로 편입된 "
-             "포지션만 오고 `positions.adoption_id`는 `position_adoptions(id)`를 참조하므로, 여기 오는 입력은 조회 "
-             "오류다"),
-            ("`p.Quantity` 대 `adoption.Quantity`", "현재 수량 대 편입 수량", "스냅샷 대 원장", "B3 — 늘지 않았으면 return"),
+            ("`AdoptionOf(p.ID)`", "편입 기록", "원장", "조회 오류면 조용히 return(무변화 — R2-B2 삭제)"),
+            ("`p.Quantity` 대 `adoption.Quantity`", "현재 수량 대 편입 수량", "스냅샷 대 원장", "늘지 않았으면 return"),
+            ("`d.newGrowthMaximum(p)`", "보고한 최대 수량보다 큰가", "프로세스 메모리 `d.grown[p.ID]`", "아니면 return(10판 — 옛 bool 래치 대체)"),
         ],
-        "calls": "`d.opts.Journal.AdoptionOf`(B1 뒤) · `riskcalc.CompareDecimal`(B2 뒤) · `d.alert` · `d.label`.",
-        "mutations": "`d.grown[p.ID] = true`(메모리) · 알림 1건(키 `…|grown|<posID>` — 수량이 없다). "
-                     "원장의 exit state는 건드리지 않는다.",
-        "boundary": "**2판 FLM의 「B2 — 엔진이 직접 연 포지션과 미편입 보유가 여기로 온다」는 거짓이었다** — "
-                    "`judgeHoldings` B8 창이 편입된 포지션만 부른다. 결정 (3)이 R2-B2를 삭제했으므로 3판은 B2를 "
-                    "바꾸지 않는다. 알림 본문 스스로 *\"늘어난 수량은 원래 수량 기준으로 산정된 손절의 보호를 "
-                    "받는다\"*라고 쓴다 — 이 사실은 「무보호」가 아니며 그 종류·등급은 Q4다.",
+        "calls": "`d.opts.Journal.AdoptionOf` · `riskcalc.CompareDecimal` · `d.newGrowthMaximum`(10판) · `d.alert` · `d.label`.",
+        "mutations": "`d.grown[p.ID] = <보고한 수량>`(메모리, `newGrowthMaximum` 안) · normal 알림 1건(key `…|grown|<posID>`). exit state 무접촉.",
+        "boundary": "**10판 편집**: 함수 머리의 bool 래치(옛 B1)를 지우고 비교 뒤의 `newGrowthMaximum`(새 leaf)으로 옮겼다 — 래치 기준이 "
+                    "(포지션, 보고한 최대 수량)이다(Q4). 조회 오류의 조용한 반환은 무변화(3.1). 등급 normal 의 전제는 review §4.4.",
         "high_risk": "yes — 편입 후 수량 증가를 알리는 유일한 자리다.",
+        "observed": "yes | yes",
         "tests": {
-            "B1": "**a095 3.3** — [비움 — Q4] 수량 기준 재알림 여부",
-            "B2": "**a095 3.1** — 무변화(R2-B2 삭제)",
-            "B3": "**a095 3.3** — [비움 — Q4] 증가 사실의 종류·등급",
+            "B1": "**a095 3.1** `TestA095AnAdoptionLookupFailureStaysSilent` — 무변화(R2-B2 삭제)",
+            "B2": "**a095 3.3 · 3.4** `TestA095TheAdoptedGrowthReplayReportsEveryNewMaximum` · 기존 `TestAnExternalIncreaseAfterAdoptionIsReported`",
+            "B3": "**a095 3.4** `TestA095TheAdoptedGrowthReplayReportsEveryNewMaximum` — 32 의 반복은 보고하지 않음",
         },
     },
     {
@@ -644,7 +644,7 @@ def render(bundle: dict, ast_dir: Path, profiles: list[str]) -> None:
                     f"{', '.join(f'`{cell(c)}`' for c in window_calls) or '—'} | "
                     f"{', '.join(window_returns) or '—'} | {entered} |")
         test = bundle["tests"].get(branch["id"], bundle.get("default_test", DEFAULT_TEST))
-        test_rows.append(f"| {branch['id']} | {condition} | {entered} | {test} | no | no |")
+        test_rows.append(f"| {branch['id']} | {condition} | {entered} | {test} | {bundle.get('observed', 'no | no')} |")
     if not branches:
         test_rows.append("| B1 | branchless happy path | — | " + DEFAULT_TEST + " | no | no |")
 
@@ -653,6 +653,11 @@ def render(bundle: dict, ast_dir: Path, profiles: list[str]) -> None:
               f"{bundle.get('coverage_note', COVERAGE_COMMAND + ' 돌린')} 프로파일에서 **그 줄로 시작하는 블록**의 count가 0보다 큰지다 — "
               "자체 블록이 없는 분기는 `—`다. 생성: `analysis/harness/render_bundles.py`.")
     inputs = "\n".join(f"| {a} | {b} | {c} | {d} |" for a, b, c, d in bundle["inputs"])
+    boundary = bundle["boundary"]
+    if bundle["dir"] in A092_CHANGED:
+        # 10판: 표는 현재 소스에서 기계로 다시 그렸고, 산문은 3판(base 02716357)의 판단임을 밝힘 — 편집하지 않은 함수를 편집 없이
+        # 재서술하면 a092 의 변경을 a095 가 설명하는 것처럼 읽히므로, 산문을 고치지 않고 그 사실만 적음.
+        boundary = (A092_NOTE + " " + boundary)
     logic = f"""# Function Logic Map: `{qualified}`
 
 - Source: `{relative}` (`{value['start']['line']}`–`{value['end']['line']}`)
@@ -689,7 +694,7 @@ def render(bundle: dict, ast_dir: Path, profiles: list[str]) -> None:
 
 ## Safety conclusion
 
-- **Safe edit boundary**: {bundle['boundary']}
+- **Safe edit boundary**: {boundary}
 - **High-risk impact**: {bundle['high_risk']}
 """
     tests = f"""# Branch Test Map: `{qualified}`

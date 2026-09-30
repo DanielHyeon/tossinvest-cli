@@ -1,20 +1,21 @@
 # Function Logic Map: `ReconcileDriver.adopt`
 
-- Source: `internal/app/engine/adoption.go` (`172`–`218`)
+- Source: `internal/app/engine/adoption.go` (`202`–`249`)
 - Qualified: `ReconcileDriver.adopt`
-- AST evidence: `ast.json` (`source_sha256` f121aba90cd05c31…)
+- AST evidence: `ast.json` (`source_sha256` 26a0601d9987c7dc…)
 - Risk scan: `risk-pattern-report.md`
 - 분기 8 · return 4 · 호출 11
 
-**역할.** 후보를 한 번의 묶음 시세 읽기로 값 매기고 편입할 수 있는 것을 편입한다. 편입된 id 집합을 돌려준다.
+**역할.** 후보를 한 번의 묶음 시세 읽기로 값 매기고 편입할 수 있는 것을 편입한다. **후보별 결과**(편입됨 · 시도 실패 · 연기)를 돌려준다(10판).
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| `d.observeCandidates`의 답 | 후보 시세 | 브로커 시세 경로 | B2 — 오류면 빈 집합을 돌려준다 |
-| `quotes[key]` | 종목별 관측 | 위 읽기 | B6 — 없으면 `cycle.Deferred`, 그 후보는 편입되지 않는다 |
-| 시세 나이 | `PriceStaleness` | config · 기본값(B4) | B7 — 넘으면 남은 후보 전부를 편입하지 않고 return |
+| `d.observeCandidates`의 답 | 후보 시세 | 브로커 시세 경로 | 오류면 빈 map — 모든 후보가 연기 |
+| `quotes[key]` | 종목별 관측 | 위 읽기 | 없으면 `cycle.Deferred`, 그 후보는 연기 |
+| 시세 나이 | `PriceStaleness` | config · 기본값 | 넘으면 남은 후보 전부 연기로 return |
+| `d.adoptOne`의 답 | 편입 시도 | 아래 함수 | 참이면 `adoptAdopted`, 거짓이면 `adoptFailed`(10판) |
 
 ## Branches and early returns
 
@@ -22,26 +23,26 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
 |---|---|---|---|---|---|
-| B1 | if | `:175` `if len(candidates) == 0 {` | `d.observeCandidates`, `len` | :176 | 예 |
-| B2 | if | `:180` `if err != nil {` | `len` | — | 아니오 |
-| B3 | if | `:182` `if cycle.Err == nil {` | — | :185 | 아니오 |
-| B4 | if | `:189` `if bound <= 0 {` | — | — | 예 |
-| B5 | range | `:192` `for _, c := range candidates {` | `adoptionQuoteKey` | — | 예 |
-| B6 | if | `:195` `if !ok {` | — | — | 예 |
-| B7 | if | `:201` `if age := d.clk.Now().Sub(readAt); age > bound {` | `Sub`, `d.clk.Now`, `d.logDeferred`, `fmt.Sprintf`, `len` | :208 | 예 |
-| B8 | if | `:210` `if d.adoptOne(ctx, c, observed) {` | `d.adoptOne` | :217 | 예 |
+| B1 | if | `:205` `if len(candidates) == 0 {` | `d.observeCandidates`, `len` | :206 | 예 |
+| B2 | if | `:210` `if err != nil {` | `len` | — | 예 |
+| B3 | if | `:212` `if cycle.Err == nil {` | — | :215 | 예 |
+| B4 | if | `:219` `if bound <= 0 {` | — | — | 예 |
+| B5 | range | `:222` `for _, c := range candidates {` | `adoptionQuoteKey` | — | 예 |
+| B6 | if | `:225` `if !ok {` | — | — | 예 |
+| B7 | if | `:231` `if age := d.clk.Now().Sub(readAt); age > bound {` | `Sub`, `adoptedCount`, `d.clk.Now`, `d.logDeferred`, `fmt.Sprintf`, `len` | :238 | 예 |
+| B8 | if | `:240` `if d.adoptOne(ctx, c, observed) {` | `d.adoptOne` | :248 | 예 |
 
 ## Calls and live bindings
 
-`d.observeCandidates`(B1 뒤) · `adoptionQuoteKey` · `d.logDeferred`(B7 창) · `d.adoptOne`(B8).
+`d.observeCandidates` · `adoptionQuoteKey` · `d.logDeferred`(묵음 창) · `adoptedCount`(10판) · `d.adoptOne`.
 
-결과는 편입된 id 집합뿐이다 — 오류를 돌려주지 않는다. 시세 읽기 오류는 `cycle.Err`에 담고(B3 창) 빈 집합을 돌려준다.
+결과는 후보별 결과 map(`adoptResult` — 편입됨 · 시도 실패 · 연기, 10판)이다 — 오류를 돌려주지 않는다. 시세 읽기 오류는 `cycle.Err`에 담고 빈 map을 돌려준다(없는 후보 = 영값 연기).
 
 ## State mutations and fallbacks
 
-편입(`d.adoptOne` 경유) · `cycle.Deferred` · `cycle.Adopted` 계수.
+편입(`d.adoptOne` 경유) · `cycle.Deferred` · `cycle.Adopted` 계수 · 결과 map.
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **5판: 결과 형태가 편집 경계 안이다(r4 R4-1, Manager 처분).** 오늘 이 함수는 편입된 id 집합만 돌려주고, 집합에 없는 후보는 호출자 `judgeHoldings` B14가 무관리로 모은다 — B2(시세 읽기 오류) · B6(관측 없음) · B7(관측 묵음)로 **연기된** 후보와 B8(`d.adoptOne` 거짓)의 **시도 실패**가 한 사유(`alertUnmanaged` B5)로 합쳐진다. critical 요구(시도 실패만)와 열린 Q2(c)(연기분의 등급)의 어느 답도 막지 않으려면 후보별 결과(편입 · 연기 · 시도 실패)를 호출자에 전해야 한다. 형태는 구현 로트가 정한다(design D1 「후보별 결과와 억제 키」).
+- **Safe edit boundary**: **10판 편집**: 결과 형태만 바뀌었다 — `map[string]bool`(편입됨) → `map[string]adoptResult`. 시도 실패 자리에 `adoptFailed`를 적고, 묵음 창의 연기 셈은 `adoptedCount`(편입된 수 — 옛 `len(adopted)`와 같은 값)로 셈을 보존한다. 분기 조건 · 순서 무변화. 영값이 연기인 것은 의도다 — 중간 반환이 남긴 후보는 시도되지 않았다.
 - **High-risk impact**: yes — 편입의 유일한 입구다.

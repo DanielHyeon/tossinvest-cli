@@ -6,8 +6,8 @@
 
 | Branch | 조건 | 진입 실측 | Test (a095 요구) | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:162` `if n.Publisher == nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B2 | `:165` `if err := n.Publisher.Publish(ctx, notificationFor(e, severity)); err != nil && n.Log != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B1 | `:180` `if n.Publisher == nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B2 | `:183` `if err := n.Publisher.Publish(ctx, notificationFor(e, severity)); err != nil && n.Log != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
 
 **미진입 분기 0개**: 없음
 **자체 블록 없는 분기 0개**: 없음 — 컴파일러가 별도 블록을 만들지 않는 형태(빈 `switch {` 등)이며 미커버와 다르다.

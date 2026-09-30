@@ -1,21 +1,22 @@
 # Function Logic Map: `ReconcileDriver.judgeHoldings`
 
-- Source: `internal/app/engine/adoption.go` (`75`–`156`)
+- Source: `internal/app/engine/adoption.go` (`99`–`185`)
 - Qualified: `ReconcileDriver.judgeHoldings`
-- AST evidence: `ast.json` (`source_sha256` f121aba90cd05c31…)
+- AST evidence: `ast.json` (`source_sha256` 26a0601d9987c7dc…)
 - Risk scan: `risk-pattern-report.md`
-- 분기 15 · return 0 · 호출 23
+- 분기 16 · return 0 · 호출 24
 
-**역할.** 안정 스냅샷의 보유를 게이트에 통과시키고, 편입하거나 무관리로 모은다. **`checkExternalIncrease`와 reconcile 쪽 `alertUnmanaged`의 유일한 호출자다.**
+**역할.** 안정 스냅샷의 보유를 게이트에 통과시키고, 편입하거나 무관리로 모은다. **`checkExternalIncrease` · `checkEngineOpenedIncrease`와 reconcile 쪽 `alertUnmanaged`의 유일한 호출자다.**
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| `p.ExitEligible()` | 진입 결정 또는 편입 기록이 있나 | 원장 `positions` | B7 창 — 참이면 `continue` |
-| `p.Adopted()` | 편입 기록이 있나 | 원장 `positions.adoption_id` | B8 창 — 참일 때만 `checkExternalIncrease` |
-| `d.blocked` · `fresh` | 전이 상태 | RECONCILE 추적기 · 스냅샷 나이 | B9 · B10 — 무알림 `continue` |
-| `d.opts.Adoption` | 편입 설정 | 런타임 config | B11(exclude) · B12(off∧미지정) → `unmanaged` |
+| `p.ExitEligible()` | 진입 결정 또는 편입 기록이 있나 | 원장 `positions` | B7 창 — 참이면 수량 증가만 검사하고 `continue` |
+| `p.Adopted()` | 편입 기록이 있나 | 원장 `positions.adoption_id` | B8 — 참이면 `checkExternalIncrease`, 거짓(엔진 개설)이면 `checkEngineOpenedIncrease`(10판) |
+| `d.blocked` · `fresh` | 전이 상태 | RECONCILE 추적기 · 스냅샷 나이 | 무알림 `continue` |
+| `d.opts.Adoption` | 편입 설정 | 런타임 config | exclude · off∧미지정 → `unmanaged` |
+| `d.adopt`의 결과 | 후보별 편입됨 · 시도 실패 · 연기 | 위 함수 | 편입됨이 아니면 `unmanaged`, 결과는 `alertUnmanaged`에 전달 |
 
 ## Branches and early returns
 
@@ -23,33 +24,34 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
 |---|---|---|---|---|---|
-| B1 | if | `:78` `if stale <= 0 {` | `d.clk.Now`, `snapshot.Age` | — | 예 |
-| B2 | range | `:87` `for _, holding := range snapshot.Holdings {` | `strings.ToLower`, `strings.TrimSpace` | — | 예 |
-| B3 | if | `:89` `if market == "" {` | `strings.ToLower`, `strings.ToUpper`, `strings.TrimSpace` | — | 아니오 |
-| B4 | if | `:93` `if symbol == "" \|\| market == "" \|\| isZeroQuantity(holding.Quantity) {` | `d.opts.Journal.CurrentPosition`, `isZeroQuantity` | — | 아니오 |
-| B5 | if | `:98` `if err != nil {` | — | — | 아니오 |
-| B6 | if | `:104` `if p.State == journal.PositionClosed \|\| isZeroQuantity(p.Quantity) {` | `isZeroQuantity` | — | 예 |
-| B7 | if | `:108` `if p.ExitEligible() {` | `p.ExitEligible` | — | 예 |
-| B8 | if | `:109` `if p.Adopted() {` | `d.checkExternalIncrease`, `p.Adopted` | — | 예 |
-| B9 | if | `:116` `if d.blocked(market, symbol) {` | `d.blocked` | — | 예 |
-| B10 | if | `:119` `if !fresh {` | — | — | 예 |
-| B11 | if | `:127` `if d.opts.Adoption.Excludes(symbol) {` | `append`, `d.opts.Adoption.Excludes` | — | 예 |
-| B12 | if | `:135` `if !d.opts.Adoption.Enabled && !d.opts.Adoption.Included(symbol) {` | `append`, `d.adopt`, `d.opts.Adoption.Included` | — | 예 |
-| B13 | range | `:143` `for _, c := range candidates {` | — | — | 예 |
-| B14 | if | `:144` `if !adopted[c.position.ID] {` | `append` | — | 예 |
-| B15 | range | `:152` `for _, p := range unmanaged {` | `d.alertUnmanaged` | — | 예 |
+| B1 | if | `:102` `if stale <= 0 {` | `d.clk.Now`, `snapshot.Age` | — | 예 |
+| B2 | range | `:111` `for _, holding := range snapshot.Holdings {` | `strings.ToLower`, `strings.TrimSpace` | — | 예 |
+| B3 | if | `:113` `if market == "" {` | `strings.ToLower`, `strings.ToUpper`, `strings.TrimSpace` | — | 아니오 |
+| B4 | if | `:117` `if symbol == "" \|\| market == "" \|\| isZeroQuantity(holding.Quantity) {` | `d.opts.Journal.CurrentPosition`, `isZeroQuantity` | — | 아니오 |
+| B5 | if | `:122` `if err != nil {` | — | — | 아니오 |
+| B6 | if | `:128` `if p.State == journal.PositionClosed \|\| isZeroQuantity(p.Quantity) {` | `isZeroQuantity` | — | 예 |
+| B7 | if | `:132` `if p.ExitEligible() {` | `p.ExitEligible` | — | 예 |
+| B8 | if | `:135` `if p.Adopted() {` | `d.checkExternalIncrease`, `p.Adopted` | — | 예 |
+| B9 | else | `:137` `} else {` | `d.checkEngineOpenedIncrease` | — | 예 |
+| B10 | if | `:144` `if d.blocked(market, symbol) {` | `d.blocked` | — | 예 |
+| B11 | if | `:147` `if !fresh {` | — | — | 예 |
+| B12 | if | `:155` `if d.opts.Adoption.Excludes(symbol) {` | `append`, `d.opts.Adoption.Excludes` | — | 예 |
+| B13 | if | `:163` `if !d.opts.Adoption.Enabled && !d.opts.Adoption.Included(symbol) {` | `append`, `d.adopt`, `d.opts.Adoption.Included` | — | 예 |
+| B14 | range | `:171` `for _, c := range candidates {` | — | — | 예 |
+| B15 | if | `:172` `if results[c.position.ID] != adoptAdopted {` | `append` | — | 예 |
+| B16 | range | `:180` `for _, p := range unmanaged {` | `d.alertUnmanaged` | — | 예 |
 
 ## Calls and live bindings
 
-`d.opts.Journal.CurrentPosition` · `d.checkExternalIncrease`(B8 창) · `d.blocked`(B9) · `d.opts.Adoption.Excludes`(B11) · `d.opts.Adoption.Included`(B12) · `d.adopt` · `d.alertUnmanaged`(B15 창).
+`d.opts.Journal.CurrentPosition` · `d.checkExternalIncrease` · `d.checkEngineOpenedIncrease`(10판) · `d.blocked` · `d.opts.Adoption.Excludes` · `d.opts.Adoption.Included` · `d.adopt` · `d.alertUnmanaged(ctx, p, results[p.ID])`.
 
 결과값이 없다 — 오류를 돌려주지 않는다. `CurrentPosition` 오류는 그 보유를 건너뛰고(B5), 편입 쪽 오류는 `adopt`가 `cycle.Err`에 담는다.
 
 ## State mutations and fallbacks
 
-`cycle.Unmanaged` 계수 · 편입(`d.adopt` 경유) · 알림(`alertUnmanaged` 경유).
+`cycle.Unmanaged` 계수 · 편입(`d.adopt` 경유) · 알림(`alertUnmanaged` · 수량 증가 검사 경유).
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **3판의 사실 셋이 이 함수에서 나온다.** ① B7 창은 `ExitEligible`이면 `continue`하고 B8만 `checkExternalIncrease`를 부른다 — **엔진이 직접 연 포지션(편입 기록 없음)의 수량 증가는 어디서도 검사되지 않는다**(결정 (3)(i)의 대상). ② 편입 기록이 없는 보유는 B8에 오지 않으므로 `checkExternalIncrease` B2가 받는 입력이 아니다 — 2판 R2-B2의 전제가 거짓이었다. ③ 무관리 보유는 B11(exclude) · B12(off∧미지정) · B14(편입 실패)로 모여 B15에서 알려진다 — 운영자가 고른 상태(B11 · B12)와 고르지 않은 상태(B14)가 **다른 분기**로 이미 갈린다.
+- **Safe edit boundary**: **10판 편집(구현 로트)**: B8 에 else 갈래(엔진 개설 포지션의 수량 증가 검사 — 결정 (3)(i), Q3)를 더했고, `adopt`의 결과를 id 집합이 아니라 후보별 결과로 받아 `alertUnmanaged`에 넘긴다(Q1 · Q2(c)). 전이 상태 · 게이트 순서는 그대로다. 후보가 아닌 무관리 보유(제외 · 꺼짐 · 설정 거부)는 결과 map 에 없어 영값(연기)을 받지만 그 셋의 조건 칸은 결과를 읽지 않는다.
 - **High-risk impact**: yes — 편입과 무관리 보고의 입구다.

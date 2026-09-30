@@ -6,7 +6,7 @@
 
 | Branch | 조건 | 진입 실측 | Test (a095 요구) | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:134` `if severity != SeverityCritical {` | 예 | **a095 2.1** — exit 관측 자리의 사실은 B1 창으로 간다 · **2.2** — reconcile 자리의 비선택 사실은 B1을 지나 `notifyCritical`로 간다 | no | no |
+| B1 | `:152` `if severity != SeverityCritical {` | 예 | **a095 2.1** — exit 관측 자리의 사실은 B1 창으로 간다 · **2.2** — reconcile 자리의 비선택 사실은 B1을 지나 `notifyCritical`로 간다 | no | no |
 
 **미진입 분기 0개**: 없음
 **자체 블록 없는 분기 0개**: 없음 — 컴파일러가 별도 블록을 만들지 않는 형태(빈 `switch {` 등)이며 미커버와 다르다.

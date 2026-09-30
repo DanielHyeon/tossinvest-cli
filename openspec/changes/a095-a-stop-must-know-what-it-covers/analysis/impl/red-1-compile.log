@@ -1,0 +1,14 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:154:53: f.opts.NotificationsEnabled undefined (type ReconcileDriverOptions has no field or method NotificationsEnabled)
+internal/app/engine/a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:196:3: unknown field NotificationsEnabled in struct literal of type ReconcileDriverOptions
+internal/app/engine/a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:352:20: undefined: obs.EventExitPositionAdoptionFailed
+internal/app/engine/a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:417:77: undefined: obs.EventExitPositionAdoptionFailed
+internal/app/engine/a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:418:60: undefined: obs.EventExitPositionAdoptionFailed
+internal/app/engine/a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:427:26: undefined: obs.EventExitPositionAdoptionFailed
+internal/app/engine/a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:543:5: unknown field NotificationsEnabled in struct literal of type ReconcileDriverOptions
+internal/app/engine/a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:727:26: undefined: obs.EventExitPositionAdoptionFailed
+internal/app/engine/a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:744:10: f.opts.NotificationsEnabled undefined (type ReconcileDriverOptions has no field or method NotificationsEnabled)
+internal/app/engine/a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:764:10: f.opts.NotificationsEnabled undefined (type ReconcileDriverOptions has no field or method NotificationsEnabled)
+internal/app/engine/a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:764:10: too many errors
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [build failed]
+FAIL

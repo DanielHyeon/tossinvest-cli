@@ -1,8 +1,8 @@
 # Function Logic Map: `ExitObserver.alertUnmanaged`
 
-- Source: `internal/app/engine/exitloop.go` (`1601`–`1618`)
+- Source: `internal/app/engine/exitloop.go` (`1606`–`1623`)
 - Qualified: `ExitObserver.alertUnmanaged`
-- AST evidence: `ast.json` (`source_sha256` 522d5d81c4992c57…)
+- AST evidence: `ast.json` (`source_sha256` 2d34b5c57f25a2c8…)
 - Risk scan: `risk-pattern-report.md`
 - 분기 1 · return 1 · 호출 3
 
@@ -20,7 +20,7 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
 |---|---|---|---|---|---|
-| B1 | if | `:1602` `if o.unmanaged[p.ID] {` | `o.alert`, `o.label`, `string` | :1603 | 예 |
+| B1 | if | `:1607` `if o.unmanaged[p.ID] {` | `o.alert`, `o.label`, `string` | :1608 | 예 |
 
 ## Calls and live bindings
 
@@ -34,5 +34,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **본문은 바꾸지 않는다.** 결정 (1)에 따라 이 자리의 사실은 normal로 남고, 결정 (3)(iii)에 따라 키가 reconcile 자리와 달라야 한다.
+- **Safe edit boundary**: **10판 재추출 주석** — 분기 표 · 좌표 · 진입 실측은 현재 소스(아래 `source_sha256`)에서 기계로 다시 그렸다. 아래 산문은 3판(base `02716357`)의 판단이며, 그 뒤 a092 가 이 소스를 바꿨다(특히 `claimAndDeliver`는 이제 claim만 `n.mu` 아래에서 하고 전송은 잠금 밖 — `fbc6df5f`). a095 는 이 함수를 편집하지 않는다. 산문의 잠금 · 좌표 서술과 현재 소스가 어긋나면 표와 `review.md` §4.2 정정이 우선한다. **본문은 바꾸지 않는다.** 결정 (1)에 따라 이 자리의 사실은 normal로 남고, 결정 (3)(iii)에 따라 키가 reconcile 자리와 달라야 한다.
 - **High-risk impact**: yes — exit goroutine 안의 발신이다.

@@ -2,7 +2,7 @@
 
 - Source: `internal/app/engine/alertdelivery.go` (`235`–`264`)
 - Qualified: `alertDeliverer.cycle`
-- AST evidence: `ast.json` (`source_sha256` 5791a31af9d24079…)
+- AST evidence: `ast.json` (`source_sha256` df8a4171e8dced1b…)
 - Risk scan: `risk-pattern-report.md`
 - 분기 4 · return 3 · 호출 12
 
@@ -37,5 +37,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **a095는 이 함수를 바꾸지 않는다.** 이 실행자는 PENDING 행을 원장에서 읽어 보낸다 — 사실이 해소됐는지 묻지 않는다(r3 N3).
+- **Safe edit boundary**: **10판 재추출 주석** — 분기 표 · 좌표 · 진입 실측은 현재 소스(아래 `source_sha256`)에서 기계로 다시 그렸다. 아래 산문은 3판(base `02716357`)의 판단이며, 그 뒤 a092 가 이 소스를 바꿨다(특히 `claimAndDeliver`는 이제 claim만 `n.mu` 아래에서 하고 전송은 잠금 밖 — `fbc6df5f`). a095 는 이 함수를 편집하지 않는다. 산문의 잠금 · 좌표 서술과 현재 소스가 어긋나면 표와 `review.md` §4.2 정정이 우선한다. **a095는 이 함수를 바꾸지 않는다.** 이 실행자는 PENDING 행을 원장에서 읽어 보낸다 — 사실이 해소됐는지 묻지 않는다(r3 N3).
 - **High-risk impact**: yes — critical 배달의 실행자다.

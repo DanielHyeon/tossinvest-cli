@@ -6,12 +6,9 @@
 
 | Branch | 조건 | 진입 실측 | Test (a095 요구) | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:393` `if d.unmanaged[p.ID] {` | 예 | **a095 2.12 · 2.15 · 2.16** — 연기(normal) 뒤 시도 실패(critical)가 재시작 없이 기록된다 · critical은 래치를 거치지 않는다(배달 뒤 창 경과 재알림 · 기록 실패 뒤 재시도) · normal은 같은 사실 반복만 억제 | no | no |
-| B2 | `:404` `switch {` | — | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B3 | `:405` `case d.opts.Adoption.Rejected != "":` | 예 | **a095 2.6** — [비움 — Q2] 설정 거부의 등급 | no | no |
-| B4 | `:407` `case d.opts.Adoption.Excludes(p.Symbol):` | 예 | **a095 2.3** — exclude는 normal | no | no |
-| B5 | `:409` `case d.opts.Adoption.Enabled:` | 예 | **a095 2.2** — enabled 시도 실패는 critical | no | no |
-| B6 | `:412` `case d.opts.Adoption.Included(p.Symbol):` | 예 | **a095 2.6** — [비움 — Q2] include 지정 시도 실패의 등급 | no | no |
+| B1 | `:441` `if d.opts.NotificationsEnabled && fact == factEnabledFailed {` | 예 | **a095 2.2 · 2.5 · 2.5a · 2.5b** `TestA095AFailedAdoptionIsCriticalAndDurable` · `TestA095NotificationsOffNeverRecordsACritical` · `TestA095OnWithoutATopicIsStillCritical` · `TestA095TheProductionAssemblyReadsTheLoadedSwitch` | yes | yes |
+| B2 | `:445` `if d.unmanaged[p.ID][fact] {` | 예 | **a095 2.12 · 2.15 · 2.16 · 2.17** `TestA095ADeliveredFailureIsRemindedAfterTheWindow` · `TestA095ARecordingFailureIsRetriedWhenTheStoreRecovers` · `TestA095TheFactIdentity` | yes | yes |
+| B3 | `:448` `if d.unmanaged[p.ID] == nil {` | 예 | **a095 2.17** `TestA095TheFactIdentity` — 다른 사실은 삼키지 않음 · 같은 사실은 억제 | yes | yes |
 
 **미진입 분기 0개**: 없음
-**자체 블록 없는 분기 1개**: B2 — 컴파일러가 별도 블록을 만들지 않는 형태(빈 `switch {` 등)이며 미커버와 다르다.
+**자체 블록 없는 분기 0개**: 없음 — 컴파일러가 별도 블록을 만들지 않는 형태(빈 `switch {` 등)이며 미커버와 다르다.

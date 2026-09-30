@@ -6,33 +6,33 @@
 
 | Branch | 조건 | 진입 실측 | Test (a095 요구) | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:422` `if attempts <= 0 {` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B2 | `:428` `for attempt := 1; attempt <= attempts; attempt++ {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B3 | `:429` `if n.Publisher == nil {` | 아니오 | **a095 2.5** — 알림 off에서 a095의 사실이 이 창에 오지 않는다(호출자 쪽에서 고정) | no | no |
-| B4 | `:434` `if err == nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B5 | `:436` `if markErr == nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B6 | `:437` `switch settled.Outcome {` | — | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B7 | `:438` `case journal.SettleApplied:` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B8 | `:440` `case journal.SettleLeaseLost, journal.SettleAlreadySettled:` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B9 | `:452` `case journal.SettleNotFound:` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B10 | `:454` `default:` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B11 | `:478` `if n.Log != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B12 | `:483` `if n.Gate != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B13 | `:495` `if markErr != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B14 | `:499` `} else if failed.Outcome != journal.SettleApplied {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B15 | `:496` `if n.Log != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B16 | `:499` `} else if failed.Outcome != journal.SettleApplied {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B17 | `:509` `if n.Log != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B18 | `:519` `if failed.Outcome == journal.SettleNotFound && n.Gate != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B19 | `:525` `if attempt < attempts {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B20 | `:526` `if !n.wait(ctx) {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B21 | `:543` `switch {` | — | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B22 | `:544` `case relErr != nil:` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B23 | `:545` `if n.Log != nil {` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B24 | `:548` `case released.Outcome == journal.SettleApplied:` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B25 | `:551` `default:` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B26 | `:565` `if n.Log != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B27 | `:570` `if n.Gate != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B1 | `:479` `if attempts <= 0 {` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B2 | `:485` `for attempt := 1; attempt <= attempts; attempt++ {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B3 | `:486` `if n.Publisher == nil {` | 아니오 | **a095 2.5** — 알림 off에서 a095의 사실이 이 창에 오지 않는다(호출자 쪽에서 고정) | no | no |
+| B4 | `:491` `if err == nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B5 | `:493` `if markErr == nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B6 | `:494` `switch settled.Outcome {` | — | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B7 | `:495` `case journal.SettleApplied:` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B8 | `:497` `case journal.SettleLeaseLost, journal.SettleAlreadySettled:` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B9 | `:509` `case journal.SettleNotFound:` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B10 | `:511` `default:` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B11 | `:537` `if n.Log != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B12 | `:551` `if markErr != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B13 | `:555` `} else if failed.Outcome != journal.SettleApplied {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B14 | `:552` `if n.Log != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B15 | `:555` `} else if failed.Outcome != journal.SettleApplied {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B16 | `:565` `if n.Log != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B17 | `:575` `if !isPreemption(failed.Outcome) && n.Gate != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B18 | `:584` `if attempt < attempts {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B19 | `:585` `if !n.wait(ctx) {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B20 | `:603` `switch {` | — | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B21 | `:604` `case relErr != nil:` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B22 | `:605` `if n.Log != nil {` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B23 | `:608` `case released.Outcome == journal.SettleApplied:` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B24 | `:611` `case !isPreemption(released.Outcome):` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B25 | `:616` `if n.Gate != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B26 | `:623` `default:` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B27 | `:639` `if n.Log != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
 
-**미진입 분기 8개**: B1, B3, B8, B9, B10, B22, B23, B25
-**자체 블록 없는 분기 2개**: B6, B21 — 컴파일러가 별도 블록을 만들지 않는 형태(빈 `switch {` 등)이며 미커버와 다르다.
+**미진입 분기 6개**: B1, B3, B10, B21, B22, B26
+**자체 블록 없는 분기 2개**: B6, B20 — 컴파일러가 별도 블록을 만들지 않는 형태(빈 `switch {` 등)이며 미커버와 다르다.

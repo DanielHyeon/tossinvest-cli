@@ -1,8 +1,8 @@
 # Function Logic Map: `Notifier.Notify`
 
-- Source: `internal/obs/notifier.go` (`130`–`139`)
+- Source: `internal/obs/notifier.go` (`148`–`157`)
 - Qualified: `Notifier.Notify`
-- AST evidence: `ast.json` (`source_sha256` 0bc75668ff17c3d6…)
+- AST evidence: `ast.json` (`source_sha256` d705f78d68c1eff3…)
 - Risk scan: `risk-pattern-report.md`
 - 분기 1 · return 2 · 호출 4
 
@@ -21,7 +21,7 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
 |---|---|---|---|---|---|
-| B1 | if | `:134` `if severity != SeverityCritical {` | `n.notifyCritical`, `n.publishBestEffort` | :136, :138 | 예 |
+| B1 | if | `:152` `if severity != SeverityCritical {` | `n.notifyCritical`, `n.publishBestEffort` | :154, :156 | 예 |
 
 ## Calls and live bindings
 
@@ -35,5 +35,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **편집 경계는 Q1의 답에 달렸다(4판, r3 N4)** — (a)면 본문 불변, (b)면 `SeverityOf` 계약 변경과 함께 경계 재선언. 어느 답이든 결정 (1)의 요구 「exit goroutine 에 critical Notify 를 새로 두지 않는다」는 exit 관측 자리의 사실이 B1 창(`publishBestEffort`)으로 가는 것으로 성립한다 — 그 경로에는 `n.mu`도 outbox도 재시도 대기도 없다(네트워크 발행 1회는 동기다).
+- **Safe edit boundary**: **10판 재추출 주석** — 분기 표 · 좌표 · 진입 실측은 현재 소스(아래 `source_sha256`)에서 기계로 다시 그렸다. 아래 산문은 3판(base `02716357`)의 판단이며, 그 뒤 a092 가 이 소스를 바꿨다(특히 `claimAndDeliver`는 이제 claim만 `n.mu` 아래에서 하고 전송은 잠금 밖 — `fbc6df5f`). a095 는 이 함수를 편집하지 않는다. 산문의 잠금 · 좌표 서술과 현재 소스가 어긋나면 표와 `review.md` §4.2 정정이 우선한다. **편집 경계는 Q1의 답에 달렸다(4판, r3 N4)** — (a)면 본문 불변, (b)면 `SeverityOf` 계약 변경과 함께 경계 재선언. 어느 답이든 결정 (1)의 요구 「exit goroutine 에 critical Notify 를 새로 두지 않는다」는 exit 관측 자리의 사실이 B1 창(`publishBestEffort`)으로 가는 것으로 성립한다 — 그 경로에는 `n.mu`도 outbox도 재시도 대기도 없다(네트워크 발행 1회는 동기다).
 - **High-risk impact**: yes — 알림이 원장에 남는지, 진입 차단에 닿는지가 여기서 갈린다.

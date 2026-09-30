@@ -6,7 +6,7 @@
 
 | Branch | 조건 | 진입 실측 | Test (a095 요구) | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:348` `if criticalEvents[t] {` | 예 | **a095 2.1 · 2.2** — exit 관측 자리의 사실은 normal, reconcile 자리의 비선택 사실은 critical. 싣는 방식은 [비움 — Q1] | no | no |
+| B1 | `:367` `if criticalEvents[t] {` | 예 | **a095 2.1 · 2.2** — exit 관측 자리의 사실은 normal, reconcile 자리의 비선택 사실은 critical. 싣는 방식: 10판 Q1 답 (a) — 새 종류 `EventExitPositionAdoptionFailed` 등재, 본문 불변(`TestA095AFailedAdoptionIsCriticalAndDurable`) | no | no |
 
 **미진입 분기 0개**: 없음
 **자체 블록 없는 분기 0개**: 없음 — 컴파일러가 별도 블록을 만들지 않는 형태(빈 `switch {` 등)이며 미커버와 다르다.

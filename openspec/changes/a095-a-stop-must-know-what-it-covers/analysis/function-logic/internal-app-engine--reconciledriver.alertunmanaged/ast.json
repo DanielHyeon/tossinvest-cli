@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/adoption.go",
-  "source_sha256": "f121aba90cd05c31de5eeb9acad14497db9150c61314039419cbd5d9e0734edd",
+  "source_sha256": "26a0601d9987c7dc07d918df099d7cbfa21381560e17dd0162943da7aa8f811e",
   "package": "engine",
   "function": "alertUnmanaged",
   "receiver": "ReconcileDriver",
-  "signature": "ReconcileDriver.alertUnmanaged(params=2, results=0)",
+  "signature": "ReconcileDriver.alertUnmanaged(params=3, results=0)",
   "start": {
-    "line": 392,
+    "line": 439,
     "column": 1
   },
   "end": {
-    "line": 432,
+    "line": 469,
     "column": 2
   },
   "branches": [
@@ -18,47 +18,23 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 393,
+        "line": 441,
         "column": 2
       }
     },
     {
       "id": "B2",
-      "kind": "switch",
+      "kind": "if",
       "at": {
-        "line": 404,
+        "line": 445,
         "column": 2
       }
     },
     {
       "id": "B3",
-      "kind": "case",
+      "kind": "if",
       "at": {
-        "line": 405,
-        "column": 2
-      }
-    },
-    {
-      "id": "B4",
-      "kind": "case",
-      "at": {
-        "line": 407,
-        "column": 2
-      }
-    },
-    {
-      "id": "B5",
-      "kind": "case",
-      "at": {
-        "line": 409,
-        "column": 2
-      }
-    },
-    {
-      "id": "B6",
-      "kind": "case",
-      "at": {
-        "line": 412,
+        "line": 448,
         "column": 2
       }
     }
@@ -67,7 +43,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 394,
+        "line": 443,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 446,
         "column": 3
       }
     }
@@ -76,23 +59,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 407,
-        "column": 7
+        "line": 440,
+        "column": 15
       },
-      "text": "d.opts.Adoption.Excludes"
+      "text": "d.unmanagedFact"
     },
     {
       "kind": "call",
       "at": {
-        "line": 412,
-        "column": 7
+        "line": 442,
+        "column": 3
       },
-      "text": "d.opts.Adoption.Included"
+      "text": "d.alertAdoptionFailed"
     },
     {
       "kind": "call",
       "at": {
-        "line": 417,
+        "line": 453,
         "column": 2
       },
       "text": "d.alert"
@@ -100,15 +83,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 419,
+        "line": 455,
         "column": 10
       },
-      "text": "string"
+      "text": "reconcileUnmanagedKey"
     },
     {
       "kind": "call",
       "at": {
-        "line": 420,
+        "line": 456,
         "column": 10
       },
       "text": "d.label"
@@ -116,45 +99,24 @@
   ],
   "assignments": [
     {
-      "kind": "=",
-      "at": {
-        "line": 396,
-        "column": 2
-      }
-    },
-    {
       "kind": ":=",
       "at": {
-        "line": 402,
+        "line": 440,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 406,
+        "line": 449,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 408,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 410,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 413,
-        "column": 3
+        "line": 451,
+        "column": 2
       }
     }
   ],

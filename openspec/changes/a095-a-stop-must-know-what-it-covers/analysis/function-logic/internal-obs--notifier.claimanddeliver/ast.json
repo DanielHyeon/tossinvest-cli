@@ -1,16 +1,16 @@
 {
   "file": "internal/obs/notifier.go",
-  "source_sha256": "0bc75668ff17c3d6dec1c8191e24f00b80a700c091ed33fe80c1acbd4b9a5bd8",
+  "source_sha256": "d705f78d68c1eff38216e9dc9791cf737dc9d505bca77b8543aa7b7bc236bd83",
   "package": "obs",
   "function": "claimAndDeliver",
   "receiver": "Notifier",
-  "signature": "Notifier.claimAndDeliver(params=3, results=3)",
+  "signature": "Notifier.claimAndDeliver(params=3, results=4)",
   "start": {
-    "line": 251,
+    "line": 288,
     "column": 1
   },
   "end": {
-    "line": 317,
+    "line": 361,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 263,
+        "line": 301,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 276,
+        "line": 314,
         "column": 3
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 279,
+        "line": 317,
         "column": 3
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "switch",
       "at": {
-        "line": 284,
+        "line": 324,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "case",
       "at": {
-        "line": 285,
+        "line": 325,
         "column": 2
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "case",
       "at": {
-        "line": 294,
+        "line": 335,
         "column": 2
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 310,
+        "line": 354,
         "column": 2
       }
     }
@@ -75,35 +75,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 282,
+        "line": 322,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 293,
+        "line": 334,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 305,
+        "line": 347,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 314,
+        "line": 358,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 316,
+        "line": 360,
         "column": 2
       }
     }
@@ -112,7 +112,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 254,
+        "line": 293,
         "column": 2
       },
       "text": "n.mu.Lock"
@@ -120,15 +120,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 255,
-        "column": 8
-      },
-      "text": "n.mu.Unlock"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 260,
+        "line": 298,
         "column": 2
       },
       "text": "n.checkAlertLease"
@@ -136,7 +128,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 262,
+        "line": 300,
         "column": 16
       },
       "text": "n.Journal.ClaimAlertForDelivery"
@@ -144,7 +136,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 262,
+        "line": 300,
         "column": 61
       },
       "text": "n.remindAfter"
@@ -152,7 +144,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 262,
+        "line": 300,
         "column": 78
       },
       "text": "n.claimant"
@@ -160,7 +152,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 274,
+        "line": 312,
         "column": 13
       },
       "text": "fmt.Sprintf"
@@ -168,7 +160,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 277,
+        "line": 315,
         "column": 4
       },
       "text": "n.Log.Error"
@@ -176,7 +168,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 277,
+        "line": 315,
         "column": 63
       },
       "text": "string"
@@ -184,7 +176,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 280,
+        "line": 319,
         "column": 4
       },
       "text": "n.Gate.Block"
@@ -192,7 +184,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 304,
+        "line": 321,
+        "column": 3
+      },
+      "text": "n.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 3
+      },
+      "text": "n.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 345,
+        "column": 3
+      },
+      "text": "n.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
         "column": 3
       },
       "text": "n.logClaimHeld"
@@ -200,7 +216,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 304,
+        "line": 346,
         "column": 18
       },
       "text": "string"
@@ -208,7 +224,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 308,
+        "line": 350,
+        "column": 2
+      },
+      "text": "n.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 352,
         "column": 2
       },
       "text": "n.logClaimStolen"
@@ -216,7 +240,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 308,
+        "line": 352,
         "column": 19
       },
       "text": "string"
@@ -224,8 +248,8 @@
     {
       "kind": "call",
       "at": {
-        "line": 309,
-        "column": 16
+        "line": 353,
+        "column": 25
       },
       "text": "n.deliver"
     }
@@ -234,34 +258,25 @@
     {
       "kind": ":=",
       "at": {
-        "line": 262,
+        "line": 300,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 274,
+        "line": 312,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 309,
+        "line": 353,
         "column": 2
       }
     }
   ],
   "go_statements": null,
-  "defers": [
-    {
-      "kind": "defer",
-      "at": {
-        "line": 255,
-        "column": 2
-      },
-      "text": "n.mu.Unlock"
-    }
-  ]
+  "defers": null
 }

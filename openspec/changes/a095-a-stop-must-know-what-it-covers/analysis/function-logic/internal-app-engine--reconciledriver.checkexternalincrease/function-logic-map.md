@@ -1,20 +1,20 @@
 # Function Logic Map: `ReconcileDriver.checkExternalIncrease`
 
-- Source: `internal/app/engine/adoption.go` (`441`–`472`)
+- Source: `internal/app/engine/adoption.go` (`543`–`573`)
 - Qualified: `ReconcileDriver.checkExternalIncrease`
-- AST evidence: `ast.json` (`source_sha256` f121aba90cd05c31…)
+- AST evidence: `ast.json` (`source_sha256` 26a0601d9987c7dc…)
 - Risk scan: `risk-pattern-report.md`
-- 분기 3 · return 3 · 호출 5
+- 분기 3 · return 3 · 호출 6
 
-**역할.** 편입된 포지션의 수량이 편입 기록보다 늘었는지 보고 알린다. 주석이 t0 동결을 의도적 설계(A8)로 선언한다.
+**역할.** 편입된 포지션의 수량이 편입 기록보다 늘었는지 보고 알린다. 주석이 t0 동결을 의도적 설계(A8)로 선언한다. 10판: 새 최대 수량마다 다시 알린다.
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| `d.grown[p.ID]` | 이미 알렸나 | 프로세스 메모리 map | B1 창의 return |
-| `AdoptionOf(p.ID)` | 편입 기록 | 원장 | B2 창의 return. 호출자 가드(`judgeHoldings` B8)로 편입된 포지션만 오고 `positions.adoption_id`는 `position_adoptions(id)`를 참조하므로, 여기 오는 입력은 조회 오류다 |
-| `p.Quantity` 대 `adoption.Quantity` | 현재 수량 대 편입 수량 | 스냅샷 대 원장 | B3 — 늘지 않았으면 return |
+| `AdoptionOf(p.ID)` | 편입 기록 | 원장 | 조회 오류면 조용히 return(무변화 — R2-B2 삭제) |
+| `p.Quantity` 대 `adoption.Quantity` | 현재 수량 대 편입 수량 | 스냅샷 대 원장 | 늘지 않았으면 return |
+| `d.newGrowthMaximum(p)` | 보고한 최대 수량보다 큰가 | 프로세스 메모리 `d.grown[p.ID]` | 아니면 return(10판 — 옛 bool 래치 대체) |
 
 ## Branches and early returns
 
@@ -22,21 +22,21 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
 |---|---|---|---|---|---|
-| B1 | if | `:442` `if d.grown[p.ID] {` | `d.opts.Journal.AdoptionOf` | :443 | 아니오 |
-| B2 | if | `:446` `if err != nil {` | `riskcalc.CompareDecimal` | :447 | 아니오 |
-| B3 | if | `:450` `if err != nil \|\| cmp <= 0 {` | `d.alert`, `d.label`, `string` | :451 | 예 |
+| B1 | if | `:545` `if err != nil {` | `riskcalc.CompareDecimal` | :546 | 예 |
+| B2 | if | `:549` `if err != nil \|\| cmp <= 0 {` | — | :550 | 예 |
+| B3 | if | `:552` `if !d.newGrowthMaximum(p) {` | `d.alert`, `d.label`, `d.newGrowthMaximum`, `string` | :553 | 예 |
 
 ## Calls and live bindings
 
-`d.opts.Journal.AdoptionOf`(B1 뒤) · `riskcalc.CompareDecimal`(B2 뒤) · `d.alert` · `d.label`.
+`d.opts.Journal.AdoptionOf` · `riskcalc.CompareDecimal` · `d.newGrowthMaximum`(10판) · `d.alert` · `d.label`.
 
-결과값이 없다 — 오류를 돌려주지 않는다. `AdoptionOf` · `CompareDecimal`의 오류에서 조용히 반환하고(B2 · B3 창 return), `d.alert`는 `Notify`의 오류를 로그로만 남긴다.
+결과값이 없다 — 오류를 돌려주지 않는다. `AdoptionOf` · `CompareDecimal`의 오류에서 조용히 반환하고(표의 return 열), `newGrowthMaximum`의 비교 실패도 보고하지 않는 쪽이며, `d.alert`는 `Notify`의 오류를 로그로만 남긴다.
 
 ## State mutations and fallbacks
 
-`d.grown[p.ID] = true`(메모리) · 알림 1건(키 `…|grown|<posID>` — 수량이 없다). 원장의 exit state는 건드리지 않는다.
+`d.grown[p.ID] = <보고한 수량>`(메모리, `newGrowthMaximum` 안) · normal 알림 1건(key `…|grown|<posID>`). exit state 무접촉.
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **2판 FLM의 「B2 — 엔진이 직접 연 포지션과 미편입 보유가 여기로 온다」는 거짓이었다** — `judgeHoldings` B8 창이 편입된 포지션만 부른다. 결정 (3)이 R2-B2를 삭제했으므로 3판은 B2를 바꾸지 않는다. 알림 본문 스스로 *"늘어난 수량은 원래 수량 기준으로 산정된 손절의 보호를 받는다"*라고 쓴다 — 이 사실은 「무보호」가 아니며 그 종류·등급은 Q4다.
+- **Safe edit boundary**: **10판 편집**: 함수 머리의 bool 래치(옛 B1)를 지우고 비교 뒤의 `newGrowthMaximum`(새 leaf)으로 옮겼다 — 래치 기준이 (포지션, 보고한 최대 수량)이다(Q4). 조회 오류의 조용한 반환은 무변화(3.1). 등급 normal 의 전제는 review §4.4.
 - **High-risk impact**: yes — 편입 후 수량 증가를 알리는 유일한 자리다.

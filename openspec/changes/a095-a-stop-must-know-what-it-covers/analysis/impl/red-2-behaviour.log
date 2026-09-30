@@ -1,0 +1,67 @@
+--- FAIL: TestA095AnEngineOpenedPositionThatGrewIsReported (0.34s)
+    a095_a_protected_position_that_grew_internal_test.go:66: reports = [], want one: an engine-opened position that grew is checked too (결정 (3)(i))
+--- FAIL: TestA095TheAdoptedGrowthReplayReportsEveryNewMaximum (0.39s)
+    a095_a_protected_position_that_grew_internal_test.go:117: reports = 1, want 6 — one per new maximum
+--- FAIL: TestA095TheExitObserverReportStaysNormalAndKeyedApart (0.33s)
+    a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:384: the reconcile report and the exit observer report share the key "exit.position_unmanaged|pos-8f62e235602d17911036cf8d"
+    a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:388: no reconcile report was captured to compare against: [{Type:exit.position_unmanaged Key:exit.position_unmanaged|pos-8f62e235602d17911036cf8d Title:005930 보유 중이지만 엔진이 관리하지 않는다 Body:이 포지션에는 진입 결정도 편입 기록도 없어 기준선을 만들 손절도, R을 잴 최초 위험도 없다. 손절·익절이 자동으로 걸려 있지 않다.
+        사유: adoption is on but this holding could not be adopted this cycle; it is unprotected until it can be Fields:map[account:acct-a095 adoption_enabled:true market:kr position_id:pos-8f62e235602d17911036cf8d quantity:10 symbol:005930]}]
+--- FAIL: TestA095AFailedAdoptionIsCriticalAndDurable (0.73s)
+    --- FAIL: TestA095AFailedAdoptionIsCriticalAndDurable/category_①_refused_before_adopting (0.35s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:415: outbox rows = [], want exactly one
+    --- FAIL: TestA095AFailedAdoptionIsCriticalAndDurable/category_②_the_adoption_transaction_failed (0.37s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:415: outbox rows = [], want exactly one
+--- FAIL: TestA095OperatorChosenStatesStayNormal (0.56s)
+    --- FAIL: TestA095OperatorChosenStatesStayNormal/excluded (0.29s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:456: key = "exit.position_unmanaged|pos-8f62e235602d17911036cf8d", want the fact cell "excluded"
+    --- FAIL: TestA095OperatorChosenStatesStayNormal/adoption_off_and_not_designated (0.27s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:456: key = "exit.position_unmanaged|pos-8f62e235602d17911036cf8d", want the fact cell "off_undesignated"
+--- FAIL: TestA095OnWithoutATopicIsStillCritical (0.29s)
+    a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:495: outbox rows = [], want exactly one
+--- FAIL: TestA095TheProductionAssemblyReadsTheLoadedSwitch (0.87s)
+    --- FAIL: TestA095TheProductionAssemblyReadsTheLoadedSwitch/accepted_block,_enabled (0.30s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:554: rows = [], want one critical row from the loaded enabled switch
+--- FAIL: TestA095Q2FactsStayNormalInTheirOwnCells (1.73s)
+    --- FAIL: TestA095Q2FactsStayNormalInTheirOwnCells/refused_block_that_asked_for_protection (0.30s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:620: event = exit.position_unmanaged "exit.position_unmanaged|pos-8f62e235602d17911036cf8d", want the normal kind in the cell "rejected"
+    --- FAIL: TestA095Q2FactsStayNormalInTheirOwnCells/refused_block_that_was_switched_off (0.30s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:620: event = exit.position_unmanaged "exit.position_unmanaged|pos-8f62e235602d17911036cf8d", want the normal kind in the cell "rejected"
+    --- FAIL: TestA095Q2FactsStayNormalInTheirOwnCells/designated_with_adoption_off,_the_attempt_failed (0.27s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:620: event = exit.position_unmanaged "exit.position_unmanaged|pos-8f62e235602d17911036cf8d", want the normal kind in the cell "include_failed"
+    --- FAIL: TestA095Q2FactsStayNormalInTheirOwnCells/designated_with_adoption_off,_deferred (0.28s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:620: event = exit.position_unmanaged "exit.position_unmanaged|pos-8f62e235602d17911036cf8d", want the normal kind in the cell "include_deferred"
+    --- FAIL: TestA095Q2FactsStayNormalInTheirOwnCells/adoption_on,_the_price_read_failed (0.27s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:620: event = exit.position_unmanaged "exit.position_unmanaged|pos-8f62e235602d17911036cf8d", want the normal kind in the cell "enabled_deferred"
+    --- FAIL: TestA095Q2FactsStayNormalInTheirOwnCells/adoption_on,_no_quote_for_the_symbol (0.30s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:620: event = exit.position_unmanaged "exit.position_unmanaged|pos-8f62e235602d17911036cf8d", want the normal kind in the cell "enabled_deferred"
+--- FAIL: TestA095ADeferralThenAFailureIsRecorded (0.29s)
+    a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:673: after the deferral: rows = [], events = [{Type:exit.position_unmanaged Key:exit.position_unmanaged|pos-8f62e235602d17911036cf8d Title:005930 보유 중이지만 엔진이 관리하지 않는다 Body:이 포지션에는 진입 결정도 편입 기록도 없어 기준선을 만들 손절도, R을 잴 최초 위험도 없다. 손절·익절이 자동으로 걸려 있지 않다.
+        사유: adoption is on but this holding could not be adopted this cycle; it is unprotected until it can be Fields:map[account:acct-a095 adoption_enabled:true market:kr position_id:pos-8f62e235602d17911036cf8d quantity:10 symbol:005930]}]
+--- FAIL: TestA095OneCycleCanHoldAFailureAndADeferral (0.33s)
+    a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:707: failed = [], deferred = [], events = [{Type:exit.position_unmanaged Key:exit.position_unmanaged|pos-e0cc9ca58d4fb35b57feb5b1 Title:000660 보유 중이지만 엔진이 관리하지 않는다 Body:이 포지션에는 진입 결정도 편입 기록도 없어 기준선을 만들 손절도, R을 잴 최초 위험도 없다. 손절·익절이 자동으로 걸려 있지 않다.
+        사유: adoption is on but this holding could not be adopted this cycle; it is unprotected until it can be Fields:map[account:acct-a095 adoption_enabled:true market:kr position_id:pos-e0cc9ca58d4fb35b57feb5b1 quantity:5 symbol:000660]} {Type:exit.position_unmanaged Key:exit.position_unmanaged|pos-8f62e235602d17911036cf8d Title:005930 보유 중이지만 엔진이 관리하지 않는다 Body:이 포지션에는 진입 결정도 편입 기록도 없어 기준선을 만들 손절도, R을 잴 최초 위험도 없다. 손절·익절이 자동으로 걸려 있지 않다.
+        사유: adoption is on but this holding could not be adopted this cycle; it is unprotected until it can be Fields:map[account:acct-a095 adoption_enabled:true market:kr position_id:pos-8f62e235602d17911036cf8d quantity:10 symbol:005930]}]; want one of each
+--- FAIL: TestA095TheSwitchTransitionMatrix (0.60s)
+    --- FAIL: TestA095TheSwitchTransitionMatrix/on,_pending_row,_then_off_across_a_restart (0.28s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:741: outbox rows = [], want exactly one
+    --- FAIL: TestA095TheSwitchTransitionMatrix/off,_then_on_across_a_restart (0.33s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:770: outbox rows = [], want exactly one
+--- FAIL: TestA095ADeliveredFailureIsRemindedAfterTheWindow (0.30s)
+    a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:789: sends after the window = 1, want 2: a memory latch must not hold a continuing critical
+--- FAIL: TestA095ARecordingFailureIsRetriedWhenTheStoreRecovers (0.27s)
+    a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:805: a critical alert that could not be recorded left the gate open (정본 「durable 기록의 실패」)
+--- FAIL: TestA095TheFactIdentity (1.65s)
+    --- FAIL: TestA095TheFactIdentity/a_deferral_and_a_failure_are_different_keys (0.31s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:829: deferred [] · failed [], want one each with different keys
+    --- FAIL: TestA095TheFactIdentity/only_the_error_text_changed (0.30s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:841: keys = [], want the same key twice
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:844: rows = [], want one row for one fact
+    --- FAIL: TestA095TheFactIdentity/A_B_A_with_A_pending_is_retried (0.44s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:864: outbox rows = [], want exactly one
+    --- FAIL: TestA095TheFactIdentity/another_sender_holds_A's_lease (0.30s)
+        a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:878: outbox rows = [], want exactly one
+--- FAIL: TestA095AResolvedFailureStillSpeaksItsMoment (0.34s)
+    a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go:901: outbox rows = [], want exactly one
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	10.800s
+FAIL

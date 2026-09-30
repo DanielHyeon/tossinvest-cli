@@ -1,8 +1,8 @@
 # Function Logic Map: `ReconcileDriver.alert`
 
-- Source: `internal/app/engine/reconcileloop.go` (`552`–`560`)
+- Source: `internal/app/engine/reconcileloop.go` (`559`–`567`)
 - Qualified: `ReconcileDriver.alert`
-- AST evidence: `ast.json` (`source_sha256` 50a2c0f0b133fc0a…)
+- AST evidence: `ast.json` (`source_sha256` 9ca090f75ee95da0…)
 - Risk scan: `risk-pattern-report.md`
 - 분기 2 · return 1 · 호출 3
 
@@ -21,8 +21,8 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
 |---|---|---|---|---|---|
-| B1 | if | `:553` `if d.opts.Alerts == nil {` | — | :554 | 아니오 |
-| B2 | if | `:556` `if err := d.opts.Alerts.Notify(ctx, e); err != nil && d.opts.Log != nil {` | `d.opts.Alerts.Notify`, `d.opts.Log.Error`, `string` | — | 예 |
+| B1 | if | `:560` `if d.opts.Alerts == nil {` | — | :561 | 아니오 |
+| B2 | if | `:563` `if err := d.opts.Alerts.Notify(ctx, e); err != nil && d.opts.Log != nil {` | `d.opts.Alerts.Notify`, `d.opts.Log.Error`, `string` | — | 예 |
 
 ## Calls and live bindings
 

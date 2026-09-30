@@ -1,8 +1,8 @@
 # Function Logic Map: `SeverityOf`
 
-- Source: `internal/obs/event.go` (`347`–`352`)
+- Source: `internal/obs/event.go` (`366`–`371`)
 - Qualified: `SeverityOf`
-- AST evidence: `ast.json` (`source_sha256` 7732f564d6e5b496…)
+- AST evidence: `ast.json` (`source_sha256` 54fa38e5a7040659…)
 - Risk scan: `risk-pattern-report.md`
 - 분기 1 · return 2 · 호출 0
 
@@ -21,7 +21,7 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
 |---|---|---|---|---|---|
-| B1 | if | `:348` `if criticalEvents[t] {` | — | :349, :351 | 예 |
+| B1 | if | `:367` `if criticalEvents[t] {` | — | :368, :370 | 예 |
 
 ## Calls and live bindings
 
@@ -35,5 +35,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **이 함수의 편집 경계는 Q1의 답에 달렸다(4판, r3 N4).** 결정 (2)는 등급을 「이벤트 종류가 아니라 사실로」 가르라고 한다. B1은 종류만 보므로 같은 종류의 두 발신 자리(exit 관측 · reconcile 대사)에 다른 등급을 줄 수 없다. Q1이 (a) 새 이벤트 종류 등재면 이 함수 **본문은 불변**이고 map만 늘어난다. (b) 등급을 `Event`에 싣고 이 함수의 계약을 바꾸면 **경계를 다시 선언**해야 한다 — 번들 재생성과 재리뷰가 필요하다.
+- **Safe edit boundary**: **10판 재추출 주석** — 분기 표 · 좌표 · 진입 실측은 현재 소스(아래 `source_sha256`)에서 기계로 다시 그렸다. 아래 산문은 3판(base `02716357`)의 판단이며, 그 뒤 a092 가 이 소스를 바꿨다(특히 `claimAndDeliver`는 이제 claim만 `n.mu` 아래에서 하고 전송은 잠금 밖 — `fbc6df5f`). a095 는 이 함수를 편집하지 않는다. 산문의 잠금 · 좌표 서술과 현재 소스가 어긋나면 표와 `review.md` §4.2 정정이 우선한다. **이 함수의 편집 경계는 Q1의 답에 달렸다(4판, r3 N4).** 결정 (2)는 등급을 「이벤트 종류가 아니라 사실로」 가르라고 한다. B1은 종류만 보므로 같은 종류의 두 발신 자리(exit 관측 · reconcile 대사)에 다른 등급을 줄 수 없다. Q1이 (a) 새 이벤트 종류 등재면 이 함수 **본문은 불변**이고 map만 늘어난다. (b) 등급을 `Event`에 싣고 이 함수의 계약을 바꾸면 **경계를 다시 선언**해야 한다 — 번들 재생성과 재리뷰가 필요하다.
 - **High-risk impact**: yes — 이 답이 알림의 durable 여부와 진입 차단 도달 여부를 정한다.

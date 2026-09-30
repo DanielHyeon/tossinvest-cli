@@ -2,7 +2,7 @@
 
 - Source: `internal/app/engine/exitwiring.go` (`98`–`121`)
 - Qualified: `notifierAlerter.ExternalPositionFound`
-- AST evidence: `ast.json` (`source_sha256` 43dcca8f37b74896…)
+- AST evidence: `ast.json` (`source_sha256` 2b0696f0b0cccdf0…)
 - Risk scan: `risk-pattern-report.md`
 - 분기 1 · return 2 · 호출 4
 
@@ -34,5 +34,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **a095는 이 함수와 그 등급을 바꾸지 않는다.** 생산 배선에서 이 함수의 유일한 호출 자리(`Ingestor.IngestExternalPositions` B13)는 B12(`in.Alert == nil`)에 막힌다 — `ReconcileDriver`가 `d.ingest.Alert = nil`로 복사하기 때문이다(`reconcileloop.go:338`). 2판 tasks 6.2a의 「오류가 대사를 실패시킨다」는 이 자리의 등급이 바뀔 때만 성립하므로 3판에서는 성립하지 않는다.
+- **Safe edit boundary**: **10판 재추출 주석** — 분기 표 · 좌표 · 진입 실측은 현재 소스(아래 `source_sha256`)에서 기계로 다시 그렸다. 아래 산문은 3판(base `02716357`)의 판단이며, 그 뒤 a092 가 이 소스를 바꿨다(특히 `claimAndDeliver`는 이제 claim만 `n.mu` 아래에서 하고 전송은 잠금 밖 — `fbc6df5f`). a095 는 이 함수를 편집하지 않는다. 산문의 잠금 · 좌표 서술과 현재 소스가 어긋나면 표와 `review.md` §4.2 정정이 우선한다. **a095는 이 함수와 그 등급을 바꾸지 않는다.** 생산 배선에서 이 함수의 유일한 호출 자리(`Ingestor.IngestExternalPositions` B13)는 B12(`in.Alert == nil`)에 막힌다 — `ReconcileDriver`가 `d.ingest.Alert = nil`로 복사하기 때문이다(`reconcileloop.go:338`). 2판 tasks 6.2a의 「오류가 대사를 실패시킨다」는 이 자리의 등급이 바뀔 때만 성립하므로 3판에서는 성립하지 않는다.
 - **High-risk impact**: no — 생산에서 도달하지 않고 3판은 등급을 바꾸지 않는다.

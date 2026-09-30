@@ -247,6 +247,10 @@ const (
 	// position it will not protect, and a feature toggle must not silence it.
 	// What the toggle changes is how often it has anything to say.
 	EventExitPositionUnmanaged EventType = "exit.position_unmanaged"
+	// EventExitPositionAdoptionFailed 는 엔진이 보호하기로 한 보유(adoption.enabled 참)의 편입 시도가 실패한 사실임
+	// (a095 — engine-safety 「무관리 보유 보고의 등급은 사실이 정한다」). 알림이 켜진 엔진의 대사 루프만 이 종류를 냄 —
+	// 알림 꺼짐 · 운영자가 고른 상태 · 연기 · exit 관측 자리는 EventExitPositionUnmanaged(normal)로 남음. CRITICAL.
+	EventExitPositionAdoptionFailed EventType = "exit.position_adoption_failed"
 	// EventExitPositionAdopted is an externally acquired holding taken into exit
 	// management (change adopt-external-positions). It carries the observation the
 	// synthetic t0 was built from and the stop derived from it, because those two
@@ -345,6 +349,10 @@ var criticalEvents = map[EventType]bool{
 	EventExitSnapshotQuarantined: true,
 	EventExitProposalRefused:     true,
 	EventExitLiquidationDelayed:  true,
+
+	// a095 — 편입 시도 실패만. 같은 무관리 보고라도 exit 관측 자리 · 운영자가 고른 상태 · 연기는 EventExitPositionUnmanaged
+	// (normal)로 남음. 종류째 올리면 알림을 끈 기본 엔진이 손으로 산 보유 하나로 진입을 멈춤(결정 (1) · (2)).
+	EventExitPositionAdoptionFailed: true,
 }
 
 // SeverityOf grades an event.

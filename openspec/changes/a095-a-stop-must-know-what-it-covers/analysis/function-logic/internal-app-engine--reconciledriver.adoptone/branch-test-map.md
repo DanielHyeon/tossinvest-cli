@@ -6,9 +6,9 @@
 
 | Branch | 조건 | 진입 실측 | Test (a095 요구) | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:320` `if err != nil {` | 아니오 | **a095 2.2** — 편입 전 거절(범주 ①)도 시도 실패 critical에 든다 | no | no |
-| B2 | `:339` `if err != nil {` | 아니오 | **a095 2.2** — 영속 실패(범주 ②)는 시도 실패 critical | no | no |
-| B3 | `:344` `if _, err := d.opts.Journal.OpenAdoptedExitState(ctx, c.position.ID); err != nil {` | 예 | **a095 2.13** — 커밋 뒤 보호 미개설(범주 ③)은 critical 요구 밖임을 명명된 경계로 고정 — 후속 후보 I7 | no | no |
+| B1 | `:362` `if err != nil {` | 예 | **a095 2.2** — 편입 전 거절(범주 ①)도 시도 실패 critical에 든다 | no | no |
+| B2 | `:381` `if err != nil {` | 예 | **a095 2.2** — 영속 실패(범주 ②)는 시도 실패 critical | no | no |
+| B3 | `:386` `if _, err := d.opts.Journal.OpenAdoptedExitState(ctx, c.position.ID); err != nil {` | 예 | **a095 2.13** — 커밋 뒤 보호 미개설(범주 ③)은 critical 요구 밖임을 명명된 경계로 고정 — 후속 후보 I7 | no | no |
 
-**미진입 분기 2개**: B1, B2
+**미진입 분기 0개**: 없음
 **자체 블록 없는 분기 0개**: 없음 — 컴파일러가 별도 블록을 만들지 않는 형태(빈 `switch {` 등)이며 미커버와 다르다.

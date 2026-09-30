@@ -1,8 +1,8 @@
 # Function Logic Map: `ReconcileDriver.adoptOne`
 
-- Source: `internal/app/engine/adoption.go` (`318`–`380`)
+- Source: `internal/app/engine/adoption.go` (`360`–`422`)
 - Qualified: `ReconcileDriver.adoptOne`
-- AST evidence: `ast.json` (`source_sha256` f121aba90cd05c31…)
+- AST evidence: `ast.json` (`source_sha256` 26a0601d9987c7dc…)
 - Risk scan: `risk-pattern-report.md`
 - 분기 3 · return 3 · 호출 15
 
@@ -22,9 +22,9 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
 |---|---|---|---|---|---|
-| B1 | if | `:320` `if err != nil {` | `d.clk.Now`, `d.logDeferred`, `d.opts.Journal.AdoptPosition`, `err.Error`, `journal.RFC3339` | :322 | 아니오 |
-| B2 | if | `:339` `if err != nil {` | `d.logDeferred`, `err.Error` | :341 | 아니오 |
-| B3 | if | `:344` `if _, err := d.opts.Journal.OpenAdoptedExitState(ctx, c.position.ID); err != nil {` | `d.alert`, `d.label`, `d.logDeferred`, `d.opts.Journal.OpenAdoptedExitState`, `delete`, `err.Error`, `string` | :379 | 예 |
+| B1 | if | `:362` `if err != nil {` | `d.clk.Now`, `d.logDeferred`, `d.opts.Journal.AdoptPosition`, `err.Error`, `journal.RFC3339` | :364 | 예 |
+| B2 | if | `:381` `if err != nil {` | `d.logDeferred`, `err.Error` | :383 | 예 |
+| B3 | if | `:386` `if _, err := d.opts.Journal.OpenAdoptedExitState(ctx, c.position.ID); err != nil {` | `d.alert`, `d.label`, `d.logDeferred`, `d.opts.Journal.OpenAdoptedExitState`, `delete`, `err.Error`, `string` | :421 | 예 |
 
 ## Calls and live bindings
 

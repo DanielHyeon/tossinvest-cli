@@ -1075,3 +1075,90 @@ a092 착지로 옮긴 좌표. frozen 문서의 인용은 그대로 두고 여기
 
 따라서 손절이 발동하면 제안 수량은 **발동 시점의 투영 수량 전량**이다. 이 사슬(특히 `RemainingQuantity`의 출처)이 바뀌면 Q4의 normal
 논거가 무너진다 — 그 편집은 이 등급을 다시 판정해야 한다.
+
+### 4.5 Pre-Edit 선언 (tasks 2.0, 2026-09-30)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a095-a-stop-must-know-what-it-covers / 2.0(2.1~2.17 · 3.1~3.5의 GREEN 대상)
+- 대상 심볼(패키지.함수):
+    engine.ReconcileDriver.judgeHoldings   — B7 창에 엔진 개설 포지션 수량 증가 검사 호출, B14 → 후보별 결과로 alertUnmanaged 에 조건 전달
+    engine.ReconcileDriver.adopt           — 결과 형태: id 집합 → 후보별 결과(편입됨 · 시도 실패 · 연기). 분기 조건 · 순서 무변화
+    engine.ReconcileDriver.alertUnmanaged  — B1 래치: 포지션 → (포지션, 조건) · critical 은 래치 우회. 조건 칸 계산 · 등급 선택 · key 철자 · 시점 사건 문구
+    engine.ReconcileDriver.checkExternalIncrease — B1/B3 래치: bool → 보고한 최대 수량. B2(조회 오류 조용히 반환) 무변화
+    engine.NewReconcileDriver              — 래치 map 두 개의 초기값 타입만(분기 무변화)
+    engine.Context.ReconcileDriver         — opts.NotificationsEnabled = c.Config.Engine.Notifications.Enabled 무조건 복사 한 줄
+    obs.criticalEvents(표, 함수 아님)      — 새 종류 EventExitPositionAdoptionFailed 등재. SeverityOf · Notify 본문 무변화
+    새 leaf(기존 함수 아님): engine.ReconcileDriver.checkEngineOpenedIncrease · engine.netAdjustedQuantity · 조건 계산 helper
+- CodeGraph definition/callers/callees/impact (codegraph 1.6.0, 2026-09-30 sync 뒤):
+    judgeHoldings ← RunOnce(reconcileloop.go:404) 단 하나 · adopt ← judgeHoldings 단 하나 · checkExternalIncrease ← judgeHoldings 단 하나
+    alertUnmanaged ← workingSet(exitloop.go:493, ExitObserver 의 동명 메서드) · judgeHoldings — 이 change 는 ReconcileDriver 쪽만 편집
+    NewReconcileDriver ← Context.ReconcileDriver · 시험 둘 / Context.ReconcileDriver ← cmd/tossctl/engine.go:636 engineRuntime(생산) · 시험
+- CodeGraphContext 후보와 evidence reconciliation: CGC update 300s 타임아웃(advisory, 4.1). 판정은 CodeGraph + 현재 HEAD 파일 직접 읽기로 함.
+  불일치 없음 — CodeGraph 의 호출자 목록이 rg 호출 자리 전수와 같다.
+- 기존 동작 파악 근거: HEAD 1ffe2295(adoption.go sha256 f121aba9… · reconcileloop.go 50a2c0f0… = 3판 번들과 동일) · 기존 시험
+  reconcileloop_test.go(TestTheUnmanagedAlertSurvivesAdoptionBeingOff · TestAnExcludedSymbolIsReportedNotAdopted · TestACandidateWithNoQuoteIsDeferred ·
+  TestAnExternalIncreaseAfterAdoptionIsReported · …) · adoption_include_test.go · a085_alert_text_test.go · exitloop_test.go:478
+- Function Logic Map / Branch Test Map: analysis/function-logic/internal-app-engine--reconciledriver.{judgeholdings,adopt,alertunmanaged,
+  checkexternalincrease}(3판, 해시 신선) + 새로 뽑음 internal-app-engine--{newreconciledriver,context.reconciledriver}(구현 로트, 편집 전)
+- upstream 상속 테스트 영향: no — reconcile 드라이버 · 편입은 TossOS 코드. 기존 시험의 normal 단언은 그대로 통과해야 함(회귀 방지 = 전체 스위트)
+- 실패 테스트 선행 작성: yes — a095_*_internal_test.go RED 뒤 GREEN
+- 설정·DB·journal 변경과 rollback: 없음 — 스키마 · 설정 필드 무변경. 새 종류 문자열은 outbox 행의 event_type 값일 뿐(롤백 = 커밋 되돌림,
+  남은 행은 기존 기계가 그대로 배달 · 승인)
+- 안전 불변식 §0 위반 여부 검토: 통과 —
+  §0.1 주문 없음 · §0.3 exit goroutine 무편집(새 critical 은 대사 goroutine 에서만) · §0.3 OFF 동등성: 알림 꺼짐 · 편입 꺼짐 · exclude 의 등급과
+  진입 차단 결과 무변화(normal 래치 키만 사실 식별자로) · §0.4 새 브로커 호출 0(PositionAdjustments 는 원장 읽기) ·
+  §0.6 손절 · 기준 열 무접촉(보고만) · §0.8 알림 본문에 계좌 원문 없음(기존 FieldAccount 관례 유지)
+```
+
+### 4.6 RED → GREEN → 변이 → 재추출 (구현 로트, 격리 연결 워크트리)
+
+공유 워킹트리에 형제 로트(a090 · a094 · a112)의 미커밋 Go 편집이 있어 **연결 워크트리**(detached, `8c3ada62`)에서 구현 · 측정했다. 로그 원문은
+`analysis/impl/`, 변이 하네스는 `analysis/impl/mutate.py`(저장소 루트를 인자로 받음 · 시작 sha 단언 · 무변이 대조군 선행 · 판마다 원문 바이트로 복원).
+
+**시험 선행(시험 전용, 5.1 · 5.2)** — 현 동작을 못 박는 고정 시험이라 처음부터 통과한다. 그래서 변이로 닿음을 확인했다:
+
+```text
+internal/exitpolicy/a095_the_stop_does_not_follow_the_average_test.go · internal/journal/a095_average_down_keeps_the_stop_test.go — PASS
+M1 RatchetInput 에 AvgPrice 필드 → CAUGHT · M2 잠금가를 관측가에서 → CAUGHT · M4 조정이 baseline 을 63000 으로 → CAUGHT
+M3 최댓값 합성에서 이전 기준선 제거 → SURVIVED — ComputeProtectedStop 의 바닥(winnerPrice.Cmp(prev) < 0)이 같은 값을 지킨다(의도된 두 겹)
+M3b 두 겹을 함께 제거 → CAUGHT (시험이 결과에 닿음을 확인)
+```
+
+**RED** — 새 API가 없어 컴파일 실패(`red-1-compile.log`). API 표면(옵션 필드 · 종류 상수, 등재 · 동작 없음)만 더한 행동 RED는
+15개 시험이 실패했다(`red-2-behaviour.log`). 기존 동작 고정 6개(알림 꺼짐 · 묵은 스냅샷 · fold 미배선 · 순증 0 · 조회 실패 무음 · 범주 ③)는 통과했다.
+
+**GREEN** — `adoption.go`(후보별 결과 · 조건 칸 · 등급 선택 · 시점 사건 문구 · 엔진 개설 포지션 순증 검사 · 최대 수량 래치) · `reconcileloop.go`(래치 map 타입 ·
+`NotificationsEnabled` 옵션 · 생산 조립의 무조건 복사) · `event.go`(새 종류 + 등급 표 한 줄). `SeverityOf` · `Notify` · `exitloop.go` · `adoptOne` ·
+`ReconcileDriver.alert` · journal 프로덕션 무편집(Q3은 기존 `Journal.PositionAdjustments` 재사용 — design D2(i) 정정, Manager 승인 2026-09-30).
+a095 시험 **43 PASS**(`green-2.log`). 시험 추가 후 기존 사유 문구 계약(`adoption_include_test.go` — "adoption is on but" · "designated") 유지.
+
+**회귀** — `go test` (`-count=1`): app/engine 405s · obs · exitpolicy · reconcile · config · cmd/tossctl · journal 785s — 전부 ok(`regress-1.log` ·
+`tossctl.log` · `journal.log`). `-race`: app/engine 의 a095 시험 + 관련 기존 시험 ok(`race.log`). `make lint` rc 0(`lint.log`).
+
+**변이 — 23 중 21 CAUGHT**(`mutation-1.log`, 생존 둘의 근거 문장은 `analysis/impl/mutation-ledger.txt`, 대조군 GREEN · 시작 sha `adoption.go 26a0601d…` · `reconcileloop.go 9ca090f7…` · `event.go 54fa38e5…`):
+
+| id | 변이 | 결과 |
+| --- | --- | --- |
+| G1 · G2 | critical 판정에서 알림 켜짐 무시 · `&&`→`||` | CAUGHT |
+| G3 | critical 이 메모리 래치를 거침(수리 되돌림) | CAUGHT |
+| G4 · G5 | normal key 를 옛 철자로(수리 되돌림) · 조건 칸 제거 | CAUGHT |
+| G6 · G7 | 연기를 시도 실패로 · 편입 켜짐 ∧ include 종목이 켜짐 칸 이탈 | CAUGHT |
+| G8 · G9 | normal 래치가 포지션 단위 · 래치 제거 | CAUGHT |
+| G10 | 시도 실패를 기록하지 않음 | CAUGHT |
+| G12 | critical 문장에서 시각 제거(Q8) | CAUGHT |
+| G13 · G14 | 생산 조립이 켜짐을 안 넘김 · 호출자 값을 남김 | CAUGHT |
+| G15 | 등급 표 등재 제거(수리 되돌림) | CAUGHT |
+| I1 | 엔진 개설 포지션 검사 호출 제거(수리 되돌림) | CAUGHT |
+| I2 · I3 | 순증 부호 반대(열 바꿔치기) · 순증 0 을 증가로(off-by-one) | CAUGHT |
+| I5 · I6 · I7 | 최대 수량 래치 off-by-one · 래치 안 옮김 · 편입 자리 래치 제거 | CAUGHT |
+| B2 | R2-B2 부활(조회 오류 → 무관리 보고) | CAUGHT |
+| **I4** | 순증의 prev 열을 `expected_prev_quantity`로 | **SURVIVED — 동등**: `ApplyPositionAdjustment`가 커밋 트랜잭션 안에서 `held`(= 행의 prev)와 기대 이전 값의 수치 동일을 강제하고 다르면 폐기한다(`position_adjustments.go:251-257`, 닫힌 인스턴스는 둘 다 0). 두 열은 기록된 모든 행에서 같은 수다 |
+| **I8** | 조정 0개 조기 반환 제거 | **SURVIVED — 동등**: 빈 목록의 순증은 `"0"`이고 바로 아래 `cmp <= 0`이 같은 반환을 한다. 최적화 줄이다 |
+
+**재추출(6.6)** — 현재 소스에서 stale 20개를 다시 뽑았다: 편집한 6(판정 · 편입 · 무관리 보고 · 증가 검사 · 두 조립 함수) + 같은 파일의 무편집 2(`adoptOne` ·
+`alert`) + a092가 바꾼 무편집 12. 생성기(`harness/render_bundles.py`)의 편집 함수 산문을 10판으로 고쳤고(분기 ID 재번호 — `judgeHoldings`는 else 갈래로
+15 → 16), a092 변경 12개에는 「표는 현재 소스, 산문은 3판 판단 — §4.2 정정 우선」 주석을 달았다. 커버리지 `harness/coverage/r10/`.
+`check_analysis.py --change a095-…`(로컬 커밋 기준): rc 0, **evidence complete**, required 6 = 편집한 함수 6.
+
+**Q3 이름 붙은 잔여(design D2(i))**: 체결 기록이 계좌보다 늦으면 +조정 뒤 −조정 사이에 순증 > 0 일시 오보 — normal 보고 한 줄, 진입 · 청산 무영향.

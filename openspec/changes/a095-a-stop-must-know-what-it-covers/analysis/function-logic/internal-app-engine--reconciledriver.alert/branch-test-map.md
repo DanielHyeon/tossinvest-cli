@@ -6,8 +6,8 @@
 
 | Branch | 조건 | 진입 실측 | Test (a095 요구) | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:553` `if d.opts.Alerts == nil {` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B2 | `:556` `if err := d.opts.Alerts.Notify(ctx, e); err != nil && d.opts.Log != nil {` | 예 | **a095 2.16** — 기록 실패 → 저장소 회복 → 같은 실패가 다음 관측에서 기록된다 | no | no |
+| B1 | `:560` `if d.opts.Alerts == nil {` | 아니오 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B2 | `:563` `if err := d.opts.Alerts.Notify(ctx, e); err != nil && d.opts.Log != nil {` | 예 | **a095 2.16** — 기록 실패 → 저장소 회복 → 같은 실패가 다음 관측에서 기록된다 | no | no |
 
 **미진입 분기 1개**: B1
 **자체 블록 없는 분기 0개**: 없음 — 컴파일러가 별도 블록을 만들지 않는 형태(빈 `switch {` 등)이며 미커버와 다르다.

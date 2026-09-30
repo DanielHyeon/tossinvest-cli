@@ -1,8 +1,8 @@
 # Function Logic Map: `Notifier.publishBestEffort`
 
-- Source: `internal/obs/notifier.go` (`161`–`173`)
+- Source: `internal/obs/notifier.go` (`179`–`192`)
 - Qualified: `Notifier.publishBestEffort`
-- AST evidence: `ast.json` (`source_sha256` 0bc75668ff17c3d6…)
+- AST evidence: `ast.json` (`source_sha256` d705f78d68c1eff3…)
 - Risk scan: `risk-pattern-report.md`
 - 분기 2 · return 1 · 호출 6
 
@@ -21,8 +21,8 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
 |---|---|---|---|---|---|
-| B1 | if | `:162` `if n.Publisher == nil {` | — | :163 | 예 |
-| B2 | if | `:165` `if err := n.Publisher.Publish(ctx, notificationFor(e, severity)); err != nil && n.Log != nil {` | `err.Error`, `n.Log.Warn`, `n.Publisher.Publish`, `notificationFor`, `string` | — | 예 |
+| B1 | if | `:180` `if n.Publisher == nil {` | — | :181 | 예 |
+| B2 | if | `:183` `if err := n.Publisher.Publish(ctx, notificationFor(e, severity)); err != nil && n.Log != nil {` | `err.Error`, `n.Log.Warn`, `n.Publisher.Publish`, `notificationFor`, `string` | — | 예 |
 
 ## Calls and live bindings
 
@@ -36,5 +36,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **a095는 이 함수를 바꾸지 않는다.** 2판은 B1을 「로그도 없다」로 적었으나 구조 로그는 `Notify`가 경로 분기(B1) 전에 `logEvent`로 이미 남긴다(보이스 B B-P2-13; 순서는 `SeverityOf` → `logEvent` → B1, 6판 r5 R5-4 정정). 이 경로의 부재는 「durable outbox와 재시도가 없다」이다.
+- **Safe edit boundary**: **10판 재추출 주석** — 분기 표 · 좌표 · 진입 실측은 현재 소스(아래 `source_sha256`)에서 기계로 다시 그렸다. 아래 산문은 3판(base `02716357`)의 판단이며, 그 뒤 a092 가 이 소스를 바꿨다(특히 `claimAndDeliver`는 이제 claim만 `n.mu` 아래에서 하고 전송은 잠금 밖 — `fbc6df5f`). a095 는 이 함수를 편집하지 않는다. 산문의 잠금 · 좌표 서술과 현재 소스가 어긋나면 표와 `review.md` §4.2 정정이 우선한다. **a095는 이 함수를 바꾸지 않는다.** 2판은 B1을 「로그도 없다」로 적었으나 구조 로그는 `Notify`가 경로 분기(B1) 전에 `logEvent`로 이미 남긴다(보이스 B B-P2-13; 순서는 `SeverityOf` → `logEvent` → B1, 6판 r5 R5-4 정정). 이 경로의 부재는 「durable outbox와 재시도가 없다」이다.
 - **High-risk impact**: no — 이 함수 자체는 설계대로다.

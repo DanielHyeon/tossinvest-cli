@@ -2,7 +2,7 @@
 
 - Source: `internal/app/engine/exitloop.go` (`493`–`612`)
 - Qualified: `ExitObserver.workingSet`
-- AST evidence: `ast.json` (`source_sha256` 522d5d81c4992c57…)
+- AST evidence: `ast.json` (`source_sha256` 2d34b5c57f25a2c8…)
 - Risk scan: `risk-pattern-report.md`
 - 분기 22 · return 3 · 호출 28
 
@@ -55,5 +55,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **a095는 이 함수를 바꾸지 않는다.** B6 창의 `o.alertUnmanaged`는 exit goroutine 안의 동기 호출이며, 결정 (1)이 그 자리를 normal로 둔다. B6에는 전이 상태 판정이 없다(reconcile 쪽 `judgeHoldings` B9 · B10과 다르다) — normal이므로 진입 차단에 닿지 않는다.
+- **Safe edit boundary**: **10판 재추출 주석** — 분기 표 · 좌표 · 진입 실측은 현재 소스(아래 `source_sha256`)에서 기계로 다시 그렸다. 아래 산문은 3판(base `02716357`)의 판단이며, 그 뒤 a092 가 이 소스를 바꿨다(특히 `claimAndDeliver`는 이제 claim만 `n.mu` 아래에서 하고 전송은 잠금 밖 — `fbc6df5f`). a095 는 이 함수를 편집하지 않는다. 산문의 잠금 · 좌표 서술과 현재 소스가 어긋나면 표와 `review.md` §4.2 정정이 우선한다. **a095는 이 함수를 바꾸지 않는다.** B6 창의 `o.alertUnmanaged`는 exit goroutine 안의 동기 호출이며, 결정 (1)이 그 자리를 normal로 둔다. B6에는 전이 상태 판정이 없다(reconcile 쪽 `judgeHoldings` B9 · B10과 다르다) — normal이므로 진입 차단에 닿지 않는다.
 - **High-risk impact**: yes — 손절 판정 앞의 작업 집합이다.

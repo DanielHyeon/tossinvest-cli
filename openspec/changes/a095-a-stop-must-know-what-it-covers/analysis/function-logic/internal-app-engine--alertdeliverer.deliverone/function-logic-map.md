@@ -1,8 +1,8 @@
 # Function Logic Map: `alertDeliverer.deliverOne`
 
-- Source: `internal/app/engine/alertdelivery.go` (`270`–`340`)
+- Source: `internal/app/engine/alertdelivery.go` (`270`–`342`)
 - Qualified: `alertDeliverer.deliverOne`
-- AST evidence: `ast.json` (`source_sha256` 5791a31af9d24079…)
+- AST evidence: `ast.json` (`source_sha256` df8a4171e8dced1b…)
 - Risk scan: `risk-pattern-report.md`
 - 분기 11 · return 4 · 호출 20
 
@@ -28,10 +28,10 @@
 | B5 | if | `:292` `if d.reportHeld(alert.ID, claim.ExpiresAt) {` | `Format`, `claim.ExpiresAt.UTC`, `d.logf`, `d.reportHeld` | :297 | 예 |
 | B6 | case | `:298` `default:` | `d.forgetHeld`, `d.forgetRecordRun` | :303 | 예 |
 | B7 | if | `:305` `if claim.Stole {` | `d.logf` | — | 예 |
-| B8 | if | `:314` `if d.Publisher == nil {` | `d.logf`, `errors.New` | — | 예 |
-| B9 | else | `:324` `} else {` | `d.Publisher.Publish`, `obs.EventType` | — | 예 |
-| B10 | if | `:331` `if perr != nil {` | `perr.Error` | — | 예 |
-| B11 | if | `:335` `if perr != nil {` | `d.recordDelivery`, `d.recordFailedAttempt` | :337 | 예 |
+| B8 | if | `:316` `if d.Publisher == nil {` | `d.logf`, `errors.New` | — | 예 |
+| B9 | else | `:326` `} else {` | `d.Publisher.Publish`, `obs.EventType` | — | 예 |
+| B10 | if | `:333` `if perr != nil {` | `perr.Error` | — | 예 |
+| B11 | if | `:337` `if perr != nil {` | `d.recordDelivery`, `d.recordFailedAttempt` | :339 | 예 |
 
 ## Calls and live bindings
 
@@ -45,5 +45,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **a095는 이 함수를 바꾸지 않는다.** B9 창이 보내는 것은 **행에 저장된** 제목 · 본문이다 — 발생 시점의 문구가 배달 시점까지 그대로 간다(r3 N3). B8은 전송기가 없을 때 실패 시도로 센다 — 알림 off 엔진에서 critical 행이 a124 정본의 지속 실패로 이어지는 경로이며, r3 N1(알림 켜짐을 critical의 전제로)의 근거다.
+- **Safe edit boundary**: **10판 재추출 주석** — 분기 표 · 좌표 · 진입 실측은 현재 소스(아래 `source_sha256`)에서 기계로 다시 그렸다. 아래 산문은 3판(base `02716357`)의 판단이며, 그 뒤 a092 가 이 소스를 바꿨다(특히 `claimAndDeliver`는 이제 claim만 `n.mu` 아래에서 하고 전송은 잠금 밖 — `fbc6df5f`). a095 는 이 함수를 편집하지 않는다. 산문의 잠금 · 좌표 서술과 현재 소스가 어긋나면 표와 `review.md` §4.2 정정이 우선한다. **a095는 이 함수를 바꾸지 않는다.** B9 창이 보내는 것은 **행에 저장된** 제목 · 본문이다 — 발생 시점의 문구가 배달 시점까지 그대로 간다(r3 N3). B8은 전송기가 없을 때 실패 시도로 센다 — 알림 off 엔진에서 critical 행이 a124 정본의 지속 실패로 이어지는 경로이며, r3 N1(알림 켜짐을 critical의 전제로)의 근거다.
 - **High-risk impact**: yes — critical 배달과 실패 판정의 자리다.

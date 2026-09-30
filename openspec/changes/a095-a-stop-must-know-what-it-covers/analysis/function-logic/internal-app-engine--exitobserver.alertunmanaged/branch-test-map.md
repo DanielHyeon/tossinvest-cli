@@ -6,7 +6,7 @@
 
 | Branch | 조건 | 진입 실측 | Test (a095 요구) | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:1602` `if o.unmanaged[p.ID] {` | 예 | **a095 2.1 · 2.7** — normal 유지 · reconcile 자리와 다른 키 | no | no |
+| B1 | `:1607` `if o.unmanaged[p.ID] {` | 예 | **a095 2.1 · 2.7** — normal 유지 · reconcile 자리와 다른 키 | no | no |
 
 **미진입 분기 0개**: 없음
 **자체 블록 없는 분기 0개**: 없음 — 컴파일러가 별도 블록을 만들지 않는 형태(빈 `switch {` 등)이며 미커버와 다르다.

@@ -6,13 +6,13 @@
 
 | Branch | 조건 | 진입 실측 | Test (a095 요구) | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:263` `if err != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B2 | `:276` `if n.Log != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B3 | `:279` `if n.Gate != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B4 | `:284` `switch claim.Disposition {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B5 | `:285` `case journal.ClaimSettled:` | 예 | **a095 3.3** — [비움 — Q4] 수량 증가 사실의 키와 재알림 창 | no | no |
-| B6 | `:294` `case journal.ClaimHeldElsewhere:` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
-| B7 | `:310` `if lost {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B1 | `:301` `if err != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B2 | `:314` `if n.Log != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B3 | `:317` `if n.Gate != nil {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B4 | `:324` `switch claim.Disposition {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B5 | `:325` `case journal.ClaimSettled:` | 예 | **a095 3.3** — 10판 Q4 답: 수량 증가는 normal — 이 창(critical 경로)에 닿지 않음 | no | no |
+| B6 | `:335` `case journal.ClaimHeldElsewhere:` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
+| B7 | `:354` `if lost {` | 예 | 기존 — a095는 이 함수를 바꾸지 않는다 | no | no |
 
 **미진입 분기 0개**: 없음
 **자체 블록 없는 분기 0개**: 없음 — 컴파일러가 별도 블록을 만들지 않는 형태(빈 `switch {` 등)이며 미커버와 다르다.

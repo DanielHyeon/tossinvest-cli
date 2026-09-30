@@ -1,0 +1,16 @@
+a095 구현 로트 변이 원장 — 원 출력은 mutation-1.log(대조군 GREEN, 23 판, 21 CAUGHT · 2 SURVIVED), 하네스 mutate.py.
+5.1 · 5.2 고정 시험의 변이(M1~M4 · M3b)는 review.md §4.6 에 있음(M3 생존 = ComputeProtectedStop 바닥이 같은 값을 지키는 의도된 두 겹, M3b 로 닿음 확인).
+
+생존 2 — 동등 판정과 그 근거(Manager 수용 조건: 근거 문장째 기록):
+
+I4  변이: netAdjustedQuantity 의 SubDecimal(a.NewQuantity, a.PrevQuantity) → SubDecimal(a.NewQuantity, a.ExpectedPrevQuantity)
+    판정: 동등. 근거: ApplyPositionAdjustment 가 커밋 트랜잭션 안에서 투영이 들던 값 held(= 행에 저장되는 prev_quantity)와
+    요청의 ExpectedPrevQuantity 를 sameDecimal 로 비교하고 다르면 StaleAdjustmentError 로 폐기한다
+    (internal/journal/position_adjustments.go:251-257). 닫힌 인스턴스는 held 를 "0" 으로 두고(:239-245) 같은 비교를 거친다.
+    그러므로 원장에 기록된 모든 조정 행에서 prev_quantity 와 expected_prev_quantity 는 수치가 같고, 두 열 중 어느 것으로
+    순증을 계산해도 값이 같다. 이 동등성은 그 비교 검사에 기대므로, 그 검사가 바뀌면 이 판정을 다시 해야 한다.
+
+I8  변이: checkEngineOpenedIncrease 의 `if err != nil || len(adjustments) == 0 {` → `if err != nil {`
+    판정: 동등. 근거: 조정이 0개이면 netAdjustedQuantity 는 루프를 돌지 않고 초기값 "0" 을 돌려주고, 바로 아래
+    `riskcalc.CompareDecimal(net, "0")` 이 cmp = 0 이 되어 `cmp <= 0` 반환 — 조기 반환과 같은 자리에서 같은 결과(보고 없음,
+    래치 무변화)로 끝난다. 차이는 한 번의 빈 계산뿐이다(최적화 줄).

@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/adoption.go",
-  "source_sha256": "f121aba90cd05c31de5eeb9acad14497db9150c61314039419cbd5d9e0734edd",
+  "source_sha256": "26a0601d9987c7dc07d918df099d7cbfa21381560e17dd0162943da7aa8f811e",
   "package": "engine",
   "function": "checkExternalIncrease",
   "receiver": "ReconcileDriver",
   "signature": "ReconcileDriver.checkExternalIncrease(params=2, results=0)",
   "start": {
-    "line": 441,
+    "line": 543,
     "column": 1
   },
   "end": {
-    "line": 472,
+    "line": 573,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 442,
+        "line": 545,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 446,
+        "line": 549,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 450,
+        "line": 552,
         "column": 2
       }
     }
@@ -43,21 +43,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 443,
+        "line": 546,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 447,
+        "line": 550,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 451,
+        "line": 553,
         "column": 3
       }
     }
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 445,
+        "line": 544,
         "column": 19
       },
       "text": "d.opts.Journal.AdoptionOf"
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 449,
+        "line": 548,
         "column": 14
       },
       "text": "riskcalc.CompareDecimal"
@@ -82,7 +82,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 455,
+        "line": 552,
+        "column": 6
+      },
+      "text": "d.newGrowthMaximum"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 556,
         "column": 2
       },
       "text": "d.alert"
@@ -90,7 +98,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 457,
+        "line": 558,
         "column": 10
       },
       "text": "string"
@@ -98,7 +106,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 458,
+        "line": 559,
         "column": 10
       },
       "text": "d.label"
@@ -108,21 +116,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 445,
+        "line": 544,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 449,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 453,
+        "line": 548,
         "column": 2
       }
     }
