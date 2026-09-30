@@ -1303,7 +1303,21 @@ audit 줄 뒤 commit 실패 시 보상 줄).
 | 7.4 토글 | 무도입 |
 | 7.5 FLM | 편집 뒤 번들 23(생산 17 · 시험 6) — `check_analysis` 의 남은 줄은 형제 change 함수뿐(a090 engineRuntime · ObserveOnce · workingSet · adoption · reconcileloop, a112 strategy_*, obs/mode.go) |
 | 7.6 sdd | `make sdd-check` rc 0(재시도) · `make sdd-sync` 는 codegraphcontext advisory 시한 초과로 incomplete(advisory) |
-| 7.7 게이트 · 7.9 아카이브 | Manager(격리 worktree, `--record-landing`) |
+| 7.7 게이트 · 7.9 아카이브 | 팀메이트 실행(Manager 2026-10-01 정정 — Manager 는 검증 · 승인). 착지 `--record-landing` 은 격리 worktree(HEAD `99dfa5bc`, 깨끗한 트리)에서 수락 — `landed-commit.txt` = `99dfa5bc`(증거에서 계산, 번들 재생성 커밋), `57b231ca` |
 | 7.8 독립 리뷰 | Claude 3보이스(§7) + codex 교차 모델 i1 → i2 → i3 PASS(§8~§10) |
 | 8.x 배포 | 사람 항목(8.2 전: 운영 원장의 ACKED 행 · intent 없는 무장 발의 행을 읽기 전용으로 셈 — I5) |
 | 3.X1 · 3.R9a | 사람 결정 · a090 착지 뒤 통합 시험 |
+
+### 12. 미체크 처분 · 이월 (2026-10-01, 게이트 준비)
+
+a092 · a095 선례대로 미체크 24건을 `[처분 2026-10-01]` 로 닫았다 — 구현한 것처럼 적은 줄은 없다.
+
+| tasks | 처분 | 행선 |
+|---|---|---|
+| 3.X1 | 사용자 결정 항목(엔진 밖 취소) — 표기 유지 | `docs/ROADMAP.md` 「a094 이월」 사람 결정 큐 |
+| 3.R9a | a090 착지 뒤 통합 시험 — 이 로트 미실행 | 「a094 이월」 |
+| 4b.0~4b.8 · 4b.6 (12) | 5판 D−3.4 이연, 범위 밖 — 구현 0 | 「a094 이월」 선택 후속 |
+| 7.1 | 게이트 ⑦ · ⑨ + 같은 커밋 격리 worktree 의 `go test ./... -count=1 -race` 전체(Manager 지시) | 아래 「게이트 실행 기록」 |
+| 7.6 · 7.7 | 게이트 준비 — 체크 커밋에서 돌리고 결과를 적음 | 아래 「게이트 실행 기록」 |
+| 7.9 | Manager 승인 뒤 팀메이트가 archive — tasks 「아카이브 때 할 일」 | — |
+| 8.1~8.4 | 사람 항목(배포 · 재시작 · 읽기 전용 셈 · 세 포지션) | 「a094 이월」 |

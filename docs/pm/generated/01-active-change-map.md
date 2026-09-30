@@ -94,7 +94,7 @@
 | `a090-an-unobserved-position-is-counted` | STORY-TOS-a090 | in_progress |
 | `a091-a-stop-that-sold-nothing-is-critical` | STORY-TOS-a091 | in_progress |
 | `a092-an-alert-does-not-hold-the-stop` | STORY-TOS-a092 | archived |
-| `a094-a-stop-clears-what-blocks-it` | STORY-TOS-a094 | in_progress |
+| `a094-a-stop-clears-what-blocks-it` | STORY-TOS-a094 | implemented |
 | `a095-a-stop-must-know-what-it-covers` | STORY-TOS-a095 | archived |
 | `a096-one-condition-is-one-alert` | STORY-TOS-a096 | archived |
 | `a097-a-re-armed-alert-is-a-new-episode` | STORY-TOS-a097 | archived |

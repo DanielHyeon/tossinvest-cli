@@ -202,7 +202,7 @@
 확대는 사용자 몫이다. 결정이 나기 전에는 아래를 **하지 않는다.** 결정이 "넓힌다" 면 그 change 가 D−2.4 의 선행 조건
 넷(귀속 규칙 · 다른 포지션/사람 보호 매도 제외 · 공표된 OPEN 스냅숏 계약 · 감사)을 **모두** 가져간다.
 
-- [ ] 3.X1 사용자 결정 기록(넓힌다/넓히지 않는다) — 3판 3.A·3.B1·3.B2·3.B4·3.B5·3.1·3.4·3.10·3.E1·3.E3 의 처분이 이것을 따른다
+- [x] 3.X1 **[처분 2026-10-01] 이월 — 사용자 결정 항목(엔진 밖 주문 취소 확대, Manager 지시로 표기 유지). 결정 전에는 3.X 아래 항목을 하지 않는다. `docs/ROADMAP.md` 「a094 이월」.** 사용자 결정 기록(넓힌다/넓히지 않는다) — 3판 3.A·3.B1·3.B2·3.B4·3.B5·3.1·3.4·3.10·3.E1·3.E3 의 처분이 이것을 따른다
 
 ## 4. R3 — 비수용으로 종결된 attempt 가 발의를 푼다 (D3 → **4판 D−2.2·D−2.5**)
 
@@ -242,7 +242,7 @@
 - [x] 3.R9 **RED (11판 D−9.3 — 종결 증거 대기 critical)** — 무장 익절 매도 · 엔진 CANCEL CONFIRMED · 종결 스냅숏 없음 · 체결 감지 **건강**(주기 성공, 그 주문은 OPEN 또는
       거절된 CLOSED)인 fixture: 취소 `settled_at` 뒤 30초 미만 → 알림 0, 이상 → `EventExitLiquidationDelayed` **1회**(key `type|position|cancel:<attempt id>`, 입구 기록, 계좌 없음),
       다음 주기 반복 0, **재시작 뒤 같은 취소는 같은 행**(재전송 0), 발의 해제 0 · 제출 0. `noteDelay` 의 key 와 겹치지 않음
-- [ ] 3.R9a **RED (11판 D−9.3 — 판정 불가 포지션)** — 같은 상태에서 시세가 없어 판정에 닿지 못하면 이 알림은 없고 a090 의 미관측 경보가 덮는다(교차 — a090 구현 뒤 통합 시험).
+- [x] 3.R9a **[처분 2026-10-01] 이월 — a090 착지 뒤 통합 시험(교차, a090 는 아직 진행 중 · 아카이브 전). 이 로트 미실행. `docs/ROADMAP.md` 「a094 이월」.** **RED (11판 D−9.3 — 판정 불가 포지션)** — 같은 상태에서 시세가 없어 판정에 닿지 못하면 이 알림은 없고 a090 의 미관측 경보가 덮는다(교차 — a090 구현 뒤 통합 시험).
       덮임은 a090 의 조건부 보장을 물려받는다 — 지속 B2·임계 전 재시작 반복은 이름 붙인 잔여(R10-1)
 - [x] 4.N4x **후속 기록** — 나머지 ACKED 정산의 선행 조건: matcher 주문 번호 판별자(`indoubt.go:638-650`) + 덮어쓰기 좌표 `indoubt.go:307` 의
       반례(오답 단일 일치·복수 일치). 이 change 에서 구현하지 않는다
@@ -290,27 +290,27 @@
 > **4판의 변경(3라운드 F2)**: 재분류 대상은 `attempt_transitions` 로 **원 발주 응답임이 양성 식별되는** attempt 뿐이다.
 > 스키마 추가 없음. 추가가 필요해지면 멈추고 보고한다.
 
-- [ ] 4b.0 **Pre-Edit 선언** — 기동 경로
-- [ ] 4b.1 **RED** — 기동 시 1회, D−2.3 의 여섯 조건(PLACE · `broker_order_id=''` · ACKED 이력 없음 · 모호 전이 하나가
+- [x] 4b.0 **[처분 2026-10-01] 이연 — 5판 D−3.4, 이 change 범위 밖(구현하지 않음 · 후속 change 가 다시 열 때의 기록). `docs/ROADMAP.md` 「a094 이월」.** **Pre-Edit 선언** — 기동 경로
+- [x] 4b.1 **[처분 2026-10-01] 이연 — 5판 D−3.4, 이 change 범위 밖(구현하지 않음 · 후속 change 가 다시 열 때의 기록). `docs/ROADMAP.md` 「a094 이월」.** **RED** — 기동 시 1회, D−2.3 의 여섯 조건(PLACE · `broker_order_id=''` · ACKED 이력 없음 · 모호 전이 하나가
       `DISPATCH_STARTED`→`IN_DOUBT`/`dispatch_outcome_unknown` · detail 이 상태 코드 분기 모양이고 두 상태가 같음 · code 가
       목록에 있음)을 모두 만족하는 attempt 가 `FAILED_CONFIRMED`로 재분류된다
-- [ ] 4b.2 **RED (안전)** — **code로만 판단한다.** detail 의 `official: API error <n>: ` 뒤 본문만 JSON 으로 읽고 엔진 산문을
+- [x] 4b.2 **[처분 2026-10-01] 이연 — 5판 D−3.4, 이 change 범위 밖(구현하지 않음 · 후속 change 가 다시 열 때의 기록). `docs/ROADMAP.md` 「a094 이월」.** **RED (안전)** — **code로만 판단한다.** detail 의 `official: API error <n>: ` 뒤 본문만 JSON 으로 읽고 엔진 산문을
       매칭하지 않는다
-- [ ] 4b.2a **RED (안전, 4판)** — `MarkAcked` 뒤 readback 실패로 모호가 된 attempt(`ACKED → IN_DOUBT`,
+- [x] 4b.2a **[처분 2026-10-01] 이연 — 5판 D−3.4, 이 change 범위 밖(구현하지 않음 · 후속 change 가 다시 열 때의 기록). `docs/ROADMAP.md` 「a094 이월」.** **RED (안전, 4판)** — `MarkAcked` 뒤 readback 실패로 모호가 된 attempt(`ACKED → IN_DOUBT`,
       `ack_round_trip_unconfirmed`, `broker_order_id` 있음)는 그 detail 에 확정 거절 code 가 있어도 **재분류하지 않는다**
-- [ ] 4b.2b **RED (안전, 4판)** — 전송 실패 분기(`transport failed with the request …`) · 상태 없음 분기 · 출처 불명 기록은 대상이 아니다
-- [ ] 4b.2c **RED (안전, 4판)** — 최상위 `code` 와 `error.code` 가 다르면 재분류하지 않는다
-- [ ] 4b.2d **RED (4판, 문서 리뷰 P1)** — 한 번이라도 재생된 attempt(`replay_count > 0` 또는 `last_replay_at` 있음 — `RefundReplay`
+- [x] 4b.2b **[처분 2026-10-01] 이연 — 5판 D−3.4, 이 change 범위 밖(구현하지 않음 · 후속 change 가 다시 열 때의 기록). `docs/ROADMAP.md` 「a094 이월」.** **RED (안전, 4판)** — 전송 실패 분기(`transport failed with the request …`) · 상태 없음 분기 · 출처 불명 기록은 대상이 아니다
+- [x] 4b.2c **[처분 2026-10-01] 이연 — 5판 D−3.4, 이 change 범위 밖(구현하지 않음 · 후속 change 가 다시 열 때의 기록). `docs/ROADMAP.md` 「a094 이월」.** **RED (안전, 4판)** — 최상위 `code` 와 `error.code` 가 다르면 재분류하지 않는다
+- [x] 4b.2d **[처분 2026-10-01] 이연 — 5판 D−3.4, 이 change 범위 밖(구현하지 않음 · 후속 change 가 다시 열 때의 기록). `docs/ROADMAP.md` 「a094 이월」.** **RED (4판, 문서 리뷰 P1)** — 한 번이라도 재생된 attempt(`replay_count > 0` 또는 `last_replay_at` 있음 — `RefundReplay`
       뒤에도 시각은 남는다)는 원 409 본문이 조건을 모두 채워도 **재분류하지 않는다**
-- [ ] 4b.2e **RED (4판, 문서 리뷰 P1)** — code 는 `official: API error <n>: ` 표식이 **정확히 한 번** 있을 때 그 뒤 JSON 에서만 읽는다.
+- [x] 4b.2e **[처분 2026-10-01] 이연 — 5판 D−3.4, 이 change 범위 밖(구현하지 않음 · 후속 change 가 다시 열 때의 기록). `docs/ROADMAP.md` 「a094 이월」.** **RED (4판, 문서 리뷰 P1)** — code 는 `official: API error <n>: ` 표식이 **정확히 한 번** 있을 때 그 뒤 JSON 에서만 읽는다.
       표식 0개·2개 이상·JSON 아님 → 그대로 둔다. 엔진 산문(`HTTP <n> does not prove …`)을 매칭하지 않는다
-- [ ] 4b.3 **RED (안전)** — 확정 거절 code가 **없는** IN_DOUBT는 건드리지 않는다. `request-in-progress`를 포함
-- [ ] 4b.4 **RED (안전)** — 재분류는 **attempt 상태만** 바꾼다. 발의 해제는 §4가 한다
-- [ ] 4b.5 **RED** — **기동 시 1회.** 주기적으로 돌지 않는다
-- [ ] 4b.7 **RED (4판)** — 매수 PLACE attempt 도 같은 조건이면 재분류되고, `FAILED_CONFIRMED` 전이가 그 결정의 예약을 푼다
+- [x] 4b.3 **[처분 2026-10-01] 이연 — 5판 D−3.4, 이 change 범위 밖(구현하지 않음 · 후속 change 가 다시 열 때의 기록). `docs/ROADMAP.md` 「a094 이월」.** **RED (안전)** — 확정 거절 code가 **없는** IN_DOUBT는 건드리지 않는다. `request-in-progress`를 포함
+- [x] 4b.4 **[처분 2026-10-01] 이연 — 5판 D−3.4, 이 change 범위 밖(구현하지 않음 · 후속 change 가 다시 열 때의 기록). `docs/ROADMAP.md` 「a094 이월」.** **RED (안전)** — 재분류는 **attempt 상태만** 바꾼다. 발의 해제는 §4가 한다
+- [x] 4b.5 **[처분 2026-10-01] 이연 — 5판 D−3.4, 이 change 범위 밖(구현하지 않음 · 후속 change 가 다시 열 때의 기록). `docs/ROADMAP.md` 「a094 이월」.** **RED** — **기동 시 1회.** 주기적으로 돌지 않는다
+- [x] 4b.7 **[처분 2026-10-01] 이연 — 5판 D−3.4, 이 change 범위 밖(구현하지 않음 · 후속 change 가 다시 열 때의 기록). `docs/ROADMAP.md` 「a094 이월」.** **RED (4판)** — 매수 PLACE attempt 도 같은 조건이면 재분류되고, `FAILED_CONFIRMED` 전이가 그 결정의 예약을 푼다
       (`durability.go:653-663`) — 부수 효과를 단언한다
-- [ ] 4b.8 **GREEN** — 재분류용 reason code 하나를 더하고 `testdata/reason_codes.golden`·`AllReasonCodes` 를 생성기로 갱신한다
-- [ ] 4b.6 ~~실측 재생~~ — **5판에서 §6.1a 로 옮겼다**(재분류 없이, park 된 두 행 그대로의 결말)
+- [x] 4b.8 **[처분 2026-10-01] 이연 — 5판 D−3.4, 이 change 범위 밖(구현하지 않음 · 후속 change 가 다시 열 때의 기록). `docs/ROADMAP.md` 「a094 이월」.** **GREEN** — 재분류용 reason code 하나를 더하고 `testdata/reason_codes.golden`·`AllReasonCodes` 를 생성기로 갱신한다
+- [x] 4b.6 **[처분 2026-10-01] 이연 — 5판 D−3.4, 이 change 범위 밖(구현하지 않음 · 후속 change 가 다시 열 때의 기록). `docs/ROADMAP.md` 「a094 이월」.** ~~실측 재생~~ — **5판에서 §6.1a 로 옮겼다**(재분류 없이, park 된 두 행 그대로의 결말)
 
 ## 5. R4 — **철회** (1라운드 차단 2·3)
 
@@ -351,7 +351,7 @@
       `--strict`를 통과한다. 1판이 실제로 그렇게 정본을 지웠다.
       **따라서 검사는 「기존 요구 본문과 시나리오가 delta 안에 그대로 있는지」를
       문자열 대조로 따로 한다.** validate 통과는 그 증거가 아니다
-- [ ] 7.1 `go test ./... -count=1 -race` 회귀 0
+- [x] 7.1 **[처분 2026-10-01] 게이트 ⑦ `make test` · ⑨ `make test-race` 에 더해 **게이트와 같은 커밋의 격리 worktree 에서 `go test ./... -count=1 -race` 전체를 돌리고** 결과를 `review.md` 「게이트 실행 기록」 에 적는다(Manager 2026-10-01 지시).** `go test ./... -count=1 -race` 회귀 0
 - [x] 7.2 **§0.3 확인** — 4판 R2 는 원장만 읽으므로(`LiveOrdersForSymbol`) **새 브로커 왕복이 0건**이다(3.E2). 5판 N1 의 attempt 상태 읽기도
       원장이다. **6판: 관측 루프·손절 경로의 새 브로커 호출 0**(D−4.8). 새 호출은 기동의 ACKED PLACE 읽기뿐이다(`ready` 앞). R5-7 의 대가는 **무장 익절 매도 위의 손절이 종결 증거가 올 때까지
       늦는 것**이며 **시간 상한이 없다**(7판 D−5.4 — 체결 감지가 멈추면 무기한, 그때는 지연·연속 실패 경보가 드러낸다). 매수 취소 경로는 무변화다.
@@ -361,23 +361,30 @@
 - [x] 7.4 **토글 OFF 동등성** — 이 change는 토글을 도입하지 않는다.
       도입하지 않았음을 명시한다(`not-applicable` 아님 — 해당 없음이 아니라 무도입)
 - [x] 7.5 FLM·AST **재생성** (구현 후) + `check_analysis.py` 통과
-- [ ] 7.6 `make sdd-sync` → `make sdd-check`
-- [ ] 7.7 **격리 worktree에서** `make gate CHANGE=a094-a-stop-clears-what-blocks-it`
+- [x] 7.6 **[처분 2026-10-01] 게이트 준비 — `make sdd-sync` 뒤 `make sdd-check` rc 0(advisory WARN 허용), 게이트 ⑥이 다시 잰다.** `make sdd-sync` → `make sdd-check`
+- [x] 7.7 **[처분 2026-10-01] 게이트 준비 — 이 체크 커밋에서 격리 worktree 로 돌리고 결과를 `review.md` 「게이트 실행 기록」에 적는다(a095 선례). 착지 `landed-commit.txt` = `99dfa5bc`(`57b231ca`).** **격리 worktree에서** `make gate CHANGE=a094-a-stop-clears-what-blocks-it`
 - [x] 7.8 **독립 리뷰**(구현과 분리된 컨텍스트). **교차 모델을 지킨다**
-- [ ] 7.9 PM 동기화 → `openspec archive`
+- [x] 7.9 **[처분 2026-10-01] archive 는 Manager 최종 검증 · 승인 뒤 팀메이트가 실행 — 아래 「아카이브 때 할 일」. tracker 는 게이트 준비에서 재생성.** PM 동기화 → `openspec archive`
 
 ## 8. 배포와 운영 — 사람이 승인한다
 
-- [ ] 8.1 배포 전 `main`과 **SchemaVersion 대조** (낮으면 엔진이 조용히 죽는다)
+- [x] 8.1 **[처분 2026-10-01] 이월 — 사람 항목(배포 승인 때). `docs/ROADMAP.md` 「a094 이월」.** 배포 전 `main`과 **SchemaVersion 대조** (낮으면 엔진이 조용히 죽는다)
 - ~~8.1a~~ **10판에서 철회**(스키마 무변경). 롤백 원칙은 8.2 로 옮겼다(R8-4)
-- [ ] 8.2 **엔진 재시작은 사람이 직접 승인한다.** **롤백 원칙(10판 R8-4)**: 단순 백업 복원은 백업 뒤 mutation 0 이 검증된 창에서만, 그 밖은 현 저널(DB/WAL/SHM)을
+- [x] 8.2 **[처분 2026-10-01] 이월 — 사람 항목(재시작 승인 · 배포 전 ACKED 행 · intent 없는 무장 발의 행의 읽기 전용 셈, issues I5). `docs/ROADMAP.md` 「a094 이월」.** **엔진 재시작은 사람이 직접 승인한다.** **롤백 원칙(10판 R8-4)**: 단순 백업 복원은 백업 뒤 mutation 0 이 검증된 창에서만, 그 밖은 현 저널(DB/WAL/SHM)을
       보존하고 통제된 복구·대사 뒤 재개(`internal/journal/backup.go:22-35`). 재시작 자체가 recovery를 돌려
       현재 얼어붙은 attempt를 park시키므로, 그 시점에 무엇이 일어나는지 미리 적어 둔다. **6판**: 첫 재시작에서 ACKED PLACE 행마다 주문 읽기 1회
       (바이트 일치 + 종목 일치면 CONFIRMED), 나머지 ACKED 행마다 attempt 당 critical 1건 — 배포 전 운영 원장의 ACKED 행 수를 종류별로 읽기 전용으로 세어
       요청 수(행당 ≤5, D−5.5)·알림 수·확정 읽기가 더하는 시간 상한(행 수 × 3초)을 미리 적는다
-- [ ] 8.3 배포 후 **첫 409 사건의 실물 확인** — attempt가 종결하는지, 청소가 도는지
-- [ ] 8.4 이 change는 **현재 열린 세 포지션을 소급 보호하지 않는다.**
+- [x] 8.3 **[처분 2026-10-01] 이월 — 사람 항목(배포 후 읽기 전용 확인). `docs/ROADMAP.md` 「a094 이월」.** 배포 후 **첫 409 사건의 실물 확인** — attempt가 종결하는지, 청소가 도는지
+- [x] 8.4 **[처분 2026-10-01] 이월 — 사람 항목(세 포지션은 사람이 처리, issues I4). `docs/ROADMAP.md` 「a094 이월」.** 이 change는 **현재 열린 세 포지션을 소급 보호하지 않는다.**
       배포 전까지 475150·080220·272210은 사람이 처리한다
+
+## 아카이브 때 할 일 (Manager 승인 뒤 — 체크박스 아님)
+
+- 델타는 order-execution MODIFIED 1(「IN_DOUBT 해소」) · exit-policy ADDED 1 이라 archive 가 정본에 자동 반영한다 — 수기 정본 편집 없음.
+  archive 뒤 7.0 의 문자열 대조를 정본에 다시 돌린다(main 요구 27 줄이 반영된 정본 블록에 그대로 있는지 — MODIFIED 는 블록 통째 치환).
+- archive 커밋 메시지와 `review.md` 에 착지 `99dfa5bc` · 게이트 실행 커밋을 인용한다.
+- Story `STORY-TOS-a094` openspec.path → 아카이브 경로, tracker 재생성.
 
 ## 선후 관계
 
