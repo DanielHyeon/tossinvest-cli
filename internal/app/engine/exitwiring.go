@@ -351,6 +351,8 @@ func (c *Context) ExitObserver(opts ExitObserverOptions) (*ExitObserver, error) 
 		// a094 의 새 critical 은 같은 알림기의 단일 입구로 창 0 기록함(D−6.1) — 호출자 값과 무관하게 덮음(같은 규칙).
 		opts.Critical = c.Notifier
 	}
+	// 보호 청산 0주의 등급 전제(a091) — 로드된 설정에서 덮음. 호출자 값과 무관(위 Alerts 와 같은 규칙, a095 reconcileloop.go 와 같은 원천).
+	opts.NotificationsEnabled = c.Config.Engine.Notifications.Enabled
 	if opts.Floor == nil {
 		opts.Floor = exitSideFloor(c.exitFloor, exitRetrier)
 	}

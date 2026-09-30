@@ -207,6 +207,10 @@ type ExitObserverOptions struct {
 	// Critical 은 a094 의 새 critical(park 원인 · 연속 청소 실패 · 종결 증거 대기)을 창 0 으로 기록하는 알림기의
 	// 단일 입구임(a092 K6). 조립부가 *obs.Notifier 를 넣음. nil 이면 경고 로그만 남음(durable 아님).
 	Critical CriticalRecorder
+	// NotificationsEnabled 는 로드된 설정의 notifications.enabled 임(a091 — a095 와 같은 원천). 보호 청산 0주를 critical 로 매기는
+	// 전제 — 꺼진 엔진에서 critical 은 보낼 수 없는 행이 되어 진입을 멈추므로(정본 「무관리 보유 보고의 등급은 사실이 정한다」와
+	// 같은 규칙) 옛 캡 종류(normal)로 남음. 생산 배선이 호출자 값과 무관하게 덮음.
+	NotificationsEnabled bool
 
 	// AccountRef scopes everything. Required.
 	AccountRef string
@@ -1394,7 +1398,8 @@ func reJudgingVersion(m managed) int64 {
 // submit takes an armed proposal to the broker.
 func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolicy.Proposal,
 	quantity, intentID, observed string, provenance journal.ExitDecisionProvenance) error {
-	submitQuantity, capped, err := o.applyFloor(ctx, m, quantity)
+	// 보호/익절 구분은 호출자가 넘김 — applyFloor 는 제안이 손절인지 모름(a091 D2). 반환값은 그 구분과 무관함.
+	submitQuantity, capped, err := o.applyFloor(ctx, m, quantity, isProtective(proposal))
 	if err != nil {
 		return err
 	}
@@ -1614,7 +1619,9 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 // reconciliation incident. What is durable is the *condition* — the baseline is
 // still breached, the rung is still unfilled — and the next observation
 // re-derives the same proposal from it, under the same level, from the ledger.
-func (o *ExitObserver) applyFloor(ctx context.Context, m managed, quantity string) (string, bool, error) {
+//
+// protective 는 보고의 등급만 가름(a091) — 보호 청산이 0주로 깎이면 알림 켜진 엔진에서 critical 로 보고함. 반환값은 protective 와 무관함.
+func (o *ExitObserver) applyFloor(ctx context.Context, m managed, quantity string, protective bool) (string, bool, error) {
 	if o.opts.Floor == nil {
 		return quantity, false, nil
 	}
@@ -1622,9 +1629,10 @@ func (o *ExitObserver) applyFloor(ctx context.Context, m managed, quantity strin
 	if err != nil {
 		// A floor that cannot be computed is a floor of zero, not an absent one:
 		// the account is in RECONCILE and the engine has just failed to establish
-		// what it may sell.
-		o.logErr(obs.EventExitProposalCapped, err,
-			"the confirmed floor of "+m.position.Symbol+" could not be computed; nothing is submitted")
+		// what it may sell. 보고는 원인 분류 · 등급 · 가린 로그까지 exit_stop_sold_nothing.go 가 맡음(a091) — 반환값은 그대로.
+		o.reportZeroFloor(ctx, m, zeroFloor{
+			cause: classifyZero(ctx, riskcalc.ConfirmedFloor{}, err), proposed: quantity, protective: protective, err: err,
+		})
 		return "0", true, nil
 	}
 	if !applies {
@@ -1640,6 +1648,13 @@ func (o *ExitObserver) applyFloor(ctx context.Context, m managed, quantity strin
 	remainder, err := riskcalc.SubDecimal(quantity, floor.Quantity)
 	if err != nil {
 		return "", false, fmt.Errorf("engine: sizing the capped remainder of %s: %w", m.position.Symbol, err)
+	}
+	if isZeroQuantity(floor.Quantity) {
+		// 한 주도 나가지 않는 캡 — 「일부만 나갔다」는 거짓이고, 보호 청산이면 실패로 보고함(a091). 반환값은 부분 캡과 같은 모양.
+		o.reportZeroFloor(ctx, m, zeroFloor{
+			cause: classifyZero(ctx, floor, nil), proposed: quantity, protective: protective, floor: floor,
+		})
+		return floor.Quantity, true, nil
 	}
 	o.alert(ctx, obs.Event{
 		Type:  obs.EventExitProposalCapped,

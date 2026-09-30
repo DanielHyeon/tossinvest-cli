@@ -430,15 +430,14 @@ func (n *Notifier) escalate(ctx context.Context, e Event) (included bool, err er
 		journal.ModeTriggerCriticalAlertUndelivered, nil)
 	switch {
 	case err != nil && n.Log != nil:
+		// 계좌 필드 없음(a091 — 새 critical 의 기록 실패가 이 줄에 닿는 표면이라 가림, 불변식 8(a)). 알림기는 계좌 하나에 묶임.
 		n.Log.Error(EventOperatingMode, MaskAccount(err, n.AccountRef),
-			FieldAccount, n.AccountRef,
 			FieldTriggerEvent, string(e.Type),
 			FieldDetail, "the undelivered critical alert did not reach the operating mode, "+
 				"so a restart would lift the block")
 	case changed && n.Log != nil:
 		// Not a Notify: see above. The line is the record.
 		n.Log.Warn(EventOperatingMode,
-			FieldAccount, n.AccountRef,
 			FieldToState, journal.ModeEntryBlocked,
 			FieldReason, journal.ModeTriggerCriticalAlertUndelivered,
 			FieldDetail, "new entries are blocked until an operator acknowledges the alert backlog")

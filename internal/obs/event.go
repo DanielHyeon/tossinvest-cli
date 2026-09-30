@@ -237,6 +237,10 @@ const (
 	// floor, with the remainder left pending (exit-policy: 캡 발생은 알림된다).
 	// Normal: part of the exit did go, and the remainder re-proposes itself.
 	EventExitProposalCapped EventType = "exit.proposal_capped"
+	// EventExitStopSoldNothing 는 엔진이 보호하기로 한 포지션의 보호 청산(손절)이 RECONCILE 확정 하한 때문에 한 주도 나가지 않은
+	// 사실임(a091 — engine-safety 「등급화된 알림」). 알림이 켜진 엔진의 exit 관측만 이 종류를 냄 — 알림 꺼짐 · 계좌 보유 0 ·
+	// 종료 취소 · 익절 · 부분 캡은 EventExitProposalCapped(normal)로 남음. CRITICAL.
+	EventExitStopSoldNothing EventType = "exit.stop_sold_nothing"
 	// EventExitLiquidationDelayed is a breach liquidation held back past the
 	// resolution bound by an unsettled attempt on the same symbol (exit-policy:
 	// 지연이 유계를 넘으면 critical 알림). CRITICAL.
@@ -358,6 +362,10 @@ var criticalEvents = map[EventType]bool{
 	// a095 — 편입 시도 실패만. 같은 무관리 보고라도 exit 관측 자리 · 운영자가 고른 상태 · 연기는 EventExitPositionUnmanaged
 	// (normal)로 남음. 종류째 올리면 알림을 끈 기본 엔진이 손으로 산 보유 하나로 진입을 멈춤(결정 (1) · (2)).
 	EventExitPositionAdoptionFailed: true,
+
+	// a091 — 보호 청산 0주만. 부분 캡 · 익절 0주 · 알림 꺼짐 · 보유 0 · 종료 취소는 EventExitProposalCapped(normal)로 남음 — 종류째
+	// 올리면 알림을 끈 기본 엔진이 보낼 수 없는 행 때문에 진입을 멈춤(a095 와 같은 규칙).
+	EventExitStopSoldNothing: true,
 }
 
 // SeverityOf grades an event.
