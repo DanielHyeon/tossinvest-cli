@@ -1,4 +1,5 @@
 {
+  "revision": "base",
   "file": "internal/exitpolicy/recovery.go",
   "source_sha256": "292a78a44ead79108320d5a5d78b33a6174aa4011eb10e0fddc9137c4b2eed0f",
   "package": "exitpolicy",

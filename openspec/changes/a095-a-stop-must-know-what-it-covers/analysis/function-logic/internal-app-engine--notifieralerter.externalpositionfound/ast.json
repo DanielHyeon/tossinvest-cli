@@ -1,4 +1,5 @@
 {
+  "revision": "base",
   "file": "internal/app/engine/exitwiring.go",
   "source_sha256": "2b0696f0b0cccdf096965085c6981a80a18b572bf1e0cccfe1ca00b3f6e83223",
   "package": "engine",

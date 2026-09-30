@@ -1,4 +1,5 @@
 {
+  "revision": "base",
   "file": "internal/obs/notifier.go",
   "source_sha256": "d705f78d68c1eff38216e9dc9791cf737dc9d505bca77b8543aa7b7bc236bd83",
   "package": "obs",

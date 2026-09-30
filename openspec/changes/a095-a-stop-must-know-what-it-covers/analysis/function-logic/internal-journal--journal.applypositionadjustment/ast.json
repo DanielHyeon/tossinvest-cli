@@ -1,4 +1,5 @@
 {
+  "revision": "base",
   "file": "internal/journal/position_adjustments.go",
   "source_sha256": "d4af875851e00c9333be22cad13685549d80a74d19c365a32840d31bdc6c555d",
   "package": "journal",

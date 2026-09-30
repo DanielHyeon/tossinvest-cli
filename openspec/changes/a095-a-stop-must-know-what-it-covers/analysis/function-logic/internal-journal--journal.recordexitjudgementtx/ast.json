@@ -1,4 +1,5 @@
 {
+  "revision": "base",
   "file": "internal/journal/exit_state.go",
   "source_sha256": "99c96bdba4a08f7ccb5eb09597d93d3b230086d5507f5d9d4367be151c079ff2",
   "package": "journal",

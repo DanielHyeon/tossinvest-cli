@@ -1,4 +1,5 @@
 {
+  "revision": "base",
   "file": "internal/exitpolicy/ladder.go",
   "source_sha256": "ee9c91aa8a5d8f51fbb0143e1083f45dc27d3ff889acc662c0886a7e0f2e5526",
   "package": "exitpolicy",

@@ -1,4 +1,5 @@
 {
+  "revision": "base",
   "file": "internal/journal/apply_hook.go",
   "source_sha256": "459f1791fa91a6c7d108804c4c67374bce7a715ccf4874f1ebb4f31a4114a5ee",
   "package": "journal",

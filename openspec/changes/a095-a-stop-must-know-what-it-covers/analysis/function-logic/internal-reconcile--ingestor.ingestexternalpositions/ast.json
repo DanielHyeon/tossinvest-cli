@@ -1,4 +1,5 @@
 {
+  "revision": "base",
   "file": "internal/reconcile/external.go",
   "source_sha256": "df79472e469f738fedf4e7d436b44a1a0c816042dfab3ac64629f09fc8072b0a",
   "package": "reconcile",

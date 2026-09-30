@@ -1,4 +1,5 @@
 {
+  "revision": "base",
   "file": "internal/config/notifications.go",
   "source_sha256": "9b4124f002ca761c791107d6eb7e6aeaf013a5754562a4284487c9fb0d8cce99",
   "package": "config",

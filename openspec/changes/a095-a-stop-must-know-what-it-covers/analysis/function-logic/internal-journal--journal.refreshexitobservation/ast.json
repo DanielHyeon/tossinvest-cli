@@ -1,4 +1,5 @@
 {
+  "revision": "base",
   "file": "internal/journal/exit_observation_refresh.go",
   "source_sha256": "08d1b43e2aa49d98e8651f027dde20ff6e55cdf3ea12e2771780c8460e873728",
   "package": "journal",

@@ -1,4 +1,5 @@
 {
+  "revision": "base",
   "file": "internal/app/engine/alertdelivery.go",
   "source_sha256": "df8a4171e8dced1b0154614ad2399a7587abf6320d37df702df37cd587d52d8d",
   "package": "engine",

@@ -1,4 +1,5 @@
 {
+  "revision": "base",
   "file": "internal/journal/outbox.go",
   "source_sha256": "ad74f6c9b295467e1ac3c29b16c749b954b728def6475511873bda861ebebcba",
   "package": "journal",
