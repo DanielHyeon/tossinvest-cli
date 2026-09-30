@@ -269,6 +269,10 @@ func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {
 	if err := restoreAlertEntryLatch(ctx, in.journal, entry); err != nil {
 		return engineWiring{}, fmt.Errorf("engine: restoring the alert entry latch: %w", err)
 	}
+	// 운영 모드도 원장이 산 게이트보다 오래 삶 — 투영기를 묶고 첫 진입 점검보다 먼저 복원함(a092 단위 ④).
+	if err := bindOperatingModeProjection(ctx, in.journal, entry, in.accountRef, in.logger); err != nil {
+		return engineWiring{}, fmt.Errorf("engine: binding the operating-mode projection: %w", err)
+	}
 	entry.SetAuthorityRefresh(func() error {
 		return tracker.Refresh(context.Background())
 	})

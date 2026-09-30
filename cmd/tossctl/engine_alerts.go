@@ -94,7 +94,8 @@ the backlog being clear does not mean trading has resumed.
 
 This command places no order, changes no setting and cannot start or stop the
 engine.`),
-		Annotations:  map[string]string{"source": "local"},
+		// mutating: 승인은 원장 쓰기(행 정착 · 운영자 이름)이고 진입 래치를 풂 — 대화형 에이전트는 자동 실행하지 않음(a092 C17).
+		Annotations:  map[string]string{"source": "local", "mutating": "true"},
 		SilenceUsage: true,
 		Args:         cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {

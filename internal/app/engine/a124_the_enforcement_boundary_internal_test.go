@@ -2,17 +2,17 @@ package engine
 
 // a124 tasks 2.14 — 집행 경계 핀 (design D10, freeze 12·13회차 AC1 · AD1 · AD2).
 //
-// 이 change 가 쓰는 운영 모드 승격은 **원장 행**이다. 생산에서 그 행을 진입 게이트로 투영하는 투영기
-// (`Journal.SetModeProjector`)와 기동 복원(`Journal.RestoreOperatingModeProjection`)은 호출자가 0 이라,
-// 모드 행은 오늘 아무것도 막지 않는다. 이 파일은 그 사실을 **문서와 같게** 못 박는다 — 안전 주장이 아니라
-// 문서의 참/거짓 핀이다:
+// 이 change 가 쓰는 운영 모드 승격은 **원장 행**이다. a124 착지 때는 그 행을 진입 게이트로 투영하는 투영기
+// (`Journal.SetModeProjector`)와 기동 복원(`Journal.RestoreOperatingModeProjection`)의 생산 호출자가 0 이라
+// 모드 행이 아무것도 막지 않았다. a092 단위 ④가 그 배선을 착지시켰다(`mode_projection_wiring.go` — a124 핀 (b) ·
+// (c)가 예고한 정상 경로, a092 tasks 21.7(d)). 이 파일은 바뀐 사실을 **문서와 같게** 못 박는다:
 //
-//	(a) 이 change 의 시험은 픽스처에서 투영기를 묶지 않는다 — 묶으면 생산에 없는 집행을 시험이 만든다
-//	(b) 두 함수의 비시험 호출자 = 0 — 배선(a092 축소판)이 착지하면 빨강이 되고, 그때 D10 · spec 경계 문장 ·
-//	    이 핀을 함께 고친다(정상 경로)
-//	(c) 생산 조립(buildGateway)의 게이트에서, 승인 뒤와 미전달 0 재시작 뒤 알림 · 모드 사유가 둘 다 없고
-//	    모드 행은 원장에 있다. 허용·강제 재잠금 두 변형은 알림 사유가 **있다**(행복 경로 핀을 보편 주장으로
-//	    읽지 않게). CheckEntryFor == nil 은 필수 조회에 정당한 관측을 준 통제된 경우에서만 단언한다.
+//	(a) 이 change(a124)의 시험은 픽스처에서 투영기를 직접 묶지 않는다 — 묶는 것은 생산 조립 하나다
+//	(b) 두 함수의 비시험 호출자 = 생산 조립의 투영 배선 한 곳(`bindOperatingModeProjection`) — 다른 곳이 묶으면
+//	    재묶기 거절 · 이중 투영이 된다
+//	(c) 생산 조립(buildGateway)의 게이트에서, 승인은 알림 사유만 풀고 **모드 사유는 남는다**(원장의 ENTRY_BLOCKED
+//	    가 투영됨). 미전달 0 재시작 뒤에도 기동 복원이 모드 사유를 세운다. 모드 사유를 푸는 것은 사람의 완화
+//	    (`tossctl engine mode-release`, a092)다. 허용·강제 재잠금 두 변형은 알림 사유가 **있다**.
 
 import (
 	"context"
@@ -87,16 +87,21 @@ func TestA124FixturesNeverBindTheModeProjector(t *testing.T) {
 }
 
 // (b)
-func TestTheModeProjectorHasNoProductionCaller(t *testing.T) {
+func TestTheModeProjectorIsBoundOnlyByTheEngineAssembly(t *testing.T) {
 	root := filepath.Join("..", "..", "..")
 	// 양성 대조: 같은 걸음이 시험 파일의 호출자는 찾아야 한다 — 못 찾으면 계측기가 눈먼 것이다.
 	if tests := a124ProjectionCalls(t, root, func(p string) bool { return strings.HasSuffix(p, "_test.go") }); len(tests) == 0 {
 		t.Fatal("the walk found no test caller either — it is not looking at the tree")
 	}
 	sites := a124ProjectionCalls(t, root, func(p string) bool { return !strings.HasSuffix(p, "_test.go") })
-	if len(sites) != 0 {
-		t.Fatalf("the mode projector is now wired in production %v — the a124 boundary (design D10, spec) "+
-			"says the ledger mode row enforces nothing; revisit D10, the spec boundary sentence and this pin together", sites)
+	if len(sites) != 2 {
+		t.Fatalf("production binders of the mode projection = %v, want exactly SetModeProjector and "+
+			"RestoreOperatingModeProjection in the engine assembly (a092 unit 4)", sites)
+	}
+	for _, site := range sites {
+		if !strings.Contains(filepath.ToSlash(site), "internal/app/engine/mode_projection_wiring.go:") {
+			t.Errorf("the mode projection is bound outside the engine assembly at %s — a second binder is a second projection", site)
+		}
 	}
 }
 
@@ -143,8 +148,8 @@ func a124ObserveEverything(gate *execgw.EntryGate) {
 	}
 }
 
-// (c) 승인 뒤 · 미전달 0 재시작 뒤.
-func TestTheLedgerModeRowAddsNoEntryEnforcementBeforeProjectionIsWired(t *testing.T) {
+// (c) 승인 뒤 · 미전달 0 재시작 뒤 — a092 배선 뒤에는 모드 사유가 남는다.
+func TestTheLedgerModeRowEnforcesEntryOnceProjectionIsWired(t *testing.T) {
 	ctx := context.Background()
 	j, wiring, d, _ := a124ProductionFixture(t)
 	for i := 0; i < alertAttemptLimit; i++ {
@@ -157,27 +162,40 @@ func TestTheLedgerModeRowAddsNoEntryEnforcementBeforeProjectionIsWired(t *testin
 	if err := (&obs.Notifier{Journal: j, Gate: wiring.entry}).Acknowledge(ctx, "operator"); err != nil {
 		t.Fatalf("Acknowledge: %v", err)
 	}
-	// ① 사유 단언
-	if alert, mode := a124Reasons(wiring.entry); alert || mode {
-		t.Fatalf("after acknowledgement: alert reason=%v mode reason=%v — the boundary changed; revisit design D10", alert, mode)
+	// ① 사유 단언: 승인은 알림 사유만 풂. 승격이 남긴 모드 행은 산 게이트에 투영돼 있음.
+	if alert, mode := a124Reasons(wiring.entry); alert || !mode {
+		t.Fatalf("after acknowledgement: alert reason=%v mode reason=%v — want the alert reason gone and the mode reason kept", alert, mode)
 	}
 	// ② 원장 행
 	if got := a124ModeRow(t, j); got != journal.ModeEntryBlocked {
 		t.Fatalf("mode row = %s, want %s kept in the ledger", got, journal.ModeEntryBlocked)
 	}
-	// ③ 통제된 허용 경우: 정당한 관측을 준 뒤에만 CheckEntryFor 를 읽는다. nil 이 아니면 그 사유를 댄다.
+	// ③ 통제된 경우: 정당한 관측을 준 뒤에도 진입은 모드 사유로 거절됨.
 	a124ObserveEverything(wiring.entry)
-	if rejected := wiring.entry.CheckEntryFor("KR", "005930"); rejected != nil {
-		t.Fatalf("with every required query observed, entry is refused for %s (%s) — "+
-			"the ledger mode row is not supposed to enforce anything today", rejected.Reason, rejected.Detail)
+	if rejected := wiring.entry.CheckEntryFor("KR", "005930"); rejected == nil || rejected.Reason != execgw.ReasonOperatingModeBlocked {
+		t.Fatalf("with every required query observed, entry check = %v — want %s", rejected, execgw.ReasonOperatingModeBlocked)
 	}
 
-	// 미전달 0 재시작
-	restarted := a098BuildGateway(t, ctx, j)
-	if alert, mode := a124Reasons(restarted.entry); alert || mode {
-		t.Fatalf("after a restart with nothing pending: alert reason=%v mode reason=%v", alert, mode)
+	// 미전달 0 재시작 — 새 프로세스는 원장을 새로 연다(한 핸들에 투영기는 한 번만 묶임). 기동 복원이 모드 사유를 다시 세움.
+	path := j.Path()
+	if err := j.Close(); err != nil {
+		t.Fatalf("closing the journal for the restart: %v", err)
 	}
-	if got := a124ModeRow(t, j); got != journal.ModeEntryBlocked {
+	reopened, err := journal.Open(ctx, journal.Options{
+		Path: path, FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
+	})
+	if err != nil {
+		t.Fatalf("reopening the journal: %v", err)
+	}
+	t.Cleanup(func() { _ = reopened.Close() })
+	if err := bindApplyHooks(reopened); err != nil {
+		t.Fatalf("bindApplyHooks: %v", err)
+	}
+	restarted := a098BuildGateway(t, ctx, reopened)
+	if alert, mode := a124Reasons(restarted.entry); alert || !mode {
+		t.Fatalf("after a restart with nothing pending: alert reason=%v mode reason=%v — want the mode restored", alert, mode)
+	}
+	if got := a124ModeRow(t, reopened); got != journal.ModeEntryBlocked {
 		t.Fatalf("mode row after restart = %s", got)
 	}
 }

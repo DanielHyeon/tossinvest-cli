@@ -130,12 +130,16 @@ func TestMutatingAnnotationOnTradeCommands(t *testing.T) {
 		// 진입점으로 정했다. 읽기 전용 `engine risk-latch-show` 는 여기 없다.
 		"tossctl engine entry-lock-release": true,
 		"tossctl engine risk-latch-release": true,
-		"tossctl order place":               true,
-		"tossctl order cancel":              true,
-		"tossctl order amend":               true,
-		"tossctl order conditional place":   true,
-		"tossctl order conditional cancel":  true,
-		"tossctl order conditional modify":  true,
+		// a092 단위 ④: 사람의 운영 모드 완화(노출 증가를 다시 여는 완화 — 같은 사용자 결정 가족)와, 원장을 쓰고 진입
+		// 래치를 푸는 알림 승인(Manager 판정 4 · a092 C17). 둘 다 주문은 내지 않음 — 자동 실행 금지 표지.
+		"tossctl engine mode-release":      true,
+		"tossctl engine alerts ack":        true,
+		"tossctl order place":              true,
+		"tossctl order cancel":             true,
+		"tossctl order amend":              true,
+		"tossctl order conditional place":  true,
+		"tossctl order conditional cancel": true,
+		"tossctl order conditional modify": true,
 	}
 	for _, c := range leafCommands(newRootCmd()) {
 		path := c.CommandPath()

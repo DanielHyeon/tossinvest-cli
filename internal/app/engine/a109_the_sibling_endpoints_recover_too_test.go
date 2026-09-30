@@ -76,6 +76,17 @@ func a109Endpoints() []a109Endpoint {
 				return StartAlertControlServer(engineDir, &AlertOperations{})
 			},
 		},
+		// a092 단위 ④: 모드 완화 표면 — 알림 제어와 같은 기계(같은 descriptor 발행 의례 · 같은 staging 접두).
+		{
+			name:            "mode control",
+			controlDir:      ModeControlDirectory,
+			socket:          ModeControlSocketPath,
+			descriptor:      ModeControlDescriptorPath,
+			stagingLeftover: ".endpoint-3641220975",
+			start: func(_ *testing.T, engineDir string) (interface{ Close() error }, error) {
+				return StartModeControlServer(engineDir, &ModeOperations{})
+			},
+		},
 	}
 }
 
@@ -339,6 +350,7 @@ func TestTheStagedSocketNameFitsInsideEverySiblingsFinalName(t *testing.T) {
 	for _, final := range []string{
 		AlertControlSocketFileName(),            // alerts.sock — 11자
 		positionpolicyrpc.RuntimeSocketFileName, // runtime.sock — 12자
+		ModeControlSocketFileName(),             // modectl.sock — 12자 (a092)
 	} {
 		if len(staged) > len(final) {
 			t.Errorf("임시 이름 %q(%d자)이 최종 이름 %q(%d자)보다 길다 — "+
@@ -383,6 +395,12 @@ func TestEveryNameThePublishingPathMakesIsKnownToItsReclaim(t *testing.T) {
 			names:            alertControlEndpointNames(),
 			descriptorPrefix: privateDescriptorStagingPrefix,
 			final:            []string{alertControlDescriptorFileName, alertControlSocketFileName},
+		},
+		{
+			name:             "mode control",
+			names:            modeControlEndpointNames(),
+			descriptorPrefix: privateDescriptorStagingPrefix,
+			final:            []string{modeControlDescriptorFileName, modeControlSocketFileName},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {

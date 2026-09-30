@@ -70,8 +70,9 @@ func TestNothingButThatReasonsClearMovesItsEpoch(t *testing.T) {
 	g.BlockSymbol("KR", "005930", ReasonAlertUndelivered, "symbol")
 	g.ClearSymbol("KR", "005930", ReasonAlertUndelivered)
 	g.ClearSymbolReason(ReasonAlertUndelivered)
-	g.ProjectOperatingMode(journal.OperatingModeRecord{Mode: journal.ModeEntryBlocked})
-	g.ProjectOperatingMode(journal.OperatingModeRecord{Mode: journal.ModeNormal})
+	// 순번을 붙임(a092 울타리 — 순번 0 투영은 적용되지 않으므로 순번 없이는 이 두 줄이 아무것도 안 함).
+	g.ProjectOperatingMode(journal.OperatingModeRecord{Seq: 1, Mode: journal.ModeEntryBlocked})
+	g.ProjectOperatingMode(journal.OperatingModeRecord{Seq: 2, Mode: journal.ModeNormal})
 	g.RebuildReconcileProjection(nil)
 	g.RecordSuccess(QueryPrice)
 	_, _ = g.BlockUnlessClearedSince(ReasonAlertUndelivered, before, "conditional")

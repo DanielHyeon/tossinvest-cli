@@ -143,6 +143,11 @@ func (n *Notifier) recordCritical(ctx context.Context, e Event, remindAfter time
 	return nil
 }
 
+// OperatingModeEventKey 는 모드 전이 통지의 중복 제거 신원임(a092 K1 — 전이 행 하나). 완화 명령이 통지 행을 다시 읽을 때도 씀.
+func OperatingModeEventKey(rec journal.OperatingModeRecord) string {
+	return "operating_mode:" + rec.AccountRef + ":" + rec.Mode + ":" + rec.ID
+}
+
 // operatingModeEvent 는 모드 전이 하나의 통지 사건을 만듦 — 동기 통지와 기록 전용 통지가 같이 씀.
 func operatingModeEvent(previous string, rec journal.OperatingModeRecord) Event {
 	direction := "tightened"
@@ -154,7 +159,7 @@ func operatingModeEvent(previous string, rec journal.OperatingModeRecord) Event 
 		// 중복 제거 신원은 전이 하나(전이 행 id)임(a092 K1). 계정+목적 모드만으로 두면 「강화 → 완화 → 재알림 창 안의
 		// 재강화」의 통지가 옛 정착 행에 흡수되어 나가지 않음. 같은 전이의 이중 통지는 원장이 막음 — 변화 없는 전이는
 		// 통지 전에 반환하므로(TransitionOperatingMode 무변화 규칙) 이 신원이 통지 수를 늘리지 않음.
-		Key:   "operating_mode:" + rec.AccountRef + ":" + rec.Mode + ":" + rec.ID,
+		Key:   OperatingModeEventKey(rec),
 		Title: fmt.Sprintf("operating mode %s: %s → %s", direction, modeLabel(previous), rec.Mode),
 		Body: fmt.Sprintf("%s by %s — %s. Exposure-raising mutations are %s; risk-reducing ones are unaffected.",
 			rec.Mode, rec.Actor, rec.Cause, permission(rec)),

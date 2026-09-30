@@ -33,13 +33,6 @@ import "github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 // journal has already refused to reach here without an operator and an audit
 // line — the gate does not re-litigate the approval, it applies the decision.
 func (g *EntryGate) ProjectOperatingMode(rec journal.OperatingModeRecord) {
-	g.mu.Lock()
-	delete(g.latches, ReasonOperatingModeBlocked)
-	g.mu.Unlock()
-
-	if !rec.BlocksEntry() {
-		return
-	}
 	detail := rec.Mode
 	if rec.Actor != "" {
 		detail += " (" + rec.Actor + ")"
@@ -47,7 +40,30 @@ func (g *EntryGate) ProjectOperatingMode(rec journal.OperatingModeRecord) {
 	if rec.Cause != "" {
 		detail += ": " + rec.Cause
 	}
-	g.Block(ReasonOperatingModeBlocked, detail)
+
+	// 한 번의 잠금 안에서 교체함(a092 AC2) — 지우고 잠금을 놓은 뒤 다시 넣으면 그 사이의 진입 점검이 모드 사유를 못 봄.
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	// 커밋 순서 울타리(a092 C5): 투영은 커밋 뒤 잠금 없이 불리므로 겹친 두 전이의 투영이 뒤바뀌어 도착할 수 있음.
+	// 마지막으로 적용한 순번보다 큰 것만 적용 — 초기값 0, 「보다 큰」(순번 0 은 원장 행이 아님).
+	if rec.Seq <= g.modeSeq {
+		return
+	}
+	g.modeSeq = rec.Seq
+	_, had := g.latches[ReasonOperatingModeBlocked]
+	if !rec.BlocksEntry() {
+		if had {
+			delete(g.latches, ReasonOperatingModeBlocked)
+			g.revision++
+		}
+		return
+	}
+	g.latches[ReasonOperatingModeBlocked] = detail
+	// 상태 세대는 모드 사유의 **존재**가 바뀔 때만 +1(a092 C20 — a124 「실제로 상태가 바뀐 때만」). 설명만 바뀌는 교체는 +0.
+	// 해제 세대(clearEpochs)는 건드리지 않음 — 그것은 그 사유의 Clear 만 바꿈(a124).
+	if !had {
+		g.revision++
+	}
 }
 
 // OperatingModeBlocked reports whether the gate currently carries a mode latch,

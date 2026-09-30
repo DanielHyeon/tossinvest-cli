@@ -481,6 +481,8 @@ type EntryGate struct {
 	// 이 값을 바꾸지 않음. revision 과 별도 필드인 이유: revision 은 실제 상태 변화 때만 올라야 함(전략 봉인).
 	// 지연 생성, g.mu 아래에서만 읽고 씀.
 	clearEpochs map[ReasonCode]uint64
+	// modeSeq 는 마지막으로 적용한 운영 모드 투영의 커밋 순번(journal rowid)임(a092 C5 울타리). 0 에서 시작, g.mu 아래에서만.
+	modeSeq int64
 }
 
 // SetAuthorityRefresh binds the durable RECONCILE recheck used by the sealed

@@ -123,6 +123,8 @@ func newEngineCmd(root *rootOptions) *cobra.Command {
 		newEngineAlertsCmd(root))
 	// a066 5.5(D8): 진입 손실 잠금 · RISK_OVERAGE latch 의 운영자 해제(mutating) 와 읽기 전용 확인.
 	cmd.AddCommand(newEngineRiskRelaxationCmds(root)...)
+	// a092 단위 ④: 사람의 운영 모드 완화(mutating) — 모드 투영이 배선된 빌드의 유일한 완화 경로.
+	cmd.AddCommand(newEngineModeReleaseCmd(root))
 	return cmd
 }
 
@@ -346,6 +348,21 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 		reportEngineEndpointDegraded(ctx, ectx, errOut, engineAlertControlEndpoint(dir),
 			alertControlErr)
 	}
+	// a092 단위 ④ — 사람의 운영 모드 완화 표면. 알림 제어와 같은 이유로 이 프로세스 안이어야 하고(산 게이트), 다른 힘이라
+	// 자기 소켓 · 토큰을 가짐. 기동 실패는 알림 제어와 같이 강등 보고 — 보호 루프는 그대로 돎.
+	// 표면을 못 만들면(핸들 부족) 기동을 멈추지 않고 강등으로 보고함 — 이 표면이 없어도 잃는 것은 사람의 완화뿐이고
+	// 모드 사유 차단은 유지되는 보수 방향임. 엔진을 멈추면 손절이 없어짐(안전 불변식 4).
+	modeOps, modeControlErr := ectx.ModeOperations()
+	if modeControlErr == nil {
+		var modeControl *engine.ModeControlServer
+		modeControl, modeControlErr = engineModeControlStart(dir, modeOps)
+		if modeControl != nil {
+			defer modeControl.Close()
+		}
+	}
+	if modeControlErr != nil {
+		reportEngineEndpointDegraded(ctx, ectx, errOut, engineModeControlEndpoint(dir), modeControlErr)
+	}
 	fmt.Fprintf(out, "account          %s\nloops            %s\n",
 		ectx.Automation.MaskedAccount(), strings.Join(rt.LoopNames(), ", "))
 	fmt.Fprintf(out, "stop             SIGINT/SIGTERM — 루프 완주 후 journal 정합 close. 두 번째 시그널은 즉시 종료\n\n")
@@ -540,6 +557,7 @@ var (
 	}
 	enginePositionPolicyRuntimeStart = engine.StartPositionPolicyRuntimeServer
 	engineAlertControlStart          = engine.StartAlertControlServer
+	engineModeControlStart           = engine.StartModeControlServer
 )
 
 // engineAssemble builds the engine profile.
