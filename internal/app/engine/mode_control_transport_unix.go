@@ -163,7 +163,9 @@ func modeControlRoutes(token string, ops *ModeOperations) *http.ServeMux {
 			case errors.Is(err, ErrModeReleaseUnavailable):
 				writeRPCError(w, http.StatusServiceUnavailable, "unavailable", err.Error())
 			default:
-				writeRPCError(w, http.StatusInternalServerError, "internal", err.Error())
+				// 본문은 고정 문구 — 원장 오류 문구는 계좌를 담을 수 있음(26라운드 보이스 B #2). 원문은 가려서 로그에.
+				ops.logFailure("the mode release failed", err)
+				writeRPCError(w, http.StatusInternalServerError, "internal", modeReleaseInternalFailure)
 			}
 			return
 		}

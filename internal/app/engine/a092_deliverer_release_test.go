@@ -102,3 +102,25 @@ func TestA092TheDelivererRecordsAPreemptedAttempt(t *testing.T) {
 		})
 	}
 }
+
+// 26라운드 codex 재확인 R1: 시도 기록은 Applied(한도 미만)인데 반납에서야 선점(승인 · 남의 임차)이 드러나도 그 사실을 기록함
+// (델타 「선점이 일어났다는 사실은 기록되어야 한다」 — 모든 발송자). 잠그지도 승격하지도 않음.
+func TestA092TheDelivererRecordsAPreemptionSeenOnlyAtRelease(t *testing.T) {
+	for name, outcome := range map[string]journal.SettleOutcome{"acknowledged": journal.SettleAlreadySettled, "lease-lost": journal.SettleLeaseLost} {
+		t.Run(name, func(t *testing.T) {
+			f, led := a092DelivererReleaseFixture(t, outcome)
+			f.row(t, "a092-release-preempted-"+name)
+			_ = f.d.cycle(context.Background())
+			if led.releases == 0 {
+				t.Fatal("arrangement: no release happened")
+			}
+			logs := f.logs.String()
+			if !strings.Contains(logs, "before it could be handed back") || !strings.Contains(logs, outcome.String()) {
+				t.Errorf("a preemption seen at release was not recorded:\n%s", logs)
+			}
+			if a092Undelivered(f.gate) || f.led.escalationCount() != 0 {
+				t.Error("a preemption seen at release latched or escalated")
+			}
+		})
+	}
+}

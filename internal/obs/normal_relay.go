@@ -116,7 +116,7 @@ func (n *Notifier) logNormalDrop(e Event, why string) {
 		return
 	}
 	n.Log.Warn(EventNormalAlertDropped,
-		FieldEvent, string(e.Type),
+		FieldTriggerEvent, string(e.Type),
 		"alert_key", n.eventKey(e),
 		FieldDetail, why)
 }

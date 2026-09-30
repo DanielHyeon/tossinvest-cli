@@ -183,9 +183,10 @@ func (n *Notifier) publishBestEffort(ctx context.Context, e Event, severity Seve
 	if err := n.Publisher.Publish(ctx, notificationFor(e, severity)); err != nil && n.Log != nil {
 		// Logged, not escalated: this grade is best-effort by definition, and
 		// treating its failure as an incident would make the grading meaningless.
+		// 원래 사건의 유형 · 등급은 trigger_* 로 — emit 이 쓰는 줄 자신의 event · severity 를 가리지 않게(a092 26라운드 A#4 · B#4).
 		n.Log.Warn(EventAlertUndelivered,
-			FieldEvent, string(e.Type),
-			FieldSeverity, string(severity),
+			FieldTriggerEvent, string(e.Type),
+			"trigger_severity", string(severity),
 			FieldError, err.Error())
 	}
 }
@@ -198,7 +199,7 @@ func (n *Notifier) notifyCritical(ctx context.Context, e Event) error {
 		// their back.
 		if n.Log != nil {
 			n.Log.Warn(EventAlertUndelivered,
-				FieldEvent, string(e.Type),
+				FieldTriggerEvent, string(e.Type),
 				FieldDetail, "no journal is wired, so this critical alert is not durable")
 		}
 		n.publishBestEffort(ctx, e, SeverityCritical)
@@ -429,7 +430,7 @@ func (n *Notifier) escalate(ctx context.Context, e Event) (included bool, err er
 	case err != nil && n.Log != nil:
 		n.Log.Error(EventOperatingMode, err,
 			FieldAccount, n.AccountRef,
-			FieldEvent, string(e.Type),
+			FieldTriggerEvent, string(e.Type),
 			FieldDetail, "the undelivered critical alert did not reach the operating mode, "+
 				"so a restart would lift the block")
 	case changed && n.Log != nil:
@@ -692,6 +693,13 @@ func (n *Notifier) logLeaseLost(res journal.SettleResult, id int64, e Event) {
 			FieldTriggerEvent, string(e.Type),
 			"alert_id", id,
 			FieldDetail, "the row was settled by an operator or an earlier delivery")
+	case res.Outcome != journal.SettleLeaseLost:
+		// 결과 enum 이 분류함 — 이름 없는 결과를 ClaimedBy 로 갈라 선점이라 적으면 원장 이상이 두 발송자의 만남으로 묻힘
+		// (a092 26라운드 codex 재확인 R3). 차단은 호출자가 이미 판정함 — 이 함수는 기록만.
+		n.Log.Error(EventAlertUndelivered,
+			fmt.Errorf("the outbox returned an unknown settle outcome %s", res.Outcome),
+			FieldTriggerEvent, string(e.Type),
+			"alert_id", id)
 	case res.ClaimedBy == "":
 		// The row is still PENDING and carries no token. That is this sender's own
 		// release, seen a second time — not a loss. Warning "somebody took your

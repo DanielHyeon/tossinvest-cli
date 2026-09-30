@@ -49,7 +49,7 @@ package engine
 //	기록 · 나열 실패 원장에 시도를 못 남긴 연속(행별 · 실행자 단위)이 한도 → 차단 + 승격
 //
 // 늦은 적용은 원칙 E(해제 세대)를 따르고, 실행자가 잡는 잠금은 진입 게이트 잠금뿐임. 진입을 실제로 막는 것은 게이트
-// 래치이고 모드 행은 원장 기록임(design D10 — 투영기 미배선).
+// 래치이고, 승격한 모드 행은 산 게이트에 모드 사유로 투영됨(a092 단위 ④ — 그 사유는 사람의 mode-release 로만 풀림).
 
 import (
 	"context"
@@ -360,6 +360,12 @@ func (d *alertDeliverer) recordFailedAttempt(ctx context.Context, id int64, toke
 			"alert_id", id, "outcome", released.Outcome.String())
 		d.judge(ctx, id, d.readEpoch(id), false, alertLatchUnaccounted)
 	}
+	// 반납에서야 드러난 선점(시도 기록 뒤의 승인 · 남의 임차)도 기록함 — 시도 기록의 결과만 보면 이 사실이 사라짐(26라운드
+	// codex 재확인 R1, 델타 「선점이 일어났다는 사실은 기록되어야 한다」). 판정은 바꾸지 않음(잠금 · 승격 없음).
+	if releaseOK && (released.Outcome == journal.SettleAlreadySettled || released.Outcome == journal.SettleLeaseLost) {
+		d.logf(obs.EventAlertClaimLost, nil, "a failed attempt's lease was preempted before it could be handed back",
+			"alert_id", id, "outcome", released.Outcome.String())
+	}
 	if err != nil {
 		// 오류의 SettleResult{} 는 Outcome 영값이 Applied 라 결과를 읽으면 안 됨(F10) — err 가 먼저.
 		// attempts 가 안 올랐으니 한도 판정이 설 수 없음 → 행별 연속 기록 실패로 셈(D8).
@@ -456,7 +462,7 @@ func (d *alertDeliverer) judge(ctx context.Context, id int64, epoch uint64, esca
 // (전달 수단이 막 실패한 참이라 알림을 다시 낼 이유가 없음).
 //
 // 새 줄에는 계좌 · 원문 오류를 넣지 않음(R2): 모드 전이 오류는 계좌를 담을 수 있으므로 err 대신 고정 분류만.
-// 이 모드 행은 원장 기록이며, 생산에서 진입을 막는 것은 위의 게이트 래치임(design D10 — 투영기 미배선).
+// 승격한 모드 행은 산 게이트에 모드 사유로 투영되어 진입을 막고, 사람의 mode-release 로만 풀림(a092 단위 ④ · K16).
 func (d *alertDeliverer) escalate(ctx context.Context, id int64) error {
 	if strings.TrimSpace(d.AccountRef) == "" {
 		return nil

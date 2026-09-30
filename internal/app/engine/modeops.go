@@ -44,6 +44,8 @@ type ModeOperations struct {
 	announcer journal.ModeAnnouncer
 	// current 는 전이 뒤 재읽기 — 기본은 원장. 시험이 재읽기 실패를 꽂을 수 있게 필드로 둠.
 	current func(ctx context.Context, accountRef string) (journal.ModeSnapshot, error)
+	// pending 은 통지 목록 재읽기 — 기본은 원장. 시험이 목록 재읽기 실패를 꽂을 수 있게 필드로 둠.
+	pending func(ctx context.Context, limit int) ([]journal.Alert, error)
 }
 
 // ModeOperations 는 이 엔진의 핸들로 완화 표면을 만듦. 하나라도 없으면 만들지 않음 — nil 게이트 위의 표면은 원장만 고치고
@@ -66,6 +68,7 @@ func newModeOperations(j *journal.Journal, gate *execgw.EntryGate, notifier *obs
 		journal: j, gate: gate, notifier: notifier, auditor: auditor, accountRef: accountRef,
 		announcer: obs.RecordOnly{N: notifier},
 		current:   j.CurrentOperatingMode,
+		pending:   j.PendingAlerts,
 	}
 }
 
@@ -93,6 +96,13 @@ func (o *ModeOperations) Release(ctx context.Context, req ModeReleaseRequest) (M
 		return ModeReleaseResult{}, fmt.Errorf("%w: the engine has no audit log", ErrModeReleaseUnavailable)
 	}
 
+	// 커밋 앞(판정 · audit · commit)은 요청 ctx 를 따름 — 요청이 끝났으면 아무것도 커밋하지 않음. 커밋 뒤의 통지 · 재읽기는
+	// 요청 ctx 에서 뗌(26라운드 보이스 A #1, a066 notifyRelaxation 선례): 클라이언트 Ctrl-C · 타임아웃이 그 창에 떨어지면
+	// 통지 행 없이 게이트 래치만 남고(ack 한 번에 풀림) 커밋된 완화가 재읽기 실패로 보고됨.
+	var announcer journal.ModeAnnouncer
+	if o.announcer != nil {
+		announcer = detachedAnnouncer{inner: o.announcer}
+	}
 	rec, changed, err := o.journal.TransitionOperatingMode(ctx, journal.TransitionModeRequest{
 		AccountRef: o.accountRef,
 		Mode:       to,
@@ -100,13 +110,14 @@ func (o *ModeOperations) Release(ctx context.Context, req ModeReleaseRequest) (M
 		Actor:      journal.ModeActorOperator,
 		Approval:   approval,
 		Auditor:    o.auditor,
-		Announcer:  o.announcer,
+		Announcer:  announcer,
 	})
 	result := ModeReleaseResult{Changed: changed}
 	switch {
 	case err != nil && errors.Is(err, journal.ErrModeAnnouncementFailed):
 		// 커밋은 됐고 통지 기록만 실패함 — 성공으로 보고하고 통지 실패를 함께 보임(델타). 실패한 기록은 입구가 이미 래치 · 승격함.
-		result.NotifyError = err.Error()
+		// 결과 칸은 고정 문구 — 원문 오류는 통지 사건 키(계좌 포함)를 품음(26라운드 보이스 B #2). 원문은 기록 입구가 로그에 남겼음.
+		result.NotifyError = modeReleaseNoticeFailed
 	case err != nil:
 		return ModeReleaseResult{}, err
 	case changed:
@@ -115,19 +126,23 @@ func (o *ModeOperations) Release(ctx context.Context, req ModeReleaseRequest) (M
 	if changed {
 		result.TransitionID = rec.ID
 	}
+	after := context.WithoutCancel(ctx)
 	// 재읽기 — 같은 호출 안의 다른 경로(통지 기록 실패의 승격 등)가 방금 푼 모드를 다시 조일 수 있음(K16).
 	// 재읽기가 실패해도 커밋 사실은 버리지 않음(26라운드 codex #5) — 오류 대신 결과에 실패를 싣고, 읽지 못한 상태는 비워 둠.
-	current, err := o.current(ctx, o.accountRef)
+	current, err := o.current(after, o.accountRef)
 	if err != nil {
-		result.ReReadError = "re-reading the operating mode after the release failed: " + err.Error()
+		o.logFailure("re-reading the operating mode after the release failed", err)
+		result.ReReadError = modeReleaseReReadFailed
 		return result, nil
 	}
 	result.Mode, result.Seq = current.Mode, current.Seq
 	result.EntryBlocks = entryBlockReasons(o.gate)
 	if changed {
-		pending, err := o.journal.PendingAlerts(ctx, 0)
+		pending, err := o.pending(after, 0)
 		if err != nil {
-			result.ReReadError = "re-reading the release notice failed: " + err.Error()
+			// 통지 목록만 못 읽음 — 이미 읽은 모드 · 사유는 그대로 둠(26라운드 codex 재확인 R2).
+			o.logFailure("re-reading the release notice failed", err)
+			result.NoticeReadError = modeReleaseNoticeReadFailed
 			return result, nil
 		}
 		key := obs.OperatingModeEventKey(rec)
@@ -139,4 +154,32 @@ func (o *ModeOperations) Release(ctx context.Context, req ModeReleaseRequest) (M
 		}
 	}
 	return result, nil
+}
+
+// 결과 · 오류 본문의 고정 문구(26라운드 보이스 B #2 — 불변식 8). 원문 오류는 계좌를 가린 채 엔진 로그에만.
+const (
+	modeReleaseNoticeFailed     = "the release notice could not be recorded in the outbox (details are in the engine log)"
+	modeReleaseReReadFailed     = "re-reading the operating mode after the release failed (details are in the engine log)"
+	modeReleaseNoticeReadFailed = "re-reading the release notice failed (details are in the engine log)"
+	modeReleaseInternalFailure  = "the mode release failed inside the engine (details are in the engine log)"
+)
+
+// logFailure 는 원문 오류를 엔진 로그에 남기되 계좌 원문은 가림 — 원장 오류 문구는 계좌를 담을 수 있음
+// ("… transition for <계좌>", 통지 사건 키). 로거가 없으면 조용함(결과 칸이 실패를 말함).
+func (o *ModeOperations) logFailure(what string, err error) {
+	if o == nil || o.notifier == nil || o.notifier.Log == nil || err == nil {
+		return
+	}
+	text := err.Error()
+	if acct := strings.TrimSpace(o.accountRef); acct != "" {
+		text = strings.ReplaceAll(text, acct, "[account]")
+	}
+	o.notifier.Log.Error(obs.EventOperatingMode, errors.New(text), obs.FieldDetail, what)
+}
+
+// detachedAnnouncer 는 커밋 뒤 통지를 요청 ctx 의 취소에서 떼어 냄 — 값은 그대로 전함(a066 notifyRelaxation 과 같은 규칙).
+type detachedAnnouncer struct{ inner journal.ModeAnnouncer }
+
+func (d detachedAnnouncer) AnnounceOperatingMode(ctx context.Context, previous string, rec journal.OperatingModeRecord) error {
+	return d.inner.AnnounceOperatingMode(context.WithoutCancel(ctx), previous, rec)
 }

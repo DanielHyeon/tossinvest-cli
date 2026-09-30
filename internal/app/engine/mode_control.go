@@ -57,6 +57,9 @@ type ModeReleaseResult struct {
 	// ReReadError 는 전이 뒤 재읽기가 실패했음을 말함(26라운드 codex #5). 그때 Mode · Seq · EntryBlocks · NoticePending 은
 	// 비어 있고 추정하지 않음 — 커밋 여부(Changed · TransitionID)와 통지 기록 결과는 그대로 보존됨.
 	ReReadError string `json:"reread_error,omitempty"`
+	// NoticeReadError 는 모드 재읽기는 됐고 통지 목록 재읽기만 실패했음을 말함(26라운드 codex 재확인 R2). 그때 Mode · Seq ·
+	// EntryBlocks 는 읽은 대로이고 NoticePending 만 모름(false 로 두되 이 칸이 그 false 를 무효로 함).
+	NoticeReadError string `json:"notice_read_error,omitempty"`
 }
 
 func ModeControlDirectory(engineDir string) string {

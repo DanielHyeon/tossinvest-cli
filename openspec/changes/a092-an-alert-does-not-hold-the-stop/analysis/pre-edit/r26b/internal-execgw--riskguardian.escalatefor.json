@@ -1,0 +1,86 @@
+{
+  "file": "internal/execgw/riskguardian.go",
+  "source_sha256": "318af68defdbe39d16ddec6afa3970babe420f2c25fdf683f2ac136f652e5561",
+  "package": "execgw",
+  "function": "escalateFor",
+  "receiver": "RiskGuardian",
+  "signature": "RiskGuardian.escalateFor(params=2, results=1)",
+  "start": {
+    "line": 640,
+    "column": 1
+  },
+  "end": {
+    "line": 650,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 641,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 644,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 642,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 646,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 649,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 644,
+        "column": 18
+      },
+      "text": "g.journal.EscalateOperatingMode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 646,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 644,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

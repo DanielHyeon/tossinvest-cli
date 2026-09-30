@@ -643,6 +643,12 @@ func (g *RiskGuardian) escalateFor(ctx context.Context, verdict risk.Decision) e
 	}
 	if _, _, err := g.journal.EscalateOperatingMode(ctx, g.accountRef,
 		journal.ModeTriggerDailyLossLimit, g.announcer); err != nil {
+		if errors.Is(err, journal.ErrModeAnnouncementFailed) {
+			// 전이는 커밋됐고 통지 기록만 실패함 — 재시작이 푸는 차단이 아님(a092 26라운드 보이스 B #7 잔재). 진입 거절은
+			// 호출자가 이미 판정했고 이 오류는 그 거절에 덧붙는 기록일 뿐임.
+			return fmt.Errorf("execgw: the daily-loss limit tightened the operating mode, but its notice "+
+				"could not be recorded: %w", err)
+		}
 		return fmt.Errorf("execgw: the daily-loss limit did not reach the operating mode, "+
 			"so a restart would lift the block: %w", err)
 	}

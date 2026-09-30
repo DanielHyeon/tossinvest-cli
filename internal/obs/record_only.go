@@ -47,7 +47,7 @@ func (r RecordOnly) Notify(ctx context.Context, e Event) error {
 		return nil
 	}
 	severity := SeverityOf(e.Type)
-	n.logEvent(e, severity)
+	n.logEvent(withoutFields(e), severity)
 	if severity != SeverityCritical {
 		if r.Relay == nil {
 			n.logNormalDrop(e, "no normal-grade relay is wired")
@@ -67,7 +67,7 @@ func (r RecordOnly) AnnounceOperatingMode(ctx context.Context, previous string, 
 		return nil
 	}
 	e := operatingModeEvent(previous, rec)
-	n.logEvent(e, SeverityOf(e.Type))
+	n.logEvent(withoutFields(e), SeverityOf(e.Type))
 	return n.recordCritical(ctx, e, n.remindAfter())
 }
 
@@ -86,7 +86,7 @@ func (n *Notifier) RecordCritical(ctx context.Context, e Event, remindAfter time
 	if n == nil || n.Journal == nil {
 		if n != nil && n.Log != nil {
 			n.Log.Warn(EventAlertUndelivered,
-				FieldEvent, string(e.Type),
+				FieldTriggerEvent, string(e.Type),
 				FieldDetail, "no journal is wired, so this critical record is not durable")
 		}
 		return ErrAlertNotDurable
@@ -95,10 +95,16 @@ func (n *Notifier) RecordCritical(ctx context.Context, e Event, remindAfter time
 	// 브로커 계좌번호 원문은 어떤 형태로도 로그 금지, 원장 내부 키 · 마스킹 형식만 허용. 이 입구의 기록자(a066 완화 통지)는
 	// 필드에 계좌를 담은 대상을 싣므로 로그에서 뺌. 사람의 계좌 가림 설계가 확정되면 그쪽이 우선함).
 	// 유형 · 키 · 제목 · 본문은 남음 — 제목 · 본문은 기록자가 외부 전송용으로 계좌를 뺀 문구임.
-	logged := e
-	logged.Fields = nil
-	n.logEvent(logged, SeverityCritical)
+	n.logEvent(withoutFields(e), SeverityCritical)
 	return n.recordCritical(ctx, e, remindAfter)
+}
+
+// withoutFields 는 기록 전용 입구의 로그 줄에서 필드를 뺀 사본임 — 입구의 세 메서드가 모두 씀(a092 26라운드 보이스 B #1:
+// f48e7865 가 RecordCritical 하나에만 적용했음). 필드는 원장 payload 로만 감. 계좌를 담는 필드(exit 두절 · 모드 통지의
+// FieldAccount)가 이 입구로 들어오므로 로그 줄에는 유형 · 키 · 본문만 남김(불변식 8, Manager 판정 2b 의 연장).
+func withoutFields(e Event) Event {
+	e.Fields = nil
+	return e
 }
 
 // recordCritical 는 critical 사건 하나를 발송 임차 없이 원장에 기록함 — 알림기의 기록 전용 입구.
@@ -111,7 +117,7 @@ func (n *Notifier) recordCritical(ctx context.Context, e Event, remindAfter time
 		// 크게 경고만 하고 반환함.
 		if n.Log != nil {
 			n.Log.Warn(EventAlertUndelivered,
-				FieldEvent, string(e.Type),
+				FieldTriggerEvent, string(e.Type),
 				FieldDetail, "no journal is wired, so this critical alert is neither durable nor sent")
 		}
 		return nil
@@ -134,8 +140,10 @@ func (n *Notifier) recordCritical(ctx context.Context, e Event, remindAfter time
 			n.Log.Error(EventAlertUndelivered, err, FieldTriggerEvent, string(e.Type))
 		}
 		if n.Gate != nil {
+			// 설명은 고정 문구 — 원문 오류는 사건 키(모드 통지 · exit 두절은 계좌를 담음)를 품고, 게이트 설명은 상태 출력이
+			// 어디서나 읽는 칸임(a092 26라운드 보이스 B #2). 원문은 위 로그 줄에만.
 			n.Gate.Block(execgw.ReasonAlertUndelivered, fmt.Sprintf(
-				"a critical %s alert could not be recorded in the outbox: %v", e.Type, err))
+				"a critical %s alert could not be recorded in the outbox (details are in the engine log)", e.Type))
 		}
 	}
 	n.mu.Unlock()

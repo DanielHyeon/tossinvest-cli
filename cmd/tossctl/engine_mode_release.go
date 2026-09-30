@@ -102,19 +102,22 @@ func writeModeReleaseResult(w io.Writer, format output.Format, r engine.ModeRele
 	if format == output.FormatJSON {
 		return output.WriteJSON(w, r)
 	}
+	// 재조회 실패를 먼저 가름 — 읽지 못한 것은 추정하지 않음(26라운드 codex 재확인 R2). 모드 재조회가 실패하면 모드 · 사유 ·
+	// 통지 상태 모두 모름. 통지 목록만 실패하면 읽은 모드 · 사유는 그대로 말하고 통지 상태만 모름.
+	mode := r.Mode
+	if r.ReReadError != "" {
+		mode = "(재조회 실패로 확인하지 못함)"
+	}
 	if !r.Changed {
-		fmt.Fprintf(w, "변화 없음 — 운영 모드는 이미 %s 이다.\n", r.Mode)
-	} else if r.NotifyError != "" {
-		fmt.Fprintf(w, "완화됨 · 통지 기록 실패 — 전이 %s, 현재 모드 %s\n  통지: %s\n", r.TransitionID, r.Mode, r.NotifyError)
+		fmt.Fprintf(w, "변화 없음 — 전이 행을 남기지 않았다. 현재 모드 %s\n", mode)
 	} else {
-		state := "기록됨(배달 실행자가 보냄)"
-		if !r.NoticePending {
-			state = "기록됨(이미 전달 처리됨)"
+		head := "완화됨"
+		if r.NotifyError != "" {
+			head = "완화됨 · 통지 기록 실패"
 		}
-		fmt.Fprintf(w, "완화됨 — 전이 %s, 현재 모드 %s\n  통지: %s\n", r.TransitionID, r.Mode, state)
+		fmt.Fprintf(w, "%s — 전이 %s, 현재 모드 %s\n  통지: %s\n", head, r.TransitionID, mode, modeReleaseNoticeState(r))
 	}
 	if r.ReReadError != "" {
-		// 읽지 못한 상태는 추정하지 않음 — 커밋 사실만 말함.
 		_, err := fmt.Fprintf(w, "재조회 실패 — 현재 모드와 남은 사유를 읽지 못했다(추정하지 않음): %s\n", r.ReReadError)
 		return err
 	}
@@ -124,6 +127,23 @@ func writeModeReleaseResult(w io.Writer, format output.Format, r engine.ModeRele
 	}
 	_, err := fmt.Fprintf(w, "남은 진입 차단 사유: %s — 모드가 풀려도 거래가 재개된 것은 아니다\n", strings.Join(r.EntryBlocks, ", "))
 	return err
+}
+
+// modeReleaseNoticeState 는 완화 통지 행의 상태 한 줄. PENDING 목록에 없다는 것은 「이미 전달됨」이 아님 — 전달 뒤 정산됐거나
+// 운영자가 승인했을 수 있음(26라운드 보이스 B #6).
+func modeReleaseNoticeState(r engine.ModeReleaseResult) string {
+	switch {
+	case r.NotifyError != "":
+		return r.NotifyError
+	case r.ReReadError != "":
+		return "기록됨(전달 상태는 재조회 실패로 확인하지 못함)"
+	case r.NoticeReadError != "":
+		return "기록됨(전달 상태는 확인하지 못함 — " + r.NoticeReadError + ")"
+	case r.NoticePending:
+		return "기록됨(배달 실행자가 보냄)"
+	default:
+		return "기록됨(대기 목록에 없음 — 전달 뒤 정산됐거나 승인됨)"
+	}
 }
 
 // modeControlClient 는 엔진의 모드 제어 소켓 연결 하나. 토큰은 출력하지 않음(안전 불변식 8).
