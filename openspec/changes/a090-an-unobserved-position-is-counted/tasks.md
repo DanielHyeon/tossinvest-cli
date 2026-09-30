@@ -118,9 +118,9 @@
 - [x] 4.4 **§0.4 확인** — 새 브로커 호출 0(2.10) — `TestA090R10OnePriceReadPerCycle`
 - [x] 4.5 **토글** — 도입하지 않는다(무도입)
 - [x] 4.6 `make sdd-sync` → `make sdd-check`
-- [ ] 4.7 격리 worktree 에서 `make gate CHANGE=a090-an-unobserved-position-is-counted`
+- [x] 4.7 **[로컬 합성 커밋 cc019374 에서 GATE PASS 11/11 — review 「게이트」, Manager 조건부 승인 A]** 격리 worktree 에서 `make gate CHANGE=a090-an-unobserved-position-is-counted`
 - [x] 4.8 독립 리뷰(구현과 분리된 컨텍스트, 교차 모델) — 분리 컨텍스트 적대 리뷰(APPROVE-WITH-FIXES) + codex 교차 모델(session `01a0f2d2`, PASS-WITH-FIXES, P2 2 — 시험 보강). review 「리뷰 라운드 1」 · 「codex 구현 리뷰」
-- [ ] 4.9 PM 동기화 → `openspec archive`
+- [x] 4.9 PM 동기화 → `openspec archive`
 
 ## 5. 배포 — 사람이 승인한다
 
