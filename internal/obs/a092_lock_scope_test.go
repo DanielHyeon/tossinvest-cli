@@ -155,6 +155,21 @@ type a092Site struct {
 	escalates bool
 	attempts  int
 	publisher func(t *testing.T, j *journal.Journal) obs.Publisher
+	// onStage 는 훅 단계마다 먼저 불림 — release-missing 자리는 반납 직전(`release`)에 행을 지움.
+	onStage func(t *testing.T, stage string, j *journal.Journal)
+}
+
+// a092DeleteRows 는 outbox 행을 원장 밖 연결로 지움(원장이 쥐고 있던 행을 잃은 상태).
+func a092DeleteRows(t *testing.T, j *journal.Journal) {
+	t.Helper()
+	db, err := sql.Open("sqlite", j.Path())
+	if err != nil {
+		t.Fatalf("arranging the disappearance: %v", err)
+	}
+	defer db.Close()
+	if _, err := db.Exec(`DELETE FROM alert_outbox`); err != nil {
+		t.Fatalf("arranging the disappearance: %v", err)
+	}
 }
 
 var a092Sites = []a092Site{
@@ -164,6 +179,14 @@ var a092Sites = []a092Site{
 		publisher: func(t *testing.T, j *journal.Journal) obs.Publisher { return &deletesTheRow{t: t, path: j.Path()} }},
 	{name: "exhausted", escalates: true, attempts: 1,
 		publisher: func(*testing.T, *journal.Journal) obs.Publisher { return &alwaysFails{} }},
+	// 25라운드 codex P0: 반납이 행 없음으로 돌아오면 선점이 아니라 잠금(승격 없음).
+	{name: "release-missing", escalates: false, attempts: 1,
+		publisher: func(*testing.T, *journal.Journal) obs.Publisher { return &alwaysFails{} },
+		onStage: func(t *testing.T, stage string, j *journal.Journal) {
+			if stage == "release" {
+				a092DeleteRows(t, j)
+			}
+		}},
 }
 
 // a092SiteRun 은 한 자리에서 발송을 실패시키고, stage 에서 act 를 부름. 반환: 게이트 · 원장 · 모드.
@@ -178,6 +201,9 @@ func a092SiteRun(t *testing.T, site a092Site, account string, stage string,
 	var seen []string
 	obs.SetDeliveryHookForTest(n, func(s string) {
 		seen = append(seen, s)
+		if site.onStage != nil {
+			site.onStage(t, s, j)
+		}
 		if s == stage && act != nil {
 			act(cancel, n.Gate)
 		}

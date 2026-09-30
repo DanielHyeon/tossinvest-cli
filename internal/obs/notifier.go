@@ -109,9 +109,12 @@ type Notifier struct {
 	// same condition earns another send. Zero uses DefaultRemindAfter.
 	RemindAfter time.Duration
 
-	// mu serialises the whole claim-and-send, not just the send. Claiming
-	// outside it would let two observations of one condition both read a row
-	// that has not been delivered yet and both publish (a096 round 1, blocker 1).
+	// mu serialises every path that records under the notifier (the claim, the
+	// record-only entry) against the operator's count-then-clear in Acknowledge.
+	// It does NOT cover the transport (a092 unit ③): a send in flight is
+	// excluded by the lease the claim took, so two observations of one condition
+	// still publish once (a096 round 1, blocker 1) — the lease, not this lock,
+	// is what now makes that true.
 	mu sync.Mutex
 
 	// leaseOnce keeps the lease-versus-budget complaint to one line per Notifier.
@@ -262,19 +265,19 @@ func (n *Notifier) judge(ctx context.Context, e Event, v latchVerdict) {
 }
 
 // claimAndDeliver asks the outbox whether this send is owed and, if it is,
-// performs it — both under the delivery mutex.
+// performs it. The claim is taken under the notifier mutex; the send is not.
 //
-// Both under one lock because they are one decision. Claiming outside it lets
-// two observations of the same condition read the same not-yet-delivered row,
-// each conclude the send is owed, and each publish; the second then fails to
-// mark a row that is already DELIVERED, which is exactly the `no such alert`
-// line the 2026-08-08 storm left behind (a096 round 1, blocker 1).
-//
-// The mutex stays, and what it is for has changed. It excludes senders *inside
-// this Notifier* and never did anything else — a second Notifier, or a flush on
-// another one, walked straight past it. Exclusion between senders is now the
-// ledger's, held as a lease on the row itself (journal/alert_claim.go), and this
-// lock is the local half of it.
+// Deciding "is this send owed" is one decision with taking the lease, and the
+// ledger makes both in one transaction. Two observations of the same condition
+// therefore cannot both conclude the send is owed: the second finds the first
+// one's live lease and stays quiet, which is what ended the 2026-08-08 storm
+// (a096 round 1, blocker 1). a096 first did this with the mutex held across the
+// send; a099 moved exclusion into the ledger as a lease on the row
+// (journal/alert_claim.go); a092 unit ③ then released the mutex before the
+// transport, because the exit goroutine's record and the operator's
+// acknowledgement wait on this mutex and must not wait on a network round trip.
+// What the mutex still does is keep every recording path apart from the
+// operator's count-then-clear (Acknowledge).
 //
 // It reports whether the send happened and whether it was owed at all. A send
 // that was never owed is not a delivery failure and must not escalate — and
@@ -590,6 +593,7 @@ func (n *Notifier) deliver(ctx context.Context, id int64, token string, e Event)
 	// the flush that is supposed to pick it up when the transport comes back.
 	// This is the one place a sender lets go without settling, which is why
 	// releasing is its own verb.
+	n.hook("release")
 	relCtx, relCancel := releaseCtx(ctx)
 	released, relErr := n.Journal.ReleaseAlertClaim(relCtx, id, token)
 	relCancel()
@@ -601,6 +605,18 @@ func (n *Notifier) deliver(ctx context.Context, id int64, token string, e Event)
 	case released.Outcome == journal.SettleApplied:
 		// The row is ours no longer and nobody else's yet. Fall through to the
 		// gate: this sender really did fail to deliver.
+	case released.Outcome != journal.SettleAlreadySettled && released.Outcome != journal.SettleLeaseLost:
+		// 행 없음 · 모르는 결과는 선점이 아님(a092 25라운드 codex P0 — 델타 「행 없음·모르는 결과·원장 오류는 선점이 아니다」).
+		// 원장이 쥐고 있던 행을 잃은 것이므로 vanished 자리와 같이 잠금만 함(승격 없음 — a124 배달 실행자 N6 와 같은 규칙).
+		// 근거 확정: 반납 결과가 돌아왔음 → 해제 세대를 지금 읽고 조건부로 잠금.
+		n.logLeaseLost(released, id, e)
+		if n.Gate != nil {
+			n.hook("evidence:release-missing")
+			v := n.readVerdict("release-missing", fmt.Sprintf(
+				"a critical %s alert could not be handed back: the ledger answered %v", e.Type, released.Outcome))
+			n.Gate.BlockUnlessClearedSince(execgw.ReasonAlertUndelivered, v.epoch, v.detail)
+		}
+		return false, true, latchVerdict{}
 	default:
 		// The row moved on while this sender was spending the last of its budget —
 		// an operator acknowledged it, or another holder took it. Report it and
