@@ -1179,3 +1179,16 @@ tasks 「안전 불변식 확인」 §4 행(「R5-7 은 무장 익절 매도 위
 | `(*journalMutationSubmitter).UnsettledOnSymbol` | `exit_identity_concurrency_test.go` 끝 | `a094_exit_clear_test.go` 끝 |
 | `(*a111SubmitSpy).UnsettledOnSymbol` | `a111_flat_exit_observation_test.go` 끝 | 같음 |
 | `(*signallingSubmitter).UnsettledOnSymbol` | `exit_snapshot_isolation_test.go` 끝 | 같음 |
+
+### 4. 착지 단위 ④ — park 해동 명령 (tasks 4.T · 4.Ta · 4.3e)
+
+**Pre-Edit Gate**: 기존 함수 편집은 `StartPositionPolicyCommandServer`(route 발견 3줄 — a066 블록 옆, capability 없는 빌드는 route 집합 불변) 하나다. 나머지는 새 파일:
+`internal/attemptthaw/`(전송 계약) · `engine/attempt_thaw_{command,transport}.go` · `positionpolicyrpc/attempt_thaw_client.go` · `cmd/tossctl/engine_attempt_resolve.go`.
+`cmd/tossctl/engine.go` 의 `AddCommand` 한 줄은 a090 의 engineRuntime 착지 뒤 Manager 창에서 넣는다(그 전까지 명령은 조립돼 있으나 트리에 붙지 않음).
+
+**형태(a066/a092 완화 명령 가족 · D−4.5)**: `mutating: true` · 필수 `--attempt --target --operator --approval --note`(CONFIRMED 는 `--broker-order-id`) · 엔진 제어 endpoint 경유 ·
+엔진 lock 없음 · 콘솔 route 0(시험이 `internal/console` 전수 grep). 순서: 엔진 안에서 attempt 가 park 인지 확인(아니면 stale) → **audit 줄**(`attempt_thaw`, 실패 시 아무것도
+안 바꿈) → `OperatorResolve`(from=UNRESOLVED 원자 검사, 실패 시 보상 audit 줄 `not_committed`) → 비수용이면 **같은 명령 안에서** `ReleaseUnacceptedExitProposal`(판정 하나,
+4.3e). 해제가 실패해도 해소는 유효하고 결과가 그것을 말하며 CLI 는 0 아닌 코드로 「다음 기동이 푼다」를 알린다 — 시험 4.Ta 가 실제로 따라잡기로 풀림을 잰다.
+journal API 는 바꾸지 않았다(audit 는 전이 트랜잭션 **앞**에 둔다 — 전이 안의 콜백을 만들면 `Attempt.transition` 편집이 필요해 High-risk 표면이 넓어진다; 선례 a066 도
+audit 줄 뒤 commit 실패 시 보상 줄).

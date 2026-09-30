@@ -153,6 +153,10 @@ func StartPositionPolicyCommandServer(engineDir string,
 	if relaxations, ok := commands.(riskRelaxationCommands); ok {
 		registerRiskRelaxationRoutes(mux, server, token, relaxations)
 	}
+	// a094 D−4.5 park 해동 — 같은 발견 방식(capability 없는 빌드는 route 집합 불변).
+	if thaws, ok := commands.(attemptThawCommands); ok {
+		registerAttemptThawRoute(mux, server, token, thaws)
+	}
 	server.server = &http.Server{
 		Handler: mux, ReadHeaderTimeout: 2 * time.Second, ReadTimeout: 5 * time.Second,
 		WriteTimeout: 5 * time.Second, IdleTimeout: 15 * time.Second, MaxHeaderBytes: 8 << 10,
