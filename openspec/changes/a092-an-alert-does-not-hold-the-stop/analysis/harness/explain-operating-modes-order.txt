@@ -1,0 +1,16 @@
+# a092 게이트 준비 gstack 리뷰(performance) 영수증 — operating_modes 최신 행 읽기의 쿼리 계획
+# sqlite 3.45.1 (python sqlite3) · 스키마: internal/journal/core_domain.go:183-195 의 표 · 인덱스(CHECK 생략)
+
+## base 721d0338 (created_at DESC, rowid DESC)
+SELECT id FROM operating_modes WHERE account_ref = ? ORDER BY created_at DESC, rowid DESC LIMIT 1
+   SEARCH operating_modes USING INDEX idx_operating_modes_account (account_ref=?)
+
+## a092 modeLatestOrder (rowid DESC)
+SELECT id FROM operating_modes WHERE account_ref = ? ORDER BY rowid DESC LIMIT 1
+   SEARCH operating_modes USING INDEX idx_operating_modes_account (account_ref=?)
+   USE TEMP B-TREE FOR ORDER BY
+
+## a092 OperatingModeHistory (rowid)
+SELECT id FROM operating_modes WHERE account_ref = ? ORDER BY rowid
+   SEARCH operating_modes USING INDEX idx_operating_modes_account (account_ref=?)
+   USE TEMP B-TREE FOR ORDER BY

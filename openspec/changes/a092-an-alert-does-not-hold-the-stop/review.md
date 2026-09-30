@@ -5033,3 +5033,63 @@ High-risk(critical 발송 · 진입 차단 · 모드 승격). 편집 전 번들 
 |---|---|---|
 | 보이스 A N1 — 떨어진 ctx 에 기한이 없어 엔진 종료 중 완화의 통지가 닫힌 원장에 쓰일 수 있음 | 창이 좁음(종료 중 완화). 기한을 다는 것은 유실 창을 다시 여는 쪽(A 도 권하지 않음). a066 선례와 같은 모양 | 후속 로트(종료 순서 — 완화 처리기를 원장 close 앞에 기다리기) |
 | 보이스 B #6 잔여 — `Notifier.Journal == nil` 조립에서 「대기 목록에 없음」 문구 | 생산 조립은 Journal 이 채워짐(추정 경로) | 후속 로트(시험 보강) |
+
+### 24.12 게이트 준비 — gstack /review · 72건 처분 · check_values 영수증 (2026-09-30)
+
+**gstack /review(25.8 의 「gstack」 몫).** 26라운드까지 gstack 코드 리뷰가 한 번도 돌지 않았다 — 게이트 준비 첫 단계로 돌렸다.
+- 범위: a092 커밋 슬라이스(생산 33파일 · 2532줄). diff 는 rtk 압축 없이 떴다(압축판은 553줄로 잘려 있었다).
+- 전문가 넷: testing · maintainability · security · performance.
+- 적대 패스(red team)는 새로 돌리지 않았다. 같은 diff 에 26라운드 codex 1차와 재확인 2회, Claude 보이스 A/B/C 와 표적 재확인이 이미 돌았다(Manager 수용).
+- 원문 요지와 발견별 처분: `analysis/review-26/gstack/README.md`.
+
+**거짓 완료를 게이트 준비가 잡았다 — M13.**
+- 25.9 는 24.3 M13(복원 실패 래치를 이어진 성공 투영이 교체)을 「닫은 RED」로 적었다. 그러나 그 경로를 재는 시험이 없었다.
+  - 기존 `TestA092AnUnreadableModeLatchesInsteadOfRefusingToStart` 는 래치가 **서는** 것만 잰다.
+- testing 전문가가 찾았고 `15b64676` 이 `TestA092ARestoreFailureLatchIsReplacedByTheNextProjection` 을 넣었다.
+  - 시험 순서: 원장 수리 → 사람 완화가 래치를 지움 → 자동 강화가 제 설명으로 교체.
+  - 변이 W14(「첫 투영은 자기가 세우지 않은 래치를 지우지 않는다」)가 이 시험과 C20 시험을 깬다.
+- 25.9 문구는 취소선으로 정정했다.
+
+**수리 로트(`15b64676`).**
+
+| 발견 | 수리 | RED / 반증 |
+|---|---|---|
+| security: `judge()`(a092 신설)의 무조건 래치 설명에 승격 실패 원문 | 고정 문구. 원문은 `escalate` 로그 줄의 error 칸에 `obs.MaskAccount` 로 가림(가림 함수 공유) | `red-r26d-judge.log`. W01 · W02 CAUGHT |
+| testing: 모드 엔드포인트 거절 셋(415 · 8KiB 초과 · 뒤따르는 값) | 거절 표에 추가, **가드별 문구 단언** | W03 · W05 CAUGHT. W04 는 1판 SURVIVED — 크기 상한을 지워도 잘린 본문이 JSON 거절로 같은 400 을 냄(가드 가림) → 문구 단언 뒤 CAUGHT |
+| testing: CLI 디스크립터 검사(토큰 보내기 전) | 표 시험 + 양성 대조(올바른 모양은 소켓 검사까지 감) | W06~W10 CAUGHT |
+| testing: `ModeOperations` 핸들 가드 | 핸들 하나씩 빼는 표 + 양성 대조 | W11~W13 CAUGHT |
+| testing: M13 | 위 | W14 CAUGHT |
+| testing: 긴 `$TMPDIR` 에서 sun_path 로 bind 실패(전문가 실측) | `/tmp` 로 | — |
+| testing: not-pending 출력이 옛 문구만 금지 | 「승인」 양성 단언 | — |
+| maintainability: WriteTimeout 주석과 값 불일치 | 주석을 값(10s)에 맞춤 | — |
+
+- 변이 `analysis/mutation-r26/ledger-r26d.tsv`: **W01~W14 14/14 CAUGHT**(W04 는 2판). 무변이 대조군 GREEN.
+- 검증: 네 패키지 전체 · `-race` · 태그판(2370 passed) · `make lint` rc 0.
+- FLM: `notifier.go` 편집으로 obs 번들 일곱을 재추출했다(`coverage-post-r26d-obs.json`, 연결 워크트리 `15b64676`, 시험 118 · 실패 0). `escalate` 번들에 편집을 적었다.
+- `check_analysis` evidence complete.
+
+**이월(이름 · 사유 · 행선 — Manager 승인 2026-09-30).**
+
+| 항목 | 사유 | 행선 |
+|---|---|---|
+| perf — `modeLatestOrder`/History 의 `ORDER BY rowid` 가 `idx_operating_modes_account(account_ref, created_at)` 로 정렬을 못 함 → `USE TEMP B-TREE FOR ORDER BY`(base 의 `created_at DESC, rowid DESC` 는 인덱스만으로 섬). 행 수는 계좌별 전이 수라 오늘은 작지만 삭제 없는 표라 무한히 자라고, 전이 트랜잭션(단일 연결) 안에서 읽힘 | 인덱스 추가는 스키마 변경(High-risk). 영수증 `analysis/harness/explain-operating-modes-order.txt`(SQLite 3.45.1 EXPLAIN QUERY PLAN) | **v33 마이그레이션 후보 — 스키마 핀 27 · 레인 활성화 순서와 함께** |
+| perf — mode-release 통지 확인이 PENDING 전체를 읽음 | 성능(한 요청에 한 번) | 후속 로트 — `event_key` 점조회 |
+| testing — `engine run` 모드 제어 기동 실패 강등 경로 | a108 하니스에 AccountRef 가 없어 seam 에 닿지 않음. 하니스 수정은 교차 change 편집 | 후속 로트 — a109 형제 표 넷째 항목 |
+| maintainability — 제어 서버 · 클라이언트 사본, 선점 판정 journal 메서드화, 수동 Unlock → defer 헬퍼, 승격 문구 판정 네 자리, 기록 실패 처리 두 사본 | 동작 불변 리팩터 | 후속 로트(리팩터) |
+| maintainability — `Flush` · `runAuxiliary` 주석 낡음 | base 함수 본문 편집이라 FLM 재작업이 붙음 | 후속 문서 로트 |
+| security/maint — 동기 `claimAndDeliver` 게이트 설명의 원문 `%v err` | base 관행(721d0338:275) | 불변식 8 (b) 사람 결정 큐 목록에 추가 |
+
+**72건 처분(Manager 판정 2026-09-30).**
+- 체크 [x] + 처분 표지: 완료는 증거 인용, 옛 §6~§10 은 「⛔ 21판 이후 철회/대체」와 사유.
+- 이관: 10.4.2~10.4.6 → 미배정 후속 표.
+- 체크박스에서 뺌:
+  - 21.10 · 22.5 → 「인계」 목록.
+  - 24.5 · 21.7(e) → 「아카이브 때 할 일」 목록. 정본을 만지는 유일한 시점이 archive 이기 때문.
+- 게이트 몫 여섯(10.3 · 10.5 · 10.8~10.11)은 실제로 한 뒤 체크한다.
+- 10.4 · 10.4.1: `docs/ROADMAP.md` 「a092 이월 · 미배정 후속」 절. 각 항에 기대는 a092 계약과 행선을 적었다.
+
+**check_values 60 철회 영수증(9.6.1 · 21.9).** `analysis/harness/check-values-base-vs-head.txt`:
+- base `721d0338` 트리(base 판 도구)에서 실패 60, HEAD 에서 60.
+- (파일 · 문구) 다중집합은 줄 번호를 빼면 **동일**하다 → a092 구현이 더한 실패 0.
+- 도구 파일의 base 이후 변경은 옛 번들 경로 재지정 세 줄뿐이다(25.2).
+

@@ -1,7 +1,7 @@
 # Function Logic Map: `Notifier.publishBestEffort`
 
 - Source: `internal/obs/notifier.go`
-- AST evidence: `ast.json` — **편집 뒤**, :179–192, 분기 2 · 반환 1 · 호출 6, source_sha256 `fbdfd9e0218b…`, 추출 커밋 `b910173a`. 편집 전 번들은 `analysis/pre-edit/r26b/internal-obs--notifier.publishbesteffort.json(AST)`에 보존.
+- AST evidence: `ast.json` — **편집 뒤**, :179–192, 분기 2 · 반환 1 · 호출 6, source_sha256 `d705f78d68c1…`, 추출 커밋 `15b64676`. 편집 전 번들은 `analysis/pre-edit/r26b/internal-obs--notifier.publishbesteffort.json(AST)`에 보존.
 - Risk scan: `risk-pattern-report.md`
 - 편집: (b910173a, 보이스 A#4 · B#4) 발행 실패 줄의 원래 사건 유형 · 등급 키를 `trigger_event` · `trigger_severity` 로 — emit 이 쓰는 줄 자신의 event · severity 를 가리지 않음. 분기 불변.
 

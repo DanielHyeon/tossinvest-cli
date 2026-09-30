@@ -1,7 +1,7 @@
 # Function Logic Map: `Notifier.deliver`
 
 - Source: `internal/obs/notifier.go`
-- AST evidence: `ast.json` — **편집 뒤**, :475–643, 분기 27 · 반환 7 · 호출 42, source_sha256 `fbdfd9e0218b…`, 추출 커밋 `b910173a`. 편집 전 번들은 `analysis/pre-edit/r26b/internal-obs--notifier.deliver/`에 보존.
+- AST evidence: `ast.json` — **편집 뒤**, :477–645, 분기 27 · 반환 7 · 호출 42, source_sha256 `d705f78d68c1…`, 추출 커밋 `15b64676`. 편집 전 번들은 `analysis/pre-edit/r26b/internal-obs--notifier.deliver/`에 보존.
 - Risk scan: `risk-pattern-report.md`
 - 편집: (d8769cfb, codex #6) 시도 기록의 행 없음 갈래 조건 `failed.Outcome == SettleNotFound` → `!isPreemption(failed.Outcome)`, 반납 갈래 조건 → `!isPreemption(released.Outcome)` — 한 판정(모르는 결과도 선점 아님). 분기 수 · 순서 불변(27).
 
@@ -17,33 +17,33 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | if (:477) | 기본 시도 수 | — | (미실행) |
-| B2 | for (:483) | 시도 루프 | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092ARecordDoesNotWaitForAnotherSendersTransport` |
-| B3 | if (:484) | 발행기 없음 | — | (미실행) |
-| B4 | if (:489) | 발행 성공 | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092ARecordDoesNotWaitForAnotherSendersTransport` |
-| B5 | if (:491) | 정산 오류 없음 | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092ARecordDoesNotWaitForAnotherSendersTransport` |
-| B6 | switch (:492) | 정산 결과 분기 | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092ARecordDoesNotWaitForAnotherSendersTransport` |
-| B7 | case (:493) | 정산됨 | — | `TestA092ARecordDoesNotWaitForAnotherSendersTransport`, `TestA092ATakeoverIsAWarningThatNamesTheDeadSender` |
-| B8 | case (:495) | 선점(승인 · 남의 임차) — 래치 없음 | — | `TestA092AnAcknowledgementPreemptsASendInFlight`, `TestAcknowledgeCannotClearTheGateMidSend` |
-| B9 | case (:507) | 행 없음 → 미정산 | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092AReleaseAfterTheEpochReadIsHonoured` |
-| B10 | case (:509) | 모르는 결과 → 미정산 | — | (미실행) |
-| B11 | if (:535) | **unrecorded 판정** | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092AReleaseAfterTheEpochReadIsHonoured` |
-| B12 | if (:549) | 시도 기록 오류 | — | `TestACancelledSenderStillHandsTheLeaseBack` |
-| B13 | else (:553) | 오류 없음 분기 | — | `TestA092AReleaseAfterTheEpochReadIsHonoured`, `TestA092AReleaseBeforeTheEpochReadRelatches` |
-| B14 | if (:550) | 로그 | — | `TestACancelledSenderStillHandsTheLeaseBack` |
-| B15 | if (:553) | 임차 상실 · 정산됨 · 행 없음 | — | `TestA092AReleaseAfterTheEpochReadIsHonoured`, `TestA092AReleaseBeforeTheEpochReadRelatches` |
-| B16 | if (:563) | 전송 실패 로그 | — | `TestA092AReleaseAfterTheEpochReadIsHonoured`, `TestA092AReleaseBeforeTheEpochReadRelatches` |
-| B17 | if (:573) | **시도 기록이 선점 아님(행 없음 · 모르는 결과 — `isPreemption`) → 원칙 E 조건부 차단** | — | `TestA092AReleaseAfterTheEpochReadIsHonoured`, `TestA092AReleaseBeforeTheEpochReadRelatches` |
-| B18 | if (:582) | 대기 | — | `TestACancelledSenderStillHandsTheLeaseBack`, `TestACriticalAlertStillEscalatesThroughTheSameNotifier` |
-| B19 | if (:583) | 문맥 종료 | — | `TestACancelledSenderStillHandsTheLeaseBack` |
-| B20 | switch (:601) | 반납 결과 분기 | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092AReleaseAfterTheEpochReadIsHonoured` |
-| B21 | case (:602) | 반납 오류 | — | (미실행) |
-| B22 | if (:603) | 로그 | — | (미실행) |
-| B23 | case (:606) | 반납 적용 → 소진 판정 | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092AReleaseAfterTheEpochReadIsHonoured` |
-| B24 | case (:609) | **반납이 선점 아님(행 없음 · 모르는 결과 — `isPreemption`) → 로그** | — | `TestA092AReleaseAfterTheEpochReadIsHonoured`, `TestA092AReleaseBeforeTheEpochReadRelatches` |
-| B25 | if (:614) | **그 자리의 원칙 E 조건부 차단(새 분기)** | — | `TestA092AReleaseAfterTheEpochReadIsHonoured`, `TestA092AReleaseBeforeTheEpochReadRelatches` |
-| B26 | case (:621) | 반납 선점(AlreadySettled · LeaseLost) → lost | — | (미실행) |
-| B27 | if (:637) | **exhausted 판정** 로그 | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092AReleaseAfterTheEpochReadIsHonoured` |
+| B1 | if (:479) | 기본 시도 수 | — | (미실행) |
+| B2 | for (:485) | 시도 루프 | — | `TestA092AFailedEscalationLatchKeepsTheAccountOut`, `TestA092AFailedEscalationLatchesUnconditionally` |
+| B3 | if (:486) | 발행기 없음 | — | (미실행) |
+| B4 | if (:491) | 발행 성공 | — | `TestA092AFailedEscalationLatchKeepsTheAccountOut`, `TestA092AFailedEscalationLatchesUnconditionally` |
+| B5 | if (:493) | 정산 오류 없음 | — | `TestA092AFailedEscalationLatchKeepsTheAccountOut`, `TestA092AFailedEscalationLatchesUnconditionally` |
+| B6 | switch (:494) | 정산 결과 분기 | — | `TestA092AFailedEscalationLatchKeepsTheAccountOut`, `TestA092AFailedEscalationLatchesUnconditionally` |
+| B7 | case (:495) | 정산됨 | — | `TestA092ARecordDoesNotWaitForAnotherSendersTransport`, `TestA092ATakeoverIsAWarningThatNamesTheDeadSender` |
+| B8 | case (:497) | 선점(승인 · 남의 임차) — 래치 없음 | — | `TestA092AnAcknowledgementPreemptsASendInFlight`, `TestAcknowledgeCannotClearTheGateMidSend` |
+| B9 | case (:509) | 행 없음 → 미정산 | — | `TestA092AFailedEscalationLatchKeepsTheAccountOut`, `TestA092AFailedEscalationLatchesUnconditionally` |
+| B10 | case (:511) | 모르는 결과 → 미정산 | — | (미실행) |
+| B11 | if (:537) | **unrecorded 판정** | — | `TestA092AFailedEscalationLatchKeepsTheAccountOut`, `TestA092AFailedEscalationLatchesUnconditionally` |
+| B12 | if (:551) | 시도 기록 오류 | — | `TestACancelledSenderStillHandsTheLeaseBack` |
+| B13 | else (:555) | 오류 없음 분기 | — | `TestA092AReleaseAfterTheEpochReadIsHonoured`, `TestA092AReleaseBeforeTheEpochReadRelatches` |
+| B14 | if (:552) | 로그 | — | `TestACancelledSenderStillHandsTheLeaseBack` |
+| B15 | if (:555) | 임차 상실 · 정산됨 · 행 없음 | — | `TestA092AReleaseAfterTheEpochReadIsHonoured`, `TestA092AReleaseBeforeTheEpochReadRelatches` |
+| B16 | if (:565) | 전송 실패 로그 | — | `TestA092AReleaseAfterTheEpochReadIsHonoured`, `TestA092AReleaseBeforeTheEpochReadRelatches` |
+| B17 | if (:575) | **시도 기록이 선점 아님(행 없음 · 모르는 결과 — `isPreemption`) → 원칙 E 조건부 차단** | — | `TestA092AReleaseAfterTheEpochReadIsHonoured`, `TestA092AReleaseBeforeTheEpochReadRelatches` |
+| B18 | if (:584) | 대기 | — | `TestACancelledSenderStillHandsTheLeaseBack`, `TestACriticalAlertStillEscalatesThroughTheSameNotifier` |
+| B19 | if (:585) | 문맥 종료 | — | `TestACancelledSenderStillHandsTheLeaseBack` |
+| B20 | switch (:603) | 반납 결과 분기 | — | `TestA092AFailedEscalationLatchKeepsTheAccountOut`, `TestA092AFailedEscalationLatchesUnconditionally` |
+| B21 | case (:604) | 반납 오류 | — | (미실행) |
+| B22 | if (:605) | 로그 | — | (미실행) |
+| B23 | case (:608) | 반납 적용 → 소진 판정 | — | `TestA092AFailedEscalationLatchKeepsTheAccountOut`, `TestA092AFailedEscalationLatchesUnconditionally` |
+| B24 | case (:611) | **반납이 선점 아님(행 없음 · 모르는 결과 — `isPreemption`) → 로그** | — | `TestA092AReleaseAfterTheEpochReadIsHonoured`, `TestA092AReleaseBeforeTheEpochReadRelatches` |
+| B25 | if (:616) | **그 자리의 원칙 E 조건부 차단(새 분기)** | — | `TestA092AReleaseAfterTheEpochReadIsHonoured`, `TestA092AReleaseBeforeTheEpochReadRelatches` |
+| B26 | case (:623) | 반납 선점(AlreadySettled · LeaseLost) → lost | — | (미실행) |
+| B27 | if (:639) | **exhausted 판정** 로그 | — | `TestA092AFailedEscalationLatchKeepsTheAccountOut`, `TestA092AFailedEscalationLatchesUnconditionally` |
 
 ## Calls and live bindings
 

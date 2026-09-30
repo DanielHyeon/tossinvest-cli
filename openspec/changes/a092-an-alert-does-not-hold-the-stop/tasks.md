@@ -29,9 +29,9 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
       **이행 커밋 `0e4f26af`**(24.4 가 인용할 커밋) → 편집 뒤 FLM · 변이 15/15(`analysis/mutation-25.6/`) · a066 아카이브 review 「§7 hand-over done」. `review.md` §24.4 · §24.5.
 - [x] 25.7 착지 단위 ③ 잠금 범위(21.4 GREEN — a095 착지 판정 기준) — 편집 전 FLM `fd7853b2` → **코드 `fbc6df5f`** → 증거 커밋.
       21.3 (f) · 21.4(GREEN 코드 — 옛 §6·§8 task 표지는 미완, 25.10) · 21.5(A-4 귀속: 임차가 지킴) · 22.3 C2/C27 · 23.3 K2/K4 · 24.3 M5 · `logClaimHeld` INFO(Manager 판정 (나)). 변이 19/19. `review.md` §24.6 · §24.7.
-- [ ] 25.8 리뷰 — 4 보이스(codex 포함) · gstack, 단위 ②~③ + 25.6 묶음. 브리프에 k3 합성 주장을 공격 대상으로.
+- [x] 25.8 **[처분 2026-09-30] 완료 — 26라운드: codex(gpt-6-astra) 1차 · 재확인 2회 + Claude 보이스 A/B/C 와 표적 재확인, 수리 네 로트(`d8769cfb` · `b910173a` · `9f6dc60d` · 게이트 준비 로트). 게이트 준비에서 gstack /review(전문가 4 — testing · maintainability · security · performance). k3 합성 공격은 브리프에 있었고 세 보이스 모두 「현 HEAD 참, 핀은 좁음」(이월). `review.md` §24.11 · §24.12.** 리뷰 — 4 보이스(codex 포함) · gstack, 단위 ②~③ + 25.6 묶음. 브리프에 k3 합성 주장을 공격 대상으로.
 - [x] 25.9 착지 단위 ④ mode-release 명령 · 완화 경로 · 투영 배선 · 복원 · AC2 · rowid 순서 · 울타리 — 코드 `2714e393` · 시험 `c9c93a7b`. 변이 23/23. `review.md` §24.9.
-      닫은 RED: 21.7 (a)(b)(c)(d) · 22.3 C4 · C5 · C12~C17 · C20 · 23.3 K14 · K16 · 24.3 M12 · M13(복원 실패 래치 · 뒤이은 성공 투영이 교체). 남김: 21.7(e) 정본 문장(archive) · 보이스 B #7(단위 ⑤).
+      닫은 RED: 21.7 (a)(b)(c)(d) · 22.3 C4 · C5 · C12~C17 · C20 · 23.3 K14 · K16 · 24.3 M12 · ~~M13(복원 실패 래치 · 뒤이은 성공 투영이 교체)~~ **정정(게이트 준비 2026-09-30): M13 은 이 착지에 시험이 없었다(거짓 완료) — gstack 리뷰가 잡았고 `15b64676` 의 `TestA092ARestoreFailureLatchIsReplacedByTheNextProjection`(변이 W14) 이 닫음, `review.md` §24.12.** 남김: 21.7(e) 정본 문장(archive) · 보이스 B #7(단위 ⑤).
 - [x] 25.10 착지 단위 ⑤ K/M 반영 항목 — 코드 `e55102f0`, 변이 21/21, `review.md` §24.10. **21.4 옛 task 표지만 남음(게이트 준비 단계).** Manager 판정(2026-09-30) 순서: **capped 동기 발행(주문 제출 앞) 먼저** → C8 일반 등급 실행자 · K19 Flush 핀 · K18 도달 경로 전수 핀 ·
       k3 AST 핀 · 주입 지점 역할 핀 · K3/K5/K6/K7/M6/M7 · `ErrModeAnnouncementFailed` 호출자 둘(보이스 B #7) · 실행자 탈취 줄 이름(보이스 A #2) · 21.4 옛 task 표지(보이스 B #1).
 
@@ -43,7 +43,7 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 - [x] 24.0 24판 문서 — 델타(통지 SHALL 범위 + 무통지 예외 · 기록 부류 = 배제 잠금 아래 모든 경로 · a124 조항 둘 · 엔진 프로세스 한정 · 생산 조립 정의 ·
       재알림 창 재무장 · 통지 실패 정의 · MODIFIED 블록 좌표를 이름으로) · exit-policy 한정어 · design D0.3i · `review.md` §23.13 · `DRAFT = 24`.
 - [x] 24.1 **24라운드 — 좁은 확인 1회**(Manager 판정: codex 한 보이스, M 반영분만) → 그 뒤 freeze 판정. **PASS**(2026-09-29 05:33~05:35 KST, session `01a0e9b8…`) — `review.md` §23.14 · `analysis/review-24/`.
-- [ ] 24.3 **RED · 핀 (23.3 에 더하거나 바꾼다)**:
+- [x] 24.3 **[처분 2026-09-30] 완료 — M1 · M2 · M4 · M5 · M6 · M7 · M12 · M15 는 25.4 · 25.7 · 25.9 · 25.10 착지(각 항의 닫은 RED · 변이 원장). **M13 은 25.9 가 「닫은 RED」로 적었으나 시험이 없었다 — 게이트 준비 gstack 리뷰가 잡은 거짓 완료. `TestA092ARestoreFailureLatchIsReplacedByTheNextProjection` 로 닫음(변이 W14 CAUGHT, `review.md` §24.12).**** **RED · 핀 (23.3 에 더하거나 바꾼다)**:
       - **M1**: `CRITICAL_ALERT_UNDELIVERED` 강화(동기 · 실행자)는 통지 행을 만들지 않는다 · 관측 두절 강화와 사람 완화는 통지 행을 만든다(키 = `rec.ID`).
       - **M2 핀**: 커밋 성공 경로에서 Commit 을 담은 `if` 다음 문장 ~ `ProjectOperatingMode` 사이 반환 · `go` 0 · 투영기 몸체 `go` 0 · 커밋 실패 → 투영 0 · 통지 0.
       - **M4 census**: 비시험 `ClaimAlertForDelivery(` 호출자 = 알림기 `claimAndDeliver` 하나(배제 잠금 아래).
@@ -53,10 +53,8 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
       - **M12**: 완화 명령 출력에 통지 행 상태(재읽기) · 통지 기록 실패 → 「완화됨 · 통지 기록 실패」.
       - **M13 · M15**: 복원 실패 래치가 이어진 성공 투영에 교체된다 · 모드 행을 못 읽으면 원장 수리 뒤 재시작만 · durable 실패 강화 무통지(K12) ·
         입구 `remindAfter = 0` 은 정착 행을 재무장하지 않는다 · `runAuxiliary` 이벤트 타입 변경 FLM(22.2 목록에 추가).
-- [ ] 24.4 **archive 게이트 (Manager 판정 M3)** — a066 `notifyRelaxation`(`internal/app/engine/risk_relaxation_command.go`)이 알림기의 기록 전용 입구로 옮겨진
+- [x] 24.4 **[처분 2026-09-30] 완료(인용) — a066 `notifyRelaxation` 이행 커밋 **`0e4f26af`**(25.6). archive 커밋 메시지와 `review.md` §24.12 가 같은 커밋을 인용한다 — 인용 없는 archive 없음.** **archive 게이트 (Manager 판정 M3)** — a066 `notifyRelaxation`(`internal/app/engine/risk_relaxation_command.go`)이 알림기의 기록 전용 입구로 옮겨진
       **커밋을 인용하기 전에는 a092 를 archive 하지 않는다.** 순서: a092 구현이 `RecordAlert` 와 입구 착지 → a066 이행 커밋 → a092 archive. (23.4 를 대체)
-- [ ] 24.5 **잔여 처리 (Manager 판정 M14)** — a092 구현 로트가 착지할 때 정본 `openspec/specs/engine-safety/spec.md:221-224`(「엔진 런타임 수명주기」 안
-      「… 그 문장의 정리는 a092가 진다」 주석)를 정리한다. MODIFIED 델타 없이, 그 주석 한 줄 수준.
 
 ## 23. 23판 작업 (2026-09-29) — 22라운드 처분 반영 (design D0.3h · `review.md` §23.11)
 
@@ -64,10 +62,10 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 
 - [x] 23.0 23판 문서 — 델타 두 개(모드 통지 신원 · 동기 경로 보수 조항 둘 · 단일 입구 · 조립 생성자 전수 · 「동시에」 해석 · 이력 순서 · 완화 뒤 재읽기 · 캡 한정어 ·
       durable 실패 무통지 예외 · MODIFIED 블록 정정 표지와 좌표) · design D0.3h · `review.md` §23.11 · `check_values.py` `DRAFT = 23`.
-- [ ] 23.1 **23라운드** — codex 대기열(Manager 배분) + Claude 독립 보이스 둘.
-- [ ] 23.2 **FLM 먼저** — 22.2 목록에 더한다: `Journal.RestoreOperatingModeProjection` · `Journal.OperatingModeHistory` · `currentModeFromRow`(K14·K18) ·
+- [x] 23.1 **[처분 2026-09-30] 완료 — 23라운드(codex + Claude 보이스 둘): `review.md` §23.12 · §23.13, 원문 `analysis/review-23/`.** **23라운드** — codex 대기열(Manager 배분) + Claude 독립 보이스 둘.
+- [x] 23.2 **[처분 2026-09-30] 완료 — 편집 전 번들: `RestoreOperatingModeProjection` · `OperatingModeHistory` · `currentModeFromRow` 는 단위 ④(`analysis/pre-edit/unit4/`), `AnnounceOperatingMode` · `escalate` 는 단위 ②/③(`analysis/pre-edit/unit2/` · `unit3/`). flatten 경로 `parkAlert` 도달은 M6 정적 핀(`a092_structure_pins_test.go`)이 대체(24판).** **FLM 먼저** — 22.2 목록에 더한다: `Journal.RestoreOperatingModeProjection` · `Journal.OperatingModeHistory` · `currentModeFromRow`(K14·K18) ·
       `Notifier.AnnounceOperatingMode`(사건 구성 추출, K1) · `Notifier.escalate`(반환값 추가, K2) · flatten CLI 경로에서 `ReplayInDoubt` → `parkAlert` 도달 여부(프로세스 밖 기록자 잔여).
-- [ ] 23.3 **RED · 구조 핀** (각각 뮤테이션으로 실패시켜 본 뒤 근거로 쓴다):
+- [x] 23.3 **[처분 2026-09-30] 완료 — K1 · K17(25.4) · K2 · K4(25.7) · K14 · K16(25.9) · K3 · K5 · K6 · K7 · K13 · K18 · K19(25.10). 각 항 변이 원장 `analysis/mutation-unit2|unit3|unit4|unit5/`. K18 「입구 도달 경로 **전수**」는 Issuer 폐포 한정으로 문구 정정(`review.md` §24.11).** **RED · 구조 핀** (각각 뮤테이션으로 실패시켜 본 뒤 근거로 쓴다):
       - **K1**: 완화 뒤 재알림 창 안의 재강화 · 두 번째 완화가 각각 새 PENDING 통지 행을 만든다. 변화 없는 재강화는 통지 행을 만들지 않는다.
       - **K2**: 해제로 조건부 차단이 생략된 판정에서 승격 쓰기가 실패하면 전달 실패 사유로 잠근다(세 래치 자리 각각).
       - **K3 핀**: `TransitionOperatingMode` 본문에서 `Commit` → `ProjectOperatingMode` 순서이고, 사이에 `go` 문 · 반환이 없다.
@@ -82,7 +80,7 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
       - **K18**: ADDED 「자동 강화…」의 「청산 무영향」 AND · 완화 통지 **성공** 경로 · 입구 도달 경로 전수 구조 핀(`Notify` · `AnnounceOperatingMode`) ·
         선점 기록과 「남은 행 계속」 · 옛 §6에 매달린 Scenario 넷(상한을 읽지 않는 transport · 예산을 줄여도 · 다시 올릴 주기 · 사이클 총 체류)의 처분.
       - **K19 핀**: `Notifier.Flush` 비시험 호출자 0.
-- [ ] 23.4 **교차 change 확인** — a066(`risk_relaxation_command.go:158` 직접 적재) · a094 · a090의 critical 기록자가 입구를 쓰거나 먼저 잠그는지(Manager 교차 통지 뒤).
+- [x] 23.4 **[처분 2026-09-30] 완료 — 24.4 로 대체(24판 머리): a066 은 이행 커밋 `0e4f26af`, a094 · a090 은 입구를 쓰거나 먼저 잠금(K6 · K7 핀이 새 기록자를 잡음).** **교차 change 확인** — a066(`risk_relaxation_command.go:158` 직접 적재) · a094 · a090의 critical 기록자가 입구를 쓰거나 먼저 잠그는지(Manager 교차 통지 뒤).
 
 ## 22. 22판 작업 (2026-09-29) — 21라운드 처분 반영 (design D0.3g · `review.md` §23.9)
 
@@ -92,11 +90,11 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 - [x] 22.0 22판 문서 — 델타 두 개(입구 규칙 · 임차 없는 기록 · 선점 한정 · :58 정밀화 · 「모든 발송자」 · 커밋 순서 · AC2 문구 · 완화 통지 · 정본
       「배달 실행자의 정지가 …」 MODIFIED) · design D0.3g · proposal 22판 표 · `review.md` §23.9 · 추출 19개 추가(모두 39, `head-ast-21/MANIFEST.txt`) ·
       `check_values.py` `DRAFT = 22`. 검증: `openspec validate --strict` rc 0, `check_values.py` 실패 목록 대조(§23.9).
-- [ ] 22.1 **22라운드** — codex 대기열 등록(Manager 배분: a125 → a090 → a095 r4 → a094 r6 → **a092 r22**) + Claude 독립 보이스 둘.
-- [ ] 22.2 **FLM 먼저 (구현 전)** — `Notifier.deliver`(분기 27 — C2 세 래치 자리) · `recordAlertTx` · `claimOwed`(C3 래퍼) · `TransitionOperatingMode` ·
+- [x] 22.1 **[처분 2026-09-30] 완료 — 22라운드: `review.md` §23.10 · §23.11, 원문 `analysis/review-22/`.** **22라운드** — codex 대기열 등록(Manager 배분: a125 → a090 → a095 r4 → a094 r6 → **a092 r22**) + Claude 독립 보이스 둘.
+- [x] 22.2 **[처분 2026-09-30] 완료 — 단위별 편집 전 번들(`analysis/pre-edit/unit2|unit3|unit4|unit5/` · `25.6/` · `r26b/`)과 Pre-Edit 선언(`review.md` §24.2 · §24.4 · §24.6). `cmd/tossctl/engine.go` exit 옵션 배선은 `cmd-tossctl--engineruntime` 번들.** **FLM 먼저 (구현 전)** — `Notifier.deliver`(분기 27 — C2 세 래치 자리) · `recordAlertTx` · `claimOwed`(C3 래퍼) · `TransitionOperatingMode` ·
       `CurrentOperatingMode` · `currentModeTx`(C4 순서) · `EntryGate.ProjectOperatingMode`(AC2 · C20) · `Context.ExitObserver` · `buildGateway`와 생산 조립
       `cmd/tossctl/engine.go`의 exit observer 옵션(C1 배선) · `Gateway.parkAlert`(C6 핀). High-risk 규율 전부(Pre-Edit · BTM · 변이 원장).
-- [ ] 22.3 **RED** (각 RED는 뮤테이션으로 실패시켜 본 뒤 근거로 쓴다):
+- [x] 22.3 **[처분 2026-09-30] 완료 — C1 · C3 · C16(25.4) · C2 · C27(25.7) · C4 · C5 · C12~C17 · C20(25.9) · C6 · C8(25.10). 각 항 변이 원장 `analysis/mutation-*`.** **RED** (각 RED는 뮤테이션으로 실패시켜 본 뒤 근거로 쓴다):
       - **C1**: NORMAL 계정 + 막힌 publisher에서 (k1) 관측 두절 강화 (k2) 가격 조회 401 (k3) 청산 상한 조회 401 — exit 사이클이 publish 없이 반환하고
         모드 전이의 통지 행이 outbox에 남는다. (k4) 대사 루프의 공유 Retrier는 동기 통지를 그대로 한다(Q1 문자 해석 회귀 핀).
       - **C3**: `RecordAlert`가 임차를 잡지 않는다 · 재알림 창이 지난 정착 행을 재무장한다 · 다른 발송자가 쥔 임차를 건드리지 않는다 · 알림 하나에 트랜잭션 하나.
@@ -111,8 +109,7 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
         커밋 뒤 통지 실패를 성공 + 통지 실패로 보고 · `tossctl engine alerts ack`의 `mutating: "true"` 표지.
       - **C15**: 모드 복원 실패 → 모드 사유 래치 + 기동 계속(손절 산다).
       - **C16**: 어댑터는 `Journal == nil`에서 동기 publish 갈래(`notifyCritical` B1 `:177` → `:186`)를 쓰지 않는다.
-- [ ] 22.4 **GREEN** — 위 RED를 통과시키는 최소 구현. 원장 편집 둘(`RecordAlert` 래퍼 · 커밋 순서)은 High-risk이므로 Pre-Edit 선언 뒤에 한다.
-- [ ] 22.5 **배포 절차 보완**(21.10에 합침, 사람 몫) — 완화 전에 전송 수단 동작 확인(C18). 기존 `ENTRY_BLOCKED` 행의 처분은 여전히 사람이 결정하고 사람이 실행한다.
+- [x] 22.4 **[처분 2026-09-30] 완료 — GREEN 은 `c6e2e3ac` · `fbc6df5f` · `2714e393` · `e55102f0` 와 26라운드 수리(`d8769cfb` · `b910173a` · `9f6dc60d`). 원장 편집 둘의 Pre-Edit 선언은 `review.md` §24.2.** **GREEN** — 위 RED를 통과시키는 최소 구현. 원장 편집 둘(`RecordAlert` 래퍼 · 커밋 순서)은 High-risk이므로 Pre-Edit 선언 뒤에 한다.
 
 ## 21. 21판 작업 (2026-09-28)
 
@@ -125,12 +122,12 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
       프로브: `operating_modes` 행 1 = `ENTRY_BLOCKED`/`AUTO`/`BROKER_AUTH_REJECTED`/`2026-07-31T09:55:49Z`(proposal Q3). 브로커 호출 0.
 - [x] 21.1 **Q3 사용자 결정 반영** (2026-09-28) — 투영 배선 + AC2 + 사람의 완화 경로를 21판 범위로(design D0.3f, 델타 ADDED 갱신).
       파킹 해제(Manager 2026-09-28: *"a092 21판 완성 → 21라운드"*). Q4·Q6은 21라운드가 판정한다(선택지 유지).
-- [ ] 21.2 **FLM 먼저 (구현 전).** (a) `Notifier.deliver`(분기 27)의 HEAD AST로 잠금 밖으로 옮겨질 갈래(정산 · 래치 `:484`·`:520`·`:571` ·
+- [x] 21.2 **[처분 2026-09-30] 완료 — (a) `deliver` 겹침 표는 단위 ③ 편집 전 번들(`fd7853b2`, `analysis/pre-edit/unit3/`) (b) base 재고정 `aea8553b` + 옛 번들 이동(25.2) (c) 편집 대상 번들 전부(편집 전 · 뒤) (d) `Acknowledge` 의 `n.mu` 보유는 backlog 비례 — 측정 대신 이월(26라운드 보이스 A #8, `review.md` §24.11 이월 표).** **FLM 먼저 (구현 전).** (a) `Notifier.deliver`(분기 27)의 HEAD AST로 잠금 밖으로 옮겨질 갈래(정산 · 래치 `:484`·`:520`·`:571` ·
       반납)를 열거하고 `Acknowledge` 셈~해제와의 겹침 표를 쓴다(design D0.3e 5번이 주장하지 않은 것). (b) 20판 블록 ①: base 재고정 +
       `DIFF` 번들 재추출 + Branch Test Map 재번호(difflib 정렬). (c) 편집 대상 `notifyCritical`·`claimAndDeliver`·`logClaimHeld`·
       `ExitObserver.alert` 배선 자리의 FLM·Branch Test Map. (d) `Acknowledge`가 `n.mu`를 쥐는 시간을 backlog 크기별로 재고 그 옆의
       exit 기록 체류를 잰다(a124 2.6(c) 하네스 재사용) — 21판에서 exit 기록이 그 잠금에 줄 서므로 셋째 항의 크기가 측정 대상이 된다(문서 리뷰 R6).
-- [ ] 21.3 **RED — 기록 전용 exit 경로 (안 가).** 막힌 publisher로: (a) exit 관측 사이클이 publish 없이 반환한다 (b) 반환 직후 그 행에
+- [x] 21.3 **[처분 2026-09-30] 완료 — (a)(c)(d)(e)(j) 25.4, (f) 25.7. (b)(g)(h)(i) 는 22판이 대체(22 머리 주석 — 기록 경로가 임차 없는 기록으로 바뀜).** **RED — 기록 전용 exit 경로 (안 가).** 막힌 publisher로: (a) exit 관측 사이클이 publish 없이 반환한다 (b) 반환 직후 그 행에
       발송 임차가 없다 — 배달 실행자가 `ClaimAlertByID`로 집는다 (c) 재알림 창이 지난 정착 행이 다시 무장된다 (d) 그 반환이
       `ReasonAlertUndelivered` 래치도 승격도 만들지 않는다 (e) 기록 자체의 실패는 그 자리에서 래치 + 승격(그대로) (f) 다른 호출자의
       동기 발송이 원격 전송 중일 때 exit 기록이 그 전송을 기다리지 않는다(잠금 범위) (g) 반납 실패는 래치하지 않고 로그로 남는다
@@ -138,12 +135,12 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
       반납을 부르지 않는다 — 남의 임차를 풀지 않는다(21판 문서 리뷰 R4) (j) **회귀 핀**: 범위 밖 호출자의 동기 발송은 그대로다 —
       런타임의 루프 비정상 반환 알림(`runtime.go:363` → `:500`)이 배수 뒤에도 publish를 시도한다(20라운드 A-3, Q1 문자 해석의 전제).
       각 RED는 뮤테이션으로 실패시켜 본 뒤 근거로 쓴다.
-- [ ] 21.4 **GREEN** — 기록 전용 어댑터 · `claimAndDeliver` 잠금 범위 · `logClaimHeld` 등급과 주석 · `replay.go:107` 주석 대조(D0.1).
+- [x] 21.4 **[처분 2026-09-30] 완료 — GREEN 코드는 25.4 · 25.7(`fbc6df5f`). §6 · §8 옛 task 표지는 이 처분(게이트 준비)이 각 줄에 「⛔ 21판 이후 철회/대체」로 단다.** **GREEN** — 기록 전용 어댑터 · `claimAndDeliver` 잠금 범위 · `logClaimHeld` 등급과 주석 · `replay.go:107` 주석 대조(D0.1).
       §6·§8 옛 task를 하나씩 「21.x로 대체 / 철회 / 유지」로 판정해 표지를 단다.
-- [ ] 21.5 **A-4 재측정** — `a096_one_send_per_condition_test.go`·`a097_exclusion_is_an_event_test.go`가 잠금 범위 변경 뒤에도 초록인지
+- [x] 21.5 **[처분 2026-09-30] 완료 — A-4 재측정: 두 시험 초록, 지키는 것은 임차(변이 L19 가 배제 시험 8개를 깸) — `review.md` §24.7.** **A-4 재측정** — `a096_one_send_per_condition_test.go`·`a097_exclusion_is_an_event_test.go`가 잠금 범위 변경 뒤에도 초록인지
       잰다. 초록이면 무엇이 그것을 지키는지(임차 · 잠금)를 뮤테이션으로 가른다.
-- [ ] 21.6 **셈~해제 (Q4 답 뒤)** — 덮이지 않는 기록자(`parkAlert` → `EnqueueAlert`)의 처분과 결정적 시험. a124 D10 (i) 경계는 문서로만.
-- [ ] 21.7 **투영 배선과 사람의 완화 경로** (design D0.3f — Q3 사용자 결정). FLM 먼저:
+- [x] 21.6 **[처분 2026-09-30] 완료 — `parkAlert` 잠금-먼저 핀 `TestA092TheOutsideRecorderLatchesBeforeItInserts`(`e55102f0`, K6 · K7). a124 D10 (i) 경계는 문서.** **셈~해제 (Q4 답 뒤)** — 덮이지 않는 기록자(`parkAlert` → `EnqueueAlert`)의 처분과 결정적 시험. a124 D10 (i) 경계는 문서로만.
+- [x] 21.7 **[처분 2026-09-30] 완료 — (a)(b)(c)(d) 25.9(`2714e393`), (f) `review.md` §23.7. **(e) 정본 문장 편집은 archive 때** — 아래 「아카이브 때 할 일」로 옮김(Manager 판정 2026-09-30, 24.5 와 같은 취급).** **투영 배선과 사람의 완화 경로** (design D0.3f — Q3 사용자 결정). FLM 먼저:
       (a) `buildGateway` 호출 함수들이 띄우는 흐름과 호출자 `engine.go:504` → 런타임 `Run`의 루프 시작 순서를 세어 「복원이 첫 진입 점검보다 앞」을 증명(오늘은 반쪽 — D0.3f 3번);
       한 프로세스에 journal이 둘 조립되는 경로 유무(`SetModeProjector` 재묶기 거절).
       (b) RED: 기동 복원 전 진입 점검 0 · 산 프로세스의 자동 강화가 커밋 뒤 진입을 거절 · AC2 원자 교체(겹친 점검이 빈 순간을 못 봄 — 결정적 시험) ·
@@ -153,10 +150,8 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
       (d) a124 구조 핀 둘(`TestTheModeProjectorHasNoProductionCaller` · `TestTheLedgerModeRowAddsNoEntryEnforcementBeforeProjectionIsWired`) 갱신.
       (e) 정본 「배달 실행자의 정지가 …」 근거 ①(`spec.md:1032-1034`)이 거짓이 된다 — 21라운드가 MODIFIED로 넣을지 판정, 아니면 archive 때 정본 편집.
       (f) a066 완화 로트와 가족 이름·형태 대조(`review.md` §23.7) — 코드 공유는 각 change 몫.
-- [ ] 21.10 **배포 절차 (사람 몫 — 완료 게이트 밖)** — 배포 전 운영 원장 현재 모드 조회(읽기 전용) → 배포 → 첫 기동에서 모드 사유 진입 차단 확인 →
-      기존 `ENTRY_BLOCKED` 행(2026-07-31 `BROKER_AUTH_REJECTED`)을 풀지 **사람이 결정하고 사람이 실행**. 에이전트는 완화 명령을 실행하지 않는다.
-- [ ] 21.8 **21라운드 적대 리뷰** — Manager 지시 뒤. 교차 모델은 Codex(결정 20-2).
-- [ ] 21.9 `check_values.py` FAIL — 9.6.1이 그대로 진다(21판은 새 FAIL을 만들지 않았다 — `review.md` §23.4).
+- [x] 21.8 **[처분 2026-09-30] 완료 — 21라운드: `review.md` §23.8 · §23.9, 원문 `analysis/review-21/`.** **21라운드 적대 리뷰** — Manager 지시 뒤. 교차 모델은 Codex(결정 20-2).
+- [x] 21.9 **[처분 2026-09-30] 철회(Manager 판정 2026-09-30) — 9.6.1 과 같은 영수증: 실패 60 은 base `721d0338` 에서도 60 이고 (파일 · 문구) 다중집합이 줄 번호를 뺀 채 **동일**(a092 가 더한 실패 0) — `analysis/harness/check-values-base-vs-head.txt`.** `check_values.py` FAIL — 9.6.1이 그대로 진다(21판은 새 FAIL을 만들지 않았다 — `review.md` §23.4).
 
 > **20판 (2026-09-25) — a098·a099 착지에 맞춰 델타를 정합하게 고치고 5.1을 돌린다.**
 > 코드는 한 줄도 안 바뀐다. 측정 HEAD는 `8d9731c1`이다.
@@ -1111,7 +1106,7 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
       > 두었다("조용한 기계에서는 통과하고 바쁜 기계에서는 죽는다").
       > **결론은 그대로 두고 근거만 참으로 바꾼다** — 999.031초는 *한 회차의 관측*이지  <!-- not-a-measurement: 같은 회차 값의 재언급 — 알림 지연 계열이 아니다 -->
       > 이 패키지의 성질이 아니다.
-- [ ] 7.3 **8절 뒤에 7.1의 두 명령을 그대로 다시 돈다**(`-timeout 30m` 포함, 태그판 포함).
+- [x] 7.3 **[처분 2026-09-30] ⛔ 21판 이후 대체 — 폭발 반경 재실행은 각 착지 단위의 스위트 실행(`review.md` §24.3~§24.12: obs · app/engine/... · cmd/tossctl · execgw · journal, 태그판 포함)으로 대체.** **8절 뒤에 7.1의 두 명령을 그대로 다시 돈다**(`-timeout 30m` 포함, 태그판 포함).
       Impact의 "기존 테스트 재작성 0건"을 여기서 검증한다. 깨지는 것이 있으면
       **목록을 Impact에 옮겨 적고** 재작성 범위를 다시 산정한다.
       **1판이 여기서 16건 틀렸다**
@@ -1711,16 +1706,16 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
 > `+4`로 정정했고, 정정 후 이름 칸이 실제 `#### Scenario:` 줄과 일치하는지
 > 14/14를 다시 확인했다.
 
-- [ ] 6.1 파일 신설
-- [ ] 6.2 **(보류 — 19판 4차 · §8.7 결정에 묶인다)** R1 — `newNotifier(...).Attempts == alertPublishAttempts` (RED: `[build failed]`).
+- [x] 6.1 **[처분 2026-09-30] ⛔ 21판 이후 철회 — 알림 예산 상수 파일(`a092_alert_budget_test.go`)은 21판 축소(사용자 결정 20-1: exit goroutine 동기 deliver 제거)로 과녁이 사라짐. 대체 RED = 21.3 · 22.3.** 파일 신설
+- [x] 6.2 **[처분 2026-09-30] ⛔ 21판 이후 철회 — 보류였던 R1(시도 수 상수)은 21판 축소로 소멸(exit 경로에 동기 시도 없음).** **(보류 — 19판 4차 · §8.7 결정에 묶인다)** R1 — `newNotifier(...).Attempts == alertPublishAttempts` (RED: `[build failed]`).
       `alertPublishAttempts`는 17판에도 살아 있지만 **조립부가 `Notifier.Attempts`를
       계속 채우는지**가 §8.7의 형태에 달렸다 — R17-6은 시도를 outbox의 `attempts`
       열에서 센다. **결정 전에는 이 RED의 대상이 확정되지 않는다.**
-- [ ] 6.3 **⛔ 철회 (19판 4차 · 19라운드 A-P7 = B-P3)** R2 — `newNotifier(...).RetryDelay == alertRetryDelay`.
+- [x] 6.3 **[처분 2026-09-30] ⛔ 21판 이후 철회 — 19판 4차 철회 그대로.** **⛔ 철회 (19판 4차 · 19라운드 A-P7 = B-P3)** R2 — `newNotifier(...).RetryDelay == alertRetryDelay`.
       **`alertRetryDelay`가 없다** — D0.6이 지웠고 `Notifier.wait`는 claim 경로에서
       도달 불가능해진다. 시도 사이의 대기는 **루프 주기**가 대신한다.
       아래 본문은 16판의 기록으로 읽는다. **적힌 대로 쓰면 컴파일되지 않는다.**
-- [ ] 6.4 R3 — `resolveNotificationPublisher(...)`가 돌려준 `obs.Publisher`를
+- [x] 6.4 **[처분 2026-09-30] ⛔ 21판 이후 철회 — R3(publisher 형) 과녁은 21판에서 a092 밖(CLI 시험 발송 non-goal).** R3 — `resolveNotificationPublisher(...)`가 돌려준 `obs.Publisher`를
       `*obs.Ntfy`로 타입 단언 후 `Timeout == alertPublishTimeout` (RED: `[build failed]`).
 
       > **RED는 "0건 통과"가 아니라 `[build failed]`다**(7라운드 NIT). 세 상수가
@@ -1730,7 +1725,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       > 어긋난다. 7라운드 보이스 B가 실제로 돌려 `undefined: alertPublishAttempts …
       > [build failed]`를 확인했다.
       반환형이 인터페이스이므로 단언이 필요하다 — 선례 `a074_notification_resolve_test.go:42`
-- [ ] 6.5 **(재조준 — 19판 4차)** **R4 — 상수 값 고정 (등식 증명이 아니다).**
+- [x] 6.5 **[처분 2026-09-30] ⛔ 21판 이후 철회 — R4 상수 값 고정: 상수가 착지하지 않음(21판 축소).** **(재조준 — 19판 4차)** **R4 — 상수 값 고정 (등식 증명이 아니다).**
       아래 본문이 부르는 넷 중 **둘(`alertRetryDelay`·`alertOverheadReserve`)이 없다.**
       대상은 **17판 채택 다섯**(`design.md:378-402`)이고 컴파일 단언과 그 실측은
       **§8.2**가 진다 — §8.2가 그 여섯 줄이 **못 잡는 구성 여덟 개**까지 열거한다.
@@ -1772,7 +1767,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       > 그렇게 세면 검증된 것의 수를 부풀린다.
 
       주석에 **무엇을 지키고 무엇을 못 지키는지** 적는다. 위 표가 그 주석의 내용이다
-- [ ] 6.6 **⛔ 철회 — R17-1이 대체한다 (19판 4차 · 19라운드 A-P7)**
+- [x] 6.6 **[처분 2026-09-30] ⛔ 21판 이후 철회 — 19판 4차 철회(R17-1 대체) 그대로.** **⛔ 철회 — R17-1이 대체한다 (19판 4차 · 19라운드 A-P7)**
       **R5 — 알림 하나의 실시계 체류.** 검증할 속성이 *"편성된 예산 안인가"*에서
       ***"사이클 안에 전송이 있는가"***로 바뀌었다(§6.0 머리말). 그리고
       `alertTransportBudget ≤ elapsed < alertBudget` 단언은 **두 상수가 없어
@@ -1923,10 +1918,10 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       검사하지 않고 자기 자신을 검사하게 된다 — 4라운드 C2가 그 형태였다.
       **이 배수는 기계마다 다르다**(4라운드 N1: 같은 상수에서 다른 기계가 60.7~82.9ms).
       7.2가 이 기계의 값을 잡는다.
-- [ ] 6.7 **ObserveOnce 사이클 단위 테스트는 만들지 않는다** (`not-applicable`).
+- [x] 6.7 **[처분 2026-09-30] ⛔ 21판 이후 대체 — `not-applicable` 선언 그대로. exit 사이클 행동은 25.4 의 기록 전용 시험(k1 · k2)이 잰다.** **ObserveOnce 사이클 단위 테스트는 만들지 않는다** (`not-applicable`).
       계약이 알림당이고, 사이클 총합은 알림 수 × 예산 + `n.mu` 경합이라 a092가 지지 않는다.
       사이클 총합의 RED는 **미배정 후속**이 진다
-- [ ] 6.8 **회귀 핀(태어날 때 GREEN, RED 아님)** — `resolveNotificationPublisher`의
+- [x] 6.8 **[처분 2026-09-30] ⛔ 21판 이후 철회 — `resolveNotificationPublisher` 회귀 핀은 21판 범위 밖(CLI 시험 발송).** **회귀 핀(태어날 때 GREEN, RED 아님)** — `resolveNotificationPublisher`의
       세 nil 이탈(**B2 `:77`·B3 `:83`·B5 `:94`**) 무변화.
       **B1 `:69`는 nil 이탈이 아니다** — `getenv == nil`일 때 `os.Getenv`를 넣을 뿐
       반환하지 않는다(4라운드 M1: 3·4판이 틀린 지도 위에 이 과제를 썼다).
@@ -1952,7 +1947,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
          `TestADisabledBlockWithAChannelStaysOff`(B3),
          `TestAnEnabledBlockWithNoChannelIsRefused`(B5).
          생략하면 **사유를 여기 남긴다** — 침묵한 생략은 금지다.
-- [ ] 6.9 **`cmd/tossctl/a092_testsend_source_test.go` — 태어날 때 GREEN**(RED 아님).
+- [x] 6.9 **[처분 2026-09-30] ⛔ 21판 이후 철회 — `a092_testsend_source_test.go` 는 21판 범위 밖(CLI 시험 발송 non-goal).** **`cmd/tossctl/a092_testsend_source_test.go` — 태어날 때 GREEN**(RED 아님).
       `publishNotificationTest`의 `&obs.Ntfy{...}`(`notificationsettings.go:151`)에
       `Timeout` 필드가 **없음**을 고정한다 — design D6의 결정이 조용히 바뀌지 않게.
       **소스 스캔인 이유는 값으로 도달할 수 없기 때문이다**: 그 리터럴은 함수 지역
@@ -1962,7 +1957,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       `vetothresholds_source_test.go`(그것도 `package main`이고 `go/parser`를 쓴다).
       **주의: 이 테스트는 상대 경로로 소스를 읽으므로 `-overlay`로 시험할 수 없다**
       (4라운드 N6). 음성 대조는 in-memory 소스로 파서를 직접 돌려서 한다.
-- [ ] 6.10 RED 실행 로그 보존. **여기서 관측 가능한 born-GREEN은 6.9 하나다** —
+- [x] 6.10 **[처분 2026-09-30] ⛔ 21판 이후 대체 — RED 로그는 단위별 `analysis/mutation-*/red-*.log` 로 보존.** RED 실행 로그 보존. **여기서 관측 가능한 born-GREEN은 6.9 하나다** —
       `cmd/tossctl`은 다른 패키지라 `internal/app/engine`이 `[build failed]`인 동안에도
       돈다(5라운드가 실행해서 확인). **6.8은 같은 패키지라 관측되지 않으므로**
       위 셋 중 무엇을 골랐는지 여기 적는다(5라운드 B3).
@@ -1972,7 +1967,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       **6.12(R6)도 같은 빌드 실패를 공유한다** — 그 과제가 기록한 세 구성 실측은
       `-overlay`로 상수를 넣어서 얻은 **설계 근거**이지 §6의 RED 증거가 아니다.
       그 구분을 여기 적는다
-- [ ] 6.11 **델타 시나리오 22건 전부에 대해 §6 테스트 또는 `not-applicable` 사유를 적는다.**
+- [x] 6.11 **[처분 2026-09-30] ⛔ 21판 이후 대체 — 델타가 21~24판에서 다시 쓰였고 시나리오 대조는 22.3 · 23.3 · 24.3 항목별 RED 와 K18(옛 §6 Scenario 넷의 처분)이 대체.** **델타 시나리오 22건 전부에 대해 §6 테스트 또는 `not-applicable` 사유를 적는다.**
 
       > **⚠⚠ 19판 3차 — 이 표는 통째로 낡아 있었다. 재대조를 기계로 돌렸다**
       > (16라운드 B-13이 두 칸이라고 보고했고, **실제는 표 전체다**).
@@ -2135,7 +2130,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       > 전부 근거를 잃는다.** 정정이 표 행에만 착지하고 그 행을 분류하는 정의에는
       > 안 간 것 — 6라운드가 이름 붙인 형태와 같다.
 
-- [ ] 6.12 **R6 — 늦게 응답한 서버가 만드는 것: 중복 발송 + 거짓 래치 + 영속 승격.**
+- [x] 6.12 **[처분 2026-09-30] ⛔ 21판 이후 대체 — R6(늦은 응답의 중복 발송 · 거짓 래치)은 a099 임차 + 25.7 잠금 범위 · 원칙 E 로 대체(22.3 C2 · C27, 23.3 K4).** **R6 — 늦게 응답한 서버가 만드는 것: 중복 발송 + 거짓 래치 + 영속 승격.**
       13판이 새로 만드는 유일한 RED다. 12판까지 이 시나리오(ES:68)는
       `not-applicable`이었고 그 사유가 12라운드 P8에서 기각됐다 — 위 ⚠ 참조.
 
@@ -2382,8 +2377,8 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
 
 > **⛔ 21판** — 이 절의 과녁은 21판 작업 21.4가 대체한다. 8.8(정산 해석)·8.9·8.11(`Flush`)은 축소로 a092 밖이다(정본 a099·a124 요구). task별 판정은 21.4.
 
-- [ ] 8.1 `notifications.go`에 **`import "time"` 추가** (현재 `os`·`strings`·`config`·`obs`)
-- [ ] 8.2 `notifications.go`에 상수 **5개** + 유도 주석 + **컴파일 타임 단언 6줄**
+- [x] 8.1 **[처분 2026-09-30] ⛔ 21판 이후 철회 — `notifications.go` 상수 · import 는 21판 축소로 착지하지 않음.** `notifications.go`에 **`import "time"` 추가** (현재 `os`·`strings`·`config`·`obs`)
+- [x] 8.2 **[처분 2026-09-30] ⛔ 21판 이후 철회 — 같은 이유(상수 5개 · 컴파일 단언).** `notifications.go`에 상수 **5개** + 유도 주석 + **컴파일 타임 단언 6줄**
 
       > **⚠⚠ 19판 3차 — 이 자리의 리터럴은 컴파일되지 않았다.**
       >
@@ -2521,7 +2516,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       > 오타 둘**은 전부 FAIL이며 **메시지가 각각 자기 상수 이름을 말한다.**
       > **`GOARCH=amd64`와 `386`의 판정이 15/15 일치한다.**
 
-- [ ] 8.2.1 **D3의 단언 표를 채택 상수 위에서 다시 돌린다** (14판 신설,
+- [x] 8.2.1 **[처분 2026-09-30] ⛔ 21판 이후 철회 — 같은 이유(D3 단언 표).** **D3의 단언 표를 채택 상수 위에서 다시 돌린다** (14판 신설,
       **16판이 절반을 먼저 갚았다**).
 
       > **⚠⚠ 19판 4차 — 이 task가 가리키는 표는 17판이 대체한 절 안에 있다**
@@ -2569,10 +2564,10 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       **자릿수 단언의 임계를 상수와 함께 재검토한다.** `- 100`은 "1회 상한 ≥ 100ms"를  <!-- not-a-measurement: 반증 구성의 설정값이지 측정이 아니다 -->
       뜻하고 채택값이 커졌으므로 **더 느슨해졌다.** 임계를 올릴지 말지는 8.2.1의
       실측 뒤에 정하고, 정한 이유를 D3에 적는다.
-- [ ] 8.3 `resolveNotificationPublisher` 안의 `&obs.Ntfy{...}` 리터럴에
+- [x] 8.3 **[처분 2026-09-30] ⛔ 21판 이후 철회 — `resolveNotificationPublisher` 리터럴은 21판 범위 밖.** `resolveNotificationPublisher` 안의 `&obs.Ntfy{...}` 리터럴에
       `Timeout: alertPublishTimeout` — **줄 번호로 지시하지 않는다.** 8.1·8.2가
       import와 상수를 넣으면 그 리터럴의 줄 번호가 내려간다
-- [ ] 8.4 **(보류 — 19판 4차 · §8.7 결정에 묶인다)** `newNotifier`가 만드는
+- [x] 8.4 **[처분 2026-09-30] ⛔ 21판 이후 철회 — 보류 항목, 21판 축소로 소멸.** **(보류 — 19판 4차 · §8.7 결정에 묶인다)** `newNotifier`가 만드는
       `&obs.Notifier{...}` 리터럴에 채우는 필드 — 같은 이유로 식별자로 지시한다.
 
       > **⚠⚠ 19판 4차까지 이 줄은 「`Attempts`·`RetryDelay`」였다** — 19라운드
@@ -2586,7 +2581,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       > 이 리터럴에 무엇이 들어가는지 확정할 수 없다.
       >
       > **6.2가 같은 이유로 보류다.** 조립부 편집과 그 RED는 한 결정에 묶여 있다.
-- [ ] 8.5 **`runtime.go:458-460`의 주석에서 시도 횟수 문구를 고친다** (13판 신설,
+- [x] 8.5 **[처분 2026-09-30] ⛔ 21판 이후 철회 — 런타임 루프 실패 알림은 21판에서 동기 경로로 남는다(Q1 문자 해석, 21.3 (j) 회귀 핀) — 「three bounded publish attempts」 주석은 그 경로에서 참으로 남음(`runtime.go` `alertDeliveryBound`).** **`runtime.go:458-460`의 주석에서 시도 횟수 문구를 고친다** (13판 신설,
       13라운드 P7). 현재 문구는 `Generous enough for obs.Notifier's three bounded
       publish attempts` 이다.
 
@@ -2640,7 +2635,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
 > 이제 a098이 진다(D0.10의 19판 열). 남은 절반 — **`internal/obs` 안에서 일어나는
 > 변화** — 이 아래 다섯이다.
 
-- [ ] 8.7 **`claimAndDeliver`가 원격 전송 위에서 잠금을 놓는다** (D0.3a).
+- [x] 8.7 **[처분 2026-09-30] ⛔ 21판 이후 대체 — 21.4 · 25.7(`fbc6df5f`): claim 만 `n.mu` 아래, 전송 중 배제는 임차.** **`claimAndDeliver`가 원격 전송 위에서 잠금을 놓는다** (D0.3a).
       claim → **release** → publish → **재취득** → 정산. 오늘은 `:254-255`가
       `n.mu`를 잡고 `defer`로 함수 전체를 덮는다. *(20판 재고정 — 19판 `:241-242`, HEAD AST
       `analysis/head-ast-20/internal-obs--notifier.claimanddeliver.json`의 `n.mu.Lock`·`defer`)*
@@ -2648,7 +2643,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       > 남는다. 그리고 claim이 이제 81초 임차를 잡는다(design D0.3d 3번). 이 task는 그 선택 뒤에 다시 쓴다.
       **RED**: R18-3(잠금이 전송을 안 덮는다) · R17-2
 
-- [ ] 8.8 **정산 CAS 실패를 "운영자가 먼저 정산했다"로 읽는다** (D0.3b).
+- [x] 8.8 **[처분 2026-09-30] ⛔ 21판 이후 대체 — 정산 결과 해석은 a099 `SettleOutcome` 과 25.7 · 26라운드 수리(`obs.isPreemption`, `d8769cfb`).** **정산 CAS 실패를 "운영자가 먼저 정산했다"로 읽는다** (D0.3b).
       > **⛔ 20라운드 B-4 = A-7 — 과녁이 옮겨 갔다.** 0행 해석은 a099가 `SettleOutcome` 넷으로 이미 구현했고
       > (design D0.3c 3번), HEAD 술어는 `AND claim_token = ?`까지 붙는다(`outbox.go:453-455`). 「PENDING 아님」은
       > 승인만이 아니라 앞선 전달도 뜻한다(`alert_claim.go:113-116`). 프로덕션 정산 자리는 `alertDeliverer.deliverOne`이다.
@@ -2659,7 +2654,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       (`internal/obs/a096_one_send_per_condition_test.go:380-397`)의 **성질을 다시 쓴다.**
       고치지 않고 초록일 수 **없다** — §6.0.1이 그 철회를 적는다
 
-- [ ] 8.9 **`Flush`가 배치와 공정성을 갖는다** (D0.5의 18판 규칙 1·2).
+- [x] 8.9 **[처분 2026-09-30] ⛔ 21판 이후 철회 — `Flush` 생산 호출자 0(K19 핀), 배달은 a098/a124 실행자. `Flush` 분류 잔여는 이월(26라운드 codex R4).** **`Flush`가 배치와 공정성을 갖는다** (D0.5의 18판 규칙 1·2).
       > **⛔ 20판 — 과녁이 옮겨 갔다.** 프로덕션 배달 경로는 `Flush`가 아니라 a098의
       > `alertDeliverer.cycle`(`internal/app/engine/alertdelivery.go:145`)이고 `Flush`의 프로덕션
       > 호출자는 0이다(design D0.3d 1번). 이 task를 `alertDeliverer`로 옮길지는 21판에서 정한다.
@@ -2678,12 +2673,12 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       > 게이트를 푸는 유일한 경로가 래치를 다 풀지 못한다.
       > 19판 4차까지 이 사실은 **훑기 표에도 §8에도 없었다.**
 
-- [ ] 8.10 **`publishBestEffort`가 사이클을 안 붙잡는다** (D0.8).
+- [x] 8.10 **[처분 2026-09-30] ⛔ 21판 이후 대체 — C8 일반 등급 유계 이관(`e55102f0` · `071e67c1`).** **`publishBestEffort`가 사이클을 안 붙잡는다** (D0.8).
       normal 등급도 오늘은 **동기 publish**다(`notifier.go:161-173` — 20판 재고정, 19판 `:155-167`). 버린 알림은
       **로그 줄로 남는다** — 조용히 버리지 않는다.
       **RED**: R18-4
 
-- [ ] 8.11 **nil publisher를 실패한 시도로 센다** (D0.5의 마지막 문단).
+- [x] 8.11 **[처분 2026-09-30] ⛔ 21판 이후 철회 — nil publisher 시도는 a124 실행자(정본) 몫, a092 범위 밖.** **nil publisher를 실패한 시도로 센다** (D0.5의 마지막 문단).
       오늘 `deliver`는 nil이면 래치하지만(`notifier.go:429-431`, `:571`)
       `Flush`는 **`break`하고 아무 시도도 기록하지 않는다**(`:742-744`).
       *(20판 재고정 — 19판 `:350-352`·`:403`·`:442-444`. HEAD AST: `deliver` B3 `if`(`:429`)·
@@ -2707,9 +2702,9 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
 
 > **⛔ 21판** — 9.2의 *"FLM 재생성은 2건 … 나머지 20개는 유효"*는 20판 census(DIFF 10)와 모순이다(20라운드 B-5(T)). 재생성 범위는 21.2(b)가 정한다.
 
-- [ ] 9.1 편집 후 AST 재생성 — `newNotifier` branches 0/returns 1/calls 0,
+- [x] 9.1 **[처분 2026-09-30] ⛔ 21판 이후 대체 — `newNotifier` · `resolveNotificationPublisher` 는 편집하지 않음. 편집 뒤 AST 재생성은 단위별 번들(25.5 · 26라운드 `render_r26b_bundles.py`).** 편집 후 AST 재생성 — `newNotifier` branches 0/returns 1/calls 0,
       `resolveNotificationPublisher` branches 5/returns 4 **무변화 확인**
-- [ ] 9.2 **FLM 재생성은 2건이다** — `internal-app-engine--newnotifier`,
+- [x] 9.2 **[처분 2026-09-30] ⛔ 21판 이후 대체 — 재생성 범위는 21.2(b) · 단위별 번들이 정함.** **FLM 재생성은 2건이다** — `internal-app-engine--newnotifier`,
       > **⛔ 20라운드 B-5 — 이 문장은 20판 census와 모순이다.** 번들 36개 중 29개가 이미 base 파일 sha와
       > 안 맞고 10개는 함수 구조가 바뀌었다(design D0.3d 5번). 아래 「나머지 20개는 유효」는 무효다.
       `internal-app-engine--resolvenotificationpublisher`. `source_sha256`가 파일 전체
@@ -2759,12 +2754,12 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
 
       갱신 후 7.4.1의 `ast.json` 대조를 다시 돌려 표와 산출물이 같은 지도를
       가리키는지 확인한다 — **5라운드 H2가 정확히 이 종류의 어긋남이었다.**
-- [ ] 9.3 `python3 tools/logic-map/check_analysis.py --change a092-...` PASS
+- [x] 9.3 **[처분 2026-09-30] 완료 — `python3 tools/logic-map/check_analysis.py --change a092-…` evidence complete(게이트 준비 로트 뒤 재확인, `review.md` §24.12).** `python3 tools/logic-map/check_analysis.py --change a092-...` PASS
 
       > **`check_analysis`는 PATH에 없다**(8라운드 M-15) — `which check_analysis`가
       > 빈손이다. 실행 형태는 저장소 안의 스크립트를 직접 부르는 것이고,
       > 3.2·9.3 두 자리에 같은 오기가 있었다.
-- [ ] 9.4 **경합 검사는 폭발 반경 안에서만 돈다.** 나무 전체 `-race`는 **완주하지 못한다**
+- [x] 9.4 **[처분 2026-09-30] 완료 — `-race` 는 폭발 반경 패키지(obs · app/engine 의 `TestA092|A124|A098`) 에서 매 로트 rc 0(`review.md` §24.3~§24.12). 나무 전체 `-race` 는 이 절 서술대로 돌리지 않음.** **경합 검사는 폭발 반경 안에서만 돈다.** 나무 전체 `-race`는 **완주하지 못한다**
       — 5라운드 실측: `go test ./... -count=1 -race`가 `internal/journal`에서
       `panic: test timed out after 30m0s`로 죽고, 유휴 기계에서 `-timeout 60m`으로
       다시 돌려도 **43분 24초에 아직 진행 중**이었다. Go의 패키지당 기본 기한은
@@ -2797,7 +2792,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       타입의 소유자**(`obs.Notifier`·`obs.Ntfy`·`execgw.EntryGate`)를 경합 검사 안에
       두려는 것이고, 셋 다 빨라서 비용이 없다. **보수적으로 넓힌 것이지 도달 분석이
       그것을 요구한 것이 아니다**(6라운드 NIT).
-- [ ] 9.5 `make lint` (= `gofmt -l` + `go vet ./...`, 저장소에 별도 lint 설정은 없다).
+- [x] 9.5 **[처분 2026-09-30] 완료 — `make lint` rc 0(매 로트, 마지막은 게이트 준비 로트).** `make lint` (= `gofmt -l` + `go vet ./...`, 저장소에 별도 lint 설정은 없다).
       **`gofmt -l`의 범위는 나무 전체가 아니라 세 경로다** — `./cmd ./internal
       ./tools/logic-map`(`Makefile:95`). a092가 편집하는 두 파일은 `./internal` 아래라
       범위 안이지만, **`make lint` 초록을 "저장소 전체가 포맷됐다"로 읽으면 안 된다**
@@ -2805,7 +2800,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       **`make fmt`가 아니다** — 그것은 `gofmt -w`이고 VERIFY 단계에서 파일을 쓴다
       (10절의 fingerprint 순서를 깨뜨린다). base에서 `gofmt -l`은 비어 있으므로
       `make fmt`는 무해한 no-op이지만, **쓰기 명령을 검증 단계에 두지 않는다**.
-- [ ] 9.6 **값 검사와 커버리지 게이트를 다시 돌린다 — 구현이 문서를 낡게 만든 뒤에.**
+- [x] 9.6 **[처분 2026-09-30] 철회(Manager 판정 2026-09-30) — 값 검사는 9.6.1 과 같은 영수증(실패 60 = base 60, 다중집합 동일). `coverage_gate.py` 는 `check_values.py` 방어의 자체 시험 커버리지를 재는 도구라 9.6.1 ⚠⚠ 박스대로 같은 실패에 매달림 — 두 도구의 base `721d0338` 이후 변경은 옛 번들 경로 재지정 세 줄뿐(25.2 — 판정 규칙 불변), 9.6.1 과 함께 철회.** **값 검사와 커버리지 게이트를 다시 돌린다 — 구현이 문서를 낡게 만든 뒤에.**
 
       ```bash
       python3 openspec/changes/a092-an-alert-does-not-hold-the-stop/tools/check_values.py
@@ -2844,7 +2839,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       줄만 싣고 못 세는 자리를 빼면, 그 보고는 7·8·9판이 세 번 한 것과 같은
       주장이 된다.
 
-- [ ] 9.6.1 **`check_values.py`의 실패를 0으로 만든다 — 고아 측정치와 등식 위반**
+- [x] 9.6.1 **[처분 2026-09-30] 철회(Manager 판정 2026-09-30) — 실패 60 은 21판 전부터 고정된 옛 수치 문단의 고아 측정치. **영수증: base `721d0338` 에서 `check_values.py` 실패 60, HEAD 에서 60, (파일 · 문구) 다중집합이 줄 번호를 뺀 채 동일 — a092 구현이 더한 실패 0**(`analysis/harness/check-values-base-vs-head.txt`). 도구 개선은 10.4.2~10.4.6 과 함께 미배정 후속으로.** **`check_values.py`의 실패를 0으로 만든다 — 고아 측정치와 등식 위반**
       (16판 신설, 15라운드 A T2 · 17판이 수를 실측으로 다시 고침 ·
       **19판 4차가 §7 실행 중에 다시 셌다**).
 
@@ -2941,7 +2936,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       기준선을 못 세운다** — *"오염하지 않은 사본이 이미 실패한다"*. 곧
       **advisory 두 개가 지금 아무것도 판정하지 못하고 있다.** 그것을 통과로
       읽어서는 안 된다.
-- [ ] 9.7 **`alertLoopShare`가 관측 주기와 묶여 있는지 확인한다** (9라운드 H-1 네 번째 구성,
+- [x] 9.7 **[처분 2026-09-30] ⛔ 21판 이후 철회 — `alertLoopShare` 상수가 착지하지 않음(21판 축소).** **`alertLoopShare`가 관측 주기와 묶여 있는지 확인한다** (9라운드 H-1 네 번째 구성,
       **19판 3차에 대상 상수 교체**).
 
       ```bash
@@ -2981,7 +2976,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       > proposal이 "구조적 보증"이라 부른 것의 **정확한 경계**다:
       > 값의 관계는 컴파일러가 지키고, 값의 **출처**는 사람이 지킨다.
 
-- [ ] 9.8 **`alertPublishTimeout`을 넘는 실전 응답이 관측됐을 때의 판정 절차를 여기
+- [x] 9.8 **[처분 2026-09-30] ⛔ 21판 이후 철회 — `alertPublishTimeout` 판정 절차는 exit 경로 동기 발송이 사라져 과녁 없음.** **`alertPublishTimeout`을 넘는 실전 응답이 관측됐을 때의 판정 절차를 여기
       고정한다** (13판 신설, **14판 개정 — 이 절차가 이미 한 번 발동했다**).
 
       > **⚠ 13판이 여기 적은 조건은 14라운드에 발동했고, 절차대로 처리했다.**
@@ -3023,9 +3018,9 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
 아니라 **이 파일의 체크박스를 채우는 것까지** 포함된다.
 3판은 sync를 10.1에 두었고 그 순서로는 통과할 수 없다.
 
-- [ ] 10.1 gstack 독립 리뷰 (구현 후)
-- [ ] 10.2 `review.md` 갱신 — 구현 후 판정
-- [ ] 10.3 PM 동기화 — `STORY-TOS-a092`. **YAML을 고치면 생성기를 반드시 다시 돌린다**:
+- [x] 10.1 **[처분 2026-09-30] 완료 — gstack /review(게이트 준비, `review.md` §24.12).** gstack 독립 리뷰 (구현 후)
+- [x] 10.2 **[처분 2026-09-30] 완료 — `review.md` §24.3~§24.12(구현 후 판정).** `review.md` 갱신 — 구현 후 판정
+- [x] 10.3 **[처분 2026-09-30] 완료 — 수용 기준 8개를 21판 전달물과 대조: 1 · 2 · 3 기록 전용 exit(critical `RecordOnly` · 일반 등급 비차단 이관, 22.3 C1 · C8 · capped 시험) · 4 `RecordAlert` 가 사이클 안 durable 기록 · 5 기록 실패 래치 + 승격(K17) 과 a124 실행자의 전달 실패 판정 · 6 C8 버림 기록(`071e67c1`) · 7 a098/a124 실행자 재시도, 성공 재시도가 차단을 스스로 풀지 않음(승인 필요) · 8 K18 「청산 무영향」. 20판 시절 「5개는 미배정 후속」 경고는 21판 축소(비동기 배달 = a098/a124 위 기록 전용)로 해소 — YAML 수용 기준 편집 없음. `openspec.path` 는 archive 뒤 실제 디렉터리로(WORKFLOW 10단계), tracker 는 이 처분 뒤 재생성.** PM 동기화 — `STORY-TOS-a092`. **YAML을 고치면 생성기를 반드시 다시 돌린다**:
       `docs/pm/generated/*.md`는 **추적 파일**이고 `make sdd-check`가
       `tools/pm/generate_master_tracker.py --check`로 신선도를 검사한다
       (`Makefile:73` → `generate_master_tracker.py:340-345`, 내용이 다르면
@@ -3041,11 +3036,11 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       스토리를 미배정 후속으로 옮기고 a092용 스토리를 따로 세우거나, 수용 기준을 a092의
       계약("한 알림이 자기 차례에 쓰는 동기 시간이 관측 주기를 넘지 않는다")으로
       다시 쓰고 나머지를 미배정 후속 스토리로 넘긴다. **어느 쪽을 골랐는지 10.6에 적는다.**
-- [ ] 10.4 `issues.md` — `flatten.Saga.Notifier` nil 지뢰, `Notifier`에 `Close`/`Stop`이
+- [x] 10.4 **[처분 2026-09-30] 완료 — `docs/pm/issues` 대신 이 change 의 이월 표 · ROADMAP 「a092 이월 · 미배정 후속」 절에 적음(10.4.1). 네 항의 21판 상태는 그 절이 적는다.** `issues.md` — `flatten.Saga.Notifier` nil 지뢰, `Notifier`에 `Close`/`Stop`이
       없는 점(미배정 후속 선행 조건), `alertDeliveryBound` 주석과 `runtime.go:415`의 무기한
       대기(미배정 후속에서 정정), `o.Interval()` drift
 
-- [ ] 10.4.1 **미배정 후속 8건을 `docs/ROADMAP.md`에 옮겨 적는다** (16판 신설,
+- [x] 10.4.1 **[처분 2026-09-30] 완료 — `docs/ROADMAP.md` 「a092 이월 · 미배정 후속」 절(각 항에 의존하는 a092 계약 · 행선).** **미배정 후속 8건을 `docs/ROADMAP.md`에 옮겨 적는다** (16판 신설,
       15라운드 A P7).
 
       **14판이 고친 것은 이름이지 구멍이 아니다.** 12·13판은 이 여덟을 `a093`에
@@ -3072,7 +3067,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       > 로컬 쓰기뿐이다). 이 task가 옮겨 적는 것은 **남는 셋 + 불필요해진 하나의
       > 사유**다.
 
-- [ ] 10.4.2 **`check_values.py`에 절 인식을 넣는다 — 지금 이 도구는 기록과 주장을
+- [x] 10.4.2 **[처분 2026-09-30] 이관(Manager 판정 2026-09-30) — 미배정 후속 표 행 추가(아래 「미배정 후속으로 이관한 것」).** **`check_values.py`에 절 인식을 넣는다 — 지금 이 도구는 기록과 주장을
       구별하지 못한다** (17판 신설).
 
       17판이 `LEGAL_EQ_MS`를 `ADOPTED_MS ∪ SUPERSEDED_MS`로 **넓혔다**. 넓히지
@@ -3087,7 +3082,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       **이것이 없는 동안 그 구멍은 사람 리뷰가 본다. 적어 두었으므로 침묵한 생략이
       아니다.**
 
-- [ ] 10.4.3 **`check_values.py`가 배달 루프 쪽 열거도 검사하게 한다** (17판 신설).
+- [x] 10.4.3 **[처분 2026-09-30] 이관(Manager 판정 2026-09-30) — 미배정 후속 표 행 추가.** **`check_values.py`가 배달 루프 쪽 열거도 검사하게 한다** (17판 신설).
 
       17판은 체류 구성 열거를 **둘로 갈랐다**: 사이클에 남는 둘(로그 줄 · outbox
       트랜잭션)과 루프 밖으로 나간 셋(시도별 실패 기록 · 게이트 래치 · 승격
@@ -3098,7 +3093,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       검사되지 않는 열거가 하나 있다는 사실 자체가 대가다. 검사 로직이 열거 집합을
       여럿 받도록 고친다.
 
-- [ ] 10.4.4 **6.11의 시나리오 지도를 기계가 대조하게 한다 — 제목이 아니라 조항으로**
+- [x] 10.4.4 **[처분 2026-09-30] 이관(Manager 판정 2026-09-30) — 미배정 후속 표 행 추가.** **6.11의 시나리오 지도를 기계가 대조하게 한다 — 제목이 아니라 조항으로**
       (19판 3차 신설, 16라운드 B-13 · **19판 4차가 범위를 넓혔다, 19라운드 B-P5**).
 
       > ## ⚠⚠ 22 = 22는 **제목 대칭**이고, 조항이 그 아래로 샜다
@@ -3143,7 +3138,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       **좌표는 검사하지 않는다.** 6.11이 좌표 열을 버렸고, 버린 것을 검사하면
       검사가 그 결정을 되돌린다.
 
-- [ ] 10.4.5 **`ADOPTED_MS`에서 `alertFlushInterval`의 소유권을 a098로 옮긴다**
+- [x] 10.4.5 **[처분 2026-09-30] 이관(Manager 판정 2026-09-30) — 미배정 후속 표 행 추가.** **`ADOPTED_MS`에서 `alertFlushInterval`의 소유권을 a098로 옮긴다**
       (19판 3차 신설 — **19판의 분리가 스스로 만든 결함**).
 
       `tools/check_values.py`의 `ADOPTED_MS`가 `alertFlushInterval: 2000.0`을
@@ -3158,7 +3153,7 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       **a098이 자기 값을 잰 뒤**이고, 그때 a092의 산문은 그 값을 *가정*으로
       다시 쓴다. design 상수 절의 ⚠가 그 경계를 적었다.
 
-- [ ] 10.4.6 **`ADOPTED_MS`를 유도로 바꾼다 — 지금은 반증할 수 없는 선언이다**
+- [x] 10.4.6 **[처분 2026-09-30] 이관(Manager 판정 2026-09-30) — 미배정 후속 표 행 추가.** **`ADOPTED_MS`를 유도로 바꾼다 — 지금은 반증할 수 없는 선언이다**
       (19판 3차 신설, 16라운드 B-10·**B-11의 잔여**).
 
       16라운드 B-10은 `ADOPTED_MS`가 **기각된 후보 #8**을 채택으로 선언하고
@@ -3175,13 +3170,13 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       거기서 읽는 것이다. 표를 만드는 것은 R19-2가 재는 값에 달려 있으므로
       **그 측정 뒤로 미룬다** — 지금 만들면 또 하나의 맨 선언이 된다.
 
-- [ ] 10.5 memory retain — 검증된 것만
-- [ ] 10.6 완료 보고 초안 — **냉 표본 n=1 · 실패 관측 0건 · 손실 ①② · reserve의 로컬성**
+- [x] 10.5 **[처분 2026-09-30] 완료 — Claude 기억 `closed-red-lists-need-test-names`(M13 거짓 완료 · rtk diff 압축 · 가드별 거절 문구 — 셋 다 이 로트에서 실측). 시크릿 · 계좌 · 수익성 결론 없음.** memory retain — 검증된 것만
+- [x] 10.6 **[처분 2026-09-30] ⛔ 21판 이후 대체 — 서술된 초안(냉 표본 · 손실 ①② · reserve)은 20판 과녁. 완료 보고는 `review.md` §24.12 와 Manager 합본 보고. 10.3 의 스토리 처리는 10.3 처분에 적음.** 완료 보고 초안 — **냉 표본 n=1 · 실패 관측 0건 · 손실 ①② · reserve의 로컬성**
       (초과분 관측 범위 31.9~356.1ms, **산포 배수 11.2배** — `delivery-latency` §7.2.1) ·
       **`STORY-TOS-a092`의 수용 기준 8개 중 5개는 미배정 후속이 채운다**(10.3에서 고른 처리) ·
       **`make gate`가 태그판을 안 돌린다**(7.3이 유일한 조립 경로 검증) ·
       **`-race`는 폭발 반경 5개 패키지에서만 돌았다**(9.4 — 나무 전체는 완주 불가)
-- [ ] 10.7 **이 파일의 미체크 박스를 전부 체크한다 — "여기까지"가 아니라 파일 전체다**
+- [x] 10.7 **[처분 2026-09-30] 완료 — 이 처분(게이트 준비, Manager 판정 2026-09-30)이 파일 전체를 처분함. 인계 · 아카이브 몫은 체크박스가 아닌 명명 목록으로 옮김.** **이 파일의 미체크 박스를 전부 체크한다 — "여기까지"가 아니라 파일 전체다**
       (이것도 worktree 쓰기다). 10.8~10.11도 포함이다. `tools/gate.sh:107`이
       `grep -c '^- \[ \]'`로 **파일 전체**를 세기 때문이고, 6판의 "여기까지"라는 문구는
       자기 뒤의 4건(10.8~10.11)을 제외해서 아래 blockquote 2단계와 어긋나 있었다
@@ -3325,6 +3320,22 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
 **이번엔 문서가 참이고 산출물이 거짓이었다.** 2~4라운드와 방향이 반대다.
 그래서 훑기의 규칙에 "표를 만든다"로는 부족하고 **표를 무엇으로 채우는가**가 들어간다.
 
+## 인계 (명명된 인계 목록 — 완료 게이트 밖, 체크박스 아님)
+
+이 change 의 완료 게이트가 세는 작업이 아니다(Manager 판정 2026-09-30, a066 §7 선례). 사람 몫이고 에이전트는 실행하지 않는다 — **에이전트는 mode-release · alerts ack 를 실행하지 않는다.**
+
+- **22.5** **배포 절차 보완**(21.10에 합침, 사람 몫) — 완화 전에 전송 수단 동작 확인(C18). 기존 `ENTRY_BLOCKED` 행의 처분은 여전히 사람이 결정하고 사람이 실행한다.
+- **21.10** **배포 절차 (사람 몫 — 완료 게이트 밖)** — 배포 전 운영 원장 현재 모드 조회(읽기 전용) → 배포 → 첫 기동에서 모드 사유 진입 차단 확인 →
+      기존 `ENTRY_BLOCKED` 행(2026-07-31 `BROKER_AUTH_REJECTED`)을 풀지 **사람이 결정하고 사람이 실행**. 에이전트는 완화 명령을 실행하지 않는다.
+
+## 아카이브 때 할 일 (완료 게이트 밖 — 아카이브 커밋이 집행)
+
+정본을 만지는 유일한 시점이 아카이브다(Manager 판정 2026-09-30). 지금 하면 델타 · 정본 이중 편집이 된다. 아카이브 커밋은 아래 둘을 같은 커밋에서 하고, 24.4 의 인용(`0e4f26af`)을 커밋 메시지에 싣는다.
+
+- **24.5** **잔여 처리 (Manager 판정 M14)** — a092 구현 로트가 착지할 때 정본 `openspec/specs/engine-safety/spec.md:221-224`(「엔진 런타임 수명주기」 안
+      「… 그 문장의 정리는 a092가 진다」 주석)를 정리한다. MODIFIED 델타 없이, 그 주석 한 줄 수준.
+- **21.7(e)** 정본 「배달 실행자의 정지가 …」 근거 ①(투영 미배선)이 단위 ④ 착지로 거짓이 됨 — 그 문장을 정본에서 정리(21.7 처분에서 옮김).
+
 ## 미배정 후속으로 이관한 것 (여기서 하지 않는다)
 
 | 항목 | 근거 |
@@ -3340,3 +3351,8 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
 | `alertDeliveryBound` 주석 문구 정정 | 1라운드 C3 |
 | **`runtime.go:415` `EscalateOperatingMode`의 무기한 대기** | 3라운드 H2(a) |
 | base spec 루프 열거의 `strategy-entry` drift | — |
+| `check_values.py` 절 인식(기록 vs 주장 구별) — 옛 10.4.2 | 이관(Manager 판정 2026-09-30). 사유: 문서 도구 개선, 실패 60 은 base 와 동일(`analysis/harness/check-values-base-vs-head.txt`). 행선: a092 문서 도구 후속 로트(미배정) |
+| `check_values.py` 배달 루프 쪽 열거 검사 — 옛 10.4.3 | 이관(같은 판정). 사유: 17판 체류 열거의 도구 몫, 21판 축소 뒤 과녁 재정의 필요. 행선: 같은 후속 로트 |
+| 6.11 시나리오 지도의 조항 단위 기계 대조 — 옛 10.4.4 | 이관(같은 판정). 사유: 6.11 이 21판에서 대체됨 — 대조 대상은 21~24판 델타 조항. 행선: 같은 후속 로트 |
+| `ADOPTED_MS` 의 `alertFlushInterval` 소유권 a098 이전 — 옛 10.4.5 | 이관(같은 판정). 사유: 도구 상수 소유권 정리. 행선: 같은 후속 로트 |
+| `ADOPTED_MS` 유도화 — 옛 10.4.6 | 이관(같은 판정). 사유: 반증 불가 선언의 도구 개선. 행선: 같은 후속 로트 |

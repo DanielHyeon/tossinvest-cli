@@ -1,7 +1,7 @@
 # Function Logic Map: `Notifier.notifyCritical`
 
 - Source: `internal/obs/notifier.go`
-- AST evidence: `ast.json` — **편집 뒤**, :195–250, 분기 4 · 반환 3 · 호출 11, source_sha256 `fbdfd9e0218b…`, 추출 커밋 `b910173a`. 편집 전 번들은 `analysis/pre-edit/r26b/internal-obs--notifier.notifycritical/`에 보존.
+- AST evidence: `ast.json` — **편집 뒤**, :195–250, 분기 4 · 반환 3 · 호출 11, source_sha256 `d705f78d68c1…`, 추출 커밋 `15b64676`. 편집 전 번들은 `analysis/pre-edit/r26b/internal-obs--notifier.notifycritical/`에 보존.
 - Risk scan: `risk-pattern-report.md`
 - 편집: (b910173a, 보이스 A#4 · B#4) 원장 없음 경고 줄의 원래 사건 유형 키 `FieldEvent` → `FieldTriggerEvent`(줄 자신의 event 를 가리지 않음). 분기 불변.
 
@@ -18,7 +18,7 @@
 | B1 | if (:196) | 원장 없음 | — | `TestA092DropAndNoJournalLinesKeepTheirOwnEventKey`, `TestCriticalWithoutAJournalIsLoudRatherThanSilent` |
 | B2 | if (:200) | 로그 | — | `TestA092DropAndNoJournalLinesKeepTheirOwnEventKey`, `TestCriticalWithoutAJournalIsLoudRatherThanSilent` |
 | B3 | if (:220) | claim 실패 → 승격 | — | `TestAClaimThatFailsAttemptsTheDurableBlock`, `TestAClaimThatFailsBlocksNewEntries` |
-| B4 | if (:242) | 미전달 → judge | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092AReleaseAfterTheEpochReadIsHonoured` |
+| B4 | if (:242) | 미전달 → judge | — | `TestA092AFailedEscalationLatchKeepsTheAccountOut`, `TestA092AFailedEscalationLatchesUnconditionally` |
 
 ## Calls and live bindings
 

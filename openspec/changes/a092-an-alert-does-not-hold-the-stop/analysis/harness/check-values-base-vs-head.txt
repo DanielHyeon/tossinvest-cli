@@ -1,0 +1,13 @@
+# a092 9.6.1 · 21.9 철회 영수증 (Manager 판정 2026-09-30) — check_values.py 실패가 base 에서도 같았음
+# base: git archive 721d0338 트리에서 python3 openspec/changes/a092-…/tools/check_values.py (base 판 도구) · head: 작업 트리 9f6dc60d 에서 같은 명령
+# 비교: 각 실패의 (파일, 문구) 쌍에서 줄 번호를 뺀 다중집합 — diff 결과 아래
+base 실패 수: 60
+head 실패 수: 60
+다중집합: 동일(diff 0) — a092 구현이 더한 실패 0
+
+## base 끝 두 줄
+  60. openspec/changes/a092-an-alert-does-not-hold-the-stop/tasks.md:2348
+      고아 측정치 2.63 — analysis/ 어디에도 없고 이 줄의 등식으로도 유도되지 않는다. 측정이면 측정 표에 싣고, 측정이 아니면 그 줄에 <!-- not-a-measurement: 사유 --> 를 단다
+## head 끝 두 줄
+  60. openspec/changes/a092-an-alert-does-not-hold-the-stop/tasks.md:2373
+      고아 측정치 2.63 — analysis/ 어디에도 없고 이 줄의 등식으로도 유도되지 않는다. 측정이면 측정 표에 싣고, 측정이 아니면 그 줄에 <!-- not-a-measurement: 사유 --> 를 단다

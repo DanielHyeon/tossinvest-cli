@@ -160,3 +160,22 @@ typed-confirmation을 유지한다 — 이 결정은 UI 표면에만 적용한�
 - MIT LICENSE·원저작권 고지 유지, 시크릿·세션·DB(sidecar 포함) 커밋 금지
 - NTFS 마운트: `core.filemode=false` 필수. **영속 데이터(원장·journal)는 저장소 밖 ext4 경로에 둔다**
 - Go module 경로: 유지 (사용자 결정 대기 항목 — review.md의 미결정 사항 참조)
+
+## a092 이월 · 미배정 후속 (a092 archive 뒤에도 남는 의무 — 2026-09-30)
+
+`a092-an-alert-does-not-hold-the-stop` 이 넘긴 것. 소유 change 가 아직 없는 항목은 「미배정」이다. 각 항에 **그것에 기대는 a092 계약**과 행선을 적는다. 근거 정본은 a092 `review.md` §24.11 · §24.12 이월 표와 `tasks.md` 「미배정 후속으로 이관한 것」이다.
+
+| 항목 | 기대는 a092 계약 | 행선 |
+|---|---|---|
+| `runtime.go` `Runtime.escalate` → `EscalateOperatingMode` 무기한 대기(3라운드 H2(a)) | 감독자 승격은 동기 통지자 경로(21판 Q1 문자 해석으로 범위 밖) | 미배정 |
+| 엔진 종료 순서 · 종료 중 완화 통지(떨어진 ctx 에 기한 없음, 26라운드 보이스 A N1) | mode-release 는 커밋 뒤 통지 · 재읽기를 요청 ctx 에서 뗌 | 종료 순서 후속 로트 — 완화 처리기를 원장 close 앞에 기다리기 |
+| `operating_modes` 최신 행 읽기의 temp B-tree 정렬(`ORDER BY rowid`, 무한 성장 — EXPLAIN 영수증 `analysis/harness/explain-operating-modes-order.txt`) | 모드 커밋 순서 = rowid(C5 · K14) | v33 마이그레이션 후보 — 스키마 핀 27 · 레인 활성화 순서와 함께 |
+| mode-release 통지 확인이 PENDING 전체를 읽음 → `event_key` 점조회 | 완화 결과는 다시 읽은 값(K16 · M12) | 후속 로트(성능) |
+| `Acknowledge` 의 N 행 autocommit(`n.mu` 아래) | 기록과 승인 셈~해제가 같은 `n.mu`(원칙) | 후속 로트(성능) |
+| `Flush` 결과 분류 · 차단 · 전송 위 `n.mu`(생산 호출자 0, K19 핀) | 생산 배달은 a098/a124 실행자 | 생산 연결 전 수리 |
+| `ClaimDisposition` 미지 값 처리 | 원장이 세 값만 반환(잠재) | 후속 로트(결과 분류 명시화) |
+| exit 배선 Floor 존재 검사(`if opts.Floor == nil`) · k3 핀이 호출 모양만 셈 · 이름 기반 구조 핀이 메서드 값을 못 봄 | k3 합성(floor 조회 401 은 기록 전용) · 입구 도달 경로 핀 | 후속 로트(구조 핀 계측기 — `*types.Func` 참조 세기) |
+| 제어 서버 · 클라이언트 사본(알림 제어 복제) · 기록 실패 처리 두 사본 · 승격 문구 판정 네 자리 · `claimAndDeliver` 수동 Unlock | 동작 불변 리팩터 | 후속 로트(리팩터) |
+| `Notifier` 에 `Close`/`Stop` 없음 · `flatten.Saga.Notifier` nil 지뢰(M6 핀이 조립 사실만 고정) · `o.Interval()` drift | exit 기록 전용(21판) 은 이 셋에 기대지 않음 | 미배정 |
+| 계좌 원문 로그 base 관행(약 20곳) · 동기 `claimAndDeliver` 게이트 설명의 원문 오류 | 불변식 8 (a) 는 a092 새 표면만 닫음 | 사람 결정 큐 「계좌 가림 설계」 |
+| `check_values.py` · `coverage_gate.py` 개선(옛 a092 10.4.2~10.4.6) | 없음(문서 도구) | a092 문서 도구 후속 로트(미배정) |

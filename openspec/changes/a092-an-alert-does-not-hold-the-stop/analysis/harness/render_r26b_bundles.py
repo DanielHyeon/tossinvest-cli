@@ -14,9 +14,11 @@ from pathlib import Path
 
 ANALYSIS = Path(__file__).resolve().parents[1]
 FL = ANALYSIS / "function-logic"
-COMMIT = "b910173a"
+# 측정 커밋은 패키지별 — obs 는 게이트 준비 로트(15b64676)가 notifier.go 를 다시 만져 재측정, 나머지는 b910173a 뒤 불변.
+COMMITS = {"obs": "15b64676", "engine": "b910173a", "execgw": "b910173a"}
+COMMIT = "b910173a"  # 머리글 문구의 두 번째 로트 커밋
 COV = {
-    "obs": "coverage-post-r26b-obs.json",
+    "obs": "coverage-post-r26d-obs.json",
     "engine": "coverage-post-r26b-engine.json",
     "execgw": "coverage-post-r26b-execgw.json",
 }
@@ -69,7 +71,7 @@ def render(bundle: str, spec: dict) -> None:
 
     btm = [f"# Branch Test Map: `{fn}`", "",
            f"- Source: `{src}` (:{start}-{end}); **편집 뒤** 측정 — `analysis/harness/{COV[spec['cov']]}`"
-           f"(연결 워크트리 `{COMMIT}`, `{cov['package'].split('tossinvest-cli/')[-1]}` 시험 {cov['tests_run']}개를 하나씩, "
+           f"(연결 워크트리 `{COMMITS[spec['cov']]}`, `{cov['package'].split('tossinvest-cli/')[-1]}` 시험 {cov['tests_run']}개를 하나씩, "
            f"실패 {len(cov['failed_tests'])}). 편집 전 번들은 `{spec['pre']}`에 보존.",
            f"- 재번호: {spec.get('renumber', '없음.')}", "",
            "| Branch | AST anchor | Scenario | Test | RED observed | GREEN observed |",
@@ -87,7 +89,7 @@ def render(bundle: str, spec: dict) -> None:
     flm = [f"# Function Logic Map: `{fn}`", "",
            f"- Source: `{src}`",
            f"- AST evidence: `ast.json` — **편집 뒤**, :{start}–{end}, 분기 {nb} · 반환 {nr} · 호출 {nc}, "
-           f"source_sha256 `{sha}…`, 추출 커밋 `{COMMIT}`. 편집 전 번들은 `{spec['pre']}`에 보존.",
+           f"source_sha256 `{sha}…`, 추출 커밋 `{COMMITS[spec['cov']]}`. 편집 전 번들은 `{spec['pre']}`에 보존.",
            "- Risk scan: `risk-pattern-report.md`",
            f"- 편집: {spec['edit']}", "",
            "## Inputs and invariants", "",
@@ -174,9 +176,11 @@ SPECS = {
     ),
     "internal-obs--notifier.escalate": dict(
         cov="obs", pre=PRE + "internal-obs--notifier.escalate/", keep_scenarios=True,
-        edit="(b910173a, 보이스 A#4 · B#4) 승격 실패 줄의 `FieldEvent` → `FieldTriggerEvent`. 분기 · 반환 불변. (`FieldAccount` 는 base 관행 — 불변식 8 (b) 사람 결정 큐.)",
+        edit="(b910173a, 보이스 A#4 · B#4) 승격 실패 줄의 `FieldEvent` → `FieldTriggerEvent`. (15b64676, 게이트 준비 gstack 리뷰) 같은 줄의 error 칸을 "
+             "`MaskAccount(err, n.AccountRef)` 로 — 원장 문구의 계좌 원문을 가림(불변식 8 (a), judge 게이트 설명 고정 문구의 짝). 분기 · 반환 불변. "
+             "(같은 줄의 `FieldAccount` 는 base 관행 — 불변식 8 (b) 사람 결정 큐.)",
         inputs=["| `n.Journal` · `n.AccountRef` | 둘 다 있어야 승격 포함 | 조립 | B1 |"],
-        red={"B3": "전용 시험 없음 — 이 줄의 키 이름은 행동 시험이 세지 않음(로그 키 변경, 판정 불변 — 비례 원칙)"},
+        red={"B3": "W02 CAUGHT(`TestA092TheEscalationFailureErrorMasksTheAccount` — error 칸 가림). 키 이름(`trigger_event`)은 행동 시험이 세지 않음(로그 키, 판정 불변 — 비례 원칙)"},
         calls=["| `EscalateOperatingMode(…, nil)` | 승격 · 통지 없음 | 오류 반환 | AST |"],
         state=["- 모드 행 하나(변화 시)."],
         safety=["- Safe edit boundary: 로그 키만.", "- High-risk impact: yes(모드 승격) — 이 편집은 판정 불변."],
@@ -240,11 +244,25 @@ def refresh_header(bundle: str) -> None:
     i = next(k for k, l in enumerate(lines) if l.startswith("- AST evidence:"))
     l = re.sub(r"source_sha256 `[0-9a-f]{12}…`", f"source_sha256 `{ast['source_sha256'][:12]}…`", lines[i])
     l = re.sub(r":\d+–\d+", f":{ast['start']['line']}–{ast['end']['line']}", l, count=1)
-    l = re.sub(r" 26라운드 수리(\(`d8769cfb`\)| 두 로트\(`d8769cfb` · `[0-9a-f]+`\)) 뒤 재추출 —.*$", "", l)
-    l += (f" 26라운드 수리 두 로트(`d8769cfb` · `{COMMIT}`) 뒤 재추출 — 이 함수 본문 · 분기 수 불변(같은 파일의 다른 함수 편집으로 "
-          "줄 이동 · 파일 해시만 바뀜, 분기 좌표는 `ast.json` 이 정본).")
+    l = re.sub(r" 26라운드 수리(\(`d8769cfb`\)| 두 로트\(`d8769cfb` · `[0-9a-f]+`\)) 뒤 재추출.*$", "", l)
+    last = "15b64676" if "internal-obs--" in bundle else COMMIT
+    l += (f" 26라운드 수리 두 로트(`d8769cfb` · `{COMMIT}`) 뒤 재추출(마지막 `{last}`) — 이 함수 본문 · 분기 수 불변(같은 파일의 다른 "
+          "함수 편집으로 줄 이동 · 파일 해시만 바뀜, 분기 좌표는 `ast.json` 이 정본).")
     lines[i] = l
     p.write_text("\n".join(lines), encoding="utf-8")
+    # BTM 앵커 · 범위를 ast.json 좌표로 다시 씀(분기 종류가 같아야 함 — 본문 불변의 확인)
+    at = {x["id"]: (x["kind"], x["at"]["line"], x["at"]["column"]) for x in ast.get("branches") or []}
+    b = FL / bundle / "branch-test-map.md"
+    out = []
+    for line in b.read_text(encoding="utf-8").split("\n"):
+        m = re.match(r"^\| (B\d+) \| (\w+) at (\d+):(\d+) \|", line)
+        if m:
+            k, ln, col = at[m.group(1)]
+            assert k == m.group(2), (bundle, m.group(1), k, m.group(2))
+            line = f"| {m.group(1)} | {k} at {ln}:{col} |" + line[m.end():]
+        out.append(line)
+    text = re.sub(r"\(:(\d+)-(\d+)\)", f"(:{ast['start']['line']}-{ast['end']['line']})", "\n".join(out), count=1)
+    b.write_text(text, encoding="utf-8")
 
 
 if __name__ == "__main__":
