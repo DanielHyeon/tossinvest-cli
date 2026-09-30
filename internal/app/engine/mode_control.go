@@ -54,6 +54,9 @@ type ModeReleaseResult struct {
 	NotifyError string `json:"notify_error,omitempty"`
 	// NoticePending 은 다시 읽은 통지 행이 아직 전달 전(PENDING)인지.
 	NoticePending bool `json:"notice_pending"`
+	// ReReadError 는 전이 뒤 재읽기가 실패했음을 말함(26라운드 codex #5). 그때 Mode · Seq · EntryBlocks · NoticePending 은
+	// 비어 있고 추정하지 않음 — 커밋 여부(Changed · TransitionID)와 통지 기록 결과는 그대로 보존됨.
+	ReReadError string `json:"reread_error,omitempty"`
 }
 
 func ModeControlDirectory(engineDir string) string {

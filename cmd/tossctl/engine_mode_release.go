@@ -113,6 +113,11 @@ func writeModeReleaseResult(w io.Writer, format output.Format, r engine.ModeRele
 		}
 		fmt.Fprintf(w, "완화됨 — 전이 %s, 현재 모드 %s\n  통지: %s\n", r.TransitionID, r.Mode, state)
 	}
+	if r.ReReadError != "" {
+		// 읽지 못한 상태는 추정하지 않음 — 커밋 사실만 말함.
+		_, err := fmt.Fprintf(w, "재조회 실패 — 현재 모드와 남은 사유를 읽지 못했다(추정하지 않음): %s\n", r.ReReadError)
+		return err
+	}
 	if len(r.EntryBlocks) == 0 {
 		_, err := fmt.Fprintln(w, "남은 진입 차단 사유: 없음")
 		return err

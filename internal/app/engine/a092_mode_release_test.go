@@ -241,3 +241,24 @@ func TestA092TheReleaseSurfaceNeedsEveryHandle(t *testing.T) {
 		t.Errorf("err = %v, want runtime unavailable", err)
 	}
 }
+
+// 26라운드 codex #5: 커밋 뒤 재읽기가 실패해도 완화 사실 · 통지 결과는 보존되고, 읽지 못한 상태는 추정하지 않음.
+func TestA092AReReadFailureKeepsTheCommittedRelease(t *testing.T) {
+	fx := a092ReleaseEngine(t)
+	fx.ops.current = func(context.Context, string) (journal.ModeSnapshot, error) {
+		return journal.ModeSnapshot{}, errors.New("ledger read failed")
+	}
+	res, err := fx.ops.Release(context.Background(), a092ReleaseRequest())
+	if err != nil {
+		t.Fatalf("Release returned an error after a committed release: %v", err)
+	}
+	if !res.Changed || res.TransitionID == "" || !res.Notified || res.ReReadError == "" {
+		t.Fatalf("result = %+v, want the committed release kept and the re-read failure named", res)
+	}
+	if res.Mode != "" || res.EntryBlocks != nil {
+		t.Errorf("unread state was guessed: mode=%q blocks=%v", res.Mode, res.EntryBlocks)
+	}
+	if a092ModeLatched(fx.gate) {
+		t.Error("the live gate did not open — the release itself must stand")
+	}
+}

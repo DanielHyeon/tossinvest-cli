@@ -42,6 +42,8 @@ type ModeOperations struct {
 	accountRef string
 	// announcer 는 통지 기록자 — 기본은 알림기의 기록 전용 입구. 시험이 재강화 픽스처를 꽂을 수 있게 필드로 둠.
 	announcer journal.ModeAnnouncer
+	// current 는 전이 뒤 재읽기 — 기본은 원장. 시험이 재읽기 실패를 꽂을 수 있게 필드로 둠.
+	current func(ctx context.Context, accountRef string) (journal.ModeSnapshot, error)
 }
 
 // ModeOperations 는 이 엔진의 핸들로 완화 표면을 만듦. 하나라도 없으면 만들지 않음 — nil 게이트 위의 표면은 원장만 고치고
@@ -63,6 +65,7 @@ func newModeOperations(j *journal.Journal, gate *execgw.EntryGate, notifier *obs
 	return &ModeOperations{
 		journal: j, gate: gate, notifier: notifier, auditor: auditor, accountRef: accountRef,
 		announcer: obs.RecordOnly{N: notifier},
+		current:   j.CurrentOperatingMode,
 	}
 }
 
@@ -113,16 +116,19 @@ func (o *ModeOperations) Release(ctx context.Context, req ModeReleaseRequest) (M
 		result.TransitionID = rec.ID
 	}
 	// 재읽기 — 같은 호출 안의 다른 경로(통지 기록 실패의 승격 등)가 방금 푼 모드를 다시 조일 수 있음(K16).
-	current, err := o.journal.CurrentOperatingMode(ctx, o.accountRef)
+	// 재읽기가 실패해도 커밋 사실은 버리지 않음(26라운드 codex #5) — 오류 대신 결과에 실패를 싣고, 읽지 못한 상태는 비워 둠.
+	current, err := o.current(ctx, o.accountRef)
 	if err != nil {
-		return result, fmt.Errorf("engine: re-reading the operating mode after the release: %w", err)
+		result.ReReadError = "re-reading the operating mode after the release failed: " + err.Error()
+		return result, nil
 	}
 	result.Mode, result.Seq = current.Mode, current.Seq
 	result.EntryBlocks = entryBlockReasons(o.gate)
 	if changed {
 		pending, err := o.journal.PendingAlerts(ctx, 0)
 		if err != nil {
-			return result, fmt.Errorf("engine: re-reading the release notice: %w", err)
+			result.ReReadError = "re-reading the release notice failed: " + err.Error()
+			return result, nil
 		}
 		key := obs.OperatingModeEventKey(rec)
 		for _, row := range pending {

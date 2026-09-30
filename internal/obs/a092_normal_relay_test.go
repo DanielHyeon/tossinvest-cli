@@ -37,8 +37,26 @@ func a092NormalEvent(key string) obs.Event {
 	return obs.Event{Type: obs.EventExitProposalCapped, Key: key, Title: "capped"}
 }
 
-func a092RelayNotifier(pub obs.Publisher) (*obs.Notifier, *bytes.Buffer) {
-	buf := &bytes.Buffer{}
+// a092LockedBuffer 는 실행자 goroutine 이 쓰는 동안 시험이 읽어도 경합이 없는 로그 버퍼임.
+type a092LockedBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (b *a092LockedBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+func (b *a092LockedBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.String()
+}
+
+func a092RelayNotifier(pub obs.Publisher) (*obs.Notifier, *a092LockedBuffer) {
+	buf := &a092LockedBuffer{}
 	return &obs.Notifier{Publisher: pub,
 		Log: obs.NewLogger(obs.LogOptions{Writer: buf, JSON: true, Clock: clock.NewFake(obsNow)})}, buf
 }
@@ -144,5 +162,70 @@ func TestA092TheRelayEventsAreNotCritical(t *testing.T) {
 		if obs.SeverityOf(e) == obs.SeverityCritical {
 			t.Errorf("%s is critical", e)
 		}
+	}
+}
+
+// 26라운드 codex #2: 실행자가 멈춘 뒤 넘긴 알림도 버림으로 기록 — 아무도 안 보내는 큐에 조용히 쌓이지 않음.
+func TestA092AHandOffAfterTheRelayStoppedIsRecorded(t *testing.T) {
+	n, buf := a092RelayNotifier(&a092RecordingPublisher{})
+	relay := obs.NewNormalRelay(n, 4)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_ = relay.Run(ctx)
+	relay.Offer(a092NormalEvent("after-stop"))
+	if !strings.Contains(buf.String(), "after-stop") {
+		t.Errorf("a hand-off after the relay stopped was not recorded:\n%s", buf.String())
+	}
+}
+
+// 26라운드 codex #2: 발행 중 패닉 — 그 알림과 남은 큐를 버림으로 기록하고 패닉은 위로(런타임이 정지로 기록).
+type a092PanickingPublisher struct{}
+
+func (a092PanickingPublisher) Publish(context.Context, obs.Notification) error {
+	panic("transport exploded")
+}
+
+func TestA092APanicInTheRelayRecordsWhatItHeld(t *testing.T) {
+	n, buf := a092RelayNotifier(a092PanickingPublisher{})
+	relay := obs.NewNormalRelay(n, 4)
+	relay.Offer(a092NormalEvent("in-flight"))
+	relay.Offer(a092NormalEvent("queued"))
+	func() {
+		defer func() { _ = recover() }()
+		_ = relay.Run(context.Background())
+	}()
+	log := buf.String()
+	if !strings.Contains(log, "in-flight") || !strings.Contains(log, "queued") {
+		t.Errorf("the panic lost alerts without a record:\n%s", log)
+	}
+	relay.Offer(a092NormalEvent("after-panic"))
+	if !strings.Contains(buf.String(), "after-panic") {
+		t.Errorf("a hand-off after the panic was not recorded:\n%s", buf.String())
+	}
+}
+
+// 26라운드 codex #3: 전송기가 없거나 발행이 실패하면 유형 + 키로 기록.
+func TestA092APublishFailureOrNoPublisherIsRecordedWithItsKey(t *testing.T) {
+	for name, pub := range map[string]obs.Publisher{"no publisher": nil, "publish fails": &failingPublisher{fail: true}} {
+		t.Run(name, func(t *testing.T) {
+			n, buf := a092RelayNotifier(pub)
+			if pub == nil {
+				n.Publisher = nil
+			}
+			relay := obs.NewNormalRelay(n, 4)
+			ctx, cancel := context.WithCancel(context.Background())
+			done := make(chan error, 1)
+			go func() { done <- relay.Run(ctx) }()
+			relay.Offer(a092NormalEvent("lost-key"))
+			deadline := time.Now().Add(5 * time.Second)
+			for !strings.Contains(buf.String(), "lost-key") && time.Now().Before(deadline) {
+				time.Sleep(10 * time.Millisecond)
+			}
+			cancel()
+			<-done
+			if !strings.Contains(buf.String(), "lost-key") {
+				t.Errorf("the lost alert's key is not in the log:\n%s", buf.String())
+			}
+		})
 	}
 }
