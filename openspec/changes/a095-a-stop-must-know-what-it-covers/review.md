@@ -1265,3 +1265,17 @@ APPROVE · Claude 델타 재리뷰+시험 품질 APPROVE(둘 다 `277a105a` 대�
   패키지 전부 ok. a095 코드 결함 아님.
 - **조건 ① 실측(첫째 갈래)**: `35a73281` 이후 비병합 Go 커밋 = a094 `48100446` · `cb36caf4` 뿐 — a095 자기 Go 커밋 0.
 - **조건 ② 승인 기록(원문)**: 「Manager 승인 (2026-09-30, 3차): WORKFLOW 조건 ① 첫째 갈래 — 35a73281 이후 a095 자기 비병합 Go 커밋 0(이후 Go 커밋은 a094 48100446·cb36caf4 뿐, a095 몫은 문서·번들). 사유: a094 의 미수리 시점 회귀(attempt-resolve mutating 표지, cb36caf4 에서 수리됨)가 게이트 ⑦ 창에 낀 것 — 코드 결함 아님. 승인 참조: 사용자 상임 지시 + 2026-09-30 재개 지시. 실행 승인자: Manager(Fable). 동반 조치: 게이트 커밋 절단까지 형제 Go 착지 동결(게이트 창 보호 프로토콜).」
+
+#### 게이트 실행 (2026-10-01) — **GATE PASS 11/11**
+
+- 대상: 격리 워크트리 `/tmp/claude-1000/a095-gate` @ **`1b93d99c`**(base 3차 재고정 커밋, 미체크 0). 저장소 밖이라 병행 세션 편집이 섞이지 않는다. 게이트 커밋
+  절단까지 형제 Go 착지 동결(Manager 게이트 창 보호 프로토콜).
+- 게이트 전 준비(`analysis/gate/prep-1b93d99c.txt`): `make sdd-infra` rc 0 · `sdd_sync.py --no-gbrain` rc 0(all indexes current) · `codegraph status` up to date ·
+  `make sdd-check` rc 0 · `openspec validate --all` 48 passed. gbrain 은 주 워크트리 전용 홈이라 격리 사본에서 돌리지 않았다 — advisory.
+- **`make gate CHANGE=a095-a-stop-must-know-what-it-covers` rc 0 — 11/11 OK**(2026-10-01 00:09:41~00:44:18 KST). 원문 `analysis/gate/gate-4-1b93d99c.log`
+  (rtk 압축 없음): tasks.md · 미완료 0 · 짝 없음 · review.md · Function Logic Map(base `fbf0d82f` → working tree, required 0 · evidence complete) · sdd-check ·
+  test · test-seams · test-race · vet · validate.
+- 이력: 1차 `b6821cf1` ⑤ FAIL(형제 착지 required 26) → 2차 재고정 · 2차 `4fe4b682` ⑤ stale 1(a090 event.go) → 재추출 · 3차 `9667fb75` ⑦ FAIL(a094 미수리
+  회귀) → 3차 재고정 · **4차 `1b93d99c` PASS**. 로그 넷 전부 `analysis/gate/`.
+- 착지 기록 없음(base 가 작업 뒤라 창이 워킹트리 — WORKFLOW 「착지 지점」의 받을 수 없는 경우). a095 Go 착지는 `277a105a` · `cc480a88`(착지 판정값이었다, `f62d5bf0` → 삭제 `4fe4b682`).
+- 이 절을 적은 커밋은 게이트 뒤 문서 편집이다.
