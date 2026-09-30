@@ -14,6 +14,8 @@
       > 승인: 사용자 상임 지시 + 2026-09-30 재개 지시 → Manager 배정. `review.md` §4.1 · 「착수 승인 기록」
       > **게이트 전 재고정(2026-09-30, 조건 ① 둘째 갈래)** — 게이트 1차 ⑤ FAIL(required 32 중 26 형제 몫). 승인 원문과 실측은 `review.md` §4.10:
       > 「Manager 승인 (2026-09-30): WORKFLOW 「사람 승인 base 재고정」 조건 ① 둘째 갈래(a071 변형·a066 전수 영수증 표준). 근거: 자기 비병합 Go 커밋 2(277a105a·cc480a88)가 변경한 기존 함수 6개(judgeHoldings·adopt·alertUnmanaged·checkExternalIncrease·NewReconcileDriver·Context.ReconcileDriver) 전수가 fresh 번들 대응·소스 sha 일치, required 32 중 26은 형제 로트(a094·a112) 착지 몫. 승인 참조: 사용자 상임 오케스트레이션 지시 + 2026-09-30 "남은것도 처리" 재개 지시. 실행 승인자: Manager(Fable), 사용자 위임 범위 내.」
+      > **게이트 전 3차 재고정(2026-10-01, 조건 ① 첫째 갈래)** — 게이트 3차 ⑦ 에 a094 미수리 시점 회귀. `review.md` §4.11:
+      > 「Manager 승인 (2026-09-30, 3차): WORKFLOW 조건 ① 첫째 갈래 — 35a73281 이후 a095 자기 비병합 Go 커밋 0(이후 Go 커밋은 a094 48100446·cb36caf4 뿐, a095 몫은 문서·번들). 사유: a094 의 미수리 시점 회귀(attempt-resolve mutating 표지, cb36caf4 에서 수리됨)가 게이트 ⑦ 창에 낀 것 — 코드 결함 아님. 승인 참조: 사용자 상임 지시 + 2026-09-30 재개 지시. 실행 승인자: Manager(Fable). 동반 조치: 게이트 커밋 절단까지 형제 Go 착지 동결(게이트 창 보호 프로토콜).」
 - [x] 0.2 `openspec validate a095-a-stop-must-know-what-it-covers --strict` — 3판에서 다시 통과(`review.md` 3판 기록)
 - [x] 0.3 **AST 산출물이 문서보다 먼저** — 3판 번들 21개(새로 12 · 다시 뽑음 4 · 해시 일치로 산문만 5).
       생성기 `analysis/harness/render_bundles.py`, 커버리지 `analysis/harness/coverage/`

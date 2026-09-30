@@ -1253,3 +1253,15 @@ APPROVE · Claude 델타 재리뷰+시험 품질 APPROVE(둘 다 `277a105a` 대�
   `revision: current` 번들로 덮이고 소스 sha 가 `cc480a88` · HEAD 와 일치. 그 밖(`adoptedCount` · `alertAdoptionFailed` · a095 시험 함수)은 base 에 없던 새 함수.
 - **조건 ② 승인 기록(원문)**: 「Manager 승인 (2026-09-30): WORKFLOW 「사람 승인 base 재고정」 조건 ① 둘째 갈래(a071 변형·a066 전수 영수증 표준). 근거: 자기 비병합 Go 커밋 2(277a105a·cc480a88)가 변경한 기존 함수 6개(judgeHoldings·adopt·alertUnmanaged·checkExternalIncrease·NewReconcileDriver·Context.ReconcileDriver) 전수가 fresh 번들 대응·소스 sha 일치, required 32 중 26은 형제 로트(a094·a112) 착지 몫. 승인 참조: 사용자 상임 오케스트레이션 지시 + 2026-09-30 "남은것도 처리" 재개 지시. 실행 승인자: Manager(Fable), 사용자 위임 범위 내.」
 - 절차: ① `base-commit.txt` 단독 커밋(영수증) ② `landed-commit.txt` 삭제 커밋(착지는 base 의 자손 — 삭제 후 재계산이 정본 기제) ③ 격리 워크트리 게이트 재실행.
+
+
+### 4.11 게이트 2차 · 3차 → base 3차 재고정 (2026-09-30~10-01)
+
+- **2차**(`4fe4b682`, `analysis/gate/gate-2-4fe4b682.log`): ⑤ FAIL — required 0, stale 1(`internal-obs--severityof`: a090 `8d2f1e12` 가 `event.go` 에
+  상수를 더해 줄이 밀림). a095 는 SeverityOf 본문을 편집하지 않았다 — `9667fb75` 에서 현재 소스 · obs 커버리지로 재추출.
+- **3차**(`9667fb75`, 준비 `analysis/gate/prep-9667fb75.txt` — sdd-infra · sync · sdd-check rc 0 · validate 48 passed, 로그 `analysis/gate/gate-3-9667fb75.log`):
+  ①~⑥ OK(⑤ required 0 · evidence complete), **⑦ make test FAIL 1** — `cmd/tossctl` `TestMutatingAnnotationOnTradeCommands`: *"tossctl engine attempt-resolve:
+  unexpected mutating=true"*. 그 명령은 a094 `6a90ebeb`(9667fb75 에 있음)가 붙였고 a094 `cb36caf4`(9667fb75 뒤)가 mutating 표지 목록에 넣어 고쳤다. 나머지
+  패키지 전부 ok. a095 코드 결함 아님.
+- **조건 ① 실측(첫째 갈래)**: `35a73281` 이후 비병합 Go 커밋 = a094 `48100446` · `cb36caf4` 뿐 — a095 자기 Go 커밋 0.
+- **조건 ② 승인 기록(원문)**: 「Manager 승인 (2026-09-30, 3차): WORKFLOW 조건 ① 첫째 갈래 — 35a73281 이후 a095 자기 비병합 Go 커밋 0(이후 Go 커밋은 a094 48100446·cb36caf4 뿐, a095 몫은 문서·번들). 사유: a094 의 미수리 시점 회귀(attempt-resolve mutating 표지, cb36caf4 에서 수리됨)가 게이트 ⑦ 창에 낀 것 — 코드 결함 아님. 승인 참조: 사용자 상임 지시 + 2026-09-30 재개 지시. 실행 승인자: Manager(Fable). 동반 조치: 게이트 커밋 절단까지 형제 Go 착지 동결(게이트 창 보호 프로토콜).」

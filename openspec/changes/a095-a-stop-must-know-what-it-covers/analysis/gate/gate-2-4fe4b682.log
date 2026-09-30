@@ -1,0 +1,25 @@
+start 2026-09-30 23:24:01 KST
+bash tools/gate.sh a095-a-stop-must-know-what-it-covers  (HEAD 4fe4b682)
+GATE: a095-a-stop-must-know-what-it-covers
+repo: /tmp/claude-1000/a095-gate
+
+==> 1/11 tasks.md 확인
+OK: openspec/changes/a095-a-stop-must-know-what-it-covers/tasks.md
+
+==> 2/11 미완료 태스크 확인
+OK: 미완료 태스크 0건
+
+==> 3/11 짝 change 확인 (deploy-pair.txt)
+OK: 짝 선언 없음 — 이 change 는 혼자 배포한다
+
+==> 4/11 gstack 리뷰 기록 확인
+OK: openspec/changes/a095-a-stop-must-know-what-it-covers/review.md
+
+==> 5/11 Function Logic Map 증거 확인
+[logic-map] a095-a-stop-must-know-what-it-covers: base 35a732814d01 → working tree (no landed-commit.txt in HEAD) required 0 function(s) — judged at HEAD 4fe4b682c130
+[logic-map] a095-a-stop-must-know-what-it-covers: the target is the working tree, so this window also holds 2 commit(s) that landed after the base and every existing function they changed is required here too — run `python3 tools/logic-map/check_analysis.py --change a095-a-stop-must-know-what-it-covers --record-landing` to let the gate compute `landed-commit.txt` from this change's evidence and record it, which narrows it to this change's own work; if no commit on this history is accepted as the landing, the command says so instead of recording
+[logic-map] internal-obs--severityof: AST source hash is stale: internal/obs/event.go
+
+GATE FAIL: a095-a-stop-must-know-what-it-covers — Function Logic Map 산출물 미완료
+rc=1
+end 2026-09-30 23:24:04 KST
