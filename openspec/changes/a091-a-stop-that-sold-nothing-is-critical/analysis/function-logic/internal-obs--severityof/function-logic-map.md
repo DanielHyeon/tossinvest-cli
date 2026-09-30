@@ -1,8 +1,8 @@
 # Function Logic Map: `SeverityOf`
 
-- Source: `internal/obs/event.go` (`371`–`376`)
+- Source: `internal/obs/event.go` (`379`–`384`)
 - Qualified: `SeverityOf`
-- AST evidence: `ast.json` (`source_sha256` 4032c4966e55f616…) — base `b30318d6` 에서 `go run ./tools/logic-map`
+- AST evidence: `ast.json` (`source_sha256` 33221d38f60885a6…) — 편집 뒤 `3ec1efd2` 에서 `go run ./tools/logic-map`
 - Risk scan: `risk-pattern-report.md`
 - 분기 1 · 반환 2
 
@@ -19,13 +19,13 @@
 
 ## Branches and early returns
 
-> 조건은 소스 원문, 진입 실측은 base `b30318d6` 의 `go test -count=1 -coverprofile`(covermode set, 2026-10-01)에서 그 줄로 시작하는 블록의 count (`analysis/harness/write_bundles.py`). engine 패키지 실행은 `-trimpath` 로 `TestA111…` 두 시험이 소스 경로를 못 찾아 실패했다 — 커버리지 프로파일은 그대로 쓰인다(두 시험은 이 함수들과 무관한 AST 핀).
+> 조건은 소스 원문, 진입 실측은 편집 뒤 `3ec1efd2` 의 `go test -count=1 -coverprofile`(covermode set, 2026-10-01)에서 그 줄로 시작하는 블록의 count (`analysis/harness/write_bundles.py`).
 
 | Branch | 종류 | 조건 (원문) | 진입 실측 |
 |---|---|---|---|
-| B1 | if | `:372` `if criticalEvents[t] {` | 예 |
+| B1 | if | `:380` `if criticalEvents[t] {` | 예 |
 
-Exact AST return positions: `373:3`, `375:2`
+Exact AST return positions: `381:3`, `383:2`
 
 ## Calls and live bindings
 

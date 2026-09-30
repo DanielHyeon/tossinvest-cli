@@ -67,3 +67,28 @@
 13 관측 동안 보유 5 · 한정 항 매도가능 0, 같은 4분에 엔진 밖 매도로 10 → 5 → 2 → 0. 2라운드 보이스 B 의 추론(매도가능 잠금)을 측정이 확인.
 **부수 관측**: 운영 `engine.log` 에 계좌 필드 원문 줄 66,009 개(`"account":"<10자리>"`, 가린 줄 73 개) — base 의 계좌 로그 관행이며
 사람 결정 큐 「계좌 가림 설계」(a090 D12 · D13) 소관. a091 은 자기가 편집 · 추가하는 줄만 가린다(design D8).
+
+## 후속 후보 — `Notifier.Acknowledge` 의 잠금 범위 (2026-10-01, Manager 판정)
+
+- 사실: 운영자 승인(`Notifier.Acknowledge`, `internal/obs/notifier.go:957-981`)은 `n.mu` 를 쥔 채 밀린 행을 하나씩 승인한다(행당 fsync 트랜잭션 약 12ms).
+  exit 관측의 critical 기록은 같은 잠금을 기다린다 — a091 실측: 밀린 행 100 개 승인 중 보고 호출 최악 1.06~1.28s(`TestA091TheReportFitsItsShare`).
+- a092 정본이 이미 이름 붙인 항이고 기존 exit critical 전부가 같은 대기를 진다. a091 은 빈도(RECONCILE 중 보호 0주 포지션마다 매 사이클)만 더한다.
+- 후보: 행별 · 배치로 잠금을 놓는 승인 — **셈-해제 배제 불변식**(a092 「미전달 수를 읽고 전달 실패 사유를 푸는 판단은 나눌 수 없는 하나」 · a124)
+  아래에서 설계해야 하므로 별도 change.
+
+## 8/2 재생 결과 (tasks 5.1 · 5.1a · 5.2 — 2026-10-01, 커밋 `3ec1efd2`, 생산 `Context.AlertDeliverer` 경유)
+
+13 관측 / 3분(보유 5 · 매도가능 0 모양), 관측 사이마다 배달 실행자 사이클(2s 주기) — `TestA091TheAugustSecondReplay`.
+
+| 팔 | 발송 | PENDING 행 | 전달 실패 래치 | 모드 | `alert_undelivered` 줄 |
+|---|---|---|---|---|---|
+| (i) 알림 켜짐 · 정상 전송 | **1** | 0(정착) | 없음 | NORMAL | 0 |
+| (ii) 알림 켜짐 · 전송 실패 | 13 시도 | 1 | **있음** | **ENTRY_BLOCKED** | 1 |
+| (iii) 알림 켜짐 · publisher 없음 | 0 | 1 | **있음** | **ENTRY_BLOCKED** | **14**(배달 실행자 「no publisher」) |
+| (iv) 알림 꺼짐 | 0 | 0 | 없음 | NORMAL | 0 |
+
+- 13 관측은 행 하나(에피소드)로 접힌다. (ii) · (iii) 의 래치 · 승격은 의도된 a092 의미론(알림을 켜 두었는데 닿지 않음). (iv) 는 불변식 3 — 오늘과 같다.
+- **첫 리뷰 H3 의 「2회차부터 `MarkAlertDelivered` 가 PENDING 에 걸려 ERROR 12줄」은 base 에 없다**(옛 동기 발송의 모양). 대신 (iii) 에서 배달 실행자의
+  「no publisher is configured」 줄이 사이클마다 난다(3분에 14 줄) — 2라운드 보이스 B 의 예측과 같다.
+- 5.1a(`TestA091TheReminderWindowDecidesTheNextEpisode`): 운영자 승인으로 정착한 행은 30분 뒤 관측에서 재무장 0, 61분 뒤 관측에서 같은 키가
+  재무장 1 — 본문이 새 에피소드의 시각으로 바뀐다(a097).

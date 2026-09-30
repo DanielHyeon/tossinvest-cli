@@ -1,12 +1,12 @@
 # Function Logic Map: `Notifier.escalate`
 
-- Source: `internal/obs/notifier.go` (`425`–`447`)
+- Source: `internal/obs/notifier.go` (`425`–`446`)
 - Qualified: `Notifier.escalate`
-- AST evidence: `ast.json` (`source_sha256` d705f78d68c1eff3…) — base `b30318d6` 에서 `go run ./tools/logic-map`
+- AST evidence: `ast.json` (`source_sha256` 408579d504089072…) — 편집 뒤 `3ec1efd2` 에서 `go run ./tools/logic-map`
 - Risk scan: `risk-pattern-report.md`
 - 분기 4 · 반환 2
 
-**편집.** **a091 편집 대상(5판, R3-3)** — 두 로그 줄(`:433` 실패 · `:440` 승격)에서 `FieldAccount` 원문을 뺀다. 판정 · 반환 · 원장 호출 무변경.
+**편집.** **a091 편집(구현 로트, 5판 R3-3 · Manager 포함 승인)** — 두 로그 줄(실패 · 승격)에서 `FieldAccount` 원문을 뺐다. 판정 · 반환 · 원장 호출 무변경(변이 M13 · M13b · M13e CAUGHT).
 
 **역할.** critical 전달 실패(또는 기록 실패)의 운영 모드 승격을 원장에 남긴다. 통지하지 않는다(전송 수단이 방금 실패).
 
@@ -19,7 +19,7 @@
 
 ## Branches and early returns
 
-> 조건은 소스 원문, 진입 실측은 base `b30318d6` 의 `go test -count=1 -coverprofile`(covermode set, 2026-10-01)에서 그 줄로 시작하는 블록의 count (`analysis/harness/write_bundles.py`). engine 패키지 실행은 `-trimpath` 로 `TestA111…` 두 시험이 소스 경로를 못 찾아 실패했다 — 커버리지 프로파일은 그대로 쓰인다(두 시험은 이 함수들과 무관한 AST 핀).
+> 조건은 소스 원문, 진입 실측은 편집 뒤 `3ec1efd2` 의 `go test -count=1 -coverprofile`(covermode set, 2026-10-01)에서 그 줄로 시작하는 블록의 count (`analysis/harness/write_bundles.py`).
 
 | Branch | 종류 | 조건 (원문) | 진입 실측 |
 |---|---|---|---|
@@ -28,7 +28,7 @@
 | B3 | case | `:432` `case err != nil && n.Log != nil:` | 예 |
 | B4 | case | `:438` `case changed && n.Log != nil:` | 예 |
 
-Exact AST return positions: `427:3`, `446:2`
+Exact AST return positions: `427:3`, `445:2`
 
 ## Calls and live bindings
 
@@ -36,10 +36,10 @@ Exact AST return positions: `427:3`, `446:2`
 |---|---|---|---|
 | `strings.TrimSpace` | `:426` | 빈 계좌 판정 | 순수 |
 | `n.Journal.EscalateOperatingMode` | `:429` | ENTRY_BLOCKED 승격 | 원장 트랜잭션(`busy_timeout` 5s · 연결 풀 대기 기한 없음), 원격 0 |
-| `n.Log.Error` | `:433` | 승격 실패 로그 | 로그 한 줄 — **`FieldAccount` 원문**(a091 이 뺀다) |
-| `MaskAccount` | `:433` | 오류 속 계좌 가림 | 순수 |
+| `n.Log.Error` | `:434` | 승격 실패 로그 | 로그 한 줄 — 계좌 필드 없음(a091), 오류는 `MaskAccount` |
+| `MaskAccount` | `:434` | 오류 속 계좌 가림 | 순수 |
 | `string` | `:435` | — | 순수 |
-| `n.Log.Warn` | `:440` | 승격 로그 | 로그 한 줄 — **`FieldAccount` 원문**(a091 이 뺀다) |
+| `n.Log.Warn` | `:440` | 승격 로그 | 로그 한 줄 — 계좌 필드 없음(a091) |
 
 ## State mutations and fallbacks
 

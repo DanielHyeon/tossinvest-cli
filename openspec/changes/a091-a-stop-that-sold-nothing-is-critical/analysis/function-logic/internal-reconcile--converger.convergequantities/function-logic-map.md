@@ -2,7 +2,7 @@
 
 - Source: `internal/reconcile/converge.go` (`142`–`273`)
 - Qualified: `Converger.ConvergeQuantities`
-- AST evidence: `ast.json` (`source_sha256` 00a784b3f6b3a3ef…) — base `b30318d6` 에서 `go run ./tools/logic-map`
+- AST evidence: `ast.json` (`source_sha256` 00a784b3f6b3a3ef…) — 편집 뒤 `3ec1efd2` 에서 `go run ./tools/logic-map`
 - Risk scan: `risk-pattern-report.md`
 - 분기 15 · 반환 10
 
@@ -18,7 +18,7 @@
 
 ## Branches and early returns
 
-> 조건은 소스 원문, 진입 실측은 base `b30318d6` 의 `go test -count=1 -coverprofile`(covermode set, 2026-10-01)에서 그 줄로 시작하는 블록의 count (`analysis/harness/write_bundles.py`). engine 패키지 실행은 `-trimpath` 로 `TestA111…` 두 시험이 소스 경로를 못 찾아 실패했다 — 커버리지 프로파일은 그대로 쓰인다(두 시험은 이 함수들과 무관한 AST 핀).
+> 조건은 소스 원문, 진입 실측은 편집 뒤 `3ec1efd2` 의 `go test -count=1 -coverprofile`(covermode set, 2026-10-01)에서 그 줄로 시작하는 블록의 count (`analysis/harness/write_bundles.py`).
 
 | Branch | 종류 | 조건 (원문) | 진입 실측 |
 |---|---|---|---|
@@ -46,7 +46,7 @@ Exact AST return positions: `145:3`, `148:3`, `153:3`, `157:3`, `174:4`, `195:3`
 
 | Callee | Line | Why called | Error/timeout/retry contract |
 |---|---|---|---|
-| `c.Journal.ApplyPositionAdjustment` | `:209` | 투영 수렴 | 원장 트랜잭션 |
+| `c.Journal.ApplyPositionAdjustment` | `:172` | 투영 수렴 | 원장 트랜잭션 |
 
 ## State mutations and fallbacks
 

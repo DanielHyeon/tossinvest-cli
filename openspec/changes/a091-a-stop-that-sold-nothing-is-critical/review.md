@@ -334,3 +334,31 @@ tasks(3.3a 머리 · 3.3b (i)(v)(vi) · 3.3c 신설 · 5.3).
   운영 `engine.log` 66,009 줄의 발생원)은 사용자 큐 「계좌 가림 설계」(a090 D12 · D13) 소관으로 남는다.
 - 구현 조건: 750ms 수락 기준 초과 시 정지 · 보고 · 4 팔 8/2 재생(생산 `AlertDeliverer` 경유) · High-risk 전면 규율 · Go 착지 전 창 요청(staged 대조 유지).
   Q1 게이트는 Manager 가 사용자 거부권 항목으로 보고한다.
+
+## 구현 로트 — 수락 기준 정정 (2026-10-01, 정지 · 보고 → Manager 판정)
+
+- **정지 · 보고**: 5.3 승인 경합 칸(밀린 행 100)의 보고 호출 관측 최악 1.17~1.28s 가 750ms 배정을 넘었다(다른 칸 11~26ms · 실패 승격 0.1ms 미만).
+  freeze 약속대로 구현을 멈추고 Manager 에 보고했다. 원인: `Acknowledge` 가 `n.mu` 를 쥔 채 행마다 fsync 트랜잭션.
+- **Manager 판정 원문 요지**: 「선택지 3 을 주로, 1 을 부분 채택. 2 는 후속 후보로 분리. 750ms pass/fail 은 a091 소유 셀에만. Acknowledge 셀은 측정-기록으로
+  전환 — 근거 셋: ① a092 정본이 이미 이름 붙인 항이고 기존 exit critical 전부가 같은 대기를 진다 — a091 은 빈도만 더한다 ② 관측 주기 유계: 실측 최악
+  1.17s < 5s ③ 750ms 할당의 출처 측정(356.1ms)은 이 셀을 재지 않았다 — 할당을 올리는 것은 남의 항을 a091 예산으로 세탁하는 것이라 기각. 후속 후보
+  정식 기재. 보강 1: 5.4 에 실측 최악(≥1.2s) 주입 변형.」
+- 반영: design D5 7판(수락 기준 · 후속 후보) · tasks 5.3 · 5.4 · issues 「후속 후보」 · 시험(`TestA091TheReportFitsItsShare` 소유 셀 판정 + 승인 셀 주기 유계,
+  `TestA091ALaterStopStillGoesOutInTheSameCycle/750ms` · `/1.3s`).
+
+## 구현 로트 기록 (2026-10-01) — 착지 대기
+
+- 격리 워크트리 `/tmp/claude-1000/a091-impl`(기점 `1602fd45`), 공유 트리 무편집. 로컬 커밋 `a1a25974` → `4f11cf7b` → `353623a6` → `3ec1efd2` → `e8c3dc9f`(+ 이 기록).
+- **편집**: `internal/obs/event.go`(새 종류 · 등급표) · `internal/obs/notifier.go`(`escalate` 두 줄 계좌 필드 제거) · `internal/app/engine/exitloop.go`(옵션 필드 ·
+  `submit` 인자 · `applyFloor` B2/B7) · `internal/app/engine/exitwiring.go`(설정 덮기 한 줄) · 새 `internal/app/engine/exit_stop_sold_nothing.go` · `docs/operations.md` 새 절.
+- **시험**: obs 3 · riskcalc 1 · engine 약 21(+ 내보내기 훅 2). RED 먼저 관측(`analysis/implementation/r1-red-*.log` — obs 는 등록 전 행동 RED, engine 은 옵션 필드 ·
+  술어 스텁만 둔 상태의 행동 RED).
+- **변이 원장**(`analysis/implementation/mutation-ledger.md`): 24 변이 — 1판 생존 1(M7b) · 무효 2 → 죽이는 시험 · 유효 변이로 재구성 → **24 전부 CAUGHT**.
+  대조군 첫 판 RED(`-trimpath` 에서 AST 열거 시험의 `runtime.Caller` 경로) — 상대 경로로 수리.
+- **실측**: 5.3 소유 칸 11~26ms(실패 승격 0.07~0.11ms), 승인 칸 1.06~1.28s(측정 · 기록, < 5s) · 5.4 750ms · 1.3s 주입 둘 다 같은 사이클 제출 · 8/2 재생 네 팔(`issues.md`).
+- **검증**: obs · riskcalc · exitpolicy · reconcile 전체 ok · engine 전체 ok(커버리지 실행, `3ec1efd2`) · `-race` a091+a092+a095+a124 시험(engine · obs · riskcalc) ok ·
+  `make test-race` rc 0 · `make lint` rc 0 · `openspec validate --strict` ok · check_analysis — a091 번들 16 증거 완결, required 11 중 7 은 a112 착지 몫(재고정에서 닫음).
+- **이름 붙인 차이(tasks 기록)**: 3.3b (vii) 은 생산 클라이언트의 오류 모양으로(httptest 공식 클라이언트 왕복 아님) · 3.4 는 보호 1 · 익절 1 끝-끝 + AST 열거 술어 표 5
+  (5 액션 전부 끝-끝 아님).
+- **착지 전 겹침 대조**(공유 HEAD `80ae96a5`): a091 이 편집하는 파일 넷(`exitloop.go` · `exitwiring.go` · `event.go` · `notifier.go`)과 `docs/operations.md` 는 기점 뒤 커밋 0 ·
+  공유 트리 미커밋 0 · staged 0. a112 는 engine 의 strategy_* 영역.

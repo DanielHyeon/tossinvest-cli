@@ -20,6 +20,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 FL = HERE.parent / "function-logic"
 ROOT = Path.cwd()
+# 두 번째 인자: 번들이 기술하는 소스 판(기본 base). 편집 뒤 재생성은 "post:<commit>".
+REV = sys.argv[2] if len(sys.argv) > 2 else "base:b30318d6"
 
 # 호출 계약의 공통 수치 — 전부 base b30318d6 소스에서 읽은 값이다(좌표는 각 행).
 FLOOR_CONTRACT = (
@@ -46,35 +48,41 @@ ALERT_CONTRACT = (
 B: dict[str, dict] = {
     "internal-app-engine--exitobserver.applyfloor": {
         "pkg": "engine",
-        "edit": "**a091 편집 대상**(tasks 3.x) — 보호 여부 인자 하나 추가 · 0주 두 경로(B2 · 끝)의 보고 종류 · 문구. 반환값 `(수량, capped, err)` 무변경.",
-        "role": "RECONCILE 확정 하한으로 청산 수량을 자른다. 0주는 두 자리에서만 나온다: B2(하한 계산 실패 → 리터럴 `\"0\"`) · 끝(`floor.Quantity` 가 원안보다 작고 그것이 `\"0\"`).",
+        "edit": "**a091 편집(구현 로트)** — 보호 여부 인자 `protective` 추가 · B2 는 `logErr` 대신 `reportZeroFloor`(원인 분류 · 게이트 · 가린 로그 · critical 이면 알림) · 끝의 0주를 B7 로 갈라 `reportZeroFloor`(부분 캡 알림은 그대로). 반환값 `(수량, capped, err)` 무변경 — 변이 M19 · M20 이 잡음.",
+        "role": "RECONCILE 확정 하한으로 청산 수량을 자른다. 0주는 두 자리에서만 나온다: B2(하한 계산 실패 → 리터럴 `\"0\"`) · B7(`floor.Quantity` 가 원안보다 작고 0).",
         "inputs": [
-            ("`quantity`", "양의 정수 정규형(`big.Int.String`)", "`record` → `snapshot.ProjectedQuantity` ← `ProjectWholeShares`(`snapshot.go:93`)", "0 이면 `orderable=false` 라 이 함수에 오지 않는다(아래 M1)"),
-            ("`floor.Quantity`", "음 아닌 십진 정규형, **0 가능**", "`riskcalc.ConfirmedFloorQuantity` — `MaxDecimal(\"0\", …)` → `CanonicalDecimal`(`decimal.go:92-101`) 또는 `zeroFloor` 리터럴 `\"0\"`(`confirmed_floor.go:236-243`)", "0 이면 끝 경로가 `\"0\"` 반환"),
-            ("`o.opts.Floor`", "nil 허용", "주입(`exitSideFloor`)", "nil 이면 무캡(B1)"),
-            ("**보호/익절 맥락**", "—", "**인자에 없다**", "⚠ 이 함수는 제안이 손절인지 모른다 — a091 이 `submit` 에서 `isProtective(proposal)` 를 넘긴다(D2)"),
+            ("`quantity`", "양의 정수 정규형(`big.Int.String`)", "`record` → `snapshot.ProjectedQuantity` ← `ProjectWholeShares`(`snapshot.go:93`)", "0 이면 `orderable=false` 라 이 함수에 오지 않는다(design D6)"),
+            ("`floor.Quantity`", "음 아닌 십진 정규형, **0 가능**", "`riskcalc.ConfirmedFloorQuantity` — `MaxDecimal` → `CanonicalDecimal` 또는 `zeroFloor` 리터럴 `\"0\"`", "0 이면 B7"),
+            ("`floor.Bound`", "한정 항", "같음", "Holdings 이면 ③(보유 0) — 옛 종류"),
+            ("`protective`", "`isProtective(proposal)`", "`submit`(`:1402`)", "보고 등급만 가름 — 반환값과 무관"),
+            ("`o.opts.NotificationsEnabled`", "로드된 설정", "생산 배선이 덮음(`exitwiring.go:355`)", "거짓이면 옛 종류"),
         ],
         "calls": [
-            ("`o.opts.Floor.ConfirmedFloor`", "1621", "RECONCILE 확정 하한", FLOOR_CONTRACT),
-            ("`o.logErr`", "1626", "B2 의 유일한 기록(오류 객체)", "구조화 로그 한 줄(`exitloop.go:1834-1839`), 반환 없음. **종류가 `EventExitProposalCapped`** — H2 가 바꾸는 자리"),
-            ("`riskcalc.CompareDecimal`", "1633", "하한 vs 원안", "순수 계산, 오류 → B4"),
-            ("`fmt.Errorf`", "1635", "B4 오류 감싸기", "순수"),
-            ("`riskcalc.SubDecimal`", "1640", "잔여", "순수 계산, 오류 → B6"),
-            ("`fmt.Errorf`", "1642", "B6 오류 감싸기", "순수"),
-            ("`o.alert`", "1644", "캡 알림(부분 · 0주 공통 — 현행)", ALERT_CONTRACT + ". **현행 종류 `EventExitProposalCapped` = normal** → Relay 경로(outbox 행 0)"),
-            ("`string`", "1646", "event key 조립 `type|position`", "순수"),
-            ("`o.label`", "1647", "종목 표시명", "메모리 조회"),
-            ("`fmt.Sprintf`", "1648", "본문", "순수"),
+            ("`o.opts.Floor.ConfirmedFloor`", "0", "RECONCILE 확정 하한", FLOOR_CONTRACT),
+            ("`o.reportZeroFloor`", "0", "B2 보고(원인 ①④)", "로그 한 줄(계좌 없음 · 가린 오류) + critical 이면 `Alerts.Notify(WithoutCancel)` — " + ALERT_CONTRACT),
+            ("`classifyZero`", "0", "원인 분류", "순수(`ctx.Err()` · 오류 나무 · 한정 항)"),
+            ("`riskcalc.CompareDecimal`", "0", "하한 vs 원안", "순수, 오류 → B4"),
+            ("`fmt.Errorf`", "0", "B4 오류 감싸기", "순수"),
+            ("`riskcalc.SubDecimal`", "0", "잔여", "순수, 오류 → B6"),
+            ("`fmt.Errorf`", "0", "B6 오류 감싸기", "순수"),
+            ("`isZeroQuantity`", "0", "B7 0주 판정", "순수(수치 비교)"),
+            ("`o.reportZeroFloor`", "0", "B7 보고(원인 ②③)", "알림 하나(종류는 게이트 · 원인이 고름) — " + ALERT_CONTRACT),
+            ("`classifyZero`", "0", "원인 분류", "순수"),
+            ("`o.alert`", "0", "부분 캡 알림(무변경)", ALERT_CONTRACT + ". 종류 `EventExitProposalCapped` = normal"),
+            ("`string`", "0", "event key", "순수"),
+            ("`o.label`", "0", "종목 표시명", "메모리 조회"),
+            ("`fmt.Sprintf`", "0", "부분 캡 본문(무변경)", "순수"),
         ],
-        "mut": "상태 변경 없음. 반환값과 로그 · 알림이 전부. B2 의 fail-closed(0 으로 봄) 방향은 옳다 — 문제는 보고의 등급 · 종류 · 문구다.",
-        "safety": "제출 수량 계산(B1~B6 · 끝의 반환)은 a091 이 건드리지 않는다(§0.3 · §0.9). 편집은 B2 의 오류 줄(종류 · 계좌 가림) · B2 알림 추가 · 끝의 원인 분류 · 종류/문구 분기 · 알림 켜짐 게이트뿐(design D1 · D3 · D8). High-risk: yes(**확정 하한이** 손절을 0주로 깎는 유일한 자리 — 0 투영 보호 액션은 이 함수에 오지 않는다, record B11).",
+        "mut": "상태 변경 없음. 반환값과 로그 · 알림이 전부. 새 알림 기록은 `context.WithoutCancel` — 종료 중이면 그 기록만큼(기한 없이) 종료가 늦는다(design D5 「종료 중 보고 대기」).",
+        "safety": "제출 수량 계산(B1~B7 의 반환)은 편집 전과 같다(§0.3 · §0.9 — 변이 M19 · M20 CAUGHT). 편집은 보고뿐. High-risk: yes(**확정 하한이** 손절을 0주로 깎는 유일한 자리).",
         "tests": {
             "B1": ["TestNoFloorSourceCapsNothing"],
-            "B2": ["TestAFloorThatCannotBeComputedSellsNothing"],
-            "B3": ["TestAZeroFloorSubmitsNothingAndLeavesTheLevelProposable"],
+            "B2": ["TestA091AFloorThatCannotBeComputedIsTheSameReport", "TestA091OnlyACancellationOnlyFailureIsSuppressed"],
+            "B3": ["TestA091TheOutcomeIsUnchanged"],
             "B4": ["TestTheConfirmedFloorCapsTheLiquidation"],
-            "B5": ["TestTheConfirmedFloorCapsTheLiquidation"],
+            "B5": ["TestA091APartialCapIsUnchanged"],
             "B6": ["TestTheConfirmedFloorCapsTheLiquidation"],
+            "B7": ["TestA091AProtectiveZeroIsACriticalRow", "TestA091AZeroHoldingIsNotAFailedStop"],
         },
     },
     "internal-obs--severityof": {
@@ -92,7 +100,7 @@ B: dict[str, dict] = {
     },
     "internal-app-engine--exitobserver.submit": {
         "pkg": "engine",
-        "edit": "**a091 편집 대상**(tasks 3.6) — `applyFloor` 호출에 `isProtective(proposal)` 를 넘긴다. 분기 · 반환 무변경.",
+        "edit": "**a091 편집(구현 로트)** — `applyFloor` 호출에 `isProtective(proposal)` 를 넘긴다(`:1402`). 분기 B1~B13 · 반환 무변경(변이 M2 · M3 CAUGHT).",
         "role": "무장된 발의를 브로커로 보낸다. 0주(B2)면 제출 없이 해제한다.",
         "inputs": [
             ("`proposal`", "`Action.Orderable()` 5종 중 하나", "`record`", "`isProtective` = BaselineBreach · LadderStop(`exitloop.go:1375-1377`)"),
@@ -101,6 +109,7 @@ B: dict[str, dict] = {
         ],
         "calls": [
             ("`o.applyFloor`", "1397", "확정 하한", "위 applyFloor 번들의 계약 — RECONCILE 에서 브로커 읽기 ≤2 Query"),
+            ("`isProtective`", "0", "보호 여부(a091)", "순수 — BaselineBreach · LadderStop"),
             ("`isZeroQuantity`", "1401", "0주 판정", "순수. **수치 비교**(`CompareDecimal(q,\"0\") <= 0`, 파싱 실패 · 빈 문자열도 0)"),
             ("`o.release`", "1406", "0주 → 발의 해제(`ProposalRefused`)", "원장 트랜잭션(`ReleaseUnacceptedExitProposal`), busy_timeout 5s"),
             ("`o.opts.Issuer.IssueReduction`", "1409", "Guardian 축소 발행", "로컬 판정(브로커 0)"),
@@ -303,26 +312,43 @@ B: dict[str, dict] = {
             "B15": ["TestConvergingAManagedPositionToZeroAlerts"],
         },
     },
+    "internal-app-engine--context.exitobserver": {
+        "pkg": "engine",
+        "edit": "**a091 편집(구현 로트)** — 로드된 설정 `c.Config.Engine.Notifications.Enabled` 로 `opts.NotificationsEnabled` 를 덮는 한 줄(`:355`). 분기 무변경(변이 M5 CAUGHT).",
+        "role": "exit 관측 루프의 생산 조립 — 알림 · 통지 · 조회 경로를 주입 지점별로 기록 전용으로 덮고, 하한 공급자를 exit Retrier 로 만든다.",
+        "inputs": [("`c.Config.Engine.Notifications.Enabled`", "로드된 설정", "설정 파일", "거짓이 기본 — 보호 0주가 옛 종류로 남는다")],
+        "calls": [
+            ("`fmt.Errorf`", "0", "미검증 조립 거절", "순수"),
+            ("`fmt.Errorf`", "0", "Guardian 형 거절", "순수"),
+            ("`c.NormalAlertRelay`", "0", "일반 등급 이관 버퍼", "메모리"),
+            ("`exitSideRetrier`", "0", "exit 전용 Retrier 사본", "메모리"),
+            ("`exitSideFloor`", "0", "exit 전용 하한 공급자", "메모리"),
+            ("`NewExitObserver`", "0", "루프 생성", "검증"),
+        ],
+        "mut": "없음(옵션 조립).",
+        "safety": "덮기는 호출자 값과 무관하다 — a095 `reconcileloop.go:369` 와 같은 원천 · 같은 규칙. High-risk: yes(생산 배선).",
+        "tests": {f"B{i}": ["TestA091TheProductionAssemblyReadsTheLoadedSwitch", "TestA092ExitObserverGetsRecordOnlyAlertPaths"] for i in range(1, 7)},
+    },
     "internal-obs--notifier.escalate": {
         "pkg": "obs",
-        "edit": "**a091 편집 대상(5판, R3-3)** — 두 로그 줄(`:433` 실패 · `:440` 승격)에서 `FieldAccount` 원문을 뺀다. 판정 · 반환 · 원장 호출 무변경.",
+        "edit": "**a091 편집(구현 로트, 5판 R3-3 · Manager 포함 승인)** — 두 로그 줄(실패 · 승격)에서 `FieldAccount` 원문을 뺐다. 판정 · 반환 · 원장 호출 무변경(변이 M13 · M13b · M13e CAUGHT).",
         "role": "critical 전달 실패(또는 기록 실패)의 운영 모드 승격을 원장에 남긴다. 통지하지 않는다(전송 수단이 방금 실패).",
         "inputs": [("`n.AccountRef`", "계좌 참조(생산 = 계좌번호, `interlock.go:680-684`)", "배선", "빈 값 → 승격 없음(B1)"), ("`e.Type`", "촉발 사건 종류", "호출자", "로그 필드")],
         "calls": [
             ("`strings.TrimSpace`", "426", "빈 계좌 판정", "순수"),
             ("`n.Journal.EscalateOperatingMode`", "429", "ENTRY_BLOCKED 승격", "원장 트랜잭션(`busy_timeout` 5s · 연결 풀 대기 기한 없음), 원격 0"),
-            ("`n.Log.Error`", "433", "승격 실패 로그", "로그 한 줄 — **`FieldAccount` 원문**(a091 이 뺀다)"),
+            ("`n.Log.Error`", "433", "승격 실패 로그", "로그 한 줄 — 계좌 필드 없음(a091), 오류는 `MaskAccount`"),
             ("`MaskAccount`", "433", "오류 속 계좌 가림", "순수"),
             ("`string`", "435", "—", "순수"),
-            ("`n.Log.Warn`", "440", "승격 로그", "로그 한 줄 — **`FieldAccount` 원문**(a091 이 뺀다)"),
+            ("`n.Log.Warn`", "440", "승격 로그", "로그 한 줄 — 계좌 필드 없음(a091)"),
         ],
         "mut": "운영 모드 행(원장).",
         "safety": "호출자 셋(`notifier.go:238` · `:261` · `record_only.go:157`)이 공유하는 함수다 — a091 의 편집은 로그 필드 하나를 빼는 것뿐이고 판정 · 반환은 같다. 계좌는 한 알림기 하나이므로 필드를 빼도 줄의 뜻은 같다. High-risk: 아니오(로그), 단 모드 승격 경로에 있다.",
         "tests": {
             "B1": ["TestA092RecordOnlyFailureLatchesAndEscalates"],
-            "B2": ["TestA092TheEscalationFailureErrorMasksTheAccount"],
-            "B3": ["TestA092TheEscalationFailureErrorMasksTheAccount"],
-            "B4": ["TestA092RecordOnlyFailureLatchesAndEscalates"],
+            "B2": ["TestA091TheEscalationLinesCarryNoAccount"],
+            "B3": ["TestA091TheEscalationLinesCarryNoAccount", "TestA092TheEscalationFailureErrorMasksTheAccount"],
+            "B4": ["TestA091TheEscalationLinesCarryNoAccount"],
         },
     },
 }
@@ -338,6 +364,11 @@ def coverage(cov_dir: Path, source: str) -> dict[int, int]:
                 s, c = int(m.group(1)), int(m.group(2))
                 out[s] = max(out.get(s, 0), c)
     return out
+
+
+def rev_text() -> str:
+    kind, _, sha = REV.partition(":")
+    return f"편집 뒤 `{sha}`" if kind == "post" else f"base `{sha}`"
 
 
 def esc(s: str) -> str:
@@ -363,7 +394,7 @@ def write(name: str, spec: dict, cov_dir: Path) -> None:
         "",
         f"- Source: `{src}` (`{ast['start']['line']}`–`{ast['end']['line']}`)",
         f"- Qualified: `{fn}`",
-        f"- AST evidence: `ast.json` (`source_sha256` {ast['source_sha256'][:16]}…) — base `b30318d6` 에서 `go run ./tools/logic-map`",
+        f"- AST evidence: `ast.json` (`source_sha256` {ast['source_sha256'][:16]}…) — {rev_text()} 에서 `go run ./tools/logic-map`",
         "- Risk scan: `risk-pattern-report.md`",
         f"- 분기 {len(br)} · 반환 {len(ast.get('returns') or [])}",
         "",
@@ -381,8 +412,8 @@ def write(name: str, spec: dict, cov_dir: Path) -> None:
         "",
         "## Branches and early returns",
         "",
-        "> 조건은 소스 원문, 진입 실측은 base `b30318d6` 의 `go test -count=1 -coverprofile`(covermode set, 2026-10-01)에서 그 줄로 시작하는 블록의 count "
-        "(`analysis/harness/write_bundles.py`). engine 패키지 실행은 `-trimpath` 로 `TestA111…` 두 시험이 소스 경로를 못 찾아 실패했다 — 커버리지 프로파일은 그대로 쓰인다(두 시험은 이 함수들과 무관한 AST 핀).",
+        f"> 조건은 소스 원문, 진입 실측은 {rev_text()} 의 `go test -count=1 -coverprofile`(covermode set, 2026-10-01)에서 그 줄로 시작하는 블록의 count "
+        "(`analysis/harness/write_bundles.py`).",
         "",
         "| Branch | 종류 | 조건 (원문) | 진입 실측 |",
         "|---|---|---|---|",
@@ -395,7 +426,19 @@ def write(name: str, spec: dict, cov_dir: Path) -> None:
         head += [spec["calls_note"], ""]
     if spec["calls"]:
         head += ["| Callee | Line | Why called | Error/timeout/retry contract |", "|---|---|---|---|"]
-        head += [f"| {esc(c)} | `:{ln}` | {esc(w)} | {esc(k)} |" for c, ln, w, k in spec["calls"]]
+        pool = [(c.get("text", ""), c["at"]["line"]) for c in (ast.get("calls") or [])]
+        used: set[int] = set()
+        for c, _ln, w, k in spec["calls"]:
+            want = c.strip("`").replace("o.opts.", "o.opts.")
+            line = None
+            for i, (txt, ln2) in enumerate(pool):
+                if i not in used and (txt == want or txt.endswith("." + want) or want.endswith(txt)):
+                    used.add(i)
+                    line = ln2
+                    break
+            if line is None:
+                raise SystemExit(f"{name}: callee {c} not found in the AST calls")
+            head.append(f"| {esc(c)} | `:{line}` | {esc(w)} | {esc(k)} |")
     else:
         head.append("호출 없음(`ast.json` `calls` 0).")
     head += ["", "## State mutations and fallbacks", "", spec["mut"], "", "## Safety conclusion", "", f"- {spec['safety']}", ""]
@@ -408,7 +451,7 @@ def write(name: str, spec: dict, cov_dir: Path) -> None:
         f"- Source: `{src}`",
         "",
         "> Test 열은 그 함수를 지나는 현존 · 통과 시험이다. 「아니오」 분기의 인용은 그 갈래 자체의 증명이 아니다(진입 실측 열이 정본).",
-        "> a091 의 새 RED 는 구현 로트의 변이 원장이 잰다 — 이 표는 편집 **전** base 의 사실이다.",
+        f"> a091 의 새 RED 는 구현 로트의 변이 원장(`analysis/implementation/mutation-ledger.md`)이 잰다 — 이 표는 {rev_text()} 의 사실이다.",
         "",
         "| Branch | 조건 | 진입 실측 | Test | RED observed | GREEN observed |",
         "|---|---|---|---|---|---|",

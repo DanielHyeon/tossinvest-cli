@@ -1,6 +1,6 @@
 {
   "file": "internal/obs/notifier.go",
-  "source_sha256": "d705f78d68c1eff38216e9dc9791cf737dc9d505bca77b8543aa7b7bc236bd83",
+  "source_sha256": "408579d5040890724062fa007c4ec36ee882c673c1eeb5aa3c09d6684a322a1b",
   "package": "obs",
   "function": "escalate",
   "receiver": "Notifier",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 447,
+    "line": 446,
     "column": 2
   },
   "branches": [
@@ -58,7 +58,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 446,
+        "line": 445,
         "column": 2
       }
     }
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 433,
+        "line": 434,
         "column": 3
       },
       "text": "n.Log.Error"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 433,
+        "line": 434,
         "column": 35
       },
       "text": "MaskAccount"
