@@ -24,7 +24,7 @@
       HEAD에서 재생성, 좌표 이동 반영. **calls 표의 timeout/retry 칸을 수치로 채운다**
       (첫 리뷰의 방법 교훈)
 - [x] 0.4 **[2026-10-01] valid.** `openspec validate a091-a-stop-that-sold-nothing-is-critical --strict --no-interactive`
-- [ ] 0.5 **proposal-freeze 재리뷰** (적대적 Eng 필수) → `review.md`에 2차 판 추가
+- [x] 0.5 **[2026-10-01] 5 라운드 — 2라운드 REJECT(A · B · codex) → 4판 → 3라운드(A REJECT · B APPROVE · codex FAIL) → 5판 → 4라운드(A APPROVE · codex FAIL) → 6판 → 5라운드 codex PASS. `review.md` 「2차 판」. Manager 승인 대기.** **proposal-freeze 재리뷰** (적대적 Eng 필수) → `review.md`에 2차 판 추가
 - [ ] 0.6 `check_analysis.py --change a091-…` — FLM 산출물 완결 확인
 
 ## 1. 산출물 (완료)
@@ -68,7 +68,8 @@
       `*url.Error` 감쌈 포함)이고 ctx 끝남 → 알림 0 · 행 0 · 래치 0 ·
       승격 0, (ii) 진짜 하한 오류가 돌아온 **뒤** ctx 취소 → ① 보고 · 행 1 · 가짜 래치 0(`WithoutCancel` 기록), (iii) 원인 판정 **뒤** · 기록 **전** ctx
       취소(주입 지점) → 행 1 · 가짜 래치 0, (iv) ctx 살아 있고 HTTP 시한(`DeadlineExceeded`) → ①, (v) **합쳐진 오류** — 인증 거절 +
-      승격 원장 연산의 취소(`errors.Join`, 생산 `Retrier.Query` 모양) → ① 보고(억제 안 함), (vi) 재시도 대기 중 취소 → 직전 일시 오류 → ① 보고
+      승격 원장 연산의 취소(`errors.Join`, 생산 `Retrier.Query` 모양) → ① 보고(억제 안 함), (vi) 재시도 대기 중 취소 → 직전 일시 오류 → ① 보고,
+      (vii) **생산 공식 클라이언트**(httptest 서버가 응답을 멈춘 채 ctx 취소)로 HTTP 중 취소 → 잎 `ErrTransport` → ① 보고 · 가짜 래치 0(과보고 잔여 핀)
 - [ ] 3.3c **RED (나) — 종료 중 보고 대기(D5 6판)** — 기록을 막아 둔(원장 쓰기 대기 주입) 상태에서 루프 ctx 취소: 루프는 기록이 풀릴 때까지
       돌아오지 않고, 풀린 뒤 행 1 · 가짜 래치 0 으로 돌아온다 — 교착 0, 대기가 기한 없음이라는 사실을 시험 이름 · 주석에 적는다
 - [ ] 3.4 **RED (가)** — 표 시험: 주문 액션 5종(보호 2 · 익절 3 — `ratchet.go:94-118`)을 `submit` 을 거쳐 두 원인 × 알림 켜짐으로 —

@@ -303,3 +303,23 @@ issues(콘솔 안내 · ntfy), 번들 `internal-obs--notifier.escalate` 신설(b
 
 위 표의 「6판 처분」 열. 편집: design(header · 원장 재독 · D1 · D3 ④ · D5 진입점 · 배정 · 수락 · 취소 · 검증), engine-safety delta(「취소뿐」 · 근거 문장),
 tasks(3.3a 머리 · 3.3b (i)(v)(vi) · 3.3c 신설 · 5.3).
+
+## freeze 재리뷰 5라운드 (2026-10-01, codex 좁은 재확인) — **PASS**
+
+- 대상 `git archive 77039e25`(6판) → `/tmp/claude-1000/a091-r5-tree`, codex 같은 세션(`01a0f3b4-…`), read-only, 머리말 위반 신고 없음. 원문 `analysis/freeze-review/codex-r5-{prompt,output}.md`.
+- 4라운드 1~4 전부 CLOSED(`design.md:153-158` · `:143-151` · `:159-162` · `:31-34`; `tasks.md:67-73` · `:107-110`).
+- **P2(비차단) — 취소 원인이 지워지는 오류**: 공식 클라이언트가 전송 오류를 `ErrTransport` + 문자열로 감싸(`client.go:196` · `:203`) HTTP 중 취소의 잎이 `context.Canceled` 가
+  아니다 → ① 로 과보고(숨김 아님). 처분: design D5 에 이름 붙인 잔여로 적고 생산 클라이언트 시험 3.3b (vii) 추가. 3라운드 보이스 A 의 「`*url.Error` 가 감싼다」는 공식
+  클라이언트 경로에서 거짓 — 기록.
+
+### 교차 모델 사슬 · 보이스 요약
+
+| 라운드 | 판 | 보이스 A | 보이스 B | codex |
+|---|---|---|---|---|
+| 2 | 3판 `64380cb6` | REJECT | REJECT | FAIL |
+| 3 | 4판 `3c9bf7b0` | REJECT(좁음) | **APPROVE** | FAIL |
+| 4 | 5판 `8870c6c9` | **APPROVE** | (3라운드 APPROVE, P3 반영) | FAIL(좁음) |
+| 5 | 6판 `77039e25` | — | — | **PASS** |
+
+**freeze 판정 요청**: 적대 Eng(A) APPROVE · 소비자/시험(B) APPROVE · 교차 모델 PASS. Manager 승인 뒤 구현(tasks 2~6, High-risk 전면 규율).
+사람 거부권 항목(Manager 보고): Q1 알림 켜짐 게이트. 범위 확장 하나: `obs.Notifier.escalate` 로그 두 줄의 계좌 필드 제거(5판 D8 — 별도 선행 change 로 뗄 수 있음).
