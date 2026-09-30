@@ -348,6 +348,8 @@ func (c *Context) ExitObserver(opts ExitObserverOptions) (*ExitObserver, error) 
 	if c.Notifier != nil {
 		opts.Alerts = recordOnly
 		opts.Announcer = recordOnly
+		// a094 의 새 critical 은 같은 알림기의 단일 입구로 창 0 기록함(D−6.1) — 호출자 값과 무관하게 덮음(같은 규칙).
+		opts.Critical = c.Notifier
 	}
 	if opts.Floor == nil {
 		opts.Floor = exitSideFloor(c.exitFloor, exitRetrier)

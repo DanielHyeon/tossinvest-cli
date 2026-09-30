@@ -1107,3 +1107,41 @@ frozen 문서의 줄 번호는 7cf80832 · 0c12844a 기준이다. a092 가 exitl
 **검증.** `go test ./internal/execgw/ -count=1` ok · `go vet` ok · 골든 diff = `+opposite_pending_order_exists` 한 줄(생성기). 1.11 소비자 조사: 새 code 는 원장 `reason_code`(자유 문자열) · 알림 detail 로만 흐르고, execgw 코드를 열거하는 소비자는 골든 시험 · a098 census 둘뿐(콘솔 필터 없음 — `internal/console` 의 `ReasonCodes` 는 soak 코드).
 
 **병행 조정.** AllReasonCodes · 골든 · a098 census 는 a112 와 같은 자리였다 — Manager 판정으로 a112(`3260f4eb`) 선행, a094 후행.
+
+### 2. 착지 단위 ② — 발의 해제 판정 · 청소 · 판정 진입 알림 (tasks §3 · §4 일부)
+
+**Pre-Edit Gate (3.0 · 4.0 중 이 단위 몫)**
+
+- 대상 심볼(기존): `journal.Journal.ResolveExitProposal`(호출 형태 — 기대 intent 인자) · `journal.Journal.LiveOrdersForSymbol`(종결 술어를 공유 상수로 — 동작 무변) ·
+  `engine.ExitObserver.{judge, record, submit, release, clearTheSymbol}` · `engine.Context.ExitObserver`(Critical 배선) ·
+  `execgw.Gateway.checkSymbolFree`(판정 추출) · `execgw.Gateway.confirmCreatedOrder`(판정 추출 + 종목 공백 강화).
+  신설: `journal/exit_proposal_release.go`(분류기 · 해제 둘 · 무장 목록 · 취소 조회) · apply_hook.go 의 `clearExitProposalTx` · `armedExitProposalsQ`(가드 컬럼 이름은
+  apply_hook.go 에만 — `TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook`) · `engine/exit_held_proposal.go` · `execgw/a094_shared_judgements.go`.
+- 호출자(grep 전수): `ResolveExitProposal` 비시험 호출자 1(`ExitObserver.release`) → 이제 0(해제는 판정 함수로), 시험 4. `ExitSubmitter` 구현 = `*execgw.Gateway`
+  (생산) + 시험 가짜 4(메서드 추가). `checkSymbolFree` 호출자 1(`Gateway.submit`). `confirmCreatedOrder` 호출자 1(`roundTripFor`).
+- 기존 동작 근거: `exitloop_test.go` 전체 · `exit_state_test.go` · `TestTransportOutcomeTable` · `roundtrip_test.go`.
+- FLM/BTM: 편집 전 AST 는 `analysis/implementation/pre-edit/*.ast.json`(HEAD `766a8456` 트리, 편집 전에 뽑음). 편집 뒤 번들은 다음 커밋(이 단위의 증거 커밋).
+- upstream 상속 시험 영향: **하나 — `TestABreachDisplacesAnOutstandingTakeProfit`**. 의도된 변경(D−4.3): 매도 취소 접수는 치움이 아니므로 손절은 취소한 주기가 아니라
+  종결 체결 기록이 있는 다음 주기에 나간다. 시험에 주기 하나를 더하고 그 이유를 주석으로 남겼다(제출 순서 · 무장 intent 단언은 그대로).
+- 실패 시험 선행: 이 단위의 새 API(분류기 · 해제 판정 · Critical 옵션 · UnsettledOnSymbol)는 편집 전 트리에 없어 새 시험은 편집 전 트리에서 **컴파일 RED** 다. 행동 RED 는
+  구현 조각을 되돌린 변이로 잰다(변이 원장 — 로트 리뷰 전 일괄, Manager 조건).
+- 설정·DB·journal 스키마: 없음(원장 쓰기는 기존 컬럼만 — 발의 해제 · exit_events 행).
+- §0 검토: 통과 — 손절 즉시성의 양보는 (a) park 된 발의 위, (b) 매도 취소의 종결 증거 대기, (c) 같은 종목의 미종결 attempt 위에서만이며 셋 다 명명 critical 또는 기존 지연 경보와 함께다.
+  (c) 는 오늘도 게이트웨이가 거절하던 제출이라 새 양보가 아니다.
+
+**구현 결정(frozen 문서가 비워 둔 자리 — 범위 확장 아님)**
+
+| 자리 | 결정 | 근거 |
+|---|---|---|
+| park 원인 critical 의 이벤트 타입 | `obs.EventOrderUnresolved`(critical), key `order.unresolved_in_doubt|<position>|attempt:<id>` | 새 타입을 만들지 않음(R9 선례). 정본 등급표 「UNRESOLVED_IN_DOUBT 발생 → critical」 |
+| 연속 청소 실패 · 종결 증거 대기 | `obs.EventExitLiquidationDelayed`, key `…|<position>|streak:<연속 id>` · `…|<position>|cancel:<취소 attempt id>` | D−2.7 · D−7.1 · D−9.3 문언 그대로 |
+| 새 critical 의 입구 | `ExitObserverOptions.Critical`(`CriticalRecorder`) = `*obs.Notifier.RecordCritical(ctx, e, 0)` — 조립부가 무조건 덮음 | D−6.1(a092 단일 입구, 창 0). 기존 `Alerts`(RecordOnly)는 창 1시간이라 쓰지 않음 |
+| 같은 종목 미종결 판정 | `ExitSubmitter.UnsettledOnSymbol` → `Gateway.unsettledFor` 한 함수, `checkSymbolFree` 도 그것을 부름 | D−4.7 · Q6-2. 옛 `checkSymbolFree` 는 첫 일치에서 거절했고 새 판정은 끝까지 모은 뒤 거절 — 뒤 행의 intent 읽기 실패가 거절 대신 오류가 될 수 있다(둘 다 fail-closed, 주문 미발송) |
+| 발의 해제 판정 | `journal.ReleaseUnacceptedExitProposal`(판정 하나 — submit · 기동 따라잡기 · 해동 명령) · 청소는 같은 분류기 위의 `ReleaseClearedExitProposal`(ORDERS_CLOSED 도 해제) | D−2.5 · D−3.2 · D−4.3-2. 판정 읽기와 해제 쓰기는 한 트랜잭션 |
+| 종결 증거 술어 | `confirmedOrderTerminalEvidence` 상수 하나를 미체결 목록과 해제 판정이 공유 | 판정을 둘로 두지 않음. 소유 유일성 필터는 미체결 목록에만(해제 판정은 intent 의 주문 번호로 봄 — D−4.3-2) |
+| 실측 발견 | 같은 범위의 소유 모호(한 주문 번호 · 두 intent)는 미체결 목록에서 **조용히 빠지지 않고 오류**다(`guardTrackedFillIdentity`) → 청소가 오류를 돌려주고 해제 · 제출 없음 | D−4.3 의 「목록에서 빠진 주문」 전제는 이 판본에서 오류 경로로 닫혀 있다 — 3.R7a 는 두 층(journal 판정 · 목록 오류) 모두로 고정 |
+| 실측 발견 | 발의 자신의 주문이 종결 체결 기록을 받으면 체결 적용 훅이 같은 트랜잭션에서 발의를 `PROPOSAL_FILLED` 로 끝낸다(`apply_hook.go` ApplyExitFill) | 그래서 형태 B 의 정상 해동은 청소의 해제가 아니라 적용 훅이다. 청소의 ORDERS_CLOSED 해제는 종결 기록이 무장보다 먼저 온 경우의 백스톱 |
+| 결과를 못 쓴 제출(4.3c) | `out.AttemptID != ""` 이고 상태가 비수용 종결이 아니면 무장 유지 + 사이클 오류로 드러냄(거절 알림 없음 — 거절이 아니다) | D−2.5 |
+| intent 없는 무장 발의 | 청소가 풀지 않음(치움 미완료, 계수 대상) | attempt 를 찾을 수 없으면 살아 있을 수 있음으로 다룸(N1) — 잔여: 옛 판본이 intent 없이 무장한 행이 있으면 사람이 푼다 |
+| 알림 기록 실패 | 결과 무변(로그만), 래치 안 함 → 다음 관측이 재시도. 진입 잠금은 입구(`recordCritical`)가 이미 세움 | D−6.1 · 3.R2a |
+| 로그 | a094 경로의 경고 줄은 계좌 필드를 싣지 않음(`warnA094`) | 불변식 8 · MaskAccount 선례 |

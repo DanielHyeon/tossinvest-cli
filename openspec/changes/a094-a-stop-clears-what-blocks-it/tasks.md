@@ -128,7 +128,7 @@
       **`classifyRefusalCode` 신설 — 반환은 3상**(D−3.5; `(ReasonCode, bool)` 은 5판에서 폐기).
       `code`와 `error.code`만 읽고, `classifyRefusalBody`보다 **먼저** 부른다.
       **기존 세 항목의 substring 매칭은 건드리지 않는다**(D0)
-- [ ] 2.9 `submit`이 `default:` 갈래(`exitloop.go:1410-1416`, base 번호 B10 `:1304`)로 가는 것을 확인 — `alertProposalRefused` + 레벨 재무장
+- [x] 2.9 `submit`이 `default:` 갈래(`exitloop.go:1410-1416`, base 번호 B10 `:1304`)로 가는 것을 확인 — `alertProposalRefused` + 레벨 재무장
 - [x] 2.10 **golden 갱신** — `internal/execgw/testdata/reason_codes.golden`에 새 code 한 줄.
       `TOSSOS_UPDATE_GOLDEN=1 go test -run TestWriteReasonCodeGolden`으로 만든다.
       **손으로 고치지 않는다**
@@ -143,50 +143,50 @@
 > `Journal.LiveOrdersForSymbol`(엔진 귀속 주문)이다. 사람이 넣은 외부 주문의 취소는 **사용자 결정 대기**(3.X).
 > 3판의 3.A(스냅샷 주입)·3.B1·3.B2·3.B4·3.B5·3.1·3.4·3.10·3.E1·3.E3 은 3.X 로 옮긴다.
 
-- [ ] 3.0 **Pre-Edit 선언** — `internal/app/engine/exitloop.go` `clearTheSymbol`
+- [x] 3.0 **Pre-Edit 선언** — `internal/app/engine/exitloop.go` `clearTheSymbol`
 - [ ] 3.0a **FLM(편집 전, 5판 N1)** — `clearTheSymbol` 번들을 현재 소스로 재생성하고 해제 자리(`:1492-1495`)의 분기를 AST 로 열거한 뒤 편집한다.
       발의 intent 의 attempt 상태를 읽는 원장 질의가 없으면 새 함수로 둔다(새 파일)
-- [ ] 3.N1 **RED (5판 N1 핵심)** — 무장된 익절 발의의 attempt 가 `UNRESOLVED_IN_DOUBT` 인 종목에서 손절 조건이 서면 청소는 발의를
+- [x] 3.N1 **RED (5판 N1 핵심)** — 무장된 익절 발의의 attempt 가 `UNRESOLVED_IN_DOUBT` 인 종목에서 손절 조건이 서면 청소는 발의를
       **비우지 않고**(`ProposalCancelled` 0건) `clear=false` 이며, 보호 청산 제출 0건이다
-- [ ] 3.N1a **RED (5판 N1)** — 같은 상황에서 critical 이 **한 번** 나가고 그 이벤트가 park 된 attempt id·종목·운영자 해소 필요를 싣는다.
+- [x] 3.N1a **RED (5판 N1)** — 같은 상황에서 critical 이 **한 번** 나가고 그 이벤트가 park 된 attempt id·종목·운영자 해소 필요를 싣는다.
       key 는 포지션 단위다(두 포지션이면 두 key)
-- [ ] 3.N1b **RED (5판 N1)** — 발의 attempt 가 `RECORDED`·`DISPATCH_STARTED`·`ACKED`·`IN_DOUBT` 여도 해제하지 않는다(표). 그 경우 park 원인
+- [x] 3.N1b **RED (5판 N1)** — 발의 attempt 가 `RECORDED`·`DISPATCH_STARTED`·`ACKED`·`IN_DOUBT` 여도 해제하지 않는다(표). 그 경우 park 원인
       critical 은 나가지 않고 기존 타이머·D−2.7 트리거가 그대로다
-- [ ] 3.N1c **RED (5판 N1, 무변화)** — 발의 attempt 가 모두 `CONFIRMED` 면 오늘대로(청소 목록 → 취소 확정 → 해제). 모두 비수용 종결이면 4.7 의
+- [x] 3.N1c **RED (5판 N1, 무변화)** — 발의 attempt 가 모두 `CONFIRMED` 면 오늘대로(청소 목록 → 취소 확정 → 해제). 모두 비수용 종결이면 4.7 의
       판정 함수로 해제
-- [ ] 3.N1d **RED (5판 N1 해동)** — park 된 attempt 가 운영자 해소(`OperatorResolve` → 판정 함수, 4.3e) 또는 종결 증거로 비수용 종결되면 다음
+- [x] 3.N1d **RED (5판 N1 해동)** — park 된 attempt 가 운영자 해소(`OperatorResolve` → 판정 함수, 4.3e) 또는 종결 증거로 비수용 종결되면 다음
       관측에서 발의가 풀리고 손절이 제안된다. 그 전에는 몇 주기가 지나도 풀리지 않는다
-- [ ] 3.R2 **RED (6판 R5-2 — 도달성)** — 무장 발의가 **손절 자신**(`STOP_LOSS_LADDER`·RATCHET 의 `BASELINE_BREACH`)이고 그 attempt 가 park 인
+- [x] 3.R2 **RED (6판 R5-2 — 도달성)** — 무장 발의가 **손절 자신**(`STOP_LOSS_LADDER`·RATCHET 의 `BASELINE_BREACH`)이고 그 attempt 가 park 인
       포지션에서 손절 조건이 다시 성립: 평가는 `SuppressedPending`(`ladder.go:441-443`·`ratchet.go:422-426`) 그대로, park 원인 critical 이
       포지션 key 로 **1회** 적재된다(사건 두 행의 모양). 무장 발의가 익절인 경우도 같은 critical 이 청소 자격과 무관하게 난다
-- [ ] 3.R2a **RED (6판)** — park 원인 판정은 평가·억제·청소의 결과를 바꾸지 않는다(판정 전후 스냅숏·원장 행 동일)
-- [ ] 3.R7 **RED (6판 R5-7 핵심)** — 무장 익절 매도를 청소가 취소해 취소가 CONFIRMED 인데 그 주문의 종결 스냅숏이 없는 주기: 발의 해제 0,
+- [x] 3.R2a **RED (6판)** — park 원인 판정은 평가·억제·청소의 결과를 바꾸지 않는다(판정 전후 스냅숏·원장 행 동일)
+- [x] 3.R7 **RED (6판 R5-7 핵심)** — 무장 익절 매도를 청소가 취소해 취소가 CONFIRMED 인데 그 주문의 종결 스냅숏이 없는 주기: 발의 해제 0,
       보호 청산 제출 0, **같은 주문 재취소 0**. 종결 스냅숏을 기록한 다음 주기: 발의 해제 → 손절 제출
-- [ ] 3.R7a **RED (6판 R5-7)** — 발의 intent 의 CONFIRMED 주문이 소유 모호로 `LiveOrdersForSymbol` 에서 빠지고 종결 증거가 없으면 발의 해제 0
+- [x] 3.R7a **RED (6판 R5-7)** — 발의 intent 의 CONFIRMED 주문이 소유 모호로 `LiveOrdersForSymbol` 에서 빠지고 종결 증거가 없으면 발의 해제 0
       (그 intent 의 주문 번호로 종결을 본다 — `fills.go:1866-1872` 필터에 기대지 않는다)
-- [ ] 3.R7b **RED (6판 R5-7, 무변화)** — **매수**(진입) 주문 취소는 종전대로 CONFIRMED 로 치운다 — 진입 매수 + 손절 경로의 제출 시점 무변화
-- [ ] 3.R7c **RED (6판)** — 종결 증거를 기다리는 취소는 D−2.7 계수에서 빠지지 않는다(3.E5 의 제외는 기록·전송·인수 단계만)
-- [ ] 3.R5 **RED (6판 R5-5 — 셋째 기전)** — 무장 발의 없음 + 같은 종목에 **다른 intent** 의 IN_DOUBT attempt: 청소 `clear=false`, 무장 0,
+- [x] 3.R7b **RED (6판 R5-7, 무변화)** — **매수**(진입) 주문 취소는 종전대로 CONFIRMED 로 치운다 — 진입 매수 + 손절 경로의 제출 시점 무변화
+- [x] 3.R7c **RED (6판)** — 종결 증거를 기다리는 취소는 D−2.7 계수에서 빠지지 않는다(3.E5 의 제외는 기록·전송·인수 단계만)
+- [x] 3.R5 **RED (6판 R5-5 — 셋째 기전)** — 무장 발의 없음 + 같은 종목에 **다른 intent** 의 IN_DOUBT attempt: 청소 `clear=false`, 무장 0,
       `ProposalCancelled` 0, `clearDelay` 호출 0 → 기존 30초 지연 경보가 한계에서 1회. 여러 주기 반복해도 `PROPOSAL_CANCELLED` 0
 - [ ] 3.R5a **RED (6판, 구조 — Q6-2 확정)** — 청소의 미종결 판정과 `checkSymbolFree` 가 **같은 게이트웨이 메서드**를 부른다(AST 구조 단언 + 그 메서드의
       대상 판정을 바꾼 변이가 두 경로 시험을 모두 깨뜨린다)
 - [ ] 3.R4 **RED (6판 R5-4 · 9판 R7-8 — enqueue-only)** — 이 change 의 새 critical(3.E4 · 3.R2 · 4.3d · 4.N4)은 **a092 단일 입구(`RecordAlert`, 창 0)** 로
       기록되고 직접 `Journal.EnqueueAlert` 호출은 0(a092 census 핀), 관측 루프의 `ExitAlerter.Notify` 호출도 0. 전송자를 막아 둔 fixture 에서 다른 포지션의 손절 제출 시점 무변화
-- [ ] 3.2 **RED** — 취소 확정 후에만 보호 청산이 제출된다 (`clearTheSymbol` `:1485-1486`·`:1489-1490` 유지)
-- [ ] 3.3 **RED** — 취소가 확정되지 않으면 **제출하지 않는다**
+- [x] 3.2 **RED** — 취소 확정 후에만 보호 청산이 제출된다 (`clearTheSymbol` `:1485-1486`·`:1489-1490` 유지)
+- [x] 3.3 **RED** — 취소가 확정되지 않으면 **제출하지 않는다**
 - [ ] 3.5 **RED** — 이 경로에서 나가는 mutation은 **취소뿐** — 신규·정정 0건
 - [ ] 3.6 **RED** — 저널에 intent가 있는 주문의 lineage 처리 **무변화**
 - [ ] 3.8 **RED** — 익절 경로에서도 같게 동작한다
 - [ ] 3.9 **RED (4판)** — 엔진에 귀속되지 않는 미체결 주문(원장에 없는 주문)은 **취소 대상이 아니다** — 오늘 동작 고정
-- [ ] 3.B3 **RED** — 원장 주문의 빈 `price` 는 **0으로** 읽고 치우기 실패로 판정하지 않는다(`floatOf` `:1779-1785`, a087 대비)
+- [x] 3.B3 **RED** — 원장 주문의 빈 `price` 는 **0으로** 읽고 치우기 실패로 판정하지 않는다(`floatOf` `:1779-1785`, a087 대비)
 - [ ] 3.7 **RED (§0.3 회귀)** — 취소·해석 실패는 `clearTheSymbol` **내부에서 흡수**되어 `clear=false` 가 된다
       (`:1465`·`:1471`·`:1485-1486`). 원장 목록 읽기 실패는 오늘처럼 오류로 반환된다(`:1443-1445`) — 무변화 고정
-- [ ] 3.E2 **RED (§0.4)** — 이 경로에서 나가는 **새 브로커 조회가 0건**임을 고정
-- [ ] 3.E4 **RED (4판 D−2.7)** — 같은 포지션의 청소가 **연속 N회**(`N = obs.DefaultCriticalAttempts` — a124 관례, 시험은 상수를 인용) `clear=false` 로 끝나면
+- [x] 3.E2 **RED (§0.4)** — 이 경로에서 나가는 **새 브로커 조회가 0건**임을 고정
+- [x] 3.E4 **RED (4판 D−2.7)** — 같은 포지션의 청소가 **연속 N회**(`N = obs.DefaultCriticalAttempts` — a124 관례, 시험은 상수를 인용) `clear=false` 로 끝나면
       `EventExitLiquidationDelayed`(이미 critical, `internal/obs/event.go:336`)를 **새 트리거로, 타이머와 다른 알림 key 로 한 번** 낸다.
       `delayAlerted` 를 건드리지 않는다. **기존 30초 타이머**(`noteDelay` `:1252`·`:1675-`, 한계 `:116`, key `type|positionID` `:1688`)의
       시작·해제·한계·중복 방지는 **무변화** — 두 경보가 모두 나가는 것을 단언한다. 그 뒤에도 자동 제출하지 않는다(§6)
-- [ ] 3.E5 **RED (4판 D−2.7)** — 그 주기에 치우지 못한 주문이 **모두** 엔진의 `CANCEL` attempt(같은 `target_order_id`)가
+- [x] 3.E5 **RED (4판 D−2.7)** — 그 주기에 치우지 못한 주문이 **모두** 엔진의 `CANCEL` attempt(같은 `target_order_id`)가
       `RECORDED`·`DISPATCH_STARTED`·`ACKED` 인 주문이면 새 계수를 늘리지 않는다. **`IN_DOUBT` 취소는 센다.** 하나라도 다른 이유면 센다.
       **기존 타이머에는 이 제외가 적용되지 않는다** — 둘을 따로 단언한다
 
@@ -234,9 +234,9 @@
       입구의 기록 실패 fixture(확정 전이 실패와 겹친 경우 포함): 진입 잠금은 입구의 생산자 래치가 한다, **관측 루프 계속·청산 무영향**.
       해제 세대 읽기는 입구의 몫(기록 오류 반환 직후) — a094 경로에서 적재 중 해제가 끼어도 잠기는지 단언(D−6.2)
 - [ ] 4.N4h **구현 하드 조건(8판 개정)** — a092 `RecordAlert` 입구가 main 에 착지한 뒤에만 4.N4g 와 새 기록자 구현을 시작한다(설계 freeze 는 독립)
-- [ ] 3.R7d **RED (7판 D−5.4 — 무기한 대기 · 10판: 사람 경로는 체결 감지 수리, D−8.2)** — 체결 감지가 종결 스냅숏을 **계속** 기록하지 않는 fixture(30초 · D−2.7 한계를 넘어): 발의 해제 0,
+- [x] 3.R7d **RED (7판 D−5.4 — 무기한 대기 · 10판: 사람 경로는 체결 감지 수리, D−8.2)** — 체결 감지가 종결 스냅숏을 **계속** 기록하지 않는 fixture(30초 · D−2.7 한계를 넘어): 발의 해제 0,
       제출 0, 지연 경보 1회, D−2.7 경보 1회 — 시간 경과로 풀리는 경로 0
-- [ ] 3.R7e **RED (10판 D−8.3 — 경보 본문)** — 형태 B 로 보류 중인 포지션의 지연 경보와 D−2.7 경보 본문에 체결 감지 확인·복구 절차 안내 문장이 있다. 등급·key·빈도는
+- [x] 3.R7e **RED (10판 D−8.3 — 경보 본문)** — 형태 B 로 보류 중인 포지션의 지연 경보와 D−2.7 경보 본문에 체결 감지 확인·복구 절차 안내 문장이 있다. 등급·key·빈도는
       무변화(형태 B 가 아닌 지연의 경보 본문은 무변화)
 - [ ] 3.R7f **(10판 D−8.3 — 문서)** — `docs/operations.md` 「체결 감지가 멈췄을 때」 절(확인 · 흔한 원인과 조치 · 수리 뒤 확인 · 하지 말 것 — 원장 수기 기록 금지, 엔진 정지 금지)
 - [ ] 3.R9 **RED (11판 D−9.3 — 종결 증거 대기 critical)** — 무장 익절 매도 · 엔진 CANCEL CONFIRMED · 종결 스냅숏 없음 · 체결 감지 **건강**(주기 성공, 그 주문은 OPEN 또는
@@ -252,18 +252,18 @@
 - [ ] 4.Ta **RED (6판)** — 해동 명령의 두 쓰기 사이 충돌 fixture → 다음 기동 따라잡기(4.3b)가 발의를 푼다
 - ~~4.Tb~~ **10판에서 철회**(D−8.1 — 운영자 종결 단언 없음)
 - ~~4.Tc · 4.Td~~ **10판에서 철회** — Q9-1(additive 단언 테이블) 승인 무효화(D−8.1 근거 1~4). 이 change 는 스키마를 바꾸지 않는다
-- [ ] 4.1 **RED (핵심)** — attempt가 `FAILED_CONFIRMED`로 종결하면 그 intent를 가리키는 발의가 해제되고, **쓸 수 있는 시세가
+- [x] 4.1 **RED (핵심)** — attempt가 `FAILED_CONFIRMED`로 종결하면 그 intent를 가리키는 발의가 해제되고, **쓸 수 있는 시세가
       있는** 다음 관측에서 손절이 다시 제안된다. `EvaluateLadder` **B26** `:441`이 더는 억제하지 않는 것을 확인
-- [ ] 4.1a **RED** — **RATCHET에서도 같다.** `EvaluateRatchet` **B17** `:423`
-- [ ] 4.2 **RED (안전)** — attempt가 `CONFIRMED`면 발의를 **해제하지 않는다**
-- [ ] 4.3 **RED (안전, 4판)** — `NOT_DISPATCHED` 는 해제 대상이다. **`UNRESOLVED_IN_DOUBT` 는 해제하지 않는다** — park 된 attempt 의
+- [x] 4.1a **RED** — **RATCHET에서도 같다.** `EvaluateRatchet` **B17** `:423`
+- [x] 4.2 **RED (안전)** — attempt가 `CONFIRMED`면 발의를 **해제하지 않는다**
+- [x] 4.3 **RED (안전, 4판)** — `NOT_DISPATCHED` 는 해제 대상이다. **`UNRESOLVED_IN_DOUBT` 는 해제하지 않는다** — park 된 attempt 의
       발의는 무장된 채 남고, 원 매도가 살아 있다고 가정한 반례(park + 살아 있는 SELL)에서 두 번째 매도가 무장되지 않음을 단언한다
-- [ ] 4.3a **RED (4판 F4)** — 해제는 attempt 의 `intent_id` = 현재 `pending_intent_id` 일 때만 비운다. 다르면 무변화
+- [x] 4.3a **RED (4판 F4)** — 해제는 attempt 의 `intent_id` = 현재 `pending_intent_id` 일 때만 비운다. 다르면 무변화
       (늦게 도착한 해제 · 재무장 뒤의 옛 해제)
 - [ ] 4.3b **RED (4판 F4)** — 기동 따라잡기: `pending_intent_id` 가 찬 발의마다 그 intent 의 attempt 가 **모두**
       `FAILED_CONFIRMED`·`NOT_DISPATCHED` 이거나 **하나도 없으면** 해제. 종결과 해제 사이 충돌 · 무장 뒤 `Prepare` 전 충돌 fixture 가
       다음 기동에서 풀린다. attempt 하나라도 `CONFIRMED`·park·미종결이면 해제하지 않는다. 멱등
-- [ ] 4.3c **RED (4판, 문서 리뷰 P0)** — 세션 중 `submit` 은 `out.State ∈ {NOT_DISPATCHED, FAILED_CONFIRMED}` 이거나
+- [x] 4.3c **RED (4판, 문서 리뷰 P0)** — 세션 중 `submit` 은 `out.State ∈ {NOT_DISPATCHED, FAILED_CONFIRMED}` 이거나
       `out.AttemptID == ""` 일 때만 해제한다. dispatch 뒤 `MarkAcked`(또는 `Settle`·`MarkInDoubt`) 쓰기를 실패시킨 fixture
       (`gateway.go:747` — `State==""`, `AttemptID!=""`)에서 발의가 **무장된 채** 남음을 단언한다
 - [ ] 4.3d **RED (4판, 문서 리뷰 P1 · Q4-5)** — 기동 단계(따라잡기 — 5판에서 재분류는 이연)의 한 행 실패는 그 행을 바꾸지 않고 다음 행으로 가며 Recover 가
@@ -275,10 +275,10 @@
 - [ ] 4.4 **RED (4판 F6 — 재핀, 5판 개정)** — 기동 순서: ① ~~재분류~~(5판 이연, D−3.4), ② 따라잡기(4.3b)가 `Recovery.Run` 뒤·`ready` 앞,
       ③ `Recovery.Run` 본문(재시작 규칙 → **기동 ACKED 확정·알림(D−4.2 — 7판)** → 재생 → 해소)과 인터록 의미는 그 외 **무변화**. 좌표 단언이 아니라 순서 단언이다(`engineRecoverySequence` `:604-606`,
       `recoverThenReady` `:677`). ②의 자리는 **`engineRecoverySequence` 클로저 안 `r.Run` 뒤** — 루프는 Recover 반환 뒤에만 시작한다
-- [ ] 4.4a **RED (핵심)** — 이 경로는 `Journal.RecoverPending`을 **세션 중에 부르지 않는다**(`journal/recovery.go:95-109`)
-- [ ] 4.5 **RED (§6)** — 발의 해제가 **손절 가격을 바꾸지 않는다.** `entry_price`·`initial_stop`·`baseline_price` 쓰기 0건
-- [ ] 4.5a **RED** — `pending_level`이 음수면 rung 되돌림 없이 해제된다(`RungIndex` 거부). **080220이 그 경우다**
-- [ ] 4.6 **RED** — 해제는 **멱등**이다. `ResolveExitProposal` B8
+- [x] 4.4a **RED (핵심)** — 이 경로는 `Journal.RecoverPending`을 **세션 중에 부르지 않는다**(`journal/recovery.go:95-109`)
+- [x] 4.5 **RED (§6)** — 발의 해제가 **손절 가격을 바꾸지 않는다.** `entry_price`·`initial_stop`·`baseline_price` 쓰기 0건
+- [x] 4.5a **RED** — `pending_level`이 음수면 rung 되돌림 없이 해제된다(`RungIndex` 거부). **080220이 그 경우다**
+- [x] 4.6 **RED** — 해제는 **멱등**이다. `ResolveExitProposal` B8
 - [ ] 4.7 **GREEN** — 후처리 하나 + 기동 따라잡기. **새 루프도 주기도 없고, 브로커 조회는 기동 ACKED 확정 읽기(D−4.2 · D−5.5)뿐이다**(9판 R7-8)
 
 ## 4bis. R1 소급 — **5판에서 이연(선택 후속, 이 change 범위 밖)** (D1 → 4판 D−2.3 → **5판 D−3.4**)

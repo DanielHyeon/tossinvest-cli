@@ -137,6 +137,9 @@ type ReductionIssuer interface {
 type ExitSubmitter interface {
 	Place(ctx context.Context, req execgw.PlaceRequest) (execgw.Outcome, error)
 	Cancel(ctx context.Context, req execgw.CancelRequest) (execgw.Outcome, error)
+	// UnsettledOnSymbol 은 같은 종목의 미종결 attempt 임 — 주문 경로의 checkSymbolFree 와 같은 판정 함수(a094 D−4.7).
+	// 청소가 이것을 보고 치움 미완료로 판정하므로, 게이트웨이가 어차피 거절할 제출을 무장 · 해제하지 않음.
+	UnsettledOnSymbol(ctx context.Context, market, symbol string) ([]journal.AttemptRecord, error)
 }
 
 // ExitAlerter receives the loop's operator alerts. *obs.Notifier satisfies it.
@@ -198,6 +201,9 @@ type ExitObserverOptions struct {
 	Escalate execgw.ModeEscalation
 	// Announcer is told about a transition that changed something. Optional.
 	Announcer journal.ModeAnnouncer
+	// Critical 은 a094 의 새 critical(park 원인 · 연속 청소 실패 · 종결 증거 대기)을 창 0 으로 기록하는 알림기의
+	// 단일 입구임(a092 K6). 조립부가 *obs.Notifier 를 넣음. nil 이면 경고 로그만 남음(durable 아님).
+	Critical CriticalRecorder
 
 	// AccountRef scopes everything. Required.
 	AccountRef string
@@ -252,6 +258,10 @@ type ExitObserver struct {
 	delayedSince map[string]time.Time
 	// delayAlerted stops that alert repeating within one delay.
 	delayAlerted map[string]bool
+	// clearStreak 는 포지션별 청소 연속 실패임(a094 D−2.7 · D−7.1 — key 는 연속 id). 관측자 상태라 재시작하면 새 연속.
+	clearStreak map[string]*clearStreak
+	// a094Recorded 는 a094 의 명명 critical 을 한 프로세스에서 다시 적재하지 않게 하는 래치임(적재 중복 최적화).
+	a094Recorded map[string]bool
 	// observationSequence distinguishes fallback observations when the quote
 	// source supplies no FetchedAt and a test/frozen clock does not advance.
 	observationSequence atomic.Uint64
@@ -864,6 +874,9 @@ func (o *ExitObserver) judge(ctx context.Context, m managed, quote observedQuote
 	if !o.quoteUsable(quote) {
 		return nil
 	}
+	// 무장된 발의가 왜 풀리지 않는지(park · 종결 증거 대기)를 판정 진입에서 알림 — 원장 읽기와 기록만, 평가 · 억제 ·
+	// 청소의 순서와 결과는 바꾸지 않음(a094 D−4.4 · D−9.3). 억제 · 조기 반환보다 앞이어야 손절 자신의 발의에도 닿음.
+	o.noteHeldProposal(ctx, m)
 	if m.identityErr != nil {
 		o.alertRefused(ctx, m, m.identityErr)
 		return nil
@@ -1253,12 +1266,16 @@ func (o *ExitObserver) record(ctx context.Context, m managed, snapshot exitpolic
 			if err != nil {
 				return err
 			}
-			if !cleared {
-				o.noteDelay(ctx, m, "a working order on the symbol could not be taken off the book")
+			if !cleared.cleared {
+				// 지연 경보의 사유는 형태 B(매도 취소의 종결 증거 대기)면 복구 절차를 안내함(a094 D−8.3 — 등급 · key ·
+				// 빈도 무변화). 연속 실패 트리거는 기존 타이머와 별개의 이른 경보임(D−2.7).
+				o.noteDelay(ctx, m, cleared.why())
+				o.noteClearFailure(ctx, m, cleared)
 				orderable = false
 				judgement.ArmSuppressedReason = journal.ArmSuppressedWorkingOrder
 			} else {
 				o.clearDelay(m.position.ID)
+				o.endClearStreak(m.position.ID)
 			}
 		}
 	}
@@ -1356,7 +1373,7 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 		// while the account is in RECONCILE. Release the proposal so the same
 		// level identity is proposed again once the floor lifts; keeping it armed
 		// would suppress exactly the re-proposal exit-policy asks for.
-		return o.release(ctx, m, journal.ProposalRefused)
+		return o.release(ctx, m, intentID, journal.ProposalRefused)
 	}
 
 	issued, err := o.opts.Issuer.IssueReduction(ctx, execgw.ReductionIssuance{
@@ -1373,7 +1390,7 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 	})
 	if err != nil {
 		o.alertProposalRefused(ctx, m, proposal, err.Error())
-		return o.release(ctx, m, journal.ProposalRefused)
+		return o.release(ctx, m, intentID, journal.ProposalRefused)
 	}
 
 	// Attach before submitting. The id is already in the judgement transaction;
@@ -1387,7 +1404,7 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 	intent, err := o.sellIntent(m, submitQuantity, observed)
 	if err != nil {
 		o.alertRefused(ctx, m, err)
-		return o.release(ctx, m, journal.ProposalRefused)
+		return o.release(ctx, m, intentID, journal.ProposalRefused)
 	}
 	out, err := o.opts.Submit.Place(ctx, execgw.PlaceRequest{
 		Intent:         intent,
@@ -1411,21 +1428,33 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 		return nil
 	case out.Reason == execgw.ReasonSymbolInFlight:
 		o.noteDelay(ctx, m, "another mutation on the symbol is in flight")
-		return o.release(ctx, m, journal.ProposalCancelled)
+		return o.release(ctx, m, intentID, journal.ProposalCancelled)
+	case out.AttemptID != "" && out.State != journal.StateNotDispatched && out.State != journal.StateFailedConfirmed:
+		// attempt 는 기록됐는데 입증된 비수용이 아님 — 결과를 원장에 쓰지 못해 상태가 빈 경우 포함(gateway 의 결과 쓰기
+		// 실패 · 종료 중 취소). 주문은 나갔을 수 있으므로 발의는 무장된 채 남기고, 재시작 복구와 기동 따라잡기가
+		// 그 attempt 를 처리함(a094 D−2.5 · 4.3c).
+		if err == nil {
+			err = fmt.Errorf("attempt %s ended in state %q", out.AttemptID, out.State)
+		}
+		return fmt.Errorf("engine: the exit order of %s did not settle as unaccepted; the proposal stays armed: %w",
+			m.position.ID, err)
 	default:
 		detail := out.Detail
 		if detail == "" && err != nil {
 			detail = err.Error()
 		}
 		o.alertProposalRefused(ctx, m, proposal, detail)
-		return o.release(ctx, m, journal.ProposalRefused)
+		return o.release(ctx, m, intentID, journal.ProposalRefused)
 	}
 }
 
 // release clears an armed proposal that produced no live order, which re-arms
 // its level (exit-policy: 거부·취소 시 해당 레벨은 재발의 가능해진다).
-func (o *ExitObserver) release(ctx context.Context, m managed, how journal.ProposalResolution) error {
-	if err := o.opts.Journal.ResolveExitProposal(ctx, m.position.ID, how); err != nil {
+//
+// 해제는 원장의 판정 하나(ReleaseUnacceptedExitProposal)가 함 — 그 intent 의 attempt 가 전부 입증된 비수용이거나 하나도
+// 없고, 무장된 발의가 그 intent 일 때만(a094 D−2.5). 판정이 해제를 허락하지 않으면 발의는 무장된 채 남음.
+func (o *ExitObserver) release(ctx context.Context, m managed, intentID string, how journal.ProposalResolution) error {
+	if _, _, err := o.opts.Journal.ReleaseUnacceptedExitProposal(ctx, m.position.ID, intentID, how); err != nil {
 		return fmt.Errorf("engine: releasing the exit proposal of %s: %w", m.position.ID, err)
 	}
 	return nil
@@ -1442,17 +1471,46 @@ func (o *ExitObserver) release(ctx context.Context, m managed, how journal.Propo
 // The release is last and only on success. Releasing a proposal whose order is
 // still live would re-arm its level over a working sell, which is the oversell
 // the whole sequence exists to prevent.
-func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPending bool) (bool, error) {
+//
+// a094 가 더한 규칙 셋(원장만 읽음 — 새 브로커 호출 0):
+//
+//   - 같은 종목에 미종결 attempt 가 있으면 치움 미완료(D−4.7). 판정은 주문 경로와 같은 함수(Submit.UnsettledOnSymbol).
+//   - 매도의 취소 접수는 치움이 아님(D−4.3). 그 매도가 종결 체결 기록으로 미체결 목록에서 빠질 때까지 미완료이고, 엔진
+//     취소가 이미 접수 확정된 매도는 다시 취소하지 않음. 매수 취소는 종전대로 접수로 치움.
+//   - 발의 해제는 원장 판정(ReleaseClearedExitProposal)이 함(D−3.2) — 그 intent 의 attempt 가 살아 있을 수 있거나 park
+//     이거나 종결 증거를 기다리면 해제하지 않고 치움 미완료임.
+func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPending bool) (clearResult, error) {
 	live, err := o.opts.Journal.LiveOrdersForSymbol(ctx,
 		o.opts.AccountRef, m.position.Market, m.position.Symbol)
 	if err != nil {
-		return false, fmt.Errorf("engine: reading the working orders of %s: %w", m.position.Symbol, err)
+		return clearResult{}, fmt.Errorf("engine: reading the working orders of %s: %w", m.position.Symbol, err)
 	}
-	clear := true
+	unsettled, err := o.opts.Submit.UnsettledOnSymbol(ctx, m.position.Market, m.position.Symbol)
+	if err != nil {
+		return clearResult{}, fmt.Errorf("engine: reading the unsettled mutations on %s: %w", m.position.Symbol, err)
+	}
+	if len(unsettled) > 0 {
+		// 게이트웨이가 어차피 SymbolInFlight 로 거절할 제출을 무장 · 해제하지 않음 — 그 반복이 지연 타이머를 매 주기
+		// 지워 30초 경보에 닿지 못하게 했음(272210 의 모양). 엔진 취소가 전송 · 인수 단계인 것뿐이면 계수에서 뺌.
+		return clearResult{countable: !onlyEngineCancelsInFlight(unsettled)}, nil
+	}
+	res := clearResult{cleared: true, countable: true}
 	for _, order := range live {
 		buy := strings.EqualFold(strings.TrimSpace(order.Side), "BUY")
 		if !buy && !withPending {
 			continue
+		}
+		if !buy {
+			// 엔진 취소가 이미 접수 확정된 매도 — 종결 증거를 기다리는 중이며 다시 취소하지 않음.
+			_, waiting, err := o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.Symbol, order.OrderID)
+			if err != nil {
+				res.cleared = false
+				continue
+			}
+			if waiting {
+				res.cleared, res.awaitingClose = false, true
+				continue
+			}
 		}
 		issued, err := o.opts.Issuer.IssueReduction(ctx, execgw.ReductionIssuance{
 			Intent: risk.Intent{
@@ -1467,13 +1525,13 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 				strings.ToUpper(strings.TrimSpace(order.Side)), order.OrderID, m.position.ID),
 		})
 		if err != nil {
-			clear = false
+			res.cleared = false
 			continue
 		}
 		quantity, qerr := floatOf("working order quantity", order.Quantity)
-		price, perr := floatOf("working order price", order.Price)
+		price, perr := workingOrderPrice(order.Price)
 		if qerr != nil || perr != nil {
-			clear = false
+			res.cleared = false
 			continue
 		}
 		out, err := o.opts.Submit.Cancel(ctx, execgw.CancelRequest{
@@ -1488,18 +1546,31 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 			Decision: issued.Decision,
 		})
 		if err != nil || out.State != journal.StateConfirmed {
-			clear = false
+			res.cleared = false
+			continue
+		}
+		if !buy {
+			// 매도의 취소 접수는 치움의 증거가 아님 — 취소 전에 얼마나 체결됐는지는 종결 체결 기록만 말함(D−4.3).
+			res.cleared, res.awaitingClose = false, true
 		}
 	}
-	if !clear {
-		return false, nil
+	if !res.cleared {
+		return res, nil
 	}
 	if withPending && m.state.Pending() {
-		if err := o.release(ctx, m, journal.ProposalCancelled); err != nil {
-			return false, err
+		if strings.TrimSpace(m.state.PendingIntentID) == "" {
+			// intent 없는 발의는 attempt 를 찾을 수 없음 — 살아 있을 수 있는 발의로 다룸.
+			return clearResult{countable: true}, nil
+		}
+		verdict, released, err := o.opts.Journal.ReleaseClearedExitProposal(ctx, m.position.ID, m.state.PendingIntentID)
+		if err != nil {
+			return clearResult{}, fmt.Errorf("engine: releasing the exit proposal of %s: %w", m.position.ID, err)
+		}
+		if !released {
+			return clearResult{countable: true, awaitingClose: verdict == journal.ExitIntentAwaitingClose}, nil
 		}
 	}
-	return true, nil
+	return res, nil
 }
 
 // applyFloor caps a liquidation at the RECONCILE confirmed floor (task 7.5).

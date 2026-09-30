@@ -189,3 +189,8 @@ func newConcurrentObserver(t *testing.T, h *exitHarness, prices engine.PriceRead
 	}
 	return observer
 }
+
+// UnsettledOnSymbol 은 a094 가 ExitSubmitter 에 더한 미종결 판정임 — 이 시험은 그것을 재지 않으므로 미종결 없음.
+func (s *journalMutationSubmitter) UnsettledOnSymbol(context.Context, string, string) ([]journal.AttemptRecord, error) {
+	return nil, nil
+}

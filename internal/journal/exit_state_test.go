@@ -378,8 +378,12 @@ func TestARefusalReArmsTheLevel(t *testing.T) {
 	o, _ := openedPosition(t, j, "10")
 	p := currentPosition(t, j, o)
 	armPartial(t, j, p.ID, "72000", RatchetBreakeven)
+	if err := j.AttachExitIntent(ctx, p.ID, "i-refused"); err != nil {
+		t.Fatalf("AttachExitIntent: %v", err)
+	}
 
-	if err := j.ResolveExitProposal(ctx, p.ID, ProposalRefused); err != nil {
+	// a094: 해제는 무장된 발의의 intent 를 이름으로 겨눈다.
+	if err := j.ResolveExitProposal(ctx, p.ID, "i-refused", ProposalRefused); err != nil {
 		t.Fatalf("ResolveExitProposal: %v", err)
 	}
 	state := exitStateOf(t, j, p.ID)
@@ -420,7 +424,7 @@ func TestResolvingNothingIsNotAnError(t *testing.T) {
 	o, _ := openedPosition(t, j, "10")
 	p := currentPosition(t, j, o)
 
-	if err := j.ResolveExitProposal(context.Background(), p.ID, ProposalCancelled); err != nil {
+	if err := j.ResolveExitProposal(context.Background(), p.ID, "i-any", ProposalCancelled); err != nil {
 		t.Fatalf("ResolveExitProposal on an empty state: %v; a retry must converge", err)
 	}
 }
@@ -446,7 +450,7 @@ func TestACancelledRungIsProposableAgain(t *testing.T) {
 	if err := j.RecordExitJudgement(ctx, ExitJudgement{
 		PositionID: p.ID, ObservedPrice: "71750", HighWater: "71750",
 		Baseline: "70700", RatchetLevel: RatchetNone, ActiveRung: 1,
-		Proposal: &ExitProposal{Action: string(exitpolicy.ActionLadderPartial), Level: "1"},
+		Proposal: &ExitProposal{Action: string(exitpolicy.ActionLadderPartial), Level: "1", IntentID: "i-rung"},
 	}); err != nil {
 		t.Fatalf("RecordExitJudgement: %v", err)
 	}
@@ -454,7 +458,7 @@ func TestACancelledRungIsProposableAgain(t *testing.T) {
 		t.Fatalf("active rung = %d, want 1", got.ActiveRung)
 	}
 
-	if err := j.ResolveExitProposal(ctx, p.ID, ProposalCancelled); err != nil {
+	if err := j.ResolveExitProposal(ctx, p.ID, "i-rung", ProposalCancelled); err != nil {
 		t.Fatalf("ResolveExitProposal: %v", err)
 	}
 	state := exitStateOf(t, j, p.ID)
@@ -796,7 +800,10 @@ func TestARefusedProposalIsReArmedAfterARestart(t *testing.T) {
 		o, _ := openedPosition(t, j, "10")
 		positionID = currentPosition(t, j, o).ID
 		armPartial(t, j, positionID, "72000", RatchetBreakeven)
-		if err := j.ResolveExitProposal(ctx, positionID, ProposalRefused); err != nil {
+		if err := j.AttachExitIntent(ctx, positionID, "i-restart"); err != nil {
+			t.Fatalf("AttachExitIntent: %v", err)
+		}
+		if err := j.ResolveExitProposal(ctx, positionID, "i-restart", ProposalRefused); err != nil {
 			t.Fatalf("ResolveExitProposal: %v", err)
 		}
 	}()

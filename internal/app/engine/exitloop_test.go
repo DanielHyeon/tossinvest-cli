@@ -80,6 +80,16 @@ type fakeSubmitter struct {
 	nextOrder    int
 	record       func(execgw.PlaceRequest) string
 	settle       func(orderID string)
+	// unsettled 는 게이트웨이의 미종결 판정(UnsettledOnSymbol)을 대신함. nil 이면 미종결 없음 — a094 시험은 실제
+	// 게이트웨이의 메서드를 넣어 두 경로가 같은 판정을 쓰는지 잰다.
+	unsettled func(ctx context.Context, market, symbol string) ([]journal.AttemptRecord, error)
+}
+
+func (f *fakeSubmitter) UnsettledOnSymbol(ctx context.Context, market, symbol string) ([]journal.AttemptRecord, error) {
+	if f.unsettled == nil {
+		return nil, nil
+	}
+	return f.unsettled(ctx, market, symbol)
 }
 
 func (f *fakeSubmitter) Place(_ context.Context, req execgw.PlaceRequest) (execgw.Outcome, error) {
@@ -842,6 +852,14 @@ func TestABreachDisplacesAnOutstandingTakeProfit(t *testing.T) {
 	}
 	if len(h.submit.cancels) == 0 {
 		t.Fatal("the outstanding take-profit must be cancelled before the liquidation is submitted")
+	}
+	// a094 D−4.3: 매도의 취소 접수는 치움이 아니다 — 취소한 주기에는 손절을 내지 않고, 그 매도의 종결 체결 기록이
+	// 원장에 있는 다음 주기에 낸다(이 가짜 제출자는 취소와 함께 종결 스냅숏을 기록한다).
+	if len(h.submit.places) != 1 {
+		t.Fatalf("places = %d in the cancelling cycle, want only the partial — a cancel ack is not a close", len(h.submit.places))
+	}
+	if cycle := h.observe(); cycle.Err != nil {
+		t.Fatalf("cycle error: %v", cycle.Err)
 	}
 	if len(h.submit.places) != 2 {
 		t.Fatalf("places = %d, want the partial and then the liquidation", len(h.submit.places))

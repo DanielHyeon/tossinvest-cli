@@ -797,20 +797,16 @@ func (g *Gateway) releaseSymbol(key string) {
 //     of the question — but the operator must still be able to cancel and
 //     liquidate through the engine (§0.3).
 func (g *Gateway) checkSymbolFree(ctx context.Context, plan mutationPlan) (*RejectedError, error) {
-	pending, err := g.journal.PendingAttempts(ctx)
+	// 같은 종목의 미종결 판정은 exit 청소와 같은 함수(unsettledFor)로 함(a094 D−4.7).
+	unsettled, err := g.unsettledFor(ctx, plan)
 	if err != nil {
-		return nil, fmt.Errorf("execgw: checking for in-flight mutations on %s: %w", plan.symbol, err)
+		return nil, err
 	}
-	for _, rec := range pending {
-		same, err := g.attemptTargets(ctx, rec, plan)
-		if err != nil {
-			return nil, err
-		}
-		if same {
-			return reject(ReasonSymbolInFlight,
-				"attempt %s (%s, %s) on %s has not settled yet",
-				rec.ID, rec.Kind, rec.State, plan.symbol), nil
-		}
+	if len(unsettled) > 0 {
+		rec := unsettled[0]
+		return reject(ReasonSymbolInFlight,
+			"attempt %s (%s, %s) on %s has not settled yet",
+			rec.ID, rec.Kind, rec.State, plan.symbol), nil
 	}
 	if !plan.raisesExposure {
 		return nil, nil
