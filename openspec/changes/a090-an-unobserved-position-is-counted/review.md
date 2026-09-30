@@ -366,3 +366,13 @@ Pre-Edit Gate:
 - **P3-2 · P3-3 사용자 큐 추가 승인.** P3-3 귀속 판정: 계좌 원문을 싣는 줄은 `Notifier.escalate`(`internal/obs/notifier.go:425-437`, `FieldAccount, n.AccountRef`)
   — **base 자리**다(a092 이전부터 있던 승격 로그, a090 은 그 함수를 편집하지 않았다). a090 은 기록 실패 시 그 경로를 부르는 호출자를 하나 더할 뿐이므로
   a090 신설 표면이 아니다 → 사용자 큐(D13 항목에 「a090 기록 실패도 이 경로를 부른다」 추가). a090 이 만든 로그 표면(`UnobservedLog` 줄)은 계좌 0 — R17 카나리.
+
+### 착지 · 게이트 준비 (2026-09-30)
+
+- **착지** `8d2f1e12`(Go + 문서, 경로 한정 — staged 전수 a090 경로만) · `6699e4ce` landed-commit.txt = `8d2f1e12`(`--record-landing` 계산, 격리 워크트리).
+- **2차 base 재고정** `825ccbe2`: `2f698db6` → `b6821cf1`(a090 Go 착지의 부모). 이유: 옛 base~landed 창에 형제 착지 16 커밋 → required 43(전부 형제 함수).
+  귀속: 그 구간 a090 디렉터리 비병합 커밋 2(`1ffe2295` · `ee60c2be`), `.go` 0. **승인: Manager 2026-09-30**(「영수증 완결」). 재고정 뒤 격리 워크트리 `825ccbe2`
+  `check_analysis` = required 4 · "evidence complete" rc 0 · `openspec validate --strict` valid.
+- **tasks 4.2** 격리 워크트리 `6699e4ce`: `make test` rc 0 · `make test-seams` rc 0(엔진 단독 전판·lint·-race 는 위 「착지 준비」).
+- **tasks 4.6** 주 워크트리: `make sdd-sync` rc 2(codegraphcontext 300s 타임아웃 · GBrain busy — advisory, codegraph 하드 증거는 갱신) · `make sdd-check` rc 0.
+- **gstack `/review` not-run**: 이 로트의 리뷰 보이스는 분리 컨텍스트 적대 리뷰(라운드 1) + codex 교차 모델(아래). gstack 스킬 러너는 공유 트리의 이웃 커밋까지 diff 범위로 잡아 이 change 만 가를 수 없어 돌리지 않았다.

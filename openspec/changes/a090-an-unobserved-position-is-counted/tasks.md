@@ -112,12 +112,12 @@
 
 ## 4. 게이트
 
-- [ ] 4.1 FLM·AST 재생성(구현 후) + BTM 재번호(difflib) + `check_analysis.py` 통과
-- [ ] 4.2 `go test ./internal/app/engine/ -count=1` · `make test` · `make test-seams` · `make lint`
+- [x] 4.1 FLM·AST 재생성(구현 후) + BTM 재번호(difflib) + `check_analysis.py` 통과
+- [x] 4.2 `go test ./internal/app/engine/ -count=1` · `make test` · `make test-seams` · `make lint`
 - [x] 4.3 **§0.3 확인** — 판정·발의·주문 경로 무변화(`judge` 이하 편집 0, AST 비교) — exitloop.go diff 헝크 10 개(전부 추가, 삭제 0) 전부 구조체 필드 · `ObserveOnce` · `workingSet` 안(`git diff -U0` 헝크 머리 확인), judge 이하 0
 - [x] 4.4 **§0.4 확인** — 새 브로커 호출 0(2.10) — `TestA090R10OnePriceReadPerCycle`
 - [x] 4.5 **토글** — 도입하지 않는다(무도입)
-- [ ] 4.6 `make sdd-sync` → `make sdd-check`
+- [x] 4.6 `make sdd-sync` → `make sdd-check`
 - [ ] 4.7 격리 worktree 에서 `make gate CHANGE=a090-an-unobserved-position-is-counted`
 - [ ] 4.8 독립 리뷰(구현과 분리된 컨텍스트, 교차 모델)
 - [ ] 4.9 PM 동기화 → `openspec archive`
