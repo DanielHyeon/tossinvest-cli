@@ -39,3 +39,11 @@ design D2 는 "관측가도 기준선도 없으면 청산을 거부한다. 시�
 
 Teammate 권고: 1. B2 의 도달 불가를 시험으로 못 박는 것(평가기가 빈/0 관측가를 거부 — `ratchet_test.go:383` 은 `-1` 만,
 ladder 쪽 빈 값 단언은 없음)은 선택 사항으로 함께 제안한다.
+
+### 처분 (2026-09-30, Manager)
+
+**선택지 1 채택** — Phase 1 불구현 종결, D2a 전제 정정. Manager 가 모집단 열거를 독립 대조해 확인했다(positive 가드 두 자리,
+snapshot 평가-성공-후-생성 두 자리, `:765` 무음 skip, `sellIntent` 생산 호출 1곳). 근거: 도달 불가 High-risk 코드 금지 ·
+선택지 2 는 미검증 가상 경로에 주문을 내주므로 보수 방향이 아님(B2 거부가 이미 fail-closed) · 선택지 3 은 a090 표면(중복 금지).
+대체 산출물: 평가기 핀 시험 `internal/exitpolicy/a087_observed_price_pin_test.go`(`7bd8f197`, 변이 4/4 CAUGHT).
+a087 은 Phase 2 사람 게이트(§0.7) 대기로 전환.

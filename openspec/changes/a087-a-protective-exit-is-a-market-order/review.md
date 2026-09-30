@@ -224,3 +224,11 @@ LIMIT 전용 오적용 주장은 **독립 확인에서 옳았다** — `CheckAut
 - **발견(blocking)**: D2a 가 앞에 서려는 거부(`sellIntent` B2)는 생산 경로에서 도달 불가다. 호출 사슬 record→submit→sellIntent,
   관측가는 평가기의 `positive` 검사를 지난 값뿐(AST), 엔진 스위트 커버리지 B1·B2 = 0. 상세·선택지는 `issues.md` I-P1.
 - Pre-Edit 선언·RED·GREEN·변이·gstack 코드 리뷰: **미착수** — production 편집 0, Manager 결정 대기.
+
+## Phase 1 종결 (2026-09-30, Manager 판정)
+
+- 판정: `issues.md` I-P1 선택지 1 — D2a 불구현, 전제 반증. Manager 독립 대조로 모집단 0 확인.
+- 대체 산출물: `7bd8f197` 평가기 관측가 가드 핀 시험(8 부분시험). 변이 `go test -overlay`: 무변이 대조군 GREEN →
+  ratchet `positive→nonNegative` CAUGHT · ratchet 가드 제거 CAUGHT · ladder `positive→nonNegative` CAUGHT · ladder 가드 제거 CAUGHT.
+- 문서: design D2a 「반증」 절 · D2b 제거 예약 취소 · proposal 3판 처분 · tasks P1.x 종결 + P1.7.
+- 남은 범위: Phase 2(§1~§3) — §5 실측(§0.7 사람 승인) 대기.

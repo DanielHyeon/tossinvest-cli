@@ -15,23 +15,22 @@
 
 ## P1. Phase 1 — 가격 사다리 KR 하한가 단 (선행 · 실측 불요 · design D2a)
 
-- [ ] P1.1 **Pre-Edit 선언 + FLM** — `ExitObserver.sellIntent`(High-risk 손절 경로,
-      WORKFLOW §Pre-Edit 형식, `ast.json`+FLM+BTM)
-> **2026-09-30 중단 — `issues.md` I-P1**: P1.1 FLM 은 작성했고(Pre-Edit 미작성), P1.2 ① 열거 결과 대상 모집단이
-> 생산에서 0(B1·B2 도달 불가, 커버리지 0)이라 production 편집 전 Manager 결정을 기다린다.
+> **종결 (2026-09-30, Manager 판정 선택지 1): 불구현 — 전제 반증.** P1.2 ① 열거에서 대상 모집단이 생산에서 0
+> (B1·B2 도달 불가, 엔진 커버리지 0)으로 측정됐다. 영수증: `issues.md` I-P1 · design D2a 「반증」 ·
+> `analysis/function-logic/internal-app-engine--exitobserver.sellintent/` · `analysis/p1-population/`.
+> Phase 1 의 대체 산출물은 P1.7 핀 시험 하나다. production 편집 0.
 
-- [ ] P1.2 **RED — 모집단 열거 포함**: ① 관측가·기준선이 모두 비는 포지션 유형의 열거
-      (언제 생기는가 — fail-closed 가 거부하던 정상 입력) ② KR 보호 제안에서 두 값이
-      빌 때 하한가 LIMIT 로 제출됨 ③ US 무가격·하한가 null/실패 시 거부 + critical 발행
-      (a090 미관측 계수와 합집합 교차 인용) ④ 익절 경로 무변화
-- [ ] P1.3 **GREEN** — 보호 분기에 한해 셋째 단: 엔진 reader 의 `PriceLimits`(reads.go:72,
-      현재 비시험 호출자 0) 배선. KRX 전용(marketdata.go:97 인용). 폴백 사건에서만 1회
-      읽기(§0.4 사건 한정)
-- [ ] P1.4 하한가 LIMIT 제출이 원장에 정직하게 기록되는지(가격 = 하한가, 유형 = limit)
-- [ ] P1.5 변이(무변이 대조군 선행) + 독립 리뷰 1 + gstack — 비례: 손절 경로라 High-risk
-      규율, 단 범위는 사다리 한 단
-- [ ] P1.6 Phase 2 착지 시 이 단 제거 예약을 design D2b 에 명기했는지 확인(도달 불가
-      증명 조건 포함)
+- [x] P1.1 **Pre-Edit 선언 + FLM** — FLM/BTM 작성(`b10cefaf`). Pre-Edit 선언: not-applicable — production 편집 없음
+- [x] P1.2 **RED — 모집단 열거 포함** — ① 열거 완료: 모집단 0(`issues.md` I-P1, `b10cefaf`). ②~④ not-applicable —
+      세울 단이 없음
+- [x] P1.3 **GREEN** — not-applicable (D2a 불구현, `PriceLimits` 배선 없음 · 새 브로커 호출 0)
+- [x] P1.4 원장 기록 — not-applicable (하한가 제출 경로 없음)
+- [x] P1.5 변이 + 리뷰 — P1.7 핀 시험에 대해 수행: 무변이 대조군 GREEN 후 변이 4/4 CAUGHT(`7bd8f197` 메시지).
+      Manager 독립 대조로 모집단 판정 확인(2026-09-30)
+- [x] P1.6 D2b 제거 예약 — 제거할 단이 없음으로 정정(design D2b 취소선 주석)
+- [x] P1.7 **평가기 관측가 가드 핀 시험** — `internal/exitpolicy/a087_observed_price_pin_test.go`(`7bd8f197`):
+      빈·공백·"0"·파싱 불가 관측가 → `EvaluateRatchet`·`EvaluateLadder` 모두 "observed price" 거부. B1·B2 가 닫혀 있는
+      등식을 고정. FLM: not-applicable — 시험 전용(비례 원칙)
 
 > **아래 §1~§3(Phase 2)의 착수 조건은 §5 실측 기록이다(§0.7 사람 승인).** Phase 1 은
 > 그 실측을 기다리지 않는다.

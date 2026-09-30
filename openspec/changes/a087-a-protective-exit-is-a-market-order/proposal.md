@@ -16,6 +16,9 @@
 > 거절되지 않게 가격 사다리에 KR 당일 하한가 단을 더한다(design D2a). **Phase 2**(실측
 > 게이트): 아래 What Changes 1~3(시장가 전환) — 착수 조건은 tasks 5.1·5.2 실측 기록이다.
 > 재가격·에스컬레이션은 a089 불구현 아카이브(64a1b2b3)로 현재 무소유다.
+>
+> **3판 (Manager 판정 2026-09-30)**: Phase 1 은 **불구현 종결(전제 반증)** — 아래 §0 처분 절. 이 change 의
+> 남은 범위는 Phase 2 뿐이며 §0.7 사람 실측 게이트 대기다.
 
 ## Why
 
@@ -122,6 +125,13 @@ OrderType: "limit",
 
 ### 0. Phase 1 (선행, 실측 불요) — 보호 청산의 가격 사다리에 KR 하한가 단
 
+> **처분 (2026-09-30, Manager 판정): 불구현 종결 — 전제 반증.** P1.2 ① 모집단 열거에서 이 단이 앞에 서려던
+> 거부(`sellIntent` B2)와 그 앞 폴백(B1)이 생산 경로에서 도달 불가로 측정됐다(관측가는 평가기의 `positive` 가드를
+> 지난 값뿐, 엔진 스위트 커버리지 0). 하한가 단은 세우지 않고, B1·B2 가 닫힌 이유를 평가기 핀 시험
+> (`internal/exitpolicy/a087_observed_price_pin_test.go`)이 고정한다. 영수증: design D2a 「반증」, `issues.md` I-P1.
+> 무가격 → 손절 없음의 실제 자리(판정 이전 무음 skip)는 a090 소관이다. **Phase 2(아래 1~3, §0.7 실측 게이트)는 유지.**
+> 아래 원문은 기록으로 남긴다.
+
 `sellIntent`의 사다리(관측가 → 기준선 → 거부, exitloop.go:1571-1578)를 보호 제안에 한해
 **관측가 → 기준선 → (KR) 당일 하한가 → 거부**로 늘린다. 하한가는 거래소 공표값이라 호가
 그리드 위에 있고, 그 세션에서 가능한 가장 공격적인 유효 지정가다. 값의 출처는 이미 엔진
@@ -172,12 +182,13 @@ side == "buy"  && orderType == "market"  → 거부 (현행 유지, US fractiona
 - **Specs**: `order-execution` (ADDED 3 — 보호 청산의 주문 유형, 축소 시장가의 게이트
   통과, 가격 없는 청산 의도의 원장·화면). **Phase 1 은 델타에 기여하지 않는다** — 하한가
   단은 Phase 2 가 제거하는 과도 상태라, 아카이브 시점의 정본에 남기면 낡은 요구가 된다.
-  Phase 1 의 계약은 코드·시험·design D2a 로만 산다
+  Phase 1 의 계약은 코드·시험·design D2a 로만 산다. (2026-09-30: Phase 1 불구현 — 남는 것은 평가기 핀 시험 1개)
 - **Code**: `internal/app/engine/exitloop.go`(`sellIntent`), `internal/execgw/failclosed.go`
-  (`checkOrderShape`), 관측·원장 표시부, Phase 1 은 `PriceLimits` 배선 추가
+  (`checkOrderShape`), 관측·원장 표시부. ~~Phase 1 은 `PriceLimits` 배선 추가~~ (불구현 — Phase 1 의 코드 산출물은
+  `internal/exitpolicy/a087_observed_price_pin_test.go` 시험 1개)
 - **Schema**: 없음 (`intents.price`는 이미 빈 값 허용)
-- **§0.4**: 관측 루프 무변화. Phase 1 이 더하는 것은 **가격 부재 폴백 사건에서만** KR
-  `PriceLimits` 읽기 1회(사건 한정, 루프 밖)
+- **§0.4**: 관측 루프 무변화. ~~Phase 1 이 더하는 것은 가격 부재 폴백 사건에서만 KR
+  `PriceLimits` 읽기 1회~~ (불구현 — 새 브로커 호출 0)
 - **§0.3**: 손절을 **빠르게** 한다. 거부 자체가 사라지고 체결이 보장된다
 - **§0.9**: 익절은 무변경. 보호만 즉시성 방향으로
 
