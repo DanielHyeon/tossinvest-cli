@@ -846,9 +846,14 @@ func (o *ExitObserver) checkOutage(ctx context.Context, cycle *ExitCycle) {
 	_, changed, err := o.opts.Escalate.EscalateOperatingMode(ctx, o.opts.AccountRef,
 		journal.ModeTriggerExitObservationOutage, o.opts.Announcer)
 	if err != nil {
+		if !errors.Is(err, journal.ErrModeAnnouncementFailed) {
+			o.logErr(obs.EventOperatingMode, err,
+				"the exit observation outage did not reach the operating mode, so a restart would lift the block")
+			return
+		}
+		// 전이는 커밋됐고 통지 기록만 실패함(a092 보이스 B #7) — 강화된 것으로 셈. 기록 입구가 이미 전달 실패 사유로 잠갔음.
 		o.logErr(obs.EventOperatingMode, err,
-			"the exit observation outage did not reach the operating mode, so a restart would lift the block")
-		return
+			"the exit observation outage tightened the operating mode, but its notice could not be recorded")
 	}
 	cycle.Escalated = changed
 }

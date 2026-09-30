@@ -33,12 +33,14 @@ import (
 // N 이 nil 이면 무동작 — Notifier.AnnounceOperatingMode 의 n == nil 과 같은 계약(알림 없는 조립도 전이는 함).
 type RecordOnly struct {
 	N *Notifier
+	// Relay 는 일반 등급 알림을 넘길 유계 버퍼임(a092 C8). nil 이면 일반 등급은 버림으로 기록됨 — 동기 발행으로 떨어지지 않음.
+	Relay *NormalRelay
 }
 
 // Notify 는 사건을 로그로 남기고 critical 이면 원장에 기록만 함.
 //
-// 일반 등급은 오늘의 최선 발송을 그대로 씀 — 일반 등급을 exit goroutine 밖으로 옮기는 것은 a092 C8(별도 실행자)의 몫이고
-// 이 단위의 범위가 아님.
+// 일반 등급은 유계 버퍼(Relay)에 넣고 반환함(a092 C8) — 보조 실행자가 비움. 원격 전송을 여기서 부르지 않음: capped 알림은
+// 축소 청산 제출 **앞**에서 나오므로(25라운드 보이스 A #1) 여기서 기다리면 그 손절 주문이 전송만큼 늦음.
 func (r RecordOnly) Notify(ctx context.Context, e Event) error {
 	n := r.N
 	if n == nil {
@@ -47,7 +49,11 @@ func (r RecordOnly) Notify(ctx context.Context, e Event) error {
 	severity := SeverityOf(e.Type)
 	n.logEvent(e, severity)
 	if severity != SeverityCritical {
-		n.publishBestEffort(ctx, e, severity)
+		if r.Relay == nil {
+			n.logNormalDrop(e, "no normal-grade relay is wired")
+			return nil
+		}
+		r.Relay.Offer(e)
 		return nil
 	}
 	return n.recordCritical(ctx, e, n.remindAfter())

@@ -35,7 +35,10 @@ func TestA092ExitObserverGetsRecordOnlyAlertPaths(t *testing.T) {
 		t.Fatalf("ExitObserver: %v", err)
 	}
 	opts := observer.OptionsForTest()
-	recordOnly := obs.RecordOnly{N: eng.Notifier}
+	recordOnly := obs.RecordOnly{N: eng.Notifier, Relay: eng.NormalAlertRelay()}
+	if recordOnly.Relay == nil {
+		t.Fatal("the engine has no normal-grade relay — exit normal alerts would be dropped (a092 C8)")
+	}
 
 	// 알림 입구.
 	if got, ok := opts.Alerts.(obs.RecordOnly); !ok || got != recordOnly {
@@ -101,4 +104,29 @@ func a092RetrierShape(r execgw.Retrier) retrierShape {
 		maxRetryAfter: p.MaxRetryAfter, jitter: p.JitterFraction, rand: rp,
 		clock: r.Clock, retryAfter: r.RetryAfter, escalate: r.Escalate,
 		announcer: r.Announcer, gate: r.Gate, account: r.AccountRef}
+}
+
+// 보이스 B #4: 호출자가 동기 알림기를 넘겨도 exit 관측기는 기록 전용을 받음(역할 핀 — 기본값이 아니라 덮어쓰기).
+func TestA092TheExitObserverOverridesACallersSyncAlertPath(t *testing.T) {
+	dir := isolate(t)
+	writeGateConfig(t, dir, smallLiveGate())
+	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	writeAttestation(t, dir, nil)
+	srv, _ := interlockServer(t, "123-45")
+	eng, err := openProtectedGateEngine(t, dir, srv, nil)
+	if err != nil {
+		t.Fatalf("production assembly: %v", err)
+	}
+	observer, err := eng.ExitObserver(engine.ExitObserverOptions{Costs: costs.DefaultModel(),
+		Alerts: eng.Notifier, Announcer: eng.Notifier})
+	if err != nil {
+		t.Fatal(err)
+	}
+	opts := observer.OptionsForTest()
+	if _, ok := opts.Alerts.(obs.RecordOnly); !ok {
+		t.Errorf("Alerts = %T — a caller-supplied sync notifier reached the exit goroutine", opts.Alerts)
+	}
+	if _, ok := opts.Announcer.(obs.RecordOnly); !ok {
+		t.Errorf("Announcer = %T — a caller-supplied sync notifier reached the exit goroutine", opts.Announcer)
+	}
 }

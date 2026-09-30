@@ -22,7 +22,8 @@ func TestProductionRuntimeStartsExactlyOneAlertDeliverer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("engineRuntime: %v", err)
 	}
-	want := []string{"alert-delivery"}
+	// a092 C8: exit 일반 등급 이관 실행자가 둘째 보조 실행자 — 배달 실행자는 여전히 하나.
+	want := []string{"alert-delivery", "normal-alert-relay"}
 	if got := runtime.AuxiliaryNames(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("production auxiliary names=%v want=%v — 밀린 알림을 보내는 주체가 없다", got, want)
 	}

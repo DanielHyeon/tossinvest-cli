@@ -238,6 +238,11 @@ type Context struct {
 	// manual flatten reads its own sellable quantity and must keep doing so).
 	exitFloor *reconcileFloor
 
+	// normalRelay 는 exit 관측 goroutine 의 일반 등급 알림 유계 이관임(a092 C8). 처음 쓸 때 만들고(normal_relay_wiring.go),
+	// exit 관측기와 런타임 보조 실행자가 같은 인스턴스를 씀.
+	normalRelayOnce sync.Once
+	normalRelay     *obs.NormalRelay
+
 	// official is the concrete client behind Official. It stays unexported: the
 	// engine's own wiring occasionally needs the concrete type, and handing it
 	// out would undo the seal the Official field exists to be.

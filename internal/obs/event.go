@@ -153,6 +153,17 @@ const (
 	// independently settable knobs in two packages, so the invariant needs a voice
 	// at runtime as well as a pin at build time.
 	EventAlertLeaseTooShort EventType = "engine.alert_lease_too_short"
+	// EventNormalAlertDropped is a normal-grade alert the exit goroutine handed off
+	// and nobody sent: the relay buffer was full, the relay was not wired, or the
+	// engine stopped with it still queued (a092 C8 · K13). Normal-grade by
+	// definition — best effort — but a drop nobody records is indistinguishable
+	// from a send, so every drop is a line naming the alert's type and key.
+	EventNormalAlertDropped EventType = "engine.normal_alert_dropped"
+	// EventNormalAlertRelayStopped is the normal-grade relay executor stopping for
+	// a reason other than shutdown. Its own type, not EventAlertUndelivered: that
+	// one is the critical delivery executor's, and a filter on it must not pick up
+	// a best-effort relay (a092 K13). Log only — no latch.
+	EventNormalAlertRelayStopped EventType = "engine.normal_alert_relay_stopped"
 	// EventEngineLoopFailed is a supervised loop that returned for a reason other
 	// than the runtime being cancelled (add-engine-runtime: 방어적 종료 계약).
 	// CRITICAL: the landed loops do not return, so one that did has hit a state

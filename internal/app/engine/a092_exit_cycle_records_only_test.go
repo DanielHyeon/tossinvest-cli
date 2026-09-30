@@ -20,6 +20,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
 )
 
 // a092StuckPublisher 는 멈춘 원격 전송 — 부르면 release 가 닫힐 때까지 돌아오지 않음(시험 끝에 닫아 누수 없음).
@@ -145,5 +146,53 @@ func TestA092CredentialTighteningRecordsWithoutSending(t *testing.T) {
 	}
 	if rows := a092PendingOfType(t, h.journal, string(obs.EventOperatingMode)); len(rows) != 1 {
 		t.Errorf("mode announcement rows = %d, want 1", len(rows))
+	}
+}
+
+// 25라운드 보이스 A #1 · C8: 축소 청산 제출 **앞**의 capped 일반 등급 알림이 멈춘 전송을 기다리지 않음 — 사이클이 곧 반환하고 축소
+// 주문이 나가며 publisher 는 사이클 안에서 불리지 않음(알림은 이관 버퍼에).
+func TestA092ACappedLiquidationDoesNotWaitForTheTransport(t *testing.T) {
+	pub := &a092StuckPublisher{release: make(chan struct{})}
+	t.Cleanup(func() { close(pub.release) })
+	var relay *obs.NormalRelay
+	h := newExitHarness(t, func(o *engine.ExitObserverOptions) {
+		n := &obs.Notifier{Publisher: pub, Journal: o.Journal, Gate: o.Retrier.Gate, AccountRef: o.AccountRef,
+			Clock: clock.System(), Attempts: 1, RetryDelay: time.Millisecond}
+		relay = obs.NewNormalRelay(n, 4)
+		o.Alerts = obs.RecordOnly{N: n, Relay: relay}
+	})
+	h.entry("005930", "10", "70000", "68000", "70000")
+	h.floor.applies, h.floor.quantity, h.floor.bound = true, "3", riskcalc.FloorBoundHoldings
+	h.quote("005930", 67900)
+
+	a092ObserveWithin(t, h, 5*time.Second)
+	if len(h.submit.places) != 1 || h.submit.places[0].Intent.Quantity != 3 {
+		t.Fatalf("places = %+v, want the capped liquidation of 3", h.submit.places)
+	}
+	if pub.count() != 0 {
+		t.Errorf("publish calls = %d inside the cycle, want 0 — the capped alert must be handed off", pub.count())
+	}
+}
+
+type a092FailingAnnouncer struct{}
+
+func (a092FailingAnnouncer) AnnounceOperatingMode(context.Context, string, journal.OperatingModeRecord) error {
+	return errors.New("outbox disk full")
+}
+
+// 보이스 B #7: 관측 두절 승격이 커밋되고 통지 기록만 실패해도 그 사이클은 「승격됨」.
+func TestA092AnUnannouncedOutageTighteningStillCountsAsEscalated(t *testing.T) {
+	h := newExitHarness(t, func(o *engine.ExitObserverOptions) { o.Announcer = a092FailingAnnouncer{} })
+	h.entry("005930", "10", "70000", "68000", "70000")
+	h.quote("005930", 70100)
+	h.observe()
+	h.prices.err = errors.New("down")
+	h.clk.Advance(61 * time.Second)
+	cycle := h.observe()
+	if h.mode() != journal.ModeEntryBlocked {
+		t.Fatalf("mode = %s, want ENTRY_BLOCKED", h.mode())
+	}
+	if !cycle.Escalated {
+		t.Error("the cycle says it did not escalate although the transition committed — only its notice failed")
 	}
 }

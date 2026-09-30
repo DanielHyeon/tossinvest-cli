@@ -305,7 +305,9 @@ func (d *alertDeliverer) deliverOne(ctx context.Context, alert journal.Alert) {
 	if claim.Stole {
 		// A steal is a designed recovery and never silent: somebody died or
 		// stalled while holding this row.
-		d.logf(obs.EventAlertClaimHeld, nil, "an expired alert lease was taken over",
+		// claim_stolen 으로 적음(a092 25라운드 보이스 A #2) — claim_held 는 알림기에서 정상 경합(INFO)이라, 죽은 발송자 신호가
+		// 같은 이름을 쓰면 경보 규칙을 걸 수 없음. 두 발송 경로의 인수 신호가 이 이름 하나.
+		d.logf(obs.EventAlertClaimStolen, nil, "an expired alert lease was taken over",
 			"alert_id", alert.ID, "stole_from", claim.StoleBy)
 	}
 

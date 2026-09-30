@@ -718,7 +718,8 @@ func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, l
 			},
 			strategyEntry.SupervisedLoop(),
 		},
-		Auxiliary: []engine.AuxiliaryExecutor{alertDelivery},
+		// a092 C8: exit 관측 goroutine 의 일반 등급 알림을 비우는 보조 실행자 — 배달 실행자와 따로(그 사이클에 얹지 않음).
+		Auxiliary: []engine.AuxiliaryExecutor{alertDelivery, ectx.NormalAlertRelayExecutor()},
 	})
 }
 

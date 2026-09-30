@@ -412,6 +412,12 @@ func (r *Retrier) escalateCredentialFailure(ctx context.Context) error {
 	}
 	if _, _, err := r.Escalate.EscalateOperatingMode(ctx, r.AccountRef,
 		journal.ModeTriggerCredentialRejected, r.Announcer); err != nil {
+		if errors.Is(err, journal.ErrModeAnnouncementFailed) {
+			// 전이는 커밋됐고 통지 기록만 실패함(a092 25라운드 보이스 B #7) — 「원장에 닿지 않았다」가 아님. 통지 기록 실패는
+			// 기록 입구가 이미 전달 실패 사유로 잠갔음.
+			return fmt.Errorf("execgw: the credential failure tightened the operating mode, but its notice "+
+				"could not be recorded: %w", err)
+		}
 		return fmt.Errorf("execgw: the credential failure did not reach the operating mode, "+
 			"so a restart would lift the block: %w", err)
 	}

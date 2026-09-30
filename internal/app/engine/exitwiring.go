@@ -330,7 +330,7 @@ func (c *Context) ExitObserver(opts ExitObserverOptions) (*ExitObserver, error) 
 	}
 	// exit goroutine 의 알림 경로는 주입 지점별로 기록 전용임(a092 C1): 알림 · 관측 두절 강화 통지 · 가격 조회와
 	// 청산 상한 조회의 401 강화 통지. 동기 통지는 원격 전송을 기다리게 하므로 손절 판정 루프에 둘 수 없음.
-	recordOnly := obs.RecordOnly{N: c.Notifier}
+	recordOnly := obs.RecordOnly{N: c.Notifier, Relay: c.NormalAlertRelay()}
 	exitRetrier := exitSideRetrier(c.Retrier, recordOnly)
 
 	opts.Journal = c.Journal
@@ -343,10 +343,10 @@ func (c *Context) ExitObserver(opts ExitObserverOptions) (*ExitObserver, error) 
 	if opts.Names == nil {
 		opts.Names = c.Names
 	}
-	if opts.Alerts == nil && c.Notifier != nil {
+	// 호출자가 넘긴 값과 무관하게 덮음(25라운드 보이스 B #4) — 기본값만 두면 「생산 호출자가 동기 알림기를 넘기지 않는다」에
+	// 기대게 되고, 그것은 존재 검사이지 역할 검사가 아님. Retrier 가 이미 무조건 덮이는 것과 같은 규칙.
+	if c.Notifier != nil {
 		opts.Alerts = recordOnly
-	}
-	if opts.Announcer == nil && c.Notifier != nil {
 		opts.Announcer = recordOnly
 	}
 	if opts.Floor == nil {

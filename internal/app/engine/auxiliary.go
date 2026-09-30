@@ -77,6 +77,9 @@ type AuxiliaryExecutor struct {
 	// pressed Ctrl-C would make the next start demand an operator's approval for
 	// nothing.
 	OnStop func(ctx context.Context, err error)
+	// StopEvent 는 이 실행자의 정지를 기록하는 이벤트 타입임(a092 K13). 빈 값이면 배달 실행자의 것(EventAlertUndelivered) —
+	// 그 실행자가 유일한 보조 실행자이던 때의 값을 그대로 둠. 두 번째 실행자는 자기 타입을 가져와야 함(아래 runAuxiliary 주석).
+	StopEvent obs.EventType
 }
 
 // runAuxiliary runs one executor and turns whatever it does into a stop.
@@ -103,7 +106,11 @@ func (r *Runtime) runAuxiliary(ctx context.Context, aux AuxiliaryExecutor) {
 	// runtime has — a second one would have to bring its own event type rather
 	// than borrow this, and internal/obs is closed to this change (결정 5-1) so
 	// there was no third option to pick.
-	r.log(obs.EventAlertUndelivered, true,
+	event := aux.StopEvent
+	if event == "" {
+		event = obs.EventAlertUndelivered
+	}
+	r.log(event, true,
 		"loop", aux.Name,
 		obs.FieldReason, describe(err),
 		obs.FieldDetail, "an auxiliary executor stopped and will not be restarted")
