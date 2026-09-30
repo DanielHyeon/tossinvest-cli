@@ -407,6 +407,77 @@ R26_MUTANTS = [
 ]
 R26_TESTS = [['go', 'test', '-count=1', '-run', 'TestA092', './internal/obs'], ['go', 'test', '-count=1', '-run', 'TestA092|A124|A098', './internal/app/engine']]
 
+# 25.8 — 26라운드 2차 수리(Manager 판정 2026-09-30) 반증. `--set r26b`.
+R26B_MUTANTS = [
+    ('Z01 R1 release preemption not recorded', 'internal/app/engine/alertdelivery.go',
+     '\t\td.logf(obs.EventAlertClaimLost, nil, "a failed attempt\'s lease was preempted before it could be handed back",\n\t\t\t"alert_id", id, "outcome", released.Outcome.String())\n',
+     '\t\t_ = released\n'),
+    ('Z02 R3 unknown outcome classified by ClaimedBy again', 'internal/obs/notifier.go',
+     '\tcase res.Outcome != journal.SettleLeaseLost:',
+     '\tcase false:'),
+    ('Z03 A#1 notice attached to the request ctx', 'internal/app/engine/modeops.go',
+     '\t\tannouncer = detachedAnnouncer{inner: o.announcer}',
+     '\t\tannouncer = o.announcer'),
+    ('Z04 A#1 re-read attached to the request ctx', 'internal/app/engine/modeops.go',
+     '\tafter := context.WithoutCancel(ctx)',
+     '\tafter := ctx'),
+    ('Z05 R2 notice-list failure reported as mode re-read', 'internal/app/engine/modeops.go',
+     '\t\t\tresult.NoticeReadError = modeReleaseNoticeReadFailed',
+     '\t\t\tresult.ReReadError = modeReleaseNoticeReadFailed'),
+    ('Z06 B#2 NotifyError carries raw text', 'internal/app/engine/modeops.go',
+     '\t\tresult.NotifyError = modeReleaseNoticeFailed',
+     '\t\tresult.NotifyError = err.Error()'),
+    ('Z07 B#2 re-read error carries raw text', 'internal/app/engine/modeops.go',
+     '\t\tresult.ReReadError = modeReleaseReReadFailed',
+     '\t\tresult.ReReadError = err.Error()'),
+    ('Z08 B#2 500 body carries raw text', 'internal/app/engine/mode_control_transport_unix.go',
+     'writeRPCError(w, http.StatusInternalServerError, "internal", modeReleaseInternalFailure)',
+     'writeRPCError(w, http.StatusInternalServerError, "internal", err.Error())'),
+    ('Z09 B#2 gate description carries raw text', 'internal/obs/record_only.go',
+     '"a critical %s alert could not be recorded in the outbox (details are in the engine log)", e.Type))',
+     '"a critical %s alert could not be recorded in the outbox: %v", e.Type, err))'),
+    ('Z10 B#1 Notify logs fields', 'internal/obs/record_only.go',
+     '\tn.logEvent(withoutFields(e), severity)',
+     '\tn.logEvent(e, severity)'),
+    ('Z11 B#1 AnnounceOperatingMode logs fields', 'internal/obs/record_only.go',
+     '\tn.logEvent(withoutFields(e), SeverityOf(e.Type))',
+     '\tn.logEvent(e, SeverityOf(e.Type))'),
+    ('Z12 A#4 drop line shadows its event key', 'internal/obs/normal_relay.go',
+     '\tn.Log.Warn(EventNormalAlertDropped,\n\t\tFieldTriggerEvent,',
+     '\tn.Log.Warn(EventNormalAlertDropped,\n\t\tFieldEvent,'),
+    ('Z13 A#4 best-effort line shadows its severity', 'internal/obs/notifier.go',
+     '\t\t\t"trigger_severity", string(severity),',
+     '\t\t\tFieldSeverity, string(severity),'),
+    ('Z14 C#2 takeover line demoted to INFO', 'internal/obs/notifier.go',
+     '\tn.Log.Warn(EventAlertClaimStolen,',
+     '\tn.Log.Event(EventAlertClaimStolen,'),
+    ('Z15 C#3 mode endpoint without token check', 'internal/app/engine/mode_control_transport_unix.go',
+     'mux.HandleFunc(ModeControlReleasePath, alertControlAuth(token, func(',
+     'mux.HandleFunc(ModeControlReleasePath, func(h http.HandlerFunc) http.HandlerFunc { return h }(func('),
+    ('Z16 C#3 mode endpoint accepts GET', 'internal/app/engine/mode_control_transport_unix.go',
+     '\t\tif r.Method != http.MethodPost {',
+     '\t\tif false {'),
+    ('Z17 C#3 unknown fields accepted', 'internal/app/engine/mode_control_transport_unix.go',
+     '\tdecoder.DisallowUnknownFields()\n',
+     ''),
+    ('Z18 B#7 sustained tightening reported as not persisted', 'internal/app/engine/runtime.go',
+     '\tif err != nil && errors.Is(err, journal.ErrModeAnnouncementFailed) {',
+     '\tif false && errors.Is(err, journal.ErrModeAnnouncementFailed) {'),
+    ('Z19 B#7 daily-loss tightening reported as not persisted', 'internal/execgw/riskguardian.go',
+     '\t\tif errors.Is(err, journal.ErrModeAnnouncementFailed) {\n\t\t\t// 전이는 커밋됐고 통지 기록만 실패함 — 재시작이',
+     '\t\tif false && errors.Is(err, journal.ErrModeAnnouncementFailed) {\n\t\t\t// 전이는 커밋됐고 통지 기록만 실패함 — 재시작이'),
+    ('Z20 R2 CLI calls not-pending delivered', 'cmd/tossctl/engine_mode_release.go',
+     '\t\treturn "기록됨(대기 목록에 없음 — 전달 뒤 정산됐거나 승인됨)"',
+     '\t\treturn "기록됨(이미 전달 처리됨)"'),
+    ('Z21 R2 CLI guesses the notice state after a mode re-read failure', 'cmd/tossctl/engine_mode_release.go',
+     '\tcase r.ReReadError != "":\n\t\treturn "기록됨(전달 상태는 재조회 실패로 확인하지 못함)"\n',
+     ''),
+    ('Z22 R2 CLI hides the read mode after a notice-list failure', 'cmd/tossctl/engine_mode_release.go',
+     '\tif r.ReReadError != "" {\n\t\t_, err := fmt.Fprintf(',
+     '\tif r.ReReadError != "" || r.NoticeReadError != "" {\n\t\t_, err := fmt.Fprintf('),
+]
+R26B_TESTS = [['go', 'test', '-count=1', '-run', 'TestA092', './internal/obs'], ['go', 'test', '-count=1', '-run', 'TestA092|A124|A098', './internal/app/engine'], ['go', 'test', '-count=1', '-run', 'TestA092', './internal/execgw'], ['go', 'test', '-count=1', '-run', 'TestA092', './cmd/tossctl']]
+
 TESTS = [
     ["go", "test", "-count=1", "-run", "TestA092|TestEnqueueAlert|TestClaim", "./internal/journal"],
     ["go", "test", "-count=1", "-run", "TestA092|TestA096|TestA097|Mode|Transition|Announc", "./internal/obs"],
@@ -458,6 +529,8 @@ def main() -> None:
             MUTANTS, TESTS = NORMAL_MUTANTS, NORMAL_TESTS
         elif args[i + 1] == "r26":
             MUTANTS, TESTS = R26_MUTANTS, R26_TESTS
+        elif args[i + 1] == "r26b":
+            MUTANTS, TESTS = R26B_MUTANTS, R26B_TESTS
         args = args[:i] + args[i + 2:]
     scratch, own = Path(args[0]), args[1:]
     copy = scratch / f"mut-a092-u2-{os.getpid()}"

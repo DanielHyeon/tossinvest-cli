@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/alertdelivery.go",
-  "source_sha256": "1fa0da7e971975f10f5c985ba42659611ee147800ba96f2cee33bc112033d4ca",
+  "source_sha256": "df8a4171e8dced1b0154614ad2399a7587abf6320d37df702df37cd587d52d8d",
   "package": "engine",
   "function": "recordFailedAttempt",
   "receiver": "alertDeliverer",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 376,
+    "line": 393,
     "column": 2
   },
   "branches": [
@@ -26,47 +26,63 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 355,
+        "line": 357,
         "column": 2
       }
     },
     {
       "id": "B3",
-      "kind": "switch",
+      "kind": "if",
       "at": {
-        "line": 361,
+        "line": 365,
         "column": 2
       }
     },
     {
       "id": "B4",
-      "kind": "case",
-      "at": {
-        "line": 362,
-        "column": 2
-      }
-    },
-    {
-      "id": "B5",
       "kind": "if",
-      "at": {
-        "line": 365,
-        "column": 3
-      }
-    },
-    {
-      "id": "B6",
-      "kind": "case",
       "at": {
         "line": 369,
         "column": 2
       }
     },
     {
-      "id": "B7",
+      "id": "B5",
+      "kind": "switch",
+      "at": {
+        "line": 375,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
       "kind": "case",
       "at": {
-        "line": 371,
+        "line": 376,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 379,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "case",
+      "at": {
+        "line": 383,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "case",
+      "at": {
+        "line": 388,
         "column": 2
       }
     }
@@ -75,14 +91,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 359,
+        "line": 373,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 366,
+        "line": 380,
         "column": 4
       }
     }
@@ -116,7 +132,7 @@
       "kind": "call",
       "at": {
         "line": 353,
-        "column": 2
+        "column": 25
       },
       "text": "d.release"
     },
@@ -131,23 +147,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 358,
+        "line": 359,
         "column": 3
       },
-      "text": "d.countRecordFailure"
+      "text": "d.logf"
     },
     {
       "kind": "call",
       "at": {
-        "line": 364,
-        "column": 3
+        "line": 360,
+        "column": 31
       },
-      "text": "d.forgetRecordRun"
+      "text": "released.Outcome.String"
     },
     {
       "kind": "call",
       "at": {
-        "line": 368,
+        "line": 361,
         "column": 3
       },
       "text": "d.judge"
@@ -155,7 +171,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 368,
+        "line": 361,
         "column": 20
       },
       "text": "d.readEpoch"
@@ -163,15 +179,39 @@
     {
       "kind": "call",
       "at": {
-        "line": 368,
-        "column": 43
+        "line": 366,
+        "column": 3
       },
-      "text": "fmt.Sprintf"
+      "text": "d.logf"
     },
     {
       "kind": "call",
       "at": {
-        "line": 374,
+        "line": 367,
+        "column": 31
+      },
+      "text": "released.Outcome.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 372,
+        "column": 3
+      },
+      "text": "d.countRecordFailure"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 378,
+        "column": 3
+      },
+      "text": "d.forgetRecordRun"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 382,
         "column": 3
       },
       "text": "d.judge"
@@ -179,7 +219,47 @@
     {
       "kind": "call",
       "at": {
-        "line": 374,
+        "line": 382,
+        "column": 20
+      },
+      "text": "d.readEpoch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 382,
+        "column": 43
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 386,
+        "column": 3
+      },
+      "text": "d.logf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 387,
+        "column": 31
+      },
+      "text": "res.Outcome.String"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 391,
+        "column": 3
+      },
+      "text": "d.judge"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 391,
         "column": 20
       },
       "text": "d.readEpoch"
@@ -190,6 +270,13 @@
       "kind": ":=",
       "at": {
         "line": 349,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 353,
         "column": 2
       }
     }

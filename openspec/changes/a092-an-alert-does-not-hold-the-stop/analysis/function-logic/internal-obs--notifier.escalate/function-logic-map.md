@@ -1,9 +1,9 @@
 # Function Logic Map: `Notifier.escalate`
 
 - Source: `internal/obs/notifier.go`
-- AST evidence: `ast.json` — **편집 뒤**, :422–444, 분기 4 · 반환 2 · 호출 5, source_sha256 `46c51c2e09e6…`, 추출 커밋 `55963f29`(25라운드 수리 뒤 재추출). 편집 전 번들은 `analysis/pre-edit/unit3/`에 보존. 26라운드 수리(`d8769cfb`) 뒤 재추출 — 이 함수 본문 · 좌표 · 분기 불변(같은 파일의 다른 함수 편집으로 파일 해시만 바뀜).
+- AST evidence: `ast.json` — **편집 뒤**, :423–445, 분기 4 · 반환 2 · 호출 5, source_sha256 `fbdfd9e0218b…`, 추출 커밋 `b910173a`. 편집 전 번들은 `analysis/pre-edit/r26b/internal-obs--notifier.escalate/`에 보존.
 - Risk scan: `risk-pattern-report.md`
-- 편집(착지 단위 ③ — `fbc6df5f`): 반환값 `(included bool, err error)` 추가 — B1 조기 반환은 `false, nil`, 끝은 `true, err`. 분기 · 로그 불변.
+- 편집: (b910173a, 보이스 A#4 · B#4) 승격 실패 줄의 `FieldEvent` → `FieldTriggerEvent`. 분기 · 반환 불변. (`FieldAccount` 는 base 관행 — 불변식 8 (b) 사람 결정 큐.)
 
 ## Inputs and invariants
 
@@ -15,11 +15,10 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | if (:420) | 승격 미포함 → `(false, nil)` | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092AReleaseBeforeTheEvidenceDoesNotChangeTheVerdict` |
-| B2 | switch (:425) | 결과 분기 | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092AReleaseAfterTheEpochReadIsHonoured` |
-| B3 | case (:426) | 승격 실패 로그 | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092RecordOnlyFailureLatchesAndEscalates` |
-| B4 | case (:432) | 승격 됨 로그 | — | `TestA092AReleaseAfterTheEpochReadIsHonoured`, `TestA092AReleaseBeforeTheEpochReadRelatches` |
-| 종단 | — | — | `true, err` — 변이 L09 · L10 | `TestA092AFailedEscalationLatchesUnconditionally` |
+| B1 | if (:424) | 승격 미포함 | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092AFailedRecordKeepsTheKeyOutOfTheGate` |
+| B2 | switch (:429) | 결과 분기 | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092AReleaseAfterTheEpochReadIsHonoured` |
+| B3 | case (:430) | 승격 실패 로그 | — | `TestA092AFailedEscalationLatchesUnconditionally`, `TestA092RecordOnlyFailureLatchesAndEscalates` |
+| B4 | case (:436) | 승격 됨 로그 | — | `TestA092AReleaseAfterTheEpochReadIsHonoured`, `TestA092AReleaseBeforeTheEpochReadRelatches` |
 
 ## Calls and live bindings
 
@@ -33,5 +32,5 @@
 
 ## Safety conclusion
 
-- Safe edit boundary: 분기 · 로그 불변, 반환값만.
-- High-risk impact: yes — 모드 승격.
+- Safe edit boundary: 로그 키만.
+- High-risk impact: yes(모드 승격) — 이 편집은 판정 불변.

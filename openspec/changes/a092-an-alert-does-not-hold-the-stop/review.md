@@ -4938,3 +4938,64 @@ High-risk(critical 발송 · 진입 차단 · 모드 승격). 편집 전 번들 
 | `b01e0cd0`(단위 ④ 이후) | 790.1s | 952 | 새 시험 4개 합 2.3s |
 
 귀속: 단위 ④ 가 더한 것은 새 시험 4개(2.3s)뿐이고, 시험별 최대 증가는 3.9s(`TestRefuseClaimedStrategyDispatchPreTransportRejectsCrossScopePairedKRUS` — a066/a112 영역, ④ 무관)로 부하 흔들림 범위다. 두 판 모두 기본 600s 를 넘으므로 **journal 전체 판은 `-timeout` 을 올려 돌린다**(Manager 판정 · `make test` 30m). 가장 긴 시험 다섯은 20.3 · 17.0 · 16.6 · 12.5 · 11.8s — 다음 성능 작업이 볼 자리.
+
+### 24.11 25.8 재리뷰 26라운드 — 4보이스 · codex 두 차례 · 수리 두 로트 (2026-09-30)
+
+**리뷰**: 보이스 A(동시성) APPROVE · B(스펙) **BLOCK(불변식 8)** · C(시험) APPROVE — 셋 다 `15cb8540` 기준. codex(gpt-6-astra, read-only) 1차 **BLOCK(P0)**, `d8769cfb` 뒤 재확인 **BLOCK(P0 닫힘 · 잔여 P1 둘)**. 원문 `analysis/review-26/`(`voice{A,B,C}-r26-output.md` · `codex-r26-output.md` · `codex-r26-reconfirm-output.md` · 실행 기록). 재확인은 원 세션(`01a0f05a…`)이 resume 불가(「no rollout found」)라 새 세션 `01a0f09c-6c07-74b0-9f28-29ded0cbb7a5` 에 원 출력 전문을 붙여 이었다.
+
+**같은 규칙이 실행자까지 닫히지 않았던 이유(한 줄)**: 25라운드 P0 수리(`55963f29`)는 codex 가 인용한 file:line(동기 `deliver` 의 반납)만 고쳤고, 규칙(「행 없음 · 모르는 결과는 선점이 아니다 — 모든 발송자」)을 값으로 삼아 반납 결과를 읽는 자리를 전수로 세지 않았다 — 배달 실행자의 `release` 는 결과를 버리는 「뒷정리」로 취급되어 분류 대상 목록에 오르지 않았다(정정의 단위는 자리가 아니라 값 · 규칙).
+
+**저자 주장 4 문구 정정(코드 아님)**: 「어느 순간에도 산 게이트가 커밋 순서의 최신보다 덜 보수적인 모드를 보지 않는다」는 스펙보다 강했다 — `Commit` 과 투영 사이 창에서는 직전 모드를 볼 수 있고 델타가 그것을 허용한다(codex 재확인 판정 「거짓 — 주장 문구가 스펙보다 강함」). 정정: **「전이 호출이 반환한 뒤에는」** 산 게이트가 그 커밋보다 덜 보수적인 모드를 보지 않고, 역순 도착은 적용되지 않으며(울타리), 교체 중 모드 사유가 없는 순간이 없고(원자 교체), 재시작 복원은 rowid 최신을 읽는다.
+
+**문구 수리(코드 아님)**:
+- tasks 25.10 의 「K18 도달 경로 **전수** 핀」은 과장(보이스 B #8) — 핀은 `IssueReduction` 폐포만 센다. 정정: 「K18 입구 도달 경로 핀(Issuer 폐포 한정 — Gateway 제출 간선은 현재 알림 부품이 없음을 grep 으로 확인, 핀 없음)」.
+- `NoticePending` 의미(보이스 B #6): 「PENDING 목록에 있음」일 뿐이고 false 는 「전달됨」이 아니다(전달 뒤 정산 또는 승인). CLI 문구를 「기록됨(대기 목록에 없음 — 전달 뒤 정산됐거나 승인됨)」으로 고쳤고(아래 R2), 필드 주석은 그대로 참이다.
+
+#### 수리 로트 1 — `d8769cfb`(Manager 승인: codex P0 · #4 · #6)
+
+| 발견 | 수리 | RED | 변이(`--set r26`) |
+|---|---|---|---|
+| codex P0 — 실행자 반납 결과 무시 | `alertDeliverer.release` 가 결과를 돌려주고 `recordFailedAttempt` 가 행 없음 · 모르는 결과를 원칙 E 조건부 차단(승격 없음), 한도 판정은 뒤에서 그대로 | `mutation-unit5/red-r26-deliverer.log` | X01 · X02 · X03 · X05 CAUGHT |
+| codex #4 — 시도 기록 선점 무기록 | `EventAlertClaimLost` 기록 | 같은 로그 | X04 CAUGHT |
+| codex #6 — 동기 발송 분류 | `obs.isPreemption` 한 판정(두 자리) · Flush 는 K19 핀으로 유보 | `red-r26-deliverer.log` | X06 CAUGHT |
+| codex #2 · #3 · #5(`071e67c1`) | relay 멈춤 · 잔여 · 발행 실패 기록, ReReadError | `red-r26-relay.log` | X07~X11 CAUGHT |
+
+변이 **11/11 CAUGHT**(`analysis/mutation-r26/ledger.tsv`, X08 은 1판 BUILD-FAIL → 재정의 2판).
+
+#### 수리 로트 2 — 이 절의 커밋(Manager 판정 2026-09-30: 승인 목록 + B 코드 항목 둘, 불변식 8 (a))
+
+| 발견 | 수리 | RED(`mutation-r26/red-r26b-*.log`) | 변이(`--set r26b`) |
+|---|---|---|---|
+| codex 재확인 R1 — 반납에서만 드러난 선점 무기록 | `recordFailedAttempt` 가 반납 결과의 선점도 `EventAlertClaimLost`(행 id · 결과)로 기록, 판정 불변 | `TestA092TheDelivererRecordsAPreemptionSeenOnlyAtRelease` FAIL | Z01 |
+| codex 재확인 R2 — 재조회 실패 전 「기록됨」 출력 | 결과에 `NoticeReadError` 칸(통지 목록만 실패 — 읽은 모드 · 사유는 보존) · CLI 가 재조회 실패를 먼저 가르고 통지 상태를 추정하지 않음 · 「이미 전달 처리됨」 문구 제거 | `TestA092ANoticeListFailureKeepsTheModeThatWasRead` · `TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead` FAIL | Z05 · Z20 · Z21 · Z22 |
+| codex 재확인 R3 — 모르는 결과를 선점으로 로그 | `logLeaseLost` 가 결과 enum 으로 분류(모르는 결과 = `EventAlertUndelivered` 오류) | `TestA092TheLeaseLossLogClassifiesByOutcome/unknown` FAIL | Z02 |
+| 보이스 A #1 — mode-release 가 요청 ctx 에 볼모 | 커밋 앞은 요청 ctx, 커밋 뒤 통지(`detachedAnnouncer`) · 재읽기는 `context.WithoutCancel` | `TestA092ACommittedReleaseIsNotHostageToTheRequestContext` FAIL | Z03 · Z04 |
+| 보이스 A #4 · B #4 — 로그 줄 event 키 중복 | 원래 사건 유형은 `trigger_event`(obs 의 같은 모양 여섯 줄 — a092 새 줄 셋 + 기존 셋), 발행 실패 줄의 등급 중복도 `trigger_severity` | `TestA092DropAndNoJournalLinesKeepTheirOwnEventKey` FAIL | Z12 · Z13 |
+| 보이스 C #2 — 인수 줄 WARN 미고정 | 시험 추가(등급 · claimed_by) | 핀(현 코드 GREEN) | Z14 |
+| 보이스 C #3 — 모드 엔드포인트 거절 시험 0 | 토큰 없음 · 알림 제어 토큰 → 401, GET → 405, 모르는 필드 → 400, 원장 불변 단언 + 양성 대조 | 핀(현 코드 GREEN) | Z15 · Z16 · Z17 |
+| 보이스 B #9(25라운드 B#7 의 잔재) — 지속 실패 · 일일 손실 승격 오보 | `Runtime.escalate` · `RiskGuardian.escalateFor` 가 `ErrModeAnnouncementFailed` 갈래를 가림(단위 ⑤ 와 같은 규칙) | `TestA092AnUnannouncedSustainedTighteningIsReportedAsTightened` · `…DailyLoss…` FAIL | Z18 · Z19 |
+| 보이스 B #10 — 거짓 주석(투영기 미배선) | alertdelivery.go 파일 머리 · `escalate` 주석 정정 | — | 해당 없음(주석) |
+| **보이스 B #1 · #2 — 불변식 8 (a)** | 기록 전용 입구 세 메서드 모두 로그 줄에서 필드 제외(`withoutFields`) · 게이트 설명 고정 문구 · `NotifyError` · `ReReadError` · `NoticeReadError` · 500 본문 고정 문구, 원문 오류는 계좌를 `[account]` 로 가려 엔진 로그에만 | `TestA092RecordOnlyLinesCarryNoFields` · `TestA092AFailedRecordKeepsTheKeyOutOfTheGate` · `TestA092ReleaseResultsCarryNoRawLedgerText` · `TestA092AnEngineFailureBodyCarriesNoLedgerText` FAIL | Z06~Z11 |
+
+변이 **22/22 CAUGHT**(`analysis/mutation-r26/ledger-r26b.tsv` — Z01~Z22, 무변이 대조군 GREEN). C#2 · C#3 는 현 코드에서 GREEN 인 핀이라 RED 대신 변이(Z14~Z17)가 반증이다.
+
+**불변식 8 — 보이스 B BLOCK 해소 기록**: a092 가 **새로 만든** 표면(기록 전용 입구의 로그 줄 · mode-release 결과 · 500 본문)과 그 전파 경로(게이트 설명)는 이 로트가 닫았다(Manager 판정 (a)). 원장 내부의 사건 키(`operating_mode:<계좌>:…` · `exit.observation_outage|<계좌>`)는 에피소드 신원이라 frozen 의미론 그대로 둔다. **남은 것(base 관행, (b) 사람 결정 큐)**: base 의 `FieldAccount` 로그 약 20곳(`721d0338` 기준 — `Notifier.escalate` · `mode.go` · `exitloop.go` · `runtime.go` `r.log` · `adoption.go` 등)과 기록 입구의 원문 오류 로그 줄(`recordCritical` 의 `Log.Error` — 키에 계좌)은 이미 사용자 큐에 있는 「계좌 가림 설계」(attest.Mask 선례 · notifier.go 의 계좌 로그 · ntfy 외부 전송)에 합류시켰다. 근거: `AccountRef` = 공식 API `accountNo` 원문(`internal/official/reads.go:93`, `internal/app/engine/interlock.go:684`).
+
+**이월(각각 이름 · 사유 · 행선 — Manager 승인)**:
+
+| 항목 | 사유 | 행선 |
+|---|---|---|
+| A#6 · B#7 · C#7(b) — `exitwiring.go` Floor 존재 검사(`if opts.Floor == nil`) | 현재 생산 리터럴은 Floor 를 넘기지 않고 cmd 핀이 금지 — 무조건 덮기는 exit 배선 재편집이라 이 로트 범위 밖 | 후속 로트(a092 착지 뒤 exit 배선 정리) |
+| A#7 · C#7(a) — k3 핀이 `f.official.X` 호출 모양만 셈 | 현재 우회 없음(세 보이스 확인), 핀 확장은 `go/types` 계측기 필요 | 후속 로트(구조 핀 계측기 — C#5 와 한 로트) |
+| A#8 — `Acknowledge` 의 N 행 autocommit | 로컬 작업(델타 「로컬 연산에 기한 없음」 안), 성능 항목 | 후속 성능 로트 |
+| C#4 — K3 · M2 핀 구간이 투영 호출 자체의 `go` 를 못 봄 | 행동 시험 7개가 막고 있음(P03 CAUGHT) | 후속 로트(구조 핀 계측기) |
+| C#5 · C#6 — 이름 기반 핀이 메서드 값 · 별칭을 못 봄 | 계측기 교체(`*types.Func` 참조 세기) 필요 | 후속 로트(구조 핀 계측기) |
+| C#8 — 못 박히지 않은 결정 넷(버퍼 64 · 종료 선검사 · 타입 있는 nil audit · 503 매핑) | 안전 판정이 아닌 운영 상수 · 방어 갈래 | 후속 로트(시험 보강) |
+| C#9 — `TestA092AReleaseBeforeTheEpochReadRelatches` 단계 도달 단언 | 형제 시험이 행동 차이를 막음 | 후속 로트(시험 보강) |
+| codex 재확인 R4 — `Flush` 분류 · 차단 | 생산 호출자 0(K19 핀) | 생산 연결 전 수리(후속 로트) |
+| codex 재확인 R5 — `ClaimDisposition` 미지 값 | 원장이 세 값만 반환(잠재 결함) | 후속 로트(결과 분류 명시화) |
+| B #5 · #6 · #8 | #5 는 `071e67c1`(ReReadError) · 이 로트의 `NoticeReadError` 로 닫힘, #6 은 CLI 문구 수리(R2), #8 은 위 K18 문구 정정 | 닫힘(이월 아님) |
+
+**FLM**: 편집 전 AST `analysis/pre-edit/r26b/`(편집 함수 7 — 편집 **전** 추출), 편집 뒤 번들 12 — 본문이 바뀐 9 재작성(그중 신설 4: `logLeaseLost` · `publishBestEffort` · `Runtime.escalate` · `RiskGuardian.escalateFor`), 본문 불변 3(`deliverOne` · `claimAndDeliver` · `logClaimHeld`)은 해시 · 좌표만 — `analysis/harness/render_r26b_bundles.py` 가 분기 좌표 · 시험 · 블록을 측정값(`coverage-post-r26b-{obs,engine,execgw}.json`, 연결 워크트리 `b910173a`, 실패 0)에서만 채움. 두 줄 조건(`recordFailedAttempt` B2 · `escalateFor` B2)은 하네스가 블록 좌표를 못 잡아 「블록 좌표 없음」으로 두고 행동 증거(X01 · Z19)를 RED 칸에 적었다. 새 코드 파일(record_only · normal_relay · modeops · mode_control* · engine_mode_release)은 base 에 없던 함수라 FLM 대상 밖(check_analysis 판정). `Notifier.escalate` 의 키 이름 변경은 행동 시험이 세지 않음 — 로그 키, 판정 불변(비례 원칙 `not-applicable`).
+
+**검증**: `go test -timeout 40m` obs · app/engine/... · cmd/tossctl · execgw rc 0, `-race` obs · engine(`TestA092|A124|A098`) rc 0, `make lint` rc 0, `check_analysis --change a092-…` **rc 0(evidence complete)**. journal 패키지는 이 로트가 만지지 않음.

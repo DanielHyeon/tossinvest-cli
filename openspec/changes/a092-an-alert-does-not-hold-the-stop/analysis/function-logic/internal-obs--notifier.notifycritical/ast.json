@@ -1,16 +1,16 @@
 {
   "file": "internal/obs/notifier.go",
-  "source_sha256": "46c51c2e09e64ce400e0af84aec28ae6047f2573d3d0dd29cd4bc62489c26b4c",
+  "source_sha256": "fbdfd9e0218bc59c5dd174fba8695e50508b3cd99047745a7f6568931823cecb",
   "package": "obs",
   "function": "notifyCritical",
   "receiver": "Notifier",
   "signature": "Notifier.notifyCritical(params=2, results=1)",
   "start": {
-    "line": 194,
+    "line": 195,
     "column": 1
   },
   "end": {
-    "line": 249,
+    "line": 250,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 195,
+        "line": 196,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 199,
+        "line": 200,
         "column": 3
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 219,
+        "line": 220,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 241,
+        "line": 242,
         "column": 2
       }
     }
@@ -51,21 +51,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 205,
+        "line": 206,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 238,
+        "line": 239,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 248,
+        "line": 249,
         "column": 2
       }
     }
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 200,
+        "line": 201,
         "column": 4
       },
       "text": "n.Log.Warn"
@@ -82,15 +82,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 201,
-        "column": 17
+        "line": 202,
+        "column": 24
       },
       "text": "string"
     },
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 205,
         "column": 3
       },
       "text": "n.publishBestEffort"
@@ -98,18 +98,10 @@
     {
       "kind": "call",
       "at": {
-        "line": 209,
-        "column": 13
-      },
-      "text": "n.eventKey"
-    },
-    {
-      "kind": "call",
-      "at": {
         "line": 210,
         "column": 13
       },
-      "text": "string"
+      "text": "n.eventKey"
     },
     {
       "kind": "call",
@@ -122,7 +114,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 214,
+        "line": 212,
+        "column": 13
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
         "column": 13
       },
       "text": "encodeFields"
@@ -130,7 +130,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 218,
+        "line": 219,
         "column": 30
       },
       "text": "n.claimAndDeliver"
@@ -138,7 +138,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 237,
+        "line": 238,
         "column": 3
       },
       "text": "n.escalate"
@@ -146,7 +146,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 238,
+        "line": 239,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -154,7 +154,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 246,
+        "line": 247,
         "column": 3
       },
       "text": "n.judge"
@@ -164,14 +164,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 208,
+        "line": 209,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 218,
+        "line": 219,
         "column": 2
       }
     }

@@ -1,0 +1,24 @@
+TREE	HEAD 699e16d6341c64c5cfeb9d60786c6791421eefaf	uncommitted tracked: cmd/tossctl/engine_mode_release.go,internal/app/engine/a092_deliverer_release_test.go,internal/app/engine/alertdelivery.go,internal/app/engine/mode_control.go,internal/app/engine/mode_control_transport_unix.go,internal/app/engine/modeops.go,internal/app/engine/runtime.go,internal/execgw/a092_announcement_failed_test.go,internal/execgw/riskguardian.go,internal/obs/normal_relay.go,internal/obs/notifier.go,internal/obs/record_only.go	own untracked: internal/obs/a092_r26b_internal_test.go,internal/obs/a092_claim_stolen_level_test.go,internal/app/engine/a092_r26b_mode_release_test.go,internal/app/engine/a092_mode_endpoint_rejects_test.go,internal/app/engine/a092_unannounced_sustained_tightening_test.go,cmd/tossctl/a092_mode_release_output_test.go
+CONTROL	GREEN	
+Z01 R1 release preemption not recorded	CAUGHT	2 failing: TestA092TheDelivererRecordsAPreemptionSeenOnlyAtRelease/acknowledged, TestA092TheDelivererRecordsAPreemptionSeenOnlyAtRelease/lease-lost
+Z02 R3 unknown outcome classified by ClaimedBy again	CAUGHT	1 failing: TestA092TheLeaseLossLogClassifiesByOutcome/unknown
+Z03 A#1 notice attached to the request ctx	CAUGHT	1 failing: TestA092ACommittedReleaseIsNotHostageToTheRequestContext
+Z04 A#1 re-read attached to the request ctx	CAUGHT	1 failing: TestA092ACommittedReleaseIsNotHostageToTheRequestContext
+Z05 R2 notice-list failure reported as mode re-read	CAUGHT	2 failing: TestA092ANoticeListFailureKeepsTheModeThatWasRead, TestA092ReleaseResultsCarryNoRawLedgerText/notice-list
+Z06 B#2 NotifyError carries raw text	CAUGHT	1 failing: TestA092ReleaseResultsCarryNoRawLedgerText/notify
+Z07 B#2 re-read error carries raw text	CAUGHT	1 failing: TestA092ReleaseResultsCarryNoRawLedgerText/reread
+Z08 B#2 500 body carries raw text	CAUGHT	1 failing: TestA092AnEngineFailureBodyCarriesNoLedgerText
+Z09 B#2 gate description carries raw text	CAUGHT	2 failing: TestA092AFailedRecordKeepsTheKeyOutOfTheGate, TestA092ReleaseResultsCarryNoRawLedgerText/notify
+Z10 B#1 Notify logs fields	CAUGHT	1 failing: TestA092RecordOnlyLinesCarryNoFields
+Z11 B#1 AnnounceOperatingMode logs fields	CAUGHT	1 failing: TestA092RecordOnlyLinesCarryNoFields
+Z12 A#4 drop line shadows its event key	CAUGHT	1 failing: TestA092DropAndNoJournalLinesKeepTheirOwnEventKey
+Z13 A#4 best-effort line shadows its severity	CAUGHT	1 failing: TestA092DropAndNoJournalLinesKeepTheirOwnEventKey
+Z14 C#2 takeover line demoted to INFO	CAUGHT	1 failing: TestA092ATakeoverIsAWarningThatNamesTheDeadSender
+Z15 C#3 mode endpoint without token check	CAUGHT	2 failing: TestA092TheModeEndpointRejectsWhatItMustNotRun/no-token, TestA092TheModeEndpointRejectsWhatItMustNotRun/alert-control-token
+Z16 C#3 mode endpoint accepts GET	CAUGHT	1 failing: TestA092TheModeEndpointRejectsWhatItMustNotRun/get
+Z17 C#3 unknown fields accepted	CAUGHT	1 failing: TestA092TheModeEndpointRejectsWhatItMustNotRun/unknown-field
+Z18 B#7 sustained tightening reported as not persisted	CAUGHT	1 failing: TestA092AnUnannouncedSustainedTighteningIsReportedAsTightened
+Z19 B#7 daily-loss tightening reported as not persisted	CAUGHT	1 failing: TestA092AnUnannouncedDailyLossTighteningIsReportedAsTightened
+Z20 R2 CLI calls not-pending delivered	CAUGHT	1 failing: TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead/not-pending
+Z21 R2 CLI guesses the notice state after a mode re-read failure	CAUGHT	1 failing: TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead/mode-reread-failed
+Z22 R2 CLI hides the read mode after a notice-list failure	CAUGHT	1 failing: TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead/notice-list-failed
