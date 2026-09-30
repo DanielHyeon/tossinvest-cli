@@ -29,14 +29,17 @@ import (
 //
 // 이 표를 늘리는 것 자체는 금지가 아니다. 금지는 **조용히** 늘리는 것이다.
 var exportedSurface = map[string]string{
-	"Capacity":      "const",
-	"Refusal":       "type string",
-	"Admitted":      "const",
-	"MarketClosed":  "const",
-	"NoSelection":   "const",
-	"OverCapacity":  "const",
-	"OverCarried":   "const",
-	"ErrNoDelivery": "var",
+	"Capacity":     "const",
+	"Refusal":      "type string",
+	"Admitted":     "const",
+	"MarketClosed": "const",
+	"NoSelection":  "const",
+	"OverCapacity": "const",
+	"OverCarried":  "const",
+	// 공개 var 는 **초기화 식까지** 고정한다(2026-09-30 codex 리뷰 P1-2). 앞 판본은 "var" 한 단어만 붙들어서, 이 이름을
+	// 비공개 타입 값으로 바꾸고 그 타입에 Handoff 를 돌려주는 공개 메서드를 달면(`ErrNoDelivery.Mint(r)`) 표 · census 둘 다
+	// 조용했다. 그 메서드 자체는 mint_census_test.go 가 따로 막는다.
+	"ErrNoDelivery": `var = errors.New("strategyhandoff: delivery body is nil")`,
 	"Handoff":       "type struct{selected []strategyflow.Result; refusal Refusal; pending int}",
 	// Delivered 는 이 경계를 지나온 값의 봉투다. 필드가 비공개라서 밖에서는
 	// 영값밖에 만들 수 없고, 그것이 이 타입의 전부다 — 값을 넣는 공개 문은
@@ -102,10 +105,21 @@ func TestThePackageExposesExactlyTheSurfaceTheSeamNeeds(t *testing.T) {
 							found[inner.Name.Name] = kind + " " + types.ExprString(inner.Type)
 						}
 					case *ast.ValueSpec:
-						for _, name := range inner.Names {
-							if name.IsExported() {
-								found[name.Name] = kind
+						for index, name := range inner.Names {
+							if !name.IsExported() {
+								continue
 							}
+							shape := kind
+							// var 는 초기화 식(없으면 선언 타입)까지 적는다 — 값의 타입이 바뀌면 이 표가 어긋난다.
+							if kind == "var" {
+								switch {
+								case index < len(inner.Values):
+									shape = "var = " + types.ExprString(inner.Values[index])
+								case inner.Type != nil:
+									shape = "var " + types.ExprString(inner.Type)
+								}
+							}
+							found[name.Name] = shape
 						}
 					}
 				}

@@ -32,20 +32,20 @@
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `make` | 1052:12 | 결과 채널. 버퍼 1 이라 늦게 끝난 사이클이 goroutine 을 붙잡지 않는다 |
-| `(unnamed)` | 1053:5 | 사이클 goroutine. **이 goroutine 은 마감 시한에 취소되지 않는다** |
-| `invokeStrategyCycle` | 1054:13 | panic 을 `abnormal=true` 인 error 로 바꾼다 |
-| `context.WithCancel` | 1056:33 | 감시견 전용 취소 문맥 |
-| `cancelWatchdog` | 1057:8 | `defer` — 감시견 goroutine 누수를 막는다 |
-| `make` | 1058:14 | 감시견 채널. 버퍼 1 |
-| `(unnamed)` | 1059:5 | 감시견 goroutine |
-| `clk.Sleep` | 1059:26 | **마감 시한 그 자체.** `time.After` 가 아니라 주입 시계(`internal/clock`)다 |
-| `ctx.Done` | 1061:9 | 상위 취소 관측 |
-| `ctx.Err` | 1062:10 | 취소 사유를 그대로 돌려준다 |
-| `ctx.Err` | 1066:6 | 마감 시한이 울린 뒤 상위가 이미 취소되었는지 |
-| `ctx.Err` | 1067:11 | 그 경우 마감 시한이 아니라 취소를 돌려준다 |
+| `make` | 1038:12 | 결과 채널. 버퍼 1 이라 늦게 끝난 사이클이 goroutine 을 붙잡지 않는다 |
+| `(unnamed)` | 1039:5 | 사이클 goroutine. **이 goroutine 은 마감 시한에 취소되지 않는다** |
+| `invokeStrategyCycle` | 1040:13 | panic 을 `abnormal=true` 인 error 로 바꾼다 |
+| `context.WithCancel` | 1042:33 | 감시견 전용 취소 문맥 |
+| `cancelWatchdog` | 1043:8 | `defer` — 감시견 goroutine 누수를 막는다 |
+| `make` | 1044:14 | 감시견 채널. 버퍼 1 |
+| `(unnamed)` | 1045:5 | 감시견 goroutine |
+| `clk.Sleep` | 1045:26 | **마감 시한 그 자체.** `time.After` 가 아니라 주입 시계(`internal/clock`)다 |
+| `ctx.Done` | 1047:9 | 상위 취소 관측 |
+| `ctx.Err` | 1048:10 | 취소 사유를 그대로 돌려준다 |
+| `ctx.Err` | 1052:6 | 마감 시한이 울린 뒤 상위가 이미 취소되었는지 |
+| `ctx.Err` | 1053:11 | 그 경우 마감 시한이 아니라 취소를 돌려준다 |
 
-Exact AST return positions: 1062:3, 1064:3, 1067:4, 1069:3.
+Exact AST return positions: 1048:3, 1050:3, 1053:4, 1055:3.
 
 
 ## State mutations and fallbacks
@@ -70,3 +70,5 @@ Exact AST return positions: 1062:3, 1064:3, 1067:4, 1069:3.
 > **5.6.2.1(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일의 다른 함수 편집으로 +43줄 이동 · 파일 해시만 바뀜). 분기 좌표는 `ast.json` 이 정본.
 
 > **5.2.2.1(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일 `runProductionStrategyMarketCycle` 편집으로 줄 이동 · 파일 해시만 바뀜, `analysis/harness/shift_same_file_bundles.py`). 분기 좌표는 `ast.json` 이 정본.
+
+> **5.2.2.1 리뷰 수리(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일 `runProductionStrategyMarketCycle` 의 몸통 이동으로 줄 이동 · 파일 해시만 바뀜, `analysis/harness/shift_same_file_bundles.py`). 분기 좌표는 `ast.json` 이 정본.

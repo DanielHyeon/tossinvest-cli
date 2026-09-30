@@ -1,3 +1,8 @@
+# a112 5.6.2.1 RED — 출처 머리말(2026-09-30 리뷰 보이스 B (T) 뒤 **사후 추가**, 아래 본문은 원 실행 출력 그대로)
+# 알려진 것: 편집 전 트리(review 의 Pre-Edit 선언 HEAD 는 504aed12 — 원 실행 트리가 그것인지는 기록이 없어 확인 불가)의 격리 사본에서 새 시험 넷을 스캐폴드(StrategyEntrySupervisorOptions.EntryGate 칸과
+#   StrategyEntryBlocker 인터페이스만 선언 · 배선 없음) 위에 돌린 출력이고, 커밋 36ade9b2 와 함께 들어왔다.
+# 기록되지 않은 것: 원 실행의 정확한 명령줄 · 사본 경로 · 시각. 이 로그만으로는 그 셋을 재구성할 수 없다 — 이후 RED 로그는
+#   red-5.2.2.1.log 처럼 머리말(트리 · 스캐폴드 · 명령)을 실행과 함께 남긴다.
 --- FAIL: TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate (0.00s)
     a112_central_integrity_entry_gate_internal_test.go:26: supervisor entry blocker = <nil>, want the engine's own entry gate 0x11db528a180
 --- FAIL: TestTheProductionStrategySupervisorRefusesAContextWithoutAnEntryGate (0.00s)

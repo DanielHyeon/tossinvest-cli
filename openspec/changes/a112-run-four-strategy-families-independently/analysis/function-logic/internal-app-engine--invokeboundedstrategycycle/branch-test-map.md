@@ -1,5 +1,7 @@
 # Branch Test Map: `invokeBoundedStrategyCycle`
 
+> **좌표 기준 표기(2026-09-30 리뷰 보이스 B #8).** 시험 옆 괄호의 `(줄-줄)` 범위는 원래 갈래 줄(889-890 · 891-892 류)이었는데 커밋 44d0fb58 에서 함수 범위로 오염됐고, 그 뒤 이동 재추출(`shift_same_file_bundles.py` 의 범위 치환)이 오염된 값을 계속 옮겼다. 그 괄호는 **갈래 좌표가 아니다** — 분기 좌표는 `ast.json` 이 정본이고, 갈래별 측정은 완료 게이트 재추출 때 다시 뜬다.
+
 - Source SHA-256: `627c647d087032586c4b63ca315a30fd9fad6b51af329fa4e8bf4fecd7104e08`; AST branch locations are authoritative.
 - Revision: base — 이 change 는 이 함수를 편집하지 않는다. RED 칸이 모두 `no (base)`
   인 이유가 그것이다. 이 번들은 태스크 5.3.2 가 인용할 분기를 열거하기 위해 만들었다.
@@ -11,8 +13,8 @@
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | select at 1060:2 — 상위 취소 / 사이클 완료 / 마감 시한 셋 중 먼저 오는 것 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues`(1051-1071), `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive`(1051-1071), `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction`(897) | no (base) | yes — 세 갈래 모두 count>0 |
-| B2 | if at 1066:3 — 마감 시한이 울렸는데 상위가 **이미** 취소되어 있다 | `TestTheWatchdogRechecksCancellationInsteadOfTrustingItsOwnTimer` | no (base) | yes (block 930-932 count=1 — **5.6 이 처음 실행**) |
+| B1 | select at 1046:2 — 상위 취소 / 사이클 완료 / 마감 시한 셋 중 먼저 오는 것 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues`(1037-1057), `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive`(1037-1057), `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction`(897) | no (base) | yes — 세 갈래 모두 count>0 |
+| B2 | if at 1052:3 — 마감 시한이 울렸는데 상위가 **이미** 취소되어 있다 | `TestTheWatchdogRechecksCancellationInsteadOfTrustingItsOwnTimer` | no (base) | yes (block 930-932 count=1 — **5.6 이 처음 실행**) |
 
 ## 측정으로 확인한 빈칸
 

@@ -5,14 +5,19 @@ package engine
 // a112 태스크 5.2.2.1 — 활성화된 시장의 주문 경로는 소유자 범위마다 handoff 를 받는다(동결 골든 "at most one selected
 // proposal per owner scope"). 활성화가 없는 시장(오늘 생산 — 배포 핀 0)은 시장 단위 상한 그대로다(토글 OFF = upstream).
 //
-// **오늘-동등성 핀**(Manager 조건 1): 소유자 범위가 둘인 활성화 시장이 handoff 를 통과해도 하류 1차 레그 권한의 개수 관문
-// (`collectStrategyFirstLegAuthority` B2 — `len(proposal.entries) != 1`, 결정 (1) 의 「봉인 전 유일한 방어」)이 거절해 주문은
-// 0 이다. 이 핀이 5.2.2.2(6.2 봉인 뒤 하류 권한의 소유자 범위 전환) 착수 때 「무엇이 바뀌는가」의 기준선이다.
+// **오늘-동등성 핀**(Manager 조건 1): 소유자 범위가 둘인 활성화 시장이 handoff 를 통과해도 하류 1차 레그 권한이 거절해
+// 주문은 0 이다. 이 핀이 5.2.2.2(6.2 봉인 뒤 하류 권한의 소유자 범위 전환) 착수 때 「무엇이 바뀌는가」의 기준선이다.
+//
+// **이 fixture 는 생산 모양이 아니다 — 의도적으로 만든 최악 조건이다**(2026-09-30 리뷰 보이스 A #1 · codex 정정). 위험 ·
+// 계좌 권한은 범위 하나짜리 fixture 에서 온 것이라 범위가 둘이어도 Ready 로 남는다. 생산에서는 권한을 다시 모으므로 그 상태가
+// 나올 수 없다 — 두 범위면 결과 권한(`ResultAuthority`)이 OverCapacity 로, 계좌 `collectMarket` B1 이 개수로 먼저 준비 안 됨이
+// 되고, 1차 레그 B2 는 개수 · 위험 · 계좌 세 조건이 함께 거짓이다. 그래서 「B2 개수 조건이 유일한 방어」는 **이 fixture 의
+// fixture 순서(원래 범위 먼저)에서만** 참이다. 조정자 순서(소유자 범위 사전순 — 000660 먼저)에서는 개수 조건을 지워도
+// :221(identity) · :228(위험 범위)이 대신 막는다. 두 순서를 모두 못 박는다.
 
 import (
 	"context"
 	"errors"
-	"go/ast"
 	"strings"
 	"testing"
 	"time"
@@ -23,12 +28,20 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 )
 
-// a112TwoScopeKR 는 KR 제안 권한에 소유자 범위를 하나 더 얹음(다른 종목 — 같은 계좌·시장·세대, 봉인된 유효 제안).
-// 원래 항목은 그대로 앞에 둠. now 는 조립의 관측 시각(유효 창의 기준).
+// a112TwoScopeKR 는 KR 제안 권한에 소유자 범위를 하나 더 얹음(다른 종목 000660 — 같은 계좌·시장·세대, 봉인된 유효 제안).
+// 원래 항목(005930)은 그대로 앞에 둠(fixture 순서). now 는 조립의 관측 시각(유효 창의 기준).
 func a112TwoScopeKR(t *testing.T, authority strategyProposalMarketAuthority, now time.Time) strategyProposalMarketAuthority {
 	t.Helper()
-	second, err := strategyflow.AcceptedResultForAuthorityTest(riskLoaderDescriptor(t, StrategyMarketKR), "acct-risk-loader", "000660",
-		"campaign-risk-loader-kr-second-scope", 8, "100", "95", "120", now.Add(-time.Second), now.Add(time.Minute))
+	return a112ExtraEntryKR(t, authority, now, "000660", false)
+}
+
+// a112ExtraEntryKR 는 KR 제안 권한에 봉인된 유효 제안 하나를 더 얹음. first 면 앞에(조정자 사전순을 흉내), 아니면 뒤에.
+// symbol 이 원래 항목과 같으면 **같은 소유자 범위**의 둘째 제안이 된다(계좌 · 시장 · 세대가 같으므로).
+func a112ExtraEntryKR(t *testing.T, authority strategyProposalMarketAuthority, now time.Time, symbol string, first bool,
+) strategyProposalMarketAuthority {
+	t.Helper()
+	second, err := strategyflow.AcceptedResultForAuthorityTest(riskLoaderDescriptor(t, StrategyMarketKR), "acct-risk-loader", symbol,
+		"campaign-risk-loader-kr-extra-"+symbol, 8, "100", "95", "120", now.Add(-time.Second), now.Add(time.Minute))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,9 +51,30 @@ func a112TwoScopeKR(t *testing.T, authority strategyProposalMarketAuthority, now
 	if !ok {
 		t.Fatal("arrangement: the second-scope proposal could not be sealed")
 	}
-	authority.entries = append(append([]strategyProposalEntryAuthority(nil), authority.entries...),
-		strategyProposalEntryAuthority{authority: sealed})
+	extra := strategyProposalEntryAuthority{authority: sealed}
+	if first {
+		authority.entries = append([]strategyProposalEntryAuthority{extra}, authority.entries...)
+	} else {
+		authority.entries = append(append([]strategyProposalEntryAuthority(nil), authority.entries...), extra)
+	}
 	return authority
+}
+
+// 같은 소유자 범위의 봉인된 제안 둘(보이스 C #2) — 활성화된 시장에서도 범위당 상한 초과로 시장 전체 OverCapacity 하나.
+// 앞 판본은 이것을 strategyhandoff 단위 시험으로만 잡았고, 엔진이 `AdmitEachOwnerScope` 를 원소마다 따로 부르는 편집
+// (언급은 한 번 · 호출은 여럿 — 중복 검사 무력화)을 아무 시험도 못 봤다. 5.2.2.2 가 1차 레그 개수 관문을 걷어 내면 이 경로가
+// 곧바로 주문으로 이어지므로 5.2.2.2 착수 조건에도 적혀 있다.
+func TestTheSameOwnerScopeSealedTwiceRefusesTheActivatedMarket(t *testing.T) {
+	_, proposals, _, _ := pairedStrategyDispatchCycleFixture(t)
+	original := proposals.kr.entries[0].authority.Proposal().Lineage.Symbol
+	twice := a112ExtraEntryKR(t, proposals.kr, proposals.observedAt, original, false)
+	twice.activation = strategyrouter.FamilyActivationForTest(strategyrouter.MarketKR, 1,
+		strategyrouter.AllFourFamiliesForTest(strategyrouter.MarketKR))
+	handoffs := twice.dispatchHandoffs()
+	if len(handoffs) != 1 || handoffs[0].Refusal() != strategyhandoff.OverCapacity || handoffs[0].Pending() != 2 {
+		t.Fatalf("one owner scope sealed twice: %d handoffs, first refusal %q — want one OverCapacity for the whole market",
+			len(handoffs), handoffs[0].Refusal())
+	}
 }
 
 func TestOnlyAnActivatedMarketHandsEachOwnerScopeOff(t *testing.T) {
@@ -79,11 +113,20 @@ func TestOnlyAnActivatedMarketHandsEachOwnerScopeOff(t *testing.T) {
 }
 
 func TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses(t *testing.T) {
+	for _, order := range []struct {
+		name  string
+		first bool
+	}{{"fixture order (original scope first)", false}, {"coordinator order (000660 first)", true}} {
+		t.Run(order.name, func(t *testing.T) { a112TwoScopePin(t, order.first) })
+	}
+}
+
+func a112TwoScopePin(t *testing.T, coordinatorOrder bool) {
 	cycle, proposals, _, spy := pairedStrategyDispatchCycleFixture(t)
-	two := a112TwoScopeKR(t, proposals.kr, proposals.observedAt)
+	two := a112ExtraEntryKR(t, proposals.kr, proposals.observedAt, "000660", coordinatorOrder)
 	two.activation = strategyrouter.FamilyActivationForTest(strategyrouter.MarketKR, 1,
 		strategyrouter.AllFourFamiliesForTest(strategyrouter.MarketKR))
-	// 조립과 같은 모양: dispatch 와 1차 레그 권한이 같은 제안 쌍을 본다.
+	// dispatch 와 1차 레그 권한이 같은 제안 쌍을 본다(위험 · 계좌 권한은 범위 하나짜리 fixture 그대로 — 머리말의 최악 조건).
 	cycle.proposals.kr = two
 	loader, ok := cycle.firstLeg.loader.(*productionStrategyFirstLegAuthorityLoader)
 	if !ok {
@@ -108,13 +151,15 @@ func TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses(t *testin
 	if n := len(spy.calls); n != 0 {
 		t.Fatalf("a two-scope market placed %d orders — the downstream per-market authority must still refuse (5.2.2.2 is what changes this)", n)
 	}
-	// 거절한 것이 하류 1차 레그 권한의 개수 관문임을 이름으로 고정(원래 범위 — 봉인된 유효 제안).
+	// 첫 범위를 거절한 것이 1차 레그 권한 B2 의 문구임을 고정. 이 fixture 의 fixture 순서에서는 B2 의 여섯 조건 중 거짓인
+	// 것이 개수 하나뿐이다(아래 대조). 조정자 순서에서도 문구는 같고, 개수 조건이 없어도 :221 · :228 이 막는다(머리말).
 	if len(errs) == 0 || !strings.Contains(errs[0], a112FirstLegCountGuard) {
 		t.Fatalf("first scope error = %v, want the first-leg count guard %q", errs, a112FirstLegCountGuard)
 	}
-	// 대조: 같은 조립·같은 활성화에서 원래 범위 **하나**만 실으면 그 문구로 거절되지 않음. :217 의 문구는 여섯 조건
-	// (제안 개수 · 위험 · 환율 · 계좌 · 일정 준비 · 활성화)이 공유하고 두 실행 사이에 달라진 것은 제안 개수뿐이므로,
-	// 위의 거절이 개수 조건(`len(proposal.entries) != 1`)에서 왔음이 이 대조로 가려짐.
+	// 대조: **같은 모양의 새 조립**(fixture 를 한 번 더 만든다 — 같은 고정 시각 · 같은 입력)에 같은 활성화로 원래 범위 **하나**만
+	// 실으면 그 문구로 거절되지 않음. :217 의 문구는 여섯 조건(제안 개수 · 위험 · 환율 · 계좌 · 일정 준비 · 활성화)이 공유하고
+	// 두 실행 사이에 달라진 것은 제안 개수뿐이므로, 위의 거절이 개수 조건(`len(proposal.entries) != 1`)에서 왔음이 이 대조로
+	// 가려짐. 이 대조 절반만을 빨갛게 하는 변이(「B2 가 늘 거절」)가 변이 원장에 있다(F16).
 	control, controlProposals, _, controlSpy := pairedStrategyDispatchCycleFixture(t)
 	one := controlProposals.kr
 	one.activation = two.activation
@@ -180,46 +225,5 @@ func TestAScopeFaultStopsTheCycleBeforeTheNextScope(t *testing.T) {
 	if err := deliverEachStrategyHandoff([]strategyhandoff.Handoff{strategyhandoff.Admit(true, selected[:1])},
 		func(strategyhandoff.Delivered) error { return fault }); err != fault {
 		t.Fatalf("single handoff err=%v, want the body's own error value", err)
-	}
-}
-
-// 생산 주문 경로(runProductionStrategyMarketCycle)는 시험이 직접 돌리지 않는 함수라서(권한 새로 고침 전체가 필요),
-// 그 함수가 **dispatchHandoffs 의 결과를 반복**한다는 것을 구조로 못 박음. 이 못이 없으면 「시장 단위 dispatchHandoff 로
-// 되돌리기」 변이가 행동 시험 전부를 통과함 — 행동 시험은 dispatchHandoffs 와 반복 헬퍼를 따로 부르기 때문.
-func TestTheProductionCycleDeliversEveryOwnerScopeHandoff(t *testing.T) {
-	var cycle *ast.FuncDecl
-	for _, path := range engineProductionFiles(t) {
-		for _, decl := range parseEngineFile(t, path).Decls {
-			if function, ok := decl.(*ast.FuncDecl); ok && function.Name.Name == dispatchCallSiteFunc {
-				cycle = function
-			}
-		}
-	}
-	if cycle == nil {
-		t.Fatalf("%s not found", dispatchCallSiteFunc)
-	}
-	delivers, singular := 0, 0
-	ast.Inspect(cycle.Body, func(node ast.Node) bool {
-		switch value := node.(type) {
-		case *ast.SelectorExpr:
-			if value.Sel.Name == "dispatchHandoff" || value.Sel.Name == "Deliver" {
-				singular++
-			}
-		case *ast.CallExpr:
-			name, ok := value.Fun.(*ast.Ident)
-			if !ok || name.Name != "deliverEachStrategyHandoff" || len(value.Args) != 2 {
-				return true
-			}
-			if source, ok := value.Args[0].(*ast.CallExpr); ok {
-				if selector, ok := source.Fun.(*ast.SelectorExpr); ok && selector.Sel.Name == "dispatchHandoffs" {
-					delivers++
-				}
-			}
-		}
-		return true
-	})
-	if delivers != 1 || singular != 0 {
-		t.Fatalf("%s: deliverEachStrategyHandoff(…dispatchHandoffs(), …)=%d, market-wide dispatchHandoff/Deliver mentions=%d — "+
-			"want exactly one per-owner-scope delivery and no market-wide one", dispatchCallSiteFunc, delivers, singular)
 	}
 }

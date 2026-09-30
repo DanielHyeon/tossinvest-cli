@@ -1,0 +1,5 @@
+before 00e1b9bd:strategy_entry_supervisor.go closure (renamed) sha256 ffb36ce3cb3b0c4275695e35d741f7d7994b1f8b9492da34aac6eac4fd354cfa
+after  worktree strategy_market_handoff_delivery.go closure sha256 ffb36ce3cb3b0c4275695e35d741f7d7994b1f8b9492da34aac6eac4fd354cfa
+EQUAL
+control (operand order swapped in the new closure): DIFFERENT (comparator sees order)
+control (comment added): EQUAL

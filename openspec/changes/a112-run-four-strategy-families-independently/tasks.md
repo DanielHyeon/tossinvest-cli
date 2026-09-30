@@ -184,12 +184,18 @@
 
   **RED · 반증.** `analysis/measurements/lot-5.6.2-5.2.2/red-5.2.2.1.log`(넷 FAIL — 범위당 handoff 부재, 대조 하나 GREEN). 변이 `analysis/harness/a112_lot_mutate.py --set 5.2.2.1` — review 절.
 
+  **리뷰 수리(2026-09-30, 4목소리 — codex BLOCK · A APPROVE · B BLOCK · C APPROVE).** 처분 전표와 수리 내용은 review 「2026-09-30 태스크 5.6.2.1 · 5.2.2.1 적대 리뷰 처분 · 수리 로트」 절. 요지: 소유자 범위에 horizon · 레인이 섞이면 잡는 시험, 전달 몸통의 의미 무변경 이동 + 스파이 구동 + 식별자 해소 못, 경계 이름 허용 목록(「자동으로 새 문을 본다」 철회), 패키지 내부 주조 census, `.Single()` 전수 세기, 같은 범위 중복의 엔진 핀, 두 순서의 동등성 핀, 5.6.2.1 변이 원장 재실행 · 커밋.
+
   **이 태스크가 주장하지 않는 것.** 두 소유자 범위 시장의 거래(5.2.2.2). 레인별 독립 감독(5.6.2.2). 시장 준비 상태의 레인 유도 — `buildProductionStrategyMarketWorker` · `ResultAuthority` · projection 은 여전히 시장 단위 `dispatchHandoff().Single()` 을 읽는다(5.2.2.2).
 - [ ] 5.2.2.2 Move the downstream authorities to owner-scope units so a two-owner-scope market trades. **(Owns the title's readiness clause and 「두 소유자 범위 시장이 거래한다」 — split 2026-09-30.)**
 
-  **착수 조건 — L6 6.2 봉인 완료.** 결정 (1)(HANDOFF 「결정 (1)(5)(6) 기록」): 1차 레그 권한의 다섯 줄(`strategy_account_first_leg_authority.go` :217 `len(proposal.entries) != 1` · :221–:225 identity 대조)은 봉인 전 **유일한 방어**이고, 6.2 가 그 자리를 봉인으로 대체한 뒤에만 바꾼다. 6.2 봉인 전에 이 태스크를 시작하지 않는다.
+  **착수 조건 — L6 6.2 봉인 완료.** 결정 (1)(HANDOFF 「결정 (1)(5)(6) 기록」): 1차 레그 권한의 다섯 줄(`strategy_account_first_leg_authority.go` :217 `len(proposal.entries) != 1` · :221–:225 identity 대조)은 봉인 전 방어이고, 6.2 가 그 자리를 봉인으로 대체한 뒤에만 바꾼다. 6.2 봉인 전에 이 태스크를 시작하지 않는다.
 
-  **옮길 것.** 결과 권한(`ResultAuthority` — `strategy_proposal_authority.go` 의 `dispatchHandoff().Single()`), 위험 권한, 계좌 권한(`collectMarket` B1 `len(proposal.entries) != 1`), 1차 레그 권한(B2 · identity 대조), 그리고 worker 승격(`buildProductionStrategyMarketWorker`)과 projection 의 시장 단위 `Single()` 읽기. 5.2.2.1 의 오늘-동등성 핀(`TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses`)이 「무엇이 바뀌는가」의 기준선이다 — 이 태스크가 그 핀을 **의도적으로** 뒤집는다. `deliverEachStrategyHandoff` 의 「첫 오류에서 멈춤」을 소유자 범위별 고장 격리로 바꿀지도 여기서 정한다.
+  **착수 조건 둘째 — 같은 범위 중복 핀이 서 있을 것**(2026-09-30 리뷰 보이스 C #2). B2 를 걷어 내면 「같은 소유자 범위의 봉인된 제안 둘」 경로가 곧바로 주문으로 이어진다. 그 경로를 엔진 쪽에서 막는 핀 `TestTheSameOwnerScopeSealedTwiceRefusesTheActivatedMarket`(활성화 시장 → handoff 하나 · OverCapacity)이 착수 시점에 초록이어야 하고, 이 태스크의 편집 뒤에도 초록이어야 한다.
+
+  **기준선의 성격**(보이스 A #1). 5.2.2.1 의 오늘-동등성 핀은 **생산 모양이 아니다** — 위험 · 계좌 권한이 범위 하나짜리 fixture 라 두 범위여도 Ready 로 남는 의도적 최악 조건이고, 「B2 개수 조건이 유일한 방어」는 fixture 순서에서만 참이다(조정자 순서에서는 :221 · :228 이 대신 막는다). 생산에서는 결과 권한 · 계좌 B1 · 위험 권한 재수집도 두 범위를 거절한다. 이 태스크는 두 순서의 핀을 **의도적으로** 뒤집되 생산 모양의 두 범위 시험을 새로 세운다.
+
+  **옮길 것.** 결과 권한(`ResultAuthority` — `strategy_proposal_authority.go` 의 `dispatchHandoff().Single()`), 위험 권한, 계좌 권한(`collectMarket` B1 `len(proposal.entries) != 1`), 1차 레그 권한(B2 · identity 대조), 그리고 worker 승격(`buildProductionStrategyMarketWorker`)과 projection 의 시장 단위 `Single()` 읽기. 5.2.2.1 의 오늘-동등성 핀(`TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses`)이 「무엇이 바뀌는가」의 기준선이다 — 이 태스크가 그 핀을 **의도적으로** 뒤집는다. `deliverEachStrategyHandoff` 의 「첫 오류에서 멈춤」을 소유자 범위별 고장 격리로 바꿀지도 여기서 정한다 — **결정 항목: 굶음**(보이스 A (T)): 조정자 사전순으로 앞선 범위가 매 주기 실패하면 뒤 범위는 매 주기 굶는다(안전 방향이지만 liveness 결함).
 
   **Done.** 서명 활성화된 두 소유자 범위 시장이 범위마다 주문을 낸다(소유자 범위마다 최대 하나), 시장 준비 상태가 레인 · 범위의 준비 상태에서 나오고, 활성화 없는 시장은 여전히 시장 단위다.
 - [x] 5.3.1 Implement the lane-local health/failure counters, bounded retry/backoff and the entry-only latch. **(Landed 2026-09-02.)**

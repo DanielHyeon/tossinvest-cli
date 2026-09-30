@@ -16,8 +16,6 @@ import (
 	candidatepkg "github.com/JungHoonGhae/tossinvest-cli/internal/candidate"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
-	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff"
 )
 
 // StrategyEntryLoopName is the single outer runtime loop which owns both market
@@ -476,8 +474,8 @@ func buildProductionStrategyMarketWorker(ctx context.Context, clk clock.Clock, m
 	//  1. 두 값이 **per-cycle** 스냅샷 봉인이라 사람이 서명한 상수가 같아질 수
 	//     없었다. 매니페스트를 배포하면 두 시장이 영원히 dormant 가 된다.
 	//  2. 이 함수가 만드는 `Effective` 는 **화면과 승격 판정**만 움직인다. 주문은
-	//     refresh worker 의 사이클이 `dispatchHandoff().Deliver` 로 내보내고,
-	//     그 경로는 이 서술자를 읽지 않는다. 즉 화면은 멈추고 주문은 나갔다.
+	//     refresh worker 의 사이클이 내보내고(당시 `dispatchHandoff().Deliver`, 5.2.2.1 이후
+	//     `dispatchStrategyMarketHandoffs`), 그 경로는 이 서술자를 읽지 않는다. 즉 화면은 멈추고 주문은 나갔다.
 	//
 	// 그래서 결속을 옮겼다: 넷은 제안 수집 단계(존재하고 변하지 않는 사실),
 	// ProtectionReady 하한은 `strategyDispatchCycle.dispatch`(보호 세대가
@@ -547,23 +545,11 @@ func (c *Context) runProductionStrategyMarketCycle(ctx context.Context, clk cloc
 	// 우회했다. 토큰 금지는 함수 본문 단위라서 한 다리만 건너면 사라진다.
 	//
 	// 태스크 5.2.2.1: 받는 handoff 는 `dispatchHandoffs` 가 정함 — 활성화 없는 시장(오늘 생산 전부)은 지금까지와 같은
-	// 시장 단위 handoff 하나, 서명 활성화된 시장은 소유자 범위마다 하나. 몸통(아래 closure)과 공유 dispatch 호출 자리는
-	// 이 함수 하나에 그대로 남음 — 바뀐 것은 몸통을 몇 번 부를 수 있는가뿐임.
-	return deliverEachStrategyHandoff(fresh.proposals.forMarket(market).dispatchHandoffs(), func(delivered strategyhandoff.Delivered) error {
-		lineage := delivered.Result().Lineage
-		cas, err := c.Journal.CurrentPositionCampaignCAS(ctx, lineage.AccountRef, string(lineage.Market), lineage.Symbol)
-		if err != nil {
-			return err
-		}
-		if cas.Claimed || cas.State != "FLAT" && cas.State != "CLOSED" {
-			return nil
-		}
-		_, err = fresh.dispatch.dispatch(ctx, delivered)
-		if errors.Is(err, journal.ErrStrategyDispatchLeaseConsumed) {
-			return nil
-		}
-		return err
-	})
+	// 시장 단위 handoff 하나, 서명 활성화된 시장은 소유자 범위마다 하나. 바뀐 것은 몸통을 몇 번 부를 수 있는가뿐임.
+	// 2026-09-30 리뷰 수리: 몸통은 `dispatchStrategyMarketHandoffs`(strategy_market_handoff_delivery.go)로 의미 무변경
+	// 이동 — 시험이 생산 몸통 자체를 돌 수 있게. 이 문장이 이 함수의 **마지막 문장**이어야 하고 그 모양(부르는 함수 ·
+	// 넘기는 원장 · dispatch 주기 · handoff 원천)은 a112_market_delivery_structure_test.go 가 식별자 해소로 못 박음.
+	return dispatchStrategyMarketHandoffs(ctx, c.Journal, fresh.dispatch, fresh.proposals.forMarket(market).dispatchHandoffs())
 }
 
 func (c *Context) refreshPairedStrategyEntryProductionAssembly(ctx context.Context, clk clock.Clock) (StrategyEntryProductionAssembly, error) {

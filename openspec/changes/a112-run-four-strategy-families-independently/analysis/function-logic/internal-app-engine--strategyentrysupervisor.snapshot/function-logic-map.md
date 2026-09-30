@@ -6,16 +6,16 @@
 - Revision: **modified (태스크 8.8.4, 2026-09-05).** 편집은 **한 줄**이다 — 반환하는
   값에 `SwallowedCycleErrors`·`FirstSwallowedFailure` 를 싣는다. 분기·반환 자리·잠금
   자세는 그대로이고, 새 필드는 이미 잡고 있는 `s.mu.RLock` 아래에서 읽힌다.
-- Source SHA-256: `1f4f20967491555bb2dcfeeffc82962f3e778ec5efa3551540cd95aa536f0be7`
+- Source SHA-256: `c9f398dbc6215f3492d3845c65d5bebfa10089b80923eedaa4cbe352bf2c5f7d`
 - Lines: 727-748
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| `s` | nil 이거나 살아 있는 감독자 | 호출자 | nil 이면 영값 + `false` (`757:3`) |
-| `market` | `validStrategyMarket` 이 참인 값만 | `strategy_entry_supervisor.go` 의 시장 열거 | 아니면 영값 + `false` (`757:3`) |
-| `s.workers[market]` | 등록된 시장이면 non-nil | `NewStrategyEntrySupervisor` 가 만든 표 | nil 이면 영값 + `false` (`763:3`) |
+| `s` | nil 이거나 살아 있는 감독자 | 호출자 | nil 이면 영값 + `false` (`743:3`) |
+| `market` | `validStrategyMarket` 이 참인 값만 | `strategy_entry_supervisor.go` 의 시장 열거 | 아니면 영값 + `false` (`743:3`) |
+| `s.workers[market]` | 등록된 시장이면 non-nil | `NewStrategyEntrySupervisor` 가 만든 표 | nil 이면 영값 + `false` (`749:3`) |
 | `worker.swallowedCount` | 0 이상, `math.MaxUint64` 에서 포화 | `recordSwallowedCycleError` 하나 | 포화하며 되감기지 않는다 |
 | `worker.firstSwallowed` | 빈 문자열이거나 **첫** 원인 | 같은 함수 | 이후 원인은 덮어쓰지 않는다 |
 
@@ -23,9 +23,9 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (`756:2`) | `s == nil \|\| !validStrategyMarket(market)` | 없음 | 영값 + `false` (`757:3`) | 기존 감독자 시험 |
-| B2 (`762:2`) | `worker == nil` — 등록되지 않은 시장 | 없음 | 영값 + `false` (`763:3`) | 기존 감독자 시험 |
-| (분기 없음) | 정상 경로 | 없음 — **읽기 전용** | 스냅샷 + `true` (`765:2`) | `TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows` (8.8.4) |
+| B1 (`742:2`) | `s == nil \|\| !validStrategyMarket(market)` | 없음 | 영값 + `false` (`743:3`) | 기존 감독자 시험 |
+| B2 (`748:2`) | `worker == nil` — 등록되지 않은 시장 | 없음 | 영값 + `false` (`749:3`) | 기존 감독자 시험 |
+| (분기 없음) | 정상 경로 | 없음 — **읽기 전용** | 스냅샷 + `true` (`751:2`) | `TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows` (8.8.4) |
 
 ## Calls and live bindings
 
@@ -33,11 +33,11 @@
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `validStrategyMarket` | 756:18 | 시장 열거 밖의 값을 거른다 — 순수 함수, 오류 없음 |
-| `s.mu.RLock` | 759:2 | worker 상태를 **공유 읽기**로 본다. 8.8.4 의 두 필드도 이 잠금 아래에서 읽힌다 |
-| `s.mu.RUnlock` | 760:8 | `defer` 로 해제 |
-| `len` | 773:15 | 큐 깊이 — 순수 |
-| `cap` | 773:49 | 큐 용량 — 순수 |
+| `validStrategyMarket` | 742:18 | 시장 열거 밖의 값을 거른다 — 순수 함수, 오류 없음 |
+| `s.mu.RLock` | 745:2 | worker 상태를 **공유 읽기**로 본다. 8.8.4 의 두 필드도 이 잠금 아래에서 읽힌다 |
+| `s.mu.RUnlock` | 746:8 | `defer` 로 해제 |
+| `len` | 759:15 | 큐 깊이 — 순수 |
+| `cap` | 759:49 | 큐 용량 — 순수 |
 
 ## State mutations and fallbacks
 
@@ -57,3 +57,5 @@
 > **5.6.2.1(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일의 다른 함수 편집으로 +17줄 이동 · 파일 해시만 바뀜). 분기 좌표는 `ast.json` 이 정본.
 
 > **5.2.2.1(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일 `runProductionStrategyMarketCycle` 편집으로 줄 이동 · 파일 해시만 바뀜, `analysis/harness/shift_same_file_bundles.py`). 분기 좌표는 `ast.json` 이 정본.
+
+> **5.2.2.1 리뷰 수리(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일 `runProductionStrategyMarketCycle` 의 몸통 이동으로 줄 이동 · 파일 해시만 바뀜, `analysis/harness/shift_same_file_bundles.py`). 분기 좌표는 `ast.json` 이 정본.

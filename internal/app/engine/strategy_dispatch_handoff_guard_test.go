@@ -25,8 +25,10 @@ const handoffSeamFile = "strategy_dispatch_handoff.go"
 // coordinatorSeamFile 은 시장 조정자를 엔진 안에서 감싸는 자리다.
 const coordinatorSeamFile = "strategy_market_coordinator.go"
 
-// dispatchCallSiteFunc 는 공유 dispatch 를 부르는 유일한 생산 함수다.
-const dispatchCallSiteFunc = "runProductionStrategyMarketCycle"
+// dispatchCallSiteFunc 는 공유 dispatch 를 부르는 유일한 생산 함수다. 2026-09-30 리뷰 수리로 주기 함수
+// (`runProductionStrategyMarketCycle`)의 closure 가 이 함수로 의미 무변경 이동했다 — 주기 함수가 이 함수를 마지막 문장으로
+// 부르는 배선은 a112_market_delivery_structure_test.go 가 식별자 해소로 못 박는다.
+const dispatchCallSiteFunc = "dispatchStrategyMarketHandoffs"
 
 // workerBuilderFunc 는 시장 worker 를 Effective 로 올리는 함수다.
 const workerBuilderFunc = "buildProductionStrategyMarketWorker"
@@ -608,15 +610,15 @@ func TestOnlyTheSeamsEnvelopeCanReachTheSharedDispatch(t *testing.T) {
 //
 // 봉투는 "dispatch 된 값이 Admit 을 거쳤다"까지만 증명한다. 엔진 패키지는
 // 스스로 `strategyhandoff.Admit(true, []Result{원본})` 을 불러 봉투를 만들 수
-// 있고, 그러면 서명은 아무것도 막지 못한다. 그래서 Admit 을 부르는 자리를
-// 하나로 고정한다.
+// 있고, 그러면 서명은 아무것도 막지 못한다. 그래서 문을 부르는 자리를 고정한다 —
+// 5.2.2.1 부터 문은 둘(`Admit` · `AdmitEachOwnerScope`)이고 자리도 문마다 하나씩 둘이다(admitCallSites).
 //
 // **앞 판본과 다른 것은 세는 범위다.** 이 자리에 있던
 // TestSeamConsumersCannotReadTheRawEntryListAgain 은 `entries` 라는 토큰을
 // **네 함수의 본문 안에서만** 셌다. 헬퍼 함수 하나를 한 다리 건너 두면
 // 사라졌고, 적대 리뷰어 셋이 각자 그렇게 뚫었다. 여기서는 이 패키지의 **모든**
-// 생산 파일에서 `Admit` 이라는 이름이 나오는 자리를 전부 센다 — 헬퍼를 만들면
-// 그 헬퍼가 세어진다.
+// 생산 파일에서 문 이름(strategyHandoffDoors)이 나오는 자리를 전부 센다 — 헬퍼를 만들면
+// 그 헬퍼가 세어진다. 문 목록 자체가 빠짐없는지는 TestEveryNameTheEngineTakesFromTheSeamIsClassified 가 지킨다.
 //
 // 별칭 import(`sh.Admit`), dot import(`Admit`), 함수 값(`var f = …Admit`)은
 // 전부 이 토큰을 쓰므로 이 세기 안에 들어온다 — **그리고 그 말은 아래
@@ -645,7 +647,10 @@ func TestOnlyTheSeamsEnvelopeCanReachTheSharedDispatch(t *testing.T) {
 // 잡는 것은 strategy_first_leg_identity_backstop_test.go 의
 // TestFirstLegAuthorityRefusesAProposalItDidNotAuthorize 하나뿐이다.
 func TestExactlyOneProductionSiteAdmitsIntoTheSeam(t *testing.T) {
-	doors := strategyHandoffAdmitDoors(t)
+	doors := make(map[string]bool, len(strategyHandoffDoors))
+	for _, door := range strategyHandoffDoors {
+		doors[door] = true
+	}
 	sites := make([]string, 0, len(admitCallSites))
 	for _, path := range engineProductionFiles(t) {
 		sites = append(sites, admitSites(parseEngineFile(t, path), doors)...)
@@ -658,37 +663,117 @@ func TestExactlyOneProductionSiteAdmitsIntoTheSeam(t *testing.T) {
 	}
 }
 
-// strategyHandoffAdmitDoors 는 경계 값을 **만드는** 문의 이름을 strategyhandoff 생산 소스에서 유도한다: 수신자 없는
-// 공개 함수 중 결과 타입에 Handoff 가 나오는 것. 손으로 적은 목록이면 문이 늘 때 이 세기가 새 문을 못 본다
-// (5.2.2.1 이전 판본은 `Admit` 한 철자만 셌으므로 `AdmitEachOwnerScope` 는 어디서 불려도 0 이었다).
-func strategyHandoffAdmitDoors(t *testing.T) map[string]bool {
-	t.Helper()
+// 경계 문(값을 만드는 공개 함수)과 비주조 이름(타입 · 거절 이름 · 상한 · 오류)의 **명시 목록**(2026-09-30 리뷰 — 보이스 C #1).
+//
+// 앞 판본은 문 목록을 strategyhandoff 소스에서 「결과 타입에 Handoff 가 나오는 수신자 없는 공개 함수」로 **유도**했고 「다음에
+// 문이 늘어도 손으로 고칠 필요가 없다」고 적었다. 보이스 C 가 그 주장을 반증했다 — 표면 표를 정식으로 늘리면 수신자 메서드 ·
+// 포인터 인자 채움 · 별칭 · 공개 var · 제네릭 다섯 모양 전부를 유도가 못 봤다(보이지 않으면 통과 = fail-open). 그 주장은
+// 철회한다. 이제는 **모르면 실패**다: 엔진이 쓰는 `strategyhandoff.X` 는 아래 두 목록 중 하나에 있어야 하고, strategyhandoff 의
+// 공개 이름도 전부 두 목록 중 하나에 분류돼 있어야 한다. 새 이름은 사람이 어느 쪽인지 적기 전에는 통과하지 못한다.
+var (
+	strategyHandoffDoors      = []string{"Admit", "AdmitEachOwnerScope"}
+	strategyHandoffNonMinting = []string{"Admitted", "Capacity", "Delivered", "ErrNoDelivery", "Handoff", "MarketClosed",
+		"NoSelection", "OverCapacity", "OverCarried", "Refusal"}
+)
+
+func TestEveryNameTheEngineTakesFromTheSeamIsClassified(t *testing.T) {
+	known := map[string]string{}
+	for _, name := range strategyHandoffDoors {
+		known[name] = "door"
+	}
+	for _, name := range strategyHandoffNonMinting {
+		known[name] = "non-minting"
+	}
+	// (가) strategyhandoff 의 공개 최상위 이름이 전부 분류돼 있다(메서드는 타입을 거쳐야 닿으므로 타입 분류로 덮는다 —
+	// 비공개 타입의 메서드 · 공개 var 의 값 타입은 strategyhandoff 의 mint_census_test.go 가 따로 막는다).
 	paths, err := filepath.Glob(filepath.Join("..", "..", "strategyhandoff", "*.go"))
 	if err != nil {
 		t.Fatalf("strategyhandoff source glob: %v", err)
 	}
-	doors := make(map[string]bool)
+	exported := map[string]bool{}
 	for _, path := range paths {
 		if strings.HasSuffix(path, "_test.go") {
 			continue
 		}
 		for _, decl := range parseEngineFile(t, path).Decls {
-			function, ok := decl.(*ast.FuncDecl)
-			if !ok || function.Recv != nil || !function.Name.IsExported() || function.Type.Results == nil {
-				continue
-			}
-			for _, result := range function.Type.Results.List {
-				if strings.Contains(types.ExprString(result.Type), "Handoff") {
-					doors[function.Name.Name] = true
+			switch value := decl.(type) {
+			case *ast.FuncDecl:
+				if value.Recv == nil && value.Name.IsExported() {
+					exported[value.Name.Name] = true
+				}
+			case *ast.GenDecl:
+				for _, spec := range value.Specs {
+					switch inner := spec.(type) {
+					case *ast.TypeSpec:
+						if inner.Name.IsExported() {
+							exported[inner.Name.Name] = true
+						}
+					case *ast.ValueSpec:
+						for _, name := range inner.Names {
+							if name.IsExported() {
+								exported[name.Name] = true
+							}
+						}
+					}
 				}
 			}
 		}
 	}
-	// 유도한 목록이 비면 세기가 아무것도 안 본다 — 오늘 알려진 두 문이 들어 있는지 스스로 확인한다.
-	if !doors["Admit"] || !doors["AdmitEachOwnerScope"] {
-		t.Fatalf("strategyhandoff 에서 유도한 경계 문=%v, want Admit 과 AdmitEachOwnerScope 포함", doors)
+	if len(exported) == 0 {
+		t.Fatal("no exported strategyhandoff name was scanned")
 	}
-	return doors
+	var problems []string
+	for name := range exported {
+		if known[name] == "" {
+			problems = append(problems, "strategyhandoff exports "+name+" which is neither a door nor a non-minting name")
+		}
+	}
+	for name := range known {
+		if !exported[name] {
+			problems = append(problems, "the classification lists "+name+" which strategyhandoff does not export")
+		}
+	}
+	// (나) 엔진 생산 코드가 이 경계에서 꺼내 쓰는 이름은 전부 분류된 것이다. dot import 는 이름을 가리므로 금지.
+	selectors := 0
+	for _, path := range engineProductionFiles(t) {
+		file := parseEngineFile(t, path)
+		local := ""
+		for _, spec := range file.Imports {
+			if strings.Trim(spec.Path.Value, `"`) != enginePackagePrefix+"internal/strategyhandoff" {
+				continue
+			}
+			local = "strategyhandoff"
+			if spec.Name != nil {
+				local = spec.Name.Name
+			}
+			if local == "." || local == "_" {
+				problems = append(problems, filepath.Base(path)+" imports the seam as "+local)
+			}
+		}
+		if local == "" || local == "." || local == "_" {
+			continue
+		}
+		ast.Inspect(file, func(node ast.Node) bool {
+			selector, ok := node.(*ast.SelectorExpr)
+			if !ok {
+				return true
+			}
+			if pkg, ok := selector.X.(*ast.Ident); ok && pkg.Name == local {
+				selectors++
+				if known[selector.Sel.Name] == "" {
+					problems = append(problems, filepath.Base(path)+" takes strategyhandoff."+selector.Sel.Name+" which is not classified")
+				}
+			}
+			return true
+		})
+	}
+	if selectors == 0 {
+		t.Fatal("no engine use of the seam was scanned, so this census is blind")
+	}
+	if len(problems) != 0 {
+		sort.Strings(problems)
+		t.Fatalf("unclassified seam names (unknown means refused): %v", problems)
+	}
 }
 
 // admitSites 는 한 파일에서 경계 문 이름(doors)이 나오는 자리를 전부 세고, 각 자리를 「감싼 최상위 선언:문 이름」으로
@@ -836,83 +921,83 @@ func TestExactlyOneProductionCallSiteTurnsAHandoffIntoADispatch(t *testing.T) {
 // 있다. 앞선 판본은 `*ast.AssignStmt` 만 보아 `var result, _ = …` 를 놓쳤다 —
 // 같은 지적을 두 번 받고서야 고쳤다.
 func TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer(t *testing.T) {
-	checked := 0
+	// 2026-09-30 리뷰(보이스 C #3): 앞 판본은 `X.dispatchHandoff().Single()` 한 철자만 **인식**해서 세었다. 5.2.2.1 이 만든
+	// `dispatchHandoffs()[i].Single()` 과 편집 전부터 있던 중간 바인딩(`h := …dispatchHandoff(); r, _ := h.Single()`)은
+	// 인식기를 비껴 가 넷째 자리가 생겨도 `checked == 3` 이 그대로였다. 이제 인식하지 않고 **센다**: 생산 코드의 `.Single()`
+	// 호출 전부를 자리 목록과 대조하고, 자리마다 답을 두 이름으로 받는지 · 둘째 이름을 버리지 않는지 본다.
+	var sites []string
 	for _, path := range engineProductionFiles(t) {
 		for _, decl := range parseEngineFile(t, path).Decls {
 			function, ok := decl.(*ast.FuncDecl)
 			if !ok || function.Body == nil {
 				continue
 			}
-			for _, answer := range seamAdmissionAnswers(t, filepath.Base(path), function) {
-				checked++
-				if identIsBlankAssigned(function.Body, answer) {
-					t.Errorf("%s: %s silences the seam's admission answer with `_ = %s`",
-						filepath.Base(path), function.Name.Name, answer)
+			label := filepath.Base(path) + ":" + function.Name.Name
+			bound := map[*ast.CallExpr]string{}
+			bind := func(lhs []ast.Expr, rhs []ast.Expr) {
+				if len(rhs) != 1 {
+					return
 				}
+				call, ok := rhs[0].(*ast.CallExpr)
+				if !ok || !isSingleCall(call) {
+					return
+				}
+				if len(lhs) != 2 {
+					bound[call] = ""
+					return
+				}
+				if name, ok := lhs[1].(*ast.Ident); ok && name.Name != "_" {
+					bound[call] = name.Name
+					return
+				}
+				bound[call] = ""
 			}
+			ast.Inspect(function.Body, func(node ast.Node) bool {
+				switch value := node.(type) {
+				case *ast.AssignStmt:
+					bind(value.Lhs, value.Rhs)
+				case *ast.ValueSpec:
+					lhs := make([]ast.Expr, 0, len(value.Names))
+					for _, name := range value.Names {
+						lhs = append(lhs, name)
+					}
+					bind(lhs, value.Values)
+				}
+				return true
+			})
+			ast.Inspect(function.Body, func(node ast.Node) bool {
+				call, ok := node.(*ast.CallExpr)
+				if !ok || !isSingleCall(call) {
+					return true
+				}
+				sites = append(sites, label)
+				answer, seen := bound[call]
+				switch {
+				case !seen:
+					t.Errorf("%s calls Single() without binding its value and admission answer (%s)", label, types.ExprString(call))
+				case answer == "":
+					t.Errorf("%s throws away the seam's admission answer (%s)", label, types.ExprString(call))
+				case identIsBlankAssigned(function.Body, answer):
+					t.Errorf("%s silences the seam's admission answer with `_ = %s`", label, answer)
+				}
+				return true
+			})
 		}
 	}
-	if checked == 0 {
-		t.Fatal("no production site reads the seam, so this guard proves nothing")
-	}
-	// 경계의 값을 읽는 자리는 셋이다: worker 승격, 결과 권한, 읽기 전용
-	// projection. dispatch 주기는 Deliver 를 쓰므로 여기 없다 — 그것이 요점이다.
-	if checked != 3 {
-		t.Fatalf("production sites binding the seam's answer=%d, want 3 (worker promotion, result authority, projection)", checked)
+	sort.Strings(sites)
+	// 경계의 값을 읽는 자리는 셋이다: worker 승격, 결과 권한, 읽기 전용 projection. dispatch 주기는 Deliver 를 쓰므로 여기
+	// 없다 — 그것이 요점이다.
+	want := []string{"strategy_entry_supervisor.go:buildProductionStrategyMarketWorker",
+		"strategy_proposal_authority.go:ResultAuthority", "strategy_runtime_projection.go:strategyProjectionFromAssembly"}
+	if strings.Join(sites, ",") != strings.Join(want, ",") {
+		t.Fatalf("production Single() sites=%v, want exactly %v", sites, want)
 	}
 }
 
-// seamAdmissionAnswers 는 이 함수 안에서 dispatchHandoff().Single() 이 묶어 준
-// bool 이름들을 돌려준다. `:=` 와 `var` 둘 다 본다.
-func seamAdmissionAnswers(t *testing.T, file string, function *ast.FuncDecl) []string {
-	t.Helper()
-	names := make([]string, 0, 1)
-	bind := func(lhs []ast.Expr, rhs []ast.Expr, spelling string) {
-		if len(rhs) != 1 {
-			return
-		}
-		outer, ok := rhs[0].(*ast.CallExpr)
-		if !ok {
-			return
-		}
-		selector, ok := outer.Fun.(*ast.SelectorExpr)
-		if !ok || selector.Sel.Name != "Single" {
-			return
-		}
-		inner, ok := selector.X.(*ast.CallExpr)
-		if !ok {
-			return
-		}
-		if source, ok := inner.Fun.(*ast.SelectorExpr); !ok || source.Sel.Name != "dispatchHandoff" {
-			return
-		}
-		if len(lhs) != 2 {
-			t.Errorf("%s: %s binds a dispatchHandoff().Single() (%s) to %d name(s), want the value and its admission answer",
-				file, function.Name.Name, spelling, len(lhs))
-			return
-		}
-		name, ok := lhs[1].(*ast.Ident)
-		if !ok || name.Name == "_" {
-			t.Errorf("%s: %s throws away the seam's admission answer with `_` (%s)", file, function.Name.Name, spelling)
-			return
-		}
-		names = append(names, name.Name)
-	}
-	ast.Inspect(function.Body, func(node ast.Node) bool {
-		switch value := node.(type) {
-		case *ast.AssignStmt:
-			bind(value.Lhs, value.Rhs, ":=")
-		case *ast.ValueSpec:
-			// `var result, ok = …Single()` — 앞선 판본이 놓친 자리다.
-			lhs := make([]ast.Expr, 0, len(value.Names))
-			for _, name := range value.Names {
-				lhs = append(lhs, name)
-			}
-			bind(lhs, value.Values, "var")
-		}
-		return true
-	})
-	return names
+// isSingleCall 은 인자 없는 `.Single()` 호출인지 답함 — 수신자 식의 모양은 보지 않는다(모양을 인식하면 새 철자가 샌다).
+func isSingleCall(call *ast.CallExpr) bool {
+	selector, ok := call.Fun.(*ast.SelectorExpr)
+	return ok && selector.Sel.Name == "Single" && len(call.Args) == 0
 }
 
 // identIsBlankAssigned 는 `_ = name` 을 찾는다. 컴파일러의 미사용 변수 검사를
@@ -959,8 +1044,8 @@ func identIsBlankAssigned(body *ast.BlockStmt, name string) bool {
 // changed` 로 막고 Gateway 주문은 한 건에서 멈춘다 — 읽어서 안 것이 아니라
 // TestTheSameEnvelopeCannotPlaceASecondOrder 가 재서 확인한 값이다.
 var dispatchMentionCensus = map[string]int{
-	"strategy_entry_supervisor.go: fresh.dispatch":          2,
-	"strategy_entry_supervisor.go: fresh.dispatch.dispatch": 1,
+	"strategy_entry_supervisor.go: fresh.dispatch":             2,
+	"strategy_market_handoff_delivery.go: dispatcher.dispatch": 1,
 }
 
 // assertEveryDispatchMentionIsInTheCensus 는 위 표를 소스와 맞춰 본다.

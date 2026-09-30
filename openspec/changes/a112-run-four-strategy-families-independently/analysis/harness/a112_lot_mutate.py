@@ -2,7 +2,8 @@
 """a112 로트 5.6.2 · 5.2.2 변이 하네스 — a092 `mutate_unit2.py` 의 사본 방식(저장소 추적 파일을 pid 붙은 사본으로 복사 · 무변이
 대조군이 GREEN 이 아니면 멈춤 · 변이는 한 번에 하나, 사본에서만 · 판정 CAUGHT/SURVIVED/BUILD-FAIL).
 
-사용: python3 a112_lot_mutate.py --set 5.6.2.1|5.2.2.1 <scratch-dir> [로트 파일 경로 …]
+사용: python3 a112_lot_mutate.py --set 5.6.2.1|5.2.2.1|5.2.2.1-fix <scratch-dir> [로트 파일 경로 …]
+(N 으로 시작하는 변이는 동작이 같은 리팩터 — GREEN-AS-EXPECTED 여야 한다.)
 """
 from __future__ import annotations
 
@@ -44,7 +45,8 @@ SET_5621 = [
     ("E09 wrong reason code", SUP,
      "s.entry.Block(execgw.ReasonStrategyCentralIntegrity,", "s.entry.Block(execgw.ReasonStrategyDispatchFenced,"),
     ("E10 reason not registered in the vocabulary", FC,
-     "\t\tReasonStrategyCentralIntegrity,\n\t}", "\t}"),
+     # 2026-09-30 리뷰 보이스 B #3: 옛 앵커 `…,\n\t}` 는 766a8456(a094)이 뒤에 줄을 덧붙인 뒤로 착지 트리에 없었다(NOT-APPLIED).
+     "\t\tReasonStrategyCentralIntegrity,\n\n", "\n"),
     ("E11 reason missing from the latch order", RT,
      "\tReasonStrategyCentralIntegrity,\n\t// Appended, per the rule above. The operating mode", "\t// Appended, per the rule above. The operating mode"),
 ]
@@ -106,7 +108,76 @@ SET_5221_TESTS = [
      "./internal/app/engine"],
     ["go", "test", "-count=1", "./internal/strategyhandoff"],
 ]
-SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS)}
+MD = "internal/app/engine/strategy_market_handoff_delivery.go"
+RO = "internal/strategyrouter/router.go"
+# 2026-09-30 리뷰 수리 로트(codex · 보이스 A/B/C). G = 잡혀야 하는 변이, N = 동작이 같은 리팩터(초록이어야 함 — 거짓 양성 대조).
+SET_5221_FIX = [
+    ("G01 owner scope keyed by horizon (B X03)", HO,
+     "\t\tsymbol:     strings.ToUpper(strings.TrimSpace(result.Lineage.Symbol)),",
+     "\t\tsymbol:     strings.ToUpper(strings.TrimSpace(result.Lineage.Symbol)) + \"|\" + string(result.Lineage.Horizon),"),
+    ("G02 owner scope keyed by lane (B X04)", HO,
+     "\t\tsymbol:     strings.ToUpper(strings.TrimSpace(result.Lineage.Symbol)),",
+     "\t\tsymbol:     strings.ToUpper(strings.TrimSpace(result.Lineage.Symbol)) + \"|\" + result.Lineage.LaneID,"),
+    ("G03 owner scope ignores account (codex P2-4)", HO,
+     "\t\taccount:    strings.TrimSpace(result.Lineage.AccountRef),", "\t\taccount:    \"\","),
+    ("G04 owner scope ignores market (codex P2-4 · B X02)", HO,
+     "\t\tmarket:     string(result.Lineage.Market),", "\t\tmarket:     \"\","),
+    ("G05 router OwnerKey normalises account differently (C #4a)", RO,
+     "\t\tAccountRef:         strings.TrimSpace(account),", "\t\tAccountRef:         strings.ToUpper(strings.TrimSpace(account)),"),
+    ("G06 production body drops the second scope onward (B X09)", MD,
+     "\treturn deliverEachStrategyHandoff(handoffs, func(delivered strategyhandoff.Delivered) error {\n\t\tlineage := delivered.Result().Lineage",
+     "\tcalls := 0\n\treturn deliverEachStrategyHandoff(handoffs, func(delivered strategyhandoff.Delivered) error {\n\t\tcalls++\n\t\tif calls > 1 {\n\t\t\treturn nil\n\t\t}\n\t\tlineage := delivered.Result().Lineage"),
+    ("G07 cycle delivers through a same-named method of another type (B X08)", SUP,
+     ("\t\"github.com/JungHoonGhae/tossinvest-cli/internal/execgw\"\n)", "fresh.proposals.forMarket(market).dispatchHandoffs())"),
+     ("\t\"github.com/JungHoonGhae/tossinvest-cli/internal/execgw\"\n\t\"github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff\"\n)", "a112MarketWideOnly{fresh.proposals.forMarket(market)}.dispatchHandoffs())\n}\n\ntype a112MarketWideOnly struct{ a strategyProposalMarketAuthority }\n\nfunc (m a112MarketWideOnly) dispatchHandoffs() []strategyhandoff.Handoff {\n\treturn []strategyhandoff.Handoff{m.a.dispatchHandoff()}")),
+    ("G08 local shadow of the delivery function (B X10)", SUP,
+     ("\t\"github.com/JungHoonGhae/tossinvest-cli/internal/execgw\"\n)", "\treturn dispatchStrategyMarketHandoffs(ctx, c.Journal, fresh.dispatch, fresh.proposals.forMarket(market).dispatchHandoffs())"),
+     ("\t\"github.com/JungHoonGhae/tossinvest-cli/internal/execgw\"\n\t\"github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff\"\n)", "\tdispatchStrategyMarketHandoffs := func(ctx context.Context, _ strategyCampaignCASReader, d strategyHandoffDispatcher, hs []strategyhandoff.Handoff) error {\n\t\treturn nil\n\t}\n\treturn dispatchStrategyMarketHandoffs(ctx, c.Journal, fresh.dispatch, fresh.proposals.forMarket(market).dispatchHandoffs())")),
+    ("N01 same-behaviour refactor: handoffs through a local variable (B X11)", SUP,
+     "\treturn dispatchStrategyMarketHandoffs(ctx, c.Journal, fresh.dispatch, fresh.proposals.forMarket(market).dispatchHandoffs())",
+     "\thandoffs := fresh.proposals.forMarket(market).dispatchHandoffs()\n\treturn dispatchStrategyMarketHandoffs(ctx, c.Journal, fresh.dispatch, handoffs)"),
+    ("G09 cycle passes the market-wide handoff (old F11)", SUP,
+     ("\t\"github.com/JungHoonGhae/tossinvest-cli/internal/execgw\"\n)", "fresh.proposals.forMarket(market).dispatchHandoffs())"),
+     ("\t\"github.com/JungHoonGhae/tossinvest-cli/internal/execgw\"\n\t\"github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff\"\n)", "[]strategyhandoff.Handoff{fresh.proposals.forMarket(market).dispatchHandoff()})")),
+    ("G10 B2 always refuses — only the control half should fail (codex P2-3 · F16)", FL,
+     "\tif len(proposal.entries) != 1 || !riskAuthority.snapshot.Ready || !fx.snapshot.Ready",
+     "\tif len(proposal.entries) >= 1 || !riskAuthority.snapshot.Ready || !fx.snapshot.Ready"),
+    ("G11 second minting door via a public var's private type (codex P1-2)", HO,
+     "var ErrNoDelivery = errors.New(\"strategyhandoff: delivery body is nil\")",
+     "var ErrNoDelivery = deliveryError{errors.New(\"strategyhandoff: delivery body is nil\")}\n\ntype deliveryError struct{ error }\n\nfunc (deliveryError) Mint(r strategyflow.Result) Handoff {\n\treturn Handoff{selected: []strategyflow.Result{r}, pending: 1}\n}"),
+    ("G12 engine admits each element separately (C #2 experiment C2)", DH,
+     "\treturn strategyhandoff.AdmitEachOwnerScope(authority.snapshot.Ready, selected)",
+     "\tadmit := strategyhandoff.AdmitEachOwnerScope\n\tif !authority.snapshot.Ready || len(selected) == 0 {\n\t\treturn admit(authority.snapshot.Ready, selected)\n\t}\n\tvar out []strategyhandoff.Handoff\n\tfor _, one := range selected {\n\t\tout = append(out, admit(true, []strategyflow.Result{one})...)\n\t}\n\treturn out"),
+    ("G13 a fourth Single() site with the new spelling (C #3 experiment D)", DH,
+     "func deliverEachStrategyHandoff(",
+     "func a112Peek(authority strategyProposalMarketAuthority) bool {\n\t_, ok := authority.dispatchHandoffs()[0].Single()\n\treturn ok\n}\n\nfunc deliverEachStrategyHandoff("),
+    ("G14 Single() answer discarded via an intermediate binding (C #3 experiment D')", DH,
+     "func deliverEachStrategyHandoff(",
+     "func a112Peek(authority strategyProposalMarketAuthority) strategyflow.Result {\n\th := authority.dispatchHandoff()\n\tr, _ := h.Single()\n\treturn r\n}\n\nfunc deliverEachStrategyHandoff("),
+    ("G15 new exported door the engine uses (C #1 experiment B shape)", HO,
+     "// ownerScope 는 포지션 소유 범위의 비교용 표기",
+     "// AdmitVar 는 새 문.\nvar AdmitVar = AdmitEachOwnerScope\n\n// ownerScope 는 포지션 소유 범위의 비교용 표기"),
+    ("G16 delivery keeps going after a fault (old F10, now on the production body)", DH,
+     "\t\tif err := handoff.Deliver(body); err != nil {\n\t\t\treturn err\n\t\t}",
+     "\t\tif err := handoff.Deliver(body); err != nil {\n\t\t\t_ = err\n\t\t}"),
+    ("G18 B2 count condition removed — both orders must fail (old F14; fixture order by orders, coordinator order by the message)", FL,
+     "\tif len(proposal.entries) != 1 || !riskAuthority.snapshot.Ready || !fx.snapshot.Ready",
+     "\tif !riskAuthority.snapshot.Ready || !fx.snapshot.Ready"),
+    ("G17 claimed scope stops the cycle instead of being skipped", MD,
+     "\t\tif cas.Claimed || cas.State != \"FLAT\" && cas.State != \"CLOSED\" {\n\t\t\treturn nil\n\t\t}",
+     "\t\tif cas.Claimed || cas.State != \"FLAT\" && cas.State != \"CLOSED\" {\n\t\t\treturn errors.New(\"claimed\")\n\t\t}"),
+]
+SET_5221_FIX_TESTS = [
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+     "Handoff|Seam|Admit|OwnerScope|Delivery|Delivers|Dispatch|Classified|TwoOwner|SameOwner|Skipped|FaultInOne|Discards|OnlyAnActivated|EveryAdmitted|AScopeFault",
+     "./internal/app/engine"],
+    ["go", "test", "-count=1", "-run",
+     "Handoff|Seam|Admit|Delivery|Delivers|Dispatch|Classified|Skipped|FaultInOne|Discards",
+     "./internal/app/engine"],
+    ["go", "test", "-count=1", "./internal/strategyhandoff"],
+]
+SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
+        "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS)}
 MUTANTS, TESTS = SET_5621, SET_5621_TESTS
 
 def run_tests(copy: Path, env: dict) -> tuple[str, str]:
@@ -172,13 +243,20 @@ def main() -> None:
             continue
         target = copy / rel
         pristine = target.read_text(encoding="utf-8")
-        if pristine.count(old) != 1:
-            ledger.write(f"{ident}\tNOT-APPLIED\told occurs {pristine.count(old)} times\n")
+        # 한 변이가 같은 파일의 여러 자리를 바꿀 수 있다(old · new 가 튜플이면 짝지어 차례로) — 각 앵커는 정확히 한 번.
+        pairs = list(zip(old, new)) if isinstance(old, tuple) else [(old, new)]
+        mutated, missing = pristine, [a for a, _ in pairs if pristine.count(a) != 1]
+        if missing:
+            ledger.write(f"{ident}\tNOT-APPLIED\tanchor count != 1: {missing[0][:60]!r}\n")
             ledger.flush()
             continue
-        target.write_text(pristine.replace(old, new, 1), encoding="utf-8")
+        for a, b in pairs:
+            mutated = mutated.replace(a, b, 1)
+        target.write_text(mutated, encoding="utf-8")
         verdict, why = run_tests(copy, env)
         label = {"RED": "CAUGHT", "GREEN": "SURVIVED"}.get(verdict, verdict)
+        if ident.startswith("N"):  # 동작이 같은 리팩터 — 초록이어야 한다(빨가면 거짓 양성)
+            label = {"GREEN": "GREEN-AS-EXPECTED", "RED": "FALSE-POSITIVE"}.get(verdict, verdict)
         ledger.write(f"{ident}\t{label}\t{why}\n")
         ledger.flush()
         target.write_text(pristine, encoding="utf-8")
