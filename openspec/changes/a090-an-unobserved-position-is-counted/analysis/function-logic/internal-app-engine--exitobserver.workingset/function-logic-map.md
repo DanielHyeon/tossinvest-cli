@@ -1,8 +1,8 @@
 # Function Logic Map: `ExitObserver.workingSet`
 
-- Source: `internal/app/engine/exitloop.go` (`493`–`612`)
+- Source: `internal/app/engine/exitloop.go` (**편집 뒤** `525`–`648`(a094 착지 `b74875e7` 위); 편집 전 `493`–`612`)
 - Qualified: `ExitObserver.workingSet`
-- AST evidence: `ast.json` (`source_sha256` 2d34b5c57f25a2c8… — base `2f698db6`) — branches 22 · returns 3
+- AST evidence: `ast.json` (**편집 뒤** `source_sha256` 014cdcc7350d17ef… — 편집 전 2d34b5c5…, base `2f698db6`) — branches 22 · returns 3
 - Risk scan: `risk-pattern-report.md`
 - **base 재고정(2026-09-30, `1ffe2295` → base `2f698db6`)**: `ast.json` 을 새 base 소스로 재추출했다. `exitloop.go` sha256 은 `2d34b5c5…`(a092 의 `checkOutage`·`alert` 편집)로 바뀌었으나 **이 함수의 AST 는 옛 base `d3bd1843` 판과 필드 단위로 같다**(start·end·branches·returns·calls·assignments 동일 — 비교 스크립트 결과) — 아래 줄 좌표·분기 번호는 그대로 유효하다.
 - 작성 시점: **a090 2판 설계 전**(1라운드 적대 보이스 F4 — "B6·B7 이 유일한 자리" 는 거짓). 이 함수의 분기를 근거로 삼는 2판 문서보다 먼저 만들었다.
@@ -69,3 +69,11 @@
   (B8 · B12 · B14 · B21)는 편집하지 않는다 — 표시되고도 판정에 닿지 않은 포지션은 `ObserveOnce` 가 순회 뒤에 미관측으로 센다(design D1). 분기 조건·이탈 무변화.
   이탈 전수는 `go/parser` 핀(tasks 2.15)이 고정한다. (2판의 "다섯 탈락 자리는 편집하지 않는다" 는 B10 해제와 모순이라 4판에서 고쳤다 — codex 2라운드 R2-6.)
 - **High-risk impact**: yes — 손절 관측의 입력 집합.
+
+## 편집 뒤 (a090 구현 로트, 2026-09-30)
+
+- **재번호(difflib 정렬)**: 분기 22 · 반환 3 의 종류·순서 동일 — 번호 불변, 좌표만 이동(B1 495→527 … B6 512→544 · B8 527→561 · B10 533→567 ·
+  B12 545→581 · B14 556→592 · B17 561→597 · B21 592→628 · B22 593→629).
+- **편집 두 자리(분기 조건·이탈 무변화)**: B6 블록 바로 뒤 형제 문장 `o.markHeld(cycle, p)`(`:554`) · B10 블록 첫 문장 `o.unmarkHeld(cycle, p.ID)`.
+- **구조 핀**: `a090_workingset_exits_test.go` 가 현재 소스를 `go/parser` 로 읽어 순회 본문의 이탈 열 개(조상 경로 좌표)와 두 자리의 위치를 고정하고,
+  tasks 2.15 의 변이 다섯이 각각 빨강임을 같은 파일에서 잰다.

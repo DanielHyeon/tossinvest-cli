@@ -1,8 +1,8 @@
 # Function Logic Map: `ExitObserver.ObserveOnce`
 
-- Source: `internal/app/engine/exitloop.go` (`413`–`470`)
+- Source: `internal/app/engine/exitloop.go` (**편집 뒤** `437`–`502`(a094 착지 `b74875e7` 위); 편집 전 `413`–`470`)
 - Qualified: `ExitObserver.ObserveOnce`
-- AST evidence: `ast.json` (`source_sha256` 2d34b5c57f25a2c8… — base `2f698db6`) — branches 8 · returns 5 · calls 16 · assignments 15
+- AST evidence: `ast.json` (**편집 뒤** `source_sha256` 014cdcc7350d17ef… — 편집 전 2d34b5c5…, base `2f698db6`) — branches 8 · returns 5 · calls 16 · assignments 15
 - Risk scan: `risk-pattern-report.md`
 - **base 재고정(2026-09-30, `1ffe2295` → base `2f698db6`)**: `ast.json` 을 새 base 소스로 재추출했다. `exitloop.go` sha256 은 `2d34b5c5…`(a092 의 `checkOutage`·`alert` 편집)로 바뀌었으나 **이 함수의 AST 는 옛 base `d3bd1843` 판과 필드 단위로 같다**(start·end·branches·returns·calls·assignments 동일 — 비교 스크립트 결과) — 아래 줄 좌표·분기 번호는 그대로 유효하다.
 - 작성 시점: **proposal 단계(구현 전)**. 이 함수의 분기를 근거로 삼는 a090 문서보다 먼저 만들었다.
@@ -74,3 +74,14 @@
   전부 `workingSet` 에서 탈락한 경우 — 그 주기도 미관측으로 센다), 순회 뒤(`:469` 앞) 처리 1개. 임계 판정·알림(enqueue-only)·강화는 **순회 뒤**에만
   — 루프 안에서는 기록만(design D4). **분기 조건·이탈·B1·B2·B4 무변화.** 새 판정 로직은 새 파일. 탈락 자리 다섯은 `workingSet` 번들에 있다.
 - **High-risk impact**: yes — 손절 관측 경로. 추가는 관측·알림(과 Q1 결정에 따라 모드 강화)뿐이며 판정·발의·주문을 바꾸지 않는다.
+
+## 편집 뒤 (a090 구현 로트, 2026-09-30)
+
+- **재번호(difflib 정렬, 편집 전 base `2f698db6` ↔ 편집 뒤)**: 분기 8 · 반환 5 의 종류·순서가 같다 — 번호 불변, 좌표만 이동
+  (B1 417→441 · B2 427→451 · B3 431→455 · B4 442→468 · B5 451→477 · B6 453→479 · B7 459→487 · B8 465→495). 줄 이동의 원인은 구조체
+  필드 추가(`ExitObserverOptions.UnobservedLog` · `ExitCycle.Unobserved` · `ExitObserver` 기록 필드)와 이 함수 안의 호출 넷.
+- **편집(분기 조건·이탈 무변화)**: B3 블록 첫 문장 `o.settleUnobserved(ctx, &cycle)` · B6 `continue` 직전 `o.noteUnobservedCause(…, unobservedNoQuote)` ·
+  B7 `continue` 직전 `o.noteUnobservedCause(…, unobservedQuoteExpired)` · `cycle.Judged++` 직후 `o.noteJudged(&cycle, state)` · 순회 뒤
+  `o.settleUnobserved(ctx, &cycle)`. B1·B2·B4 무편집(그 주기는 포지션 단위 처리를 하지 않는다 — design D11).
+- 새 호출 셋은 전부 `exit_unobserved.go`(새 파일)의 새 함수다. 루프 안의 둘(`noteUnobservedCause` · `noteJudged`)은 관측자 메모리에만 쓴다 —
+  원장·알림 없음. 순회 뒤 `settleUnobserved` 만 알림기 기록 입구(`RecordCritical`, 창 0)와 `EscalateOperatingMode` 를 부른다.

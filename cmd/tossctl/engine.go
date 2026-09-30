@@ -666,6 +666,8 @@ func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, l
 		SLO:      detectorPressure{detector: detector},
 		Escalate: ectx.Journal,
 		// Announcer · Alerts 는 넘기지 않음 — Context.ExitObserver 가 기록 전용으로 묶음(a092 C1).
+		// a090: 미관측 줄(exit.position_unobserved)만 받는 전용 로거. 관측자 전체 Log 는 넣지 않음 — 기존 줄이 계좌 원문을 실음.
+		UnobservedLog: logger,
 	})
 	if err != nil {
 		return nil, err

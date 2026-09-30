@@ -188,6 +188,11 @@ const (
 	// CRITICAL: with no broker-resident stop, an unobserved position is an
 	// unprotected one.
 	EventExitObservationOutage EventType = "exit.observation_outage"
+	// EventExitPositionUnobserved 는 보유 포지션 하나가 판정에 닿지 못한 연속의 시작 · 해제 · 기록 실패 줄임(a090).
+	// Normal — 등급표(criticalEvents)에 넣지 않음: 임계 아래의 미관측은 경보가 아니고, 임계를 넘은 것은
+	// EventExitObservationOutage 가 critical 로 알림. 로그 줄은 SeverityOf 를 싣으므로 여기서 critical 타입을 쓰면
+	// 연속 시작 한 줄이 critical 표지를 닮.
+	EventExitPositionUnobserved EventType = "exit.position_unobserved"
 	// EventExitJudgementRefused is an evaluation that could not run at all — an
 	// invariant violation in the stored state, or a price the policy cannot use
 	// (exitpolicy.ErrRefused). CRITICAL, and distinct from "nothing to do": the

@@ -1,0 +1,99 @@
+# RED-1 (단언) — 2026-09-30T19:54:37+09:00 격리 워크트리 HEAD 3260f4eb + API 스텁(필드·상수·래퍼)만 · go test ./internal/app/engine/ -run TestA090 -count=1 -v
+=== RUN   TestA090R1AZeroQuoteSiblingIsCountedAndLoggedAtNormalGrade
+    a090_unobserved_position_test.go:233: Unobserved = 0, want 1
+--- FAIL: TestA090R1AZeroQuoteSiblingIsCountedAndLoggedAtNormalGrade (0.33s)
+=== RUN   TestA090R2AnAbsentSiblingIsCountedLikeAZeroQuote
+    a090_unobserved_position_test.go:255: cycle = {Deferred:false Observed:1 Judged:1 Proposed:0 Opened:0 Unmanaged:0 Escalated:false Unobserved:0 Err:<nil>}, want judged 1 · unobserved 1
+--- FAIL: TestA090R2AnAbsentSiblingIsCountedLikeAZeroQuote (0.32s)
+=== RUN   TestA090R3APositionUnjudgedPastTheThresholdIsRecordedOnceAndTightens
+    a090_unobserved_position_test.go:287: outage rows at 60s = 0, want 1
+--- FAIL: TestA090R3APositionUnjudgedPastTheThresholdIsRecordedOnceAndTightens (0.36s)
+=== RUN   TestA090R3bTheThresholdRunsFromTheLastJudgementAcrossYieldsAndBlackouts
+=== RUN   TestA090R3bTheThresholdRunsFromTheLastJudgementAcrossYieldsAndBlackouts/yield
+    a090_unobserved_position_test.go:358: outage rows = [], want the position alerted at 60s from its last judgement
+=== RUN   TestA090R3bTheThresholdRunsFromTheLastJudgementAcrossYieldsAndBlackouts/blackout
+    a090_unobserved_position_test.go:358: outage rows = [], want the position alerted at 60s from its last judgement
+--- FAIL: TestA090R3bTheThresholdRunsFromTheLastJudgementAcrossYieldsAndBlackouts (0.63s)
+    --- FAIL: TestA090R3bTheThresholdRunsFromTheLastJudgementAcrossYieldsAndBlackouts/yield (0.30s)
+    --- FAIL: TestA090R3bTheThresholdRunsFromTheLastJudgementAcrossYieldsAndBlackouts/blackout (0.33s)
+=== RUN   TestA090R3cAStopIsSubmittedBeforeTheAlertAndTheNextCycleIsNotDelayed
+    a090_unobserved_position_test.go:403: A's outage row after the cycle = []
+--- FAIL: TestA090R3cAStopIsSubmittedBeforeTheAlertAndTheNextCycleIsNotDelayed (0.45s)
+=== RUN   TestA090R3dARecordFailureLatchesTheGateAtTheEntranceAndIsRetried
+    a090_unobserved_position_test.go:439: entry check = execgw: rejected, want the entrance's producer latch (critical_alert_undelivered)
+--- FAIL: TestA090R3dARecordFailureLatchesTheGateAtTheEntranceAndIsRetried (0.39s)
+=== RUN   TestA090R3eANewStreakIsANewRowAndTheSameStreakIsOne
+    a090_unobserved_position_test.go:472: first streak rows = 0
+--- FAIL: TestA090R3eANewStreakIsANewRowAndTheSameStreakIsOne (0.36s)
+=== RUN   TestA090R3fElapsedIsMonotonicAcrossAWallClockRollback
+    a090_unobserved_position_test.go:572: a wall-clock rollback lengthened the window: rows=0 at elapsed 60s
+--- FAIL: TestA090R3fElapsedIsMonotonicAcrossAWallClockRollback (0.34s)
+=== RUN   TestA090R3gATighteningCommitFailureIsRetriedNextCycle
+    a090_unobserved_position_test.go:609: the alert was not recorded
+--- FAIL: TestA090R3gATighteningCommitFailureIsRetriedNextCycle (0.38s)
+=== RUN   TestA090R3gACommittedTighteningWhoseNoticeFailedIsAnnouncedExactlyOnce
+    a090_unobserved_position_test.go:637: mode = NORMAL — the transition must be committed
+--- FAIL: TestA090R3gACommittedTighteningWhoseNoticeFailedIsAnnouncedExactlyOnce (0.37s)
+=== RUN   TestA090R3gAFailureAfterTheOperatorClearedLatchesAgain
+    a090_unobserved_position_test.go:689: first failure did not latch: execgw: rejected
+--- FAIL: TestA090R3gAFailureAfterTheOperatorClearedLatchesAgain (0.40s)
+=== RUN   TestA090R4AJudgementEndsTheStreakWithOneReleaseLine
+    a090_unobserved_position_test.go:716: lines = [], want start + release
+--- FAIL: TestA090R4AJudgementEndsTheStreakWithOneReleaseLine (0.37s)
+=== RUN   TestA090R5WhenNoSymbolAnswersOnlyTheAccountLadderMoves
+--- PASS: TestA090R5WhenNoSymbolAnswersOnlyTheAccountLadderMoves (0.33s)
+=== RUN   TestA090R6AYieldIsUnchanged
+--- PASS: TestA090R6AYieldIsUnchanged (0.29s)
+=== RUN   TestA090R7AQuoteThatExpiredMidCycleIsCountedAsExpired
+    a090_unobserved_position_test.go:789: cycle = {Deferred:false Observed:2 Judged:1 Proposed:1 Opened:0 Unmanaged:0 Escalated:false Unobserved:0 Err:<nil>}, want first judged and later unobserved
+--- FAIL: TestA090R7AQuoteThatExpiredMidCycleIsCountedAsExpired (0.33s)
+=== RUN   TestA090R8APositionThatStopsBeingHeldIsForgottenWithoutAnAlert
+--- PASS: TestA090R8APositionThatStopsBeingHeldIsForgottenWithoutAnAlert (0.39s)
+=== RUN   TestA090R10OnePriceReadPerCycle
+--- PASS: TestA090R10OnePriceReadPerCycle (0.36s)
+=== RUN   TestA090R11ARestartForgetsTheRecordAndStartsANewEpisode
+    a090_unobserved_position_test.go:847: first episode not recorded
+--- FAIL: TestA090R11ARestartForgetsTheRecordAndStartsANewEpisode (0.40s)
+=== RUN   TestA090R12APositionWhoseStateCannotOpenIsCountedAndAlerted
+=== RUN   TestA090R12APositionWhoseStateCannotOpenIsCountedAndAlerted/with_sibling
+    a090_unobserved_position_test.go:891: first cycle = {Deferred:false Observed:1 Judged:1 Proposed:0 Opened:1 Unmanaged:0 Escalated:false Unobserved:0 Err:engine: opening the exit state of pos-656a6843ea765d207357d3a4: journal: opening the exit state of pos-656a6843ea765d207357d3a4: constraint failed: no stop (1811)}, want the unopenable position counted
+=== RUN   TestA090R12APositionWhoseStateCannotOpenIsCountedAndAlerted/alone_B3
+    a090_unobserved_position_test.go:891: first cycle = {Deferred:false Observed:0 Judged:0 Proposed:0 Opened:0 Unmanaged:0 Escalated:false Unobserved:0 Err:engine: opening the exit state of pos-656a6843ea765d207357d3a4: journal: opening the exit state of pos-656a6843ea765d207357d3a4: constraint failed: no stop (1811)}, want the unopenable position counted
+--- FAIL: TestA090R12APositionWhoseStateCannotOpenIsCountedAndAlerted (0.65s)
+    --- FAIL: TestA090R12APositionWhoseStateCannotOpenIsCountedAndAlerted/with_sibling (0.35s)
+    --- FAIL: TestA090R12APositionWhoseStateCannotOpenIsCountedAndAlerted/alone_B3 (0.29s)
+=== RUN   TestA090R13QuarantineReadAndWriteFailuresAreCounted
+=== RUN   TestA090R13QuarantineReadAndWriteFailuresAreCounted/active_quarantine_read_B14
+    a090_unobserved_position_test.go:917: cycle = {Deferred:false Observed:0 Judged:0 Proposed:0 Opened:0 Unmanaged:0 Escalated:false Unobserved:0 Err:SQL logic error: no such table: exit_snapshot_quarantines (1)}, want both positions counted (the read fails for every position)
+=== RUN   TestA090R13QuarantineReadAndWriteFailuresAreCounted/quarantine_write_B12
+    a090_unobserved_position_test.go:937: cycle = {Deferred:false Observed:1 Judged:1 Proposed:0 Opened:0 Unmanaged:0 Escalated:false Unobserved:0 Err:constraint failed: quarantine store down (1811)}, want the corrupt position counted
+--- FAIL: TestA090R13QuarantineReadAndWriteFailuresAreCounted (0.71s)
+    --- FAIL: TestA090R13QuarantineReadAndWriteFailuresAreCounted/active_quarantine_read_B14 (0.33s)
+    --- FAIL: TestA090R13QuarantineReadAndWriteFailuresAreCounted/quarantine_write_B12 (0.38s)
+=== RUN   TestA090R14UnmanagedAndCompletedPositionsAreNotCounted
+--- PASS: TestA090R14UnmanagedAndCompletedPositionsAreNotCounted (0.40s)
+=== RUN   TestA090R16AJudgementThatEndsAtOnceStillCountsAsObserved
+=== RUN   TestA090R16AJudgementThatEndsAtOnceStillCountsAsObserved/quarantined_refused
+=== RUN   TestA090R16AJudgementThatEndsAtOnceStillCountsAsObserved/selector_stamp_failure
+--- PASS: TestA090R16AJudgementThatEndsAtOnceStillCountsAsObserved (0.87s)
+    --- PASS: TestA090R16AJudgementThatEndsAtOnceStillCountsAsObserved/quarantined_refused (0.43s)
+    --- PASS: TestA090R16AJudgementThatEndsAtOnceStillCountsAsObserved/selector_stamp_failure (0.45s)
+=== RUN   TestA090R17NoAccountReachesTheNewLinesAlertsOrNotices
+=== RUN   TestA090R17NoAccountReachesTheNewLinesAlertsOrNotices/success
+    a090_unobserved_position_test.go:1036: the canary measured nothing: outage=0 notices=0 lines=0
+=== RUN   TestA090R17NoAccountReachesTheNewLinesAlertsOrNotices/alert_record_failure
+    a090_unobserved_position_test.go:1080: no a090 failure line was written: []
+=== RUN   TestA090R17NoAccountReachesTheNewLinesAlertsOrNotices/mode_record_failure
+    a090_unobserved_position_test.go:1064: the mode failure was not injected: mode=NORMAL outage=0 notices=0
+=== RUN   TestA090R17NoAccountReachesTheNewLinesAlertsOrNotices/notice_record_failure
+    a090_unobserved_position_test.go:1069: the notice failure was not injected: mode=NORMAL notices=0
+--- FAIL: TestA090R17NoAccountReachesTheNewLinesAlertsOrNotices (1.71s)
+    --- FAIL: TestA090R17NoAccountReachesTheNewLinesAlertsOrNotices/success (0.41s)
+    --- FAIL: TestA090R17NoAccountReachesTheNewLinesAlertsOrNotices/alert_record_failure (0.43s)
+    --- FAIL: TestA090R17NoAccountReachesTheNewLinesAlertsOrNotices/mode_record_failure (0.45s)
+    --- FAIL: TestA090R17NoAccountReachesTheNewLinesAlertsOrNotices/notice_record_failure (0.42s)
+=== RUN   TestA090R17TheEngineAssemblyPassesTheDedicatedLoggerThrough
+--- PASS: TestA090R17TheEngineAssemblyPassesTheDedicatedLoggerThrough (0.34s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	11.497s
+FAIL

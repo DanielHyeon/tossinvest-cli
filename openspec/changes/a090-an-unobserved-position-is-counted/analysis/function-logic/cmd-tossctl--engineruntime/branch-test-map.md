@@ -17,3 +17,9 @@
 - R17(tasks 2.17): 이 함수가 만드는 관측자 옵션에 `UnobservedLog: logger` 가 있고 `Log` 가 **없음**(구조 핀 — cmd 시험은 엔진 패키지의
   `OptionsForTest` 에 닿지 못하므로 `go/parser` 로 이 함수의 `ExitObserverOptions` 리터럴 키를 센다) + 엔진 패키지 시험에서 `Context.ExitObserver` 가
   `UnobservedLog` 를 통과시키고 그 로거에 새 줄이 나옴(행동).
+
+## 편집 뒤 (a090)
+
+- 편집 뒤 분기 좌표: B1 `:650` · B2 `:659` · B3 `:672` · B4 `:677` · B5 `:681` · B6 `:693`(a094 `d485a45f` 위). a090 편집은 분기 밖(리터럴 필드 하나). 시험: `cmd/tossctl/a090_engine_runtime_unobserved_log_test.go`
+  `TestA090EngineRuntimeWiresOnlyTheDedicatedUnobservedLogger`(키 전수 — `UnobservedLog = logger` 있음 · `Log` 없음) +
+  엔진 쪽 `TestA090R17TheEngineAssemblyPassesTheDedicatedLoggerThrough`(Context.ExitObserver 통과 · `Log` nil).

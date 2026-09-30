@@ -53,6 +53,12 @@ func (n *Notifier) AnnounceOperatingMode(ctx context.Context, previous string, r
 	return n.Notify(ctx, operatingModeEvent(previous, rec))
 }
 
+// OperatingModeEvent 는 모드 전이 하나의 통지 사건을 만드는 순수 함수의 공개 입구임(a090 — 기록 전용 공지자가 obs 밖에서
+// 같은 내용을 씀). 내용은 operatingModeEvent 한 곳에만 있음: 두 공지가 같은 전이를 다르게 적지 않게.
+func OperatingModeEvent(previous string, rec journal.OperatingModeRecord) Event {
+	return operatingModeEvent(previous, rec)
+}
+
 func modeLabel(mode string) string {
 	if mode == "" {
 		return journal.ModeNormal

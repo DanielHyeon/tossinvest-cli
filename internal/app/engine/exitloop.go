@@ -187,6 +187,9 @@ type ExitObserverOptions struct {
 	Names *InstrumentNames
 	// Log receives the structured lines. Optional.
 	Log *obs.Logger
+	// UnobservedLog 는 a090 의 미관측 줄(exit.position_unobserved, normal)만 받는 전용 로거임. 선택.
+	// Log 와 따로 둔 이유: Log 의 기존 줄은 계좌 원문을 싣고(logErr) 생산에서 nil 이라, 새 줄만 내보내려면 좁은 싱크가 필요함.
+	UnobservedLog *obs.Logger
 	// Costs is the shared cost model, for the real break-even the BREAKEVEN
 	// ratchet level is composed from. Required: an unconfigured model drops
 	// break-even onto the entry price, which would promote the baseline early.
@@ -265,6 +268,14 @@ type ExitObserver struct {
 	// observationSequence distinguishes fallback observations when the quote
 	// source supplies no FetchedAt and a test/frozen clock does not advance.
 	observationSequence atomic.Uint64
+	// unobserved 는 보유·대상 포지션별 미관측 기록임(a090, exit_unobserved.go). 지연 초기화 — nil 이 「기록 없음」.
+	// 재시작하면 잃음(파일 머리 계약: 잃으면 다시 세고 다시 알림).
+	unobserved map[string]*unobservedRecord
+	// pendingModeNotices 는 커밋된 강화의 적재 못 한 공지임 — 처리 주기마다 같은 key 로 재시도(a090 design D10).
+	pendingModeNotices []obs.Event
+	// cycleUnobserved 는 진행 중인 주기 하나의 표시 · 원인 · 판정 진입 집계임(a090). 주기 신원(owner)으로 묶어,
+	// settle 을 부르지 않은 주기(B4)의 집계가 다음 주기로 새지 않게 함.
+	cycleUnobserved *unobservedCycle
 }
 
 // NewExitObserver validates the wiring and snapshots the common selection used
@@ -413,6 +424,9 @@ type ExitCycle struct {
 	Unmanaged int
 	// Escalated reports that this cycle tightened the operating mode.
 	Escalated bool
+	// Unobserved 는 보유·exit 대상인데 이 주기에 판정에 닿지 못한 포지션 수임(a090). 시험·tracer 표면 — 생산 증거는
+	// UnobservedLog 의 줄임(Run 은 성공 주기의 결과를 버림).
+	Unobserved int
 	// Err is the cycle's first failure, if any. It is reported and not returned
 	// by Run: the loop holds rather than stops.
 	Err error
@@ -439,6 +453,8 @@ func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
 		return cycle
 	}
 	if len(states) == 0 {
+		// a090: 보유·대상 표시가 있는데 전부 탈락했으면 그 주기도 미관측으로 셈 — 표시가 없으면 기록을 비움.
+		o.settleUnobserved(ctx, &cycle)
 		// Nothing is held, so there is nothing to observe and nothing to be
 		// unprotected. The outage clock is reset rather than left running: an
 		// account with no positions that has not read a price is not in an
@@ -464,18 +480,24 @@ func (o *ExitObserver) ObserveOnce(ctx context.Context) ExitCycle {
 			// A symbol the price read did not answer for is a symbol this cycle
 			// did not observe. Hold it; the outage clock is per account and the
 			// next cycle may answer.
+			// a090: 무음으로 넘기지 않음 — 원인만 적고 판정은 순회 뒤(settleUnobserved).
+			o.noteUnobservedCause(&cycle, state.position.ID, unobservedNoQuote)
 			continue
 		}
 		if !o.quoteUsable(quote) {
 			// A quote that expired while an earlier position was handled is not a
 			// judgement. Keep its state untouched until the next one-batch cycle.
+			o.noteUnobservedCause(&cycle, state.position.ID, unobservedQuoteExpired)
 			continue
 		}
 		cycle.Judged++
+		o.noteJudged(&cycle, state)
 		if err := o.judge(ctx, state, quote, observation, &cycle); err != nil && cycle.Err == nil {
 			cycle.Err = err
 		}
 	}
+	// a090: 임계 판정 · 알림 · 강화는 모든 포지션 판정이 끝난 뒤 한 번 — 뒤 포지션의 손절 판정 앞에 서지 않음.
+	o.settleUnobserved(ctx, &cycle)
 	return cycle
 }
 
@@ -528,6 +550,8 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 			o.alertUnmanaged(ctx, p)
 			continue
 		}
+		// a090: exit 대상이 확정된 첫 자리 — 여기서 표시해야 아래 탈락(B8 · B12 · B14 · B21)이 전부 미관측으로 세어짐.
+		o.markHeld(cycle, p)
 		result, ok := byPosition[p.ID]
 		state := result.State
 		reJudging := false
@@ -541,6 +565,8 @@ func (o *ExitObserver) workingSet(ctx context.Context, cycle *ExitCycle) ([]mana
 				continue
 			}
 			if opened.PositionID == "" {
+				// a090: 완료된 정책은 미관측 계수 범위 밖 — 위 표시를 해제함(관측 실패가 아니라 정책 수명).
+				o.unmarkHeld(cycle, p.ID)
 				// The state exists and is completed: the position closed and
 				// reopened is a new instance, and a completed policy judges
 				// nothing further.

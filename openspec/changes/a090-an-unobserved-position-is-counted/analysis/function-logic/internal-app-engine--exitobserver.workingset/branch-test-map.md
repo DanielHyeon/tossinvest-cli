@@ -28,3 +28,16 @@ AST 분기 22 · return 3. 진입 실측 `analysis/harness/observeonce.blocks`(c
 | B22 | `:593` | 없음 | no | no |
 
 > 표의 시험 이름은 그 분기 블록이 진입했다는 실측과 시험 이름·주석의 대응으로 붙였다 — **분기별 단일 시험 귀속은 측정하지 않았다**(패키지 전체 커버리지).
+
+## 편집 뒤 (a090)
+
+| 이탈 | 편집 뒤 좌표 | a090 에서 | a090 시험 |
+|---|---|---|---|
+| 표시 앞 B5(보유 아님) · B6(미관리) | `:541` · `:544` | 세지 않음(범위 밖) | `TestA090R8…`(보유 종료 → 정리) · `TestA090R14…`(미관리) |
+| 표시 | `:554` `o.markHeld(cycle, p)` | 보유·대상 표시 | `TestA090R15…`(위치 핀) |
+| B8 열기 실패 | `:561` | 미관측(`not_in_working_set`) | `TestA090R12APositionWhoseStateCannotOpenIsCountedAndAlerted`(형제 있음 · 단독 B3) |
+| B10 완료 | `:567` 첫 문장 `o.unmarkHeld` | 표시 해제 — 세지 않음 | `TestA090R14UnmanagedAndCompletedPositionsAreNotCounted` |
+| B12 격리 쓰기 실패 | `:581` | 미관측 | `TestA090R13…/quarantine_write_B12` |
+| B14 격리 읽기 실패 | `:592` | 미관측 | `TestA090R13…/active_quarantine_read_B14` |
+| B11 · B17 · B20 refused | — | 판정 진입(alertRefused) → 관측됨 | `TestA090R16…/quarantined_refused` |
+| B21 격리 쓰기 실패 | `:628` | 미관측(B12 와 같은 규칙 — 집합 계수라 자리별 시험 없음) | 구조 핀 `TestA090R15…` |

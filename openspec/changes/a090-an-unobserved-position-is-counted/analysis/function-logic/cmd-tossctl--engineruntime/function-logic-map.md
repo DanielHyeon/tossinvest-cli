@@ -1,8 +1,8 @@
 # Function Logic Map: `engineRuntime`
 
-- Source: `cmd/tossctl/engine.go` (`636`–`724`)
+- Source: `cmd/tossctl/engine.go` (**편집 뒤** `647`–`737`(a094 착지 `d485a45f` 위); 편집 전 `636`–`724`)
 - Qualified: `engineRuntime`
-- AST evidence: `ast.json` (`source_sha256` aeefd5dcc3dd9cfb… — base `2f698db6`) — branches 6 · returns 7
+- AST evidence: `ast.json` (**편집 뒤** `source_sha256` 5aa437eb90d87a3a… — 편집 전 aeefd5dc…, base `2f698db6`) — branches 6 · returns 7
 - Risk scan: `risk-pattern-report.md`
 - 작성 시점: **구현 로트 편집 전**(tasks 1.1, base 재고정 뒤 2026-09-30). 선행 번들: a092 아카이브
   `openspec/changes/archive/2026-09-30-a092-an-alert-does-not-hold-the-stop/analysis/function-logic/cmd-tossctl--engineruntime/` — **같은 source_sha256**
@@ -50,3 +50,8 @@
 - **Safe edit boundary(a090 design D7 · D8)**: `ExitObserverOptions` 합성 리터럴에 **`UnobservedLog: logger` 한 줄**. `Log` 는 넣지 않는다(4판 R2-1 —
   관측자의 기존 줄은 `obs.FieldAccount` 로 계좌 원문을 싣는다, `exitloop.go:1735`). 분기·반환 무변화.
 - **High-risk impact**: yes(조립) — 로그 싱크 하나를 새 normal 줄 전용으로 배선. 주문·판정 경로 무변화.
+
+## 편집 뒤 (a090 구현 로트, 2026-09-30)
+
+- 편집: `ExitObserverOptions` 리터럴에 `UnobservedLog: logger`(주석 1 + 줄 1). 분기 6 · 반환 7 동일 — difflib 재번호 불변. 좌표는 a094 의 파일 앞쪽 편집(+11)과 이 편집(+2, B3 이후)을 합쳐
+  B1 639→650 · B2 648→659 · B3 659→672 · B4 664→677 · B5 668→681 · B6 680→693.

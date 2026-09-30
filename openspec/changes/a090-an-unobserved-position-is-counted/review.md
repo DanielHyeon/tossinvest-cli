@@ -282,3 +282,87 @@ Pre-Edit Gate:
 정적 전수(`internal/app/engine/*_test.go`, `h.entry`/`adopt*` 2개 이상 + `Advance`): **2** — `TestA111QuoteEvidenceUsesOnePostBatchClockAndNeverFallsBackFromBadOfficialTime`
 (`Advance(2s)`) · `TestA111SlowFirstPositionExpiresLaterQuoteWithoutAbandoningStartedProtection`(`16s`). 둘 다 60초 미만 — 경보·모드 단언이 바뀔 시험 0.
 보강: 기존 하네스의 `Alerts` 는 `fakeAlerts`(Notify 만)라 a090 의 기록 입구 해석이 nil 을 돌려준다 — 기존 시험에서 a090 알림·강화는 **임계와 무관하게** 0 이다.
+
+### RED → GREEN → 변이 (구현 로트, 격리 연결 워크트리)
+
+공유 트리에 이웃 미커밋 편집(a094 journal 시그니처)이 있어 컴파일이 깨졌으므로 Go 작업은 detached 연결 워크트리(`3260f4eb` 기준)에서 했다.
+
+- **RED-0**(컴파일): 새 API 없음 — `analysis/red/red-0-compile.log`.
+- **RED-1**(단언, API 스텁만): 실패 22 / 통과 7 — `analysis/red/red-1-assert.log`. 통과 7(R5 · R6 · R8 · R10 · R14 · R16 · R17 배선)은 「무변화 · 범위 밖」
+  핀이라 편집 전에도 참인 것이 맞다(그 핀이 무는지는 변이로 잼). 주의: RED-1 의 두 트리거 픽스처는 이벤트 타입 문자열이 틀렸었다
+  (`operating_mode` → 실제 `engine.operating_mode`) — GREEN 단계에서 고쳤고, 그 둘은 RED-1 에서 다른 단언으로 이미 빨강이었다.
+- **GREEN**: `go test ./internal/app/engine/ ./internal/obs/ ./cmd/tossctl/ -count=1` 전부 ok(engine 349.8s — **R9: 기존 엔진 시험 전부 무변화 통과**) ·
+  `make lint` rc 0 · `go test -race -run 'TestA090|TestA092|TestA111|TestExitObserverConcurrent' ./internal/app/engine/` ok(559.7s).
+  GREEN 도중 기존 시험 1 이 빨강 → 설계 수정: `TestAnnouncingAQuarantineDoesNotChangeTheWorkingSet` 은 `ExitCycle` 을 `==` 로 비교한다 — 주기 집계를
+  `ExitCycle` 의 비공개 포인터로 싣던 1차 구현이 그것을 깼다. 집계를 관측자 필드(`cycleUnobserved`, 주기 신원 = 그 주기의 `ExitCycle` 변수 주소)로 옮겼다.
+  `ExitCycle` 에 더한 것은 `Unobserved int` 하나(비교 가능 유지).
+- **변이**(`analysis/mutation/a090_mutate.py`, 사본 워크트리 · 무변이 대조군 GREEN 선행 · sha 복원 단언 · 한 판씩): 1판 **24/27** —
+  생존 3(M22 주기 신원 무시 · M23 같은 연속 재적재 · M24 정리 삭제). 「동등 변이」로 넘기지 않고 시험을 보강했다:
+  M22 — 옛 주기 집계는 **표시가 0 인 주기(B3)** 에서만 새어 나온다(표시가 있으면 새 집계가 시작됨) → 두 포지션을 다 없앤 뒤 B3 주기로 잰다;
+  M23 — 원장 key 중복 제거가 행 수를 가려 주던 우연 안전 → 입구 호출 수를 연속당 1 로 직접 셈(R3e);
+  M24 — 관측 불가능한 메모리 성장 → 좁은 시험 창 `UnobservedRecordsForTest`(export_test)로 기록 수를 셈(R8 · B4 누수 시험).
+  2판 **27/27 CAUGHT** — `analysis/mutation/round1-24of27.log` · `round2-27of27.log`. 축: 기록 삭제 · 수리 되돌림(표시·해제·판정 표시·순회 뒤·B3) ·
+  무조건 실행(B1·B4 에서 처리) · 순서(순회 앞 처리) · 경계 · 기점 · 에피소드 key · 재강화 래치 · 계좌 필드 · 공지 key · 동기 Notify 경로 · 대기열 ·
+  벽시계 경과 · 알림 없는 조임 · 원문 오류 로그 · 생산 배선 삭제/전체 Log.
+- **tasks 2.3g ⑦ not-applicable**: 착지한 입구(`recordCritical`)는 기록 오류가 돌아온 뒤 `Gate.Block` 을 **무조건** 건다 — 해제 세대를 읽는 창이 없다.
+  「세대를 읽은 뒤·적용 전 해제」 경우가 존재하지 않는다. ⑤(기록 중 해제가 끼어도 잠금)는 그 무조건 잠금으로 성립하고 ⑥ 을 시험이 잰다.
+- **tasks 2.17 배선의 모양**: cmd 시험은 엔진 패키지의 `OptionsForTest` 에 닿지 못하고 `Runtime` 은 관측자를 드러내지 않는다 — 생산 조립 쪽은 `go/parser`
+  키 전수 핀(M26 · M27 CAUGHT), `Context.ExitObserver` 통과는 엔진 쪽 행동 시험이 잰다. 실제 로그 출력 단언은 엔진 쪽 픽스처(전용 로거 버퍼)에서 한다.
+- **-race 목록 편입 not-applicable**: a090 은 새 goroutine·공유 상태를 만들지 않는다(관측자 필드는 한 goroutine 소유 — 기존 `unmanaged`·`refused` 맵과 같은 계약).
+
+### a094 착지(`b74875e7`) 위 3-way 재적용 (Manager 창 2026-09-30)
+
+- `git apply -3`(engine.go · cmd 시험 제외 — engine.go 창은 따로 열림) 충돌 0. a094 가 `ObserveOnce`·`workingSet` 본문을 바꾸지 않았음을 확인(base `2f698db6` 과
+  바이트 동일) — 편집 뒤 좌표만 +10(a094 의 구조체 필드). FLM/BTM 「편집 뒤」 좌표를 그에 맞춤.
+- **기록 입구를 a094 의 명시 주입으로 통일**: a094 가 `ExitObserverOptions.Critical`(`CriticalRecorder`, `Context.ExitObserver` 가 생산에서 항상
+  `c.Notifier` 로 덮음 — `exitwiring.go:352`)을 착지했다. a090 은 처음에 `opts.Alerts` 타입 분기로 알림기를 찾았으나 같은 단일 입구를 두 방식으로
+  찾을 이유가 없으므로 `opts.Critical` 로 바꿨다(새 배선 0 — a094 의 배선을 공유).
+- 재적용 뒤 전판: `go test ./internal/app/engine/ ./internal/obs/ -count=1` ok(engine 393.0s) · `make lint` rc 0.
+
+## 리뷰 라운드 1 — 분리 컨텍스트 적대 리뷰(Claude code-reviewer, 2026-09-30) — **APPROVE-WITH-FIXES** (P0 0 · P1 0 · P2 6 · P3 6)
+
+리뷰어는 자기 overlay 변이로 저자의 27/27 목록 밖을 쟀다. 안전(손절 지연·판정 경로·계좌) 발견 없음.
+
+| id | 분류 | 요지 | 처분 |
+|---|---|---|---|
+| P2-1 | 시험 | 앵커를 `o.clk.Now()` 로 바꾼 변이 생존 — 주입 시계는 lease 확장이 없어 행동 시험이 단조성을 못 봄 | **수용** — `a090_monotonic_pin_test.go` 구조 핀(LeaseAnchor 1 · LeaseElapsed ≥2 · `o.clk.Now`/`time.Now` 0). 변이 M29 |
+| P2-2 | 시험 | `ErrModeAnnouncementFailed` 를 커밋 실패로 다루는 변이 생존 — 기존 시험은 입구의 자기 승격이 가렸음 | **수용** — `TestA090R3gARecoveredNoticeDoesNotRetightenAfterTheOperatorRelaxes`(복구 → 완화 → 재강화 0). 변이 M30 |
+| P2-3 | 시험 | 적재된 공지가 대기열에 남는 변이 생존(창 0 이 행 수를 가림) | **수용** — 같은 시험이 대기열 0 · 입구 호출 불변을 셈. 변이 M31 |
+| P2-4 | 시험 | B2 경로에서 settle 을 부르는 변이 생존(기점 삭제 → 탐지 60초 지연) | **수용** — `TestA090R3bAWorkingSetErrorKeepsTheBase`. 변이 M28 |
+| P2-5 | 시험 | R15 census 가 `break`·`goto` 를 못 봄 | **수용** — census 가 모든 BranchStmt(순회 수준) · `panic` 을 이탈로 셈. 변이 6·7(break · panic 표시 앞) 추가 |
+| P2-6 | 설계 | settle 의 루프 체류 몫(K 포지션 × 기록 트랜잭션 + P 공지 재시도, 실패 시 입구의 승격 트랜잭션)이 이름·예산 없이 늘어남(engine-safety 「루프에 남는 몫은 이름을 갖고 편성」) | **Manager 판정 요청** — frozen design 에 없는 항. 사실: 전부 로컬 원장 트랜잭션, 순회 **뒤**(그 주기의 손절 제출 뒤), 다음 주기 판정 앞. K 는 연속당 적재 1회로 유계(재시도는 실패 상태에서만), P 는 전이당 1. 저장소가 계속 실패하면 주기당 2K+2P 트랜잭션 — 상한 캡은 설계 변경이라 이 로트에서 넣지 않음 |
+| P3-1 | 정책 | 이미 ENTRY_BLOCKED(다른 트리거)면 `changed=false` 로도 tightened — 운영자가 다른 원인을 풀면 이 연속은 다시 막지 않음 | design D10 문자 그대로(「이미 그 모드면 조인 것으로 본다」). Manager 에 정책 질문으로 올림 |
+| P3-2 | 계좌 | `position_id` 는 계좌번호의 무염 해시 — 저엔트로피 계좌는 오프라인 역산 가능 | 기존 관행(원장 내부 키 허용)과 같음 — D12 사용자 큐 항목에 추가 제안 |
+| P3-3 | 계좌 | a090 기록 실패가 입구의 `escalate` 로그(`FieldAccount` 원문, `notifier.go:433-444`)를 주기마다 새로 부를 수 있음 | D13 귀속(공유 경로 · 사용자 큐) — a090 이 새 경로를 하나 더한다는 사실을 그 항목에 추가 |
+| P3-4 | 시험 | 엔진 조립 시험은 넣은 값을 되읽는 것에 가까움 | 인정 — 생산 조립 쪽 핀은 cmd 의 AST 키 전수(M26·M27) |
+| P3-5 | 시험 | 연속 id 가 intent id 생성기를 공유 — 결정적 NewID 시험에서 intent id 가 밀림 | design D4 문자 그대로. 기존 전판 무회귀로 확인 |
+| P3-6 | 잠재 | 관측자를 동시에 돌리면 맵 동시 쓰기 | 기존 맵(`unmanaged`·`refused`)과 같은 계약(한 goroutine 소유), 생산 호출자 없음 |
+
+### 착지 준비 (a094 `d485a45f` 위, 2026-09-30)
+
+- `engineRuntime` 편집을 `d485a45f`(a094 는 `engineRecoverySequence` 만 편집 · engineRuntime 무접촉) 위에 다시 적용. 파일 앞쪽 a094 편집으로 좌표 +11 —
+  engineRuntime 번들 「편집 뒤」 좌표 갱신.
+- 전판(격리 워크트리): `go test ./internal/app/engine/ ./internal/obs/ ./cmd/tossctl/ -count=1` ok(engine 445.0s · obs 59.4s · cmd 72.8s) ·
+  `make lint` rc 0 · 변이 **31/31 CAUGHT**(`analysis/mutation/round4-d485a45f-31of31.log` — 저자 27 + 리뷰어 생존 4, 무변이 대조군 GREEN 선행).
+  리뷰어 P2-5 의 census 변이(break · panic)는 `TestA090R15TheCensusCatchesTheFiveMutations` 안에서 빨강을 단언한다.
+- `check_analysis`(격리 워크트리): a090 번들 오류 0. 남은 것은 base 뒤 형제 착지 함수(a094 `ResolveExitProposal` 등)뿐 — 착지 뒤 `--record-landing` 으로 창을 좁힐 몫.
+
+### Manager 판정 (2026-09-30) — 리뷰 라운드 1 처분
+
+- 설계 변경 1(기록 입구 = a094 `opts.Critical`) **승인** — 입구 단일화 방향.
+- **P2-6 승인 — 캡 미도입 · 이름 붙인 잔여.** 정본 engine-safety 「등급화된 알림」: "루프에 남는 몫은 이름을 갖고 편성되어야 하며(SHALL — 이름 없는 여유는
+  다음 편집이 말없이 먹는다), 그 몫이 관측 주기보다 작아야 한다". a090 이 exit 관측 goroutine 에 남기는 몫:
+
+  | 이름 | 크기(주기당) | 위치 | 종류 |
+  |---|---|---|---|
+  | `a090.settle.alert` — 임계 넘은 연속의 알림 기록 | 연속당 1 회(성공 뒤 래치). 기록 실패 상태면 매 처리 주기 1 회 + 입구의 승격 트랜잭션 1 → 최악 **2K** (K = 기록 실패 중인 연속 수) | 순회 **뒤** — 그 주기의 모든 손절 판정·제출 뒤, 다음 주기 판정 앞 | 로컬 원장 트랜잭션(`RecordAlert` · `EscalateOperatingMode`) |
+  | `a090.settle.tighten` — 강화 커밋 | 연속당 1 회(성공 뒤 래치). 실패 상태면 매 처리 주기 1 | 같음 | 로컬 원장 트랜잭션 |
+  | `a090.settle.notice` — 미적재 공지 재시도 | 전이당 대기 1 — 실패 중이면 매 처리 주기 1 + 입구 승격 1 → 최악 **2P** | 같음 | 로컬 원장 트랜잭션 |
+
+  정상 상태(저장소 건강)의 정상 몫은 연속 시작·해제 때의 기록 몇 건뿐이다. 최악(저장소 지속 실패)은 주기당 **2K+2P** 로컬 트랜잭션 — 원격 왕복 0.
+  「원장이 멈추면 관측도 멈춘다」 독트린 안이며, 상한 캡은 frozen 범위 밖(후속 후보)이다. 이 몫이 관측 주기(5초)보다 작다는 것은 **측정하지 않았다**
+  (로컬 SQLite 트랜잭션 수 ms 가정 — 실측 의무는 남는다).
+- **P3-1 확인** — no-op 전이도 tightened(이미 차단된 상태에 차단 트리거가 겹치는 것은 완화가 아님, D10 · 「자동은 조이기만」).
+- **P3-2 · P3-3 사용자 큐 추가 승인.** P3-3 귀속 판정: 계좌 원문을 싣는 줄은 `Notifier.escalate`(`internal/obs/notifier.go:425-437`, `FieldAccount, n.AccountRef`)
+  — **base 자리**다(a092 이전부터 있던 승격 로그, a090 은 그 함수를 편집하지 않았다). a090 은 기록 실패 시 그 경로를 부르는 호출자를 하나 더할 뿐이므로
+  a090 신설 표면이 아니다 → 사용자 큐(D13 항목에 「a090 기록 실패도 이 경로를 부른다」 추가). a090 이 만든 로그 표면(`UnobservedLog` 줄)은 계좌 0 — R17 카나리.
