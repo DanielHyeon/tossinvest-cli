@@ -141,4 +141,4 @@
     - STORY-TOS-a072 — Wire the supervised KR and US strategy entry runtime [archived] → `a072-wire-multi-market-strategy-runtime`
     - STORY-TOS-a073 — Operate and deploy the concurrent KR and US lanes [archived] → `a073-operate-multi-market-strategy-lanes`
     - STORY-TOS-a112 — Run four strategy families as independent evaluators [in_progress] → `a112-run-four-strategy-families-independently`
-    - STORY-TOS-a126 — Filled exposure leaves the bucket when its position does [in_progress] → `a126-filled-exposure-leaves-the-bucket`
+    - STORY-TOS-a126 — Filled exposure leaves the bucket when its position does [implemented] → `a126-filled-exposure-leaves-the-bucket`
