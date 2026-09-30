@@ -51,6 +51,7 @@
 ## 2. 게이트
 
 - [ ] 2.1 격리 워크트리 `make gate CHANGE=a126-filled-exposure-leaves-the-bucket`
+  - [x] 2.1.1 **(review 2.1 — Manager 승인 2026-10-01, 형제 착지 개재)** 사람 승인 base 재고정 `a189e74f` → `97a6f717` + 시험 함수 경량 번들 다섯 + 착지 재기록
 - [ ] 2.2 아카이브 (Manager 검증 뒤)
 
 ## 3. 다른 로트에 거는 조건 (이 change 가 체크하지 않음 — 기록용)

@@ -296,3 +296,23 @@ X1 · X2 · X3 · X7 · X7m · X9 · B3 · C2close · T1 = **27/27 CAUGHT, 생�
 **VERDICT: PASS.** 이전 P2 셋 닫힘(R1 값이 판정을 가름 · C2 핀이 발급 + 재검증 전후 실호출 · 생성기 replay 는 v27(`production_snapshot_authority.go:33,367`)
 대 journal 35(`schema.go:6`)로 분리 정당). 새 사례 비공허 확인, `64ad3058` 의 비시험 `.go` 변경 0 확인. census 는 문자열 tripwire 이지 간접 호출
 분석은 아님(기록). P3 둘 — R9 문언(옛 **해제** 철자가 아니라 옛 **재구성** 판정과 의미 동일) · 변이 수 설명(18 + 9) — 위 표와 문단에서 정정.
+
+## 2.1 격리 게이트 준비 — 사람 승인 base 재고정 (2026-10-01)
+
+**막힘 실측**(격리 워크트리, HEAD `cf7ba56d`, 착지 `e9955bcd`): base `a189e74f` → required **41**, missing **32** — 전부 형제 몫(a112 engine 27 ·
+a091 exitloop 2 · exitwiring 1 · obs notifier.escalate 1 · strategyflow seal_census_test 3). a126 몫 9 는 전부 fresh 번들로 덮임(41 − 32).
+원인: 형제 Go 커밋 `80ae96a5`(a112 5.2.2.2) · `6635e443`(a091)이 a126 의 두 Go 커밋 `9cbc7560` · `64ad3058` **사이**에 착지해 착지 기록으로도
+창을 못 좁힘.
+
+**재고정** `a189e74f` → `97a6f717`(= `64ad3058^`). WORKFLOW 「사람 승인 base 재고정」 세 조건:
+1. **귀속 실측** — 옛 base 이후 a126 자기 Go 커밋 2(`9cbc7560` · `64ad3058`). 0 이 아니므로 그 커밋들이 고친 기존 함수가 전부 fresh 번들로
+   덮였음을 check 로 실측: 옛 base 창에서 a126 missing **0**(위 41 − 32 = 9 전부 덮임). 모의 재고정(버린 커밋) required 6 · missing 5 — 전부
+   `64ad3058` 이 고친 a126 시험 함수(`a126AdmitSymbol` · `TestA126CorruptReceiptedRowsAreUnreadable` · `TestA126ADepartureDoesNotReleaseAnotherOwnersLatch` ·
+   개명으로 지워진 `TestA126ResidualRevertAfterAnotherOwnersReservationLeavesItUnlatched`(revision: base) · riskbucket
+   `TestA126AggregateRefusesCorruptReceiptedRows`) → 경량 번들 다섯(비례 원칙, 시험 전용).
+2. **승인 기록** — Manager 인용: 「승인 — 제안 절차 그대로 진행하라(a095 3차·a094 규격과 동일). 모의 실측(재고정 후 required 6·missing 5
+   전부 자기 시험 함수 → 경량 번들 완비, 개명-삭제 시험의 revision: base 처리 포함)이 영수증 요건을 채운다.」 규격: 조건 ① 둘째 갈래 아님 —
+   자기 Go 2 커밋의 변경 함수 전수 fresh 확인은 첫째 갈래 변형. 사유: 형제 착지 개재. 승인 참조: 사용자 상임 지시 + 2026-10-01 진행.
+3. **단독 커밋 + 영수증** — `base-commit.txt` 한 파일 커밋(메시지에 옛→새 sha · 실측 · required 41 / 형제 32).
+
+순서: base 단독 커밋 → 번들 다섯 + 옛 착지 기록 삭제 → 착지 재기록 → 격리 게이트 2.1.
