@@ -1,0 +1,7 @@
+# 격리 워크트리 /tmp/claude-1000/a094-gate @ acc796ce — 게이트 전 준비
+make sdd-infra rc 2
+sdd_sync.py --no-gbrain rc 0 ([sdd-sync] all indexes current)
+make sdd-check rc 0
+make[2]: Leaving directory '/tmp/claude-1000/a094-gate'
+make[1]: Leaving directory '/tmp/claude-1000/a094-gate'
+make sdd-infra rc 2 원인: 1차에서 만든 .sdd/.venv 가 이미 있음(uv 「A virtual environment already exists」) — 무해, sync · check rc 0

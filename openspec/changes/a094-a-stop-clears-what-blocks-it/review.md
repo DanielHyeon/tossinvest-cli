@@ -1345,3 +1345,20 @@ a092 · a095 선례대로 미체크 24건을 `[처분 2026-10-01]` 로 닫았다
 - **조건 ② 승인 기록(원문)**: 「Manager 승인 (2026-10-01): WORKFLOW 「사람 승인 base 재고정」 조건 ① 둘째 갈래(a071 변형·a066 전수 영수증 표준, a095 3차와 동일 규격). 근거: 자기 비병합 Go 커밋 12가 변경한 기존 함수 22개 전수가 fresh 번들 대응(99dfa5bc 재생성)·stale 0, required 45 중 23은 형제 로트(a112 13·a095 6·a090 4) 착지 몫, 99dfa5bc 뒤 Go 커밋 0. 승인 참조: 사용자 상임 오케스트레이션 지시 + Manager 2026-10-01 「a095 형 재고정이 네 상황의 정답이다 … 이 메시지가 승인이다」. 실행 승인자: Manager(Fable), 사용자 위임 범위 내. 동반 조치: 게이트 커밋 절단까지 형제 Go 착지 동결(a112 수리 로트 보류 — 게이트 창 보호 프로토콜).」
 - 절차: ① 이 기록 커밋 ② `base-commit.txt` 단독 커밋(새 base = ① 의 커밋) ③ `landed-commit.txt` 삭제 커밋(착지는 base 의 자손 — 삭제 후 재계산이 정본 기제)
   ④ 격리 워크트리 ③ 커밋 고정으로 게이트 재실행.
+
+#### 게이트 실행 (2026-10-01) — **GATE PASS 11/11** · 7.1 전체 `-race` 회귀 0
+
+- 대상: 격리 워크트리 `/tmp/claude-1000/a094-gate` @ **`acc796ce`**(base `8c041ac6` 재고정 `8b7a91ac` · 착지 삭제 `acc796ce`, 미체크 0). 저장소 밖이라 병행 세션 편집이
+  섞이지 않는다. 게이트 커밋 절단까지 형제 Go 착지 동결(a112 보류 — 절단 즉시 Manager 에 신호).
+- 게이트 전 준비(`analysis/gate/prep-acc796ce.txt`): `sdd_sync.py --no-gbrain` rc 0(all indexes current) · `make sdd-check` rc 0. `make sdd-infra` rc 2 는 1차가 만든
+  `.sdd/.venv` 가 이미 있어서(uv 「A virtual environment already exists」) — 무해. gbrain 은 주 워크트리 전용 홈이라 격리 사본에서 돌리지 않았다 — advisory.
+- **`make gate CHANGE=a094-a-stop-clears-what-blocks-it` rc 0 — 11/11 OK**(2026-10-01 01:00~01:39:24 KST). 원문 `analysis/gate/gate-2-acc796ce.log`(rtk 압축 없음):
+  tasks.md · 미완료 0 · 짝 없음 · review.md · Function Logic Map(base `8c041ac6` → working tree, required 0 · evidence complete) · sdd-check(CodeGraph 색인 일치) ·
+  test · test-seams · test-race · vet · validate.
+- **7.1 전체 `go test ./... -count=1 -race -timeout 90m`** — 같은 커밋 `acc796ce` 의 별도 격리 워크트리(`/tmp/claude-1000/a094-race`), 01:40:25~02:53:19 KST, **rc 0 ·
+  ok 99 · FAIL 0 · DATA RACE 0**(`analysis/gate/race-full-acc796ce.log`). 무거운 패키지: journal 4355.8s · engine 2102.0s · execgw 856.8s · reconcile 436.7s —
+  journal 은 `-race` 아래 72.6 분이라 Makefile 의 `test-race` 상한(15m)이나 `test` 상한(30m)으로는 전체 `-race` 를 못 돈다(이름 붙은 관찰, 게이트는 저장소의 race 집합만 잰다).
+- 이력: 1차 `126fcbad` ⑤ FAIL(창 안 형제 착지 missing 23) → base 재고정(§13) · **2차 `acc796ce` PASS**. 로그 둘 · 준비 둘 · 영수증 · 전체 race 로그 전부 `analysis/gate/`.
+- 착지 기록 없음(base 가 작업 뒤라 창이 워킹트리 — WORKFLOW 「착지 지점」의 받을 수 없는 경우). a094 Go 착지는 `766a8456` … `f6a5bcd9`(12 커밋, 착지 판정값이었다
+  `99dfa5bc` — `57b231ca` → 삭제 `acc796ce`).
+- 이 절을 적은 커밋은 게이트 뒤 문서 편집이다.

@@ -1,0 +1,113 @@
+start 2026-10-01 01:40:25 KST · acc796ce · go test ./... -count=1 -race -timeout 90m
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	216.488s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app	1.028s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	2101.970s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/app/paths	[no test files]
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/attemptthaw	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/attest	1.373s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/audit	2.430s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/auth	1.040s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/binstamp	1.018s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	1.097s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/brokerstate	1.021s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/candidate	33.302s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/candidatesrc	1.070s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/client	1.186s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	1.085s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/config	1.126s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	638.361s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane	1.141s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/costs	3.287s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/deployguard	1.064s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/doctor	1.028s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/domain	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/enginelock	1.687s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	856.774s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy	5.436s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/exitquarantine	1.011s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/export	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/filldetect	50.134s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/flatten	103.440s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/handoff	1.138s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	2.068s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/hybrid	1.016s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/i18n	1.017s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	4355.755s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/localupdate	11.204s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/markout	1.017s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/mcp	1.359s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/measure	27.202s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/measure/degrade	4.099s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/monitor	1.018s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/networkboundary	1.043s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/obs	326.350s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	9.006s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialbars	3.623s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialfx	1.929s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/onboarding	1.097s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/operatorview	1.037s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/ops	1.565s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/optimization	17.664s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/optimizationevidence	1.052s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/orderintent	1.036s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/orderlineage	1.057s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/output	1.079s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/performance	25.823s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/performancejournal	1.021s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/position	1.157s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positioncampaign	1.093s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicy	1.015s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc	1.049s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protection	14.574s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionlifecycle	1.075s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionofficial	1.024s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/protectionreadiness	2.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/push	1.016s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/qr	2.740s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/ratebudget	1.040s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	436.736s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/releaseupdate	1.475s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/replay	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reversallane	1.360s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/risk	1.050s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	4.649s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc	1.015s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/riskrelaxation	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/runlock	1.016s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/scheduler	4.441s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/selfupdate	1.011s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/session	1.011s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/settingmeta	1.013s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/soak	1.378s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/strategy	[no test files]
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/strategyaccount	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	1.014s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycandidate	1.022s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycandle	1.023s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	1.018s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategydispatch	1.041s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyengine	6.710s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyevidence	11.698s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	1.241s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	5.655s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategymarket	4.371s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	3.223s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc	10.390s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	1.016s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	9.353s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyruntime	1.055s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	2.646s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/testenv	1.165s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/trading	1.017s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/tui	1.016s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/updatecheck	1.026s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/verifylive	32.395s
+?   	github.com/JungHoonGhae/tossinvest-cli/internal/version	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane	1.575s
+?   	github.com/JungHoonGhae/tossinvest-cli/tools/a112-family-activation	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-l1c-quote-probe	1.015s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-mb-us-source	344.021s
+?   	github.com/JungHoonGhae/tossinvest-cli/tools/boundarymap	[no test files]
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/logic-map	1.015s
+rc=0
+end 2026-10-01 02:53:19 KST
