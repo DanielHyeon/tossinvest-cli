@@ -205,3 +205,22 @@ LIMIT 전용 오적용 주장은 **독립 확인에서 옳았다** — `CheckAut
 3. **실측** — KR/US MARKET 접수 가능 여부, 세션 경계 응답, **청산측 슬리피지 계기**
    (현재 `slippagePct`는 진입 전용이고 청산 슬리피지를 재는 코드가 없다).
 4. **그 다음에** MARKET vs 하한가 지정가를 bps 데이터로 결정. a088은 익절 지정가에만 필요.
+
+---
+
+# Phase 1 착수 기록 (2026-09-30, Teammate)
+
+## base 재고정 (tasks 0.1) — 승인 기록
+
+- 커밋 `5491451b`: `base-commit.txt` ec29dc72 → `102d4e99` 단독 커밋.
+- 승인: 사용자 2026-09-28 결정 ①(D2 분리 선행) + 2026-09-30 재개 지시, Manager 위임(WORKFLOW 「사람 승인 base 재고정」 2).
+- 귀속 실측(조건 1): 옛 base 이후 이 change 디렉터리를 만진 비병합 `.go` 커밋 = `a30eb35a` 1건. 그 커밋의 a087 몫은 문서
+  6개뿐이고 `.go`(journal/outbox.go · obs/notifier.go + 시험 4)는 a096 몫 — a087 자기 Go 작업 0.
+- 옛 base 에서 `check_analysis` required = 295 함수(형제 착지 603 커밋 몫, a087 production 편집 0).
+
+## P1.1 FLM 과 모집단 측정 — Phase 1 편집 중단
+
+- FLM/BTM: `analysis/function-logic/internal-app-engine--exitobserver.sellintent/` (ast.json · FLM · BTM · risk report).
+- **발견(blocking)**: D2a 가 앞에 서려는 거부(`sellIntent` B2)는 생산 경로에서 도달 불가다. 호출 사슬 record→submit→sellIntent,
+  관측가는 평가기의 `positive` 검사를 지난 값뿐(AST), 엔진 스위트 커버리지 B1·B2 = 0. 상세·선택지는 `issues.md` I-P1.
+- Pre-Edit 선언·RED·GREEN·변이·gstack 코드 리뷰: **미착수** — production 편집 0, Manager 결정 대기.

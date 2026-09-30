@@ -7,7 +7,7 @@
 
 ## 0. 게이트 선행
 
-- [ ] 0.1 `capture_change_base.py --change a087-a-protective-exit-is-a-market-order`로 base commit 재고정 (디렉터리명이 바뀌었다)
+- [x] 0.1 `capture_change_base.py --change a087-a-protective-exit-is-a-market-order`로 base commit 재고정 (디렉터리명이 바뀌었다) — `5491451b`(ec29dc72 → 102d4e99, 2026-09-30, 승인 기록 review.md)
 - [ ] 0.2 `openspec validate a087-a-protective-exit-is-a-market-order --strict --no-interactive`
 - [ ] 0.3 **proposal-freeze 재리뷰** 실행 후 `review.md`에 2차 절 추가 (적대적 Eng 필수)
 - [ ] 0.4 `make sdd-sync` 후 `sellIntent`·`checkOrderShape`·`isProtective`·`buildOrderCreate`의
@@ -17,6 +17,9 @@
 
 - [ ] P1.1 **Pre-Edit 선언 + FLM** — `ExitObserver.sellIntent`(High-risk 손절 경로,
       WORKFLOW §Pre-Edit 형식, `ast.json`+FLM+BTM)
+> **2026-09-30 중단 — `issues.md` I-P1**: P1.1 FLM 은 작성했고(Pre-Edit 미작성), P1.2 ① 열거 결과 대상 모집단이
+> 생산에서 0(B1·B2 도달 불가, 커버리지 0)이라 production 편집 전 Manager 결정을 기다린다.
+
 - [ ] P1.2 **RED — 모집단 열거 포함**: ① 관측가·기준선이 모두 비는 포지션 유형의 열거
       (언제 생기는가 — fail-closed 가 거부하던 정상 입력) ② KR 보호 제안에서 두 값이
       빌 때 하한가 LIMIT 로 제출됨 ③ US 무가격·하한가 null/실패 시 거부 + critical 발행

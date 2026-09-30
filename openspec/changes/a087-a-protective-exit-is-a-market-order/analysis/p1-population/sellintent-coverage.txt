@@ -1,0 +1,9 @@
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine/exitloop.go:1571.106,1573.17 2 1
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine/exitloop.go:1573.17,1575.3 1 0
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine/exitloop.go:1576.2,1576.17 1 1
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine/exitloop.go:1576.17,1579.3 1 0
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine/exitloop.go:1580.2,1581.16 2 1
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine/exitloop.go:1581.16,1583.3 1 0
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine/exitloop.go:1584.2,1585.16 2 1
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine/exitloop.go:1585.16,1587.3 1 0
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine/exitloop.go:1588.2,1596.8 1 1
