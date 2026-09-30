@@ -1,15 +1,16 @@
 {
-  "file": "internal/obs/event.go",
-  "source_sha256": "4032c4966e55f616d0294ce19cdccd7fe8e30c2909e7c116ea8c8b0c11320a02",
-  "package": "obs",
-  "function": "SeverityOf",
-  "signature": "SeverityOf(params=1, results=1)",
+  "file": "internal/exitpolicy/snapshot.go",
+  "source_sha256": "5aaed0f721c2931c0df07bdd58b626f785ec44fe30a63413c7f31a3b1d8d0ce0",
+  "package": "exitpolicy",
+  "function": "ExecutableProposal",
+  "receiver": "ExitLineSnapshot",
+  "signature": "ExitLineSnapshot.ExecutableProposal(params=0, results=1)",
   "start": {
-    "line": 371,
+    "line": 54,
     "column": 1
   },
   "end": {
-    "line": 376,
+    "line": 59,
     "column": 2
   },
   "branches": [
@@ -17,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 372,
+        "line": 55,
         "column": 2
       }
     }
@@ -26,14 +27,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 373,
+        "line": 56,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 375,
+        "line": 58,
         "column": 2
       }
     }

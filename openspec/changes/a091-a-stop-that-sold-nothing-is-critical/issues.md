@@ -14,6 +14,25 @@
 **재조사 의무**: 위는 a092 이전 세계다. a092가 기록 입구·배달 실행자·재알림 창을
 세웠으므로 재고정 시점의 소비자는 다시 센다(특히 배달 실행자와 episode 관련 신규 소비자).
 
+## 소비자 재조사 (base `b30318d6`, 2026-10-01 — tasks 1.4)
+
+| 소비자 | base 사실 | 새 종류가 깨는가 |
+| --- | --- | --- |
+| `CriticalEvents()` 호출자 | 시험 셋 — `internal/obs/measurement_test.go:48`(subject `measurement` 금지) · `internal/obs/a074_quarantine_event_test.go:34`(격리 사건 등재) · `cmd/tossctl/a109_the_engine_outlives_its_sibling_endpoints_test.go:293`(강등 사건 비등재). 개수 · 집합 고정 없음 | 아니오 — subject `exit` |
+| `EventExitProposalCapped` 참조 | 생산 `exitloop.go:1626` · `:1645-1646`, 시험 `exitloop_test.go:958`(**부분** 캡 — 종류 유지) · `a092_normal_relay_test.go:37` · `:66`(일반 등급 표본 — 여전히 normal) · `a092_r26b_internal_test.go:147` · `:186`(문자열 표본) | 아니오 — 부분 캡 · 익절 0주는 옛 종류 그대로 |
+| 콘솔 · httpapi | 이벤트명 필터 없음(`"exit.` 는 설정 키 `exit.common-policy` 뿐) | 아니오 |
+| 배달 실행자(a124 `alertdelivery.go`) | 행의 `event_type` 을 `obs.EventType` 으로 되돌려 발송만 함(`:328`) — 종류별 분기 없음 | 아니오 |
+| `alert_outbox.event_type` | `TEXT NOT NULL`, CHECK 없음(`outbox.go:51`) | 아니오 — 스키마 무변경 |
+| 구조화 로그 `subject` 필드 | `Subject()` 가 `.` 앞(`log.go:196`) | 아니오 — `exit` |
+
+## M1 — 해소 (2026-10-01, design D6)
+
+- `isZeroQuantity` 는 base 에서 **수치 비교**다(`exitloop.go:1871-1878`) — 첫 리뷰의 「정확히 `"0"` 비교」는 낡았다.
+- 입력 쪽 불변식의 생산 출처(번들 근거): 포지션 수량 `ConvergeQuantities`(`converge.go:218` — 계좌 값) → exit 루프의 수치 0 건너뛰기
+  (`exitloop.go:541`) · `canonicalSnapshotContext` 의 양수 강제 + `RatString` → `ProjectWholeShares` 의 `units.String()` →
+  `orderable = projected != "0"` → `record` B11. 하한은 `MaxDecimal` → `CanonicalDecimal` 또는 `zeroFloor` 의 `"0"`.
+- 결론: `applyFloor` 입력 `quantity` 는 양의 정수, 0주 반환은 B2 · 끝 두 자리뿐. 「수치 비교로 세우는 안」은 이미 base 의 모양이다.
+
 ## 낡음 대장 (2026-09-30 재작성 시점)
 
 - **a089 참조 제거됨** — 불구현 아카이브(2026-09-28 사용자 결정). 재발·접힘·재알림
@@ -26,7 +45,7 @@
 
 ## freeze 입력 — 열린 질문
 
-- **M1 — `quantity` 정규형 불변식.** `isZeroQuantity`는 정확히 `"0"` 비교이고
+- ~~**M1 — `quantity` 정규형 불변식.**~~ **해소(위 「M1 — 해소」).** `isZeroQuantity`는 정확히 `"0"` 비교이고
   `""`·파싱 실패도 0 취급, `"0.0"`·`" 0"`은 통과한다(당시 `:1657-1664`). "0주 경로는
   둘"이 성립하려면 `floor.Quantity`가 정규형이어야 한다 — 그 불변식의 생산 출처
   (설정하는 코드)를 FLM Inputs 표에 인용한다. 인용 없으면 0주 판정 자체를

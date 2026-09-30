@@ -1,0 +1,77 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "0f943813a3efa42329f97eddf7944361a7f6bbb09b3991afb5d2b4f842f38a7f",
+  "package": "engine",
+  "function": "isZeroQuantity",
+  "signature": "isZeroQuantity(params=1, results=1)",
+  "start": {
+    "line": 1871,
+    "column": 1
+  },
+  "end": {
+    "line": 1878,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1873,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1874,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1877,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1872,
+        "column": 6
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1876,
+        "column": 15
+      },
+      "text": "riskcalc.CompareDecimal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 1872,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1876,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

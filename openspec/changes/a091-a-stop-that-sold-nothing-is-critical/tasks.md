@@ -11,15 +11,15 @@
 
 - [x] 0.0 **[2026-10-01] 확인 — 아카이브 `75d138b5` 가 새 base 의 조상, review 2차 판 0.0.** **a092 아카이브 확인** — C1 발효 조건. exit 관측 goroutine의 critical이
       기록까지만 동기임이 정본이 된 뒤에만 진행
-- [ ] 0.1 `capture_change_base.py --change a091-a-stop-that-sold-nothing-is-critical`
+- [x] 0.1 **[2026-10-01] `ec29dc72` → `b30318d6`(`16cb1a1a`, 영수증 `39feef86` · review 2차 판 0.1). `capture_change_base.py` 는 기존 파일을 거절하므로 선례대로 단독 커밋.** `capture_change_base.py --change a091-a-stop-that-sold-nothing-is-critical`
       (base 재고정 — WORKFLOW 「사람 승인 base 재고정」 절차)
-- [ ] 0.2 **spec delta 재기저화** — MODIFIED 「등급화된 알림」 블록을 a092 아카이브 뒤
+- [x] 0.2 **[2026-10-01] 정본 블록 125 줄 기계 복사 + a091 몫 셋(열거 항목 · 0주 문단 넷 · Scenario 넷). 정본 비공백 83 줄 중 delta 에 없는 것 = 열거 첫 줄 1(의도한 치환) — review 2차 판 0.2.** **spec delta 재기저화** — MODIFIED 「등급화된 알림」 블록을 a092 아카이브 뒤
       정본 위에 재작성한다(delta 머리의 재기저화 의무). a091이 더하는 것은 열거 항목
       하나와 0주 문단들뿐, a092 문단은 전부 보존
-- [ ] 0.3 FLM 재검증 — `applyFloor`·`SeverityOf`·(신규) 알림 경로의 AST를 재고정
+- [x] 0.3 **[2026-10-01] 번들 14(편집 대상 applyFloor · submit · 등급 SeverityOf + 알림 경로 alert · RecordOnly.Notify + M1 사슬 9) — base AST · 커버리지, calls 표 수치(Floor 읽기 최악 · 기록 경로 busy 5s · 재알림 1h). 하네스 `analysis/harness/write_bundles.py`.** FLM 재검증 — `applyFloor`·`SeverityOf`·(신규) 알림 경로의 AST를 재고정
       HEAD에서 재생성, 좌표 이동 반영. **calls 표의 timeout/retry 칸을 수치로 채운다**
       (첫 리뷰의 방법 교훈)
-- [ ] 0.4 `openspec validate a091-a-stop-that-sold-nothing-is-critical --strict --no-interactive`
+- [x] 0.4 **[2026-10-01] valid.** `openspec validate a091-a-stop-that-sold-nothing-is-critical --strict --no-interactive`
 - [ ] 0.5 **proposal-freeze 재리뷰** (적대적 Eng 필수) → `review.md`에 2차 판 추가
 - [ ] 0.6 `check_analysis.py --change a091-…` — FLM 산출물 완결 확인
 
@@ -28,25 +28,27 @@
 - [x] 1.1 **Function Logic Map** — `ExitObserver.applyFloor` (branches 6, returns 7)
 - [x] 1.2 **Function Logic Map** — `SeverityOf` (branches 1, returns 2)
 - [x] 1.3 **Branch Test Map** — 위 두 함수. 미테스트 분기 B4·B6 식별
-- [ ] 1.4 새 이벤트 종류의 **소비자 조사** — 콘솔 필터·로그 대시보드·`CriticalEvents()`
+- [x] 1.4 **[2026-10-01] base 재조사 → `issues.md` 「소비자 조사」.** 새 이벤트 종류의 **소비자 조사** — 콘솔 필터·로그 대시보드·`CriticalEvents()`
       호출자. 조사 결과를 `issues.md`에 기록
 
 ## 2. 이벤트 종류 신설 (D1)
 
 - [ ] 2.0 **Pre-Edit 선언** — `internal/obs/event.go`
 - [ ] 2.1 **RED** — 새 종류가 `SeverityOf`에서 critical
-- [ ] 2.2 **RED** — 기존 18종의 등급 **무변화**
+- [ ] 2.2 **RED** — 기존 **19**종(base `event.go:337-361`)의 등급 **무변화**
 - [ ] 2.3 **RED** — 미등록 종류는 여전히 normal (기본값 보존)
-- [ ] 2.4 **GREEN** — 종류 추가 + `criticalEvents` 등록.
-      `EventExitProposalCapped`는 **부분 캡 전용**으로 좁아지고 등급 무변화
+- [ ] 2.4 **GREEN** — 종류 `EventExitStopSoldNothing = "exit.stop_sold_nothing"`(subject `exit`) 추가 + `criticalEvents` 등록 +
+      종류 목록 주석. `EventExitProposalCapped` 는 **보호 0주를 뺀 캡**(부분 캡 · 익절 0주)으로 좁아지고 등급 무변화(design D1 3판 정정)
+- [ ] 2.5 **RED** — 새 종류 값 문자열 핀(`"exit.stop_sold_nothing"`) · subject `exit` · `CriticalEvents()` 등재 — class rule 셋(measurement · a074 · a109) 통과
 
 ## 3. 0주 두 경로를 같게 보고 (D3)
 
 - [ ] 3.0 **Pre-Edit 선언** — `ExitObserver.applyFloor`, `ExitObserver.submit`
-- [ ] 3.1 **RED** — 보호 + `floor.Quantity == 0` (`:1446`) → 새 종류, critical, outbox 행
-- [ ] 3.2 **RED** — 보호 + 하한 계산 실패 (B2 `:1408`) → **같은 종류·등급**, 원인이 detail에
+- [ ] 3.1 **RED** — 보호 + `floor.Quantity == 0` (끝 `:1644`) → 새 종류, critical, outbox 행, 키 `exit.stop_sold_nothing|<position>`
+- [ ] 3.2 **RED** — 보호 + 하한 계산 실패 (B2 `:1622`) → **같은 종류 · 등급 · 키**, 원인이 detail에
 - [ ] 3.3 **RED** — 보호 + **부분** 캡 → `EventExitProposalCapped` 유지, 등급·문구 무변화
-- [ ] 3.4 **RED** — 익절 + 0주 → 종전 등급 무변화
+- [ ] 3.4 **RED** — 익절 + 0주(끝) → 종전 종류 `EventExitProposalCapped` · normal 무변화
+- [ ] 3.4a **RED** — 익절 + 하한 계산 실패(B2) → 알림 0 · `logErr` 종류 `EventExitProposalCapped` 무변화(design D3 3판)
 - [ ] 3.5 **RED (§0.3·§0.9 회귀)** — 위 전부에서 `applyFloor`의 반환값
       `(수량, capped, err)`이 **무변화**. 이 테스트가 이 change의 안전 경계다
 - [ ] 3.6 **GREEN** — `submit`이 `isProtective(proposal)`을 `applyFloor`에 전달.

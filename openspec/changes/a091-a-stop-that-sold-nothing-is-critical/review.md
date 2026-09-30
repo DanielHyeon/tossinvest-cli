@@ -161,3 +161,24 @@ outbox 1행 + `alert_undelivered` ERROR 13줄 + 게이트 13회 래치다.
   (`exitloop.go` · `event.go`). 원문 `analysis/rebase/check-oldbase-ec29dc72-at-b30318d6.txt`.
 - **조건 ② 승인**: 위 「착수 승인 기록」 의 Manager 배정 원문(0.1 base 재고정 지시).
 - **조건 ③**: 다음 커밋이 `base-commit.txt` 한 파일.
+
+## 0.2 spec delta 재기저화 (2026-10-01)
+
+- 정본 `openspec/specs/engine-safety/spec.md` 「등급화된 알림」(base `b30318d6`, 125 줄 — a092 아카이브 뒤 판, a095 는 이 요구를
+  건드리지 않았다: 정본 이력 `75d138b5` a092 · `78e70d62` a095 는 engine-safety 에 **다른 요구 둘**을 더함)을 기계 복사하고
+  a091 몫 셋만 더했다: ① 첫 문단 열거에 「보호 청산의 0주 제출」 ② 첫 문단 뒤 0주 문단 넷 ③ 끝에 Scenario 넷.
+- 대조(파이썬, 줄 단위): 정본 비공백 83 줄 중 delta 에 없는 것 = **1**(열거 첫 줄 — 의도한 치환), delta 에만 있는 줄 28(a091 몫).
+  `openspec validate --strict` 통과.
+
+## 0.3 FLM 재검증 (2026-10-01)
+
+- 깨끗한 격리 워크트리 @ `b30318d6` 에서 `go run ./tools/logic-map` 로 AST 14, 같은 커밋의 `go test -coverprofile`(engine ·
+  obs · riskcalc · reconcile · exitpolicy)로 진입 실측, 산문 · Test 열 · 수치는 하네스 `analysis/harness/write_bundles.py`.
+- 편집 대상 3(`applyFloor` · `submit` · `SeverityOf`), 알림 경로 2(`ExitObserver.alert` · `RecordOnly.Notify`), M1 사슬 9.
+- **calls 표의 timeout/retry 칸을 수치로 채웠다(첫 리뷰 방법 교훈)**: `ConfirmedFloor` 의 RECONCILE 읽기(Query 2 · 3시도 · 대기
+  400/800ms ±25% · 예산 8s 는 대기만 · HTTP 15s · 401 refresh ≤2 → 한 Query 최악 ≈ 98s) · critical 기록(`busy_timeout` 5s ·
+  `n.mu` 기한 없음 · 원격 0) · 재알림 창 1h.
+- 3판에서 드러난 2판의 틀린 문장 셋: 「`applyFloor` 는 브로커에 닿지 않는다」(§0.4 — RECONCILE 에서 읽는다) · 「`isZeroQuantity`
+  는 정확히 `"0"` 비교」(M1 — base 는 수치 비교) · 「`EventExitProposalCapped` 는 부분 캡 전용」(D1 — 익절 0주가 남는다).
+  전부 3판 문서에서 정정했다.
+- engine 커버리지 실행은 `-trimpath` 때문에 `TestA111…` 두 시험이 소스 경로를 못 찾아 실패했다(무관한 AST 핀) — 프로파일은 유효.

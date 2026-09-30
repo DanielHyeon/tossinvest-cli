@@ -1,32 +1,15 @@
 # Branch Test Map: `ExitObserver.applyFloor`
 
-AST 기준 분기 6 / 이탈 7. 기존 테스트는 `internal/app/engine/exitloop_test.go`.
+- Source: `internal/app/engine/exitloop.go`
 
-| Branch | Scenario | Test | RED observed | GREEN observed |
-|---|---|---|---|---|
-| B1 | `:1404` Floor 미주입 → 무캡 | `TestNoFloorSourceCapsNothing` `:997` | no | yes |
-| B2 | `:1408` 하한 계산 실패 → 0주, **logErr만** | `TestAFloorThatCannotBeComputedSellsNothing` `:982` | no | 부분 |
-| B3 | `:1416` 하한 미적용 → 무캡 | 간접 | no | yes |
-| B4 | `:1420` `CompareDecimal` 오류 | **없음** | no | no |
-| B5 | `:1423` 하한이 충분 → 무캡 | 간접 | no | yes |
-| B6 | `:1427` `SubDecimal` 오류 | **없음** | no | no |
+> Test 열은 그 함수를 지나는 현존 · 통과 시험이다. 「아니오」 분기의 인용은 그 갈래 자체의 증명이 아니다(진입 실측 열이 정본).
+> a091 의 새 RED 는 구현 로트의 변이 원장이 잰다 — 이 표는 편집 **전** base 의 사실이다.
 
-`:1446`(캡 성립)은 분기 id가 없지만 `TestTheConfirmedFloorCapsTheLiquidation` `:927`과
-`TestAZeroFloorSubmitsNothingAndLeavesTheLevelProposable` `:953`이 도달한다.
-
-## 기존 테스트가 단언하지 않는 것
-
-`:953`·`:982`는 "아무것도 제출되지 않고 레벨은 재발의 가능"까지만 본다.
-**등급·durability·반복 계수·문구는 단언하지 않는다.** 그래서 8/2에 13회 반복되는 동안
-어떤 테스트도 깨지지 않았다.
-
-## 필요한 RED
-
-| # | Scenario | 기대 |
-|---|---|---|
-| R1 | 보호 제안 + `floor.Quantity == 0` | critical 등급, outbox 행 생성 |
-| R2 | 보호 제안 + 하한 계산 실패(B2) | R1과 동일 — 원인이 달라도 결과는 "손절이 0주" |
-| R3 | 보호 제안 + **부분** 캡(`floor.Quantity > 0`) | **종전 등급 유지** (일부는 나갔다) |
-| R4 | 익절 제안 + `floor.Quantity == 0` | **종전 등급 유지** — 무보호 노출이 아니다 |
-| R5 | 알림 문구 | 0주일 때 "일부만 나갔다"라고 말하지 않는다 |
-| R6 | 제출 수량 반환값 | R1~R5 전부에서 **무변화** (§0.9) |
+| Branch | 조건 | 진입 실측 | Test | RED observed | GREEN observed |
+|---|---|---|---|---|---|
+| B1 | `:1618` `if o.opts.Floor == nil {` | 예 | `TestNoFloorSourceCapsNothing` | n/a | yes |
+| B2 | `:1622` `if err != nil {` | 예 | `TestAFloorThatCannotBeComputedSellsNothing` | n/a | yes |
+| B3 | `:1630` `if !applies {` | 예 | `TestAZeroFloorSubmitsNothingAndLeavesTheLevelProposable` | n/a | yes |
+| B4 | `:1634` `if err != nil {` | 아니오 | `TestTheConfirmedFloorCapsTheLiquidation` | n/a | yes |
+| B5 | `:1637` `if cmp >= 0 {` | 예 | `TestTheConfirmedFloorCapsTheLiquidation` | n/a | yes |
+| B6 | `:1641` `if err != nil {` | 아니오 | `TestTheConfirmedFloorCapsTheLiquidation` | n/a | yes |

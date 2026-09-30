@@ -14,6 +14,11 @@
 > a092 신설·freeze 종료·기록 입구 착지(design D5). **발효 조건은 C1 그대로 — a092 완주
 > 뒤 base 재고정 + freeze 재리뷰.** 본문의 코드 좌표는 base `ec29dc72` 시점이며 재고정
 > 시 재검증한다.
+>
+> **3판(2026-10-01, 재freeze 입력)**: C1 발효(a092 아카이브 `75d138b5`) → base 재고정 `b30318d6`(`16cb1a1a`) →
+> 좌표 · 수치를 base 에서 다시 쟀다(FLM 번들 14 — `analysis/function-logic/`). 바뀐 판단: M1 해소(`isZeroQuantity` 는
+> base 에서 수치 비교 — design D6), §0.4 문장 정정(`applyFloor` 는 RECONCILE 에서 브로커를 읽는다 — a091 이 더하는 요청 0),
+> 새 종류 이름 `exit.stop_sold_nothing`(design D1), 루프에 남는 몫의 이름(design D5). 아래 `ec29dc72` 좌표는 3판에서 base 좌표로 바꿨다.
 
 ## Why
 
@@ -30,8 +35,9 @@
 **손절이 3분 동안 13번 완전히 막혔고, `alert_outbox`에 남은 행은 0건이다.**
 
 `EventExitProposalCapped`가 `criticalEvents`(`obs/event.go`)에 없다. `SeverityOf`는
-그 map만 보는 순수 함수이고(`event.go:309-314`, AST branches 1) 미등록은 `SeverityNormal`로
-**조용히 강등된다**. normal 등급은 `publishBestEffort`로 가서
+그 map만 보는 순수 함수이고(base `event.go:371-376`, AST branches 1) 미등록은 `SeverityNormal`로
+**조용히 강등된다**. 8/2 당시 normal 등급은 `publishBestEffort`로 가서(base 에서는 a092 의 이관 버퍼 `NormalRelay` 로 간다 —
+outbox 행이 생기지 않는 것은 같다)
 
 - outbox 행이 생기지 않는다 → 원장에 흔적 없음
 - 전달 실패해도 재시도가 없다
@@ -61,25 +67,24 @@ Title: "… 청산이 확정 하한에 걸려 일부만 나갔다"
 
 ### 0주가 되는 경로는 둘이고 하나는 알림조차 없다
 
-`applyFloor`의 AST는 분기 6·이탈 7이다(`analysis/…/applyfloor/ast.json`).
+`applyFloor`의 AST는 분기 6·반환 7이다(`analysis/…/applyfloor/ast.json`, base `exitloop.go:1617-1661`).
 
 | 경로 | 조건 | 남는 것 | 제출 수량 |
 | --- | --- | --- | --- |
-| B2 `:1408→:1414` | 확정 하한을 **계산할 수 없다** | `logErr` 한 줄. **알림 없음** | 0 |
-| `:1446` | 확정 하한이 **0을 허용한다** | `EventExitProposalCapped` (normal) | 0 |
+| B2 `:1622→:1628` | 확정 하한을 **계산할 수 없다** | `logErr` 한 줄. **알림 없음** | 0 |
+| 끝 `:1644→:1660` | 확정 하한이 **0을 허용한다** | `EventExitProposalCapped` (normal) | 0 |
 
-둘 다 `submit`의 `isZeroQuantity` 분기(`:1243`)로 가서 조용히 `release`된다.
+둘 다 `submit`의 `isZeroQuantity` 분기(`:1401`)로 가서 조용히 `release`된다.
 B2의 fail-closed 방향은 옳다 — 문제는 **그 사실이 보고되지 않는 것**이다.
 
-`isZeroQuantity`(`:1657-1664`)의 모양에 주의(리뷰 M1): **정확히 `"0"` 문자열 비교**이고
-`""`·파싱 실패도 0으로 보되 `"0.0"`·`" 0"`은 통과한다. "0주 경로는 둘"의 성립은
-`quantity`가 정규형(`"0"`)이라는 전제 위에 있고, 그 불변식의 출처 인용은 freeze
-입력이다(`issues.md`).
+`isZeroQuantity`의 모양(리뷰 M1): 첫 리뷰 시점에는 정확히 `"0"` 문자열 비교였으나 **base 에서는 수치 비교**다
+(`exitloop.go:1871-1878` — `CompareDecimal(q, "0") <= 0`, 빈 문자열 · 파싱 실패도 0). "0주 경로는 둘"의 입력 쪽 불변식
+(`quantity` 는 양의 정수, `floor.Quantity` 의 0 은 `"0"` 한 철자)은 생산 출처까지 인용했다 — design D6.
 
 ### 기존 테스트는 이것을 잡을 수 없다
 
-`TestAZeroFloorSubmitsNothingAndLeavesTheLevelProposable`(`:953`)과
-`TestAFloorThatCannotBeComputedSellsNothing`(`:982`)은 "아무것도 제출되지 않고 레벨은
+`TestAZeroFloorSubmitsNothingAndLeavesTheLevelProposable`(base `exitloop_test.go:971`)과
+`TestAFloorThatCannotBeComputedSellsNothing`(`:1000`)은 "아무것도 제출되지 않고 레벨은
 재발의 가능"까지만 단언한다. **등급·durability·문구는 단언하지 않는다.**
 그래서 13회가 반복되는 동안 아무 테스트도 깨지지 않았다.
 
@@ -102,13 +107,13 @@ B2의 fail-closed 방향은 옳다 — 문제는 **그 사실이 보고되지 �
 ### 보호/익절 구분은 호출자가 넘긴다
 
 `applyFloor`는 제안이 손절인지 익절인지 모른다(FLM 입력 표). `submit`은 `proposal`을
-갖고 있으므로(`:1237` 시그니처) 전달할 수 있다.
+갖고 있으므로(`:1395` 시그니처) 전달할 수 있다.
 
 ## Impact
 
 - **Specs**: `engine-safety` (**MODIFIED 1** — 리뷰 M4. 「등급화된 알림」의 critical
   열거에 사건 하나를 더한다. a092가 같은 요구를 MODIFIED로 싣는 선행이므로 재고정 시
-  a092-뒤 정본 위로 재기저화한다 — delta 머리와 tasks 0.5)
+  a092-뒤 정본 위로 재기저화한다 — delta 머리와 tasks 0.2, 3판에서 완료)
 - **Code**: `internal/app/engine/exitloop.go` (`applyFloor` 알림 경로 · `submit`의 인자
   전달 · B2 `logErr`의 종류 — H2), `internal/obs/event.go` (새 종류 등록 + 종류 목록
   주석 갱신)
@@ -121,7 +126,9 @@ B2의 fail-closed 방향은 옳다 — 문제는 **그 사실이 보고되지 �
 - **Schema**: **없음**
 - **§0.3**: 손절을 지연시키지 않는다. **제출 수량 계산(B1~B6·`:1446`의 반환값)을
   건드리지 않는다** — 바꾸는 것은 보고뿐이다
-- **§0.4**: 브로커 요청 무변경 (`applyFloor`는 브로커에 닿지 않는다 — FLM calls 표)
+- **§0.4**: 브로커 요청 무변경. **3판 정정**: 2판의 「`applyFloor`는 브로커에 닿지 않는다」는 거짓이었다 — RECONCILE 에서
+  `ConfirmedFloor` 가 `Retrier.Query` 2회(Holdings · SellableQuantity)로 브로커를 읽는다(번들 calls 표 — 최악 수치 포함).
+  a091 은 그 읽기를 바꾸지 않고 새 요청을 더하지 않는다(더하는 것은 로컬 outbox 기록 하나 — design D5)
 - **§0.9**: 임계·가격·수량 무변경
 
 ## Non-goals
@@ -144,7 +151,6 @@ B2의 fail-closed 방향은 옳다 — 문제는 **그 사실이 보고되지 �
 - **§0.3 — 승격이 만드는 동기 지연 (C1).** 리뷰 시점(base `ec29dc72`) HEAD에서 normal은
   `publishBestEffort` publish 1회(상한 10s), critical은 `deliver` 최대 3회 + 대기 2회
   (**34s**, `n.mu` 보유)였고 `applyFloor`는 `ObserveOnce`(순차 순회) 안에서 불린다.
-  **a092가 이 성질 자체를 제거한다**(critical은 기록까지만 동기 — design D5). a092는
-  freeze 종료(24라운드)·기록 입구 착지(`Journal.RecordAlert`) 상태로 구현 중이다.
-  **발효 조건은 a092 완주(아카이브)이며, 그 뒤 base 재고정 + freeze 재리뷰가 이
-  change의 다음 단계다**
+  **a092가 이 성질 자체를 제거했다**(critical은 기록까지만 동기 — design D5). **C1 발효**: a092 아카이브 `75d138b5`
+  (2026-09-30) → base 재고정 `b30318d6` → freeze 재리뷰(3판, tasks 0.5). 루프에 남는 몫은 보호 0주 사건당 로컬
+  outbox 트랜잭션 하나(「0주 기록」 — design D5)

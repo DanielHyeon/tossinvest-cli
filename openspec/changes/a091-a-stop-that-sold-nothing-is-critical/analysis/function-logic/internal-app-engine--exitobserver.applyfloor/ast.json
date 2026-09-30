@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "6625c92061d5b05f566ecb0913f5c5f74a7fdde4cc4b5d8e7dfe8e75dd71de00",
+  "source_sha256": "0f943813a3efa42329f97eddf7944361a7f6bbb09b3991afb5d2b4f842f38a7f",
   "package": "engine",
   "function": "applyFloor",
   "receiver": "ExitObserver",
   "signature": "ExitObserver.applyFloor(params=3, results=3)",
   "start": {
-    "line": 1403,
+    "line": 1617,
     "column": 1
   },
   "end": {
-    "line": 1447,
+    "line": 1661,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 1404,
+        "line": 1618,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 1408,
+        "line": 1622,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 1416,
+        "line": 1630,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 1420,
+        "line": 1634,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 1423,
+        "line": 1637,
         "column": 2
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 1427,
+        "line": 1641,
         "column": 2
       }
     }
@@ -67,49 +67,49 @@
     {
       "kind": "return",
       "at": {
-        "line": 1405,
+        "line": 1619,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1414,
+        "line": 1628,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1417,
+        "line": 1631,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1421,
+        "line": 1635,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1424,
+        "line": 1638,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1428,
+        "line": 1642,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1446,
+        "line": 1660,
         "column": 2
       }
     }
@@ -118,7 +118,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1407,
+        "line": 1621,
         "column": 25
       },
       "text": "o.opts.Floor.ConfirmedFloor"
@@ -126,7 +126,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1412,
+        "line": 1626,
         "column": 3
       },
       "text": "o.logErr"
@@ -134,7 +134,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1419,
+        "line": 1633,
         "column": 14
       },
       "text": "riskcalc.CompareDecimal"
@@ -142,7 +142,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1421,
+        "line": 1635,
         "column": 21
       },
       "text": "fmt.Errorf"
@@ -150,7 +150,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1426,
+        "line": 1640,
         "column": 20
       },
       "text": "riskcalc.SubDecimal"
@@ -158,7 +158,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1428,
+        "line": 1642,
         "column": 21
       },
       "text": "fmt.Errorf"
@@ -166,7 +166,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1430,
+        "line": 1644,
         "column": 2
       },
       "text": "o.alert"
@@ -174,7 +174,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1432,
+        "line": 1646,
         "column": 10
       },
       "text": "string"
@@ -182,7 +182,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1433,
+        "line": 1647,
         "column": 10
       },
       "text": "o.label"
@@ -190,7 +190,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1434,
+        "line": 1648,
         "column": 9
       },
       "text": "fmt.Sprintf"
@@ -200,21 +200,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 1407,
+        "line": 1621,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 1419,
+        "line": 1633,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 1426,
+        "line": 1640,
         "column": 2
       }
     }
