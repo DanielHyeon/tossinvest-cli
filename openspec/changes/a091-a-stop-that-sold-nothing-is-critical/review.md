@@ -256,3 +256,31 @@ outbox 1행 + `alert_undelivered` ERROR 13줄 + 게이트 13회 래치다.
 **남는 판단 하나(Manager 보고)**: 8/2 는 보유 0 이 아니라 운영자 자신의 매도 주문이 매도가능을 잡은 경우였다 — Q2 의 배제에 들지 않으므로 알림 켜진
 엔진에서는 critical 이다. 엔진은 외부 매도 주문이 잡은 매도가능 0 과 그 밖의 매도가능 0(브로커 보류 등)을 가를 입력이 없다(하한 계산은 로컬
 미체결 매도만 안다). 4판은 그것을 critical 로 둔다(손절이 나가지 못한 사실은 참).
+
+## freeze 재리뷰 3라운드 (2026-10-01, 표적 재확인) — 보이스 A REJECT(좁음) · 보이스 B APPROVE · codex FAIL
+
+- 대상: `git archive 3c9bf7b0`(4판) → `/tmp/claude-1000/a091-r3-tree`, read-only. 보이스 A · B 는 2라운드 에이전트 재개(문맥 유지), codex 는 **같은 세션**
+  (`01a0f3b4-…`) 재개(`-c sandbox_mode="read-only"`). 원문: `analysis/freeze-review/{claude-r3-voiceA.md, claude-r3-voiceB.md, codex-r3-prompt.md, codex-r3-output.md}`.
+- **codex 머리말 `ACCESS-VIOLATION`**: 비교 명령의 셸 프로세스 치환이 `/dev/fd/63` · `/dev/fd/62` 를 읽었다(트리 밖 경로 = 파이프 fd). ~/.codex 접근 신고 없음. 조항대로 자진 신고 —
+  내용상 무해(파일 시스템 밖 파이프)로 기록.
+- 2라운드 대비 닫힘: R2-1(알림 꺼짐) · R2-2(exit-policy) · R2-6(원인 계약) · R2-7(재생) · R2-10(소비자) · R2-11(수치) · R2-12(낡은 문장) — 세 보이스 수렴.
+
+| # | 심각도(최고) | 제기 | 내용 | 5판 처분 |
+|---|---|---|---|---|
+| R3-1 | P1 | A · B · codex | D3 ③ 「⟺」 거짓 — (⇐)는 매도가능 신선 · 로컬 유효일 때만. 새는 칸: 매도가능 조회 실패(B2) · 보유 스냅숏 낡음(`Now` 가 두 조회 뒤, 한계 10s) · 로컬 오류 | 한 방향 정확 + 조건부 반대 방향으로 정정, 새는 칸 셋은 **critical 유지(과보고 방향)** · 이름 붙인 잔여, 3.3a 칸 추가 |
+| R3-2 | P1 | codex(A: 건전, 경합 P3) | `ctx.Err()` 만으로는 원인 출처를 못 가린다(진짜 오류 뒤 취소 · 판정 뒤 기록 전 취소) | 억제 = 하한 오류가 `context.Canceled` ∧ ctx 끝남(출처), 기록은 `context.WithoutCancel` — 판정 뒤 취소도 가짜 래치 0, 3.3b 네 팔 |
+| R3-3 | **P0** | codex(A: P2) | 계좌 — 기록 실패 시 `o.alert` → `logErr` 원문(`exitloop.go:1818-1838`) · `Notifier.escalate` 두 줄 원문은 명명만으로 불변식 불충족 | a091 보고는 `o.alert` 를 거치지 않고 가린 실패 줄 · `escalate` 두 줄의 `FieldAccount` 제거(번들 `notifier.escalate` 신설) · 카나리 확장 |
+| R3-4 | **P0** | codex(A: PARTIAL) | §0.3 — 수락 기준 · 배정 없음 | a092 `alertLoopShare` 750ms 대입 배정(근거 356.1ms 상위집합) + 수락 (i) 세 칸 × 두 몫 최악 ≤ 750ms(넘으면 멈춤) (ii) 뒤쪽 보호 포지션 750ms 지연 주입 시험(5.4) · 실패 경로 로그 두 줄 |
+| R3-5 | P1 | codex · B | 알림 꺼짐 B2 에 normal Notify 를 더하면 base 와 다름 | 꺼짐 B2 = 알림 0 · 로그 한 줄(3.2a 호출 수 단언) |
+| R3-6 | P2 | codex · A | 원장 재독이 추론을 측정으로 적음 · 「4분」은 10분 25초 · 한정 항 Sellable 은 로컬 매도를 가리지 못함 | 측정/추론 분리, 엔진 intent 0 건(읽기 전용 조회)을 로컬 매도 0 의 근거로, 시간 정정 |
+| R3-7 | P3 | A · B | delta ¶1 열거 무조건 · exit-policy 새 Scenario 「잔여 pending 유지」 거짓(0주는 해제) · 3.4 `Orderable()` 는 술어 · 3.2b 하네스 라벨 · 5.1 훅 불요 · 콘솔 안내 문장 · ntfy `Tags` · B2 가림 범위 | 전부 반영 |
+
+## 5판 (2026-10-01) — 3라운드 반영 · 판정 아님
+
+위 표의 「5판 처분」 열이 전부다. 편집: design(header · 원장 재독 · D1 꺼짐 B2 · D3 ③ · ④ · D5 배정 · 수락 · 취소 · D8), engine-safety delta(열거 조건 · 취소 출처 ·
+꺼짐 B2 · 로그 계좌 SHALL NOT · 근거 문장), exit-policy delta(Scenario THEN · 제외 문구), tasks(3.0 · 3.2a · 3.2b · 3.3a · 3.3b · 3.4 · 3.8 · 5.1 · 5.3 · 5.4 · 6.8),
+issues(콘솔 안내 · ntfy), 번들 `internal-obs--notifier.escalate` 신설(base AST · 커버리지).
+
+**범위 확장 하나 — Manager 보고**: R3-3 처분으로 a091 이 `internal/obs/notifier.go` `Notifier.escalate` 의 로그 두 줄을 편집한다(필드 하나 제거, 판정 무변경). a092 · a124
+공유 경로이고 모든 critical 기록 실패 · 동기 발송 실패의 승격 로그가 바뀐다(계좌 필드가 빠짐). Manager 상임 지시(계좌 원문 로그 금지)와 codex P0 에 따른 것이며, 원하면
+이 편집을 별도 change 로 떼어 a091 의 선행으로 둘 수 있다.

@@ -1,5 +1,6 @@
 # a091 tasks
 
+> **5판(2026-10-01)**: 3라운드 R3-1~R3-6 반영(3.0 · 3.2a · 3.2b · 3.3a · 3.3b · 3.4 · 3.8 · 5.1 · 5.3 · 5.4 · 6.8).
 > **4판(2026-10-01)**: 2라운드 R2-1~R2-12 · Manager 판정 Q1~Q3 반영으로 2~6 절을 다시 썼다(`review.md` 「4판」).
 >
 > **High-risk.** 손절 경로의 함수를 편집한다. 다만 **제출 수량 계산은 건드리지 않는다** —
@@ -47,27 +48,34 @@
 > (`a092_exit_cycle_records_only_test.go` 의 `a092RecordOnlyHarness` 모양) — 행 · 등급 · 게이트 · 로그 줄. RED 는 둘 중 단언이 사는 쪽에서.
 
 - [ ] 3.0 **Pre-Edit 선언** — `ExitObserver.applyFloor` · `ExitObserver.submit` · `ExitObserverOptions`(+`NotificationsEnabled`) ·
-      `Context.ExitObserver` 생산 배선(설정 값으로 덮기). High-risk — 제출 수량 · 시점 무변경이 경계
+      `Context.ExitObserver` 생산 배선(설정 값으로 덮기) · `obs.Notifier.escalate`(로그 두 줄의 계좌 필드만 — D8). High-risk — 제출 수량 ·
+      시점 무변경이 경계
 - [ ] 3.1 **RED (나)** — 알림 켜짐 · 보호 · 하한 0(Bound Sellable) → 새 종류 critical · outbox 행 1 · 키 `exit.stop_sold_nothing|<pos>` ·
       본문에 원인 범주 + 관측 시각(UTC) · 한국어 · `이름(코드)`
 - [ ] 3.2 **RED (나)** — 알림 켜짐 · 보호 · 하한 계산 실패(B2) → **같은 종류 · 등급 · 키**, 원문 오류 문자열은 제목 · 본문 · payload 에 없음
-- [ ] 3.2a **RED (나)** — 알림 **꺼짐** · 보호 · 두 원인 → 옛 종류 normal · outbox 행 0 · 게이트 사유 없음 · 모드 무변화(불변식 3)
-- [ ] 3.2b **RED (가)** — 생산 배선이 로드된 설정의 `notifications.enabled` 로 옵션을 **덮는다**(호출자 값 무시) — 참 · 거짓 두 팔
+- [ ] 3.2a **RED (나)** — 알림 **꺼짐** · 보호: ① B2 → **알림 0**(Notify 호출 0) · 로그 한 줄(옛 종류 · 계좌 없음), ② 끝 → 옛 종류 normal 알림 하나.
+      둘 다 outbox 행 0 · 게이트 사유 없음 · 모드 무변화(불변식 3 — base 와 같은 호출 수)
+- [ ] 3.2b **RED (배선 하네스 — `a092_exit_record_only_wiring_test.go` · `a092_export_test.go` 의 `OptionsForTest` 모양)** — 생산 배선이
+      로드된 설정의 `notifications.enabled` 로 옵션을 **덮는다**(호출자 값 무시) — 참 · 거짓 두 팔
 - [ ] 3.3 **RED (가)** — 보호 · **부분** 캡 → 옛 종류 · 등급 · 문구 **무변화**(기존 `TestTheConfirmedFloorCapsTheLiquidation` 단언 유지)
 - [ ] 3.3a **RED** — 보유 0 판정: `Bound == FloorBoundHoldings ∧ Quantity == "0"` ⟺ 신선한 보유 0 — `riskcalc.ConfirmedFloorQuantity` 표
-      시험(보유 0 × 매도가능 0/양수 × 로컬 매도 0/양수, 보유 양수 × 같은 칸)으로 동치 핀. 알림 켜짐 · 보호 · 보유 0 → 옛 종류 normal · 본문 「계좌에 보유가 없다」
-- [ ] 3.3b **RED (나)** — 종료 취소: 호출자 ctx 를 취소한 뒤 하한 조회가 ClassCanceled → 알림 0 · outbox 행 0 · 게이트 래치 0 · 승격 시도 0.
-      대조: ctx 살아 있고 HTTP 시한(`DeadlineExceeded` 감싼 오류) → 3.2 와 같은 보고
+      시험으로 **한 방향(⇒)을 정확히, 반대 방향(⇐)은 조건부로** 핀(design D3 ③ 5판): 신선 보유 0 × 매도가능 {신선 0, 신선 양수, 없음, 낡음}
+      × 로컬 {0, 양수, 비정상}, 보유 양수 × 같은 칸 — Holdings 한정 0 은 「신선 보유 0 ∧ 신선 매도가능 ∧ 유효 로컬」에서만. 알림 켜짐 · 보호 ·
+      보유 0(Holdings 한정) → 옛 종류 normal · 본문 「계좌에 보유가 없다」. **새는 칸 셋**(매도가능 조회 실패 · 보유 스냅숏 낡음 · 로컬 오류)은
+      critical 로 남음을 단언(과보고 방향 — 이름 붙인 잔여)
+- [ ] 3.3b **RED (나)** — 종료 취소는 **출처**로(design D5 5판): (i) 하한 오류가 `context.Canceled` 이고 ctx 끝남 → 알림 0 · 행 0 · 래치 0 ·
+      승격 0, (ii) 진짜 하한 오류가 돌아온 **뒤** ctx 취소 → ① 보고 · 행 1 · 가짜 래치 0(`WithoutCancel` 기록), (iii) 원인 판정 **뒤** · 기록 **전** ctx
+      취소(주입 지점) → 행 1 · 가짜 래치 0, (iv) ctx 살아 있고 HTTP 시한(`DeadlineExceeded`) → ①
 - [ ] 3.4 **RED (가)** — 표 시험: 주문 액션 5종(보호 2 · 익절 3 — `ratchet.go:94-118`)을 `submit` 을 거쳐 두 원인 × 알림 켜짐으로 —
-      보호만 새 종류, 익절은 어떤 원인이든 옛 종류 normal(익절 B2 는 알림 0 · `logErr` 옛 종류). 새 주문 액션이 생기면 이 표가 깨지게
-      `Action.Orderable()` 열거와 표의 행 집합을 대조
+      보호만 새 종류, 익절은 어떤 원인이든 옛 종류 normal(익절 B2 는 알림 0 · 로그 옛 종류). 새 액션이 생기면 이 표가 깨지게 `exitpolicy`
+      패키지의 `Action` 상수를 **AST 로 열거**해 `Orderable()` 인 것의 집합과 표의 행 집합이 같음을 단언(`Orderable()` 은 술어라 열거가 아니다 — 3라운드 보이스 B)
 - [ ] 3.5 **RED (§0.3 · §0.9 회귀 — 이 change 의 안전 경계)** — 위 전부에서 관측 결과 무변화: 제출 수량 · 제출 수 · B2/0주 뒤 레벨 해제
       (`Pending()==false`) · 하한이 풀린 다음 관측의 같은 레벨 재발의(기존 두 시험을 확장)
 - [ ] 3.6 **GREEN** — `submit` 이 `isProtective(proposal)` 를 `applyFloor` 에 넘기고, `applyFloor` 는 반환값을 바꾸지 않은 채 원인 분류(D3) ·
       게이트(D1)로 종류를 고른다. `exitpolicy` · `riskcalc` 무편집
 - [ ] 3.7 **RED (나) — H2** — 보호 · 알림 켜짐 · 두 원인: 그 사건의 로그 줄(B2 오류 줄 · 기록 줄)과 알림이 같은 종류. 게이트 밖이면 둘 다 옛 종류
-- [ ] 3.8 **RED (나) — 계좌 카나리(D8)** — 계좌 sentinel 로 B2 오류 줄 · 기록 줄 · 행(제목 · 본문 · payload)에 sentinel 없음. B2 오류 줄은
-      계좌 필드 없이 `obs.MaskAccount` 로 가린 오류
+- [ ] 3.8 **RED (나) — 계좌 카나리(D8 5판)** — 계좌 sentinel 로: B2 오류 줄(보호 · 익절 · 게이트 밖) · 기록 줄 · **기록 실패 줄** · **`escalate` 성공 ·
+      실패 줄**(`internal/obs` 시험) · 행(제목 · 본문 · payload) 어디에도 sentinel 없음. 기록 실패 팔은 원장 쓰기 실패 주입으로
 - [ ] 3.9 **RED (나) — 겹침(D5 범위 표)** — 하한 조회가 401 이면 한 `applyFloor` 호출에서 모드 통지 기록 1 + 새 종류 기록 1(둘 다 critical 행),
       그 밖의 기록 0
 - [ ] 3.10 **RED (나) — 원인 계약(D7)** — 한 에피소드에서 B2 → 끝(Sellable), 그리고 끝 → B2 두 순서: 행 1 · 본문 = 첫 원인, 로그 줄 = 관측마다 그 관측의 원인
@@ -82,7 +90,8 @@
 ## 5. 실측 재생 · 비용 — 4판
 
 - [ ] 5.1 **2026-08-02 재생**(원장 재독의 모양 — 보유 5 · 매도가능 0 · 13 관측 / 3분, `design.md` 「8/2 원장 재독」) — 하네스 (나) + **배달 실행자**
-      (a124 `alertDeliverer`, 내부 패키지 내보내기 훅), 팔 넷:
+      (생산 조립 그대로 `(&engine.Context{Journal, Entry, Notifier, AccountRef}).AlertDeliverer(clk)` — 선례
+      `a124_the_production_executor_latches_test.go:54` · 같은 `EntryGate` 공유, 내보내기 훅 불요), 팔 넷:
       (i) 알림 켜짐 · 정상 전송 → 행 1 · 발송 1 · 정착 · 13 관측 중 재발송 0,
       (ii) 알림 켜짐 · 전송 실패 → 행 1 PENDING · 시도 계수 · 한도에서 래치 · ENTRY_BLOCKED 승격(의도된 a092 의미론),
       (iii) 알림 켜짐 · publisher 없음 → (ii)와 같은 판정 + 배달 실행자의 `alert_undelivered` 「no publisher」 줄이 사이클마다,
@@ -90,8 +99,11 @@
 - [ ] 5.1a **재알림 창 경계** — 정착(전달 · 승인) 행 뒤 같은 키: 1h 안 재무장 0, 1h 지나 재무장 1(본문 교체 — a097)
 - [ ] 5.2 결과를 `issues.md` 에 — 첫 리뷰 H3(`MarkAlertDelivered` PENDING ERROR 12줄)은 옛 동기 발송의 모양이었고 base 에는 그 발생원이 없으며,
       대신 (iii)의 배달 실행자 줄이 난다는 것을 **잰 수**로
-- [ ] 5.3 **「0주 기록」 실측(D5)** — `RecordOnly.Notify` critical 한 번의 소요를 세 칸(경합 없는 원장 · `Acknowledge` 경합 · 연결 풀 경합)에서
-      분포로 재고, 실측 대입 사실을 design D5 에 적는다. 실측 전에는 「주기보다 작다」를 주장하지 않는다
+- [ ] 5.3 **몫 실측 · 수락(D5 5판)** — 「0주 기록」 · 「0주 기록 실패 승격」 각각의 소요를 세 칸(경합 없는 원장 · `Acknowledge` 경합 ·
+      연결 풀 경합)에서 재고 **최악 ≤ 750ms**(a092 `alertLoopShare` 대입 배정) — 넘으면 구현을 멈추고 보고(배정 변경은 freeze 결정).
+      결과(분포 · 최악 · 칸 조건)를 design D5 에 적고 대입을 실측으로 바꾼다
+- [ ] 5.4 **뒤쪽 보호 포지션(D5 수락 (ii))** — 한 사이클에 보호 0주 포지션 → 보호 포지션 순서, 앞 포지션의 기록에 750ms 지연 주입:
+      뒤 포지션이 그 사이클에 판정 · 제출되고 시세가 쓸 수 있는 상태(15s 수명 안)임을 단언
 
 ## 6. 게이트
 
@@ -104,7 +116,8 @@
 - [ ] 6.6 독립 검증 (구현과 분리된 컨텍스트) · 교차 모델
 - [ ] 6.7 PM 동기화 → `openspec archive`
 - [ ] 6.8 **운영 문서** — `docs/operations.md` 에 `exit.stop_sold_nothing` 절(무엇이 났나 · 확인 · 사람 조치 · 승인 `tossctl engine alerts ack` ·
-      모드 해제 `tossctl engine mode-release` — 둘 다 `mutating: true`, 에이전트 자동 실행 금지)
+      모드 해제 `tossctl engine mode-release` — 둘 다 `mutating: true`, 에이전트 자동 실행 금지) + **ntfy 구독 필터 주의**: ntfy 는
+      `event_type` 을 `Tags` 머리에 싣는다(`internal/obs/ntfy.go`) — `exit.proposal_capped` 로 거르던 운영자 필터는 보호 0주를 더 이상 못 본다
 
 ## 선후 관계
 

@@ -24,7 +24,8 @@
 | 배달 실행자(a124 `alertdelivery.go`) | 종류별 분기는 없다(`:328`). **그러나 발송만 하지 않는다**(4판 정정 — 2라운드 보이스 B): publisher 부재를 실패 시도로 세고(`:316-326`) 한도에서 진입 게이트 래치 · ENTRY_BLOCKED 승격(`:446-495`), publisher 없으면 사이클마다 `alert_undelivered` 줄 | **예 — 알림 켜진 엔진에서** 새 critical 행이 이 판정에 든다. 알림 꺼진 엔진은 게이트(design D1)로 행이 생기지 않는다 |
 | `tossctl engine alerts ack` (`cmd/tossctl/engine_alerts.go:77`, `mutating: true`, `--operator`) | 미전달 행을 사람이 승인 — 래치 해제 조건 | 예 — 알림 켜짐 · 전송 실패에서 새 행마다 사람 승인이 필요(의도된 a092 의미론) |
 | `tossctl engine mode-release` (`cmd/tossctl/engine_mode_release.go:31`) | ENTRY_BLOCKED 해제 | 예 — 위 승격 뒤 |
-| 콘솔 알림 꺼짐 안내 「critical 알림은 다시 outbox에 쌓이기만 한다」(`internal/console/settings_notifications.go:169`) | 꺼짐 안내 | 아니오 — 게이트로 꺼짐 엔진에서 새 critical 이 생기지 않으므로 안내가 그대로 참 |
+| 콘솔 알림 꺼짐 안내 「critical 알림은 다시 outbox에 쌓이기만 한다」(`internal/console/settings_notifications.go:169`) | 꺼짐 안내 | 아니오 — 그 안내는 base 에서 이미 부정확하다(전송 수단 부재도 실패 시도로 세어 게이트 없는 19 종은 래치에 닿는다 — `alertdelivery.go:316-326`, 3라운드 보이스 B). a091 은 게이트로 꺼짐 엔진에 새 critical 을 만들지 않으므로 그 부정확을 **늘리지 않는다** |
+| ntfy 전송(`internal/obs/ntfy.go`) | `event_type` 을 `Tags` 머리에, 등급으로 우선순위를 싣는다 | 예 — 운영자 쪽 ntfy 필터가 `exit.proposal_capped` 로 걸러 왔다면 보호 0주(켜짐)는 새 태그로 옮겨 간다. 런북에 적는다(tasks 6.8) |
 | `docs/operations.md` 「이 절차로 오게 되는 알림」(`:514-520` 모양) | critical 종류별 런북 | 예 — 새 절 필요(tasks 6.8) |
 | `alert_outbox.event_type` | `TEXT NOT NULL`, CHECK 없음(`outbox.go:51`) | 아니오 — 스키마 무변경 |
 | 구조화 로그 `subject` 필드 | `Subject()` 가 `.` 앞(`log.go:196`) | 아니오 — `exit` |
