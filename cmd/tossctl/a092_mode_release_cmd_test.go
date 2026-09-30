@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -131,9 +132,11 @@ func TestA092ModeReleaseGoesThroughTheRunningEngine(t *testing.T) {
 		t.Fatalf("dialModeControl: %v", err)
 	}
 	// 빈 칸은 엔진이 400 invalid 로 거절(CLI 검사를 건너뛴 직접 호출).
-	if _, err := client.Release(ctx, engine.ModeReleaseRequest{To: "NORMAL", Operator: "ops"}); err == nil ||
-		!strings.Contains(err.Error(), "invalid") {
-		t.Fatalf("err = %v, want invalid", err)
+	// 운영자 입력 실수는 400 invalid — 엔진 고장(500)과 가름. 문구가 아니라 상태 · 코드로 봄(오류 문구에도 "invalid" 가 들어 있음).
+	_, err = client.Release(ctx, engine.ModeReleaseRequest{To: "NORMAL", Operator: "ops"})
+	var remote *modeControlError
+	if !errors.As(err, &remote) || remote.status != 400 || remote.code != "invalid" {
+		t.Fatalf("err = %#v, want HTTP 400 invalid", err)
 	}
 	res, err := client.Release(ctx, engine.ModeReleaseRequest{To: "NORMAL", Operator: "박지훈",
 		Approval: "OPS-1", Reason: "credential rotated"})
