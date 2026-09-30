@@ -45,7 +45,9 @@ func TestA094TheBootCatchUpRunsAfterASuccessfulRecovery(t *testing.T) {
 				}
 			}
 		case *ast.IfStmt:
-			if len(s.Body.List) == 1 {
+			cond, ok := s.Cond.(*ast.BinaryExpr)
+			isErrCheck := ok && cond.Op == token.NEQ && identName(cond.X) == "err" && identName(cond.Y) == "nil"
+			if len(s.Body.List) == 1 && isErrCheck {
 				if _, ok := s.Body.List[0].(*ast.ReturnStmt); ok {
 					order = append(order, "return-on-error")
 				}
@@ -69,4 +71,11 @@ func TestA094TheBootCatchUpRunsAfterASuccessfulRecovery(t *testing.T) {
 			t.Fatalf("closure order = %v, want %v — the catch-up must follow a successful Run and precede the return that lets ready fire", order, want)
 		}
 	}
+}
+
+func identName(e ast.Expr) string {
+	if id, ok := e.(*ast.Ident); ok {
+		return id.Name
+	}
+	return ""
 }

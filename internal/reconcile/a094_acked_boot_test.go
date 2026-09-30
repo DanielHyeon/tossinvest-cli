@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -20,6 +21,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
 )
 
@@ -195,6 +197,9 @@ func TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed(t *testing.T) {
 				t.Fatalf("state %s reads %d, want ACKED and no read", stored.State, orders.reads)
 			}
 			a094AssertNamed(t, alerts, "attempt-acked")
+			if alerts.events[0].Fields[obs.FieldSymbol] != "AAPL" {
+				t.Errorf("the ACKED alert names symbol %v, want AAPL", alerts.events[0].Fields[obs.FieldSymbol])
+			}
 		})
 	}
 }
@@ -295,5 +300,25 @@ func TestA094BootAndPostPlaceShareOneConfirmation(t *testing.T) {
 	post := calls("../execgw/roundtrip.go", "confirmCreatedOrder")
 	if !post["ConfirmPlacedOrder"] || post["parseOrderFacts"] || post["OrderRaw"] {
 		t.Errorf("confirmCreatedOrder must delegate wholly to ConfirmPlacedOrder: %v", post)
+	}
+}
+
+// A P2#4 · 불변식 8 — 기동 ACKED 알림 본문은 브로커 응답 본문을 싣지 않음(계좌 식별자를 담을 수 있음). 상태 코드만.
+func TestA094TheAckedAlertWithholdsTheBrokerBody(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "journal.db")
+	a094CrashAfterAck(t, path, journal.KindPlace, "O-acked")
+	secret := `{"error":{"code":"not-found","message":"account 123-45-678 has no such order"}}`
+	orders := &a094CountingOrders{fail: &official.APIError{Code: 404, Body: secret}}
+	alerts := &a094Alerts{}
+	a094Recover(t, path, orders, alerts)
+	a094AssertNamed(t, alerts, "attempt-acked")
+	e := alerts.events[0]
+	for _, text := range []string{e.Title, e.Body, fmt.Sprint(e.Fields)} {
+		if strings.Contains(text, "123-45-678") || strings.Contains(text, "no such order") {
+			t.Fatalf("the ACKED alert carries the broker body: %q", text)
+		}
+	}
+	if !strings.Contains(e.Body, "HTTP 404") {
+		t.Errorf("the alert should keep the status code: %q", e.Body)
 	}
 }

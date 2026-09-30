@@ -85,46 +85,45 @@ type codeField struct {
 
 // refusalCodes 는 본문에서 최상위 `code` 와 `error.code` 를 읽음.
 //
-// ok=false 는 판정할 수 없는 본문(JSON 객체 아님 · 어느 자리의 code 가 문자열도 null 도 아님)임 — 호출자는 판정 없음으로
-// 다룸. 읽을 수 없는 code 가 한 자리에 있는데 다른 자리의 값으로 확정 거절을 내면, 그 읽을 수 없는 값이 모순일 수 있는데도
-// 확정으로 바꾸게 됨. null 과 빈 문자열(공백만 포함)은 「없음」임.
+// ok=false 는 JSON 객체가 아닌 본문임 — 호출자는 판정 없음으로 다룸. null 과 빈 문자열(공백만 포함)은 「없음」임. 문자열이
+// 아닌 code 값은 「있으나 어느 문자열과도 같지 않은 값」 으로 읽음 — 다른 자리의 값과 함께 있으면 모순(모호 강제)이고, 혼자면
+// 목록 밖(판정 없음)임. 그래서 읽을 수 없는 값을 곁에 둔 확정 거절 code 는 확정이 되지 않음.
 func refusalCodes(body string) (top, nested codeField, ok bool) {
 	var root map[string]json.RawMessage
 	if err := json.Unmarshal([]byte(body), &root); err != nil || root == nil {
 		return codeField{}, codeField{}, false
 	}
-	top, ok = readCode(root["code"])
-	if !ok {
-		return codeField{}, codeField{}, false
-	}
+	top = readCode(root["code"])
 	if raw, has := root["error"]; has && !isJSONNull(raw) {
 		var inner map[string]json.RawMessage
 		if err := json.Unmarshal(raw, &inner); err != nil || inner == nil {
 			// `error` 가 객체가 아니면 그 아래 code 는 없음 — 최상위만으로 판정함.
 			return top, codeField{}, true
 		}
-		nested, ok = readCode(inner["code"])
-		if !ok {
-			return codeField{}, codeField{}, false
-		}
+		nested = readCode(inner["code"])
 	}
 	return top, nested, true
 }
 
-// readCode 는 code 자리 하나를 읽음. 자리 없음 · null · 빈 문자열은 없음(ok=true), 문자열이 아닌 값은 판정 불가(ok=false).
-func readCode(raw json.RawMessage) (codeField, bool) {
+// readCode 는 code 자리 하나를 읽음. 자리 없음 · null · 빈 문자열은 없음. 문자열이 아닌 값은 있음으로 읽되 값에 표식을 붙여
+// 어느 문자열 code 와도 같지 않게 함(대소문자 무시 비교에서도).
+func readCode(raw json.RawMessage) codeField {
 	if len(raw) == 0 || isJSONNull(raw) {
-		return codeField{}, true
+		return codeField{}
 	}
 	var s string
 	if err := json.Unmarshal(raw, &s); err != nil {
-		return codeField{}, false
+		return codeField{value: unreadableCodeMark + string(raw), present: true}
 	}
 	if strings.TrimSpace(s) == "" {
-		return codeField{}, true
+		return codeField{}
 	}
-	return codeField{value: s, present: true}, true
+	return codeField{value: s, present: true}
 }
+
+// unreadableCodeMark 는 문자열이 아닌 code 값 앞에 붙이는 표식임 — 디코드된 JSON 문자열 code 가 이 접두로 시작할 수는 있어도
+// 목록(definitiveRefusalCodes)의 값과는 같지 않고, 비교 상대가 문자열이면 원문 JSON 이 따옴표 없이 붙으므로 같아질 수 없음.
+const unreadableCodeMark = "\x00non-string:"
 
 func isJSONNull(raw json.RawMessage) bool {
 	return strings.TrimSpace(string(raw)) == "null"

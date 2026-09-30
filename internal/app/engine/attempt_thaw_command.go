@@ -27,6 +27,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/attemptthaw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 )
 
 // AuditActionAttemptThaw 는 해동의 audit 동작 이름임.
@@ -120,11 +121,29 @@ func (s *PositionPolicyCommandService) releaseThawedProposal(ctx context.Context
 		_, released, err := repo.ReleaseUnacceptedExitProposal(ctx, a.PositionID, a.IntentID, journal.ProposalRefused)
 		if err != nil {
 			result.ReleaseError = err.Error()
+			s.recordThawReleaseFailure(ctx, rec, a.PositionID, err)
 			return
 		}
 		result.ProposalReleased = released
 		return
 	}
+}
+
+// recordThawReleaseFailure 는 해소는 커밋됐는데 발의 해제가 실패한 사실을 critical 로 남김 — 관측 루프가 다음 판정 진입에서
+// 같은 판정으로 풀지만(noteHeldProposal), 운영자가 결과를 기다리는 명령 밖에서도 보이게.
+func (s *PositionPolicyCommandService) recordThawReleaseFailure(ctx context.Context, rec journal.AttemptRecord,
+	positionID string, cause error) {
+	if s.notices == nil {
+		return
+	}
+	_ = s.notices.RecordCritical(context.WithoutCancel(ctx), obs.Event{
+		Type:  obs.EventExitLiquidationDelayed,
+		Key:   string(obs.EventExitLiquidationDelayed) + "|" + positionID + "|thaw-release:" + rec.ID,
+		Title: "해동한 attempt 의 발의 해제가 실패했다",
+		Body: fmt.Sprintf("운영자가 attempt %s 를 비수용으로 닫았으나 포지션 %s 의 발의 해제 쓰기가 실패했다. 다음 관측이 같은 판정으로 "+
+			"다시 풀고, 안 되면 다음 기동이 푼다. 원인: %v", rec.ID, positionID, cause),
+		Fields: map[string]any{obs.FieldAttemptID: rec.ID, "position_id": positionID},
+	}, 0)
 }
 
 func thawTarget(req attemptthaw.Request) (journal.AttemptState, error) {

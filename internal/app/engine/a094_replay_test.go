@@ -37,6 +37,9 @@ func TestA094ReplayTheNew409BecomesAReportedRepetition(t *testing.T) {
 	if got := h.exitEventCount(p.ID, journal.ExitEventProposalRefused); got != 3 {
 		t.Errorf("PROPOSAL_REFUSED = %d, want 3", got)
 	}
+	if got := h.exitEventCount(p.ID, journal.ExitEventProposalCancelled); got != 0 {
+		t.Errorf("PROPOSAL_CANCELLED = %d, want 0 (6.2 across all three branches)", got)
+	}
 	if got := h.alerts.count(obs.EventExitProposalRefused); got != 3 {
 		t.Errorf("refusal alerts = %d, want each refusal reported", got)
 	}
@@ -82,6 +85,9 @@ func TestA094ReplayTheTwoParkedRows(t *testing.T) {
 			}
 			if got := len(crit.withKey("|" + p.ID + "|attempt:" + parked)); got != 1 {
 				t.Fatalf("park-cause alerts = %d, want 1", got)
+			}
+			if got := h.exitEventCount(p.ID, journal.ExitEventProposalCancelled); got != 0 {
+				t.Fatalf("PROPOSAL_CANCELLED = %d on the parked branch, want 0", got)
 			}
 			// 해동: 운영자 비수용 종결 + 같은 판정 함수.
 			if err := h.journal.OperatorResolve(ctx, parked, journal.StateFailedConfirmed, "op", "", "broker shows nothing"); err != nil {

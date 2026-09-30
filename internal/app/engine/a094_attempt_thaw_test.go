@@ -19,6 +19,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/positionpolicyrpc"
 )
 
@@ -109,7 +110,7 @@ func a094ThawEngine(t *testing.T, withAudit bool, attemptState journal.AttemptSt
 	}
 
 	fx := &a094ThawFixture{dir: dir, auditLog: filepath.Join(dir, "audit.log"), positionID: p.ID, j: j}
-	ectx := &Context{Journal: j}
+	ectx := &Context{Journal: j, Notifier: &obs.Notifier{Journal: j}}
 	if withAudit {
 		log, err := audit.Open(audit.Options{Path: fx.auditLog, Subject: "engine"})
 		must(err)
@@ -240,6 +241,19 @@ func TestA094AThawWhoseReleaseFailsIsCaughtUpAtBoot(t *testing.T) {
 	}
 	if result.ProposalReleased || result.ReleaseError == "" {
 		t.Fatalf("result = %+v, want a named release failure", result)
+	}
+	pending, err := fx.j.PendingAlerts(context.Background(), 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	named := 0
+	for _, a := range pending {
+		if strings.Contains(a.EventKey, "|thaw-release:a-stop") {
+			named++
+		}
+	}
+	if named != 1 {
+		t.Fatalf("thaw release-failure alerts = %d, want 1 — the operator must see it outside the command", named)
 	}
 	if state, armed := fx.state(t); state != journal.StateFailedConfirmed || !armed {
 		t.Fatalf("state %s armed %v, want closed attempt with the proposal still armed", state, armed)

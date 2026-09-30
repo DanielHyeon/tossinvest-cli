@@ -64,7 +64,9 @@ func TestA094RefusalCodeClassifiesTheAttempt(t *testing.T) {
 		{"2.5d not JSON", 409, `opposite-pending-order-exists`, journal.StateInDoubt, ""},
 		{"2.5d empty code", 409, `{"error":{"code":""}}`, journal.StateInDoubt, ""},
 		{"2.5d null code", 409, `{"code":null,"error":{"code":null}}`, journal.StateInDoubt, ""},
-		{"2.5d a code that is not a string", 409, `{"code":7,"error":{"code":"opposite-pending-order-exists"}}`, journal.StateInDoubt, ""},
+		{"2.5d a code that is not a string beside a listed code", 409, `{"code":7,"error":{"code":"opposite-pending-order-exists"}}`, journal.StateInDoubt, ""},
+		{"2.5e a non-string code beside a listed code is contradictory on a 422", 422, `{"code":7,"error":{"code":"opposite-pending-order-exists"}}`, journal.StateInDoubt, ""},
+		{"2.5g a lone non-string code is no verdict (422 stays definitive by status)", 422, `{"code":7}`, journal.StateFailedConfirmed, ""},
 		{"2.5g no verdict on a 422 keeps the definitive status", 422, `{"error":{"code":"something-else"}}`, journal.StateFailedConfirmed, ""},
 
 		// 모호 강제 — 두 자리의 값이 다름. 422 여도 확정 거절이 아님(2.5f).

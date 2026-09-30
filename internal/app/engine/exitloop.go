@@ -263,8 +263,8 @@ type ExitObserver struct {
 	delayAlerted map[string]bool
 	// clearStreak 는 포지션별 청소 연속 실패임(a094 D−2.7 · D−7.1 — key 는 연속 id). 관측자 상태라 재시작하면 새 연속.
 	clearStreak map[string]*clearStreak
-	// a094Recorded 는 a094 의 명명 critical 을 한 프로세스에서 다시 적재하지 않게 하는 래치임(적재 중복 최적화).
-	a094Recorded map[string]bool
+	// episodeRecorded 는 a094 의 명명 critical 을 한 프로세스에서 다시 적재하지 않게 하는 래치임(적재 중복 최적화).
+	episodeRecorded map[string]bool
 	// observationSequence distinguishes fallback observations when the quote
 	// source supplies no FetchedAt and a test/frozen clock does not advance.
 	observationSequence atomic.Uint64
@@ -1518,7 +1518,7 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 	if len(unsettled) > 0 {
 		// 게이트웨이가 어차피 SymbolInFlight 로 거절할 제출을 무장 · 해제하지 않음 — 그 반복이 지연 타이머를 매 주기
 		// 지워 30초 경보에 닿지 못하게 했음(272210 의 모양). 엔진 취소가 전송 · 인수 단계인 것뿐이면 계수에서 뺌.
-		return clearResult{countable: !onlyEngineCancelsInFlight(unsettled)}, nil
+		return clearResult{countable: !onlyEngineCancelsInFlight(unsettled, clearTargets(live, withPending))}, nil
 	}
 	res := clearResult{cleared: true, countable: true}
 	for _, order := range live {
@@ -1530,6 +1530,7 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 			// 엔진 취소가 이미 접수 확정된 매도 — 종결 증거를 기다리는 중이며 다시 취소하지 않음.
 			_, waiting, err := o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.Symbol, order.OrderID)
 			if err != nil {
+				o.warnEpisode(obs.EventExitLiquidationDelayed, err, "reading the engine cancel of order "+order.OrderID)
 				res.cleared = false
 				continue
 			}

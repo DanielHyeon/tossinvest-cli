@@ -84,7 +84,7 @@ func TestA094TheAttemptResolveCommandRefusesWithoutAnEngine(t *testing.T) {
 	}
 	client = &a094ThawClient{result: attemptthaw.Result{AttemptID: "a-1", State: "FAILED_CONFIRMED", ReleaseError: "disk"}}
 	_, run = a094ThawCmd(client, nil)
-	if err := run(a094ThawArgs...); err == nil || !strings.Contains(err.Error(), "next engine start releases it") {
+	if err := run(a094ThawArgs...); err == nil || !strings.Contains(err.Error(), "next engine start) releases it") {
 		t.Fatalf("release failure err = %v", err)
 	}
 }

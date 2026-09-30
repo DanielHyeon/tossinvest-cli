@@ -133,7 +133,7 @@ func runEngineAttemptResolve(cmd *cobra.Command, root *rootOptions, deps attempt
 		return err
 	case result.ReleaseError != "":
 		return fmt.Errorf("engine attempt-resolve: the attempt is closed, but releasing its exit proposal failed (%s); "+
-			"the next engine start releases it", result.ReleaseError)
+			"the next observation (or the next engine start) releases it", result.ReleaseError)
 	}
 	return nil
 }

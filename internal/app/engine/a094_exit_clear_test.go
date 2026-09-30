@@ -641,62 +641,97 @@ func TestA094ConsecutiveClearFailuresRaiseAnEarlierAlert(t *testing.T) {
 	}
 }
 
-// 4.N4f ④ — 같은 벽시계 시각에 시작한 두 연속도 다른 key(연속 id).
+// 4.N4f④ — 청소 연속의 에피소드는 연속 id: 같은 벽시계 시각에 시작한 두 연속도 다른 key, 재시작 뒤 이어지는 연속은 새
+// 에피소드(보수 중복).
 func TestA094TwoStreaksAtTheSameInstantAreTwoEpisodes(t *testing.T) {
 	h, sub, crit := a094Harness(t, nil)
-	h.entry("005930", "10", "70000", "68000", "70000")
-	entry := h.workingEntry("005930", "5", "69500")
+	p := h.entry("005930", "10", "70000", "68000", "70000")
+	h.workingEntry("005930", "5", "69500")
 	sub.cancelFails = true
 	h.quote("005930", 67900)
 	for i := 0; i < obs.DefaultCriticalAttempts; i++ {
 		h.observe()
 	}
-	// 연속 끝: 취소가 통하고 종목이 깨끗해짐 → 제출. 그 뒤 새 매수가 막고 다시 실패.
+	// 연속 끝: 취소가 통해 치움 완료 → 손절 제출이 확정 거절로 돌아와 발의가 풀림(시계는 그대로).
 	sub.cancelFails = false
+	sub.placeState = journal.StateFailedConfirmed
 	h.observe()
-	_ = entry
+	if len(h.submit.places) != 1 || h.state(p.ID).Pending() {
+		t.Fatalf("control: places %d armed %v — the first streak did not end", len(h.submit.places), h.state(p.ID).Pending())
+	}
+	// 둘째 연속: 새 매수가 막고 다시 실패 — 같은 시각.
+	sub.placeState = ""
+	h.workingEntry("005930", "5", "69400")
+	sub.cancelFails = true
+	for i := 0; i < obs.DefaultCriticalAttempts; i++ {
+		h.observe()
+	}
 	keys := map[string]bool{}
-	for _, e := range crit.withKey("|streak:") {
+	for _, e := range crit.withKey("|" + p.ID + "|streak:") {
 		keys[e.Key] = true
 	}
-	if len(keys) != 1 {
-		t.Fatalf("control: streak keys = %v", keys)
+	if len(keys) != 2 {
+		t.Fatalf("streak keys = %v, want two episodes started at the same instant", keys)
+	}
+	// 재시작: 같은 원장 위 새 관측자 — 이어지는 연속은 새 에피소드(관측자 상태가 비므로).
+	restarted, err := engine.NewExitObserver(h.observer.OptionsForTest())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < obs.DefaultCriticalAttempts; i++ {
+		restarted.ObserveOnce(context.Background())
+	}
+	keys = map[string]bool{}
+	for _, e := range crit.withKey("|" + p.ID + "|streak:") {
+		keys[e.Key] = true
+	}
+	if len(keys) != 3 {
+		t.Fatalf("streak keys after the restart = %d, want a third episode", len(keys))
 	}
 }
 
-// 3.E5 — 치우지 못한 것이 전부 엔진 취소의 기록 · 전송 · 인수 단계면 계수를 늘리지 않음. IN_DOUBT 취소는 셈.
+// 3.E5 — 치우지 못한 주문이 전부 **그 주문을 겨눈** 엔진 취소의 기록 · 전송 · 인수 단계면 계수를 늘리지 않음. IN_DOUBT 취소는
+// 셈. 취소가 다른 주문을 겨누거나 대상 주문에 취소가 없으면 셈(배제는 대상 주문에 결속됨 — 결속이 없으면 무엇이든 통과함).
 func TestA094AnInFlightEngineCancelIsNotCountedButAnInDoubtOneIs(t *testing.T) {
 	for _, tc := range []struct {
+		name   string
 		state  journal.AttemptState
+		bound  bool // 취소가 치울 대상(작업 매수)을 겨누는가
 		counts bool
 	}{
-		{journal.StateRecorded, false},
-		{journal.StateDispatchStarted, false},
-		{journal.StateAcked, false},
-		{journal.StateInDoubt, true},
+		{"recorded", journal.StateRecorded, true, false},
+		{"dispatch started", journal.StateDispatchStarted, true, false},
+		{"acked", journal.StateAcked, true, false},
+		{"in doubt", journal.StateInDoubt, true, true},
+		{"acked cancel of another order", journal.StateAcked, false, true},
 	} {
-		t.Run(string(tc.state), func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			h, sub, crit := a094Harness(t, nil)
 			gw := a094RealGateway(t, h)
 			sub.unsettled = gw.UnsettledOnSymbol
 			p := h.entry("005930", "10", "70000", "68000", "70000")
-			h.a094RecordCancel("O-target", tc.state)
+			buy := h.workingEntry("005930", "5", "69500")
+			target := buy
+			if !tc.bound {
+				target = "O-elsewhere"
+			}
+			h.a094RecordCancel(target, tc.state)
 			h.quote("005930", 67900)
 			for i := 0; i < obs.DefaultCriticalAttempts+1; i++ {
 				h.observe()
 			}
 			got := len(crit.withKey("|" + p.ID + "|streak:"))
 			if tc.counts && got != 1 {
-				t.Errorf("%s cancel: streak alerts = %d, want 1", tc.state, got)
+				t.Errorf("streak alerts = %d, want 1", got)
 			}
 			if !tc.counts && got != 0 {
-				t.Errorf("%s cancel: streak alerts = %d, want 0 — it is being cleared, not failing", tc.state, got)
+				t.Errorf("streak alerts = %d, want 0 — the order is being cleared, not failing", got)
 			}
 			// 기존 타이머에는 제외가 없음.
 			h.clk.Advance(31 * time.Second)
 			h.observe()
 			if got := h.alerts.count(obs.EventExitLiquidationDelayed); got != 1 {
-				t.Errorf("%s cancel: delay alerts = %d, want 1 — the timer takes no exclusion", tc.state, got)
+				t.Errorf("delay alerts = %d, want 1 — the timer takes no exclusion", got)
 			}
 		})
 	}
