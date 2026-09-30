@@ -275,7 +275,7 @@ fixture 비용 수용」 · 「R1·R3~R14 처분안 그대로 승인 … R15·R1
 | R6 | 해제 A 와 키 셋을 공유하는 활성 owner 셋(새 generation · 같은 generation 다른 종목 · 다른 계좌)의 예약이 판독되고 셈에 듦 | `TestA126AReceiptBindsOnlyItsOwnOwnerKey` — X1 · X2 · X9 CAUGHT |
 | R7 | 생산 호출 census 에 `.releaseRiskBucketOwner(` 추가, 같은 줄 주석에 tasks 3.1 · H1 | `risk_bucket_fill_test.go` 한 줄 — 변이 T1(생산 호출 한 줄 추가) CAUGHT |
 | R8 | 손상 변형 전부에서 admission 이 `ErrRiskBucketSnapshotMismatch` + "ledger usage unreadable" 로 거절(문구로 갈래를 가름 — 반환을 지우면 빈 사용량이 "not an amount" 로 같은 종류를 냄). snapshot 은 50 을 주장 — 되돌림 변형에서 손상 없는 앞 bucket 이 stale 로 먼저 거절해 갈래를 가리지 않게 | 변이 B3 CAUGHT · BTM B3 인용 정정 |
-| R9 | 정정: 공유 조각은 옛 해제 철자와 **의미 동일, 바깥 괄호만 추가**(1.0.3 · 커밋 노트의 「문자열 동일」은 거짓) | 이 절 |
+| R9 | 정정: 공유 조각은 **옛 재구성(`loadRiskBucketFillTransition`) 판정과 의미 동일, 바깥 괄호만 추가**(1.0.3 · 커밋 노트의 「문자열 동일」은 거짓). 옛 **해제** 철자와는 의도적으로 다름(그것이 a066 결함 — codex 재리뷰 P3 로 정정) | 이 절 |
 | R10 | design D1 조건 4 · D5 errata | `design.md` |
 | R11 | RED 재도출(확정 시험, 시험 19): (i) 편집 전 생산(reader · 해제 검사 = `9cbc7560^`) **14 FAIL / 5 PASS** — FAIL 14 전부 `a126Release` 의 "blocked by unresolved_fill"(a066 결함의 실측 증거) · (ii) a066 수리만 **14 FAIL / 5 PASS** — 떠남 없음(filled 50) · 손상 거절 없음(err nil) · stale 등 기대한 이유, `ReleaseAccepts…` 는 여기서 PASS(a066 수리 시험). 1.1~1.4 절의 13/5 와 증거 보이스의 12/6 은 각각 그 시점 시험 판본의 수 — 확정본 기준은 위 | `red-journal.log`(ii) · `red-journal-pre-edit.log`(i) · riskbucket 은 여전히 컴파일 실패(M1b 가 행동 RED) |
 | R12 | 전략 정산 시험 주석에 범위(직접 backfill · attempt 상태 위조 · 도달성 미증명) | 시험 주석 |
@@ -284,9 +284,15 @@ fixture 비용 수용」 · 「R1·R3~R14 처분안 그대로 승인 … R15·R1
 | R15 · R16 | 기록 잔여(Manager 승인): X8 · X10 · X11 생존하나 fail-closed · allocation 행 손상 모양 · 공유 조각 셋째 철자 방지 | — |
 
 **변이 전수**(`analysis/impl/mutation-4-fixlot.log`, 시작 트리 `7ab8cd12` + 시험 diff, 대조군 GREEN, 시험 sha 판마다 불변): 기존 21 + 새
-X1 · X2 · X3 · X7 · X7m · X9 · B3 · C2close · T1 = **27/27 CAUGHT, 생존 0**. RUNS 에 `tossos_testseams` riskbucket · census 시험 추가.
+X1 · X2 · X3 · X7 · X7m · X9 · B3 · C2close · T1 = **27/27 CAUGHT, 생존 0**. 「기존」은 하네스의 서로 다른 변이 **18**(M 13 · F 3 · P 2)이다 — 1.1~1.4 절의 21 은 F1~F3 를 상수 이동 뒤 재실행한 판을 더한 실행 수(codex 재리뷰 P3 로 정정). 18 + 9 = 27. RUNS 에 `tossos_testseams` riskbucket · census 시험 추가.
 
 **회귀**(`analysis/impl/regress-2.log`): riskbucket · journal 무태그(522s) · `tossos_testseams`(643s) ok, `-race` a126 ok, `make lint` rc 0.
 
 **FLM.** 생산 함수 편집 0 → 생산 번들 재추출 없음. BTM B3 인용만 정정. 시험 함수 `TestRiskBucketUnsafeEvidenceAndReleaseMethodsAreNotExported`
 는 목록에 원소 하나를 더함(분기 무변, 비례 원칙 — 게이트가 요구하면 경량 번들).
+
+### 1.5.3 codex 재리뷰 (2026-10-01, `codex exec resume 01a0f3f6-…`, 대상 `64ad3058`, read-only · 머리말 신고 있음)
+
+**VERDICT: PASS.** 이전 P2 셋 닫힘(R1 값이 판정을 가름 · C2 핀이 발급 + 재검증 전후 실호출 · 생성기 replay 는 v27(`production_snapshot_authority.go:33,367`)
+대 journal 35(`schema.go:6`)로 분리 정당). 새 사례 비공허 확인, `64ad3058` 의 비시험 `.go` 변경 0 확인. census 는 문자열 tripwire 이지 간접 호출
+분석은 아님(기록). P3 둘 — R9 문언(옛 **해제** 철자가 아니라 옛 **재구성** 판정과 의미 동일) · 변이 수 설명(18 + 9) — 위 표와 문단에서 정정.
