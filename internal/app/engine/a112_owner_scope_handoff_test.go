@@ -57,6 +57,8 @@ func a112ExtraEntryKR(t *testing.T, authority strategyProposalMarketAuthority, n
 	} else {
 		authority.entries = append(append([]strategyProposalEntryAuthority(nil), authority.entries...), extra)
 	}
+	// 조립이 중재 때 적는 제안 집합 digest 를 같은 식으로 다시 적는다(6.2 A-lite 가독 계약 — 조립과 같은 모양).
+	authority.snapshot.ProposalSetDigest = strategyProposalSetDigest(authority.entries)
 	return authority
 }
 
@@ -163,6 +165,7 @@ func a112TwoScopePin(t *testing.T, coordinatorOrder bool) {
 	control, controlProposals, _, controlSpy := pairedStrategyDispatchCycleFixture(t)
 	one := controlProposals.kr
 	one.activation = two.activation
+	one.snapshot.ProposalSetDigest = strategyProposalSetDigest(one.entries)
 	control.proposals.kr = one
 	control.firstLeg.loader.(*productionStrategyFirstLegAuthorityLoader).proposals.kr = one
 	single := one.dispatchHandoffs()

@@ -1,0 +1,25 @@
+# a112 6.2 봉인 RED — 격리 사본(git archive HEAD a234d8d7 + 시험 파일 하나, 생산 코드 편집 전), 2026-10-01T02:21:26+09:00
+# 명령: GOFLAGS=-trimpath go test -tags tossos_testseams -count=1 -v -run TestTheFirstLegSeal ./internal/app/engine/
+# 기대: 선택 실패 문구를 요구하는 셋(미선택 범위 · 타 시장 · 범위 둘) FAIL. identity 대조 셋과 「개수 관문 앞 범위 선택」은 편집 전에도 PASS — 그들은 변이(선택 기제 · 대조 약화)를 잡는 시험이다.
+=== RUN   TestTheFirstLegSealRefusesEveryForgeryAxis
+=== RUN   TestTheFirstLegSealRefusesEveryForgeryAxis/same-scope_loser_(another_campaign)
+=== RUN   TestTheFirstLegSealRefusesEveryForgeryAxis/gated_lane_(same_scope,_another_family_lane)
+=== RUN   TestTheFirstLegSealRefusesEveryForgeryAxis/unselected_scope_(another_symbol)
+    a112_first_leg_owner_scope_seal_test.go:133: unselected scope: err=production proposal identity changed, want the owner-scope selection refusal "production proposal identity changed: owner scope is not uniquely authorized by the assembly"
+=== RUN   TestTheFirstLegSealRefusesEveryForgeryAxis/other_market_(a_US_result_in_the_KR_slot)
+    a112_first_leg_owner_scope_seal_test.go:138: other market: err=production proposal identity changed, want the owner-scope selection refusal "production proposal identity changed: owner scope is not uniquely authorized by the assembly"
+=== RUN   TestTheFirstLegSealRefusesEveryForgeryAxis/same_lineage,_rewritten_execution_terms
+--- FAIL: TestTheFirstLegSealRefusesEveryForgeryAxis (0.26s)
+    --- PASS: TestTheFirstLegSealRefusesEveryForgeryAxis/same-scope_loser_(another_campaign) (0.00s)
+    --- PASS: TestTheFirstLegSealRefusesEveryForgeryAxis/gated_lane_(same_scope,_another_family_lane) (0.00s)
+    --- FAIL: TestTheFirstLegSealRefusesEveryForgeryAxis/unselected_scope_(another_symbol) (0.00s)
+    --- FAIL: TestTheFirstLegSealRefusesEveryForgeryAxis/other_market_(a_US_result_in_the_KR_slot) (0.00s)
+    --- PASS: TestTheFirstLegSealRefusesEveryForgeryAxis/same_lineage,_rewritten_execution_terms (0.00s)
+=== RUN   TestTheFirstLegSealRefusesAnOwnerScopeTheAssemblyHoldsTwice
+    a112_first_leg_owner_scope_seal_test.go:155: scope held twice: err=paired production authority is incomplete for market, want the owner-scope selection refusal "production proposal identity changed: owner scope is not uniquely authorized by the assembly"
+--- FAIL: TestTheFirstLegSealRefusesAnOwnerScopeTheAssemblyHoldsTwice (0.24s)
+=== RUN   TestTheFirstLegSealSelectsByScopeBeforeTheMarketCountGate
+--- PASS: TestTheFirstLegSealSelectsByScopeBeforeTheMarketCountGate (0.24s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.742s
+FAIL

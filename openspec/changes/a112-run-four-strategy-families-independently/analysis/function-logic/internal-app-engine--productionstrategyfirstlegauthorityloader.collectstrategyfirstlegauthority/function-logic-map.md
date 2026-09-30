@@ -1,103 +1,109 @@
 # Function Logic Map: `collectStrategyFirstLegAuthority`
 
 - Source: `internal/app/engine/strategy_account_first_leg_authority.go`
-- Current-base source SHA-256: `1d710710098c03669719779609db137d0660a361a025d070128e8993772ed063`
+- Source SHA-256: `26bca2d7d1c0ae0ff24a70ec64eb9a660ddf0ac27a60cd4947a40487cbe303be`
 - Signature: `productionStrategyFirstLegAuthorityLoader.collectStrategyFirstLegAuthority(params=2, results=2)`
-- Source range: `210:1`–`281:2`
-- AST evidence: `ast.json`, generated from frozen base `016da6245feb60e13971388be386c2c2041469a8`.
+- Source range: `210:1`–`290:2`
+- AST evidence: `ast.json` — **편집 뒤**(a112 6.2 봉인 로트).
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
-- Inputs/results are the exact AST signature above; this L0 map does not infer undocumented state.
-- Any later edit must preserve OFF defaults, the owner key without family/horizon, and zero exposure-raising dispatch while a prerequisite is missing.
+- 입력: loader 자기 권한 쌍(조립이 새로 고침 때 중재한 제안 · 위험 · 환율 · 계좌 · 일정)과 건너온 `accepted`(봉투가 나른 결과).
+- **봉인 불변식(6.2):** 발급하는 1차 레그의 결과는 건너온 값이 아니라 **조립의 권한 쌍에서 소유자 범위로 다시 꺼낸 항목**이고, 그 항목의 봉인된 identity 가 accepted 와 같아야 한다. 범위는 accepted 계보에서 읽되 선택 기준일 뿐 대조 대상이 아니다(자기 참조 함정 회피 — `authorityForOwnerScope` 머리말).
+- 시장 단위 개수 관문(B4)은 봉인이 아니라 상한이고 5.2.2.2 가 걷어 낸다. 이 편집은 판정을 더 엄격하게만 한다(새로 통과하는 입력 0).
 
 ## Branches and early returns
 
-- Exact AST return nodes: `212:3, 219:3, 224:3, 229:3, 234:3, 251:3, 260:4, 264:4, 266:3, 270:2`.
+- Exact AST return nodes: `212:3, 219:3, 225:3, 229:3, 233:3, 238:3, 243:3, 260:3, 269:4, 273:4, 275:3, 279:2`.
 
-| Branch | AST kind | Source location | Required test disposition |
+| Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
-| B1 | if | 211:2 | planned targeted RED before any edit; not run by L0 |
-| B2 | if | 217:2 | planned targeted RED before any edit; not run by L0 |
-| B3 | if | 223:2 | planned targeted RED before any edit; not run by L0 |
-| B4 | if | 227:2 | planned targeted RED before any edit; not run by L0 |
-| B5 | if | 232:2 | planned targeted RED before any edit; not run by L0 |
-| B6 | range | 239:2 | planned targeted RED before any edit; not run by L0 |
-| B7 | if | 250:2 | planned targeted RED before any edit; not run by L0 |
-| B8 | if | 259:3 | planned targeted RED before any edit; not run by L0 |
-| B9 | if | 263:3 | planned targeted RED before any edit; not run by L0 |
+| B1 | if | 211:2 | loader · ctx · 시계 · 원장 · Guardian 부재 → 발급 불가 |
+| B2 | if | 217:2 | 위험 · 환율 · 계좌 · 일정 준비 · 활성화 부재 → `paired production authority is incomplete for market`. **편집: 개수 조건을 떼어 냄**(아래 B4) |
+| B3 | if | 224:2 | **(새) 소유자 범위 선택 실패** — 조립의 권한 쌍에 accepted 범위가 정확히 하나가 아님(0: 미선택 범위 · 다른 시장, 2+: 범위당 하나 붕괴) → `production proposal identity changed: owner scope is not uniquely authorized by the assembly` |
+| B4 | if | 228:2 | **(새, 편집 전 B2 에서 분리) 시장 단위 개수 관문** `len(proposal.entries) != 1` — 봉인이 아니라 시장당 하나 상한, 걷어 내는 일은 5.2.2.2 |
+| B5 | if | 232:2 | 봉인된 identity 대조(편집 전 B3, 조건 불변) — 선택된 항목의 `Lineage.Identity` · `ExecutionTerms.Identity()` 와 accepted 비교 |
+| B6 | if | 236:2 | 위험 권한 범위 불일치(편집 전 B4) |
+| B7 | if | 241:2 | 포지션 캠페인 CAS 변경(편집 전 B5) |
+| B8 | range | 248:2 | 위험 버킷 항목 순회(편집 전 B6) |
+| B9 | if | 259:2 | 가격 단위 무효(편집 전 B7) |
+| B10 | if | 268:3 | 노출 스냅숏 만료(collect 클로저, 편집 전 B8) |
+| B11 | if | 272:3 | 예약 버전 읽기 실패(collect 클로저, 편집 전 B9) |
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Current-base evidence/requirement |
-|---|---|---|
-| errors.New | 212:51 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| StrategyMarket | 214:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| loader.proposals.forMarket | 215:52 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| loader.risk.forMarket | 215:88 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| loader.fx.forMarket | 216:3 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| loader.accounts.forMarket | 216:32 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| loader.schedule.forMarket | 216:67 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 217:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 219:51 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| proposalAuthority.Proposal | 222:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| result.ExecutionTerms.Identity | 223:68 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| accepted.result.ExecutionTerms.Identity | 223:104 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 224:51 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| riskAuthority.bundle.Scope | 226:11 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| riskAuthority.bundle.Validate | 227:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| string | 228:3 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| string | 228:27 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| scope.AsOf.Equal | 228:102 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 229:51 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| loader.journal.CurrentPositionCampaignCAS | 231:14 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| string | 231:88 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| uint64 | 233:40 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 234:51 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| riskAuthority.bundle.Entries | 236:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 237:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 237:50 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 238:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 238:63 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| append | 240:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| append | 242:16 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| MajorDecimal | 247:25 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| result.ExecutionTerms.Entry | 247:25 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| MajorDecimal | 248:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| result.ExecutionTerms.EffectiveStop | 248:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| MajorDecimal | 249:27 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| result.ExecutionTerms.Target | 249:27 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 251:51 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strategyFirstLegBindingDigest | 253:19 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| riskAuthority.bundle.Digest | 253:76 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.TrimPrefix | 254:38 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.TrimPrefix | 255:37 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| UTC | 258:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| loader.clk.Now | 258:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| readCtx.Err | 259:24 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| now.IsZero | 259:48 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| now.After | 259:64 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| account.authority.FreshUntil | 259:74 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| errors.New | 260:38 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| loader.journal.ReservationVersion | 262:26 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| account.authority.ObservedAt | 266:40 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| account.authority.OpenExposure | 266:104 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| string | 270:89 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| account.authority.AccountState | 272:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| riskAuthority.bundle.Policy | 273:80 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| loader.guardian.PolicyVersion | 275:26 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| loader.guardian.LimitsDigest | 275:81 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.TrimPrefix | 278:81 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.TrimPrefix | 279:42 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.TrimPrefix | 280:39 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| proposalAuthority.WeeklyBinding | 280:99 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| Callee expression | Position |
+|---|---|
+| `errors.New` | 212:51 |
+| `StrategyMarket` | 214:12 |
+| `loader.proposals.forMarket` | 215:52 |
+| `loader.risk.forMarket` | 215:88 |
+| `loader.fx.forMarket` | 216:3 |
+| `loader.accounts.forMarket` | 216:32 |
+| `loader.schedule.forMarket` | 216:67 |
+| `errors.New` | 219:51 |
+| `proposal.authorityForOwnerScope` | 223:31 |
+| `errors.New` | 225:51 |
+| `len` | 228:5 |
+| `errors.New` | 229:51 |
+| `proposalAuthority.Proposal` | 231:12 |
+| `result.ExecutionTerms.Identity` | 232:68 |
+| `accepted.result.ExecutionTerms.Identity` | 232:104 |
+| `errors.New` | 233:51 |
+| `riskAuthority.bundle.Scope` | 235:11 |
+| `riskAuthority.bundle.Validate` | 236:12 |
+| `string` | 237:3 |
+| `string` | 237:27 |
+| `scope.AsOf.Equal` | 237:102 |
+| `errors.New` | 238:51 |
+| `loader.journal.CurrentPositionCampaignCAS` | 240:14 |
+| `string` | 240:88 |
+| `uint64` | 242:40 |
+| `errors.New` | 243:51 |
+| `riskAuthority.bundle.Entries` | 245:13 |
+| `make` | 246:13 |
+| `len` | 246:50 |
+| `make` | 247:16 |
+| `len` | 247:63 |
+| `append` | 249:13 |
+| `append` | 251:16 |
+| `MajorDecimal` | 256:25 |
+| `result.ExecutionTerms.Entry` | 256:25 |
+| `MajorDecimal` | 257:23 |
+| `result.ExecutionTerms.EffectiveStop` | 257:23 |
+| `MajorDecimal` | 258:27 |
+| `result.ExecutionTerms.Target` | 258:27 |
+| `errors.New` | 260:51 |
+| `strategyFirstLegBindingDigest` | 262:19 |
+| `riskAuthority.bundle.Digest` | 262:76 |
+| `strings.TrimPrefix` | 263:38 |
+| `strings.TrimPrefix` | 264:37 |
+| `UTC` | 267:10 |
+| `loader.clk.Now` | 267:10 |
+| `readCtx.Err` | 268:24 |
+| `now.IsZero` | 268:48 |
+| `now.After` | 268:64 |
+| `account.authority.FreshUntil` | 268:74 |
+| `errors.New` | 269:38 |
+| `loader.journal.ReservationVersion` | 271:26 |
+| `account.authority.ObservedAt` | 275:40 |
+| `account.authority.OpenExposure` | 275:104 |
+| `string` | 279:89 |
+| `account.authority.AccountState` | 281:12 |
+| `riskAuthority.bundle.Policy` | 282:80 |
+| `loader.guardian.PolicyVersion` | 284:26 |
+| `loader.guardian.LimitsDigest` | 284:81 |
+| `strings.TrimPrefix` | 287:81 |
+| `strings.TrimPrefix` | 288:42 |
+| `strings.TrimPrefix` | 289:39 |
+| `proposalAuthority.WeeklyBinding` | 289:99 |
 
 ## State mutations and fallbacks
 
-- The AST is the exhaustive current-base record of assignments, calls, branches, defers and returns. Before a function body edit, the owning lot must update this map with changed condition semantics and concrete RED/GREEN test evidence.
+- 이 함수 자신은 원장을 쓰지 않는다(읽기: 캠페인 CAS · 예약 버전). 발급 값은 호출자가 q_final 입장에서 쓴다.
 
 ## Safety conclusion
 
-- L0 status: pre-edit evidence only; no production function was edited and no branch test is claimed as run by L0.
-- A named targeted RED or explicit evidence-backed not-applicable rationale is required for every edited branch before GREEN.
+- High-risk impact: yes(1차 레그 발급). 편집은 거절 갈래를 하나 더하고(B3) 선택 기준을 위치에서 소유자 범위로 바꿨다 — 편집 전 통과하던 입력 중 새로 통과하는 것은 없다(단일 항목 쌍에서 범위가 같으면 편집 전과 같은 항목을 고르고, 다르면 편집 전에도 identity 대조에서 거절됐다).
+- 위조 축 다섯 · 기제 둘은 행동 시험, 선택 기제 · 대조 약화 · 재유도 제거는 변이 S01~S07 이 CAUGHT.

@@ -223,6 +223,62 @@ SET_5221_FIX4 = [
      "\tpending := len(selected)\n",
      "\tpending  :=  len(selected)\n"),
 ]
+# 6.2 봉인 로트(2026-10-01): 범위 재유도 · A-lite · strategyflow 봉인 census. S = 엔진 봉인, F = strategyflow census, N = 동작 동등.
+SEAL = "internal/app/engine/strategy_first_leg_owner_scope.go"
+FLA = "internal/app/engine/strategy_account_first_leg_authority.go"
+SFT = "internal/strategyflow/types.go"
+SFL = "internal/strategyflow/flow.go"
+REVIEW = "openspec/changes/a112-run-four-strategy-families-independently/review.md"
+SET_62_SEAL = [
+    ("S01 re-derivation removed (the guard compares accepted with itself)", FLA,
+     "\tresult := proposalAuthority.Proposal()\n", "\tresult := accepted.result\n\t_ = proposalAuthority\n"),
+    ("S02 selection by identity instead of owner scope (the self-reference trap)", SEAL,
+     "\t\tif key == want {", "\t\tif _ = want; key == key && held.Identity == lineage.Identity {"),
+    ("S03 comparison weakened: execution-terms disjunct dropped", FLA,
+     "if result.Lineage.Identity != accepted.result.Lineage.Identity || result.ExecutionTerms.Identity() != accepted.result.ExecutionTerms.Identity() {",
+     "if result.Lineage.Identity != accepted.result.Lineage.Identity {"),
+    ("S04 scope key weakened: symbol ignored on both sides", SEAL,
+     ("\twant, err := strategyrouter.NewOwnerKey(lineage.AccountRef, lineage.Market, lineage.Symbol, lineage.PositionGeneration)",
+      "\t\tkey, err := strategyrouter.NewOwnerKey(held.AccountRef, held.Market, held.Symbol, held.PositionGeneration)"),
+     ("\twant, err := strategyrouter.NewOwnerKey(lineage.AccountRef, lineage.Market, \"ANY\", lineage.PositionGeneration)",
+      "\t\tkey, err := strategyrouter.NewOwnerKey(held.AccountRef, held.Market, \"ANY\", held.PositionGeneration)")),
+    ("S05 uniqueness dropped (first match wins)", SEAL,
+     "\tif matches != 1 {", "\tif matches < 1 {"),
+    ("S06 selection by position (entries[0]) — the pre-seal shape", SEAL,
+     "\tif matches != 1 {\n\t\treturn strategyproposal.ProductionAuthority{}, false\n\t}\n\treturn chosen, true",
+     "\tif len(authority.entries) == 0 {\n\t\treturn strategyproposal.ProductionAuthority{}, false\n\t}\n\t_ = chosen\n\treturn authority.entries[0].authority, true"),
+    ("S07 selection failure ignored", FLA,
+     "\tif !scoped {\n\t\treturn execgw.QFinalCampaignFirstLegIssuance{}, errors.New(strategyFirstLegOwnerScopeRefusal)\n\t}",
+     "\tif !scoped && false {\n\t\treturn execgw.QFinalCampaignFirstLegIssuance{}, errors.New(strategyFirstLegOwnerScopeRefusal)\n\t}"),
+    ("S08 A-lite contract removed", DH,
+     "\tready := authority.snapshot.Ready && strategyProposalSetDigest(authority.entries) == authority.snapshot.ProposalSetDigest\n",
+     "\tready := authority.snapshot.Ready\n"),
+    ("S09 A-lite applied to the unactivated market (toggle OFF must stay upstream)", DH,
+     "\tif !authority.familyActivation().Verified() {\n\t\treturn []strategyhandoff.Handoff{authority.dispatchHandoff()}",
+     "\tif !authority.familyActivation().Verified() && strategyProposalSetDigest(authority.entries) == authority.snapshot.ProposalSetDigest {\n\t\treturn []strategyhandoff.Handoff{authority.dispatchHandoff()}"),
+    ("F01 a second seal writer (FinalizeProposalQuantity re-seals)", SFT,
+     "\tfinal.proposalSeal = [32]byte{}\n", "\tfinal.proposalSeal = proposalResultSeal(final)\n"),
+    ("F02 twin struct carrying the seal field (conversion channel)", SFT,
+     "func sealProposalResult(result Result) Result {",
+     "type sealTwin struct{ proposalSeal [32]byte }\n\nvar _ = sealTwin{}\n\nfunc sealProposalResult(result Result) Result {"),
+    ("F03 new exported minter in the default build", SFL,
+     "func Propose(request Request) Result {",
+     "func SealForAnyone(result Result) Result { return sealProposalResult(result) }\n\nfunc Propose(request Request) Result {"),
+    ("F04 ValidProposal weakened (quantity clause dropped)", SFT,
+     "result.Code == RefusalNone && result.Quantity > 0 &&", "result.Code == RefusalNone &&"),
+    ("F05 the review record drops the frozen pins (re-pin/review binding)", REVIEW,
+     "  - `sealProposalResult` = `sha256:5e45db69120f540a463f43b2c6d8ba8cd0e7f94d3b070fcb9a80b42629d6bd6a`\n",
+     "  - `sealProposalResult` = (removed)\n"),
+    ("N04 comment-only edit inside a frozen seal function (digest is comment-free)", SFT,
+     "func sealProposalResult(result Result) Result {\n", "func sealProposalResult(result Result) Result {\n\t// (주석 한 줄)\n"),
+]
+SET_62_SEAL_TESTS = [
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+     "TestTheFirstLegSeal|TestFirstLegAuthority|TestTheFirstLegBackstop|TestAnActivatedMarketWhose|TestTheProposalSetDigest|TestOnlyAnActivated|TestTwoOwnerScopes|TestTheProductionCycle|TestWithoutAnActivation",
+     "./internal/app/engine"],
+    ["go", "test", "-count=1", "-run", "TestTheSingleProposalAssumption|TestTheFirstLegBackstop|Handoff|Seam|Admit|Classified", "./internal/app/engine"],
+    ["go", "test", "-count=1", "./internal/strategyflow"],
+]
 SET_5221_FIX3_TESTS = [
     ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
      "TheProductionCycleHandsEvery|WithoutAnActivationTheProductionCycle|TheProductionCycleEnds|TheDeliveryBodyHands|TheMarketDelivery|Skipped|FaultInOne|TwoOwner|SameOwner|Classified|ExactlyOneProduction",
@@ -231,7 +287,8 @@ SET_5221_FIX3_TESTS = [
 ]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
-        "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]])}
+        "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
+        "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS)}
 MUTANTS, TESTS = SET_5621, SET_5621_TESTS
 
 def run_tests(copy: Path, env: dict) -> tuple[str, str]:
@@ -274,7 +331,7 @@ def main() -> None:
     copy.mkdir(parents=True)
     # 사본은 HEAD 커밋 트리 + 이 로트가 넘긴 파일(own)뿐이다 — 병행 세션의 미커밋 편집이 사본에 섞이면 대조군부터
     # 깨지고(2026-09-30 실측: 남의 미커밋 journal 편집이 남의 미추적 파일을 참조), 섞인 채 GREEN 이면 무엇을 쟀는지 모른다.
-    archive = subprocess.run(["git", "archive", "HEAD", "go.mod", "go.sum", "internal", "cmd", "tools"], cwd=ROOT,
+    archive = subprocess.run(["git", "archive", "HEAD", "go.mod", "go.sum", "internal", "cmd", "tools", "openspec"], cwd=ROOT,
                              capture_output=True, check=True).stdout
     subprocess.run(["tar", "-x", "-C", str(copy)], input=archive, check=True)
     for rel in own:

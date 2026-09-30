@@ -45,7 +45,13 @@ func (authority strategyProposalMarketAuthority) dispatchHandoffs() []strategyha
 	for _, entry := range authority.entries {
 		selected = append(selected, entry.authority.Proposal())
 	}
-	return strategyhandoff.AdmitEachOwnerScope(authority.snapshot.Ready, selected)
+	// 가독 계약(a112 6.2 A-lite — 2차 방어, **봉인이 아님**): 건네는 목록이 조립이 중재 때 적어 둔 제안 집합 digest 와 같아야 함.
+	// 다르면 준비 안 됨으로 닫음(범위를 쪼개지 않고 시장 단위 MarketClosed 하나 — 경계에 없는 거절 이름을 지어내지 않음).
+	// 이것이 **못 보는 모양**: 엔진 코드는 digest 도 스스로 계산할 수 있으므로(strategyProposalSetDigest 는 엔진 함수) 권한 값을
+	// 통째로 위조하면 이 대조를 맞출 수 있다. 봉인은 1차 레그 권한의 소유자 범위 재유도(authorityForOwnerScope + identity 가드)가
+	// 진다 — 여기는 「중재 결과와 다른 목록」이 섞이는 것을 이름 붙여 막는 읽히는 계약이다.
+	ready := authority.snapshot.Ready && strategyProposalSetDigest(authority.entries) == authority.snapshot.ProposalSetDigest
+	return strategyhandoff.AdmitEachOwnerScope(ready, selected)
 }
 
 // deliverEachStrategyHandoff 는 handoff 들을 조정자 순서대로 하나씩 몸통에 건넴(태스크 5.2.2.1).

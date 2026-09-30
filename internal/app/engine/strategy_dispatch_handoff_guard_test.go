@@ -139,9 +139,10 @@ func isZero(node ast.Expr) bool {
 // (handoff seam)으로 모으는 데까지만 한다. 남은 줄은 그 사본을 없앨 로트를
 // 이름으로 달고 여기 남는다 — 목록에서 지우면 조용한 생략이 된다.
 var singleProposalAssumptionCensus = map[string]int{
-	// L6 소유(태스크 6.2 q_final/owner admission). 그 로트가 열릴 때까지 남는다.
-	// 5 는 센 값이다: len 비교 두 개와 색인 세 개.
-	"strategy_account_first_leg_authority.go": 5,
+	// L6 소유(태스크 6.2 q_final/owner admission). 5 → 4(2026-10-01, 6.2 봉인 로트): 1차 레그 권한의 `proposal.entries[0]` 선택이
+	// 소유자 범위 선택(`authorityForOwnerScope`)으로 바뀌어 색인 하나가 빠졌다. 남은 넷 — 계좌 권한 `collectMarket` 의 len 비교 하나와
+	// 색인 둘, 1차 레그 권한의 시장 단위 개수 관문 len 비교 하나 — 은 5.2.2.2(두 소유자 범위 시장의 거래)가 지운다.
+	"strategy_account_first_leg_authority.go": 4,
 }
 
 // handoffSeamFile 이 이 표에 없는 것은 빠뜨린 것이 아니다. dispatch 경로에서

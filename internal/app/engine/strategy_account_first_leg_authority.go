@@ -214,11 +214,20 @@ func (loader *productionStrategyFirstLegAuthorityLoader) collectStrategyFirstLeg
 	market := StrategyMarket(accepted.market)
 	proposal, riskAuthority, fx, account, schedule := loader.proposals.forMarket(market), loader.risk.forMarket(market),
 		loader.fx.forMarket(market), loader.accounts.forMarket(market), loader.schedule.forMarket(market)
-	if len(proposal.entries) != 1 || !riskAuthority.snapshot.Ready || !fx.snapshot.Ready || !account.snapshot.Ready ||
+	if !riskAuthority.snapshot.Ready || !fx.snapshot.Ready || !account.snapshot.Ready ||
 		!schedule.snapshot.Ready || schedule.restore.Activation == nil {
 		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("paired production authority is incomplete for market")
 	}
-	proposalAuthority := proposal.entries[0].authority
+	// a112 6.2 봉인(의미 봉인): 조립이 중재해 둔 권한 쌍에서 **소유자 범위로** 항목 하나를 다시 꺼냄 — 0 또는 복수면 거절.
+	// 범위는 선택 기준이고 대조는 아래 identity 가드가 함(자기 참조 함정 회피 — authorityForOwnerScope 머리말).
+	proposalAuthority, scoped := proposal.authorityForOwnerScope(accepted.result.Lineage)
+	if !scoped {
+		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New(strategyFirstLegOwnerScopeRefusal)
+	}
+	// 시장 단위 개수 관문 — 봉인이 아니라 시장당 하나 상한임. 걷어 내는 일(두 소유자 범위 시장의 거래)은 5.2.2.2.
+	if len(proposal.entries) != 1 {
+		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("paired production authority is incomplete for market")
+	}
 	result := proposalAuthority.Proposal()
 	if result.Lineage.Identity != accepted.result.Lineage.Identity || result.ExecutionTerms.Identity() != accepted.result.ExecutionTerms.Identity() {
 		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production proposal identity changed")

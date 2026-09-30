@@ -5519,3 +5519,83 @@ digest 동결의 검출 범위는 인정(생산 `.go` 전부 · 파일 이름 ·
 | codex 4차(최종) | ae8a5ff9 | BLOCK | 동결 검출 인정, 시험 실행 건너뛰기(`init` 조기 종료) 한계 → **이월**(위 1~3) |
 
 생산 동작 변화는 네 라운드 전부에서 0(토글 OFF = upstream, 주문 경로 약화 없음). 모든 BLOCK 은 **검증 장치**의 공백이었다.
+
+## 2026-10-01 6.2 봉인 로트 — 1차 레그 권한의 소유자 범위 재유도(의미 봉인) · A-lite · strategyflow 봉인 census
+
+**판정(Manager 2026-10-01).** 결정 (1) 의 **기제 정정**: 봉인 = `Admit` 입력 타입이 아니라 **마지막 권한의 범위-단위 재유도**(의미 봉인). 근거: 조정자는
+신뢰 주조자가 아니다 — 엔진이 만들고(`NewMarketCoordinator`) · 먹이고(`Submit`) · 돌린다(`Arbitrate`). 조정자가 찍은 토큰은 「어떤 중재가 돌았다」만
+증명하고, 엔진이 새 조정자에 패자 가족의 진짜 봉투만 넣으면 유효한 토큰을 얻는다 — 타입 봉인은 다섯 줄이 막던 구멍을 다시 연다. 수용 · 선결 구조는
+결정 (1) 그대로, 기제만 정정. 다섯 줄은 **삭제가 아니라 일반화로 대체**된다. A-lite(조정자 선택 목록을 가독 계약으로)는 2차 방어로 병기하되 봉인이라
+주장하지 않는다. 사용자 거부권 보고됨(Manager).
+
+**위조가 실제로 할 수 있는 것.** 봉인된 제안을 **지어낼** 수는 없다(`ValidProposal` 이 strategyflow 비공개 봉인을 요구 — 기본 빌드에서 그것을 쓰는 문은
+`Propose` 하나, 아래 census). 할 수 있는 것은 **이 파도의 중재가 고르지 않은 진짜 봉인 제안을 dispatch 하는 것**이다: 같은 범위의 패자 가족 · 게이트된
+레인 · 미선택 범위 · 다른 시장의 항목 · 같은 계보의 조건 재작성.
+
+**Pre-Edit 선언(편집 전 AST, HEAD `a234d8d7`).**
+- `productionStrategyFirstLegAuthorityLoader.collectStrategyFirstLegAuthority` :210–281, 분기 9, 소스 SHA `1d710710…`(기존 번들이 현행과 일치 — 편집 전
+  번들 `analysis/measurements/lot-6.2-seal/pre-edit/`). High-risk(1차 레그 발급). 편집: B2 에서 시장 단위 개수 조건을 떼어 내고, `proposal.entries[0]`
+  선택을 소유자 범위 선택으로 바꾸고, 선택 실패 거절을 더하고, 개수 관문을 선택 **뒤**의 별도 분기로 둔다. identity 가드(:223) · 뒤의 모든 분기 불변.
+- 새 함수(FLM not-applicable): `authorityForOwnerScope`(새 파일 `strategy_first_leg_owner_scope.go`), `strategyProposalSetDigest`. `dispatchHandoffs`
+  (5.2.2.1 이 만든 함수, 번들 없음)에 A-lite 갈래.
+- **개수 관문은 남긴다**(보수 방향): `len(proposal.entries) != 1` 은 봉인이 아니라 시장당 하나 상한이고, 걷어 내는 일(두 소유자 범위 시장의 거래)은
+  5.2.2.2. 이 로트는 판정을 **더 엄격하게만** 한다 — 오늘 통과하던 입력 중 새로 통과하는 것은 없다(생산 동작 변화 0 · 토글 OFF = upstream).
+
+**설계 — 범위로 고르고 identity 로 대조(HANDOFF §4 자기 참조 함정 회피).** `authorityForOwnerScope(accepted.result.Lineage)` 는 accepted 계보의
+`strategyrouter.NewOwnerKey` 정규형(계좌 · 시장 · 종목 · 세대)과 같은 범위의 항목을 권한 쌍에서 찾는다 — 정확히 하나가 아니면 거절(0 = 조립이 중재하지
+않은 범위 · 다른 시장, 2+ = 조정자의 범위당 하나 보장 붕괴), 쌍 항목이 정규화되지 않으면 그 쌍 전체를 믿지 않음. 범위는 **선택 기준일 뿐 대조 대상이
+아니고**, 대조는 선택된 항목의 봉인된 `Lineage.Identity` · `ExecutionTerms.Identity()` 와 한다(기존 가드 그대로). identity 로 고르면 accepted 와 맞는
+항목을 골라 accepted 와 비교하게 되어 대조가 공허해진다 — 그래서 선택 함수는 identity 를 **읽지 않는다**(구조 시험이 센다). 선택 실패 문구는 identity 거절
+문구를 머리로 담는다(`production proposal identity changed: owner scope is not uniquely authorized by the assembly`) — 같은 사실(조립이 중재하지 않은 것을
+날랐다)을 같은 머리로 부르고, 기존 backstop 시험(`strings.Contains`)이 그대로 초록이다.
+
+**행동 시험(위조 축 다섯 + 기제 둘, `a112_first_leg_owner_scope_seal_test.go`).** 거절 **문구**로 어느 판정이 거절했는지 가린다: ① 같은 범위 패자(다른 캠페인) ·
+② 게이트된 레인(같은 범위 · 다른 가족 레인) · ⑤ 같은 계보 조건 재작성 → 선택됨 · identity 대조 거절(선택 실패 문구 **없음**), ③ 미선택 범위 · ④ 타 시장(US 결과를
+KR 자리로) → 선택 실패 거절. 기제: 같은 범위가 쌍에 둘 → 선택 실패, 범위 둘인 쌍(다른 범위를 앞에) → 범위로 선택된 뒤 개수 관문 거절(`entries[0]` 선택이면
+identity 거절이 된다). 기존 backstop 셋(`strategy_first_leg_identity_backstop_test.go`) 초록 유지.
+
+**§4 구조 시험의 의도적 변경**(`strategy_first_leg_backstop_shape_test.go`). 사슬 `proposalAuthority := proposal.entries[0].authority` → `result :=
+proposalAuthority.Proposal()` → 가드를 다음으로 바꿨다 — 실패 메시지가 요구한 대로 **새 선택이 무엇에 기대는지 먼저 정하고** 다시 못 박았다: (1) 가드 바로 앞은
+여전히 `result := proposalAuthority.Proposal()`, (2) `proposalAuthority, scoped := proposal.authorityForOwnerScope(accepted.result.Lineage)` 한 번 · 바로
+다음이 `if !scoped { 빈 발주 · 선택 실패 거절 }`, (3) 선택 함수 본문이 `Identity` · `LineageIdentity` · `CampaignID` · `LaneID` · `Horizon` 을 읽지 않고
+`NewOwnerKey` 를 두 번 부른다. `singleProposalAssumptionCensus` 5 → 4(색인 하나가 범위 선택으로 바뀜, 남은 넷은 5.2.2.2 몫).
+
+**A-lite(가독 계약 — 2차 방어, 봉인 아님).** `dispatchHandoffs` 의 활성화 갈래: 건네는 목록의 제안 집합 digest(조립이 중재 때 적는 식과 같은
+`strategyProposalSetDigest`)가 `snapshot.ProposalSetDigest` 와 다르면 시장 단위 `MarketClosed` 하나. 못 보는 모양: 엔진은 digest 도 계산할 수 있으므로
+권한 값을 통째로 위조하면 맞출 수 있다 — 봉인은 1차 레그 권한이 진다. 활성화 없는 시장은 이 계약을 보지 않는다(시험이 토글 OFF 갈래를 함께 잰다). 식이 조립과
+같다는 것은 실제 중재 경로(`collectArbitrated`)의 digest 로 잰다.
+
+**strategyflow 봉인 census(결정 (5) 의 봉인 로트 몫, `internal/strategyflow/seal_census_test.go`).**
+- ① 공개 표면 동결: 기본 빌드의 공개 이름 · 서명 80 줄을 `testdata/exported_surface.golden` 과 대조(재생성 = 의도적 재고정, diff 로 보임).
+- ② 봉인 쓰기 census: 기본 빌드에서 `proposalSeal` 에 0 이 아닌 값을 쓰는 자리는 `sealProposalResult` 하나, 호출자는 `Propose`(기본) · 태그 파일의 시험 주조기 둘
+  (`AcceptedResultForAuthorityTest` · `ResultWithRestatedStopProvenanceForTest`). 합성 리터럴의 `proposalSeal:` 키 금지, 위치 기반 `Result{…}` 금지,
+  `proposalSeal` 필드를 선언하는 구조체는 Result 하나(쌍둥이 구조체 변환 · 그 필드를 품은 제약의 제네릭 주조 차단).
+- ③ 함수 수준 AST 정본 digest 동결(주석 제외 · 좌표 독립 — 형제 편집의 줄 밀림에 안정) + **재고정-리뷰 결속**(5.2.2.1 리뷰 이월 #3): 아래 digest 가 어느
+  openspec review 기록에 적혀 있어야 시험이 통과한다. 재고정은 같은 커밋에서 상수와 이 기록을 함께 바꾸고 독립 리뷰 뒤에만 착지한다.
+  - `sealProposalResult` = `sha256:5e45db69120f540a463f43b2c6d8ba8cd0e7f94d3b070fcb9a80b42629d6bd6a`
+  - `proposalResultSeal` = `sha256:311b1ccc0808e9ac01c35fa5c4b169ed255b12eac3445842b698deaddfcfb69e`
+  - `Result.ValidProposal` = `sha256:60114abda6d2266c6fb27c269c74f6089cdb637f2524cd739c032d7a3b74a4ee`
+  (동결 시점 소스 = HEAD `a234d8d7` 의 `internal/strategyflow/types.go` — 이 로트에서 strategyflow 생산 코드는 바뀌지 않았다.)
+- 완전성 주장 없음(머리말에 못 보는 모양 명명). 주문 경로의 종결은 1차 레그 권한의 범위 재유도가 진다.
+
+**RED · 변이 · 실행 증거.**
+- RED `analysis/measurements/lot-6.2-seal/red-6.2-seal.log`(격리 사본 = HEAD `a234d8d7` + 시험 파일): 선택 실패 문구를 요구하는 셋(미선택 범위 · 타 시장 · 범위 둘) FAIL —
+  편집 전에는 identity 문구(미선택 · 타 시장)나 개수 문구(범위 둘)로 거절했다. identity 대조 셋 · 「개수 관문 앞 범위 선택」은 편집 전에도 PASS(변이를 잡는 시험).
+- 변이 `analysis/harness/a112_lot_mutate.py --set 6.2-seal`(하네스 사본에 `openspec` 포함 — review 결속 시험이 읽는다): **S01~S09 · F01~F05 14/14 CAUGHT**,
+  **N04(봉인 함수 안 주석 한 줄) GREEN-AS-EXPECTED**, 무변이 대조군 GREEN. S02(identity 로 고르기)는 첫 판이 변이 자체의 컴파일 실패(BUILD-FAIL)라 변이를
+  고쳐 단독 재실행해 CAUGHT — 원장에 두 판 모두. 필수 축: 재유도 제거(S01) · 범위 선택을 identity 선택으로(S02) · 대조 약화(S03) · 범위 약화(S04) ·
+  유일성(S05) · 위치 선택(S06) · 선택 실패 무시(S07) · A-lite 제거 · 확장(S08 · S09) · 둘째 봉인 쓰기 · 쌍둥이 · 새 공개 주조기 · ValidProposal 약화 ·
+  review 결속(F01~F05). 원장 `analysis/measurements/lot-6.2-seal/mutation-6.2-seal.tsv`.
+- 기존 가드가 A-lite 첫 판을 잡았다: `strategy_dispatch_handoff.go` 의 import 폐포(crypto/sha256 · encoding/hex)와 Admit 문 자리 census(문 이름 두 번) —
+  digest 식을 새 파일 `strategy_proposal_set_digest.go` 로 옮기고 `ready` 한 식으로 합쳐 단일 호출로 고쳤다.
+- **실행 증거 하네스의 양성 대조(codex 4차 반례 재현).** 사본의 strategyflow 에 `init()` 이 시험 이진에서만 `os.Exit(0)` 하는 파일을 넣자 평범한
+  `go test` 는 `ok`(rc 0), `verify_named_tests.py` 는 세 이름 모두 `NOT-RUN` · rc 1. 이 로트의 봉인 시험 13 이름(엔진 10 · strategyflow 3)은 실제 트리에서
+  전부 pass 사건을 냈다.
+
+**검증(6.2 봉인 로트).** 격리 사본(`git archive` HEAD `a234d8d7` 전체 + 이 로트 파일): gofmt 위반 0, `go vet`(무태그 — engine · strategyflow · strategyhandoff · cmd/tossctl,
+태그 — engine · strategyflow) rc 0, 무태그 engine · strategyflow · strategyhandoff · strategyworker · strategyproposal · cmd/tossctl ok, 태그 engine · strategyflow ·
+strategyhandoff · strategyworker · strategyproposal ok. `openspec validate --strict` 통과. `check_analysis`: 기준선 대비 이 로트 몫의 새 발견은 **미추적 시험 인용 둘뿐**
+(커밋하면 풀림), 나머지는 창 머리 두 줄과 병행 로트 함수. strategyhandoff 소스 digest 동결은 이 로트에서 건드리지 않았다(초록).
+
+**이월.** 5.2.2.2(개수 관문 제거 = 두 소유자 범위 시장의 거래 — 이제 봉인이 서 있으므로 착수 조건 (1) 충족, 둘째 조건(같은 범위 중복 핀)도 초록) · 6.2 본문(q_final 최소값 ·
+동시 가족 입장 단일 트랜잭션) · 실행 증거의 저장소 전역판(후속 후보) · 비`.go` 빌드 입력(strategyhandoff 동결).
