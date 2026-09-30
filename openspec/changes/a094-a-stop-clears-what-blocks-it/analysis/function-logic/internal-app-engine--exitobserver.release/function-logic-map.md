@@ -1,8 +1,8 @@
 # Function Logic Map: `ExitObserver.release`
 
-- Source: `internal/app/engine/exitloop.go` (`1482`–`1487`)
+- Source: `internal/app/engine/exitloop.go` (`1486`–`1491`)
 - Qualified: `ExitObserver.release`
-- AST evidence: `ast.json` (`source_sha256` aa184f1394822180…) — 구현 로트(2026-09-30) 편집 뒤. 편집 전 AST 는 `analysis/implementation/pre-edit/`
+- AST evidence: `ast.json` (`source_sha256` 0f943813a3efa423…) — 구현 로트(2026-09-30) 편집 뒤. 편집 전 AST 는 `analysis/implementation/pre-edit/`
 - Risk scan: `risk-pattern-report.md`
 - 분기 1
 
@@ -20,7 +20,7 @@
 
 | Branch | 종류 | 조건 (원문) | 진입 실측 |
 |---|---|---|---|
-| B1 | if | `:1483` `if _, _, err := o.opts.Journal.ReleaseUnacceptedExitProposal(ctx, m.position.ID, intentID, how); err != nil {` | 예 |
+| B1 | if | `:1487` `if _, _, err := o.opts.Journal.ReleaseUnacceptedExitProposal(ctx, m.position.ID, intentID, how); err != nil {` | 예 |
 
 ## Calls and live bindings
 

@@ -1,10 +1,10 @@
 # Function Logic Map: `ExitObserver.judge`
 
-- Source: `internal/app/engine/exitloop.go` (`898`–`937`)
+- Source: `internal/app/engine/exitloop.go` (`898`–`941`)
 - Qualified: `ExitObserver.judge`
-- AST evidence: `ast.json` (`source_sha256` aa184f1394822180…) — 구현 로트(2026-09-30) 편집 뒤. 편집 전 AST 는 `analysis/implementation/pre-edit/`
+- AST evidence: `ast.json` (`source_sha256` 0f943813a3efa423…) — 구현 로트(2026-09-30) 편집 뒤. 편집 전 AST 는 `analysis/implementation/pre-edit/`
 - Risk scan: `risk-pattern-report.md`
-- 분기 8
+- 분기 9
 
 **역할.** 포지션 하나를 판정한다. a094 는 진입에 `noteHeldProposal`(park 원인 · 종결 증거 대기 명명 critical) 한 호출을 더했다.
 
@@ -22,13 +22,14 @@
 | Branch | 종류 | 조건 (원문) | 진입 실측 |
 |---|---|---|---|
 | B1 | if | `:900` `if !o.quoteUsable(quote) {` | 아니오 |
-| B2 | if | `:906` `if m.identityErr != nil {` | 예 |
-| B3 | if | `:910` `if m.reJudge {` | 예 |
-| B4 | if | `:920` `if err := o.opts.Journal.StampExitSnapshotQuarantineSelector(ctx,` | — |
-| B5 | if | `:926` `if err != nil {` | 아니오 |
-| B6 | switch | `:931` `switch m.state.PolicyKind {` | 예 |
-| B7 | case | `:932` `case journal.ExitPolicyLadder:` | 예 |
-| B8 | case | `:934` `default:` | 예 |
+| B2 | if | `:907` `if o.noteHeldProposal(ctx, m) {` | 예 |
+| B3 | if | `:910` `if m.identityErr != nil {` | 예 |
+| B4 | if | `:914` `if m.reJudge {` | 예 |
+| B5 | if | `:924` `if err := o.opts.Journal.StampExitSnapshotQuarantineSelector(ctx,` | — |
+| B6 | if | `:930` `if err != nil {` | 아니오 |
+| B7 | switch | `:935` `switch m.state.PolicyKind {` | 예 |
+| B8 | case | `:936` `case journal.ExitPolicyLadder:` | 예 |
+| B9 | case | `:938` `default:` | 예 |
 
 ## Calls and live bindings
 

@@ -1,0 +1,7 @@
+| ID | Severity | File:line | Evidence | Fix |
+|---|---|---|---|---|
+| N1 | P1 — resolved | `internal/journal/exit_proposal_release.go:158`; `internal/app/engine/exitloop.go:1533` | Query now matches trading day, trimming both operands. `clearTheSymbol` passes `LiveOrder.TradingDay`, sourced from the owning PLACE/AMEND intent (`internal/journal/fills.go:1858,1889`). | Implemented. |
+| N1 callers | Verified | `internal/app/engine/exit_held_proposal.go:159,170,178` | Both notification paths forward the target order’s own day. Proposal orders select and scan `i.trading_day` (`internal/journal/exit_proposal_release.go:252,267`). No remaining production callers omit day or substitute today’s clock. | None. |
+| F1 regression check | No new P0/P1 found | `internal/execgw/gateway.go:399,421,505,1007,1035`; `internal/clock/market.go:163`; `internal/journal/durability.go:401` | PLACE and CANCEL share `prepareRequest`: market-local `YYYY-MM-DD`, persisted unchanged by Prepare. Same-day gateway-generated cancellation evidence still matches; no format mismatch found. | None. |
+
+**Verdict: PASS.** Narrow static re-check only. Named cross-day cancellation residual remains. Regression tests inspected, not executed; no files changed, network accessed, or engine run.

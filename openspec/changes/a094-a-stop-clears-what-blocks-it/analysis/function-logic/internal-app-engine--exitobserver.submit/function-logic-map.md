@@ -1,8 +1,8 @@
 # Function Logic Map: `ExitObserver.submit`
 
-- Source: `internal/app/engine/exitloop.go` (`1391`–`1475`)
+- Source: `internal/app/engine/exitloop.go` (`1395`–`1479`)
 - Qualified: `ExitObserver.submit`
-- AST evidence: `ast.json` (`source_sha256` aa184f1394822180…) — 구현 로트(2026-09-30) 편집 뒤. 편집 전 AST 는 `analysis/implementation/pre-edit/`
+- AST evidence: `ast.json` (`source_sha256` 0f943813a3efa423…) — 구현 로트(2026-09-30) 편집 뒤. 편집 전 AST 는 `analysis/implementation/pre-edit/`
 - Risk scan: `risk-pattern-report.md`
 - 분기 13
 
@@ -21,19 +21,19 @@
 
 | Branch | 종류 | 조건 (원문) | 진입 실측 |
 |---|---|---|---|
-| B1 | if | `:1394` `if err != nil {` | 아니오 |
-| B2 | if | `:1397` `if isZeroQuantity(submitQuantity) {` | 예 |
-| B3 | if | `:1417` `if err != nil {` | 아니오 |
-| B4 | if | `:1426` `if err := o.opts.Journal.AttachExitIntent(ctx, m.position.ID, intentID); err != nil {` | 예 |
-| B5 | if | `:1431` `if err != nil {` | 아니오 |
-| B6 | switch | `:1441` `switch {` | — |
-| B7 | case | `:1442` `case out.State == journal.StateConfirmed:` | 예 |
-| B8 | case | `:1450` `case out.State == journal.StateInDoubt \|\| out.State == journal.StateUnresolvedInDoubt:` | 예 |
-| B9 | case | `:1455` `case out.Reason == execgw.ReasonSymbolInFlight:` | 아니오 |
-| B10 | case | `:1458` `case out.AttemptID != "" && out.State != journal.StateNotDispatched && out.State != journal.StateFailedConfirmed:` | 예 |
-| B11 | if | `:1462` `if err == nil {` | 아니오 |
-| B12 | case | `:1467` `default:` | 예 |
-| B13 | if | `:1469` `if detail == "" && err != nil {` | 아니오 |
+| B1 | if | `:1398` `if err != nil {` | 아니오 |
+| B2 | if | `:1401` `if isZeroQuantity(submitQuantity) {` | 예 |
+| B3 | if | `:1421` `if err != nil {` | 아니오 |
+| B4 | if | `:1430` `if err := o.opts.Journal.AttachExitIntent(ctx, m.position.ID, intentID); err != nil {` | 예 |
+| B5 | if | `:1435` `if err != nil {` | 아니오 |
+| B6 | switch | `:1445` `switch {` | — |
+| B7 | case | `:1446` `case out.State == journal.StateConfirmed:` | 예 |
+| B8 | case | `:1454` `case out.State == journal.StateInDoubt \|\| out.State == journal.StateUnresolvedInDoubt:` | 예 |
+| B9 | case | `:1459` `case out.Reason == execgw.ReasonSymbolInFlight:` | 아니오 |
+| B10 | case | `:1462` `case out.AttemptID != "" && out.State != journal.StateNotDispatched && out.State != journal.StateFailedConfirmed:` | 예 |
+| B11 | if | `:1466` `if err == nil {` | 아니오 |
+| B12 | case | `:1471` `default:` | 예 |
+| B13 | if | `:1473` `if detail == "" && err != nil {` | 아니오 |
 
 ## Calls and live bindings
 

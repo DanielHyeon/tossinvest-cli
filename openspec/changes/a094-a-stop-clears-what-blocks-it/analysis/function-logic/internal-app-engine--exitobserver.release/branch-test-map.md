@@ -7,4 +7,4 @@
 
 | Branch | 조건 | 진입 실측 | Test | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:1483` `if _, _, err := o.opts.Journal.ReleaseUnacceptedExitProposal(ctx, m.position.ID, intentID, how); err != nil {` | 예 | `TestA094AnUnacceptedStopIsReleasedAndProposedAgain` · `TestARefusedProposalReleasesTheLevelAndAlerts` | n/a | yes |
+| B1 | `:1487` `if _, _, err := o.opts.Journal.ReleaseUnacceptedExitProposal(ctx, m.position.ID, intentID, how); err != nil {` | 예 | `TestA094AnUnacceptedStopIsReleasedAndProposedAgain` · `TestARefusedProposalReleasesTheLevelAndAlerts` | n/a | yes |

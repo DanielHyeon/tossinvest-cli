@@ -1285,3 +1285,25 @@ audit 줄 뒤 commit 실패 시 보상 줄).
 
 **잔여(이름 붙임).** 엔진 주문은 `TimeInForce DAY` 라 한 주문의 취소는 같은 거래일에 난다는 전제에 선다. 거래일을 건너 살아 있는 주문을 다른 날 취소하면 그 취소는 이
 결속으로 찾히지 않는다 — 그때 청소는 그 매도를 「아직 취소 안 됨」 으로 보고(발의가 있으면) 취소를 다시 보내며, 발의가 없으면 3.D1 대로 건너뛴다(오늘 동작).
+
+### 10. codex 좁은 재확인 i3 (2026-10-01, N1 한정) — **PASS**
+
+- 트리 `git archive f6a5bcd9`, 00:49 KST 종료 rc 0, 정적. 프롬프트 `analysis/impl-review/codex-i3-prompt.md`, 출력 `analysis/impl-review/codex-i3-output.md`.
+- 확인: `ConfirmedCancelOf` 가 거래일을 양쪽 TRIM 으로 대조 · 청소는 미체결 목록의 소유 PLACE/AMEND intent 거래일을, 알림은 대상 주문 자신의 거래일을 넘김(오늘 시계 대입 0) ·
+  게이트웨이의 PLACE · CANCEL 이 같은 `prepareRequest`(시장 현지 `YYYY-MM-DD`)를 써서 같은 날 취소 증거는 그대로 찾힘 — F1 재개방 없음. 거래일 건너 취소 잔여는 이름 붙은 대로.
+- 교차 모델 사슬: i1 REJECT(F1 P0 · F2 P1 · F3) → 수리 → i2 REJECT(N1 P1, 수리가 만든 과보류) → 수리 → **i3 PASS**.
+
+### 11. 게이트 준비 상태 (2026-10-01, 이 로트 끝)
+
+| 항목 | 상태 |
+|---|---|
+| 7.0 정본 보존 | delta 의 「IN_DOUBT 해소」 가 main 요구의 27 줄 전부를 담음(문자열 대조) |
+| 7.1 `go test ./... -race` | **부분** — `-race -run TestA094` 5 패키지 ok · `make test-race` ok · 전체 `./... -race` 는 게이트(격리 worktree)에서 |
+| 7.2 · 7.3 §0.3 · §0.4 | 관측 루프 · 손절 경로의 새 브로커 호출 0(3.E2 시험) · 새 호출은 기동 ACKED PLACE 행마다 읽기 1(401 재시도 포함 ≤3 GET + ≤2 토큰, `roundTripTimeout` 3s) — D−5.5 표 그대로 |
+| 7.4 토글 | 무도입 |
+| 7.5 FLM | 편집 뒤 번들 23(생산 17 · 시험 6) — `check_analysis` 의 남은 줄은 형제 change 함수뿐(a090 engineRuntime · ObserveOnce · workingSet · adoption · reconcileloop, a112 strategy_*, obs/mode.go) |
+| 7.6 sdd | `make sdd-check` rc 0(재시도) · `make sdd-sync` 는 codegraphcontext advisory 시한 초과로 incomplete(advisory) |
+| 7.7 게이트 · 7.9 아카이브 | Manager(격리 worktree, `--record-landing`) |
+| 7.8 독립 리뷰 | Claude 3보이스(§7) + codex 교차 모델 i1 → i2 → i3 PASS(§8~§10) |
+| 8.x 배포 | 사람 항목(8.2 전: 운영 원장의 ACKED 행 · intent 없는 무장 발의 행을 읽기 전용으로 셈 — I5) |
+| 3.X1 · 3.R9a | 사람 결정 · a090 착지 뒤 통합 시험 |

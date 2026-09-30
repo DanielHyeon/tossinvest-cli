@@ -1,8 +1,8 @@
 # Function Logic Map: `ExitObserver.record`
 
-- Source: `internal/app/engine/exitloop.go` (`1221`–`1351`)
+- Source: `internal/app/engine/exitloop.go` (`1225`–`1355`)
 - Qualified: `ExitObserver.record`
-- AST evidence: `ast.json` (`source_sha256` aa184f1394822180…) — 구현 로트(2026-09-30) 편집 뒤. 편집 전 AST 는 `analysis/implementation/pre-edit/`
+- AST evidence: `ast.json` (`source_sha256` 0f943813a3efa423…) — 구현 로트(2026-09-30) 편집 뒤. 편집 전 AST 는 `analysis/implementation/pre-edit/`
 - Risk scan: `risk-pattern-report.md`
 - 분기 16
 
@@ -20,22 +20,22 @@
 
 | Branch | 종류 | 조건 (원문) | 진입 실측 |
 |---|---|---|---|
-| B1 | if | `:1224` `if !o.quoteUsable(quote) {` | 아니오 |
-| B2 | if | `:1243` `if judgement.ObservationSource == "" {` | 아니오 |
-| B3 | if | `:1244` `if quote.FetchedAt.IsZero() {` | 아니오 |
-| B4 | else | `:1246` `} else {` | 아니오 |
-| B5 | if | `:1267` `if orderable && (snapshot.CancelPendingFirst \|\| isFullExit(proposal)) {` | 예 |
-| B6 | if | `:1268` `if m.reJudge && !isProtective(proposal) {` | 예 |
-| B7 | else | `:1290` `} else {` | 예 |
-| B8 | if | `:1292` `if err != nil {` | 예 |
-| B9 | if | `:1295` `if !cleared.cleared {` | 예 |
-| B10 | else | `:1302` `} else {` | 예 |
-| B11 | if | `:1310` `if orderable {` | 예 |
-| B12 | if | `:1312` `if intentID == "" {` | 아니오 |
-| B13 | if | `:1324` `if err != nil {` | 예 |
-| B14 | if | `:1325` `if errors.Is(err, journal.ErrProposalPending) {` | 예 |
-| B15 | if | `:1331` `if errors.Is(err, journal.ErrExitSnapshotQuarantined) {` | 예 |
-| B16 | if | `:1344` `if recorded.ArmedProposal == nil \|\| recorded.ArmOutcome != journal.ExitArmArmed {` | 예 |
+| B1 | if | `:1228` `if !o.quoteUsable(quote) {` | 아니오 |
+| B2 | if | `:1247` `if judgement.ObservationSource == "" {` | 아니오 |
+| B3 | if | `:1248` `if quote.FetchedAt.IsZero() {` | 아니오 |
+| B4 | else | `:1250` `} else {` | 아니오 |
+| B5 | if | `:1271` `if orderable && (snapshot.CancelPendingFirst \|\| isFullExit(proposal)) {` | 예 |
+| B6 | if | `:1272` `if m.reJudge && !isProtective(proposal) {` | 예 |
+| B7 | else | `:1294` `} else {` | 예 |
+| B8 | if | `:1296` `if err != nil {` | 예 |
+| B9 | if | `:1299` `if !cleared.cleared {` | 예 |
+| B10 | else | `:1306` `} else {` | 예 |
+| B11 | if | `:1314` `if orderable {` | 예 |
+| B12 | if | `:1316` `if intentID == "" {` | 아니오 |
+| B13 | if | `:1328` `if err != nil {` | 예 |
+| B14 | if | `:1329` `if errors.Is(err, journal.ErrProposalPending) {` | 예 |
+| B15 | if | `:1335` `if errors.Is(err, journal.ErrExitSnapshotQuarantined) {` | 예 |
+| B16 | if | `:1348` `if recorded.ArmedProposal == nil \|\| recorded.ArmOutcome != journal.ExitArmArmed {` | 예 |
 
 ## Calls and live bindings
 

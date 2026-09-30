@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "aa184f1394822180098e86b0c86a27acdc67493e785d687769365e898838cc01",
+  "source_sha256": "0f943813a3efa42329f97eddf7944361a7f6bbb09b3991afb5d2b4f842f38a7f",
   "package": "engine",
   "function": "judge",
   "receiver": "ExitObserver",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 937,
+    "line": 941,
     "column": 2
   },
   "branches": [
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 906,
+        "line": 907,
         "column": 2
       }
     },
@@ -42,31 +42,31 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 920,
-        "column": 3
+        "line": 914,
+        "column": 2
       }
     },
     {
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 926,
-        "column": 2
+        "line": 924,
+        "column": 3
       }
     },
     {
       "id": "B6",
-      "kind": "switch",
+      "kind": "if",
       "at": {
-        "line": 931,
+        "line": 930,
         "column": 2
       }
     },
     {
       "id": "B7",
-      "kind": "case",
+      "kind": "switch",
       "at": {
-        "line": 932,
+        "line": 935,
         "column": 2
       }
     },
@@ -74,7 +74,15 @@
       "id": "B8",
       "kind": "case",
       "at": {
-        "line": 934,
+        "line": 936,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "case",
+      "at": {
+        "line": 938,
         "column": 2
       }
     }
@@ -97,28 +105,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 922,
+        "line": 912,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 926,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 928,
+        "line": 932,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 933,
+        "line": 937,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 935,
+        "line": 939,
         "column": 3
       }
     }
@@ -135,15 +150,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 905,
-        "column": 2
+        "line": 907,
+        "column": 5
       },
       "text": "o.noteHeldProposal"
     },
     {
       "kind": "call",
       "at": {
-        "line": 907,
+        "line": 911,
         "column": 3
       },
       "text": "o.alertRefused"
@@ -151,7 +166,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 920,
+        "line": 924,
         "column": 13
       },
       "text": "o.opts.Journal.StampExitSnapshotQuarantineSelector"
@@ -159,7 +174,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 925,
+        "line": 929,
         "column": 20
       },
       "text": "o.breakEven"
@@ -167,7 +182,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 927,
+        "line": 931,
         "column": 3
       },
       "text": "o.alertRefused"
@@ -175,7 +190,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 933,
+        "line": 937,
         "column": 10
       },
       "text": "o.judgeLadder"
@@ -183,7 +198,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 935,
+        "line": 939,
         "column": 10
       },
       "text": "o.judgeRatchet"
@@ -193,14 +208,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 920,
+        "line": 924,
         "column": 6
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 925,
+        "line": 929,
         "column": 2
       }
     }
