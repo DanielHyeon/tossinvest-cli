@@ -1062,3 +1062,48 @@ Manager 판정 (i)(2026-09-29). 정본 `design.md` D−9.
   (4.0a · 4.0b · 3.0a).
 - 이름 붙인 후속 후보: UNKNOWN_BROKER_STATE 손 해소(D−9.4) · ACKED 정산의 matcher 번호 판별자(D−4.2) · 3.X 엔진 밖 주문 취소(사용자 결정).
 
+
+## 구현 로트 (2026-09-30~) — 착지 단위별 기록
+
+### 0. base 재고정 승인 (사람 절차 조건 ②)
+
+- 승인 참조: **Manager 상임 지시**(구현 로트의 첫 행위 = base 재고정, freeze 선언 「남은 선행」) + **2026-09-30 a094 구현 재개 지시**.
+- 조건 ① 실측: 옛 base `3937e341..1ffe2295` 에서 a094 디렉터리를 만진 비병합 커밋 36 중 `.go` 편집 0. 옛 base 의 required 92 · 창의 착지 223 = 형제 몫.
+- 조건 ③: `479fdfa3` — `base-commit.txt` 단독 커밋(옛→새 sha · 실측 · 선례를 메시지에).
+- 선행 조건 확인: a092 `RecordAlert` 입구 착지(4.N4h 하드) — a092 아카이브 `75d138b5`. 입구는 `obs.Notifier.RecordCritical(ctx, e, remindAfter)`(`internal/obs/record_only.go`) → `Journal.RecordAlert`. a094 의 새 기록자는 이것을 창 0 으로 부른다.
+
+### 0.1 frozen 좌표의 현재 HEAD 대조 (a092 착지로 움직인 것)
+
+frozen 문서의 줄 번호는 7cf80832 · 0c12844a 기준이다. a092 가 exitloop · obs · journal 을 바꿨으므로 **구현은 좌표가 아니라 심볼로** 짚고, 낡은 좌표는 여기서 정정한다(문서 본문은 frozen 이라 고치지 않는다).
+
+| frozen 좌표 | 현재(HEAD `3260f4eb`) | 비고 |
+|---|---|---|
+| `classify.go:46` B3 `ClassifyBrokerRefusal` | `:66`(R1 편집 뒤) | R1 이 앞에 switch(`:44`)를 끼움 |
+| `exitloop.go:1223` 청소 게이트 · `:1255-1256` `clearDelay` | `record` 안 같은 문장, 편집 전 `:1223`·`:1250` 부근 | 심볼 `ExitObserver.record` |
+| `exitloop.go:1407-1416` submit 갈래 | `ExitObserver.submit` `switch` (편집 전 `:1396-1424`) | |
+| `exitloop.go:1485-1495` 청소 해제 | `ExitObserver.clearTheSymbol` 끝(편집 전 `:1500-1508`) | |
+| `exitloop.go:1688` `noteDelay` key · `:1675-` | `ExitObserver.noteDelay`(편집 전 `:1680-1704`) key `type|positionID` 무변화 | |
+| `exitloop.go:1710` 동기 notifier | a092 뒤 **기록 전용**(`obs.RecordOnly`, `exitwiring.go:333`) — D−5.6 의 「동기 전송 잔여」는 a092 가 닫음 | 잔여 소멸 |
+| `apply_hook.go:825-884` `ResolveExitProposal` | 같은 자리(편집 전 `:825-884`) | |
+| `notifier.go:262-280` 생산자 래치 | 기록 입구의 실패 래치는 `record_only.go` `recordCritical`(`Gate.Block(ReasonAlertUndelivered)` + 승격) | D−6.1 의 「입구의 몫」 실물 |
+
+### 1. 착지 단위 ① — R1 (tasks §2)
+
+**Pre-Edit Gate (2.0)**
+
+- change/task: a094 · 2.0~2.11
+- 대상 심볼: `execgw.classifyMutation`(기존 — 분기 추가) · `execgw.AllReasonCodes`(기존 — 목록 한 줄) · 신설 `execgw.classifyRefusalCode`(새 파일 `refusal_code.go`)
+- CodeGraph/호출자: `classifyMutation` 의 비시험 호출자 1(`Gateway.submit` → `gateway.go:726`), `ClassifyBrokerRefusal` 비시험 호출자 1(`classifyMutation`), `classifyReplay` 는 둘 다 부르지 않음(grep 전수 2026-09-30)
+- CodeGraphContext: not-applicable — 호출자 1 의 순수 함수, grep 전수로 닫힘
+- 기존 동작 근거: `TestTransportOutcomeTable` · `TestBrokerBranchesMapToStableReasonCodes` · `TestStatusOfReadsWrappedSentinels`
+- FLM/BTM: `analysis/function-logic/internal-execgw--classifymutation/`(편집 뒤 재생성 · 10 분기) · `internal-execgw--allreasoncodes/`(신설)
+- upstream 상속 시험 영향: no — 두 자리 code 모순 본문의 422 만 확정 거절 → 모호로 바뀐다(보수 방향, spec 2.5f)
+- 실패 시험 선행: yes — `analysis/implementation/r1-red.log`(편집 전 7 실패)
+- 설정·DB·journal: 없음(스키마 무변경 · 토글 무도입)
+- §0 검토: 통과 — 확정 거절은 목록 code 하나(`opposite-pending-order-exists`)로만 넓고, 409 전체를 확정으로 바꾸지 않음(`request-in-progress` 는 모호 유지 — 2.3)
+
+**구현 요지.** 본문 JSON 의 최상위 `code` · `error.code` 만 읽고(부분문자열 아님), 대소문자 무시 전체 일치. 모순은 모호 강제로 뒤 분류를 건너뜀. 읽을 수 없는 code 값(문자열 · null 아님)은 판정 없음(다른 자리 값으로 확정하지 않음). 읽는 본문은 `official.APIError.Body` 뿐 — 공식 클라이언트는 401·403 을 본문 없는 sentinel 로 바꾸므로 그 둘은 이 분류기에 닿지 않는다(기존 동작).
+
+**검증.** `go test ./internal/execgw/ -count=1` ok · `go vet` ok · 골든 diff = `+opposite_pending_order_exists` 한 줄(생성기). 1.11 소비자 조사: 새 code 는 원장 `reason_code`(자유 문자열) · 알림 detail 로만 흐르고, execgw 코드를 열거하는 소비자는 골든 시험 · a098 census 둘뿐(콘솔 필터 없음 — `internal/console` 의 `ReasonCodes` 는 soak 코드).
+
+**병행 조정.** AllReasonCodes · 골든 · a098 census 는 a112 와 같은 자리였다 — Manager 판정으로 a112(`3260f4eb`) 선행, a094 후행.

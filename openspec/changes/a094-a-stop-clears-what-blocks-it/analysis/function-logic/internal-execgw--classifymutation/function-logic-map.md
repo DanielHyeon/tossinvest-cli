@@ -1,46 +1,49 @@
 # Function Logic Map: `classifyMutation`
 
-- Source: `internal/execgw/classify.go` (`21`–`79`)
+- Source: `internal/execgw/classify.go` (`21`–`99`)
 - Qualified: `classifyMutation`
-- AST evidence: `ast.json` (`source_sha256` 808e462cd6f9f136…)
+- AST evidence: `ast.json` (`source_sha256` 020dba811b666e94…) — **구현 로트(2026-09-30) 편집 뒤 재생성**. 편집 전 판본은 base `1ffe2295` 의 같은 파일(`808e462c…`)이며 B3~B5 가 없었다
 - Risk scan: `risk-pattern-report.md`
-- 분기 7 · return 5 · 호출 16
+- 분기 10 · return 7
 
-**역할.** 브로커 호출 하나의 결과를 원장의 dispatch 분류로 바꾼다. **순서가 설계다** — 로컬 거부 → 브로커의 서술적 거절 → status.
+**역할.** 브로커 호출 하나의 결과를 원장의 dispatch 분류로 바꾼다. **순서가 설계다** — 로컬 거부 → **본문 code(a094 R1)** → 브로커의 서술적 거절 → status.
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| `err` | 브로커/로컬 오류 | 호출자 | B1이 nil이면 Acked |
-| `result` | `domain.MutationResult` | 브로커 응답 | B1에서 broker order id 추출 |
-| `send` | 전송 진행도 | dispatch 추적기 | B5에서 `ClassifyHTTPMutation`에 넘어간다 |
+| `err` | 브로커/로컬 오류 | 호출자(`Gateway.submit` `gateway.go` 발송 결과) | B1 이 nil 이면 Acked |
+| `result` | `domain.MutationResult` | 브로커 응답 | B1 에서 broker order id 추출 |
+| `send` | 전송 진행도 | dispatch 추적기 | B8 · B10 에서 `ClassifyHTTPMutation` 에 넘어간다 |
+
+불변식: 확정 거절(`DispatchRejected`)은 증거가 있을 때만 — B4(목록 안 code, 모순 없음) · B6(서술적 거절) · status 확정 목록(B8 안). 모르면 모호.
 
 ## Branches and early returns
 
-> **표의 유래.** 조건은 소스의 그 줄 원문이다. 「창의 호출/return」은 `ast.json`이 기록한 좌표를 `[분기 줄, 다음 분기 줄)` 창에 넣은 것이며 **분기의 의미가 아니라 위치**다. 「진입 실측」은 `go test ./internal/... -count=1 -covermode=set`의 프로파일에서 **그 줄로 시작하는 블록**의 count가 0보다 큰지다 — 자체 블록이 없는 분기는 `—`다.
+> 조건은 소스 원문, 진입 실측은 `go test ./internal/execgw/ -count=1 -covermode=set` 프로파일(2026-09-30)에서 그 줄로 시작하는 블록의 count.
 
-| Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
-|---|---|---|---|---|---|
-| B1 | if | `:22` `if err == nil {` | `brokerOrderID`, `string` | :23 | 예 |
-| B2 | if | `:32` `if reason, refused := policyRefusal(err); refused {` | `err.Error`, `policyRefusal`, `string` | :33 | 예 |
-| B3 | if | `:46` `if reason, refused := ClassifyBrokerRefusal(err); refused {` | `ClassifyBrokerRefusal` | — | 예 |
-| B4 | if | `:49` `if errors.As(err, &branch) && branch.Source == trading.BranchSourcePostPrepareConfirmation {` | `err.Error`, `errors.As`, `string` | :54 | 아니오 |
-| B5 | if | `:64` `if status, known := statusOf(err); known {` | `journal.ClassifyHTTPMutation`, `statusOf` | — | 예 |
-| B6 | if | `:67` `if outcome.Detail == "" {` | `err.Error` | — | 아니오 |
-| B7 | else | `:69` `} else {` | `err.Error`, `journal.ClassifyHTTPMutation`, `reasonForClass` | :73, :78 | 예 |
+| Branch | 종류 | 조건 (원문) | return | 진입 실측 |
+|---|---|---|---|---|
+| B1 | if | `:22` `if err == nil {` | :23 Acked | 예 |
+| B2 | if | `:32` `if reason, refused := policyRefusal(err); refused {` | :33 NotSent | 예 |
+| B3 | switch | `:44` `switch reason, verdict := classifyRefusalCode(err); verdict {` | — | 예 |
+| B4 | case | `:45` `case refusalCodeDefinitive:` | :46 Rejected(code 의 reason) | 예 |
+| B5 | case | `:52` `case refusalCodeContradictory:` | :53 Ambiguous — 뒤의 분류를 타지 않음 | 예 |
+| B6 | if | `:66` `if reason, refused := ClassifyBrokerRefusal(err); refused {` | :74 | 예 |
+| B7 | if | `:69` `if errors.As(err, &branch) && branch.Source == trading.BranchSourcePostPrepareConfirmation {` | — (class 만 바꿈) | 아니오 |
+| B8 | if | `:84` `if status, known := statusOf(err); known {` | :93 | 예 |
+| B9 | if | `:87` `if outcome.Detail == "" {` | — | 아니오 |
+| B10 | else | `:89` `} else {` | :98(함수 끝 갈래) | 예 |
 
 ## Calls and live bindings
 
-`policyRefusal`(B2) · `ClassifyBrokerRefusal`(B3) · `errors.As`(B4) · `statusOf`(B5) · `journal.ClassifyHTTPMutation`(B5 안) · `reasonForClass`.
-
-브로커·원장에 닿는 호출의 오류·타임아웃 계약은 각 호출자의 것이며, 이 함수는 그것을 되던진다(위 표의 return 열이 그 자리다).
+`policyRefusal`(B2) · `classifyRefusalCode`(B3 — 새 파일 `refusal_code.go`, 공식 `APIError.Body` 만 읽음) · `ClassifyBrokerRefusal`(B6) · `errors.As`(B7) · `statusOf`(B8) · `journal.ClassifyHTTPMutation`(B8 안 · 끝) · `reasonForClass`. 전부 순수 함수 — 브로커 · 원장 호출 0, 오류 · 타임아웃 계약 없음.
 
 ## State mutations and fallbacks
 
-없다.
+없다(분류만). 판정 없음(`refusalCodeNone`)은 B3 의 switch 를 빠져나와 종전 경로(B6 → B8 → 끝)로 간다 — 이것이 "모르는 것을 확정으로 바꾸지 않는다" 의 fallback 이다.
 
 ## Safety conclusion
 
-- **Safe edit boundary**: **a094가 바꾸는 것은 이 함수가 아니라 B3이 부르는 `classifyRefusalBody`다.** 이 함수의 분기 구조와 순서는 그대로 둔다 — 그 순서가 이미 옳다(B3 주석: *the meaning comes from the answer and not from how far the bytes got*).
-- **High-risk impact**: yes — 주문 분류의 최상위 진입점.
+- **Safe edit boundary**: a094 R1 은 B3~B5 를 **B6(ClassifyBrokerRefusal) 앞**에 끼웠다(D−3.5). B5 가 뒤의 분류를 건너뛰는 것이 핵심 — 두 자리 code 모순은 422 여도 확정 거절이 아니다(시험 2.5f). 상태 코드 표(`isDefinitiveRejection`)는 건드리지 않았다(시험 2.6). 재생 분류(`classifyReplay`)는 이 함수도 B3 의 분류기도 부르지 않는다(구조 시험 2.11).
+- **High-risk impact**: yes — 주문 분류의 최상위 진입점. 확정 거절은 attempt 를 종결시켜 종목 차단(`checkSymbolFree`)을 푼다.

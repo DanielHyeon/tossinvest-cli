@@ -34,6 +34,8 @@ var reasonCodesRegisteredAfterA098 = []execgw.ReasonCode{
 	execgw.ReasonEntryLossLockActive, // a066 5.5
 	// a112 5.6.2.1 — 전략 중앙 무결성의 진입 래치(사람 결정 (6)). 해제는 재시작뿐(원장 수리 뒤) — 완화 명령 가족 없음.
 	execgw.ReasonStrategyCentralIntegrity,
+	// a094 R1 — 브로커가 본문 code 로 이름 준 확정 거절(반대 방향 미체결 주문).
+	execgw.ReasonOppositePendingOrder,
 }
 
 // TestTheSenderDownReasonIsRegisteredInTheEnumeration is check ① and ②.

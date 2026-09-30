@@ -302,6 +302,9 @@ func AllReasonCodes() []ReasonCode {
 
 		// a112 5.6.2.1 strategy central integrity (entry latch; restart is the only release).
 		ReasonStrategyCentralIntegrity,
+
+		// a094 R1 — 본문 code 로 분류한 확정 거절(반대 방향 미체결 주문).
+		ReasonOppositePendingOrder,
 	}
 	sort.Slice(codes, func(i, j int) bool { return codes[i] < codes[j] })
 	return codes

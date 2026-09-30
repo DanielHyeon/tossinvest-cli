@@ -94,45 +94,45 @@
       한 번도 밟지 않는다. a094가 바로 그 술어 위에 R2를 얹으므로 3.1이 이것을 먼저 덮는다.
       `reconcile.Run`의 미진입 7개는 `B1,B2,B4,B5,B8,B9,B11`이다 — 해소 경로(B5~B9)에
       드는 것은 **3개뿐**이고 나머지 넷은 그 밖이다(1라운드 정정)
-- [ ] 1.11 `classifyRefusalBody`의 **소비자 조사** — 새 reason code가 닿는 자리
+- [x] 1.11 `classifyRefusalBody`의 **소비자 조사** — 새 reason code가 닿는 자리
       (`AllReasonCodes()` 고정 테스트 · 콘솔 필터 · 원장 질의 · Phase 2 ledger)
 
 ## 2. R1 — code가 분류한다 (D1)
 
-- [ ] 2.0 **Pre-Edit 선언** — `internal/execgw/failclosed.go`, `internal/execgw/reason.go`
-- [ ] 2.1 **RED** — 409 + `code=opposite-pending-order-exists` → `DispatchRejected`,
+- [x] 2.0 **Pre-Edit 선언** — `internal/execgw/failclosed.go`, `internal/execgw/reason.go`
+- [x] 2.1 **RED** — 409 + `code=opposite-pending-order-exists` → `DispatchRejected`,
       attempt **종결**, `PendingAttempts`에서 제외
-- [ ] 2.2 **RED** — **422** + 같은 code → 같은 결과 (계약대로 왔을 때도 같아야 한다)
-- [ ] 2.3 **RED** — 409 + `code=request-in-progress` → **종전대로 Ambiguous**.
+- [x] 2.2 **RED** — **422** + 같은 code → 같은 결과 (계약대로 왔을 때도 같아야 한다)
+- [x] 2.3 **RED** — 409 + `code=request-in-progress` → **종전대로 Ambiguous**.
       **이 케이스가 R1의 안전 경계다** — 깨지면 살아 있는 주문을 은퇴시킨다
-- [ ] 2.4 **RED** — code 없는 409 → 종전대로 Ambiguous
-- [ ] 2.5 **RED** — message에만 그 문구가 있고 code는 다름 → **분류되지 않는다**
+- [x] 2.4 **RED** — code 없는 409 → 종전대로 Ambiguous
+- [x] 2.5 **RED** — message에만 그 문구가 있고 code는 다름 → **분류되지 않는다**
       (D0: message로 걸지 않는다)
-- [ ] 2.5a **RED** — 본문의 code가 **`error` 아래**에 있어도 잡힌다
+- [x] 2.5a **RED** — 본문의 code가 **`error` 아래**에 있어도 잡힌다
       (프로덕션 3건의 실물 모양: `{"error":{"requestId":…,"code":"opposite-pending-order-exists",…}}`)
-- [ ] 2.5b **RED** — 본문의 code가 **최상위**에 있어도 잡힌다
+- [x] 2.5b **RED** — 본문의 code가 **최상위**에 있어도 잡힌다
       (`testdata/interactive_auth_challenge.json`의 모양). **두 자리를 다 읽는다**
-- [ ] 2.5c **RED** — code 값 비교는 **대소문자 무시 + 전체 일치**다.
+- [x] 2.5c **RED** — code 값 비교는 **대소문자 무시 + 전체 일치**다.
       `opposite-pending-order-exists-v2` 같은 값은 **잡히지 않는다**(substring 아님)
-- [ ] 2.5d **RED** — JSON이 아닌 본문 · code 필드 부재 · 빈 code → **분류하지 않음**
-- [ ] 2.5e **RED (5판 N3 — 모호 강제)** — 최상위 `code` 와 `error.code` 가 둘 다 있고 값이 다르면 `DispatchAmbiguous` 를 **즉시** 반환하고
+- [x] 2.5d **RED** — JSON이 아닌 본문 · code 필드 부재 · 빈 code → **분류하지 않음**
+- [x] 2.5e **RED (5판 N3 — 모호 강제)** — 최상위 `code` 와 `error.code` 가 둘 다 있고 값이 다르면 `DispatchAmbiguous` 를 **즉시** 반환하고
       뒤의 분류(`ClassifyBrokerRefusal` · 상태 코드)를 타지 않는다(D−3.5)
-- [ ] 2.5f **RED (5판 N3 — 계약 반례)** — **422** + 두 자리가 다른 code → 확정 거절이 **아니다**(모호). 4판의 「분류하지 않음 → 종전 경로」 는
+- [x] 2.5f **RED (5판 N3 — 계약 반례)** — **422** + 두 자리가 다른 code → 확정 거절이 **아니다**(모호). 4판의 「분류하지 않음 → 종전 경로」 는
       이 입력을 상태 코드 분기의 422 확정 거절(`journal/dispatch.go:323-327`·`:351`)로 떨어뜨렸다 — 그 반례를 계약 시험으로 고정한다
-- [ ] 2.5g **RED (5판 N3)** — 세 결과를 표로 고정한다: 확정 거절(목록 안 · 모순 없음) · 모호 강제(두 자리 모순) · 판정 없음(JSON 아님 · code 없음 ·
+- [x] 2.5g **RED (5판 N3)** — 세 결과를 표로 고정한다: 확정 거절(목록 안 · 모순 없음) · 모호 강제(두 자리 모순) · 판정 없음(JSON 아님 · code 없음 ·
       목록 밖 → 종전 경로). 판정 없음 입력이 409 면 종전대로 모호, 422 면 종전대로 확정 거절임을 함께 단언한다
-- [ ] 2.6 **RED** — `isDefinitiveRejection`의 상태 목록 **무변화**를 표로 고정
-- [ ] 2.7 **RED** — 기존 세 code(`trade_auth_required`·`fx_consent`·`funding_required`)의
+- [x] 2.6 **RED** — `isDefinitiveRejection`의 상태 목록 **무변화**를 표로 고정
+- [x] 2.7 **RED** — 기존 세 code(`trade_auth_required`·`fx_consent`·`funding_required`)의
       분류 **무변화**
-- [ ] 2.8 **GREEN** — `ReasonOppositePendingOrder` 추가 + `AllReasonCodes()` 등록 +
+- [x] 2.8 **GREEN** — `ReasonOppositePendingOrder` 추가 + `AllReasonCodes()` 등록 +
       **`classifyRefusalCode` 신설 — 반환은 3상**(D−3.5; `(ReasonCode, bool)` 은 5판에서 폐기).
       `code`와 `error.code`만 읽고, `classifyRefusalBody`보다 **먼저** 부른다.
       **기존 세 항목의 substring 매칭은 건드리지 않는다**(D0)
 - [ ] 2.9 `submit`이 `default:` 갈래(`exitloop.go:1410-1416`, base 번호 B10 `:1304`)로 가는 것을 확인 — `alertProposalRefused` + 레벨 재무장
-- [ ] 2.10 **golden 갱신** — `internal/execgw/testdata/reason_codes.golden`에 새 code 한 줄.
+- [x] 2.10 **golden 갱신** — `internal/execgw/testdata/reason_codes.golden`에 새 code 한 줄.
       `TOSSOS_UPDATE_GOLDEN=1 go test -run TestWriteReasonCodeGolden`으로 만든다.
       **손으로 고치지 않는다**
-- [ ] 2.11 **RED (재생 경계)** — 재생 응답에는 이 code 분류가 적용되지 않는다.
+- [x] 2.11 **RED (재생 경계)** — 재생 응답에는 이 code 분류가 적용되지 않는다.
       오늘 `classifyReplay`가 `classifyMutation`과 코드를 공유하지 않아 **우연히** 안전하나,
       재생 attestation이 켜지는 날 이 code는 반대 방향으로 작동한다.
       **구조로 고정하고 spec에 SHALL NOT으로 적는다**

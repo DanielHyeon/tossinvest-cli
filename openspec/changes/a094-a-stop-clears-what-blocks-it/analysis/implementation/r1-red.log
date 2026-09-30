@@ -1,0 +1,18 @@
+--- FAIL: TestA094RefusalCodeClassifiesTheAttempt (4.98s)
+    --- FAIL: TestA094RefusalCodeClassifiesTheAttempt/2.1_production_409_with_error.code (0.28s)
+        a094_refusal_code_test.go:78: state = IN_DOUBT, want FAILED_CONFIRMED (reason dispatch_outcome_unknown, detail HTTP 409 does not prove whether the mutation executed: official: API error 409: {"error":{"requestId":"a094-test","code":"opposite-pending-order-exists","message":"반대 포지션 미체결 주문이 존재합니다."}})
+    --- FAIL: TestA094RefusalCodeClassifiesTheAttempt/2.2_contract_422_with_the_same_code (0.27s)
+        a094_refusal_code_test.go:81: reason = dispatch_rejected_by_broker, want opposite_pending_order_exists
+    --- FAIL: TestA094RefusalCodeClassifiesTheAttempt/2.5b_code_at_the_top_level (0.28s)
+        a094_refusal_code_test.go:78: state = IN_DOUBT, want FAILED_CONFIRMED (reason dispatch_outcome_unknown, detail HTTP 409 does not prove whether the mutation executed: official: API error 409: {"code":"opposite-pending-order-exists","message":"x"})
+    --- FAIL: TestA094RefusalCodeClassifiesTheAttempt/2.5c_upper_case_is_the_same_code (0.28s)
+        a094_refusal_code_test.go:78: state = IN_DOUBT, want FAILED_CONFIRMED (reason dispatch_outcome_unknown, detail HTTP 409 does not prove whether the mutation executed: official: API error 409: {"error":{"code":"OPPOSITE-PENDING-ORDER-EXISTS"}})
+    --- FAIL: TestA094RefusalCodeClassifiesTheAttempt/both_places_carry_the_same_code (0.29s)
+        a094_refusal_code_test.go:78: state = IN_DOUBT, want FAILED_CONFIRMED (reason dispatch_outcome_unknown, detail HTTP 409 does not prove whether the mutation executed: official: API error 409: {"code":"opposite-pending-order-exists","error":{"code":"Opposite-Pending-Order-Exists"}})
+    --- FAIL: TestA094RefusalCodeClassifiesTheAttempt/2.5f_contradictory_places_on_a_422 (0.27s)
+        a094_refusal_code_test.go:78: state = FAILED_CONFIRMED, want IN_DOUBT (reason dispatch_rejected_by_broker, detail broker refused the mutation with HTTP 422: official: API error 422: {"code":"opposite-pending-order-exists","error":{"code":"request-in-progress"}})
+    --- FAIL: TestA094RefusalCodeClassifiesTheAttempt/2.5f_contradictory,_neither_listed,_on_a_422 (0.28s)
+        a094_refusal_code_test.go:78: state = FAILED_CONFIRMED, want IN_DOUBT (reason dispatch_rejected_by_broker, detail broker refused the mutation with HTTP 422: official: API error 422: {"code":"a","error":{"code":"b"}})
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	5.796s
+FAIL
