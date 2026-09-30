@@ -1,8 +1,8 @@
 # Function Logic Map: `createStrategyRiskLoaderJournal`
 
-- Source: `internal/app/engine/strategy_risk_authority_test.go` (`201`–`224`)
+- Source: `internal/app/engine/strategy_risk_authority_test.go` (`211`–`234`)
 - Qualified: `createStrategyRiskLoaderJournal`
-- AST evidence: `ast.json` (`source_sha256` afb21e1c30354837…) — **편집 뒤**(시험 전용 fixture)
+- AST evidence: `ast.json` (`source_sha256` bb13286b7859e266…) — **편집 뒤**(시험 전용 fixture; 1.5 게이트 준비 때 재추출 — a112 `80ae96a5` 가 앞에 함수를 더해 10 줄 밀림, 본문 불변)
 - Risk scan: `risk-pattern-report.md`
 - AST branches 4 · return 0 · 호출 8
 
@@ -20,10 +20,10 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 return | 진입 실측 |
 |---|---|---|---|---|
-| B1 | if | `:204` `if err != nil {` | — | — |
-| B2 | range | `:207` `for _, statement := range []string{`PRAGMA user_version=27`,` | — | — |
-| B3 | if | `:216` `if _, err := db.Exec(statement); err != nil {` | — | — |
-| B4 | if | `:221` `if err := os.Chmod(path, 0o600); err != nil {` | — | — |
+| B1 | if | `:214` `if err != nil {` | — | — |
+| B2 | range | `:217` `for _, statement := range []string{`PRAGMA user_version=27`,` | — | — |
+| B3 | if | `:226` `if _, err := db.Exec(statement); err != nil {` | — | — |
+| B4 | if | `:231` `if err := os.Chmod(path, 0o600); err != nil {` | — | — |
 
 ## Calls and live bindings
 
