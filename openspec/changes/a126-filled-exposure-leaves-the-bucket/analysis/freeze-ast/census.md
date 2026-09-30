@@ -213,6 +213,57 @@ AST: `ast/internal-journal--queryriskbucketorder.json` · sha256 `d8d3cefcb06679
 | B9 | if | 611 | `if err := r.Scan(&d, &v, &pv, &id); err != nil {` |
 | B10 | if | 617 | `if err := r.Close(); err != nil {` |
 
+## `internal/journal/risk_bucket_fill.go` · `riskMinorMonotoneDelta` (L669–682, 분기 3)
+
+AST: `ast/internal-journal--riskminormonotonedelta.json` · sha256 `d8d3cefcb0667911…`
+
+| id | kind | line | source |
+|---|---|---|---|
+| B1 | if | 671 | `if err != nil {` |
+| B2 | if | 675 | `if err != nil {` |
+| B3 | if | 678 | `if a.Cmp(b) < 0 {` |
+
+## `internal/journal/risk_bucket_fill.go` · `latchRiskBucketScope` (L1132–1138, 분기 1)
+
+AST: `ast/internal-journal--latchriskbucketscope.json` · sha256 `d8d3cefcb0667911…`
+
+| id | kind | line | source |
+|---|---|---|---|
+| B1 | if | 1133 | `if latch != "REPLAY_MISMATCH" && latch != "ORPHAN_FILL" {` |
+
+## `internal/journal/risk_bucket_fill.go` · `latchRiskBucketFillFailure` (L1140–1156, 분기 3)
+
+AST: `ast/internal-journal--latchriskbucketfillfailure.json` · sha256 `d8d3cefcb0667911…`
+
+| id | kind | line | source |
+|---|---|---|---|
+| B1 | if | 1141 | `if err := latchRiskBucketScope(ctx, tx, key, latch, detail, fill.CommittedAt); err != nil {` |
+| B2 | if | 1144 | `if _, err := tx.ExecContext(ctx, `UPDATE risk_bucket_owners SET unknown_actual_latched=1 WHERE account_ref=? AND market=? AND symbol=? AND prospect...` |
+| B3 | if | 1147 | `if _, err := tx.ExecContext(ctx, `UPDATE risk_bucket_reservations SET unknown_actual_latched=1,updated_at=? WHERE account_ref=? AND market=? AND sy...` |
+
+## `internal/journal/risk_bucket_fill.go` · `latchRiskBucketFillFailureForScope` (L1158–1181, 분기 6)
+
+AST: `ast/internal-journal--latchriskbucketfillfailureforscope.json` · sha256 `d8d3cefcb0667911…`
+
+| id | kind | line | source |
+|---|---|---|---|
+| B1 | if | 1160 | `if err != nil {` |
+| B2 | for | 1165 | `for rows.Next() {` |
+| B3 | if | 1167 | `if err := rows.Scan(&key.AccountID, &key.Market, &key.Symbol, &key.ProspectiveGeneration); err != nil {` |
+| B4 | if | 1172 | `if err := rows.Err(); err != nil {` |
+| B5 | range | 1175 | `for _, key := range keys {` |
+| B6 | if | 1176 | `if err := latchRiskBucketFillFailure(ctx, tx, key, fill, "REPLAY_MISMATCH", detail); err != nil {` |
+
+## `internal/riskbucket/production_snapshot_authority.go` · `readProductionRiskUsage` (L452–473, 분기 3)
+
+AST: `ast/internal-riskbucket--readproductionriskusage.json` · sha256 `5f26bf28bbf8207f…`
+
+| id | kind | line | source |
+|---|---|---|---|
+| B1 | if | 459 | `if err != nil {` |
+| B2 | for | 464 | `for rows.Next() {` |
+| B3 | if | 466 | `if err := rows.Scan(&row.ReservationID, &row.PolicyVersion, &row.HeldMinor, &row.FilledMinor, &row.State,` |
+
 ## `internal/journal/risk_bucket_usage.go` · `refuseStaleBucketUsage` (L30–84, 분기 12)
 
 AST: `ast/internal-journal--refusestalebucketusage.json` · sha256 `8eacbf2fea3f1234…`
@@ -278,6 +329,40 @@ AST: `ast/internal-journal--journal.releaseriskoveragelatch.json` · sha256 `090
 | B15 | if | 372 | `if err := j.recordRiskBucketStateTx(ctx, tx, key, "OVERAGE_LATCH_RELEASED", "overage-latch-release-"+eventDigest[:24], eventDigest, releasedAt); er...` |
 | B16 | if | 378 | `if err := req.Auditor.RecordAction(AuditActionOverageLatchRelease, setting, relaxationAuditAttempt, detail); err != nil {` |
 | B17 | if | 381 | `if err := tx.Commit(); err != nil {` |
+
+## `internal/journal/risk_bucket_issuance.go` · `Journal.RevalidateQFinalAdmission` (L557–668, 분기 27)
+
+AST: `ast/internal-journal--journal.revalidateqfinaladmission.json` · sha256 `8828a2a0d1dba358…`
+
+| id | kind | line | source |
+|---|---|---|---|
+| B1 | if | 559 | `if err != nil {` |
+| B2 | if | 563 | `if err != nil {` |
+| B3 | if | 567 | `if !ok {` |
+| B4 | if | 571 | `if !required {` |
+| B5 | if | 577 | `if err != nil {` |
+| B6 | if | 581 | `if !valid \|\| quantity != strconv.FormatUint(qFinal, 10) \|\| account != decision.AccountRef \|\| strings.EqualFold(market, intent.Market) == fals...` |
+| B7 | if | 585 | `if err := j.db.QueryRowContext(ctx, `SELECT state,decision_id FROM risk_reservations WHERE id=?`, existingID).Scan(&legacyState, &legacyDecision); ...` |
+| B8 | if | 590 | `if err := j.db.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_owners WHERE account_ref=? AND market=? AND symbol=? AND prospective_generati...` |
+| B9 | if | 593 | `if err := verifyRiskBucketStateDigest(ctx, j.db, key); err != nil {` |
+| B10 | if | 597 | `if err != nil {` |
+| B11 | for | 602 | `for rows.Next() {` |
+| B12 | if | 605 | `if err := rows.Scan(&dimension, &state, &reserved, &held, &linkedExisting, &linkedOwner); err != nil {` |
+| B13 | if | 608 | `if seen[dimension] \|\| state != "HELD" \|\| reserved == "" \|\| held != reserved \|\| linkedExisting != existingID \|\| linkedOwner != prospective {` |
+| B14 | if | 613 | `if err := rows.Err(); err != nil {` |
+| B15 | range | 616 | `for _, dimension := range riskbucket.RequiredDimensionOrder() {` |
+| B16 | if | 617 | `if !seen[dimension] {` |
+| B17 | if | 621 | `if len(seen) != len(riskbucket.RequiredDimensionOrder()) {` |
+| B18 | if | 627 | `if err != nil {` |
+| B19 | if | 630 | `if err := refuseEntryUnderLossLock(ctx, j.db, account, riskbucket.Market(market), horizon); err != nil {` |
+| B20 | if | 635 | `if err := ensureRiskBucketEntryScopeClean(ctx, j.db, key); err != nil {` |
+| B21 | if | 639 | `if err != nil {` |
+| B22 | for | 647 | `for bucketRows.Next() {` |
+| B23 | if | 649 | `if err := bucketRows.Scan(&ref.dimension, &ref.value); err != nil {` |
+| B24 | if | 655 | `if err := bucketRows.Close(); err != nil {` |
+| B25 | range | 658 | `for _, ref := range refs {` |
+| B26 | if | 660 | `if err != nil {` |
+| B27 | if | 663 | `if err := latchedUsageRefusal(ref.dimension, ref.value, usage); err != nil {` |
 
 ## `internal/riskbucket/fill.go` · `ApplyFill` (L100–277, 분기 38)
 

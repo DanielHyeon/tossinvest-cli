@@ -31,10 +31,16 @@ TARGETS = [
     ("internal/journal/risk_bucket_fill.go", "persistRiskBucketFillTransition"),
     ("internal/journal/risk_bucket_fill.go", "riskBucketSharedUsage"),
     ("internal/journal/risk_bucket_fill.go", "queryRiskBucketOrder"),
+    ("internal/journal/risk_bucket_fill.go", "riskMinorMonotoneDelta"),  # freeze 리뷰 R3 #8
+    ("internal/journal/risk_bucket_fill.go", "latchRiskBucketScope"),  # R2 #2(c) latch 작성자 열거
+    ("internal/journal/risk_bucket_fill.go", "latchRiskBucketFillFailure"),  # R2 #2(c)
+    ("internal/journal/risk_bucket_fill.go", "latchRiskBucketFillFailureForScope"),  # R1 #2 · R3 #1
+    ("internal/riskbucket/production_snapshot_authority.go", "readProductionRiskUsage"),  # R2 #9
     ("internal/journal/risk_bucket_usage.go", "refuseStaleBucketUsage"),
     ("internal/journal/risk_bucket_usage.go", "smallestRecordedBucketLimit"),
     ("internal/journal/risk_bucket_usage.go", "latchedUsageRefusal"),
     ("internal/journal/risk_bucket_relaxation.go", "Journal.ReleaseRiskOverageLatch"),
+    ("internal/journal/risk_bucket_issuance.go", "Journal.RevalidateQFinalAdmission"),  # freeze 리뷰 R3 #3
     ("internal/riskbucket/fill.go", "ApplyFill"),
     ("internal/riskbucket/fill.go", "recomputeOverageLatches"),
     ("internal/riskbucket/fill.go", "clearResolvedUnknownLatches"),

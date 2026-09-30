@@ -59,9 +59,9 @@ a066 6.5 실측(아카이브 review.md:1124 부근):
 
 - **Specs**: `multi-horizon-risk-buckets` (ADDED — 떠남 요구 1, latch 불가침 요구 1)
 - **Code**: 사용량 reader 한 곳 — `internal/riskbucket/production_snapshot_authority.go`
-  (`readProductionRiskUsage`·`aggregateProductionRiskUsage`·`JournalBucketUsage`), 한도 모집단 흡수로
-  `internal/journal/risk_bucket_usage.go`(`refuseStaleBucketUsage` 소비 변경·`smallestRecordedBucketLimit` 삭제).
-  persist 쓰기 자리(`risk_bucket_fill.go` :1068·:1071·:1087)와 owner 해제·완화·재계산 경로는 **편집하지 않는다**(파생 설계).
+  (`readProductionRiskUsage`·`aggregateProductionRiskUsage`·`JournalBucketUsage`). 한도 모집단(`smallestRecordedBucketLimit`)은
+  **바꾸지 않는다**(freeze 리뷰 처분 D3 — 주석 한 줄만). persist 쓰기 자리(`risk_bucket_fill.go` :1068·:1071·:1087)와 owner
+  해제·완화·재계산 경로는 **편집하지 않는다**(파생 설계).
 - **Schema**: 없음(영수증 v24·scope latch v22 재사용). 저장값 불변.
 - **생산 효과**: owner 해제가 배선될 때까지 0(a066 잔여 #5).
 - **§0.3·손절**: 무접촉 — 진입 cap 만 다룬다. 감소는 진입을 **여는** 방향이므로 모든
