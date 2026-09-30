@@ -1352,7 +1352,7 @@ a092 · a095 선례대로 미체크 24건을 `[처분 2026-10-01]` 로 닫았다
   섞이지 않는다. 게이트 커밋 절단까지 형제 Go 착지 동결(a112 보류 — 절단 즉시 Manager 에 신호).
 - 게이트 전 준비(`analysis/gate/prep-acc796ce.txt`): `sdd_sync.py --no-gbrain` rc 0(all indexes current) · `make sdd-check` rc 0. `make sdd-infra` rc 2 는 1차가 만든
   `.sdd/.venv` 가 이미 있어서(uv 「A virtual environment already exists」) — 무해. gbrain 은 주 워크트리 전용 홈이라 격리 사본에서 돌리지 않았다 — advisory.
-- **`make gate CHANGE=a094-a-stop-clears-what-blocks-it` rc 0 — 11/11 OK**(2026-10-01 01:00~01:39:24 KST). 원문 `analysis/gate/gate-2-acc796ce.log`(rtk 압축 없음):
+- **`make gate CHANGE=a094-a-stop-clears-what-blocks-it` rc 0 — 11/11 OK**(2026-10-01 01:09:30~01:39:24 KST). 원문 `analysis/gate/gate-2-acc796ce.log`(rtk 압축 없음):
   tasks.md · 미완료 0 · 짝 없음 · review.md · Function Logic Map(base `8c041ac6` → working tree, required 0 · evidence complete) · sdd-check(CodeGraph 색인 일치) ·
   test · test-seams · test-race · vet · validate.
 - **7.1 전체 `go test ./... -count=1 -race -timeout 90m`** — 같은 커밋 `acc796ce` 의 별도 격리 워크트리(`/tmp/claude-1000/a094-race`), 01:40:25~02:53:19 KST, **rc 0 ·
