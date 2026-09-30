@@ -211,3 +211,49 @@ riskbucket 행 규칙 7(`a126_departed_rows_test.go`).
 **생산 효과 0 (동등성 논거, Manager 지시).** 떠남은 영수증에만 걸리고 영수증 작성자 `releaseRiskBucketOwner` 의 생산 호출자는 0(CodeGraph callers 9 전부 시험),
 운영 원장 영수증 0(design Q2 실측). 영수증이 없으면 새 SQL 열은 전부 0/""이고 `aggregateProductionRiskUsage` 는 편집 전과 같은 합 · 같은 latch · 같은 RowDigest 를
 낸다(B3 · B4 는 영수증이 있을 때만 서고 B5 는 영수증 없으면 거짓). a066 수리도 해제 생산 호출자 0 이라 빈 효과다. 배선은 tasks 3.1 의 면제 불가 의존 뒤.
+
+## 1.5 구현 리뷰 합본 (2026-10-01, 대상 `9cbc7560`, 3 보이스 + codex)
+
+**형식(Manager 지시).** 별도 문맥 Claude 보이스 셋(① 적대 fail-open · ② 원장 정합 · ③ 증거 · 시험 품질) + codex(read-only · non-ephemeral ·
+`~/.codex` 금지 + 머리말 신고, 세션 `01a0f3f6-e3b6-7333-adb9-17040a750f96`). **gstack `/review` 는 대체** — 공유 작업 트리에 병행 로트(a090 · a094 · a112)의
+미커밋 diff 가 섞여 있어 diff 기반 리뷰가 남의 변경을 이 로트의 것으로 읽는다. 보이스는 전부 `9cbc7560` 분리 워크트리에서 돌았고 끝나고 지웠다.
+
+| 보이스 | 판정 | P0/P1 |
+|---|---|---|
+| ① 적대 fail-open | APPROVE | 0 (P2 1 · P3 2) |
+| ② 원장 정합 | APPROVE | 0 (P3 4) |
+| ③ 증거 · 시험 품질 | APPROVE-WITH-FIXES | 0 (P2 4 · P3 여럿) |
+| codex | **FAIL** | 0 — P2 셋, 전부 시험 공백. "No new P0/P1 implementation defect" · 머리말 신고 있음 |
+
+**생산 코드 결함 0 은 네 목소리 일치.** ① 은 조인 키가 전부 PK 라 행 복제가 없고, 떠남은 r.* 로 찾은 영수증 + r.*=d.* 에서만 서며, 대소문자 · 공백 불일치는
+BINARY 비교로 영수증을 못 찾아 계상 쪽(안전 방향)으로 떨어짐을 공격으로 확인. D4 되돌림은 latch 종류 필터 없는 EXISTS 라 네 CHECK 값 전부에서 섬. a066 수리
+철자는 두 자리(`risk_bucket_owner.go:932` · `risk_bucket_fill.go:891`)뿐이고 다른 `actual_known` 읽기(`risk_bucket.go:572`)는 digest 입력. 생산 효과 0 재확인
+(영수증 작성자 `:1029` · owner released_at 작성자 `:1017` 모두 `releaseRiskBucketOwner` 안, 생산 호출자 0).
+
+### 지적 목록과 처분안 (Manager 결정 전 — 제안)
+
+| # | 출처 | 등급 | 내용 | 처분안 |
+|---|---|---|---|---|
+| R1 | codex 1 | P2 | 「떠남은 다른 owner latch 를 풀지 않는다」 뒷절 미시험 — B latch 를 운영자 경로로 푼 뒤 B 의 다음 실측 체결이 A 제외 합으로 overage 를 계산해야 함(delta :60-61) | **시험 보강**: A 포함이면 overage · A 제외면 아님이 되는 값으로 연장 |
+| R2 | codex 2 · ③ · ① P3 | P2 | codex #2 잔여 핀이 발급 대신 admission, `RevalidateQFinalAdmission` 미호출 — 재검증이 latch 아닌 재계산으로 구멍을 닫아도 핀이 초록으로 남음 | **Manager 결정**: (가) 발급 + 재검증 실호출로 재작성 (나) 현 모양 유지 + R3 에 한쪽성 명기. 권고 (가) |
+| R3 | codex 3 | P2 | replay fingerprint 에 snapshot digest 없음(tasks 1.1 문언) | **논거 + 보강**: snapshot digest = H(manifest · dim · value · limit · filled · held · RowDigest · asOf)(`production_snapshot_authority.go:403-404`) — 고정 입력 아래 fingerprint 필드의 함수이고 Latched 면 생성 자체가 거절(`:392`). 문언 이행을 위해 생산 snapshot 생성기로 digest 를 실측해 fingerprint 에 넣는 보강 제안 |
+| R4 | ③ X3 | P2 | `State=="HELD"` 절 삭제 변이 생존 — HELD 시험 전부 held=5 동반 | **시험 보강**: HELD · held=0 사례를 두 손상 시험에 |
+| R5 | ③ X7 | P2 | `OwnerKeyMatches` 에서 `d.symbol=r.symbol` 삭제 생존 — 사본 불일치는 generation 으로만 고정 | **시험 보강**: symbol 불일치 사례(journal 실 원장) |
+| R6 | ③ X1/X2/X9 | P2 | 영수증 조인 rc 의 generation · symbol · account 삭제 생존 — 오늘은 released_at 불일치 역지지로 우연히 fail-closed | **시험 보강**: 같은 종목 옛 세대 해제 + 새 세대 활성 체결에서 새 세대 사용량이 읽히고 계상됨 |
+| R7 | ① | P2 | tasks 3.1 면제 불가 의존에 코드 tripwire 없음 — 생산 호출 census(`risk_bucket_fill_test.go:343-347`)에 `.releaseRiskBucketOwner(` 없음. 호출 한 줄이면 R3 구멍이 열린 채 떠남이 켜지고 어떤 시험도 안 깨짐 | **시험 보강**: census 에 추가, 메시지에 tasks 3.1 · H1 인용 |
+| R8 | ② P3-4(a) · ③ B3 | P3 | 영수증 있는 손상 행의 admission 거절을 a126 시험이 고정하지 않음 — BTM B3 인용 시험은 admission 을 안 돌림(B3 오류 반환을 끄면 a066 `TestA066StorageErrorExitsFailClosed` 만 잡음) | **시험 보강** + BTM B3 인용 정정 |
+| R9 | ② P3-1 | P3 | 「문자열 동일」 거짓 — 공유 조각에 바깥 괄호 추가 | 정정: 「의미 동일, 바깥 괄호만 추가」(이 절이 정정 기록) |
+| R10 | ② P3-2 · P3-3 | P3 | design D1 조건 4 의 영수증 한정 적용 · D5 「`releaseRiskBucketOwner` 편집 없음」이 구현과 어긋남 | design errata 두 줄(D1 조건 4 · D5 에 1.0.3 수리 인용) |
+| R11 | ③ | P3 | `red-journal.log` 가 이전 시험 판본에서 나옴(줄 번호 불일치 · 한 FAIL 은 fixture 오류). 확정 시험으로 재도출하면 a066 수리 + 옛 reader = 12 FAIL / 6 PASS(기록 13/5) — `ReleaseAccepts…` 는 떠남이 아니라 a066 수리 시험 | RED 로그 재생성(확정 시험 · 두 상태: 편집 전 전체 · a066 수리만), 1.1~1.4 절의 13/5 를 이 절에서 정정 |
+| R12 | ③ | P3 | 전략 정산 시험(`:218`)은 `backfillConfirmedStrategyFillTx` 직접 호출 · attempt 상태 위조 — 경로 끝의 binding 호출만 잰다(P1 CAUGHT) | 시험 주석에 도달성 미증명 명기 |
+| R13 | ③ | P3 | `TestA126ReleaseAndTransitionShareOneFillResolutionRule` 은 상수 진리표 — 두 자리 공유는 F1 · F3 가 강제 | 기록만 |
+| R14 | ③ · ① | P3 | 하네스가 시험 파일 sha 를 단언하지 않음 · mutation-1 은 옛 fill.go(`d154c684`) 위 — ③ 이 확정 트리에서 M1 · M2 · M3 · M6c · M7 재실행 5/5 CAUGHT | 하네스에 시험 파일 sha 추가, 보강 뒤 전수 재실행 |
+| R15 | ③ X8 · X10 · X11 | P3 | 생존하나 fail-closed(결정 쪽 영수증 generation · `OwnerReleasedAt==""` · scope latch 세대 무시) | 기록만(보수 방향) |
+| R16 | ① | P3 | reader 가 못 보는 손상: 활성 owner 체결을 해제 owner 예약에 배분하는 allocation 행(작성자 없음) · 공유 조각 셋째 철자 방지는 행동 시험뿐 | 기록만(3.1 배선 로트의 입력) |
+
+③ 의 fixture 비약화 점검: 축소 스키마 diff 는 열 · 빈 표 추가뿐, `closeRiskBucketOwnerLifecycle` 호출자의 단언 변경 0, a066 `BlockingField` 단언
+(`risk_bucket_owner_test.go` :70/114/138/155/193/254/484/636 · `a066_relaxation_test.go:370`) 전부 통과, `risk_bucket_owner.go` 덮인 블록 199→200(잃은 블록 0).
+FLM 좌표 현행(③ 대조).
+
+**판정: 수리 로트 필요(시험 · 문서만, 생산 코드 변경 0).** R1 · R3 · R4~R8 은 시험 보강, R2 는 Manager 결정, R9~R14 는 문서 · 하네스. 수리 뒤 전수 변이 재실행 +
+codex resume 재리뷰 → 격리 게이트(2.1) → 아카이브 승인(2.2).
