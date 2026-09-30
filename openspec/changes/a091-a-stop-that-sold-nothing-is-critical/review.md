@@ -182,3 +182,37 @@ outbox 1행 + `alert_undelivered` ERROR 13줄 + 게이트 13회 래치다.
   는 정확히 `"0"` 비교」(M1 — base 는 수치 비교) · 「`EventExitProposalCapped` 는 부분 캡 전용」(D1 — 익절 0주가 남는다).
   전부 3판 문서에서 정정했다.
 - engine 커버리지 실행은 `-trimpath` 때문에 `TestA111…` 두 시험이 소스 경로를 못 찾아 실패했다(무관한 AST 핀) — 프로파일은 유효.
+
+## freeze 재리뷰 2라운드 (2026-10-01, task 0.5) — **REJECT** (보이스 A · B REJECT, codex FAIL) · 분류만, 반영은 Manager 결정 뒤
+
+- 대상: `git archive 64380cb6`(3판) → `/tmp/claude-1000/a091-r2-tree`, 전 보이스 read-only. Claude 보이스 A(적대 Eng) · B(소비자 · 폭발반경 · 시험)
+  분리 실행(Opus, 각 독립 컨텍스트) · codex 교차 모델(v0.154.0, `-s read-only`, non-ephemeral, ~/.codex 접근 금지 + 위반 머리말 조항 —
+  출력 머리말 위반 신고 없음. 실행 로그의 `~/.codex/skills/…` ERROR 한 줄은 codex 하네스 기동 시 스킬 적재이며 모델 명령이 아님; 명령 26건
+  중 작업 디렉터리 밖 경로 0). 원문: `analysis/freeze-review/{claude-r2-voiceA.md, claude-r2-voiceB.md, codex-r2-prompt.md, codex-r2-output.md}`.
+- 세 보이스가 **확인한 것**(참): 19 종 · class rule 셋 · `isProtective` 의 5 액션 정확한 이분(recovery 가 여섯째 액션을 만들지 않음 — codex) ·
+  applyFloor 좌표와 0주 반환 두 자리 · `isZeroQuantity` 수치 비교 · D6 생산 출처 좌표 · 재시도 상수 · 1h · 5s · `Offer` 비차단 · 재기저화
+  충실(83 줄 중 첫 줄만 치환) · `event_type` CHECK 없음 · 콘솔/httpapi 이름 필터 없음.
+
+### 수렴 분류 (중복 병합)
+
+| # | 심각도(최고) | 제기 | 내용 | 처분 후보 |
+|---|---|---|---|---|
+| R2-1 | **P0** | A · B · codex | **알림 꺼진(기본) 엔진 · 전송 부재에서 보호 0주가 진입 차단 + ENTRY_BLOCKED 승격을 부른다**(기본값 off `a074_notifications_test.go:28-30` · nil publisher `notifications.go:83-87` · Notifier 는 늘 생성 `gateway.go:327` · 배달 실행자는 publisher 부재를 실패로 셈 `alertdelivery.go:316-326` → 3 사이클 뒤 래치 · 승격 `:446-495`). a095 정본(`engine-safety/spec.md:1845-1851`)은 같은 모양의 사실을 알림 off 에서 critical 로 매기지 않았다(`adoption.go:451` `NotificationsEnabled`). 3판은 a095 를 선례로 들며 그 게이트를 뺐고 비용을 적지 않았다. 불변식 3(토글 OFF = upstream)과도 닿는다 | **사용자/Manager 결정 Q1**: (a) a095 식 게이트(알림 켜짐일 때만 critical, 「꺼짐」과 「켜짐 · 전송 실패」를 구별 — codex) 또는 (b) 무게이트 + 비용(래치 ≈3 배달 사이클 · durable ENTRY_BLOCKED · ack + mode-release) 명시 |
+| R2-2 | **P0** | A · B | **exit-policy 정본 충돌** — `exit-policy/spec.md:62` 「캡 발생은 알림된다(SHALL — 일반 등급 알림이다 …)」. 보호 0주도 캡이므로 아카이브 뒤 두 정본이 어긋난다. delta 는 engine-safety 하나 | exit-policy MODIFIED delta 추가(보호 0주는 engine-safety 가 등급을 정한다 + Scenario) — 기계적 |
+| R2-3 | **P0** | codex · A | **계좌 원문 로그** — 유지 · 핀하는 B2 `logErr` 가 `obs.FieldAccount, o.opts.AccountRef`(`exitloop.go:1838`, AccountRef = 계좌번호 `interlock.go:680-684`, 로거 비가림 `log.go:113-117`)를 쓰고, 새로 닿는 기록 실패 → `escalate` 로그도 원문(`notifier.go:432-444`) | 편집하는 줄에서 가림(`obs.MaskAccount` 선례) + sentinel 계좌 시험(B2 · 기록 실패 · 승격 성공/실패) |
+| R2-4 | **P0** | codex · A | **§0.3 D5 불완전** — 기록 실패 시 `escalate` 가 exit goroutine 에서 동기로 원장 트랜잭션 하나 더(`record_only.go:136-157` · `notifier.go:425-449`), 종료 시 ctx 취소가 B2 로 가(`retry.go:365-366` ClassCanceled) 취소된 ctx 로 `RecordAlert` → 가짜 래치 · 승격 시도(A), `Acknowledge` 가 `n.mu` 아래 임의 백로그를 처리(`notifier.go:957-981`), 뒤쪽 포지션의 시세 신선도(`exitloop.go:477-495`) | 몫을 항목별로 이름 붙임(로그 · 잠금 대기 · 기록 · 실패 승격) + `context.Canceled`/`DeadlineExceeded` 는 0주 보고 제외(또는 시험) + 뒤쪽 보호 포지션 포함 시험 |
+| R2-5 | P1 | B | **8/2 동기 사건의 성격** — 결말 `ADJUSTMENT_CLOSED` 는 엔진 밖 종결(`converge.go:95-98`)이고, 수동 매도 · 외부 주문이면 대사 블록 아래 `reconcileFloor` 가 보유 0(`exitwiring.go:216-220`) 또는 매도가능 0 을 낸다 — a091 은 주인이 이미 판 포지션에 「손절이 한 주도 나가지 않았다」 critical 을 낸다. `EventExitPositionClosedExternally` 는 바로 그 이유로 normal(`event.go` 주석). 8/2 의 한정 bound 가 `sellable` 이었다는 점은 외부 매도 주문의 잠금과 맞다(추론 — 원장 미열람) | **결정 Q2**: 보유 0 으로 인한 하한 0(보호할 것 없음)을 매도가능 0 · 낡음 · 오류와 가를지. Why/근거 문장 정정. 8/2 원장 재열람(읽기 전용, 사람 또는 승인 범위) |
+| R2-6 | P1 | A · codex | **「원인은 세부 정보로 구분」 SHALL 과 공유 키** — PENDING 행은 첫 내용 유지(`outbox.go:285-340` · a097), 배달은 Title/Body 만(`alertdelivery.go:324-332`), `RecordOnly` 로그는 필드를 지움(`record_only.go:51`). 원인이 바뀌면 행 · 푸시는 첫 원인만 말한다. a095 정본이 같은 함정을 명명(`spec.md:1851-1852`) | **결정 Q3**: 원인별 키 vs 「에피소드 첫 원인(시각 포함, 한국어 Body) + 관측마다 안전한 로그」 명문화 — 두 순서 시험 |
+| R2-7 | P2 | A · B · codex | **재생 5.1 · 5.2 의 전제** — 13회 안에서 행은 PENDING 이라 재알림 창이 판정하지 않고, 8/2 조건(publisher 없음)의 실제 결말은 배달 실행자의 `alert_undelivered` 매 사이클(`alertdelivery.go:212-262, 316-322`) + 래치 + 승격이다. D5 의 「발생원이 없다」는 누락에 의한 거짓. 기존 `newExitHarness` 는 가짜 알림 수집기(`exitloop_test.go:122-126, 236`) — outbox 를 못 본다 | 5.1 을 팔 셋(정상 전송 · 실패 전송 · publisher 없음) + 정착 행 1h 경계 별도 사례로, 하네스 = 실제 `RecordOnly` + 원장 + 배달 실행자(내보내기 훅) |
+| R2-8 | P2 | B · codex | **시험 계획 구멍** — 익절 3 액션 · 보호 2 액션 전수 표 시험(현재 「익절」 단수) · B2 반환 회귀의 관측 가능 단언(레벨 해제 · 재발의 — 기존 시험은 「제출 없음」만) · 로그 캡처 하네스(H2) · a085 문구 규칙(한국어 · 이름(코드) · 계좌 없음, `engine-safety/spec.md:801-813`) · B2 원문 오류가 Title/Body 에 안 들어감 · 4.1 을 금지 문구 하나가 아니라 참인 0주 문장 단언으로 | tasks 2.x~5.x 재작성 |
+| R2-9 | P2 | A | **알림 전수 표 누락** — `EventOperatingMode`(critical) 통지 경로: `exitloop.go:882-883` Announcer · `exit_unobserved.go:229-230` · exit Retrier 401 강화(`exit_record_only.go:15-21`, `retry.go:360-364`) — 마지막은 `applyFloor` 의 하한 읽기에서 닿고, 같은 호출에서 새 critical 과 겹친다 | 표를 「알림 경로에 닿는 경로」 단위로(a092 정본 방법) |
+| R2-10 | P2 | B | **소비자 조사 불완전** — 배달 실행자는 「발송만」이 아니라 래치 · 승격(issues 문장 거짓) · `tossctl engine alerts ack`(`engine_alerts.go:74-100`) · mode-release · 콘솔 알림 꺼짐 안내(`settings_notifications.go:169`) · `docs/operations.md:514-520` 런북(새 종류 절 없음) | 표 보강 + 런북 Impact |
+| R2-11 | P2 | A · codex | **수치 과장** — 「≈98s」 는 상한이 아님(`tm.mu` · 토큰 캐시 파일 I/O 기한 없음 `token.go:61-78,109-125,172-223`; 풀 대기 `SetMaxOpenConns(1)` `journal.go:174` 은 busy_timeout 밖), 여섯 요청 산식은 실현 불가(둘째 refresh 는 첫째가 adopt 일 때만 `client.go:344-360`), 호출 좌표 `:204`/`:227` 는 호출 자리가 아님, 「수 자릿수 크다」 비교는 근거가 안 됨 | 가정 붙인 HTTP 추정으로 강등 · 실현 가능한 요청 열 열거 · 비교 문장 삭제 |
+| R2-12 | P3 | 전원 | **낡은 · 거짓 문장** — tasks 6.3 「브로커에 닿지 않는다」 · 6.1 「upstream 650」 · 3.7 보호 한정 누락(3.4a 와 모순) · 6.2 「시점 무변화를 diff 로」 · proposal `:1446` 잔존 · `notifier.go:139-141` 문장(base 에선 다른 코드) · issues 열린 질문 M1 현재형 · applyFloor 번들 「유일한 자리」(0 투영 보호 액션도 있음 — `ladder.go:446` · `snapshot.go:136-144`, 정확히는 「확정 하한이 손절을 0 으로 깎는 유일한 자리」) · B4 · B6(오류 반환)의 범위 미명시 | 문서 정정 |
+
+### Manager 결정 요청
+
+- **Q1 (R2-1)** 알림 꺼진 엔진에서 보호 0주의 등급 — (a) a095 식 게이트 / (b) 무게이트 + 비용 명시. a095 의 게이트가 사용자 결정 (2)였으므로 사용자 확인이 필요할 수 있다.
+- **Q2 (R2-5)** 보유 0(엔진 밖 종결)으로 인한 하한 0 을 critical 에서 뺄지 — 8/2 원장 재열람(읽기 전용) 여부 포함.
+- **Q3 (R2-6)** 원인 계약 — 원인별 키 vs 첫 원인 유지 명문화.
+- 나머지(R2-2 · R2-3 · R2-4 · R2-7~R2-12)는 결정 없이 4판에서 반영 가능.
