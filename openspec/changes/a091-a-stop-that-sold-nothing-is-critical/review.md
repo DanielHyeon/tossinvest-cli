@@ -323,3 +323,14 @@ tasks(3.3a 머리 · 3.3b (i)(v)(vi) · 3.3c 신설 · 5.3).
 
 **freeze 판정 요청**: 적대 Eng(A) APPROVE · 소비자/시험(B) APPROVE · 교차 모델 PASS. Manager 승인 뒤 구현(tasks 2~6, High-risk 전면 규율).
 사람 거부권 항목(Manager 보고): Q1 알림 켜짐 게이트. 범위 확장 하나: `obs.Notifier.escalate` 로그 두 줄의 계좌 필드 제거(5판 D8 — 별도 선행 change 로 뗄 수 있음).
+
+## freeze 승인 (2026-10-01, Manager) — 구현 개시
+
+- **Manager 원문 요지**: 「검증(경로 이탈 0)·푸시 완료 — freeze 승인, 구현 개시하라. 5라운드 사슬(3REJECT→표적 수리→PASS/APPROVE×3)과 8/2 재독(보유 5·sellable 0 실측 —
+  추론을 측정으로 교체, alerts-on 이면 critical 이 맞다는 확정)이 이 freeze 의 무게다.」
+- **스코프 확장 판정: 포함 승인(별도 change 아님)** — a091 의 새 critical 이 기록 실패 시 `escalate` 로 흐르므로 그 두 로그 줄은 a091 이 **새로 도달시키는 표면**이다
+  (불변식 8(a) — 새 표면은 자기가 닫는다). `FieldAccount` 제거 방식 승인(신원은 포지션 · 에피소드 키로 충분).
+- **구분(한 줄)**: a091 이 가리는 것은 자기가 편집 · 추가 · 새로 도달시키는 줄(B2 줄 · 보고 기록 실패 줄 · `escalate` 두 줄)뿐이고, base 의 나머지 계좌 필드 줄(~18 자리 ·
+  운영 `engine.log` 66,009 줄의 발생원)은 사용자 큐 「계좌 가림 설계」(a090 D12 · D13) 소관으로 남는다.
+- 구현 조건: 750ms 수락 기준 초과 시 정지 · 보고 · 4 팔 8/2 재생(생산 `AlertDeliverer` 경유) · High-risk 전면 규율 · Go 착지 전 창 요청(staged 대조 유지).
+  Q1 게이트는 Manager 가 사용자 거부권 항목으로 보고한다.
