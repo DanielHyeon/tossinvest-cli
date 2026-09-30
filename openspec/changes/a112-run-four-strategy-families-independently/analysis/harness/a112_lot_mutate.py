@@ -206,6 +206,23 @@ SET_5221_FIX3 = [
      "// ownerScope 는 포지션 소유 범위의 비교용 표기",
      "type aliasHandoff = Handoff\n\nfunc (h Handoff) widen(r strategyflow.Result) Handoff {\n\treturn aliasHandoff{selected: []strategyflow.Result{r}, pending: 1}\n}\n\n// ownerScope 는 포지션 소유 범위의 비교용 표기"),
 ]
+# 4차(Manager 판정 안 (b) — 소스 digest 동결): 동결을 뚫으려는 편집. digest 를 갱신하지 **않는** 편집은 전부 잡혀야 한다.
+SET_5221_FIX4 = [
+    ("H09 codex round-3 generic minter + any-returning method + pointer reassignment (digest not re-pinned)", HO,
+     "// ownerScope 는 포지션 소유 범위의 비교용 표기",
+     "type mintingError struct{ error }\n\nfunc makeSeam[T ~struct{ result strategyflow.Result }](r strategyflow.Result) T {\n\treturn T{result: r}\n}\n\nfunc (mintingError) Mint(r strategyflow.Result) any {\n\treturn makeSeam[Delivered](r)\n}\n\nfunc replaceError(dst *error) {\n\t*dst = mintingError{*dst}\n}\n\nfunc init() {\n\treplaceError(&ErrNoDelivery)\n}\n\n// ownerScope 는 포지션 소유 범위의 비교용 표기"),
+    ("H10 twin-struct conversion minter (digest not re-pinned)", HO,
+     "// ownerScope 는 포지션 소유 범위의 비교용 표기",
+     "type twin struct{ result strategyflow.Result }\n\nfunc (h Handoff) sneak(r strategyflow.Result) any {\n\treturn Delivered(twin{r})\n}\n\n// ownerScope 는 포지션 소유 범위의 비교용 표기"),
+    ("H11 comment-only edit to the seam (digest not re-pinned — every edit is a re-pin)", HO,
+     "// ownerScope 는 포지션 소유 범위의 비교용 표기",
+     "// (주석 한 줄 추가)\n// ownerScope 는 포지션 소유 범위의 비교용 표기"),
+    ("H12 a new production file in the seam package (digest not re-pinned)", "internal/strategyhandoff/zz_extra.go",
+     None, "package strategyhandoff\n\n// extraFileMarker 는 새 생산 파일이다.\nconst extraFileMarker = 1\n"),
+    ("N03 gofmt-normalised whitespace only (digest must not move)", HO,
+     "\tpending := len(selected)\n",
+     "\tpending  :=  len(selected)\n"),
+]
 SET_5221_FIX3_TESTS = [
     ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
      "TheProductionCycleHandsEvery|WithoutAnActivationTheProductionCycle|TheProductionCycleEnds|TheDeliveryBodyHands|TheMarketDelivery|Skipped|FaultInOne|TwoOwner|SameOwner|Classified|ExactlyOneProduction",
@@ -213,7 +230,8 @@ SET_5221_FIX3_TESTS = [
     ["go", "test", "-count=1", "./internal/strategyhandoff"],
 ]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
-        "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS)}
+        "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
+        "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]])}
 MUTANTS, TESTS = SET_5621, SET_5621_TESTS
 
 def run_tests(copy: Path, env: dict) -> tuple[str, str]:
@@ -278,6 +296,18 @@ def main() -> None:
         if only and not only.search(ident):
             continue
         target = copy / rel
+        if old is None:  # 새 파일을 만드는 변이 — 끝나면 지운다
+            if target.exists():
+                ledger.write(f"{ident}\tNOT-APPLIED\ttarget exists\n")
+                ledger.flush()
+                continue
+            target.write_text(new, encoding="utf-8")
+            verdict, why = run_tests(copy, env)
+            target.unlink()
+            label = {"RED": "CAUGHT", "GREEN": "SURVIVED"}.get(verdict, verdict)
+            ledger.write(f"{ident}\t{label}\t{why}\n")
+            ledger.flush()
+            continue
         pristine = target.read_text(encoding="utf-8")
         # 한 변이가 같은 파일의 여러 자리를 바꿀 수 있다(old · new 가 튜플이면 짝지어 차례로) — 각 앵커는 정확히 한 번.
         pairs = list(zip(old, new)) if isinstance(old, tuple) else [(old, new)]

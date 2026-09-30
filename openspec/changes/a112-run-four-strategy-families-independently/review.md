@@ -5467,3 +5467,29 @@ strategyhandoff · engine) rc 0, 무태그 `./internal/strategyhandoff` · `./in
 `./internal/strategyhandoff` · `./internal/app/engine` · `./internal/strategyworker` ok. G 세트는 개명 · 추가 시험 트리에서 재실행해 G01~G18 18/18 CAUGHT ·
 N01 GREEN-AS-EXPECTED(`mutation-5.2.2.1-fix.tsv` 끝 「재실행」 판) — 주기 행동 시험이 G06~G10 · G16 에도 함께 걸린다. 기존 함수 본문 편집 0
 (`dispatchHandoffs` 의 주석만 — 이 로트가 만든 함수, FLM 번들 없음), FLM not-applicable.
+
+## 2026-10-01 codex 3차(618b1002) 처분 · 4차 수리 — 경계 패키지 소스 digest 동결
+
+**3차 재확인.** 세션 01a0f313 resume(`prompt-codex-recheck2.md` · `codex-recheck2-output.md` · `codex-recheck2-run.txt`). 이번에는 `~/.codex` 무접근을
+스스로 명시했다. 판정 BLOCK — #1(주기 행동 시험이 생산 호출부를 실제로 지남, 캐시 주입은 새로 고침만 우회) · #2 처분의 정직성 · #4 · (T) ·
+생산 변경 0(99ad897c 대비 비시험 Go 차이는 주석 한 곳) **CLOSED**, #3 만 **OPEN**: 제네릭 주조(`makeSeam[T ~struct{result …}]`) + `any` 반환 메서드 +
+매개변수 포인터 경유 재대입(`replaceError(&ErrNoDelivery)`)이 타입 동일성 census 를 피해 엔진에서 채운 `Delivered` 를 얻는다(정적 · 축약 모델 컴파일).
+구현자 자체 점검으로 한 채널 더: 같은 필드 모양 비공개 쌍둥이 구조체 변환 `Delivered(twin{r})`.
+
+**Manager 판정(2026-10-01): 안 (b) 채택.** 주조 축의 추격은 세 라운드가 구성상 비종결임을 보였다. ~270줄 · import 폐쇄 · 안전 결정 패키지의 생산 소스를
+**gofmt 정본 바이트 digest 로 동결**하고 어떤 편집이든 같은 커밋에서 digest 재고정을 요구한다 — 무음 우회가 정의상 불가능해지고, 남는 것은 diff 에 보이는
+의도적 재고정(= 리뷰 지점)이다. (a) 의 변환 규칙은 문서로 병기.
+
+**수리.**
+- `internal/strategyhandoff/source_freeze_test.go` — `TestTheSeamSourceIsFrozen`(생산 `.go` 전부, 파일 이름 포함, gofmt 정본 SHA-256 = `frozenSourceDigest`),
+  `TestTheFreezeDigestIgnoresOnlyWhatGofmtNormalises`(양성 대조). 머리말에 동결 이유 · 약점(변이가 digest 도 갱신 = 가시적 행위라 과녁 밖) 논증 ·
+  **재고정 절차**(같은 커밋 · 커밋 메시지와 리뷰에 명시 · 독립 리뷰 후 착지) · **이 동결이 닫는 실증 우회 목록**(별칭+init 재대입 · 결과 없는 out-param ·
+  제네릭+any+포인터 재대입 · 쌍둥이 변환 — 「경계 타입으로의 변환도 주조다」 규칙 병기).
+- `mint_census_test.go` · `escape_test.go` 머리말: **완전성 주장 철회, 종결은 digest 동결이 진다.** census 는 「왜 두 문뿐인가」의 설명으로 유지.
+- 동결 digest 는 `618b1002` 의 `handoff.go`(이 로트에서 바뀌지 않음)에서 계산했다.
+
+**변이 `--set 5.2.2.1-fix4`**(하네스에 「새 파일 만들기」 변이 지원 추가): H09(codex 3차 반례 그대로 — **컴파일되고 census 는 통과, 동결만 잡음**) ·
+H10(쌍둥이 변환) · H11(주석 한 줄) · H12(새 생산 파일) **4/4 CAUGHT**(`TestTheSeamSourceIsFrozen` 단독), N03(gofmt 가 지우는 공백만) **GREEN-AS-EXPECTED**,
+무변이 대조군 GREEN. 원장 `mutation-5.2.2.1-fix4.tsv`.
+
+**codex 라운드 종료 조건.** 4차는 협대역 한 번 — 질문은 「digest 동결이 실증된 우회 축을 종결하는가」 하나. 그 뒤 발견은 5.2.2.2 / 6.2 로 이월한다(Manager 판정).

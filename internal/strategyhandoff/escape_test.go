@@ -28,6 +28,9 @@ import (
 //     새 탈출구는 예외 없이 새 공개 이름을 요구하므로 이 표와 어긋난다.
 //
 // 이 표를 늘리는 것 자체는 금지가 아니다. 금지는 **조용히** 늘리는 것이다.
+//
+// (2026-10-01) 이 표도 완전성을 주장하지 않는다 — 비공개 수신자 메서드는 보지 않는다. 패키지가 리뷰 없이 바뀌지 않는다는 성질은
+// source_freeze_test.go 의 digest 동결이 진다.
 var exportedSurface = map[string]string{
 	"Capacity":     "const",
 	"Refusal":      "type string",
