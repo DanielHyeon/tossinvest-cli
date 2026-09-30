@@ -197,6 +197,8 @@
 
   **옮길 것.** 결과 권한(`ResultAuthority` — `strategy_proposal_authority.go` 의 `dispatchHandoff().Single()`), 위험 권한, 계좌 권한(`collectMarket` B1 `len(proposal.entries) != 1`), 1차 레그 권한(B2 · identity 대조), 그리고 worker 승격(`buildProductionStrategyMarketWorker`)과 projection 의 시장 단위 `Single()` 읽기. 5.2.2.1 의 오늘-동등성 핀(`TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses`)이 「무엇이 바뀌는가」의 기준선이다 — 이 태스크가 그 핀을 **의도적으로** 뒤집는다. `deliverEachStrategyHandoff` 의 「첫 오류에서 멈춤」을 소유자 범위별 고장 격리로 바꿀지도 여기서 정한다 — **결정 항목: 굶음**(보이스 A (T)): 조정자 사전순으로 앞선 범위가 매 주기 실패하면 뒤 범위는 매 주기 굶는다(안전 방향이지만 liveness 결함).
 
+  **이월(2026-10-01, 5.2.2.1 리뷰 codex 4차 — review 끝 절).** (1) 게이트 · 하네스가 종료 코드가 아니라 이름 붙은 시험의 실행을 확인(`init` 조기 종료로 시험 이진이 `ok` 가 되는 경로 — 동결 시험을 포함한 모든 시험의 일반 부류), (2) strategyhandoff 소스 동결에 비`.go` 빌드 입력 포함 또는 금지, (3) digest 재고정 커밋에 독립 리뷰 기록 결속. 6.2 와 공유.
+
   **Done.** 서명 활성화된 두 소유자 범위 시장이 범위마다 주문을 낸다(소유자 범위마다 최대 하나), 시장 준비 상태가 레인 · 범위의 준비 상태에서 나오고, 활성화 없는 시장은 여전히 시장 단위다.
 - [x] 5.3.1 Implement the lane-local health/failure counters, bounded retry/backoff and the entry-only latch. **(Landed 2026-09-02.)**
 
