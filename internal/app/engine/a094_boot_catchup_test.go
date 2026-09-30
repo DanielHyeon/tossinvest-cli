@@ -29,10 +29,17 @@ func TestA094TheBootCatchUpReleasesOnlyUnacceptedProposals(t *testing.T) {
 		{"068270", journal.StateInDoubt, false},
 	}
 	ids := map[string]string{}
-	for i, s := range symbols {
+	positions := map[string]journal.Position{}
+	// 먼저 exit 상태를 전부 연다 — 무장 뒤에 관측을 돌리면 판정 진입이 비수용 발의를 세션 중에 풀어 버려(그것도 옳은
+	// 동작) 따라잡기가 잴 것이 없어짐.
+	for _, s := range symbols {
 		p := h.entry(s.symbol, "10", "70000", "68000", "70000")
 		h.quote(s.symbol, 70100)
-		h.observe()
+		positions[s.symbol] = p
+	}
+	h.observe()
+	for i, s := range symbols {
+		p := positions[s.symbol]
 		intent := fmt.Sprintf("exit-boot-%d", i)
 		h.a094ArmOn(p, s.symbol, intent, string(exitpolicy.ActionBaselineBreach))
 		if s.state != "" {

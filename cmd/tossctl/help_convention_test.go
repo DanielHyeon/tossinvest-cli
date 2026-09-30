@@ -132,8 +132,11 @@ func TestMutatingAnnotationOnTradeCommands(t *testing.T) {
 		"tossctl engine risk-latch-release": true,
 		// a092 단위 ④: 사람의 운영 모드 완화(노출 증가를 다시 여는 완화 — 같은 사용자 결정 가족)와, 원장을 쓰고 진입
 		// 래치를 푸는 알림 승인(Manager 판정 4 · a092 C17). 둘 다 주문은 내지 않음 — 자동 실행 금지 표지.
-		"tossctl engine mode-release":      true,
-		"tossctl engine alerts ack":        true,
+		"tossctl engine mode-release": true,
+		"tossctl engine alerts ack":   true,
+		// a094 D−4.5: park(UNRESOLVED_IN_DOUBT) 해동 — 원장 전이와 발의 해제를 하는 운영자 해소(주문은 내지 않음). 같은 완화
+		// 명령 가족 계약이라 자동 실행 금지 표지를 단다.
+		"tossctl engine attempt-resolve":   true,
 		"tossctl order place":              true,
 		"tossctl order cancel":             true,
 		"tossctl order amend":              true,
