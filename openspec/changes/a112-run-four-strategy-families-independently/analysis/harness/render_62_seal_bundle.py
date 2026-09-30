@@ -24,7 +24,8 @@ SCEN = {
     "B4": ("**(새, 편집 전 B2 에서 분리) 시장 단위 개수 관문** `len(proposal.entries) != 1` — 봉인이 아니라 시장당 하나 상한, 걷어 내는 일은 5.2.2.2",
            f"{SEAL} `TestTheFirstLegSealSelectsByScopeBeforeTheMarketCountGate`(범위 선택이 먼저 성공해야 이 문구) · "
            "`a112_owner_scope_handoff_test.go` `TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses`(두 순서)",
-           "편집 전에도 같은 문구로 거절(선택 기제 변이 S04 · S06 이 이 시험을 빨갛게 함)", "yes"),
+           "편집 전에도 같은 문구로 거절. 이 시험을 빨갛게 하는 변이는 M12(첫 항목만 훑는 선택) · M2(개수 관문 제거) · S04(범위 약화) — "
+           "⛔ 앞 판의 「S06 이 이 시험을 빨갛게 함」은 거짓이었다(개수 관문이 identity 가드보다 앞이라 위치 선택도 같은 문구, 6.2 리뷰 보이스 B #3)", "yes"),
     "B5": ("봉인된 identity 대조(편집 전 B3, 조건 불변) — 선택된 항목의 `Lineage.Identity` · `ExecutionTerms.Identity()` 와 accepted 비교",
            f"{SEAL} ① 같은 범위 패자 · ② 게이트된 레인 · ⑤ 조건 재작성(선택 실패 문구 없이 정확히 이 문구) + backstop 셋 "
            "`TestFirstLegAuthorityRefusesAProposalItDidNotAuthorize` · `…ASiblingCampaignOnTheSameSymbol` · `…RewrittenExecutionTermsUnderTheSameLineage`",

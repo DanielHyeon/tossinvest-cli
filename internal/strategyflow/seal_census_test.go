@@ -9,9 +9,16 @@ package strategyflow
 //      `Propose` 하나. 태그(`tossos_testseams`) 파일의 시험 전용 주조기 둘은 태그 파일 안에서만 부른다. 구조체 필드 `proposalSeal`
 //      을 선언하는 타입은 Result 하나뿐 — 같은 필드 이름을 가진 쌍둥이 구조체(변환으로 봉인을 들여오는 모양)나 그 필드를 품은
 //      제약(제네릭 주조)을 막는다.
+//   ②' 언급 census — 봉인 관련 세 이름의 **모든 등장**을 함수별로 세어 표와 대조(함수 값 별칭 · 주소 경유 쓰기 차단, 6.2 리뷰 codex #2),
+//      봉인 필드의 주소 취득 · 슬라이싱 금지, reflect · unsafe import 금지.
 //   ③ 함수 수준 AST 정본 digest 동결 — sealProposalResult · proposalResultSeal · ValidProposal 의 본문(주석 제외 · 좌표 독립)을
 //      상수로 고정하고, 그 상수가 **어느 리뷰 기록(openspec review.md)에 적혀 있어야** 통과한다(재고정-리뷰 결속 — 5.2.2.1 리뷰
 //      이월 #3). 패키지 전체 동결은 하지 않는다 — ~2,900줄이고 형제 로트가 편집한다.
+//
+// **③ 의 한계(6.2 리뷰 보이스 B #8):** review 결속은 openspec review 기록에 digest 문자열이 **적혀 있는지**만 본다 — 저자가 같은 커밋에서
+// 스스로 만족시킬 수 있고, 증명하는 것은 「적혔다」이지 「독립 리뷰됐다」가 아니다. 동결 셋 밖의 해시 입력 함수(writeLineageString ·
+// writeLineageUint64 · executionTermsIdentity)는 동결하지 않는다. 같은 이름의 함수가 여러 파일에 있으면 마지막 정의만 본다(플랫폼별
+// 파일은 위에서 거절하므로 오늘은 생기지 않는다).
 //
 // **못 보는 모양(이름 붙여 둔다).** ② 는 모양을 센다: 필드 이름을 쓰지 않는 위치 기반 합성 리터럴로 Result 를 통째로 만드는 편집
 // (`Result{a, b, …, seal}`)은 ① 의 표면 · ③ 의 동결에 걸리지 않을 수 있다 — 위치 기반 Result 리터럴 자체를 아래에서 금지하는 것으로
@@ -23,7 +30,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"go/ast"
-	"go/build"
 	"go/parser"
 	"go/printer"
 	"go/token"
@@ -58,16 +64,43 @@ func strategyflowSourceFiles(t *testing.T) []flowFile {
 		if err != nil {
 			t.Fatalf("parse %s: %v", path, err)
 		}
-		matches, err := build.Default.MatchFile(".", path)
-		if err != nil {
-			t.Fatalf("match %s: %v", path, err)
+		// 「tagged」는 시험 호스트의 빌드 맥락(build.Default — cgo · GOOS)으로 정하지 않는다(6.2 리뷰 보이스 B #1): 생산 이미지는
+		// CGO_ENABLED=0 이고 release 는 여러 GOOS 로 빌드하므로, `!cgo` · `_windows.go` 같은 파일은 호스트에서는 빠져도 생산에는 들어간다.
+		// 태그 파일은 정확히 `//go:build tossos_testseams` 인 파일뿐이고, 그 밖의 빌드 제약 · GOOS/GOARCH 접미사 파일은 거절한다(모르면 실패).
+		constraint := ""
+		for _, group := range file.Comments {
+			for _, comment := range group.List {
+				if strings.HasPrefix(comment.Text, "//go:build ") && comment.Pos() < file.Package {
+					constraint = strings.TrimSpace(strings.TrimPrefix(comment.Text, "//go:build "))
+				}
+			}
 		}
-		out = append(out, flowFile{name: path, file: file, tagged: !matches})
+		if constraint != "" && constraint != "tossos_testseams" {
+			t.Fatalf("%s carries the build constraint %q — only tossos_testseams is recognised; a constraint the census does not model "+
+				"could ship a file the census skipped", path, constraint)
+		}
+		if goosArchSuffix(path) {
+			t.Fatalf("%s has a GOOS/GOARCH file-name suffix — the census does not model per-platform files", path)
+		}
+		out = append(out, flowFile{name: path, file: file, tagged: constraint == "tossos_testseams"})
 	}
 	if len(out) == 0 {
 		t.Fatal("no strategyflow source file")
 	}
 	return out
+}
+
+// goosArchSuffix 는 파일 이름이 go 의 암묵 빌드 제약(`_linux.go` · `_amd64.go` · `_windows_arm64.go` …)을 지는지 답한다.
+func goosArchSuffix(path string) bool {
+	name := strings.TrimSuffix(filepath.Base(path), ".go")
+	parts := strings.Split(name, "_")
+	known := map[string]bool{}
+	for _, value := range strings.Fields("aix android darwin dragonfly freebsd hurd illumos ios js linux nacl netbsd openbsd plan9 solaris " +
+		"wasip1 windows zos 386 amd64 amd64p32 arm arm64 arm64be armbe loong64 mips mipsle mips64 mips64le mips64p32 mips64p32le ppc ppc64 " +
+		"ppc64le riscv riscv64 s390 s390x sparc sparc64 wasm") {
+		known[value] = true
+	}
+	return len(parts) > 1 && known[parts[len(parts)-1]]
 }
 
 func funcName(function *ast.FuncDecl) string {
@@ -129,6 +162,8 @@ func TestTheStrategyflowSurfaceIsFrozen(t *testing.T) {
 		if err := os.WriteFile(filepath.Join("testdata", "exported_surface.golden"), []byte(got), 0o644); err != nil {
 			t.Fatal(err)
 		}
+		// 같은 실행에서 통과시키지 않는다(6.2 리뷰 보이스 B #7) — 재생성은 멈추고, 다시 돌려 diff 를 보게 한다.
+		t.Fatal("regenerated testdata/exported_surface.golden — rerun without STRATEGYFLOW_REGENERATE_SURFACE and review the diff")
 	}
 	want, err := os.ReadFile(filepath.Join("testdata", "exported_surface.golden"))
 	if err != nil {
@@ -221,6 +256,79 @@ func TestOnlyProposeSealsAProposalInTheProductionBuild(t *testing.T) {
 	if len(problems) != 0 {
 		sort.Strings(problems)
 		t.Fatalf("%v", problems)
+	}
+}
+
+// ②' 언급 census(6.2 리뷰 codex #2): 봉인 쓰기 census 는 **호출식과 대입 좌변**만 봤으므로 함수 값 별칭(`mint := sealProposalResult;
+// mint(r)`)과 주소 경유 쓰기(`p := &r.proposalSeal; *p = …`)를 못 봤다. 여기서는 모양을 가리지 않고 **언급을 센다**: 봉인과 관련된
+// 세 이름(`sealProposalResult` · `proposalResultSeal` 식별자, `.proposalSeal` 선택자)의 모든 등장을 감싼 함수별로 세어 아래 표와 대조한다 —
+// 새 등장은 그 모양이 무엇이든 표와 어긋난다. 그리고 봉인 필드의 주소 취득 · 슬라이싱, reflect · unsafe import(비공개 필드 우회)를 금지한다.
+var sealMentionCensus = map[string]int{
+	"flow.go:Propose:sealProposalResult":                                                               1,
+	"types.go:Result.ValidProposal:.proposalSeal":                                                      2,
+	"types.go:Result.ValidProposal:proposalResultSeal":                                                 1,
+	"types.go:sealProposalResult:.proposalSeal":                                                        2,
+	"types.go:sealProposalResult:proposalResultSeal":                                                   1,
+	"types.go:FinalizeProposalQuantity:.proposalSeal":                                                  1,
+	"authority_testseam.go:AcceptedResultForAuthorityTest:sealProposalResult":                          1,
+	"authority_stop_provenance_testseam.go:ResultWithRestatedStopProvenanceForTest:sealProposalResult": 1,
+}
+
+func TestEveryMentionOfTheSealIsWhereTheCensusSaysItIs(t *testing.T) {
+	found := map[string]int{}
+	var problems []string
+	for _, source := range strategyflowSourceFiles(t) {
+		for _, spec := range source.file.Imports {
+			if path := strings.Trim(spec.Path.Value, `"`); path == "reflect" || path == "unsafe" {
+				problems = append(problems, source.name+" imports "+path+" — it can reach the unexported seal field")
+			}
+		}
+		for _, decl := range source.file.Decls {
+			owner := "(package level)"
+			var declName *ast.Ident
+			if function, ok := decl.(*ast.FuncDecl); ok {
+				owner, declName = funcName(function), function.Name
+			}
+			ast.Inspect(decl, func(node ast.Node) bool {
+				switch value := node.(type) {
+				case *ast.Ident:
+					if value != declName && (value.Name == "sealProposalResult" || value.Name == "proposalResultSeal") {
+						found[source.name+":"+owner+":"+value.Name]++
+					}
+				case *ast.SelectorExpr:
+					if value.Sel.Name == "proposalSeal" {
+						found[source.name+":"+owner+":.proposalSeal"]++
+					}
+				case *ast.UnaryExpr:
+					if selector, ok := value.X.(*ast.SelectorExpr); ok && value.Op == token.AND && selector.Sel.Name == "proposalSeal" {
+						problems = append(problems, source.name+":"+owner+" takes the address of proposalSeal")
+					}
+				case *ast.SliceExpr:
+					if selector, ok := value.X.(*ast.SelectorExpr); ok && selector.Sel.Name == "proposalSeal" {
+						problems = append(problems, source.name+":"+owner+" slices proposalSeal")
+					}
+				}
+				return true
+			})
+		}
+	}
+	// 양성 대조: 알려진 쓰기 자리를 실제로 셌는가.
+	if found["types.go:sealProposalResult:.proposalSeal"] == 0 {
+		t.Fatal("the mention census did not see sealProposalResult's own seal write — it is blind")
+	}
+	for key, count := range found {
+		if sealMentionCensus[key] != count {
+			problems = append(problems, key+" appears "+strconv.Itoa(count)+" time(s), census says "+strconv.Itoa(sealMentionCensus[key]))
+		}
+	}
+	for key, count := range sealMentionCensus {
+		if found[key] != count {
+			problems = append(problems, key+" is in the census "+strconv.Itoa(count)+" time(s) but the source has "+strconv.Itoa(found[key]))
+		}
+	}
+	if len(problems) != 0 {
+		sort.Strings(problems)
+		t.Fatalf("a mention of the seal moved or appeared: %v", problems)
 	}
 }
 

@@ -49,3 +49,21 @@ func (authority strategyProposalMarketAuthority) authorityForOwnerScope(lineage 
 	}
 	return chosen, true
 }
+
+// detachedStrategyProposalPair 는 1차 레그 권한이 드는 제안 쌍을 호출자의 배열과 떼어 놓은 사본으로 만듦(a112 6.2 봉인 리뷰 codex #1).
+//
+// 봉인은 「조립이 중재한 항목과 대조」이므로 대조 원본이 조립 뒤에 바뀌면 안 됨. entries 는 slice 라 값 복사만으로는 배열을 공유하고,
+// dispatch 쪽 사본의 원소 교체(`entries[0].authority = 다른 봉인 제안`)가 이 권한의 원본까지 바꾸어 선택 · 대조가 교체된 값끼리
+// 이루어짐(codex 가 코드로 도출한 발급 경로). 새 배열로 옮겨 공유를 끊음 — 원소(`strategyProposalEntryAuthority`)는 값이고
+// 그 안의 봉인 제안(`strategyproposal.ProductionAuthority`)은 다른 패키지의 비공개 필드라 엔진이 제자리에서 고칠 수 없음.
+//
+// **다음 고리(이름만 붙여 둠, 추격하지 않음):** 같은 패키지의 코드가 loader 의 필드(`loader.proposals`)에 직접 쓰는 것은 이 복사가
+// 막지 못함 — 엔진 패키지 안의 임의 쓰기는 이 봉인의 위협 모델(dispatch 시점의 봉투 위조) 밖임.
+func detachedStrategyProposalPair(pair strategyProposalAuthorityPair) strategyProposalAuthorityPair {
+	detach := func(authority strategyProposalMarketAuthority) strategyProposalMarketAuthority {
+		authority.entries = append([]strategyProposalEntryAuthority(nil), authority.entries...)
+		return authority
+	}
+	pair.kr, pair.us = detach(pair.kr), detach(pair.us)
+	return pair
+}

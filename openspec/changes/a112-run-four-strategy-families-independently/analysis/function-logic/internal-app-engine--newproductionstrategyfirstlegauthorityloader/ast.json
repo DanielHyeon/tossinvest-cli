@@ -1,0 +1,38 @@
+{
+  "file": "internal/app/engine/strategy_account_first_leg_authority.go",
+  "source_sha256": "e6c12de7902b15de91de03a8da004f1ad167ce37d37580cf52766f4707ed0a4d",
+  "package": "engine",
+  "function": "newProductionStrategyFirstLegAuthorityLoader",
+  "signature": "newProductionStrategyFirstLegAuthorityLoader(params=8, results=1)",
+  "start": {
+    "line": 202,
+    "column": 1
+  },
+  "end": {
+    "line": 211,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 209,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 14
+      },
+      "text": "detachedStrategyProposalPair"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

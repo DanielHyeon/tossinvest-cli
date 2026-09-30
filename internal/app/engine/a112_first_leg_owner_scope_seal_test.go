@@ -157,8 +157,10 @@ func TestTheFirstLegSealRefusesAnOwnerScopeTheAssemblyHoldsTwice(t *testing.T) {
 	requireRefusal(t, fixture.collectWithPair(t, a112Accepted(t, winner), winner, twin), a112ScopeRefusal, "scope held twice")
 }
 
-// 기제: 범위 둘인 쌍에서도 선택은 범위로 된다 — 그 뒤 개수 관문(5.2.2.2 가 걷어 낼 시장 단위 상한)이 거절한다. 선택이 identity 나
-// 순서(entries[0])에 기대면 이 시험의 거절 문구가 달라진다.
+// 기제: 범위 둘인 쌍에서도 선택은 범위로 된다 — 그 뒤 개수 관문(5.2.2.2 가 걷어 낼 시장 단위 상한)이 거절한다.
+// **정정(2026-10-01, 6.2 리뷰 codex #3):** 앞 판의 「순서(entries[0])에 기대는 선택이면 이 시험의 거절 문구가 달라진다」는 거짓이었다 —
+// 개수 관문이 identity 대조보다 앞이라 entries[0] 을 골라도 같은 개수 문구로 거절된다. 이 시험이 지키는 것은 「두 범위 쌍에서 범위 선택이
+// 실패하지 않는다(선택 실패 문구가 아니다)」뿐이다. 어느 항목을 골랐는지는 아래 TestTheScopeSelectorReturnsTheInScopeEntry 가 직접 잰다.
 func TestTheFirstLegSealSelectsByScopeBeforeTheMarketCountGate(t *testing.T) {
 	fixture := newFirstLegIdentityFixture(t)
 	winner := fixture.proposals.kr.entries[0].authority
@@ -216,5 +218,90 @@ func TestTheProposalSetDigestMatchesWhatTheAssemblyRecords(t *testing.T) {
 	}
 	if got := strategyProposalSetDigest(pair.kr.entries); got != pair.kr.snapshot.ProposalSetDigest {
 		t.Fatalf("contract digest %s != assembly digest %s — every activated market would close", got, pair.kr.snapshot.ProposalSetDigest)
+	}
+}
+
+// 선택 함수를 직접 잰다(6.2 리뷰 codex #3): 두 범위 쌍에서 범위마다 **그 범위의** 항목을 돌려주고(순서 무관), 없는 범위는 거절한다.
+func TestTheScopeSelectorReturnsTheInScopeEntry(t *testing.T) {
+	fixture := newFirstLegIdentityFixture(t)
+	winner := fixture.proposals.kr.entries[0].authority
+	other := fixture.sealedKR(t, riskLoaderDescriptor(t, StrategyMarketKR), "000660", "campaign-seal-selector", "100", "95", "120")
+	absent := fixture.sealedKR(t, riskLoaderDescriptor(t, StrategyMarketKR), "035420", "campaign-seal-absent", "100", "95", "120")
+	pair := strategyProposalMarketAuthority{market: StrategyMarketKR,
+		entries: []strategyProposalEntryAuthority{{authority: other}, {authority: winner}}}
+	for _, want := range []strategyproposal.ProductionAuthority{winner, other} {
+		got, ok := pair.authorityForOwnerScope(want.Proposal().Lineage)
+		if !ok || got.Proposal().Lineage.Identity != want.Proposal().Lineage.Identity {
+			t.Fatalf("scope %s: ok=%v got %s — want the in-scope entry %s", want.Proposal().Lineage.Symbol, ok,
+				got.Proposal().Lineage.Identity, want.Proposal().Lineage.Identity)
+		}
+	}
+	if _, ok := pair.authorityForOwnerScope(absent.Proposal().Lineage); ok {
+		t.Fatal("a scope the pair does not hold was selected")
+	}
+}
+
+// 공유 배열 경로(6.2 리뷰 codex #1 P0): dispatch 쪽 사본의 원소를 **제자리에서** 같은 계보 · 다른 손절의 봉인 제안으로 바꿔도, 1차 레그 권한은
+// 구성 때 떼어 낸 조립 원본과 대조한다 — 교체된 제안은 발급되지 않는다. 편집 전(loader 가 slice 를 그대로 들던 때)에는 선택 · 대조가
+// 교체된 값끼리 이루어져 발급됐다(err=nil — RED 로그).
+func TestAnInPlaceSwapInTheDispatchCopyDoesNotReachTheSeal(t *testing.T) {
+	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
+		t.Run(string(market), func(t *testing.T) {
+			fixture := newFirstLegIdentityFixture(t)
+			loader := fixture.loaderWith(fixture.proposals)
+			shared := fixture.proposals.forMarket(market)
+			winner := shared.entries[0].authority.Proposal()
+			entry, stop, target := "100", "80", "120"
+			if market == StrategyMarketUS {
+				entry, stop, target = "10000", "9000", "12000"
+			}
+			result, err := strategyflow.AcceptedResultForAuthorityTest(riskLoaderDescriptor(t, market), winner.Lineage.AccountRef,
+				winner.Lineage.Symbol, winner.Lineage.CampaignID, winner.Quantity, entry, stop, target,
+				fixture.now.Add(-time.Second), fixture.now.Add(time.Minute))
+			if err != nil {
+				t.Fatal(err)
+			}
+			batch := strategyproposal.ProductionBatchAuthorityForTest("sha256:twin-"+string(market),
+				map[string]strategyflow.Result{result.Lineage.Symbol: result})
+			twin, ok := batch.For(result.Lineage.Symbol)
+			if !ok || twin.Proposal().Lineage.Identity != winner.Lineage.Identity ||
+				twin.Proposal().ExecutionTerms.Identity() == winner.ExecutionTerms.Identity() {
+				t.Fatal("arrangement: the twin must keep the lineage and change the terms")
+			}
+			shared.entries[0].authority = twin // 같은 배열을 공유하던 모든 사본이 바뀐다
+			_, err = loader.collectStrategyFirstLegAuthority(context.Background(), a112Accepted(t, twin))
+			requireRefusal(t, err, a112IdentityRefusal, "in-place swap in the "+string(market)+" dispatch copy")
+		})
+	}
+}
+
+// 범위 키의 축을 하나씩(6.2 리뷰 보이스 B #6): 종목이 같아도 **시장만** 또는 **계좌만** 다른 항목은 다른 범위다 — 선택이 실패해야 한다.
+// (세대 축과 정규화 실패 항목은 이 시험 seam 으로 만들 수 없다 — `AcceptedResultForAuthorityTest` 는 세대 1 과 유효한 키만 봉인한다.
+// 그 둘은 review 에 이름 붙여 둔다.)
+func TestTheScopeSelectorKeysOnMarketAndAccountToo(t *testing.T) {
+	fixture := newFirstLegIdentityFixture(t)
+	winner := fixture.proposals.kr.entries[0].authority
+	lineage := winner.Proposal().Lineage
+	marketOnly, err := strategyflow.AcceptedResultForAuthorityTest(riskLoaderDescriptor(t, StrategyMarketUS), lineage.AccountRef,
+		lineage.Symbol, "campaign-seal-market-only", 8, "10000", "9500", "12000", fixture.now.Add(-time.Second), fixture.now.Add(time.Minute))
+	if err != nil {
+		t.Fatal(err)
+	}
+	accountOnly, err := strategyflow.AcceptedResultForAuthorityTest(riskLoaderDescriptor(t, StrategyMarketKR), "acct-seal-other",
+		lineage.Symbol, "campaign-seal-account-only", 8, "100", "95", "120", fixture.now.Add(-time.Second), fixture.now.Add(time.Minute))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, result := range map[string]strategyflow.Result{"market only": marketOnly, "account only": accountOnly} {
+		batch := strategyproposal.ProductionBatchAuthorityForTest("sha256:axis-"+name, map[string]strategyflow.Result{result.Lineage.Symbol: result})
+		entry, ok := batch.For(result.Lineage.Symbol)
+		if !ok {
+			t.Fatal("missing proposal test authority")
+		}
+		pair := strategyProposalMarketAuthority{market: StrategyMarketKR, entries: []strategyProposalEntryAuthority{{authority: entry}}}
+		if _, selected := pair.authorityForOwnerScope(lineage); selected {
+			t.Fatalf("%s: an entry differing only in that axis was selected for the winner's scope", name)
+		}
+		requireRefusal(t, fixture.collectWithPair(t, a112Accepted(t, winner), entry), a112ScopeRefusal, name)
 	}
 }

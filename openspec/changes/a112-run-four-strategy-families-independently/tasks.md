@@ -197,6 +197,10 @@
 
   **옮길 것.** 결과 권한(`ResultAuthority` — `strategy_proposal_authority.go` 의 `dispatchHandoff().Single()`), 위험 권한, 계좌 권한(`collectMarket` B1 `len(proposal.entries) != 1`), 1차 레그 권한(B2 · identity 대조), 그리고 worker 승격(`buildProductionStrategyMarketWorker`)과 projection 의 시장 단위 `Single()` 읽기. 5.2.2.1 의 오늘-동등성 핀(`TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses`)이 「무엇이 바뀌는가」의 기준선이다 — 이 태스크가 그 핀을 **의도적으로** 뒤집는다. `deliverEachStrategyHandoff` 의 「첫 오류에서 멈춤」을 소유자 범위별 고장 격리로 바꿀지도 여기서 정한다 — **결정 항목: 굶음**(보이스 A (T)): 조정자 사전순으로 앞선 범위가 매 주기 실패하면 뒤 범위는 매 주기 굶는다(안전 방향이지만 liveness 결함).
 
+  **6.2.0 의 효력 범위(2026-10-01, 6.2 리뷰 보이스 A #4 — 인용할 때 과대 읽지 말 것).** 6.2.0 의 소유자 범위 선택은 개수 관문이 1 인 동안 **거절 문구만** 바꾸고 수락 집합은 편집 전과 같다. 봉인의 보호 효과는 이 태스크가 개수 관문을 걷는 순간부터 생긴다 — 그래서 이 태스크의 편집 뒤에 위조 축 행동 시험(`a112_first_leg_owner_scope_seal_test.go`)이 **두 범위 쌍에서** 다시 초록이어야 한다.
+
+  **이월(6.2 봉인 리뷰, 2026-10-01 — 이 태스크가 개수 관문을 걷을 때 함께):** (a) 발급 통화를 봉투(`accepted.currency`)가 아니라 `result.Lineage.Market` 에서 다시 유도(보이스 A #3 — 오늘은 Guardian 이 fail-closed 로 막음), (b) 계좌 권한도 선택된 소유자 범위 단위로 다시 유도(보이스 A #5 — 계좌 권한은 오늘 `entries[0]` 종목으로 적재되고 선택 범위와 대조되지 않음), (c) 제안 집합 digest 식을 한 곳으로(`collectMarket` 인라인과 `strategyProposalSetDigest` 사본 — 보이스 A #6, 갈라지면 fail-closed).
+
   **이월(2026-10-01, 5.2.2.1 리뷰 codex 4차 — review 끝 절).** (1) 게이트 · 하네스가 종료 코드가 아니라 이름 붙은 시험의 실행을 확인(`init` 조기 종료로 시험 이진이 `ok` 가 되는 경로 — 동결 시험을 포함한 모든 시험의 일반 부류), (2) strategyhandoff 소스 동결에 비`.go` 빌드 입력 포함 또는 금지, (3) digest 재고정 커밋에 독립 리뷰 기록 결속. 6.2 와 공유.
 
   **Done.** 서명 활성화된 두 소유자 범위 시장이 범위마다 주문을 낸다(소유자 범위마다 최대 하나), 시장 준비 상태가 레인 · 범위의 준비 상태에서 나오고, 활성화 없는 시장은 여전히 시장 단위다.
@@ -367,6 +371,8 @@
   **무엇이 바뀌었나.** `collectStrategyFirstLegAuthority`: 준비 조건과 시장 단위 개수 관문을 나누고, 그 사이에 소유자 범위 선택(`authorityForOwnerScope`, 새 파일 `strategy_first_leg_owner_scope.go`) — 범위로 고르고 identity 로 대조(자기 참조 함정 회피). 선택 실패 거절 문구는 identity 거절 문구를 머리로 담는다. 개수 관문(`len(entries) != 1`)은 5.2.2.2 몫으로 남는다 — 이 태스크는 판정을 더 엄격하게만 한다(생산 동작 변화 0). A-lite: 활성화 시장에서 dispatch 목록의 제안 집합 digest 가 조립의 것과 다르면 시장 단위 MarketClosed(2차 방어, 봉인 아님). strategyflow: 공개 표면 golden · 봉인 쓰기 census · 봉인 함수 셋의 AST 정본 digest 동결 + review 기록 결속. 이름 붙은 봉인 시험의 실행 증거(`go test -json` pass 사건) 하네스 `analysis/harness/verify_named_tests.py`(5.2.2.1 리뷰 이월 #1 — 이 로트 한정).
 
   **증거.** RED `analysis/measurements/lot-6.2-seal/red-6.2-seal.log`(셋 FAIL), 변이 `analysis/measurements/lot-6.2-seal/mutation-6.2-seal.tsv`(S01~S09 · F01~F05 CAUGHT, N04 GREEN-AS-EXPECTED), review 「2026-10-01 6.2 봉인 로트」 절.
+
+  **리뷰 수리(2026-10-01, codex BLOCK · A BLOCK · B BLOCK — review 「6.2 봉인 로트 적대 리뷰 처분 · 수리」 절).** 공유 배열 구멍(loader 가 조립 slice 를 그대로 듦 → dispatch 쪽 제자리 교체로 같은 계보 · 다른 손절 쌍둥이가 **발급됨**, 실측 RED)을 구성 때 떼어 내기로 닫음. strategyflow 언급 census · 빌드 제약 모델 · 재생성 멈춤, 하위 시험 인지 하네스 · 변이 대조군 pass 사건, 선택 함수 직접 시험 · 축별 시험, 거짓 증거 문장 정정. 6.2.0 의 효력 범위는 위 5.2.2.2 절.
 - [ ] 6.3 Preserve the current dispatch validation order and final authority rechecks; add only the proposal family/arbitration lineage required by the lease preimage and reject any digest/version drift before transport.
 - [ ] 6.4 Enforce breakout first-leg-only production authority and add broker spies proving duplicate evaluation/restart/correction cannot create a second first-leg or any scale-in mutation.
 - [ ] 6.5 Add crash/retry tests across coordinator handoff, owner/q_final admission, lease claim, SUBMITTING and exact outcome reconciliation without releasing or duplicating capacity incorrectly.

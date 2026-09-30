@@ -5551,8 +5551,10 @@ digest 동결의 검출 범위는 인정(생산 `.go` 전부 · 파일 이름 ·
 
 **행동 시험(위조 축 다섯 + 기제 둘, `a112_first_leg_owner_scope_seal_test.go`).** 거절 **문구**로 어느 판정이 거절했는지 가린다: ① 같은 범위 패자(다른 캠페인) ·
 ② 게이트된 레인(같은 범위 · 다른 가족 레인) · ⑤ 같은 계보 조건 재작성 → 선택됨 · identity 대조 거절(선택 실패 문구 **없음**), ③ 미선택 범위 · ④ 타 시장(US 결과를
-KR 자리로) → 선택 실패 거절. 기제: 같은 범위가 쌍에 둘 → 선택 실패, 범위 둘인 쌍(다른 범위를 앞에) → 범위로 선택된 뒤 개수 관문 거절(`entries[0]` 선택이면
-identity 거절이 된다). 기존 backstop 셋(`strategy_first_leg_identity_backstop_test.go`) 초록 유지.
+KR 자리로) → 선택 실패 거절. 기제: 같은 범위가 쌍에 둘 → 선택 실패, 범위 둘인 쌍(다른 범위를 앞에) → 범위로 선택된 뒤 개수 관문 거절. ⛔ *정정(6.2 리뷰 보이스 B #3 ·
+codex #3): 원래 적은 「`entries[0]` 선택이면 identity 거절이 된다」는 거짓이었다 — 개수 관문(B4)이 identity 가드(B5)보다 앞이라 무엇을 고르든 선택만
+성공하면 개수 문구로 끝난다. 이 시험의 실제 판별 대상은 「첫 항목만 훑는 선택」(M12)과 「개수 관문의 존재」(M2)이고, 어느 항목을 골랐는지는
+`TestTheScopeSelectorReturnsTheInScopeEntry` 가 직접 잰다.* 기존 backstop 셋(`strategy_first_leg_identity_backstop_test.go`) 초록 유지.
 
 **§4 구조 시험의 의도적 변경**(`strategy_first_leg_backstop_shape_test.go`). 사슬 `proposalAuthority := proposal.entries[0].authority` → `result :=
 proposalAuthority.Proposal()` → 가드를 다음으로 바꿨다 — 실패 메시지가 요구한 대로 **새 선택이 무엇에 기대는지 먼저 정하고** 다시 못 박았다: (1) 가드 바로 앞은
@@ -5599,3 +5601,41 @@ strategyhandoff · strategyworker · strategyproposal ok. `openspec validate --s
 
 **이월.** 5.2.2.2(개수 관문 제거 = 두 소유자 범위 시장의 거래 — 이제 봉인이 서 있으므로 착수 조건 (1) 충족, 둘째 조건(같은 범위 중복 핀)도 초록) · 6.2 본문(q_final 최소값 ·
 동시 가족 입장 단일 트랜잭션) · 실행 증거의 저장소 전역판(후속 후보) · 비`.go` 빌드 입력(strategyhandoff 동결).
+
+## 2026-10-01 6.2 봉인 로트 적대 리뷰(686b94e4) 처분 · 수리
+
+**라운드.** 원문 `analysis/review-62-seal/`(`prompt-*.md`, `codex-output.md` · `codex-run.txt`, `voiceA-output.md` · `voiceB-output.md`). 세 목소리 모두 BLOCK:
+codex(새 세션 01a0f373, 비-ephemeral, 읽기 전용 — 사본 생성이 read-only fs 로 실패해 정적 판정) P0 1 · P1 1 · P2 2, 보이스 A P1 2 · P2 4, 보이스 B P1 2 · P2 5 · (T) 4.
+**codex 접근 조항 재위반 기록:** `~/.codex/memories/MEMORY.md` 를 1회 검색 — 이번에는 브리프 규격대로 출력 맨 위에 신고했고 판정에 쓰지 않았다고 자인.
+위반 자체는 계속 기록 대상이다(Manager 판정).
+
+**핵심 영수증 — 공유 배열 구멍(codex #1 P0 = 보이스 A #1, 실행 재현).** loader 가 조립의 제안 쌍을 값으로만 들어 `entries` slice 의 배열을 dispatch ·
+조립과 공유했다. dispatch 쪽 사본에서 원소를 **제자리** 교체(같은 계보 · 다른 손절의 봉인 쌍둥이)하면 봉인의 대조 원본도 바뀌어 선택 · 대조가 교체된 값끼리
+이루어지고 **1차 레그가 발급된다**(`red-6.2-seal-fix.log`: 686b94e4 코드에서 `issued a first leg`; 보이스 A 는 같은 범위 패자가 Guardian precheck 까지 통과함을
+따로 재현). 편집 전부터 있던 구조지만 이 로트가 「봉인이 섰다」고 선언했으므로 착지 상태로 둘 수 없었다. **수리:** `newProductionStrategyFirstLegAuthorityLoader`
+가 `detachedStrategyProposalPair` 로 두 시장의 entries 를 새 배열로 떼어 낸다(편집 전 번들 `pre-edit-fix/`, 새 번들 `internal-app-engine--newproductionstrategyfirstlegauthorityloader`).
+시험 `TestAnInPlaceSwapInTheDispatchCopyDoesNotReachTheSeal`(KR · US). **다음 고리(이름만):** 같은 패키지 코드가 `loader.proposals` 에 직접 쓰는 것은 막지 않는다 —
+엔진 패키지 안의 임의 쓰기는 위협 모델(dispatch 시점 봉투 위조) 밖.
+
+| # | 출처 | 등급 | 요지 | 처분 |
+|---|---|---|---|---|
+| 1 | codex #1 · A #1 | P0/P1 | 공유 배열로 봉인 원본 교체 → 발급 | 위 — 떼어 내기 + 시험(RED 실측), 변이 S10 · S11 |
+| 2 | codex #2 · B #2 | P1/P2 | strategyflow census 가 함수 값 별칭 · 색인 쓰기 · `copy` · 주소 경유 · unsafe 를 못 봄 | **언급 census**(`TestEveryMentionOfTheSealIsWhereTheCensusSaysItIs`): 봉인 관련 세 이름의 모든 등장을 함수별 표와 대조, 주소 취득 · 슬라이싱 · reflect/unsafe 금지. 변이 F06 · F07 |
+| 3 | B #1 | P1 | census 의 「tagged」가 시험 호스트 빌드 맥락(cgo=1) — `!cgo` · GOOS 파일이 생산 이미지(CGO_ENABLED=0)에 들어가는데 검사에서 빠짐(B 실증) | tagged = 정확히 `//go:build tossos_testseams`, 그 밖의 빌드 제약 · GOOS/GOARCH 접미사 파일은 거절(모르면 실패). **B 의 `!cgo` 재봉인자 그대로를 변이 F08 로 원장에** — CAUGHT |
+| 4 | codex #3 · B #3 | P1/P2 | 「entries[0] 선택이면 identity 거절」 거짓 진술 셋(시험 주석 · review · BTM B4) | 셋 다 정정 표지. 선택 함수 직접 시험 `TestTheScopeSelectorReturnsTheInScopeEntry`. B 실측 변이 M7(개수 관문을 선택 앞으로 = 편집 전 순서) · M12(첫 항목만) · K1 · K2(선택 키에 캠페인 · 레인) 원장에 |
+| 5 | codex #4 · B #4 | P2 | 하네스가 하위 시험 skip 을 못 봄 · 변이 대조군이 종료 코드로 판정 · 「실제로 돌았다」 과장 | 하위 시험 이름(`Parent/child`) 수용 · 요구 부모 아래 skip = 실패, 변이 대조군은 명령마다 pass 사건 > 0 요구, 주장을 「pass 사건이 보고됐다」로 좁히고 못 하는 것(같은 프로세스 framing 위조 · 조기 return) 명명 |
+| 6 | B #5 | P2 | RED 로그가 커밋 전 시험 파일 · A-lite RED 없음 | 커밋할 시험 파일 전부를 편집 전 배선(a234d8d7 판 두 파일)에 대 재기록 — 위조 축 둘 · 범위 둘 · A-lite · 제자리 교체(KR · US) · 축별 시험 FAIL(`red-6.2-seal.log`) |
+| 7 | B #6 | P2 | 범위 키의 계좌 · 시장 · 세대 축과 정규화 실패 갈래 무시험(M4~M6 · M3 생존) | 시장만 · 계좌만 다른 항목 시험 `TestTheScopeSelectorKeysOnMarketAndAccountToo`(M5 · M6 CAUGHT). **세대 축(M4 SURVIVED) · 정규화 실패 항목은 이 seam 으로 만들 수 없어 이름만** — 안전 영향 없음(identity 가드가 세대를 담은 조건 identity 로 대조) |
+| 8 | B #7 | P2 | golden 재생성 env 가 같은 실행에서 통과 | 쓴 뒤 `t.Fatal` |
+| 9 | B #8 · #9 · #10 · #11 | (T) | review 결속 한계 · 계보 조건 중복 · M8/M10 무해 · 원장 이중 계산 · S06 라벨 | 머리말 명명, 하네스가 시험 이름 중복 제거, S06 라벨 정정(편집 전 모양 = S06 + M7) |
+| 10 | A #2 | P1(문서) | 「권한 값을 통째로 위조해도 봉인이 진다」는 제자리 쓰기에 거짓이었음 | `dispatchHandoffs` 주석 정정 — 떼어 내기 뒤에는 재할당 · 제자리 교체 모두 대조 원본에 닿지 않음. A-lite digest 가 조건을 담지 않는 한계 명명 |
+| 11 | A #4 | (T) | 6.2.0 은 오늘 거절 **문구만** 바꾼다(수락 집합 동일 — A/B 실측), 보호 효과는 5.2.2.2 의 개수 관문 제거부터 | tasks 5.2.2.2 · HANDOFF 결정 (1) 절 · 이 절에 명기 |
+| 12 | A #3 · #5 · #6 | P2 | 발급 통화가 봉투에서 옴(Guardian 이 막음) · 계좌 권한이 선택 범위에 안 묶임 · digest 식 두 곳 | **5.2.2.2 로 이월**(tasks) |
+
+**변이(리뷰 수리 판, `mutation-6.2-seal.tsv` 끝 판).** 대조군 GREEN + **pass 사건 확인**(engine 31 · 17, strategyflow 136). S01~S11 · F01~F08 · M5 · M6 · M7 · M12 · K1 · K2
+**25/25 CAUGHT**, M4(세대 축) **SURVIVED — 예상 · 명명**, N04 GREEN-AS-EXPECTED.
+
+**검증(리뷰 수리 판).** 격리 사본(`git archive` HEAD `467322df` 전체 + 이 로트 파일): gofmt 0, vet(무태그 · 태그) rc 0, 무태그 engine · strategyflow · strategyhandoff ·
+strategyworker · cmd/tossctl ok, 태그 engine · strategyflow · strategyhandoff · strategyworker ok. **실행 증거**(`verify_named_tests.py`, 하위 시험 포함): engine 16/16 ·
+strategyflow 4/4 pass 사건. `openspec validate --strict` 통과.
+`check_analysis`: 기준선 대비 이 로트 몫의 새 발견 **0**(창 머리 두 줄만 — 커밋된 시험을 인용하므로 미추적 인용도 없음; 새로 편집한 생성자 번들 포함).

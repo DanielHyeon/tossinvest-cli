@@ -244,7 +244,7 @@ SET_62_SEAL = [
       "\t\tkey, err := strategyrouter.NewOwnerKey(held.AccountRef, held.Market, \"ANY\", held.PositionGeneration)")),
     ("S05 uniqueness dropped (first match wins)", SEAL,
      "\tif matches != 1 {", "\tif matches < 1 {"),
-    ("S06 selection by position (entries[0]) — the pre-seal shape", SEAL,
+    ("S06 selection by position (entries[0]) — half of the pre-seal shape (with M7)", SEAL,
      "\tif matches != 1 {\n\t\treturn strategyproposal.ProductionAuthority{}, false\n\t}\n\treturn chosen, true",
      "\tif len(authority.entries) == 0 {\n\t\treturn strategyproposal.ProductionAuthority{}, false\n\t}\n\t_ = chosen\n\treturn authority.entries[0].authority, true"),
     ("S07 selection failure ignored", FLA,
@@ -269,12 +269,42 @@ SET_62_SEAL = [
     ("F05 the review record drops the frozen pins (re-pin/review binding)", REVIEW,
      "  - `sealProposalResult` = `sha256:5e45db69120f540a463f43b2c6d8ba8cd0e7f94d3b070fcb9a80b42629d6bd6a`\n",
      "  - `sealProposalResult` = (removed)\n"),
+    ("S10 loader keeps the shared slice (codex #1 — no detach at construction)", FLA,
+     "proposals: detachedStrategyProposalPair(proposals), risk: riskAuthority", "proposals: proposals, risk: riskAuthority"),
+    ("S11 detach copies only one market", SEAL,
+     "\tpair.kr, pair.us = detach(pair.kr), detach(pair.us)", "\tpair.kr = detach(pair.kr)"),
+    ("F06 function-value alias of the sealer (codex #2)", SFL,
+     "\t\tresult = sealProposalResult(result)", "\t\tmint := sealProposalResult\n\t\tresult = mint(result)"),
+    ("F07 seal written through the field's address (codex #2)", SFT,
+     "\tfinal.proposalSeal = [32]byte{}\n", "\tseal := &final.proposalSeal\n\t*seal = proposalResultSeal(final)\n"),
+    ("M7 count gate before the scope selection (the pre-seal order, with S06)", FLA,
+     ("\tproposalAuthority, scoped := proposal.authorityForOwnerScope(accepted.result.Lineage)\n\tif !scoped {",
+      "\t// 시장 단위 개수 관문 — 봉인이 아니라 시장당 하나 상한임. 걷어 내는 일(두 소유자 범위 시장의 거래)은 5.2.2.2.\n\tif len(proposal.entries) != 1 {\n\t\treturn execgw.QFinalCampaignFirstLegIssuance{}, errors.New(\"paired production authority is incomplete for market\")\n\t}\n\tresult := proposalAuthority.Proposal()"),
+     ("\tif len(proposal.entries) != 1 {\n\t\treturn execgw.QFinalCampaignFirstLegIssuance{}, errors.New(\"paired production authority is incomplete for market\")\n\t}\n\tproposalAuthority, scoped := proposal.authorityForOwnerScope(accepted.result.Lineage)\n\tif !scoped {",
+      "\tresult := proposalAuthority.Proposal()")),
+    ("M12 selection scans only the first entry", SEAL,
+     "\tfor _, entry := range authority.entries {", "\tfor _, entry := range authority.entries[:min(1, len(authority.entries))] {"),
+    ("K1 selection key also requires the accepted campaign (same-scope loser no longer selected)", SEAL,
+     "\t\tif key == want {", "\t\tif key == want && held.CampaignID == lineage.CampaignID {"),
+    ("K2 selection key also requires the accepted lane (gated lane no longer selected)", SEAL,
+     "\t\tif key == want {", "\t\tif key == want && held.LaneID == lineage.LaneID {"),
+    ("M4 scope key drops the position generation (both sides) — expected to SURVIVE (seam cannot mint generation != 1; named)", SEAL,
+     ("lineage.Symbol, lineage.PositionGeneration)", "held.Symbol, held.PositionGeneration)"),
+     ("lineage.Symbol, 1)", "held.Symbol, 1)")),
+    ("M5 scope key drops the account (both sides)", SEAL,
+     ("strategyrouter.NewOwnerKey(lineage.AccountRef,", "strategyrouter.NewOwnerKey(held.AccountRef,"),
+     ("strategyrouter.NewOwnerKey(\"acct\",", "strategyrouter.NewOwnerKey(\"acct\",")),
+    ("M6 scope key drops the market (both sides)", SEAL,
+     ("lineage.AccountRef, lineage.Market,", "held.AccountRef, held.Market,"),
+     ("lineage.AccountRef, strategyrouter.MarketKR,", "held.AccountRef, strategyrouter.MarketKR,")),
+    ("F08 a !cgo file re-seals in the production image (B#1 — the host's build context skipped it)", "internal/strategyflow/reseal_nocgo.go",
+     None, "//go:build !cgo\n\npackage strategyflow\n\n// ResealForAnyone re-seals a result.\nfunc ResealForAnyone(r Result) Result {\n\tseal := proposalResultSeal(r)\n\tcopy(r.proposalSeal[:], seal[:])\n\treturn r\n}\n"),
     ("N04 comment-only edit inside a frozen seal function (digest is comment-free)", SFT,
      "func sealProposalResult(result Result) Result {\n", "func sealProposalResult(result Result) Result {\n\t// (주석 한 줄)\n"),
 ]
 SET_62_SEAL_TESTS = [
     ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
-     "TestTheFirstLegSeal|TestFirstLegAuthority|TestTheFirstLegBackstop|TestAnActivatedMarketWhose|TestTheProposalSetDigest|TestOnlyAnActivated|TestTwoOwnerScopes|TestTheProductionCycle|TestWithoutAnActivation",
+     "TestTheFirstLegSeal|TestFirstLegAuthority|TestTheFirstLegBackstop|TestAnActivatedMarketWhose|TestTheProposalSetDigest|TestOnlyAnActivated|TestTwoOwnerScopes|TestTheProductionCycle|TestWithoutAnActivation|TestTheScopeSelector|TestAnInPlaceSwap|TestTheSingleProposalAssumption",
      "./internal/app/engine"],
     ["go", "test", "-count=1", "-run", "TestTheSingleProposalAssumption|TestTheFirstLegBackstop|Handoff|Seam|Admit|Classified", "./internal/app/engine"],
     ["go", "test", "-count=1", "./internal/strategyflow"],
@@ -306,6 +336,7 @@ def run_tests(copy: Path, env: dict) -> tuple[str, str]:
             failed.extend(leaves)
             if not names:
                 notes.append(out.strip().splitlines()[-1][:160] if out.strip() else "no output")
+    failed = list(dict.fromkeys(failed))  # 같은 시험이 두 명령(태그 · 무태그)에서 세어지지 않게(6.2 리뷰 보이스 B #11)
     why = f"{len(failed)} failing: " + ", ".join(failed[:8]) + (" …" if len(failed) > 8 else "") + (" | " + " | ".join(notes) if notes else "")
     if build:
         return "BUILD-FAIL", why
@@ -344,6 +375,17 @@ def main() -> None:
     ledger = open(copy / "ledger.tsv", "w", encoding="utf-8")
     ledger.write(f"TREE\tHEAD {head} (git archive) + own: {','.join(own) or 'none'}\n")
     verdict, why = run_tests(copy, env)
+    # 대조군 GREEN 은 종료 코드다 — 시험이 실제로 돌았는지 pass 사건으로 확인한다(6.2 리뷰 codex #4, 이월 #1 의 자기 적용). init 조기 종료
+    # 같은 모양이면 대조군도 변이도 전부 「GREEN」이 되어 원장이 무의미해진다.
+    if verdict == "GREEN":
+        for command in TESTS:
+            json_command = command[:2] + ["-json"] + command[2:]
+            completed = subprocess.run(json_command, cwd=copy, env=env, capture_output=True, text=True)
+            passes = sum(1 for line in completed.stdout.splitlines() if '"Action":"pass"' in line and '"Test":' in line)
+            if passes == 0:
+                verdict, why = "NO-TESTS-RAN", " ".join(command) + " emitted no test pass event"
+                break
+            why = (why + " " if why else "") + f"[{command[-1]} pass events {passes}]"
     ledger.write(f"CONTROL\t{verdict}\t{why}\n")
     ledger.flush()
     if verdict != "GREEN":

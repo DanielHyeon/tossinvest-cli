@@ -48,8 +48,10 @@ func (authority strategyProposalMarketAuthority) dispatchHandoffs() []strategyha
 	// 가독 계약(a112 6.2 A-lite — 2차 방어, **봉인이 아님**): 건네는 목록이 조립이 중재 때 적어 둔 제안 집합 digest 와 같아야 함.
 	// 다르면 준비 안 됨으로 닫음(범위를 쪼개지 않고 시장 단위 MarketClosed 하나 — 경계에 없는 거절 이름을 지어내지 않음).
 	// 이것이 **못 보는 모양**: 엔진 코드는 digest 도 스스로 계산할 수 있으므로(strategyProposalSetDigest 는 엔진 함수) 권한 값을
-	// 통째로 위조하면 이 대조를 맞출 수 있다. 봉인은 1차 레그 권한의 소유자 범위 재유도(authorityForOwnerScope + identity 가드)가
-	// 진다 — 여기는 「중재 결과와 다른 목록」이 섞이는 것을 이름 붙여 막는 읽히는 계약이다.
+	// 통째로 위조하면 이 대조를 맞출 수 있고, digest 가 (종목, 계보 identity)만 담으므로 같은 계보의 조건 재작성은 보지 못한다. 봉인은
+	// 1차 레그 권한의 소유자 범위 재유도(authorityForOwnerScope + identity 가드)가 진다 — 그 권한은 구성 때 제안 쌍을 떼어 내므로
+	// (detachedStrategyProposalPair) 이 목록의 재할당도 제자리 원소 교체도 그 대조 원본에 닿지 않는다(6.2 리뷰 A#2 · codex #1 뒤 정정).
+	// 여기는 「중재 결과와 다른 목록」이 섞이는 것을 이름 붙여 막는 읽히는 계약이다.
 	ready := authority.snapshot.Ready && strategyProposalSetDigest(authority.entries) == authority.snapshot.ProposalSetDigest
 	return strategyhandoff.AdmitEachOwnerScope(ready, selected)
 }
