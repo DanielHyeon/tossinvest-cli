@@ -369,6 +369,44 @@ NORMAL_MUTANTS = [
 ]
 NORMAL_TESTS = [['go', 'test', '-count=1', '-run', 'TestA092', './internal/obs'], ['go', 'test', '-count=1', '-run', 'TestA092|Outage|Auxiliar|A098', './internal/app/engine'], ['go', 'test', '-count=1', '-run', 'TestA092|Escalat|Credential', './internal/execgw'], ['go', 'test', '-count=1', '-run', 'TestProductionRuntime|TestTheAlertDeliverer|TestA092', './cmd/tossctl']]
 
+# 25.8 — 26라운드 수리(codex P0 · P1 · P2) 반증. `--set r26`.
+R26_MUTANTS = [
+    ('X01 release NotFound read as preemption again', 'internal/app/engine/alertdelivery.go',
+     '\tif releaseOK && released.Outcome != journal.SettleApplied && released.Outcome != journal.SettleAlreadySettled &&',
+     '\tif false && releaseOK && released.Outcome != journal.SettleApplied && released.Outcome != journal.SettleAlreadySettled &&'),
+    ('X02 release site latches unconditionally', 'internal/app/engine/alertdelivery.go',
+     '\t\td.judge(ctx, id, d.readEpoch(id), false, alertLatchUnaccounted)\n\t}\n\tif err != nil {',
+     '\t\td.Gate.Block(execgw.ReasonAlertUndelivered, alertLatchUnaccounted)\n\t}\n\tif err != nil {'),
+    ('X03 release site escalates', 'internal/app/engine/alertdelivery.go',
+     '\t\td.judge(ctx, id, d.readEpoch(id), false, alertLatchUnaccounted)\n\t}\n\tif err != nil {',
+     '\t\td.judge(ctx, id, d.readEpoch(id), true, alertLatchUnaccounted)\n\t}\n\tif err != nil {'),
+    ('X04 preemption not recorded', 'internal/app/engine/alertdelivery.go',
+     '\t\td.logf(obs.EventAlertClaimLost, nil, "a failed attempt was preempted before it could be recorded",\n\t\t\t"alert_id", id, "outcome", res.Outcome.String())\n',
+     ''),
+    ('X05 release site returns before the limit verdict', 'internal/app/engine/alertdelivery.go',
+     '\t\td.judge(ctx, id, d.readEpoch(id), false, alertLatchUnaccounted)\n\t}\n\tif err != nil {',
+     '\t\td.judge(ctx, id, d.readEpoch(id), false, alertLatchUnaccounted)\n\t\treturn\n\t}\n\tif err != nil {'),
+    ('X06 preemption judgement widened to not-found', 'internal/obs/settle_outcome.go',
+     '\treturn outcome == journal.SettleAlreadySettled || outcome == journal.SettleLeaseLost',
+     '\treturn outcome == journal.SettleAlreadySettled || outcome == journal.SettleLeaseLost || outcome == journal.SettleNotFound'),
+    ('X07 hand-off after stop silently queued', 'internal/obs/normal_relay.go',
+     '\tif r.stopped {\n\t\tr.n.logNormalDrop(e, "the normal-grade relay has stopped")\n\t\treturn\n\t}',
+     '\tif false {\n\t}'),
+    ('X08 in-flight alert at panic not recorded', 'internal/obs/normal_relay.go',
+     '\t\tif inFlight != nil {\n\t\t\tr.n.logNormalDrop(*inFlight, "the normal-grade relay stopped while sending this alert")\n\t\t}\n',
+     '\t\t_ = inFlight\n'),
+    ('X09 publish failure not recorded', 'internal/obs/normal_relay.go',
+     '\t\tr.n.logNormalDrop(e, "publishing the normal-grade alert failed: "+err.Error())',
+     '\t\t_ = err'),
+    ('X10 no publisher silent', 'internal/obs/normal_relay.go',
+     '\t\tr.n.logNormalDrop(e, "no notification publisher is configured")\n',
+     ''),
+    ('X11 re-read failure returns an error again', 'internal/app/engine/modeops.go',
+     '\t\tresult.ReReadError = "re-reading the operating mode after the release failed: " + err.Error()\n\t\treturn result, nil',
+     '\t\treturn result, fmt.Errorf("re-read: %w", err)'),
+]
+R26_TESTS = [['go', 'test', '-count=1', '-run', 'TestA092', './internal/obs'], ['go', 'test', '-count=1', '-run', 'TestA092|A124|A098', './internal/app/engine']]
+
 TESTS = [
     ["go", "test", "-count=1", "-run", "TestA092|TestEnqueueAlert|TestClaim", "./internal/journal"],
     ["go", "test", "-count=1", "-run", "TestA092|TestA096|TestA097|Mode|Transition|Announc", "./internal/obs"],
@@ -418,6 +456,8 @@ def main() -> None:
             MUTANTS, TESTS = MODE_MUTANTS, MODE_TESTS
         elif args[i + 1] == "25.10":
             MUTANTS, TESTS = NORMAL_MUTANTS, NORMAL_TESTS
+        elif args[i + 1] == "r26":
+            MUTANTS, TESTS = R26_MUTANTS, R26_TESTS
         args = args[:i] + args[i + 2:]
     scratch, own = Path(args[0]), args[1:]
     copy = scratch / f"mut-a092-u2-{os.getpid()}"

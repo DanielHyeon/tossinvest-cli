@@ -1,0 +1,31 @@
+**BLOCK — 기존 P0는 닫힘. 반납 시 선점 기록과 재조회 실패의 CLI 표시가 남았습니다. 새 P0는 찾지 못했습니다.**
+
+아래는 제공된 트리·`R26-FIX.diff`의 정적 코드 판정입니다. 시험은 실행하지 않았고, 저자 변이 원장은 근거로 사용하지 않았습니다.
+
+| 기존 # | 등급 | 판정 | 파일:줄 | 근거(코드 인용) |
+|---|---|---|---|---|
+| **1** | **P0** | **닫힘** | [alertdelivery.go:353](/tmp/claude-1000/a092-r26-tree/internal/app/engine/alertdelivery.go:353), [release:616](/tmp/claude-1000/a092-r26-tree/internal/app/engine/alertdelivery.go:616) | `released, releaseOK := d.release(...)`로 결과를 받는다. 오류 없는 결과 중 `Applied / AlreadySettled / LeaseLost`가 아니면 행 ID·결과를 기록하고 `judge(..., false, alertLatchUnaccounted)`로 조건부 차단한다. 이후 시도 기록의 `Attempts` 판정까지 계속하므로 반납 이상이 한도 승격을 삼키지 않는다. |
+| **2** | P1 | **닫힘** | [normal_relay.go:43](/tmp/claude-1000/a092-r26-tree/internal/obs/normal_relay.go:43), [Run:63](/tmp/claude-1000/a092-r26-tree/internal/obs/normal_relay.go:63), [stop:88](/tmp/claude-1000/a092-r26-tree/internal/obs/normal_relay.go:88) | `Offer`와 `stopped=true`가 같은 `mu`로 직렬화된다. `Run`의 defer가 `inFlight`를 기록하고 `stop`으로 큐를 배수한다. 멈춤 표시 전 들어온 사건은 배수 대상, 표시 뒤 사건은 `Offer`에서 즉시 버림 기록된다. 발행 패닉도 defer를 지난다. |
+| **3** | P1 | **닫힘** | [normal_relay.go:103](/tmp/claude-1000/a092-r26-tree/internal/obs/normal_relay.go:103) | Relay는 이제 `publishBestEffort` 대신 자체 `publish`를 사용한다. 발행기 부재·발행 오류 모두 `logNormalDrop`을 호출하며, 그 로그에 `EventNormalAlertDropped`, 사건 유형, `"alert_key"`가 들어간다. 생산의 로그 배선 기준 판정이다. |
+| **4** | P1 | **부분** | [alertdelivery.go:377](/tmp/claude-1000/a092-r26-tree/internal/app/engine/alertdelivery.go:377), [반납 분류:357](/tmp/claude-1000/a092-r26-tree/internal/app/engine/alertdelivery.go:357) | **시도 기록**의 `AlreadySettled / LeaseLost` 빈 분기는 닫혔다. `EventAlertClaimLost`에 ID·결과를 남긴다. 그러나 **반납에서만** 발견한 같은 결과는 여전히 기록하지 않는다. 아래 잔여 #1. |
+| **5** | P1 | **부분** | [modeops.go:105](/tmp/claude-1000/a092-r26-tree/internal/app/engine/modeops.go:105), [engine_mode_release.go:110](/tmp/claude-1000/a092-r26-tree/cmd/tossctl/engine_mode_release.go:110) | 서버의 커밋 사실 유실은 닫혔다. 두 재조회 오류 모두 `ReReadError`를 싣고 `return result, nil`; HTTP도 결과를 200으로 반환한다. 그러나 CLI는 오류 검사 전에 `NoticePending=false`를 전달 완료로 해석한다. 아래 잔여 #2. |
+| **6** | P2 | **부분** | [settle_outcome.go:8](/tmp/claude-1000/a092-r26-tree/internal/obs/settle_outcome.go:8), [notifier.go:572](/tmp/claude-1000/a092-r26-tree/internal/obs/notifier.go:572), [Flush:882](/tmp/claude-1000/a092-r26-tree/internal/obs/notifier.go:882) | 동기 `deliver`의 미지 결과도 이제 조건부 차단한다. 하지만 로그의 미지 결과 분류는 선점으로 흐르고, `Flush`의 분류·차단 미수리는 그대로다. K19는 생산 호출을 막는 핀이지 함수 수리는 아니다. |
+
+| # | 등급(P0/P1/P2) | 파일:줄 | 무엇이 틀렸나 | 근거(코드 인용 또는 정적 반례) | 제안 |
+|---|---|---|---|---|---|
+| 1 | **P1** | [alertdelivery.go:357](/tmp/claude-1000/a092-r26-tree/internal/app/engine/alertdelivery.go:357) | **반납에서만 드러난 선점은 여전히 무기록이다.** 기존 #4의 잔여. | 실패 기록이 `Applied, Attempts=1` → 운영자 승인 → 반납이 `AlreadySettled,nil`이면, 357행 조건을 건너뛰고 373–374행에서 반환한다. 380행 로그는 **`res.Outcome`**만 보므로 실행되지 않는다. `LeaseLost`도 같은 누락이다. | 반납의 명명된 선점도 ID·결과를 기록한다. 이미 확정된 한도 판정은 그대로 유지한다. |
+| 2 | **P1** | [engine_mode_release.go:110](/tmp/claude-1000/a092-r26-tree/cmd/tossctl/engine_mode_release.go:110) | **재조회 실패를 정상 응답으로 돌려주면서 CLI가 전달 완료를 추정한다.** 이번 수리로 도달하게 된 경로. | 통지 기록 성공 뒤 현재 모드 또는 통지 목록 재조회 실패 → `Changed=true`, `NotifyError=""`, `NoticePending=false`, `ReReadError!=""`. CLI는 먼저 `if !r.NoticePending { state = "기록됨(이미 전달 처리됨)" }`를 출력하고, **그 뒤** 116행에서 재조회 실패를 검사한다. 통지 목록만 실패한 경우에는 이미 읽은 모드·차단 사유까지 “읽지 못했다”고 표시한다. | 재조회 오류를 상태 출력 전에 분류한다. 통지 기록 성공과 전달 상태 미확인을 구분하고, 실제 실패한 조회만 표시한다. |
+| 3 | P2 | [notifier.go:676](/tmp/claude-1000/a092-r26-tree/internal/obs/notifier.go:676) | **미지 정산 결과를 로그에서는 여전히 선점으로 분류한다.** 기존 잔여. | `deliver`의 시도 기록·반납 모두 `logLeaseLost`를 호출한다. 이 함수는 `NotFound`, `AlreadySettled` 다음에 **결과 enum이 아니라 `ClaimedBy`**로 분기한다. `Outcome=99, ClaimedBy=""`이면 `EventAlertClaimLost`와 “already handed back”을 기록한다. 차단은 수행되지만 사건 분류가 틀린다. | `LeaseLost`를 명시적으로 분기하고 미지 값은 원장 이상으로 결과값과 함께 기록한다. 현재 원장은 미지 enum을 반환하지 않으므로 잠재 결함이다. |
+| 4 | P2 | [notifier.go:882](/tmp/claude-1000/a092-r26-tree/internal/obs/notifier.go:882), [903](/tmp/claude-1000/a092-r26-tree/internal/obs/notifier.go:903), [912](/tmp/claude-1000/a092-r26-tree/internal/obs/notifier.go:912) | **`Flush`의 실패 기록·반납·전달 정산이 모든 비적용 결과를 같은 흐름으로 처리한다.** 명시적으로 유보한 잔여. | `Outcome != SettleApplied`이면 `logLeaseLost` 후 계속한다. `NotFound`도 조건부 차단하지 않고, 미지 결과는 위 #3처럼 선점 로그로 흐른다. 생산 소스 검색에서 `Notifier.Flush` 호출은 발견하지 못했다. | 현재 생산 장애로 올려 잡지 않는다. K19 유지, 생산 연결 전 결과 분류·차단·전송 잠금 수리 필요. |
+| 5 | P2 | [alertdelivery.go:298](/tmp/claude-1000/a092-r26-tree/internal/app/engine/alertdelivery.go:298), [notifier.go:321](/tmp/claude-1000/a092-r26-tree/internal/obs/notifier.go:321) | **인접한 `ClaimDisposition`도 미지 값 처리가 닫혀 있지 않다.** 기존 잠재 결함. | 실행자는 `default`를 정착으로 보고 기록 실패 계수를 지운다. 동기 알림기는 `Settled / HeldElsewhere`만 반환하고 나머지는 `deliver`로 진행한다. 현재 원장이 반환하는 세 값에는 문제가 없지만, 미지 값은 각각 정상 정착·임차 획득으로 취급된다. 실제 행 없음은 원장이 오류로 반환하므로 이 반례와 구별해야 한다. | `ClaimAcquired / ClaimSettled / ClaimHeldElsewhere`를 명시하고 미지 값은 이상으로 처리한다. 현재 생산 장애로 주장하지 않는다. |
+
+| 집중 확인 항목 | 판정 | 코드 근거 |
+|---|---|---|
+| 반납 행 없음 차단이 한도 판정을 지우는가 | **아니오** | [alertdelivery.go:361](/tmp/claude-1000/a092-r26-tree/internal/app/engine/alertdelivery.go:361)의 무승격 차단 뒤, 한도 도달 시 376행의 `judge(..., true, ...)`가 실행된다. [BlockUnlessClearedSince:579](/tmp/claude-1000/a092-r26-tree/internal/execgw/retry.go:579)는 기존 사유를 삭제하지 않고 첫 설명을 유지한다. 기존 래치 때문에 승격을 생략하지도 않는다. |
+| 순서·해제 세대에 변화가 있는가 | **반납 이상 판정 → 한도 판정이며, 세대는 각각 읽는다** | 두 읽기 사이 운영자 해제가 있으면 뒤 판정이 새 세대로 다시 잠글 수 있다. 다만 정본 [engine-safety:1471](/tmp/claude-1000/a092-r26-tree/openspec/specs/engine-safety/spec.md:1471)은 **근거 확정과 해당 세대 읽기 사이 해제를 앞선 해제로 보는 보수적 창**을 허용한다. 따라서 이것만으로 새 원칙 E 위반이라고 판정하지 않는다. “첫 세대 읽기 뒤 해제면 호출 전체가 재잠그지 않는다”는 더 강한 주장은 성립하지 않는다. |
+| `isPreemption`이 다른 결과를 선점으로 가르는가 | **아니오** | `AlreadySettled || LeaseLost`만 참이다. 두 호출부 모두 원장 오류를 먼저 분리하고 `Applied`도 앞에서 처리한다. 잔여 오류는 helper가 아니라 `logLeaseLost`의 분류다. |
+| Relay의 `mu`가 전송을 덮는가 | **아니오** | 잠금은 `Offer`와 `stop`의 멈춤 표시 구간이다. `Run → publish → Publisher.Publish`에는 잠금이 없다. `Offer`의 버림 로그는 잠금 안이므로 “완전한 무대기”는 아니지만, 원격 전송 잠금 대기는 추가되지 않았다. |
+
+파일 생성·수정과 시험·게이트·색인 갱신은 하지 않았습니다. 위의 **닫힘은 지적된 코드 경로의 정적 폐쇄 판정**이며 배포 완료 판정이 아닙니다.
+
+Recommendation: 반납 선점 로그와 재조회 실패의 CLI 오표시를 수정하고, 미지 결과 로그 분류를 명시하십시오. 기존 P0 수리는 유효하며 `Flush`는 생산 미연결 조건으로 유보할 수 있습니다.

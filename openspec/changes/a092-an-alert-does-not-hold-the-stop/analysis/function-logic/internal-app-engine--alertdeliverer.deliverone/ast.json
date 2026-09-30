@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/alertdelivery.go",
-  "source_sha256": "1fa0da7e971975f10f5c985ba42659611ee147800ba96f2cee33bc112033d4ca",
+  "source_sha256": "695899203a9a796c5ca6a6cc2314e315a4f74c20b1b231b6b89922ec35f9fbc3",
   "package": "engine",
   "function": "deliverOne",
   "receiver": "alertDeliverer",

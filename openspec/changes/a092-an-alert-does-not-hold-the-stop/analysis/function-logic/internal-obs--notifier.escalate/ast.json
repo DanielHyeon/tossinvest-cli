@@ -1,6 +1,6 @@
 {
   "file": "internal/obs/notifier.go",
-  "source_sha256": "6878b8f1df556d4a25095ab3944c98c92ee0865eb764c7233da0386538133f5a",
+  "source_sha256": "46c51c2e09e64ce400e0af84aec28ae6047f2573d3d0dd29cd4bc62489c26b4c",
   "package": "obs",
   "function": "escalate",
   "receiver": "Notifier",
