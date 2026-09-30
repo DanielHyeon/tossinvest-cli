@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/adoption.go",
-  "source_sha256": "26a0601d9987c7dc07d918df099d7cbfa21381560e17dd0162943da7aa8f811e",
+  "source_sha256": "3d66976f07a50aa7e98447cc17c943d394c67694025ad665765d39562ec0bc9d",
   "package": "engine",
   "function": "alertUnmanaged",
   "receiver": "ReconcileDriver",
   "signature": "ReconcileDriver.alertUnmanaged(params=3, results=0)",
   "start": {
-    "line": 439,
+    "line": 449,
     "column": 1
   },
   "end": {
-    "line": 469,
+    "line": 479,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 441,
+        "line": 451,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 445,
+        "line": 455,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 448,
+        "line": 458,
         "column": 2
       }
     }
@@ -43,14 +43,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 443,
+        "line": 453,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 446,
+        "line": 456,
         "column": 3
       }
     }
@@ -59,7 +59,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 440,
+        "line": 450,
         "column": 15
       },
       "text": "d.unmanagedFact"
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 442,
+        "line": 452,
         "column": 3
       },
       "text": "d.alertAdoptionFailed"
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 453,
+        "line": 463,
         "column": 2
       },
       "text": "d.alert"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 455,
+        "line": 465,
         "column": 10
       },
       "text": "reconcileUnmanagedKey"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 456,
+        "line": 466,
         "column": 10
       },
       "text": "d.label"
@@ -101,21 +101,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 440,
+        "line": 450,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 449,
+        "line": 459,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 451,
+        "line": 461,
         "column": 2
       }
     }

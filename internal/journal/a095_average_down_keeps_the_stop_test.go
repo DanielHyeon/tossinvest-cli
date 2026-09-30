@@ -10,8 +10,8 @@ import (
 //
 // 물타기(추가 매수)가 원장에 닿는 길은 대사 수렴의 조정 하나임(ApplyPositionAdjustment — 투영 수량 · 평단만 옮김).
 // 이 시험은 그 조정이 exit state 의 네 기준 열(진입가 · 최초 손절 · 최초 위험 · 기준선)을 건드리지 않음을 행동으로
-// 확인함. 자동 경로(판정 · 관측 갱신 · 복구)가 평단을 입력으로 받지 않는다는 짝 주장은 exitpolicy 패키지의
-// TestA095TheEvaluatorsTakeNoAveragePrice 가 구조로 고정함.
+// 확인함. 평가기 입력 타입에 평단 필드가 없다는 것은 exitpolicy 의 TestA095TheEvaluatorsTakeNoAveragePrice(필드 전수 · 존재 검사),
+// exit 관측이 진입가 자리에 exit state 의 값을 넣는다는 배선은 engine 의 기존 시험(TestTheCostBasisDoesNotChangeTheFirstJudgement 등)이 막음.
 //
 // 운영자 재편입 reset(resetExitStateForReadoptTx — positionpolicy.ActionReadopt)은 이 요구 밖임 — 이전 기준선과
 // 비교하지 않고 새 관측의 합성 손절로 다시 세우는 사람 행위이며, 그 하향의 승인 · audit 여부는 issues.md I6 소관.

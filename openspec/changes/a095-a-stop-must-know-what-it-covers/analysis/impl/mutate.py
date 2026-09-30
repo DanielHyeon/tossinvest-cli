@@ -23,12 +23,16 @@ EVENT = "internal/obs/event.go"
 
 # (id, 파일, 옛 문자열, 새 문자열, 설명)
 MUTANTS = [
-    ("G1", ADOPTION, "if d.opts.NotificationsEnabled && fact == factEnabledFailed {",
-     "if fact == factEnabledFailed {", "critical 판정이 알림 켜짐을 보지 않음"),
-    ("G2", ADOPTION, "if d.opts.NotificationsEnabled && fact == factEnabledFailed {",
-     "if d.opts.NotificationsEnabled || fact == factEnabledFailed {", "&& → ||"),
-    ("G3", ADOPTION, """	if d.opts.NotificationsEnabled && fact == factEnabledFailed {
-		d.alertAdoptionFailed(ctx, p)
+    ("G1", ADOPTION, "if d.opts.NotificationsEnabled && (fact == factEnabledFailed || fact == factIncludeFailed) {",
+     "if fact == factEnabledFailed || fact == factIncludeFailed {", "critical 판정이 알림 켜짐을 보지 않음"),
+    ("G2", ADOPTION, "if d.opts.NotificationsEnabled && (fact == factEnabledFailed || fact == factIncludeFailed) {",
+     "if d.opts.NotificationsEnabled || (fact == factEnabledFailed || fact == factIncludeFailed) {", "&& → ||"),
+    ("G16", ADOPTION, "if d.opts.NotificationsEnabled && (fact == factEnabledFailed || fact == factIncludeFailed) {",
+     "if d.opts.NotificationsEnabled && fact == factEnabledFailed {", "include 지정 시도 실패를 normal 로(Q2(b) 정정 되돌림)"),
+    ("G17", ADOPTION, "adopted[c.position.ID] = adoptOutcome{result: adoptFailed, at: d.clk.Now()}",
+     "adopted[c.position.ID] = adoptOutcome{result: adoptFailed}", "실패 시각을 싣지 않음 — 보고 순간으로 대체(codex P2 되돌림)"),
+    ("G3", ADOPTION, """	if d.opts.NotificationsEnabled && (fact == factEnabledFailed || fact == factIncludeFailed) {
+		d.alertAdoptionFailed(ctx, p, fact, outcome.at)
 		return
 	}
 	if d.unmanaged[p.ID][fact] {
@@ -36,12 +40,12 @@ MUTANTS = [
 	}""", """	if d.unmanaged[p.ID][fact] {
 		return
 	}
-	if d.opts.NotificationsEnabled && fact == factEnabledFailed {
+	if d.opts.NotificationsEnabled && (fact == factEnabledFailed || fact == factIncludeFailed) {
 		if d.unmanaged[p.ID] == nil {
 			d.unmanaged[p.ID] = map[string]bool{}
 		}
 		d.unmanaged[p.ID][fact] = true
-		d.alertAdoptionFailed(ctx, p)
+		d.alertAdoptionFailed(ctx, p, fact, outcome.at)
 		return
 	}""", "critical 이 메모리 래치를 거침(5판 이전 모양)"),
     ("G4", ADOPTION, 'Key:   reconcileUnmanagedKey(obs.EventExitPositionUnmanaged, fact, p.ID),',
@@ -57,8 +61,8 @@ MUTANTS = [
     ("G8", ADOPTION, "	if d.unmanaged[p.ID][fact] {\n		return\n	}",
      "	if len(d.unmanaged[p.ID]) > 0 {\n		return\n	}", "normal 래치가 포지션 단위(사실 무시)"),
     ("G9", ADOPTION, "	if d.unmanaged[p.ID][fact] {\n		return\n	}", "", "normal 래치 제거"),
-    ("G10", ADOPTION, "		adopted[c.position.ID] = adoptFailed\n", "", "시도 실패를 기록하지 않음(연기로 읽힘)"),
-    ("G12", ADOPTION, 'Body: moment + "에 편입 시도가 실패했다.',
+    ("G10", ADOPTION, "		adopted[c.position.ID] = adoptOutcome{result: adoptFailed, at: d.clk.Now()}\n", "", "시도 실패를 기록하지 않음(연기로 읽힘)"),
+    ("G12", ADOPTION, 'Body: moment + "(UTC)에 편입 시도가 실패했다.',
      'Body: "편입 시도가 실패했다.', "critical 문장에서 시각을 뺌(Q8)"),
     ("G13", LOOP, "	opts.NotificationsEnabled = c.Config.Engine.Notifications.Enabled\n", "",
      "생산 조립이 로드된 켜짐을 넘기지 않음"),
@@ -96,7 +100,7 @@ MUTANTS = [
 		return
 	}""", """	adoption, err := d.opts.Journal.AdoptionOf(ctx, p.ID)
 	if err != nil {
-		d.alertUnmanaged(ctx, p, adoptFailed)
+		d.alertUnmanaged(ctx, p, adoptOutcome{result: adoptFailed})
 		return
 	}""", "R2-B2 부활 — 조회 오류를 무관리 보고로(3.1 이 막아야 함)"),
 ]

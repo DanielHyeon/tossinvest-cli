@@ -120,8 +120,10 @@ func TestA095TheAdoptedGrowthReplayReportsEveryNewMaximum(t *testing.T) {
 	if last := got[len(got)-1].Fields[obs.FieldQuantity]; last != "32" {
 		t.Errorf("the last report says %v, want 32", last)
 	}
-	if adopted := got[0].Fields["adopted_quantity"]; adopted != "2" {
-		t.Errorf("adopted_quantity = %v, want the frozen 2", adopted)
+	for i, r := range got { // 고정은 마지막 보고까지 — 첫 보고만 보면 기준이 움직여도 통과함(독립 리뷰 P2-2)
+		if adopted := r.Fields["adopted_quantity"]; adopted != "2" {
+			t.Errorf("report %d: adopted_quantity = %v, want the frozen 2", i, adopted)
+		}
 	}
 	f.assertNoCriticalConsequence(t)
 }
@@ -142,5 +144,83 @@ func TestA095AnAdoptionLookupFailureStaysSilent(t *testing.T) {
 		if strings.HasSuffix(e.Key, id) {
 			t.Errorf("event %s %q after a lookup failure; B2 returns silently", e.Type, e.Key)
 		}
+	}
+}
+
+// 음수 순증 — 손으로 일부를 판 엔진 개설 포지션은 증가가 아님(codex 교차 리뷰 보강).
+func TestA095APartialSaleByHandIsNotAnIncrease(t *testing.T) {
+	f := newA095(t)
+	id := f.engineOpened("005930", "10")
+	f.holds("005930", "6", 70000) // 수렴이 −4 조정을 적음
+	f.cycle()
+	if got := f.grownReports(id); len(got) != 0 {
+		t.Errorf("reports = %+v; a sale by hand nets negative", got)
+	}
+}
+
+// 교차 인스턴스 — 앞 인스턴스의 조정은 뒤 인스턴스의 순증에 들지 않음(PositionAdjustments 는 인스턴스 id 로 거름).
+func TestA095AnEarlierInstancesAdjustmentsDoNotCount(t *testing.T) {
+	f := newA095(t)
+	ctx := context.Background()
+	old := journal.PositionID(a095Account, "kr", "005930", 1)
+	conn, err := f.sideDB().Conn(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	for _, q := range []string{
+		`PRAGMA foreign_keys = OFF`,
+		`INSERT INTO positions (id, account_ref, market, symbol, instance_seq, entry_decision_id, state, quantity, avg_price,
+		   opened_at, closed_at) VALUES ('` + old + `', '` + a095Account + `', 'kr', '005930', 1, 'decision-old', '` +
+			journal.PositionClosed + `', '0', '70000', '2026-09-29T00:00:00Z', '2026-09-29T06:00:00Z')`,
+		`INSERT INTO position_adjustments (id, position_id, kind, expected_prev_quantity, prev_quantity, new_quantity,
+		   broker_as_of, created_at) VALUES ('a095-old-up', '` + old + `', 'EXTERNAL', '10', '10', '15',
+		   '2026-09-29T01:00:00Z', '2026-09-29T01:00:00Z')`,
+	} {
+		if _, err := conn.ExecContext(ctx, q); err != nil {
+			t.Fatalf("seeding: %v", err)
+		}
+	}
+	id := journal.PositionID(a095Account, "kr", "005930", 2)
+	if _, err := conn.ExecContext(ctx, `INSERT INTO positions
+		  (id, account_ref, market, symbol, instance_seq, entry_decision_id, state, quantity, avg_price, opened_at)
+		VALUES (?, ?, 'kr', '005930', 2, 'decision-new', ?, '10', '70000', '2026-09-30T00:00:00Z')`,
+		id, a095Account, journal.PositionOpen); err != nil {
+		t.Fatalf("seeding the new instance: %v", err)
+	}
+	f.holds("005930", "10", 70000)
+	f.cycle()
+	if got := f.grownReports(id); len(got) != 0 {
+		t.Errorf("reports = %+v; the earlier instance's increase belongs to that instance", got)
+	}
+	if p := f.position("005930"); p.ID != id {
+		t.Fatalf("arrangement: the current instance is %s, want %s", p.ID, id)
+	}
+}
+
+// 새 요구의 SHALL NOT — 수량 증가 보고는 진입가 · 최초 손절 · 최초 위험 · 기준선을 바꾸지 않음(독립 리뷰 P2-2). 엔진 개설 포지션에
+// exit state 를 두고 증가 전후 네 열을 비교함.
+func TestA095AGrowthReportLeavesTheProtectionColumnsAlone(t *testing.T) {
+	f := newA095(t)
+	id := f.engineOpened("005930", "10")
+	f.exec(`INSERT INTO exit_states (position_id, policy_kind, entry_price, initial_stop, initial_risk, baseline_price,
+		  high_water, ratchet_level, updated_at)
+		VALUES ('` + id + `', 'RATCHET', '70000', '68000', '2000', '68000', '70000', 'NONE', '2026-09-30T00:00:00Z')`)
+	before, err := f.j.ExitState(context.Background(), id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.holds("005930", "15", 70000)
+	f.cycle()
+	if len(f.grownReports(id)) != 1 {
+		t.Fatalf("arrangement: no growth report (%+v)", f.capture.events)
+	}
+	after, err := f.j.ExitState(context.Background(), id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if before.EntryPrice != after.EntryPrice || before.InitialStop != after.InitialStop ||
+		before.InitialRisk != after.InitialRisk || before.Baseline != after.Baseline {
+		t.Errorf("exit state moved %+v → %+v on a growth report", before, after)
 	}
 }

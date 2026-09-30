@@ -1162,3 +1162,41 @@ a095 시험 **43 PASS**(`green-2.log`). 시험 추가 후 기존 사유 문구 �
 `check_analysis.py --change a095-…`(로컬 커밋 기준): rc 0, **evidence complete**, required 6 = 편집한 함수 6.
 
 **Q3 이름 붙은 잔여(design D2(i))**: 체결 기록이 계좌보다 늦으면 +조정 뒤 −조정 사이에 순증 > 0 일시 오보 — normal 보고 한 줄, 진입 · 청산 무영향.
+
+### 4.7 로트 리뷰 라운드 (2026-09-30, 대상 `277a105a`) — 델타 10판 추가분의 requirement 재리뷰를 겸함
+
+Manager 판정 (2)의 조건 ②대로, 세 보이스의 브리프에 **델타 10판 추가분(Q2 SHALL NOT · Q8 SHALL · 새 요구 「보호 중인 포지션의 수량 증가는 새 최대
+수량마다 보고된다」)을 명시 검토 대상**으로 넣었다. 셋 다 분리 컨텍스트 · read-only · 고정 워크트리(`277a105a`)다.
+
+| 보이스 | 판정 | 요지 |
+| --- | --- | --- |
+| codex 교차 모델(gpt-6-astra, `codex exec -s read-only`) | **FAIL** — P1 1 · P2 1 | P1: Q2(b)(편입 꺼짐 + include 지정 시도 실패 = normal)가 정본 exit-policy 「외부 취득 포지션의 자동 편입」 *"include 경유 편입은 … 알림 규칙 전부에서 enabled 경유 편입과 동일하다(SHALL)"*과 충돌. P2: Q8 시각이 보고 생성 순간 — 한 사이클의 후보 둘이 실패하면 앞 후보의 동기 전송 동안 뒤 문장의 시각이 밀림. 그 밖 범위 · 안전 · 순증 술어 · exit 루프 무편집은 통과 |
+| Claude 독립 — 적대 Eng(`code-reviewer`) | **APPROVE** — P0 0 · P1 0 · P2 2 · P3 5 | `-race -count=3` 통과. P2-1: transport 사망 시 대사 goroutine의 동기 배달이 실패 보유 N에 비례(실패당 ≈34s) — 이름 붙은 잔여. P2-2: Q4 최대 수량 래치는 감소 뒤의 증가를 놓침(델타 문자에는 맞음). P3: UTC 표기 · 미래 주장 문구 · 재무장 본문의 새 시각 단언 없음 · fold 불도달 논증 등 |
+| Claude 독립 — 델타 재리뷰 + 시험 품질(`code-inspector-tester`) | **APPROVE** — P0 0 · P1 0 · P2 2 · P3 8 | 델타 추가분이 결정 (1)(2)(3)과 모순 없음. P2-1: 엔진 개설 증가 검사가 `adoption.enabled`와 무관한데 6.4 · 델타가 말하지 않음. P2-2: 새 SHALL NOT(기준 열 불변)에 시험 없음, 475150 재생은 첫 보고만 봄. P3: 5.1 주석 과장(존재 검사) · 2.7 비교가 종류만으로 갈림 · 제목 SHALL과 구현 불일치 · tasks 3.2 문언 낡음 · 음수 순증 시험 없음. 생존 변이 I4 · I8 동등 판정 동의 |
+
+**정정 — Q2(b) (승인 → 정본 반증 → 교체, a094 선례 형태).** 로트가 제안하고 Manager가 승인한 Q2(b)=normal(§4.3)은 **정본 exit-policy의 include
+동일성 SHALL과 대조하지 않고** 이뤄졌다. codex P1이 그 문장을 인용해 반증했고, Manager 판정 (가)(2026-09-30): *"Q2(b)를 critical 로 바꾼다 … 정본이
+이긴다(권위 순서: 승인된 OpenSpec > 로트 판정) … include 지정은 운영자가 그 종목의 보호를 고른 것이므로 「운영자가 고른 무보호 상태」가 아니라 a091
+경계의 「엔진이 보호하기로 한 포지션」쪽이다. OFF 동등성은 정본의 「빈 include = 이전 동작」이 이미 지킨다."* 반영: 코드 critical 조건에
+`include_failed` 추가 · 델타의 Q2(b) SHALL NOT 삭제와 요구 첫 문단 · 새 시나리오 「편입 지정 종목의 편입 실패」 · design D1 표 · 시험
+`TestA095ADesignatedSymbolsFailureIsCriticalToo`(범주 ① ② + 알림 꺼짐 대조) · 변이 G16(정정 되돌림) CAUGHT.
+교훈: 로트가 정본에 닿는 등급 답을 낼 때는 **정본의 같은 토글 · 같은 대상 문장**을 먼저 찾는다 — 「결정 (2)의 문자」만 대조한 것이 원인이다.
+
+**처분(한 로트, 착지 대기)**
+
+| id | 처분 | 반영 |
+| --- | --- | --- |
+| codex P1 | 수용 — 위 정정 | 코드 · 델타 · design · 시험 · 변이 G16 |
+| codex P2 | 수용 | `adoptOutcome{result, at}` — `adopt`가 실패 관측 시각을 싣고 문장은 그 시각. `TestA095EachFailureSpeaksTheMomentItFailed`(전송이 시계를 30s 움직이는 publisher, 후보 둘). 변이 G17 CAUGHT |
+| codex 보강 · 리뷰 P3 | 수용 | 음수 순증 `TestA095APartialSaleByHandIsNotAnIncrease` · 교차 인스턴스 `TestA095AnEarlierInstancesAdjustmentsDoNotCount` |
+| 적대 P2-1 · codex 부기 | **이름 붙은 잔여 — 이월** | design D8: 실패 보유당 사이클마다 ≈34s(쓰기 대기 포함 배달 상한 54s) × N. 손절 무관(exit 루프 무편집, 알림기 잠금은 전송을 덮지 않음). 대사 루프는 정본 「등급화된 알림」이 **범위 밖 동기 발송자**로 명시 허용한 자리(*"다른 호출자(대사 루프 …)가 자기 전송을 동기로 기다리는 것은 이 요구가 바꾸지 않으며"*). Q7 둘째 면(a092 영역 이름 붙은 잔여)과 같은 실체. 개선 후보: PENDING 재배달을 배달 실행자에게만 맡기기 |
+| 적대 P2-2 | **이름 붙은 잔여 — 이월(후속 후보)** | 최대 수량 래치는 감소(부분 익절 · 부분 매도) 뒤의 새 증가를 그 최대를 넘기 전까지 보고하지 않는다. 델타 문자(「이미 보고한 최대 수량보다 클 때마다」)에는 맞고 등급은 normal(손절은 투영 수량 전량 — §4.4). 순증(체결로 설명되지 않는 양) 기준 래치로 바꾸는 것은 델타 문언 변경이라 후속 후보 |
+| 델타 P2-1 | 수용 | 델타 새 요구에 「`adoption.enabled`와 무관(SHALL) — 편입 동작이 아님」 문장 · tasks 6.4 보강 |
+| 델타 P2-2 | 수용 | `TestA095AGrowthReportLeavesTheProtectionColumnsAlone`(exit state 네 열 전후 비교) · 475150 재생이 여섯 보고 전부의 `adopted_quantity` 단언 |
+| 적대 P3 UTC · 미래 문구 | 수용 | 본문 `<시각>(UTC)에` · 「편입 설정이 그대로면 다음 대사 사이클이 다시 시도한다」 |
+| 적대 P3 재무장 본문 | 수용 | 2.15 시험이 재무장된 본문에 **새** 실패 시각이 있고 첫 본문과 다름을 단언 |
+| 델타 P3 제목 SHALL | 수용 | 델타 「제목과 본문」→「본문」, 시각은 실패를 관측한 순간 |
+| 델타 P3 2.7 · 5.1 주석 · tasks 3.2 · 델타 :39 문언 | 수용 | 2.7은 같은 종류(normal)끼리 비교 · 5.1 주석은 존재 검사임을 밝히고 배선을 막는 기존 시험 셋 인용 · tasks 3.2 문언 · 델타 문언 |
+| 델타 P3 2.1 `n.mu` · 2.14 무재시작 | 기록 | 2.1은 대리 지표(normal 등급 + outbox 행 0 + `publishBestEffort`는 잠금 없음 — 코드 `notifier.go:179-192`)로 잰다. 2.14의 「재시작 없는 전환」은 생산에 없다 — 드라이버는 조립 때 한 번 설정을 읽는다(`Context.ReconcileDriver`) |
+| 적대 P3 fold 불도달 · 셈 중복 · 종료 시 소음 | 기록 | fold 불도달은 적대 보이스가 코드로 확인(`position_projection.go:350` · `position_adjustments.go:321`). B7 셈 중복은 기존 동작 보존. ctx 취소 중 실패는 로그 소음뿐 |
+| 정본 사유 행렬 5행 vs 조건 칸 7 | 기록 | 아카이브 때 정본 동기화 항목(연기 둘 추가) |

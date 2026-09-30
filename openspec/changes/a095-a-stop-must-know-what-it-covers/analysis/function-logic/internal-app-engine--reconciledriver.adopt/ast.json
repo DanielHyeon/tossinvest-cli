@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/adoption.go",
-  "source_sha256": "26a0601d9987c7dc07d918df099d7cbfa21381560e17dd0162943da7aa8f811e",
+  "source_sha256": "3d66976f07a50aa7e98447cc17c943d394c67694025ad665765d39562ec0bc9d",
   "package": "engine",
   "function": "adopt",
   "receiver": "ReconcileDriver",
   "signature": "ReconcileDriver.adopt(params=3, results=1)",
   "start": {
-    "line": 202,
+    "line": 210,
     "column": 1
   },
   "end": {
-    "line": 249,
+    "line": 257,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 205,
+        "line": 213,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 210,
+        "line": 218,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 212,
+        "line": 220,
         "column": 3
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 219,
+        "line": 227,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "range",
       "at": {
-        "line": 222,
+        "line": 230,
         "column": 2
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 225,
+        "line": 233,
         "column": 3
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 231,
+        "line": 239,
         "column": 3
       }
     },
@@ -74,7 +74,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 240,
+        "line": 248,
         "column": 3
       }
     }
@@ -83,28 +83,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 206,
+        "line": 214,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 215,
+        "line": 223,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 238,
+        "line": 246,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 248,
+        "line": 256,
         "column": 2
       }
     }
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 205,
+        "line": 213,
         "column": 5
       },
       "text": "len"
@@ -121,7 +121,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 209,
+        "line": 217,
         "column": 25
       },
       "text": "d.observeCandidates"
@@ -129,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 211,
+        "line": 219,
         "column": 21
       },
       "text": "len"
@@ -137,7 +137,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 223,
+        "line": 231,
         "column": 10
       },
       "text": "adoptionQuoteKey"
@@ -145,7 +145,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 231,
+        "line": 239,
         "column": 13
       },
       "text": "Sub"
@@ -153,7 +153,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 231,
+        "line": 239,
         "column": 13
       },
       "text": "d.clk.Now"
@@ -161,7 +161,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 235,
+        "line": 243,
         "column": 22
       },
       "text": "len"
@@ -169,7 +169,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 235,
+        "line": 243,
         "column": 40
       },
       "text": "adoptedCount"
@@ -177,7 +177,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 236,
+        "line": 244,
         "column": 4
       },
       "text": "d.logDeferred"
@@ -185,7 +185,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 236,
+        "line": 244,
         "column": 30
       },
       "text": "fmt.Sprintf"
@@ -193,115 +193,123 @@
     {
       "kind": "call",
       "at": {
-        "line": 240,
+        "line": 248,
         "column": 6
       },
       "text": "d.adoptOne"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 66
+      },
+      "text": "d.clk.Now"
     }
   ],
   "assignments": [
     {
       "kind": ":=",
       "at": {
-        "line": 204,
+        "line": 212,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 209,
+        "line": 217,
         "column": 2
       }
     },
     {
       "kind": "+=",
       "at": {
-        "line": 211,
+        "line": 219,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 213,
+        "line": 221,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 218,
+        "line": 226,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 220,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 223,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 224,
-        "column": 3
-      }
-    },
-    {
-      "kind": "++",
-      "at": {
         "line": 228,
-        "column": 4
+        "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
         "line": 231,
-        "column": 6
+        "column": 3
       }
     },
     {
-      "kind": "+=",
+      "kind": ":=",
       "at": {
-        "line": 235,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 241,
-        "column": 4
-      }
-    },
-    {
-      "kind": "++",
-      "at": {
-        "line": 242,
-        "column": 4
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 245,
+        "line": 232,
         "column": 3
       }
     },
     {
       "kind": "++",
       "at": {
-        "line": 246,
+        "line": 236,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 239,
+        "column": 6
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 243,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 249,
+        "column": 4
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 250,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 253,
+        "column": 3
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 254,
         "column": 3
       }
     }

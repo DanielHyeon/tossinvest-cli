@@ -82,6 +82,14 @@ const (
 	adoptAdopted                     // 편입됨(보호 미개설 포함 — adoptOne B3 창, issues I7 의 이름 붙은 경계)
 )
 
+// adoptOutcome 은 후보 하나의 결과와, 시도 실패면 그 실패를 관측한 시각임. critical 문장이 말하는 시각은 보고를 만드는
+// 순간이 아니라 이 시각이어야 함(Q8 — 앞 후보의 동기 전송이 전송 예산을 쓰는 동안 뒤 후보의 보고 시각이 밀려도, 그 문장은
+// 실패가 일어난 때를 말해야 참임. codex 교차 리뷰 P2).
+type adoptOutcome struct {
+	result adoptResult
+	at     time.Time
+}
+
 // 무관리 보고의 조건 칸(a095 design D1 「사실 식별자」). 사실 = (포지션, 조건)이고 durable key 와 normal 래치가 이 칸을 씀.
 // 오류 문구 · 연기의 세 원인 같은 진단 원인은 칸이 아님 — 본문에만 실음.
 const (
@@ -89,7 +97,7 @@ const (
 	factExcluded        = "excluded"         // 운영자 제외
 	factEnabledFailed   = "enabled_failed"   // 편입 켜짐 — 시도 실패(알림 켜짐이면 critical)
 	factEnabledDeferred = "enabled_deferred" // 편입 켜짐 — 연기
-	factIncludeFailed   = "include_failed"   // include 지정(편입 꺼짐) — 시도 실패
+	factIncludeFailed   = "include_failed"   // include 지정(편입 꺼짐) — 시도 실패(알림 켜짐이면 critical)
 	factIncludeDeferred = "include_deferred" // include 지정(편입 꺼짐) — 연기
 	factOffUndesignated = "off_undesignated" // 편입 꺼짐 ∧ 미지정
 )
@@ -169,7 +177,7 @@ func (d *ReconcileDriver) judgeHoldings(ctx context.Context, snapshot reconcile.
 
 	results := d.adopt(ctx, candidates, cycle)
 	for _, c := range candidates {
-		if results[c.position.ID] != adoptAdopted {
+		if results[c.position.ID].result != adoptAdopted {
 			// A candidate the engine could not adopt is a position it is not
 			// protecting, which is the same finding as an excluded one
 			// (exit-policy: 제외 목록 심볼·편입 실패는 알림이 남는다).
@@ -200,8 +208,8 @@ func (d *ReconcileDriver) blocked(market, symbol string) bool {
 // 결과는 편입됨 · 시도 실패 · 연기로 갈림(a095) — 연기와 시도 실패는 다른 사실이고, 시도 실패만 critical 이 될 수 있음.
 // 중간 반환(B2 · B7)이 남긴 후보는 map 에 없고 영값 adoptDeferred 로 읽힘.
 func (d *ReconcileDriver) adopt(ctx context.Context, candidates []candidate,
-	cycle *ReconcileCycle) map[string]adoptResult {
-	adopted := map[string]adoptResult{}
+	cycle *ReconcileCycle) map[string]adoptOutcome {
+	adopted := map[string]adoptOutcome{}
 	if len(candidates) == 0 {
 		return adopted
 	}
@@ -238,21 +246,21 @@ func (d *ReconcileDriver) adopt(ctx context.Context, candidates []candidate,
 			return adopted
 		}
 		if d.adoptOne(ctx, c, observed) {
-			adopted[c.position.ID] = adoptAdopted
+			adopted[c.position.ID] = adoptOutcome{result: adoptAdopted}
 			cycle.Adopted++
 			continue
 		}
-		adopted[c.position.ID] = adoptFailed
+		adopted[c.position.ID] = adoptOutcome{result: adoptFailed, at: d.clk.Now()}
 		cycle.Deferred++
 	}
 	return adopted
 }
 
 // adoptedCount 는 이번 판정에서 편입된 후보 수임 — B7 의 연기 셈이 시도 실패를 편입으로 세지 않게 함.
-func adoptedCount(results map[string]adoptResult) int {
+func adoptedCount(results map[string]adoptOutcome) int {
 	n := 0
 	for _, r := range results {
-		if r == adoptAdopted {
+		if r.result == adoptAdopted {
 			n++
 		}
 	}
@@ -429,17 +437,19 @@ func (d *ReconcileDriver) adoptOne(ctx context.Context, c candidate, observed st
 //
 // 등급은 사실이 정함(a095 — engine-safety 「무관리 보유 보고의 등급은 사실이 정한다」):
 //
-//	critical ⇔ 알림 켜짐(로드된 설정) ∧ 조건 = 편입 켜짐 — 시도 실패
-//	그 밖(제외 · 꺼짐∧미지정 · 설정 거부 · include 지정 · 연기 · 알림 꺼짐) → normal, 오늘 등급 그대로
+//	critical ⇔ 알림 켜짐(로드된 설정) ∧ 조건 ∈ {편입 켜짐 — 시도 실패, include 지정 — 시도 실패}
+//	          (include 지정은 운영자가 그 종목의 보호를 고른 것 — 정본 exit-policy 「종목별 편입」: include 경유 편입은 알림 규칙
+//	          전부에서 enabled 경유와 동일. 빈 include 목록의 엔진은 무변화)
+//	그 밖(제외 · 꺼짐∧미지정 · 설정 거부 · 연기 · 알림 꺼짐) → normal, 오늘 등급 그대로
 //
 // 억제도 등급을 따름. normal 은 (포지션, 조건) 메모리 래치로 같은 사실의 반복만 한 번 알림 — 1분마다 반복되는 알림은
 // 아무도 읽지 않음. 래치는 메모리라 재시작이 다시 올림(운영자가 가장 볼 때). critical 은 래치를 거치지 않음 — 매 관측이
 // durable 기록을 시도하고 중복은 outbox key 와 정본 재알림 창이 맡음. 앞에 래치를 겹치면 기록 실패 · 창 뒤 재알림이 영구히
 // 삼켜짐(a095 6판 원칙, 5라운드 R5-1).
-func (d *ReconcileDriver) alertUnmanaged(ctx context.Context, p journal.Position, result adoptResult) {
-	fact, why := d.unmanagedFact(p, result)
-	if d.opts.NotificationsEnabled && fact == factEnabledFailed {
-		d.alertAdoptionFailed(ctx, p)
+func (d *ReconcileDriver) alertUnmanaged(ctx context.Context, p journal.Position, outcome adoptOutcome) {
+	fact, why := d.unmanagedFact(p, outcome.result)
+	if d.opts.NotificationsEnabled && (fact == factEnabledFailed || fact == factIncludeFailed) {
+		d.alertAdoptionFailed(ctx, p, fact, outcome.at)
 		return
 	}
 	if d.unmanaged[p.ID][fact] {
@@ -473,14 +483,17 @@ func (d *ReconcileDriver) alertUnmanaged(ctx context.Context, p journal.Position
 // 문장은 **그 관측 시각의 사건**임(a095 Q8 답 (b)). outbox 행은 전달 성공이나 운영자 승인으로만 정산되고 편입의 회복은 그 행을
 // 갱신하지 않으므로, 「지금 무보호」라고 쓰면 해소 뒤 늦게 배달된 행이 거짓을 전함. 시각을 담은 과거형 문장은 언제 배달돼도 참임.
 // PENDING 행의 본문은 재무장되지 않아 첫 실패의 시각이 남고, 창이 지난 정착 행의 재무장은 그 관측의 문장으로 바뀜.
-func (d *ReconcileDriver) alertAdoptionFailed(ctx context.Context, p journal.Position) {
-	moment := journal.RFC3339(d.clk.Now())
+func (d *ReconcileDriver) alertAdoptionFailed(ctx context.Context, p journal.Position, fact string, failedAt time.Time) {
+	if failedAt.IsZero() {
+		failedAt = d.clk.Now() // 시도 실패는 늘 시각을 싣지만, 빠졌으면 보고 순간으로 — 문장이 시각을 잃지 않게
+	}
+	moment := journal.RFC3339(failedAt)
 	d.alert(ctx, obs.Event{
 		Type:  obs.EventExitPositionAdoptionFailed,
-		Key:   reconcileUnmanagedKey(obs.EventExitPositionAdoptionFailed, factEnabledFailed, p.ID),
+		Key:   reconcileUnmanagedKey(obs.EventExitPositionAdoptionFailed, fact, p.ID),
 		Title: d.label(p.Symbol) + " 편입 시도 실패 — 보호가 열리지 않았다",
-		Body: moment + "에 편입 시도가 실패했다. 편입이 켜져 있어 엔진이 보호하기로 한 보유인데, 그 시각 기준 이 보유에는 " +
-			"손절·익절이 걸려 있지 않았다.\n다음 대사 사이클이 다시 시도한다 — 이 알림이 늦게 도착했다면 그 사이 편입이 " +
+		Body: moment + "(UTC)에 편입 시도가 실패했다. 편입 설정(전체 켜짐 또는 종목 지정)으로 엔진이 보호하기로 한 보유인데, 그 시각 기준 이 보유에는 " +
+			"손절·익절이 걸려 있지 않았다.\n편입 설정이 그대로면 다음 대사 사이클이 다시 시도한다 — 이 알림이 늦게 도착했다면 그 사이 편입이 " +
 			"끝났을 수 있으니 콘솔에서 현재 상태를 확인하라. 이 알림의 승인은 운영자가 한다.",
 		Fields: map[string]any{
 			obs.FieldAccount:  d.opts.AccountRef,
@@ -488,7 +501,7 @@ func (d *ReconcileDriver) alertAdoptionFailed(ctx context.Context, p journal.Pos
 			obs.FieldQuantity: p.Quantity,
 			"market":          p.Market,
 			"position_id":     p.ID,
-			"fact":            factEnabledFailed,
+			"fact":            fact,
 			"observed_at":     moment,
 		},
 	})

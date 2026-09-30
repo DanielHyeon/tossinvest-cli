@@ -1,8 +1,8 @@
 # Function Logic Map: `ReconcileDriver.judgeHoldings`
 
-- Source: `internal/app/engine/adoption.go` (`99`–`185`)
+- Source: `internal/app/engine/adoption.go` (`107`–`193`)
 - Qualified: `ReconcileDriver.judgeHoldings`
-- AST evidence: `ast.json` (`source_sha256` 26a0601d9987c7dc…)
+- AST evidence: `ast.json` (`source_sha256` 3d66976f07a50aa7…)
 - Risk scan: `risk-pattern-report.md`
 - 분기 16 · return 0 · 호출 24
 
@@ -24,22 +24,22 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
 |---|---|---|---|---|---|
-| B1 | if | `:102` `if stale <= 0 {` | `d.clk.Now`, `snapshot.Age` | — | 예 |
-| B2 | range | `:111` `for _, holding := range snapshot.Holdings {` | `strings.ToLower`, `strings.TrimSpace` | — | 예 |
-| B3 | if | `:113` `if market == "" {` | `strings.ToLower`, `strings.ToUpper`, `strings.TrimSpace` | — | 아니오 |
-| B4 | if | `:117` `if symbol == "" \|\| market == "" \|\| isZeroQuantity(holding.Quantity) {` | `d.opts.Journal.CurrentPosition`, `isZeroQuantity` | — | 아니오 |
-| B5 | if | `:122` `if err != nil {` | — | — | 아니오 |
-| B6 | if | `:128` `if p.State == journal.PositionClosed \|\| isZeroQuantity(p.Quantity) {` | `isZeroQuantity` | — | 예 |
-| B7 | if | `:132` `if p.ExitEligible() {` | `p.ExitEligible` | — | 예 |
-| B8 | if | `:135` `if p.Adopted() {` | `d.checkExternalIncrease`, `p.Adopted` | — | 예 |
-| B9 | else | `:137` `} else {` | `d.checkEngineOpenedIncrease` | — | 예 |
-| B10 | if | `:144` `if d.blocked(market, symbol) {` | `d.blocked` | — | 예 |
-| B11 | if | `:147` `if !fresh {` | — | — | 예 |
-| B12 | if | `:155` `if d.opts.Adoption.Excludes(symbol) {` | `append`, `d.opts.Adoption.Excludes` | — | 예 |
-| B13 | if | `:163` `if !d.opts.Adoption.Enabled && !d.opts.Adoption.Included(symbol) {` | `append`, `d.adopt`, `d.opts.Adoption.Included` | — | 예 |
-| B14 | range | `:171` `for _, c := range candidates {` | — | — | 예 |
-| B15 | if | `:172` `if results[c.position.ID] != adoptAdopted {` | `append` | — | 예 |
-| B16 | range | `:180` `for _, p := range unmanaged {` | `d.alertUnmanaged` | — | 예 |
+| B1 | if | `:110` `if stale <= 0 {` | `d.clk.Now`, `snapshot.Age` | — | 예 |
+| B2 | range | `:119` `for _, holding := range snapshot.Holdings {` | `strings.ToLower`, `strings.TrimSpace` | — | 예 |
+| B3 | if | `:121` `if market == "" {` | `strings.ToLower`, `strings.ToUpper`, `strings.TrimSpace` | — | 아니오 |
+| B4 | if | `:125` `if symbol == "" \|\| market == "" \|\| isZeroQuantity(holding.Quantity) {` | `d.opts.Journal.CurrentPosition`, `isZeroQuantity` | — | 아니오 |
+| B5 | if | `:130` `if err != nil {` | — | — | 아니오 |
+| B6 | if | `:136` `if p.State == journal.PositionClosed \|\| isZeroQuantity(p.Quantity) {` | `isZeroQuantity` | — | 예 |
+| B7 | if | `:140` `if p.ExitEligible() {` | `p.ExitEligible` | — | 예 |
+| B8 | if | `:143` `if p.Adopted() {` | `d.checkExternalIncrease`, `p.Adopted` | — | 예 |
+| B9 | else | `:145` `} else {` | `d.checkEngineOpenedIncrease` | — | 예 |
+| B10 | if | `:152` `if d.blocked(market, symbol) {` | `d.blocked` | — | 예 |
+| B11 | if | `:155` `if !fresh {` | — | — | 예 |
+| B12 | if | `:163` `if d.opts.Adoption.Excludes(symbol) {` | `append`, `d.opts.Adoption.Excludes` | — | 예 |
+| B13 | if | `:171` `if !d.opts.Adoption.Enabled && !d.opts.Adoption.Included(symbol) {` | `append`, `d.adopt`, `d.opts.Adoption.Included` | — | 예 |
+| B14 | range | `:179` `for _, c := range candidates {` | — | — | 예 |
+| B15 | if | `:180` `if results[c.position.ID].result != adoptAdopted {` | `append` | — | 예 |
+| B16 | range | `:188` `for _, p := range unmanaged {` | `d.alertUnmanaged` | — | 예 |
 
 ## Calls and live bindings
 

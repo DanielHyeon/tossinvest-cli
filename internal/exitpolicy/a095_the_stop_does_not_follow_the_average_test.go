@@ -10,9 +10,11 @@ import (
 
 // a095 tasks 5.1 · 5.2 — 손절 평가기는 평단을 읽지 않고, 사다리의 선은 진입가 · 관측 워터마크 · 이전 기준선에서만 나옴.
 //
-// 5.1 의 구조 절반: 자동 경로(판정 · 관측 갱신 · 복구)는 전부 이 두 평가기의 입력으로 손절을 계산함. 입력 타입에 평단 · 원가
-// 필드가 없으면 평단 하락이 손절을 끌어내릴 길이 평가기 안에는 없음. 필드가 새로 생기면 이 시험이 먼저 깨져 그 편집이
-// exit-policy 델타(평단 하락 비하향)와 대조되게 함.
+// 5.1 의 한 조각: 평가기 **입력 타입**에 평단 · 원가 필드가 없음을 필드 전수로 고정함 — 필드가 새로 생기면 이 시험이 먼저 깨져
+// 그 편집이 exit-policy 델타(평단 하락 비하향)와 대조되게 함. 이것은 존재 검사이고 호출자 배선(exit 관측이 진입가 자리에 무엇을
+// 넣는가)은 재지 않음 — 그 배선은 기존 시험이 막음: engine 의 TestTheCostBasisDoesNotChangeTheFirstJudgement ·
+// TestAnAdoptedWinnerRatchetsFromTheAdoptionPrice · TestTheFirstObservationAfterAdoptionAppliesTheRatchetNormally
+// (독립 리뷰 변이 프로브 — exitloop 평가기 진입가를 AvgPrice 로 바꾸면 그 셋이 실패, a095 시험은 통과).
 var averageLike = regexp.MustCompile(`(?i)avg|average|cost|basis`)
 
 func TestA095TheEvaluatorsTakeNoAveragePrice(t *testing.T) {

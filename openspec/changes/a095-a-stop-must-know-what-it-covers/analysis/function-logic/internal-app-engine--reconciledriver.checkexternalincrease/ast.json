@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/adoption.go",
-  "source_sha256": "26a0601d9987c7dc07d918df099d7cbfa21381560e17dd0162943da7aa8f811e",
+  "source_sha256": "3d66976f07a50aa7e98447cc17c943d394c67694025ad665765d39562ec0bc9d",
   "package": "engine",
   "function": "checkExternalIncrease",
   "receiver": "ReconcileDriver",
   "signature": "ReconcileDriver.checkExternalIncrease(params=2, results=0)",
   "start": {
-    "line": 543,
+    "line": 556,
     "column": 1
   },
   "end": {
-    "line": 573,
+    "line": 586,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 545,
+        "line": 558,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 549,
+        "line": 562,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 552,
+        "line": 565,
         "column": 2
       }
     }
@@ -43,21 +43,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 546,
+        "line": 559,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 550,
+        "line": 563,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 553,
+        "line": 566,
         "column": 3
       }
     }
@@ -66,7 +66,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 544,
+        "line": 557,
         "column": 19
       },
       "text": "d.opts.Journal.AdoptionOf"
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 548,
+        "line": 561,
         "column": 14
       },
       "text": "riskcalc.CompareDecimal"
@@ -82,7 +82,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 552,
+        "line": 565,
         "column": 6
       },
       "text": "d.newGrowthMaximum"
@@ -90,7 +90,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 556,
+        "line": 569,
         "column": 2
       },
       "text": "d.alert"
@@ -98,7 +98,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 558,
+        "line": 571,
         "column": 10
       },
       "text": "string"
@@ -106,7 +106,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 559,
+        "line": 572,
         "column": 10
       },
       "text": "d.label"
@@ -116,14 +116,14 @@
     {
       "kind": ":=",
       "at": {
-        "line": 544,
+        "line": 557,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 548,
+        "line": 561,
         "column": 2
       }
     }

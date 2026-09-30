@@ -96,8 +96,8 @@
       아니다(관측 가능한 것만 단언). **등급은 단언하지 않는다**(Q2(a) 열림). 픽스처에 두 거부 모양 — 편입 켜짐의 범위 밖 pct ·
       꺼짐 · include 없음이지만 범위 밖 pct가 남은 블록 — 을 둘 다 넣는다(9판 r8 N3 · N4, `config.mergeadoption` B3 ·
       `config.adoption.validate` B1)
-- [x] 2.6 **RED (Q2 답 — normal)** 설정 거부(B3) · include 지정 시도 실패(B6, 편입 꺼짐) · `adopt` B2 · B6 · B7 연기분 — 셋 다 outbox 행 0,
-      연기와 시도 실패는 다른 key. (알림 on에 transport 죽음은 Q2(d)로 a124 정본에 이관됨 — 여기 없음, r3 N7)
+- [x] 2.6 **RED (Q2 답)** 설정 거부(B3) · `adopt` B2 · B6 · B7 연기분은 normal — outbox 행 0, 연기와 시도 실패는 다른 key. include 지정 시도 실패(B6,
+      편입 꺼짐)는 **critical**(10판 정정 — 정본 exit-policy include 동일성, codex P1 → Manager 판정 (가), `review.md` §4.7) (알림 on에 transport 죽음은 Q2(d)로 a124 정본에 이관됨 — 여기 없음, r3 N7)
 - [x] 2.7 **RED** — 키 분리(결정 (3)(iii)): exit 관측 자리와 reconcile 자리의 event key가 다르다
 - [x] 2.8 **RED** — 전이 상태 무알림 유지: `judgeHoldings` B9(RECONCILE) · B10(묵은 스냅샷)에서 알림 0
 - [x] 2.9 **RED** — `notifierAlerter.ExternalPositionFound`의 등급은 normal로 남고, 생산 배선에서
@@ -134,7 +134,8 @@
 - [x] 3.1 **RED** — `checkExternalIncrease` B2 **무변화**(R2-B2 삭제): 조회 오류에서 조용히 반환하고
       무관리 알림으로 보내지 않는다
 - [x] 3.2 **RED (Q3 답)** 엔진 개설 포지션(`judgeHoldings` B7, 편입 기록 없음)의 수량 증가 검사 — 원장 조정 순증 > 0이면 normal 보고,
-      0 · 음수 · 조정 없음이면 보고 없음. journal leaf `NetAdjustedQuantity`의 비교 술어 변이(부등호 방향 · off-by-one · 열 바꿔치기)
+      0 · 음수 · 조정 없음이면 보고 없음. 비교 술어 변이(부등호 방향 · off-by-one · 열 바꿔치기) — 10판 구현: 기존 `Journal.PositionAdjustments`
+      위의 engine leaf `netAdjustedQuantity`(journal 새 함수 없음, design D2(i) 정정)
 - [x] 3.3 **(Q4 답 — normal · 종류 · key 유지 · 최대 수량 래치)** 수량 증가 사실의 종류 · 등급 · 키. critical이면 정본 engine-safety 재알림 창 SHALL NOT과
       대조한 키로, normal이면 `d.grown`(B1) 래치의 기준만
 - [x] 3.4 **(Q4 답)** 475150 원장 순서(편입 2 → 3 · 4 · 5 · 8 · 26 · 32) 재생 시험 — 「32가 운영자에게
@@ -163,7 +164,7 @@
 - [x] 6.2 **§0.3** — exit goroutine에 **새** critical Notify가 없음을 구조로 보인다: `workingSet` B6 경로의
       사실이 normal(2.1). 기존 exit 발신의 `n.mu` 대기는 **a092 21판 소유**(Q7 이관, 2026-09-28) — 대사 goroutine 자신의 대기는 a092 21판 밖의 이름 붙은 잔여
 - [x] 6.3 **§0.4** — 새 브로커 조회 0건
-- [x] 6.4 **토글 OFF 동등성** — 기존 토글 둘(`notifications.enabled` · `adoption.enabled`)의 OFF에서 **등급과 진입 차단
+- [x] 6.4 **토글 OFF 동등성** (10판 보강: 엔진이 연 포지션의 수량 증가 보고는 `adoption.enabled`와 무관한 새 normal 보고 — 편입 동작이 아니므로 정본 false 동등성의 대상이 아님, 델타 새 요구에 명시. 진입 · 청산 무영향) — 기존 토글 둘(`notifications.enabled` · `adoption.enabled`)의 OFF에서 **등급과 진입 차단
       결과**가 이 change 전과 같다(2.4 · 2.5). normal 래치 키가 사실 식별자로 바뀌어 normal 보고 횟수 · 로그 줄은 달라질 수
       있다. `adoption.enabled=false`에 include 지정이 있는 경로는 Q2(b)로 열려 있다(8판 r7a F5). 새 토글은 도입하지 않는다
 - [x] 6.5 `openspec validate --strict`의 한계 — 델타가 ADDED만 쓰는지 확인하고 적는다

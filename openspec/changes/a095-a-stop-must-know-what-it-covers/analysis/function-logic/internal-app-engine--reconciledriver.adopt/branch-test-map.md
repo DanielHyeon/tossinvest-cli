@@ -6,14 +6,14 @@
 
 | Branch | 조건 | 진입 실측 | Test (a095 요구) | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:205` `if len(candidates) == 0 {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
-| B2 | `:210` `if err != nil {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
-| B3 | `:212` `if cycle.Err == nil {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
-| B4 | `:219` `if bound <= 0 {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
-| B5 | `:222` `for _, c := range candidates {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
-| B6 | `:225` `if !ok {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
-| B7 | `:231` `if age := d.clk.Now().Sub(readAt); age > bound {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
-| B8 | `:240` `if d.adoptOne(ctx, c, observed) {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
+| B1 | `:213` `if len(candidates) == 0 {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
+| B2 | `:218` `if err != nil {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
+| B3 | `:220` `if cycle.Err == nil {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
+| B4 | `:227` `if bound <= 0 {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
+| B5 | `:230` `for _, c := range candidates {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
+| B6 | `:233` `if !ok {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
+| B7 | `:239` `if age := d.clk.Now().Sub(readAt); age > bound {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
+| B8 | `:248` `if d.adoptOne(ctx, c, observed) {` | 예 | 분기 무변화 — 결과 형태는 `TestA095Q2FactsStayNormalInTheirOwnCells` · `TestA095OneCycleCanHoldAFailureAndADeferral`가 잰다 | yes | yes |
 
 **미진입 분기 0개**: 없음
 **자체 블록 없는 분기 0개**: 없음 — 컴파일러가 별도 블록을 만들지 않는 형태(빈 `switch {` 등)이며 미커버와 다르다.

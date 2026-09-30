@@ -365,10 +365,51 @@ func a095CriticalFailureKey(posID string) string {
 	return string(obs.EventExitPositionAdoptionFailed) + "|reconcile|enabled_failed|" + posID
 }
 
+// 2.6 (Q2(b) 정정 — Manager 판정 (가) 2026-09-30): 편입 꺼짐 + include 지정 종목의 시도 실패도 critical. include 지정은 운영자가
+// 그 종목의 보호를 고른 것이고, 정본 exit-policy 「종목별 편입」이 include 경유 편입을 알림 규칙 전부에서 enabled 경유와 같게 둠.
+func TestA095ADesignatedSymbolsFailureIsCriticalToo(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		options []a095Option
+		arrange func(*a095Fixture)
+	}{
+		{"category ① refused before adopting",
+			[]a095Option{a095Adoption(config.Adoption{IncludeSymbols: []string{"005930"}})}, nil}, // pct 0
+		{"category ② the adoption transaction failed",
+			[]a095Option{a095Adoption(config.Adoption{IncludeSymbols: []string{"005930"}, DefaultStopPct: 0.05})},
+			func(f *a095Fixture) { f.refuseAdoptions("a095 refusal") }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f := newA095(t, tc.options...)
+			f.holds("005930", "10", 70000)
+			if tc.arrange != nil {
+				tc.arrange(f)
+			}
+			f.cycle()
+			row := f.onlyRow(t)
+			want := string(obs.EventExitPositionAdoptionFailed) + "|reconcile|include_failed|" + f.position("005930").ID
+			if row.severity != string(obs.SeverityCritical) || row.key != want {
+				t.Errorf("row = %+v, want a critical row keyed %q", row, want)
+			}
+		})
+	}
+	t.Run("notifications off keeps it normal", func(t *testing.T) {
+		f := newA095(t, a095NotificationsOff, a095Adoption(config.Adoption{IncludeSymbols: []string{"005930"}}))
+		f.holds("005930", "10", 70000)
+		f.cycle()
+		f.assertNoCriticalConsequence(t)
+		if len(f.capture.keysContaining("|reconcile|include_failed|")) != 1 {
+			t.Errorf("events = %+v, want one normal include_failed report", f.capture.events)
+		}
+	})
+}
+
 // --- 2.1 · 2.7 — exit 관측 자리는 normal, 두 자리의 key 는 다름 --------------------------
 
 func TestA095TheExitObserverReportStaysNormalAndKeyedApart(t *testing.T) {
-	f := newA095(t, a095StopPctRefused)
+	// 같은 **종류**(exit.position_unmanaged)끼리 비교함 — critical 종류와 비교하면 종류만으로 늘 달라 key 분리를 재지 못함
+	// (독립 리뷰 P3-3). 알림 꺼짐이라 대사 쪽 보고도 normal 종류로 남음.
+	f := newA095(t, a095NotificationsOff, a095StopPctRefused)
 	f.holds("005930", "10", 70000)
 	f.cycle()
 	p := f.position("005930")
@@ -391,14 +432,13 @@ func TestA095TheExitObserverReportStaysNormalAndKeyedApart(t *testing.T) {
 		t.Errorf("the exit observer's report wrote %d outbox row(s); normal reports have no durable row",
 			got-before)
 	}
-	// 2.7 — 같은 포지션의 두 발신 자리는 다른 key 를 씀.
-	for _, e := range f.capture.events {
-		if e.Key == exitEvent.Key {
-			t.Errorf("the reconcile report and the exit observer report share the key %q", e.Key)
-		}
+	// 2.7 — 같은 포지션 · 같은 종류의 두 발신 자리는 다른 key 를 씀.
+	reconcile := f.capture.keysContaining("|reconcile|")
+	if len(reconcile) != 1 || f.capture.events[0].Type != exitEvent.Type {
+		t.Fatalf("arrangement: want one reconcile report of the same kind, got %+v", f.capture.events)
 	}
-	if len(f.capture.keysContaining("|reconcile|")) == 0 {
-		t.Fatalf("no reconcile report was captured to compare against: %+v", f.capture.events)
+	if reconcile[0] == exitEvent.Key {
+		t.Errorf("the reconcile report and the exit observer report share the key %q", exitEvent.Key)
 	}
 }
 
@@ -609,9 +649,6 @@ func TestA095Q2FactsStayNormalInTheirOwnCells(t *testing.T) {
 		{"refused block that was switched off", func(t *testing.T) []a095Option {
 			return []a095Option{a095Adoption(a095LoadAdoption(t, `{"enabled":false,"default_stop_pct":5}`))}
 		}, nil, "rejected"},
-		{"designated with adoption off, the attempt failed", func(*testing.T) []a095Option {
-			return []a095Option{a095Adoption(config.Adoption{IncludeSymbols: []string{"005930"}})} // pct 0 → 범주 ①
-		}, nil, "include_failed"},
 		{"designated with adoption off, deferred", func(*testing.T) []a095Option {
 			return []a095Option{a095Adoption(config.Adoption{IncludeSymbols: []string{"005930"}, DefaultStopPct: 0.05})}
 		}, func(f *a095Fixture) { f.prices.err = fmt.Errorf("a095 quote outage") }, "include_deferred"},
@@ -801,10 +838,16 @@ func TestA095ADeliveredFailureIsRemindedAfterTheWindow(t *testing.T) {
 	if got := f.criticalSends(); got != 1 {
 		t.Fatalf("sends inside the window = %d, want 1", got)
 	}
+	first := f.onlyRow(t).body
 	f.clk.Advance(11 * time.Minute)
+	again := journal.RFC3339(f.clk.Now().Add(reconcile.DefaultStabilisationInterval))
 	f.cycle()
 	if got := f.criticalSends(); got != 2 {
 		t.Errorf("sends after the window = %d, want 2: a memory latch must not hold a continuing critical", got)
+	}
+	// 재무장된 행은 통째로 이번 에피소드를 말함(정본) — 본문이 새 실패의 시각을 담아야 함(독립 리뷰 P3).
+	if body := f.onlyRow(t).body; !strings.Contains(body, again) || body == first {
+		t.Errorf("the re-armed row says %q; it must speak of the new failure at %s", body, again)
 	}
 }
 
@@ -961,5 +1004,39 @@ func TestA095AResolvedFailureStillSpeaksItsMoment(t *testing.T) {
 	}
 	if !f.latched() {
 		t.Error("a late delivery was counted as the operator's acknowledgement")
+	}
+}
+
+// a095AdvancingPublisher 는 전송할 때마다 가짜 시계를 움직임 — 앞 후보의 동기 전송이 시간을 쓰는 동안 뒤 후보의 보고가 늦게
+// 만들어지는 모양(codex 교차 리뷰 P2).
+type a095AdvancingPublisher struct {
+	inner *a098RecordingPublisher
+	clk   *clock.Fake
+	by    time.Duration
+}
+
+func (p *a095AdvancingPublisher) Publish(ctx context.Context, n obs.Notification) error {
+	p.clk.Advance(p.by)
+	return p.inner.Publish(ctx, n)
+}
+
+// 2.11 보강 — critical 문장의 시각은 보고를 만든 순간이 아니라 시도 실패를 관측한 순간임.
+func TestA095EachFailureSpeaksTheMomentItFailed(t *testing.T) {
+	f := newA095(t, a095StopPctRefused)
+	f.n.Publisher = &a095AdvancingPublisher{inner: f.pub, clk: f.clk, by: 30 * time.Second}
+	f.rebuild()
+	f.holds("000660", "5", 150000)
+	f.holds("005930", "10", 70000)
+	failedAt := journal.RFC3339(f.clk.Now().Add(reconcile.DefaultStabilisationInterval))
+	f.cycle()
+
+	rows := f.rows()
+	if len(rows) != 2 {
+		t.Fatalf("rows = %+v, want two critical rows", rows)
+	}
+	for _, r := range rows {
+		if !strings.Contains(r.body, failedAt) {
+			t.Errorf("row %s says %q; both attempts failed at %s, before any send", r.key, r.body, failedAt)
+		}
 	}
 }

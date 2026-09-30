@@ -1,8 +1,8 @@
 # Function Logic Map: `ReconcileDriver.checkExternalIncrease`
 
-- Source: `internal/app/engine/adoption.go` (`543`–`573`)
+- Source: `internal/app/engine/adoption.go` (`556`–`586`)
 - Qualified: `ReconcileDriver.checkExternalIncrease`
-- AST evidence: `ast.json` (`source_sha256` 26a0601d9987c7dc…)
+- AST evidence: `ast.json` (`source_sha256` 3d66976f07a50aa7…)
 - Risk scan: `risk-pattern-report.md`
 - 분기 3 · return 3 · 호출 6
 
@@ -22,9 +22,9 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
 |---|---|---|---|---|---|
-| B1 | if | `:545` `if err != nil {` | `riskcalc.CompareDecimal` | :546 | 예 |
-| B2 | if | `:549` `if err != nil \|\| cmp <= 0 {` | — | :550 | 예 |
-| B3 | if | `:552` `if !d.newGrowthMaximum(p) {` | `d.alert`, `d.label`, `d.newGrowthMaximum`, `string` | :553 | 예 |
+| B1 | if | `:558` `if err != nil {` | `riskcalc.CompareDecimal` | :559 | 예 |
+| B2 | if | `:562` `if err != nil \|\| cmp <= 0 {` | — | :563 | 예 |
+| B3 | if | `:565` `if !d.newGrowthMaximum(p) {` | `d.alert`, `d.label`, `d.newGrowthMaximum`, `string` | :566 | 예 |
 
 ## Calls and live bindings
 

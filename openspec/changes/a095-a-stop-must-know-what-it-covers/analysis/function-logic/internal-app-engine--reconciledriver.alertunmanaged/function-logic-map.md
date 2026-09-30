@@ -1,19 +1,19 @@
 # Function Logic Map: `ReconcileDriver.alertUnmanaged`
 
-- Source: `internal/app/engine/adoption.go` (`439`–`469`)
+- Source: `internal/app/engine/adoption.go` (`449`–`479`)
 - Qualified: `ReconcileDriver.alertUnmanaged`
-- AST evidence: `ast.json` (`source_sha256` 26a0601d9987c7dc…)
+- AST evidence: `ast.json` (`source_sha256` 3d66976f07a50aa7…)
 - Risk scan: `risk-pattern-report.md`
 - 분기 3 · return 2 · 호출 5
 
-**역할.** 엔진이 관리하지 않는 보유를 알린다. 사실(조건 칸)을 `unmanagedFact`로 고르고, 알림 켜짐 ∧ 편입 켜짐 — 시도 실패만 critical(`alertAdoptionFailed`)로, 그 밖은 normal로 보낸다(10판).
+**역할.** 엔진이 관리하지 않는 보유를 알린다. 사실(조건 칸)을 `unmanagedFact`로 고르고, 알림 켜짐 ∧ (편입 켜짐 — 시도 실패 ∨ include 지정 — 시도 실패)만 critical(`alertAdoptionFailed`, 문장의 시각은 실패 관측 시각)로, 그 밖은 normal로 보낸다(10판 · Q2(b) 정정 — 정본 exit-policy include 동일성).
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
 | `d.opts.NotificationsEnabled` | 로드된 알림 켜짐 | 생산 조립 `Context.ReconcileDriver` | 거짓이면 어떤 사실도 critical 아님 |
-| `result` | 후보의 편입 결과 | `adopt` | 시도 실패 / 연기를 가른다 |
+| `outcome` | 후보의 편입 결과 · 실패 관측 시각 | `adopt` | 시도 실패 / 연기를 가르고, critical 문장의 시각을 준다 |
 | `d.unmanaged[p.ID][fact]` | 이 사실을 이미 알렸나 | 프로세스 메모리 — (포지션, 조건) | normal 만 억제, critical 은 거치지 않음 |
 
 ## Branches and early returns
@@ -22,9 +22,9 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
 |---|---|---|---|---|---|
-| B1 | if | `:441` `if d.opts.NotificationsEnabled && fact == factEnabledFailed {` | `d.alertAdoptionFailed` | :443 | 예 |
-| B2 | if | `:445` `if d.unmanaged[p.ID][fact] {` | — | :446 | 예 |
-| B3 | if | `:448` `if d.unmanaged[p.ID] == nil {` | `d.alert`, `d.label`, `reconcileUnmanagedKey` | — | 예 |
+| B1 | if | `:451` `if d.opts.NotificationsEnabled && (fact == factEnabledFailed \|\| fact == factIncludeFailed) {` | `d.alertAdoptionFailed` | :453 | 예 |
+| B2 | if | `:455` `if d.unmanaged[p.ID][fact] {` | — | :456 | 예 |
+| B3 | if | `:458` `if d.unmanaged[p.ID] == nil {` | `d.alert`, `d.label`, `reconcileUnmanagedKey` | — | 예 |
 
 ## Calls and live bindings
 

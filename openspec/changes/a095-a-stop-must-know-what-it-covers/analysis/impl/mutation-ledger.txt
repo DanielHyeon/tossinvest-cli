@@ -14,3 +14,6 @@ I8  변이: checkEngineOpenedIncrease 의 `if err != nil || len(adjustments) == 
     판정: 동등. 근거: 조정이 0개이면 netAdjustedQuantity 는 루프를 돌지 않고 초기값 "0" 을 돌려주고, 바로 아래
     `riskcalc.CompareDecimal(net, "0")` 이 cmp = 0 이 되어 `cmp <= 0` 반환 — 조기 반환과 같은 자리에서 같은 결과(보고 없음,
     래치 무변화)로 끝난다. 차이는 한 번의 빈 계산뿐이다(최적화 줄).
+
+리뷰 라운드 반영 뒤(review §4.7) 재실행: mutation-2.log(Q2(b) 정정 · 실패 시각 반영 뒤) 23/25 CAUGHT, mutation-3.log(UTC · 문구 정정 뒤, 최종 코드)
+23/25 CAUGHT — 새 변이 G16(include 지정 실패를 normal 로 되돌림) · G17(실패 시각을 싣지 않음) 둘 다 CAUGHT. 생존은 같은 I4 · I8 이고 위 근거 그대로다.

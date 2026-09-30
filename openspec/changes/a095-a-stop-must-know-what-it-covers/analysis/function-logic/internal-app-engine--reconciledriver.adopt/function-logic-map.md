@@ -1,10 +1,10 @@
 # Function Logic Map: `ReconcileDriver.adopt`
 
-- Source: `internal/app/engine/adoption.go` (`202`–`249`)
+- Source: `internal/app/engine/adoption.go` (`210`–`257`)
 - Qualified: `ReconcileDriver.adopt`
-- AST evidence: `ast.json` (`source_sha256` 26a0601d9987c7dc…)
+- AST evidence: `ast.json` (`source_sha256` 3d66976f07a50aa7…)
 - Risk scan: `risk-pattern-report.md`
-- 분기 8 · return 4 · 호출 11
+- 분기 8 · return 4 · 호출 12
 
 **역할.** 후보를 한 번의 묶음 시세 읽기로 값 매기고 편입할 수 있는 것을 편입한다. **후보별 결과**(편입됨 · 시도 실패 · 연기)를 돌려준다(10판).
 
@@ -23,20 +23,20 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
 |---|---|---|---|---|---|
-| B1 | if | `:205` `if len(candidates) == 0 {` | `d.observeCandidates`, `len` | :206 | 예 |
-| B2 | if | `:210` `if err != nil {` | `len` | — | 예 |
-| B3 | if | `:212` `if cycle.Err == nil {` | — | :215 | 예 |
-| B4 | if | `:219` `if bound <= 0 {` | — | — | 예 |
-| B5 | range | `:222` `for _, c := range candidates {` | `adoptionQuoteKey` | — | 예 |
-| B6 | if | `:225` `if !ok {` | — | — | 예 |
-| B7 | if | `:231` `if age := d.clk.Now().Sub(readAt); age > bound {` | `Sub`, `adoptedCount`, `d.clk.Now`, `d.logDeferred`, `fmt.Sprintf`, `len` | :238 | 예 |
-| B8 | if | `:240` `if d.adoptOne(ctx, c, observed) {` | `d.adoptOne` | :248 | 예 |
+| B1 | if | `:213` `if len(candidates) == 0 {` | `d.observeCandidates`, `len` | :214 | 예 |
+| B2 | if | `:218` `if err != nil {` | `len` | — | 예 |
+| B3 | if | `:220` `if cycle.Err == nil {` | — | :223 | 예 |
+| B4 | if | `:227` `if bound <= 0 {` | — | — | 예 |
+| B5 | range | `:230` `for _, c := range candidates {` | `adoptionQuoteKey` | — | 예 |
+| B6 | if | `:233` `if !ok {` | — | — | 예 |
+| B7 | if | `:239` `if age := d.clk.Now().Sub(readAt); age > bound {` | `Sub`, `adoptedCount`, `d.clk.Now`, `d.logDeferred`, `fmt.Sprintf`, `len` | :246 | 예 |
+| B8 | if | `:248` `if d.adoptOne(ctx, c, observed) {` | `d.adoptOne`, `d.clk.Now` | :256 | 예 |
 
 ## Calls and live bindings
 
 `d.observeCandidates` · `adoptionQuoteKey` · `d.logDeferred`(묵음 창) · `adoptedCount`(10판) · `d.adoptOne`.
 
-결과는 후보별 결과 map(`adoptResult` — 편입됨 · 시도 실패 · 연기, 10판)이다 — 오류를 돌려주지 않는다. 시세 읽기 오류는 `cycle.Err`에 담고 빈 map을 돌려준다(없는 후보 = 영값 연기).
+결과는 후보별 결과 map(`adoptOutcome{result, at}` — 편입됨 · 시도 실패(관측 시각 포함) · 연기, 10판)이다 — 오류를 돌려주지 않는다. 시세 읽기 오류는 `cycle.Err`에 담고 빈 map을 돌려준다(없는 후보 = 영값 연기).
 
 ## State mutations and fallbacks
 

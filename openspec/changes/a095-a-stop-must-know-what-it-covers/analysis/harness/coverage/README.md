@@ -22,9 +22,3 @@
 - `r6-app-engine.out` — 같은 실행의 `reconcileloop.go` 줄 (`ReconcileDriver.alert`)
 - `r8-config.out` — `go test ./internal/config/ -count=1 -covermode=set`, 작업트리의 `internal/config` 무수정 · base `02716357` 이래
   `engine.go` · `notifications.go` 무변화 확인 뒤 실행. `mergeAdoption` · `mergeNotifications`
-
-## 10판 추가 (구현 로트 재추출)
-
-- `r10/app-engine.out` · `r10/obs.out` — 연결 워크트리(구현 GREEN, a095 편집 포함 · a092 착지 뒤 소스)에서
-  `go test ./internal/<pkg>/ -count=1 -covermode=set -coverprofile=…`, 대상 파일(`adoption.go` · `reconcileloop.go` · `exitloop.go` ·
-  `exitwiring.go` · `alertdelivery.go` · `notifier.go` · `event.go`)의 줄만 남김. stale 18개 생성 번들을 이 둘로 다시 그림

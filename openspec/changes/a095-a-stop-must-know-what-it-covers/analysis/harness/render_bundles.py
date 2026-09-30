@@ -41,7 +41,7 @@ ERROR_CONTRACTS = {
     "internal-app-engine--exitobserver.observeonce": "결과는 `ExitCycle`이다 — 오류를 돌려주지 않고 `cycle.Err`에 담는다(B2 · B8 창).",
     "internal-app-engine--exitobserver.workingset": "결과는 `([]managed, error)`다 — 원장 읽기 오류(B1 · B2)는 되던지고, 포지션별 개설 · 격리 실패는 `cycle.Err`에 담고 다음 포지션으로 간다(B8 · B9 · B13 · B16 · B22 창).",
     "internal-app-engine--notifieralerter.externalpositionfound": "결과는 `error`다 — `Notify`의 오류를 그대로 돌려준다(nil 알림기는 B1에서 nil).",
-    "internal-app-engine--reconciledriver.adopt": "결과는 후보별 결과 map(`adoptResult` — 편입됨 · 시도 실패 · 연기, 10판)이다 — 오류를 돌려주지 않는다. 시세 읽기 오류는 `cycle.Err`에 담고 빈 map을 돌려준다(없는 후보 = 영값 연기).",
+    "internal-app-engine--reconciledriver.adopt": "결과는 후보별 결과 map(`adoptOutcome{result, at}` — 편입됨 · 시도 실패(관측 시각 포함) · 연기, 10판)이다 — 오류를 돌려주지 않는다. 시세 읽기 오류는 `cycle.Err`에 담고 빈 map을 돌려준다(없는 후보 = 영값 연기).",
     "internal-app-engine--reconciledriver.adoptone": "결과는 `bool`이다 — 오류를 돌려주지 않는다. 범주 ① ②는 `logDeferred` 로그 뒤 false, 범주 ③(B3 창)은 로그 뒤 true.",
     "internal-app-engine--reconciledriver.alert": "이 함수는 결과값이 없고 오류를 **되던지지 않는다** — B2가 `Notify`의 오류를 로그로만 남긴다. 호출자는 기록 실패를 알 수 없다(7판 r6 R6-2).",
     "internal-app-engine--reconciledriver.alertunmanaged": "결과값이 없다 — 오류를 돌려주지 않는다. `d.alert`(→ `ReconcileDriver.alert` B2)가 `Notify`의 오류를 로그로만 남긴다.",
@@ -436,11 +436,12 @@ BUNDLES: list[dict] = [
     {
         "stem": "adoption--ReconcileDriver.alertUnmanaged",
         "dir": "internal-app-engine--reconciledriver.alertunmanaged",
-        "role": "엔진이 관리하지 않는 보유를 알린다. 사실(조건 칸)을 `unmanagedFact`로 고르고, 알림 켜짐 ∧ 편입 켜짐 — 시도 실패만 "
-                "critical(`alertAdoptionFailed`)로, 그 밖은 normal로 보낸다(10판).",
+        "role": "엔진이 관리하지 않는 보유를 알린다. 사실(조건 칸)을 `unmanagedFact`로 고르고, 알림 켜짐 ∧ (편입 켜짐 — 시도 실패 ∨ "
+                "include 지정 — 시도 실패)만 critical(`alertAdoptionFailed`, 문장의 시각은 실패 관측 시각)로, 그 밖은 normal로 보낸다(10판 · "
+                "Q2(b) 정정 — 정본 exit-policy include 동일성).",
         "inputs": [
             ("`d.opts.NotificationsEnabled`", "로드된 알림 켜짐", "생산 조립 `Context.ReconcileDriver`", "거짓이면 어떤 사실도 critical 아님"),
-            ("`result`", "후보의 편입 결과", "`adopt`", "시도 실패 / 연기를 가른다"),
+            ("`outcome`", "후보의 편입 결과 · 실패 관측 시각", "`adopt`", "시도 실패 / 연기를 가르고, critical 문장의 시각을 준다"),
             ("`d.unmanaged[p.ID][fact]`", "이 사실을 이미 알렸나", "프로세스 메모리 — (포지션, 조건)", "normal 만 억제, critical 은 거치지 않음"),
         ],
         "calls": "`d.unmanagedFact` · `d.alertAdoptionFailed`(critical 갈래) · `reconcileUnmanagedKey` · `d.alert` · `d.label`.",
@@ -451,7 +452,7 @@ BUNDLES: list[dict] = [
         "high_risk": "yes — reconcile 쪽 무보호 보고와 진입 차단 도달의 자리다.",
         "observed": "yes | yes",
         "tests": {
-            "B1": "**a095 2.2 · 2.5 · 2.5a · 2.5b** `TestA095AFailedAdoptionIsCriticalAndDurable` · `TestA095NotificationsOffNeverRecordsACritical` · `TestA095OnWithoutATopicIsStillCritical` · `TestA095TheProductionAssemblyReadsTheLoadedSwitch`",
+            "B1": "**a095 2.2 · 2.5 · 2.5a · 2.5b · 2.6 · 2.11** `TestA095AFailedAdoptionIsCriticalAndDurable` · `TestA095ADesignatedSymbolsFailureIsCriticalToo` · `TestA095NotificationsOffNeverRecordsACritical` · `TestA095OnWithoutATopicIsStillCritical` · `TestA095TheProductionAssemblyReadsTheLoadedSwitch` · `TestA095EachFailureSpeaksTheMomentItFailed`",
             "B2": "**a095 2.12 · 2.15 · 2.16 · 2.17** `TestA095ADeliveredFailureIsRemindedAfterTheWindow` · `TestA095ARecordingFailureIsRetriedWhenTheStoreRecovers` · `TestA095TheFactIdentity`",
             "B3": "**a095 2.17** `TestA095TheFactIdentity` — 다른 사실은 삼키지 않음 · 같은 사실은 억제",
         },
