@@ -65,10 +65,30 @@ code로 오는지의 **실물 응답**이 먼저 있어야 한다. `testdata/`�
 `code`를 갖지만 그것이 프로덕션 모양인지는 미확인이다 —
 **프로덕션 409 3건은 `error.code`였다.**
 
-## I3. 배포 재생 결과 (tasks 6.3 — 미실행)
+## I3. 재생 결과 (tasks 6.1 · 6.1a · 6.2 · 6.3 — 2026-09-30, fixture)
 
-`[미실행]` — tasks 6.1·6.2가 fixture 재생을 만든 뒤 여기에 결과를 적는다.
-a087·a089·a091·a092와의 상호작용도 같은 자리에 적는다.
+`internal/app/engine/a094_replay_test.go` 가 세 모양을 재생했다(운영 원장 · 브로커 호출 0).
+
+| 사건 | 재생 | 결말(이 change 의 기대) |
+|---|---|---|
+| 새 409(`6GKYatiUehps5SQX` · `7d3we7ZD3dtxWTMO` · `7k5oRgmEHnoU5Vfi` 의 모양) | `TestA094ReplayTheNew409BecomesAReportedRepetition` + 게이트웨이 끝의 실제 HTTP 409(`TestA094RefusalCodeClassifiesTheAttempt`) | FAILED_CONFIRMED → 판정 함수가 발의를 풂 → 다음 관측 재발의 → 같은 409 → 매 주기 거절 **보고**. 반대 매수는 엔진 밖 주문이라 치우지 않음(3.X) — **손절은 사람이 반대 주문을 치울 때까지 나가지 않는다** |
+| park 된 두 행(475150 level 0 · 080220 level −1) | `TestA094ReplayTheTwoParkedRows` | 발의 무장 유지 · 제출 0 · park 원인 critical 1(판정 진입). 해동 명령(`tossctl engine attempt-resolve --target FAILED_CONFIRMED`) 뒤 6.1 과 같은 결말 |
+| 272210 라이브락(PROPOSAL_CANCELLED 1931건, 중앙값 5.0초) | `TestA094ReplayThe272210LivelockStops` | **셋째 기전(D−4.7)으로 재현** — 무장 발의 없음 + 같은 종목 다른 intent 의 IN_DOUBT(옛 409 손절). a094 뒤 3분(36 주기) PROPOSAL_CANCELLED 0, 지연 경보 1. 인과 확정: 청소가 미종결을 안 보게 한 변이(M9)에서 이 시험이 반복으로 실패(변이 원장) |
+
+**상호작용.** a087(보호 청산 시장가): 빈 가격 주문도 치움 대상(3.B3) — 충돌 없음. a089: 아카이브(64a1b2b3), R1 규범 충돌 해소. a091: 알림 등급과 독립.
+a092: 새 critical 은 전부 a092 입구(`RecordCritical`, 창 0)로 — 막힌 전송자에서 다른 포지션 손절 무지연을 실측(3.R4). a090: 판정 불가(시세 없음) 포지션의 종결
+대기 알림은 a090 미관측 경보가 덮는다(3.R9a — a090 착지 뒤 통합 시험, 이 로트 미실행).
+
+## I5. 후속 기록 (이 change 에서 구현하지 않음)
+
+- **나머지 ACKED 정산(4.N4x)**: 기동은 기록 번호 바이트 일치만 확정한다. 그 밖의 ACKED 를 풀려면 해소기 matcher 에 주문 번호 판별자(기록된 `broker_order_id` 와
+  바이트 일치 요구)가 먼저 있어야 한다 — 좌표 `internal/execgw/indoubt.go` 의 matcher 필드 목록(D−4.2 인용 당시 `:638-650`)과 단일 일치 덮어쓰기
+  `res.BrokerOrderID = order.OrderID`(당시 `:307`). 반례 시험: 오답 단일 일치 · 복수 일치.
+- **UNKNOWN_BROKER_STATE 손 해소(D−9.4)**: 명령이 저장소에 없다 — 이름 붙인 후속 change 후보.
+- **3.X 엔진 밖 주문 취소**: 사용자 결정 대기(사람 항목).
+- **4.3f 정지 조건 — 미발동**: 구현이 「rate-limit 으로 park 된 attempt」 를 타입으로 가를 필요가 없었다(park 원인 알림은 attempt 를 이름으로 댈 뿐 원인을 분류하지 않음).
+- **intent 없는 무장 발의**: 옛 판본이 `pending_intent_id` 없이 무장한 행은 청소 · 따라잡기가 풀지 않는다(attempt 를 찾을 수 없어 살아 있음으로 다룸). 운영 원장에
+  그런 행이 있는지 배포 전 읽기 전용으로 센다(8.2 와 함께).
 
 ## I4. 현재 얼어붙은 포지션은 이 change가 소급 보호하지 않는다
 

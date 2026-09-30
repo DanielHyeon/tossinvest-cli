@@ -1192,3 +1192,21 @@ tasks 「안전 불변식 확인」 §4 행(「R5-7 은 무장 익절 매도 위
 4.3e). 해제가 실패해도 해소는 유효하고 결과가 그것을 말하며 CLI 는 0 아닌 코드로 「다음 기동이 푼다」를 알린다 — 시험 4.Ta 가 실제로 따라잡기로 풀림을 잰다.
 journal API 는 바꾸지 않았다(audit 는 전이 트랜잭션 **앞**에 둔다 — 전이 안의 콜백을 만들면 `Attempt.transition` 편집이 필요해 High-risk 표면이 넓어진다; 선례 a066 도
 audit 줄 뒤 commit 실패 시 보상 줄).
+
+### 5. 기존 동작 고정 · 문서 · 재생 (tasks 3.5 · 3.6 · 3.8 · 3.9 · 3.D1 · 3.D2 · 3.7 · 3.R7f · 5.3 · 6.x · 4.N4x · 4.3f)
+
+| task | 근거 |
+|---|---|
+| 3.5 이 경로의 mutation 은 취소뿐 | `TestA094ACancelledSellIsNotClearedUntilItsClosingRecord`(취소 1 · 발주 무변) · `clearTheSymbol` 의 브로커 mutation 호출은 `Submit.Cancel` 하나(AST calls) |
+| 3.6 lineage 무변화 | `LiveOrdersForSymbol` 의 lineage 해석(`ResolveCurrentOrderIDScoped`) 무편집 — 종결 술어만 상수로 옮김(SQL 같은 술어). `TestLiveOrdersForSymbolKeepsAReusedCurrentDayOrderAfterThePriorDayTerminal` 외 journal 전체 통과 |
+| 3.8 익절 경로 | `clearTheSymbol` 은 발의 종류로 가르지 않는다(인자 `withPending` 뿐 — FLM 입력 표). 익절 발의 위 손절(CancelPendingFirst)은 3.R7 시험들이, 청소가 여는 조건(`isFullExit` 에 사다리 익절 포함)은 무편집 |
+| 3.9 엔진 밖 주문 취소 0 | `TestA094AnOrderTheEngineDidNotPlaceIsNotCancelled` |
+| 3.D1 | `TestA094AnOwnSideSellDoesNotWithholdAStopWithoutAProposal` |
+| 3.D2 두 번째 발의 거절 | 기존 `TestASecondProposalIsRefusedWhileOneIsOutstanding`(journal, `ErrProposalPending`) — 무편집 · 통과 |
+| 3.7 | 흡수: `TestA094ConsecutiveClearFailuresRaiseAnEarlierAlert`(취소 실패 → clear=false). 목록 읽기 실패는 오류: `TestA094AListReadFailureIsAnErrorAsBefore` |
+| 3.R7f | `docs/operations.md` 「체결 감지가 멈췄을 때」(확인 · 흔한 원인 · 수리 뒤 확인 · 하지 말 것 · 감지는 건강한데) |
+| 5.3 | `issues.md` I1(기존 — 매도용 부재 증거 모델이 선행 조건) |
+| 6.1 · 6.1a · 6.2 · 6.3 | `a094_replay_test.go` · `issues.md` I3(272210 은 D−4.7 셋째 기전으로 재현 — 인과는 변이 M9 로 확정) |
+| 4.N4x · 4.3f | `issues.md` I5(후속 기록 · 정지 조건 미발동) |
+| 3.R9a | **미실행** — a090 미관측 경보 착지 뒤 통합 시험(tasks 3.R9a 문언 그대로). 사람/후속 로트 |
+| 3.X1 | **사람 항목**(사용자 결정 — 엔진 밖 주문 취소). 구현하지 않았다 |
