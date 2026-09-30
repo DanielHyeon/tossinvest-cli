@@ -1,0 +1,10 @@
+--- FAIL: TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead (0.00s)
+    --- FAIL: TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead/notify-and-notice-list-failed (0.00s)
+        a092_mode_release_output_test.go:58: one of two failures disappeared:
+            완화됨 · 통지 기록 실패 — 전이 t1, 현재 모드 NORMAL
+              통지: the release notice could not be recorded
+            남은 진입 차단 사유: 없음
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.052s
+FAIL
+rc=1

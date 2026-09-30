@@ -116,7 +116,7 @@ func (o *ModeOperations) Release(ctx context.Context, req ModeReleaseRequest) (M
 	switch {
 	case err != nil && errors.Is(err, journal.ErrModeAnnouncementFailed):
 		// 커밋은 됐고 통지 기록만 실패함 — 성공으로 보고하고 통지 실패를 함께 보임(델타). 실패한 기록은 입구가 이미 래치 · 승격함.
-		// 결과 칸은 고정 문구 — 원문 오류는 통지 사건 키(계좌 포함)를 품음(26라운드 보이스 B #2). 원문은 기록 입구가 로그에 남겼음.
+		// 결과 칸은 고정 문구 — 원문 오류는 통지 사건 키(계좌 포함)를 품음(26라운드 보이스 B #2). 원문은 기록 입구가 계좌를 가려 로그에 남겼음(obs.MaskAccount).
 		result.NotifyError = modeReleaseNoticeFailed
 	case err != nil:
 		return ModeReleaseResult{}, err
@@ -170,11 +170,7 @@ func (o *ModeOperations) logFailure(what string, err error) {
 	if o == nil || o.notifier == nil || o.notifier.Log == nil || err == nil {
 		return
 	}
-	text := err.Error()
-	if acct := strings.TrimSpace(o.accountRef); acct != "" {
-		text = strings.ReplaceAll(text, acct, "[account]")
-	}
-	o.notifier.Log.Error(obs.EventOperatingMode, errors.New(text), obs.FieldDetail, what)
+	o.notifier.Log.Error(obs.EventOperatingMode, obs.MaskAccount(err, o.accountRef), obs.FieldDetail, what)
 }
 
 // detachedAnnouncer 는 커밋 뒤 통지를 요청 ctx 의 취소에서 떼어 냄 — 값은 그대로 전함(a066 notifyRelaxation 과 같은 규칙).

@@ -50,6 +50,14 @@ func TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead(t *testing.T) {
 			t.Errorf("the notice state was not marked unconfirmed: %q\n%s", notice, out)
 		}
 	})
+	// 26라운드 codex 2차 재확인 P2: 통지 기록 실패와 통지 목록 재조회 실패가 함께면 둘 다 보임.
+	t.Run("notify-and-notice-list-failed", func(t *testing.T) {
+		out := a092Render(engine.ModeReleaseResult{Changed: true, TransitionID: "t1", Mode: "NORMAL",
+			NotifyError: "the release notice could not be recorded", NoticeReadError: "re-reading the release notice failed"})
+		if !strings.Contains(out, "the release notice could not be recorded") || !strings.Contains(out, "re-reading the release notice failed") {
+			t.Errorf("one of two failures disappeared:\n%s", out)
+		}
+	})
 	t.Run("not-pending", func(t *testing.T) {
 		out := a092Render(engine.ModeReleaseResult{Changed: true, TransitionID: "t1", Mode: "NORMAL", Notified: true})
 		if strings.Contains(out, "이미 전달 처리됨") {

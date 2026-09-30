@@ -21,6 +21,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
@@ -137,7 +138,9 @@ func (n *Notifier) recordCritical(ctx context.Context, e Event, remindAfter time
 	if err != nil {
 		// 기록 실패 = 행도 발송도 없음. 호출자가 오류를 버려도 결과가 같도록 여기서 진입을 잠금(청산은 무관).
 		if n.Log != nil {
-			n.Log.Error(EventAlertUndelivered, err, FieldTriggerEvent, string(e.Type))
+			// 원문 오류는 사건 키(모드 통지 · exit 두절 — 계좌 원문 포함)를 품으므로 계좌를 가려서 남김(26라운드 보이스 B
+			// 재확인 N1 — Manager 판정 (a) 「원문은 계좌를 가려 엔진 로그에만」).
+			n.Log.Error(EventAlertUndelivered, MaskAccount(err, n.AccountRef), FieldTriggerEvent, string(e.Type))
 		}
 		if n.Gate != nil {
 			// 설명은 고정 문구 — 원문 오류는 사건 키(모드 통지 · exit 두절은 계좌를 담음)를 품고, 게이트 설명은 상태 출력이
@@ -185,4 +188,15 @@ func operatingModeEvent(previous string, rec journal.OperatingModeRecord) Event 
 			FieldReason:    rec.Cause,
 		},
 	}
+}
+
+// MaskAccount 는 오류 문구 속 계좌 원문을 "[account]" 로 가린 오류를 돌려줌. 계좌가 비었거나 오류가 nil 이면 그대로.
+// 가리는 것은 넘겨받은 계좌 하나뿐임 — 일반 마스커가 아님(base 의 계좌 로그 관행은 사람 결정 큐). 기록 입구와
+// mode-release(ModeOperations.logFailure)가 이 한 함수를 씀.
+func MaskAccount(err error, account string) error {
+	acct := strings.TrimSpace(account)
+	if err == nil || acct == "" || !strings.Contains(err.Error(), acct) {
+		return err
+	}
+	return errors.New(strings.ReplaceAll(err.Error(), acct, "[account]"))
 }

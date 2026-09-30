@@ -17,10 +17,18 @@ import (
 )
 
 const (
-	a092ModeToken  = "mode-control-token"
-	a092AlertToken = "alert-control-token"
+	// 두 토큰은 같은 길이 — 길이 검사만으로 거절되면 내용 비교가 없어도 시험이 통과함(26라운드 보이스 C 재확인 N2). 운영 토큰도
+	// 둘 다 같은 길이(43자)라 내용으로만 갈림.
+	a092ModeToken  = "mode-control-token-0123456789abcdef"
+	a092AlertToken = "alrt-control-token-0123456789abcdef"
 	a092GoodBody   = `{"to":"normal","operator":"박지훈","approval":"OPS-1","reason":"checked"}`
 )
+
+func init() {
+	if len(a092ModeToken) != len(a092AlertToken) || a092ModeToken == a092AlertToken {
+		panic("a092 endpoint fixture: the two tokens must differ only in content")
+	}
+}
 
 func a092ModeRequest(method, token, body string) *http.Request {
 	r := httptest.NewRequest(method, ModeControlReleasePath, strings.NewReader(body))

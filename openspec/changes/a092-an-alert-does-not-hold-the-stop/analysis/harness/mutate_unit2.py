@@ -475,6 +475,14 @@ R26B_MUTANTS = [
     ('Z22 R2 CLI hides the read mode after a notice-list failure', 'cmd/tossctl/engine_mode_release.go',
      '\tif r.ReReadError != "" {\n\t\t_, err := fmt.Fprintf(',
      '\tif r.ReReadError != "" || r.NoticeReadError != "" {\n\t\t_, err := fmt.Fprintf('),
+    ('Z23 R2 CLI drops the notice-list failure beside a record failure', 'cmd/tossctl/engine_mode_release.go',
+     '\t\tif r.NotifyError != "" && r.NoticeReadError != "" {', '\t\tif false {'),
+    ('Z24 N1 record-failure log carries the account', 'internal/obs/record_only.go',
+     'MaskAccount(err, n.AccountRef), FieldTriggerEvent', 'err, FieldTriggerEvent'),
+    ('Z25 mode-release failure log carries the account', 'internal/app/engine/modeops.go',
+     'obs.MaskAccount(err, o.accountRef), obs.FieldDetail', 'err, obs.FieldDetail'),
+    ('Z26 C-N2 bearer check compares only the length', 'internal/app/engine/alert_control_transport_unix.go',
+     'subtle.ConstantTimeCompare([]byte(provided), []byte(token)) != 1 {', 'subtle.ConstantTimeCompare([]byte(provided), []byte(provided)) != 1 {'),
 ]
 R26B_TESTS = [['go', 'test', '-count=1', '-run', 'TestA092', './internal/obs'], ['go', 'test', '-count=1', '-run', 'TestA092|A124|A098', './internal/app/engine'], ['go', 'test', '-count=1', '-run', 'TestA092', './internal/execgw'], ['go', 'test', '-count=1', '-run', 'TestA092', './cmd/tossctl']]
 

@@ -6,6 +6,7 @@ package engine
 //   - 보이스 B #2(불변식 8): 결과 · 오류 본문에 원문 오류(계좌 담긴 키 · 원장 문구)를 싣지 않음 — 고정 문구.
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"path/filepath"
@@ -124,4 +125,24 @@ func TestA092ReleaseResultsCarryNoRawLedgerText(t *testing.T) {
 			t.Errorf("NoticeReadError = %q, want a fixed wording without the account", res.NoticeReadError)
 		}
 	})
+}
+
+// 불변식 8 (a): 결과 칸은 고정 문구이고 원문은 엔진 로그에만 — 그 로그 줄도 계좌를 가림.
+func TestA092TheReleaseFailureLogMasksTheAccount(t *testing.T) {
+	fx := a092ReleaseEngine(t)
+	buf := &bytes.Buffer{}
+	fx.n.Log = obs.NewLogger(obs.LogOptions{Writer: buf, JSON: true})
+	fx.ops.current = func(context.Context, string) (journal.ModeSnapshot, error) {
+		return journal.ModeSnapshot{}, errors.New("reading the mode for " + a092Account + " failed")
+	}
+	if _, err := fx.ops.Release(context.Background(), a092ReleaseRequest()); err != nil {
+		t.Fatal(err)
+	}
+	logs := buf.String()
+	if !strings.Contains(logs, "reading the mode for [account] failed") {
+		t.Fatalf("the raw failure is not in the engine log, masked:\n%s", logs)
+	}
+	if strings.Contains(logs, a092Account) {
+		t.Errorf("the engine log carries the account number:\n%s", logs)
+	}
 }

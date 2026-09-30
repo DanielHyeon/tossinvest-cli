@@ -199,7 +199,8 @@ func TestA092AFailedRecordKeepsTheKeyOutOfTheGate(t *testing.T) {
 	j := a092OpenJournal(t)
 	_ = j.Close() // 닫힌 원장 — 기록이 반드시 실패
 	gate := execgw.NewEntryGate(clock.System(), map[execgw.RequiredQuery]time.Duration{})
-	n := &Notifier{Journal: j, Gate: gate, Clock: clock.System()}
+	buf := &a092SyncBuffer{}
+	n := &Notifier{Journal: j, Gate: gate, Clock: clock.System(), Log: a092JSONLogger(buf), AccountRef: a092Acct}
 	err := RecordOnly{N: n}.AnnounceOperatingMode(context.Background(), journal.ModeEntryBlocked, journal.OperatingModeRecord{
 		ID: "t2", AccountRef: a092Acct, Mode: journal.ModeNormal, Actor: journal.ModeActorOperator, Cause: "checked"})
 	if err == nil {
@@ -211,5 +212,18 @@ func TestA092AFailedRecordKeepsTheKeyOutOfTheGate(t *testing.T) {
 	}
 	if strings.Contains(detail, a092Acct) {
 		t.Errorf("the gate description carries the account number: %q", detail)
+	}
+	// 26라운드 보이스 B 재확인 N1: 기록 입구의 원문 오류 로그 줄도 계좌를 가림(사건 키가 계좌를 품음).
+	var recordLine string
+	for _, l := range strings.Split(buf.String(), "\n") {
+		if strings.Contains(l, `"level":"ERROR"`) && strings.Contains(l, string(EventAlertUndelivered)) {
+			recordLine = l
+		}
+	}
+	if recordLine == "" {
+		t.Fatalf("arrangement: no record-failure line:\n%s", buf.String())
+	}
+	if strings.Contains(recordLine, a092Acct) || !strings.Contains(recordLine, "[account]") {
+		t.Errorf("the record-failure line does not mask the account: %s", recordLine)
 	}
 }

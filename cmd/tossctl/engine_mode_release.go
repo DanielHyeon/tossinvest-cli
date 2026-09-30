@@ -116,6 +116,10 @@ func writeModeReleaseResult(w io.Writer, format output.Format, r engine.ModeRele
 			head = "완화됨 · 통지 기록 실패"
 		}
 		fmt.Fprintf(w, "%s — 전이 %s, 현재 모드 %s\n  통지: %s\n", head, r.TransitionID, mode, modeReleaseNoticeState(r))
+		if r.NotifyError != "" && r.NoticeReadError != "" {
+			// 두 실패는 독립 — 통지 상태 줄이 기록 실패를 말하면 목록 재조회 실패는 따로 보임(26라운드 codex 2차 재확인 P2).
+			fmt.Fprintf(w, "  통지 목록 재조회: %s\n", r.NoticeReadError)
+		}
 	}
 	if r.ReReadError != "" {
 		_, err := fmt.Fprintf(w, "재조회 실패 — 현재 모드와 남은 사유를 읽지 못했다(추정하지 않음): %s\n", r.ReReadError)

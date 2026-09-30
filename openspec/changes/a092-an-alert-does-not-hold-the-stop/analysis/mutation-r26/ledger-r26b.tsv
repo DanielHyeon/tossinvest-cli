@@ -22,3 +22,13 @@ Z19 B#7 daily-loss tightening reported as not persisted	CAUGHT	1 failing: TestA0
 Z20 R2 CLI calls not-pending delivered	CAUGHT	1 failing: TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead/not-pending
 Z21 R2 CLI guesses the notice state after a mode re-read failure	CAUGHT	1 failing: TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead/mode-reread-failed
 Z22 R2 CLI hides the read mode after a notice-list failure	CAUGHT	1 failing: TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead/notice-list-failed
+# 판 2 (codex 2차 재확인 P2 · 보이스 B 재확인 N1 수리 뒤 — Z23~Z25)
+TREE	HEAD 55b435eacfb9f77c12211992eaa6e4ff92e31dac	uncommitted tracked: cmd/tossctl/a092_mode_release_output_test.go,cmd/tossctl/engine_mode_release.go,internal/app/engine/a092_r26b_mode_release_test.go,internal/app/engine/modeops.go,internal/obs/a092_r26b_internal_test.go,internal/obs/record_only.go	own untracked: none
+CONTROL	GREEN	
+Z23 R2 CLI drops the notice-list failure beside a record failure	CAUGHT	1 failing: TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead/notify-and-notice-list-failed
+Z24 N1 record-failure log carries the account	CAUGHT	1 failing: TestA092AFailedRecordKeepsTheKeyOutOfTheGate
+Z25 mode-release failure log carries the account	CAUGHT	1 failing: TestA092TheReleaseFailureLogMasksTheAccount
+# 판 3 (보이스 C 재확인 N2 — Z26; 첫 정의 'false {' 는 crypto/subtle 미사용으로 BUILD-FAIL → 같은 길이 · 자기 비교로 재정의)
+TREE	HEAD 55b435eacfb9f77c12211992eaa6e4ff92e31dac	uncommitted tracked: cmd/tossctl/a092_mode_release_output_test.go,cmd/tossctl/engine_mode_release.go,internal/app/engine/a092_mode_endpoint_rejects_test.go,internal/app/engine/a092_r26b_mode_release_test.go,internal/app/engine/modeops.go,internal/obs/a092_r26b_internal_test.go,internal/obs/record_only.go	own untracked: none
+CONTROL	GREEN	
+Z26 C-N2 bearer check compares only the length	CAUGHT	1 failing: TestA092TheModeEndpointRejectsWhatItMustNotRun/alert-control-token

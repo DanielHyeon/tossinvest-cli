@@ -4999,3 +4999,37 @@ High-risk(critical 발송 · 진입 차단 · 모드 승격). 편집 전 번들 
 **FLM**: 편집 전 AST `analysis/pre-edit/r26b/`(편집 함수 7 — 편집 **전** 추출), 편집 뒤 번들 12 — 본문이 바뀐 9 재작성(그중 신설 4: `logLeaseLost` · `publishBestEffort` · `Runtime.escalate` · `RiskGuardian.escalateFor`), 본문 불변 3(`deliverOne` · `claimAndDeliver` · `logClaimHeld`)은 해시 · 좌표만 — `analysis/harness/render_r26b_bundles.py` 가 분기 좌표 · 시험 · 블록을 측정값(`coverage-post-r26b-{obs,engine,execgw}.json`, 연결 워크트리 `b910173a`, 실패 0)에서만 채움. 두 줄 조건(`recordFailedAttempt` B2 · `escalateFor` B2)은 하네스가 블록 좌표를 못 잡아 「블록 좌표 없음」으로 두고 행동 증거(X01 · Z19)를 RED 칸에 적었다. 새 코드 파일(record_only · normal_relay · modeops · mode_control* · engine_mode_release)은 base 에 없던 함수라 FLM 대상 밖(check_analysis 판정). `Notifier.escalate` 의 키 이름 변경은 행동 시험이 세지 않음 — 로그 키, 판정 불변(비례 원칙 `not-applicable`).
 
 **검증**: `go test -timeout 40m` obs · app/engine/... · cmd/tossctl · execgw rc 0, `-race` obs · engine(`TestA092|A124|A098`) rc 0, `make lint` rc 0, `check_analysis --change a092-…` **rc 0(evidence complete)**. journal 패키지는 이 로트가 만지지 않음.
+
+#### 26라운드 2차 재확인 (codex 같은 세션 · 보이스 A/B/C 표적) — 수리 로트 3
+
+- **codex**: 2차 재확인 `01a0f09c-6c07-74b0-9f28-29ded0cbb7a5`(resume), `55b435ea` 트리, 401 없음.
+  - 판정: R1 · R2 · R3 **닫힘**, 새 P0/P1 없음. P2 하나 — CLI 에서 통지 기록 실패와 통지 목록 재조회 실패가 함께 오면 목록 실패가 사라짐.
+  - 확인: `detachedAnnouncer` 는 커밋 **앞**을 떼지 않음. 400/500 분류는 유지되고, 차단 · 승격 · 거절 판정도 완화되지 않음.
+  - 지적: 「원문은 모두 가려진다」는 주장은 `logFailure` 범위를 넘는다고 봄 — 기록 입구의 원문 로그 줄이 남아 있었음. 아래 N1 로 닫음.
+  - 원문: `codex-r26-reconfirm2-{output.md,run.txt}`.
+- **보이스 A: APPROVE.** #1 · #4 닫힘. `WithoutCancel` 제거 변이가 시험에 잡힘. 잠금 그래프에 잎 잠금 하나만 늘어났고 교착 · 오개방 없음. 새 P2 는 N1(떨어진 ctx 에 기한 없음 — 종료 중 완화 창) 하나.
+- **보이스 B: APPROVE-WITH-FIX.** #1 · #2 표시면 · #6 · #9 · #10 닫힘. 새 P2 둘:
+  - N1: `recordCritical` 원문 로그 줄의 계좌 무가림.
+  - N2: 1차 #3 relay 패닉 유실이 이번 diff 에 없음 — 이는 `071e67c1` 에서 닫혔음(codex · A · C 가 확인. B 는 `d8769cfb..b910173a` diff 만 봄).
+- **보이스 C.** #2 · #3 닫힘. 표본 변이 11/12 CAUGHT.
+  - SURVIVED 1: Q06 — `logFailure` 가림을 지키는 시험 없음, P1.
+  - P2 하나: 틀린 토큰 케이스가 길이만 달라 내용 비교를 안 잼.
+
+| 발견 | 수리 | RED(`mutation-r26/red-r26c-*.log`) | 변이 |
+|---|---|---|---|
+| codex 2차 P2 — CLI 복합 실패 | 기록 실패와 목록 재조회 실패를 독립 줄로 | `…/notify-and-notice-list-failed` FAIL | Z23 |
+| 보이스 B N1 — `recordCritical` 원문 로그 무가림 | `obs.MaskAccount`(한 함수)로 가림. mode-release `logFailure` 도 같은 함수를 씀 | `TestA092AFailedRecordKeepsTheKeyOutOfTheGate` FAIL | Z24 |
+| 보이스 C N1 — `logFailure` 가림 시험 없음 | `TestA092TheReleaseFailureLogMasksTheAccount`(Log 를 붙인 픽스처) | 핀(Q06 SURVIVED 가 RED 역할) | Z25 |
+| 보이스 C N2 — 토큰 길이 차이 | 픽스처 두 토큰을 같은 길이로 + `init` 단언 | 핀 | Z26(1판 BUILD-FAIL → 재정의 CAUGHT) |
+
+- **변이 `ledger-r26b.tsv` 누계**: Z01~Z26 **26/26 CAUGHT**. BUILD-FAIL 1판은 재정의 전의 기록임.
+- **검증**: `go test -timeout 40m` obs · app/engine/... · cmd/tossctl · execgw, `-race` obs · engine, `make lint` — 모두 rc 0. `-tags tossos_testseams` 네 패키지 rc 0(2353 passed).
+  - 이 로트 3 은 a092 새 파일(record_only · modeops · engine_mode_release)과 시험만 편집함 → FLM 번들 변화 없음. `check_analysis` rc 0 은 커밋 뒤 재확인함.
+- **정정**: 위 불변식 8 문단에서 「기록 입구의 원문 오류 로그 줄」을 (b) 잔여로 적었던 것은 이 로트가 가림으로 닫았음. 가림의 범위는 넘겨받은 계좌 하나(`MaskAccount`)이고 일반 마스커가 아님(codex 판정).
+
+**이월 추가(Manager 승인 범위 밖이라 판정 요청)**:
+
+| 항목 | 사유 | 행선 |
+|---|---|---|
+| 보이스 A N1 — 떨어진 ctx 에 기한이 없어 엔진 종료 중 완화의 통지가 닫힌 원장에 쓰일 수 있음 | 창이 좁음(종료 중 완화). 기한을 다는 것은 유실 창을 다시 여는 쪽(A 도 권하지 않음). a066 선례와 같은 모양 | 후속 로트(종료 순서 — 완화 처리기를 원장 close 앞에 기다리기) |
+| 보이스 B #6 잔여 — `Notifier.Journal == nil` 조립에서 「대기 목록에 없음」 문구 | 생산 조립은 Journal 이 채워짐(추정 경로) | 후속 로트(시험 보강) |
