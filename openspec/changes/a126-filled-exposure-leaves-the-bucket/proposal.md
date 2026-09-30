@@ -37,7 +37,13 @@ a066 6.5 실측(아카이브 review.md:1124 부근):
 `filled_minor` 가 bucket 사용량에서 빠진다. 자동 회계 의미론이며 **운영자 해제
 (a066 완화 가족)와 다른 축**이다 — 사람 승인이 아니라 원장 사실이 트리거다.
 
-## 열린 질문 (freeze 로트 입력)
+## 열린 질문 (freeze 로트 입력) — **2026-09-30 freeze 로트가 확정, 답과 영수증은 design.md**
+
+- Q1 → ② owner release receipt(①·③ 을 선결 조건으로 포함). Q2 → 파생(저장값·스키마 불변), 운영 원장 영수증 0 건 실측,
+  활성화 직전 재실측은 사람 승인 항목 H1. Q3 → latch 해제 → owner 해제(=떠남) → 다음 체결의 재계산, 떠남은 latch 를
+  풀지 않음. Q4 → 부분 종결 감소 없음(SELL→예약 귀속 열 없음), 최소 귀속 단위 = owner generation.
+
+아래는 초안의 원 질문이다.
 
 - **Q1 — 떠나는 사건은 무엇인가.** 후보: ① 포지션 종결(매도 체결로 보유 0) ② owner
   해제(release — 청결 검사 통과 시점) ③ 대사 확인 0 보유. 어느 것이 D5 의 "Position
@@ -49,12 +55,15 @@ a066 6.5 실측(아카이브 review.md:1124 부근):
   순서로 만나는지.
 - **Q4 — 부분 체결·부분 종결.** 수량 단위 감소의 근거 열(귀속 가능한 최소 단위).
 
-## Impact (예상 — freeze 로트가 확정)
+## Impact (freeze 로트 확정 2026-09-30 — design.md)
 
-- **Specs**: `multi-horizon-risk-buckets` (MODIFIED — 사용량 정의에 수명주기 절)
-- **Code**: `internal/journal/risk_bucket_fill.go`(persist 쓰기 자리 :1071·:1087 계열),
-  `internal/riskbucket/` 재계산 경로
-- **Schema**: Q2 가 소급이면 마이그레이션(additive 원칙), 전방이면 없을 수 있음
+- **Specs**: `multi-horizon-risk-buckets` (ADDED — 떠남 요구 1, latch 불가침 요구 1)
+- **Code**: 사용량 reader 한 곳 — `internal/riskbucket/production_snapshot_authority.go`
+  (`readProductionRiskUsage`·`aggregateProductionRiskUsage`·`JournalBucketUsage`), 한도 모집단 흡수로
+  `internal/journal/risk_bucket_usage.go`(`refuseStaleBucketUsage` 소비 변경·`smallestRecordedBucketLimit` 삭제).
+  persist 쓰기 자리(`risk_bucket_fill.go` :1068·:1071·:1087)와 owner 해제·완화·재계산 경로는 **편집하지 않는다**(파생 설계).
+- **Schema**: 없음(영수증 v24·scope latch v22 재사용). 저장값 불변.
+- **생산 효과**: owner 해제가 배선될 때까지 0(a066 잔여 #5).
 - **§0.3·손절**: 무접촉 — 진입 cap 만 다룬다. 감소는 진입을 **여는** 방향이므로 모든
   감소는 원장 사실에 결속돼야 한다(느슨한 감소 = fail-open)
 
