@@ -389,3 +389,18 @@ Pre-Edit Gate:
 | A090-I2 | P2 시험 | 「포지션 소멸 뒤 B3 주기의 공지 재시도」(tasks 2.3g ⑧) 미검증 | **수용** — `TestA090R3gANoticeQueuedBeforeThePositionsLeftIsRecordedInTheEmptyCycle` + 변이 M32(표시 0 주기 재시도 생략) |
 
 Manager 판정(2026-10-01): I1·I2 보강 승인(생산 무변경) · 0.8/5.x 사람 항목 이월(a095 선례 — ROADMAP 「a090 이월」).
+
+## 게이트 (tasks 4.7) — 로컬 합성 커밋 (A) · **GATE PASS 11/11** (2026-10-01)
+
+- **왜 합성인가**(Manager 판정 D 실패 → 조건부 승인 A): 보강 착지 `df3a6c69`(a090 시험 = 자기 Go 작업) 뒤로 착지 기록 불가. 옛 기록 `8d2f1e12` 는 조건 8 거절(→ `48ba0cd4` 삭제),
+  번들 refresh `6dd1e74e`(본문 무변) 뒤 재시도의 도구 거절 원문: "no commit at or after the evidence (6dd1e74ed666) is accepted as the landing — at the first
+  commit walked, landing point 6dd1e74ed666 is not the revision this evidence describes: internal/app/engine/exitloop.go" — 그 사이 a094 `e5e7a67f` 가 같은 파일을 고침.
+- **합성 구성**(로컬 detached 워크트리, 푸시 안 함, HEAD `cc019374`): `8d2f1e12`(a090 Go 착지) → `8c2d61c3`(= `6699e4ce` cherry-pick, landed = `8d2f1e12`) →
+  `efc03718`(= `825ccbe2` cherry-pick, base `b6821cf1`) → `3b1c2e01`(a090 **문서 전용**: tasks · review · ROADMAP 이월 절 · impl-review · mutation · red 로그 + 4.7/4.9 체크) →
+  `cc019374`(tracker 재생성). **제외**: `df3a6c69` 의 `.go`(시험 보강 둘) · 그 시험을 인용하는 BTM 줄(`270a7881`) · 번들 refresh(`6dd1e74e`) —
+  합성 트리의 번들은 `8d2f1e12` 판 그대로(`git diff 8d2f1e12 HEAD -- analysis/function-logic` 공집합 확인), 생산 코드도 착지본 그대로.
+- **결과**: `SDD_PYTHON=<저장소 밖 venv> make sdd-sync` rc 0 → `make gate CHANGE=a090-…` **rc 0 · GATE PASS**. 5단계: "base b6821cf1c029 → landed-commit 8d2f1e12…
+  required 4 function(s) … evidence complete or diff-proven exempt". 7 test · 8 test-seams · 9 test-race · 10 vet · 11 validate(48 passed) 전부 OK.
+  로그 `analysis/gate/gate-synthetic-cc019374.log`.
+- **제외분의 별도 실측**: `df3a6c69` 보강 시험 — 격리 워크트리(cb36caf4+보강) `go test ./internal/app/engine/ -count=1` ok(492s) · 변이 32/32(`round5-cb36caf4-32of32.log`).
+- 이 봉쇄 전말은 `docs/ROADMAP.md` 「a090 이월」 gate change 후보 줄(거절 원문 인용, `0e5cb08f`).
