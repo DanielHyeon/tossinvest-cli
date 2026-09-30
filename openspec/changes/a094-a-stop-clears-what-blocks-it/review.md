@@ -1321,3 +1321,27 @@ a092 · a095 선례대로 미체크 24건을 `[처분 2026-10-01]` 로 닫았다
 | 7.6 · 7.7 | 게이트 준비 — 체크 커밋에서 돌리고 결과를 적음 | 아래 「게이트 실행 기록」 |
 | 7.9 | Manager 승인 뒤 팀메이트가 archive — tasks 「아카이브 때 할 일」 | — |
 | 8.1~8.4 | 사람 항목(배포 · 재시작 · 읽기 전용 셈 · 세 포지션) | 「a094 이월」 |
+
+### 13. 게이트 1차(126fcbad) FAIL ⑤ → 사람 승인 base 재고정 (2026-10-01)
+
+- 착지 기록 `57b231ca`(landed = `99dfa5bc`, 격리 워크트리에서 계산 · 수락). 처분 · tracker 커밋 `126fcbad`.
+- 격리 워크트리 `/tmp/claude-1000/a094-gate` @ `126fcbad` 준비(`analysis/gate/prep-126fcbad.txt`): sdd-infra rc 0 · `sdd_sync.py --no-gbrain` rc 0(all indexes
+  current) · sdd-check rc 0. **`make gate` ①~④ OK, ⑤ FAIL**(`analysis/gate/gate-1-126fcbad.log`). 거절 원문: 「[logic-map] a094-a-stop-clears-what-blocks-it:
+  base 1ffe2295994d → landed-commit 99dfa5bc413081ad352ed8bebf81a1dddb748d2e required 45 function(s) — judged at HEAD 126fcbadbfcc」 … 「GATE FAIL:
+  a094-a-stop-clears-what-blocks-it — Function Logic Map 산출물 미완료」. missing 23 — 전부 창 안 형제 착지 몫.
+- **조건 ① 실측(둘째 갈래)** — 하네스 `analysis/harness/repin_condition1.py`, 영수증 `analysis/gate/repin-condition1-126fcbad.txt`(격리 워크트리, `check_analysis.changed_existing_functions`
+  를 커밋마다 부모 대비로 부름):
+  - 옛 base 뒤 a094 자기 비병합 Go 커밋 12(`766a8456` · `b74875e7` · `d485a45f` · `ffd88707` · `05de14c3` · `41f3d9f6` · `bfa61fb4` · `6a90ebeb` · `48100446` ·
+    `cb36caf4` · `e5e7a67f` · `f6a5bcd9`). 이들이 바꾼 함수 중 **base 에 있던** 것 = required 의 22 — **증거 없는 것 0**(전부 `revision: current` 번들, `99dfa5bc`
+    재생성 · ⑤ 가 stale 0 으로 판정): `newEngineCmd` · `TestMutatingAnnotationOnTradeCommands` · `ExitObserver.clearTheSymbol` · `judge` · `record` · `release` ·
+    `submit` · `TestABreachDisplacesAnOutstandingTakeProfit` · `Context.ExitObserver` · `StartPositionPolicyCommandServer` · `Context.Recovery` · `classifyMutation` ·
+    `AllReasonCodes` · `Gateway.checkSymbolFree` · `Gateway.confirmCreatedOrder` · `Journal.ResolveExitProposal` · exit_state_test 4 · `Journal.LiveOrdersForSymbol` ·
+    `Recovery.Run`.
+  - missing 23 의 귀속(미귀속 0): a112 13(`36ade9b2` 6 · `00e1b9bd` 7 — strategy_* · handoff · 시험) · a095 6(`277a105a` · `cc480a88` — adoption 4 · reconcileloop 2) ·
+    a090 4(`8d2f1e12` — `engineRuntime` · `ObserveOnce` · `workingSet` · `obs.Notifier.AnnounceOperatingMode`).
+  - `99dfa5bc` 뒤 비병합 Go 커밋 0(a112 수리 로트는 Manager 가 게이트 커밋 절단까지 보류).
+- a090 형 합성 커밋 (A) 가 아닌 이유(Manager 2026-10-01): a090 은 형제가 같은 파일을 자기 증거 뒤에 재편집해 유효 착지 지점이 사라진 경우였고, a094 는 마지막 자기
+  Go 커밋 뒤 형제 Go 착지가 없어 재고정으로 창을 비울 수 있다.
+- **조건 ② 승인 기록(원문)**: 「Manager 승인 (2026-10-01): WORKFLOW 「사람 승인 base 재고정」 조건 ① 둘째 갈래(a071 변형·a066 전수 영수증 표준, a095 3차와 동일 규격). 근거: 자기 비병합 Go 커밋 12가 변경한 기존 함수 22개 전수가 fresh 번들 대응(99dfa5bc 재생성)·stale 0, required 45 중 23은 형제 로트(a112 13·a095 6·a090 4) 착지 몫, 99dfa5bc 뒤 Go 커밋 0. 승인 참조: 사용자 상임 오케스트레이션 지시 + Manager 2026-10-01 「a095 형 재고정이 네 상황의 정답이다 … 이 메시지가 승인이다」. 실행 승인자: Manager(Fable), 사용자 위임 범위 내. 동반 조치: 게이트 커밋 절단까지 형제 Go 착지 동결(a112 수리 로트 보류 — 게이트 창 보호 프로토콜).」
+- 절차: ① 이 기록 커밋 ② `base-commit.txt` 단독 커밋(새 base = ① 의 커밋) ③ `landed-commit.txt` 삭제 커밋(착지는 base 의 자손 — 삭제 후 재계산이 정본 기제)
+  ④ 격리 워크트리 ③ 커밋 고정으로 게이트 재실행.

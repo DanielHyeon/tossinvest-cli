@@ -1,0 +1,34 @@
+required 45 missing 23 missing⊆required True
+own-touched (existing at parent) 66 ∩ required(existing at base) 22
+own-touched base functions WITHOUT evidence: 0
+sibling-only missing: 23
+  own cmd/tossctl/engine.go:newEngineCmd
+  own cmd/tossctl/help_convention_test.go:TestMutatingAnnotationOnTradeCommands
+  own internal/app/engine/exitloop.go:ExitObserver.clearTheSymbol
+  own internal/app/engine/exitloop.go:ExitObserver.judge
+  own internal/app/engine/exitloop.go:ExitObserver.record
+  own internal/app/engine/exitloop.go:ExitObserver.release
+  own internal/app/engine/exitloop.go:ExitObserver.submit
+  own internal/app/engine/exitloop_test.go:TestABreachDisplacesAnOutstandingTakeProfit
+  own internal/app/engine/exitwiring.go:Context.ExitObserver
+  own internal/app/engine/position_policy_transport.go:StartPositionPolicyCommandServer
+  own internal/app/engine/runtime_wiring.go:Context.Recovery
+  own internal/execgw/classify.go:classifyMutation
+  own internal/execgw/failclosed.go:AllReasonCodes
+  own internal/execgw/gateway.go:Gateway.checkSymbolFree
+  own internal/execgw/roundtrip.go:Gateway.confirmCreatedOrder
+  own internal/journal/apply_hook.go:Journal.ResolveExitProposal
+  own internal/journal/exit_state_test.go:TestACancelledRungIsProposableAgain
+  own internal/journal/exit_state_test.go:TestARefusalReArmsTheLevel
+  own internal/journal/exit_state_test.go:TestARefusedProposalIsReArmedAfterARestart
+  own internal/journal/exit_state_test.go:TestResolvingNothingIsNotAnError
+  own internal/journal/fills.go:Journal.LiveOrdersForSymbol
+  own internal/reconcile/recovery.go:Recovery.Run
+sibling 3260f4eb 0 []
+sibling 36ade9b2 6 ['internal/app/engine/a112_fault_scope_test.go:TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo', 'internal/app/engine/strategy_entry_supervisor.go:Context.NewRefreshingPairedStrategyEntrySupervisor', 'internal/app/engine/strategy_entry_supervisor.go:NewStrategyEntrySupervisor', 'internal/app/engine/strategy_entry_supervisor.go:StrategyEntrySupervisor.recordSwallowedCycleError', 'internal/app/engine/strategy_entry_supervisor.go:StrategyEntrySupervisor.runMarket', 'internal/strategyworker/policy_receipt_test.go:TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter']
+sibling 277a105a 6 ['internal/app/engine/adoption.go:ReconcileDriver.adopt', 'internal/app/engine/adoption.go:ReconcileDriver.alertUnmanaged', 'internal/app/engine/adoption.go:ReconcileDriver.checkExternalIncrease', 'internal/app/engine/adoption.go:ReconcileDriver.judgeHoldings', 'internal/app/engine/reconcileloop.go:Context.ReconcileDriver', 'internal/app/engine/reconcileloop.go:NewReconcileDriver']
+sibling cc480a88 3 ['internal/app/engine/adoption.go:ReconcileDriver.adopt', 'internal/app/engine/adoption.go:ReconcileDriver.alertUnmanaged', 'internal/app/engine/adoption.go:ReconcileDriver.judgeHoldings']
+sibling 00e1b9bd 7 ['internal/app/engine/strategy_dispatch_handoff.go:strategyProposalMarketAuthority.dispatchHandoff', 'internal/app/engine/strategy_dispatch_handoff_guard_test.go:TestAdmitCensusSeesEverySpellingItClaims', 'internal/app/engine/strategy_dispatch_handoff_guard_test.go:TestExactlyOneProductionSiteAdmitsIntoTheSeam', 'internal/app/engine/strategy_dispatch_handoff_guard_test.go:admitSites', 'internal/app/engine/strategy_entry_supervisor.go:Context.runProductionStrategyMarketCycle', 'internal/strategyhandoff/dependency_closure_test.go:TestTheHandoffSeamImportsNothingOutsideItsAllowedClosure', 'internal/strategyhandoff/handoff.go:Handoff.Deliver']
+sibling 8d2f1e12 4 ['cmd/tossctl/engine.go:engineRuntime', 'internal/app/engine/exitloop.go:ExitObserver.ObserveOnce', 'internal/app/engine/exitloop.go:ExitObserver.workingSet', 'internal/obs/mode.go:Notifier.AnnounceOperatingMode']
+sibling df3a6c69 0 []
+unattributed missing: 0

@@ -1,0 +1,47 @@
+start 2026-10-01 01:00:34 KST
+bash tools/gate.sh a094-a-stop-clears-what-blocks-it
+GATE: a094-a-stop-clears-what-blocks-it
+repo: /tmp/claude-1000/a094-gate
+
+==> 1/11 tasks.md 확인
+OK: openspec/changes/a094-a-stop-clears-what-blocks-it/tasks.md
+
+==> 2/11 미완료 태스크 확인
+OK: 미완료 태스크 0건
+
+==> 3/11 짝 change 확인 (deploy-pair.txt)
+OK: 짝 선언 없음 — 이 change 는 혼자 배포한다
+
+==> 4/11 gstack 리뷰 기록 확인
+OK: openspec/changes/a094-a-stop-clears-what-blocks-it/review.md
+
+==> 5/11 Function Logic Map 증거 확인
+[logic-map] a094-a-stop-clears-what-blocks-it: base 1ffe2295994d → landed-commit 99dfa5bc413081ad352ed8bebf81a1dddb748d2e required 45 function(s) — judged at HEAD 126fcbadbfcc
+[logic-map] missing evidence for modified function cmd/tossctl/engine.go:engineRuntime
+[logic-map] missing evidence for modified function internal/app/engine/a112_fault_scope_test.go:TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo
+[logic-map] missing evidence for modified function internal/app/engine/adoption.go:ReconcileDriver.judgeHoldings
+[logic-map] missing evidence for modified function internal/app/engine/adoption.go:ReconcileDriver.adopt
+[logic-map] missing evidence for modified function internal/app/engine/adoption.go:ReconcileDriver.alertUnmanaged
+[logic-map] missing evidence for modified function internal/app/engine/adoption.go:ReconcileDriver.checkExternalIncrease
+[logic-map] missing evidence for modified function internal/app/engine/exitloop.go:ExitObserver.ObserveOnce
+[logic-map] missing evidence for modified function internal/app/engine/exitloop.go:ExitObserver.workingSet
+[logic-map] missing evidence for modified function internal/app/engine/reconcileloop.go:NewReconcileDriver
+[logic-map] missing evidence for modified function internal/app/engine/reconcileloop.go:Context.ReconcileDriver
+[logic-map] missing evidence for modified function internal/app/engine/strategy_dispatch_handoff.go:strategyProposalMarketAuthority.dispatchHandoff
+[logic-map] missing evidence for modified function internal/app/engine/strategy_dispatch_handoff_guard_test.go:TestExactlyOneProductionSiteAdmitsIntoTheSeam
+[logic-map] missing evidence for modified function internal/app/engine/strategy_dispatch_handoff_guard_test.go:admitSites
+[logic-map] missing evidence for modified function internal/app/engine/strategy_dispatch_handoff_guard_test.go:TestAdmitCensusSeesEverySpellingItClaims
+[logic-map] missing evidence for modified function internal/app/engine/strategy_entry_supervisor.go:Context.NewRefreshingPairedStrategyEntrySupervisor
+[logic-map] missing evidence for modified function internal/app/engine/strategy_entry_supervisor.go:Context.runProductionStrategyMarketCycle
+[logic-map] missing evidence for modified function internal/app/engine/strategy_entry_supervisor.go:NewStrategyEntrySupervisor
+[logic-map] missing evidence for modified function internal/app/engine/strategy_entry_supervisor.go:StrategyEntrySupervisor.runMarket
+[logic-map] missing evidence for modified function internal/app/engine/strategy_entry_supervisor.go:StrategyEntrySupervisor.recordSwallowedCycleError
+[logic-map] missing evidence for modified function internal/obs/mode.go:Notifier.AnnounceOperatingMode
+[logic-map] missing evidence for modified function internal/strategyhandoff/dependency_closure_test.go:TestTheHandoffSeamImportsNothingOutsideItsAllowedClosure
+[logic-map] missing evidence for modified function internal/strategyhandoff/handoff.go:Handoff.Deliver
+[logic-map] missing evidence for modified function internal/strategyworker/policy_receipt_test.go:TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter
+
+GATE FAIL: a094-a-stop-clears-what-blocks-it — Function Logic Map 산출물 미완료
+make: *** [Makefile:169: gate] Error 1
+rc=2
+end 2026-10-01 01:00:40 KST
