@@ -316,3 +316,10 @@ a091 exitloop 2 · exitwiring 1 · obs notifier.escalate 1 · strategyflow seal_
 3. **단독 커밋 + 영수증** — `base-commit.txt` 한 파일 커밋(메시지에 옛→새 sha · 실측 · required 41 / 형제 32).
 
 순서: base 단독 커밋 → 번들 다섯 + 옛 착지 기록 삭제 → 착지 재기록 → 격리 게이트 2.1.
+
+### 2.1 게이트 결과 (2026-10-01)
+
+격리 워크트리(`scratchpad/wt-gate`, detached `3f8d0566`, 워크트리 전용 `.sdd/.venv` 는 `make sdd-infra`) · `make sdd-sync`(indexes current) 뒤
+`make gate CHANGE=a126-filled-exposure-leaves-the-bucket` → **GATE PASS 11/11**(`analysis/impl/gate-3f8d0566.log`). 5단계 FLM: base `97a6f717` → 착지
+`958f8239` required 6, evidence complete. 과정의 두 교정: 경량 번들 BTM 둘(branchless 행 · 지워진 시험 대신 대체 시험 인용, `eaed24b3`)과
+2.1 · 2.2 처분 체크(a095 관례, `3f8d0566`). 첫 실행의 sdd-check 실패는 격리 워크트리에 `.sdd/.venv` 가 없던 것(환경 — 코드 무관).
