@@ -1,0 +1,127 @@
+{
+  "file": "internal/app/engine/a109_the_sibling_endpoints_recover_too_test.go",
+  "source_sha256": "4ed962de949a424d863a206ed4e688882d9bc7687c167aa25a71c5d98c82851b",
+  "package": "engine",
+  "function": "TestTheStagedSocketNameFitsInsideEverySiblingsFinalName",
+  "signature": "TestTheStagedSocketNameFitsInsideEverySiblingsFinalName(params=1, results=0)",
+  "start": {
+    "line": 345,
+    "column": 1
+  },
+  "end": {
+    "line": 361,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 347,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 350,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 355,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
+        "column": 17
+      },
+      "text": "positionpolicyrpc.StagedSocketName"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 348,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 3
+      },
+      "text": "AlertControlSocketFileName"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 353,
+        "column": 3
+      },
+      "text": "ModeControlSocketFileName"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 355,
+        "column": 20
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 356,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 358,
+        "column": 13
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 358,
+        "column": 33
+      },
+      "text": "len"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 346,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,51 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/app/engine",
+ "tests_run": 12,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-app-engine--buildgateway": {
+   "B1": {
+    "kind": "if",
+    "line": 239,
+    "column": 2,
+    "block": "239.57-241.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 261,
+    "column": 2,
+    "block": "261.45-263.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 269,
+    "column": 2,
+    "block": "269.71-271.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 293,
+    "column": 2,
+    "block": "293.16-295.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B5": {
+    "kind": "if",
+    "line": 317,
+    "column": 2,
+    "block": "317.16-319.3",
+    "entered_by": [],
+    "union": null
+   }
+  }
+ }
+}

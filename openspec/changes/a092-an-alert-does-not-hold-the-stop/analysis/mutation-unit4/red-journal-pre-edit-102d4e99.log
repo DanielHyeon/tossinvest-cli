@@ -1,0 +1,9 @@
+# 편집 전(102d4e99 — operating_mode.go 무편집) 에서 a092_mode_commit_order_test.go 사본(Seq 를 쓰는 시험 하나 제외) 실행
+--- FAIL: TestA092CurrentModeIsTheLatestCommitNotTheLatestClock (0.28s)
+    a092_mode_commit_order_test.go:70: current mode = NORMAL, want ENTRY_BLOCKED — the latest *committed* transition is a tightening
+--- FAIL: TestA092HistoryIsInCommitOrder (0.22s)
+    a092_mode_commit_order_test.go:87: tighten: changed=false err=<nil>
+--- FAIL: TestA092CommitOrderSurvivesAVacuumCopy (0.25s)
+    a092_mode_commit_order_test.go:109: tighten: changed=false err=<nil>
+FAIL
+# 해석: 벽시계 되감김 뒤 커밋된 강화가 「과거」로 읽혀 현재 = NORMAL(fail-open), 되감긴 재강화는 변화 없음으로 거절됨.

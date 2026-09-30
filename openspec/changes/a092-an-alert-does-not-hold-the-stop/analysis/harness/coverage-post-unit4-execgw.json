@@ -1,0 +1,94 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/execgw",
+ "tests_run": 16,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-execgw--entrygate.projectoperatingmode": {
+   "B1": {
+    "kind": "if",
+    "line": 37,
+    "column": 2,
+    "block": "37.21-39.3",
+    "entered_by": [
+     "TestA092AProjectionReplacesTheModeLatch",
+     "TestA092AStaleProjectionIsNotApplied",
+     "TestA092NoCheckSeesAGapDuringReplacement",
+     "TestA092TheModeRevisionMovesOnlyWhenPresenceChanges",
+     "TestARejectedCredentialTightensTheOperatingMode",
+     "TestTheModeLatchIsReplacedRatherThanAccumulated",
+     "TestTheModeSnapshotIsTheSharedView",
+     "TestTheRestartRebuildsTheModeLatch"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 40,
+    "column": 2,
+    "block": "40.21-42.3",
+    "entered_by": [
+     "TestA092AProjectionReplacesTheModeLatch",
+     "TestA092AStaleProjectionIsNotApplied",
+     "TestA092NoCheckSeesAGapDuringReplacement",
+     "TestA092TheModeRevisionMovesOnlyWhenPresenceChanges",
+     "TestARejectedCredentialTightensTheOperatingMode",
+     "TestTheModeLatchIsReplacedRatherThanAccumulated",
+     "TestTheModeSnapshotIsTheSharedView",
+     "TestTheRestartRebuildsTheModeLatch"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 49,
+    "column": 2,
+    "block": "49.26-51.3",
+    "entered_by": [
+     "TestA092AStaleProjectionIsNotApplied"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 54,
+    "column": 2,
+    "block": "54.24-55.10",
+    "entered_by": [
+     "TestA092AStaleProjectionIsNotApplied",
+     "TestA092TheModeRevisionMovesOnlyWhenPresenceChanges"
+    ],
+    "union": null
+   },
+   "B5": {
+    "kind": "if",
+    "line": 55,
+    "column": 3,
+    "block": "55.10-58.4",
+    "entered_by": [
+     "TestA092AStaleProjectionIsNotApplied",
+     "TestA092TheModeRevisionMovesOnlyWhenPresenceChanges"
+    ],
+    "union": null
+   },
+   "B6": {
+    "kind": "if",
+    "line": 64,
+    "column": 2,
+    "block": "64.10-66.3",
+    "entered_by": [
+     "TestA092AProjectionReplacesTheModeLatch",
+     "TestA092AStaleProjectionIsNotApplied",
+     "TestA092NoCheckSeesAGapDuringReplacement",
+     "TestA092TheModeRevisionMovesOnlyWhenPresenceChanges",
+     "TestARejectedCredentialTightensTheOperatingMode",
+     "TestTheModeLatchIsReplacedRatherThanAccumulated",
+     "TestTheModeSnapshotIsTheSharedView",
+     "TestTheRestartRebuildsTheModeLatch"
+    ],
+    "union": null
+   }
+  }
+ }
+}

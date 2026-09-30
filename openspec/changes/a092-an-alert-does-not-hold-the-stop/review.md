@@ -4869,3 +4869,38 @@ High-risk(critical 발송 · 진입 차단 · 모드 승격). 편집 전 번들 
 - 문서 정정: 25.7 의 「21.4 · 21.5 닫음」→ 「21.4 GREEN 코드 부분 · 옛 task 표지 미완(25.10)」(B#1) · `logClaimHeld` 주석의 「죽은 발송자 신호」에 실행자의 `claim_held`+`stole_from` 을 더함(A#2).
 - 결정 요청: 실행자 본문에 필드 블록을 붙일지(B#6 — 불변식 8 쪽으로는 지금이 유리) · 완화 통지 로그 줄의 계좌 ref(A#4).
 - 조치: `ErrModeAnnouncementFailed` 를 호출자 둘이 따로 다룸(B#7) — 단위 ④(모드 전이 경로)에서.
+
+### 24.9 착지 단위 ④ — 모드 커밋 순서 · 원자 투영 · 생산 배선 · 사람의 완화 (2026-09-30)
+
+**착지**: 코드 `2714e393` · 시험 조임 `c9c93a7b` · 이 절의 증거 커밋. 그 앞에 25라운드 판정 2b(Manager)의 로그 수리 `f48e7865`(기록 전용 입구의 로그 줄에서 필드 제거 — 반증: 수리 되돌림 → 시험 FAIL).
+
+| 요구 | 구현 | RED 관측 | GREEN · 변이 |
+|---|---|---|---|
+| C4 · C5 · K14 — 현재 모드 · 방향 · 복원 · 이력 = 커밋 순서 | `modeLatestOrder` = rowid · 이력 rowid · 레코드/스냅숏 `Seq` | `mutation-unit4/red-journal-pre-edit-102d4e99.log`: 벽시계 되감김 뒤 현재 = NORMAL(fail-open), 되감긴 재강화가 변화 없음으로 거절 | M01~M04 CAUGHT · VACUUM 복사본에서 순서 유지 |
+| AC2 · C5 · C20 — 원자 교체 · 울타리 · 세대 | `ProjectOperatingMode` 한 잠금 구간 · `Seq <= modeSeq` 무시 · 존재 변화에만 revision | `red-execgw-pre-edit-102d4e99.log`: 역순 도착 적용 · 설명만 바뀌어도 revision+1 · 교체 중 점검 5632회 빈 창 · `g.Block` 재잠금 | M05~M08 CAUGHT(`-race` 포함) |
+| 투영 배선 + 기동 복원(첫 진입 점검 전) · C15 (ㄴ) · K8 | `bindOperatingModeProjection`(새 파일) — `buildGateway` 가 알림 래치 복원 뒤 부름 | `red-engine-pre-edit.log`: 조립 뒤 모드 사유 없음 · 조립 뒤 강화가 산 게이트에 안 닿음 · 못 읽는 모드 행에서 진입 열림 | M09~M11 CAUGHT |
+| C12~C16 · K16 · M12 — 사람의 완화 | `tossctl engine mode-release` → 모드 전용 소켓(`.mode-control/modectl.sock`) → `ModeOperations.Release` | 새 코드(심볼 없음 = 컴파일 RED) | M12~M20 · M23 CAUGHT(M20 1회차 생존 → 시험을 상태 · 코드 단언으로 조여 CAUGHT, `ledger-run2-M20.tsv`) |
+| C17 — `alerts ack` mutating | 표지 | a098 시험이 반대를 단언하고 있었음(아래) | M22 CAUGHT |
+| 21.7(d) — a124 집행 경계 핀 | 두 핀 이름 바꿔 갱신(아래) | 배선 뒤 옛 핀 둘 FAIL — a124 가 예고한 빨강 | 새 핀 PASS |
+
+변이 `--set 25.9`(`analysis/mutation-unit4/ledger-run1.tsv`, 대조군 GREEN): **23/23 CAUGHT**(M20 은 2회차). 실행: journal · execgw · app/engine · cmd/tossctl · obs 스위트 ok, 태그 시험 ok, `-race`(execgw · engine A092) ok, `make lint` rc 0, `check_analysis` evidence complete.
+
+**스펙 해석 · 선언과 달라진 점 — 보고**:
+1. **완화 통지의 통지자 = 기록 전용 입구**(`obs.RecordOnly`). design D0.3g 8 C13(22판)은 `Announcer = Notifier`(동기)였으나, frozen 24판 델타가 「통지 실패 = 기록 실패 — 전송은 배달 실행자의 일이라 명령의 호출 안에서 드러나지 않는다 · 명령은 다시 읽은 통지 행 상태를 보인다」로 고쳤다. 델타를 따랐다(스펙끼리의 판 차이 — 새 판 우선).
+2. **모드 표면 생성 실패는 기동을 멈추지 않고 강등 보고**(`runEngineRun`). 알림 표면은 생성 실패 시 `return err` 이지만, 모드 표면이 없어 잃는 것은 사람의 완화뿐(모드 사유 차단은 유지 — 보수 방향)이고 엔진 정지는 손절 부재라 안전 불변식 4 가 앞선다. cmd 의 a108/a109 강등 부팅 시험(계좌 없는 스텁 Context)이 처음 판(`return err`)에서 전부 빨강이었다.
+3. **소켓 이름 `modectl.sock`**(12자) — `mode.sock`(9자)은 형제 공용 staging 이름(11자)보다 짧아 a109 규칙 위반.
+4. **`newEngineCmd` 는 편집 전 FLM 없이 편집했다**(Pre-Edit 목록 누락 — 한 줄 `AddCommand`). 편집 뒤 번들을 만들었고 분기 0.
+5. **`ModeOperations` 등 새 코드는 시험보다 먼저 썼다** — RED 는 「심볼 없음」뿐이고 행동 반증은 변이(M12~M23)가 진다.
+6. **교차 change 시험 편집 넷**(단언 불약화 표):
+
+   | 시험(소유) | 옛 | 새 | 근거 |
+   |---|---|---|---|
+   | `TestTheAlertCommandsAreWiredUnderEngine`(a098) | ack 는 mutating 이 **아님** | ack 는 mutating | frozen 22.3 C17 · Manager 판정 4 와 정면 충돌하던 단언. 마찰 없음 · 기본값 없음 단언 유지. M22 CAUGHT |
+   | `TestTheModeProjectorHasNoProductionCaller`(a124) → `…IsBoundOnlyByTheEngineAssembly` | 생산 호출자 0 | 생산 호출 자리 정확히 둘, 둘 다 `mode_projection_wiring.go` | a124 핀 주석 자체가 「배선 착지 시 함께 고친다(정상 경로)」. 양성 대조(시험 호출자 발견) 유지 |
+   | `TestTheLedgerModeRowAddsNoEntryEnforcementBeforeProjectionIsWired`(a124) → `…EnforcesEntryOnceProjectionIsWired` | 승인 뒤 · 재시작 뒤 모드 사유 **없음** | 승인 뒤 · 재시작(원장 재오픈) 뒤 모드 사유 **있음**, 관측을 다 줘도 모드 사유로 거절 | 같은 예고. 재시작을 같은 핸들 재조립에서 원장 재오픈으로 바꿈(한 핸들에 투영기는 한 번 — 생산 재시작의 실제 모양) |
+   | `TestNothingButThatReasonsClearMovesItsEpoch`(a124) | 순번 없는 투영 둘 | 순번 1 · 2 | 울타리 뒤 순번 없는 투영은 무동작 → 「투영은 해제 세대를 안 바꾼다」가 공허하게 참이 됐을 것. 주제 강화 |
+
+**남은 것(단위 ⑤ · 문서)**:
+- 보이스 B #7: 기록 전용 announcer 의 기록 실패 → `ErrModeAnnouncementFailed` 를 호출자 둘(`Retrier.escalateCredentialFailure` · `checkOutage`)이 「승격 안 됨」으로 오기 — High-risk 기존 함수 편집이라 단위 ⑤ 로 옮김.
+- 21.7(e): 정본 「배달 실행자의 정지가 …」 근거 ①(투영 미배선)이 이 착지로 거짓이 됨 — archive 때 정본 편집(24.5 와 함께).
+- 21.10 · 22.5(사람): 배포 전 운영 원장 현재 모드 조회 · 첫 기동의 모드 사유 차단 확인 · 기존 ENTRY_BLOCKED 행 처분은 사람 결정 · 사람 실행. **에이전트는 mode-release 를 실행하지 않는다.**

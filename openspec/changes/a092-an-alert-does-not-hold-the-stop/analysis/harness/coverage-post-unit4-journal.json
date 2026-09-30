@@ -1,0 +1,547 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/journal",
+ "tests_run": 30,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-journal--journal.transitionoperatingmode": {
+   "B1": {
+    "kind": "switch",
+    "line": 360,
+    "column": 2,
+    "block": "353.126-360.9",
+    "entered_by": [
+     "TestA092CurrentModeIsTheLatestCommitNotTheLatestClock",
+     "TestA092TransitionsCarryTheirCommitSequence",
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestARefusedTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond",
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "case",
+    "line": 361,
+    "column": 2,
+    "block": "361.21-363.87",
+    "entered_by": [
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "case",
+    "line": 364,
+    "column": 2,
+    "block": "364.33-366.86",
+    "entered_by": [
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "case",
+    "line": 367,
+    "column": 2,
+    "block": "367.30-370.37",
+    "entered_by": [
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B5": {
+    "kind": "case",
+    "line": 371,
+    "column": 2,
+    "block": "371.19-374.22",
+    "entered_by": [
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B6": {
+    "kind": "if",
+    "line": 378,
+    "column": 2,
+    "block": "378.28-379.15",
+    "entered_by": [
+     "TestA092CurrentModeIsTheLatestCommitNotTheLatestClock",
+     "TestA092TransitionsCarryTheirCommitSequence",
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestARefusedTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestModesAreScopedToTheirAccount",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B7": {
+    "kind": "switch",
+    "line": 379,
+    "column": 3,
+    "block": "378.28-379.15",
+    "entered_by": [
+     "TestA092CurrentModeIsTheLatestCommitNotTheLatestClock",
+     "TestA092TransitionsCarryTheirCommitSequence",
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestARefusedTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestModesAreScopedToTheirAccount",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B8": {
+    "kind": "case",
+    "line": 380,
+    "column": 3,
+    "block": "380.20-381.67",
+    "entered_by": [
+     "TestARefusedTransitionIsNotAnnounced",
+     "TestTheFullTransitionMatrix"
+    ],
+    "union": null
+   },
+   "B9": {
+    "kind": "case",
+    "line": 382,
+    "column": 3,
+    "block": "382.19-386.89",
+    "entered_by": [
+     "TestTheFullTransitionMatrix"
+    ],
+    "union": null
+   },
+   "B10": {
+    "kind": "if",
+    "line": 388,
+    "column": 3,
+    "block": "388.31-392.4",
+    "entered_by": [],
+    "union": null
+   },
+   "B11": {
+    "kind": "if",
+    "line": 399,
+    "column": 2,
+    "block": "399.16-402.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B12": {
+    "kind": "if",
+    "line": 406,
+    "column": 2,
+    "block": "406.16-408.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B13": {
+    "kind": "if",
+    "line": 413,
+    "column": 2,
+    "block": "413.16-415.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B14": {
+    "kind": "switch",
+    "line": 416,
+    "column": 2,
+    "block": "416.2-416.9",
+    "entered_by": [
+     "TestA092CurrentModeIsTheLatestCommitNotTheLatestClock",
+     "TestA092TransitionsCarryTheirCommitSequence",
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B15": {
+    "kind": "case",
+    "line": 417,
+    "column": 2,
+    "block": "417.22-422.43",
+    "entered_by": [
+     "TestA092CurrentModeIsTheLatestCommitNotTheLatestClock",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestTheFullTransitionMatrix"
+    ],
+    "union": null
+   },
+   "B16": {
+    "kind": "case",
+    "line": 424,
+    "column": 2,
+    "block": "424.47-428.43",
+    "entered_by": [
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestTheFullTransitionMatrix"
+    ],
+    "union": null
+   },
+   "B17": {
+    "kind": "case",
+    "line": 430,
+    "column": 2,
+    "block": "430.21-431.21",
+    "entered_by": [
+     "TestA092CurrentModeIsTheLatestCommitNotTheLatestClock",
+     "TestA092TransitionsCarryTheirCommitSequence",
+     "TestTheFullTransitionMatrix",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B18": {
+    "kind": "if",
+    "line": 431,
+    "column": 3,
+    "block": "431.21-434.4",
+    "entered_by": [],
+    "union": null
+   },
+   "B19": {
+    "kind": "if",
+    "line": 435,
+    "column": 3,
+    "block": "435.25-439.4",
+    "entered_by": [],
+    "union": null
+   },
+   "B20": {
+    "kind": "if",
+    "line": 444,
+    "column": 2,
+    "block": "444.16-446.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B21": {
+    "kind": "if",
+    "line": 448,
+    "column": 2,
+    "block": "448.14-450.3",
+    "entered_by": [
+     "TestA092CurrentModeIsTheLatestCommitNotTheLatestClock",
+     "TestA092TransitionsCarryTheirCommitSequence",
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B22": {
+    "kind": "if",
+    "line": 455,
+    "column": 2,
+    "block": "455.16-458.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B23": {
+    "kind": "if",
+    "line": 462,
+    "column": 2,
+    "block": "462.16-465.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B24": {
+    "kind": "if",
+    "line": 475,
+    "column": 2,
+    "block": "475.24-477.70",
+    "entered_by": [
+     "TestA092CurrentModeIsTheLatestCommitNotTheLatestClock",
+     "TestA092TransitionsCarryTheirCommitSequence",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B25": {
+    "kind": "if",
+    "line": 476,
+    "column": 3,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B26": {
+    "kind": "if",
+    "line": 483,
+    "column": 2,
+    "block": "483.36-486.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B27": {
+    "kind": "if",
+    "line": 490,
+    "column": 2,
+    "block": "490.41-492.3",
+    "entered_by": [
+     "TestA092CurrentModeIsTheLatestCommitNotTheLatestClock",
+     "TestA092TransitionsCarryTheirCommitSequence",
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B28": {
+    "kind": "if",
+    "line": 493,
+    "column": 2,
+    "block": "493.26-494.88",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced"
+    ],
+    "union": null
+   },
+   "B29": {
+    "kind": "if",
+    "line": 494,
+    "column": 3,
+    "block": "494.88-497.4",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition"
+    ],
+    "union": null
+   }
+  },
+  "internal-journal--journal.currentoperatingmode": {
+   "B1": {
+    "kind": "if",
+    "line": 570,
+    "column": 2,
+    "block": "570.19-573.3",
+    "entered_by": [
+     "TestCurrentOperatingModeNeedsAnAccount"
+    ],
+    "union": null
+   }
+  },
+  "internal-journal--journal.restoreoperatingmodeprojection": {
+   "B1": {
+    "kind": "if",
+    "line": 591,
+    "column": 2,
+    "block": "591.16-593.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 594,
+    "column": 2,
+    "block": "594.41-603.3",
+    "entered_by": [
+     "TestA092TransitionsCarryTheirCommitSequence",
+     "TestTheModeIsRestoredAfterARestart"
+    ],
+    "union": null
+   }
+  },
+  "internal-journal--journal.operatingmodehistory": {
+   "B1": {
+    "kind": "if",
+    "line": 613,
+    "column": 2,
+    "block": "613.16-615.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "for",
+    "line": 619,
+    "column": 2,
+    "block": "619.18-621.17",
+    "entered_by": [
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 621,
+    "column": 3,
+    "block": "621.17-623.4",
+    "entered_by": [],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 626,
+    "column": 2,
+    "block": "626.35-628.3",
+    "entered_by": [],
+    "union": null
+   }
+  },
+  "internal-journal--currentmodefromrow": {
+   "B1": {
+    "kind": "switch",
+    "line": 676,
+    "column": 2,
+    "block": "674.79-676.9",
+    "entered_by": [
+     "TestA092CurrentModeIsTheLatestCommitNotTheLatestClock",
+     "TestA092TransitionsCarryTheirCommitSequence",
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestNoModeRowMeansNormal",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond",
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "case",
+    "line": 677,
+    "column": 2,
+    "block": "677.42-679.66",
+    "entered_by": [
+     "TestA092CurrentModeIsTheLatestCommitNotTheLatestClock",
+     "TestA092TransitionsCarryTheirCommitSequence",
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestNoModeRowMeansNormal",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond",
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "case",
+    "line": 680,
+    "column": 2,
+    "block": "680.18-681.29",
+    "entered_by": [],
+    "union": null
+   }
+  },
+  "internal-journal--currentmodetx": {},
+  "internal-journal--scanoperatingmode": {
+   "B1": {
+    "kind": "if",
+    "line": 718,
+    "column": 2,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 720,
+    "column": 3,
+    "block": "720.36-722.4",
+    "entered_by": [
+     "TestA092CurrentModeIsTheLatestCommitNotTheLatestClock",
+     "TestA092TransitionsCarryTheirCommitSequence",
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestNoModeRowMeansNormal",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond",
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 726,
+    "column": 2,
+    "block": "726.16-729.3",
+    "entered_by": [],
+    "union": null
+   }
+  }
+ }
+}

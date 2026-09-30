@@ -1,0 +1,3 @@
+TREE	HEAD c9c93a7b0cfa5d6dc1914193eedf6c0a6bcdf89e	uncommitted tracked: none	own untracked: none
+CONTROL	GREEN	
+M20 invalid mapped to 500	CAUGHT	1 failing: TestA092ModeReleaseGoesThroughTheRunningEngine

@@ -28,10 +28,12 @@ base: `285c7619c0fd589daa2069ccf26bad26baeb2a04` (`base-commit.txt`)
 - [x] 25.6 a066 §7 이행 — `notifyRelaxation`(`risk_relaxation_command.go`) → 알림기 기록 전용 입구(`Notifier.RecordCritical`). 편집 전 FLM `efb9389d` →
       **이행 커밋 `0e4f26af`**(24.4 가 인용할 커밋) → 편집 뒤 FLM · 변이 15/15(`analysis/mutation-25.6/`) · a066 아카이브 review 「§7 hand-over done」. `review.md` §24.4 · §24.5.
 - [x] 25.7 착지 단위 ③ 잠금 범위(21.4 GREEN — a095 착지 판정 기준) — 편집 전 FLM `fd7853b2` → **코드 `fbc6df5f`** → 증거 커밋.
-      21.3 (f) · 21.4 · 21.5(A-4 귀속: 임차가 지킴) · 22.3 C2/C27 · 23.3 K2/K4 · 24.3 M5 · `logClaimHeld` INFO(Manager 판정 (나)). 변이 19/19. `review.md` §24.6 · §24.7.
+      21.3 (f) · 21.4(GREEN 코드 — 옛 §6·§8 task 표지는 미완, 25.10) · 21.5(A-4 귀속: 임차가 지킴) · 22.3 C2/C27 · 23.3 K2/K4 · 24.3 M5 · `logClaimHeld` INFO(Manager 판정 (나)). 변이 19/19. `review.md` §24.6 · §24.7.
 - [ ] 25.8 리뷰 — 4 보이스(codex 포함) · gstack, 단위 ②~③ + 25.6 묶음. 브리프에 k3 합성 주장을 공격 대상으로.
-- [ ] 25.9 착지 단위 ④ mode-release 명령 · 완화 경로 · 투영 배선 · 복원 · AC2 · rowid 순서 · 울타리.
-- [ ] 25.10 착지 단위 ⑤ K/M 반영 항목(C8 일반 등급 실행자 · K3/K5/K6/K7/M6/M7 · K19 Flush 핀).
+- [x] 25.9 착지 단위 ④ mode-release 명령 · 완화 경로 · 투영 배선 · 복원 · AC2 · rowid 순서 · 울타리 — 코드 `2714e393` · 시험 `c9c93a7b`. 변이 23/23. `review.md` §24.9.
+      닫은 RED: 21.7 (a)(b)(c)(d) · 22.3 C4 · C5 · C12~C17 · C20 · 23.3 K14 · K16 · 24.3 M12 · M13(복원 실패 래치 · 뒤이은 성공 투영이 교체). 남김: 21.7(e) 정본 문장(archive) · 보이스 B #7(단위 ⑤).
+- [ ] 25.10 착지 단위 ⑤ K/M 반영 항목 — Manager 판정(2026-09-30) 순서: **capped 동기 발행(주문 제출 앞) 먼저** → C8 일반 등급 실행자 · K19 Flush 핀 · K18 도달 경로 전수 핀 ·
+      k3 AST 핀 · 주입 지점 역할 핀 · K3/K5/K6/K7/M6/M7 · `ErrModeAnnouncementFailed` 호출자 둘(보이스 B #7) · 실행자 탈취 줄 이름(보이스 A #2) · 21.4 옛 task 표지(보이스 B #1).
 
 ## 24. 24판 작업 (2026-09-29) — 23라운드 처분 반영 (design D0.3i · `review.md` §23.13)
 

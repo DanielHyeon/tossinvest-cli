@@ -1,0 +1,515 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/journal",
+ "tests_run": 28,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-journal--journal.transitionoperatingmode": {
+   "B1": {
+    "kind": "switch",
+    "line": 353,
+    "column": 2,
+    "block": "346.126-353.9",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestARefusedTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond",
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "case",
+    "line": 354,
+    "column": 2,
+    "block": "354.21-356.87",
+    "entered_by": [
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "case",
+    "line": 357,
+    "column": 2,
+    "block": "357.33-359.86",
+    "entered_by": [
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "case",
+    "line": 360,
+    "column": 2,
+    "block": "360.30-363.37",
+    "entered_by": [
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B5": {
+    "kind": "case",
+    "line": 364,
+    "column": 2,
+    "block": "364.19-367.22",
+    "entered_by": [
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B6": {
+    "kind": "if",
+    "line": 371,
+    "column": 2,
+    "block": "371.28-372.15",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestARefusedTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestModesAreScopedToTheirAccount",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B7": {
+    "kind": "switch",
+    "line": 372,
+    "column": 3,
+    "block": "371.28-372.15",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestARefusedTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestModesAreScopedToTheirAccount",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B8": {
+    "kind": "case",
+    "line": 373,
+    "column": 3,
+    "block": "373.20-374.67",
+    "entered_by": [
+     "TestARefusedTransitionIsNotAnnounced",
+     "TestTheFullTransitionMatrix"
+    ],
+    "union": null
+   },
+   "B9": {
+    "kind": "case",
+    "line": 375,
+    "column": 3,
+    "block": "375.19-379.89",
+    "entered_by": [
+     "TestTheFullTransitionMatrix"
+    ],
+    "union": null
+   },
+   "B10": {
+    "kind": "if",
+    "line": 381,
+    "column": 3,
+    "block": "381.31-385.4",
+    "entered_by": [],
+    "union": null
+   },
+   "B11": {
+    "kind": "if",
+    "line": 392,
+    "column": 2,
+    "block": "392.16-395.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B12": {
+    "kind": "if",
+    "line": 399,
+    "column": 2,
+    "block": "399.16-401.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B13": {
+    "kind": "if",
+    "line": 406,
+    "column": 2,
+    "block": "406.16-408.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B14": {
+    "kind": "switch",
+    "line": 409,
+    "column": 2,
+    "block": "409.2-409.9",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B15": {
+    "kind": "case",
+    "line": 410,
+    "column": 2,
+    "block": "410.22-415.43",
+    "entered_by": [
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestTheFullTransitionMatrix"
+    ],
+    "union": null
+   },
+   "B16": {
+    "kind": "case",
+    "line": 417,
+    "column": 2,
+    "block": "417.47-421.43",
+    "entered_by": [
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestTheFullTransitionMatrix"
+    ],
+    "union": null
+   },
+   "B17": {
+    "kind": "case",
+    "line": 423,
+    "column": 2,
+    "block": "423.21-424.21",
+    "entered_by": [
+     "TestTheFullTransitionMatrix",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B18": {
+    "kind": "if",
+    "line": 424,
+    "column": 3,
+    "block": "424.21-427.4",
+    "entered_by": [],
+    "union": null
+   },
+   "B19": {
+    "kind": "if",
+    "line": 428,
+    "column": 3,
+    "block": "428.25-432.4",
+    "entered_by": [],
+    "union": null
+   },
+   "B20": {
+    "kind": "if",
+    "line": 437,
+    "column": 2,
+    "block": "437.16-439.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B21": {
+    "kind": "if",
+    "line": 441,
+    "column": 2,
+    "block": "441.14-443.3",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B22": {
+    "kind": "if",
+    "line": 444,
+    "column": 2,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B23": {
+    "kind": "if",
+    "line": 460,
+    "column": 2,
+    "block": "460.24-462.70",
+    "entered_by": [
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B24": {
+    "kind": "if",
+    "line": 461,
+    "column": 3,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B25": {
+    "kind": "if",
+    "line": 468,
+    "column": 2,
+    "block": "468.36-471.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B26": {
+    "kind": "if",
+    "line": 475,
+    "column": 2,
+    "block": "475.41-477.3",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B27": {
+    "kind": "if",
+    "line": 478,
+    "column": 2,
+    "block": "478.26-479.88",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced"
+    ],
+    "union": null
+   },
+   "B28": {
+    "kind": "if",
+    "line": 479,
+    "column": 3,
+    "block": "479.88-482.4",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition"
+    ],
+    "union": null
+   }
+  },
+  "internal-journal--journal.currentoperatingmode": {
+   "B1": {
+    "kind": "if",
+    "line": 555,
+    "column": 2,
+    "block": "555.19-558.3",
+    "entered_by": [
+     "TestCurrentOperatingModeNeedsAnAccount"
+    ],
+    "union": null
+   }
+  },
+  "internal-journal--journal.restoreoperatingmodeprojection": {
+   "B1": {
+    "kind": "if",
+    "line": 576,
+    "column": 2,
+    "block": "576.16-578.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 579,
+    "column": 2,
+    "block": "579.41-587.3",
+    "entered_by": [
+     "TestTheModeIsRestoredAfterARestart"
+    ],
+    "union": null
+   }
+  },
+  "internal-journal--journal.operatingmodehistory": {
+   "B1": {
+    "kind": "if",
+    "line": 597,
+    "column": 2,
+    "block": "597.16-599.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "for",
+    "line": 603,
+    "column": 2,
+    "block": "603.18-605.17",
+    "entered_by": [
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestTransitionIDsDoNotCollideInsideOneSecond"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 605,
+    "column": 3,
+    "block": "605.17-607.4",
+    "entered_by": [],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 610,
+    "column": 2,
+    "block": "610.35-612.3",
+    "entered_by": [],
+    "union": null
+   }
+  },
+  "internal-journal--currentmodefromrow": {
+   "B1": {
+    "kind": "switch",
+    "line": 657,
+    "column": 2,
+    "block": "655.79-657.9",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestNoModeRowMeansNormal",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond",
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "case",
+    "line": 658,
+    "column": 2,
+    "block": "658.42-660.66",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestNoModeRowMeansNormal",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond",
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "case",
+    "line": 661,
+    "column": 2,
+    "block": "661.18-662.29",
+    "entered_by": [],
+    "union": null
+   }
+  },
+  "internal-journal--currentmodetx": {},
+  "internal-journal--scanoperatingmode": {
+   "B1": {
+    "kind": "if",
+    "line": 698,
+    "column": 2,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 700,
+    "column": 3,
+    "block": "700.36-702.4",
+    "entered_by": [
+     "TestAFailedAnnouncementDoesNotUndoTheTransition",
+     "TestANoOpTransitionIsNotAnnounced",
+     "TestATransitionIsPersistedAndProjectedInOneFlow",
+     "TestConcurrentEscalationsConvergeOnTheStrictestMode",
+     "TestConservativePrecedenceKeepsTheStricterMode",
+     "TestEachTriggerEscalatesImmediatelyAndDurably",
+     "TestFlattenIsNeverGatedByTheMode",
+     "TestModesAreScopedToTheirAccount",
+     "TestNoModeRowMeansNormal",
+     "TestProtectionWeakeningIsRefusedByTheDecisionRecorderInEveryMode",
+     "TestTheFullTransitionMatrix",
+     "TestTheModeIsRestoredAfterARestart",
+     "TestTransitionIDsDoNotCollideInsideOneSecond",
+     "TestUnusableTransitionRequestsAreRefused"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 706,
+    "column": 2,
+    "block": "706.16-709.3",
+    "entered_by": [],
+    "union": null
+   }
+  }
+ }
+}

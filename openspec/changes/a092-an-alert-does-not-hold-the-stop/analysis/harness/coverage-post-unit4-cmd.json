@@ -1,0 +1,307 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl",
+ "tests_run": 90,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "cmd-tossctl--runenginerun": {
+   "B1": {
+    "kind": "if",
+    "line": 190,
+    "column": 2,
+    "block": "190.16-192.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 196,
+    "column": 2,
+    "block": "196.16-198.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 202,
+    "column": 2,
+    "block": "202.16-204.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 212,
+    "column": 2,
+    "block": "212.16-213.67",
+    "entered_by": [],
+    "union": null
+   },
+   "B5": {
+    "kind": "if",
+    "line": 213,
+    "column": 3,
+    "block": "213.67-215.35",
+    "entered_by": [],
+    "union": null
+   },
+   "B6": {
+    "kind": "range",
+    "line": 215,
+    "column": 4,
+    "block": "215.35-217.5",
+    "entered_by": [],
+    "union": null
+   },
+   "B7": {
+    "kind": "if",
+    "line": 224,
+    "column": 2,
+    "block": "224.31-226.3",
+    "entered_by": [
+     "TestAGateOffEngineRefusesWithoutEnumeratingClauses"
+    ],
+    "union": null
+   },
+   "B8": {
+    "kind": "if",
+    "line": 234,
+    "column": 2,
+    "block": "234.63-235.81",
+    "entered_by": [
+     "TestAFailedSiblingEndpointDoesNotStopTheEngine",
+     "TestAFailedStrategyProjectionDoesNotStopTheEngine"
+    ],
+    "union": null
+   },
+   "B9": {
+    "kind": "if",
+    "line": 235,
+    "column": 3,
+    "block": "235.81-239.4",
+    "entered_by": [],
+    "union": null
+   },
+   "B10": {
+    "kind": "if",
+    "line": 251,
+    "column": 2,
+    "block": "251.65-253.3",
+    "entered_by": [
+     "TestAFailedSiblingEndpointDoesNotStopTheEngine",
+     "TestAFailedStrategyProjectionDoesNotStopTheEngine"
+    ],
+    "union": null
+   },
+   "B11": {
+    "kind": "if",
+    "line": 254,
+    "column": 2,
+    "block": "254.17-258.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B12": {
+    "kind": "else",
+    "line": 258,
+    "column": 9,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B13": {
+    "kind": "if",
+    "line": 270,
+    "column": 2,
+    "block": "270.16-272.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B14": {
+    "kind": "if",
+    "line": 274,
+    "column": 2,
+    "block": "274.16-276.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B15": {
+    "kind": "if",
+    "line": 297,
+    "column": 2,
+    "block": "297.26-299.3",
+    "entered_by": [
+     "TestAFailedSiblingEndpointDoesNotStopTheEngine",
+     "TestAFailedStrategyProjectionDoesNotStopTheEngine"
+    ],
+    "union": null
+   },
+   "B16": {
+    "kind": "if",
+    "line": 300,
+    "column": 2,
+    "block": "300.29-303.3",
+    "entered_by": [
+     "TestAFailedSiblingEndpointDoesNotStopTheEngine"
+    ],
+    "union": null
+   },
+   "B17": {
+    "kind": "if",
+    "line": 305,
+    "column": 2,
+    "block": "305.26-307.3",
+    "entered_by": [
+     "TestAFailedSiblingEndpointDoesNotStopTheEngine",
+     "TestAFailedStrategyProjectionDoesNotStopTheEngine"
+    ],
+    "union": null
+   },
+   "B18": {
+    "kind": "if",
+    "line": 308,
+    "column": 2,
+    "block": "308.29-311.3",
+    "entered_by": [
+     "TestAFailedSiblingEndpointDoesNotStopTheEngine"
+    ],
+    "union": null
+   },
+   "B19": {
+    "kind": "if",
+    "line": 323,
+    "column": 2,
+    "block": "323.28-332.3",
+    "entered_by": [
+     "TestAFailedSiblingEndpointDoesNotStopTheEngine"
+    ],
+    "union": null
+   },
+   "B20": {
+    "kind": "if",
+    "line": 333,
+    "column": 2,
+    "block": "333.20-335.3",
+    "entered_by": [
+     "TestAFailedStrategyProjectionDoesNotStopTheEngine"
+    ],
+    "union": null
+   },
+   "B21": {
+    "kind": "if",
+    "line": 340,
+    "column": 2,
+    "block": "340.16-342.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B22": {
+    "kind": "if",
+    "line": 344,
+    "column": 2,
+    "block": "344.25-346.3",
+    "entered_by": [
+     "TestAFailedSiblingEndpointDoesNotStopTheEngine",
+     "TestAFailedStrategyProjectionDoesNotStopTheEngine"
+    ],
+    "union": null
+   },
+   "B23": {
+    "kind": "if",
+    "line": 347,
+    "column": 2,
+    "block": "347.28-350.3",
+    "entered_by": [
+     "TestAFailedSiblingEndpointDoesNotStopTheEngine"
+    ],
+    "union": null
+   },
+   "B24": {
+    "kind": "if",
+    "line": 356,
+    "column": 2,
+    "block": "356.27-359.25",
+    "entered_by": [],
+    "union": null
+   },
+   "B25": {
+    "kind": "if",
+    "line": 359,
+    "column": 3,
+    "block": "359.25-361.4",
+    "entered_by": [],
+    "union": null
+   },
+   "B26": {
+    "kind": "if",
+    "line": 363,
+    "column": 2,
+    "block": "363.27-365.3",
+    "entered_by": [
+     "TestAFailedSiblingEndpointDoesNotStopTheEngine",
+     "TestAFailedStrategyProjectionDoesNotStopTheEngine"
+    ],
+    "union": null
+   }
+  },
+  "cmd-tossctl--newenginealertsackcmd": {},
+  "cmd-tossctl--engineruntime": {
+   "B1": {
+    "kind": "if",
+    "line": 639,
+    "column": 2,
+    "block": "639.16-641.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 648,
+    "column": 2,
+    "block": "648.16-650.3",
+    "entered_by": [
+     "TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 659,
+    "column": 2,
+    "block": "659.16-661.3",
+    "entered_by": [
+     "TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 664,
+    "column": 2,
+    "block": "664.16-666.3",
+    "entered_by": [
+     "TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess"
+    ],
+    "union": null
+   },
+   "B5": {
+    "kind": "if",
+    "line": 668,
+    "column": 2,
+    "block": "668.16-670.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B6": {
+    "kind": "if",
+    "line": 680,
+    "column": 2,
+    "block": "680.16-682.3",
+    "entered_by": [],
+    "union": null
+   }
+  },
+  "cmd-tossctl--newenginecmd": {}
+ }
+}

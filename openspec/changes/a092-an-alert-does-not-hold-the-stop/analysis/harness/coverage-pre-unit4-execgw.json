@@ -1,0 +1,45 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/execgw",
+ "tests_run": 11,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-execgw--entrygate.projectoperatingmode": {
+   "B1": {
+    "kind": "if",
+    "line": 40,
+    "column": 2,
+    "block": "40.24-42.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 44,
+    "column": 2,
+    "block": "44.21-46.3",
+    "entered_by": [
+     "TestARejectedCredentialTightensTheOperatingMode",
+     "TestTheModeLatchIsReplacedRatherThanAccumulated",
+     "TestTheModeSnapshotIsTheSharedView",
+     "TestTheRestartRebuildsTheModeLatch"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 47,
+    "column": 2,
+    "block": "47.21-49.3",
+    "entered_by": [
+     "TestARejectedCredentialTightensTheOperatingMode",
+     "TestTheModeLatchIsReplacedRatherThanAccumulated",
+     "TestTheModeSnapshotIsTheSharedView",
+     "TestTheRestartRebuildsTheModeLatch"
+    ],
+    "union": null
+   }
+  }
+ }
+}

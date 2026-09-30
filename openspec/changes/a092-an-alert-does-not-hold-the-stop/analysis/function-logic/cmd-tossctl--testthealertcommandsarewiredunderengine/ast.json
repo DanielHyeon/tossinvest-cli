@@ -1,0 +1,276 @@
+{
+  "file": "cmd/tossctl/a098_the_operator_command_names_a_person_test.go",
+  "source_sha256": "805b502b1d701ff3225d16e49f3083b95064098fade1383ca2ffa4ff3e4552d6",
+  "package": "main",
+  "function": "TestTheAlertCommandsAreWiredUnderEngine",
+  "signature": "TestTheAlertCommandsAreWiredUnderEngine(params=1, results=0)",
+  "start": {
+    "line": 135,
+    "column": 1
+  },
+  "end": {
+    "line": 170,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 137,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 138,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 139,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 141,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 143,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 147,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 158,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 161,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 20
+      },
+      "text": "leafCommands"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 33
+      },
+      "text": "newRootCmd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 10
+      },
+      "text": "c.CommandPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 23
+      },
+      "text": "Lookup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 23
+      },
+      "text": "resolve.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 5
+      },
+      "text": "Lookup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 5
+      },
+      "text": "ack.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 45
+      },
+      "text": "Lookup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 45
+      },
+      "text": "ack.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 155,
+        "column": 3
+      },
+      "text": "t.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 14
+      },
+      "text": "Lookup"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 157,
+        "column": 14
+      },
+      "text": "ack.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 162,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 140,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 142,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 144,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 157,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

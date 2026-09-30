@@ -203,6 +203,88 @@ LOCK_TESTS = [
     ["go", "test", "-count=1", "./internal/obs"],
 ]
 
+# 25.9 — 착지 단위 ④ 모드 커밋 순서 · 투영 · 배선 · 완화. `--set 25.9`.
+OM = 'internal/journal/operating_mode.go'
+MG = 'internal/execgw/modegate.go'
+MW = 'internal/app/engine/mode_projection_wiring.go'
+GW = 'internal/app/engine/gateway.go'
+MO = 'internal/app/engine/modeops.go'
+MT = 'internal/app/engine/mode_control_transport_unix.go'
+CE = 'cmd/tossctl/engine_mode_release.go'
+CA = 'cmd/tossctl/engine_alerts.go'
+MODE_MUTANTS = [
+    ('M01 current mode by wall clock', OM,
+     'const modeLatestOrder = " ORDER BY rowid DESC LIMIT 1"',
+     'const modeLatestOrder = " ORDER BY created_at DESC, rowid DESC LIMIT 1"'),
+    ('M02 history by wall clock', OM,
+     '" WHERE account_ref = ? ORDER BY rowid",',
+     '" WHERE account_ref = ? ORDER BY created_at, rowid",'),
+    ('M03 transition carries no seq', OM,
+     'CreatedAt: now, Seq: seqRow,',
+     'CreatedAt: now, Seq: 0 * seqRow,'),
+    ('M04 restore carries no seq', OM,
+     '\t\t\tSeq:        snapshot.Seq,\n',
+     ''),
+    ('M05 fence removed', MG,
+     '\tif rec.Seq <= g.modeSeq {\n\t\treturn\n\t}',
+     '\tif false {\n\t\treturn\n\t}'),
+    ('M06 fence admits equal', MG,
+     '\tif rec.Seq <= g.modeSeq {',
+     '\tif rec.Seq < g.modeSeq {'),
+    ('M07 revision on every replacement', MG,
+     '\tif !had {\n\t\tg.revision++\n\t}\n}',
+     '\tg.revision++\n\t_ = had\n}'),
+    ('M08 replacement leaves a gap', MG,
+     '\tg.latches[ReasonOperatingModeBlocked] = detail\n',
+     '\tdelete(g.latches, ReasonOperatingModeBlocked)\n\tg.mu.Unlock()\n\tg.mu.Lock()\n\tg.latches[ReasonOperatingModeBlocked] = detail\n'),
+    ('M09 assembly does not bind the projection', GW,
+     '\tif err := bindOperatingModeProjection(ctx, in.journal, entry, in.accountRef, in.logger); err != nil {',
+     '\tif err := error(nil); err != nil {'),
+    ('M10 restore failure refuses start', MW,
+     '\t\tgate.Block(execgw.ReasonOperatingModeBlocked, operatingModeRestoreFailed)\n',
+     '\t\treturn err\n'),
+    ('M11 restore failure leaves entries open', MW,
+     '\t\tgate.Block(execgw.ReasonOperatingModeBlocked, operatingModeRestoreFailed)\n',
+     ''),
+    ('M12 nil audit accepted', MO,
+     '\tif o.auditor == nil {\n\t\treturn ModeReleaseResult{}, fmt.Errorf("%w: the engine has no audit log", ErrModeReleaseUnavailable)\n\t}',
+     '\tif false {\n\t}'),
+    ('M13 announcer is the sync notifier', MO,
+     '\t\tannouncer: obs.RecordOnly{N: notifier},',
+     '\t\tannouncer: notifier,'),
+    ('M14 result not re-read', MO,
+     '\tresult.Mode, result.Seq = current.Mode, current.Seq',
+     '\tresult.Mode, result.Seq = to, current.Seq'),
+    ('M15 operator not in the cause', MO,
+     'reason + " | operator: " + operator,',
+     'reason,'),
+    ('M16 operator not required', MO,
+     'case operator == "", approval == "", reason == "":',
+     'case approval == "", reason == "":'),
+    ('M17 HALT_ALL target allowed', MO,
+     'case to != journal.ModeNormal && to != journal.ModeEntryBlocked:',
+     'case to != journal.ModeNormal && to != journal.ModeEntryBlocked && to != journal.ModeHaltAll:'),
+    ('M18 notice failure reported as an error', MO,
+     '\tcase err != nil && errors.Is(err, journal.ErrModeAnnouncementFailed):',
+     '\tcase false && errors.Is(err, journal.ErrModeAnnouncementFailed):'),
+    ('M19 notice row state not read', MO,
+     '\t\t\t\tresult.NoticePending = true\n',
+     ''),
+    ('M20 invalid mapped to 500', MT,
+     '\t\t\t\twriteRPCError(w, http.StatusBadRequest, "invalid", err.Error())',
+     '\t\t\t\twriteRPCError(w, http.StatusInternalServerError, "internal", err.Error())'),
+    ('M21 mode-release not mutating', CE,
+     'Annotations:  map[string]string{"source": "local", "mutating": "true"},',
+     'Annotations:  map[string]string{"source": "local"},'),
+    ('M22 ack not mutating', CA,
+     'Annotations:  map[string]string{"source": "local", "mutating": "true"},',
+     'Annotations:  map[string]string{"source": "local"},'),
+    ('M23 remaining reasons not reported', MO,
+     '\tresult.EntryBlocks = entryBlockReasons(o.gate)',
+     '\tresult.EntryBlocks = nil'),
+]
+MODE_TESTS = [['go', 'test', '-count=1', '-run', 'TestA092|Mode|Transition|Escalat', './internal/journal'], ['go', 'test', '-count=1', '-run', 'TestA092|A124|Mode', './internal/execgw'], ['go', 'test', '-count=1', '-run', 'TestA092|TestTheModeProjector|TestTheLedgerModeRow|Relatch|Sibling', './internal/app/engine'], ['go', 'test', '-count=1', '-run', 'TestA092|TestTheAlertCommands|TestMutating', './cmd/tossctl']]
+
 TESTS = [
     ["go", "test", "-count=1", "-run", "TestA092|TestEnqueueAlert|TestClaim", "./internal/journal"],
     ["go", "test", "-count=1", "-run", "TestA092|TestA096|TestA097|Mode|Transition|Announc", "./internal/obs"],
@@ -248,6 +330,8 @@ def main() -> None:
             MUTANTS, TESTS = RELAX_MUTANTS, RELAX_TESTS
         elif args[i + 1] == "25.7":
             MUTANTS, TESTS = LOCK_MUTANTS, LOCK_TESTS
+        elif args[i + 1] == "25.9":
+            MUTANTS, TESTS = MODE_MUTANTS, MODE_TESTS
         args = args[:i] + args[i + 2:]
     scratch, own = Path(args[0]), args[1:]
     copy = scratch / f"mut-a092-u2-{os.getpid()}"

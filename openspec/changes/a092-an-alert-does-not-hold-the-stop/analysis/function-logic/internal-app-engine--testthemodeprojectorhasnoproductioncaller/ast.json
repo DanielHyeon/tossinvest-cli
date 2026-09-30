@@ -1,0 +1,149 @@
+{
+  "file": "internal/app/engine/a124_the_enforcement_boundary_internal_test.go",
+  "source_sha256": "225ebd6478f455394ef2f2f9d976e0af6c1fdeccaaef92058ebc0461189ce277",
+  "package": "engine",
+  "function": "TestTheModeProjectorHasNoProductionCaller",
+  "signature": "TestTheModeProjectorHasNoProductionCaller(params=1, results=0)",
+  "start": {
+    "line": 90,
+    "column": 1
+  },
+  "end": {
+    "line": 101,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 93,
+        "column": 65
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 96,
+        "column": 62
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 10
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 14
+      },
+      "text": "a124ProjectionCalls"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 72
+      },
+      "text": "strings.HasSuffix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 109
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 11
+      },
+      "text": "a124ProjectionCalls"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 70
+      },
+      "text": "strings.HasSuffix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 93,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}
