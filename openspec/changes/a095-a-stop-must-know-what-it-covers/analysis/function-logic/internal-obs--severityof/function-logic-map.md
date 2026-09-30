@@ -1,8 +1,8 @@
 # Function Logic Map: `SeverityOf`
 
-- Source: `internal/obs/event.go` (`366`–`371`)
+- Source: `internal/obs/event.go` (`371`–`376`)
 - Qualified: `SeverityOf`
-- AST evidence: `ast.json` (`source_sha256` 54fa38e5a7040659…)
+- AST evidence: `ast.json` (`source_sha256` 4032c4966e55f616…)
 - Risk scan: `risk-pattern-report.md`
 - 분기 1 · return 2 · 호출 0
 
@@ -21,7 +21,7 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 호출 (AST) | 창의 return | 진입 실측 |
 |---|---|---|---|---|---|
-| B1 | if | `:367` `if criticalEvents[t] {` | — | :368, :370 | 예 |
+| B1 | if | `:372` `if criticalEvents[t] {` | — | :373, :375 | 예 |
 
 ## Calls and live bindings
 
