@@ -24,6 +24,7 @@ reconciliation_mismatch
 reconciliation_mismatch_permanent
 recovery_incomplete
 required_query_stale
+strategy_central_integrity
 symbol_mutation_in_flight
 trading_policy_disabled
 unknown_broker_state

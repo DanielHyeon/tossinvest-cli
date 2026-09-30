@@ -299,6 +299,9 @@ func AllReasonCodes() []ReasonCode {
 
 		// a066 5.5 entry loss lock.
 		ReasonEntryLossLockActive,
+
+		// a112 5.6.2.1 strategy central integrity (entry latch; restart is the only release).
+		ReasonStrategyCentralIntegrity,
 	}
 	sort.Slice(codes, func(i, j int) bool { return codes[i] < codes[j] })
 	return codes

@@ -680,6 +680,10 @@ var latchOrder = []ReasonCode{
 	// was attempted and failed, which is the more specific answer to "why can I
 	// not enter"; this one only says nothing is attempting.
 	ReasonAlertSenderDown,
+	// Appended, per the rule above, and — like sender-down — ahead of the operating mode: a strategy central
+	// integrity fault is a specific cause an operator repairs (the ledger) and then restarts to clear (a112 5.6.2.1).
+	// No existing pair moves relative to another.
+	ReasonStrategyCentralIntegrity,
 	// Appended, per the rule above. The operating mode reads last on purpose as
 	// well as by convention: every condition before it is a specific fault an
 	// operator can go and fix, while "the account is in ENTRY_BLOCKED" is often

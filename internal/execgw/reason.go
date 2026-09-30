@@ -266,6 +266,11 @@ const (
 	// ReasonAccountBaseFXMismatch: opaque evidence is missing, stale, scoped to
 	// another market/pair, or differs from the persisted decision envelope.
 	ReasonAccountBaseFXMismatch ReasonCode = "account_base_fx_mismatch"
+	// ReasonStrategyCentralIntegrity: 전략 런타임의 권한 갱신 사이클이 중앙 무결성 고장(원장 · 소유자 fence 등 프로세스 전체
+	// 불변식 위반)을 보고했다(a112 5.6.2.1, 사람 결정 (6) — fail-closed 의 수단은 프로세스 정지가 아니라 진입 게이트).
+	// 신규 진입만 닫고 청산 · 손절 루프는 산다. 해제 경로는 **재시작뿐**이다(원장 수리 뒤) — 이 사유를 푸는 운영 명령
+	// (`engine <대상>-release` 가족)은 의도적으로 없다: 중앙 무결성이 깨진 원장 위에서 사람이 진입을 다시 여는 수단을 두지 않는다.
+	ReasonStrategyCentralIntegrity ReasonCode = "strategy_central_integrity"
 )
 
 // RejectedError is a refusal produced by the gateway itself: the mutation was
