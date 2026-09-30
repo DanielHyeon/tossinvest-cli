@@ -438,3 +438,26 @@ func TestA092RecordCriticalRefusesWhenNotDurable(t *testing.T) {
 		t.Errorf("publish calls = %d, want 0", pub.count())
 	}
 }
+
+// Manager 판정 2b(2026-09-30): RecordCritical 의 구조화 로그 줄에 필드(계좌를 담은 대상)가 새지 않음. 원장 payload 에는 남음.
+func TestA092RecordCriticalKeepsFieldsOutOfTheLog(t *testing.T) {
+	buf := &bytes.Buffer{}
+	n, j, _, _ := a096Notifier(t, &stuckPublisher{})
+	n.Log = obs.NewLogger(obs.LogOptions{Writer: buf, JSON: true, Clock: clock.NewFake(obsNow)})
+	e := obs.Event{Type: obs.EventType("engine.risk_relaxation"), Key: "engine.risk_relaxation|entry_lock|1",
+		Title: "RISK RELAXATION: entry_loss_lock:KR/SHORT", Body: "operator ops released entry_loss_lock:KR/SHORT",
+		Fields: map[string]any{"target": "entry_loss_lock:acct-SECRET-7/KR/SHORT"}}
+	if err := n.RecordCritical(context.Background(), e, 0); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(buf.String(), "acct-SECRET-7") {
+		t.Errorf("the account reference reached the structured log:\n%s", buf.String())
+	}
+	if !strings.Contains(buf.String(), "engine.risk_relaxation") {
+		t.Errorf("no log line for the record:\n%s", buf.String())
+	}
+	rows, _ := j.PendingAlerts(context.Background(), 0)
+	if len(rows) != 1 || !strings.Contains(rows[0].Payload, "acct-SECRET-7") {
+		t.Errorf("the payload lost the full target: %+v", rows)
+	}
+}

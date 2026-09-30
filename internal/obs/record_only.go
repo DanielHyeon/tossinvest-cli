@@ -85,7 +85,13 @@ func (n *Notifier) RecordCritical(ctx context.Context, e Event, remindAfter time
 		}
 		return ErrAlertNotDurable
 	}
-	n.logEvent(e, SeverityCritical)
+	// 구조화 로그 줄에는 필드를 싣지 않음 — 필드는 원장 payload 로만 감(Manager 판정 2026-09-30, 불변식 8 잠정 규칙:
+	// 브로커 계좌번호 원문은 어떤 형태로도 로그 금지, 원장 내부 키 · 마스킹 형식만 허용. 이 입구의 기록자(a066 완화 통지)는
+	// 필드에 계좌를 담은 대상을 싣므로 로그에서 뺌. 사람의 계좌 가림 설계가 확정되면 그쪽이 우선함).
+	// 유형 · 키 · 제목 · 본문은 남음 — 제목 · 본문은 기록자가 외부 전송용으로 계좌를 뺀 문구임.
+	logged := e
+	logged.Fields = nil
+	n.logEvent(logged, SeverityCritical)
 	return n.recordCritical(ctx, e, remindAfter)
 }
 
