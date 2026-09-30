@@ -1,0 +1,6 @@
+# 26라운드 codex P0 · P1#4 — 071e67c1 alertdelivery.go 에서
+--- FAIL: TestA092TheDelivererLatchesWhenTheReleaseFindsNoRow/not-found — a release that found no row was read as a preemption — nothing latched
+--- FAIL: TestA092TheDelivererLatchesWhenTheReleaseFindsNoRow/unknown
+--- FAIL: TestA092TheDelivererRecordsAPreemptedAttempt/acknowledged — the preemption was not recorded
+--- FAIL: TestA092TheDelivererRecordsAPreemptedAttempt/lease-lost
+# PASS(편집 전에도 — 공허): TestA092AReleaseAfterTheEpochReadStandsForTheReleaseSite(래치 자체가 없었음) · TestA092TheAttemptLimitVerdictSurvivesAMissingRelease(보존 회귀 가드)

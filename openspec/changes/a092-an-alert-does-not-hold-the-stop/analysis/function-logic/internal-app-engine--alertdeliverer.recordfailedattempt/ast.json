@@ -1,0 +1,199 @@
+{
+  "file": "internal/app/engine/alertdelivery.go",
+  "source_sha256": "1fa0da7e971975f10f5c985ba42659611ee147800ba96f2cee33bc112033d4ca",
+  "package": "engine",
+  "function": "recordFailedAttempt",
+  "receiver": "alertDeliverer",
+  "signature": "alertDeliverer.recordFailedAttempt(params=4, results=0)",
+  "start": {
+    "line": 348,
+    "column": 1
+  },
+  "end": {
+    "line": 376,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 350,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 355,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "switch",
+      "at": {
+        "line": 361,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 362,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 365,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 369,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "case",
+      "at": {
+        "line": 371,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 359,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 366,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 349,
+        "column": 14
+      },
+      "text": "MarkAlertAttemptFailed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 349,
+        "column": 14
+      },
+      "text": "d.led"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 351,
+        "column": 3
+      },
+      "text": "d.logf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 353,
+        "column": 2
+      },
+      "text": "d.release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 354,
+        "column": 2
+      },
+      "text": "d.hook"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 358,
+        "column": 3
+      },
+      "text": "d.countRecordFailure"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 364,
+        "column": 3
+      },
+      "text": "d.forgetRecordRun"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 3
+      },
+      "text": "d.judge"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 20
+      },
+      "text": "d.readEpoch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 368,
+        "column": 43
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 3
+      },
+      "text": "d.judge"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 374,
+        "column": 20
+      },
+      "text": "d.readEpoch"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 349,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

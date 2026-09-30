@@ -1,0 +1,5 @@
+# 26라운드 codex #2 · #3 — e55102f0 NormalRelay 에서
+--- FAIL: TestA092AHandOffAfterTheRelayStoppedIsRecorded
+--- FAIL: TestA092APanicInTheRelayRecordsWhatItHeld
+--- FAIL: TestA092APublishFailureOrNoPublisherIsRecordedWithItsKey/no_publisher
+--- FAIL: TestA092APublishFailureOrNoPublisherIsRecordedWithItsKey/publish_fails

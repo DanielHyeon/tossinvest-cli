@@ -350,8 +350,16 @@ func (d *alertDeliverer) recordFailedAttempt(ctx context.Context, id int64, toke
 	if err != nil {
 		d.logf(obs.EventAlertUndelivered, err, "recording a failed attempt failed", "alert_id", id)
 	}
-	d.release(ctx, id, token)
+	released, releaseOK := d.release(ctx, id, token)
 	d.hook(alertStageSettled, id)
+	// 반납이 행 없음 · 모르는 결과면 원장이 쥔 행을 잃은 것 — 선점이 아님(a092 26라운드 codex P0). 원칙 E 조건부 차단만(승격
+	// 없음 — N6). 시도 기록의 판정(한도 도달이면 차단 + 승격)은 아래에서 그대로 섬 — 둘 다 차단이면 같은 사유 하나로 모임.
+	if releaseOK && released.Outcome != journal.SettleApplied && released.Outcome != journal.SettleAlreadySettled &&
+		released.Outcome != journal.SettleLeaseLost {
+		d.logf(obs.EventAlertUndelivered, nil, "a released alert could not be matched to its row",
+			"alert_id", id, "outcome", released.Outcome.String())
+		d.judge(ctx, id, d.readEpoch(id), false, alertLatchUnaccounted)
+	}
 	if err != nil {
 		// 오류의 SettleResult{} 는 Outcome 영값이 Applied 라 결과를 읽으면 안 됨(F10) — err 가 먼저.
 		// attempts 가 안 올랐으니 한도 판정이 설 수 없음 → 행별 연속 기록 실패로 셈(D8).
@@ -368,6 +376,9 @@ func (d *alertDeliverer) recordFailedAttempt(ctx context.Context, id int64, toke
 		d.judge(ctx, id, d.readEpoch(id), true, fmt.Sprintf(alertLatchAttemptLimit, alertAttemptLimit))
 	case journal.SettleAlreadySettled, journal.SettleLeaseLost:
 		// 승인(또는 남의 발송)이 먼저였음 — 잠그지도 승격하지도 않음. 0 행을 썼으므로 계수도 그대로(R3).
+		// 선점 사실은 기록함(a092 델타 「선점이 일어났다는 사실은 기록되어야 한다」 — 모든 발송자, 26라운드 codex P1 #4).
+		d.logf(obs.EventAlertClaimLost, nil, "a failed attempt was preempted before it could be recorded",
+			"alert_id", id, "outcome", res.Outcome.String())
 	default:
 		// 행을 못 찾음 · 모르는 결과 → 잠금만(동기 경로 parity: lost → 승격 없음, N6). 모르는 값은
 		// 동기 경로보다 한 칸 보수적(fail-safe).
@@ -599,12 +610,18 @@ func (d *alertDeliverer) led() alertLedger {
 // The context is detached because a cycle cancelled partway must not leave the
 // rows it claimed locked behind it: the ledger only reopens them when the lease
 // expires, and until then nobody sends them.
-func (d *alertDeliverer) release(ctx context.Context, id int64, token string) {
+//
+// 결과를 돌려줌(a092 26라운드 codex P0) — 반납이 행 없음 · 모르는 결과로 돌아오는 것은 선점이 아니라 원장이 쥔 행을 잃은
+// 것이고(델타 「행 없음·모르는 결과·원장 오류는 선점이 아니다」), 그 판정은 호출자가 함. 오류면 ok=false.
+func (d *alertDeliverer) release(ctx context.Context, id int64, token string) (res journal.SettleResult, ok bool) {
 	relCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), alertReleaseTimeout)
 	defer cancel()
-	if _, err := d.led().ReleaseAlertClaim(relCtx, id, token); err != nil {
+	res, err := d.led().ReleaseAlertClaim(relCtx, id, token)
+	if err != nil {
 		d.logf(obs.EventAlertUndelivered, err, "releasing an alert lease failed", "alert_id", id)
+		return journal.SettleResult{}, false
 	}
+	return res, true
 }
 
 // reportHeld says whether this held row is worth a line, and remembers that it

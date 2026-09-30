@@ -569,7 +569,7 @@ func (n *Notifier) deliver(ctx context.Context, id int64, token string, e Event)
 			// it documents as an error rather than contention. It latches, exactly
 			// as the same outcome does on the success path above; the two used to
 			// disagree about one fact.
-			if failed.Outcome == journal.SettleNotFound && n.Gate != nil {
+			if !isPreemption(failed.Outcome) && n.Gate != nil {
 				// 근거 확정: 시도 기록이 행 없음으로 돌아왔음. 승격을 포함하지 않는 판정이라 여기서 조건부 차단만 함.
 				n.hook("evidence:vanished")
 				v := n.readVerdict("vanished", fmt.Sprintf(
@@ -605,7 +605,7 @@ func (n *Notifier) deliver(ctx context.Context, id int64, token string, e Event)
 	case released.Outcome == journal.SettleApplied:
 		// The row is ours no longer and nobody else's yet. Fall through to the
 		// gate: this sender really did fail to deliver.
-	case released.Outcome != journal.SettleAlreadySettled && released.Outcome != journal.SettleLeaseLost:
+	case !isPreemption(released.Outcome):
 		// 행 없음 · 모르는 결과는 선점이 아님(a092 25라운드 codex P0 — 델타 「행 없음·모르는 결과·원장 오류는 선점이 아니다」).
 		// 원장이 쥐고 있던 행을 잃은 것이므로 vanished 자리와 같이 잠금만 함(승격 없음 — a124 배달 실행자 N6 와 같은 규칙).
 		// 근거 확정: 반납 결과가 돌아왔음 → 해제 세대를 지금 읽고 조건부로 잠금.
