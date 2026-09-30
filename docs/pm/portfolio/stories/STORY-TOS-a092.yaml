@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a092-an-alert-does-not-hold-the-stop",
-    "path": "openspec/changes/a092-an-alert-does-not-hold-the-stop"
+    "path": "openspec/changes/archive/2026-09-30-a092-an-alert-does-not-hold-the-stop"
   },
   "acceptance": [
     "An observation cycle that raises an operator alert pays for a local durable write and nothing more: it does not wait for the remote send, its retries, or the waits between them",
