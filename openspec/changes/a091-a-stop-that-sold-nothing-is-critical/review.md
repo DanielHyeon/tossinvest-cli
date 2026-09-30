@@ -284,3 +284,22 @@ issues(콘솔 안내 · ntfy), 번들 `internal-obs--notifier.escalate` 신설(b
 **범위 확장 하나 — Manager 보고**: R3-3 처분으로 a091 이 `internal/obs/notifier.go` `Notifier.escalate` 의 로그 두 줄을 편집한다(필드 하나 제거, 판정 무변경). a092 · a124
 공유 경로이고 모든 critical 기록 실패 · 동기 발송 실패의 승격 로그가 바뀐다(계좌 필드가 빠짐). Manager 상임 지시(계좌 원문 로그 금지)와 codex P0 에 따른 것이며, 원하면
 이 편집을 별도 change 로 떼어 a091 의 선행으로 둘 수 있다.
+
+## freeze 재리뷰 4라운드 (2026-10-01, 좁은 재확인) — 보이스 A **APPROVE** · codex FAIL(P1 둘 — 좁음)
+
+- 대상 `git archive 8870c6c9`(5판) → `/tmp/claude-1000/a091-r4-tree`. 보이스 A 재개 · codex 같은 세션 재개(프로세스 치환 금지 조항 추가 — 신고 없음).
+  보이스 B 는 3라운드 APPROVE(P3 만)이고 그 P3 은 5판에 전부 반영 — 이번 판 재호출 안 함. 원문 `analysis/freeze-review/{claude-r4-voiceA.md, codex-r4-prompt.md, codex-r4-output.md}`.
+- 3라운드 대비: codex — ③ · 계좌 · 꺼짐 B2 CLOSED, 취소 · 몫 · 원장 재독 PARTIAL. 보이스 A — ③ · 계좌 · P3 CLOSED, 몫 PARTIAL(P2).
+
+| # | 심각도 | 제기 | 내용 | 6판 처분 |
+|---|---|---|---|---|
+| R4-1 | P1 | codex | `errors.Is(err, context.Canceled)` 는 합쳐진 오류(생산 `Retrier.Query` 의 인증 거절 + 승격 실패, `retry.go:357-365`)도 참 — 진짜 실패를 억제 | 억제 = **취소뿐인 오류**(잎 전부 `context.Canceled`) ∧ ctx 끝남. 3.3b (v) 합쳐진 오류 · (vi) 재시도 대기 중 취소 |
+| R4-2 | P1 | codex · A(P2) | 합계 배정인데 몫을 따로 잼 · `Acknowledge` 칸 백로그 미고정 · 배정 출처가 철회된 a092 상수 | 수락 = 보고 호출 **전체 경과** 관측 최악 ≤ 750ms · 밀린 행 100 · 배정은 a091 소유(a092 17판 산정 규칙, 21판 철회 — `tasks.md:1709`, Go 0 건) · 측정 조건 한계 명시 |
+| R4-3 | P2 | codex · A(P3) | `WithoutCancel` 기록은 기한 없음 — 종료가 기한 없이 늦을 수 있음 | 「종료 중 보고 대기」 이름 + 3.3c 시험(막힌 기록 → 루프는 기다렸다 행 1 · 교착 0) · 종료 순서 안전 근거 인용 |
+| R4-4 | P2 | codex | 당일 intent 조회로는 로컬 미체결 매도 0 을 못 보인다(거래일을 넘기는 주문) | 전 기간 조회: 그 종목의 엔진 intent 는 전 기간 1 건(2026-08-18) — 8/2 에 엔진 주문 없음(측정) |
+| R4-5 | P3 | A | D5/D8 진입점 모순 · `runtime.go:344` · D1 「뿐」 · 3.3a 머리 「⟺」 | 진입점 `o.opts.Alerts.Notify(context.WithoutCancel(ctx), e)` 명시(재알림 창 1h 보존 이유 포함) · `:345` · `escalate` 로그 변화 포함 · 「⇒ (반대 조건부)」 |
+
+## 6판 (2026-10-01) — 4라운드 반영 · 판정 아님
+
+위 표의 「6판 처분」 열. 편집: design(header · 원장 재독 · D1 · D3 ④ · D5 진입점 · 배정 · 수락 · 취소 · 검증), engine-safety delta(「취소뿐」 · 근거 문장),
+tasks(3.3a 머리 · 3.3b (i)(v)(vi) · 3.3c 신설 · 5.3).
