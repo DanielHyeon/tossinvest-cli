@@ -9,6 +9,7 @@
   사본 안에서도 `git init` 하지 마라. 변이는 그 사본에서만, 한 번에 하나, 끝나면 되돌린다. `GOFLAGS=-trimpath` 를 쓰고 전용 `GOCACHE` 는 선택.
   리뷰 트리(`a112-review-00e1b9bd`) 자체는 고치지 마라 — 다른 리뷰어와 공유한다.
 - LIVE 주문 · 운영 토글 · 엔진 기동 · `mutating: true` 명령 금지. 운영 원장(`~/.config/tossctl/`) · 자격 증명 · `~/.codex` 열지 마라.
+  (2026-10-01 추가) `~/.codex` 아래 어떤 파일(기억 · 설정 포함)도 읽거나 검색하지 마라. **어겼다면 출력 맨 위에 무엇을 했는지 적어라** — 적지 않은 위반이 가장 나쁘다.
 - `go test ./internal/app/engine/` 전체는 7~8분 걸린다. 필요하면 `-run` 으로 좁혀라.
 
 ## 대상 — 커밋 셋(브랜치 `feat/a112-four-family-runtime`, 푸시됨)

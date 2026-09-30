@@ -328,6 +328,8 @@
   **Why it is open.** Every property 5.6.1 measured is a property of *two market workers driven by one consumer goroutine each*. The swap changes the number, the drivers and the fault sources. Concretely, three things measured here are known to need re-deriving: the fault-stream capacity equals the worker count (2 today, 8 after); the refresh-only swallow at `813:4` is the production configuration today and will not be after; and "each market latches at most once" is what makes the handoff `default` arm unreachable.
 
   **Done.** The seven blocks stay executed against whatever then runs the production cycle, the census still returns zero production callers of `StrategyCentralIntegrityFailure`, and a lane fault — including eight simultaneous ones — still leaves fill detection, reconcile and exit observation running.
+
+  **선납(2026-10-01, 5.2.2.1 리뷰 수리 3차).** 5.6.2.2 의 행동 커버 요구 중 **주기 전달 부분**은 `a112_market_cycle_delivery_test.go`(`TestTheProductionCycleHandsEveryOwnerScopeToTheDispatch` · 활성화 없음 대조)가 선납했다 — `runProductionStrategyMarketCycle` 을 통째로 돌려(권한 새로 고침은 1초 캐시 주입, 레인 런타임은 생산 생성자) dispatch 가 handoff 를 전부 받는지 센다. 레인 고장 · 여덟 동시 고장 · 안전 루프 생존은 여전히 이 태스크의 몫이다.
 - [x] 5.7 Add race, goroutine-leak, queue pressure, fake-clock and fault-injection tests for 8 concurrent workers and 2 coordinators, including simultaneous same-symbol proposals and shutdown/restart. **(Landed 2026-09-02.)**
 
   `internal/strategyworker/rehearsal_test.go` stands all eight lanes and both coordinators up together and drives them from eight goroutines behind one gate. This is the rehearsal `design.md:255` asks for before the swap, not the swap: the lanes here are test-turned-ON copies, and production callers remain zero.

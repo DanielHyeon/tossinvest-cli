@@ -187,7 +187,8 @@ func a112TwoScopePin(t *testing.T, coordinatorOrder bool) {
 }
 
 // a112FirstLegCountGuard 는 strategy_account_first_leg_authority.go `collectStrategyFirstLegAuthority` 의 B2
-// (`len(proposal.entries) != 1 || …`, :217–:219) 가 내는 문구임. 결정 (1) — L6 6.2 봉인 전 유일한 방어 — 의 다섯 줄 중 첫 줄.
+// (`len(proposal.entries) != 1 || …`, :217–:219) 가 내는 문구임. 결정 (1) 이 6.2 봉인까지 바꾸지 않는 다섯 줄 중 첫 줄 — 이 문구로
+// 거절하는 것은 이 fixture 에서이고, 생산에서는 결과 권한 · 계좌 B1 · 위험 권한 재수집도 두 범위를 거절한다(머리말).
 const a112FirstLegCountGuard = "paired production authority is incomplete for market"
 
 // 주문 경로의 반복: 승인된 소유자 범위는 조정자 순서대로 **전부** 몸통에 건너감.

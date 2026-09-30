@@ -176,8 +176,44 @@ SET_5221_FIX_TESTS = [
      "./internal/app/engine"],
     ["go", "test", "-count=1", "./internal/strategyhandoff"],
 ]
+# 3차(codex 재확인 뒤, 2026-10-01): 주기 행동 시험 · 타입 동일성 census 를 죽이는 변이. H01 이 Manager 가 요구한 「n-1 전달」.
+SET_5221_FIX3 = [
+    ("H01 cycle hands n-1 handoffs (codex recheck #1 — clear the tail at the call site)", SUP,
+     "\treturn dispatchStrategyMarketHandoffs(ctx, c.Journal, fresh.dispatch, fresh.proposals.forMarket(market).dispatchHandoffs())",
+     "\ths := fresh.proposals.forMarket(market).dispatchHandoffs()\n\tif len(hs) > 1 {\n\t\ths = hs[:len(hs)-1]\n\t}\n\treturn dispatchStrategyMarketHandoffs(ctx, c.Journal, fresh.dispatch, hs)"),
+    ("H02 cycle zeroes the tail handoffs in place (clear)", SUP,
+     "\treturn dispatchStrategyMarketHandoffs(ctx, c.Journal, fresh.dispatch, fresh.proposals.forMarket(market).dispatchHandoffs())",
+     "\ths := fresh.proposals.forMarket(market).dispatchHandoffs()\n\tif len(hs) > 1 {\n\t\tclear(hs[1:])\n\t}\n\treturn dispatchStrategyMarketHandoffs(ctx, c.Journal, fresh.dispatch, hs)"),
+    ("H03 delivery body skips every scope after the first via a pointer counter (codex recheck #2 shape)", MD,
+     "\treturn deliverEachStrategyHandoff(handoffs, func(delivered strategyhandoff.Delivered) error {\n\t\tlineage := delivered.Result().Lineage",
+     "\tseen := new(int)\n\treturn deliverEachStrategyHandoff(handoffs, func(delivered strategyhandoff.Delivered) error {\n\t\t(*seen)++\n\t\tif *seen > 1 {\n\t\t\treturn nil\n\t\t}\n\t\tlineage := delivered.Result().Lineage"),
+    ("N02 same-behaviour refactor: var-declared handoffs (codex recheck #4)", SUP,
+     "\treturn dispatchStrategyMarketHandoffs(ctx, c.Journal, fresh.dispatch, fresh.proposals.forMarket(market).dispatchHandoffs())",
+     "\tvar hs = fresh.proposals.forMarket(market).dispatchHandoffs()\n\treturn dispatchStrategyMarketHandoffs(ctx, c.Journal, fresh.dispatch, hs)"),
+    ("H04 private alias + init reassignment mints a Delivered (codex recheck #3)", HO,
+     "// ownerScope 는 포지션 소유 범위의 비교용 표기",
+     "type hiddenDelivered = Delivered\n\ntype mintingError struct{ error }\n\nfunc (mintingError) Mint(r strategyflow.Result) hiddenDelivered {\n\treturn hiddenDelivered{result: r}\n}\n\nfunc init() {\n\tErrNoDelivery = mintingError{ErrNoDelivery}\n}\n\n// ownerScope 는 포지션 소유 범위의 비교용 표기"),
+    ("H05 private-alias method alone (no reassignment)", HO,
+     "// ownerScope 는 포지션 소유 범위의 비교용 표기",
+     "type hiddenHandoff = Handoff\n\ntype quietMinter struct{}\n\nfunc (quietMinter) mint(r strategyflow.Result) hiddenHandoff {\n\treturn Admit(true, []strategyflow.Result{r})\n}\n\n// ownerScope 는 포지션 소유 범위의 비교용 표기"),
+    ("H06 out-param minter with no results (codex recheck: skipped at :52-53)", HO,
+     "// ownerScope 는 포지션 소유 범위의 비교용 표기",
+     "func admitInto(dst *[]Handoff, ready bool, selected []strategyflow.Result) {\n\t*dst = AdmitEachOwnerScope(ready, selected)\n}\n\n// ownerScope 는 포지션 소유 범위의 비교용 표기"),
+    ("H07 function-valued package var re-exposing a door", HO,
+     "// ownerScope 는 포지션 소유 범위의 비교용 표기",
+     "var eachScope = AdmitEachOwnerScope\n\n// ownerScope 는 포지션 소유 범위의 비교용 표기"),
+    ("H08 a Handoff built with a selection outside Admit, through an alias", HO,
+     "// ownerScope 는 포지션 소유 범위의 비교용 표기",
+     "type aliasHandoff = Handoff\n\nfunc (h Handoff) widen(r strategyflow.Result) Handoff {\n\treturn aliasHandoff{selected: []strategyflow.Result{r}, pending: 1}\n}\n\n// ownerScope 는 포지션 소유 범위의 비교용 표기"),
+]
+SET_5221_FIX3_TESTS = [
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+     "TheProductionCycleHandsEvery|WithoutAnActivationTheProductionCycle|TheProductionCycleEnds|TheDeliveryBodyHands|TheMarketDelivery|Skipped|FaultInOne|TwoOwner|SameOwner|Classified|ExactlyOneProduction",
+     "./internal/app/engine"],
+    ["go", "test", "-count=1", "./internal/strategyhandoff"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
-        "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS)}
+        "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS)}
 MUTANTS, TESTS = SET_5621, SET_5621_TESTS
 
 def run_tests(copy: Path, env: dict) -> tuple[str, str]:

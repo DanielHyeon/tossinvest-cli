@@ -1,0 +1,11 @@
+TREE	HEAD 89865a888ec2f5fea05e353430d3f5c9a102119a (git archive) + own: internal/strategyhandoff/mint_census_test.go,internal/app/engine/a112_market_delivery_structure_test.go,internal/app/engine/a112_market_cycle_delivery_test.go,internal/app/engine/strategy_dispatch_handoff.go,internal/app/engine/a112_owner_scope_handoff_test.go
+CONTROL	GREEN	
+H01 cycle hands n-1 handoffs (codex recheck #1 — clear the tail at the call site)	CAUGHT	2 failing: TestTheProductionCycleHandsEveryOwnerScopeToTheDispatch, TestTheProductionCycleEndsByDeliveringEveryOwnerScopeHandoff
+H02 cycle zeroes the tail handoffs in place (clear)	CAUGHT	1 failing: TestTheProductionCycleHandsEveryOwnerScopeToTheDispatch
+H03 delivery body skips every scope after the first via a pointer counter (codex recheck #2 shape)	CAUGHT	5 failing: TestTheProductionCycleHandsEveryOwnerScopeToTheDispatch, TestTheDeliveryBodyHandsEveryHandoffToOneClosureThatWritesNothingOutside, TestTheMarketDeliveryDispatchesEveryAdmittedScopeInOrder, TestASkippedScopeDoesNotStopTheNextOne, TestAFaultInOneScopeStopsTheCycleBeforeTheNext
+N02 same-behaviour refactor: var-declared handoffs (codex recheck #4)	GREEN-AS-EXPECTED	
+H04 private alias + init reassignment mints a Delivered (codex recheck #3)	CAUGHT	3 failing: TestOnlyTheTwoDoorsHandOutASeamValue, TestNoPackageVariableCarriesOrIsReassigned, TestSeamValuesAreBuiltOnlyInsideTheirDoors
+H05 private-alias method alone (no reassignment)	CAUGHT	1 failing: TestOnlyTheTwoDoorsHandOutASeamValue
+H06 out-param minter with no results (codex recheck: skipped at :52-53)	CAUGHT	1 failing: TestOnlyTheTwoDoorsHandOutASeamValue
+H07 function-valued package var re-exposing a door	CAUGHT	1 failing: TestNoPackageVariableCarriesOrIsReassigned
+H08 a Handoff built with a selection outside Admit, through an alias	CAUGHT	2 failing: TestOnlyTheTwoDoorsHandOutASeamValue, TestSeamValuesAreBuiltOnlyInsideTheirDoors

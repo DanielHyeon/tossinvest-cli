@@ -32,9 +32,10 @@ func (authority strategyProposalMarketAuthority) dispatchHandoff() strategyhando
 //     `familyActivation().Verified()`)과 같은 값을 읽음 — 두 자리가 다른 활성화를 보지 않게 함.
 //
 // 이 함수가 올리는 것은 **경계의 상한뿐**임. 하류의 세 권한(결과 권한 · 1차 레그 권한 · worker 승격/projection)은 여전히
-// 시장당 제안 하나를 요구하고, 그 다섯 줄(strategy_account_first_leg_authority.go)은 결정 (1) 에 따라 L6 6.2 봉인 전까지
-// 유일한 방어로 남음. 그래서 오늘 소유자 범위가 둘인 활성화 시장은 경계를 지나도 1차 레그 권한에서 거절돼 주문이 0 임
-// (a112_owner_scope_handoff_test.go 의 오늘-동등성 핀). 하류를 소유자 범위 단위로 옮기는 일은 5.2.2.2 임.
+// 시장당 제안 하나를 요구하고, 1차 레그의 다섯 줄(strategy_account_first_leg_authority.go)은 결정 (1) 에 따라 L6 6.2 봉인
+// 전까지 바꾸지 않음. 그래서 오늘 소유자 범위가 둘인 활성화 시장은 경계를 지나도 하류에서 거절돼 주문이 0 임 — 생산에서는
+// 결과 권한 · 계좌 B1 · 위험 권한 재수집도 거절하고, 1차 레그 B2 가 **유일한** 방어인 것은 오늘-동등성 핀의 의도적 최악
+// 조건(fixture 순서)에서뿐임(a112_owner_scope_handoff_test.go 머리말). 하류를 소유자 범위 단위로 옮기는 일은 5.2.2.2 임.
 func (authority strategyProposalMarketAuthority) dispatchHandoffs() []strategyhandoff.Handoff {
 	if !authority.familyActivation().Verified() {
 		return []strategyhandoff.Handoff{authority.dispatchHandoff()}

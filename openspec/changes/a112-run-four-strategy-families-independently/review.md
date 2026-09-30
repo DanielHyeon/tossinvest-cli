@@ -5439,3 +5439,31 @@ strategyhandoff · engine) rc 0, 무태그 `./internal/strategyhandoff` · `./in
 
 **이월.** 5.2.2.2(착수 조건 둘 — 6.2 봉인 · 같은 범위 중복 핀) · 5.6.2.2 는 그대로. `runProductionStrategyMarketCycle` 을 통째로 도는 행동 시험 0 은
 여전히 참이다(전달 몸통은 이제 행동으로 돈다). 옛 5.2.2.1 변이 원장(`mutation-5.2.2.1.tsv`)의 F11 앵커는 이 로트 뒤 코드에 없다 — 역사 기록으로 두고 현행은 `-fix` 원장.
+
+## 2026-10-01 codex 재확인(99ad897c) 처분 · 3차 수리 — 모양이 아니라 의미로 종결
+
+**재확인.** `analysis/review-5621-5221/prompt-codex-recheck.md` · `codex-recheck-output.md` · `codex-recheck-run.txt`. 첫 판 세션(01a0f288)은
+`--ephemeral` 로 돌려 기록이 없어 resume 이 「no rollout found」로 실패했고, 새 세션 **01a0f313-9a12-7760-a555-c99b15f97107**(ephemeral 없음 — 다음
+재확인은 resume)로 돌렸다. 판정 BLOCK: P1-1(a)(b) · P1-2 원형 · P2-3 · P2-4 · 정정 CLOSED, 새 구조 못의 같은 부류 우회 P1 셋 · P2 하나 OPEN.
+생산 결함 새로 없음.
+
+**접근 이탈 기록.** codex 는 시작 때 `~/.codex/memories/MEMORY.md` 에 키워드 검색 1회를 했다고 **스스로 적었다**(브리프의 접근 제한 위반).
+판정 근거로 쓰지 않았고 운영 원장 · 자격 증명은 열지 않았다고 자인했다. 다음 codex 브리프에 접근 제한을 유지하고 「위반하면 출력에 적어라」를 명시한다.
+
+**Manager 판정(2026-10-01).** 「축별 행동 시험은 종료하지 않는다」의 결론대로 철자 핀을 한 겹 더 쌓지 않고 **의미를 재는 것으로 종결**한다.
+
+| # | 등급 | 요지 | 처분 · 수리 | 변이(`mutation-5.2.2.1-fix3.tsv`) |
+|---|---|---|---|---|
+| R1 | P1 | 호출부에서 뒤 handoff 를 지워도(`clear(hs[1:])`) 구조 못 통과, 주기 함수를 도는 행동 시험 0 | **(a)** `a112_market_cycle_delivery_test.go` — `runProductionStrategyMarketCycle` **자체**를 돈다: 권한 새로 고침은 Context 의 1초 캐시에 fixture 조립 주입(원격 0), 레인 런타임은 생산 생성자, dispatch 는 fixture 의 실제 주기(Gateway 스파이). 활성화된 두 범위 시장에서 dispatch 진입 수(스파이 보호 관측) = 2 · 스파이 주문 1 · 둘째 범위 identity 거절이 반환 오류. 활성화 없는 대조: 진입 0 · 주문 0 · 오류 nil. **5.6.2.2 행동 커버 중 주기 전달 부분 선납**(tasks) | **H01(n-1 전달)** · H02(`clear`) CAUGHT |
+| R2 | P1 | 캡처 쓰기 금지가 포인터 · 필드 · 맵 · 송신 · 미해소 외부 식별자를 못 봄 | **(b) 조건부**: R1 행동 시험이 의미를 재므로 구조 못은 **2차 방어로 동결**(더 조이지 않음). 미해소 모양은 `a112_market_delivery_structure_test.go` 머리말에 이름 붙여 기록 | H03(포인터 카운터) — 행동 시험이 CAUGHT(구조 못은 이 모양을 원래 못 봄) |
+| R3 | P1 | 비공개 별칭 + `init()` 재대입으로 둘째 주조 문 · out-param 누락 | **(a)** `mint_census_test.go` 재작성 — **진짜 importer(소스 모드)로 전체 타입 검사**, 미해소면 실패. 타입 동일성으로: 결과 · 쓰기 가능한 out-param 이 경계 타입을 품는 함수 · 메서드(비공개 수신자 · 별칭 포함)는 두 문뿐, 경계 타입을 품는 패키지 var 0, 패키지 var 의 선언 밖 대입 0, Handoff/Delivered 리터럴(별칭 포함)은 문 안에만, 두 타입 필드 쓰기 0. `-trimpath` 시험 이진에서 GOROOT 가 비는 문제는 `go env GOROOT` 로 보완(하네스 대조군이 먼저 잡았다) | H04(별칭 + init 재대입) · H05(별칭 메서드) · H06(out-param) · H07(함수 값 var) · H08(별칭 리터럴) CAUGHT |
+| R4 | P2 | `var hs = …` 동작 동등 리팩터가 거짓 양성 | `handoffSource` 가 `ValueSpec` 도 센다 | **N02 GREEN-AS-EXPECTED** |
+| R5 | (T) | 「유일한 방어」 낡은 문구 둘 | `strategy_dispatch_handoff.go` · `a112_owner_scope_handoff_test.go` 정정 | — |
+
+**H 세트 결과.** H01~H08 **8/8 CAUGHT**, N02 GREEN-AS-EXPECTED, 무변이 대조군 GREEN(TREE 스탬프 원장). 앞 G 세트는 시험 개명(`mint_census_test.go`
+재작성) 뒤 같은 트리에서 다시 돌려 `mutation-5.2.2.1-fix.tsv` 에 덧붙였다(아래 검증 절).
+
+**검증(3차).** 격리 사본(`git archive` HEAD `f1ff3791` 전체 + 이 로트 파일 다섯): gofmt 위반 0, `go vet`(무태그 · 태그) rc 0, 무태그 · 태그
+`./internal/strategyhandoff` · `./internal/app/engine` · `./internal/strategyworker` ok. G 세트는 개명 · 추가 시험 트리에서 재실행해 G01~G18 18/18 CAUGHT ·
+N01 GREEN-AS-EXPECTED(`mutation-5.2.2.1-fix.tsv` 끝 「재실행」 판) — 주기 행동 시험이 G06~G10 · G16 에도 함께 걸린다. 기존 함수 본문 편집 0
+(`dispatchHandoffs` 의 주석만 — 이 로트가 만든 함수, FLM 번들 없음), FLM not-applicable.

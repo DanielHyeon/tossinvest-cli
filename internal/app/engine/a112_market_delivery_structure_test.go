@@ -15,6 +15,13 @@ package engine
 //
 // 타입 검사는 엔진 생산 파일만으로 한다(의존 패키지는 빈 스텁 — 그쪽 식별자는 해소되지 않아 오류가 나지만 무시한다). 여기서
 // 해소가 필요한 것은 전부 이 패키지 안의 선언이다.
+//
+// **이 파일은 2차 방어이고 동결됐다**(Manager 판정 2026-10-01). 의미 — 「dispatch 가 이 시장의 handoff 를 전부 받는다」 — 는
+// 주기 함수를 통째로 도는 행동 시험 a112_market_cycle_delivery_test.go 가 잰다(어떤 철자의 우회든 dispatch 수가 준다). 여기의
+// 모양 검사를 더 조이지 않는다. 이름 붙여 두는 미해소 모양(codex 재확인 #2): 캡처 쓰기 금지는 **식별자 대입 · 증감만** 본다 —
+// 포인터 경유(`(*p)++`) · 필드(`s.n++`) · 맵 원소(`m[k]++`) · 채널 송신(`ch <- v`)은 보지 않고, 스텁 importer 로 해소되지 않는
+// 외부 패키지 식별자(dot import 변수 등)는 「밖」으로 판정하지 못해 허용된다. `handoffSource` 는 지역 변수의 **대입**만 세므로
+// 원소 변경(`clear(hs[1:])`) · 다른 호출로의 전달은 보지 않는다 — 그 우회는 위 행동 시험이 잡는다(변이 원장 H 세트).
 
 import (
 	"go/ast"
@@ -121,6 +128,19 @@ func (e a112EngineTypes) handoffSource(function *ast.FuncDecl, arg ast.Expr) boo
 	}
 	writes, good := 0, 0
 	ast.Inspect(function.Body, func(node ast.Node) bool {
+		// `var hs = …dispatchHandoffs()` 도 같은 동작이다(codex 재확인 #4 — 앞 판은 ValueSpec 을 안 세서 거짓 양성).
+		if spec, ok := node.(*ast.ValueSpec); ok {
+			for index, name := range spec.Names {
+				if e.info.Defs[name] != variable {
+					continue
+				}
+				writes++
+				if len(spec.Values) == len(spec.Names) && e.isDispatchHandoffsCall(spec.Values[index]) {
+					good++
+				}
+			}
+			return true
+		}
 		assign, ok := node.(*ast.AssignStmt)
 		if !ok {
 			return true
