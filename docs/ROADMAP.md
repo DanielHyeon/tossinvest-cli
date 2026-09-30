@@ -179,3 +179,16 @@ typed-confirmation을 유지한다 — 이 결정은 UI 표면에만 적용한�
 | `Notifier` 에 `Close`/`Stop` 없음 · `flatten.Saga.Notifier` nil 지뢰(M6 핀이 조립 사실만 고정) · `o.Interval()` drift | exit 기록 전용(21판) 은 이 셋에 기대지 않음 | 미배정 |
 | 계좌 원문 로그 base 관행(약 20곳) · 동기 `claimAndDeliver` 게이트 설명의 원문 오류 | 불변식 8 (a) 는 a092 새 표면만 닫음 | 사람 결정 큐 「계좌 가림 설계」 |
 | `check_values.py` · `coverage_gate.py` 개선(옛 a092 10.4.2~10.4.6) | 없음(문서 도구) | a092 문서 도구 후속 로트(미배정) |
+
+## a095 이월 · 미배정 후속 (a095 archive 뒤에도 남는 의무 — 2026-09-30)
+
+`a095-a-stop-must-know-what-it-covers` 가 넘긴 것. 근거는 a095 `review.md` §4.7 · §4.8 · §4.9 와 `design.md` D8 · `issues.md`.
+
+| 항목 | 기대는 a095 계약 | 행선 |
+|---|---|---|
+| 배포 전 `main` 과 SchemaVersion 대조 · 배포 직전 원장 읽기 전용 재측정 · 배포 후 `alert_outbox` 에 편입 실패 critical 행 확인(tasks 7.1 · 7.2 · 7.4) | 공시 문안 §4.9 | 사람 항목 — 배포 승인 때 |
+| 대사 goroutine 의 동기 배달 비용 — transport 사망 시 편입 실패 보유당 사이클마다 ≈34s(계산값, 상한 54s) × N(design D8, Q7 둘째 면) | critical 은 메모리 래치를 지남(6판 원칙) · 정본은 이 대기를 근거로 인용 금지(SHALL NOT) | 미배정 — 후보: PENDING 재배달을 배달 실행자에게만 |
+| 수량 증가 래치가 「보고한 최대 수량」이라 감소(부분 익절 · 부분 매도) 뒤의 새 증가를 그 최대를 넘기 전까지 놓침 | 델타 「새 최대 수량마다 보고」 | 미배정 — 체결로 설명되지 않는 순증 기준 래치(델타 문언 변경) |
+| 편입 커밋 뒤 보호 미개설 보유의 알림 · 오해 부르는 성공 문구(`issues.md` I7) | 범주 ③ 은 critical 요구 밖(이름 붙은 경계) | 미배정 |
+| 총위험 보고(R3, `issues.md` I2) · 불타기 래칫 선행 조건(Q6, `issues.md` I1) · 운영자 재편입 하향의 승인 · audit(`issues.md` I6) | 없음(보류 · 후속) | 미배정 |
+

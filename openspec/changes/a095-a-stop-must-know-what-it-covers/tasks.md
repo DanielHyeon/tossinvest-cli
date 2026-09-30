@@ -160,34 +160,42 @@
 
 ## 6. 게이트
 
-- [ ] 6.1 `go test ./... -count=1 -race` 회귀 0
+- [x] 6.1 **[처분 2026-09-30] 게이트 ⑦ `make test`(전 패키지 `-count=1`) · ⑨ `make test-race`(저장소의 race 집합)가 잰다 — 결과는 `review.md` 「게이트 실행 기록」. a095 패키지 `-race`는 §4.6 · §4.7(적대 보이스 `-count=3`).** `go test ./... -count=1 -race` 회귀 0
 - [x] 6.2 **§0.3** — exit goroutine에 **새** critical Notify가 없음을 구조로 보인다: `workingSet` B6 경로의
       사실이 normal(2.1). 기존 exit 발신의 `n.mu` 대기는 **a092 21판 소유**(Q7 이관, 2026-09-28) — 대사 goroutine 자신의 대기는 a092 21판 밖의 이름 붙은 잔여
 - [x] 6.3 **§0.4** — 새 브로커 조회 0건
 - [x] 6.4 **토글 OFF 동등성** (10판 보강: 엔진이 연 포지션의 수량 증가 보고는 `adoption.enabled`와 무관한 새 normal 보고 — 편입 동작이 아니므로 정본 false 동등성의 대상이 아님, 델타 새 요구에 명시. 진입 · 청산 무영향) — 기존 토글 둘(`notifications.enabled` · `adoption.enabled`)의 OFF에서 **등급과 진입 차단
       결과**가 이 change 전과 같다(2.4 · 2.5). normal 래치 키가 사실 식별자로 바뀌어 normal 보고 횟수 · 로그 줄은 달라질 수
-      있다. `adoption.enabled=false`에 include 지정이 있는 경로는 Q2(b)로 열려 있다(8판 r7a F5). 새 토글은 도입하지 않는다
+      있다. `adoption.enabled=false`에 include 지정이 있는 경로는 ~~Q2(b)로 열려 있다(8판 r7a F5)~~ → 10판 정정: 알림 켜짐이면 critical(정본 include 동일성) — 빈 include 목록 엔진은 무변화. 새 토글은 도입하지 않는다
 - [x] 6.5 `openspec validate --strict`의 한계 — 델타가 ADDED만 쓰는지 확인하고 적는다
 - [x] 6.6 FLM · AST **재생성**(구현 후) + `check_analysis.py` 통과
       > 10판: stale 20 재추출 + 새 번들 2, `check_analysis` rc 0 evidence complete(required 6). RED/GREEN/변이 영수증 `review.md` §4.6.
       > 6.2 = exit 루프 무편집 + `TestA095TheExitObserverReportStaysNormalAndKeyedApart` · 6.3 = 새 호출은 원장 읽기(`PositionAdjustments`)뿐 · 6.4 = 2.4 · 2.5 · 6.5 = 델타 두 파일 모두 ADDED 만
-- [ ] 6.7 `make sdd-sync` → `make sdd-check`
-- [ ] 6.8 **격리 worktree에서** `make gate CHANGE=a095-a-stop-must-know-what-it-covers`
-- [ ] 6.9 **독립 리뷰**(구현과 분리된 컨텍스트) · 교차 모델
-- [ ] 6.10 PM 동기화 → `openspec archive`
+- [x] 6.7 **[처분 2026-09-30] 게이트 준비 — `make sdd-sync` 뒤 `make sdd-check` rc 0(advisory WARN 허용), 게이트 ⑥이 다시 잰다.** `make sdd-sync` → `make sdd-check`
+- [x] 6.8 **[처분 2026-09-30] 게이트 준비 — 이 체크 커밋에서 격리 worktree 로 돌리고 결과를 `review.md` 「게이트 실행 기록」에 적는다(돌리고→적고→체크 관례, a092 선례).** **격리 worktree에서** `make gate CHANGE=a095-a-stop-must-know-what-it-covers`
+- [x] 6.9 **[처분 2026-09-30] 완료 — codex 교차 모델 FAIL → 처분 → 재확인 2 PASS(`e9bbdf39`) · Claude 적대 Eng APPROVE · Claude 델타 재리뷰+시험 품질 APPROVE. `review.md` §4.7 · §4.8.** **독립 리뷰**(구현과 분리된 컨텍스트) · 교차 모델
+- [x] 6.10 **[처분 2026-09-30] archive 는 Manager 최종 검증 · 승인 뒤 — 아래 「아카이브 때 할 일」. tracker 는 게이트 준비에서 재생성.** PM 동기화 → `openspec archive`
 
 ## 7. 배포와 운영 — 사람이 승인한다
 
-- [ ] 7.1 배포 전 `main`과 SchemaVersion 대조
-- [ ] 7.2 **배포 직전에 원장을 다시 잰다.** 2026-09-25 재조회(2라운드 P1-6)의 OPEN은 TSLA 먼지 1건이었다.
+- [x] 7.1 **[처분 2026-09-30] 이월 — 사람 항목(배포 승인 때). `docs/ROADMAP.md` 「a095 이월」.** 배포 전 `main`과 SchemaVersion 대조
+- [x] 7.2 **[처분 2026-09-30] 이월 — 사람 항목(배포 직전 읽기 전용 측정). `docs/ROADMAP.md` 「a095 이월」.** **배포 직전에 원장을 다시 잰다.** 2026-09-25 재조회(2라운드 P1-6)의 OPEN은 TSLA 먼지 1건이었다.
       배포 직후 critical로 울 것의 예측은 **그 시점의 측정**으로 쓴다 — 2판의 「6건 중 최소 2건」은 거짓이
       되었으므로 지웠다
-- [ ] 7.3 **공시** — 편입 켜짐(`adoption.enabled=true`)이고 알림 on인 엔진에서 편입 실패(B5)가 critical이 되고,
+- [x] 7.3 **[처분 2026-09-30] 공시 문안 완료 — `review.md` §4.9(10판 정정 반영: include 지정 포함). 운영자 전달은 배포 때 사람이.** **공시** — 편입 켜짐(`adoption.enabled=true`)이고 알림 on인 엔진에서 편입 실패(B5)가 critical이 되고,
       전달 실패 시 진입이 막힌다. 알림 off(거부된 알림 블록 포함) · 편입 off · exclude에서는 막히지 않는다(결정 (2)).
       critical이 메모리 래치를 지나므로 PENDING 동안 대사 쪽 배달이 늘어 exit goroutine의 기존 critical 발신 대기가 늘 수
       있음을 함께 적는다. a092 「모든 보유자」 착지 전에 구현한 경우 **그 창의 증폭을 수용했다는 사용자 확인과 Manager 승인 기록**
       (`review.md` 「착수 승인 기록」)을 인용한다(0.7). transport가 죽은 경우의 교환은 정본 「배달 실행자는 지속 실패를 진입 차단과 운영 모드 승격으로 잇는다」(a124)를 따른다고 함께 적는다(Q2(d) 이관)
-- [ ] 7.4 배포 후 `alert_outbox`에 B5 사실의 행이 생기는지 확인
+- [x] 7.4 **[처분 2026-09-30] 이월 — 사람 항목(배포 후 읽기 전용 확인). `docs/ROADMAP.md` 「a095 이월」.** 배포 후 `alert_outbox`에 B5 사실의 행이 생기는지 확인
+
+## 아카이브 때 할 일 (Manager 승인 뒤 — 체크박스 아님)
+
+- 정본 exit-policy 「외부 취득 포지션의 자동 편입」의 사유 행렬(5행: 설정 거부 / 의도적 제외 / enabled 시도 실패 / include 지정 시도 실패 / 꺼져 있고
+  미지정)을 구현의 조건 칸 7로 동기화 — 연기 둘(「편입 켜짐 — 연기」 · 「include 지정 — 연기」)을 더한다. 델타가 ADDED 만이라 archive 가 자동으로
+  하지 않는다(a092 21.7(e) 선례의 archive 때 정본 편집).
+- archive 커밋 메시지와 `review.md` 에 착지 `cc480a88` · 게이트 실행 커밋을 인용한다.
+- Story `STORY-TOS-a095` openspec.path → 아카이브 경로, tracker 재생성.
 
 ## 선후 관계
 
