@@ -2,7 +2,7 @@
 """a112 로트 5.6.2 · 5.2.2 변이 하네스 — a092 `mutate_unit2.py` 의 사본 방식(저장소 추적 파일을 pid 붙은 사본으로 복사 · 무변이
 대조군이 GREEN 이 아니면 멈춤 · 변이는 한 번에 하나, 사본에서만 · 판정 CAUGHT/SURVIVED/BUILD-FAIL).
 
-사용: python3 a112_lot_mutate.py --set 5.6.2.1 <scratch-dir> [미추적 새 파일 경로 …]
+사용: python3 a112_lot_mutate.py --set 5.6.2.1|5.2.2.1 <scratch-dir> [로트 파일 경로 …]
 """
 from __future__ import annotations
 
@@ -54,7 +54,59 @@ SET_5621_TESTS = [
      "./internal/app/engine"],
     ["go", "test", "-count=1", "-run", "TestReasonCodeEnumIsStable|TestTheStrategyCentralIntegrityLatch", "./internal/execgw"],
 ]
-SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS)}
+HO = "internal/strategyhandoff/handoff.go"
+DH = "internal/app/engine/strategy_dispatch_handoff.go"
+FL = "internal/app/engine/strategy_account_first_leg_authority.go"
+SET_5221 = [
+    ("F01 activation gate removed (every market per scope)", DH,
+     "\tif !authority.familyActivation().Verified() {\n\t\treturn []strategyhandoff.Handoff{authority.dispatchHandoff()}",
+     "\tif false {\n\t\treturn []strategyhandoff.Handoff{authority.dispatchHandoff()}"),
+    ("F02 activated market stays market-wide", DH,
+     "\tif !authority.familyActivation().Verified() {\n\t\treturn []strategyhandoff.Handoff{authority.dispatchHandoff()}",
+     "\tif true {\n\t\treturn []strategyhandoff.Handoff{authority.dispatchHandoff()}"),
+    ("F03 duplicate owner scope not refused", HO,
+     "if _, duplicate := seen[scope]; duplicate {", "if _, duplicate := seen[scope]; duplicate && false {"),
+    ("F04 owner scope ignores position generation", HO,
+     "\t\tgeneration: result.Lineage.PositionGeneration,", "\t\tgeneration: 0,"),
+    ("F05 owner scope ignores symbol", HO,
+     "\t\tsymbol:     strings.ToUpper(strings.TrimSpace(result.Lineage.Symbol)),", "\t\tsymbol:     \"\","),
+    ("F06 symbol spelling not normalised", HO,
+     "\t\tsymbol:     strings.ToUpper(strings.TrimSpace(result.Lineage.Symbol)),", "\t\tsymbol:     result.Lineage.Symbol,"),
+    ("F07 account spelling not normalised", HO,
+     "\t\taccount:    strings.TrimSpace(result.Lineage.AccountRef),", "\t\taccount:    result.Lineage.AccountRef,"),
+    ("F08 closed market split into scopes", HO,
+     "\tif !ready || len(selected) == 0 {\n\t\treturn []Handoff{Admit(ready, selected)}",
+     "\tif len(selected) == 0 {\n\t\treturn []Handoff{Admit(ready, selected)}"),
+    ("F09 delivery loop stops after the first scope", DH,
+     "\tfor _, handoff := range handoffs {\n\t\tif err := handoff.Deliver(body); err != nil {",
+     "\tfor _, handoff := range handoffs[:1] {\n\t\tif err := handoff.Deliver(body); err != nil {"),
+    ("F10 delivery loop continues past a fault", DH,
+     "\t\tif err := handoff.Deliver(body); err != nil {\n\t\t\treturn err\n\t\t}",
+     "\t\tif err := handoff.Deliver(body); err != nil {\n\t\t\t_ = err\n\t\t}"),
+    ("F11 production cycle reverts to the market-wide handoff", SUP,
+     "return deliverEachStrategyHandoff(fresh.proposals.forMarket(market).dispatchHandoffs(),",
+     "return deliverEachStrategyHandoff([]strategyhandoff.Handoff{fresh.proposals.forMarket(market).dispatchHandoff()},"),
+    ("F12 activated branch mints through the market-wide door", DH,
+     "\treturn strategyhandoff.AdmitEachOwnerScope(authority.snapshot.Ready, selected)",
+     "\treturn []strategyhandoff.Handoff{strategyhandoff.Admit(authority.snapshot.Ready, selected)}"),
+    ("F13 activated branch ignores readiness", DH,
+     "\treturn strategyhandoff.AdmitEachOwnerScope(authority.snapshot.Ready, selected)",
+     "\treturn strategyhandoff.AdmitEachOwnerScope(true, selected)"),
+    ("F14 first-leg count guard removed (today-equivalence pin must see it)", FL,
+     "\tif len(proposal.entries) != 1 || !riskAuthority.snapshot.Ready || !fx.snapshot.Ready",
+     "\tif !riskAuthority.snapshot.Ready || !fx.snapshot.Ready"),
+    ("F15 a second site mints per-scope handoffs", DH,
+     "\treturn strategyhandoff.Admit(authority.snapshot.Ready, selected)\n}",
+     "\t_ = strategyhandoff.AdmitEachOwnerScope\n\treturn strategyhandoff.Admit(authority.snapshot.Ready, selected)\n}"),
+]
+SET_5221_TESTS = [
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+     "TestOnlyAnActivatedMarket|TestTwoOwnerScopesStill|TestEveryAdmittedOwnerScope|TestAScopeFault|TestTheProductionCycleDelivers"
+     "|TestExactlyOneProduction|TestAdmitCensus|Handoff|Seam",
+     "./internal/app/engine"],
+    ["go", "test", "-count=1", "./internal/strategyhandoff"],
+]
+SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS)}
 MUTANTS, TESTS = SET_5621, SET_5621_TESTS
 
 def run_tests(copy: Path, env: dict) -> tuple[str, str]:

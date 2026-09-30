@@ -1,6 +1,6 @@
 # Branch Test Map: `NewPairedStrategyEntryProductionAssembly`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (295-382); file SHA-256 `da4fa6d1b57217a08a05d0ae57a4f4be1e3c173c35947e06527b02014ae75b23`. AST branch positions are authoritative.
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (295-382); file SHA-256 `1f4f20967491555bb2dcfeeffc82962f3e778ec5efa3551540cd95aa536f0be7`. AST branch positions are authoritative.
 
 - Measurement regime (8.7.2 편집 뒤): 몸통 진입 count. engine tagged suite 바이너리(`-coverpkg=./internal/app/engine,./internal/strategyrouter`, -trimpath 없이)를 `systemd-run … MemoryMax=16G` 안에서 실행, 스위트 PASS; 전체 시험 509 개를 하나씩 돈 per-test 프로파일(하네스 `analysis/harness/a872_pertest_cover.sh` · `a872_attribute.py`). 모든 행에서 시험별 합 == 스위트(ATTRIBUTION MISMATCH 0).
 

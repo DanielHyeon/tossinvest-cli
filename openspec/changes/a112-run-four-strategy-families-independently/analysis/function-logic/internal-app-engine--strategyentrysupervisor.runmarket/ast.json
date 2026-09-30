@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_entry_supervisor.go",
-  "source_sha256": "da4fa6d1b57217a08a05d0ae57a4f4be1e3c173c35947e06527b02014ae75b23",
+  "source_sha256": "1f4f20967491555bb2dcfeeffc82962f3e778ec5efa3551540cd95aa536f0be7",
   "package": "engine",
   "function": "runMarket",
   "receiver": "StrategyEntrySupervisor",
   "signature": "StrategyEntrySupervisor.runMarket(params=4, results=0)",
   "start": {
-    "line": 878,
+    "line": 882,
     "column": 1
   },
   "end": {
-    "line": 964,
+    "line": 968,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "select",
       "at": {
-        "line": 879,
+        "line": 883,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "for",
       "at": {
-        "line": 884,
+        "line": 888,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "select",
       "at": {
-        "line": 885,
+        "line": 889,
         "column": 3
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 894,
+        "line": 898,
         "column": 4
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 896,
+        "line": 900,
         "column": 5
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 900,
+        "line": 904,
         "column": 5
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 901,
+        "line": 905,
         "column": 6
       }
     },
@@ -74,7 +74,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 909,
+        "line": 913,
         "column": 4
       }
     },
@@ -82,7 +82,7 @@
       "id": "B9",
       "kind": "if",
       "at": {
-        "line": 913,
+        "line": 917,
         "column": 4
       }
     },
@@ -90,7 +90,7 @@
       "id": "B10",
       "kind": "if",
       "at": {
-        "line": 916,
+        "line": 920,
         "column": 4
       }
     },
@@ -98,7 +98,7 @@
       "id": "B11",
       "kind": "if",
       "at": {
-        "line": 919,
+        "line": 923,
         "column": 4
       }
     },
@@ -106,7 +106,7 @@
       "id": "B12",
       "kind": "if",
       "at": {
-        "line": 922,
+        "line": 926,
         "column": 4
       }
     },
@@ -114,7 +114,7 @@
       "id": "B13",
       "kind": "if",
       "at": {
-        "line": 940,
+        "line": 944,
         "column": 5
       }
     },
@@ -122,7 +122,7 @@
       "id": "B14",
       "kind": "if",
       "at": {
-        "line": 946,
+        "line": 950,
         "column": 4
       }
     },
@@ -130,7 +130,7 @@
       "id": "B15",
       "kind": "if",
       "at": {
-        "line": 951,
+        "line": 955,
         "column": 4
       }
     },
@@ -138,7 +138,7 @@
       "id": "B16",
       "kind": "if",
       "at": {
-        "line": 955,
+        "line": 959,
         "column": 4
       }
     },
@@ -146,7 +146,7 @@
       "id": "B17",
       "kind": "if",
       "at": {
-        "line": 956,
+        "line": 960,
         "column": 5
       }
     }
@@ -155,63 +155,56 @@
     {
       "kind": "return",
       "at": {
-        "line": 881,
+        "line": 885,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 887,
+        "line": 891,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 898,
+        "line": 902,
         "column": 6
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 902,
+        "line": 906,
         "column": 7
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 905,
+        "line": 909,
         "column": 6
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 917,
+        "line": 921,
         "column": 5
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 942,
+        "line": 946,
         "column": 6
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 948,
-        "column": 5
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 953,
+        "line": 952,
         "column": 5
       }
     },
@@ -219,13 +212,20 @@
       "kind": "return",
       "at": {
         "line": 957,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 961,
         "column": 6
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 960,
+        "line": 964,
         "column": 5
       }
     }
@@ -234,16 +234,8 @@
     {
       "kind": "call",
       "at": {
-        "line": 880,
+        "line": 884,
         "column": 9
-      },
-      "text": "ctx.Done"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 886,
-        "column": 10
       },
       "text": "ctx.Done"
     },
@@ -251,6 +243,14 @@
       "kind": "call",
       "at": {
         "line": 890,
+        "column": 10
+      },
+      "text": "ctx.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 894,
         "column": 4
       },
       "text": "s.mu.RLock"
@@ -258,7 +258,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 892,
+        "line": 896,
         "column": 4
       },
       "text": "s.mu.RUnlock"
@@ -266,7 +266,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 893,
+        "line": 897,
         "column": 24
       },
       "text": "s.evaluationState"
@@ -274,7 +274,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 895,
+        "line": 899,
         "column": 30
       },
       "text": "s.latchMarket"
@@ -282,7 +282,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 897,
+        "line": 901,
         "column": 6
       },
       "text": "s.signalCentral"
@@ -290,7 +290,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 900,
+        "line": 904,
         "column": 15
       },
       "text": "s.waitMarketRestart"
@@ -298,7 +298,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 901,
+        "line": 905,
         "column": 9
       },
       "text": "ctx.Err"
@@ -306,7 +306,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 904,
+        "line": 908,
         "column": 6
       },
       "text": "s.signalCentral"
@@ -314,7 +314,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 912,
+        "line": 916,
         "column": 43
       },
       "text": "invokeBoundedStrategyCycle"
@@ -322,7 +322,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 914,
+        "line": 918,
         "column": 5
       },
       "text": "s.markAbandoned"
@@ -330,7 +330,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 933,
+        "line": 937,
         "column": 5
       },
       "text": "s.recordSwallowedCycleError"
@@ -338,7 +338,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 940,
+        "line": 944,
         "column": 8
       },
       "text": "isCentralStrategyIntegrity"
@@ -346,7 +346,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 940,
+        "line": 944,
         "column": 44
       },
       "text": "s.blockEntryOnCentralIntegrity"
@@ -354,7 +354,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 941,
+        "line": 945,
         "column": 6
       },
       "text": "s.signalCentral"
@@ -362,7 +362,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 946,
+        "line": 950,
         "column": 7
       },
       "text": "isCentralStrategyIntegrity"
@@ -370,7 +370,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 947,
+        "line": 951,
         "column": 5
       },
       "text": "s.signalCentral"
@@ -378,7 +378,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 950,
+        "line": 954,
         "column": 29
       },
       "text": "s.latchMarket"
@@ -386,7 +386,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 952,
+        "line": 956,
         "column": 5
       },
       "text": "s.signalCentral"
@@ -394,7 +394,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 955,
+        "line": 959,
         "column": 14
       },
       "text": "s.waitMarketRestart"
@@ -402,7 +402,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 956,
+        "line": 960,
         "column": 8
       },
       "text": "ctx.Err"
@@ -410,7 +410,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 959,
+        "line": 963,
         "column": 5
       },
       "text": "s.signalCentral"
@@ -420,56 +420,56 @@
     {
       "kind": ":=",
       "at": {
-        "line": 889,
+        "line": 893,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 891,
-        "column": 4
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 893,
-        "column": 4
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
         "line": 895,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 897,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 899,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 900,
+        "line": 904,
         "column": 8
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 912,
+        "line": 916,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 950,
+        "line": 954,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 955,
+        "line": 959,
         "column": 7
       }
     }

@@ -167,13 +167,31 @@
   **덤으로 고친 것 하나.** 5.6.1 이 BTM 에 적어 둔 커버리지 블록 번호 29개가 5.1.2.1(+16)과 이 로트(+3) 뒤 19줄 밀린 채였다. 산술로 옮기지 않고 프로파일을 다시 떠서 대조했다: 28개가 정확히 +19 자리에 있었고 `count` 도 전부 일치했다. 남은 하나는 실제 블록이 `804-806` 인데 `785-786`(= 804-805)로 적혀 있었다 — 옮겨 적을 때 한 줄 어긋난 것이고, 잰 값으로 바꿨다.
 
   **이 태스크가 주장하지 않는 것.** 시장 단위 단일 제안 준비 상태는 그대로다(5.2.2). 7.5 의 "no remote I/O under strategy refresh mutex" 성능·운용 시험은 여기 없다 — 이 로트가 넣은 것은 구조 셈과 동시성 행동 시험이고, 부하 아래 지연을 재는 것은 7.5 다. 그리고 `internal/app/engine` 의 나머지 동시성은 여전히 검출기 밖이다.
-- [ ] 5.2.2 Replace market-level single-proposal readiness with four independently supervised lane workers per market.
+- [x] 5.2.2.1 Move the handoff capacity from the market to the owner scope, in activated markets only. **(Landed 2026-09-30.)**
 
-  **왜 열려 있나.** `buildProductionStrategyMarketWorker` 가 `p.dispatchHandoff().Single()` 로 시장의 준비 상태를 정한다 — 한 시장에 소유자 범위가 둘이면 `HANDOFF_OVER_CAPACITY` 로 그 시장 worker 전체가 dormant 가 된다. 동결 골든의 `queue.market_wide_single_proposal_assumption_forbidden: true` 와 스펙의 "서로 다른 symbol/owner scope 를 market-wide proposal 하나로 접어서는 안 되며 (MUST NOT)" 가 금지하는 바로 그 모양이고, 5.5 는 그 상한에 **이름만 붙였지 들어내지 않았다**.
+  **Split note, 2026-09-30 (Manager 판정 — 분할 (가)).** 원문 5.2.2 는 「Replace market-level single-proposal readiness with four independently supervised lane workers per market」과 아래 Done 네 문장이다. 상한을 경계에서 들어내도 하류의 네 권한(결과 권한 `ResultAuthority` · 위험 · 계좌 `collectMarket` B1 · 1차 레그 `collectStrategyFirstLegAuthority` B2)이 여전히 시장당 제안 하나를 요구하므로, 두 소유자 범위 시장이 실제로 거래하려면 그 넷을 소유자 범위 단위로 옮겨야 한다. 그중 1차 레그의 다섯 줄(`strategy_account_first_leg_authority.go` :217 · :221–:225)은 결정 (1) 에 따라 **L6 6.2 봉인 전까지 유일한 방어**라 봉인 전에는 손대지 않는다. 그래서 셋으로 갈랐다. 원문의 문장마다 소유자는 정확히 하나다:
 
-  **들어내는 것이 왜 사람 결정에 걸리나.** 오늘 소유자 범위가 둘인 시장은 아무 주문도 내지 않는다. 상한을 들어내면 그 시장이 거래를 시작한다 — 즉 진입 발행이 늘어나는 방향의 생산 동작 변화다. 네-가족 런타임이 OFF 인 동안 그런 변화가 생기면 "토글 OFF 는 upstream 동작과 동일해야 한다"에 정면으로 어긋난다. 그래서 이 절은 5.1.2.2 와 **같은** 서명된 활성화 매니페스트(사람 결정 (7))에 걸려 있다.
+  | 원문 문장 | 소유 |
+  |---|---|
+  | 「소유자 범위마다 최대 하나가 bounded handoff 를 기다린다」 | **5.2.2.1** |
+  | 「상한을 실제로 올리는 편집은 매니페스트가 선 뒤에만 한다」 | **5.2.2.1**(서명 활성화된 시장에서만 상한 상향) |
+  | 「시장의 준비 상태가 "이 시장에 제안이 정확히 하나"가 아니라 네 레인 각자의 준비 상태에서 나오고」 + 제목의 「Replace market-level single-proposal readiness」 + 들어냄의 결과인 「두 소유자 범위 시장이 거래한다」 | **5.2.2.2** |
+  | 「각 레인이 자기 cadence·큐·마감·health·latch 로 독립 감독되며」 + 제목의 「four independently supervised lane workers」 | **5.6.2.2**(레인 고장이 감독자 fault 스트림으로 가는 편집과 같은 편집 — 5.6.2.1 이월 표) |
 
-  **Done.** 시장의 준비 상태가 "이 시장에 제안이 정확히 하나"가 아니라 네 레인 각자의 준비 상태에서 나오고, 각 레인이 자기 cadence·큐·마감·health·latch 로 **독립 감독**되며(오늘은 시장 주기가 넷을 차례로 돌린다), 소유자 범위마다 최대 하나가 bounded handoff 를 기다린다. 상한을 실제로 올리는 편집은 매니페스트가 선 뒤에만 한다.
+  **무엇이 바뀌었나.** `strategyhandoff.AdmitEachOwnerScope` — 선택마다 `Admit` 을 한 번씩 불러 handoff 를 **여러 개** 돌려준다. 값이 나가는 문(`Single` · `Deliver`)과 `Capacity=1` 은 그대로라서, 같은 1 이 서명 활성화된 시장에서는 **소유자 범위당** 1 이 된다(HANDOFF 의 「상수와 Single 서명을 함께 바꾼다」 예고 대신 개수를 늘린 이유 — review). 시장 단위 판정은 쪼개지 않는다: 닫힘 · 선택 없음은 handoff 하나, 같은 소유자 범위(계좌 · 시장 · 종목 · 포지션 세대, `strategyrouter.OwnerKey` 와 같은 정규화)에 둘이 실리면 시장 전체 `OverCapacity`. 엔진은 `dispatchHandoffs` 가 **서명 활성화가 있을 때만** 이 문을 쓰고(없으면 오늘의 `dispatchHandoff` 하나), 주문 경로 `runProductionStrategyMarketCycle` 은 `deliverEachStrategyHandoff` 로 조정자 순서대로 건네며 **첫 오류에서 멈춘다**(보수 방향). 공유 dispatch 호출 자리는 여전히 그 함수 하나다.
+
+  **오늘-동등성.** 생산에 서명 매니페스트 0건이라 모든 시장이 활성화 없는 갈래 — 토글 OFF = upstream 동작 불변. 활성화된 두 소유자 범위 시장도 경계는 지나지만 1차 레그 개수 관문(B2 `len(proposal.entries) != 1`, 문구 `paired production authority is incomplete for market`)이 거절해 주문 0 이다 — `TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses` 가 이를 못 박고, 같은 조립에서 범위 하나면 Gateway 스파이까지 닿는 대조로 거절을 개수 조건에 귀속시킨다.
+
+  **RED · 반증.** `analysis/measurements/lot-5.6.2-5.2.2/red-5.2.2.1.log`(넷 FAIL — 범위당 handoff 부재, 대조 하나 GREEN). 변이 `analysis/harness/a112_lot_mutate.py --set 5.2.2.1` — review 절.
+
+  **이 태스크가 주장하지 않는 것.** 두 소유자 범위 시장의 거래(5.2.2.2). 레인별 독립 감독(5.6.2.2). 시장 준비 상태의 레인 유도 — `buildProductionStrategyMarketWorker` · `ResultAuthority` · projection 은 여전히 시장 단위 `dispatchHandoff().Single()` 을 읽는다(5.2.2.2).
+- [ ] 5.2.2.2 Move the downstream authorities to owner-scope units so a two-owner-scope market trades. **(Owns the title's readiness clause and 「두 소유자 범위 시장이 거래한다」 — split 2026-09-30.)**
+
+  **착수 조건 — L6 6.2 봉인 완료.** 결정 (1)(HANDOFF 「결정 (1)(5)(6) 기록」): 1차 레그 권한의 다섯 줄(`strategy_account_first_leg_authority.go` :217 `len(proposal.entries) != 1` · :221–:225 identity 대조)은 봉인 전 **유일한 방어**이고, 6.2 가 그 자리를 봉인으로 대체한 뒤에만 바꾼다. 6.2 봉인 전에 이 태스크를 시작하지 않는다.
+
+  **옮길 것.** 결과 권한(`ResultAuthority` — `strategy_proposal_authority.go` 의 `dispatchHandoff().Single()`), 위험 권한, 계좌 권한(`collectMarket` B1 `len(proposal.entries) != 1`), 1차 레그 권한(B2 · identity 대조), 그리고 worker 승격(`buildProductionStrategyMarketWorker`)과 projection 의 시장 단위 `Single()` 읽기. 5.2.2.1 의 오늘-동등성 핀(`TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses`)이 「무엇이 바뀌는가」의 기준선이다 — 이 태스크가 그 핀을 **의도적으로** 뒤집는다. `deliverEachStrategyHandoff` 의 「첫 오류에서 멈춤」을 소유자 범위별 고장 격리로 바꿀지도 여기서 정한다.
+
+  **Done.** 서명 활성화된 두 소유자 범위 시장이 범위마다 주문을 낸다(소유자 범위마다 최대 하나), 시장 준비 상태가 레인 · 범위의 준비 상태에서 나오고, 활성화 없는 시장은 여전히 시장 단위다.
 - [x] 5.3.1 Implement the lane-local health/failure counters, bounded retry/backoff and the entry-only latch. **(Landed 2026-09-02.)**
 
   **Split note, 2026-09-02.** The original 5.3 read "Implement lane-local single-flight cadence, monotonic deadline, health/failure counters, bounded retry/backoff and durable entry-only latch/recovery conditions." It is now three tasks: this one owns "health/failure counters, bounded retry/backoff and [the] entry-only latch", 5.3.2 owns "single-flight cadence, monotonic deadline", and 5.3.3 owns the word **durable** together with "recovery conditions". Every clause of the original is owned by exactly one of the three; 5.3.2 landed 2026-09-02 and 5.3.3 is open. The seam is placed where it is because this lot's latch is in process memory: it survives nothing.
@@ -299,7 +317,7 @@
   **RED · 반증.** `analysis/measurements/lot-5.6.2-5.2.2/red-5.6.2.1.log`: 게이트 잠김 · 엔진 불정지 · 두 시장 계속(한 시험), 게이트 없는 조립의 삼킴 금지, 생산 생성자의 게이트 요구 · 역할(엔진 자신의 게이트) — 넷 FAIL, 대조(보통 오류는 게이트를 잠그지 않음)는 GREEN. 변이 E01~E11 11/11 CAUGHT(`analysis/harness/a112_lot_mutate.py --set 5.6.2.1`, HEAD archive + 이 로트 파일 사본, 무변이 대조군 GREEN). 편집 전 번들 `analysis/measurements/lot-5.6.2-5.2.2/pre-edit/`, 편집 뒤 재측정 `coverage-post-5.6.2.1-engine.json`.
 
   **이 태스크가 주장하지 않는 것.** 여덟 레인 재증명(fault 스트림 용량 = 레인 수 유도 · 레인 고장 여덟 동시에도 fill/reconcile/exit 생존) — 5.6.2.2. effective worker 활성화 시 중앙 고장의 처분(B14) — 이월(review).
-- [ ] 5.6.2.2 Re-prove the same three clauses on the eight-lane runtime once 5.1.2/5.2 have swapped it in. **(Owns every clause of the original 5.6.2 — split 2026-09-30; runs after 5.2.2.)**
+- [ ] 5.6.2.2 Re-prove the same three clauses on the eight-lane runtime once 5.1.2/5.2 have swapped it in. **(Owns every clause of the original 5.6.2 — split 2026-09-30; runs after 5.2.2.1. Also owns 5.2.2's 「each lane independently supervised」 — split 2026-09-30.)**
 
   **Why it is open.** Every property 5.6.1 measured is a property of *two market workers driven by one consumer goroutine each*. The swap changes the number, the drivers and the fault sources. Concretely, three things measured here are known to need re-deriving: the fault-stream capacity equals the worker count (2 today, 8 after); the refresh-only swallow at `813:4` is the production configuration today and will not be after; and "each market latches at most once" is what makes the handoff `default` arm unreachable.
 

@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_entry_supervisor.go",
-  "source_sha256": "1f4f20967491555bb2dcfeeffc82962f3e778ec5efa3551540cd95aa536f0be7",
+  "source_sha256": "da4fa6d1b57217a08a05d0ae57a4f4be1e3c173c35947e06527b02014ae75b23",
   "package": "engine",
   "function": "runProductionStrategyMarketCycle",
   "receiver": "Context",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 567,
+    "line": 563,
     "column": 2
   },
   "branches": [
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 555,
+        "line": 551,
         "column": 3
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 558,
+        "line": 554,
         "column": 3
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 562,
+        "line": 558,
         "column": 3
       }
     }
@@ -103,14 +103,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 552,
+        "line": 548,
         "column": 2
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 556,
+        "line": 552,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 555,
         "column": 4
       }
     },
@@ -124,14 +131,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 563,
-        "column": 4
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 565,
+        "line": 561,
         "column": 3
       }
     }
@@ -212,31 +212,31 @@
     {
       "kind": "call",
       "at": {
-        "line": 552,
+        "line": 548,
         "column": 9
       },
-      "text": "deliverEachStrategyHandoff"
+      "text": "Deliver"
     },
     {
       "kind": "call",
       "at": {
-        "line": 552,
-        "column": 36
+        "line": 548,
+        "column": 9
       },
-      "text": "dispatchHandoffs"
+      "text": "dispatchHandoff"
     },
     {
       "kind": "call",
       "at": {
-        "line": 552,
-        "column": 36
+        "line": 548,
+        "column": 9
       },
       "text": "fresh.proposals.forMarket"
     },
     {
       "kind": "call",
       "at": {
-        "line": 553,
+        "line": 549,
         "column": 14
       },
       "text": "delivered.Result"
@@ -244,7 +244,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 554,
+        "line": 550,
         "column": 15
       },
       "text": "c.Journal.CurrentPositionCampaignCAS"
@@ -252,7 +252,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 554,
+        "line": 550,
         "column": 77
       },
       "text": "string"
@@ -260,7 +260,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 561,
+        "line": 557,
         "column": 12
       },
       "text": "fresh.dispatch.dispatch"
@@ -268,7 +268,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 562,
+        "line": 558,
         "column": 6
       },
       "text": "errors.Is"
@@ -299,21 +299,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 553,
+        "line": 549,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 554,
+        "line": 550,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 561,
+        "line": 557,
         "column": 3
       }
     }

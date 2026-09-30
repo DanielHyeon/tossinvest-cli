@@ -1,7 +1,7 @@
 # Function Logic Map: `Context.NewRefreshingPairedStrategyEntrySupervisor`
 
 - Source: `internal/app/engine/strategy_entry_supervisor.go`
-- AST evidence: `ast.json` — **편집 뒤**, :390–418, 분기 4, source_sha256 `da4fa6d1b572…`.
+- AST evidence: `ast.json` — **편집 뒤**, :390–418, 분기 4, source_sha256 `1f4f20967491…`.
 - Risk scan: `risk-pattern-report.md`
 - 편집: (5.6.2.1) 새 B2 `if c.Entry == nil` — 진입 게이트 없는 Context 에서는 생산 감독자를 만들지 않는다(그 조립에서는 중앙 무결성 고장이 진입이 아니라 프로세스를 닫게 되므로). 감독자 옵션에 `EntryGate: c.Entry`. 편집 전 B2 · B3 → B3 · B4.
 
@@ -41,3 +41,5 @@
 
 - Safe edit boundary: 생산 기동 순서에서 이 생성자 앞의 `Recovery` 가 이미 같은 게이트를 요구하므로(runtime_wiring.go) 생산 기동 동작 변화 0.
 - High-risk impact: yes(진입 게이트 경로) — 편집은 진입을 닫는 방향만 더함.
+
+> **5.2.2.1(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일 `runProductionStrategyMarketCycle` 편집으로 줄 이동 · 파일 해시만 바뀜, `analysis/harness/shift_same_file_bundles.py`). 분기 좌표는 `ast.json` 이 정본.

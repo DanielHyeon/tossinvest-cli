@@ -49,6 +49,9 @@ var exportedSurface = map[string]string{
 	"Delivered": "type struct{result strategyflow.Result}",
 
 	"Admit": "func(ready bool, selected []strategyflow.Result) Handoff",
+	// 소유자 범위 문(태스크 5.2.2.1). 돌려주는 handoff 는 전부 Admit 이 만든 것이라 값이 나가는 문(Single · Deliver)은
+	// 늘지 않는다 — 늘어난 것은 handoff 의 개수뿐이다.
+	"AdmitEachOwnerScope": "func(ready bool, selected []strategyflow.Result) []Handoff",
 
 	"Handoff.Refusal": "func() Refusal",
 	"Handoff.Pending": "func() int",

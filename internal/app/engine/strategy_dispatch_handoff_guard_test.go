@@ -555,8 +555,12 @@ func TestTheWorkerBuilderOnlyObservesThroughTheGateway(t *testing.T) {
 // dispatchEnvelopeType 은 공유 dispatch 가 받는 값의 타입 표기다.
 const dispatchEnvelopeType = "strategyhandoff.Delivered"
 
-// admitCallSiteFunc 는 경계에 값을 실어 넣는 유일한 생산 함수다.
-const admitCallSiteFunc = "dispatchHandoff"
+// admitCallSites 는 경계에 값을 실어 넣는 생산 자리 전부다(「감싼 최상위 선언:문 이름」).
+//
+// 태스크 5.2.2.1 이 문을 하나 늘렸다: 시장 단위 문 `Admit`(오늘 생산 — 활성화 없는 시장)과 소유자 범위 문
+// `AdmitEachOwnerScope`(서명 활성화된 시장). 두 문은 서로 다른 함수 하나씩에서만 불린다 — 자리마다 문이 정해져 있어야
+// 「활성화가 없으면 시장 단위」라는 조건이 한 곳(dispatchHandoffs 의 첫 갈래)에만 산다.
+var admitCallSites = []string{"dispatchHandoff:Admit", "dispatchHandoffs:AdmitEachOwnerScope"}
 
 // TestOnlyTheSeamsEnvelopeCanReachTheSharedDispatch 는 공유 dispatch 가
 // 봉투만 받는다는 것을 소스에서 확인한다.
@@ -641,33 +645,63 @@ func TestOnlyTheSeamsEnvelopeCanReachTheSharedDispatch(t *testing.T) {
 // 잡는 것은 strategy_first_leg_identity_backstop_test.go 의
 // TestFirstLegAuthorityRefusesAProposalItDidNotAuthorize 하나뿐이다.
 func TestExactlyOneProductionSiteAdmitsIntoTheSeam(t *testing.T) {
-	sites := make([]string, 0, 1)
+	doors := strategyHandoffAdmitDoors(t)
+	sites := make([]string, 0, len(admitCallSites))
 	for _, path := range engineProductionFiles(t) {
-		for _, name := range admitSites(parseEngineFile(t, path)) {
-			sites = append(sites, filepath.Base(path)+":"+name)
-		}
+		sites = append(sites, admitSites(parseEngineFile(t, path), doors)...)
 	}
 	sort.Strings(sites)
-	if len(sites) != 1 || !strings.HasSuffix(sites[0], ":"+admitCallSiteFunc) {
-		t.Fatalf("경계에 값을 싣는 생산 자리=%v, want %s 하나뿐", sites, admitCallSiteFunc)
+	want := append([]string(nil), admitCallSites...)
+	sort.Strings(want)
+	if strings.Join(sites, ", ") != strings.Join(want, ", ") {
+		t.Fatalf("경계에 값을 싣는 생산 자리=%v, want %v — 문마다 자리 하나뿐", sites, want)
 	}
 }
 
-// admitSites 는 한 파일에서 `Admit` 이 나오는 자리를 전부 세고, 각 자리를 그것을
-// 감싼 최상위 선언의 이름으로 부른다. 함수 본문만이 아니라 **선언 전부**를 훑는다.
-func admitSites(file *ast.File) []string {
+// strategyHandoffAdmitDoors 는 경계 값을 **만드는** 문의 이름을 strategyhandoff 생산 소스에서 유도한다: 수신자 없는
+// 공개 함수 중 결과 타입에 Handoff 가 나오는 것. 손으로 적은 목록이면 문이 늘 때 이 세기가 새 문을 못 본다
+// (5.2.2.1 이전 판본은 `Admit` 한 철자만 셌으므로 `AdmitEachOwnerScope` 는 어디서 불려도 0 이었다).
+func strategyHandoffAdmitDoors(t *testing.T) map[string]bool {
+	t.Helper()
+	paths, err := filepath.Glob(filepath.Join("..", "..", "strategyhandoff", "*.go"))
+	if err != nil {
+		t.Fatalf("strategyhandoff source glob: %v", err)
+	}
+	doors := make(map[string]bool)
+	for _, path := range paths {
+		if strings.HasSuffix(path, "_test.go") {
+			continue
+		}
+		for _, decl := range parseEngineFile(t, path).Decls {
+			function, ok := decl.(*ast.FuncDecl)
+			if !ok || function.Recv != nil || !function.Name.IsExported() || function.Type.Results == nil {
+				continue
+			}
+			for _, result := range function.Type.Results.List {
+				if strings.Contains(types.ExprString(result.Type), "Handoff") {
+					doors[function.Name.Name] = true
+				}
+			}
+		}
+	}
+	// 유도한 목록이 비면 세기가 아무것도 안 본다 — 오늘 알려진 두 문이 들어 있는지 스스로 확인한다.
+	if !doors["Admit"] || !doors["AdmitEachOwnerScope"] {
+		t.Fatalf("strategyhandoff 에서 유도한 경계 문=%v, want Admit 과 AdmitEachOwnerScope 포함", doors)
+	}
+	return doors
+}
+
+// admitSites 는 한 파일에서 경계 문 이름(doors)이 나오는 자리를 전부 세고, 각 자리를 「감싼 최상위 선언:문 이름」으로
+// 부른다. 함수 본문만이 아니라 **선언 전부**를 훑는다.
+func admitSites(file *ast.File, doors map[string]bool) []string {
 	sites := make([]string, 0, 1)
 	for _, decl := range file.Decls {
-		mentions := 0
 		ast.Inspect(decl, func(node ast.Node) bool {
-			if ident, ok := node.(*ast.Ident); ok && ident.Name == "Admit" {
-				mentions++
+			if ident, ok := node.(*ast.Ident); ok && doors[ident.Name] {
+				sites = append(sites, declName(decl)+":"+ident.Name)
 			}
 			return true
 		})
-		for i := 0; i < mentions; i++ {
-			sites = append(sites, declName(decl))
-		}
 	}
 	return sites
 }
@@ -719,14 +753,17 @@ var hidden = map[string]any{"seam": sh.Admit}
 
 // 5) 아무 언급도 없는 함수는 세어지지 않아야 한다
 func unrelated() int { return 0 }
+
+// 6) 소유자 범위 문(5.2.2.1) — 앞 판본은 철자 하나만 셌으므로 이 자리를 못 봤다
+var eachScope = sh.AdmitEachOwnerScope
 `
 	file, err := parser.ParseFile(token.NewFileSet(), "fixture.go", fixture, 0)
 	if err != nil {
 		t.Fatalf("fixture 를 파싱하지 못했다: %v", err)
 	}
-	got := admitSites(file)
+	got := admitSites(file, map[string]bool{"Admit": true, "AdmitEachOwnerScope": true})
 	sort.Strings(got)
-	want := "dottedCall, hidden, mintedElsewhere, plainCall"
+	want := "dottedCall:Admit, eachScope:AdmitEachOwnerScope, hidden:Admit, mintedElsewhere:Admit, plainCall:Admit"
 	if strings.Join(got, ", ") != want {
 		t.Fatalf("admitSites=%v, want [%s]", got, want)
 	}

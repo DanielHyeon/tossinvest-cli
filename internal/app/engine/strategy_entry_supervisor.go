@@ -545,7 +545,11 @@ func (c *Context) runProductionStrategyMarketCycle(ctx context.Context, clk cloc
 	// 봉투의 값 필드는 strategyhandoff 밖에서 채울 수 없다. 앞 판본은 이 자리를
 	// `entries` 라는 토큰을 세어 지켰고, 적대 리뷰가 헬퍼 함수 하나로 세 번
 	// 우회했다. 토큰 금지는 함수 본문 단위라서 한 다리만 건너면 사라진다.
-	return fresh.proposals.forMarket(market).dispatchHandoff().Deliver(func(delivered strategyhandoff.Delivered) error {
+	//
+	// 태스크 5.2.2.1: 받는 handoff 는 `dispatchHandoffs` 가 정함 — 활성화 없는 시장(오늘 생산 전부)은 지금까지와 같은
+	// 시장 단위 handoff 하나, 서명 활성화된 시장은 소유자 범위마다 하나. 몸통(아래 closure)과 공유 dispatch 호출 자리는
+	// 이 함수 하나에 그대로 남음 — 바뀐 것은 몸통을 몇 번 부를 수 있는가뿐임.
+	return deliverEachStrategyHandoff(fresh.proposals.forMarket(market).dispatchHandoffs(), func(delivered strategyhandoff.Delivered) error {
 		lineage := delivered.Result().Lineage
 		cas, err := c.Journal.CurrentPositionCampaignCAS(ctx, lineage.AccountRef, string(lineage.Market), lineage.Symbol)
 		if err != nil {

@@ -1,6 +1,6 @@
 # Function Logic Map: `Context.runProductionStrategyMarketCycle`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (496-567)
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (496-563)
 - Function: `Context.runProductionStrategyMarketCycle` in package `engine`
 - Signature: `Context.runProductionStrategyMarketCycle(params=3, results=1)`
 - File SHA-256: `22855de0f27de05c60c2b5ff8cf2d5c7e3ed50e78a9fa6f67fb81ec38decdbfa`
@@ -88,7 +88,7 @@ The signature above is the exhaustive input/result record; this map does not inf
   그래서 이 함수에 대한 근거는 실행이 아니라 **소스에 무엇이 쓰여 있는지**뿐이고,
   아래 반증 표의 뮤테이션은 전부 AST 가드가 죽인 것이다.
 
-Exact AST return positions: 499:3, 523:3, 529:3, 532:3, 552:2, 556:4, 559:4, 563:4, 565:3.
+Exact AST return positions: 499:3, 523:3, 529:3, 532:3, 548:2, 552:4, 555:4, 559:4, 561:3.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
@@ -96,9 +96,9 @@ Exact AST return positions: 499:3, 523:3, 529:3, 532:3, 552:2, 556:4, 559:4, 563
 | B2 | if | 522:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
 | B3 | if | 525:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
 | B4 | if | 531:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B5 | if | 555:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B6 | if | 558:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B7 | if | 562:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B5 | if | 551:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B6 | if | 554:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B7 | if | 558:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
 
 이 공백은 이 태스크가 만든 것이 아니다. 이 함수는 `*Context` 와 살아 있는 journal·gateway 를
 요구하고, 그 배선은 태스크 5.7(fault injection·race)과 L6 의 몫이다. 여기서는 그 공백을
@@ -119,14 +119,14 @@ Exact AST return positions: 499:3, 523:3, 529:3, 532:3, 552:2, 556:4, 559:4, 563
 | `fresh.proposals.forMarket` | 527:3 |
 | `strategyLaneInputs` | 528:3 |
 | `fresh.proposals.forMarket` | 528:36 |
-| `deliverEachStrategyHandoff` | 552:9 |
-| `dispatchHandoffs` | 552:36 |
-| `fresh.proposals.forMarket` | 552:36 |
-| `delivered.Result` | 553:14 |
-| `c.Journal.CurrentPositionCampaignCAS` | 554:15 |
-| `string` | 554:77 |
-| `fresh.dispatch.dispatch` | 561:12 |
-| `errors.Is` | 562:6 |
+| `Deliver` | 548:9 |
+| `dispatchHandoff` | 548:9 |
+| `fresh.proposals.forMarket` | 548:9 |
+| `delivered.Result` | 549:14 |
+| `c.Journal.CurrentPositionCampaignCAS` | 550:15 |
+| `string` | 550:77 |
+| `fresh.dispatch.dispatch` | 557:12 |
+| `errors.Is` | 558:6 |
 
 ## State mutations and fallbacks
 
@@ -147,15 +147,3 @@ dispatch 호출 자리는 **정확히 하나**이고 그 자리에 넘어가는 
 값으로 지킨다.
 
 > **5.6.2.1(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일의 다른 함수 편집으로 +16줄 이동 · 파일 해시만 바뀜). 분기 좌표는 `ast.json` 이 정본.
-
-> **5.2.2.1(2026-09-30) 편집** — 마지막 문장 하나: `fresh.proposals.forMarket(market).dispatchHandoff().Deliver(body)` →
-> `deliverEachStrategyHandoff(fresh.proposals.forMarket(market).dispatchHandoffs(), body)`(`552:9`). 분기 수 · 종류 불변(7),
-> 몸통 closure 의 세 분기(B5~B7)는 +4 줄 이동뿐. 바뀐 것은 몸통을 **몇 번** 부를 수 있는가다:
-> - 서명 활성화 없는 시장(오늘 생산 전부 — 매니페스트 0건): `dispatchHandoffs` 가 `dispatchHandoff()` 하나를 돌려주고,
->   `deliverEachStrategyHandoff` 는 그 하나의 `Deliver(body)` 값을 감싸지 않고 돌려준다 → 편집 전과 같은 호출 · 같은 오류 값.
-> - 서명 활성화된 시장: 소유자 범위마다 handoff 하나, 조정자 순서, **첫 오류에서 멈춤**(보수 방향 — 예상 밖 오류 뒤 같은
->   주기에 주문을 더 내지 않는다). 공유 dispatch 호출 자리(`561:12`)는 여전히 이 함수 하나다.
-> - 이 함수는 여전히 어떤 시험도 통째로 돌지 않는다(진입 0 — 위 표). 그래서 「시장 단위로 되돌리기」 변이(F11)는 행동 시험이
->   아니라 `TestTheProductionCycleDeliversEveryOwnerScopeHandoff`(이 함수 본문 AST: `deliverEachStrategyHandoff(…dispatchHandoffs(), …)`
->   정확히 하나 · 시장 단위 `dispatchHandoff`/`Deliver` 언급 0)가 죽인다. 반복 · 멈춤 의미는 헬퍼를 직접 부르는 두 행동 시험이 잰다.
-> - 편집 전 번들: `analysis/measurements/lot-5.6.2-5.2.2/pre-edit-5.2.2.1/`.

@@ -24,7 +24,9 @@ const modulePath = "github.com/JungHoonGhae/tossinvest-cli/"
 // 빠져 있었다.
 func TestTheHandoffSeamImportsNothingOutsideItsAllowedClosure(t *testing.T) {
 	allowed := map[string]bool{
-		"errors":                             true,
+		"errors": true,
+		// 소유자 범위 표기 정규화(태스크 5.2.2.1 — ownerScopeOf 의 공백 제거 · 대문자). 순수 문자열 함수뿐인 표준 패키지.
+		"strings":                            true,
 		modulePath + "internal/strategyflow": true,
 	}
 	fset := token.NewFileSet()

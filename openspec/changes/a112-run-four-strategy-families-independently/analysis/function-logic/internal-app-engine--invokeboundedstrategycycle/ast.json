@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/strategy_entry_supervisor.go",
-  "source_sha256": "da4fa6d1b57217a08a05d0ae57a4f4be1e3c173c35947e06527b02014ae75b23",
+  "source_sha256": "1f4f20967491555bb2dcfeeffc82962f3e778ec5efa3551540cd95aa536f0be7",
   "package": "engine",
   "function": "invokeBoundedStrategyCycle",
   "signature": "invokeBoundedStrategyCycle(params=4, results=4)",
   "start": {
-    "line": 1047,
+    "line": 1051,
     "column": 1
   },
   "end": {
-    "line": 1067,
+    "line": 1071,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "select",
       "at": {
-        "line": 1056,
+        "line": 1060,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 1062,
+        "line": 1066,
         "column": 3
       }
     }
@@ -34,28 +34,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 1058,
+        "line": 1062,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1060,
+        "line": 1064,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1063,
+        "line": 1067,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1065,
+        "line": 1069,
         "column": 3
       }
     }
@@ -64,7 +64,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1048,
+        "line": 1052,
         "column": 12
       },
       "text": "make"
@@ -72,14 +72,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 1049,
+        "line": 1053,
         "column": 5
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 1050,
+        "line": 1054,
         "column": 13
       },
       "text": "invokeStrategyCycle"
@@ -87,7 +87,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1052,
+        "line": 1056,
         "column": 33
       },
       "text": "context.WithCancel"
@@ -95,7 +95,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1053,
+        "line": 1057,
         "column": 8
       },
       "text": "cancelWatchdog"
@@ -103,7 +103,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1054,
+        "line": 1058,
         "column": 14
       },
       "text": "make"
@@ -111,14 +111,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 1055,
+        "line": 1059,
         "column": 5
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 1055,
+        "line": 1059,
         "column": 26
       },
       "text": "clk.Sleep"
@@ -126,7 +126,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1057,
+        "line": 1061,
         "column": 9
       },
       "text": "ctx.Done"
@@ -134,7 +134,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1058,
+        "line": 1062,
         "column": 10
       },
       "text": "ctx.Err"
@@ -142,7 +142,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1062,
+        "line": 1066,
         "column": 6
       },
       "text": "ctx.Err"
@@ -150,7 +150,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1063,
+        "line": 1067,
         "column": 11
       },
       "text": "ctx.Err"
@@ -160,13 +160,6 @@
     {
       "kind": ":=",
       "at": {
-        "line": 1048,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
         "line": 1052,
         "column": 2
       }
@@ -174,14 +167,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 1054,
+        "line": 1056,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 1059,
+        "line": 1058,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1063,
         "column": 7
       }
     }
@@ -190,14 +190,14 @@
     {
       "kind": "go",
       "at": {
-        "line": 1049,
+        "line": 1053,
         "column": 2
       }
     },
     {
       "kind": "go",
       "at": {
-        "line": 1055,
+        "line": 1059,
         "column": 2
       }
     }
@@ -206,7 +206,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 1053,
+        "line": 1057,
         "column": 2
       },
       "text": "cancelWatchdog"

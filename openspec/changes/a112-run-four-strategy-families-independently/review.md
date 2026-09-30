@@ -5306,3 +5306,64 @@ Codex(실제 CLI, gpt-6-astra, read-only) 3판 **APPROVE** · A **APPROVE**(현�
 | 감독자 장부 고장 넷(관측 시각 없음 · latch revision 소진 · 재시작 지연 계약 밖)의 엔진 정지 | census 가 얼린 계약, 결정 (6) 의 문자 범위 밖 | 같은 활성화 로트 판정 |
 | 여덟 레인 재증명 — fault 스트림 용량 = **레인 수에서 유도한** 등식(하드코딩 금지 — Manager 조건), 레인 고장 여덟 동시에도 fill/reconcile/exit 생존 | 레인 고장이 감독자 스트림으로 가는 것은 5.2.2 의 「레인별 독립 감독」과 같은 편집 | 5.6.2.2(5.2.2 뒤) |
 | `make lint` 적색(a090 미추적 시험) | 이 로트 밖 | a090 로트 |
+
+## 2026-09-30 태스크 5.2.2.1 — 상한의 단위를 시장에서 소유자 범위로(서명 활성화된 시장에서만)
+
+**범위(Manager 판정 2026-09-30 — 분할 (가)).** 5.2.2.1: 소유자 범위별 Admit 경계 + 활성화된 시장에서만 상한 상향, 하류 권한(결과 · 위험 · 계좌 · 1차 레그) 무접촉. 5.2.2.2: 그 하류를 소유자 범위 단위로 — 착수 조건 = L6 6.2 봉인 완료(결정 (1)). 레인 독립 감독은 5.6.2.2 로. 원문 문장별 소유 표는 tasks.md 5.2.2.1 에 있다(문장마다 소유자 하나).
+
+**Pre-Edit 선언(편집 전 AST, HEAD `36ade9b2`).**
+- 편집하는 기존 함수는 하나: `Context.runProductionStrategyMarketCycle` :496–563, 분기 7. 마지막 문장 `…dispatchHandoff().Deliver(body)`(:548)가 주문 경로의 유일한 전달이다. High-risk(주문 경로). 편집 전 번들 `analysis/measurements/lot-5.6.2-5.2.2/pre-edit-5.2.2.1/`.
+- 새 함수 넷(`strategyhandoff.AdmitEachOwnerScope` · `ownerScopeOf`, 엔진 `dispatchHandoffs` · `deliverEachStrategyHandoff`)은 새 코드라 FLM not-applicable — 대신 변이 표(아래)가 분기마다 하나 이상의 검출기를 보인다.
+- 수정한 시험 함수(`TestExactlyOneProductionSiteAdmitsIntoTheSeam` · `admitSites` · `TestAdmitCensusSeesEverySpellingItClaims` · `TestTheHandoffSeamImportsNothingOutsideItsAllowedClosure`)는 base `aeeb209e` 이후에 생긴 함수라 `check_analysis` 가 번들을 요구하지 않는다 — 비례 원칙상 not-applicable, 변이 F12 · F15 가 census 를 잰다.
+- 하류 1차 레그의 다섯 줄(`strategy_account_first_leg_authority.go` :217 · :221–:225)은 **무변경**(결정 (1)).
+
+**설계 — Single 의 서명 대신 handoff 의 개수.** HANDOFF 와 옛 `Capacity` 주석은 「상수와 Single 서명을 함께 바꾼다」를 예고했다. 그렇게 하지 않았다:
+- `Single` 은 세 하류 자리(worker 승격 :453 · `ResultAuthority` · projection :122)가 읽는 문이다. 서명을 바꾸면 5.2.2.2 의 몫(하류 권한)을 지금 건드리게 된다.
+- `AdmitEachOwnerScope` 가 돌려주는 handoff 는 전부 `Admit` 이 만든 선택 하나짜리라 `Single ⇔ Refusal()==Admitted` 불변식과 `Capacity=deliverable=1` 이 그대로 성립한다 — `OverCarried` 가 생길 길이 없다.
+- 시장 단위 판정(닫힘 · 선택 없음)은 쪼개지 않고, 같은 소유자 범위에 둘이면 하나를 골라 버리지 않고 시장 전체를 `OverCapacity` 로 거절한다(조정자는 범위당 하나만 고르므로 둘이 왔다는 것 자체가 고장 신호).
+- 소유자 범위 축은 `strategyrouter.OwnerKey` 와 같은 넷(계좌 · 시장 · 종목 · 포지션 세대)이고 같은 정규화(공백 · 대문자)를 쓴다 — 보수 방향(정규화는 중복을 늘릴 뿐). 이 경계는 import 허용 목록이 `strategyflow` 하나라 `strategyrouter` 를 들이지 않고 축을 옮겨 적었다. 허용 목록에 표준 `strings` 를 더했다(순수 문자열 함수).
+- 주문 경로의 반복은 **첫 오류에서 멈춘다**. 한 범위의 예상 밖 오류(원장 읽기 · dispatch 거절) 뒤에 같은 주기에서 주문을 더 내지 않는 보수 방향이다. 범위별 고장 격리는 하류가 범위 단위가 되는 5.2.2.2 에서 정한다. handoff 가 하나인 오늘 경로에서 헬퍼는 `Deliver(body)` 의 값을 감싸지 않고 돌려준다 — 오류 분류(`errors.Is/As`, :171)가 받는 값이 편집 전과 같다.
+
+**토글 OFF = upstream(인용).** 활성화된 시장에서만 상한 상향, 생산 핀 0 = 동작 불변. `dispatchHandoffs`(`strategy_dispatch_handoff.go:38`)의 첫 갈래는 `!authority.familyActivation().Verified()` → `[]{authority.dispatchHandoff()}`(:40)이고, 오늘 생산에 서명된 4-가족 매니페스트는 0건(8.7.1+5.1.2.2 측정, HANDOFF)이라 모든 시장이 이 갈래다. 활성화 판정은 dispatch 주기의 보호 세대 하한(`strategy_dispatch_cycle.go:114`)과 같은 값(`familyActivation().Verified()`)을 읽는다.
+
+**조건 1 — 오늘-동등성 핀.** `TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses`(`a112_owner_scope_handoff_test.go`):
+- 서명 활성화된 KR 시장에 봉인된 유효 제안 둘(005930 · 000660, 같은 계좌 · 세대)을 싣는다. 두 범위 모두 경계를 지난다(handoff 2, 각각 `Single` ok).
+- 각 봉투를 실제 dispatch 주기에 넣으면 Gateway 스파이의 주문 호출은 **0** 이고, 첫 범위의 거절 문구는 `paired production authority is incomplete for market` — **거절한 관문은 `collectStrategyFirstLegAuthority` B2(:217 `len(proposal.entries) != 1 || …`)** 이다.
+- 그 문구는 B2 의 여섯 조건(제안 개수 · 위험 · 환율 · 계좌 · 일정 · 활성화)이 공유한다. 그래서 같은 조립 · 같은 활성화에 범위 **하나**만 실은 대조를 같은 시험에서 돌린다: 오류 nil · Gateway 스파이 호출 > 0. 두 실행의 차이는 제안 개수뿐이므로 거절이 개수 조건에서 왔다.
+- 변이 F14(B2 에서 `len(proposal.entries) != 1` 제거)가 이 핀을 빨갛게 한다 — 핀이 그 관문을 실제로 본다.
+
+**조건 2 — a087 교훈 대조.** 새 경계는 도달 불가 코드가 아니라 오늘의 단일 범위 흐름이 **매 주기 지나가는 자리의 재구성**이다. 활성 경로: `cmd/tossctl/engine.go:667`(HEAD) `ectx.NewRefreshingPairedStrategyEntrySupervisor(clk)` → `strategy_entry_supervisor.go:402–404` 두 시장 worker(`RefreshesAuthority: true`)의 사이클 = `runProductionStrategyMarketCycle` → 매 poll(`DefaultStrategyCycleLimit`) `:552` `deliverEachStrategyHandoff(…dispatchHandoffs(), body)` → `dispatchHandoffs` B1(활성화 없음) → `dispatchHandoff()` → `Deliver(body)`. 즉 오늘 생산의 모든 주기가 새 두 함수를 지나고, 바뀐 것은 활성화된 시장에서 그 자리가 handoff 를 여럿 낼 수 있다는 것뿐이다.
+
+**RED · GREEN · 반증.**
+- RED `analysis/measurements/lot-5.6.2-5.2.2/red-5.2.2.1.log`(격리 사본 = HEAD archive + 스캐폴드 둘 + 시험 둘) — 넷 FAIL: `TestEachOwnerScopeCrossesTheSeamOnItsOwn` · `TestAnotherPositionGenerationIsAnotherOwnerScope` · `TestOnlyAnActivatedMarketHandsEachOwnerScopeOff` · `TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses`(전부 「범위당 handoff 1」 부재). `TestMarketLevelRefusalsStayOneHandoff` 는 편집 전에도 GREEN(시장 단위 거절 보존 — 의도).
+- GREEN 뒤에 더한 시험(정직하게 적는다 — RED 를 거치지 않았다): 반복 헬퍼 둘(`TestEveryAdmittedOwnerScopeReachesTheDeliveryBody` · `TestAScopeFaultStopsTheCycleBeforeTheNextScope`), 주문 경로 구조 못 `TestTheProductionCycleDeliversEveryOwnerScopeHandoff`, 표기 정규화 두 경우, 활성화됐지만 닫힌 시장, 오늘-동등성 핀의 대조. 이들의 판별력은 아래 변이가 대신 보인다.
+- 변이 `analysis/harness/a112_lot_mutate.py --set 5.2.2.1` — **F01~F15 15/15 CAUGHT**, 무변이 대조군 GREEN(사본 = HEAD `b74875e7` archive + 이 로트 파일 여덟). 원장 `analysis/measurements/lot-5.6.2-5.2.2/mutation-5.2.2.1.tsv`.
+
+| 변이 | 검출기 |
+|---|---|
+| F01 활성화 관문 제거(모든 시장 범위별) | `TestOnlyAnActivatedMarketHandsEachOwnerScopeOff`(토글 OFF 갈래) |
+| F02 활성화돼도 시장 단위 | 같은 시험 + 오늘-동등성 핀 |
+| F03 중복 범위 미거절 · F06 종목 표기 · F07 계좌 표기 | `TestMarketLevelRefusalsStayOneHandoff` |
+| F04 세대 무시 | `TestAnotherPositionGenerationIsAnotherOwnerScope` |
+| F05 종목 무시 | 다섯 시험 |
+| F08 닫힌 시장을 범위로 쪼갬 · F13 활성 갈래가 준비 상태 무시 | `TestOnlyAnActivatedMarket…`(활성 · 닫힘) · `TestMarketLevelRefusals…` |
+| F09 첫 범위만 전달 · F10 오류 뒤 계속 | 반복 헬퍼 시험 둘 |
+| F11 주문 경로가 시장 단위로 되돌아감 | `TestTheProductionCycleDeliversEveryOwnerScopeHandoff`(구조 — 이 함수를 도는 행동 시험은 여전히 0) |
+| F12 활성 갈래가 시장 단위 문으로 주조 | 행동 둘 + `TestExactlyOneProductionSiteAdmitsIntoTheSeam` |
+| F14 1차 레그 개수 관문 제거 | 오늘-동등성 핀 |
+| F15 둘째 자리가 범위별 문을 부름 | `TestExactlyOneProductionSiteAdmitsIntoTheSeam` |
+
+**census 가 새 문을 보게 한 것.** 편집 전 Admit census 는 식별자 `Admit` 한 철자만 셌으므로 `AdmitEachOwnerScope` 는 엔진 어디서 불려도 0 이었다(다른 식별자). 이제 경계 문 목록을 strategyhandoff 생산 소스에서 **유도**한다(수신자 없는 공개 함수 중 결과에 `Handoff` 가 나오는 것) — 다음에 문이 늘어도 목록을 손으로 고칠 필요가 없고, 유도가 알려진 두 문을 못 찾으면 스스로 실패한다. 기대 자리는 `dispatchHandoff:Admit` · `dispatchHandoffs:AdmitEachOwnerScope` 둘, 문마다 하나. 동결 표면 표에 `AdmitEachOwnerScope` 한 줄을 선언했다(조용히 늘리지 않음).
+
+**검증.** 격리 사본(HEAD `05de14c3` 전체 archive + 이 로트 파일 여덟)에서 `go vet`(무태그 · 태그) rc 0, 무태그 `./internal/strategyhandoff` · `./internal/app/engine` · `./cmd/tossctl` · `./internal/strategyworker` ok, 태그 `./internal/strategyhandoff` · `./internal/app/engine` · `./internal/strategyworker` ok. `openspec validate --strict` 통과. 본 트리는 병행 로트의 미커밋 편집이 섞여 판정에 쓰지 않았다.
+- FLM: `runProductionStrategyMarketCycle` 편집 번들(분기 7 불변, 호출 표 · return · 좌표 AST 에서 재작성, 5.2.2.1 절). 같은 파일 본문 불변 번들 열하나는 `analysis/harness/shift_same_file_bundles.py` 로 재추출(구조 동일을 판정한 뒤 옛 AST 좌표만 옮김 — 앞 셋 +0 · 뒤 여덟 +4).
+- `check_analysis`: 기준선(129) 대비 새 발견 중 이 로트 몫은 **미추적 시험 인용 셋뿐**(커밋하면 풀림). 나머지는 창 머리 두 줄(커밋 수)과 병행 로트(a090 · a094 · a095)의 착지 · 미커밋 함수다.
+
+**이월.**
+
+| 항목 | 행선 |
+|---|---|
+| 두 소유자 범위 시장의 거래 — 하류 넷(결과 · 위험 · 계좌 B1 · 1차 레그 B2/identity)을 범위 단위로, 오늘-동등성 핀을 의도적으로 뒤집기, 「첫 오류에서 멈춤」 대 범위별 격리 결정 | 5.2.2.2(착수 조건: 6.2 봉인, 결정 (1)) |
+| 시장 준비 상태의 레인 유도(`buildProductionStrategyMarketWorker` :453 · projection :122 의 시장 단위 `Single`) | 5.2.2.2 |
+| 레인별 독립 감독(cadence · 큐 · 마감 · health · latch) | 5.6.2.2 |
+| `runProductionStrategyMarketCycle` 을 통째로 도는 행동 시험 0(권한 새로 고침 전체 필요) — 구조 못이 대신함 | 5.6.2.2 재증명 때 함께 |

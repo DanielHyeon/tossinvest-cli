@@ -30,8 +30,8 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (`1025:2`) | 종료 중이거나 nil 이거나 **잠겼거나** 사이클이 없거나 (dormant 이고 갱신자도 아님) | 없음 (RLock 만) | `(false, false)` (`895:3`) | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` |
-| B2 (`1029:2`) | 권한 갱신 worker | 없음 | `(true, false)` (`898:3`) | `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError` |
+| B1 (`1029:2`) | 종료 중이거나 nil 이거나 **잠겼거나** 사이클이 없거나 (dormant 이고 갱신자도 아님) | 없음 (RLock 만) | `(false, false)` (`895:3`) | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` |
+| B2 (`1033:2`) | 권한 갱신 worker | 없음 | `(true, false)` (`898:3`) | `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError` |
 | 본문 (`901:2`) | effective worker | 없음 | `(fresh, !fresh)` — 만료 여부가 두 번째 값 | `TestExpiredAuthorityLatchesBeforeEvaluation` |
 
 ## Calls and live bindings
@@ -40,12 +40,12 @@
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `s.mu.RLock` | 1023:2 | 읽기 잠금 — 이 함수는 아무것도 바꾸지 않는다 |
-| `s.mu.RUnlock` | 1024:8 | `defer` |
-| `Before` | 1032:11 | 권한 신선도 비교 |
-| `s.clk.Now` | 1032:11 | 주입 시계 |
+| `s.mu.RLock` | 1027:2 | 읽기 잠금 — 이 함수는 아무것도 바꾸지 않는다 |
+| `s.mu.RUnlock` | 1028:8 | `defer` |
+| `Before` | 1036:11 | 권한 신선도 비교 |
+| `s.clk.Now` | 1036:11 | 주입 시계 |
 
-Exact AST return positions: 1027:3, 1030:3, 1033:2.
+Exact AST return positions: 1031:3, 1034:3, 1037:2.
 
 ## State mutations and fallbacks
 
@@ -63,3 +63,5 @@ Exact AST return positions: 1027:3, 1030:3, 1033:2.
   들고 있느냐의 차이다 — 엔진의 트리거는 빈 `struct{}` 라 버려도 잃을 것이 없다.
 
 > **5.6.2.1(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일의 다른 함수 편집으로 +43줄 이동 · 파일 해시만 바뀜). 분기 좌표는 `ast.json` 이 정본.
+
+> **5.2.2.1(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일 `runProductionStrategyMarketCycle` 편집으로 줄 이동 · 파일 해시만 바뀜, `analysis/harness/shift_same_file_bundles.py`). 분기 좌표는 `ast.json` 이 정본.

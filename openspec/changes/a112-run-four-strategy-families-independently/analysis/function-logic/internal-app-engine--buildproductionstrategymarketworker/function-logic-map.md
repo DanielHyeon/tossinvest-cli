@@ -115,3 +115,5 @@ B8(462:2)은 옛 B6 그대로다: 증거 digest · desired revision · 권한 �
 `TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer` 가 죽인다(M5 KILLED).
 
 > **5.6.2.1(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일의 다른 함수 편집으로 +16줄 이동 · 파일 해시만 바뀜). 분기 좌표는 `ast.json` 이 정본.
+
+> **5.2.2.1(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일 `runProductionStrategyMarketCycle` 편집으로 줄 이동 · 파일 해시만 바뀜, `analysis/harness/shift_same_file_bundles.py`). 분기 좌표는 `ast.json` 이 정본.

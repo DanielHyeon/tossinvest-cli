@@ -1,0 +1,24 @@
+# a112 5.2.2.1 RED — 격리 사본(git archive HEAD 36ade9b2 + 스캐폴드 2 + 시험 2), 2026-09-30T21:08:58+09:00
+# 스캐폴드: AdmitEachOwnerScope = []Handoff{Admit(...)} · dispatchHandoffs = []{dispatchHandoff()} — 기대 실패는 '소유자 범위당 handoff 1' 부재뿐
+$ go test -tags tossos_testseams -count=1 -v -run "TestEachOwnerScope|TestMarketLevelRefusals|TestAnotherPositionGeneration" ./internal/strategyhandoff/
+=== RUN   TestEachOwnerScopeCrossesTheSeamOnItsOwn
+    owner_scope_test.go:24: handoffs=1, want one per owner scope
+--- FAIL: TestEachOwnerScopeCrossesTheSeamOnItsOwn (0.00s)
+=== RUN   TestMarketLevelRefusalsStayOneHandoff
+--- PASS: TestMarketLevelRefusalsStayOneHandoff (0.00s)
+=== RUN   TestAnotherPositionGenerationIsAnotherOwnerScope
+    owner_scope_test.go:70: two generations of one symbol were not two scopes: 1 handoffs
+--- FAIL: TestAnotherPositionGenerationIsAnotherOwnerScope (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	0.003s
+FAIL
+$ go test -tags tossos_testseams -count=1 -v -run "TestOnlyAnActivatedMarket|TestTwoOwnerScopesStill" ./internal/app/engine/
+=== RUN   TestOnlyAnActivatedMarketHandsEachOwnerScopeOff
+    a112_owner_scope_handoff_test.go:63: with an activation: 1 handoffs, want one per owner scope
+--- FAIL: TestOnlyAnActivatedMarketHandsEachOwnerScopeOff (0.31s)
+=== RUN   TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses
+    a112_owner_scope_handoff_test.go:87: arrangement: 1 handoffs, want both owner scopes across the seam
+--- FAIL: TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses (0.31s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.628s
+FAIL

@@ -1,7 +1,7 @@
 # Function Logic Map: `NewPairedStrategyEntryProductionAssembly`
 
 - Source: `internal/app/engine/strategy_entry_supervisor.go`
-- Current-base source SHA-256: `da4fa6d1b57217a08a05d0ae57a4f4be1e3c173c35947e06527b02014ae75b23`
+- Current-base source SHA-256: `1f4f20967491555bb2dcfeeffc82962f3e778ec5efa3551540cd95aa536f0be7`
 - Signature: `Context.NewPairedStrategyEntryProductionAssembly(params=2, results=2)`
 - Source range: `295:1`–`382:2`
 - AST evidence: `ast.json`, generated from frozen base `016da6245feb60e13971388be386c2c2041469a8`.
@@ -119,3 +119,5 @@ Exact AST return positions: 297:3, 324:3, 354:4, 356:3, 372:3, 379:3, 381:2.
 review.md 에 적는다). 이 대입이 빠지면 검증된 가족 활성화를 가진 시장의 주문이 전부 거절된다(fail-closed) — 넓힘이 아니다.
 
 > **5.6.2.1(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일의 다른 함수 편집으로 +12줄 이동 · 파일 해시만 바뀜). 분기 좌표는 `ast.json` 이 정본.
+
+> **5.2.2.1(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일 `runProductionStrategyMarketCycle` 편집으로 줄 이동 · 파일 해시만 바뀜, `analysis/harness/shift_same_file_bundles.py`). 분기 좌표는 `ast.json` 이 정본.

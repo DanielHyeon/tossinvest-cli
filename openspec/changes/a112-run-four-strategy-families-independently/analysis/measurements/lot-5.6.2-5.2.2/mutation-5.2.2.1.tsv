@@ -1,0 +1,17 @@
+TREE	HEAD b74875e78fa8a2eb80a608b76bd3656b49147719 (git archive) + own: internal/strategyhandoff/handoff.go,internal/strategyhandoff/owner_scope_test.go,internal/strategyhandoff/escape_test.go,internal/strategyhandoff/dependency_closure_test.go,internal/app/engine/strategy_dispatch_handoff.go,internal/app/engine/a112_owner_scope_handoff_test.go,internal/app/engine/strategy_entry_supervisor.go,internal/app/engine/strategy_dispatch_handoff_guard_test.go
+CONTROL	GREEN	
+F01 activation gate removed (every market per scope)	CAUGHT	1 failing: TestOnlyAnActivatedMarketHandsEachOwnerScopeOff
+F02 activated market stays market-wide	CAUGHT	2 failing: TestOnlyAnActivatedMarketHandsEachOwnerScopeOff, TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses
+F03 duplicate owner scope not refused	CAUGHT	1 failing: TestMarketLevelRefusalsStayOneHandoff
+F04 owner scope ignores position generation	CAUGHT	1 failing: TestAnotherPositionGenerationIsAnotherOwnerScope
+F05 owner scope ignores symbol	CAUGHT	5 failing: TestOnlyAnActivatedMarketHandsEachOwnerScopeOff, TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses, TestEveryAdmittedOwnerScopeReachesTheDeliveryBody, TestAScopeFaultStopsTheCycleBeforeTheNextScope, TestEachOwnerScopeCrossesTheSeamOnItsOwn
+F06 symbol spelling not normalised	CAUGHT	1 failing: TestMarketLevelRefusalsStayOneHandoff
+F07 account spelling not normalised	CAUGHT	1 failing: TestMarketLevelRefusalsStayOneHandoff
+F08 closed market split into scopes	CAUGHT	2 failing: TestOnlyAnActivatedMarketHandsEachOwnerScopeOff, TestMarketLevelRefusalsStayOneHandoff
+F09 delivery loop stops after the first scope	CAUGHT	1 failing: TestEveryAdmittedOwnerScopeReachesTheDeliveryBody
+F10 delivery loop continues past a fault	CAUGHT	1 failing: TestAScopeFaultStopsTheCycleBeforeTheNextScope
+F11 production cycle reverts to the market-wide handoff	CAUGHT	1 failing: TestTheProductionCycleDeliversEveryOwnerScopeHandoff
+F12 activated branch mints through the market-wide door	CAUGHT	3 failing: TestOnlyAnActivatedMarketHandsEachOwnerScopeOff, TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses, TestExactlyOneProductionSiteAdmitsIntoTheSeam
+F13 activated branch ignores readiness	CAUGHT	1 failing: TestOnlyAnActivatedMarketHandsEachOwnerScopeOff
+F14 first-leg count guard removed (today-equivalence pin must see it)	CAUGHT	1 failing: TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses
+F15 a second site mints per-scope handoffs	CAUGHT	1 failing: TestExactlyOneProductionSiteAdmitsIntoTheSeam
