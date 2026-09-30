@@ -1,7 +1,7 @@
 # Function Logic Map: `Notifier.logClaimHeld`
 
 - Source: `internal/obs/notifier.go`
-- AST evidence: `ast.json` — **편집 뒤**, :716–726, 분기 1 · 반환 1 · 호출 4, source_sha256 `e790b278b3e6…`, 추출 커밋 `fbc6df5f`. 편집 전 번들은 `analysis/pre-edit/unit3/`에 보존.
+- AST evidence: `ast.json` — **편집 뒤**, :732–742, 분기 1 · 반환 1 · 호출 4, source_sha256 `6878b8f1df55…`, 추출 커밋 `55963f29`(25라운드 수리 뒤 재추출). 편집 전 번들은 `analysis/pre-edit/unit3/`에 보존.
 - Risk scan: `risk-pattern-report.md`
 - 편집(착지 단위 ③ — `fbc6df5f`): Manager 판정 (나): `n.Log.Warn` → `n.Log.Event`(INFO) + 주석 정정(a098 의 산 발송자 · 단위 ③ 의 동시 동기 관측 → 정상 경로, 죽은 발송자 신호는 `logClaimStolen` WARN).
 

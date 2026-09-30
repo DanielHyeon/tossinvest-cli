@@ -1,7 +1,7 @@
 # Function Logic Map: `Notifier.claimAndDeliver`
 
 - Source: `internal/obs/notifier.go`
-- AST evidence: `ast.json` — **편집 뒤**, :282–355, 분기 7 · 반환 5 · 호출 18, source_sha256 `e790b278b3e6…`, 추출 커밋 `fbc6df5f`. 편집 전 번들은 `analysis/pre-edit/unit3/`에 보존.
+- AST evidence: `ast.json` — **편집 뒤**, :285–358, 분기 7 · 반환 5 · 호출 18, source_sha256 `6878b8f1df55…`, 추출 커밋 `55963f29`(25라운드 수리 뒤 재추출). 편집 전 번들은 `analysis/pre-edit/unit3/`에 보존.
 - Risk scan: `risk-pattern-report.md`
 - 편집(착지 단위 ③ — `fbc6df5f`): `defer n.mu.Unlock()` 을 없애고 각 반환 앞 · `deliver` 앞에서 명시적으로 푼다 — 잠금은 claim 과 그 판정(B1~B6)만 덮는다. `deliver` 의 판정을 넷째 반환값으로 올린다.
 
@@ -10,6 +10,11 @@
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
 | `n.mu` | claim ~ 판정만 | 알림기 | 구조 핀 `a096PinLockedBetween(claimAndDeliver, ClaimAlertForDelivery)`(변이 L15 · L18) |
+
+## 25라운드 수리 (`55963f29`)
+
+- 반납 결과 분기에 새 갈래: `SettleAlreadySettled` · `SettleLeaseLost` 만 선점(lost), 그 밖(`SettleNotFound` · 모르는 결과)은 근거 확정 뒤 세대를 읽고 `BlockUnlessClearedSince`(승격 없음 — a124 N6). codex r25 P0.
+- 아래 분기 표의 줄 번호는 단위 ③ 착지(`fbc6df5f`) 기준이다 — 현재 좌표는 `branch-test-map.md`(AST 기준).
 
 ## Branches and early returns
 

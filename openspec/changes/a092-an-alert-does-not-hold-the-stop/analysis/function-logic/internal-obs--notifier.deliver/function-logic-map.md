@@ -1,7 +1,7 @@
 # Function Logic Map: `Notifier.deliver`
 
 - Source: `internal/obs/notifier.go`
-- AST evidence: `ast.json` — **편집 뒤**, :471–626, 분기 25 · 반환 6 · 호출 34, source_sha256 `e790b278b3e6…`, 추출 커밋 `fbc6df5f`. 편집 전 번들은 `analysis/pre-edit/unit3/`에 보존.
+- AST evidence: `ast.json` — **편집 뒤**, :474–642, 분기 27 · 반환 6 · 호출 34, source_sha256 `6878b8f1df55…`, 추출 커밋 `55963f29`(25라운드 수리 뒤 재추출). 편집 전 번들은 `analysis/pre-edit/unit3/`에 보존.
 - Risk scan: `risk-pattern-report.md`
 - 편집(착지 단위 ③ — `fbc6df5f`): `deliver` 는 이제 `n.mu` 를 쥐지 않은 채 돈다. 세 래치 자리가 원칙 E 로 바뀌었다 — 편집 전 B12(`:484` `Gate.Block`)와 B27(`:571` `Gate.Block`)은 사라지고 판정(`latchVerdict` — 세대 · 사유)을 반환하며, 편집 전 B18(`:520`)은 B17 에서 `BlockUnlessClearedSince` 로 조건부 차단한다. 세대는 새 함수 `readVerdict` 가 근거 확정 직후 읽는다(시험 훅 `evidence:` · `epoch:` 단계).
 
@@ -12,6 +12,11 @@
 | `id` · `token` | claim 한 행과 임차 | `claimAndDeliver`(잠금 안 claim) | 토큰이 안 맞으면 정산 거절 |
 | `n.mu` | **쥐지 않음** | — | 배제는 임차(A-4 귀속: 임차 무시 변이 L19 가 배제 시험 8개를 깸) |
 | 해제 세대 | 근거 확정 직후 `readVerdict` 가 읽음 | `EntryGate.ClearEpoch` | 읽기 뒤 해제 → 차단 생략, 사이 해제 → 다시 차단 |
+
+## 25라운드 수리 (`55963f29`)
+
+- 반납 결과 분기에 새 갈래: `SettleAlreadySettled` · `SettleLeaseLost` 만 선점(lost), 그 밖(`SettleNotFound` · 모르는 결과)은 근거 확정 뒤 세대를 읽고 `BlockUnlessClearedSince`(승격 없음 — a124 N6). codex r25 P0.
+- 아래 분기 표의 줄 번호는 단위 ③ 착지(`fbc6df5f`) 기준이다 — 현재 좌표는 `branch-test-map.md`(AST 기준).
 
 ## Branches and early returns
 

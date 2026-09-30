@@ -1,7 +1,7 @@
 # Function Logic Map: `Notifier.notifyCritical`
 
 - Source: `internal/obs/notifier.go`
-- AST evidence: `ast.json` — **편집 뒤**, :191–246, 분기 4 · 반환 3 · 호출 11, source_sha256 `e790b278b3e6…`, 추출 커밋 `fbc6df5f`. 편집 전 번들은 `analysis/pre-edit/unit3/`에 보존.
+- AST evidence: `ast.json` — **편집 뒤**, :194–249, 분기 4 · 반환 3 · 호출 11, source_sha256 `6878b8f1df55…`, 추출 커밋 `55963f29`(25라운드 수리 뒤 재추출). 편집 전 번들은 `analysis/pre-edit/unit3/`에 보존.
 - Risk scan: `risk-pattern-report.md`
 - 편집(착지 단위 ③ — `fbc6df5f`): B4 가 `escalate` 대신 새 함수 `judge(ctx, e, verdict)` 를 부른다.
 

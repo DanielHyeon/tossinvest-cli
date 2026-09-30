@@ -1,0 +1,8 @@
+start 2026-09-29 13:08:34 KST
+prompt sha256 126d916311e7b49e
+rc 0
+end 2026-09-29 13:12:13 KST
+codex-cli 0.154.0, codex exec -s read-only --ephemeral --skip-git-repo-check -C <tree>
+session 01a0eb59-a060-7793-8cec-e2bc4d12c5e4
+tree = git archive 22db26e7
+인증 오류 없음(401 없음)

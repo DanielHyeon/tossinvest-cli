@@ -1,16 +1,16 @@
 {
   "file": "internal/obs/notifier.go",
-  "source_sha256": "e790b278b3e642740afca5318eda86fb365924a2ff176e599329973df88c4020",
+  "source_sha256": "6878b8f1df556d4a25095ab3944c98c92ee0865eb764c7233da0386538133f5a",
   "package": "obs",
   "function": "escalate",
   "receiver": "Notifier",
   "signature": "Notifier.escalate(params=2, results=2)",
   "start": {
-    "line": 419,
+    "line": 422,
     "column": 1
   },
   "end": {
-    "line": 441,
+    "line": 444,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 420,
+        "line": 423,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "switch",
       "at": {
-        "line": 425,
+        "line": 428,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "case",
       "at": {
-        "line": 426,
+        "line": 429,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "case",
       "at": {
-        "line": 432,
+        "line": 435,
         "column": 2
       }
     }
@@ -51,14 +51,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 421,
+        "line": 424,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 440,
+        "line": 443,
         "column": 2
       }
     }
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 420,
+        "line": 423,
         "column": 25
       },
       "text": "strings.TrimSpace"
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 423,
+        "line": 426,
         "column": 21
       },
       "text": "n.Journal.EscalateOperatingMode"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 427,
+        "line": 430,
         "column": 3
       },
       "text": "n.Log.Error"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 429,
+        "line": 432,
         "column": 16
       },
       "text": "string"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 434,
+        "line": 437,
         "column": 3
       },
       "text": "n.Log.Warn"
@@ -109,7 +109,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 423,
+        "line": 426,
         "column": 2
       }
     }

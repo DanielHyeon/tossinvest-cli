@@ -1,7 +1,7 @@
 # Function Logic Map: `Notifier.escalate`
 
 - Source: `internal/obs/notifier.go`
-- AST evidence: `ast.json` — **편집 뒤**, :419–441, 분기 4 · 반환 2 · 호출 5, source_sha256 `e790b278b3e6…`, 추출 커밋 `fbc6df5f`. 편집 전 번들은 `analysis/pre-edit/unit3/`에 보존.
+- AST evidence: `ast.json` — **편집 뒤**, :422–444, 분기 4 · 반환 2 · 호출 5, source_sha256 `6878b8f1df55…`, 추출 커밋 `55963f29`(25라운드 수리 뒤 재추출). 편집 전 번들은 `analysis/pre-edit/unit3/`에 보존.
 - Risk scan: `risk-pattern-report.md`
 - 편집(착지 단위 ③ — `fbc6df5f`): 반환값 `(included bool, err error)` 추가 — B1 조기 반환은 `false, nil`, 끝은 `true, err`. 분기 · 로그 불변.
 

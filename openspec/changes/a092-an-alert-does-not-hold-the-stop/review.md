@@ -4850,3 +4850,22 @@ High-risk(critical 발송 · 진입 차단 · 모드 승격). 편집 전 번들 
 **실행**: `go test` obs · execgw · app/engine · cmd/tossctl 전부 ok, 태그 obs ok, `make lint` rc 0, `-race` obs 최종 `-count=3 -timeout 60m`: 348 PASS · DATA RACE 0(첫 시도는 패키지 전체 10분 기본 한도에 걸려 중단 — 멈춘 시험 없음, 한도만 늘려 재실행).
 
 **남은 것**: 4 보이스 · gstack 리뷰(Manager 승인 타이밍 — 이 단위 뒤). 브리프에 「k3 는 배선 + k2 합성으로만 선다」를 공격 대상으로 명시한다. `Flush` 는 여전히 전송 위에서 `n.mu` 를 쥐지만 비시험 호출자 0 — K19 핀(단위 ⑤)이 그 전제를 고정해야 한다.
+
+### 24.8 25라운드 리뷰 1차 (25.8 — 진행 중, 2026-09-29~30)
+
+원문: `analysis/review-25/`(브리프 `prompt-common.md` + 보이스별 초점 · `output-format.md`). 트리 = git archive `22db26e7`.
+
+| 보이스 | 판정 | 요지 |
+|---|---|---|
+| codex(`codex-r25-output.md`, session `01a0eb59…`, 401 없음) | **BLOCK** — P0 1 · P2 1 | P0: 소진 뒤 반납이 `SettleNotFound` 로 돌아와도 선점으로 처리해 차단 없음(델타 「행 없음·모르는 결과는 선점이 아니다」). P2: 잠금 주석 불일치 |
+| 보이스 A(`voiceA-r25-output.md`) | APPROVE | P1(기존 · C8): `EventExitProposalCapped` 가 축소 청산 **제출 앞**에서 동기 발행. P2: 실행자 탈취가 `claim_held` WARN 으로 찍힘(「죽은 발송자 신호 = claim_stolen」 서술 부정확) · Flush 전송 위 잠금(K19) · 완화 통지 로그 줄 · parkAlert 경계 |
+| 보이스 B(`voiceB-r25-output.md`) | APPROVE | P2 8: 25.7 의 21.4 과대 주장 · K18 미추적 · k3 핀 공백(행동 시험 또는 AST 핀) · 주입 지점 조건부 기본값(존재 검사) · capped 동기 발행(주문 앞) · 실행자 본문에 필드 블록 없음 · `ErrModeAnnouncementFailed` 로그 문구 · 25.6 부수 효과 |
+| 보이스 C(시험 적합성 · 변이) | **미완** | 주간 한도(429)로 보고 없이 종료. 25.8 재실행 필요 |
+
+**codex P0 처분 — 수용, 수리 `55963f29`**: 반납 결과가 `AlreadySettled` · `LeaseLost` 일 때만 선점, 그 밖은 근거 확정 뒤 세대를 읽고 `BlockUnlessClearedSince`(승격 없음 — a124 실행자 N6 와 같은 규칙). 시험에 `release-missing` 자리를 세 자리 표에 더함(반납 직전 훅에서 행 삭제). 변이 L20(수리 되돌림) CAUGHT(`analysis/mutation-r25/ledger-L20.tsv`). 이 결함은 편집 전 코드에도 있던 분기다(codex 도 「새 회귀라 단정하지 않는다」) — 단위 ③ 이 그 갈래를 원칙 E 표 밖에 남겨 둔 것. P2 주석도 같은 커밋에서 정정. 편집 뒤 FLM 다섯 재추출 · 커버리지 `analysis/harness/coverage-post-r25fix.json`.
+
+**나머지 처분(저자 제안 — Manager 판정 대기)**:
+- 단위 ⑤ 로 명시 이관: capped 동기 발행(A#1 = B#5, **가장 먼저**) · K19 Flush 핀(A#3) · K18 도달 경로 전수 핀(B#2) · k3 AST 핀(B#3) · 주입 지점 역할 핀(B#4).
+- 문서 정정: 25.7 의 「21.4 · 21.5 닫음」→ 「21.4 GREEN 코드 부분 · 옛 task 표지 미완(25.10)」(B#1) · `logClaimHeld` 주석의 「죽은 발송자 신호」에 실행자의 `claim_held`+`stole_from` 을 더함(A#2).
+- 결정 요청: 실행자 본문에 필드 블록을 붙일지(B#6 — 불변식 8 쪽으로는 지금이 유리) · 완화 통지 로그 줄의 계좌 ref(A#4).
+- 조치: `ErrModeAnnouncementFailed` 를 호출자 둘이 따로 다룸(B#7) — 단위 ④(모드 전이 경로)에서.

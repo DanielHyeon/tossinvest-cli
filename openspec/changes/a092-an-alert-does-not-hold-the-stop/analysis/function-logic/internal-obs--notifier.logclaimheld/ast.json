@@ -1,16 +1,16 @@
 {
   "file": "internal/obs/notifier.go",
-  "source_sha256": "e790b278b3e642740afca5318eda86fb365924a2ff176e599329973df88c4020",
+  "source_sha256": "6878b8f1df556d4a25095ab3944c98c92ee0865eb764c7233da0386538133f5a",
   "package": "obs",
   "function": "logClaimHeld",
   "receiver": "Notifier",
   "signature": "Notifier.logClaimHeld(params=2, results=0)",
   "start": {
-    "line": 716,
+    "line": 732,
     "column": 1
   },
   "end": {
-    "line": 726,
+    "line": 742,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 717,
+        "line": 733,
         "column": 2
       }
     }
@@ -27,7 +27,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 718,
+        "line": 734,
         "column": 3
       }
     }
@@ -36,7 +36,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 720,
+        "line": 736,
         "column": 2
       },
       "text": "n.Log.Event"
@@ -44,7 +44,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 724,
+        "line": 740,
         "column": 19
       },
       "text": "claimAgeMS"
@@ -52,7 +52,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 724,
+        "line": 740,
         "column": 47
       },
       "text": "n.now"
@@ -60,7 +60,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 725,
+        "line": 741,
         "column": 23
       },
       "text": "journal.RFC3339"

@@ -194,6 +194,10 @@ LOCK_MUTANTS = [
     ("L19 lease ignored (A-4 attribution)", "internal/journal/alert_claim.go",
      "WHERE id = ? AND state = ? AND `+alertClaimable,",
      "WHERE id = ? AND state = ? AND (1=1 OR `+alertClaimable+`)`,"),
+    # 25라운드 codex P0 수리의 반증: 반납 행 없음을 다시 선점으로 되돌림.
+    ("L20 release NotFound read as preemption (r25 codex P0)", NOT,
+     "\tcase released.Outcome != journal.SettleAlreadySettled && released.Outcome != journal.SettleLeaseLost:",
+     "\tcase false && released.Outcome != journal.SettleAlreadySettled && released.Outcome != journal.SettleLeaseLost:"),
 ]
 LOCK_TESTS = [
     ["go", "test", "-count=1", "./internal/obs"],
