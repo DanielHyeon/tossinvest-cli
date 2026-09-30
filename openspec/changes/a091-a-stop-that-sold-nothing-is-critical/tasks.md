@@ -1,5 +1,7 @@
 # a091 tasks
 
+> **4판(2026-10-01)**: 2라운드 R2-1~R2-12 · Manager 판정 Q1~Q3 반영으로 2~6 절을 다시 썼다(`review.md` 「4판」).
+>
 > **High-risk.** 손절 경로의 함수를 편집한다. 다만 **제출 수량 계산은 건드리지 않는다** —
 > 바꾸는 것은 보고(등급·종류·문구)뿐이다. proposal-freeze 리뷰(적대적 Eng 필수)가
 > 구현 착수 전에 필요하다.
@@ -31,56 +33,78 @@
 - [x] 1.4 **[2026-10-01] base 재조사 → `issues.md` 「소비자 조사」.** 새 이벤트 종류의 **소비자 조사** — 콘솔 필터·로그 대시보드·`CriticalEvents()`
       호출자. 조사 결과를 `issues.md`에 기록
 
-## 2. 이벤트 종류 신설 (D1)
+## 2. 이벤트 종류 신설 (D1) — 4판
 
-- [ ] 2.0 **Pre-Edit 선언** — `internal/obs/event.go`
-- [ ] 2.1 **RED** — 새 종류가 `SeverityOf`에서 critical
-- [ ] 2.2 **RED** — 기존 **19**종(base `event.go:337-361`)의 등급 **무변화**
-- [ ] 2.3 **RED** — 미등록 종류는 여전히 normal (기본값 보존)
-- [ ] 2.4 **GREEN** — 종류 `EventExitStopSoldNothing = "exit.stop_sold_nothing"`(subject `exit`) 추가 + `criticalEvents` 등록 +
-      종류 목록 주석. `EventExitProposalCapped` 는 **보호 0주를 뺀 캡**(부분 캡 · 익절 0주)으로 좁아지고 등급 무변화(design D1 3판 정정)
-- [ ] 2.5 **RED** — 새 종류 값 문자열 핀(`"exit.stop_sold_nothing"`) · subject `exit` · `CriticalEvents()` 등재 — class rule 셋(measurement · a074 · a109) 통과
+- [ ] 2.0 **Pre-Edit 선언** — `internal/obs/event.go`(등급표 한 줄 · 종류 상수 · 목록 주석)
+- [ ] 2.1 **RED** — `SeverityOf(EventExitStopSoldNothing)` = critical
+- [ ] 2.2 **RED** — 기존 **19**종(base `event.go:337-361`)의 등급 무변화 · 미등록 종류는 normal
+- [ ] 2.3 **RED** — 값 문자열 핀 `"exit.stop_sold_nothing"` · subject `exit` · `CriticalEvents()` 등재 — class rule 셋(measurement · a074 · a109) 통과
+- [ ] 2.4 **GREEN** — 종류 추가 + `criticalEvents` 등록 + 목록 주석. `EventExitProposalCapped` 등급 · 값 무변화
 
-## 3. 0주 두 경로를 같게 보고 (D3)
+## 3. 0주 보고 (D1 게이트 · D2 · D3 · D7 · D8) — 4판
 
-- [ ] 3.0 **Pre-Edit 선언** — `ExitObserver.applyFloor`, `ExitObserver.submit`
-- [ ] 3.1 **RED** — 보호 + `floor.Quantity == 0` (끝 `:1644`) → 새 종류, critical, outbox 행, 키 `exit.stop_sold_nothing|<position>`
-- [ ] 3.2 **RED** — 보호 + 하한 계산 실패 (B2 `:1622`) → **같은 종류 · 등급 · 키**, 원인이 detail에
-- [ ] 3.3 **RED** — 보호 + **부분** 캡 → `EventExitProposalCapped` 유지, 등급·문구 무변화
-- [ ] 3.4 **RED** — 익절 + 0주(끝) → 종전 종류 `EventExitProposalCapped` · normal 무변화
-- [ ] 3.4a **RED** — 익절 + 하한 계산 실패(B2) → 알림 0 · `logErr` 종류 `EventExitProposalCapped` 무변화(design D3 3판)
-- [ ] 3.5 **RED (§0.3·§0.9 회귀)** — 위 전부에서 `applyFloor`의 반환값
-      `(수량, capped, err)`이 **무변화**. 이 테스트가 이 change의 안전 경계다
-- [ ] 3.6 **GREEN** — `submit`이 `isProtective(proposal)`을 `applyFloor`에 전달.
-      판정기 `exitpolicy`는 건드리지 않는다
-- [ ] 3.7 B2의 `logErr` 유지 — 오류 객체를 담는 유일한 자리. **단 이벤트 종류는 새
-      종류로 바꾼다(리뷰 H2 — 로그와 알림은 한 종류, spec delta 동일 문장).
-      RED: 0주 두 경로의 로그 줄과 알림이 같은 종류를 단언**
+> 하네스 둘: (가) 기존 `newExitHarness`(가짜 알림 수집기 — 종류 · 필드 · 호출 수), (나) **실제 `obs.RecordOnly` + 실제 원장 + 로그 캡처**
+> (`a092_exit_cycle_records_only_test.go` 의 `a092RecordOnlyHarness` 모양) — 행 · 등급 · 게이트 · 로그 줄. RED 는 둘 중 단언이 사는 쪽에서.
 
-## 4. 문구 (D4)
+- [ ] 3.0 **Pre-Edit 선언** — `ExitObserver.applyFloor` · `ExitObserver.submit` · `ExitObserverOptions`(+`NotificationsEnabled`) ·
+      `Context.ExitObserver` 생산 배선(설정 값으로 덮기). High-risk — 제출 수량 · 시점 무변경이 경계
+- [ ] 3.1 **RED (나)** — 알림 켜짐 · 보호 · 하한 0(Bound Sellable) → 새 종류 critical · outbox 행 1 · 키 `exit.stop_sold_nothing|<pos>` ·
+      본문에 원인 범주 + 관측 시각(UTC) · 한국어 · `이름(코드)`
+- [ ] 3.2 **RED (나)** — 알림 켜짐 · 보호 · 하한 계산 실패(B2) → **같은 종류 · 등급 · 키**, 원문 오류 문자열은 제목 · 본문 · payload 에 없음
+- [ ] 3.2a **RED (나)** — 알림 **꺼짐** · 보호 · 두 원인 → 옛 종류 normal · outbox 행 0 · 게이트 사유 없음 · 모드 무변화(불변식 3)
+- [ ] 3.2b **RED (가)** — 생산 배선이 로드된 설정의 `notifications.enabled` 로 옵션을 **덮는다**(호출자 값 무시) — 참 · 거짓 두 팔
+- [ ] 3.3 **RED (가)** — 보호 · **부분** 캡 → 옛 종류 · 등급 · 문구 **무변화**(기존 `TestTheConfirmedFloorCapsTheLiquidation` 단언 유지)
+- [ ] 3.3a **RED** — 보유 0 판정: `Bound == FloorBoundHoldings ∧ Quantity == "0"` ⟺ 신선한 보유 0 — `riskcalc.ConfirmedFloorQuantity` 표
+      시험(보유 0 × 매도가능 0/양수 × 로컬 매도 0/양수, 보유 양수 × 같은 칸)으로 동치 핀. 알림 켜짐 · 보호 · 보유 0 → 옛 종류 normal · 본문 「계좌에 보유가 없다」
+- [ ] 3.3b **RED (나)** — 종료 취소: 호출자 ctx 를 취소한 뒤 하한 조회가 ClassCanceled → 알림 0 · outbox 행 0 · 게이트 래치 0 · 승격 시도 0.
+      대조: ctx 살아 있고 HTTP 시한(`DeadlineExceeded` 감싼 오류) → 3.2 와 같은 보고
+- [ ] 3.4 **RED (가)** — 표 시험: 주문 액션 5종(보호 2 · 익절 3 — `ratchet.go:94-118`)을 `submit` 을 거쳐 두 원인 × 알림 켜짐으로 —
+      보호만 새 종류, 익절은 어떤 원인이든 옛 종류 normal(익절 B2 는 알림 0 · `logErr` 옛 종류). 새 주문 액션이 생기면 이 표가 깨지게
+      `Action.Orderable()` 열거와 표의 행 집합을 대조
+- [ ] 3.5 **RED (§0.3 · §0.9 회귀 — 이 change 의 안전 경계)** — 위 전부에서 관측 결과 무변화: 제출 수량 · 제출 수 · B2/0주 뒤 레벨 해제
+      (`Pending()==false`) · 하한이 풀린 다음 관측의 같은 레벨 재발의(기존 두 시험을 확장)
+- [ ] 3.6 **GREEN** — `submit` 이 `isProtective(proposal)` 를 `applyFloor` 에 넘기고, `applyFloor` 는 반환값을 바꾸지 않은 채 원인 분류(D3) ·
+      게이트(D1)로 종류를 고른다. `exitpolicy` · `riskcalc` 무편집
+- [ ] 3.7 **RED (나) — H2** — 보호 · 알림 켜짐 · 두 원인: 그 사건의 로그 줄(B2 오류 줄 · 기록 줄)과 알림이 같은 종류. 게이트 밖이면 둘 다 옛 종류
+- [ ] 3.8 **RED (나) — 계좌 카나리(D8)** — 계좌 sentinel 로 B2 오류 줄 · 기록 줄 · 행(제목 · 본문 · payload)에 sentinel 없음. B2 오류 줄은
+      계좌 필드 없이 `obs.MaskAccount` 로 가린 오류
+- [ ] 3.9 **RED (나) — 겹침(D5 범위 표)** — 하한 조회가 401 이면 한 `applyFloor` 호출에서 모드 통지 기록 1 + 새 종류 기록 1(둘 다 critical 행),
+      그 밖의 기록 0
+- [ ] 3.10 **RED (나) — 원인 계약(D7)** — 한 에피소드에서 B2 → 끝(Sellable), 그리고 끝 → B2 두 순서: 행 1 · 본문 = 첫 원인, 로그 줄 = 관측마다 그 관측의 원인
 
-- [ ] 4.1 **RED** — 0주일 때 제목·본문이 "일부만 나갔다"라고 말하지 않는다
-- [ ] 4.2 **RED** — 부분 캡의 문구는 **무변화**
+## 4. 문구 (D4) — 4판
+
+- [ ] 4.1 **RED** — 0주 문구(보호 새 종류 · 보호 게이트 밖 옛 종류 · 익절 옛 종류)가 **참인 결과를 말한다**: 제출 수량 0 을 명시하고
+      「일부」 계열 문구가 없다 — 금지어 하나가 아니라 문장 단언(제목 · 본문 고정 문자열)
+- [ ] 4.2 **RED** — 부분 캡 문구 **무변화**(고정 문자열)
 - [ ] 4.3 **GREEN**
 
-## 5. 실측 재생
+## 5. 실측 재생 · 비용 — 4판
 
-- [ ] 5.1 2026-08-02의 13회 시퀀스를 fixture로 재생 — outbox 행이 생기는지,
-      13회가 한 episode(`event_key`)로 접히는지, 재알림 창(`remindAfter`)이 재무장을
-      결정하는지(design D5 — a092 의미론) 확인
-- [ ] 5.2 재생 결과를 `issues.md`에 기록. 첫 리뷰 H3의 관측(2회차부터
-      `MarkAlertDelivered`가 `state=PENDING`에 걸려 `alert_undelivered` ERROR 12줄)이
-      a092 재알림 창 아래에서 어떻게 달라졌는지 명시
+- [ ] 5.1 **2026-08-02 재생**(원장 재독의 모양 — 보유 5 · 매도가능 0 · 13 관측 / 3분, `design.md` 「8/2 원장 재독」) — 하네스 (나) + **배달 실행자**
+      (a124 `alertDeliverer`, 내부 패키지 내보내기 훅), 팔 넷:
+      (i) 알림 켜짐 · 정상 전송 → 행 1 · 발송 1 · 정착 · 13 관측 중 재발송 0,
+      (ii) 알림 켜짐 · 전송 실패 → 행 1 PENDING · 시도 계수 · 한도에서 래치 · ENTRY_BLOCKED 승격(의도된 a092 의미론),
+      (iii) 알림 켜짐 · publisher 없음 → (ii)와 같은 판정 + 배달 실행자의 `alert_undelivered` 「no publisher」 줄이 사이클마다,
+      (iv) 알림 꺼짐 → 행 0 · 래치 0 · 승격 0. 각 팔의 행 수 · 발송 수 · 래치 · 모드 · 로그 줄 수를 기록
+- [ ] 5.1a **재알림 창 경계** — 정착(전달 · 승인) 행 뒤 같은 키: 1h 안 재무장 0, 1h 지나 재무장 1(본문 교체 — a097)
+- [ ] 5.2 결과를 `issues.md` 에 — 첫 리뷰 H3(`MarkAlertDelivered` PENDING ERROR 12줄)은 옛 동기 발송의 모양이었고 base 에는 그 발생원이 없으며,
+      대신 (iii)의 배달 실행자 줄이 난다는 것을 **잰 수**로
+- [ ] 5.3 **「0주 기록」 실측(D5)** — `RecordOnly.Notify` critical 한 번의 소요를 세 칸(경합 없는 원장 · `Acknowledge` 경합 · 연결 풀 경합)에서
+      분포로 재고, 실측 대입 사실을 design D5 에 적는다. 실측 전에는 「주기보다 작다」를 주장하지 않는다
 
 ## 6. 게이트
 
-- [ ] 6.1 `go test ./... -count=1 -race` 회귀 0, upstream 650 green
-- [ ] 6.2 §0.3 확인 — 제출 수량·시점 무변화를 diff로 보인다
-- [ ] 6.3 §0.4 확인 — `applyFloor`는 브로커에 닿지 않는다(FLM calls 표)
+- [ ] 6.1 `go test ./... -count=1 -race` 회귀 0(격리 worktree, 게이트와 같은 커밋)
+- [ ] 6.2 §0.3 확인 — 제출 수량 · 제출 수 · 레벨 해제/재발의 무변화는 3.5 가, 루프 몫은 D5 편성 + 5.3 실측이 보인다(diff 한 줄로 갈음하지 않는다)
+- [ ] 6.3 §0.4 확인 — **a091 이 더하는 브로커 요청 0**: `applyFloor` · `submit` 번들 calls 표를 편집 전후로 대조(RECONCILE 의 하한 읽기
+      `exitwiring.go:207` · `:231` 은 그대로)
 - [ ] 6.4 `make sdd-sync` 재실행 → `make sdd-check`
 - [ ] 6.5 **격리 worktree에서** `make gate CHANGE=a091-a-stop-that-sold-nothing-is-critical`
-- [ ] 6.6 독립 검증 (구현과 분리된 컨텍스트)
+- [ ] 6.6 독립 검증 (구현과 분리된 컨텍스트) · 교차 모델
 - [ ] 6.7 PM 동기화 → `openspec archive`
+- [ ] 6.8 **운영 문서** — `docs/operations.md` 에 `exit.stop_sold_nothing` 절(무엇이 났나 · 확인 · 사람 조치 · 승인 `tossctl engine alerts ack` ·
+      모드 해제 `tossctl engine mode-release` — 둘 다 `mutating: true`, 에이전트 자동 실행 금지)
 
 ## 선후 관계
 

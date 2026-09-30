@@ -32,6 +32,11 @@
 23:27:42             ADJUSTMENT_CLOSED — 손절은 끝내 나가지 않았다
 ```
 
+**4판 — 원장 재독(2026-10-01, 읽기 전용, design 「8/2 원장 재독」)**: 13회 동안 계좌 보유는 **5**였고 한정 항은 **매도가능 0**이었다.
+같은 4분 사이 보유가 **엔진 밖 매도로** 10 → 5(23:17) → 2(23:26:39) → 0(23:27:41) 으로 줄었다 — 운영자가 손으로 내던 매도 주문이
+남은 주식을 잡고 있었다. 포지션은 엔진 밖에서 종결됐고(`exit.position_closed_externally`), 엔진이 편입해 보호하던 그 포지션의 손절은
+그동안 한 번도 나가지 못했다. 이 사실은 a091 뒤에도 보고 대상이다(보유 0 이 아니다 — design D3).
+
 **손절이 3분 동안 13번 완전히 막혔고, `alert_outbox`에 남은 행은 0건이다.**
 
 `EventExitProposalCapped`가 `criticalEvents`(`obs/event.go`)에 없다. `SeverityOf`는
@@ -42,7 +47,7 @@ outbox 행이 생기지 않는 것은 같다)
 - outbox 행이 생기지 않는다 → 원장에 흔적 없음
 - 전달 실패해도 재시도가 없다
 - 게이트가 반응하지 않는다
-- publisher가 nil이면 `notifier.go:139-141`이 **로그도 없이 반환한다**
+- (8/2 당시) publisher 가 nil 이면 normal 은 로그도 없이 반환했다. base 에서는 이관 버퍼가 버림을 로그로 기록한다(`normal_relay.go:43-58`)
 
 **8/2에 운영자가 한 번도 호출받지 못한 이유는 등급이 아니라 transport 부재다** —
 알림 배선 커밋 `e540668f`는 2026-08-04이고, `alert_outbox` id 1~9(7/31~08-04)는 전부
@@ -92,8 +97,14 @@ B2의 fail-closed 방향은 옳다 — 문제는 **그 사실이 보고되지 �
 
 ### 보호 청산이 0주로 깎이면 critical로 보고한다
 
-`applyFloor`가 보호 제안에 대해 **0주**를 돌려주는 두 경로(B2 · `:1446`)에서 critical
-등급의 이벤트를 올린다. critical은 durable outbox에 기록되고 전달 실패가 게이트로 이어진다.
+`applyFloor`가 보호 제안에 대해 **0주**를 돌려주는 두 경로(B2 `:1622` · 끝 `:1644`)에서, **알림이 켜진 엔진이면** 새 종류
+`exit.stop_sold_nothing`(critical)으로 보고한다. critical은 durable outbox에 기록되고 전달 실패가 게이트로 이어진다.
+
+**알림이 꺼진 엔진(기본값)은 종전 등급 그대로다** — 정본 a095 「무관리 보유 보고의 등급은 사실이 정한다」의 규칙을 문자 그대로 따른다
+(보낼 수 없는 critical 이 진입 차단 · ENTRY_BLOCKED 로 가지 않게 — 불변식 3). 알림이 켜져 있는데 전송이 실패하는 엔진의 래치는
+의도된 동작이다(design D1).
+
+**계좌 보유 0**(엔진 밖 종결 진행 중)이 원인인 0주와 **관측을 끝내는 취소**로 하한 조회가 중단된 경우도 종전 등급이다(design D3).
 
 **부분 캡은 종전 등급을 유지한다.** 일부라도 나갔으면 그것은 "보호되지 않은 노출"이
 아니라 축소된 노출이다.
@@ -102,7 +113,8 @@ B2의 fail-closed 방향은 옳다 — 문제는 **그 사실이 보고되지 �
 
 ### 문구를 결과에 맞춘다
 
-0주일 때는 "일부만 나갔다"가 아니라 **한 주도 나가지 않았다**고 말한다.
+0주일 때는 "일부만 나갔다"가 아니라 **한 주도 나가지 않았다**고 말한다. 알림 행 본문은 에피소드의 **첫 원인과 시각**을 담고,
+관측마다의 원인은 구조화 로그 줄이 담는다(design D7). 하한 계산 실패의 원문 오류는 계좌를 가린 로그에만 남긴다(design D8).
 
 ### 보호/익절 구분은 호출자가 넘긴다
 
@@ -112,23 +124,25 @@ B2의 fail-closed 방향은 옳다 — 문제는 **그 사실이 보고되지 �
 ## Impact
 
 - **Specs**: `engine-safety` (**MODIFIED 1** — 리뷰 M4. 「등급화된 알림」의 critical
-  열거에 사건 하나를 더한다. a092가 같은 요구를 MODIFIED로 싣는 선행이므로 재고정 시
-  a092-뒤 정본 위로 재기저화한다 — delta 머리와 tasks 0.2, 3판에서 완료)
-- **Code**: `internal/app/engine/exitloop.go` (`applyFloor` 알림 경로 · `submit`의 인자
-  전달 · B2 `logErr`의 종류 — H2), `internal/obs/event.go` (새 종류 등록 + 종류 목록
-  주석 갱신)
-- **Tests** (리뷰 M5): `internal/obs/a091_*_test.go` **신규** — 새 종류의 `criticalEvents`
-  등록 누락을 잡는 유일한 장치, `internal/app/engine/exitloop_test.go` (기존 0주 시험 둘
-  옆에 등급·종류·문구 단언 추가)
-- **Docs** (리뷰 M5): `issues.md`(소비자 조사·낡음 대장), `docs/pm/generated/` 3종,
-  `cmd/tossctl/engine_assembly.go:31-35`의 Publisher 주석 — nil transport 서술이
-  현행 배선과 맞는지 확인·갱신
+  열거에 사건 하나를 더한다. a092-뒤 정본 위로 재기저화 — 3판), `exit-policy` (**MODIFIED 1** — 4판, R2-2.
+  「관측 경로와 fail-safe」의 「캡 발생은 알림된다(… 일반 등급 …)」 뒤에 보호 0주 예외 한 문장)
+- **Code**: `internal/app/engine/exitloop.go` (`applyFloor` 원인 분류 · 게이트 · 알림 경로 · B2 오류 줄(계좌 가림) · `submit`의 인자
+  전달 · `ExitObserverOptions.NotificationsEnabled`), `internal/app/engine/exitwiring.go` (설정 값으로 덮기),
+  `internal/obs/event.go` (새 종류 등록 + 종류 목록 주석)
+- **Tests** (리뷰 M5 · 4판): `internal/obs/a091_*_test.go` **신규**(등록 · 값 핀 · class rule), `internal/app/engine/a091_*_test.go` **신규**
+  (실제 `RecordOnly` + 원장 + 로그 캡처 하네스 · 5 액션 표 · 게이트 두 팔 · 보유 0 · 종료 취소 · 계좌 카나리 · 원인 두 순서 ·
+  8/2 재생 네 팔 + 배달 실행자 내보내기 훅), `internal/riskcalc` 보유 0 동치 표 시험, `exitloop_test.go` 기존 0주 시험 둘 확장(레벨 해제 ·
+  재발의). 깨지는 기존 시험 0(측정 — 2라운드 보이스 B)
+- **Docs** (리뷰 M5 · 4판): `issues.md`(소비자 조사 · 낡음 대장), `docs/pm/generated/` 3종, **`docs/operations.md` 새 절**(`exit.stop_sold_nothing` —
+  확인 · 조치 · 승인 `tossctl engine alerts ack` · 모드 해제 `tossctl engine mode-release`). `cmd/tossctl/engine_assembly.go:31-35`의
+  Publisher 주석은 이미 참이다(2라운드 보이스 B — 갱신 불요)
 - **Schema**: **없음**
-- **§0.3**: 손절을 지연시키지 않는다. **제출 수량 계산(B1~B6·`:1446`의 반환값)을
-  건드리지 않는다** — 바꾸는 것은 보고뿐이다
+- **§0.3**: 제출 수량 계산(B1~B6 · 끝의 반환값)을 **건드리지 않는다**. 루프에 남는 몫은 이름 둘로 편성한다 — 「0주 기록」(로그 줄 · `n.mu`
+  대기 · 기록 트랜잭션) · 「0주 기록 실패 승격」(기록 실패일 때만 동기 승격 트랜잭션). 둘 다 원격 0 · 기한 없음, 같은 사이클 뒤쪽 포지션이
+  그만큼 늦게 판정된다. 소요는 미실측 — 구현 로트가 잰다(design D5, tasks 5.3)
 - **§0.4**: 브로커 요청 무변경. **3판 정정**: 2판의 「`applyFloor`는 브로커에 닿지 않는다」는 거짓이었다 — RECONCILE 에서
   `ConfirmedFloor` 가 `Retrier.Query` 2회(Holdings · SellableQuantity)로 브로커를 읽는다(번들 calls 표 — 최악 수치 포함).
-  a091 은 그 읽기를 바꾸지 않고 새 요청을 더하지 않는다(더하는 것은 로컬 outbox 기록 하나 — design D5)
+  a091 은 그 읽기를 바꾸지 않고 새 요청을 더하지 않는다(더하는 것은 로컬 원장 쓰기 — design D5)
 - **§0.9**: 임계·가격·수량 무변경
 
 ## Non-goals
@@ -144,7 +158,7 @@ B2의 fail-closed 방향은 옳다 — 문제는 **그 사실이 보고되지 �
   아카이브됐다(2026-09-28 사용자 결정)
 - **보호 청산의 가격** → a087
 
-## 미해결 → 처분 (2026-09-30 재작성)
+## 미해결 → 처분 (2026-09-30 재작성 · 2026-10-01 4판)
 
 - **새 이벤트 종류 vs 등급 분기** — **해소: design D1이 B(신설)로 결정했다.** 진짜
   근거는 리뷰 H1이 세운 class rule(D1 표의 C안 행 참조)
@@ -152,5 +166,7 @@ B2의 fail-closed 방향은 옳다 — 문제는 **그 사실이 보고되지 �
   `publishBestEffort` publish 1회(상한 10s), critical은 `deliver` 최대 3회 + 대기 2회
   (**34s**, `n.mu` 보유)였고 `applyFloor`는 `ObserveOnce`(순차 순회) 안에서 불린다.
   **a092가 이 성질 자체를 제거했다**(critical은 기록까지만 동기 — design D5). **C1 발효**: a092 아카이브 `75d138b5`
-  (2026-09-30) → base 재고정 `b30318d6` → freeze 재리뷰(3판, tasks 0.5). 루프에 남는 몫은 보호 0주 사건당 로컬
-  outbox 트랜잭션 하나(「0주 기록」 — design D5)
+  (2026-09-30) → base 재고정 `b30318d6` → freeze 재리뷰(3판 REJECT → 4판, tasks 0.5). 루프에 남는 몫은 design D5 의 이름 둘
+- **알림 꺼진 엔진의 등급 (2라운드 R2-1 → Manager Q1, 2026-10-01)** — 해소: a095 정본 게이트(enabled 플래그만). 사용자 거부권 항목으로 Manager 가 보고
+- **보유 0 원인의 0주 (R2-5 → Q2)** — 해소: 배제(종전 등급 · 본문에 원인). 8/2 는 보유 0 이 아니었다(원장 재독 — 매도가능 0)
+- **원인 계약 (R2-6 → Q3)** — 해소: 에피소드 단일 키 유지, 행 본문 = 첫 원인 + 시각, 관측마다의 원인 = 로그(design D7)
