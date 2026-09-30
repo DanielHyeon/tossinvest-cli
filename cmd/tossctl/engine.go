@@ -125,6 +125,8 @@ func newEngineCmd(root *rootOptions) *cobra.Command {
 	cmd.AddCommand(newEngineRiskRelaxationCmds(root)...)
 	// a092 단위 ④: 사람의 운영 모드 완화(mutating) — 모드 투영이 배선된 빌드의 유일한 완화 경로.
 	cmd.AddCommand(newEngineModeReleaseCmd(root))
+	// a094 D−4.5: park(UNRESOLVED_IN_DOUBT) 해동 — 운영자 해소(mutating, audit 먼저) 뒤 같은 명령 안에서 발의 해제.
+	cmd.AddCommand(newEngineAttemptResolveCmd(root))
 	return cmd
 }
 

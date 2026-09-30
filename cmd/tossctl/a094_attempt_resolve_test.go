@@ -88,3 +88,18 @@ func TestA094TheAttemptResolveCommandRefusesWithoutAnEngine(t *testing.T) {
 		t.Fatalf("release failure err = %v", err)
 	}
 }
+
+// 4.T — 명령이 실제 바이너리의 `engine` 트리에 붙어 있음(조립만 되고 안 붙은 명령은 없는 명령과 같다 — park 원인 알림 본문이
+// 이 명령을 가리킨다).
+func TestA094TheAttemptResolveCommandIsAttachedToTheEngineTree(t *testing.T) {
+	engine := newEngineCmd(&rootOptions{})
+	for _, c := range engine.Commands() {
+		if c.Name() == "attempt-resolve" {
+			if c.Annotations["mutating"] != "true" {
+				t.Fatalf("attached command annotations = %v", c.Annotations)
+			}
+			return
+		}
+	}
+	t.Fatal("`tossctl engine attempt-resolve` is not attached — the park exit does not exist in the binary")
+}
