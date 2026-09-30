@@ -53,6 +53,7 @@ type a090CountingAlerts struct {
 	mu       sync.Mutex
 	notifies int
 	records  map[obs.EventType]int
+	events   []obs.Event // 입구에 넘어간 사건 전부(성공 · 실패 불문) — 실패한 기록은 원장 행이 없어 행 검사로는 안 보임
 }
 
 func (a *a090CountingAlerts) Notify(ctx context.Context, e obs.Event) error {
@@ -68,8 +69,15 @@ func (a *a090CountingAlerts) RecordCritical(ctx context.Context, e obs.Event, re
 		a.records = map[obs.EventType]int{}
 	}
 	a.records[e.Type]++
+	a.events = append(a.events, e)
 	a.mu.Unlock()
 	return a.ro.N.RecordCritical(ctx, e, remindAfter)
+}
+
+func (a *a090CountingAlerts) seen() []obs.Event {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return append([]obs.Event(nil), a.events...)
 }
 
 func (a *a090CountingAlerts) recorded(t obs.EventType) int {
@@ -1079,7 +1087,11 @@ func TestA090R17NoAccountReachesTheNewLinesAlertsOrNotices(t *testing.T) {
 			WHEN NEW.event_type = 'engine.operating_mode' BEGIN SELECT RAISE(ABORT, 'notice store acct-exit down'); END`},
 	} {
 		t.Run(inj.name, func(t *testing.T) {
-			f := a090Setup(t, nil)
+			var spy *a090CountingAlerts
+			f := a090Setup(t, func(o *engine.ExitObserverOptions) {
+				spy = &a090CountingAlerts{ro: o.Alerts.(obs.RecordOnly)}
+				o.Critical = spy
+			})
 			f.a090Pair()
 			db := a090Raw(t, f.exitHarness)
 			a090Exec(t, db, inj.trigger)
@@ -1115,6 +1127,36 @@ func TestA090R17NoAccountReachesTheNewLinesAlertsOrNotices(t *testing.T) {
 				t.Fatalf("an a090 line carried the raw error text: %s", f.logs.String())
 			}
 			check(t, f, inj.name)
+			// 입구 인자 카나리(codex A090-I1): 실패한 기록은 행이 없으므로 입구에 넘어간 사건 자체를 봄 — 첫 시도와 재시도 모두
+			// (한 주기 더 돌려 재시도 경로를 태움).
+			f.cycles(1)
+			events := spy.seen()
+			if len(events) == 0 {
+				t.Fatal("nothing reached the record entrance — the canary measured nothing")
+			}
+			for _, e := range events {
+				encoded, _ := json.Marshal(e)
+				if strings.Contains(string(encoded), exitAccount) {
+					t.Fatalf("an event a090 handed to the entrance carries the account: %s", encoded)
+				}
+			}
+			switch inj.name {
+			case "alert_record_failure":
+				if spy.recorded(obs.EventExitObservationOutage) < 2 {
+					t.Fatalf("the failed alert was not retried: calls=%d", spy.recorded(obs.EventExitObservationOutage))
+				}
+			case "mode_record_failure":
+				// 모드 커밋 실패 → 공지는 입구에 가지 않고 대기열도 비어 있음.
+				if spy.recorded(obs.EventOperatingMode) != 0 || f.observer.PendingModeNoticesForTest() != 0 {
+					t.Fatalf("a notice without a committed transition: calls=%d pending=%d",
+						spy.recorded(obs.EventOperatingMode), f.observer.PendingModeNoticesForTest())
+				}
+			case "notice_record_failure":
+				if spy.recorded(obs.EventOperatingMode) < 2 || f.observer.PendingModeNoticesForTest() != 1 {
+					t.Fatalf("the failed notice was not queued and retried: calls=%d pending=%d",
+						spy.recorded(obs.EventOperatingMode), f.observer.PendingModeNoticesForTest())
+				}
+			}
 		})
 	}
 }
@@ -1229,5 +1271,47 @@ func TestA090R3bAWorkingSetErrorKeepsTheBase(t *testing.T) {
 	rows := f.outageRows()
 	if len(rows) != 1 || !strings.Contains(rows[0].EventKey, target.ID) {
 		t.Fatalf("rows = %+v, want the position alerted 60s after its last judgement across B2 cycles", rows)
+	}
+}
+
+// codex A090-I2 · tasks 2.3g ⑧: 공지 적재가 실패한 뒤 보유 포지션이 전부 사라져도, 저장소가 복구된 다음 처리 주기(표시 0 인 B3)에서
+// 같은 전이의 공지가 정확히 한 번 적재되고 대기열이 비며 전이는 다시 일어나지 않음.
+func TestA090R3gANoticeQueuedBeforeThePositionsLeftIsRecordedInTheEmptyCycle(t *testing.T) {
+	f := a090Setup(t, nil)
+	f.a090Pair()
+	db := a090Raw(t, f.exitHarness)
+	a090Exec(t, db, `CREATE TRIGGER a090_fail_notice BEFORE INSERT ON alert_outbox
+		WHEN NEW.event_type = 'engine.operating_mode' BEGIN SELECT RAISE(ABORT, 'notice store down'); END`)
+	delete(f.prices.last, "005930")
+	f.cycles(12)
+	if len(f.a090Tightenings()) != 1 || f.observer.PendingModeNoticesForTest() != 1 {
+		t.Fatalf("setup: tightenings=%d pending=%d", len(f.a090Tightenings()), f.observer.PendingModeNoticesForTest())
+	}
+	transition := f.a090Tightenings()[0]
+	// 두 포지션 모두 보유 종료.
+	ctx := context.Background()
+	for _, symbol := range []string{"000001", "005930"} {
+		watermark, err := f.journal.FillWatermark(ctx, symbol)
+		if err != nil {
+			t.Fatalf("FillWatermark: %v", err)
+		}
+		if _, err := f.journal.ApplyPositionAdjustment(ctx, journal.AdjustmentRequest{
+			AccountRef: exitAccount, Market: "kr", Symbol: symbol, Kind: "EXTERNAL",
+			ExpectedPrevQuantity: "10", ExpectedFillWatermark: watermark, NewQuantity: "0", NewAvgPrice: "0",
+			BrokerAsOf: f.clk.Now().Format(time.RFC3339), Evidence: "sold by hand",
+		}); err != nil {
+			t.Fatalf("ApplyPositionAdjustment: %v", err)
+		}
+	}
+	a090Exec(t, db, `DROP TRIGGER a090_fail_notice`)
+	if c := f.cycles(1); c.Judged != 0 || c.Unobserved != 0 {
+		t.Fatalf("the empty cycle = %+v, want B3 with nothing held", c)
+	}
+	notices := f.noticeRows()
+	if len(notices) != 1 || notices[0].EventKey != "operating_mode:"+journal.ModeEntryBlocked+":"+transition.ID {
+		t.Fatalf("notice rows = %+v, want exactly the queued transition %s", notices, transition.ID)
+	}
+	if f.observer.PendingModeNoticesForTest() != 0 || len(f.a090Tightenings()) != 1 {
+		t.Fatalf("pending=%d tightenings=%d after the empty cycle", f.observer.PendingModeNoticesForTest(), len(f.a090Tightenings()))
 	}
 }

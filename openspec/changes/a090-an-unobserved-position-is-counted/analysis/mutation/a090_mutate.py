@@ -83,6 +83,11 @@ MUTATIONS = [
     ("M31", "적재된 공지를 대기열에 남김", UNOBS,
      "\t\tif err := recorder.RecordCritical(ctx, e, 0); err != nil {\n\t\t\tkept = append(kept, e)\n\t\t}\n",
      "\t\t_ = recorder.RecordCritical(ctx, e, 0)\n\t\tkept = append(kept, e)\n", ENGINE_TEST),
+    # codex 교차 리뷰(2026-10-01) A090-I2 — 표시 0 주기(B3)에서 공지 재시도를 건너뜀
+    ("M32", "표시 0 주기 공지 재시도 생략", UNOBS,
+     "\to.retryModeNotices(ctx)\n\n\ttally := o.cycleUnobserved\n\to.cycleUnobserved = nil\n\tif tally != nil && tally.owner != cycle {\n\t\ttally = nil // 이 주기에는 표시가 없었음(옛 주기의 집계)\n\t}\n\tif tally == nil || len(tally.held) == 0 {\n",
+     "\ttally := o.cycleUnobserved\n\to.cycleUnobserved = nil\n\tif tally != nil && tally.owner != cycle {\n\t\ttally = nil // 이 주기에는 표시가 없었음(옛 주기의 집계)\n\t}\n\tif tally != nil && len(tally.held) > 0 {\n\t\to.retryModeNotices(ctx)\n\t}\n\tif tally == nil || len(tally.held) == 0 {\n",
+     ENGINE_TEST),
     ("M26", "생산 배선 삭제", RUNTIME, "\t\tUnobservedLog: logger,\n", "", CMD_TEST),
     ("M27", "생산 배선에 전체 Log", RUNTIME, "\t\tUnobservedLog: logger,\n", "\t\tUnobservedLog: logger,\n\t\tLog: logger,\n",
      CMD_TEST),

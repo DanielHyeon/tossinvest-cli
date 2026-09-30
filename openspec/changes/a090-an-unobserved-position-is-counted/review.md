@@ -376,3 +376,16 @@ Pre-Edit Gate:
 - **tasks 4.2** 격리 워크트리 `6699e4ce`: `make test` rc 0 · `make test-seams` rc 0(엔진 단독 전판·lint·-race 는 위 「착지 준비」).
 - **tasks 4.6** 주 워크트리: `make sdd-sync` rc 2(codegraphcontext 300s 타임아웃 · GBrain busy — advisory, codegraph 하드 증거는 갱신) · `make sdd-check` rc 0.
 - **gstack `/review` not-run**: 이 로트의 리뷰 보이스는 분리 컨텍스트 적대 리뷰(라운드 1) + codex 교차 모델(아래). gstack 스킬 러너는 공유 트리의 이웃 커밋까지 diff 범위로 잡아 이 change 만 가를 수 없어 돌리지 않았다.
+
+## codex 구현 리뷰 (교차 모델, tasks 4.8, 2026-10-01) — **PASS-WITH-FIXES** (P0 0 · P1 0 · P2 2)
+
+- 실행: session **`01a0f2d2-ed74-7d11-a04e-b0bc19dfc475`**, 트리 `git archive 825ccbe2`, `codex exec -s read-only`, 정적 검토(시험 미실행). 프롬프트
+  `analysis/impl-review/codex-i1-prompt.md`, 출력 `analysis/impl-review/codex-i1-output.md`. 첫 시도는 codex 가 stdin 을 기다려 22분 멈춰 중단(`</dev/null` 로 재실행).
+- 확인: 기록은 포지션 판정 뒤, 생산 경로는 기록 입구만(원격 전송·배달 임차 없음), 계수·단조 기점·강화 래치·공지 재시도가 frozen design 과 일치.
+
+| id | 분류 | 요지 | 처분 |
+|---|---|---|---|
+| A090-I1 | P2 시험 | R17 실패 주입 카나리가 원장 행만 봄 — 실패한 기록은 행이 없어 입구로 간 사건이 검사 밖(tasks 2.17 의 「입구에 넘긴 값」) | **수용** — 입구 스파이가 넘어간 사건 전부(첫 시도·재시도)를 JSON 으로 계좌 검사, 모드 커밋 실패 시 공지 호출 0 · 대기열 0 단언 |
+| A090-I2 | P2 시험 | 「포지션 소멸 뒤 B3 주기의 공지 재시도」(tasks 2.3g ⑧) 미검증 | **수용** — `TestA090R3gANoticeQueuedBeforeThePositionsLeftIsRecordedInTheEmptyCycle` + 변이 M32(표시 0 주기 재시도 생략) |
+
+Manager 판정(2026-10-01): I1·I2 보강 승인(생산 무변경) · 0.8/5.x 사람 항목 이월(a095 선례 — ROADMAP 「a090 이월」).

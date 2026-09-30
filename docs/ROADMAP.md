@@ -192,3 +192,16 @@ typed-confirmation을 유지한다 — 이 결정은 UI 표면에만 적용한�
 | 편입 커밋 뒤 보호 미개설 보유의 알림 · 오해 부르는 성공 문구(`issues.md` I7) | 범주 ③ 은 critical 요구 밖(이름 붙은 경계) | 미배정 |
 | 총위험 보고(R3, `issues.md` I2) · 불타기 래칫 선행 조건(Q6, `issues.md` I1) · 운영자 재편입 하향의 승인 · audit(`issues.md` I6) | 없음(보류 · 후속) | 미배정 |
 
+
+## a090 이월 · 미배정 후속 (a090 archive 뒤에도 남는 의무 — 2026-10-01)
+
+`a090-an-unobserved-position-is-counted` 가 넘긴 것. 근거는 a090 `design.md` D1 · D2 · D9 · D11 · D12 · D13 · Q2 · Q3 와 `review.md` 「리뷰 라운드 1」 · 「Manager 판정 (2026-09-30)」.
+
+| 항목 | 사유 | 행선 |
+|---|---|---|
+| Q2 실측 — 정지·0가격 종목 포함 `/prices` 읽기 전용 GET 1회(장중, 쓰기 0) → design D6 의 [미측정] 두 행 확정(tasks 0.8) | 라이브 실측 — 이 로트 실행 금지(Manager 2026-09-30). 규칙은 결과와 무관(빈도만 알려 줌) | 사람 항목 — 사전 승인 범위 안에서 사람이 장중 실행 |
+| 배포 전 `main` 과 SchemaVersion 대조 · 엔진 재시작(두 시장 닫힌 창) · 배포 뒤 첫 포지션 단위 경보의 실물 확인(tasks 5.1 · 5.2 · 5.3) | 스키마 변경 0 · 엔진 정지 = 손절 없음 | 사람 항목 — 배포 승인 때 |
+| settle 의 루프 체류 몫 실측(주기당 최악 2K+2P 로컬 트랜잭션 — review 「Manager 판정」 표) · 상한 캡 | 정본 「루프에 남는 몫은 이름을 갖고 편성」 — 이름·크기는 기록, 실측·캡은 frozen 범위 밖 | 미배정 — 후속 로트(측정 후 필요 시 캡) |
+| 하류 임대 재검사 5자리 무음(`judge` · `judgeRatchet` · `judgeLadder` · `refreshObservation` · `record` 의 `!o.quoteUsable(quote)` → `return nil`) | Q3 — 판정 진입을 「관측됨」 으로 봄 | 미배정 — 후속 change 후보 |
+| 지속 B2(작업 집합 오류)를 어느 사다리도 재지 않음 · 재시작 창(기점 소실) · workingSet B6(미관리 normal)·B10(완료 정책) | D11-2 · D2 · D1 명명 잔여 | 미배정 |
+| `position_id`(계좌번호 무염 해시) 알림 탑재 · 기록 실패 시 입구 `Notifier.escalate` 로그의 `FieldAccount` 원문(a090 이 호출 경로 하나 추가) | base 관행(원장 내부 키 · a092 이전 승격 로그) — a090 신설 표면은 계좌 0(R17) | 사람 결정 큐 「계좌 가림 설계」(D12 · D13) |
