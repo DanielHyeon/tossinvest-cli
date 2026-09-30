@@ -1001,6 +1001,77 @@ evaluateladder: 「순수 계산 · 판정 거부 오류」로 정정(호출 목
 
 ## 착수 승인 기록
 
-> a095 구현 착수 전 tasks 0.7의 기록 자리. **비어 있다(2026-09-29 — freeze, 구현 로트 대기).**
+> a095 구현 착수 전 tasks 0.7의 기록 자리.
 > 적을 것: (1) a092 「모든 보유자」 착지 여부 — a092 tasks 21.4가 체크된 커밋 해시와 그 커밋에서의 21.3 (f) 시험 결과, 또는 「미착지」
 > (2) 미착지면 Q7 첫째 면 증폭 수용에 대한 **사용자 확인** 원문 · 날짜 (3) Manager 승인 · 날짜. (2)가 필요한데 없으면 착수 금지.
+
+**기록(2026-09-30, 구현 로트 — Opus 팀메이트).**
+
+1. **a092 「모든 보유자」 착지 — 착지함.** a092 tasks 21.4가 처음 `[x]`인 커밋은 **`06b39a78`**(`git show <c>:…/a092-…/tasks.md`로
+   `fbc6df5f..75d138b5` 구간 전수, 그 직전 `15cb8540`은 미체크). 21.4의 GREEN 코드는 `fbc6df5f`(a092 25.7 — `claimAndDeliver`는
+   claim만 `n.mu` 아래, `n.deliver`는 잠금 밖 — 오늘 HEAD `notifier.go:293` Lock · `:353` deliver). 그 커밋의 연결 워크트리에서
+   21.3 (f) 시험(`internal/obs/a092_lock_scope_test.go` 주석 「21.3 (f) · 21.4」)을 돌렸다:
+   ```text
+   $ git worktree add --detach <scratch>/wt-a092 06b39a78 ; go test ./internal/obs/ -run TestA092ARecordDoesNotWaitForAnotherSendersTransport -count=1 -v
+   --- PASS: TestA092ARecordDoesNotWaitForAnotherSendersTransport (0.24s)
+   ok  	github.com/JungHoonGhae/tossinvest-cli/internal/obs	0.247s
+   ```
+   a092는 2026-09-30 아카이브(`75d138b5`)됐다.
+2. **사용자 확인 — 불요.** (1)이 착지이므로 0.7의 「착지 전 착수」 경우가 아니다(Manager 판정 2026-09-30: *"조건이 코드 착지 사실이고
+   그 사실이 성립했다"*).
+3. **Manager 승인 — 2026-09-30.** 사용자 상임 지시(/goal 2026-07-26 · 2026-09-25 추가 지시, §3.25 인용) 아래 2026-09-30 사용자 재개
+   지시 「남은것도 처리」로 Manager가 a095 구현 로트를 배정했다. base 재고정은 `821ab02a`(아래 §4.1).
+
+## 4. 구현 로트 (2026-09-30~, Opus 팀메이트)
+
+### 4.1 base 재고정 — `821ab02a` (0.1)
+
+`02716357` → `1ffe2295`(`base-commit.txt` 단독 커밋). 조건 ① 귀속 실측: 옛 base 뒤 236 커밋(`git rev-list --count`) 중 a095 디렉터리를 만진
+비병합 커밋 20개, `.go` 편집 0(`git diff-tree --no-commit-id -r --name-only` 전수 — `rtk proxy` 로 잘리지 않은 출력). renumber 이력 없음.
+옛 base 판정 `check_analysis`: required 85 — 전부 형제 착지 몫(a092 · a098 등 `cmd/tossctl` · `internal/obs` · `internal/app/engine`),
+그리고 a095 번들 12개가 AST source hash stale(a092가 `notifier.go` · `exitloop.go` · `alertdelivery.go` · `event.go` · `exitwiring.go`를 바꿈).
+사전 게이트: `make sdd-check` 첫 실행 rc 2(CodeGraph stale · status 15s 타임아웃) → `make sdd-sync`(CodeGraph 갱신, CGC 300s
+타임아웃 — advisory, GBrain busy — advisory) → `make sdd-check` rc 0.
+
+### 4.2 frozen 좌표 대조 — 현재 HEAD 정정 (문서 본문은 불변)
+
+a092 착지로 옮긴 좌표. frozen 문서의 인용은 그대로 두고 여기서 정정한다.
+
+| frozen 인용 | 현재 (`1ffe2295` 이후) | 비고 |
+| --- | --- | --- |
+| `exitloop.go:831` 관측 두절 | `:831` | 그대로 |
+| `exitloop.go:1633` 판정 거부 | `:1638`(Type) | +5 |
+| `exitloop.go:1657` 제안 거부 | `:1662` | +5 |
+| `exitloop.go:1687` 청산 지연 | `:1692` | +5 |
+| `exitloop.go:518` `alertUnmanaged` 호출 · `:512` B6 | `:512` B6 · 정의 `:1606` | 그대로 |
+| `ObserveOnce` `:426` · `:441` · `:465` | 같음 | 그대로 |
+| `notifier.go` `claimAndDeliver` `n.mu.Lock` `:254` · `n.deliver` `:309`(잠금 안) | `:293` Lock · `:353` deliver — **잠금 밖**(a092 `fbc6df5f`) | Q7 첫째 면이 닫힘 |
+| `adoption.go` · `reconcileloop.go` 전 좌표 | 같음 — 파일 sha256 `f121aba9…` · `50a2c0f0…`가 3판 번들과 일치 | 편집 전 번들 신선 |
+
+### 4.3 열린 질문의 답 — Manager 판정 (2026-09-30)
+
+로트가 코드 영수증으로 제안하고 Manager가 승인했다(원문 요지: *"(1) 답 전부 승인. 조건 셋 … (2) 델타에 추가하라"*).
+
+| Q | 답 | 조건 · 영수증 |
+| --- | --- | --- |
+| Q1 | (a) 새 종류 `exit.position_adoption_failed`를 `criticalEvents`에 등재 — `SeverityOf` · `Notify` 본문 불변. 켜짐은 `ReconcileDriverOptions`의 bool을 `Context.ReconcileDriver`가 `c.Config.Engine.Notifications.Enabled`(로드된 값 — 거부 블록은 `mergeNotifications` B3가 0으로 만들어 거짓)로 채운다 | design D1 「싣는 방식」 |
+| Q2(a)(b)(c) | 설정 거부 · include 지정(편입 꺼짐) 시도 실패 · 연기(`adopt` B2 · B6 · B7)는 **normal**(오늘 등급 유지). 조건 칸은 사실 식별자로 분리 | OFF 동등성(불변식 3) |
+| Q3 | 엔진 개설 포지션: **원장 `position_adjustments`의 순증(Σ(new−prev) > 0)** — journal 읽기 전용 새 leaf. 이월 아님 | Manager 조건: 비교 술어 변이(부등호 방향 · off-by-one · 열 바꿔치기) + 「외부 증가 사실」 의미를 `ConvergeQuantities` 쓰기 코드에서 인용 |
+| Q4 | 수량 증가 사실은 **normal**, 종류 · key 철자 유지, 래치를 (포지션, 보고한 최대 수량)으로 | Manager 조건: 「청산 사이징이 현재 보유 수량을 읽는다」 전제를 코드 좌표로 — §4.4 |
+| Q6 | SHALL 추가 없음 — issues I1에 두고 후속 change로 | 이월 표 규격 |
+| Q8 | (b) critical 행 문구를 **시점 사건**으로(「<시각>에 편입 시도가 실패했다 — 그 시각 기준 …」). 새 outbox 연산 없음, 사람 래치 자동 해제 없음 | a094 수렴 교훈과 같은 형태 |
+| 델타 | **추가한다** — frozen 델타 자신의 「답이 온 뒤 이 파일에 더한다」. 규범 문장만 델타에, 값과 영수증은 design. 추가 후 `openspec validate --strict`, 추가분은 이번 로트 다각 리뷰의 **명시 검토 대상**(requirement 재리뷰 겸함 — a092 22판 선례) | |
+
+### 4.4 Q4 전제 영수증 — 손절은 현재 보유 수량을 청산한다
+
+증가분이 원래 손절의 보호를 받는다는 문장(`adoption.go:461`)의 전제:
+
+- 원장 투영의 수량은 조정이 계좌 값으로 수렴시킨다 — `position_adjustments.go:346-350`(`UPDATE positions SET … quantity = ?` ← `req.NewQuantity`),
+  그 요청은 `converge.go:218` `NewQuantity: mismatch.Authority()`.
+- exit 관측은 매 사이클 원장 투영을 읽는다 — `exitloop.go` `workingSet`의 `positions` 순회(`:507`)가 `managed.position`을 채우고,
+  스냅샷 문맥이 `RemainingQuantity: m.position.Quantity`(`exitloop.go:1092`).
+- 손절 제안의 비율은 전량 — `ratchet.go:430` `Ratio: "1"` · `ladder.go:446` `ActionLadderStop … Ratio: "1"`.
+- 제안 수량은 그 둘의 곱 — `snapshot.go:137` · `:206` `ProjectWholeShares(quantity, ratio)`.
+
+따라서 손절이 발동하면 제안 수량은 **발동 시점의 투영 수량 전량**이다. 이 사슬(특히 `RemainingQuantity`의 출처)이 바뀌면 Q4의 normal
+논거가 무너진다 — 그 편집은 이 등급을 다시 판정해야 한다.

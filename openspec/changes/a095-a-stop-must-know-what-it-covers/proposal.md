@@ -157,6 +157,10 @@ critical로 올리는 것은 `adoption.enabled`가 참이어서 **엔진이 보�
 
 ## 열린 질문 — Manager 에게 (결정 (1)~(3)이 덮지 않는 지점)
 
+> **10판 — 답이 왔다(Manager 판정 2026-09-30, 구현 로트 제안 승인).** Q1 (a) 새 critical 종류 `exit.position_adoption_failed` ·
+> Q2(a)(b)(c) normal · Q3 원장 조정 순증 · Q4 normal + 최대 수량 래치 · Q6 후속 이월 · Q8 (b) 시점 사건 문구. 규범은 델타 10판,
+> 값과 영수증은 `design.md`(D1 「싣는 방식」 · 「사실이 해소된 뒤의 행」 · D2 (i)(ii) · D4), 판정 기록은 `review.md` §4.3. 아래 원문은 이력이다.
+
 1. **Q1 — 등급을 싣는 방식.** `SeverityOf` B1은 종류만 본다. reconcile 자리의 비선택 사실만 critical로
    만드는 방식은 (a) 그 사실에 새 이벤트 종류를 주고 `criticalEvents`에 등재, (b) `Event`에 등급을 싣고
    `SeverityOf`의 계약을 바꿈, (c) 다른 방식 — 어느 것인가? 그리고 발신 자리가 설정의 `notifications.enabled`

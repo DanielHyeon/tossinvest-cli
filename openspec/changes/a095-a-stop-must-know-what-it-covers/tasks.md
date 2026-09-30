@@ -1,8 +1,8 @@
-# a095 · tasks — 9판
+# a095 · tasks — 10판 (구현 로트)
 
 - **Change**: `a095-a-stop-must-know-what-it-covers`
 - **위험 등급**: **High-risk** — 무보호 보고의 등급과 진입 차단 도달. §0.3 적용.
-- **base-commit**: `027163575e78482cdd4d8129f027e928b769ae87` (3판 재고정 `0b17784e`)
+- **base-commit**: `1ffe2295994de4ca4530fc1086535c1f7dc37835` (구현 로트 재고정 `821ab02a`, 이전 3판 `0b17784e`)
 - 결정 (1)~(3) 원문은 `proposal.md` §0. `[비움 — Qn]`은 결정이 덮지 않아 Manager 에게 올린 질문이다
   (`proposal.md` 「열린 질문」). 비운 task는 답이 오기 전에 착수하지 않는다.
 
@@ -10,6 +10,8 @@
 
 - [x] 0.1 `base-commit.txt` 고정 — **3판 재고정** `ec29dc72` → `02716357`(`0b17784e`). a095 디렉터리를 만진
       커밋 중 `.go`를 고친 것은 `a30eb35a` 하나이고 새 base 앞이다
+      > **구현 로트 재고정(2026-09-30)** `02716357` → `1ffe2295`(`821ab02a`, 단독 커밋) — 자기 Go 편집 0, 옛 base required 85는 형제 착지 몫.
+      > 승인: 사용자 상임 지시 + 2026-09-30 재개 지시 → Manager 배정. `review.md` §4.1 · 「착수 승인 기록」
 - [x] 0.2 `openspec validate a095-a-stop-must-know-what-it-covers --strict` — 3판에서 다시 통과(`review.md` 3판 기록)
 - [x] 0.3 **AST 산출물이 문서보다 먼저** — 3판 번들 21개(새로 12 · 다시 뽑음 4 · 해시 일치로 산문만 5).
       생성기 `analysis/harness/render_bundles.py`, 커버리지 `analysis/harness/coverage/`
@@ -20,14 +22,19 @@
       > **APPROVE**(P0 0 · P1 0). 남은 P2 1 · P3 4(r9 R9-1~R9-5)는 기록 — `review.md` §3.24. 구현 착수는 0.7(Manager 스케줄링)을 거친다
       > **2라운드(2026-09-25) FAIL**(`review.md` 「2라운드」). **사용자 결정(2026-09-25)**: §2.11 1 **독립** ·
       > 2 **거부** · 3 **수용**(범위 이동). 3판이 그것을 반영했다. 3라운드는 Manager 가 따로 지시한다
-- [ ] 0.6 **열린 질문 Q1~Q7의 답** — 답이 온 뒤 비운 절을 채우고 3라운드 전에 다시 뽑을 번들을 정한다
+- [x] 0.6 **열린 질문 Q1~Q7의 답** — 답이 온 뒤 비운 절을 채우고 3라운드 전에 다시 뽑을 번들을 정한다
       > **파킹(2026-09-27, Manager 분류 — `review.md` §3.8)**: 사용자행 Q5 · Q2(d) · Q7, 구현 로트행 Q1 · Q2(a)(b)(c) ·
       > Q3(정지 조건) · Q4 · Q6. 교차 모델은 Codex 401 가능성 — 실행 시점에 확인
       > **사용자 결정(2026-09-28)**: Q5 보류 + 델타 SHALL 해제 · Q2(d) → a124 정본 · Q7 → a092 21판(둘째 면은 이름
       > 붙은 잔여). **남은 열림은 구현 로트행 Q1 · Q2(a)(b)(c) · Q3 · Q4 · Q6** — 착수 시 코드 영수증으로 확정
+      > **구현 로트 답(Manager 판정 2026-09-30)**: Q1 (a) 새 critical 종류 · Q2(a)(b)(c) normal · Q3 원장 조정 순증(journal 읽기 leaf) ·
+      > Q4 normal + 최대 수량 래치 · Q6 후속 이월 · Q8 (b) 시점 사건 문구. 델타에 규범 추가(10판), 값 · 영수증은 design.
+      > `review.md` §4.3 · §4.4
 
-- [ ] 0.7 **구현 착수 순서 — Manager 스케줄링 사항**(9판 r8 N1 · N2, 10판 r9 R9-1 · R9-2 강화). 구현 착수 순서는 Manager 스케줄링 사항이다. **기본 스케줄은 a092 「모든 보유자」 착지 이후다.** 그 **전에** 착수하려면 Manager 승인만으로는 부족하고 **사용자 확인**이 필요하다 — 추가되는 대기가 손절 루프의 `o.alert` 네 자리(`exitloop.go:831` 관측 두절 · `:1633` 판정 거부 · `:1657` 제안 거부 · `:1687` 청산 지연)를 지나 안전 불변식 4(손절 즉시성)에 닿기 때문이다. **깨질 때의 행동**: 착지 전인데 사용자 확인 기록이 없으면 착수 금지. 사용자 확인과 Manager 승인은 이 change의 `review.md` 「착수 승인 기록」 절에 적고, tasks 7.3 공시에 증폭 수용을 명기한다. 「a092 『모든 보유자』 착지」의 판정 기준은 a092 tasks **21.4**(GREEN — `claimAndDeliver` 잠금 범위)가 체크된 커밋이 이 브랜치 역사에 있고 그 커밋에서 a092 tasks **21.3 (f)**(다른 호출자의 동기 발송이 원격 전송 중일 때 exit 기록이 그 전송을 기다리지 않는다) 시험이 통과하는 것이다 — 그 커밋 해시를 기록에 적는다.
+- [x] 0.7 **구현 착수 순서 — Manager 스케줄링 사항**(9판 r8 N1 · N2, 10판 r9 R9-1 · R9-2 강화). 구현 착수 순서는 Manager 스케줄링 사항이다. **기본 스케줄은 a092 「모든 보유자」 착지 이후다.** 그 **전에** 착수하려면 Manager 승인만으로는 부족하고 **사용자 확인**이 필요하다 — 추가되는 대기가 손절 루프의 `o.alert` 네 자리(`exitloop.go:831` 관측 두절 · `:1633` 판정 거부 · `:1657` 제안 거부 · `:1687` 청산 지연)를 지나 안전 불변식 4(손절 즉시성)에 닿기 때문이다. **깨질 때의 행동**: 착지 전인데 사용자 확인 기록이 없으면 착수 금지. 사용자 확인과 Manager 승인은 이 change의 `review.md` 「착수 승인 기록」 절에 적고, tasks 7.3 공시에 증폭 수용을 명기한다. 「a092 『모든 보유자』 착지」의 판정 기준은 a092 tasks **21.4**(GREEN — `claimAndDeliver` 잠금 범위)가 체크된 커밋이 이 브랜치 역사에 있고 그 커밋에서 a092 tasks **21.3 (f)**(다른 호출자의 동기 발송이 원격 전송 중일 때 exit 기록이 그 전송을 기다리지 않는다) 시험이 통과하는 것이다 — 그 커밋 해시를 기록에 적는다.
       결정 (1)(범위)은 무접촉이다
+      > **충족(2026-09-30)**: a092 21.4 첫 체크 커밋 `06b39a78`, 그 커밋에서 21.3 (f) `TestA092ARecordDoesNotWaitForAnotherSendersTransport`
+      > PASS · GREEN 코드 `fbc6df5f`. 사용자 확인 불요. `review.md` 「착수 승인 기록」
 
 ## 1. 산출물 (3판 — 문서보다 먼저)
 
@@ -57,11 +64,13 @@
 - [x] 1.10 **8판 근거 번들 2개**(r7 F1 · F3): `config.mergeAdoption` · `config.mergeNotifications` — 커버리지
       `analysis/harness/coverage/r8-config.out`(작업트리 `internal/config` 무수정 · base 이래 무변화 확인 뒤 실행). 생성기의 오류
       계약을 번들별 명시로 바꿔 21개 맵을 정정(아래 review §3.21 영수증)
-- [ ] 1.6 **a091과의 병합 확인** — 둘 다 등급 표를 건드릴 수 있다. 3판은 표 크기를 시험에 적지 않는다
+- [x] 1.6 **a091과의 병합 확인** — 둘 다 등급 표를 건드릴 수 있다. 3판은 표 크기를 시험에 적지 않는다
+      > **2026-09-30**: a091은 활성 · 미구현(tasks 2.4 GREEN 미체크). 두 change 모두 `criticalEvents`에 **줄을 더할 뿐**이라 충돌은 map 리터럴의
+      > 인접 줄뿐이다. a095 시험은 표 크기를 단언하지 않고 자기 종류의 등급만 단언한다(`SeverityOf(EventExitPositionAdoptionFailed)`)
 
 ## 2. R1′ — 등급을 사실로 (결정 (1)·(2), design D1)
 
-- [ ] 2.0 **Pre-Edit 선언** — 대상은 Q1의 답이 정한다
+- [ ] 2.0 **Pre-Edit 선언** — 대상은 Q1의 답이 정한다(10판: `adopt` 결과 형태 · `judgeHoldings` · `alertUnmanaged` · `checkExternalIncrease` · `NewReconcileDriver` · `Context.ReconcileDriver` + 새 종류 등재 · journal 새 leaf)
 - [ ] 2.1 **RED** — exit 관측 자리(`workingSet` B6 → `ExitObserver.alertUnmanaged`)의 사실은 **normal**이고
       `Notify` B1 창(`publishBestEffort`)으로 간다: outbox 행 0 · `n.mu` 미획득. 기존
       `TestAPositionWithNoEntryDecisionIsSkippedAndAlertedOnce`의 normal 단언을 유지한다
@@ -87,8 +96,8 @@
       아니다(관측 가능한 것만 단언). **등급은 단언하지 않는다**(Q2(a) 열림). 픽스처에 두 거부 모양 — 편입 켜짐의 범위 밖 pct ·
       꺼짐 · include 없음이지만 범위 밖 pct가 남은 블록 — 을 둘 다 넣는다(9판 r8 N3 · N4, `config.mergeadoption` B3 ·
       `config.adoption.validate` B1)
-- [ ] 2.6 `[비움 — Q2(a)(b)(c)]` 설정 거부(B3) · include 지정 시도 실패(B6) · `adopt` B2 · B6 · B7 연기분 — 답에
-      따라 RED를 쓴다. (알림 on에 transport 죽음은 Q2(d)로 a124 정본에 이관됨 — 여기 없음, r3 N7)
+- [ ] 2.6 **RED (Q2 답 — normal)** 설정 거부(B3) · include 지정 시도 실패(B6, 편입 꺼짐) · `adopt` B2 · B6 · B7 연기분 — 셋 다 outbox 행 0,
+      연기와 시도 실패는 다른 key. (알림 on에 transport 죽음은 Q2(d)로 a124 정본에 이관됨 — 여기 없음, r3 N7)
 - [ ] 2.7 **RED** — 키 분리(결정 (3)(iii)): exit 관측 자리와 reconcile 자리의 event key가 다르다
 - [ ] 2.8 **RED** — 전이 상태 무알림 유지: `judgeHoldings` B9(RECONCILE) · B10(묵은 스냅샷)에서 알림 0
 - [ ] 2.9 **RED** — `notifierAlerter.ExternalPositionFound`의 등급은 normal로 남고, 생산 배선에서
@@ -116,19 +125,19 @@
       가정) · 창 안에서 A → B → A는 **정착한 A**면 A의 재전송을 창 규칙대로 흡수하고 **PENDING인 A**면 재시도한다(둘을 나눠
       시험) · 다른 발송자가 A의 임차를 쥐고 있으면(`ClaimHeldElsewhere`) 그 관측은 배달하지 않는다 · 오류 문구만 바뀐 반복은
       같은 key다(7판 r6 R6-1)
-- [ ] 2.11 `[비움 — Q8]` **사실이 해소된 뒤의 critical 행**(r3 N3) — 편입 실패 → 다음 사이클 편입 성공 → 지연 배달 ·
-      재시작의 시험. 기존 outbox 기계로는 PENDING 행을 갱신 · 정산할 수 없다(design D1). **답 전에는 구현 착수
-      금지 — 정지 조건**
+- [ ] 2.11 **(Q8 답 — (b) 시점 사건 문구)** **사실이 해소된 뒤의 critical 행**(r3 N3) — 편입 실패 → 다음 사이클 편입 성공 → 지연 배달 ·
+      재시작의 시험. 기존 outbox 기계로는 PENDING 행을 갱신 · 정산할 수 없다(design D1). ~~답 전에는 구현 착수
+      금지 — 정지 조건~~ → 10판 답: 행 문구가 그 시각의 실패 사건을 말하고(해소 뒤 배달도 참), 편입 성공이 진입 게이트 래치를 풀지 않음을 시험한다
 
 ## 3. R2′ — 수량 증가 (결정 (3), design D2)
 
 - [ ] 3.1 **RED** — `checkExternalIncrease` B2 **무변화**(R2-B2 삭제): 조회 오류에서 조용히 반환하고
       무관리 알림으로 보내지 않는다
-- [ ] 3.2 `[비움 — Q3]` 엔진 개설 포지션(`judgeHoldings` B7, 편입 기록 없음)의 수량 증가 검사 — 비교 기준이
-      정해지면 RED를 쓴다
-- [ ] 3.3 `[비움 — Q4]` 수량 증가 사실의 종류 · 등급 · 키. critical이면 정본 engine-safety 재알림 창 SHALL NOT과
+- [ ] 3.2 **RED (Q3 답)** 엔진 개설 포지션(`judgeHoldings` B7, 편입 기록 없음)의 수량 증가 검사 — 원장 조정 순증 > 0이면 normal 보고,
+      0 · 음수 · 조정 없음이면 보고 없음. journal leaf `NetAdjustedQuantity`의 비교 술어 변이(부등호 방향 · off-by-one · 열 바꿔치기)
+- [ ] 3.3 **(Q4 답 — normal · 종류 · key 유지 · 최대 수량 래치)** 수량 증가 사실의 종류 · 등급 · 키. critical이면 정본 engine-safety 재알림 창 SHALL NOT과
       대조한 키로, normal이면 `d.grown`(B1) 래치의 기준만
-- [ ] 3.4 `[비움 — Q4]` 475150 원장 순서(편입 2 → 3 · 4 · 5 · 8 · 26 · 32) 재생 시험 — 「32가 운영자에게
+- [ ] 3.4 **(Q4 답)** 475150 원장 순서(편입 2 → 3 · 4 · 5 · 8 · 26 · 32) 재생 시험 — 「32가 운영자에게
       전해진다」를 Q4의 답에 맞는 형태로 못 박는다
 - [ ] 3.5 **GREEN**
 
@@ -146,7 +155,7 @@
       runner 보호는 관측 워터마크에서, 이전 기준선은 최댓값 합성에 그대로(`ladder.go:391-403`, r3 N6)
 - [x] 5.3 `issues.md` I1에 **`baseline_price` 쓰기 자리 넷의 사실**을 번들 분기로 기록 — 판정(B25 `notBelow` ·
       B29 창 선택) · 관측 갱신(B23 — effective 스냅샷과 비교, 스칼라와 일치할 때만 값 유지 · 갈라지면 되돌림) · 재편입 reset(비교 분기 없음) · 최초 INSERT
-- [ ] 5.4 `[비움 — Q6]` 래칫 선행 조건을 SHALL로 다시 세울지
+- [x] 5.4 **(Q6 답 — Manager 판정 2026-09-30)** 래칫 선행 조건을 SHALL로 다시 세우지 않는다 — `issues.md` I1에 두고 후속 change로(design D4)
 
 ## 6. 게이트
 
