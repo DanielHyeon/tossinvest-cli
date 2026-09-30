@@ -1,15 +1,15 @@
 {
   "file": "cmd/tossctl/engine.go",
-  "source_sha256": "5aa437eb90d87a3a0695a359da87bd0276842212851cbf77a6137b0d2e2368b8",
+  "source_sha256": "6844d37952bf3b9fe8b3738e1f0748b08c40f2b0fc5e7a63982f5f264394d745",
   "package": "main",
   "function": "engineRuntime",
   "signature": "engineRuntime(params=5, results=2)",
   "start": {
-    "line": 647,
+    "line": 649,
     "column": 1
   },
   "end": {
-    "line": 737,
+    "line": 739,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 650,
+        "line": 652,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 659,
+        "line": 661,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 672,
+        "line": 674,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 677,
+        "line": 679,
         "column": 2
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 681,
+        "line": 683,
         "column": 2
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 693,
+        "line": 695,
         "column": 2
       }
     }
@@ -66,49 +66,49 @@
     {
       "kind": "return",
       "at": {
-        "line": 651,
+        "line": 653,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 660,
+        "line": 662,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 673,
+        "line": 675,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 678,
+        "line": 680,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 682,
+        "line": 684,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 694,
+        "line": 696,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 697,
+        "line": 699,
         "column": 2
       }
     }
@@ -117,7 +117,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 649,
+        "line": 651,
         "column": 19
       },
       "text": "engineFillDetector"
@@ -125,7 +125,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 654,
+        "line": 656,
         "column": 17
       },
       "text": "ectx.ReconcileDriver"
@@ -133,7 +133,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 655,
+        "line": 657,
         "column": 18
       },
       "text": "ectx.SnapshotCollector"
@@ -141,7 +141,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 663,
+        "line": 665,
         "column": 19
       },
       "text": "ectx.ExitObserver"
@@ -149,7 +149,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 665,
+        "line": 667,
         "column": 13
       },
       "text": "costs.DefaultModel"
@@ -157,7 +157,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 676,
+        "line": 678,
         "column": 19
       },
       "text": "ectx.Recovery"
@@ -165,7 +165,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 680,
+        "line": 682,
         "column": 24
       },
       "text": "ectx.NewRefreshingPairedStrategyEntrySupervisor"
@@ -173,7 +173,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 692,
+        "line": 694,
         "column": 24
       },
       "text": "ectx.AlertDeliverer"
@@ -181,7 +181,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 697,
+        "line": 699,
         "column": 9
       },
       "text": "engine.NewRuntime"
@@ -189,7 +189,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 710,
+        "line": 712,
         "column": 12
       },
       "text": "recoverThenReady"
@@ -197,7 +197,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 710,
+        "line": 712,
         "column": 29
       },
       "text": "engineRecoverySequence"
@@ -205,7 +205,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 710,
+        "line": 712,
         "column": 70
       },
       "text": "engineRecoveryObserver"
@@ -213,7 +213,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 732,
+        "line": 734,
         "column": 4
       },
       "text": "strategyEntry.SupervisedLoop"
@@ -221,7 +221,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 735,
+        "line": 737,
         "column": 56
       },
       "text": "ectx.NormalAlertRelayExecutor"
@@ -231,42 +231,42 @@
     {
       "kind": ":=",
       "at": {
-        "line": 649,
+        "line": 651,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 654,
+        "line": 656,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 663,
+        "line": 665,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 676,
+        "line": 678,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 680,
+        "line": 682,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 692,
+        "line": 694,
         "column": 2
       }
     }

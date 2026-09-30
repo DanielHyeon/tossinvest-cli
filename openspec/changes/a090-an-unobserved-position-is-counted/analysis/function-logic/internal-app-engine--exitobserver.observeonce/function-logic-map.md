@@ -85,3 +85,7 @@
   `o.settleUnobserved(ctx, &cycle)`. B1·B2·B4 무편집(그 주기는 포지션 단위 처리를 하지 않는다 — design D11).
 - 새 호출 셋은 전부 `exit_unobserved.go`(새 파일)의 새 함수다. 루프 안의 둘(`noteUnobservedCause` · `noteJudged`)은 관측자 메모리에만 쓴다 —
   원장·알림 없음. 순회 뒤 `settleUnobserved` 만 알림기 기록 입구(`RecordCritical`, 창 0)와 `EscalateOperatingMode` 를 부른다.
+
+## 착지 리비전 refresh (2026-10-01, Manager 판정 D)
+
+착지 기록 대상 = a090 의 마지막 자기 Go 커밋 `df3a6c69`. 그 사이 a094 가 같은 파일을 편집해 파일 sha 가 밀렸으므로 `ast.json` 을 `df3a6c69` 소스로 재추출했다. **함수 본문 무변** — 시작 줄 기준 상대 좌표로 정규화한 AST(분기·반환·호출·대입) 필드 단위 동일(비교 스크립트). 바뀐 것은 파일 sha(`014cdcc7…` → `aa184f13…`)뿐 — 좌표 동일.
