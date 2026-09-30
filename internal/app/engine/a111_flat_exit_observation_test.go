@@ -1347,8 +1347,3 @@ func TestA111MalformedTransportEvidenceDoesNotMutateOrRetryPermanentlyInvalidPay
 		t.Fatalf("malformed payload mutated the exit state: %+v", h.state(p.ID))
 	}
 }
-
-// UnsettledOnSymbol 은 a094 가 ExitSubmitter 에 더한 미종결 판정임 — 이 시험은 그것을 재지 않으므로 미종결 없음.
-func (s *a111SubmitSpy) UnsettledOnSymbol(context.Context, string, string) ([]journal.AttemptRecord, error) {
-	return nil, nil
-}

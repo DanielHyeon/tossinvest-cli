@@ -933,3 +933,19 @@ func (h *exitHarness) a094DB() *sql.DB {
 	h.t.Cleanup(func() { _ = db.Close() })
 	return db
 }
+
+// --- ExitSubmitter 의 a094 메서드를 다른 시험의 가짜에 더함 -----------------------------------------------
+// 그 시험들은 미종결 판정을 재지 않으므로 「미종결 없음」. 그 파일들을 편집하지 않고 여기에 두는 것은 FLM 게이트가 편집된
+// 파일의 이웃 함수를 요구 집합으로 끌어들이기 때문임(저장소 교훈 「새 코드는 새 파일에」).
+
+func (s *journalMutationSubmitter) UnsettledOnSymbol(context.Context, string, string) ([]journal.AttemptRecord, error) {
+	return nil, nil
+}
+
+func (s *a111SubmitSpy) UnsettledOnSymbol(context.Context, string, string) ([]journal.AttemptRecord, error) {
+	return nil, nil
+}
+
+func (s *signallingSubmitter) UnsettledOnSymbol(context.Context, string, string) ([]journal.AttemptRecord, error) {
+	return nil, nil
+}

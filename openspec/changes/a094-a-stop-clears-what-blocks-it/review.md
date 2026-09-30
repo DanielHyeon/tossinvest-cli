@@ -1145,3 +1145,37 @@ frozen 문서의 줄 번호는 7cf80832 · 0c12844a 기준이다. a092 가 exitl
 | intent 없는 무장 발의 | 청소가 풀지 않음(치움 미완료, 계수 대상) | attempt 를 찾을 수 없으면 살아 있을 수 있음으로 다룸(N1) — 잔여: 옛 판본이 intent 없이 무장한 행이 있으면 사람이 푼다 |
 | 알림 기록 실패 | 결과 무변(로그만), 래치 안 함 → 다음 관측이 재시도. 진입 잠금은 입구(`recordCritical`)가 이미 세움 | D−6.1 · 3.R2a |
 | 로그 | a094 경로의 경고 줄은 계좌 필드를 싣지 않음(`warnA094`) | 불변식 8 · MaskAccount 선례 |
+
+**§0.3 인접 대가 — 이름 붙은 대가임(Manager 조건, 2026-09-30).** `TestABreachDisplacesAnOutstandingTakeProfit` 의 +1 사이클은 손절 제출이
+늦어지는 대가이며, frozen design 이 그것을 이름 대고 적었다: `design.md:403`(D−4.3-4 「무장 익절(매도)이 걸린 채 손절이 성립하면 손절이 체결 감지
+한 주기(≈3초, SLO 10초)만큼 늦는다」)과 그 개정 `design.md:311`(D−5.4-4 「종결 증거가 올 때까지 늦는다 — 정상이면 체결 감지 몇 주기, 멈추면 무기한」),
+tasks 「안전 불변식 확인」 §4 행(「R5-7 은 무장 익절 매도 위의 손절을 종결 증거가 올 때까지 늦춘다」). 시험의 가짜 제출자는 취소와 **동시에** 종결
+스냅숏을 기록하므로 실측 지연은 관측 주기 하나(5초)다 — 생산에서는 체결 감지가 종결을 기록하는 시점까지다. 대가로 지키는 것: 살아 있을 수 있는
+매도 위에 두 번째 매도를 얹지 않는다(취소 접수를 치움으로 치던 종전 규칙은 부분 체결을 모른 채 초과 매도로 열리는 fail-open 이었다). **다각 리뷰의
+명시 검토 대상**으로 표시한다.
+
+### 3. 착지 단위 ③ — 기동: ACKED 발주 확정 · 따라잡기 (tasks 4.N4* · 4.3b · 4.3d · 4.4)
+
+**Pre-Edit Gate (4.0 의 기동 몫)**: 대상 `reconcile.Recovery.Run`(ACKED 갈래에 `confirmAcked` 한 호출 — 확정되면 `continue`, 아니면 종전 `StillPending`) ·
+`engine.Context.Recovery`(Alerts · CatchUp 배선) · `cmd/tossctl` 의 `engineRecoverySequence` **var 클로저**(r.Run 성공 뒤 `r.CatchUpExitProposals`).
+신설: `reconcile/acked_boot.go` · `engine/boot_catchup.go`. 호출자: `Recovery.Run` 은 클로저 하나(생산), `Context.Recovery` 는 `engineRuntime` 하나.
+`engineRuntime` 은 **편집하지 않았다**(a090 편집 표면 — 따라잡기는 `reconcile.Options.CatchUp` 으로 실었다). var 클로저는 logic-map 도구의 함수 단위가 아니다
+(`go run ./tools/logic-map --func engineRecoverySequence` → "not found") — FLM 은 `Function Logic Map: not-applicable` 사유로 구조 시험
+`TestA094TheBootCatchUpRunsAfterASuccessfulRecovery`(클로저 문장 순서 Run → 오류 반환 → CatchUp → return 을 AST 로 단언)가 대신한다. §0 검토: 기동
+확정은 바이트 일치에서만 원장을 바꾸고, 모든 실패는 알림으로 흡수해 복구를 실패시키지 않는다(D−4.2-2) — 관측 루프가 뜨지 않는 경로를 새로 만들지 않는다.
+
+**구현 결정.** 기동 ACKED 알림은 `obs.EventOrderInDoubt`(critical), key `order.in_doubt|acked:<attempt>` · 창 0. 따라잡기 행 실패는
+`obs.EventExitLiquidationDelayed`, key `…|<position>|intent:<intent>` · 창 0. 따라잡기의 목록 읽기 실패는 아무것도 바꾸지 않았으므로 경고 로그만 남기고
+복구는 계속한다(잔여: 그 기동에서는 따라잡기가 없다 — 다음 기동이 다시 본다). 번호 없는 PLACE ACKED 는 원장이 `MarkAcked("")` 를 받지 않아 픽스처로 만들 수
+없다 — 코드 갈래(`strings.TrimSpace(rec.BrokerOrderID) == ""` → 알림)는 남기고 시험은 CANCEL ACKED 로 「읽기 0 · 알림 1」 을 잰다.
+
+**세 시험 파일의 되돌림은 이동이다(삭제 아님, Manager 조건).** b74875e7 이 `exit_identity_concurrency_test.go`(`journalMutationSubmitter`) ·
+`a111_flat_exit_observation_test.go`(`a111SubmitSpy`) · `exit_snapshot_isolation_test.go`(`signallingSubmitter`)에 붙였던 `UnsettledOnSymbol` 메서드 셋은
+**단언이 없는 인터페이스 충족용 메서드**(`return nil, nil`)이며, 같은 몸체 그대로 `a094_exit_clear_test.go` 끝으로 옮겼다. 세 파일은 b74875e7 이전 바이트로
+돌아갔다 — FLM 게이트가 편집된 파일의 이웃 함수(`newConcurrentObserver` 등)를 요구 집합으로 끌어들이기 때문이다. 약화된 단언 0.
+
+| 옮긴 것 | 옛 자리 | 새 자리 |
+|---|---|---|
+| `(*journalMutationSubmitter).UnsettledOnSymbol` | `exit_identity_concurrency_test.go` 끝 | `a094_exit_clear_test.go` 끝 |
+| `(*a111SubmitSpy).UnsettledOnSymbol` | `a111_flat_exit_observation_test.go` 끝 | 같음 |
+| `(*signallingSubmitter).UnsettledOnSymbol` | `exit_snapshot_isolation_test.go` 끝 | 같음 |

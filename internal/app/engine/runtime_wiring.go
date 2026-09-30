@@ -185,6 +185,18 @@ func (c *Context) Recovery(opts reconcile.Options) (*reconcile.Recovery, error) 
 	opts.Collector = c.SnapshotCollector(opts.Clock)
 	opts.Gate = c.Entry
 	opts.AccountRef = c.AccountRef
+	// a094: 기동 ACKED 확정 실패의 명명 critical 과 기동 따라잡기(D−4.2 · D−2.5). 호출자 값과 무관하게 덮음.
+	if c.Notifier != nil {
+		opts.Alerts = c.Notifier
+	}
+	journalRef, account, notifier, log := c.Journal, c.AccountRef, c.Notifier, c.Log
+	opts.CatchUp = func(ctx context.Context) {
+		var critical CriticalRecorder
+		if notifier != nil {
+			critical = notifier
+		}
+		catchUpExitProposals(ctx, journalRef, account, critical, log)
+	}
 	rec, err := reconcile.New(opts)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrRecoveryUnavailable, err)

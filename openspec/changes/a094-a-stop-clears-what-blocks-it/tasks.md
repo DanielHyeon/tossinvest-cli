@@ -215,16 +215,16 @@
       (`cmd/tossctl/engine.go:604-606`·`:677`)의 AST·FLM·BTM 을 **편집 전에** 만든다
 - [ ] 4.0b **FLM(편집 전, 6판)** — `Recovery.Run`(ACKED 알림을 그 안에 둘 경우)과 `Gateway.checkSymbolFree`(판정 추출) 번들을 현재 소스로
       재생성한다. `ExitObserver.judge`/`record`(park 알림 자리) 번들도 편집 전에 갖춘다
-- [ ] 4.N4 **RED (6판 D−4.2, Q6-1)** — ACKED PLACE(기록 번호 있음)를 남긴 채 재시작: 가짜 주문 읽기가 **같은 번호 바이트 일치 + 같은 종목**을
+- [x] 4.N4 **RED (6판 D−4.2, Q6-1)** — ACKED PLACE(기록 번호 있음)를 남긴 채 재시작: 가짜 주문 읽기가 **같은 번호 바이트 일치 + 같은 종목**을
       돌려주면 `CONFIRMED`, 알림 0, 읽기 호출 **정확히 1**
-- [ ] 4.N4a **RED (6판, 안전)** — 같은 fixture 에서 읽기가 ① 실패 ② 다른 번호(대소문자·공백만 다른 번호 포함) ③ 다른 종목 ④ 해석 불가 → attempt ACKED
+- [x] 4.N4a **RED (6판, 안전)** — 같은 fixture 에서 읽기가 ① 실패 ② 다른 번호(대소문자·공백만 다른 번호 포함) ③ 다른 종목 ④ 해석 불가 → attempt ACKED
       그대로, 발의 무장 그대로, 명명 critical 1회(attempt key), `Recovery.Run` 은 `ErrRecoveryIncomplete` 없이 끝남. 해소기(`Resolver.Resolve`)·목록
       조회 호출 0
-- [ ] 4.N4b **RED (6판)** — CANCEL/AMEND ACKED 와 기록 번호 없는 PLACE ACKED: 읽기 호출 0, 상태 무변경, 명명 critical 1회
-- [ ] 4.N4c **RED (6판, 구조)** — 기동 확정의 번호·종목 판정과 `confirmCreatedOrder` 가 **같은 함수**를 부른다(AST 구조 단언 + 그 함수의 번호 비교를
+- [x] 4.N4b **RED (6판)** — CANCEL/AMEND ACKED 와 기록 번호 없는 PLACE ACKED: 읽기 호출 0, 상태 무변경, 명명 critical 1회
+- [x] 4.N4c **RED (6판, 구조)** — 기동 확정의 번호·종목 판정과 `confirmCreatedOrder` 가 **같은 함수**를 부른다(AST 구조 단언 + 그 함수의 번호 비교를
       바꾼 변이가 발주 직후 확인 시험과 4.N4 를 모두 깨뜨린다)
-- [ ] 4.N4d **RED (6판)** — `ResolveConfirmed` 원장 쓰기 실패 fixture: ACKED 그대로, 명명 critical, 복구 성공(루프 시작)
-- [ ] 4.N4e **RED (7판 D−5.1 — 종목 공백)** — 발주 직후 확인과 기동 확정 **둘 다**: 번호 바이트 일치 + 응답 종목이 ① 필드 없음 ② `null` ③ `""` ④ 공백만 →
+- [x] 4.N4d **RED (6판)** — `ResolveConfirmed` 원장 쓰기 실패 fixture: ACKED 그대로, 명명 critical, 복구 성공(루프 시작)
+- [x] 4.N4e **RED (7판 D−5.1 — 종목 공백)** — 발주 직후 확인과 기동 확정 **둘 다**: 번호 바이트 일치 + 응답 종목이 ① 필드 없음 ② `null` ③ `""` ④ 공백만 →
       확인 실패(발주 직후는 IN_DOUBT `ack_round_trip_unconfirmed`, 기동은 ACKED 잔존 + 알림). 한 함수의 종목 비교를 되돌린 변이가 두 경로 시험을 모두 깬다.
       **확인 읽기를 실제로 타는 픽스처 중 종목 없는 것을 먼저 센다**(후보 `wts_isolation_test.go:96`) — 그 목록만 고친다
 - [ ] 4.N4f **RED (7판 D−5.2 · 9판 D−7.1 — 에피소드 key)** — ① 같은 attempt 의 기동 ACKED 알림을 전달→재시작→재적재: 새 행 0, 재전송 0 ② 다른 attempt: 새 행
@@ -260,19 +260,19 @@
       발의는 무장된 채 남고, 원 매도가 살아 있다고 가정한 반례(park + 살아 있는 SELL)에서 두 번째 매도가 무장되지 않음을 단언한다
 - [x] 4.3a **RED (4판 F4)** — 해제는 attempt 의 `intent_id` = 현재 `pending_intent_id` 일 때만 비운다. 다르면 무변화
       (늦게 도착한 해제 · 재무장 뒤의 옛 해제)
-- [ ] 4.3b **RED (4판 F4)** — 기동 따라잡기: `pending_intent_id` 가 찬 발의마다 그 intent 의 attempt 가 **모두**
+- [x] 4.3b **RED (4판 F4)** — 기동 따라잡기: `pending_intent_id` 가 찬 발의마다 그 intent 의 attempt 가 **모두**
       `FAILED_CONFIRMED`·`NOT_DISPATCHED` 이거나 **하나도 없으면** 해제. 종결과 해제 사이 충돌 · 무장 뒤 `Prepare` 전 충돌 fixture 가
       다음 기동에서 풀린다. attempt 하나라도 `CONFIRMED`·park·미종결이면 해제하지 않는다. 멱등
 - [x] 4.3c **RED (4판, 문서 리뷰 P0)** — 세션 중 `submit` 은 `out.State ∈ {NOT_DISPATCHED, FAILED_CONFIRMED}` 이거나
       `out.AttemptID == ""` 일 때만 해제한다. dispatch 뒤 `MarkAcked`(또는 `Settle`·`MarkInDoubt`) 쓰기를 실패시킨 fixture
       (`gateway.go:747` — `State==""`, `AttemptID!=""`)에서 발의가 **무장된 채** 남음을 단언한다
-- [ ] 4.3d **RED (4판, 문서 리뷰 P1 · Q4-5)** — 기동 단계(따라잡기 — 5판에서 재분류는 이연)의 한 행 실패는 그 행을 바꾸지 않고 다음 행으로 가며 Recover 가
+- [x] 4.3d **RED (4판, 문서 리뷰 P1 · Q4-5)** — 기동 단계(따라잡기 — 5판에서 재분류는 이연)의 한 행 실패는 그 행을 바꾸지 않고 다음 행으로 가며 Recover 가
       nil 을 돌려준다(루프 시작 — `runtime.go:289-295`). 그 실패는 **포지션 단위 key 의 critical** 로 발송된다
 - [ ] 4.3e **(Q4-1 → 6판 4.T 로 구현 범위 편입)** — 운영자 해소 도구가 `OperatorResolve` 뒤 **같은 해제 판정 함수**를 그 자리에서 부른다는 계약을
       4.7 의 판정 함수 시그니처에 반영한다(판정 함수 하나 — 세션 중 `submit` · 기동 따라잡기 · 운영자 도구가 공유). ~~도구 구현은 범위 밖~~ — **6판: 4.T 로 구현 범위**
 - [ ] 4.3f **정지 조건(Q4-6)** — 구현이 「rate-limit 으로 park 된 attempt」 를 타입으로 가려야 하게 되면(원장 reason 수준에서 429 가
       `dispatch_outcome_unknown` 과 구별되지 않는다 — `classify.go:114-117`) 새 reason code 추가를 Manager 에게 올리고 멈춘다
-- [ ] 4.4 **RED (4판 F6 — 재핀, 5판 개정)** — 기동 순서: ① ~~재분류~~(5판 이연, D−3.4), ② 따라잡기(4.3b)가 `Recovery.Run` 뒤·`ready` 앞,
+- [x] 4.4 **RED (4판 F6 — 재핀, 5판 개정)** — 기동 순서: ① ~~재분류~~(5판 이연, D−3.4), ② 따라잡기(4.3b)가 `Recovery.Run` 뒤·`ready` 앞,
       ③ `Recovery.Run` 본문(재시작 규칙 → **기동 ACKED 확정·알림(D−4.2 — 7판)** → 재생 → 해소)과 인터록 의미는 그 외 **무변화**. 좌표 단언이 아니라 순서 단언이다(`engineRecoverySequence` `:604-606`,
       `recoverThenReady` `:677`). ②의 자리는 **`engineRecoverySequence` 클로저 안 `r.Run` 뒤** — 루프는 Recover 반환 뒤에만 시작한다
 - [x] 4.4a **RED (핵심)** — 이 경로는 `Journal.RecoverPending`을 **세션 중에 부르지 않는다**(`journal/recovery.go:95-109`)

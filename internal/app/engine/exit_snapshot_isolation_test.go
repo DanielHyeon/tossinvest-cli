@@ -138,8 +138,3 @@ func TestUnknownLegacyPolicyIdentityIsDurablyGenerationQuarantined(t *testing.T)
 		t.Fatalf("generation quarantine = %+v active=%v err=%v", q, active, err)
 	}
 }
-
-// UnsettledOnSymbol 은 a094 가 ExitSubmitter 에 더한 미종결 판정임 — 이 시험은 그것을 재지 않으므로 미종결 없음.
-func (s *signallingSubmitter) UnsettledOnSymbol(context.Context, string, string) ([]journal.AttemptRecord, error) {
-	return nil, nil
-}

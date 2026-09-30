@@ -621,8 +621,19 @@ var engineRuntimeFactory = engineRuntime
 // Without it that step was guarded by a source string, and a102's A2 review
 // showed what that is worth: `ready = nil` inserted between the parameter and
 // its use left every test green (mutation N5).
+//
+// a094 D−2.5 · D−2.6-2: 재시작 복구가 **성공한 뒤** · 준비 신호 앞에 exit 발의 따라잡기를 한 번 돈다(종결됐는데 무장된 채
+// 남은 발의를 같은 해제 판정으로 푼다). 복구가 실패하면 루프가 하나도 뜨지 않으므로 따라잡기도 하지 않는다. 따라잡기는
+// 행 단위로 실패를 흡수하고 반환값을 바꾸지 않는다.
 var engineRecoverySequence = func(r *reconcile.Recovery) func(context.Context) (reconcile.Report, error) {
-	return r.Run
+	return func(ctx context.Context) (reconcile.Report, error) {
+		report, err := r.Run(ctx)
+		if err != nil {
+			return report, err
+		}
+		r.CatchUpExitProposals(ctx)
+		return report, nil
+	}
 }
 
 // engineRuntime assembles the loop set and hands it to the supervisor, refusing
