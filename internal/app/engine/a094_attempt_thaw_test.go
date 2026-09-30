@@ -190,6 +190,10 @@ func TestA094AThawOfAnUnparkedAttemptIsStale(t *testing.T) {
 	if state, armed := fx.state(t); state != journal.StateInDoubt || !armed {
 		t.Fatalf("state %s armed %v, want untouched", state, armed)
 	}
+	// stale 은 audit 줄 **앞**에서 거절 — audit 기록은 실제로 시도한 해소만 담는다(변이 M27).
+	if raw, _ := os.ReadFile(fx.auditLog); strings.Contains(string(raw), AuditActionAttemptThaw) {
+		t.Errorf("a stale thaw left an audit line: %s", raw)
+	}
 }
 
 // 4.T — 필수 입력 누락은 거절, 접수 확정은 주문 번호 필수 · 발의를 풀지 않음.

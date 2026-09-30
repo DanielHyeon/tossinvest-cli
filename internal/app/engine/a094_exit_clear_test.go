@@ -242,6 +242,34 @@ func TestA094AParkedTakeProfitIsNotClearedAndIsNamed(t *testing.T) {
 			t.Errorf("remindAfter = %s, want 0 — an episode is one row", r)
 		}
 	}
+	// 침묵하지 않는다: 보류가 한계를 넘으면 기존 지연 경보가 난다 — 청소가 「완료」 로 판정해 타이머를 지우면 안 난다
+	// (arming 의 두 번째 발의 거절이 제출은 막아도 경보는 못 살림 — 변이 M12).
+	h.clk.Advance(31 * time.Second)
+	h.observe()
+	if got := h.alerts.count(obs.EventExitLiquidationDelayed); got != 1 {
+		t.Errorf("delay alerts = %d past the bound, want 1", got)
+	}
+}
+
+// 3.R7(다른 intent) — 무장 발의와 다른 intent 의 엔진 매도를 취소한 주기: 그 매도의 취소 접수는 치움이 아님. 발의 판정이
+// 해제를 허락해도(그 intent 에 attempt 없음) 손절은 그 매도의 종결 기록 전에 나가지 않음(변이 M10).
+func TestA094AnotherIntentsCancelledSellStillHoldsTheStop(t *testing.T) {
+	h, sub, _ := a094Harness(t, nil)
+	p := h.entry("005930", "10", "70000", "68000", "70000")
+	h.quote("005930", 70100)
+	h.observe()
+	h.a094ArmOn(p, "005930", "exit-tp-armed", string(exitpolicy.ActionRatchetPartial))
+	h.a094RecordSell("old-sell", 4, 72000, journal.StateConfirmed)
+	h.submit.settle = nil
+	sub.cancelRecords = true
+	h.quote("005930", 67900)
+	h.observe()
+	if len(h.submit.cancels) != 1 {
+		t.Fatalf("cancels = %d, want the other intent's sell cancelled", len(h.submit.cancels))
+	}
+	if len(h.submit.places) != 0 {
+		t.Fatalf("places = %d, want no stop over a sell whose cancel is only acknowledged", len(h.submit.places))
+	}
 }
 
 // 3.N1a — key 는 포지션 단위: 두 포지션이면 두 key.

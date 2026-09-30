@@ -152,6 +152,7 @@ func TestA094AnUnconfirmedAckedPlaceStaysAndIsNamed(t *testing.T) {
 		{"number differs in case", &a094CountingOrders{single: map[string]json.RawMessage{"O-acked": a094Detail("o-acked", "AAPL")}}},
 		{"number differs in space", &a094CountingOrders{single: map[string]json.RawMessage{"O-acked": a094Detail(" O-acked", "AAPL")}}},
 		{"other symbol", &a094CountingOrders{single: map[string]json.RawMessage{"O-acked": a094Detail("O-acked", "MSFT")}}},
+		{"empty symbol (4.N4e)", &a094CountingOrders{single: map[string]json.RawMessage{"O-acked": a094Detail("O-acked", "")}}},
 		{"unreadable", &a094CountingOrders{single: map[string]json.RawMessage{"O-acked": json.RawMessage(`{"result":`)}}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
