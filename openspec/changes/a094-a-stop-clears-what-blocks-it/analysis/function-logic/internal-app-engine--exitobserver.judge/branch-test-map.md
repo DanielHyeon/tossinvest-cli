@@ -7,11 +7,11 @@
 
 | Branch | 조건 | 진입 실측 | Test | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:874` `if !o.quoteUsable(quote) {` | 아니오 | `TestA094TheParkCheckChangesNoOutcome` | n/a | yes |
-| B2 | `:880` `if m.identityErr != nil {` | 예 | `TestARungTableSwappedUnderALivePositionIsRefused` | n/a | yes |
-| B3 | `:884` `if m.reJudge {` | 예 | `TestCrossingTheFirstTakeProfitKeepsThePositionUnderJudgement` | n/a | yes |
-| B4 | `:894` `if err := o.opts.Journal.StampExitSnapshotQuarantineSelector(ctx,` | — | `TestCrossingTheFirstTakeProfitKeepsThePositionUnderJudgement` | n/a | yes |
-| B5 | `:900` `if err != nil {` | 아니오 | `TestA094TheParkCheckChangesNoOutcome` | n/a | yes |
-| B6 | `:905` `switch m.state.PolicyKind {` | 예 | `TestA094AParkedStopIsNamedOnceAndStaysSuppressed` | n/a | yes |
-| B7 | `:906` `case journal.ExitPolicyLadder:` | 예 | `TestA094AnUnacceptedStopIsReleasedAndProposedAgain` | n/a | yes |
-| B8 | `:908` `default:` | 예 | `TestA094AParkedStopIsNamedOnceAndStaysSuppressed` | n/a | yes |
+| B1 | `:900` `if !o.quoteUsable(quote) {` | 아니오 | `TestA094TheParkCheckChangesNoOutcome` | n/a | yes |
+| B2 | `:906` `if m.identityErr != nil {` | 예 | `TestARungTableSwappedUnderALivePositionIsRefused` | n/a | yes |
+| B3 | `:910` `if m.reJudge {` | 예 | `TestCrossingTheFirstTakeProfitKeepsThePositionUnderJudgement` | n/a | yes |
+| B4 | `:920` `if err := o.opts.Journal.StampExitSnapshotQuarantineSelector(ctx,` | — | `TestCrossingTheFirstTakeProfitKeepsThePositionUnderJudgement` | n/a | yes |
+| B5 | `:926` `if err != nil {` | 아니오 | `TestA094TheParkCheckChangesNoOutcome` | n/a | yes |
+| B6 | `:931` `switch m.state.PolicyKind {` | 예 | `TestA094AParkedStopIsNamedOnceAndStaysSuppressed` | n/a | yes |
+| B7 | `:932` `case journal.ExitPolicyLadder:` | 예 | `TestA094AnUnacceptedStopIsReleasedAndProposedAgain` | n/a | yes |
+| B8 | `:934` `default:` | 예 | `TestA094AParkedStopIsNamedOnceAndStaysSuppressed` | n/a | yes |

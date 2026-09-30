@@ -7,16 +7,16 @@
 
 | Branch | 조건 | 진입 실측 | Test | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:1368` `if err != nil {` | 아니오 | `TestAFloorThatCannotBeComputedSellsNothing` | n/a | yes |
-| B2 | `:1371` `if isZeroQuantity(submitQuantity) {` | 예 | `TestAZeroFloorSubmitsNothingAndLeavesTheLevelProposable` | n/a | yes |
-| B3 | `:1391` `if err != nil {` | 아니오 | `TestA094AnUnacceptedStopIsReleasedAndProposedAgain` | n/a | yes |
-| B4 | `:1400` `if err := o.opts.Journal.AttachExitIntent(ctx, m.position.ID, intentID); err != nil {` | 예 | `TestABaselineBreachProposesTheWholePosition` | n/a | yes |
-| B5 | `:1405` `if err != nil {` | 아니오 | `TestABaselineBreachProposesTheWholePosition` | n/a | yes |
-| B6 | `:1415` `switch {` | — | `TestABaselineBreachProposesTheWholePosition` | n/a | yes |
-| B7 | `:1416` `case out.State == journal.StateConfirmed:` | 예 | `TestABaselineBreachProposesTheWholePosition` | n/a | yes |
-| B8 | `:1424` `case out.State == journal.StateInDoubt \|\| out.State == journal.StateUnresolvedInDoubt:` | 예 | `TestAnInDoubtSubmissionKeepsTheProposalArmed` | n/a | yes |
-| B9 | `:1429` `case out.Reason == execgw.ReasonSymbolInFlight:` | 아니오 | `TestABaselineBreachProposesTheWholePosition` | n/a | yes |
-| B10 | `:1432` `case out.AttemptID != "" && out.State != journal.StateNotDispatched && out.State != journal.StateFailedConfirmed:` | 예 | `TestA094AnUnrecordedOutcomeKeepsTheProposalArmed` | n/a | yes |
-| B11 | `:1436` `if err == nil {` | 아니오 | `TestA094AnUnrecordedOutcomeKeepsTheProposalArmed` | n/a | yes |
-| B12 | `:1441` `default:` | 예 | `TestA094AnUnacceptedStopIsReleasedAndProposedAgain` · `TestARefusedProposalReleasesTheLevelAndAlerts` | n/a | yes |
-| B13 | `:1443` `if detail == "" && err != nil {` | 아니오 | `TestARefusedProposalReleasesTheLevelAndAlerts` | n/a | yes |
+| B1 | `:1394` `if err != nil {` | 아니오 | `TestAFloorThatCannotBeComputedSellsNothing` | n/a | yes |
+| B2 | `:1397` `if isZeroQuantity(submitQuantity) {` | 예 | `TestAZeroFloorSubmitsNothingAndLeavesTheLevelProposable` | n/a | yes |
+| B3 | `:1417` `if err != nil {` | 아니오 | `TestA094AnUnacceptedStopIsReleasedAndProposedAgain` | n/a | yes |
+| B4 | `:1426` `if err := o.opts.Journal.AttachExitIntent(ctx, m.position.ID, intentID); err != nil {` | 예 | `TestABaselineBreachProposesTheWholePosition` | n/a | yes |
+| B5 | `:1431` `if err != nil {` | 아니오 | `TestABaselineBreachProposesTheWholePosition` | n/a | yes |
+| B6 | `:1441` `switch {` | — | `TestABaselineBreachProposesTheWholePosition` | n/a | yes |
+| B7 | `:1442` `case out.State == journal.StateConfirmed:` | 예 | `TestABaselineBreachProposesTheWholePosition` | n/a | yes |
+| B8 | `:1450` `case out.State == journal.StateInDoubt \|\| out.State == journal.StateUnresolvedInDoubt:` | 예 | `TestAnInDoubtSubmissionKeepsTheProposalArmed` | n/a | yes |
+| B9 | `:1455` `case out.Reason == execgw.ReasonSymbolInFlight:` | 아니오 | `TestABaselineBreachProposesTheWholePosition` | n/a | yes |
+| B10 | `:1458` `case out.AttemptID != "" && out.State != journal.StateNotDispatched && out.State != journal.StateFailedConfirmed:` | 예 | `TestA094AnUnrecordedOutcomeKeepsTheProposalArmed` | n/a | yes |
+| B11 | `:1462` `if err == nil {` | 아니오 | `TestA094AnUnrecordedOutcomeKeepsTheProposalArmed` | n/a | yes |
+| B12 | `:1467` `default:` | 예 | `TestA094AnUnacceptedStopIsReleasedAndProposedAgain` · `TestARefusedProposalReleasesTheLevelAndAlerts` | n/a | yes |
+| B13 | `:1469` `if detail == "" && err != nil {` | 아니오 | `TestARefusedProposalReleasesTheLevelAndAlerts` | n/a | yes |

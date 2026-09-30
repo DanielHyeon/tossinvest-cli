@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "9b7d9a800069b1008baf9c2db9742b3998d2c89f5f4b6861475aff067e3f0182",
+  "source_sha256": "aa184f1394822180098e86b0c86a27acdc67493e785d687769365e898838cc01",
   "package": "engine",
   "function": "release",
   "receiver": "ExitObserver",
   "signature": "ExitObserver.release(params=4, results=1)",
   "start": {
-    "line": 1456,
+    "line": 1482,
     "column": 1
   },
   "end": {
-    "line": 1461,
+    "line": 1487,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 1457,
+        "line": 1483,
         "column": 2
       }
     }
@@ -27,14 +27,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 1458,
+        "line": 1484,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1460,
+        "line": 1486,
         "column": 2
       }
     }
@@ -43,7 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1457,
+        "line": 1483,
         "column": 18
       },
       "text": "o.opts.Journal.ReleaseUnacceptedExitProposal"
@@ -51,7 +51,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1458,
+        "line": 1484,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -61,7 +61,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 1457,
+        "line": 1483,
         "column": 5
       }
     }

@@ -1219,3 +1219,39 @@ audit 줄 뒤 commit 실패 시 보상 줄).
   돈다. `engineRecoverySequence` 는 var 클로저라 도구의 함수 단위가 아님 — `Function Logic Map: not-applicable` 사유로 구조 시험이 대신한다(§3).
 - **변이**: `analysis/implementation/mutation-ledger.md` — 29 변이, 최종 CAUGHT 28 · 동등 1(M20b, 메시지 전용 — 근거는 원장). 생존 넷 중 셋이 실제 시험 구멍이었고
   (M10 다른 intent 의 매도 · M12 보류의 경보 침묵 · M27 거절된 해동의 audit 줄) 시험을 더해 닫았다.
+
+### 7. 다각 리뷰 (2026-09-30, Claude 3보이스 · 변이 원장 1·2판 뒤) — 전표와 처분
+
+보이스: **A 적대 Eng(안전)** REJECT(P0 0 · P1 1 · P2 3 · P3 5) · **B 스펙 적합 · 범위** REJECT(P0 0 · P1 4 · P2 3 · P3 6) · **C 품질 · 시험 · 동시성** PASS(P2 4 · P3 7).
+세 보이스 모두 초과 매도 경로 0 을 확인했다(해제는 판정 읽기+쓰기 한 트랜잭션 · 미종결/접수 대기/park 은 해제 안 함 · 게이트웨이와 같은 미종결 판정).
+교차 모델(codex)은 Manager 대기열(a090 다음).
+
+| id | 보이스 | 발견 | 처분 | 증거 |
+|---|---|---|---|---|
+| A1 · B P1-a | A·B | 해동 명령이 `engine` 트리에 안 붙음(park 의 유일한 출구 부재) | **수리** `6a90ebeb` | `TestA094TheAttemptResolveCommandIsAttachedToTheEngineTree` |
+| B P1-b | B | 3.E5 제외가 대상 주문(`target_order_id`)에 결속 안 됨 — 다른 주문 취소가 이른 경보를 끔 | **수리** `48100446`(`onlyEngineCancelsInFlight(unsettled, clearTargets)`) | 3.E5 표에 「다른 주문을 겨눈 ACKED 취소 → 셈」 · 변이 M28 · M29 |
+| B P1-c | B | 3.R9 재시작 같은 행 미시험 | **수리** | `TestA094TheCloseWaitEpisodeIsOneRowAcrossRestarts`(실제 outbox) |
+| B P1-d | B | 4.N4f④ 시험이 공허(연속 하나) · ③ 다른 park 새 행 미시험 | **수리** | `TestA094TwoStreaksAtTheSameInstantAreTwoEpisodes`(같은 시각 두 연속 + 재시작 셋째) · `TestA094AnotherParkedAttemptIsANewRow` |
+| A2 | A | 연속 실패 경보 래치가 기록 전 — 기록 실패 시 영영 재시도 안 함 | **수리**(성공 뒤 래치) | `TestA094AFailedStreakRecordIsRetried` · 변이 M31 |
+| A3 · C P2#2 | A·C | 해동 뒤 해제 실패(또는 제출 뒤 해제 실패)는 재시작만이 복구 — 재시작은 손절 정지 | **수리**: 판정 진입에서 발의 intent 가 입증된 비수용이면 같은 판정 함수로 해제(「종결 후에는 반드시 푼다」). 해동 해제 실패는 critical `|thaw-release:` | `TestA094AnUnacceptedProposalLeftArmedIsReleasedNextObservation` · 4.Ta 시험의 critical 단언 · 변이 M30 · M36 |
+| A4 | A | 기동 ACKED 알림 본문에 공식 API 응답 본문(계좌 식별자 가능) | **수리**(`withoutBrokerBody` — 상태 코드만) | `TestA094TheAckedAlertWithholdsTheBrokerBody` · 변이 M34 |
+| B P2-a · A5 | A·B | D−9.3 알림이 발의 intent 의 매도만 봄 — 청소가 취소한 다른 intent 매도는 `|cancel:` 없음 | **수리**(미체결 목록의 엔진 매도도 봄 — 스펙 문장 「엔진의 매도 주문」 에 맞춤) | `TestA094AnotherIntentsCloseWaitIsNamedToo` · 변이 M32 |
+| B P2-b | B | 4.N4g 미시험 · 4.N4h 미체크 | **수리** | `TestA094ARecordFailureLocksEntriesAndTheLoopGoesOn`(outbox 삽입 거부 → `ReasonAlertUndelivered` 잠금 · 두 포지션 판정 · 다른 손절 제출). 4.N4h 는 a092 아카이브로 충족 |
+| B P2-c · A6 · C P3#5 | A·B·C | intent 없는 무장 발의가 조용히 얼어 있음 | **수리**(명명 critical `|nointent:`, 따라잡기 경고) — 푸는 것은 여전히 사람(I5) | `TestA094AnIntentlessArmedProposalIsNamed` · 변이 M33 |
+| C P2#1 · A7 | A·C | 판정 없는 `ResolveExitProposal` 이 남아 있음(생산 호출자 0) | **핀**: 비시험 호출자 0 을 AST 로 고정(공개 API 삭제는 base 번들 증거를 요구하는 교체라 하지 않음) | `TestA094TheUnjudgedResolveHasNoProductionCaller` |
+| C P2#3 | C | 배선 시험이 따라잡기 클로저를 실행 안 함 | **수리**(생산 조립 원장에 무장 발의를 심고 `rec.CatchUpExitProposals`) | `TestA094TheRecoveryCarriesTheBootCatchUp` |
+| C P2#4 · B P3-c | B·C | 따라잡기 목록 실패가 로그뿐 | **수리**(기동 에피소드 critical `|catchup-list:<boot id>`) | `TestA094ABootCatchUpListFailureIsNamed` · 변이 M35 |
+| B P3-a | B | 비문자열 code 곁의 확정 code 가 422 에서 확정 거절 | **수리**(모순 강제) | 2.5e 비문자열 행 · 변이 M4(재정의) |
+| B P3-b | B | CANCEL ACKED 알림의 종목 `?` | **수리**(intent 먼저 읽음) | 4.N4b 에 종목 단언 |
+| C P3#6 | C | 청소의 취소 조회 오류가 조용함 | **수리**(경고 줄) | — |
+| C P3#9 | C | 주석 종결 · a094 붙은 식별자 | **수리** | — |
+| C P3#10 | C | 부팅 순서 AST 가 조건을 안 봄 | **수리**(`err != nil`) | `TestA094TheBootCatchUpRunsAfterASuccessfulRecovery` |
+| B P3-f | B | 6.2 가 셋째 갈래만 | **보강**: 6.1 · 6.1a 에 PROPOSAL_CANCELLED 0 단언 | 재생 시험 |
+| A8 | A | JSON 중복 키(뒤 값이 이김) | **수용된 잔여** — 이론적(브로커 실측 0), 분류기는 표준 디코더 | — |
+| A9 | A | 발의 없는 주기에 다른 intent 의 엔진 매도는 청소 안 함 | **범위 밖**(a094 이전과 같음 · 3.D1 이 고정한 오늘 동작) | — |
+| B P3-d | B | `checkSymbolFree` 가 끝까지 모은 뒤 거절(뒤 행 읽기 실패 → 오류) | **공개된 차이**(§2 표) · 둘 다 fail-closed | — |
+| B P3-e · C P3#8 | B·C | 연속은 치움 성공에서만 끝남 — 같은 프로세스의 뒤 사건은 이른 경보 없음 · 오래된 연속 | **설계대로**(D−7.1). 30초 지연 경보는 매 지연마다 | — |
+| C P3#7 | C | 적용 훅이 먼저 발의를 끝낸 주기에 청소가 미완료로 한 번 셈 | **수용된 잔여**(지연 타이머 시작 1회 · 경보 아님) | — |
+| C P3#11 | C | `noteHeldProposal` 의 CTE 질의가 무장 포지션마다 매 주기 | **수용** — 무장 포지션에서만, 원장 로컬 · 측정 대상으로 남김 | — |
+
+변이 원장 3판(38 변이, 커밋 `cb36caf4`)은 `analysis/implementation/mutation-ledger.md` — CAUGHT 35 · 동등 1 · M28/M29 생존(두 결속 검사가 서로를 가림) → 행 둘을 더해 3b 에서 CAUGHT. 최종 CAUGHT 37 · 동등 1.

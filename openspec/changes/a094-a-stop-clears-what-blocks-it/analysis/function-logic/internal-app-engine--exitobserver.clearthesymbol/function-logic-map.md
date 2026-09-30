@@ -1,8 +1,8 @@
 # Function Logic Map: `ExitObserver.clearTheSymbol`
 
-- Source: `internal/app/engine/exitloop.go` (`1482`–`1574`)
+- Source: `internal/app/engine/exitloop.go` (`1508`–`1601`)
 - Qualified: `ExitObserver.clearTheSymbol`
-- AST evidence: `ast.json` (`source_sha256` 9b7d9a800069b100…) — 구현 로트(2026-09-30) 편집 뒤. 편집 전 AST 는 `analysis/implementation/pre-edit/`
+- AST evidence: `ast.json` (`source_sha256` aa184f1394822180…) — 구현 로트(2026-09-30) 편집 뒤. 편집 전 AST 는 `analysis/implementation/pre-edit/`
 - Risk scan: `risk-pattern-report.md`
 - 분기 17
 
@@ -23,23 +23,23 @@
 
 | Branch | 종류 | 조건 (원문) | 진입 실측 |
 |---|---|---|---|
-| B1 | if | `:1485` `if err != nil {` | 예 |
-| B2 | if | `:1489` `if err != nil {` | 아니오 |
-| B3 | if | `:1492` `if len(unsettled) > 0 {` | 예 |
-| B4 | range | `:1498` `for _, order := range live {` | 예 |
-| B5 | if | `:1500` `if !buy && !withPending {` | 예 |
-| B6 | if | `:1503` `if !buy {` | 예 |
-| B7 | if | `:1506` `if err != nil {` | 아니오 |
-| B8 | if | `:1510` `if waiting {` | 예 |
-| B9 | if | `:1527` `if err != nil {` | 아니오 |
-| B10 | if | `:1533` `if qerr != nil \|\| perr != nil {` | 아니오 |
-| B11 | if | `:1548` `if err != nil \|\| out.State != journal.StateConfirmed {` | 예 |
-| B12 | if | `:1552` `if !buy {` | 예 |
-| B13 | if | `:1557` `if !res.cleared {` | 예 |
-| B14 | if | `:1560` `if withPending && m.state.Pending() {` | 예 |
-| B15 | if | `:1561` `if strings.TrimSpace(m.state.PendingIntentID) == "" {` | 아니오 |
-| B16 | if | `:1566` `if err != nil {` | 아니오 |
-| B17 | if | `:1569` `if !released {` | 예 |
+| B1 | if | `:1511` `if err != nil {` | 예 |
+| B2 | if | `:1515` `if err != nil {` | 아니오 |
+| B3 | if | `:1518` `if len(unsettled) > 0 {` | 예 |
+| B4 | range | `:1524` `for _, order := range live {` | 예 |
+| B5 | if | `:1526` `if !buy && !withPending {` | 예 |
+| B6 | if | `:1529` `if !buy {` | 예 |
+| B7 | if | `:1532` `if err != nil {` | 아니오 |
+| B8 | if | `:1537` `if waiting {` | 예 |
+| B9 | if | `:1554` `if err != nil {` | 아니오 |
+| B10 | if | `:1560` `if qerr != nil \|\| perr != nil {` | 아니오 |
+| B11 | if | `:1575` `if err != nil \|\| out.State != journal.StateConfirmed {` | 예 |
+| B12 | if | `:1579` `if !buy {` | 예 |
+| B13 | if | `:1584` `if !res.cleared {` | 예 |
+| B14 | if | `:1587` `if withPending && m.state.Pending() {` | 예 |
+| B15 | if | `:1588` `if strings.TrimSpace(m.state.PendingIntentID) == "" {` | 아니오 |
+| B16 | if | `:1593` `if err != nil {` | 아니오 |
+| B17 | if | `:1596` `if !released {` | 예 |
 
 ## Calls and live bindings
 

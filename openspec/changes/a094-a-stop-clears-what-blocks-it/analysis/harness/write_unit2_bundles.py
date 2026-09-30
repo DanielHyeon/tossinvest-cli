@@ -189,9 +189,19 @@ BUNDLES: dict[str, dict] = {
         "safety": "capability 없는 빌드는 route 집합 불변. 콘솔은 route 를 부르지 않음(시험). High-risk: no(등록) — 명령 자체는 attempt_thaw_command.go.",
         "tests": {f"B{i}": ["TestA094AnOperatorThawClosesTheParkAndReleasesTheProposal"] for i in range(1, 19)},
     },
+    "cmd-tossctl--newenginecmd": {
+        "pkg": "tossctl",
+        "role": "`tossctl engine` 명령 트리를 조립한다. a094: `engine attempt-resolve`(park 해동, mutating) 한 줄.",
+        "inputs": [("`root`", "루트 옵션", "main", "")],
+        "calls": "`newEngineAttemptResolveCmd` 외 종전 AddCommand.",
+        "mut": "없음(조립).",
+        "safety": "붙지 않은 명령은 없는 명령과 같다 — park 원인 알림 본문이 이 명령을 가리키므로 부착을 시험으로 고정. High-risk: no(조립).",
+        "tests": {"B1": ["TestA094TheAttemptResolveCommandIsAttachedToTheEngineTree", "TestMutatingAnnotationOnTradeCommands"]},
+    },
 }
 
 TEST_BUNDLES = {
+    "cmd-tossctl--testmutatingannotationontradecommands": ("tossctl", "기존 시험 — mutating 표지 목록에 `tossctl engine attempt-resolve` 한 줄(완화 명령 가족 계약)."),
     "internal-app-engine--testabreachdisplacesanoutstandingtakeprofit": ("engine", "기존 시험 — a094 D−4.3 로 손절이 취소한 주기 다음 주기에 나감(+1 관측). 이름 붙은 대가(design.md:403 · :311)."),
     "internal-journal--testarefusalrearmsthelevel": ("journal", "기존 시험 — ResolveExitProposal 이 기대 intent 를 요구하므로 발의에 intent 를 달고 그 intent 로 해제(단언 무변)."),
     "internal-journal--testresolvingnothingisnotanerror": ("journal", "기존 시험 — 기대 intent 인자 추가(단언 무변: 빈 상태의 해제는 오류 아님)."),

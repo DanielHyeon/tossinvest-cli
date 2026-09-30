@@ -23,7 +23,7 @@
 | B1 | if | `:176` `if c == nil \|\| c.Journal == nil \|\| c.Resolver == nil \|\| c.Entry == nil {` | 아니오 |
 | B2 | if | `:179` `if opts.Clock == nil {` | 예 |
 | B3 | if | `:189` `if c.Notifier != nil {` | 예 |
-| B4 | if | `:195` `if notifier != nil {` | 아니오 |
+| B4 | if | `:195` `if notifier != nil {` | 예 |
 | B5 | if | `:201` `if err != nil {` | 아니오 |
 
 ## Calls and live bindings

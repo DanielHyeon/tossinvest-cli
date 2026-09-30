@@ -1,8 +1,8 @@
 # Function Logic Map: `ExitObserver.judge`
 
-- Source: `internal/app/engine/exitloop.go` (`872`–`911`)
+- Source: `internal/app/engine/exitloop.go` (`898`–`937`)
 - Qualified: `ExitObserver.judge`
-- AST evidence: `ast.json` (`source_sha256` 9b7d9a800069b100…) — 구현 로트(2026-09-30) 편집 뒤. 편집 전 AST 는 `analysis/implementation/pre-edit/`
+- AST evidence: `ast.json` (`source_sha256` aa184f1394822180…) — 구현 로트(2026-09-30) 편집 뒤. 편집 전 AST 는 `analysis/implementation/pre-edit/`
 - Risk scan: `risk-pattern-report.md`
 - 분기 8
 
@@ -21,14 +21,14 @@
 
 | Branch | 종류 | 조건 (원문) | 진입 실측 |
 |---|---|---|---|
-| B1 | if | `:874` `if !o.quoteUsable(quote) {` | 아니오 |
-| B2 | if | `:880` `if m.identityErr != nil {` | 예 |
-| B3 | if | `:884` `if m.reJudge {` | 예 |
-| B4 | if | `:894` `if err := o.opts.Journal.StampExitSnapshotQuarantineSelector(ctx,` | — |
-| B5 | if | `:900` `if err != nil {` | 아니오 |
-| B6 | switch | `:905` `switch m.state.PolicyKind {` | 예 |
-| B7 | case | `:906` `case journal.ExitPolicyLadder:` | 예 |
-| B8 | case | `:908` `default:` | 예 |
+| B1 | if | `:900` `if !o.quoteUsable(quote) {` | 아니오 |
+| B2 | if | `:906` `if m.identityErr != nil {` | 예 |
+| B3 | if | `:910` `if m.reJudge {` | 예 |
+| B4 | if | `:920` `if err := o.opts.Journal.StampExitSnapshotQuarantineSelector(ctx,` | — |
+| B5 | if | `:926` `if err != nil {` | 아니오 |
+| B6 | switch | `:931` `switch m.state.PolicyKind {` | 예 |
+| B7 | case | `:932` `case journal.ExitPolicyLadder:` | 예 |
+| B8 | case | `:934` `default:` | 예 |
 
 ## Calls and live bindings
 

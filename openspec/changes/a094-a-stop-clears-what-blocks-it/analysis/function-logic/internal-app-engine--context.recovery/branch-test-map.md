@@ -10,5 +10,5 @@
 | B1 | `:176` `if c == nil \|\| c.Journal == nil \|\| c.Resolver == nil \|\| c.Entry == nil {` | 아니오 | `TestA094TheRecoveryCarriesTheBootCatchUp` | n/a | yes |
 | B2 | `:179` `if opts.Clock == nil {` | 예 | `TestA094TheRecoveryCarriesTheBootCatchUp` | n/a | yes |
 | B3 | `:189` `if c.Notifier != nil {` | 예 | `TestA094TheRecoveryCarriesTheBootCatchUp` | n/a | yes |
-| B4 | `:195` `if notifier != nil {` | 아니오 | `TestA094TheRecoveryCarriesTheBootCatchUp` | n/a | yes |
+| B4 | `:195` `if notifier != nil {` | 예 | `TestA094TheRecoveryCarriesTheBootCatchUp` | n/a | yes |
 | B5 | `:201` `if err != nil {` | 아니오 | `TestA094TheRecoveryCarriesTheBootCatchUp` | n/a | yes |
