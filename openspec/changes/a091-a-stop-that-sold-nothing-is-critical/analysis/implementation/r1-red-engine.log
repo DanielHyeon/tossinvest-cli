@@ -1,0 +1,14 @@
+--- FAIL: TestA091AProtectiveZeroIsACriticalRow (0.32s)
+--- FAIL: TestA091AFloorThatCannotBeComputedIsTheSameReport (0.30s)
+--- FAIL: TestA091WithAlertsOffNothingChangesButTheWording (1.17s)
+    --- FAIL: TestA091WithAlertsOffNothingChangesButTheWording/the_zero_floor_stays_a_normal_capped_alert (0.29s)
+--- FAIL: TestA091AZeroHoldingIsNotAFailedStop (0.31s)
+--- FAIL: TestA091OnlyACancellationOnlyFailureIsSuppressed (1.52s)
+    --- FAIL: TestA091OnlyACancellationOnlyFailureIsSuppressed/(ii)_a_real_failure,_then_shutdown (0.33s)
+    --- FAIL: TestA091OnlyACancellationOnlyFailureIsSuppressed/(iv)_an_HTTP_deadline_with_the_loop_alive (0.31s)
+    --- FAIL: TestA091OnlyACancellationOnlyFailureIsSuppressed/(v)_a_joined_auth_refusal_and_cancellation (0.27s)
+    --- FAIL: TestA091OnlyACancellationOnlyFailureIsSuppressed/(vii)_the_production_client_erases_the_cause (0.28s)
+--- FAIL: TestA091TheCancellationPredicate (0.00s)
+panic: test timed out after 10m0s
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	600.112s
+FAIL
