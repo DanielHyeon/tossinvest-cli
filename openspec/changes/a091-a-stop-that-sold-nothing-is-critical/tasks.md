@@ -25,7 +25,7 @@
       (첫 리뷰의 방법 교훈)
 - [x] 0.4 **[2026-10-01] valid.** `openspec validate a091-a-stop-that-sold-nothing-is-critical --strict --no-interactive`
 - [x] 0.5 **[2026-10-01] 5 라운드 — 2라운드 REJECT(A · B · codex) → 4판 → 3라운드(A REJECT · B APPROVE · codex FAIL) → 5판 → 4라운드(A APPROVE · codex FAIL) → 6판 → 5라운드 codex PASS. `review.md` 「2차 판」. Manager 승인 대기.** **proposal-freeze 재리뷰** (적대적 Eng 필수) → `review.md`에 2차 판 추가
-- [ ] 0.6 `check_analysis.py --change a091-…` — FLM 산출물 완결 확인
+- [x] 0.6 **[2026-10-01] 깨끗한 격리 워크트리 @ `6d30d8ea`: a091 번들 15 stale 0 · required 7 은 전부 base 뒤 a112 착지 몫(strategy_* 4 · strategyflow seal census 3) — 게이트 전 재고정(a094 · a095 절차)에서 닫는다.** `check_analysis.py --change a091-…` — FLM 산출물 완결 확인
 
 ## 1. 산출물 (완료)
 
