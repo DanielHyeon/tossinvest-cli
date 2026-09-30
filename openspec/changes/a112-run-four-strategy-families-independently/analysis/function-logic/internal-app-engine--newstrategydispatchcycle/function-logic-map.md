@@ -50,3 +50,5 @@ Exact AST return nodes: `61:2`.
   시험 픽스처 한 곳(`pairedStrategyDispatchCycleFixture`)에만 닿는다. 컴파일러가
   누락을 잡으므로 조용히 빠질 수 없다.
 - High-risk impact: yes — 이 구조체가 주문 경로의 승인 사슬을 들고 있다.
+
+a112 5.2.2.2: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)

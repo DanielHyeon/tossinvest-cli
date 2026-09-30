@@ -1,54 +1,54 @@
-# Function Logic Map: `collectMarket`
+# Function Logic Map: `strategyRiskAuthorityLoader.collectMarket`
 
 - Source: `internal/app/engine/strategy_risk_authority.go`
-- Current-base source SHA-256: `8151a106ce66a76adc865520a899a103aaafa767cc66c42d44bed3f979857a55`
+- Source SHA-256: `bd5589d0c7d35de8294af8646be3502615fc0509d43a27c19931fe3fcc093d10`
 - Signature: `strategyRiskAuthorityLoader.collectMarket(params=4, results=1)`
-- Source range: `170:1`–`201:2`
-- AST evidence: `ast.json`, generated from frozen base `016da6245feb60e13971388be386c2c2041469a8`.
+- Source range: `186:1`–`223:2`
+- AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2).
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
-- Inputs/results are the exact AST signature above; this L0 map does not infer undocumented state.
-- Any later edit must preserve OFF defaults, the owner key without family/horizon, and zero exposure-raising dispatch while a prerequisite is missing.
+- 범위 번들은 모두 같은 서명 시장 매니페스트에서 온다(세대 · 정책은 시장 단위, 버킷 사용량 스냅숏은 적재 시점의 원장).
 
 ## Branches and early returns
 
-- Exact AST return nodes: `174:3, 177:3, 180:3, 192:3, 196:3, 198:2`.
+- Exact AST return nodes: `190:3, 193:3, 196:3, 222:2`.
 
-| Branch | AST kind | Source location | Required test disposition |
+| Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
-| B1 | if | 176:2 | planned targeted RED before any edit; not run by L0 |
-| B2 | if | 179:2 | planned targeted RED before any edit; not run by L0 |
-| B3 | if | 183:2 | planned targeted RED before any edit; not run by L0 |
-| B4 | if | 191:2 | planned targeted RED before any edit; not run by L0 |
-| B5 | if | 195:2 | planned targeted RED before any edit; not run by L0 |
+| B1 | if | 192:2 | 결과 권한 준비 안 됨 → LaneNotReady |
+| B2 | if | 195:2 | 환율 준비 안 됨 → FXNotReady |
+| B3 | if | 199:2 | 시장이 US 면 버킷 시장 US |
+| B4 | range | 205:2 | **(새)** 결과 권한의 범위마다 번들 하나(`result.results()` — 활성화 없는 시장은 하나) |
+| B5 | if | 208:3 | **(새)** 범위 키 정규화 성공 시에만 적재 — 실패면 그 범위 AuthorityUnavailable |
+| B6 | if | 215:4 | 적재 성공 · 시장 · 계좌 · 시각 · 항목 5 일치 → 그 범위 준비(편집 전 B4 · B5 의 반대편) |
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Current-base evidence/requirement |
-|---|---|---|
-| fail | 177:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fail | 180:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| riskbucket.LoadProductionRiskSnapshotAuthority | 186:17 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fail | 192:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| bundle.Scope | 194:11 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| string | 195:5 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| string | 195:29 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| scope.AsOf.Equal | 195:87 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 195:126 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| bundle.Entries | 195:130 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fail | 196:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| string | 199:39 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| bundle.Digest | 200:39 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| len | 200:69 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| bundle.Entries | 200:73 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| Callee expression | Position |
+|---|---|
+| `fail` | 193:10 |
+| `fail` | 196:10 |
+| `make` | 204:12 |
+| `len` | 204:50 |
+| `result.results` | 204:54 |
+| `result.results` | 205:25 |
+| `strategyOwnerKeyOf` | 206:17 |
+| `riskbucket.LoadProductionRiskSnapshotAuthority` | 209:19 |
+| `bundle.Scope` | 214:13 |
+| `string` | 215:21 |
+| `string` | 215:45 |
+| `scope.AsOf.Equal` | 216:5 |
+| `len` | 216:44 |
+| `bundle.Entries` | 216:48 |
+| `append` | 220:12 |
+| `strategyRiskMarketFromScopes` | 222:9 |
 
 ## State mutations and fallbacks
 
-- The AST is the exhaustive current-base record of assignments, calls, branches, defers and returns. Before a function body edit, the owning lot must update this map with changed condition semantics and concrete RED/GREEN test evidence.
+- 이 함수 자신은 원장을 쓰지 않는다. 봉투 · 시장 값으로의 폴백 없음(범위 권한이 없으면 거절 또는 준비 안 됨).
 
 ## Safety conclusion
 
-- L0 status: pre-edit evidence only; no production function was edited and no branch test is claimed as run by L0.
-- A named targeted RED or explicit evidence-backed not-applicable rationale is required for every edited branch before GREEN.
+- High-risk(위험 권한). 한 범위 적재 실패는 그 범위만 준비 안 됨(J3). 오늘 생산에서는 스키마 핀 27 결함으로 전 범위가 준비 안 됨 — ROADMAP a112 이월.

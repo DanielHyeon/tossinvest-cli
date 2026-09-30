@@ -221,3 +221,11 @@ typed-confirmation을 유지한다 — 이 결정은 UI 표면에만 적용한�
 | 지속 B2(작업 집합 오류)를 어느 사다리도 재지 않음 · 재시작 창(기점 소실) · workingSet B6(미관리 normal)·B10(완료 정책) | D11-2 · D2 · D1 명명 잔여 | 미배정 |
 | `position_id`(계좌번호 무염 해시) 알림 탑재 · 기록 실패 시 입구 `Notifier.escalate` 로그의 `FieldAccount` 원문(a090 이 호출 경로 하나 추가) | base 관행(원장 내부 키 · a092 이전 승격 로그) — a090 신설 표면은 계좌 0(R17) | 사람 결정 큐 「계좌 가림 설계」(D12 · D13) |
 | 착지 기록이 형제의 같은-파일 편집에 연쇄 거절됨 — 착지는 번들이 역사에 든 커밋(바닥) **이후**여야 하는데, 자기 Go 착지 뒤 형제가 같은 파일을 다시 고치면 그 뒤 어느 커밋도 번들 리비전과 맞지 않는다. 거절 원문(a090 2026-10-01, a094 `e5e7a67f` 가 사이에 exitloop.go 편집): "no commit at or after the evidence (6dd1e74ed666) is accepted as the landing — at the first commit walked, landing point 6dd1e74ed666 is not the revision this evidence describes: internal/app/engine/exitloop.go". a090 은 로컬 합성 커밋(A)으로 게이트를 돌렸다(review 「게이트」) | 조건 5 · 8 의 합성 효과 — 형제 로트가 같은 파일을 병행 편집하는 한 반복 | 미배정 — gate change 후보(Manager 2026-10-01: 같은-파일 로트 직렬화 또는 착지 기록 선행) |
+
+## a112 이월 · 미배정 후속 (a112 5.2.2.2 에서 발견 — 2026-10-01)
+
+`a112-run-four-strategy-families-independently` 태스크 5.2.2.2 가 실측으로 올린 것. 근거는 a112 `review.md` 「5.2.2.2 잔여」 절과 영수증 `openspec/changes/a112-run-four-strategy-families-independently/analysis/measurements/lot-5.2.2.2/schema-pin-receipt.log`.
+
+| 항목 | 사유 | 행선 |
+|---|---|---|
+| riskbucket 스키마 핀 27 → `journal.SchemaVersion` 결속(또는 읽는 표가 존재하는 최소 버전 이상). `internal/riskbucket/production_snapshot_authority.go:33` `productionRiskJournalSchema = 27` · `:361` `PRAGMA user_version` 정확 일치 비교, `internal/journal/schema.go:6` `SchemaVersion = 35`(2026-08-05 a084 부터 28 이상). 생산 호출 `internal/app/engine/strategy_entry_supervisor.go:328` 이 실제 원장 경로를 넘기므로 **생산 위험 권한은 어느 범위에서도 ready 가 될 수 없다** | **레인 활성화의 경성 선행** — 수리 전에 서명 활성화하면 전 범위 `AuthorityUnavailable`(1차 레그 0). 오늘 생산 서명 활성화 0 이라 동작 변화 없음. 시험 stub(user_version 27)이 결함을 가렸다. 수리 착지 시 a112 시험 다리 `a112MirrorLedgerIntoRiskStub` 제거 · 적재기를 실제 원장으로 단일화(트립와이어 `TestTheRiskStubBridgeIsStillNeededBecauseTheLoaderRefusesTheRealJournal` 가 실패로 알림) | 미배정 — 별도 change 후보(riskbucket 은 High-risk · a066 영역, Manager 2026-10-01 판정 B) |

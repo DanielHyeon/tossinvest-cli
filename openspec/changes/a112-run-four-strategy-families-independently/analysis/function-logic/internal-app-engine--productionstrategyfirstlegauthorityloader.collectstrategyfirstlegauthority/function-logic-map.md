@@ -1,109 +1,112 @@
 # Function Logic Map: `collectStrategyFirstLegAuthority`
 
 - Source: `internal/app/engine/strategy_account_first_leg_authority.go`
-- Source SHA-256: `e6c12de7902b15de91de03a8da004f1ad167ce37d37580cf52766f4707ed0a4d`
+- Source SHA-256: `d0d6281292dafcc979edce741a3a2bf98ed348f023267d8198d2436c71ec7291`
 - Signature: `productionStrategyFirstLegAuthorityLoader.collectStrategyFirstLegAuthority(params=2, results=2)`
-- Source range: `213:1`–`293:2`
-- AST evidence: `ast.json` — **편집 뒤**(a112 6.2 봉인 로트).
+- Source range: `255:1`–`348:2`
+- AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2).
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
-- 입력: loader 자기 권한 쌍(조립이 새로 고침 때 중재한 제안 · 위험 · 환율 · 계좌 · 일정)과 건너온 `accepted`(봉투가 나른 결과).
-- **봉인 불변식(6.2):** 발급하는 1차 레그의 결과는 건너온 값이 아니라 **조립의 권한 쌍에서 소유자 범위로 다시 꺼낸 항목**이고, 그 항목의 봉인된 identity 가 accepted 와 같아야 한다. 범위는 accepted 계보에서 읽되 선택 기준일 뿐 대조 대상이 아니다(자기 참조 함정 회피 — `authorityForOwnerScope` 머리말).
-- 시장 단위 개수 관문(B4)은 봉인이 아니라 상한이고 5.2.2.2 가 걷어 낸다. 이 편집은 판정을 더 엄격하게만 한다(새로 통과하는 입력 0).
+- 범위 거절 타입(`strategyScopeRefusal`)을 만드는 자리는 B5 · B6 둘뿐이다 — 언급 census `a112_scope_refusal_census_test.go` `TestTheScopeRefusalTypeIsMadeOnlyWhereTheCensusSaysItIs`.
+- 시장 단위 개수 관문이 지키던 것(관문 전수표 (a)~(e))은 review 「5.2.2.2」 절의 대체 수단 · 시험으로 옮겼다.
 
 ## Branches and early returns
 
-- Exact AST return nodes: `215:3, 222:3, 228:3, 232:3, 236:3, 241:3, 246:3, 263:3, 272:4, 276:4, 278:3, 282:2`.
+- Exact AST return nodes: `257:3, 264:3, 270:3, 274:3, 282:3, 286:3, 291:3, 296:3, 301:3, 318:3, 327:4, 331:4, 333:3, 337:2`.
 
 | Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
-| B1 | if | 214:2 | loader · ctx · 시계 · 원장 · Guardian 부재 → 발급 불가 |
-| B2 | if | 220:2 | 위험 · 환율 · 계좌 · 일정 준비 · 활성화 부재 → `paired production authority is incomplete for market`. **편집: 개수 조건을 떼어 냄**(아래 B4) |
-| B3 | if | 227:2 | **(새) 소유자 범위 선택 실패** — 조립의 권한 쌍에 accepted 범위가 정확히 하나가 아님(0: 미선택 범위 · 다른 시장, 2+: 범위당 하나 붕괴) → `production proposal identity changed: owner scope is not uniquely authorized by the assembly` |
-| B4 | if | 231:2 | **(새, 편집 전 B2 에서 분리) 시장 단위 개수 관문** `len(proposal.entries) != 1` — 봉인이 아니라 시장당 하나 상한, 걷어 내는 일은 5.2.2.2 |
-| B5 | if | 235:2 | 봉인된 identity 대조(편집 전 B3, 조건 불변) — 선택된 항목의 `Lineage.Identity` · `ExecutionTerms.Identity()` 와 accepted 비교 |
-| B6 | if | 239:2 | 위험 권한 범위 불일치(편집 전 B4) |
-| B7 | if | 244:2 | 포지션 캠페인 CAS 변경(편집 전 B5) |
-| B8 | range | 251:2 | 위험 버킷 항목 순회(편집 전 B6) |
-| B9 | if | 262:2 | 가격 단위 무효(편집 전 B7) |
-| B10 | if | 271:3 | 노출 스냅숏 만료(collect 클로저, 편집 전 B8) |
-| B11 | if | 275:3 | 예약 버전 읽기 실패(collect 클로저, 편집 전 B9) |
+| B1 | if | 256:2 | loader · ctx · 시계 · 원장 · Guardian 부재 → 발급 불가 |
+| B2 | if | 262:2 | 시장 권한(위험 · 환율 · 계좌 · 일정) 준비 미완 → `paired production authority is incomplete for market`(개수 조건은 6.2 에서 이미 뗌) |
+| B3 | if | 269:2 | 소유자 범위 선택 실패(0 또는 복수) → `…owner scope is not uniquely authorized by the assembly` — **범위 거절 타입 아님**(위조 의심 → 주기 멈춤) |
+| B4 | if | 273:2 | 봉인된 identity 대조(편집 전 B5) — 불일치는 **타입 없는 오류**(범위 거절 아님) |
+| B5 | if | 281:2 | **(새)** 그 범위의 준비된 위험 권한 없음 → `*strategyScopeRefusal`(그 범위만 거절 · 봉투 폴백 없음, J3) |
+| B6 | if | 285:2 | **(새)** 그 범위의 준비된 계좌 권한 없음 → `*strategyScopeRefusal` |
+| B7 | if | 290:2 | **(새)** 계보 시장 통화 미지(KR/US 밖) → 발급 불가 — 통화는 봉투가 아니라 `Lineage.Market` 에서 유도(A#3) |
+| B8 | if | 294:2 | 위험 권한 범위 불일치(편집 전 B6) — 이제 **그 범위의** 번들로 대조 |
+| B9 | if | 299:2 | 포지션 캠페인 CAS 변경(편집 전 B7) |
+| B10 | range | 306:2 | 위험 버킷 항목 순회(편집 전 B8) — 범위 번들 |
+| B11 | if | 317:2 | 가격 단위 무효(편집 전 B9) |
+| B12 | if | 326:3 | 노출 스냅숏 만료(collect 클로저, 편집 전 B10) — 범위 계좌 권한의 FreshUntil |
+| B13 | if | 330:3 | 예약 버전 읽기 실패(collect 클로저, 편집 전 B11) |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `errors.New` | 215:51 |
-| `StrategyMarket` | 217:12 |
-| `loader.proposals.forMarket` | 218:52 |
-| `loader.risk.forMarket` | 218:88 |
-| `loader.fx.forMarket` | 219:3 |
-| `loader.accounts.forMarket` | 219:32 |
-| `loader.schedule.forMarket` | 219:67 |
-| `errors.New` | 222:51 |
-| `proposal.authorityForOwnerScope` | 226:31 |
-| `errors.New` | 228:51 |
-| `len` | 231:5 |
-| `errors.New` | 232:51 |
-| `proposalAuthority.Proposal` | 234:12 |
-| `result.ExecutionTerms.Identity` | 235:68 |
-| `accepted.result.ExecutionTerms.Identity` | 235:104 |
-| `errors.New` | 236:51 |
-| `riskAuthority.bundle.Scope` | 238:11 |
-| `riskAuthority.bundle.Validate` | 239:12 |
-| `string` | 240:3 |
-| `string` | 240:27 |
-| `scope.AsOf.Equal` | 240:102 |
-| `errors.New` | 241:51 |
-| `loader.journal.CurrentPositionCampaignCAS` | 243:14 |
-| `string` | 243:88 |
-| `uint64` | 245:40 |
-| `errors.New` | 246:51 |
-| `riskAuthority.bundle.Entries` | 248:13 |
-| `make` | 249:13 |
-| `len` | 249:50 |
-| `make` | 250:16 |
-| `len` | 250:63 |
-| `append` | 252:13 |
-| `append` | 254:16 |
-| `MajorDecimal` | 259:25 |
-| `result.ExecutionTerms.Entry` | 259:25 |
-| `MajorDecimal` | 260:23 |
-| `result.ExecutionTerms.EffectiveStop` | 260:23 |
-| `MajorDecimal` | 261:27 |
-| `result.ExecutionTerms.Target` | 261:27 |
-| `errors.New` | 263:51 |
-| `strategyFirstLegBindingDigest` | 265:19 |
-| `riskAuthority.bundle.Digest` | 265:76 |
-| `strings.TrimPrefix` | 266:38 |
-| `strings.TrimPrefix` | 267:37 |
-| `UTC` | 270:10 |
-| `loader.clk.Now` | 270:10 |
-| `readCtx.Err` | 271:24 |
-| `now.IsZero` | 271:48 |
-| `now.After` | 271:64 |
-| `account.authority.FreshUntil` | 271:74 |
-| `errors.New` | 272:38 |
-| `loader.journal.ReservationVersion` | 274:26 |
-| `account.authority.ObservedAt` | 278:40 |
-| `account.authority.OpenExposure` | 278:104 |
-| `string` | 282:89 |
-| `account.authority.AccountState` | 284:12 |
-| `riskAuthority.bundle.Policy` | 285:80 |
-| `loader.guardian.PolicyVersion` | 287:26 |
-| `loader.guardian.LimitsDigest` | 287:81 |
-| `strings.TrimPrefix` | 290:81 |
-| `strings.TrimPrefix` | 291:42 |
-| `strings.TrimPrefix` | 292:39 |
-| `proposalAuthority.WeeklyBinding` | 292:99 |
+| `errors.New` | 257:51 |
+| `StrategyMarket` | 259:12 |
+| `loader.proposals.forMarket` | 260:52 |
+| `loader.risk.forMarket` | 260:88 |
+| `loader.fx.forMarket` | 261:3 |
+| `loader.accounts.forMarket` | 261:32 |
+| `loader.schedule.forMarket` | 261:67 |
+| `errors.New` | 264:51 |
+| `proposal.authorityForOwnerScope` | 268:31 |
+| `errors.New` | 270:51 |
+| `proposalAuthority.Proposal` | 272:12 |
+| `result.ExecutionTerms.Identity` | 273:68 |
+| `accepted.result.ExecutionTerms.Identity` | 273:104 |
+| `errors.New` | 274:51 |
+| `strategyOwnerKeyOf` | 279:12 |
+| `riskAuthority.forScope` | 280:28 |
+| `account.forScope` | 284:37 |
+| `errors.New` | 291:51 |
+| `riskBundle.Scope` | 293:11 |
+| `riskBundle.Validate` | 294:12 |
+| `string` | 295:3 |
+| `string` | 295:27 |
+| `scope.AsOf.Equal` | 295:102 |
+| `errors.New` | 296:51 |
+| `loader.journal.CurrentPositionCampaignCAS` | 298:14 |
+| `string` | 298:88 |
+| `uint64` | 300:40 |
+| `errors.New` | 301:51 |
+| `riskBundle.Entries` | 303:13 |
+| `make` | 304:13 |
+| `len` | 304:50 |
+| `make` | 305:16 |
+| `len` | 305:63 |
+| `append` | 307:13 |
+| `append` | 309:16 |
+| `MajorDecimal` | 314:25 |
+| `result.ExecutionTerms.Entry` | 314:25 |
+| `MajorDecimal` | 315:23 |
+| `result.ExecutionTerms.EffectiveStop` | 315:23 |
+| `MajorDecimal` | 316:27 |
+| `result.ExecutionTerms.Target` | 316:27 |
+| `errors.New` | 318:51 |
+| `strategyFirstLegBindingDigest` | 320:19 |
+| `riskBundle.Digest` | 320:75 |
+| `strings.TrimPrefix` | 321:38 |
+| `strings.TrimPrefix` | 322:37 |
+| `UTC` | 325:10 |
+| `loader.clk.Now` | 325:10 |
+| `readCtx.Err` | 326:24 |
+| `now.IsZero` | 326:48 |
+| `now.After` | 326:64 |
+| `accountAuthority.FreshUntil` | 326:74 |
+| `errors.New` | 327:38 |
+| `loader.journal.ReservationVersion` | 329:26 |
+| `accountAuthority.ObservedAt` | 333:40 |
+| `accountAuthority.OpenExposure` | 333:103 |
+| `string` | 337:89 |
+| `accountAuthority.AccountState` | 339:12 |
+| `riskBundle.Policy` | 340:80 |
+| `loader.guardian.PolicyVersion` | 342:26 |
+| `loader.guardian.LimitsDigest` | 342:81 |
+| `strings.TrimPrefix` | 345:81 |
+| `strings.TrimPrefix` | 346:42 |
+| `strings.TrimPrefix` | 347:39 |
+| `proposalAuthority.WeeklyBinding` | 347:99 |
 
 ## State mutations and fallbacks
 
-- 이 함수 자신은 원장을 쓰지 않는다(읽기: 캠페인 CAS · 예약 버전). 발급 값은 호출자가 q_final 입장에서 쓴다.
+- 이 함수 자신은 원장을 쓰지 않는다. 봉투 · 시장 값으로의 폴백 없음(범위 권한이 없으면 거절 또는 준비 안 됨).
 
 ## Safety conclusion
 
-- High-risk impact: yes(1차 레그 발급). 편집은 거절 갈래를 하나 더하고(B3) 선택 기준을 위치에서 소유자 범위로 바꿨다 — 편집 전 통과하던 입력 중 새로 통과하는 것은 없다(단일 항목 쌍에서 범위가 같으면 편집 전과 같은 항목을 고르고, 다르면 편집 전에도 identity 대조에서 거절됐다).
-- 위조 축 다섯 · 기제 둘은 행동 시험, 선택 기제 · 대조 약화 · 재유도 제거는 변이 S01~S07 이 CAUGHT.
+- High-risk(1차 레그 발급). 편집은 개수 관문을 걷어 **범위 둘인 활성화 시장의 발급을 연다** — 각 범위는 자기 위험 · 계좌 권한으로만 발급되고, 권한이 없는 범위는 그 범위만 타입 거절된다. 활성화 없는 시장은 결과 · 계좌 권한이 여전히 항목 하나를 요구하므로 새 통과 입력 0.
+- 위조 다섯 축은 범위 하나 · 둘(두 순서) 쌍에서 모두 거절(행동 시험), 오분류 · 폴백 변이 X05~X11 · X21 · X22 CAUGHT.

@@ -1,0 +1,431 @@
+{
+  "file": "internal/app/engine/strategy_runtime_projection.go",
+  "source_sha256": "5f203ad88f4476284006b92099365d42d04a619a2f567524efdd9bb1beb64f65",
+  "package": "engine",
+  "function": "strategyProjectionFromAssembly",
+  "signature": "strategyProjectionFromAssembly(params=1, results=1)",
+  "start": {
+    "line": 97,
+    "column": 1
+  },
+  "end": {
+    "line": 155,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 107,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "switch",
+      "at": {
+        "line": 109,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 110,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 112,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 114,
+        "column": 4
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 123,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 131,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 14
+      },
+      "text": "assembly.Schedule.ObservedAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 14
+      },
+      "text": "strategyprojection.DormantSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 23
+      },
+      "text": "strategyprojection.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 15
+      },
+      "text": "assembly.Schedule.For"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 16
+      },
+      "text": "assembly.Candidate.For"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 15
+      },
+      "text": "assembly.Proposal.For"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 11
+      },
+      "text": "assembly.Risk.For"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 17
+      },
+      "text": "assembly.Supervisor.Snapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 117,
+        "column": 15
+      },
+      "text": "strategyprojection.WithMarketFailure"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 24
+      },
+      "text": "Single"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 24
+      },
+      "text": "dispatchHandoff"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 122,
+        "column": 24
+      },
+      "text": "assembly.proposals.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 123,
+        "column": 21
+      },
+      "text": "result.ValidProposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 15
+      },
+      "text": "strategyprojection.WithMarketFailure"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 58
+      },
+      "text": "projectionDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 132,
+        "column": 21
+      },
+      "text": "projectionDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 134,
+        "column": 44
+      },
+      "text": "strconv.Itoa"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 135,
+        "column": 28
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 136,
+        "column": 59
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 23
+      },
+      "text": "projectionDigest"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 103,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 105,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 106,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 108,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 111,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 113,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 115,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 117,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 122,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 124,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 128,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 129,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 130,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 132,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 134,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 135,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 136,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 137,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 138,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 152,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

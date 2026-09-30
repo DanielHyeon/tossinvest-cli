@@ -2,7 +2,7 @@
 """a112 로트 5.6.2 · 5.2.2 변이 하네스 — a092 `mutate_unit2.py` 의 사본 방식(저장소 추적 파일을 pid 붙은 사본으로 복사 · 무변이
 대조군이 GREEN 이 아니면 멈춤 · 변이는 한 번에 하나, 사본에서만 · 판정 CAUGHT/SURVIVED/BUILD-FAIL).
 
-사용: python3 a112_lot_mutate.py --set 5.6.2.1|5.2.2.1|5.2.2.1-fix <scratch-dir> [로트 파일 경로 …]
+사용: python3 a112_lot_mutate.py --set 5.6.2.1|5.2.2.1|5.2.2.1-fix|6.2-seal|5.2.2.2 <scratch-dir> [로트 파일 경로 …]
 (N 으로 시작하는 변이는 동작이 같은 리팩터 — GREEN-AS-EXPECTED 여야 한다.)
 """
 from __future__ import annotations
@@ -315,10 +315,78 @@ SET_5221_FIX3_TESTS = [
      "./internal/app/engine"],
     ["go", "test", "-count=1", "./internal/strategyhandoff"],
 ]
+ADM = "internal/app/engine/strategy_first_leg_admission.go"
+DCY = "internal/app/engine/strategy_dispatch_cycle.go"
+RSK = "internal/app/engine/strategy_risk_authority.go"
+PRA = "internal/app/engine/strategy_proposal_authority.go"
+PRJ = "internal/app/engine/strategy_runtime_projection.go"
+SET_5222 = [
+    ("X01 every delivery fault skipped as a scope refusal (J4 misclassification)", MD,
+     "\t\tif errors.As(err, &scope) {", "\t\tif true || errors.As(err, &scope) {"),
+    ("X02 a scope refusal stops the cycle (starvation — J3)", MD,
+     "\t\tif errors.As(err, &scope) {", "\t\tif false && errors.As(err, &scope) {"),
+    ("X03 skipped refusals dropped when a later fault stops (J4 ③)", MD,
+     "\t\treturn errors.Join(append(skipped, err)...)", "\t\treturn err"),
+    ("X04 skipped refusals dropped at the end (silent skip — J3 ②)", MD,
+     "\treturn errors.Join(skipped...)", "\treturn nil"),
+    ("X05 admit types every collection failure as a scope refusal", ADM,
+     "\t\tif scope := (*strategyScopeRefusal)(nil); errors.As(err, &scope) {\n\t\t\trefusal.scope = scope",
+     "\t\tif scope := (*strategyScopeRefusal)(nil); true {\n\t\t\tif !errors.As(err, &scope) {\n\t\t\t\tscope = &strategyScopeRefusal{detail: err.Error()}\n\t\t\t}\n\t\t\trefusal.scope = scope"),
+    ("X06 dispatch wraps every admission refusal with the scope type", DCY,
+     "\t\tif admitted.scope != nil {", "\t\tif true {"),
+    ("X07 identity mismatch returned as a scope refusal", FLA,
+     "\t\treturn execgw.QFinalCampaignFirstLegIssuance{}, errors.New(\"production proposal identity changed\")",
+     "\t\treturn execgw.QFinalCampaignFirstLegIssuance{}, &strategyScopeRefusal{detail: \"production proposal identity changed\"}"),
+    ("X08 risk authority falls back to the market bundle (J3 ① envelope fallback)", FLA,
+     "\triskBundle, riskScoped := riskAuthority.forScope(key)", "\triskBundle, riskScoped := riskAuthority.bundle, true"),
+    ("X09 account authority falls back to the market authority (J3 ①)", FLA,
+     "\taccountAuthority, accountScoped := account.forScope(key)", "\taccountAuthority, accountScoped := account.authority, true"),
+    ("X10 currency from the envelope again (A#3)", FLA,
+     "\tcurrency, currencyKnown := map[strategyrouter.Market]string{strategyrouter.MarketKR: \"KRW\", strategyrouter.MarketUS: \"USD\"}[result.Lineage.Market]",
+     "\tcurrency, currencyKnown := accepted.currency, true"),
+    ("X11 market count gate restored", FLA,
+     "\tkey, _ := strategyOwnerKeyOf(result.Lineage)\n",
+     "\tif len(proposal.entries) != 1 {\n\t\treturn execgw.QFinalCampaignFirstLegIssuance{}, errors.New(\"paired production authority is incomplete for market\")\n\t}\n\tkey, _ := strategyOwnerKeyOf(result.Lineage)\n"),
+    ("X12 risk loader loads only the first scope", RSK,
+     "\tfor _, scoped := range result.results() {", "\tfor _, scoped := range result.results()[:1] {"),
+    ("X13 result authority hands the risk loader only the first scope", PRA,
+     "\t\tif len(results) > 1 || value.familyActivation().Verified() {", "\t\tif false {"),
+    ("X14 account loader loads the first entry's symbol for every scope (A#5)", FL,
+     "AccountCurrency: loader.accountCurrency, Symbol: result.Lineage.Symbol, Market: accountMarket,",
+     "AccountCurrency: loader.accountCurrency, Symbol: proposal.entries[0].authority.Proposal().Lineage.Symbol, Market: accountMarket,"),
+    ("X15 worker promotion needs every scope (one refusal starves the market)", SUP,
+     "\t\tif _, err := gateway.ObserveStrategyEntryGate(ctx, strings.ToLower(string(market)), result.Lineage.Symbol); err != nil {\n\t\t\tcontinue",
+     "\t\tif _, err := gateway.ObserveStrategyEntryGate(ctx, strings.ToLower(string(market)), result.Lineage.Symbol); err != nil {\n\t\t\treturn dormant"),
+    ("X16 worker promotion reads the market-wide handoff", SUP,
+     "\tfor _, handoff := range p.dispatchHandoffs() {", "\tfor _, handoff := range append(p.dispatchHandoffs()[:0], p.dispatchHandoff()) {"),
+    ("X17 worker promoted although the entry gate refused every scope", SUP,
+     "\t\tif _, err := gateway.ObserveStrategyEntryGate(ctx, strings.ToLower(string(market)), result.Lineage.Symbol); err != nil {",
+     "\t\tif _, err := gateway.ObserveStrategyEntryGate(ctx, strings.ToLower(string(market)), result.Lineage.Symbol); err != nil && false {"),
+    ("X18 assembly digest drifts from the contract function (A#6)", PRA,
+     "ProposalSetDigest: strategyProposalSetDigest(entries),", "ProposalSetDigest: strategyProposalSetDigest(entries[:len(entries)-1]),"),
+    ("X19 projection reads the market-wide handoff", PRJ,
+     "\t\tfor _, handoff := range assembly.proposals.forMarket(market).dispatchHandoffs() {",
+     "\t\tfor _, handoff := range append(assembly.proposals.forMarket(market).dispatchHandoffs()[:0], assembly.proposals.forMarket(market).dispatchHandoff()) {"),
+    ("M20 risk generation read from the market bundle — expected to SURVIVE (every scope's bundle comes from the same signed market manifest; generation is per market by construction)", DCY,
+     "\t\tif bundle, scoped := cycle.risk.forMarket(market).forScope(key); scoped {",
+     "\t\tif bundle, scoped := cycle.risk.forMarket(market).bundle, key.Symbol != \"\"; scoped {"),
+    ("X21 the delivery body stops on the first scope refusal of the account (J3, account half)", FLA,
+     "\t\treturn execgw.QFinalCampaignFirstLegIssuance{}, &strategyScopeRefusal{scope: key, detail: \"no ready account authority for this owner scope\"}",
+     "\t\treturn execgw.QFinalCampaignFirstLegIssuance{}, errors.New(\"no ready account authority for this owner scope\")"),
+    ("X22 the risk scope refusal untyped (J3, risk half)", FLA,
+     "\t\treturn execgw.QFinalCampaignFirstLegIssuance{}, &strategyScopeRefusal{scope: key, detail: \"no ready risk authority for this owner scope\"}",
+     "\t\treturn execgw.QFinalCampaignFirstLegIssuance{}, errors.New(\"no ready risk authority for this owner scope\")"),
+]
+SET_5222_TESTS = [
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+     "TestAnActivatedTwoScope|TestTheSecondLeg|TestAScopeWithout|TestTheFirstLegCurrency|TestTheRiskStubBridge|TestAForgedScope|TestTheFirstLegSeal|TestTwoOwnerScopes|TestAScopeFault|TestEveryAdmitted|TestARefusedHandoff|TestTheScopeSelector|TestTheProposalSetDigest|TestAnActivatedMarketWhose|TestOnlyAnActivated|TestTheSameOwnerScope|TestAnInPlaceSwap|TestFirstLegAuthority|TestTheFirstLegBackstop|TestTheProductionCycle|TestWithoutAnActivation",
+     "./internal/app/engine"],
+    ["go", "test", "-count=1", "-run", "TestTheSingleProposalAssumption|TestTheScopeRefusalType|TestOnlyATypedScopeRefusal|Handoff|Seam|Admit|Classified|Single", "./internal/app/engine"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
-        "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS)}
+        "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS)}
 MUTANTS, TESTS = SET_5621, SET_5621_TESTS
 
 def run_tests(copy: Path, env: dict) -> tuple[str, str]:
@@ -382,6 +450,10 @@ def main() -> None:
             json_command = command[:2] + ["-json"] + command[2:]
             completed = subprocess.run(json_command, cwd=copy, env=env, capture_output=True, text=True)
             passes = sum(1 for line in completed.stdout.splitlines() if '"Action":"pass"' in line and '"Test":' in line)
+            # 종료 코드도 본다(6.2 봉인 이월 — pass 사건만 세면 한 시험이 빨개도 다른 시험의 pass 로 대조군이 「GREEN」이 된다).
+            if completed.returncode != 0:
+                verdict, why = "CONTROL-JSON-RED", " ".join(command) + f" -json exited {completed.returncode}"
+                break
             if passes == 0:
                 verdict, why = "NO-TESTS-RAN", " ".join(command) + " emitted no test pass event"
                 break

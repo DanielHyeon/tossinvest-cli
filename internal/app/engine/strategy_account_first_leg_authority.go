@@ -18,6 +18,7 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyaccount"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 )
 
 const (
@@ -64,6 +65,8 @@ type strategyAccountMarketAuthority struct {
 	market    StrategyMarket
 	authority strategyaccount.Authority
 	snapshot  StrategyAccountMarketSnapshot
+	// scopes 는 소유자 범위별 계좌 권한이다(a112 5.2.2.2). 활성화 없는 시장은 원소 하나.
+	scopes []strategyAccountScopeAuthority
 }
 
 type strategyAccountAuthorityPair struct {
@@ -152,26 +155,65 @@ func (loader *strategyAccountAuthorityLoader) collectMarket(ctx context.Context,
 	fail := func(reason StrategyAccountReason) strategyAccountMarketAuthority {
 		return strategyAccountMarketAuthority{market: market, snapshot: StrategyAccountMarketSnapshot{Market: market, Reason: reason}}
 	}
-	if len(proposal.entries) != 1 || !proposal.entries[0].authority.Proposal().ValidProposal() {
+	// a112 5.2.2.2: 활성화 없는 시장은 오늘처럼 항목이 정확히 하나여야 한다(토글 OFF = upstream). 서명 활성화된 시장은 조립이 중재한
+	// 항목(소유자 범위)마다 계좌 권한 하나 — 보이스 A #5: 계좌 권한은 `entries[0]` 이 아니라 **그 범위의 종목**으로 적재되어야 한다.
+	activated := proposal.familyActivation().Verified()
+	if len(proposal.entries) == 0 || !activated && (len(proposal.entries) != 1 || !proposal.entries[0].authority.Proposal().ValidProposal()) {
 		return fail(StrategyAccountProposalNotReady)
 	}
 	if loader.load == nil || len(loader.key) != ed25519.PublicKeySize || loader.configDir == "." || loader.accountRef == "" {
 		return fail(StrategyAccountInternalFailure)
 	}
-	result := proposal.entries[0].authority.Proposal()
 	accountMarket := strategyaccount.MarketKR
 	if market == StrategyMarketUS {
 		accountMarket = strategyaccount.MarketUS
 	}
-	authority, err := loader.load(ctx, strategyaccount.ProductionConfig{ConfigDir: loader.configDir, AccountRef: loader.accountRef,
-		AccountCurrency: loader.accountCurrency, Symbol: result.Lineage.Symbol, Market: accountMarket, ManifestDigest: loader.digests[market],
-		TrustedKeyID: loader.keyID, TrustedKey: loader.key, ObservedAt: loader.observedAt})
-	if err != nil || authority.Market() != accountMarket || authority.ManifestDigest() != loader.digests[market] {
-		return fail(StrategyAccountAuthorityUnavailable)
+	scopes := make([]strategyAccountScopeAuthority, 0, len(proposal.entries))
+	for _, entry := range proposal.entries {
+		result := entry.authority.Proposal()
+		key, keyed := strategyOwnerKeyOf(result.Lineage)
+		scoped := strategyAccountScopeAuthority{key: key, reason: StrategyAccountProposalNotReady}
+		if keyed && result.ValidProposal() {
+			scoped.reason = StrategyAccountAuthorityUnavailable
+			authority, err := loader.load(ctx, strategyaccount.ProductionConfig{ConfigDir: loader.configDir, AccountRef: loader.accountRef,
+				AccountCurrency: loader.accountCurrency, Symbol: result.Lineage.Symbol, Market: accountMarket, ManifestDigest: loader.digests[market],
+				TrustedKeyID: loader.keyID, TrustedKey: loader.key, ObservedAt: loader.observedAt})
+			if err == nil && authority.Market() == accountMarket && authority.ManifestDigest() == loader.digests[market] {
+				scoped.authority, scoped.ready, scoped.reason = authority, true, StrategyAccountReady
+			}
+		}
+		scopes = append(scopes, scoped)
 	}
-	return strategyAccountMarketAuthority{market: market, authority: authority, snapshot: StrategyAccountMarketSnapshot{Market: market,
-		Ready: true, Reason: StrategyAccountReady, Generation: authority.Generation(), QuoteCurrency: authority.QuoteCurrency(),
-		ManifestDigest: authority.ManifestDigest(), Identity: authority.Identity()}}
+	return strategyAccountMarketFromScopes(market, scopes)
+}
+
+// strategyAccountMarketFromScopes 는 범위별 계좌 권한에서 시장 권한을 만든다. 시장 칸은 첫 준비된 범위의 것(범위 하나면 오늘과 같은 값).
+// 준비된 범위가 없으면 첫 범위의 사유로 시장 전체가 준비 안 됨 — 범위 하나일 때 오늘의 사유 그대로.
+func strategyAccountMarketFromScopes(market StrategyMarket, scopes []strategyAccountScopeAuthority) strategyAccountMarketAuthority {
+	for _, scope := range scopes {
+		if !scope.ready {
+			continue
+		}
+		authority := scope.authority
+		return strategyAccountMarketAuthority{market: market, authority: authority, scopes: scopes, snapshot: StrategyAccountMarketSnapshot{
+			Market: market, Ready: true, Reason: StrategyAccountReady, Generation: authority.Generation(), QuoteCurrency: authority.QuoteCurrency(),
+			ManifestDigest: authority.ManifestDigest(), Identity: authority.Identity()}}
+	}
+	reason := StrategyAccountProposalNotReady
+	if len(scopes) != 0 {
+		reason = scopes[0].reason
+	}
+	return strategyAccountMarketAuthority{market: market, scopes: scopes, snapshot: StrategyAccountMarketSnapshot{Market: market, Reason: reason}}
+}
+
+// forScope 는 그 소유자 범위의 준비된 계좌 권한이다. 없으면 false — 봉투 값으로 폴백하지 않는다.
+func (authority strategyAccountMarketAuthority) forScope(key strategyrouter.OwnerKey) (strategyaccount.Authority, bool) {
+	for _, scope := range authority.scopes {
+		if scope.key == key && scope.ready {
+			return scope.authority, true
+		}
+	}
+	return strategyaccount.Authority{}, false
 }
 
 func failedStrategyAccountPair(observedAt time.Time, reason StrategyAccountReason) strategyAccountAuthorityPair {
@@ -227,16 +269,29 @@ func (loader *productionStrategyFirstLegAuthorityLoader) collectStrategyFirstLeg
 	if !scoped {
 		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New(strategyFirstLegOwnerScopeRefusal)
 	}
-	// 시장 단위 개수 관문 — 봉인이 아니라 시장당 하나 상한임. 걷어 내는 일(두 소유자 범위 시장의 거래)은 5.2.2.2.
-	if len(proposal.entries) != 1 {
-		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("paired production authority is incomplete for market")
-	}
 	result := proposalAuthority.Proposal()
 	if result.Lineage.Identity != accepted.result.Lineage.Identity || result.ExecutionTerms.Identity() != accepted.result.ExecutionTerms.Identity() {
 		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production proposal identity changed")
 	}
-	scope := riskAuthority.bundle.Scope()
-	if err := riskAuthority.bundle.Validate(scope); err != nil || scope.AccountID != result.Lineage.AccountRef ||
+	// a112 5.2.2.2 — 시장 단위 개수 관문을 걷었다. 그 관문이 지키던 「하류 권한이 시장당 하나」를 이제 **범위별 재유도**가 진다: 위험 ·
+	// 계좌 권한도 봉인과 같은 소유자 범위 키로 조립 권한에서 다시 고른다. 그 범위의 권한이 없으면 **그 범위만** 거절한다(Manager 판정 J3 —
+	// 범위 거절 타입 · 봉투 값 폴백 없음). 원장 · Gateway · 중앙 오류와 identity 불일치(위조 의심)는 범위 거절이 아니다.
+	key, _ := strategyOwnerKeyOf(result.Lineage)
+	riskBundle, riskScoped := riskAuthority.forScope(key)
+	if !riskScoped {
+		return execgw.QFinalCampaignFirstLegIssuance{}, &strategyScopeRefusal{scope: key, detail: "no ready risk authority for this owner scope"}
+	}
+	accountAuthority, accountScoped := account.forScope(key)
+	if !accountScoped {
+		return execgw.QFinalCampaignFirstLegIssuance{}, &strategyScopeRefusal{scope: key, detail: "no ready account authority for this owner scope"}
+	}
+	// 발급 통화는 봉투(accepted.currency)가 아니라 조립 권한의 계보 시장에서 다시 유도한다(6.2 리뷰 보이스 A #3).
+	currency, currencyKnown := map[strategyrouter.Market]string{strategyrouter.MarketKR: "KRW", strategyrouter.MarketUS: "USD"}[result.Lineage.Market]
+	if !currencyKnown {
+		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production first-leg market currency unknown")
+	}
+	scope := riskBundle.Scope()
+	if err := riskBundle.Validate(scope); err != nil || scope.AccountID != result.Lineage.AccountRef ||
 		string(scope.Market) != string(result.Lineage.Market) || scope.Symbol != result.Lineage.Symbol || !scope.AsOf.Equal(loader.accounts.observedAt) {
 		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production risk authority scope changed")
 	}
@@ -245,7 +300,7 @@ func (loader *productionStrategyFirstLegAuthorityLoader) collectStrategyFirstLeg
 		result.Lineage.PositionGeneration != uint64(cas.Generation)+1 {
 		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production position campaign CAS changed")
 	}
-	entries := riskAuthority.bundle.Entries()
+	entries := riskBundle.Entries()
 	buckets := make([]riskbucket.BucketSnapshot, 0, len(entries))
 	references := make([]journal.RiskBucketSnapshotReference, 0, len(entries))
 	for _, entry := range entries {
@@ -262,27 +317,27 @@ func (loader *productionStrategyFirstLegAuthorityLoader) collectStrategyFirstLeg
 	if !entryOK || !stopOK || !targetOK {
 		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production strategy price unit invalid")
 	}
-	bindingDigest := strategyFirstLegBindingDigest(result, account.authority, riskAuthority.bundle.Digest(), schedule.snapshot.ActivationManifestDigest)
+	bindingDigest := strategyFirstLegBindingDigest(result, accountAuthority, riskBundle.Digest(), schedule.snapshot.ActivationManifestDigest)
 	transactionID := "strategy-risk:" + strings.TrimPrefix(bindingDigest, "sha256:")[:32]
 	attemptID := "strategy-attempt:" + strings.TrimPrefix(bindingDigest, "sha256:")[:32]
 	observedAt := loader.accounts.observedAt
 	collect := func(readCtx context.Context, _ int) (execgw.ExposureSnapshot, error) {
 		now := loader.clk.Now().UTC()
-		if readCtx == nil || readCtx.Err() != nil || now.IsZero() || now.After(account.authority.FreshUntil()) {
+		if readCtx == nil || readCtx.Err() != nil || now.IsZero() || now.After(accountAuthority.FreshUntil()) {
 			return execgw.ExposureSnapshot{}, errors.New("production account exposure snapshot expired")
 		}
 		version, versionErr := loader.journal.ReservationVersion(readCtx, result.Lineage.AccountRef)
 		if versionErr != nil {
 			return execgw.ExposureSnapshot{}, versionErr
 		}
-		return execgw.ExposureSnapshot{AsOf: account.authority.ObservedAt(), Version: version, OpenExposure: account.authority.OpenExposure()}, nil
+		return execgw.ExposureSnapshot{AsOf: accountAuthority.ObservedAt(), Version: version, OpenExposure: accountAuthority.OpenExposure()}, nil
 	}
 	owner := riskbucket.OwnerClaim{Key: riskbucket.OwnerKey{AccountID: result.Lineage.AccountRef, Market: scope.Market, Symbol: result.Lineage.Symbol},
 		LaneID: result.Lineage.LaneID, CampaignID: result.Lineage.CampaignID}
-	return execgw.QFinalCampaignFirstLegIssuance{Entry: execgw.QFinalEntryIssuance{Market: string(result.Lineage.Market), Currency: accepted.currency,
+	return execgw.QFinalCampaignFirstLegIssuance{Entry: execgw.QFinalEntryIssuance{Market: string(result.Lineage.Market), Currency: currency,
 		Symbol: result.Lineage.Symbol, QCandidate: result.Quantity, EntryPrice: entryPrice, StopPrice: stopPrice, TargetPrice: targetPrice,
-		Account: account.authority.AccountState(), Collect: collect, Admission: journal.RiskBucketAdmissionPlan{TransactionID: transactionID,
-			Admission: riskbucket.AdmissionRequest{QCandidate: result.Quantity, Policy: riskAuthority.bundle.Policy(), Buckets: buckets},
+		Account: accountAuthority.AccountState(), Collect: collect, Admission: journal.RiskBucketAdmissionPlan{TransactionID: transactionID,
+			Admission: riskbucket.AdmissionRequest{QCandidate: result.Quantity, Policy: riskBundle.Policy(), Buckets: buckets},
 			Owner:     owner, Snapshots: references, CreatedAt: observedAt}, FXAuthority: fx.read.evidence,
 		ExpectedPolicyVersion: loader.guardian.PolicyVersion(), ExpectedLimitsDigest: loader.guardian.LimitsDigest()},
 		Result: result, ActivationManifestDigest: schedule.snapshot.ActivationManifestDigest, AttemptID: attemptID, Revision: 1,

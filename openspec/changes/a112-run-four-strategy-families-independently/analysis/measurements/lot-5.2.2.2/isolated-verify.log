@@ -1,0 +1,4 @@
+# isolated worktree eb99c48a (= HEAD 9cbc7560 + lot 155 paths)
+Go test: 1195 passed in 1 packages
+Go test: 1030 passed in 1 packages
+# (rtk 요약 — 태그 스위트 1195 pass, 무태그 1030 pass, 두 명령 exit 0); make lint exit 0; openspec validate valid (main tree)

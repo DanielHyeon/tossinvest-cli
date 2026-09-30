@@ -1,6 +1,6 @@
 # Branch Test Map: `newProductionStrategyFirstLegAuthorityLoader`
 
-- Source SHA-256: `e6c12de7902b15de91de03a8da004f1ad167ce37d37580cf52766f4707ed0a4d`; AST branch locations are authoritative.
+- Source SHA-256: `d0d6281292dafcc979edce741a3a2bf98ed348f023267d8198d2436c71ec7291`; AST branch locations are authoritative.
 - Revision: **modified (a112 6.2 봉인 리뷰 수리, 2026-10-01)** — 제안 쌍을 떼어 내어 든다.
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |

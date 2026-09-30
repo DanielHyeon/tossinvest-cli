@@ -1,33 +1,30 @@
 # Branch Test Map: `dispatch`
 
-- Source: `internal/app/engine/strategy_dispatch_cycle.go` (75-211); file SHA-256 `9610abb34ee350fa3f19ad06cb41d279ebe3c19df44f0a60336dd83276c6c289`. AST branch positions are authoritative.
+- Source SHA-256: `d9d29dfcc61759b835bce75e3f500885704f2f27ee9879056cdccbf4f50a5b3b`; AST branch locations are authoritative.
+- Revision: **modified (a112 5.2.2.2, 2026-10-01).** 편집 전 19 분기 → 22: 편집 전 B12(admission 거절 → 오류)안에 범위 거절 타입을 `%w` 로 싣는 B13 을 더했고, 편집 전 B14 앞의 위험 세대 읽기를 시장 번들에서 **그 범위의 번들**로 옮겼다(B15 범위 키 · B16 범위 번들). 편집 전 B13 → B14, B14 → B17, B15~B19 → B18~B22.
+- 편집 전 번들: `analysis/measurements/lot-5.2.2.2/pre-edit/internal-app-engine--strategydispatchcycle.dispatch/`. 변이 원장 `analysis/measurements/lot-5.2.2.2/mutation-5.2.2.2.tsv`.
 
-- Measurement regime (8.7.2 편집 뒤): 몸통 진입 count. engine tagged suite 바이너리(`-coverpkg=./internal/app/engine,./internal/strategyrouter`, -trimpath 없이)를 `systemd-run … MemoryMax=16G` 안에서 실행, 스위트 PASS; 전체 시험 509 개를 하나씩 돈 per-test 프로파일(하네스 `analysis/harness/a872_pertest_cover.sh` · `a872_attribute.py`). 모든 행에서 시험별 합 == 스위트(ATTRIBUTION MISMATCH 0).
-
-| Branch | AST kind | Position | Measured disposition |
-|---|---|---|---|
-| B1 | if | 78:2 | arm entered 1x (engine tagged suite, post-edit); `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall` |
-| B2 | if | 81:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
-| B3 | if | 86:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
-| B4 | if | 93:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
-| B5 | if | 97:2 | arm entered 4x (engine tagged suite, post-edit); `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS` |
-| B6 | if | 114:2 | arm entered 10x (engine tagged suite, post-edit); `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`, `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor` |
-| B7 | if | 115:3 | arm entered 1x (engine tagged suite, post-edit); `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor` |
-| B8 | if | 136:2 | arm entered 1x (engine tagged suite, post-edit); `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission` |
-| B9 | if | 140:2 | arm entered 2x (engine tagged suite, post-edit); `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation` |
-| B10 | if | 144:2 | arm entered 4x (engine tagged suite, post-edit); `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS` |
-| B11 | if | 148:2 | arm entered 2x (engine tagged suite, post-edit); `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral` |
-| B12 | if | 152:2 | arm entered 1x (engine tagged suite, post-edit); `TestTheSameEnvelopeCannotPlaceASecondOrder` |
-| B13 | if | 156:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
-| B14 | if | 163:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
-| B15 | if | 169:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
-| B16 | if | 182:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
-| B17 | if | 188:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
-| B18 | if | 192:2 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
-| B19 | if | 205:4 | arm not entered (engine tagged suite, post-edit); no per-test profile entered it |
-
-8.7.2 가 더한 분기: B8(시계 없음 + 검증된 가족 활성화 → admission 앞 거절), B9(admission 앞 `LeaseCeiling` 만료 오류). 최종 검사 클로저(`FinalAuthorityCheck`) 안의 분기는 하나(B19 205:4, 스케줄 재검증 오류)이고 가족 만료는 분기 없이 마지막 `LeaseCeiling` 의 오류를 그대로 돌려준다. FuncLit 안이라 이 함수의 B 목록에 잡힌다 — 클로저는 게이트웨이가 부르므로 이 스위트(스파이 게이트웨이)에서는 시험이 직접 불러 잰다(`TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`·`TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`). 첫 편집 전 B8~B16 은 B10~B17 로 밀렸다 — 조건을 소스와 하나씩 대조했다.
-
-옛 표(8.8.2 까지의 조건-평가 regime 과 편집 전 좌표)는 이 번들의 git 이력에 있다 — 이 파일은 현재 소스만 적는다.
-
-A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.
+| Branch | Scenario anchor | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | if at 78:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B2 | if at 81:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B3 | if at 86:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B4 | if at 93:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B5 | if at 97:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B6 | if at 114:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B7 | if at 115:3 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B8 | if at 136:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B9 | if at 140:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B10 | if at 144:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B11 | if at 148:2 — 편집 전과 같은 분기(좌표만) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B12 | if at 152:2 — admission 거절 → 주기 오류(편집 전 B12) | `a112_owner_scope_trading_test.go` `TestAForgedScopeStopsTheCycleBeforeTheNextValidScope` | no — 조건 불변 | yes |
+| B13 | if at 154:3 — **(새)** 거절이 범위 거절이면 타입을 `%w` 로 싣는다 — 문구는 같음(J4 ①: 분류는 타입으로) | `a112_owner_scope_handoff_test.go` `TestTwoOwnerScopesTradeOnlyWhereEachHasItsOwnAuthority` · `a112_owner_scope_trading_test.go` `TestAScopeWithoutItsOwnAccountAuthorityIsRefusedAloneAndRecorded` | yes — 변이 X06(모든 거절에 타입) CAUGHT(`analysis/measurements/lot-5.2.2.2/mutation-5.2.2.2.tsv`) | yes |
+| B14 | if at 160:2 — Guardian 결정 세대 없음(편집 전 B13) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B15 | if at 168:2 — **(새)** 계보의 범위 키 정규화 | `a112_owner_scope_trading_test.go` `TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope` | no — 경로 추가 | yes |
+| B16 | if at 169:3 — **(새)** 그 범위의 준비된 위험 번들에서 세대를 읽음(범위 번들이 없으면 세대 0 → B17 거절) | `a112_owner_scope_trading_test.go` `TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope` | M20(시장 번들 세대) SURVIVED — **예상**: 모든 범위 번들이 같은 서명 시장 매니페스트에서 와서 세대가 구조상 시장 단위다 | yes |
+| B17 | if at 173:2 — 서명 위험 정책 세대 없음(편집 전 B14) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B18 | if at 179:2 — 편집 전과 같은 분기(좌표만, 편집 전 B15) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B19 | if at 192:2 — 편집 전과 같은 분기(좌표만, 편집 전 B16) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B20 | if at 198:2 — 편집 전과 같은 분기(좌표만, 편집 전 B17) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B21 | if at 202:2 — 편집 전과 같은 분기(좌표만, 편집 전 B18) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |
+| B22 | if at 215:4 — 편집 전과 같은 분기(좌표만, 편집 전 B19) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |

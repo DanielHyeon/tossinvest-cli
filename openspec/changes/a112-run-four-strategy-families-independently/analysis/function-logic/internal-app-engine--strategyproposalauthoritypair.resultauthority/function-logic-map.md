@@ -1,78 +1,48 @@
 # Function Logic Map: `strategyProposalAuthorityPair.ResultAuthority`
 
-- Source: `internal/app/engine/strategy_proposal_authority.go` (184-196)
-- Function: `strategyProposalAuthorityPair.ResultAuthority` in package `engine`
+- Source: `internal/app/engine/strategy_proposal_authority.go`
+- Source SHA-256: `a356e5ead7d719e7b791423645a86b2a2f8b2eed26066127eafb1928ec411288`
 - Signature: `strategyProposalAuthorityPair.ResultAuthority(params=0, results=1)`
-- File SHA-256: `cb6916966fa9f85868443b63d600f2502c685f2d595aae89f8fa2cfd435f024b`
-- Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
-- AST evidence: `ast.json` — AST branches 1.
+- Source range: `183:1`–`211:2`
+- AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2).
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
-이 함수는 5.5 에서 바뀌었다. 이전에는 `len(value.entries) != 1` 을 직접 세었고, 이제는
-`value.dispatchHandoff().Single()` 이 정한 결과만 읽는다. 세는 규칙이 사라진 것이 아니라
-패키지 밖 `internal/strategyhandoff` 한 곳으로 옮겨졌다 — 엔진 안에서는 "여기서는 주문을 낼
-수 없다"를 import 로 증명할 수 없기 때문이다.
-
-새로 생긴 조건이 하나 있다: handoff 는 `snapshot.Ready` 도 본다. 이전 이 함수는 보지 않았다.
-그 검사가 거부하게 될 **정상 입력**은 없다 — 항목을 담은 시장 권한은 모두 준비된 시장이며,
-그 사실은 사람이 읽은 것이 아니라 `TestEveryMarketAuthorityCarryingEntriesAlsoReportsReady` 가
-생산 소스를 파싱해 확인한다.
-
-The signature above is the exhaustive input/result record; this map does not infer state the AST does not show.
+- 결과 권한이 보는 범위 집합 = 주문 경로가 받는 handoff 집합(같은 함수).
 
 ## Branches and early returns
 
-- Measurement regime: Go coverage profiles, count mode.
-- 모든 실행은 `systemd-run --user --scope -p MemoryMax=… -p MemorySwapMax=0` cgroup 안에서 돌렸다.
-- engine tagged suite: `go test -c -tags tossos_testseams -covermode=count -coverpkg=./internal/app/engine ./internal/app/engine/`
-  뒤에 그 바이너리를 `-test.coverprofile` 로 실행. 스위트 전체 PASS, **73.8~73.9% of statements** — 3회 측정에 2912·2909·2909 of 3941.
-  태그 스위트도 흔들린다. 앞선 판본이 표본 하나(2912)를 안정값으로 적었고, 적대
-  리뷰어는 같은 트리에서 2911 을 쟀다. 둘 다 맞고, 둘 다 **표본**이었다.
-- engine untagged suite: 같은 명령에서 `-tags tossos_testseams` 만 뺀 것. 스위트 전체 PASS,
-  **63.5% of statements** — 같은 바이너리·같은 트리에서 다섯 번 재서 2498·2498·2499·2500·2501
-  of 3936 이 나왔다. 이 수는 실행마다 흔들린다(무태그 쪽에 스케줄링 의존 시험이 있다).
-  앞선 판본이 표본 하나(63.5%)를 안정된 값으로 적은 것을 정정한다.
-- 분기의 arm 은 그 분기 위치 **다음에 처음 열리는** 커버리지 블록이다. 조건이 여러 줄이면
-  여는 중괄호가 다음 줄에 있어서, 같은 줄만 보던 첫 판본은 이 태스크가 실제로 바꾼 분기를
-  `null`(=측정 없음)로 보고했다. "자료 없음"은 "진입 0"과 다르고 그 차이가 요점이다.
-- Per-test attribution set: `buildProductionStrategyMarketWorker` 를 부르는 시험은 트리 전체에서 둘
-  (`strategy_dispatch_cycle_test.go:191`, `a112_dispatch_handoff_test.go:124`)이고,
-  `ResultAuthority` 를 부르는 시험은 **둘**이다
-  (`strategy_proposal_authority_test.go:44`, `a112_arbitration_test.go:214`). 그 각각을
-  `-test.run '^<Test>$'` 로 따로 돌렸다. 앞선 판본이 "넷"이라고 적은 것은 **grep 히트 수를 시험
-  수로 센 것**이다 — 44 행에 호출이 둘 있고, `a112_arbitration_test.go:215` 의 호출은 `t.Fatalf`
-  안이라 실행되지 않는다.
-- **귀속 완전성은 주장이 아니라 측정이다.** 아래 모든 분기에서 시험별 진입 수의 합이 스위트 전체
-  진입 수와 정확히 같다. 이 집합 밖의 시험이 어느 arm 이든 들어갔다면 그 등식이 깨진다.
-  깨진 행은 `ATTRIBUTION MISMATCH` 로 표시되며 아래에는 하나도 없다.
+- Exact AST return nodes: `197:5, 202:4, 208:3, 210:2`.
 
-Exact AST return positions: 191:4, 193:3, 195:2.
-
-| Branch | AST kind | Position | Measured disposition |
+| Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
-| B1 | if | 190:3 | arm entered 3x (engine tagged suite); arm entered 2x (engine untagged suite); `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
-
-중재가 거절한 시장은 `Ready=false` 로 닫히므로 handoff 는 `HANDOFF_MARKET_CLOSED` 를 돌려주고
-이 arm 이 그것을 받는다.
+| B1 | range | 194:3 | **(새)** handoff 목록 순회 |
+| B2 | if | 196:4 | handoff 거절 또는 무효 제안 → 시장 결과 권한 준비 안 됨(편집 전 B1 — 목록의 일부만 넘기지 않음) |
+| B3 | if | 201:3 | **(새)** 목록 없음 → 준비 안 됨 |
+| B4 | if | 205:3 | **(새)** 범위 둘 이상 또는 활성화 시장 → 범위별 결과(`scoped`)를 싣는다 — 위험 적재기가 범위마다 번들을 만든다 |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `Single` | 189:24 |
-| `value.dispatchHandoff` | 189:24 |
-| `result.ValidProposal` | 190:21 |
-| `convert` | 195:70 |
-| `convert` | 195:110 |
+| `value.dispatchHandoffs` | 192:15 |
+| `make` | 193:14 |
+| `len` | 193:45 |
+| `handoff.Single` | 195:25 |
+| `result.ValidProposal` | 196:22 |
+| `append` | 199:14 |
+| `len` | 201:6 |
+| `len` | 205:6 |
+| `Verified` | 205:26 |
+| `value.familyActivation` | 205:26 |
+| `convert` | 210:70 |
+| `convert` | 210:110 |
 
 ## State mutations and fallbacks
 
-- AST assignments: 2. Defers: 0. Goroutine statements: 0.
-- 이 함수는 아무것도 바꾸지 않는다. 값을 만들어 돌려줄 뿐이다.
+- 이 함수 자신은 원장을 쓰지 않는다. 봉투 · 시장 값으로의 폴백 없음(범위 권한이 없으면 거절 또는 준비 안 됨).
 
 ## Safety conclusion
 
-시장 단위 단일 제안 가정의 소비자 **여섯 함수** 중 하나였고, 5.5 에서 경계를 쓰도록 바뀌었다.
-가정 자체를 없애는 것은 태스크 5.2 의 몫이며 이 태스크는 상한을 풀지 않았다.
+- High-risk 인접(위험 권한 입력). 활성화 없는 시장은 handoff 하나 — `scoped` 없음 → 위험 적재기가 편집 전과 같은 결과 하나를 본다.

@@ -448,21 +448,33 @@ func buildProductionStrategyMarketWorker(ctx context.Context, clk clock.Clock, m
 		fx.forMarket(market), proposal.forMarket(market), riskAuthority.forMarket(market), account.forMarket(market)
 	// 제안 쪽 준비 상태와 개수는 경계가 혼자 판단한다. 여기서 다시 세면
 	// 승격 규칙과 dispatch 규칙이 따로 놀 수 있고, 그 차이는 아무도 보고하지 않는다.
-	result, handedOff := p.dispatchHandoff().Single()
 	if !s.snapshot.Ready || s.restore.Activation == nil || !ca.snapshot.Ready || !ro.snapshot.Ready || !f.snapshot.Ready ||
-		!handedOff || !r.snapshot.Ready || !a.snapshot.Ready {
+		!r.snapshot.Ready || !a.snapshot.Ready {
 		return dormant
 	}
-	if !result.ValidProposal() {
-		return dormant
+	// a112 5.2.2.2: 승격은 주문 경로와 **같은 handoff 목록**(dispatchHandoffs)을 본다. 활성화 없는 시장은 오늘처럼 시장 단위
+	// handoff 하나(상한 거절이면 dormant — 토글 OFF = upstream). 서명 활성화된 시장은 소유자 범위마다 handoff 하나이고, 승인된
+	// 범위 중 **하나라도** 보호 · 진입 관문 관측을 통과하면 승격함 — 한 범위의 거절이 다른 범위를 굶기지 않음(Manager 판정 J3).
+	// 관측은 준비 확인일 뿐이고 주문마다 제출 경로가 범위 단위로 다시 검사함(withStrategyEntryGateAuthority · 보호 재확인).
+	promoted := false
+	for _, handoff := range p.dispatchHandoffs() {
+		result, handedOff := handoff.Single()
+		if !handedOff || !result.ValidProposal() {
+			continue
+		}
+		// 보호 관측은 그대로 둔다. 관측 자체가 준비되지 않은 범위를 걸러 내는 일을
+		// 하고 있고(오류면 그 범위는 승격 근거가 못 됨), 반환값을 활성화와 대조하지
+		// **않는다**는 점은 이전 그대로다 — 아래 주석 참고.
+		if _, err := gateway.ObserveStrategyProtection(ctx, strings.ToLower(string(market)), result.Quantity); err != nil {
+			continue
+		}
+		if _, err := gateway.ObserveStrategyEntryGate(ctx, strings.ToLower(string(market)), result.Lineage.Symbol); err != nil {
+			continue
+		}
+		promoted = true
+		break
 	}
-	// 보호 관측은 그대로 둔다. 관측 자체가 준비되지 않은 시장을 걸러 내는 일을
-	// 하고 있고(오류면 dormant), 그것은 이 로트가 바꾸지 않는다. 바뀐 것은
-	// 반환값을 활성화와 대조하지 **않는다**는 점뿐이다 — 아래 주석 참고.
-	if _, err := gateway.ObserveStrategyProtection(ctx, strings.ToLower(string(market)), result.Quantity); err != nil {
-		return dormant
-	}
-	if _, err := gateway.ObserveStrategyEntryGate(ctx, strings.ToLower(string(market)), result.Lineage.Symbol); err != nil {
+	if !promoted {
 		return dormant
 	}
 	// **여기에는 활성화 결속이 없다 (태스크 8.8.2).**

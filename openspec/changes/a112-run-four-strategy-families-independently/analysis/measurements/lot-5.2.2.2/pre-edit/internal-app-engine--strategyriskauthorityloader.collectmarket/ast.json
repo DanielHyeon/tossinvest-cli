@@ -1,0 +1,263 @@
+{
+  "file": "internal/app/engine/strategy_risk_authority.go",
+  "source_sha256": "8151a106ce66a76adc865520a899a103aaafa767cc66c42d44bed3f979857a55",
+  "package": "engine",
+  "function": "collectMarket",
+  "receiver": "strategyRiskAuthorityLoader",
+  "signature": "strategyRiskAuthorityLoader.collectMarket(params=4, results=1)",
+  "start": {
+    "line": 170,
+    "column": 1
+  },
+  "end": {
+    "line": 201,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 176,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 179,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 191,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 195,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 174,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 177,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 180,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 192,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 196,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 198,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 10
+      },
+      "text": "fail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 10
+      },
+      "text": "fail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 186,
+        "column": 17
+      },
+      "text": "riskbucket.LoadProductionRiskSnapshotAuthority"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 10
+      },
+      "text": "fail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 11
+      },
+      "text": "bundle.Scope"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 5
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 29
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 87
+      },
+      "text": "scope.AsOf.Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 126
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 130
+      },
+      "text": "bundle.Entries"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 10
+      },
+      "text": "fail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 39
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 39
+      },
+      "text": "bundle.Digest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 69
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 73
+      },
+      "text": "bundle.Entries"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 173,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 182,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 184,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 186,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

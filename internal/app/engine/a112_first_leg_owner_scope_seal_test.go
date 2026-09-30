@@ -19,10 +19,11 @@ package engine
 //   ③ 미선택 범위(다른 종목)                  → 선택 실패로 거절
 //   ④ 타 시장(US 결과를 KR 자리로)            → 선택 실패로 거절
 //   ⑤ 같은 계보 · 조건 재작성                  → 선택됨 · identity(ExecutionTerms) 대조에서 거절
-// 기제 시험: 같은 범위가 쌍에 둘이면 선택 실패(유일성), 범위 둘인 쌍은 선택이 되고 뒤의 개수 관문(5.2.2.2 몫)이 거절.
+// 기제 시험: 같은 범위가 쌍에 둘이면 선택 실패(유일성), 범위 둘인 쌍은 범위마다 선택된다(5.2.2.2 — 개수 관문 제거 뒤 발급까지).
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -100,6 +101,10 @@ func requireRefusal(t *testing.T, err error, want string, what string) {
 		t.Fatalf("%s: issued a first leg, want refusal %q", what, want)
 	}
 	got := err.Error()
+	// 위조 의심(선택 실패 · identity 불일치)은 범위 거절 **타입이 아니다**(J4) — 타입이면 전달 몸통이 건너뛰고 같은 주기의 다음 범위를 낸다.
+	if scope := (*strategyScopeRefusal)(nil); errors.As(err, &scope) {
+		t.Fatalf("%s: err=%v is typed as a scope refusal — a forgery must stop the cycle, not be skipped", what, err)
+	}
 	switch want {
 	case a112ScopeRefusal:
 		if !strings.Contains(got, a112ScopeRefusal) {
@@ -112,40 +117,58 @@ func requireRefusal(t *testing.T, err error, want string, what string) {
 	}
 }
 
+// 위조 다섯 축은 **범위 하나인 쌍**과 **범위 둘인 쌍(두 순서)** 에서 모두 거절된다(5.2.2.2 Done — 개수 관문을 걷은 뒤에도 봉인이
+// 범위마다 선다). 둘째 범위(000660)는 조립이 중재한 진짜 범위라 선택 대상이 될 수 있으므로, 미선택 범위 축은 어느 쌍에도 없는
+// 종목(035420)으로 잰다.
 func TestTheFirstLegSealRefusesEveryForgeryAxis(t *testing.T) {
 	fixture := newFirstLegIdentityFixture(t)
 	winner := fixture.proposals.kr.entries[0].authority
 	winnerResult := winner.Proposal()
 	continuation := riskLoaderDescriptor(t, StrategyMarketKR)
-
-	t.Run("same-scope loser (another campaign)", func(t *testing.T) {
-		loser := fixture.sealedKR(t, continuation, winnerResult.Lineage.Symbol, "campaign-seal-loser", "100", "95", "120")
-		requireRefusal(t, fixture.collectWithPair(t, a112Accepted(t, loser), winner), a112IdentityRefusal, "same-scope loser")
-	})
-	t.Run("gated lane (same scope, another family lane)", func(t *testing.T) {
-		gated := fixture.sealedKR(t, a112KRDescriptor(t, reversalLaneID(t)), winnerResult.Lineage.Symbol,
-			winnerResult.Lineage.CampaignID, "100", "95", "120")
-		if gated.Proposal().Lineage.LaneID == winnerResult.Lineage.LaneID {
-			t.Fatal("arrangement: the gated proposal is on the winner's lane")
-		}
-		requireRefusal(t, fixture.collectWithPair(t, a112Accepted(t, gated), winner), a112IdentityRefusal, "gated lane")
-	})
-	t.Run("unselected scope (another symbol)", func(t *testing.T) {
-		other := fixture.sealedKR(t, continuation, "000660", "campaign-seal-other", "100", "95", "120")
-		requireRefusal(t, fixture.collectWithPair(t, a112Accepted(t, other), winner), a112ScopeRefusal, "unselected scope")
-	})
-	t.Run("other market (a US result in the KR slot)", func(t *testing.T) {
-		accepted := a112Accepted(t, fixture.proposals.us.entries[0].authority)
-		accepted.market = strategyrouter.MarketKR // 위조: KR 권한 쌍으로 보내진 US 결과
-		requireRefusal(t, fixture.collectWithPair(t, accepted, winner), a112ScopeRefusal, "other market")
-	})
-	t.Run("same lineage, rewritten execution terms", func(t *testing.T) {
-		rewritten := fixture.sealedKR(t, continuation, winnerResult.Lineage.Symbol, winnerResult.Lineage.CampaignID, "100", "90", "130")
-		if rewritten.Proposal().Lineage.Identity != winnerResult.Lineage.Identity {
-			t.Fatal("arrangement: the rewrite moved the lineage")
-		}
-		requireRefusal(t, fixture.collectWithPair(t, a112Accepted(t, rewritten), winner), a112IdentityRefusal, "rewritten terms")
-	})
+	second := fixture.sealedKR(t, continuation, "000660", "campaign-seal-second-scope", "100", "95", "120")
+	for _, pair := range []struct {
+		name    string
+		entries []strategyproposal.ProductionAuthority
+	}{
+		{"one-scope pair", []strategyproposal.ProductionAuthority{winner}},
+		{"two-scope pair", []strategyproposal.ProductionAuthority{winner, second}},
+		{"two-scope pair, coordinator order", []strategyproposal.ProductionAuthority{second, winner}},
+	} {
+		t.Run(pair.name, func(t *testing.T) {
+			t.Run("same-scope loser (another campaign)", func(t *testing.T) {
+				loser := fixture.sealedKR(t, continuation, winnerResult.Lineage.Symbol, "campaign-seal-loser", "100", "95", "120")
+				requireRefusal(t, fixture.collectWithPair(t, a112Accepted(t, loser), pair.entries...), a112IdentityRefusal, "same-scope loser")
+			})
+			t.Run("gated lane (same scope, another family lane)", func(t *testing.T) {
+				gated := fixture.sealedKR(t, a112KRDescriptor(t, reversalLaneID(t)), winnerResult.Lineage.Symbol,
+					winnerResult.Lineage.CampaignID, "100", "95", "120")
+				if gated.Proposal().Lineage.LaneID == winnerResult.Lineage.LaneID {
+					t.Fatal("arrangement: the gated proposal is on the winner's lane")
+				}
+				requireRefusal(t, fixture.collectWithPair(t, a112Accepted(t, gated), pair.entries...), a112IdentityRefusal, "gated lane")
+			})
+			t.Run("unselected scope (another symbol)", func(t *testing.T) {
+				other := fixture.sealedKR(t, continuation, "035420", "campaign-seal-other", "100", "95", "120")
+				requireRefusal(t, fixture.collectWithPair(t, a112Accepted(t, other), pair.entries...), a112ScopeRefusal, "unselected scope")
+			})
+			t.Run("other market (a US result in the KR slot)", func(t *testing.T) {
+				accepted := a112Accepted(t, fixture.proposals.us.entries[0].authority)
+				accepted.market = strategyrouter.MarketKR // 위조: KR 권한 쌍으로 보내진 US 결과
+				requireRefusal(t, fixture.collectWithPair(t, accepted, pair.entries...), a112ScopeRefusal, "other market")
+			})
+			t.Run("same lineage, rewritten execution terms", func(t *testing.T) {
+				rewritten := fixture.sealedKR(t, continuation, winnerResult.Lineage.Symbol, winnerResult.Lineage.CampaignID, "100", "90", "130")
+				if rewritten.Proposal().Lineage.Identity != winnerResult.Lineage.Identity {
+					t.Fatal("arrangement: the rewrite moved the lineage")
+				}
+				requireRefusal(t, fixture.collectWithPair(t, a112Accepted(t, rewritten), pair.entries...), a112IdentityRefusal, "rewritten terms")
+			})
+			// 대조: 같은 쌍에서 진짜 winner 는 발급된다 — 위의 거절이 쌍 자체의 고장이 아님.
+			if err := fixture.collectWithPair(t, a112Accepted(t, winner), pair.entries...); err != nil {
+				t.Fatalf("control: the genuine winner was refused in the %s: %v", pair.name, err)
+			}
+		})
+	}
 }
 
 // 기제: 같은 소유자 범위가 쌍에 둘이면 어느 쪽도 고르지 않는다(유일성) — 하나를 골라 조용히 버리지 않는다.
@@ -157,18 +180,28 @@ func TestTheFirstLegSealRefusesAnOwnerScopeTheAssemblyHoldsTwice(t *testing.T) {
 	requireRefusal(t, fixture.collectWithPair(t, a112Accepted(t, winner), winner, twin), a112ScopeRefusal, "scope held twice")
 }
 
-// 기제: 범위 둘인 쌍에서도 선택은 범위로 된다 — 그 뒤 개수 관문(5.2.2.2 가 걷어 낼 시장 단위 상한)이 거절한다.
-// **정정(2026-10-01, 6.2 리뷰 codex #3):** 앞 판의 「순서(entries[0])에 기대는 선택이면 이 시험의 거절 문구가 달라진다」는 거짓이었다 —
-// 개수 관문이 identity 대조보다 앞이라 entries[0] 을 골라도 같은 개수 문구로 거절된다. 이 시험이 지키는 것은 「두 범위 쌍에서 범위 선택이
-// 실패하지 않는다(선택 실패 문구가 아니다)」뿐이다. 어느 항목을 골랐는지는 아래 TestTheScopeSelectorReturnsTheInScopeEntry 가 직접 잰다.
-func TestTheFirstLegSealSelectsByScopeBeforeTheMarketCountGate(t *testing.T) {
+// 기제: 범위 둘인 쌍에서도 선택은 범위로 된다. 5.2.2.2 가 시장 단위 개수 관문을 걷어 낸 뒤(이 시험의 앞 판은 그 관문의 거절을 단언했다)
+// 범위 선택은 **발급까지** 이어진다 — 순서에 기대지 않고 양방향으로 잰다:
+//
+//	· winner(뒤에 둠) → 발급, 발급된 제안은 winner 의 identity(entries[0] 선택이면 other 를 골라 identity 거절)
+//	· other(앞에 둠)  → 선택 · identity 대조는 통과하고 그 범위의 위험 권한이 없어 **범위 거절 타입**(단일 범위 fixture 의 위험 권한 —
+//	                    identity 거절 문구가 아니므로 other 가 자기 범위로 골라졌음이 가려진다)
+func TestTheFirstLegSealSelectsByScopeInATwoScopePair(t *testing.T) {
 	fixture := newFirstLegIdentityFixture(t)
 	winner := fixture.proposals.kr.entries[0].authority
 	other := fixture.sealedKR(t, riskLoaderDescriptor(t, StrategyMarketKR), "000660", "campaign-seal-second-scope", "100", "95", "120")
-	// other 를 앞에 둔다 — entries[0] 에 기대는 선택은 other 를 골라 identity 거절을 낸다.
-	err := fixture.collectWithPair(t, a112Accepted(t, winner), other, winner)
-	if err == nil || !strings.Contains(err.Error(), "paired production authority is incomplete for market") {
-		t.Fatalf("two-scope pair: err=%v, want the scope selection to succeed and the market count gate to refuse", err)
+	pair := fixture.proposals
+	pair.kr = strategyProposalMarketAuthority{market: StrategyMarketKR, snapshot: fixture.proposals.kr.snapshot,
+		entries: []strategyProposalEntryAuthority{{authority: other}, {authority: winner}}}
+	loader := fixture.loaderWith(pair)
+	issuance, err := loader.collectStrategyFirstLegAuthority(context.Background(), a112Accepted(t, winner))
+	if err != nil || issuance.Result.Lineage.Identity != winner.Proposal().Lineage.Identity {
+		t.Fatalf("two-scope pair, winner: err=%v issued=%q — want the in-scope entry issued", err, issuance.Result.Lineage.Identity)
+	}
+	_, err = loader.collectStrategyFirstLegAuthority(context.Background(), a112Accepted(t, other))
+	var refusal *strategyScopeRefusal
+	if !errors.As(err, &refusal) || refusal.scope.Symbol != "000660" {
+		t.Fatalf("two-scope pair, other: err=%v — want the other scope selected and refused alone by its missing risk authority", err)
 	}
 }
 

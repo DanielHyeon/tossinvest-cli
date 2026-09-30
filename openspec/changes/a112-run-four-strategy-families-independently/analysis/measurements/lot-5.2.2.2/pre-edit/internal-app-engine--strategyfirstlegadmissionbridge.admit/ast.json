@@ -1,0 +1,278 @@
+{
+  "file": "internal/app/engine/strategy_first_leg_admission.go",
+  "source_sha256": "a08618229629b30fd7f4f45b19b3773cb9b1e84f9dc3eebf6654e44ea4e72894",
+  "package": "engine",
+  "function": "admit",
+  "receiver": "strategyFirstLegAdmissionBridge",
+  "signature": "strategyFirstLegAdmissionBridge.admit(params=2, results=1)",
+  "start": {
+    "line": 69,
+    "column": 1
+  },
+  "end": {
+    "line": 93,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 71,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 74,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 72,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 75,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 79,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 82,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 86,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 90,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 23
+      },
+      "text": "validateStrategyFirstLegResult"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 75,
+        "column": 10
+      },
+      "text": "strategyFirstLegRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 20
+      },
+      "text": "b.loader.collectStrategyFirstLegAuthority"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 10
+      },
+      "text": "strategyFirstLegRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 94
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 12
+      },
+      "text": "validateStrategyFirstLegAuthority"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 10
+      },
+      "text": "strategyFirstLegRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 86
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 19
+      },
+      "text": "b.guardian.PrecheckQFinalCampaignFirstLeg"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 10
+      },
+      "text": "strategyFirstLegRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 86
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 18
+      },
+      "text": "b.guardian.IssuePrecheckedQFinalCampaignFirstLeg"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 10
+      },
+      "text": "strategyFirstLegRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 90
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 81
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 81,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

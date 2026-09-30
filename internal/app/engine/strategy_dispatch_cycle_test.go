@@ -29,6 +29,8 @@ type strategyDispatchGatewaySpy struct {
 	observed       map[string]int
 	failProtection map[string]error
 	failEntryGate  map[string]error
+	// failEntryGateSymbol 은 종목 단위 진입 관문 거절(a112 5.2.2.2 — 한 범위의 관문 거절이 다른 범위의 worker 승격을 굶기지 않음).
+	failEntryGateSymbol map[string]error
 }
 
 func (spy *strategyDispatchGatewaySpy) ObserveStrategyProtection(_ context.Context, market string, _ uint64) (execgw.StrategyProtectionAuthority, error) {
@@ -41,11 +43,14 @@ func (spy *strategyDispatchGatewaySpy) ObserveStrategyProtection(_ context.Conte
 	return execgw.StrategyProtectionAuthorityForTest(strings.ToUpper(market), 9, strings.Repeat("a", 64)), nil
 }
 
-func (spy *strategyDispatchGatewaySpy) ObserveStrategyEntryGate(_ context.Context, market, _ string) (execgw.StrategyEntryGateAuthority, error) {
+func (spy *strategyDispatchGatewaySpy) ObserveStrategyEntryGate(_ context.Context, market, symbol string) (execgw.StrategyEntryGateAuthority, error) {
 	spy.mu.Lock()
 	defer spy.mu.Unlock()
 	spy.observed["gate-"+market]++
 	if err := spy.failEntryGate[market]; err != nil {
+		return execgw.StrategyEntryGateAuthority{}, err
+	}
+	if err := spy.failEntryGateSymbol[symbol]; err != nil {
 		return execgw.StrategyEntryGateAuthority{}, err
 	}
 	return execgw.StrategyEntryGateAuthorityForTest(3, "sha256:"+strings.Repeat("b", 64)), nil
@@ -262,6 +267,7 @@ func pairedStrategyDispatchCycleFixture(t *testing.T) (*strategyDispatchCycle, s
 		account := strategyAccountMarketAuthority{market: market,
 			authority: strategyaccount.AuthorityForTest(accountMarket, quote, state, now.Add(-time.Second), now.Add(time.Minute), 1,
 				"sha256:"+strings.Repeat("c", 64)), snapshot: StrategyAccountMarketSnapshot{Market: market, Ready: true, Reason: StrategyAccountReady}}
+		account = a112ScopedAccount(account, result, account.authority)
 		if market == StrategyMarketKR {
 			proposals.kr, accounts.kr = proposal, account
 		} else {

@@ -3,9 +3,7 @@ package engine
 import (
 	"context"
 	"crypto/ed25519"
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"os"
 	"path/filepath"
 	"sort"
@@ -14,6 +12,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/officialfx"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker"
@@ -186,11 +185,27 @@ func (pair strategyProposalAuthorityPair) ResultAuthority() strategyResultAuthor
 		// 몇 개까지 넘길 수 있는지는 여기서 정하지 않는다. 경계 한 곳이 정한다.
 		// Single 은 값과 함께 "건너가도 되는가"를 돌려주므로, 거절을 안 보고
 		// 값을 읽는 판본은 아예 쓸 수 없다.
-		result, handedOff := value.dispatchHandoff().Single()
-		if !handedOff || !result.ValidProposal() {
+		//
+		// a112 5.2.2.2: 주문 경로와 같은 handoff 목록(dispatchHandoffs)에서 읽는다 — 활성화 없는 시장은 시장 단위 handoff 하나라 오늘과
+		// 같고(토글 OFF = upstream), 서명 활성화된 시장은 소유자 범위마다 하나다. 하나라도 유효하지 않으면 그 시장의 결과 권한은 준비 안 됨
+		// (경계가 승인한 목록의 일부만 넘기면 위험 · 계좌 권한이 주문 경로와 다른 범위 집합을 보게 된다).
+		handoffs := value.dispatchHandoffs()
+		results := make([]strategyflow.Result, 0, len(handoffs))
+		for _, handoff := range handoffs {
+			result, handedOff := handoff.Single()
+			if !handedOff || !result.ValidProposal() {
+				return strategyResultMarketAuthority{market: market}
+			}
+			results = append(results, result)
+		}
+		if len(results) == 0 {
 			return strategyResultMarketAuthority{market: market}
 		}
-		return strategyResultMarketAuthority{market: market, ready: true, result: result}
+		authority := strategyResultMarketAuthority{market: market, ready: true, result: results[0]}
+		if len(results) > 1 || value.familyActivation().Verified() {
+			authority.scoped = results
+		}
+		return authority
 	}
 	return strategyResultAuthorityPair{observedAt: pair.observedAt, kr: convert(StrategyMarketKR, pair.kr), us: convert(StrategyMarketUS, pair.us)}
 }
@@ -416,14 +431,12 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 		result.snapshot.QueueDropCount = outcome.Drops
 		return result
 	}
-	h := sha256.New()
-	for _, entry := range entries {
-		_, _ = h.Write([]byte(entry.route.approved.Symbol() + "\x00" + entry.authority.Proposal().Lineage.Identity + "\x00"))
-	}
+	// 제안 집합 digest 는 A-lite 계약(dispatchHandoffs)이 대조하는 식과 **한 함수**로 적는다(6.2 리뷰 보이스 A #6 — 두 사본이면 한쪽만
+	// 바뀌어 활성화 시장이 조용히 닫히거나, 대조가 공허해짐).
 	return strategyProposalMarketAuthority{market: market, entries: entries, activation: gate.activation,
 		snapshot: StrategyProposalMarketSnapshot{Market: market, Ready: true, Reason: StrategyProposalReady,
 			RoutedCount: len(routes.entries), ProposedCount: len(entries), RefusedCount: refused, ManifestDigest: digest,
-			ProposalSetDigest: "sha256:" + hex.EncodeToString(h.Sum(nil)), QueueDropCount: outcome.Drops,
+			ProposalSetDigest: strategyProposalSetDigest(entries), QueueDropCount: outcome.Drops,
 			GatedCount: gatedCount, GatedOutcomes: gatedOutcomes}}
 }
 

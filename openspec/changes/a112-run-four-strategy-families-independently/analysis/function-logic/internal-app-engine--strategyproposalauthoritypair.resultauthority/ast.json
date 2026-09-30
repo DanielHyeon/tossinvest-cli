@@ -1,24 +1,48 @@
 {
   "file": "internal/app/engine/strategy_proposal_authority.go",
-  "source_sha256": "cb6916966fa9f85868443b63d600f2502c685f2d595aae89f8fa2cfd435f024b",
+  "source_sha256": "a356e5ead7d719e7b791423645a86b2a2f8b2eed26066127eafb1928ec411288",
   "package": "engine",
   "function": "ResultAuthority",
   "receiver": "strategyProposalAuthorityPair",
   "signature": "strategyProposalAuthorityPair.ResultAuthority(params=0, results=1)",
   "start": {
-    "line": 184,
+    "line": 183,
     "column": 1
   },
   "end": {
-    "line": 196,
+    "line": 211,
     "column": 2
   },
   "branches": [
     {
       "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 194,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
       "kind": "if",
       "at": {
-        "line": 190,
+        "line": 196,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 201,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 205,
         "column": 3
       }
     }
@@ -27,21 +51,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 191,
+        "line": 197,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 202,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 193,
+        "line": 208,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 195,
+        "line": 210,
         "column": 2
       }
     }
@@ -50,31 +81,87 @@
     {
       "kind": "call",
       "at": {
-        "line": 189,
-        "column": 24
+        "line": 192,
+        "column": 15
       },
-      "text": "Single"
+      "text": "value.dispatchHandoffs"
     },
     {
       "kind": "call",
       "at": {
-        "line": 189,
-        "column": 24
+        "line": 193,
+        "column": 14
       },
-      "text": "value.dispatchHandoff"
+      "text": "make"
     },
     {
       "kind": "call",
       "at": {
-        "line": 190,
-        "column": 21
+        "line": 193,
+        "column": 45
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 25
+      },
+      "text": "handoff.Single"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 22
       },
       "text": "result.ValidProposal"
     },
     {
       "kind": "call",
       "at": {
-        "line": 195,
+        "line": 199,
+        "column": 14
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 6
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 26
+      },
+      "text": "Verified"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 26
+      },
+      "text": "value.familyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
         "column": 70
       },
       "text": "convert"
@@ -82,7 +169,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 195,
+        "line": 210,
         "column": 110
       },
       "text": "convert"
@@ -92,15 +179,50 @@
     {
       "kind": ":=",
       "at": {
-        "line": 185,
+        "line": 184,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 189,
+        "line": 192,
         "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 193,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 195,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 199,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 204,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 206,
+        "column": 4
       }
     }
   ],

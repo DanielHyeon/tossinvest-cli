@@ -1,17 +1,17 @@
 # Branch Test Map: `Context.Read`
 
-- Source SHA-256: `5f203ad88f4476284006b92099365d42d04a619a2f567524efdd9bb1beb64f65`; AST branch locations are authoritative.
+- Source SHA-256: `95474831b04d24c21d90d72aac7349fe0682d2cbee9beb02c3be6307ac9dc510`; AST branch locations are authoritative.
 - **이 lot 전까지 이 함수에는 어떤 테스트도 없었다.** 아래 네 테스트가 첫 실행이다.
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 24:2 — nil receiver/context | `TestStrategyRuntimeReadWithoutAStoreStaysAnError` | 아니오 — 기존 동작을 처음으로 고정한 것이며 이 lot 이 바꾸지 않았다 | 예 |
-| B2 | if at 30:2 — store 부재 | `TestStrategyRuntimeReadWithoutAStoreStaysAnError` | 아니오 — 같은 이유 | 예 |
-| B3 | if at 34:2 — store 읽기 오류 (**조건이 좁아짐**) | `TestStrategyRuntimeReadOnAFailedStoreInventsNothing` | 아니오 — 편집 뒤에 쓴 테스트다. 대신 뮤테이션으로 반증한다(아래) | 예 |
-| B4 | if at 50:2 — supervisor 부재 (**신규**) | `TestStrategyRuntimeReadExposesThisProcessConfigAndBuildDigest` | 예 — "운영자가 적어야 하는 숫자가 여전히 밖으로 나오지 않는다"로 실패 | 예 |
-| B5 | range at 53:2 — KR·US latch 검사 | `TestStrategyRuntimeReadKeepsTheIdentityWhileLatchingAMarket` | 아니오 — 편집 뒤에 쓴 테스트 | 예 |
-| B6 | if at 55:3 — latch 안 된 시장 건너뛰기 | `TestStrategyRuntimeReadKeepsTheIdentityWhileLatchingAMarket` (US 는 latch 아님) | 아니오 — 같은 이유 | 예 |
-| B7 | if at 59:3 — CURRENT 인 시장만 덮기 | `TestStrategyRuntimeReadKeepsTheIdentityWhileLatchingAMarket` (KR 이 CURRENT) | 아니오 — 같은 이유 | 예 |
+| B1 | if at 25:2 — nil receiver/context | `TestStrategyRuntimeReadWithoutAStoreStaysAnError` | 아니오 — 기존 동작을 처음으로 고정한 것이며 이 lot 이 바꾸지 않았다 | 예 |
+| B2 | if at 31:2 — store 부재 | `TestStrategyRuntimeReadWithoutAStoreStaysAnError` | 아니오 — 같은 이유 | 예 |
+| B3 | if at 35:2 — store 읽기 오류 (**조건이 좁아짐**) | `TestStrategyRuntimeReadOnAFailedStoreInventsNothing` | 아니오 — 편집 뒤에 쓴 테스트다. 대신 뮤테이션으로 반증한다(아래) | 예 |
+| B4 | if at 51:2 — supervisor 부재 (**신규**) | `TestStrategyRuntimeReadExposesThisProcessConfigAndBuildDigest` | 예 — "운영자가 적어야 하는 숫자가 여전히 밖으로 나오지 않는다"로 실패 | 예 |
+| B5 | range at 54:2 — KR·US latch 검사 | `TestStrategyRuntimeReadKeepsTheIdentityWhileLatchingAMarket` | 아니오 — 편집 뒤에 쓴 테스트 | 예 |
+| B6 | if at 56:3 — latch 안 된 시장 건너뛰기 | `TestStrategyRuntimeReadKeepsTheIdentityWhileLatchingAMarket` (US 는 latch 아님) | 아니오 — 같은 이유 | 예 |
+| B7 | if at 60:3 — CURRENT 인 시장만 덮기 | `TestStrategyRuntimeReadKeepsTheIdentityWhileLatchingAMarket` (KR 이 CURRENT) | 아니오 — 같은 이유 | 예 |
 
 ## 반증 실측
 

@@ -1,40 +1,16 @@
 # Branch Test Map: `buildProductionStrategyMarketWorker`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (432-492); file SHA-256 `22855de0f27de05c60c2b5ff8cf2d5c7e3ed50e78a9fa6f67fb81ec38decdbfa`. AST branch positions are authoritative.
-- 이 태스크는 B2 만 편집했다. 나머지 행은 측정만 갱신했다.
+- Source SHA-256: `9e24e93028b2728071d71d1d6ccea2c2a83fe768f6efe2dc09a57906c435a373`; AST branch locations are authoritative.
+- Revision: **modified (a112 5.2.2.2, 2026-10-01).** 편집 전 6 분기 → 8: 편집 전 B2(준비 + handoff 승인)에서 handoff 조건을 떼어 범위 순회(B3)와 범위별 승인 · 유효(B4)로 옮기고, 편집 전 B3(봉인 깨짐)을 B4 에 합쳤다. 편집 전 B4 · B5(보호 · 진입 관문 관측 실패 → dormant)는 B5 · B6(그 범위만 건너뜀)이 되고, 승격 근거가 된 범위가 없으면 B7 이 dormant. 편집 전 B6 은 B8(불변).
+- 편집 전 번들: `analysis/measurements/lot-5.2.2.2/pre-edit/internal-app-engine--buildproductionstrategymarketworker/`. 변이 원장 `analysis/measurements/lot-5.2.2.2/mutation-5.2.2.2.tsv`.
+
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 438:2 — 배선 미완/nil | `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` | 아니오 — 편집 없음 | 예 |
-| B2 | if at 452:2 — **handoff 거절 포함**, 권한 준비 미완 | `TestARefusedHandoffLeavesTheWorkerDormant` | 아니오 — 컴파일 실패로서의 RED 는 있었으나(`dispatchHandoff` 미존재) 동작 RED 는 없다. 이 태스크는 동작을 보존했다 | 예 |
-| B3 | if at 456:2 — 봉인 깨진 제안 | 없음 | 아니오 | 아니오 — **진입 0** |
-| B4 | if at 462:2 — 보호 관측 실패 | `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` | 아니오 — 편집 없음 | 예 |
-| B5 | if at 465:2 — 진입 게이트 관측 실패 | 없음 | 아니오 | 아니오 — **진입 0** |
-| B6 | if at 486:2 — digest/revision/만료 (옛 B6) | 없음 | 아니오 | 아니오 — **진입 0** |
-
-## 반증 실측
-
-| 뮤테이션 | 결과 |
-|---|---|
-| M5: B2 에서 관문을 지우고 `_ = handedOff` 로 컴파일러를 달랜다 | KILLED — `TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer` 실패. 5.5 판본에서는 같은 모양이 **SURVIVED** 했다: 거절된 값이 영값이라 B3 의 `ValidProposal()` 이 대신 걸러 주었고, 그 자리의 안전은 경계가 아니라 우연이 지키고 있었다. |
-| M7: 이 본문에 `gateway.PlaceClaimedStrategy(...)` 를 넣는다 | KILLED — `TestTheWorkerBuilderOnlyObservesThroughTheGateway` 실패 |
-| M10: 어댑터가 첫 항목만 싣는다(`break`) | KILLED — `TestARefusedHandoffLeavesTheWorkerDormant` 실패. 상한 초과가 승인으로 바뀌면 이 worker 가 올라가 버린다. |
-
-원복은 12개 전부 sha256 대조로 확인했고 `unrestored_files` 는 비어 있다.
-
-행은 측정한 것을 말한다. 진입 0 인 arm 은 커버리지 공백이지 통과가 아니다.
-
-## 2026-09-04 — 태스크 8.8.2 가 들어낸 두 분기
-
-옛 B6(`activation.Verified()`)·B7(위험·ProtectionReady digest 대조)이 코드에서
-사라졌으므로 행도 지웠다. 옛 B8 은 새 B6 이다.
-
-**왜 들어냈나.** 8.5 적대 리뷰가 그 결속이 두 가지 이유로 아무것도 막지 못한다는
-것을 값으로 보였다. (1) 두 값이 per-cycle 스냅샷 봉인이라 사람이 서명한 상수가
-어떤 정상 입력으로도 같아질 수 없었다 — 매니페스트를 배포하면 두 시장이 영원히
-dormant 가 된다. (2) 이 함수가 만드는 `Effective` 는 화면과 승격만 움직이고,
-주문은 refresh worker 의 사이클이 `dispatchHandoff().Deliver` 로 내보내며 그
-경로는 이 서술자를 읽지 않는다.
-
-결속은 두 자리로 옮겼다: 넷은 제안 수집 단계(`loadFamilyActivation`, 존재하고
-변하지 않는 사실), ProtectionReady 하한은 `strategyDispatchCycle.dispatch`
-(보호 세대가 실제로 존재하고 주문을 거절할 수 있는 유일한 자리).
+| B1 | if at 438:2 — 배선 미완/nil → dormant(편집 전 B1 불변) | `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` | no — 편집 없음 | yes |
+| B2 | if at 451:2 — 시장 권한(일정 · 후보 · 경로 · 환율 · 위험 · 계좌) 준비 미완 → dormant. **편집: handoff 조건을 뺐다**(B3~B4 로) | `TestARefusedHandoffLeavesTheWorkerDormant` | no — 준비 조건 불변 | yes |
+| B3 | range at 460:2 — **(새)** 주문 경로와 같은 handoff 목록(`dispatchHandoffs`) 순회 — 활성화 없는 시장은 시장 단위 하나(오늘), 서명 활성화 시장은 범위마다 하나 | `a112_owner_scope_trading_test.go` `TestAnActivatedTwoScopeMarketPromotesItsWorkerPerScope` | yes — 편집 전 활성화 두 범위 시장 dormant(FAIL 관측), 변이 X16 CAUGHT(`analysis/measurements/lot-5.2.2.2/mutation-5.2.2.2.tsv`) | yes |
+| B4 | if at 462:3 — **(새, 편집 전 B2 의 handoff 절반 + 편집 전 B3)** 그 handoff 가 거절했거나 봉인 깨진 제안 → 그 범위는 승격 근거가 못 됨(continue) | `TestARefusedHandoffLeavesTheWorkerDormant`(시장 단위 상한 거절 → 모든 범위 건너뜀 → B7 dormant) | no — 동작 보존(거절 handoff 는 편집 전에도 dormant) | yes |
+| B5 | if at 468:3 — 보호 관측 실패 → **그 범위만** 건너뜀(편집 전 B4 는 시장 dormant — 범위 하나면 B7 로 같은 결과) | `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure` | no — 범위 하나에서는 동작 동일 | yes |
+| B6 | if at 471:3 — 진입 관문 관측 실패 → **그 범위만** 건너뜀(J3 — 한 범위의 거절이 다른 범위의 승격을 굶기지 않음) | `a112_owner_scope_trading_test.go` `TestAnActivatedTwoScopeMarketPromotesItsWorkerPerScope`(005930 차단 → 000660 으로 승격, 둘 다 차단 → dormant) | yes — 변이 X15(`return dormant`) · X17(관문 무시) CAUGHT(`analysis/measurements/lot-5.2.2.2/mutation-5.2.2.2.tsv`) | yes |
+| B7 | if at 477:2 — **(새)** 승격 근거가 된 범위 없음 → dormant | `a112_owner_scope_trading_test.go` `TestAnActivatedTwoScopeMarketPromotesItsWorkerPerScope`(모든 범위 차단) · `TestARefusedHandoffLeavesTheWorkerDormant` | yes — 변이 X17 CAUGHT | yes |
+| B8 | if at 498:2 — digest / revision / 만료 → dormant(편집 전 B6 불변) | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | 편집 전 번들의 측정 |

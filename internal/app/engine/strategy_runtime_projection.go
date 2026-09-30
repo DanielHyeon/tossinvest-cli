@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection"
 )
 
@@ -119,8 +120,17 @@ func strategyProjectionFromAssembly(assembly StrategyEntryProductionAssembly) st
 		}
 		// 화면이 보는 제안은 dispatch 가 받는 제안과 같아야 한다. 그래서
 		// 여기서도 같은 경계를 쓴다 — 따로 세면 화면과 실제가 갈라진다.
-		result, handedOff := assembly.proposals.forMarket(market).dispatchHandoff().Single()
-		if !handedOff || !result.ValidProposal() {
+		// a112 5.2.2.2: 주문 경로와 같은 handoff 목록(dispatchHandoffs)에서 조정자 순서의 첫 승인 범위를 보임. 활성화 없는 시장은
+		// 오늘처럼 시장 단위 handoff 하나. 서명 활성화된 두 범위 시장은 첫 범위만 화면에 오름 — 범위별 행은 이 로트 밖(review 잔여).
+		var result strategyflow.Result
+		handedOff := false
+		for _, handoff := range assembly.proposals.forMarket(market).dispatchHandoffs() {
+			if scoped, admitted := handoff.Single(); admitted && scoped.ValidProposal() {
+				result, handedOff = scoped, true
+				break
+			}
+		}
+		if !handedOff {
 			snapshot = strategyprojection.WithMarketFailure(snapshot, projectionMarket,
 				strategyprojection.RefusalEvidenceStale, observed)
 			continue

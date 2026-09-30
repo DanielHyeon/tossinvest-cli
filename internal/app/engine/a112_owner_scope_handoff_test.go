@@ -5,15 +5,14 @@ package engine
 // a112 태스크 5.2.2.1 — 활성화된 시장의 주문 경로는 소유자 범위마다 handoff 를 받는다(동결 골든 "at most one selected
 // proposal per owner scope"). 활성화가 없는 시장(오늘 생산 — 배포 핀 0)은 시장 단위 상한 그대로다(토글 OFF = upstream).
 //
-// **오늘-동등성 핀**(Manager 조건 1): 소유자 범위가 둘인 활성화 시장이 handoff 를 통과해도 하류 1차 레그 권한이 거절해
-// 주문은 0 이다. 이 핀이 5.2.2.2(6.2 봉인 뒤 하류 권한의 소유자 범위 전환) 착수 때 「무엇이 바뀌는가」의 기준선이다.
+// **오늘-동등성 핀**(Manager 조건 1)은 5.2.2.2 에서 의도대로 뒤집혔다: 5.2.2.1 판은 「두 범위면 하류 1차 레그 개수 관문이 거절해
+// 주문 0」이었고, 개수 관문을 걷은 지금은 「범위마다 자기 권한이 있는 범위만 거래, 나머지는 범위 거절 타입」이다
+// (TestTwoOwnerScopesTradeOnlyWhereEachHasItsOwnAuthority).
 //
 // **이 fixture 는 생산 모양이 아니다 — 의도적으로 만든 최악 조건이다**(2026-09-30 리뷰 보이스 A #1 · codex 정정). 위험 ·
-// 계좌 권한은 범위 하나짜리 fixture 에서 온 것이라 범위가 둘이어도 Ready 로 남는다. 생산에서는 권한을 다시 모으므로 그 상태가
-// 나올 수 없다 — 두 범위면 결과 권한(`ResultAuthority`)이 OverCapacity 로, 계좌 `collectMarket` B1 이 개수로 먼저 준비 안 됨이
-// 되고, 1차 레그 B2 는 개수 · 위험 · 계좌 세 조건이 함께 거짓이다. 그래서 「B2 개수 조건이 유일한 방어」는 **이 fixture 의
-// fixture 순서(원래 범위 먼저)에서만** 참이다. 조정자 순서(소유자 범위 사전순 — 000660 먼저)에서는 개수 조건을 지워도
-// :221(identity) · :228(위험 범위)이 대신 막는다. 두 순서를 모두 못 박는다.
+// 계좌 권한은 범위 하나짜리 fixture 에서 온 것이라 둘째 범위(000660)의 범위별 권한이 없다. 생산 조립은 범위마다 권한을 다시
+// 모으므로(5.2.2.2) 이 모양은 「한 범위의 위험 · 계좌 적재가 실패한 파도」와 같다 — 그 범위만 거절되고 나머지는 거래한다(J3).
+// 두 순서(fixture 순서 · 조정자 사전순 000660 먼저)를 모두 못 박는다 — 거절된 범위가 앞이어도 뒤 범위가 굶지 않음.
 
 import (
 	"context"
@@ -114,7 +113,10 @@ func TestOnlyAnActivatedMarketHandsEachOwnerScopeOff(t *testing.T) {
 	}
 }
 
-func TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses(t *testing.T) {
+// 5.2.2.2 로 뒤집은 오늘-동등성 핀(5.2.2.1 판: 「두 범위면 주문 0 — 1차 레그 개수 관문」). 개수 관문을 걷은 뒤, 이 fixture 의
+// 최악 조건(위험 · 계좌 권한이 원래 범위 하나에만 있음)에서 **권한을 가진 범위만** 거래하고 다른 범위는 그 범위만의 **타입 거절**로
+// 건너뛰어진다(조용히가 아니라 반환 오류에 기록 — J3). 두 순서 모두: 거절된 범위가 앞이어도 뒤 범위가 굶지 않는다.
+func TestTwoOwnerScopesTradeOnlyWhereEachHasItsOwnAuthority(t *testing.T) {
 	for _, order := range []struct {
 		name  string
 		first bool
@@ -125,6 +127,7 @@ func TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses(t *testin
 
 func a112TwoScopePin(t *testing.T, coordinatorOrder bool) {
 	cycle, proposals, _, spy := pairedStrategyDispatchCycleFixture(t)
+	original := proposals.kr.entries[0].authority.Proposal().Lineage.Symbol
 	two := a112ExtraEntryKR(t, proposals.kr, proposals.observedAt, "000660", coordinatorOrder)
 	two.activation = strategyrouter.FamilyActivationForTest(strategyrouter.MarketKR, 1,
 		strategyrouter.AllFourFamiliesForTest(strategyrouter.MarketKR))
@@ -140,59 +143,24 @@ func a112TwoScopePin(t *testing.T, coordinatorOrder bool) {
 	if len(handoffs) != 2 {
 		t.Fatalf("arrangement: %d handoffs, want both owner scopes across the seam", len(handoffs))
 	}
-	var errs []string
-	for _, handoff := range handoffs {
-		if err := handoff.Deliver(func(delivered strategyhandoff.Delivered) error {
-			_, err := cycle.dispatch(context.Background(), delivered)
-			return err
-		}); err != nil {
-			errs = append(errs, err.Error())
-		}
-	}
-	// 주문 0.
-	if n := len(spy.calls); n != 0 {
-		t.Fatalf("a two-scope market placed %d orders — the downstream per-market authority must still refuse (5.2.2.2 is what changes this)", n)
-	}
-	// 첫 범위를 거절한 것이 1차 레그 권한 B2 의 문구임을 고정. 이 fixture 의 fixture 순서에서는 B2 의 여섯 조건 중 거짓인
-	// 것이 개수 하나뿐이다(아래 대조). 조정자 순서에서도 문구는 같고, 개수 조건이 없어도 :221 · :228 이 막는다(머리말).
-	if len(errs) == 0 || !strings.Contains(errs[0], a112FirstLegCountGuard) {
-		t.Fatalf("first scope error = %v, want the first-leg count guard %q", errs, a112FirstLegCountGuard)
-	}
-	// 대조: **같은 모양의 새 조립**(fixture 를 한 번 더 만든다 — 같은 고정 시각 · 같은 입력)에 같은 활성화로 원래 범위 **하나**만
-	// 실으면 그 문구로 거절되지 않음. :217 의 문구는 여섯 조건(제안 개수 · 위험 · 환율 · 계좌 · 일정 준비 · 활성화)이 공유하고
-	// 두 실행 사이에 달라진 것은 제안 개수뿐이므로, 위의 거절이 개수 조건(`len(proposal.entries) != 1`)에서 왔음이 이 대조로
-	// 가려짐. 이 대조 절반만을 빨갛게 하는 변이(「B2 가 늘 거절」)가 변이 원장에 있다(F16).
-	control, controlProposals, _, controlSpy := pairedStrategyDispatchCycleFixture(t)
-	one := controlProposals.kr
-	one.activation = two.activation
-	one.snapshot.ProposalSetDigest = strategyProposalSetDigest(one.entries)
-	control.proposals.kr = one
-	control.firstLeg.loader.(*productionStrategyFirstLegAuthorityLoader).proposals.kr = one
-	single := one.dispatchHandoffs()
-	if len(single) != 1 {
-		t.Fatalf("control: %d handoffs, want one scope", len(single))
-	}
-	controlErr := single[0].Deliver(func(delivered strategyhandoff.Delivered) error {
-		_, err := control.dispatch(context.Background(), delivered)
+	err := deliverEachStrategyHandoff(handoffs, func(delivered strategyhandoff.Delivered) error {
+		_, err := cycle.dispatch(context.Background(), delivered)
 		return err
 	})
-	if controlErr != nil && strings.Contains(controlErr.Error(), a112FirstLegCountGuard) {
-		t.Fatalf("control: a single-scope market was refused by the same sentence (%v) — the refusal above is not attributable to the count", controlErr)
+	spy.mu.Lock()
+	placed := make([]string, 0, len(spy.calls))
+	for _, call := range spy.calls {
+		placed = append(placed, call.Intent.Symbol)
 	}
-	// 대조는 실제로 주문 경로 끝(Gateway 스파이 — 실주문 아님)까지 닿아야 함. 닿지 않으면 위 거절의 귀속이 성립하지 않음.
-	controlSpy.mu.Lock()
-	placed := len(controlSpy.calls)
-	controlSpy.mu.Unlock()
-	if controlErr != nil || placed == 0 {
-		t.Fatalf("control: err=%v places=%d — a single-scope activated market must reach the gateway spy for the attribution to hold",
-			controlErr, placed)
+	spy.mu.Unlock()
+	if strings.Join(placed, ",") != original {
+		t.Fatalf("placed=%v err=%v — want only the scope that holds its own risk and account authority (%s)", placed, err, original)
+	}
+	var refusal *strategyScopeRefusal
+	if !errors.As(err, &refusal) || refusal.scope.Symbol != "000660" || !strings.Contains(refusal.detail, "risk authority") {
+		t.Fatalf("err=%v — want the other scope's typed refusal (its missing risk authority) returned, not swallowed", err)
 	}
 }
-
-// a112FirstLegCountGuard 는 strategy_account_first_leg_authority.go `collectStrategyFirstLegAuthority` 의 B2
-// (`len(proposal.entries) != 1 || …`, :217–:219) 가 내는 문구임. 결정 (1) 이 6.2 봉인까지 바꾸지 않는 다섯 줄 중 첫 줄 — 이 문구로
-// 거절하는 것은 이 fixture 에서이고, 생산에서는 결과 권한 · 계좌 B1 · 위험 권한 재수집도 두 범위를 거절한다(머리말).
-const a112FirstLegCountGuard = "paired production authority is incomplete for market"
 
 // 주문 경로의 반복: 승인된 소유자 범위는 조정자 순서대로 **전부** 몸통에 건너감.
 func TestEveryAdmittedOwnerScopeReachesTheDeliveryBody(t *testing.T) {

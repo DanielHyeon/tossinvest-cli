@@ -5654,3 +5654,82 @@ strategyflow 4/4 pass 사건. `openspec validate --strict` 통과.
 
 **라운드 사슬(6.2 봉인 로트).** 686b94e4(봉인) → 세 목소리 BLOCK(공유 배열 발급 실측 등) → e5a335bb(수리) → codex 재확인 #2 APPROVE. 생산 동작 변화 0(판정 조건은
 더 엄격해지기만, 수락 집합은 편집 전과 같음 — 보호 효과는 5.2.2.2 의 개수 관문 제거부터).
+
+## 2026-10-01 태스크 5.2.2.2 — 하류 권한의 소유자 범위 전환 · 개수 관문 제거(Pre-Edit · 설계)
+
+**판정(Manager 2026-10-01).** J1 = 기존 시장 권한 안 **범위별 목록**(새 타입 계층 없음). J2 = 범위별 적재 무캡 수용, 상한에 이름. J3 = **범위별 거절**(그 범위에 한해
+fail-closed · 봉투 데이터 폴백 금지 · 거절 기록 · 공유 bucket 논거 시험). J4 = **타입 분류 거절 클래스**(문구 아닌 타입 · journal/gateway/central 오류를 범위 거절로
+오분류하는 변이 CAUGHT 필수 · 건너뛴 거절 각각 기록). J5 = 관문 대체의 축별 증명(아래 전수표) + 두-레그 시험은 held 계상 · CAS 를 직접 단언.
+
+**Pre-Edit 선언(편집 전 AST, HEAD `e8d56d49`, 편집 전 번들 `analysis/measurements/lot-5.2.2.2/pre-edit/`).** 편집할 기존 함수(전부 High-risk 주문 경로):
+`strategyProposalAuthorityPair.ResultAuthority`(분기 1) · `strategyRiskAuthorityLoader.collectMarket`(5) · `strategyAccountAuthorityLoader.collectMarket`(4, 번들 신설) ·
+`productionStrategyFirstLegAuthorityLoader.collectStrategyFirstLegAuthority`(11) · `strategyProposalAuthorityLoader.collectMarket`(16 — A#6 digest 단일 출처만) ·
+`strategyDispatchCycle.dispatch`(19 — 위험 정책 세대를 범위의 번들에서) · `buildProductionStrategyMarketWorker`(6) · `strategyProjectionFromAssembly`(8).
+불변식: **활성화 없는 시장은 오늘의 단일 범위 경로 그대로**(토글 OFF = upstream — 범위 목록은 원소 하나, 판정 조건 동일).
+
+**J2 상한(이름).** 한 시장 · 한 파도의 범위별 적재 수 N = 조정자가 고른 소유자 범위 수 ≤ 그 시장의 경로 대상 수 ≤ `strategyproposal.productionMaxTargets`(10,000)
+이고, 동시에 ≤ `strategycoordinator.Capacity`(10,000 레인 칸 — 범위 하나가 칸 하나 이상). 파도당 읽기 = 위험 N + 계좌 N. 활성화 없는 시장은 N = 1(오늘과 같음).
+
+**관문이 지키던 것 전수표(J5 ①) — 관문이 거부하던 것을 이제 무엇이 거부하는가.**
+
+| # | 개수 관문(`len(entries) != 1`)이 오늘 막던 것 | 대체 수단 | 증명(시험 · 측정) |
+|---|---|---|---|
+| (a) | 하류 권한(결과 · 위험 · 계좌)이 시장당 하나라 두 범위 시장이 준비 안 됨 — 틀린 범위의 위험 · 계좌 권한으로 발급될 길이 구조적으로 없었음 | 결과 · 위험 · 계좌 권한을 **범위별 목록**으로, 1차 레그가 봉인과 같은 범위 키로 **각각** 다시 고름(봉투 데이터 폴백 금지) | `TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope`(범위 번들 digest 둘) · `TestTwoOwnerScopesTradeOnlyWhereEachHasItsOwnAuthority`(두 순서) · `TestAScopeWithoutItsOwnAccountAuthorityIsRefusedAloneAndRecorded`; 변이 X08 · X09(시장 권한 폴백) · X12 · X13 · X14 CAUGHT |
+| (b) | 한 주기에 두 레그 — 둘째 admission 의 브로커 노출 스냅숏이 첫 레그를 모름 | journal `checkLimits`: usage + **held** + new ≤ limit(종류별) · `ObservedVersion` CAS | `TestTheSecondLegOfOneCycleCountsTheFirstLegsHeldReservation` — 예약 버전(CAS) 전진 직접 단언 + 브로커 스냅숏 OpenExposure=0 인데 둘째 레그가 노출 상한(usage + held + new)으로 거절 |
+| (c) | 위조 봉투(조립이 중재하지 않은 봉인 제안) | 6.2.0 봉인(범위 재유도 + identity) | `TestTheFirstLegSealRefusesEveryForgeryAxis` — 범위 하나 · 둘 · 둘(조정자 순서) 세 쌍 × 다섯 축 + 쌍마다 진짜 winner 발급 대조; `TestAForgedScopeStopsTheCycleBeforeTheNextValidScope`(주문 경로 끝까지 — 위조가 주기를 멈춰 뒤 정상 범위 0); 변이 X07 · X11 CAUGHT |
+| (d) | 발급 통화를 봉투(`accepted.currency`)에서 읽음(오늘 Guardian 이 막음) | 통화를 `result.Lineage.Market` 에서 재유도 | `TestTheFirstLegCurrencyComesFromTheLineageNotTheEnvelope`; 변이 X10 CAUGHT |
+| (e) | 범위 사이 공유 bucket(섹터 · 계좌) 이중 소비 | (b) 와 같은 journal 합산 + 버킷 사용량 스냅숏 CAS(`refuseStaleBucketUsage`) — 남은 범위의 admission 을 계속 지킴 | `TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope` — 같은 파도 둘째 범위 `BUCKET_USAGE_STALE`(타입 없는 원장 거절 · 주기 멈춤) 실측, 다음 파도(첫 레그 held 반영 번들)에서 발급; `TestAScopeWithoutItsOwnAccountAuthorityIsRefusedAloneAndRecorded`(남은 범위 admission 은 journal 경로 그대로) |
+
+### 편집 로트(2026-10-01) — 무엇이 바뀌었나 · 증거
+
+**Manager 판정(2026-10-01, 편집 중 정지 보고 뒤) — B.** 생산 위험 적재기의 스키마 핀 결함은 **별도 change**(아래 잔여 R1). 조건 넷: ① 원장 → stub 복사는
+측정 이전이어야 함 — `a112MirrorLedgerIntoRiskStub` 는 admission 원장의 실제 행을 읽어 넣고 표마다 행 집합이 같음을 단언(복사기 자체의 시험), 옮길 표 · 열은
+**stub 스키마에서 유도**(a126 `9cbc7560` 이 stub 에 표 셋 · 열 넷을 더한 뒤 손 고른 4표 투영이 낡았음을 되얹기 때 발견 — 유도로 바꿈); 주석에 사유 · 제거 조건.
+② 실원장 v35 거절 RED 보존 — 트립와이어 `TestTheRiskStubBridgeIsStillNeededBecauseTheLoaderRefusesTheRealJournal`(핀이 고쳐지면 실패해 다리 제거를 알림) +
+영수증 `analysis/measurements/lot-5.2.2.2/schema-pin-receipt.log`. ③ ROADMAP 「a112 이월」 절에 정식 기재. ④ **같은 파도 두 범위 동시 발급 불가는 (e) 보호의
+설계** — Done 문장의 의미를 「범위별 발급은 파도 순차(둘째 파도가 첫 레그 held 반영 뒤 발급), 같은 파도 둘째는 `BUCKET_USAGE_STALE` 거절」로 확정(정밀화).
+
+**바뀐 것(생산).** 새 파일 `strategy_owner_scope_authority.go`(범위 키 · 범위별 위험/계좌 권한 칸 · 범위 거절 타입 `strategyScopeRefusal`).
+결과 권한은 `dispatchHandoffs` 목록을 읽고 범위별 결과를 싣는다(활성화 시장 · 범위 둘 이상). 위험 · 계좌 적재기는 범위마다 하나 적재(계좌는 `entries[0]` 이 아니라
+그 범위의 종목 — A#5). 1차 레그는 시장 단위 개수 관문을 지우고 identity 대조 뒤 `forScope(key)` 로 위험 · 계좌를 다시 고르며, 없으면 그 범위만
+`*strategyScopeRefusal`. 통화는 `Lineage.Market` 에서(A#3). admit 이 그 타입을 결과에 싣고, dispatch 가 `%w` 로 나르고, 위험 정책 세대는 그 범위의 번들에서.
+전달 몸통 `deliverEachStrategyHandoff`(seam 파일의 import 폐포 때문에 `strategy_market_handoff_delivery.go` 로 이동)는 **범위 거절 타입만** 건너뛰고 나머지 오류에서
+멈추며, 건너뛴 거절은 멈춘 오류와 함께 또는 끝에 `errors.Join` 으로 돌려준다(J4 ③). worker 승격 · projection 은 `dispatchHandoffs` 를 읽고 승인 범위 **하나라도**
+관측을 통과하면 승격(J3 — 한 범위의 관문 거절이 다른 범위를 굶기지 않음). 조립 digest 는 `strategyProposalSetDigest` 한 함수(A#6).
+**활성화 없는 시장(오늘 생산 전부 — 서명 활성화 0)은 handoff 하나 · 결과 하나 · 적재 하나라 판정 조건이 편집 전과 같다.**
+
+**RED → GREEN.** `analysis/measurements/lot-5.2.2.2/red-5.2.2.2.log`(편집 전 4 FAIL — 개수 관문 · 오늘-동등성 핀 · Done · census). 의도적으로 뒤집은 핀:
+`TestTheFirstLegSealSelectsByScopeBeforeTheMarketCountGate` → `TestTheFirstLegSealSelectsByScopeInATwoScopePair`(양방향: winner 발급 · other 는 범위 거절),
+`TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses` → `TestTwoOwnerScopesTradeOnlyWhereEachHasItsOwnAuthority`(두 순서). `singleProposalAssumptionCensus`
+4 → 2(남은 둘 = 계좌 `collectMarket` 의 활성화 없는 시장 갈래 — 토글 OFF 의 시장 단위 상한과 같은 수명). 새 시험: `TestAnActivatedTwoScopeMarketPromotesItsWorkerPerScope`
+(승격 · projection · 한 범위 관문 거절 · 전 범위 거절) · `TestAForgedScopeStopsTheCycleBeforeTheNextValidScope` · `TestOnlyATypedScopeRefusalIsSkippedEveryOtherFaultStops`
+(journal · gateway · central · **같은 문구의 평문 오류** 넷 모두 멈춤 + 건너뛴 거절 보존) · `TestTheScopeRefusalTypeIsMadeOnlyWhereTheCensusSaysItIs`(타입 언급 census —
+만드는 자리 둘뿐) · 트립와이어. 위조 다섯 축은 세 쌍(범위 하나 · 둘 · 둘 조정자 순서)에서 재실행하고 `requireRefusal` 이 위조 거절이 **범위 거절 타입이 아님**을 단언.
+
+**J2 실측.** 활성 두 범위 KR 파도의 읽기 = 위험 2 + 계좌 2(`analysis/measurements/lot-5.2.2.2/j2-reads-per-wave.log`; 각 적재기의 적재 호출은 범위 순회 안 한 자리 — AST).
+
+**변이(`analysis/measurements/lot-5.2.2.2/mutation-5.2.2.2.tsv`, 하네스 `a112_lot_mutate.py --set 5.2.2.2`, 대조군 GREEN · pass 사건 54 + 22 · 종료 코드 확인).**
+X01~X22 중 21 CAUGHT. J4 ② 오분류 변이: X01(전달 몸통이 모든 오류 건너뜀) · X05(admit 이 모든 수집 오류에 타입) · X06(dispatch 가 모든 거절에 타입) · X07(identity
+불일치를 범위 거절로) 전부 CAUGHT. M20(위험 세대를 시장 번들에서) SURVIVED — **예상 · 구조적 동등**: 모든 범위 번들이 같은 서명 시장 매니페스트에서 와서 세대가 시장 단위이고,
+범위 번들이 없는 범위는 그 전에 1차 레그 B5 에서 거절된다.
+
+**하네스 이월 해소.** 대조군 JSON 추가 실행이 종료 코드를 본다(`CONTROL-JSON-RED`). 봉인 시험 본문의 낡은 주석(「entries[0] 이면 identity 거절」)은 그 시험을 다시 쓰며 지웠다.
+
+**FLM.** 본문을 바꾼 아홉 함수의 편집 뒤 번들은 `analysis/harness/render_5222_bundles.py` 가 AST 에서 채웠다(편집 전 번들 `pre-edit/` — admit 은 base 번들 사본).
+같은 파일의 본문 불변 함수 열여섯은 `shift_same_file_bundles.py` 로 좌표만 옮김. 시험 파일 셋(비례 원칙 — 시험 코드)은 게이트 모양만.
+check_analysis 델타(같은 HEAD `9cbc7560` 의 깨끗한 연결 워크트리 대비): 남은 새 줄은 **미추적 새 시험 파일**의 인용(커밋 뒤 해소 — 격리 검증에서 확인)뿐.
+
+**잔여(이름 붙임 — Manager 판정 대상).**
+- R1 **생산 위험 적재기 스키마 핀 27 vs journal v35** — 오늘 생산에서 위험 권한이 어느 범위에서도 준비될 수 없음(2026-08-05 a084 이후). 레인 활성화의 경성 선행.
+  별도 change(ROADMAP a112 이월).
+- R2 **범위 거절이 시장 latch 를 부른다.** 전달 몸통이 돌려준 범위 거절은 감독자에게 주기 오류이고 Effective worker 에서는 `latchMarket`(재시작 backoff)로 간다 —
+  같은 주기의 다른 범위는 이미 배달된 뒤라 굶지는 않지만, 한 범위가 매 주기 권한을 못 얻으면 시장이 매 주기 잠겼다 풀린다(보수 방향 · 가시). 삼킨 오류 기록
+  (`recordSwallowedCycleError`)으로 낮출지는 사람 결정.
+- R3 **진입 관문 관측 거절은 범위 거절이 아니다.** dispatch 의 `ObserveStrategyEntryGate`(종목 단위) 거절은 타입 없는 오류라 주기를 멈춘다 — 앞 범위의 종목이 막히면
+  뒤 범위는 그 주기에 굶는다(worker 승격은 이미 범위 단위). J4 가 정한 분류 경계(위험 · 계좌 권한 부재만)를 넓히지 않았다.
+- R4 projection 은 두 범위 시장에서 첫 승인 범위만 보인다(범위별 행 없음 — 읽기 전용 화면).
+- R5 범위 키 정규화 실패 · 무효 제안 갈래(위험 B5 · 계좌 B5)와 통화 미지 갈래(1차 레그 B7)는 시험 seam 으로 만들 수 없어 진입 0.
+
+**Manager 판정(2026-10-01, 착지 창 개방 때) — R2~R5 전부 이름 붙인 이월, 지금 코드 변경 없음.** R2: Effective 활성화가 실재하기 전까지 시장 latch 반복은 보수 방향
+그대로 — 낮추는 결정은 활성화 로트의 몫. R3: J4 경계 유지(주기 내 굶김은 명명 잔여). R4: 활성 다중 범위의 가시성 공백 — 콘솔/관측 후속 로트로 이월. R5: seam 불가 명명 수용.
+승격 · projection 의 복수 handoff 읽기는 Done 성립의 필요조건이라 범위 내로 접수.

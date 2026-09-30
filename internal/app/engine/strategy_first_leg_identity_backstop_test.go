@@ -82,6 +82,7 @@ func newFirstLegIdentityFixture(t *testing.T) firstLegIdentityFixture {
 			"sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
 		accountValue := strategyAccountMarketAuthority{market: market, authority: accountAuthority,
 			snapshot: StrategyAccountMarketSnapshot{Market: market, Ready: true, Reason: StrategyAccountReady}}
+		accountValue = a112ScopedAccount(accountValue, result, accountAuthority)
 		if market == StrategyMarketKR {
 			proposals.kr, accounts.kr = proposalMarket, accountValue
 		} else {

@@ -150,6 +150,10 @@ func (cycle *strategyDispatchCycle) dispatch(ctx context.Context, delivered stra
 	}
 	admitted := cycle.firstLeg.admit(ctx, result)
 	if admitted.Code != StrategyFirstLegAdmitted {
+		// 범위 거절은 타입을 싣고 올라간다(a112 5.2.2.2 J4) — 문구는 같다(범위 거절의 Error() 가 곧 Detail).
+		if admitted.scope != nil {
+			return execgw.Outcome{}, fmt.Errorf("engine: first-leg admission %s: %w", admitted.Code, admitted.scope)
+		}
 		return execgw.Outcome{}, fmt.Errorf("engine: first-leg admission %s: %s", admitted.Code, admitted.Detail)
 	}
 	decision, err := cycle.journal.LookupDecision(ctx, admitted.Receipt.DecisionID)
@@ -159,7 +163,13 @@ func (cycle *strategyDispatchCycle) dispatch(ctx context.Context, delivered stra
 	// Journal generations are zero-based. Dispatch authority generations are
 	// one-based so zero remains the fail-closed "unavailable" sentinel.
 	guardianGeneration := uint64(decision.Generation) + 1
-	riskGeneration := cycle.risk.forMarket(market).bundle.Generation()
+	// 위험 정책 세대는 **그 범위의** 번들에서 읽는다(a112 5.2.2.2 — 범위마다 번들이 따로다; 범위 하나면 오늘과 같은 번들).
+	riskGeneration := uint64(0)
+	if key, keyed := strategyOwnerKeyOf(result.Lineage); keyed {
+		if bundle, scoped := cycle.risk.forMarket(market).forScope(key); scoped {
+			riskGeneration = bundle.Generation()
+		}
+	}
 	if riskGeneration == 0 {
 		return execgw.Outcome{}, errors.New("engine: signed risk policy generation unavailable")
 	}

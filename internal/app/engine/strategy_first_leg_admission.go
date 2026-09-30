@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -34,6 +35,9 @@ type StrategyFirstLegAdmissionResult struct {
 	Market  string
 	Receipt journal.QFinalCampaignFirstLegReceipt
 	Detail  string
+	// scope 는 권한 수집이 **그 소유자 범위에만** 해당하는 거절을 냈을 때의 타입 값이다(a112 5.2.2.2 J4). 주문 경로는 이것으로만
+	// 「다음 범위로 가도 되는가」를 가른다 — 문구로 가르지 않는다.
+	scope *strategyScopeRefusal
 }
 
 // strategyFirstLegAuthorityLoader has an unexported method deliberately. A
@@ -76,7 +80,11 @@ func (b *strategyFirstLegAdmissionBridge) admit(ctx context.Context, result stra
 	}
 	authority, err := b.loader.collectStrategyFirstLegAuthority(ctx, accepted)
 	if err != nil {
-		return strategyFirstLegRefusal(StrategyFirstLegAuthorityCollectionFailed, accepted.market, err.Error())
+		refusal := strategyFirstLegRefusal(StrategyFirstLegAuthorityCollectionFailed, accepted.market, err.Error())
+		if scope := (*strategyScopeRefusal)(nil); errors.As(err, &scope) {
+			refusal.scope = scope
+		}
+		return refusal
 	}
 	if err := validateStrategyFirstLegAuthority(accepted, authority); err != nil {
 		return strategyFirstLegRefusal(StrategyFirstLegAuthorityMismatch, accepted.market, err.Error())

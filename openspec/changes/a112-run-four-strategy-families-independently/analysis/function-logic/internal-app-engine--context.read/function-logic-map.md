@@ -1,9 +1,9 @@
 # Function Logic Map: `Context.Read`
 
 - Source: `internal/app/engine/strategy_runtime_projection.go`
-- Current source SHA-256: `5f203ad88f4476284006b92099365d42d04a619a2f567524efdd9bb1beb64f65`
+- Current source SHA-256: `95474831b04d24c21d90d72aac7349fe0682d2cbee9beb02c3be6307ac9dc510`
 - Signature: `Context.Read(params=1, results=2)`
-- Source range: `23:1`–`65:2`
+- Source range: `24:1`–`66:2`
 - AST evidence: `ast.json`, regenerated from the post-edit worktree; AST 분기 7개 (편집 전 6개).
 - Risk scan: `risk-pattern-report.md`.
 - Lot: a112 L5 — 결정 54의 `ConfigDigest`/`BuildDigest` 노출.
@@ -40,33 +40,33 @@ envelope 를 새로 만들므로, `Clone` 이 이 필드를 안 옮기면 **시�
 
 ## Branches and early returns
 
-- Exact AST return nodes: `25:3`, `31:3`, `35:3`, `51:3`, `64:2`.
+- Exact AST return nodes: `26:3`, `32:3`, `36:3`, `52:3`, `65:2`.
 
 | Branch | AST kind | Source location | Edited by this lot | Disposition |
 |---|---|---|---|---|
-| B1 | if | 24:2 | 아니오 | nil receiver/context. 기존 그대로. |
-| B2 | if | 30:2 | 아니오 | store 부재. 기존 그대로. |
-| B3 | if | 34:2 | **예 — 조건이 좁아짐** | 편집 전 `err != nil || supervisor == nil`. 이제 `err != nil` 만. 오류는 identity 를 붙이기 **전에** 끝난다. |
-| B4 | if | 50:2 | **예 — 이 lot 이 추가** | B3 에서 갈라져 나온 `supervisor == nil`. identity 를 붙인 뒤 latch 덮어쓰기 없이 반환한다. |
-| B5 | range | 53:2 | 아니오 | KR·US 루프. 기존 그대로. |
-| B6 | if | 55:3 | 아니오 | latch 안 된 시장 건너뛰기. 기존 그대로. |
-| B7 | if | 59:3 | 아니오 | CURRENT 인 시장만 덮기. 기존 그대로. |
+| B1 | if | 25:2 | 아니오 | nil receiver/context. 기존 그대로. |
+| B2 | if | 31:2 | 아니오 | store 부재. 기존 그대로. |
+| B3 | if | 35:2 | **예 — 조건이 좁아짐** | 편집 전 `err != nil || supervisor == nil`. 이제 `err != nil` 만. 오류는 identity 를 붙이기 **전에** 끝난다. |
+| B4 | if | 51:2 | **예 — 이 lot 이 추가** | B3 에서 갈라져 나온 `supervisor == nil`. identity 를 붙인 뒤 latch 덮어쓰기 없이 반환한다. |
+| B5 | range | 54:2 | 아니오 | KR·US 루프. 기존 그대로. |
+| B6 | if | 56:3 | 아니오 | latch 안 된 시장 건너뛰기. 기존 그대로. |
+| B7 | if | 60:3 | 아니오 | CURRENT 인 시장만 덮기. 기존 그대로. |
 
 ## Calls and live bindings
 
 | Callee expression | Source location |
 |---|---|
-| errors.New | 25:41 |
-| c.strategyProjectionMu.RLock | 27:2 |
-| c.strategyProjectionMu.RUnlock | 29:2 |
-| errors.New | 31:41 |
-| store.Read | 33:19 |
-| strategyprojection.WithRuntimeIdentity | 48:13 |
-| strategyRuntimeConfigDigest | 49:3 |
-| strategyRuntimeBuildDigest | 49:34 |
-| supervisor.Snapshot | 54:17 |
-| strategyprojection.Market | 58:23 |
-| strategyprojection.WithMarketFailure | 60:15 |
+| errors.New | 26:41 |
+| c.strategyProjectionMu.RLock | 28:2 |
+| c.strategyProjectionMu.RUnlock | 30:2 |
+| errors.New | 32:41 |
+| store.Read | 34:19 |
+| strategyprojection.WithRuntimeIdentity | 49:13 |
+| strategyRuntimeConfigDigest | 50:3 |
+| strategyRuntimeBuildDigest | 50:34 |
+| supervisor.Snapshot | 55:17 |
+| strategyprojection.Market | 59:23 |
+| strategyprojection.WithMarketFailure | 61:15 |
 
 ## State mutations and fallbacks
 
@@ -79,3 +79,5 @@ envelope 를 새로 만들므로, `Clone` 이 이 필드를 안 옮기면 **시�
 - 이 lot 전까지 이 함수에는 **어떤 테스트도 없었다.** 이 lot 이 B1·B2·B3·B4 와 B5–B7 의
   latch 경로를 처음으로 실행한다.
 - 반증 실측: config/build 인자를 맞바꾸면(뮤테이션 M2) 두 테스트가 실패한다.
+
+a112 5.2.2.2: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)

@@ -127,6 +127,13 @@ type strategyRiskLoaderFixture struct {
 
 func newStrategyRiskLoaderFixture(t *testing.T) strategyRiskLoaderFixture {
 	t.Helper()
+	return newStrategyRiskLoaderFixtureWith(t, nil)
+}
+
+// newStrategyRiskLoaderFixtureWith 는 KR 서명 위험 정책의 종목 목록에 extraKR 을 더한다(a112 5.2.2.2 — 소유자 범위 둘인 KR 시장의
+// 범위별 위험 권한). 결과 권한 쌍은 원래 종목 하나 그대로다 — 범위별 결과는 시험이 제안 권한에서 다시 만든다.
+func newStrategyRiskLoaderFixtureWith(t *testing.T, extraKR []riskLoaderSymbol) strategyRiskLoaderFixture {
+	t.Helper()
 	now := time.Date(2026, 8, 4, 2, 0, 0, 0, time.UTC)
 	dir := t.TempDir()
 	journalPath := filepath.Join(dir, "journal.db")
@@ -164,6 +171,9 @@ func newStrategyRiskLoaderFixture(t *testing.T) strategyRiskLoaderFixture {
 			Strategies: []riskLoaderStrategy{{LaneID: descriptor.LaneID, LaneVersion: descriptor.LaneVersion, Horizon: riskbucket.HorizonShort,
 				RiskID: "continuation", RiskVersion: "continuation-risk-v1", LimitMinor: "5000000"}},
 			Symbols: []riskLoaderSymbol{{Symbol: symbol, Sector: "technology", SectorLimitMinor: "3000000", SymbolLimitMinor: "2000000"}}}
+		if market == StrategyMarketKR {
+			body.Symbols = append(body.Symbols, extraKR...)
+		}
 		bodyJSON, _ := json.Marshal(body)
 		manifest := riskLoaderManifest{riskLoaderBody: body, Signature: base64.StdEncoding.EncodeToString(ed25519.Sign(private, bodyJSON))}
 		data, _ := json.Marshal(manifest)

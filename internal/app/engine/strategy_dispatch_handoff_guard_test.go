@@ -142,7 +142,11 @@ var singleProposalAssumptionCensus = map[string]int{
 	// L6 소유(태스크 6.2 q_final/owner admission). 5 → 4(2026-10-01, 6.2 봉인 로트): 1차 레그 권한의 `proposal.entries[0]` 선택이
 	// 소유자 범위 선택(`authorityForOwnerScope`)으로 바뀌어 색인 하나가 빠졌다. 남은 넷 — 계좌 권한 `collectMarket` 의 len 비교 하나와
 	// 색인 둘, 1차 레그 권한의 시장 단위 개수 관문 len 비교 하나 — 은 5.2.2.2(두 소유자 범위 시장의 거래)가 지운다.
-	"strategy_account_first_leg_authority.go": 4,
+	// 4 → 2(2026-10-01, 5.2.2.2): 1차 레그 개수 관문(len 비교)과 계좌 `collectMarket` 의 `entries[0]` 종목 적재(색인)가 범위별 재유도로
+	// 바뀌어 빠졌다. 남은 둘은 계좌 `collectMarket` 의 **활성화 없는 시장** 갈래(`!activated && (len(entries) != 1 || !entries[0]…)`) —
+	// 토글 OFF = upstream 의 시장 단위 상한이며 strategyhandoff `Capacity=1`(활성화 없는 시장)과 같은 수명이다. 활성화된 시장에는 이
+	// 가정이 없다. 지울 주인: 활성화 없는 시장의 시장 단위 상한을 걷는 로트(오늘 미배정 — 토글 OFF 동작을 바꾸므로 사람 결정).
+	"strategy_account_first_leg_authority.go": 2,
 }
 
 // handoffSeamFile 이 이 표에 없는 것은 빠뜨린 것이 아니다. dispatch 경로에서
