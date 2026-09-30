@@ -1,0 +1,12 @@
+--- FAIL: TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate (0.00s)
+    a112_central_integrity_entry_gate_internal_test.go:26: supervisor entry blocker = <nil>, want the engine's own entry gate 0x11db528a180
+--- FAIL: TestTheProductionStrategySupervisorRefusesAContextWithoutAnEntryGate (0.00s)
+    a112_central_integrity_entry_gate_internal_test.go:34: err = <nil>, want runtime unavailable — without a gate a central fault would close the process, not entry
+--- FAIL: TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine (0.00s)
+    a112_central_integrity_entry_gate_test.go:88: a central integrity fault on the refresh-only worker left new entries open — it was swallowed (결정 (6): fail-closed 의 수단은 EntryGate). blocks=map[]
+--- FAIL: TestWithoutAnEntryGateACentralFaultIsNotSwallowed (3.00s)
+    a112_central_integrity_entry_gate_test.go:139: with no entry gate the central fault was swallowed
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	3.031s
+FAIL
+rc=1

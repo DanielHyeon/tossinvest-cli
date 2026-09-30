@@ -1,6 +1,6 @@
 # Function Logic Map: `Context.runProductionStrategyMarketCycle`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (480-547)
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (496-563)
 - Function: `Context.runProductionStrategyMarketCycle` in package `engine`
 - Signature: `Context.runProductionStrategyMarketCycle(params=3, results=1)`
 - File SHA-256: `22855de0f27de05c60c2b5ff8cf2d5c7e3ed50e78a9fa6f67fb81ec38decdbfa`
@@ -40,7 +40,7 @@
 handoff 앞에서 이 시장의 네 레인을 한 번씩 돌린다(`455:12`). 그 자리에서 도는 일은
 `strategyFamilyLaneStep` 하나이고 그 함수는 인자가 `*strategyworker.Lane` 뿐이라
 `*Context` 를 들 수 없다 — 오늘 이 함수의 몸통이 `c.Journal.CurrentPositionCampaignCAS`
-(`479:15`)와 `fresh.dispatch.dispatch`(`486:12`)를 들고 있는 것과 정확히 대비되는
+(`479:15`)와 `fresh.dispatch.dispatch`(`502:12`)를 들고 있는 것과 정확히 대비되는
 지점이다. **그 두 호출은 여전히 여기 있고, 그것이 맞다** — 스펙은 변경 권한을
 시장 하나에 하나만 두라고 요구하고, 이 함수가 그 하나다. 5.1.2 가 옮긴 것은
 *전략군의* 사이클이지 시장의 변경 권한이 아니다.
@@ -88,17 +88,17 @@ The signature above is the exhaustive input/result record; this map does not inf
   그래서 이 함수에 대한 근거는 실행이 아니라 **소스에 무엇이 쓰여 있는지**뿐이고,
   아래 반증 표의 뮤테이션은 전부 AST 가드가 죽인 것이다.
 
-Exact AST return positions: 483:3, 507:3, 513:3, 516:3, 532:2, 536:4, 539:4, 543:4, 545:3.
+Exact AST return positions: 499:3, 523:3, 529:3, 532:3, 548:2, 552:4, 555:4, 559:4, 561:3.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 482:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B2 | if | 506:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B3 | if | 509:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B4 | if | 515:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B5 | if | 535:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B6 | if | 538:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B7 | if | 542:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B1 | if | 498:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B2 | if | 522:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B3 | if | 525:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B4 | if | 531:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B5 | if | 551:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B6 | if | 554:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| B7 | if | 558:3 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
 
 이 공백은 이 태스크가 만든 것이 아니다. 이 함수는 `*Context` 와 살아 있는 journal·gateway 를
 요구하고, 그 배선은 태스크 5.7(fault injection·race)과 L6 의 몫이다. 여기서는 그 공백을
@@ -110,23 +110,23 @@ Exact AST return positions: 483:3, 507:3, 513:3, 516:3, 532:2, 536:4, 539:4, 543
 
 | Callee expression | Position |
 |---|---|
-| `c.refreshPairedStrategyEntryProductionAssembly` | 481:16 |
-| `c.productionStrategyLanes` | 505:16 |
-| `lanes.evaluate` | 509:12 |
-| `restore.Activation.Generation` | 510:3 |
-| `fresh.schedule.forMarket` | 510:3 |
-| `familyActivation` | 511:3 |
-| `fresh.proposals.forMarket` | 511:3 |
-| `strategyLaneInputs` | 512:3 |
-| `fresh.proposals.forMarket` | 512:36 |
-| `Deliver` | 532:9 |
-| `dispatchHandoff` | 532:9 |
-| `fresh.proposals.forMarket` | 532:9 |
-| `delivered.Result` | 533:14 |
-| `c.Journal.CurrentPositionCampaignCAS` | 534:15 |
-| `string` | 534:77 |
-| `fresh.dispatch.dispatch` | 541:12 |
-| `errors.Is` | 542:6 |
+| `c.refreshPairedStrategyEntryProductionAssembly` | 497:16 |
+| `c.productionStrategyLanes` | 521:16 |
+| `lanes.evaluate` | 525:12 |
+| `restore.Activation.Generation` | 526:3 |
+| `fresh.schedule.forMarket` | 526:3 |
+| `familyActivation` | 527:3 |
+| `fresh.proposals.forMarket` | 527:3 |
+| `strategyLaneInputs` | 528:3 |
+| `fresh.proposals.forMarket` | 528:36 |
+| `Deliver` | 548:9 |
+| `dispatchHandoff` | 548:9 |
+| `fresh.proposals.forMarket` | 548:9 |
+| `delivered.Result` | 549:14 |
+| `c.Journal.CurrentPositionCampaignCAS` | 550:15 |
+| `string` | 550:77 |
+| `fresh.dispatch.dispatch` | 557:12 |
+| `errors.Is` | 558:6 |
 
 ## State mutations and fallbacks
 
@@ -145,3 +145,5 @@ dispatch 호출 자리는 **정확히 하나**이고 그 자리에 넘어가는 
 로 막는다. 5.5 판본은 인자가 `handoff.result` 인지만 봤으므로 `handoff` 라는 이름의 구조체
 리터럴로 우회할 수 있었다. 관문이 완화되지 않았음은 `internal/strategyhandoff` 의 단위 시험이
 값으로 지킨다.
+
+> **5.6.2.1(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일의 다른 함수 편집으로 +16줄 이동 · 파일 해시만 바뀜). 분기 좌표는 `ast.json` 이 정본.

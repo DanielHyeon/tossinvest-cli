@@ -1,37 +1,31 @@
 # Branch Test Map: `StrategyEntrySupervisor.runMarket`
 
-- Source SHA-256: `c2a825fceac8692f865d89ae61b736d9a43ad10e0b5dec4968cfac304c93555a`; AST branch locations are authoritative.
-- Revision: **modified (태스크 8.8.4, 2026-09-05)** — 그전까지 base 였다. 이 change 가
-  이 함수를 처음 편집했고, 편집은 **B12 하나**다: 버리기 전에 세는 호출을 더했다.
-  `continue` 도, 갈래 순서도, 다른 열다섯 분기도 그대로다. 분기 수는 편집 전후 모두
-  16 이며(AST 로 확인) 새 분기는 새 leaf 함수
-  `StrategyEntrySupervisor.recordSwallowedCycleError` 안에 있다 — frozen base 에 없는
-  신규 함수이므로 그쪽은 `Function Logic Map: not-applicable` 이다.
-  나머지 행의 RED 칸이 `no (base)` 인 것은 그 분기들이 여전히 편집 대상이 아니기 때문이다.
-
-커버리지는 주장이 아니라 **측정**이다. "Test" 칸은 시험마다 따로
-`go test ./internal/app/engine/ -run '^<Test>$' -coverprofile=…` 를 돌려 그
-프로파일이 해당 줄을 포함하는 블록을 `count>0` 으로 보고한 것만 적었고,
-"**없음**" 은 패키지 전체를 한 번에 돌린 프로파일에서도 `count=0` 인 것이다.
+- Source SHA-256: `da4fa6d1b57217a08a05d0ae57a4f4be1e3c173c35947e06527b02014ae75b23`; AST branch locations are authoritative.
+- Revision: **modified (태스크 5.6.2.1, 2026-09-30)** — 그 앞은 8.8.4(2026-09-05, B12 에 세기 호출). 이번 편집은 **B12 본문 안에
+  새 분기 하나(B13)**: 중앙 무결성 오류를 삼키지 않고 신규 진입을 닫는다(사람 결정 (6) — fail-closed 의 수단은 EntryGate).
+  판정 순서(refreshOnly 가 중앙 판정보다 앞)는 그대로다. 편집 전 번들은 `analysis/measurements/lot-5.6.2-5.2.2/pre-edit/` 에 보존.
+- **재번호**: 편집 전 B1~B12 불변, 새 B13, 편집 전 B13~B16 → B14~B17(위치 정렬 — 편집 지점 뒤 네 분기가 하나씩 밀림).
+- 측정: `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json` — 격리 사본(HEAD `3260f4eb` archive + 이 로트 파일), `./internal/app/engine` 시험 109개를 하나씩, 실패 0.
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | select at 862:2 — 배리어 전에 취소되면 사이클 0 회 | 배리어 경합 시험(`TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently`) | no (base) | yes |
-| B2 | for at 867:2 — 시장 하나를 도는 **단일** 소비자 루프 | 같은 시험 | no (base) | yes |
-| B3 | select at 868:3 — 취소 vs 큐 도착 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues` | no (base) | yes |
-| B4 | if at 877:4 — 권한 만료가 평가 전에 잠근다 | `TestExpiredAuthorityLatchesBeforeEvaluation` | no (base) | yes (block 821-823) |
-| B5 | if at 879:5 — 만료 잠금 자체가 실패한다 | `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping`/"권한 만료의 잠금도…" | no (base) | yes (block 823-826 count=1 — **5.6 이 처음 실행**) |
-| B6 | if at 883:5 — 만료 뒤 재시작 대기가 실패한다 | 취소 갈래 `TestExpiredAuthorityLatchesBeforeEvaluation`; 비취소 갈래 `TestTheFourEscalations…`/"만료 뒤의 재시작 대기도…" | no (base) | yes (block 828-830 count=1, block 831-832 count=1 — **후자를 5.6 이 처음 실행**) |
-| B7 | if at 884:6 — 그 실패가 ctx 취소 때문이다 | `TestExpiredAuthorityLatchesBeforeEvaluation` | no (base) | yes (block 828-830 count=1) |
-| B8 | if at 892:4 — 꺼졌거나 잠긴 worker 가 사이클을 건너뛴다 | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` | no (base) | yes (block 836-837 count=1 — **5.6 이 처음 실행**) |
-| B9 | if at 896:4 — 마감 시한을 넘긴 사이클을 버려진 것으로 표시 | `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction` 외 3 | no (base) | yes |
-| B10 | if at 899:4 — 취소된 사이클이 루프를 끝낸다 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues` 외 2 | no (base) | yes |
-| B11 | if at 902:4 — 성공한 사이클이 다음 투입을 기다린다 | `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive` 외 2 | no (base) | yes |
-| B12 | if at 905:4 — 권한 갱신 전용 worker 의 오류는 잠그지 않되 **세어진다** | `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError`, `TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo`, `TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows` (8.8.4 신규) | **yes (8.8.4)** — 새 시험이 `SwallowedCycleErrors` 미정의로 컴파일 실패 | yes. 반증 셋 전부 CAUGHT: 기록 호출 삭제 · 첫 원인 대신 마지막 덮어쓰기 · 모든 시장을 함께 세기. 두 번째는 **첫 판에서 살아남았다** — 시험이 매번 같은 오류를 내 첫/마지막 축을 재지 않았고, 두 번째 사이클부터 다른 오류를 내게 고친 뒤 CAUGHT |
-| B13 | if at 919:4 — 중앙 무결성 오류가 모든 신규 진입을 멈춘다 | `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety` | no (base) | yes |
-| B14 | if at 924:4 — 보통 오류의 잠금 자체가 실패한다 | `TestTheFourEscalations…`/"관측 시각이 없으면…"·"latch revision 이 소진되면…", `TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt` | no (base) | yes (block 857-860 count=1 — **5.6 이 처음 실행**) |
-| B15 | if at 928:4 — 잠근 뒤 재시작 대기가 실패한다 | 취소 갈래 `TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority` 외 3; 비취소 갈래 `TestTheFourEscalations…`/"재시작 기한이 계약 밖이면…" | no (base) | yes (block 862-864 count=1, block 865-866 count=1 — **후자를 5.6 이 처음 실행**) |
-| B16 | if at 929:5 — 그 실패가 ctx 취소 때문이다 | `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction` 외 3 | no (base) | yes (block 862-864 count=1) |
+| B1 | select at 879:2 — 배리어 전에 취소되면 사이클 0 회 | 배리어 경합 시험(`TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently`) | no (base) | yes (하네스가 select 블록 좌표를 못 잡음 — 이 행은 앞 측정 유지) |
+| B2 | for at 884:2 — 시장 하나를 도는 **단일** 소비자 루프 | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue`, `TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine` 외 24 | no (base) | yes (block 884.6-885.10, 시험 26개 — `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`) |
+| B3 | select at 885:3 — 취소 vs 큐 도착 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues` | no (base) | yes (하네스가 select 블록 좌표를 못 잡음 — 이 행은 앞 측정 유지) |
+| B4 | if at 894:4 — 권한 만료가 평가 전에 잠근다 | `TestExpiredAuthorityLatchesBeforeEvaluation`, `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping` | no (base) | yes (block 894.15-896.19, 시험 2개 — `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`) |
+| B5 | if at 896:5 — 만료 잠금 자체가 실패한다 | `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping` | no (base) | yes (block 896.19-899.6, 시험 1개 — `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`) |
+| B6 | if at 900:5 — 만료 뒤 재시작 대기가 실패한다 | `TestExpiredAuthorityLatchesBeforeEvaluation`, `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping` | no (base) | yes (block 900.70-901.26, 시험 2개 — `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`) |
+| B7 | if at 901:6 — 그 실패가 ctx 취소 때문이다 | `TestExpiredAuthorityLatchesBeforeEvaluation` | no (base) | yes (block 901.26-903.7, 시험 1개 — `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`) |
+| B8 | if at 909:4 — 꺼졌거나 잠긴 worker 가 사이클을 건너뛴다 | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` | no (base) | yes (block 909.16-910.13, 시험 1개 — `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`) |
+| B9 | if at 913:4 — 마감 시한을 넘긴 사이클을 버려진 것으로 표시 | `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction`, `TestMarketQueueSaturationDoesNotConsumePeerQueue` 외 4 | no (base) | yes (block 913.17-915.5, 시험 6개 — `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`) |
+| B10 | if at 916:4 — 취소된 사이클이 루프를 끝낸다 | `TestMarketQueueSaturationDoesNotConsumePeerQueue`, `TestShutdownAndTriggerShareBarrierAndDrainBothQueues` 외 3 | no (base) | yes (block 916.17-918.5, 시험 5개 — `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`) |
+| B11 | if at 919:4 — 성공한 사이클이 다음 투입을 기다린다 | `TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine`, `TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning` 외 11 | no (base) | yes (block 919.18-920.13, 시험 13개 — `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`) |
+| B12 | if at 922:4 — 권한 갱신 전용 worker 의 오류는 잠그지 않되 **세어진다** — 5.6.2.1 부터 그 안에서 중앙 무결성 오류는 신규 진입을 닫는다(B13) | `TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine`, `TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning` 외 4 | yes (5.6.2.1 편집 — 본문에 B13 추가) · `red-5.6.2.1.log` | yes (block 922.19-940.83, 시험 6개 — `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`) |
+| B13 | if at 940:5 — (새 분기, 5.6.2.1) 권한 갱신 전용 worker 의 **중앙 무결성** 오류 — 게이트가 있으면 `blockEntryOnCentralIntegrity` 가 신규 진입을 닫고(`ReasonStrategyCentralIntegrity`) `continue`, 게이트가 없을 때만 이 본문(프로세스 전체 fail-closed 로 중계) | `TestWithoutAnEntryGateACentralFaultIsNotSwallowed` | yes — `red-5.6.2.1.log`(`TestWithoutAnEntryGateACentralFaultIsNotSwallowed` · `TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine` FAIL); 변이 E02 · E03 · E04 · E05 CAUGHT | yes (block 940.83-943.6, 시험 1개 — `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`); 게이트 갈래(본문 밖)는 `TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine` 가 게이트 사유 · CheckEntry · Run 불반환 · 두 시장 계속으로 잼 |
+| B14 | if at 946:4 — (effective worker) 중앙 무결성 오류가 프로세스 전체 fail-closed 로 올라간다 — 생산 0(effective worker 없음); 활성화 로트 전 처분은 이월 표(5.6.2.1) | `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety` | no (base) | yes (block 946.39-949.5, 시험 1개 — `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`) |
+| B15 | if at 951:4 — 보통 오류의 잠금 자체가 실패한다 | `TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt`, `TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping` | no (base) | yes (block 951.18-954.5, 시험 2개 — `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`) |
+| B16 | if at 955:4 — 잠근 뒤 재시작 대기가 실패한다 | `TestAnEffectiveMarketFaultLeavesItsPeerAndTheSupervisorAlone`, `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction` 외 6 | no (base) | yes (block 955.69-956.25, 시험 8개 — `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`) |
+| B17 | if at 956:5 — 그 실패가 ctx 취소 때문이다 | `TestAnEffectiveMarketFaultLeavesItsPeerAndTheSupervisorAlone`, `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction` 외 5 | no (base) | yes (block 956.25-958.6, 시험 7개 — `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`) |
 
 ## 측정으로 확인한 빈칸 — **닫혔다 (2026-09-03, 태스크 5.6)**
 
@@ -57,4 +51,5 @@
 > 옮기면서(+17) 모든 번호를 프로파일과 대조했다. 프로파일은
 > `go test -count=1 -tags tossos_testseams -coverprofile ./internal/app/engine/`
 > (2026-09-03, 77.9% of statements).
+
 

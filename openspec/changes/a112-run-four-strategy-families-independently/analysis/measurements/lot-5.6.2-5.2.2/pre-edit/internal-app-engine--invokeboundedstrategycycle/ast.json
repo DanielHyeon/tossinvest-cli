@@ -1,0 +1,215 @@
+{
+  "file": "internal/app/engine/strategy_entry_supervisor.go",
+  "source_sha256": "9d97e59cf36590ade76b3e4804134b9ee66b3af1f8efa409e2f41222d5579b4f",
+  "package": "engine",
+  "function": "invokeBoundedStrategyCycle",
+  "signature": "invokeBoundedStrategyCycle(params=4, results=4)",
+  "start": {
+    "line": 1004,
+    "column": 1
+  },
+  "end": {
+    "line": 1024,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "select",
+      "at": {
+        "line": 1013,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1019,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1015,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1017,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1020,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1022,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1005,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1006,
+        "column": 5
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1007,
+        "column": 13
+      },
+      "text": "invokeStrategyCycle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1009,
+        "column": 33
+      },
+      "text": "context.WithCancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1010,
+        "column": 8
+      },
+      "text": "cancelWatchdog"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1011,
+        "column": 14
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1012,
+        "column": 5
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1012,
+        "column": 26
+      },
+      "text": "clk.Sleep"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1014,
+        "column": 9
+      },
+      "text": "ctx.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1015,
+        "column": 10
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1019,
+        "column": 6
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1020,
+        "column": 11
+      },
+      "text": "ctx.Err"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1005,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1009,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1011,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1016,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 1006,
+        "column": 2
+      }
+    },
+    {
+      "kind": "go",
+      "at": {
+        "line": 1012,
+        "column": 2
+      }
+    }
+  ],
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 1010,
+        "column": 2
+      },
+      "text": "cancelWatchdog"
+    }
+  ]
+}

@@ -1,44 +1,43 @@
-# Function Logic Map: `NewRefreshingPairedStrategyEntrySupervisor`
+# Function Logic Map: `Context.NewRefreshingPairedStrategyEntrySupervisor`
 
 - Source: `internal/app/engine/strategy_entry_supervisor.go`
-- Current-base source SHA-256: `627c647d087032586c4b63ca315a30fd9fad6b51af329fa4e8bf4fecd7104e08`
-- Signature: `Context.NewRefreshingPairedStrategyEntrySupervisor(params=1, results=2)`
-- Source range: `342:1`–`366:2`
-- AST evidence: `ast.json`, generated from frozen base `016da6245feb60e13971388be386c2c2041469a8`.
-- Risk scan: `risk-pattern-report.md`.
+- AST evidence: `ast.json` — **편집 뒤**, :390–418, 분기 4, source_sha256 `da4fa6d1b572…`.
+- Risk scan: `risk-pattern-report.md`
+- 편집: (5.6.2.1) 새 B2 `if c.Entry == nil` — 진입 게이트 없는 Context 에서는 생산 감독자를 만들지 않는다(그 조립에서는 중앙 무결성 고장이 진입이 아니라 프로세스를 닫게 되므로). 감독자 옵션에 `EntryGate: c.Entry`. 편집 전 B2 · B3 → B3 · B4.
 
 ## Inputs and invariants
 
-- Inputs/results are the exact AST signature above; this L0 map does not infer undocumented state.
-- Any later edit must preserve OFF defaults, the owner key without family/horizon, and zero exposure-raising dispatch while a prerequisite is missing.
+| Input/state | Valid range | Source of truth | Failure behavior |
+|---|---|---|---|
+| 편집이 더한 입력 | 진입 게이트(`*execgw.EntryGate`) 또는 없음 | 엔진 조립(`Context.Entry`) | 위 편집 설명 |
 
 ## Branches and early returns
 
-- Exact AST return nodes: `380:3, 388:5, 396:3, 401:2`.
-
-| Branch | AST kind | Source location | Required test disposition |
-|---|---|---|---|
-| B1 | if| 379:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B2 | range| 383:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B3 | if| 395:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
+| Branch | Condition | Mutation/side effect | Return/error | Required test |
+|---|---|---|---|---|
+| B1 | if (:391) | nil Context · nil 시계 → 거절 | — | (측정 표본 0) |
+| B2 | if (:395) | (새) 진입 게이트 없음 → `ErrRuntimeUnavailable` | — | `TestTheProductionStrategySupervisorRefusesAContextWithoutAnEntryGate` |
+| B3 | range (:399) | KR · US 권한 갱신 전용 worker 둘 | — | `TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate` |
+| B4 | if (:411) | 감독자 생성 실패 → 오류 | — | (측정 표본 0) |
 
 ## Calls and live bindings
 
-| Callee expression | Source location | Current-base evidence/requirement |
-|---|---|---|
-| errors.New | 380:15 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| make | 382:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| append | 385:13 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.runProductionStrategyMarketCycle | 388:12 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| NewStrategyEntrySupervisor | 392:21 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.strategyProjectionMu.Lock | 398:2 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| c.strategyProjectionMu.Unlock | 400:2 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| Callee expression | Position |
+|---|---|
+| `errors.New` | 392:15 |
+| `fmt.Errorf` | 396:15 |
+| `make` | 398:13 |
+| `append` | 401:13 |
+| `c.runProductionStrategyMarketCycle` | 404:12 |
+| `NewStrategyEntrySupervisor` | 408:21 |
+| `c.strategyProjectionMu.Lock` | 414:2 |
+| `c.strategyProjectionMu.Unlock` | 416:2 |
 
 ## State mutations and fallbacks
 
-- The AST is the exhaustive current-base record of assignments, calls, branches, defers and returns. Before a function body edit, the owning lot must update this map with changed condition semantics and concrete RED/GREEN test evidence.
+- 위 편집 설명 외 없음.
 
 ## Safety conclusion
 
-- L0 status: pre-edit evidence only; no production function was edited and no branch test is claimed as run by L0.
-- A named targeted RED or explicit evidence-backed not-applicable rationale is required for every edited branch before GREEN.
+- Safe edit boundary: 생산 기동 순서에서 이 생성자 앞의 `Recovery` 가 이미 같은 게이트를 요구하므로(runtime_wiring.go) 생산 기동 동작 변화 0.
+- High-risk impact: yes(진입 게이트 경로) — 편집은 진입을 닫는 방향만 더함.

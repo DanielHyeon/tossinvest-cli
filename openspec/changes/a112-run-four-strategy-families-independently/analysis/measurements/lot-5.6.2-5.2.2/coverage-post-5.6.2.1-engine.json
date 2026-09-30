@@ -1,0 +1,570 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/app/engine",
+ "tests_run": 109,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-app-engine--strategyentrysupervisor.runmarket": {
+   "B1": {
+    "kind": "select",
+    "line": 879,
+    "column": 2,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "for",
+    "line": 884,
+    "column": 2,
+    "block": "884.6-885.10",
+    "entered_by": [
+     "TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue",
+     "TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine",
+     "TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning",
+     "TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows",
+     "TestAnEffectiveMarketFaultLeavesItsPeerAndTheSupervisorAlone",
+     "TestAnOrdinaryRefreshOnlyCycleErrorDoesNotBlockEntry",
+     "TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt",
+     "TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety",
+     "TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction",
+     "TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining",
+     "TestExpiredAuthorityLatchesBeforeEvaluation",
+     "TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive",
+     "TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority",
+     "TestMarketQueueSaturationDoesNotConsumePeerQueue",
+     "TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal",
+     "TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive",
+     "TestPairedMarketRestartHonorsPublishedAbsoluteDeadlineAfterHandoffRace",
+     "TestShutdownAndTriggerShareBarrierAndDrainBothQueues",
+     "TestStrategyEntrySupervisorPollerKeepsCompletePeerRunningWhenOtherMarketDormant",
+     "TestStrategyEntrySupervisorPollsDormantRefreshWorkerWithoutOpeningPublicTrigger",
+     "TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave",
+     "TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently",
+     "TestStrategyEntrySupervisorZeroPollIntervalKeepsExplicitTriggerSemantics",
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping",
+     "TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError",
+     "TestWithoutAnEntryGateACentralFaultIsNotSwallowed"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "select",
+    "line": 885,
+    "column": 3,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 894,
+    "column": 4,
+    "block": "894.15-896.19",
+    "entered_by": [
+     "TestExpiredAuthorityLatchesBeforeEvaluation",
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": null
+   },
+   "B5": {
+    "kind": "if",
+    "line": 896,
+    "column": 5,
+    "block": "896.19-899.6",
+    "entered_by": [
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": null
+   },
+   "B6": {
+    "kind": "if",
+    "line": 900,
+    "column": 5,
+    "block": "900.70-901.26",
+    "entered_by": [
+     "TestExpiredAuthorityLatchesBeforeEvaluation",
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": null
+   },
+   "B7": {
+    "kind": "if",
+    "line": 901,
+    "column": 6,
+    "block": "901.26-903.7",
+    "entered_by": [
+     "TestExpiredAuthorityLatchesBeforeEvaluation"
+    ],
+    "union": null
+   },
+   "B8": {
+    "kind": "if",
+    "line": 909,
+    "column": 4,
+    "block": "909.16-910.13",
+    "entered_by": [
+     "TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue"
+    ],
+    "union": null
+   },
+   "B9": {
+    "kind": "if",
+    "line": 913,
+    "column": 4,
+    "block": "913.17-915.5",
+    "entered_by": [
+     "TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction",
+     "TestMarketQueueSaturationDoesNotConsumePeerQueue",
+     "TestShutdownAndTriggerShareBarrierAndDrainBothQueues",
+     "TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave",
+     "TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently",
+     "TestWithoutAnEntryGateACentralFaultIsNotSwallowed"
+    ],
+    "union": null
+   },
+   "B10": {
+    "kind": "if",
+    "line": 916,
+    "column": 4,
+    "block": "916.17-918.5",
+    "entered_by": [
+     "TestMarketQueueSaturationDoesNotConsumePeerQueue",
+     "TestShutdownAndTriggerShareBarrierAndDrainBothQueues",
+     "TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave",
+     "TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently",
+     "TestWithoutAnEntryGateACentralFaultIsNotSwallowed"
+    ],
+    "union": null
+   },
+   "B11": {
+    "kind": "if",
+    "line": 919,
+    "column": 4,
+    "block": "919.18-920.13",
+    "entered_by": [
+     "TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine",
+     "TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning",
+     "TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows",
+     "TestAnEffectiveMarketFaultLeavesItsPeerAndTheSupervisorAlone",
+     "TestAnOrdinaryRefreshOnlyCycleErrorDoesNotBlockEntry",
+     "TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive",
+     "TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority",
+     "TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive",
+     "TestStrategyEntrySupervisorPollerKeepsCompletePeerRunningWhenOtherMarketDormant",
+     "TestStrategyEntrySupervisorPollsDormantRefreshWorkerWithoutOpeningPublicTrigger",
+     "TestStrategyEntrySupervisorZeroPollIntervalKeepsExplicitTriggerSemantics",
+     "TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError",
+     "TestWithoutAnEntryGateACentralFaultIsNotSwallowed"
+    ],
+    "union": null
+   },
+   "B12": {
+    "kind": "if",
+    "line": 922,
+    "column": 4,
+    "block": "922.19-940.83",
+    "entered_by": [
+     "TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine",
+     "TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning",
+     "TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows",
+     "TestAnOrdinaryRefreshOnlyCycleErrorDoesNotBlockEntry",
+     "TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError",
+     "TestWithoutAnEntryGateACentralFaultIsNotSwallowed"
+    ],
+    "union": null
+   },
+   "B13": {
+    "kind": "if",
+    "line": 940,
+    "column": 5,
+    "block": "940.83-943.6",
+    "entered_by": [
+     "TestWithoutAnEntryGateACentralFaultIsNotSwallowed"
+    ],
+    "union": null
+   },
+   "B14": {
+    "kind": "if",
+    "line": 946,
+    "column": 4,
+    "block": "946.39-949.5",
+    "entered_by": [
+     "TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety"
+    ],
+    "union": null
+   },
+   "B15": {
+    "kind": "if",
+    "line": 951,
+    "column": 4,
+    "block": "951.18-954.5",
+    "entered_by": [
+     "TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt",
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": null
+   },
+   "B16": {
+    "kind": "if",
+    "line": 955,
+    "column": 4,
+    "block": "955.69-956.25",
+    "entered_by": [
+     "TestAnEffectiveMarketFaultLeavesItsPeerAndTheSupervisorAlone",
+     "TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction",
+     "TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining",
+     "TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive",
+     "TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority",
+     "TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal",
+     "TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive",
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping"
+    ],
+    "union": null
+   },
+   "B17": {
+    "kind": "if",
+    "line": 956,
+    "column": 5,
+    "block": "956.25-958.6",
+    "entered_by": [
+     "TestAnEffectiveMarketFaultLeavesItsPeerAndTheSupervisorAlone",
+     "TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction",
+     "TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining",
+     "TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive",
+     "TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority",
+     "TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal",
+     "TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive"
+    ],
+    "union": null
+   }
+  },
+  "internal-app-engine--newstrategyentrysupervisor": {
+   "B1": {
+    "kind": "if",
+    "line": 618,
+    "column": 2,
+    "block": "618.16-620.3",
+    "entered_by": [
+     "TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine",
+     "TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning",
+     "TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows",
+     "TestAnEffectiveMarketFaultLeavesItsPeerAndTheSupervisorAlone",
+     "TestAnOrdinaryRefreshOnlyCycleErrorDoesNotBlockEntry",
+     "TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt",
+     "TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety",
+     "TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction",
+     "TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining",
+     "TestExpiredAuthorityLatchesBeforeEvaluation",
+     "TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive",
+     "TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority",
+     "TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal",
+     "TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive",
+     "TestPairedMarketRestartHonorsPublishedAbsoluteDeadlineAfterHandoffRace",
+     "TestStrategyEntrySupervisorDefaultsPairedMarketsDormant",
+     "TestStrategyEntrySupervisorPollerKeepsCompletePeerRunningWhenOtherMarketDormant",
+     "TestStrategyEntrySupervisorPollsDormantRefreshWorkerWithoutOpeningPublicTrigger",
+     "TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave",
+     "TestStrategyEntrySupervisorRejectsUnsafeProductionPollIntervals",
+     "TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently",
+     "TestStrategyEntrySupervisorZeroPollIntervalKeepsExplicitTriggerSemantics",
+     "TestStrategySupervisorRejectsInvalidAssemblies",
+     "TestTheFaultStreamHoldsOneSlotForEveryWorkerThatCanLatch",
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping",
+     "TestTheMarketThatLeadsAWaveAlwaysPublishesIt",
+     "TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError",
+     "TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate",
+     "TestWithoutAnEntryGateACentralFaultIsNotSwallowed"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 621,
+    "column": 2,
+    "block": "621.52-623.3",
+    "entered_by": [
+     "TestStrategySupervisorRejectsInvalidAssemblies"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 625,
+    "column": 2,
+    "block": "625.21-627.3",
+    "entered_by": [
+     "TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety",
+     "TestExpiredAuthorityLatchesBeforeEvaluation",
+     "TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive",
+     "TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority",
+     "TestMarketQueueSaturationDoesNotConsumePeerQueue",
+     "TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal",
+     "TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive",
+     "TestPairedMarketRestartHonorsPublishedAbsoluteDeadlineAfterHandoffRace",
+     "TestShutdownAndTriggerShareBarrierAndDrainBothQueues",
+     "TestStrategyEntrySupervisorDefaultsPairedMarketsDormant",
+     "TestStrategyEntrySupervisorPollerKeepsCompletePeerRunningWhenOtherMarketDormant",
+     "TestStrategyEntrySupervisorPollsDormantRefreshWorkerWithoutOpeningPublicTrigger",
+     "TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave",
+     "TestStrategyEntrySupervisorRejectsUnsafeProductionPollIntervals",
+     "TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently",
+     "TestStrategyEntrySupervisorZeroPollIntervalKeepsExplicitTriggerSemantics",
+     "TestStrategySupervisorRejectsInvalidAssemblies"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 628,
+    "column": 2,
+    "block": "628.62-630.3",
+    "entered_by": [
+     "TestStrategySupervisorRejectsInvalidAssemblies"
+    ],
+    "union": null
+   },
+   "B5": {
+    "kind": "if",
+    "line": 631,
+    "column": 2,
+    "block": "631.28-633.3",
+    "entered_by": [
+     "TestStrategySupervisorRejectsInvalidAssemblies"
+    ],
+    "union": null
+   },
+   "B6": {
+    "kind": "if",
+    "line": 635,
+    "column": 2,
+    "block": "635.16-637.3",
+    "entered_by": [
+     "TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety",
+     "TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive",
+     "TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority",
+     "TestMarketQueueSaturationDoesNotConsumePeerQueue",
+     "TestShutdownAndTriggerShareBarrierAndDrainBothQueues",
+     "TestStrategyEntrySupervisorDefaultsPairedMarketsDormant",
+     "TestStrategyEntrySupervisorPollerKeepsCompletePeerRunningWhenOtherMarketDormant",
+     "TestStrategyEntrySupervisorPollsDormantRefreshWorkerWithoutOpeningPublicTrigger",
+     "TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave",
+     "TestStrategyEntrySupervisorRejectsUnsafeProductionPollIntervals",
+     "TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently",
+     "TestStrategyEntrySupervisorZeroPollIntervalKeepsExplicitTriggerSemantics",
+     "TestStrategySupervisorRejectsInvalidAssemblies"
+    ],
+    "union": null
+   },
+   "B7": {
+    "kind": "if",
+    "line": 639,
+    "column": 2,
+    "block": "639.18-641.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B8": {
+    "kind": "range",
+    "line": 644,
+    "column": 2,
+    "block": "644.42-645.46",
+    "entered_by": [
+     "TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue",
+     "TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine",
+     "TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning",
+     "TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows",
+     "TestAnEffectiveMarketFaultLeavesItsPeerAndTheSupervisorAlone",
+     "TestAnOrdinaryRefreshOnlyCycleErrorDoesNotBlockEntry",
+     "TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt",
+     "TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety",
+     "TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction",
+     "TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining",
+     "TestExpiredAuthorityLatchesBeforeEvaluation",
+     "TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive",
+     "TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority",
+     "TestMarketQueueSaturationDoesNotConsumePeerQueue",
+     "TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal",
+     "TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive",
+     "TestPairedMarketRestartHonorsPublishedAbsoluteDeadlineAfterHandoffRace",
+     "TestShutdownAndTriggerShareBarrierAndDrainBothQueues",
+     "TestStrategyEntrySupervisorDefaultsPairedMarketsDormant",
+     "TestStrategyEntrySupervisorPollerKeepsCompletePeerRunningWhenOtherMarketDormant",
+     "TestStrategyEntrySupervisorPollsDormantRefreshWorkerWithoutOpeningPublicTrigger",
+     "TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave",
+     "TestStrategyEntrySupervisorRejectsUnsafeProductionPollIntervals",
+     "TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently",
+     "TestStrategyEntrySupervisorZeroPollIntervalKeepsExplicitTriggerSemantics",
+     "TestStrategySupervisorRejectsInvalidAssemblies",
+     "TestTheFaultStreamHoldsOneSlotForEveryWorkerThatCanLatch",
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping",
+     "TestTheMarketThatLeadsAWaveAlwaysPublishesIt",
+     "TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError",
+     "TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate",
+     "TestWithoutAnEntryGateACentralFaultIsNotSwallowed"
+    ],
+    "union": null
+   },
+   "B9": {
+    "kind": "if",
+    "line": 645,
+    "column": 3,
+    "block": "645.46-647.4",
+    "entered_by": [
+     "TestStrategySupervisorRejectsInvalidAssemblies"
+    ],
+    "union": null
+   },
+   "B10": {
+    "kind": "if",
+    "line": 648,
+    "column": 3,
+    "block": "648.60-650.4",
+    "entered_by": [
+     "TestStrategySupervisorRejectsInvalidAssemblies"
+    ],
+    "union": null
+   },
+   "B11": {
+    "kind": "if",
+    "line": 651,
+    "column": 3,
+    "block": "651.54-653.4",
+    "entered_by": [
+     "TestStrategySupervisorRejectsInvalidAssemblies"
+    ],
+    "union": null
+   },
+   "B12": {
+    "kind": "if",
+    "line": 654,
+    "column": 3,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B13": {
+    "kind": "if",
+    "line": 658,
+    "column": 3,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B14": {
+    "kind": "if",
+    "line": 662,
+    "column": 3,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B15": {
+    "kind": "if",
+    "line": 668,
+    "column": 3,
+    "block": "668.180-670.4",
+    "entered_by": [
+     "TestStrategySupervisorRejectsInvalidAssemblies"
+    ],
+    "union": null
+   },
+   "B16": {
+    "kind": "if",
+    "line": 671,
+    "column": 3,
+    "block": "671.161-673.4",
+    "entered_by": [
+     "TestStrategySupervisorRejectsInvalidAssemblies"
+    ],
+    "union": null
+   },
+   "B17": {
+    "kind": "range",
+    "line": 684,
+    "column": 2,
+    "block": "684.78-685.29",
+    "entered_by": [
+     "TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue",
+     "TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine",
+     "TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning",
+     "TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows",
+     "TestAnEffectiveMarketFaultLeavesItsPeerAndTheSupervisorAlone",
+     "TestAnOrdinaryRefreshOnlyCycleErrorDoesNotBlockEntry",
+     "TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt",
+     "TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety",
+     "TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction",
+     "TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining",
+     "TestExpiredAuthorityLatchesBeforeEvaluation",
+     "TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive",
+     "TestMarketPanicIsContainedAndCannotRecoverMemoryAuthority",
+     "TestMarketQueueSaturationDoesNotConsumePeerQueue",
+     "TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal",
+     "TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive",
+     "TestPairedMarketRestartHonorsPublishedAbsoluteDeadlineAfterHandoffRace",
+     "TestShutdownAndTriggerShareBarrierAndDrainBothQueues",
+     "TestStrategyEntrySupervisorDefaultsPairedMarketsDormant",
+     "TestStrategyEntrySupervisorPollerKeepsCompletePeerRunningWhenOtherMarketDormant",
+     "TestStrategyEntrySupervisorPollsDormantRefreshWorkerWithoutOpeningPublicTrigger",
+     "TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave",
+     "TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently",
+     "TestStrategyEntrySupervisorZeroPollIntervalKeepsExplicitTriggerSemantics",
+     "TestTheFaultStreamHoldsOneSlotForEveryWorkerThatCanLatch",
+     "TestTheFourEscalationsThatStopTheEngineAreExactlyTheSupervisorsOwnBrokenBookkeeping",
+     "TestTheMarketThatLeadsAWaveAlwaysPublishesIt",
+     "TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError",
+     "TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate",
+     "TestWithoutAnEntryGateACentralFaultIsNotSwallowed"
+    ],
+    "union": null
+   },
+   "B18": {
+    "kind": "if",
+    "line": 685,
+    "column": 3,
+    "block": "685.29-687.4",
+    "entered_by": [],
+    "union": null
+   }
+  },
+  "internal-app-engine--context.newrefreshingpairedstrategyentrysupervisor": {
+   "B1": {
+    "kind": "if",
+    "line": 391,
+    "column": 2,
+    "block": "391.28-393.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 395,
+    "column": 2,
+    "block": "395.20-397.3",
+    "entered_by": [
+     "TestTheProductionStrategySupervisorRefusesAContextWithoutAnEntryGate"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "range",
+    "line": 399,
+    "column": 2,
+    "block": "399.78-403.48",
+    "entered_by": [
+     "TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 411,
+    "column": 2,
+    "block": "411.16-413.3",
+    "entered_by": [],
+    "union": null
+   }
+  }
+ }
+}

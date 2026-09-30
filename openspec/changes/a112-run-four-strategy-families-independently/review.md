@@ -5246,3 +5246,63 @@ Codex(실제 CLI, gpt-6-astra, read-only) 3판 **APPROVE** · A **APPROVE**(현�
 위 "이름만 붙여 남긴 것" 목록 그대로다. **통과 이유가 바뀐 시험**: 핀을 두지 않는 엔진 시험들이 편집 전엔 적재기 형식 검사(B3)로,
 편집 뒤엔 미선언(B1)으로 영값 관문을 받는다(엔진 스위트 B1 41 회) — 결과는 같고 되돌림 판별이 정확히 그 이유에 기댄다. 번들
 `internal-strategyrouter--loadproductionfamilyactivation` 에 적었다.
+
+## 2026-09-30 태스크 5.6.2.1 — 중앙 무결성 고장은 삼키지 않고 진입을 닫는다 [사람 결정 (6)]
+
+**결정.** 사람 결정 (6)(2026-09-30, HANDOFF 「결정 (1)(5)(6) 기록」): fail-closed 의 수단은 프로세스 정지가 아니라 `execgw.EntryGate.Block` 이다. 근거 셋: 엔진 정지 = 손절 없음 · spec 「lane worker 가 safety loop 를 취소해서는 안 된다(MUST NOT)」 · design.md:198 고장표의 문장 자체가 「모든 **신규 entry** fail-closed」.
+
+**Pre-Edit 선언(편집 전 AST, HEAD `504aed12`).**
+- `StrategyEntrySupervisor.runMarket` :861–937, 분기 16. B12 `if refreshOnly`(:905)가 기록 뒤 `continue` — 중앙 무결성 오류도 여기서 삼켜졌다. 오늘 생산이 도는 유일한 구성이 이 갈래다.
+- B13(:919) · B5/B7/B14/B16 은 `signalCentral` → `Run` 반환 → Runtime 이 모든 루프를 취소한다(census 가 얼린 「엔진을 세우는 넷」 + effective worker 의 중앙 고장).
+- 편집 대상: `runMarket`(B12 안에 분기 하나) · `NewStrategyEntrySupervisor`(감독자에 게이트 칸) · `Context.NewRefreshingPairedStrategyEntrySupervisor`(게이트 요구 · 전달) · `execgw.AllReasonCodes`(등록). 편집 전 번들 `analysis/measurements/lot-5.6.2-5.2.2/pre-edit/`.
+
+**범위(Manager 판정 2026-09-30).**
+- Q1 = 안 1(좁음): B12 의 삼킴만 `Block` + `continue` 로 바꾼다. 판정 순서(refreshOnly 가 중앙 판정보다 앞)는 루프 생존을 위해 그대로다. B13(이제 B14 — effective worker)과 감독자 장부 고장 넷의 엔진 정지는 census 가 얼린 계약이라 바꾸지 않는다.
+- Q2 = A: 사유 코드 신설 `ReasonStrategyCentralIntegrity` = `strategy_central_integrity`.
+- Q3 = 분할: 5.6.2.1(이 배선)과 5.6.2.2(5.2.2 뒤 여덟 레인 재증명). 원문 5.6.2 의 절은 전부 5.6.2.2 가 가진다.
+
+**착지.**
+- `3260f4eb` — 사유 코드 트리오: `reason.go` 신설, `AllReasonCodes` 등록, 골든 재생성, latchOrder 에서 sender-down 뒤 · 운영 모드 앞, a098 census 한 줄, 순서 시험. a094 의 `ReasonOppositePendingOrder` 와 공유 파일이 겹쳐 Manager 조정으로 선행 커밋했다.
+- (이 절의 커밋) 감독자 배선:
+  - B12 안에 새 B13: 중앙 무결성이면 `blockEntryOnCentralIntegrity` 가 고정 문구로 `Block` 하고 `continue`. 게이트가 없을 때만 `signalCentral` → `return`.
+  - 옵션 `EntryGate StrategyEntryBlocker` — `Block` 하나뿐인 좁은 인터페이스라 감독자는 진입을 닫을 수만 있다.
+  - 생산 생성자는 게이트 없는 Context 를 `ErrRuntimeUnavailable` 로 거절하고 `c.Entry` 를 넘긴다.
+
+**사유 코드 소비자 대조(Q2 조건 ①).** 새 값의 소비자를 형제 값(`ReasonAlertSenderDown` · `ReasonFillDetectionSLO`)으로 grep 해 전부 대조했다.
+- 소비 자리는 넷이다: `reason.go` 선언 · `failclosed.go` `AllReasonCodes` · `testdata/reason_codes.golden` · `retry.go` `latchOrder`.
+- 사유별 해제 경로가 있는 것은 `ReasonAlertUndelivered`(운영자 승인) · `ReasonOperatingModeBlocked`(`engine mode-release`) · `ReasonFillDetectionSLO`(회복 시 자기 해제) 등이다.
+- **이 사유에는 해제 경로를 두지 않았다 — 의도다.** `engine <대상>-release` 가족에 이 사유를 푸는 명령이 없고, 해제는 **재시작뿐**이다(원장 수리 뒤). 중앙 무결성이 깨진 원장 위에서 사람이 진입을 다시 여는 수단을 두지 않는다. 적히지 않은 부재는 다음 편집이 「누락」으로 읽으므로 여기와 `reason.go` 주석에 적는다.
+- 게이트 래치는 인메모리라 재시작이 지운다. 그때 중앙 무결성 고장이 다시 나면 다시 선다.
+
+**fail-closed 가 거부하는 정상 입력(Q2 조건 ②).** 이 분기가 진입을 닫는 입력은 `isCentralStrategyIntegrity(err)` 가 참인 사이클 오류뿐이다.
+- 그 값을 만드는 생산 호출자는 **0** 이다: `StrategyCentralIntegrityFailure` 호출자 0, sentinel 을 만드는 자리는 `Run` 안의 셋뿐. `a112_central_integrity_census_test.go` 가 패키지 전체 열거로 얼린다.
+- 그러므로 **오늘 이 fail-closed 가 거부하는 정상 운영 입력은 없다.** 원장 읽기 실패 · Gateway 거절 · fence 실패는 보통 오류로 와서 게이트를 잠그지 않는다. 대조 시험 `TestAnOrdinaryRefreshOnlyCycleErrorDoesNotBlockEntry` 가 이를 재고, 변이 E04 가 그 대조를 깬다.
+- 이 분기에 생산 입력이 생기는 날은 누군가 `StrategyCentralIntegrityFailure` 를 부르는 날이다. 그 편집은 census 가 먼저 실패시키므로 조용히 들어오지 않는다.
+
+**RED · GREEN · 반증.**
+- RED `analysis/measurements/lot-5.6.2-5.2.2/red-5.6.2.1.log` — 넷 FAIL:
+  - `TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine`(게이트 사유 · CheckEntry 거절 · Run 불반환 · 두 시장 계속을 한 시험에서)
+  - `TestWithoutAnEntryGateACentralFaultIsNotSwallowed`
+  - `TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate`(역할 — 엔진 자신의 게이트, 포인터 동일성)
+  - `TestTheProductionStrategySupervisorRefusesAContextWithoutAnEntryGate`
+  - 대조 `TestAnOrdinaryRefreshOnlyCycleErrorDoesNotBlockEntry` 는 편집 전에도 GREEN(의도).
+- 5.6.1 의 `TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo` → `TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning`.
+  - 엔진 불정지 절반은 그대로 못 박고, 이제 게이트를 준다. 이름에서 「Swallows」 를 뺀 것은 더는 삼키지 않기 때문이다.
+  - 옛 이름을 인용하던 번들 문서 두 곳과 `strategyworker/policy_receipt_test.go` 주석을 갱신했다. 옛 review 절의 인용은 역사라 두었다.
+- 변이 `analysis/harness/a112_lot_mutate.py --set 5.6.2.1` — **E01~E11 11/11 CAUGHT**, 무변이 대조군 GREEN.
+  - 사본은 HEAD archive + 이 로트 파일이다. 병행 세션의 미커밋 편집이 섞여 첫 판의 대조군이 BUILD-FAIL 이 났고(남의 미커밋 journal 편집이 남의 미추적 파일을 참조), 그래서 하네스를 archive 방식으로 고쳤다.
+- 검증:
+  - `./internal/app/engine/...` · `./cmd/tossctl` · `./internal/strategyworker` 전체 ok, 태그판 ok, `make test-race` rc 0, `tools/sdd` race 가드 ok.
+  - execgw 는 a098 census 수리 뒤 해당 시험 ok.
+  - `make lint` 는 rc 2 — 원인은 a090 의 미추적 시험 `a090_unobserved_position_test.go:94` 이고 이 로트 파일이 아니다.
+- FLM: 편집 번들 넷 재작성(`analysis/harness/render_5621_bundles.py` + runMarket 수기 재번호), 본문 불변 번들 아홉은 AST 재추출 · 좌표 이동.
+  - `check_analysis` 는 기준선(`check-analysis-baseline-2f698db6.log`, 129) 대비 **새 발견이 이 로트의 미추적 시험 인용 다섯뿐**이다(커밋하면 풀림). 나머지 새 줄은 병행 세션 미커밋 편집(`execgw/classify.go` · `journal/apply_hook.go` · `journal/exit_state_test.go`)의 것이다.
+
+**이월(이름 · 사유 · 행선).**
+
+| 항목 | 사유 | 행선 |
+|---|---|---|
+| **B14 — effective worker 활성화 시 중앙 무결성 고장의 처분.** 오늘은 `signalCentral` → 엔진 정지(census 가 얼린 계약) | 생산 0(effective worker 없음) — 잠재. 결정 (6) 을 이 갈래까지 넓히면 `Run` 계약과 동결 census 를 다시 써야 하고 설계가 정해지지 않았다(Manager 판정 Q1) | **활성화 로트가 서기 전 결정 항목**(effective worker 를 켜는 로트의 선결조건) |
+| 감독자 장부 고장 넷(관측 시각 없음 · latch revision 소진 · 재시작 지연 계약 밖)의 엔진 정지 | census 가 얼린 계약, 결정 (6) 의 문자 범위 밖 | 같은 활성화 로트 판정 |
+| 여덟 레인 재증명 — fault 스트림 용량 = **레인 수에서 유도한** 등식(하드코딩 금지 — Manager 조건), 레인 고장 여덟 동시에도 fill/reconcile/exit 생존 | 레인 고장이 감독자 스트림으로 가는 것은 5.2.2 의 「레인별 독립 감독」과 같은 편집 | 5.6.2.2(5.2.2 뒤) |
+| `make lint` 적색(a090 미추적 시험) | 이 로트 밖 | a090 로트 |

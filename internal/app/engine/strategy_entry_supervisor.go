@@ -122,6 +122,15 @@ type StrategyEntrySupervisorOptions struct {
 	QueueDepth int
 	CycleLimit time.Duration
 	Clock      clock.Clock
+	// EntryGate 는 권한 갱신 전용 worker 가 보고한 중앙 무결성 고장을 신규 진입 차단으로 잇는 자리다(a112 5.6.2.1, 사람
+	// 결정 (6)). 할 수 있는 일은 `Block` 하나뿐이다 — 감독자는 진입을 닫을 수만 있고 열 수 없다. nil 이면 그 고장은
+	// 기존의 프로세스 전체 fail-closed 로 올라간다(조용히 삼키지 않는다).
+	EntryGate StrategyEntryBlocker
+}
+
+// StrategyEntryBlocker 는 감독자가 진입 게이트에 쓸 수 있는 유일한 동작이다. `*execgw.EntryGate` 가 만족한다.
+type StrategyEntryBlocker interface {
+	Block(reason execgw.ReasonCode, detail string)
 }
 
 // ErrStrategyCentralIntegrity is the only non-cancellation failure the outer
@@ -229,6 +238,9 @@ const (
 type StrategyEntrySupervisor struct {
 	clk        clock.Clock
 	cycleLimit time.Duration
+
+	// entry 는 중앙 무결성 고장의 진입 차단 자리(5.6.2.1). nil 이면 프로세스 전체 fail-closed 로 올린다.
+	entry StrategyEntryBlocker
 
 	mu        sync.RWMutex
 	workers   map[StrategyMarket]*strategyMarketRuntime
@@ -379,6 +391,10 @@ func (c *Context) NewRefreshingPairedStrategyEntrySupervisor(clk clock.Clock) (*
 	if c == nil || clk == nil {
 		return nil, errors.New("engine: paired strategy refresh supervisor unavailable")
 	}
+	// 진입 게이트가 없으면 만들지 않는다(5.6.2.1): 그 조립에서는 중앙 무결성 고장이 진입이 아니라 프로세스를 닫는다.
+	if c.Entry == nil {
+		return nil, fmt.Errorf("%w: the strategy refresh supervisor needs the entry gate", ErrRuntimeUnavailable)
+	}
 	workers := make([]StrategyMarketWorker, 0, 2)
 	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
 		market := market
@@ -390,7 +406,7 @@ func (c *Context) NewRefreshingPairedStrategyEntrySupervisor(clk clock.Clock) (*
 		})
 	}
 	supervisor, err := NewStrategyEntrySupervisor(StrategyEntrySupervisorOptions{
-		Clock: clk, CycleLimit: MaximumStrategyCycleLimit, Workers: workers,
+		Clock: clk, CycleLimit: MaximumStrategyCycleLimit, Workers: workers, EntryGate: c.Entry,
 	})
 	if err != nil {
 		return nil, err
@@ -673,6 +689,7 @@ func NewStrategyEntrySupervisor(opts StrategyEntrySupervisorOptions) (*StrategyE
 
 	return &StrategyEntrySupervisor{
 		clk: clk, cycleLimit: cycleLimit, workers: workers, ready: make(chan struct{}), faults: make(chan StrategyWorkerFault, 2),
+		entry: opts.EntryGate,
 	}, nil
 }
 
@@ -914,6 +931,16 @@ func (s *StrategyEntrySupervisor) runMarket(ctx context.Context, start <-chan st
 				// (5.2.1) KR·US 가 **함께** 여기 온다. 세지 않으면 두 시장의 진입이
 				// 조용히 멈춘 채 어느 화면에도 나타나지 않는다.
 				s.recordSwallowedCycleError(worker, err)
+				// **중앙 무결성 고장은 삼키지 않는다** (태스크 5.6.2.1, 사람 결정 (6)).
+				//
+				// 판정 순서(refreshOnly 가 중앙 판정보다 앞)는 그대로다 — 뒤집으면 전략 평가 하나가
+				// `Run` 을 반환시키고 Runtime 이 fill/exit/reconcile 까지 취소한다(엔진 정지 = 손절 없음).
+				// 대신 이 갈래 안에서 신규 진입만 닫는다(design.md:198 고장표 = 진입 게이트 의미론). 루프는
+				// 계속 돌고, 게이트가 없는 조립에서만 기존의 프로세스 전체 fail-closed 로 올린다.
+				if isCentralStrategyIntegrity(err) && !s.blockEntryOnCentralIntegrity(worker) {
+					s.signalCentral(central, err)
+					return
+				}
 				continue
 			}
 			if isCentralStrategyIntegrity(err) {
@@ -956,6 +983,22 @@ func (s *StrategyEntrySupervisor) recordSwallowedCycleError(worker *strategyMark
 	if worker.firstSwallowed == "" {
 		worker.firstSwallowed = cause.Error()
 	}
+}
+
+// blockEntryOnCentralIntegrity 는 권한 갱신 전용 worker 가 보고한 중앙 무결성 고장으로 신규 진입을 닫는다(5.6.2.1).
+// 게이트가 없으면 false — 호출자가 프로세스 전체 fail-closed 로 올린다.
+//
+// 설명은 고정 문구다: 원인 원문은 그 시장의 스냅숏(`FirstSwallowedFailure`)에 남고, 게이트 설명은 상태 출력이
+// 어디서나 읽는 칸이라 원문(원장 · 계좌 문구를 품을 수 있음)을 싣지 않는다. 해제는 재시작뿐이다(원장 수리 뒤).
+func (s *StrategyEntrySupervisor) blockEntryOnCentralIntegrity(worker *strategyMarketRuntime) bool {
+	if s == nil || s.entry == nil || worker == nil {
+		return false
+	}
+	s.entry.Block(execgw.ReasonStrategyCentralIntegrity, fmt.Sprintf(
+		"the %s strategy refresh cycle reported a central integrity fault; new entries are closed until a restart "+
+			"after the ledger is repaired (first cause in the strategy runtime snapshot); exits are unaffected",
+		worker.descriptor.Market))
+	return true
 }
 
 func (s *StrategyEntrySupervisor) waitMarketRestart(ctx context.Context, notBefore time.Time) error {

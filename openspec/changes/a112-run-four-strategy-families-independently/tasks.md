@@ -290,7 +290,16 @@
   Ten mutants on `strategy_entry_supervisor.go` (all caught) plus three on `strategy_dispatch_cycle.go` (two caught behaviourally, the third by the census), restored from a hashed backup rather than `git checkout`.
 
   **What this task does not claim.** It changes no production behaviour — the lot is tests and analysis only. It does not decide the open ordering question below; it pins today's answer so the question cannot be settled silently.
-- [ ] 5.6.2 Re-prove the same three clauses on the eight-lane runtime once 5.1.2/5.2 have swapped it in.
+- [x] 5.6.2.1 Wire the central-integrity fail-closed to the entry gate on today's runtime (human decision (6), 2026-09-30). **(Landed 2026-09-30.)**
+
+  **Split note, 2026-09-30 (Manager 판정 Q3).** 원문 5.6.2(아래)는 「여덟 레인 런타임에서 세 절을 다시 증명」이다. 사람 결정 (6) 은 그 앞에 한 가지를 정했다: fail-closed 의 수단은 프로세스 정지가 아니라 `execgw.EntryGate.Block`. 이 태스크는 그 배선 하나를 오늘 런타임 위에 세운다. **원문 5.6.2 의 절은 전부 5.6.2.2 가 가진다**(재증명이 본문이므로) — 이 태스크는 결정 (6) 의 배선만 가진다.
+
+  **무엇이 바뀌었나.** `runMarket` B12(권한 갱신 전용 worker 갈래 — 오늘 생산이 도는 유일한 구성) 안에 새 분기 B13: 중앙 무결성 오류면 `blockEntryOnCentralIntegrity` 가 `ReasonStrategyCentralIntegrity`(`strategy_central_integrity`, 커밋 `3260f4eb`)로 신규 진입을 닫고 `continue` — 루프는 산다. 판정 순서(refreshOnly 가 중앙 판정보다 앞)는 그대로다. 게이트가 없는 조립에서만 기존의 프로세스 전체 fail-closed 로 올리고, 생산 생성자(`NewRefreshingPairedStrategyEntrySupervisor`)는 게이트 없는 Context 를 거절하며 엔진 자신의 게이트를 넘긴다(같은 게이트를 이미 요구하는 `Recovery` 가 앞에 있어 생산 기동 동작 변화 0). effective worker 의 중앙 고장(B14)과 감독자 장부 고장 넷의 엔진 정지는 census 가 얼린 계약이라 바꾸지 않았다(Manager 판정 Q1 = 안 1).
+
+  **RED · 반증.** `analysis/measurements/lot-5.6.2-5.2.2/red-5.6.2.1.log`: 게이트 잠김 · 엔진 불정지 · 두 시장 계속(한 시험), 게이트 없는 조립의 삼킴 금지, 생산 생성자의 게이트 요구 · 역할(엔진 자신의 게이트) — 넷 FAIL, 대조(보통 오류는 게이트를 잠그지 않음)는 GREEN. 변이 E01~E11 11/11 CAUGHT(`analysis/harness/a112_lot_mutate.py --set 5.6.2.1`, HEAD archive + 이 로트 파일 사본, 무변이 대조군 GREEN). 편집 전 번들 `analysis/measurements/lot-5.6.2-5.2.2/pre-edit/`, 편집 뒤 재측정 `coverage-post-5.6.2.1-engine.json`.
+
+  **이 태스크가 주장하지 않는 것.** 여덟 레인 재증명(fault 스트림 용량 = 레인 수 유도 · 레인 고장 여덟 동시에도 fill/reconcile/exit 생존) — 5.6.2.2. effective worker 활성화 시 중앙 고장의 처분(B14) — 이월(review).
+- [ ] 5.6.2.2 Re-prove the same three clauses on the eight-lane runtime once 5.1.2/5.2 have swapped it in. **(Owns every clause of the original 5.6.2 — split 2026-09-30; runs after 5.2.2.)**
 
   **Why it is open.** Every property 5.6.1 measured is a property of *two market workers driven by one consumer goroutine each*. The swap changes the number, the drivers and the fault sources. Concretely, three things measured here are known to need re-deriving: the fault-stream capacity equals the worker count (2 today, 8 after); the refresh-only swallow at `813:4` is the production configuration today and will not be after; and "each market latches at most once" is what makes the handoff `default` arm unreachable.
 

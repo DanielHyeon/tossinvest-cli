@@ -48,25 +48,25 @@ c.strategyRefreshAt = now
 
 ## Branches and early returns
 
-- Exact AST return nodes: `551:3, 559:3, 562:3, 566:2, 567:3`.
+- Exact AST return nodes: `567:3, 575:3, 578:3, 582:2, 583:3`.
 
 | Branch | AST kind | Source location | Test disposition |
 |---|---|---|---|
-| B1 | if— `c` 또는 시계가 없다 | 550:2 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestARefreshWithoutAClockRefusesBeforeItCanMintAWave` |
-| B2 | if— 창 안의 캐시가 있다 | 558:2 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
-| B3 | if— 지도자가 아니다 (파도에 합류) | 561:2 | arm entered 5x (engine tagged suite); arm entered 5x (engine untagged suite); `TestAFailedWaveCarriesNoAssemblyForEitherMarket`, `TestAFailedWaveReachesEveryMarketAndIsNeverCached`, `TestAMarketWaitingOnTheWaveLeavesWhenItsOwnCycleIsCancelled`, `TestAPanickingWaveNeverStrandsTheMarketsWaitingOnIt`, `TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns` |
+| B1 | if— `c` 또는 시계가 없다 | 566:2 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestARefreshWithoutAClockRefusesBeforeItCanMintAWave` |
+| B2 | if— 창 안의 캐시가 있다 | 574:2 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
+| B3 | if— 지도자가 아니다 (파도에 합류) | 577:2 | arm entered 5x (engine tagged suite); arm entered 5x (engine untagged suite); `TestAFailedWaveCarriesNoAssemblyForEitherMarket`, `TestAFailedWaveReachesEveryMarketAndIsNeverCached`, `TestAMarketWaitingOnTheWaveLeavesWhenItsOwnCycleIsCancelled`, `TestAPanickingWaveNeverStrandsTheMarketsWaitingOnIt`, `TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns` |
 
 ## Calls and live bindings
 
 | Callee expression | Source location | Note |
 |---|---|---|
-| errors.New | 551:45 | B1 의 거절 |
-| UTC | 553:9 | 창을 재는 시각을 UTC 로 고정한다 |
-| clk.Now | 553:9 | 창을 재는 유일한 시각. 잠금 **밖**에서 읽는다 |
-| c.joinStrategyRefreshWave | 557:26 | 잠금 안에서 하는 일의 전부 |
-| awaitStrategyRefreshWave | 562:10 | 채널에서 기다린다 — `ctx` 를 함께 본다 |
-| c.collectStrategyRefreshWave | 566:9 | 지도자의 자리. 잠금 밖 |
-| c.NewPairedStrategyEntryProductionAssembly | 567:10 | 원격 파도 본체. 클로저 안이므로 `collect` 인자로 넘어간다 |
+| errors.New | 567:45 | B1 의 거절 |
+| UTC | 569:9 | 창을 재는 시각을 UTC 로 고정한다 |
+| clk.Now | 569:9 | 창을 재는 유일한 시각. 잠금 **밖**에서 읽는다 |
+| c.joinStrategyRefreshWave | 573:26 | 잠금 안에서 하는 일의 전부 |
+| awaitStrategyRefreshWave | 578:10 | 채널에서 기다린다 — `ctx` 를 함께 본다 |
+| c.collectStrategyRefreshWave | 582:9 | 지도자의 자리. 잠금 밖 |
+| c.NewPairedStrategyEntryProductionAssembly | 583:10 | 원격 파도 본체. 클로저 안이므로 `collect` 인자로 넘어간다 |
 
 ## State mutations and fallbacks
 
@@ -91,3 +91,5 @@ c.strategyRefreshAt = now
 - 반증 16개 전부 CAUGHT, 대조군 2개 SURVIVED(의도). 그중 M10b(발표가 `done` 을 먼저 닫고
   값을 나중에 쓴다)는 `-race` **없이는 초록**이고 `-race` 로만 빨갛다 — 그래서 이 로트가
   `make test-race` 에 이 패키지의 동시성 시험을 이름으로 배선했다.
+
+> **5.6.2.1(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일의 다른 함수 편집으로 +16줄 이동 · 파일 해시만 바뀜). 분기 좌표는 `ast.json` 이 정본.

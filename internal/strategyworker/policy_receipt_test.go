@@ -394,7 +394,7 @@ func TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter(t *testi
 	// `latchMarket` 에 닿는다. 참인 것은 더 좁다: 삼킴 **갈래**(`runMarket` B12)가
 	// 사이클 오류의 잠금 호출 앞에서 `continue` 로 끊는다는 것, 그리고 그 계약을
 	// TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError 와
-	// TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo 가 못 박는다는 것.
+	// TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning 이 못 박는다는 것(5.6.2.1 부터 중앙 무결성 오류는 삼키지 않고 진입 게이트를 닫는다 — 잠금 판정은 여전히 안 함).
 	//
 	// 그래서 임계값 1 의 유도 — **잠금은 세지 않고 첫 실패에 일어난다** — 는
 	// 그대로다. 그것이 무너지는 날은 삼킨 수가 잠금 판정에 들어가는 날이고, 그때는

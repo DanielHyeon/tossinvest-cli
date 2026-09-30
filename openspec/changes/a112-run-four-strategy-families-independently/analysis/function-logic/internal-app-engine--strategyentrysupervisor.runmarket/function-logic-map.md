@@ -3,11 +3,13 @@
 - Source: `internal/app/engine/strategy_entry_supervisor.go`
 - AST evidence: `ast.json`
 - Risk scan: `risk-pattern-report.md`
-- Revision: **modified (태스크 8.8.4, 2026-09-05).** 그전까지 base 였고, 처음에는
-  태스크 5.3.2 가 이 루프를 영수증으로 인용하려고 만든 번들이었다. 8.8.4 가 B12 에
-  기록 호출 하나를 더했다 — 버리기 **전에** 센다. 삼킴 자세(`continue`, 잠그지 않음,
-  갈래 순서)는 바꾸지 않았고 그것을 못 박는 기존 시험 둘이 그대로 통과한다.
-- Source SHA-256: `c2a825fceac8692f865d89ae61b736d9a43ad10e0b5dec4968cfac304c93555a`
+- Revision: **modified (태스크 5.6.2.1, 2026-09-30).** 그 앞 편집은 8.8.4(2026-09-05 — B12 에 기록 호출). 5.6.2.1 은 B12
+  본문 안에 새 분기 B13 을 넣었다: 중앙 무결성 오류면 `blockEntryOnCentralIntegrity`(새 함수 — base 에 없어 FLM
+  `not-applicable`)가 신규 진입을 닫고 `continue`, 게이트가 없을 때만 `signalCentral` → `return`. 사람 결정 (6): fail-closed 의
+  수단은 EntryGate. 판정 순서(refreshOnly 가 중앙 판정보다 앞)는 루프 생존을 위해 그대로다. 편집 전 번들
+  `analysis/measurements/lot-5.6.2-5.2.2/pre-edit/`. 재번호는 `branch-test-map.md` 머리글.
+- Source SHA-256: `da4fa6d1b57217a08a05d0ae57a4f4be1e3c173c35947e06527b02014ae75b23` · 범위 :878–964 · 분기 17
+- **아래 표의 줄 번호(`:770` 등)는 5.3.2 작성 당시 좌표다** — 현재 좌표는 `ast.json`(정본)과 `branch-test-map.md`.
 
 ## Inputs and invariants
 
@@ -42,41 +44,44 @@ goroutine 이 **하나**이고, 사이클은 `<-worker.queue` 를 다시 읽기 
 | B9 (`:804`) | `abandoned` | `s.markAbandoned` | 계속 | 4 개 시험 |
 | B10 (`:807`) | `cancelled` | 없음 | `return` | 3 개 시험 |
 | B11 (`:810`) | `err == nil` | 없음 | `continue` | 3 개 시험 |
-| B12 (`:813`) | `refreshOnly` — 권한 갱신 전용 worker 의 오류 | `recordSwallowedCycleError` (포화 계수 + 첫 원인 보존) | `continue` — **잠그지 않는다** | 스냅샷의 `SwallowedCycleErrors`·`FirstSwallowedFailure` (8.8.4) |
-| B13 (`:816`) | 중앙 무결성 오류 | `s.signalCentral` | `return` — 모든 신규 진입 정지 | `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety` |
-| B14 (`:821`) | 잠금 자체가 실패 | `s.signalCentral` | `return` | **없음 — 측정으로 확인** |
-| B15 (`:825`) | 재시작 대기 실패 | 조건부 `signalCentral` | `return` | **없음 — 측정으로 확인(`:829` 블록)** |
-| B16 (`:826`) | 그 실패가 ctx 취소 때문 | 없음 | 조용한 `return` | 4 개 시험 |
+| B12 (`:813`) | `refreshOnly` — 권한 갱신 전용 worker 의 오류 | `recordSwallowedCycleError` (포화 계수 + 첫 원인 보존) | `continue` — **시장을 잠그지 않는다** | 스냅샷의 `SwallowedCycleErrors`· |
+| **B13 (새, 5.6.2.1)** | B12 안: `isCentralStrategyIntegrity(err) && !s.blockEntryOnCentralIntegrity(worker)` | 게이트가 있으면 `EntryGate.Block(ReasonStrategyCentralIntegrity, 고정 문구)` 뒤 조건 거짓 → `continue` | 게이트가 없을 때만 `signalCentral` → `return` | `TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine` · `TestWithoutAnEntryGateACentralFaultIsNotSwallowed` · 대조 `TestAnOrdinaryRefreshOnlyCycleErrorDoesNotBlockEntry` |
+| B14 (옛 B13, `:816`) | (effective worker) 중앙 무결성 오류 | `s.signalCentral` | `return` — 프로세스 전체 fail-closed(생산 0 — 활성화 로트 전 처분은 이월 표) | `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety` |
+| B15 (옛 B14, `:821`) | 잠금 자체가 실패 | `s.signalCentral` | `return` | 5.6.1 이 채움(`TestTheFourEscalations…`) |
+| B16 (옛 B15, `:825`) | 재시작 대기 실패 | 조건부 `signalCentral` | `return` | 5.6.1 이 채움 |
+| B17 (옛 B16, `:826`) | 그 실패가 ctx 취소 때문 | 없음 | 조용한 `return` | 4 개 시험 |
 
 ## Calls and live bindings
 
-표는 `ast.json` 의 `calls` 를 그 순서 그대로 생성한 것이다. 손으로 고른 목록이 아니다.
+표는 `ast.json` 의 `calls` 를 그 순서 그대로 생성한 것이다(5.6.2.1 편집 뒤 재생성). 손으로 고른 목록이 아니다.
 
-| Callee expression | Position | Why called / contract |
-|---|---|---|
-| `ctx.Done` | 863:9 | 배리어 전 취소 |
-| `ctx.Done` | 869:10 | 루프마다 취소 확인 |
-| `s.mu.RLock` | 873:4 | `refreshOnly` 를 읽기 위한 공유 잠금 |
-| `s.mu.RUnlock` | 875:4 | 같은 잠금 해제 |
-| `s.evaluationState` | 876:24 | 이 사이클을 돌려도 되는지 + 권한 만료 여부 |
-| `s.latchMarket` | 878:30 | 권한 만료로 시장 진입 잠금 |
-| `s.signalCentral` | 880:6 | 잠금 자체가 실패하면 중앙 고장 |
-| `s.waitMarketRestart` | 883:15 | backoff 만큼 대기 |
-| `ctx.Err` | 884:9 | 그 대기 실패가 취소 때문인지 |
-| `s.signalCentral` | 887:6 | 아니면 중앙 고장 |
-| `invokeBoundedStrategyCycle` | 895:43 | **마감 시한 아래 사이클 한 번.** 이 함수의 유일한 호출자다(CodeGraph) |
-| `s.markAbandoned` | 897:5 | 마감 시한을 넘긴 사이클을 버려진 것으로 표시 |
-| `s.recordSwallowedCycleError` | 916:5 | **버리기 전에 센다** (8.8.4). `continue` 도 갈래 순서도 바꾸지 않는다 — 더한 것은 기록뿐이다 |
-| `isCentralStrategyIntegrity` | 919:7 | 원장·게이트웨이·펜스·소유자 무결성 오류인지 |
-| `s.signalCentral` | 920:5 | 그러면 모든 신규 진입을 멈춘다 |
-| `s.latchMarket` | 923:29 | 보통 오류로 시장 진입 잠금 |
-| `s.signalCentral` | 925:5 | 잠금 자체가 실패하면 중앙 고장 |
-| `s.waitMarketRestart` | 928:14 | backoff 만큼 대기 |
-| `ctx.Err` | 929:8 | 그 대기 실패가 취소 때문인지 |
-| `s.signalCentral` | 932:5 | 아니면 중앙 고장 |
+| Callee expression | Position |
+|---|---|
+| `ctx.Done` | 880:9 |
+| `ctx.Done` | 886:10 |
+| `s.mu.RLock` | 890:4 |
+| `s.mu.RUnlock` | 892:4 |
+| `s.evaluationState` | 893:24 |
+| `s.latchMarket` | 895:30 |
+| `s.signalCentral` | 897:6 |
+| `s.waitMarketRestart` | 900:15 |
+| `ctx.Err` | 901:9 |
+| `s.signalCentral` | 904:6 |
+| `invokeBoundedStrategyCycle` | 912:43 |
+| `s.markAbandoned` | 914:5 |
+| `s.recordSwallowedCycleError` | 933:5 |
+| `isCentralStrategyIntegrity` | 940:8 |
+| `s.blockEntryOnCentralIntegrity` | 940:44 |
+| `s.signalCentral` | 941:6 |
+| `isCentralStrategyIntegrity` | 946:7 |
+| `s.signalCentral` | 947:5 |
+| `s.latchMarket` | 950:29 |
+| `s.signalCentral` | 952:5 |
+| `s.waitMarketRestart` | 955:14 |
+| `ctx.Err` | 956:8 |
+| `s.signalCentral` | 959:5 |
 
-Exact AST return positions: 864:3, 870:4, 881:6, 885:7, 888:6, 900:5, 921:5, 926:5, 930:6, 933:5.
-
+Exact AST return positions: 881:3, 887:4, 898:6, 902:7, 905:6, 917:5, 942:6, 948:5, 953:5, 957:6, 960:5.
 
 ## State mutations and fallbacks
 
@@ -89,7 +94,7 @@ Exact AST return positions: 864:3, 870:4, 881:6, 885:7, 888:6, 900:5, 921:5, 926
 
 ## Safety conclusion
 
-- Safe edit boundary: 이 change 는 이 함수를 편집하지 않는다. 인용만 한다.
+- Safe edit boundary: 5.6.2.1 은 B12 안에 B13 하나만 더했다 — 판정 순서 · 다른 열여섯 분기 · 시장 잠금 규칙 불변. 중앙 무결성 오류가 신규 진입을 닫는 것은 보수 방향(진입만 줄임)이고 청산 · 손절 루프는 영향 없음(Run 불반환).
 - High-risk impact: yes — 진입 잠금과 중앙 고장 전파가 여기 있다.
 - **인용해 가는 계약 셋:** (1) 단일 비행은 플래그가 아니라 소비자 goroutine 하나로
   성립한다, (2) 카덴스 기준점은 사이클 완료가 아니라 투입 시도다, (3) 넘친 투입의

@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_entry_supervisor.go",
-  "source_sha256": "9d97e59cf36590ade76b3e4804134b9ee66b3af1f8efa409e2f41222d5579b4f",
+  "source_sha256": "da4fa6d1b57217a08a05d0ae57a4f4be1e3c173c35947e06527b02014ae75b23",
   "package": "engine",
   "function": "runProductionStrategyMarketCycle",
   "receiver": "Context",
   "signature": "Context.runProductionStrategyMarketCycle(params=3, results=1)",
   "start": {
-    "line": 480,
+    "line": 496,
     "column": 1
   },
   "end": {
-    "line": 547,
+    "line": 563,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 482,
+        "line": 498,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 506,
+        "line": 522,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 509,
+        "line": 525,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 515,
+        "line": 531,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 535,
+        "line": 551,
         "column": 3
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 538,
+        "line": 554,
         "column": 3
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 542,
+        "line": 558,
         "column": 3
       }
     }
@@ -75,28 +75,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 483,
+        "line": 499,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 507,
+        "line": 523,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 513,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 516,
+        "line": 529,
         "column": 3
       }
     },
@@ -104,34 +97,41 @@
       "kind": "return",
       "at": {
         "line": 532,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 548,
         "column": 2
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 536,
+        "line": 552,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 539,
+        "line": 555,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 543,
+        "line": 559,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 545,
+        "line": 561,
         "column": 3
       }
     }
@@ -140,7 +140,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 481,
+        "line": 497,
         "column": 16
       },
       "text": "c.refreshPairedStrategyEntryProductionAssembly"
@@ -148,7 +148,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 505,
+        "line": 521,
         "column": 16
       },
       "text": "c.productionStrategyLanes"
@@ -156,7 +156,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 509,
+        "line": 525,
         "column": 12
       },
       "text": "lanes.evaluate"
@@ -164,7 +164,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 510,
+        "line": 526,
         "column": 3
       },
       "text": "restore.Activation.Generation"
@@ -172,7 +172,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 510,
+        "line": 526,
         "column": 3
       },
       "text": "fresh.schedule.forMarket"
@@ -180,7 +180,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 511,
+        "line": 527,
         "column": 3
       },
       "text": "familyActivation"
@@ -188,7 +188,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 511,
+        "line": 527,
         "column": 3
       },
       "text": "fresh.proposals.forMarket"
@@ -196,7 +196,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 512,
+        "line": 528,
         "column": 3
       },
       "text": "strategyLaneInputs"
@@ -204,7 +204,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 512,
+        "line": 528,
         "column": 36
       },
       "text": "fresh.proposals.forMarket"
@@ -212,7 +212,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 532,
+        "line": 548,
         "column": 9
       },
       "text": "Deliver"
@@ -220,7 +220,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 532,
+        "line": 548,
         "column": 9
       },
       "text": "dispatchHandoff"
@@ -228,7 +228,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 532,
+        "line": 548,
         "column": 9
       },
       "text": "fresh.proposals.forMarket"
@@ -236,7 +236,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 533,
+        "line": 549,
         "column": 14
       },
       "text": "delivered.Result"
@@ -244,7 +244,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 534,
+        "line": 550,
         "column": 15
       },
       "text": "c.Journal.CurrentPositionCampaignCAS"
@@ -252,7 +252,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 534,
+        "line": 550,
         "column": 77
       },
       "text": "string"
@@ -260,7 +260,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 541,
+        "line": 557,
         "column": 12
       },
       "text": "fresh.dispatch.dispatch"
@@ -268,7 +268,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 542,
+        "line": 558,
         "column": 6
       },
       "text": "errors.Is"
@@ -278,42 +278,42 @@
     {
       "kind": ":=",
       "at": {
-        "line": 481,
+        "line": 497,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 505,
+        "line": 521,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 509,
+        "line": 525,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 533,
+        "line": 549,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 534,
+        "line": 550,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 541,
+        "line": 557,
         "column": 3
       }
     }

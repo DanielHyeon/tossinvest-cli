@@ -1,6 +1,6 @@
 # Branch Test Map: `StrategyEntrySupervisor.Snapshot`
 
-- Source SHA-256: `9d97e59cf36590ade76b3e4804134b9ee66b3af1f8efa409e2f41222d5579b4f`; AST branch locations are authoritative.
+- Source SHA-256: `da4fa6d1b57217a08a05d0ae57a4f4be1e3c173c35947e06527b02014ae75b23`; AST branch locations are authoritative.
 - Revision: **modified (태스크 8.8.4, 2026-09-05)** — 한 줄 편집. 분기는 둘이고 편집
   전후 같다(AST 로 확인). 새 분기는 새 leaf 함수
   `StrategyEntrySupervisor.recordSwallowedCycleError` 안에 있으며 그 함수는 frozen
@@ -8,6 +8,6 @@
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 735:2 — nil 감독자이거나 열거 밖 시장 | 기존 감독자 시험이 `Snapshot` 을 알 수 없는 시장으로 부른다 | no (base) | yes |
-| B2 | if at 741:2 — 등록되지 않은 시장 | 같음 | no (base) | yes |
-| 정상 경로 (`744:2`) | 등록된 시장의 상태를 읽어 낸다. 8.8.4 가 여기에 `SwallowedCycleErrors`·`FirstSwallowedFailure` 를 실었다 | `TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows` | **yes (8.8.4)** — 새 시험이 `SwallowedCycleErrors` 미정의로 컴파일 실패 | yes. 반증 셋 CAUGHT: 기록 호출 삭제 · 첫 원인 덮어쓰기 · 모든 시장을 함께 세기 |
+| B1 | if at 752:2 — nil 감독자이거나 열거 밖 시장 | 기존 감독자 시험이 `Snapshot` 을 알 수 없는 시장으로 부른다 | no (base) | yes |
+| B2 | if at 758:2 — 등록되지 않은 시장 | 같음 | no (base) | yes |
+| 정상 경로 (`761:2`) | 등록된 시장의 상태를 읽어 낸다. 8.8.4 가 여기에 `SwallowedCycleErrors`·`FirstSwallowedFailure` 를 실었다 | `TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows` | **yes (8.8.4)** — 새 시험이 `SwallowedCycleErrors` 미정의로 컴파일 실패 | yes. 반증 셋 CAUGHT: 기록 호출 삭제 · 첫 원인 덮어쓰기 · 모든 시장을 함께 세기 |

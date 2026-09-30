@@ -1,12 +1,12 @@
-# Branch Test Map: `NewRefreshingPairedStrategyEntrySupervisor`
+# Branch Test Map: `Context.NewRefreshingPairedStrategyEntrySupervisor`
 
-- Source SHA-256: `627c647d087032586c4b63ca315a30fd9fad6b51af329fa4e8bf4fecd7104e08`; AST branch locations are authoritative.
-- L0 did not alter this function and does not claim an existing test covers a branch.
+- Source SHA-256: `da4fa6d1b57217a08a05d0ae57a4f4be1e3c173c35947e06527b02014ae75b23`; AST branch locations are authoritative.
+- Revision: **modified (태스크 5.6.2.1, 2026-09-30).** (5.6.2.1) 새 B2 `if c.Entry == nil` — 진입 게이트 없는 Context 에서는 생산 감독자를 만들지 않는다(그 조립에서는 중앙 무결성 고장이 진입이 아니라 프로세스를 닫게 되므로). 감독자 옵션에 `EntryGate: c.Entry`. 편집 전 B2 · B3 → B3 · B4. 편집 전 번들은 `analysis/measurements/lot-5.6.2-5.2.2/pre-edit/`.
+- 측정: `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`(격리 사본, `./internal/app/engine` 시험 109개를 하나씩).
 
-| Branch | Scenario anchor | Required test disposition | RED observed | GREEN observed |
+| Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 379:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B2 | range at 383:2 | planned targeted RED before any edit; not run by L0 | no | no |
-| B3 | if at 395:2 | planned targeted RED before any edit; not run by L0 | no | no |
-
-A lot may replace a planned row only after recording its exact test name and actual RED/GREEN command result.
+| B1 | if at 391:2 — nil Context · nil 시계 → 거절 | (측정 표본 0) | 해당 없음(분기 불변) | 측정 표본의 시험 0개(블록 좌표 없거나 미실행) |
+| B2 | if at 395:2 — (새) 진입 게이트 없음 → `ErrRuntimeUnavailable` | `TestTheProductionStrategySupervisorRefusesAContextWithoutAnEntryGate` | B2: `red-5.6.2.1.log`(`TestTheProductionStrategySupervisorRefusesAContextWithoutAnEntryGate` FAIL) · 변이 E07; 옵션 전달: `TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate` FAIL · 변이 E06 | yes (block 395.20-397.3, 시험 1개) |
+| B3 | range at 399:2 — KR · US 권한 갱신 전용 worker 둘 | `TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate` | 해당 없음(분기 불변) | yes (block 399.78-403.48, 시험 1개) |
+| B4 | if at 411:2 — 감독자 생성 실패 → 오류 | (측정 표본 0) | 해당 없음(분기 불변) | 측정 표본의 시험 0개(블록 좌표 없거나 미실행) |

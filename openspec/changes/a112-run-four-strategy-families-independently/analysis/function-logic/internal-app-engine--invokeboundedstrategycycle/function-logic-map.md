@@ -32,20 +32,20 @@
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `make` | 1005:12 | 결과 채널. 버퍼 1 이라 늦게 끝난 사이클이 goroutine 을 붙잡지 않는다 |
-| `(unnamed)` | 1006:5 | 사이클 goroutine. **이 goroutine 은 마감 시한에 취소되지 않는다** |
-| `invokeStrategyCycle` | 1007:13 | panic 을 `abnormal=true` 인 error 로 바꾼다 |
-| `context.WithCancel` | 1009:33 | 감시견 전용 취소 문맥 |
-| `cancelWatchdog` | 1010:8 | `defer` — 감시견 goroutine 누수를 막는다 |
-| `make` | 1011:14 | 감시견 채널. 버퍼 1 |
-| `(unnamed)` | 1012:5 | 감시견 goroutine |
-| `clk.Sleep` | 1012:26 | **마감 시한 그 자체.** `time.After` 가 아니라 주입 시계(`internal/clock`)다 |
-| `ctx.Done` | 1014:9 | 상위 취소 관측 |
-| `ctx.Err` | 1015:10 | 취소 사유를 그대로 돌려준다 |
-| `ctx.Err` | 1019:6 | 마감 시한이 울린 뒤 상위가 이미 취소되었는지 |
-| `ctx.Err` | 1020:11 | 그 경우 마감 시한이 아니라 취소를 돌려준다 |
+| `make` | 1048:12 | 결과 채널. 버퍼 1 이라 늦게 끝난 사이클이 goroutine 을 붙잡지 않는다 |
+| `(unnamed)` | 1049:5 | 사이클 goroutine. **이 goroutine 은 마감 시한에 취소되지 않는다** |
+| `invokeStrategyCycle` | 1050:13 | panic 을 `abnormal=true` 인 error 로 바꾼다 |
+| `context.WithCancel` | 1052:33 | 감시견 전용 취소 문맥 |
+| `cancelWatchdog` | 1053:8 | `defer` — 감시견 goroutine 누수를 막는다 |
+| `make` | 1054:14 | 감시견 채널. 버퍼 1 |
+| `(unnamed)` | 1055:5 | 감시견 goroutine |
+| `clk.Sleep` | 1055:26 | **마감 시한 그 자체.** `time.After` 가 아니라 주입 시계(`internal/clock`)다 |
+| `ctx.Done` | 1057:9 | 상위 취소 관측 |
+| `ctx.Err` | 1058:10 | 취소 사유를 그대로 돌려준다 |
+| `ctx.Err` | 1062:6 | 마감 시한이 울린 뒤 상위가 이미 취소되었는지 |
+| `ctx.Err` | 1063:11 | 그 경우 마감 시한이 아니라 취소를 돌려준다 |
 
-Exact AST return positions: 1015:3, 1017:3, 1020:4, 1022:3.
+Exact AST return positions: 1058:3, 1060:3, 1063:4, 1065:3.
 
 
 ## State mutations and fallbacks
@@ -66,3 +66,5 @@ Exact AST return positions: 1015:3, 1017:3, 1020:4, 1022:3.
   설계 문서의 고장표(`design.md:198`)는 deadline 을 "보통 오류 — 세고 다시 시도"
   줄에 두었으므로 **두 정본이 갈린다.** 생산 임계값이 1 이라 오늘은 두 해석의
   결과가 같지만, 임계값이 1 보다 커지는 순간 갈라진다.
+
+> **5.6.2.1(2026-09-30) 재추출** — 이 함수 본문 · 분기 종류 불변(같은 파일의 다른 함수 편집으로 +43줄 이동 · 파일 해시만 바뀜). 분기 좌표는 `ast.json` 이 정본.
