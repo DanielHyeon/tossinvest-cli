@@ -9,7 +9,7 @@
 
 ## 0. 게이트 선행
 
-- [ ] 0.0 **a092 아카이브 확인** — C1 발효 조건. exit 관측 goroutine의 critical이
+- [x] 0.0 **[2026-10-01] 확인 — 아카이브 `75d138b5` 가 새 base 의 조상, review 2차 판 0.0.** **a092 아카이브 확인** — C1 발효 조건. exit 관측 goroutine의 critical이
       기록까지만 동기임이 정본이 된 뒤에만 진행
 - [ ] 0.1 `capture_change_base.py --change a091-a-stop-that-sold-nothing-is-critical`
       (base 재고정 — WORKFLOW 「사람 승인 base 재고정」 절차)

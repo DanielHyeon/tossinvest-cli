@@ -132,3 +132,32 @@ outbox 1행 + `alert_undelivered` ERROR 13줄 + 게이트 13회 래치다.
 앞의 넷은 증거가 틀렸다. 이번엔 **증거는 맞고 읽기가 얕았다.** FLM은 함수 경계에서
 멈추지만 §0.3은 경계를 넘는다 — 반환값이 아니라 **부작용의 예산**을 따라가야 한다.
 다음 FLM은 calls 표의 timeout/retry 칸을 반드시 수치로 채운다.
+
+---
+
+# 2차 판 — 재freeze (2026-10-01~)
+
+## 착수 승인 기록
+
+- **Manager 배정 원문 (2026-10-01)**: 「다음 배정: a091-a-stop-that-sold-nothing-is-critical 재freeze → (통과 시) 구현. … 발효 조건(C1 = a092 완주)이
+  a092 아카이브로 성립했다. … 0.0 a092 아카이브 확인 → 0.1 base 재고정(WORKFLOW 절차·영수증·승인 참조는 형제 로트 규격). 0.2 spec delta 재기저화 …
+  0.3 FLM 재검증 … calls 표의 timeout/retry 칸을 수치로 … 0.4 validate → 0.5 freeze 적대 재리뷰(분리 보이스, codex 는 슬롯 요청제) → 0.6 check_analysis.
+  freeze 통과 보고 → 내 승인 → 구현」. 승인 참조: 사용자 상임 오케스트레이션 지시(구현은 Teammate 위임, Manager 스케줄링). 실행: 팀메이트(Opus).
+
+## 0.0 발효 조건 C1 — a092 아카이브 확인
+
+- `openspec/changes/archive/2026-09-30-a092-an-alert-does-not-hold-the-stop/` 실재, 아카이브 커밋 `75d138b5`(2026-09-30 17:55 KST)가 새 base `b30318d6` 의
+  조상이다(`git merge-base --is-ancestor`). 정본 engine-safety 「등급화된 알림」 은 a092 문단(기록 입구 · 배달 실행자 · 재알림 창)을 담은 판이다 — 0.2 가 그 위에 재기저화한다.
+
+## 0.1 base 재고정 `ec29dc72` → `b30318d6` (WORKFLOW 「사람 승인 base 재고정」)
+
+- **조건 ① 귀속 실측**: 옛 base `ec29dc72..b30318d6` 은 696+ 커밋. a091 디렉터리를 만진 비병합 커밋 = `989ab031`(2판 재작성, `.go` 0) · `a30eb35a`(`.go` 6).
+  `a30eb35a` 는 a091 디렉터리를 **처음 들인 묶음 커밋**(「fix(safety): bound alerts and plan exit hardening」 — a087 · a089 · a091 · a092 · a094 · a095 · a096 문서를
+  함께 추가)이고 그 `.go` 6 은 전부 a096 몫이다: `internal/journal/a096_claim_for_delivery_test.go` · `a096b_round2_test.go` · `internal/obs/a096_one_send_per_condition_test.go` ·
+  `a096b_round2_test.go` · `internal/journal/outbox.go` · `internal/obs/notifier.go` — 뒤 둘의 편집 함수는 a096 번들(아카이브 `2026-08-29-a096-one-condition-is-one-alert`:
+  `journal.claimalertfordelivery` · `enqueuealert` · `markalertdelivered` · `claimowed` · `notifier.deliver` · `notify` · `notifycritical` · `claimanddeliver` · `flush` · `acknowledge`)이 덮는다.
+  **a091 자기 Go 편집 0**(a091 은 구현 전이다). renumber 이력 없음(`git log --follow` 두 커밋).
+- **옛 base 에서의 판정**: 깨끗한 격리 워크트리 @ `b30318d6` 에서 `check_analysis` — required **325**(전부 base 뒤 형제 착지 몫 — a091 Go 0) · 번들 2 stale
+  (`exitloop.go` · `event.go`). 원문 `analysis/rebase/check-oldbase-ec29dc72-at-b30318d6.txt`.
+- **조건 ② 승인**: 위 「착수 승인 기록」 의 Manager 배정 원문(0.1 base 재고정 지시).
+- **조건 ③**: 다음 커밋이 `base-commit.txt` 한 파일.
