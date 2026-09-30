@@ -2,8 +2,9 @@
 
 - Source: `internal/app/engine/exitloop.go` (`413`–`470`)
 - Qualified: `ExitObserver.ObserveOnce`
-- AST evidence: `ast.json` (`source_sha256` 522d5d81c4992c57…) — branches 8 · returns 5 · calls 16 · assignments 15
+- AST evidence: `ast.json` (`source_sha256` 2d34b5c57f25a2c8… — base `2f698db6`) — branches 8 · returns 5 · calls 16 · assignments 15
 - Risk scan: `risk-pattern-report.md`
+- **base 재고정(2026-09-30, `1ffe2295` → base `2f698db6`)**: `ast.json` 을 새 base 소스로 재추출했다. `exitloop.go` sha256 은 `2d34b5c5…`(a092 의 `checkOutage`·`alert` 편집)로 바뀌었으나 **이 함수의 AST 는 옛 base `d3bd1843` 판과 필드 단위로 같다**(start·end·branches·returns·calls·assignments 동일 — 비교 스크립트 결과) — 아래 줄 좌표·분기 번호는 그대로 유효하다.
 - 작성 시점: **proposal 단계(구현 전)**. 이 함수의 분기를 근거로 삼는 a090 문서보다 먼저 만들었다.
 - 선행 산출물: a092 의 같은 함수 번들(`openspec/changes/a092-an-alert-does-not-hold-the-stop/analysis/function-logic/
   internal-app-engine--exitobserver.observeonce/`)은 **7 분기** 판이다. 그 뒤 a111(`882a0b49`)이 `quoteUsable`

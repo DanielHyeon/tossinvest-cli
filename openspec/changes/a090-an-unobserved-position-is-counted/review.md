@@ -216,3 +216,69 @@ Manager 처분(2026-09-29). **설계 freeze 는 a092 와 독립, 구현은 a092 
 - 리뷰 이력: 적대 보이스 1 REJECT(1라운드) → codex 1 REJECT → 2 REJECT → 3 REJECT → **4(좁은 확인) PASS**. 결정 기록: Q1~Q3 · N1~N10 · R2-1~R2-6 · R3-1~R3-8 처분 · a092 교차(K6 · 세대 시점 · D14).
 - **freeze 게이트 줄**: tasks 0.1~0.3 · 0.5 · 0.5a · 0.6~0.6h 체크. 남은 선행(구현 전): 0.4 base 재고정(구현 로트 첫 행위) · 0.8 Q2 장중 실측(사전 승인) · **0.9 a092 `RecordAlert` 착지(하드)**.
 
+
+## 구현 로트 (2026-09-30) — base 재고정 · 좌표 대조 · Pre-Edit
+
+### 선행 게이트 상태
+
+- **0.4 base 재고정**: `1ffe2295`(단독 커밋) — `d3bd1843` → `2f698db6`. 귀속 실측: 옛 base 이후 a090 디렉터리를 만진 비병합 커밋 20 개, `.go` 편집 0.
+  옛 base 의 required 47 은 형제 착지 몫. 승인 참조: 사용자 상임 지시(WORKFLOW 「사람 승인 base 재고정」) + 2026-09-30 "남은것도 처리" 재개(Manager 지시).
+- **0.9 a092 입구 착지**: 작업 브랜치 `feat/a112-four-family-runtime` 에 착지·아카이브(`c6e2e3ac` 입구 · `75d138b5` archive). **로컬 `main` 참조(`62b35779`)에는
+  아직 없다** — 이 저장소의 착지 대상은 작업 브랜치이며 Manager 가 a092 정본 위에서 구현하라고 지시했다(2026-09-30). 입구의 실제 모양:
+  `Notifier.RecordCritical(ctx, e, remindAfter)`(`internal/obs/record_only.go:86-101`, 공개) → `recordCritical` 이 `n.mu` 아래 `Journal.RecordAlert`,
+  실패 시 `Gate.Block(ReasonAlertUndelivered)` + `n.escalate`(생산자 래치, `:136-158`).
+- **0.8 Q2 장중 실측**: **사람 항목으로 표기만** — 이 로트는 실행하지 않는다(Manager 2026-09-30 지시: 라이브 실측 실행 금지). 구현은 막히지 않는다(design Q2).
+
+### 코드 좌표 대조 (frozen 문서 ↔ base `2f698db6`) — 문서는 frozen, 정정은 여기에만
+
+`ObserveOnce`(413-470)·`workingSet`(493-612)의 AST 는 옛 base 판과 **필드 단위로 같다**(재추출 비교) — 분기 번호·줄 좌표 전부 유효.
+낡은 좌표:
+
+| frozen 문서의 좌표 | base `2f698db6` | 비고 |
+|---|---|---|
+| `exitloop.go:1076` `LeaseElapsed` | `:1081` | a092 편집으로 5줄 밀림 |
+| `exitloop.go:1730` 관측자 `logErr` 의 `FieldAccount` | `:1735` | 같음 |
+| 하류 임대 재검사 `:859` `:956` `:1027` `:1050` `:1180` | `:864` `:961` `:1032` `:1055` `:1185` | 같음(Q3 명명 잔여) |
+| `cmd/tossctl/engine.go:639` 생산 `Announcer` = Notifier | `:652-658` 는 `Announcer`·`Alerts` 를 넘기지 않음 — `Context.ExitObserver` 가 `obs.RecordOnly` 로 **덮는다**(`exitwiring.go:348-351`) | a092 C1 |
+| `internal/obs/mode.go:49-74` `AnnounceOperatingMode`(2 분기) · `:67` `FieldAccount` | `mode.go:48-54`(1 분기) · 사건 구성은 `operatingModeEvent`(`record_only.go:169-191`, `FieldAccount` `:184`) | **a092 K1 이 추출을 이미 했다** — a090 tasks 3.4 의 추출은 공개 래퍼 한 줄로 끝나고 이 함수는 편집 0 |
+| mode 공지 key `operating_mode:<account>:<mode>`(id 뺌) | `OperatingModeEventKey` = `operating_mode:<account>:<mode>:<전이 id>`(`record_only.go:164-166`) | a092 K1. a090 key(`operating_mode:<mode>:<전이 id>`)는 그대로 — 계좌만 뺀다 |
+| `internal/obs/notifier.go:262-280` 생산자 래치 | `record_only.go:136-158`(`recordCritical`) | a092 |
+| `notifier.go:385-396` 승격 로그(`:387`·`:394` 계좌) | `notifier.go:425-437`(`escalate`, `FieldAccount` `:434`) | D13 귀속 그대로(사용자 큐) |
+| `event.go:332` · `:348` | `:343`(표) · `:358`(`SeverityOf`) | |
+| `obs/alert_lease.go:57` "54s" | `:58` | |
+| `operating_mode.go:409-421` 무변화 전이 | `:415-421` | |
+
+### Pre-Edit Gate (tasks 1.0)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a090-an-unobserved-position-is-counted / 1.0 (구현 2.x · 3.x)
+- 대상 심볼(패키지.함수):
+    engine.ExitObserver.ObserveOnce (기존) — B6·B7 원인 기록 2 · 판정 진입 표시 1 · B3 앞 처리 1 · 순회 뒤 처리 1
+    engine.ExitObserver.workingSet (기존) — B6 통과 뒤 표시 1 · B10 첫 문장 해제 1
+    engine.ExitCycle · ExitObserver · ExitObserverOptions (구조체 필드: Unobserved int · 비공개 주기 집계 · 기록 맵 · UnobservedLog)
+    cmd/tossctl.engineRuntime (기존) — `UnobservedLog: logger` 한 줄
+    새 파일 internal/app/engine/exit_unobserved.go (새 함수만)
+    internal/obs: 새 공개 래퍼 OperatingModeEvent(새 함수) · 상수 EventExitPositionUnobserved
+    ※ Notifier.AnnounceOperatingMode 는 편집 0(a092 가 추출 완료 — 위 좌표 표)
+- CodeGraph (1.6.0, base 2f698db6 sync 뒤): callers ObserveOnce = Run(exitloop.go:354) · tracer Run(tracer.go:273) + 시험 6;
+    callers workingSet = ObserveOnce 하나; callers engineRuntime = cmd 시험 4 + engine.go(engineRuntimeFactory)
+- CodeGraphContext: advisory — update 가 300s 타임아웃(sdd-sync rc 2, 상습). 하드 증거는 CodeGraph + 현재 HEAD + AST. 설계 단계
+    evidence-reconciliation.md 의 결론(호출 사슬)은 AST 동일성으로 유지
+- 기존 동작 파악 근거: ObserveOnce·workingSet FLM/BTM(편집 전, AST 옛 base 와 동일) · engineRuntime FLM/BTM(1.1, a092 번들과 같은 sha) ·
+    a092 정본 「등급화된 알림」(exit 관측 goroutine critical 은 기록까지 동기 · 발송 임차 없음 · 세울 사유 없는 기록자는 알림기 기록 입구)
+- Function Logic Map / Branch Test Map: analysis/function-logic/ 네 번들
+- upstream 상속 테스트 영향: no — 새 필드·새 파일. 기존 시험 하네스의 Alerts(fakeAlerts)는 기록 입구를 갖지 않으므로 a090 알림·강화는 기존 시험에서
+    구조적으로 일어나지 않는다(2.0 전수 결과와 함께 R9 로 확인). 연속 id 가 opts.NewID 를 쓰므로 미관측 연속이 생기는 기존 시험의 intent id 순번이
+    밀릴 수 있다 — 전체 스위트로 확인
+- 실패 테스트 선행 작성: yes (2.1~2.17 RED 먼저)
+- 설정·DB·journal 변경과 rollback: 없음 — 스키마 0 · 토글 0 · 새 브로커 호출 0. 롤백 = 커밋 되돌림
+- 안전 불변식 §0 위반 여부 검토: 통과 — 판정·발의·주문 경로 편집 0(judge 이하 무편집), 새 알림은 순회 뒤·기록 전용(창 0),
+    강화는 조이기만, 새 로그·알림·공지에 계좌 없음. 직접 원장 기록자 없음(알림기 기록 입구 RecordCritical 만)
+```
+
+### 2.0 전수 검색 (F9)
+
+정적 전수(`internal/app/engine/*_test.go`, `h.entry`/`adopt*` 2개 이상 + `Advance`): **2** — `TestA111QuoteEvidenceUsesOnePostBatchClockAndNeverFallsBackFromBadOfficialTime`
+(`Advance(2s)`) · `TestA111SlowFirstPositionExpiresLaterQuoteWithoutAbandoningStartedProtection`(`16s`). 둘 다 60초 미만 — 경보·모드 단언이 바뀔 시험 0.
+보강: 기존 하네스의 `Alerts` 는 `fakeAlerts`(Notify 만)라 a090 의 기록 입구 해석이 nil 을 돌려준다 — 기존 시험에서 a090 알림·강화는 **임계와 무관하게** 0 이다.

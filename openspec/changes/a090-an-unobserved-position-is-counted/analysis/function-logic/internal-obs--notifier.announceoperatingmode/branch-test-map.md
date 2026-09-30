@@ -2,7 +2,7 @@
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | `:50` nil Notifier 무동작 | 구현 로트가 `internal/obs` 시험에서 확인해 채운다(설계 단계 미측정) | no | no |
-| B2 | `:54` 완화 방향 표기 | 같음 | no | no |
+| B1 | `:49` nil Notifier 무동작 | `TestAnnouncingWithoutANotifierIsSafe` (`internal/obs/mode_test.go:252`) | no | yes |
 
-> 설계 단계 산출물 — 진입 실측은 구현 로트(3판 tasks 1.1)가 한다. 이 change 가 이 함수에 하는 편집은 동작 무변화 추출뿐이다.
+> a090 은 이 함수를 편집하지 않는다(FLM 「a092 이후 바뀐 것」). 설계 단계의 B2(완화 방향 표기)는 a092 가 `operatingModeEvent` 로 옮겼다 —
+> `TestARelaxationIsAnnouncedAsARelaxation` (`mode_test.go:135`)이 그 경로를 이 함수를 거쳐 잰다.

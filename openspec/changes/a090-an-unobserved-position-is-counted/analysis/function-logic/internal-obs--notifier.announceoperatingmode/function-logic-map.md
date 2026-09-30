@@ -1,13 +1,21 @@
 # Function Logic Map: `Notifier.AnnounceOperatingMode`
 
-- Source: `internal/obs/mode.go` (`49`–`74`)
+- Source: `internal/obs/mode.go` (`48`–`54`)
 - Qualified: `Notifier.AnnounceOperatingMode`
-- AST evidence: `ast.json` (`source_sha256` 95d6a3417808a527…) — branches 2 · returns 2 · calls 7
+- AST evidence: `ast.json` (`source_sha256` ff7224f12ed7c089… — base `2f698db6`) — branches 1 · returns 2
 - Risk scan: `risk-pattern-report.md`
-- 작성 시점: **a090 3판 설계 전**(codex 1라운드 N2 — 모드 강화 공지의 동기 전송). 이 함수의 모양을 근거로 쓰는 3판 문서보다 먼저 만들었다.
+- 작성 시점: **a090 3판 설계 전**(codex 1라운드 N2) 판을 **구현 로트 편집 전(base 재고정 뒤, 2026-09-30)** 에 다시 추출했다.
 
-**역할.** 커밋된 운영 모드 전이 하나를 critical 알림으로 공지한다(`journal.ModeAnnouncer` 구현). 생산에서 관측자의 `Announcer` 는 이 Notifier 다
-(`cmd/tossctl/engine.go:639`), 그래서 관측자가 부르는 `EscalateOperatingMode` 의 공지는 `n.Notify` 로 **동기 전송**된다.
+## a092 이후 바뀐 것 (구현 로트 기록)
+
+설계 단계 번들(옛 base `d3bd1843`)은 **2 분기 · 호출 7** 판이었다 — `Event` 구조체를 함수 안에서 만들고 key 에서 전이 id 를 **뺐다**.
+a092(K1, 아카이브 `2026-09-30-a092-…`)가 그 구성을 **이미 순수 함수로 추출**했다: `operatingModeEvent(previous, rec)`
+(`internal/obs/record_only.go:169-191`, 비공개) — 이 함수와 `RecordOnly.AnnounceOperatingMode` 가 같이 쓴다. key 도 바뀌었다:
+`OperatingModeEventKey(rec)` = `operating_mode:<account>:<mode>:<전이 id>`(`record_only.go:164-166`).
+
+그래서 a090 tasks 3.4 의 「`obs.OperatingModeEvent` 추출」 은 **이 함수를 편집하지 않고** 끝난다 — 새 공개 래퍼
+`obs.OperatingModeEvent` 한 줄(새 함수, `operatingModeEvent` 호출)만 더한다. **이 함수는 a090 편집 대상에서 빠진다**(분기·key·`Notify` 무변화가
+아니라 **편집 0**). 이 번들은 편집 전 사실의 기록으로 남긴다.
 
 ## Inputs and invariants
 
@@ -20,15 +28,14 @@
 
 | Branch | 종류 | 조건 (원문) | 결과 |
 |---|---|---|---|
-| B1 | if | `:50` `if n == nil {` | **return nil** `:51` |
-| B2 | if | `:54` `if journal.MoreConservativeMode(previous, rec.Mode) == previous && previous != rec.Mode {` | `direction = "relaxed"` |
+| B1 | if | `:49` `if n == nil {` | **return nil** `:50` |
 
-마지막 **return** `:57` `n.Notify(ctx, Event{…})` — key `"operating_mode:" + rec.AccountRef + ":" + rec.Mode`(`:61`), 전이 id 는 **의도적으로 뺐다**
-(`:58-60` "a re-announcement of the same transition deduplicates … The transition id would be unique per row and defeat that").
+마지막 **return** `:53` `n.Notify(ctx, operatingModeEvent(previous, rec))`.
 
 ## Calls and live bindings
 
-`journal.MoreConservativeMode` · `n.Notify`(동기: `n.mu` 아래 적재·전송·재시도 — 최악 54초, `obs/alert_lease.go:57`) · `fmt.Sprintf` · `modeLabel` · `permission`.
+`operatingModeEvent`(순수) · `n.Notify`(동기 경로 — 생산 exit 관측자는 이 함수가 아니라 `RecordOnly.AnnounceOperatingMode` 를 받는다,
+`internal/app/engine/exitwiring.go:348-351`).
 
 ## State mutations and fallbacks
 
@@ -36,6 +43,5 @@ outbox 행(Notify 경유). 그 밖 없음.
 
 ## Safety conclusion
 
-- **Safe edit boundary(a090 3판)**: `Event` 를 만드는 부분(`:57-71` 의 구조체)만 순수 함수 `OperatingModeEvent(previous, rec) Event` 로 **옮겨** 이 함수와
-  a090 의 enqueue-only 공지자가 같은 내용을 쓴다(내용을 두 곳에 두지 않는다). 이 함수의 분기·key·`Notify` 호출은 **무변화**.
-- **High-risk impact**: yes(운영 모드 공지) — 동작 무변화 리팩터만.
+- **Safe edit boundary**: 편집 없음(a092 가 추출 완료). a090 은 `operatingModeEvent` 의 공개 래퍼만 새로 둔다.
+- **High-risk impact**: no — a090 에서 이 함수는 편집 0.

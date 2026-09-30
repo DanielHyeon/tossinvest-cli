@@ -1,16 +1,16 @@
 {
   "file": "internal/obs/mode.go",
-  "source_sha256": "95d6a3417808a5275451d81df0782275d90476af04f73fe591d1c3632033f3c4",
+  "source_sha256": "ff7224f12ed7c0898cd3cc14cfb64e1206580327ae7e980b64c66ea0a7e5497e",
   "package": "obs",
   "function": "AnnounceOperatingMode",
   "receiver": "Notifier",
   "signature": "Notifier.AnnounceOperatingMode(params=3, results=1)",
   "start": {
-    "line": 49,
+    "line": 48,
     "column": 1
   },
   "end": {
-    "line": 74,
+    "line": 54,
     "column": 2
   },
   "branches": [
@@ -18,15 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 50,
-        "column": 2
-      }
-    },
-    {
-      "id": "B2",
-      "kind": "if",
-      "at": {
-        "line": 54,
+        "line": 49,
         "column": 2
       }
     }
@@ -35,14 +27,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 51,
+        "line": 50,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 57,
+        "line": 53,
         "column": 2
       }
     }
@@ -51,15 +43,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 54,
-        "column": 5
-      },
-      "text": "journal.MoreConservativeMode"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 57,
+        "line": 53,
         "column": 9
       },
       "text": "n.Notify"
@@ -67,60 +51,13 @@
     {
       "kind": "call",
       "at": {
-        "line": 63,
-        "column": 10
-      },
-      "text": "fmt.Sprintf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 63,
-        "column": 65
-      },
-      "text": "modeLabel"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 64,
-        "column": 9
-      },
-      "text": "fmt.Sprintf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 65,
-        "column": 36
-      },
-      "text": "permission"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 68,
-        "column": 20
-      },
-      "text": "modeLabel"
-    }
-  ],
-  "assignments": [
-    {
-      "kind": ":=",
-      "at": {
         "line": 53,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 55,
-        "column": 3
-      }
+        "column": 23
+      },
+      "text": "operatingModeEvent"
     }
   ],
+  "assignments": null,
   "go_statements": null,
   "defers": null
 }

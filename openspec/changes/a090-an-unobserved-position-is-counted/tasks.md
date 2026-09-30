@@ -23,24 +23,26 @@
 - [x] 0.6f **codex 4라운드(좁은 확인)** — **PASS**(P2 3), `review.md` 「codex 4라운드」 · `analysis/freeze-review/codex-r4-output.md`
 - [x] 0.6g **freeze 전 P2 반영**(Manager 2026-09-29) — N1 옛 문구 정리(직접 적재 · 삭제된 대안 · 계좌 필드) · N2 실패 카나리 보강(주입 도달 · a090 소유 로그 · 계좌 섞인 오류). N3 는 a092 명확화 후보(기록 유지)
 - [x] 0.6h **proposal-freeze 선언**(2026-09-29) — 적대 보이스 1(0.5) + codex 4라운드(0.6 · 0.6b · 0.6d · 0.6f, 마지막 PASS) 완료, 사용자·Manager 결정(Q1~Q3 · R2/R3 처분) 기록 완료. **구현은 0.8(Q2 실측)·0.9(a092 입구 착지 하드 조건)·0.4(base 재고정) 뒤** — Manager 확인 대기
-- [ ] 0.9 **구현 하드 조건** — a092 `RecordAlert` 입구가 main 에 착지한 뒤에만 1.x 이후를 시작한다(설계 freeze 는 독립)
+- [x] 0.9 **구현 하드 조건** — a092 `RecordAlert` 입구가 main 에 착지한 뒤에만 1.x 이후를 시작한다(설계 freeze 는 독립)
+      — **충족(2026-09-30)**: 작업 브랜치 `feat/a112-four-family-runtime` 에 착지·아카이브(`c6e2e3ac` · `75d138b5`). 로컬 `main` 참조에는 아직 없음 — review 「구현 로트」
 - [x] 0.7 **Q1·Q3 결정 기록**(Manager 2026-09-29, 사용자행 아님) — Q1 = (a) 정본 준수(`exit-policy/spec.md:62`·`:65`), Q3 = 판정 진입 + 하류 5자리 명명 잔여. design 「Q — 결정 기록」
-- [ ] 0.8 **Q2 실측 — 사전 승인됨(Manager 2026-09-29), 구현 로트가 장중 실행** — 정지·0가격 종목 포함 `/prices` 읽기 전용 GET 1회, 쓰기 0.
+- [ ] 0.8 **[사람 항목 — 이 로트는 실행하지 않는다(Manager 2026-09-30)]** **Q2 실측 — 사전 승인됨(Manager 2026-09-29), 구현 로트가 장중 실행** — 정지·0가격 종목 포함 `/prices` 읽기 전용 GET 1회, 쓰기 0.
       결과로 design D6 의 두 [미측정] 행을 확정한다. 구현을 막지 않는다
 
 ## 1. Pre-Edit
 
-- [ ] 1.1 **FLM(편집 전, 3판)** — `engineRuntime`(`cmd/tossctl/engine.go`) 번들 · `AnnounceOperatingMode` BTM 진입 실측(설계 단계 번들은 있음)
-- [ ] 1.0 **Pre-Edit 선언** — `internal/app/engine/exitloop.go` `ExitObserver.ObserveOnce`·`ExitObserver.workingSet`(기존) · `ExitCycle`·`ExitObserver`
+- [x] 1.1 **FLM(편집 전, 3판)** — `engineRuntime`(`cmd/tossctl/engine.go`) 번들 · `AnnounceOperatingMode` BTM 진입 실측(설계 단계 번들은 있음) — **완료**: engineRuntime 번들 신설 · 세 번들 base `2f698db6` 재추출 · AnnounceOperatingMode 는 a092 가 추출해 a090 편집 0
+- [x] 1.0 **Pre-Edit 선언** — `internal/app/engine/exitloop.go` `ExitObserver.ObserveOnce`·`ExitObserver.workingSet`(기존) · `ExitCycle`·`ExitObserver`
       구조체 필드 · 새 파일 `exit_unobserved.go` · **3판**: `Notifier.AnnounceOperatingMode`(추출만) · `internal/obs/event.go` 상수 · `cmd/tossctl/engine.go`
-      `engineRuntime`(로거 옵션 한 줄). 호출자: `Run`(`exitloop.go:354`) · tracer `Run`(`tracer.go:273`, B6 도달 불가 · **B7 도달 가능**(`:793` 원장 작업이 임대를 태울 수 있음)). 불변식: 두 함수의
+      `engineRuntime`(로거 옵션 한 줄). **선언: review 「구현 로트 — Pre-Edit Gate」.** 호출자: `Run`(`exitloop.go:354`) · tracer `Run`(`tracer.go:273`, B6 도달 불가 · **B7 도달 가능**(`:793` 원장 작업이 임대를 태울 수 있음)). 불변식: 두 함수의
       분기 조건·이탈 무변화, 새 브로커 호출 0, 게이트 직접 잠금 0(입구의 몫)
 
 ## 2. RED (BTM 「필요한 RED」 — a092 R1~R6 승계 + a090 R7~R14)
 
-- [ ] 2.0 **RED 전 전수 검색(F9)** — 엔진 시험 중 보유 2종목 이상 + 한 종목 미응답 + 가짜 시계 전진 합이 60초 이상인 것을 센다(2판 작성 시 1차 표본:
+- [x] 2.0 **RED 전 전수 검색(F9)** — 엔진 시험 중 보유 2종목 이상 + 한 종목 미응답 + 가짜 시계 전진 합이 60초 이상인 것을 센다(2판 작성 시 1차 표본:
       `h.entry` 2개 이상 + `Advance` 있는 시험 2 — `TestA111QuoteEvidenceUsesOnePostBatchClockAndNeverFallsBackFromBadOfficialTime` · `…SlowFirstPosition…`,
-      둘 다 60초 미만). 걸리는 시험은 경보·모드 단언이 바뀌는지 먼저 적는다
+      둘 다 60초 미만). 걸리는 시험은 경보·모드 단언이 바뀌는지 먼저 적는다 — **결과(구현 로트)**: 같은 2 개, 둘 다 60초 미만 · 기존 하네스는 기록 입구가 없어
+      a090 알림·강화 0(review 「2.0」)
 - [ ] 2.1 **R1** — 보유 2종목, 1종목만 `Last = 0`: `cycle.Err == nil`, 다른 종목 판정, `cycle.Unobserved == 1`, 연속 시작 로그 1줄(`cause=no_quote`,
       이벤트 `exit.position_unobserved`, **severity normal**)
 - [ ] 2.2 **R2** — 1종목이 응답에 **부재**: R1 과 같다
