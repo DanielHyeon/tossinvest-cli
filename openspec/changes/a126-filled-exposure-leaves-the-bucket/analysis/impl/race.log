@@ -1,0 +1,3 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	1.011s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	105.280s
+race=0

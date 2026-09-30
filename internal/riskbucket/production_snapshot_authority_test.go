@@ -219,8 +219,12 @@ func createProductionRiskDB(t *testing.T, path string) {
 		`PRAGMA user_version=27`,
 		`CREATE TABLE risk_bucket_policies(bucket_dimension TEXT,bucket_value TEXT,policy_version TEXT,record_digest TEXT,PRIMARY KEY(bucket_dimension,bucket_value,policy_version))`,
 		`CREATE TABLE risk_bucket_snapshots(snapshot_id TEXT PRIMARY KEY,bucket_dimension TEXT,bucket_value TEXT,policy_version TEXT)`,
-		`CREATE TABLE risk_bucket_reservations(reservation_id TEXT PRIMARY KEY,account_ref TEXT,bucket_dimension TEXT,bucket_value TEXT,policy_version TEXT,snapshot_id TEXT,held_minor TEXT,filled_minor TEXT,state TEXT,risk_overage_latched INTEGER,unknown_actual_latched INTEGER)`,
-		`CREATE TABLE risk_bucket_scope_latches(account_ref TEXT,market TEXT,symbol TEXT)`,
+		`CREATE TABLE risk_bucket_reservations(reservation_id TEXT PRIMARY KEY,account_ref TEXT,bucket_dimension TEXT,bucket_value TEXT,policy_version TEXT,snapshot_id TEXT,held_minor TEXT,filled_minor TEXT,state TEXT,risk_overage_latched INTEGER,unknown_actual_latched INTEGER,decision_id TEXT,market TEXT,symbol TEXT,owner_prospective_generation TEXT)`,
+		`CREATE TABLE risk_bucket_scope_latches(account_ref TEXT,market TEXT,symbol TEXT,prospective_generation TEXT)`,
+		// a126: 사용량 reader 가 떠남 판정을 위해 읽는 표(생산 원장 v24+ 에 실재). 빈 표 — 이 시험의 단언은 바뀌지 않음.
+		`CREATE TABLE risk_bucket_owner_release_receipts(account_ref TEXT,market TEXT,symbol TEXT,prospective_generation TEXT,released_at TEXT)`,
+		`CREATE TABLE risk_bucket_owners(account_ref TEXT,market TEXT,symbol TEXT,prospective_generation TEXT,released_at TEXT)`,
+		`CREATE TABLE risk_bucket_final_decisions(decision_id TEXT PRIMARY KEY,account_ref TEXT,market TEXT,symbol TEXT,owner_prospective_generation TEXT)`,
 	}
 	for _, statement := range statements {
 		if _, err := db.Exec(statement); err != nil {

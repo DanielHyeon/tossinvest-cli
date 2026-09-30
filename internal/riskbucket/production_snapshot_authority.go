@@ -108,6 +108,12 @@ type productionRiskUsageRow struct {
 	ReservationID, PolicyVersion, HeldMinor, FilledMinor, State string
 	SnapshotID, PolicyRecordDigest                              string
 	OverageLatched, UnknownLatched                              int
+	// 떠남 판정의 원장 사실(a126 D1) — SQL 이 싣고 aggregateProductionRiskUsage 만 판정함.
+	// Receipted: 예약 행의 owner 키(r.*)로 해제 영수증이 있음. DecisionReceipted: 결정 사본의 owner 키(d.*)로 영수증이 있음.
+	// ReceiptReleasedAt · OwnerReleasedAt: 영수증 · owner 행의 released_at(없으면 ""). ScopeLatched: 그 owner 키의 scope latch 가 하나라도 있음.
+	// OwnerKeyMatches: 예약 행의 owner 키가 결정 사본과 같음.
+	Receipted, DecisionReceipted, ScopeLatched, OwnerKeyMatches int
+	ReceiptReleasedAt, OwnerReleasedAt                          string
 }
 
 type fixedProductionRiskSnapshotSource struct{ material riskSnapshotAuthorityMaterial }
@@ -450,11 +456,23 @@ func ReadJournalBucketUsage(ctx context.Context, q UsageQueryer, account string,
 }
 
 func readProductionRiskUsage(ctx context.Context, db UsageQueryer, account string, dimension Dimension, value string) ([]productionRiskUsageRow, error) {
+	// 떠남 판정의 사실(a126 D1)을 행마다 함께 읽음 — 영수증 · owner released_at 은 예약 행의 owner 키(r.*)로, 결정 사본(d.*)의 영수증과
+	// 두 사본의 일치는 따로. 규칙 적용은 aggregateProductionRiskUsage 한 곳(판정이 둘이면 서로의 시험을 통과시킴).
 	rows, err := db.QueryContext(ctx, `SELECT r.reservation_id,r.policy_version,r.held_minor,r.filled_minor,r.state,
-		r.risk_overage_latched,r.unknown_actual_latched,COALESCE(s.snapshot_id,''),COALESCE(p.record_digest,'')
+		r.risk_overage_latched,r.unknown_actual_latched,COALESCE(s.snapshot_id,''),COALESCE(p.record_digest,''),
+		CASE WHEN rc.released_at IS NULL THEN 0 ELSE 1 END,COALESCE(rc.released_at,''),COALESCE(ow.released_at,''),
+		CASE WHEN EXISTS(SELECT 1 FROM risk_bucket_scope_latches l WHERE l.account_ref=r.account_ref AND l.market=r.market AND l.symbol=r.symbol
+			AND l.prospective_generation=r.owner_prospective_generation) THEN 1 ELSE 0 END,
+		CASE WHEN d.decision_id IS NOT NULL AND d.account_ref=r.account_ref AND d.market=r.market AND d.symbol=r.symbol
+			AND d.owner_prospective_generation=r.owner_prospective_generation THEN 1 ELSE 0 END,
+		CASE WHEN EXISTS(SELECT 1 FROM risk_bucket_owner_release_receipts x WHERE x.account_ref=d.account_ref AND x.market=d.market AND x.symbol=d.symbol
+			AND x.prospective_generation=d.owner_prospective_generation) THEN 1 ELSE 0 END
 		FROM risk_bucket_reservations r
 		LEFT JOIN risk_bucket_snapshots s ON s.snapshot_id=r.snapshot_id AND s.bucket_dimension=r.bucket_dimension AND s.bucket_value=r.bucket_value AND s.policy_version=r.policy_version
 		LEFT JOIN risk_bucket_policies p ON p.bucket_dimension=r.bucket_dimension AND p.bucket_value=r.bucket_value AND p.policy_version=r.policy_version
+		LEFT JOIN risk_bucket_owner_release_receipts rc ON rc.account_ref=r.account_ref AND rc.market=r.market AND rc.symbol=r.symbol AND rc.prospective_generation=r.owner_prospective_generation
+		LEFT JOIN risk_bucket_owners ow ON ow.account_ref=r.account_ref AND ow.market=r.market AND ow.symbol=r.symbol AND ow.prospective_generation=r.owner_prospective_generation
+		LEFT JOIN risk_bucket_final_decisions d ON d.decision_id=r.decision_id
 		WHERE r.account_ref=? AND r.bucket_dimension=? AND r.bucket_value=? ORDER BY r.reservation_id`, account, string(dimension), value)
 	if err != nil {
 		return nil, err
@@ -464,7 +482,8 @@ func readProductionRiskUsage(ctx context.Context, db UsageQueryer, account strin
 	for rows.Next() {
 		var row productionRiskUsageRow
 		if err := rows.Scan(&row.ReservationID, &row.PolicyVersion, &row.HeldMinor, &row.FilledMinor, &row.State,
-			&row.OverageLatched, &row.UnknownLatched, &row.SnapshotID, &row.PolicyRecordDigest); err != nil {
+			&row.OverageLatched, &row.UnknownLatched, &row.SnapshotID, &row.PolicyRecordDigest,
+			&row.Receipted, &row.ReceiptReleasedAt, &row.OwnerReleasedAt, &row.ScopeLatched, &row.OwnerKeyMatches, &row.DecisionReceipted); err != nil {
 			return nil, err
 		}
 		result = append(result, row)
@@ -485,12 +504,25 @@ func aggregateProductionRiskUsage(rows []productionRiskUsageRow) (JournalBucketU
 			!canonicalIdentity(row.ReservationID) || !canonicalIdentity(row.PolicyVersion) {
 			return JournalBucketUsage{}, ErrJournalUsageInvalid
 		}
-		// latch 는 합에서 빼지 않고 호출자에게 알림 — 생산 snapshot 은 거절하고, admission 대조는 합만 씀.
+		// a126 D1 · D2: 영수증이 있는 owner 의 행은 떠남 여부와 무관하게(scope latch 로 되돌려진 행 포함) 먼저 손상 · 불일치를 거절함 —
+		// 해제는 bucket_held=0 을 요구했으므로 HELD · held≠0 은 손상, 영수증과 owner released_at 이 어긋나거나 예약 행의 owner 키가 결정
+		// 사본과 다르면 떠남 판정과 소유 판정이 서로 다른 owner 를 보게 됨. 모르는 것은 "안 떠남" 이 아니라 판독 불가(fail-closed).
+		if (row.Receipted != 0 || row.DecisionReceipted != 0) && row.OwnerKeyMatches == 0 {
+			return JournalBucketUsage{}, fmt.Errorf("%w: reservation %s owner key diverges from its decision", ErrJournalUsageInvalid, row.ReservationID)
+		}
+		if row.Receipted != 0 && (row.OwnerReleasedAt == "" || row.OwnerReleasedAt != row.ReceiptReleasedAt || row.State == "HELD" || rowHeld.Sign() != 0) {
+			return JournalBucketUsage{}, fmt.Errorf("%w: reservation %s of a released owner is not settled", ErrJournalUsageInvalid, row.ReservationID)
+		}
+		// 떠남 = 영수증 ∧ scope latch 없음(영수증 뒤 ORPHAN_FILL 등 scope latch 가 서면 되돌림 — D4). 떠난 행은 **합에서만** 빠짐.
+		departed := row.Receipted != 0 && row.ScopeLatched == 0
+		// latch 는 합에서 빼지 않고 호출자에게 알림 — 생산 snapshot 은 거절하고, admission 대조는 합만 씀. 떠난 행의 플래그도 셈(Q3).
 		latched = latched || row.OverageLatched != 0 || row.UnknownLatched != 0
 		overage = overage || row.OverageLatched != 0
 		unknown = unknown || row.UnknownLatched != 0
-		filled.Add(filled, rowFilled)
-		held.Add(held, rowHeld)
+		if !departed {
+			filled.Add(filled, rowFilled)
+			held.Add(held, rowHeld)
+		}
 		if filled.BitLen() > 256 || held.BitLen() > 256 {
 			return JournalBucketUsage{}, fmt.Errorf("%w: journal usage overflow", ErrJournalUsageInvalid)
 		}

@@ -2,9 +2,9 @@
 
 - Source: `internal/journal/risk_bucket_usage.go` (`30`–`84`)
 - Qualified: `refuseStaleBucketUsage`
-- AST evidence: `ast.json` (`source_sha256` 8eacbf2fea3f1234…) — **편집 전**(freeze census 와 sha · 분기 일치)
+- AST evidence: `ast.json` (`source_sha256` 9ae65976e8c1502c…) — **편집 뒤**(구현 로트, 격리 워크트리). 편집 전 판은 `467322df`
 - Risk scan: `risk-pattern-report.md`
-- AST branches 12 · return 11
+- AST branches 12 · return 11 · 호출 21
 
 **역할.** 공유 bucket 사용량 대조의 유일한 판정 규칙 — 원장 사용량이 snapshot 주장보다 크면 stale, latch 면 차단, 기록된 가장 작은 한도로 cap.
 
@@ -44,6 +44,6 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary (a126 D3)**: **주석 한 줄만** — `:59–62` 의 "활성은 원장이 세는 행과 같은 모집단" 을 "한도 모집단은 떠난 행을 포함한다(a126 D3)" 로.
+- **Safe edit boundary (a126 D3, 편집 뒤)**: **주석만 바뀌었다**(`:59–62` → "한도 모집단은 filled 가 남은 RELEASED 행과 떠난 행을 포함한다(a126 D3)") — `:59–62` 의 "활성은 원장이 세는 행과 같은 모집단" 을 "한도 모집단은 떠난 행을 포함한다(a126 D3)" 로.
   분기 · 호출 · 모집단 SQL(`smallestRecordedBucketLimit`) 무변.
 - **High-risk impact**: yes(진입 cap 판정) — 동작 무변.

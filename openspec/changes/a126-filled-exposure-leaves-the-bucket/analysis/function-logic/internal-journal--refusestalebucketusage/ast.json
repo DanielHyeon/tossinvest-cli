@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/risk_bucket_usage.go",
-  "source_sha256": "8eacbf2fea3f123439abe2d4d402193126661b505ac5e840b44e8869f4e6fcc0",
+  "source_sha256": "9ae65976e8c1502cd024c1e6112147d00a691b919329c1b868dea3091a7aafab",
   "package": "journal",
   "function": "refuseStaleBucketUsage",
   "signature": "refuseStaleBucketUsage(params=5, results=1)",

@@ -85,3 +85,129 @@ OFF(원장 래치)로 싣고 R3 해소 뒤 켜기.
 ## 0.7 H2
 
 Manager 판정(2026-09-30) — design.md D7 「H2 처분」. 사용자 최종 보고에 해석을 명시해 거부권을 남긴다.
+
+## 1. 구현 로트 (2026-10-01~, Opus 팀메이트)
+
+### 1.0.1 base 재고정 — `b30318d6`
+
+`989ab031` → `a189e74f`(base-commit.txt 단독). 조건 ①: 옛 base 뒤 96 커밋 중 a126 디렉터리를 만진 비병합 5, `.go` 0. 옛 base 판정 required 93 은
+전부 형제 착지 몫이고 `internal/riskbucket` · `journal/risk_bucket*` · `production_snapshot_authority` 는 창 안 diff 0. 조건 ②: tasks 1.0.1 +
+Manager 배정(2026-10-01) + 사용자 상임 지시.
+
+### 1.0.2 편집 전 FLM — `467322df`
+
+`readProductionRiskUsage` · `aggregateProductionRiskUsage` · `refuseStaleBucketUsage`(주석) · `Journal.releaseRiskBucketOwner` · `loadRiskBucketFillTransition`.
+앞의 넷은 freeze census(`989ab031`)와 sha · 분기 일치. 분기 표는 `analysis/harness/branch_table.py` 가 ast · 소스 · 편집 전 커버리지(`analysis/impl/coverage-pre-edit.out`,
+`-coverpkg=./internal/riskbucket,./internal/journal`)로 생성.
+
+### 1.0.3 a066 결함 수리 (스코프 정정 — Manager 판정 (가) 2026-10-01)
+
+**발견.** 체결이 한 번이라도 있었던 owner 는 영원히 해제되지 않았다. `releaseRiskBucketOwner` 검사표 `unresolved_fill`(`risk_bucket_owner.go:932`)은
+`f.actual_known=0 OR NOT EXISTS(evidence)` 였는데, `risk_bucket_fills` 의 생산 INSERT 는 한 자리(`risk_bucket_fill.go:1063`)이고 `actual_known` 을 리터럴 0 으로
+쓰며, actual 보완(`completeRiskBucketFillActual`)은 evidence 행만 더한다(fills 는 append-only). 해소 정의의 정본인 `loadRiskBucketFillTransition`(`:885`)은
+`actual_known=1 OR EXISTS evidence` 다 — 해제 검사만 반대로 적혀 해소된 체결도 미해소로 셌다.
+
+**실측.** 실제 체결 → actual 보완(`ActualEvidenceCompleted=true`) → 수명주기 종결 → release = `blocked by unresolved_fill`. 그 조건만 임시로 `AND` 로 바꾸면 release
+성공 · a126 RED 가 기대대로 실패(5 bucket 전부 filled=50). 임시 편집은 즉시 되돌렸다(diff 0 확인). a066 시험이 못 본 이유: `closeRiskBucketOwnerLifecycle` 이
+filled_minor='0' 으로 체결 없이 FILLED 를 만들었다(그 주석이 적은 갭과 같은 뿌리).
+
+**판정 원문(Manager, 2026-10-01).** *"이것은 해제 「완화」가 아니라 같은 규칙의 두 철자가 갈라진 결함이다 — 해소 정의의 정본은 `loadRiskBucketFillTransition`(:885)
+이고, 해제 검사만 반대로 적혀 서로를 가렸다 … 방향 안전: 해제 생산 호출자 0(빈 효과) + 배선은 a126 freeze C3 의 면제 불가 조건 뒤 — 「자동은 조이기만」 침해 없음.
+이 논거와 함께 사용자 거부권 항목으로 보고한다(해제 경로 접촉이므로). (나) 기각 — 생산이 쓰지 않는 상태를 딛는 픽스처는 시험을 원장 밖에 세운다."*
+
+**수리.** 해소 조각을 공유 상수 `riskBucketFillActualResolvedSQL`(`risk_bucket_fill.go`)로 두고 두 자리가 쓴다 — 재구성은 `CASE WHEN <조각>`, 해제 검사는
+`AND NOT <조각>`. 재구성 쪽은 **문자열 동일**(동작 무변). 분기 · 검사 순서 · 쓰기 무변. 결속 시험(Manager 조건 ②):
+`TestA126ReleaseAndTransitionShareOneFillResolutionRule`(해소 3상 — known=1 만 · evidence 만 · 둘 다 없음 — 에서 조각의 해소/차단이 정반대) ·
+`TestA126ReleaseAcceptsAnActualCompletedFillAndRefusesAnUnresolvedOne`(생산 경로의 두 상태). 이 수리는 **사용자 거부권 항목**이다(해제 경로 접촉).
+
+### 1.0.4 Pre-Edit 선언
+
+```text
+Pre-Edit Gate:
+- change / task: a126-filled-exposure-leaves-the-bucket / 1.2 GREEN + 1.0.3 a066 결함 수리 + 1.4 픽스처
+- 대상 심볼:
+    riskbucket.readProductionRiskUsage     — SQL 에 영수증 · owner released_at · scope latch · 결정 사본 조인(행마다 떠남 사실), 분기 무변
+    riskbucket.aggregateProductionRiskUsage — D1 · D2 규칙의 유일한 적용 자리(손상 · 불일치 거절 → 떠남 → 합에서만 뺌), RowDigest 형식 불변
+    riskbucket.productionRiskUsageRow(타입) — 사실 열 6
+    journal.refuseStaleBucketUsage          — 주석 한 줄(D3), 동작 무변
+    journal.Journal.releaseRiskBucketOwner  — unresolved_fill SQL 한 곳(공유 조각), 분기 무변
+    journal.loadRiskBucketFillTransition    — 해소 조각을 상수로(문자열 동일), 동작 무변
+- CodeGraph (1.6.0): ReadJournalBucketUsage 생산 소비자 4(refuseStaleBucketUsage · riskBucketSharedUsage · RevalidateQFinalAdmission ·
+  loadProductionRiskEntries) · releaseRiskBucketOwner callers 9 전부 _test.go(생산 0) · loadRiskBucketFillTransition ← ApplyFill 경로
+- 기존 동작 근거: HEAD b30318d6(대상 파일 base 이래 무변), freeze census, 기존 시험(a066 · 체결 · 해제 · admission)
+- FLM/BTM: analysis/function-logic/ 5 번들(467322df, 편집 전)
+- upstream 영향: 없음(TossOS 코드)
+- 실패 시험 선행: yes — analysis/impl/red-*.log
+- 설정 · DB · journal: 스키마 · 저장값 무변(Q2 파생). 시험 픽스처 2 곳(v27식 축소 스키마)에 빈 표 · 열 추가 — 단언 무변(아래 영수증)
+- §0 검토: 통과 — 주문 없음 · 손절 경로 무접촉 · 감소는 영수증에만(§0.9 보수) · 한도 모집단 불변(D3) · 해제 배선 없음(tasks 3.1) ·
+  생산 효과 0(해제 생산 호출자 0 · 운영 원장 영수증 0 — design Q1 · Q2)
+```
+
+**픽스처 파급 영수증(Manager 조건).** `internal/riskbucket/production_snapshot_authority_test.go` 의 `createProductionRiskDB` 와
+`internal/app/engine/strategy_risk_authority_test.go` 의 `createStrategyRiskLoaderJournal` — diff 는 `CREATE TABLE` 문에 열 추가
+(reservations: decision_id · market · symbol · owner_prospective_generation, scope_latches: prospective_generation)와 빈 표 셋(receipts · owners ·
+final_decisions) 추가뿐이고 **어떤 단언 · INSERT · 기대값도 바뀌지 않았다**(두 파일의 다른 줄 diff 0).
+
+**`loadProductionRiskEntries` 스키마 27 고정 대조(Manager 요청).** `productionRiskJournalSchema = 27`(`production_snapshot_authority.go:33`), `:361` 에서
+`PRAGMA user_version` 이 27 이 아니면 거절. 생산 원장은 v32(design 운영 원장 실측) → 이 reader 는 오늘 생산에서 이미 거절하며(a066 잔여 #7), 떠남 판정이 이 경로의
+결과를 바꿀 수 없다. v27 원장에도 영수증(v24) · owners · final_decisions(v22) · scope_latches(v22)가 실재하므로 새 조인은 실제 v27 원장에서 성립한다 —
+빈 표를 더한 것은 축소 스키마 **픽스처**뿐이다.
+
+### 1.1~1.4 RED → GREEN → 변이 (격리 연결 워크트리)
+
+**RED**(`analysis/impl/red-journal.log` · `red-riskbucket.log`): riskbucket 행 규칙 시험은 새 사실 열이 없어 컴파일 실패. journal 통합 시험은 a066 수리 뒤
+13 FAIL · 5 PASS — PASS 다섯은 현 동작을 고정하는 대조(활성 owner 불변 · 영수증 없는 해제 표식 · 떠남 없으면 stale · 부분 매도 불변 · 결속 행렬)다. FAIL 은
+전부 기대한 이유(떠남 없음 → filled 50 · 손상 거절 없음 → err nil 등).
+
+**GREEN**: `readProductionRiskUsage` SQL(사실 열 6) · `aggregateProductionRiskUsage`(B3 사본 불일치 · B4 영수증 행 손상/불일치 거절 → B5 떠남) · 행 타입 ·
+`refuseStaleBucketUsage` 주석(D3) · a066 수리(공유 조각). `RowDigest` 형식 불변(시험 `TestA126AggregateRowDigestFormatIsUnchanged`).
+
+**D1 조건 4 의 적용 범위(구현 노트).** 사본 불일치 거절은 **영수증이 r.* 또는 d.* 로 있을 때만** 선다. 영수증이 어디에도 없는 행의 불일치는 오늘처럼
+셈에 든다 — 떠남 판정과 소유 판정이 갈라질 수 있는 것은 영수증이 있는 경우뿐이고(design D1 조건 4의 목적), 이렇게 두어야 해제 생산 호출자 0 인 오늘의
+동작이 손상 원장에서도 바뀌지 않는다(생산 효과 0 논거).
+
+**1.1 목록 대응.** 떠남 양성 `TestA126AReleasedOwnersFilledLeavesEveryBucket` · 활성 불변 `TestA126AnActiveOwnersFilledStaysInEveryBucket` · 영수증 없는 해제
+표식 `TestA126AReleaseMarkWithoutAReceiptDoesNotLeave` · late BUY 되돌림 두 경로 `TestA126ALateBuyViaRecordFillWithCampaignHookRevertsTheDeparture` ·
+`TestA126ALateBuyViaStrategySettlementWithoutCampaignHookRevertsTheDeparture`(결선 전제를 이름에) · 서지 않는 경로 (a)(b) 잔여 핀
+`TestA126ResidualAmbiguousAndUnreadableLateFillsDoNotRevert` · D3 `TestA126ADepartedRowsLimitStillCaps`(+ 반대편 `TestA126WithoutTheDepartureTheSameEntryIsStale`) ·
+손상 · 불일치 × scope latch 조합(codex #4) `TestA126CorruptReceiptedRowsAreUnreadable` · D2 파급 `TestA126ACorruptDepartedRowLatchesAnUnrelatedActiveOwnerButKeepsItsFill` ·
+latch 집계 유지 `TestA126ADepartedRowsLatchFlagStillBlocksEntry` · 다른 owner latch 불해제 `TestA126ADepartureDoesNotReleaseAnotherOwnersLatch` · 부분 매도
+`TestA126APartialSellLeavesUsageUnchanged` · replay 결정성(codex #5) `TestA126UsageIsReplayDeterministicAcrossReleaseRevertAndSharedFills`(해제 전 · 뒤 · 공유
+owner 체결 둘 · 되돌림 뒤에 원장을 새로 열어 같은 사용량 · RowDigest · latch, 건강한 활성 owner 체결에 scope latch 0) · 잔여 핀 (f)
+`TestA126ResidualReusedOrderIDAcrossGenerationsKeepsTheOldOwnerDeparted` · 잔여 핀 codex #2 `TestA126ResidualRevertAfterAnotherOwnersReservationLeavesItUnlatched`.
+riskbucket 행 규칙 7(`a126_departed_rows_test.go`).
+
+**codex #2 핀의 모양(구현 노트).** frozen 문언은 「해제 → 다른 종목 발급 → late 체결 되돌림 → 제출 재검증 통과」다. 이 시험은 발급(`RecordQFinalDecisionAndReserve`)
+대신 admission 예약으로 B 를 세우고, 되돌림 뒤 공유 합(50 + 60)이 기록 한도 100 을 넘는데 B 에 bucket latch · owner latch · scope latch 가 **하나도 없음**을
+단언한다. 제출 재검증은 latch 만 소비하므로(freeze census `RevalidateQFinalAdmission` B25–B27) latch 부재가 곧 「재검증 통과」의 원인이다. 발급 경로 전체를
+세우는 fixture 는 다른 계좌 · 결정 체계(`qFinalIssueFixture`)라 이 로트에서 만들지 않았다 — 리뷰가 부족하다고 보면 보강한다.
+
+**1.4** `closeRiskBucketOwnerLifecycle` 은 주문 없는 owner 에 생산 작성자 경로로 전량 체결을 쌓고(`fillRiskBucketOwnerInFull`), SQL 로 FILLED · held 0 을 만들던
+줄과 가림 주석을 지웠다. a066 해제 시험 전부 이 fixture 위에서 통과.
+
+**회귀**(`analysis/impl/regress-1.log`): riskbucket · journal(674s) · app/engine(387s) · execgw · cmd/tossctl 전부 ok. `-race`(a126 시험) ok(`race.log`).
+`make lint` rc 0(`lint.log`).
+
+**변이**(하네스 `analysis/impl/mutate.py`, 대조군 GREEN · 시작 sha 단언 · 판마다 복원):
+
+| id | 변이 | 결과 |
+|---|---|---|
+| M1 · M1b | 떠남 항상 참 · 떠남 미적용(수리 되돌림) | CAUGHT · CAUGHT |
+| M2 · M10 | 영수증 대신 owner released_at(판정 · SQL 두 자리) | CAUGHT · CAUGHT |
+| M3 · M9 | scope latch 되돌림 제거(판정 · SQL) | CAUGHT · CAUGHT |
+| M4 | 떠난 행을 한도 모집단에서 뺌(D3) | CAUGHT |
+| M6 · M6b-1~3 · M6c | 손상 수용 · released_at 불일치 수용 · 사본 불일치 수용 · 결정 쪽 영수증 무시 · 손상 검사를 scope latch 뒤로 | 전부 CAUGHT |
+| M7 | 떠난 행 latch 를 집계에서 뺌 | CAUGHT |
+| P1 · P2 | 전략 정산 경로 · RecordFill 경로의 binding 제거(경로별) | CAUGHT · CAUGHT |
+| F1 · F2 · F3 | a066 수리 되돌림 · 해제 검사 fail-open · 공통 조각 OR→AND | 전부 CAUGHT(상수 이동 뒤 재실행 `mutation-3-const-moved.log`) |
+
+18 + 3 = **21/21 CAUGHT, 생존 0**(`mutation-1.log` · `mutation-2-paths.log` · `mutation-3-const-moved.log`). M8(부분 매도 감소)은 감소 코드가 없어 변이할 자리가 없다 —
+`TestA126APartialSellLeavesUsageUnchanged` 가 행동으로 고정한다.
+
+**편집 뒤 FLM**: 5 대상 번들 재추출(편집 뒤 커버리지 `coverage-post-edit.out`) + 시험 fixture 셋의 번들(비례 원칙 — 시험 전용, 게이트가 수정 함수로 셈).
+공유 상수는 파일 머리(import 뒤)에 두었다 — 함수 사이에 두면 게이트가 앞 함수의 편집으로 셌다(실측: `riskBucketSharedUsage` ·
+`recordReleasedRiskBucketOrderInTx` 가 차례로 오탐). `check_analysis`(로컬 커밋 기준) rc 0 evidence complete, required 9.
+
+**생산 효과 0 (동등성 논거, Manager 지시).** 떠남은 영수증에만 걸리고 영수증 작성자 `releaseRiskBucketOwner` 의 생산 호출자는 0(CodeGraph callers 9 전부 시험),
+운영 원장 영수증 0(design Q2 실측). 영수증이 없으면 새 SQL 열은 전부 0/""이고 `aggregateProductionRiskUsage` 는 편집 전과 같은 합 · 같은 latch · 같은 RowDigest 를
+낸다(B3 · B4 는 영수증이 있을 때만 서고 B5 는 영수증 없으면 거짓). a066 수리도 해제 생산 호출자 0 이라 빈 효과다. 배선은 tasks 3.1 의 면제 불가 의존 뒤.

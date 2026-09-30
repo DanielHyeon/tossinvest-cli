@@ -1,7 +1,7 @@
 # Branch Test Map: `readProductionRiskUsage`
 
-| Branch | Scenario | Test | RED observed | GREEN observed |
-|---|---|---|---|---|
-| B1 | 질의 오류 | 기존 — a126 무변 | n/a | n/a |
-| B2 | 행 순회 | a126 1.1(떠남 양성 · 활성 불변 · 부패 거절) — 편집 뒤 갱신 | no | no |
-| B3 | 스캔 오류 | 기존 — a126 무변 | n/a | n/a |
+| Branch | 조건 | 진입 실측 | Test | RED observed | GREEN observed |
+|---|---|---|---|---|---|
+| B1 | `:477` `if err != nil {` | 아니오 | 기존 — 무편집 분기 | n/a | n/a |
+| B2 | `:482` `for rows.Next() {` | 예 | `TestA126AReleasedOwnersFilledLeavesEveryBucket` · `TestA126CorruptReceiptedRowsAreUnreadable` · `TestA126ALateBuyViaRecordFillWithCampaignHookRevertsTheDeparture` — 변이 M9 · M10 CAUGHT | yes | yes |
+| B3 | `:484` `if err := rows.Scan(&row.ReservationID, &row.PolicyVersion, &row.HeldMinor, &row.FilledMinor, &row.State,` | — | 스캔 — 사실 열 6 을 싣는 자리(M9 · M10 이 이 열들을 바꿔치기해 잼) | yes | yes |

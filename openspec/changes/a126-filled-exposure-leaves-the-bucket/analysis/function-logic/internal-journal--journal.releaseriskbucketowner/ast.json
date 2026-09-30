@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/risk_bucket_owner.go",
-  "source_sha256": "e0c9930d76928f3b0aad675b9d03b4b6f9688b57c0847024edca2ae08d3714f1",
+  "source_sha256": "6292cb576e64b9f9adde1c66a35b9d3df94e18dc67a5682738961a658fa31d92",
   "package": "journal",
   "function": "releaseRiskBucketOwner",
   "receiver": "Journal",
@@ -1105,7 +1105,7 @@
       "kind": "call",
       "at": {
         "line": 932,
-        "column": 409
+        "column": 339
       },
       "text": "string"
     },

@@ -1,0 +1,283 @@
+{
+  "file": "internal/journal/risk_bucket_owner_test.go",
+  "source_sha256": "40d2f896e7e09c8e27d2fd32820d736e5fcf2c185e2810ce2814ba84034e2fc9",
+  "package": "journal",
+  "function": "closeRiskBucketOwnerLifecycle",
+  "signature": "closeRiskBucketOwnerLifecycle(params=4, results=0)",
+  "start": {
+    "line": 808,
+    "column": 1
+  },
+  "end": {
+    "line": 834,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 811,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 815,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 818,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 821,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 824,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 827,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 831,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 809,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 811,
+        "column": 12
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 811,
+        "column": 12
+      },
+      "text": "j.db.QueryRow"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 812,
+        "column": 18
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 813,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 816,
+        "column": 3
+      },
+      "text": "fillRiskBucketOwnerInFull"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 818,
+        "column": 15
+      },
+      "text": "j.db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 818,
+        "column": 190
+      },
+      "text": "normaliseMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 818,
+        "column": 206
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 819,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 821,
+        "column": 15
+      },
+      "text": "j.db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 821,
+        "column": 285
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 822,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 824,
+        "column": 15
+      },
+      "text": "j.db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 824,
+        "column": 218
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 825,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 827,
+        "column": 15
+      },
+      "text": "j.db.Exec"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 827,
+        "column": 316
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 828,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 830,
+        "column": 2
+      },
+      "text": "refreshRiskBucketOwnerSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 832,
+        "column": 3
+      },
+      "text": "seedReleasedBrokerZeroReconciliation"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 811,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 818,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 821,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 824,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 827,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

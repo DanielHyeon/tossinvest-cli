@@ -2,7 +2,7 @@
 
 - Source: `internal/journal/risk_bucket_owner.go` (`814`–`1043`)
 - Qualified: `Journal.releaseRiskBucketOwner`
-- AST evidence: `ast.json` (`source_sha256` e0c9930d76928f3b…) — **편집 전**(base `a189e74f`; freeze census `989ab031` 과 sha · 분기 일치)
+- AST evidence: `ast.json` (`source_sha256` 6292cb576e64b9f9…) — **편집 뒤**(구현 로트, 격리 워크트리). 편집 전 판은 `467322df`
 - Risk scan: `risk-pattern-report.md`
 - AST branches 48 · return 45 · 호출 96
 
@@ -23,8 +23,7 @@
 
 ## Branches and early returns
 
-> 표는 `analysis/harness/branch_table.py` 가 `ast.json` · 소스 · 커버리지(편집 전 `-coverpkg=./internal/riskbucket,./internal/journal`)로 만들었다.
-> 조건은 소스 원문, 「창의 return」은 위치다(의미 아님).
+> 분기 표는 `analysis/harness/branch_table.py` 가 ast · 소스 · 편집 뒤 커버리지(`analysis/impl/coverage-post-edit.out`, `-coverpkg=./internal/riskbucket,./internal/journal`)로 만들었다. 「창의 return」은 위치다.
 
 | Branch | 종류 | 조건 (원문) | 창의 return | 진입 실측 |
 |---|---|---|---|---|
@@ -77,7 +76,6 @@
 | B47 | if | `:1029` `if _, err := tx.ExecContext(ctx, `INSERT INTO risk_bucket_owner_release_receipts(` | :1037 | 예 |
 | B48 | if | `:1039` `if err := tx.Commit(); err != nil {` | :1040, :1042 | 예 |
 
-
 ## Calls and live bindings
 
 원장 질의 · 쓰기(`tx.QueryRowContext` · `tx.ExecContext` · `tx.Commit`), 청결 판정 도우미(`validateRiskBucketOwnerKey` ·
@@ -91,7 +89,7 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary (a126 — a066 결함 수리, Manager 판정 (가) 2026-10-01)**: 검사표의 `unresolved_fill` 첫 행(`:932`) SQL 한 곳만. 오늘
+- **Safe edit boundary (a126 — a066 결함 수리, Manager 판정 (가) 2026-10-01, 편집 뒤)**: 검사표의 `unresolved_fill` 첫 행(`:932`) SQL 한 곳만. 오늘
   `f.actual_known=0 OR NOT EXISTS(evidence)` 는 fill 행의 `actual_known` 이 생산에서 늘 0(`risk_bucket_fill.go:1063` 의 유일한 INSERT)이라
   **모든** 체결 owner 를 영구히 막는다 — 해소 정의의 정본 `loadRiskBucketFillTransition`(`actual_known=1 OR EXISTS evidence`)과 갈라진 철자다.
   수리는 두 자리가 **한 SQL 조각**(`riskBucketFillActualResolvedSQL`)을 쓰게 한다. 분기(B1~B48) · 순서 · 쓰기 무변.

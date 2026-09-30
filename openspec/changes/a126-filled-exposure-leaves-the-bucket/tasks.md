@@ -23,11 +23,11 @@
 
 ## 1. 구현 (freeze 뒤 — 별도 로트, a092 뒤 큐, High-risk 규율 전부)
 
-- [ ] 1.0 착수 전
-  - [ ] 1.0.1 사람 승인 base 재고정(형제 커밋 `55963f29`·`f48e7865` 이 창에 들어옴 — design.md R4)
-  - [ ] 1.0.2 편집 대상 기존 함수의 gate FLM/BTM 번들(`readProductionRiskUsage`·`aggregateProductionRiskUsage`, 주석만 고치는
+- [x] 1.0 착수 전
+  - [x] 1.0.1 **(`b30318d6`, review 1.0.1)** 사람 승인 base 재고정(형제 커밋 `55963f29`·`f48e7865` 이 창에 들어옴 — design.md R4)
+  - [x] 1.0.2 **(`467322df` 편집 전 5 번들 + Pre-Edit review 1.0.4. a066 결함 수리로 `releaseRiskBucketOwner` · `loadRiskBucketFillTransition` 추가 — Manager 판정 (가), review 1.0.3)** 편집 대상 기존 함수의 gate FLM/BTM 번들(`readProductionRiskUsage`·`aggregateProductionRiskUsage`, 주석만 고치는
         `refuseStaleBucketUsage`, 그리고 AST 가 추가로 잡는 것 전부) + Pre-Edit 선언
-- [ ] 1.1 RED — design.md 「반증 설계」 M1·M2·M3·M3b·M4·M6·M6b·M7·M8 각각을 실패시키는 시험:
+- [x] 1.1 **(review 1.1~1.4 대응표 · `analysis/impl/red-*.log`)** RED — design.md 「반증 설계」 M1·M2·M3·M3b·M4·M6·M6b·M7·M8 각각을 실패시키는 시험:
   - 떠남(양성) · 활성 owner 불변 · 영수증 없는 해제 표식
   - late BUY 되돌림 — RecordFill 경로와 전략 정산 경로 **각각**, Campaign hook 결선 전제를 시험 이름에 명시
   - 되돌림이 서지 않는 경로 (a) 소유 모호 · (b) 증분 판독 불가의 잔여 핀(해제 owner 에 scope latch 없음을 단언)
@@ -39,10 +39,10 @@
     snapshot digest·latch 가 같음, 건강한 활성 owner 체결이 `total < own` 을 만들지 않음
   - 잔여 핀(서지 않음/뚫림을 **단언**해 배선 로트가 바꾸면 깨지게): (f) 두 generation 이 같은 order id 를 쓸 때 옛 owner 가
     떠난 채 남음(codex #1), 해제 → 다른 종목 발급 → late 체결 되돌림 → 제출 재검증 통과(codex #2)
-- [ ] 1.2 GREEN — 최소 구현(D1 판정 한 곳 — `readProductionRiskUsage` SQL + `aggregateProductionRiskUsage`). `RowDigest` 형식
+- [x] 1.2 **(review 1.1~1.4)** GREEN — 최소 구현(D1 판정 한 곳 — `readProductionRiskUsage` SQL + `aggregateProductionRiskUsage`). `RowDigest` 형식
       불변(D2). `risk_bucket_usage.go:59–62` 주석을 "한도 모집단은 떠난 행을 포함한다(a126 D3)" 로 정정(동작 불변)
-- [ ] 1.3 변이(무변이 대조군 + 양성 대조군) — "감소를 무조건 수행"(M1) 변이가 반드시 잡혀야 한다(fail-open 축). 위 M 전부
-- [ ] 1.4 a066 owner-lifecycle 픽스처의 filled_minor 가림 주석 해소(`risk_bucket_owner_test.go:802–804`, 실값 픽스처로)
+- [x] 1.3 **(21/21 CAUGHT, 대조군 GREEN — review 표)** 변이(무변이 대조군 + 양성 대조군) — "감소를 무조건 수행"(M1) 변이가 반드시 잡혀야 한다(fail-open 축). 위 M 전부
+- [x] 1.4 **(생산 작성자 경로로 전량 체결 — a066 수리 뒤 가능해짐)** a066 owner-lifecycle 픽스처의 filled_minor 가림 주석 해소(`risk_bucket_owner_test.go:802–804`, 실값 픽스처로)
 - [ ] 1.5 4보이스 리뷰 + gstack
 
 ## 2. 게이트

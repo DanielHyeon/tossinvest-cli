@@ -16,6 +16,12 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 )
 
+// riskBucketFillActualResolvedSQL 은 체결 한 건(별칭 f)의 actual 이 해소됐는가의 **유일한** 철자임 — fill 행의 actual_known 은 생산 INSERT
+// 가 늘 0 으로 쓰고(append-only) actual 보완은 evidence 행만 더하므로 둘 중 하나면 해소. 체결 재구성(loadRiskBucketFillTransition)과
+// owner 해제 검사(releaseRiskBucketOwner 의 unresolved_fill)가 함께 씀 — 두 자리가 갈라져 해제 검사만 OR 을 반대로 적었던 결함(a066,
+// a126 에서 발견 · 수리)이 다시 생기지 않게 함.
+const riskBucketFillActualResolvedSQL = `(f.actual_known=1 OR EXISTS(SELECT 1 FROM risk_bucket_fill_actual_evidence a WHERE a.fill_id=f.fill_id))`
+
 type RiskBucketOrderPlan struct {
 	OrderID, DecisionID, PredecessorOrderID              string
 	OrderQuantity                                        uint64
@@ -882,7 +888,7 @@ func loadRiskBucketFillTransition(ctx context.Context, tx *sql.Tx, target riskBu
 	if err := orders.Close(); err != nil {
 		return state, riskbucket.FillEvent{}, err
 	}
-	fills, err := tx.QueryContext(ctx, `SELECT f.fill_id,f.order_key,f.cumulative_fill,f.delta_quantity,CASE WHEN f.actual_known=1 OR EXISTS(SELECT 1 FROM risk_bucket_fill_actual_evidence a WHERE a.fill_id=f.fill_id) THEN 1 ELSE 0 END FROM risk_bucket_fills f JOIN risk_bucket_orders o ON o.order_key=f.order_key JOIN risk_bucket_final_decisions d ON d.decision_id=o.decision_id WHERE d.account_ref=? AND d.market=? AND d.symbol=? AND d.owner_prospective_generation=? ORDER BY f.order_key,f.cumulative_fill,f.fill_id`, target.account, target.market, target.symbol, target.prospective)
+	fills, err := tx.QueryContext(ctx, `SELECT f.fill_id,f.order_key,f.cumulative_fill,f.delta_quantity,CASE WHEN `+riskBucketFillActualResolvedSQL+` THEN 1 ELSE 0 END FROM risk_bucket_fills f JOIN risk_bucket_orders o ON o.order_key=f.order_key JOIN risk_bucket_final_decisions d ON d.decision_id=o.decision_id WHERE d.account_ref=? AND d.market=? AND d.symbol=? AND d.owner_prospective_generation=? ORDER BY f.order_key,f.cumulative_fill,f.fill_id`, target.account, target.market, target.symbol, target.prospective)
 	if err != nil {
 		return state, riskbucket.FillEvent{}, err
 	}

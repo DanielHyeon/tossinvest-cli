@@ -1,0 +1,66 @@
+    a126_filled_exposure_leaves_the_bucket_test.go:133: sector/sector-tech usage filled=50 held=0, want 0 after the release receipt
+    a126_filled_exposure_leaves_the_bucket_test.go:133: symbol/AAPL usage filled=50 held=0, want 0 after the release receipt
+    a126_filled_exposure_leaves_the_bucket_test.go:133: horizon/SHORT usage filled=50 held=0, want 0 after the release receipt
+    a126_filled_exposure_leaves_the_bucket_test.go:133: market/US usage filled=50 held=0, want 0 after the release receipt
+    a126_filled_exposure_leaves_the_bucket_test.go:133: strategy/strategy-alpha usage filled=50 held=0, want 0 after the release receipt
+--- FAIL: TestA126AReleasedOwnersFilledLeavesEveryBucket (0.75s)
+--- PASS: TestA126AnActiveOwnersFilledStaysInEveryBucket (0.78s)
+--- PASS: TestA126AReleaseMarkWithoutAReceiptDoesNotLeave (0.66s)
+    a126_filled_exposure_leaves_the_bucket_test.go:219: sector/sector-tech filled=50, want 0
+    a126_filled_exposure_leaves_the_bucket_test.go:219: horizon/SHORT filled=50, want 0
+    a126_filled_exposure_leaves_the_bucket_test.go:219: market/US filled=50, want 0
+    a126_filled_exposure_leaves_the_bucket_test.go:219: strategy/strategy-alpha filled=50, want 0
+--- FAIL: TestA126ALateBuyViaRecordFillWithCampaignHookRevertsTheDeparture (0.84s)
+    a126_filled_exposure_leaves_the_bucket_test.go:242: horizon/SHORT filled=50, want 0
+    a126_filled_exposure_leaves_the_bucket_test.go:242: market/US filled=50, want 0
+    a126_filled_exposure_leaves_the_bucket_test.go:242: strategy/strategy-alpha filled=50, want 0
+    a126_filled_exposure_leaves_the_bucket_test.go:242: sector/sector-tech filled=50, want 0
+--- FAIL: TestA126ALateBuyViaStrategySettlementWithoutCampaignHookRevertsTheDeparture (0.89s)
+    a126_filled_exposure_leaves_the_bucket_test.go:300: horizon/SHORT filled=50, want 0
+    a126_filled_exposure_leaves_the_bucket_test.go:300: market/US filled=50, want 0
+    a126_filled_exposure_leaves_the_bucket_test.go:300: strategy/strategy-alpha filled=50, want 0
+    a126_filled_exposure_leaves_the_bucket_test.go:300: sector/sector-tech filled=50, want 0
+--- FAIL: TestA126ResidualAmbiguousAndUnreadableLateFillsDoNotRevert (0.87s)
+    a126_filled_exposure_leaves_the_bucket_test.go:327: err=BUCKET_USAGE_STALE (horizon): journal: risk bucket usage snapshot is behind the ledger; refused for this cycle and re-evaluated on the next snapshot wave: horizon bucket "SHORT" snapshot claims 0 used, the ledger holds 50, want the recorded 100 to cap a declared 1000
+--- FAIL: TestA126ADepartedRowsLimitStillCaps (0.84s)
+--- PASS: TestA126WithoutTheDepartureTheSameEntryIsStale (0.70s)
+    a126_filled_exposure_leaves_the_bucket_test.go:367: err=<nil>, want ErrJournalUsageInvalid
+    a126_filled_exposure_leaves_the_bucket_test.go:367: err=<nil>, want ErrJournalUsageInvalid
+    a126_filled_exposure_leaves_the_bucket_test.go:367: err=<nil>, want ErrJournalUsageInvalid
+    a126_filled_exposure_leaves_the_bucket_test.go:367: err=<nil>, want ErrJournalUsageInvalid
+    a126_filled_exposure_leaves_the_bucket_test.go:367: err=<nil>, want ErrJournalUsageInvalid
+    a126_filled_exposure_leaves_the_bucket_test.go:367: err=<nil>, want ErrJournalUsageInvalid
+    a126_filled_exposure_leaves_the_bucket_test.go:367: err=<nil>, want ErrJournalUsageInvalid
+    a126_filled_exposure_leaves_the_bucket_test.go:367: err=<nil>, want ErrJournalUsageInvalid
+    a126_filled_exposure_leaves_the_bucket_test.go:367: err=<nil>, want ErrJournalUsageInvalid
+    a126_filled_exposure_leaves_the_bucket_test.go:367: err=<nil>, want ErrJournalUsageInvalid
+--- FAIL: TestA126CorruptReceiptedRowsAreUnreadable (8.35s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/owner_released_at_moved (0.79s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/owner_released_at_moved_+_scope_latch (0.78s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/reservation_owner_key_diverged_from_the_decision (0.80s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/reservation_owner_key_diverged_from_the_decision_+_scope_latch (0.83s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/HELD_row (0.83s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/HELD_row_+_scope_latch (0.80s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/held_remainder (0.81s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/held_remainder_+_scope_latch (0.84s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/owner_released_at_cleared (0.95s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/owner_released_at_cleared_+_scope_latch (0.91s)
+    a126_filled_exposure_leaves_the_bucket_test.go:402: BUCKET_USAGE_STALE (horizon): journal: risk bucket usage snapshot is behind the ledger; refused for this cycle and re-evaluated on the next snapshot wave: horizon bucket "SHORT" snapshot claims 0 used, the ledger holds 50
+--- FAIL: TestA126ACorruptDepartedRowLatchesAnUnrelatedActiveOwnerButKeepsItsFill (0.90s)
+    a126_filled_exposure_leaves_the_bucket_test.go:425: usage={FilledMinor:50 HeldMinor:0 RowDigest:sha256:771ef1e28b917a5ffa720b902ed80911d461250b0e7965d680e2b6683e615967 Latched:true OverageLatched:true UnknownLatched:false}, want the sum to leave and the latch to stay
+--- FAIL: TestA126ADepartedRowsLatchFlagStillBlocksEntry (0.89s)
+    a126_filled_exposure_leaves_the_bucket_test.go:452: usage={FilledMinor:50 HeldMinor:50 RowDigest:sha256:1898889cc3cb9e437f72a27a33a0c7c3cd4c1e9cb2d9c9e6b61dfd7557d76281 Latched:true OverageLatched:true UnknownLatched:false}, want A's 50 gone, B's held 50 counted and B's latch kept
+--- FAIL: TestA126ADepartureDoesNotReleaseAnotherOwnersLatch (0.93s)
+--- PASS: TestA126APartialSellLeavesUsageUnchanged (0.83s)
+    a126_filled_exposure_leaves_the_bucket_test.go:502: BUCKET_USAGE_STALE (horizon): journal: risk bucket usage snapshot is behind the ledger; refused for this cycle and re-evaluated on the next snapshot wave: horizon bucket "SHORT" snapshot claims 0 used, the ledger holds 50
+--- FAIL: TestA126UsageIsReplayDeterministicAcrossReleaseRevertAndSharedFills (1.03s)
+    a126_filled_exposure_leaves_the_bucket_test.go:533: next generation admission: BUCKET_USAGE_STALE (horizon): journal: risk bucket usage snapshot is behind the ledger; refused for this cycle and re-evaluated on the next snapshot wave: horizon bucket "SHORT" snapshot claims 0 used, the ledger holds 50
+--- FAIL: TestA126ResidualReusedOrderIDAcrossGenerationsKeepsTheOldOwnerDeparted (0.82s)
+    a126_filled_exposure_leaves_the_bucket_test.go:559: B reserves 60 after A departed: BUCKET_USAGE_STALE (horizon): journal: risk bucket usage snapshot is behind the ledger; refused for this cycle and re-evaluated on the next snapshot wave: horizon bucket "SHORT" snapshot claims 0 used, the ledger holds 50
+--- FAIL: TestA126ResidualRevertAfterAnotherOwnersReservationLeavesItUnlatched (0.92s)
+--- PASS: TestA126ReleaseAndTransitionShareOneFillResolutionRule (0.54s)
+    a126_filled_exposure_leaves_the_bucket_test.go:644: journal: risk bucket replay mismatch: state digest
+--- FAIL: TestA126ReleaseAcceptsAnActualCompletedFillAndRefusesAnUnresolvedOne (1.49s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	23.040s
+FAIL

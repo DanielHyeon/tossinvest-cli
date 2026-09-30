@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -799,11 +800,21 @@ func seedRiskBucketOwnerLifecycle(t *testing.T, market riskbucket.Market, suffix
 	return j, plan.Owner.Key
 }
 
-// closeRiskBucketOwnerLifecycle 은 owner 해제 시험의 수명주기를 닫음. 주의(a066 6.5 적대 리뷰 R1, 사용자 결정 대기 "사용량
-// 수명주기"): 이 fixture 는 예약을 FILLED 로 두되 filled_minor 를 '0' 으로 남김 — 실제 체결은 filled_minor 를 올리고 그 값은
-// 해제 뒤에도 원장 사용량에 계속 셈(모든 bucket 이 평생 누적 cap). 이 fixture 로 통과하는 해제 시험은 그 갭을 보지 못함.
+// closeRiskBucketOwnerLifecycle 은 owner 해제 시험의 수명주기를 닫음. 주문이 하나도 없는 owner 는 먼저 생산 작성자 경로로 전량 체결을
+// 쌓음(fillRiskBucketOwnerInFull — 등록 주문 · RecordFill · actual 보완) — 예약은 체결로 FILLED · held 0 이 되고 filled 는 실제 금액임
+// (a126 1.4: 예전 fixture 는 held=0 · FILLED 를 SQL 로 만들고 filled_minor 를 '0' 으로 남겨 "해제 뒤에도 filled 가 평생 누적" 갭과
+// a066 해제 검사의 unresolved_fill 결함 — 체결 owner 는 해제될 수 없었음 — 을 가렸음). 주문이 이미 있는 owner(취소 · 체결 시험)는 그
+// 주문들이 만든 원장 그대로 닫음.
 func closeRiskBucketOwnerLifecycle(t *testing.T, j *Journal, key riskbucket.OwnerKey, reconcile bool) {
 	t.Helper()
+	var orders int
+	if err := j.db.QueryRow(`SELECT count(*) FROM risk_bucket_orders o JOIN risk_bucket_final_decisions d ON d.decision_id=o.decision_id WHERE d.account_ref=? AND d.market=? AND d.symbol=? AND d.owner_prospective_generation=?`,
+		key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration).Scan(&orders); err != nil {
+		t.Fatal(err)
+	}
+	if orders == 0 {
+		fillRiskBucketOwnerInFull(t, j, key, "lifecycle-"+key.ProspectiveGeneration)
+	}
 	if _, err := j.db.Exec(`UPDATE positions SET state='CLOSED',quantity='0',closed_at='2026-03-30T00:35:00Z' WHERE account_ref=? AND market=? AND symbol=? AND instance_seq=1`, key.AccountID, normaliseMarket(string(key.Market)), key.Symbol); err != nil {
 		t.Fatal(err)
 	}
@@ -816,13 +827,60 @@ func closeRiskBucketOwnerLifecycle(t *testing.T, j *Journal, key riskbucket.Owne
 	if _, err := j.db.Exec(`UPDATE risk_reservations SET state='RELEASED',released_at='2026-03-30T00:36:00Z',release_reason='BROKER_TERMINAL' WHERE id IN (SELECT existing_reservation_id FROM risk_bucket_final_decisions WHERE account_ref=? AND market=? AND symbol=? AND owner_prospective_generation=?)`, key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := j.db.Exec(`UPDATE risk_bucket_reservations SET held_minor='0',state='FILLED',updated_at='2026-03-30T00:36:00Z' WHERE account_ref=? AND market=? AND symbol=? AND owner_prospective_generation=?`, key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration); err != nil {
-		t.Fatal(err)
-	}
 	refreshRiskBucketOwnerSnapshot(t, j, key, "closed")
 	if reconcile {
 		seedReleasedBrokerZeroReconciliation(t, j, key)
 	}
+}
+
+// fillRiskBucketOwnerInFull 은 owner 의 결정에 주문 하나를 등록하고 결정 수량 전량을 체결시킨 뒤 actual 을 보완함 — 전부 생산 작성자
+// (RegisterRiskBucketOrder · RecordFill · completeRiskBucketFillActual). 예약 금액을 actual 로 다시 재면 가격 5 · 환율 1 · 수수료 0 에서
+// 같은 금액이 filled 가 됨. 반환값은 주문 id.
+func fillRiskBucketOwnerInFull(t *testing.T, j *Journal, key riskbucket.OwnerKey, suffix string) string {
+	t.Helper()
+	ctx := context.Background()
+	var decision string
+	if err := j.db.QueryRow(`SELECT decision_id FROM risk_bucket_final_decisions WHERE account_ref=? AND market=? AND symbol=? AND owner_prospective_generation=? ORDER BY owner_sequence LIMIT 1`,
+		key.AccountID, string(key.Market), key.Symbol, key.ProspectiveGeneration).Scan(&decision); err != nil {
+		t.Fatal(err)
+	}
+	reserved := map[riskbucket.BucketKey]string{}
+	rows, err := j.db.Query(`SELECT bucket_dimension,bucket_value,policy_version,reserved_minor FROM risk_bucket_reservations WHERE decision_id=?`, decision)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for rows.Next() {
+		var dimension, value, policy, amount string
+		if err := rows.Scan(&dimension, &value, &policy, &amount); err != nil {
+			t.Fatal(err)
+		}
+		reserved[riskbucket.BucketKey{Dimension: riskbucket.Dimension(dimension), Value: value, PolicyVersion: policy}] = amount
+	}
+	rows.Close()
+	order := "real-fill-" + suffix
+	market := strings.ToLower(string(key.Market))
+	recordConfirmedFillOrderScope(t, j, "real-fill-intent-"+suffix, "real-fill-attempt-"+suffix, order, FillSnapshotScope{
+		AccountRef: key.AccountID, Market: market, TradingDay: "2026-03-30", Symbol: key.Symbol, Side: "BUY",
+	})
+	bindRiskOrderAttemptDecision(t, j, order, decision)
+	if err := j.RegisterRiskBucketOrder(ctx, RiskBucketOrderPlan{OrderID: order, DecisionID: decision, OrderQuantity: 10,
+		ReservedMinor: reserved, CreatedAt: riskFillNow}); err != nil {
+		t.Fatal(err)
+	}
+	fill := observation(order, "10")
+	fill.AccountRef, fill.Market, fill.Symbol, fill.State, fill.Terminal = key.AccountID, market, key.Symbol, "FILLED", true
+	if res, err := j.RecordFill(ctx, fill); err != nil || !res.Changed {
+		t.Fatalf("real fill=%+v err=%v", res, err)
+	}
+	actual := riskBucketActual("5", "1", "0")
+	if key.Market == riskbucket.MarketKR {
+		actual.QuoteCurrency = "KRW"
+	}
+	if result, err := j.completeRiskBucketFillActual(ctx, RiskBucketActualFillPlan{Owner: key, DecisionID: decision, OrderID: order,
+		CumulativeFill: 10, Actual: actual, ObservedAt: riskFillNow}); err != nil || !result.ActualEvidenceCompleted {
+		t.Fatalf("real fill actual=%+v err=%v", result, err)
+	}
+	return order
 }
 
 func seedReleasedBrokerZeroReconciliation(t *testing.T, j *Journal, key riskbucket.OwnerKey) {

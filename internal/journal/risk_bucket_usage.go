@@ -58,8 +58,8 @@ func refuseStaleBucketUsage(ctx context.Context, tx *sql.Tx, account string, buc
 		}
 		// a066 6.5: 공유 bucket 의 한도는 진입마다 자기 snapshot 이 들고 오는 값이라, 더 큰 한도를 선언한 진입이 앞 진입의
 		// 한도를 넘길 수 있었음. 그 bucket 의 활성(HELD·FILLED) 예약이 기록한 snapshot 한도 중 **가장 작은 값**으로 cap 함
-		// (보수 방향). 한도 하나로의 단일화는 상류 매니페스트 검증의 몫(잔여, 정책 불변성 잔여와 같은 가족). "활성" 은 원장이
-		// 세는 행과 같은 모집단임 — filled 가 남은 RELEASED 행 포함.
+		// (보수 방향). 한도 하나로의 단일화는 상류 매니페스트 검증의 몫(잔여, 정책 불변성 잔여와 같은 가족). 한도 모집단은 filled 가
+		// 남은 RELEASED 행과 **떠난 행을 포함한다**(a126 D3) — 사용량 합에서 빠진 행도 자기가 기록한 한도로 계속 cap 함.
 		if caps[i].Key != bucket.Key {
 			return fmt.Errorf("%w: %s bucket cap does not align with its snapshot", ErrRiskBucketSnapshotMismatch, bucket.Key.Dimension)
 		}

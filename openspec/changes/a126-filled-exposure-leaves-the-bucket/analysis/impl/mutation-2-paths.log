@@ -1,0 +1,10 @@
+start 8daed316f087979f internal/journal/apply_hook.go
+start d154c6845d9f613b internal/journal/risk_bucket_fill.go
+start 6292cb576e64b9f9 internal/journal/risk_bucket_owner.go
+start 9ae65976e8c1502c internal/journal/risk_bucket_usage.go
+start 04b461130389895e internal/journal/strategy_dispatch_runtime.go
+start c5e0c64b2de65248 internal/riskbucket/production_snapshot_authority.go
+control GREEN
+P1 CAUGHT — 전략 정산 경로(campaign 미결선)의 binding 제거 — 그 경로의 되돌림 시험이 잡아야
+P2 CAUGHT — RecordFill 경로(campaign 결선)의 binding 제거 — 그 경로의 되돌림 시험이 잡아야
+caught 2 · survived 0
