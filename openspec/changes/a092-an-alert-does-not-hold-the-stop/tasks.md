@@ -3181,10 +3181,10 @@ RED 표와 별개로, **기존 테스트 세 개가 17판 구현의 합격 조�
       `grep -c '^- \[ \]'`로 **파일 전체**를 세기 때문이고, 6판의 "여기까지"라는 문구는
       자기 뒤의 4건(10.8~10.11)을 제외해서 아래 blockquote 2단계와 어긋나 있었다
       (6라운드 M2/M-1)
-- [ ] 10.8 **`make sdd-sync`** (fingerprint 재고정) — 위 쓰기가 전부 끝난 **뒤**
-- [ ] 10.9 `codegraph status` · `openspec validate --all` 로 게이트 전제 확인
-- [ ] 10.10 `make sdd-check`
-- [ ] 10.11 **`make gate CHANGE=a092-an-alert-does-not-hold-the-stop`** —
+- [x] 10.8 **[처분 2026-09-30] 게이트 몫 — 이 줄을 체크한 커밋 위의 격리 워크트리에서 체크 → tracker 재생성 → sdd-sync → sdd-check → gate 순서로 실행(메모리 「닫는 순서」). 실행 결과(단계별 rc)는 `review.md` §24.12 「게이트 실행」 절 — 실패하면 이 체크를 되돌린다.** **`make sdd-sync`** (fingerprint 재고정) — 위 쓰기가 전부 끝난 **뒤**
+- [x] 10.9 **[처분 2026-09-30] 게이트 몫 — 이 줄을 체크한 커밋 위의 격리 워크트리에서 체크 → tracker 재생성 → sdd-sync → sdd-check → gate 순서로 실행(메모리 「닫는 순서」). 실행 결과(단계별 rc)는 `review.md` §24.12 「게이트 실행」 절 — 실패하면 이 체크를 되돌린다.** `codegraph status` · `openspec validate --all` 로 게이트 전제 확인
+- [x] 10.10 **[처분 2026-09-30] 게이트 몫 — 이 줄을 체크한 커밋 위의 격리 워크트리에서 체크 → tracker 재생성 → sdd-sync → sdd-check → gate 순서로 실행(메모리 「닫는 순서」). 실행 결과(단계별 rc)는 `review.md` §24.12 「게이트 실행」 절 — 실패하면 이 체크를 되돌린다.** `make sdd-check`
+- [x] 10.11 **[처분 2026-09-30] 게이트 몫 — 이 줄을 체크한 커밋 위의 격리 워크트리에서 체크 → tracker 재생성 → sdd-sync → sdd-check → gate 순서로 실행(메모리 「닫는 순서」). 실행 결과(단계별 rc)는 `review.md` §24.12 「게이트 실행」 절 — 실패하면 이 체크를 되돌린다.** **`make gate CHANGE=a092-an-alert-does-not-hold-the-stop`** —
       게이트는 미체크 박스가 0일 때만 통과하므로 **마지막이다**
 
 **`openspec archive`는 여기서 하지 않는다.** `docs/WORKFLOW.md:80`이 게이트 뒤에
