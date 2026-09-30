@@ -236,9 +236,30 @@ func TestA092ALedgerOnlyReleaseDoesNotOpenTheLiveGate(t *testing.T) {
 }
 
 // 조립: Context 에서 만들 때 핸들이 하나라도 없으면 거절.
+// 게이트 준비 gstack 리뷰(testing): 핸들마다 하나씩 빼서 잼 — 빈 Context 하나로는 첫 검사(Journal)만 잰다. 양성 대조: 전부 있으면 섬.
 func TestA092TheReleaseSurfaceNeedsEveryHandle(t *testing.T) {
 	if _, err := (&Context{}).ModeOperations(); !errors.Is(err, ErrRuntimeUnavailable) {
 		t.Errorf("err = %v, want runtime unavailable", err)
+	}
+	fx := a092ReleaseEngine(t)
+	full := func() *Context {
+		return &Context{Journal: fx.j, Notifier: fx.n, Entry: fx.gate, AccountRef: a092Account}
+	}
+	if ops, err := full().ModeOperations(); err != nil || ops == nil {
+		t.Fatalf("control: a context with every handle built no surface: %v", err)
+	}
+	for name, strip := range map[string]func(*Context){
+		"journal":       func(c *Context) { c.Journal = nil },
+		"notifier":      func(c *Context) { c.Notifier = nil },
+		"entry-gate":    func(c *Context) { c.Entry = nil },
+		"account":       func(c *Context) { c.AccountRef = "" },
+		"blank-account": func(c *Context) { c.AccountRef = "   " },
+	} {
+		c := full()
+		strip(c)
+		if _, err := c.ModeOperations(); !errors.Is(err, ErrRuntimeUnavailable) {
+			t.Errorf("without %s: err = %v, want runtime unavailable", name, err)
+		}
 	}
 }
 

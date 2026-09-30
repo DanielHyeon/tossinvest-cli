@@ -39,6 +39,11 @@ func a092ModeRequest(method, token, body string) *http.Request {
 	return r
 }
 
+func a092WithContentType(r *http.Request, ct string) *http.Request {
+	r.Header.Set("Content-Type", ct)
+	return r
+}
+
 func a092Serve(fx *a092ReleaseFixture, r *http.Request) *httptest.ResponseRecorder {
 	w := httptest.NewRecorder()
 	modeControlRoutes(a092ModeToken, fx.ops).ServeHTTP(w, r)
@@ -55,16 +60,26 @@ func a092ModeNow(t *testing.T, fx *a092ReleaseFixture) string {
 }
 
 func TestA092TheModeEndpointRejectsWhatItMustNotRun(t *testing.T) {
+	// msg 는 그 거절만 내는 문구 — 크기 상한을 지워도 잘린 본문이 JSON 거절로 400 을 내므로 상태만으로는 가드를 못 가름.
 	cases := []struct {
 		name   string
 		req    *http.Request
 		status int
+		msg    string
 	}{
-		{"no-token", a092ModeRequest(http.MethodPost, "", a092GoodBody), http.StatusUnauthorized},
-		{"alert-control-token", a092ModeRequest(http.MethodPost, a092AlertToken, a092GoodBody), http.StatusUnauthorized},
-		{"get", a092ModeRequest(http.MethodGet, a092ModeToken, a092GoodBody), http.StatusMethodNotAllowed},
+		{"no-token", a092ModeRequest(http.MethodPost, "", a092GoodBody), http.StatusUnauthorized, ""},
+		{"alert-control-token", a092ModeRequest(http.MethodPost, a092AlertToken, a092GoodBody), http.StatusUnauthorized, ""},
+		{"get", a092ModeRequest(http.MethodGet, a092ModeToken, a092GoodBody), http.StatusMethodNotAllowed, ""},
 		{"unknown-field", a092ModeRequest(http.MethodPost, a092ModeToken,
-			`{"to":"normal","operator":"박지훈","approval":"OPS-1","reason":"checked","force":true}`), http.StatusBadRequest},
+			`{"to":"normal","operator":"박지훈","approval":"OPS-1","reason":"checked","force":true}`), http.StatusBadRequest, ""},
+		// 게이트 준비 gstack 리뷰(testing): 요청 모양 거절 셋 — 형식 · 크기 상한 · 값 하나.
+		{"not-json", a092WithContentType(a092ModeRequest(http.MethodPost, a092ModeToken, a092GoodBody), "text/plain"),
+			http.StatusUnsupportedMediaType, "application/json required"},
+		{"oversized", a092ModeRequest(http.MethodPost, a092ModeToken,
+			`{"to":"normal","operator":"박지훈","approval":"OPS-1","reason":"`+strings.Repeat("x", 8<<10)+`"}`), http.StatusBadRequest,
+			"request body rejected"},
+		{"trailing-value", a092ModeRequest(http.MethodPost, a092ModeToken, a092GoodBody+`{}`), http.StatusBadRequest,
+			"one JSON value"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -72,6 +87,9 @@ func TestA092TheModeEndpointRejectsWhatItMustNotRun(t *testing.T) {
 			w := a092Serve(fx, c.req)
 			if w.Code != c.status {
 				t.Errorf("status = %d, want %d (body %s)", w.Code, c.status, w.Body.String())
+			}
+			if c.msg != "" && !strings.Contains(w.Body.String(), c.msg) {
+				t.Errorf("body = %s, want the %q rejection", w.Body.String(), c.msg)
 			}
 			if mode := a092ModeNow(t, fx); mode != journal.ModeEntryBlocked {
 				t.Errorf("mode = %s — a rejected request reached the ledger", mode)

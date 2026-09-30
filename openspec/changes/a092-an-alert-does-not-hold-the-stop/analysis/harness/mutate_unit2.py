@@ -486,6 +486,53 @@ R26B_MUTANTS = [
 ]
 R26B_TESTS = [['go', 'test', '-count=1', '-run', 'TestA092', './internal/obs'], ['go', 'test', '-count=1', '-run', 'TestA092|A124|A098', './internal/app/engine'], ['go', 'test', '-count=1', '-run', 'TestA092', './internal/execgw'], ['go', 'test', '-count=1', '-run', 'TestA092', './cmd/tossctl']]
 
+# 25.8 — 게이트 준비 gstack 리뷰 처분 반증. `--set r26d`.
+R26D_MUTANTS = [
+    ('W01 judge gate text carries the raw escalation error', 'internal/obs/notifier.go',
+     '"a critical %s alert could not be delivered and the operating mode could not be tightened (details are in the engine log)", e.Type))',
+     '"a critical %s alert could not be delivered and the operating mode could not be tightened: %v", e.Type, err))'),
+    ('W02 escalation failure log unmasked', 'internal/obs/notifier.go',
+     '\t\tn.Log.Error(EventOperatingMode, MaskAccount(err, n.AccountRef),',
+     '\t\tn.Log.Error(EventOperatingMode, err,'),
+    ('W03 mode endpoint accepts a non-JSON content type', 'internal/app/engine/mode_control_transport_unix.go',
+     'if err != nil || mediaType != "application/json" {',
+     'if err != nil && mediaType != "application/json" {'),
+    ('W04 mode endpoint accepts an oversized body', 'internal/app/engine/mode_control_transport_unix.go',
+     'if err != nil || len(body) > maxModeControlRequestBytes {',
+     'if err != nil {'),
+    ('W05 mode endpoint accepts a trailing JSON value', 'internal/app/engine/mode_control_transport_unix.go',
+     'if err := decoder.Decode(&trailing); !errors.Is(err, io.EOF) {',
+     'if err := decoder.Decode(&trailing); false && !errors.Is(err, io.EOF) {'),
+    ('W06 CLI sends the token to a foreign socket name', 'cmd/tossctl/engine_mode_release_client_unix.go',
+     'if descriptor.Socket != engine.ModeControlSocketFileName() || descriptor.PID <= 0 ||',
+     'if descriptor.PID <= 0 ||'),
+    ('W07 CLI accepts pid 0', 'cmd/tossctl/engine_mode_release_client_unix.go',
+     '|| descriptor.PID <= 0 ||',
+     '|| descriptor.PID < 0 ||'),
+    ('W08 CLI accepts a 31-char token', 'cmd/tossctl/engine_mode_release_client_unix.go',
+     'len(strings.TrimSpace(descriptor.Token)) < 32 {',
+     'len(strings.TrimSpace(descriptor.Token)) < 31 {'),
+    ('W09 CLI accepts unknown descriptor fields', 'cmd/tossctl/engine_mode_release_client_unix.go',
+     '\tdecoder.DisallowUnknownFields()\n',
+     ''),
+    ('W10 CLI accepts an oversized descriptor', 'cmd/tossctl/engine_mode_release_client_unix.go',
+     'if err != nil || len(body) > 4<<10 {',
+     'if err != nil {'),
+    ('W11 release surface without a notifier', 'internal/app/engine/modeops.go',
+     'c.Notifier == nil || ',
+     ''),
+    ('W12 release surface without an entry gate', 'internal/app/engine/modeops.go',
+     'c.Entry == nil || ',
+     ''),
+    ('W13 release surface without an account', 'internal/app/engine/modeops.go',
+     ' || strings.TrimSpace(c.AccountRef) == ""',
+     ''),
+    ('W14 M13 first projection keeps a latch it did not project', 'internal/execgw/modegate.go',
+     '\tg.modeSeq = rec.Seq\n\t_, had := g.latches[ReasonOperatingModeBlocked]',
+     '\thad := g.modeSeq > 0\n\tg.modeSeq = rec.Seq'),
+]
+R26D_TESTS = [['go', 'test', '-count=1', '-run', 'TestA092', './internal/obs'], ['go', 'test', '-count=1', '-run', 'TestA092', './internal/app/engine'], ['go', 'test', '-count=1', '-run', 'TestA092', './internal/execgw'], ['go', 'test', '-count=1', '-run', 'TestA092', './cmd/tossctl']]
+
 TESTS = [
     ["go", "test", "-count=1", "-run", "TestA092|TestEnqueueAlert|TestClaim", "./internal/journal"],
     ["go", "test", "-count=1", "-run", "TestA092|TestA096|TestA097|Mode|Transition|Announc", "./internal/obs"],
@@ -539,6 +586,8 @@ def main() -> None:
             MUTANTS, TESTS = R26_MUTANTS, R26_TESTS
         elif args[i + 1] == "r26b":
             MUTANTS, TESTS = R26B_MUTANTS, R26B_TESTS
+        elif args[i + 1] == "r26d":
+            MUTANTS, TESTS = R26D_MUTANTS, R26D_TESTS
         args = args[:i] + args[i + 2:]
     scratch, own = Path(args[0]), args[1:]
     copy = scratch / f"mut-a092-u2-{os.getpid()}"

@@ -227,3 +227,27 @@ func TestA092AFailedRecordKeepsTheKeyOutOfTheGate(t *testing.T) {
 		t.Errorf("the record-failure line does not mask the account: %s", recordLine)
 	}
 }
+
+// 게이트 준비 gstack 리뷰: 승격 실패의 원문은 escalate 로그 줄의 error 칸에 계좌를 가려 남음(MaskAccount 공유).
+// 같은 줄의 FieldAccount 는 base 관행 — 불변식 8 (b) 사람 결정 큐 몫이라 여기서 재지 않음.
+func TestA092TheEscalationFailureErrorMasksTheAccount(t *testing.T) {
+	j := a092OpenJournal(t)
+	_ = j.Close() // 닫힌 원장 — 승격 쓰기가 반드시 실패
+	buf := &a092SyncBuffer{}
+	n := &Notifier{Journal: j, Log: a092JSONLogger(buf), AccountRef: a092Acct, Clock: clock.System()}
+	included, err := n.escalate(context.Background(), Event{Type: EventOperatingMode})
+	if !included || err == nil {
+		t.Fatalf("arrangement: included=%v err=%v, want a failed escalation", included, err)
+	}
+	for _, l := range a092Lines(t, buf.String()) {
+		if a092Value(l, "msg") != string(EventOperatingMode) {
+			continue
+		}
+		e := a092Value(l, FieldError)
+		if strings.Contains(e, a092Acct) || !strings.Contains(e, "[account]") {
+			t.Errorf("escalation failure error field does not mask the account: %q", e)
+		}
+		return
+	}
+	t.Fatalf("no escalation failure line:\n%s", buf.String())
+}

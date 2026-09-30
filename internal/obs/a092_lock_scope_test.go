@@ -314,3 +314,27 @@ func TestA092AFailedEscalationLatchesUnconditionally(t *testing.T) {
 		})
 	}
 }
+
+// gstack 리뷰(게이트 준비, 불변식 8 (a)): 승격 실패의 무조건 래치 설명에 원문 오류(원장 문구 「… transition for <계좌>」)가
+// 실리지 않음 — 게이트 설명은 상태 출력이 어디서나 읽는 칸.
+func TestA092AFailedEscalationLatchKeepsTheAccountOut(t *testing.T) {
+	for _, site := range a092Sites {
+		if !site.escalates {
+			continue
+		}
+		t.Run(site.name, func(t *testing.T) {
+			gate, _, _ := a092SiteRun(t, site, "acct-a092", "epoch:"+site.name,
+				func(cancel context.CancelFunc, g *execgw.EntryGate) {
+					g.Clear(execgw.ReasonAlertUndelivered)
+					cancel() // 승격 쓰기를 실패시킴
+				})
+			detail, ok := gate.Blocks()[execgw.ReasonAlertUndelivered]
+			if !ok {
+				t.Fatal("arrangement: no unconditional latch")
+			}
+			if strings.Contains(detail, "acct-a092") {
+				t.Errorf("the gate description carries the account: %q", detail)
+			}
+		})
+	}
+}

@@ -109,7 +109,8 @@ func StartModeControlServer(engineDir string, ops *ModeOperations) (*ModeControl
 		Handler:           modeControlRoutes(token, ops),
 		ReadHeaderTimeout: 2 * time.Second,
 		ReadTimeout:       5 * time.Second,
-		// 완화는 원장 트랜잭션 하나 + 재읽기 — 원격 호출이 없으므로 알림 제어와 같은 한도.
+		// 원격 호출은 없음. 한 요청이 audit · 커밋 · 통지 기록 · 재읽기 넷을 단일 연결 원장에서 차례로 하므로 알림 제어(5s)보다
+		// 여유를 둠(주석과 값이 갈렸던 것을 게이트 준비 gstack 리뷰가 찾음 — 값은 그대로, 주석을 값에 맞춤).
 		WriteTimeout:   10 * time.Second,
 		IdleTimeout:    15 * time.Second,
 		MaxHeaderBytes: 8 << 10,

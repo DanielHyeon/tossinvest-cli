@@ -88,7 +88,7 @@ func TestA092ModeReleaseSaysWhatRemains(t *testing.T) {
 // audit 줄이 남음. 엔진 쪽 판정 시험은 internal/app/engine/a092_mode_release_test.go 몫.
 func TestA092ModeReleaseGoesThroughTheRunningEngine(t *testing.T) {
 	ctx := context.Background()
-	dir, err := os.MkdirTemp("", "a092-mode-*")
+	dir, err := os.MkdirTemp("/tmp", "a092-mode-*") // sun_path 한도 — 긴 $TMPDIR 에서 bind 가 깨짐(gstack 리뷰), a108 하니스와 같은 선택
 	if err != nil {
 		t.Fatal(err)
 	}

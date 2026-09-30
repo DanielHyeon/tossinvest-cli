@@ -1,0 +1,23 @@
+# 판 1 (W01~W14) — W04 SURVIVED: 크기 상한을 지워도 LimitReader 가 자른 본문이 JSON 거절로 같은 400 을 냄(가드 가림)
+TREE	HEAD 9f6dc60d77c59709c28d165bcdf1aecd9e4bd3a3	uncommitted tracked: cmd/tossctl/a092_mode_release_cmd_test.go,cmd/tossctl/a092_mode_release_output_test.go,internal/app/engine/a092_mode_endpoint_rejects_test.go,internal/app/engine/a092_mode_release_test.go,internal/app/engine/mode_control_transport_unix.go,internal/obs/a092_lock_scope_test.go,internal/obs/a092_r26b_internal_test.go,internal/obs/notifier.go	own untracked: cmd/tossctl/a092_mode_release_descriptor_test.go,internal/app/engine/a092_m13_restore_latch_test.go
+CONTROL	GREEN	
+W01 judge gate text carries the raw escalation error	CAUGHT	2 failing: TestA092AFailedEscalationLatchKeepsTheAccountOut/unrecorded, TestA092AFailedEscalationLatchKeepsTheAccountOut/exhausted
+W02 escalation failure log unmasked	CAUGHT	1 failing: TestA092TheEscalationFailureErrorMasksTheAccount
+W03 mode endpoint accepts a non-JSON content type	CAUGHT	1 failing: TestA092TheModeEndpointRejectsWhatItMustNotRun/not-json
+W04 mode endpoint accepts an oversized body	SURVIVED	
+W05 mode endpoint accepts a trailing JSON value	CAUGHT	1 failing: TestA092TheModeEndpointRejectsWhatItMustNotRun/trailing-value
+W06 CLI sends the token to a foreign socket name	CAUGHT	1 failing: TestA092TheModeReleaseClientChecksTheDescriptorBeforeSendingTheToken/foreign-socket
+W07 CLI accepts pid 0	CAUGHT	1 failing: TestA092TheModeReleaseClientChecksTheDescriptorBeforeSendingTheToken/no-pid
+W08 CLI accepts a 31-char token	CAUGHT	1 failing: TestA092TheModeReleaseClientChecksTheDescriptorBeforeSendingTheToken/short-token
+W09 CLI accepts unknown descriptor fields	CAUGHT	1 failing: TestA092TheModeReleaseClientChecksTheDescriptorBeforeSendingTheToken/unknown-field
+W10 CLI accepts an oversized descriptor	CAUGHT	1 failing: TestA092TheModeReleaseClientChecksTheDescriptorBeforeSendingTheToken/oversized
+W11 release surface without a notifier	CAUGHT	1 failing: TestA092TheReleaseSurfaceNeedsEveryHandle
+W12 release surface without an entry gate	CAUGHT	1 failing: TestA092TheReleaseSurfaceNeedsEveryHandle
+W13 release surface without an account	CAUGHT	1 failing: TestA092TheReleaseSurfaceNeedsEveryHandle
+W14 M13 first projection keeps a latch it did not project	CAUGHT	2 failing: TestA092ARestoreFailureLatchIsReplacedByTheNextProjection, TestA092TheModeRevisionMovesOnlyWhenPresenceChanges
+# 판 2 (거절 시험이 가드별 문구를 단언하게 고친 뒤 W03~W05)
+TREE	HEAD 9f6dc60d77c59709c28d165bcdf1aecd9e4bd3a3	uncommitted tracked: cmd/tossctl/a092_mode_release_cmd_test.go,cmd/tossctl/a092_mode_release_output_test.go,internal/app/engine/a092_mode_endpoint_rejects_test.go,internal/app/engine/a092_mode_release_test.go,internal/app/engine/mode_control_transport_unix.go,internal/obs/a092_lock_scope_test.go,internal/obs/a092_r26b_internal_test.go,internal/obs/notifier.go	own untracked: cmd/tossctl/a092_mode_release_descriptor_test.go,internal/app/engine/a092_m13_restore_latch_test.go
+CONTROL	GREEN	
+W03 mode endpoint accepts a non-JSON content type	CAUGHT	1 failing: TestA092TheModeEndpointRejectsWhatItMustNotRun/not-json
+W04 mode endpoint accepts an oversized body	CAUGHT	1 failing: TestA092TheModeEndpointRejectsWhatItMustNotRun/oversized
+W05 mode endpoint accepts a trailing JSON value	CAUGHT	1 failing: TestA092TheModeEndpointRejectsWhatItMustNotRun/trailing-value

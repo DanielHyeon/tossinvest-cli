@@ -260,8 +260,10 @@ func (n *Notifier) judge(ctx context.Context, e Event, v latchVerdict) {
 	}
 	included, err := n.escalate(ctx, e)
 	if included && err != nil && n.Gate != nil {
+		// 설명은 고정 문구 — 승격 실패 원문은 원장 문구(「… transition for <계좌>」)를 품고, 게이트 설명은 상태 출력이 어디서나
+		// 읽는 칸임(불변식 8 (a), 게이트 준비 gstack 리뷰). 원문은 escalate 의 로그 줄에 계좌를 가려 남음.
 		n.Gate.Block(execgw.ReasonAlertUndelivered, fmt.Sprintf(
-			"a critical %s alert could not be delivered and the operating mode could not be tightened: %v", e.Type, err))
+			"a critical %s alert could not be delivered and the operating mode could not be tightened (details are in the engine log)", e.Type))
 	}
 }
 
@@ -428,7 +430,7 @@ func (n *Notifier) escalate(ctx context.Context, e Event) (included bool, err er
 		journal.ModeTriggerCriticalAlertUndelivered, nil)
 	switch {
 	case err != nil && n.Log != nil:
-		n.Log.Error(EventOperatingMode, err,
+		n.Log.Error(EventOperatingMode, MaskAccount(err, n.AccountRef),
 			FieldAccount, n.AccountRef,
 			FieldTriggerEvent, string(e.Type),
 			FieldDetail, "the undelivered critical alert did not reach the operating mode, "+

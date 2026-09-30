@@ -60,8 +60,9 @@ func TestA092ModeReleaseOutputDoesNotGuessWhatItCouldNotRead(t *testing.T) {
 	})
 	t.Run("not-pending", func(t *testing.T) {
 		out := a092Render(engine.ModeReleaseResult{Changed: true, TransitionID: "t1", Mode: "NORMAL", Notified: true})
-		if strings.Contains(out, "이미 전달 처리됨") {
-			t.Errorf("not pending was rendered as delivered — it may have been acknowledged:\n%s", out)
+		notice := a092NoticeLine(out)
+		if strings.Contains(notice, "이미 전달 처리됨") || !strings.Contains(notice, "승인") {
+			t.Errorf("not pending must say it may have been acknowledged, not that it was delivered: %q", notice)
 		}
 	})
 }
