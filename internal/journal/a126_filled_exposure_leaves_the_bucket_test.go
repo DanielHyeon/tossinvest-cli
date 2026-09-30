@@ -8,6 +8,7 @@ package journal
 import (
 	"context"
 	"errors"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -214,7 +215,9 @@ func TestA126ALateBuyViaRecordFillWithCampaignHookRevertsTheDeparture(t *testing
 }
 
 // M3 (전략 정산 경로, Campaign hook 미결선 전제) — backfillConfirmedStrategyFillTx 가 직접 binding 을 부르는 자리(strategy_dispatch_runtime.go
-// 의 campaignBound=false 갈래)로 같은 late BUY 가 들어와도 되돌림.
+// 의 campaignBound=false 갈래)로 같은 late BUY 가 들어와도 되돌림. 범위(1.5 R12): 이 시험은 backfill 을 최소 lease 로 **직접** 부르고
+// attempt 상태를 SQL 로 옮김 — linkConfirmedStrategyDispatchTx · registerConfirmedStrategyRiskOrderTx 를 거치는 정산 경로 전체도, 해제 뒤
+// 전략 late 체결의 도달 가능성도 증명하지 않음. 재는 것은 그 경로 끝의 binding 호출이 되돌림을 세운다는 것(변이 P1).
 func TestA126ALateBuyViaStrategySettlementWithoutCampaignHookRevertsTheDeparture(t *testing.T) {
 	j, key := seedRiskBucketOwnerLifecycle(t, riskbucket.MarketUS, "late-strategy")
 	o := a126FilledOwner(t, j, key, "late-strategy")
@@ -288,14 +291,21 @@ func a126Admit(t *testing.T, j *Journal, suffix, limit string, q int64) error {
 
 func a126AdmitSymbol(t *testing.T, j *Journal, suffix, symbol, limit, held string, q int64) error {
 	t.Helper()
+	return a126AdmitOwner(t, j, suffix, riskbucket.OwnerKey{AccountID: a126Account, Market: riskbucket.MarketUS, Symbol: symbol,
+		ProspectiveGeneration: "prospective-a126-" + suffix}, limit, held, q)
+}
+
+// a126AdmitOwner 는 owner 키 넷(계좌 · US · 종목 · generation)을 호출자가 정하는 fresh admission.
+func a126AdmitOwner(t *testing.T, j *Journal, suffix string, key riskbucket.OwnerKey, limit, held string, q int64) error {
+	t.Helper()
 	existing := "a126-existing-" + suffix
-	seedExistingRiskReservation(t, j, existing, a126Account)
-	plan := riskBucketAdmissionFixture(t, "a126-"+suffix, a126Account, "lane-short", "campaign-a126-"+suffix, "prospective-a126-"+suffix, limit, held)
+	seedExistingRiskReservation(t, j, existing, key.AccountID)
+	plan := riskBucketAdmissionFixture(t, "a126-"+suffix, key.AccountID, "lane-short", "campaign-a126-"+suffix, key.ProspectiveGeneration, limit, held)
 	plan.ExistingReservationID = existing
-	plan.Owner.Key.Market, plan.Owner.Key.Symbol = riskbucket.MarketUS, symbol
+	plan.Owner.Key.Market, plan.Owner.Key.Symbol = riskbucket.MarketUS, key.Symbol
 	plan.Admission.Policy.QuoteCurrency = "USD"
 	rebindRiskBucket(t, &plan, 1, riskbucket.BucketKey{Dimension: riskbucket.DimensionMarket, Value: "US", PolicyVersion: "policy-v1"})
-	rebindRiskBucket(t, &plan, 4, riskbucket.BucketKey{Dimension: riskbucket.DimensionSymbol, Value: symbol, PolicyVersion: "policy-v1"})
+	rebindRiskBucket(t, &plan, 4, riskbucket.BucketKey{Dimension: riskbucket.DimensionSymbol, Value: key.Symbol, PolicyVersion: "policy-v1"})
 	plan.Admission.QCandidate, plan.Admission.QExistingGuardian = uint64(q), uint64(q)
 	_, err := j.CommitRiskBucketAdmission(context.Background(), plan)
 	return err
@@ -325,10 +335,15 @@ func TestA126WithoutTheDepartureTheSameEntryIsStale(t *testing.T) {
 // M6 · M6b · codex #4 — 영수증 있는 owner 행의 손상 · 불일치는 판독 불가(scope latch 로 되돌려진 행 포함).
 func TestA126CorruptReceiptedRowsAreUnreadable(t *testing.T) {
 	cases := map[string]string{
-		"HELD row":                  `UPDATE risk_bucket_reservations SET state='HELD',held_minor='5' WHERE owner_prospective_generation=? AND bucket_dimension='sector'`,
-		"held remainder":            `UPDATE risk_bucket_reservations SET held_minor='5' WHERE owner_prospective_generation=? AND bucket_dimension='sector'`,
-		"owner released_at cleared": `UPDATE risk_bucket_owners SET released_at=NULL WHERE prospective_generation=?`,
-		"owner released_at moved":   `UPDATE risk_bucket_owners SET released_at='2026-03-30T23:59:00Z' WHERE prospective_generation=?`,
+		"HELD row": `UPDATE risk_bucket_reservations SET state='HELD',held_minor='5' WHERE owner_prospective_generation=? AND bucket_dimension='sector'`,
+		// 1.5 R4(X3) — HELD 상태 단독(held 0): held≠0 절이 대신 막지 못하는 모양.
+		"HELD row with held 0": `UPDATE risk_bucket_reservations SET state='HELD' WHERE owner_prospective_generation=? AND bucket_dimension='sector'`,
+		// 1.5 R5(X7) — 사본 불일치를 generation 밖 축(symbol · market)으로도 잼. account 는 사용량 조회 조건이라 행이 조회에서 빠짐(대상 아님).
+		"reservation symbol diverged from the decision": `UPDATE risk_bucket_reservations SET symbol='A126X' WHERE owner_prospective_generation=? AND bucket_dimension='sector'`,
+		"reservation market diverged from the decision": `UPDATE risk_bucket_reservations SET market='KR' WHERE owner_prospective_generation=? AND bucket_dimension='sector'`,
+		"held remainder":                                   `UPDATE risk_bucket_reservations SET held_minor='5' WHERE owner_prospective_generation=? AND bucket_dimension='sector'`,
+		"owner released_at cleared":                        `UPDATE risk_bucket_owners SET released_at=NULL WHERE prospective_generation=?`,
+		"owner released_at moved":                          `UPDATE risk_bucket_owners SET released_at='2026-03-30T23:59:00Z' WHERE prospective_generation=?`,
 		"reservation owner key diverged from the decision": `UPDATE risk_bucket_reservations SET owner_prospective_generation='a126-other' WHERE owner_prospective_generation=? AND bucket_dimension='sector'`,
 	}
 	for name, corrupt := range cases {
@@ -347,8 +362,43 @@ func TestA126CorruptReceiptedRowsAreUnreadable(t *testing.T) {
 				if _, err := riskbucket.ReadJournalBucketUsage(context.Background(), j.db, a126Account, riskbucket.DimensionSector, "sector-tech"); !errors.Is(err, riskbucket.ErrJournalUsageInvalid) {
 					t.Fatalf("err=%v, want ErrJournalUsageInvalid", err)
 				}
+				// 1.5 R8 — 판독 불가는 admission 까지 fail-closed 로 전파(refuseStaleBucketUsage 의 판독 오류 갈래). 문구로 그 갈래를
+				// 가름: 그 반환을 지우면 빈 사용량이 "not an amount" 로 같은 오류 종류를 내므로 종류만으로는 못 가름. snapshot 은 50 을
+				// 주장함 — 되돌림 변형에서 손상 없는 앞 bucket(horizon 50)이 stale 로 먼저 거절해 판독 갈래를 가리지 않게.
+				if err := a126AdmitSymbol(t, j, "after-corrupt", "MSFT", "1000", "50", 1); !errors.Is(err, ErrRiskBucketSnapshotMismatch) || !strings.Contains(err.Error(), "ledger usage unreadable") {
+					t.Fatalf("admission err=%v, want the unreadable ledger usage to refuse entry", err)
+				}
 			})
 		}
+	}
+}
+
+// 1.5 R6(X1 · X2 · X9) — 영수증은 자기 owner 키 넷 전부로만 붙음. 해제된 A 와 키 셋을 공유하고 하나만 다른 활성 owner(새 generation ·
+// 같은 generation 의 다른 종목 · 같은 종목 · generation 의 다른 계좌)의 예약은 판독되고 셈에 듦. 영수증 조인에서 축 하나가 빠지면 그
+// owner 가 A 의 영수증을 받아 released_at 불일치로 판독 불가가 됨 — 오늘은 그 역지지가 우연히 fail-closed 로 막던 것을 축별로 고정.
+func TestA126AReceiptBindsOnlyItsOwnOwnerKey(t *testing.T) {
+	for _, c := range []struct{ name, account, symbol, generation string }{
+		{"next generation of the same symbol", a126Account, "", "prospective-a126-join-next"},
+		{"another symbol under the same generation", a126Account, "MSFT", ""},
+		{"another account under the same symbol and generation", "acct-a126-other", "", ""},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			j, a := a126ReleasedOwner(t, "join")
+			key := riskbucket.OwnerKey{AccountID: c.account, Market: riskbucket.MarketUS, Symbol: c.symbol, ProspectiveGeneration: c.generation}
+			if key.Symbol == "" {
+				key.Symbol = a.key.Symbol
+			}
+			if key.ProspectiveGeneration == "" {
+				key.ProspectiveGeneration = a.key.ProspectiveGeneration
+			}
+			if err := a126AdmitOwner(t, j, "join-peer", key, "1000", "0", 2); err != nil {
+				t.Fatalf("peer admission: %v", err)
+			}
+			usage, err := riskbucket.ReadJournalBucketUsage(context.Background(), j.db, key.AccountID, riskbucket.DimensionSector, "sector-tech")
+			if err != nil || usage.FilledMinor != "0" || usage.HeldMinor != "10" {
+				t.Fatalf("peer usage=%+v err=%v, want only the peer's held 10 (A departed, the peer counted and readable)", usage, err)
+			}
+		})
 	}
 }
 
@@ -410,30 +460,74 @@ func TestA126ADepartedRowsLatchFlagStillBlocksEntry(t *testing.T) {
 	}
 }
 
-// 델타 「떠남은 다른 owner 의 latch 를 풀지 않는다」 — B 의 RISK_OVERAGE 는 A 의 해제 뒤에도 남아 신규 진입을 막음.
+// a126OrderFor 는 owner 의 결정에 주문 하나(10 주, 모든 bucket 예약 reserved)를 생산 작성자로 등록하고 결정 id 를 돌려줌.
+func a126OrderFor(t *testing.T, j *Journal, key riskbucket.OwnerKey, order, reserved string, at time.Time) string {
+	t.Helper()
+	decision := a126Decision(t, j, key)
+	recordConfirmedFillOrderScope(t, j, order+"-intent", order+"-attempt", order, FillSnapshotScope{
+		AccountRef: key.AccountID, Market: strings.ToLower(string(key.Market)), TradingDay: "2026-03-30", Symbol: key.Symbol, Side: "BUY",
+	})
+	bindRiskOrderAttemptDecision(t, j, order, decision)
+	if err := j.RegisterRiskBucketOrder(context.Background(), RiskBucketOrderPlan{OrderID: order, DecisionID: decision, OrderQuantity: 10,
+		ReservedMinor: a126Reserved(key.Symbol, reserved), CreatedAt: at}); err != nil {
+		t.Fatal(err)
+	}
+	return decision
+}
+
+// a126FillWithActual 은 누적 cumulative 주 체결을 기록하고 실제 가격 price(환율 1 · 수수료 0)로 actual 을 보완함 — overage 는 이
+// 보완에서 실제 금액으로 재계산됨(생산 작성자 RecordFill · completeRiskBucketFillActual).
+func a126FillWithActual(t *testing.T, j *Journal, key riskbucket.OwnerKey, decision, order string, cumulative uint64, price, at string) {
+	t.Helper()
+	fill := observation(order, strconv.FormatUint(cumulative, 10))
+	fill.AccountRef, fill.Symbol, fill.ObservedAt = key.AccountID, key.Symbol, at
+	if res, err := j.RecordFill(context.Background(), fill); err != nil || !res.Changed {
+		t.Fatalf("fill %s@%d=%+v err=%v", order, cumulative, res, err)
+	}
+	if result, err := j.completeRiskBucketFillActual(context.Background(), RiskBucketActualFillPlan{Owner: key, DecisionID: decision, OrderID: order,
+		CumulativeFill: cumulative, Actual: riskBucketActual(price, "1", "0"), ObservedAt: riskFillNow}); err != nil || !result.ActualEvidenceCompleted {
+		t.Fatalf("actual %s@%d=%+v err=%v", order, cumulative, result, err)
+	}
+}
+
+// 델타 「떠남은 다른 owner 의 latch 를 풀지 않는다」 — A 의 사용량 때문에 B 에 선 RISK_OVERAGE(생산 재계산)는 A 의 해제 뒤에도 남아
+// 신규 진입을 막고, 운영자 해제 뒤 B 의 다음 체결은 A 가 빠진 합으로 overage 를 판정함(1.5 R1 — 뒷절). 값은 A 를 넣으면 넘고 빼면
+// 안 넘게 고름: 한도 100, A filled 50, B 는 가격 6 실체결.
 func TestA126ADepartureDoesNotReleaseAnotherOwnersLatch(t *testing.T) {
+	ctx := context.Background()
 	j, key := seedRiskBucketOwnerLifecycle(t, riskbucket.MarketUS, "other-latch")
 	a126FilledOwner(t, j, key, "other-latch")
 	if err := a126AdmitSymbol(t, j, "b", "MSFT", "100", "50", 10); err != nil {
 		t.Fatalf("B admission while A still counts: %v", err)
 	}
-	if _, err := j.db.Exec(`UPDATE risk_bucket_owners SET risk_overage_latched=1 WHERE prospective_generation='prospective-a126-b'`); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := j.db.Exec(`UPDATE risk_bucket_reservations SET risk_overage_latched=1 WHERE owner_prospective_generation='prospective-a126-b'`); err != nil {
-		t.Fatal(err)
+	b := riskbucket.OwnerKey{AccountID: a126Account, Market: riskbucket.MarketUS, Symbol: "MSFT", ProspectiveGeneration: "prospective-a126-b"}
+	bDecision := a126OrderFor(t, j, b, "a126-b-order", "50", riskFillNow.Add(10*time.Minute))
+	// B 4 주 실가격 6 → filled 24 + 남은 held 30 = 54. A 50 을 더한 104 > 100 → B 에 RISK_OVERAGE(A 를 빼면 54 로 안 넘음).
+	a126FillWithActual(t, j, b, bDecision, "a126-b-order", 4, "6", "2026-03-30T00:52:00Z")
+	if overage, _, _ := ownerFlags(t, j, b); overage != 1 {
+		t.Fatal("arrangement: A's usage did not latch B")
 	}
 	a126Release(t, j, key)
-	var ownerLatch int
-	if err := j.db.QueryRow(`SELECT risk_overage_latched FROM risk_bucket_owners WHERE prospective_generation='prospective-a126-b'`).Scan(&ownerLatch); err != nil || ownerLatch != 1 {
-		t.Fatalf("B owner latch=%d err=%v, want it kept after A's departure", ownerLatch, err)
+	if overage, _, _ := ownerFlags(t, j, b); overage != 1 {
+		t.Fatal("A's departure released B's RISK_OVERAGE")
 	}
 	usage := a126Usage(t, j, riskbucket.DimensionSector, "sector-tech")
-	if usage.FilledMinor != "0" || usage.HeldMinor != "50" || !usage.OverageLatched {
-		t.Fatalf("usage=%+v, want A's 50 gone, B's held 50 counted and B's latch kept", usage)
+	if usage.FilledMinor != "24" || usage.HeldMinor != "30" || !usage.OverageLatched {
+		t.Fatalf("usage=%+v, want A's 50 gone, B's 24 filled + 30 held counted and B's latch kept", usage)
 	}
 	if err := a126Admit(t, j, "c", "1000", 1); !errors.Is(err, ErrRiskBucketEntryBlocked) {
 		t.Fatalf("err=%v, want B's latch to keep blocking new exposure", err)
+	}
+	// 운영자 해제 → B 5 주 누적 실가격 6 → filled 30 + held 25 = 55. A 를 넣으면 105 > 100 이라 다시 latch 되어야 할 값.
+	if _, err := j.ReleaseRiskOverageLatch(ctx, latchRelease(b, ownerLatchView(t, j, b).StateDigest, &relaxationAuditor{})); err != nil {
+		t.Fatalf("operator release of B's RISK_OVERAGE: %v", err)
+	}
+	a126FillWithActual(t, j, b, bDecision, "a126-b-order", 5, "6", "2026-03-30T00:53:00Z")
+	if overage, unknown, rows := ownerFlags(t, j, b); overage != 0 || unknown != 0 || rows != 0 {
+		t.Fatalf("B latches owner=%d unknown=%d reservation rows=%d after its next fill — the overage recompute still counted A's departed 50", overage, unknown, rows)
+	}
+	if usage := a126Usage(t, j, riskbucket.DimensionSector, "sector-tech"); usage.FilledMinor != "30" || usage.HeldMinor != "25" || usage.Latched {
+		t.Fatalf("usage=%+v, want only B's 30 filled + 25 held, unlatched", usage)
 	}
 }
 
@@ -452,7 +546,9 @@ func TestA126APartialSellLeavesUsageUnchanged(t *testing.T) {
 	a126AssertShared(t, j, "50")
 }
 
-// a126Fingerprint 는 재시작 replay 비교용 — 공유 bucket 넷의 사용량 · RowDigest · latch.
+// a126Fingerprint 는 재시작 replay 비교용 — 공유 bucket 넷의 사용량 · RowDigest · latch. snapshot digest 는 이 원장(현행 schema)에서
+// 생산 생성기가 돌지 않아(v27 전용) riskbucket 쪽 TestA126SnapshotDigestIsReplayDeterministicAcrossReleaseSharedFillAndRevert 가
+// 같은 단계 순서로 생성기를 실측함(1.5 R3).
 func a126Fingerprint(t *testing.T, j *Journal) string {
 	t.Helper()
 	var parts []string
@@ -546,15 +642,63 @@ func TestA126ResidualReusedOrderIDAcrossGenerationsKeepsTheOldOwnerDeparted(t *t
 	}
 }
 
-// 잔여 핀 codex #2 — 되돌림 뒤 공유 합이 기록 한도를 넘어도 이미 예약된 다른 owner 에는 bucket latch 도 scope latch 도 서지 않음(제출
-// 재검증 `RevalidateQFinalAdmission` 은 latch 만 본다 — freeze census B27). 배선 로트(R3)가 이 구멍을 닫으면 이 시험이 깨짐.
-func TestA126ResidualRevertAfterAnotherOwnersReservationLeavesItUnlatched(t *testing.T) {
+// a126IssueFor 는 qFinalIssueFixture 를 이 로트의 계좌 · US 로 옮긴 발급 요청임 — 결정 · 집계 예약 · 다섯 bucket 예약 · owner 를 한
+// 트랜잭션에 쓰는 생산 발급(RecordQFinalDecisionAndReserve) 입력. 수량 q · 가격 5 → bucket 마다 held 5q.
+func a126IssueFor(t *testing.T, j *Journal, suffix, symbol, limit string, q uint64) QFinalIssueRequest {
+	t.Helper()
+	plan := riskBucketAdmissionFixture(t, "a126-"+suffix, a126Account, "lane-short", "campaign-a126-"+suffix, "prospective-a126-"+suffix, limit, "0")
+	plan.Owner.Key.Market, plan.Owner.Key.Symbol = riskbucket.MarketUS, symbol
+	plan.Admission.Policy.QuoteCurrency = "USD"
+	rebindRiskBucket(t, &plan, 1, riskbucket.BucketKey{Dimension: riskbucket.DimensionMarket, Value: "US", PolicyVersion: "policy-v1"})
+	rebindRiskBucket(t, &plan, 4, riskbucket.BucketKey{Dimension: riskbucket.DimensionSymbol, Value: symbol, PolicyVersion: "policy-v1"})
+	plan.Admission.QCandidate, plan.Admission.QExistingGuardian = q, q
+	policyVersion, err := QFinalPolicyVersion("guardian-v1", plan.TransactionID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	decisionID, reservationID := "a126-qfinal-"+suffix, "a126-qfinal-existing-"+suffix
+	plan.DecisionID, plan.ExistingReservationID = decisionID, reservationID
+	now := time.Date(2026, 3, 30, 0, 30, 0, 0, time.UTC)
+	version, err := j.ReservationVersion(context.Background(), a126Account)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return QFinalIssueRequest{
+		Issue: IssueRequest{
+			Decision: DecisionRequest{
+				ID: decisionID, AccountRef: a126Account, SafetyClass: SafetyClassExposureRaising, Kind: KindPlace,
+				Preimage: RiskIntent{AccountRef: a126Account, Market: "us", Symbol: symbol, Side: "BUY", Quantity: strconv.FormatUint(q, 10),
+					EntryPrice: "5", StopPrice: "4", TargetPrice: "7", PolicyVersion: policyVersion},
+				LimitsJSON: `{"test":"opaque-to-journal"}`, Nonce: "nonce-a126-" + suffix, IssuedAt: now, ExpiresAt: now.Add(time.Hour),
+			},
+			Reserve: ReserveRequest{
+				SnapshotAsOf: now, ObservedVersion: version,
+				SnapshotUsage: []AggregateAmount{{Kind: ReservationKindOpenExposure, Amount: "0", Currency: "KRW"}},
+				Limits:        []AggregateAmount{{Kind: ReservationKindOpenExposure, Amount: "100000", Currency: "KRW"}},
+				Reservations:  []ReservationRequest{{ID: reservationID, Kind: ReservationKindOpenExposure, Amount: "1", Currency: "KRW"}},
+			},
+		},
+		Admission: plan,
+	}
+}
+
+// 잔여 핀 codex #2 (1.5 R2 — Manager 판정 (가): 인접 대리가 아니라 실제 발급 + 제출 재검증을 잼) — 해제 → 다른 종목 **발급** → late 체결
+// 되돌림으로 공유 합(50 + 60)이 기록 한도 100 을 넘어도, 이미 발급된 B 의 제출 재검증 `RevalidateQFinalAdmission` 은 통과함(재검증은
+// latch 만 소비하고 B 에는 bucket · owner · scope latch 가 하나도 서지 않음). 배선 로트(R3)가 latch 로든 재계산으로든 이 구멍을 닫으면
+// 이 시험이 깨짐 — 그때 a126 R3 와 tasks 3.1 을 갱신.
+func TestA126ResidualRevertAfterAnotherOwnersIssuancePassesSubmitRevalidation(t *testing.T) {
+	ctx := context.Background()
 	j, key := seedRiskBucketOwnerLifecycle(t, riskbucket.MarketUS, "c2")
 	o := a126FilledOwner(t, j, key, "c2")
 	order := a126LateOrder(t, j, o, "c2")
 	a126Release(t, j, key)
-	if err := a126AdmitSymbol(t, j, "c2-b", "MSFT", "100", "0", 12); err != nil {
-		t.Fatalf("B reserves 60 after A departed: %v", err)
+	request := a126IssueFor(t, j, "c2-b", "MSFT", "100", 12)
+	issued, err := j.RecordQFinalDecisionAndReserve(ctx, request)
+	if err != nil || issued.Admission.QFinal != 12 {
+		t.Fatalf("B issuance after A departed: result=%+v err=%v", issued, err)
+	}
+	if required, err := j.RevalidateQFinalAdmission(ctx, request.Issue.Decision.ID); err != nil || !required {
+		t.Fatalf("arrangement: B's submit revalidation before the revert required=%v err=%v", required, err)
 	}
 	if _, err := j.db.Exec(`UPDATE mutation_attempts SET state='CONFIRMED' WHERE id='a126-late-attempt-c2'`); err != nil {
 		t.Fatal(err)
@@ -562,12 +706,18 @@ func TestA126ResidualRevertAfterAnotherOwnersReservationLeavesItUnlatched(t *tes
 	if err := j.SetApplyHooks(ApplyHooks{Campaign: func(context.Context, *ApplyTx, AppliedFill) error { return nil }}); err != nil {
 		t.Fatal(err)
 	}
-	if res, err := j.RecordFill(context.Background(), a126LateFill(o, order)); err != nil || !res.Changed {
+	if res, err := j.RecordFill(ctx, a126LateFill(o, order)); err != nil || !res.Changed {
 		t.Fatalf("late fill=%+v err=%v", res, err)
+	}
+	if !a126OrphanLatched(t, j, key) {
+		t.Fatal("arrangement: the late BUY did not revert A's departure")
 	}
 	usage := a126Usage(t, j, riskbucket.DimensionSector, "sector-tech")
 	if usage.FilledMinor != "50" || usage.HeldMinor != "60" {
 		t.Fatalf("usage=%+v, want A's 50 back and B's 60 held (110 over the recorded 100)", usage)
+	}
+	if required, err := j.RevalidateQFinalAdmission(ctx, request.Issue.Decision.ID); err != nil || !required {
+		t.Fatalf("B's submit revalidation required=%v err=%v — residual C2 closed? update a126 R3 and tasks 3.1", required, err)
 	}
 	var latches int
 	if err := j.db.QueryRow(`SELECT (SELECT count(*) FROM risk_bucket_scope_latches WHERE prospective_generation='prospective-a126-c2-b')

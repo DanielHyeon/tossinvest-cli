@@ -138,6 +138,9 @@ owner 해제가 배선될 때(활성화 로트)까지 0 이다.** 그 배선 로
    `risk_bucket_final_decisions` 의 사본(`d.*`, `r.decision_id` 로 조인)과 같아야 한다. 다르면 `ErrJournalUsageInvalid`.
    공유 사용량의 `own`(`loadRiskBucketFillTransition`)과 late-fill latch 는 `d.*` 로 owner 를 고르므로, 두 사본이 갈라진 원장은
    떠남 판정과 소유 판정이 서로 다른 owner 를 보게 된다 — 그 상태를 판정 전에 거절한다(R1 #4 · R2 #5).
+   **errata (구현 1.5 R10, 2026-10-01):** 구현은 이 거절을 **영수증이 `r.*` 또는 `d.*` 로 있을 때만** 세운다. 영수증이
+   어디에도 없는 행의 사본 불일치는 편집 전처럼 셈에 든다(과대 계상 = 안전 방향). 떠남 판정과 소유 판정이 갈라질 수 있는 것은
+   영수증이 있을 때뿐이고, 이렇게 두어야 영수증 0 인 오늘의 생산 동작이 손상 원장에서도 바뀌지 않는다(review 1.1~1.4 구현 노트).
 
 이 판정은 `readProductionRiskUsage` 의 SQL 이 행마다 한 열(`departed`)과 불일치 표식으로 계산하고
 `aggregateProductionRiskUsage` 만 소비한다. 다른 곳에 같은 규칙을 다시 쓰지 않는다 — 판정이 둘이면 서로의 시험을 통과시켜
@@ -219,6 +222,9 @@ latch 플래그는 되돌림이 아니라 latch 집계로 진입을 막는다.
 `smallestRecordedBucketLimit`·`refuseStaleBucketUsage` 는 동작 불변(D3, 주석 한 줄만). `persistRiskBucketFillTransition`·
 `releaseRiskBucketOwner`·`ReleaseRiskOverageLatch`·`recomputeOverageLatches`·`latchReleasedOwnerLateFillInTx` 는 편집하지
 않는다(편집이 필요해지면 그 함수의 gate FLM 번들을 먼저 만든다 — "Logic Map 은 계획보다 항상 많다").
+**errata (구현 1.5 R10, 2026-10-01):** `releaseRiskBucketOwner` 는 편집됐다 — a066 해제 검사 `unresolved_fill` 철자 결함 수리
+(Manager 승인 (가), 사용자 거부권 항목, review 1.0.3 · issues I1). 해소 판정을 `loadRiskBucketFillTransition` 과 같은 공유 조각
+`riskBucketFillActualResolvedSQL`(`risk_bucket_fill.go` 머리)로 바꿨고, FLM · Pre-Edit · 편집 뒤 FLM 을 그 절차대로 먼저 만들었다.
 
 ### D6. 소비자 영향
 

@@ -1,0 +1,11 @@
+# a126 1.5.2 회귀 — base 7ab8cd12cda7aed2b0b925fd793149f8bcf93627 + 수리 로트 시험 diff
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	0.329s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	522.606s
+# tossos_testseams
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	3.059s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	643.615s
+# -race (a126 시험)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	1.013s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	138.653s
+# make lint
+lint rc=0

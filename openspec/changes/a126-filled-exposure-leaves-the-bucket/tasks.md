@@ -43,7 +43,10 @@
       불변(D2). `risk_bucket_usage.go:59–62` 주석을 "한도 모집단은 떠난 행을 포함한다(a126 D3)" 로 정정(동작 불변)
 - [x] 1.3 **(21/21 CAUGHT, 대조군 GREEN — review 표)** 변이(무변이 대조군 + 양성 대조군) — "감소를 무조건 수행"(M1) 변이가 반드시 잡혀야 한다(fail-open 축). 위 M 전부
 - [x] 1.4 **(생산 작성자 경로로 전량 체결 — a066 수리 뒤 가능해짐)** a066 owner-lifecycle 픽스처의 filled_minor 가림 주석 해소(`risk_bucket_owner_test.go:802–804`, 실값 픽스처로)
-- [ ] 1.5 4보이스 리뷰 + gstack
+- [ ] 1.5 4보이스 리뷰 + gstack (gstack 은 별도 문맥 리뷰로 대체 — review 1.5 에 사유)
+  - [x] 1.5.1 **(review 1.5)** 3 보이스 + codex 합본 — 생산 결함 0, codex FAIL(시험 공백 P2 셋), 처분안 R1~R16
+  - [x] 1.5.2 **(review 1.5.2 · 27/27 CAUGHT)** 수리 로트(Manager 승인: R2=(가) · R1 · R3~R14 · R15/R16 기록) — 시험 · 문서만, 생산 코드 변경 0 · 변이 전수 재실행
+  - [ ] 1.5.3 codex resume 재리뷰
 
 ## 2. 게이트
 

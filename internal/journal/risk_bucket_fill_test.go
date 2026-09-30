@@ -340,7 +340,7 @@ func TestRiskBucketUnsafeEvidenceAndReleaseMethodsAreNotExported(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		for _, call := range []string{".completeRiskBucketFillActual(", ".releaseRiskBucketOrder("} {
+		for _, call := range []string{".completeRiskBucketFillActual(", ".releaseRiskBucketOrder(", ".releaseRiskBucketOwner("} { // a126 tasks 3.1 · H1: owner 해제(=떠남) 생산 배선은 R3 면제 불가 의존 뒤
 			if strings.Contains(string(raw), call) {
 				t.Fatalf("production caller exists in %s: %s", path, call)
 			}

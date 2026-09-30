@@ -61,7 +61,9 @@ func TestA126AggregateScopeLatchRevertsTheDeparture(t *testing.T) {
 // M6 · M6b · codex #4 — 영수증 있는 행의 손상과 불일치는 떠남 여부와 무관하게, scope latch 판정 앞에서 거절.
 func TestA126AggregateRefusesCorruptReceiptedRows(t *testing.T) {
 	cases := map[string]func(productionRiskUsageRow) productionRiskUsageRow{
-		"HELD state":                func(r productionRiskUsageRow) productionRiskUsageRow { r.State = "HELD"; r.HeldMinor = "5"; return r },
+		"HELD state": func(r productionRiskUsageRow) productionRiskUsageRow { r.State = "HELD"; r.HeldMinor = "5"; return r },
+		// 1.5 R4(X3) — HELD 상태 단독(held 0)도 손상. held≠0 절이 대신 막지 못하게 held 를 0 으로 둠.
+		"HELD state with held 0":    func(r productionRiskUsageRow) productionRiskUsageRow { r.State = "HELD"; return r },
 		"held remainder on FILLED":  func(r productionRiskUsageRow) productionRiskUsageRow { r.HeldMinor = "5"; return r },
 		"owner released_at missing": func(r productionRiskUsageRow) productionRiskUsageRow { r.OwnerReleasedAt = ""; return r },
 		"owner released_at differs": func(r productionRiskUsageRow) productionRiskUsageRow {

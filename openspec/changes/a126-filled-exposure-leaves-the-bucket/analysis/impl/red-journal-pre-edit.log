@@ -1,0 +1,74 @@
+# a126 RED 재도출 (1.5 R11) — 상태 (i) 편집 전 생산 코드: production_snapshot_authority.go · risk_bucket_owner.go · risk_bucket_usage.go = 9cbc7560^, risk_bucket_fill.go 는 9cbc7560(공유 상수 정의 — 재구성 판정은 편집 전과 의미 동일), 시험 = 1.5 확정본
+# base 7ab8cd12cda7aed2b0b925fd793149f8bcf93627
+    a126_filled_exposure_leaves_the_bucket_test.go:104: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+--- FAIL: TestA126AReleasedOwnersFilledLeavesEveryBucket (0.38s)
+--- PASS: TestA126AnActiveOwnersFilledStaysInEveryBucket (0.37s)
+--- PASS: TestA126AReleaseMarkWithoutAReceiptDoesNotLeave (0.36s)
+    a126_filled_exposure_leaves_the_bucket_test.go:200: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+--- FAIL: TestA126ALateBuyViaRecordFillWithCampaignHookRevertsTheDeparture (0.58s)
+    a126_filled_exposure_leaves_the_bucket_test.go:225: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+--- FAIL: TestA126ALateBuyViaStrategySettlementWithoutCampaignHookRevertsTheDeparture (0.71s)
+    a126_filled_exposure_leaves_the_bucket_test.go:262: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+--- FAIL: TestA126ResidualAmbiguousAndUnreadableLateFillsDoNotRevert (0.77s)
+    a126_filled_exposure_leaves_the_bucket_test.go:316: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+--- FAIL: TestA126ADepartedRowsLimitStillCaps (0.69s)
+--- PASS: TestA126WithoutTheDepartureTheSameEntryIsStale (0.71s)
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:352: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+--- FAIL: TestA126CorruptReceiptedRowsAreUnreadable (13.40s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/HELD_row_with_held_0 (0.79s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/HELD_row_with_held_0_+_scope_latch (0.81s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/reservation_symbol_diverged_from_the_decision (0.82s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/reservation_symbol_diverged_from_the_decision_+_scope_latch (0.84s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/reservation_market_diverged_from_the_decision (0.85s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/reservation_market_diverged_from_the_decision_+_scope_latch (0.86s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/held_remainder (0.84s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/held_remainder_+_scope_latch (0.88s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/owner_released_at_cleared (0.84s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/owner_released_at_cleared_+_scope_latch (0.81s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/owner_released_at_moved (0.85s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/owner_released_at_moved_+_scope_latch (0.84s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/reservation_owner_key_diverged_from_the_decision (0.82s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/reservation_owner_key_diverged_from_the_decision_+_scope_latch (0.89s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/HELD_row (0.83s)
+    --- FAIL: TestA126CorruptReceiptedRowsAreUnreadable/HELD_row_+_scope_latch (0.84s)
+    a126_filled_exposure_leaves_the_bucket_test.go:386: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:386: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+    a126_filled_exposure_leaves_the_bucket_test.go:386: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+--- FAIL: TestA126AReceiptBindsOnlyItsOwnOwnerKey (2.54s)
+    --- FAIL: TestA126AReceiptBindsOnlyItsOwnOwnerKey/next_generation_of_the_same_symbol (0.83s)
+    --- FAIL: TestA126AReceiptBindsOnlyItsOwnOwnerKey/another_symbol_under_the_same_generation (0.87s)
+    --- FAIL: TestA126AReceiptBindsOnlyItsOwnOwnerKey/another_account_under_the_same_symbol_and_generation (0.85s)
+    a126_filled_exposure_leaves_the_bucket_test.go:432: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+--- FAIL: TestA126ACorruptDepartedRowLatchesAnUnrelatedActiveOwnerButKeepsItsFill (0.82s)
+    a126_filled_exposure_leaves_the_bucket_test.go:450: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+--- FAIL: TestA126ADepartedRowsLatchFlagStillBlocksEntry (0.83s)
+    a126_filled_exposure_leaves_the_bucket_test.go:510: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+--- FAIL: TestA126ADepartureDoesNotReleaseAnotherOwnersLatch (0.95s)
+--- PASS: TestA126APartialSellLeavesUsageUnchanged (0.78s)
+    a126_filled_exposure_leaves_the_bucket_test.go:577: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+--- FAIL: TestA126UsageIsReplayDeterministicAcrossReleaseRevertAndSharedFills (0.98s)
+    a126_filled_exposure_leaves_the_bucket_test.go:611: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+--- FAIL: TestA126ResidualReusedOrderIDAcrossGenerationsKeepsTheOldOwnerDeparted (0.81s)
+    a126_filled_exposure_leaves_the_bucket_test.go:694: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+--- FAIL: TestA126ResidualRevertAfterAnotherOwnersIssuancePassesSubmitRevalidation (0.99s)
+--- PASS: TestA126ReleaseAndTransitionShareOneFillResolutionRule (0.61s)
+    a126_filled_exposure_leaves_the_bucket_test.go:765: release result={Released:false AlreadyReleased:false} err=journal: risk bucket owner release blocked by unresolved_fill lifecycle=journal: risk bucket owner release blocked by unresolved_fill
+--- FAIL: TestA126ReleaseAcceptsAnActualCompletedFillAndRefusesAnUnresolvedOne (0.88s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	28.160s
+FAIL

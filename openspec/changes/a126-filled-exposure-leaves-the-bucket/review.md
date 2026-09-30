@@ -257,3 +257,36 @@ FLM 좌표 현행(③ 대조).
 
 **판정: 수리 로트 필요(시험 · 문서만, 생산 코드 변경 0).** R1 · R3 · R4~R8 은 시험 보강, R2 는 Manager 결정, R9~R14 는 문서 · 하네스. 수리 뒤 전수 변이 재실행 +
 codex resume 재리뷰 → 격리 게이트(2.1) → 아카이브 승인(2.2).
+
+### 1.5.2 수리 로트 (2026-10-01, Manager 판정: R2=(가) · 개시 · Go 시험 착지 창)
+
+**Manager 판정 인용.** 「R2 = (가) — 핀은 인접 대리(admission)가 아니라 실제 발급 경로+RevalidateQFinalAdmission 을 재야 한다. …
+fixture 비용 수용」 · 「R1·R3~R14 처분안 그대로 승인 … R15·R16 기록 잔여 승인」.
+
+**생산 코드 변경 0.** 바뀐 것은 시험 네 파일 · 하네스 · 문서뿐 — `git diff 7ab8cd12 -- '*.go'` 의 비시험 파일 0.
+
+| # | 처분 | 자리 |
+|---|---|---|
+| R1 | 「떠남은 다른 owner latch 를 풀지 않는다」를 **생산 재계산**으로 다시 씀: A filled 50 · B 4 주 실가격 6(24 + held 30) → A 포함 104 > 100 으로 B 에 RISK_OVERAGE(SQL 주입 제거) → A 해제 뒤 latch 유지 · 신규 진입 차단 → `ReleaseRiskOverageLatch`(운영자) → B 5 주 누적(30 + 25) — A 포함이면 105 > 100 인 값에서 latch 0 · 사용량 55 | `TestA126ADepartureDoesNotReleaseAnotherOwnersLatch` |
+| R2 | 잔여 핀을 발급(`RecordQFinalDecisionAndReserve`, q 12) + 제출 재검증(`RevalidateQFinalAdmission`) 실호출로 재작성 — 되돌림 전 재검증 통과(양성) · 되돌림 뒤 합 110 > 100 에서도 통과 · B latch 0 을 단언. 옛 이름 `…ReservationLeavesItUnlatched` 는 `…IssuancePassesSubmitRevalidation` 으로 바뀜 | 변이 C2close(재검증이 재계산으로 닫음) CAUGHT |
+| R3 | snapshot digest 를 **생산 생성기**로 실측: 생성기는 v27 원장 전용이라 journal 실 원장에서 못 돎 → riskbucket 축소 v27 원장에 해제 전 · 해제 뒤 · 공유 owner 체결 · 되돌림 단계를 쌓고 단계마다 생성기를 두 번(새 읽기 전용 연결 = 재시작 replay) 불러 bundle digest · dimension 별 filled/held/snapshot digest 동일, 떠남이 공유 dimension 의 snapshot digest 를 움직임, 되돌림 digest = 영수증 · released_at · scope latch 를 지운 "떠난 적 없는" 원장 digest | `TestA126SnapshotDigestIsReplayDeterministicAcrossReleaseSharedFillAndRevert`(`tossos_testseams`) |
+| R4 | HELD · held 0 사례를 두 손상 시험에 | 변이 X3 CAUGHT |
+| R5 | 사본 불일치를 symbol · market 축으로(journal 실 원장). account 는 사용량 조회 조건이라 행이 빠져 대상 아님 | X7 · X7m CAUGHT |
+| R6 | 해제 A 와 키 셋을 공유하는 활성 owner 셋(새 generation · 같은 generation 다른 종목 · 다른 계좌)의 예약이 판독되고 셈에 듦 | `TestA126AReceiptBindsOnlyItsOwnOwnerKey` — X1 · X2 · X9 CAUGHT |
+| R7 | 생산 호출 census 에 `.releaseRiskBucketOwner(` 추가, 같은 줄 주석에 tasks 3.1 · H1 | `risk_bucket_fill_test.go` 한 줄 — 변이 T1(생산 호출 한 줄 추가) CAUGHT |
+| R8 | 손상 변형 전부에서 admission 이 `ErrRiskBucketSnapshotMismatch` + "ledger usage unreadable" 로 거절(문구로 갈래를 가름 — 반환을 지우면 빈 사용량이 "not an amount" 로 같은 종류를 냄). snapshot 은 50 을 주장 — 되돌림 변형에서 손상 없는 앞 bucket 이 stale 로 먼저 거절해 갈래를 가리지 않게 | 변이 B3 CAUGHT · BTM B3 인용 정정 |
+| R9 | 정정: 공유 조각은 옛 해제 철자와 **의미 동일, 바깥 괄호만 추가**(1.0.3 · 커밋 노트의 「문자열 동일」은 거짓) | 이 절 |
+| R10 | design D1 조건 4 · D5 errata | `design.md` |
+| R11 | RED 재도출(확정 시험, 시험 19): (i) 편집 전 생산(reader · 해제 검사 = `9cbc7560^`) **14 FAIL / 5 PASS** — FAIL 14 전부 `a126Release` 의 "blocked by unresolved_fill"(a066 결함의 실측 증거) · (ii) a066 수리만 **14 FAIL / 5 PASS** — 떠남 없음(filled 50) · 손상 거절 없음(err nil) · stale 등 기대한 이유, `ReleaseAccepts…` 는 여기서 PASS(a066 수리 시험). 1.1~1.4 절의 13/5 와 증거 보이스의 12/6 은 각각 그 시점 시험 판본의 수 — 확정본 기준은 위 | `red-journal.log`(ii) · `red-journal-pre-edit.log`(i) · riskbucket 은 여전히 컴파일 실패(M1b 가 행동 RED) |
+| R12 | 전략 정산 시험 주석에 범위(직접 backfill · attempt 상태 위조 · 도달성 미증명) | 시험 주석 |
+| R13 | 기록만 — 공유 조각 진리표 시험, 두 자리 공유는 F1 · F3 가 강제 | — |
+| R14 | 하네스가 시험 파일 여섯의 sha 를 시작에 기록하고 판마다 재단언. 전수 재실행 | `mutate.py` |
+| R15 · R16 | 기록 잔여(Manager 승인): X8 · X10 · X11 생존하나 fail-closed · allocation 행 손상 모양 · 공유 조각 셋째 철자 방지 | — |
+
+**변이 전수**(`analysis/impl/mutation-4-fixlot.log`, 시작 트리 `7ab8cd12` + 시험 diff, 대조군 GREEN, 시험 sha 판마다 불변): 기존 21 + 새
+X1 · X2 · X3 · X7 · X7m · X9 · B3 · C2close · T1 = **27/27 CAUGHT, 생존 0**. RUNS 에 `tossos_testseams` riskbucket · census 시험 추가.
+
+**회귀**(`analysis/impl/regress-2.log`): riskbucket · journal 무태그(522s) · `tossos_testseams`(643s) ok, `-race` a126 ok, `make lint` rc 0.
+
+**FLM.** 생산 함수 편집 0 → 생산 번들 재추출 없음. BTM B3 인용만 정정. 시험 함수 `TestRiskBucketUnsafeEvidenceAndReleaseMethodsAreNotExported`
+는 목록에 원소 하나를 더함(분기 무변, 비례 원칙 — 게이트가 요구하면 경량 번들).
