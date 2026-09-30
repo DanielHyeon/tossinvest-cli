@@ -1237,3 +1237,19 @@ APPROVE · Claude 델타 재리뷰+시험 품질 APPROVE(둘 다 `277a105a` 대�
   손절 경로는 영향이 없다.
 - **착수 순서 조건(0.7)**: a092 「모든 보유자」 착지 뒤에 구현했다(`06b39a78`) — 착지 전 창의 증폭 수용은 해당 없음.
 - **transport 사망 교환**: 정본 「배달 실행자는 지속 실패를 진입 차단과 운영 모드 승격으로 잇는다」(a124)를 따른다(Q2(d) 이관).
+
+
+### 4.10 게이트 1차(b6821cf1) FAIL ⑤ → 사람 승인 base 재고정 (2026-09-30)
+
+- 착지 기록 `f62d5bf0`(landed = `cc480a88`). 그 전 `6dbbb0f0` 에서 a095 무편집 · base 소스 일치 번들 25 를 `revision: base` 로(형제가 exitloop.go ·
+  exitwiring.go · apply_hook.go 를 바꾼 뒤 `revision: current` 로는 어느 커밋도 착지로 받아지지 않았다).
+- 격리 워크트리 `/tmp/claude-1000/a095-gate` @ `b6821cf1` 준비(`analysis/gate/prep-b6821cf1.txt`): sdd-infra rc 0 · `sdd_sync.py --no-gbrain` rc 0 ·
+  sdd-check rc 0 · validate --all 48 passed. **`make gate` ①~④ OK, ⑤ FAIL**(`analysis/gate/gate-1-b6821cf1.log`) — 창 base `1ffe2295` → landed `cc480a88`,
+  required 32: 26 은 그 사이 착지한 형제 로트 함수(a094 `766a8456` · `b74875e7` · `d485a45f` · `ffd88707` · `05de14c3` · `41f3d9f6` · `bfa61fb4` — 뒤의 여섯은
+  a095 의 두 Go 커밋 **사이**, a112 `3260f4eb` · `36ade9b2`), 6 은 a095 자기 함수(증거 있음). a094 가 두 커밋 사이에 끼어 있어 base 를 어디로 옮겨도 착지까지의
+  창에서 형제 함수를 뺄 수 없다.
+- **조건 ① 실측(둘째 갈래)**: 옛 base 뒤 a095 자기 비병합 Go 커밋 2(`277a105a` · `cc480a88`). 두 커밋 각각 부모 대비 함수 본문 비교로 센 **base 에 있던** 함수 중
+  바뀐 것 = `ReconcileDriver.judgeHoldings` · `adopt` · `alertUnmanaged` · `checkExternalIncrease` · `NewReconcileDriver` · `Context.ReconcileDriver` 6 — 전부
+  `revision: current` 번들로 덮이고 소스 sha 가 `cc480a88` · HEAD 와 일치. 그 밖(`adoptedCount` · `alertAdoptionFailed` · a095 시험 함수)은 base 에 없던 새 함수.
+- **조건 ② 승인 기록(원문)**: 「Manager 승인 (2026-09-30): WORKFLOW 「사람 승인 base 재고정」 조건 ① 둘째 갈래(a071 변형·a066 전수 영수증 표준). 근거: 자기 비병합 Go 커밋 2(277a105a·cc480a88)가 변경한 기존 함수 6개(judgeHoldings·adopt·alertUnmanaged·checkExternalIncrease·NewReconcileDriver·Context.ReconcileDriver) 전수가 fresh 번들 대응·소스 sha 일치, required 32 중 26은 형제 로트(a094·a112) 착지 몫. 승인 참조: 사용자 상임 오케스트레이션 지시 + 2026-09-30 "남은것도 처리" 재개 지시. 실행 승인자: Manager(Fable), 사용자 위임 범위 내.」
+- 절차: ① `base-commit.txt` 단독 커밋(영수증) ② `landed-commit.txt` 삭제 커밋(착지는 base 의 자손 — 삭제 후 재계산이 정본 기제) ③ 격리 워크트리 게이트 재실행.

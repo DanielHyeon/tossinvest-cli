@@ -1,0 +1,49 @@
+start 2026-09-30 23:03:55 KST
+bash tools/gate.sh a095-a-stop-must-know-what-it-covers
+GATE: a095-a-stop-must-know-what-it-covers
+repo: /tmp/claude-1000/a095-gate
+
+==> 1/11 tasks.md 확인
+OK: openspec/changes/a095-a-stop-must-know-what-it-covers/tasks.md
+
+==> 2/11 미완료 태스크 확인
+OK: 미완료 태스크 0건
+
+==> 3/11 짝 change 확인 (deploy-pair.txt)
+OK: 짝 선언 없음 — 이 change 는 혼자 배포한다
+
+==> 4/11 gstack 리뷰 기록 확인
+OK: openspec/changes/a095-a-stop-must-know-what-it-covers/review.md
+
+==> 5/11 Function Logic Map 증거 확인
+[logic-map] a095-a-stop-must-know-what-it-covers: base 1ffe2295994d → landed-commit cc480a887933112870c9c7630be010c32688b260 required 32 function(s) — judged at HEAD b6821cf1c029
+[logic-map] missing evidence for modified function internal/app/engine/a112_fault_scope_test.go:TestARefreshOnlyWorkerSwallowsACentralIntegrityErrorToo
+[logic-map] missing evidence for modified function internal/app/engine/exitloop.go:ExitObserver.judge
+[logic-map] missing evidence for modified function internal/app/engine/exitloop.go:ExitObserver.record
+[logic-map] missing evidence for modified function internal/app/engine/exitloop.go:ExitObserver.submit
+[logic-map] missing evidence for modified function internal/app/engine/exitloop.go:ExitObserver.release
+[logic-map] missing evidence for modified function internal/app/engine/exitloop.go:ExitObserver.clearTheSymbol
+[logic-map] missing evidence for modified function internal/app/engine/exitloop_test.go:TestABreachDisplacesAnOutstandingTakeProfit
+[logic-map] missing evidence for modified function internal/app/engine/exitwiring.go:Context.ExitObserver
+[logic-map] missing evidence for modified function internal/app/engine/position_policy_transport.go:StartPositionPolicyCommandServer
+[logic-map] missing evidence for modified function internal/app/engine/runtime_wiring.go:Context.Recovery
+[logic-map] missing evidence for modified function internal/app/engine/strategy_entry_supervisor.go:Context.NewRefreshingPairedStrategyEntrySupervisor
+[logic-map] missing evidence for modified function internal/app/engine/strategy_entry_supervisor.go:NewStrategyEntrySupervisor
+[logic-map] missing evidence for modified function internal/app/engine/strategy_entry_supervisor.go:StrategyEntrySupervisor.runMarket
+[logic-map] missing evidence for modified function internal/app/engine/strategy_entry_supervisor.go:StrategyEntrySupervisor.recordSwallowedCycleError
+[logic-map] missing evidence for modified function internal/execgw/classify.go:classifyMutation
+[logic-map] missing evidence for modified function internal/execgw/failclosed.go:AllReasonCodes
+[logic-map] missing evidence for modified function internal/execgw/gateway.go:Gateway.checkSymbolFree
+[logic-map] missing evidence for modified function internal/execgw/roundtrip.go:Gateway.confirmCreatedOrder
+[logic-map] missing evidence for modified function internal/journal/apply_hook.go:Journal.ResolveExitProposal
+[logic-map] missing evidence for modified function internal/journal/exit_state_test.go:TestARefusalReArmsTheLevel
+[logic-map] missing evidence for modified function internal/journal/exit_state_test.go:TestResolvingNothingIsNotAnError
+[logic-map] missing evidence for modified function internal/journal/exit_state_test.go:TestACancelledRungIsProposableAgain
+[logic-map] missing evidence for modified function internal/journal/exit_state_test.go:TestARefusedProposalIsReArmedAfterARestart
+[logic-map] missing evidence for modified function internal/journal/fills.go:Journal.LiveOrdersForSymbol
+[logic-map] missing evidence for modified function internal/reconcile/recovery.go:Recovery.Run
+[logic-map] missing evidence for modified function internal/strategyworker/policy_receipt_test.go:TestTheProductionThresholdMatchesAnEngineThatKeepsNoFailureCounter
+
+GATE FAIL: a095-a-stop-must-know-what-it-covers — Function Logic Map 산출물 미완료
+rc=1
+end 2026-09-30 23:04:05 KST
