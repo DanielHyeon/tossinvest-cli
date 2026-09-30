@@ -5093,3 +5093,18 @@ High-risk(critical 발송 · 진입 차단 · 모드 승격). 편집 전 번들 
 - (파일 · 문구) 다중집합은 줄 번호를 빼면 **동일**하다 → a092 구현이 더한 실패 0.
 - 도구 파일의 base 이후 변경은 옛 번들 경로 재지정 세 줄뿐이다(25.2).
 
+
+#### 게이트 실행 (2026-09-30)
+
+- 대상: 격리 워크트리 `/tmp/claude-1000/a092-gate` @ **`b04e3f8c`**(미체크 0, tracker 재생성 커밋). 저장소 밖이라 정적 검사가 사본을 세지 않는다. 병행 세션 편집도 섞이지 않는다.
+- 게이트 전 준비(`analysis/gate/prep-b04e3f8c.txt`):
+  - `make sdd-infra` rc 0.
+  - `sdd_sync.py --no-gbrain` rc 0: codegraph init + codegraphcontext index. gbrain 은 주 워크트리 전용 홈이라 격리 사본에서 돌리지 않았다 — advisory.
+  - `codegraph status` up to date.
+  - `make sdd-check` rc 0. gbrain advisory WARN 만 있고, 하드 증거 codegraph 는 일치한다.
+  - `openspec validate --all` 49 passed.
+- **`make gate CHANGE=a092-an-alert-does-not-hold-the-stop` rc 0 — 11/11 OK**(16:43:29~17:11:23 KST). 원문 `analysis/gate/gate-b04e3f8c.log`(rtk 압축 없음).
+  - tasks.md · 미완료 0 · 짝 없음 · review.md.
+  - Function Logic Map · sdd-check.
+  - test · test-seams · test-race · vet · validate.
+- 이 절을 적은 커밋은 게이트 뒤 문서 편집이다. 주 워크트리의 fingerprint 는 이 커밋으로 다시 낡으므로 Manager 최종 검증 전에 재고정이 필요하다.
