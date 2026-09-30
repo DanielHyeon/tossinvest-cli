@@ -102,7 +102,7 @@
     - STORY-TOS-a089 — An unserved stop is counted, recorded and visible [archived] → `a089-an-unserved-stop-is-counted`
     - STORY-TOS-a091 — A stop that sold nothing is critical [in_progress] → `a091-a-stop-that-sold-nothing-is-critical`
     - STORY-TOS-a092 — An alert does not hold the stop [archived] → `a092-an-alert-does-not-hold-the-stop`
-    - STORY-TOS-a094 — A stop clears what blocks it [implemented] → `a094-a-stop-clears-what-blocks-it`
+    - STORY-TOS-a094 — A stop clears what blocks it [archived] → `a094-a-stop-clears-what-blocks-it`
     - STORY-TOS-a095 — A stop must know what it covers [archived] → `a095-a-stop-must-know-what-it-covers`
     - STORY-TOS-a096 — One condition is one alert [archived] → `a096-one-condition-is-one-alert`
     - STORY-TOS-a097 — A re-armed alert is a new episode [archived] → `a097-a-re-armed-alert-is-a-new-episode`
