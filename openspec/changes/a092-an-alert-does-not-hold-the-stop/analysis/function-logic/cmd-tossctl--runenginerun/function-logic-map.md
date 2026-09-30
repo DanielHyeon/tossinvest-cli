@@ -1,10 +1,10 @@
 # Function Logic Map: `runEngineRun`
 
 - Source: `cmd/tossctl/engine.go`
-- AST evidence: `ast.json` — **편집 뒤**, :188–376, 분기 26 · 반환 10 · 호출 69, source_sha256 `ef56c3613d41…`, 추출 커밋 `2714e393`. 편집 전 번들은 `analysis/pre-edit/unit4/`.
+- AST evidence: `ast.json` — **편집 뒤**, :188–376, 분기 26 · 반환 10 · 호출 69, source_sha256 `aeefd5dcc3dd…`, 추출 커밋 `e55102f0`. 편집 전 번들은 `analysis/pre-edit/unit5/`(없으면 단위 ④ 번들이 편집 전).
 - Risk scan: `risk-pattern-report.md`
-- 편집(착지 단위 ④ `2714e393`): 알림 제어 뒤에 모드 제어 엔드포인트 기동 — 표면 생성 · 기동 실패는 강등 보고(엔진 계속). 분기 셋 추가.
-- 재번호: difflib 정렬(편집 전 `22db26e7` 소스 대비): B1~B23 → B1~B23(같은 분기, 줄 이동); 새 분기 B24(:356), B25(:359), B26(:363).
+- 편집(착지 단위 ⑤ `e55102f0`): 단위 ⑤ 무편집 — 같은 파일 편집으로 줄 이동(재추출). 단위 ④ 편집(모드 제어 기동)은 `analysis/pre-edit/unit4/` 대조.
+- 재번호: 편집 전 번들 없음(이 단위에서 새로 만든 번들).
 
 ## Inputs and invariants
 
@@ -28,14 +28,14 @@
 | B10 | `if token, terr := engineProcInstance(os.Getpid()); terr == nil` (:251) | — | — | `TestAFailedSiblingEndpointDoesNotStopTheEngine`, `TestAFailedStrategyProjectionDoesNotStopTheEngine` |
 | B11 | `if merr != nil` (:254) | — | — | (미실행) |
 | B12 | `} else` (:258) | — | — | (미실행) |
-| B13 | `if err != nil` (:270) | — | — | (미실행) |
+| B13 | `if err != nil` (:270) | — | — | `TestTheReadySignalReachesTheMarkerThroughTheRuntimeSeam` |
 | B14 | `if err != nil` (:274) | — | — | (미실행) |
 | B15 | `if policyControl != nil` (:297) | — | — | `TestAFailedSiblingEndpointDoesNotStopTheEngine`, `TestAFailedStrategyProjectionDoesNotStopTheEngine` |
 | B16 | `if policyControlErr != nil` (:300) | — | — | `TestAFailedSiblingEndpointDoesNotStopTheEngine` |
 | B17 | `if policyRuntime != nil` (:305) | — | — | `TestAFailedSiblingEndpointDoesNotStopTheEngine`, `TestAFailedStrategyProjectionDoesNotStopTheEngine` |
 | B18 | `if policyRuntimeErr != nil` (:308) | — | — | `TestAFailedSiblingEndpointDoesNotStopTheEngine` |
 | B19 | `if strategyRuntime != nil` (:323) | — | — | `TestAFailedSiblingEndpointDoesNotStopTheEngine` |
-| B20 | `if projErr != nil` (:333) | — | — | `TestAFailedStrategyProjectionDoesNotStopTheEngine` |
+| B20 | `if projErr != nil` (:333) | — | — | `TestAFailedStrategyProjectionDoesNotStopTheEngine`, `TestTheDegradedBootLeavesReadyToTheRuntimeSeam` |
 | B21 | `if err != nil` (:340) | — | — | (미실행) |
 | B22 | `if alertControl != nil` (:344) | — | — | `TestAFailedSiblingEndpointDoesNotStopTheEngine`, `TestAFailedStrategyProjectionDoesNotStopTheEngine` |
 | B23 | `if alertControlErr != nil` (:347) | — | — | `TestAFailedSiblingEndpointDoesNotStopTheEngine` |
@@ -56,4 +56,4 @@
 ## Safety conclusion
 
 - Safe edit boundary: 위 편집만.
-- High-risk impact: 중간 — 운영자 표면.
+- High-risk impact: 중간.

@@ -1,0 +1,337 @@
+{
+  "file": "internal/app/engine/alertdelivery.go",
+  "source_sha256": "1fa0da7e971975f10f5c985ba42659611ee147800ba96f2cee33bc112033d4ca",
+  "package": "engine",
+  "function": "deliverOne",
+  "receiver": "alertDeliverer",
+  "signature": "alertDeliverer.deliverOne(params=2, results=0)",
+  "start": {
+    "line": 270,
+    "column": 1
+  },
+  "end": {
+    "line": 342,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 272,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "switch",
+      "at": {
+        "line": 278,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 279,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 283,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 292,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 298,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 305,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 316,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "else",
+      "at": {
+        "line": 326,
+        "column": 9
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 333,
+        "column": 3
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 337,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 276,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 297,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 303,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 339,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 16
+      },
+      "text": "ClaimAlertByID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 16
+      },
+      "text": "d.led"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 54
+      },
+      "text": "d.claimant"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 3
+      },
+      "text": "d.logf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 3
+      },
+      "text": "d.countRecordFailure"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 3
+      },
+      "text": "d.forgetHeld"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 292,
+        "column": 6
+      },
+      "text": "d.reportHeld"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 4
+      },
+      "text": "d.logf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 25
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 25
+      },
+      "text": "claim.ExpiresAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 300,
+        "column": 3
+      },
+      "text": "d.forgetHeld"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 3
+      },
+      "text": "d.forgetRecordRun"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 3
+      },
+      "text": "d.logf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 3
+      },
+      "text": "d.logf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 17
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 10
+      },
+      "text": "d.Publisher.Publish"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 14
+      },
+      "text": "obs.EventType"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 12
+      },
+      "text": "perr.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 3
+      },
+      "text": "d.recordFailedAttempt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 341,
+        "column": 2
+      },
+      "text": "d.recordDelivery"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 271,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 315,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 325,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 327,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 334,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

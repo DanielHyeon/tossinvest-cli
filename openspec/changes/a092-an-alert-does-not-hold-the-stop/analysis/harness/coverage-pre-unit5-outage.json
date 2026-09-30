@@ -1,0 +1,60 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/app/engine",
+ "tests_run": 24,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-app-engine--exitobserver.checkoutage": {
+   "B1": {
+    "kind": "if",
+    "line": 819,
+    "column": 2,
+    "block": "819.20-821.3",
+    "entered_by": [
+     "TestA092CredentialTighteningRecordsWithoutSending",
+     "TestA111MissingManagedSymbolIsInvalidEvidenceAndDoesNotResetTheOutage"
+    ],
+    "union": null
+   },
+   "B2": {
+    "kind": "if",
+    "line": 822,
+    "column": 2,
+    "block": "822.46-824.3",
+    "entered_by": [
+     "TestA092CredentialTighteningRecordsWithoutSending",
+     "TestA111MissingManagedSymbolIsInvalidEvidenceAndDoesNotResetTheOutage",
+     "TestASustainedOutageBlocksEntriesAndAlertsOnce"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "if",
+    "line": 825,
+    "column": 2,
+    "block": "825.20-827.3",
+    "entered_by": [
+     "TestASustainedOutageBlocksEntriesAndAlertsOnce"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "if",
+    "line": 843,
+    "column": 2,
+    "block": "843.74-845.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B5": {
+    "kind": "if",
+    "line": 848,
+    "column": 2,
+    "block": "848.16-852.3",
+    "entered_by": [],
+    "union": null
+   }
+  }
+ }
+}

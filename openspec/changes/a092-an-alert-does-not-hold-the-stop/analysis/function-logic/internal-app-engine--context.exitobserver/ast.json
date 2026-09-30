@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/exitwiring.go",
-  "source_sha256": "d0a5a24ce1a2e85dba2df086d3101da836b96838fa08adefcf84954c88959de5",
+  "source_sha256": "2b0696f0b0cccdf096965085c6981a80a18b572bf1e0cccfe1ca00b3f6e83223",
   "package": "engine",
   "function": "ExitObserver",
   "receiver": "Context",
@@ -50,20 +50,12 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 346,
+        "line": 348,
         "column": 2
       }
     },
     {
       "id": "B6",
-      "kind": "if",
-      "at": {
-        "line": 349,
-        "column": 2
-      }
-    },
-    {
-      "id": "B7",
       "kind": "if",
       "at": {
         "line": 352,
@@ -117,6 +109,14 @@
         "column": 15
       },
       "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 53
+      },
+      "text": "c.NormalAlertRelay"
     },
     {
       "kind": "call",
@@ -224,7 +224,7 @@
     {
       "kind": "=",
       "at": {
-        "line": 347,
+        "line": 349,
         "column": 3
       }
     },

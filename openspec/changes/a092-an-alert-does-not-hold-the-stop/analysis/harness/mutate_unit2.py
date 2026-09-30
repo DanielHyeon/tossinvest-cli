@@ -285,6 +285,90 @@ MODE_MUTANTS = [
 ]
 MODE_TESTS = [['go', 'test', '-count=1', '-run', 'TestA092|Mode|Transition|Escalat', './internal/journal'], ['go', 'test', '-count=1', '-run', 'TestA092|A124|Mode', './internal/execgw'], ['go', 'test', '-count=1', '-run', 'TestA092|TestTheModeProjector|TestTheLedgerModeRow|Relatch|Sibling', './internal/app/engine'], ['go', 'test', '-count=1', '-run', 'TestA092|TestTheAlertCommands|TestMutating', './cmd/tossctl']]
 
+# 25.10 — 착지 단위 ⑤ C8 일반 등급 이관 · B#7 · A#2 · 구조 핀 반증. `--set 25.10`.
+U5 = {
+    'RO': 'internal/obs/record_only.go',
+    'NR': 'internal/obs/normal_relay.go',
+    'EW': 'internal/app/engine/exitwiring.go',
+    'AX': 'internal/app/engine/auxiliary.go',
+    'NW': 'internal/app/engine/normal_relay_wiring.go',
+    'EN': 'cmd/tossctl/engine.go',
+    'RT': 'internal/execgw/retry.go',
+    'EL': 'internal/app/engine/exitloop.go',
+    'AD': 'internal/app/engine/alertdelivery.go',
+    'RP': 'internal/execgw/replay.go',
+    'GW': 'internal/app/engine/gateway.go',
+    'OM': 'internal/journal/operating_mode.go',
+    'RG': 'internal/execgw/riskguardian.go',
+    'FW': 'internal/app/engine/exitwiring.go',
+}
+NORMAL_MUTANTS = [
+    ('N01 no relay falls back to a sync publish', 'internal/obs/record_only.go',
+     '\t\t\tn.logNormalDrop(e, "no normal-grade relay is wired")\n\t\t\treturn nil',
+     '\t\t\tn.publishBestEffort(ctx, e, severity)\n\t\t\treturn nil'),
+    ('N02 hand-off blocks when full', 'internal/obs/normal_relay.go',
+     '\tselect {\n\tcase r.ch <- e:\n\tdefault:\n\t\tr.n.logNormalDrop(e, "the normal-grade relay buffer is full")\n\t}',
+     '\tr.ch <- e'),
+    ('N03 a full drop is silent', 'internal/obs/normal_relay.go',
+     '\t\tr.n.logNormalDrop(e, "the normal-grade relay buffer is full")\n',
+     ''),
+    ('N04 shutdown drain is silent', 'internal/obs/normal_relay.go',
+     '\t\t\tr.n.logNormalDrop(e, "the engine stopped before this normal-grade alert was sent")\n',
+     '\t\t\t_ = e\n'),
+    ('N05 cancellation reported as nil', 'internal/obs/normal_relay.go',
+     '\t\tdefault:\n\t\t\treturn ctx.Err()',
+     '\t\tdefault:\n\t\t\treturn nil'),
+    ('N06 hand-off skipped silently', 'internal/obs/record_only.go',
+     '\t\tr.Relay.Offer(e)\n',
+     ''),
+    ('N07 exit observer gets no relay', 'internal/app/engine/exitwiring.go',
+     'recordOnly := obs.RecordOnly{N: c.Notifier, Relay: c.NormalAlertRelay()}',
+     'recordOnly := obs.RecordOnly{N: c.Notifier}'),
+    ('N08 runtime does not start the relay', 'cmd/tossctl/engine.go',
+     'Auxiliary: []engine.AuxiliaryExecutor{alertDelivery, ectx.NormalAlertRelayExecutor()},',
+     'Auxiliary: []engine.AuxiliaryExecutor{alertDelivery},'),
+    ('N09 stop event ignored', 'internal/app/engine/auxiliary.go',
+     '\tevent := aux.StopEvent\n',
+     '\tevent := obs.EventType("")\n'),
+    ('N10 relay borrows the delivery event', 'internal/app/engine/normal_relay_wiring.go',
+     '\t\tStopEvent: obs.EventNormalAlertRelayStopped,\n',
+     ''),
+    ('N11 caller alert path respected', 'internal/app/engine/exitwiring.go',
+     '\tif c.Notifier != nil {\n\t\topts.Alerts = recordOnly\n\t\topts.Announcer = recordOnly\n\t}',
+     '\tif opts.Alerts == nil && c.Notifier != nil {\n\t\topts.Alerts = recordOnly\n\t}\n\tif opts.Announcer == nil && c.Notifier != nil {\n\t\topts.Announcer = recordOnly\n\t}'),
+    ('N12 credential notice failure misreported', 'internal/execgw/retry.go',
+     '\t\tif errors.Is(err, journal.ErrModeAnnouncementFailed) {\n\t\t\t// 전이는 커밋됐고',
+     '\t\tif false {\n\t\t\t// 전이는 커밋됐고'),
+    ('N13 outage notice failure not escalated', 'internal/app/engine/exitloop.go',
+     '\t\tif !errors.Is(err, journal.ErrModeAnnouncementFailed) {',
+     '\t\tif true {'),
+    ('N14 takeover logged as held', 'internal/app/engine/alertdelivery.go',
+     '\t\td.logf(obs.EventAlertClaimStolen, nil, "an expired alert lease was taken over",',
+     '\t\td.logf(obs.EventAlertClaimHeld, nil, "an expired alert lease was taken over",'),
+    ('P01 outside recorder releases before inserting', 'internal/execgw/replay.go',
+     '\t\tg.entry.Block(ReasonUnresolvedInDoubt, fmt.Sprintf(',
+     '\t\tg.entry.Clear(ReasonUnresolvedInDoubt)\n\t\tg.entry.Block(ReasonUnresolvedInDoubt, fmt.Sprintf('),
+    ('P02 notifier gets another gate', 'internal/app/engine/gateway.go',
+     '\tnotifier := newNotifier(in.journal, entry, in.accountRef, in.logger, in.publisher, in.clock)',
+     '\tnotifier := newNotifier(in.journal, execgw.NewEntryGate(in.clock, nil), in.accountRef, in.logger, in.publisher, in.clock)'),
+    ('P03 projection in a goroutine', 'internal/journal/operating_mode.go',
+     '\t\tp.ProjectOperatingMode(record)',
+     '\t\tgo p.ProjectOperatingMode(record)'),
+    ('P04 issuer reaches the escalation', 'internal/execgw/riskguardian.go',
+     'func (g *RiskGuardian) IssueReduction(ctx context.Context, req ReductionIssuance) (Issued, error) {\n\tintent, err := g.scopedIntent(req.Intent)',
+     'func (g *RiskGuardian) IssueReduction(ctx context.Context, req ReductionIssuance) (Issued, error) {\n\tif false {\n\t\t_ = g.escalateFor(ctx, risk.Decision{})\n\t}\n\tintent, err := g.scopedIntent(req.Intent)'),
+    ('P05 floor reads outside the retrier', 'internal/app/engine/exitwiring.go',
+     '\tif err := f.retrier.Query(ctx, execgw.QueryHoldings, func(ctx context.Context) error {\n\t\tq, err := f.official.SellableQuantity(ctx, symbol)',
+     '\tif _, err := f.official.SellableQuantity(ctx, symbol); err != nil {\n\t\t_ = err\n\t}\n\tif err := f.retrier.Query(ctx, execgw.QueryHoldings, func(ctx context.Context) error {\n\t\tq, err := f.official.SellableQuantity(ctx, symbol)'),
+    ('P06 a production Flush caller', 'internal/obs/record_only.go',
+     '// OperatingModeEventKey 는',
+     'func a092MutantFlush(n *Notifier) { _, _, _ = n.Flush(context.Background()) }\n\n// OperatingModeEventKey 는'),
+    ("N15 normal grade published synchronously (C8 reverted — capped RED)", 'internal/obs/record_only.go',
+     '\t\tr.Relay.Offer(e)\n',
+     '\t\tn.publishBestEffort(ctx, e, severity)\n'),
+]
+NORMAL_TESTS = [['go', 'test', '-count=1', '-run', 'TestA092', './internal/obs'], ['go', 'test', '-count=1', '-run', 'TestA092|Outage|Auxiliar|A098', './internal/app/engine'], ['go', 'test', '-count=1', '-run', 'TestA092|Escalat|Credential', './internal/execgw'], ['go', 'test', '-count=1', '-run', 'TestProductionRuntime|TestTheAlertDeliverer|TestA092', './cmd/tossctl']]
+
 TESTS = [
     ["go", "test", "-count=1", "-run", "TestA092|TestEnqueueAlert|TestClaim", "./internal/journal"],
     ["go", "test", "-count=1", "-run", "TestA092|TestA096|TestA097|Mode|Transition|Announc", "./internal/obs"],
@@ -332,6 +416,8 @@ def main() -> None:
             MUTANTS, TESTS = LOCK_MUTANTS, LOCK_TESTS
         elif args[i + 1] == "25.9":
             MUTANTS, TESTS = MODE_MUTANTS, MODE_TESTS
+        elif args[i + 1] == "25.10":
+            MUTANTS, TESTS = NORMAL_MUTANTS, NORMAL_TESTS
         args = args[:i] + args[i + 2:]
     scratch, own = Path(args[0]), args[1:]
     copy = scratch / f"mut-a092-u2-{os.getpid()}"

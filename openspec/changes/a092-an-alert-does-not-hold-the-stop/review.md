@@ -4904,3 +4904,37 @@ High-risk(critical 발송 · 진입 차단 · 모드 승격). 편집 전 번들 
 - 보이스 B #7: 기록 전용 announcer 의 기록 실패 → `ErrModeAnnouncementFailed` 를 호출자 둘(`Retrier.escalateCredentialFailure` · `checkOutage`)이 「승격 안 됨」으로 오기 — High-risk 기존 함수 편집이라 단위 ⑤ 로 옮김.
 - 21.7(e): 정본 「배달 실행자의 정지가 …」 근거 ①(투영 미배선)이 이 착지로 거짓이 됨 — archive 때 정본 편집(24.5 와 함께).
 - 21.10 · 22.5(사람): 배포 전 운영 원장 현재 모드 조회 · 첫 기동의 모드 사유 차단 확인 · 기존 ENTRY_BLOCKED 행 처분은 사람 결정 · 사람 실행. **에이전트는 mode-release 를 실행하지 않는다.**
+
+### 24.10 착지 단위 ⑤ — C8 일반 등급 이관 · 구조 핀 · 25라운드 잔여 (2026-09-30)
+
+**착지** `e55102f0`(코드 · 시험) + 이 절의 증거 커밋. Manager 판정 순서(capped 먼저 → C8 → 핀들 → B#7 · A#2)를 따랐다.
+
+| 요구 | 구현 | RED 관측 | GREEN · 변이 |
+|---|---|---|---|
+| 25라운드 A#1 · C8 — exit 일반 등급(capped 는 축소 청산 **제출 앞**)이 전송을 기다리지 않음 | `obs.NormalRelay`(유계 64, 넘김은 막히지 않음) · `RecordOnly.Relay` · 런타임 보조 실행자 `normal-alert-relay` | N15(C8 전체 되돌림 = 편집 전 동작): `TestA092ACappedLiquidationDoesNotWaitForTheTransport` 포함 3개 FAIL | N01~N08 · N15 CAUGHT |
+| C8 · K13 — 버림 기록 · 종료 배수 기록 · 자기 정지 이벤트 | `EventNormalAlertDropped` · `drainOnShutdown` · `AuxiliaryExecutor.StopEvent` + `EventNormalAlertRelayStopped` | 새 코드(심볼 없음) | N03 · N04 · N05 · N09 · N10 CAUGHT |
+| B#4 — 주입 지점 역할(존재 → 역할) | `Context.ExitObserver` 가 `Alerts` · `Announcer` 를 무조건 기록 전용으로 덮음 | — | N11 CAUGHT(`TestA092TheExitObserverOverridesACallersSyncAlertPath`) |
+| B#7 — `ErrModeAnnouncementFailed` 오기 | `escalateCredentialFailure` · `checkOutage` 가 그 갈래를 가림 | `mutation-unit5/red-b7-pre-edit.log`(두 시험 FAIL) | N12 · N13 CAUGHT |
+| A#2 — 실행자 인수 줄 이름 | `EventAlertClaimHeld` → `EventAlertClaimStolen` | 같은 로그(핀 FAIL) | N14 CAUGHT |
+| K6 · K7 · M4 · K19 · M6 · K5 · M7 · K3 · M2 · K18(B#2) · k3(B#3) — 구조 핀 | `a092_structure_pins_test.go` 8 시험(각각 양성 대조 포함) | — | 반증 P01~P06 CAUGHT(잠금 전 해제 · 다른 게이트 · 투영 goroutine · 발의자→승격 · 상한 우회 조회 · 생산 Flush 호출자) |
+
+변이 `--set 25.10`: **21/21 CAUGHT**(`ledger-run1.tsv` 20 + `ledger-run2-N15.tsv`). 실행: journal · execgw · app/engine · cmd/tossctl · obs 스위트 ok(`-timeout 40m`), 태그 ok, `-race` obs A092 ok, `make lint` rc 0, `check_analysis` evidence complete.
+
+**교차 change 시험 편집**: `TestProductionRuntimeStartsExactlyOneAlertDeliverer`(a098) 기대 집합에 `normal-alert-relay` 추가 — 배달 실행자가 하나라는 주제 · 집합 동일성 단언 유지, 반증 N08.
+
+**편집하지 않은 것 · 판단**: `logClaimHeld` 주석은 「죽은 발송자 신호 = logClaimStolen」로 두었다 — 실행자 인수도 이제 같은 `claim_stolen` 이라 참이 됐다. 문구에 실행자를 더하려면 notifier.go 를 다시 만져야 해서(번들 다섯 재추출) 이번에는 두었다.
+
+**남은 것(게이트 준비 전)**:
+- 21.4 옛 §6 · §8 · §9 task(약 70개)의 「21.x 로 대체 / 철회 / 유지」 표지(보이스 B #1) — tasks 완료 판정과 겹치므로 게이트 준비 단계에서 한 번에.
+- 25.8 재리뷰(4보이스 + codex 슬롯, 브리프에 k3 합성 공격 — 이제 AST 핀 `TestA092TheFloorQueriesOnlyThroughTheRetrier` 가 합성의 절반을 구조로 섬).
+
+#### 부록 — journal 패키지 소요 A/B (Manager 요청, 2026-09-30)
+
+같은 연결 워크트리 · 같은 `GOCACHE` · `-timeout 60m` · 순차 실행(`analysis/harness/journal-timing-*.tsv` — `go test -json` 요약):
+
+| 판 | 패키지 소요 | 시험 수 | 비고 |
+|---|---|---|---|
+| `102d4e99`(단위 ④ 이전) | 827.7s | 948 | 병행 부하: 단위 ⑤ 스위트 · 변이 하네스 동시 실행 |
+| `b01e0cd0`(단위 ④ 이후) | 790.1s | 952 | 새 시험 4개 합 2.3s |
+
+귀속: 단위 ④ 가 더한 것은 새 시험 4개(2.3s)뿐이고, 시험별 최대 증가는 3.9s(`TestRefuseClaimedStrategyDispatchPreTransportRejectsCrossScopePairedKRUS` — a066/a112 영역, ④ 무관)로 부하 흔들림 범위다. 두 판 모두 기본 600s 를 넘으므로 **journal 전체 판은 `-timeout` 을 올려 돌린다**(Manager 판정 · `make test` 30m). 가장 긴 시험 다섯은 20.3 · 17.0 · 16.6 · 12.5 · 11.8s — 다음 성능 작업이 볼 자리.

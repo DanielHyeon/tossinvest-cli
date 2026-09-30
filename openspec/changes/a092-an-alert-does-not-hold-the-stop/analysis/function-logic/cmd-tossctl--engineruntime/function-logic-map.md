@@ -1,10 +1,10 @@
 # Function Logic Map: `engineRuntime`
 
 - Source: `cmd/tossctl/engine.go`
-- AST evidence: `ast.json` — **편집 뒤**, :636–723, 분기 6 · 반환 7 · 호출 13, source_sha256 `ef56c3613d41…`, 추출 커밋 `2714e393`. 편집 전 번들은 `analysis/pre-edit/unit4/`.
+- AST evidence: `ast.json` — **편집 뒤**, :636–724, 분기 6 · 반환 7 · 호출 14, source_sha256 `aeefd5dcc3dd…`, 추출 커밋 `e55102f0`. 편집 전 번들은 `analysis/pre-edit/unit5/`(없으면 단위 ④ 번들이 편집 전).
 - Risk scan: `risk-pattern-report.md`
-- 편집(착지 단위 ④ `2714e393`): 본문 불변 — 같은 파일의 다른 편집으로 줄만 이동(재추출).
-- 재번호: 편집 전 번들 없음(이 단위에서 새로 만든 번들).
+- 편집(착지 단위 ⑤ `e55102f0`): `Auxiliary` 에 `ectx.NormalAlertRelayExecutor()` 추가(C8). 분기 불변.
+- 재번호: difflib 정렬(편집 전 `b01e0cd0` 소스 대비): 분기 좌표 불변.
 
 ## Inputs and invariants
 
@@ -27,7 +27,7 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `costs.DefaultModel`, `ectx.AlertDeliverer`, `ectx.ExitObserver`, `ectx.NewRefreshingPairedStrategyEntrySupervisor`, `ectx.ReconcileDriver`, `ectx.Recovery`, `ectx.SnapshotCollector`, `engine.NewRuntime`, `engineFillDetector`, `engineRecoveryObserver`, `engineRecoverySequence`, `recoverThenReady`, `strategyEntry.SupervisedLoop` | 편집 뒤 호출 | 위 편집 참조 | AST |
+| `costs.DefaultModel`, `ectx.AlertDeliverer`, `ectx.ExitObserver`, `ectx.NewRefreshingPairedStrategyEntrySupervisor`, `ectx.NormalAlertRelayExecutor`, `ectx.ReconcileDriver`, `ectx.Recovery`, `ectx.SnapshotCollector`, `engine.NewRuntime`, `engineFillDetector`, `engineRecoveryObserver`, `engineRecoverySequence`, `recoverThenReady`, `strategyEntry.SupervisedLoop` | 편집 뒤 호출 | 위 편집 참조 | AST |
 
 ## State mutations and fallbacks
 
@@ -36,4 +36,4 @@
 ## Safety conclusion
 
 - Safe edit boundary: 위 편집만.
-- High-risk impact: High-risk(조립) — 이 단위에서 무편집.
+- High-risk impact: High-risk(조립) — 보조 실행자 하나 추가.

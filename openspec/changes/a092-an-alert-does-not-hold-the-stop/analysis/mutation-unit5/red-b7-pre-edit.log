@@ -1,0 +1,6 @@
+# 편집 전(retry.go · exitloop.go 무편집) — 보이스 B #7 RED
+--- FAIL: TestA092AnUnannouncedCredentialTighteningIsReportedAsTightened
+    err = "...execgw: the credential failure did not reach the operating mode, so a restart would lift the block: journal: the operating-mode transition was recorded but not announced (NORMAL → ENTRY_BLOCKED): outbox disk full"
+--- FAIL: TestA092AnUnannouncedOutageTighteningStillCountsAsEscalated
+    the cycle says it did not escalate although the transition committed — only its notice failed
+--- FAIL: TestA092TheDelivererNamesATakeoverAsStolen — the takeover line is logged as EventAlertClaimHeld at alertdelivery.go:308:3 (편집 전)

@@ -1,0 +1,121 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/app/engine",
+ "tests_run": 17,
+ "failed_tests": [],
+ "union_passed": null,
+ "failures": {},
+ "bundles": {
+  "internal-app-engine--alertdeliverer.deliverone": {
+   "B1": {
+    "kind": "if",
+    "line": 272,
+    "column": 2,
+    "block": "272.16-277.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B2": {
+    "kind": "switch",
+    "line": 278,
+    "column": 2,
+    "block": "278.2-278.27",
+    "entered_by": [
+     "TestACancelledDeliveryJudgementFallsBackToAnUnconditionalLatch",
+     "TestADeliveryAndAnEmptyAcknowledgementAfterTheEvidenceDropOnlyTheBlock",
+     "TestADeliveryRecordErrorFollowedByCancellationStillLatches",
+     "TestADeliveryRecordOutcomeDecidesTheJudgement",
+     "TestARecordedCriticalAlertIsDeliveredWithinTwoCycles",
+     "TestTheDeliveredNotificationCarriesTheRecordedAlert",
+     "TestTheDelivererHoldsNoLeaseAfterASuccessfulSend",
+     "TestTheDelivererNeverPublishesTheSameRowTwiceInACycle"
+    ],
+    "union": null
+   },
+   "B3": {
+    "kind": "case",
+    "line": 279,
+    "column": 2,
+    "block": "279.29-282.25",
+    "entered_by": [
+     "TestACancelledDeliveryJudgementFallsBackToAnUnconditionalLatch",
+     "TestADeliveryAndAnEmptyAcknowledgementAfterTheEvidenceDropOnlyTheBlock",
+     "TestADeliveryRecordErrorFollowedByCancellationStillLatches",
+     "TestADeliveryRecordOutcomeDecidesTheJudgement",
+     "TestARecordedCriticalAlertIsDeliveredWithinTwoCycles",
+     "TestTheDeliveredNotificationCarriesTheRecordedAlert",
+     "TestTheDelivererHoldsNoLeaseAfterASuccessfulSend",
+     "TestTheDelivererNeverPublishesTheSameRowTwiceInACycle"
+    ],
+    "union": null
+   },
+   "B4": {
+    "kind": "case",
+    "line": 283,
+    "column": 2,
+    "block": "283.34-292.46",
+    "entered_by": [],
+    "union": null
+   },
+   "B5": {
+    "kind": "if",
+    "line": 292,
+    "column": 3,
+    "block": "292.46-296.4",
+    "entered_by": [],
+    "union": null
+   },
+   "B6": {
+    "kind": "case",
+    "line": 298,
+    "column": 2,
+    "block": "298.10-303.9",
+    "entered_by": [],
+    "union": null
+   },
+   "B7": {
+    "kind": "if",
+    "line": 305,
+    "column": 2,
+    "block": "305.17-310.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B8": {
+    "kind": "if",
+    "line": 314,
+    "column": 2,
+    "block": "314.24-324.3",
+    "entered_by": [],
+    "union": null
+   },
+   "B9": {
+    "kind": "else",
+    "line": 324,
+    "column": 9,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B10": {
+    "kind": "if",
+    "line": 331,
+    "column": 3,
+    "block": "331.18-333.4",
+    "entered_by": [
+     "TestADeliveryAndAnEmptyAcknowledgementAfterTheEvidenceDropOnlyTheBlock"
+    ],
+    "union": null
+   },
+   "B11": {
+    "kind": "if",
+    "line": 335,
+    "column": 2,
+    "block": "335.17-338.3",
+    "entered_by": [
+     "TestADeliveryAndAnEmptyAcknowledgementAfterTheEvidenceDropOnlyTheBlock"
+    ],
+    "union": null
+   }
+  }
+ }
+}

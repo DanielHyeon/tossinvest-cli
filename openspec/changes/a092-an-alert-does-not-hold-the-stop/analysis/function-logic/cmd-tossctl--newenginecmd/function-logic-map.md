@@ -1,9 +1,9 @@
 # Function Logic Map: `newEngineCmd`
 
 - Source: `cmd/tossctl/engine.go`
-- AST evidence: `ast.json` — **편집 뒤**, :114–129, 분기 0 · 반환 1 · 호출 8, source_sha256 `ef56c3613d41…`, 추출 커밋 `2714e393`. 편집 전 번들은 `analysis/pre-edit/unit4/`.
+- AST evidence: `ast.json` — **편집 뒤**, :114–129, 분기 0 · 반환 1 · 호출 8, source_sha256 `aeefd5dcc3dd…`, 추출 커밋 `e55102f0`. 편집 전 번들은 `analysis/pre-edit/unit5/`(없으면 단위 ④ 번들이 편집 전).
 - Risk scan: `risk-pattern-report.md`
-- 편집(착지 단위 ④ `2714e393`): `AddCommand(newEngineModeReleaseCmd(root))` 한 줄. **편집 전 FLM 없이 편집함**(Pre-Edit 목록 누락 — review §24.9 에 기록). 분기 0.
+- 편집(착지 단위 ⑤ `e55102f0`): 단위 ⑤ 무편집 — 줄 이동(재추출). 단위 ④ 편집은 `AddCommand(newEngineModeReleaseCmd)` 한 줄.
 - 재번호: 편집 전 번들 없음(이 단위에서 새로 만든 번들).
 
 ## Inputs and invariants
@@ -31,4 +31,4 @@
 ## Safety conclusion
 
 - Safe edit boundary: 위 편집만.
-- High-risk impact: Low — 명령 등록.
+- High-risk impact: Low.

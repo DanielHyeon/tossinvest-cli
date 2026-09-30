@@ -1,6 +1,6 @@
 {
   "file": "cmd/tossctl/engine.go",
-  "source_sha256": "ef56c3613d413f01db40bf3086439280c6bbe1751c13fa1b053b3de69f3e996c",
+  "source_sha256": "aeefd5dcc3dd9cfb1f1b1435e816ff2f966c62c7ec9717f2308804ce062fdefd",
   "package": "main",
   "function": "engineRuntime",
   "signature": "engineRuntime(params=5, results=2)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 723,
+    "line": 724,
     "column": 2
   },
   "branches": [
@@ -217,6 +217,14 @@
         "column": 4
       },
       "text": "strategyEntry.SupervisedLoop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 722,
+        "column": 56
+      },
+      "text": "ectx.NormalAlertRelayExecutor"
     }
   ],
   "assignments": [

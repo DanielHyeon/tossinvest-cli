@@ -1,0 +1,22 @@
+TREE	HEAD e55102f04de29a29ca156196f65565cdb2f79c3c	uncommitted tracked: none	own untracked: none
+CONTROL	GREEN	
+N01 no relay falls back to a sync publish	CAUGHT	1 failing: TestA092WithoutARelayANormalAlertIsDroppedNotSent
+N02 hand-off blocks when full	CAUGHT	1 failing: TestA092AFullRelayDropsAndSaysWhat
+N03 a full drop is silent	CAUGHT	1 failing: TestA092AFullRelayDropsAndSaysWhat
+N04 shutdown drain is silent	CAUGHT	1 failing: TestA092TheRelayRecordsWhatShutdownLeftBehind
+N05 cancellation reported as nil	CAUGHT	2 failing: TestA092TheRelayPublishesWhatWasHandedOff, TestA092TheRelayRecordsWhatShutdownLeftBehind
+N06 hand-off skipped silently	CAUGHT	3 failing: TestA092TheRelayPublishesWhatWasHandedOff, TestA092AFullRelayDropsAndSaysWhat, TestA092TheRelayRecordsWhatShutdownLeftBehind
+N07 exit observer gets no relay	CAUGHT	1 failing: TestA092ExitObserverGetsRecordOnlyAlertPaths
+N08 runtime does not start the relay	CAUGHT	1 failing: TestProductionRuntimeStartsExactlyOneAlertDeliverer
+N09 stop event ignored	CAUGHT	1 failing: TestA092TheRelayStopIsNotAnUndeliveredCriticalAlert
+N10 relay borrows the delivery event	CAUGHT	1 failing: TestA092TheRelayStopIsNotAnUndeliveredCriticalAlert
+N11 caller alert path respected	CAUGHT	1 failing: TestA092TheExitObserverOverridesACallersSyncAlertPath
+N12 credential notice failure misreported	CAUGHT	1 failing: TestA092AnUnannouncedCredentialTighteningIsReportedAsTightened
+N13 outage notice failure not escalated	CAUGHT	1 failing: TestA092AnUnannouncedOutageTighteningStillCountsAsEscalated
+N14 takeover logged as held	CAUGHT	1 failing: TestA092TheDelivererNamesATakeoverAsStolen
+P01 outside recorder releases before inserting	CAUGHT	1 failing: TestA092TheOutsideRecorderLatchesBeforeItInserts
+P02 notifier gets another gate	CAUGHT	1 failing: TestA092EveryGatewayGetsItsEntryGate
+P03 projection in a goroutine	CAUGHT	7 failing: TestA092TransitionsAfterAssemblyReachTheLiveGate, TestA092AReleaseNeedsEveryField/no_operator, TestA092AReleaseNeedsEveryField/no_approval, TestA092AReleaseNeedsEveryField/no_reason, TestA092AReleaseNeedsEveryField/halt_target, TestA092AReleaseNeedsEveryField/no_target, TestA092AReleaseWithoutAnAuditLogIsRefused
+P04 issuer reaches the escalation	CAUGHT	1 failing: TestA092TheExitIssuerDoesNotReachAnAnnouncer
+P05 floor reads outside the retrier	CAUGHT	1 failing: TestA092TheFloorQueriesOnlyThroughTheRetrier
+P06 a production Flush caller	CAUGHT	1 failing: TestA092TheNotifierFlushHasNoProductionCaller
