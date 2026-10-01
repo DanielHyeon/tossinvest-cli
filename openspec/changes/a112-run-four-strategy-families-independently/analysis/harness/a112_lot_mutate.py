@@ -478,12 +478,39 @@ SET_5622_TESTS = [
      "./internal/app/engine"],
     ["go", "test", "-count=1", "-run", "Census|TestTheFaultStream|TestEveryWorkerCanHandOff", "./internal/app/engine"],
 ]
+SRP = "internal/strategyrouter/production.go"
+SET_61 = [
+    ("V01 two families sharing a risk id accepted", RB,
+     "\t\tif prior, seen := riskFamilies[value.RiskID]; !known || seen && prior != family {",
+     "\t\tif prior, seen := riskFamilies[value.RiskID]; !known || seen && prior != family && false {"),
+    ("V02 a lane without a family accepted", RB,
+     "\t\tif prior, seen := riskFamilies[value.RiskID]; !known || seen && prior != family {",
+     "\t\tif prior, seen := riskFamilies[value.RiskID]; (!known && false) || seen && prior != family {"),
+    ("V03 family lint removed", RB,
+     "\t\triskFamilies[value.RiskID] = family", "\t\t_ = family"),
+    ("V04 family resolved from the wrong market", RB,
+     "strategyrouter.ProductionLaneFamily(strategyrouter.Market(body.Market), value.LaneID)",
+     "strategyrouter.ProductionLaneFamily(strategyrouter.MarketKR, value.LaneID)"),
+    ("V05 resolver ignores the market (any market's lane resolves)", SRP,
+     "\tdescriptor, ok := productionRouteDescriptors(market)[laneID]\n\treturn descriptor.Family, ok",
+     "\tdescriptor, ok := productionRouteDescriptors(market)[laneID]\n\tif !ok {\n\t\tdescriptor, ok = productionRouteDescriptors(MarketKR)[laneID]\n\t}\n\tif !ok {\n\t\tdescriptor, ok = productionRouteDescriptors(MarketUS)[laneID]\n\t}\n\treturn descriptor.Family, ok"),
+    ("V06 resolver invents a family for unknown lanes", SRP,
+     "\tdescriptor, ok := productionRouteDescriptors(market)[laneID]\n\treturn descriptor.Family, ok",
+     "\tdescriptor, ok := productionRouteDescriptors(market)[laneID]\n\tif !ok {\n\t\treturn FamilyContinuation, true\n\t}\n\treturn descriptor.Family, ok"),
+    ("V07 weekly horizon squeezed into SHORT", RB,
+     "\thorizon := Horizon(lineage.Horizon)\n",
+     "\thorizon := Horizon(lineage.Horizon)\n\tif horizon == \"WEEKLY\" {\n\t\thorizon = HorizonShort\n\t}\n"),
+]
+SET_61_TESTS = [
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "./internal/riskbucket"],
+    ["go", "test", "-count=1", "-run", "TestProductionLaneFamily|TestPaired|TestProduction", "./internal/strategyrouter"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
-        "5.6.2.2": (SET_5622, SET_5622_TESTS)}
+        "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측

@@ -1,9 +1,9 @@
 # Function Logic Map: `loadProductionRiskEntries`
 
 - Source: `internal/riskbucket/production_snapshot_authority.go`
-- Source SHA-256: `38de0b7d846b0a1af1b01bc24eb94adc673ca953a3f125f3130adbc3bb4f58c2`
+- Source SHA-256: `3aa9b66c00cdcdedf09e0bea1b0eeeaf56d46d0ba40149f28edf70e73d7e26b4`
 - Signature: `loadProductionRiskEntries(params=6, results=2)`
-- Source range: `352:1`–`439:2`
+- Source range: `361:1`–`448:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2 리뷰 수리).
 - Risk scan: `risk-pattern-report.md`.
 
@@ -13,76 +13,76 @@
 
 ## Branches and early returns
 
-- Exact AST return nodes: `355:3, 358:3, 367:3, 372:3, 376:3, 382:3, 385:3, 395:3, 401:4, 405:4, 415:4, 425:4, 434:4, 438:2`.
+- Exact AST return nodes: `364:3, 367:3, 376:3, 381:3, 385:3, 391:3, 394:3, 404:3, 410:4, 414:4, 424:4, 434:4, 443:4, 447:2`.
 
 | Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
-| B1 | if | 354:2 | 소유자 UID 없음 |
-| B2 | if | 357:2 | 원장 파일 검증 실패 |
-| B3 | if | 366:2 | 열기 실패 |
-| B4 | if | 371:2 | ping 실패 |
-| B5 | if | 375:2 | 스키마 핀 불일치(R1 — 별도 change) |
-| B6 | if | 380:2 | **(분리)** latch 조회 결함 → `scope latch unreadable: %w`(결함) |
-| B7 | if | 384:2 | **(분리)** 그 범위에 scope latch 있음 → `ErrProductionRiskScopeRefused`(범위 국소) |
-| B8 | if | 394:2 | 권한 창 불일치 |
-| B9 | range | 398:2 | 차원 순회 |
-| B10 | if | 400:3 | 사용량 읽기 실패(원장 결함 — 손상 행 포함) |
-| B11 | if | 404:3 | latch 된 사용량 |
-| B12 | if | 414:3 | 정책 출처 구성 실패 |
-| B13 | if | 424:3 | 스냅숏 출처 구성 실패 |
-| B14 | if | 433:3 | 권한 항목 구성 실패 |
+| B1 | if | 363:2 | 소유자 UID 없음 |
+| B2 | if | 366:2 | 원장 파일 검증 실패 |
+| B3 | if | 375:2 | 열기 실패 |
+| B4 | if | 380:2 | ping 실패 |
+| B5 | if | 384:2 | 스키마 핀 불일치(R1 — 별도 change) |
+| B6 | if | 389:2 | **(분리)** latch 조회 결함 → `scope latch unreadable: %w`(결함) |
+| B7 | if | 393:2 | **(분리)** 그 범위에 scope latch 있음 → `ErrProductionRiskScopeRefused`(범위 국소) |
+| B8 | if | 403:2 | 권한 창 불일치 |
+| B9 | range | 407:2 | 차원 순회 |
+| B10 | if | 409:3 | 사용량 읽기 실패(원장 결함 — 손상 행 포함) |
+| B11 | if | 413:3 | latch 된 사용량 |
+| B12 | if | 423:3 | 정책 출처 구성 실패 |
+| B13 | if | 433:3 | 스냅숏 출처 구성 실패 |
+| B14 | if | 442:3 | 권한 항목 구성 실패 |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `productionRiskOwnerUID` | 353:15 |
-| `validateProductionRiskJournalFile` | 357:12 |
-| `query.Set` | 361:2 |
-| `query.Add` | 362:2 |
-| `query.Add` | 363:2 |
-| `query.Encode` | 364:69 |
-| `sql.Open` | 365:13 |
-| `dsn.String` | 365:32 |
-| `db.Close` | 369:8 |
-| `db.SetMaxOpenConns` | 370:2 |
-| `db.PingContext` | 371:12 |
-| `Scan` | 375:12 |
-| `db.QueryRowContext` | 375:12 |
-| `errors.New` | 376:15 |
-| `Scan` | 380:12 |
-| `db.QueryRowContext` | 380:12 |
-| `string` | 381:20 |
-| `fmt.Errorf` | 382:15 |
-| `fmt.Errorf` | 385:15 |
-| `string` | 387:51 |
-| `string` | 387:91 |
-| `canonicalProductionRiskTime` | 389:25 |
-| `canonicalProductionRiskTime` | 390:22 |
-| `latestProductionRiskTime` | 391:23 |
-| `earliestProductionRiskTime` | 392:20 |
-| `scope.AsOf.Add` | 393:3 |
-| `authorityObserved.After` | 394:5 |
-| `authorityFresh.Before` | 394:44 |
-| `errors.New` | 395:15 |
-| `make` | 397:13 |
-| `len` | 397:59 |
-| `ReadJournalBucketUsage` | 399:17 |
-| `errors.New` | 405:16 |
-| `productionRiskDigest` | 409:19 |
-| `(unnamed)` | 409:40 |
-| `strings.Join` | 409:47 |
-| `string` | 409:112 |
-| `NewPolicyProvenance` | 413:28 |
-| `productionRiskDigest` | 417:21 |
-| `(unnamed)` | 417:42 |
-| `strings.Join` | 417:49 |
-| `string` | 417:94 |
-| `scope.AsOf.Format` | 418:15 |
-| `strings.TrimPrefix` | 419:44 |
-| `NewSnapshotProvenance` | 423:30 |
-| `newRiskSnapshotAuthorityMaterialEntry` | 432:17 |
-| `append` | 436:13 |
+| `productionRiskOwnerUID` | 362:15 |
+| `validateProductionRiskJournalFile` | 366:12 |
+| `query.Set` | 370:2 |
+| `query.Add` | 371:2 |
+| `query.Add` | 372:2 |
+| `query.Encode` | 373:69 |
+| `sql.Open` | 374:13 |
+| `dsn.String` | 374:32 |
+| `db.Close` | 378:8 |
+| `db.SetMaxOpenConns` | 379:2 |
+| `db.PingContext` | 380:12 |
+| `Scan` | 384:12 |
+| `db.QueryRowContext` | 384:12 |
+| `errors.New` | 385:15 |
+| `Scan` | 389:12 |
+| `db.QueryRowContext` | 389:12 |
+| `string` | 390:20 |
+| `fmt.Errorf` | 391:15 |
+| `fmt.Errorf` | 394:15 |
+| `string` | 396:51 |
+| `string` | 396:91 |
+| `canonicalProductionRiskTime` | 398:25 |
+| `canonicalProductionRiskTime` | 399:22 |
+| `latestProductionRiskTime` | 400:23 |
+| `earliestProductionRiskTime` | 401:20 |
+| `scope.AsOf.Add` | 402:3 |
+| `authorityObserved.After` | 403:5 |
+| `authorityFresh.Before` | 403:44 |
+| `errors.New` | 404:15 |
+| `make` | 406:13 |
+| `len` | 406:59 |
+| `ReadJournalBucketUsage` | 408:17 |
+| `errors.New` | 414:16 |
+| `productionRiskDigest` | 418:19 |
+| `(unnamed)` | 418:40 |
+| `strings.Join` | 418:47 |
+| `string` | 418:112 |
+| `NewPolicyProvenance` | 422:28 |
+| `productionRiskDigest` | 426:21 |
+| `(unnamed)` | 426:42 |
+| `strings.Join` | 426:49 |
+| `string` | 426:94 |
+| `scope.AsOf.Format` | 427:15 |
+| `strings.TrimPrefix` | 428:44 |
+| `NewSnapshotProvenance` | 432:30 |
+| `newRiskSnapshotAuthorityMaterialEntry` | 441:17 |
+| `append` | 445:13 |
 
 ## State mutations and fallbacks
 
@@ -91,3 +91,5 @@
 ## Safety conclusion
 
 - High-risk. 원장 읽기 전용. 새로 통과 · 새로 거절 0.
+
+a112 6.1: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)

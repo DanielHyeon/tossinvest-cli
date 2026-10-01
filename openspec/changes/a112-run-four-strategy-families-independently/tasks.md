@@ -376,6 +376,12 @@
 ## 6. Shared Risk Owner and Dispatch Integration
 
 - [ ] 6.1 Bind family to the server-owned a066 strategy risk bucket identity without creating a second Guardian, account-wide cap, journal, owner key, dispatch owner or Gateway.
+
+  **진행(2026-10-01 — 미착지).** Manager 판정 (C): 「risk_id 가 family 를 함의하며 적재기가 강제」 — `validProductionRiskPolicyContents` 가 레인 family 를
+  `strategyrouter.ProductionLaneFamily`(정본 표 유도, 완전성 8 = 4 × 2 시험)로 해소해 한 risk_id 를 두 family 가 공유하거나 family 미해소 레인이면 정책 거절(결함 등급).
+  (A) 매니페스트 family 필드는 v2 때 묶음, (B) 버킷 값 family 접두는 용량 복제라 기각 — design 정정 사슬. 두 번째 Guardian · account cap · 원장 · owner key · dispatch owner ·
+  Gateway 는 만들지 않았다(새 상태 0 — 검증만). **weekly family 활성화의 경성 선행: riskbucket horizon 매핑 결정**(WEEKLY 는 SHORT/MEDIUM 에 매핑되지 않아 적재기가
+  「unsupported horizon」 으로 거절 — 의도된 현재 상태로 핀 `TestAWeeklyLaneIsRefusedForItsHorizonUntilAMappingIsDecided`; ROADMAP).
 - [ ] 6.2 Prove q_final remains the minimum of q_candidate and every Guardian/horizon/market/family/sector/symbol cap and that concurrent family admission creates one owner/decision/reservation transaction only.
 
   **Blocking prerequisite inherited from 5.5 — read before touching `strategy_account_first_leg_authority.go`.** 5.5's handoff seam proves that a dispatched value passed through `strategyhandoff.Admit`; it does **not** prove the coordinator called `Admit`, because `dispatchHandoff` is a method on a package-private struct that any engine function can build from entries of its own choosing. Round 4 compiled four such bypasses. None of them reaches the broker, and the reason is in this file, not in the seam: `collectStrategyFirstLegAuthority` refuses the crossing value, re-derives the proposal from its own authority pair and compares identities at `:217` (the count gate), `:221`–`:222` (re-derivation) and `:223`–`:225` (the identity comparison, whose refusal is `production proposal identity changed`). Those lines are the five sites `singleProposalAssumptionCensus` records as 6.2's debt.

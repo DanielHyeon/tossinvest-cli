@@ -560,6 +560,13 @@ type productionLaneDescriptor struct {
 	LaneVersion string
 }
 
+// ProductionLaneFamily 는 이 빌드의 생산 레인이 어느 전략군인지다(a112 6.1). 정본은 아래 `productionRouteDescriptors` 표 하나이고 여기서는
+// 그 표를 읽기만 한다 — 레인 → 전략군을 다른 곳에 다시 적으면 두 표가 갈라진다. 표 밖의 레인(또는 다른 시장의 레인)은 false.
+func ProductionLaneFamily(market Market, laneID string) (Family, bool) {
+	descriptor, ok := productionRouteDescriptors(market)[laneID]
+	return descriptor.Family, ok
+}
+
 func productionRouteDescriptors(market Market) map[string]productionLaneDescriptor {
 	if market == MarketKR {
 		return map[string]productionLaneDescriptor{

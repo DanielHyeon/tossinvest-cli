@@ -5847,3 +5847,25 @@ console `multiMarketStrategyRuntimePage.project`)은 `shift_same_file_bundles.py
   W05 생산 worker 가 새로 고침을 멈춤 · W06 fault 스트림 용량 1 — **6/6 CAUGHT**.
 
 **FLM: not-applicable** — 이 로트는 새 시험 파일 하나뿐이고 기존 함수 본문 편집 0(생산 변경 0).
+
+## 2026-10-01 태스크 6.1 — family 를 strategy risk bucket identity 에 결속(판정 (C))
+
+**판정.** Manager (C): 「risk_id 가 family 를 함의하며 적재기가 강제」 — 지금. (A) 매니페스트 `family` 필드는 v2 가 다른 이유로 필요할 때 묶음, (B) 버킷 값 family 접두는
+용량 복제라 기각. 조건: ① lint 거절은 결함 등급(시장 위험 미준비) ② 「두 family 가 같은 risk_id 공유 → 수락」 변이 CAUGHT, lane → family 는 정본 표에서 유도 + 표 완전성
+(8 = 4 × 2) ③ design 정정 사슬. weekly horizon 별도 판정: 지금 매핑하지 않음 — 「unsupported horizon」 거절을 의도된 현재 상태로 핀 + ROADMAP · tasks 명명.
+
+**편집.** `strategyrouter.ProductionLaneFamily`(새 — 정본 표 `productionRouteDescriptors` 를 읽기만) · `riskbucket.validProductionRiskPolicyContents` B9(새 — family
+미해소 레인 · 한 risk_id 두 family 공유 → false). 새 Guardian · account cap · 원장 · owner key · dispatch owner · Gateway 0(검증만). Pre-Edit `analysis/measurements/lot-6.1/pre-edit/`.
+
+**증거.** RED `lot-6.1/red-6.1.log`(편집 전: 공유 risk_id · family 없는 레인 err=nil). 시험 `internal/riskbucket/a112_family_risk_binding_test.go`(공유 — 대조: 다른 risk_id 수락 ·
+family 없는 레인 · 정책 시장 안 해소 — US 정책 대조 + KR 정책의 US 레인 거절 · weekly horizon 핀) · `internal/strategyrouter/a112_lane_family_test.go`(표 완전성 · 유도 일치 ·
+표 밖/다른 시장 레인 미해소). 변이 `lot-6.1/mutation-6.1.tsv`: V01 공유 수락 · V02 family 없는 레인 수락(첫 실행 BUILD-FAIL → 재정의 후 CAUGHT) · V03 lint 제거 ·
+V04 잘못된 시장 · V05 해소기가 시장 무시 · V06 해소기가 family 를 지어냄 · V07 weekly 를 SHORT 로 — **7/7 CAUGHT**. check_analysis 델타 새 오류 0(`lot-6.1/check-analysis-delta.txt`).
+같은 파일 번들 7 은 줄 이동만(shift). **base 번들 `strategyrouter--productionrouteauthority.ownerdigest` 는 shift 가 덮어쓴 것을 발견해 HEAD 로 되돌림** — base 15 는 결정 (5) 대로
+마지막 Go 커밋 직후 재추출(shift 대상에서 `revision: base` 를 빼야 한다 — 다음 shift 때 주의).
+
+**생산 동작 변화 0**(서명 위험 정책 0건 · 활성화 0). 순서: a127(스키마 핀 두 자리)은 이 착지 위로 선다(Manager 2026-10-01).
+
+**정정(a127 F10 실측, 2026-10-01).** R1 의 「2026-08-05 a084 이후 28 이상」은 부정확하다 — 위험 · route 핀 27 은 SchemaVersion 이 이미 29 이던 커밋 `8022f578` 에서 태어나 출하된 어느 스키마와도 맞은 적이 없다(생산 위험 · route 권한은 처음부터 실원장에서 준비될 수 없었다). ROADMAP R1 행 정정.
+
+**교훈(6.1).** 같은 파일 번들을 shift 로 재기준화하는 루프가 `revision: base` 번들까지 덮어썼다(ownerdigest — HEAD 로 복원). base 번들은 base 리비전의 AST 를 지켜야 하므로 shift · rebase 대상에서 제외한다(결정 (5) 재추출에서만 갱신).

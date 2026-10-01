@@ -3,7 +3,7 @@
 - Source: `internal/strategyrouter/production.go` (475-506)
 - Function: `verifyProductionRouteManifest` in package `strategyrouter`
 - Signature: `verifyProductionRouteManifest(params=2, results=2)`
-- File SHA-256: `1175f67d72d78cc9f3ef65d505d97112382de26ea1eae89165314529dafb26d9`
+- File SHA-256: `7d60a867a87576cab66d25591d3211b50f1d532efa29166bd71bb5b623cc09f4`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 3.
 - Risk scan: `risk-pattern-report.md`.
@@ -60,3 +60,5 @@ Exact AST return positions: 492:3, 496:3, 500:3, 505:2.
 ## Safety conclusion
 
 Every refusal here is fail-closed for the whole market snapshot: the function returns a zero scope and false, and the only caller turns that into `ErrProductionRouteUnavailable`. The refusal carries no distinguishing reason — that diagnosability gap is recorded as a residual in review.md decision 51, not closed here.
+
+a112 6.1: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)

@@ -21,6 +21,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/officialfx"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 	_ "modernc.org/sqlite"
 )
 
@@ -252,6 +253,9 @@ func validProductionRiskPolicyContents(body productionRiskPolicyBody) bool {
 		return false
 	}
 	strategyKeys := map[string]bool{}
+	// a112 6.1(Manager 판정 (C)): risk_id 는 **한 전략군(family)을 함의**한다 — 한 risk_id 를 서로 다른 family 의 레인이 공유하면 family 버킷
+	// 경계가 무너지므로 정책 전체를 거절한다. family 는 strategyrouter 정본 표에서 유도하고, 해소되지 않는 레인(이 빌드 · 이 시장 밖)도 거절한다.
+	riskFamilies := map[string]strategyrouter.Family{}
 	for _, value := range body.Strategies {
 		key := value.LaneID + "\x00" + value.LaneVersion + "\x00" + string(value.Horizon)
 		if strategyKeys[key] || !canonicalIdentity(value.LaneID) || !canonicalIdentity(value.LaneVersion) ||
@@ -259,6 +263,11 @@ func validProductionRiskPolicyContents(body productionRiskPolicyBody) bool {
 			!canonicalIdentity(value.RiskVersion) {
 			return false
 		}
+		family, known := strategyrouter.ProductionLaneFamily(strategyrouter.Market(body.Market), value.LaneID)
+		if prior, seen := riskFamilies[value.RiskID]; !known || seen && prior != family {
+			return false
+		}
+		riskFamilies[value.RiskID] = family
 		if _, err := parseMinor(value.LimitMinor, 256); err != nil {
 			return false
 		}

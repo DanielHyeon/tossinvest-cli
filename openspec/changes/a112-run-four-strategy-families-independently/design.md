@@ -93,7 +93,14 @@ Queue는 server-owned positive finite capacity를 가지며 같은 key는 newest
 
 8개 worker 어디에도 broker mutator, writable journal, Guardian issuer, activation writer 또는 toggle writer를 주입하지 않는다. 두 market coordinator는 하나의 bounded dispatch handoff로 연결되고, `strategyDispatchCycle.dispatch`의 protection/reconciliation/FX/Guardian/q_final/lease/Gateway 순서를 재사용한다.
 
-동일 계좌에는 하나의 account-base Guardian과 하나의 account-wide exposure/loss domain만 둔다. family는 a066의 versioned strategy risk bucket key에 포함되지만 capacity source를 만들지 않는다. 수량은 항상 다음 교집합이다.
+동일 계좌에는 하나의 account-base Guardian과 하나의 account-wide exposure/loss domain만 둔다. family는 a066의 versioned strategy risk bucket key에 포함되지만 capacity source를 만들지 않는다.
+
+**정정 2026-10-01 [a112 6.1 — Manager 판정 (C)] — 「family 가 strategy risk bucket key 에 포함」의 구현 해석.** 전제(이 문장)는 버킷 키에 family 를 넣는 것으로 읽혔다.
+측정해 보니 서명 위험 정책 v1 의 strategy 항목은 `{lane_id, lane_version, horizon, risk_id, …}` 이고 family 필드가 없으며, strategy 차원의 버킷 값은 `risk_id` 다.
+교체: **「risk_id 가 family 를 함의하며 적재기가 그것을 강제한다」** — 적재기(`validProductionRiskPolicyContents`)가 레인의 family 를 strategyrouter 정본 표
+(`ProductionLaneFamily`)에서 유도하고, 한 risk_id 를 서로 다른 family 의 레인이 공유하거나 family 를 해소할 수 없는 레인이 있으면 정책 전체를 거절한다(결함 등급 — 시장 위험
+미준비). 버킷 값 자체에 family 를 붙이는 안(`family/risk_id`)은 같은 risk_id 를 쓰는 family 마다 한도를 따로 갖게 해 **용량 복제**라 기각. 매니페스트에 `family`
+필드를 더하는 안(판정 (A))은 서명 형식 v2 · 생성기 · 골든 변경이 들고, 오늘 그것이 더 막는 것이 없으므로 **매니페스트 v2 가 다른 이유로 필요해질 때 묶는다**(이연). 수량은 항상 다음 교집합이다.
 
 `q_final = min(q_candidate, q_guardian, q_horizon, q_market, q_family_policy, q_sector, q_symbol)`
 

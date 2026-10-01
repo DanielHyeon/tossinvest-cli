@@ -1,6 +1,6 @@
 # Branch Test Map: `LoadProductionRouteAuthorityBatch`
 
-- Source: `internal/strategyrouter/production.go`; file SHA-256 `1175f67d72d78cc9f3ef65d505d97112382de26ea1eae89165314529dafb26d9`. AST branch positions are authoritative.
+- Source: `internal/strategyrouter/production.go`; file SHA-256 `7d60a867a87576cab66d25591d3211b50f1d532efa29166bd71bb5b623cc09f4`. AST branch positions are authoritative.
 - Rows carry measured counts from Go coverage profiles, count mode.
 - untagged package suite: `go test -count=1 -covermode=count ./internal/strategyrouter/`
 - tagged package suite: `go test -count=1 -tags tossos_testseams -covermode=count ./internal/strategyrouter/`

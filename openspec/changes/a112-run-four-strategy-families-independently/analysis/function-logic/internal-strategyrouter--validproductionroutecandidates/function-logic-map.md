@@ -3,7 +3,7 @@
 - Source: `internal/strategyrouter/production.go` (532-555)
 - Function: `validProductionRouteCandidates` in package `strategyrouter`
 - Signature: `validProductionRouteCandidates(params=2, results=1)`
-- File SHA-256: `1175f67d72d78cc9f3ef65d505d97112382de26ea1eae89165314529dafb26d9`
+- File SHA-256: `7d60a867a87576cab66d25591d3211b50f1d532efa29166bd71bb5b623cc09f4`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 3.
 - Risk scan: `risk-pattern-report.md`.
@@ -52,3 +52,5 @@ Exact AST return positions: 535:3, 550:4, 554:2.
 ## Safety conclusion
 
 B1 (`len(values) != len(want)`) is the arm that kills a legacy three-family manifest; the tail return is always true once the loop completes and is not a refusal arm. The family comparison inside B3 is what stops four lanes from claiming one family. A `len(families)` count here was measured to be unfalsifiable and was deleted rather than kept as an unkillable defence; the table's own four-distinct-families property is asserted by `TestProductionRouteDescriptorsCoverFourFamiliesPerMarket` instead.
+
+a112 6.1: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)

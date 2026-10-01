@@ -3,7 +3,7 @@
 - Source: `internal/strategyrouter/production.go` (318-411)
 - Function: `LoadProductionRouteAuthorityBatch` in package `strategyrouter`
 - Signature: `LoadProductionRouteAuthorityBatch(params=3, results=2)`
-- File SHA-256: `1175f67d72d78cc9f3ef65d505d97112382de26ea1eae89165314529dafb26d9`
+- File SHA-256: `7d60a867a87576cab66d25591d3211b50f1d532efa29166bd71bb5b623cc09f4`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 16.
 - Risk scan: `risk-pattern-report.md`.
@@ -104,3 +104,5 @@ Exact AST return positions: 320:3, 323:3, 334:3, 338:3, 342:3, 348:3, 352:3, 365
 ## Safety conclusion
 
 The function holds no writer, signer or transport handle; the SQLite handle is opened `mode=ro` with `query_only(1)` and is rolled back on every path. A manifest or journal integrity failure refuses the whole market snapshot; a symbol merely absent from the signed scope set is skipped without refusing the market.
+
+a112 6.1: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)

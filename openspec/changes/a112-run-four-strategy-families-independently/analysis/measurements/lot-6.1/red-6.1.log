@@ -1,0 +1,21 @@
+# RED — HEAD 125dd048 + 6.1 시험(생산 편집 전)
+internal/strategyrouter/a112_lane_family_test.go:16:18: undefined: ProductionLaneFamily
+internal/strategyrouter/a112_lane_family_test.go:39:16: undefined: ProductionLaneFamily
+internal/strategyrouter/a112_lane_family_test.go:43:15: undefined: ProductionLaneFamily
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter [build failed]
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket [build failed]
+internal/riskbucket/a112_family_risk_binding_test.go:60:32: undefined: strategyrouter.ProductionLaneFamily
+FAIL
+
+# RED 2 — 해소 함수만 추가(동작 무변), riskbucket 편집 전
+--- PASS: TestProductionLaneFamilyIsDerivedFromTheCompleteRouteTable (0.00s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	0.003s
+    a112_family_risk_binding_test.go:99: risk id shared by two families: err=<nil> — want the policy refused as a fault (not scope-local)
+--- FAIL: TestARiskIDSharedByTwoFamiliesRefusesThePolicy (0.08s)
+    a112_family_risk_binding_test.go:112: lane without a family: err=<nil> — want the policy refused as a fault
+--- FAIL: TestAStrategyEntryWhoseLaneHasNoFamilyRefusesThePolicy (0.12s)
+--- PASS: TestAWeeklyLaneIsRefusedForItsHorizonUntilAMappingIsDecided (0.08s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	0.283s
+FAIL
