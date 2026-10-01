@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/strategy_dispatch_cycle_test.go",
-  "source_sha256": "ffbd3a816543468aad30bd6d2264c5fbb834be2e6e3385f77d80d5944b4ac281",
+  "source_sha256": "b0b9734d75c5e4fafa2b2033bd9c3d9660af813aa7d485b1840d2a1f8ebcd958",
   "package": "engine",
   "function": "TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway",
   "signature": "TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway(params=1, results=0)",
   "start": {
-    "line": 61,
+    "line": 66,
     "column": 1
   },
   "end": {
-    "line": 90,
+    "line": 95,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 63,
+        "line": 68,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 67,
+        "line": 72,
         "column": 3
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 70,
+        "line": 75,
         "column": 3
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 75,
+        "line": 80,
         "column": 3
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "range",
       "at": {
-        "line": 79,
+        "line": 84,
         "column": 3
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 81,
+        "line": 86,
         "column": 4
       }
     },
@@ -65,7 +65,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 87,
+        "line": 92,
         "column": 2
       }
     }
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 64,
+        "line": 69,
         "column": 31
       },
       "text": "pairedStrategyDispatchCycleFixture"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 65,
+        "line": 70,
         "column": 13
       },
       "text": "entries.authority.Proposal"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 65,
+        "line": 70,
         "column": 13
       },
       "text": "proposals.forMarket"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 66,
+        "line": 71,
         "column": 15
       },
       "text": "cycle.dispatch"
@@ -107,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 66,
+        "line": 71,
         "column": 30
       },
       "text": "context.Background"
@@ -115,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 66,
+        "line": 71,
         "column": 52
       },
       "text": "deliverForTest"
@@ -123,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 68,
+        "line": 73,
         "column": 4
       },
       "text": "t.Fatalf"
@@ -131,7 +131,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 70,
+        "line": 75,
         "column": 6
       },
       "text": "len"
@@ -139,7 +139,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 71,
+        "line": 76,
         "column": 4
       },
       "text": "t.Fatalf"
@@ -147,7 +147,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 74,
+        "line": 79,
         "column": 17
       },
       "text": "j.LookupStrategyDispatchLease"
@@ -155,7 +155,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 74,
+        "line": 79,
         "column": 47
       },
       "text": "context.Background"
@@ -163,7 +163,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 77,
+        "line": 82,
         "column": 4
       },
       "text": "t.Fatalf"
@@ -171,7 +171,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 82,
+        "line": 87,
         "column": 5
       },
       "text": "t.Fatalf"
@@ -179,7 +179,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 88,
+        "line": 93,
         "column": 3
       },
       "text": "t.Fatalf"
@@ -189,56 +189,56 @@
     {
       "kind": ":=",
       "at": {
-        "line": 62,
+        "line": 67,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 64,
+        "line": 69,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 65,
+        "line": 70,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 66,
+        "line": 71,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 73,
+        "line": 78,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 74,
+        "line": 79,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 80,
+        "line": 85,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 85,
+        "line": 90,
         "column": 3
       }
     }

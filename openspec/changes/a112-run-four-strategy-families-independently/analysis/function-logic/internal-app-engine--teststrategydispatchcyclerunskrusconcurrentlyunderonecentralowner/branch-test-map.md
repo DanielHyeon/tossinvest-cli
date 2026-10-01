@@ -1,25 +1,19 @@
 # Branch Test Map: `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`
 
-- Source: `internal/app/engine/strategy_dispatch_cycle_test.go` (92-149); file SHA-256 `ffbd3a816543468aad30bd6d2264c5fbb834be2e6e3385f77d80d5944b4ac281`.
+- Source SHA-256: `b0b9734d75c5e4fafa2b2033bd9c3d9660af813aa7d485b1840d2a1f8ebcd958`; AST branch locations are authoritative.
+- Revision: **재작성(a066 5.6.1 교차 편집 d78f3f4a — 공유 bucket KR/US 동시 dispatch 를 5.6.1 계약으로; a112 게이트 위생 재측정 2026-10-01).** 9 분기 → 10: 결과 분류가 switch(B3~B6)로 바뀌고 성립 · 거절 짝 단언(B7)과 lease 의 중앙 owner 대조(B10)가 섰다. 편집 전 번들은 이 파일의 git 이력.
 
-이 함수는 시험 자신이다. 분기는 단언 실패 경로이므로 "그 분기를 도는 시험"은
-이 함수 자체이고, 초록은 어느 실패 arm 도 돌지 않았다는 뜻이다.
+이 함수는 시험 자신이다. 분기는 단언 실패 경로이므로 「그 분기를 도는 시험」은 이 함수 자체이고, 초록은 어느 실패 arm 도 돌지 않았다는 뜻이다.
 
-| Branch | Scenario | Test | RED observed | GREEN observed |
+| Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | 봉투 경유로만 바뀐 경로 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 재는 대상이 바뀌지 않았다 | PASS |
-| B2 | 봉투 경유로만 바뀐 경로 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 재는 대상이 바뀌지 않았다 | PASS |
-| B3 | 봉투 경유로만 바뀐 경로 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 재는 대상이 바뀌지 않았다 | PASS |
-| B4 | 봉투 경유로만 바뀐 경로 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 재는 대상이 바뀌지 않았다 | PASS |
-| B5 | 봉투 경유로만 바뀐 경로 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 재는 대상이 바뀌지 않았다 | PASS |
-| B6 | 봉투 경유로만 바뀐 경로 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 재는 대상이 바뀌지 않았다 | PASS |
-| B7 | 봉투 경유로만 바뀐 경로 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 재는 대상이 바뀌지 않았다 | PASS |
-| B8 | 봉투 경유로만 바뀐 경로 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 재는 대상이 바뀌지 않았다 | PASS |
-| B9 | 봉투 경유로만 바뀐 경로 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 재는 대상이 바뀌지 않았다 | PASS |
-
-## 반증
-
-이 로트가 바꾼 것은 값을 만드는 방법뿐이므로, 반증은 이 파일이 아니라 봉투
-타입에서 한다 — `strategy_dispatch_envelope_test.go` 의
-`TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall` 와
-`TestTheSameEnvelopeCannotPlaceASecondOrder`, 그리고 뮤테이션 M1~M3.
+| B1 | range at 115:2 — KR · US 두 dispatch 를 동시에 출발시키는 순회 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 시험 코드(a066 재작성) | PASS(엔진 태그 스위트, a112 5.2.2.2 격리 검증) |
+| B2 | range at 133:2 — 결과 둘을 받는 순회 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 시험 코드(a066 재작성) | PASS(엔진 태그 스위트, a112 5.2.2.2 격리 검증) |
+| B3 | switch at 134:3 — 결과 분류 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 시험 코드(a066 재작성) | PASS(엔진 태그 스위트, a112 5.2.2.2 격리 검증) |
+| B4 | case at 135:3 — 성립(Confirmed) — admitted 에 담음 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 시험 코드(a066 재작성) | PASS(엔진 태그 스위트, a112 5.2.2.2 격리 검증) |
+| B5 | case at 137:3 — 공유 bucket 두 번째 진입의 `ATOMIC_ADMISSION_FAILED`(BUCKET_USAGE_STALE) — refused 에 담음 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 시험 코드(a066 재작성) | PASS(엔진 태그 스위트, a112 5.2.2.2 격리 검증) |
+| B6 | case at 143:3 — 그 밖의 결과 — 실패 단언 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 시험 코드(a066 재작성) | PASS(엔진 태그 스위트, a112 5.2.2.2 격리 검증) |
+| B7 | if at 147:2 — 성립 하나 · 거절 하나 · 서로 다른 시장이 아니면 실패 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 시험 코드(a066 재작성) | PASS(엔진 태그 스위트, a112 5.2.2.2 격리 검증) |
+| B8 | if at 153:2 — Gateway 호출이 성립한 시장 하나가 아니면 실패 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 시험 코드(a066 재작성) | PASS(엔진 태그 스위트, a112 5.2.2.2 격리 검증) |
+| B9 | if at 157:2 — lease 읽기 실패 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 시험 코드(a066 재작성) | PASS(엔진 태그 스위트, a112 5.2.2.2 격리 검증) |
+| B10 | if at 163:2 — lease 의 owner epoch · fencing token 이 중앙 owner(첫 epoch)와 다르면 실패 | `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` | n/a — 시험 코드(a066 재작성) | PASS(엔진 태그 스위트, a112 5.2.2.2 격리 검증) |

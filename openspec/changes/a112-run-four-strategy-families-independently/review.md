@@ -5801,3 +5801,19 @@ codex(같은 세션 resume, `analysis/review-5222/codex-recheck2-output.md`): �
 원인 보존 · 전달 몸통 중단 유지), 「계좌 매니페스트는 시장 단위 파일」 전제 **참**(종목별 파일 선택 · 정책 거절 분기 없음), #1 · 위험 쪽 #2 · #3 **종결 유지**. T 둘 —
 계좌 수집 주석의 「그 밖의 적재 실패는 범위 국소」 잔존, 시험 설명의 「스텁에서만」 과장(순차 읽기 사이 파일 교체 · 일시적 I/O 로 범위마다 갈릴 수 있음 — 그때도 결함) —
 은 주석 정정으로 처리(동작 변화 0, 번들 재렌더 · 좌표 이동). **5.2.2.2 리뷰 사슬 종결: 80ae96a5(BLOCK) → face8d0d(BLOCK, 계좌) → bf269eb5(APPROVE).**
+
+### 2026-10-01 정정 — 스키마 핀은 두 자리(R1 갱신)
+
+a127 조사가 둘째 핀을 찾았다: `internal/strategyrouter/production.go:38` `productionRouteJournalV = 27` · `:609` 정확 일치이고, supervisor 가 route 적재기에도 같은 실원장 경로를 준다.
+route 적재기는 위험 적재기보다 **앞**이므로 riskbucket 만 고쳐도 레인 활성화 시 1차 레그는 0 그대로다. a112 문서에 이 자리 기록이 없었다(이 change 시험 fixture 의 v27 축소 원장이
+두 자리 모두를 가렸다 — 5.2.2.2 의 트립와이어는 riskbucket 자리만 잰다). 처분: **a127 이 두 적재기를 함께 수리**(Manager 승인). R1 = 두 자리, 레인 활성화의 경성 선행은
+route · 위험 둘 다 — ROADMAP 「a112 이월」 갱신.
+
+### 2026-10-01 게이트 위생 — STALE 6 재측정
+
+check_analysis 의 STALE(non-base) 6 을 현재 소스로 재측정했다. 줄만 밀린 셋(`TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway` · `…ReadOnlyRefusalsPrecede…` ·
+console `multiMarketStrategyRuntimePage.project`)은 `shift_same_file_bundles.py`(구조 동일 판정). 분기는 같고 호출 · 줄이 고르지 않게 바뀐 둘(`pairedStrategyDispatchCycleFixture` —
+5.2.2.2 의 `a112ScopedAccount` 호출 한 줄, `journal.TestSchemaTablesAndColumns` — a066 5.5 v35 기대 표 추가)은 새 `analysis/harness/rebase_bundle.py`(분기 (id · 종류) · return 수
+동일을 요구, 좌표 id 사상 · 호출 표 재작성). 본문이 다시 쓰인 하나(`TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` — a066 5.6.1 교차 편집 d78f3f4a, 9 → 10 분기)는
+현재 AST 로 다시 썼다(시험 코드 — 비례 원칙). base 15 재추출은 결정 (5) 대로 마지막 Go 커밋 직후.
+

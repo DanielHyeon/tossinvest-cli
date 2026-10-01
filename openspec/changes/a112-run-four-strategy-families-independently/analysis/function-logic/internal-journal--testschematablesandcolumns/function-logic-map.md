@@ -1,9 +1,9 @@
 # Function Logic Map: `TestSchemaTablesAndColumns`
 
-- Source: `internal/journal/schema_test.go` (78-397)
+- Source: `internal/journal/schema_test.go` (78-406)
 - Function: `TestSchemaTablesAndColumns` in package `journal`
 - Signature: `TestSchemaTablesAndColumns(params=1, results=0)`
-- File SHA-256: `73f2ca58ca5f0e263ed3db208f35318607dc45a74b67149911237a8abf1504e0`
+- File SHA-256: `d7be960f013d32a6080f48941e682c1a66445dd38a814da868556bcb61648ef2`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 7.
 - Risk scan: `risk-pattern-report.md`.
@@ -36,13 +36,13 @@ Exact AST return positions: none.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 165:2 | 시험이 PASS 이므로 진입하지 않는 arm(질의 실패) |
-| B2 | for | 169:2 | 진입 — 실제 테이블 이름을 읽는다 |
-| B3 | if | 171:3 | 시험이 PASS 이므로 진입하지 않는 arm(스캔 실패) |
-| B4 | if | 176:2 | 시험이 PASS 이므로 진입하지 않는 arm(rows.Err) |
-| B5 | if | 180:2 | **이 태스크가 재는 분기** — 얼린 목록과 실제가 다르면 실패. 편집 전 진입(RED), 편집 후 미진입(GREEN) |
-| B6 | for | 390:2 | 진입 — 칼럼 대조 |
-| B7 | if | 393:3 | 시험이 PASS 이므로 진입하지 않는 arm |
+| B1 | if | 174:2 | 시험이 PASS 이므로 진입하지 않는 arm(질의 실패) |
+| B2 | for | 178:2 | 진입 — 실제 테이블 이름을 읽는다 |
+| B3 | if | 180:3 | 시험이 PASS 이므로 진입하지 않는 arm(스캔 실패) |
+| B4 | if | 185:2 | 시험이 PASS 이므로 진입하지 않는 arm(rows.Err) |
+| B5 | if | 189:2 | **이 태스크가 재는 분기** — 얼린 목록과 실제가 다르면 실패. 편집 전 진입(RED), 편집 후 미진입(GREEN) |
+| B6 | for | 399:2 | 진입 — 칼럼 대조 |
+| B7 | if | 402:3 | 시험이 PASS 이므로 진입하지 않는 arm |
 
 ## Calls and live bindings
 
@@ -50,23 +50,23 @@ Exact AST return positions: none.
 |---|---|
 | `openTestJournal` | 79:7 |
 | `context.Background` | 80:9 |
-| `j.db.QueryContext` | 163:15 |
-| `t.Fatal` | 166:3 |
-| `rows.Next` | 169:6 |
-| `rows.Scan` | 171:13 |
-| `t.Fatal` | 172:4 |
-| `append` | 174:15 |
-| `rows.Err` | 176:12 |
-| `t.Fatal` | 177:3 |
-| `rows.Close` | 179:2 |
-| `strings.Join` | 180:5 |
-| `strings.Join` | 180:37 |
-| `t.Fatalf` | 181:3 |
-| `tableColumns` | 391:10 |
-| `sort.Strings` | 392:3 |
-| `strings.Join` | 393:6 |
-| `strings.Join` | 393:32 |
-| `t.Errorf` | 394:4 |
+| `j.db.QueryContext` | 172:15 |
+| `t.Fatal` | 175:3 |
+| `rows.Next` | 178:6 |
+| `rows.Scan` | 180:13 |
+| `t.Fatal` | 181:4 |
+| `append` | 183:15 |
+| `rows.Err` | 185:12 |
+| `t.Fatal` | 186:3 |
+| `rows.Close` | 188:2 |
+| `strings.Join` | 189:5 |
+| `strings.Join` | 189:37 |
+| `t.Fatalf` | 190:3 |
+| `tableColumns` | 400:10 |
+| `sort.Strings` | 401:3 |
+| `strings.Join` | 402:6 |
+| `strings.Join` | 402:32 |
+| `t.Errorf` | 403:4 |
 
 ## State mutations and fallbacks
 

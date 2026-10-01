@@ -1,12 +1,12 @@
 # Branch Test Map: `multiMarketStrategyRuntimePage.project`
 
-- Source SHA-256: `11b5fff5a3b5eb90a71c7cda8176666fc6ed583263c62292d3446082d79f3417`; AST branch locations are authoritative.
+- Source SHA-256: `dd84f3074d2fd14f67c369050bb42e78c55403b044d36c1aa4e45168acb155f5`; AST branch locations are authoritative.
 - 이 lot 의 편집은 루프 앞 직선 두 줄이며 분기 수를 바꾸지 않았다(편집 전후 2개).
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | range at 71:2 — 시장 카드 두 장 | `TestStrategyRuntimeMarketsRenderIndependently` | 아니오 — 기존 분기 | 예 |
-| B2 | if at 83:3 — 시장 오류 코드 표시 | `TestStrategyRuntimeMarketsRenderIndependently` (US 가 RUNTIME_UNAVAILABLE) | 아니오 — 기존 분기 | 예 |
+| B1 | range at 75:2 — 시장 카드 두 장 | `TestStrategyRuntimeMarketsRenderIndependently` | 아니오 — 기존 분기 | 예 |
+| B2 | if at 87:3 — 시장 오류 코드 표시 | `TestStrategyRuntimeMarketsRenderIndependently` (US 가 RUNTIME_UNAVAILABLE) | 아니오 — 기존 분기 | 예 |
 
 ## 직선 편집의 반증 (분기가 아니라 화면 값)
 

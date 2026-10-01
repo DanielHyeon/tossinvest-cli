@@ -1,86 +1,79 @@
 # Function Logic Map: `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`
 
 - Source: `internal/app/engine/strategy_dispatch_cycle_test.go`
-- Function: `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` in package `engine`
+- Source SHA-256: `b0b9734d75c5e4fafa2b2033bd9c3d9660af813aa7d485b1840d2a1f8ebcd958`
 - Signature: `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner(params=1, results=0)`
-- File SHA-256: `ffbd3a816543468aad30bd6d2264c5fbb834be2e6e3385f77d80d5944b4ac281`
-- Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
-- AST evidence: `ast.json` — AST branches 9.
+- Source range: `97:1`–`167:2`
+- AST evidence: `ast.json` — 현재 소스(a112 게이트 위생 재측정 2026-10-01).
 - Risk scan: `risk-pattern-report.md`.
-- Lot: a112 L5 — 태스크 5.5-fix3(봉투 타입).
-
-## 이 로트가 이 함수에서 바꾼 것
-
-두 시장의 dispatch 가 동시에 돌아도 소유자 epoch 와 fencing token 이 갈라지지 않는지 잰다.
-바뀐 것은 **dispatch 에 넘기는 값을 만드는 방법 하나**다.
-
-앞 판본은 `cycle.dispatch(ctx, result)` 처럼 경계를 지나지 않은
-`strategyflow.Result` 를 곧바로 넘겼다. `strategyDispatchCycle.dispatch` 가 이제
-`strategyhandoff.Delivered` 를 받으므로 그 철자는 **컴파일되지 않는다**. 그래서
-시험도 생산 코드와 같은 문을 지난다 — `deliverForTest` 가
-`strategyhandoff.Admit(true, …).Deliver(…)` 로 봉투를 만든다
-(`strategy_dispatch_envelope_test.go`).
-
-시험만 쓰는 뒷문을 만들지 않은 것이 요점이다. 뒷문을 만들면 그 뒷문이 곧 생산
-코드가 쓸 수 있는 문이 된다.
-
-봉투는 고루틴 **밖에서** 미리 만든다. 안에서 만들면 `t.Fatalf` 가 시험 고루틴 밖에서
-불릴 수 있고, 두 dispatch 가 같은 순간에 출발한다는 이 시험의 요점도 흐려진다 —
-경주 전에 하는 일이 늘어나기 때문이다.
-
-**재는 것은 달라지지 않았다.** 단언·기대값·호출 순서는 그대로이고, 이 시험이
-초록인 것은 앞 판본과 같은 이유다.
 
 ## Inputs and invariants
 
-- 입력은 위 signature 그대로다(`*testing.T` 하나).
-- 불변식: 이 시험은 spy Gateway 와 임시 저널만 쓰고 실계좌에 닿지 않는다.
+- 입력은 `*testing.T` 하나. spy Gateway 와 임시 저널만 쓰고 실계좌에 닿지 않는다.
+- 주제(그대로): 두 dispatch 가 동시에 출발하고 하나의 중앙 owner 아래에서 돌며 번갈아 기다리지 않는다. 공유 bucket 두 번째 진입은 BUCKET_USAGE_STALE 로 거절된다(5.6.1 계약).
 
 ## Branches and early returns
 
-- AST 분기 9개, 반환 0개. 전체 열거는 `ast.json` 에 있다.
-- 분기는 전부 단언 실패 경로(`t.Fatalf`)와 시장 순회다. production 분기를 만들지 않는다.
+- Exact AST return nodes: ``.
+
+| Branch | AST kind | Source location | Meaning |
+|---|---|---|---|
+| B1 | range | 115:2 | KR · US 두 dispatch 를 동시에 출발시키는 순회 |
+| B2 | range | 133:2 | 결과 둘을 받는 순회 |
+| B3 | switch | 134:3 | 결과 분류 |
+| B4 | case | 135:3 | 성립(Confirmed) — admitted 에 담음 |
+| B5 | case | 137:3 | 공유 bucket 두 번째 진입의 `ATOMIC_ADMISSION_FAILED`(BUCKET_USAGE_STALE) — refused 에 담음 |
+| B6 | case | 143:3 | 그 밖의 결과 — 실패 단언 |
+| B7 | if | 147:2 | 성립 하나 · 거절 하나 · 서로 다른 시장이 아니면 실패 |
+| B8 | if | 153:2 | Gateway 호출이 성립한 시장 하나가 아니면 실패 |
+| B9 | if | 157:2 | lease 읽기 실패 |
+| B10 | if | 163:2 | lease 의 owner epoch · fencing token 이 중앙 owner(첫 epoch)와 다르면 실패 |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `pairedStrategyDispatchCycleFixture` | 93:30 |
-| `make` | 99:13 |
-| `make` | 100:11 |
-| `deliverForTest` | 107:16 |
-| `entries.authority.Proposal` | 107:34 |
-| `proposals.forMarket` | 107:34 |
-| `runners.Add` | 108:3 |
-| `(unnamed)` | 109:6 |
-| `runners.Done` | 110:10 |
-| `cycle.dispatch` | 112:16 |
-| `context.Background` | 112:31 |
-| `close` | 116:2 |
-| `runners.Wait` | 117:2 |
-| `close` | 118:2 |
-| `t.Fatalf` | 122:4 |
-| `t.Fatalf` | 127:3 |
-| `spy.mu.Lock` | 129:2 |
-| `append` | 130:11 |
-| `(unnamed)` | 130:18 |
-| `spy.mu.Unlock` | 131:2 |
-| `len` | 132:5 |
-| `t.Fatalf` | 133:3 |
-| `j.LookupStrategyDispatchLease` | 138:17 |
-| `context.Background` | 138:47 |
-| `t.Fatal` | 140:4 |
-| `t.Fatalf` | 146:4 |
-
-- AST 호출 26개. 전체 열거는 `ast.json` 에 있다.
-- production 심볼과의 결합은 `cycle.dispatch` 와 픽스처가 만드는 권한 값들이며,
-  이 로트가 더한 유일한 결합은 `deliverForTest` 다.
+| `pairedStrategyDispatchCycleFixture` | 106:30 |
+| `make` | 112:13 |
+| `make` | 113:11 |
+| `deliverForTest` | 120:16 |
+| `entries.authority.Proposal` | 120:34 |
+| `proposals.forMarket` | 120:34 |
+| `runners.Add` | 121:3 |
+| `(unnamed)` | 122:6 |
+| `runners.Done` | 123:10 |
+| `cycle.dispatch` | 125:16 |
+| `context.Background` | 125:31 |
+| `close` | 129:2 |
+| `runners.Wait` | 130:2 |
+| `close` | 131:2 |
+| `append` | 136:15 |
+| `strings.Contains` | 137:29 |
+| `result.err.Error` | 137:46 |
+| `strings.Contains` | 138:4 |
+| `result.err.Error` | 138:21 |
+| `append` | 142:14 |
+| `t.Fatalf` | 144:4 |
+| `len` | 147:5 |
+| `len` | 147:27 |
+| `t.Fatalf` | 148:3 |
+| `spy.mu.Lock` | 150:2 |
+| `append` | 151:11 |
+| `(unnamed)` | 151:18 |
+| `spy.mu.Unlock` | 152:2 |
+| `len` | 153:5 |
+| `strings.EqualFold` | 153:25 |
+| `string` | 153:67 |
+| `t.Fatalf` | 154:3 |
+| `j.LookupStrategyDispatchLease` | 156:16 |
+| `context.Background` | 156:46 |
+| `t.Fatal` | 158:3 |
+| `t.Fatalf` | 164:3 |
 
 ## State mutations and fallbacks
 
-- 임시 저널에만 쓴다. 브로커·설정·운영 토글에 쓰지 않는다.
+- 임시 저널에 dispatch lease · 예약을 쓴다(시험 소유). 생산 상태 없음.
 
 ## Safety conclusion
 
-- Safe edit boundary: 시험 전용 함수다. production 동작을 만들지 않는다.
-- High-risk impact: no — 실계좌 주문 경로에 닿지 않는다(spy Gateway).
+- High-risk 아님(시험 코드). 거절된 쪽이 Gateway 에 닿지 않음을 단언한다(B8).

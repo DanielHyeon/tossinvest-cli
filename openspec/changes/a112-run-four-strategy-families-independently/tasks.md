@@ -209,7 +209,7 @@
   `dispatchHandoffs` 목록 · 소유자 범위 키로 옮기고 1차 레그의 시장 단위 개수 관문을 지웠다. 범위 권한이 없으면 그 범위만 타입 거절(`strategyScopeRefusal`), 전달 몸통은
   그 타입만 건너뛰고 나머지 오류에서 멈춤. 통화 재유도(A#3) · 범위별 계좌 적재(A#5) · digest 단일 출처(A#6). Done 시험 `TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope`
   — **범위별 발급은 파도 순차**(같은 파도 둘째 범위는 공유 버킷 사용량 CAS `BUCKET_USAGE_STALE` 로 거절 — (e) 보호의 설계), 위조 다섯 축은 두 범위 쌍에서 재실행.
-  생산 동작 변화 0(서명 활성화 0). 변이 21 CAUGHT · M20 예상 SURVIVED. 잔여 R1~R5(review 「5.2.2.2 편집 로트」) — R1 스키마 핀 27 은 **레인 활성화의 경성 선행**(ROADMAP).
+  생산 동작 변화 0(서명 활성화 0). 변이 21 CAUGHT · M20 예상 SURVIVED. 잔여 R1~R5(review 「5.2.2.2 편집 로트」) — R1 스키마 핀 27 은 **두 자리**(riskbucket · strategyrouter route — 2026-10-01 a127 조사) **레인 활성화의 경성 선행**(ROADMAP, a127 이 함께 수리).
   착지 `80ae96a5`. **리뷰 라운드(2026-10-01): A · codex BLOCK, B APPROVE** — 처분 · 수리는 review 「5.2.2.2 리뷰 라운드(80ae96a5)」 절: 활성화 없는 시장의 개수 관문 복원
   (codex #1), J4 = (A) 적재 단계 원인 분류(riskbucket 범위 국소 sentinel + 엔진 원인 운반 — A #1 · codex #2), 승격 근거 범위 권한 · 최소 만료 · As census · M20 격추 · 첫 파도 두 레그
   단언 · 문서 정정. 수리 변이 21 CAUGHT(M14 예상 생존) — 착지 `face8d0d`. codex 재확인 #1: 계좌 경계 P1 → 판정 (A)(계좌 매니페스트는 시장 단위 — 계좌 실패는 언제나 결함), 2차 수리 변이 5/5 CAUGHT — 착지 `bf269eb5`. **codex 재확인 #2 APPROVE → 체크(2026-10-01).** 잔여 R1~R5 · 새 명명 잔여는 review 「5.2.2.2」 절들.

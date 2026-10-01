@@ -1,16 +1,16 @@
 {
   "file": "internal/console/strategy_runtime_multimarket.go",
-  "source_sha256": "11b5fff5a3b5eb90a71c7cda8176666fc6ed583263c62292d3446082d79f3417",
+  "source_sha256": "dd84f3074d2fd14f67c369050bb42e78c55403b044d36c1aa4e45168acb155f5",
   "package": "console",
   "function": "project",
   "receiver": "multiMarketStrategyRuntimePage",
   "signature": "multiMarketStrategyRuntimePage.project(params=1, results=0)",
   "start": {
-    "line": 62,
+    "line": 66,
     "column": 1
   },
   "end": {
-    "line": 88,
+    "line": 92,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 71,
+        "line": 75,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 83,
+        "line": 87,
         "column": 3
       }
     }
@@ -36,7 +36,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 64,
+        "line": 68,
         "column": 21
       },
       "text": "runtimeProjectionTime"
@@ -44,7 +44,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 67,
+        "line": 71,
         "column": 22
       },
       "text": "projectionValue"
@@ -52,7 +52,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 68,
+        "line": 72,
         "column": 21
       },
       "text": "projectionValue"
@@ -60,7 +60,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 69,
+        "line": 73,
         "column": 16
       },
       "text": "strategyprojection.Registry"
@@ -68,7 +68,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 70,
+        "line": 74,
         "column": 17
       },
       "text": "make"
@@ -76,7 +76,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 71,
+        "line": 75,
         "column": 23
       },
       "text": "strategyprojection.OrderedMarkets"
@@ -84,7 +84,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 72,
+        "line": 76,
         "column": 50
       },
       "text": "string"
@@ -92,7 +92,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 72,
+        "line": 76,
         "column": 79
       },
       "text": "string"
@@ -100,7 +100,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 72,
+        "line": 76,
         "column": 113
       },
       "text": "runtimeProjectionClass"
@@ -108,7 +108,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 72,
+        "line": 76,
         "column": 136
       },
       "text": "string"
@@ -116,7 +116,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 73,
+        "line": 77,
         "column": 12
       },
       "text": "projectionValue"
@@ -124,7 +124,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 73,
+        "line": 77,
         "column": 56
       },
       "text": "projectionValue"
@@ -132,7 +132,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 73,
+        "line": 77,
         "column": 105
       },
       "text": "string"
@@ -140,7 +140,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 73,
+        "line": 77,
         "column": 147
       },
       "text": "string"
@@ -148,7 +148,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 74,
+        "line": 78,
         "column": 16
       },
       "text": "projectionValue"
@@ -156,7 +156,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 74,
+        "line": 78,
         "column": 67
       },
       "text": "projectionValue"
@@ -164,7 +164,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 74,
+        "line": 78,
         "column": 125
       },
       "text": "string"
@@ -172,7 +172,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 75,
+        "line": 79,
         "column": 16
       },
       "text": "projectionValue"
@@ -180,7 +180,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 75,
+        "line": 79,
         "column": 58
       },
       "text": "projectionValue"
@@ -188,7 +188,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 75,
+        "line": 79,
         "column": 108
       },
       "text": "projectionValue"
@@ -196,7 +196,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 76,
+        "line": 80,
         "column": 23
       },
       "text": "projectionValue"
@@ -204,7 +204,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 76,
+        "line": 80,
         "column": 84
       },
       "text": "string"
@@ -212,7 +212,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 77,
+        "line": 81,
         "column": 22
       },
       "text": "string"
@@ -220,7 +220,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 77,
+        "line": 81,
         "column": 74
       },
       "text": "string"
@@ -228,7 +228,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 78,
+        "line": 82,
         "column": 20
       },
       "text": "projectionValue"
@@ -236,7 +236,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 78,
+        "line": 82,
         "column": 85
       },
       "text": "projectionValue"
@@ -244,7 +244,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 78,
+        "line": 82,
         "column": 153
       },
       "text": "string"
@@ -252,7 +252,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 79,
+        "line": 83,
         "column": 23
       },
       "text": "string"
@@ -260,7 +260,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 79,
+        "line": 83,
         "column": 77
       },
       "text": "string"
@@ -268,7 +268,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 79,
+        "line": 83,
         "column": 130
       },
       "text": "projectionValue"
@@ -276,7 +276,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 80,
+        "line": 84,
         "column": 22
       },
       "text": "string"
@@ -284,7 +284,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 80,
+        "line": 84,
         "column": 75
       },
       "text": "string"
@@ -292,7 +292,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 80,
+        "line": 84,
         "column": 129
       },
       "text": "string"
@@ -300,7 +300,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 81,
+        "line": 85,
         "column": 26
       },
       "text": "string"
@@ -308,7 +308,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 81,
+        "line": 85,
         "column": 85
       },
       "text": "string"
@@ -316,7 +316,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 82,
+        "line": 86,
         "column": 18
       },
       "text": "string"
@@ -324,7 +324,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 82,
+        "line": 86,
         "column": 57
       },
       "text": "runtimeProjectionTimePointer"
@@ -332,7 +332,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 84,
+        "line": 88,
         "column": 21
       },
       "text": "string"
@@ -340,7 +340,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 86,
+        "line": 90,
         "column": 18
       },
       "text": "append"
@@ -350,20 +350,6 @@
     {
       "kind": "=",
       "at": {
-        "line": 63,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 64,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
         "line": 67,
         "column": 2
       }
@@ -378,35 +364,49 @@
     {
       "kind": "=",
       "at": {
-        "line": 69,
+        "line": 71,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 70,
+        "line": 72,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 74,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 72,
+        "line": 76,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 84,
+        "line": 88,
         "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 86,
+        "line": 90,
         "column": 3
       }
     }

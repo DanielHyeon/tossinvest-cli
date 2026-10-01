@@ -1,8 +1,8 @@
 # Function Logic Map: `pairedStrategyDispatchCycleFixture`
 
-- Source: `internal/app/engine/strategy_dispatch_cycle_test.go` (226-279)
+- Source: `internal/app/engine/strategy_dispatch_cycle_test.go` (244-298)
 - Function: `pairedStrategyDispatchCycleFixture` in package `engine`
-- File SHA-256: `ffbd3a816543468aad30bd6d2264c5fbb834be2e6e3385f77d80d5944b4ac281`
+- File SHA-256: `b0b9734d75c5e4fafa2b2033bd9c3d9660af813aa7d485b1840d2a1f8ebcd958`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 7.
 - Risk scan: `risk-pattern-report.md`.
@@ -27,17 +27,17 @@
 
 ## Branches and early returns
 
-Exact AST return positions: 275:108, 278:2.
+Exact AST return positions: 294:108, 297:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | range | 233:2 | test-file helper — 시험 파일은 커버리지 계측 밖이라 진입 수를 잴 수 없다. 이 fixture 를 부르는 시험 16 개가 전부 PASS: `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached`, `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`, `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall`, `TestARefusedHandoffLeavesTheWorkerDormant`, `TestASingleSelectedScopeIsTheValueThatCrossesTheSeam`, `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` |
-| B2 | if | 237:3 | test-file helper — 시험 파일은 커버리지 계측 밖이라 진입 수를 잴 수 없다. 이 fixture 를 부르는 시험 16 개가 전부 PASS: `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached`, `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`, `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall`, `TestARefusedHandoffLeavesTheWorkerDormant`, `TestASingleSelectedScopeIsTheValueThatCrossesTheSeam`, `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` |
-| B3 | if | 243:3 | test-file helper — 시험 파일은 커버리지 계측 밖이라 진입 수를 잴 수 없다. 이 fixture 를 부르는 시험 16 개가 전부 PASS: `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached`, `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`, `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall`, `TestARefusedHandoffLeavesTheWorkerDormant`, `TestASingleSelectedScopeIsTheValueThatCrossesTheSeam`, `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` |
-| B4 | if | 252:3 | test-file helper — 시험 파일은 커버리지 계측 밖이라 진입 수를 잴 수 없다. 이 fixture 를 부르는 시험 16 개가 전부 PASS: `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached`, `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`, `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall`, `TestARefusedHandoffLeavesTheWorkerDormant`, `TestASingleSelectedScopeIsTheValueThatCrossesTheSeam`, `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` |
-| B5 | else | 254:10 | test-file helper — 시험 파일은 커버리지 계측 밖이라 진입 수를 잴 수 없다. 이 fixture 를 부르는 시험 16 개가 전부 PASS: `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached`, `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`, `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall`, `TestARefusedHandoffLeavesTheWorkerDormant`, `TestASingleSelectedScopeIsTheValueThatCrossesTheSeam`, `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` |
-| B6 | if | 262:2 | test-file helper — 시험 파일은 커버리지 계측 밖이라 진입 수를 잴 수 없다. 이 fixture 를 부르는 시험 16 개가 전부 PASS: `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached`, `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`, `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall`, `TestARefusedHandoffLeavesTheWorkerDormant`, `TestASingleSelectedScopeIsTheValueThatCrossesTheSeam`, `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` |
-| B7 | if | 268:2 | test-file helper — 시험 파일은 커버리지 계측 밖이라 진입 수를 잴 수 없다. 이 fixture 를 부르는 시험 16 개가 전부 PASS: `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached`, `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`, `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall`, `TestARefusedHandoffLeavesTheWorkerDormant`, `TestASingleSelectedScopeIsTheValueThatCrossesTheSeam`, `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` |
+| B1 | range | 251:2 | test-file helper — 시험 파일은 커버리지 계측 밖이라 진입 수를 잴 수 없다. 이 fixture 를 부르는 시험 16 개가 전부 PASS: `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached`, `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`, `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall`, `TestARefusedHandoffLeavesTheWorkerDormant`, `TestASingleSelectedScopeIsTheValueThatCrossesTheSeam`, `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` |
+| B2 | if | 255:3 | test-file helper — 시험 파일은 커버리지 계측 밖이라 진입 수를 잴 수 없다. 이 fixture 를 부르는 시험 16 개가 전부 PASS: `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached`, `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`, `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall`, `TestARefusedHandoffLeavesTheWorkerDormant`, `TestASingleSelectedScopeIsTheValueThatCrossesTheSeam`, `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` |
+| B3 | if | 261:3 | test-file helper — 시험 파일은 커버리지 계측 밖이라 진입 수를 잴 수 없다. 이 fixture 를 부르는 시험 16 개가 전부 PASS: `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached`, `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`, `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall`, `TestARefusedHandoffLeavesTheWorkerDormant`, `TestASingleSelectedScopeIsTheValueThatCrossesTheSeam`, `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` |
+| B4 | if | 271:3 | test-file helper — 시험 파일은 커버리지 계측 밖이라 진입 수를 잴 수 없다. 이 fixture 를 부르는 시험 16 개가 전부 PASS: `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached`, `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`, `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall`, `TestARefusedHandoffLeavesTheWorkerDormant`, `TestASingleSelectedScopeIsTheValueThatCrossesTheSeam`, `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` |
+| B5 | else | 273:10 | test-file helper — 시험 파일은 커버리지 계측 밖이라 진입 수를 잴 수 없다. 이 fixture 를 부르는 시험 16 개가 전부 PASS: `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached`, `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`, `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall`, `TestARefusedHandoffLeavesTheWorkerDormant`, `TestASingleSelectedScopeIsTheValueThatCrossesTheSeam`, `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` |
+| B6 | if | 281:2 | test-file helper — 시험 파일은 커버리지 계측 밖이라 진입 수를 잴 수 없다. 이 fixture 를 부르는 시험 16 개가 전부 PASS: `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached`, `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`, `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall`, `TestARefusedHandoffLeavesTheWorkerDormant`, `TestASingleSelectedScopeIsTheValueThatCrossesTheSeam`, `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` |
+| B7 | if | 287:2 | test-file helper — 시험 파일은 커버리지 계측 밖이라 진입 수를 잴 수 없다. 이 fixture 를 부르는 시험 16 개가 전부 PASS: `TestAClosedMarketHandsOffNothingEvenWhenAnEntryIsStillAttached`, `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`, `TestAForgedEnvelopeIsRefusedBeforeAnyGatewayCall`, `TestARefusedHandoffLeavesTheWorkerDormant`, `TestASingleSelectedScopeIsTheValueThatCrossesTheSeam`, `TestAnActivationThatExpiresAfterTheWaveStopsBeforeAdmission`, `TestNoJournalOrGatewayFaultInTheDispatchCycleIsClassifiedCentral`, `TestProductionStrategyWorkersPromoteKRUSInSameWaveAndIsolateProtectionFailure`, `TestStrategyDispatchCyclePairsKRUSThroughDerivedLeaseAndGateway`, `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS`, `TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner`, `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestTheOrderLeaseCannotOutliveTheFamilyActivation`, `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`, `TestTheSameEnvelopeCannotPlaceASecondOrder` |
 
 8.7.2 편집: 끝에 `cycle.now = fakeClock.Now` 한 줄(생산 조립과 같은 모양). 분기는 바뀌지 않았다(편집 전·후 7 개, 좌표 불변).
 
@@ -45,36 +45,37 @@ Exact AST return positions: 275:108, 278:2.
 
 | Callee expression | Position |
 |---|---|
-| `t.Helper` | 227:2 |
-| `newStrategyRiskLoaderFixture` | 228:17 |
-| `riskFixture.loader.collect` | 230:14 |
-| `context.Background` | 230:41 |
-| `riskFixture.results.forMarket` | 234:13 |
-| `strategyproposal.ProductionBatchAuthorityForTest` | 235:12 |
-| `string` | 235:80 |
-| `batch.For` | 236:20 |
-| `t.Fatal` | 238:4 |
-| `strategyaccount.AuthorityForTest` | 250:15 |
-| `now.Add` | 250:77 |
-| `now.Add` | 250:100 |
-| `strings.Repeat` | 251:15 |
-| `pairedDispatchSchedule` | 258:14 |
-| `clock.NewFake` | 259:15 |
-| `journal.Open` | 260:12 |
-| `context.Background` | 260:25 |
-| `filepath.Join` | 260:69 |
-| `t.TempDir` | 260:83 |
-| `journal.FixedFSProber` | 261:13 |
-| `t.Fatal` | 263:3 |
-| `t.Cleanup` | 265:2 |
-| `j.Close` | 265:25 |
-| `execgw.NewRiskGuardian` | 266:19 |
-| `risk.DefaultPolicy` | 267:11 |
-| `costs.DefaultModel` | 267:40 |
-| `t.Fatal` | 269:3 |
-| `newProductionStrategyFirstLegAuthorityLoader` | 271:12 |
-| `newStrategyFirstLegAdmissionBridge` | 272:14 |
-| `newStrategyDispatchCycle` | 274:11 |
+| `t.Helper` | 245:2 |
+| `newStrategyRiskLoaderFixture` | 246:17 |
+| `riskFixture.loader.collect` | 248:14 |
+| `context.Background` | 248:41 |
+| `riskFixture.results.forMarket` | 252:13 |
+| `strategyproposal.ProductionBatchAuthorityForTest` | 253:12 |
+| `string` | 253:80 |
+| `batch.For` | 254:20 |
+| `t.Fatal` | 256:4 |
+| `strategyaccount.AuthorityForTest` | 268:15 |
+| `now.Add` | 268:77 |
+| `now.Add` | 268:100 |
+| `strings.Repeat` | 269:15 |
+| `a112ScopedAccount` | 270:13 |
+| `pairedDispatchSchedule` | 277:14 |
+| `clock.NewFake` | 278:15 |
+| `journal.Open` | 279:12 |
+| `context.Background` | 279:25 |
+| `filepath.Join` | 279:69 |
+| `t.TempDir` | 279:83 |
+| `journal.FixedFSProber` | 280:13 |
+| `t.Fatal` | 282:3 |
+| `t.Cleanup` | 284:2 |
+| `j.Close` | 284:25 |
+| `execgw.NewRiskGuardian` | 285:19 |
+| `risk.DefaultPolicy` | 286:11 |
+| `costs.DefaultModel` | 286:40 |
+| `t.Fatal` | 288:3 |
+| `newProductionStrategyFirstLegAuthorityLoader` | 290:12 |
+| `newStrategyFirstLegAdmissionBridge` | 291:14 |
+| `newStrategyDispatchCycle` | 293:11 |
 
 ## State mutations and fallbacks
 

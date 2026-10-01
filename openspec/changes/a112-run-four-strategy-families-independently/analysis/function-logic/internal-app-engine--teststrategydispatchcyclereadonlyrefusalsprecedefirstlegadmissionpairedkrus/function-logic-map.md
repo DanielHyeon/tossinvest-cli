@@ -3,7 +3,7 @@
 - Source: `internal/app/engine/strategy_dispatch_cycle_test.go`
 - Function: `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS` in package `engine`
 - Signature: `TestStrategyDispatchCycleReadOnlyRefusalsPrecedeFirstLegAdmissionPairedKRUS(params=1, results=0)`
-- File SHA-256: `ffbd3a816543468aad30bd6d2264c5fbb834be2e6e3385f77d80d5944b4ac281`
+- File SHA-256: `b0b9734d75c5e4fafa2b2033bd9c3d9660af813aa7d485b1840d2a1f8ebcd958`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 7.
 - Risk scan: `risk-pattern-report.md`.
@@ -41,29 +41,29 @@
 
 | Callee expression | Position |
 |---|---|
-| `t.Run` | 154:4 |
-| `string` | 154:22 |
-| `pairedStrategyDispatchCycleFixture` | 155:33 |
-| `entries.authority.Proposal` | 156:15 |
-| `proposals.forMarket` | 156:15 |
-| `errors.New` | 157:16 |
-| `strings.ToLower` | 159:44 |
-| `string` | 159:60 |
-| `strings.ToLower` | 161:43 |
-| `string` | 161:59 |
-| `cycle.dispatch` | 163:18 |
-| `context.Background` | 163:33 |
-| `deliverForTest` | 163:55 |
-| `errors.Is` | 163:84 |
-| `t.Fatalf` | 164:6 |
-| `j.CurrentPositionCampaignCAS` | 166:17 |
-| `context.Background` | 166:46 |
-| `string` | 167:6 |
-| `t.Fatalf` | 169:6 |
-| `spy.mu.Lock` | 171:5 |
-| `len` | 172:15 |
-| `spy.mu.Unlock` | 173:5 |
-| `t.Fatalf` | 175:6 |
+| `t.Run` | 172:4 |
+| `string` | 172:22 |
+| `pairedStrategyDispatchCycleFixture` | 173:33 |
+| `entries.authority.Proposal` | 174:15 |
+| `proposals.forMarket` | 174:15 |
+| `errors.New` | 175:16 |
+| `strings.ToLower` | 177:44 |
+| `string` | 177:60 |
+| `strings.ToLower` | 179:43 |
+| `string` | 179:59 |
+| `cycle.dispatch` | 181:18 |
+| `context.Background` | 181:33 |
+| `deliverForTest` | 181:55 |
+| `errors.Is` | 181:84 |
+| `t.Fatalf` | 182:6 |
+| `j.CurrentPositionCampaignCAS` | 184:17 |
+| `context.Background` | 184:46 |
+| `string` | 185:6 |
+| `t.Fatalf` | 187:6 |
+| `spy.mu.Lock` | 189:5 |
+| `len` | 190:15 |
+| `spy.mu.Unlock` | 191:5 |
+| `t.Fatalf` | 193:6 |
 
 - AST 호출 23개. 전체 열거는 `ast.json` 에 있다.
 - production 심볼과의 결합은 `cycle.dispatch` 와 픽스처가 만드는 권한 값들이며,
@@ -77,3 +77,5 @@
 
 - Safe edit boundary: 시험 전용 함수다. production 동작을 만들지 않는다.
 - High-risk impact: no — 실계좌 주문 경로에 닿지 않는다(spy Gateway).
+
+a112 게이트 위생(2026-10-01): STALE 재측정 — 줄 이동(본문 불변)

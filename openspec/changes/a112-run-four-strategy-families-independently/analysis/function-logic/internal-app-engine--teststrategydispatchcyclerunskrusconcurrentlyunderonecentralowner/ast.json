@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/strategy_dispatch_cycle_test.go",
-  "source_sha256": "ffbd3a816543468aad30bd6d2264c5fbb834be2e6e3385f77d80d5944b4ac281",
+  "source_sha256": "b0b9734d75c5e4fafa2b2033bd9c3d9660af813aa7d485b1840d2a1f8ebcd958",
   "package": "engine",
   "function": "TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner",
   "signature": "TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner(params=1, results=0)",
   "start": {
-    "line": 92,
+    "line": 97,
     "column": 1
   },
   "end": {
-    "line": 149,
+    "line": 167,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "range",
       "at": {
-        "line": 102,
+        "line": 115,
         "column": 2
       }
     },
@@ -25,64 +25,72 @@
       "id": "B2",
       "kind": "range",
       "at": {
-        "line": 120,
+        "line": 133,
         "column": 2
       }
     },
     {
       "id": "B3",
-      "kind": "if",
+      "kind": "switch",
       "at": {
-        "line": 121,
+        "line": 134,
         "column": 3
       }
     },
     {
       "id": "B4",
-      "kind": "if",
+      "kind": "case",
       "at": {
-        "line": 126,
-        "column": 2
+        "line": 135,
+        "column": 3
       }
     },
     {
       "id": "B5",
-      "kind": "if",
+      "kind": "case",
       "at": {
-        "line": 132,
-        "column": 2
+        "line": 137,
+        "column": 3
       }
     },
     {
       "id": "B6",
-      "kind": "range",
+      "kind": "case",
       "at": {
-        "line": 137,
-        "column": 2
+        "line": 143,
+        "column": 3
       }
     },
     {
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 139,
-        "column": 3
+        "line": 147,
+        "column": 2
       }
     },
     {
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 142,
-        "column": 3
+        "line": 153,
+        "column": 2
       }
     },
     {
       "id": "B9",
       "kind": "if",
       "at": {
-        "line": 145,
-        "column": 3
+        "line": 157,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 163,
+        "column": 2
       }
     }
   ],
@@ -91,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 93,
+        "line": 106,
         "column": 30
       },
       "text": "pairedStrategyDispatchCycleFixture"
@@ -99,7 +107,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 99,
+        "line": 112,
         "column": 13
       },
       "text": "make"
@@ -107,7 +115,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 100,
+        "line": 113,
         "column": 11
       },
       "text": "make"
@@ -115,7 +123,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 107,
+        "line": 120,
         "column": 16
       },
       "text": "deliverForTest"
@@ -123,7 +131,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 107,
+        "line": 120,
         "column": 34
       },
       "text": "entries.authority.Proposal"
@@ -131,7 +139,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 107,
+        "line": 120,
         "column": 34
       },
       "text": "proposals.forMarket"
@@ -139,7 +147,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 108,
+        "line": 121,
         "column": 3
       },
       "text": "runners.Add"
@@ -147,14 +155,14 @@
     {
       "kind": "call",
       "at": {
-        "line": 109,
+        "line": 122,
         "column": 6
       }
     },
     {
       "kind": "call",
       "at": {
-        "line": 110,
+        "line": 123,
         "column": 10
       },
       "text": "runners.Done"
@@ -162,7 +170,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 112,
+        "line": 125,
         "column": 16
       },
       "text": "cycle.dispatch"
@@ -170,7 +178,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 112,
+        "line": 125,
         "column": 31
       },
       "text": "context.Background"
@@ -178,7 +186,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 116,
+        "line": 129,
         "column": 2
       },
       "text": "close"
@@ -186,7 +194,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 117,
+        "line": 130,
         "column": 2
       },
       "text": "runners.Wait"
@@ -194,7 +202,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 118,
+        "line": 131,
         "column": 2
       },
       "text": "close"
@@ -202,7 +210,55 @@
     {
       "kind": "call",
       "at": {
-        "line": 122,
+        "line": 136,
+        "column": 15
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 29
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 137,
+        "column": 46
+      },
+      "text": "result.err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 4
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 138,
+        "column": 21
+      },
+      "text": "result.err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 14
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 144,
         "column": 4
       },
       "text": "t.Fatalf"
@@ -210,46 +266,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 127,
-        "column": 3
-      },
-      "text": "t.Fatalf"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 129,
-        "column": 2
-      },
-      "text": "spy.mu.Lock"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 130,
-        "column": 11
-      },
-      "text": "append"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 130,
-        "column": 18
-      }
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 131,
-        "column": 2
-      },
-      "text": "spy.mu.Unlock"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 132,
+        "line": 147,
         "column": 5
       },
       "text": "len"
@@ -257,7 +274,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 133,
+        "line": 147,
+        "column": 27
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 148,
         "column": 3
       },
       "text": "t.Fatalf"
@@ -265,32 +290,95 @@
     {
       "kind": "call",
       "at": {
-        "line": 138,
-        "column": 17
+        "line": 150,
+        "column": 2
+      },
+      "text": "spy.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 11
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 151,
+        "column": 18
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 152,
+        "column": 2
+      },
+      "text": "spy.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 25
+      },
+      "text": "strings.EqualFold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 153,
+        "column": 67
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 156,
+        "column": 16
       },
       "text": "j.LookupStrategyDispatchLease"
     },
     {
       "kind": "call",
       "at": {
-        "line": 138,
-        "column": 47
+        "line": 156,
+        "column": 46
       },
       "text": "context.Background"
     },
     {
       "kind": "call",
       "at": {
-        "line": 140,
-        "column": 4
+        "line": 158,
+        "column": 3
       },
       "text": "t.Fatal"
     },
     {
       "kind": "call",
       "at": {
-        "line": 146,
-        "column": 4
+        "line": 164,
+        "column": 3
       },
       "text": "t.Fatalf"
     }
@@ -299,78 +387,78 @@
     {
       "kind": ":=",
       "at": {
-        "line": 93,
+        "line": 106,
         "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 99,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 100,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 103,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 107,
-        "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
         "line": 112,
-        "column": 4
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 119,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 124,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 130,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 138,
+        "line": 113,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 116,
         "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 120,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 125,
+        "column": 4
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 143,
+        "line": 136,
         "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 142,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 156,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 162,
+        "column": 2
       }
     }
   ],
@@ -378,7 +466,7 @@
     {
       "kind": "go",
       "at": {
-        "line": 109,
+        "line": 122,
         "column": 3
       }
     }
@@ -387,7 +475,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 110,
+        "line": 123,
         "column": 4
       },
       "text": "runners.Done"
