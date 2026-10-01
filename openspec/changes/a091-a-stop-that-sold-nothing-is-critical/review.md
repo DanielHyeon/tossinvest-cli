@@ -422,9 +422,9 @@ tasks(3.3a 머리 · 3.3b (i)(v)(vi) · 3.3c 신설 · 5.3).
 
 ## 게이트 1차(3403be28) FAIL ⑦ → a112 수리 → base 3차 재고정 (2026-10-01)
 
-- 게이트 1차: 격리 워크트리 `/tmp/claude-1000/a091-gate` @ `3403be28`, 준비 rc 0(`analysis/gate/prep-3403be28.txt`), ①~⑥ OK(⑤ base `e14add96` → 작업트리,
+- 게이트 1차: 격리 워크트리 `/tmp/claude-1000/a091-gate` @ `3403be28`, 준비 rc 0(`analysis/gate/a091-prep-3403be28.txt`), ①~⑥ OK(⑤ base `e14add96` → 작업트리,
   required 0, evidence complete), **⑦ `make test` FAIL** — `internal/journal` `TestA066StorageErrorExitsFailClosed`: 「walked scope changed: got … exits=337 …,
-  census {… exits:336 …}」(`analysis/gate/gate-1-3403be28.log`). a091 이 만지지 않는 파일(journal `risk_bucket_*.go` · `riskbucket/production_snapshot_authority.go` ·
+  census {… exits:336 …}」(`analysis/gate/a091-gate-1-3403be28.log`). a091 이 만지지 않는 파일(journal `risk_bucket_*.go` · `riskbucket/production_snapshot_authority.go` ·
   `execgw/gateway.go`)의 a066 census.
 - 귀속(측정): `git bisect`(acc796ce 양호 → 82f39206 불량) → 첫 불량 **`face8d0d`**(a112 5.2.2.2 리뷰 수리 — 걸어가는 범위에 exit 하나 추가, census 미갱신).
   a112 수리 `0b6cb9b1`(census 336 → 337, 함수별 이름 맵 등재) 뒤 HEAD 에서 그 시험 ok. 같은 판에 돌던 전체 `-race` 는 중단(수리 뒤 커밋으로 다시).
@@ -432,3 +432,15 @@ tasks(3.3a 머리 · 3.3b (i)(v)(vi) · 3.3c 신설 · 5.3).
 - **조건 ② 승인 기록(원문)**: 「3차 재고정 사전 승인: a112 수리가 네 창에 Go 를 넣으므로, 수리 착지 해시를 받으면 같은 첫째-갈래 규격(base=새 기록 커밋·자기 Go 0 영수증)으로
   재고정하고 게이트 2차를 돌려라 — 별도 왕복 불요. 전체 -race 판은 수리 후 커밋 기준으로 다시.」(Manager, 2026-10-01).
 - **조건 ③**: 다음 커밋이 `base-commit.txt` 한 파일.
+
+## 게이트 2차(f0f7d668) PASS 11/11 (2026-10-01)
+
+- 격리 워크트리 `/tmp/claude-1000/a091-gate` @ `f0f7d668`(base `17cbf45d`). 준비 rc 0 — `make sdd-infra` · `sdd_sync.py --no-gbrain`(all indexes current) ·
+  `make sdd-check`(`analysis/gate/a091-prep-f0f7d668.txt`, sha256 `f9623e9d…`).
+- `make gate CHANGE=a091-a-stop-that-sold-nothing-is-critical` **GATE PASS, rc=0**(15:21:59 → 15:54:49 KST, `analysis/gate/a091-gate-2-f0f7d668.log`, sha256 `a8264859…`):
+  ① tasks.md · ② 미완료 0 · ③ 짝 선언 없음 · ④ review.md · ⑤ FLM — base `17cbf45d` → 작업트리 required 0, evidence complete · ⑥ sdd-check(CodeGraph 색인 = 작업트리) ·
+  ⑦ `make test` OK(1차의 a066 census 회귀는 `0b6cb9b1` 뒤 해소) · ⑧ test-seams · ⑨ test-race · ⑩ vet · ⑪ validate 모두 OK.
+- ⑤ 의 「base 뒤 착지 커밋 1」 안내는 base 기록 커밋 뒤 `f0f7d668`(base-commit.txt 한 파일) — 판정은 evidence complete, `--record-landing` 불요.
+- 전체 `-race`(같은 커밋 `f0f7d668`, 격리 `/tmp/claude-1000/a091-race`): `go test ./... -count=1 -race -timeout 120m` **rc=0**(15:54:49 → 17:17:22 KST) —
+  `ok` 99 · `[no test files]` 11 · FAIL / DATA RACE / panic 0(`analysis/gate/a091-race-full-f0f7d668.log`, 113줄, sha256 `7ef6e4d0…`). 무거운 셋: `internal/journal` 4941s ·
+  `internal/app/engine` 2663s · `internal/obs` 348s.
