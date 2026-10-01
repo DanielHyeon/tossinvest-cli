@@ -1,0 +1,265 @@
+{
+  "file": "internal/app/engine/a091_stop_sold_nothing_test.go",
+  "source_sha256": "9e8cdf8722000cda3ab20b64d2395e924d193b5047814547fe66dcfc1606aa7c",
+  "package": "engine_test",
+  "function": "TestA091TheProductionAssemblyReadsTheLoadedSwitch",
+  "signature": "TestA091TheProductionAssemblyReadsTheLoadedSwitch(params=1, results=0)",
+  "start": {
+    "line": 872,
+    "column": 1
+  },
+  "end": {
+    "line": 901,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 873,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 882,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 885,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 890,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 893,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 896,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 874,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 874,
+        "column": 9
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 875,
+        "column": 11
+      },
+      "text": "isolate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 876,
+        "column": 4
+      },
+      "text": "writeGateConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 876,
+        "column": 28
+      },
+      "text": "smallLiveGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 877,
+        "column": 4
+      },
+      "text": "writeCredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 878,
+        "column": 4
+      },
+      "text": "writeAttestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 879,
+        "column": 14
+      },
+      "text": "interlockServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 881,
+        "column": 16
+      },
+      "text": "openProtectedGateEngineLogging"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 883,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 886,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 889,
+        "column": 21
+      },
+      "text": "eng.ExitObserver"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 889,
+        "column": 72
+      },
+      "text": "costs.DefaultModel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 891,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 893,
+        "column": 14
+      },
+      "text": "observer.OptionsForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 894,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 896,
+        "column": 14
+      },
+      "text": "observer.OptionsForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 897,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 875,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 879,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 881,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 888,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 889,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 893,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 896,
+        "column": 7
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

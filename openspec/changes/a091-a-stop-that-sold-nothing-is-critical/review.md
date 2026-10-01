@@ -405,3 +405,17 @@ tasks(3.3a 머리 · 3.3b (i)(v)(vi) · 3.3c 신설 · 5.3).
 | I2-3 | P3 | B | `no_holding` 원인 표지 미고정(N5b 생존) | `TestA091AZeroHoldingIsNotAFailedStop` 이 payload cause `no_holding` 단언 |
 | I2-4 | P3 | B | design · issues 의 옛 수치가 측정값처럼 남음 · 5.3 체크 문장 「여섯」과 시험 다섯 불일치 | 세 자리 「앞선 측정(조건 상이)」 표지 · 「실측」 문단 갱신(i2 실측 포함) · 연결 풀 B2 칸 추가(여섯) |
 | I2-5 | P3 | A | 배선 시험이 `eng.Log` 를 덮어 조립의 로거 누락을 못 봄(`engine.go:598` 변이 생존) | 로거를 받는 조립(`openProtectedGateEngineLogging`)으로 — 덮지 않고 `eng.Log != nil` 단언 |
+
+## base 2차 재고정 (2026-10-01) — 조건 ① 첫째 갈래(a094 · a095 3차 규격)
+
+- **사정**: Manager 처음 지시는 「마지막 자기 Go 커밋(e4d976d6)의 부모 82f39206 + 경량 번들」이었다. 격리 탐침에서 그 base 는 required 5(e4d976d6 이 바꾼 시험 함수 —
+  넷 + `a091Harness`(revision base))로 경량 번들 5 와 함께 **evidence complete** 였다(번들은 `analysis/rebase/light-bundles-82f39206/` 에 보존 — 생성기
+  `analysis/harness/write_test_bundles.py`). 그러나 a112 의 Go 커밋 `7b3f659f` 가 그 뒤 공유 트리에 착지해 82f39206 → 작업트리 창에 형제 함수가 들 수밖에 없고,
+  착지 기록도 그 창을 비우지 못한다(착지가 내 문서 커밋이라 7b3f659f 가 창 안).
+- **조건 ① 실측(첫째 갈래)**: 새 base = 이 기록 커밋. 그 뒤 a091 자기 Go 커밋 0 → required 0. 영수증 세 요소:
+  ① 리베이스 전 `8add5d5d` 의 check_analysis — a091 번들 0 missing · 0 stale, missing 은 전부 a112 · a126 · a127 착지 몫(`analysis/rebase/check-at-8add5d5d.txt`),
+  ② `e4d976d6` 은 시험 전용(생산 무변경 — 번들 유효), ③ 82f39206 탐침 evidence complete + 경량 번들 5 보존.
+- **조건 ② 승인 기록(원문)**: 「(a) 승인 — a094·a095 3차 규격 그대로(조건 ① 첫째 갈래, base = 기록 커밋, 자기 Go 0·required 0). 영수증 3요소(8add5d5d 검증 시점 a091 번들
+  0 missing/0 stale·e4d976d6 시험 전용·82f39206 탐침 evidence complete+경량 번들 5 보존)가 완결이다. (b)의 합성 커밋은 유효 착지 지점이 없을 때의 최후 수단 — 네겐 (a)가
+  선다.」(Manager, 2026-10-01). 승인 참조: 사용자 상임 오케스트레이션 지시.
+- **조건 ③**: 다음 커밋이 `base-commit.txt` 한 파일.
