@@ -1,8 +1,13 @@
-# a127 design (3판 — freeze 리뷰 1 · 2라운드 반영, review.md 「0.5.1」 · 「0.5.2」)
+# a127 design (4판 — freeze 리뷰 1~3라운드 반영, review.md 「0.5.1」~「0.5.3」)
 
 > 분기 · early return 을 근거로 쓰는 문장은 `analysis/freeze-ast/` 의 AST 산출물(편집 전, base `f9a25549`, `tools/logic-map`)에서 읽었다 —
 > `loadProductionRiskEntries` 14 분기 · `openProductionRouteSnapshot` 4 분기 · `LoadProductionRiskSnapshotAuthority` 7 ·
 > `LoadProductionRouteAuthorityBatch` 16 · `LoadProductionRouteAuthority` 2. 두 적재기 파일의 source sha256 은 `65fe66e7` 에서도 같다.
+>
+> **좌표 기준**: 본문의 `production_snapshot_authority.go` · `strategyrouter/production.go` 줄 번호는 `65fe66e7`(= `f9a25549` 와 같은 바이트) 기준이다.
+> 그 뒤 a112 6.1 (C) 가 두 파일 앞쪽을 편집해 `18109568` 에서 risk 는 **+9**(버전 확인 `:384` · latch `:389`/`:393` · 사용량 `:408`), route 는
+> **+7**(`BeginTx` `:610` · 버전 확인 `:616` · 성공 반환 `:621` · owner 없음 반환 `:659` · campaign 질의 `:672`) 줄 밀렸다(codex 3R P3). 구현 로트는 그 해시 위
+> 편집 전 AST 로 다시 잡는다(tasks 1.0.2).
 
 ## 증거 기반
 
@@ -113,26 +118,33 @@ riskbucket · strategyrouter 는 journal 이 import 한다(`journal/risk_bucket*
   라 `evaluationState` 가 승격과 무관하게 사이클을 허용한다(`strategy_entry_supervisor.go:1044-1046`). 주문은 매 사이클
   `runProductionStrategyMarketCycle` → `dispatchStrategyMarketHandoffs` → `strategyDispatchCycle.dispatch` 로 나가고, 코드 자신이 「`Effective` 는
   화면과 승격 판정만 움직인다 … 그 경로는 이 서술자를 읽지 않는다」라고 적는다(`:500-502`). **승격이 막힌다고 주문이 막히지 않는다.**
-- **a127 뒤 주문 경로에 남는 필요 조건 전수**(4-가족 활성화 **없는** 시장 기준 — 각각 사람 · 운영 항목):
-  1. 엔진 기동 자체: `engine.automation_gate.enabled` + 검증된 attestation(`ectx.Automation.Verified`, 아니면 `errEngineGateOff` — `cmd/tossctl/engine.go:226`) · 운영자.
-  2. schedule: 서명 scheduler 활성화 매니페스트로 복원된 `restore.Activation` · calendar(`strategy_dispatch_cycle.go:86-88`, 제안 권한 `strategy_proposal_authority.go:314`) · 사람 서명.
-  3. candidate: 서명 threshold · evidence 매니페스트로 Ready 인 후보 권한 · 사람 서명.
-  4. route: 서명 route 매니페스트 + 원장 owner snapshot(**a127 이 고치는 자리**) · 사람 서명.
-  5. FX: 서명 FX 정책 매니페스트 + 공식 FX 관측(`strategy_dispatch_cycle.go:86-88`) · 사람 서명.
-  6. proposal: 제안 서명 키 · 매니페스트 digest · evidence DB identity 환경값(`strategy_proposal_authority.go:323-350`, `TOSSOS_STRATEGY_EVIDENCE_*_ID`) · 운영자.
-  7. 4-가족 활성화가 없으면 유효 제안이 **정확히 하나**(`strategy_account_first_leg_authority.go:161-163` — 둘이면 거절이지 하나로 줄이지 않음) ·
-     handoff 는 시장 단위 하나(`strategy_dispatch_handoff.go:38-39`). 4-가족 활성화가 **있는** 시장은 범위마다 handoff(다중 범위) — 이 경로도
-     a127 뒤 도달 가능해진다.
-  8. risk: 서명 위험 정책 매니페스트 + 원장 사용량(**a127 이 고치는 자리**), 위험 세대 ≠ 0 · 사람 서명.
-  9. account: 서명 계좌 권한 · 사람 서명.
-  10. 보호: `ObserveStrategyProtection`(a100 readiness, `strategy_dispatch_cycle.go:96`)과 노출 증가의 보호 배선(`ReasonProtectionNotWired`,
-      `internal/execgw/protection_refusal.go:4`) · 사람(a100 배포).
-  11. 진입 관문: `ObserveStrategyEntryGate`(latch · 신선도, `strategy_dispatch_cycle.go:143`) · 자동(원장 상태).
-  12. 1차 레그 admission(q_final · 다섯 bucket · owner · 손실 잠금)과 Guardian · 제출 전후 보호 재확인 · 자동(원장 상태).
+- **a127 뒤 주문 경로에 남는 조건** — 두 무리로 나눈다(3라운드 codex: 「전수 1~12, 자동은 11 · 12 뿐」은 거짓이었다 — 자동 조건이 더 많고 사람 조건 하나가
+  빠졌다). a127 이 없애는 것은 **4 · 8 의 핀뿐**이다.
+  - **(A) 사람 · 운영 조건** — 리뷰 세 라운드가 찾은 전부(전수 증명은 아님):
+    1. 엔진 기동: `engine.automation_gate.enabled` + 검증된 attestation(`ectx.Automation.Verified`, 아니면 `errEngineGateOff` — `cmd/tossctl/engine.go:226`).
+    2. 거래 정책: `trading.place` 등 필요한 허용과 LIVE 마스터 스위치(`internal/app/engine/interlock.go` `checkTradingPolicy` ~`:571`, 실행 시점
+       `internal/trading/service.go:244` `AllowLiveOrderActions`) — Gateway 가 실행 옵션을 스스로 만들므로(`internal/execgw/gateway.go:461`) 주문마다의
+       새 사람 승인이 아니라 **설정**이다.
+    3. 공식 자격 증명(OpenAPI 키 · 토큰) — 없으면 공식 경로가 서지 않는다.
+    4. route: 서명 route 매니페스트(+ 원장 owner snapshot — **a127 이 고치는 자리**).
+    5. schedule: 서명 scheduler 활성화 매니페스트로 복원된 `restore.Activation` · calendar(`strategy_dispatch_cycle.go:86-88`, `strategy_proposal_authority.go:314`).
+    6. candidate: 서명 threshold · evidence 매니페스트.
+    7. FX: 서명 FX 정책 매니페스트 + 공식 FX 관측.
+    8. risk: 서명 위험 정책 매니페스트(+ 원장 사용량 — **a127 이 고치는 자리**).
+    9. proposal: 제안 서명 키 · 매니페스트 digest · evidence DB identity 환경값(`strategy_proposal_authority.go:323-350`, `TOSSOS_STRATEGY_EVIDENCE_*_ID`).
+    10. account: 서명 계좌 권한.
+    11. 보호 배선 · readiness 배포(a100 — `ReasonProtectionNotWired`, `internal/execgw/protection_refusal.go:4`).
+    12. (선택) 4-가족 활성화 서명 — 없으면 유효 제안이 **정확히 하나**여야 하고(`strategy_account_first_leg_authority.go:161-163`, 둘이면 거절)
+        handoff 는 시장 단위 하나(`strategy_dispatch_handoff.go:38-39`), 있으면 범위마다 handoff(다중 범위 — 이 경로도 a127 뒤 도달 가능).
+  - **(B) 자동 런타임 조건**(스위치가 아님 — 원장 · 관측 상태가 정함, 예시이며 전수 아님): 감독자 accepting · 레인 미잠금 · 사이클 존재
+    (`strategy_entry_supervisor.go:1041`), 캠페인 미점유 · FLAT/CLOSED(`strategy_market_handoff_delivery.go:42`), 진입 관문(latch · 신선도,
+    `strategy_dispatch_cycle.go:143`), 보호 readiness 의 런타임 증거(`:96`), dispatch owner · lease 발급 · claim · fencing(`:147` · `:190` · `:196`,
+    `internal/execgw/strategy_gateway.go:93`), 1차 레그 admission(q_final · 다섯 bucket · owner · 손실 잠금)과 Guardian, 충돌 attempt · 미사용
+    결정 · 지원 주문 모양 · 읽을 수 있는 매수 여력(`internal/execgw/gateway.go:525` · `:535` · `:594`, `failclosed.go:40` · `:129`), 제출 전후 보호 재확인.
 - **경보 수위**(Manager 판정 2026-10-01): a127 은 진입을 「연다」가 아니다 — **핀이라는 우연한 차단이 사라지고 설계된 조건 사슬(위 1~12)만 남는다**.
-  그 사슬에서 자동 판정(11 · 12)을 뺀 나머지는 전부 사람 서명 또는 운영자 설정이다. 비사람 스위치는 찾지 못했다(2라운드 보이스).
-- **불변식 3(토글 OFF = upstream)**: automation gate OFF 면 엔진이 기동을 거절한다(조건 1) — upstream 과 같다. a127 은 이 경로를 건드리지 않는다.
-  **불변식 7(사람 승인)**: 조건 2~6 · 8 · 9 의 서명 · 발급과 조건 1 의 설정이 사람 승인 항목이다.
+  (A) 는 전부 사람 서명 또는 운영자 설정이고, (B) 는 스위치가 아니라 상태 판정이다. (A) 밖의 비사람 스위치는 세 라운드 리뷰에서 찾지 못했다.
+- **불변식 3(토글 OFF = upstream)**: automation gate OFF 면 엔진이 기동을 거절한다((A)1) — upstream 과 같다. a127 은 이 경로를 건드리지 않는다.
+  **불변식 7(사람 승인)**: (A) 의 서명 · 발급 · 설정 전부가 사람 승인 항목이다.
 - **오늘 동작 변화 0 의 영수증**: 생산 설정 실측은 a127 문서에 없다(가장 최근 기록은 a112 8.7.1 「생산에 서명 매니페스트 0건(측정)」, 2026-09-04).
   배포 전 재실측을 사람 항목 H1 로 둔다(tasks 2.0) — 매니페스트 digest 환경값 · scheduler 활성화 · automation gate 상태.
 - 손절 즉시성: 무관(진입 권한만).
@@ -151,8 +163,12 @@ riskbucket · strategyrouter 는 journal 이 import 한다(`journal/risk_bucket*
   - route: owners · campaign 두 질의. campaign 은 active owner 가 있을 때만 실행되므로(`:652-653`) prepare 가 없으면 그 범위에서 열 부재가 안 드러난다(codex 1R P1, 측정 2판).
   - risk: scope latch · 사용량 두 질의. 사용량 질의는 scope latch 가 0 일 때만 실행된다 — latch 가 선 범위는 사용량 판독 전에
     `ErrProductionRiskScopeRefused` 로 돌아가므로, prepare 가 없으면 **사용량 전용 열이 없는 원장이 범위 국소 거절로 재표식**돼 엔진이 다음 범위로
-    넘어간다(2R 보이스 P2-1). prepare 를 latch early return 앞에 두면 스키마 결함이 결함 신원으로 먼저 나온다(오류 우선순위: 주입 · 파일 · 버전 ·
-    prepare 결함 → 범위 국소 거절).
+    넘어간다(2R 보이스 P2-1). prepare 를 latch early return 앞에 두면 스키마 결함이 결함 신원으로 먼저 나온다.
+  - **오류 우선순위의 적용 범위**(3R codex P2): 위 순서(주입 → 파일 → 버전 → prepare 결함 → **원장에서 나온** 범위 국소 거절)는 **정책 · 입력
+    결속 뒤** 원장 적재 안에서만 성립한다. `LoadProductionRiskSnapshotAuthority` 는 원장을 열기 전에 `bindProductionRiskInputs` 를 부르고
+    (`18109568` `:169` → 적재 `:173`), 서명 정책에 종목 섹터 매핑이 없으면 `:311` 에서 `ErrProductionRiskScopeRefused` 를 돌려준다 — 그 범위에서는
+    원장 결함보다 정책 범위 거절이 먼저다. 이것은 원장을 읽지 않은 정확한 범위 국소 거절이므로 바꾸지 않는다(같은 원장 결함은 매핑이 있는 범위에서
+    결함으로 드러난다). 주입 누락(D2)만 정책 결속보다 앞에 둔다(열기 전 거절).
 - **의존 기록**: 「prepare 가 없는 열을 드러낸다」는 modernc sqlite v1.54.0 이 prepare 를 즉시 수행한다는 사실에 기댄다(`stmt.go:23-45`
   `newStmt` → `prepareV2`, codex 2R 확인). 드라이버 판본이 바뀌어 지연 prepare 가 되면 S8 · S14 가 깨져 알린다.
 

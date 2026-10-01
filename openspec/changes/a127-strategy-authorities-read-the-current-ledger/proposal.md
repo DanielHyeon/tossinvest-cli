@@ -56,9 +56,10 @@
 
 - 코드: `internal/riskbucket/production_snapshot_authority.go`, `internal/strategyrouter/production.go`, `internal/app/engine/strategy_risk_authority.go`,
   `internal/app/engine/strategy_route_authority.go` + 시험.
-- 동작: 오늘(생산 서명 매니페스트 0 — 기록) 변화 0. **착지 뒤에는 핀이라는 우연한 차단이 사라지고 설계된 조건 사슬만 남는다**(design D6 의
-  1~12 — 엔진 기동의 automation gate · attestation, scheduler 활성화, candidate · route · FX · proposal · risk · account 의 서명 매니페스트와 환경값,
-  4-가족 활성화가 없으면 유효 제안 정확히 하나, 보호 readiness 와 배선, 진입 관문, 1차 레그 admission). 자동 판정을 뺀 나머지는 전부 사람 서명 ·
-  운영자 설정이다(불변식 3 · 7). 주의: 시장 **승격**(화면)은 주문 관문이 아니다 — 주문은 refresh 사이클이 승격과 무관하게 내보낸다(design D6).
+- 동작: 오늘(생산 서명 매니페스트 0 — 기록) 변화 0. **착지 뒤에는 핀이라는 우연한 차단이 사라지고 설계된 조건 사슬만 남는다**(design D6). 남는
+  사람 · 운영 조건은 엔진 기동의 automation gate · attestation, 거래 정책과 LIVE 마스터 스위치, 공식 자격 증명, scheduler 활성화와 candidate · route ·
+  FX · risk · proposal · account 의 서명 매니페스트 · 환경값, 보호 배선, (선택) 4-가족 활성화 — 4-가족 활성화가 없으면 유효 제안이 정확히 하나여야
+  한다. 그 밖은 자동 런타임 판정(진입 관문 · lease · admission · Guardian · 매수 여력 등)이다. 주의: 시장 **승격**(화면)은 주문 관문이 아니다 —
+  주문은 refresh 사이클이 승격과 무관하게 내보낸다(design D6).
 - 시험 기반: route 실원장 양성 시험을 위한 서명 매니페스트 작성 seam(`tossos_testseams`) + 외부 시험 패키지(design D4).
 - a112: 시험 다리 제거 · 트립와이어 반전 · a112 의 동결 증거(FLM 번들 · 하네스)가 그 시험을 인용하는 자리의 재기준(tasks 1.3) · L6 의 형식상 선행 해소.

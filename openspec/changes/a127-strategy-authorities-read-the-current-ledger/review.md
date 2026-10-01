@@ -60,3 +60,18 @@ Manager 지시(2026-10-01): F2 의 사람 승인 문장이 freeze 의 하중 —
 S9 · S11 · S12 실현 가능 · S6 순서(위험 경로 검증은 `loadProductionRiskEntries` 안, route 는 opener 안 — 가드는 그 앞) · F6 인용.
 
 ROADMAP R1 행 정정(핀 탄생 이력)은 a127 밖 · a112 행이라 Manager 가 a112 소유자에 전달(2026-10-01).
+
+## 0.5.3 proposal-freeze 리뷰 3라운드 — 협대역 codex (2026-10-01, 대상 `18109568`)
+
+codex(Manager 슬롯 부여 · 「PASS 면 freeze 승인 간주」 조건, 14:04:56~14:07:15, read-only · 머리말 신고): **FAIL** — P0 0 · P1 1 · P2 2 · P3 1
+(`analysis/review-freeze/codex-r3-*`). PASS 가 아니므로 사전 승인은 발동하지 않았다 — 처분 뒤 재보고.
+
+| # | 지적 | 처분(design 4판) |
+|---|---|---|
+| H1 | P1 — D6 「전수 1~12, 자동은 11 · 12 뿐」 거짓: 자동 조건 다수 누락(감독자 accepting · 미잠금 레인 · 캠페인 FLAT/CLOSED · lease/fencing · 충돌 attempt · 매수 여력 등)과 사람 조건 누락(거래 정책 · LIVE 마스터 스위치 · 공식 자격 증명) | D6 을 (A) 사람 · 운영 조건 12(세 라운드가 찾은 전부 — 전수 증명 아님, 거래 정책 · LIVE · 자격 증명 추가)과 (B) 자동 런타임 조건(예시 · 비전수, 좌표 포함)으로 재구성. 「a127 이 없애는 것은 핀 둘뿐」 명시. proposal Impact 동문 |
+| H2 | P2 — D7 오류 우선순위는 원장 적재 안에서만 성립: 정책 결속(`bindProductionRiskInputs` — 섹터 매핑 없음 `:311` ScopeRefused)이 원장보다 먼저 | D7 에 적용 범위 명시(정책 · 입력 결속 뒤 원장 적재 안), 정책 범위 거절은 원장을 읽지 않은 정확한 범위 거절이라 유지, 주입 누락만 정책 결속 앞 |
+| H3 | P2 — spec 「판독 질의 전부는 첫 판독 전에 prepare」는 `PRAGMA user_version` 까지 포함하는 과잉 · 범위 거절 우선 무조건 서술 과잉 | spec: 「원장 데이터 질의 전부는 버전 확인 뒤 · 첫 원장 데이터 질의 전에 prepare」, 「원장에서 유도되는 범위 국소 거절보다 먼저」, 정책 결속 범위 거절은 대상 아님 명시 |
+| H4 | P3 — 좌표 낡음(a112 6.1 이 같은 파일 앞쪽 편집) | design 머리에 좌표 기준(`65fe66e7`)과 `18109568` 오프셋(risk +9 · route +7) 명시, 구현 로트는 그 해시 위 편집 전 AST 로 다시 잡음 |
+
+codex 가 참으로 확인: 「승격은 주문 관문이 아님」, D6 의 `engine.go:226/:682` · proposal/account/handoff 인용, risk prepare 를 버전 확인 뒤 · latch 앞에 두는 것과
+route 의 같은 자리(버전 확인 뒤 · tx 반환 전) 실현 가능, 같은 tx SHALL 은 두 적재기 모두 실현 · 시험 가능.
