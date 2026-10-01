@@ -1,0 +1,39 @@
+{
+  "file": "internal/scheduler/budget.go",
+  "source_sha256": "36879e8856901f349ea2a75856ddc3124520f5bd67b674359dcf854e6e8b6bf8",
+  "package": "scheduler",
+  "function": "TryAcquire",
+  "receiver": "BudgetCoordinator",
+  "signature": "BudgetCoordinator.TryAcquire(params=3, results=1)",
+  "start": {
+    "line": 312,
+    "column": 1
+  },
+  "end": {
+    "line": 314,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 313,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 313,
+        "column": 9
+      },
+      "text": "c.tryAcquire"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

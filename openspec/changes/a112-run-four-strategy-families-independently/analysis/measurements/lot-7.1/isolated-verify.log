@@ -1,0 +1,7 @@
+# isolated worktree 070d2111 = de3b4f65 + 7.1 로트 (원 출력)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/scheduler	2.662s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialbars	0.859s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	69.290s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/scheduler	2.574s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/officialbars	0.746s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/scheduler	5.771s

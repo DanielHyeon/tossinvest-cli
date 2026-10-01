@@ -5892,3 +5892,19 @@ V04 잘못된 시장 · V05 해소기가 시장 무시 · V06 해소기가 famil
 **잔여.** 원장 owner CAS 자체의 변이는 a066 journal 시험이 잰다(`TestRiskBucketAdmissionConcurrentProspectiveOwnersHaveOneWinner` 등) — 이 로트는 a112 생산 경로에서 그 결과를 관측만.
 생산 동작 변화 0(활성화 0).
 
+## 2026-10-01 태스크 7.1 · 7.2 — 전략 capability 의 family subscope(BudgetCoordinator)
+
+**판정(Manager Q1~Q4).** Q1 거절 = 골든 `refusal_enums.scheduler` 의 `BUDGET_DEFERRED` 하나 + Detail(기존 BudgetReason), 범위 불일치 완료는 `false` · 상태 불변. Q2 additive 두 메서드 +
+토큰 · commitment 범위 + 완료 대조, 교차 replay 수락 변이 양방향 CAUGHT. Q3 `StrategyScope` 정규화 검증, family → horizon 표 정합 비강제. Q4 capability 만 · 생산 호출자 0 핀 · 배선 행선
+7.5 또는 활성화 로트.
+
+**편집.** `budget.go`: `TryAcquire` · `Complete` 본문을 `tryAcquire(…, scope)` · `complete(…, scope)` 로 옮김(공개 메서드는 범위 0 위임 — 범위 없는 경로 판정 불변: 분기 17 · 7 동일, 바뀐 것은
+발급 기록의 범위 한 줄과 완료 대조의 `record.scope != scope` 한 항), `budgetCommitment.scope` 추가. 새 파일 `strategy_scope.go`. Pre-Edit `analysis/measurements/lot-7.1/pre-edit/`.
+
+**증거.** RED `lot-7.1/red-7.1.log`(편집 전 컴파일 실패 — API 부재) → GREEN. 시험 6(`internal/scheduler/a112_strategy_scope_test.go`, `-race` 깨끗). 변이 `lot-7.1/mutation-7.1.tsv`:
+T01 완료가 범위 무시 · T02 토큰 범위 확인 생략 · T03 범위 있는 → 범위 없는 완료 · T04 범위 없는 → 범위 있는 완료 · T05 발급이 범위를 안 묶음 · T06 family 마다 용량(복제) · T07 거절 이름 누출 ·
+T08 안전 등급 수락 · T09 범위 검증 제거 · T10 생산 호출자 등장 — **10/10 CAUGHT**. 시험 함정 하나: `incrementingEntropy` 는 256 바이트마다 되돌아 32 바이트 capability 가 여덟 번째부터
+겹친다(발급 충돌 → TOKEN_UNAVAILABLE) — `uniqueEntropy` 로 세움.
+
+**생산 동작 변화 0**(생산 호출자 0 — a070 처분 감사 이래 그대로, 이제 핀).
+

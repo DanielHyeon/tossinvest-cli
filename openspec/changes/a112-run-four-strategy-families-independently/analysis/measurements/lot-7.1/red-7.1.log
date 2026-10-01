@@ -1,0 +1,18 @@
+# RED — HEAD 3403be28 + 7.1 시험(생산 편집 전)
+# github.com/JungHoonGhae/tossinvest-cli/internal/scheduler [github.com/JungHoonGhae/tossinvest-cli/internal/scheduler.test]
+internal/scheduler/a112_strategy_scope_test.go:23:46: undefined: StrategyScope
+internal/scheduler/a112_strategy_scope_test.go:24:9: undefined: StrategyScope
+internal/scheduler/a112_strategy_scope_test.go:51:13: c.TryAcquireStrategy undefined (type *BudgetCoordinator has no field or method TryAcquireStrategy)
+internal/scheduler/a112_strategy_scope_test.go:56:7: c.CompleteStrategy undefined (type *BudgetCoordinator has no field or method CompleteStrategy)
+internal/scheduler/a112_strategy_scope_test.go:62:8: c.CompleteStrategy undefined (type *BudgetCoordinator has no field or method CompleteStrategy)
+internal/scheduler/a112_strategy_scope_test.go:65:7: c.CompleteStrategy undefined (type *BudgetCoordinator has no field or method CompleteStrategy)
+internal/scheduler/a112_strategy_scope_test.go:76:14: c.TryAcquireStrategy undefined (type *BudgetCoordinator has no field or method TryAcquireStrategy)
+
+# GREEN — 편집 뒤
+--- PASS: TestAContinuationCapabilityCannotCompleteABreakoutPoll (0.00s)
+--- PASS: TestScopedAndUnscopedCapabilitiesCannotCompleteEachOther (0.00s)
+--- PASS: TestEveryScopeSharesOnePhysicalCommitmentSet (0.00s)
+--- PASS: TestEightLanesRacingForTheLastSlotCommitOnce (0.00s)
+--- PASS: TestAnInvalidStrategyScopeOrSafetyClassIsDeferred (0.00s)
+--- PASS: TestTheStrategyBudgetAPIHasNoProductionCallerYet (0.30s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/scheduler	0.304s

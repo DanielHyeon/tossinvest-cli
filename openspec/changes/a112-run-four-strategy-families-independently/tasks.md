@@ -411,13 +411,19 @@
 
 ## 7. Scheduler Observability and Operator Surfaces
 
-- [ ] 7.1 Extend scheduler capability scope with family while retaining one physical endpoint/reset-generation quota, commitment set, absolute issuance cap, observation-cycle authority and safety reserve.
+- [x] 7.1 Extend scheduler capability scope with family while retaining one physical endpoint/reset-generation quota, commitment set, absolute issuance cap, observation-cycle authority and safety reserve.
 
   **설계 입력(2026-10-01, a070 처분 ② 종결 — Manager 지시).** 7.1 의 API 예산 subscope 는 `strategyrouter.QuotaAuthority` 가 아니라 정본 구현 **`internal/scheduler.BudgetCoordinator`**
   위에 얹는다. 근거: `QuotaAuthority` 는 정본 요구보다 약하다 — capability 토큰이 요청 필드 + 스냅숏 digest 의 결정적 sha256(정본은 암호학적 난수), reset generation 진행 ·
   observation cycle · `SafetyReserve` 규칙(50% 올림 · 최소 5)이 없고 reserve 를 호출자가 넣는다(a070 처분 감사 `0d3e2849` §quota). 거기에 family 를 얹으면 정본보다 약한 두 번째
   예산 권한이 생산에 선다. L4 원장의 `quota.go` 편집 대상 지정은 이 입력으로 교체했다.
-- [ ] 7.2 Add replay/concurrency tests proving a capability cannot cross family and 8 simultaneous acquires cannot issue beyond the shared physical allowance.
+- [x] 7.2 Add replay/concurrency tests proving a capability cannot cross family and 8 simultaneous acquires cannot issue beyond the shared physical allowance.
+
+  **7.1 · 7.2 종결(2026-10-01 — 미착지).** Manager 판정 Q1~Q4: `internal/scheduler.BudgetCoordinator` 위에 additive `TryAcquireStrategy` · `CompleteStrategy` +
+  `StrategyScope{Market, Horizon, Family}`(정규화 검증, family → horizon 표 정합은 비강제 — 필요해지면 6.1 식 정본 표 유도). 토큰 · commitment 에 범위 digest, 완료 때 대조(양방향 교차
+  replay 금지), 용량은 endpoint 하나의 commitment 집합 공유(복제 0). 거절은 골든 `BUDGET_DEFERRED` 하나 + Detail. 생산 호출자 0 을 핀(`TestTheStrategyBudgetAPIHasNoProductionCallerYet`)
+  — 레인 evidence polling 배선은 7.5 또는 활성화 로트가 핀을 뒤집으며 한다. 시험(`internal/scheduler/a112_strategy_scope_test.go`): continuation → breakout replay 거부 · 양방향 교차 ·
+  공유 집합 비복제 · 여덟 레인 마지막 자리 경쟁(하나만 commit, 나머지 BUDGET_DEFERRED, 예비 유지, 안전 등급 통과) · 잘못된 범위/안전 등급. 변이 T01~T10 10/10 CAUGHT.
 - [ ] 7.3 Project read-only family/worker desired/effective/runtime, cycle generation, queue/drop, health/latch, first refusal, evidence/config/calibration and arbitration lineage to the existing console/API model.
 - [ ] 7.3.1 Distinguish `OFF/OFF/UNOBSERVED` from explicit read-only `SHADOW`: SHADOW may evaluate and project counterfactuals but cannot mint desired/effective/activation, own dispatch capability or survive restart without a server-owned signed shadow manifest.
 - [ ] 7.4 Bound metrics cardinality by fixed market/family/lane/version/reason labels; keep symbol/setup/candidate identifiers in logs/journal queries rather than metric labels.

@@ -528,13 +528,41 @@ SET_62_TESTS = [
      "./internal/app/engine"],
     ["go", "test", "-count=1", "-run", "TestTheScopeRefusalType|TestOnlyATypedScopeRefusal|TestNoEngineErrorType", "./internal/app/engine"],
 ]
+BUD = "internal/scheduler/budget.go"
+SSC = "internal/scheduler/strategy_scope.go"
+SET_71 = [
+    ("T01 completion ignores the scope (cross-family replay accepted)", BUD,
+     "record.generation != token.generation || record.scope != scope {", "record.generation != token.generation {"),
+    ("T02 scoped completion skips the token's own scope check", SSC,
+     "\tif !scope.Valid() || token.scope != scope.digest() {", "\tif !scope.Valid() {"),
+    ("T03 unscoped API completes scoped capabilities (scoped -> unscoped replay)", BUD,
+     "\treturn c.complete(key, token, [sha256.Size]byte{})", "\treturn c.complete(key, token, c.endpoints[key].commitments[token.capability].scope)"),
+    ("T04 scoped API completes unscoped capabilities (unscoped -> scoped replay)", SSC,
+     "\treturn c.complete(key, token.token, token.scope)", "\treturn c.complete(key, token.token, [sha256.Size]byte{}) || c.complete(key, token.token, token.scope)"),
+    ("T05 issuance does not bind the scope", BUD,
+     "budgetCommitment{class: class, generation: state.generation, scope: scope}", "budgetCommitment{class: class, generation: state.generation}"),
+    ("T06 each family gets its own capacity (capacity multiplied)", BUD,
+     "\tif discretionary <= 0 || len(state.commitments) >= discretionary {",
+     "\tif discretionary <= 0 || len(state.commitments) >= 4*discretionary {"),
+    ("T07 refusal name leaks the internal reason instead of BUDGET_DEFERRED", SSC,
+     "\t\tresult.Refusal = StrategyBudgetDeferred\n\t\treturn result", "\t\tresult.Refusal = string(grant.Reason)\n\t\treturn result"),
+    ("T08 safety classes accepted by the strategy API", SSC,
+     "\tif !isKnownPollClass(class) || isSafetyClass(class) {", "\tif !isKnownPollClass(class) {"),
+    ("T09 scope validation removed", SSC,
+     "\tif !scope.Valid() {\n\t\treturn StrategyBudgetGrant{", "\tif false && !scope.Valid() {\n\t\treturn StrategyBudgetGrant{"),
+    ("T10 a production caller of the strategy budget API appears (Q4 pin)", "internal/app/engine/a112_budget_wire_mutant.go", None,
+     "package engine\n\nimport \"github.com/JungHoonGhae/tossinvest-cli/internal/scheduler\"\n\nvar _ = (*scheduler.BudgetCoordinator).TryAcquireStrategy\n"),
+]
+SET_71_TESTS = [
+    ["go", "test", "-count=1", "./internal/scheduler"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측
