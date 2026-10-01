@@ -229,3 +229,11 @@ typed-confirmation을 유지한다 — 이 결정은 UI 표면에만 적용한�
 | 항목 | 사유 | 행선 |
 |---|---|---|
 | riskbucket 스키마 핀 27 → `journal.SchemaVersion` 결속(또는 읽는 표가 존재하는 최소 버전 이상). `internal/riskbucket/production_snapshot_authority.go:33` `productionRiskJournalSchema = 27` · `:361` `PRAGMA user_version` 정확 일치 비교, `internal/journal/schema.go:6` `SchemaVersion = 35`(2026-08-05 a084 부터 28 이상). 생산 호출 `internal/app/engine/strategy_entry_supervisor.go:328` 이 실제 원장 경로를 넘기므로 **생산 위험 권한은 어느 범위에서도 ready 가 될 수 없다** | **레인 활성화의 경성 선행** — 수리 전에 서명 활성화하면 전 범위 `AuthorityUnavailable`(1차 레그 0). 오늘 생산 서명 활성화 0 이라 동작 변화 없음. 시험 stub(user_version 27)이 결함을 가렸다. 수리 착지 시 a112 시험 다리 `a112MirrorLedgerIntoRiskStub` 제거 · 적재기를 실제 원장으로 단일화(트립와이어 `TestTheRiskStubBridgeIsStillNeededBecauseTheLoaderRefusesTheRealJournal` 가 실패로 알림) | 미배정 — 별도 change 후보(riskbucket 은 High-risk · a066 영역, Manager 2026-10-01 판정 B) |
+
+## a070 이월 · 미배정 후속 (a070 `--skip-specs` archive 뒤 — 2026-10-01)
+
+`a070-add-multi-market-horizon-router` 처분 ②(부분 대체)가 넘긴 것. 근거는 아카이브의 `analysis/disposition-audit.md` §5 · §7.
+
+| 항목 | 사유 | 행선 |
+|---|---|---|
+| 생산 호출자 0 인 `strategyrouter` 섬 정리 — `Route()`(a112 `RouteSet` 이 대체) · durable `SchedulerState`/CAS/rollback/`MarketRecordStore` · `MigrateLegacy` · `QuotaAuthority` | a112 시험 다수가 `Route` 를 참조 대조로 부름 — quota 권한이 정해진 뒤 한 번에 | a112 7.1 뒤 정리 change 하나(미배정) |
