@@ -35,3 +35,28 @@
 `strategy_route_authority.go:101` 하나) · 비시험 스키마 리터럴 둘 · v27 픽스처 셋 · freeze-ast source sha256 · v33 손실 잠금은 admission 이 강제.
 
 판정: **2판으로 재리뷰 필요**(codex 슬롯은 Manager 요청).
+
+## 0.5.2 proposal-freeze 리뷰 2라운드 (2026-10-01, 대상 `951b3ec3`)
+
+| 목소리 | 판정 | 지적 |
+|---|---|---|
+| codex(Manager 슬롯 부여, 13:27:43~13:30:16, read-only · 머리말 신고, 반납 보고함) | FAIL | P0 0 · P1 0 · P2 3 · P3 1(`analysis/review-freeze/codex-r2-*`) — 1R P1 은 D7 로 닫힘 확인 |
+| 독립 보이스 협대역(처분 자리 F2 · F3 · F5 · F7 표적, 분리 워크트리 `a127-rev2` — 제거됨) | APPROVE-WITH-FIXES | P0 0 · P1 1 · P2 3 · P3 6 |
+
+Manager 지시(2026-10-01): F2 의 사람 승인 문장이 freeze 의 하중 — 재리뷰가 공격. 공격이 의도대로 작동했다(아래 G1).
+
+| # | 출처 | 등급 | 지적 | 처분(design 3판) |
+|---|---|---|---|---|
+| G1 | 보이스 P1-1 · codex P2-a | P1 | 2판 D6 의 「오늘 0 인 이유」(supervisor `:451-452` 승격)는 **화면 · 승격 경로**다 — 주문은 refresh 사이클이 승격과 무관하게 내보냄(`strategy_entry_supervisor.go:500-502` 자기 주석 · `:1044-1046` · `engine.go:682`). 조건도 불완전(제안 서명 · evidence 결속 · 정확히 하나 · FX · candidate · automation gate · 보호 배선) | **실측 확인**. D6 재작성: 주문 경로 기준 필요 조건 1~12 전수와 각 조건의 사람 · 운영 · 자동 표기, 「승격은 주문 관문이 아님」 명시, 경보 수위 정정(Manager: 「열린다」가 아니라 「핀이라는 우연 차단이 사라지고 설계된 조건 사슬만 남는다」), 단일 범위 인용을 `strategy_dispatch_handoff.go:38-39` 로, 다중 범위 경로도 도달 가능해짐 명시. proposal Why · Impact 동문 정정 |
+| G2 | 보이스 P2-1 · codex P2-c | P2 | risk 도 조건부 질의 — latch 가 선 범위는 사용량 질의 전에 ScopeRefused 로 돌아가 사용량 전용 열 부재가 **범위 국소 거절로 재표식**(spec · D3 위반, fail-open 아님). spec 의 「판독 전」이 risk 에서 거짓 | 실측(코드 순서 `:380` latch → `:399` 사용량)이 고름: **prepare 선행** — 두 적재기 모두 버전 확인 직후 · 첫 판독 전에 자기 SQL 상수 전부 prepare(risk 는 latch early return 앞). 오류 우선순위 명시. S14 추가 |
+| G3 | codex P2-b · 보이스 P3-1 | P2 | S13 은 판독 일부만 tx 로 옮긴 변이를 놓침 | spec 에 「버전 확인과 모든 판독이 같은 읽기 tx」 SHALL, S13 을 세 판독 수신자 동일성 · tx 수명 단언으로. `SetMaxOpenConns(1)` 의 tx 밖 판독은 멈춤(막는 쪽) 기록 |
+| G4 | 보이스 P2-2 | P2 | 「오늘 동작 변화 0」의 생산 설정 영수증이 a127 문서에 없음 | 근거를 a112 8.7.1 기록으로 명시하고 배포 전 재실측을 사람 항목 H1(tasks 2.0)로 |
+| G5 | 보이스 P2-3 | P2 | S8 · S3/S4 는 픽스처가 고정되지 않으면 생존 | 반증표 머리에 픽스처 규율(버전만 바꾼 온전한 원장 · 조건부 질의 전용 열 삭제) |
+| G6 | 보이스 P3 | P3 | modernc 즉시 prepare 의존 · S6 음수 · S2 태그 스위트 · 불변식 3 인용 · spec 의 Batch 경계(설계 수준이면 수용) | D7 의존 기록, S6 에 음수, 1.4 하네스 태그 스위트, D6 불변식 3 · 7 분리 서술 |
+| G7 | codex P3 | P3 | design 끝 `</content>` 잔존 | 제거(F1 의 정리 누락 — 이번에 전수 grep 0) |
+
+확인된 참(2R): D7 route prepare 는 route 에 충분(두 SQL 이 버전 뒤 유일한 질의, owners 도 범위 일치 조건부라 prepare 가 덮음) · risk tx 실현 가능 ·
+판정 · 오류 신원 불변 · flatten 주장 정확(엔진 밖 `journal.Open` 은 flatten 과 engine_reconcile 둘, 후자는 engine lock 보유) · S1 · S2 · S5 · S7/S10 ·
+S9 · S11 · S12 실현 가능 · S6 순서(위험 경로 검증은 `loadProductionRiskEntries` 안, route 는 opener 안 — 가드는 그 앞) · F6 인용.
+
+ROADMAP R1 행 정정(핀 탄생 이력)은 a127 밖 · a112 행이라 Manager 가 a112 소유자에 전달(2026-10-01).

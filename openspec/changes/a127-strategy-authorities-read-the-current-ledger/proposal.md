@@ -22,8 +22,8 @@
 원장은 v35 다(`internal/journal/schema.go:6`). 두 리터럴은 같은 커밋 `8022f578`(2026-08-04)에서 태어났는데 그때 `journal.SchemaVersion` 은 이미
 29 였다 — **핀은 출하된 어느 스키마와도 맞은 적이 없다**(ROADMAP R1 행의 「2026-08-05 a084 부터 28 이상」은 부정확). supervisor 는 두 적재기에 엔진이 연 **실제 원장 경로**를 넘긴다
 (`internal/app/engine/strategy_entry_supervisor.go:300-305` · `:328`). 그래서 **생산 route 권한과 위험 권한은 어느 범위에서도 ready 가 될 수
-없다** — 서명 매니페스트와 활성화를 갖춰도 1차 레그 0. 오늘은 서명 route · risk · account 매니페스트와 schedule 활성화가 없어 시장 승격 자체가
-dormant 다(`strategy_entry_supervisor.go:451-452`) — 동작 변화가 없다.
+없다** — 서명 매니페스트와 활성화를 갖춰도 1차 레그 0. 오늘 생산에는 서명 매니페스트가 없다고 기록돼 있다(a112 8.7.1 실측, 2026-09-04 —
+배포 전 재실측은 사람 항목 H1, design D6) — 동작 변화가 없다.
 
 **왜 여태 안 보였나 — 가린 픽스처.** 두 적재기의 시험은 전부 `PRAGMA user_version=27` 로 만든 **축소 원장**을 읽었다
 (`riskbucket/production_snapshot_authority_test.go:219`, `strategyrouter/production_test.go:216`, `app/engine/strategy_risk_authority_test.go:224`).
@@ -46,7 +46,8 @@ dormant 다(`strategy_entry_supervisor.go:451-452`) — 동작 변화가 없다.
   넘긴다. 주입이 0 이하면 원장을 열기 전에 거절한다. 불일치는 방향(더 새 원장 · 더 옛 원장)을 문구로 말한다. 거절 신원
   (`ErrProductionRiskSnapshotUnavailable` · `ErrProductionRouteUnavailable`)은 그대로 — 범위 국소가 아니라 결함이다.
 - 리터럴 상수 둘을 지운다. route 의 방향 문구가 공개 경계(`LoadProductionRouteAuthorityBatch` `:352` 감싸기)까지 오도록 원인을 보존한다.
-- risk 적재기의 판독을 읽기 트랜잭션 하나로 묶고, route 적재기는 판독 전에 두 질의를 prepare 해 조건부 질의도 열 부재에 fail-closed 하게 한다(design D7).
+- 두 적재기의 판독을 각각 읽기 트랜잭션 하나로 묶고(risk 는 새로, route 는 기존), 버전 확인 직후 · 첫 판독 전에 자기 SQL 상수 전부를 prepare 해
+  조건부 질의의 열 부재도 결함 신원으로 먼저 드러나게 한다(design D7).
 - 수락 시험을 실제 원장으로: a112 트립와이어를 양성 시험으로 뒤집고 시험 다리를 지운다(a112 소유 파일 — Manager 가 a112 소유자에 통지).
   축소 픽스처 셋은 주입 값과 같은 `user_version` 을 쓰게 바꾼다(행 · 단언 불변).
 - 판독 SQL · 사용량 판정 · owner 재구성 · 원장 스키마는 바꾸지 않는다.
@@ -55,7 +56,9 @@ dormant 다(`strategy_entry_supervisor.go:451-452`) — 동작 변화가 없다.
 
 - 코드: `internal/riskbucket/production_snapshot_authority.go`, `internal/strategyrouter/production.go`, `internal/app/engine/strategy_risk_authority.go`,
   `internal/app/engine/strategy_route_authority.go` + 시험.
-- 동작: 오늘(서명 매니페스트 · schedule 활성화 없음) 변화 0. **착지 뒤에는 서명 매니페스트 발급과 schedule 활성화가 곧 실진입 경로를 연다** —
-  4-가족 활성화가 없는 시장도 단일 범위 handoff 로 1차 레그까지 갈 수 있다(design D6). 그 발급 · 활성화는 사람 승인 항목이다.
+- 동작: 오늘(생산 서명 매니페스트 0 — 기록) 변화 0. **착지 뒤에는 핀이라는 우연한 차단이 사라지고 설계된 조건 사슬만 남는다**(design D6 의
+  1~12 — 엔진 기동의 automation gate · attestation, scheduler 활성화, candidate · route · FX · proposal · risk · account 의 서명 매니페스트와 환경값,
+  4-가족 활성화가 없으면 유효 제안 정확히 하나, 보호 readiness 와 배선, 진입 관문, 1차 레그 admission). 자동 판정을 뺀 나머지는 전부 사람 서명 ·
+  운영자 설정이다(불변식 3 · 7). 주의: 시장 **승격**(화면)은 주문 관문이 아니다 — 주문은 refresh 사이클이 승격과 무관하게 내보낸다(design D6).
 - 시험 기반: route 실원장 양성 시험을 위한 서명 매니페스트 작성 seam(`tossos_testseams`) + 외부 시험 패키지(design D4).
 - a112: 시험 다리 제거 · 트립와이어 반전 · a112 의 동결 증거(FLM 번들 · 하네스)가 그 시험을 인용하는 자리의 재기준(tasks 1.3) · L6 의 형식상 선행 해소.

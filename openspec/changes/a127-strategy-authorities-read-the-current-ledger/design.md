@@ -1,4 +1,4 @@
-# a127 design (2판 — freeze 리뷰 1라운드 반영, review.md 「0.5」)
+# a127 design (3판 — freeze 리뷰 1 · 2라운드 반영, review.md 「0.5.1」 · 「0.5.2」)
 
 > 분기 · early return 을 근거로 쓰는 문장은 `analysis/freeze-ast/` 의 AST 산출물(편집 전, base `f9a25549`, `tools/logic-map`)에서 읽었다 —
 > `loadProductionRiskEntries` 14 분기 · `openProductionRouteSnapshot` 4 분기 · `LoadProductionRiskSnapshotAuthority` 7 ·
@@ -22,8 +22,9 @@
   (`RevalidateQFinalAdmission`)이 **현재 원장에서** 매번 같은 함수를 부른다는 사실이 근거다(a126 시험 다수가 v35 원장에서 직접 부름).
 - **없는 열은 그 열을 참조하는 질의가 prepare 될 때만 실패한다**(같은 측정의 대조 — `position_campaigns.entry_blocked` 를 지운 원장: owners 질의
   성공, campaign 질의 `no such column: entry_blocked`). 모든 적재기 SQL 은 상관 부질의 안에서도 한정 이름을 쓰고 큰따옴표 식별자가 없다 — 이름
-  해석이 문자열 리터럴로 떨어지는 경로가 없다. **그러나 route 의 campaign 질의는 조건부다**: `loadProductionRouteOwnersFrom` 은 active owner 가
-  없으면 `:652-653` 에서 성공으로 반환해 `:665` 의 campaign 질의를 prepare 하지 않는다(codex freeze P1) → D7.
+  해석이 문자열 리터럴로 떨어지는 경로가 없다. **그러나 두 적재기 모두 조건부 질의가 있다**: route 의 `loadProductionRouteOwnersFrom` 은 active
+  owner 가 없으면 `:652-653` 에서 성공으로 반환해 `:665` 의 campaign 질의를 prepare 하지 않고(codex 1R P1), risk 는 scope latch 가 선 범위에서
+  사용량 질의 전에 `ErrProductionRiskScopeRefused` 로 돌아간다(2R 보이스 P2-1) → D7.
 - **v28~v35 의 읽기 집합 변경** — 두 갈래로 센다:
   - DDL(`internal/journal/*_v2[8-9].sql` · `*_v3[0-5].sql` 전수): 읽기 집합 표에 대한 `ALTER` · `CREATE TRIGGER` 는 v34 하나 —
     `risk_bucket_reservations.policy_record_digest`(nullable)와 삽입 · 불변 트리거. 적재기는 그 열을 읽지 않는다.
@@ -89,8 +90,8 @@ riskbucket · strategyrouter 는 journal 이 import 한다(`journal/risk_bucket*
   시험은 journal 을 import 할 수 없다(순환). 엔진 시험은 `loader.load` 를 stub 으로 바꾼다(`strategy_route_authority_test.go:26/55/73`), a112 는
   `readyRouteAuthority(...)` 를 쓴다. → `tossos_testseams` 빌드에 서명 매니페스트 작성 seam(기존 내부 픽스처의 이동)을 두고, **외부 시험 패키지**
   `strategyrouter_test` 가 `journal.Open` 원장으로 `LoadProductionRouteAuthorityBatch` 를 부른다.
-- **음성**(두 적재기): 주입 0 · 미설정 거절(열기 전), 더 새 · 더 옛 `user_version` 거절 + 방향 문구, 읽기 집합 열을 지운 원장 거절 — route 는
-  **active owner 가 없는 범위**에서도(D7). 열 삭제 픽스처 주의: SQLite `DROP COLUMN` 은 인덱스 · 트리거가 쓰는 열을 거절한다(예: `released_at` 은
+- **음성**(두 적재기): 주입 0 · 음수 · 미설정 거절(열기 전), 더 새 · 더 옛 `user_version` 거절 + 방향 문구, 조건부 질의 전용 열을 지운 원장 거절 —
+  route 는 **active owner 가 없는 범위**, risk 는 **latch 가 선 범위**(D7, 반증표의 픽스처 규율). 열 삭제 픽스처 주의: SQLite `DROP COLUMN` 은 인덱스 · 트리거가 쓰는 열을 거절한다(예: `released_at` 은
   부분 인덱스 `uq_risk_bucket_active_owner`, `entry_blocked` 는 트리거 `strategy_first_leg_binding_insert_guard`) — 측정 하네스처럼 표를 다시
   만들어야 한다.
 - **구조**: engine 두 호출 자리가 `journal.SchemaVersion` 선택자를 넘긴다는 AST 단언(리터럴 · 런타임 읽기 금지).
@@ -104,47 +105,80 @@ riskbucket · strategyrouter 는 journal 이 import 한다(`journal/risk_bucket*
 판독 SQL 의 문언, 사용량 판정(`aggregateProductionRiskUsage`), owner 재구성 판정(`loadProductionRouteOwnersFrom` 의 분기), 원장 스키마 ·
 마이그레이션, 엔진의 진입 판정 순서.
 
-### D6. §0 안전 불변식 대조 — 무엇이 오늘 진입을 0 으로 막는가
+### D6. §0 안전 불변식 대조 — 무엇이 진입을 막는가(주문 경로 기준)
 
 - LIVE 주문 side effect: 없음 — 적재기는 읽기 전용(`mode=ro` · `query_only`). 시험은 원장 픽스처만.
-- **오늘 진입이 0 인 실제 이유**(1판의 「4-가족 관문」은 틀렸다 — 그 관문은 서명 4-가족 활성화가 있는 시장에만 선다): 시장 승격은
-  `strategy_entry_supervisor.go:451-452` 에서 schedule 활성화(`s.restore.Activation == nil` → dormant)와 schedule · candidate · route · FX · risk ·
-  account 권한 각각의 Ready 를 모두 요구한다. 오늘은 서명 route · risk · account 매니페스트와 schedule 활성화가 없어 dormant 이고, **설령 매니페스트가
-  있어도 route · risk 는 핀 때문에 Ready 가 될 수 없었다**.
-- **a127 뒤 새로 도달 가능해지는 경로**: schedule 활성화 + 서명 route · risk · account 매니페스트가 있고 **4-가족 활성화가 없는** 시장은
-  단일 범위 handoff(시장당 1, `strategy_entry_supervisor.go:455-457` · `strategy_account_first_leg_authority.go:159-162`)로 1차 레그까지 갈 수 있다.
-  지금까지 이 경로는 핀 때문에 도달 불가였다. 이것은 설계된 동작이고 새 구멍이 아니다 — 그러나 사람 승인(불변식 3 · 7)이 올바른 그림 위에서
-  이루어지도록 명시한다: **a127 착지 뒤에는 서명 매니페스트 발급과 schedule 활성화가 곧 실진입 경로를 연다.** 그 발급 · 활성화는 사람 승인 항목이다.
+- **승격은 진입 관문이 아니다**(1 · 2판 정정 — 2판은 supervisor `:451-452` 의 시장 승격을 「오늘 0 인 이유」로 들었으나 그것은 **화면 · 승격 판정**
+  경로다). 생산 감독자는 `NewRefreshingPairedStrategyEntrySupervisor`(`cmd/tossctl/engine.go:682`)이고 그 worker 는 dormant + `RefreshesAuthority`
+  라 `evaluationState` 가 승격과 무관하게 사이클을 허용한다(`strategy_entry_supervisor.go:1044-1046`). 주문은 매 사이클
+  `runProductionStrategyMarketCycle` → `dispatchStrategyMarketHandoffs` → `strategyDispatchCycle.dispatch` 로 나가고, 코드 자신이 「`Effective` 는
+  화면과 승격 판정만 움직인다 … 그 경로는 이 서술자를 읽지 않는다」라고 적는다(`:500-502`). **승격이 막힌다고 주문이 막히지 않는다.**
+- **a127 뒤 주문 경로에 남는 필요 조건 전수**(4-가족 활성화 **없는** 시장 기준 — 각각 사람 · 운영 항목):
+  1. 엔진 기동 자체: `engine.automation_gate.enabled` + 검증된 attestation(`ectx.Automation.Verified`, 아니면 `errEngineGateOff` — `cmd/tossctl/engine.go:226`) · 운영자.
+  2. schedule: 서명 scheduler 활성화 매니페스트로 복원된 `restore.Activation` · calendar(`strategy_dispatch_cycle.go:86-88`, 제안 권한 `strategy_proposal_authority.go:314`) · 사람 서명.
+  3. candidate: 서명 threshold · evidence 매니페스트로 Ready 인 후보 권한 · 사람 서명.
+  4. route: 서명 route 매니페스트 + 원장 owner snapshot(**a127 이 고치는 자리**) · 사람 서명.
+  5. FX: 서명 FX 정책 매니페스트 + 공식 FX 관측(`strategy_dispatch_cycle.go:86-88`) · 사람 서명.
+  6. proposal: 제안 서명 키 · 매니페스트 digest · evidence DB identity 환경값(`strategy_proposal_authority.go:323-350`, `TOSSOS_STRATEGY_EVIDENCE_*_ID`) · 운영자.
+  7. 4-가족 활성화가 없으면 유효 제안이 **정확히 하나**(`strategy_account_first_leg_authority.go:161-163` — 둘이면 거절이지 하나로 줄이지 않음) ·
+     handoff 는 시장 단위 하나(`strategy_dispatch_handoff.go:38-39`). 4-가족 활성화가 **있는** 시장은 범위마다 handoff(다중 범위) — 이 경로도
+     a127 뒤 도달 가능해진다.
+  8. risk: 서명 위험 정책 매니페스트 + 원장 사용량(**a127 이 고치는 자리**), 위험 세대 ≠ 0 · 사람 서명.
+  9. account: 서명 계좌 권한 · 사람 서명.
+  10. 보호: `ObserveStrategyProtection`(a100 readiness, `strategy_dispatch_cycle.go:96`)과 노출 증가의 보호 배선(`ReasonProtectionNotWired`,
+      `internal/execgw/protection_refusal.go:4`) · 사람(a100 배포).
+  11. 진입 관문: `ObserveStrategyEntryGate`(latch · 신선도, `strategy_dispatch_cycle.go:143`) · 자동(원장 상태).
+  12. 1차 레그 admission(q_final · 다섯 bucket · owner · 손실 잠금)과 Guardian · 제출 전후 보호 재확인 · 자동(원장 상태).
+- **경보 수위**(Manager 판정 2026-10-01): a127 은 진입을 「연다」가 아니다 — **핀이라는 우연한 차단이 사라지고 설계된 조건 사슬(위 1~12)만 남는다**.
+  그 사슬에서 자동 판정(11 · 12)을 뺀 나머지는 전부 사람 서명 또는 운영자 설정이다. 비사람 스위치는 찾지 못했다(2라운드 보이스).
+- **불변식 3(토글 OFF = upstream)**: automation gate OFF 면 엔진이 기동을 거절한다(조건 1) — upstream 과 같다. a127 은 이 경로를 건드리지 않는다.
+  **불변식 7(사람 승인)**: 조건 2~6 · 8 · 9 의 서명 · 발급과 조건 1 의 설정이 사람 승인 항목이다.
+- **오늘 동작 변화 0 의 영수증**: 생산 설정 실측은 a127 문서에 없다(가장 최근 기록은 a112 8.7.1 「생산에 서명 매니페스트 0건(측정)」, 2026-09-04).
+  배포 전 재실측을 사람 항목 H1 로 둔다(tasks 2.0) — 매니페스트 digest 환경값 · scheduler 활성화 · automation gate 상태.
 - 손절 즉시성: 무관(진입 권한만).
-- **권한을 넓히지 않는다**: 원장 내용 판단은 그대로이고, 엔진이 이미 admission · 재검증에서 같은 원장을 같은 함수(risk)로 읽는다. 열리는 것은
-  「서명이 갖춰져도 영원히 거절」이라는 결함 상태뿐이다.
+- **권한을 넓히지 않는다**: 원장 내용 판단은 그대로이고, 엔진이 이미 admission · 재검증에서 같은 원장을 같은 함수(risk)로 읽는다.
 
-### D7. 판독은 한 읽기 트랜잭션에서, route 의 조건부 질의는 판독 전에 prepare
+### D7. 판독은 한 읽기 트랜잭션에서, 두 적재기 모두 판독 전에 prepare
 
-- **risk**: 버전 확인(`:375`) · scope latch(`:380`) · 다섯 dimension 사용량(`:399`)이 지금은 각각 autocommit 이다. 엔진 밖 `flatten` 이 engine lock
-  없이 마이그레이션할 수 있으므로(증거) 확인과 판독 사이에 새 스키마가 커밋되는 창이 있고, 다섯 dimension 이 서로 다른 커밋을 볼 수 있다.
-  섞인 snapshot 은 admission 이 쓰기 트랜잭션에서 다시 읽어(`journal/risk_bucket_usage.go:30-56`) fail-closed 하지만, a127 이 같은 줄을 편집하므로
-  route 처럼(`production.go:603`) **읽기 전용 트랜잭션 하나**로 묶는다(비용 ≈ 0, `ReadJournalBucketUsage` 는 `UsageQueryer` 를 받음).
-- **route**: `openProductionRouteSnapshot` 이 tx 위에서 owners · campaign 두 질의를 **판독 전에 prepare** 한다(같은 SQL 상수를 prepare 와 실행에
-  쓴다 — 둘째 철자 금지). 그래야 「읽는 열이 없으면 fail-closed」가 active owner 가 없는 범위에서도 참이다.
+- **같은 트랜잭션**: risk 의 버전 확인(`:375`) · scope latch(`:380`) · 다섯 dimension 사용량(`:399`)이 지금은 각각 autocommit 이다. 엔진 밖
+  `flatten` 이 engine lock 없이 마이그레이션할 수 있으므로(증거) 확인과 판독 사이에 새 스키마가 커밋되는 창이 있고, 다섯 dimension 이 서로 다른
+  커밋을 볼 수 있다(섞인 snapshot 은 admission 이 쓰기 tx 에서 다시 읽어 fail-closed — `journal/risk_bucket_usage.go:30-56`). a127 은 route 처럼
+  (`production.go:603`) **버전 · latch · 사용량 판독 전부를 읽기 전용 트랜잭션 하나**로 묶는다(`ReadJournalBucketUsage` 는 `UsageQueryer` 를
+  받고 `*sql.Tx` 가 만족 — 판정 · 오류 신원 불변). `SetMaxOpenConns(1)` 이라 tx 밖에 남은 판독은 그 연결을 기다리다 ctx 기한까지 멈춘다 — 막는
+  쪽 실패이지만 S13 이 모든 판독의 수신자를 단언한다.
+- **판독 전 prepare**: 각 적재기는 버전 확인 직후 · 첫 판독 전에 자기 SQL 상수 전부를 그 tx 위에서 prepare 한다(같은 상수를 prepare 와 실행에 —
+  둘째 철자 금지).
+  - route: owners · campaign 두 질의. campaign 은 active owner 가 있을 때만 실행되므로(`:652-653`) prepare 가 없으면 그 범위에서 열 부재가 안 드러난다(codex 1R P1, 측정 2판).
+  - risk: scope latch · 사용량 두 질의. 사용량 질의는 scope latch 가 0 일 때만 실행된다 — latch 가 선 범위는 사용량 판독 전에
+    `ErrProductionRiskScopeRefused` 로 돌아가므로, prepare 가 없으면 **사용량 전용 열이 없는 원장이 범위 국소 거절로 재표식**돼 엔진이 다음 범위로
+    넘어간다(2R 보이스 P2-1). prepare 를 latch early return 앞에 두면 스키마 결함이 결함 신원으로 먼저 나온다(오류 우선순위: 주입 · 파일 · 버전 ·
+    prepare 결함 → 범위 국소 거절).
+- **의존 기록**: 「prepare 가 없는 열을 드러낸다」는 modernc sqlite v1.54.0 이 prepare 를 즉시 수행한다는 사실에 기댄다(`stmt.go:23-45`
+  `newStmt` → `prepareV2`, codex 2R 확인). 드라이버 판본이 바뀌어 지연 prepare 가 되면 S8 · S14 가 깨져 알린다.
 
 ## 반증 설계 (구현 로트가 세울 것)
+
+픽스처 규율: **더 새 · 더 옛 원장 픽스처는 읽기 집합을 온전히 갖추고 `user_version` 만 바꾼다**(그렇지 않으면 prepare 가 대신 거절해 S3 · S4 · S5 가
+생존). **열 삭제 픽스처는 조건부 질의 전용 열**을 지운다(route: `position_campaigns.entry_blocked` + active owner 없는 범위, risk:
+`risk_bucket_final_decisions.owner_prospective_generation` 같은 사용량 전용 열 + latch 가 선 범위) — owners · latch 질의도 읽는 열을 지우면 prepare
+삭제 변이가 생존한다. 표 재생성 방식은 측정 하네스(`readset-probe_test.go.txt`).
 
 | id | 변이 | 잡아야 할 시험 |
 |---|---|---|
 | S1 | risk 비교를 `version != 27` 로 되돌림 | 실제 원장 양성(risk) |
-| S2 | route 비교를 `version != 27` 로 되돌림 | 실제 원장 양성(route, 외부 시험 패키지) |
-| S3 | 버전 검사 삭제(risk) | 더 새 원장 거절(risk) |
-| S4 | 버전 검사 삭제(route) | 더 새 원장 거절(route) |
+| S2 | route 비교를 `version != 27` 로 되돌림 | 실제 원장 양성(route, 외부 시험 패키지 — 변이 하네스가 `tossos_testseams` 스위트를 돌려야 함) |
+| S3 | 버전 검사 삭제(risk) | 더 새 원장 거절(risk) — 읽기 집합 온전 · 버전만 증가 |
+| S4 | 버전 검사 삭제(route) | 더 새 원장 거절(route) — 같은 픽스처 규율 |
 | S5 | `!=` → `>` (더 옛 원장 수락 — (a) 로의 후퇴) | 더 옛 원장 거절(두 적재기) |
-| S6 | 0 이하 주입 수락(가드 삭제) | 주입 0 + **존재하지 않는 원장 경로** → 오류가 열기 실패가 아니라 주입 누락 문구(가드가 열기 전에 섬을 관측) |
-| S7 | engine 이 상수 대신 런타임 `user_version` 을 넘김 | 구조 단언(선택자 `journal.SchemaVersion`) |
-| S8 | route 의 판독 전 prepare 삭제 | active owner 없는 범위 + 읽기 집합 열 삭제 원장 → 거절 |
+| S6 | 0 이하 주입 수락(가드 삭제 · `<=0`→`==0`) | 주입 0 **과 음수** + 존재하지 않는 원장 경로 → 오류가 열기 실패가 아니라 주입 누락 문구(가드가 경로 검증보다 앞) |
+| S7 | engine 이 상수 대신 런타임 `user_version` 을 넘김 | 구조 단언(go/types 로 두 config 필드 값이 `journal.SchemaVersion` 상수 객체) |
+| S8 | route 의 판독 전 prepare 삭제 | active owner 없는 범위 + `position_campaigns` 전용 열 삭제 원장 → 거절 |
 | S9 | 더 새 · 더 옛 문구 뒤바꿈 | 방향 문구 단언(두 적재기, route 는 Batch 경계) |
-| S10 | engine 이 리터럴(예: 35)을 넘김 | 구조 단언(선택자) — 값 비교로는 오늘 같아서 못 잡음 |
+| S10 | engine 이 리터럴(예: 35)을 넘김 | 구조 단언(S7 과 같은 시험) — 값 비교로는 오늘 같아서 못 잡음 |
 | S11 | 스키마 거절을 `ErrProductionRiskScopeRefused` 로 재표식 | 스키마 거절 오류가 그 신원을 갖지 않음 + 엔진이 범위를 건너뛰지 않음 |
 | S12 | route `:352` 감싸기가 원인을 다시 버림 | Batch 경계 방향 문구 단언 |
-| S13 | risk 판독을 tx 밖으로(autocommit 복귀) | 구조 단언(사용량 판독의 queryer 가 tx) |
+| S13 | risk 판독 일부를 tx 밖으로(버전 · latch · 사용량 중 하나라도) | 구조 단언 — 세 판독의 수신자가 모두 같은 tx(수신자 동일성과 tx 수명) |
+| S14 | risk 의 판독 전 prepare 삭제(또는 latch early return 뒤로 이동) | latch 가 선 범위 + 사용량 전용 열 삭제 원장 → 거절이 `ErrProductionRiskScopeRefused` 가 아님 |
 
 ## 롤백
 
@@ -157,4 +191,3 @@ riskbucket · strategyrouter 는 journal 이 import 한다(`journal/risk_bucket*
 - 엔진 route 적재기는 오류 원인을 버리고 `StrategyRouteAuthorityInvalid` 로 접는다 — 방향 문구의 운영 관측은 risk 쪽만(범위 밖).
 - v34 의 정책 레코드 의미 변화가 RowDigest 에 남기는 것(키의 첫 레코드)은 admission 과 공유 — a127 무관.
 - 레인 활성화 · 서명 정책 · route 매니페스트 발급 · schedule 활성화는 a112 · 사람 승인 항목(D6).
-</content>
