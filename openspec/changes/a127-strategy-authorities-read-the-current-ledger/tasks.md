@@ -10,18 +10,18 @@
       prepare 실패 대조(`analysis/measurements/readset-probe.log`), v28~v35 의 읽기 집합 변경 전수(design 「증거 기반」)
 - [x] 0.3 범위 판정 — route 적재기 포함(Manager 2026-10-01), D1 = (b) 주입된 현재 버전과 정확 일치(Manager 재판정 2026-10-01, (a) 대체)
 - [x] 0.4 design · proposal · delta(strategy-runtime ADDED 1) 작성
-- [ ] 0.5 proposal-freeze 리뷰 — 독립 적대 리뷰(fail-open 축 · 증거 규율) + codex 교차 모델, 처분 반영
+- [x] 0.5 proposal-freeze 리뷰 — 독립 적대 리뷰(fail-open 축 · 증거 규율) + codex 교차 모델, 처분 반영
   - [x] 0.5.1 1라운드(review 0.5.1): 보이스 APPROVE-WITH-FIXES(P1 2 · P2 6 · P3 6) · codex FAIL(P1 1 · P2 3 · P3 1), 처분 → design 2판
   - [x] 0.5.2 2라운드(review 0.5.2): codex FAIL(P2 3 · P3 1) · 협대역 보이스 APPROVE-WITH-FIXES(P1 1 · P2 3 · P3 6), 처분 → design 3판
   - [x] 0.5.3 3라운드 협대역 codex(review 0.5.3): FAIL(P1 1 · P2 2 · P3 1), 처분 → design 4판
-  - [ ] 0.5.4 4판 확인(Manager 지시에 따름)
-- [ ] 0.6 openspec validate --strict(리뷰 반영 뒤 재실행)
-- [ ] 0.7 Manager freeze 승인
+  - [x] 0.5.4 4판 — Manager 직접 판정(추가 codex 라운드 불요, review 0.7)
+- [x] 0.6 openspec validate --strict — 4판 valid
+- [x] 0.7 Manager freeze 승인(2026-10-01, review 0.7)
 
 ## 1. 구현 (freeze 승인 뒤)
 
 - [ ] 1.0 착수 전
-  - [ ] 1.0.1 base 재확인 — a112 6.1 (C) lint 가 같은 파일의 다른 함수(`validProductionRiskPolicyContents`)를 먼저 착지(Manager 통지 2026-10-01):
+  - [x] 1.0.1 **(review 0.7)** base 재고정 `f9a25549` → `3403be28`(a112 6.1 `40ec5aff` 포함). 원 지시: base 재확인 — a112 6.1 (C) lint 가 같은 파일의 다른 함수(`validProductionRiskPolicyContents`)를 먼저 착지(Manager 통지 2026-10-01):
         그 해시 위에서 진행. 형제 착지가 창에 들어오면 사람 승인 재고정
   - [ ] 1.0.2 편집 대상 함수의 gate FLM 번들(편집 전) + Pre-Edit 선언 — `loadProductionRiskEntries` · `openProductionRouteSnapshot` ·
         두 config 검증 자리 · engine 의 두 호출 자리(`strategyRiskAuthorityLoader.collectMarket` · route 적재기의 config 리터럴 함수),

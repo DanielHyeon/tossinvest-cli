@@ -75,3 +75,13 @@ codex(Manager 슬롯 부여 · 「PASS 면 freeze 승인 간주」 조건, 14:04
 
 codex 가 참으로 확인: 「승격은 주문 관문이 아님」, D6 의 `engine.go:226/:682` · proposal/account/handoff 인용, risk prepare 를 버전 확인 뒤 · latch 앞에 두는 것과
 route 의 같은 자리(버전 확인 뒤 · tx 반환 전) 실현 가능, 같은 tx SHALL 은 두 적재기 모두 실현 · 시험 가능.
+
+## 0.7 freeze 승인 · base 재고정 (2026-10-01)
+
+- Manager 인용: 「**직접 판정: freeze 승인 — 구현 개시하라**(추가 codex 라운드 불요). 근거: H1 의 본질은 「전수」 주장 자체였고, 4판이 그 주장을
+  **철회** … 하는 것으로 종결했다 … 「(A) 밖 비사람 스위치 0, 세 라운드 관측」은 관측으로 표기 유지. H2~H4 처분 그대로.」
+- 구현 조건(Manager): a112 6.1 해시(`40ec5aff`) 위 + 편집 전 AST 재취득 · High-risk 전면 규율 · 반증 S1~S14 를 RED 세트로 · 수락은 D4 · 변이에 「버전 확인
+  생략」 · 「prepare 생략」 · 「tx 분리」 · 「0 수락」 축 필수 · 착지 창 요청 규격 유지.
+- **base 재고정** `f9a25549` → `3403be28`(WORKFLOW 「사람 승인 base 재고정」): (1) 귀속 실측 — 옛 base 이후 a127 자기 Go 커밋 **0**(이 change 디렉터리를
+  만지며 `.go` 를 고친 비병합 커밋 없음 — a127 커밋은 전부 문서). (2) 승인 — 위 Manager 판정의 「a112 6.1 해시 위」. (3) 단독 커밋 — 다음 커밋.
+  사유: 형제 `40ec5aff`(a112 6.1)가 같은 파일(`production_snapshot_authority.go` 의 `validProductionRiskPolicyContents` 등)을 편집해 옛 창에 들어옴.
