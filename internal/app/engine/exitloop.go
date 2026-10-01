@@ -211,6 +211,9 @@ type ExitObserverOptions struct {
 	// 전제 — 꺼진 엔진에서 critical 은 보낼 수 없는 행이 되어 진입을 멈추므로(정본 「무관리 보유 보고의 등급은 사실이 정한다」와
 	// 같은 규칙) 옛 캡 종류(normal)로 남음. 생산 배선이 호출자 값과 무관하게 덮음.
 	NotificationsEnabled bool
+	// ZeroFloorLog 는 a091 의 0주 보고 줄(B2 의 가린 오류 · 기록 실패)만 받는 전용 로거임 — 계좌 필드 없는 줄만 씀. Log 는 생산에서 nil 이라
+	// 따로 둠(UnobservedLog 와 같은 이유). 생산 배선이 엔진 로거로 덮음. nil 이면 그 줄은 버려짐.
+	ZeroFloorLog *obs.Logger
 
 	// AccountRef scopes everything. Required.
 	AccountRef string

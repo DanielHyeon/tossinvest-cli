@@ -114,7 +114,7 @@ func a091Harness(t *testing.T, enabled bool, floor engine.FloorSource, mutate fu
 		r.notifier = &obs.Notifier{Journal: o.Journal, Gate: o.Retrier.Gate, AccountRef: o.AccountRef,
 			Clock: clock.System(), Log: logger}
 		o.Alerts = obs.RecordOnly{N: r.notifier}
-		o.Log = logger
+		o.ZeroFloorLog = logger // 생산 모양: 관측자 전체 Log 는 nil, a091 줄은 전용 싱크로
 		o.NotificationsEnabled = enabled
 		if floor != nil {
 			o.Floor = floor
@@ -161,10 +161,10 @@ func TestA091AProtectiveZeroIsACriticalRow(t *testing.T) {
 	if want := "005930 손절이 한 주도 나가지 않았다"; row.Title != want {
 		t.Errorf("title = %q, want %q", row.Title, want)
 	}
-	for _, s := range []string{"매도가능 수량이 0", exitNow.Format(time.RFC3339), "10주", "0주"} {
-		if !strings.Contains(row.Body, s) {
-			t.Errorf("body lacks %q:\n%s", s, row.Body)
-		}
+	wantBody := "005930 · " + r.clk.Now().UTC().Format(time.RFC3339) + " 관측: 매도가능 수량이 0이다 — 다른 미체결 매도가 주식을 잡고 있을 수 있다. " +
+		"제안 10주 중 0주를 제출했다 — 손절이 나가지 않았다. 불일치가 해소되면 같은 단계를 다시 제안한다."
+	if row.Body != wantBody {
+		t.Errorf("body:\n got %s\nwant %s", row.Body, wantBody)
 	}
 	if strings.Contains(row.Title+row.Body, "일부") {
 		t.Errorf("a zero-share report must not say part went out:\n%s\n%s", row.Title, row.Body)
@@ -231,6 +231,39 @@ func TestA091WithAlertsOffNothingChangesButTheWording(t *testing.T) {
 		a, _ := h.alerts.first(obs.EventExitProposalCapped)
 		if want := "005930 청산이 확정 하한에 걸려 한 주도 나가지 않았다"; a.Title != want {
 			t.Errorf("title = %q, want %q", a.Title, want)
+		}
+	})
+	t.Run("B2 leaves exactly one account-free log line in the production shape", func(t *testing.T) {
+		r := a091Harness(t, false, a091Failing(errors.New("holdings read failed for "+exitAccount)), nil)
+		p := r.breach()
+		r.observe()
+		lines := r.log.ofEvent(t, obs.EventExitProposalCapped)
+		if len(lines) != 1 {
+			t.Fatalf("capped lines = %d, want exactly 1:\n%s", len(lines), r.log.String())
+		}
+		l := lines[0]
+		if l["level"] != "ERROR" || l["cause"] != "floor_unknown" || l["symbol"] != "005930" || l["position_id"] != p.ID {
+			t.Errorf("B2 line = %v, want level ERROR, cause floor_unknown, the symbol and the position", l)
+		}
+		if _, ok := l["account"]; ok || strings.Contains(fmt.Sprint(l), exitAccount) {
+			t.Errorf("the B2 line carries the account: %v", l)
+		}
+		if len(r.log.ofEvent(t, obs.EventExitStopSoldNothing)) != 0 {
+			t.Error("an alerts-off engine logged the new kind")
+		}
+	})
+	t.Run("the take-profit and the alerts-off bodies say what happened", func(t *testing.T) {
+		h := newExitHarness(t, func(o *engine.ExitObserverOptions) {
+			o.Floor = a091Zero(riskcalc.FloorBoundSellable)
+		})
+		h.entry("005930", "10", "70000", "68000", "70000")
+		h.quote("005930", 67900)
+		h.observe()
+		a, _ := h.alerts.first(obs.EventExitProposalCapped)
+		want := "005930 · " + h.clk.Now().UTC().Format(time.RFC3339) + " 관측: 매도가능 수량이 0이다 — 다른 미체결 매도가 주식을 잡고 있을 수 있다. " +
+			"제안 10주 중 0주를 제출했다 — 손절이 나가지 않았다. 불일치가 해소되면 같은 단계를 다시 제안한다."
+		if a.Body != want {
+			t.Errorf("alerts-off protective body:\n got %s\nwant %s", a.Body, want)
 		}
 	})
 	for _, cause := range []struct {
@@ -324,6 +357,7 @@ func TestA091OnlyACancellationOnlyFailureIsSuppressed(t *testing.T) {
 		{"(viii) a cancellation-only error while the loop is alive", func() error {
 			return fmt.Errorf("engine: reading the holding: %w", context.Canceled) // 루프가 아닌 하위 ctx 의 취소 — 종료가 아님
 		}, false, true},
+		{"(vi) shutdown during the retry backoff reports the last transient failure", nil, true, true},
 		{"(vii) the production client erases the cause", func() error {
 			return fmt.Errorf("%w: %s", official.ErrTransport, context.Canceled) // official/client.go doRequest 모양
 		}, true, true},
@@ -331,13 +365,27 @@ func TestA091OnlyACancellationOnlyFailureIsSuppressed(t *testing.T) {
 		t.Run(a.name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			floor := &a091Floor{fn: func(context.Context) (riskcalc.ConfirmedFloor, bool, error) {
+			var retrier *execgw.Retrier
+			floor := &a091Floor{fn: func(fctx context.Context) (riskcalc.ConfirmedFloor, bool, error) {
+				if a.err == nil { // (vi): 실제 Retrier — 첫 시도 일시 실패, 대기 중 종료
+					go func() {
+						clk := retrier.Clock.(*clock.Fake)
+						if clk.WaitForSleepers(1, 5*time.Second) {
+							cancel()
+						}
+					}()
+					err := retrier.Query(fctx, execgw.QueryHoldings, func(context.Context) error { return official.ErrServer })
+					return riskcalc.ConfirmedFloor{}, true, fmt.Errorf("engine: reading the holding: %w", err)
+				}
 				if a.cancel {
 					cancel()
 				}
 				return riskcalc.ConfirmedFloor{}, true, a.err()
 			}}
-			r := a091Harness(t, true, floor, nil)
+			r := a091Harness(t, true, floor, func(o *engine.ExitObserverOptions) {
+				o.Retrier.Policy = execgw.RetryPolicy{MaxAttempts: 3, Budget: time.Minute, BaseBackoff: time.Second, MaxBackoff: time.Second}
+				retrier = o.Retrier
+			})
 			r.breach()
 			r.observer.ObserveOnce(ctx)
 			got := len(r.rows(obs.EventExitStopSoldNothing))
@@ -351,6 +399,40 @@ func TestA091OnlyACancellationOnlyFailureIsSuppressed(t *testing.T) {
 				t.Errorf("a false undelivered latch: %v", rej)
 			}
 		})
+	}
+}
+
+// (iii) — 판정 뒤 · 기록 전에 종료가 끼어든다: 기록은 끝난 ctx 를 보지 않으므로 행 1 · 가짜 래치 0.
+type a091CancelBeforeRecord struct {
+	inner  engine.ExitAlerter
+	cancel func()
+}
+
+func (c *a091CancelBeforeRecord) Notify(ctx context.Context, e obs.Event) error {
+	if e.Type == obs.EventExitStopSoldNothing {
+		c.cancel()
+	}
+	return c.inner.Notify(ctx, e)
+}
+
+func TestA091AShutdownBetweenJudgementAndRecordStillRecords(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	wrap := &a091CancelBeforeRecord{cancel: cancel}
+	r := a091Harness(t, true, a091Failing(errors.New("broker said no")), func(o *engine.ExitObserverOptions) {
+		o.Alerts = wrap
+	})
+	wrap.inner = obs.RecordOnly{N: r.notifier}
+	r.breach()
+	r.observer.ObserveOnce(ctx)
+	if ctx.Err() == nil {
+		t.Fatal("arrangement: the shutdown never came")
+	}
+	if n := len(r.rows(obs.EventExitStopSoldNothing)); n != 1 {
+		t.Fatalf("rows = %d, want 1", n)
+	}
+	if rej := r.gate.CheckEntry(); rej != nil {
+		t.Errorf("entry gate = %v, want open — a cancelled ctx must not fail the record", rej)
 	}
 }
 
@@ -369,12 +451,19 @@ func TestA091TheCancellationPredicate(t *testing.T) {
 		{"deadline", context.DeadlineExceeded, false},
 		{"erased by the official client", fmt.Errorf("%w: %s", official.ErrTransport, context.Canceled), false},
 		{"a multi-error of nothing", a091Multi{nil, nil}, false},
+		{"a wrapper that unwraps to nothing", a091NilUnwrap{}, false},
 	} {
 		if got := engine.CancellationOnlyForTest(c.err); got != c.want {
 			t.Errorf("%s: cancellationOnly = %v, want %v", c.name, got, c.want)
 		}
 	}
 }
+
+// a091NilUnwrap 은 Unwrap 이 nil 을 돌려주는 감싼 오류 — 잎이 없으므로 취소뿐이 아님.
+type a091NilUnwrap struct{}
+
+func (a091NilUnwrap) Error() string { return "wrapped nothing" }
+func (a091NilUnwrap) Unwrap() error { return nil }
 
 // a091Multi 는 잎이 비었을 수 있는 다중 오류 — errors.Join 은 nil 잎을 거르지만 다른 구현은 그렇지 않을 수 있음.
 type a091Multi []error
@@ -385,10 +474,10 @@ func (m a091Multi) Unwrap() []error { return m }
 // --- 3.3c — 종료 중 보고 대기: 기록이 막혀 있으면 루프는 기다렸다 행을 쓰고 돌아온다(기한 없음 — 이름 붙은 대가) ---------------
 
 type a091BlockingAlerts struct {
+	inner   engine.ExitAlerter
 	release chan struct{}
 	entered chan struct{}
 	ctxErr  error
-	events  []obs.Event
 }
 
 func (b *a091BlockingAlerts) Notify(ctx context.Context, e obs.Event) error {
@@ -397,19 +486,17 @@ func (b *a091BlockingAlerts) Notify(ctx context.Context, e obs.Event) error {
 		<-b.release
 		b.ctxErr = ctx.Err()
 	}
-	b.events = append(b.events, e)
-	return nil
+	return b.inner.Notify(ctx, e)
 }
 
 func TestA091ShutdownWaitsForTheReportWithoutADeadline(t *testing.T) {
 	blocking := &a091BlockingAlerts{release: make(chan struct{}), entered: make(chan struct{})}
-	h := newExitHarness(t, func(o *engine.ExitObserverOptions) {
-		o.Floor = a091Failing(errors.New("broker said no"))
-		o.NotificationsEnabled = true
+	r := a091Harness(t, true, a091Failing(errors.New("broker said no")), func(o *engine.ExitObserverOptions) {
 		o.Alerts = blocking
 	})
-	h.entry("005930", "10", "70000", "68000", "70000")
-	h.quote("005930", 67900)
+	blocking.inner = obs.RecordOnly{N: r.notifier} // 실제 기록 — 막힘이 풀린 뒤 원장에 행이 생기는지 잼
+	h := r.exitHarness
+	r.breach()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
@@ -435,6 +522,12 @@ func TestA091ShutdownWaitsForTheReportWithoutADeadline(t *testing.T) {
 	}
 	if blocking.ctxErr != nil {
 		t.Errorf("the report saw ctx.Err() = %v, want nil — it records with context.WithoutCancel", blocking.ctxErr)
+	}
+	if n := len(r.rows(obs.EventExitStopSoldNothing)); n != 1 {
+		t.Errorf("rows = %d after the shutdown, want 1 — the report survived the cancellation", n)
+	}
+	if rej := r.gate.CheckEntry(); rej != nil {
+		t.Errorf("entry gate = %v, want open — no false undelivered latch", rej)
 	}
 }
 
@@ -508,8 +601,14 @@ func TestA091ATakeProfitThatSoldNothingKeepsItsGrade(t *testing.T) {
 		if n := len(r.rows(obs.EventExitStopSoldNothing)); n != 0 {
 			t.Fatalf("rows of the new kind = %d for a take-profit, want 0", n)
 		}
-		if n := len(r.log.ofEvent(t, obs.EventExitProposalCapped)); n != 1 {
-			t.Fatalf("capped lines = %d, want 1", n)
+		lines := r.log.ofEvent(t, obs.EventExitProposalCapped)
+		if len(lines) != 1 {
+			t.Fatalf("capped lines = %d, want 1", len(lines))
+		}
+		want := "005930 · " + r.clk.Now().UTC().Format(time.RFC3339) + " 관측: 매도가능 수량이 0이다 — 다른 미체결 매도가 주식을 잡고 있을 수 있다. " +
+			"제안 4주 중 0주를 제출했다 — 청산이 나가지 않았다. 불일치가 해소되면 같은 단계를 다시 제안한다."
+		if lines[0]["detail"] != want {
+			t.Errorf("take-profit body:\n got %v\nwant %s — a take-profit is not a stop", lines[0]["detail"], want)
 		}
 	})
 	t.Run("floor cannot be computed", func(t *testing.T) {
@@ -580,14 +679,16 @@ func TestA091TheLogAndTheAlertAreOneKind(t *testing.T) {
 		{"alerts off", false, obs.EventExitProposalCapped, obs.EventExitStopSoldNothing},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			r := a091Harness(t, c.enabled, a091Failing(errors.New("holdings read failed")), nil)
-			r.breach()
-			r.observe()
-			if n := len(r.log.ofEvent(t, c.want)); n == 0 {
-				t.Fatalf("no %s log line:\n%s", c.want, r.log.String())
-			}
-			if n := len(r.log.ofEvent(t, c.other)); n != 0 {
-				t.Errorf("%d %s log lines — the same event under two kinds:\n%s", n, c.other, r.log.String())
+			for _, floor := range []engine.FloorSource{a091Failing(errors.New("holdings read failed")), a091Zero(riskcalc.FloorBoundSellable)} {
+				r := a091Harness(t, c.enabled, floor, nil)
+				r.breach()
+				r.observe()
+				if n := len(r.log.ofEvent(t, c.want)); n == 0 {
+					t.Fatalf("no %s log line:\n%s", c.want, r.log.String())
+				}
+				if n := len(r.log.ofEvent(t, c.other)); n != 0 {
+					t.Errorf("%d %s log lines — the same event under two kinds:\n%s", n, c.other, r.log.String())
+				}
 			}
 		})
 	}
@@ -596,10 +697,42 @@ func TestA091TheLogAndTheAlertAreOneKind(t *testing.T) {
 // --- 3.8 — 계좌 카나리: 보고 · 기록 실패 · 승격 줄 · 행 어디에도 계좌 원문이 없음 --------------------------------------------------
 
 func TestA091NoLineOrRowCarriesTheAccount(t *testing.T) {
+	for _, arm := range []struct {
+		name       string
+		enabled    bool
+		takeProfit bool
+	}{{"alerts off, protective", false, false}, {"alerts on, take-profit", true, true}, {"alerts off, take-profit", false, true}} {
+		t.Run("B2 line: "+arm.name, func(t *testing.T) {
+			r := a091Harness(t, arm.enabled, a091Failing(errors.New("holdings read failed for "+exitAccount)), nil)
+			r.entry("005930", "10", "70000", "68000", "70000")
+			if arm.takeProfit {
+				r.quote("005930", 72000)
+			} else {
+				r.quote("005930", 67900)
+			}
+			r.observe()
+			if len(r.log.ofEvent(t, obs.EventExitProposalCapped)) == 0 {
+				t.Fatalf("arrangement: no B2 line:\n%s", r.log.String())
+			}
+			if strings.Contains(r.log.String(), exitAccount) {
+				t.Errorf("the log carries the account %q:\n%s", exitAccount, r.log.String())
+			}
+		})
+	}
 	t.Run("recorded", func(t *testing.T) {
 		r := a091Harness(t, true, a091Failing(errors.New("holdings read failed for "+exitAccount)), nil)
 		r.breach()
 		r.observe()
+		if errs := r.log.ofEvent(t, obs.EventExitStopSoldNothing); len(errs) == 0 || func() bool {
+			for _, l := range errs {
+				if l["level"] == "ERROR" && strings.Contains(fmt.Sprint(l["error"]), "[account]") {
+					return false
+				}
+			}
+			return true
+		}() {
+			t.Errorf("no masked B2 error line of the new kind:\n%s", r.log.String())
+		}
 		rows, _ := r.journal.PendingAlerts(context.Background(), 0)
 		if len(rows) == 0 {
 			t.Fatal("arrangement: no row was recorded")
@@ -631,6 +764,9 @@ func TestA091NoLineOrRowCarriesTheAccount(t *testing.T) {
 		}
 		if !strings.Contains(r.log.String(), "did not reach the operating mode") {
 			t.Fatalf("arrangement: the escalation line is missing:\n%s", r.log.String())
+		}
+		if !strings.Contains(r.log.String(), "the report that the stop sold nothing could not be made durable") {
+			t.Errorf("the report's own failure line is missing:\n%s", r.log.String())
 		}
 		if strings.Contains(r.log.String(), exitAccount) {
 			t.Errorf("the failure path logs the account %q:\n%s", exitAccount, r.log.String())
@@ -724,13 +860,88 @@ func TestA091TheProductionAssemblyReadsTheLoadedSwitch(t *testing.T) {
 				t.Fatalf("production assembly: %v", err)
 			}
 			eng.Config.Engine.Notifications.Enabled = loaded
+			eng.Log = obs.NewLogger(obs.LogOptions{Writer: &a091Buf{}, JSON: true}) // 생산은 engine_assembly 의 Logger
 			observer, err := eng.ExitObserver(engine.ExitObserverOptions{Costs: costs.DefaultModel(), NotificationsEnabled: !loaded})
 			if err != nil {
 				t.Fatalf("ExitObserver: %v", err)
+			}
+			if got := observer.OptionsForTest().ZeroFloorLog; got == nil || got != eng.Log {
+				t.Errorf("ZeroFloorLog = %p, want the engine logger %p — the alerts-off B2 line must reach a sink", got, eng.Log)
 			}
 			if got := observer.OptionsForTest().NotificationsEnabled; got != loaded {
 				t.Errorf("NotificationsEnabled = %v, want the loaded %v — the caller's value must not win", got, loaded)
 			}
 		})
+	}
+}
+
+// --- 3.3a 보강 — 한정 항 다섯 전부: Holdings 만 옛 종류, 나머지 넷은 새 종류 · 원인 문구 · payload 고정 ------------------------------
+
+func TestA091EveryFloorBoundHasItsGradeAndItsWords(t *testing.T) {
+	for _, c := range []struct {
+		bound, text string
+		critical    bool
+	}{
+		{riskcalc.FloorBoundHoldings, "계좌에 보유가 없다 — 엔진 밖에서 종결되는 중일 수 있다", false},
+		{riskcalc.FloorBoundSellable, "매도가능 수량이 0이다 — 다른 미체결 매도가 주식을 잡고 있을 수 있다", true},
+		{riskcalc.FloorBoundLocalSells, "엔진의 미체결 매도가 남은 수량을 모두 쓰고 있다", true},
+		{riskcalc.FloorBoundNoSnapshot, "계좌 스냅숏을 읽지 못했다", true},
+		{riskcalc.FloorBoundStaleSnapshot, "계좌 스냅숏이 낡았다", true},
+	} {
+		t.Run(c.bound, func(t *testing.T) {
+			r := a091Harness(t, true, a091Zero(c.bound), nil)
+			p := r.breach()
+			r.observe()
+			rows := r.rows(obs.EventExitStopSoldNothing)
+			if !c.critical {
+				if len(rows) != 0 {
+					t.Fatalf("rows = %d for %s, want 0 — the account holds none", len(rows), c.bound)
+				}
+				return
+			}
+			if len(rows) != 1 {
+				t.Fatalf("rows = %d for %s, want 1 — the stop failed", len(rows), c.bound)
+			}
+			if !strings.Contains(rows[0].Body, " 관측: "+c.text+". ") {
+				t.Errorf("body does not carry the %s cause %q:\n%s", c.bound, c.text, rows[0].Body)
+			}
+			var payload map[string]any
+			if err := json.Unmarshal([]byte(rows[0].Payload), &payload); err != nil {
+				t.Fatalf("payload: %v", err)
+			}
+			if payload["cause"] != "floor_zero" || payload["floor_bound"] != c.bound || payload["position_id"] != p.ID {
+				t.Errorf("payload = %v, want cause floor_zero, floor_bound %s, the position", payload, c.bound)
+			}
+		})
+	}
+	t.Run("B2", func(t *testing.T) {
+		r := a091Harness(t, true, a091Failing(errors.New("x")), nil)
+		r.breach()
+		r.observe()
+		rows := r.rows(obs.EventExitStopSoldNothing)
+		if len(rows) != 1 {
+			t.Fatalf("rows = %d, want 1", len(rows))
+		}
+		var payload map[string]any
+		_ = json.Unmarshal([]byte(rows[0].Payload), &payload)
+		if _, has := payload["floor_bound"]; payload["cause"] != "floor_unknown" || has {
+			t.Errorf("payload = %v, want cause floor_unknown and no floor_bound", payload)
+		}
+	})
+}
+
+// 종료 취소는 알림 없이 로그 한 줄 — cause shutdown(알림에 닿지 않는 유일한 원인 표지).
+func TestA091AShutdownLeavesOnlyALine(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	r := a091Harness(t, true, &a091Floor{fn: func(context.Context) (riskcalc.ConfirmedFloor, bool, error) {
+		cancel()
+		return riskcalc.ConfirmedFloor{}, true, fmt.Errorf("x: %w", context.Canceled)
+	}}, nil)
+	r.breach()
+	r.observer.ObserveOnce(ctx)
+	lines := r.log.ofEvent(t, obs.EventExitProposalCapped)
+	if len(lines) != 1 || lines[0]["cause"] != "shutdown" {
+		t.Fatalf("lines = %v, want exactly one capped line with cause shutdown", lines)
 	}
 }

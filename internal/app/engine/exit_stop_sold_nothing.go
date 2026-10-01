@@ -110,12 +110,12 @@ func (o *ExitObserver) reportZeroFloor(ctx context.Context, m managed, z zeroFlo
 		kind = obs.EventExitStopSoldNothing
 	}
 	if z.err != nil {
-		o.logZeroFloor(kind, z.err, "the confirmed floor of "+m.position.Symbol+" could not be computed; nothing is submitted")
+		o.logZeroFloor(kind, m, z, z.err, "the confirmed floor of "+m.position.Symbol+" could not be computed; nothing is submitted")
 		if kind != obs.EventExitStopSoldNothing {
 			return
 		}
 	}
-	o.notifyZeroFloor(ctx, kind, o.zeroFloorEvent(m, kind, z))
+	o.notifyZeroFloor(ctx, kind, m, z, o.zeroFloorEvent(m, kind, z))
 }
 
 // zeroFloorEvent 는 0주 알림을 만듦. 제목 · 본문은 한국어 · 이름(코드) · 계좌 없음(정본 a085). 본문은 원인 범주와 관측 시각을 담음 —
@@ -137,17 +137,24 @@ func (o *ExitObserver) zeroFloorEvent(m managed, kind obs.EventType, z zeroFloor
 	if z.err == nil {
 		fields["floor_bound"] = z.floor.Bound
 	}
+	// 본문 첫머리에 종목(이름(코드))을 둠 — RecordOnly 는 필드를 지우고 본문만 로그의 detail 로 남기므로, 본문이 관측마다의 로그 줄을
+	// 포지션에 잇는 유일한 표지임(design D7 · 구현 리뷰 보이스 A #2). 익절은 「손절」이라 말하지 않음(보이스 A #4 · codex #4).
+	what := "청산"
+	if z.protective {
+		what = "손절"
+	}
 	return obs.Event{
 		Type:  kind,
 		Key:   string(kind) + "|" + m.position.ID,
 		Title: title,
-		Body: fmt.Sprintf("%s 관측: %s. 제안 %s주 중 0주를 제출했다 — 손절이 나가지 않았다. "+
+		Body: fmt.Sprintf("%s · %s 관측: %s. 제안 %s주 중 0주를 제출했다 — %s이 나가지 않았다. "+
 			"불일치가 해소되면 같은 단계를 다시 제안한다.",
-			o.clk.Now().UTC().Format(time.RFC3339), zeroCauseText(z), z.proposed),
+			label, o.clk.Now().UTC().Format(time.RFC3339), zeroCauseText(z), z.proposed, what),
 		Fields: fields,
 	}
 }
 
+// zeroCauseCode 는 원인의 기계 판독 표지임(알림 payload · 로그 줄의 cause 필드).
 func zeroCauseCode(z zeroFloor) string {
 	switch z.cause {
 	case zeroFloorUnknown:
@@ -155,7 +162,7 @@ func zeroCauseCode(z zeroFloor) string {
 	case zeroNoHolding:
 		return "no_holding"
 	case zeroShutdown:
-		return "shutdown"
+		return "shutdown" // 알림에는 닿지 않음 — B2 로그 줄의 cause 로만 쓰임
 	}
 	return "floor_zero"
 }
@@ -163,7 +170,7 @@ func zeroCauseCode(z zeroFloor) string {
 // zeroCauseText 는 원인의 한국어 범주임. 원문 오류는 싣지 않음(엔진 로그에만, 가려서).
 func zeroCauseText(z zeroFloor) string {
 	switch z.cause {
-	case zeroFloorUnknown, zeroShutdown:
+	case zeroFloorUnknown:
 		return "확정 하한을 계산하지 못했다(계좌 조회 실패)"
 	case zeroNoHolding:
 		return "계좌에 보유가 없다 — 엔진 밖에서 종결되는 중일 수 있다"
@@ -183,19 +190,23 @@ func zeroCauseText(z zeroFloor) string {
 
 // notifyZeroFloor 는 알림기에 직접 기록함 — o.alert 를 거치지 않음. o.alert 의 실패 로그(logErr)는 계좌 원문을 싣기 때문임(D8).
 // 재알림 창은 알림기(RecordOnly)의 것이 그대로 쓰임.
-func (o *ExitObserver) notifyZeroFloor(ctx context.Context, kind obs.EventType, e obs.Event) {
+func (o *ExitObserver) notifyZeroFloor(ctx context.Context, kind obs.EventType, m managed, z zeroFloor, e obs.Event) {
 	if o.opts.Alerts == nil {
 		return
 	}
 	if err := o.opts.Alerts.Notify(context.WithoutCancel(ctx), e); err != nil {
-		o.logZeroFloor(kind, err, "the report that the stop sold nothing could not be made durable")
+		o.logZeroFloor(kind, m, z, err, "the report that the stop sold nothing could not be made durable")
 	}
 }
 
-// logZeroFloor 는 a091 의 로그 줄임 — 계좌 필드 없이, 오류는 계좌를 가려서.
-func (o *ExitObserver) logZeroFloor(kind obs.EventType, err error, detail string) {
-	if o.opts.Log == nil {
+// logZeroFloor 는 a091 의 로그 줄임 — 계좌 필드 없이, 오류는 계좌를 가려서, 종목 · 포지션 · 원인을 실어 줄을 포지션에 이음.
+//
+// 싱크는 ZeroFloorLog 임 — 관측자 전체 Log 는 생산에서 nil 이고(기존 줄이 계좌 원문을 실어서), 그 nil 에 쓰면 알림 꺼짐 B2 의 유일한 흔적이
+// 사라짐(구현 리뷰 보이스 A P1). 생산 배선이 엔진 로거를 넣음(a090 UnobservedLog 선례).
+func (o *ExitObserver) logZeroFloor(kind obs.EventType, m managed, z zeroFloor, err error, detail string) {
+	if o.opts.ZeroFloorLog == nil {
 		return
 	}
-	o.opts.Log.Error(kind, obs.MaskAccount(err, o.opts.AccountRef), obs.FieldDetail, detail)
+	o.opts.ZeroFloorLog.Error(kind, obs.MaskAccount(err, o.opts.AccountRef),
+		obs.FieldSymbol, m.position.Symbol, "position_id", m.position.ID, "cause", zeroCauseCode(z), obs.FieldDetail, detail)
 }

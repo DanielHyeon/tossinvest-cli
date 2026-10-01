@@ -353,6 +353,8 @@ func (c *Context) ExitObserver(opts ExitObserverOptions) (*ExitObserver, error) 
 	}
 	// 보호 청산 0주의 등급 전제(a091) — 로드된 설정에서 덮음. 호출자 값과 무관(위 Alerts 와 같은 규칙, a095 reconcileloop.go 와 같은 원천).
 	opts.NotificationsEnabled = c.Config.Engine.Notifications.Enabled
+	// a091 0주 보고 줄의 싱크 — 엔진 로거(계좌 필드 없는 줄만 씀). 호출자 값과 무관하게 덮음.
+	opts.ZeroFloorLog = c.Log
 	if opts.Floor == nil {
 		opts.Floor = exitSideFloor(c.exitFloor, exitRetrier)
 	}

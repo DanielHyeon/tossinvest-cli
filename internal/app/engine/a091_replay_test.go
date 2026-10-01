@@ -7,7 +7,10 @@ package engine_test
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"fmt"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -43,6 +46,7 @@ type a091ReplayResult struct {
 	latched             bool
 	mode                string
 	undeliveredLines    int
+	noPublisherLines    int
 }
 
 // a091Replay 는 13 관측과 그 사이의 배달 사이클을 돌린다. pub 이 nil 이면 publisher 없음.
@@ -89,6 +93,11 @@ func a091Replay(t *testing.T, enabled bool, pub *a091Transport) a091ReplayResult
 	_, res.latched = r.gate.Blocks()[execgw.ReasonAlertUndelivered]
 	res.mode = r.mode()
 	res.undeliveredLines = len(r.log.ofEvent(t, obs.EventAlertUndelivered))
+	for _, l := range r.log.ofEvent(t, obs.EventAlertUndelivered) {
+		if strings.Contains(fmt.Sprint(l["detail"]), "no publisher is configured") {
+			res.noPublisherLines++
+		}
+	}
 	return res
 }
 
@@ -105,16 +114,15 @@ func TestA091TheAugustSecondReplay(t *testing.T) {
 		pub := &a091Transport{fail: true}
 		res := a091Replay(t, true, pub)
 		t.Logf("measured: %+v", res)
-		if res.pendingNew != 1 || res.sends < obs.DefaultCriticalAttempts || !res.latched || res.mode != journal.ModeEntryBlocked {
-			t.Fatalf("got %+v, want one PENDING row, at least %d attempts, the latch and ENTRY_BLOCKED (intended a092)",
-				res, obs.DefaultCriticalAttempts)
+		if res.pendingNew != 1 || res.sends != 13 || res.undeliveredLines != 1 || !res.latched || res.mode != journal.ModeEntryBlocked {
+			t.Fatalf("got %+v, want one PENDING row, 13 attempts (one per delivery cycle), one undelivered line, the latch and ENTRY_BLOCKED (intended a092)", res)
 		}
 	})
 	t.Run("(iii) alerts on, no publisher", func(t *testing.T) {
 		res := a091Replay(t, true, nil)
 		t.Logf("measured: %+v", res)
-		if res.pendingNew != 1 || !res.latched || res.mode != journal.ModeEntryBlocked || res.undeliveredLines == 0 {
-			t.Fatalf("got %+v, want one PENDING row, the latch, ENTRY_BLOCKED and the executor's no-publisher lines", res)
+		if res.pendingNew != 1 || !res.latched || res.mode != journal.ModeEntryBlocked || res.undeliveredLines != 14 || res.noPublisherLines != 13 {
+			t.Fatalf("got %+v, want one PENDING row, the latch, ENTRY_BLOCKED and 14 undelivered lines (13 no-publisher, one per delivery cycle, + the latch)", res)
 		}
 	})
 	t.Run("(iv) alerts off", func(t *testing.T) {
@@ -155,136 +163,177 @@ func TestA091TheReminderWindowDecidesTheNextEpisode(t *testing.T) {
 	}
 }
 
-// --- 5.3 — 보고 호출 하나의 전체 경과, 세 칸, 관측 최악 ≤ 750ms(a091 배정 「0주 보고 몫」) -------------------------------------
-
-type a091TimedAlerts struct {
-	inner engine.ExitAlerter
-	mu    sync.Mutex
-	worst time.Duration
-	n     int
-}
-
-func (a *a091TimedAlerts) Notify(ctx context.Context, e obs.Event) error {
-	if e.Type != obs.EventExitStopSoldNothing {
-		return a.inner.Notify(ctx, e)
-	}
-	start := time.Now()
-	err := a.inner.Notify(ctx, e)
-	d := time.Since(start)
-	a.mu.Lock()
-	a.n++
-	if d > a.worst {
-		a.worst = d
-	}
-	a.mu.Unlock()
-	return err
-}
+// --- 5.3 — 보고 몫, 칸별(design D5 7판) ----------------------------------------------------------------------------------
+//
+// 재는 양: **한 포지션의 관측 사이클 전체 경과**(ObserveOnce) — 보고 호출(로그 줄 · `n.mu` 대기 · 기록 · 실패 시 래치와 승격)을 전부
+// 담는 상한이다(구현 리뷰 codex #1: Notify 만 재면 B2 오류 줄 · 실패 줄이 빠짐). 시세 · 판정 · 해제 트랜잭션도 들어가므로 보고 몫보다
+// 크게 잰다(보수 방향). 소유 칸은 B2 · B7 두 경로를 다 잰다.
 
 const a091ReportShare = 750 * time.Millisecond
 
 // a091ObservationPeriod 는 exit 관측 주기 기본값(5s) — 정본 「몫은 주기보다 작아야 한다」의 판정 기준.
 const a091ObservationPeriod = 5 * time.Second
 
-// a091MeasuredAckWorst 는 승인 경합 셀의 실측 최악(2026-10-01: 1.17~1.28s)을 올림한 값 — 5.4 의 실측 주입 변형이 씀.
+// a091MeasuredAckWorst 는 승인 경합 칸의 실측 최악(2026-10-01: 1.06~1.28s, `-race` · 커버리지 실행 포함)을 올림한 값 — 5.4 의 실측 주입 변형이 씀.
 const a091MeasuredAckWorst = 1300 * time.Millisecond
+
+// a091FailOutboxWrites 는 원장의 알림 행 쓰기만 실패시킴(SQL 트리거) — 운영 모드 쓰기는 살아 있어 승격 트랜잭션이 실제로 돈다
+// (구현 리뷰 codex #2: 닫힌 원장은 승격까지 실패시켜 그 비용을 재지 못함).
+func a091FailOutboxWrites(t *testing.T, r *a091Rig) {
+	t.Helper()
+	db, err := sql.Open("sqlite", r.dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	for _, stmt := range []string{
+		`CREATE TRIGGER a091_fail_insert BEFORE INSERT ON alert_outbox BEGIN SELECT RAISE(ABORT, 'a091 injected outbox failure'); END`,
+		`CREATE TRIGGER a091_fail_update BEFORE UPDATE ON alert_outbox BEGIN SELECT RAISE(ABORT, 'a091 injected outbox failure'); END`,
+	} {
+		if _, err := db.Exec(stmt); err != nil {
+			t.Fatalf("installing the outbox failure: %v", err)
+		}
+	}
+}
+
+func a091OutboxCount(t *testing.T, r *a091Rig, typ obs.EventType) int {
+	t.Helper()
+	db, err := sql.Open("sqlite", r.dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	var n int
+	if err := db.QueryRow(`SELECT count(*) FROM alert_outbox WHERE event_type = ?`, string(typ)).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	return n
+}
 
 func TestA091TheReportFitsItsShare(t *testing.T) {
 	const reps = 20
-	for _, cell := range []struct {
+	type cell struct {
 		name   string
+		floor  func() engine.FloorSource
 		fail   bool
-		before func(t *testing.T, r *a091Rig) (stop func())
-		// owned 는 a091 이 소유한 셀인가 — 소유 셀만 750ms 통과/실패, 승인 경합 셀은 측정 · 기록(Manager 판정 2026-10-01).
-		owned bool
-	}{
-		{"uncontended ledger", false, nil, true},
-		{"uncontended ledger, the record fails", true, nil, true},
-		{"an operator acknowledging a 100-row backlog", false, func(t *testing.T, r *a091Rig) func() {
-			ctx := context.Background()
-			stop := make(chan struct{})
-			var wg sync.WaitGroup
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				for k := 0; ; k++ {
-					select {
-					case <-stop:
-						return
-					default:
-					}
-					for i := 0; i < 100; i++ {
-						_, _ = r.journal.EnqueueAlert(ctx, journal.Alert{EventKey: "a091-backlog-" + time.Now().Format(time.RFC3339Nano),
-							Type: "execgw.order_unresolved", Severity: "critical", Title: "t"})
-					}
-					_ = r.notifier.Acknowledge(ctx, "a091-operator")
+		before func(t *testing.T, r *a091Rig) (stop func() int)
+		owned  bool
+	}
+	b7 := func() engine.FloorSource { return a091Zero(riskcalc.FloorBoundSellable) }
+	b2 := func() engine.FloorSource { return a091Failing(errors.New("holdings read failed")) }
+	ack := func(t *testing.T, r *a091Rig) func() int {
+		ctx := context.Background()
+		fill := func() {
+			for i := 0; i < 100; i++ {
+				if _, err := r.journal.EnqueueAlert(ctx, journal.Alert{EventKey: "a091-backlog-" + time.Now().Format(time.RFC3339Nano) + fmt.Sprint(i),
+					Type: "execgw.order_unresolved", Severity: "critical", Title: "t"}); err != nil {
+					t.Errorf("backlog insert: %v", err)
+					return
 				}
-			}()
-			return func() { close(stop); wg.Wait() }
-		}, false},
-		{"a busy connection pool", false, func(t *testing.T, r *a091Rig) func() {
-			ctx := context.Background()
-			stop := make(chan struct{})
-			var wg sync.WaitGroup
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				for {
-					select {
-					case <-stop:
-						return
-					default:
-					}
-					_, _ = r.journal.EnqueueAlert(ctx, journal.Alert{EventKey: "a091-pool-" + time.Now().Format(time.RFC3339Nano),
-						Type: "execgw.order_unresolved", Severity: "normal", Title: "t"})
-				}
-			}()
-			return func() { close(stop); wg.Wait() }
-		}, true},
-	} {
-		t.Run(cell.name, func(t *testing.T) {
-			timed := &a091TimedAlerts{}
-			r := a091Harness(t, true, a091Zero(riskcalc.FloorBoundSellable), nil)
-			timed.inner = obs.RecordOnly{N: r.notifier}
-			// 옵션은 조립 뒤라 알림 부품을 다시 끼울 수 없으니, 시간 재는 부품을 끼운 새 하네스를 만든다.
-			r = a091Harness(t, true, a091Zero(riskcalc.FloorBoundSellable), func(o *engine.ExitObserverOptions) {
-				o.Alerts = timed
-			})
-			timed.inner = obs.RecordOnly{N: r.notifier}
-			if cell.fail {
-				closed, err := journal.Open(context.Background(), journal.Options{
-					Path: t.TempDir() + "/closed.db", Clock: r.clk,
-					FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}),
-				})
-				if err != nil {
-					t.Fatal(err)
-				}
-				_ = closed.Close()
-				r.notifier.Journal = closed
 			}
-			if cell.before != nil {
-				stop := cell.before(t, r)
-				defer stop()
+		}
+		fill() // 측정 전에 밀린 행 100 이 이미 있다(준비 장벽 — codex #3)
+		stop := make(chan struct{})
+		acks := 0
+		var mu sync.Mutex
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for {
+				select {
+				case <-stop:
+					return
+				default:
+				}
+				if err := r.notifier.Acknowledge(ctx, "a091-operator"); err != nil {
+					t.Errorf("Acknowledge: %v", err)
+					return
+				}
+				mu.Lock()
+				acks++
+				mu.Unlock()
+				fill()
+			}
+		}()
+		return func() int { close(stop); wg.Wait(); mu.Lock(); defer mu.Unlock(); return acks }
+	}
+	pool := func(t *testing.T, r *a091Rig) func() int {
+		ctx := context.Background()
+		stop := make(chan struct{})
+		var wg sync.WaitGroup
+		writes := 0
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for {
+				select {
+				case <-stop:
+					return
+				default:
+				}
+				if _, err := r.journal.EnqueueAlert(ctx, journal.Alert{EventKey: "a091-pool-" + time.Now().Format(time.RFC3339Nano),
+					Type: "execgw.order_unresolved", Severity: "normal", Title: "t"}); err != nil {
+					t.Errorf("pool write: %v", err)
+					return
+				}
+				writes++
+			}
+		}()
+		return func() int { close(stop); wg.Wait(); return writes }
+	}
+	for _, c := range []cell{
+		{"uncontended ledger, B7", b7, false, nil, true},
+		{"uncontended ledger, B2", b2, false, nil, true},
+		{"the record fails and escalates, B7", b7, true, nil, true},
+		{"the record fails and escalates, B2", b2, true, nil, true},
+		{"a busy connection pool, B7", b7, false, pool, true},
+		{"an operator acknowledging a 100-row backlog, B7", b7, false, ack, false},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			r := a091Harness(t, true, c.floor(), nil)
+			if c.fail {
+				a091FailOutboxWrites(t, r)
+			}
+			var stop func() int
+			if c.before != nil {
+				stop = c.before(t, r)
 			}
 			r.breach()
+			var worst time.Duration
 			for i := 0; i < reps; i++ {
+				start := time.Now()
 				r.observe()
+				if d := time.Since(start); d > worst {
+					worst = d
+				}
 				r.clk.Advance(5 * time.Second)
 			}
-			if timed.n != reps {
-				t.Fatalf("reports timed = %d, want %d", timed.n, reps)
+			load := -1
+			if stop != nil {
+				load = stop()
+				if load == 0 {
+					t.Fatalf("the contention never ran during the measurement — this cell measured nothing")
+				}
 			}
-			t.Logf("cell %q: %d reports, observed worst %s (share %s)", cell.name, timed.n, timed.worst, a091ReportShare)
-			if !cell.owned {
-				// 승인 경합 셀은 측정 · 기록(design D5 (i) 7판): 이 대기는 a092 정본이 이름 붙인 항(승인은 잠금 아래 밀린 행을
-				// 하나씩 — 행 수 비례)이고 a091 은 빈도만 더함. 판정은 관측 주기 유계 하나.
-				if timed.worst >= a091ObservationPeriod {
-					t.Fatalf("observed worst %s reaches the %s observation period — the canonical bound fails", timed.worst, a091ObservationPeriod)
+			t.Logf("cell %q: %d cycles, observed worst %s (share %s), contention ops %d", c.name, reps, worst, a091ReportShare, load)
+			if c.fail {
+				if got := r.mode(); got != journal.ModeEntryBlocked {
+					t.Fatalf("mode = %s, want ENTRY_BLOCKED — the escalation transaction did not run", got)
+				}
+			} else if n := a091OutboxCount(t, r, obs.EventExitStopSoldNothing); n != 1 {
+				// 승인 칸에서는 운영자 승인이 그 행도 정착시키므로 PENDING 이 아니라 행 수로 잰다.
+				t.Fatalf("outbox rows of the new kind = %d, want 1 — the report never recorded", n)
+			}
+			if !c.owned {
+				// 승인 경합 칸은 측정 · 기록(design D5 (i) 7판): a092 정본이 이름 붙인 항이고 a091 은 빈도만 더함. 판정은 주기 유계 하나.
+				if worst >= a091ObservationPeriod {
+					t.Fatalf("observed worst %s reaches the %s observation period — the canonical bound fails", worst, a091ObservationPeriod)
 				}
 				return
 			}
-			if timed.worst > a091ReportShare {
-				t.Fatalf("observed worst %s exceeds the %s share — STOP and report (design D5 acceptance (i))",
-					timed.worst, a091ReportShare)
+			if worst > a091ReportShare {
+				t.Fatalf("observed worst %s exceeds the %s share — STOP and report (design D5 acceptance (i))", worst, a091ReportShare)
 			}
 		})
 	}
@@ -315,13 +364,15 @@ func (a *a091DelayedAlerts) Notify(ctx context.Context, e obs.Event) error {
 
 func TestA091ALaterStopStillGoesOutInTheSameCycle(t *testing.T) {
 	for _, delay := range []time.Duration{a091ReportShare, a091MeasuredAckWorst} {
-		t.Run(delay.String(), func(t *testing.T) { a091LaterStopUnder(t, delay) })
+		t.Run(delay.String(), func(t *testing.T) { a091LaterStopUnder(t, delay, true) })
 	}
+	// 양성 대조군: 시세 수명(15s)을 넘기는 지연이면 뒤 포지션은 그 사이클에 판정되지 않는다 — 이 시험이 실제로 시세 수명을 잰다는 증거.
+	t.Run("positive control 20s", func(t *testing.T) { a091LaterStopUnder(t, 20*time.Second, false) })
 }
 
 // a091LaterStopUnder 는 앞 포지션의 보고가 delay 만큼 걸려도 뒤 보호 포지션이 그 사이클에 제출되는지 잰다 — 배정값과 실측
 // 최악(승인 경합 셀) 둘 다(Manager 판정 보강 1: 증명은 측정값으로).
-func a091LaterStopUnder(t *testing.T, delay time.Duration) {
+func a091LaterStopUnder(t *testing.T, delay time.Duration, wantPlaced bool) {
 	var order []string
 	delayed := &a091DelayedAlerts{order: &order}
 	r := a091Harness(t, true, a091SymbolFloor{"000660": {Quantity: "0", Bound: riskcalc.FloorBoundSellable}},
@@ -341,6 +392,12 @@ func a091LaterStopUnder(t *testing.T, delay time.Duration) {
 	r.quote("000660", 67900)
 	r.observe()
 
+	if !wantPlaced {
+		if len(r.submit.places) != 0 || len(order) != 1 || order[0] != "report" {
+			t.Fatalf("places = %+v, order = %v — a %s delay must outlive the quote, or this test cannot see the quote lifetime", r.submit.places, order, delay)
+		}
+		return
+	}
 	if len(r.submit.places) != 1 || r.submit.places[0].Intent.Symbol != "005930" {
 		t.Fatalf("places = %+v, want the 005930 stop in the same cycle", r.submit.places)
 	}
