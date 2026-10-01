@@ -6140,3 +6140,33 @@ X4 레인이 cadence 창 안에서 사이클을 엶 · X5 protection 이 안전 
 cadence 를 잰다). 중앙 결함은 설계상 안전 loop 를 세운다(`TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt`) — 2.8 의 「lane-local/market-local」 범위 밖.
 
 **breakout 쪽(2.2~2.4.1)은 이 로트 밖** — Manager 판정 B1(허용 변 = 검증 집합, 여섯 변의 생산자 실측) · B2(`NewFXSeal` 역방향 digest 미검증 수리) 뒤 「breakout 덮개」 로트.
+
+## 2026-10-01 breakout 덮개 — B1 생산자 실측 · B2 `NewFXSeal` 역방향 digest 수리
+
+**B1(Manager 판정: 골든 `allowed_transitions` = 허용 가능 변의 검증 집합, 평가기 산출 의무 아님 — 단 변마다 생산자를 실측해 명명, 없으면 gap).**
+실측(grep · AST, `internal/breakoutlane/machine.go`):
+
+| 변 | 생산자 |
+|---|---|
+| RETEST_WAIT → INVALIDATED | `machine.go:86` 무효화 수준 아래 종가 · `:97` 거래량 확장 실패 재돌파 — **있음** |
+| RETEST_WAIT → TIMED_OUT | `:89` · `:100` — 있음 |
+| 정방향 여섯 | `:48-49`(RANGE_LOCKED) · `:63-65`(BREAKOUT_CLOSED → RETEST_WAIT 를 한 걸음에) · `:92-93`(RECLAIMED → ARMED 를 한 걸음에) · `:116`(PROPOSED) — 있음 |
+| DISCOVERED → INVALIDATED | **없음** — 돌파 전 무효화 신호가 스펙에 정의되지 않음(무효화 수준 = 범위 하단, 돌파 뒤 개념) |
+| RANGE_LOCKED → INVALIDATED | **없음** — 같은 이유 |
+| BREAKOUT_CLOSED → INVALIDATED | **없음** — BREAKOUT_CLOSED 는 결과 단계가 아니라 전이 목록에만 들어가는 과도 단계(`:63-65`) |
+| RECLAIMED → INVALIDATED | **없음** — RECLAIMED 도 과도 단계(`:92-93`) |
+| ARMED → INVALIDATED | **없음** — 호가 거절은 ARMED 에 머물며 typed refusal(`:106-114`). 스펙 시나리오 「final quote drift → typed quote refusal」 과는 맞고, 설계 l.145 「typed refusal/terminal transition」 은 둘 다 허용 |
+| PROPOSED → CONSUMED | **없음** — 스펙 시나리오(「shared admission 이 CONSUMED 를 기록」)가 생산자를 공유 admission 으로 지목하지만 저장소 어디에도 breakout setup 의 CONSUMED 기록이 없다(grep: `phaseConsumed` 는 상수 · `terminalPhase` 판정뿐, `CONSUMED` 의 다른 hit 은 weekly 예약 상태로 다른 개념) |
+
+→ **gap 여섯**(조기 INVALIDATED 다섯 + CONSUMED). 발명하지 않고 실측대로 올린다. 자연스러운 행선: CONSUMED 는 6.4(breakout 첫 레그 전용 생산 권한 —
+중복 평가 · 재시작 · 정정이 둘째 첫 레그를 못 만들게 하는 자리), 조기 INVALIDATED 넷은 「v1 에서 생산자 없음 · 예약」 표기 여부를 Manager/사람이 판정.
+
+**B2(Manager 판정: 결함 — 수리) — Pre-Edit 선언(High-risk: FX · 사이징).** `breakoutlane.NewFXSeal` 이 역방향(instrument→account · 통화 다름) 입력에서 digest 를
+정규화 뒤 **덮어쓰고** 자기와 비교했다(`types.go:158` → `:160`) — 그 방향의 호출자 digest 가 검증되지 않는 공허 검사(fail-open 모양), 시험 EV:314 는 digest 없는
+역방향 봉인의 성공을 박고 있었다(결함을 핀). 수리: 주어진 모양 그대로 digest 를 먼저 검증(B2) → 정규화 → 정규형으로 재봉인. 방향 = 보수(이전 수락 입력을 거절).
+- Pre-Edit `lot-bk/pre-edit/`(HEAD 538439ed). RED `lot-bk/red-b2.log`(편집 전 위조 다섯 — digest 없음 · 다른 봉인 · 정규형 digest · 봉인 뒤 비율 · 창 변조 — **전부 수락**,
+  반전한 EV:314 도 실패). GREEN: `a112_fx_seal_digest_test.go` `TestAnInverseFXSealVerifiesTheCallersDigest`(다섯 거절 · 바른 봉인 수락 · 정규화 2/3 · 재봉인 · fxValid 재검증),
+  EV:314 반전(digest 없으면 거절, 주어진 모양으로 봉인하면 정규화 통과). gstack 「inverse scale 6」 사례는 이미 주어진 모양으로 봉인하므로 불변.
+- 변이 `lot-bk/mutation-b2.tsv` **3/3 CAUGHT**: B2-1 덮어쓰기 복원(지시된 변이) · B2-2 정규형 대조 · B2-3 재봉인 생략.
+- **생산 호출자(패키지 밖) 0** — `FXSealInput{` · `breakoutlane.NewFXSeal` 패키지 밖 hit 0(grep), 패키지 안 호출은 `fxValid`(정규형 재검증 — 수리와 무관). breakout 미배선이라
+  **생산 효과 0**.

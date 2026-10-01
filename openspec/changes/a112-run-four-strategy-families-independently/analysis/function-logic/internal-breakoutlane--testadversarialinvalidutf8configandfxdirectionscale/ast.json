@@ -1,0 +1,192 @@
+{
+  "file": "internal/breakoutlane/evaluator_test.go",
+  "source_sha256": "878c75713f0d714c0a6569f8f7b314a7f9796611f38d28fb50939f8138982b3e",
+  "package": "breakoutlane",
+  "function": "TestAdversarialInvalidUTF8ConfigAndFXDirectionScale",
+  "signature": "TestAdversarialInvalidUTF8ConfigAndFXDirectionScale(params=1, results=0)",
+  "start": {
+    "line": 307,
+    "column": 1
+  },
+  "end": {
+    "line": 325,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 311,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 317,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 322,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 308,
+        "column": 7
+      },
+      "text": "fixtureInput"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 13
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 311,
+        "column": 10
+      },
+      "text": "Evaluate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 311,
+        "column": 28
+      },
+      "text": "d.Refusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 312,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 312,
+        "column": 11
+      },
+      "text": "d.Refusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 317,
+        "column": 15
+      },
+      "text": "NewFXSeal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 318,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 15
+      },
+      "text": "FXSealDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 12
+      },
+      "text": "NewFXSeal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 308,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 309,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 310,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 311,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 314,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 317,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 320,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 321,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,12 @@
+# RED a112 B2 — HEAD 538439ed + 시험만(NewFXSeal 무편집)
+    a112_fx_seal_digest_test.go:31: window tampered after seal: an inverse FX seal whose digest does not cover its own fields was accepted
+    a112_fx_seal_digest_test.go:31: no digest: an inverse FX seal whose digest does not cover its own fields was accepted
+    a112_fx_seal_digest_test.go:31: digest of another seal: an inverse FX seal whose digest does not cover its own fields was accepted
+    a112_fx_seal_digest_test.go:31: canonical-form digest: an inverse FX seal whose digest does not cover its own fields was accepted
+    a112_fx_seal_digest_test.go:31: rate tampered after seal: an inverse FX seal whose digest does not cover its own fields was accepted
+--- FAIL: TestAnInverseFXSealVerifiesTheCallersDigest (0.00s)
+    evaluator_test.go:318: an inverse FX seal without a digest was accepted
+--- FAIL: TestAdversarialInvalidUTF8ConfigAndFXDirectionScale (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.003s
+FAIL

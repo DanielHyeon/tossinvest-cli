@@ -153,6 +153,11 @@ func FXSealDigest(input FXSealInput) string {
 func NewFXSeal(input FXSealInput) (FXSeal, error) {
 	sameCurrency := input.AccountCurrency == input.InstrumentCurrency
 	if input.Direction == FXInstrumentToAccount && !sameCurrency {
+		// a112 B2: 호출자 digest 는 **주어진 모양 그대로** 먼저 검증한다. 앞 판은 정규화한 뒤 digest 를 덮어쓰고 자기와 비교해, 이 방향의
+		// 봉인은 digest 없이도 · 변조돼도 통과했다(공허 검사). 검증한 다음에만 정규형(account→instrument, 비율 뒤집기)으로 다시 봉인한다.
+		if input.Digest != FXSealDigest(input) {
+			return FXSeal{}, errors.New("invalid fx seal")
+		}
 		input.RateNum, input.RateDen = input.RateDen, input.RateNum
 		input.Direction = FXAccountToInstrument
 		input.Digest = FXSealDigest(input)

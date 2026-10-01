@@ -760,13 +760,25 @@ SET_2X_TESTS = [
     ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
      "TestSafetyLoopsKeepTheirCadenceThroughEveryEntryFailureKind|TestSafetyLoopsKeepTheirCadenceWhileEveryEntryQueueIsSaturated", "./internal/app/engine"],
 ]
+BKT = "internal/breakoutlane/types.go"
+SET_B2 = [
+    ("B2-1 the overwrite is restored (the caller's inverse digest is not verified — Manager-required mutant)", BKT,
+     "\t\tif input.Digest != FXSealDigest(input) {\n\t\t\treturn FXSeal{}, errors.New(\"invalid fx seal\")\n\t\t}\n\t\tinput.RateNum, input.RateDen",
+     "\t\tinput.RateNum, input.RateDen"),
+    ("B2-2 the inverse digest is checked against the normalized form instead of the given form", BKT,
+     "\t\tif input.Digest != FXSealDigest(input) {\n\t\t\treturn FXSeal{}, errors.New(\"invalid fx seal\")\n\t\t}\n\t\tinput.RateNum, input.RateDen = input.RateDen, input.RateNum\n\t\tinput.Direction = FXAccountToInstrument\n",
+     "\t\tinput.RateNum, input.RateDen = input.RateDen, input.RateNum\n\t\tinput.Direction = FXAccountToInstrument\n\t\tif input.Digest != FXSealDigest(input) {\n\t\t\treturn FXSeal{}, errors.New(\"invalid fx seal\")\n\t\t}\n"),
+    ("B2-3 the normalized seal is not re-sealed (keeps the caller's inverse digest)", BKT,
+     "\t\tinput.Direction = FXAccountToInstrument\n\t\tinput.Digest = FXSealDigest(input)\n", "\t\tinput.Direction = FXAccountToInstrument\n"),
+]
+SET_B2_TESTS = [["go", "test", "-count=1", "-run", "TestAnInverseFXSealVerifiesTheCallersDigest|TestAdversarial|TestGstackRepairQuoteAndFXExactBoundaries", "./internal/breakoutlane"]]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측
