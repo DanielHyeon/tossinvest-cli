@@ -85,3 +85,24 @@ route 의 같은 자리(버전 확인 뒤 · tx 반환 전) 실현 가능, 같�
 - **base 재고정** `f9a25549` → `3403be28`(WORKFLOW 「사람 승인 base 재고정」): (1) 귀속 실측 — 옛 base 이후 a127 자기 Go 커밋 **0**(이 change 디렉터리를
   만지며 `.go` 를 고친 비병합 커밋 없음 — a127 커밋은 전부 문서). (2) 승인 — 위 Manager 판정의 「a112 6.1 해시 위」. (3) 단독 커밋 — 다음 커밋.
   사유: 형제 `40ec5aff`(a112 6.1)가 같은 파일(`production_snapshot_authority.go` 의 `validProductionRiskPolicyContents` 등)을 편집해 옛 창에 들어옴.
+
+## 1. 구현 로트 (2026-10-01~)
+
+### 1.0.2 편집 전 FLM 번들 + Pre-Edit 선언
+
+격리 워크트리(`scratchpad/wt127`, base `de3b4f65` = 새 base `3403be28` + 문서)에서 편집 대상 8 함수의 편집 전 번들(`analysis/function-logic/`) —
+AST(`tools/logic-map`) · 위험 패턴 · 분기 표(`analysis/harness/branch_table.py`, 편집 전 커버리지 `analysis/impl/coverage-pre-edit.out` =
+riskbucket · strategyrouter `tossos_testseams` 전체 + app/engine `-run 'Risk|Route|A112'`) · 산문(`analysis/harness/bundle_prose.json` →
+`write_bundles.py`). `check_analysis` evidence complete(편집 0 상태).
+
+**편집 전 실측이 결함을 그대로 보인다**: `loadProductionRiskEntries` B5(버전 비교)와 `openProductionRouteSnapshot` B4 · `LoadProductionRouteAuthorityBatch`
+B7(opener 실패)의 진입 실측이 **아니오** — 시험 전체가 핀과 같은 `user_version=27` 픽스처라 거절 갈래를 한 번도 지나지 않았다(가린 픽스처).
+
+**Pre-Edit 선언**(High-risk — 위험 · route 권한):
+- 편집 함수: `LoadProductionRiskSnapshotAuthority`(주입 가드 — 정책 결속 앞) · `loadProductionRiskEntries`(B5 비교 · 문구, 읽기 tx 하나, prepare 선행) ·
+  `readProductionRiskUsage`(SQL 상수 이동, 바이트 동일) · `LoadProductionRouteAuthorityBatch`(주입 가드 · opener 인자 · B7 원인 보존) ·
+  `openProductionRouteSnapshot`(B4 비교 · 문구, prepare) · `loadProductionRouteOwnersFrom`(SQL 상수 이동, 바이트 동일) · engine 두 `collectMarket`(config
+  필드 하나). 타입 `ProductionRiskSnapshotConfig` · `ProductionRouteConfig` 에 필드 하나, 리터럴 상수 둘 삭제.
+- 보수 방향 논거: 판정을 넓히는 편집 없음 — 받는 원장은 「이 프로세스가 연 현재 원장」 하나뿐이고(더 옛 · 더 새 · 주입 누락 거절), 판독 SQL ·
+  사용량 판정 · owner 재구성은 바이트 · 분기 불변, 추가되는 것은 거절 갈래(주입 가드 · prepare 실패)와 트랜잭션 묶음뿐.
+- 손절 · 청산 경로 무관(진입 권한만). LIVE 주문 · 토글 변경 없음, 시험은 원장 픽스처만.

@@ -1,0 +1,160 @@
+{
+ "internal-riskbucket--loadproductionrisksnapshotauthority": {
+  "qualified": "LoadProductionRiskSnapshotAuthority",
+  "role": "위험 snapshot 권한의 공개 적재기 — config 정규화 · 정책 파일 digest · 서명 검증 · 입력 결속(`bindProductionRiskInputs`, 섹터 매핑 없음은 범위 국소 거절) 뒤 원장 적재(`loadProductionRiskEntries`)를 부르고 원인을 `%w: %w` 로 보존해 감쌈. a127: 원장 스키마 주입 누락(0 이하)을 **정책 결속보다 앞**에서 거절하는 가드를 둠(design D2).",
+  "inputs": [
+   "| `ctx` · `config.ObservedAt` | nil 아님 · 0 아님 | 호출자 | B1 거절(Unavailable) |",
+   "| config 경로 · digest · 키 · 계좌 · 통화 | 절대 경로 · 정규 digest · ed25519 · 정규 식별자 | engine 로더 | B3 거절 |",
+   "| 정책 파일 | 소유자 · 0400 · 1 MiB · digest 일치 · 서명 | config dir | B4 · B5 거절 |",
+   "| (a127) 원장 스키마 주입 값 | > 0(= `journal.SchemaVersion`) | engine 호출 자리 | 정책 결속 앞 거절(편집 뒤) |"
+  ],
+  "calls": "`canonicalProductionRiskConfig` · `productionRiskOwnerUID` · `readProductionRiskFile` · `decodeProductionRiskPolicy` · `verifyProductionRiskPolicy` · `bindProductionRiskInputs` · `loadProductionRiskEntries` · `newRiskSnapshotAuthorityService(...).Load`. 원장 · 브로커 쓰기 없음.",
+  "state": "없음 — 읽기 전용. 실패는 전부 거절(`ErrProductionRiskSnapshotUnavailable` 감쌈, 범위 국소면 `ErrProductionRiskScopeRefused` 도 보존).",
+  "boundary_pre": "편집 전 — a127 은 B3 앞(또는 B1 뒤)에 주입 가드 하나를 더할 예정. 기존 분기 B1~B7 의 판정 · 순서는 바꾸지 않음.",
+  "boundary_post": "주입 가드 하나 추가(정책 결속 앞). 나머지 분기 판정 · 순서 · 오류 신원 불변.",
+  "highrisk": "yes — 진입 경로 위험 권한의 입구.",
+  "tests_pre": {
+   "*": "기존 — `production_snapshot_authority_test.go`(tossos_testseams) 시험군"
+  },
+  "red_pre": [],
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+ },
+ "internal-riskbucket--loadproductionriskentries": {
+  "qualified": "loadProductionRiskEntries",
+  "role": "원장을 읽기 전용으로 열어 버전 확인 · 범위 scope latch · 다섯 dimension 사용량을 읽고 snapshot 항목을 만듦. **편집 전 결함**: B5 `:384` 가 `PRAGMA user_version` 을 동결 리터럴 `productionRiskJournalSchema = 27` 과 비교 — 실제 원장(v35)은 항상 거절. 판독은 각각 autocommit(`db`), 사용량 질의는 scope latch 가 0 일 때만 실행(조건부).",
+  "inputs": [
+   "| 원장 파일 | 소유자 · 0600 · 정규 파일(심링크 아님) | `validateProductionRiskJournalFile` | B2 거절 |",
+   "| `PRAGMA user_version` | 편집 전: == 27(결함) · 편집 뒤: == 주입 값 | 원장 | B5 거절(편집 전 진입 0 — 픽스처가 27) |",
+   "| scope latch 행 | 0 | `risk_bucket_scope_latches` | B6 오류 · B7 범위 국소 거절(ScopeRefused) |",
+   "| 권한 창 | manifest · 가격 · FX 관측 ≤ AsOf < fresh | 정책 · 입력 | B8 거절 |",
+   "| 다섯 dimension 사용량 | 판독 가능 · latch 없음 | `ReadJournalBucketUsage` | B10 · B11 거절 |"
+  ],
+  "calls": "`productionRiskOwnerUID` · `validateProductionRiskJournalFile` · `sql.Open`(mode=ro · query_only · busy_timeout) · `db.SetMaxOpenConns(1)` · `db.PingContext` · `db.QueryRowContext`(PRAGMA user_version · scope latch count) · `ReadJournalBucketUsage`(dimension 마다, `db`) · provenance 생성자 · `newRiskSnapshotAuthorityMaterialEntry`. 원장 쓰기 · 브로커 없음.",
+  "state": "없음 — 읽기 전용 연결. 실패는 오류 반환(호출자가 Unavailable 로 감쌈).",
+  "boundary_pre": "편집 전 — a127 은 B5 의 비교를 주입 값 정확 일치 + 방향 문구로, 판독 전부를 읽기 전용 tx 하나로, 버전 확인 직후 · latch 판독 전에 SQL 상수 둘을 prepare 하도록 바꿀 예정(D1 · D7). 판독 SQL · 사용량 판정 불변.",
+  "boundary_post": "B5 비교 · 문구, tx 묶음, prepare 선행만 바뀜. scope latch · 창 · 사용량 판정과 오류 신원 불변.",
+  "highrisk": "yes — 사이징 사용량 판독.",
+  "tests_pre": {
+   "B5": "편집 전 진입 0 — 모든 픽스처가 `user_version=27`(가린 픽스처, proposal)",
+   "*": "기존 — production_snapshot_authority_test · a126 replay 시험"
+  },
+  "red_pre": [],
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+ },
+ "internal-riskbucket--readproductionriskusage": {
+  "qualified": "readProductionRiskUsage",
+  "role": "계좌 bucket 의 예약 행을 읽는 원장 사용량의 유일한 SQL(a126 의 떠남 사실 포함). a127: 질의 문자열을 패키지 상수로 옮겨 적재기가 같은 상수로 prepare 하게 함(D7 — 둘째 철자 금지).",
+  "inputs": [
+   "| `db` | UsageQueryer(`*sql.DB` · `*sql.Tx`) | 호출자 | B1 질의 오류 되던짐 |",
+   "| 예약 · snapshot · policy · 영수증 · owners · scope_latches · final_decisions | 현재 원장 표 | 원장 | B3 스캔 오류 |"
+  ],
+  "calls": "`db.QueryContext`(SQL 한 개) · `rows.Scan` · `rows.Err`. 브로커 없음.",
+  "state": "없음 — 읽기 전용.",
+  "boundary_pre": "편집 전 — a127 은 SQL 문자열을 상수로 옮기는 것만(내용 · 분기 불변).",
+  "boundary_post": "SQL 문자열이 패키지 상수로 이동(바이트 동일). 분기 B1~B3 불변.",
+  "highrisk": "yes — 사이징 사용량 합의 입력.",
+  "tests_pre": {
+   "*": "기존 — a126 시험군(실 원장)"
+  },
+  "red_pre": [],
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+ },
+ "internal-strategyrouter--loadproductionrouteauthoritybatch": {
+  "qualified": "LoadProductionRouteAuthorityBatch",
+  "role": "route 권한의 공개 적재기 — 매니페스트 digest · 서명 검증 뒤 원장을 열고(`openProductionRouteSnapshot`) 서명 범위마다 owner snapshot 을 재구성해 봉인. **편집 전**: B7 `:351-352` 가 opener 의 어떤 오류든 `fmt.Errorf(\"%w: owner snapshot\", ErrProductionRouteUnavailable)` 로 바꿔 원인을 지움. a127: 주입 가드(원장 열기 전) · opener 에 주입 값 전달 · 원인 보존(D2 · D3).",
+  "inputs": [
+   "| `ctx` · `ObservedAt` | nil 아님 · 0 아님 | 호출자 | B1 거절 |",
+   "| config 경로 · 키 · 계좌 · 시장 | 절대 경로 · ed25519 · 정규 식별자 | engine 로더 | B3 거절 |",
+   "| 매니페스트 | digest · 서명 · 범위 ≥ 1 | config dir | B4~B6 거절 |",
+   "| 원장 snapshot | opener 성공 | `openProductionRouteSnapshot` | B7 거절(원인 지움 — 편집 전) |",
+   "| owner 재구성 | revision == 매니페스트 OwnerRevision | `loadProductionRouteOwnersFrom` | B13 거절 |"
+  ],
+  "calls": "`canonicalProductionRouteConfig` · `productionRouteOwnerUID` · 매니페스트 읽기 · `decodeProductionRouteManifest` · `verifyProductionRouteManifest` · `openProductionRouteSnapshot` · `newMarketRecord` · `EvaluateMarketLifecycle` · `validProductionRouteScopes` · `NewOwnerKey` · `loadProductionRouteOwnersFrom` · `newOwnerSnapshot` · 봉인 함수 · `tx.Commit`. 원장 쓰기 없음(읽기 전용 tx).",
+  "state": "없음 — 읽기 전용 tx 를 열고 닫음.",
+  "boundary_pre": "편집 전 — a127 은 주입 가드(열기 전) · opener 호출 인자 · B7 감싸기의 원인 보존만 바꿀 예정. 범위 · 재구성 · 봉인 판정 불변.",
+  "boundary_post": "주입 가드 추가, opener 에 주입 값 전달, B7 감싸기가 원인을 `%w` 로 보존. 나머지 불변.",
+  "highrisk": "yes — 진입 경로 route 권한.",
+  "tests_pre": {
+   "B7": "편집 전 진입 0 — 픽스처가 `user_version=27`",
+   "*": "기존 — `strategyrouter/production_test.go` 시험군"
+  },
+  "red_pre": [],
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+ },
+ "internal-strategyrouter--openproductionroutesnapshot": {
+  "qualified": "openProductionRouteSnapshot",
+  "role": "원장 파일을 검증하고 읽기 전용 tx 를 연 뒤 `PRAGMA user_version` 을 확인. **편집 전 결함**: B4 `:616` 이 동결 리터럴 `productionRouteJournalV = 27` 과 비교 — 실제 원장 항상 거절, 원인은 맨 sentinel. a127: 주입 값 정확 일치 + 방향 문구(`%w`), 버전 확인 직후 owners · campaign SQL 상수 prepare(D1 · D7).",
+  "inputs": [
+   "| 원장 파일 | 소유자 · 0600 · 정규 파일 | `validateProductionRouteJournalFile` | B1 거절 |",
+   "| `PRAGMA user_version` | 편집 전: == 27(결함) · 편집 뒤: == 주입 값 | 원장 | B4 거절(편집 전 진입 0) |"
+  ],
+  "calls": "`validateProductionRouteJournalFile` · `sql.Open`(mode=ro · query_only · busy_timeout) · `db.SetMaxOpenConns(1)` · `db.BeginTx`(ReadOnly) · `tx.QueryRowContext`(PRAGMA user_version) · `tx.Rollback` · `db.Close`.",
+  "state": "실패 시 tx rollback · db close. 성공 시 db · tx 를 호출자에게 넘김.",
+  "boundary_pre": "편집 전 — a127 은 B4 비교 · 문구와 prepare 추가만 바꿀 예정.",
+  "boundary_post": "B4 비교가 주입 값 정확 일치 · 방향 문구, prepare 실패 거절 추가. 파일 검증 · tx 수명 불변.",
+  "highrisk": "yes — route 권한의 원장 입구.",
+  "tests_pre": {
+   "B4": "편집 전 진입 0 — 픽스처가 `user_version=27`",
+   "*": "기존 — production_test 시험군"
+  },
+  "red_pre": [],
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+ },
+ "internal-strategyrouter--loadproductionrouteownersfrom": {
+  "qualified": "loadProductionRouteOwnersFrom",
+  "role": "owner 이력을 읽어 active owner 를 재구성하고, active owner 가 있을 때만 position_campaigns 를 읽어 대조. **조건부 질의**: B10 `:659` 에서 active owner 가 없으면 campaign 질의 전에 성공 반환(codex 1R P1). a127: 두 SQL 을 패키지 상수로 옮겨 opener 가 같은 상수로 prepare(D7).",
+  "inputs": [
+   "| `queryer` | nil 아님 | 호출자(tx) | B1 거절 |",
+   "| owner 이력 행 | ≤ 상한 · 정규 값 | `risk_bucket_owners` | B2 · B4 · B5 거절 |",
+   "| active owner | ≤ 1 · actual 있음 · latch 없음 | 원장 | B9 · B11 · B12 거절 |",
+   "| campaign | 키 일치 · ACTIVE · 진입 막힘 아님 | `position_campaigns` | B13 거절 |"
+  ],
+  "calls": "`queryer.QueryContext`(owners SQL) · `rows.Scan` · `validProductionOwnerRow` · `rows.Err` · `productionOwnerHistoryDigest` · `strconv.ParseUint` · `queryer.QueryRowContext`(campaign SQL) · `productionRouteDescriptors`.",
+  "state": "없음 — 읽기 전용.",
+  "boundary_pre": "편집 전 — a127 은 두 SQL 문자열을 상수로 옮기는 것만(내용 · 분기 불변).",
+  "boundary_post": "두 SQL 이 패키지 상수로 이동(바이트 동일). 분기 B1~B14 불변.",
+  "highrisk": "yes — owner 재구성(route 권한의 기반).",
+  "tests_pre": {
+   "*": "기존 — production_test 시험군"
+  },
+  "red_pre": [],
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+ },
+ "internal-app-engine--strategyriskauthorityloader.collectmarket": {
+  "qualified": "strategyRiskAuthorityLoader.collectMarket",
+  "role": "결과 권한의 범위마다 `riskbucket.LoadProductionRiskSnapshotAuthority` 를 부르고 원인을 운반. a127: config 리터럴에 원장 스키마 주입 값 `journal.SchemaVersion`(상수 선택자)을 넣음(D2).",
+  "inputs": [
+   "| 결과 · FX 권한 | ready | 상위 로더 | B1 · B2 거절 |",
+   "| 범위 owner 키 | 유효 | 계보 | B5 거짓이면 그 범위 거절 |"
+  ],
+  "calls": "`strategyOwnerKeyOf` · `riskbucket.LoadProductionRiskSnapshotAuthority`(config 리터럴) · `bundle.Scope` · `bundle.Entries` · `strategyRiskMarketFromScopes`.",
+  "state": "없음 — 범위 권한 값을 만듦.",
+  "boundary_pre": "편집 전 — a127 은 config 리터럴에 필드 하나만 더할 예정.",
+  "boundary_post": "config 리터럴에 `JournalSchemaVersion: journal.SchemaVersion` 한 필드. 분기 불변.",
+  "highrisk": "yes — 위험 권한 배선.",
+  "tests_pre": {
+   "*": "기존 — strategy_risk_authority_test · a112 시험군"
+  },
+  "red_pre": [],
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+ },
+ "internal-app-engine--strategyrouteauthorityloader.collectmarket": {
+  "qualified": "strategyRouteAuthorityLoader.collectMarket",
+  "role": "schedule · candidate 권한 위에서 route 매니페스트 환경값을 읽고 `loader.load`(= `strategyrouter.LoadProductionRouteAuthorityBatch`)를 부름. 오류는 버리고 `StrategyRouteAuthorityInvalid` 로 접음(B8). a127: config 리터럴에 원장 스키마 주입 값(상수 선택자)을 넣음(D2).",
+  "inputs": [
+   "| schedule · candidate | Ready · 활성화 | 상위 로더 | B1~B3 거절 |",
+   "| 로더 배선 · 키 환경값 | 존재 · ed25519 | 환경 | B4 · B5 거절 |",
+   "| Batch 결과 | 오류 없음 · digest 일치 | strategyrouter | B8 거절(오류 버림) |"
+  ],
+  "calls": "`loader.getenv` · base64 · `candidates.approved.At` · `loader.load`(config 리터럴) · `batch.For` · `strategyrouter.RouteSet` · sha256.",
+  "state": "없음 — 시장 route 권한 값을 만듦.",
+  "boundary_pre": "편집 전 — a127 은 config 리터럴에 필드 하나만 더할 예정.",
+  "boundary_post": "config 리터럴에 `JournalSchemaVersion: journal.SchemaVersion` 한 필드. 분기 불변.",
+  "highrisk": "yes — route 권한 배선.",
+  "tests_pre": {
+   "*": "기존 — strategy_route_authority_test 시험군(loader.load stub)"
+  },
+  "red_pre": [],
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+ }
+}

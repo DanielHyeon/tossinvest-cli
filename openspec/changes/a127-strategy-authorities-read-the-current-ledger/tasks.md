@@ -23,7 +23,7 @@
 - [ ] 1.0 착수 전
   - [x] 1.0.1 **(review 0.7)** base 재고정 `f9a25549` → `3403be28`(a112 6.1 `40ec5aff` 포함). 원 지시: base 재확인 — a112 6.1 (C) lint 가 같은 파일의 다른 함수(`validProductionRiskPolicyContents`)를 먼저 착지(Manager 통지 2026-10-01):
         그 해시 위에서 진행. 형제 착지가 창에 들어오면 사람 승인 재고정
-  - [ ] 1.0.2 편집 대상 함수의 gate FLM 번들(편집 전) + Pre-Edit 선언 — `loadProductionRiskEntries` · `openProductionRouteSnapshot` ·
+  - [x] 1.0.2 **(review 1.0.2)** 편집 대상 함수의 gate FLM 번들(편집 전) + Pre-Edit 선언 — `loadProductionRiskEntries` · `openProductionRouteSnapshot` ·
         두 config 검증 자리 · engine 의 두 호출 자리(`strategyRiskAuthorityLoader.collectMarket` · route 적재기의 config 리터럴 함수),
         그리고 AST 가 추가로 잡는 것 전부
 - [ ] 1.1 RED — design 「반증 설계」 S1~S14 를 실패시키는 시험(픽스처 규율 — 버전만 바꾼 온전한 원장 · 조건부 질의 전용 열 삭제): 실제 원장 양성 risk(a112 트립와이어 반전) · route(**새 기반**: `tossos_testseams`
