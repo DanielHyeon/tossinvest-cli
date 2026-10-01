@@ -13,8 +13,8 @@
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | select at 1058:2 — 상위 취소 / 사이클 완료 / 마감 시한 셋 중 먼저 오는 것 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues`(1049-1069), `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive`(1049-1069), `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction`(897) | no (base) | yes — 세 갈래 모두 count>0 |
-| B2 | if at 1064:3 — 마감 시한이 울렸는데 상위가 **이미** 취소되어 있다 | `TestTheWatchdogRechecksCancellationInsteadOfTrustingItsOwnTimer` | no (base) | yes (block 930-932 count=1 — **5.6 이 처음 실행**) |
+| B1 | select at 1072:2 — 상위 취소 / 사이클 완료 / 마감 시한 셋 중 먼저 오는 것 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues`(1063-1083), `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive`(1063-1083), `TestContextIgnoringCycleWatchdogLatchesOnceAndLateResultHasNoAction`(897) | no (base) | yes — 세 갈래 모두 count>0 |
+| B2 | if at 1078:3 — 마감 시한이 울렸는데 상위가 **이미** 취소되어 있다 | `TestTheWatchdogRechecksCancellationInsteadOfTrustingItsOwnTimer` | no (base) | yes (block 930-932 count=1 — **5.6 이 처음 실행**) |
 
 ## 측정으로 확인한 빈칸
 

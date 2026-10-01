@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_dispatch_cycle.go",
-  "source_sha256": "d9d29dfcc61759b835bce75e3f500885704f2f27ee9879056cdccbf4f50a5b3b",
+  "source_sha256": "72021ef372fe658540d68292cf0556181ad8a981ce81d807eb0903e3b55c67a7",
   "package": "engine",
   "function": "newStrategyDispatchCycle",
   "signature": "newStrategyDispatchCycle(params=8, results=1)",

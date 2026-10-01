@@ -6,13 +6,11 @@ package engine
 // proposal per owner scope"). 활성화가 없는 시장(오늘 생산 — 배포 핀 0)은 시장 단위 상한 그대로다(토글 OFF = upstream).
 //
 // **오늘-동등성 핀**(Manager 조건 1)은 5.2.2.2 에서 의도대로 뒤집혔다: 5.2.2.1 판은 「두 범위면 하류 1차 레그 개수 관문이 거절해
-// 주문 0」이었고, 개수 관문을 걷은 지금은 「범위마다 자기 권한이 있는 범위만 거래, 나머지는 범위 거절 타입」이다
-// (TestTwoOwnerScopesTradeOnlyWhereEachHasItsOwnAuthority).
+// 주문 0」이었다. 5.2.2.2 리뷰 수리 뒤 판은 `TestAScopeTheRiskAuthorityDoesNotHoldIsAFaultInEitherOrder`(그 머리말 참고).
 //
 // **이 fixture 는 생산 모양이 아니다 — 의도적으로 만든 최악 조건이다**(2026-09-30 리뷰 보이스 A #1 · codex 정정). 위험 ·
-// 계좌 권한은 범위 하나짜리 fixture 에서 온 것이라 둘째 범위(000660)의 범위별 권한이 없다. 생산 조립은 범위마다 권한을 다시
-// 모으므로(5.2.2.2) 이 모양은 「한 범위의 위험 · 계좌 적재가 실패한 파도」와 같다 — 그 범위만 거절되고 나머지는 거래한다(J3).
-// 두 순서(fixture 순서 · 조정자 사전순 000660 먼저)를 모두 못 박는다 — 거절된 범위가 앞이어도 뒤 범위가 굶지 않음.
+// 계좌 권한은 범위 하나짜리 fixture 에서 온 것이라 둘째 범위(000660)의 항목이 없다 — 생산 조립에서는 생기지 않는 불일치이고, 리뷰 수리 뒤
+// 이것은 범위 거절이 아니라 결함(주기 멈춤)이다. 두 순서(fixture 순서 · 조정자 사전순 000660 먼저)를 모두 못 박는다.
 
 import (
 	"context"
@@ -113,21 +111,23 @@ func TestOnlyAnActivatedMarketHandsEachOwnerScopeOff(t *testing.T) {
 	}
 }
 
-// 5.2.2.2 로 뒤집은 오늘-동등성 핀(5.2.2.1 판: 「두 범위면 주문 0 — 1차 레그 개수 관문」). 개수 관문을 걷은 뒤, 이 fixture 의
-// 최악 조건(위험 · 계좌 권한이 원래 범위 하나에만 있음)에서 **권한을 가진 범위만** 거래하고 다른 범위는 그 범위만의 **타입 거절**로
-// 건너뛰어진다(조용히가 아니라 반환 오류에 기록 — J3). 두 순서 모두: 거절된 범위가 앞이어도 뒤 범위가 굶지 않는다.
-func TestTwoOwnerScopesTradeOnlyWhereEachHasItsOwnAuthority(t *testing.T) {
+// 5.2.2.2 로 뒤집은 오늘-동등성 핀(5.2.2.1 판: 「두 범위면 주문 0 — 1차 레그 개수 관문」) → 리뷰 수리 판. 이 fixture 의 최악 조건(위험 ·
+// 계좌 권한이 원래 범위 하나에만 있음)은 생산 조립에서는 생기지 않는 **불일치**다 — 조립은 같은 결과 집합으로 위험 권한을 모으므로 어느 범위의
+// 항목도 빠지지 않는다. 그래서 「위험 권한이 그 범위의 항목을 갖지 않음」은 범위 거절이 아니라 결함이고(타입 없는 오류) 주기를 멈춘다: fixture
+// 순서에서는 권한 있는 범위가 먼저 거래하고 멈추며, 조정자 순서(000660 먼저)에서는 아무것도 나가지 않는다. 범위 국소 거절(정책 밖 종목 · scope
+// latch · 계좌 매니페스트 부재)의 J3 동작은 `TestARiskScopeOutsideTheSignedPolicyIsRefusedAloneInEitherOrder` 등이 잰다.
+func TestAScopeTheRiskAuthorityDoesNotHoldIsAFaultInEitherOrder(t *testing.T) {
 	for _, order := range []struct {
-		name  string
-		first bool
-	}{{"fixture order (original scope first)", false}, {"coordinator order (000660 first)", true}} {
-		t.Run(order.name, func(t *testing.T) { a112TwoScopePin(t, order.first) })
+		name   string
+		first  bool
+		placed string
+	}{{"fixture order (original scope first)", false, "005930"}, {"coordinator order (000660 first)", true, ""}} {
+		t.Run(order.name, func(t *testing.T) { a112TwoScopePin(t, order.first, order.placed) })
 	}
 }
 
-func a112TwoScopePin(t *testing.T, coordinatorOrder bool) {
+func a112TwoScopePin(t *testing.T, coordinatorOrder bool, wantPlaced string) {
 	cycle, proposals, _, spy := pairedStrategyDispatchCycleFixture(t)
-	original := proposals.kr.entries[0].authority.Proposal().Lineage.Symbol
 	two := a112ExtraEntryKR(t, proposals.kr, proposals.observedAt, "000660", coordinatorOrder)
 	two.activation = strategyrouter.FamilyActivationForTest(strategyrouter.MarketKR, 1,
 		strategyrouter.AllFourFamiliesForTest(strategyrouter.MarketKR))
@@ -153,12 +153,12 @@ func a112TwoScopePin(t *testing.T, coordinatorOrder bool) {
 		placed = append(placed, call.Intent.Symbol)
 	}
 	spy.mu.Unlock()
-	if strings.Join(placed, ",") != original {
-		t.Fatalf("placed=%v err=%v — want only the scope that holds its own risk and account authority (%s)", placed, err, original)
+	if strings.Join(placed, ",") != wantPlaced {
+		t.Fatalf("placed=%v err=%v — want %q (the fault stops the cycle)", placed, err, wantPlaced)
 	}
 	var refusal *strategyScopeRefusal
-	if !errors.As(err, &refusal) || refusal.scope.Symbol != "000660" || !strings.Contains(refusal.detail, "risk authority") {
-		t.Fatalf("err=%v — want the other scope's typed refusal (its missing risk authority) returned, not swallowed", err)
+	if err == nil || errors.As(err, &refusal) || !strings.Contains(err.Error(), "risk authority holds no entry for this owner scope") {
+		t.Fatalf("err=%v — want the untyped fault for the scope the risk authority does not hold", err)
 	}
 }
 

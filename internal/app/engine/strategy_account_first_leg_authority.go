@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -172,14 +173,24 @@ func (loader *strategyAccountAuthorityLoader) collectMarket(ctx context.Context,
 	for _, entry := range proposal.entries {
 		result := entry.authority.Proposal()
 		key, keyed := strategyOwnerKeyOf(result.Lineage)
-		scoped := strategyAccountScopeAuthority{key: key, reason: StrategyAccountProposalNotReady}
+		scoped := strategyAccountScopeAuthority{key: key, reason: StrategyAccountProposalNotReady,
+			cause: errors.New("production account owner scope key invalid or proposal invalid")}
 		if keyed && result.ValidProposal() {
 			scoped.reason = StrategyAccountAuthorityUnavailable
 			authority, err := loader.load(ctx, strategyaccount.ProductionConfig{ConfigDir: loader.configDir, AccountRef: loader.accountRef,
 				AccountCurrency: loader.accountCurrency, Symbol: result.Lineage.Symbol, Market: accountMarket, ManifestDigest: loader.digests[market],
 				TrustedKeyID: loader.keyID, TrustedKey: loader.key, ObservedAt: loader.observedAt})
-			if err == nil && authority.Market() == accountMarket && authority.ManifestDigest() == loader.digests[market] {
-				scoped.authority, scoped.ready, scoped.reason = authority, true, StrategyAccountReady
+			switch {
+			case err != nil:
+				// 적재기는 ctx 종료를 자기 오류로 접으므로 ctx 를 직접 봄 — ctx 종료는 결함(조건 ④), 그 밖의 적재 실패는 범위 국소.
+				scoped.cause = err
+				if ctxErr := ctx.Err(); ctxErr != nil {
+					scoped.cause = ctxErr
+				}
+			case authority.Market() == accountMarket && authority.ManifestDigest() == loader.digests[market]:
+				scoped.authority, scoped.ready, scoped.reason, scoped.cause = authority, true, StrategyAccountReady, nil
+			default:
+				scoped.cause = errors.New("production account authority does not match the loader's market or manifest")
 			}
 		}
 		scopes = append(scopes, scoped)
@@ -195,15 +206,37 @@ func strategyAccountMarketFromScopes(market StrategyMarket, scopes []strategyAcc
 			continue
 		}
 		authority := scope.authority
+		// 범위가 둘 이상이면 식별은 준비된 범위들의 묶음(위험 BundleDigest 와 대칭 — 5.2.2.2 리뷰 A #3); 범위 하나면 오늘과 같은 값.
+		identity := authority.Identity()
+		if len(scopes) > 1 {
+			ready := make([]string, 0, len(scopes))
+			for _, each := range scopes {
+				if each.ready {
+					ready = append(ready, each.authority.Identity())
+				}
+			}
+			identity = strategyWorkerEvidenceDigest(ready...)
+		}
 		return strategyAccountMarketAuthority{market: market, authority: authority, scopes: scopes, snapshot: StrategyAccountMarketSnapshot{
 			Market: market, Ready: true, Reason: StrategyAccountReady, Generation: authority.Generation(), QuoteCurrency: authority.QuoteCurrency(),
-			ManifestDigest: authority.ManifestDigest(), Identity: authority.Identity()}}
+			ManifestDigest: authority.ManifestDigest(), Identity: identity}}
 	}
 	reason := StrategyAccountProposalNotReady
 	if len(scopes) != 0 {
 		reason = scopes[0].reason
 	}
 	return strategyAccountMarketAuthority{market: market, scopes: scopes, snapshot: StrategyAccountMarketSnapshot{Market: market, Reason: reason}}
+}
+
+// earliestFreshUntil 은 준비된 계좌 범위들 중 가장 이른 FreshUntil 이다(worker 권한 만료 — 5.2.2.2 리뷰 A #3). 준비된 범위가 없으면 0.
+func (authority strategyAccountMarketAuthority) earliestFreshUntil() time.Time {
+	var earliest time.Time
+	for _, scope := range authority.scopes {
+		if fresh := scope.authority.FreshUntil(); scope.ready && (earliest.IsZero() || fresh.Before(earliest)) {
+			earliest = fresh
+		}
+	}
+	return earliest
 }
 
 // forScope 는 그 소유자 범위의 준비된 계좌 권한이다. 없으면 false — 봉투 값으로 폴백하지 않는다.
@@ -273,17 +306,35 @@ func (loader *productionStrategyFirstLegAuthorityLoader) collectStrategyFirstLeg
 	if result.Lineage.Identity != accepted.result.Lineage.Identity || result.ExecutionTerms.Identity() != accepted.result.ExecutionTerms.Identity() {
 		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production proposal identity changed")
 	}
+	// 5.2.2.2 리뷰 codex #1: 마지막 권한 경계의 수용 집합은 서명 활성화 밖에서 넓어지지 않는다 — 활성화 없는 시장은 6.2 위치에서 편집 전과
+	// 같은 시장 단위 개수 관문으로 거절한다(상류 handoff · 계좌 적재기도 막지만 마지막 권한이 스스로 막는다).
+	if !proposal.familyActivation().Verified() && len(proposal.entries) != 1 {
+		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("paired production authority is incomplete for market")
+	}
 	// a112 5.2.2.2 — 시장 단위 개수 관문을 걷었다. 그 관문이 지키던 「하류 권한이 시장당 하나」를 이제 **범위별 재유도**가 진다: 위험 ·
 	// 계좌 권한도 봉인과 같은 소유자 범위 키로 조립 권한에서 다시 고른다. 그 범위의 권한이 없으면 **그 범위만** 거절한다(Manager 판정 J3 —
 	// 범위 거절 타입 · 봉투 값 폴백 없음). 원장 · Gateway · 중앙 오류와 identity 불일치(위조 의심)는 범위 거절이 아니다.
-	key, _ := strategyOwnerKeyOf(result.Lineage)
+	key, keyed := strategyOwnerKeyOf(result.Lineage)
+	if !keyed { // 봉인이 정규화를 보장하므로 도달 불가 — 바뀌면 범위 거절이 아니라 결함(리뷰 A #4)
+		return execgw.QFinalCampaignFirstLegIssuance{}, errors.New("production first-leg owner scope key invalid")
+	}
+	// 범위 권한이 없을 때 그것이 **범위 국소 원인**이면 그 범위만 타입 거절(J3), 원장 결함 · ctx · 항목 부재면 타입 없는 오류로 주기를 멈춤
+	// (J4 — 5.2.2.2 리뷰 A #1 · codex #2: 편집 전에는 원장 결함도 범위 거절로 접혀 같은 주기의 다음 범위가 발급됐다).
 	riskBundle, riskScoped := riskAuthority.forScope(key)
 	if !riskScoped {
-		return execgw.QFinalCampaignFirstLegIssuance{}, &strategyScopeRefusal{scope: key, detail: "no ready risk authority for this owner scope"}
+		scopeLocal, cause := riskAuthority.riskScopeCause(key)
+		if !scopeLocal {
+			return execgw.QFinalCampaignFirstLegIssuance{}, fmt.Errorf("production risk authority fault for owner scope %s: %w", key.Symbol, cause)
+		}
+		return execgw.QFinalCampaignFirstLegIssuance{}, &strategyScopeRefusal{scope: key, detail: "no ready risk authority for this owner scope", cause: cause}
 	}
 	accountAuthority, accountScoped := account.forScope(key)
 	if !accountScoped {
-		return execgw.QFinalCampaignFirstLegIssuance{}, &strategyScopeRefusal{scope: key, detail: "no ready account authority for this owner scope"}
+		scopeLocal, cause := account.accountScopeCause(key)
+		if !scopeLocal {
+			return execgw.QFinalCampaignFirstLegIssuance{}, fmt.Errorf("production account authority fault for owner scope %s: %w", key.Symbol, cause)
+		}
+		return execgw.QFinalCampaignFirstLegIssuance{}, &strategyScopeRefusal{scope: key, detail: "no ready account authority for this owner scope", cause: cause}
 	}
 	// 발급 통화는 봉투(accepted.currency)가 아니라 조립 권한의 계보 시장에서 다시 유도한다(6.2 리뷰 보이스 A #3).
 	currency, currencyKnown := map[strategyrouter.Market]string{strategyrouter.MarketKR: "KRW", strategyrouter.MarketUS: "USD"}[result.Lineage.Market]

@@ -45,8 +45,13 @@ type a112TradingOptions struct {
 	riskSymbols []riskLoaderSymbol
 	// maxOpenExposure 는 Guardian 계좌 노출 상한(KRW). 빈 값이면 기본 정책.
 	maxOpenExposure string
-	// failAccountFor 는 계좌 권한 적재를 실패시킬 종목.
+	// failAccountFor 는 계좌 권한 적재를 실패시킬 종목. accountFailure 가 있으면 그 오류로(없으면 범위 국소 평문 오류).
 	failAccountFor string
+	accountFailure error
+	// coordinatorOrder 면 둘째 범위(000660)를 앞에 둔다(조정자 사전순).
+	coordinatorOrder bool
+	// shortFreshFor 종목의 계좌 권한은 30초 뒤 만료(나머지는 1분).
+	shortFreshFor string
 }
 
 type a112TradingFixture struct {
@@ -93,10 +98,13 @@ func newA112TradingFixture(t *testing.T, options a112TradingOptions) a112Trading
 		}
 	}
 	winner := proposals.kr.entries[0].authority
-	two := a112ExtraEntryKR(t, proposals.kr, now, "000660", false)
+	two := a112ExtraEntryKR(t, proposals.kr, now, "000660", options.coordinatorOrder)
 	two.activation = strategyrouter.FamilyActivationForTest(strategyrouter.MarketKR, 1, strategyrouter.AllFourFamiliesForTest(strategyrouter.MarketKR))
 	proposals.kr = two
 	second := two.entries[1].authority
+	if options.coordinatorOrder {
+		second = two.entries[0].authority
+	}
 
 	handle, err := journal.Open(context.Background(), journal.Options{Path: filepath.Join(t.TempDir(), journal.DBFileName),
 		Clock: clock.NewFake(now), FSProber: journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt})})
@@ -118,7 +126,7 @@ func newA112TradingFixture(t *testing.T, options a112TradingOptions) a112Trading
 	riskLoader := *riskFixture.loader
 	fixture := a112TradingFixture{now: now, riskLoader: riskLoader, fx: riskFixture.fx, guardian: guardian, clk: fakeClock, journal: handle,
 		proposals: proposals, spy: &strategyDispatchGatewaySpy{observed: map[string]int{}}, winner: winner, second: second}
-	fixture.accounts = a112AccountLoader(t, now, options.failAccountFor).collect(context.Background(), proposals)
+	fixture.accounts = a112AccountLoaderWith(t, now, options.failAccountFor, options.accountFailure, options.shortFreshFor).collect(context.Background(), proposals)
 	fixture.wave(t)
 	return fixture
 }
@@ -244,7 +252,7 @@ func (fixture *a112TradingFixture) wave(t *testing.T) {
 }
 
 // a112AccountLoader 는 생산 계좌 적재기를 세우되 적재 함수만 시험 권한으로 바꾼다 — 종목마다 그 종목을 허용한 계좌 권한.
-func a112AccountLoader(t *testing.T, now time.Time, failFor string) *strategyAccountAuthorityLoader {
+func a112AccountLoaderWith(t *testing.T, now time.Time, failFor string, failure error, shortFreshFor string) *strategyAccountAuthorityLoader {
 	t.Helper()
 	public, _, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
@@ -256,6 +264,9 @@ func a112AccountLoader(t *testing.T, now time.Time, failFor string) *strategyAcc
 	loader := newStrategyAccountAuthorityLoader(t.TempDir(), "acct-risk-loader", "KRW", now, func(key string) string { return env[key] })
 	loader.load = func(_ context.Context, config strategyaccount.ProductionConfig) (strategyaccount.Authority, error) {
 		if config.Symbol == failFor {
+			if failure != nil {
+				return strategyaccount.Authority{}, failure
+			}
 			return strategyaccount.Authority{}, errors.New("account authority unavailable for " + config.Symbol)
 		}
 		quote, cash := "KRW", "5000000"
@@ -265,7 +276,11 @@ func a112AccountLoader(t *testing.T, now time.Time, failFor string) *strategyAcc
 		state := risk.AccountState{Mode: risk.ModeNormal, AllowedSymbols: []string{config.Symbol}, HeldQuantity: "0",
 			CashAvailable: riskcalc.Money{Amount: cash, Currency: quote}, OpenExposure: riskcalc.Money{Amount: "0", Currency: "KRW"},
 			DailyRealizedLoss: riskcalc.Money{Amount: "0", Currency: "KRW"}, AccountEquity: riskcalc.Money{Amount: "10000000", Currency: "KRW"}}
-		return strategyaccount.AuthorityForTest(config.Market, quote, state, now.Add(-time.Second), now.Add(time.Minute), 1, digest), nil
+		fresh := now.Add(time.Minute)
+		if config.Symbol == shortFreshFor {
+			fresh = now.Add(30 * time.Second)
+		}
+		return strategyaccount.AuthorityForTest(config.Market, quote, state, now.Add(-time.Second), fresh, 1, digest), nil
 	}
 	return loader
 }
@@ -297,11 +312,12 @@ func (fixture a112TradingFixture) deliverKR(t *testing.T) error {
 // 둘째 파도 전의 원장 → stub 복사는 스키마 핀 결함의 다리다(a112MirrorLedgerIntoRiskStub 주석 — 핀 수리 change 착지 시 제거).
 func TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope(t *testing.T) {
 	fixture := newA112TradingFixture(t, a112TradingOptions{})
-	// J2 실측: 활성 두 범위 파도의 읽기 수 = 위험 N + 계좌 N(범위마다 적재 하나 — 적재 호출은 각 적재기의 범위 순회 안 한 자리).
+	// J2 실측: 활성 두 범위 파도의 범위 항목 수 = 위험 N + 계좌 N(범위마다 적재 시도 하나 — 적재 호출은 각 적재기의 범위 순회 안 한 자리;
+	// 항목 수는 적재 성공 수가 아니다 — 리뷰 B #6).
 	if risk, account := len(fixture.risk.kr.scopes), len(fixture.accounts.kr.scopes); risk != 2 || account != 2 {
 		t.Fatalf("reads per wave: risk=%d account=%d, want one per owner scope (2 + 2)", risk, account)
 	}
-	t.Logf("J2 measured: one activated two-scope KR wave reads risk=%d + account=%d owner-scope authorities",
+	t.Logf("J2 measured: one activated two-scope KR wave holds risk=%d + account=%d owner-scope entries (one load attempt each)",
 		len(fixture.risk.kr.scopes), len(fixture.accounts.kr.scopes))
 	firstWave := fixture.deliverKR(t)
 	if got := strings.Join(fixture.placedSymbols(), ","); got != "005930" {
@@ -323,7 +339,8 @@ func TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope(t *testing.T) {
 	if got := strings.Join(fixture.placedSymbols(), ","); got != "000660,005930" {
 		t.Fatalf("placed=%s, want one first leg per owner scope (000660, 005930)", got)
 	}
-	// 각 범위는 자기 범위의 위험 번들로 발급됐다 — 범위의 위험 권한 digest 가 서로 다르고, 발급된 수만큼이다.
+	// 적재기가 범위마다 번들을 따로 만들었다(준비된 번들 digest 가 서로 다른 둘) — 이것은 적재기 출력의 개수이고, 「각 범위가 **자기** 번들로
+	// 발급됐다」를 지키는 것은 1차 레그의 범위 대조(`production risk authority scope changed` — 변이 X08 이 그 대조로 CAUGHT, 리뷰 B #4)다.
 	digests := map[string]bool{}
 	for _, scope := range fixture.risk.kr.scopes {
 		if scope.ready {
@@ -335,39 +352,29 @@ func TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope(t *testing.T) {
 	}
 }
 
-// 두 레그 한 주기(관문 전수표 (b) · J5 ②): 둘째 admission 은 첫 레그의 **held** 예약을 센다. 한 레그만 들어가는 계좌 노출 상한에서
-// 둘째는 journal 합산(usage + held + new)으로 거절된다 — 브로커 스냅숏(계좌 권한의 OpenExposure=0)은 첫 레그를 모르는데도.
-//
-// 버킷 스냅숏 CAS 를 떼어 놓고 노출 합산만 재려고 **둘째 파도**(번들을 지금 원장으로 다시 모음)에서 잰다: 계좌 권한의 브로커 스냅숏은 여전히
-// OpenExposure=0 인데도 둘째 레그는 첫 레그의 held 예약 때문에 계좌 노출 상한에 걸린다.
+// 두 레그 한 주기(관문 전수표 (b) · J5 ② — 리뷰 B #5 로 첫 파도 단언으로 고침): 같은 주기의 둘째 범위 admission 은 첫 레그의 **held** 예약을
+// 센다. 한 레그(801)만 들어가는 계좌 노출 상한(1200)에서 둘째는 journal 합산(usage + held + new)으로 거절된다 — 브로커 스냅숏(계좌 권한의
+// OpenExposure=0)은 첫 레그를 모르는데도. 이 합산 검사는 버킷 사용량 CAS(stale)보다 먼저 돈다(실측: 리뷰 B 사본). 예약 버전(CAS) 전진도 직접 잰다.
 func TestTheSecondLegOfOneCycleCountsTheFirstLegsHeldReservation(t *testing.T) {
 	fixture := newA112TradingFixture(t, a112TradingOptions{maxOpenExposure: "1200"})
 	versionBefore, err := fixture.journal.ReservationVersion(context.Background(), "acct-risk-loader")
 	if err != nil {
 		t.Fatal(err)
 	}
-	_ = fixture.deliverKR(t) // 첫 파도: 첫 범위 발급(둘째는 공유 버킷 CAS 로 거절 — 위 Done 시험)
+	if fixture.accounts.kr.authority.OpenExposure().Amount != "0" {
+		t.Fatal("arrangement: the broker snapshot must not know the first leg")
+	}
+	err = fixture.deliverKR(t) // 한 주기 — 첫 범위 발급, 둘째 범위 admission 은 첫 레그의 held 를 셈
 	if got := strings.Join(fixture.placedSymbols(), ","); got != "005930" {
-		t.Fatalf("first wave placed=%s, want the first scope", got)
+		t.Fatalf("placed=%s err=%v, want only the first scope under the exposure cap", got, err)
 	}
 	versionAfter, verr := fixture.journal.ReservationVersion(context.Background(), "acct-risk-loader")
 	if verr != nil || versionAfter <= versionBefore {
 		t.Fatalf("reservation version %d → %d (err=%v) — the first leg's reservation did not move the CAS version the next admission reads",
 			versionBefore, versionAfter, verr)
 	}
-	if fixture.accounts.kr.authority.OpenExposure().Amount != "0" {
-		t.Fatal("arrangement: the broker snapshot must not know the first leg")
-	}
-	if counts := a112MirrorLedgerIntoRiskStub(t, fixture.journal.Path(), fixture.riskLoader.journalPath); counts["risk_bucket_reservations"] == 0 {
-		t.Fatal("arrangement: the first leg left no bucket reservation to mirror")
-	}
-	fixture.wave(t)
-	err = fixture.deliverKR(t)
-	if got := strings.Join(fixture.placedSymbols(), ","); got != "005930" {
-		t.Fatalf("second wave placed=%s err=%v — the held reservation of the first leg must keep the second under the exposure cap", got, err)
-	}
-	if err == nil || !strings.Contains(err.Error(), "open_exposure") && !strings.Contains(strings.ToLower(err.Error()), "exposure") {
-		t.Fatalf("second wave err=%v, want the aggregate open-exposure refusal (usage + held + new > limit)", err)
+	if err == nil || !strings.Contains(err.Error(), "OPEN_EXPOSURE") || !strings.Contains(err.Error(), "already held 801") {
+		t.Fatalf("err=%v, want the journal's aggregate refusal counting the first leg's held reservation (already held 801)", err)
 	}
 }
 
@@ -451,7 +458,7 @@ func TestAnActivatedTwoScopeMarketPromotesItsWorkerPerScope(t *testing.T) {
 		t.Fatalf("activated two-scope market: worker=%+v, want Effective (per-scope handoffs)", worker)
 	}
 	// 읽기 전용 projection 도 같은 목록을 본다: 승격된 두 범위 시장은 「현재」이고 조정자 순서의 첫 승인 범위를 보인다(시장 단위
-	// handoff 를 읽으면 상한 거절로 EvidenceStale 이 된다).
+	// handoff 를 읽으면 상한 거절로 「현재」가 아니게 된다 — 리뷰 B 실측 상태 UNKNOWN).
 	promoted := build(activated)
 	supervisor, err := NewStrategyEntrySupervisor(StrategyEntrySupervisorOptions{Workers: []StrategyMarketWorker{promoted, {Market: StrategyMarketUS}},
 		Clock: loader.clk})
@@ -464,13 +471,47 @@ func TestAnActivatedTwoScopeMarketPromotesItsWorkerPerScope(t *testing.T) {
 		*kr.Campaign.ID != activated.kr.entries[0].authority.Proposal().Lineage.CampaignID {
 		t.Fatalf("projection of the activated two-scope market: status=%q campaign=%v — want current, first admitted scope", kr.Status, kr.Campaign.ID)
 	}
-	spy.failEntryGateSymbol = map[string]error{"005930": errors.New("symbol entry blocked")}
+	// 이 fixture 의 위험 · 계좌 권한은 005930 범위에만 있다(000660 은 범위 권한 없음).
+	spy.failEntryGateSymbol = map[string]error{"000660": errors.New("symbol entry blocked")}
 	if worker := build(activated); !worker.Effective {
 		t.Fatal("one scope's entry gate refusal starved the other scope's promotion")
+	}
+	// 리뷰 A #3: 승격 근거 범위는 자기 위험 · 계좌 권한이 준비돼 있어야 한다 — 005930(권한 있음)이 관문에 막히고 000660(관문 통과 · 권한 없음)만
+	// 남으면 거래할 수 있는 범위가 0 이므로 dormant.
+	spy.failEntryGateSymbol = map[string]error{"005930": errors.New("symbol entry blocked")}
+	if worker := build(activated); worker.Effective {
+		t.Fatal("promoted on a scope that has no risk or account authority of its own")
 	}
 	spy.failEntryGateSymbol["000660"] = errors.New("symbol entry blocked")
 	if worker := build(activated); worker.Effective {
 		t.Fatal("every scope refused by the entry gate, yet the worker was promoted")
+	}
+}
+
+// 리뷰 A #3(만료 · digest): 두 범위가 모두 준비된 시장에서 worker 의 권한 만료는 준비된 계좌 범위들 중 **가장 이른** FreshUntil 이고, 계좌 식별
+// 스냅숏은 범위 묶음이다(위험 BundleDigest 와 대칭).
+func TestAWorkerOverTwoReadyScopesExpiresWithItsEarliestAccountScope(t *testing.T) {
+	fixture := newA112TradingFixture(t, a112TradingOptions{shortFreshFor: "000660"})
+	now := fixture.now
+	candidates := strategyCandidateAuthorityPair{observedAt: now, kr: readyCandidateAuthority(StrategyMarketKR), us: readyCandidateAuthority(StrategyMarketUS)}
+	routes := strategyRouteAuthorityPair{observedAt: now, kr: readyRouteAuthority(StrategyMarketKR), us: readyRouteAuthority(StrategyMarketUS)}
+	worker := buildProductionStrategyMarketWorker(context.Background(), fixture.clk, StrategyMarketKR, true, fixture.spy, fixture.loader.schedule,
+		candidates, routes, fixture.fx, fixture.proposals, fixture.risk, fixture.accounts, func(context.Context) error { return nil })
+	if !worker.Effective {
+		t.Fatalf("arrangement: worker=%+v, want Effective", worker)
+	}
+	earliest := now.Add(30 * time.Second)
+	if !worker.AuthorityExpiresAt.Equal(earliest) {
+		t.Fatalf("AuthorityExpiresAt=%s, want the earliest ready account scope's FreshUntil %s", worker.AuthorityExpiresAt, earliest)
+	}
+	identities := make([]string, 0, 2)
+	for _, scope := range fixture.accounts.kr.scopes {
+		if scope.ready {
+			identities = append(identities, scope.authority.Identity())
+		}
+	}
+	if len(identities) != 2 || fixture.accounts.kr.snapshot.Identity != strategyWorkerEvidenceDigest(identities...) {
+		t.Fatalf("account identity=%q over %d ready scopes, want the scope bundle digest", fixture.accounts.kr.snapshot.Identity, len(identities))
 	}
 }
 
@@ -500,5 +541,213 @@ func TestAForgedScopeStopsTheCycleBeforeTheNextValidScope(t *testing.T) {
 	}
 	if scope := (*strategyScopeRefusal)(nil); err == nil || errors.As(err, &scope) || !strings.Contains(err.Error(), "production proposal identity changed") {
 		t.Fatalf("err=%v — want the untyped identity refusal that stops the cycle", err)
+	}
+}
+
+// ── a112 5.2.2.2 리뷰 수리(2026-10-01, J4 = (A)) ──────────────────────────────────────────────────────────────────────────
+//
+// 범위 거절은 **원천에서 온 신원**(riskbucket.ErrProductionRiskScopeRefused — 서명 정책 밖 종목 · scope latch)일 때만이다. 원장 결함 ·
+// 무결성 · ctx 는 범위 칸이 비어 있어도 범위 거절이 아니라 주기를 멈추는 타입 없는 오류이고, 원인은 오류 사슬에 남는다.
+
+func a112ScopeRefusalOf(err error) *strategyScopeRefusal {
+	var refusal *strategyScopeRefusal
+	if errors.As(err, &refusal) {
+		return refusal
+	}
+	return nil
+}
+
+// 서명 위험 정책 밖의 종목(000660)은 그 범위만 거절되고 다른 범위는 거래한다 — 두 순서 모두(앞이어도 뒤 범위를 굶기지 않음).
+func TestARiskScopeOutsideTheSignedPolicyIsRefusedAloneInEitherOrder(t *testing.T) {
+	for _, order := range []struct {
+		name  string
+		first bool
+	}{{"fixture order", false}, {"coordinator order (000660 first)", true}} {
+		t.Run(order.name, func(t *testing.T) {
+			fixture := newA112TradingFixture(t, a112TradingOptions{riskSymbols: []riskLoaderSymbol{}, coordinatorOrder: order.first})
+			err := fixture.deliverKR(t)
+			if got := strings.Join(fixture.placedSymbols(), ","); got != "005930" {
+				t.Fatalf("placed=%s err=%v, want only the scope inside the signed risk policy", got, err)
+			}
+			refusal := a112ScopeRefusalOf(err)
+			if refusal == nil || refusal.scope.Symbol != "000660" || !errors.Is(err, riskbucket.ErrProductionRiskScopeRefused) {
+				t.Fatalf("err=%v — want 000660's typed scope refusal carrying the policy's scope-refused identity", err)
+			}
+		})
+	}
+}
+
+// E1(리뷰 A #1 · codex #2): 한 범위의 원장 버킷 행이 손상되면 그 범위의 위험 권한은 결함이다 — 범위 거절로 건너뛰고 다음 범위를 내지 않고,
+// 주기를 멈추며(주문 0), 원인(원장 사용량 무효)을 오류 사슬에 남긴다.
+func TestACorruptLedgerRowStopsTheCycleWithItsCause(t *testing.T) {
+	fixture := newA112TradingFixture(t, a112TradingOptions{})
+	stub, err := sql.Open("sqlite", "file:"+fixture.riskLoader.journalPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := stub.Exec(`INSERT INTO risk_bucket_reservations(reservation_id,account_ref,bucket_dimension,bucket_value,policy_version,snapshot_id,
+		held_minor,filled_minor,state,risk_overage_latched,unknown_actual_latched) VALUES('corrupt-1','acct-risk-loader','symbol','005930','risk-policy-v1','',
+		'-5','0','GARBAGE',0,0)`); err != nil {
+		t.Fatal(err)
+	}
+	_ = stub.Close()
+	fixture.wave(t)
+	scopes := map[string]bool{}
+	for _, scope := range fixture.risk.kr.scopes {
+		scopes[scope.key.Symbol] = scope.ready
+	}
+	if scopes["005930"] || !scopes["000660"] {
+		t.Fatalf("arrangement: risk scope readiness %v, want 005930 faulted and 000660 ready", scopes)
+	}
+	err = fixture.deliverKR(t)
+	if placed := fixture.placedSymbols(); len(placed) != 0 {
+		t.Fatalf("placed=%v err=%v — a ledger fault on one scope must stop the cycle, not skip to the next scope", placed, err)
+	}
+	if err == nil || a112ScopeRefusalOf(err) != nil {
+		t.Fatalf("err=%v — want an untyped fault (not a scope refusal)", err)
+	}
+	if !errors.Is(err, riskbucket.ErrProductionRiskSnapshotUnavailable) || errors.Is(err, riskbucket.ErrProductionRiskScopeRefused) {
+		t.Fatalf("err=%v — want the loader's cause preserved (snapshot unavailable, not scope-refused)", err)
+	}
+}
+
+// scope latch 는 그 범위만 거절(신원 운반), latch 를 **읽지 못하는** 것은 결함(주기 멈춤) — 편집 전에는 둘이 한 오류였다.
+func TestAScopeLatchIsRefusedAloneButALatchReadFaultStops(t *testing.T) {
+	latched := newA112TradingFixture(t, a112TradingOptions{})
+	stub, err := sql.Open("sqlite", "file:"+latched.riskLoader.journalPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := stub.Exec(`INSERT INTO risk_bucket_scope_latches(account_ref,market,symbol,prospective_generation) VALUES('acct-risk-loader','KR','005930','1')`); err != nil {
+		t.Fatal(err)
+	}
+	_ = stub.Close()
+	latched.wave(t)
+	err = latched.deliverKR(t)
+	if got := strings.Join(latched.placedSymbols(), ","); got != "000660" {
+		t.Fatalf("latched: placed=%s err=%v, want the unlatched scope only", got, err)
+	}
+	if refusal := a112ScopeRefusalOf(err); refusal == nil || refusal.scope.Symbol != "005930" || !errors.Is(err, riskbucket.ErrProductionRiskScopeRefused) {
+		t.Fatalf("latched: err=%v — want 005930's typed scope refusal", err)
+	}
+
+	unreadable := newA112TradingFixture(t, a112TradingOptions{})
+	stub, err = sql.Open("sqlite", "file:"+unreadable.riskLoader.journalPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// 005930 의 latch 조회만 실패하게 함(정수 넘침으로 SELECT 가 오류) — 표를 지우면 두 범위가 함께 실패해 시장 전체가 준비 안 됨이 되어
+	// 분류 갈래에 닿지 않는다(변이 Y03 이 그렇게 살아남았다).
+	for _, statement := range []string{`DROP TABLE risk_bucket_scope_latches`,
+		`CREATE VIEW risk_bucket_scope_latches AS SELECT 'acct-risk-loader' AS account_ref, 'KR' AS market, s.symbol AS symbol,
+			'1' AS prospective_generation FROM (SELECT '005930' AS symbol UNION SELECT '000660') s
+			WHERE CASE WHEN s.symbol = '005930' THEN abs(-9223372036854775808) ELSE 0 END`} {
+		if _, err := stub.Exec(statement); err != nil {
+			t.Fatal(err)
+		}
+	}
+	_ = stub.Close()
+	unreadable.wave(t)
+	readiness := map[string]bool{}
+	for _, scope := range unreadable.risk.kr.scopes {
+		readiness[scope.key.Symbol] = scope.ready
+	}
+	if readiness["005930"] || !readiness["000660"] {
+		t.Fatalf("arrangement: risk readiness %v, want only 005930's latch read to fail", readiness)
+	}
+	err = unreadable.deliverKR(t)
+	if placed := unreadable.placedSymbols(); len(placed) != 0 || err == nil || a112ScopeRefusalOf(err) != nil ||
+		errors.Is(err, riskbucket.ErrProductionRiskScopeRefused) {
+		t.Fatalf("latch unreadable: placed=%v err=%v — want no order and an untyped fault", placed, err)
+	}
+}
+
+// 계좌 쪽 경계(조건 ④): 적재가 ctx 로 끝난 범위는 결함이다(주기 멈춤) — 평문 적재 실패(서명 매니페스트 부재)만 범위 거절.
+func TestAnAccountLoadCancelledByItsContextStopsTheCycle(t *testing.T) {
+	fixture := newA112TradingFixture(t, a112TradingOptions{failAccountFor: "005930", accountFailure: context.Canceled})
+	err := fixture.deliverKR(t)
+	if placed := fixture.placedSymbols(); len(placed) != 0 || err == nil || a112ScopeRefusalOf(err) != nil || !errors.Is(err, context.Canceled) {
+		t.Fatalf("placed=%v err=%v — want no order, an untyped fault and the context cause preserved", placed, err)
+	}
+}
+
+// 리뷰 B #1(M20 격추): dispatch 가 lease 에 적는 위험 정책 세대는 **그 범위의 번들** 세대다 — 시장 칸 번들을 다른 세대(2)로 바꿔 놓아도 1.
+func TestTheLeaseRiskGenerationComesFromTheScopesOwnBundle(t *testing.T) {
+	fixture := newA112TradingFixture(t, a112TradingOptions{})
+	other := newStrategyRiskLoaderFixtureGeneration(t, []riskLoaderSymbol{{Symbol: "000660", Sector: "technology", SectorLimitMinor: "3000000",
+		SymbolLimitMinor: "2000000"}}, 2)
+	otherPair := other.loader.collect(context.Background(), fixture.proposals.ResultAuthority(), other.fx)
+	if !otherPair.kr.snapshot.Ready || otherPair.kr.bundle.Generation() != 2 {
+		t.Fatalf("arrangement: generation-2 market bundle ready=%v generation=%d", otherPair.kr.snapshot.Ready, otherPair.kr.bundle.Generation())
+	}
+	fixture.risk.kr.bundle = otherPair.kr.bundle // 시장 칸만 세대 2 — 범위 번들은 세대 1 그대로
+	fixture.cycle.risk.kr.bundle = otherPair.kr.bundle
+	_ = fixture.deliverKR(t)
+	if got := strings.Join(fixture.placedSymbols(), ","); got != "005930" {
+		t.Fatalf("arrangement: placed=%s, want the first scope issued", got)
+	}
+	db, err := sql.Open("sqlite", "file:"+fixture.journal.Path()+"?mode=ro")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	var generation uint64
+	if err := db.QueryRow(`SELECT risk_policy_generation FROM strategy_dispatch_market_authorities WHERE symbol='005930'`).Scan(&generation); err != nil {
+		t.Fatal(err)
+	}
+	if generation != 1 {
+		t.Fatalf("lease risk_policy_generation=%d, want 1 — the scope's own bundle, not the market slot", generation)
+	}
+}
+
+// 계좌 적재기는 ctx 종료를 자기 오류로 접는다(생산 `strategyaccount.LoadProductionAuthority` 는 ctx.Err 를 ErrProductionAccountUnavailable 로
+// 돌려줌) — 그래서 계좌 권한 수집은 실패 뒤 ctx 를 **직접** 보고 원인을 ctx 로 바꾼다(조건 ④). 취소된 ctx 로 모으면 실패한 범위의 원인은
+// context.Canceled 이고 1차 레그에서 결함이다.
+func TestAnAccountLoadThatFailsUnderACancelledContextIsAFault(t *testing.T) {
+	fixture := newA112TradingFixture(t, a112TradingOptions{})
+	cancelled, cancel := context.WithCancel(context.Background())
+	cancel()
+	accounts := a112AccountLoaderWith(t, fixture.now, "005930", strategyaccount.ErrProductionAccountUnavailable, "").collect(cancelled, fixture.proposals)
+	for _, scope := range accounts.kr.scopes {
+		if scope.key.Symbol != "005930" {
+			continue
+		}
+		if scope.ready || !errors.Is(scope.cause, context.Canceled) {
+			t.Fatalf("005930 account scope ready=%v cause=%v — want the context's cancellation as the cause", scope.ready, scope.cause)
+		}
+		if local, _ := accounts.kr.accountScopeCause(scope.key); local {
+			t.Fatal("a cancelled account load was classified as a scope-local refusal")
+		}
+		return
+	}
+	t.Fatal("arrangement: no 005930 account scope")
+}
+
+// 리뷰 A #3(축별): 승격 근거 범위는 위험 · 계좌 권한을 **둘 다** 가져야 한다. 005930 이 관문에 막히고 000660 이 한쪽 권한만 가지면 dormant.
+func TestAWorkerPromotesOnlyOnAScopeWithBothAuthorities(t *testing.T) {
+	for _, missing := range []struct {
+		name    string
+		options a112TradingOptions
+	}{
+		{"000660 without risk authority", a112TradingOptions{riskSymbols: []riskLoaderSymbol{}}},
+		{"000660 without account authority", a112TradingOptions{failAccountFor: "000660"}},
+	} {
+		t.Run(missing.name, func(t *testing.T) {
+			fixture := newA112TradingFixture(t, missing.options)
+			now := fixture.now
+			candidates := strategyCandidateAuthorityPair{observedAt: now, kr: readyCandidateAuthority(StrategyMarketKR), us: readyCandidateAuthority(StrategyMarketUS)}
+			routes := strategyRouteAuthorityPair{observedAt: now, kr: readyRouteAuthority(StrategyMarketKR), us: readyRouteAuthority(StrategyMarketUS)}
+			build := func() StrategyMarketWorker {
+				return buildProductionStrategyMarketWorker(context.Background(), fixture.clk, StrategyMarketKR, true, fixture.spy, fixture.loader.schedule,
+					candidates, routes, fixture.fx, fixture.proposals, fixture.risk, fixture.accounts, func(context.Context) error { return nil })
+			}
+			if worker := build(); !worker.Effective {
+				t.Fatalf("arrangement: worker=%+v, want Effective on 005930", worker)
+			}
+			fixture.spy.failEntryGateSymbol = map[string]error{"005930": errors.New("symbol entry blocked")}
+			if worker := build(); worker.Effective {
+				t.Fatal("promoted on a scope missing one of its own authorities")
+			}
+		})
 	}
 }

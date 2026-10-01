@@ -1,31 +1,33 @@
 # Function Logic Map: `buildProductionStrategyMarketWorker`
 
 - Source: `internal/app/engine/strategy_entry_supervisor.go`
-- Source SHA-256: `9e24e93028b2728071d71d1d6ccea2c2a83fe768f6efe2dc09a57906c435a373`
+- Source SHA-256: `64f1cc0b85ecf5693dc5df0622b0f19f665697ea1b6f7616eb6755598f546e97`
 - Signature: `buildProductionStrategyMarketWorker(params=13, results=1)`
-- Source range: `432:1`–`504:2`
-- AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2).
+- Source range: `432:1`–`518:2`
+- AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2 리뷰 수리).
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
-- 활성화 없는 시장(오늘 생산 전부)은 handoff 가 하나라 편집 전과 같은 판정이다(토글 OFF = upstream).
-- 관측(보호 · 진입 관문)은 준비 확인일 뿐이고 주문마다 제출 경로가 범위 단위로 다시 검사한다(`withStrategyEntryGateAuthority`).
+- 활성화 없는 시장은 범위 하나 — 최소 만료 = 그 범위의 FreshUntil = 편집 전 값, forScope 는 그 범위 그대로(새 거절 0).
 
 ## Branches and early returns
 
-- Exact AST return nodes: `439:3, 453:3, 478:3, 499:3, 501:2`.
+- Exact AST return nodes: `439:3, 453:3, 490:3, 513:3, 515:2`.
 
 | Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
-| B1 | if | 438:2 | 배선 미완/nil → dormant(편집 전 B1 불변) |
-| B2 | if | 451:2 | 시장 권한(일정 · 후보 · 경로 · 환율 · 위험 · 계좌) 준비 미완 → dormant. **편집: handoff 조건을 뺐다**(B3~B4 로) |
-| B3 | range | 460:2 | **(새)** 주문 경로와 같은 handoff 목록(`dispatchHandoffs`) 순회 — 활성화 없는 시장은 시장 단위 하나(오늘), 서명 활성화 시장은 범위마다 하나 |
-| B4 | if | 462:3 | **(새, 편집 전 B2 의 handoff 절반 + 편집 전 B3)** 그 handoff 가 거절했거나 봉인 깨진 제안 → 그 범위는 승격 근거가 못 됨(continue) |
-| B5 | if | 468:3 | 보호 관측 실패 → **그 범위만** 건너뜀(편집 전 B4 는 시장 dormant — 범위 하나면 B7 로 같은 결과) |
-| B6 | if | 471:3 | 진입 관문 관측 실패 → **그 범위만** 건너뜀(J3 — 한 범위의 거절이 다른 범위의 승격을 굶기지 않음) |
-| B7 | if | 477:2 | **(새)** 승격 근거가 된 범위 없음 → dormant |
-| B8 | if | 498:2 | digest / revision / 만료 → dormant(편집 전 B6 불변) |
+| B1 | if | 438:2 | 배선 미완/nil → dormant |
+| B2 | if | 451:2 | 시장 권한 준비 미완 → dormant |
+| B3 | range | 460:2 | 주문 경로와 같은 handoff 목록 순회 |
+| B4 | if | 462:3 | handoff 거절 · 봉인 깨짐 → 그 범위 건너뜀 |
+| B5 | if | 468:3 | **(새)** 범위 키 정규화 실패 → 건너뜀 |
+| B6 | if | 471:3 | **(새)** 그 범위의 위험 권한 준비 안 됨 → 건너뜀(승격 근거 아님) |
+| B7 | if | 474:3 | **(새)** 그 범위의 계좌 권한 준비 안 됨 → 건너뜀 |
+| B8 | if | 480:3 | 보호 관측 실패 → 그 범위 건너뜀 |
+| B9 | if | 483:3 | 진입 관문 관측 실패 → 그 범위 건너뜀(J3) |
+| B10 | if | 489:2 | 승격 근거 범위 없음 → dormant |
+| B11 | if | 512:2 | digest / revision / **만료(준비된 계좌 범위의 최소 FreshUntil)** → dormant |
 
 ## Calls and live bindings
 
@@ -41,17 +43,19 @@
 | `p.dispatchHandoffs` | 460:26 |
 | `handoff.Single` | 461:24 |
 | `result.ValidProposal` | 462:21 |
-| `gateway.ObserveStrategyProtection` | 468:16 |
-| `strings.ToLower` | 468:55 |
-| `string` | 468:71 |
-| `gateway.ObserveStrategyEntryGate` | 471:16 |
-| `strings.ToLower` | 471:54 |
-| `string` | 471:70 |
-| `strategyWorkerEvidenceDigest` | 495:12 |
-| `validStrategyDigest` | 498:6 |
-| `IsZero` | 498:64 |
-| `a.authority.FreshUntil` | 498:64 |
-| `a.authority.FreshUntil` | 502:23 |
+| `strategyOwnerKeyOf` | 467:17 |
+| `r.forScope` | 471:18 |
+| `a.forScope` | 474:18 |
+| `gateway.ObserveStrategyProtection` | 480:16 |
+| `strings.ToLower` | 480:55 |
+| `string` | 480:71 |
+| `gateway.ObserveStrategyEntryGate` | 483:16 |
+| `strings.ToLower` | 483:54 |
+| `string` | 483:70 |
+| `strategyWorkerEvidenceDigest` | 507:12 |
+| `a.earliestFreshUntil` | 511:15 |
+| `validStrategyDigest` | 512:6 |
+| `expiresAt.IsZero` | 512:64 |
 
 ## State mutations and fallbacks
 
@@ -59,4 +63,4 @@
 
 ## Safety conclusion
 
-- High-risk 인접(승격은 화면 · 주기 가동만 움직이고 주문은 dispatch 가 낸다). 편집은 활성화 시장에서만 승격을 **넓힌다** — 한 범위라도 모든 관측을 통과해야 한다. 새로 승격되는 입력: 서명 활성화된 두 범위 시장(편집 전 OverCapacity 로 dormant). 활성화 없는 시장의 새 통과 입력 0.
+- High-risk 인접(승격). 편집은 승격을 **좁히기만** 한다(권한 없는 범위로의 승격 · 늦은 만료 제거). 주문은 dispatch 가 범위마다 다시 검사.

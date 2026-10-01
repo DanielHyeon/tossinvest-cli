@@ -462,6 +462,18 @@ func buildProductionStrategyMarketWorker(ctx context.Context, clk clock.Clock, m
 		if !handedOff || !result.ValidProposal() {
 			continue
 		}
+		// 승격 근거 범위는 자기 위험 · 계좌 권한이 준비돼 있어야 함(5.2.2.2 리뷰 A #3) — 시장 칸의 Ready 는 「어느 범위든」이라, 권한 있는
+		// 범위가 관문에 막히고 권한 없는 범위만 관문을 통과하면 거래할 범위 0 인 worker 가 승격됐다.
+		key, keyed := strategyOwnerKeyOf(result.Lineage)
+		if !keyed {
+			continue
+		}
+		if _, ready := r.forScope(key); !ready {
+			continue
+		}
+		if _, ready := a.forScope(key); !ready {
+			continue
+		}
 		// 보호 관측은 그대로 둔다. 관측 자체가 준비되지 않은 범위를 걸러 내는 일을
 		// 하고 있고(오류면 그 범위는 승격 근거가 못 됨), 반환값을 활성화와 대조하지
 		// **않는다**는 점은 이전 그대로다 — 아래 주석 참고.
@@ -495,11 +507,13 @@ func buildProductionStrategyMarketWorker(ctx context.Context, clk clock.Clock, m
 	digest := strategyWorkerEvidenceDigest(s.snapshot.ActivationManifestDigest, s.calendar.Version,
 		ca.snapshot.ThresholdSetDigest, ca.snapshot.EvidenceDigest, ro.snapshot.OwnerSetDigest,
 		f.snapshot.Digest, p.snapshot.ProposalSetDigest, r.snapshot.BundleDigest, a.snapshot.Identity)
-	if !validStrategyDigest(digest) || s.desired.Revision == 0 || a.authority.FreshUntil().IsZero() {
+	// 권한 만료는 준비된 계좌 범위들 중 가장 이른 값(범위 하나면 오늘과 같은 값 — 5.2.2.2 리뷰 A #3).
+	expiresAt := a.earliestFreshUntil()
+	if !validStrategyDigest(digest) || s.desired.Revision == 0 || expiresAt.IsZero() {
 		return dormant
 	}
 	return StrategyMarketWorker{Market: market, Effective: true, AuthorityGeneration: s.desired.Revision,
-		AuthorityExpiresAt: a.authority.FreshUntil(), EvidenceDigest: digest, LatchRevision: 1,
+		AuthorityExpiresAt: expiresAt, EvidenceDigest: digest, LatchRevision: 1,
 		PollInterval: DefaultStrategyCycleLimit, RefreshesAuthority: true, Cycle: cycle}
 }
 

@@ -266,8 +266,8 @@ def ast_for(file: str, func: str) -> dict:
     return json.loads(out), out
 
 
-def main() -> None:
-    for spec in FUNCS:
+def main(funcs=None, tag: str = "a112 5.2.2.2", pre: str = "lot-5.2.2.2", ledger: str = LEDGER) -> None:
+    for spec in FUNCS if funcs is None else funcs:
         bundle = FL / spec["bundle"]
         ast, raw = ast_for(spec["file"], spec["func"])
         pos = lambda n: f"{n['at']['line']}:{n['at']['column']}"
@@ -280,8 +280,8 @@ def main() -> None:
         (bundle / "ast.json").write_text(raw)
         btm = [f"# Branch Test Map: `{spec['title']}`", "",
                f"- Source SHA-256: `{ast['source_sha256']}`; AST branch locations are authoritative.",
-               f"- Revision: **modified (a112 5.2.2.2, 2026-10-01).** {spec['revision']}",
-               f"- 편집 전 번들: `analysis/measurements/lot-5.2.2.2/pre-edit/{spec['bundle']}/`. 변이 원장 {LEDGER}.", "",
+               f"- Revision: **modified ({tag}, 2026-10-01).** {spec['revision']}",
+               f"- 편집 전 번들: `analysis/measurements/{pre}/pre-edit/{spec['bundle']}/`. 변이 원장 {ledger}.", "",
                "| Branch | Scenario anchor | Test | RED observed | GREEN observed |", "|---|---|---|---|---|"]
         for b in ast["branches"]:
             scenario, test, red, green = spec["scen"][b["id"]]
@@ -292,7 +292,7 @@ def main() -> None:
         flm = [f"# Function Logic Map: `{spec['title']}`", "",
                f"- Source: `{ast['file']}`", f"- Source SHA-256: `{ast['source_sha256']}`",
                f"- Signature: `{ast['signature']}`", f"- Source range: `{ast['start']['line']}:1`–`{ast['end']['line']}:2`",
-               "- AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2).", "- Risk scan: `risk-pattern-report.md`.", "",
+               f"- AST evidence: `ast.json` — **편집 뒤**({tag}).", "- Risk scan: `risk-pattern-report.md`.", "",
                "## Inputs and invariants", ""] + [f"- {line}" for line in spec["invariants"]] + [
                "", "## Branches and early returns", "",
                "- Exact AST return nodes: `" + ", ".join(pos(r) for r in ast["returns"]) + "`.", "",

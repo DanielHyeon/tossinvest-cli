@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_first_leg_admission.go",
-  "source_sha256": "c31f12fd07855ab32d29c815c8b7b21e14c83add0cd3e1c46503bf01c15eda22",
+  "source_sha256": "3c82793300b39454ccac2ff41fe97c0b76ed2190534c5a76c0f9f7abd59652e5",
   "package": "engine",
   "function": "admit",
   "receiver": "strategyFirstLegAdmissionBridge",
   "signature": "strategyFirstLegAdmissionBridge.admit(params=2, results=1)",
   "start": {
-    "line": 73,
+    "line": 72,
     "column": 1
   },
   "end": {
-    "line": 101,
+    "line": 98,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 75,
+        "line": 74,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 78,
+        "line": 77,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 82,
+        "line": 81,
         "column": 2
       }
     },
@@ -42,15 +42,15 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 84,
-        "column": 3
+        "line": 86,
+        "column": 2
       }
     },
     {
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 89,
+        "line": 90,
         "column": 2
       }
     },
@@ -58,15 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 93,
-        "column": 2
-      }
-    },
-    {
-      "id": "B7",
-      "kind": "if",
-      "at": {
-        "line": 97,
+        "line": 94,
         "column": 2
       }
     }
@@ -75,14 +67,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 76,
+        "line": 75,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 79,
+        "line": 78,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 84,
         "column": 3
       }
     },
@@ -96,28 +95,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 90,
+        "line": 91,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 94,
+        "line": 95,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 98,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 100,
+        "line": 97,
         "column": 2
       }
     }
@@ -126,7 +118,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 74,
+        "line": 73,
         "column": 23
       },
       "text": "validateStrategyFirstLegResult"
@@ -134,7 +126,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 79,
+        "line": 78,
         "column": 10
       },
       "text": "strategyFirstLegRefusal"
@@ -142,7 +134,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 81,
+        "line": 80,
         "column": 20
       },
       "text": "b.loader.collectStrategyFirstLegAuthority"
@@ -150,7 +142,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 83,
+        "line": 82,
         "column": 14
       },
       "text": "strategyFirstLegRefusal"
@@ -158,7 +150,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 83,
+        "line": 82,
         "column": 98
       },
       "text": "err.Error"
@@ -166,22 +158,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 84,
-        "column": 15
-      }
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 84,
-        "column": 45
-      },
-      "text": "errors.As"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 89,
+        "line": 86,
         "column": 12
       },
       "text": "validateStrategyFirstLegAuthority"
@@ -189,7 +166,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 90,
+        "line": 87,
         "column": 10
       },
       "text": "strategyFirstLegRefusal"
@@ -197,7 +174,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 90,
+        "line": 87,
         "column": 86
       },
       "text": "err.Error"
@@ -205,7 +182,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 92,
+        "line": 89,
         "column": 19
       },
       "text": "b.guardian.PrecheckQFinalCampaignFirstLeg"
@@ -213,7 +190,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 94,
+        "line": 91,
         "column": 10
       },
       "text": "strategyFirstLegRefusal"
@@ -221,7 +198,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 94,
+        "line": 91,
         "column": 86
       },
       "text": "err.Error"
@@ -229,7 +206,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 96,
+        "line": 93,
         "column": 18
       },
       "text": "b.guardian.IssuePrecheckedQFinalCampaignFirstLeg"
@@ -237,7 +214,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 98,
+        "line": 95,
         "column": 10
       },
       "text": "strategyFirstLegRefusal"
@@ -245,7 +222,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 98,
+        "line": 95,
         "column": 90
       },
       "text": "err.Error"
@@ -253,7 +230,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 100,
+        "line": 97,
         "column": 81
       },
       "text": "string"
@@ -263,19 +240,26 @@
     {
       "kind": ":=",
       "at": {
-        "line": 74,
+        "line": 73,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 81,
+        "line": 80,
         "column": 2
       }
     },
     {
       "kind": ":=",
+      "at": {
+        "line": 82,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
       "at": {
         "line": 83,
         "column": 3
@@ -284,35 +268,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 84,
-        "column": 6
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 85,
-        "column": 4
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 89,
+        "line": 86,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 92,
+        "line": 89,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 96,
+        "line": 93,
         "column": 2
       }
     }

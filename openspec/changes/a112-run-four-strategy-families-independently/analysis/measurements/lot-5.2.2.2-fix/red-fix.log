@@ -1,0 +1,39 @@
+# RED — HEAD 83234aff + 수리 로트 시험(생산 편집 전; riskbucket 은 sentinel 선언만, 사용처 0)
+=== RUN   TestAnUnactivatedMultiEntryPairIsStillRefusedAtTheFirstLeg
+    a112_first_leg_owner_scope_seal_test.go:356: unactivated two-entry pair: err=<nil> — want the pre-5.2.2.2 market count refusal
+--- FAIL: TestAnUnactivatedMultiEntryPairIsStillRefusedAtTheFirstLeg (0.28s)
+=== RUN   TestARiskScopeOutsideTheSignedPolicyIsRefusedAloneInEitherOrder
+=== RUN   TestARiskScopeOutsideTheSignedPolicyIsRefusedAloneInEitherOrder/fixture_order
+    a112_owner_scope_trading_test.go:542: err=engine: first-leg admission AUTHORITY_COLLECTION_FAILED: strategy owner scope refused (acct-risk-loader/KR/000660): no ready risk authority for this owner scope — want 000660's typed scope refusal carrying the policy's scope-refused identity
+=== RUN   TestARiskScopeOutsideTheSignedPolicyIsRefusedAloneInEitherOrder/coordinator_order_(000660_first)
+    a112_owner_scope_trading_test.go:542: err=engine: first-leg admission AUTHORITY_COLLECTION_FAILED: strategy owner scope refused (acct-risk-loader/KR/000660): no ready risk authority for this owner scope — want 000660's typed scope refusal carrying the policy's scope-refused identity
+--- FAIL: TestARiskScopeOutsideTheSignedPolicyIsRefusedAloneInEitherOrder (0.61s)
+    --- FAIL: TestARiskScopeOutsideTheSignedPolicyIsRefusedAloneInEitherOrder/fixture_order (0.31s)
+    --- FAIL: TestARiskScopeOutsideTheSignedPolicyIsRefusedAloneInEitherOrder/coordinator_order_(000660_first) (0.31s)
+=== RUN   TestACorruptLedgerRowStopsTheCycleWithItsCause
+    a112_owner_scope_trading_test.go:572: placed=[000660] err=engine: first-leg admission AUTHORITY_COLLECTION_FAILED: strategy owner scope refused (acct-risk-loader/KR/005930): no ready risk authority for this owner scope — a ledger fault on one scope must stop the cycle, not skip to the next scope
+--- FAIL: TestACorruptLedgerRowStopsTheCycleWithItsCause (0.31s)
+=== RUN   TestAScopeLatchIsRefusedAloneButALatchReadFaultStops
+    a112_owner_scope_trading_test.go:599: latched: err=engine: first-leg admission AUTHORITY_COLLECTION_FAILED: strategy owner scope refused (acct-risk-loader/KR/005930): no ready risk authority for this owner scope — want 005930's typed scope refusal
+--- FAIL: TestAScopeLatchIsRefusedAloneButALatchReadFaultStops (0.32s)
+=== RUN   TestAnAccountLoadCancelledByItsContextStopsTheCycle
+    a112_owner_scope_trading_test.go:624: placed=[000660] err=engine: first-leg admission AUTHORITY_COLLECTION_FAILED: strategy owner scope refused (acct-risk-loader/KR/005930): no ready account authority for this owner scope — want no order, an untyped fault and the context cause preserved
+--- FAIL: TestAnAccountLoadCancelledByItsContextStopsTheCycle (0.30s)
+=== RUN   TestTheLeaseRiskGenerationComesFromTheScopesOwnBundle
+--- PASS: TestTheLeaseRiskGenerationComesFromTheScopesOwnBundle (0.36s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	2.208s
+FAIL
+
+# RED 2 — 승격 forScope · 최소 만료 · 첫 파도 두 레그(생산 편집 전)
+=== RUN   TestTheSecondLegOfOneCycleCountsTheFirstLegsHeldReservation
+--- PASS: TestTheSecondLegOfOneCycleCountsTheFirstLegsHeldReservation (0.30s)
+=== RUN   TestAnActivatedTwoScopeMarketPromotesItsWorkerPerScope
+    a112_owner_scope_trading_test.go:481: promoted on a scope that has no risk or account authority of its own
+--- FAIL: TestAnActivatedTwoScopeMarketPromotesItsWorkerPerScope (0.28s)
+=== RUN   TestAWorkerOverTwoReadyScopesExpiresWithItsEarliestAccountScope
+    a112_owner_scope_trading_test.go:503: AuthorityExpiresAt=2026-08-04 02:01:00 +0000 UTC, want the earliest ready account scope's FreshUntil 2026-08-04 02:00:30 +0000 UTC
+--- FAIL: TestAWorkerOverTwoReadyScopesExpiresWithItsEarliestAccountScope (0.31s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.901s
+FAIL

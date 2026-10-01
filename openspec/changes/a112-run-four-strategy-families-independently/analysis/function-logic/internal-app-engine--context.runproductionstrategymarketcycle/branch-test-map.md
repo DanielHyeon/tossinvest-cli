@@ -1,15 +1,15 @@
 # Branch Test Map: `Context.runProductionStrategyMarketCycle`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (506-565); file SHA-256 `9e24e93028b2728071d71d1d6ccea2c2a83fe768f6efe2dc09a57906c435a373`. AST branch positions are authoritative.
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (520-579); file SHA-256 `64f1cc0b85ecf5693dc5df0622b0f19f665697ea1b6f7616eb6755598f546e97`. AST branch positions are authoritative.
 - **어떤 시험도 이 함수를 통째로 돌지 않는다**(진입 0). 이 함수가 하던 전달(옛 B5~B7)은 2026-09-30 리뷰 수리로
   `dispatchStrategyMarketHandoffs` 로 의미 무변경 이동했고, 거기서 행동 시험이 돈다.
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 508:2 — refresh 실패 | 없음 | 아니오 | 아니오 — **진입 0** |
-| B2 | if at 532:2 — durable latch 를 읽으며 레인을 세우지 못함(5.3.3) | 이 함수로는 없음. 같은 판단을 `TestADurableLatchThatNamesNoLaneInThisBuildStopsTheCycleLoudlyAndCanBeClosed` 가 레인 런타임에서 잰다 | 아니오 | 아니오 — **이 함수 진입 0** |
-| B3 | if at 535:2 — 레인 주기가 durable latch 를 남기지 못함(5.3.3) | 이 함수로는 없음. 같은 판단을 `TestALedgerThatCannotTakeTheLatchStopsTheCycle` 이 잰다 | 아니오 | 아니오 — **이 함수 진입 0** |
-| B4 | if at 541:2 — dispatch 부재 | 없음 (단위 수준은 `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff`) | 아니오 | 아니오 — **진입 0** |
+| B1 | if at 522:2 — refresh 실패 | 없음 | 아니오 | 아니오 — **진입 0** |
+| B2 | if at 546:2 — durable latch 를 읽으며 레인을 세우지 못함(5.3.3) | 이 함수로는 없음. 같은 판단을 `TestADurableLatchThatNamesNoLaneInThisBuildStopsTheCycleLoudlyAndCanBeClosed` 가 레인 런타임에서 잰다 | 아니오 | 아니오 — **이 함수 진입 0** |
+| B3 | if at 549:2 — 레인 주기가 durable latch 를 남기지 못함(5.3.3) | 이 함수로는 없음. 같은 판단을 `TestALedgerThatCannotTakeTheLatchStopsTheCycle` 이 잰다 | 아니오 | 아니오 — **이 함수 진입 0** |
+| B4 | if at 555:2 — dispatch 부재 | 없음 (단위 수준은 `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff`) | 아니오 | 아니오 — **진입 0** |
 
 ## 반증 실측
 

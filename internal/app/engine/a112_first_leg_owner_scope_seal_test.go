@@ -81,6 +81,9 @@ func (fixture firstLegIdentityFixture) collectWithPair(t *testing.T, accepted st
 		list = append(list, strategyProposalEntryAuthority{authority: entry})
 	}
 	pair.kr = strategyProposalMarketAuthority{market: StrategyMarketKR, entries: list, snapshot: fixture.proposals.kr.snapshot}
+	if len(list) > 1 { // 두 항목 이상인 쌍은 서명 활성화 시장의 모양이다(활성화 없는 시장은 개수 관문 — 5.2.2.2 리뷰 codex #1)
+		pair.kr.activation = strategyrouter.FamilyActivationForTest(strategyrouter.MarketKR, 1, strategyrouter.AllFourFamiliesForTest(strategyrouter.MarketKR))
+	}
 	_, err := fixture.loaderWith(pair).collectStrategyFirstLegAuthority(context.Background(), accepted)
 	return err
 }
@@ -184,15 +187,17 @@ func TestTheFirstLegSealRefusesAnOwnerScopeTheAssemblyHoldsTwice(t *testing.T) {
 // 범위 선택은 **발급까지** 이어진다 — 순서에 기대지 않고 양방향으로 잰다:
 //
 //	· winner(뒤에 둠) → 발급, 발급된 제안은 winner 의 identity(entries[0] 선택이면 other 를 골라 identity 거절)
-//	· other(앞에 둠)  → 선택 · identity 대조는 통과하고 그 범위의 위험 권한이 없어 **범위 거절 타입**(단일 범위 fixture 의 위험 권한 —
-//	                    identity 거절 문구가 아니므로 other 가 자기 범위로 골라졌음이 가려진다)
+//	· other(앞에 둠)  → 선택 · identity 대조는 통과하고, 단일 범위 fixture 의 위험 권한이 그 범위의 항목을 갖지 않아 **결함**(타입 없는 오류
+//	                    「holds no entry」 — 5.2.2.2 리뷰 수리 뒤 범위 항목 부재는 범위 거절이 아님). identity 거절 문구가 아니므로 other 가
+//	                    자기 범위로 골라졌음이 가려진다. 쌍은 서명 활성화 시장(활성화 없는 두 항목 쌍은 개수 관문)
 func TestTheFirstLegSealSelectsByScopeInATwoScopePair(t *testing.T) {
 	fixture := newFirstLegIdentityFixture(t)
 	winner := fixture.proposals.kr.entries[0].authority
 	other := fixture.sealedKR(t, riskLoaderDescriptor(t, StrategyMarketKR), "000660", "campaign-seal-second-scope", "100", "95", "120")
 	pair := fixture.proposals
 	pair.kr = strategyProposalMarketAuthority{market: StrategyMarketKR, snapshot: fixture.proposals.kr.snapshot,
-		entries: []strategyProposalEntryAuthority{{authority: other}, {authority: winner}}}
+		entries:    []strategyProposalEntryAuthority{{authority: other}, {authority: winner}},
+		activation: strategyrouter.FamilyActivationForTest(strategyrouter.MarketKR, 1, strategyrouter.AllFourFamiliesForTest(strategyrouter.MarketKR))}
 	loader := fixture.loaderWith(pair)
 	issuance, err := loader.collectStrategyFirstLegAuthority(context.Background(), a112Accepted(t, winner))
 	if err != nil || issuance.Result.Lineage.Identity != winner.Proposal().Lineage.Identity {
@@ -200,8 +205,9 @@ func TestTheFirstLegSealSelectsByScopeInATwoScopePair(t *testing.T) {
 	}
 	_, err = loader.collectStrategyFirstLegAuthority(context.Background(), a112Accepted(t, other))
 	var refusal *strategyScopeRefusal
-	if !errors.As(err, &refusal) || refusal.scope.Symbol != "000660" {
-		t.Fatalf("two-scope pair, other: err=%v — want the other scope selected and refused alone by its missing risk authority", err)
+	if err == nil || errors.As(err, &refusal) || !strings.Contains(err.Error(), "holds no entry for this owner scope") ||
+		strings.Contains(err.Error(), a112IdentityRefusal) {
+		t.Fatalf("two-scope pair, other: err=%v — want the other scope selected, then an untyped fault for the risk entry its authority does not hold", err)
 	}
 }
 
@@ -336,5 +342,23 @@ func TestTheScopeSelectorKeysOnMarketAndAccountToo(t *testing.T) {
 			t.Fatalf("%s: an entry differing only in that axis was selected for the winner's scope", name)
 		}
 		requireRefusal(t, fixture.collectWithPair(t, a112Accepted(t, winner), entry), a112ScopeRefusal, name)
+	}
+}
+
+// 리뷰 codex #1: 마지막 권한 경계의 수용 집합은 활성화 밖에서 넓어지지 않는다 — 서명 활성화가 **없는** 시장의 두 항목 쌍은 6.2 위치(범위
+// 선택 뒤)에서 편집 전과 같은 문구로 거절된다(상류 handoff · 계좌 적재기도 막지만, 1차 레그 자신이 막는다).
+func TestAnUnactivatedMultiEntryPairIsStillRefusedAtTheFirstLeg(t *testing.T) {
+	fixture := newFirstLegIdentityFixture(t)
+	winner := fixture.proposals.kr.entries[0].authority
+	other := fixture.sealedKR(t, riskLoaderDescriptor(t, StrategyMarketKR), "000660", "campaign-seal-unactivated", "100", "95", "120")
+	pair := fixture.proposals
+	pair.kr = strategyProposalMarketAuthority{market: StrategyMarketKR, snapshot: fixture.proposals.kr.snapshot,
+		entries: []strategyProposalEntryAuthority{{authority: other}, {authority: winner}}}
+	if pair.kr.familyActivation().Verified() {
+		t.Fatal("arrangement: the pair must be unactivated")
+	}
+	_, err := fixture.loaderWith(pair).collectStrategyFirstLegAuthority(context.Background(), a112Accepted(t, winner))
+	if err == nil || err.Error() != "paired production authority is incomplete for market" {
+		t.Fatalf("unactivated two-entry pair: err=%v — want the pre-5.2.2.2 market count refusal", err)
 	}
 }

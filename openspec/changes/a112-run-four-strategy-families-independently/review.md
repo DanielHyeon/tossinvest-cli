@@ -5674,11 +5674,11 @@ fail-closed · 봉투 데이터 폴백 금지 · 거절 기록 · 공유 bucket 
 
 | # | 개수 관문(`len(entries) != 1`)이 오늘 막던 것 | 대체 수단 | 증명(시험 · 측정) |
 |---|---|---|---|
-| (a) | 하류 권한(결과 · 위험 · 계좌)이 시장당 하나라 두 범위 시장이 준비 안 됨 — 틀린 범위의 위험 · 계좌 권한으로 발급될 길이 구조적으로 없었음 | 결과 · 위험 · 계좌 권한을 **범위별 목록**으로, 1차 레그가 봉인과 같은 범위 키로 **각각** 다시 고름(봉투 데이터 폴백 금지) | `TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope`(범위 번들 digest 둘) · `TestTwoOwnerScopesTradeOnlyWhereEachHasItsOwnAuthority`(두 순서) · `TestAScopeWithoutItsOwnAccountAuthorityIsRefusedAloneAndRecorded`; 변이 X08 · X09(시장 권한 폴백) · X12 · X13 · X14 CAUGHT |
+| (a) | 하류 권한(결과 · 위험 · 계좌)이 시장당 하나라 두 범위 시장이 준비 안 됨 — 틀린 범위의 위험 · 계좌 권한으로 발급될 길이 구조적으로 없었음 | 결과 · 위험 · 계좌 권한을 **범위별 목록**으로, 1차 레그가 봉인과 같은 범위 키로 **각각** 다시 고름(봉투 데이터 폴백 금지) | `TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope`(적재기가 범위마다 번들을 따로 만듦 — digest 둘; 「각 범위가 **자기** 번들로 발급」은 1차 레그의 범위 대조가 지킴, 리뷰 B #4 정정) · `TestTwoOwnerScopesTradeOnlyWhereEachHasItsOwnAuthority`(두 순서) · `TestAScopeWithoutItsOwnAccountAuthorityIsRefusedAloneAndRecorded`; 변이 X08 · X09(시장 권한 폴백) · X12 · X13 · X14 CAUGHT |
 | (b) | 한 주기에 두 레그 — 둘째 admission 의 브로커 노출 스냅숏이 첫 레그를 모름 | journal `checkLimits`: usage + **held** + new ≤ limit(종류별) · `ObservedVersion` CAS | `TestTheSecondLegOfOneCycleCountsTheFirstLegsHeldReservation` — 예약 버전(CAS) 전진 직접 단언 + 브로커 스냅숏 OpenExposure=0 인데 둘째 레그가 노출 상한(usage + held + new)으로 거절 |
 | (c) | 위조 봉투(조립이 중재하지 않은 봉인 제안) | 6.2.0 봉인(범위 재유도 + identity) | `TestTheFirstLegSealRefusesEveryForgeryAxis` — 범위 하나 · 둘 · 둘(조정자 순서) 세 쌍 × 다섯 축 + 쌍마다 진짜 winner 발급 대조; `TestAForgedScopeStopsTheCycleBeforeTheNextValidScope`(주문 경로 끝까지 — 위조가 주기를 멈춰 뒤 정상 범위 0); 변이 X07 · X11 CAUGHT |
 | (d) | 발급 통화를 봉투(`accepted.currency`)에서 읽음(오늘 Guardian 이 막음) | 통화를 `result.Lineage.Market` 에서 재유도 | `TestTheFirstLegCurrencyComesFromTheLineageNotTheEnvelope`; 변이 X10 CAUGHT |
-| (e) | 범위 사이 공유 bucket(섹터 · 계좌) 이중 소비 | (b) 와 같은 journal 합산 + 버킷 사용량 스냅숏 CAS(`refuseStaleBucketUsage`) — 남은 범위의 admission 을 계속 지킴 | `TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope` — 같은 파도 둘째 범위 `BUCKET_USAGE_STALE`(타입 없는 원장 거절 · 주기 멈춤) 실측, 다음 파도(첫 레그 held 반영 번들)에서 발급; `TestAScopeWithoutItsOwnAccountAuthorityIsRefusedAloneAndRecorded`(남은 범위 admission 은 journal 경로 그대로) |
+| (e) | 범위 사이 공유 bucket(섹터 · 계좌) 이중 소비 | (b) 와 같은 journal 합산(원장 기준 usage + held + new ≤ limit) + 버킷 사용량 스냅숏 하한 대조(`refuseStaleBucketUsage` — 스냅숏 주장 < 원장이면 거절; 주장 ≥ 원장이면 그 주장으로 판정하므로 보수 방향) — 남은 범위의 admission 을 계속 지킴. **「같은 파도 둘째 범위는 항상 STALE」은 과장이었다**(codex #3 정정 — 사이에 해제가 끼면 주장 ≥ 원장일 수 있다; 안전은 위 두 대조가 진다) | `TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope` — 이 fixture 에서 같은 파도 둘째 범위 `BUCKET_USAGE_STALE`(타입 없는 원장 거절 · 주기 멈춤) 실측, 다음 파도(첫 레그 held 반영 번들)에서 발급; `TestAScopeWithoutItsOwnAccountAuthorityIsRefusedAloneAndRecorded`(남은 범위 admission 은 journal 경로 그대로) |
 
 ### 편집 로트(2026-10-01) — 무엇이 바뀌었나 · 증거
 
@@ -5698,7 +5698,7 @@ fail-closed · 봉투 데이터 폴백 금지 · 거절 기록 · 공유 bucket 
 관측을 통과하면 승격(J3 — 한 범위의 관문 거절이 다른 범위를 굶기지 않음). 조립 digest 는 `strategyProposalSetDigest` 한 함수(A#6).
 **활성화 없는 시장(오늘 생산 전부 — 서명 활성화 0)은 handoff 하나 · 결과 하나 · 적재 하나라 판정 조건이 편집 전과 같다.**
 
-**RED → GREEN.** `analysis/measurements/lot-5.2.2.2/red-5.2.2.2.log`(편집 전 4 FAIL — 개수 관문 · 오늘-동등성 핀 · Done · census). 의도적으로 뒤집은 핀:
+**RED → GREEN.** `analysis/measurements/lot-5.2.2.2/red-5.2.2.2.log`(편집 전 4 FAIL — Done · SecondLeg · AScopeWithoutAccount · Currency; 거절 문구 `paired production authority is incomplete for market` 는 B2 준비 문구와 같아 개수 관문 귀속은 이 로그로 특정되지 않는다 — 리뷰 B #2 정정). 의도적으로 뒤집은 핀:
 `TestTheFirstLegSealSelectsByScopeBeforeTheMarketCountGate` → `TestTheFirstLegSealSelectsByScopeInATwoScopePair`(양방향: winner 발급 · other 는 범위 거절),
 `TestTwoOwnerScopesStillPlaceNothingBecauseTheFirstLegGuardRefuses` → `TestTwoOwnerScopesTradeOnlyWhereEachHasItsOwnAuthority`(두 순서). `singleProposalAssumptionCensus`
 4 → 2(남은 둘 = 계좌 `collectMarket` 의 활성화 없는 시장 갈래 — 토글 OFF 의 시장 단위 상한과 같은 수명). 새 시험: `TestAnActivatedTwoScopeMarketPromotesItsWorkerPerScope`
@@ -5706,7 +5706,7 @@ fail-closed · 봉투 데이터 폴백 금지 · 거절 기록 · 공유 bucket 
 (journal · gateway · central · **같은 문구의 평문 오류** 넷 모두 멈춤 + 건너뛴 거절 보존) · `TestTheScopeRefusalTypeIsMadeOnlyWhereTheCensusSaysItIs`(타입 언급 census —
 만드는 자리 둘뿐) · 트립와이어. 위조 다섯 축은 세 쌍(범위 하나 · 둘 · 둘 조정자 순서)에서 재실행하고 `requireRefusal` 이 위조 거절이 **범위 거절 타입이 아님**을 단언.
 
-**J2 실측.** 활성 두 범위 KR 파도의 읽기 = 위험 2 + 계좌 2(`analysis/measurements/lot-5.2.2.2/j2-reads-per-wave.log`; 각 적재기의 적재 호출은 범위 순회 안 한 자리 — AST).
+**J2 실측.** 활성 두 범위 KR 파도의 **범위 항목 수**(범위마다 적재 시도 하나 — 성공 수가 아님, 리뷰 B #6 정정) = 위험 2 + 계좌 2(`analysis/measurements/lot-5.2.2.2/j2-reads-per-wave.log`; 각 적재기의 적재 호출은 범위 순회 안 한 자리 — AST).
 
 **변이(`analysis/measurements/lot-5.2.2.2/mutation-5.2.2.2.tsv`, 하네스 `a112_lot_mutate.py --set 5.2.2.2`, 대조군 GREEN · pass 사건 54 + 22 · 종료 코드 확인).**
 X01~X22 중 21 CAUGHT. J4 ② 오분류 변이: X01(전달 몸통이 모든 오류 건너뜀) · X05(admit 이 모든 수집 오류에 타입) · X06(dispatch 가 모든 거절에 타입) · X07(identity
@@ -5717,7 +5717,7 @@ X01~X22 중 21 CAUGHT. J4 ② 오분류 변이: X01(전달 몸통이 모든 오�
 
 **FLM.** 본문을 바꾼 아홉 함수의 편집 뒤 번들은 `analysis/harness/render_5222_bundles.py` 가 AST 에서 채웠다(편집 전 번들 `pre-edit/` — admit 은 base 번들 사본).
 같은 파일의 본문 불변 함수 열여섯은 `shift_same_file_bundles.py` 로 좌표만 옮김. 시험 파일 셋(비례 원칙 — 시험 코드)은 게이트 모양만.
-check_analysis 델타(같은 HEAD `9cbc7560` 의 깨끗한 연결 워크트리 대비): 남은 새 줄은 **미추적 새 시험 파일**의 인용(커밋 뒤 해소 — 격리 검증에서 확인)뿐.
+check_analysis 델타(같은 HEAD `9cbc7560` 의 깨끗한 연결 워크트리 대비, 격리 커밋 기준): 요약 줄 둘(요구 함수 176→182 · 창 커밋 518→519)뿐 — 새 오류 0(리뷰 B #9 정정: 앞 판의 「미추적 시험 파일 인용」 서술은 작업 트리 판의 것). 격리 검증 영수증 `isolated-verify.log` 는 rtk 요약이었다 — 수리 로트는 원 출력을 남긴다.
 
 **잔여(이름 붙임 — Manager 판정 대상).**
 - R1 **생산 위험 적재기 스키마 핀 27 vs journal v35** — 오늘 생산에서 위험 권한이 어느 범위에서도 준비될 수 없음(2026-08-05 a084 이후). 레인 활성화의 경성 선행.
@@ -5733,3 +5733,42 @@ check_analysis 델타(같은 HEAD `9cbc7560` 의 깨끗한 연결 워크트리 �
 **Manager 판정(2026-10-01, 착지 창 개방 때) — R2~R5 전부 이름 붙인 이월, 지금 코드 변경 없음.** R2: Effective 활성화가 실재하기 전까지 시장 latch 반복은 보수 방향
 그대로 — 낮추는 결정은 활성화 로트의 몫. R3: J4 경계 유지(주기 내 굶김은 명명 잔여). R4: 활성 다중 범위의 가시성 공백 — 콘솔/관측 후속 로트로 이월. R5: seam 불가 명명 수용.
 승격 · projection 의 복수 handoff 읽기는 Done 성립의 필요조건이라 범위 내로 접수.
+
+## 2026-10-01 5.2.2.2 리뷰 라운드(80ae96a5) — 합본 · 처분 · 수리 로트
+
+**리뷰.** 대상 `80ae96a5`, 리뷰 트리 `git archive`(18585 파일). 보이스 A(적대 — J4 양방향 · CAS 창 · 위조 · 토글 OFF) **BLOCK**, 보이스 B(증거) **APPROVE**(P2 다수),
+codex(non-ephemeral, read-only — 사본 생성이 샌드박스에서 막혀 코드 인용으로 판정) **BLOCK**. 원문 `analysis/review-5222/{voiceA,voiceB,codex}-output.md`, 프롬프트 같은 디렉터리.
+세 리뷰어 모두 `~/.codex` · 운영 원장 · 자격 증명 무접촉 보고, 실제 저장소 쓰기 0(시작 · 끝 `git status` · `git config --local` 대조).
+
+**합본(처분).**
+
+| # | 출처 | 등급 | 발견 | 처분 |
+|---|---|---|---|---|
+| 1 | codex #1 | P0(기준상) | 활성화 없는 두 항목 쌍도 마지막 권한을 통과 — 개수 관문 삭제가 활성화로 제한되지 않음(상류 차단으로 생산 주문은 0) | **수리** — 6.2 위치에 `!Verified && len != 1` 관문 복원, census 2 → 3, `TestAnUnactivatedMultiEntryPairIsStillRefusedAtTheFirstLeg` |
+| 2 | A #1 = codex #2 | P1 | J4 경계가 적재 단계에서 뚫림 — 위험 적재기가 어떤 err(원장 손상 · sql · ctx)든 범위 미준비로 접어 범위 거절이 되고 같은 주기의 다음 범위가 발급됨(A 실측 E1: placed=[000660]) | **수리 — Manager 판정 J4 = (A)**: riskbucket 에 범위 국소 sentinel `ErrProductionRiskScopeRefused`(정책 밖 종목 · scope latch 두 자리), 바깥 감싸기 두 자리 `%v` → `%w`, latch 조회 결함과 latch 존재를 분리(판정 불변). 엔진은 범위 칸에 원인을 운반하고 1차 레그가 원인의 신원으로 가름(범위 국소만 범위 거절, 원장 결함 · ctx · 항목 부재는 타입 없는 결함 — 주기 멈춤 · 원인 보존). admit · dispatch 는 수집 오류를 사슬째 나름 |
+| 3 | codex #3 · B #5 | P2 | 「같은 파도 둘째 범위는 항상 STALE」은 과장 · 두-레그 시험이 둘째 파도에서 재고 단언이 느슨함 | **수리** — 문구 정정(전수표 (e)), 두-레그 시험을 첫 파도(한 주기) 단언으로: `OPEN_EXPOSURE … already held 801` |
+| 4 | A #2 | P2 | census 우회: `As(any) bool` 메서드 감싸개가 타입 언급 없이 범위 거절을 만듦(A 실측 — census PASS) | **수리** — `TestNoEngineErrorTypeImplementsAs` |
+| 5 | A #3 | P2 | 승격 「하나라도」가 근거 범위의 위험 · 계좌 준비를 요구 안 함 · 만료가 첫 범위 · 계좌 digest 비대칭 | **수리** — 근거 범위에 `forScope` 둘 요구, 만료 = 준비된 계좌 범위 최소, 계좌 식별 = 범위 묶음 |
+| 6 | A #4 | T | `key, _` 가 keyed 를 버림 | **수리** — `!keyed` 면 결함(도달 불가 — M14 예상 생존) |
+| 7 | B #1 | P2 | M20 생존 이유는 참이나 시험이 고정 안 함 | **수리** — `TestTheLeaseRiskGenerationComesFromTheScopesOwnBundle`(시장 칸 세대 2 · 범위 번들 세대 1 → lease 1) |
+| 8 | B #2 · #3 · #4 · #6 · #8 · #9 | P2/T | RED 로그 서술 · worker BTM B3 영수증 · 전수표 (a) 문구 · J2 표기 · X19 주석 · 격리 영수증 · 델타 서술 | **정정**(위 절 본문 · 번들 재렌더) |
+| 9 | B #7 · #10 | T | X06 이 nil 감싸기 부작용으로 빨개짐 · 대조군 pass 수 미고정 | **수리** — Y21(원인 없는 거절에 non-nil 범위 타입), 하네스 `EXPECTED_PASSES` |
+
+**Pre-Edit(수리 로트).** 편집 전 번들 `analysis/measurements/lot-5.2.2.2-fix/pre-edit/` — 엔진 다섯(80ae96a5 의 편집 뒤 번들 사본) + riskbucket 셋(편집 전 AST ·
+지도: `LoadProductionRiskSnapshotAuthority` B6 · B7, `bindProductionRiskInputs` B4, `loadProductionRiskEntries` B6 이 편집 자리). admit 편집 전은 `lot-5.2.2.2` 의 편집 뒤 번들.
+**판정 무변 증명(조건 ①):** riskbucket 세 함수의 편집 전후 AST — `LoadProductionRiskSnapshotAuthority` · `bindProductionRiskInputs` 는 분기 수 · 종류 · 위치 동일(감싸기 동사만),
+`loadProductionRiskEntries` 는 편집 전 B6(`err != nil || latches != 0` → 거절) 하나가 B6(err → 거절) · B7(latches → 거절) 둘로 — 같은 입력이 같은 결론(거절).
+riskbucket 패키지 시험 전부 PASS(122).
+
+**RED.** `analysis/measurements/lot-5.2.2.2-fix/red-fix.log` — 생산 편집 전(riskbucket 은 sentinel 선언만): 개수 관문 · 정책 밖 종목(두 순서) · E1 손상 행
+(placed=[000660] · 범위 거절) · latch · ctx 취소 · 승격 근거 · 최소 만료 FAIL. M20 격추 시험은 편집 전에도 PASS(변이 격추용).
+
+**변이.** `analysis/measurements/lot-5.2.2.2-fix/mutation-5.2.2.2-fix.tsv`(하네스 `--set 5.2.2.2-fix`, 대조군 pass 60 · 8 · 122 고정). 조건 ②: sentinel 제거(Y01 · Y02) ·
+**결함 원인에 sentinel 을 감싸는 확대**(Y03 latch 조회 결함 · Y04 원장 항목 결함 · Y06 엔진이 모든 실패를 범위 국소로) · 신원 평탄화(Y05 · Y19 · Y20) · 분류기 확대(Y07 · Y08).
+조건 ④ 계좌: ctx 결함 범위 국소화(Y09) · 모든 실패 결함화(Y10) · 적재기가 ctx 를 안 봄(Y11). 첫 실행에서 Y03 이 **SURVIVED** — latch 표를 지우면 두 범위가 함께 실패해
+시장 전체가 준비 안 됨(B2)이 되어 분류 갈래에 닿지 않았다; 시험을 005930 의 latch 조회만 실패하게(정수 넘침 VIEW) 고치고 재실행. Y09 · Y10 은 첫 실행에서 BUILD-FAIL
+(미사용 변수) — 변이 재정의. 첫 실행 원장은 `mutation-5.2.2.2-fix-run1.tsv`.
+**재실행 결과: Y01~Y22 중 21 CAUGHT, M14 SURVIVED(예상 — 봉인 선택이 키 정규화를 보장해 도달 불가).** 대조군 GREEN · pass 60 / 8 / 122(고정치와 일치).
+
+**잔여(이름 붙임).** R2~R5 는 앞 절 판정 그대로. 새로: `bindProductionRiskInputs` 의 전략 매핑 부재(B3)는 범위 국소로 넓히지 않았다 — 한 가족 레인의 정책 누락은
+결함으로 주기를 멈춘다(설정 오류 · 보수 방향). `accountScopeCause` 의 ctx 판정은 적재 실패 뒤 ctx 를 직접 보는 것에 기댄다(생산 적재기가 ctx 를 자기 오류로 접으므로).

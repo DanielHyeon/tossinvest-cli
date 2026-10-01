@@ -1,9 +1,9 @@
 # Function Logic Map: `validateStrategyFirstLegAuthority`
 
 - Source: `internal/app/engine/strategy_first_leg_admission.go`
-- Current-base source SHA-256: `c31f12fd07855ab32d29c815c8b7b21e14c83add0cd3e1c46503bf01c15eda22`
+- Current-base source SHA-256: `3c82793300b39454ccac2ff41fe97c0b76ed2190534c5a76c0f9f7abd59652e5`
 - Signature: `validateStrategyFirstLegAuthority(params=2, results=1)`
-- Source range: `146:1`–`181:2`
+- Source range: `143:1`–`178:2`
 - AST evidence: `ast.json`, generated from frozen base `016da6245feb60e13971388be386c2c2041469a8`.
 - Risk scan: `risk-pattern-report.md`.
 
@@ -14,40 +14,40 @@
 
 ## Branches and early returns
 
-- Exact AST return nodes: `152:3, 159:3, 168:3, 174:3, 178:3, 180:2`.
+- Exact AST return nodes: `149:3, 156:3, 165:3, 171:3, 175:3, 177:2`.
 
 | Branch | AST kind | Source location | Required test disposition |
 |---|---|---|---|
-| B1 | if | 148:2 | planned targeted RED before any edit; not run by L0 |
-| B2 | if | 158:2 | planned targeted RED before any edit; not run by L0 |
-| B3 | if | 162:2 | planned targeted RED before any edit; not run by L0 |
-| B4 | if | 170:2 | planned targeted RED before any edit; not run by L0 |
-| B5 | if | 176:2 | planned targeted RED before any edit; not run by L0 |
+| B1 | if | 145:2 | planned targeted RED before any edit; not run by L0 |
+| B2 | if | 155:2 | planned targeted RED before any edit; not run by L0 |
+| B3 | if | 159:2 | planned targeted RED before any edit; not run by L0 |
+| B4 | if | 167:2 | planned targeted RED before any edit; not run by L0 |
+| B5 | if | 173:2 | planned targeted RED before any edit; not run by L0 |
 
 ## Calls and live bindings
 
 | Callee expression | Source location | Current-base evidence/requirement |
 |---|---|---|
-| validateStrategyFirstLegResult | 147:32 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| request.Result.ExecutionTerms.Identity | 150:3 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| accepted.result.ExecutionTerms.Identity | 150:47 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 152:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| MajorDecimal | 155:25 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| terms.Entry | 155:25 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| MajorDecimal | 156:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| terms.EffectiveStop | 156:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| MajorDecimal | 157:27 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| terms.Target | 157:27 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 159:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| string | 162:21 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| string | 166:3 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| string | 166:31 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 168:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| uint64 | 172:33 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 174:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.TrimSpace | 176:53 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| strings.TrimSpace | 177:81 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
-| fmt.Errorf | 178:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| validateStrategyFirstLegResult | 144:32 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| request.Result.ExecutionTerms.Identity | 147:3 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| accepted.result.ExecutionTerms.Identity | 147:47 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 149:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| MajorDecimal | 152:25 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| terms.Entry | 152:25 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| MajorDecimal | 153:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| terms.EffectiveStop | 153:23 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| MajorDecimal | 154:27 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| terms.Target | 154:27 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 156:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| string | 159:21 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| string | 163:3 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| string | 163:31 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 165:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| uint64 | 169:33 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 171:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| strings.TrimSpace | 173:53 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| strings.TrimSpace | 174:81 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
+| fmt.Errorf | 175:10 | current-base AST call; re-query CodeGraph callers/callees/impact immediately before edit |
 
 ## State mutations and fallbacks
 
@@ -59,3 +59,5 @@
 - A named targeted RED or explicit evidence-backed not-applicable rationale is required for every edited branch before GREEN.
 
 a112 5.2.2.2: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
+
+a112 5.2.2.2 리뷰 수리: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)

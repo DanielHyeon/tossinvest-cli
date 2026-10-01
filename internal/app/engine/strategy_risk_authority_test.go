@@ -134,6 +134,13 @@ func newStrategyRiskLoaderFixture(t *testing.T) strategyRiskLoaderFixture {
 // 범위별 위험 권한). 결과 권한 쌍은 원래 종목 하나 그대로다 — 범위별 결과는 시험이 제안 권한에서 다시 만든다.
 func newStrategyRiskLoaderFixtureWith(t *testing.T, extraKR []riskLoaderSymbol) strategyRiskLoaderFixture {
 	t.Helper()
+	return newStrategyRiskLoaderFixtureGeneration(t, extraKR, 1)
+}
+
+// newStrategyRiskLoaderFixtureGeneration 은 서명 위험 정책의 세대를 정한다(a112 5.2.2.2 리뷰 수리 — 시장 칸과 범위 번들의 세대가 갈리는
+// 배치를 만들어 dispatch 가 **범위 번들의** 세대를 읽는지 잼, 리뷰 B #1 · 변이 M20).
+func newStrategyRiskLoaderFixtureGeneration(t *testing.T, extraKR []riskLoaderSymbol, generation uint64) strategyRiskLoaderFixture {
+	t.Helper()
 	now := time.Date(2026, 8, 4, 2, 0, 0, 0, time.UTC)
 	dir := t.TempDir()
 	journalPath := filepath.Join(dir, "journal.db")
@@ -163,7 +170,7 @@ func newStrategyRiskLoaderFixtureWith(t *testing.T, extraKR []riskLoaderSymbol) 
 			t.Fatal(err)
 		}
 		body := riskLoaderBody{SchemaVersion: "strategy-risk-bucket-policy:v1", Domain: "TossOS/strategy-risk-bucket-policy/ed25519/v1",
-			SignatureAlgorithm: "Ed25519", KeyID: env[strategyRiskKeyIDEnv], Generation: 1, Market: bucketMarket,
+			SignatureAlgorithm: "Ed25519", KeyID: env[strategyRiskKeyIDEnv], Generation: generation, Market: bucketMarket,
 			AccountID: "acct-risk-loader", AccountCurrency: "KRW", QuoteCurrency: quote, PolicyVersion: "risk-policy-v1", Approver: "risk-committee",
 			ObservedAt: now.Add(-time.Minute).Format(time.RFC3339Nano), FreshUntil: now.Add(time.Minute).Format(time.RFC3339Nano),
 			Fee:           riskLoaderFee{FixedBaseMinor: "0", PerUnitBaseMinor: "1", MinimumBaseMinor: "1", Version: "fee-v1", Digest: riskLoaderDigest("fee-" + string(market))},

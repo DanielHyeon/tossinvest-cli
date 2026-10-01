@@ -1,0 +1,880 @@
+{
+  "file": "internal/riskbucket/production_snapshot_authority.go",
+  "source_sha256": "38de0b7d846b0a1af1b01bc24eb94adc673ca953a3f125f3130adbc3bb4f58c2",
+  "package": "riskbucket",
+  "function": "bindProductionRiskInputs",
+  "signature": "bindProductionRiskInputs(params=3, results=4)",
+  "start": {
+    "line": 283,
+    "column": 1
+  },
+  "end": {
+    "line": 350,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 285,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 292,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 296,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 300,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 308,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 314,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 321,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 339,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "range",
+      "at": {
+        "line": 344,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 345,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 289,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 293,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 297,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 302,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 311,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 315,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 322,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 340,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 346,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 349,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 285,
+        "column": 6
+      },
+      "text": "result.ValidProposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 285,
+        "column": 121
+      },
+      "text": "lineage.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 285,
+        "column": 141
+      },
+      "text": "terms.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 45
+      },
+      "text": "Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 88
+      },
+      "text": "terms.AccountRef"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 3
+      },
+      "text": "terms.Market"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 39
+      },
+      "text": "terms.Symbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 75
+      },
+      "text": "terms.Quantity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 3
+      },
+      "text": "terms.LineageIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 92
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 108
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 53
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 13
+      },
+      "text": "Horizon"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 53
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 18
+      },
+      "text": "exactProductionRiskStrategy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
+        "column": 53
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 16
+      },
+      "text": "exactProductionRiskSymbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 53
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 304,
+        "column": 11
+      },
+      "text": "terms.Entry"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 305,
+        "column": 28
+      },
+      "text": "canonicalProductionRiskTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 305,
+        "column": 56
+      },
+      "text": "entry.AsOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 306,
+        "column": 30
+      },
+      "text": "entry.MajorDecimal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 307,
+        "column": 16
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 307,
+        "column": 16
+      },
+      "text": "time.Unix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 308,
+        "column": 34
+      },
+      "text": "entry.Currency"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 308,
+        "column": 76
+      },
+      "text": "entry.UnitVersion"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 3
+      },
+      "text": "entry.MinorScale"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 25
+      },
+      "text": "productionRiskMinorScale"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 68
+      },
+      "text": "entry.Source"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 92
+      },
+      "text": "entry.Version"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 117
+      },
+      "text": "entry.Digest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 3
+      },
+      "text": "entryObserved.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 310,
+        "column": 45
+      },
+      "text": "entryFresh.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 311,
+        "column": 53
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 313,
+        "column": 13
+      },
+      "text": "input.FX.EvidenceAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 317,
+        "column": 23
+      },
+      "text": "canonicalProductionRiskTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 318,
+        "column": 20
+      },
+      "text": "canonicalProductionRiskTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 319,
+        "column": 14
+      },
+      "text": "latestProductionRiskTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 319,
+        "column": 70
+      },
+      "text": "fx.ObservedAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 11
+      },
+      "text": "earliestProductionRiskTime"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 63
+      },
+      "text": "fx.FreshUntil"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 5
+      },
+      "text": "observed.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 42
+      },
+      "text": "fresh.Before"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 53
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 19
+      },
+      "text": "productionRiskDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 40
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 47
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 110
+      },
+      "text": "terms.Identity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 128
+      },
+      "text": "input.FX.Digest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 3
+      },
+      "text": "config.ObservedAt.Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 42
+      },
+      "text": "strings.TrimPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 332,
+        "column": 128
+      },
+      "text": "entry.Version"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 14
+      },
+      "text": "productionRiskDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 35
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 42
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 64
+      },
+      "text": "entry.Source"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 80
+      },
+      "text": "entry.Version"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 97
+      },
+      "text": "entry.Digest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 113
+      },
+      "text": "entry.PriceMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 333,
+        "column": 133
+      },
+      "text": "terms.Identity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 35
+      },
+      "text": "fx.RateQuoteToBase"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 66
+      },
+      "text": "fx.Haircut"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 107
+      },
+      "text": "fx.Source"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 129
+      },
+      "text": "fx.Version"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 336,
+        "column": 12
+      },
+      "text": "fx.Digest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 336,
+        "column": 67
+      },
+      "text": "fx.ObservedAt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 336,
+        "column": 96
+      },
+      "text": "fx.FreshUntil"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 339,
+        "column": 30
+      },
+      "text": "validateReservePolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 345,
+        "column": 16
+      },
+      "text": "parseMinor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 346,
+        "column": 54
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 284,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 291,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 295,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 299,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 304,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 305,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 306,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 307,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 313,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 317,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 318,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 319,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 320,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 324,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 326,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 327,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 330,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 331,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 339,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 342,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 345,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

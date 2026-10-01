@@ -35,6 +35,12 @@ const (
 
 var ErrProductionRiskSnapshotUnavailable = errors.New("risk bucket: production snapshot authority unavailable")
 
+// ErrProductionRiskScopeRefused 는 실패가 **그 소유자 범위에만** 해당한다는 신원임(a112 5.2.2.2 리뷰 수리 — J4 = (A)).
+// 서명 정책에 그 종목의 섹터 매핑이 없거나, 그 범위에 scope latch 가 있는 두 경우만 이것을 감쌈. 그 밖의 실패(원장 읽기 · 행 손상 ·
+// 스키마 · 매니페스트 digest · ctx)는 결함이고 이 신원을 갖지 않음 — 엔진은 이 신원이 있을 때만 그 범위를 건너뛰고 같은 주기의 다른 범위로
+// 감. 판정은 바뀌지 않음: 어느 쪽이든 이 함수는 거절함(신원만 운반).
+var ErrProductionRiskScopeRefused = errors.New("risk bucket: owner scope refused by the signed policy or a scope latch")
+
 // ProductionRiskSnapshotConfig contains only read paths and externally managed
 // trust pins. It exposes no policy writer, signer, toggle or execution handle.
 type ProductionRiskSnapshotConfig struct {
@@ -158,13 +164,14 @@ func LoadProductionRiskSnapshotAuthority(ctx context.Context, config ProductionR
 	if err != nil || !verifyProductionRiskPolicy(manifest, config) {
 		return RiskSnapshotAuthorityBundle{}, ErrProductionRiskSnapshotUnavailable
 	}
+	// 원인의 신원을 `%w` 로 보존함(문구는 `%v` 와 같음) — 범위 국소 거절(ErrProductionRiskScopeRefused)과 결함을 호출자가 타입으로 가르게.
 	scope, reserve, limits, err := bindProductionRiskInputs(config, manifest.productionRiskPolicyBody, input)
 	if err != nil {
-		return RiskSnapshotAuthorityBundle{}, fmt.Errorf("%w: %v", ErrProductionRiskSnapshotUnavailable, err)
+		return RiskSnapshotAuthorityBundle{}, fmt.Errorf("%w: %w", ErrProductionRiskSnapshotUnavailable, err)
 	}
 	entries, err := loadProductionRiskEntries(ctx, config, manifest.productionRiskPolicyBody, scope, reserve, limits)
 	if err != nil {
-		return RiskSnapshotAuthorityBundle{}, fmt.Errorf("%w: %v", ErrProductionRiskSnapshotUnavailable, err)
+		return RiskSnapshotAuthorityBundle{}, fmt.Errorf("%w: %w", ErrProductionRiskSnapshotUnavailable, err)
 	}
 	material := riskSnapshotAuthorityMaterial{Scope: scope, Policy: reserve, Generation: manifest.Generation, Entries: entries}
 	service := newRiskSnapshotAuthorityService(fixedProductionRiskSnapshotSource{material: material})
@@ -291,7 +298,8 @@ func bindProductionRiskInputs(config ProductionRiskSnapshotConfig, body producti
 	}
 	symbol, ok := exactProductionRiskSymbol(body.Symbols, lineage.Symbol)
 	if !ok {
-		return RiskSnapshotScope{}, ReservePolicy{}, nil, errors.New("symbol sector mapping unavailable")
+		// 그 종목이 서명 정책 밖 — 범위 국소 거절(신원 운반, 판정 불변).
+		return RiskSnapshotScope{}, ReservePolicy{}, nil, fmt.Errorf("%w: symbol sector mapping unavailable", ErrProductionRiskScopeRefused)
 	}
 	entry := terms.Entry()
 	entryObserved, entryOK := canonicalProductionRiskTime(entry.AsOf())
@@ -368,9 +376,13 @@ func loadProductionRiskEntries(ctx context.Context, config ProductionRiskSnapsho
 		return nil, errors.New("risk bucket: exact journal schema unavailable")
 	}
 	var scopeLatches int
+	// 조회 결함과 latch 존재를 가름(편집 전에는 한 오류로 합쳐 있었음) — 둘 다 거절(판정 불변), latch 만 범위 국소 신원.
 	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_scope_latches WHERE account_ref=? AND market=? AND symbol=?`,
-		scope.AccountID, string(scope.Market), scope.Symbol).Scan(&scopeLatches); err != nil || scopeLatches != 0 {
-		return nil, errors.New("risk bucket: scope latch present")
+		scope.AccountID, string(scope.Market), scope.Symbol).Scan(&scopeLatches); err != nil {
+		return nil, fmt.Errorf("risk bucket: scope latch unreadable: %w", err)
+	}
+	if scopeLatches != 0 {
+		return nil, fmt.Errorf("%w: scope latch present", ErrProductionRiskScopeRefused)
 	}
 	values := map[Dimension]string{DimensionHorizon: string(scope.Horizon), DimensionMarket: string(scope.Market),
 		DimensionStrategy: scope.StrategyRiskID, DimensionSector: scope.Sector, DimensionSymbol: scope.Symbol}

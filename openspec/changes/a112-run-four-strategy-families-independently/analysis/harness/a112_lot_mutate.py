@@ -383,10 +383,70 @@ SET_5222_TESTS = [
      "./internal/app/engine"],
     ["go", "test", "-count=1", "-run", "TestTheSingleProposalAssumption|TestTheScopeRefusalType|TestOnlyATypedScopeRefusal|Handoff|Seam|Admit|Classified|Single", "./internal/app/engine"],
 ]
+OWN = "internal/app/engine/strategy_owner_scope_authority.go"
+RB = "internal/riskbucket/production_snapshot_authority.go"
+SET_5222_FIX = [
+    ("Y01 sentinel removed at the out-of-policy symbol site", RB,
+     'nil, fmt.Errorf("%w: symbol sector mapping unavailable", ErrProductionRiskScopeRefused)', 'nil, errors.New("symbol sector mapping unavailable")'),
+    ("Y02 sentinel removed at the scope latch site", RB,
+     'return nil, fmt.Errorf("%w: scope latch present", ErrProductionRiskScopeRefused)', 'return nil, errors.New("risk bucket: scope latch present")'),
+    ("Y03 sentinel widened onto the latch read fault", RB,
+     'return nil, fmt.Errorf("risk bucket: scope latch unreadable: %w", err)', 'return nil, fmt.Errorf("%w: scope latch unreadable: %w", ErrProductionRiskScopeRefused, err)'),
+    ("Y04 sentinel widened onto every ledger-entry fault", RB,
+     "\tentries, err := loadProductionRiskEntries(ctx, config, manifest.productionRiskPolicyBody, scope, reserve, limits)\n\tif err != nil {\n\t\treturn RiskSnapshotAuthorityBundle{}, fmt.Errorf(\"%w: %w\", ErrProductionRiskSnapshotUnavailable, err)",
+     "\tentries, err := loadProductionRiskEntries(ctx, config, manifest.productionRiskPolicyBody, scope, reserve, limits)\n\tif err != nil {\n\t\treturn RiskSnapshotAuthorityBundle{}, fmt.Errorf(\"%w: %w: %w\", ErrProductionRiskSnapshotUnavailable, ErrProductionRiskScopeRefused, err)"),
+    ("Y05 bind cause flattened again (%v)", RB,
+     "\tscope, reserve, limits, err := bindProductionRiskInputs(config, manifest.productionRiskPolicyBody, input)\n\tif err != nil {\n\t\treturn RiskSnapshotAuthorityBundle{}, fmt.Errorf(\"%w: %w\", ErrProductionRiskSnapshotUnavailable, err)",
+     "\tscope, reserve, limits, err := bindProductionRiskInputs(config, manifest.productionRiskPolicyBody, input)\n\tif err != nil {\n\t\treturn RiskSnapshotAuthorityBundle{}, fmt.Errorf(\"%w: %v\", ErrProductionRiskSnapshotUnavailable, err)"),
+    ("Y06 engine risk loader stamps every failure scope-local", RSK,
+     "\t\t\t\tentry.cause = err\n", "\t\t\t\tentry.cause = riskbucket.ErrProductionRiskScopeRefused\n"),
+    ("Y07 risk classifier calls every cause scope-local", OWN,
+     "return errors.Is(scope.cause, riskbucket.ErrProductionRiskScopeRefused), scope.cause", "return true, scope.cause"),
+    ("Y08 a scope the risk authority does not hold becomes scope-local", OWN,
+     'return false, errors.New("production risk authority holds no entry for this owner scope")', 'return true, errors.New("production risk authority holds no entry for this owner scope")'),
+    ("Y09 account ctx fault classified scope-local", OWN, "return !fault, scope.cause", "return !fault || true, scope.cause"),
+    ("Y10 every account failure classified as a fault", OWN, "return !fault, scope.cause", "return !fault && false, scope.cause"),
+    ("Y11 account loader ignores its own context after a failure", FL,
+     "\t\t\t\tif ctxErr := ctx.Err(); ctxErr != nil {", "\t\t\t\tif ctxErr := ctx.Err(); false && ctxErr != nil {"),
+    ("Y12 unactivated count gate removed", FL,
+     "\tif !proposal.familyActivation().Verified() && len(proposal.entries) != 1 {", "\tif false && !proposal.familyActivation().Verified() && len(proposal.entries) != 1 {"),
+    ("Y13 count gate applied to activated markets too", FL,
+     "\tif !proposal.familyActivation().Verified() && len(proposal.entries) != 1 {", "\tif len(proposal.entries) != 1 {"),
+    ("M14 unkeyed first leg no longer refused — expected to SURVIVE (unreachable: the seal's selection already normalises the key)", FL,
+     "\tif !keyed { // 봉인이", "\tif false && !keyed { // 봉인이"),
+    ("Y15 worker promotion skips the scope's risk readiness", SUP,
+     "\t\tif _, ready := r.forScope(key); !ready {\n\t\t\tcontinue\n\t\t}", "\t\tif _, ready := r.forScope(key); false && !ready {\n\t\t\tcontinue\n\t\t}"),
+    ("Y16 worker promotion skips the scope's account readiness", SUP,
+     "\t\tif _, ready := a.forScope(key); !ready {\n\t\t\tcontinue\n\t\t}", "\t\tif _, ready := a.forScope(key); false && !ready {\n\t\t\tcontinue\n\t\t}"),
+    ("Y17 worker expiry from the first ready scope again", SUP,
+     "\texpiresAt := a.earliestFreshUntil()", "\texpiresAt := a.authority.FreshUntil()"),
+    ("Y18 account identity not bundled over scopes", FL,
+     "\t\tif len(scopes) > 1 {\n\t\t\tready := make([]string, 0, len(scopes))", "\t\tif false {\n\t\t\tready := make([]string, 0, len(scopes))"),
+    ("Y19 admit drops the collection cause", ADM, "\t\trefusal.cause = err\n", ""),
+    ("Y20 dispatch flattens the collection cause (%v)", DCY,
+     'return execgw.Outcome{}, fmt.Errorf("engine: first-leg admission %s: %w", admitted.Code, admitted.cause)',
+     'return execgw.Outcome{}, fmt.Errorf("engine: first-leg admission %s: %v", admitted.Code, admitted.cause)'),
+    ("Y21 dispatch types a cause-less refusal as a scope refusal (non-nil wrap — review B #7)", DCY,
+     'return execgw.Outcome{}, fmt.Errorf("engine: first-leg admission %s: %s", admitted.Code, admitted.Detail)',
+     'return execgw.Outcome{}, fmt.Errorf("engine: first-leg admission %s: %w", admitted.Code, &strategyScopeRefusal{detail: admitted.Detail})'),
+    ("Y22 delivery skips every fault (J4 misclassification, carried from X01)", MD,
+     "\t\tif errors.As(err, &scope) {", "\t\tif true || errors.As(err, &scope) {"),
+]
+SET_5222_FIX_TESTS = [
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+     "TestAnActivatedTwoScope|TestTheSecondLeg|TestAScope|TestTheFirstLegCurrency|TestTheRiskStubBridge|TestAForgedScope|TestTheFirstLegSeal|TestARiskScope|TestACorrupt|TestAnAccountLoad|TestTheLeaseRisk|TestAnUnactivated|TestAWorker|TestTheSameOwnerScope|TestEveryAdmitted|TestARefusedHandoff|TestTheProposalSetDigest|TestFirstLegAuthority|TestTheFirstLegBackstop|TestTheProductionCycle",
+     "./internal/app/engine"],
+    ["go", "test", "-count=1", "-run", "TestTheSingleProposalAssumption|TestTheScopeRefusalType|TestOnlyATypedScopeRefusal|TestNoEngineErrorTypeImplementsAs|Single", "./internal/app/engine"],
+    ["go", "test", "-count=1", "./internal/riskbucket"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
-        "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS)}
+        "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
+        "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS)}
+# 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
+# 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
+EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측
 MUTANTS, TESTS = SET_5621, SET_5621_TESTS
 
 def run_tests(copy: Path, env: dict) -> tuple[str, str]:
@@ -421,9 +481,11 @@ def main() -> None:
         only = re.compile(args[i + 1])
         args = args[:i] + args[i + 2:]
     global MUTANTS, TESTS
+    expected = None
     if "--set" in args:
         i = args.index("--set")
         MUTANTS, TESTS = SETS[args[i + 1]]
+        expected = EXPECTED_PASSES.get(args[i + 1])
         args = args[:i] + args[i + 2:]
     scratch, own = Path(args[0]), args[1:]
     copy = scratch / f"mut-a112-lot-{os.getpid()}"
@@ -456,6 +518,10 @@ def main() -> None:
                 break
             if passes == 0:
                 verdict, why = "NO-TESTS-RAN", " ".join(command) + " emitted no test pass event"
+                break
+            index = TESTS.index(command)
+            if expected is not None and passes != expected[index]:
+                verdict, why = "CONTROL-PASS-COUNT", " ".join(command) + f" pass events {passes} != expected {expected[index]}"
                 break
             why = (why + " " if why else "") + f"[{command[-1]} pass events {passes}]"
     ledger.write(f"CONTROL\t{verdict}\t{why}\n")

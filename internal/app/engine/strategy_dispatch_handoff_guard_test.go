@@ -146,7 +146,9 @@ var singleProposalAssumptionCensus = map[string]int{
 	// 바뀌어 빠졌다. 남은 둘은 계좌 `collectMarket` 의 **활성화 없는 시장** 갈래(`!activated && (len(entries) != 1 || !entries[0]…)`) —
 	// 토글 OFF = upstream 의 시장 단위 상한이며 strategyhandoff `Capacity=1`(활성화 없는 시장)과 같은 수명이다. 활성화된 시장에는 이
 	// 가정이 없다. 지울 주인: 활성화 없는 시장의 시장 단위 상한을 걷는 로트(오늘 미배정 — 토글 OFF 동작을 바꾸므로 사람 결정).
-	"strategy_account_first_leg_authority.go": 2,
+	// 2 → 3(2026-10-01, 5.2.2.2 리뷰 codex #1): 1차 레그가 **활성화 없는 시장**에서 6.2 위치의 시장 단위 개수 관문을 되살렸다
+	// (`!familyActivation().Verified() && len(proposal.entries) != 1`) — 마지막 권한 경계의 수용 집합이 활성화 밖에서 넓어지지 않게. 같은 수명.
+	"strategy_account_first_leg_authority.go": 3,
 }
 
 // handoffSeamFile 이 이 표에 없는 것은 빠뜨린 것이 아니다. dispatch 경로에서

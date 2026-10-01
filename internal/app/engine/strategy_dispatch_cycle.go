@@ -150,9 +150,10 @@ func (cycle *strategyDispatchCycle) dispatch(ctx context.Context, delivered stra
 	}
 	admitted := cycle.firstLeg.admit(ctx, result)
 	if admitted.Code != StrategyFirstLegAdmitted {
-		// 범위 거절은 타입을 싣고 올라간다(a112 5.2.2.2 J4) — 문구는 같다(범위 거절의 Error() 가 곧 Detail).
-		if admitted.scope != nil {
-			return execgw.Outcome{}, fmt.Errorf("engine: first-leg admission %s: %w", admitted.Code, admitted.scope)
+		// 수집 오류는 사슬째 올라간다(a112 5.2.2.2 J4 · 리뷰 수리) — 문구는 같다(Detail 이 곧 그 오류의 문구). 범위 거절 타입과 결함 원인의
+		// 신원이 모두 보존됨.
+		if admitted.cause != nil {
+			return execgw.Outcome{}, fmt.Errorf("engine: first-leg admission %s: %w", admitted.Code, admitted.cause)
 		}
 		return execgw.Outcome{}, fmt.Errorf("engine: first-leg admission %s: %s", admitted.Code, admitted.Detail)
 	}

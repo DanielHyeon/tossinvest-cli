@@ -1,9 +1,9 @@
 # Function Logic Map: `newProductionStrategyFirstLegAuthorityLoader`
 
 - Source: `internal/app/engine/strategy_account_first_leg_authority.go`
-- Source SHA-256: `d0d6281292dafcc979edce741a3a2bf98ed348f023267d8198d2436c71ec7291`
+- Source SHA-256: `674fb6c148cca915074491fed6e39397a2e655d67687a913362b7676e64abdc3`
 - Signature: `newProductionStrategyFirstLegAuthorityLoader(params=8, results=1)`
-- Source range: `244:1`–`253:2`
+- Source range: `277:1`–`286:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 6.2 봉인 리뷰 수리, 2026-10-01). 편집 전 AST: `analysis/measurements/lot-6.2-seal/pre-edit-fix/newproductionstrategyfirstlegauthorityloader.ast.json`.
 - Risk scan: `risk-pattern-report.md`.
 
@@ -15,17 +15,17 @@
 
 ## Branches and early returns
 
-- 분기 없음. Exact AST return nodes: `251:2`.
+- 분기 없음. Exact AST return nodes: `284:2`.
 
 | Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
-| B1 | happy path | 244:1 | 모든 권한을 담은 loader 를 돌려준다 — 제안 쌍만 `detachedStrategyProposalPair` 로 떼어 냄 |
+| B1 | happy path | 277:1 | 모든 권한을 담은 loader 를 돌려준다 — 제안 쌍만 `detachedStrategyProposalPair` 로 떼어 냄 |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `detachedStrategyProposalPair` | 252:14 |
+| `detachedStrategyProposalPair` | 285:14 |
 
 ## State mutations and fallbacks
 
@@ -36,3 +36,5 @@
 - High-risk impact: yes(1차 레그 권한의 대조 원본). 편집은 공유를 끊는 방향만 — 판정 조건 불변, 입력이 같으면 결과가 같다.
 
 a112 5.2.2.2: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
+
+a112 5.2.2.2 리뷰 수리: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)

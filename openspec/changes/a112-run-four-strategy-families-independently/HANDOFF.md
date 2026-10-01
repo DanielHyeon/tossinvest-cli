@@ -327,6 +327,15 @@ safety context 를 분리한다"와 spec 의 "lane worker 가 safety loop 를 �
      새 자리를 여는 것은 "엔진을 세울 새 이유를 만드는 것"이고 그 시험이 실패한다.
 4. **6.2 를 여는 사람은 tasks.md 6.2 본문을 먼저 읽는다.** 아래 4 절이 그 요약이다.
 
+### 2026-10-01 a070 처분 ② 종결이 넘긴 것(문서 — Manager 지시)
+
+- **dependency matrix 정정.** 동결 골든 `analysis/goldens/dependency-matrix.json` 의 「a070 INCOMPLETE → L6 · L7 차단」 행은 낡았다 — a070 은 `--skip-specs` 아카이브
+  (`ee7b8cb8`)되었고 코어(타입 · owner/market 봉인)는 a072 · a112 생산 기반으로 살아 있다(처분 감사 `0d3e2849`). a070 은 L6 · L7 차단 선행이 아니다. 골든은 L0 동결
+  (manifest.sha256)이라 고치지 않고 정정을 tasks 1.2 와 여기에 기록한다.
+- **7.1 설계 입력.** 7.1 의 API 예산 subscope 는 `strategyrouter.QuotaAuthority` 가 아니라 정본 구현 `internal/scheduler.BudgetCoordinator` 위에 얹는다. 근거:
+  `QuotaAuthority` 는 정본 요구보다 약함(결정적 sha256 토큰 vs 암호학 난수 · reset generation · SafetyReserve 부재) — a070 처분 감사 §quota. L4 원장(tasks 표)의
+  `quota.go` 편집 대상 지정도 이 입력으로 교체 표기했다.
+
 ## 4. 6.2 를 여는 사람에게
 
 6.2 는 `strategy_account_first_leg_authority.go` 의 다섯 줄을 지우거나 바꾸게 된다.

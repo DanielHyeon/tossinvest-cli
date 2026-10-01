@@ -25,14 +25,13 @@ import (
 
 // strategyScopeRefusalMentions 는 생산 소스에서 그 타입 이름이 나오는 자리(파일:함수 — 함수 밖은 "(decl)")와 횟수.
 var strategyScopeRefusalMentions = map[string]int{
-	// 선언과 Error 메서드의 수신자.
+	// 선언과 Error · Unwrap 메서드의 수신자.
 	"strategy_owner_scope_authority.go:(decl)": 1,
 	"strategy_owner_scope_authority.go:Error":  1,
-	// **만드는 자리는 여기 둘뿐**: 그 범위의 위험 권한 부재 · 계좌 권한 부재.
+	"strategy_owner_scope_authority.go:Unwrap": 1,
+	// **만드는 자리는 여기 둘뿐**: 그 범위의 위험 · 계좌 권한이 범위 국소 원인으로 준비되지 않음(riskScopeCause · accountScopeCause 가 가름).
 	"strategy_account_first_leg_authority.go:collectStrategyFirstLegAuthority": 2,
-	// 운반: 결과 필드의 형, admit 의 errors.As 대상, 전달 몸통의 errors.As 대상.
-	"strategy_first_leg_admission.go:(decl)":                         1,
-	"strategy_first_leg_admission.go:admit":                          1,
+	// 운반: 전달 몸통의 errors.As 대상(admit · dispatch 는 수집 오류를 사슬째 나르므로 이 타입을 언급하지 않음 — 리뷰 수리).
 	"strategy_market_handoff_delivery.go:deliverEachStrategyHandoff": 1,
 }
 
@@ -72,6 +71,23 @@ func TestTheScopeRefusalTypeIsMadeOnlyWhereTheCensusSaysItIs(t *testing.T) {
 		sort.Strings(drift)
 		t.Fatalf("scope-refusal type mentions moved at %s: found %v, census %v — a new maker widens what the order path skips",
 			strings.Join(drift, ", "), found, strategyScopeRefusalMentions)
+	}
+}
+
+// 이름을 언급하지 않는 생산자(5.2.2.2 리뷰 A #2 — 사본 실측): `As(any) bool` 메서드를 가진 오류 감싸개는 errors.As 가 그 메서드로 대상 포인터를
+// 채우게 해서 타입 이름 없이 범위 거절을 만들어 낸다. 엔진 생산 코드에는 `As` 메서드 선언이 하나도 없어야 한다(필요해지면 이 시험이 그 자리를
+// 이름으로 받아들이는 편집이 리뷰에 보인다).
+func TestNoEngineErrorTypeImplementsAs(t *testing.T) {
+	var found []string
+	for _, path := range engineProductionFiles(t) {
+		for _, decl := range parseEngineFile(t, path).Decls {
+			if function, ok := decl.(*ast.FuncDecl); ok && function.Recv != nil && function.Name.Name == "As" {
+				found = append(found, filepath.Base(path))
+			}
+		}
+	}
+	if len(found) != 0 {
+		t.Fatalf("engine production code declares As methods in %v — an As method can mint a scope refusal without naming its type", found)
 	}
 }
 

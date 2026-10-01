@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/base64"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -204,7 +205,8 @@ func (loader *strategyRiskAuthorityLoader) collectMarket(ctx context.Context, ma
 	scopes := make([]strategyRiskScopeAuthority, 0, len(result.results()))
 	for _, scoped := range result.results() {
 		key, keyed := strategyOwnerKeyOf(scoped.Lineage)
-		entry := strategyRiskScopeAuthority{key: key, reason: StrategyRiskAuthorityUnavailable}
+		entry := strategyRiskScopeAuthority{key: key, reason: StrategyRiskAuthorityUnavailable,
+			cause: errors.New("production risk owner scope key invalid")}
 		if keyed {
 			bundle, err := riskbucket.LoadProductionRiskSnapshotAuthority(ctx, riskbucket.ProductionRiskSnapshotConfig{
 				ConfigDir: loader.configDir, JournalPath: loader.journalPath, Market: bucketMarket, AccountID: loader.accountID,
@@ -212,9 +214,15 @@ func (loader *strategyRiskAuthorityLoader) collectMarket(ctx context.Context, ma
 				TrustedKey: loader.key, ObservedAt: loader.observedAt,
 			}, riskbucket.ProductionRiskSnapshotInput{Result: scoped, FX: fx.read.evidence})
 			scope := bundle.Scope()
-			if err == nil && string(scope.Market) == string(market) && scope.AccountID == loader.accountID &&
-				scope.AsOf.Equal(loader.observedAt) && len(bundle.Entries()) == 5 {
-				entry.bundle, entry.ready, entry.reason = bundle, true, StrategyRiskReady
+			switch {
+			case err != nil:
+				// 원인을 접지 않고 운반(5.2.2.2 리뷰 수리 — 범위 국소 거절인지 결함인지는 1차 레그가 이 원인의 신원으로 가름).
+				entry.cause = err
+			case string(scope.Market) == string(market) && scope.AccountID == loader.accountID &&
+				scope.AsOf.Equal(loader.observedAt) && len(bundle.Entries()) == 5:
+				entry.bundle, entry.ready, entry.reason, entry.cause = bundle, true, StrategyRiskReady, nil
+			default:
+				entry.cause = errors.New("production risk bundle does not match the loader's market, account or observation")
 			}
 		}
 		scopes = append(scopes, entry)

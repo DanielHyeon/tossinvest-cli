@@ -2,7 +2,6 @@ package engine
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -35,9 +34,9 @@ type StrategyFirstLegAdmissionResult struct {
 	Market  string
 	Receipt journal.QFinalCampaignFirstLegReceipt
 	Detail  string
-	// scope 는 권한 수집이 **그 소유자 범위에만** 해당하는 거절을 냈을 때의 타입 값이다(a112 5.2.2.2 J4). 주문 경로는 이것으로만
-	// 「다음 범위로 가도 되는가」를 가른다 — 문구로 가르지 않는다.
-	scope *strategyScopeRefusal
+	// cause 는 권한 수집이 낸 오류 그대로다(a112 5.2.2.2 J4 · 리뷰 수리). 주문 경로는 이 사슬의 **타입**으로만 「다음 범위로 가도 되는가」를
+	// 가르고(범위 거절 타입), 결함이면 원인의 신원(원장 · ctx)을 잃지 않는다 — 문구로 가르지 않는다. Detail 은 같은 오류의 문구다.
+	cause error
 }
 
 // strategyFirstLegAuthorityLoader has an unexported method deliberately. A
@@ -81,9 +80,7 @@ func (b *strategyFirstLegAdmissionBridge) admit(ctx context.Context, result stra
 	authority, err := b.loader.collectStrategyFirstLegAuthority(ctx, accepted)
 	if err != nil {
 		refusal := strategyFirstLegRefusal(StrategyFirstLegAuthorityCollectionFailed, accepted.market, err.Error())
-		if scope := (*strategyScopeRefusal)(nil); errors.As(err, &scope) {
-			refusal.scope = scope
-		}
+		refusal.cause = err
 		return refusal
 	}
 	if err := validateStrategyFirstLegAuthority(accepted, authority); err != nil {

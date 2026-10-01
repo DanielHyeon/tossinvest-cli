@@ -1,53 +1,59 @@
 # Function Logic Map: `strategyAccountAuthorityLoader.collectMarket`
 
 - Source: `internal/app/engine/strategy_account_first_leg_authority.go`
-- Source SHA-256: `d0d6281292dafcc979edce741a3a2bf98ed348f023267d8198d2436c71ec7291`
+- Source SHA-256: `674fb6c148cca915074491fed6e39397a2e655d67687a913362b7676e64abdc3`
 - Signature: `strategyAccountAuthorityLoader.collectMarket(params=3, results=1)`
-- Source range: `154:1`–`188:2`
-- AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2).
+- Source range: `155:1`–`199:2`
+- AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2 리뷰 수리).
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
-- 시장 칸(`authority` · `snapshot`)은 첫 준비된 범위의 것 — 범위 하나면 편집 전과 같은 값.
-- 범위의 계좌 권한은 `forScope(key)` 로만 1차 레그에 건너간다(봉투 폴백 없음).
+- 준비 판정은 편집 전과 같다 — 바뀐 것은 실패 원인의 운반뿐(판정 불변).
 
 ## Branches and early returns
 
-- Exact AST return nodes: `156:3, 162:3, 165:3, 187:2`.
+- Exact AST return nodes: `157:3, 163:3, 166:3, 198:2`.
 
 | Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
-| B1 | if | 161:2 | 항목 없음, 또는 **활성화 없는 시장**에서 항목이 정확히 하나가 아니거나 무효 → `StrategyAccountProposalNotReady`(토글 OFF = upstream) |
-| B2 | if | 164:2 | loader 구성 불완전 → `StrategyAccountInternalFailure` |
-| B3 | if | 168:2 | 시장이 US 면 계좌 시장 US |
-| B4 | range | 172:2 | **(새)** 항목(소유자 범위)마다 계좌 권한 적재 — 적재 종목은 `entries[0]` 이 아니라 **그 범위의 종목**(A#5) |
-| B5 | if | 176:3 | **(새)** 범위 키 정규화 실패 또는 무효 제안 → 그 범위만 `ProposalNotReady` |
-| B6 | if | 181:4 | 적재 성공 · 시장 · 매니페스트 일치 → 그 범위 준비(편집 전 B4 의 반대편); 실패는 그 범위만 `AuthorityUnavailable` |
+| B1 | if | 162:2 | 항목 없음 · 활성화 없는 시장의 항목 하나 아님/무효 |
+| B2 | if | 165:2 | loader 구성 불완전 |
+| B3 | if | 169:2 | 시장이 US 면 계좌 시장 US |
+| B4 | range | 173:2 | 항목(범위)마다 적재 |
+| B5 | if | 178:3 | 범위 키 · 제안 유효할 때만 적재 |
+| B6 | switch | 183:4 | **(새)** 적재 결과 분기 |
+| B7 | case | 184:4 | **(새)** 적재 실패 → 원인 운반 |
+| B8 | if | 187:5 | **(새)** 실패 뒤 ctx 종료 → 원인 = ctx 오류(결함) |
+| B9 | case | 190:4 | 적재 성공 · 시장 · 매니페스트 일치 → 그 범위 준비 |
+| B10 | case | 192:4 | **(새)** 적재 성공인데 시장 · 매니페스트 불일치 → 결함 원인 |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `Verified` | 160:15 |
-| `proposal.familyActivation` | 160:15 |
-| `len` | 161:5 |
-| `len` | 161:50 |
-| `ValidProposal` | 161:81 |
-| `proposal.entries.authority.Proposal` | 161:81 |
-| `fail` | 162:10 |
-| `len` | 164:27 |
-| `fail` | 165:10 |
-| `make` | 171:12 |
-| `len` | 171:53 |
-| `entry.authority.Proposal` | 173:13 |
-| `strategyOwnerKeyOf` | 174:17 |
-| `result.ValidProposal` | 176:15 |
-| `loader.load` | 178:22 |
-| `authority.Market` | 181:21 |
-| `authority.ManifestDigest` | 181:60 |
-| `append` | 185:12 |
-| `strategyAccountMarketFromScopes` | 187:9 |
+| `Verified` | 161:15 |
+| `proposal.familyActivation` | 161:15 |
+| `len` | 162:5 |
+| `len` | 162:50 |
+| `ValidProposal` | 162:81 |
+| `proposal.entries.authority.Proposal` | 162:81 |
+| `fail` | 163:10 |
+| `len` | 165:27 |
+| `fail` | 166:10 |
+| `make` | 172:12 |
+| `len` | 172:53 |
+| `entry.authority.Proposal` | 174:13 |
+| `strategyOwnerKeyOf` | 175:17 |
+| `errors.New` | 177:11 |
+| `result.ValidProposal` | 178:15 |
+| `loader.load` | 180:22 |
+| `ctx.Err` | 187:18 |
+| `authority.Market` | 190:9 |
+| `authority.ManifestDigest` | 190:48 |
+| `errors.New` | 193:20 |
+| `append` | 196:12 |
+| `strategyAccountMarketFromScopes` | 198:9 |
 
 ## State mutations and fallbacks
 
@@ -55,4 +61,4 @@
 
 ## Safety conclusion
 
-- High-risk 인접(1차 레그의 계좌 권한 출처). 활성화 없는 시장의 새 통과 입력 0. 활성화 시장에서 한 범위의 적재 실패가 시장 전체를 닫지 않게 됐다(J3) — 그 범위는 1차 레그에서 타입 거절된다.
+- High-risk 인접. 새로 통과 · 새로 거절하는 입력 0(원인 분류는 1차 레그에서).
