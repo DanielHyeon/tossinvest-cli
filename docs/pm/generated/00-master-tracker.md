@@ -142,4 +142,4 @@
     - STORY-TOS-a073 — Operate and deploy the concurrent KR and US lanes [archived] → `a073-operate-multi-market-strategy-lanes`
     - STORY-TOS-a112 — Run four strategy families as independent evaluators [in_progress] → `a112-run-four-strategy-families-independently`
     - STORY-TOS-a126 — Filled exposure leaves the bucket when its position does [archived] → `a126-filled-exposure-leaves-the-bucket`
-    - STORY-TOS-a127 — Strategy authorities read the ledger the engine opened [implemented] → `a127-strategy-authorities-read-the-current-ledger`
+    - STORY-TOS-a127 — Strategy authorities read the ledger the engine opened [archived] → `a127-strategy-authorities-read-the-current-ledger`

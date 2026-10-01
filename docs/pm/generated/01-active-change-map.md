@@ -124,4 +124,4 @@
 | `a124-a-deliverer-that-keeps-failing-blocks-entry` | STORY-TOS-a124 | archived |
 | `a125-the-a063-exception-retires` | STORY-TOS-a125 | archived |
 | `a126-filled-exposure-leaves-the-bucket` | STORY-TOS-a126 | archived |
-| `a127-strategy-authorities-read-the-current-ledger` | STORY-TOS-a127 | implemented |
+| `a127-strategy-authorities-read-the-current-ledger` | STORY-TOS-a127 | archived |

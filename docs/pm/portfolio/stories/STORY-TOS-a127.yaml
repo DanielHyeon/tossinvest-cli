@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a127-strategy-authorities-read-the-current-ledger",
-    "path": "openspec/changes/a127-strategy-authorities-read-the-current-ledger"
+    "path": "openspec/changes/archive/2026-10-01-a127-strategy-authorities-read-the-current-ledger"
   },
   "found_by": {
     "date": "2026-10-01",
