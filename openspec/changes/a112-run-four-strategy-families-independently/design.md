@@ -150,6 +150,14 @@ encoding은 L1/L2/L3가 공유하는 유일한 setup identity authority다.
 
 v1의 server-owned experimental parameters는 opening range 15 regular-session minutes, breakout close buffer `max(1 tick, 100,000 ppm × ATR)`, retest tolerance `100,000..250,000 ppm × ATR`, timeout KR 8/US 10 closed one-minute bars, RVOL threshold 1,500,000 ppm, upper-wick/range veto 350,000 ppm이다. 1,200,000/2,000,000/2,500,000 RVOL counterfactual 결과도 관측에 기록한다. 변경은 새 config/version/digest와 shadow replay 승인을 요구하고 기존 setup을 소급 재해석하지 않는다.
 
+**1.2 반사실의 의미(2026-10-01 Manager 판정 2.3 (b)).** 원문 — spec「breakout v1 threshold는 server-owned experimental config로 versioning된다」:
+"RVOL 1,200,000/2,000,000/2,500,000 ppm counterfactual 결과도 evidence에 기록해야 하며 (SHALL)"; 위 문단: "1,200,000/2,000,000/2,500,000 RVOL counterfactual
+결과도 관측에 기록한다"; 골든 `thresholds.rvol_counterfactual_ppm` = `[1200000,2000000,2500000]`(값만 — 의미 문장 없음). 셋 중 어느 것도 「입장한 봉의 RVOL 을
+문턱과 비교한 깃발」(읽기 (a))이라고 말하지 않는다. (a) 로 읽으면 1.2 는 공허하다: 입장 문턱이 1.5 이므로 입장한 봉의 `RVOL >= 1.2` 는 항상 참이고(정보량 0),
+1.2 문턱에서만 입장할 봉(1.2 <= RVOL < 1.5)은 아무것도 남기지 않는다 — 「결과」 로 담을 내용이 없다. 그래서 1.2 반사실은 **가지 않은 길**의 측정으로 읽는다:
+「입장 문턱이 1.2 였다면 이 setup 에 돌파 봉이 있었는가」. v1 구현: 범위 뒤 봉 중 close buffer 와 wick 상한을 통과했지만 RVOL 만 입장 문턱 아래이고 1.2 이상인 봉이
+있으면 `RVOLAt1200000` 을 참으로 기록한다(기록 전용 — 상태 · 전이 · 거절 · 수량 · 봉인 불변). 입장(>= 1.5) 경로와 그 안의 2.0 · 2.5 기록은 바꾸지 않는다.
+
 첫 breakout touch 주문, intrabar high만으로 breakout 인정, failed reclaim 뒤 평균단가 낮추기는 금지한다. invalidation close, volume-expanded failed reclaim, timeout, spread/drift/freshness failure는 typed refusal/terminal transition을 만든다.
 
 ### 5. evidence producer와 snapshot authority를 evaluator 밖에 둔다

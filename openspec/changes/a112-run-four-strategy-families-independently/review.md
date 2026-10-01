@@ -6223,3 +6223,27 @@ BK2-30(`terminalPhase` 에서 CONSUMED 삭제)은 **이 로트 전에는 잡는 
 **정지 보고(임의 해석 금지) — 2.3 의 1.2 반사실.** 반사실 플래그는 입장(RVOL ≥ 1.5)한 돌파 봉에서만 기록된다(`evaluateFresh` B6 `57:3` 안). 그래서 1.2 플래그는
 기록될 때 항상 참이고, 1.2 ≤ RVOL < 1.5 인 봉(1.2 문턱에서만 입장할 봉)에는 아무것도 기록되지 않는다. 스펙 · design 「1.2 counterfactual 결과도 evidence/관측에
 기록」 의 「결과」 가 (a) 입장 봉의 문턱 비교 플래그(지금 코드)인지 (b) 「그 문턱이었다면 돌파였는가」 인지 판정이 필요 — 2.3 은 열어 둔다.
+
+## 2026-10-01 2.3 (b) — 1.2 반사실 기록(High-risk · 생산 편집)
+
+**판정(Manager, 2026-10-01): (b)** — (a) 의 기록은 입장(1.5)한 봉에서 항상 참인 깃발이라 정보량 0, 반사실은 가지 않은 길(1.2 <= RVOL < 1.5)의 측정. 조건 ① design 원문
+인용 + 공허 논증(원문이 명백히 (a) 면 재정지) — 원문 셋(spec SHALL 문장 · design 문단 · 골든 `rvol_counterfactual_ppm` 값)을 인용했고 어느 것도 (a) 를 말하지 않는다
+(review :867 의 「RVOL sets the 1.2/2.0/2.5 counterfactual flags (`:60-62`)」 는 코드 서술이지 의미 결정이 아니다). ② 구현 ③ 별도 커밋(앞 로트 d54f4dca 뒤).
+
+**Pre-Edit 선언.** 대상 `breakoutlane.evaluateFresh`(High-risk: 돌파 판정 · 증거). 편집 전 FLM `lot-2.3/pre-edit/internal-breakoutlane--evaluatefresh/`(HEAD d54f4dca,
+19 분기). 계획: B6(입장 · break) 뒤에 기록 갈래 하나. 입장 경로 · 결정 · 봉인 불변. `decisionSeal` 은 provenance RVOL 플래그를 포함하지 않는다(전이 · 계보만 — 코드 확인).
+패키지 밖 소비자 0(`RVOLAt1200000` · breakout `Provenance()` hit 0).
+
+**RED → GREEN.** RED `lot-2.3/red-2.3.log`: 1.2 정확 · 1.5 바로 아래 두 경우만 실패(나머지 셋은 미기록이 맞으므로 통과 — 시험의 첫 판 쌍둥이 배치 오류는 RED 전에 고쳤고 재수집).
+GREEN: 패키지 전체 · 태그 · race. 편집 뒤 번들 `function-logic/internal-breakoutlane--evaluatefresh/`(20 분기 — 편집 전 B7~B19 → B8~B20 위치 이동, 새 B7), 렌더러
+`harness/render_23_bundles.py`. B13(`since > timeout`)은 도달 불가로 BTM 에 그대로 적었다(앞 로트 정정). 이름 결속 17/17 `lot-2.3/named-2.3.log`.
+
+**변이 `lot-2.3/mutation-2.3.tsv` 10/10 CAUGHT** — 기록 억제(CF-01) · 문턱 교환 1.2→1.5(CF-02) · 1.2→2.0(CF-03) · +1 ppm(CF-04) · 배타(CF-05) · wick 누락(CF-06) ·
+buffer 누락(CF-07) · 입장 깃발 오기록(CF-08) · 결정 변경(전이 추가, CF-09) · 입장 경로 1.2 깃발 교환(CF-10).
+
+**잔여.** 1.2 문턱 리터럴 `1_200_000` 이 입장 경로(기존)와 새 갈래 두 곳에 있다 — 입장 경로를 손대지 않는다는 조건 때문에 상수로 묶지 않았다. 값의 정본은 골든
+`rvol_counterfactual_ppm[0]`; 둘을 골든에 묶는 시험은 없다(CF-03/04 가 새 갈래 값을, CF-10 이 입장 쪽 값을 행동으로 잡는다). 2.0 · 2.5 반사실은 판정 범위 밖이라 지금 의미
+(입장 봉의 문턱 비교)를 그대로 둔다.
+
+**착지 판정(Manager, 2026-10-01).** 착지 시점 독립 적대 리뷰 불요 — 비례 원칙(기록 전용 · 봉인 무포함 · 입장 경로 바이트 동일 · 쌍둥이 비교 · 판정 변경 변이 CAUGHT ·
+원문 3출처로 (a) 배제). 대신 완료 게이트 8.5 독립 적대 리뷰의 명시 대상에 올렸다(tasks 8.5). 리터럴 중복은 변이 핀으로 수용 — 입장 경로 불변 지시가 상수 통합보다 우선.

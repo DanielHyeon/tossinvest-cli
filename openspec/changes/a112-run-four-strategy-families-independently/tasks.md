@@ -85,12 +85,14 @@
   기존 `TestAdversarialCorrectionReplaysPreTerminalAndPreservesProposed` · `TestTerminalCorrectionsRetainTerminalAuthority`(TIMED_OUT 뒤). 변이 BK2-01~04 · 29 · 30 CAUGHT
   (BK2-30 「CONSUMED 비종단」 은 이 로트 전에는 잡는 시험이 없었다 — 원장의 유일한 실패 이름이 새 시험).
 
-- [ ] 2.3 Add failing threshold boundary tests for 15-minute range, 1-tick versus 0.10 ATR buffer, 0.10..0.25 ATR retest tolerance, KR 8/US 10 timeout, 1.5 RVOL, 1.2/2.0/2.5 counterfactuals and 0.35 wick veto using integer PPM arithmetic.
+- [x] 2.3 Add failing threshold boundary tests for 15-minute range, 1-tick versus 0.10 ATR buffer, 0.10..0.25 ATR retest tolerance, KR 8/US 10 timeout, 1.5 RVOL, 1.2/2.0/2.5 counterfactuals and 0.35 wick veto using integer PPM arithmetic.
 
-  **2.3 열림 — Manager 판정 대기(2026-10-01).** 1.5 입장 · 2.0 · 2.5 반사실 경계는 `TestRVOLAdmissionAndCounterfactualBoundaries`(BK2-24~26 CAUGHT), 범위 · buffer ·
-  허용폭 · 시한 · wick 은 기존 `TestGstackRepairFrozenVocabularyAndV1Thresholds` · `TestGstackRepairRetestQualifiesToleranceEndpoints` · `TestTimeoutExactBoundaryKRAndUS`.
-  남은 하나: **1.2 반사실** — 코드는 입장한 돌파 봉에서만 반사실 플래그를 적으므로 1.2 는 기록될 때 항상 참이고, 1.2~1.5 사이 봉(1.2 에서만 입장할 봉)에는
-  아무것도 기록되지 않는다. 스펙 「1.2 counterfactual 결과도 evidence에 기록」 을 어떻게 읽을지가 열려 있어 임의 해석하지 않고 보고했다.
+  **2.3 종결(2026-10-01 — 미착지).** 1.5 입장 · 2.0 · 2.5 반사실 경계 `TestRVOLAdmissionAndCounterfactualBoundaries`(BK2-24~26 CAUGHT); 범위 · buffer · 허용폭 · 시한 · wick
+  기존 `TestGstackRepairFrozenVocabularyAndV1Thresholds` · `TestGstackRepairRetestQualifiesToleranceEndpoints` · `TestTimeoutExactBoundaryKRAndUS`.
+  **1.2 반사실 = Manager 판정 (b)**(design.md 「1.2 반사실의 의미」 — 원문 인용 + (a) 의 공허 논증): 입장 못 한 봉 중 close buffer · wick 통과 · 1.2 <= RVOL 이면
+  `RVOLAt1200000` 기록(`evaluateFresh` 새 B7, 기록 전용). `a112_rvol_counterfactual_test.go` `TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit`
+  (1.2 정확 · 1.5 바로 아래 기록, 1.2 바로 아래 · wick 초과 · buffer 미달 미기록, 각 경우 RVOL 1.0 쌍둥이와 결정 동일) · `TestTheAdmittedBreakoutPathIsUnchangedByTheCounterfactual`.
+  RED `lot-2.3/red-2.3.log`, 변이 `lot-2.3/mutation-2.3.tsv` CF-01~10 CAUGHT(기록 억제 · 문턱 교환 1.5/2.0 · +1 · 배타 · 조건 누락 둘 · 입장 깃발 오기록 · 결정 변경 · 입장 경로 교환).
 
 - [x] 2.4 Add failing sizing property tests proving cost-inclusive `risk_per_share`, overflow-safe floor, `0 <= q_final <= q_candidate`, non-protective stop/target refusal and no averaging-down or stop retreat.
 
@@ -534,6 +536,10 @@
 - [ ] 8.3 Run `openspec validate a112-run-four-strategy-families-independently --strict --no-interactive`, PM tracker generation/check, `make sdd-check`, `make test`, `make vet`, `make validate` and `make gate CHANGE=a112-run-four-strategy-families-independently`.
 - [ ] 8.4 Refresh all edited-function AST/FLM/BTM/risk reports after GREEN implementation and confirm every branch/risk row maps to an automated test or an explicit reviewed non-code control.
 - [ ] 8.5 Complete independent adversarial review for owner uniqueness, score calibration, q_final monotonicity, evidence correction/replay, queue/failure isolation, API quota sharing, OFF defaults and safety-loop independence; resolve all P0/P1 findings.
+
+  **8.5 명시 대상 추가(2026-10-01 Manager 판정).** 2.3 (b) 의 `breakoutlane.evaluateFresh` 편집(1.2 반사실 기록 갈래 B7 — High-risk 함수) — 착지 시점 독립 적대 리뷰는
+  비례 원칙으로 생략(기록 전용 · `decisionSeal` 무포함 · 입장 경로 바이트 동일 · 쌍둥이 비교 · 판정 변경 변이 CAUGHT)했으므로 이 리뷰에서 덮는다. 증거: review.md 「2.3 (b)」 절,
+  `measurements/lot-2.3/`, `function-logic/internal-breakoutlane--evaluatefresh/`. 리터럴 `1_200_000` 두 자리는 변이 핀(CF-03/04 · CF-10)으로 수용(Manager).
 - [ ] 8.6 If and only if current A100 ProtectionReady and all dependency gates are complete, build/deploy in dormant OFF/UNOBSERVED mode and verify lane/automation/autostart/LIVE approval remain unchanged. Otherwise perform build-only/shadow-fixture verification, record deployment as BLOCKED, and prove exposure-raising broker requests remain zero.
 - [x] 8.7.1 Build the mechanism that *requires* a separate human-approved operating activation: no lane may read effective ON without a verified signed four-family manifest binding the current calibration, market calendar, risk, build and ProtectionReady digests. **(Landed 2026-09-03.)**
 

@@ -65,6 +65,11 @@ func evaluateFresh(snapshot EvidenceSnapshot, setup string) Decision {
 			state = phaseRetestWait
 			break
 		}
+		// a112 2.3 (b): 1.2 반사실 = 입장 문턱이 1.2 였다면 돌파였을 봉의 기록. 입장 봉은 위에서 break 하므로 여기는 입장 못 한 봉뿐이다 —
+		// close buffer · wick 을 통과하고 RVOL 만 문턱 아래인 봉. 기록 전용: 상태 · 전이 · 거절 · 수량 · 봉인에 닿지 않는다.
+		if BreakoutCloseQualifies(b.CloseMinor, resistance, v.ATRMinor, v.Config) && b.UpperWickRangePPM <= v.Config.value.UpperWickRangeMaxPPM && b.RVOLPPM >= 1_200_000 {
+			p.RVOLAt1200000 = true
+		}
 	}
 	if breakout < 0 {
 		d := newDecision(setup, snapshot, state, RefusalNone, p)
