@@ -3,8 +3,9 @@
 package riskbucket
 
 // a126 1.5 R3 (codex 3) — tasks 1.1 의 replay 결정성 문언 중 **snapshot digest** 를 생산 snapshot 생성기(LoadProductionRiskSnapshotAuthority)로
-// 실측함. 이 생성기는 v27 원장만 읽으므로(`productionRiskJournalSchema`) journal 패키지의 실 원장(현행 schema)에서는 돌 수 없음 —
-// 그래서 수명주기 사실(영수증 · owner released_at · scope latch · 공유 owner 체결)을 축소 v27 원장에 단계별로 쌓고, 매 단계 생성기를
+// 실측함. 이 riskbucket 내부 시험은 journal 을 import 할 수 없어(journal → riskbucket) 실 원장을 만들 수 없으므로 — a127 뒤 생성기는 주입된
+// 현재 스키마와 같은 원장을 읽고, 실 원장 수락은 engine 의 TestTheRiskLoaderReadsTheRealJournal 이 잰다 — 수명주기 사실(영수증 · owner
+// released_at · scope latch · 공유 owner 체결)을 축소 원장(주입 값과 같은 user_version)에 단계별로 쌓고, 매 단계 생성기를
 // 두 번 부름(부를 때마다 읽기 전용 연결을 새로 엶 = 재시작 replay). 사용량 · RowDigest · latch 의 replay 는 journal 쪽
 // TestA126UsageIsReplayDeterministicAcrossReleaseRevertAndSharedFills 가 생산 작성자 경로로 잼.
 

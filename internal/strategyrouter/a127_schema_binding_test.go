@@ -9,6 +9,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -85,7 +88,93 @@ func TestA127RouteLoaderRefusesALedgerMissingACampaignColumnEvenWithoutAnActiveO
 		`CREATE TABLE a127_pc AS SELECT id,account_ref,market,symbol,lane_id,lane_version,prospective_token,actual_position_generation,state FROM position_campaigns`,
 		`DROP TABLE position_campaigns`,
 		`ALTER TABLE a127_pc RENAME TO position_campaigns`)
-	if err := a127RouteLoad(t, fixture, fixture.config[MarketKR]); !errors.Is(err, ErrProductionRouteUnavailable) {
-		t.Fatalf("err=%v, want the missing campaign column to refuse before reading", err)
+	if err := a127RouteLoad(t, fixture, fixture.config[MarketKR]); !errors.Is(err, ErrProductionRouteUnavailable) || !strings.Contains(err.Error(), "journal read set unavailable") {
+		t.Fatalf("err=%v, want the missing campaign column refused by the pre-read prepare", err)
+	}
+}
+
+// codex 구현 리뷰 P2 #1 · #2 — route 의 판독 순서와 트랜잭션 수명을 구조로 단언: opener 는 읽기 전용 BeginTx 하나 · 원장 데이터 질의 없음 · 모든 prepare
+// 뒤에만 성공 반환, Batch 는 opener 를 owner 재구성(데이터 질의)보다 먼저 부름. 열 삭제 시험은 prepare 를 뒤로 옮긴 변이를 못 가르므로 순서는 여기서 잼.
+func TestA127RouteLoaderPreparesBeforeAnyLedgerDataRead(t *testing.T) {
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, "production.go", nil, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	funcs := map[string]*ast.FuncDecl{}
+	for _, decl := range file.Decls {
+		if fn, ok := decl.(*ast.FuncDecl); ok {
+			funcs[fn.Name.Name] = fn
+		}
+	}
+	opener, batch := funcs["openProductionRouteSnapshot"], funcs["LoadProductionRouteAuthorityBatch"]
+	if opener == nil || batch == nil {
+		t.Fatal("opener or batch not found")
+	}
+	begins, readOnly := 0, false
+	var lastPrepare, success token.Pos
+	ast.Inspect(opener.Body, func(n ast.Node) bool {
+		switch node := n.(type) {
+		case *ast.CallExpr:
+			sel, ok := node.Fun.(*ast.SelectorExpr)
+			if !ok {
+				return true
+			}
+			switch sel.Sel.Name {
+			case "BeginTx":
+				begins++
+				if unary, ok := node.Args[1].(*ast.UnaryExpr); ok {
+					if lit, ok := unary.X.(*ast.CompositeLit); ok {
+						for _, element := range lit.Elts {
+							if kv, ok := element.(*ast.KeyValueExpr); ok {
+								if key, ok := kv.Key.(*ast.Ident); ok && key.Name == "ReadOnly" {
+									if value, ok := kv.Value.(*ast.Ident); ok && value.Name == "true" {
+										readOnly = true
+									}
+								}
+							}
+						}
+					}
+				}
+			case "PrepareContext":
+				if node.Pos() > lastPrepare {
+					lastPrepare = node.Pos()
+				}
+			case "QueryRowContext", "QueryContext":
+				if lit, ok := node.Args[1].(*ast.BasicLit); !ok || !strings.Contains(lit.Value, "PRAGMA user_version") {
+					t.Errorf("%s: the opener reads ledger data before handing the transaction over", fset.Position(node.Pos()))
+				}
+			}
+		case *ast.ReturnStmt:
+			if len(node.Results) == 3 {
+				if id, ok := node.Results[2].(*ast.Ident); ok && id.Name == "nil" {
+					success = node.Pos()
+				}
+			}
+		}
+		return true
+	})
+	if begins != 1 || !readOnly || lastPrepare == token.NoPos || success == token.NoPos || !(lastPrepare < success) {
+		t.Fatalf("opener BeginTx=%d readOnly=%v last prepare %s success return %s — want one read-only tx returned only after every prepare",
+			begins, readOnly, fset.Position(lastPrepare), fset.Position(success))
+	}
+	var open, owners token.Pos
+	ast.Inspect(batch.Body, func(n ast.Node) bool {
+		if call, ok := n.(*ast.CallExpr); ok {
+			if id, ok := call.Fun.(*ast.Ident); ok {
+				switch id.Name {
+				case "openProductionRouteSnapshot":
+					open = call.Pos()
+				case "loadProductionRouteOwnersFrom":
+					if owners == token.NoPos {
+						owners = call.Pos()
+					}
+				}
+			}
+		}
+		return true
+	})
+	if open == token.NoPos || owners == token.NoPos || !(open < owners) {
+		t.Fatalf("batch opens the snapshot at %s and first reads owners at %s — the prepares must come first", fset.Position(open), fset.Position(owners))
 	}
 }

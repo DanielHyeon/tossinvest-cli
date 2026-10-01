@@ -158,6 +158,113 @@ func TestA127RiskLoaderReadsEverythingInOneReadOnlyTransaction(t *testing.T) {
 	if reads < 2 || usage != 1 {
 		t.Fatalf("reads=%d usage calls=%d — the census found less than the version, latch and usage reads", reads, usage)
 	}
+	a127AssertOneReadOnlyTransactionLifetime(t, fset, fn, txName)
+	a127AssertPrepareBeforeFirstDataQuery(t, fset, fn)
+}
+
+// a127AssertOneReadOnlyTransactionLifetime — codex 구현 리뷰 P2 #1: 수신자 철자만으로는 같은 트랜잭션임을 못 보임(같은 이름으로 tx 를 닫고 다시 열면 통과).
+// 그래서 BeginTx 는 정확히 하나 · 옵션은 ReadOnly: true · tx 대입은 그 하나뿐 · tx 의 Rollback/Commit 은 defer 된 Rollback 하나뿐임을 단언함.
+func a127AssertOneReadOnlyTransactionLifetime(t *testing.T, fset *token.FileSet, fn *ast.FuncDecl, txName string) {
+	t.Helper()
+	begins, assigns, closes := 0, 0, 0
+	ast.Inspect(fn.Body, func(n ast.Node) bool {
+		switch node := n.(type) {
+		case *ast.DeferStmt:
+			if sel, ok := node.Call.Fun.(*ast.SelectorExpr); ok && sel.Sel.Name == "Rollback" {
+				if id, ok := sel.X.(*ast.Ident); ok && id.Name == txName {
+					return false // 허용된 유일한 닫기 — 함수 끝에서만 실행됨
+				}
+			}
+		case *ast.AssignStmt:
+			for _, lhs := range node.Lhs {
+				if id, ok := lhs.(*ast.Ident); ok && id.Name == txName {
+					assigns++
+				}
+			}
+		case *ast.CallExpr:
+			sel, ok := node.Fun.(*ast.SelectorExpr)
+			if !ok {
+				return true
+			}
+			switch sel.Sel.Name {
+			case "BeginTx":
+				begins++
+				if len(node.Args) != 2 || !a127ReadOnlyOption(node.Args[1]) {
+					t.Errorf("%s: BeginTx without &sql.TxOptions{ReadOnly: true}", fset.Position(node.Pos()))
+				}
+			case "Rollback", "Commit":
+				if id, ok := sel.X.(*ast.Ident); ok && id.Name == txName {
+					closes++
+					t.Errorf("%s: %s.%s ends the read transaction before the function does", fset.Position(node.Pos()), txName, sel.Sel.Name)
+				}
+			}
+		}
+		return true
+	})
+	if begins != 1 || assigns != 1 || closes != 0 {
+		t.Fatalf("BeginTx=%d tx assignments=%d early closes=%d — want one read-only transaction living until the function returns", begins, assigns, closes)
+	}
+}
+
+func a127ReadOnlyOption(arg ast.Expr) bool {
+	unary, ok := arg.(*ast.UnaryExpr)
+	if !ok || unary.Op != token.AND {
+		return false
+	}
+	lit, ok := unary.X.(*ast.CompositeLit)
+	if !ok {
+		return false
+	}
+	for _, element := range lit.Elts {
+		if kv, ok := element.(*ast.KeyValueExpr); ok {
+			if key, ok := kv.Key.(*ast.Ident); ok && key.Name == "ReadOnly" {
+				if value, ok := kv.Value.(*ast.Ident); ok && value.Name == "true" {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// a127AssertPrepareBeforeFirstDataQuery — codex 구현 리뷰 P2 #2: 열 삭제 시험은 prepare 를 latch 질의 뒤로 옮긴 변이를 못 가름. 소스 순서로 단언함:
+// 원장 데이터 질의(PRAGMA user_version 을 뺀 Query*Context · ReadJournalBucketUsage)는 전부 마지막 PrepareContext 보다 뒤.
+func a127AssertPrepareBeforeFirstDataQuery(t *testing.T, fset *token.FileSet, fn *ast.FuncDecl) {
+	t.Helper()
+	var lastPrepare, firstData token.Pos
+	ast.Inspect(fn.Body, func(n ast.Node) bool {
+		call, ok := n.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+		data := false
+		switch fun := call.Fun.(type) {
+		case *ast.SelectorExpr:
+			switch fun.Sel.Name {
+			case "PrepareContext":
+				if call.Pos() > lastPrepare {
+					lastPrepare = call.Pos()
+				}
+			case "QueryRowContext", "QueryContext":
+				data = !(len(call.Args) >= 2 && a127IsPragmaUserVersion(call.Args[1]))
+			}
+		case *ast.Ident:
+			data = fun.Name == "ReadJournalBucketUsage"
+		}
+		if data && (firstData == token.NoPos || call.Pos() < firstData) {
+			firstData = call.Pos()
+		}
+		return true
+	})
+	if lastPrepare == token.NoPos || firstData == token.NoPos || !(lastPrepare < firstData) {
+		t.Fatalf("last prepare at %s, first ledger-data query at %s — every data query must come after the prepares",
+			fset.Position(lastPrepare), fset.Position(firstData))
+	}
+}
+
+func a127IsPragmaUserVersion(expr ast.Expr) bool {
+	lit, ok := expr.(*ast.BasicLit)
+	return ok && strings.Contains(lit.Value, "PRAGMA user_version")
 }
 
 func exprName(expr ast.Expr) string {

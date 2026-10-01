@@ -7,7 +7,6 @@ package strategyrouter_test
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -25,9 +24,7 @@ func TestA127RouteLoaderReadsARealJournalOpenedByJournalOpen(t *testing.T) {
 		t.Fatalf("journal.Open: %v", err)
 	}
 	t.Cleanup(func() { _ = j.Close() })
-	if err := os.Chmod(path, 0o600); err != nil {
-		t.Fatal(err)
-	}
+	// 권한 0600 은 journal.Open 이 스스로 맞춤 — 여기서 다시 맞추지 않아야 그 강화의 회귀도 이 시험이 잡음(1.6 리뷰 P3-8).
 	for _, market := range []strategyrouter.Market{strategyrouter.MarketKR, strategyrouter.MarketUS} {
 		config, err := strategyrouter.SignedProductionRouteConfigForTest(t.TempDir(), path, market, time.Date(2026, 8, 4, 1, 0, 0, 0, time.UTC), journal.SchemaVersion)
 		if err != nil {

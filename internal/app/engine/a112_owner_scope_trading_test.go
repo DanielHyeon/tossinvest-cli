@@ -381,14 +381,20 @@ func TestTheRiskLoaderReadsTheRealJournal(t *testing.T) {
 		AccountCurrency: loader.accountCurrency, ManifestDigest: loader.digests[StrategyMarketKR], TrustedKeyID: loader.keyID,
 		TrustedKey: loader.key, ObservedAt: loader.observedAt, JournalSchemaVersion: journal.SchemaVersion,
 	}, riskbucket.ProductionRiskSnapshotInput{Result: scoped[0], FX: fixture.fx.kr.read.evidence})
-	if err != nil || len(bundle.Entries()) != 5 {
-		t.Fatalf("real-journal load (schema %d) err=%v entries=%d, want the five-bucket bundle", journal.SchemaVersion, err, len(bundle.Entries()))
+	// 번들의 항목 배열은 길이 5 고정이라 길이 비교는 공허함(1.6 리뷰 P3-2) — digest 와 범위 준비 수로 잼.
+	if err != nil || bundle.Digest() == "" {
+		t.Fatalf("real-journal load (schema %d) err=%v digest=%q, want a sealed five-bucket bundle", journal.SchemaVersion, err, bundle.Digest())
 	}
 	collected := loader.collect(context.Background(), fixture.proposals.ResultAuthority(), fixture.fx)
+	ready := 0
 	for _, scope := range collected.kr.scopes {
 		if !scope.ready {
 			t.Fatalf("scope %v not ready against the real journal: %v", scope.key, scope.cause)
 		}
+		ready++
+	}
+	if ready != 2 {
+		t.Fatalf("ready scopes=%d against the real journal, want both owner scopes", ready)
 	}
 }
 
