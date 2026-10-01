@@ -1,8 +1,8 @@
 # Function Logic Map: `strategyRouteAuthorityLoader.collectMarket`
 
-- Source: `internal/app/engine/strategy_route_authority.go` (`140`–`218`)
+- Source: `internal/app/engine/strategy_route_authority.go` (`141`–`221`)
 - Qualified: `strategyRouteAuthorityLoader.collectMarket`
-- AST evidence: `ast.json` (`source_sha256` 2c6b43decf3a2706…) — **편집 전**(base `de3b4f65` 의 바이트, 커버리지 `analysis/impl/coverage-pre-edit.out`)
+- AST evidence: `ast.json` (`source_sha256` 85e97cf96bd416ee…) — **편집 뒤**(구현 로트, 커버리지 `analysis/impl/coverage-post-edit.out`)
 - Risk scan: `risk-pattern-report.md`
 - AST branches 13 · return 11 · 호출 64
 
@@ -22,19 +22,19 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 return | 진입 실측 |
 |---|---|---|---|---|
-| B1 | if | `:147` `if !schedule.snapshot.Ready \|\| schedule.restore.Activation == nil {` | :148 | 예 |
-| B2 | if | `:150` `if !candidates.snapshot.Ready {` | :151 | 예 |
-| B3 | if | `:153` `if candidates.approved.Len() == 0 {` | :154 | 예 |
-| B4 | if | `:156` `if loader.getenv == nil \|\| loader.load == nil \|\| loader.configDir == "" \|\| loader.journalPath == "" \|\| loader.accountRef == "" {` | :157 | 예 |
-| B5 | if | `:161` `if err != nil \|\| base64.StdEncoding.EncodeToString(key) != encoded \|\| len(key) != ed25519.PublicKeySize {` | :162 | 아니오 |
-| B6 | for | `:170` `for index := 0; index < candidates.approved.Len(); index++ {` | — | 예 |
-| B7 | if | `:172` `if !ok \|\| !approved.Valid() \|\| approved.Market() != string(market) \|\| seen[approved.Symbol()] {` | :173 | 아니오 |
-| B8 | if | `:184` `if err != nil \|\| batch.ManifestDigest() != digest {` | :185 | 예 |
-| B9 | range | `:189` `for _, approved := range approvedValues {` | — | 예 |
-| B10 | if | `:191` `if !ok {` | — | 예 |
-| B11 | if | `:199` `if routed.Code != strategyrouter.RefusalNone \|\| !routed.Valid() \|\| len(routed.Decisions) == 0 \|\|` | :206 | — |
-| B12 | if | `:207` `if len(entries) == 0 {` | :208 | 예 |
-| B13 | range | `:212` `for _, entry := range entries {` | :215 | 예 |
+| B1 | if | `:148` `if !schedule.snapshot.Ready \|\| schedule.restore.Activation == nil {` | :149 | 예 |
+| B2 | if | `:151` `if !candidates.snapshot.Ready {` | :152 | 예 |
+| B3 | if | `:154` `if candidates.approved.Len() == 0 {` | :155 | 예 |
+| B4 | if | `:157` `if loader.getenv == nil \|\| loader.load == nil \|\| loader.configDir == "" \|\| loader.journalPath == "" \|\| loader.accountRef == "" {` | :158 | 예 |
+| B5 | if | `:162` `if err != nil \|\| base64.StdEncoding.EncodeToString(key) != encoded \|\| len(key) != ed25519.PublicKeySize {` | :163 | 아니오 |
+| B6 | for | `:171` `for index := 0; index < candidates.approved.Len(); index++ {` | — | 예 |
+| B7 | if | `:173` `if !ok \|\| !approved.Valid() \|\| approved.Market() != string(market) \|\| seen[approved.Symbol()] {` | :174 | 아니오 |
+| B8 | if | `:187` `if err != nil \|\| batch.ManifestDigest() != digest {` | :188 | 예 |
+| B9 | range | `:192` `for _, approved := range approvedValues {` | — | 예 |
+| B10 | if | `:194` `if !ok {` | — | 예 |
+| B11 | if | `:202` `if routed.Code != strategyrouter.RefusalNone \|\| !routed.Valid() \|\| len(routed.Decisions) == 0 \|\|` | :209 | — |
+| B12 | if | `:210` `if len(entries) == 0 {` | :211 | 예 |
+| B13 | range | `:215` `for _, entry := range entries {` | :218 | 예 |
 
 ## Calls and live bindings
 
@@ -46,5 +46,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: 편집 전 — a127 은 config 리터럴에 필드 하나만 더할 예정.
+- **Safe edit boundary**: config 리터럴에 `JournalSchemaVersion: journal.SchemaVersion` 한 필드. 분기 불변.
 - **High-risk impact**: yes — route 권한 배선.

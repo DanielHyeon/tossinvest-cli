@@ -1,15 +1,15 @@
 {
   "file": "internal/riskbucket/production_snapshot_authority.go",
-  "source_sha256": "3aa9b66c00cdcdedf09e0bea1b0eeeaf56d46d0ba40149f28edf70e73d7e26b4",
+  "source_sha256": "9a74db4abd523da823e02e716258d428d3f385647c3d18121e744f9fac45119e",
   "package": "riskbucket",
   "function": "LoadProductionRiskSnapshotAuthority",
   "signature": "LoadProductionRiskSnapshotAuthority(params=3, results=2)",
   "start": {
-    "line": 145,
+    "line": 170,
     "column": 1
   },
   "end": {
-    "line": 180,
+    "line": 209,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 146,
+        "line": 171,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 149,
+        "line": 174,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 155,
+        "line": 178,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 161,
+        "line": 184,
         "column": 2
       }
     },
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 165,
+        "line": 190,
         "column": 2
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 170,
+        "line": 194,
         "column": 2
       }
     },
@@ -65,7 +65,15 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 174,
+        "line": 199,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 203,
         "column": 2
       }
     }
@@ -74,42 +82,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 147,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 150,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 158,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 162,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 166,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 171,
+        "line": 172,
         "column": 3
       }
     },
@@ -124,6 +97,48 @@
       "kind": "return",
       "at": {
         "line": 179,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 187,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 191,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 195,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 200,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 204,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 208,
         "column": 2
       }
     }
@@ -132,7 +147,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 146,
+        "line": 171,
         "column": 19
       },
       "text": "config.ObservedAt.IsZero"
@@ -140,7 +155,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 149,
+        "line": 174,
         "column": 12
       },
       "text": "ctx.Err"
@@ -148,7 +163,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 152,
+        "line": 179,
+        "column": 41
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
         "column": 11
       },
       "text": "canonicalProductionRiskConfig"
@@ -156,7 +179,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 153,
+        "line": 182,
         "column": 20
       },
       "text": "productionRiskOwnerUID"
@@ -164,7 +187,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 154,
+        "line": 183,
         "column": 10
       },
       "text": "ProductionRiskPolicyFileName"
@@ -172,7 +195,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 155,
+        "line": 184,
         "column": 32
       },
       "text": "filepath.IsAbs"
@@ -180,7 +203,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 155,
+        "line": 184,
         "column": 69
       },
       "text": "filepath.IsAbs"
@@ -188,7 +211,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 156,
+        "line": 185,
         "column": 4
       },
       "text": "canonicalRiskDigest"
@@ -196,7 +219,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 156,
+        "line": 185,
         "column": 51
       },
       "text": "canonicalIdentity"
@@ -204,7 +227,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 156,
+        "line": 185,
         "column": 93
       },
       "text": "len"
@@ -212,7 +235,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 157,
+        "line": 186,
         "column": 4
       },
       "text": "canonicalIdentity"
@@ -220,7 +243,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 157,
+        "line": 186,
         "column": 44
       },
       "text": "canonicalCurrency"
@@ -228,7 +251,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 160,
+        "line": 189,
         "column": 15
       },
       "text": "readProductionRiskFile"
@@ -236,7 +259,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 160,
+        "line": 189,
         "column": 38
       },
       "text": "filepath.Join"
@@ -244,7 +267,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 161,
+        "line": 190,
         "column": 19
       },
       "text": "productionRiskDigest"
@@ -252,7 +275,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 164,
+        "line": 193,
         "column": 19
       },
       "text": "decodeProductionRiskPolicy"
@@ -260,7 +283,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 165,
+        "line": 194,
         "column": 20
       },
       "text": "verifyProductionRiskPolicy"
@@ -268,7 +291,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 169,
+        "line": 198,
         "column": 33
       },
       "text": "bindProductionRiskInputs"
@@ -276,7 +299,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 171,
+        "line": 200,
         "column": 41
       },
       "text": "fmt.Errorf"
@@ -284,7 +307,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 173,
+        "line": 202,
         "column": 18
       },
       "text": "loadProductionRiskEntries"
@@ -292,7 +315,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 175,
+        "line": 204,
         "column": 41
       },
       "text": "fmt.Errorf"
@@ -300,7 +323,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 178,
+        "line": 207,
         "column": 13
       },
       "text": "newRiskSnapshotAuthorityService"
@@ -308,7 +331,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 179,
+        "line": 208,
         "column": 9
       },
       "text": "service.Load"
@@ -318,70 +341,70 @@
     {
       "kind": ":=",
       "at": {
-        "line": 149,
+        "line": 174,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 152,
+        "line": 181,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 153,
+        "line": 182,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 154,
+        "line": 183,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 160,
+        "line": 189,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 164,
+        "line": 193,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 169,
+        "line": 198,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 173,
+        "line": 202,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 177,
+        "line": 206,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 178,
+        "line": 207,
         "column": 2
       }
     }

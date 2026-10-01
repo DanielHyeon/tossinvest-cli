@@ -1,10 +1,10 @@
 # Function Logic Map: `openProductionRouteSnapshot`
 
-- Source: `internal/strategyrouter/production.go` (`600`–`622`)
+- Source: `internal/strategyrouter/production.go` (`616`–`658`)
 - Qualified: `openProductionRouteSnapshot`
-- AST evidence: `ast.json` (`source_sha256` 7d60a867a87576ca…) — **편집 전**(base `de3b4f65` 의 바이트, 커버리지 `analysis/impl/coverage-pre-edit.out`)
+- AST evidence: `ast.json` (`source_sha256` 617163a508030dea…) — **편집 뒤**(구현 로트, 커버리지 `analysis/impl/coverage-post-edit.out`)
 - Risk scan: `risk-pattern-report.md`
-- AST branches 4 · return 5 · 호출 10
+- AST branches 8 · return 9 · 호출 20
 
 **역할.** 원장 파일을 검증하고 읽기 전용 tx 를 연 뒤 `PRAGMA user_version` 을 확인. **편집 전 결함**: B4 `:616` 이 동결 리터럴 `productionRouteJournalV = 27` 과 비교 — 실제 원장 항상 거절, 원인은 맨 sentinel. a127: 주입 값 정확 일치 + 방향 문구(`%w`), 버전 확인 직후 owners · campaign SQL 상수 prepare(D1 · D7).
 
@@ -21,10 +21,14 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 return | 진입 실측 |
 |---|---|---|---|---|
-| B1 | if | `:601` `if err := validateProductionRouteJournalFile(journalPath, ownerUID); err != nil {` | :602 | 아니오 |
-| B2 | if | `:606` `if err != nil {` | :607 | 아니오 |
-| B3 | if | `:611` `if err != nil {` | :613 | 아니오 |
-| B4 | if | `:616` `if err := tx.QueryRowContext(ctx, `PRAGMA user_version`).Scan(&version); err != nil \|\| version != productionRouteJournalV {` | :619, :621 | 아니오 |
+| B1 | if | `:617` `if err := validateProductionRouteJournalFile(journalPath, ownerUID); err != nil {` | :618 | 아니오 |
+| B2 | if | `:622` `if err != nil {` | :623 | 아니오 |
+| B3 | if | `:627` `if err != nil {` | :629, :634 | 아니오 |
+| B4 | if | `:639` `if err := tx.QueryRowContext(ctx, `PRAGMA user_version`).Scan(&version); err != nil {` | :640 | 아니오 |
+| B5 | if | `:642` `if version > journalSchema {` | :643 | 예 |
+| B6 | if | `:645` `if version < journalSchema {` | :646 | 예 |
+| B7 | range | `:650` `for _, statement := range []string{productionRouteOwnersSQL, productionRouteCampaignSQL} {` | — | 예 |
+| B8 | if | `:652` `if err != nil {` | :653, :657 | 예 |
 
 ## Calls and live bindings
 
@@ -36,5 +40,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: 편집 전 — a127 은 B4 비교 · 문구와 prepare 추가만 바꿀 예정.
+- **Safe edit boundary**: B4 비교가 주입 값 정확 일치 · 방향 문구, prepare 실패 거절 추가. 파일 검증 · tx 수명 불변.
 - **High-risk impact**: yes — route 권한의 원장 입구.

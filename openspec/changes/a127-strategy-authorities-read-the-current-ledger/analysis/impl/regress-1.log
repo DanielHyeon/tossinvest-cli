@@ -1,0 +1,31 @@
+# a127 회귀 — fef34f11 + 작업 트리(구현 · 시험 diff)
+## 무태그
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	0.389s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	3.704s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	0.123s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.368s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	506.852s
+--- FAIL: TestA066StorageErrorExitsFailClosed (0.01s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	796.278s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	161.777s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	68.860s
+FAIL
+## tossos_testseams
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	15.309s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	6.159s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	0.144s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	1.763s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	0.007s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.452s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	646.995s
+--- FAIL: TestA066StorageErrorExitsFailClosed (0.01s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	967.555s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	226.239s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	80.807s
+FAIL
+END
+# 처분: 두 판 모두 유일한 실패 TestA066StorageErrorExitsFailClosed 는 census(출구 수) 불일치 — a127 이 loadProductionRiskEntries 에 저장 출구 3 · tx 여는 함수 1 을 더함. main 의 a112 0b6cb9b1(336→337) 위에 재기준 후 340/13 · 함수별 6 으로 갱신, 단독 재실행 ok(review 1.1~1.4)

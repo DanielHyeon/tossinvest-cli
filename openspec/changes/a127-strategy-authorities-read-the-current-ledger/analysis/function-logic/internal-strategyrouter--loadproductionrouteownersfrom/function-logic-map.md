@@ -1,8 +1,8 @@
 # Function Logic Map: `loadProductionRouteOwnersFrom`
 
-- Source: `internal/strategyrouter/production.go` (`624`–`685`)
+- Source: `internal/strategyrouter/production.go` (`660`–`721`)
 - Qualified: `loadProductionRouteOwnersFrom`
-- AST evidence: `ast.json` (`source_sha256` 7d60a867a87576ca…) — **편집 전**(base `de3b4f65` 의 바이트, 커버리지 `analysis/impl/coverage-pre-edit.out`)
+- AST evidence: `ast.json` (`source_sha256` 617163a508030dea…) — **편집 뒤**(구현 로트, 커버리지 `analysis/impl/coverage-post-edit.out`)
 - Risk scan: `risk-pattern-report.md`
 - AST branches 14 · return 12 · 호출 23
 
@@ -23,20 +23,20 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 return | 진입 실측 |
 |---|---|---|---|---|
-| B1 | if | `:625` `if queryer == nil {` | :626 | 아니오 |
-| B2 | if | `:629` `if err != nil {` | :630 | 아니오 |
-| B3 | for | `:634` `for rows.Next() {` | — | 예 |
-| B4 | if | `:635` `if len(history) >= productionRouteMaxOwners {` | :636 | 아니오 |
-| B5 | if | `:639` `if err := rows.Scan(&value.prospective, &value.laneID, &value.campaignID, &value.actual, &value.acquired, &value.released, &value.overage…` | :641 | — |
-| B6 | if | `:645` `if err := rows.Err(); err != nil {` | :646 | 예 |
-| B7 | range | `:651` `for _, value := range history {` | — | 예 |
-| B8 | if | `:652` `if value.released == "" {` | — | 예 |
-| B9 | if | `:656` `if len(active) > 1 {` | :657 | 예 |
-| B10 | if | `:659` `if len(active) == 0 {` | :660 | 예 |
-| B11 | if | `:663` `if value.actual == "" \|\| value.overage != 0 \|\| value.unknown != 0 {` | :664 | 예 |
-| B12 | if | `:667` `if err != nil \|\| actual != key.PositionGeneration \|\| strconv.FormatUint(actual, 10) != value.actual {` | :668 | 아니오 |
-| B13 | if | `:672` `if err := queryer.QueryRowContext(ctx, `SELECT account_ref,market,symbol,lane_version,prospective_token,coalesce(actual_position_generati…` | :676 | — |
-| B14 | if | `:679` `if !ok \|\| descriptor.LaneVersion != laneVersion {` | :680, :684 | 아니오 |
+| B1 | if | `:661` `if queryer == nil {` | :662 | 아니오 |
+| B2 | if | `:665` `if err != nil {` | :666 | 아니오 |
+| B3 | for | `:670` `for rows.Next() {` | — | 예 |
+| B4 | if | `:671` `if len(history) >= productionRouteMaxOwners {` | :672 | 아니오 |
+| B5 | if | `:675` `if err := rows.Scan(&value.prospective, &value.laneID, &value.campaignID, &value.actual, &value.acquired, &value.released, &value.overage…` | :677 | — |
+| B6 | if | `:681` `if err := rows.Err(); err != nil {` | :682 | 예 |
+| B7 | range | `:687` `for _, value := range history {` | — | 예 |
+| B8 | if | `:688` `if value.released == "" {` | — | 예 |
+| B9 | if | `:692` `if len(active) > 1 {` | :693 | 예 |
+| B10 | if | `:695` `if len(active) == 0 {` | :696 | 예 |
+| B11 | if | `:699` `if value.actual == "" \|\| value.overage != 0 \|\| value.unknown != 0 {` | :700 | 예 |
+| B12 | if | `:703` `if err != nil \|\| actual != key.PositionGeneration \|\| strconv.FormatUint(actual, 10) != value.actual {` | :704 | 아니오 |
+| B13 | if | `:708` `if err := queryer.QueryRowContext(ctx, productionRouteCampaignSQL, value.campaignID, value.laneID).` | :712 | — |
+| B14 | if | `:715` `if !ok \|\| descriptor.LaneVersion != laneVersion {` | :716, :720 | 아니오 |
 
 ## Calls and live bindings
 
@@ -48,5 +48,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: 편집 전 — a127 은 두 SQL 문자열을 상수로 옮기는 것만(내용 · 분기 불변).
+- **Safe edit boundary**: 두 SQL 이 패키지 상수로 이동(바이트 동일). 분기 B1~B14 불변.
 - **High-risk impact**: yes — owner 재구성(route 권한의 기반).

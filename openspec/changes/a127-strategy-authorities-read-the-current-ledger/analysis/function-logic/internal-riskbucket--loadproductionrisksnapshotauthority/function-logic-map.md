@@ -1,10 +1,10 @@
 # Function Logic Map: `LoadProductionRiskSnapshotAuthority`
 
-- Source: `internal/riskbucket/production_snapshot_authority.go` (`145`–`180`)
+- Source: `internal/riskbucket/production_snapshot_authority.go` (`170`–`209`)
 - Qualified: `LoadProductionRiskSnapshotAuthority`
-- AST evidence: `ast.json` (`source_sha256` 3aa9b66c00cdcded…) — **편집 전**(base `de3b4f65` 의 바이트, 커버리지 `analysis/impl/coverage-pre-edit.out`)
+- AST evidence: `ast.json` (`source_sha256` 9a74db4abd523da8…) — **편집 뒤**(구현 로트, 커버리지 `analysis/impl/coverage-post-edit.out`)
 - Risk scan: `risk-pattern-report.md`
-- AST branches 7 · return 8 · 호출 23
+- AST branches 8 · return 9 · 호출 24
 
 **역할.** 위험 snapshot 권한의 공개 적재기 — config 정규화 · 정책 파일 digest · 서명 검증 · 입력 결속(`bindProductionRiskInputs`, 섹터 매핑 없음은 범위 국소 거절) 뒤 원장 적재(`loadProductionRiskEntries`)를 부르고 원인을 `%w: %w` 로 보존해 감쌈. a127: 원장 스키마 주입 누락(0 이하)을 **정책 결속보다 앞**에서 거절하는 가드를 둠(design D2).
 
@@ -23,13 +23,14 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 return | 진입 실측 |
 |---|---|---|---|---|
-| B1 | if | `:146` `if ctx == nil \|\| config.ObservedAt.IsZero() {` | :147 | 아니오 |
-| B2 | if | `:149` `if err := ctx.Err(); err != nil {` | :150 | 예 |
-| B3 | if | `:155` `if !ownerOK \|\| name == "" \|\| !filepath.IsAbs(config.ConfigDir) \|\| !filepath.IsAbs(config.JournalPath) \|\|` | :158 | — |
-| B4 | if | `:161` `if err != nil \|\| productionRiskDigest(data) != config.ManifestDigest {` | :162 | 예 |
-| B5 | if | `:165` `if err != nil \|\| !verifyProductionRiskPolicy(manifest, config) {` | :166 | 예 |
-| B6 | if | `:170` `if err != nil {` | :171 | 예 |
-| B7 | if | `:174` `if err != nil {` | :175, :179 | 예 |
+| B1 | if | `:171` `if ctx == nil \|\| config.ObservedAt.IsZero() {` | :172 | 아니오 |
+| B2 | if | `:174` `if err := ctx.Err(); err != nil {` | :175 | 예 |
+| B3 | if | `:178` `if config.JournalSchemaVersion <= 0 {` | :179 | 예 |
+| B4 | if | `:184` `if !ownerOK \|\| name == "" \|\| !filepath.IsAbs(config.ConfigDir) \|\| !filepath.IsAbs(config.JournalPath) \|\|` | :187 | — |
+| B5 | if | `:190` `if err != nil \|\| productionRiskDigest(data) != config.ManifestDigest {` | :191 | 예 |
+| B6 | if | `:194` `if err != nil \|\| !verifyProductionRiskPolicy(manifest, config) {` | :195 | 예 |
+| B7 | if | `:199` `if err != nil {` | :200 | 예 |
+| B8 | if | `:203` `if err != nil {` | :204, :208 | 예 |
 
 ## Calls and live bindings
 
@@ -41,5 +42,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: 편집 전 — a127 은 B3 앞(또는 B1 뒤)에 주입 가드 하나를 더할 예정. 기존 분기 B1~B7 의 판정 · 순서는 바꾸지 않음.
+- **Safe edit boundary**: 주입 가드 하나 추가(정책 결속 앞). 나머지 분기 판정 · 순서 · 오류 신원 불변.
 - **High-risk impact**: yes — 진입 경로 위험 권한의 입구.

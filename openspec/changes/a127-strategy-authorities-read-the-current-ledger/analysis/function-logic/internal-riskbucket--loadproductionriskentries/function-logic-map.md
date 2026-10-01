@@ -1,10 +1,10 @@
 # Function Logic Map: `loadProductionRiskEntries`
 
-- Source: `internal/riskbucket/production_snapshot_authority.go` (`361`–`448`)
+- Source: `internal/riskbucket/production_snapshot_authority.go` (`390`–`500`)
 - Qualified: `loadProductionRiskEntries`
-- AST evidence: `ast.json` (`source_sha256` 3aa9b66c00cdcded…) — **편집 전**(base `de3b4f65` 의 바이트, 커버리지 `analysis/impl/coverage-pre-edit.out`)
+- AST evidence: `ast.json` (`source_sha256` 9a74db4abd523da8…) — **편집 뒤**(구현 로트, 커버리지 `analysis/impl/coverage-post-edit.out`)
 - Risk scan: `risk-pattern-report.md`
-- AST branches 14 · return 14 · 호출 47
+- AST branches 19 · return 18 · 호출 54
 
 **역할.** 원장을 읽기 전용으로 열어 버전 확인 · 범위 scope latch · 다섯 dimension 사용량을 읽고 snapshot 항목을 만듦. **편집 전 결함**: B5 `:384` 가 `PRAGMA user_version` 을 동결 리터럴 `productionRiskJournalSchema = 27` 과 비교 — 실제 원장(v35)은 항상 거절. 판독은 각각 autocommit(`db`), 사용량 질의는 scope latch 가 0 일 때만 실행(조건부).
 
@@ -24,20 +24,25 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 return | 진입 실측 |
 |---|---|---|---|---|
-| B1 | if | `:363` `if !ok {` | :364 | 아니오 |
-| B2 | if | `:366` `if err := validateProductionRiskJournalFile(config.JournalPath, owner); err != nil {` | :367 | 예 |
-| B3 | if | `:375` `if err != nil {` | :376 | 아니오 |
-| B4 | if | `:380` `if err := db.PingContext(ctx); err != nil {` | :381 | 아니오 |
-| B5 | if | `:384` `if err := db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil \|\| version != productionRiskJournalSchema {` | :385 | 아니오 |
-| B6 | if | `:389` `if err := db.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_scope_latches WHERE account_ref=? AND market=? AND symbol=?`,` | :391 | — |
-| B7 | if | `:393` `if scopeLatches != 0 {` | :394 | 예 |
-| B8 | if | `:403` `if authorityObserved.After(scope.AsOf) \|\| authorityFresh.Before(scope.AsOf) {` | :404 | 아니오 |
-| B9 | range | `:407` `for _, dimension := range requiredDimensions {` | — | 예 |
-| B10 | if | `:409` `if err != nil {` | :410 | 아니오 |
-| B11 | if | `:413` `if usage.Latched {` | :414 | 예 |
-| B12 | if | `:423` `if err != nil {` | :424 | 아니오 |
-| B13 | if | `:433` `if err != nil {` | :434 | 아니오 |
-| B14 | if | `:442` `if err != nil {` | :443, :447 | 아니오 |
+| B1 | if | `:392` `if !ok {` | :393 | 아니오 |
+| B2 | if | `:395` `if err := validateProductionRiskJournalFile(config.JournalPath, owner); err != nil {` | :396 | 예 |
+| B3 | if | `:404` `if err != nil {` | :405 | 아니오 |
+| B4 | if | `:409` `if err := db.PingContext(ctx); err != nil {` | :410 | 아니오 |
+| B5 | if | `:415` `if err != nil {` | :416 | 아니오 |
+| B6 | if | `:422` `if err := tx.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil {` | :423 | 아니오 |
+| B7 | if | `:425` `if version > config.JournalSchemaVersion {` | :426 | 예 |
+| B8 | if | `:428` `if version < config.JournalSchemaVersion {` | :429 | 예 |
+| B9 | range | `:433` `for _, statement := range []string{productionRiskScopeLatchSQL, productionRiskUsageSQL} {` | — | 예 |
+| B10 | if | `:435` `if err != nil {` | :436 | 예 |
+| B11 | if | `:442` `if err := tx.QueryRowContext(ctx, productionRiskScopeLatchSQL, scope.AccountID, string(scope.Market), scope.Symbol).Scan(&scopeLatches); …` | :443 | 아니오 |
+| B12 | if | `:445` `if scopeLatches != 0 {` | :446 | 예 |
+| B13 | if | `:455` `if authorityObserved.After(scope.AsOf) \|\| authorityFresh.Before(scope.AsOf) {` | :456 | 아니오 |
+| B14 | range | `:459` `for _, dimension := range requiredDimensions {` | — | 예 |
+| B15 | if | `:461` `if err != nil {` | :462 | 아니오 |
+| B16 | if | `:465` `if usage.Latched {` | :466 | 예 |
+| B17 | if | `:475` `if err != nil {` | :476 | 아니오 |
+| B18 | if | `:485` `if err != nil {` | :486 | 아니오 |
+| B19 | if | `:494` `if err != nil {` | :495, :499 | 아니오 |
 
 ## Calls and live bindings
 
@@ -49,5 +54,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: 편집 전 — a127 은 B5 의 비교를 주입 값 정확 일치 + 방향 문구로, 판독 전부를 읽기 전용 tx 하나로, 버전 확인 직후 · latch 판독 전에 SQL 상수 둘을 prepare 하도록 바꿀 예정(D1 · D7). 판독 SQL · 사용량 판정 불변.
+- **Safe edit boundary**: B5 비교 · 문구, tx 묶음, prepare 선행만 바뀜. scope latch · 창 · 사용량 판정과 오류 신원 불변.
 - **High-risk impact**: yes — 사이징 사용량 판독.

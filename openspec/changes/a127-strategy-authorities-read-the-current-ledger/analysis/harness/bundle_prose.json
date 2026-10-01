@@ -17,7 +17,15 @@
    "*": "기존 — `production_snapshot_authority_test.go`(tossos_testseams) 시험군"
   },
   "red_pre": [],
-  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험.",
+  "tests_post": {
+   "B3": "`TestA127RiskLoaderRefusesAMissingInjectionBeforeOpeningTheLedger`(0 · 음수, 존재하지 않는 원장 경로) — 변이 S6a · S6b",
+   "*": "기존 — production_snapshot_authority_test 시험군 · `TestA127RiskLoaderReadsTheLedgerWhoseSchemaEqualsTheInjectedVersion`"
+  },
+  "red_post": [
+   "B3"
+  ],
+  "btm_note_post": "편집 뒤 — RED(`analysis/impl/red.log`) → GREEN → 변이(`analysis/impl/mutation-1.log`). 편집하지 않은 분기는 기존 시험."
  },
  "internal-riskbucket--loadproductionriskentries": {
   "qualified": "loadProductionRiskEntries",
@@ -39,7 +47,30 @@
    "*": "기존 — production_snapshot_authority_test · a126 replay 시험"
   },
   "red_pre": [],
-  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험.",
+  "tests_post": {
+   "B5": "BeginTx — 구조 단언 `TestA127RiskLoaderReadsEverythingInOneReadOnlyTransaction`(S13a~c)",
+   "B6": "버전 판독 — 같은 tx 구조 단언(S13c)",
+   "B7": "`TestA127RiskLoaderRefusesANewerLedger`(방향 문구 · ScopeRefused 아님) — S3 · S9a · S11",
+   "B8": "`TestA127RiskLoaderRefusesAnOlderLedger` — S5a; 양성 `TestTheRiskLoaderReadsTheRealJournal`(engine, 실 원장) — S1",
+   "B9": "prepare 선행 — `TestA127RiskLoaderReportsAMissingUsageColumnAsADefectEvenOnALatchedScope` — S14",
+   "B10": "같은 시험(사용량 전용 열 삭제 · latch 범위 → 결함 신원)",
+   "B11": "scope latch 판독 — 같은 tx 구조 단언(S13b)",
+   "B12": "같은 시험의 대조(온전한 원장 · latch → ScopeRefused)",
+   "B15": "사용량 판독 — 같은 tx 구조 단언(S13a)",
+   "*": "기존 — 이 change 가 판정을 바꾸지 않은 분기"
+  },
+  "red_post": [
+   "B5",
+   "B6",
+   "B7",
+   "B8",
+   "B9",
+   "B10",
+   "B11",
+   "B15"
+  ],
+  "btm_note_post": "편집 뒤 — RED(`analysis/impl/red.log`) → GREEN → 변이(`analysis/impl/mutation-1.log`). 편집하지 않은 분기는 기존 시험."
  },
  "internal-riskbucket--readproductionriskusage": {
   "qualified": "readProductionRiskUsage",
@@ -57,7 +88,12 @@
    "*": "기존 — a126 시험군(실 원장)"
   },
   "red_pre": [],
-  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험.",
+  "tests_post": {
+   "*": "SQL 상수 이동(바이트 동일) — a126 · a127 시험군이 이 질의를 실행"
+  },
+  "red_post": [],
+  "btm_note_post": "편집 뒤 — RED(`analysis/impl/red.log`) → GREEN → 변이(`analysis/impl/mutation-1.log`). 편집하지 않은 분기는 기존 시험."
  },
  "internal-strategyrouter--loadproductionrouteauthoritybatch": {
   "qualified": "LoadProductionRouteAuthorityBatch",
@@ -79,7 +115,17 @@
    "*": "기존 — `strategyrouter/production_test.go` 시험군"
   },
   "red_pre": [],
-  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험.",
+  "tests_post": {
+   "B3": "`TestA127RouteLoaderRefusesAMissingInjectionBeforeOpeningTheLedger` — S6c · S6d",
+   "B8": "opener 원인 보존 — `TestA127RouteLoaderRefusesANewerLedgerAndSaysSoAtTheBatchBoundary` · `…OlderLedger…`(Batch 경계 문구) — S12a",
+   "*": "기존 — production_test 시험군 · `TestA127RouteLoaderReadsARealJournalOpenedByJournalOpen`(실 원장, 외부 패키지)"
+  },
+  "red_post": [
+   "B3",
+   "B8"
+  ],
+  "btm_note_post": "편집 뒤 — RED(`analysis/impl/red.log`) → GREEN → 변이(`analysis/impl/mutation-1.log`). 편집하지 않은 분기는 기존 시험."
  },
  "internal-strategyrouter--openproductionroutesnapshot": {
   "qualified": "openProductionRouteSnapshot",
@@ -98,7 +144,21 @@
    "*": "기존 — production_test 시험군"
   },
   "red_pre": [],
-  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험.",
+  "tests_post": {
+   "B5": "`TestA127RouteLoaderRefusesANewerLedgerAndSaysSoAtTheBatchBoundary` — S4 · S9b · S12b",
+   "B6": "`TestA127RouteLoaderRefusesAnOlderLedgerAndSaysSoAtTheBatchBoundary` — S5b; 양성 `TestA127RouteLoaderReadsARealJournalOpenedByJournalOpen` — S2",
+   "B7": "prepare — `TestA127RouteLoaderRefusesALedgerMissingACampaignColumnEvenWithoutAnActiveOwner` — S8",
+   "B8": "같은 시험(campaign 열 삭제 → prepare 실패 거절)",
+   "*": "기존 — 파일 검증 · tx 열기 갈래"
+  },
+  "red_post": [
+   "B5",
+   "B6",
+   "B7",
+   "B8"
+  ],
+  "btm_note_post": "편집 뒤 — RED(`analysis/impl/red.log`) → GREEN → 변이(`analysis/impl/mutation-1.log`). 편집하지 않은 분기는 기존 시험."
  },
  "internal-strategyrouter--loadproductionrouteownersfrom": {
   "qualified": "loadProductionRouteOwnersFrom",
@@ -118,7 +178,12 @@
    "*": "기존 — production_test 시험군"
   },
   "red_pre": [],
-  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험.",
+  "tests_post": {
+   "*": "SQL 상수 이동(바이트 동일) — production_test · a127 시험군"
+  },
+  "red_post": [],
+  "btm_note_post": "편집 뒤 — RED(`analysis/impl/red.log`) → GREEN → 변이(`analysis/impl/mutation-1.log`). 편집하지 않은 분기는 기존 시험."
  },
  "internal-app-engine--strategyriskauthorityloader.collectmarket": {
   "qualified": "strategyRiskAuthorityLoader.collectMarket",
@@ -136,7 +201,12 @@
    "*": "기존 — strategy_risk_authority_test · a112 시험군"
   },
   "red_pre": [],
-  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험.",
+  "tests_post": {
+   "*": "config 필드 하나 — 구조 단언 `TestA127EngineInjectsTheJournalSchemaVersionConstant`(S7 · S10a), 실 원장 `TestTheRiskLoaderReadsTheRealJournal`"
+  },
+  "red_post": [],
+  "btm_note_post": "편집 뒤 — RED(`analysis/impl/red.log`) → GREEN → 변이(`analysis/impl/mutation-1.log`). 편집하지 않은 분기는 기존 시험."
  },
  "internal-app-engine--strategyrouteauthorityloader.collectmarket": {
   "qualified": "strategyRouteAuthorityLoader.collectMarket",
@@ -155,6 +225,11 @@
    "*": "기존 — strategy_route_authority_test 시험군(loader.load stub)"
   },
   "red_pre": [],
-  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험."
+  "btm_note_pre": "편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험.",
+  "tests_post": {
+   "*": "config 필드 하나 — 구조 단언 `TestA127EngineInjectsTheJournalSchemaVersionConstant`(S10b)"
+  },
+  "red_post": [],
+  "btm_note_post": "편집 뒤 — RED(`analysis/impl/red.log`) → GREEN → 변이(`analysis/impl/mutation-1.log`). 편집하지 않은 분기는 기존 시험."
  }
 }

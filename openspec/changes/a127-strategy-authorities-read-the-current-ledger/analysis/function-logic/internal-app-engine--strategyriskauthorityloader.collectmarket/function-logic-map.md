@@ -1,8 +1,8 @@
 # Function Logic Map: `strategyRiskAuthorityLoader.collectMarket`
 
-- Source: `internal/app/engine/strategy_risk_authority.go` (`187`–`231`)
+- Source: `internal/app/engine/strategy_risk_authority.go` (`188`–`234`)
 - Qualified: `strategyRiskAuthorityLoader.collectMarket`
-- AST evidence: `ast.json` (`source_sha256` f7ad67b8ad584c17…) — **편집 전**(base `de3b4f65` 의 바이트, 커버리지 `analysis/impl/coverage-pre-edit.out`)
+- AST evidence: `ast.json` (`source_sha256` 90192bbebb241d78…) — **편집 뒤**(구현 로트, 커버리지 `analysis/impl/coverage-post-edit.out`)
 - Risk scan: `risk-pattern-report.md`
 - AST branches 9 · return 4 · 호출 18
 
@@ -21,15 +21,15 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 return | 진입 실측 |
 |---|---|---|---|---|
-| B1 | if | `:193` `if !result.ready {` | :194 | 예 |
-| B2 | if | `:196` `if !fx.snapshot.Ready \|\| !fx.read.valid {` | :197 | 예 |
-| B3 | if | `:200` `if market == StrategyMarketUS {` | — | 예 |
-| B4 | range | `:206` `for _, scoped := range result.results() {` | — | 예 |
-| B5 | if | `:210` `if keyed {` | — | 예 |
-| B6 | switch | `:217` `switch {` | — | — |
-| B7 | case | `:218` `case err != nil:` | — | 예 |
-| B8 | case | `:221` `case string(scope.Market) == string(market) && scope.AccountID == loader.accountID &&` | — | — |
-| B9 | case | `:224` `default:` | :230 | 아니오 |
+| B1 | if | `:194` `if !result.ready {` | :195 | 예 |
+| B2 | if | `:197` `if !fx.snapshot.Ready \|\| !fx.read.valid {` | :198 | 예 |
+| B3 | if | `:201` `if market == StrategyMarketUS {` | — | 예 |
+| B4 | range | `:207` `for _, scoped := range result.results() {` | — | 예 |
+| B5 | if | `:211` `if keyed {` | — | 예 |
+| B6 | switch | `:220` `switch {` | — | — |
+| B7 | case | `:221` `case err != nil:` | — | 예 |
+| B8 | case | `:224` `case string(scope.Market) == string(market) && scope.AccountID == loader.accountID &&` | — | — |
+| B9 | case | `:227` `default:` | :233 | 아니오 |
 
 ## Calls and live bindings
 
@@ -41,5 +41,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: 편집 전 — a127 은 config 리터럴에 필드 하나만 더할 예정.
+- **Safe edit boundary**: config 리터럴에 `JournalSchemaVersion: journal.SchemaVersion` 한 필드. 분기 불변.
 - **High-risk impact**: yes — 위험 권한 배선.

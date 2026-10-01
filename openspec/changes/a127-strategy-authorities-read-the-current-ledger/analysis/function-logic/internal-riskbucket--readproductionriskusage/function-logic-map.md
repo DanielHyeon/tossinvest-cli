@@ -1,8 +1,8 @@
 # Function Logic Map: `readProductionRiskUsage`
 
-- Source: `internal/riskbucket/production_snapshot_authority.go` (`479`–`513`)
+- Source: `internal/riskbucket/production_snapshot_authority.go` (`531`–`550`)
 - Qualified: `readProductionRiskUsage`
-- AST evidence: `ast.json` (`source_sha256` 3aa9b66c00cdcded…) — **편집 전**(base `de3b4f65` 의 바이트, 커버리지 `analysis/impl/coverage-pre-edit.out`)
+- AST evidence: `ast.json` (`source_sha256` 9a74db4abd523da8…) — **편집 뒤**(구현 로트, 커버리지 `analysis/impl/coverage-post-edit.out`)
 - Risk scan: `risk-pattern-report.md`
 - AST branches 3 · return 3 · 호출 7
 
@@ -21,9 +21,9 @@
 
 | Branch | 종류 | 조건 (원문) | 창의 return | 진입 실측 |
 |---|---|---|---|---|
-| B1 | if | `:498` `if err != nil {` | :499 | 아니오 |
-| B2 | for | `:503` `for rows.Next() {` | — | 예 |
-| B3 | if | `:505` `if err := rows.Scan(&row.ReservationID, &row.PolicyVersion, &row.HeldMinor, &row.FilledMinor, &row.State,` | :508, :512 | — |
+| B1 | if | `:535` `if err != nil {` | :536 | 아니오 |
+| B2 | for | `:540` `for rows.Next() {` | — | 예 |
+| B3 | if | `:542` `if err := rows.Scan(&row.ReservationID, &row.PolicyVersion, &row.HeldMinor, &row.FilledMinor, &row.State,` | :545, :549 | — |
 
 ## Calls and live bindings
 
@@ -35,5 +35,5 @@
 
 ## Safety conclusion
 
-- **Safe edit boundary**: 편집 전 — a127 은 SQL 문자열을 상수로 옮기는 것만(내용 · 분기 불변).
+- **Safe edit boundary**: SQL 문자열이 패키지 상수로 이동(바이트 동일). 분기 B1~B3 불변.
 - **High-risk impact**: yes — 사이징 사용량 합의 입력.

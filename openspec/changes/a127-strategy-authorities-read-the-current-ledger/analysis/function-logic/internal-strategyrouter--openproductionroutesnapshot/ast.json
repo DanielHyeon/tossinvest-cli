@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyrouter/production.go",
-  "source_sha256": "7d60a867a87576cab66d25591d3211b50f1d532efa29166bd71bb5b623cc09f4",
+  "source_sha256": "617163a508030dea2768655db66006d52097f17be9c04bb7c9fc300d3adf8a21",
   "package": "strategyrouter",
   "function": "openProductionRouteSnapshot",
-  "signature": "openProductionRouteSnapshot(params=3, results=3)",
+  "signature": "openProductionRouteSnapshot(params=4, results=3)",
   "start": {
-    "line": 600,
+    "line": 616,
     "column": 1
   },
   "end": {
-    "line": 622,
+    "line": 658,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 601,
+        "line": 617,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 606,
+        "line": 622,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 611,
+        "line": 627,
         "column": 2
       }
     },
@@ -41,8 +41,40 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 616,
+        "line": 639,
         "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 642,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 645,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "range",
+      "at": {
+        "line": 650,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 652,
+        "column": 3
       }
     }
   ],
@@ -50,35 +82,63 @@
     {
       "kind": "return",
       "at": {
-        "line": 602,
+        "line": 618,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 607,
+        "line": 623,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 613,
+        "line": 629,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 619,
+        "line": 634,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 621,
+        "line": 640,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 643,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 646,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 653,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 657,
         "column": 2
       }
     }
@@ -87,7 +147,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 601,
+        "line": 617,
         "column": 12
       },
       "text": "validateProductionRouteJournalFile"
@@ -95,7 +155,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 605,
+        "line": 621,
         "column": 13
       },
       "text": "sql.Open"
@@ -103,7 +163,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 605,
+        "line": 621,
         "column": 32
       },
       "text": "dsn.String"
@@ -111,7 +171,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 609,
+        "line": 625,
         "column": 2
       },
       "text": "db.SetMaxOpenConns"
@@ -119,7 +179,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 610,
+        "line": 626,
         "column": 13
       },
       "text": "db.BeginTx"
@@ -127,7 +187,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 612,
+        "line": 628,
         "column": 3
       },
       "text": "db.Close"
@@ -135,23 +195,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 616,
-        "column": 12
-      },
-      "text": "Scan"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 616,
-        "column": 12
-      },
-      "text": "tx.QueryRowContext"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 617,
+        "line": 632,
         "column": 3
       },
       "text": "tx.Rollback"
@@ -159,46 +203,156 @@
     {
       "kind": "call",
       "at": {
-        "line": 618,
+        "line": 633,
         "column": 3
       },
       "text": "db.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 639,
+        "column": 12
+      },
+      "text": "Scan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 639,
+        "column": 12
+      },
+      "text": "tx.QueryRowContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 640,
+        "column": 10
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 640,
+        "column": 17
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 643,
+        "column": 10
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 643,
+        "column": 17
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 646,
+        "column": 10
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 646,
+        "column": 17
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 651,
+        "column": 20
+      },
+      "text": "tx.PrepareContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 653,
+        "column": 11
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 653,
+        "column": 18
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 655,
+        "column": 3
+      },
+      "text": "prepared.Close"
     }
   ],
   "assignments": [
     {
       "kind": ":=",
       "at": {
-        "line": 601,
+        "line": 617,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 604,
+        "line": 620,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 605,
+        "line": 621,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 610,
+        "line": 626,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 616,
+        "line": 631,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 639,
         "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 651,
+        "column": 3
       }
     }
   ],

@@ -1,9 +1,9 @@
 # Branch Test Map: `readProductionRiskUsage`
 
-편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험.
+편집 뒤 — RED(`analysis/impl/red.log`) → GREEN → 변이(`analysis/impl/mutation-1.log`). 편집하지 않은 분기는 기존 시험.
 
 | Branch | 조건 | 진입 실측 | Test | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:498` `if err != nil {` | 아니오 | 기존 — a126 시험군(실 원장) | n/a | n/a |
-| B2 | `:503` `for rows.Next() {` | 예 | 기존 — a126 시험군(실 원장) | n/a | n/a |
-| B3 | `:505` `if err := rows.Scan(&row.ReservationID, &row.PolicyVersion, &row.HeldMinor, &row.FilledMinor, &row.State,` | — | 기존 — a126 시험군(실 원장) | n/a | n/a |
+| B1 | `:535` `if err != nil {` | 아니오 | SQL 상수 이동(바이트 동일) — a126 · a127 시험군이 이 질의를 실행 | n/a | n/a |
+| B2 | `:540` `for rows.Next() {` | 예 | SQL 상수 이동(바이트 동일) — a126 · a127 시험군이 이 질의를 실행 | n/a | n/a |
+| B3 | `:542` `if err := rows.Scan(&row.ReservationID, &row.PolicyVersion, &row.HeldMinor, &row.FilledMinor, &row.State,` | — | SQL 상수 이동(바이트 동일) — a126 · a127 시험군이 이 질의를 실행 | n/a | n/a |

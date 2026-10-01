@@ -20,27 +20,27 @@
 
 ## 1. 구현 (freeze 승인 뒤)
 
-- [ ] 1.0 착수 전
+- [x] 1.0 착수 전
   - [x] 1.0.1 **(review 0.7)** base 재고정 `f9a25549` → `3403be28`(a112 6.1 `40ec5aff` 포함). 원 지시: base 재확인 — a112 6.1 (C) lint 가 같은 파일의 다른 함수(`validProductionRiskPolicyContents`)를 먼저 착지(Manager 통지 2026-10-01):
         그 해시 위에서 진행. 형제 착지가 창에 들어오면 사람 승인 재고정
   - [x] 1.0.2 **(review 1.0.2)** 편집 대상 함수의 gate FLM 번들(편집 전) + Pre-Edit 선언 — `loadProductionRiskEntries` · `openProductionRouteSnapshot` ·
         두 config 검증 자리 · engine 의 두 호출 자리(`strategyRiskAuthorityLoader.collectMarket` · route 적재기의 config 리터럴 함수),
         그리고 AST 가 추가로 잡는 것 전부
-- [ ] 1.1 RED — design 「반증 설계」 S1~S14 를 실패시키는 시험(픽스처 규율 — 버전만 바꾼 온전한 원장 · 조건부 질의 전용 열 삭제): 실제 원장 양성 risk(a112 트립와이어 반전) · route(**새 기반**: `tossos_testseams`
+- [x] **(review 1.1~1.4)** 1.1 RED — design 「반증 설계」 S1~S14 를 실패시키는 시험(픽스처 규율 — 버전만 바꾼 온전한 원장 · 조건부 질의 전용 열 삭제): 실제 원장 양성 risk(a112 트립와이어 반전) · route(**새 기반**: `tossos_testseams`
       서명 매니페스트 작성 seam + 외부 시험 패키지 `strategyrouter_test` 가 `journal.Open` 원장으로 Batch 호출), 더 새 · 더 옛 거절 + 방향 문구
       (route 는 Batch 경계), 주입 0 · 미설정 거절을 존재하지 않는 원장 경로로 관측, 열 삭제 원장 거절(route 는 active owner 없는 범위 포함 —
       표 재생성 픽스처), risk 는 latch 가 선 범위 + 사용량 전용 열 삭제, 스키마 거절의 신원(ScopeRefused 아님), engine 두 자리(go/types 상수 객체) ·
       risk 의 버전 · latch · 사용량 판독이 같은 tx 라는 구조 단언, 주입 음수
-- [ ] 1.2 GREEN — 최소 구현(D1~D3 · D7): config 필드 · 0 이하 거절(열기 전) · 정확 일치 비교 · 방향 문구, route `:352` 감싸기의 원인 보존,
+- [x] **(review 1.1~1.4)** 1.2 GREEN — 최소 구현(D1~D3 · D7): config 필드 · 0 이하 거절(열기 전) · 정확 일치 비교 · 방향 문구, route `:352` 감싸기의 원인 보존,
       risk 판독 읽기 tx 하나(버전 · latch · 사용량 전부), 두 적재기 판독 전 prepare(같은 SQL 상수, risk 는 latch early return 앞), 리터럴 상수 둘 삭제,
       engine 두 자리 주입
-- [ ] 1.3 픽스처 — 축소 원장 셋(`riskbucket/production_snapshot_authority_test.go:219` · `strategyrouter/production_test.go:216` ·
+- [x] **(review 1.1~1.4)** 1.3 픽스처 — 축소 원장 셋(`riskbucket/production_snapshot_authority_test.go:219` · `strategyrouter/production_test.go:216` ·
       `app/engine/strategy_risk_authority_test.go:224`)이 주입 값과 같은 `user_version` 을 쓰게 바꿈 — riskbucket · strategyrouter 는 journal 버전처럼 보이지
       않는 값(예: 1), 행 · 단언 불변. `riskbucket/a126_snapshot_digest_replay_test.go:6` 주석 갱신. a112 시험 다리 `a112MirrorLedgerIntoRiskStub` 제거 ·
       거래 픽스처 위험 적재기 실제 원장 단일화, a112 동결 증거가 트립와이어를 인용하는 자리(`analysis/measurements/lot-5.2.2.2-fix/pre-edit/…collectmarket/branch-test-map.md:14` ·
       `analysis/harness/render_5222_bundles.py:215`)와 `collectMarket` 편집으로 밀리는 a112 FLM 번들의 재기준 — a112 소유자와 조율(Manager 통지)
-- [ ] 1.4 변이 S1~S14 전수 — 하네스는 무태그와 `tossos_testseams` 스위트를 모두 돈다(S2 의 route 양성 시험이 태그 뒤)(무변이 대조군 GREEN · 시작 sha · 시험 파일 sha 판마다 단언)
-- [ ] 1.5 회귀(riskbucket · strategyrouter · app/engine · journal, 무태그 + `tossos_testseams`, `-race`), `make lint`
+- [x] **(review 1.1~1.4)** 1.4 변이 S1~S14 전수 — 하네스는 무태그와 `tossos_testseams` 스위트를 모두 돈다(S2 의 route 양성 시험이 태그 뒤)(무변이 대조군 GREEN · 시작 sha · 시험 파일 sha 판마다 단언)
+- [x] **(review 1.1~1.4)** 1.5 회귀(riskbucket · strategyrouter · app/engine · journal, 무태그 + `tossos_testseams`, `-race`), `make lint`
 - [ ] 1.6 독립 리뷰(보이스 + codex) · 처분
 
 ## 2. 게이트

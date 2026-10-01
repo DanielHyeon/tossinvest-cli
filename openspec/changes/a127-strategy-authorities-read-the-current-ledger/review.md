@@ -107,6 +107,40 @@ B7(opener 실패)의 진입 실측이 **아니오** — 시험 전체가 핀과 
   사용량 판정 · owner 재구성은 바이트 · 분기 불변, 추가되는 것은 거절 갈래(주입 가드 · prepare 실패)와 트랜잭션 묶음뿐.
 - 손절 · 청산 경로 무관(진입 권한만). LIVE 주문 · 토글 변경 없음, 시험은 원장 픽스처만.
 
+### 1.1~1.4 RED → GREEN → 변이 (격리 워크트리, 2026-10-01)
+
+**RED**(`analysis/impl/red.log`, 시험만 — 생산 판정 무변, config 필드만 먼저): riskbucket · strategyrouter · engine 의 a127 시험이 전부 기대한 이유로 실패
+(핀 27 거절 · 주입 가드 없음 · BeginTx 없음 · Batch 가 원인 지움 · 엔진 자리 주입 없음). 축소 픽스처를 주입 값(1)으로 바꾼 기존 시험도 핀 27 에 걸려 실패 —
+**같은 결함을 이번엔 픽스처가 드러냄**. a112 트립와이어를 뒤집은 `TestTheRiskLoaderReadsTheRealJournal` 도 실패(실 원장 거절).
+
+**GREEN**(D1 · D2 · D3 · D7):
+- riskbucket: `LoadProductionRiskSnapshotAuthority` 에 주입 가드(정책 결속 앞, `journal schema version not injected`), `loadProductionRiskEntries` 가
+  읽기 전용 tx 하나에서 버전 확인(정확 일치 · 방향 문구) → 두 SQL 상수 prepare → scope latch → 다섯 사용량. 리터럴 `productionRiskJournalSchema` 삭제,
+  SQL 은 상수(`productionRiskScopeLatchSQL` · `productionRiskUsageSQL`, 바이트 동일)로.
+- strategyrouter: Batch 주입 가드(매니페스트 · 원장 열기 앞), opener 가 주입 값과 정확 일치 · 방향 문구(`%w` Unavailable) · 두 SQL 상수 prepare, Batch 의
+  `:352` 감싸기가 원인을 `%w` 로 보존. 리터럴 `productionRouteJournalV` 삭제, SQL 상수(`productionRouteOwnersSQL` · `productionRouteCampaignSQL`).
+- engine: 두 config 리터럴에 `JournalSchemaVersion: journal.SchemaVersion`.
+- 시험 기반(D4): `tossos_testseams` seam `SignedProductionRouteConfigForTest`(+ 내부 픽스처와 본문 일치 시험) · 외부 시험 패키지 `strategyrouter_test` 의
+  `journal.Open` 실 원장 양성. a112 거래 픽스처의 위험 적재기를 실 원장으로 단일화(다리 · 헬퍼 셋 · 트립와이어 삭제 → 양성 시험), 손상 주입 시험 둘은
+  `useRiskStub` 으로 stub 을 명시 선택(실 원장의 트리거가 그 모양을 막음).
+
+**편집 전 · 뒤 진입 실측**(커버리지): 버전 거절 갈래가 편집 전 **아니오**(가린 픽스처) → 편집 뒤 risk B7 · B8 · route B5 · B6 **예**.
+
+**변이**(`analysis/impl/mutation-1.log`, 하네스 `mutate.py` — 무변이 대조군 GREEN · 시작 sha · 시험 파일 sha 판마다 불변 · 빠른 구조 시험 선행):
+S1 · S2 · S3 · S4 · S5a · S5b · S6a~d · S7 · S8 · S9a · S9b · S10a · S10b · S11 · S12a · S12b · S13a~c · S14 = **23/23 CAUGHT, 생존 0**. Manager 필수 축: 버전 확인 생략
+(S3 · S4) · prepare 생략(S8 · S14) · tx 분리(S13a~c) · 0 수락(S6a · S6c, 음수 S6b · S6d) 전부 포함.
+
+**회귀**(`analysis/impl/regress-1.log`): riskbucket · strategyrouter · strategyflow · strategyproposal · strategyarbiter · strategyworker · app/engine ·
+execgw · cmd/tossctl 무태그 · `tossos_testseams` 모두 ok. journal 은 **a066 census 시험 하나**만 실패 — `TestA066StorageErrorExitsFailClosed` 는 저장 출구 ·
+tx 여는 함수 수를 얼린 구조 시험이고 a127 이 `loadProductionRiskEntries` 에 출구 셋(BeginTx · user_version 판독 · prepare)과 tx 여는 함수 하나를 더함(P1 · P2
+는 그 시험이 통과로 검사). main 의 a112 `0b6cb9b1`(336→337, 함수별 이름 표 도입) 위로 재기준한 뒤 340 · 13 · 함수별 6 으로 갱신, 단독 재실행 ok.
+`-race`(a127 시험 · 관련 패키지) ok, `make lint` rc 0(`analysis/impl/race-lint.log`).
+
+**재기준**: 작업 트리를 main `f0f7d668` 위로 옮김(그 사이 대상 파일 중 바뀐 것은 a066 census 시험 하나 — 위). 착지 창 범위의 형제 커밋 때문에 착지 전
+base 재고정이 필요(자기 Go 커밋 0 — 조건 ① 첫째 갈래).
+
+**편집 뒤 FLM**: 8 번들 재추출(편집 뒤 커버리지 `analysis/impl/coverage-post-edit.out`) + 시험 함수 경량 번들 12(현재 8 · 삭제된 4 는 `revision: base`).
+
 ### 1.6 착지 창 · base 재고정 (2026-10-01)
 
 - Manager 인용: 「**착지 창 + base 재고정 승인(첫째 갈래) — 순서 1~4 진행.** … 다리 제거 · 실원장 단일화는 **그 다리에 적어 둔 제거 조건의 계획된 이행**이다.

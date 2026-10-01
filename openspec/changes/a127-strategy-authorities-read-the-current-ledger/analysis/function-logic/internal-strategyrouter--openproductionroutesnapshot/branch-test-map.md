@@ -1,10 +1,14 @@
 # Branch Test Map: `openProductionRouteSnapshot`
 
-편집 전 — 이 change 의 시험은 구현 로트 1.1 이 세운다. 아래는 편집 전 실측과 기존 시험.
+편집 뒤 — RED(`analysis/impl/red.log`) → GREEN → 변이(`analysis/impl/mutation-1.log`). 편집하지 않은 분기는 기존 시험.
 
 | Branch | 조건 | 진입 실측 | Test | RED observed | GREEN observed |
 |---|---|---|---|---|---|
-| B1 | `:601` `if err := validateProductionRouteJournalFile(journalPath, ownerUID); err != nil {` | 아니오 | 기존 — production_test 시험군 | n/a | n/a |
-| B2 | `:606` `if err != nil {` | 아니오 | 기존 — production_test 시험군 | n/a | n/a |
-| B3 | `:611` `if err != nil {` | 아니오 | 기존 — production_test 시험군 | n/a | n/a |
-| B4 | `:616` `if err := tx.QueryRowContext(ctx, `PRAGMA user_version`).Scan(&version); err != nil \ | version != productionRouteJournalV {` | 편집 전 진입 0 — 픽스처가 `user_version=27` | n/a | n/a |
+| B1 | `:617` `if err := validateProductionRouteJournalFile(journalPath, ownerUID); err != nil {` | 아니오 | 기존 — 파일 검증 · tx 열기 갈래 | n/a | n/a |
+| B2 | `:622` `if err != nil {` | 아니오 | 기존 — 파일 검증 · tx 열기 갈래 | n/a | n/a |
+| B3 | `:627` `if err != nil {` | 아니오 | 기존 — 파일 검증 · tx 열기 갈래 | n/a | n/a |
+| B4 | `:639` `if err := tx.QueryRowContext(ctx, `PRAGMA user_version`).Scan(&version); err != nil {` | 아니오 | 기존 — 파일 검증 · tx 열기 갈래 | n/a | n/a |
+| B5 | `:642` `if version > journalSchema {` | 예 | `TestA127RouteLoaderRefusesANewerLedgerAndSaysSoAtTheBatchBoundary` — S4 · S9b · S12b | yes | yes |
+| B6 | `:645` `if version < journalSchema {` | 예 | `TestA127RouteLoaderRefusesAnOlderLedgerAndSaysSoAtTheBatchBoundary` — S5b; 양성 `TestA127RouteLoaderReadsARealJournalOpenedByJournalOpen` — S2 | yes | yes |
+| B7 | `:650` `for _, statement := range []string{productionRouteOwnersSQL, productionRouteCampaignSQL} {` | 예 | prepare — `TestA127RouteLoaderRefusesALedgerMissingACampaignColumnEvenWithoutAnActiveOwner` — S8 | yes | yes |
+| B8 | `:652` `if err != nil {` | 예 | 같은 시험(campaign 열 삭제 → prepare 실패 거절) | yes | yes |
