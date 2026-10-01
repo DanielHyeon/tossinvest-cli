@@ -380,9 +380,10 @@ func TestTheSecondLegOfOneCycleCountsTheFirstLegsHeldReservation(t *testing.T) {
 }
 
 // 계좌 적재 실패는 결함이다(5.2.2.2 codex 재확인 P1 → Manager 판정 (A), 2026-10-01). 생산 계좌 매니페스트는 **시장 단위 파일 하나**
-// (`strategyaccount.FileName(market)`)라 적재 실패(파일 부재 · digest · 서명 · 창 · ctx)는 모든 범위에 같이 걸리는 사유이고 범위 국소 원인이
-// 없다 — 한 범위만 실패하는 모양은 이 시험 스텁에서만 나온다. 그래서 한 범위의 계좌 적재 실패는 범위 거절(건너뛰기)이 아니라 주기를 멈추는
-// 타입 없는 결함이고 원인을 남긴다. 앞 판(J3 계좌 절반 — 「그 범위만 거절, 다른 범위 거래」)은 생산에서 불가능한 모양을 재던 것이라 뒤집었다.
+// (`strategyaccount.FileName(market)`)라 범위별 정책 거절 원인이 없다 — 적재 실패(파일 부재 · digest · 서명 · 창 · ctx)는 시장의 사유다. 범위마다
+// 결과가 갈리는 것은 순차 읽기 사이 파일 교체 · 일시적 I/O 같은 경우뿐이고(codex 재확인 #2 T 정정), 그때도 결함이다. 그래서 한 범위의 계좌 적재
+// 실패는 범위 거절(건너뛰기)이 아니라 주기를 멈추는 타입 없는 결함이고 원인을 남긴다. 앞 판(J3 계좌 절반 — 「그 범위만 거절, 다른 범위 거래」)은
+// 범위별 정책 거절 원인이 있다는 틀린 전제를 재던 것이라 뒤집었다.
 func TestAnAccountLoadFailureOnOneScopeIsAFaultThatStopsTheCycle(t *testing.T) {
 	failure := errors.New("account manifest digest mismatch")
 	for _, order := range []struct {

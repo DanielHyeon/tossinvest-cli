@@ -182,7 +182,7 @@ func (loader *strategyAccountAuthorityLoader) collectMarket(ctx context.Context,
 				TrustedKeyID: loader.keyID, TrustedKey: loader.key, ObservedAt: loader.observedAt})
 			switch {
 			case err != nil:
-				// 적재기는 ctx 종료를 자기 오류로 접으므로 ctx 를 직접 봄 — ctx 종료는 결함(조건 ④), 그 밖의 적재 실패는 범위 국소.
+				// 적재기는 ctx 종료를 자기 오류로 접으므로 ctx 를 직접 봐 원인을 보존함. 계좌 적재 실패는 원인과 무관하게 1차 레그에서 결함(판정 (A)).
 				scoped.cause = err
 				if ctxErr := ctx.Err(); ctxErr != nil {
 					scoped.cause = ctxErr

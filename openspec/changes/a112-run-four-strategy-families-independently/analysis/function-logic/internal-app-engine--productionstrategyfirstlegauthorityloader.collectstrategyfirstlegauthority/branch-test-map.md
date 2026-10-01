@@ -1,6 +1,6 @@
 # Branch Test Map: `collectStrategyFirstLegAuthority`
 
-- Source SHA-256: `03beca9c77991951b18a6a97237327425a48188aa56bcb3c72bfb5c2c299cac5`; AST branch locations are authoritative.
+- Source SHA-256: `c29e90e2a1e9f04e531a1cc000caa4bcc6a97a0cd796a73845a97dd23e1de7ca`; AST branch locations are authoritative.
 - Revision: **modified (a112 5.2.2.2 리뷰 수리, 2026-10-01).** 리뷰 수리: B5(**활성화 없는 시장의 개수 관문** — codex #1, 6.2 위치), B6(키 정규화 실패 → 결함, A #4), B8(위험 범위 권한 부재가 범위 국소 원인일 때만 범위 거절, 아니면 타입 없는 결함 — A #1 · codex #2)를 더했고, B9(계좌 범위 권한 부재)는 **언제나 결함**(codex 재확인 P1 → 판정 (A) — 계좌 매니페스트는 시장 단위). 나머지는 80ae96a5 와 같은 분기(번호 이동). 2차 편집 전 번들: `lot-5.2.2.2-fix2/pre-edit/`.
 - 편집 전 번들: `analysis/measurements/lot-5.2.2.2-fix/pre-edit/internal-app-engine--productionstrategyfirstlegauthorityloader.collectstrategyfirstlegauthority/`. 변이 원장 `analysis/measurements/lot-5.2.2.2-fix/mutation-5.2.2.2-fix.tsv`.
 

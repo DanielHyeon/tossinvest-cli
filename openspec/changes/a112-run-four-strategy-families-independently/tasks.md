@@ -193,7 +193,7 @@
   **리뷰 수리(2026-09-30, 4목소리 — codex BLOCK · A APPROVE · B BLOCK · C APPROVE).** 처분 전표와 수리 내용은 review 「2026-09-30 태스크 5.6.2.1 · 5.2.2.1 적대 리뷰 처분 · 수리 로트」 절. 요지: 소유자 범위에 horizon · 레인이 섞이면 잡는 시험, 전달 몸통의 의미 무변경 이동 + 스파이 구동 + 식별자 해소 못, 경계 이름 허용 목록(「자동으로 새 문을 본다」 철회), 패키지 내부 주조 census, `.Single()` 전수 세기, 같은 범위 중복의 엔진 핀, 두 순서의 동등성 핀, 5.6.2.1 변이 원장 재실행 · 커밋.
 
   **이 태스크가 주장하지 않는 것.** 두 소유자 범위 시장의 거래(5.2.2.2). 레인별 독립 감독(5.6.2.2). 시장 준비 상태의 레인 유도 — `buildProductionStrategyMarketWorker` · `ResultAuthority` · projection 은 여전히 시장 단위 `dispatchHandoff().Single()` 을 읽는다(5.2.2.2).
-- [ ] 5.2.2.2 Move the downstream authorities to owner-scope units so a two-owner-scope market trades. **(Owns the title's readiness clause and 「두 소유자 범위 시장이 거래한다」 — split 2026-09-30.)**
+- [x] 5.2.2.2 Move the downstream authorities to owner-scope units so a two-owner-scope market trades. **(Owns the title's readiness clause and 「두 소유자 범위 시장이 거래한다」 — split 2026-09-30.)**
 
   **착수 조건 — L6 6.2 봉인 완료.** 결정 (1)(HANDOFF 「결정 (1)(5)(6) 기록」): 1차 레그 권한의 다섯 줄(`strategy_account_first_leg_authority.go` :217 `len(proposal.entries) != 1` · :221–:225 identity 대조)은 봉인 전 방어이고, 6.2 가 그 자리를 봉인으로 대체한 뒤에만 바꾼다. 6.2 봉인 전에 이 태스크를 시작하지 않는다.
 
@@ -212,7 +212,7 @@
   생산 동작 변화 0(서명 활성화 0). 변이 21 CAUGHT · M20 예상 SURVIVED. 잔여 R1~R5(review 「5.2.2.2 편집 로트」) — R1 스키마 핀 27 은 **레인 활성화의 경성 선행**(ROADMAP).
   착지 `80ae96a5`. **리뷰 라운드(2026-10-01): A · codex BLOCK, B APPROVE** — 처분 · 수리는 review 「5.2.2.2 리뷰 라운드(80ae96a5)」 절: 활성화 없는 시장의 개수 관문 복원
   (codex #1), J4 = (A) 적재 단계 원인 분류(riskbucket 범위 국소 sentinel + 엔진 원인 운반 — A #1 · codex #2), 승격 근거 범위 권한 · 최소 만료 · As census · M20 격추 · 첫 파도 두 레그
-  단언 · 문서 정정. 수리 변이 21 CAUGHT(M14 예상 생존) — 착지 `face8d0d`. codex 재확인 #1: 계좌 경계 P1 → 판정 (A)(계좌 매니페스트는 시장 단위 — 계좌 실패는 언제나 결함), 2차 수리 변이 5/5 CAUGHT. 남은 것: 2차 착지 → codex 재확인 #2. 체크는 APPROVE 뒤.
+  단언 · 문서 정정. 수리 변이 21 CAUGHT(M14 예상 생존) — 착지 `face8d0d`. codex 재확인 #1: 계좌 경계 P1 → 판정 (A)(계좌 매니페스트는 시장 단위 — 계좌 실패는 언제나 결함), 2차 수리 변이 5/5 CAUGHT — 착지 `bf269eb5`. **codex 재확인 #2 APPROVE → 체크(2026-10-01).** 잔여 R1~R5 · 새 명명 잔여는 review 「5.2.2.2」 절들.
 
   **이월(6.2 봉인 리뷰, 2026-10-01 — 이 태스크가 개수 관문을 걷을 때 함께):** (a) 발급 통화를 봉투(`accepted.currency`)가 아니라 `result.Lineage.Market` 에서 다시 유도(보이스 A #3 — 오늘은 Guardian 이 fail-closed 로 막음), (b) 계좌 권한도 선택된 소유자 범위 단위로 다시 유도(보이스 A #5 — 계좌 권한은 오늘 `entries[0]` 종목으로 적재되고 선택 범위와 대조되지 않음), (c) 제안 집합 digest 식을 한 곳으로(`collectMarket` 인라인과 `strategyProposalSetDigest` 사본 — 보이스 A #6, 갈라지면 fail-closed). (d) 변이 하네스 대조군의 JSON 추가 실행이 종료 코드도 보게(6.2 codex 재확인 #2 P2), (e) 봉인 시험 파일의 옛 주석 한 줄(「entries[0] 이면 identity 거절」) 삭제((T)). 그리고 codex 의 말 그대로: 6.2.0 의 APPROVE 는 **개수 관문 제거의 안전성을 승인한 것이 아니다.**
 

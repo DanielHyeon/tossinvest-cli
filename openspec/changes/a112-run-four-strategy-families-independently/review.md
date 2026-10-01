@@ -5794,3 +5794,10 @@ J3 계좌 절반 시험(`TestAScopeWithoutItsOwnAccountAuthorityIsRefusedAloneAn
 RED `analysis/measurements/lot-5.2.2.2-fix2/red-fix2.log`(편집 전: 범위 거절 · placed=000660). 변이 `mutation-5.2.2.2-fix2.tsv`: Z01(계좌 실패를 범위 국소로 되돌림 — 판정 전 경계) ·
 Z02(%v) · Z03(적재기가 ctx 를 안 봄) · Z04(위험 분류기 확대) · Z05(전달 몸통이 모든 결함 건너뜀) **전부 CAUGHT**, 대조군 pass 62 / 8 / 122. 생산 동작 변화 0(계좌는 시장 단위라
 어차피 모든 범위가 함께 실패하고, 서명 활성화 0).
+
+### codex 재확인 #2(bf269eb5) — **APPROVE** · 로트 종결
+
+codex(같은 세션 resume, `analysis/review-5222/codex-recheck2-output.md`): 계좌 경계 **종결**(`accountScopeCause` 는 원인만, 계좌 부재 갈래는 언제나 타입 없는 결함 · admit → dispatch
+원인 보존 · 전달 몸통 중단 유지), 「계좌 매니페스트는 시장 단위 파일」 전제 **참**(종목별 파일 선택 · 정책 거절 분기 없음), #1 · 위험 쪽 #2 · #3 **종결 유지**. T 둘 —
+계좌 수집 주석의 「그 밖의 적재 실패는 범위 국소」 잔존, 시험 설명의 「스텁에서만」 과장(순차 읽기 사이 파일 교체 · 일시적 I/O 로 범위마다 갈릴 수 있음 — 그때도 결함) —
+은 주석 정정으로 처리(동작 변화 0, 번들 재렌더 · 좌표 이동). **5.2.2.2 리뷰 사슬 종결: 80ae96a5(BLOCK) → face8d0d(BLOCK, 계좌) → bf269eb5(APPROVE).**

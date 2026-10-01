@@ -1,7 +1,7 @@
 # Function Logic Map: `newProductionStrategyFirstLegAuthorityLoader`
 
 - Source: `internal/app/engine/strategy_account_first_leg_authority.go`
-- Source SHA-256: `03beca9c77991951b18a6a97237327425a48188aa56bcb3c72bfb5c2c299cac5`
+- Source SHA-256: `c29e90e2a1e9f04e531a1cc000caa4bcc6a97a0cd796a73845a97dd23e1de7ca`
 - Signature: `newProductionStrategyFirstLegAuthorityLoader(params=8, results=1)`
 - Source range: `277:1`–`286:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 6.2 봉인 리뷰 수리, 2026-10-01). 편집 전 AST: `analysis/measurements/lot-6.2-seal/pre-edit-fix/newproductionstrategyfirstlegauthorityloader.ast.json`.
@@ -40,3 +40,5 @@ a112 5.2.2.2: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 �
 a112 5.2.2.2 리뷰 수리: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
 
 a112 5.2.2.2 리뷰 수리 2차: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
+
+a112 5.2.2.2 codex 재확인 #2 T: 주석만 바뀜(본문 불변)
