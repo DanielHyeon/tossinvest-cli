@@ -10,6 +10,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -19,6 +20,10 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 )
+
+// productionRiskTestJournalSchema 는 축소 원장 픽스처가 쓰고 config 로 주입하는 스키마 버전임 — journal 버전처럼 보이지 않는 값(a127 D4:
+// 이 패키지는 journal 을 import 할 수 없고, 시험에 새 동결 리터럴 35 를 심지 않음).
+const productionRiskTestJournalSchema = 1
 
 type productionRiskFixture struct {
 	config   ProductionRiskSnapshotConfig
@@ -198,7 +203,7 @@ func newProductionRiskFixture(t *testing.T, market Market, now time.Time) produc
 	}
 	return productionRiskFixture{config: ProductionRiskSnapshotConfig{ConfigDir: dir, JournalPath: journalPath, Market: market,
 		AccountID: body.AccountID, AccountCurrency: body.AccountCurrency, ManifestDigest: productionRiskDigest(data), TrustedKeyID: body.KeyID,
-		TrustedKey: public, ObservedAt: now}, input: ProductionRiskSnapshotInput{Result: result, FX: fx}, body: body, private: private, filePath: filePath}
+		TrustedKey: public, ObservedAt: now, JournalSchemaVersion: productionRiskTestJournalSchema}, input: ProductionRiskSnapshotInput{Result: result, FX: fx}, body: body, private: private, filePath: filePath}
 }
 
 func productionRiskDescriptor(t *testing.T, market Market) strategyflow.Descriptor {
@@ -216,7 +221,7 @@ func createProductionRiskDB(t *testing.T, path string) {
 	t.Helper()
 	db := openProductionRiskDB(t, path)
 	statements := []string{
-		`PRAGMA user_version=27`,
+		fmt.Sprintf(`PRAGMA user_version=%d`, productionRiskTestJournalSchema),
 		`CREATE TABLE risk_bucket_policies(bucket_dimension TEXT,bucket_value TEXT,policy_version TEXT,record_digest TEXT,PRIMARY KEY(bucket_dimension,bucket_value,policy_version))`,
 		`CREATE TABLE risk_bucket_snapshots(snapshot_id TEXT PRIMARY KEY,bucket_dimension TEXT,bucket_value TEXT,policy_version TEXT)`,
 		`CREATE TABLE risk_bucket_reservations(reservation_id TEXT PRIMARY KEY,account_ref TEXT,bucket_dimension TEXT,bucket_value TEXT,policy_version TEXT,snapshot_id TEXT,held_minor TEXT,filled_minor TEXT,state TEXT,risk_overage_latched INTEGER,unknown_actual_latched INTEGER,decision_id TEXT,market TEXT,symbol TEXT,owner_prospective_generation TEXT)`,

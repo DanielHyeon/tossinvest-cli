@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
@@ -212,6 +213,8 @@ func (loader *strategyRiskAuthorityLoader) collectMarket(ctx context.Context, ma
 				ConfigDir: loader.configDir, JournalPath: loader.journalPath, Market: bucketMarket, AccountID: loader.accountID,
 				AccountCurrency: loader.accountCurrency, ManifestDigest: loader.digests[market], TrustedKeyID: loader.keyID,
 				TrustedKey: loader.key, ObservedAt: loader.observedAt,
+				// a127 D2: 이 빌드가 이해하는 원장 스키마(상수) — 적재기는 원장 user_version 이 이 값과 같을 때만 읽음.
+				JournalSchemaVersion: journal.SchemaVersion,
 			}, riskbucket.ProductionRiskSnapshotInput{Result: scoped, FX: fx.read.evidence})
 			scope := bundle.Scope()
 			switch {

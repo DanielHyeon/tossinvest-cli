@@ -35,10 +35,18 @@ const (
 	productionRouteDomain       = "TossOS/strategy-router-lane-authority/ed25519/v1"
 	productionRouteAlgorithm    = "Ed25519"
 	productionRouteMaximumBytes = 1 << 20
-	productionRouteJournalV     = 27
 	productionRouteMaxOwners    = 10_000
 	// 중재 점수는 0..1,000,000 의 정수 ppm 이다(design.md "score_ppm(0..1,000,000)").
 	productionRouteScorePPMMax = 1_000_000
+)
+
+// owner 재구성의 원장 판독 SQL 은 상수 하나씩 — snapshot 을 열 때의 prepare(a127 D7)와 실행이 같은 문자열을 씀(둘째 철자 금지). 내용은 a127 이
+// 바꾸지 않음(D5).
+const (
+	// productionRouteOwnersSQL 은 범위(계좌 · 시장 · 종목)의 owner 이력.
+	productionRouteOwnersSQL = `SELECT prospective_generation,lane_id,campaign_id,coalesce(actual_generation,''),acquired_at,coalesce(released_at,''),risk_overage_latched,unknown_actual_latched FROM risk_bucket_owners WHERE account_ref=? AND market=? AND symbol=? ORDER BY acquired_at,prospective_generation`
+	// productionRouteCampaignSQL 은 active owner 의 campaign — active owner 가 있을 때만 실행됨(조건부, a127 D7 의 prepare 가 덮음).
+	productionRouteCampaignSQL = `SELECT account_ref,market,symbol,lane_version,prospective_token,coalesce(actual_position_generation,''),state,entry_blocked FROM position_campaigns WHERE id=? AND lane_id=?`
 )
 
 // 세 봉인은 서로 다른 도메인 문자열로 시작한다. 같은 재료를 해시해도
@@ -75,6 +83,9 @@ type ProductionRouteConfig struct {
 	ActivationDigest, CalendarGeneration   string
 	CalendarDigest, SchedulerConfigVersion string
 	ActivationExpiresAt                    time.Time
+	// JournalSchemaVersion 은 이 빌드가 이해하는 원장 스키마 버전(호출자가 `journal.SchemaVersion` 을 넣음 — 순환 import 때문에 주입, a127 D2).
+	// 원장 `user_version` 이 이 값과 정확히 같을 때만 판독함(a127 D1).
+	JournalSchemaVersion int
 }
 
 // productionRouteCandidate 는 매니페스트가 서명한 한 가족의 후보다.
@@ -322,6 +333,10 @@ func LoadProductionRouteAuthorityBatch(ctx context.Context, config ProductionRou
 	if err := ctx.Err(); err != nil {
 		return ProductionRouteBatchAuthority{}, err
 	}
+	// a127 D2: 원장 스키마 주입 누락(0 이하)은 매니페스트 · 원장을 열기 **앞**에서 거절 — 받아 주면 판독 조건이 사라짐.
+	if config.JournalSchemaVersion <= 0 {
+		return ProductionRouteBatchAuthority{}, fmt.Errorf("%w: journal schema version not injected", ErrProductionRouteUnavailable)
+	}
 	config = canonicalProductionRouteConfig(config)
 	targets, ok := canonicalProductionRouteTargets(targets)
 	ownerUID, ownerOK := productionRouteOwnerUID()
@@ -347,9 +362,10 @@ func LoadProductionRouteAuthorityBatch(ctx context.Context, config ProductionRou
 	if _, verified := verifyProductionRouteManifest(manifest, verificationConfig); !verified {
 		return ProductionRouteBatchAuthority{}, ErrProductionRouteUnavailable
 	}
-	db, tx, err := openProductionRouteSnapshot(ctx, config.JournalPath, ownerUID)
+	db, tx, err := openProductionRouteSnapshot(ctx, config.JournalPath, ownerUID, config.JournalSchemaVersion)
 	if err != nil {
-		return ProductionRouteBatchAuthority{}, fmt.Errorf("%w: owner snapshot", ErrProductionRouteUnavailable)
+		// a127 D3: 원인을 지우지 않고 `%w` 로 보존 — 스키마 방향 문구가 공개 경계까지 옴(신원은 그대로 Unavailable).
+		return ProductionRouteBatchAuthority{}, fmt.Errorf("%w: owner snapshot: %w", ErrProductionRouteUnavailable, err)
 	}
 	defer db.Close()
 	defer tx.Rollback()
@@ -597,7 +613,7 @@ type productionRouteQueryer interface {
 	QueryRowContext(context.Context, string, ...any) *sql.Row
 }
 
-func openProductionRouteSnapshot(ctx context.Context, journalPath string, ownerUID uint32) (*sql.DB, *sql.Tx, error) {
+func openProductionRouteSnapshot(ctx context.Context, journalPath string, ownerUID uint32, journalSchema int) (*sql.DB, *sql.Tx, error) {
 	if err := validateProductionRouteJournalFile(journalPath, ownerUID); err != nil {
 		return nil, nil, err
 	}
@@ -612,11 +628,31 @@ func openProductionRouteSnapshot(ctx context.Context, journalPath string, ownerU
 		db.Close()
 		return nil, nil, err
 	}
-	var version int
-	if err := tx.QueryRowContext(ctx, `PRAGMA user_version`).Scan(&version); err != nil || version != productionRouteJournalV {
+	refuse := func(err error) (*sql.DB, *sql.Tx, error) {
 		tx.Rollback()
 		db.Close()
-		return nil, nil, ErrProductionRouteUnavailable
+		return nil, nil, err
+	}
+	// a127 D1: 원장 스키마는 주입된 현재 버전(engine 이 넣는 journal.SchemaVersion)과 **정확히** 같아야 함 — 더 옛 원장과 더 새 원장 둘 다 거절,
+	// 방향을 문구로 가르고 신원(ErrProductionRouteUnavailable)은 `%w` 로 유지. 호출자가 원인을 보존해 공개 경계까지 운반(D3).
+	var version int
+	if err := tx.QueryRowContext(ctx, `PRAGMA user_version`).Scan(&version); err != nil {
+		return refuse(fmt.Errorf("%w: journal schema unreadable: %v", ErrProductionRouteUnavailable, err))
+	}
+	if version > journalSchema {
+		return refuse(fmt.Errorf("%w: journal schema %d is newer than this build's %d", ErrProductionRouteUnavailable, version, journalSchema))
+	}
+	if version < journalSchema {
+		return refuse(fmt.Errorf("%w: journal schema %d is older than this build's %d — the ledger is not migrated", ErrProductionRouteUnavailable, version, journalSchema))
+	}
+	// a127 D7: owner · campaign 질의를 판독 전에 prepare — campaign 질의는 active owner 가 있을 때만 실행되므로, prepare 가 없으면 active owner 가 없는
+	// 범위에서 campaign 열이 없는 원장이 권한으로 통과함(codex freeze 1R P1, 측정 readset-probe 2판).
+	for _, statement := range []string{productionRouteOwnersSQL, productionRouteCampaignSQL} {
+		prepared, err := tx.PrepareContext(ctx, statement)
+		if err != nil {
+			return refuse(fmt.Errorf("%w: journal read set unavailable: %v", ErrProductionRouteUnavailable, err))
+		}
+		prepared.Close()
 	}
 	return db, tx, nil
 }
@@ -625,7 +661,7 @@ func loadProductionRouteOwnersFrom(ctx context.Context, queryer productionRouteQ
 	if queryer == nil {
 		return nil, 0, "", ErrProductionRouteUnavailable
 	}
-	rows, err := queryer.QueryContext(ctx, `SELECT prospective_generation,lane_id,campaign_id,coalesce(actual_generation,''),acquired_at,coalesce(released_at,''),risk_overage_latched,unknown_actual_latched FROM risk_bucket_owners WHERE account_ref=? AND market=? AND symbol=? ORDER BY acquired_at,prospective_generation`, key.AccountRef, string(key.Market), key.Symbol)
+	rows, err := queryer.QueryContext(ctx, productionRouteOwnersSQL, key.AccountRef, string(key.Market), key.Symbol)
 	if err != nil {
 		return nil, 0, "", err
 	}
@@ -669,7 +705,7 @@ func loadProductionRouteOwnersFrom(ctx context.Context, queryer productionRouteQ
 	}
 	var account, market, symbol, laneVersion, prospective, actualCampaign, state string
 	var entryBlocked int
-	if err := queryer.QueryRowContext(ctx, `SELECT account_ref,market,symbol,lane_version,prospective_token,coalesce(actual_position_generation,''),state,entry_blocked FROM position_campaigns WHERE id=? AND lane_id=?`, value.campaignID, value.laneID).
+	if err := queryer.QueryRowContext(ctx, productionRouteCampaignSQL, value.campaignID, value.laneID).
 		Scan(&account, &market, &symbol, &laneVersion, &prospective, &actualCampaign, &state, &entryBlocked); err != nil ||
 		account != key.AccountRef || market != string(key.Market) || symbol != key.Symbol || prospective != value.prospective ||
 		actualCampaign != value.actual || state != "ACTIVE" || entryBlocked != 0 {

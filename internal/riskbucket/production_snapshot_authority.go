@@ -31,7 +31,29 @@ const (
 	productionRiskPolicyAlgorithm    = "Ed25519"
 	productionRiskPolicyMaximumBytes = 1 << 20
 	productionRiskSnapshotWindow     = 5 * time.Second
-	productionRiskJournalSchema      = 27
+)
+
+// 원장 판독 SQL 은 상수 하나씩 — 판독 전 prepare(a127 D7)와 실행이 같은 문자열을 씀(둘째 철자 금지). 판독 SQL 의 내용은 a127 이 바꾸지 않음(D5).
+const (
+	// productionRiskScopeLatchSQL 은 범위(계좌 · 시장 · 종목)의 scope latch 수.
+	productionRiskScopeLatchSQL = `SELECT count(*) FROM risk_bucket_scope_latches WHERE account_ref=? AND market=? AND symbol=?`
+	// productionRiskUsageSQL 은 계좌 bucket 의 예약 행과 떠남 판정의 원장 사실(a126 D1) — readProductionRiskUsage 의 유일한 질의.
+	productionRiskUsageSQL = `SELECT r.reservation_id,r.policy_version,r.held_minor,r.filled_minor,r.state,
+		r.risk_overage_latched,r.unknown_actual_latched,COALESCE(s.snapshot_id,''),COALESCE(p.record_digest,''),
+		CASE WHEN rc.released_at IS NULL THEN 0 ELSE 1 END,COALESCE(rc.released_at,''),COALESCE(ow.released_at,''),
+		CASE WHEN EXISTS(SELECT 1 FROM risk_bucket_scope_latches l WHERE l.account_ref=r.account_ref AND l.market=r.market AND l.symbol=r.symbol
+			AND l.prospective_generation=r.owner_prospective_generation) THEN 1 ELSE 0 END,
+		CASE WHEN d.decision_id IS NOT NULL AND d.account_ref=r.account_ref AND d.market=r.market AND d.symbol=r.symbol
+			AND d.owner_prospective_generation=r.owner_prospective_generation THEN 1 ELSE 0 END,
+		CASE WHEN EXISTS(SELECT 1 FROM risk_bucket_owner_release_receipts x WHERE x.account_ref=d.account_ref AND x.market=d.market AND x.symbol=d.symbol
+			AND x.prospective_generation=d.owner_prospective_generation) THEN 1 ELSE 0 END
+		FROM risk_bucket_reservations r
+		LEFT JOIN risk_bucket_snapshots s ON s.snapshot_id=r.snapshot_id AND s.bucket_dimension=r.bucket_dimension AND s.bucket_value=r.bucket_value AND s.policy_version=r.policy_version
+		LEFT JOIN risk_bucket_policies p ON p.bucket_dimension=r.bucket_dimension AND p.bucket_value=r.bucket_value AND p.policy_version=r.policy_version
+		LEFT JOIN risk_bucket_owner_release_receipts rc ON rc.account_ref=r.account_ref AND rc.market=r.market AND rc.symbol=r.symbol AND rc.prospective_generation=r.owner_prospective_generation
+		LEFT JOIN risk_bucket_owners ow ON ow.account_ref=r.account_ref AND ow.market=r.market AND ow.symbol=r.symbol AND ow.prospective_generation=r.owner_prospective_generation
+		LEFT JOIN risk_bucket_final_decisions d ON d.decision_id=r.decision_id
+		WHERE r.account_ref=? AND r.bucket_dimension=? AND r.bucket_value=? ORDER BY r.reservation_id`
 )
 
 var ErrProductionRiskSnapshotUnavailable = errors.New("risk bucket: production snapshot authority unavailable")
@@ -51,6 +73,9 @@ type ProductionRiskSnapshotConfig struct {
 	ManifestDigest, TrustedKeyID string
 	TrustedKey                   ed25519.PublicKey
 	ObservedAt                   time.Time
+	// JournalSchemaVersion 은 이 빌드가 이해하는 원장 스키마 버전(호출자가 `journal.SchemaVersion` 을 넣음 — journal 이 이 패키지를 import 하므로
+	// 여기서는 읽을 수 없음, a127 D2). 원장 `user_version` 이 이 값과 정확히 같을 때만 판독함(a127 D1).
+	JournalSchemaVersion int
 }
 
 // ProductionRiskSnapshotInput carries opaque authorities. Result and FX remain
@@ -148,6 +173,10 @@ func LoadProductionRiskSnapshotAuthority(ctx context.Context, config ProductionR
 	}
 	if err := ctx.Err(); err != nil {
 		return RiskSnapshotAuthorityBundle{}, err
+	}
+	// a127 D2: 원장 스키마 주입 누락(0 이하)은 정책 결속 · 원장 열기 **앞**에서 거절 — 주입 누락은 결함이고, 받아 주면 판독 조건이 사라짐.
+	if config.JournalSchemaVersion <= 0 {
+		return RiskSnapshotAuthorityBundle{}, fmt.Errorf("%w: journal schema version not injected", ErrProductionRiskSnapshotUnavailable)
 	}
 	config = canonicalProductionRiskConfig(config)
 	owner, ownerOK := productionRiskOwnerUID()
@@ -380,14 +409,37 @@ func loadProductionRiskEntries(ctx context.Context, config ProductionRiskSnapsho
 	if err := db.PingContext(ctx); err != nil {
 		return nil, err
 	}
+	// a127 D7: 버전 확인 · scope latch · 다섯 사용량 판독을 읽기 전용 트랜잭션 하나에서 — 확인과 판독 사이에 다른 프로세스(예: engine lock 없이
+	// 원장을 여는 flatten)의 마이그레이션이 끼어 서로 다른 커밋을 보는 창을 닫음. 판정 · 오류 신원은 그대로.
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	// a127 D1: 원장 스키마는 주입된 현재 버전(engine 이 넣는 journal.SchemaVersion)과 **정확히** 같아야 함 — 같은 프로세스가 방금 연 · 마이그레이션한
+	// 원장이 생산의 불변식이고, 더 옛 원장(트리거 · 제약이 그 버전 이전)과 더 새 원장(이 빌드가 모르는 의미)은 둘 다 거절. 방향을 문구로 가름.
 	var version int
-	if err := db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil || version != productionRiskJournalSchema {
-		return nil, errors.New("risk bucket: exact journal schema unavailable")
+	if err := tx.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil {
+		return nil, fmt.Errorf("risk bucket: journal schema unreadable: %w", err)
+	}
+	if version > config.JournalSchemaVersion {
+		return nil, fmt.Errorf("risk bucket: journal schema %d is newer than this build's %d", version, config.JournalSchemaVersion)
+	}
+	if version < config.JournalSchemaVersion {
+		return nil, fmt.Errorf("risk bucket: journal schema %d is older than this build's %d — the ledger is not migrated", version, config.JournalSchemaVersion)
+	}
+	// a127 D7: 원장 데이터 질의 전부를 첫 판독 전에 prepare — 사용량 질의는 scope latch 가 0 일 때만 실행되므로(아래 범위 국소 거절), prepare 가
+	// 없으면 사용량 전용 열이 없는 원장의 결함이 latch 가 선 범위에서 범위 국소 거절로 재표식됨. 열 부재는 여기서 결함으로 먼저 나옴.
+	for _, statement := range []string{productionRiskScopeLatchSQL, productionRiskUsageSQL} {
+		prepared, err := tx.PrepareContext(ctx, statement)
+		if err != nil {
+			return nil, fmt.Errorf("risk bucket: journal read set unavailable: %w", err)
+		}
+		prepared.Close()
 	}
 	var scopeLatches int
 	// 조회 결함과 latch 존재를 가름(편집 전에는 한 오류로 합쳐 있었음) — 둘 다 거절(판정 불변), latch 만 범위 국소 신원.
-	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM risk_bucket_scope_latches WHERE account_ref=? AND market=? AND symbol=?`,
-		scope.AccountID, string(scope.Market), scope.Symbol).Scan(&scopeLatches); err != nil {
+	if err := tx.QueryRowContext(ctx, productionRiskScopeLatchSQL, scope.AccountID, string(scope.Market), scope.Symbol).Scan(&scopeLatches); err != nil {
 		return nil, fmt.Errorf("risk bucket: scope latch unreadable: %w", err)
 	}
 	if scopeLatches != 0 {
@@ -405,7 +457,7 @@ func loadProductionRiskEntries(ctx context.Context, config ProductionRiskSnapsho
 	}
 	entries := make([]riskSnapshotAuthorityMaterialEntry, 0, len(requiredDimensions))
 	for _, dimension := range requiredDimensions {
-		usage, err := ReadJournalBucketUsage(ctx, db, scope.AccountID, dimension, values[dimension])
+		usage, err := ReadJournalBucketUsage(ctx, tx, scope.AccountID, dimension, values[dimension])
 		if err != nil {
 			return nil, err
 		}
@@ -479,22 +531,7 @@ func ReadJournalBucketUsage(ctx context.Context, q UsageQueryer, account string,
 func readProductionRiskUsage(ctx context.Context, db UsageQueryer, account string, dimension Dimension, value string) ([]productionRiskUsageRow, error) {
 	// 떠남 판정의 사실(a126 D1)을 행마다 함께 읽음 — 영수증 · owner released_at 은 예약 행의 owner 키(r.*)로, 결정 사본(d.*)의 영수증과
 	// 두 사본의 일치는 따로. 규칙 적용은 aggregateProductionRiskUsage 한 곳(판정이 둘이면 서로의 시험을 통과시킴).
-	rows, err := db.QueryContext(ctx, `SELECT r.reservation_id,r.policy_version,r.held_minor,r.filled_minor,r.state,
-		r.risk_overage_latched,r.unknown_actual_latched,COALESCE(s.snapshot_id,''),COALESCE(p.record_digest,''),
-		CASE WHEN rc.released_at IS NULL THEN 0 ELSE 1 END,COALESCE(rc.released_at,''),COALESCE(ow.released_at,''),
-		CASE WHEN EXISTS(SELECT 1 FROM risk_bucket_scope_latches l WHERE l.account_ref=r.account_ref AND l.market=r.market AND l.symbol=r.symbol
-			AND l.prospective_generation=r.owner_prospective_generation) THEN 1 ELSE 0 END,
-		CASE WHEN d.decision_id IS NOT NULL AND d.account_ref=r.account_ref AND d.market=r.market AND d.symbol=r.symbol
-			AND d.owner_prospective_generation=r.owner_prospective_generation THEN 1 ELSE 0 END,
-		CASE WHEN EXISTS(SELECT 1 FROM risk_bucket_owner_release_receipts x WHERE x.account_ref=d.account_ref AND x.market=d.market AND x.symbol=d.symbol
-			AND x.prospective_generation=d.owner_prospective_generation) THEN 1 ELSE 0 END
-		FROM risk_bucket_reservations r
-		LEFT JOIN risk_bucket_snapshots s ON s.snapshot_id=r.snapshot_id AND s.bucket_dimension=r.bucket_dimension AND s.bucket_value=r.bucket_value AND s.policy_version=r.policy_version
-		LEFT JOIN risk_bucket_policies p ON p.bucket_dimension=r.bucket_dimension AND p.bucket_value=r.bucket_value AND p.policy_version=r.policy_version
-		LEFT JOIN risk_bucket_owner_release_receipts rc ON rc.account_ref=r.account_ref AND rc.market=r.market AND rc.symbol=r.symbol AND rc.prospective_generation=r.owner_prospective_generation
-		LEFT JOIN risk_bucket_owners ow ON ow.account_ref=r.account_ref AND ow.market=r.market AND ow.symbol=r.symbol AND ow.prospective_generation=r.owner_prospective_generation
-		LEFT JOIN risk_bucket_final_decisions d ON d.decision_id=r.decision_id
-		WHERE r.account_ref=? AND r.bucket_dimension=? AND r.bucket_value=? ORDER BY r.reservation_id`, account, string(dimension), value)
+	rows, err := db.QueryContext(ctx, productionRiskUsageSQL, account, string(dimension), value)
 	if err != nil {
 		return nil, err
 	}

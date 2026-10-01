@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -18,6 +19,10 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane"
 	_ "modernc.org/sqlite"
 )
+
+// productionRouteTestJournalSchema 는 축소 원장 픽스처가 쓰고 config 로 주입하는 스키마 버전임 — journal 버전처럼 보이지 않는 값(a127 D4:
+// 이 패키지의 내부 시험은 journal 을 import 할 수 없고, 시험에 새 동결 리터럴 35 를 심지 않음).
+const productionRouteTestJournalSchema = 1
 
 func TestPairedProductionRouteAuthorityLoadsExactFourLanesIndependently(t *testing.T) {
 	fixture := newProductionRouteFixture(t)
@@ -213,7 +218,7 @@ func newProductionRouteFixture(t *testing.T) *productionRouteFixture {
 		t.Fatal(err)
 	}
 	for _, statement := range []string{
-		`PRAGMA user_version=27`,
+		fmt.Sprintf(`PRAGMA user_version=%d`, productionRouteTestJournalSchema),
 		`CREATE TABLE risk_bucket_owners(account_ref TEXT,market TEXT,symbol TEXT,prospective_generation TEXT,lane_id TEXT,campaign_id TEXT,actual_generation TEXT,acquired_at TEXT,released_at TEXT,risk_overage_latched INTEGER,unknown_actual_latched INTEGER)`,
 		`CREATE TABLE position_campaigns(id TEXT PRIMARY KEY,account_ref TEXT,market TEXT,symbol TEXT,lane_id TEXT,lane_version TEXT,prospective_token TEXT,actual_position_generation INTEGER,state TEXT,entry_blocked INTEGER)`,
 	} {
@@ -239,7 +244,7 @@ func newProductionRouteFixture(t *testing.T) *productionRouteFixture {
 		fixture.config[market] = ProductionRouteConfig{ConfigDir: dir, JournalPath: journal, AccountRef: "acct",
 			Market: market, Symbol: scope.Symbol, PositionGeneration: scope.PositionGeneration, TrustedKeyID: "route-key-v1", TrustedKey: public, ObservedAt: fixture.now,
 			ActivationDigest: body.ActivationDigest, CalendarGeneration: body.CalendarGeneration, CalendarDigest: body.CalendarDigest,
-			SchedulerConfigVersion: body.ConfigVersion, ActivationExpiresAt: fixture.now.Add(time.Hour)}
+			SchedulerConfigVersion: body.ConfigVersion, ActivationExpiresAt: fixture.now.Add(time.Hour), JournalSchemaVersion: productionRouteTestJournalSchema}
 		fixture.write(t, market, body)
 	}
 	return fixture

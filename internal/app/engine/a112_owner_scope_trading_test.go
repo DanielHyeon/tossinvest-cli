@@ -17,9 +17,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"path/filepath"
-	"reflect"
 	"sort"
 	"strings"
 	"testing"
@@ -66,18 +64,20 @@ type a112TradingOptions struct {
 type a112TradingFixture struct {
 	now        time.Time
 	riskLoader strategyRiskAuthorityLoader
-	fx         strategyFXAuthorityPair
-	guardian   *execgw.RiskGuardian
-	clk        *clock.Fake
-	journal    *journal.Journal
-	proposals  strategyProposalAuthorityPair
-	risk       strategyRiskAuthorityPair
-	accounts   strategyAccountAuthorityPair
-	loader     *productionStrategyFirstLegAuthorityLoader
-	cycle      *strategyDispatchCycle
-	spy        *strategyDispatchGatewaySpy
-	winner     strategyproposal.ProductionAuthority
-	second     strategyproposal.ProductionAuthority
+	// riskStub 은 축소 위험 원장 경로(a127 전에는 적재기가 늘 이것을 읽었음) — 손상 주입 시험만 useRiskStub 으로 씀.
+	riskStub  string
+	fx        strategyFXAuthorityPair
+	guardian  *execgw.RiskGuardian
+	clk       *clock.Fake
+	journal   *journal.Journal
+	proposals strategyProposalAuthorityPair
+	risk      strategyRiskAuthorityPair
+	accounts  strategyAccountAuthorityPair
+	loader    *productionStrategyFirstLegAuthorityLoader
+	cycle     *strategyDispatchCycle
+	spy       *strategyDispatchGatewaySpy
+	winner    strategyproposal.ProductionAuthority
+	second    strategyproposal.ProductionAuthority
 }
 
 func newA112TradingFixture(t *testing.T, options a112TradingOptions) a112TradingFixture {
@@ -139,9 +139,12 @@ func newA112TradingFixture(t *testing.T, options a112TradingOptions) a112Trading
 	if err != nil {
 		t.Fatal(err)
 	}
-	// 위험 적재기는 stub 원장(user_version 27)을 읽는다 — 실제 원장(v35)은 생산 적재기의 스키마 핀이 거절한다(결함, 아래 다리 참고).
+	// a127: 위험 적재기는 admission 과 **같은 실제 원장**을 읽는다(스키마 핀 수리 — 다리 `a112MirrorLedgerIntoRiskStub` 제거). 축소 stub 원장은
+	// 실제 원장의 트리거 · 제약이 막는 손상 모양(GARBAGE 행 · latch 뷰)을 심는 시험만 `useRiskStub` 으로 고른다.
 	riskLoader := *riskFixture.loader
-	fixture := a112TradingFixture{now: now, riskLoader: riskLoader, fx: riskFixture.fx, guardian: guardian, clk: fakeClock, journal: handle,
+	riskStub := riskLoader.journalPath
+	riskLoader.journalPath = handle.Path()
+	fixture := a112TradingFixture{now: now, riskLoader: riskLoader, riskStub: riskStub, fx: riskFixture.fx, guardian: guardian, clk: fakeClock, journal: handle,
 		proposals: proposals, spy: &strategyDispatchGatewaySpy{observed: map[string]int{}}, winner: winner, second: second}
 	accountLoader := a112AccountLoaderWith(t, now, options.failAccountFor, options.accountFailure, options.shortFreshFor)
 	if options.disallowFor != "" {
@@ -162,111 +165,22 @@ func newA112TradingFixture(t *testing.T, options a112TradingOptions) a112Trading
 	return fixture
 }
 
-// a112MirrorLedgerIntoRiskStub 는 admission 원장의 **실제 행**을 위험 적재기의 stub 원장으로 옮기고, 옮긴 행이 원본과 같음을 단언함.
-//
-// 다리(임시)의 사유: 생산 위험 적재기가 journal schema 27 에 고정돼(riskbucket productionRiskJournalSchema) 실제 원장(v35)을 거절하므로
-// 적재기가 admission 원장을 직접 못 읽음 — 그래서 사용량이 stub 에서 늘지 않아 둘째 파도가 영원히 BUCKET_USAGE_STALE 로 남음.
-// 이 복사는 행을 지어내지 않음: 원장에서 읽은 것만 넣고 표마다 행 집합이 원본과 같은지 대조함(복사기 자체의 시험).
-// 옮기는 표와 열은 손으로 고르지 않고 **stub 의 스키마에서 유도**함(stub 이 적재기가 읽는 투영 — a126 이 표를 더해도 따라감).
-// 제거 조건: 스키마 핀 수리 change 가 착지하면 적재기를 실제 원장으로 단일화하고 이 다리를 지움.
-func a112MirrorLedgerIntoRiskStub(t *testing.T, ledgerPath, stubPath string) map[string]int {
-	t.Helper()
-	ledger, err := sql.Open("sqlite", "file:"+ledgerPath+"?mode=ro")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer ledger.Close()
-	stub, err := sql.Open("sqlite", "file:"+stubPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer stub.Close()
-	tables := a112StubTables(t, stub)
-	if len(tables) == 0 {
-		t.Fatal("arrangement: the risk stub has no tables to mirror")
-	}
-	counts := map[string]int{}
-	for table, columns := range tables {
-		source := a112ReadRows(t, ledger, table, columns)
-		if _, err := stub.Exec("DELETE FROM " + table); err != nil {
-			t.Fatal(err)
-		}
-		width := len(strings.Split(columns, ","))
-		placeholders := strings.TrimSuffix(strings.Repeat("?,", width), ",")
-		for _, row := range source {
-			if _, err := stub.Exec(fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)", table, columns, placeholders), row...); err != nil {
-				t.Fatal(err)
-			}
-		}
-		// 복사기 시험: stub 의 행 집합이 원장의 것과 정확히 같아야 함(누락 · 변형 · 잔여 없음).
-		if copied := a112ReadRows(t, stub, table, columns); !reflect.DeepEqual(copied, source) {
-			t.Fatalf("mirror of %s diverged from the admission ledger: copied=%v source=%v", table, copied, source)
-		}
-		counts[table] = len(source)
-	}
-	return counts
+// useRiskStub 은 위험 적재기를 축소 stub 원장으로 돌림 — 실제 원장의 트리거 · STRICT · FK 가 막는 손상 모양(GARBAGE 행 · latch 뷰)을 심어 결함
+// 분류를 재는 시험 전용(a127: 기본은 실제 원장). 반환값은 stub 경로.
+func (fixture *a112TradingFixture) useRiskStub() string {
+	fixture.riskLoader.journalPath = fixture.riskStub
+	return fixture.riskStub
 }
 
-// a112StubTables 는 stub 원장의 표 → 열 목록(쉼표, 선언 순서).
-func a112StubTables(t *testing.T, stub *sql.DB) map[string]string {
+// sqlOpenReadOnlyCount 는 원장 파일을 읽기 전용으로 열어 count 질의 하나를 읽음(시험 준비 단언용).
+func sqlOpenReadOnlyCount(t *testing.T, path, query string, out *int) error {
 	t.Helper()
-	rows, err := stub.Query(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`)
+	db, err := sql.Open("sqlite", "file:"+path+"?mode=ro")
 	if err != nil {
-		t.Fatal(err)
+		return err
 	}
-	var names []string
-	for rows.Next() {
-		var name string
-		if err := rows.Scan(&name); err != nil {
-			t.Fatal(err)
-		}
-		names = append(names, name)
-	}
-	rows.Close()
-	tables := map[string]string{}
-	for _, name := range names {
-		info, err := stub.Query(`SELECT name FROM pragma_table_info(?) ORDER BY cid`, name)
-		if err != nil {
-			t.Fatal(err)
-		}
-		var columns []string
-		for info.Next() {
-			var column string
-			if err := info.Scan(&column); err != nil {
-				t.Fatal(err)
-			}
-			columns = append(columns, column)
-		}
-		info.Close()
-		tables[name] = strings.Join(columns, ",")
-	}
-	return tables
-}
-
-func a112ReadRows(t *testing.T, db *sql.DB, table, columns string) [][]any {
-	t.Helper()
-	rows, err := db.Query(fmt.Sprintf("SELECT %s FROM %s ORDER BY %s", columns, table, columns))
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer rows.Close()
-	width := len(strings.Split(columns, ","))
-	var out [][]any
-	for rows.Next() {
-		values := make([]any, width)
-		pointers := make([]any, width)
-		for i := range values {
-			pointers[i] = &values[i]
-		}
-		if err := rows.Scan(pointers...); err != nil {
-			t.Fatal(err)
-		}
-		out = append(out, values)
-	}
-	if err := rows.Err(); err != nil {
-		t.Fatal(err)
-	}
-	return out
+	defer db.Close()
+	return db.QueryRow(query).Scan(out)
 }
 
 // wave 는 생산 조립처럼 결과 → 위험 권한을 **지금 원장으로** 다시 모으고 1차 레그 권한 · dispatch 주기를 새로 세운다(새 파도).
@@ -341,7 +255,7 @@ func (fixture a112TradingFixture) deliverKR(t *testing.T) error {
 // (관문 전수표 (e)). 둘째 파도가 첫 레그의 held 를 반영한 번들을 다시 모으면 둘째 범위가 발급된다 — 첫 범위는 캠페인이 이제 FLAT 이 아니라
 // 전달 몸통이 건너뛴다(굶음 없음).
 //
-// 둘째 파도 전의 원장 → stub 복사는 스키마 핀 결함의 다리다(a112MirrorLedgerIntoRiskStub 주석 — 핀 수리 change 착지 시 제거).
+// 둘째 파도는 위험 적재기가 admission 과 같은 실제 원장을 다시 읽어 첫 레그의 held 를 본다(a127 — 예전 원장 → stub 복사 다리는 지워짐).
 func TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope(t *testing.T) {
 	fixture := newA112TradingFixture(t, a112TradingOptions{})
 	// J2 실측: 활성 두 범위 파도의 범위 항목 수 = 위험 N + 계좌 N(범위마다 적재 시도 하나 — 적재 호출은 각 적재기의 범위 순회 안 한 자리;
@@ -361,8 +275,9 @@ func TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope(t *testing.T) {
 	if scope := (*strategyScopeRefusal)(nil); errors.As(firstWave, &scope) {
 		t.Fatalf("first wave err=%v — the journal's stale-usage refusal must not be typed as a scope refusal (J4)", firstWave)
 	}
-	if counts := a112MirrorLedgerIntoRiskStub(t, fixture.journal.Path(), fixture.riskLoader.journalPath); counts["risk_bucket_reservations"] == 0 {
-		t.Fatal("arrangement: the first leg left no bucket reservation in the admission ledger — the second wave would prove nothing")
+	var reservations int
+	if err := sqlOpenReadOnlyCount(t, fixture.journal.Path(), `SELECT count(*) FROM risk_bucket_reservations`, &reservations); err != nil || reservations == 0 {
+		t.Fatalf("arrangement: the first leg left no bucket reservation in the admission ledger (n=%d err=%v) — the second wave would prove nothing", reservations, err)
 	}
 	fixture.wave(t)
 	if err := fixture.deliverKR(t); err != nil {
@@ -449,30 +364,30 @@ func TestTheFirstLegCurrencyComesFromTheLineageNotTheEnvelope(t *testing.T) {
 	}
 }
 
-// 다리의 제거 조건을 기계로 건다(결함 영수증 · Manager 판정 ②): 생산 위험 적재기는 오늘 admission 원장(journal.SchemaVersion)을 스키마 핀
-// 27 로 거절한다. 핀 수리 change 가 착지하면 이 시험이 실패한다 — 그때 a112MirrorLedgerIntoRiskStub 를 지우고 적재기를 실제 원장으로 단일화할 것.
-func TestTheRiskStubBridgeIsStillNeededBecauseTheLoaderRefusesTheRealJournal(t *testing.T) {
+// a127 D4 · S1 — 생산 위험 적재기는 admission 원장(`journal.Open`, 스키마 journal.SchemaVersion)을 주입된 현재 스키마로 읽는다. a112 의
+// 트립와이어(핀 27 이 실제 원장을 거절함을 단언하던 시험)를 양성으로 뒤집은 것 — 동결 리터럴로 되돌리면(S1) 이 시험이 실패한다.
+func TestTheRiskLoaderReadsTheRealJournal(t *testing.T) {
 	fixture := newA112TradingFixture(t, a112TradingOptions{})
 	loader := fixture.riskLoader
-	loader.journalPath = fixture.journal.Path()
+	if loader.journalPath != fixture.journal.Path() {
+		t.Fatalf("arrangement: the risk loader reads %q, want the admission ledger %q", loader.journalPath, fixture.journal.Path())
+	}
 	scoped := fixture.proposals.ResultAuthority().kr.results()
 	if len(scoped) != 2 {
 		t.Fatalf("arrangement: KR results=%d, want the two owner scopes", len(scoped))
 	}
-	_, err := riskbucket.LoadProductionRiskSnapshotAuthority(context.Background(), riskbucket.ProductionRiskSnapshotConfig{
+	bundle, err := riskbucket.LoadProductionRiskSnapshotAuthority(context.Background(), riskbucket.ProductionRiskSnapshotConfig{
 		ConfigDir: loader.configDir, JournalPath: loader.journalPath, Market: riskbucket.MarketKR, AccountID: loader.accountID,
 		AccountCurrency: loader.accountCurrency, ManifestDigest: loader.digests[StrategyMarketKR], TrustedKeyID: loader.keyID,
-		TrustedKey: loader.key, ObservedAt: loader.observedAt,
+		TrustedKey: loader.key, ObservedAt: loader.observedAt, JournalSchemaVersion: journal.SchemaVersion,
 	}, riskbucket.ProductionRiskSnapshotInput{Result: scoped[0], FX: fixture.fx.kr.read.evidence})
-	if err == nil || !strings.HasSuffix(err.Error(), "risk bucket: exact journal schema unavailable") {
-		t.Fatalf("real-journal load err=%v (journal schema %d) — if the schema pin was repaired, remove the stub bridge and read the real ledger",
-			err, journal.SchemaVersion)
+	if err != nil || len(bundle.Entries()) != 5 {
+		t.Fatalf("real-journal load (schema %d) err=%v entries=%d, want the five-bucket bundle", journal.SchemaVersion, err, len(bundle.Entries()))
 	}
-	t.Logf("receipt: journal.SchemaVersion=%d, real-journal load refused: %v", journal.SchemaVersion, err)
 	collected := loader.collect(context.Background(), fixture.proposals.ResultAuthority(), fixture.fx)
 	for _, scope := range collected.kr.scopes {
-		if scope.ready {
-			t.Fatalf("scope %v ready against the real journal — the pin was repaired; remove the stub bridge", scope.key)
+		if !scope.ready {
+			t.Fatalf("scope %v not ready against the real journal: %v", scope.key, scope.cause)
 		}
 	}
 }
@@ -625,7 +540,7 @@ func TestARiskScopeOutsideTheSignedPolicyIsRefusedAloneInEitherOrder(t *testing.
 // 주기를 멈추며(주문 0), 원인(원장 사용량 무효)을 오류 사슬에 남긴다.
 func TestACorruptLedgerRowStopsTheCycleWithItsCause(t *testing.T) {
 	fixture := newA112TradingFixture(t, a112TradingOptions{})
-	stub, err := sql.Open("sqlite", "file:"+fixture.riskLoader.journalPath)
+	stub, err := sql.Open("sqlite", "file:"+fixture.useRiskStub())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -658,7 +573,7 @@ func TestACorruptLedgerRowStopsTheCycleWithItsCause(t *testing.T) {
 // scope latch 는 그 범위만 거절(신원 운반), latch 를 **읽지 못하는** 것은 결함(주기 멈춤) — 편집 전에는 둘이 한 오류였다.
 func TestAScopeLatchIsRefusedAloneButALatchReadFaultStops(t *testing.T) {
 	latched := newA112TradingFixture(t, a112TradingOptions{})
-	stub, err := sql.Open("sqlite", "file:"+latched.riskLoader.journalPath)
+	stub, err := sql.Open("sqlite", "file:"+latched.useRiskStub())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -676,7 +591,7 @@ func TestAScopeLatchIsRefusedAloneButALatchReadFaultStops(t *testing.T) {
 	}
 
 	unreadable := newA112TradingFixture(t, a112TradingOptions{})
-	stub, err = sql.Open("sqlite", "file:"+unreadable.riskLoader.journalPath)
+	stub, err = sql.Open("sqlite", "file:"+unreadable.useRiskStub())
 	if err != nil {
 		t.Fatal(err)
 	}

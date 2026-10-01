@@ -11,12 +11,14 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/officialfx"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
@@ -243,7 +245,8 @@ func createStrategyRiskLoaderJournal(t *testing.T, path string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, statement := range []string{`PRAGMA user_version=27`,
+	// a127: 축소 원장도 엔진이 주입하는 현재 스키마(journal.SchemaVersion)를 단다 — 엔진 호출 자리가 그 상수를 넣으므로(D2).
+	for _, statement := range []string{fmt.Sprintf(`PRAGMA user_version=%d`, journal.SchemaVersion),
 		`CREATE TABLE risk_bucket_policies(bucket_dimension TEXT,bucket_value TEXT,policy_version TEXT,record_digest TEXT,PRIMARY KEY(bucket_dimension,bucket_value,policy_version))`,
 		`CREATE TABLE risk_bucket_snapshots(snapshot_id TEXT PRIMARY KEY,bucket_dimension TEXT,bucket_value TEXT,policy_version TEXT)`,
 		`CREATE TABLE risk_bucket_reservations(reservation_id TEXT PRIMARY KEY,account_ref TEXT,bucket_dimension TEXT,bucket_value TEXT,policy_version TEXT,snapshot_id TEXT,held_minor TEXT,filled_minor TEXT,state TEXT,risk_overage_latched INTEGER,unknown_actual_latched INTEGER,decision_id TEXT,market TEXT,symbol TEXT,owner_prospective_generation TEXT)`,

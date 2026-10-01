@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategy"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 )
@@ -180,7 +181,9 @@ func (loader *strategyRouteAuthorityLoader) collectMarket(ctx context.Context, s
 		AccountRef: loader.accountRef, Market: strategyRouterMarket(market), ManifestDigest: digest,
 		TrustedKeyID: keyID, TrustedKey: ed25519.PublicKey(key), ObservedAt: observedAt,
 		ActivationDigest: schedule.snapshot.ActivationManifestDigest, CalendarGeneration: schedule.desired.CalendarVersion,
-		CalendarDigest: schedule.calendar.Version, SchedulerConfigVersion: schedule.desired.ConfigVersion}, targets)
+		CalendarDigest: schedule.calendar.Version, SchedulerConfigVersion: schedule.desired.ConfigVersion,
+		// a127 D2: 이 빌드가 이해하는 원장 스키마(상수) — 적재기는 원장 user_version 이 이 값과 같을 때만 읽음.
+		JournalSchemaVersion: journal.SchemaVersion}, targets)
 	if err != nil || batch.ManifestDigest() != digest {
 		return strategyRouteMarketAuthority{market: market, snapshot: StrategyRouteMarketSnapshot{Market: market,
 			Reason: StrategyRouteAuthorityInvalid, ApprovedCount: candidates.approved.Len(), RefusedCount: candidates.approved.Len(), ManifestDigest: digest}}

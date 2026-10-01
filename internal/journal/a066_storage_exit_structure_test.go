@@ -32,16 +32,19 @@ import (
 // 세기만 함(범위가 조용히 줄지 않게).
 var a066StorageExitCensus = struct {
 	files, funcs, exits, others, txOpeners int
-}{files: 11, funcs: 128, exits: 337, others: 91, txOpeners: 12}
+}{files: 11, funcs: 128, exits: 340, others: 91, txOpeners: 13}
 
 // a066ProductionSnapshotStorageExits 는 걷는 범위 중 riskbucket 생산 snapshot reader 의 저장소 오류 출구를 **함수별 이름으로** 얼린다.
 // 336 → 337(2026-10-01, a112 5.2.2.2 리뷰 수리 `face8d0d` — J4 = (A)): `loadProductionRiskEntries` 의 scope latch 조회가 `err != nil ||
 // latches != 0` 한 갈래에서 둘로 갈렸다 — 조회 결함(`scope latch unreadable: %w`, 이 새 저장소 출구 — 결함이라 nil 아닌 오류 · 쓰기 0)과 latch
 // 존재(범위 국소 sentinel, 저장소 출구 아님). 편집 전에는 합쳐진 조건이라 `err != nil` 출구로 세어지지 않았다. 정당한 이유: 원장 조회 결함을
 // 범위 국소 거절과 가르려면 그 결함이 자기 출구를 가져야 한다(a112 J4).
+// 337 → 340 · txOpeners 12 → 13(2026-10-01, a127 D1 · D7): `loadProductionRiskEntries` 가 판독을 읽기 전용 tx 하나로 묶고(BeginTx 출구 +1, 트랜잭션
+// 여는 함수 +1 — `defer tx.Rollback()` 이 BeginTx 검사 바로 뒤) user_version 판독 실패를 버전 불일치와 가르며(+1) 원장 데이터 질의를 판독 전에
+// prepare 함(+1). 세 출구 모두 nil 아닌 오류 · 쓰기 0(이 시험이 검사), 대상 파일 목록 불변.
 var a066ProductionSnapshotStorageExits = map[string]int{
 	"LoadProductionRiskSnapshotAuthority": 2,
-	"loadProductionRiskEntries":           3, // a112 5.2.2.2: +1 「scope latch unreadable」
+	"loadProductionRiskEntries":           6, // a112 5.2.2.2: +1 「scope latch unreadable」 · a127: +3(읽기 tx BeginTx · user_version 판독 · 판독 전 prepare)
 	"ReadJournalBucketUsage":              1,
 	"readProductionRiskUsage":             2,
 }
