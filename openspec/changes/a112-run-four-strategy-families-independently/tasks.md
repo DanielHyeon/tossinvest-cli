@@ -433,7 +433,11 @@
   레인을 지금 상태로 읽기만 해서 덧씌움, 조정자 자식은 조립 발행 때(실패 갈래에서도). OpenAPI 세 스키마. 콘솔 template 무편집(화면 노출은 후속 콘솔 로트).
   계좌 원문 0(lineageIdentity 는 SHA-256). 변이 `lot-7.3/mutation-7.3.tsv`(동등 표기 둘 외 CAUGHT), 읽기 전용 불변 변이(Offer · Fail) CAUGHT. review 「7.3」 절.
 - [ ] 7.3.1 Distinguish `OFF/OFF/UNOBSERVED` from explicit read-only `SHADOW`: SHADOW may evaluate and project counterfactuals but cannot mint desired/effective/activation, own dispatch capability or survive restart without a server-owned signed shadow manifest.
-- [ ] 7.4 Bound metrics cardinality by fixed market/family/lane/version/reason labels; keep symbol/setup/candidate identifiers in logs/journal queries rather than metric labels.
+- [x] 7.4 Bound metrics cardinality by fixed market/family/lane/version/reason labels; keep symbol/setup/candidate identifiers in logs/journal queries rather than metric labels.
+
+  **7.4 종결(2026-10-01 — 미착지).** 실측: 생산 메트릭 방출기 0(묶을 label 없음). Manager 판정 (A): 금지 명시 가드
+  `internal/strategyprojection/a112_no_metric_emitter_test.go` — internal · cmd 비시험 Go 의 메트릭 API import 금지, 허용 목록(이름) 빈 채,
+  머리말에 label 계약(고정 다섯 · symbol/setup/candidate 금지 · 골든 인용). 첫 방출기는 이 시험을 뒤집으며 계약을 세워야 한다. 변이 Q01 · Q02 CAUGHT.
 - [ ] 7.5 Add performance/operability tests for bounded evidence fan-out, no remote I/O under strategy refresh mutex, independent lane latency, status snapshot consistency and safety cadence under all entry queues saturated.
 
 ## 8. Verification Rollout and Review

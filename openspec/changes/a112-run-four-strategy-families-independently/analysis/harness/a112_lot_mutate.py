@@ -636,13 +636,20 @@ SET_73_TESTS = [
     ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run", "TestTheLaneDesiredAndEffectiveFollow", "./internal/strategyworker"],
     ["go", "test", "-count=1", "-run", "OpenAPI|StrategyRuntime", "./internal/httpapi"],
 ]
+SET_74 = [
+    ("Q01 a production engine file starts emitting expvar metrics", "internal/app/engine/a112_metric_mutant.go", None,
+     "package engine\n\nimport _ \"expvar\"\n"),
+    ("Q02 a production cmd file starts emitting OpenTelemetry metrics", "cmd/tossctl/a112_metric_mutant.go", None,
+     "package main\n\nimport _ \"go.opentelemetry.io/otel/metric\"\n"),
+]
+SET_74_TESTS = [["go", "test", "-count=1", "-run", "TestNoProductionCodeEmitsMetrics", "./internal/strategyprojection"]]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측

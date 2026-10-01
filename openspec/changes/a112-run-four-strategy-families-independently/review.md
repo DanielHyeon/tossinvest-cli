@@ -5992,3 +5992,22 @@ census 필수 실행 대상 아님(규칙 확인함). 대신 이 로트가 만�
 
 **생산 동작 변화.** 투영(읽기 전용 표면)에 필드가 늘었을 뿐 주문 · 활성화 · 원장 경로 무편집. 레인 관측에 값 넷이 늘었고 `record` 가 물결 번호를 올린다(프로세스
 메모리). 생산에 서명 매니페스트 0 → 레인은 전부 DORMANT 로 관측된다.
+
+## 2026-10-01 태스크 7.4 — 메트릭 label cardinality: 방출기 0 을 금지 가드로
+
+**실측(코드 전 정지 보고).** 생산 Go 에 메트릭 방출기가 0 이다: prometheus · expvar import 0, `go.opentelemetry.io/otel/metric` 은 go.mod
+indirect(`go mod why` = releaseupdate → sigstore 경유, 우리 import 0), `/metrics` 경로 0(OpenAPI 포함), 유일한 「Counter」는
+`measure/degrade.NewCounter`(고정 손실 종류 셋, 전략 무관). 7.3 상태 표면의 차원은 닫힌 열거형(Validate + census)이고 symbol 은 상태 payload
+`selected[]` 에만 있다(label 아님). **묶을 label 이 없다 — 「묶었다」는 거짓이 된다.**
+
+**판정 (A)(Manager).** 부재를 침묵이 아니라 **금지 명시 가드**로: `internal/strategyprojection/a112_no_metric_emitter_test.go` 가 internal · cmd 의
+비시험 Go 838 파일(하한 500 — 표본 0 이면 전칭이 자동 참)의 import 를 훑어 메트릭 API(expvar · prometheus client · otel/metric · otel sdk/metric ·
+otel prometheus exporter · VictoriaMetrics · go-metrics 셋 · datadog)를 금지한다. 허용 목록은 **이름 목록이고 지금 비어 있다** — 첫 방출기는
+이 시험을 뒤집으며(허용 목록에 자기 파일) 들어와야 하고, 그 change 가 label 계약을 그 자리에서 세워야 한다. 가드 머리말에 계약 요지:
+고정 다섯(market · family · lane · version · reason, 닫힌 열거형 값) · symbol/setup/candidate 금지(골든 `unbounded_metric_labels_forbidden` · 스펙
+MUST NOT 인용) · 그 식별자는 로그 · journal 질의 · 읽기 전용 payload 에만. (B) 새 메트릭 표면은 YAGNI, (C) 침묵은 기각.
+
+**증거.** RED: not-applicable — 없는 표면의 가드라 현재 트리는 통과가 정답이고, 반증은 변이가 진다. 변이 `lot-7.4/mutation-7.4.tsv`: Q01(엔진 생산 파일이
+`expvar` import) · Q02(cmd 생산 파일이 `otel/metric` import) **2/2 CAUGHT**(새 파일 변이 — 하네스가 끝나면 지움).
+
+**not-applicable(비례 원칙).** FLM/BTM: 기존 함수 편집 0(새 시험 파일 하나) · High-risk 경로 무관. 생산 동작 변화 0.

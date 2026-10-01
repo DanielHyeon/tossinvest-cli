@@ -1,0 +1,4 @@
+TREE	HEAD eb3212b964224d50a65ce14de3f0ff90b1e76eb2 (git archive) + own: internal/strategyprojection/a112_no_metric_emitter_test.go
+CONTROL	GREEN	[./internal/strategyprojection pass events 1]
+Q01 a production engine file starts emitting expvar metrics	CAUGHT	1 failing: TestNoProductionCodeEmitsMetricsWithoutTheFixedLabelContract
+Q02 a production cmd file starts emitting OpenTelemetry metrics	CAUGHT	1 failing: TestNoProductionCodeEmitsMetricsWithoutTheFixedLabelContract

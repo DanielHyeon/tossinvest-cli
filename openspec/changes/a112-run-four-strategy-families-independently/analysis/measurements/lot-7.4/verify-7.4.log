@@ -1,0 +1,6 @@
+# a112 7.4 격리 — HEAD eb3212b9 + 로트
+go vet ./...
+go vet -tags tossos_testseams ./...
+lint exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	0.160s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	0.171s
