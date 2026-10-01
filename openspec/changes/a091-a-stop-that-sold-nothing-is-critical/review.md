@@ -390,3 +390,18 @@ tasks(3.3a 머리 · 3.3b (i)(v)(vi) · 3.3c 신설 · 5.3).
 | I1-16 | P3 | A | 벽시계 시험의 CI 불안정 가능성 | 수용 — 관측 최악 54~69ms 대 750ms(10배 이상 여유). 실패하면 정지 · 보고 규칙이 그대로 적용 |
 
 - **변이 원장 3판**: 40 변이(i1 생존 자리 15 추가) — **전부 CAUGHT**(M28 은 처음 무효 → 한 줄 조건문으로 재실행 CAUGHT). `analysis/implementation/mutation-ledger.md`.
+
+## 구현 리뷰 i2 (2026-10-01, 좁은 재확인) — 보이스 A **APPROVE** · 보이스 B **APPROVE** · codex FAIL(P2 하나 · P3 하나) → 수리
+
+- 대상 `git archive 54ff5ee2` → `/tmp/claude-1000/a091-i2-tree`. 보이스 A · B 같은 에이전트 재개, codex 같은 세션(`01a0f576-…`) 재개(머리말 위반 신고 없음).
+  원문: `analysis/impl-review/{claude-i2-voiceA.md, claude-i2-voiceB.md, codex-i2-prompt.md, codex-i2-output.md}`.
+- i1 대비: 보이스 A — I1-1(생산 싱크) · 연결 · 경계 · 익절 문구 · 생존 변이 전부 CLOSED(생산 모양 탐침에서 꺼짐 B2 줄 1, 계좌 가림). 보이스 B — 9 중 7 CLOSED, 2 PARTIAL.
+  codex — 5 중 3 CLOSED, 2 PARTIAL. 생산 싱크 경로(`engine.go:212` → `engine_assembly.go:24` → `engine.go:598` → `exitwiring.go:357`) 건전 — codex · A 확인.
+
+| # | 심각도 | 제기 | 내용 | 수리 |
+|---|---|---|---|---|
+| I2-1 | P2 | codex | 승인 칸이 승인 호출과 실제로 겹쳤는지 증명 없음 | 승인 호출 구간 · 측정 사이클 구간을 기록해 겹친 사이클 수 > 0 단언(실측 20 중 3) |
+| I2-2 | P3 | codex | 재생 (i) · (iv) 의 미전달 줄 0 미단언 | 둘 다 `undeliveredLines == 0`(· (iv) 발송 0) 단언 |
+| I2-3 | P3 | B | `no_holding` 원인 표지 미고정(N5b 생존) | `TestA091AZeroHoldingIsNotAFailedStop` 이 payload cause `no_holding` 단언 |
+| I2-4 | P3 | B | design · issues 의 옛 수치가 측정값처럼 남음 · 5.3 체크 문장 「여섯」과 시험 다섯 불일치 | 세 자리 「앞선 측정(조건 상이)」 표지 · 「실측」 문단 갱신(i2 실측 포함) · 연결 풀 B2 칸 추가(여섯) |
+| I2-5 | P3 | A | 배선 시험이 `eng.Log` 를 덮어 조립의 로거 누락을 못 봄(`engine.go:598` 변이 생존) | 로거를 받는 조립(`openProtectedGateEngineLogging`)으로 — 덮지 않고 `eng.Log != nil` 단언 |

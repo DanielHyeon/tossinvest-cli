@@ -71,7 +71,7 @@
 ## 후속 후보 — `Notifier.Acknowledge` 의 잠금 범위 (2026-10-01, Manager 판정)
 
 - 사실: 운영자 승인(`Notifier.Acknowledge`, `internal/obs/notifier.go:957-981`)은 `n.mu` 를 쥔 채 밀린 행을 하나씩 승인한다(행당 fsync 트랜잭션 약 12ms).
-  exit 관측의 critical 기록은 같은 잠금을 기다린다 — a091 실측: 밀린 행 100 개 승인 중 보고 호출 최악 1.06~1.28s(`TestA091TheReportFitsItsShare`).
+  exit 관측의 critical 기록은 같은 잠금을 기다린다 — a091 실측: 밀린 행 100 개 승인 중 — 앞선 측정(보고 호출만 · 조건 상이) 최악 1.06~1.28s, i1 · i2 뒤 재정의(관측 사이클 상한) 0.30~0.49s(`TestA091TheReportFitsItsShare`, design D5 「실측」).
 - a092 정본이 이미 이름 붙인 항이고 기존 exit critical 전부가 같은 대기를 진다. a091 은 빈도(RECONCILE 중 보호 0주 포지션마다 매 사이클)만 더한다.
 - 후보: 행별 · 배치로 잠금을 놓는 승인 — **셈-해제 배제 불변식**(a092 「미전달 수를 읽고 전달 실패 사유를 푸는 판단은 나눌 수 없는 하나」 · a124)
   아래에서 설계해야 하므로 별도 change.
