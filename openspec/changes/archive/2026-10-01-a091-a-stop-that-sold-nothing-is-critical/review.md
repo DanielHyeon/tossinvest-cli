@@ -444,3 +444,11 @@ tasks(3.3a 머리 · 3.3b (i)(v)(vi) · 3.3c 신설 · 5.3).
 - 전체 `-race`(같은 커밋 `f0f7d668`, 격리 `/tmp/claude-1000/a091-race`): `go test ./... -count=1 -race -timeout 120m` **rc=0**(15:54:49 → 17:17:22 KST) —
   `ok` 99 · `[no test files]` 11 · FAIL / DATA RACE / panic 0(`analysis/gate/a091-race-full-f0f7d668.log`, 113줄, sha256 `7ef6e4d0…`). 무거운 셋: `internal/journal` 4941s ·
   `internal/app/engine` 2663s · `internal/obs` 348s.
+
+## 아카이브 (2026-10-01, Manager 승인)
+
+- 착지(자기 Go 커밋 셋): `6635e443`(구현 — 생산 · 시험) · `b0e2f204`(i1 수리 — 생산 · 시험) · `e4d976d6`(i2 수리 — 시험 전용). 이후 a091 Go 0.
+- 리뷰 사슬: i1 보이스 A · B REJECT · codex FAIL → `b0e2f204` 수리 → i2 보이스 A · B APPROVE · codex FAIL(P2 · P3) → `e4d976d6` 수리로 수렴. 변이 40/40 CAUGHT.
+- 게이트: 1차 `3403be28` ⑦ FAIL(a112 `face8d0d` census — a112 `0b6cb9b1` 수리) → base 3차 재고정 `f0f7d668` → 게이트 2차 11/11 PASS · 전체 `-race` rc 0(ok 99), 기록 `16cc0a49`.
+- 정본 반영: engine-safety 「등급화된 알림」 · exit-policy 「관측 경로와 fail-safe」 MODIFIED 각 1 — archive 전 대조(정본 줄 중 델타에 없는 줄 각 1 = 의도한 치환)와
+  archive 뒤 대조(정본 블록 = 델타, 차이 0), 정본 파일 diff engine-safety −1 +59 · exit-policy −1 +5. `openspec validate --all` 43/43. 수기 정본 편집 없음.
