@@ -20,6 +20,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strings"
 	"testing"
@@ -31,7 +32,19 @@ import (
 // 세기만 함(범위가 조용히 줄지 않게).
 var a066StorageExitCensus = struct {
 	files, funcs, exits, others, txOpeners int
-}{files: 11, funcs: 128, exits: 336, others: 91, txOpeners: 12}
+}{files: 11, funcs: 128, exits: 337, others: 91, txOpeners: 12}
+
+// a066ProductionSnapshotStorageExits 는 걷는 범위 중 riskbucket 생산 snapshot reader 의 저장소 오류 출구를 **함수별 이름으로** 얼린다.
+// 336 → 337(2026-10-01, a112 5.2.2.2 리뷰 수리 `face8d0d` — J4 = (A)): `loadProductionRiskEntries` 의 scope latch 조회가 `err != nil ||
+// latches != 0` 한 갈래에서 둘로 갈렸다 — 조회 결함(`scope latch unreadable: %w`, 이 새 저장소 출구 — 결함이라 nil 아닌 오류 · 쓰기 0)과 latch
+// 존재(범위 국소 sentinel, 저장소 출구 아님). 편집 전에는 합쳐진 조건이라 `err != nil` 출구로 세어지지 않았다. 정당한 이유: 원장 조회 결함을
+// 범위 국소 거절과 가르려면 그 결함이 자기 출구를 가져야 한다(a112 J4).
+var a066ProductionSnapshotStorageExits = map[string]int{
+	"LoadProductionRiskSnapshotAuthority": 2,
+	"loadProductionRiskEntries":           3, // a112 5.2.2.2: +1 「scope latch unreadable」
+	"ReadJournalBucketUsage":              1,
+	"readProductionRiskUsage":             2,
+}
 
 func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 	names, err := filepath.Glob("risk_bucket*.go")
@@ -52,6 +65,7 @@ func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 
 	fset := token.NewFileSet()
 	var funcs, exits, others, txOpeners int
+	productionExits := map[string]int{}
 	for _, name := range files {
 		src, err := os.ReadFile(name)
 		if err != nil {
@@ -111,6 +125,9 @@ func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 							}
 							if assignsErrFromStorageCall(source) {
 								exits++
+								if name == "../riskbucket/production_snapshot_authority.go" {
+									productionExits[fn.Name.Name]++
+								}
 								if os.Getenv("A066_LIST_STORAGE_EXITS") != "" {
 									t.Logf("storage exit %s %s (switch default)", fset.Position(cc.Pos()), fn.Name.Name)
 								}
@@ -141,6 +158,9 @@ func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 							}
 							if assignsErrFromStorageCall(source) {
 								exits++
+								if name == "../riskbucket/production_snapshot_authority.go" {
+									productionExits[fn.Name.Name]++
+								}
 								if os.Getenv("A066_LIST_STORAGE_EXITS") != "" {
 									t.Logf("storage exit %s %s", fset.Position(stmt.Pos()), fn.Name.Name)
 								}
@@ -158,6 +178,10 @@ func TestA066StorageErrorExitsFailClosed(t *testing.T) {
 				return true
 			})
 		}
+	}
+	if !reflect.DeepEqual(productionExits, a066ProductionSnapshotStorageExits) {
+		t.Errorf("riskbucket production snapshot storage exits by function = %v, census %v — name the new exit", productionExits,
+			a066ProductionSnapshotStorageExits)
 	}
 	got := struct{ files, funcs, exits, others, txOpeners int }{len(files), funcs, exits, others, txOpeners}
 	if got != a066StorageExitCensus {

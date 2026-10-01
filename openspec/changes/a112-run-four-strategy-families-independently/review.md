@@ -5908,3 +5908,21 @@ T08 안전 등급 수락 · T09 범위 검증 제거 · T10 생산 호출자 등
 
 **생산 동작 변화 0**(생산 호출자 0 — a070 처분 감사 이래 그대로, 이제 핀).
 
+
+## 2026-10-01 a066 census 수리 — `face8d0d`(5.2.2.2) 가 깬 storage exit census 336 → 337
+
+**발견.** Manager 보고: `TestA066StorageErrorExitsFailClosed` 가 walked scope exits 337 vs census 336 으로 실패, a091 게이트가 그것에 막힘. 원인은 내 `face8d0d` —
+`riskbucket/production_snapshot_authority.go` `loadProductionRiskEntries` 의 범위 latch 조회를 「읽기 실패(`scope latch unreadable: %w`)」 와 「latch 있음(`ErrProductionRiskScopeRefused`)」 둘로 가른 것.
+사본 worktree 에서 갈라짐만 되돌리면 336 으로 돌아옴(이분 실측).
+
+**새 exit 의 정당성(한 줄).** 새로 세어진 exit 는 latch 조회 `err != nil` 갈래 = 저장소 읽기 실패이며 fault 로 그대로 위로 올라가 범위 거절(sentinel)로 접히지 않는다 — a066 이 요구하는 fail-closed
+storage exit 그 자체이고, latch **있음** 갈래는 sentinel 거절이라 storage exit 가 아니어서 세어지지 않는다(J4=(A) 분류의 의도된 모양).
+
+**수리.** census 숫자만 올리지 않음 — `a066_storage_exit_structure_test.go` 에 `a066ProductionSnapshotStorageExits`(함수 이름 → exit 수: `LoadProductionRiskSnapshotAuthority` 2 ·
+`loadProductionRiskEntries` 3 · `ReadJournalBucketUsage` 1 · `readProductionRiskUsage` 2)를 두고 walked 파일의 함수별 실측과 `reflect.DeepEqual` 로 대조(실패 문구 「name the new exit」). 총계 337 은 그대로 단언.
+사본 worktree 에서 latch 갈라짐을 되돌리면 맵 · 총계 둘 다 FAIL(반증 확인), 현재 트리 PASS. 검증 로그 `analysis/measurements/lot-a066-census-fix/verify.log`(journal · riskbucket · execgw, 무태그 + `tossos_testseams`).
+
+**근본 원인(내 검증의 구멍).** 5.2.2.2 로트 검증 행렬이 engine · riskbucket 만 돌고 journal 패키지를 안 돌렸다 — census 는 journal 에 살면서 riskbucket 파일을 걷는다(패키지 경계 너머의 감시).
+
+**재발 방지 — 로트 검증 행렬 규칙(이후 모든 a112 로트).** walked-scope 파일(journal `risk_bucket_*` · `internal/riskbucket/` · `internal/execgw/` gateway)을 만지는 로트는
+`go test ./internal/journal/ -run 'TestA066'`(census 포함) 를 **필수** 실행하고 결과를 로트 로그에 남긴다 — 편집한 파일의 패키지가 아니라 그 파일을 **걷는** 시험의 패키지를 돌린다.

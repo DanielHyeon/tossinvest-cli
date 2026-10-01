@@ -1,0 +1,9 @@
+# a066 census 수리 검증 — HEAD a5e61fcd + census 편집(원 출력)
+## 무태그
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	924.655s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	0.380s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	172.080s
+## -tags tossos_testseams
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	910.890s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	8.409s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	201.352s
