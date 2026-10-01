@@ -5,7 +5,7 @@
   "intent": "active",
   "openspec": {
     "change_id": "a091-a-stop-that-sold-nothing-is-critical",
-    "path": "openspec/changes/a091-a-stop-that-sold-nothing-is-critical"
+    "path": "openspec/changes/archive/2026-10-01-a091-a-stop-that-sold-nothing-is-critical"
   },
   "acceptance": [
     "When the confirmed floor reduces a protective exit's submitted quantity to zero, the engine reports it at critical grade so the event is written to the durable outbox and a delivery failure reaches the entry gate",

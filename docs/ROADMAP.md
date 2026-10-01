@@ -208,6 +208,19 @@ typed-confirmation을 유지한다 — 이 결정은 UI 표면에만 적용한�
 | 브로커 거절 본문의 JSON 중복 키(뒤 값이 이김, review §7 A8) | 수용된 잔여 — 이론적(브로커 실측 0) | 미배정 |
 
 
+## a091 이월 · 미배정 후속 (a091 archive 뒤에도 남는 의무 — 2026-10-01)
+
+`a091-a-stop-that-sold-nothing-is-critical` 가 넘긴 것. 근거는 a091 `design.md` D1 · D3 「새는 칸의 처분」 · D5 「후속 후보」 · D7 「이름 붙인 잔여」 · D8 와 `issues.md` 「후속 후보 — `Notifier.Acknowledge` 의 잠금 범위」.
+
+| 항목 | 사유 | 행선 |
+|---|---|---|
+| 배포 전 `main` 과 SchemaVersion 대조 · 엔진 재시작(두 시장 닫힌 창) · 배포 뒤 첫 `exit.stop_sold_nothing` 실물 확인 · ntfy 구독 필터 갱신(`exit.proposal_capped` 로 거르던 필터는 보호 0주를 더 이상 못 본다 — `docs/operations.md`) | 스키마 변경 0 · 엔진 정지 = 손절 없음 | 사람 항목 — 배포 승인 때 |
+| 알림 켜짐 게이트(D1, Manager Q1 — a095 정본 문자 그대로): `notifications.enabled = false` 엔진에서는 보호 0주가 옛 종류 normal + 로그 줄로 남는다 | 사용자 거부권 항목 — Manager 가 보고 | 사람 결정 큐 |
+| `Notifier.Acknowledge` 의 행별 · 배치 잠금 해제(`internal/obs/notifier.go` 승인이 `n.mu` 를 쥔 채 행마다 fsync — 밀린 행 100 승인 중 exit critical 기록 대기 실측 0.30~0.49s, 앞선 조건 1.06~1.28s) | 셈-해제 배제 불변식(a092 · a124) 아래 설계 필요 — 기존 exit critical 전부가 같은 대기를 진다 | 미배정 — 후속 change 후보 |
+| 보유 0 을 읽었는데 ③(no_holding)로 안 떨어지는 칸 셋 — (a) 매도가능 조회 실패 · (b) 매도가능 조회 지연으로 보유 스냅숏 낡음(StaleSnapshot) · (c) 로컬 수량 오류. 셋 다 critical 로 남김(과보고 방향). 넓히려면 `reconcileFloor` 가 보유 0 을 입력으로 넘겨야 함(riskcalc · 하한 공급자 편집). 또 ③ 는 보유 조회 한 번의 0 을 믿는다(base 와 같은 성질) | 범위 밖 — 이름 붙인 잔여 | 미배정 — 후속 change 후보 |
+| 공식 클라이언트가 요청 · 본문 읽기 오류를 문자열로 감싸 취소 원인을 지움(`internal/official/client.go` `fmt.Errorf("%w: %s", ErrTransport, err)`) — HTTP 요청 중 종료 취소가 ①(floor_unknown) critical 로 기록됨(과보고, 가짜 래치는 `WithoutCancel` 로 없음) | 이름 붙인 잔여(5라운드 codex P2) | 미배정 |
+| 계좌 가림 — exit 루프의 다른 `logErr` 호출자 · base 의 나머지 계좌 필드 줄(a091 은 자기가 새로 닿게 한 줄과 `Notifier.escalate` 두 줄만 가렸다) | a090 D12 · D13 와 같은 큐 | 사람 결정 큐 「계좌 가림 설계」 |
+
 ## a090 이월 · 미배정 후속 (a090 archive 뒤에도 남는 의무 — 2026-10-01)
 
 `a090-an-unobserved-position-is-counted` 가 넘긴 것. 근거는 a090 `design.md` D1 · D2 · D9 · D11 · D12 · D13 · Q2 · Q3 와 `review.md` 「리뷰 라운드 1」 · 「Manager 판정 (2026-09-30)」.

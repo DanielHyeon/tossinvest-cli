@@ -452,3 +452,6 @@ tasks(3.3a 머리 · 3.3b (i)(v)(vi) · 3.3c 신설 · 5.3).
 - 게이트: 1차 `3403be28` ⑦ FAIL(a112 `face8d0d` census — a112 `0b6cb9b1` 수리) → base 3차 재고정 `f0f7d668` → 게이트 2차 11/11 PASS · 전체 `-race` rc 0(ok 99), 기록 `16cc0a49`.
 - 정본 반영: engine-safety 「등급화된 알림」 · exit-policy 「관측 경로와 fail-safe」 MODIFIED 각 1 — archive 전 대조(정본 줄 중 델타에 없는 줄 각 1 = 의도한 치환)와
   archive 뒤 대조(정본 블록 = 델타, 차이 0), 정본 파일 diff engine-safety −1 +59 · exit-policy −1 +5. `openspec validate --all` 43/43. 수기 정본 편집 없음.
+- **착지 귀속(사고 기록)**: 아카이브 rename(133 파일)과 정본 적용 2 파일은 공유 index 사고로 `69deeb48`(a127 tracker 커밋 「docs(pm): tracker — STORY-TOS-a127 implemented」)에
+  섞여 착지했다 — 내용은 이 로트가 만든 것 그대로(`git diff HEAD` 0 확인). 되돌림(`reset --soft`)은 권한 분류기에 막혀 Manager 가 기록 복원(선택지 1)으로 처분.
+  경위는 양측 review 기록(a127 `1f079acd`). 위 인용 사슬의 정식 커밋 메시지는 이 줄을 담은 PM 커밋이 대신 진다.
