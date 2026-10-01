@@ -195,3 +195,10 @@ S14 CAUGHT, 추가 변이 X1 · X2 · X4 · X5 · X7 · X8 CAUGHT, X3(`TxOptions
   그대로 두고 a091 쪽 기록이 이 커밋을 인용한다. **69deeb48 의 메시지는 a127 tracker 행만 말하지만 실제로는 a091 아카이브 rename · spec 적용을 담고 있다.**
 - **교훈**: 남의 변경이 섞인 파일의 부분 커밋은 경로 한정 commit 으로도, index blob 편집 + **경로 없는 commit** 으로도 금지 — 그런 파일은 Manager 에게
   이관한다. 공유 index 는 staged 전수 확인과 커밋 사이에도 바뀐다(기억 「공유 index 는 경로 필터로 못 지킨다」의 다른 형태).
+
+### 2.1 게이트 결과 (2026-10-01)
+
+- 69deeb48 의 게이트 영향 실측: 그 커밋의 `.go` 파일 **0**(a091 아카이브 rename · spec · tracker 문서뿐) — a127 창(base `f0f7d668`)의 형제 Go 아님.
+  착지 기록 `a8c0f978` 은 HEAD `1edee667` 에서도 check_analysis evidence complete(required 20) — 재작성 불요.
+- 격리 워크트리(`scratchpad/wt127mut`, detached `1edee667`, 워크트리 전용 `.sdd/.venv` 는 `make sdd-infra`) · `make sdd-sync`(indexes current) 뒤
+  `make gate CHANGE=a127-strategy-authorities-read-the-current-ledger` → **GATE PASS 11/11**(`analysis/impl/gate-1edee667.log`).
