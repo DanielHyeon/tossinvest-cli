@@ -46,7 +46,7 @@
 
 ## Calls and live bindings
 
-`productionRiskOwnerUID` · `validateProductionRiskJournalFile` · `sql.Open`(mode=ro · query_only · busy_timeout) · `db.SetMaxOpenConns(1)` · `db.PingContext` · `db.QueryRowContext`(PRAGMA user_version · scope latch count) · `ReadJournalBucketUsage`(dimension 마다, `db`) · provenance 생성자 · `newRiskSnapshotAuthorityMaterialEntry`. 원장 쓰기 · 브로커 없음.
+`productionRiskOwnerUID` · `validateProductionRiskJournalFile` · `sql.Open`(mode=ro · query_only · busy_timeout) · `db.SetMaxOpenConns(1)` · `db.PingContext` · `db.BeginTx`(ReadOnly) · `tx.Rollback`(defer) · `tx.QueryRowContext`(PRAGMA user_version · `productionRiskScopeLatchSQL`) · `tx.PrepareContext`(`productionRiskScopeLatchSQL` · `productionRiskUsageSQL`) · `ReadJournalBucketUsage`(dimension 마다, `tx`) · provenance 생성자 · `newRiskSnapshotAuthorityMaterialEntry`. 원장 쓰기 · 브로커 없음(1.6 리뷰 P3-5 로 편집 뒤 호출 갱신).
 
 ## State mutations and fallbacks
 

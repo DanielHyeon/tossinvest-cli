@@ -29,7 +29,7 @@ def main():
                "## Inputs and invariants", "", "| Input/state | Valid range | Source of truth | Failure behavior |", "|---|---|---|---|"] + p["inputs"] + ["",
                "## Branches and early returns", "",
                "> 분기 표는 `analysis/harness/branch_table.py` 가 ast · 소스 · 커버리지로 만들었다. 「창의 return」은 위치, 「진입 실측」은 그 줄로 시작하는 커버리지 블록.", "",
-               table.rstrip(), "", "## Calls and live bindings", "", p["calls"], "", "## State mutations and fallbacks", "", p["state"], "",
+               table.rstrip(), "", "## Calls and live bindings", "", p.get("calls_" + phase, p["calls"]), "", "## State mutations and fallbacks", "", p["state"], "",
                "## Safety conclusion", "", f"- **Safe edit boundary**: {p['boundary_' + phase]}", f"- **High-risk impact**: {p['highrisk']}"]
         (d / "function-logic-map.md").write_text("\n".join(flm) + "\n")
         tests = p.get("tests_" + phase, {})

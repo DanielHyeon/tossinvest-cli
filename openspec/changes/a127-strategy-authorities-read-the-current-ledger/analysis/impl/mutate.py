@@ -32,6 +32,7 @@ TESTS = [
 
 RUNS = [
     (["-tags", "tossos_testseams"], "./internal/riskbucket/", "TestA127RiskLoaderReadsEverythingInOneReadOnlyTransaction", "60s"),
+    ([], "./internal/strategyrouter/", "TestA127RouteLoaderPreparesBeforeAnyLedgerDataRead", "60s"),
     ([], "./internal/app/engine/", "TestA127", "120s"),
     (["-tags", "tossos_testseams"], "./internal/riskbucket/", "TestA127|TestProductionRisk|TestA126", "300s"),
     ([], "./internal/strategyrouter/", "TestA127|TestProductionRoute", "300s"),
@@ -71,6 +72,17 @@ MUTANTS = [
     ("S13c", RISK, 'if err := tx.QueryRowContext(ctx, "PRAGMA user_version")', 'if err := db.QueryRowContext(ctx, "PRAGMA user_version")', "risk 버전 판독을 tx 밖으로"),
     ("S14", RISK, "for _, statement := range []string{productionRiskScopeLatchSQL, productionRiskUsageSQL} {",
      "for _, statement := range []string{} {", "risk 판독 전 prepare 생략(prepare 생략 축)"),
+    # codex 구현 리뷰 P2 #1 · #2 보강(review 1.6.2): 트랜잭션 수명 · prepare 순서.
+    ("S13d", RISK, "tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})", "tx, err := db.BeginTx(ctx, nil)", "risk BeginTx 의 ReadOnly 제거(보이스 X3 — 이제 구조 단언이 잡아야)"),
+    ("S13e", RISK, "\t// a127 D7: 원장 데이터 질의 전부를 첫 판독 전에 prepare",
+     "\ttx.Rollback()\n\ttx, _ = db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})\n\t// a127 D7: 원장 데이터 질의 전부를 첫 판독 전에 prepare",
+     "risk 버전 확인 뒤 트랜잭션을 닫고 같은 이름으로 다시 엶(수명 분리)"),
+    ("S15", RISK, "\t// a127 D7: 원장 데이터 질의 전부를 첫 판독 전에 prepare",
+     "\tvar a127Probe int\n\t_ = tx.QueryRowContext(ctx, productionRiskScopeLatchSQL, scope.AccountID, string(scope.Market), scope.Symbol).Scan(&a127Probe)\n\t// a127 D7: 원장 데이터 질의 전부를 첫 판독 전에 prepare",
+     "risk 데이터 질의를 prepare 앞에 둠(순서 위반)"),
+    ("S16", ROUTE, "\t// a127 D7: owner · campaign 질의를 판독 전에 prepare",
+     "\tif rows, err := tx.QueryContext(ctx, productionRouteOwnersSQL, \"\", \"\", \"\"); err == nil {\n\t\trows.Close()\n\t}\n\t// a127 D7: owner · campaign 질의를 판독 전에 prepare",
+     "route opener 가 prepare 앞에서 원장 데이터를 읽음(순서 위반)"),
 ]
 
 

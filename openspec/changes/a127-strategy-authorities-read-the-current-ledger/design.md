@@ -187,7 +187,7 @@ riskbucket · strategyrouter 는 journal 이 import 한다(`journal/risk_bucket*
 | S4 | 버전 검사 삭제(route) | 더 새 원장 거절(route) — 같은 픽스처 규율 |
 | S5 | `!=` → `>` (더 옛 원장 수락 — (a) 로의 후퇴) | 더 옛 원장 거절(두 적재기) |
 | S6 | 0 이하 주입 수락(가드 삭제 · `<=0`→`==0`) | 주입 0 **과 음수** + 존재하지 않는 원장 경로 → 오류가 열기 실패가 아니라 주입 누락 문구(가드가 경로 검증보다 앞) |
-| S7 | engine 이 상수 대신 런타임 `user_version` 을 넘김 | 구조 단언(go/types 로 두 config 필드 값이 `journal.SchemaVersion` 상수 객체) |
+| S7 | engine 이 상수 대신 런타임 `user_version` 을 넘김 | 구조 단언(import 경로를 해석한 AST — 두 config 필드 값이 journal import 의 `SchemaVersion` 선택자. 지역 식별자가 import 이름을 가리는 경우는 범위 밖 — 1.6 리뷰 P3-4, go/types 로 올리지 않음) |
 | S8 | route 의 판독 전 prepare 삭제 | active owner 없는 범위 + `position_campaigns` 전용 열 삭제 원장 → 거절 |
 | S9 | 더 새 · 더 옛 문구 뒤바꿈 | 방향 문구 단언(두 적재기, route 는 Batch 경계) |
 | S10 | engine 이 리터럴(예: 35)을 넘김 | 구조 단언(S7 과 같은 시험) — 값 비교로는 오늘 같아서 못 잡음 |
@@ -195,6 +195,8 @@ riskbucket · strategyrouter 는 journal 이 import 한다(`journal/risk_bucket*
 | S12 | route `:352` 감싸기가 원인을 다시 버림 | Batch 경계 방향 문구 단언 |
 | S13 | risk 판독 일부를 tx 밖으로(버전 · latch · 사용량 중 하나라도) | 구조 단언 — 세 판독의 수신자가 모두 같은 tx(수신자 동일성과 tx 수명) |
 | S14 | risk 의 판독 전 prepare 삭제(또는 latch early return 뒤로 이동) | latch 가 선 범위 + 사용량 전용 열 삭제 원장 → 거절이 `ErrProductionRiskScopeRefused` 가 아님 |
+| S13d · S13e | risk BeginTx 의 ReadOnly 제거 · 버전 확인 뒤 tx 를 닫고 같은 이름으로 다시 엶 | 구조 단언 — BeginTx 하나 · ReadOnly · tx 대입 하나 · defer 된 Rollback 외 닫기 없음(구현 리뷰 1.6.2) |
+| S15 · S16 | 원장 데이터 질의를 prepare 앞에 둠(risk) · opener 가 prepare 앞에서 데이터를 읽음(route) | 구조 단언 — 데이터 질의는 마지막 prepare 뒤, opener 는 데이터 질의 없음 · 모든 prepare 뒤에만 성공 반환(1.6.2) |
 
 ## 롤백
 

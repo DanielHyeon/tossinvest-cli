@@ -147,3 +147,39 @@ base 재고정이 필요(자기 Go 커밋 0 — 조건 ① 첫째 갈래).
   census 340 재기준(함수별 표 갱신+사유) 방식 맞다. a112 소유 시험 편집 · 동결 증거 재기준 두 자리는 내가 통지한다.」
 - base 재고정 `3403be28` → `f0f7d668`: (1) 귀속 실측 — 옛 base 이후 a127 자기 Go 커밋 **0**. (2) 승인 — 위 인용. (3) 단독 커밋 — 다음 커밋.
   사유: 형제 착지(a112 `0b6cb9b1` 의 a066 census 시험 함수 본문 변경 등)가 옛 창에 들어옴.
+
+### 1.6.1 구현 리뷰 — 독립 보이스(적대 fail-open + 수락 진정성 + 증거, 대상 `d8a1c312`)
+
+판정 **APPROVE-WITH-FIXES** — P0 0 · P1 0 · P2 1 · P3 8. fail-open 경로 없음(주입 가드 · 정확 일치 · 단일 읽기 tx · 오류 신원 · 엔진 두 자리 · SQL 상수
+네 개가 `f0f7d668` 과 바이트 동일 · 실 원장 수락 진정 · a066 새 출구 정확히 셋). RED 진정성 재현(편집 전 생산 파일 + 새 시험), 변이 재실행 S6b · S8 · S13a ·
+S14 CAUGHT, 추가 변이 X1 · X2 · X4 · X5 · X7 · X8 CAUGHT, X3(`TxOptions{ReadOnly:true}` → nil) 생존 — DSN 이 이미 `mode=ro` · `query_only` 이고 드라이버가
+`_txlock` 없이 ReadOnly 를 무시하므로 등가(정보).
+
+| # | 등급 | 지적 | 처분 |
+|---|---|---|---|
+| V1 | P2 | tasks 1.3 이 체크됐는데 `a126_snapshot_digest_replay_test.go:6` 주석(「v27 원장만 읽으므로(productionRiskJournalSchema)」) 미갱신 | 주석 갱신(축소 원장인 이유 = 패키지 순환, 실 원장 수락은 engine 시험) |
+| V2 | P3 | route S8 시험이 거절 사유를 고정하지 않음 — 편집 전 코드(핀 27)에서도 통과 | `journal read set unavailable` 문구 단언 추가 |
+| V3 | P3 | `len(bundle.Entries()) != 5` 는 항상 거짓(길이 5 배열), 범위 루프는 빈 경우에도 통과 | `bundle.Digest() != ""` + 준비된 범위 정확히 2 |
+| V4 | P3 | route 실 원장 양성은 빈 원장만 — active owner 재구성 · campaign 질의를 실 STRICT 타입에서 돌지 않음 | 잔여 기록(불일치는 거절 쪽 — fail-closed). 생산 첫 실 owner 판독은 활성화 전 사람 항목 H1 과 같은 창에서 관측 |
+| V5 | P3 | S7/S10 구조 시험은 go/types 가 아니라 이름 기반 — 문서는 go/types 라 적음 | 문서를 구현에 맞춤(import 해석 AST 선택자, 지역 식별자 가림은 범위 밖) |
+| V6 | P3 | 편집 뒤 FLM 의 호출 산문이 편집 전(db · ReadJournalBucketUsage(db)) | 편집 뒤 호출 산문 분리(`calls_post`) |
+| V7 | P3 | route BTM B4(user_version 판독 실패 — 편집된 갈래)를 「기존」으로 표기 | 편집된 갈래 · 시험 없음 not-applicable(결함 주입 seam 없음, fail-closed) 로 정정 — risk B6 도 같은 사유 명시 |
+| V8 | P3 | Batch 경계 문구에 sentinel 이 두 번 | 기록(외관) |
+| V9 | P3 | route 실 원장 시험의 `os.Chmod(0o600)` 가 journal.Open 의 권한 강화 회귀를 가림 | 삭제 |
+
+### 1.6.2 구현 리뷰 — codex(Manager 슬롯, 17:03:49~17:05:31, read-only · 머리말 신고, 대상 `d8a1c312`)
+
+**FAIL** — P0 0 · P1 0 · P2 2 · 생산 fail-open 0(`analysis/review-impl/codex-i1-*`). codex 가 참으로 확인: 주입 가드 · 양방향 거절이 데이터 판독 앞 · 단일 tx ·
+오류 신원 · 엔진 두 자리 · SQL 상수 네 개 바이트 동일(스크립트) · 두 수락이 `journal.Open` · a112 단언 불약화 · a066 +3/+1 일치. (§1.6.1 은 `d8a1c312`
+뒤에 쓴 것이라 codex 가 보지 못함 — 중복 제외는 수동으로 함.)
+
+| # | 지적 | 처분 |
+|---|---|---|
+| K1 | P2 — S13 구조 시험은 수신자 **철자**만 봄: 같은 이름으로 tx 를 닫고 다시 열어도 통과, BeginTx 수 · ReadOnly 옵션 미검사(spec 「같은 읽기 전용 트랜잭션」 · design 「수신자 동일성과 tx 수명」) | risk 구조 시험에 수명 단언 추가 — BeginTx 정확히 하나 · `&sql.TxOptions{ReadOnly: true}` · tx 대입 하나 · defer 된 Rollback 외 Rollback/Commit 0. 변이 S13d(ReadOnly 제거 — 보이스 X3 생존분)· S13e(닫고 다시 엶) 추가 |
+| K2 | P2 — 열 삭제 시험은 「prepare 를 latch 질의 뒤로」 같은 **순서** 위반을 못 가름(spec 「첫 원장 데이터 질의 전에 prepare」) | 순서 구조 단언 — risk: 데이터 질의(PRAGMA 제외 Query*Context · ReadJournalBucketUsage)는 전부 마지막 PrepareContext 뒤. route: opener 는 읽기 전용 BeginTx 하나 · 데이터 질의 0 · 모든 prepare 뒤에만 성공 반환, Batch 는 opener 를 owner 재구성보다 먼저. 변이 S15(risk 데이터 질의를 prepare 앞) · S16(opener 가 prepare 앞에서 데이터 판독) 추가 |
+
+**1.6 수리 묶음 변이**(`analysis/impl/mutation-2.log`, 같은 규율): 기존 23 + S13d · S13e · S15 · S16 = **27/27 CAUGHT, 생존 0** — 보이스 X3(ReadOnly 제거)도 이제 잡힘.
+수리 묶음은 시험 · 하네스 · 문서만(생산 코드 변경 0).
+
+**재리뷰 생략 근거**(Manager 판정 2026-10-01): 생산 코드 무변(수리 묶음은 시험 · 하네스 · 문서) · 남은 지적이 P2 시험 판별력 계급이고 수리가 구조 단언(수명 · 순서)으로 종결형 ·
+변이 27/27 CAUGHT — a091 i2 와 같은 처분(P2 꼬리는 수리 기록으로 닫고 게이트행). 수리 묶음 착지 `1e25b3a3`.

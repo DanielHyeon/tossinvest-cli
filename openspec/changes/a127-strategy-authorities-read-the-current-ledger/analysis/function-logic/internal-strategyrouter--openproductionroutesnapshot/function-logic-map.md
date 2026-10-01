@@ -32,7 +32,7 @@
 
 ## Calls and live bindings
 
-`validateProductionRouteJournalFile` · `sql.Open`(mode=ro · query_only · busy_timeout) · `db.SetMaxOpenConns(1)` · `db.BeginTx`(ReadOnly) · `tx.QueryRowContext`(PRAGMA user_version) · `tx.Rollback` · `db.Close`.
+`validateProductionRouteJournalFile` · `sql.Open`(mode=ro · query_only · busy_timeout) · `db.SetMaxOpenConns(1)` · `db.BeginTx`(ReadOnly) · `tx.QueryRowContext`(PRAGMA user_version) · `tx.PrepareContext`(`productionRouteOwnersSQL` · `productionRouteCampaignSQL`) · `refuse`(tx.Rollback · db.Close).
 
 ## State mutations and fallbacks
 
