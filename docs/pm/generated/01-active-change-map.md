@@ -92,7 +92,7 @@
 | `a087-a-protective-exit-is-a-market-order` | STORY-TOS-a087 | in_progress |
 | `a089-an-unserved-stop-is-counted` | STORY-TOS-a089 | archived |
 | `a090-an-unobserved-position-is-counted` | STORY-TOS-a090 | archived |
-| `a091-a-stop-that-sold-nothing-is-critical` | STORY-TOS-a091 | in_progress |
+| `a091-a-stop-that-sold-nothing-is-critical` | STORY-TOS-a091 | implemented |
 | `a092-an-alert-does-not-hold-the-stop` | STORY-TOS-a092 | archived |
 | `a094-a-stop-clears-what-blocks-it` | STORY-TOS-a094 | archived |
 | `a095-a-stop-must-know-what-it-covers` | STORY-TOS-a095 | archived |

@@ -114,17 +114,26 @@
 
 ## 6. 게이트
 
-- [ ] 6.1 `go test ./... -count=1 -race` 회귀 0(격리 worktree, 게이트와 같은 커밋)
+- [x] 6.1 **[처분 2026-10-01] 게이트 ⑦ `make test` · ⑨ `make test-race` 에 더해 게이트와 같은 커밋의 격리 worktree 에서 `go test ./... -count=1 -race` 전체를 돌려 `review.md` 「게이트 실행 기록」에 적는다(a094 선례).** `go test ./... -count=1 -race` 회귀 0(격리 worktree, 게이트와 같은 커밋)
 - [x] 6.2 **[2026-10-01] 3.5 + D5 편성 + 5.3 실측.** §0.3 확인 — 제출 수량 · 제출 수 · 레벨 해제/재발의 무변화는 3.5 가, 루프 몫은 D5 편성 + 5.3 실측이 보인다(diff 한 줄로 갈음하지 않는다)
 - [x] 6.3 **[2026-10-01] `applyFloor` · `submit` 번들 calls 표 편집 전후 대조 — 브로커 호출은 `ConfirmedFloor` 하나 그대로.** §0.4 확인 — **a091 이 더하는 브로커 요청 0**: `applyFloor` · `submit` 번들 calls 표를 편집 전후로 대조(RECONCILE 의 하한 읽기
       `exitwiring.go:207` · `:231` 은 그대로)
-- [ ] 6.4 `make sdd-sync` 재실행 → `make sdd-check`
-- [ ] 6.5 **격리 worktree에서** `make gate CHANGE=a091-a-stop-that-sold-nothing-is-critical`
-- [ ] 6.6 독립 검증 (구현과 분리된 컨텍스트) · 교차 모델
-- [ ] 6.7 PM 동기화 → `openspec archive`
+- [x] 6.4 **[처분 2026-10-01] 게이트 준비 — 격리 worktree 에서 `sdd_sync.py --no-gbrain` 뒤 `make sdd-check` rc 0, 게이트 ⑥이 다시 잰다.** `make sdd-sync` 재실행 → `make sdd-check`
+- [x] 6.5 **[처분 2026-10-01] 게이트 준비 — base 2차 재고정(`96f006c0`) 뒤 이 체크 커밋에서 격리 worktree 로 돌리고 결과를 `review.md` 「게이트 실행 기록」에 적는다(a094 · a095 선례).** **격리 worktree에서** `make gate CHANGE=a091-a-stop-that-sold-nothing-is-critical`
+- [x] 6.6 **[처분 2026-10-01] 완료 — Claude 보이스 A · B(구현과 분리된 컨텍스트) + codex 교차 모델: i1 REJECT/REJECT/FAIL → 수리 → i2 APPROVE/APPROVE/FAIL(P2 · P3) → 수리(`e4d976d6` · `1268f525`). `review.md` 「구현 리뷰 i1 · i2」.** 독립 검증 (구현과 분리된 컨텍스트) · 교차 모델
+- [x] 6.7 **[처분 2026-10-01] archive 는 Manager 최종 검증 · 승인 뒤 팀메이트가 실행 — 아래 「아카이브 때 할 일」. tracker 는 게이트 준비에서 재생성.** PM 동기화 → `openspec archive`
 - [x] 6.8 **[2026-10-01] `docs/operations.md` 「손절이 한 주도 나가지 않았을 때」.** **운영 문서** — `docs/operations.md` 에 `exit.stop_sold_nothing` 절(무엇이 났나 · 확인 · 사람 조치 · 승인 `tossctl engine alerts ack` ·
       모드 해제 `tossctl engine mode-release` — 둘 다 `mutating: true`, 에이전트 자동 실행 금지) + **ntfy 구독 필터 주의**: ntfy 는
       `event_type` 을 `Tags` 머리에 싣는다(`internal/obs/ntfy.go`) — `exit.proposal_capped` 로 거르던 운영자 필터는 보호 0주를 더 이상 못 본다
+
+## 아카이브 때 할 일 (Manager 승인 뒤 — 체크박스 아님)
+
+- 델타는 engine-safety MODIFIED 1(「등급화된 알림」) · exit-policy MODIFIED 1(「관측 경로와 fail-safe」) — archive 가 정본에 자동 반영한다. 수기 정본 편집 없음.
+  archive 직전에 두 정본 블록이 델타의 복사본과 같은지(의도한 치환 줄 각 1 외 누락 0) 다시 대조하고, archive 뒤 정본에서 같은 대조를 한 번 더 한다
+  (2026-10-01 대조: engine-safety 83 줄 중 누락 1 · exit-policy 36 줄 중 누락 1 — 둘 다 의도한 치환).
+- archive 커밋 메시지와 `review.md` 에 착지(`6635e443` · `b0e2f204` · `e4d976d6`) · 게이트 실행 커밋을 인용한다.
+- Story `STORY-TOS-a091` openspec.path → 아카이브 경로, tracker 재생성.
+- `docs/ROADMAP.md` 에 「a091 이월」(후속 후보 — `Acknowledge` 의 행별 · 배치 잠금 해제 · 보유 0 새는 칸 셋 · 공식 클라이언트의 취소 원인 지움 · 계좌 가림 설계 큐의 나머지 줄).
 
 ## 선후 관계
 
