@@ -126,6 +126,24 @@ func a091Harness(t *testing.T, enabled bool, floor engine.FloorSource, mutate fu
 	return r
 }
 
+// alertsCause 는 이관 버퍼로 넘어간(normal) 마지막 0주 알림의 payload cause 를 돌려줌 — 하네스 (나) 의 알림기에는 이관 버퍼가 없어
+// 일반 등급은 버려지므로, 같은 사건을 가짜 수집기로 한 번 더 관측해 잼.
+func (r *a091Rig) alertsCause(t *testing.T) string {
+	t.Helper()
+	h := newExitHarness(t, func(o *engine.ExitObserverOptions) {
+		o.Floor = a091Zero(riskcalc.FloorBoundHoldings)
+		o.NotificationsEnabled = true
+	})
+	h.entry("005930", "10", "70000", "68000", "70000")
+	h.quote("005930", 67900)
+	h.observe()
+	a, ok := h.alerts.first(obs.EventExitProposalCapped)
+	if !ok {
+		t.Fatal("no capped alert")
+	}
+	return fmt.Sprint(a.Fields["cause"])
+}
+
 func (r *a091Rig) rows(typ obs.EventType) []journal.Alert {
 	return a092PendingOfType(r.t, r.journal, string(typ))
 }
@@ -330,6 +348,10 @@ func TestA091AZeroHoldingIsNotAFailedStop(t *testing.T) {
 	lines := r.log.ofEvent(t, obs.EventExitProposalCapped)
 	if len(lines) != 1 || !strings.Contains(fmt.Sprint(lines[0]["detail"]), "계좌에 보유가 없다") {
 		t.Fatalf("capped lines = %+v, want one that says the account holds none", lines)
+	}
+	a := r.alertsCause(t)
+	if a != "no_holding" {
+		t.Errorf("cause = %q, want no_holding", a)
 	}
 }
 
@@ -855,12 +877,15 @@ func TestA091TheProductionAssemblyReadsTheLoadedSwitch(t *testing.T) {
 			writeCredentials(t, dir, "test-api-key-000000", "test-secret")
 			writeAttestation(t, dir, nil)
 			srv, _ := interlockServer(t, "123-45")
-			eng, err := openProtectedGateEngine(t, dir, srv, nil)
+			// 조립이 Logger 를 받아 Context.Log 로 놓는 생산 경로 그대로 — 시험이 eng.Log 를 덮지 않는다(i2 보이스 A).
+			eng, err := openProtectedGateEngineLogging(t, dir, srv, nil, &a091Buf{})
 			if err != nil {
 				t.Fatalf("production assembly: %v", err)
 			}
+			if eng.Log == nil {
+				t.Fatal("the assembly dropped its logger — the a091 lines would have no sink")
+			}
 			eng.Config.Engine.Notifications.Enabled = loaded
-			eng.Log = obs.NewLogger(obs.LogOptions{Writer: &a091Buf{}, JSON: true}) // 생산은 engine_assembly 의 Logger
 			observer, err := eng.ExitObserver(engine.ExitObserverOptions{Costs: costs.DefaultModel(), NotificationsEnabled: !loaded})
 			if err != nil {
 				t.Fatalf("ExitObserver: %v", err)

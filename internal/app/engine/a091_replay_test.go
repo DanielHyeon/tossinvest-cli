@@ -106,7 +106,7 @@ func TestA091TheAugustSecondReplay(t *testing.T) {
 		pub := &a091Transport{}
 		res := a091Replay(t, true, pub)
 		t.Logf("measured: %+v", res)
-		if res.sends != 1 || res.pendingNew != 0 || res.latched || res.mode != journal.ModeNormal {
+		if res.sends != 1 || res.pendingNew != 0 || res.latched || res.mode != journal.ModeNormal || res.undeliveredLines != 0 {
 			t.Fatalf("got %+v, want one send, the row settled, no latch, NORMAL — 13 observations fold into one episode", res)
 		}
 	})
@@ -128,7 +128,7 @@ func TestA091TheAugustSecondReplay(t *testing.T) {
 	t.Run("(iv) alerts off", func(t *testing.T) {
 		res := a091Replay(t, false, nil)
 		t.Logf("measured: %+v", res)
-		if res.allRows != 0 || res.latched || res.mode != journal.ModeNormal {
+		if res.allRows != 0 || res.sends != 0 || res.latched || res.mode != journal.ModeNormal || res.undeliveredLines != 0 {
 			t.Fatalf("got %+v, want no row, no latch, NORMAL — an alerts-off engine does not stop over a report it cannot send", res)
 		}
 	})
@@ -212,6 +212,7 @@ func a091OutboxCount(t *testing.T, r *a091Rig, typ obs.EventType) int {
 
 func TestA091TheReportFitsItsShare(t *testing.T) {
 	const reps = 20
+	var ackWindows [][2]time.Time // 승인 칸의 승인 호출 구간(겹침 증명)
 	type cell struct {
 		name   string
 		floor  func() engine.FloorSource
@@ -236,6 +237,7 @@ func TestA091TheReportFitsItsShare(t *testing.T) {
 		stop := make(chan struct{})
 		acks := 0
 		var mu sync.Mutex
+		ackWindows = ackWindows[:0]
 		var wg sync.WaitGroup
 		wg.Add(1)
 		go func() {
@@ -246,12 +248,15 @@ func TestA091TheReportFitsItsShare(t *testing.T) {
 					return
 				default:
 				}
+				start := time.Now()
 				if err := r.notifier.Acknowledge(ctx, "a091-operator"); err != nil {
 					t.Errorf("Acknowledge: %v", err)
 					return
 				}
+				end := time.Now()
 				mu.Lock()
 				acks++
+				ackWindows = append(ackWindows, [2]time.Time{start, end})
 				mu.Unlock()
 				fill()
 			}
@@ -288,6 +293,7 @@ func TestA091TheReportFitsItsShare(t *testing.T) {
 		{"the record fails and escalates, B7", b7, true, nil, true},
 		{"the record fails and escalates, B2", b2, true, nil, true},
 		{"a busy connection pool, B7", b7, false, pool, true},
+		{"a busy connection pool, B2", b2, false, pool, true},
 		{"an operator acknowledging a 100-row backlog, B7", b7, false, ack, false},
 	} {
 		t.Run(c.name, func(t *testing.T) {
@@ -301,12 +307,15 @@ func TestA091TheReportFitsItsShare(t *testing.T) {
 			}
 			r.breach()
 			var worst time.Duration
+			var cycles [][2]time.Time
 			for i := 0; i < reps; i++ {
 				start := time.Now()
 				r.observe()
-				if d := time.Since(start); d > worst {
+				end := time.Now()
+				if d := end.Sub(start); d > worst {
 					worst = d
 				}
+				cycles = append(cycles, [2]time.Time{start, end})
 				r.clk.Advance(5 * time.Second)
 			}
 			load := -1
@@ -326,6 +335,20 @@ func TestA091TheReportFitsItsShare(t *testing.T) {
 				t.Fatalf("outbox rows of the new kind = %d, want 1 — the report never recorded", n)
 			}
 			if !c.owned {
+				// 겹침 증명(i2 codex): 승인 호출 구간과 시간이 겹친 측정 사이클 수 — 0 이면 이 칸은 경합을 재지 않았다.
+				overlap := 0
+				for _, cy := range cycles {
+					for _, w := range ackWindows {
+						if cy[0].Before(w[1]) && w[0].Before(cy[1]) {
+							overlap++
+							break
+						}
+					}
+				}
+				t.Logf("cycles overlapping an acknowledgement: %d of %d (acknowledgements %d)", overlap, reps, len(ackWindows))
+				if overlap == 0 {
+					t.Fatalf("no measured cycle overlapped an acknowledgement — this cell measured nothing")
+				}
 				// 승인 경합 칸은 측정 · 기록(design D5 (i) 7판): a092 정본이 이름 붙인 항이고 a091 은 빈도만 더함. 판정은 주기 유계 하나.
 				if worst >= a091ObservationPeriod {
 					t.Fatalf("observed worst %s reaches the %s observation period — the canonical bound fails", worst, a091ObservationPeriod)
