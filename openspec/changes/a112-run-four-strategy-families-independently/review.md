@@ -5926,3 +5926,69 @@ storage exit 그 자체이고, latch **있음** 갈래는 sentinel 거절이라 
 
 **재발 방지 — 로트 검증 행렬 규칙(이후 모든 a112 로트).** walked-scope 파일(journal `risk_bucket_*` · `internal/riskbucket/` · `internal/execgw/` gateway)을 만지는 로트는
 `go test ./internal/journal/ -run 'TestA066'`(census 포함) 를 **필수** 실행하고 결과를 로트 로그에 남긴다 — 편집한 파일의 패키지가 아니라 그 파일을 **걷는** 시험의 패키지를 돌린다.
+
+## 2026-10-01 태스크 7.3 — 읽기 전용 투영의 additive 자식 `lanes[8]` · `coordinators[2]`(R4 흡수)
+
+**판정(Manager).** 계약 모양 승인(SchemaVersion v1 그대로, envelope additive 두 필드, `coordinators[].selected[]` 로 R4 흡수, 읽기 전용 변이 CAUGHT, 콘솔 template
+무편집). 코드 전 정지 보고(스펙 SHALL 목록의 cycle generation · snapshot digest · deadline 이 승인 필드 집합에 없었음)에 대한 판정: **Q1=(B)** 엔진 시장별 물결
+계수기 + 레인별 「마지막 관측 물결」(0 = 미관측, 프로세스 수명 — 계약 주석에 명시), strategyworker 상태 무편집. **Q2** 기존 읽기 접근자만(사이클 마감 ms · 다음
+카덴스 시각 · 재시작 backoff 시각, 영값이면 null) + 레인 관측의 snapshot digest. **Q3** `runtime` 은 worker 값 그대로(UNOBSERVED 하나) — 골든 밖 어휘 발명 금지,
+SHADOW 는 7.3.1. 부가: strategyworker 에 additive 읽기 접근자(`Lane.Horizon/Runtime/Desired/Effective` — worker 위임, Q3 가 Runtime 을 요구해 넷).
+**판정 (A)(체크 전 대조에서 발견한 덮개 부족)**: tasks 7.3 문장의 「first refusal · config/calibration lineage」 가 승인 필드 집합에 없었다 → 같은 로트에서
+additive 넷: `lanes[].refusal`(REFUSED 일 때만 골든 중재 코드, Validate 짝 — outcome 무관하게 싣는 변이 P21 CAUGHT) · `selected[].configDigest`(계보) ·
+`scoreVersion` · `calibrationDigest`(그 범위 **자기** 항목의 경로 권한 보정 — 범위 해소는 1차 레그 봉인과 같은 `authorityForOwnerScope` 재사용 + 봉인 신원 일치,
+새 읽기 도우미 `routeForSelectedScope`; 못 되찾으면 null). (B)(체크 후 7.3.2 로 미룸)는 「체크된 태스크가 자기 문장을 안 덮는」 형태라 기각.
+
+**계좌 성분(조건 이행).** 기존 envelope 에 계좌 원문 0(`internal/strategyprojection` 에 account 필드 없음 — 실측 grep). `selected[].lineageIdentity` 는
+`strategyflow.lineageIdentity`(types.go:386) = AccountRef 를 포함한 계보 26+ 필드의 SHA-256(`strategy-lineage:v1:sha256:<hex>`) — 원문이 아니고 ns 시각 성분 때문에
+역산도 불가 → ② 「계좌 성분을 뺀다」가 이미 성립, digest 그대로 싣는다(Manager 동의로 종결). OpenAPI `StrategyRuntimeSelectedScope` 설명에 같은 문장.
+
+**편집.**
+- `internal/strategyprojection`: 새 `lanes.go`(자식 타입 · 기본 표 · 어휘 · `NormalizedText` · 검증 · 깊은 복사). `model.go` — `Snapshot` 두 필드,
+  `DormantSnapshot` · `UnavailableSnapshot` 에 기본 자식, `Clone` 깊은 복사, `Validate` B6 · B7. 패키지는 import 0 잎 그대로(레인 표를 스스로 들고, 골든 ·
+  생산 목록 양쪽을 시험이 못 박음 — 옮겨 적은 코드 양쪽 핀).
+- engine: 새 `strategy_lane_projection.go`(`strategyLaneRuntime.projection` · `strategyCoordinatorProjection` · 도우미). `strategy_lane_runtime.go` — 관측 필드
+  (Wave · Desired/Effective · 두 digest), `runLane` 관측 구성(레인 호출 순서 · 횟수 불변), `record(market, …)` 물결 번호(같은 쓰기 잠금 안 증가 · 찍기, 포화
+  상한), `evaluate` 인자 한 줄. `strategy_runtime_projection.go` — `Read` B4(레인 런타임 있으면 지금 상태 덧씌움), `strategyProjectionFromAssembly` 순회 머리의
+  조정자 대입(실패 갈래에서도 보임). `strategy_proposal_authority.go` — QueueDropCount 주석 정정(「운영자에게 닿지 않는다」가 거짓이 됨).
+- `strategyworker/lane_view.go`(새, 접근자 넷). `docs/api/openapi-v1.json` — 세 스키마 · 개수 고정 · required(additionalProperties=false 라 문서가 이름을 알아야 함).
+- Pre-Edit `analysis/measurements/lot-7.3/pre-edit/`(HEAD f0f7d668, 아홉 함수, `render_pre_edit.py`). 편집 뒤 번들 `render_73_bundles.py`(열둘) · 줄 이동 셋
+  (`shift_same_file_bundles.py`).
+
+**기존 시험 편집 셋(약화 아님 — 각 사유).** ① `currentPair`: 자식 없는 옛 모양 리터럴 → DormantSnapshot 에서 시작(시장 레코드 값 동일). ② `TestClientIgnores…
+NewerEngine`: 「모르는 필드」로 심던 `coordinators` · `lanes` 가 7.3 에서 아는(검증되는) 이름이 되어 부분 객체가 정당하게 거절됨(`green-7.3-first.log`) → 아직
+모르는 이름으로 세 층(envelope · 시장 레코드 · 레인 자식) 주입, 재는 것 불변. ③ `TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer`: `.Single()` 생산 자리
+이름 핀에 새 읽기 자리 `strategyCoordinatorProjection` 을 **이름 대어** 추가(셋 → 넷) — 핀은 숫자가 아니라 이름 목록.
+
+**증거.** RED `lot-7.3/red-7.3.log`(편집 전 컴파일 실패 — 네 패키지). 새 시험: strategyprojection 6(기본 자식 · 골든 표 · 중재 여섯 · Validate 거절 표 42 행(레인 26 · 조정자 16) ·
+깊은 복사 · JSON 이름), strategyworker 4(무태그 3 — 생산 목록 표 · 어휘 census · 접근자 위임, 태그 1 — 활성화 ON), engine 8(태그 — 미관측 기본 · 시장별 물결 · 활성화
+desired/effective · 잠긴 여덟 · 제어문자 사유 정규화 · 읽기 전용 불변 · R4 selected · 사유 census), httpapi 1(OpenAPI 이름 · 개수). 변이
+`lot-7.3/mutation-7.3.tsv` P01~P25(27 개): SURVIVED 는 **동등 변이로 표기해 넣은 둘**뿐이고 근거 문장이 원장의 변이 이름에 그대로 있다 — P08a(거절된 `Single()` 은
+영값 Result 라 `ValidProposal` 이 같은 것을 거름 — strategyhandoff `TestARefusedSingleReturnsTheZeroResult` 가 값으로 지킴; 두 검사를 다 지우는 P08b 는 CAUGHT) ·
+P21b(빈 코드는 여전히 null 인 채 결과 관문만 지움 — REFUSED 사이클만 비지 않은 `Cycle.Refusal` 을 싣는 worker 계약 때문에 동등; 항상 싣는 P21 은 CAUGHT). P23(남의 항목 보정)은 첫 판이 BUILD-FAIL(쓰지 않은 루프 변수) → 컴파일되는 모양으로 다시 정의해 `--only ^P23` 재실행 CAUGHT(원장에 두 줄 다 남김). 첫 판 P12(얕은 Clone) SURVIVED → 원인은 시험이
+기준을 `Clone` 으로 만든 것(얕은 Clone 이 원본 · 기준과 포인터를 나눠 같이 움직임) → 기준을 직렬화 바이트로 바꿔 CAUGHT. 회귀 · 격리 검증 · check_analysis
+델타는 아래 「격리 검증」 줄.
+
+**격리 검증(HEAD d8a1c312 = a127 착지 뒤 + 로트 스크래치 커밋).** `lot-7.3/green-7.3.log`: `make lint` 0 · 무태그 · `tossos_testseams` 아홉 패키지
+(strategyprojection · strategyprojectionrpc · httpapi · console · strategyworker · networkboundary · deployguard · app/engine · cmd/tossctl) 전부 ok · 새 엔진 시험 ·
+strategyprojection · strategyworker `-race` ok. check_analysis 발견 집합이 HEAD 기준선과 **동일**(델타 0 — 줄 이동 셋 재기준, `type-switch` 칸은 게이트
+좌표 문법 때문에 `type switch at` 로 적음). `openspec validate --strict` valid. 첫 넓은 회귀 판(`green-7.3-first.log`)의 두 실패는 위 「기존 시험 편집」 ② · ③.
+a127 착지 뒤 소유자 범위 거래 시험(거울 다리 제거판) 포함 엔진 스위트 재실행 ok — Manager 통지 1 확인.
+
+**새로 거절되는 정상 입력(fail-closed 가 이름 대는 것).** `Validate` B6 · B7 은 자식이 없는 옛 모양 envelope 를 거절한다 — 즉 **7.3 이전 엔진의 응답을 7.3
+client(콘솔 · httpapi)가 읽으면 전략 화면이 unavailable** 이 된다. 엔진과 콘솔은 같은 이미지에서 함께 교체되므로 정상 배포에 혼합 창은 없다(잔여로 명명).
+반대 방향(옛 client + 새 엔진)은 스펙 시나리오 그대로 견딘다(rpc client 비엄격 디코딩 — 기존 시험).
+
+**잔여.** ① 콘솔 html/template 무편집 — 화면 노출은 후속 콘솔 로트(데이터 층만 이 로트, 조건 ①). ② `Read` 가 `strategyLanesMu` 를 잠깐 잡는다 — 그 잠금은
+`productionStrategyLanes` 가 첫 `restoreLatches` 원장 읽기 동안 쥐므로 프로세스 첫 생산 주기에 Read 가 로컬 SQLite 읽기 한 번만큼 기다릴 수 있다(7.5 측정 대상).
+③ uint64 계수기(JSON 정수)는 2^53 위에서 JS 정밀도를 잃는다(포화 상한 값) — Go client 무관. ④ `selected[]` 는 worker 미승격 시장에서도 조정자의 승인
+범위를 보인다(조정자 사실) — 주문 가능 여부는 시장 레코드가 말한다. ⑤ a127(`82080177`)이 트립와이어 `TestTheRiskStubBridge…` 를 지워 5.2.2.2 계열 변이 집합의
+`-run` 패턴 · 대조군 기대치(`EXPECTED_PASSES` 5.2.2.2-fix [60,8,122])는 HEAD 에서 그대로 재현되지 않는다 — 동결 원장은 그 시점 측정으로 유효, 재실행하려면
+기대치 재측정. 동결 증거 두 자리(`lot-5.2.2.2-fix/pre-edit/…collectmarket/branch-test-map.md` · `render_5222_bundles.py`)는 「a127 에서 제거됨 · 대체 양성 시험
+`TestTheRiskLoaderReadsTheRealJournal`」 표기로 재기준(Manager 통지 이행).
+
+**재발 방지 규칙 적용 확인.** 이 로트는 walked-scope 파일(journal `risk_bucket_*` · `internal/riskbucket/` · `internal/execgw/` gateway)을 만지지 않는다 —
+census 필수 실행 대상 아님(규칙 확인함). 대신 이 로트가 만진 census 류 핀(`.Single()` 자리 · 어휘 census 둘)은 위 ③ · 새 시험으로 다뤘다.
+
+**생산 동작 변화.** 투영(읽기 전용 표면)에 필드가 늘었을 뿐 주문 · 활성화 · 원장 경로 무편집. 레인 관측에 값 넷이 늘었고 `record` 가 물결 번호를 올린다(프로세스
+메모리). 생산에 서명 매니페스트 0 → 레인은 전부 DORMANT 로 관측된다.

@@ -212,7 +212,7 @@ FUNCS = [
                    f"{T} `TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope`(범위 번들 digest 둘)", f"yes — 변이 X12(첫 범위만) CAUGHT({LEDGER})", "yes"),
             "B5": ("**(새)** 범위 키 정규화 성공 시에만 적재 — 실패면 그 범위 AuthorityUnavailable", "진입 0(거짓 갈래) — 조립 결과는 항상 유효 키", "no", "진입 0"),
             "B6": ("적재 성공 · 시장 · 계좌 · 시각 · 항목 5 일치 → 그 범위 준비(편집 전 B4 · B5 의 반대편)",
-                   f"{T} `TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope` · `TestTheRiskStubBridgeIsStillNeededBecauseTheLoaderRefusesTheRealJournal`(실원장 → 전 범위 준비 안 됨)",
+                   f"{T} `TestAnActivatedTwoScopeMarketIssuesOneFirstLegPerScope` · `TestTheRiskStubBridgeIsStillNeededBecauseTheLoaderRefusesTheRealJournal`(**a127 `82080177` 에서 제거됨** — 다리 제거 조건 이행, 대체 양성 시험 `TestTheRiskLoaderReadsTheRealJournal`: 실원장 → 범위 준비)(실원장 → 전 범위 준비 안 됨)",
                    "yes — X12", "yes"),
         },
         "invariants": ["범위 번들은 모두 같은 서명 시장 매니페스트에서 온다(세대 · 정책은 시장 단위, 버킷 사용량 스냅숏은 적재 시점의 원장)."],

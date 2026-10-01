@@ -1,62 +1,64 @@
 # Function Logic Map: `strategyProjectionFromAssembly`
 
 - Source: `internal/app/engine/strategy_runtime_projection.go`
-- Source SHA-256: `95474831b04d24c21d90d72aac7349fe0682d2cbee9beb02c3be6307ac9dc510`
+- Source SHA-256: `4302edefe72942bd1f4f7f4aa51b3c03e26ef97c13c3d8d52a0b6be94a2eef9f`
 - Signature: `strategyProjectionFromAssembly(params=1, results=1)`
-- Source range: `98:1`–`165:2`
-- AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2).
+- Source range: `106:1`–`177:2`
+- AST evidence: `ast.json` — **편집 뒤**(a112 7.3).
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
-- 읽기 전용 화면 — 주문 · 토글 · 원장 쓰기 없음. 두 범위 시장은 첫 범위만 보인다(범위별 행은 review 잔여).
+- 시장 레코드는 편집 전과 같은 값이다(첫 범위만). 범위 전부는 조정자 자식 selected[] 가 싣는다 — 같은 handoff 목록 · 같은 술어.
 
 ## Branches and early returns
 
-- Exact AST return nodes: `164:2`.
+- Exact AST return nodes: `176:2`.
 
 | Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
-| B1 | range | 101:2 | 편집 전과 같은 분기 |
-| B2 | if | 108:3 | 편집 전과 같은 분기 |
-| B3 | switch | 110:4 | 편집 전과 같은 분기 |
-| B4 | case | 111:4 | 편집 전과 같은 분기 |
-| B5 | case | 113:4 | 편집 전과 같은 분기 |
-| B6 | case | 115:4 | 편집 전과 같은 분기 |
-| B7 | range | 127:3 | **(새)** 주문 경로와 같은 handoff 목록 순회 |
-| B8 | if | 128:4 | **(새)** 조정자 순서의 첫 승인 · 유효 범위를 보임 |
-| B9 | if | 133:3 | 승인 범위 없음 → EvidenceStale(편집 전 B7 의 결과) |
-| B10 | if | 141:3 | 레인 증거 다이제스트 부재(편집 전 B8) |
+| B1 | range | 109:2 | KR · US 순회 — **(편집)** 머리에서 조정자 자식을 채움(R4: 승인 범위 전부) |
+| B2 | if | 119:3 | worker 미승격 → 시장 실패(조정자는 이미 채워짐) |
+| B3 | switch | 121:4 | 실패 사유 고르기 |
+| B4 | case | 122:4 | 활성화 부재 |
+| B5 | case | 124:4 | 근거 stale |
+| B6 | case | 126:4 | 보호 미배선 |
+| B7 | range | 139:3 | 주문 경로와 같은 handoff 목록 순회 |
+| B8 | if | 140:4 | 조정자 순서의 첫 승인 · 유효 범위(시장 레코드 — 불변) |
+| B9 | if | 145:3 | 승인 범위 없음 → EvidenceStale |
+| B10 | if | 153:3 | 레인 근거 digest 부재 → 후보 근거 |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `assembly.Schedule.ObservedAt.UTC` | 99:14 |
-| `strategyprojection.DormantSnapshot` | 100:14 |
-| `strategyprojection.Market` | 102:23 |
-| `assembly.Schedule.For` | 103:15 |
-| `assembly.Candidate.For` | 104:16 |
-| `assembly.Proposal.For` | 105:15 |
-| `assembly.Risk.For` | 106:11 |
-| `assembly.Supervisor.Snapshot` | 107:17 |
-| `strategyprojection.WithMarketFailure` | 118:15 |
-| `dispatchHandoffs` | 127:27 |
-| `assembly.proposals.forMarket` | 127:27 |
-| `handoff.Single` | 128:27 |
-| `scoped.ValidProposal` | 128:57 |
-| `strategyprojection.WithMarketFailure` | 134:15 |
-| `projectionDigest` | 140:58 |
-| `projectionDigest` | 142:21 |
-| `strconv.Itoa` | 144:44 |
-| `string` | 145:28 |
-| `string` | 146:59 |
-| `projectionDigest` | 147:23 |
+| `assembly.Schedule.ObservedAt.UTC` | 107:14 |
+| `strategyprojection.DormantSnapshot` | 108:14 |
+| `strategyCoordinatorProjection` | 112:34 |
+| `assembly.proposals.forMarket` | 112:72 |
+| `strategyprojection.Market` | 113:23 |
+| `assembly.Schedule.For` | 114:15 |
+| `assembly.Candidate.For` | 115:16 |
+| `assembly.Proposal.For` | 116:15 |
+| `assembly.Risk.For` | 117:11 |
+| `assembly.Supervisor.Snapshot` | 118:17 |
+| `strategyprojection.WithMarketFailure` | 129:15 |
+| `dispatchHandoffs` | 139:27 |
+| `assembly.proposals.forMarket` | 139:27 |
+| `handoff.Single` | 140:27 |
+| `scoped.ValidProposal` | 140:57 |
+| `strategyprojection.WithMarketFailure` | 146:15 |
+| `projectionDigest` | 152:58 |
+| `projectionDigest` | 154:21 |
+| `strconv.Itoa` | 156:44 |
+| `string` | 157:28 |
+| `string` | 158:59 |
+| `projectionDigest` | 159:23 |
 
 ## State mutations and fallbacks
 
-- 이 함수 자신은 원장을 쓰지 않는다. 봉투 · 시장 값으로의 폴백 없음(범위 권한이 없으면 거절 또는 준비 안 됨).
+- 상태 변경 없음 — 조립 값에서 스냅숏을 만든다.
 
 ## Safety conclusion
 
-- High-risk 아님(화면). 활성화 없는 시장은 handoff 하나라 편집 전과 같은 값.
+- High-risk 아님 — 읽기 전용 투영(주문 · 원장 · 활성화 · 토글 쓰기 없음). 기존 시장 레코드의 판정은 불변이고 additive 자식만 더했다.

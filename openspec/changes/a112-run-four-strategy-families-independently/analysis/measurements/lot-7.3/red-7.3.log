@@ -1,0 +1,20 @@
+# RED a112 7.3 — HEAD f0f7d668 + 시험만(생산 무편집)
+## ./internal/strategyprojection/
+# github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection
+# [github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection]
+vet: internal/strategyprojection/a112_lane_coordinator_children_test.go:28:19: snapshot.Lanes undefined (type Snapshot has no field or method Lanes)
+## ./internal/strategyworker/
+# github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker
+# [github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker]
+vet: internal/strategyworker/a112_projection_table_test.go:24:55: strategyprojection.DormantSnapshot(laneNow).Lanes undefined (type strategyprojection.Snapshot has no field or method Lanes)
+## ./internal/httpapi/
+# github.com/JungHoonGhae/tossinvest-cli/internal/httpapi
+# [github.com/JungHoonGhae/tossinvest-cli/internal/httpapi]
+vet: internal/httpapi/a112_lane_children_openapi_test.go:47:53: undefined: strategyprojection.LaneJSONFields
+## engine (tossos_testseams)
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a112_lane_coordinator_projection_test.go:68:18: snapshot.Lanes undefined (type strategyprojection.Snapshot has no field or method Lanes)
+internal/app/engine/a112_lane_coordinator_projection_test.go:69:45: snapshot.Lanes undefined (type strategyprojection.Snapshot has no field or method Lanes)
+internal/app/engine/a112_lane_coordinator_projection_test.go:71:32: snapshot.Lanes undefined (type strategyprojection.Snapshot has no field or method Lanes)
+internal/app/engine/a112_lane_coordinator_projection_test.go:86:30: before.Lanes undefined (type strategyprojection.Snapshot has no field or method Lanes)
+internal/app/engine/a112_lane_coordinator_projection_test.go:102:38: a112Read(t, c).Lanes undefined (type strategyprojection.Snapshot has no field or method Lanes)

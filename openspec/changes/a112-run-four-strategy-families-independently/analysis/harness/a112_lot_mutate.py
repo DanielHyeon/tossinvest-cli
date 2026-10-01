@@ -556,13 +556,93 @@ SET_71 = [
 SET_71_TESTS = [
     ["go", "test", "-count=1", "./internal/scheduler"],
 ]
+LPJ = "internal/app/engine/strategy_lane_projection.go"
+LRT = "internal/app/engine/strategy_lane_runtime.go"
+RPJ = "internal/app/engine/strategy_runtime_projection.go"
+PLN = "internal/strategyprojection/lanes.go"
+SET_73 = [
+    ("P01 projection offers a trigger to the lane (read-only violated)", LPJ,
+     "Pending:      lane.Pending(),", "Pending:      func() int { lane.Offer(); return lane.Pending() }(),"),
+    ("P02 projection records a lane failure (read-only violated)", LPJ,
+     "ConsecutiveFailures: lane.ConsecutiveFailures(),",
+     "ConsecutiveFailures: func() uint64 { lane.Fail(\"projection\", false); return lane.ConsecutiveFailures() }(),"),
+    ("P03 Read does not overlay the live lanes", RPJ, "\tif lanes != nil {\n\t\tsnapshot.Lanes", "\tif false && lanes != nil {\n\t\tsnapshot.Lanes"),
+    ("P04 record never advances the wave", LRT,
+     "\tif runtime.waves[market] < ^uint64(0) {\n\t\truntime.waves[market]++\n\t}", "\tif false {\n\t\truntime.waves[market]++\n\t}"),
+    ("P05 one wave counter shared by both markets", LRT,
+     ("\t\truntime.waves[market]++", "\t\tobservation.Wave = runtime.waves[market]"),
+     ("\t\truntime.waves[StrategyMarketKR]++", "\t\tobservation.Wave = runtime.waves[StrategyMarketKR]")),
+    ("P06 lane desired/effective ignore the activation", LRT,
+     "Desired: lane.Desired(promotion), Effective: lane.Effective(promotion),",
+     "Desired: strategyrouter.StateOff, Effective: strategyrouter.StateOff,"),
+    ("P07 selected keeps only the first scope (R4 regression)", LPJ,
+     "\t\tvalue.Selected = append(value.Selected, selected)\n",
+     "\t\tvalue.Selected = append(value.Selected, selected)\n\t\tbreak\n"),
+    ("P08a selected drops the admitted check — EQUIVALENT by construction: a refused Single() returns the zero Result "
+     "(pinned by strategyhandoff TestARefusedSingleReturnsTheZeroResult) whose ValidProposal() is false, so the remaining check "
+     "excludes exactly the same handoffs; removing both checks is P08b (CAUGHT)", LPJ,
+     "\t\tif !admitted || !scoped.ValidProposal() {", "\t\tif !scoped.ValidProposal() {\n\t\t\t_ = admitted"),
+    ("P08b selected drops both checks", LPJ, "\t\tif !admitted || !scoped.ValidProposal() {", "\t\tif false {\n\t\t\t_ = admitted"),
+    ("P09 coordinators not set (failure branch hides them)", RPJ,
+     "\t\tsnapshot.Coordinators[index] = strategyCoordinatorProjection(market, assembly.proposals.forMarket(market))",
+     "\t\t_, _ = index, strategyCoordinatorProjection"),
+    ("P10 Validate drops the fixed lane order", PLN,
+     "\t\t\tlane.Horizon != key.hor {\n\t\t\treturn errors.New(\"lanes out of the fixed production order\")",
+     "\t\t\tlane.Horizon != key.hor && false {\n\t\t\treturn errors.New(\"lanes out of the fixed production order\")"),
+    ("P11 Validate accepts an invented runtime", PLN,
+     "!validState(lane.Effective) || lane.Runtime != LaneRuntimeUnobserved {", "!validState(lane.Effective) {"),
+    ("P12 Clone copies lanes shallowly", PLN,
+     "\tout := make([]LaneRuntimeProjection, len(lanes))\n", "\treturn append([]LaneRuntimeProjection(nil), lanes...)\n\tout := make([]LaneRuntimeProjection, len(lanes))\n"),
+    ("P13 Validate lets an unobserved lane carry facts", PLN,
+     "\t\t\treturn errors.New(\"unobserved lane carries inferred facts\")", "\t\t\treturn nil"),
+    ("P14 coordinator reason vocabulary misses an engine reason", PLN,
+     "\"PROPOSAL_PRODUCTION_FAULT\", \"FAMILY_GATE_CLOSED\"}", "\"PROPOSAL_PRODUCTION_FAULT\"}"),
+    ("P15 lane start vocabulary misses a worker value", PLN,
+     "\t\tstring(LaneStartTooSoon), string(LaneStartNoTrigger)}", "\t\tstring(LaneStartTooSoon)}"),
+    ("P16 a lane JSON name drops out of the contract list", PLN, "return []string{\"abandoned\", \"abnormal\", ", "return []string{\"abandoned\", "),
+    ("P17 the default lanes are born ON", PLN,
+     "Horizon: key.hor, Desired: StateOff, Effective: StateOff,", "Horizon: key.hor, Desired: StateOn, Effective: StateOff,"),
+    ("P18 lane health read from the last observation, not the lane", LPJ,
+     "health := strategyprojection.LaneHealth(lane.Health())", "health := strategyprojection.LaneHealth(observation.Health)"),
+    ("P19 latch reason not normalized", LPJ,
+     "FirstFailure: strategyprojection.NormalizedText(lane.FirstFailure()),", "FirstFailure: projectionOptional(lane.FirstFailure()),"),
+    ("P20 coordinator lists null when empty", LPJ,
+     "GatedOutcomes: []string{},\n", "GatedOutcomes: nil,\n"),
+    # 판정 (A) — first refusal · config · calibration 계보.
+    ("P21 lane refusal carried regardless of the outcome (Manager condition)", LPJ,
+     "\t\t\tif observation.Outcome == strategyworker.OutcomeRefused {\n\t\t\t\tvalue.Refusal = projectionOptional(string(observation.Refusal))\n\t\t\t}",
+     "\t\t\tcode := string(observation.Refusal)\n\t\t\tvalue.Refusal = &code"),
+    ("P21b lane refusal outcome gate removed but empty codes still null — EQUIVALENT by the worker contract: only a REFUSED cycle "
+     "carries a non-empty Cycle.Refusal (strategyworker FamilyWorker.Run); the outcome gate is the projection's own guard", LPJ,
+     "\t\t\tif observation.Outcome == strategyworker.OutcomeRefused {\n\t\t\t\tvalue.Refusal",
+     "\t\t\tif true {\n\t\t\t\tvalue.Refusal"),
+    ("P22 runLane does not record the cycle refusal", LRT,
+     "\tobservation.Refusal = bounded.Cycle.Refusal\n", ""),
+    ("P23 selected calibration read from the first entry, not the scope's own (first run BUILD-FAIL: unused loop variable — redefined)", LPJ,
+     "\t\tif entry.authority.Proposal().Lineage.Identity == lineage.Identity {\n\t\t\treturn entry.route, true",
+     "\t\tif entry.authority.Proposal().Lineage.Identity != \"\" {\n\t\t\treturn entry.route, true"),
+    ("P24 selected config digest dropped", LPJ,
+     ", ConfigDigest: projectionOptional(lineage.ConfigDigest)}", "}"),
+    ("P25 Validate drops the refusal/outcome pairing", PLN,
+     "\tif (lane.Refusal != nil) != refused || lane.Refusal != nil && !member(*lane.Refusal, ArbitrationRefusals()) {",
+     "\tif lane.Refusal != nil && !member(*lane.Refusal, ArbitrationRefusals()) && refused {"),
+]
+SET_73_TESTS = [
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+     "TestAProcessWithoutLanes|TestTheCycleGeneration|TestTheLaneDesiredAndEffective|TestEightLatchedLanes|TestReadingTheLaneProjection|TestTheCoordinatorChild|TestTheCoordinatorReasonVocabulary|TestALatchReasonWithControl|TestAnActivatedTwoScopeMarketPromotesItsWorkerPerScope",
+     "./internal/app/engine"],
+    ["go", "test", "-count=1", "./internal/strategyprojection"],
+    ["go", "test", "-count=1", "-run", "TestTheProjection|TestTheLaneRead", "./internal/strategyworker"],
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run", "TestTheLaneDesiredAndEffectiveFollow", "./internal/strategyworker"],
+    ["go", "test", "-count=1", "-run", "OpenAPI|StrategyRuntime", "./internal/httpapi"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측

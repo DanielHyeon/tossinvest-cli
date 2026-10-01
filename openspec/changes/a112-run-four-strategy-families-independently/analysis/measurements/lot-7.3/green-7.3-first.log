@@ -1,0 +1,34 @@
+# GREEN a112 7.3 — HEAD d8a1c312 + 로트(작업 트리)
+## 무태그
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	0.769s
+--- FAIL: TestClientIgnoresAdditiveFieldsFromANewerEngine (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc	5.881s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	0.704s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	113.361s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	6.690s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/networkboundary	0.008s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/deployguard	0.071s
+--- FAIL: TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer (0.02s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	406.423s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	73.808s
+FAIL
+## tossos_testseams
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	0.786s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc	5.494s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	0.635s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	115.330s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	3.349s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/networkboundary	0.004s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/deployguard	0.010s
+--- FAIL: TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer (0.11s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	566.540s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	75.660s
+FAIL
+## -race (새 엔진 시험 + strategyprojection + strategyworker)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	20.954s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	5.991s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	12.951s
+END

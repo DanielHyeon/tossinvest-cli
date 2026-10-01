@@ -132,7 +132,9 @@ func currentPair(t *testing.T) Snapshot {
 			Reconciliation: ReconciliationProjection{Status: ReconciliationHealthy, Refusal: RefusalNone},
 			FirstRefusal:   RefusalNone, ObservedAt: &observed}
 	}
-	snapshot := Snapshot{SchemaVersion: SchemaVersion, GeneratedAt: projectionNow, Markets: markets}
+	// a112 7.3: 시장 레코드만 「현재」로 바꾸고 additive 자식(lanes[8] · coordinators[2])은 기본값 그대로 둔다 — envelope 계약이 자식을 요구한다.
+	snapshot := DormantSnapshot(projectionNow)
+	snapshot.Markets = markets
 	if err := Validate(snapshot); err != nil {
 		t.Fatal(err)
 	}

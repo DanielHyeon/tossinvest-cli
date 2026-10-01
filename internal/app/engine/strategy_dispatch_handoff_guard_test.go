@@ -992,9 +992,11 @@ func TestNoProductionSiteDiscardsTheSeamsAdmissionAnswer(t *testing.T) {
 		}
 	}
 	sort.Strings(sites)
-	// 경계의 값을 읽는 자리는 셋이다: worker 승격, 결과 권한, 읽기 전용 projection. dispatch 주기는 Deliver 를 쓰므로 여기
-	// 없다 — 그것이 요점이다.
+	// 경계의 값을 읽는 자리는 넷이다: worker 승격, 결과 권한, 읽기 전용 projection 의 시장 레코드, 그리고 a112 7.3 의 조정자
+	// 자식(strategyCoordinatorProjection — 승인된 범위 전부를 selected[] 로, `!admitted` 로 거름: 변이 P08b CAUGHT). dispatch 주기는
+	// Deliver 를 쓰므로 여기 없다 — 그것이 요점이다.
 	want := []string{"strategy_entry_supervisor.go:buildProductionStrategyMarketWorker",
+		"strategy_lane_projection.go:strategyCoordinatorProjection",
 		"strategy_proposal_authority.go:ResultAuthority", "strategy_runtime_projection.go:strategyProjectionFromAssembly"}
 	if strings.Join(sites, ",") != strings.Join(want, ",") {
 		t.Fatalf("production Single() sites=%v, want exactly %v", sites, want)

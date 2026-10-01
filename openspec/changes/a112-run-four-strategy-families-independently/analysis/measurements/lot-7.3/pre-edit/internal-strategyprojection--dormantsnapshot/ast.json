@@ -1,0 +1,62 @@
+{
+  "file": "internal/strategyprojection/model.go",
+  "source_sha256": "0662dc5ab11eda0213bc4e887cdccbb71feb5115bfd5b4627dc71de81090d08f",
+  "package": "strategyprojection",
+  "function": "DormantSnapshot",
+  "signature": "DormantSnapshot(params=1, results=1)",
+  "start": {
+    "line": 175,
+    "column": 1
+  },
+  "end": {
+    "line": 181,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 176,
+        "column": 16
+      },
+      "text": "generatedAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 13
+      },
+      "text": "unknownMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 179,
+        "column": 13
+      },
+      "text": "unknownMarket"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 176,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

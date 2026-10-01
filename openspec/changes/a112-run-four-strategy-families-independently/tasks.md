@@ -424,7 +424,14 @@
   replay 금지), 용량은 endpoint 하나의 commitment 집합 공유(복제 0). 거절은 골든 `BUDGET_DEFERRED` 하나 + Detail. 생산 호출자 0 을 핀(`TestTheStrategyBudgetAPIHasNoProductionCallerYet`)
   — 레인 evidence polling 배선은 7.5 또는 활성화 로트가 핀을 뒤집으며 한다. 시험(`internal/scheduler/a112_strategy_scope_test.go`): continuation → breakout replay 거부 · 양방향 교차 ·
   공유 집합 비복제 · 여덟 레인 마지막 자리 경쟁(하나만 commit, 나머지 BUDGET_DEFERRED, 예비 유지, 안전 등급 통과) · 잘못된 범위/안전 등급. 변이 T01~T10 10/10 CAUGHT.
-- [ ] 7.3 Project read-only family/worker desired/effective/runtime, cycle generation, queue/drop, health/latch, first refusal, evidence/config/calibration and arbitration lineage to the existing console/API model.
+- [x] 7.3 Project read-only family/worker desired/effective/runtime, cycle generation, queue/drop, health/latch, first refusal, evidence/config/calibration and arbitration lineage to the existing console/API model.
+
+  **7.3 종결(2026-10-01 — 미착지).** Manager 판정: 계약 모양(envelope additive `lanes[8]` · `coordinators[2]`, SchemaVersion v1 그대로, R4 를 `coordinators[].selected[]` 로
+  흡수) · Q1=(B) cycle generation = 엔진 시장별 물결 번호 중 레인이 마지막으로 관측된 번호(0 = 미관측, 프로세스 수명) · Q2 기한은 기존 읽기 접근자만 · Q3 runtime 은
+  worker 값(UNOBSERVED) 그대로 · (A) first refusal(`lanes[].refusal` — REFUSED 일 때만 골든 중재 코드) · config/calibration 계보(`selected[].configDigest` ·
+  `scoreVersion` · `calibrationDigest`). `internal/strategyprojection` 은 import 0 잎 그대로(레인 표 · 어휘를 골든 · 생산 상수와 시험으로 대조), 엔진 `Read` 가
+  레인을 지금 상태로 읽기만 해서 덧씌움, 조정자 자식은 조립 발행 때(실패 갈래에서도). OpenAPI 세 스키마. 콘솔 template 무편집(화면 노출은 후속 콘솔 로트).
+  계좌 원문 0(lineageIdentity 는 SHA-256). 변이 `lot-7.3/mutation-7.3.tsv`(동등 표기 둘 외 CAUGHT), 읽기 전용 불변 변이(Offer · Fail) CAUGHT. review 「7.3」 절.
 - [ ] 7.3.1 Distinguish `OFF/OFF/UNOBSERVED` from explicit read-only `SHADOW`: SHADOW may evaluate and project counterfactuals but cannot mint desired/effective/activation, own dispatch capability or survive restart without a server-owned signed shadow manifest.
 - [ ] 7.4 Bound metrics cardinality by fixed market/family/lane/version/reason labels; keep symbol/setup/candidate identifiers in logs/journal queries rather than metric labels.
 - [ ] 7.5 Add performance/operability tests for bounded evidence fan-out, no remote I/O under strategy refresh mutex, independent lane latency, status snapshot consistency and safety cadence under all entry queues saturated.

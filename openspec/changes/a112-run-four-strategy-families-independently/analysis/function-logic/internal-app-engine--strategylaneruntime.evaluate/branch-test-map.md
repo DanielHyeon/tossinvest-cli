@@ -1,23 +1,14 @@
 # Branch Test Map: `strategyLaneRuntime.evaluate`
 
-- Source: `internal/app/engine/strategy_lane_runtime.go` (191-224); file SHA-256 `0526b42f2ba26f101931e4f30425ae64558dd1d7e0e0070fa5f9c9a2e34df104`. AST branch positions are authoritative.
-- Rows carry measured counts from Go coverage profiles, count mode.
-- Per-test attribution set: 두 엔진 바이너리의 테스트 **전체**(태그 491 · 무태그 438).
+- Source SHA-256: `4a7fd7fedb3237720070c6c4c6ef03030fa30c67e181fdb0a86053a8418390a6`; AST branch locations are authoritative.
+- Revision: **modified (a112 7.3, 2026-10-01).** 분기 불변(6). `record(observations)` → `record(market, observations)` 한 줄(시장별 물결 번호 — 판정 Q1=(B)). 순서(복구 → 돌기 → 기록 → 잠금 남기기) 불변.
+- 편집 전 번들: `analysis/measurements/lot-7.3/pre-edit/internal-app-engine--strategylaneruntime.evaluate/`. 변이 원장 `analysis/measurements/lot-7.3/mutation-7.3.tsv`.
 
-| Branch | AST kind | Position | Measured disposition |
-|---|---|---|---|
-| B1 | if | 194:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B2 | if | 200:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-| B3 | range | 205:2 | arm entered 288x (engine tagged suite); arm entered 280x (engine untagged suite); `TestADroppedTriggerNeverDrivesACycle`, `TestADurableLatchThatNamesNoLaneInThisBuildStopsTheCycleLoudlyAndCanBeClosed`, `TestALatchOnlyReopensForAStrictlyNewerVerifiedActivation`, `TestALatchedLaneComesBackLatchedAfterTheProcessRestarts`, `TestALedgerThatCannotTakeTheLatchStopsTheCycle`, `TestARestoredLatchKeepsTheFirstCauseAcrossTheRestart`, `TestEveryFamilyLaneIsDormantUntilASignedManifestPromotesIt`, `TestEveryLaneStaysDormantOnAProposalItActuallyOwns`, `TestOneLatchedLaneLeavesItsSevenPeersOpenAcrossARestart`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestTheProductionStepNeverLatchesSoTheLedgerStaysEmpty`, `TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther` |
-| B4 | range | 207:3 | arm entered 14x (engine tagged suite); arm not entered (engine untagged suite); `TestEveryLaneStaysDormantOnAProposalItActuallyOwns`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes` |
-| B5 | if | 208:4 | arm entered 2x (engine tagged suite); arm not entered (engine untagged suite); `TestEveryLaneStaysDormantOnAProposalItActuallyOwns`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes` |
-| B6 | if | 218:2 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestALedgerThatCannotTakeTheLatchStopsTheCycle` |
-
-RED→GREEN: 승격을 인자로 받는 편집은 이 함수의 **행동을 바꾸지 않는다**(영값 승격에서
-모든 레인이 DORMANT — 오늘의 값). 바뀐 것을 재는 시험은 관문 쪽이다:
-`TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt` 와
-`TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading`.
-
-B1 · B2 는 진입 0 회다. 구멍으로 남겨 두고 5.6.2 에 넘긴다 — 채우는 척하지 않는다.
-
-A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.
+| Branch | Scenario anchor | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | if at 202:2 — nil 런타임 | 진입 0(편집 전 번들 기록 그대로) | no — 이 로트가 바꾸지 않음 | n/a |
+| B2 | if at 208:2 — 복구 실패 → 오류 | 진입 0(편집 전 번들 기록 그대로) | no — 이 로트가 바꾸지 않음 | n/a |
+| B3 | range at 213:2 — 이 시장 네 레인 순회 | `a112_lane_coordinator_projection_test.go` `TestTheCycleGenerationIsTheMarketWaveInWhichTheLaneWasLastObserved` | no — 이 로트가 바꾸지 않음 | yes |
+| B4 | range at 215:3 — 레인 입력 찾기 | `TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt` | no — 이 로트가 바꾸지 않음 | yes |
+| B5 | if at 216:4 — 자기 제안 소유 | `TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt` | no — 이 로트가 바꾸지 않음 | yes |
+| B6 | if at 226:2 — 잠금 기록 실패 → 오류 | `TestALaneLatchThatCannotBeRecordedIsCountedNotEscalated` | no — 이 로트가 바꾸지 않음 | yes |

@@ -1,9 +1,9 @@
 # Function Logic Map: `strategyProposalAuthorityPair.ResultAuthority`
 
 - Source: `internal/app/engine/strategy_proposal_authority.go`
-- Source SHA-256: `a356e5ead7d719e7b791423645a86b2a2f8b2eed26066127eafb1928ec411288`
+- Source SHA-256: `60e0ef9270e3102bb69ce930cdffb41a5c4653dca69efdc94d32374823161bae`
 - Signature: `strategyProposalAuthorityPair.ResultAuthority(params=0, results=1)`
-- Source range: `183:1`–`211:2`
+- Source range: `181:1`–`209:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2).
 - Risk scan: `risk-pattern-report.md`.
 
@@ -13,31 +13,31 @@
 
 ## Branches and early returns
 
-- Exact AST return nodes: `197:5, 202:4, 208:3, 210:2`.
+- Exact AST return nodes: `195:5, 200:4, 206:3, 208:2`.
 
 | Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
-| B1 | range | 194:3 | **(새)** handoff 목록 순회 |
-| B2 | if | 196:4 | handoff 거절 또는 무효 제안 → 시장 결과 권한 준비 안 됨(편집 전 B1 — 목록의 일부만 넘기지 않음) |
-| B3 | if | 201:3 | **(새)** 목록 없음 → 준비 안 됨 |
-| B4 | if | 205:3 | **(새)** 범위 둘 이상 또는 활성화 시장 → 범위별 결과(`scoped`)를 싣는다 — 위험 적재기가 범위마다 번들을 만든다 |
+| B1 | range | 192:3 | **(새)** handoff 목록 순회 |
+| B2 | if | 194:4 | handoff 거절 또는 무효 제안 → 시장 결과 권한 준비 안 됨(편집 전 B1 — 목록의 일부만 넘기지 않음) |
+| B3 | if | 199:3 | **(새)** 목록 없음 → 준비 안 됨 |
+| B4 | if | 203:3 | **(새)** 범위 둘 이상 또는 활성화 시장 → 범위별 결과(`scoped`)를 싣는다 — 위험 적재기가 범위마다 번들을 만든다 |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `value.dispatchHandoffs` | 192:15 |
-| `make` | 193:14 |
-| `len` | 193:45 |
-| `handoff.Single` | 195:25 |
-| `result.ValidProposal` | 196:22 |
-| `append` | 199:14 |
-| `len` | 201:6 |
-| `len` | 205:6 |
-| `Verified` | 205:26 |
-| `value.familyActivation` | 205:26 |
-| `convert` | 210:70 |
-| `convert` | 210:110 |
+| `value.dispatchHandoffs` | 190:15 |
+| `make` | 191:14 |
+| `len` | 191:45 |
+| `handoff.Single` | 193:25 |
+| `result.ValidProposal` | 194:22 |
+| `append` | 197:14 |
+| `len` | 199:6 |
+| `len` | 203:6 |
+| `Verified` | 203:26 |
+| `value.familyActivation` | 203:26 |
+| `convert` | 208:70 |
+| `convert` | 208:110 |
 
 ## State mutations and fallbacks
 
@@ -46,3 +46,5 @@
 ## Safety conclusion
 
 - High-risk 인접(위험 권한 입력). 활성화 없는 시장은 handoff 하나 — `scoped` 없음 → 위험 적재기가 편집 전과 같은 결과 하나를 본다.
+
+a112 7.3 — 같은 파일 편집(관측 필드 · record 인자 / QueueDropCount 주석)으로 줄만 밀림

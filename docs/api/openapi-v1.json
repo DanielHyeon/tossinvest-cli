@@ -2589,7 +2589,7 @@
         "type": "object",
         "description": "Single server-owned paired KR and US operational truth shared by REST, SSE, console and the private Unix read transport.",
         "additionalProperties": false,
-        "required": ["schemaVersion", "generatedAt", "runtime", "markets"],
+        "required": ["schemaVersion", "generatedAt", "runtime", "markets", "lanes", "coordinators"],
         "properties": {
           "schemaVersion": {
             "type": "string",
@@ -2604,7 +2604,95 @@
           },
           "markets": {
             "$ref": "#/components/schemas/StrategyRuntimeMarkets"
+          },
+          "lanes": {
+            "type": "array",
+            "description": "Additive child: the eight family lanes in the fixed production order (KR/US continuation, KR/US reversal, KR/US weekly value, KR/US breakout retest). Older readers may ignore it; the market-level records keep their meaning.",
+            "minItems": 8,
+            "maxItems": 8,
+            "items": {
+              "$ref": "#/components/schemas/StrategyRuntimeLaneRuntime"
+            }
+          },
+          "coordinators": {
+            "type": "array",
+            "description": "Additive child: the two market proposal coordinators in the fixed order KR, US.",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "$ref": "#/components/schemas/StrategyRuntimeCoordinator"
+            }
           }
+        }
+      },
+      "StrategyRuntimeLaneRuntime": {
+        "type": "object",
+        "description": "Read-only state of one family lane. health null means the lane is unobserved (no lane runtime yet, or the engine was unreachable); then only the key and the frozen defaults OFF/OFF/UNOBSERVED are present. cycleGeneration is the per-market evaluate wave in which this lane was last observed (process lifetime, 0 = not yet observed in this process); a lane whose value is below its market peers is stale. desired/effective are what the signed activation of that wave said for this lane. start is present only when trigger is ENQUEUED; outcome and abnormal only when start is ADMITTED; refusal only when outcome is REFUSED.",
+        "additionalProperties": false,
+        "required": ["market", "family", "laneId", "laneVersion", "horizon", "desired", "effective", "runtime", "health", "consecutiveFailures", "latchRevision", "firstFailure", "cycleGeneration", "trigger", "start", "outcome", "refusal", "abnormal", "pending", "dropped", "abandoned", "policyVersion", "cycleDeadlineMs", "nextDueAt", "restartNotBefore", "snapshotDigest", "evidenceDigest"],
+        "properties": {
+          "market": {"type": "string", "enum": ["KR", "US"]},
+          "family": {"type": "string", "enum": ["CONTINUATION", "REVERSAL", "WEEKLY_VALUE", "BREAKOUT_RETEST"]},
+          "laneId": {"type": "string", "maxLength": 256},
+          "laneVersion": {"type": "string", "maxLength": 256},
+          "horizon": {"type": "string", "enum": ["SHORT", "WEEKLY"]},
+          "desired": {"$ref": "#/components/schemas/StrategyRuntimeState"},
+          "effective": {"$ref": "#/components/schemas/StrategyRuntimeState"},
+          "runtime": {"type": "string", "enum": ["UNOBSERVED"]},
+          "health": {"type": ["string", "null"], "enum": ["HEALTHY", "DEGRADED", "LATCHED", null]},
+          "consecutiveFailures": {"type": "integer", "minimum": 0},
+          "latchRevision": {"type": "integer", "minimum": 0},
+          "firstFailure": {"type": ["string", "null"], "maxLength": 512},
+          "cycleGeneration": {"type": "integer", "minimum": 0},
+          "trigger": {"type": ["string", "null"], "enum": ["ENQUEUED", "DISABLED", "FULL", null]},
+          "start": {"type": ["string", "null"], "enum": ["ADMITTED", "LATCHED", "IN_FLIGHT", "BACKOFF", "TOO_SOON", "NO_TRIGGER", null]},
+          "outcome": {"type": ["string", "null"], "enum": ["EMITTED", "DORMANT", "REFUSED", "LATCHED", null]},
+          "refusal": {"type": ["string", "null"], "description": "Golden arbitration refusal code of the last observed cycle, present exactly when outcome is REFUSED.", "enum": ["ARBITRATION_UNCALIBRATED", "ARBITRATION_TIE", "ARBITRATION_MULTIPLE_OWNER", "ARBITRATION_STALE_OWNER", "ARBITRATION_STALE_ENVELOPE", "ARBITRATION_SEAL_MISMATCH", null]},
+          "abnormal": {"type": "boolean"},
+          "pending": {"type": "integer", "minimum": 0},
+          "dropped": {"type": "integer", "minimum": 0},
+          "abandoned": {"type": "integer", "minimum": 0},
+          "policyVersion": {"type": ["string", "null"], "maxLength": 256},
+          "cycleDeadlineMs": {"type": ["integer", "null"], "minimum": 1},
+          "nextDueAt": {"type": ["string", "null"], "format": "date-time"},
+          "restartNotBefore": {"type": ["string", "null"], "format": "date-time"},
+          "snapshotDigest": {"type": ["string", "null"], "maxLength": 256},
+          "evidenceDigest": {"type": ["string", "null"], "maxLength": 256}
+        }
+      },
+      "StrategyRuntimeCoordinator": {
+        "type": "object",
+        "description": "Read-only result of one market's proposal coordination. reason null means unobserved. selected lists every owner scope admitted by the same handoff list the order path receives, in coordinator order (a market with a signed activation shows each scope; the market-level record still shows only the first).",
+        "additionalProperties": false,
+        "required": ["market", "reason", "ready", "routedCount", "proposedCount", "refusedCount", "gatedCount", "gatedOutcomes", "queueDropCount", "arbitrationRefusal", "proposalSetDigest", "selected"],
+        "properties": {
+          "market": {"type": "string", "enum": ["KR", "US"]},
+          "reason": {"type": ["string", "null"], "enum": ["READY", "ROUTE_NOT_READY", "FX_NOT_READY", "PROPOSAL_AUTHORITY_INVALID", "NO_ACCEPTED_PROPOSAL", "INTERNAL_FAILURE", "ARBITRATION_REFUSED", "PROPOSAL_QUEUE_OVERFLOW", "PROPOSAL_PRODUCTION_FAULT", "FAMILY_GATE_CLOSED", null]},
+          "ready": {"type": "boolean"},
+          "routedCount": {"type": "integer", "minimum": 0},
+          "proposedCount": {"type": "integer", "minimum": 0},
+          "refusedCount": {"type": "integer", "minimum": 0},
+          "gatedCount": {"type": "integer", "minimum": 0},
+          "gatedOutcomes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "enum": ["EMITTED", "DORMANT", "REFUSED", "LATCHED"]}},
+          "queueDropCount": {"type": "integer", "minimum": 0},
+          "arbitrationRefusal": {"type": ["string", "null"], "enum": ["ARBITRATION_UNCALIBRATED", "ARBITRATION_TIE", "ARBITRATION_MULTIPLE_OWNER", "ARBITRATION_STALE_OWNER", "ARBITRATION_STALE_ENVELOPE", "ARBITRATION_SEAL_MISMATCH", null]},
+          "proposalSetDigest": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+          "selected": {"type": "array", "items": {"$ref": "#/components/schemas/StrategyRuntimeSelectedScope"}}
+        }
+      },
+      "StrategyRuntimeSelectedScope": {
+        "type": "object",
+        "description": "One admitted owner scope. lineageIdentity is the sealed lineage's SHA-256 identity; the account enters only as a hash input and is never carried in clear. configDigest is the lineage config digest; scoreVersion and calibrationDigest are the arbitration calibration sealed on this scope's own route authority (null when absent or when the scope cannot be resolved to exactly one entry).",
+        "additionalProperties": false,
+        "required": ["symbol", "laneId", "campaignId", "lineageIdentity", "configDigest", "scoreVersion", "calibrationDigest"],
+        "properties": {
+          "symbol": {"type": "string", "maxLength": 256},
+          "laneId": {"type": "string", "maxLength": 256},
+          "campaignId": {"type": "string", "maxLength": 256},
+          "lineageIdentity": {"type": "string", "maxLength": 256},
+          "configDigest": {"type": ["string", "null"], "maxLength": 256},
+          "scoreVersion": {"type": ["string", "null"], "maxLength": 256},
+          "calibrationDigest": {"type": ["string", "null"], "maxLength": 256}
         }
       },
       "StrategyRuntimeIdentity": {

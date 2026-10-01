@@ -1,0 +1,142 @@
+{
+  "file": "internal/app/engine/strategy_lane_runtime.go",
+  "source_sha256": "4a7fd7fedb3237720070c6c4c6ef03030fa30c67e181fdb0a86053a8418390a6",
+  "package": "engine",
+  "function": "record",
+  "receiver": "strategyLaneRuntime",
+  "signature": "strategyLaneRuntime.record(params=2, results=0)",
+  "start": {
+    "line": 293,
+    "column": 1
+  },
+  "end": {
+    "line": 309,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 294,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 299,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 302,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 305,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 295,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 294,
+        "column": 23
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 297,
+        "column": 2
+      },
+      "text": "runtime.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 298,
+        "column": 8
+      },
+      "text": "runtime.mu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 300,
+        "column": 19
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 30
+      },
+      "text": "uint64"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 300,
+        "column": 3
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 303,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 306,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 307,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 298,
+        "column": 2
+      },
+      "text": "runtime.mu.Unlock"
+    }
+  ]
+}

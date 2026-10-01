@@ -1,15 +1,15 @@
 {
   "file": "internal/strategyprojection/model.go",
-  "source_sha256": "0662dc5ab11eda0213bc4e887cdccbb71feb5115bfd5b4627dc71de81090d08f",
+  "source_sha256": "f192e4f2f934f8bb3e165a47f2ecb7dda91874826c299aff0aa073f8082cbd01",
   "package": "strategyprojection",
   "function": "Validate",
   "signature": "Validate(params=1, results=1)",
   "start": {
-    "line": 266,
+    "line": 270,
     "column": 1
   },
   "end": {
-    "line": 283,
+    "line": 294,
     "column": 2
   },
   "branches": [
@@ -17,7 +17,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 267,
+        "line": 271,
         "column": 2
       }
     },
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 270,
+        "line": 274,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "range",
       "at": {
-        "line": 273,
+        "line": 277,
         "column": 2
       }
     },
@@ -41,7 +41,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 275,
+        "line": 279,
         "column": 3
       }
     },
@@ -49,8 +49,24 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 278,
+        "line": 282,
         "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 287,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 290,
+        "column": 2
       }
     }
   ],
@@ -58,35 +74,49 @@
     {
       "kind": "return",
       "at": {
-        "line": 268,
+        "line": 272,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 271,
+        "line": 275,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 276,
+        "line": 280,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 279,
+        "line": 283,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 282,
+        "line": 288,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 291,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 293,
         "column": 2
       }
     }
@@ -95,7 +125,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 267,
+        "line": 271,
         "column": 48
       },
       "text": "snapshot.GeneratedAt.IsZero"
@@ -103,7 +133,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 267,
+        "line": 271,
         "column": 81
       },
       "text": "len"
@@ -111,7 +141,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 268,
+        "line": 272,
         "column": 10
       },
       "text": "errors.New"
@@ -119,7 +149,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 270,
+        "line": 274,
         "column": 12
       },
       "text": "validateRuntimeIdentity"
@@ -127,7 +157,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 271,
+        "line": 275,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -135,7 +165,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 276,
+        "line": 280,
         "column": 11
       },
       "text": "fmt.Errorf"
@@ -143,7 +173,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 278,
+        "line": 282,
         "column": 13
       },
       "text": "validateMarketProjection"
@@ -151,8 +181,40 @@
     {
       "kind": "call",
       "at": {
-        "line": 279,
+        "line": 283,
         "column": 11
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 12
+      },
+      "text": "validateLanes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 12
+      },
+      "text": "validateCoordinators"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 10
       },
       "text": "fmt.Errorf"
     }
@@ -161,22 +223,36 @@
     {
       "kind": ":=",
       "at": {
-        "line": 270,
+        "line": 274,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 274,
+        "line": 278,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 278,
+        "line": 282,
         "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 287,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 290,
+        "column": 5
       }
     }
   ],

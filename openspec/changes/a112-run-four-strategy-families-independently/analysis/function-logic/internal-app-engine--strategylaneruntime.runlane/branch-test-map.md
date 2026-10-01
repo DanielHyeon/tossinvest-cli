@@ -1,15 +1,10 @@
 # Branch Test Map: `strategyLaneRuntime.runLane`
 
-- Source: `internal/app/engine/strategy_lane_runtime.go` (252-274); file SHA-256 `0526b42f2ba26f101931e4f30425ae64558dd1d7e0e0070fa5f9c9a2e34df104`. AST branch positions are authoritative.
-- Rows carry measured counts from Go coverage profiles, count mode.
-- Per-test attribution set: 두 엔진 바이너리의 테스트 **전체**(태그 491 · 무태그 438).
+- Source SHA-256: `4a7fd7fedb3237720070c6c4c6ef03030fa30c67e181fdb0a86053a8418390a6`; AST branch locations are authoritative.
+- Revision: **modified (a112 7.3, 2026-10-01).** 분기 불변(2). 관측 구성자가 desired/effective(활성화 위임) · 입력 digest 둘을 싣고, 열린 사이클의 거절 코드(`Cycle.Refusal`)를 기록하며(판정 (A)), `lane.Offer()` 를 구성자 밖 다음 줄로 옮겼다 — 레인 호출 순서 · 횟수 불변(Offer 한 번, 투입 시 RunBounded 한 번).
+- 편집 전 번들: `analysis/measurements/lot-7.3/pre-edit/internal-app-engine--strategylaneruntime.runlane/`. 변이 원장 `analysis/measurements/lot-7.3/mutation-7.3.tsv`.
 
-| Branch | AST kind | Position | Measured disposition |
-|---|---|---|---|
-| B1 | if | 256:2 | arm entered 170x (engine tagged suite); arm entered 170x (engine untagged suite); `TestADroppedTriggerNeverDrivesACycle`, `TestALatchOnlyReopensForAStrictlyNewerVerifiedActivation`, `TestALatchedLaneComesBackLatchedAfterTheProcessRestarts`, `TestALedgerThatCannotTakeTheLatchStopsTheCycle`, `TestARestoredLatchKeepsTheFirstCauseAcrossTheRestart`, `TestOneLatchedLaneLeavesItsSevenPeersOpenAcrossARestart`, `TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther` |
-| B2 | if | 268:2 | arm not entered (engine tagged suite); arm not entered (engine untagged suite); no per-test profile in the attribution set entered it |
-
-B2 는 오늘 생산에서 도달 불가다(생산 `Step` 이 오류를 내지 않는다). 구멍으로 남겨
-두고 5.6.2 에 넘긴다 — 채우는 척하지 않는다.
-
-A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.
+| Branch | Scenario anchor | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | if at 268:2 — 투입 거절(DISABLED · FULL) → 건강만 싣고 반환 | `a112_lane_coordinator_projection_test.go` `TestEightLatchedLanesAreProjectedInProductionOrderWithTheirFirstFailure`(DISABLED) | no — 이 로트가 바꾸지 않음 | yes |
+| B2 | if at 281:2 — 유계 사이클 오류 → 실패 문장 | 진입 0 — 생산 Step 은 오류를 내지 않는다(편집 전 번들 기록 그대로) | no — 이 로트가 바꾸지 않음 | n/a |

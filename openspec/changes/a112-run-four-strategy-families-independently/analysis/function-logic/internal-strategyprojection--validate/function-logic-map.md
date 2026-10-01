@@ -1,65 +1,52 @@
 # Function Logic Map: `Validate`
 
 - Source: `internal/strategyprojection/model.go`
-- Current source SHA-256: `0662dc5ab11eda0213bc4e887cdccbb71feb5115bfd5b4627dc71de81090d08f`
+- Source SHA-256: `f192e4f2f934f8bb3e165a47f2ecb7dda91874826c299aff0aa073f8082cbd01`
 - Signature: `Validate(params=1, results=1)`
-- Source range: `266:1`–`283:2`
-- AST evidence: `ast.json`, regenerated from the post-edit worktree; AST 분기 5개.
+- Source range: `270:1`–`294:2`
+- AST evidence: `ast.json` — **편집 뒤**(a112 7.3).
 - Risk scan: `risk-pattern-report.md`.
-- Lot: a112 L5 — 결정 54의 `ConfigDigest`/`BuildDigest` 노출.
-
-## 이 lot 이 무엇을 바꿨는가
-
-envelope 검사 바로 뒤에 분기 하나(B2)가 늘었다. runtime identity 가 반쪽이거나 비정규 digest 면
-스냅샷 전체를 무효로 만든다.
-
-## 왜 판정이 필요한가 — 이 값은 신뢰 경계를 건넌다
-
-스냅샷은 `strategyprojectionrpc` 의 Unix socket 을 건너 콘솔·httpapi 프로세스로 온다. 받는 쪽은
-`WithRuntimeIdentity` 를 거치지 않은 값을 볼 수 있다. 그리고 이 두 문자열은 운영자가 **그대로
-서명 매니페스트에 옮겨 적는** 값이라, 검사 없이 화면에 올리면 형식이 깨진 숫자를 사람이 받아 적는다.
-
-판정 규칙은 이 패키지의 다른 짝 필드와 같다 — `pairedIdentity` 로 「함께 있거나 함께 없거나」,
-그리고 있으면 `validDigest`(소문자 64자리 hex).
 
 ## Inputs and invariants
 
-- 입력은 AST signature 그대로다.
-- 불변식: 판정은 **거절만** 한다. 값을 고치거나 채우지 않는다.
-- 불변식: dormant/unavailable 스냅샷(둘 다 nil)은 유효하다 — 엔진이 만들지 않은 스냅샷에는
-  엔진의 build 를 알 방법이 없고, 그 부재가 정직한 답이다.
+- 새 두 분기는 거절 집합을 늘린다. 기본(미관측) 스냅숏은 계속 유효하다(`TestDormantAndUnavailableSnapshotsCarryEightUnobservedLanesAndTwoCoordinators`).
+- 새로 거절되는 정상 입력: 자식이 없는 옛 모양 envelope(7.3 전 엔진이 보낸 것) — 같은 이미지가 엔진 · 콘솔을 함께 교체하므로 혼합 창은 배포 절차 밖(review 잔여).
 
 ## Branches and early returns
 
-- Exact AST return nodes: `268:3`, `271:3`, `276:4`, `279:4`, `282:2`.
+- Exact AST return nodes: `272:3, 275:3, 280:4, 283:4, 288:3, 291:3, 293:2`.
 
-| Branch | AST kind | Source location | Edited by this lot | Disposition |
-|---|---|---|---|---|
-| B1 | if | 267:2 | 아니오 | envelope 3항(schema·시각·시장 수). 기존 그대로. |
-| B2 | if | 270:2 | **예 — 이 lot 이 추가** | runtime identity 판정. `validateRuntimeIdentity` 로 위임한다. |
-| B3 | range | 273:2 | 아니오 | KR·US 두 시장 루프. 기존 그대로. |
-| B4 | if | 275:3 | 아니오 | 시장 부재/교차 판정. 기존 그대로. |
-| B5 | if | 278:3 | 아니오 | 시장 레코드 판정 위임. 기존 그대로. |
+| Branch | AST kind | Source location | Meaning |
+|---|---|---|---|
+| B1 | if | 271:2 | envelope 3항 |
+| B2 | if | 274:2 | runtime identity |
+| B3 | range | 277:2 | KR · US |
+| B4 | if | 279:3 | 시장 부재/교차 |
+| B5 | if | 282:3 | 시장 레코드 판정 |
+| B6 | if | 287:2 | **(새)** 레인 자식: 개수 8 · 고정 순서 · 열쇠 · enum · 거절 코드 ⇔ REFUSED(판정 (A)) · 미관측 무사실 · 관측 사슬(물결 ⇔ 트리거, 투입만 시작, 연 사이클만 결과) |
+| B7 | if | 290:2 | **(새)** 조정자 자식: 개수 2 · KR,US · 미관측 무사실 · 사유 · 중재 코드 · 정렬 유일 gated · null 아닌 목록 |
 
 ## Calls and live bindings
 
-| Callee expression | Source location |
+| Callee expression | Position |
 |---|---|
-| snapshot.GeneratedAt.IsZero | 267:48 |
-| len | 267:81 |
-| errors.New | 268:10 |
-| validateRuntimeIdentity | 270:12 |
-| fmt.Errorf | 271:10 |
-| fmt.Errorf | 276:11 |
-| validateMarketProjection | 278:13 |
-| fmt.Errorf | 279:11 |
+| `snapshot.GeneratedAt.IsZero` | 271:48 |
+| `len` | 271:81 |
+| `errors.New` | 272:10 |
+| `validateRuntimeIdentity` | 274:12 |
+| `fmt.Errorf` | 275:10 |
+| `fmt.Errorf` | 280:11 |
+| `validateMarketProjection` | 282:13 |
+| `fmt.Errorf` | 283:11 |
+| `validateLanes` | 287:12 |
+| `fmt.Errorf` | 288:10 |
+| `validateCoordinators` | 290:12 |
+| `fmt.Errorf` | 291:10 |
 
 ## State mutations and fallbacks
 
-- 상태 변경 없음. fallback 없음 — 판정 실패는 오류이지 기본값이 아니다.
+- 상태 변경 없음.
 
 ## Safety conclusion
 
-- 읽기 전용 관측 계약의 판정이다. 주문·손절·사이징·Guardian·원장 경로에 닿지 않는다.
-- 추가된 B2 는 **거절을 늘릴 뿐** 어떤 스냅샷도 새로 통과시키지 않는다. 기존 스냅샷은 두 필드가
-  모두 nil 이므로 `pairedIdentity` 를 통과한다 (`TestDormantSnapshotHasNoRuntimeIdentity` 실측).
+- High-risk 아님 — 읽기 전용 투영(주문 · 원장 · 활성화 · 토글 쓰기 없음). 기존 시장 레코드의 판정은 불변이고 additive 자식만 더했다.

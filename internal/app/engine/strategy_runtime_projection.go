@@ -48,6 +48,14 @@ func (c *Context) Read(ctx context.Context) (strategyprojection.Snapshot, error)
 	// 거절한다 — 이 기능이 없애려던 바로 그 실패다.
 	snapshot = strategyprojection.WithRuntimeIdentity(snapshot,
 		strategyRuntimeConfigDigest(), strategyRuntimeBuildDigest())
+	// a112 7.3: 여덟 레인은 발행 시점이 아니라 **지금** 상태를 읽어 덧씌운다(레인은 조립 새로 고침보다 자주 돈다). 런타임이 아직 없으면
+	// (첫 생산 주기 전) 저장소의 미관측 기본값이 그대로 나간다. 읽기만 한다 — projection 은 레인 접근자와 관측 기록만 읽는다.
+	c.strategyLanesMu.Lock()
+	lanes := c.strategyLanes
+	c.strategyLanesMu.Unlock()
+	if lanes != nil {
+		snapshot.Lanes = lanes.projection()
+	}
 	if supervisor == nil {
 		return snapshot, nil
 	}
@@ -98,7 +106,10 @@ func (c *Context) publishStrategyRuntime(assembly StrategyEntryProductionAssembl
 func strategyProjectionFromAssembly(assembly StrategyEntryProductionAssembly) strategyprojection.Snapshot {
 	observed := assembly.Schedule.ObservedAt.UTC()
 	snapshot := strategyprojection.DormantSnapshot(observed)
-	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
+	for index, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
+		// a112 7.3: 조정자 자식은 worker 승격과 무관하게 이 시장의 조정 결과를 그대로 싣는다(아래 시장 레코드의 갈래보다 앞 — 실패
+		// 갈래에서도 보인다). 고정 순서 KR, US 는 DormantSnapshot 의 기본값 순서와 같다.
+		snapshot.Coordinators[index] = strategyCoordinatorProjection(market, assembly.proposals.forMarket(market))
 		projectionMarket := strategyprojection.Market(market)
 		schedule := assembly.Schedule.For(market)
 		candidate := assembly.Candidate.For(market)
@@ -121,7 +132,8 @@ func strategyProjectionFromAssembly(assembly StrategyEntryProductionAssembly) st
 		// 화면이 보는 제안은 dispatch 가 받는 제안과 같아야 한다. 그래서
 		// 여기서도 같은 경계를 쓴다 — 따로 세면 화면과 실제가 갈라진다.
 		// a112 5.2.2.2: 주문 경로와 같은 handoff 목록(dispatchHandoffs)에서 조정자 순서의 첫 승인 범위를 보임. 활성화 없는 시장은
-		// 오늘처럼 시장 단위 handoff 하나. 서명 활성화된 두 범위 시장은 첫 범위만 화면에 오름 — 범위별 행은 이 로트 밖(review 잔여).
+		// 오늘처럼 시장 단위 handoff 하나. 서명 활성화된 두 범위 시장은 이 시장 레코드에 첫 범위만 오름 — 범위 전부는 조정자 자식의
+		// selected[] 가 싣는다(a112 7.3, R4 — strategyCoordinatorProjection, 같은 handoff 목록 · 같은 술어).
 		var result strategyflow.Result
 		handedOff := false
 		for _, handoff := range assembly.proposals.forMarket(market).dispatchHandoffs() {

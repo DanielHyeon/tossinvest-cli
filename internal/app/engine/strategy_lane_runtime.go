@@ -48,6 +48,12 @@ type strategyLaneObservation struct {
 	Abandoned bool
 	Latched   bool
 	Emitted   bool
+	// 아래는 a112 7.3 투영이 읽는 관측 시점 값이다. Wave 는 record 가 찍는 시장별 물결 번호(0 = 미관측), Desired · Effective 는 그 물결이
+	// 받은 활성화가 이 레인에 대해 말한 값, 두 digest 는 그 물결에 이 레인이 받은 입력(없으면 빈 값)이다.
+	Wave                           uint64
+	Refusal                        strategyarbiter.Refusal
+	Desired, Effective             strategyrouter.DesiredState
+	SnapshotDigest, EvidenceDigest string
 }
 
 // strategyLaneRuntime 은 프로세스가 사는 내내 **같은** 여덟 레인이다.
@@ -74,6 +80,8 @@ type strategyLaneRuntime struct {
 	// latches 는 지금 **열려 있는** 원장 기록이다. 원장의 순번을 들고 있어야
 	// 복구를 요청할 수 있다.
 	latches map[strategyworker.Key]journal.StrategyLaneLatch
+	// waves 는 시장별 evaluate 물결 번호다(a112 7.3, 판정 Q1=(B)). 프로세스 수명이고 record 가 mu 아래에서 올린다.
+	waves map[StrategyMarket]uint64
 	// unmatched 는 이 빌드에 없는 레인을 가리키는 기록이다. 버리지 않고 들고
 	// 있는 이유는 그것이 복구를 요청할 수 있는 유일한 손잡이이기 때문이다.
 	unmatched []journal.StrategyLaneLatch
@@ -212,7 +220,7 @@ func (runtime *strategyLaneRuntime) evaluate(ctx context.Context, market Strateg
 		}
 		observations = append(observations, runtime.runLane(ctx, lane, promotion, input))
 	}
-	runtime.record(observations)
+	runtime.record(market, observations)
 	// 남기지 못한 잠금은 오류다. 조용히 넘기면 다음 재시작이 잠긴 레인을 열고,
 	// 그것이 이 태스크가 없애려는 바로 그 동작이다.
 	if err := runtime.persistMarketLatches(ctx, market, activationGeneration, runtime.clk.Now()); err != nil {
@@ -252,7 +260,11 @@ func strategyLaneInputs(accountRef string, authority strategyProposalMarketAutho
 func (runtime *strategyLaneRuntime) runLane(ctx context.Context, lane *strategyworker.Lane,
 	promotion strategyrouter.FamilyActivation, input strategyworker.Input,
 ) strategyLaneObservation {
-	observation := strategyLaneObservation{Key: lane.Key(), Trigger: lane.Offer()}
+	// a112 7.3: 투영이 읽을 관측 시점 값 — 활성화가 이 레인 자기 열쇠에 대해 말한 상태와 이번 입력의 digest. 레인 상태는 건드리지 않는다
+	// (Desired · Effective 는 worker 값 위임, 입력은 이미 받은 값).
+	observation := strategyLaneObservation{Key: lane.Key(), Desired: lane.Desired(promotion), Effective: lane.Effective(promotion),
+		SnapshotDigest: input.SnapshotDigest, EvidenceDigest: strategyLaneEvidenceDigest(input)}
+	observation.Trigger = lane.Offer()
 	if observation.Trigger != strategyworker.TriggerEnqueued {
 		observation.Health = lane.Health()
 		return observation
@@ -261,6 +273,7 @@ func (runtime *strategyLaneRuntime) runLane(ctx context.Context, lane *strategyw
 	observation.Start = start
 	observation.Outcome = bounded.Cycle.Outcome
 	observation.Detail = bounded.Cycle.Detail
+	observation.Refusal = bounded.Cycle.Refusal
 	observation.Abnormal = bounded.Abnormal
 	observation.Cancelled = bounded.Cancelled
 	observation.Abandoned = bounded.Abandoned
@@ -274,13 +287,23 @@ func (runtime *strategyLaneRuntime) runLane(ctx context.Context, lane *strategyw
 }
 
 // record 는 이번 주기의 관측을 레인 열쇠별로 덮어쓴다.
-func (runtime *strategyLaneRuntime) record(observations []strategyLaneObservation) {
+//
+// a112 7.3(판정 Q1=(B)): 이 시장의 물결 번호를 하나 올려 이번 관측들에 찍는다. 같은 잠금 안에서 올리고 찍어야 두 물결이 한 번호를
+// 나눠 갖지 않는다. 관측이 없는 호출은 물결이 아니다(번호를 올리지 않음).
+func (runtime *strategyLaneRuntime) record(market StrategyMarket, observations []strategyLaneObservation) {
 	if runtime == nil || len(observations) == 0 {
 		return
 	}
 	runtime.mu.Lock()
 	defer runtime.mu.Unlock()
+	if runtime.waves == nil {
+		runtime.waves = make(map[StrategyMarket]uint64, 2)
+	}
+	if runtime.waves[market] < ^uint64(0) {
+		runtime.waves[market]++
+	}
 	for _, observation := range observations {
+		observation.Wave = runtime.waves[market]
 		runtime.observed[observation.Key] = observation
 	}
 }

@@ -1,0 +1,78 @@
+{
+  "file": "internal/strategyprojection/model.go",
+  "source_sha256": "f192e4f2f934f8bb3e165a47f2ecb7dda91874826c299aff0aa073f8082cbd01",
+  "package": "strategyprojection",
+  "function": "UnavailableSnapshot",
+  "signature": "UnavailableSnapshot(params=1, results=1)",
+  "start": {
+    "line": 186,
+    "column": 1
+  },
+  "end": {
+    "line": 192,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 188,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 16
+      },
+      "text": "generatedAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 189,
+        "column": 13
+      },
+      "text": "unknownMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 190,
+        "column": 13
+      },
+      "text": "unknownMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 12
+      },
+      "text": "defaultLanes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 191,
+        "column": 42
+      },
+      "text": "defaultCoordinators"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 187,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

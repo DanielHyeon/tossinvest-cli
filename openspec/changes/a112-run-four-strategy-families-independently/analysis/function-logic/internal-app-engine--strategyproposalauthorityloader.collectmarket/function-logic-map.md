@@ -1,9 +1,9 @@
 # Function Logic Map: `strategyProposalAuthorityLoader.collectMarket`
 
 - Source: `internal/app/engine/strategy_proposal_authority.go`
-- Source SHA-256: `a356e5ead7d719e7b791423645a86b2a2f8b2eed26066127eafb1928ec411288`
+- Source SHA-256: `60e0ef9270e3102bb69ce930cdffb41a5c4653dca69efdc94d32374823161bae`
 - Signature: `strategyProposalAuthorityLoader.collectMarket(params=5, results=1)`
-- Source range: `295:1`–`441:2`
+- Source range: `293:1`–`439:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2).
 - Risk scan: `risk-pattern-report.md`.
 
@@ -13,81 +13,81 @@
 
 ## Branches and early returns
 
-- Exact AST return nodes: `310:3, 315:3, 318:3, 321:3, 326:3, 338:4, 350:3, 359:3, 390:3, 398:3, 407:3, 416:3, 425:3, 432:3, 436:2`.
+- Exact AST return nodes: `308:3, 313:3, 316:3, 319:3, 324:3, 336:4, 348:3, 357:3, 388:3, 396:3, 405:3, 414:3, 423:3, 430:3, 434:2`.
 
 | Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
-| B1 | if | 314:2 | 편집 전과 같은 분기(좌표만) |
-| B2 | if | 317:2 | 편집 전과 같은 분기(좌표만) |
-| B3 | if | 320:2 | 편집 전과 같은 분기(좌표만) |
-| B4 | if | 325:2 | 편집 전과 같은 분기(좌표만) |
-| B5 | if | 329:2 | 편집 전과 같은 분기(좌표만) |
-| B6 | range | 335:2 | 편집 전과 같은 분기(좌표만) |
-| B7 | if | 337:3 | 편집 전과 같은 분기(좌표만) |
-| B8 | if | 349:2 | 편집 전과 같은 분기(좌표만) |
-| B9 | if | 354:2 | 편집 전과 같은 분기(좌표만) |
-| B10 | if | 385:2 | 편집 전과 같은 분기(좌표만) |
-| B11 | if | 392:2 | 편집 전과 같은 분기(좌표만) |
-| B12 | if | 401:2 | 편집 전과 같은 분기(좌표만) |
-| B13 | if | 409:2 | 편집 전과 같은 분기(좌표만) |
-| B14 | if | 419:2 | 편집 전과 같은 분기(좌표만) |
-| B15 | if | 427:2 | 편집 전과 같은 분기(좌표만) |
+| B1 | if | 312:2 | 편집 전과 같은 분기(좌표만) |
+| B2 | if | 315:2 | 편집 전과 같은 분기(좌표만) |
+| B3 | if | 318:2 | 편집 전과 같은 분기(좌표만) |
+| B4 | if | 323:2 | 편집 전과 같은 분기(좌표만) |
+| B5 | if | 327:2 | 편집 전과 같은 분기(좌표만) |
+| B6 | range | 333:2 | 편집 전과 같은 분기(좌표만) |
+| B7 | if | 335:3 | 편집 전과 같은 분기(좌표만) |
+| B8 | if | 347:2 | 편집 전과 같은 분기(좌표만) |
+| B9 | if | 352:2 | 편집 전과 같은 분기(좌표만) |
+| B10 | if | 383:2 | 편집 전과 같은 분기(좌표만) |
+| B11 | if | 390:2 | 편집 전과 같은 분기(좌표만) |
+| B12 | if | 399:2 | 편집 전과 같은 분기(좌표만) |
+| B13 | if | 407:2 | 편집 전과 같은 분기(좌표만) |
+| B14 | if | 417:2 | 편집 전과 같은 분기(좌표만) |
+| B15 | if | 425:2 | 편집 전과 같은 분기(좌표만) |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `len` | 311:90 |
-| `len` | 314:31 |
-| `fail` | 315:10 |
-| `fail` | 318:10 |
-| `fail` | 321:10 |
-| `strings.TrimSpace` | 323:13 |
-| `loader.getenv` | 323:31 |
-| `DecodeString` | 324:14 |
-| `base64.StdEncoding.Strict` | 324:14 |
-| `base64.StdEncoding.EncodeToString` | 325:19 |
-| `len` | 325:72 |
-| `fail` | 326:10 |
-| `strings.TrimSpace` | 332:12 |
-| `loader.getenv` | 332:30 |
-| `make` | 333:13 |
-| `len` | 333:58 |
-| `make` | 334:14 |
-| `len` | 334:59 |
-| `entry.approved.Symbol` | 336:13 |
-| `bySymbol.approved.Valid` | 337:22 |
-| `fail` | 338:11 |
-| `append` | 341:13 |
-| `entry.route.Request` | 341:97 |
-| `loader.load` | 343:16 |
-| `strategyrouter.Market` | 344:42 |
-| `strings.TrimSpace` | 344:111 |
-| `loader.getenv` | 344:129 |
-| `ed25519.PublicKey` | 345:15 |
-| `strings.TrimSpace` | 348:23 |
-| `loader.getenv` | 348:41 |
-| `batch.ManifestDigest` | 349:19 |
-| `fail` | 350:10 |
-| `batch.Fault` | 354:22 |
-| `fail` | 355:13 |
-| `absence.String` | 357:37 |
-| `loader.familyGateFor` | 373:9 |
-| `coordinateMarketProposals` | 374:26 |
-| `len` | 375:30 |
-| `distinctGatedOutcomes` | 375:54 |
-| `fail` | 386:13 |
-| `fail` | 393:13 |
-| `fail` | 402:13 |
-| `fail` | 410:13 |
-| `string` | 412:40 |
-| `arbitration.entries` | 418:23 |
-| `fail` | 420:13 |
-| `len` | 427:5 |
-| `fail` | 428:13 |
-| `len` | 438:17 |
-| `len` | 438:53 |
-| `strategyProposalSetDigest` | 439:23 |
+| `len` | 309:90 |
+| `len` | 312:31 |
+| `fail` | 313:10 |
+| `fail` | 316:10 |
+| `fail` | 319:10 |
+| `strings.TrimSpace` | 321:13 |
+| `loader.getenv` | 321:31 |
+| `DecodeString` | 322:14 |
+| `base64.StdEncoding.Strict` | 322:14 |
+| `base64.StdEncoding.EncodeToString` | 323:19 |
+| `len` | 323:72 |
+| `fail` | 324:10 |
+| `strings.TrimSpace` | 330:12 |
+| `loader.getenv` | 330:30 |
+| `make` | 331:13 |
+| `len` | 331:58 |
+| `make` | 332:14 |
+| `len` | 332:59 |
+| `entry.approved.Symbol` | 334:13 |
+| `bySymbol.approved.Valid` | 335:22 |
+| `fail` | 336:11 |
+| `append` | 339:13 |
+| `entry.route.Request` | 339:97 |
+| `loader.load` | 341:16 |
+| `strategyrouter.Market` | 342:42 |
+| `strings.TrimSpace` | 342:111 |
+| `loader.getenv` | 342:129 |
+| `ed25519.PublicKey` | 343:15 |
+| `strings.TrimSpace` | 346:23 |
+| `loader.getenv` | 346:41 |
+| `batch.ManifestDigest` | 347:19 |
+| `fail` | 348:10 |
+| `batch.Fault` | 352:22 |
+| `fail` | 353:13 |
+| `absence.String` | 355:37 |
+| `loader.familyGateFor` | 371:9 |
+| `coordinateMarketProposals` | 372:26 |
+| `len` | 373:30 |
+| `distinctGatedOutcomes` | 373:54 |
+| `fail` | 384:13 |
+| `fail` | 391:13 |
+| `fail` | 400:13 |
+| `fail` | 408:13 |
+| `string` | 410:40 |
+| `arbitration.entries` | 416:23 |
+| `fail` | 418:13 |
+| `len` | 425:5 |
+| `fail` | 426:13 |
+| `len` | 436:17 |
+| `len` | 436:53 |
+| `strategyProposalSetDigest` | 437:23 |
 
 ## State mutations and fallbacks
 
@@ -96,3 +96,5 @@
 ## Safety conclusion
 
 - 동작 불변 리팩터(같은 식) — `TestTheProposalSetDigestMatchesWhatTheAssemblyRecords` 가 실제 중재 경로로 잰다; 변이 X18(조립 쪽만 바뀜) CAUGHT.
+
+a112 7.3 — 같은 파일 편집(관측 필드 · record 인자 / QueueDropCount 주석)으로 줄만 밀림

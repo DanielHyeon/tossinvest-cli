@@ -1,6 +1,6 @@
 # Branch Test Map: `strategyFamilyLaneStep`
 
-- Source: `internal/app/engine/strategy_lane_runtime.go` (164-170); file SHA-256 `0526b42f2ba26f101931e4f30425ae64558dd1d7e0e0070fa5f9c9a2e34df104`. AST branch positions are authoritative.
+- Source: `internal/app/engine/strategy_lane_runtime.go` (172-178); file SHA-256 `4a7fd7fedb3237720070c6c4c6ef03030fa30c67e181fdb0a86053a8418390a6`. AST branch positions are authoritative.
 - Rows carry measured counts from Go coverage profiles, count mode.
 - Per-test attribution set: 두 엔진 바이너리의 테스트 **전체**(태그 491 · 무태그 438).
 
@@ -8,7 +8,7 @@
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | branchless happy path | 164:1 | arm entered 170x (engine tagged suite); arm entered 170x (engine untagged suite); `TestADroppedTriggerNeverDrivesACycle`, `TestALatchOnlyReopensForAStrictlyNewerVerifiedActivation`, `TestALatchedLaneComesBackLatchedAfterTheProcessRestarts`, `TestALedgerThatCannotTakeTheLatchStopsTheCycle`, `TestARestoredLatchKeepsTheFirstCauseAcrossTheRestart`, `TestOneLatchedLaneLeavesItsSevenPeersOpenAcrossARestart`, `TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther` |
+| B1 | branchless happy path | 172:1 | arm entered 170x (engine tagged suite); arm entered 170x (engine untagged suite); `TestADroppedTriggerNeverDrivesACycle`, `TestALatchOnlyReopensForAStrictlyNewerVerifiedActivation`, `TestALatchedLaneComesBackLatchedAfterTheProcessRestarts`, `TestALedgerThatCannotTakeTheLatchStopsTheCycle`, `TestARestoredLatchKeepsTheFirstCauseAcrossTheRestart`, `TestOneLatchedLaneLeavesItsSevenPeersOpenAcrossARestart`, `TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther` |
 
 RED→GREEN: 둘째 인자(서명된 승격)를 더한 편집은 두 열거표를 **실제로 빨갛게** 만들었고
 (`TestOnlyThePackageLevelStepEverRunsInsideALane` 의 얼린 철자,

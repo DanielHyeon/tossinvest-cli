@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_runtime_projection.go",
-  "source_sha256": "95474831b04d24c21d90d72aac7349fe0682d2cbee9beb02c3be6307ac9dc510",
+  "source_sha256": "4302edefe72942bd1f4f7f4aa51b3c03e26ef97c13c3d8d52a0b6be94a2eef9f",
   "package": "engine",
   "function": "Read",
   "receiver": "Context",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 66,
+    "line": 74,
     "column": 2
   },
   "branches": [
@@ -42,31 +42,39 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 51,
+        "line": 56,
         "column": 2
       }
     },
     {
       "id": "B5",
-      "kind": "range",
+      "kind": "if",
       "at": {
-        "line": 54,
+        "line": 59,
         "column": 2
       }
     },
     {
       "id": "B6",
-      "kind": "if",
+      "kind": "range",
       "at": {
-        "line": 56,
-        "column": 3
+        "line": 62,
+        "column": 2
       }
     },
     {
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 60,
+        "line": 64,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 68,
         "column": 3
       }
     }
@@ -96,14 +104,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 52,
+        "line": 60,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 65,
+        "line": 73,
         "column": 2
       }
     }
@@ -176,7 +184,31 @@
     {
       "kind": "call",
       "at": {
+        "line": 53,
+        "column": 2
+      },
+      "text": "c.strategyLanesMu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
         "line": 55,
+        "column": 2
+      },
+      "text": "c.strategyLanesMu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 57,
+        "column": 20
+      },
+      "text": "lanes.projection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
         "column": 17
       },
       "text": "supervisor.Snapshot"
@@ -184,7 +216,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 59,
+        "line": 67,
         "column": 23
       },
       "text": "strategyprojection.Market"
@@ -192,7 +224,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 61,
+        "line": 69,
         "column": 15
       },
       "text": "strategyprojection.WithMarketFailure"
@@ -223,28 +255,42 @@
     {
       "kind": ":=",
       "at": {
-        "line": 55,
+        "line": 54,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 57,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 59,
+        "line": 63,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 60,
+        "line": 67,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 68,
         "column": 6
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 61,
+        "line": 69,
         "column": 4
       }
     }

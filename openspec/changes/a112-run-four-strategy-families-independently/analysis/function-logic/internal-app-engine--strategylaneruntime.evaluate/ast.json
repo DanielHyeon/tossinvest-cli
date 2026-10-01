@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_lane_runtime.go",
-  "source_sha256": "0526b42f2ba26f101931e4f30425ae64558dd1d7e0e0070fa5f9c9a2e34df104",
+  "source_sha256": "4a7fd7fedb3237720070c6c4c6ef03030fa30c67e181fdb0a86053a8418390a6",
   "package": "engine",
   "function": "evaluate",
   "receiver": "strategyLaneRuntime",
   "signature": "strategyLaneRuntime.evaluate(params=5, results=1)",
   "start": {
-    "line": 191,
+    "line": 199,
     "column": 1
   },
   "end": {
-    "line": 224,
+    "line": 232,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 194,
+        "line": 202,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 200,
+        "line": 208,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "range",
       "at": {
-        "line": 205,
+        "line": 213,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "range",
       "at": {
-        "line": 207,
+        "line": 215,
         "column": 3
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 208,
+        "line": 216,
         "column": 4
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 218,
+        "line": 226,
         "column": 2
       }
     }
@@ -67,28 +67,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 195,
+        "line": 203,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 201,
+        "line": 209,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 219,
+        "line": 227,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 223,
+        "line": 231,
         "column": 2
       }
     }
@@ -97,7 +97,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 200,
+        "line": 208,
         "column": 12
       },
       "text": "runtime.recoverMarketLanes"
@@ -105,7 +105,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 203,
+        "line": 211,
         "column": 11
       },
       "text": "runtime.lanesFor"
@@ -113,7 +113,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 212,
         "column": 18
       },
       "text": "make"
@@ -121,7 +121,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 204,
+        "line": 212,
         "column": 53
       },
       "text": "len"
@@ -129,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 208,
+        "line": 216,
         "column": 7
       },
       "text": "lane.Owns"
@@ -137,7 +137,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 213,
+        "line": 221,
         "column": 18
       },
       "text": "append"
@@ -145,7 +145,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 213,
+        "line": 221,
         "column": 39
       },
       "text": "runtime.runLane"
@@ -153,7 +153,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 215,
+        "line": 223,
         "column": 2
       },
       "text": "runtime.record"
@@ -161,7 +161,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 218,
+        "line": 226,
         "column": 12
       },
       "text": "runtime.persistMarketLatches"
@@ -169,7 +169,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 218,
+        "line": 226,
         "column": 76
       },
       "text": "runtime.clk.Now"
@@ -177,7 +177,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 223,
+        "line": 231,
         "column": 9
       },
       "text": "runtime.staleLatchError"
@@ -187,49 +187,49 @@
     {
       "kind": ":=",
       "at": {
-        "line": 200,
+        "line": 208,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 203,
+        "line": 211,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 204,
+        "line": 212,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 206,
+        "line": 214,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 209,
+        "line": 217,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 213,
+        "line": 221,
         "column": 3
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 218,
+        "line": 226,
         "column": 5
       }
     }

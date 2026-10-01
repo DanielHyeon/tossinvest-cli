@@ -1,0 +1,86 @@
+{
+  "file": "internal/strategyprojection/model.go",
+  "source_sha256": "0662dc5ab11eda0213bc4e887cdccbb71feb5115bfd5b4627dc71de81090d08f",
+  "package": "strategyprojection",
+  "function": "Clone",
+  "signature": "Clone(params=1, results=1)",
+  "start": {
+    "line": 221,
+    "column": 1
+  },
+  "end": {
+    "line": 228,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 224,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 12
+      },
+      "text": "cloneRuntimeIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 61
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 95
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 25
+      },
+      "text": "cloneMarket"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 222,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 225,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

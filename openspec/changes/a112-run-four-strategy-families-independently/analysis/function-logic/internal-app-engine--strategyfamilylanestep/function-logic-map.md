@@ -1,9 +1,9 @@
 # Function Logic Map: `strategyFamilyLaneStep`
 
-- Source: `internal/app/engine/strategy_lane_runtime.go` (164-170)
+- Source: `internal/app/engine/strategy_lane_runtime.go` (172-178)
 - Function: `strategyFamilyLaneStep` in package `engine`
 - Signature: `strategyFamilyLaneStep(params=2, results=1)`
-- File SHA-256: `0526b42f2ba26f101931e4f30425ae64558dd1d7e0e0070fa5f9c9a2e34df104`
+- File SHA-256: `4a7fd7fedb3237720070c6c4c6ef03030fa30c67e181fdb0a86053a8418390a6`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 0.
 - Risk scan: `risk-pattern-report.md`.
@@ -43,11 +43,11 @@ The signature above is the exhaustive input/result record; this map does not inf
 
 분기가 없다. 아래 한 줄은 행복 경로이며 이 함수의 몸통 진입 수다.
 
-Exact AST return positions: 167:2, 168:3.
+Exact AST return positions: 175:2, 176:3.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | branchless happy path | 164:1 | arm entered 170x (engine tagged suite); arm entered 170x (engine untagged suite); `TestADroppedTriggerNeverDrivesACycle`, `TestALatchOnlyReopensForAStrictlyNewerVerifiedActivation`, `TestALatchedLaneComesBackLatchedAfterTheProcessRestarts`, `TestALedgerThatCannotTakeTheLatchStopsTheCycle`, `TestARestoredLatchKeepsTheFirstCauseAcrossTheRestart`, `TestOneLatchedLaneLeavesItsSevenPeersOpenAcrossARestart`, `TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther` |
+| B1 | branchless happy path | 172:1 | arm entered 170x (engine tagged suite); arm entered 170x (engine untagged suite); `TestADroppedTriggerNeverDrivesACycle`, `TestALatchOnlyReopensForAStrictlyNewerVerifiedActivation`, `TestALatchedLaneComesBackLatchedAfterTheProcessRestarts`, `TestALedgerThatCannotTakeTheLatchStopsTheCycle`, `TestARestoredLatchKeepsTheFirstCauseAcrossTheRestart`, `TestOneLatchedLaneLeavesItsSevenPeersOpenAcrossARestart`, `TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther` |
 
 위 수는 이 함수를 호출하는 `runLane` 의 `lane.RunBounded` 자리에서 잰 것이다
 (`internal-app-engine--strategylaneruntime.runlane` 의 B1 과 같은 실행). 반환되는
@@ -57,7 +57,7 @@ Exact AST return positions: 167:2, 168:3.
 
 | Callee expression | Position |
 |---|---|
-| `lane.Run` | 168:10 |
+| `lane.Run` | 176:10 |
 
 ## State mutations and fallbacks
 
@@ -68,3 +68,7 @@ Exact AST return positions: 167:2, 168:3.
 - Safe edit boundary: 인자 타입 둘이 이 함수가 닿을 수 있는 전부다.
 - High-risk impact: yes — 레인 안에서 도는 값의 목록은
   `TestOnlyThePackageLevelStepEverRunsInsideALane` 이 패키지 전체에서 세어 한 줄로 얼린다.
+
+a112 7.3 — 같은 파일 편집(관측 필드 · record 인자 / QueueDropCount 주석)으로 줄만 밀림
+
+a112 7.3 판정 (A) — 같은 파일 관측 필드 한 줄로 줄만 다시 밀림

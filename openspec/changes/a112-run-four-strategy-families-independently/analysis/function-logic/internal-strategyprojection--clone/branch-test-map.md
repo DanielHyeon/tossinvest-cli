@@ -1,14 +1,9 @@
 # Branch Test Map: `Clone`
 
-- Source SHA-256: `0662dc5ab11eda0213bc4e887cdccbb71feb5115bfd5b4627dc71de81090d08f`; AST branch locations are authoritative.
-- 이 lot 의 편집은 직선 코드 한 항목이며 분기 수를 바꾸지 않았다(편집 전후 1개).
+- Source SHA-256: `f192e4f2f934f8bb3e165a47f2ecb7dda91874826c299aff0aa073f8082cbd01`; AST branch locations are authoritative.
+- Revision: **modified (a112 7.3, 2026-10-01).** 분기 불변(1). 직선 코드: 자식 둘의 깊은 복사(`cloneLanes` · `cloneCoordinators`)를 구성자에 더했다.
+- 편집 전 번들: `analysis/measurements/lot-7.3/pre-edit/internal-strategyprojection--clone/`. 변이 원장 `analysis/measurements/lot-7.3/mutation-7.3.tsv`.
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | range at 224:2 — 시장 두 개 복사 | `TestCloneCarriesRuntimeIdentityWithoutSharingIt`, `TestMarketFailureReplacesOnlyExactMarketWithoutFallback` | 예 — B1 을 도는 새 테스트가 "Clone 이 runtime identity 를 떨어뜨렸다"로 실패 | 예 — `go test ./internal/strategyprojection/ -count=1` ok |
-
-## 직선 편집의 반증 (분기가 아니라 값)
-
-| 뮤테이션 | 결과 |
-|---|---|
-| M1: `Runtime: cloneRuntimeIdentity(...)` 삭제 | KILLED — `TestStrategyRuntimeRESTCarriesTheDigestsTheOperatorMustWriteDown` 실패(REST 응답의 `runtime.configDigest` 가 null). 원복 후 심볼 1개 확인. |
+| B1 | range at 228:2 — 시장 두 개 복사(불변) | `TestCloneCarriesRuntimeIdentityWithoutSharingIt` · `a112_lane_coordinator_children_test.go` `TestCloneDeepCopiesLaneAndCoordinatorChildren` | yes(자식 복사 — 직선) — 편집 전 컴파일 실패, 변이 P12(얕은 복사) CAUGHT(`analysis/measurements/lot-7.3/mutation-7.3.tsv`) | yes |
