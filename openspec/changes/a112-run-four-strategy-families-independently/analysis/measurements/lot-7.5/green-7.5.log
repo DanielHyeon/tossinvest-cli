@@ -1,0 +1,37 @@
+# GREEN a112 7.5 격리(seam 태그 분리 수리 뒤) — HEAD 1edee667 + 로트 스크래치 커밋
+## gate delta
+head findings 173 lot findings 173
+ONLY-HEAD 0
+ONLY-LOT 0
+## make lint
+go vet ./...
+go vet -tags tossos_testseams ./...
+lint exit=0
+## 무태그
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.419s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	0.220s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc	9.886s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	0.924s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	128.782s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	520.922s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	71.186s
+## tossos_testseams
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.435s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	0.178s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc	8.772s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	0.863s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	117.684s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	420.429s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	70.050s
+## make test-race
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	2.276s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	1.638s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	27.190s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	1.034s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	9.081s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	1.295s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	1.077s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	25.026s
+## race 완전성 가드
+OK
+END

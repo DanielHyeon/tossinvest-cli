@@ -6011,3 +6011,58 @@ MUST NOT 인용) · 그 식별자는 로그 · journal 질의 · 읽기 전용 p
 `expvar` import) · Q02(cmd 생산 파일이 `otel/metric` import) **2/2 CAUGHT**(새 파일 변이 — 하네스가 끝나면 지움).
 
 **not-applicable(비례 원칙).** FLM/BTM: 기존 함수 편집 0(새 시험 파일 하나) · High-risk 경로 무관. 생산 동작 변화 0.
+
+## 2026-10-01 태스크 7.5 — 성능 · 운용성: 레인 지연 독립 · 상태 행 일관 · fan-out · 멈춘 물결 · 포화 하 안전 cadence
+
+**판정(Manager, 코드 전 정지 보고 뒤).** D1=(A): 스펙 「한 instance 의 wait/timeout 이 peer 의 evaluation cycle 을 바꾸지 않는다」 · 설계 「느린 worker 때문에 다른
+worker 가 기다리지 않게」가 규범인데, 코드는 한 시장의 레인 넷을 `evaluate` 안에서 **순차**로 돌려 앞 레인의 멈춤이 뒤 레인을 그 마감 시한만큼 세웠다(스펙
+시나리오 「KR breakout timeout」이 통과한 것은 breakout 이 KR 순서의 마지막이었기 때문 — 우연 통과). → 시장 주기 **안에서** 레인 동시 실행 + join. D2: 7.3 투영이
+레인 한 행을 접근자별 잠금으로 읽어 찢긴 행(LATCHED 인데 revision 0)이 가능했다(실결함 후보) → `Lane.Status()` 한 잠금 + 투영 단일화. C1~C3 승인.
+
+**편집.**
+- engine `strategy_lane_runtime.go`: `evaluate` — 레인마다 goroutine 하나 · `sync.WaitGroup` join(시장 주기 안 — 조건 ①), 관측은 레인 순서 색인 칸, 레인 goroutine
+  의 panic 은 recover 해 두었다가 join 뒤 **시장 주기 goroutine 에서 다시 던짐**(순차 때와 같은 `invokeStrategyCycle` 회복 경로 — 다른 goroutine 의 panic 은 그
+  경로가 못 잡아 프로세스를 끝낸다). `runLane` — `RunBounded` 에 `runtime.laneStepFor(lane, promotion)` 을 넘긴다. 생산 정의
+  `strategy_lane_step.go`(`//go:build !tossos_testseams`)는 `return strategyFamilyLaneStep(lane, promotion)` 한 줄, 시험 seam(런타임별 훅)은
+  `strategy_lane_step_testseam.go`(`//go:build tossos_testseams`)에만 — **생산 바이너리에 seam 0**.
+- **핀이 잡은 자기 이탈.** 승인안은 「태그 testseam seam」이었는데 첫 구현은 무태그 함수 필드(`strategyLaneRuntime.laneStep`)였다 — 생산 코드 어디서든 `*Context`
+  클로저로 채울 수 있어 레인 경계를 다시 연다. 격리 검증에서 5.1.2.1 핀 `TestOnlyThePackageLevelStepEverRunsInsideALane` 이 잡았다(`green-7.5-first.log` — 그 한
+  건만 FAIL). Manager 판정 (A): 승인안대로 태그 분리 + 핀 **강화** — 자리 철자 단일 · 무태그 정의 본문 AST 고정 · seam 파일의 빌드 태그 단언 · 다른 정의 0
+  (`assertLaneStepForIsTheProductionStepOutsideTestSeams`). D1 두 시험은 태그 시험 파일 `a112_lane_latency_testseam_test.go` 로 옮겼다.
+- engine `strategy_lane_projection.go`: `strategyLaneProjection` 이 상태를 `lane.Status()` 한 번으로 읽음(열쇠 · 정책 · horizon · runtime 은 불변 worker 값).
+- strategyworker: `Health` 판정을 `healthLocked` 로 옮기고(판정 한 벌) `LaneStatus` · `Status()`(한 잠금 행) 추가. `Makefile` — 새 동시성 시험 파일 둘을
+  `RACE_ENGINE_FILES`, 여섯 시험을 `RACE_ENGINE_TESTS` 에(완전성 가드 `tools/sdd/test_race_detector_actually_runs.py` 대조 대상), 엔진 race 줄에
+  `-tags tossos_testseams`(D1 시험의 seam 이 태그 빌드에만 있으므로 — -run 목록이 걸러 도는 집합은 목록 그대로).
+- Pre-Edit `analysis/measurements/lot-7.5/pre-edit/`(HEAD f03b6ec1: evaluate · runLane · strategyLaneProjection). **`Lane.Health` 는 편집이 먼저 일어났다** —
+  편집 전 번들을 HEAD 사본(scratch worktree)에서 렌더해 기록했다(순서 역전을 숨기지 않음; 판정 본문은 그대로 옮겨졌고 분기 2 → 0 은 AST 열거 실측).
+  편집 뒤 번들 `render_75_bundles.py`(넷 + 핀 시험 경량 하나), 같은 파일 줄 이동 셋(record · strategyFamilyLaneStep · Lane.Run — `shift_same_file_bundles.py`).
+
+**조건 ② — 버려진 레인의 goroutine 수명(이름 없는 누수 금지).** `RunBounded` 가 마감 시한으로 사이클을 버리면(`strategyworker.invokeBounded`):
+step goroutine 은 **step 이 돌아올 때까지** 산다 — 결과 채널이 버퍼 1 이라 돌아오면 막히지 않고 끝난다. 감시견 goroutine 은 `defer cancelWatchdog()` 로 끝난다.
+evaluate 의 레인 goroutine 은 join 되므로 남지 않는다. 그래서 남을 수 있는 것은 **멈춘 step goroutine 하나**뿐이고, 그 상한은: 마감 시한 버림은 비정상이라 레인이
+즉시 잠기므로(생산 임계 1 · 비정상은 임계를 기다리지 않음) 복구 전까지 그 레인에 새 사이클이 없다 → **레인당 최대 하나(최대 여덟)**. 취소(ctx 끝 — 종료)로
+버려진 step 도 같은 방식으로 step 반환까지 산다. 전제: 생산 step 은 순수 메모리 평가(`lane.Run` — I/O 0, 폐포 시험)라 멈춤은 버그일 때뿐이다 — 그 전제가 깨지는
+변경(step 에 I/O)은 이 상한을 다시 재야 한다.
+
+**증거.** RED `lot-7.5/red-7.5.log`(seam · Status 부재로 컴파일 실패; C1~C3 는 지금 동작의 운용성 핀이라 HEAD 통과가 정답 — 반증은 변이). 새 시험:
+- `a112_lane_latency_testseam_test.go`(태그) · `a112_lane_operability_test.go`(무태그) — 둘 다 `-race` 목록: D1 `TestAHungLaneDoesNotDelayItsPeersInTheSameWave`(synctest 가상 시계 — KR continuation · reversal 멈춤 →
+  경과 = 마감 시한 **정확히 1 회**(순차면 2 회), 이웃 weekly · breakout 은 가상 시각 0 에 DORMANT 로 반환 · 건강, 멈춘 둘만 실패 1 · LATCHED, 끝에 step 풀어 거품
+  종료) · `TestAPanicOutsideALaneStepStillReachesTheMarketCycle`; D2 `TestAProjectedLaneRowIsNeverTorn`(200 회 · 동시 Fail + Read 행 불변식) ·
+  `TestTheLaneProjectionReadsALaneRowUnderOneLock`(AST 결정적 핀 — Manager 승인: 동시성 변이의 비결정 CAUGHT 를 꾸미지 않음); C2
+  `TestAStalledRemoteWaveNeverBlocksTheProjectionRead`; C3 `TestSafetyLoopsKeepTheirCadenceWhileEveryEntryQueueIsSaturated`(두 시장 감독자 큐 FULL + 여덟 레인 칸
+  FULL 아래 안전 loop 셋이 10.5 cadence 동안 정확히 10 회).
+- `a112_lane_fanout_test.go`(태그) C1: 두 시장 주기 · 여덟 레인이 캐시된 조립 하나를 읽고 새 물결 0, 제안 하나 → 레인 하나. **첫 판에서 발견**: fixture 의 빈 경로
+  권한에는 가족 점수 행이 없어 어느 레인도 제안을 자기 것으로 알아보지 못했다(`ProposalFamily` 는 점수 행에서 유도) — 생산 경로 권한처럼 행을 붙여 세웠다.
+- strategyworker `TestTheLaneStatusIsTheRowItsAccessorsRead`.
+- 변이 `lot-7.5/mutation-7.5.tsv` **R01~R13 13/13 CAUGHT**: R01 순차 되돌림(조건 ③) · R02 panic 삼킴 · R03 recover 제거(프로세스 종료 — 실패 줄 없이 FAIL) ·
+  R04 join 제거 · R05 투영이 접근자별 읽기(찢긴 행) · R06 Status 판정 분리 · R07 seam 훅 무시(도달 대조군 — seam 이 태그 뒤로 옮겨 재정박) · R08 모든 레인에 모든
+  제안 · R09 1 초 캐시 우회 · R10 Read 가 진행 중 물결을 기다림 · R11 런타임이 loop 를 차례로 시작 · **R12 생산 laneStepFor 가 훅을 봄 · R13 seam 파일 태그 확장**
+  (판정 (A) 의 변이 둘 — 둘 다 핀이 CAUGHT).
+- `-race`: 새 시험 + 기존 레인 · 감독자 시험, strategyworker 전체 ok. `make test-race` ok(목록 갱신 포함), 완전성 가드 자기 시험 ok.
+- **격리 검증(seam 태그 분리 수리 뒤, HEAD 1edee667 + 로트 스크래치 커밋)** `lot-7.5/green-7.5.log`: check_analysis 발견 집합 기준선과 동일(173 = 173, 델타 0) ·
+  `make lint` 0 · 무태그 · 태그 일곱 패키지(strategyworker · strategyprojection · rpc · httpapi · console · app/engine · cmd/tossctl) ok · `make test-race` ok ·
+  race 완전성 가드 OK. 수리 전 판 `green-7.5-first.log` 는 핀 한 건 FAIL(위 「핀이 잡은 자기 이탈」).
+
+**잔여.** ① 레인 동시 실행은 시장 **안**이다 — 시장 주기 자체의 지연은 최댓값(≤ 마감 시한 1 회)이고 레인이 시장 주기와 분리된 완전 비동기는 기각(Manager).
+② C3 의 안전 loop 셋은 이 시험의 자리 표시 loop 다 — 생산 loop(fill · reconcile · exit)의 실제 cadence 는 각 loop 시험이 잰다; 이 시험은 「진입 포화가 런타임의 다른
+loop 를 세우지 않는다」를 잰다. ③ 7.3 잔여 ② (Read 가 `strategyLanesMu` 를 첫 restore 동안 기다릴 수 있음)는 그대로 — C2 는 원격 물결 쪽만 잰다.

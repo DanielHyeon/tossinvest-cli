@@ -44,18 +44,20 @@ func (runtime *strategyLaneRuntime) projection() []strategyprojection.LaneRuntim
 
 func strategyLaneProjection(lane *strategyworker.Lane, observation strategyLaneObservation, observed bool,
 ) strategyprojection.LaneRuntimeProjection {
-	key, policy := lane.Key(), lane.Policy()
-	health := strategyprojection.LaneHealth(lane.Health())
+	// a112 7.5 D2: 상태는 Lane.Status() **한 번**(한 잠금)으로 읽는다 — 접근자마다 잠금을 잡으면 그 사이 잠긴 레인이 「LATCHED 인데
+	// revision 0」 같은 찢긴 행으로 나온다. 열쇠 · 정책 · horizon · runtime 은 worker 값이라 레인 수명 동안 불변이다.
+	key, policy, row := lane.Key(), lane.Policy(), lane.Status()
+	health := strategyprojection.LaneHealth(row.Health)
 	version, deadline := policy.Version(), policy.CycleDeadline().Milliseconds()
 	value := strategyprojection.LaneRuntimeProjection{Market: strategyprojection.Market(key.Market), Family: string(key.Family),
 		LaneID: key.LaneID, LaneVersion: key.LaneVersion, Horizon: string(lane.Horizon()),
 		Desired: strategyprojection.StateOff, Effective: strategyprojection.StateOff,
 		Runtime: strategyprojection.LaneRuntime(lane.Runtime()), Health: &health,
-		ConsecutiveFailures: lane.ConsecutiveFailures(), LatchRevision: lane.LatchRevision(),
-		FirstFailure: strategyprojection.NormalizedText(lane.FirstFailure()),
-		Pending:      lane.Pending(), Dropped: lane.Dropped(), Abandoned: lane.Abandoned(),
+		ConsecutiveFailures: row.ConsecutiveFailures, LatchRevision: row.LatchRevision,
+		FirstFailure: strategyprojection.NormalizedText(row.FirstFailure),
+		Pending:      row.Pending, Dropped: row.Dropped, Abandoned: row.Abandoned,
 		PolicyVersion: &version, CycleDeadlineMS: &deadline,
-		NextDueAt: projectionTime(lane.NextDue()), RestartNotBefore: projectionTime(lane.RestartNotBefore())}
+		NextDueAt: projectionTime(row.NextDue), RestartNotBefore: projectionTime(row.RestartNotBefore)}
 	if !observed {
 		return value
 	}

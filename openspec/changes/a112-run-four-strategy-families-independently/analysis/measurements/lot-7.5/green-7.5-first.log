@@ -1,0 +1,41 @@
+# GREEN a112 7.5 격리 — HEAD 1edee667 + 로트 스크래치 커밋
+## gate delta
+head findings 173 lot findings 173
+ONLY-HEAD 0
+ONLY-LOT 0
+## make lint
+go vet ./...
+go vet -tags tossos_testseams ./...
+lint exit=0
+## 무태그
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.527s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	0.376s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc	3.140s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	0.352s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	60.866s
+--- FAIL: TestOnlyThePackageLevelStepEverRunsInsideALane (0.02s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	396.278s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	50.183s
+FAIL
+## tossos_testseams
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.455s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	0.256s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojectionrpc	9.410s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	0.890s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	129.453s
+--- FAIL: TestOnlyThePackageLevelStepEverRunsInsideALane (0.02s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	600.430s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	73.182s
+FAIL
+## make test-race
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	2.465s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	1.678s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	29.391s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	1.037s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	11.222s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	1.324s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	1.076s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	27.843s
+END

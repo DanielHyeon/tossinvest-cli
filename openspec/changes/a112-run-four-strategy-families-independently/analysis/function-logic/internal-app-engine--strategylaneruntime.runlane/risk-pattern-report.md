@@ -2,6 +2,6 @@
 
 | Rule | Location | Message |
 |---|---|---|
-| — | — | No configured risk pattern matched |
+| go-panic | `internal/app/engine/strategy_lane_runtime.go:246` | panic can bypass normal error and shutdown handling; map the recovery boundary. |
 
 > Findings are review candidates, not automatic defect verdicts.

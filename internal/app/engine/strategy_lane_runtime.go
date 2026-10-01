@@ -209,8 +209,23 @@ func (runtime *strategyLaneRuntime) evaluate(ctx context.Context, market Strateg
 		return err
 	}
 	lanes := runtime.lanesFor(market)
-	observations := make([]strategyLaneObservation, 0, len(lanes))
-	for _, lane := range lanes {
+	// a112 7.5 D1: 레인 넷은 **동시에** 돌고 여기서 join 된다(시장 주기 안 — 분리된 레인 goroutine 금지, Manager 조건 ①).
+	//
+	// 왜: 순차로 돌면 앞 레인의 멈춤이 뒤 레인을 그 마감 시한만큼 세운다 — 설계 「느린 worker 때문에 다른 worker 가 기다리지 않게」와
+	// 스펙 「한 instance 의 wait · timeout 이 peer 의 evaluation cycle 을 바꾸지 않는다」를 어긴다. 동시에 돌면 이웃은 자기 지연으로
+	// 끝나고, 시장 주기의 지연은 합이 아니라 최댓값(각 레인이 RunBounded 마감 시한으로 끊기므로 ≤ 마감 시한 1 회)이다.
+	//
+	// 안전한 이유: 레인은 서로 상태를 공유하지 않고(Lane 주석 — 이웃 레인을 가리키는 필드 0), goroutine 하나가 레인 하나만 돌며, 관측은
+	// 자기 색인 칸에만 쓴다(레인 순서 그대로). 버려진 사이클의 step goroutine 수명은 strategyworker.invokeBounded 가 정한다 — step 이
+	// 돌아올 때까지 살고(순수 메모리 step 이라 곧 끝남), 비정상으로 레인이 즉시 잠기므로 레인당 최대 하나다(review 「7.5」 조건 ②).
+	//
+	// panic: 레인 goroutine 안의 panic(step 밖 — step 의 panic 은 invokeStep 이 이미 실패로 바꾼다)을 삼키지 않고 join 뒤 이 goroutine
+	// 에서 다시 던진다. 순차였을 때와 같이 시장 주기의 회복 경로(invokeStrategyCycle)가 받게 하려는 것이다 — 다른 goroutine 의 panic 은
+	// 그 경로가 잡을 수 없어 프로세스를 끝낸다.
+	observations := make([]strategyLaneObservation, len(lanes))
+	panics := make([]any, len(lanes))
+	var join sync.WaitGroup
+	for index, lane := range lanes {
 		input := strategyworker.Input{}
 		for _, candidate := range inputs {
 			if lane.Owns(candidate.Proposal) {
@@ -218,7 +233,18 @@ func (runtime *strategyLaneRuntime) evaluate(ctx context.Context, market Strateg
 				break
 			}
 		}
-		observations = append(observations, runtime.runLane(ctx, lane, promotion, input))
+		join.Add(1)
+		go func(index int, lane *strategyworker.Lane, input strategyworker.Input) {
+			defer join.Done()
+			defer func() { panics[index] = recover() }()
+			observations[index] = runtime.runLane(ctx, lane, promotion, input)
+		}(index, lane, input)
+	}
+	join.Wait()
+	for _, recovered := range panics {
+		if recovered != nil {
+			panic(recovered)
+		}
 	}
 	runtime.record(market, observations)
 	// 남기지 못한 잠금은 오류다. 조용히 넘기면 다음 재시작이 잠긴 레인을 열고,
@@ -269,7 +295,10 @@ func (runtime *strategyLaneRuntime) runLane(ctx context.Context, lane *strategyw
 		observation.Health = lane.Health()
 		return observation
 	}
-	bounded, start := lane.RunBounded(ctx, input, strategyFamilyLaneStep(lane, promotion))
+	// 레인 안에서 도는 일은 laneStepFor 하나다(a112 7.5 D1). 생산 빌드(태그 없음)의 정의는 strategyFamilyLaneStep 그대로이고 seam 은
+	// tossos_testseams 빌드에만 있다 — 생산 바이너리에 함수 필드를 두면 `*Context` 클로저가 레인 안으로 들어올 길이 열린다
+	// (TestOnlyThePackageLevelStepEverRunsInsideALane 가 자리 · 본문 · 태그를 못 박음).
+	bounded, start := lane.RunBounded(ctx, input, runtime.laneStepFor(lane, promotion))
 	observation.Start = start
 	observation.Outcome = bounded.Cycle.Outcome
 	observation.Detail = bounded.Cycle.Detail

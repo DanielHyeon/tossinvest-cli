@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"go/ast"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -219,13 +220,73 @@ func TestOnlyThePackageLevelStepEverRunsInsideALane(t *testing.T) {
 	// 영값은 아무것도 승격하지 않는 **값**이다. 능력이 아니라는 것은 아래
 	// TestTheFamilyLaneStepCarriesNothingButItsLaneAndTheSignedPromotion 이
 	// 두 인자의 **타입**을 못 박아 확인한다(개수가 아니라 타입이다).
-	want := []string{"strategy_lane_runtime.go:runLane:strategyFamilyLaneStep(lane, promotion)"}
+	// a112 7.5 D1: 자리는 여전히 하나이고 값은 `runtime.laneStepFor(lane, promotion)` 이다. 그 메서드의 **생산 정의**가
+	// strategyFamilyLaneStep 한 줄이라는 것은 아래 laneStepFor 대조가 정의마다 본문 · 빌드 태그로 못 박는다(자리만 세면 메서드 본문이
+	// 바뀌어도 이 목록은 그대로다 — 한 다리 건너 우회).
+	want := []string{"strategy_lane_runtime.go:runLane:runtime.laneStepFor(lane, promotion)"}
 	if strings.Join(sites, "\n") != strings.Join(want, "\n") {
 		t.Fatalf("레인이 도는 일의 목록이 바뀌었다.\n got: %v\nwant: %v\n\n"+
 			"레인 안에서 도는 일은 `*Context` 를 들 수 없어야 한다. 이 목록에 줄이 늘면"+
 			" 그 값이 무엇을 담고 있는지 먼저 적을 것 — `*Context` 는 Journal 과 Gateway 를"+
 			" 들고 있고, 그것이 레인 안에 들어오면 이 태스크가 옮긴 경계가 사라진다.",
 			sites, want)
+	}
+	assertLaneStepForIsTheProductionStepOutsideTestSeams(t)
+}
+
+// assertLaneStepForIsTheProductionStepOutsideTestSeams 는 laneStepFor 의 정의 전부를 센다(a112 7.5 — Manager 판정 (A) 의 핀 강화 넷 중 셋):
+//   - 정의는 정확히 둘이다(다른 정의 0).
+//   - 빌드 태그 `!tossos_testseams` 인 정의의 본문은 정확히 `return strategyFamilyLaneStep(lane, promotion)` 한 문장이다 — 생산 바이너리의
+//     레인 안에는 순수 step 하나만 들어간다.
+//   - 다른 하나(seam)는 빌드 태그 `tossos_testseams` 파일에 있다 — 생산 바이너리 밖.
+func assertLaneStepForIsTheProductionStepOutsideTestSeams(t *testing.T) {
+	t.Helper()
+	type definition struct{ path, tag, body string }
+	var found []definition
+	for _, path := range engineProductionFiles(t) {
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		tag := ""
+		if first := strings.SplitN(string(raw), "\n", 2)[0]; strings.HasPrefix(first, "//go:build ") {
+			tag = strings.TrimPrefix(first, "//go:build ")
+		}
+		for _, decl := range parseEngineFile(t, path).Decls {
+			function, ok := decl.(*ast.FuncDecl)
+			if !ok || function.Name.Name != "laneStepFor" {
+				continue
+			}
+			body := ""
+			if len(function.Body.List) == 1 {
+				if ret, ok := function.Body.List[0].(*ast.ReturnStmt); ok && len(ret.Results) == 1 {
+					body = "return " + exprSpelling(ret.Results[0])
+				}
+			}
+			found = append(found, definition{path: filepath.Base(path), tag: tag, body: body})
+		}
+	}
+	if len(found) != 2 {
+		t.Fatalf("laneStepFor definitions=%+v, want exactly two (production and test seam)", found)
+	}
+	production, seam := 0, 0
+	for _, value := range found {
+		switch value.tag {
+		case "!tossos_testseams":
+			production++
+			if value.body != "return strategyFamilyLaneStep(lane, promotion)" {
+				t.Fatalf("the production laneStepFor in %s is %q — the lane must run exactly the package-level step in a production build",
+					value.path, value.body)
+			}
+		case "tossos_testseams":
+			seam++
+		default:
+			t.Fatalf("laneStepFor in %s carries build constraint %q — a seam outside the test-seam build reaches the production binary",
+				value.path, value.tag)
+		}
+	}
+	if production != 1 || seam != 1 {
+		t.Fatalf("laneStepFor production=%d seam=%d, want one of each", production, seam)
 	}
 }
 

@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_lane_runtime.go",
-  "source_sha256": "4a7fd7fedb3237720070c6c4c6ef03030fa30c67e181fdb0a86053a8418390a6",
+  "source_sha256": "95611377145456c4906da5ebb95eca97dd025df0c1fb255ebc443c1ce12d5d36",
   "package": "engine",
   "function": "evaluate",
   "receiver": "strategyLaneRuntime",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 232,
+    "line": 258,
     "column": 2
   },
   "branches": [
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "range",
       "at": {
-        "line": 213,
+        "line": 228,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "range",
       "at": {
-        "line": 215,
+        "line": 230,
         "column": 3
       }
     },
@@ -50,15 +50,31 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 216,
+        "line": 231,
         "column": 4
       }
     },
     {
       "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
       "kind": "if",
       "at": {
-        "line": 226,
+        "line": 245,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 252,
         "column": 2
       }
     }
@@ -81,14 +97,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 227,
+        "line": 253,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 231,
+        "line": 257,
         "column": 2
       }
     }
@@ -113,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 212,
+        "line": 225,
         "column": 18
       },
       "text": "make"
@@ -121,42 +137,10 @@
     {
       "kind": "call",
       "at": {
-        "line": 212,
-        "column": 53
+        "line": 225,
+        "column": 50
       },
       "text": "len"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 216,
-        "column": 7
-      },
-      "text": "lane.Owns"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 221,
-        "column": 18
-      },
-      "text": "append"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 221,
-        "column": 39
-      },
-      "text": "runtime.runLane"
-    },
-    {
-      "kind": "call",
-      "at": {
-        "line": 223,
-        "column": 2
-      },
-      "text": "runtime.record"
     },
     {
       "kind": "call",
@@ -164,12 +148,106 @@
         "line": 226,
         "column": 12
       },
-      "text": "runtime.persistMarketLatches"
+      "text": "make"
     },
     {
       "kind": "call",
       "at": {
         "line": 226,
+        "column": 24
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 7
+      },
+      "text": "lane.Owns"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 3
+      },
+      "text": "join.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 6
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 10
+      },
+      "text": "join.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 10
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 35
+      },
+      "text": "recover"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 26
+      },
+      "text": "runtime.runLane"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 2
+      },
+      "text": "join.Wait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 4
+      },
+      "text": "panic"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 2
+      },
+      "text": "runtime.record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 12
+      },
+      "text": "runtime.persistMarketLatches"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
         "column": 76
       },
       "text": "runtime.clk.Now"
@@ -177,7 +255,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 231,
+        "line": 257,
         "column": 9
       },
       "text": "runtime.staleLatchError"
@@ -201,39 +279,77 @@
     {
       "kind": ":=",
       "at": {
-        "line": 212,
+        "line": 225,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 214,
-        "column": 3
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 217,
-        "column": 5
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 221,
-        "column": 3
+        "line": 226,
+        "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 226,
+        "line": 229,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 232,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 239,
+        "column": 19
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 240,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 252,
         "column": 5
       }
     }
   ],
-  "go_statements": null,
-  "defers": null
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 237,
+        "column": 3
+      }
+    }
+  ],
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 238,
+        "column": 4
+      },
+      "text": "join.Done"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 239,
+        "column": 4
+      }
+    }
+  ]
 }

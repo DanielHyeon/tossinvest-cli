@@ -1,9 +1,9 @@
 # Function Logic Map: `Lane.Run`
 
-- Source: `internal/strategyworker/lane.go` (205-213)
+- Source: `internal/strategyworker/lane.go` (211-219)
 - Function: `Lane.Run` in package `strategyworker`
 - Signature: `Lane.Run(params=2, results=1)`
-- File SHA-256: `b6919f2ac3ce70c08631286b8c879bd3b3ab273228d21246b359fa5031e594c5`
+- File SHA-256: `b869921551c2058b80fa03d2bc9c601f3ea306234d918ee41cde019312d529ab`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 1.
 - Risk scan: `risk-pattern-report.md`.
@@ -33,11 +33,11 @@ The signature above is the exhaustive input/result record; this map does not inf
 - **귀속 완전성은 측정이다.** 아래 분기에서 테스트별 진입 수의 합이 스위트 전체 진입
   수와 같다. 어긋난 행은 `ATTRIBUTION MISMATCH` 로 표시되며 아래에는 없다.
 
-Exact AST return positions: 210:3, 212:2.
+Exact AST return positions: 216:3, 218:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 209:2 | arm entered 4x (strategyworker tagged suite); arm entered 3x (strategyworker untagged suite); `TestALatchedLaneEmitsNothingEvenWhenItIsEffective`, `TestALatchedLaneReportsTheLatchRatherThanDormancy`, `TestAProductionLaneBornFromADurableRecordIsLatched`, `TestARestoredLaneStillCannotUnlatchItself` |
+| B1 | if | 215:2 | arm entered 4x (strategyworker tagged suite); arm entered 3x (strategyworker untagged suite); `TestALatchedLaneEmitsNothingEvenWhenItIsEffective`, `TestALatchedLaneReportsTheLatchRatherThanDormancy`, `TestAProductionLaneBornFromADurableRecordIsLatched`, `TestARestoredLaneStillCannotUnlatchItself` |
 
 B1 은 잠긴 레인이다 — LATCHED 를 돌려주고 worker 를 부르지 않는다. 통과하면 승격
 판정은 worker 가 한다.
@@ -46,9 +46,9 @@ B1 은 잠긴 레인이다 — LATCHED 를 돌려주고 worker 를 부르지 않
 
 | Callee expression | Position |
 |---|---|
-| `lane.mu.Lock` | 206:2 |
-| `lane.mu.Unlock` | 208:2 |
-| `lane.worker.Run` | 212:9 |
+| `lane.mu.Lock` | 212:2 |
+| `lane.mu.Unlock` | 214:2 |
+| `lane.worker.Run` | 218:9 |
 
 ## State mutations and fallbacks
 
@@ -60,3 +60,5 @@ B1 은 잠긴 레인이다 — LATCHED 를 돌려주고 worker 를 부르지 않
 - Safe edit boundary: 잠금 안에서 하는 일은 한 필드를 읽는 것뿐이다.
 - High-risk impact: yes — 잠긴 레인의 가족이 조정자에 닿지 않는 것이 이 change 가
   사려던 가족 단위 고장 격리다. 잠금 검사를 지운 변이(E5)는 CAUGHT.
+
+a112 7.5 — 같은 파일 Health → healthLocked 분리로 줄만 밀림

@@ -1,10 +1,10 @@
 # Branch Test Map: `strategyLaneRuntime.runLane`
 
-- Source SHA-256: `4a7fd7fedb3237720070c6c4c6ef03030fa30c67e181fdb0a86053a8418390a6`; AST branch locations are authoritative.
-- Revision: **modified (a112 7.3, 2026-10-01).** 분기 불변(2). 관측 구성자가 desired/effective(활성화 위임) · 입력 digest 둘을 싣고, 열린 사이클의 거절 코드(`Cycle.Refusal`)를 기록하며(판정 (A)), `lane.Offer()` 를 구성자 밖 다음 줄로 옮겼다 — 레인 호출 순서 · 횟수 불변(Offer 한 번, 투입 시 RunBounded 한 번).
-- 편집 전 번들: `analysis/measurements/lot-7.3/pre-edit/internal-app-engine--strategylaneruntime.runlane/`. 변이 원장 `analysis/measurements/lot-7.3/mutation-7.3.tsv`.
+- Source SHA-256: `95611377145456c4906da5ebb95eca97dd025df0c1fb255ebc443c1ce12d5d36`; AST branch locations are authoritative.
+- Revision: **modified (a112 7.5, 2026-10-01).** 분기 불변(2). `RunBounded` 에 넘기는 값이 `strategyFamilyLaneStep(lane, promotion)` → `runtime.laneStepFor(lane, promotion)` 한 곳 — 생산 정의(`strategy_lane_step.go`, `!tossos_testseams`)는 strategyFamilyLaneStep 한 줄이고 seam 은 태그 빌드(`strategy_lane_step_testseam.go`)에만 있다. 첫 구현은 무태그 함수 필드였고 5.1.2.1 핀이 잡았다(「핀이 잡은 자기 이탈」 — review).
+- 편집 전 번들: `analysis/measurements/lot-7.5/pre-edit/internal-app-engine--strategylaneruntime.runlane/`. 변이 원장 `analysis/measurements/lot-7.5/mutation-7.5.tsv`.
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 268:2 — 투입 거절(DISABLED · FULL) → 건강만 싣고 반환 | `a112_lane_coordinator_projection_test.go` `TestEightLatchedLanesAreProjectedInProductionOrderWithTheirFirstFailure`(DISABLED) | no — 이 로트가 바꾸지 않음 | yes |
-| B2 | if at 281:2 — 유계 사이클 오류 → 실패 문장 | 진입 0 — 생산 Step 은 오류를 내지 않는다(편집 전 번들 기록 그대로) | no — 이 로트가 바꾸지 않음 | n/a |
+| B1 | if at 294:2 — 투입 거절(DISABLED · FULL) → 건강만 싣고 반환 | `a112_lane_coordinator_projection_test.go` `TestEightLatchedLanesAreProjectedInProductionOrderWithTheirFirstFailure` | no — 이 로트가 바꾸지 않음 | yes |
+| B2 | if at 310:2 — 유계 사이클 오류 → 실패 문장 | `a112_lane_latency_testseam_test.go` `TestAHungLaneDoesNotDelayItsPeersInTheSameWave`(멈춘 레인의 마감 시한 오류) | no — 분기 불변(편집 전 진입 0 → 이 로트의 시험이 처음 진입) | yes |

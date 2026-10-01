@@ -185,6 +185,12 @@ func (lane *Lane) RestartNotBefore() time.Time {
 func (lane *Lane) Health() LaneHealth {
 	lane.mu.Lock()
 	defer lane.mu.Unlock()
+	return lane.healthLocked()
+}
+
+// healthLocked 는 Health 의 판정이다. Status 가 같은 잠금 안에서 같은 판정을 쓰도록 따로 두었다(a112 7.5 D2) — 판정을 두 벌 두면
+// 한 행의 건강과 개별 접근자의 건강이 갈린다. 호출자가 lane.mu 를 쥐고 있어야 한다.
+func (lane *Lane) healthLocked() LaneHealth {
 	if lane.latched {
 		return LaneLatched
 	}

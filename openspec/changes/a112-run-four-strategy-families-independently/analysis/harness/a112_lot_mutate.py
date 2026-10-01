@@ -643,13 +643,57 @@ SET_74 = [
      "package main\n\nimport _ \"go.opentelemetry.io/otel/metric\"\n"),
 ]
 SET_74_TESTS = [["go", "test", "-count=1", "-run", "TestNoProductionCodeEmitsMetrics", "./internal/strategyprojection"]]
+LVW = "internal/strategyworker/lane_view.go"
+WAV = "internal/app/engine/strategy_refresh_wave.go"
+RTM = "internal/app/engine/runtime.go"
+SET_75 = [
+    ("R01 lanes run sequentially again (Manager: revert-to-sequential mutant)", LRT,
+     "\t\tgo func(index int, lane *strategyworker.Lane, input strategyworker.Input) {",
+     "\t\tfunc(index int, lane *strategyworker.Lane, input strategyworker.Input) {"),
+    ("R02 a lane goroutine panic is swallowed instead of re-raised on the market cycle", LRT,
+     "\t\tif recovered != nil {\n\t\t\tpanic(recovered)", "\t\tif recovered != nil {\n\t\t\t_ = recovered"),
+    ("R03 the lane goroutine does not recover (a panic would end the process)", LRT,
+     "\t\t\tdefer func() { panics[index] = recover() }()\n", ""),
+    ("R04 evaluate does not join its lanes", LRT, "\tjoin.Wait()\n", ""),
+    ("R05 the projection reads a per-field state accessor again (torn row)", LPJ,
+     "ConsecutiveFailures: row.ConsecutiveFailures,", "ConsecutiveFailures: lane.ConsecutiveFailures(),"),
+    ("R06 Status judges health differently from Health", LVW, "Health: lane.healthLocked(),", "Health: LaneHealthy,"),
+    ("R07 the test-seam laneStepFor ignores its hook (the hang never reaches the lane — reach control; re-anchored after the seam moved behind the build tag)",
+     "internal/app/engine/strategy_lane_step_testseam.go",
+     "\tif hook, ok := strategyLaneStepHooks.Load(runtime); ok {", "\tif hook, ok := strategyLaneStepHooks.Load(runtime); false && ok {"),
+    ("R08 every lane receives every sealed proposal (fan-out duplicated)", LRT,
+     "\t\t\tif lane.Owns(candidate.Proposal) {", "\t\t\tif true || lane.Owns(candidate.Proposal) {"),
+    ("R09 a market cycle bypasses the one-second wave cache (a wave per cycle)", WAV,
+     "\tif c.strategyRefresh != nil && !now.Before(c.strategyRefreshAt) && now.Sub(c.strategyRefreshAt) < time.Second {",
+     "\tif false && c.strategyRefresh != nil && !now.Before(c.strategyRefreshAt) && now.Sub(c.strategyRefreshAt) < time.Second {"),
+    ("R10 the projection Read waits for an in-flight remote wave", RPJ,
+     "\tc.strategyProjectionMu.RLock()\n\tstore, supervisor := c.strategyProjection, c.strategySupervisor",
+     "\tc.strategyRefreshMu.Lock()\n\tif wave := c.strategyRefreshWave; wave != nil {\n\t\tc.strategyRefreshMu.Unlock()\n\t\t<-wave.done\n\t} else {\n\t\tc.strategyRefreshMu.Unlock()\n\t}\n"
+     "\tc.strategyProjectionMu.RLock()\n\tstore, supervisor := c.strategyProjection, c.strategySupervisor"),
+    ("R11 the runtime starts its loops one after another (safety loops wait behind the entry supervisor)", RTM,
+     "\t\tgo func(loop SupervisedLoop) {\n\t\t\tdefer wg.Done()", "\t\tfunc(loop SupervisedLoop) {\n\t\t\tdefer wg.Done()"),
+    # 판정 (A) 핀 강화의 변이 둘(Manager).
+    ("R12 the production laneStepFor consults a hook (a function field reaches the production binary)", "internal/app/engine/strategy_lane_step.go",
+     "\treturn strategyFamilyLaneStep(lane, promotion)\n}\n",
+     "\tif hook := strategyLaneStepProductionHook; hook != nil {\n\t\treturn hook(lane, promotion)\n\t}\n\treturn strategyFamilyLaneStep(lane, promotion)\n}\n\n"
+     "var strategyLaneStepProductionHook func(*strategyworker.Lane, strategyrouter.FamilyActivation) strategyworker.Step\n"),
+    ("R13 the seam file's build constraint widens beyond the test-seam build (a debug build would ship the seam)",
+     "internal/app/engine/strategy_lane_step_testseam.go", "//go:build tossos_testseams\n", "//go:build tossos_testseams || tossos_debug\n"),
+]
+SET_75_TESTS = [
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+     "TestAHungLane|TestAPanicOutsideALaneStep|TestAProjectedLaneRow|TestTheLaneProjectionReadsALaneRow|TestAStalledRemoteWave|TestSafetyLoopsKeepTheirCadence|TestEightLanesShareOneAuthorityWave|TestOnlyThePackageLevelStepEverRunsInsideALane",
+     "./internal/app/engine"],
+    ["go", "test", "-count=1", "-run", "TestTheLaneStatusIsTheRowItsAccessorsRead", "./internal/strategyworker"],
+    ["go", "test", "-count=1", "-run", "TestOnlyThePackageLevelStepEverRunsInsideALane", "./internal/app/engine"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측

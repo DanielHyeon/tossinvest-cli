@@ -1,6 +1,6 @@
 # Branch Test Map: `strategyFamilyLaneStep`
 
-- Source: `internal/app/engine/strategy_lane_runtime.go` (172-178); file SHA-256 `4a7fd7fedb3237720070c6c4c6ef03030fa30c67e181fdb0a86053a8418390a6`. AST branch positions are authoritative.
+- Source: `internal/app/engine/strategy_lane_runtime.go` (172-178); file SHA-256 `95611377145456c4906da5ebb95eca97dd025df0c1fb255ebc443c1ce12d5d36`. AST branch positions are authoritative.
 - Rows carry measured counts from Go coverage profiles, count mode.
 - Per-test attribution set: 두 엔진 바이너리의 테스트 **전체**(태그 491 · 무태그 438).
 

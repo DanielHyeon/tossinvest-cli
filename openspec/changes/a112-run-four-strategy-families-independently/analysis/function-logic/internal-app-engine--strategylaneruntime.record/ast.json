@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_lane_runtime.go",
-  "source_sha256": "4a7fd7fedb3237720070c6c4c6ef03030fa30c67e181fdb0a86053a8418390a6",
+  "source_sha256": "95611377145456c4906da5ebb95eca97dd025df0c1fb255ebc443c1ce12d5d36",
   "package": "engine",
   "function": "record",
   "receiver": "strategyLaneRuntime",
   "signature": "strategyLaneRuntime.record(params=2, results=0)",
   "start": {
-    "line": 293,
+    "line": 322,
     "column": 1
   },
   "end": {
-    "line": 309,
+    "line": 338,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 294,
+        "line": 323,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 299,
+        "line": 328,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 302,
+        "line": 331,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "range",
       "at": {
-        "line": 305,
+        "line": 334,
         "column": 2
       }
     }
@@ -51,7 +51,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 295,
+        "line": 324,
         "column": 3
       }
     }
@@ -60,7 +60,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 294,
+        "line": 323,
         "column": 23
       },
       "text": "len"
@@ -68,7 +68,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 297,
+        "line": 326,
         "column": 2
       },
       "text": "runtime.mu.Lock"
@@ -76,7 +76,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 298,
+        "line": 327,
         "column": 8
       },
       "text": "runtime.mu.Unlock"
@@ -84,7 +84,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 300,
+        "line": 329,
         "column": 19
       },
       "text": "make"
@@ -92,7 +92,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 302,
+        "line": 331,
         "column": 30
       },
       "text": "uint64"
@@ -102,28 +102,28 @@
     {
       "kind": "=",
       "at": {
-        "line": 300,
+        "line": 329,
         "column": 3
       }
     },
     {
       "kind": "++",
       "at": {
-        "line": 303,
+        "line": 332,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 306,
+        "line": 335,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 307,
+        "line": 336,
         "column": 3
       }
     }
@@ -133,7 +133,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 298,
+        "line": 327,
         "column": 2
       },
       "text": "runtime.mu.Unlock"

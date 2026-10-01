@@ -1,0 +1,272 @@
+{
+  "file": "internal/app/engine/a112_lane_runtime_test.go",
+  "source_sha256": "406bd29b9c2ce881d31fe69f638c9f6aee89a442e0adbcd709d56aac4f6ab98d",
+  "package": "engine",
+  "function": "TestOnlyThePackageLevelStepEverRunsInsideALane",
+  "signature": "TestOnlyThePackageLevelStepEverRunsInsideALane(params=1, results=0)",
+  "start": {
+    "line": 193,
+    "column": 1
+  },
+  "end": {
+    "line": 235,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 195,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 197,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 200,
+        "column": 5
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 204,
+        "column": 5
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 207,
+        "column": 5
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 201,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 205,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 213,
+        "column": 5
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 11
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 23
+      },
+      "text": "engineProductionFiles"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 11
+      },
+      "text": "parseEngineFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 198,
+        "column": 4
+      },
+      "text": "ast.Inspect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 207,
+        "column": 8
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 6
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 7
+      },
+      "text": "filepath.Base"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 209,
+        "column": 28
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 13
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 27
+      },
+      "text": "filepath.Base"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 51
+      },
+      "text": "declName"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 6
+      },
+      "text": "exprSpelling"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 2
+      },
+      "text": "sort.Strings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 5
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 34
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 2
+      },
+      "text": "assertLaneStepForIsTheProductionStepOutsideTestSeams"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 196,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 199,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 203,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 211,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

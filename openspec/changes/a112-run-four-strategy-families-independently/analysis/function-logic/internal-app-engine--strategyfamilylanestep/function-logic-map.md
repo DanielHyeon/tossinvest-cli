@@ -3,7 +3,7 @@
 - Source: `internal/app/engine/strategy_lane_runtime.go` (172-178)
 - Function: `strategyFamilyLaneStep` in package `engine`
 - Signature: `strategyFamilyLaneStep(params=2, results=1)`
-- File SHA-256: `4a7fd7fedb3237720070c6c4c6ef03030fa30c67e181fdb0a86053a8418390a6`
+- File SHA-256: `95611377145456c4906da5ebb95eca97dd025df0c1fb255ebc443c1ce12d5d36`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 0.
 - Risk scan: `risk-pattern-report.md`.
@@ -72,3 +72,7 @@ Exact AST return positions: 175:2, 176:3.
 a112 7.3 — 같은 파일 편집(관측 필드 · record 인자 / QueueDropCount 주석)으로 줄만 밀림
 
 a112 7.3 판정 (A) — 같은 파일 관측 필드 한 줄로 줄만 다시 밀림
+
+a112 7.5 — 같은 파일 편집(evaluate 동시 실행 · laneStep seam)으로 줄만 밀림
+
+a112 7.5 판정 (A) 수리 — seam 필드 제거 · laneStepFor 로 줄만 다시 밀림

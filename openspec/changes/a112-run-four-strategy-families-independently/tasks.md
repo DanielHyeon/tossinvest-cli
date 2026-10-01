@@ -438,7 +438,12 @@
   **7.4 종결(2026-10-01 — 미착지).** 실측: 생산 메트릭 방출기 0(묶을 label 없음). Manager 판정 (A): 금지 명시 가드
   `internal/strategyprojection/a112_no_metric_emitter_test.go` — internal · cmd 비시험 Go 의 메트릭 API import 금지, 허용 목록(이름) 빈 채,
   머리말에 label 계약(고정 다섯 · symbol/setup/candidate 금지 · 골든 인용). 첫 방출기는 이 시험을 뒤집으며 계약을 세워야 한다. 변이 Q01 · Q02 CAUGHT.
-- [ ] 7.5 Add performance/operability tests for bounded evidence fan-out, no remote I/O under strategy refresh mutex, independent lane latency, status snapshot consistency and safety cadence under all entry queues saturated.
+- [x] 7.5 Add performance/operability tests for bounded evidence fan-out, no remote I/O under strategy refresh mutex, independent lane latency, status snapshot consistency and safety cadence under all entry queues saturated.
+
+  **7.5 종결(2026-10-01 — 미착지).** Manager 판정 D1=(A) · D2 · C1~C3. 레인 지연 독립: 한 시장의 레인 넷을 시장 주기 안에서 동시 실행 + join(멈춘 레인은
+  자기 마감 시한에 버려지고 이웃은 정상 지연, 시장 지연 = 최댓값 ≤ 마감 시한 1 회 — synctest 등식), 레인 goroutine panic 은 join 뒤 시장 주기에서 다시 던짐,
+  버려진 step goroutine 수명 명명(레인당 최대 하나). 상태 행 일관: `Lane.Status()` 한 잠금 + 투영 단일화(AST 핀 · -race 불변식). fan-out(조립 하나 · 물결 0 ·
+  제안 하나 → 레인 하나) · 멈춘 원격 물결 중 Read 비차단 · 모든 진입 큐 포화 하 안전 loop cadence. 변이 R01~R13 13/13 CAUGHT, `make test-race` 목록 · 엔진 줄 태그 갱신. 시험 seam 은 태그 빌드에만(생산 바이너리 seam 0 — 5.1.2.1 핀이 첫 구현의 무태그 필드를 잡아 핀 강화와 함께 수리).
 
 ## 8. Verification Rollout and Review
 
