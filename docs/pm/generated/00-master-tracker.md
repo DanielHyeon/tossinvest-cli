@@ -136,7 +136,7 @@
     - STORY-TOS-a067 — Add concurrent KR and US short continuation lanes [archived] → `a067-add-kr-us-continuation-lanes`
     - STORY-TOS-a068 — Add concurrent KR and US short reversal lanes [archived] → `a068-add-kr-us-reversal-lanes`
     - STORY-TOS-a069 — Add concurrent KR and US weekly value repricing lanes [archived] → `a069-add-kr-us-weekly-value-lanes`
-    - STORY-TOS-a070 — Route candidates across markets, horizons and owning lanes [in_progress] → `a070-add-multi-market-horizon-router`
+    - STORY-TOS-a070 — Route candidates across markets, horizons and owning lanes [archived] → `a070-add-multi-market-horizon-router`
     - STORY-TOS-a071 — Wire attested broker protection for KR and US entry [archived] → `a071-wire-kr-us-protection-readiness`
     - STORY-TOS-a072 — Wire the supervised KR and US strategy entry runtime [archived] → `a072-wire-multi-market-strategy-runtime`
     - STORY-TOS-a073 — Operate and deploy the concurrent KR and US lanes [archived] → `a073-operate-multi-market-strategy-lanes`

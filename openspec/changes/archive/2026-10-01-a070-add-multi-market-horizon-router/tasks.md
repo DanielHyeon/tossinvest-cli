@@ -18,13 +18,13 @@
 
 ## 3. Integration and Safety
 
-- [ ] 3.1 Integrate a067–a069 eligible lanes and a066 owner snapshots so each generation reaches at most one owner across all horizons
+- [ ] 3.1 **[처분 2026-10-01 — 다른 change 가 수행: a072 3.23 · 3.24 + a112 RouteSet · 조정자, `analysis/disposition-audit.md` §3]** Integrate a067–a069 eligible lanes and a066 owner snapshots so each generation reaches at most one owner across all horizons
 - [x] 3.2 Add independent KR/US, short/weekly, legacy migration, owner race, CAS crash and shared quota exhaustion matrices
 - [x] 3.3 Prove router/scheduler cannot create campaign, owner, broker, journal, activation or toggle mutations and OFF yields zero entry routing
-- [ ] 3.4 Confirm exit/fill/reconciliation/protection/emergency loops continue under shared quota exhaustion, migration refusal or one-market failure
+- [ ] 3.4 **[처분 2026-10-01 — 대상(공유 quota · migration)이 생산에 배선된 적 없음, 예산 소진 시 안전 루프는 a112 2.8 소유, 감사 §3]** Confirm exit/fill/reconciliation/protection/emergency loops continue under shared quota exhaustion, migration refusal or one-market failure
 
 ## 4. VERIFY
 
 - [x] 4.1 Run targeted router/owner/scheduler/migration/budget tests with race detection and cross-horizon plus shared-quota property tests
-- [ ] 4.2 Run broader candidate/strategy/campaign/risk/exit/runtime regressions including concurrent CAS, crash/replay and partial-market failure
-- [ ] 4.3 Run `make sdd-sync`, `make sdd-check` and `make gate CHANGE=a070-add-multi-market-horizon-router`, recording no market selection, lane enablement or live order
+- [ ] 4.2 **[처분 2026-10-01 — 독립 의미 없음, 감사 §3]** Run broader candidate/strategy/campaign/risk/exit/runtime regressions including concurrent CAS, crash/replay and partial-market failure
+- [ ] 4.3 **[처분 2026-10-01 — 독립 의미 없음; 아카이브는 `--skip-specs`(a123 선례), 감사 §5]** Run `make sdd-sync`, `make sdd-check` and `make gate CHANGE=a070-add-multi-market-horizon-router`, recording no market selection, lane enablement or live order

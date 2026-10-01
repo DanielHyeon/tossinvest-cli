@@ -73,7 +73,7 @@
 | `a067-add-kr-us-continuation-lanes` | STORY-TOS-a067 | archived |
 | `a068-add-kr-us-reversal-lanes` | STORY-TOS-a068 | archived |
 | `a069-add-kr-us-weekly-value-lanes` | STORY-TOS-a069 | archived |
-| `a070-add-multi-market-horizon-router` | STORY-TOS-a070 | in_progress |
+| `a070-add-multi-market-horizon-router` | STORY-TOS-a070 | archived |
 | `a071-wire-kr-us-protection-readiness` | STORY-TOS-a071 | archived |
 | `a072-wire-multi-market-strategy-runtime` | STORY-TOS-a072 | archived |
 | `a073-operate-multi-market-strategy-lanes` | STORY-TOS-a073 | archived |

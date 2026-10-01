@@ -42,3 +42,14 @@
 Core pure/sealed-port implementation approved for integration review. KR and US ship in the same release,
 remain independently OFF/UNOBSERVED by default, and share one physical quota authority. Runtime wiring,
 broader safety-loop regressions and the repository SDD/gate remain intentionally pending at root integration.
+
+## 처분 감사와 아카이브 (2026-10-01)
+
+- 감사: `analysis/disposition-audit.md`(커밋 `0d3e2849`) — CodeGraph callers 15 · Go AST(`Route` 25 분기 ↔ `RouteSet` 23, 앞 20 원문 동일) ·
+  패키지 밖 비시험 `strategyrouter.` 선택자 250 전수. 코어 타입 · owner/market 봉인 · 요청/결정 타입은 a072 · a112 생산 기반으로 생존,
+  `Route()` 는 a112 4.3.1 `RouteSet` 이 대체(4.3.2 가드), 스케줄러 durable record · `MigrateLegacy` · `QuotaAuthority` 는 생산 호출자 0.
+- Manager 판정: **② 부분 대체 승인**(사용자 거부권 항목으로 보고). ③ 기각 사유 — a112 는 a070 코어 **위에** 서 있다(대체 아님). ① 기각 — 둘째 권한 표면.
+- spec delta 는 적용하지 않는다(`--skip-specs`): 7 요구가 정본과 중복 · a112 와 충돌 · 미구현. a123 선례 「구현되지 않은 SHALL 이 정본에 들어가면 안 된다」.
+- 미완료 3.1 · 3.4 · 4.2 · 4.3 은 tasks 에 처분을 적고 미체크로 닫는다.
+- 후속: quota 단일화는 a112 7.1 설계 입력(`scheduler.BudgetCoordinator` 위에 subscope — Manager 가 a112 소유자에 전달), 섬 코드 삭제는 7.1 뒤
+  정리 change 하나(ROADMAP 후속 후보). a112 dependency-matrix 의 a070 행 정정은 a112 소유자 몫.
