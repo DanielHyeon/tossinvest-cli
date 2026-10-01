@@ -183,3 +183,15 @@ S14 CAUGHT, 추가 변이 X1 · X2 · X4 · X5 · X7 · X8 CAUGHT, X3(`TxOptions
 
 **재리뷰 생략 근거**(Manager 판정 2026-10-01): 생산 코드 무변(수리 묶음은 시험 · 하네스 · 문서) · 남은 지적이 P2 시험 판별력 계급이고 수리가 구조 단언(수명 · 순서)으로 종결형 ·
 변이 27/27 CAUGHT — a091 i2 와 같은 처분(P2 꼬리는 수리 기록으로 닫고 게이트행). 수리 묶음 착지 `1e25b3a3`.
+
+### 2.0 사고 기록 — 커밋 69deeb48 에 a091 아카이브가 섞임 (2026-10-01)
+
+- **경위**: tracker 두 파일(`docs/pm/generated/00-master-tracker.md` · `01-active-change-map.md`)의 a127 행만 커밋하려 했으나, 작업 트리의 같은 파일에 a091
+  세션의 미커밋 a091 행이 섞여 있어 `git commit -- <경로>` 를 쓸 수 없었다. a127 줄만 바꾼 blob 을 `git update-index --cacheinfo` 로 index 에 올리고
+  staged 전수(2 파일)를 확인한 뒤 **경로 없는** `git commit` 을 했다. 두 호출 사이에 a091 세션이 아카이브(디렉터리 rename 133 · engine-safety ·
+  exit-policy spec 적용 2)를 index 에 올렸고, 그것이 메시지 「docs(pm): tracker — STORY-TOS-a127 implemented」 인 **69deeb48** 에 함께 들어갔다(137 파일).
+- **처분(Manager 선택지 1 확정)**: 내용은 a091 이 커밋하려던 그대로라 저장소 손상 없음 — 틀린 것은 메시지와 귀속. 되돌리기(`git reset --soft HEAD~1`)는
+  권한 분류기가 거절했고(「Interfere With Workloads」) 우회하지 않음(Manager 가 대신 실행하는 것도 같은 세탁이라 하지 않음 — 사용자 보고). 69deeb48 은
+  그대로 두고 a091 쪽 기록이 이 커밋을 인용한다. **69deeb48 의 메시지는 a127 tracker 행만 말하지만 실제로는 a091 아카이브 rename · spec 적용을 담고 있다.**
+- **교훈**: 남의 변경이 섞인 파일의 부분 커밋은 경로 한정 commit 으로도, index blob 편집 + **경로 없는 commit** 으로도 금지 — 그런 파일은 Manager 에게
+  이관한다. 공유 index 는 staged 전수 확인과 커밋 사이에도 바뀐다(기억 「공유 index 는 경로 필터로 못 지킨다」의 다른 형태).
