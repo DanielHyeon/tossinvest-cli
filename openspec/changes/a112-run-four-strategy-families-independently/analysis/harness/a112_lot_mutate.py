@@ -505,12 +505,36 @@ SET_61_TESTS = [
     ["go", "test", "-tags", "tossos_testseams", "-count=1", "./internal/riskbucket"],
     ["go", "test", "-count=1", "-run", "TestProductionLaneFamily|TestPaired|TestProduction", "./internal/strategyrouter"],
 ]
+SET_62 = [
+    ("U01 bucket exhaustion no longer a scope refusal (the pre-ruling stop)", ADM,
+     "errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalBucketCapExhausted {",
+     "errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalBucketCapExhausted && false {"),
+    ("U02 every precheck refusal widened into a scope refusal", ADM,
+     "\t\tif qFinal := (*execgw.QFinalRefusal)(nil); errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalBucketCapExhausted {",
+     "\t\tif qFinal := (*execgw.QFinalRefusal)(nil); true || errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalBucketCapExhausted {"),
+    ("U03 another q_final code widened into a scope refusal", ADM,
+     "qFinal.Code == riskbucket.RefusalBucketCapExhausted {", "qFinal.Code != riskbucket.RefusalZeroQuantity {"),
+    ("U04 issuance-stage STALE reclassified as a scope refusal (design 4 protection)", ADM,
+     "\t\treturn strategyFirstLegRefusal(StrategyFirstLegAtomicAdmissionFailed, accepted.market, err.Error())",
+     "\t\trefusal := strategyFirstLegRefusal(StrategyFirstLegAtomicAdmissionFailed, accepted.market, err.Error())\n\t\tif key, keyed := strategyOwnerKeyOf(authority.Result.Lineage); keyed && strings.Contains(err.Error(), \"BUCKET_USAGE_STALE\") {\n\t\t\trefusal.cause = &strategyScopeRefusal{scope: key, detail: \"stale\", cause: err}\n\t\t}\n\t\treturn refusal"),
+    ("U05 the scope refusal drops its cause", ADM,
+     "detail: \"this owner scope's risk bucket is exhausted\", cause: err}", "detail: \"this owner scope's risk bucket is exhausted\"}"),
+    ("U06 q_final ignores the strategy (family) cap", "internal/riskbucket/admission.go",
+     "\t\tqFinal = minUint64(qFinal, capQuantity)\n", "\t\tif bucket.Key.Dimension != DimensionStrategy {\n\t\t\tqFinal = minUint64(qFinal, capQuantity)\n\t\t}\n"),
+]
+SET_62_TESTS = [
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+     "TestQFinalIsBound|TestAnExhaustedFamilyBucket|TestASharedDimension|TestTwoFamiliesRacing|TestAPrecheckRefusalOtherThan|TestAnExistingGuardianCap|TestAnActivatedTwoScopeMarketIssues|TestTheScopeRefusalType|TestAScope|TestACorrupt|TestARiskScope",
+     "./internal/app/engine"],
+    ["go", "test", "-count=1", "-run", "TestTheScopeRefusalType|TestOnlyATypedScopeRefusal|TestNoEngineErrorType", "./internal/app/engine"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
-        "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS)}
+        "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
+        "6.2": (SET_62, SET_62_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측

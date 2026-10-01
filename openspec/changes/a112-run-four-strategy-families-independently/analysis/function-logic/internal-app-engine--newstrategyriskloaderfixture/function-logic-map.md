@@ -1,7 +1,7 @@
 # Function Logic Map: `newStrategyRiskLoaderFixture`
 
 - Source: `internal/app/engine/strategy_risk_authority_test.go`
-- Source SHA-256: `83d3fc0b58ff21f47265b04af72a933f571daf5320d75fe77bf1e31b3b7d183c`
+- Source SHA-256: `5e015333560303ac59eef1feab9098ef7b259696f80e9f370e1f292a0d00945c`
 - Signature: `newStrategyRiskLoaderFixture(params=1, results=1)`
 - Source range: `128:1`–`131:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2).
@@ -32,3 +32,5 @@
 ## Safety conclusion
 
 - High-risk 아님. 기존 호출자가 받는 fixture 는 바이트 단위로 같은 매니페스트(append 할 것이 없음).
+
+a112 6.2: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)

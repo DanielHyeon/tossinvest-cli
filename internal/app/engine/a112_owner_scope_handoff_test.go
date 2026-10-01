@@ -37,7 +37,15 @@ func a112TwoScopeKR(t *testing.T, authority strategyProposalMarketAuthority, now
 func a112ExtraEntryKR(t *testing.T, authority strategyProposalMarketAuthority, now time.Time, symbol string, first bool,
 ) strategyProposalMarketAuthority {
 	t.Helper()
-	second, err := strategyflow.AcceptedResultForAuthorityTest(riskLoaderDescriptor(t, StrategyMarketKR), "acct-risk-loader", symbol,
+	return a112ExtraEntryKRWith(t, authority, now, symbol, first, riskLoaderDescriptor(t, StrategyMarketKR))
+}
+
+// a112ExtraEntryKRWith 는 둘째 항목의 레인(전략군)을 고른다(a112 6.2 — 다른 family 의 범위).
+func a112ExtraEntryKRWith(t *testing.T, authority strategyProposalMarketAuthority, now time.Time, symbol string, first bool,
+	descriptor strategyflow.Descriptor,
+) strategyProposalMarketAuthority {
+	t.Helper()
+	second, err := strategyflow.AcceptedResultForAuthorityTest(descriptor, "acct-risk-loader", symbol,
 		"campaign-risk-loader-kr-extra-"+symbol, 8, "100", "95", "120", now.Add(-time.Second), now.Add(time.Minute))
 	if err != nil {
 		t.Fatal(err)

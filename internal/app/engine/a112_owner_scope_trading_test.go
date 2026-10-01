@@ -52,6 +52,15 @@ type a112TradingOptions struct {
 	coordinatorOrder bool
 	// shortFreshFor 종목의 계좌 권한은 30초 뒤 만료(나머지는 1분).
 	shortFreshFor string
+	// a112 6.2: 둘째 범위(000660)의 레인(빈 값이면 첫 범위와 같은 continuation), 첫 레인 strategy 한도, 추가 strategy 항목.
+	secondLane      *strategyflow.Descriptor
+	strategyLimit   string
+	extraStrategies []riskLoaderStrategy
+	horizonShort    string
+	// disallowFor 종목의 계좌 권한은 그 종목을 허용하지 않는다(Guardian precheck 의 버킷 고갈이 아닌 거절).
+	disallowFor string
+	// riskBudget 은 Guardian 정책의 거래당 위험 예산(KRW) — 아주 작으면 q_existing_guardian 0(버킷 고갈이 아닌 q_final 코드).
+	riskBudget string
 }
 
 type a112TradingFixture struct {
@@ -77,7 +86,8 @@ func newA112TradingFixture(t *testing.T, options a112TradingOptions) a112Trading
 	if symbols == nil {
 		symbols = []riskLoaderSymbol{{Symbol: "000660", Sector: "technology", SectorLimitMinor: "3000000", SymbolLimitMinor: "2000000"}}
 	}
-	riskFixture := newStrategyRiskLoaderFixtureWith(t, symbols)
+	riskFixture := newStrategyRiskLoaderFixtureFor(t, riskLoaderFixtureOptions{extraKR: symbols, generation: 1,
+		krStrategyLimit: options.strategyLimit, extraKRStrategies: options.extraStrategies, krHorizonShort: options.horizonShort})
 	now := riskFixture.results.observedAt
 	// 제안 권한 쌍: KR 은 범위 둘(원래 005930 + 000660) · 서명 활성화, US 는 fixture 그대로 하나.
 	proposals := strategyProposalAuthorityPair{observedAt: now}
@@ -98,7 +108,11 @@ func newA112TradingFixture(t *testing.T, options a112TradingOptions) a112Trading
 		}
 	}
 	winner := proposals.kr.entries[0].authority
-	two := a112ExtraEntryKR(t, proposals.kr, now, "000660", options.coordinatorOrder)
+	secondLane := riskLoaderDescriptor(t, StrategyMarketKR)
+	if options.secondLane != nil {
+		secondLane = *options.secondLane
+	}
+	two := a112ExtraEntryKRWith(t, proposals.kr, now, "000660", options.coordinatorOrder, secondLane)
 	two.activation = strategyrouter.FamilyActivationForTest(strategyrouter.MarketKR, 1, strategyrouter.AllFourFamiliesForTest(strategyrouter.MarketKR))
 	proposals.kr = two
 	second := two.entries[1].authority
@@ -117,6 +131,9 @@ func newA112TradingFixture(t *testing.T, options a112TradingOptions) a112Trading
 	if options.maxOpenExposure != "" {
 		policy.MaxOpenExposure = riskcalc.Money{Amount: options.maxOpenExposure, Currency: "KRW"}
 	}
+	if options.riskBudget != "" {
+		policy.RiskBudget = riskcalc.Money{Amount: options.riskBudget, Currency: "KRW"}
+	}
 	guardian, err := execgw.NewRiskGuardian(execgw.RiskGuardianOptions{Journal: handle, Clock: fakeClock, AccountRef: "acct-risk-loader",
 		Policy: policy, Costs: costs.DefaultModel(), PolicyVersion: "engine.automation_gate/risk-policy-v1"})
 	if err != nil {
@@ -126,7 +143,21 @@ func newA112TradingFixture(t *testing.T, options a112TradingOptions) a112Trading
 	riskLoader := *riskFixture.loader
 	fixture := a112TradingFixture{now: now, riskLoader: riskLoader, fx: riskFixture.fx, guardian: guardian, clk: fakeClock, journal: handle,
 		proposals: proposals, spy: &strategyDispatchGatewaySpy{observed: map[string]int{}}, winner: winner, second: second}
-	fixture.accounts = a112AccountLoaderWith(t, now, options.failAccountFor, options.accountFailure, options.shortFreshFor).collect(context.Background(), proposals)
+	accountLoader := a112AccountLoaderWith(t, now, options.failAccountFor, options.accountFailure, options.shortFreshFor)
+	if options.disallowFor != "" {
+		load := accountLoader.load
+		accountLoader.load = func(ctx context.Context, config strategyaccount.ProductionConfig) (strategyaccount.Authority, error) {
+			authority, err := load(ctx, config)
+			if err != nil || config.Symbol != options.disallowFor {
+				return authority, err
+			}
+			state := authority.AccountState()
+			state.AllowedSymbols = []string{"999999"}
+			return strategyaccount.AuthorityForTest(config.Market, authority.QuoteCurrency(), state, authority.ObservedAt(), authority.FreshUntil(),
+				authority.Generation(), authority.ManifestDigest()), nil
+		}
+	}
+	fixture.accounts = accountLoader.collect(context.Background(), proposals)
 	fixture.wave(t)
 	return fixture
 }

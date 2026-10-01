@@ -2,12 +2,14 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 )
@@ -88,7 +90,17 @@ func (b *strategyFirstLegAdmissionBridge) admit(ctx context.Context, result stra
 	}
 	precheck, err := b.guardian.PrecheckQFinalCampaignFirstLeg(authority)
 	if err != nil {
-		return strategyFirstLegRefusal(StrategyFirstLegAuthorityMismatch, accepted.market, err.Error())
+		refusal := strategyFirstLegRefusal(StrategyFirstLegAuthorityMismatch, accepted.market, err.Error())
+		// a112 6.2(Manager 판정 (A)): 그 범위의 버킷 고갈(q_final 0)은 결함이 아니라 그 범위의 정책 결과다 — **타입 · 코드**로만 범위 거절로
+		// 싣는다(문구 아님). 그래야 한 family 버킷이 고갈돼도 같은 주기의 다른 범위가 계속 평가된다(스펙 「한 family risk bucket 고갈」).
+		// 그 밖의 precheck 거절과, 발급 단계(원장 트랜잭션)의 거절 — 같은 파도 둘째 범위의 BUCKET_USAGE_STALE 등 CAS — 은 결함으로 남는다
+		// (설계 ④ 보호). 진입 관문 관측 거절(R3)은 이 판정이 넓히지 않는다.
+		if qFinal := (*execgw.QFinalRefusal)(nil); errors.As(err, &qFinal) && qFinal.Code == riskbucket.RefusalBucketCapExhausted {
+			if key, keyed := strategyOwnerKeyOf(authority.Result.Lineage); keyed {
+				refusal.cause = &strategyScopeRefusal{scope: key, detail: "this owner scope's risk bucket is exhausted", cause: err}
+			}
+		}
+		return refusal
 	}
 	receipt, err := b.guardian.IssuePrecheckedQFinalCampaignFirstLeg(ctx, precheck)
 	if err != nil {

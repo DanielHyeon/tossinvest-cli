@@ -1,0 +1,6 @@
+# isolated worktree 566c6bf4 = 18109568 + 6.2 로트 (원 출력 — rtk proxy)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	344.905s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	2.569s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	351.259s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	0.261s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	14.639s

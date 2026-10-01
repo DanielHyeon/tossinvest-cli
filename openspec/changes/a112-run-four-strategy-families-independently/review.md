@@ -5869,3 +5869,26 @@ V04 잘못된 시장 · V05 해소기가 시장 무시 · V06 해소기가 famil
 **정정(a127 F10 실측, 2026-10-01).** R1 의 「2026-08-05 a084 이후 28 이상」은 부정확하다 — 위험 · route 핀 27 은 SchemaVersion 이 이미 29 이던 커밋 `8022f578` 에서 태어나 출하된 어느 스키마와도 맞은 적이 없다(생산 위험 · route 권한은 처음부터 실원장에서 준비될 수 없었다). ROADMAP R1 행 정정.
 
 **교훈(6.1).** 같은 파일 번들을 shift 로 재기준화하는 루프가 `revision: base` 번들까지 덮어썼다(ownerdigest — HEAD 로 복원). base 번들은 base 리비전의 AST 를 지켜야 하므로 shift · rebase 대상에서 제외한다(결정 (5) 재추출에서만 갱신).
+
+## 2026-10-01 태스크 6.2 본문 — q_final 최솟값 · 한 family 버킷 고갈 · 같은 범위 동시 family admission
+
+**정지 보고 → 판정.** 스펙 「한 family risk bucket 고갈」은 「breakout 만 거절, continuation 은 계속 평가」인데, 실측(`TestAnExhaustedFamilyBucketRefusesOnlyThatFamily`
+조정자 순서)에서 고갈된 reversal 범위가 앞이면 그 precheck 거절(타입 없음)이 주기를 멈춰 continuation 이 **매 주기 굶었다**. Manager 판정 (A): admission 단계의 버킷 고갈을
+범위 거절로 분류 — admit 이 Guardian precheck 의 `*execgw.QFinalRefusal` 코드 `BUCKET_CAP_EXHAUSTED` 를 **타입 · 코드**로 보고(문구 아님) `strategyScopeRefusal{cause}` 로 싣는다.
+조건 ① 공유 차원 논거를 시험으로(`TestASharedDimensionExhaustionRefusesEveryScopeAndIssuesNothing` — horizon 0: 두 범위 각자 범위 거절, 발급 0, 주기 생존) ② 변이 양방향 + STALE
+재분류 변이 ③ 건너뛴 거절 각각 기록(errors.Join — 위 시험이 둘 다 셈) ④ **R3(진입 관문 관측 거절 — dispatch 쪽)과 구분: 이 판정은 그 계열을 넓히지 않는다** ⑤ High-risk 규율.
+
+**편집.** `admit`(Pre-Edit `analysis/measurements/lot-6.2/pre-edit/`): precheck 거절 갈래 안에 B6(타입 · 코드) · B7(범위 키). census 만드는 자리 1 → 2(admit). dispatch · 1차 레그 무편집.
+
+**증거.** RED `lot-6.2/red-6.2.log`(편집 전: 고갈 범위가 타입 없음 · 조정자 순서 발급 0 · 공유 차원 기록 없음) → GREEN 같은 로그. 시험(`a112_qfinal_family_test.go`):
+- `TestQFinalIsBoundByTheFamilyBucketWhenItIsTheSmallestCap` — family 한도 = `ReservationMinor(3)` → 발급 수량 = `MaximumQuantity` 독립 계산 = 원장 q_final < q_candidate(8).
+- `TestAnExhaustedFamilyBucketRefusesOnlyThatFamily`(두 순서) · `TestASharedDimensionExhaustionRefusesEveryScopeAndIssuesNothing`.
+- `TestTwoFamiliesRacingForOneOwnerScopeLeaveOneTransaction` — 두 조립(continuation 쌍 · reversal 쌍)이 한 원장 · Guardian · dispatch owner 로 005930 을 동시 dispatch → 주문 1, 결정 1,
+  예약 한 세트, 진 쪽은 `journal: risk bucket owner conflict`(두 쪽 모두 admission 에 닿았음을 단언). 조정자 우회 사유와 조정자 경로 핀(`TestTheSameOwnerScopeSealedTwiceRefusesTheActivatedMarket`) 교차 인용은 시험 주석.
+- 경계: `TestAPrecheckRefusalOtherThanBucketExhaustionStillStopsTheCycle`(SYMBOL_NOT_ALLOWED — chain 거절) · `TestAnExistingGuardianCapRefusalIsNotAScopeRefusal`(같은 q_final 타입의 다른 코드).
+- 변이 `lot-6.2/mutation-6.2.tsv`: U01 분류 제거 · U02 모든 precheck 로 확대 · U03 다른 q_final 코드로 확대(첫 실행 SURVIVED → 경계 시험 추가 후 CAUGHT) · U04 STALE 을 범위로 재분류 ·
+  U05 원인 누락 · U06 q_final 이 family cap 무시 — **6/6 CAUGHT**.
+
+**잔여.** 원장 owner CAS 자체의 변이는 a066 journal 시험이 잰다(`TestRiskBucketAdmissionConcurrentProspectiveOwnersHaveOneWinner` 등) — 이 로트는 a112 생산 경로에서 그 결과를 관측만.
+생산 동작 변화 0(활성화 0).
+

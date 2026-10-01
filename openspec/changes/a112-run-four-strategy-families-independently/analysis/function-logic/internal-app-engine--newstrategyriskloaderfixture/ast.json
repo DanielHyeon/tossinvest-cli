@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_risk_authority_test.go",
-  "source_sha256": "83d3fc0b58ff21f47265b04af72a933f571daf5320d75fe77bf1e31b3b7d183c",
+  "source_sha256": "5e015333560303ac59eef1feab9098ef7b259696f80e9f370e1f292a0d00945c",
   "package": "engine",
   "function": "newStrategyRiskLoaderFixture",
   "signature": "newStrategyRiskLoaderFixture(params=1, results=1)",

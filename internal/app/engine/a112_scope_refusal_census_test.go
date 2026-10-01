@@ -32,7 +32,10 @@ var strategyScopeRefusalMentions = map[string]int{
 	// **만드는 자리는 여기 하나뿐**: 그 범위의 위험 권한이 범위 국소 원인(riskbucket.ErrProductionRiskScopeRefused)으로 준비되지 않음.
 	// 2 → 1(2026-10-01, codex 재확인 P1 → Manager 판정 (A)): 계좌 쪽은 범위 국소 원인이 없어(시장 단위 매니페스트) 언제나 결함.
 	"strategy_account_first_leg_authority.go:collectStrategyFirstLegAuthority": 1,
-	// 운반: 전달 몸통의 errors.As 대상(admit · dispatch 는 수집 오류를 사슬째 나르므로 이 타입을 언급하지 않음 — 리뷰 수리).
+	// 둘째 만드는 자리(a112 6.2, Manager 판정 (A)): admit 이 Guardian precheck 의 버킷 고갈(QFinalRefusal 코드 BUCKET_CAP_EXHAUSTED — 타입 · 코드)을
+	// 그 범위의 거절로 싣는다. 다른 precheck 거절 · 발급 단계 CAS(STALE)는 결함 그대로.
+	"strategy_first_leg_admission.go:admit": 1,
+	// 운반: 전달 몸통의 errors.As 대상(dispatch 는 수집 오류를 사슬째 나르므로 이 타입을 언급하지 않음 — 리뷰 수리).
 	"strategy_market_handoff_delivery.go:deliverEachStrategyHandoff": 1,
 }
 

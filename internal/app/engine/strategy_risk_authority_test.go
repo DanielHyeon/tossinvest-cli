@@ -141,6 +141,21 @@ func newStrategyRiskLoaderFixtureWith(t *testing.T, extraKR []riskLoaderSymbol) 
 // 배치를 만들어 dispatch 가 **범위 번들의** 세대를 읽는지 잼, 리뷰 B #1 · 변이 M20).
 func newStrategyRiskLoaderFixtureGeneration(t *testing.T, extraKR []riskLoaderSymbol, generation uint64) strategyRiskLoaderFixture {
 	t.Helper()
+	return newStrategyRiskLoaderFixtureFor(t, riskLoaderFixtureOptions{extraKR: extraKR, generation: generation})
+}
+
+// riskLoaderFixtureOptions 는 KR 서명 위험 정책의 변형이다(a112 6.2 — family 버킷 한도 · 둘째 family 레인 항목).
+type riskLoaderFixtureOptions struct {
+	extraKR           []riskLoaderSymbol
+	generation        uint64
+	krStrategyLimit   string               // 빈 값이면 기본 5000000
+	extraKRStrategies []riskLoaderStrategy // 다른 family 레인의 strategy 항목
+	krHorizonShort    string               // 빈 값이면 기본 10000000(공유 차원 고갈 시험)
+}
+
+func newStrategyRiskLoaderFixtureFor(t *testing.T, options riskLoaderFixtureOptions) strategyRiskLoaderFixture {
+	t.Helper()
+	extraKR, generation := options.extraKR, options.generation
 	now := time.Date(2026, 8, 4, 2, 0, 0, 0, time.UTC)
 	dir := t.TempDir()
 	journalPath := filepath.Join(dir, "journal.db")
@@ -180,6 +195,13 @@ func newStrategyRiskLoaderFixtureGeneration(t *testing.T, extraKR []riskLoaderSy
 			Symbols: []riskLoaderSymbol{{Symbol: symbol, Sector: "technology", SectorLimitMinor: "3000000", SymbolLimitMinor: "2000000"}}}
 		if market == StrategyMarketKR {
 			body.Symbols = append(body.Symbols, extraKR...)
+			if options.krStrategyLimit != "" {
+				body.Strategies[0].LimitMinor = options.krStrategyLimit
+			}
+			if options.krHorizonShort != "" {
+				body.HorizonLimits = map[riskbucket.Horizon]string{riskbucket.HorizonShort: options.krHorizonShort, riskbucket.HorizonMedium: "20000000"}
+			}
+			body.Strategies = append(body.Strategies, options.extraKRStrategies...)
 		}
 		bodyJSON, _ := json.Marshal(body)
 		manifest := riskLoaderManifest{riskLoaderBody: body, Signature: base64.StdEncoding.EncodeToString(ed25519.Sign(private, bodyJSON))}
