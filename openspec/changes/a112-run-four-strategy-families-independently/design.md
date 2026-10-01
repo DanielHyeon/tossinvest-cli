@@ -133,8 +133,11 @@ stateDiagram-v2
 v1 평가기에 생산자가 있는 변은 여덟(정방향 여섯 · `RETEST_WAIT → INVALIDATED` · `RETEST_WAIT → TIMED_OUT`)이고, 나머지 여섯은 이렇게 남는다:
 조기 `INVALIDATED` 다섯(`DISCOVERED` · `RANGE_LOCKED` · `BREAKOUT_CLOSED` · `RECLAIMED` · `ARMED` → `INVALIDATED`)은 **v1 생산자 없음 · 예약**이다 —
 v1 의 무효화 수준(범위 하단 아래 종가)과 거래량 확장 실패 재돌파는 돌파 뒤 개념이고, `BREAKOUT_CLOSED` · `RECLAIMED` 는 한 걸음에 지나가는 과도 단계이며,
-`ARMED` 의 호가 실패는 terminal 이 아니라 ARMED 에 머무는 typed refusal 이다(review.md B1 표에 변마다 근거). `PROPOSED → CONSUMED` 는 태스크 6.4
-(breakout 첫 레그 전용 생산 권한)의 몫이다. 생산자 집합은 `internal/breakoutlane/a112_transition_producer_census_test.go` 가 고정한다 — 생산자를 더하는
+`ARMED` 의 호가 실패는 terminal 이 아니라 ARMED 에 머무는 typed refusal 이다(review.md B1 표에 변마다 근거). `PROPOSED → CONSUMED` 는 **v1 에서 journal 첫-레그 결속이 곧 CONSUMED 기록**이다(태스크 6.4 판정 (i), 2026-10-01): 스펙 시나리오 「shared admission이 CONSUMED를
+기록」 의 기록은 `internal/journal/strategy_first_leg_atomic.go` `RecordQFinalCampaignFirstLeg`(:101)가 한 트랜잭션에서 쓰는 캠페인(`insertFirstLegCampaignTx` :374 —
+`position_campaigns` PLANNED 행 + `position_campaign_claims`, 활성 유일 색인 `idx_position_campaign_active_scope` `position_campaign.go:62`)과 첫 레그 결속(`insertFirstLegBindingTx` :455 —
+`strategy_first_leg_bindings`)이다. 레인의 `phaseConsumed` 는 v1 에서 생산자가 없고(census 0 고정) 레인에 그 결속을 되먹이는 길도 없다 — 생산에 prior 영속이 없기 때문.
+그 결속이 setup 에 묶이지 않는 잔여(손절-종결 → 재시작 → 새 CampaignID → 같은 setup 둘째 첫 레그)는 breakout 벽 해제 로트의 면제 불가 선행(B 또는 C)이다(tasks 6.4 · ROADMAP). 생산자 집합은 `internal/breakoutlane/a112_transition_producer_census_test.go` 가 고정한다 — 생산자를 더하는
 편집은 그 census 를 의도적으로 뒤집어야 한다.
 
 `INVALIDATED`, `TIMED_OUT`, `CONSUMED`는 terminal이며 같은 setup ID에서 부활하지 않는다. state transition은 official calendar가 정한 regular session의 닫힌 1-minute bar만 사용한다. live quote는 ARMED 뒤 최종 spread/drift/freshness veto에만 사용하며 breakout/retest/reclaim transition의 근거가 될 수 없다.

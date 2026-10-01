@@ -1,0 +1,12 @@
+TREE	HEAD 654443415b36dca624a5e73f5e4d7aadc5fc9b9e (git archive) + own: internal/app/engine/a112_breakout_first_leg_only_test.go,internal/strategyproposal/a112_breakout_wall_test.go
+CONTROL	GREEN	[./internal/app/engine pass events 4] [./internal/strategyproposal pass events 10]
+W1 the breakout wall is deleted (production breakout input reaches the lane)	CAUGHT	2 failing: TestEveryProductionBreakoutLaneInputIsRefusedAtTheWall, TestBuildLaneInputRefusesBreakoutLanesWithTheBreakoutReason
+W2 the wall covers KR only	CAUGHT	2 failing: TestEveryProductionBreakoutLaneInputIsRefusedAtTheWall, TestBuildLaneInputRefusesBreakoutLanesWithTheBreakoutReason
+W3 a new non-test producer calls strategyflow.BreakoutKR around the wall	CAUGHT	1 failing: TestNoNonTestCodeBuildsABreakoutLaneInputAroundTheWall
+W4 a new non-test producer builds a breakout LaneInput literal inside strategyflow	CAUGHT	1 failing: TestNoNonTestCodeBuildsABreakoutLaneInputAroundTheWall
+L1 the delivery body no longer skips an open campaign (layer 1 off)	BUILD-FAIL	0 failing:  | internal/app/engine/strategy_market_handoff_delivery.go:37:3: declared and not used: cas
+L1b the delivery body ignores the claim	CAUGHT	2 failing: TestARedeliveredBreakoutFirstLegReachesTheBrokerOnce, TestASecondBreakoutFirstLegWhileTheClaimIsActiveNeverReachesTheBroker
+L2 the first-leg loader no longer refuses an open campaign (layer 2 off)	CAUGHT	1 failing: TestTheFirstLegAuthorityRefusesASecondBreakoutLegEvenPastTheDeliverySkip
+RERUN	L1 redefined (first definition BUILD-FAIL: unused variable) — same HEAD, own control below
+CONTROL	GREEN	[./internal/app/engine pass events 4] [./internal/strategyproposal pass events 10]
+L1 the delivery body no longer skips an open campaign (layer 1 off)	CAUGHT	2 failing: TestARedeliveredBreakoutFirstLegReachesTheBrokerOnce, TestASecondBreakoutFirstLegWhileTheClaimIsActiveNeverReachesTheBroker

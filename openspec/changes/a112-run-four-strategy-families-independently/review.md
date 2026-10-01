@@ -6247,3 +6247,34 @@ buffer 누락(CF-07) · 입장 깃발 오기록(CF-08) · 결정 변경(전이 �
 
 **착지 판정(Manager, 2026-10-01).** 착지 시점 독립 적대 리뷰 불요 — 비례 원칙(기록 전용 · 봉인 무포함 · 입장 경로 바이트 동일 · 쌍둥이 비교 · 판정 변경 변이 CAUGHT ·
 원문 3출처로 (a) 배제). 대신 완료 게이트 8.5 독립 적대 리뷰의 명시 대상에 올렸다(tasks 8.5). 리터럴 중복은 변이 핀으로 수용 — 입장 경로 불변 지시가 상수 통합보다 우선.
+
+## 2026-10-01 6.4 — breakout 첫 레그 전용 생산 권한(판정 A + CONSUMED (i))
+
+**판정(Manager).** A(시험만 · 생산 변경 0) + CONSUMED (i); B(SetupID 계보 결속)/C(consumed-setup 원장 기록)는 breakout 벽 해제 로트의 **면제 불가 선행**(tasks 6.4 · ROADMAP
+「a112 이월」 표에 문구). 근거: 갭이 오늘 경성 fail-closed 벽 뒤에 있고, B 는 봉인 · 골든을 만지는 freeze 급, C 는 스키마 범프 — a126 R3 가족과 같은 처분.
+FLM/BTM: `not-applicable` — 편집한 생산 함수 0. 분기 근거 주장(층 ① · ② 의 거절 자리)은 실행(변이 L1 · L1b · L2 · 프로브)으로 쟀다.
+
+**실측(코드 읽기 → 시험으로 확인).** 첫 레그 권한은 공유 journal admission 이 진다. 캠페인이 열린 동안 같은 종목의 둘째 첫 레그는 세 층이 각각 거절한다:
+① 전달 몸통 `dispatchStrategyMarketHandoffs`(`strategy_market_handoff_delivery.go:41` — claim 또는 FLAT/CLOSED 아님 → dispatch 안 부름),
+② 1차 레그 권한 loader(`strategy_account_first_leg_authority.go:348` → `production position campaign CAS changed`),
+③ journal(`insertFirstLegCampaignTx` `strategy_first_leg_atomic.go:374` 의 위치 CAS · claim · `idx_position_campaign_active_scope`, 그리고 그보다 앞의 위험 버킷 owner).
+층 ③ 단독(① · ② 를 `go test -overlay` 로 끔)은 `risk bucket owner conflict` 로 거절, 브로커 1 유지 — `lot-6.4/probe-journal-layer.log`.
+
+**시험.** seam 주입 사유: 생산 breakout 입력은 전부 벽(`ErrBreakoutEvidenceUnavailable`)에 막혀 봉인 제안을 생산 경로로 만들 수 없다 — `strategyflow.AcceptedResultForAuthorityTest`
+(등록된 breakout descriptor 만 받음)로 결과를 주입하고 그 뒤는 생산과 같은 경로(제안 권한 쌍 → 위험 · 계좌 적재기 → loader → dispatch 주기 → 전달 몸통 → 실제 journal → Gateway 스파이).
+- engine `a112_breakout_first_leg_only_test.go`(태그): 중복 평가 멱등(재전달 세 파도 뒤 브로커 1 · 캠페인 1 · 결속 1 · 레그 1) · 층 ①(몸통 도달 CAS 1 · dispatch 0 — 거절이 앞
+  단계의 것이 아님을 직접 잼) · 층 ②(몸통 우회 직접 dispatch → loader 거절) · 개입 금지(네 파도, 다른 캠페인 제안 섞어도 추가 노출 레그 0).
+- strategyproposal `a112_breakout_wall_test.go`(무태그 — CI 에서 돎): 벽 핀(조건 ③) — breakout 레인을 서술자 두 출처(breakoutlane · strategyflow+router)에서 열거해 같음을 단언하고
+  빈/채운 scope 모두 벽 사유 거절; 우회 생산자 census — 시험 아닌 Go 파일 전수(바닥 500)에서 `strategyflow.BreakoutKR/US` 호출 0 · `laneBreakout*` 사용 = 등록표 두 자리.
+- 이름 결속 `lot-6.4/named-6.4.log`.
+
+**변이 `lot-6.4/mutation-6.4.tsv` 7/7 CAUGHT.** W1 벽 삭제 · W2 KR 만 · W3 패키지 밖 우회 호출 · W4 strategyflow 안 우회 리터럴 · L1 몸통 건너뛰기 끔(첫 정의 BUILD-FAIL — 미사용 변수,
+재정의 뒤 CAUGHT) · L1b claim 무시 · L2 loader CAS 끔.
+
+**CONSUMED (i).** design.md 「`PROPOSED → CONSUMED`」 문단: v1 에서 journal 첫-레그 결속(`RecordQFinalCampaignFirstLeg` :101 → 캠페인 :374 · 결속 :455)이 곧 CONSUMED 기록.
+census 불변(`phaseConsumed` 생산 자리 0), 골든 불변 — census 시험의 주석만 6.4 → (i) 해석으로 고쳤다(로직 변경 없음).
+
+**잔여(재생 수순 그대로 — 면제 불가 선행).** 손절-종결(캠페인 CLOSED · claim 해제) → 재시작(레인 prior 상실 — 생산에서 Prior 를 채우는 곳 0) → 같은 setup 이 봉 하나만
+더해져도 새 스냅숏 digest · 새 ProposalID 로 다시 PROPOSED → 서명 제안 입력 매니페스트가 새 CampaignID 를 실으면 journal 이 받아들임 → 같은 setup 둘째 첫 레그. 스펙:
+"Proposal replay, duplicate bar delivery, correction 또는 restart가 동일 setup/bar에서 두 번째 first-leg 권위를 만들면 안 되며 (MUST NOT)". 오늘 도달 불가(벽).
+**「ErrBreakoutEvidenceUnavailable 해제 로트는 B(SetupID 계보 결속) 또는 C(consumed-setup 원장 기록) 착지 전 해제 불가」** — 벽 핀 두 시험이 해제 편집에서 뒤집힌다.

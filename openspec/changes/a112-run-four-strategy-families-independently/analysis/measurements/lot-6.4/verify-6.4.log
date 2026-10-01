@@ -1,0 +1,13 @@
+== scratch b91b7b3d on 65444341
+make lint exit=0
+gofmt listed=0
+go test untagged strategyproposal+breakoutlane exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	0.209s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.248s
+go test tagged engine+strategyproposal exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	274.341s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	0.599s
+go test -race new engine tests exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	22.862s
+Change 'a112-run-four-strategy-families-independently' is valid
+== check_analysis --change a112: HEAD 173, lot 173, normalized set delta 0/0

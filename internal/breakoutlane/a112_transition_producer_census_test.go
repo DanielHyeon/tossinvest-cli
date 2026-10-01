@@ -3,7 +3,7 @@ package breakoutlane
 // a112 breakout 덮개 B1(Manager 판정 2026-10-01): 골든 `allowed_transitions`(four-family-runtime-v1.json)는 **허용 가능한 변의 검증 집합**이지
 // 평가기의 산출 의무가 아니다. 열넷 중 여섯 변은 v1 에 생산자가 없다 —
 //   조기 INVALIDATED 다섯(DISCOVERED · RANGE_LOCKED · BREAKOUT_CLOSED · RECLAIMED · ARMED → INVALIDATED): 「v1 생산자 없음 · 예약」(review.md B1 표에 변마다 부재 근거),
-//   PROPOSED → CONSUMED: 6.4(breakout 첫 레그 전용 생산 권한)의 몫.
+//   PROPOSED → CONSUMED: v1 에서는 journal 첫-레그 결속이 곧 CONSUMED 기록(6.4 판정 (i) — design.md) — 레인 생산자 0 유지.
 // 이 census 는 **지금 평가기가 낼 수 있는 변**을 고정한다. 누가 위 여섯 중 하나의 생산자를 더하면(또는 지금의 생산자를 빼면) 아래 둘 중 하나가
 // 뒤집힌다 — 의도한 편집이면 census 와 review 의 B1 표를 같이 고친다(그 편집이 리뷰에 보인다). 골든 자체는 불변.
 //   (1) 구조: 패키지 생산 파일 전체에서 phase 상수의 「생산 자리」 수(비교 피연산자가 아닌 모든 사용)와, 상수를 우회하는 철자
@@ -25,7 +25,7 @@ import (
 // a112ReservedBreakoutEdges 는 골든이 허용하지만 v1 평가기에 생산자가 없는 변이다(B1 판정).
 var a112ReservedBreakoutEdges = []string{
 	"DISCOVERED>INVALIDATED", "RANGE_LOCKED>INVALIDATED", "BREAKOUT_CLOSED>INVALIDATED", "RECLAIMED>INVALIDATED", "ARMED>INVALIDATED", // v1 생산자 없음 · 예약
-	"PROPOSED>CONSUMED", // 6.4
+	"PROPOSED>CONSUMED", // v1: journal 첫-레그 결속이 CONSUMED 기록(6.4 판정 (i))
 }
 
 // a112ProducedBreakoutEdges 는 지금 평가기가 내는 변이다(아래 행동 census 가 실측으로 같음을 단언).

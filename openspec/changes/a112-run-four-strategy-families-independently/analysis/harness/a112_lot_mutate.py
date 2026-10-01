@@ -842,13 +842,38 @@ SET_23 = [
     ("CF-10 the admitted path's 1.2 flag is swapped to 2.0 (admitted path must stay)", BKM,
      "p.RVOLAt1200000 = b.RVOLPPM >= 1_200_000", "p.RVOLAt1200000 = b.RVOLPPM >= 2_000_000"),
 ]
+# 6.4 (Manager 판정 2026-10-01: A + CONSUMED (i)) — 벽 핀 · 층별 첫 레그 거절. 엔진 시험은 태그(tossos_testseams), 벽 시험은 무태그.
+SPP = "internal/strategyproposal/production.go"
+DLV = "internal/app/engine/strategy_market_handoff_delivery.go"
+FLA = "internal/app/engine/strategy_account_first_leg_authority.go"
+SET_64 = [
+    ("W1 the breakout wall is deleted (production breakout input reaches the lane)", SPP,
+     "\tif scope.LaneID == breakoutlane.KRLaneID || scope.LaneID == breakoutlane.USLaneID {\n\t\treturn strategyflow.LaneInput{}, nil, ErrBreakoutEvidenceUnavailable\n\t}\n", ""),
+    ("W2 the wall covers KR only", SPP, "if scope.LaneID == breakoutlane.KRLaneID || scope.LaneID == breakoutlane.USLaneID {",
+     "if scope.LaneID == breakoutlane.KRLaneID {"),
+    ("W3 a new non-test producer calls strategyflow.BreakoutKR around the wall", "internal/strategyproposal/zz_a112_bypass.go", None,
+     "package strategyproposal\n\nimport \"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow\"\n\nvar _ = strategyflow.BreakoutKR(strategyflow.BreakoutRequest{})\n"),
+    ("W4 a new non-test producer builds a breakout LaneInput literal inside strategyflow", "internal/strategyflow/zz_a112_bypass.go", None,
+     "package strategyflow\n\nvar _ = LaneInput{kind: laneBreakoutUS}\n"),
+    ("L1 the delivery body no longer skips an open campaign (layer 1 off)", DLV,
+     "\t\tif cas.Claimed || cas.State != \"FLAT\" && cas.State != \"CLOSED\" {", "\t\tif false && (cas.Claimed || cas.State != \"FLAT\" && cas.State != \"CLOSED\") {"),
+    ("L1b the delivery body ignores the claim", DLV, "\t\tif cas.Claimed || cas.State != \"FLAT\"", "\t\tif cas.State != \"FLAT\""),
+    ("L2 the first-leg loader no longer refuses an open campaign (layer 2 off)", FLA,
+     "if err != nil || cas.Claimed || cas.State != \"FLAT\" && cas.State != \"CLOSED\" || cas.Generation < 0 ||", "if err != nil || cas.Generation < 0 ||"),
+]
+SET_64_TESTS = [
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+     "TestARedeliveredBreakoutFirstLegReachesTheBrokerOnce|TestASecondBreakoutFirstLegWhileTheClaimIsActiveNeverReachesTheBroker|TestTheFirstLegAuthorityRefusesASecondBreakoutLegEvenPastTheDeliverySkip|TestNoScaleInOrExtraBreakoutLegWhileTheCampaignIsOpen",
+     "./internal/app/engine"],
+    ["go", "test", "-count=1", "./internal/strategyproposal"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측

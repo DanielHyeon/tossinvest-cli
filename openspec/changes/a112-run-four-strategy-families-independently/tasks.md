@@ -483,13 +483,27 @@
   권한 · admission 커밋 전)에 대조됨을 시험으로(`a112_dispatch_lineage_test.go`: 순서 AST 동결 · lease 레인 → 가족 단사 · 같은 범위 다른 계보의 발급 시점 거절
   (예약 · lease 행 불변 · 게이트웨이 0) · 최종 검사의 재검증 drift 거절). transport 전 계보 재대조는 없음 — ROADMAP 「a112 이월」 (B) 행(활성화 로트 선행).
   잔여 (c): 재검증 drift 판정을 순수 함수로 의미 무변경 이동(영수증) + 축별 시험. 변이 13(동등 표기 A2 · A3 — 철자 핀만).
-- [ ] 6.4 Enforce breakout first-leg-only production authority and add broker spies proving duplicate evaluation/restart/correction cannot create a second first-leg or any scale-in mutation.
+- [x] 6.4 Enforce breakout first-leg-only production authority and add broker spies proving duplicate evaluation/restart/correction cannot create a second first-leg or any scale-in mutation.
 
   **6.4 입력(2026-10-01 B1 · breakout 덮개 2차).** (a) 골든 변 `PROPOSED → CONSUMED` 의 생산자가 이 태스크다 — v1 평가기에는 없고(B1 실측),
   `a112_transition_producer_census_test.go` 가 `phaseConsumed` 생산 자리 0 을 고정하므로 이 태스크가 생산자를 더할 때 census 와 review B1 표를 같이 고친다;
   소비 계약(CONSUMED prior 는 정정 뒤 보존)은 `TestACorrectionAfterConsumedNeitherResurrectsNorReissues` 가 미리 잰다. (b) 레인이 막지 **않는** 둘째 첫 레그 경로
   (실측): config 재버전(새 setup ID — 스펙대로 소급 재해석 없음)은 같은 세션 · 같은 종목에 새 제안을 낸다(prior 를 넘겨도 다른 setup 이라 fresh — 프로브에서 후보 99 → 19, 새 ProposalID);
   세션 교체도 새 setup 이다. 레인 판정은 setup 단위라 「(종목, 세션) 또는 포지션 단위 첫 레그 하나」 는 이 태스크의 권한이 세워야 한다.
+
+  **6.4 종결(2026-10-01 Manager 판정 A + CONSUMED (i) — 미착지).** 생산 변경 0. 첫 레그 전용 권한은 공유 journal admission 이 진다 — 캠페인이 열린 동안 같은 종목의
+  둘째 첫 레그는 세 층에서 각각 거절: ① 전달 몸통(`strategy_market_handoff_delivery.go` CAS 건너뛰기) ② 1차 레그 권한 loader(`production position campaign CAS changed`)
+  ③ journal(`insertFirstLegCampaignTx` · `idx_position_campaign_active_scope` · 위험 버킷 owner). 시험(seam 주입 — 생산 breakout 입력이 벽에 막혀 있음):
+  engine `a112_breakout_first_leg_only_test.go` `TestARedeliveredBreakoutFirstLegReachesTheBrokerOnce`(중복 평가 멱등 — 재전달 세 파도 뒤 브로커 1 · 캠페인 1 · 결속 1 · 레그 1) ·
+  `TestASecondBreakoutFirstLegWhileTheClaimIsActiveNeverReachesTheBroker`(층 ① — 몸통 도달 · dispatch 0) · `TestTheFirstLegAuthorityRefusesASecondBreakoutLegEvenPastTheDeliverySkip`(층 ②) ·
+  `TestNoScaleInOrExtraBreakoutLegWhileTheCampaignIsOpen`(개입 금지 — 네 파도 · 다른 캠페인 제안 섞어도 추가 노출 레그 0); 층 ③ 단독은 journal
+  `TestFirstLegAtomicAdmissionCompetingSameScopeHasOneWinner` · `TestFirstLegAtomicAdmissionExactReplayUsesOriginalJournalToken` + 프로브 `lot-6.4/probe-journal-layer.log`(층 ①② 끔 →
+  `risk bucket owner conflict`, 브로커 1 유지). 벽 핀(조건 ③): strategyproposal `a112_breakout_wall_test.go` `TestEveryProductionBreakoutLaneInputIsRefusedAtTheWall`(서술자 두 출처로
+  breakout 레인 전부) · `TestNoNonTestCodeBuildsABreakoutLaneInputAroundTheWall`(우회 생산자 0). 변이 `lot-6.4/mutation-6.4.tsv` W1~W4 · L1 · L1b · L2 CAUGHT.
+  CONSUMED (i): design.md 「v1 CONSUMED 기록」 — 레인 phase CONSUMED 생산자 0(census 불변), 골든 불변.
+
+  **잔여(재생 수순 그대로).** 손절-종결 → 재시작 → 새 매니페스트 CampaignID → 같은 setup 둘째 첫 레그: 첫 레그 캠페인이 손절로 CLOSED 되고 claim 이 풀린다 → 재시작으로 레인 prior 를 잃는다(생산에서 `BreakoutRequest.Prior` 를 채우는 곳 0) → 같은 setup 이 봉 하나만 더해져도 새 스냅숏 digest · 새 ProposalID 로 다시 PROPOSED → 서명 제안 입력 매니페스트가 새 CampaignID 를 실으면 journal 은 FLAT/CLOSED · claim 없음 · 새 캠페인 PK 로 받아들인다 → 같은 setup 의 둘째 첫 레그. 스펙(breakout-retest-strategy-lane 「breakout v1 production 권위는 first-leg 하나로 제한된다」): "Proposal replay, duplicate bar delivery, correction 또는 restart가 동일 setup/bar에서 두 번째 first-leg 권위를 만들면 안 되며 (MUST NOT)".
+  오늘 이 수순은 벽(`ErrBreakoutEvidenceUnavailable`) 뒤에 있어 도달 불가다. **면제 불가: 「ErrBreakoutEvidenceUnavailable 해제 로트는 B(SetupID 계보 결속) 또는 C(consumed-setup 원장 기록) 착지 전 해제 불가」.**
 - [ ] 6.5 Add crash/retry tests across coordinator handoff, owner/q_final admission, lease claim, SUBMITTING and exact outcome reconciliation without releasing or duplicating capacity incorrectly.
 - [ ] 6.6 Add prerequisite regression tests proving a066 incomplete owner/exit gate or a100 missing/mismatched/expired protection attestation yields exposure-raising broker request zero while reduce-only paths continue.
 
