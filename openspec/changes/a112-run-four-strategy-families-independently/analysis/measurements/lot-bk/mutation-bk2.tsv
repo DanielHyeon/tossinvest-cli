@@ -1,0 +1,34 @@
+TREE	HEAD 3be54204e514624e7e9f97d8eea61108c8682520 (git archive) + own: internal/breakoutlane/a112_no_averaging_down_test.go,internal/breakoutlane/a112_transition_producer_census_test.go,internal/breakoutlane/a112_sizing_oracle_test.go,internal/breakoutlane/a112_setup_identity_and_bars_test.go
+CONTROL	GREEN	[./internal/breakoutlane pass events 111]
+BK2-01 a PROPOSED prior is no longer preserved (re-sizes into a second leg)	CAUGHT	3 failing: TestAProposedSetupNeverReSizesIntoALowerLegOrARetreatedStop/lower_leg_after_one_more_bar, TestAProposedSetupNeverReSizesIntoALowerLegOrARetreatedStop/retreated_stop_riding_a_bar_correction, TestAdversarialCorrectionReplaysPreTerminalAndPreservesProposed
+BK2-02 a terminal prior is no longer preserved (re-entry after failure)	CAUGHT	4 failing: TestNoAveragingDownLegAfterAFailedSetup/volume-expanded_failed_reclaim, TestNoAveragingDownLegAfterAFailedSetup/close_below_the_range_low, TestACorrectionCannotResurrectAFailedSetupIntoALowerLeg, TestTerminalCorrectionsRetainTerminalAuthority
+BK2-03 INVALIDATED is not terminal	CAUGHT	4 failing: TestNoAveragingDownLegAfterAFailedSetup/volume-expanded_failed_reclaim, TestNoAveragingDownLegAfterAFailedSetup/close_below_the_range_low, TestACorrectionCannotResurrectAFailedSetupIntoALowerLeg, TestTerminalCorrectionsRetainTerminalAuthority
+BK2-04 an unchanged lineage counts as a correction (re-sizing without new evidence)	CAUGHT	2 failing: TestAProposedSetupNeverReSizesIntoALowerLegOrARetreatedStop/stop_retreated_on_the_same_bars, TestAProposedSetupNeverReSizesIntoALowerLegOrARetreatedStop/lower_entry_and_retreated_stop_on_the_same_bars
+BK2-05 an early ARMED->INVALIDATED producer is added on quote refusal (census must flip)	CAUGHT	1 failing: TestTheBreakoutTransitionProducersAreExactlyTheCensus
+BK2-06 a phase literal bypasses the constants (census literal count must flip)	CAUGHT	1 failing: TestTheBreakoutTransitionProducersAreExactlyTheCensus
+BK2-07 an inert PROPOSED->CONSUMED producer is added in the evaluator (6.4 edge — only the census can see it)	CAUGHT	1 failing: TestTheBreakoutTransitionProducersAreExactlyTheCensus
+BK2-08 the unreachable since>timeout guard is deleted (behaviour-equivalent — only the census sees it)	CAUGHT	1 failing: TestTheBreakoutTransitionProducersAreExactlyTheCensus
+BK2-09 stop equal to entry is protective	CAUGHT	1 failing: TestANonProtectiveStopNeverProposes/stop_equals_entry
+BK2-10 a zero stop is not refused	CAUGHT	2 failing: TestANonProtectiveStopNeverProposes/stop_zero, TestSizingMatchesTheExactRationalOracle
+BK2-11 a zero ask is not refused	CAUGHT	1 failing: TestANonProtectiveStopNeverProposes
+BK2-12 EQUIVALENT a zero entry is not refused by its own clause (stop==0 or stop>=entry still refuses)	SURVIVED	
+BK2-13 the candidate rounds up instead of down	CAUGHT	1 failing: TestSizingMatchesTheExactRationalOracle
+BK2-14 worst entry ignores an ask above the proposed entry	CAUGHT	3 failing: TestSizingMatchesTheExactRationalOracle, TestFinalRedTeamSizingUsesWorstEntryInRisk, TestGstackRepairFailedReclaimAndRiskRewardBoundary/minimum_RR_one_minor_below
+BK2-15 the final cap is ignored	CAUGHT	2 failing: TestSizingMatchesTheExactRationalOracle, TestAdversarialQuoteFXAndSizingRefusals/zero_final_cap
+BK2-16 ceil degrades to floor	CAUGHT	5 failing: TestSizingMatchesTheExactRationalOracle, TestMulDivMatchesTheExactQuotientOrRefuses, TestQuoteVetoMatchesTheGoldenFormulasAtAndBeyondEachLimit, TestGstackRepairQuoteAndFXExactBoundaries/canonical_scale_2, TestGstackRepairQuoteAndFXExactBoundaries/inverse_scale_6
+BK2-17 the ceil q==max overflow guard is deleted (wraps to 0)	CAUGHT	1 failing: TestMulDivMatchesTheExactQuotientOrRefuses
+BK2-18 floor overflow test is off by one (hi==d reaches Div64)	CAUGHT	1 failing: TestMulDivMatchesTheExactQuotientOrRefuses
+BK2-19 the spread mid uses the overflowing sum	CAUGHT	1 failing: TestQuoteVetoMatchesTheGoldenFormulasAtAndBeyondEachLimit
+BK2-20 drift at the limit is refused	CAUGHT	2 failing: TestQuoteVetoMatchesTheGoldenFormulasAtAndBeyondEachLimit, TestGstackRepairQuoteAndFXExactBoundaries/drift_exact
+BK2-21 spread at the limit is refused	CAUGHT	5 failing: TestQuoteVetoMatchesTheGoldenFormulasAtAndBeyondEachLimit, TestGstackRepairQuoteAndFXExactBoundaries/age_exact, TestGstackRepairQuoteAndFXExactBoundaries/spread_exact, TestGstackRepairQuoteAndFXExactBoundaries/drift_exact, TestGstackRepairQuoteAndFXExactBoundaries/drift_one_over
+BK2-22 source after received is not refused	CAUGHT	1 failing: TestQuoteVetoMatchesTheGoldenFormulasAtAndBeyondEachLimit
+BK2-23 drift is the floor, not the ceil	CAUGHT	1 failing: TestQuoteVetoMatchesTheGoldenFormulasAtAndBeyondEachLimit
+BK2-24 the 2.0 counterfactual boundary is exclusive	CAUGHT	1 failing: TestRVOLAdmissionAndCounterfactualBoundaries
+BK2-25 the 2.5 counterfactual boundary is exclusive	CAUGHT	1 failing: TestRVOLAdmissionAndCounterfactualBoundaries
+BK2-26 RVOL admission is exclusive	CAUGHT	35 failing: TestNoAveragingDownLegAfterAFailedSetup/volume-expanded_failed_reclaim, TestNoAveragingDownLegAfterAFailedSetup/close_below_the_range_low, TestACorrectionCannotResurrectAFailedSetupIntoALowerLeg, TestAProposedSetupNeverReSizesIntoALowerLegOrARetreatedStop, TestANonProtectiveStopNeverProposes/stop_zero, TestANonProtectiveStopNeverProposes/stop_equals_entry, TestANonProtectiveStopNeverProposes/stop_above_entry, TestANonProtectiveStopNeverProposes/stop_one_minor_below_entry …
+BK2-27 duplicate bar ids are admitted	CAUGHT	1 failing: TestDuplicateOrReorderedBarsAreRefusedBeforeTheSnapshotSeals
+BK2-28 bar order is not checked	CAUGHT	4 failing: TestDuplicateOrReorderedBarsAreRefusedBeforeTheSnapshotSeals, TestRepairREDConstructorRejectsSkippedSequenceAndStaleSeal, TestSnapshotRejectsSkippedOpeningAndPostBreakoutSequence/4, TestSnapshotRejectsSkippedOpeningAndPostBreakoutSequence/15
+BK2-29 the session leaves the setup identity	CAUGHT	2 failing: TestTheSetupIDIsStableAcrossSameSessionCorrectionsAndChangesWithTheSession, TestSetupIDKnownVectorAndNineFieldSensitivity
+RERUN	BK2-30 added after TestACorrectionAfterConsumedNeitherResurrectsNorReissues was written (same HEAD; own test files updated) — its own control + verdict below
+CONTROL	GREEN	[./internal/breakoutlane pass events 112]
+BK2-30 CONSUMED is not terminal (a consumed setup re-evaluates fresh after a correction)	CAUGHT	1 failing: TestACorrectionAfterConsumedNeitherResurrectsNorReissues

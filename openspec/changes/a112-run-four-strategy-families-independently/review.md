@@ -6170,3 +6170,56 @@ cadence 를 잰다). 중앙 결함은 설계상 안전 loop 를 세운다(`TestB
 - 변이 `lot-bk/mutation-b2.tsv` **3/3 CAUGHT**: B2-1 덮어쓰기 복원(지시된 변이) · B2-2 정규형 대조 · B2-3 재봉인 생략.
 - **생산 호출자(패키지 밖) 0** — `FXSealInput{` · `breakoutlane.NewFXSeal` 패키지 밖 hit 0(grep), 패키지 안 호출은 `fxValid`(정규형 재검증 — 수리와 무관). breakout 미배선이라
   **생산 효과 0**.
+
+## 2026-10-01 breakout 덮개 2차 — 물타기 · 손절 후퇴 금지 · B1 생산자 census · 2.2~2.4.1 속성 시험
+
+**범위 · 비례.** 생산 코드 변경 0 — 새 시험 파일 넷(`internal/breakoutlane/a112_{no_averaging_down,transition_producer_census,sizing_oracle,setup_identity_and_bars}_test.go`) · 하네스 집합 BK2 · design 노트 · tasks/review.
+FLM/BTM: `not-applicable` — 편집한 생산 함수 없음. 분기를 근거로 쓰는 주장(조기 반환 자리 · 도달 불가 갈래)은 AST 열거를 먼저 만들었다:
+`lot-bk/ast-evidence/`(`evaluateFresh` 19 분기 · `Evaluate` 7 · `validCorrectionLineage` 4 · `size` 18, HEAD 3be54204).
+
+**B1 지시 이행(Manager 판정).** ① design.md 상태도 아래 노트: 골든 열넷 = 검증 집합, 생산자 있는 여덟 · 조기 INVALIDATED 다섯 「v1 생산자 없음 · 예약」(변마다 근거는
+위 B1 표) · `PROPOSED → CONSUMED` = 6.4. ② census 시험 `a112_transition_producer_census_test.go` 둘:
+- 구조 `TestTheBreakoutTransitionProducersAreExactlyTheCensus` — 패키지 **생산 파일 전체**(함수 하나가 아니다 — 헬퍼로 옮겨도 세어진다)에서 phase 상수의
+  생산 사용(==/!= 피연산자가 아닌 모든 사용) 수를 상수별로 고정(INVALIDATED 4 · TIMED_OUT 4 · CONSUMED 0 …)하고, 상수를 우회하는 철자(phase 값과 같은 문자열
+  리터럴 · `phase(…)` 변환)는 0 이어야 한다. 상수 개수(10)도 고정 — 빈 표본 통과를 막는다.
+- 행동 `TestTheObservedBreakoutEdgesPlusTheReservedSixAreTheGoldenSet` — 도달 가능한 생산 자리마다 경로 하나(끝 단계 단언)의 연속 쌍 = 관측 변 여덟,
+  ∪ 예약 여섯 = 골든 열넷, 교집합 0. 골든 자체는 불변.
+- 변이: 조기 ARMED→INVALIDATED 생산자 추가(BK2-05) · 리터럴 우회(BK2-06) · **행동상 무력한** CONSUMED 생산자 추가(BK2-07) — 셋 다 census 만 잡는다(CAUGHT).
+- 6.4 tasks 에 CONSUMED 변 인용 완료.
+
+**B1 표 정정(측정).** `RETEST_WAIT → TIMED_OUT` 의 생산자로 적은 「`:89` · `:100`」 중 **`:89`(B12 `88:3` `since > timeout` → 반환 `89:4`)는 도달 불가**다:
+`since` 는 반복마다 1 씩 늘고 같은 반복 끝의 B15(`99:3` `since >= timeout`)가 같음에서 먼저 돌려준다(그 사이 B13 reclaim · B11/B14 무효화도 반환/탈출).
+전체 스위트 커버리지 `machine.go:88.22,90.4` 실행 0(실측). 동작상 동등한 방어 갈래 — 지우면 BK2-08, census 만 잡는다(생산 자리 수가 바뀐다). 생산 변경은 하지 않았다
+(이 로트 범위 밖 · 동작 무변).
+
+**물타기 · 손절 후퇴 금지(우선 — 정본 손절 불변식의 breakout 적용).** spec 「Failed reclaim 이후 더 낮은 가격으로 평균단가를 낮추거나 stop을 entry에서 멀어지게 하는
+proposal을 만들면 안 되며」. 레인이 그것을 만들 길은 셋(실패 뒤 재진입 · PROPOSED 뒤 재사이징 · 처음부터 비보호 stop) — `a112_no_averaging_down_test.go`:
+- `TestNoAveragingDownLegAfterAFailedSetup`(두 INVALIDATED 생산자 × prior 없음/있음: 뒤의 더 낮은 reclaim + 낮은 entry · 먼 stop → 다리 0),
+  `TestACorrectionCannotResurrectAFailedSetupIntoALowerLeg`(대조군: prior 없이는 같은 정정 스냅숏이 **실제로 제안** → prior 가 막음),
+  `TestAProposedSetupNeverReSizesIntoALowerLegOrARetreatedStop`(네 경우 각각 대조군이 다른 수량 · 새 ProposalID 로 재사이징함을 먼저 보인 뒤: 같은 봉 위의 재사이징은
+  EVIDENCE_INVALID 거절, 봉 추가 · 정정에 실린 재사이징은 원 제안 보존), `TestANonProtectiveStopNeverProposes`(stop 0 · = entry · > entry 거절, entry-1 수락 대조;
+  entry 0 · ask 0 은 앞 층(quote 검사 · 봉인)이 먼저 막고 사이징 가드는 이중 방어 — 층마다 따로 잰다).
+- **범위(측정).** 이 금지는 호출자가 prior 를 넘길 때의 setup 단위 판정이다. 생산에서 `BreakoutRequest.Prior` 를 채우는 생산자 0(시험 밖 `BreakoutRequest{` 0 곳).
+  레인이 막지 않는 둘째 첫 레그 경로 둘을 프로브로 쟀다(임시 시험, 지움): **config 재버전**은 새 setup ID 라 prior 를 넘겨도 fresh — 같은 세션 · 같은 종목에
+  먼 stop 의 새 제안(후보 99 → 19, 새 ProposalID); **세션 교체**도 새 setup. 둘 다 스펙(소급 재해석 금지 · 세션 = 새 setup)과 맞고, 「(종목, 세션)/포지션 단위
+  첫 레그 하나」 는 6.4 의 권한 몫 — tasks 6.4 입력에 적었다.
+
+**2.2 · 2.2.1 · 2.4 · 2.4.1 빈칸 · 속성 시험.**
+- `a112_sizing_oracle_test.go`: 사이징 신탁(결정적 PCG 2만 건, math/big) — 거절 판정 · 단계 값 일치 + 수락마다 **코드와 다른 경로**의 정확한 유리수 바닥
+  (floor(min(B·num/(den·risk), N·num/(den·worst))))과 같음, q_final ≤ q_candidate, q_final ≤ FinalCap. 분포(실측): 수락 467 · NPS 3,939 · NPT 10,970 · OVERFLOW 3,015 ·
+  ZERO 1,609, 128 비트 곱 수락 365 — 갈래별 하한 50 을 시험이 단언(빈 갈래 통과 방지). 거절 **순서**는 코드에서 옮겼다(설계 선택) — 신탁이 증명하는 것은 「넘침이
+  감싸지 않고 거절」 · 「값이 정확」 이다. risk 의 entry 는 골든 문장(「entry-stop」)보다 보수인 worst_entry 기준(기존 판정 `TestFinalRedTeamSizingUsesWorstEntryInRisk`).
+  mulDiv 신탁 5만 건 + 천장 = 2^64 경계. 호가 신탁 2만 건: 골든 spread · drift 식, 한계 같음 수락 / 한 단위 넘음 거절, ask<entry, drift 넘침 = SIZING_OVERFLOW
+  (1,144 건), **spread 넘침 갈래는 도달 불가**(spread ≤ 2·10^6 — 시험이 그 상한을 단언), 나이 경계 · source>received · received>evaluated.
+- `a112_setup_identity_and_bars_test.go`: 중복 ID · 중복 순번 · 자리 바꿈 거절; setup ID 가 같은 세션의 정정 내내 같고 세션 교체(봉 ID 가 같아도)에 바뀜 · 이전 종단
+  비상속; CONSUMED prior 소비 계약(패키지 안 봉인 — 생산자는 6.4); RVOL 1.5 입장 · 2.0 · 2.5 반사실 경계.
+- 이름 결속 28 개 pass 사건 확인 `lot-bk/named-bk2.log`(28/28).
+
+**변이 `lot-bk/mutation-bk2.tsv` — 29/30 CAUGHT, 1 동등.** 하네스 집합 BK2(패키지 전체 시험, `-trimpath=false` — guard_test 의 `repoRoot` 가
+`runtime.Caller` 경로로 go.mod 를 찾아 기본 `GOFLAGS=-trimpath` 아래서는 대조군이 빨갛다; 첫 시도의 그 실패는 원장 밖, 이유만 여기 적는다).
+BK2-04 · 28 첫 정의는 BUILD-FAIL(미사용 변수) → 재정의 뒤 CAUGHT. BK2-12(entry 0 절 단독 삭제)는 **동등**: stop==0 이면 stop 절이, stop>0 이면 stop≥entry 절이 거절.
+BK2-30(`terminalPhase` 에서 CONSUMED 삭제)은 **이 로트 전에는 잡는 시험이 없었다** — 원장의 유일한 실패 이름이 새 시험.
+
+**정지 보고(임의 해석 금지) — 2.3 의 1.2 반사실.** 반사실 플래그는 입장(RVOL ≥ 1.5)한 돌파 봉에서만 기록된다(`evaluateFresh` B6 `57:3` 안). 그래서 1.2 플래그는
+기록될 때 항상 참이고, 1.2 ≤ RVOL < 1.5 인 봉(1.2 문턱에서만 입장할 봉)에는 아무것도 기록되지 않는다. 스펙 · design 「1.2 counterfactual 결과도 evidence/관측에
+기록」 의 「결과」 가 (a) 입장 봉의 문턱 비교 플래그(지금 코드)인지 (b) 「그 문턱이었다면 돌파였는가」 인지 판정이 필요 — 2.3 은 열어 둔다.

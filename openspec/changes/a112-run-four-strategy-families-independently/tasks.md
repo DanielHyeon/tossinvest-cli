@@ -66,11 +66,47 @@
   OFF/OFF/UNOBSERVED — 같은 시험들 + `TestDescriptorsShipKRAndUSTogetherDefaultOFF` · `TestEveryProductionWorkerIsBornDormantAndEmitsNothing`; partial/duplicate/unknown/mismatched —
   `TestValidateDescriptorsRejectsPartialDuplicateUnknownAndMismatched` · `TestProductionRouteCandidatesRejectLegacyThreeFamilyAndPartialSets` · `TestProductionRouteCandidatesRejectFamilyDriftAndPartialFamilyCoverage`.
   빈칸(불일치 축이 Desired 하나뿐) → `a112_descriptor_axes_test.go` `TestEveryDescriptorFieldOtherThanTheKeyIsPartOfTheBinding`(열쇠 아닌 필드 전부를 반사로 열거, 변이 X1 CAUGHT).
-- [ ] 2.2 Add failing breakout state-machine table/property tests for every valid forward edge, skipped edge, terminal non-resurrection, duplicate/reordered bar, first-touch refusal and deterministic replay.
-- [ ] 2.2.1 Add failing setup-identity tests for pre-terminal correction, correction after each terminal state, the PROPOSED-before-CONSUMED window and regular-session rollover, proving stable same-session setup ID, immutable snapshot revision and no proposal seal/first-leg resurrection.
+- [x] 2.2 Add failing breakout state-machine table/property tests for every valid forward edge, skipped edge, terminal non-resurrection, duplicate/reordered bar, first-touch refusal and deterministic replay.
+
+  **2.2 종결(2026-10-01 breakout 덮개 2차 — 미착지).** 「every valid forward edge」 = Manager 판정 B1(골든 `allowed_transitions` 는 검증 집합): 생산자 있는 여덟은
+  `a112_transition_producer_census_test.go` `TestTheObservedBreakoutEdgesPlusTheReservedSixAreTheGoldenSet`(관측 변 = 여덟, ∪ 예약 여섯 = 골든 열넷)과
+  `TestTheBreakoutTransitionProducersAreExactlyTheCensus`(패키지 생산 파일 전체의 phase 생산 자리 수 · 우회 철자 0 — 생산자를 더하면 뒤집힌다);
+  skipped edge — `TestAdversarialSnapshotEvaluatorRejectsRawTransitionBypass` · `TestPublicSurfaceCannotAssertEventsOrForgeMachine`(전이 입구는 봉인 스냅숏뿐);
+  terminal non-resurrection — `TestTerminalCorrectionsRetainTerminalAuthority` · `TestACorrectionCannotResurrectAFailedSetupIntoALowerLeg` · `TestNoAveragingDownLegAfterAFailedSetup`;
+  duplicate/reordered bar — `TestDuplicateOrReorderedBarsAreRefusedBeforeTheSnapshotSeals` · `TestSnapshotRejectsSkippedOpeningAndPostBreakoutSequence`;
+  first-touch — `TestAdversarialFirstTouchMissingRangeAndBadBarCannotPropose`; deterministic replay — `TestFinalRedTeamDuplicateSnapshotIsIdempotent`.
+  변이 `lot-bk/mutation-bk2.tsv` BK2-05~08 · 27 · 28 CAUGHT.
+
+- [x] 2.2.1 Add failing setup-identity tests for pre-terminal correction, correction after each terminal state, the PROPOSED-before-CONSUMED window and regular-session rollover, proving stable same-session setup ID, immutable snapshot revision and no proposal seal/first-leg resurrection.
+
+  **2.2.1 종결(2026-10-01 — 미착지).** `a112_setup_identity_and_bars_test.go` `TestTheSetupIDIsStableAcrossSameSessionCorrectionsAndChangesWithTheSession`(종단 전 정정 ·
+  PROPOSED 뒤 · INVALIDATED 뒤 같은 setup, 세션 교체 = 새 setup · 이전 종단 비상속 — 봉 ID 가 같아도) · `TestACorrectionAfterConsumedNeitherResurrectsNorReissues`
+  (CONSUMED 는 생산자가 없어 패키지 안에서 봉인한 prior 로 소비 계약만 — 생산은 6.4) · `TestAProposedSetupNeverReSizesIntoALowerLegOrARetreatedStop`(PROPOSED-before-CONSUMED 창) ·
+  기존 `TestAdversarialCorrectionReplaysPreTerminalAndPreservesProposed` · `TestTerminalCorrectionsRetainTerminalAuthority`(TIMED_OUT 뒤). 변이 BK2-01~04 · 29 · 30 CAUGHT
+  (BK2-30 「CONSUMED 비종단」 은 이 로트 전에는 잡는 시험이 없었다 — 원장의 유일한 실패 이름이 새 시험).
+
 - [ ] 2.3 Add failing threshold boundary tests for 15-minute range, 1-tick versus 0.10 ATR buffer, 0.10..0.25 ATR retest tolerance, KR 8/US 10 timeout, 1.5 RVOL, 1.2/2.0/2.5 counterfactuals and 0.35 wick veto using integer PPM arithmetic.
-- [ ] 2.4 Add failing sizing property tests proving cost-inclusive `risk_per_share`, overflow-safe floor, `0 <= q_final <= q_candidate`, non-protective stop/target refusal and no averaging-down or stop retreat.
-- [ ] 2.4.1 Add exact-boundary quote/FX property tests for age/spread/drift at and one unit beyond each limit, both FX directions/scales, stale/mismatched currency seals, overflow and conservative rounding; every accepted result must be no larger than the exact rational floor.
+
+  **2.3 열림 — Manager 판정 대기(2026-10-01).** 1.5 입장 · 2.0 · 2.5 반사실 경계는 `TestRVOLAdmissionAndCounterfactualBoundaries`(BK2-24~26 CAUGHT), 범위 · buffer ·
+  허용폭 · 시한 · wick 은 기존 `TestGstackRepairFrozenVocabularyAndV1Thresholds` · `TestGstackRepairRetestQualifiesToleranceEndpoints` · `TestTimeoutExactBoundaryKRAndUS`.
+  남은 하나: **1.2 반사실** — 코드는 입장한 돌파 봉에서만 반사실 플래그를 적으므로 1.2 는 기록될 때 항상 참이고, 1.2~1.5 사이 봉(1.2 에서만 입장할 봉)에는
+  아무것도 기록되지 않는다. 스펙 「1.2 counterfactual 결과도 evidence에 기록」 을 어떻게 읽을지가 열려 있어 임의 해석하지 않고 보고했다.
+
+- [x] 2.4 Add failing sizing property tests proving cost-inclusive `risk_per_share`, overflow-safe floor, `0 <= q_final <= q_candidate`, non-protective stop/target refusal and no averaging-down or stop retreat.
+
+  **2.4 종결(2026-10-01 — 미착지).** `a112_sizing_oracle_test.go` `TestSizingMatchesTheExactRationalOracle`(결정적 난수 2만 건 · math/big 신탁: 비용 포함 risk ·
+  넘침은 감싸지 않고 거절 · 수락마다 q_candidate = 정확한 유리수 바닥(코드와 다른 경로) · 0 <= q_final <= q_candidate <= …; 갈래 분포 하한 50 · 128 비트 곱 수락 365 건) ·
+  `TestMulDivMatchesTheExactQuotientOrRefuses`; 비보호 stop/target — `TestANonProtectiveStopNeverProposes` · `TestGstackRepairFailedReclaimAndRiskRewardBoundary`;
+  물타기 · 손절 후퇴 금지 — `a112_no_averaging_down_test.go` 네 시험(대조군이 prior 없이 실제로 제안함을 보인 뒤 prior 가 막음을 잰다).
+  변이 BK2-09~18 CAUGHT, BK2-12(entry 0 절 단독 삭제) 동등 — stop==0 · stop>=entry 가 대신 거절.
+
+- [x] 2.4.1 Add exact-boundary quote/FX property tests for age/spread/drift at and one unit beyond each limit, both FX directions/scales, stale/mismatched currency seals, overflow and conservative rounding; every accepted result must be no larger than the exact rational floor.
+
+  **2.4.1 종결(2026-10-01 — 미착지).** `TestQuoteVetoMatchesTheGoldenFormulasAtAndBeyondEachLimit`(골든 spread · drift 식을 big.Int 로 — 한계와 같으면 수락, 한 단위 넘으면
+  SPREAD_TOO_WIDE / ENTRY_DRIFT_EXCEEDED, ask<entry 포함, drift 넘침 = SIZING_OVERFLOW; spread 는 <= 2e6 이라 넘침 갈래는 도달 불가 — 시험이 그 상한을 단언; 나이 포함 경계 ·
+  source>received · received>evaluated) · 기존 `TestGstackRepairQuoteAndFXExactBoundaries`(두 방향 · scale) · `TestAnInverseFXSealVerifiesTheCallersDigest` ·
+  `TestAdversarialQuoteAndFXSealTimeOrderDigestCurrencyDirectionScale` · `TestAdversarialQuoteFXAndSizingRefusals`; 정확한 유리수 바닥은 2.4 의 신탁. 변이 BK2-19~23 CAUGHT.
+
 - [x] 2.5 Add failing strict evidence tests for unknown fields/enums, float/minor-unit mismatch, secret-like fields, unbounded/duplicate/future/unfinished bars, append-only correction revision and dual-cutoff snapshot replay. (L1a 2026-08-16/17: RED-first in `breakout_bar_test.go`/`breakout_series_test.go`; "out-of-order bar" is enforced by L3's ordered bar ids — recorded not-applicable at this layer in review.md.)
 - [x] 2.6 Add failing arbitration tests for unique highest calibrated score, exact tie, incomparable calibration, stale seal, active-owner priority, multiple-owner corruption and at-most-one dispatch handoff per owner scope.
 
@@ -446,6 +482,12 @@
   (예약 · lease 행 불변 · 게이트웨이 0) · 최종 검사의 재검증 drift 거절). transport 전 계보 재대조는 없음 — ROADMAP 「a112 이월」 (B) 행(활성화 로트 선행).
   잔여 (c): 재검증 drift 판정을 순수 함수로 의미 무변경 이동(영수증) + 축별 시험. 변이 13(동등 표기 A2 · A3 — 철자 핀만).
 - [ ] 6.4 Enforce breakout first-leg-only production authority and add broker spies proving duplicate evaluation/restart/correction cannot create a second first-leg or any scale-in mutation.
+
+  **6.4 입력(2026-10-01 B1 · breakout 덮개 2차).** (a) 골든 변 `PROPOSED → CONSUMED` 의 생산자가 이 태스크다 — v1 평가기에는 없고(B1 실측),
+  `a112_transition_producer_census_test.go` 가 `phaseConsumed` 생산 자리 0 을 고정하므로 이 태스크가 생산자를 더할 때 census 와 review B1 표를 같이 고친다;
+  소비 계약(CONSUMED prior 는 정정 뒤 보존)은 `TestACorrectionAfterConsumedNeitherResurrectsNorReissues` 가 미리 잰다. (b) 레인이 막지 **않는** 둘째 첫 레그 경로
+  (실측): config 재버전(새 setup ID — 스펙대로 소급 재해석 없음)은 같은 세션 · 같은 종목에 새 제안을 낸다(prior 를 넘겨도 다른 setup 이라 fresh — 프로브에서 후보 99 → 19, 새 ProposalID);
+  세션 교체도 새 setup 이다. 레인 판정은 setup 단위라 「(종목, 세션) 또는 포지션 단위 첫 레그 하나」 는 이 태스크의 권한이 세워야 한다.
 - [ ] 6.5 Add crash/retry tests across coordinator handoff, owner/q_final admission, lease claim, SUBMITTING and exact outcome reconciliation without releasing or duplicating capacity incorrectly.
 - [ ] 6.6 Add prerequisite regression tests proving a066 incomplete owner/exit gate or a100 missing/mismatched/expired protection attestation yields exposure-raising broker request zero while reduce-only paths continue.
 

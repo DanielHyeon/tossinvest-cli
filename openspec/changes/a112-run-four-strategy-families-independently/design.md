@@ -129,6 +129,14 @@ stateDiagram-v2
   PROPOSED --> CONSUMED
 ```
 
+위 그림(= 골든 `allowed_transitions` 열넷)은 **허용 가능한 변의 검증 집합**이지 v1 평가기의 산출 의무가 아니다(2026-10-01 Manager 판정 B1).
+v1 평가기에 생산자가 있는 변은 여덟(정방향 여섯 · `RETEST_WAIT → INVALIDATED` · `RETEST_WAIT → TIMED_OUT`)이고, 나머지 여섯은 이렇게 남는다:
+조기 `INVALIDATED` 다섯(`DISCOVERED` · `RANGE_LOCKED` · `BREAKOUT_CLOSED` · `RECLAIMED` · `ARMED` → `INVALIDATED`)은 **v1 생산자 없음 · 예약**이다 —
+v1 의 무효화 수준(범위 하단 아래 종가)과 거래량 확장 실패 재돌파는 돌파 뒤 개념이고, `BREAKOUT_CLOSED` · `RECLAIMED` 는 한 걸음에 지나가는 과도 단계이며,
+`ARMED` 의 호가 실패는 terminal 이 아니라 ARMED 에 머무는 typed refusal 이다(review.md B1 표에 변마다 근거). `PROPOSED → CONSUMED` 는 태스크 6.4
+(breakout 첫 레그 전용 생산 권한)의 몫이다. 생산자 집합은 `internal/breakoutlane/a112_transition_producer_census_test.go` 가 고정한다 — 생산자를 더하는
+편집은 그 census 를 의도적으로 뒤집어야 한다.
+
 `INVALIDATED`, `TIMED_OUT`, `CONSUMED`는 terminal이며 같은 setup ID에서 부활하지 않는다. state transition은 official calendar가 정한 regular session의 닫힌 1-minute bar만 사용한다. live quote는 ARMED 뒤 최종 spread/drift/freshness veto에만 사용하며 breakout/retest/reclaim transition의 근거가 될 수 없다.
 
 Setup ID의 canonical byte preimage는 UTF-8 문자열

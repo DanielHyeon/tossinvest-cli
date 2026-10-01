@@ -772,13 +772,66 @@ SET_B2 = [
      "\t\tinput.Direction = FXAccountToInstrument\n\t\tinput.Digest = FXSealDigest(input)\n", "\t\tinput.Direction = FXAccountToInstrument\n"),
 ]
 SET_B2_TESTS = [["go", "test", "-count=1", "-run", "TestAnInverseFXSealVerifiesTheCallersDigest|TestAdversarial|TestGstackRepairQuoteAndFXExactBoundaries", "./internal/breakoutlane"]]
+BKM, BKS, BKR, BKA = "internal/breakoutlane/machine.go", "internal/breakoutlane/sizing.go", "internal/breakoutlane/rules.go", "internal/breakoutlane/arithmetic.go"
+# breakout 덮개 2차(물타기 · 손절 후퇴 금지 · B1 생산자 census · 2.2~2.4.1 속성 시험). 시험은 패키지 전체 — 원장의 실패 이름이 어느 시험이 잡았는지 말한다.
+SET_BK2 = [
+    ("BK2-01 a PROPOSED prior is no longer preserved (re-sizes into a second leg)", BKM,
+     "if prior.phase == phaseProposed || terminalPhase(prior.phase) {", "if terminalPhase(prior.phase) {"),
+    ("BK2-02 a terminal prior is no longer preserved (re-entry after failure)", BKM,
+     "if prior.phase == phaseProposed || terminalPhase(prior.phase) {", "if prior.phase == phaseProposed {"),
+    ("BK2-03 INVALIDATED is not terminal", BKM,
+     "return phase == phaseInvalidated || phase == phaseTimedOut || phase == phaseConsumed", "return phase == phaseTimedOut || phase == phaseConsumed"),
+    ("BK2-04 an unchanged lineage counts as a correction (re-sizing without new evidence)", BKM,
+     "\treturn changed\n}", "\treturn changed || len(now) == len(prior.lineage)\n}"),
+    ("BK2-05 an early ARMED->INVALIDATED producer is added on quote refusal (census must flip)", BKM,
+     "\t\treturn newDecision(setup, snapshot, phaseArmed, refusal, p)",
+     "\t\treturn newDecision(setup, snapshot, phaseInvalidated, refusal, appendTransition(p, string(phaseInvalidated)))"),
+    ("BK2-06 a phase literal bypasses the constants (census literal count must flip)", BKM,
+     "\t\treturn newDecision(setup, snapshot, phaseArmed, result.Refusal, p)", "\t\treturn newDecision(setup, snapshot, \"ARMED\", result.Refusal, p)"),
+    ("BK2-07 an inert PROPOSED->CONSUMED producer is added in the evaluator (6.4 edge — only the census can see it)", BKM,
+     "\t\t\t\tpreserved.diagnostic = DiagnosticCorrectionAfterProposal\n",
+     "\t\t\t\tpreserved.diagnostic = DiagnosticCorrectionAfterProposal\n\t\t\t\tif preserved.phase == phaseProposed && len(preserved.lineage) > 512 {\n\t\t\t\t\tpreserved.phase = phaseConsumed\n\t\t\t\t}\n"),
+    ("BK2-08 the unreachable since>timeout guard is deleted (behaviour-equivalent — only the census sees it)", BKM,
+     "\t\tif since > timeout {\n\t\t\treturn newDecision(setup, snapshot, phaseTimedOut, RefusalNone, appendTransition(p, string(phaseTimedOut)))\n\t\t}\n", ""),
+    ("BK2-09 stop equal to entry is protective", BKS, "in.StopMinor >= in.ProposedEntryMinor {", "in.StopMinor > in.ProposedEntryMinor {"),
+    ("BK2-10 a zero stop is not refused", BKS, "q.value.AskMinor == 0 || in.StopMinor == 0 ||", "q.value.AskMinor == 0 ||"),
+    ("BK2-11 a zero ask is not refused", BKS, "in.ProposedEntryMinor == 0 || q.value.AskMinor == 0 ||", "in.ProposedEntryMinor == 0 ||"),
+    ("BK2-12 EQUIVALENT a zero entry is not refused by its own clause (stop==0 or stop>=entry still refuses)", BKS,
+     "if in.ProposedEntryMinor == 0 || q.value.AskMinor == 0", "if q.value.AskMinor == 0"),
+    ("BK2-13 the candidate rounds up instead of down", BKS, "candidate := budget / risk", "candidate := (budget + risk - 1) / risk"),
+    ("BK2-14 worst entry ignores an ask above the proposed entry", BKS,
+     "\tif q.value.AskMinor > base {\n\t\tbase = q.value.AskMinor\n\t}\n", ""),
+    ("BK2-15 the final cap is ignored", BKS, "\tif in.FinalCap < final {", "\tif false && in.FinalCap < final {"),
+    ("BK2-16 ceil degrades to floor", BKA, "\tq, r := bits.Div64(hi, lo, d)\n\tif r == 0 {", "\tq, r := bits.Div64(hi, lo, d)\n\tif r >= 0 {"),
+    ("BK2-17 the ceil q==max overflow guard is deleted (wraps to 0)", BKA, "\tif q == maxUint64 {\n\t\treturn 0, true\n\t}\n", ""),
+    ("BK2-18 floor overflow test is off by one (hi==d reaches Div64)", BKA, "\tif hi >= d {\n\t\treturn 0, RefusalSizingOverflow", "\tif hi > d {\n\t\treturn 0, RefusalSizingOverflow"),
+    ("BK2-19 the spread mid uses the overflowing sum", BKR,
+     "mid := v.BidMinor/2 + v.AskMinor/2 + (v.BidMinor%2+v.AskMinor%2)/2", "mid := (v.BidMinor + v.AskMinor) / 2"),
+    ("BK2-20 drift at the limit is refused", BKR, "if drift > c.value.MaxEntryDriftPPM {", "if drift >= c.value.MaxEntryDriftPPM {"),
+    ("BK2-21 spread at the limit is refused", BKR, "if spread > c.value.MaxSpreadPPM {", "if spread >= c.value.MaxSpreadPPM {"),
+    ("BK2-22 source after received is not refused", BKR, "if v.SourceObservedAtMS > v.ReceivedAtMS || v.ReceivedAtMS > evaluated {", "if v.ReceivedAtMS > evaluated {"),
+    ("BK2-23 drift is the floor, not the ceil", BKR,
+     "drift, ov := mulDivCeil(absoluteDifference(v.AskMinor, entry), v1PPMScale, entry)",
+     "driftFloor, refusal := mulDivFloor(absoluteDifference(v.AskMinor, entry), v1PPMScale, entry)\n\tdrift, ov := driftFloor, refusal != RefusalNone"),
+    ("BK2-24 the 2.0 counterfactual boundary is exclusive", BKM, "p.RVOLAt2000000 = b.RVOLPPM >= 2_000_000", "p.RVOLAt2000000 = b.RVOLPPM > 2_000_000"),
+    ("BK2-25 the 2.5 counterfactual boundary is exclusive", BKM, "p.RVOLAt2500000 = b.RVOLPPM >= 2_500_000", "p.RVOLAt2500000 = b.RVOLPPM > 2_500_000"),
+    ("BK2-26 RVOL admission is exclusive", BKM, "b.RVOLPPM >= v.Config.value.RVOLMinPPM", "b.RVOLPPM > v.Config.value.RVOLMinPPM"),
+    ("BK2-27 duplicate bar ids are admitted", BKM, "b.SessionID != v.SessionID || seen[b.ID] ||", "b.SessionID != v.SessionID ||"),
+    ("BK2-28 bar order is not checked", BKM, " || n > 0 && b.Sequence != prev+1 {", " || n > 0 && prev+1 == 0 {"),
+    ("BK2-30 CONSUMED is not terminal (a consumed setup re-evaluates fresh after a correction)", BKM,
+     "return phase == phaseInvalidated || phase == phaseTimedOut || phase == phaseConsumed", "return phase == phaseInvalidated || phase == phaseTimedOut"),
+    ("BK2-29 the session leaves the setup identity", BKM, "string(v.Market), v.Symbol, v.SessionID, v.CalendarVersion,", "string(v.Market), v.Symbol, v.CalendarVersion,"),
+]
+# -trimpath=false: guard_test 의 repoRoot 가 runtime.Caller 경로로 go.mod 를 찾는다 — 하네스 기본 GOFLAGS=-trimpath 아래서는 패키지 전체의
+# 대조군이 빨갛다(골든 · 폐포 시험 다섯). 명령줄 플래그가 GOFLAGS 를 덮는다. 패키지가 작아 경로별 캐시 증가는 무시할 만하다.
+SET_BK2_TESTS = [["go", "test", "-trimpath=false", "-count=1", "./internal/breakoutlane"]]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측
