@@ -1,0 +1,21 @@
+{
+  "id": "STORY-TOS-a127",
+  "title": "Strategy authorities read the ledger the engine opened",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a127-strategy-authorities-read-the-current-ledger",
+    "path": "openspec/changes/a127-strategy-authorities-read-the-current-ledger"
+  },
+  "found_by": {
+    "date": "2026-10-01",
+    "how": "a112 task 5.2.2.2 measured that the production risk snapshot loader pins the journal schema to the literal 27 while the ledger is v35, so the production risk authority can never be ready; the a127 intake measurement found the same pin in the production route loader. Both loaders' tests used user_version=27 fixtures, which hid the defect.",
+    "record": "openspec/changes/a112-run-four-strategy-families-independently/analysis/measurements/lot-5.2.2.2/schema-pin-receipt.log"
+  },
+  "acceptance": [
+    "Both production loaders read only a ledger whose user_version equals the journal schema version the engine injects; no frozen literal remains",
+    "A missing or non-positive injected version, a newer ledger and an older ledger are each refused before any row is read, and the refusal names the direction",
+    "Acceptance is tested against a ledger opened by journal.Open, and the a112 stub bridge is removed",
+    "Mutants restoring the literal, dropping the check, accepting older ledgers, accepting a zero injection or passing a runtime-read version are caught"
+  ]
+}

@@ -1,0 +1,17 @@
+package journal
+
+import (
+	"context"
+	"testing"
+)
+
+func TestA127ProbeReadSets(t *testing.T) {
+	j := openTestJournal(t)
+	ctx := context.Background()
+	var v int
+	if err := j.db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&v); err != nil { t.Fatal(err) }
+	t.Logf("receipt: fresh journal user_version=%d SchemaVersion=%d", v, SchemaVersion)
+	if rows, err := j.db.QueryContext(ctx, `SELECT prospective_generation,lane_id,campaign_id,coalesce(actual_generation,''),acquired_at,coalesce(released_at,''),risk_overage_latched,unknown_actual_latched FROM risk_bucket_owners WHERE account_ref=? AND market=? AND symbol=? ORDER BY acquired_at,prospective_generation`, "x", "x", "x"); err != nil { t.Errorf("route query 0: %v", err) } else { rows.Close(); t.Logf("receipt: route query 0 (strategyrouter/production.go, verbatim) prepared and ran on v%d", v) }
+	if rows, err := j.db.QueryContext(ctx, `SELECT account_ref,market,symbol,lane_version,prospective_token,coalesce(actual_position_generation,''),state,entry_blocked FROM position_campaigns WHERE id=? AND lane_id=?`, "x", "x"); err != nil { t.Errorf("route query 1: %v", err) } else { rows.Close(); t.Logf("receipt: route query 1 (strategyrouter/production.go, verbatim) prepared and ran on v%d", v) }
+	if _, err := j.db.ExecContext(ctx, "SELECT count(*) FROM risk_bucket_scope_latches WHERE account_ref=? AND market=? AND symbol=?", "x", "US", "X"); err != nil { t.Errorf("risk scope latch query: %v", err) } else { t.Logf("receipt: risk scope-latch query ran on v%d", v) }
+}

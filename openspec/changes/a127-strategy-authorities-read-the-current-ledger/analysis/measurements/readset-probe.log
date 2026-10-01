@@ -1,0 +1,8 @@
+# a127 read-set probe — 2026-10-01T12:26:50+09:00 base ce1cda37e157febdc03908585c54af5f6efde3cd; 스크래치 워크트리에서 internal/journal 에 readset-probe_test.go.txt 를 넣고 실행(저장소에 커밋하지 않음)
+    zz_a127_probe_test.go:13: receipt: fresh journal user_version=35 SchemaVersion=35
+    zz_a127_probe_test.go:14: receipt: route query 0 (strategyrouter/production.go, verbatim) prepared and ran on v35
+    zz_a127_probe_test.go:15: receipt: route query 1 (strategyrouter/production.go, verbatim) prepared and ran on v35
+    zz_a127_probe_test.go:16: receipt: risk scope-latch query ran on v35
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.243s
+# 대조(같은 하네스의 첫 실행 — 따옴표 변환 오류로 빈 열 이름을 낸 판): SQLite 는 prepare 시점에 'no such column' 으로 실패함 → 없는 열은 판독 오류로 fail-closed
+    route query 0: SQL logic error: no such column:  (1)
