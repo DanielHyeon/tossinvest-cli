@@ -5817,3 +5817,33 @@ console `multiMarketStrategyRuntimePage.project`)은 `shift_same_file_bundles.py
 동일을 요구, 좌표 id 사상 · 호출 표 재작성). 본문이 다시 쓰인 하나(`TestStrategyDispatchCycleRunsKRUSConcurrentlyUnderOneCentralOwner` — a066 5.6.1 교차 편집 d78f3f4a, 9 → 10 분기)는
 현재 AST 로 다시 썼다(시험 코드 — 비례 원칙). base 15 재추출은 결정 (5) 대로 마지막 Go 커밋 직후.
 
+
+## 2026-10-01 태스크 5.6.2.2 — 세 절을 여덟 레인 런타임 위에서 다시 잼
+
+**재유도(측정으로 확인).** 5.6.1 이 「교체 뒤 다시 유도해야 한다」고 적은 셋:
+1. **fault 스트림 용량 = 잠길 수 있는 worker 수.** 교체(5.1.2 · 5.2)는 감독자 worker 를 바꾸지 않았다 — 생산 감독자(`NewRefreshingPairedStrategyEntrySupervisor`)의
+   worker 는 여전히 **시장 둘**이고, 여덟 레인은 worker 가 아니라 시장 주기(`runProductionStrategyMarketCycle`) **안**의 레인 런타임이다. 레인 고장은 레인 자기 잠금
+   (strategyworker.Lane · durable latch, 5.3.3)에서 끝나고 감독자의 `latchMarket` · fault 스트림에 닿지 않는다. 그래서 등식은 2 = 2 그대로, handoff `default` 팔은
+   여전히 도달 불가. 이 모양이 바뀌는 순간(레인이 감독자 worker 가 되면)을 `TestTheProductionSupervisorStillHasTwoRefreshOnlyMarketWorkers` 가 알린다.
+2. **refresh-only 삼킴이 생산 구성.** 생산 감독자의 worker 서술자는 고정으로 `Effective=false · RefreshesAuthority=true` — 교체 뒤에도 refresh-only 가 유일한 생산
+   구성이다(같은 시험이 고정). 5.2.2.2 로 서명 활성화 시 `buildProductionStrategyMarketWorker` 가 Effective 서술자를 만들 수 있지만, 생산 감독자는 그 서술자를 쓰지
+   않는다(새로 고침 worker 가 주기 안에서 주문을 낸다) — 이 사실이 바뀌면 R2(범위 거절 → 시장 latch)와 함께 재유도 대상.
+3. **시장당 잠금 한 번.** refresh-only 는 잠그지 않으므로 생산에서 시장 잠금은 0 — 「시장당 최대 한 번」은 상한으로만 남는다.
+
+**Done 세 절 — 측정.**
+- **일곱 블록이 여전히 실행된다**(`analysis/measurements/lot-5.6.2.2/seven-blocks-coverage.txt` — 엔진 태그 스위트 전체 count 커버, 현재 좌표): 787-790 → 913-914
+  count=1, 795-796 → 920-921 =1, 800-801 → 926 =1, 813-814 → 949 =14, 821-824 → 968-969 =3, 829-830 → 975-976 =1, 894-896 → 1078-1080 =1. 「whatever then runs the
+  production cycle」 = 같은 감독자 코드(교체가 감독자를 바꾸지 않았음 — 위 1).
+- **census:** `TestTheCompleteCensusOfWhatCanStopTheEngineOnAStrategyFault` PASS — `StrategyCentralIntegrityFailure` 생산 호출자 0.
+- **레인 고장 — 여덟 동시 포함 — 뒤에도 fill detection · reconcile · exit observation 이 돈다:** 새 시험 `a112_eight_lane_fault_test.go`(태그) — 생산 생성자로 레인 런타임 ·
+  refresh 감독자를 세우고 안전 loop 셋과 Runtime 에 넣은 뒤, 레인 여덟을 **동시에** 잠근다(`Lane.Fail(…, abnormal)` — 생산 step 은 고장 입력이 없어 레인의 자기 고장
+  입구로 주입; panic · 마감 시한 정산 경로는 strategyworker 시험이 잰다).
+  - `TestEightSimultaneousLaneFaultsLeaveTheSafetyLoopsRunning`: 두 시장 주기가 잠긴 레인 여덟을 돌았고(DISABLED · LATCHED 관측), 감독자 fault 스트림 0 · 시장 잠금 0 ·
+    삼킨 주기 오류 0 · 진입 게이트 0, Runtime · 안전 loop 셋 생존, durable 레인 잠금 여덟.
+  - `TestALaneLatchThatCannotBeRecordedIsCountedNotEscalated`: 레인 잠금을 원장에 남기지 못하면(레인 쪽이 시장 주기에 돌려주는 유일한 오류) refresh-only 가 그것을
+    **세며** 삼키고(SwallowedCycleErrors > 0) 중앙으로 올리지 않는다 — 게이트 · fault · 엔진 · 안전 loop 무접촉.
+  - `-race` 3 시험 깨끗(12.2s).
+- **변이**(`mutation-5.6.2.2.tsv`, 하네스 `--set 5.6.2.2`): W01 잠긴 레인을 시장 주기 오류로 · W02 중앙으로 · W03 기록 실패를 조용히 버림 · W04 기록 실패를 중앙으로 ·
+  W05 생산 worker 가 새로 고침을 멈춤 · W06 fault 스트림 용량 1 — **6/6 CAUGHT**.
+
+**FLM: not-applicable** — 이 로트는 새 시험 파일 하나뿐이고 기존 함수 본문 편집 0(생산 변경 0).

@@ -452,11 +452,38 @@ SET_5222_FIX2 = [
     ("Z05 delivery skips every fault (carried Y22)", MD,
      "\t\tif errors.As(err, &scope) {", "\t\tif true || errors.As(err, &scope) {"),
 ]
+LRT = "internal/app/engine/strategy_lane_runtime.go"
+SET_5622 = [
+    ("W01 a latched lane surfaces as a market cycle error", LRT,
+     "\truntime.record(observations)\n",
+     "\truntime.record(observations)\n\tfor _, observation := range observations {\n\t\tif observation.Health == strategyworker.LaneLatched {\n\t\t\treturn context.DeadlineExceeded\n\t\t}\n\t}\n"),
+    ("W02 a latched lane escalates as central integrity", LRT,
+     "\truntime.record(observations)\n",
+     "\truntime.record(observations)\n\tfor _, observation := range observations {\n\t\tif observation.Health == strategyworker.LaneLatched {\n\t\t\treturn StrategyCentralIntegrityFailure(context.DeadlineExceeded)\n\t\t}\n\t}\n"),
+    ("W03 an unrecorded lane latch is dropped silently", LRT,
+     "\tif err := runtime.persistMarketLatches(ctx, market, activationGeneration, runtime.clk.Now()); err != nil {\n\t\treturn err\n\t}",
+     "\t_ = runtime.persistMarketLatches(ctx, market, activationGeneration, runtime.clk.Now())"),
+    ("W04 an unrecorded lane latch escalates as central integrity", LRT,
+     "\tif err := runtime.persistMarketLatches(ctx, market, activationGeneration, runtime.clk.Now()); err != nil {\n\t\treturn err\n\t}",
+     "\tif err := runtime.persistMarketLatches(ctx, market, activationGeneration, runtime.clk.Now()); err != nil {\n\t\treturn StrategyCentralIntegrityFailure(err)\n\t}"),
+    ("W05 production supervisor workers stop refreshing", SUP,
+     "\t\t\tMarket: market, PollInterval: DefaultStrategyCycleLimit, RefreshesAuthority: true,",
+     "\t\t\tMarket: market, PollInterval: DefaultStrategyCycleLimit, RefreshesAuthority: false,"),
+    ("W06 fault stream capacity 2 -> 1", SUP,
+     "faults: make(chan StrategyWorkerFault, 2)", "faults: make(chan StrategyWorkerFault, 1)"),
+]
+SET_5622_TESTS = [
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+     "TestEightSimultaneousLaneFaults|TestALaneLatchThatCannotBeRecorded|TestTheProductionSupervisorStillHasTwo|TestTheFaultStream|TestEveryWorkerCanHandOff|TestARefreshOnly|TestAnOrdinaryRefreshOnly|TestTheProductionCycleHandsEvery",
+     "./internal/app/engine"],
+    ["go", "test", "-count=1", "-run", "Census|TestTheFaultStream|TestEveryWorkerCanHandOff", "./internal/app/engine"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
-        "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS)}
+        "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
+        "5.6.2.2": (SET_5622, SET_5622_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측

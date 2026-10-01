@@ -1,0 +1,8 @@
+TREE	HEAD ce1cda37e157febdc03908585c54af5f6efde3cd (git archive) + own: internal/app/engine/a112_eight_lane_fault_test.go
+CONTROL	GREEN	[./internal/app/engine pass events 10] [./internal/app/engine pass events 7]
+W01 a latched lane surfaces as a market cycle error	CAUGHT	1 failing: TestEightSimultaneousLaneFaultsLeaveTheSafetyLoopsRunning
+W02 a latched lane escalates as central integrity	CAUGHT	3 failing: TestEightSimultaneousLaneFaultsLeaveTheSafetyLoopsRunning, TestALaneLatchThatCannotBeRecordedIsCountedNotEscalated, TestTheCompleteCensusOfWhatCanStopTheEngineOnAStrategyFault
+W03 an unrecorded lane latch is dropped silently	CAUGHT	1 failing: TestALaneLatchThatCannotBeRecordedIsCountedNotEscalated
+W04 an unrecorded lane latch escalates as central integrity	CAUGHT	2 failing: TestALaneLatchThatCannotBeRecordedIsCountedNotEscalated, TestTheCompleteCensusOfWhatCanStopTheEngineOnAStrategyFault
+W05 production supervisor workers stop refreshing	CAUGHT	3 failing: TestEightSimultaneousLaneFaultsLeaveTheSafetyLoopsRunning, TestALaneLatchThatCannotBeRecordedIsCountedNotEscalated, TestTheProductionSupervisorStillHasTwoRefreshOnlyMarketWorkers
+W06 fault stream capacity 2 -> 1	CAUGHT	3 failing: TestTheProductionSupervisorStillHasTwoRefreshOnlyMarketWorkers, TestTheFaultStreamHoldsOneSlotForEveryWorkerThatCanLatch, TestEveryWorkerCanHandOffItsFaultWithoutAnybodyDraining

@@ -344,13 +344,17 @@
   **RED · 반증.** `analysis/measurements/lot-5.6.2-5.2.2/red-5.6.2.1.log`: 게이트 잠김 · 엔진 불정지 · 두 시장 계속(한 시험), 게이트 없는 조립의 삼킴 금지, 생산 생성자의 게이트 요구 · 역할(엔진 자신의 게이트) — 넷 FAIL, 대조(보통 오류는 게이트를 잠그지 않음)는 GREEN. 변이 E01~E11 11/11 CAUGHT(`analysis/harness/a112_lot_mutate.py --set 5.6.2.1`, HEAD archive + 이 로트 파일 사본, 무변이 대조군 GREEN). 편집 전 번들 `analysis/measurements/lot-5.6.2-5.2.2/pre-edit/`, 편집 뒤 재측정 `coverage-post-5.6.2.1-engine.json`.
 
   **이 태스크가 주장하지 않는 것.** 여덟 레인 재증명(fault 스트림 용량 = 레인 수 유도 · 레인 고장 여덟 동시에도 fill/reconcile/exit 생존) — 5.6.2.2. effective worker 활성화 시 중앙 고장의 처분(B14) — 이월(review).
-- [ ] 5.6.2.2 Re-prove the same three clauses on the eight-lane runtime once 5.1.2/5.2 have swapped it in. **(Owns every clause of the original 5.6.2 — split 2026-09-30; runs after 5.2.2.1. Also owns 5.2.2's 「each lane independently supervised」 — split 2026-09-30.)**
+- [x] 5.6.2.2 Re-prove the same three clauses on the eight-lane runtime once 5.1.2/5.2 have swapped it in. **(Owns every clause of the original 5.6.2 — split 2026-09-30; runs after 5.2.2.1. Also owns 5.2.2's 「each lane independently supervised」 — split 2026-09-30.)**
 
   **Why it is open.** Every property 5.6.1 measured is a property of *two market workers driven by one consumer goroutine each*. The swap changes the number, the drivers and the fault sources. Concretely, three things measured here are known to need re-deriving: the fault-stream capacity equals the worker count (2 today, 8 after); the refresh-only swallow at `813:4` is the production configuration today and will not be after; and "each market latches at most once" is what makes the handoff `default` arm unreachable.
 
   **Done.** The seven blocks stay executed against whatever then runs the production cycle, the census still returns zero production callers of `StrategyCentralIntegrityFailure`, and a lane fault — including eight simultaneous ones — still leaves fill detection, reconcile and exit observation running.
 
   **선납(2026-10-01, 5.2.2.1 리뷰 수리 3차).** 5.6.2.2 의 행동 커버 요구 중 **주기 전달 부분**은 `a112_market_cycle_delivery_test.go`(`TestTheProductionCycleHandsEveryOwnerScopeToTheDispatch` · 활성화 없음 대조)가 선납했다 — `runProductionStrategyMarketCycle` 을 통째로 돌려(권한 새로 고침은 1초 캐시 주입, 레인 런타임은 생산 생성자) dispatch 가 handoff 를 전부 받는지 센다. 레인 고장 · 여덟 동시 고장 · 안전 루프 생존은 여전히 이 태스크의 몫이다.
+
+  **종결(2026-10-01).** 재유도: 감독자 worker 는 여전히 시장 둘(레인은 시장 주기 안의 런타임, 레인 고장은 레인 잠금에서 끝남) — fault 스트림 2 = 2 · handoff `default`
+  도달 불가 · refresh-only 가 유일한 생산 구성. 일곱 블록 전부 count ≥ 1(현재 좌표), census 0, 여덟 동시 레인 고장 · 레인 잠금 기록 실패 모두 안전 loop 생존
+  (`a112_eight_lane_fault_test.go`), 변이 6/6 CAUGHT. review 「5.6.2.2」 절.
 - [x] 5.7 Add race, goroutine-leak, queue pressure, fake-clock and fault-injection tests for 8 concurrent workers and 2 coordinators, including simultaneous same-symbol proposals and shutdown/restart. **(Landed 2026-09-02.)**
 
   `internal/strategyworker/rehearsal_test.go` stands all eight lanes and both coordinators up together and drives them from eight goroutines behind one gate. This is the rehearsal `design.md:255` asks for before the swap, not the swap: the lanes here are test-turned-ON copies, and production callers remain zero.
