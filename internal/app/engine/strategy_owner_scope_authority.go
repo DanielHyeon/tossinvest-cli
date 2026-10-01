@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"context"
 	"errors"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket"
@@ -51,20 +50,21 @@ func (authority strategyRiskMarketAuthority) riskScopeCause(key strategyrouter.O
 	return false, errors.New("production risk authority holds no entry for this owner scope")
 }
 
-// accountScopeCause 는 계좌 쪽 같은 분류다. 계좌 적재기는 원장을 읽지 않고(서명 매니페스트 파일만) 그 실패는 범위 국소이며, 결함은
-// ctx 종료(취소 · 기한)와 범위 항목 부재뿐이다(Manager 조건 ④).
-func (authority strategyAccountMarketAuthority) accountScopeCause(key strategyrouter.OwnerKey) (bool, error) {
+// accountScopeCause 는 준비되지 않은 계좌 범위의 원인이다. 계좌 쪽에는 **범위 국소 원인이 없다** — 생산 계좌 매니페스트는 시장 단위 파일
+// 하나(`strategyaccount.FileName(market)`)라 적재 실패(파일 부재 · digest · 서명 · 창 · ctx)는 모든 범위에 같이 걸린다. 그래서 1차 레그는 계좌
+// 실패를 언제나 결함으로 다룬다(5.2.2.2 codex 재확인 P1 → Manager 판정 (A), 2026-10-01 — 앞 판의 「ctx 만 결함」은 매니페스트가 범위별이라는
+// 틀린 전제 위에 서 있었다).
+func (authority strategyAccountMarketAuthority) accountScopeCause(key strategyrouter.OwnerKey) error {
 	for _, scope := range authority.scopes {
 		if scope.key != key {
 			continue
 		}
 		if scope.cause == nil {
-			return false, errors.New("production account authority scope is not ready without a cause")
+			return errors.New("production account authority scope is not ready without a cause")
 		}
-		fault := errors.Is(scope.cause, context.Canceled) || errors.Is(scope.cause, context.DeadlineExceeded)
-		return !fault, scope.cause
+		return scope.cause
 	}
-	return false, errors.New("production account authority holds no entry for this owner scope")
+	return errors.New("production account authority holds no entry for this owner scope")
 }
 
 // strategyOwnerKeyOf 는 계보의 소유자 범위 정규형이다(봉인의 선택과 같은 키).
@@ -77,7 +77,7 @@ func strategyOwnerKeyOf(lineage strategyflow.Lineage) (strategyrouter.OwnerKey, 
 // 타입의 거절만 건너뛰고 다음 범위로 가며(각각 기록), 그 밖의 오류(원장 · Gateway · 중앙 무결성 · 위조 의심)는 주기를 멈춘다.
 //
 // 이 타입을 만드는 자리는 1차 레그 권한의 둘뿐이다(census — a112_scope_refusal_census_test.go): 그 범위의 위험 · 계좌 권한이 **범위 국소
-// 원인**(riskScopeCause · accountScopeCause 가 가름)으로 준비되지 않았을 때. 원장 결함 · ctx · 범위 항목 부재는 이 타입이 아니다 — 넓히면
+// 원인**(riskScopeCause 가 가름 — 계좌 쪽에는 범위 국소 원인이 없음)으로 준비되지 않았을 때. 원장 결함 · ctx · 범위 항목 부재는 이 타입이 아니다 — 넓히면
 // 원장 · Gateway 오류가 「범위 거절」로 오분류되어 한 범위의 고장 뒤에도 주기가 주문을 계속 낸다(5.2.2.2 리뷰 A #1 · codex #2 가 실측).
 type strategyScopeRefusal struct {
 	scope  strategyrouter.OwnerKey

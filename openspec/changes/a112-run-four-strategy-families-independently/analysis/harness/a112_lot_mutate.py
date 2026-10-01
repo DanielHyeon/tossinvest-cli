@@ -439,11 +439,24 @@ SET_5222_FIX_TESTS = [
     ["go", "test", "-count=1", "-run", "TestTheSingleProposalAssumption|TestTheScopeRefusalType|TestOnlyATypedScopeRefusal|TestNoEngineErrorTypeImplementsAs|Single", "./internal/app/engine"],
     ["go", "test", "-count=1", "./internal/riskbucket"],
 ]
+SET_5222_FIX2 = [
+    ("Z01 account failure classified scope-local again (the pre-ruling boundary)", FL,
+     "\t\treturn execgw.QFinalCampaignFirstLegIssuance{}, fmt.Errorf(\"production account authority fault for owner scope %s: %w\", key.Symbol,\n\t\t\taccount.accountScopeCause(key))",
+     "\t\treturn execgw.QFinalCampaignFirstLegIssuance{}, &strategyScopeRefusal{scope: key, detail: \"no ready account authority for this owner scope\",\n\t\t\tcause: account.accountScopeCause(key)}"),
+    ("Z02 account fault cause flattened (%v)", FL,
+     "fmt.Errorf(\"production account authority fault for owner scope %s: %w\", key.Symbol,", "fmt.Errorf(\"production account authority fault for owner scope %s: %v\", key.Symbol,"),
+    ("Z03 account loader ignores its own context after a failure", FL,
+     "\t\t\t\tif ctxErr := ctx.Err(); ctxErr != nil {", "\t\t\t\tif ctxErr := ctx.Err(); false && ctxErr != nil {"),
+    ("Z04 risk scope-local classifier widened to every cause (carried Y07)", OWN,
+     "return errors.Is(scope.cause, riskbucket.ErrProductionRiskScopeRefused), scope.cause", "return true, scope.cause"),
+    ("Z05 delivery skips every fault (carried Y22)", MD,
+     "\t\tif errors.As(err, &scope) {", "\t\tif true || errors.As(err, &scope) {"),
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
-        "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS)}
+        "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측

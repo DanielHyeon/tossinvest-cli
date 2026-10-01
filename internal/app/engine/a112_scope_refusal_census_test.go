@@ -29,8 +29,9 @@ var strategyScopeRefusalMentions = map[string]int{
 	"strategy_owner_scope_authority.go:(decl)": 1,
 	"strategy_owner_scope_authority.go:Error":  1,
 	"strategy_owner_scope_authority.go:Unwrap": 1,
-	// **만드는 자리는 여기 둘뿐**: 그 범위의 위험 · 계좌 권한이 범위 국소 원인으로 준비되지 않음(riskScopeCause · accountScopeCause 가 가름).
-	"strategy_account_first_leg_authority.go:collectStrategyFirstLegAuthority": 2,
+	// **만드는 자리는 여기 하나뿐**: 그 범위의 위험 권한이 범위 국소 원인(riskbucket.ErrProductionRiskScopeRefused)으로 준비되지 않음.
+	// 2 → 1(2026-10-01, codex 재확인 P1 → Manager 판정 (A)): 계좌 쪽은 범위 국소 원인이 없어(시장 단위 매니페스트) 언제나 결함.
+	"strategy_account_first_leg_authority.go:collectStrategyFirstLegAuthority": 1,
 	// 운반: 전달 몸통의 errors.As 대상(admit · dispatch 는 수집 오류를 사슬째 나르므로 이 타입을 언급하지 않음 — 리뷰 수리).
 	"strategy_market_handoff_delivery.go:deliverEachStrategyHandoff": 1,
 }

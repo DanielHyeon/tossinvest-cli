@@ -1,0 +1,12 @@
+# RED — HEAD face8d0d + 뒤집은 시험(생산 편집 전)
+=== RUN   TestAnAccountLoadFailureOnOneScopeIsAFaultThatStopsTheCycle
+=== RUN   TestAnAccountLoadFailureOnOneScopeIsAFaultThatStopsTheCycle/fixture_order_(failing_scope_first)
+    a112_owner_scope_trading_test.go:397: placed=000660 err=engine: first-leg admission AUTHORITY_COLLECTION_FAILED: strategy owner scope refused (acct-risk-loader/KR/005930): no ready account authority for this owner scope: account manifest digest mismatch, want "" — the account fault must stop the cycle, not skip to the next scope
+=== RUN   TestAnAccountLoadFailureOnOneScopeIsAFaultThatStopsTheCycle/coordinator_order_(000660_first)
+    a112_owner_scope_trading_test.go:400: err=engine: first-leg admission AUTHORITY_COLLECTION_FAILED: strategy owner scope refused (acct-risk-loader/KR/005930): no ready account authority for this owner scope: account manifest digest mismatch — want an untyped fault carrying the account loader's cause
+--- FAIL: TestAnAccountLoadFailureOnOneScopeIsAFaultThatStopsTheCycle (0.58s)
+    --- FAIL: TestAnAccountLoadFailureOnOneScopeIsAFaultThatStopsTheCycle/fixture_order_(failing_scope_first) (0.30s)
+    --- FAIL: TestAnAccountLoadFailureOnOneScopeIsAFaultThatStopsTheCycle/coordinator_order_(000660_first) (0.28s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.580s
+FAIL

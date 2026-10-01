@@ -1,20 +1,20 @@
 # Function Logic Map: `collectStrategyFirstLegAuthority`
 
 - Source: `internal/app/engine/strategy_account_first_leg_authority.go`
-- Source SHA-256: `674fb6c148cca915074491fed6e39397a2e655d67687a913362b7676e64abdc3`
+- Source SHA-256: `03beca9c77991951b18a6a97237327425a48188aa56bcb3c72bfb5c2c299cac5`
 - Signature: `productionStrategyFirstLegAuthorityLoader.collectStrategyFirstLegAuthority(params=2, results=2)`
-- Source range: `288:1`–`399:2`
+- Source range: `288:1`–`397:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2 리뷰 수리).
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
-- 범위 거절 타입을 만드는 자리는 B8 · B10 의 범위 국소 갈래 둘뿐 — census `TestTheScopeRefusalTypeIsMadeOnlyWhereTheCensusSaysItIs` · `TestNoEngineErrorTypeImplementsAs`.
+- 범위 거절 타입을 만드는 자리는 B8 의 범위 국소 갈래 하나뿐 — census `TestTheScopeRefusalTypeIsMadeOnlyWhereTheCensusSaysItIs` · `TestNoEngineErrorTypeImplementsAs`.
 - 활성화 밖에서 마지막 경계의 수용 집합은 80ae96a5 이전(7ab8cd12)과 같다(B5).
 
 ## Branches and early returns
 
-- Exact AST return nodes: `290:3, 297:3, 303:3, 307:3, 312:3, 319:3, 327:4, 329:3, 335:4, 337:3, 342:3, 347:3, 352:3, 369:3, 378:4, 382:4, 384:3, 388:2`.
+- Exact AST return nodes: `290:3, 297:3, 303:3, 307:3, 312:3, 319:3, 327:4, 329:3, 334:3, 340:3, 345:3, 350:3, 367:3, 376:4, 380:4, 382:3, 386:2`.
 
 | Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
@@ -26,15 +26,14 @@
 | B6 | if | 318:2 | **(새)** 범위 키 정규화 실패 → 결함(타입 없음) |
 | B7 | if | 324:2 | 그 범위의 준비된 위험 권한 없음 |
 | B8 | if | 326:3 | **(새)** 원인이 범위 국소가 아님(원장 결함 · 무결성 · 항목 부재) → 타입 없는 결함 `production risk authority fault …: %w`(주기 멈춤 · 원인 보존); 범위 국소(`riskbucket.ErrProductionRiskScopeRefused`)면 범위 거절 타입(원인 Unwrap) |
-| B9 | if | 332:2 | 그 범위의 준비된 계좌 권한 없음 |
-| B10 | if | 334:3 | **(새)** 계좌 원인이 ctx 종료 · 항목 부재면 결함(타입 없음), 그 밖의 적재 실패(서명 매니페스트)면 범위 거절 |
-| B11 | if | 341:2 | 계보 시장 통화 미지 |
-| B12 | if | 345:2 | 위험 권한 범위 불일치(범위 번들) |
-| B13 | if | 350:2 | 포지션 캠페인 CAS 변경 |
-| B14 | range | 357:2 | 위험 버킷 항목 순회 |
-| B15 | if | 368:2 | 가격 단위 무효 |
-| B16 | if | 377:3 | 노출 스냅숏 만료(collect 클로저) |
-| B17 | if | 381:3 | 예약 버전 읽기 실패(collect 클로저) |
+| B9 | if | 332:2 | 그 범위의 준비된 계좌 권한 없음 → **언제나 결함**(타입 없는 오류 `production account authority fault …: %w` — 주기 멈춤 · 원인 보존). 계좌 매니페스트는 시장 단위 파일이라 범위 국소 원인이 없다(codex 재확인 P1 → Manager 판정 (A) — 앞 판의 「ctx 만 결함」 대체) |
+| B10 | if | 339:2 | 계보 시장 통화 미지 |
+| B11 | if | 343:2 | 위험 권한 범위 불일치(범위 번들) |
+| B12 | if | 348:2 | 포지션 캠페인 CAS 변경 |
+| B13 | range | 355:2 | 위험 버킷 항목 순회 |
+| B14 | if | 366:2 | 가격 단위 무효 |
+| B15 | if | 375:3 | 노출 스냅숏 만료(collect 클로저) |
+| B16 | if | 379:3 | 예약 버전 읽기 실패(collect 클로저) |
 
 ## Calls and live bindings
 
@@ -64,56 +63,56 @@
 | `riskAuthority.riskScopeCause` | 325:24 |
 | `fmt.Errorf` | 327:52 |
 | `account.forScope` | 331:37 |
-| `account.accountScopeCause` | 333:24 |
-| `fmt.Errorf` | 335:52 |
-| `errors.New` | 342:51 |
-| `riskBundle.Scope` | 344:11 |
-| `riskBundle.Validate` | 345:12 |
-| `string` | 346:3 |
-| `string` | 346:27 |
-| `scope.AsOf.Equal` | 346:102 |
-| `errors.New` | 347:51 |
-| `loader.journal.CurrentPositionCampaignCAS` | 349:14 |
-| `string` | 349:88 |
-| `uint64` | 351:40 |
-| `errors.New` | 352:51 |
-| `riskBundle.Entries` | 354:13 |
-| `make` | 355:13 |
-| `len` | 355:50 |
-| `make` | 356:16 |
-| `len` | 356:63 |
-| `append` | 358:13 |
-| `append` | 360:16 |
-| `MajorDecimal` | 365:25 |
-| `result.ExecutionTerms.Entry` | 365:25 |
-| `MajorDecimal` | 366:23 |
-| `result.ExecutionTerms.EffectiveStop` | 366:23 |
-| `MajorDecimal` | 367:27 |
-| `result.ExecutionTerms.Target` | 367:27 |
-| `errors.New` | 369:51 |
-| `strategyFirstLegBindingDigest` | 371:19 |
-| `riskBundle.Digest` | 371:75 |
-| `strings.TrimPrefix` | 372:38 |
-| `strings.TrimPrefix` | 373:37 |
-| `UTC` | 376:10 |
-| `loader.clk.Now` | 376:10 |
-| `readCtx.Err` | 377:24 |
-| `now.IsZero` | 377:48 |
-| `now.After` | 377:64 |
-| `accountAuthority.FreshUntil` | 377:74 |
-| `errors.New` | 378:38 |
-| `loader.journal.ReservationVersion` | 380:26 |
-| `accountAuthority.ObservedAt` | 384:40 |
-| `accountAuthority.OpenExposure` | 384:103 |
-| `string` | 388:89 |
-| `accountAuthority.AccountState` | 390:12 |
-| `riskBundle.Policy` | 391:80 |
-| `loader.guardian.PolicyVersion` | 393:26 |
-| `loader.guardian.LimitsDigest` | 393:81 |
-| `strings.TrimPrefix` | 396:81 |
-| `strings.TrimPrefix` | 397:42 |
-| `strings.TrimPrefix` | 398:39 |
-| `proposalAuthority.WeeklyBinding` | 398:99 |
+| `fmt.Errorf` | 334:51 |
+| `account.accountScopeCause` | 335:4 |
+| `errors.New` | 340:51 |
+| `riskBundle.Scope` | 342:11 |
+| `riskBundle.Validate` | 343:12 |
+| `string` | 344:3 |
+| `string` | 344:27 |
+| `scope.AsOf.Equal` | 344:102 |
+| `errors.New` | 345:51 |
+| `loader.journal.CurrentPositionCampaignCAS` | 347:14 |
+| `string` | 347:88 |
+| `uint64` | 349:40 |
+| `errors.New` | 350:51 |
+| `riskBundle.Entries` | 352:13 |
+| `make` | 353:13 |
+| `len` | 353:50 |
+| `make` | 354:16 |
+| `len` | 354:63 |
+| `append` | 356:13 |
+| `append` | 358:16 |
+| `MajorDecimal` | 363:25 |
+| `result.ExecutionTerms.Entry` | 363:25 |
+| `MajorDecimal` | 364:23 |
+| `result.ExecutionTerms.EffectiveStop` | 364:23 |
+| `MajorDecimal` | 365:27 |
+| `result.ExecutionTerms.Target` | 365:27 |
+| `errors.New` | 367:51 |
+| `strategyFirstLegBindingDigest` | 369:19 |
+| `riskBundle.Digest` | 369:75 |
+| `strings.TrimPrefix` | 370:38 |
+| `strings.TrimPrefix` | 371:37 |
+| `UTC` | 374:10 |
+| `loader.clk.Now` | 374:10 |
+| `readCtx.Err` | 375:24 |
+| `now.IsZero` | 375:48 |
+| `now.After` | 375:64 |
+| `accountAuthority.FreshUntil` | 375:74 |
+| `errors.New` | 376:38 |
+| `loader.journal.ReservationVersion` | 378:26 |
+| `accountAuthority.ObservedAt` | 382:40 |
+| `accountAuthority.OpenExposure` | 382:103 |
+| `string` | 386:89 |
+| `accountAuthority.AccountState` | 388:12 |
+| `riskBundle.Policy` | 389:80 |
+| `loader.guardian.PolicyVersion` | 391:26 |
+| `loader.guardian.LimitsDigest` | 391:81 |
+| `strings.TrimPrefix` | 394:81 |
+| `strings.TrimPrefix` | 395:42 |
+| `strings.TrimPrefix` | 396:39 |
+| `proposalAuthority.WeeklyBinding` | 396:99 |
 
 ## State mutations and fallbacks
 

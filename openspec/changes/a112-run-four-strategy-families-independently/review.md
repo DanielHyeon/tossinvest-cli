@@ -5772,3 +5772,25 @@ riskbucket 패키지 시험 전부 PASS(122).
 
 **잔여(이름 붙임).** R2~R5 는 앞 절 판정 그대로. 새로: `bindProductionRiskInputs` 의 전략 매핑 부재(B3)는 범위 국소로 넓히지 않았다 — 한 가족 레인의 정책 누락은
 결함으로 주기를 멈춘다(설정 오류 · 보수 방향). `accountScopeCause` 의 ctx 판정은 적재 실패 뒤 ctx 를 직접 보는 것에 기댄다(생산 적재기가 ctx 를 자기 오류로 접으므로).
+
+### codex 재확인 #1(face8d0d) — BLOCK(계좌 경계) · 정정 사슬 · 2차 수리
+
+**재확인 판정.** codex(같은 세션 resume, `analysis/review-5222/codex-recheck-output.md`): #1(비활성 개수 관문) **종결**, #3(CAS 정정) **종결**(시험 주석 전제 T 하나),
+#2 위험 쪽 **종결**(sentinel 생성 두 자리 · riskbucket 거절 집합 불변), **#2 계좌 쪽 P1** — `accountScopeCause` 가 ctx 밖의 모든 오류를 범위 국소로 분류하는데, 계좌 적재
+실패에는 매니페스트 digest · 서명 · 결속 검증(무결성) 실패가 섞여 있다.
+
+**정정 사슬(전제 → 반증 실측 → 교체).**
+1. 전제(틀림): J4 판정 요청 때 「계좌 적재기는 원장을 읽지 않고 서명 매니페스트 파일만 보므로 그 실패는 범위 국소, 결함은 ctx 뿐」이라고 썼고, Manager 가 그 위에
+   「계좌 쪽 ctx 만 결함」 조건을 세웠다.
+2. 반증 실측: 생산 계좌 매니페스트는 **시장 단위 파일 하나** — `strategyaccount.FileName(market)` = `strategy-account-snapshot-<MARKET>.json`(`internal/strategyaccount/production.go`
+   `LoadProductionAuthority`), 종목은 형식 검사(`validSymbol`)에만 쓰인다. 따라서 생산의 계좌 적재 실패(파일 부재 · digest · 서명 · 창 · ctx)는 모든 범위에 같이 걸리고
+   **범위 국소 원인이 없다**. 범위마다 다르게 실패하는 모양은 시험 스텁(`a112AccountLoaderWith`)에서만 나온다.
+3. 교체(Manager 판정 (A), 2026-10-01): 계좌 적재 실패는 원인 무관 **언제나 결함**(타입 없는 오류 · 주기 멈춤 · 원인 보존). 범위 거절 타입은 위험 쪽 sentinel(정책 밖
+   종목 · scope latch)에서만. 앞 「ctx 만 결함」 조건은 이 판정으로 대체. (B)(strategyaccount 범위 국소 sentinel)는 존재하지 않는 원인이라 YAGNI 로 기각.
+
+**2차 수리.** 1차 레그 B9: 계좌 범위 권한 부재 → `production account authority fault …: %w`. `accountScopeCause` 는 원인만 돌려줌(분류 없음). census 만드는 자리 2 → 1.
+J3 계좌 절반 시험(`TestAScopeWithoutItsOwnAccountAuthorityIsRefusedAloneAndRecorded` — 생산 불가능 모양을 재던 것)을 뒤집어 `TestAnAccountLoadFailureOnOneScopeIsAFaultThatStopsTheCycle`
+(두 순서: 실패 범위가 앞이면 주문 0, 뒤면 앞 범위만 · 둘 다 타입 없는 오류 · 원인 보존). T: Done 시험 주석에 「이 fixture 에서」 전제.
+RED `analysis/measurements/lot-5.2.2.2-fix2/red-fix2.log`(편집 전: 범위 거절 · placed=000660). 변이 `mutation-5.2.2.2-fix2.tsv`: Z01(계좌 실패를 범위 국소로 되돌림 — 판정 전 경계) ·
+Z02(%v) · Z03(적재기가 ctx 를 안 봄) · Z04(위험 분류기 확대) · Z05(전달 몸통이 모든 결함 건너뜀) **전부 CAUGHT**, 대조군 pass 62 / 8 / 122. 생산 동작 변화 0(계좌는 시장 단위라
+어차피 모든 범위가 함께 실패하고, 서명 활성화 0).

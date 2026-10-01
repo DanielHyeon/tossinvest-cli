@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_account_first_leg_authority.go",
-  "source_sha256": "674fb6c148cca915074491fed6e39397a2e655d67687a913362b7676e64abdc3",
+  "source_sha256": "03beca9c77991951b18a6a97237327425a48188aa56bcb3c72bfb5c2c299cac5",
   "package": "engine",
   "function": "newProductionStrategyFirstLegAuthorityLoader",
   "signature": "newProductionStrategyFirstLegAuthorityLoader(params=8, results=1)",

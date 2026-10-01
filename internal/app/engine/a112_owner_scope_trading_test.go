@@ -303,7 +303,8 @@ func (fixture a112TradingFixture) deliverKR(t *testing.T) error {
 
 // Done: 서명 활성화된 두 소유자 범위 시장이 범위마다 첫 레그를 낸다 — 각자 자기 범위의 위험 · 계좌 권한으로.
 //
-// Done 문장의 확정된 의미(2026-10-01 Manager 판정 ④ — 약화가 아니라 정밀화): **범위별 발급은 파도 순차**다. 두 범위는 horizon · 시장 ·
+// Done 문장의 확정된 의미(2026-10-01 Manager 판정 ④ — 약화가 아니라 정밀화): **이 fixture 에서** 범위별 발급은 파도 순차다(사이에 해제가
+// 끼지 않는 원장 — 일반적인 안전은 원장 기준 합산과 스냅숏 하한 대조가 진다, codex #3 · 재확인 T). 두 범위는 horizon · 시장 ·
 // 계좌 버킷을 공유하므로 첫 레그의 admission 이 공유 버킷 사용량을 올리고, 같은 파도에서 모은 둘째 범위의 버킷 스냅숏은 뒤처져 journal 이
 // `BUCKET_USAGE_STALE` 로 거절한다(범위 거절이 아닌 원장 거절 — 주기가 멈춘다). 이것은 결함이 아니라 공유 버킷 이중 소비를 막는 설계다
 // (관문 전수표 (e)). 둘째 파도가 첫 레그의 held 를 반영한 번들을 다시 모으면 둘째 범위가 발급된다 — 첫 범위는 캠페인이 이제 FLAT 이 아니라
@@ -378,16 +379,27 @@ func TestTheSecondLegOfOneCycleCountsTheFirstLegsHeldReservation(t *testing.T) {
 	}
 }
 
-// 범위별 거절(J3): 한 범위의 계좌 권한을 못 얻으면 그 범위만 거절되고(봉투 폴백 없음 · 기록됨) 다른 범위는 거래한다.
-func TestAScopeWithoutItsOwnAccountAuthorityIsRefusedAloneAndRecorded(t *testing.T) {
-	fixture := newA112TradingFixture(t, a112TradingOptions{failAccountFor: "005930"})
-	err := fixture.deliverKR(t)
-	if got := strings.Join(fixture.placedSymbols(), ","); got != "000660" {
-		t.Fatalf("placed=%s err=%v, want only the scope with its own account authority", got, err)
-	}
-	var refusal *strategyScopeRefusal
-	if err == nil || !errors.As(err, &refusal) {
-		t.Fatalf("err=%v, want the skipped scope's typed refusal returned (recorded, not silent)", err)
+// 계좌 적재 실패는 결함이다(5.2.2.2 codex 재확인 P1 → Manager 판정 (A), 2026-10-01). 생산 계좌 매니페스트는 **시장 단위 파일 하나**
+// (`strategyaccount.FileName(market)`)라 적재 실패(파일 부재 · digest · 서명 · 창 · ctx)는 모든 범위에 같이 걸리는 사유이고 범위 국소 원인이
+// 없다 — 한 범위만 실패하는 모양은 이 시험 스텁에서만 나온다. 그래서 한 범위의 계좌 적재 실패는 범위 거절(건너뛰기)이 아니라 주기를 멈추는
+// 타입 없는 결함이고 원인을 남긴다. 앞 판(J3 계좌 절반 — 「그 범위만 거절, 다른 범위 거래」)은 생산에서 불가능한 모양을 재던 것이라 뒤집었다.
+func TestAnAccountLoadFailureOnOneScopeIsAFaultThatStopsTheCycle(t *testing.T) {
+	failure := errors.New("account manifest digest mismatch")
+	for _, order := range []struct {
+		name   string
+		first  bool
+		placed string
+	}{{"fixture order (failing scope first)", false, ""}, {"coordinator order (000660 first)", true, "000660"}} {
+		t.Run(order.name, func(t *testing.T) {
+			fixture := newA112TradingFixture(t, a112TradingOptions{failAccountFor: "005930", accountFailure: failure, coordinatorOrder: order.first})
+			err := fixture.deliverKR(t)
+			if got := strings.Join(fixture.placedSymbols(), ","); got != order.placed {
+				t.Fatalf("placed=%s err=%v, want %q — the account fault must stop the cycle, not skip to the next scope", got, err, order.placed)
+			}
+			if err == nil || a112ScopeRefusalOf(err) != nil || !errors.Is(err, failure) {
+				t.Fatalf("err=%v — want an untyped fault carrying the account loader's cause", err)
+			}
+		})
 	}
 }
 
@@ -702,7 +714,7 @@ func TestTheLeaseRiskGenerationComesFromTheScopesOwnBundle(t *testing.T) {
 
 // 계좌 적재기는 ctx 종료를 자기 오류로 접는다(생산 `strategyaccount.LoadProductionAuthority` 는 ctx.Err 를 ErrProductionAccountUnavailable 로
 // 돌려줌) — 그래서 계좌 권한 수집은 실패 뒤 ctx 를 **직접** 보고 원인을 ctx 로 바꾼다(조건 ④). 취소된 ctx 로 모으면 실패한 범위의 원인은
-// context.Canceled 이고 1차 레그에서 결함이다.
+// context.Canceled 다(원인 보존 — 1차 레그는 계좌 실패를 모두 결함으로 다룬다).
 func TestAnAccountLoadThatFailsUnderACancelledContextIsAFault(t *testing.T) {
 	fixture := newA112TradingFixture(t, a112TradingOptions{})
 	cancelled, cancel := context.WithCancel(context.Background())
@@ -714,9 +726,6 @@ func TestAnAccountLoadThatFailsUnderACancelledContextIsAFault(t *testing.T) {
 		}
 		if scope.ready || !errors.Is(scope.cause, context.Canceled) {
 			t.Fatalf("005930 account scope ready=%v cause=%v — want the context's cancellation as the cause", scope.ready, scope.cause)
-		}
-		if local, _ := accounts.kr.accountScopeCause(scope.key); local {
-			t.Fatal("a cancelled account load was classified as a scope-local refusal")
 		}
 		return
 	}

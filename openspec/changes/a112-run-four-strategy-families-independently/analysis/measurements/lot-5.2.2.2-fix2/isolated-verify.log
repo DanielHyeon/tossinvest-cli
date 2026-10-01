@@ -1,0 +1,5 @@
+# isolated worktree 212d01ef = face8d0d + 2차 수리 (원 출력 — rtk proxy)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	203.413s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	1.967s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	179.722s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/riskbucket	0.289s

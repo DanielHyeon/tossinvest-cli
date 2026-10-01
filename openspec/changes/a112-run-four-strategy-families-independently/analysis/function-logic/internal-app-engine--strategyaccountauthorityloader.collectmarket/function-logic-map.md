@@ -1,7 +1,7 @@
 # Function Logic Map: `strategyAccountAuthorityLoader.collectMarket`
 
 - Source: `internal/app/engine/strategy_account_first_leg_authority.go`
-- Source SHA-256: `674fb6c148cca915074491fed6e39397a2e655d67687a913362b7676e64abdc3`
+- Source SHA-256: `03beca9c77991951b18a6a97237327425a48188aa56bcb3c72bfb5c2c299cac5`
 - Signature: `strategyAccountAuthorityLoader.collectMarket(params=3, results=1)`
 - Source range: `155:1`–`199:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2 리뷰 수리).

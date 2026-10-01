@@ -212,7 +212,7 @@
   생산 동작 변화 0(서명 활성화 0). 변이 21 CAUGHT · M20 예상 SURVIVED. 잔여 R1~R5(review 「5.2.2.2 편집 로트」) — R1 스키마 핀 27 은 **레인 활성화의 경성 선행**(ROADMAP).
   착지 `80ae96a5`. **리뷰 라운드(2026-10-01): A · codex BLOCK, B APPROVE** — 처분 · 수리는 review 「5.2.2.2 리뷰 라운드(80ae96a5)」 절: 활성화 없는 시장의 개수 관문 복원
   (codex #1), J4 = (A) 적재 단계 원인 분류(riskbucket 범위 국소 sentinel + 엔진 원인 운반 — A #1 · codex #2), 승격 근거 범위 권한 · 최소 만료 · As census · M20 격추 · 첫 파도 두 레그
-  단언 · 문서 정정. 수리 변이 21 CAUGHT(M14 예상 생존). 남은 것: 수리 착지 → codex 재확인. 체크는 APPROVE 뒤.
+  단언 · 문서 정정. 수리 변이 21 CAUGHT(M14 예상 생존) — 착지 `face8d0d`. codex 재확인 #1: 계좌 경계 P1 → 판정 (A)(계좌 매니페스트는 시장 단위 — 계좌 실패는 언제나 결함), 2차 수리 변이 5/5 CAUGHT. 남은 것: 2차 착지 → codex 재확인 #2. 체크는 APPROVE 뒤.
 
   **이월(6.2 봉인 리뷰, 2026-10-01 — 이 태스크가 개수 관문을 걷을 때 함께):** (a) 발급 통화를 봉투(`accepted.currency`)가 아니라 `result.Lineage.Market` 에서 다시 유도(보이스 A #3 — 오늘은 Guardian 이 fail-closed 로 막음), (b) 계좌 권한도 선택된 소유자 범위 단위로 다시 유도(보이스 A #5 — 계좌 권한은 오늘 `entries[0]` 종목으로 적재되고 선택 범위와 대조되지 않음), (c) 제안 집합 digest 식을 한 곳으로(`collectMarket` 인라인과 `strategyProposalSetDigest` 사본 — 보이스 A #6, 갈라지면 fail-closed). (d) 변이 하네스 대조군의 JSON 추가 실행이 종료 코드도 보게(6.2 codex 재확인 #2 P2), (e) 봉인 시험 파일의 옛 주석 한 줄(「entries[0] 이면 identity 거절」) 삭제((T)). 그리고 codex 의 말 그대로: 6.2.0 의 APPROVE 는 **개수 관문 제거의 안전성을 승인한 것이 아니다.**
 

@@ -330,11 +330,9 @@ func (loader *productionStrategyFirstLegAuthorityLoader) collectStrategyFirstLeg
 	}
 	accountAuthority, accountScoped := account.forScope(key)
 	if !accountScoped {
-		scopeLocal, cause := account.accountScopeCause(key)
-		if !scopeLocal {
-			return execgw.QFinalCampaignFirstLegIssuance{}, fmt.Errorf("production account authority fault for owner scope %s: %w", key.Symbol, cause)
-		}
-		return execgw.QFinalCampaignFirstLegIssuance{}, &strategyScopeRefusal{scope: key, detail: "no ready account authority for this owner scope", cause: cause}
+		// 계좌 매니페스트는 시장 단위 파일 — 범위 국소 원인이 없으므로 계좌 실패는 언제나 결함(codex 재확인 P1 → Manager 판정 (A)).
+		return execgw.QFinalCampaignFirstLegIssuance{}, fmt.Errorf("production account authority fault for owner scope %s: %w", key.Symbol,
+			account.accountScopeCause(key))
 	}
 	// 발급 통화는 봉투(accepted.currency)가 아니라 조립 권한의 계보 시장에서 다시 유도한다(6.2 리뷰 보이스 A #3).
 	currency, currencyKnown := map[strategyrouter.Market]string{strategyrouter.MarketKR: "KRW", strategyrouter.MarketUS: "USD"}[result.Lineage.Market]
