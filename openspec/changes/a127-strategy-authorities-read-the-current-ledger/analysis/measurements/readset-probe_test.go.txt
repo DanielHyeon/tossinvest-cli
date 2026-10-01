@@ -1,17 +1,50 @@
 package journal
 
+// a127 freeze 실측 하네스(커밋하지 않고 analysis/measurements 에 사본으로 보관). route 적재기의 두 SQL 은 strategyrouter/production.go 에서
+// 원문 그대로 추출함. 세 가지를 잼: (1) 현재 원장에서 두 질의 성립, (2) 열 하나(position_campaigns.entry_blocked)를 지운 원장에서 owners 질의는
+// 성공하고 campaign 질의는 prepare 에서 실패 — 실패는 그 질의가 **실행될 때만** 드러남, (3) risk scope-latch 질의 성립.
+
 import (
 	"context"
 	"testing"
 )
 
+const a127OwnersSQL = `SELECT prospective_generation,lane_id,campaign_id,coalesce(actual_generation,''),acquired_at,coalesce(released_at,''),risk_overage_latched,unknown_actual_latched FROM risk_bucket_owners WHERE account_ref=? AND market=? AND symbol=? ORDER BY acquired_at,prospective_generation`
+const a127CampaignSQL = `SELECT account_ref,market,symbol,lane_version,prospective_token,coalesce(actual_position_generation,''),state,entry_blocked FROM position_campaigns WHERE id=? AND lane_id=?`
+
 func TestA127ProbeReadSets(t *testing.T) {
 	j := openTestJournal(t)
 	ctx := context.Background()
 	var v int
-	if err := j.db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&v); err != nil { t.Fatal(err) }
+	if err := j.db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&v); err != nil {
+		t.Fatal(err)
+	}
 	t.Logf("receipt: fresh journal user_version=%d SchemaVersion=%d", v, SchemaVersion)
-	if rows, err := j.db.QueryContext(ctx, `SELECT prospective_generation,lane_id,campaign_id,coalesce(actual_generation,''),acquired_at,coalesce(released_at,''),risk_overage_latched,unknown_actual_latched FROM risk_bucket_owners WHERE account_ref=? AND market=? AND symbol=? ORDER BY acquired_at,prospective_generation`, "x", "x", "x"); err != nil { t.Errorf("route query 0: %v", err) } else { rows.Close(); t.Logf("receipt: route query 0 (strategyrouter/production.go, verbatim) prepared and ran on v%d", v) }
-	if rows, err := j.db.QueryContext(ctx, `SELECT account_ref,market,symbol,lane_version,prospective_token,coalesce(actual_position_generation,''),state,entry_blocked FROM position_campaigns WHERE id=? AND lane_id=?`, "x", "x"); err != nil { t.Errorf("route query 1: %v", err) } else { rows.Close(); t.Logf("receipt: route query 1 (strategyrouter/production.go, verbatim) prepared and ran on v%d", v) }
-	if _, err := j.db.ExecContext(ctx, "SELECT count(*) FROM risk_bucket_scope_latches WHERE account_ref=? AND market=? AND symbol=?", "x", "US", "X"); err != nil { t.Errorf("risk scope latch query: %v", err) } else { t.Logf("receipt: risk scope-latch query ran on v%d", v) }
+	run := func(label string) {
+		if rows, err := j.db.QueryContext(ctx, a127OwnersSQL, "x", "US", "X"); err != nil {
+			t.Logf("receipt: %s owners query: ERROR %v", label, err)
+		} else {
+			rows.Close()
+			t.Logf("receipt: %s owners query: ok", label)
+		}
+		var a, b, c, d, e, f, g string
+		var h int
+		err := j.db.QueryRowContext(ctx, a127CampaignSQL, "x", "y").Scan(&a, &b, &c, &d, &e, &f, &g, &h)
+		t.Logf("receipt: %s campaign query: %v", label, err)
+		if _, err := j.db.ExecContext(ctx, "SELECT count(*) FROM risk_bucket_scope_latches WHERE account_ref=? AND market=? AND symbol=?", "x", "US", "X"); err != nil {
+			t.Logf("receipt: %s scope-latch query: ERROR %v", label, err)
+		} else {
+			t.Logf("receipt: %s scope-latch query: ok", label)
+		}
+	}
+	run("v35 intact")
+	if _, err := j.db.ExecContext(ctx, "ALTER TABLE position_campaigns DROP COLUMN entry_blocked"); err != nil {
+		t.Logf("receipt: DROP COLUMN refused: %v — fallback: rebuild table without the column", err)
+		for _, stmt := range []string{"PRAGMA foreign_keys=OFF", "CREATE TABLE a127_pc AS SELECT id,account_ref,market,symbol,lane_id,lane_version,prospective_token,actual_position_generation,state FROM position_campaigns", "DROP TABLE position_campaigns", "PRAGMA legacy_alter_table=ON", "ALTER TABLE a127_pc RENAME TO position_campaigns"} {
+			if _, err := j.db.ExecContext(ctx, stmt); err != nil {
+				t.Fatalf("%s: %v", stmt, err)
+			}
+		}
+	}
+	run("entry_blocked removed")
 }

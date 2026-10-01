@@ -1,8 +1,12 @@
-# a127 read-set probe — 2026-10-01T12:26:50+09:00 base ce1cda37e157febdc03908585c54af5f6efde3cd; 스크래치 워크트리에서 internal/journal 에 readset-probe_test.go.txt 를 넣고 실행(저장소에 커밋하지 않음)
-    zz_a127_probe_test.go:13: receipt: fresh journal user_version=35 SchemaVersion=35
-    zz_a127_probe_test.go:14: receipt: route query 0 (strategyrouter/production.go, verbatim) prepared and ran on v35
-    zz_a127_probe_test.go:15: receipt: route query 1 (strategyrouter/production.go, verbatim) prepared and ran on v35
-    zz_a127_probe_test.go:16: receipt: risk scope-latch query ran on v35
-ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.243s
-# 대조(같은 하네스의 첫 실행 — 따옴표 변환 오류로 빈 열 이름을 낸 판): SQLite 는 prepare 시점에 'no such column' 으로 실패함 → 없는 열은 판독 오류로 fail-closed
-    route query 0: SQL logic error: no such column:  (1)
+# a127 read-set probe 2판 — 2026-10-01T12:38:53+09:00 base 65fe66e7. 하네스: readset-probe_test.go.txt(스크래치 워크트리 internal/journal/zz_a127_probe_test.go 로 넣어 실행 — 저장소에 커밋하지 않음).
+# 1판의 대조 줄(따옴표 변환 오류로 빈 열 이름)은 증명력이 없어 폐기(codex freeze P2). 이 판의 대조는 실제 열 하나(position_campaigns.entry_blocked)를 지운 원장.
+# 판독: 열이 없으면 그 열을 참조하는 질의만 prepare 에서 실패한다 — owners 질의는 성공. route 적재기는 active owner 가 없으면 campaign 질의를 실행하지 않으므로(production.go:652-653) 그 경로에서는 열 부재가 드러나지 않음(codex freeze P1).
+    zz_a127_probe_test.go:22: receipt: fresh journal user_version=35 SchemaVersion=35
+    zz_a127_probe_test.go:28: receipt: v35 intact owners query: ok
+    zz_a127_probe_test.go:33: receipt: v35 intact campaign query: sql: no rows in result set
+    zz_a127_probe_test.go:37: receipt: v35 intact scope-latch query: ok
+    zz_a127_probe_test.go:42: receipt: DROP COLUMN refused: SQL logic error: error in trigger strategy_first_leg_binding_insert_guard after drop column: no such column: campaign.entry_blocked (1) — fallback: rebuild table without the column
+    zz_a127_probe_test.go:28: receipt: entry_blocked removed owners query: ok
+    zz_a127_probe_test.go:33: receipt: entry_blocked removed campaign query: SQL logic error: no such column: entry_blocked (1)
+    zz_a127_probe_test.go:37: receipt: entry_blocked removed scope-latch query: ok
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.622s
