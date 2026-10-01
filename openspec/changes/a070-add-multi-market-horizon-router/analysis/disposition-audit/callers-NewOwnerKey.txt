@@ -1,0 +1,63 @@
+
+Callers of "NewOwnerKey" (20):
+
+function    arbitrationRoutePair
+  internal/app/engine/a112_arbitration_test.go:75
+
+function    TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused
+  internal/app/engine/a112_arbitration_test.go:238
+
+function    collectOverflowing
+  internal/app/engine/a112_coordinator_test.go:68
+
+function    collectWithLostProposal
+  internal/app/engine/a112_lost_proposal_test.go:50
+
+function    proposalRoutePair
+  internal/app/engine/strategy_proposal_authority_test.go:84
+
+function    testRouteBatchAuthority
+  internal/app/engine/strategy_route_authority_test.go:135
+
+function    newKRFixture
+  internal/strategyarbiter/fixture_test.go:46
+
+method      crossScopeRequest
+  internal/strategyarbiter/fixture_test.go:184
+
+method      crossAuthorityRequest
+  internal/strategyarbiter/fixture_test.go:222
+
+function    TestAMarketClosedWhileArbitrateIsRunningStillReportsClosed
+  internal/strategycoordinator/coordinator_test.go:273
+
+method      key
+  internal/strategycoordinator/fixture_test.go:59
+
+function    acceptedProjectionFixture
+  internal/strategyflow/canonical_projection_test.go:10
+
+function    TestEvaluateSealsExactExecutionTerms
+  internal/strategyflow/execution_terms_test.go:9
+
+function    TestEvaluateRejectsAcceptedLaneWithoutExactExecutionTerms
+  internal/strategyflow/execution_terms_test.go:66
+
+function    validScope
+  internal/strategyflow/flow.go:165
+
+function    TestApprovedCandidatesRouteAndEvaluateAllPairedBindingsWithCompleteLineage
+  internal/strategyflow/flow_test.go:50
+
+function    TestRouterRefusalSkipsLaneAndUnsupportedBindingIsTyped
+  internal/strategyflow/flow_test.go:88
+
+function    TestLaneRefusalPreservesFirstTypedCodeAndRouterLaneEvidence
+  internal/strategyflow/flow_test.go:112
+
+function    TestWrongMarketLaneInputAndForgedAcceptedLineageFailClosed
+  internal/strategyflow/flow_test.go:134
+
+function    TestCompleteLineageSealDetectsMutation
+  internal/strategyflow/flow_test.go:160
+

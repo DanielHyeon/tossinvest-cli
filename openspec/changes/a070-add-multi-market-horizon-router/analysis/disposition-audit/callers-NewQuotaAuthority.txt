@@ -1,0 +1,6 @@
+
+Callers of "NewQuotaAuthority" (1):
+
+function    TestExternalCallersCannotForgeOwnerMarketOrQuotaAttestation
+  internal/strategyrouter/external_api_test.go:35
+
