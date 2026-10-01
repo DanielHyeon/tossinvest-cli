@@ -419,3 +419,16 @@ tasks(3.3a 머리 · 3.3b (i)(v)(vi) · 3.3c 신설 · 5.3).
   0 missing/0 stale·e4d976d6 시험 전용·82f39206 탐침 evidence complete+경량 번들 5 보존)가 완결이다. (b)의 합성 커밋은 유효 착지 지점이 없을 때의 최후 수단 — 네겐 (a)가
   선다.」(Manager, 2026-10-01). 승인 참조: 사용자 상임 오케스트레이션 지시.
 - **조건 ③**: 다음 커밋이 `base-commit.txt` 한 파일.
+
+## 게이트 1차(3403be28) FAIL ⑦ → a112 수리 → base 3차 재고정 (2026-10-01)
+
+- 게이트 1차: 격리 워크트리 `/tmp/claude-1000/a091-gate` @ `3403be28`, 준비 rc 0(`analysis/gate/prep-3403be28.txt`), ①~⑥ OK(⑤ base `e14add96` → 작업트리,
+  required 0, evidence complete), **⑦ `make test` FAIL** — `internal/journal` `TestA066StorageErrorExitsFailClosed`: 「walked scope changed: got … exits=337 …,
+  census {… exits:336 …}」(`analysis/gate/gate-1-3403be28.log`). a091 이 만지지 않는 파일(journal `risk_bucket_*.go` · `riskbucket/production_snapshot_authority.go` ·
+  `execgw/gateway.go`)의 a066 census.
+- 귀속(측정): `git bisect`(acc796ce 양호 → 82f39206 불량) → 첫 불량 **`face8d0d`**(a112 5.2.2.2 리뷰 수리 — 걸어가는 범위에 exit 하나 추가, census 미갱신).
+  a112 수리 `0b6cb9b1`(census 336 → 337, 함수별 이름 맵 등재) 뒤 HEAD 에서 그 시험 ok. 같은 판에 돌던 전체 `-race` 는 중단(수리 뒤 커밋으로 다시).
+- **조건 ① 실측(첫째 갈래)**: 옛 base `e14add96` 뒤 Go 커밋은 a112 `0b6cb9b1` · `a5e61fcd` 뿐 — a091 자기 Go 0. 새 base = 이 기록 커밋.
+- **조건 ② 승인 기록(원문)**: 「3차 재고정 사전 승인: a112 수리가 네 창에 Go 를 넣으므로, 수리 착지 해시를 받으면 같은 첫째-갈래 규격(base=새 기록 커밋·자기 Go 0 영수증)으로
+  재고정하고 게이트 2차를 돌려라 — 별도 왕복 불요. 전체 -race 판은 수리 후 커밋 기준으로 다시.」(Manager, 2026-10-01).
+- **조건 ③**: 다음 커밋이 `base-commit.txt` 한 파일.
