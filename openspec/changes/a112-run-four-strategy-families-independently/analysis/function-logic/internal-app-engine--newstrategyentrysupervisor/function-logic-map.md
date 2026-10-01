@@ -1,7 +1,7 @@
 # Function Logic Map: `NewStrategyEntrySupervisor`
 
 - Source: `internal/app/engine/strategy_entry_supervisor.go`
-- AST evidence: `ast.json` — **편집 뒤**, :644–696, 분기 18, source_sha256 `64f1cc0b85ec…`.
+- AST evidence: `ast.json` — **편집 뒤**, :638–696, 분기 18, source_sha256 `6f1f6804cfd4…`.
 - Risk scan: `risk-pattern-report.md`
 - 편집: (5.6.2.1) 반환하는 감독자 리터럴에 `entry: opts.EntryGate` 한 칸 — 분기 · 검증 규칙 불변(분기 18 전후 동일). `StrategyEntrySupervisorOptions.EntryGate`(좁은 인터페이스 `StrategyEntryBlocker` — `Block` 하나)를 감독자에 넘긴다.
 
@@ -15,59 +15,59 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | if (:634) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine`, `TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning` 외 27 |
-| B2 | if (:637) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
-| B3 | if (:641) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety`, `TestExpiredAuthorityLatchesBeforeEvaluation` 외 15 |
-| B4 | if (:644) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
-| B5 | if (:647) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
-| B6 | if (:651) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety`, `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive` 외 11 |
-| B7 | if (:655) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | (측정 표본 0) |
-| B8 | range (:660) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue`, `TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine` 외 30 |
-| B9 | if (:661) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
-| B10 | if (:664) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
-| B11 | if (:667) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
-| B12 | if (:670) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | (측정 표본 0) |
-| B13 | if (:674) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | (측정 표본 0) |
-| B14 | if (:678) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | (측정 표본 0) |
-| B15 | if (:684) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
-| B16 | if (:687) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
-| B17 | range (:700) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue`, `TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine` 외 28 |
-| B18 | if (:701) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | (측정 표본 0) |
+| B1 | if (:628) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine`, `TestARefreshOnlyWorkerCentralIntegrityErrorLeavesTheEngineRunning` 외 27 |
+| B2 | if (:631) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B3 | if (:635) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety`, `TestExpiredAuthorityLatchesBeforeEvaluation` 외 15 |
+| B4 | if (:638) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B5 | if (:641) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B6 | if (:645) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety`, `TestMarketFailureEmitsExactIrreversibleFaultAndKeepsPeerSafetyAlive` 외 11 |
+| B7 | if (:649) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | (측정 표본 0) |
+| B8 | range (:654) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue`, `TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine` 외 30 |
+| B9 | if (:655) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B10 | if (:658) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B11 | if (:661) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B12 | if (:664) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | (측정 표본 0) |
+| B13 | if (:668) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | (측정 표본 0) |
+| B14 | if (:672) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | (측정 표본 0) |
+| B15 | if (:678) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B16 | if (:681) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestStrategySupervisorRejectsInvalidAssemblies` |
+| B17 | range (:694) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue`, `TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine` 외 28 |
+| B18 | if (:695) | (분기 불변 — 편집 전 번들의 서술 그대로) | — | (측정 표본 0) |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `fmt.Errorf` | 638:15 |
-| `fmt.Errorf` | 645:15 |
-| `len` | 647:5 |
-| `errors.New` | 648:15 |
-| `clock.System` | 652:9 |
-| `clk.Now` | 654:9 |
-| `now.IsZero` | 655:5 |
-| `errors.New` | 656:15 |
-| `make` | 659:13 |
-| `validStrategyMarket` | 661:7 |
+| `fmt.Errorf` | 632:15 |
+| `fmt.Errorf` | 639:15 |
+| `len` | 641:5 |
+| `errors.New` | 642:15 |
+| `clock.System` | 646:9 |
+| `clk.Now` | 648:9 |
+| `now.IsZero` | 649:5 |
+| `errors.New` | 650:15 |
+| `make` | 653:13 |
+| `validStrategyMarket` | 655:7 |
+| `fmt.Errorf` | 656:16 |
+| `fmt.Errorf` | 659:16 |
 | `fmt.Errorf` | 662:16 |
-| `fmt.Errorf` | 665:16 |
-| `fmt.Errorf` | 668:16 |
-| `descriptor.AuthorityExpiresAt.IsZero` | 670:70 |
-| `now.Before` | 671:5 |
-| `validStrategyDigest` | 671:51 |
-| `fmt.Errorf` | 672:16 |
-| `descriptor.RestartNotBefore.IsZero` | 674:124 |
-| `validStrategyWorkerRefusal` | 675:96 |
-| `descriptor.RestartNotBefore.IsZero` | 675:151 |
+| `descriptor.AuthorityExpiresAt.IsZero` | 664:70 |
+| `now.Before` | 665:5 |
+| `validStrategyDigest` | 665:51 |
+| `fmt.Errorf` | 666:16 |
+| `descriptor.RestartNotBefore.IsZero` | 668:124 |
+| `validStrategyWorkerRefusal` | 669:96 |
+| `descriptor.RestartNotBefore.IsZero` | 669:151 |
+| `fmt.Errorf` | 670:16 |
 | `fmt.Errorf` | 676:16 |
+| `descriptor.AuthorityExpiresAt.IsZero` | 678:72 |
+| `fmt.Errorf` | 679:16 |
+| `descriptor.RestartNotBefore.IsZero` | 681:123 |
 | `fmt.Errorf` | 682:16 |
-| `descriptor.AuthorityExpiresAt.IsZero` | 684:72 |
-| `fmt.Errorf` | 685:16 |
-| `descriptor.RestartNotBefore.IsZero` | 687:123 |
-| `fmt.Errorf` | 688:16 |
-| `make` | 692:22 |
-| `fmt.Errorf` | 702:16 |
-| `make` | 707:62 |
-| `make` | 707:91 |
+| `make` | 686:22 |
+| `fmt.Errorf` | 696:16 |
+| `make` | 701:62 |
+| `make` | 701:91 |
 
 ## State mutations and fallbacks
 
@@ -85,3 +85,5 @@
 a112 5.2.2.2: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
 
 a112 5.2.2.2 리뷰 수리: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
+
+a112 6.3 (c) — 같은 파일 재검증 판정 이동(6 줄 감소)으로 줄만 밀림

@@ -687,13 +687,61 @@ SET_75_TESTS = [
     ["go", "test", "-count=1", "-run", "TestTheLaneStatusIsTheRowItsAccessorsRead", "./internal/strategyworker"],
     ["go", "test", "-count=1", "-run", "TestOnlyThePackageLevelStepEverRunsInsideALane", "./internal/app/engine"],
 ]
+DSP = "internal/app/engine/strategy_dispatch_cycle.go"
+FLA = "internal/app/engine/strategy_account_first_leg_authority.go"
+GATE_BLOCK = ("\treconciliation, err := cycle.gateway.ObserveStrategyEntryGate(ctx, strings.ToLower(string(market)), accepted.result.Lineage.Symbol)\n"
+              "\tif err != nil {\n\t\treturn execgw.Outcome{}, err\n\t}\n")
+SET_63 = [
+    ("S01 the final check reads the family expiry before the schedule revalidation (order swap)", DSP,
+     "\t\t\tif err := cycle.revalidateSchedule(checkCtx, market, schedule); err != nil {\n\t\t\t\treturn err\n\t\t\t}\n"
+     "\t\t\t_, err := family.LeaseCeiling(cycle.clockNow(), 30*time.Second)\n\t\t\treturn err",
+     "\t\t\tif _, err := family.LeaseCeiling(cycle.clockNow(), 30*time.Second); err != nil {\n\t\t\t\treturn err\n\t\t\t}\n"
+     "\t\t\treturn cycle.revalidateSchedule(checkCtx, market, schedule)"),
+    ("S02 the first-leg identity guard is removed (a drifted lineage would be admitted)", FLA,
+     "\tif result.Lineage.Identity != accepted.result.Lineage.Identity || result.ExecutionTerms.Identity() != accepted.result.ExecutionTerms.Identity() {",
+     "\tif false && (result.Lineage.Identity != accepted.result.Lineage.Identity || result.ExecutionTerms.Identity() != accepted.result.ExecutionTerms.Identity()) {"),
+    ("S03 the final check ignores the schedule revalidator", DSP,
+     "\t\t\tif err := cycle.revalidateSchedule(checkCtx, market, schedule); err != nil {\n\t\t\t\treturn err\n\t\t\t}",
+     "\t\t\t_ = cycle.revalidateSchedule(checkCtx, market, schedule)"),
+    ("S04 the entry gate is observed after admission commits (validation order moved)", DSP,
+     (GATE_BLOCK, "\tdecision, err := cycle.journal.LookupDecision(ctx, admitted.Receipt.DecisionID)\n"),
+     ("", GATE_BLOCK + "\tdecision, err := cycle.journal.LookupDecision(ctx, admitted.Receipt.DecisionID)\n")),
+]
+SRV = "internal/app/engine/strategy_schedule_revalidation.go"
+SUP = "internal/app/engine/strategy_entry_supervisor.go"
+SET_63 += [
+    # 6.3 잔여 (c): drift 판정의 축 하나씩 빼기(Manager 판정) + 이동 우회.
+    ("A1 drift judgement drops the readiness axis", SRV, "\tif !fresh.snapshot.Ready || fresh.restore", "\tif fresh.restore"),
+    ("A2 drift judgement drops the fresh-activation nil axis — EQUIVALENT by construction: Activation.Generation() is nil-safe (0) and every valid "
+     "activation has generation >= 1, so a missing fresh activation is still refused by the generation axis (case A2 stays refused)", SRV,
+     "fresh.restore.Activation == nil || expected.restore.Activation == nil ||", "expected.restore.Activation == nil ||"),
+    ("A3 drift judgement drops the expected-activation nil axis — EQUIVALENT by construction (same reason as A2, mirrored)", SRV,
+     "fresh.restore.Activation == nil || expected.restore.Activation == nil ||", "fresh.restore.Activation == nil ||"),
+    ("A4 drift judgement drops the desired-revision axis", SRV,
+     "\t\tfresh.desired.Revision != expected.desired.Revision || fresh.calendar", "\t\tfresh.calendar"),
+    ("A5 drift judgement drops the calendar-version axis", SRV,
+     " || fresh.calendar.Version != expected.calendar.Version ||\n", " ||\n"),
+    ("A6 drift judgement drops the manifest-digest axis", SRV,
+     "\t\tfresh.snapshot.ActivationManifestDigest != expected.snapshot.ActivationManifestDigest ||\n", ""),
+    ("A7 drift judgement drops the activation-generation axis", SRV,
+     "\t\tfresh.restore.Activation.Generation() != expected.restore.Activation.Generation() ||\n", ""),
+    ("A8 drift judgement drops the activation-expiry axis", SRV,
+     " ||\n\t\t!fresh.restore.Activation.ExpiresAt().Equal(expected.restore.Activation.ExpiresAt()) {", " {"),
+    ("A9 the production revalidator bypasses the moved judgement", SUP,
+     "\t\treturn strategyScheduleStillMatchesAdmission(fresh, expected)", "\t\t_ = fresh\n\t\treturn nil"),
+]
+SET_63_TESTS = [
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+     "TestTheDispatchValidationOrderIsFrozen|TestALeaseNamesItsLane|TestALineageDriftIsRefusedAtIssuance|TestTheFinalCheckRefusesWhenTheScheduleRevalidator|TestTheScheduleDriftJudgement",
+     "./internal/app/engine"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측

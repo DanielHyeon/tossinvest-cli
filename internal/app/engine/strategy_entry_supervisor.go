@@ -342,16 +342,10 @@ func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context, 
 	if clk != nil {
 		dispatchCycle.now = clk.Now
 	}
+	// 재검증 = 수집(I/O) + drift 판정. 판정은 축마다 시험할 수 있게 순수 함수로 옮겼다(a112 6.3 — 의미 무변경 이동).
 	dispatchCycle.revalidateSchedule = func(checkCtx context.Context, market StrategyMarket, expected strategyScheduleMarketAuthority) error {
 		fresh := newStrategyScheduleAuthorityLoader(c.Paths.ConfigDir, clk, c.official, os.Getenv).collectMarket(checkCtx, market)
-		if !fresh.snapshot.Ready || fresh.restore.Activation == nil || expected.restore.Activation == nil ||
-			fresh.desired.Revision != expected.desired.Revision || fresh.calendar.Version != expected.calendar.Version ||
-			fresh.snapshot.ActivationManifestDigest != expected.snapshot.ActivationManifestDigest ||
-			fresh.restore.Activation.Generation() != expected.restore.Activation.Generation() ||
-			!fresh.restore.Activation.ExpiresAt().Equal(expected.restore.Activation.ExpiresAt()) {
-			return errors.New("engine: signed scheduler activation no longer matches dispatch admission")
-		}
-		return nil
+		return strategyScheduleStillMatchesAdmission(fresh, expected)
 	}
 	snapshot := StrategyEntryProductionSnapshot{
 		Clock:              clk,

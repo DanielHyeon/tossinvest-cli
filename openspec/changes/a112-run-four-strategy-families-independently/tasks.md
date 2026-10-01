@@ -404,7 +404,12 @@
   **증거.** RED `analysis/measurements/lot-6.2-seal/red-6.2-seal.log`(셋 FAIL), 변이 `analysis/measurements/lot-6.2-seal/mutation-6.2-seal.tsv`(S01~S09 · F01~F05 CAUGHT, N04 GREEN-AS-EXPECTED), review 「2026-10-01 6.2 봉인 로트」 절.
 
   **리뷰 수리(2026-10-01, codex BLOCK · A BLOCK · B BLOCK — review 「6.2 봉인 로트 적대 리뷰 처분 · 수리」 절).** 공유 배열 구멍(loader 가 조립 slice 를 그대로 듦 → dispatch 쪽 제자리 교체로 같은 계보 · 다른 손절 쌍둥이가 **발급됨**, 실측 RED)을 구성 때 떼어 내기로 닫음. strategyflow 언급 census · 빌드 제약 모델 · 재생성 멈춤, 하위 시험 인지 하네스 · 변이 대조군 pass 사건, 선택 함수 직접 시험 · 축별 시험, 거짓 증거 문장 정정. 6.2.0 의 효력 범위는 위 5.2.2.2 절.
-- [ ] 6.3 Preserve the current dispatch validation order and final authority rechecks; add only the proposal family/arbitration lineage required by the lease preimage and reject any digest/version drift before transport.
+- [x] 6.3 Preserve the current dispatch validation order and final authority rechecks; add only the proposal family/arbitration lineage required by the lease preimage and reject any digest/version drift before transport.
+
+  **6.3 종결(2026-10-01 — 미착지).** Manager 판정 (A)+(C): lease 스키마 무변경 — family 는 lease LaneID 가 정본 표로 함의, 중재 계보는 **발급 시점**(1차 레그
+  권한 · admission 커밋 전)에 대조됨을 시험으로(`a112_dispatch_lineage_test.go`: 순서 AST 동결 · lease 레인 → 가족 단사 · 같은 범위 다른 계보의 발급 시점 거절
+  (예약 · lease 행 불변 · 게이트웨이 0) · 최종 검사의 재검증 drift 거절). transport 전 계보 재대조는 없음 — ROADMAP 「a112 이월」 (B) 행(활성화 로트 선행).
+  잔여 (c): 재검증 drift 판정을 순수 함수로 의미 무변경 이동(영수증) + 축별 시험. 변이 13(동등 표기 A2 · A3 — 철자 핀만).
 - [ ] 6.4 Enforce breakout first-leg-only production authority and add broker spies proving duplicate evaluation/restart/correction cannot create a second first-leg or any scale-in mutation.
 - [ ] 6.5 Add crash/retry tests across coordinator handoff, owner/q_final admission, lease claim, SUBMITTING and exact outcome reconciliation without releasing or duplicating capacity incorrectly.
 - [ ] 6.6 Add prerequisite regression tests proving a066 incomplete owner/exit gate or a100 missing/mismatched/expired protection attestation yields exposure-raising broker request zero while reduce-only paths continue.

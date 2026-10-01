@@ -6,16 +6,16 @@
 - Revision: **modified (태스크 8.8.4, 2026-09-05).** 편집은 **한 줄**이다 — 반환하는
   값에 `SwallowedCycleErrors`·`FirstSwallowedFailure` 를 싣는다. 분기·반환 자리·잠금
   자세는 그대로이고, 새 필드는 이미 잡고 있는 `s.mu.RLock` 아래에서 읽힌다.
-- Source SHA-256: `64f1cc0b85ecf5693dc5df0622b0f19f665697ea1b6f7616eb6755598f546e97`
+- Source SHA-256: `6f1f6804cfd437116c16a48d1526327c28360433f09e0ba3567eb3537442ee5b`
 - Lines: 727-748
 
 ## Inputs and invariants
 
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
-| `s` | nil 이거나 살아 있는 감독자 | 호출자 | nil 이면 영값 + `false` (`769:3`) |
-| `market` | `validStrategyMarket` 이 참인 값만 | `strategy_entry_supervisor.go` 의 시장 열거 | 아니면 영값 + `false` (`769:3`) |
-| `s.workers[market]` | 등록된 시장이면 non-nil | `NewStrategyEntrySupervisor` 가 만든 표 | nil 이면 영값 + `false` (`775:3`) |
+| `s` | nil 이거나 살아 있는 감독자 | 호출자 | nil 이면 영값 + `false` (`763:3`) |
+| `market` | `validStrategyMarket` 이 참인 값만 | `strategy_entry_supervisor.go` 의 시장 열거 | 아니면 영값 + `false` (`763:3`) |
+| `s.workers[market]` | 등록된 시장이면 non-nil | `NewStrategyEntrySupervisor` 가 만든 표 | nil 이면 영값 + `false` (`769:3`) |
 | `worker.swallowedCount` | 0 이상, `math.MaxUint64` 에서 포화 | `recordSwallowedCycleError` 하나 | 포화하며 되감기지 않는다 |
 | `worker.firstSwallowed` | 빈 문자열이거나 **첫** 원인 | 같은 함수 | 이후 원인은 덮어쓰지 않는다 |
 
@@ -23,9 +23,9 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (`768:2`) | `s == nil \|\| !validStrategyMarket(market)` | 없음 | 영값 + `false` (`769:3`) | 기존 감독자 시험 |
-| B2 (`774:2`) | `worker == nil` — 등록되지 않은 시장 | 없음 | 영값 + `false` (`775:3`) | 기존 감독자 시험 |
-| (분기 없음) | 정상 경로 | 없음 — **읽기 전용** | 스냅샷 + `true` (`777:2`) | `TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows` (8.8.4) |
+| B1 (`762:2`) | `s == nil \|\| !validStrategyMarket(market)` | 없음 | 영값 + `false` (`763:3`) | 기존 감독자 시험 |
+| B2 (`768:2`) | `worker == nil` — 등록되지 않은 시장 | 없음 | 영값 + `false` (`769:3`) | 기존 감독자 시험 |
+| (분기 없음) | 정상 경로 | 없음 — **읽기 전용** | 스냅샷 + `true` (`771:2`) | `TestARefreshOnlyWorkerCountsTheCycleErrorsItSwallows` (8.8.4) |
 
 ## Calls and live bindings
 
@@ -33,11 +33,11 @@
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `validStrategyMarket` | 768:18 | 시장 열거 밖의 값을 거른다 — 순수 함수, 오류 없음 |
-| `s.mu.RLock` | 771:2 | worker 상태를 **공유 읽기**로 본다. 8.8.4 의 두 필드도 이 잠금 아래에서 읽힌다 |
-| `s.mu.RUnlock` | 772:8 | `defer` 로 해제 |
-| `len` | 785:15 | 큐 깊이 — 순수 |
-| `cap` | 785:49 | 큐 용량 — 순수 |
+| `validStrategyMarket` | 762:18 | 시장 열거 밖의 값을 거른다 — 순수 함수, 오류 없음 |
+| `s.mu.RLock` | 765:2 | worker 상태를 **공유 읽기**로 본다. 8.8.4 의 두 필드도 이 잠금 아래에서 읽힌다 |
+| `s.mu.RUnlock` | 766:8 | `defer` 로 해제 |
+| `len` | 779:15 | 큐 깊이 — 순수 |
+| `cap` | 779:49 | 큐 용량 — 순수 |
 
 ## State mutations and fallbacks
 
@@ -63,3 +63,5 @@
 a112 5.2.2.2: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
 
 a112 5.2.2.2 리뷰 수리: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
+
+a112 6.3 (c) — 같은 파일 재검증 판정 이동(6 줄 감소)으로 줄만 밀림

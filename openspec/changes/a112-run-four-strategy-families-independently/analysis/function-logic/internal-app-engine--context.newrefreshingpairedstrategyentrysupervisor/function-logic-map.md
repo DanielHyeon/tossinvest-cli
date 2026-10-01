@@ -1,7 +1,7 @@
 # Function Logic Map: `Context.NewRefreshingPairedStrategyEntrySupervisor`
 
 - Source: `internal/app/engine/strategy_entry_supervisor.go`
-- AST evidence: `ast.json` — **편집 뒤**, :388–416, 분기 4, source_sha256 `64f1cc0b85ec…`.
+- AST evidence: `ast.json` — **편집 뒤**, :382–410, 분기 4, source_sha256 `6f1f6804cfd4…`.
 - Risk scan: `risk-pattern-report.md`
 - 편집: (5.6.2.1) 새 B2 `if c.Entry == nil` — 진입 게이트 없는 Context 에서는 생산 감독자를 만들지 않는다(그 조립에서는 중앙 무결성 고장이 진입이 아니라 프로세스를 닫게 되므로). 감독자 옵션에 `EntryGate: c.Entry`. 편집 전 B2 · B3 → B3 · B4.
 
@@ -15,23 +15,23 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | if (:389) | nil Context · nil 시계 → 거절 | — | (측정 표본 0) |
-| B2 | if (:393) | (새) 진입 게이트 없음 → `ErrRuntimeUnavailable` | — | `TestTheProductionStrategySupervisorRefusesAContextWithoutAnEntryGate` |
-| B3 | range (:397) | KR · US 권한 갱신 전용 worker 둘 | — | `TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate` |
-| B4 | if (:409) | 감독자 생성 실패 → 오류 | — | (측정 표본 0) |
+| B1 | if (:383) | nil Context · nil 시계 → 거절 | — | (측정 표본 0) |
+| B2 | if (:387) | (새) 진입 게이트 없음 → `ErrRuntimeUnavailable` | — | `TestTheProductionStrategySupervisorRefusesAContextWithoutAnEntryGate` |
+| B3 | range (:391) | KR · US 권한 갱신 전용 worker 둘 | — | `TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate` |
+| B4 | if (:403) | 감독자 생성 실패 → 오류 | — | (측정 표본 0) |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `errors.New` | 390:15 |
-| `fmt.Errorf` | 394:15 |
-| `make` | 396:13 |
-| `append` | 399:13 |
-| `c.runProductionStrategyMarketCycle` | 402:12 |
-| `NewStrategyEntrySupervisor` | 406:21 |
-| `c.strategyProjectionMu.Lock` | 412:2 |
-| `c.strategyProjectionMu.Unlock` | 414:2 |
+| `errors.New` | 384:15 |
+| `fmt.Errorf` | 388:15 |
+| `make` | 390:13 |
+| `append` | 393:13 |
+| `c.runProductionStrategyMarketCycle` | 396:12 |
+| `NewStrategyEntrySupervisor` | 400:21 |
+| `c.strategyProjectionMu.Lock` | 406:2 |
+| `c.strategyProjectionMu.Unlock` | 408:2 |
 
 ## State mutations and fallbacks
 
@@ -49,3 +49,5 @@
 a112 5.2.2.2: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
 
 a112 5.2.2.2 리뷰 수리: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
+
+a112 6.3 (c) — 같은 파일 재검증 판정 이동(6 줄 감소)으로 줄만 밀림

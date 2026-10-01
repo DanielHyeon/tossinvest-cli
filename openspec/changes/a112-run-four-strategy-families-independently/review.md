@@ -6066,3 +6066,44 @@ evaluate 의 레인 goroutine 은 join 되므로 남지 않는다. 그래서 남
 **잔여.** ① 레인 동시 실행은 시장 **안**이다 — 시장 주기 자체의 지연은 최댓값(≤ 마감 시한 1 회)이고 레인이 시장 주기와 분리된 완전 비동기는 기각(Manager).
 ② C3 의 안전 loop 셋은 이 시험의 자리 표시 loop 다 — 생산 loop(fill · reconcile · exit)의 실제 cadence 는 각 loop 시험이 잰다; 이 시험은 「진입 포화가 런타임의 다른
 loop 를 세우지 않는다」를 잰다. ③ 7.3 잔여 ② (Read 가 `strategyLanesMu` 를 첫 restore 동안 기다릴 수 있음)는 그대로 — C2 는 원격 물결 쪽만 잰다.
+
+## 2026-10-01 태스크 6.3 — dispatch 검증 순서 보존 · lease preimage 계보(판정 (A)+(C))
+
+**실측(사전 정지 보고).** lease preimage = 시장 권위 증거(`StrategyDispatchVerifiedEvidence` — activation · calendar · protection · reconciliation ·
+risk-policy · Guardian 세대/digest, build digest) + lease plan(CandidateID · EvidenceDigest · LaneID · LaneVersion · CampaignID · LegID · `AuthorityDigest`
+= 시장 권위 기록 digest). family 직접 열 없음(LaneID → 정본 표로 함의), 중재 계보(봉인 identity · score version · calibration digest) 열 없음 —
+대조는 lease **발급 앞** 1차 레그 권한(`authorityForOwnerScope` + identity 가드)에서.
+
+**판정 (A)+(C)(Manager).** 스키마 무변경, 함의 · 대조를 시험으로 박는다. (C) ROADMAP 「a112 이월」 에 창을 정확히 명명한 행: 「lease 발급 후 ~ transport 전 조정
+결과 변경은 lease 행에 계보가 없어 검출 불가 — FinalAuthorityCheck 는 스케줄 재검증 · 가족 만료만 본다. (B) 스키마 열 추가가 활성화 로트의 선행」.
+
+**시험(`internal/app/engine/a112_dispatch_lineage_test.go`, 태그) — 새 생산 코드 0.**
+- ① `TestTheDispatchValidationOrderIsFrozen` — dispatch 의 호출 순서(검증 → protection · 하한 → 가족 수명 → 진입 관문 → owner → admission → Guardian 결정 →
+  범위 위험 번들 → lease 발급 · claim → transport)와 최종 검사 순서(스케줄 재검증 → 가족 만료)를 AST 로 얼림. 첫 판 기대가 `ProtectionReadyMinGeneration` 을 하나로
+  적어 틀렸다(하한 비교 · 거절 문구 두 자리 — 측정값으로 고침).
+- ② `TestALeaseNamesItsLaneAndTheLaneNamesExactlyOneFamily` — 여덟 레인 → 정본 가족 단사 + 실제 발급 lease 행의 LaneID/LaneVersion/CampaignID = 계보(KR · US).
+  가족 완전성 8 = 4 × 2 는 6.1 의 `a112_lane_family_test.go` 가 이미 잰다(결속).
+- ③ `TestALineageDriftIsRefusedAtIssuanceBeforeAnyReservationLeaseOrBrokerCall` — 같은 소유자 범위 · 다른 캠페인으로 봉인된 계보를 dispatch 에 보내면
+  「production proposal identity changed」 로 **발급 시점** 거절, 원장 `risk_bucket_reservations` · `strategy_dispatch_leases` 행 불변, 게이트웨이 호출 0(KR · US).
+  **단언하는 닫힌 지점은 발급 시점 하나다** — transport 시점 계보 재대조는 없고 주장하지 않는다(조건 2). 축 다섯(같은 범위 패자 · 다른 가족 레인 · 미선택
+  범위 · 타 시장 · 조건 재작성)은 6.2 봉인 시험 `TestTheFirstLegSealRefusesEveryForgeryAxis` · `TestAnInPlaceSwapInTheDispatchCopyDoesNotReachTheSeal` 이 권한
+  층에서 잰다(결속 — 이 시험은 그 거절이 dispatch 경로에서 원장 · 브로커 0 으로 끝남을 잼).
+- ④ `TestTheFinalCheckRefusesWhenTheScheduleRevalidatorSeesDrift` — 재검증기가 drift 를 보면 최종 검사가 그 오류를 그대로 돌려줌(KR · US). 게이트웨이가 그
+  오류에서 브로커 0 인 것은 execgw `TestStrategyGatewayRechecksSourceBackedActivationAfterSubmittingFencePairedKRUS`(places=0), 가족 만료 쪽은 8.7.2
+  `TestSubmittingCannotPassTheFinalCheckAfterTheFamilyActivationExpires` · `TestAFamilyActivationThatExpiresDuringTheScheduleRevalidationStillStopsTheOrder`,
+  보호 세대 하한은 8.8.2 `TestTheOrderPathRefusesAProtectionPostureOlderThanTheSignedFloor`(결속).
+- 변이 `lot-6.3/mutation-6.3.tsv`(S01 최종 검사 순서 뒤집기 · S02 identity 가드 제거 · S03 재검증기 무시 · S04 진입 관문을 admission 뒤로).
+
+**잔여 → 판정 (c)(Manager) 로 종결.** 생산 재검증기의 축별 비교에 직접 시험이 0 이었다(`no longer matches dispatch admission` grep 0). 「drift 거절」 이
+6.3 문장의 핵심이므로 비교를 순수 함수 `strategyScheduleStillMatchesAdmission`(새 파일 `strategy_schedule_revalidation.go`)로 **의미 무변경 이동**:
+- Pre-Edit `lot-6.3/pre-edit/`(HEAD 76dc35f7 — `Context.NewPairedStrategyEntryProductionAssembly`). 이동 영수증 `lot-6.3/move-receipt.txt`: 이동 전 클로저의
+  조건식과 이동 뒤 함수의 조건식이 go/types 철자로 **동일**, 이동 뒤 클로저 안 if 0.
+- 양쪽 못 박기 `TestTheScheduleDriftJudgementMovedVerbatim`(함수 조건식 = 이동 전 철자 · 클로저 = 수집 한 문장 + `return strategyScheduleStillMatchesAdmission(fresh, expected)`).
+- 축별 `TestTheScheduleDriftJudgementRefusesEveryAxis`(대조: 같으면 통과 · A1 준비 · A2/A3 활성화 부재(양쪽) · A4 desired revision · A5 달력 버전 · A6 매니페스트
+  digest · A7 활성화 세대 · A8 활성화 만료 — 각각 거절).
+- 변이 `lot-6.3/mutation-6.3.tsv` **13 개**: S01~S04 · A1 · A4~A8 · A9(클로저가 판정 우회) **CAUGHT**(축 변이는 행동 시험 + 철자 핀 둘 다). **A2 · A3 는 행동상
+  동등** — `Activation.Generation()` 이 nil 에 0 을 돌려주고 유효한 활성화의 세대는 ≥ 1 이라 한쪽 활성화 부재는 세대 축이 대신 거절한다(축별 시험 A2 · A3 는
+  그래서 통과로 남음). 원장에는 CAUGHT 로 찍혔으나 **잡은 것은 철자 핀 하나뿐**이다(행동 시험은 못 잡음) — 근거 문장을 변이 이름에 넣어 원장에 남김.
+- 편집 뒤 번들 `render_63_bundles.py`(9 → 8 분기), 같은 파일 줄 이동 11. 그중 4(invokeBoundedStrategyCycle · evaluationState · latchMarket · waitMarketRestart)는
+  `Revision: base` 표기지만 `ast.json` 해시가 HEAD 파일과 같았다(앞 로트들이 파일과 함께 동기화해 옴). 첫 판은 **표기만 보고** 건너뛰어 격리 gate 델타 +4(stale)로
+  드러났다 → 「해시가 편집 전 HEAD 파일과 같으면 이동」 규칙으로 고쳐 이동.

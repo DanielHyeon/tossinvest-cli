@@ -1,9 +1,9 @@
 # Function Logic Map: `Context.runProductionStrategyMarketCycle`
 
-- Source: `internal/app/engine/strategy_entry_supervisor.go` (520-579)
+- Source: `internal/app/engine/strategy_entry_supervisor.go` (514-573)
 - Function: `Context.runProductionStrategyMarketCycle` in package `engine`
 - Signature: `Context.runProductionStrategyMarketCycle(params=3, results=1)`
-- File SHA-256: `64f1cc0b85ecf5693dc5df0622b0f19f665697ea1b6f7616eb6755598f546e97`
+- File SHA-256: `6f1f6804cfd437116c16a48d1526327c28360433f09e0ba3567eb3537442ee5b`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file (2026-09-30 리뷰 수리 로트).
   앞 판본 머리의 `22855de0…` 는 어느 커밋의 파일과도 맞지 않는 오염 값이었다(보이스 B #7 — 4f49a8eb/44d0fb58 에서 유입) — 정정.
 - AST evidence: `ast.json` — AST branches 4.
@@ -12,8 +12,8 @@
 
 ## Inputs and invariants
 
-한 시장의 권한을 새로 고치고(`521:16`), 그 시장의 네 전략군 레인을 한 번씩 돌린 뒤
-(`545:16` 레인 런타임 · `549:12` `lanes.evaluate`), 주문 경로에 이 시장의 handoff 들을 넘긴다(`578:9`).
+한 시장의 권한을 새로 고치고(`515:16`), 그 시장의 네 전략군 레인을 한 번씩 돌린 뒤
+(`539:16` 레인 런타임 · `543:12` `lanes.evaluate`), 주문 경로에 이 시장의 handoff 들을 넘긴다(`572:9`).
 
 **2026-09-30 리뷰 수리 — 전달 몸통의 의미 무변경 이동.** 5.2.2.1 판본까지 이 함수의 마지막 문장은
 `deliverEachStrategyHandoff(…dispatchHandoffs(), func(delivered) error { CAS 읽기 · dispatch })` 였고 몸통 closure 에
@@ -27,11 +27,11 @@
 하나이고, 그 모양(부르는 함수 · 넘기는 원장 · dispatch 주기 · handoff 원천)은 `TestTheProductionCycleEndsByDeliveringEveryOwnerScopeHandoff`
 가 **식별자 해소(go/types)** 로 못 박는다. 옮겨 간 몸통은 스파이로 직접 돈다(`a112_owner_scope_delivery_test.go`).
 
-**활성화 세대의 출처(`550:3`).** `fresh.schedule.forMarket(market).restore.Activation.Generation()` — durable latch 의 복구 조건이
+**활성화 세대의 출처(`544:3`).** `fresh.schedule.forMarket(market).restore.Activation.Generation()` — durable latch 의 복구 조건이
 서명과 묶인다(`TestTheRecoveryGenerationComesFromTheVerifiedActivationAndNothingElse`).
 
 **레인 사이클이 새로 고침 잠금 밖인 이유**와 **관측은 돌려주지 않고 오류만 돌려주는 이유(5.3.3)** 는 이전 판본 서술 그대로 —
-`evaluate` 오류(B3 `549:2`)는 durable latch 를 남기지 못했다는 뜻이다.
+`evaluate` 오류(B3 `543:2`)는 durable latch 를 남기지 못했다는 뜻이다.
 
 The signature above is the exhaustive input/result record; this map does not infer state the AST does not show.
 
@@ -41,14 +41,14 @@ The signature above is the exhaustive input/result record; this map does not inf
   전달 일을 시험이 돌 수 있는 함수로 옮긴 것이다. 보이스 B 가 00e1b9bd 에서 태그 스위트 커버리지를 재측정해 이 함수 본문 블록
   전부 count 0 을 확인했다.
 
-Exact AST return positions: 523:3, 547:3, 553:3, 556:3, 578:2.
+Exact AST return positions: 517:3, 541:3, 547:3, 550:3, 572:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | if | 522:2 | 진입 0 — refresh 실패 |
-| B2 | if | 546:2 | 진입 0 — durable latch 를 읽으며 레인을 세우지 못함(5.3.3) |
-| B3 | if | 549:2 | 진입 0 — 레인 주기가 durable latch 를 남기지 못함(5.3.3) |
-| B4 | if | 555:2 | 진입 0 — dispatch 부재 |
+| B1 | if | 516:2 | 진입 0 — refresh 실패 |
+| B2 | if | 540:2 | 진입 0 — durable latch 를 읽으며 레인을 세우지 못함(5.3.3) |
+| B3 | if | 543:2 | 진입 0 — 레인 주기가 durable latch 를 남기지 못함(5.3.3) |
+| B4 | if | 549:2 | 진입 0 — dispatch 부재 |
 
 옛 B5~B7(캠페인 CAS 실패 · 이미 점유 · lease 소모)은 몸통과 함께 `dispatchStrategyMarketHandoffs` 로 옮겨 갔고, 거기서
 `TestAFaultInOneScopeStopsTheCycleBeforeTheNext`(CAS 실패) · `TestASkippedScopeDoesNotStopTheNextOne`(점유 · 비-FLAT · lease 소모)이
@@ -58,18 +58,18 @@ Exact AST return positions: 523:3, 547:3, 553:3, 556:3, 578:2.
 
 | Callee expression | Position |
 |---|---|
-| `c.refreshPairedStrategyEntryProductionAssembly` | 521:16 |
-| `c.productionStrategyLanes` | 545:16 |
-| `lanes.evaluate` | 549:12 |
-| `restore.Activation.Generation` | 550:3 |
-| `fresh.schedule.forMarket` | 550:3 |
-| `familyActivation` | 551:3 |
-| `fresh.proposals.forMarket` | 551:3 |
-| `strategyLaneInputs` | 552:3 |
-| `fresh.proposals.forMarket` | 552:36 |
-| `dispatchStrategyMarketHandoffs` | 578:9 |
-| `dispatchHandoffs` | 578:72 |
-| `fresh.proposals.forMarket` | 578:72 |
+| `c.refreshPairedStrategyEntryProductionAssembly` | 515:16 |
+| `c.productionStrategyLanes` | 539:16 |
+| `lanes.evaluate` | 543:12 |
+| `restore.Activation.Generation` | 544:3 |
+| `fresh.schedule.forMarket` | 544:3 |
+| `familyActivation` | 545:3 |
+| `fresh.proposals.forMarket` | 545:3 |
+| `strategyLaneInputs` | 546:3 |
+| `fresh.proposals.forMarket` | 546:36 |
+| `dispatchStrategyMarketHandoffs` | 572:9 |
+| `dispatchHandoffs` | 572:72 |
+| `fresh.proposals.forMarket` | 572:72 |
 
 ## State mutations and fallbacks
 
@@ -88,3 +88,5 @@ Exact AST return positions: 523:3, 547:3, 553:3, 556:3, 578:2.
 a112 5.2.2.2: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
 
 a112 5.2.2.2 리뷰 수리: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
+
+a112 6.3 (c) — 같은 파일 재검증 판정 이동(6 줄 감소)으로 줄만 밀림

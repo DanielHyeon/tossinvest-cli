@@ -8,7 +8,7 @@
   `not-applicable`)가 신규 진입을 닫고 `continue`, 게이트가 없을 때만 `signalCentral` → `return`. 사람 결정 (6): fail-closed 의
   수단은 EntryGate. 판정 순서(refreshOnly 가 중앙 판정보다 앞)는 루프 생존을 위해 그대로다. 편집 전 번들
   `analysis/measurements/lot-5.6.2-5.2.2/pre-edit/`. 재번호는 `branch-test-map.md` 머리글.
-- Source SHA-256: `64f1cc0b85ecf5693dc5df0622b0f19f665697ea1b6f7616eb6755598f546e97` · 범위 :906–966 · 분기 17
+- Source SHA-256: `6f1f6804cfd437116c16a48d1526327c28360433f09e0ba3567eb3537442ee5b` · 범위 :900–966 · 분기 17
 - **아래 표의 줄 번호(`:770` 등)는 5.3.2 작성 당시 좌표다** — 현재 좌표는 `ast.json`(정본)과 `branch-test-map.md`.
 
 ## Inputs and invariants
@@ -57,31 +57,31 @@ goroutine 이 **하나**이고, 사이클은 `<-worker.queue` 를 다시 읽기 
 
 | Callee expression | Position |
 |---|---|
-| `ctx.Done` | 896:9 |
-| `ctx.Done` | 902:10 |
-| `s.mu.RLock` | 906:4 |
-| `s.mu.RUnlock` | 908:4 |
-| `s.evaluationState` | 909:24 |
-| `s.latchMarket` | 911:30 |
-| `s.signalCentral` | 913:6 |
-| `s.waitMarketRestart` | 916:15 |
-| `ctx.Err` | 917:9 |
-| `s.signalCentral` | 920:6 |
-| `invokeBoundedStrategyCycle` | 928:43 |
-| `s.markAbandoned` | 930:5 |
-| `s.recordSwallowedCycleError` | 949:5 |
-| `isCentralStrategyIntegrity` | 956:8 |
-| `s.blockEntryOnCentralIntegrity` | 956:44 |
-| `s.signalCentral` | 957:6 |
-| `isCentralStrategyIntegrity` | 962:7 |
-| `s.signalCentral` | 963:5 |
-| `s.latchMarket` | 966:29 |
-| `s.signalCentral` | 968:5 |
-| `s.waitMarketRestart` | 971:14 |
-| `ctx.Err` | 972:8 |
-| `s.signalCentral` | 975:5 |
+| `ctx.Done` | 890:9 |
+| `ctx.Done` | 896:10 |
+| `s.mu.RLock` | 900:4 |
+| `s.mu.RUnlock` | 902:4 |
+| `s.evaluationState` | 903:24 |
+| `s.latchMarket` | 905:30 |
+| `s.signalCentral` | 907:6 |
+| `s.waitMarketRestart` | 910:15 |
+| `ctx.Err` | 911:9 |
+| `s.signalCentral` | 914:6 |
+| `invokeBoundedStrategyCycle` | 922:43 |
+| `s.markAbandoned` | 924:5 |
+| `s.recordSwallowedCycleError` | 943:5 |
+| `isCentralStrategyIntegrity` | 950:8 |
+| `s.blockEntryOnCentralIntegrity` | 950:44 |
+| `s.signalCentral` | 951:6 |
+| `isCentralStrategyIntegrity` | 956:7 |
+| `s.signalCentral` | 957:5 |
+| `s.latchMarket` | 960:29 |
+| `s.signalCentral` | 962:5 |
+| `s.waitMarketRestart` | 965:14 |
+| `ctx.Err` | 966:8 |
+| `s.signalCentral` | 969:5 |
 
-Exact AST return positions: 897:3, 903:4, 914:6, 918:7, 921:6, 933:5, 958:6, 964:5, 969:5, 973:6, 976:5.
+Exact AST return positions: 891:3, 897:4, 908:6, 912:7, 915:6, 927:5, 952:6, 958:5, 963:5, 967:6, 970:5.
 
 ## State mutations and fallbacks
 
@@ -107,3 +107,5 @@ Exact AST return positions: 897:3, 903:4, 914:6, 918:7, 921:6, 933:5, 958:6, 964
 a112 5.2.2.2: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
 
 a112 5.2.2.2 리뷰 수리: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
+
+a112 6.3 (c) — 같은 파일 재검증 판정 이동(6 줄 감소)으로 줄만 밀림

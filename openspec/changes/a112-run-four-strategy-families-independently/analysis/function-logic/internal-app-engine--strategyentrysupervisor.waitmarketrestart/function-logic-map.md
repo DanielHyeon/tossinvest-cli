@@ -28,10 +28,10 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (`1021:2`) | 기한이 0 | 없음 | `errors.New("strategy market restart deadline is unavailable")` (`874:3`) | **없음 — `latchMarket` 이 성공 시 0 을 주지 않는다(구조적으로 도달 불가)** |
-| B2 (`1025:2`) | 현재 시각이 0 | 없음 | `errors.New("strategy market restart clock is unavailable")` (`878:3`) | **없음 — B3 가 같은 확대 경로를 이미 연다(아래)** |
-| B3 (`1029:2`) | 남은 시간 > 30s | 없음 | `errors.New("strategy market restart delay is outside the bounded contract")` (`882:3`) | `TestTheFourEscalationsThatStopTheEngine…`/"재시작 기한이 계약 밖이면…"·"만료 뒤의 재시작 대기도…" |
-| B4 (`1032:2`) | 남은 시간 ≤ 0 | 없음 | `nil` (`885:3`) | `TestPairedMarketRestartHonorsPublishedAbsoluteDeadlineAfterHandoffRace` |
+| B1 (`1015:2`) | 기한이 0 | 없음 | `errors.New("strategy market restart deadline is unavailable")` (`874:3`) | **없음 — `latchMarket` 이 성공 시 0 을 주지 않는다(구조적으로 도달 불가)** |
+| B2 (`1019:2`) | 현재 시각이 0 | 없음 | `errors.New("strategy market restart clock is unavailable")` (`878:3`) | **없음 — B3 가 같은 확대 경로를 이미 연다(아래)** |
+| B3 (`1023:2`) | 남은 시간 > 30s | 없음 | `errors.New("strategy market restart delay is outside the bounded contract")` (`882:3`) | `TestTheFourEscalationsThatStopTheEngine…`/"재시작 기한이 계약 밖이면…"·"만료 뒤의 재시작 대기도…" |
+| B4 (`1026:2`) | 남은 시간 ≤ 0 | 없음 | `nil` (`885:3`) | `TestPairedMarketRestartHonorsPublishedAbsoluteDeadlineAfterHandoffRace` |
 | 본문 (`887:2`) | 그 외 | 없음 | `s.clk.Sleep(ctx, delay)` | `TestMarketRestartAttemptAndDeadlineSaturateWithoutOverwritingFirstTypedRefusal` |
 
 ## Calls and live bindings
@@ -40,16 +40,16 @@
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `notBefore.IsZero` | 1021:5 | B1 |
-| `errors.New` | 1022:10 | B1 의 오류 |
-| `s.clk.Now` | 1024:9 | **지금**을 다시 읽는다 — 잠금 시각이 아니라 |
-| `now.IsZero` | 1025:5 | B2 |
-| `errors.New` | 1026:10 | B2 의 오류 |
-| `notBefore.Sub` | 1028:11 | 절대 기한 − 지금 = 남은 시간 |
-| `errors.New` | 1030:10 | B3 의 오류 |
-| `s.clk.Sleep` | 1035:9 | 취소를 존중하는 유일한 대기 |
+| `notBefore.IsZero` | 1015:5 | B1 |
+| `errors.New` | 1016:10 | B1 의 오류 |
+| `s.clk.Now` | 1018:9 | **지금**을 다시 읽는다 — 잠금 시각이 아니라 |
+| `now.IsZero` | 1019:5 | B2 |
+| `errors.New` | 1020:10 | B2 의 오류 |
+| `notBefore.Sub` | 1022:11 | 절대 기한 − 지금 = 남은 시간 |
+| `errors.New` | 1024:10 | B3 의 오류 |
+| `s.clk.Sleep` | 1029:9 | 취소를 존중하는 유일한 대기 |
 
-Exact AST return positions: 1022:3, 1026:3, 1030:3, 1033:3, 1035:2.
+Exact AST return positions: 1016:3, 1020:3, 1024:3, 1027:3, 1029:2.
 
 ## State mutations and fallbacks
 
@@ -75,3 +75,5 @@ Exact AST return positions: 1022:3, 1026:3, 1030:3, 1033:3, 1035:2.
 a112 5.2.2.2: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
 
 a112 5.2.2.2 리뷰 수리: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
+
+a112 6.3 (c) — 같은 파일 재검증 판정 이동으로 줄만 밀림(이 번들의 해시가 HEAD 파일과 같았음 — 앞 로트들과 같은 동기화)

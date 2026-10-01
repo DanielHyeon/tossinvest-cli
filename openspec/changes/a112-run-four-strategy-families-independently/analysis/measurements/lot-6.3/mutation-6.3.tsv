@@ -1,0 +1,15 @@
+TREE	HEAD 76dc35f742f892d8d710713061b7ba121c9d3387 (git archive) + own: internal/app/engine/a112_dispatch_lineage_test.go,internal/app/engine/strategy_schedule_revalidation.go,internal/app/engine/strategy_entry_supervisor.go
+CONTROL	GREEN	[./internal/app/engine pass events 16]
+S01 the final check reads the family expiry before the schedule revalidation (order swap)	CAUGHT	1 failing: TestTheDispatchValidationOrderIsFrozen
+S02 the first-leg identity guard is removed (a drifted lineage would be admitted)	CAUGHT	2 failing: TestALineageDriftIsRefusedAtIssuanceBeforeAnyReservationLeaseOrBrokerCall/KR, TestALineageDriftIsRefusedAtIssuanceBeforeAnyReservationLeaseOrBrokerCall/US
+S03 the final check ignores the schedule revalidator	CAUGHT	1 failing: TestTheFinalCheckRefusesWhenTheScheduleRevalidatorSeesDrift
+S04 the entry gate is observed after admission commits (validation order moved)	CAUGHT	1 failing: TestTheDispatchValidationOrderIsFrozen
+A1 drift judgement drops the readiness axis	CAUGHT	2 failing: TestTheScheduleDriftJudgementMovedVerbatim, TestTheScheduleDriftJudgementRefusesEveryAxis/A1_fresh_not_ready
+A2 drift judgement drops the fresh-activation nil axis — EQUIVALENT by construction: Activation.Generation() is nil-safe (0) and every valid activation has generation >= 1, so a missing fresh activation is still refused by the generation axis (case A2 stays refused)	CAUGHT	1 failing: TestTheScheduleDriftJudgementMovedVerbatim
+A3 drift judgement drops the expected-activation nil axis — EQUIVALENT by construction (same reason as A2, mirrored)	CAUGHT	1 failing: TestTheScheduleDriftJudgementMovedVerbatim
+A4 drift judgement drops the desired-revision axis	CAUGHT	2 failing: TestTheScheduleDriftJudgementMovedVerbatim, TestTheScheduleDriftJudgementRefusesEveryAxis/A4_desired_revision
+A5 drift judgement drops the calendar-version axis	CAUGHT	2 failing: TestTheScheduleDriftJudgementMovedVerbatim, TestTheScheduleDriftJudgementRefusesEveryAxis/A5_calendar_version
+A6 drift judgement drops the manifest-digest axis	CAUGHT	2 failing: TestTheScheduleDriftJudgementMovedVerbatim, TestTheScheduleDriftJudgementRefusesEveryAxis/A6_manifest_digest
+A7 drift judgement drops the activation-generation axis	CAUGHT	2 failing: TestTheScheduleDriftJudgementMovedVerbatim, TestTheScheduleDriftJudgementRefusesEveryAxis/A7_activation_generation
+A8 drift judgement drops the activation-expiry axis	CAUGHT	2 failing: TestTheScheduleDriftJudgementMovedVerbatim, TestTheScheduleDriftJudgementRefusesEveryAxis/A8_activation_expiry
+A9 the production revalidator bypasses the moved judgement	CAUGHT	1 failing: TestTheScheduleDriftJudgementMovedVerbatim
