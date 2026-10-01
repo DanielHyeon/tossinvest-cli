@@ -45,7 +45,16 @@
 
 ## 2. 게이트
 
-- [ ] 2.0 사람 항목 H1 — 배포 전 생산 설정 재실측(전략 매니페스트 digest 환경값 · scheduler 활성화 · automation gate 상태): design D6 「오늘 동작 변화 0」의 영수증
+- [x] 2.1 **[처분 2026-10-01] 게이트 — 이 체크 커밋에서 격리 워크트리로 `make gate CHANGE=a127-strategy-authorities-read-the-current-ledger` 를 돌리고 결과를 `review.md` 에 적는다**(a095 6.8 관례: 게이트는 자기 줄도 미완료로 세므로 체크 → 실행 → 기록)
+- [x] 2.2 **[처분 2026-10-01] 아카이브는 Manager 최종 검증 · 승인 뒤** — 아래 「아카이브 때 할 일」
 
-- [ ] 2.1 격리 워크트리 `make gate CHANGE=a127-strategy-authorities-read-the-current-ledger`
-- [ ] 2.2 아카이브(Manager 검증 뒤)
+## 사람 항목 (체크박스 아님 — 이 change 의 게이트 밖)
+
+- **H1** — 배포 전 생산 설정 재실측(전략 매니페스트 digest 환경값 · scheduler 활성화 · automation gate 상태): design D6 「오늘 동작 변화 0」의 영수증.
+  a127 착지 뒤에는 핀이라는 우연한 차단이 사라지므로, 서명 매니페스트 발급 · schedule 활성화 전에 사람이 확인한다.
+
+## 아카이브 때 할 일 (Manager 승인 뒤 — 체크박스 아님)
+
+- archive 커밋 메시지와 `review.md` 에 착지 `82080177`(+ 수리 묶음 `1e25b3a3`) · 착지 기록 `a8c0f978` · 게이트 실행 커밋을 인용한다.
+- 델타 ADDED(strategy-runtime) 적용 확인, Story openspec.path → 아카이브 경로, tracker 재생성.
+- 사용자 보고: D6 경보 수위(「핀이라는 우연 차단이 사라지고 설계된 조건 사슬만 남는다」, 사람 · 운영 조건 12 — 거래 정책 · LIVE 마스터 스위치 · 공식 자격 증명 포함)와 H1.
