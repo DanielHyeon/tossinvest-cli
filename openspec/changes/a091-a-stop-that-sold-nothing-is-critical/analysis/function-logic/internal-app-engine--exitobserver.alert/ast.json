@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "53e631730f185be7c53164bbf1fb739ebf443a387d1bb80d7711fe2bf02d5e80",
+  "source_sha256": "0733bd8641ed8c41fd92b41e6cf5d4d24ce3e7534ea1308435534e4c284d827e",
   "package": "engine",
   "function": "alert",
   "receiver": "ExitObserver",
   "signature": "ExitObserver.alert(params=2, results=0)",
   "start": {
-    "line": 1829,
+    "line": 1832,
     "column": 1
   },
   "end": {
-    "line": 1836,
+    "line": 1839,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 1830,
+        "line": 1833,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 1833,
+        "line": 1836,
         "column": 2
       }
     }
@@ -35,7 +35,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 1831,
+        "line": 1834,
         "column": 3
       }
     }
@@ -44,7 +44,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1833,
+        "line": 1836,
         "column": 12
       },
       "text": "o.opts.Alerts.Notify"
@@ -52,7 +52,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1834,
+        "line": 1837,
         "column": 3
       },
       "text": "o.logErr"
@@ -62,7 +62,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 1833,
+        "line": 1836,
         "column": 5
       }
     }

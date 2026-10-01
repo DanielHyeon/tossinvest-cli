@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/exitwiring.go",
-  "source_sha256": "27905e84de89b7d967e69c9d78290f447d23959000399aa850b654c425827a1e",
+  "source_sha256": "36e51db80cd3879305f2c7518552d81169c1ef35ab4e4ca99163b761d91e6453",
   "package": "engine",
   "function": "ExitObserver",
   "receiver": "Context",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 360,
+    "line": 362,
     "column": 2
   },
   "branches": [
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 356,
+        "line": 358,
         "column": 2
       }
     }
@@ -88,7 +88,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 359,
+        "line": 361,
         "column": 2
       }
     }
@@ -129,7 +129,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 357,
+        "line": 359,
         "column": 16
       },
       "text": "exitSideFloor"
@@ -137,7 +137,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 359,
+        "line": 361,
         "column": 9
       },
       "text": "NewExitObserver"
@@ -253,6 +253,13 @@
       "kind": "=",
       "at": {
         "line": 357,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 359,
         "column": 3
       }
     }

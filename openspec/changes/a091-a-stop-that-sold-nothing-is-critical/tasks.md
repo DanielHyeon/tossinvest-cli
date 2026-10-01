@@ -64,13 +64,13 @@
       × 로컬 {0, 양수, 비정상}, 보유 양수 × 같은 칸 — Holdings 한정 0 은 「신선 보유 0 ∧ 신선 매도가능 ∧ 유효 로컬」에서만. 알림 켜짐 · 보호 ·
       보유 0(Holdings 한정) → 옛 종류 normal · 본문 「계좌에 보유가 없다」. **새는 칸 셋**(매도가능 조회 실패 · 보유 스냅숏 낡음 · 로컬 오류)은
       critical 로 남음을 단언(과보고 방향 — 이름 붙인 잔여)
-- [x] 3.3b **[2026-10-01] `TestA091OnlyACancellationOnlyFailureIsSuppressed` 팔 8 · `TestA091TheCancellationPredicate` — (vii) 은 생산 클라이언트의 오류 모양(`client.go` doRequest 의 `%w: %s`)으로, httptest 공식 클라이언트 왕복은 아님(이름 붙인 차이).** **RED (나)** — 종료 취소는 **출처**로(design D5 6판): (i) 하한 오류가 **취소뿐**(잎이 전부 `context.Canceled` — `%w` 감쌈 ·
+- [x] 3.3b **[2026-10-01] `TestA091OnlyACancellationOnlyFailureIsSuppressed` 팔 7 — (i)(ii)(iv)(v)(vi 실제 Retrier 재시도 대기 중 취소)(vii)(viii) · (iii) 은 `TestA091AShutdownBetweenJudgementAndRecordStillRecords`(실제 RecordOnly — 행 1 · 래치 0) · `TestA091TheCancellationPredicate` · `TestA091AShutdownLeavesOnlyALine`(cause shutdown 줄). i1 보이스 B #1 이 「팔 8」 의 (iii) · (vi) 부재를 잡아 i1 수리에서 더함. (vii) 은 생산 클라이언트의 오류 모양으로, httptest 공식 클라이언트 왕복은 아님(이름 붙인 차이).** **RED (나)** — 종료 취소는 **출처**로(design D5 6판): (i) 하한 오류가 **취소뿐**(잎이 전부 `context.Canceled` — `%w` 감쌈 ·
       `*url.Error` 감쌈 포함)이고 ctx 끝남 → 알림 0 · 행 0 · 래치 0 ·
       승격 0, (ii) 진짜 하한 오류가 돌아온 **뒤** ctx 취소 → ① 보고 · 행 1 · 가짜 래치 0(`WithoutCancel` 기록), (iii) 원인 판정 **뒤** · 기록 **전** ctx
       취소(주입 지점) → 행 1 · 가짜 래치 0, (iv) ctx 살아 있고 HTTP 시한(`DeadlineExceeded`) → ①, (v) **합쳐진 오류** — 인증 거절 +
       승격 원장 연산의 취소(`errors.Join`, 생산 `Retrier.Query` 모양) → ① 보고(억제 안 함), (vi) 재시도 대기 중 취소 → 직전 일시 오류 → ① 보고,
       (vii) **생산 공식 클라이언트**(httptest 서버가 응답을 멈춘 채 ctx 취소)로 HTTP 중 취소 → 잎 `ErrTransport` → ① 보고 · 가짜 래치 0(과보고 잔여 핀)
-- [x] 3.3c **[2026-10-01] `TestA091ShutdownWaitsForTheReportWithoutADeadline`.** **RED (나) — 종료 중 보고 대기(D5 6판)** — 기록을 막아 둔(원장 쓰기 대기 주입) 상태에서 루프 ctx 취소: 루프는 기록이 풀릴 때까지
+- [x] 3.3c **[2026-10-01] `TestA091ShutdownWaitsForTheReportWithoutADeadline` — i1 수리 뒤 실제 RecordOnly 를 막힘 뒤에 두고 행 1 · 게이트 열림까지 단언.** **RED (나) — 종료 중 보고 대기(D5 6판)** — 기록을 막아 둔(원장 쓰기 대기 주입) 상태에서 루프 ctx 취소: 루프는 기록이 풀릴 때까지
       돌아오지 않고, 풀린 뒤 행 1 · 가짜 래치 0 으로 돌아온다 — 교착 0, 대기가 기한 없음이라는 사실을 시험 이름 · 주석에 적는다
 - [x] 3.4 **[2026-10-01] `TestA091TheProtectiveSplitCoversEveryOrderableAction`(AST 열거 5) · `TestA091ATakeProfitThatSoldNothingKeepsItsGrade`(익절 끝-끝 둘) — 5 액션 전부를 `submit` 끝-끝으로 돌리지는 않음(보호 1 · 익절 1 끝-끝 + 술어 표 5, 이름 붙인 차이).** **RED (가)** — 표 시험: 주문 액션 5종(보호 2 · 익절 3 — `ratchet.go:94-118`)을 `submit` 을 거쳐 두 원인 × 알림 켜짐으로 —
       보호만 새 종류, 익절은 어떤 원인이든 옛 종류 normal(익절 B2 는 알림 0 · 로그 옛 종류). 새 액션이 생기면 이 표가 깨지게 `exitpolicy`
@@ -79,8 +79,8 @@
       (`Pending()==false`) · 하한이 풀린 다음 관측의 같은 레벨 재발의(기존 두 시험을 확장)
 - [x] 3.6 **[2026-10-01] `exitloop.go` · `exit_stop_sold_nothing.go`.** **GREEN** — `submit` 이 `isProtective(proposal)` 를 `applyFloor` 에 넘기고, `applyFloor` 는 반환값을 바꾸지 않은 채 원인 분류(D3) ·
       게이트(D1)로 종류를 고른다. `exitpolicy` · `riskcalc` 무편집
-- [x] 3.7 **[2026-10-01] `TestA091TheLogAndTheAlertAreOneKind`.** **RED (나) — H2** — 보호 · 알림 켜짐 · 두 원인: 그 사건의 로그 줄(B2 오류 줄 · 기록 줄)과 알림이 같은 종류. 게이트 밖이면 둘 다 옛 종류
-- [x] 3.8 **[2026-10-01] `TestA091NoLineOrRowCarriesTheAccount` · `TestA091TheEscalationLinesCarryNoAccount`.** **RED (나) — 계좌 카나리(D8 5판)** — 계좌 sentinel 로: B2 오류 줄(보호 · 익절 · 게이트 밖) · 기록 줄 · **기록 실패 줄** · **`escalate` 성공 ·
+- [x] 3.7 **[2026-10-01] `TestA091TheLogAndTheAlertAreOneKind` — 두 원인 × 켜짐 · 꺼짐(i1 뒤).** **RED (나) — H2** — 보호 · 알림 켜짐 · 두 원인: 그 사건의 로그 줄(B2 오류 줄 · 기록 줄)과 알림이 같은 종류. 게이트 밖이면 둘 다 옛 종류
+- [x] 3.8 **[2026-10-01] `TestA091NoLineOrRowCarriesTheAccount`(보호 · 익절 × 켜짐 · 꺼짐 B2 줄, 기록 · 기록 실패 · 실패 줄) · `TestA091TheEscalationLinesCarryNoAccount` — 익절 · 꺼짐 팔은 i1 보이스 B #2 뒤.** **RED (나) — 계좌 카나리(D8 5판)** — 계좌 sentinel 로: B2 오류 줄(보호 · 익절 · 게이트 밖) · 기록 줄 · **기록 실패 줄** · **`escalate` 성공 ·
       실패 줄**(`internal/obs` 시험) · 행(제목 · 본문 · payload) 어디에도 sentinel 없음. 기록 실패 팔은 원장 쓰기 실패 주입으로
 - [x] 3.9 **[2026-10-01] `TestA091AnAuthRefusalOnTheFloorReadRecordsTwo`.** **RED (나) — 겹침(D5 범위 표)** — 하한 조회가 401 이면 한 `applyFloor` 호출에서 모드 통지 기록 1 + 새 종류 기록 1(둘 다 critical 행),
       그 밖의 기록 0
@@ -88,7 +88,7 @@
 
 ## 4. 문구 (D4) — 4판
 
-- [x] 4.1 **[2026-10-01] 3.1 · 3.2a 의 고정 제목 단언 + 「일부」 부재.** **RED** — 0주 문구(보호 새 종류 · 보호 게이트 밖 옛 종류 · 익절 옛 종류)가 **참인 결과를 말한다**: 제출 수량 0 을 명시하고
+- [x] 4.1 **[2026-10-01] 보호 새 종류 · 보호 꺼짐 옛 종류 · 익절 옛 종류 세 본문의 고정 문자열 단언(`TestA091AProtectiveZeroIsACriticalRow` · `TestA091WithAlertsOffNothingChangesButTheWording` · `TestA091ATakeProfitThatSoldNothingKeepsItsGrade` — i1 뒤 전체 문자열, 익절은 「청산」) + 한정 항 다섯의 원인 문구(`TestA091EveryFloorBoundHasItsGradeAndItsWords`).** **RED** — 0주 문구(보호 새 종류 · 보호 게이트 밖 옛 종류 · 익절 옛 종류)가 **참인 결과를 말한다**: 제출 수량 0 을 명시하고
       「일부」 계열 문구가 없다 — 금지어 하나가 아니라 문장 단언(제목 · 본문 고정 문자열)
 - [x] 4.2 **[2026-10-01] `TestA091APartialCapIsUnchanged` 고정 본문.** **RED** — 부분 캡 문구 **무변화**(고정 문자열)
 - [x] 4.3 **[2026-10-01] `exit_stop_sold_nothing.go` `zeroFloorEvent`.** **GREEN**
@@ -105,10 +105,10 @@
 - [x] 5.1a **[2026-10-01] `TestA091TheReminderWindowDecidesTheNextEpisode`.** **재알림 창 경계** — 정착(전달 · 승인) 행 뒤 같은 키: 1h 안 재무장 0, 1h 지나 재무장 1(본문 교체 — a097)
 - [x] 5.2 **[2026-10-01] `issues.md` 「8/2 재생 결과」.** 결과를 `issues.md` 에 — 첫 리뷰 H3(`MarkAlertDelivered` PENDING ERROR 12줄)은 옛 동기 발송의 모양이었고 base 에는 그 발생원이 없으며,
       대신 (iii)의 배달 실행자 줄이 난다는 것을 **잰 수**로
-- [x] 5.3 **[2026-10-01] `TestA091TheReportFitsItsShare` — 소유 칸 11~26ms(실패 승격 <0.12ms), 승인 칸 1.06~1.28s < 5s(측정 · 기록).** **몫 실측 · 수락(D5 7판 — Manager 판정 2026-10-01)** — 보고 호출 하나의 전체 경과를 네 칸에서 잰다. **a091 소유 칸**(경합 없는 원장 ·
+- [x] 5.3 **[2026-10-01] `TestA091TheReportFitsItsShare` — i1 뒤 재는 양은 **관측 사이클 전체 경과**(보고 몫의 상한), 소유 칸 B7 · B2 × {경합 없음, 기록 실패 + 실제 승격 트랜잭션(SQL 트리거 주입), 연결 풀} · 승인 칸(준비 장벽 · 승인 수행 수 단언). 수치는 design D5 「실측」.** **몫 실측 · 수락(D5 7판 — Manager 판정 2026-10-01)** — 보고 호출 하나의 전체 경과를 네 칸에서 잰다. **a091 소유 칸**(경합 없는 원장 ·
       기록 실패 승격 · 연결 풀 경합)은 관측 최악 ≤ 750ms(넘으면 멈춤 · 보고). **승인 경합 칸**(밀린 행 100)은 측정 · 기록이고 판정은 관측 주기
       5s 미만 하나(근거 design D5). 결과를 design D5 에 적는다
-- [x] 5.4 **[2026-10-01] `TestA091ALaterStopStillGoesOutInTheSameCycle/750ms` · `/1.3s`.** **뒤쪽 보호 포지션(D5 수락 (ii))** — 한 사이클에 보호 0주 포지션 → 보호 포지션 순서, 앞 포지션의 기록에 **750ms(배정)와 1.3s(실측 최악)**
+- [x] 5.4 **[2026-10-01] `TestA091ALaterStopStillGoesOutInTheSameCycle/750ms` · `/1.3s` · 양성 대조군 `/positive_control_20s`(시세 수명 초과 → 그 사이클 미제출).** **뒤쪽 보호 포지션(D5 수락 (ii))** — 한 사이클에 보호 0주 포지션 → 보호 포지션 순서, 앞 포지션의 기록에 **750ms(배정)와 1.3s(실측 최악)**
       지연을 각각 주입:
       뒤 포지션이 그 사이클에 판정 · 제출되고 시세가 쓸 수 있는 상태(15s 수명 안)임을 단언
 

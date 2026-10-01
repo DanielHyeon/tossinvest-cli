@@ -40,10 +40,11 @@ ALERT_CONTRACT = (
     "`o.opts.Alerts` = `obs.RecordOnly{N, Relay}`(생산 배선 `exitwiring.go:348-349`). 일반 등급 → `NormalRelay.Offer`"
     "(`normal_relay.go:43-58` — 비차단 `select`, 버퍼가 차면 버림을 로그로 기록). critical → `n.mu` 아래 "
     "`Journal.RecordAlert`(`record_only.go:136-137` — SQLite `BEGIN IMMEDIATE`, `busy_timeout` **5s**(`journal.go:36`) · "
-    "`synchronous=FULL` fsync, 원격 전송 0). `n.mu` 대기는 **기한 없음**(보유자는 로컬 원장 연산만 — a092 정본 「등급화된 알림」 잠금 문단). "
-    "재알림 창 `DefaultRemindAfter` **1h**(`notifier.go:59`). 기록 실패 → 그 자리에서 게이트 래치 + 승격 시도, 오류 반환 → `o.alert` 가 "
-    "`logErr` 한 줄로 삼킴(`exitloop.go:1818-1819`)"
+    "`synchronous=FULL` fsync, 원격 전송 0). `n.mu` 대기는 **기한 없음**(보유자는 로컬 원장 연산만 — 운영자 승인 `Acknowledge` 는 밀린 행 수에 비례). "
+    "재알림 창 `DefaultRemindAfter` **1h**(`notifier.go:59`). 기록 실패 → 그 자리에서 게이트 래치 + 승격(`escalate` 원장 트랜잭션, 동기) 후 오류 반환"
 )
+# 실패 오류를 받는 쪽은 호출자마다 다름: o.alert 는 logErr(계좌 원문)로 삼키고, a091 의 notifyZeroFloor 는 o.alert 를 거치지 않고
+# 계좌 없는 가린 줄(ZeroFloorLog)로 남김(design D8).
 
 B: dict[str, dict] = {
     "internal-app-engine--exitobserver.applyfloor": {
@@ -59,14 +60,14 @@ B: dict[str, dict] = {
         ],
         "calls": [
             ("`o.opts.Floor.ConfirmedFloor`", "0", "RECONCILE 확정 하한", FLOOR_CONTRACT),
-            ("`o.reportZeroFloor`", "0", "B2 보고(원인 ①④)", "로그 한 줄(계좌 없음 · 가린 오류) + critical 이면 `Alerts.Notify(WithoutCancel)` — " + ALERT_CONTRACT),
+            ("`o.reportZeroFloor`", "0", "B2 보고(원인 ①④)", "`ZeroFloorLog` 줄 하나(계좌 없음 · 가린 오류 · 종목 · 포지션 · 원인) + critical 이면 `Alerts.Notify(WithoutCancel)` — " + ALERT_CONTRACT + ". 실패 오류는 `ZeroFloorLog` 의 가린 줄로(o.alert 우회)"),
             ("`classifyZero`", "0", "원인 분류", "순수(`ctx.Err()` · 오류 나무 · 한정 항)"),
             ("`riskcalc.CompareDecimal`", "0", "하한 vs 원안", "순수, 오류 → B4"),
             ("`fmt.Errorf`", "0", "B4 오류 감싸기", "순수"),
             ("`riskcalc.SubDecimal`", "0", "잔여", "순수, 오류 → B6"),
             ("`fmt.Errorf`", "0", "B6 오류 감싸기", "순수"),
             ("`isZeroQuantity`", "0", "B7 0주 판정", "순수(수치 비교)"),
-            ("`o.reportZeroFloor`", "0", "B7 보고(원인 ②③)", "알림 하나(종류는 게이트 · 원인이 고름) — " + ALERT_CONTRACT),
+            ("`o.reportZeroFloor`", "0", "B7 보고(원인 ②③)", "알림 하나(종류는 게이트 · 원인이 고름, 본문 첫머리에 종목) — " + ALERT_CONTRACT + ". 실패 오류는 `ZeroFloorLog` 의 가린 줄로(o.alert 우회)"),
             ("`classifyZero`", "0", "원인 분류", "순수"),
             ("`o.alert`", "0", "부분 캡 알림(무변경)", ALERT_CONTRACT + ". 종류 `EventExitProposalCapped` = normal"),
             ("`string`", "0", "event key", "순수"),
@@ -156,15 +157,15 @@ B: dict[str, dict] = {
     },
     "internal-app-engine--exitobserver.alert": {
         "pkg": "engine",
-        "edit": "편집하지 않는다 — 새 critical 이 타는 기존 경로의 증거(design D5).",
+        "edit": "편집하지 않는다 — 부분 캡 알림이 타는 기존 경로. **a091 의 0주 보고는 이 함수를 거치지 않는다**(`notifyZeroFloor` 가 `o.opts.Alerts.Notify(context.WithoutCancel)` 를 직접 부름 — 이 함수의 실패 로그 `logErr` 가 계좌 원문을 싣기 때문, design D8 · 변이 M15).",
         "role": "exit 관측 goroutine 의 알림 입구. 오류는 로그 한 줄로 삼킨다.",
         "inputs": [("`o.opts.Alerts`", "nil 허용", "생산: `obs.RecordOnly`(`exitwiring.go:349`)", "nil 이면 무동작(B1)")],
         "calls": [
-            ("`o.opts.Alerts.Notify`", "1818", "기록(critical) 또는 이관(normal)", ALERT_CONTRACT),
-            ("`o.logErr`", "1819", "기록 실패 로그", "로그 한 줄 — 종류는 사건의 종류(`e.Type`)"),
+            ("`o.opts.Alerts.Notify`", "1818", "기록(critical) 또는 이관(normal)", ALERT_CONTRACT + ". 실패 오류는 이 함수가 `logErr` 로 삼킨다"),
+            ("`o.logErr`", "1819", "기록 실패 로그", "로그 한 줄 — 종류는 사건의 종류(`e.Type`), **계좌 필드 원문**(그래서 a091 은 이 경로를 쓰지 않는다)"),
         ],
         "mut": "원장 outbox 행(critical) 또는 이관 버퍼(normal). 기록 실패는 알림기가 이미 게이트를 잠갔다.",
-        "safety": "새 종류는 이 경로를 그대로 탄다 — 발송 경로를 만들지 않는다(D5). 원격 전송 0.",
+        "safety": "a091 의 새 종류는 같은 알림기(`RecordOnly`)를 쓰되 이 함수를 우회한다(D8). 원격 전송 0.",
         "tests": {"B1": ["TestNoFloorSourceCapsNothing"], "B2": ["TestA092ACappedLiquidationDoesNotWaitForTheTransport"]},
     },
     "internal-obs--recordonly.notify": {
@@ -314,7 +315,7 @@ B: dict[str, dict] = {
     },
     "internal-app-engine--context.exitobserver": {
         "pkg": "engine",
-        "edit": "**a091 편집(구현 로트)** — 로드된 설정 `c.Config.Engine.Notifications.Enabled` 로 `opts.NotificationsEnabled` 를 덮는 한 줄(`:355`). 분기 무변경(변이 M5 CAUGHT).",
+        "edit": "**a091 편집(구현 로트 · i1 수리)** — 로드된 설정 `c.Config.Engine.Notifications.Enabled` 로 `opts.NotificationsEnabled` 를 덮는 한 줄, 엔진 로거 `c.Log` 로 `opts.ZeroFloorLog` 를 덮는 한 줄(알림 꺼짐 B2 의 유일한 흔적 — i1 보이스 A P1). 분기 무변경(변이 M5 · M36).",
         "role": "exit 관측 루프의 생산 조립 — 알림 · 통지 · 조회 경로를 주입 지점별로 기록 전용으로 덮고, 하한 공급자를 exit Retrier 로 만든다.",
         "inputs": [("`c.Config.Engine.Notifications.Enabled`", "로드된 설정", "설정 파일", "거짓이 기본 — 보호 0주가 옛 종류로 남는다")],
         "calls": [

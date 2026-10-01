@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "53e631730f185be7c53164bbf1fb739ebf443a387d1bb80d7711fe2bf02d5e80",
+  "source_sha256": "0733bd8641ed8c41fd92b41e6cf5d4d24ce3e7534ea1308435534e4c284d827e",
   "package": "engine",
   "function": "submit",
   "receiver": "ExitObserver",
   "signature": "ExitObserver.submit(params=7, results=1)",
   "start": {
-    "line": 1399,
+    "line": 1402,
     "column": 1
   },
   "end": {
-    "line": 1484,
+    "line": 1487,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 1403,
+        "line": 1406,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 1406,
+        "line": 1409,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 1426,
+        "line": 1429,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 1435,
+        "line": 1438,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 1440,
+        "line": 1443,
         "column": 2
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "switch",
       "at": {
-        "line": 1450,
+        "line": 1453,
         "column": 2
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "case",
       "at": {
-        "line": 1451,
+        "line": 1454,
         "column": 2
       }
     },
@@ -74,7 +74,7 @@
       "id": "B8",
       "kind": "case",
       "at": {
-        "line": 1459,
+        "line": 1462,
         "column": 2
       }
     },
@@ -82,7 +82,7 @@
       "id": "B9",
       "kind": "case",
       "at": {
-        "line": 1464,
+        "line": 1467,
         "column": 2
       }
     },
@@ -90,7 +90,7 @@
       "id": "B10",
       "kind": "case",
       "at": {
-        "line": 1467,
+        "line": 1470,
         "column": 2
       }
     },
@@ -98,7 +98,7 @@
       "id": "B11",
       "kind": "if",
       "at": {
-        "line": 1471,
+        "line": 1474,
         "column": 3
       }
     },
@@ -106,7 +106,7 @@
       "id": "B12",
       "kind": "case",
       "at": {
-        "line": 1476,
+        "line": 1479,
         "column": 2
       }
     },
@@ -114,7 +114,7 @@
       "id": "B13",
       "kind": "if",
       "at": {
-        "line": 1478,
+        "line": 1481,
         "column": 3
       }
     }
@@ -123,49 +123,42 @@
     {
       "kind": "return",
       "at": {
-        "line": 1404,
+        "line": 1407,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1411,
+        "line": 1414,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1428,
+        "line": 1431,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1436,
+        "line": 1439,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1442,
+        "line": 1445,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1458,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 1463,
+        "line": 1461,
         "column": 3
       }
     },
@@ -179,14 +172,21 @@
     {
       "kind": "return",
       "at": {
-        "line": 1474,
+        "line": 1469,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1482,
+        "line": 1477,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1485,
         "column": 3
       }
     }
@@ -195,7 +195,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1402,
+        "line": 1405,
         "column": 33
       },
       "text": "o.applyFloor"
@@ -203,7 +203,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1402,
+        "line": 1405,
         "column": 64
       },
       "text": "isProtective"
@@ -211,7 +211,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1406,
+        "line": 1409,
         "column": 5
       },
       "text": "isZeroQuantity"
@@ -219,7 +219,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1411,
+        "line": 1414,
         "column": 10
       },
       "text": "o.release"
@@ -227,7 +227,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1414,
+        "line": 1417,
         "column": 17
       },
       "text": "o.opts.Issuer.IssueReduction"
@@ -235,7 +235,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1417,
+        "line": 1420,
         "column": 16
       },
       "text": "costs.Market"
@@ -243,7 +243,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1417,
+        "line": 1420,
         "column": 29
       },
       "text": "strings.ToLower"
@@ -251,7 +251,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1417,
+        "line": 1420,
         "column": 45
       },
       "text": "strings.TrimSpace"
@@ -259,7 +259,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1423,
+        "line": 1426,
         "column": 11
       },
       "text": "fmt.Sprintf"
@@ -267,7 +267,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1427,
+        "line": 1430,
         "column": 3
       },
       "text": "o.alertProposalRefused"
@@ -275,7 +275,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1427,
+        "line": 1430,
         "column": 44
       },
       "text": "err.Error"
@@ -283,7 +283,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1428,
+        "line": 1431,
         "column": 10
       },
       "text": "o.release"
@@ -291,7 +291,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1435,
+        "line": 1438,
         "column": 12
       },
       "text": "o.opts.Journal.AttachExitIntent"
@@ -299,7 +299,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1436,
+        "line": 1439,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -307,7 +307,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1439,
+        "line": 1442,
         "column": 17
       },
       "text": "o.sellIntent"
@@ -315,7 +315,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1441,
+        "line": 1444,
         "column": 3
       },
       "text": "o.alertRefused"
@@ -323,7 +323,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1442,
+        "line": 1445,
         "column": 10
       },
       "text": "o.release"
@@ -331,7 +331,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1444,
+        "line": 1447,
         "column": 14
       },
       "text": "o.opts.Submit.Place"
@@ -339,7 +339,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1452,
+        "line": 1455,
         "column": 3
       },
       "text": "o.log"
@@ -347,7 +347,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1455,
+        "line": 1458,
         "column": 14
       },
       "text": "string"
@@ -355,7 +355,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1465,
+        "line": 1468,
         "column": 3
       },
       "text": "o.noteDelay"
@@ -363,7 +363,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1466,
+        "line": 1469,
         "column": 10
       },
       "text": "o.release"
@@ -371,7 +371,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1472,
+        "line": 1475,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -379,7 +379,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1474,
+        "line": 1477,
         "column": 10
       },
       "text": "fmt.Errorf"
@@ -387,7 +387,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1479,
+        "line": 1482,
         "column": 13
       },
       "text": "err.Error"
@@ -395,7 +395,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1481,
+        "line": 1484,
         "column": 3
       },
       "text": "o.alertProposalRefused"
@@ -403,7 +403,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1482,
+        "line": 1485,
         "column": 10
       },
       "text": "o.release"
@@ -413,56 +413,56 @@
     {
       "kind": ":=",
       "at": {
-        "line": 1402,
+        "line": 1405,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 1414,
+        "line": 1417,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 1435,
+        "line": 1438,
         "column": 5
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 1439,
+        "line": 1442,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 1444,
+        "line": 1447,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 1472,
+        "line": 1475,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 1477,
+        "line": 1480,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 1479,
+        "line": 1482,
         "column": 4
       }
     }

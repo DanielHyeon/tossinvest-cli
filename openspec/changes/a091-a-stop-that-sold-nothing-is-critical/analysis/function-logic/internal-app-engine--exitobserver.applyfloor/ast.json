@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "53e631730f185be7c53164bbf1fb739ebf443a387d1bb80d7711fe2bf02d5e80",
+  "source_sha256": "0733bd8641ed8c41fd92b41e6cf5d4d24ce3e7534ea1308435534e4c284d827e",
   "package": "engine",
   "function": "applyFloor",
   "receiver": "ExitObserver",
   "signature": "ExitObserver.applyFloor(params=4, results=3)",
   "start": {
-    "line": 1624,
+    "line": 1627,
     "column": 1
   },
   "end": {
-    "line": 1676,
+    "line": 1679,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 1625,
+        "line": 1628,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 1629,
+        "line": 1632,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 1638,
+        "line": 1641,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 1642,
+        "line": 1645,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 1645,
+        "line": 1648,
         "column": 2
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 1649,
+        "line": 1652,
         "column": 2
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 1652,
+        "line": 1655,
         "column": 2
       }
     }
@@ -75,14 +75,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 1626,
-        "column": 3
-      }
-    },
-    {
-      "kind": "return",
-      "at": {
-        "line": 1636,
+        "line": 1629,
         "column": 3
       }
     },
@@ -96,7 +89,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 1643,
+        "line": 1642,
         "column": 3
       }
     },
@@ -110,21 +103,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 1650,
+        "line": 1649,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1657,
+        "line": 1653,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 1675,
+        "line": 1660,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1678,
         "column": 2
       }
     }
@@ -133,7 +133,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1628,
+        "line": 1631,
         "column": 25
       },
       "text": "o.opts.Floor.ConfirmedFloor"
@@ -141,7 +141,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1633,
+        "line": 1636,
         "column": 3
       },
       "text": "o.reportZeroFloor"
@@ -149,7 +149,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1634,
+        "line": 1637,
         "column": 11
       },
       "text": "classifyZero"
@@ -157,7 +157,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1641,
+        "line": 1644,
         "column": 14
       },
       "text": "riskcalc.CompareDecimal"
@@ -165,7 +165,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1643,
+        "line": 1646,
         "column": 21
       },
       "text": "fmt.Errorf"
@@ -173,7 +173,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1648,
+        "line": 1651,
         "column": 20
       },
       "text": "riskcalc.SubDecimal"
@@ -181,7 +181,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1650,
+        "line": 1653,
         "column": 21
       },
       "text": "fmt.Errorf"
@@ -189,7 +189,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1652,
+        "line": 1655,
         "column": 5
       },
       "text": "isZeroQuantity"
@@ -197,7 +197,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1654,
+        "line": 1657,
         "column": 3
       },
       "text": "o.reportZeroFloor"
@@ -205,7 +205,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1655,
+        "line": 1658,
         "column": 11
       },
       "text": "classifyZero"
@@ -213,7 +213,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1659,
+        "line": 1662,
         "column": 2
       },
       "text": "o.alert"
@@ -221,7 +221,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1661,
+        "line": 1664,
         "column": 10
       },
       "text": "string"
@@ -229,7 +229,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1662,
+        "line": 1665,
         "column": 10
       },
       "text": "o.label"
@@ -237,7 +237,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 1663,
+        "line": 1666,
         "column": 9
       },
       "text": "fmt.Sprintf"
@@ -247,21 +247,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 1628,
+        "line": 1631,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 1641,
+        "line": 1644,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 1648,
+        "line": 1651,
         "column": 2
       }
     }

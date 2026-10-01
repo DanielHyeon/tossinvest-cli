@@ -362,3 +362,31 @@ tasks(3.3a 머리 · 3.3b (i)(v)(vi) · 3.3c 신설 · 5.3).
   (5 액션 전부 끝-끝 아님).
 - **착지 전 겹침 대조**(공유 HEAD `80ae96a5`): a091 이 편집하는 파일 넷(`exitloop.go` · `exitwiring.go` · `event.go` · `notifier.go`)과 `docs/operations.md` 는 기점 뒤 커밋 0 ·
   공유 트리 미커밋 0 · staged 0. a112 는 engine 의 strategy_* 영역.
+
+## 구현 리뷰 i1 (2026-10-01) — 보이스 A REJECT · 보이스 B REJECT · codex FAIL → 수리
+
+- 대상 `git archive 97a6f717` → `/tmp/claude-1000/a091-i1-tree`(read-only). 보이스 A(적대 · §0.3 · 게이트 — Manager 공격 지정 ①~④) · 보이스 B(증거 · 시험 품질 · 4 팔 재생 검증) ·
+  codex(non-ephemeral, `-s read-only`, ~/.codex 금지 조항 — 머리말 위반 신고 없음). **codex 는 a127 의 슬롯 밖 codex 실행과 시간이 겹쳤을 수 있다**(Manager 확인 — 사실 기록).
+  원문: `analysis/impl-review/{claude-i1-voiceA.md, claude-i1-voiceB.md, codex-i1-prompt.md, codex-i1-output.md}`.
+- **안전 불변식 위반 0** — 세 보이스 수렴: `applyFloor` 반환값 B1~B7 편집 전과 같음 · 패닉 경로 없음 · 게이트 단일 술어 · 계좌 필드 없음 · 종료 순서 안전.
+
+| # | 심각도 | 제기 | 내용 | 수리 |
+|---|---|---|---|---|
+| I1-1 | **P1** | A | 생산에서 관측자 `Log` 가 nil — 알림 꺼짐 B2 의 로그 SHALL 이 하네스에서만 성립 | 전용 싱크 `ExitObserverOptions.ZeroFloorLog`, 생산 배선이 엔진 로거 `c.Log`(`engine_assembly.go:24` 의 Logger)로 덮음 · 하네스는 생산 모양(`Log` nil) · 배선 시험이 `ZeroFloorLog == eng.Log` 단언 · 꺼짐 B2 줄 정확히 1(ERROR · cause · 종목 · 포지션 · 계좌 없음) |
+| I1-2 | P1 | B | 3.3b 「팔 8」 거짓 — (iii) · (vi) 부재, execgw 재시도 대기 중 취소 변이 생존 | (vi) 실제 Retrier 대기 중 취소 → ① 행 1 · (iii) 실제 RecordOnly 앞에서 취소 → 행 1 · 래치 0 · 변이 M34 CAUGHT |
+| I1-3 | P1 | B | 3.8 카나리가 보호 · 켜짐 팔만 | 익절 × 켜짐/꺼짐 · 보호 꺼짐 B2 줄 팔 + 기록 실패 줄 존재 단언 · 변이 M35 |
+| I1-4 | P1 | codex | 5.3 이 Notify 만 잼(B2 줄 · 실패 줄 제외) | 관측 사이클 전체 경과(상한)로, B7 · B2 둘 다 |
+| I1-5 | P2 | codex | 「실패 승격」 칸이 닫힌 원장 — 승격 트랜잭션도 실패해 재지 못함 | SQL 트리거로 알림 행 쓰기만 실패 — 승격은 실제로 돌고 ENTRY_BLOCKED 단언 |
+| I1-6 | P2 | codex | 승인 칸 준비 미확인 · 오류 무시 | 측정 전 밀린 행 100 채움 · 승인 수행 수 > 0 단언 · 오류 단언 |
+| I1-7 | P2 | A | 관측마다의 로그 줄을 포지션에 이을 수 없음 | 본문 첫머리에 종목 `이름(코드)` · `ZeroFloorLog` 줄에 종목 · 포지션 · 원인 · 변이 M31 · M32 |
+| I1-8 | P2 | A | 원인 경계 변이 생존(Holdings 판정 폭) | 한정 항 다섯 표 시험(`TestA091EveryFloorBoundHasItsGradeAndItsWords`) · 변이 M22 · M23 |
+| I1-9 | P2 | codex · A | 익절 0주 본문 「손절이 나가지 않았다」 거짓 | 보호면 「손절」 · 아니면 「청산」 · 익절 본문 고정 단언 · 변이 M30 |
+| I1-10 | P2 | B | 3.3c 가 가짜 위 — 행 · 래치 미단언 | 막힘 뒤 실제 RecordOnly — 행 1 · 게이트 열림 단언 |
+| I1-11 | P2 | B | 4.1 · 3.2a 단언이 체크보다 좁음 | 세 본문 전체 문자열 · 꺼짐 B2 줄 정확히 1 |
+| I1-12 | P2 | B | 번들이 a091 이 `o.alert` 를 탄다고 적음 | 하네스 문장 정정 · 재생성(`exitobserver.alert` · `applyfloor`) |
+| I1-13 | P3 | A · B | 문구 · 표지 · payload · 기록 실패 줄 · Unwrap nil 미고정 · 종료 문구 죽은 코드 | 표 시험 · payload 단언 · 실패 줄 단언 · `a091NilUnwrap` · 종료는 알림 문구에서 빼고 로그 cause `shutdown` 으로 고정(`TestA091AShutdownLeavesOnlyALine`) · 변이 M24~M29 · M33 |
+| I1-14 | P3 | codex · B | 재생 표의 수를 시험이 단언하지 않음 | (ii) 발송 13 · 미전달 줄 1, (iii) 미전달 줄 14 = no-publisher 13 + 래치 1 정확히 단언 |
+| I1-15 | P3 | B | 3.7 한 원인 · 5.4 양성 대조 미커밋 · 원장 「24」 오기 · 5.3 수치 조건 | 두 원인 · `/positive_control_20s` · 원장 정정 · design D5 「실측」 문단(재는 양 · 조건 명시) |
+| I1-16 | P3 | A | 벽시계 시험의 CI 불안정 가능성 | 수용 — 관측 최악 54~69ms 대 750ms(10배 이상 여유). 실패하면 정지 · 보고 규칙이 그대로 적용 |
+
+- **변이 원장 3판**: 40 변이(i1 생존 자리 15 추가) — **전부 CAUGHT**(M28 은 처음 무효 → 한 줄 조건문으로 재실행 CAUGHT). `analysis/implementation/mutation-ledger.md`.

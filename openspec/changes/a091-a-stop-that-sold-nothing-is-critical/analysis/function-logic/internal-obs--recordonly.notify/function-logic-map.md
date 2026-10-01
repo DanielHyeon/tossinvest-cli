@@ -2,7 +2,7 @@
 
 - Source: `internal/obs/record_only.go` (`45`–`61`)
 - Qualified: `RecordOnly.Notify`
-- AST evidence: `ast.json` (`source_sha256` 465f094668570d3a…) — 편집 뒤 `3ec1efd2` 에서 `go run ./tools/logic-map`
+- AST evidence: `ast.json` (`source_sha256` 465f094668570d3a…) — 편집 뒤 `540aebe6` 에서 `go run ./tools/logic-map`
 - Risk scan: `risk-pattern-report.md`
 - 분기 3 · 반환 4
 
@@ -19,7 +19,7 @@
 
 ## Branches and early returns
 
-> 조건은 소스 원문, 진입 실측은 편집 뒤 `3ec1efd2` 의 `go test -count=1 -coverprofile`(covermode set, 2026-10-01)에서 그 줄로 시작하는 블록의 count (`analysis/harness/write_bundles.py`).
+> 조건은 소스 원문, 진입 실측은 편집 뒤 `540aebe6` 의 `go test -count=1 -coverprofile`(covermode set, 2026-10-01)에서 그 줄로 시작하는 블록의 count (`analysis/harness/write_bundles.py`).
 
 | Branch | 종류 | 조건 (원문) | 진입 실측 |
 |---|---|---|---|

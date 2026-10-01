@@ -1,12 +1,12 @@
 # Function Logic Map: `Context.ExitObserver`
 
-- Source: `internal/app/engine/exitwiring.go` (`319`–`360`)
+- Source: `internal/app/engine/exitwiring.go` (`319`–`362`)
 - Qualified: `Context.ExitObserver`
-- AST evidence: `ast.json` (`source_sha256` 27905e84de89b7d9…) — 편집 뒤 `3ec1efd2` 에서 `go run ./tools/logic-map`
+- AST evidence: `ast.json` (`source_sha256` 36e51db80cd38793…) — 편집 뒤 `540aebe6` 에서 `go run ./tools/logic-map`
 - Risk scan: `risk-pattern-report.md`
 - 분기 6 · 반환 4
 
-**편집.** **a091 편집(구현 로트)** — 로드된 설정 `c.Config.Engine.Notifications.Enabled` 로 `opts.NotificationsEnabled` 를 덮는 한 줄(`:355`). 분기 무변경(변이 M5 CAUGHT).
+**편집.** **a091 편집(구현 로트 · i1 수리)** — 로드된 설정 `c.Config.Engine.Notifications.Enabled` 로 `opts.NotificationsEnabled` 를 덮는 한 줄, 엔진 로거 `c.Log` 로 `opts.ZeroFloorLog` 를 덮는 한 줄(알림 꺼짐 B2 의 유일한 흔적 — i1 보이스 A P1). 분기 무변경(변이 M5 · M36).
 
 **역할.** exit 관측 루프의 생산 조립 — 알림 · 통지 · 조회 경로를 주입 지점별로 기록 전용으로 덮고, 하한 공급자를 exit Retrier 로 만든다.
 
@@ -18,7 +18,7 @@
 
 ## Branches and early returns
 
-> 조건은 소스 원문, 진입 실측은 편집 뒤 `3ec1efd2` 의 `go test -count=1 -coverprofile`(covermode set, 2026-10-01)에서 그 줄로 시작하는 블록의 count (`analysis/harness/write_bundles.py`).
+> 조건은 소스 원문, 진입 실측은 편집 뒤 `540aebe6` 의 `go test -count=1 -coverprofile`(covermode set, 2026-10-01)에서 그 줄로 시작하는 블록의 count (`analysis/harness/write_bundles.py`).
 
 | Branch | 종류 | 조건 (원문) | 진입 실측 |
 |---|---|---|---|
@@ -27,9 +27,9 @@
 | B3 | if | `:327` `if !ok {` | 아니오 |
 | B4 | if | `:343` `if opts.Names == nil {` | 예 |
 | B5 | if | `:348` `if c.Notifier != nil {` | 예 |
-| B6 | if | `:356` `if opts.Floor == nil {` | 예 |
+| B6 | if | `:358` `if opts.Floor == nil {` | 예 |
 
-Exact AST return positions: `321:3`, `324:3`, `328:3`, `359:2`
+Exact AST return positions: `321:3`, `324:3`, `328:3`, `361:2`
 
 ## Calls and live bindings
 
@@ -39,8 +39,8 @@ Exact AST return positions: `321:3`, `324:3`, `328:3`, `359:2`
 | `fmt.Errorf` | `:328` | Guardian 형 거절 | 순수 |
 | `c.NormalAlertRelay` | `:333` | 일반 등급 이관 버퍼 | 메모리 |
 | `exitSideRetrier` | `:334` | exit 전용 Retrier 사본 | 메모리 |
-| `exitSideFloor` | `:357` | exit 전용 하한 공급자 | 메모리 |
-| `NewExitObserver` | `:359` | 루프 생성 | 검증 |
+| `exitSideFloor` | `:359` | exit 전용 하한 공급자 | 메모리 |
+| `NewExitObserver` | `:361` | 루프 생성 | 검증 |
 
 ## State mutations and fallbacks
 

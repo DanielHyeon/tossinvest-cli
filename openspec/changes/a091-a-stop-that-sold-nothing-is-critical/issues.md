@@ -84,11 +84,11 @@
 |---|---|---|---|---|---|
 | (i) 알림 켜짐 · 정상 전송 | **1** | 0(정착) | 없음 | NORMAL | 0 |
 | (ii) 알림 켜짐 · 전송 실패 | 13 시도 | 1 | **있음** | **ENTRY_BLOCKED** | 1 |
-| (iii) 알림 켜짐 · publisher 없음 | 0 | 1 | **있음** | **ENTRY_BLOCKED** | **14**(배달 실행자 「no publisher」) |
+| (iii) 알림 켜짐 · publisher 없음 | 0 | 1 | **있음** | **ENTRY_BLOCKED** | **14**(배달 실행자 「no publisher」 13 + 래치 1) |
 | (iv) 알림 꺼짐 | 0 | 0 | 없음 | NORMAL | 0 |
 
 - 13 관측은 행 하나(에피소드)로 접힌다. (ii) · (iii) 의 래치 · 승격은 의도된 a092 의미론(알림을 켜 두었는데 닿지 않음). (iv) 는 불변식 3 — 오늘과 같다.
 - **첫 리뷰 H3 의 「2회차부터 `MarkAlertDelivered` 가 PENDING 에 걸려 ERROR 12줄」은 base 에 없다**(옛 동기 발송의 모양). 대신 (iii) 에서 배달 실행자의
-  「no publisher is configured」 줄이 사이클마다 난다(3분에 14 줄) — 2라운드 보이스 B 의 예측과 같다.
+  「no publisher is configured」 줄이 사이클마다 난다(13 사이클에 13 줄 + 래치 줄 1 = 14 — i1 뒤 시험이 수와 문구를 정확히 단언) — 2라운드 보이스 B 의 예측과 같다.
 - 5.1a(`TestA091TheReminderWindowDecidesTheNextEpisode`): 운영자 승인으로 정착한 행은 30분 뒤 관측에서 재무장 0, 61분 뒤 관측에서 같은 키가
   재무장 1 — 본문이 새 에피소드의 시각으로 바뀐다(a097).
