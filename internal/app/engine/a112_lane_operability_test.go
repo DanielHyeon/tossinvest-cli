@@ -15,6 +15,7 @@ package engine
 import (
 	"context"
 	"errors"
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -134,6 +135,8 @@ func TestAStalledRemoteWaveNeverBlocksTheProjectionRead(t *testing.T) {
 		if !leader || wave == nil {
 			t.Fatal("arrangement: no wave leader")
 		}
+		// 실패로 일찍 빠져도 물결을 발표해 기다리는 goroutine 을 풀어 준다(거품 안 Fatal 이 교착 panic 이 되지 않게).
+		defer c.publishStrategyRefreshWave(wave, started, StrategyEntryProductionAssembly{}, errors.New("a112 test wave released"))
 		done := make(chan error, 1)
 		go func() {
 			_, err := c.Read(context.Background())
@@ -148,12 +151,16 @@ func TestAStalledRemoteWaveNeverBlocksTheProjectionRead(t *testing.T) {
 		default:
 			t.Fatal("the projection Read is blocked behind an unfinished remote authority wave")
 		}
-		c.publishStrategyRefreshWave(wave, started, StrategyEntryProductionAssembly{}, errors.New("a112 test wave released"))
 	})
 }
 
-// C3: 진입 큐 전부 포화 — 두 시장 감독자 큐(사이클 하나가 돌며 멈춤 + 대기 칸 FULL)와 여덟 레인 칸(FULL) — 에서도 안전 loop 셋(fill ·
-// reconcile · exit 관측 자리)은 1 초 cadence 로 정확히 돈다. 안전 loop 는 별도 goroutine · 별도 context 이고 진입 경로와 잠금 · 큐를 나누지
+// a112SafetyLoopNames 는 스펙의 안전 생애 다섯(fill detection · reconciliation · broker-resident protection supervision · exit observation ·
+// emergency reduction)의 자리 표시 loop 이름이다(2.8 감사 — 앞 판은 셋만 잼). 생산 loop 는 브로커가 필요해 여기 못 서므로 자리 표시이고,
+// 이 시험들은 「진입 쪽 포화 · 실패가 런타임의 다른 loop 를 세우지 않는다」를 잰다.
+var a112SafetyLoopNames = [...]string{"fill-detection", "reconcile", "protection", "exit-observation", "emergency-reduction"}
+
+// C3: 진입 큐 전부 포화 — 두 시장 감독자 큐(사이클 하나가 돌며 멈춤 + 대기 칸 FULL)와 여덟 레인 칸(FULL) — 에서도 안전 loop 다섯(fill ·
+// reconcile · protection · exit 관측 · emergency reduction 자리)은 1 초 cadence 로 정확히 돈다. 안전 loop 는 별도 goroutine · 별도 context 이고 진입 경로와 잠금 · 큐를 나누지
 // 않는다는 것을 포화 아래에서 잰다(스펙 「entry worker 장애는 safety lifecycle을 지연하지 않는다」).
 func TestSafetyLoopsKeepTheirCadenceWhileEveryEntryQueueIsSaturated(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
@@ -170,9 +177,9 @@ func TestSafetyLoopsKeepTheirCadenceWhileEveryEntryQueueIsSaturated(t *testing.T
 		}
 		lanes := newStrategyLaneRuntime(clock.System(), nil, "")
 		const cadence = time.Second
-		var ticks [3]atomic.Int64
+		var ticks [len(a112SafetyLoopNames)]atomic.Int64
 		loops := []SupervisedLoop{supervisor.SupervisedLoop()}
-		for index, name := range []string{"fill-detection", "reconcile", "exit-observation"} {
+		for index, name := range a112SafetyLoopNames {
 			loops = append(loops, SupervisedLoop{Name: name, Run: func(ctx context.Context) error {
 				ticker := time.NewTicker(cadence)
 				defer ticker.Stop()
@@ -195,34 +202,40 @@ func TestSafetyLoopsKeepTheirCadenceWhileEveryEntryQueueIsSaturated(t *testing.T
 		go func() { done <- runtime.Run(ctx) }()
 		<-supervisor.Ready()
 		synctest.Wait()
+		// 판정은 모아 두고 정리를 먼저 한 뒤 보고한다 — 거품 안에서 Fatal 로 빠지면 남은 goroutine 이 교착 panic 으로 보고되어 같은
+		// 바이너리의 다른 시험까지 죽인다(2.x 변이 X6 판에서 실측: 이 시험의 Fatal 이 실패 종류 cadence 시험을 가렸다).
+		var failures []string
 		// 포화: 시장마다 사이클 하나가 돌며 멈췄고(첫 poll) 대기 칸 하나를 채우면 다음은 FULL. 레인마다 칸 하나를 채우면 다음은 FULL.
 		for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
 			for supervisor.Trigger(market) == StrategyTriggerEnqueued {
 			}
 			if got := supervisor.Trigger(market); got != StrategyTriggerFull {
-				t.Fatalf("%s market queue=%s, want FULL", market, got)
+				failures = append(failures, fmt.Sprintf("%s market queue=%s, want FULL", market, got))
 			}
 		}
 		for _, lane := range lanes.lanes {
 			for lane.Offer() == strategyworker.TriggerEnqueued {
 			}
 			if got := lane.Offer(); got != strategyworker.TriggerFull {
-				t.Fatalf("lane %v queue=%s, want FULL", lane.Key(), got)
+				failures = append(failures, fmt.Sprintf("lane %v queue=%s, want FULL", lane.Key(), got))
 			}
 		}
 		for index := range ticks {
 			ticks[index].Store(0)
 		}
 		time.Sleep(10*cadence + cadence/2)
-		for index, name := range []string{"fill-detection", "reconcile", "exit-observation"} {
+		for index, name := range a112SafetyLoopNames {
 			if got := ticks[index].Load(); got != 10 {
-				t.Fatalf("%s ran %d cycles in 10.5 cadences under full entry saturation, want exactly 10", name, got)
+				failures = append(failures, fmt.Sprintf("%s ran %d cycles in 10.5 cadences under full entry saturation, want exactly 10", name, got))
 			}
 		}
 		cancel()
 		close(release)
 		if err := <-done; err != nil && !errors.Is(err, context.Canceled) {
-			t.Fatalf("runtime stop=%v", err)
+			failures = append(failures, fmt.Sprintf("runtime stop=%v", err))
+		}
+		for _, failure := range failures {
+			t.Error(failure)
 		}
 	})
 }

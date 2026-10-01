@@ -735,13 +735,38 @@ SET_63_TESTS = [
      "TestTheDispatchValidationOrderIsFrozen|TestALeaseNamesItsLane|TestALineageDriftIsRefusedAtIssuance|TestTheFinalCheckRefusesWhenTheScheduleRevalidator|TestTheScheduleDriftJudgement",
      "./internal/app/engine"],
 ]
+COO = "internal/strategycoordinator/coordinator.go"
+SET_2X = [
+    ("X1 the descriptor binding compares only Desired (other axes drift through)", "internal/strategyflow/registry.go",
+     "if !ok || seen[descriptor.LaneID] || descriptor != want {", "if !ok || seen[descriptor.LaneID] || descriptor.Desired != want.Desired {"),
+    ("X2 coordinator overflow evicts a queued envelope to make room (silent drop)", COO,
+     "\tif len(coordinator.slots) >= coordinator.capacity {\n\t\tcoordinator.drops++\n\t\treturn coordinator.faultLocked(scope, true, strategyarbiter.RefusalNone, DetailOverflow)\n\t}",
+     "\tif len(coordinator.slots) >= coordinator.capacity {\n\t\tcoordinator.drops++\n\t\tfor victim := range coordinator.slots {\n\t\t\tdelete(coordinator.slots, victim)\n\t\t\tbreak\n\t\t}\n\t}"),
+    ("X3 coordinator overflow refuses the envelope but leaves the market open", COO,
+     "\t\treturn coordinator.faultLocked(scope, true, strategyarbiter.RefusalNone, DetailOverflow)\n\t}\n\tcoordinator.slots[slot]",
+     "\t\treturn Admission{Key: key, Overflow: true}\n\t}\n\tcoordinator.slots[slot]"),
+    ("X4 a lane opens a cycle inside its cadence window", "internal/strategyworker/bounded.go",
+     "\tif now.Before(lane.nextDue) {\n\t\treturn StartTooSoon", "\tif false {\n\t\treturn StartTooSoon"),
+    ("X5 protection polling is no longer a safety class", "internal/scheduler/budget.go",
+     "\tcase PollEmergencyExit, PollReconcile, PollFillDetection, PollProtection:", "\tcase PollEmergencyExit, PollReconcile, PollFillDetection:"),
+    ("X6 the runtime starts its loops one after another", "internal/app/engine/runtime.go",
+     "\t\tgo func(loop SupervisedLoop) {\n\t\t\tdefer wg.Done()", "\t\tfunc(loop SupervisedLoop) {\n\t\t\tdefer wg.Done()"),
+]
+SET_2X_TESTS = [
+    ["go", "test", "-count=1", "-run", "TestEveryDescriptorFieldOtherThanTheKeyIsPartOfTheBinding|TestValidateDescriptorsRejects", "./internal/strategyflow"],
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run", "TestOverflowNeverSilentlyDropsAnActiveOwnerScope|TestOverflowClosesTheMarket", "./internal/strategycoordinator"],
+    ["go", "test", "-count=1", "-run", "TestOneLaneInsideItsCadenceWindow|TestOneLaneInFlightDoesNot", "./internal/strategyworker"],
+    ["go", "test", "-count=1", "-run", "TestEverySafetyClassStaysCallableAfterStrategyCapacityIsExhausted", "./internal/scheduler"],
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+     "TestSafetyLoopsKeepTheirCadenceThroughEveryEntryFailureKind|TestSafetyLoopsKeepTheirCadenceWhileEveryEntryQueueIsSaturated", "./internal/app/engine"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측

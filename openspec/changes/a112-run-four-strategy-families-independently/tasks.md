@@ -59,17 +59,52 @@
 
 ## 2. RED Contract and Property Tests
 
-- [ ] 2.1 Add failing registry tests requiring exactly continuation/reversal/weekly-value/breakout-retest × KR/US descriptors, exact OFF/OFF/UNOBSERVED defaults and rejection of partial/duplicate/unknown/mismatched bindings.
+- [x] 2.1 Add failing registry tests requiring exactly continuation/reversal/weekly-value/breakout-retest × KR/US descriptors, exact OFF/OFF/UNOBSERVED defaults and rejection of partial/duplicate/unknown/mismatched bindings.
+
+  **2.1 종결(2026-10-01 대조 감사 — 미착지).** 이름 결속: 여덟 서술자 — strategyflow `TestPairedRegistryCoversAllFourFamiliesInBothMarkets` · `TestPairedRegistryCoversKRUSContinuationReversalWeeklyAndBreakout`,
+  strategyrouter `TestProductionRouteDescriptorsCoverFourFamiliesPerMarket`, strategyworker `TestProductionWorkersAreExactlyTheEightTheGoldenFroze` · `TestEveryProductionWorkerKeyIsDistinct`;
+  OFF/OFF/UNOBSERVED — 같은 시험들 + `TestDescriptorsShipKRAndUSTogetherDefaultOFF` · `TestEveryProductionWorkerIsBornDormantAndEmitsNothing`; partial/duplicate/unknown/mismatched —
+  `TestValidateDescriptorsRejectsPartialDuplicateUnknownAndMismatched` · `TestProductionRouteCandidatesRejectLegacyThreeFamilyAndPartialSets` · `TestProductionRouteCandidatesRejectFamilyDriftAndPartialFamilyCoverage`.
+  빈칸(불일치 축이 Desired 하나뿐) → `a112_descriptor_axes_test.go` `TestEveryDescriptorFieldOtherThanTheKeyIsPartOfTheBinding`(열쇠 아닌 필드 전부를 반사로 열거, 변이 X1 CAUGHT).
 - [ ] 2.2 Add failing breakout state-machine table/property tests for every valid forward edge, skipped edge, terminal non-resurrection, duplicate/reordered bar, first-touch refusal and deterministic replay.
 - [ ] 2.2.1 Add failing setup-identity tests for pre-terminal correction, correction after each terminal state, the PROPOSED-before-CONSUMED window and regular-session rollover, proving stable same-session setup ID, immutable snapshot revision and no proposal seal/first-leg resurrection.
 - [ ] 2.3 Add failing threshold boundary tests for 15-minute range, 1-tick versus 0.10 ATR buffer, 0.10..0.25 ATR retest tolerance, KR 8/US 10 timeout, 1.5 RVOL, 1.2/2.0/2.5 counterfactuals and 0.35 wick veto using integer PPM arithmetic.
 - [ ] 2.4 Add failing sizing property tests proving cost-inclusive `risk_per_share`, overflow-safe floor, `0 <= q_final <= q_candidate`, non-protective stop/target refusal and no averaging-down or stop retreat.
 - [ ] 2.4.1 Add exact-boundary quote/FX property tests for age/spread/drift at and one unit beyond each limit, both FX directions/scales, stale/mismatched currency seals, overflow and conservative rounding; every accepted result must be no larger than the exact rational floor.
 - [x] 2.5 Add failing strict evidence tests for unknown fields/enums, float/minor-unit mismatch, secret-like fields, unbounded/duplicate/future/unfinished bars, append-only correction revision and dual-cutoff snapshot replay. (L1a 2026-08-16/17: RED-first in `breakout_bar_test.go`/`breakout_series_test.go`; "out-of-order bar" is enforced by L3's ordered bar ids — recorded not-applicable at this layer in review.md.)
-- [ ] 2.6 Add failing arbitration tests for unique highest calibrated score, exact tie, incomparable calibration, stale seal, active-owner priority, multiple-owner corruption and at-most-one dispatch handoff per owner scope.
-- [ ] 2.6.1 Add failing tests proving the production RouteSet returns every eligible family candidate without raw-score preselection, singleton uncalibrated proposals refuse, multiple symbols in one market arbitrate independently and queue overflow cannot silently drop the active-owner scope.
-- [ ] 2.7 Add failing worker-isolation tests for independent cadence/queue/deadline/latch, panic recovery, bounded retry/backoff, coalescing/drop accounting and no peer worker state mutation.
-- [ ] 2.8 Add failing safety tests proving every lane-local/market-local failure and low-priority budget exhaustion leaves fill, reconcile, protection, exit and emergency reduction cadence callable and reserved.
+- [x] 2.6 Add failing arbitration tests for unique highest calibrated score, exact tie, incomparable calibration, stale seal, active-owner priority, multiple-owner corruption and at-most-one dispatch handoff per owner scope.
+
+  **2.6 종결(2026-10-01 대조 감사 — 미착지).** 이름 결속(strategyarbiter `arbiter_selection_test.go` 외): 유일 최고 `TestThreeFamiliesOnOneSymbolYieldTheSingleHighestScore` ·
+  `TestATieBelowTheTopStillLeavesAUniqueWinner`; 동점 `TestATieAtTheTopIsRefusedRatherThanBrokenArbitrarily`; 비교불가 보정 `TestProposalsUnderDifferentScoreVersionsAreIncomparable` ·
+  `TestAScoreAboveTheApprovedCeilingIsRefused`; 활성 소유자 우선 `TestAnActiveWeeklyOwnerIsNotReplacedByAHigherScore` · strategyrouter `TestRouteSetPreservesTheActiveOwnerAloneBeforeAnyComparison`;
+  다중 소유자 `TestTwoActiveOwnersAreItsOwnRefusal`; 범위당 handoff 1 — strategyhandoff `TestEachOwnerScopeCrossesTheSeamOnItsOwn` · `TestTwoSelectedScopesAreRefusedByNameInsteadOfSilently` ·
+  strategyworker `TestOneOwnerScopeHandsAtMostOneThingToTheSeam` · engine `TestTheSameOwnerScopeSealedTwiceRefusesTheActivatedMarket`. **「stale seal」 은 해석 매핑이다**(스펙 · 설계 · 골든에
+  정의 없음 — 발명 계약 아님): stale envelope `TestAStaleProposalClosesTheWholeScope`(arbiter_selection_test.go:143) · stale owner `TestAStaleOwnerRevisionIsItsOwnRefusal`(:269) ·
+  `TestAnOwnerSnapshotOutsideItsFreshnessWindowIsAStaleOwner`(:308) · 봉인 뒤 변조 `TestAProposalMutatedAfterSealingIsRefused`(:165) · 같은 레인 다른 스냅숏
+  strategycoordinator `TestTheSameLaneWithADifferentSnapshotClosesTheScope`(coordinator_test.go:93).
+- [x] 2.6.1 Add failing tests proving the production RouteSet returns every eligible family candidate without raw-score preselection, singleton uncalibrated proposals refuse, multiple symbols in one market arbitrate independently and queue overflow cannot silently drop the active-owner scope.
+
+  **2.6.1 종결(2026-10-01 대조 감사 — 미착지).** 이름 결속: RouteSet 전수 · 원점수 미사전선택 `TestRouteSetEmitsEveryEligibleCandidateWithoutRawScorePreselection` ·
+  `TestPairedProductionRouteAuthorityLoadsExactFourLanesIndependently` · `TestProductionRouteCandidatesCarryNoRawArbitrationScore`; 보정 없는 단일 거절
+  `TestASingletonProposalWithoutApprovedScoreAuthorityIsRefused` · engine `TestAnUncalibratedMarketRefusesEvenASingleProposal`; 한 시장 여러 종목 독립 선택
+  `TestEachOwnerScopeInOneMarketGetsItsOwnSelection` · `TestSelectionOrderDoesNotDependOnSubmissionOrder`. 빈칸(넘침 fixture 에 활성 소유자 범위 0) →
+  strategycoordinator `TestOverflowNeverSilentlyDropsAnActiveOwnerScope`(두 순서, 변이 X2 · X3 CAUGHT).
+- [x] 2.7 Add failing worker-isolation tests for independent cadence/queue/deadline/latch, panic recovery, bounded retry/backoff, coalescing/drop accounting and no peer worker state mutation.
+
+  **2.7 종결(2026-10-01 대조 감사 — 미착지).** 이름 결속: 칸 `TestEveryProductionLaneKeepsItsOwnSlotAndFlight` · `TestTheInboundSlotIsBoundedAndCountsWhatItDropped`; 마감 시한
+  `TestTheLaneFollowsTheDesignFaultTableForEveryKindItCanExpress` · engine `TestAHungLaneDoesNotDelayItsPeersInTheSameWave`; 잠금 `TestAFaultOnOneLaneChangesNothingOnItsPeers` ·
+  `TestOneLatchedLaneLeavesItsSevenPeersOpenAcrossARestart`; panic `TestAPanickingStepIsAnAbnormalFailureRatherThanACrash` · `TestAPanicOutsideALaneStepStillReachesTheMarketCycle`;
+  backoff `TestALaneInBackoffWaitsItsRestartDeadline` · `TestTheBackoffLadderSaturatesAtItsCeiling`; 접힘/버림 `TestQueuePressureNeverBlocksAndNeverLosesCount` ·
+  `TestTheSameDedupKeyArrivingAgainCoalescesAndCountsADrop`; 이웃 상태 무변경 `TestAFaultOnOneLaneChangesNothingOnItsPeers` · `TestProductionLanesHandsOutFreshLanesEveryTime`.
+  빈칸(교차 cadence 창 · 「Flight」 미단언) → `a112_cross_lane_isolation_test.go` `TestOneLaneInsideItsCadenceWindowDoesNotGateItsPeer` · `TestOneLaneInFlightDoesNotMakeItsPeerInFlight`(변이 X4 CAUGHT).
+- [x] 2.8 Add failing safety tests proving every lane-local/market-local failure and low-priority budget exhaustion leaves fill, reconcile, protection, exit and emergency reduction cadence callable and reserved.
+
+  **2.8 종결(2026-10-01 대조 감사 — 미착지).** 이름 결속(liveness): `TestEightSimultaneousLaneFaultsLeaveTheSafetyLoopsRunning` · `TestPairedMarketAbnormalReturnSchedulesOnlyLocalBoundedRestartAndKeepsEverySafetyLoopAlive` ·
+  `TestUSFXReadFailureDoesNotCancelKRIdentityOrSafetyBudgets`. 빈칸 셋을 메움: ① 안전 생애 **다섯**(fill · reconcile · protection · exit · emergency reduction)의 cadence 를 진입 포화
+  (`TestSafetyLoopsKeepTheirCadenceWhileEveryEntryQueueIsSaturated` — 셋 → 다섯) · **실패 종류 전부**(시장 오류 · 시장 panic · 레인 멈춤 · 레인 step panic · 잠긴 레인 —
+  `TestSafetyLoopsKeepTheirCadenceThroughEveryEntryFailureKind`) 아래 정확히 10/10.5 로; ② 저우선 · 전략 고갈 뒤 **안전 등급 넷 전부** 허용 + 예비 불변
+  (`TestEverySafetyClassStaysCallableAfterStrategyCapacityIsExhausted`, 등급은 isSafetyClass · PollClass 상수 census 로); 변이 X5 · X6 CAUGHT. 한계(명명): 안전 loop 는 자리 표시
+  — 생산 loop 는 브로커가 필요하다; 중앙 결함은 설계상 안전 loop 를 세운다(`TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt`).
 
 ## 3. Breakout Evidence and Pure Lane Core
 

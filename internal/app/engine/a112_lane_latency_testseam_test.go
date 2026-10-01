@@ -24,6 +24,8 @@ func TestAHungLaneDoesNotDelayItsPeersInTheSameWave(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		runtime := newStrategyLaneRuntime(clock.System(), nil, "")
 		release := make(chan struct{})
+		// 실패로 일찍 빠져도 멈춘 step 을 풀어 거품이 깨끗이 끝나게 한다(거품 안 Fatal 이 교착 panic 으로 같은 바이너리의 다른 시험을 가리지 않게).
+		defer close(release)
 		var mu sync.Mutex
 		returned := map[strategyworker.Key]time.Duration{}
 		start := time.Now()
@@ -75,9 +77,7 @@ func TestAHungLaneDoesNotDelayItsPeersInTheSameWave(t *testing.T) {
 				t.Fatalf("peer lane %v returned=%v at %s observation=%+v, want an immediate DORMANT cycle and a healthy lane", key, ran, at, got)
 			}
 		}
-		// 조건 ②: 버려진 레인의 step goroutine 은 step 이 돌아올 때까지 산다 — 여기서 풀어 주면 끝난다(거품이 모두 끝남을 요구한다).
-		close(release)
-		synctest.Wait()
+		// 조건 ②: 버려진 레인의 step goroutine 은 step 이 돌아올 때까지 산다 — 함수가 끝날 때(defer) 풀어 주면 끝난다(거품이 모두 끝남을 요구한다).
 	})
 }
 

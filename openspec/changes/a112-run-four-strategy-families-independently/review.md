@@ -6107,3 +6107,36 @@ risk-policy · Guardian 세대/digest, build digest) + lease plan(CandidateID ·
 - 편집 뒤 번들 `render_63_bundles.py`(9 → 8 분기), 같은 파일 줄 이동 11. 그중 4(invokeBoundedStrategyCycle · evaluationState · latchMarket · waitMarketRestart)는
   `Revision: base` 표기지만 `ast.json` 해시가 HEAD 파일과 같았다(앞 로트들이 파일과 함께 동기화해 옴). 첫 판은 **표기만 보고** 건너뛰어 격리 gate 델타 +4(stale)로
   드러났다 → 「해시가 편집 전 HEAD 파일과 같으면 이동」 규칙으로 고쳐 이동.
+
+## 2026-10-01 「2.x 런타임」 로트 — 태스크 2.1 · 2.6 · 2.6.1 · 2.7 · 2.8 대조 감사와 빈칸 메우기
+
+**감사(Manager 지시: 체크마다 시험 이름 결속 · 문장 단위 대조 · 덮지 않는 조각은 RED).** 읽기 전용 조사 둘(런타임 · breakout)을 돌리고 결정적 주장은 원문으로
+다시 확인했다. 2.x 체크박스는 지금까지 어느 로트도 청구하지 않았고(grep), 덮는 시험은 다른 로트들(L3 · 5.x · 7.x)이 만들었다. 결속한 이름 58 개는 저장소에서 전부
+유일하게 해소됨을 기계로 대조했다(tasks 2.1~2.8 의 종결 줄). **「stale seal」 은 해석 매핑**이다 — 스펙 · 설계 · 골든에 정의가 없어 stale envelope · stale owner ·
+봉인 뒤 변조 · 같은 레인 다른 스냅숏 시험(좌표 tasks 2.6)으로 매핑했고 발명한 계약이 아님을 적었다.
+
+**메운 빈칸(시험 위주 — 생산 변경 0).**
+- 2.1: `ValidateDescriptors` 불일치 축이 Desired 하나뿐 → `strategyflow/a112_descriptor_axes_test.go`(열쇠 아닌 필드 전부를 반사로 열거 — 필드가 늘면 자동 포함).
+- 2.6.1: 넘침 fixture 에 활성 소유자 범위 0 → `strategycoordinator/a112_overflow_active_owner_test.go`(소유자 먼저 · 소유자 나중 두 순서 — 어느 쪽이든 시장 닫힘 ·
+  선택 0 · 버림 셈, 소유자 봉투 쫓아내기 없음).
+- 2.7: 교차 cadence 창 · 「Flight」 단언 0 → `strategyworker/a112_cross_lane_isolation_test.go`(`-race`).
+- 2.8: ① 안전 생애 다섯 중 protection · emergency reduction 이 a112 안전 loop 시험 어디에도 없었음 → 7.5 C3 를 다섯으로(`a112SafetyLoopNames`), ② 실패 아래 cadence 0 →
+  `a112_safety_cadence_under_failure_testseam_test.go`(시장 오류 · 시장 panic · 레인 멈춤 · 레인 step panic · 잠긴 레인을 한 판에, 다섯이 정확히 10/10.5, 대조: 두 시장이
+  실제로 실패 · 레인 물결은 멈춘 레인을 기다리는 중), ③ 고갈 뒤 안전 등급은 비상 청산만 재어짐 → `scheduler/a112_safety_classes_after_exhaustion_test.go`(isSafetyClass
+  · PollClass 상수 census 로 넷 전부 · 그 뒤 전략은 여전히 미뤄지고 예비 불변). 안전 등급 허가는 예산 회계 밖(`SAFETY_PRIORITY` · 예비 수치 0)이라 예비 불변은 뒤따르는
+  전략 거절이 보고하는 값으로 잰다(첫 판이 허가의 Reserve 를 읽어 틀렸다 — 측정으로 고침).
+- 새 동시성 시험을 race 행렬에(`RACE_ENGINE_FILES` · `RACE_ENGINE_TESTS`, 완전성 가드 OK).
+
+**발견해 고친 시험 결함(거품 안 Fatal).** 2.x 변이 X6(런타임이 loop 를 차례로 시작) 첫 판에서 포화 시험의 `t.Fatalf` 가 synctest 거품 안에서 남은 goroutine 을
+교착 panic 으로 만들어 **같은 바이너리의 실패 종류 cadence 시험을 가렸다**(원장에 한 시험만 찍힘). 실패 종류 시험 단독 실행으로 X6 을 잡는 것을 확인한 뒤, 포화 ·
+실패 종류 시험은 판정을 모아 정리 뒤 보고하도록, D1(멈춘 레인) · C2(멈춘 물결) 시험은 `defer` 로 풀어 주도록 고쳤다 — X6 재실행 둘 다 CAUGHT.
+**일반 규칙(이후 모든 로트): synctest 거품 안의 판정은 모아 두고, 거품의 goroutine 을 정리(해제 · 취소 · 대기)한 뒤 보고한다** — 거품 안 `Fatal`
+은 남은 goroutine 을 교착 panic 으로 만들어 같은 바이너리의 다른 시험을 지운다(시험이 시험을 가리는 부류). 해제는 `defer` 로 둔다.
+
+**변이 `lot-2x/mutation-2x.tsv` X1~X6 6/6 CAUGHT**: X1 binding 이 Desired 만 비교 · X2 넘침이 큐 항목을 쫓아냄(조용한 유실) · X3 넘침이 거절만 하고 시장을 열어 둠 ·
+X4 레인이 cadence 창 안에서 사이클을 엶 · X5 protection 이 안전 등급에서 빠짐 · X6 런타임 loop 순차 시작(재실행 줄 포함).
+
+**한계(명명).** 안전 loop 는 자리 표시 — 생산 fill · reconcile · protection · exit · emergency loop 는 브로커가 필요해 이 시험들에 못 선다(각 loop 의 자기 시험이
+cadence 를 잰다). 중앙 결함은 설계상 안전 loop 를 세운다(`TestBrokenSupervisorBookkeepingTakesTheSafetyLoopsDownWithIt`) — 2.8 의 「lane-local/market-local」 범위 밖.
+
+**breakout 쪽(2.2~2.4.1)은 이 로트 밖** — Manager 판정 B1(허용 변 = 검증 집합, 여섯 변의 생산자 실측) · B2(`NewFXSeal` 역방향 digest 미검증 수리) 뒤 「breakout 덮개」 로트.

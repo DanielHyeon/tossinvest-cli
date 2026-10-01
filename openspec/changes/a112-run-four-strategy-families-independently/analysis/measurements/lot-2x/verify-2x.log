@@ -1,0 +1,24 @@
+# a112 2.x 런타임 격리 — HEAD 8b7f1a54 + 로트
+gate: head 173 lot 173 ONLY-HEAD 0 ONLY-LOT 0
+go vet -tags tossos_testseams ./...
+lint exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	0.114s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	0.003s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.361s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/scheduler	2.515s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	185.115s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	0.111s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	0.086s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.373s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/scheduler	2.494s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	216.643s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	2.176s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	1.533s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	25.130s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	1.037s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	8.436s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	1.247s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	1.073s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	23.037s
+OK
+END
