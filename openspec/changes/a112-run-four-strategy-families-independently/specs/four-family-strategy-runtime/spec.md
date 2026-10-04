@@ -86,10 +86,10 @@ Lane OFF, market close, evidence failure, worker queue pressure와 low-priority 
 - **THEN** exposure-raising broker request는 0건이고 reduce-only safety lifecycle은 계속된다
 
 ### Requirement: SHADOW는 OFF state를 승격하지 않는 read-only runtime이다
-새 설치·migration·restart는 `desired=OFF`, `effective=OFF`, `runtime=UNOBSERVED`를 유지해야 한다 (SHALL). `SHADOW`는 server-owned signed shadow manifest가 있을 때만 pure evaluation과 counterfactual projection을 허용하며 (SHALL), desired/effective/activation을 ON으로 만들거나 dispatch capability를 소유해서는 안 된다 (MUST NOT). Process-local shadow 상태를 restart에서 자동 복구해서는 안 된다 (MUST NOT).
+새 설치·migration·restart는 `desired=OFF`, `effective=OFF`, `runtime=UNOBSERVED`를 유지해야 한다 (SHALL). `SHADOW`는 digest 핀(`TOSSOS_STRATEGY_FAMILY_SHADOW_<MARKET>_MANIFEST_SHA256`)으로 결속된 server-owned shadow manifest가 있을 때만 pure evaluation과 counterfactual projection을 허용하며 (SHALL), desired/effective/activation을 ON으로 만들거나 dispatch capability를 소유해서는 안 된다 (MUST NOT). Process-local shadow 상태를 restart에서 자동 복구해서는 안 된다 (MUST NOT). (개정 2026-10-04 [a112 결정 63] — 신뢰 앵커를 "signed"에서 digest 핀으로: 결정 61과 같은 모델, 근거는 design.md 결정 63 문단.)
 
-#### Scenario: signed shadow manifest가 없는 restart
-- **WHEN** 이전 process가 SHADOW를 관측한 뒤 signed shadow manifest 없이 restart한다
+#### Scenario: shadow manifest 핀이 없는 restart
+- **WHEN** 이전 process가 SHADOW를 관측한 뒤 shadow manifest 핀 없이 restart한다
 - **THEN** 모든 lane는 OFF/OFF/UNOBSERVED이고 proposal dispatch 또는 activation write는 0건이다
 
 ### Requirement: runtime lineage와 health는 lane 단위로 결정적으로 관측된다
