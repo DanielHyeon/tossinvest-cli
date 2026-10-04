@@ -9,7 +9,7 @@
   수단은 EntryGate. 판정 순서(refreshOnly 가 중앙 판정보다 앞)는 루프 생존을 위해 그대로다. 편집 전 번들
   `analysis/measurements/lot-5.6.2-5.2.2/pre-edit/`. 재번호는 `branch-test-map.md` 머리글.
 - Source SHA-256: `6f1f6804cfd437116c16a48d1526327c28360433f09e0ba3567eb3537442ee5b` · 범위 :900–966 · 분기 17
-- **아래 표의 줄 번호(`:770` 등)는 5.3.2 작성 당시 좌표다** — 현재 좌표는 `ast.json`(정본)과 `branch-test-map.md`.
+- **분기표(2026-10-04, a112 8.8.4 — ast.json 기준 수리).** 앞 판 분기표는 AST 분기 17 중 16 행이었다(B2 `for` 누락 — 5.3.2 작성 때부터, 8.8.1 이 "16 중 15" 로 기록한 그 빈칸). 이제 **Branch 열의 ID · 종류 · 좌표는 `ast.json` 에서 생성**했고(17 행, ID 는 BTM 과 같은 위치 번호) B2 행을 더했다. 다른 열(Return/error 등)에 남은 `:772` 꼴 줄 번호는 여전히 5.3.2 작성 당시 좌표다 — 현재 좌표는 `ast.json`(정본)과 `branch-test-map.md`.
 
 ## Inputs and invariants
 
@@ -34,22 +34,23 @@ goroutine 이 **하나**이고, 사이클은 `<-worker.queue` 를 다시 읽기 
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (`:770`) | 배리어 전 ctx 취소 | 없음 | `return` (`:772`) | 배리어 경합 시험 |
-| B3 (`:776`) | ctx 취소 vs 큐 도착 | 없음 | `return` (`:778`) 또는 사이클 진행 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues` |
-| B4 (`:785`) | 권한 만료 | `s.latchMarket` — 시장 잠금 | 잠근 뒤 backoff 대기, `continue` | `TestExpiredAuthorityLatchesBeforeEvaluation` |
-| B5 (`:787`) | 만료 잠금이 실패 | `s.signalCentral` | `return` (중앙 고장) | **없음 — 측정으로 확인** |
-| B6 (`:791`) | 만료 뒤 재시작 대기 실패 | 조건부 `signalCentral` | `return` | `TestExpiredAuthorityLatchesBeforeEvaluation` |
-| B7 (`:792`) | 그 실패가 ctx 취소 때문 | 없음 | 조용한 `return` (`:793`) | `TestExpiredAuthorityLatchesBeforeEvaluation` |
-| B8 (`:800`) | `!allowed` — 잠겼거나 꺼졌거나 cycle 이 nil | 없음 | `continue` — 사이클 없음 | **없음 — 측정으로 확인** |
-| B9 (`:804`) | `abandoned` | `s.markAbandoned` | 계속 | 4 개 시험 |
-| B10 (`:807`) | `cancelled` | 없음 | `return` | 3 개 시험 |
-| B11 (`:810`) | `err == nil` | 없음 | `continue` | 3 개 시험 |
-| B12 (`:813`) | `refreshOnly` — 권한 갱신 전용 worker 의 오류 | `recordSwallowedCycleError` (포화 계수 + 첫 원인 보존) | `continue` — **시장을 잠그지 않는다** | 스냅샷의 `SwallowedCycleErrors`· |
-| **B13 (새, 5.6.2.1)** | B12 안: `isCentralStrategyIntegrity(err) && !s.blockEntryOnCentralIntegrity(worker)` | 게이트가 있으면 `EntryGate.Block(ReasonStrategyCentralIntegrity, 고정 문구)` 뒤 조건 거짓 → `continue` | 게이트가 없을 때만 `signalCentral` → `return` | `TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine` · `TestWithoutAnEntryGateACentralFaultIsNotSwallowed` · 대조 `TestAnOrdinaryRefreshOnlyCycleErrorDoesNotBlockEntry` |
-| B14 (옛 B13, `:816`) | (effective worker) 중앙 무결성 오류 | `s.signalCentral` | `return` — 프로세스 전체 fail-closed(생산 0 — 활성화 로트 전 처분은 이월 표) | `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety` |
-| B15 (옛 B14, `:821`) | 잠금 자체가 실패 | `s.signalCentral` | `return` | 5.6.1 이 채움(`TestTheFourEscalations…`) |
-| B16 (옛 B15, `:825`) | 재시작 대기 실패 | 조건부 `signalCentral` | `return` | 5.6.1 이 채움 |
-| B17 (옛 B16, `:826`) | 그 실패가 ctx 취소 때문 | 없음 | 조용한 `return` | 4 개 시험 |
+| B1 (select `889:2`) | 배리어 전 ctx 취소 | 없음 | `return` (`:772`) | 배리어 경합 시험 |
+| B2 (for `894:2`) | 시장 하나를 도는 **단일** 소비자 루프(무한 `for`) — 반복마다 B3 의 select 로 들어간다 | 없음(루프 머리) | 루프 밖으로 나가는 길은 본문의 `return` 뿐(ast `returns`) | BTM B2 행(시험 26개 — `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` 외) |
+| B3 (select `895:3`) | ctx 취소 vs 큐 도착 | 없음 | `return` (`:778`) 또는 사이클 진행 | `TestShutdownAndTriggerShareBarrierAndDrainBothQueues` |
+| B4 (if `904:4`) | 권한 만료 | `s.latchMarket` — 시장 잠금 | 잠근 뒤 backoff 대기, `continue` | `TestExpiredAuthorityLatchesBeforeEvaluation` |
+| B5 (if `906:5`) | 만료 잠금이 실패 | `s.signalCentral` | `return` (중앙 고장) | **없음 — 측정으로 확인** |
+| B6 (if `910:5`) | 만료 뒤 재시작 대기 실패 | 조건부 `signalCentral` | `return` | `TestExpiredAuthorityLatchesBeforeEvaluation` |
+| B7 (if `911:6`) | 그 실패가 ctx 취소 때문 | 없음 | 조용한 `return` (`:793`) | `TestExpiredAuthorityLatchesBeforeEvaluation` |
+| B8 (if `919:4`) | `!allowed` — 잠겼거나 꺼졌거나 cycle 이 nil | 없음 | `continue` — 사이클 없음 | **없음 — 측정으로 확인** |
+| B9 (if `923:4`) | `abandoned` | `s.markAbandoned` | 계속 | 4 개 시험 |
+| B10 (if `926:4`) | `cancelled` | 없음 | `return` | 3 개 시험 |
+| B11 (if `929:4`) | `err == nil` | 없음 | `continue` | 3 개 시험 |
+| B12 (if `932:4`) | `refreshOnly` — 권한 갱신 전용 worker 의 오류 | `recordSwallowedCycleError` (포화 계수 + 첫 원인 보존) | `continue` — **시장을 잠그지 않는다** | 스냅샷의 `SwallowedCycleErrors`· |
+| **B13** (if `950:5`, 새 — 5.6.2.1) | B12 안: `isCentralStrategyIntegrity(err) && !s.blockEntryOnCentralIntegrity(worker)` | 게이트가 있으면 `EntryGate.Block(ReasonStrategyCentralIntegrity, 고정 문구)` 뒤 조건 거짓 → `continue` | 게이트가 없을 때만 `signalCentral` → `return` | `TestARefreshOnlyCentralIntegrityFaultBlocksNewEntryNotTheEngine` · `TestWithoutAnEntryGateACentralFaultIsNotSwallowed` · 대조 `TestAnOrdinaryRefreshOnlyCycleErrorDoesNotBlockEntry` |
+| B14 (if `956:4`, 옛 B13) | (effective worker) 중앙 무결성 오류 | `s.signalCentral` | `return` — 프로세스 전체 fail-closed(생산 0 — 활성화 로트 전 처분은 이월 표) | `TestCentralIntegrityFailureEscapesOuterLoopAndDrainsSafety` |
+| B15 (if `961:4`, 옛 B14) | 잠금 자체가 실패 | `s.signalCentral` | `return` | 5.6.1 이 채움(`TestTheFourEscalations…`) |
+| B16 (if `965:4`, 옛 B15) | 재시작 대기 실패 | 조건부 `signalCentral` | `return` | 5.6.1 이 채움 |
+| B17 (if `966:5`, 옛 B16) | 그 실패가 ctx 취소 때문 | 없음 | 조용한 `return` | 4 개 시험 |
 
 ## Calls and live bindings
 

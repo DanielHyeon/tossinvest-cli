@@ -101,20 +101,12 @@ func TestProductionWorkersAreExactlyTheEightTheGoldenFroze(t *testing.T) {
 		if string(got.Horizon()) != want.Horizon {
 			t.Errorf("worker %d horizon: golden %q, implementation %q", index, want.Horizon, got.Horizon())
 		}
-		// OFF 기본값은 이 change 의 안전 약속 중 하나다. 골든이 여덟 줄 모두에
-		// 적어 두었으므로 여덟 줄 모두에서 확인한다.
-		//
-		// **영값 활성화를 건네는 것이 골든이 얼린 상태의 정의다** (8.7.1).
-		// 골든의 `desired: OFF, effective: OFF` 는 "새 설치·migration·restart" —
-		// 즉 서명된 4-가족 활성화가 **없는** 상태의 값이다. 그 상태를 값으로
-		// 만드는 것이 `strategyrouter.FamilyActivation{}` 이고, 이 패키지 밖에서
-		// 만들 수 있는 유일한 활성화가 그것이다.
-		none := strategyrouter.FamilyActivation{}
-		if string(got.Desired(none)) != want.Desired || string(got.Effective(none)) != want.Effective ||
-			string(got.Runtime()) != want.Runtime {
-			t.Errorf("worker %d is not born dormant: golden %s/%s/%s, implementation %s/%s/%s",
-				index, want.Desired, want.Effective, want.Runtime,
-				got.Desired(none), got.Effective(none), got.Runtime())
+		// desired/effective 는 여기서 단언하지 않는다(a112 8.8.4 항목 3). 앞 판은 영값 활성화로 `Desired(none)` 을 물었는데, 영값은
+		// `lookup` 이 첫 줄에서 OFF 를 돌려주는 상수라 골든의 OFF 와 상수-대-상수였다(어떤 worker 열쇠 · 어떤 상태 표에도 같은 답 — 공허).
+		// 골든의 OFF 가 **그 열쇠의 기본값**이고 서명 활성화만이 그것을 뒤집는다는 행동 단언은 태그 파일
+		// `a112_golden_desired_effective_test.go` 에 있다(활성화 seam 이 태그 아래에 있다).
+		if string(got.Runtime()) != want.Runtime {
+			t.Errorf("worker %d runtime: golden %s, implementation %s", index, want.Runtime, got.Runtime())
 		}
 	}
 }

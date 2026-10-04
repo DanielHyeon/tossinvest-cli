@@ -1,0 +1,28 @@
+== scratch fd1d466c on 7e124a73
+make lint exit=0
+gofmt listed=0
+make sdd-test exit=0
+Ran 15 tests in 0.310s
+OK
+Ran 503 tests in 63.564s
+OK
+Ran 79 tests in 0.578s
+OK
+Ran 29 tests in 0.974s
+OK
+Ran 16 tests in 0.027s
+OK
+Ran 18 tests in 0.000s
+OK
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/logic-map	0.003s
+untagged strategyworker+engine exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.443s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	189.352s
+tagged strategyworker exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.352s
+tagged engine exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	217.888s
+make test-race engine line (as in Makefile) exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	72.273s
+Change 'a112-run-four-strategy-families-independently' is valid
+== check_analysis --change a112: HEAD 173, lot 173, normalized set delta 0/0

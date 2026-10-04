@@ -5224,7 +5224,7 @@ rolledBack 시험(B3), census 에 `admit`(B7), 위험 핀 추가(B P2-4).
 | `go vet` 두 태그 구성 · `gofmt -l` | 무출력 |
 | per-test 커버리지 | 엔진 509 · 라우터 71 시험, 모든 행 시험별 합 == 스위트 |
 | `check_analysis --change a112` (이 로트 번들만 걸러 봄) | 남은 줄은 새 시험 파일이 아직 추적되지 않아 생기는 "not a Go test in any tracked file" 뿐 — 커밋 뒤 재확인 |
-| 경합 목록 | 새 시험에 goroutine·sync·Parallel 0 — `RACE_ENGINE_FILES` 완전성 가드 대상 아님(리뷰 B 확인) |
+| 경합 목록 | 새 시험에 goroutine·sync·Parallel 0 — `RACE_ENGINE_FILES` 완전성 가드 대상 아님(리뷰 B 확인) **정정(2026-10-04, 8.8.4 로트 A): 모집단 오류 — 시험 파일이 아니라 코드-언더-테스트(`strategyProposalAuthorityLoader.collect` 의 시장별 goroutine)가 동시성이다; 두 파일을 `RACE_ENGINE_FILES` 에 등재.** |
 
 **생산 동작 변화 0 — 측정.** 운영 컨테이너 env 에 가족 핀 0 건, 설정 디렉터리에 매니페스트 0 건(착수 때 측정, 이름만 셈). 핀이
 없으면 적재기 첫 줄이 Undeclared → 영값 관문 → 기존 경로이고, `LeaseCeiling` 은 검증 안 된 값에서 상한 30 초를 그대로 돌려주며
@@ -6311,3 +6311,37 @@ C1 SUBMITTING 살아 있는데 새 owner 허용.
 **잔여(면제 불가 — tasks 6.5 · ROADMAP).** SUBMITTING 중 crash 는 브로커에 실주문이 있을 수 있는데 결과를 알아낼 경로가 0(`journal/strategy_dispatch_runtime.go:178`
 「No constructor for that authority exists in this build」, 복구 API 생산 호출 0, `internal/strategyruntime` 생산 import 0) — UNKNOWN_BROKER_STATE 가족의 실체, 활성화
 상태에서는 안전 문제. **「활성화 로트는 outcome reconciliation 착지 전 해제 불가」.** ② · ③ 의 사슬 미재개(그 종목 claim · HELD 영구)는 같은 경로 부재의 liveness 면.
+
+## 2026-10-04 8.8.4 로트 A — 생산 .go 0(시험 · Makefile · 가드 · 문서)
+
+**판정(Manager, 2026-10-04).** 8.8.4 를 두 로트로 분할(A → B). 로트 A = 항목 3 · 4 · 5 · 6 · 7(b) + runMarket FLM 표 수리. 로트 B = 항목 1(strategyrouter
+sentinel 필드명 `%w` 래핑) · 항목 2((ii) 독해 — 계산 가능한 지점부터 gate 활성화 carry, 폐포 전수 표 시험) — 생산 편집이라 8.5 재리뷰 명시 대상.
+감사는 읽기 전용 에이전트(보고는 Manager 에게 직접); 좌표는 이 로트에서 재확인했다. FLM/BTM `not-applicable` — 편집한 생산 함수 0.
+
+- **항목 3(공허한 골든 단언).** `strategyworker/golden_contract_test.go` 의 desired/effective 절은 영값 활성화로 물었다 — `FamilyActivation.lookup`
+  (`strategyrouter/production_family_activation.go:407`)이 영값에서 첫 줄 OFF 를 돌려주므로 골든 OFF 와 상수-대-상수. 그 절을 빼고(런타임 대조는 남김) 태그 파일
+  `a112_golden_desired_effective_test.go` `TestTheGoldenOffIsEachWorkersDefaultAndOnlyItsSignedActivationFlipsIt` 로 교체: 활성화 없음 → 여덟 골든 값; worker i 의 레인
+  하나만 승격 → worker i 만 ON/ON; 다른 시장 네 레인 승격 → 그 시장 넷만 ON, 이 시장 넷 골든 값; 레인 ID 의 시장별 분리를 단언.
+- **항목 4(race 등재).** `a112_family_gate_test.go`(11) · `a112_family_rollback_test.go`(15) 전부 `RACE_ENGINE_FILES`/`RACE_ENGINE_TESTS` 에 — 두 파일 다
+  `loader.collect`(시장별 goroutine)를 돈다(호출 2 · 3 곳 실측). 8.7.2 기록(위 「경합 목록」 행)에 정정 표기. `-race` 실행 47 s(통과). 완전성 가드
+  `tools/sdd/test_race_detector_actually_runs.py` 가 두 파일을 읽는다(파일 목록에서 Test 함수를 모아 대조 — stale/missing 0).
+- **항목 5(promotion 양성).** ① engine `a112_lane_promotion_test.go` `TestAVerifiedPromotionLetsTheOwningLaneEmitThroughTheLaneRuntime` — 검증된 KR 네 가족 활성화 +
+  소유 입력으로 `evaluate` → 소유 레인 EMITTED · ON/ON, 나머지 봉투 0; 대조(영값) → 같은 레인 DORMANT. `evaluate` 가 레인을 동시에 돌므로 race 목록에도 등재.
+  ② 무태그 빌드에서 생산 `laneStepFor`(strategy_lane_step.go:15)를 `evaluate` 경유로 도는 시험 — 실재(시험별 커버리지 실측, count 1):
+  `TestEveryFamilyLaneIsDormantUntilASignedManifestPromotesIt` · `TestADroppedTriggerNeverDrivesACycle` · `TestTheProductionStepNeverLatchesSoTheLedgerStaysEmpty` ·
+  `TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther` 외 durability 여섯(a112_lane_runtime_test.go · a112_lane_latch_durability_test.go). 추가 불요.
+- **항목 6(testseam 가드).** `tools/sdd/test_testseam_build_tags.py`(`make sdd-test` → 게이트 `sdd-check` · CI `sdd-check-ci` 에서 돎): `internal` · `cmd` · `tools` 의
+  `*_testseam.go` 전수(디스크 rglob — git 없이도) = 핀한 24 목록(빈 표본 · 증감 실패); 첫 줄 정확히 `//go:build tossos_testseams`, 다른 빌드 제약 0; 판정 함수 자기 반증
+  (빌드 줄 없음 · 다른 태그 · 부정 · `||` · 첫 줄 아님 · 둘째 제약 · 빈 파일 → 전부 위반).
+- **항목 7(b) — cycle 오류의 양시장 전파.** 레인을 제안 수집 앞으로 옮긴 뒤(5.1.2.2) 원장 latch 읽기 실패가 paired assembly 를 멈추고 두 시장이 한 파도를 나눠 타므로(5.2.1)
+  KR · US 가 함께 그 오류를 받는다. **전파는 바꾸지 않는다** — 4f49a8eb 의 의도된 결정(잠금 표는 두 시장을 함께 덮으므로 못 읽으면 둘 다 닫는 것이 안전 방향).
+  `refreshOnly` 갈래(`runMarket` B12)는 그 오류를 삼키되 센다(`swallowedCount` · `firstSwallowed` → 스냅샷 `SwallowedCycleErrors`). (a) 그 계수의 운영자 노출은 로트 B 잔여 행.
+- **runMarket FLM 표.** 번들 `function-logic/internal-app-engine--strategyentrysupervisor.runmarket` 의 source SHA = 현재 파일(6f1f6804…) — 번들 유효. ast.json 분기 17 중
+  FLM 분기표는 16 행(B2 `for` 누락 — 8.8.1 이 "16 중 15" 로 남긴 빈칸이 5.6.2.1 의 B13 추가 뒤에도 그대로). Branch 열의 ID · 종류 · 좌표를 ast.json 에서 생성하고 B2 행을
+  더했다. ID 는 이미 BTM(같은 ast.json 의 위치 번호)과 일치해 재번호는 없다(difflib 정렬 불요 — 정렬할 옛/새 ast 쌍이 없음, 같은 SHA). 다른 열의 `:772` 꼴 줄 번호는 5.3.2
+  좌표로 남는다고 머리글에 명시.
+
+**변이 `lot-8.8.4-A/mutation-8.8.4-A.tsv` — 5 CAUGHT · 1 동등.** A2 worker 가 자기 레인 키를 안 물음 · A3 레인 step 이 승격을 못 봄(영값) · A4 testseam 빌드 줄 삭제 ·
+A5 핀 밖 새 testseam 파일 · A6 관문 시험 하나가 race 필터에서 빠짐 — CAUGHT. **A1(lookup 의 시장 대조 삭제) 동등**: 레인 ID 가 시장마다 달라 KR 활성화 상태에 US 키가
+없다 — 그 분리를 시험이 단언해 우연이 아니게 했다(분리가 깨지면 그 단언이 먼저 뒤집힌다). 하네스: 파이썬 가드 명령은 test2json 이 없어 `-json` 대조군 계수를 건너뛰고
+종료 코드로 GREEN 을 잰다(`a112_lot_mutate.py` 수정).

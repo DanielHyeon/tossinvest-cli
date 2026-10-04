@@ -740,3 +740,9 @@
   desired/effective 단언 무효화, 엔진 race 목록에 관문 시험 등록,
   `promotion` 인자를 검증된 활성화로 도는 시험, `*_testseam.go` 빌드 태그 가드,
   그리고 레인을 제안 수집 앞으로 옮기며 생긴 원장 오류의 양시장 전파.
+
+  **8.8.4 진행(2026-10-04 Manager 판정 — 두 로트 A → B).** 로트 A(생산 .go 0): 항목 3 `TestTheGoldenOffIsEachWorkersDefaultAndOnlyItsSignedActivationFlipsIt`
+  (공허한 상수-대-상수 절 교체) · 항목 4 관문 시험 두 파일 race 등재(8.7.2 기록 정정) · 항목 5 `TestAVerifiedPromotionLetsTheOwningLaneEmitThroughTheLaneRuntime`
+  (+ 무태그 생산 `laneStepFor` 경유 시험 실재 확인) · 항목 6 `tools/sdd/test_testseam_build_tags.py` · 항목 7(b) 전파 불변 = 4f49a8eb 의 의도된 결정 문서화 ·
+  runMarket FLM 표 ast 기준 수리 — review.md 「8.8.4 로트 A」. 남은 것 = **로트 B**: 항목 1(strategyrouter sentinel 필드명 래핑, errors.Is 보존) · 항목 2((ii) gate
+  활성화 carry + 폐포 전수 표 시험) — 생산 편집, 8.5 재리뷰 명시 대상. 잔여(로트 B 에서 등재): 활성화 실패 사유 · `SwallowedCycleErrors` 의 운영자 표면.

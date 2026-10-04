@@ -885,13 +885,34 @@ SET_6566_TESTS = [
     ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
      "TestAnExpiredProtectionAttestationStopsTheStrategyFirstLegBeforeTheBroker|TestADispatchCrashAtEveryStepNeitherDuplicatesTheOrderNorReleasesTheCapacity", "./internal/app/engine"],
 ]
+# 8.8.4 로트 A(Manager 판정 2026-10-04) — 골든 desired/effective 행동 단언 · 레인 승격 양성 · race 목록 · testseam 빌드 태그 가드.
+SET_884A = [
+    ("A1 EQUIVALENT the activation lookup ignores the market — lane ids are market-specific so a KR activation has no US key (disjointness pinned in the test)", "internal/strategyrouter/production_family_activation.go",
+     "\tif !activation.Verified() || market != activation.market || activation.state == nil {", "\tif !activation.Verified() || activation.state == nil {"),
+    ("A2 a worker asks the activation about no lane (its own key is not consulted)", "internal/strategyworker/worker.go",
+     "return activation.Desired(worker.key.Market, worker.key.Family, worker.key.LaneID, worker.key.LaneVersion)",
+     "return activation.Desired(worker.key.Market, worker.key.Family, \"\", worker.key.LaneVersion)"),
+    ("A3 the lane step never sees the promotion (runs with the zero activation)", "internal/app/engine/strategy_lane_runtime.go",
+     "runtime.laneStepFor(lane, promotion))", "runtime.laneStepFor(lane, strategyrouter.FamilyActivation{}))"),
+    ("A4 one testseam file loses its build line (would compile into production)", "internal/scheduler/activation_testseam.go",
+     "//go:build tossos_testseams\n", "\n"),
+    ("A5 a new testseam file appears unpinned", "internal/scheduler/zz_a112_new_testseam.go", None,
+     "//go:build tossos_testseams\n\npackage scheduler\n"),
+    ("A6 a gate test leaves the race filter", "Makefile",
+     "|TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt", ""),
+]
+SET_884A_TESTS = [
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run", "TestTheGoldenOffIsEachWorkersDefaultAndOnlyItsSignedActivationFlipsIt", "./internal/strategyworker"],
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run", "TestAVerifiedPromotionLetsTheOwningLaneEmitThroughTheLaneRuntime", "./internal/app/engine"],
+    ["python3", "-m", "unittest", "tools/sdd/test_testseam_build_tags.py", "tools/sdd/test_race_detector_actually_runs.py"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS), "8.8.4-A": (SET_884A, SET_884A_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측
@@ -957,6 +978,9 @@ def main() -> None:
     # 같은 모양이면 대조군도 변이도 전부 「GREEN」이 되어 원장이 무의미해진다.
     if verdict == "GREEN":
         for command in TESTS:
+            if command[0] != "go":  # a112 8.8.4: 파이썬 가드(unittest)는 test2json 이 없다 — 종료 코드로 위에서 이미 GREEN 을 쟀다
+                why = (why + " " if why else "") + f"[{command[-1]} non-go control: exit 0]"
+                continue
             json_command = command[:2] + ["-json"] + command[2:]
             completed = subprocess.run(json_command, cwd=copy, env=env, capture_output=True, text=True)
             passes = sum(1 for line in completed.stdout.splitlines() if '"Action":"pass"' in line and '"Test":' in line)

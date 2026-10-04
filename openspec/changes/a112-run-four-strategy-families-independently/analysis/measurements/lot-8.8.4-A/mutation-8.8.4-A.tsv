@@ -1,0 +1,8 @@
+TREE	HEAD 7e124a735dd11966a354164dc337267c3c7e3dcf (git archive: go.mod go.sum internal cmd tools openspec) + lot overlay: Makefile,internal/strategyworker/golden_contract_test.go,internal/strategyworker/a112_golden_desired_effective_test.go,internal/app/engine/a112_lane_promotion_test.go,tools/sdd/test_testseam_build_tags.py | also copied (outside the archive scope, read by the race guard): .github/workflows/ci.yml — byte-identical to HEAD (blob 98118cda6dab93f5e5af2214a14269b5f1e4f766 both), not part of the lot [TREE line corrected 2026-10-04 at landing; the harness printed every own path, including this unchanged one]
+CONTROL	GREEN	[./internal/strategyworker pass events 1] [./internal/app/engine pass events 3] [tools/sdd/test_race_detector_actually_runs.py non-go control: exit 0]
+A1 EQUIVALENT the activation lookup ignores the market — lane ids are market-specific so a KR activation has no US key (disjointness pinned in the test)	SURVIVED	
+A2 a worker asks the activation about no lane (its own key is not consulted)	CAUGHT	2 failing: TestTheGoldenOffIsEachWorkersDefaultAndOnlyItsSignedActivationFlipsIt, TestAVerifiedPromotionLetsTheOwningLaneEmitThroughTheLaneRuntime/verified_activation_of_all_four_KR_families
+A3 the lane step never sees the promotion (runs with the zero activation)	CAUGHT	1 failing: TestAVerifiedPromotionLetsTheOwningLaneEmitThroughTheLaneRuntime/verified_activation_of_all_four_KR_families
+A4 one testseam file loses its build line (would compile into production)	CAUGHT	0 failing:  | FAILED (failures=1)
+A5 a new testseam file appears unpinned	CAUGHT	0 failing:  | FAILED (failures=1)
+A6 a gate test leaves the race filter	CAUGHT	0 failing:  | FAILED (failures=1)
