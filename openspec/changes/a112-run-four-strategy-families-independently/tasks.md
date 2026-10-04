@@ -153,7 +153,8 @@
 - [x] 3.5 Implement cost/FX/fee-aware q_candidate sizing, protective stop/target validation and a single first-leg proposal seal; enforce idempotency by setup/snapshot/config identity.
 - [ ] 3.6 Implement the read-only official KR/US bar/quote evidence producer outside strategy refresh critical sections, using the M-B-proven lossless source, shared snapshots and scheduler capabilities rather than per-lane duplicate polling; do not fallback to WTS, float-adapted domain candles or test fixtures as production authority.
 - [ ] 3.7 Turn all breakout RED tests GREEN and prove deterministic replay across timezone, restart, correction and cache-miss fixtures with broker mutation spies at zero.
-- [ ] 3.8 Add candidate-origin tests proving Toss rank/volume/flow is read-only discovery evidence, cannot substitute for official closed bars/session/tradability and exposes no Toss manual-condition-order mutation path.
+- [x] 3.8 Add candidate-origin tests proving Toss rank/volume/flow is read-only discovery evidence, cannot substitute for official closed bars/session/tradability and exposes no Toss manual-condition-order mutation path.
+  **닫음(2026-10-04, Manager 판정 — 감사 후 최소 보강):** 처분 표 `measurements/gate-8.1-8.3-2026-10-04/disposition-3.8-4.5.md`(감사 `audit-3.8-4.5.md`) · a · b · c(순수 코어 · 흐름 층) · e 를 새 시험으로 닫음(review.md 「3.8 · 4.5 감사 보강 로트」, 변이 10/10). **이연(not-applicable in a112):** d 거래 가능 여부 · b/c 생산 절반 — breakout 입력에 그 자리가 없고 생산 경로가 3.6(생산자 미배선) + 결정 49 벽 뒤.
 
 ## 4. Canonical Registry and Production Assembly
 
@@ -163,7 +164,8 @@
 - [x] 4.3.1 Replace production use of pre-evaluation `strategyrouter.Route` selection with a sealed `RouteSet` authority that validates and emits all eligible family candidates; only pure proposal evaluation followed by the coordinator's common calibrated arbiter may select across families.
 - [x] 4.3.2 Add a Go-AST/import-resolution guard over exact production caller files `internal/app/engine/strategy_route_authority.go`, `strategy_proposal_authority.go`, `strategy_entry_supervisor.go` and every new `strategy_*coordinator*.go`: resolve the `github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter` import alias and forbid any selector call to its `Route` symbol while requiring at least one resolved `RouteSet` call. Legacy `Route` and callers outside this exact closure remain behaviorally unchanged.
 - [ ] 4.4 Extend production proposal scope validation and `buildLaneInput` with strict breakout snapshot/config construction while preserving continuation/reversal/weekly-value fixtures byte-for-byte where contracts are unchanged.
-- [ ] 4.5 Add paired KR/US production integration tests covering all 8 descriptors, exact route/proposal lineage, matrix migration refusal and no implicit desired/effective/LIVE activation.
+- [x] 4.5 Add paired KR/US production integration tests covering all 8 descriptors, exact route/proposal lineage, matrix migration refusal and no implicit desired/effective/LIVE activation.
+  **닫음(2026-10-04, Manager 판정 — 감사 후 최소 보강 + (A)(i)):** 처분 표 `measurements/gate-8.1-8.3-2026-10-04/disposition-3.8-4.5.md` · a(벽 아래: 경로 8/8 · 흐름 8/8 · 제안 실 적재 6/6) · b · c · d · e 를 새 시험으로 닫음(변이 10/10). **이연:** 벽 너머 4.5-a(breakout 제안 · dispatch 생산 적재 — 결정 49, 해제는 B · C 선행) · MigrateLegacy 근거 제외(생산 호출자 0).
 
 ## 5. Independent Worker and Arbitration Runtime
 

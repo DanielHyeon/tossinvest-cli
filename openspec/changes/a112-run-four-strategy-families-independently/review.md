@@ -6468,3 +6468,22 @@ WithBaseURL + WithHTTPClient(공식 클라이언트는 자기 Transport 를 만�
 G3 net/http · G4 config · G5 PlaceOrder 이름 · G6 official 밖 경로의 journal · G7 WithHTTPClient 누락 · G8 TestMain 미설치 · G9 레인의 ops(자기 금지 목록은
 못 봄 — census 가 잡음) · G10 예외 삭제 · G11 태그 시험의 ops(무태그 걸음은 못 봄) · G12 목록에서 strategydispatch 탈락 · G13 절단 무력화.
 검증 `verify-8.2-G.log`: make lint · 6 패키지 무태그(321) · 태그(356) · make sdd-test 전부 exit 0. FLM: 새 파일 · 새 함수뿐(기존 함수 편집 0) — 번들 대상 아님(not-applicable).
+
+## 2026-10-04 3.8 · 4.5 감사 보강 로트 + BTM 재측정(시험 전용, Manager 판정 결정 2 (i) · (A)(i) · (B)(a))
+
+**입력.** 감사 `measurements/gate-8.1-8.3-2026-10-04/audit-3.8-4.5.md`(절 → 기존 시험 사상; Explore 읽기 전용) — 3.8 b/c/e · 4.5 a/b/c/e 가 PARTIAL/GAP,
+3.8-d 와 벽 너머 4.5-a 는 생산 경로 없음. BTM 재측정 `btm-remeasure-prod.tsv`(생산 128 행 — 패키지 자기 태그 union + 모듈 전체 태그 union, 워크트리 8f6f756b):
+ENTERED 45(옛 무태그 측정의 산물) · R 31(실패-닫힘 거절/건너뛰기) · NB 17(몸통 블록 없음) · D 14(생산 호출자 0 — Route · QuotaAuthority) · T 3(도구 hold) ·
+S 3(낡은 행) · **L 15**(reversal · weekly 생산 lane-input — 실 적재기 시험 0). 시험 함수 95 행 = 미계측 아티팩트, 삭제 2 행 = GONE(`btm-disposition-census.tsv`).
+
+**구현(시험 7 파일, 생산 .go 0).** 표 `measurements/gate-8.1-8.3-2026-10-04/disposition-3.8-4.5.md`. ① strategyflow 후보 출처(순위만 → 타입 거절 · 권한 0,
+대조 = 공식 봉 증거로 제안 성립 · 레인 증거 = 봉 스냅숏) ② breakoutlane 세션 두 갈래(KR · US) ③ 엔진 조건부 주문 변경자 자리 census(broker.go 만)
+④ 라우터 적재기 세 가족 매니페스트 거절 + 세 가족 활성화(KR · US) ⑤ strategyflow 생산 Evaluate · Propose breakout KR · US(흐름 8/8) ⑥ 엔진 — 서명된 네 가족
+매니페스트(후보 ON)를 실 적재기로 · 핀 없는 생산 관문 = 미선언 · 레인 여덟 DORMANT · 투영 OFF/OFF/UNOBSERVED · 설정 디렉터리(운영 설정 config.json 포함)와
+원장 바이트 불변 ⑦ (A)(i) strategyproposal 실 LoadProductionAuthorityBatch 로 reversal · weekly KR · US(실 증거 저장소 · 실 원장 예약) + 원장 없음 · 예약 ID
+불일치 거절 + breakout 두 시장 정상 부재 — 제안 측 6/6(벽 아래), L 15 중 8 진입(L→ENTERED), 7 은 실패-닫힘 오류 갈래(L→R).
+
+**증거.** 변이 `measurements/lot-3.8-4.5/mutation-3.8-4.5.tsv` **10/10 CAUGHT**(S1 정규장 아닌 봉 · S2 세션 대조 탈락 · C1 후보 증거가 레인 증거 자리로 · C2 전략
+파일의 조건부 주문 · R1 세 가족 경로 매니페스트(두 크기 판정 동시 제거 — 하나만 지우면 다른 하나가 가림) · R2 세 가족 활성화 · P1 예약 ID 대조 탈락 · P2 US
+reversal 을 KR 로 · P3 weekly 원장 미개방 · E1 미선언을 되돌림으로). 검증 `verify-3.8-4.5.log`. FLM: 새 파일 · 새 함수뿐 — not-applicable.
+**이연(감사 사유 그대로):** 3.8-d · 3.8-b/c 생산 절반(3.6 + 벽) · 벽 너머 4.5-a(결정 49, B · C 선행) · MigrateLegacy(생산 호출자 0).

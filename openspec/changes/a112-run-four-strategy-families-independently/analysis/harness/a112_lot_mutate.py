@@ -1082,13 +1082,46 @@ SET_82G_TESTS = [
     ["go", "test", "-trimpath=false", "-count=1", "./internal/testenv", "./internal/strategyproposal", "./internal/strategyprojection",
      "./internal/officialbars", "./internal/strategyworker", "./internal/strategyhandoff"],
 ]
+# a112 3.8 · 4.5 감사 보강 로트(Manager 판정 2026-10-04 — 시험 전용): 새 핀이 겨눈 갈래를 사본에서 끈다.
+SET_3845 = [
+    ("S1 NewClosedBar accepts an extended-session bar", "internal/breakoutlane/types.go",
+     "|| !input.RegularSession || !input.Closed ||", "|| !input.Closed ||"),
+    ("S2 the snapshot stops comparing each bar's session with its own", "internal/breakoutlane/machine.go",
+     "if _, err := NewClosedBar(b); err != nil || b.SessionID != v.SessionID || seen[b.ID]", "if _, err := NewClosedBar(b); err != nil || seen[b.ID]"),
+    ("C1 the candidate's discovery evidence stands in for the lane's bar evidence", "internal/strategyflow/flow.go",
+     "\tlineage.LaneEvidenceDigest = evaluated.lineage.EvidenceDigest\n", "\tlineage.LaneEvidenceDigest = request.Approved.EvidenceDigest()\n"),
+    ("C2 a strategy file reaches the conditional-order mutator", "internal/app/engine/strategy_zz_a112_mut_conditional.go", None,
+     "package engine\n\nvar _ = (*officialBroker).CreateConditionalOrder\n"),
+    ("R1 the route manifest accepts a three-family candidate set (both size judgements removed)", "internal/strategyrouter/production.go",
+     ("\twant := productionRouteDescriptors(market)\n\tif len(values) != len(want) {\n\t\treturn false\n\t}\n", "\treturn len(seen) == len(want)\n}"),
+     ("\twant := productionRouteDescriptors(market)\n", "\treturn len(seen) == len(values)\n}")),
+    ("R2 the activation manifest accepts a three-family descriptor set", "internal/strategyrouter/production_family_activation.go",
+     "\tif len(state) != len(want) {\n\t\treturn nil, fmt.Errorf(\"%w: descriptors: %d of %d lanes\"", "\tif false {\n\t\treturn nil, fmt.Errorf(\"%w: descriptors: %d of %d lanes\""),
+    ("P1 the weekly scope stops checking its journal reservation id", "internal/strategyproposal/production.go",
+     "if err != nil || reservation.ReservationID != scope.WeeklyReservationID {", "if err != nil {"),
+    ("P2 the US reversal scope is built as a KR lane", "internal/strategyproposal/production.go",
+     "\t\tif config.Market == strategyrouter.MarketUS {\n\t\t\tmarket = reversallane.MarketUS\n\t\t}\n", ""),
+    ("P3 the weekly journal is never opened for a weekly scope", "internal/strategyproposal/production.go",
+     "\t\tif isWeeklyLane(scope.LaneID) {\n\t\t\tjournalRO, err = journal.OpenReadOnly(", "\t\tif false && isWeeklyLane(scope.LaneID) {\n\t\t\tjournalRO, err = journal.OpenReadOnly("),
+    ("E1 an undeclared market is treated as declared-but-unusable (no longer the upstream path)", "internal/app/engine/strategy_family_activation.go",
+     "\tif errors.Is(err, strategyrouter.ErrProductionFamilyActivationUndeclared) {\n\t\treturn strategyFamilyGate{}\n\t}",
+     "\tif errors.Is(err, strategyrouter.ErrProductionFamilyActivationUndeclared) {\n\t\treturn strategyFamilyGate{lanes: loader.lanes.lanesFor(market), rolledBack: true}\n\t}"),
+]
+SET_3845_TESTS = [
+    ["go", "test", "-trimpath=false", "-count=1", "-run",
+     "TestAClosedBarOutside|TestASnapshotRefuses|TestTossRankEvidenceAlone|TestAFreshlySignedThreeFamily|TestAThreeFamilyActivation|TestNoStrategyFileReachesAConditionalOrderMutator",
+     "./internal/breakoutlane", "./internal/strategyflow", "./internal/strategyrouter", "./internal/app/engine"],
+    ["go", "test", "-trimpath=false", "-tags", "tossos_testseams", "-count=1", "-run",
+     "TestProductionEvaluateAndProposeCarryExactBreakoutLineage|TestReversalAndWeeklyProposals|TestAWeeklyScopeWithout|TestABreakoutScopeIsAbsence|TestAPairedFourFamilyRouteManifestThatSaysOn",
+     "./internal/strategyflow", "./internal/strategyproposal", "./internal/app/engine"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS), "8.8.4-A": (SET_884A, SET_884A_TESTS), "8.8.4-B": (SET_884B, SET_884B_TESTS), "7.3.1-R2": (SET_731R2, SET_731R2_TESTS), "8.5-R": (SET_85R, SET_85R_TESTS), "8.5-R-full": (SET_85R_FULL, SET_85R_FULL_TESTS), "8.2-G": (SET_82G, SET_82G_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS), "8.8.4-A": (SET_884A, SET_884A_TESTS), "8.8.4-B": (SET_884B, SET_884B_TESTS), "7.3.1-R2": (SET_731R2, SET_731R2_TESTS), "8.5-R": (SET_85R, SET_85R_TESTS), "8.5-R-full": (SET_85R_FULL, SET_85R_FULL_TESTS), "8.2-G": (SET_82G, SET_82G_TESTS), "3.8-4.5": (SET_3845, SET_3845_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측
