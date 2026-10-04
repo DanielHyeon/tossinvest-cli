@@ -1,0 +1,59 @@
+# a112 8.1 / 8.4 — BTM 행 처분 census (HEAD fc0911f9, 2026-10-04; 생성 = 이 파일 머리의 규칙, 손 분류 없음)
+#
+# 마지막 열(GREEN observed / Measured disposition / Observed) 을 분류: GAP = 'not entered' · '진입 0' · '시험 0개' · '아니오' · 'no' · '미실행' 로 시작/포함하고 'arm entered N' 이 없음.
+# kind = 번들 대상이 시험 함수(Test…/…Fixture/…fixture)인가 생산 함수인가 — 시험 파일은 커버리지 계측 밖이라 'not entered' 가 측정 방식의 산물일 수 있다.
+# exists = 대상 함수가 HEAD 에 아직 있는가(ast.json 의 file 이 존재하고 그 안에 함수 이름이 있는가).
+
+bundle	kind	exists	gap_rows	total_rows	sample_disposition
+internal-app-engine--allsixstrategyfirstlegresults	prod	NO	2	3	passing run: not entered
+internal-app-engine--buildproductionstrategymarketworker	prod	yes	1	11	진입 0
+internal-app-engine--context.newrefreshingpairedstrategyentrysupervisor	prod	yes	2	4	측정 표본의 시험 0개(블록 좌표 없거나 미실행)
+internal-app-engine--context.runproductionstrategymarketcycle	prod	yes	4	4	아니오 — **진입 0**
+internal-app-engine--newstrategyentrysupervisor	prod	yes	5	18	측정 표본의 시험 0개(블록 좌표 없거나 미실행)
+internal-app-engine--productionprotectionassemblies	prod	yes	1	1	no
+internal-app-engine--productionstrategyfirstlegauthorityloader.collectstrategyfirstlegauthority	prod	yes	1	16	진입 0
+internal-app-engine--strategyaccountauthorityloader.collectmarket	prod	yes	1	10	진입 0
+internal-app-engine--strategyfirstlegadmissionbridge.admit	prod	yes	1	8	거짓 갈래 진입 0
+internal-app-engine--strategyproposalauthorityloader.familygatefor	prod	yes	1	4	arm not entered (engine tagged suite, post-edit); no per-test profile entered it
+internal-app-engine--strategyproposalauthoritypair.resultauthority	prod	yes	1	4	진입 0
+internal-app-engine--strategyriskauthorityloader.collectmarket	prod	yes	1	9	진입 0
+internal-app-engine--teststrategyfirstlegadmissionusesguardianonlyallsixlanes	test	NO	4	4	passing run: not entered
+internal-app-engine--validatestrategyfirstlegauthority	prod	yes	5	5	no
+internal-app-engine--validatestrategyfirstlegresult	prod	yes	7	7	no
+internal-execgw--gateway.checkprotection	prod	yes	5	5	no
+internal-execgw--testqfinalcampaignfirstlegprojectsguardianownedlineageallsixlanes	test	NO	14	14	passing run: not entered
+internal-journal--testprojectacceptedstrategyflowlineagepairsallsixkruslanes	test	NO	12	12	passing run: not entered
+internal-journal--testrecordqfinalcampaignfirstlegacceptsallstrategyflowlanespaired	test	yes	6	7	passing run: not entered
+internal-journal--testschematablesandcolumns	test	yes	4	7	아니오 — 진입하지 않는 arm
+internal-strategyflow--acceptedprojectionfixture	test	yes	1	1	passing run: not entered
+internal-strategyflow--testacceptedprojectioncoverskruscontinuationreversalandweeklytogether	test	NO	6	7	passing run: not entered
+internal-strategyflow--testapprovedcandidatesrouteandevaluateallpairedbindingswithcompletelineage	test	yes	5	6	passing run: not entered
+internal-strategyflow--testcandidateandlaneevidencearedistinctandbothpreserved	test	yes	1	1	passing run: not entered
+internal-strategyflow--testcompletelineagesealdetectsmutation	test	yes	2	2	passing run: not entered
+internal-strategyflow--testevaluaterejectsacceptedlanewithoutexactexecutionterms	test	yes	2	2	passing run: not entered
+internal-strategyflow--testevaluatesealsexactexecutionterms	test	yes	2	3	passing run: not entered
+internal-strategyflow--testexistingownerroutepinscampaignandacceptslaneconfiglineage	test	yes	2	2	passing run: not entered
+internal-strategyflow--testlanerefusalpreservesfirsttypedcodeandrouterlaneevidence	test	yes	3	3	passing run: not entered
+internal-strategyflow--testpairedregistrycoverskruscontinuationreversalandweekly	test	NO	7	7	passing run: not entered
+internal-strategyflow--testproductionevaluateusesrealrouterandallsixconcreteevaluators	test	NO	15	19	passing run: not entered
+internal-strategyflow--testrouterrefusalskipslaneandunsupportedbindingistyped	test	yes	2	2	passing run: not entered
+internal-strategyflow--testwrongmarketlaneinputandforgedacceptedlineagefailclosed	test	yes	2	2	passing run: not entered
+internal-strategyproposal--buildlaneinput	prod	yes	17	21	arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm no
+internal-strategyproposal--loadproductionauthoritybatch	prod	yes	15	21	arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm no
+internal-strategyproposal--productionbatchauthority.manifestdigest	prod	yes	1	1	not entered by any measured profile
+internal-strategyproposal--validscopes	prod	yes	3	3	arm not entered (untagged proposal suite); arm not entered (tagged proposal suite); arm no
+internal-strategyrouter--acquirefingerprint	prod	yes	1	1	no
+internal-strategyrouter--capabilityseal	prod	yes	1	1	no
+internal-strategyrouter--capabilitytoken	prod	yes	1	1	no
+internal-strategyrouter--productionroutefixture.write	prod	yes	6	6	passing run: not entered
+internal-strategyrouter--quotaauthority.acquire	prod	yes	6	6	no
+internal-strategyrouter--quotaauthority.complete	prod	yes	6	6	no
+internal-strategyrouter--quotasnapshotseal	prod	yes	2	2	no
+internal-strategyrouter--route	prod	yes	25	25	no
+internal-strategyrouter--testpairedproductionrouteauthorityloadsexactthreelanesindependently	test	NO	5	5	passing run: not entered
+internal-strategyrouter--validacquirerequest	prod	yes	1	1	no
+internal-strategyrouter--validproductionroutecandidates	prod	yes	1	3	arm not entered (untagged package suite); arm not entered (tagged package suite); no per-t
+internal-strategyrouter--verifyproductionroutemanifest	prod	yes	3	3	arm not entered (untagged package suite); arm not entered (tagged package suite); no per-t
+tools-a112-mb-us-source--run	prod	yes	3	38	no
+
+# 합계 (kind, exists) → gap 행: ('prod', 'NO')=2, ('prod', 'yes')=128, ('test', 'NO')=63, ('test', 'yes')=32
