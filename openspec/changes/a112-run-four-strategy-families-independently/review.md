@@ -6586,3 +6586,11 @@ exit 0 · race 목록 가드 8/8 · `named-0.5-response.log` 이름 결속 25/25
 - 8.4: BTM census 를 코드로(`harness/btm_census.py`, `btm-disposition-census.tsv`) — 옛 census 규칙을 fc0911f9 트리에서 재현해 옛 표가 굵은 글씨 행 4 를 놓친 것을 찾음. 10-04
   재측정 뒤 생긴 생산 GAP 30 을 모듈 union 커버리지로 다시 잼(`harness/btm_remeasure.py`, `btm-remeasure-new-gaps.tsv`, `module-union-coverage.log` ok 102): ENTERED 1 ·
   R 22 · NB 5 · W 2. 처분 분류(R · NB · W)는 갈래 몸통을 읽고 붙였다 — 손 분류이며 근거는 표 머리 범례.
+
+## 2026-10-05 make gate — GATE PASS 11/11(전 태스크 닫힘)
+
+HEAD f02fcc71(0.5 · 7.3.1 · 8.x 체크 커밋) + 미커밋 수리 1줄에서 `make gate CHANGE=a112-run-four-strategy-families-independently` → rc=0, 11 단계 OK
+(tasks · 미완료 0 · 짝 없음 · review · FLM · sdd-check · test · test-seams · test-race · vet · validate). 전문 `analysis/measurements/gate-2026-10-05/gate.log`.
+gate 앞 sdd-check 의 실제 결함 하나: `tools/sdd/test_testseam_build_tags.py` 고정 목록이 7.3.1 의 `strategy_lane_shadow_load_testseam.go` 를 몰랐다(4cbcfb36 부터 — 이 시험은
+sdd-test 에서만 돌아 로트 verify · 8.1/8.3 스위트에 안 걸림). 첫 줄 빌드 태그 확인 뒤 목록 25 로 수리. 다른 하나(fingerprint stale)는 내가 gate 로그를 sync 뒤 저장소에 쓴 탓 —
+로그는 측정 뒤 옮겨 넣었다.

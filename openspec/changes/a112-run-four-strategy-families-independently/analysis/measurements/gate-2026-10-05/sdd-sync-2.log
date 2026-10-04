@@ -1,0 +1,15 @@
+python3 tools/sdd/sdd_sync.py
+┌  Syncing CodeGraph
+│
+Scanning files...
+│
+●  Already up to date
+│
+└  Done
+
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
++ codegraph sync .
++ codegraphcontext update . --quiet
+[sdd-sync] WARN: GBrain advisory busy; keeping its previous freshness ([gbrain-project] busy: owner pid=99027 command='gbrain serve' home=/mnt/D/Axipient/workspace/TossOS/.sdd/gbrain-home)
+[sdd-sync] all indexes current

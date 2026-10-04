@@ -616,6 +616,10 @@
   make vet · make lint · make validate · openspec validate --strict · PM tracker --check 전부 exit 0, FAIL 0. 남은 것: `make sdd-sync` · `make sdd-check` · `make gate CHANGE=…`.
   **체크 순서(관례 — gate 2단계는 이 줄 자신도 미완료로 센다):** 나머지 태스크가 전부 닫힌 뒤 이 줄을 먼저 체크하고 `make sdd-sync` → `make sdd-check` → `make gate` 를
   돌려 결과를 이 아래에 적는다. gate 가 FAIL 이면 이 체크를 되돌린다.
+  **결과(2026-10-05): `make gate CHANGE=a112-…` GATE PASS 11/11**(HEAD f02fcc71 + 아래 census 수리 1줄, rc=0, 07:58 → 08:32 KST — 전문
+  `measurements/gate-2026-10-05/gate.log`). 앞서 sdd-check 두 번 실패: ① 내 gate 로그를 sync 뒤 저장소에 써서 fingerprint stale(로그를 저장소 밖으로 옮김) ② **실제 결함** —
+  `tools/sdd/test_testseam_build_tags.py` 의 고정 목록이 7.3.1 의 `strategy_lane_shadow_load_testseam.go` 를 몰랐다(4cbcfb36 부터; 이 시험은 sdd-test 에서만 돌아 스위트 ·
+  verify 에 안 걸림). 빌드 줄 확인 뒤 EXPECTED 25 로 수리 → sdd-sync rc=0 · sdd-check rc=0 → gate.
 - [x] 8.4 Refresh all edited-function AST/FLM/BTM/risk reports after GREEN implementation and confirm every branch/risk row maps to an automated test or an explicit reviewed non-code control.
   **닫음(2026-10-05, 2497427e).** `check_analysis` 통과(`lot-0.5-response/check-analysis-0.5-response-r2.log` — 7.3.1 로트 + 응답 로트 번들 재기준 뒤). BTM census 를 하네스로
   다시 만듦(`harness/btm_census.py` — 10-04 census 머리 규칙을 코드로, fc0911f9 트리 재현에서 옛 census 가 굵은 글씨 `**no — …**` 4 행을 놓친 것을 찾음):

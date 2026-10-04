@@ -19,7 +19,9 @@ TAG_LINE = "//go:build tossos_testseams"
 SEARCH_ROOTS = ("internal", "cmd", "tools")
 
 # 2026-10-04 실측(git ls-files '*_testseam.go' · 디스크 전수 같음): 24 파일.
+# 2026-10-05 +1: a112 7.3.1 SHADOW 적재 훅 `strategy_lane_shadow_load_testseam.go`(4cbcfb36) — 첫 줄 `//go:build tossos_testseams` 확인, 25 파일.
 EXPECTED = sorted([
+    "internal/app/engine/strategy_lane_shadow_load_testseam.go",
     "internal/app/engine/strategy_lane_step_testseam.go",
     "internal/continuationlane/strategyflow_testseam.go",
     "internal/execgw/a124_entry_gate_testseam.go",
