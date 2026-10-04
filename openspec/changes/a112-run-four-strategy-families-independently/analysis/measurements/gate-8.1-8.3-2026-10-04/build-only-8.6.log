@@ -1,0 +1,18 @@
+== 8.6 build-only verification (HEAD 81bf5045, 2026-10-04T19:53:33+09:00) — 이미지 빌드 · 컨테이너 교체 없음
+go build ./... exit=0
+go build -tags tossos_testseams ./... exit=0
+go build ./cmd/tossctl exit=0 (산출물은 scratchpad, 배포 안 함)
+go version go1.26.5 linux/amd64
+
+
+== 8.6 shadow-fixture · 상승 0 핀(이름 결속 — 각 이름의 pass 사건 확인)
+exit=0 passed=5/5
+  PASS	TestWithoutAnActivationTheProductionCycleHandsNothingToTheDispatch
+  PASS	TestTheProductionActivationLoaderRunsAndFindsNoManifest
+  PASS	TestWithoutAVerifiedActivationCoordinationIsUnchanged
+  PASS	TestAPairedFourFamilyRouteManifestThatSaysOnPromotesNoLaneWithoutAnActivation
+  PASS	TestAnExpiredProtectionAttestationStopsTheStrategyFirstLegBeforeTheBroker
+exit=0 passed=1/1
+  PASS	TestEveryProductionWorkerIsBornDormantAndEmitsNothing
+exit=0 passed=1/1
+  PASS	TestEachProtectionAttestationFailureStopsBuysAndKeepsReductionsFlowing
