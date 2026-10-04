@@ -89,7 +89,7 @@ type strategyLaneRuntime struct {
 	//   shadowCells: 시장별 칸 하나 {wave, batch, activation} — record 가 파도를 올리는 같은 임계 구역에서 덮어쓴다(누적 없음).
 	//   shadowEpochs: 실패한 주기마다 오르는 세대 — 게시는 시작 때 복사한 세대 · 파도와 같을 때만(CAS).
 	//   shadowObserved: 게시된 관측(시장 → 레인 열쇠). 투영은 shadowObservationUsable 하나로만 쓴다.
-	//   shadowInFlight · shadowSkipped: 시장당 단일 비행과 그때 건너뛴 물결 수(진단).
+	//   shadowInFlight · shadowSkipped: 시장당 단일 비행과 그때 건너뛴 물결 수(시험 관측 전용 — 생산 독자 · 투영 노출 없음).
 	shadowCells    map[StrategyMarket]strategyShadowCell
 	shadowEpochs   map[StrategyMarket]uint64
 	shadowObserved map[StrategyMarket]map[strategyworker.Key]strategyShadowObservation

@@ -1,0 +1,27 @@
+[logic-map] a112-run-four-strategy-families-independently: base 1e25b3a31b71 → working tree (no landed-commit.txt in HEAD) required 60 function(s) — judged at HEAD 4cbcfb36365c
+[logic-map] a112-run-four-strategy-families-independently: the target is the working tree, so this window also holds 35 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits
+[logic-map] internal-app-engine--newstrategylaneruntime: AST source hash is stale: internal/app/engine/strategy_lane_runtime.go
+[logic-map] internal-app-engine--strategyfamilylanestep: AST source hash is stale: internal/app/engine/strategy_lane_runtime.go
+[logic-map] internal-app-engine--strategylaneruntime.evaluate: AST source hash is stale: internal/app/engine/strategy_lane_runtime.go
+[logic-map] internal-app-engine--strategylaneruntime.record: AST source hash is stale: internal/app/engine/strategy_lane_runtime.go
+[logic-map] internal-app-engine--strategylaneruntime.runlane: AST source hash is stale: internal/app/engine/strategy_lane_runtime.go
+[logic-map] internal-app-engine--strategyproposalauthorityloader.collect: AST source hash is stale: internal/app/engine/strategy_proposal_authority.go
+[logic-map] internal-app-engine--strategyproposalauthorityloader.collectmarket: AST source hash is stale: internal/app/engine/strategy_proposal_authority.go
+[logic-map] internal-app-engine--strategyproposalauthoritypair.resultauthority: AST source hash is stale: internal/app/engine/strategy_proposal_authority.go
+[logic-map] internal-strategyrouter--decodeproductionfamilyactivation: AST source hash is stale: internal/strategyrouter/production_family_activation.go
+[logic-map] internal-strategyrouter--failedfields: AST source hash is stale: internal/strategyrouter/production_family_activation.go
+[logic-map] internal-strategyrouter--familyactivationdocument.body: AST source hash is stale: internal/strategyrouter/production_family_activation.go
+[logic-map] internal-strategyrouter--familyactivationremaining: AST source hash is stale: internal/strategyrouter/production_family_activation.go
+[logic-map] internal-strategyrouter--loadproductionfamilyactivation: AST source hash is stale: internal/strategyrouter/production_family_activation.go
+[logic-map] internal-strategyrouter--validateproductionfamilyactivation: AST source hash is stale: internal/strategyrouter/production_family_activation.go
+[logic-map] internal-app-engine--newstrategylaneruntime: AST hash does not match modified function revision
+[logic-map] internal-app-engine--strategylaneruntime.evaluate: AST hash does not match modified function revision
+[logic-map] internal-app-engine--strategylaneruntime.runlane: AST hash does not match modified function revision
+[logic-map] internal-app-engine--strategylaneruntime.record: AST hash does not match modified function revision
+[logic-map] internal-app-engine--strategyproposalauthorityloader.collect: AST hash does not match modified function revision
+[logic-map] internal-app-engine--strategyproposalauthorityloader.collectmarket: AST hash does not match modified function revision
+[logic-map] internal-strategyrouter--familyactivationdocument.body: AST hash does not match modified function revision
+[logic-map] internal-strategyrouter--familyactivationremaining: AST hash does not match modified function revision
+[logic-map] internal-strategyrouter--loadproductionfamilyactivation: AST hash does not match modified function revision
+[logic-map] internal-strategyrouter--decodeproductionfamilyactivation: AST hash does not match modified function revision
+[logic-map] internal-strategyrouter--validateproductionfamilyactivation: AST hash does not match modified function revision

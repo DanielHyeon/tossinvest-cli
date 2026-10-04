@@ -1,6 +1,6 @@
 # Branch Test Map: `LoadProductionFamilyActivation`
 
-- Source SHA-256: `57123f814187d9201ec6999d6375adc649b579c89beb6c4731f36cc51243b005`; AST branch locations are authoritative.
+- Source SHA-256: `bac16c04b38d49c479a381fb326d7dd066e5525997322619d8ceb496e3ddb0d8`; AST branch locations are authoritative.
 - Revision: **modified (a112 8.5-R, 2026-10-01).** 분기 불변(10). B5(읽기 결함)의 안쪽 오류를 `%w` → `%v` 로(8.5 응답 로트 ④ — 보이스 2 P2-1): 편집 전(f473d815) `errors.Is` 사슬로 복원 — 읽기 결함이 공유 읽기 함수의 sentinel(ErrProductionRouteUnavailable)까지 만족하던 둘째 신원 제거. B10 행 정정(보이스 3 P2-5).
 - 편집 전 번들: `analysis/measurements/lot-8.5-R/pre-edit/internal-strategyrouter--loadproductionfamilyactivation/`. 변이 원장 `analysis/measurements/lot-8.5-R/mutation-8.5-R.tsv`.
 

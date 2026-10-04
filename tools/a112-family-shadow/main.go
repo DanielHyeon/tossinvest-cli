@@ -91,11 +91,14 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("매니페스트 파일을 만들지 못했다 — 이미 있으면 덮어쓰지 않는다: %w", err)
 	}
+	// 쓰기 · 닫기 실패 시 부분 파일 제거 — 0400 + O_EXCL 이라 남겨 두면 같은 경로로 재시도 불가.
 	if _, err := file.Write(data); err != nil {
 		file.Close()
+		os.Remove(opts.out)
 		return err
 	}
 	if err := file.Close(); err != nil {
+		os.Remove(opts.out)
 		return err
 	}
 	if err := os.Chmod(opts.out, 0o400); err != nil {

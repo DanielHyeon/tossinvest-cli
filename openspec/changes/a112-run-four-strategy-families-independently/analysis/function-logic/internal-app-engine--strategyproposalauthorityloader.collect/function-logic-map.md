@@ -1,7 +1,7 @@
 # Function Logic Map: `collect`
 
 - Source: `internal/app/engine/strategy_proposal_authority.go`
-- Source SHA-256: `2e2e7dd7ade2428ad72eddde648e1798c1e6c19b082052a61804c1c226a6dcf6`
+- Source SHA-256: `a349829128400c6ae6845aa49d271b318d582b0151532d2fcbd62515debfffbf`
 - Signature: `strategyProposalAuthorityLoader.collect(params=4, results=2)`
 - Source range: `258:1`–`297:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 7.3.1 SHADOW).
@@ -49,3 +49,5 @@
 ## Safety conclusion
 
 - High-risk(조정 · 제안 권한 · 조립) 경로의 편집은 운반뿐이다 — 조정 · admit · Submit · Arbitrate · dispatch 의 입력 · 순서 · 반환은 편집 전과 같고(차등 dispatch 시험 · 변이 S01~S08), shadow 값은 authority 구조체에 들어가지 않는다(census ② `TestOnlyTheAllowedFunctionsEverTouchAShadowType`).
+
+0.5 응답 로트: 같은 파일의 주석 · 한 글자 편집(본문 구조 불변)으로 파일 SHA 만 바뀜

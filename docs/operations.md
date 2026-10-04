@@ -399,7 +399,7 @@ SHADOW는 **OFF 레인의 읽기 전용 반사실**이다: "이 레인이 켜져
 
 ```bash
 go run ./tools/a112-family-shadow \
-  -market KR -generation <이전보다 큰 수> \
+  -market KR -generation <이전보다 큰 수 — 권장> \
   -route-manifest-digest   "$TOSSOS_STRATEGY_LANE_KR_MANIFEST_SHA256" \
   -calibration-digest      "<경로 권한 파일의 calibration_digest>" \
   -calendar-version        "<공식 달력 버전>" \
@@ -416,6 +416,8 @@ go run ./tools/a112-family-shadow \
 결속 다섯(경로 매니페스트·보정·달력·위험 정책·빌드)의 출처는 위 활성화 절의 표와 같다.
 ProtectionReady 하한은 없다(노출이 없으므로). 수명 상한 24시간, 재발급은 위 활성화 절과 같은
 `.new` → 핀 교체 → 이름 바꾸기 → 재시작 순서다. `-shadow`를 비우면 넷 다 OFF다.
+세대(`-generation`)를 올리는 것은 **권장**이다 — 적재기는 0만 거절하고 단조 증가는 강제하지 않는다
+(신뢰 앵커는 세대가 아니라 핀이다).
 
 언제 SHADOW로 보이나(엔진이 지키는 규칙):
 
@@ -431,7 +433,10 @@ ProtectionReady 하한은 없다(노출이 없으므로). 수명 상한 24시간
   유효한 핀이 있으면 첫 물결에서 매니페스트를 다시 읽는다.
 
 **끄기:** 핀을 env에서 빼고 재시작하면 SHADOW가 사라진다. 이것은 진입·주문과 무관하다
-(SHADOW는 애초에 진입을 열지 않는다). 급히 끄려면 `-revoked` 매니페스트를 배포해도 된다.
+(SHADOW는 애초에 진입을 열지 않는다). `-revoked` 매니페스트로 끄려면 위 재발급 절차대로 **핀도 새
+바이트로 바꾸고 재시작**해야 한다 — 핀은 프로세스가 사는 동안 고정이고 폐기는 핀 대조 뒤에 읽으므로,
+핀 빼기보다 빠르지 않다. 재시작 없이 끄려면 매니페스트 파일을 치운다: 다음 물결부터 적재가 실패해
+관측이 비고 `UNOBSERVED`로 돌아간다(핀은 남아 있으므로 정리는 다음 재시작 때 핀을 빼서 한다).
 
 ### 교체·회수·복구
 

@@ -3,7 +3,7 @@
 - Source: `internal/app/engine/strategy_lane_runtime.go` (189-195)
 - Function: `strategyFamilyLaneStep` in package `engine`
 - Signature: `strategyFamilyLaneStep(params=2, results=1)`
-- File SHA-256: `333970fa5e15db9741cc10da836922c79763f4b1b87bf62ddbc1af2fba9c6462`
+- File SHA-256: `0935960f05276aa2bf972734943b879a5c56b3525f2083aeed9f5b2e3855c620`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 0.
 - Risk scan: `risk-pattern-report.md`.
@@ -78,3 +78,5 @@ a112 7.5 — 같은 파일 편집(evaluate 동시 실행 · laneStep seam)으로
 a112 7.5 판정 (A) 수리 — seam 필드 제거 · laneStepFor 로 줄만 다시 밀림
 
 a112 7.3.1 SHADOW 로트 — 같은 파일의 다른 함수 편집으로 줄만 밀림(본문 불변)
+
+0.5 응답 로트: 같은 파일의 주석 · 한 글자 편집(본문 구조 불변)으로 파일 SHA 만 바뀜

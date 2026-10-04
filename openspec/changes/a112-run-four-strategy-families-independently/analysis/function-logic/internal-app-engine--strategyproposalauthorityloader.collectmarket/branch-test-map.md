@@ -1,6 +1,6 @@
 # Branch Test Map: `collectMarket`
 
-- Source SHA-256: `2e2e7dd7ade2428ad72eddde648e1798c1e6c19b082052a61804c1c226a6dcf6`; AST branch locations are authoritative.
+- Source SHA-256: `a349829128400c6ae6845aa49d271b318d582b0151532d2fcbd62515debfffbf`; AST branch locations are authoritative.
 - Revision: **modified (a112 7.3.1 SHADOW, 2026-10-01).** 분기 불변(15). out 인자 `shadow` 를 더했다: 첫 문장에서 부재 값으로 비우고(조정 앞 닫힘 일곱 = 관측 없음), 조정 바로 뒤 대입 하나로 수집 묶음 + 결속 설정(`loader.shadowConfig`)을 싣는다. 반환 갈래 열다섯 불변.
 - 편집 전 번들: `analysis/measurements/lot-7.3.1-shadow/pre-edit/internal-app-engine--strategyproposalauthorityloader.collectmarket/`. 변이 원장 `analysis/measurements/lot-7.3.1-shadow/mutation-7.3.1-S.tsv`.
 

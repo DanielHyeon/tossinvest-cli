@@ -1,0 +1,71 @@
+# a112 0.5 응답 로트 — 7.3.1 새 함수 블록 진입 영수증 (리뷰 시험#11)
+# 잰 시각 2026-10-04T21:03:53Z · HEAD 4cbcfb36365c5910a681883841edb9e7fad9cc04 + 응답 로트 작업 트리(미커밋) · covermode=set
+# 모집단: engine = tossos_testseams 태그 전체 스위트 · strategyshadow = -coverpkg strategyshadow,strategyrouter(공유 래퍼는 shadow 시험이 부름) · worker = 태그 전체 · tool = 전체.
+# 이 파일은 두 번째 측정이다. 첫 측정(시험 추가 전 · strategyshadow 를 -coverpkg 없이)은 진입 0 블록 25 를 냈고 같은 경로에 덮어써 파일로는 남지 않았다
+# (그중 6 은 production_shared_export.go — 같은 패키지 시험만 센 범위 탓). 수치 25 는 세션 출력으로만 남은 값이다.
+# 생산 정의 strategy_lane_shadow_load.go(!tossos_testseams)는 태그 빌드 밖 — 몸통은 TestTheProductionLoadShadowIsTheProductionLoaderOutsideTestSeams 가 AST 로 고정.
+
+## 함수별 문장 커버(go tool cover -func)
+internal/app/engine/strategy_lane_shadow.go:103:				invalidateShadow				100.0%
+internal/app/engine/strategy_lane_shadow.go:115:				startShadowStep					100.0%
+internal/app/engine/strategy_lane_shadow.go:145:				superviseShadowStep				100.0%
+internal/app/engine/strategy_lane_shadow.go:172:				runShadowStep					100.0%
+internal/app/engine/strategy_lane_shadow.go:201:				publishShadow					100.0%
+internal/app/engine/strategy_lane_shadow.go:50:				shadowObservationUsable				100.0%
+internal/app/engine/strategy_lane_shadow.go:55:				productionStrategyCycle				100.0%
+internal/app/engine/strategy_lane_shadow.go:67:				strategyCycleWithShadow				100.0%
+internal/app/engine/strategy_lane_shadow.go:93:				strategyLaneRuntimeIfAny			100.0%
+internal/app/engine/strategy_lane_shadow_load_testseam.go:27:		loadShadow					100.0%
+internal/app/engine/strategy_lane_shadow_load_testseam.go:40:		setStrategyShadowLoadHookForTest		100.0%
+internal/app/engine/strategy_lane_shadow_load_testseam.go:50:		strategyShadowSupervisionSettledForTest		100.0%
+internal/app/engine/strategy_lane_shadow_load_testseam.go:67:		strategyShadowStepsStartedForTest		100.0%
+internal/app/engine/strategy_shadow_batch.go:32:				collect						100.0%
+internal/app/engine/strategy_shadow_batch.go:37:				boundTo						100.0%
+internal/app/engine/strategy_shadow_batch.go:52:				forMarket					100.0%
+internal/app/engine/strategy_shadow_batch.go:66:				shadowConfig					100.0%
+internal/strategyrouter/production_shared_export.go:28:		SharedProductionRouteOwnerUID		100.0%
+internal/strategyrouter/production_shared_export.go:31:		SharedReadProductionRouteFile		100.0%
+internal/strategyrouter/production_shared_export.go:36:		SharedProductionRouteDigest		100.0%
+internal/strategyrouter/production_shared_export.go:39:		SharedProductionRouteTime		100.0%
+internal/strategyrouter/production_shared_export.go:42:		SharedProductionRouteIdentity		100.0%
+internal/strategyrouter/production_shared_export.go:45:		SharedProductionRouteDigestValid	100.0%
+internal/strategyrouter/production_shared_export.go:48:		SharedProductionRouteDescriptors	100.0%
+internal/strategyshadow/shadow.go:135:				body					100.0%
+internal/strategyshadow/shadow.go:169:				EncodeProductionFamilyShadow		100.0%
+internal/strategyshadow/shadow.go:193:				Verified				100.0%
+internal/strategyshadow/shadow.go:195:				Market					100.0%
+internal/strategyshadow/shadow.go:196:				Generation				100.0%
+internal/strategyshadow/shadow.go:197:				ExpiresAt				100.0%
+internal/strategyshadow/shadow.go:200:				Shadowed				100.0%
+internal/strategyshadow/shadow.go:211:				LoadProductionFamilyShadow		96.4%
+internal/strategyshadow/shadow.go:270:				decodeProductionFamilyShadow		100.0%
+internal/strategyshadow/shadow.go:293:				validateProductionFamilyShadow		100.0%
+internal/strategyshadow/shadow.go:365:				failedFields				100.0%
+internal/strategyshadow/shadow.go:57:				ProductionFamilyShadowFileName		100.0%
+internal/strategyworker/shadow.go:26:	ShadowOutcomes		100.0%
+internal/strategyworker/shadow.go:36:	NewShadowInput		100.0%
+internal/strategyworker/shadow.go:42:	ShadowEligible		100.0%
+internal/strategyworker/shadow.go:47:	ShadowVerdict		100.0%
+internal/strategyworker/shadow.go:59:	ShadowEligible		100.0%
+internal/strategyworker/shadow.go:65:	ShadowOutcomeOver	100.0%
+tools/a112-family-shadow/main.go:115:	document	100.0%
+tools/a112-family-shadow/main.go:142:	parseMarket	75.0%
+tools/a112-family-shadow/main.go:152:	parseTime	100.0%
+tools/a112-family-shadow/main.go:161:	parseFamilies	100.0%
+tools/a112-family-shadow/main.go:36:	main		0.0%
+tools/a112-family-shadow/main.go:60:	run		82.5%
+
+## 진입 0 블록(파일:시작-끝)
+internal/strategyshadow/shadow.go:262.34,264.3
+tools/a112-family-shadow/main.go:100.37,103.3
+tools/a112-family-shadow/main.go:104.50,106.3
+tools/a112-family-shadow/main.go:36.13,37.30
+tools/a112-family-shadow/main.go:37.30,40.3
+tools/a112-family-shadow/main.go:83.16,85.3
+tools/a112-family-shadow/main.go:95.44,99.3
+
+## 남은 진입 0 블록의 처분(측정 뒤 TestParseMarketKnowsBothMarketsAndNothingElse 를 더해 main.go:146 US 갈래는 닫음 — 위 목록에서 뺐음)
+- strategyshadow/shadow.go:262 — 검증 뒤 두 번째 `ctx.Err()`(읽기와 반환 사이 취소). 결정적으로 넣을 자리가 없음(파일 읽기 중 취소 seam 없음). 첫 ctx 검사(:219)는 TestTheShadowEncoderAndLoaderRefuseTheirShortCircuits 가 잼.
+- tools/a112-family-shadow/main.go:95 · :100 · :104 — 쓰기 · 닫기 · chmod 의 OS 실패(0.5 보안#4 의 `os.Remove` 는 :95 · :100 안). 정규 파일에 쓰기 실패를 주입할 seam 이 없음 — 코드 읽기로만 확인, 시험 없음(남은 위험: 부분 파일 제거 갈래 미실행).
+- tools/a112-family-shadow/main.go:83 — document() 를 지난 문서를 인코더가 거절하는 갈래. parseMarket · parseFamilies 가 인코더의 두 거절(모르는 시장 · 가족)을 먼저 막으므로 도구 경로로는 닿지 않음(인코더 거절 자체는 strategyshadow 시험이 잼).
+- tools/a112-family-shadow/main.go:36 · :37 — main(). 시험은 run() 을 직접 부름.

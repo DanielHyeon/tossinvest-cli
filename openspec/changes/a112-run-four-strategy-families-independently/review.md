@@ -6542,3 +6542,31 @@ shadow 단계(`strategy_lane_shadow.go` — 성공 플래그 · 경과 판정 ·
 5. 변이 하네스가 사본에 `docs/api` 를 더 담는다(httpapi 시험이 OpenAPI 를 읽음 — 모든 집합에 무해).
 
 **남는 것.** 착지 뒤 재고정 영수증 최종 갱신 → 0.5 전체 diff gstack 리뷰 → 8.1 · 8.3 · 8.4 → make gate. 운영 shadow 수집은 활성화 로트의 몫(ROADMAP).
+
+## 2026-10-05 0.5 전체 diff 프리랜딩 리뷰(4판) + 응답 로트 — HOLD → 응답 → SHIP(Manager 합본 판정)
+
+**리뷰.** 좌표 base `1e25b3a3` → 착지 `4cbcfb36`, 공통 브리프 `analysis/review-0.5-full-2026-10/brief.md`, 원문 네 판(testing · maintainability · security ·
+performance)은 같은 디렉터리 `voice*-output.md`. **P0 0(네 판 모두).** P1 3(시험#1 부분 ON 차등이 빈 표본 · 시험#2 단계 폐포가 금지 목록이라 레인 상태 변경을 못 봄 ·
+보안#1 관문 함수 안 shadow 읽기를 막는 핀 없음) — 셋 다 「시험이 주장을 못 받침」 이고 생산 결함 재현 0.
+
+**응답 로트.** 처분 표 전체는 `analysis/review-0.5-full-2026-10/disposition.md`(리뷰 # 마다 고친 자리 · 재확인). 생산 편집 2자리: `decodeProductionFamilyActivation`
+둘째 `%w` → `%v`(Pre-Edit `lot-0.5-response/pre-edit/` → RED `red-decode-identity.log` → GREEN, BTM B2 갱신) · 도구 쓰기 실패 시 `os.Remove`. 그 밖은 시험 · tagged 시험 seam
+(감독 종료 신호 — 생산 파일 무편집) · 주석 · 문서 · Makefile · 하네스(CRASH 판정).
+
+**재확인 — 리뷰가 생존시킨 변이를 같은 모양으로 다시 넣음(`lot-0.5-response/mutation-0.5-R-run1.tsv` · `-run2-fixed.tsv`).** 정의 28. 1회차: CAUGHT 22 ·
+GREEN-AS-EXPECTED 2(N01 게시 10ms 지연 · N02 마감 전달 50ms 지연 — 리뷰 때는 시험을 깨던 동작 동등 지연, 이제 대기 helper 가 감독 종료를 기다림) · BUILD-FAIL 2(B03 · B05 —
+미사용 변수) · SURVIVED 2(T01 · T02 — 도구 시험이 인코더 · 0400 권한이라는 다른 벽에 기댐). 2회차: B03b · B05b 를 컴파일되는 같은 결함으로, 도구 시험을 「그 플래그 이름으로
+거절」 · 「쓰기 가능한 기존 파일」 로 보강 → B03b · B05b · T01 · T02 · T03 CAUGHT. 결론: 26/26 결함 변이 CAUGHT + 동등 지연 2 GREEN. P1 셋의 재현 변이(A01 lane.Offer ·
+C01 M4 · C02 M2 · C03) 전부 CAUGHT.
+
+**검증.** `verify-0.5-response.log` — 무태그 · 태그 10 패키지 전부 ok · `race-0.5-response.log` 엔진 race 목록 76/76 PASS, DATA RACE 0, wall 3:03(한도 10m) · `lint-0.5-response.log`
+exit 0 · race 목록 가드 8/8 · `named-0.5-response.log` 이름 결속 25/25 · `check-analysis-0.5-response-r2.log` 통과(r1 은 같은 파일 주석 · 한 글자 편집으로 파일 SHA 가 바뀐 번들
+14 — `harness/shift_same_file_bundles.py` 로 Δ+0 재기준, 구조 불변 확인) · 새 함수 블록 진입 영수증 `branch-coverage-new-functions.txt`(남은 진입 0 블록 7 처분 포함).
+
+**기록만(로트 밖).** 유지#6 상수 전달 리팩터(R1 이 덮어 안전 효과 0 · supervisor 편집 필요) · 유지#9 RVOL 리터럴 이름(breakout 로트 재개방 회피). 각주: voice3 의 사본 전역 grep 에
+8.5 `_codex-r2/*.go` 줄이 우연히 걸림 — 판정 미사용, 즉시 범위 축소, 출력 맨 위 자기 고지.
+
+**FLM 비례 판정.** 생산 편집 2자리 중 High-risk 경로 인접은 활성화 해석 하나(판정 · sentinel 불변, 사슬의 둘째 신원 제거) — Pre-Edit 번들 · BTM 갱신. 도구 `run` 은 생산 경로 밖
+(Pre-Edit 번들만 남김, BTM `not-applicable` — 도구는 a112 BTM 범위 밖). 시험 · seam 편집은 「비례 원칙」 대로 `not-applicable`(시험 + 변이 재확인이 대신함).
+
+**재확인의 한계.** P1 재확인은 리뷰어 자신의 재현 변이를 다시 넣은 것이다 — 새 리뷰어의 재검토는 아니다. 남은 위험 셋은 disposition.md 끝 절.

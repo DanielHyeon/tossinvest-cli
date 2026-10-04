@@ -515,7 +515,7 @@ func decodeProductionFamilyActivation(data []byte) (productionFamilyActivationBo
 	decoder.DisallowUnknownFields()
 	var manifest productionFamilyActivationBody
 	if err := decoder.Decode(&manifest); err != nil {
-		return productionFamilyActivationBody{}, fmt.Errorf("%w: manifest json: %w", ErrProductionFamilyActivationUnavailable, err)
+		return productionFamilyActivationBody{}, fmt.Errorf("%w: manifest json: %v", ErrProductionFamilyActivationUnavailable, err)
 	}
 	if err := decoder.Decode(&struct{}{}); err != io.EOF {
 		return productionFamilyActivationBody{}, fmt.Errorf("%w: trailing data after the manifest document", ErrProductionFamilyActivationUnavailable)

@@ -2658,7 +2658,7 @@
           "restartNotBefore": {"type": ["string", "null"], "format": "date-time"},
           "snapshotDigest": {"type": ["string", "null"], "maxLength": 256},
           "evidenceDigest": {"type": ["string", "null"], "maxLength": 256},
-          "shadowOutcome": {"type": ["string", "null"], "description": "Counterfactual of a SHADOW lane for its latest evaluate wave: WOULD_EMIT (an owned sealed proposal - the lane would have emitted had it been ON), NOT_THIS_LANE (a proposal claimed this lane but its seal or family does not hold), NO_INPUT (no proposal claimed this lane). null whenever runtime is not SHADOW, including whenever no shadow pin is deployed.", "enum": ["WOULD_EMIT", "NOT_THIS_LANE", "NO_INPUT", null]}
+          "shadowOutcome": {"type": ["string", "null"], "description": "Counterfactual of a SHADOW lane for its latest evaluate wave: WOULD_EMIT (an owned sealed proposal - the lane would have emitted had it been ON), NOT_THIS_LANE (a proposal claimed this lane but its seal or family does not hold), NO_INPUT (no proposal claimed this lane). The verdict does not reflect the lane latch: a LATCHED lane can still read WOULD_EMIT (health on the same row says it is latched). null whenever runtime is not SHADOW, including whenever no shadow pin is deployed.", "enum": ["WOULD_EMIT", "NOT_THIS_LANE", "NO_INPUT", null]}
         }
       },
       "StrategyRuntimeCoordinator": {

@@ -1,7 +1,7 @@
 # Function Logic Map: `FamilyActivationDocument.body`
 
 - Source: `internal/strategyrouter/production_family_activation.go`
-- Source SHA-256: `57123f814187d9201ec6999d6375adc649b579c89beb6c4731f36cc51243b005`
+- Source SHA-256: `bac16c04b38d49c479a381fb326d7dd066e5525997322619d8ceb496e3ddb0d8`
 - Signature: `FamilyActivationDocument.body(params=0, results=2)`
 - Source range: `226:1`–`266:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 8.8.4-B).
@@ -52,3 +52,5 @@
 - 판정 · 수락 집합 불변 — 같은 입력이 같은 sentinel 로 거절된다(errors.Is 보존, `==` 비교 0 — grep). 메시지에 필드 이름만 더해진다.
 
 a112 8.5 응답 로트(2026-10-04): 같은 파일의 다른 함수 편집으로 줄만 밀림 — shift_same_file_bundles.py(구조 동일 확인 뒤 좌표 사상)
+
+0.5 응답 로트: 같은 파일의 주석 · 한 글자 편집(본문 구조 불변)으로 파일 SHA 만 바뀜

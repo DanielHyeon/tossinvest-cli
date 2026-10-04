@@ -18,3 +18,12 @@ docs/WORKFLOW.md 「사람 승인 base 재고정」 세 요건:
 
 옛 base 에서의 요구(2026-10-04 게이트 준비 분류 `../gateprep-2026-10-04/classification.txt`): 173 → 150(타 change 소관 missing 148 = 「형제 착지 몫」). 새 base 는 그
 형제 몫을 창 밖으로 옮긴다. SHADOW 로트 착지 뒤 영수증을 최종 갱신한다(새로 편집할 함수 편입).
+
+## 최종 갱신 — SHADOW 로트 착지 뒤(2026-10-05, HEAD 4cbcfb36)
+
+- 새 창 영수증 `window-receipt-1e25b3a3-at-4cbcfb36.tsv`(같은 하네스, 대상 = HEAD 4cbcfb36 워킹트리 + 아래 번들 하나): **required 60 · a112 FRESH 58 · STALE 2**.
+  STALE 둘은 **의도된 base 고정 번들**이다(본문 불변 — 바로 뒤에 새 함수를 붙인 diff 조각이 끝 줄과 맞닿아 수정 함수로 잡힘, `revision: base` · base 파일 AST):
+  `SelectedScopeJSONFields`(lanes.go — LaneRuntimes · LaneShadowOutcomes 추가) · `AllFourFamiliesForTest`(태그 seam — `FamilyActivationDesiredOnlyForTest` 추가,
+  이번 갱신에서 번들 `function-logic/internal-strategyrouter--allfourfamiliesfortest` 신설 — 직전 실행은 NO-BUNDLE 이었다). 영수증 하네스는 「지금 파일 바이트」 와만
+  비교하므로 base 고정 번들을 STALE 로 적는다; 게이트 판정은 `check-analysis-at-4cbcfb36.txt` rc=0 「evidence complete or diff-proven exempt」(required 60).
+- required 20 → 60 의 증가분 40 은 SHADOW 로트(엔진 · 투영 · 시험 호출 수정)와 그 같은 파일의 줄 밀림 재기준이다(로트 증거 `../lot-7.3.1-shadow/`).

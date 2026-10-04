@@ -1,6 +1,6 @@
 # Branch Test Map: `strategyLaneRuntime.runLane`
 
-- Source SHA-256: `333970fa5e15db9741cc10da836922c79763f4b1b87bf62ddbc1af2fba9c6462`; AST branch locations are authoritative.
+- Source SHA-256: `0935960f05276aa2bf972734943b879a5c56b3525f2083aeed9f5b2e3855c620`; AST branch locations are authoritative.
 - Revision: **modified (a112 7.5, 2026-10-01).** 분기 불변(2). `RunBounded` 에 넘기는 값이 `strategyFamilyLaneStep(lane, promotion)` → `runtime.laneStepFor(lane, promotion)` 한 곳 — 생산 정의(`strategy_lane_step.go`, `!tossos_testseams`)는 strategyFamilyLaneStep 한 줄이고 seam 은 태그 빌드(`strategy_lane_step_testseam.go`)에만 있다. 첫 구현은 무태그 함수 필드였고 5.1.2.1 핀이 잡았다(「핀이 잡은 자기 이탈」 — review).
 - 편집 전 번들: `analysis/measurements/lot-7.5/pre-edit/internal-app-engine--strategylaneruntime.runlane/`. 변이 원장 `analysis/measurements/lot-7.5/mutation-7.5.tsv`.
 

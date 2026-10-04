@@ -16,8 +16,10 @@ import (
 	"context"
 	"database/sql"
 	"go/ast"
+	"go/constant"
 	"go/parser"
 	"go/token"
+	"go/types"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -25,6 +27,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/testenv"
 )
 
 func TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten(t *testing.T) {
@@ -74,38 +77,39 @@ func TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWri
 }
 
 func TestTheRouterRuntimeStaysUnobservedAndOnlyTheProjectionAddsShadow(t *testing.T) {
-	census := func(dir, typeName string) []string {
+	// 0.5 리뷰 시험#8: 앞 판은 「타입을 적은 const」 만 셌음 — `var LaneRuntimeLive LaneRuntime = "LIVE"` 나 그룹 안 타입 생략 상수는
+	// 세지 않았음. 이제 철자가 아니라 **타입 검사기의 선언 객체**로 셈: 패키지 범위의 const · var 중 타입이 그 이름 붙은 타입인 것 전부
+	// (var 는 값 대신 「<var 이름>」 — 어휘는 상수여야 하므로 var 하나만 있어도 census 가 뒤집힘). 그리고 그 패키지 안에서 그 타입을 가진
+	// **상수 값 식** 전부가 어휘 안에 있어야 함(타입 없는 상수를 그 타입 자리에 넣는 암묵 변환도 걸림).
+	census := func(dir, importPath, typeName string) []string {
 		t.Helper()
-		files, err := filepath.Glob(filepath.Join(dir, "*.go"))
-		if err != nil || len(files) == 0 {
-			t.Fatalf("no Go files under %s (err=%v)", dir, err)
+		checked := testenv.TypeCheckProduction(t, dir, importPath)
+		isTarget := func(typ types.Type) bool {
+			named, ok := typ.(*types.Named)
+			return ok && named.Obj().Name() == typeName && named.Obj().Pkg() != nil && named.Obj().Pkg().Path() == importPath
 		}
+		vocabulary := map[string]bool{}
 		var values []string
-		for _, path := range files {
-			if strings.HasSuffix(path, "_test.go") {
+		for _, object := range checked.Info.Defs {
+			if object == nil || object.Pkg() == nil || object.Parent() != object.Pkg().Scope() || !isTarget(object.Type()) {
 				continue
 			}
-			file, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
-			if err != nil {
-				t.Fatal(err)
+			switch value := object.(type) {
+			case *types.Const:
+				text := constant.StringVal(value.Val())
+				vocabulary[text] = true
+				values = append(values, text)
+			case *types.Var:
+				values = append(values, "<var "+value.Name()+">")
 			}
-			for _, decl := range file.Decls {
-				gen, ok := decl.(*ast.GenDecl)
-				if !ok || gen.Tok != token.CONST {
-					continue
-				}
-				for _, spec := range gen.Specs {
-					value := spec.(*ast.ValueSpec)
-					if id, ok := value.Type.(*ast.Ident); ok && id.Name == typeName {
-						for index := range value.Names {
-							if lit, ok := value.Values[index].(*ast.BasicLit); ok {
-								values = append(values, strings.Trim(lit.Value, `"`))
-							} else {
-								values = append(values, "<non-literal>")
-							}
-						}
-					}
-				}
+		}
+		for expr, typed := range checked.Info.Types {
+			if typed.Value == nil || !isTarget(typed.Type) || typed.Value.Kind() != constant.String {
+				continue
+			}
+			// 빈 문자열은 영값(「아직 정하지 않음」 비교 · 기본값 채움 — strategyrouter scheduler.go 의 `record.Runtime == ""`)이라 어휘가 아님.
+			if text := constant.StringVal(typed.Value); text != "" && !vocabulary[text] {
+				values = append(values, "<constant expression "+text+" at "+checked.Fset.Position(expr.Pos()).String()+">")
 			}
 		}
 		sort.Strings(values)
@@ -113,11 +117,11 @@ func TestTheRouterRuntimeStaysUnobservedAndOnlyTheProjectionAddsShadow(t *testin
 	}
 	// a112 7.3.1 SHADOW 로트(브리프 v3.3 §7)가 이 census 의 주인이다: SHADOW 는 projection 어휘에만 열리고, router RuntimeState 는
 	// MarketRecord 와 공유하므로 {UNOBSERVED} 그대로다. 어휘는 타입을 가진 상수로만 세운다(변환식 `LaneRuntime("…")` 은 아래에서 0 으로 잰다).
-	for _, tc := range []struct{ dir, typeName, want string }{
-		{"../../strategyrouter", "RuntimeState", "UNOBSERVED"},
-		{"../../strategyprojection", "LaneRuntime", "SHADOW,UNOBSERVED"},
+	for _, tc := range []struct{ dir, importPath, typeName, want string }{
+		{"../../strategyrouter", "github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter", "RuntimeState", "UNOBSERVED"},
+		{"../../strategyprojection", "github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection", "LaneRuntime", "SHADOW,UNOBSERVED"},
 	} {
-		if got := census(tc.dir, tc.typeName); strings.Join(got, ",") != tc.want {
+		if got := census(tc.dir, tc.importPath, tc.typeName); strings.Join(got, ",") != tc.want {
 			t.Errorf("%s %s constants=%v, want exactly [%s]", tc.dir, tc.typeName, got, tc.want)
 		}
 	}

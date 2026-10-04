@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/testenv"
@@ -65,9 +66,20 @@ var a112ShadowForbidden = []string{"strategyFamilyGate.admit", "strategyProposal
 	"strategyProposalMarketAuthority.dispatchHandoff", "strategyProposalMarketAuthority.authorityForOwnerScope",
 	"strategyMarketArbitration.entries", "dispatchStrategyMarketHandoffs", "strategyDispatchCycle.dispatch"}
 
+// a112EngineChecked 는 엔진 생산 패키지 타입 검사를 한 번만 함(0.5 리뷰 성능#1 — census 시험마다 ~6s 씩 다시 검사했음).
+// 실패는 값으로 남아 이 묶음을 읽는 모든 시험이 같은 오류로 실패함(첫 시험에만 귀속되고 나머지가 영값을 받는 일 없음).
+// 검사 결과(Info 맵)는 읽기만 함 — 시험들이 공유해도 판정이 바뀌지 않음.
+var a112EngineChecked = sync.OnceValues(func() (testenv.CheckedPackage, error) {
+	return testenv.TypeCheckProductionErr(".", a112EnginePath)
+})
+
 func a112CheckedEngine(t *testing.T) testenv.CheckedPackage {
 	t.Helper()
-	return testenv.TypeCheckProduction(t, ".", a112EnginePath)
+	checked, err := a112EngineChecked()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return checked
 }
 
 func a112FuncName(decl *ast.FuncDecl) string {
@@ -473,6 +485,46 @@ func TestTheCoordinatorCollectsWithOneStatementAndReturnsTheAbsentValueOnCollisi
 		strings.Join(stores, " | ") != "strategyShadowBatch{} | collected.boundTo(loader.shadowConfig(market, schedule, routes))" {
 		t.Fatalf("collectMarket shadow stores=%v — want the absent value first, then the coordinated batch with its binding", stores)
 	}
+	// 0.5 리뷰 보안#1: 관문을 쥔 두 함수 안에서 shadow 값이 나타나는 자리를 **정확히** 고정함 — collect 문 하나 · admit 앞만 세면
+	// 같은 함수 안의 `len(shadow.inputs) > 64 { gate = … }` 같은 읽기(변이 M4 — 묶음 크기가 관문을 내림)가 살아남음.
+	// 지역 변수 객체의 정의 · 사용 식별자를 전수로 셈(이름이 아니라 types 객체 — 가림 · 별칭도 같은 객체면 걸림).
+	for _, pin := range []struct {
+		decl  *ast.FuncDecl
+		name  string
+		sites []string
+	}{
+		{coordinate, "shadow", []string{"def shadow := strategyShadowBatch{…}", "use shadow.collect(…)", "use return …, shadow"}},
+		{collectMarket, "shadow", []string{"def shadow *strategyShadowBatch (param)", "use *shadow = strategyShadowBatch{}", "use *shadow = collected.boundTo(…)"}},
+		{collectMarket, "collected", []string{"def …, collected := coordinateMarketProposals(…)", "use *shadow = collected.boundTo(…)"}},
+	} {
+		if got := a112LocalObjectSites(checked.Info, pin.decl, pin.name); got != len(pin.sites) {
+			t.Errorf("%s: the local %q appears at %d identifier sites, want exactly %d %v — any other read can steer the gate",
+				a112FuncName(pin.decl), pin.name, got, len(pin.sites), pin.sites)
+		}
+	}
+}
+
+// a112LocalObjectSites 는 함수 선언 안에서 정의된 지역 변수(매개변수 포함) `name` 의 객체를 가리키는 식별자(정의 + 사용) 수임.
+// 같은 이름의 지역이 둘이면 둘 다 셈 — 새로 가린 변수도 자리로 걸리게.
+func a112LocalObjectSites(info *types.Info, decl *ast.FuncDecl, name string) int {
+	inside := func(object types.Object) bool {
+		variable, ok := object.(*types.Var)
+		return ok && !variable.IsField() && variable.Name() == name && object.Pos() >= decl.Pos() && object.Pos() <= decl.End()
+	}
+	n := 0
+	ast.Inspect(decl, func(node ast.Node) bool {
+		ident, ok := node.(*ast.Ident)
+		if !ok {
+			return true
+		}
+		if object := info.Defs[ident]; object != nil && inside(object) {
+			n++
+		} else if object := info.Uses[ident]; object != nil && inside(object) {
+			n++
+		}
+		return true
+	})
+	return n
 }
 
 // cycle 클로저: 두 생산 자리 → productionStrategyCycle 하나 → strategyCycleWithShadow(run = 주기 함수). 몸통: recover 0, defer 는
@@ -558,8 +610,11 @@ func TestTheShadowStepClosureNeverRefreshesCoordinatesDispatchesOrWrites(t *test
 			}
 		}
 	}
+	// workers 는 폐포가 닿는 strategyworker 패키지 함수 · 메서드(「수신자.이름」)임 — 허용 목록 대조용.
+	workers := map[string]bool{}
 	closure := func(roots ...string) (map[string]bool, map[string]bool) {
 		callees, fields := map[string]bool{}, map[string]bool{}
+		clear(workers)
 		stack, seen := append([]string(nil), roots...), map[string]bool{}
 		for len(stack) > 0 {
 			name := stack[len(stack)-1]
@@ -581,6 +636,9 @@ func TestTheShadowStepClosureNeverRefreshesCoordinatesDispatchesOrWrites(t *test
 				case *types.Func:
 					full := object.FullName()
 					callees[full] = true
+					if object.Pkg() != nil && object.Pkg().Path() == a112WorkerPath {
+						workers[a112ReceiverQualified(object)] = true
+					}
 					if object.Pkg() != nil && object.Pkg().Path() == a112EnginePath {
 						key := object.Name()
 						if signature, ok := object.Type().(*types.Signature); ok && signature.Recv() != nil {
@@ -632,8 +690,28 @@ func TestTheShadowStepClosureNeverRefreshesCoordinatesDispatchesOrWrites(t *test
 			t.Errorf("lower bound: the closure walk never reached %s — it read nothing", must)
 		}
 	}
-	// 양성 대조: 같은 걸음이 주기 함수에서는 refresh 를 본다.
+	// 0.5 리뷰 시험#2: 금지 단어 목록은 레인 상태를 바꾸는 호출(Offer · Fail · Run …)을 못 봄 → strategyworker 는 **허용 목록**.
+	// 단계가 레인에 할 수 있는 일은 열쇠 읽기 · 자격 술어 · 반사실 판정 셋뿐이고, 셋 다 닿아야 함(하한 — 빈 표본 통과 방지).
+	allowedWorkers := map[string]bool{"Lane.Key": true, "Lane.ShadowEligible": true, "Lane.ShadowOutcomeOver": true}
+	for worker := range workers {
+		if !allowedWorkers[worker] {
+			t.Errorf("the shadow step closure reaches strategyworker %s — only Lane.Key · Lane.ShadowEligible · Lane.ShadowOutcomeOver", worker)
+		}
+	}
+	for worker := range allowedWorkers {
+		if !workers[worker] {
+			t.Errorf("lower bound: the closure walk never reached strategyworker %s", worker)
+		}
+	}
+	// 양성 대조: 같은 걸음이 주기 함수에서는 refresh 와 허용 목록 밖 레인 메서드를 본다.
 	control, _ := closure("Context.runProductionStrategyMarketCycle")
+	outside := false
+	for worker := range workers {
+		outside = outside || !allowedWorkers[worker]
+	}
+	if !outside {
+		t.Fatalf("control: the walk from the market cycle reached only allowed worker calls %v — the allowlist check is blind", workers)
+	}
 	seen := false
 	for callee := range control {
 		seen = seen || strings.Contains(callee, "refreshPairedStrategyEntryProductionAssembly")
@@ -641,6 +719,25 @@ func TestTheShadowStepClosureNeverRefreshesCoordinatesDispatchesOrWrites(t *test
 	if !seen {
 		t.Fatal("control: the walk from the market cycle did not reach the refresh — the walker is blind")
 	}
+}
+
+// a112WorkerPath 는 레인 상태를 가진 strategyworker 패키지 경로임.
+const a112WorkerPath = "github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker"
+
+// a112ReceiverQualified 는 함수 객체를 「수신자.이름」(수신자 없으면 이름)으로 적음 — 포인터 수신자는 벗김.
+func a112ReceiverQualified(object *types.Func) string {
+	signature, ok := object.Type().(*types.Signature)
+	if !ok || signature.Recv() == nil {
+		return object.Name()
+	}
+	receiver := signature.Recv().Type()
+	if pointer, ok := receiver.(*types.Pointer); ok {
+		receiver = pointer.Elem()
+	}
+	if named, ok := receiver.(*types.Named); ok {
+		return named.Obj().Name() + "." + object.Name()
+	}
+	return object.Name()
 }
 
 // a112Source 는 식의 원문(printer)이다 — types.ExprString 은 composite literal 원소를 「…」 로 줄인다.

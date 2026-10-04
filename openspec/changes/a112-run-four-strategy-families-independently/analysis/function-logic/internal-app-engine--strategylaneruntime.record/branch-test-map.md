@@ -1,6 +1,6 @@
 # Branch Test Map: `record`
 
-- Source SHA-256: `333970fa5e15db9741cc10da836922c79763f4b1b87bf62ddbc1af2fba9c6462`; AST branch locations are authoritative.
+- Source SHA-256: `0935960f05276aa2bf972734943b879a5c56b3525f2083aeed9f5b2e3855c620`; AST branch locations are authoritative.
 - Revision: **modified (a112 7.3.1 SHADOW, 2026-10-01).** 분기 불변(4). 파도 증가 바로 뒤 같은 잠금에서 `shadowCells[market] = {wave, batch, activation}` 을 덮어쓴다(⑤).
 - 편집 전 번들: `analysis/measurements/lot-7.3.1-shadow/pre-edit/internal-app-engine--strategylaneruntime.record/`. 변이 원장 `analysis/measurements/lot-7.3.1-shadow/mutation-7.3.1-S.tsv`.
 

@@ -91,6 +91,9 @@ func newA112ShadowWorld(t *testing.T, pinned bool, activation strategyrouter.Fam
 	if activation.Verified() {
 		kr := proposals.kr
 		kr.activation = activation
+		// 활성화된 시장의 handoff 는 조립이 중재 때 적은 제안 집합 digest 와 대조된다(strategy_dispatch_handoff.go 가독 계약) — fixture 도
+		// 조립과 같은 식으로 적어야 dispatch 가 실제로 돈다(0.5 리뷰 시험#1: 이것이 빠져 부분 ON 배치가 0 == 0 으로 통과했다).
+		kr.snapshot.ProposalSetDigest = strategyProposalSetDigest(kr.entries)
 		proposals.kr, cycle.proposals.kr = kr, kr
 		first := loader.proposals.kr
 		first.activation = activation
@@ -121,6 +124,8 @@ func (world *a112ShadowWorld) cycle(t *testing.T, market StrategyMarket) error {
 	return err
 }
 
+// a112WaitShadowIdle 은 단계 goroutine(단일 비행 표시)과 감독 goroutine(게시 · 마감 판정) **둘 다** 끝날 때까지 기다림.
+// 표시만 보면 감독의 게시 전에 돌아올 수 있음(0.5 리뷰 시험#3) — 감독 종료는 seam 의 stepCtx 닫힘으로 잼.
 func a112WaitShadowIdle(t *testing.T, runtime *strategyLaneRuntime, market StrategyMarket) {
 	t.Helper()
 	deadline := time.Now().Add(5 * time.Second)
@@ -128,12 +133,25 @@ func a112WaitShadowIdle(t *testing.T, runtime *strategyLaneRuntime, market Strat
 		runtime.mu.RLock()
 		busy := runtime.shadowInFlight[market]
 		runtime.mu.RUnlock()
-		if !busy {
+		if !busy && strategyShadowSupervisionSettledForTest(runtime) {
 			return
 		}
 		time.Sleep(time.Millisecond)
 	}
 	t.Fatalf("the %s shadow step did not finish", market)
+}
+
+// a112WaitShadowSupervisionSettled 는 감독 goroutine 만 끝날 때까지 기다림(멈춘 단계를 풀기 **전** — 마감 판정이 끝났음을 확정).
+func a112WaitShadowSupervisionSettled(t *testing.T, runtime *strategyLaneRuntime) {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		if strategyShadowStepsStartedForTest(runtime) > 0 && strategyShadowSupervisionSettledForTest(runtime) {
+			return
+		}
+		time.Sleep(time.Millisecond)
+	}
+	t.Fatal("the shadow supervisor did not settle")
 }
 
 // a112ShadowLanes 는 KR 레인 넷의 투영(생산 순서)이다.
@@ -208,6 +226,43 @@ func TestTheShadowStepProjectsWouldEmitForOffLanesAfterTheCycle(t *testing.T) {
 	}
 }
 
+// 0.5 리뷰 시험#2 행동 짝: 성공한 단계 전후로 8 레인 Status() 가 같음. 구조 핀(허용 목록)이 막는 「단계가 레인 상태를 바꾼다」
+// (`lane.Offer` 변이 — OFF 레인 pending 을 올려 나중에 켜졌을 때 진짜 투입이 queueDepth 에서 버려짐)를 행동으로도 잼.
+// 주기가 바꾼 상태는 기준에 넣고 단계만 다시 띄움: 관측을 지워 세대를 올린 뒤 같은 칸으로 단계를 시작함.
+func TestASuccessfulShadowStepLeavesEveryLaneStatusUnchanged(t *testing.T) {
+	world := newA112ShadowWorld(t, true, strategyrouter.FamilyActivation{})
+	if err := world.cycle(t, StrategyMarketKR); err != nil {
+		t.Fatalf("cycle err=%v", err)
+	}
+	statuses := func() map[strategyworker.Key]strategyworker.LaneStatus {
+		out := map[strategyworker.Key]strategyworker.LaneStatus{}
+		for _, lane := range world.lanes.lanes {
+			out[lane.Key()] = lane.Status()
+		}
+		return out
+	}
+	world.lanes.invalidateShadow(StrategyMarketKR)
+	if n := a112ShadowCount(a112ShadowLanes(t, world.c)); n != 0 {
+		t.Fatalf("arrangement: invalidate left %d SHADOW lanes", n)
+	}
+	before := statuses()
+	if len(before) != 8 {
+		t.Fatalf("arrangement: %d lanes, want 8", len(before))
+	}
+	world.lanes.startShadowStep(context.Background(), world.clk, StrategyMarketKR)
+	a112WaitShadowIdle(t, world.lanes, StrategyMarketKR)
+	// 전제(빈 표본 금지): 단계가 실제로 성공해 WOULD_EMIT 를 게시했어야 「불변」 이 무언가를 잼.
+	if n := a112ShadowCount(a112ShadowLanes(t, world.c)); n < 1 {
+		t.Fatal("precondition: the re-run step published no WOULD_EMIT")
+	}
+	after := statuses()
+	for key, want := range before {
+		if got := after[key]; got != want {
+			t.Errorf("lane %v status changed across a successful shadow step:\n before %+v\n  after %+v", key, want, got)
+		}
+	}
+}
+
 // 차등 dispatch(§8): 두 배치(미선언 · 부분 ON)에서 shadow 핀 유/무의 궤적이 같다. 전제: 핀 쪽 WOULD_EMIT ≥ 1(빈 표본 통과 금지).
 func TestTheShadowPinLeavesTheDispatchTraceUnchanged(t *testing.T) {
 	partial := strategyrouter.FamilyActivationForTest(strategyrouter.MarketKR, 1, map[string]bool{continuationlane.KRContinuationLaneID: true})
@@ -223,6 +278,10 @@ func TestTheShadowPinLeavesTheDispatchTraceUnchanged(t *testing.T) {
 			}
 			if a112ShadowCount(a112ShadowLanes(t, without.c)) != 0 {
 				t.Fatal("the unpinned run projected SHADOW")
+			}
+			// 전제(빈 표본 금지 — 0.5 리뷰 시험#1): 비교하는 궤적에 실제 주문 하나 이상이 있어야 「같다」 가 무언가를 잰다.
+			if placed := without.trace(t).placed; placed < 1 {
+				t.Fatalf("precondition: the baseline dispatched %d orders — the differential would compare two empty traces", placed)
 			}
 			if got, want := with.trace(t), without.trace(t); got != want {
 				t.Fatalf("dispatch trace with the shadow pin %+v, without %+v — SHADOW must not change dispatch", got, want)
@@ -272,8 +331,9 @@ func TestAFailingShadowStepChangesNothingButItsOwnObservation(t *testing.T) {
 					t.Fatal("the shadow watchdog never slept")
 				}
 				world.clk.Advance(strategyShadowStepDeadline + time.Nanosecond)
-				// 감시견이 마감을 판정한 뒤 늦은 결과를 낸다 — 버려져야 한다.
-				time.Sleep(20 * time.Millisecond)
+				// 감시견이 마감을 판정한 뒤 늦은 결과를 낸다 — 버려져야 한다. 실시간 sleep 대신 감독 종료를 seam 으로 확정한 뒤
+				// 풂(0.5 리뷰 시험#4 — 부하에서 결과 · 마감이 동시에 준비되면 select 가 무작위로 고르던 경합).
+				a112WaitShadowSupervisionSettled(t, world.lanes)
 				close(release)
 			}
 			a112WaitShadowIdle(t, world.lanes, StrategyMarketKR)
@@ -294,13 +354,28 @@ func TestAFailingShadowStepChangesNothingButItsOwnObservation(t *testing.T) {
 
 // 교차 시장(§5 v3.1): KR shadow 단계가 마감 초과로 멈춘 동안 US 주기 → US 잠기지 않음 · refresh 파도를 일으키지 않음 · US 주기의 결과와
 // dispatch 궤적이 shadow 없는 같은 순서(KR → US)와 같다.
+//
+// 0.5 리뷰 시험#7: 앞 판은 KR 주기가 주문을 내 공유 위험 버킷 원장이 움직였고, 캐시된 US 위험 스냅숏이 낡아(BUCKET_USAGE_STALE) US 가
+// 기준 · 실험 둘 다 같은 실패로 끝났음 — 「US dispatch 불변」 이 「같은 오류」 만 쟀음. 그래서 KR 주기는 dispatch 없이 돌림(평가 · record ·
+// shadow 칸은 그대로 서고 단계도 시작됨 — dispatch 는 이 시험의 KR 쪽 측정 대상이 아님). US 기준은 주문 ≥ 1 을 전제로 단언함.
 func TestAStuckShadowStepNeitherLatchesNorRefreshesTheOtherMarket(t *testing.T) {
+	krWithoutDispatch := func(world *a112ShadowWorld) error {
+		saved := world.c.strategyRefresh.dispatch
+		world.c.strategyRefresh.dispatch = nil
+		defer func() { world.c.strategyRefresh.dispatch = saved }()
+		return world.c.productionStrategyCycle(world.clk, StrategyMarketKR)(context.Background())
+	}
 	baseline := newA112ShadowWorld(t, false, strategyrouter.FamilyActivation{})
-	baselineKR := baseline.cycle(t, StrategyMarketKR)
+	baselineKR := krWithoutDispatch(baseline)
+	a112WaitShadowIdle(t, baseline.lanes, StrategyMarketKR)
 	baselineUS := baseline.cycle(t, StrategyMarketUS)
 	baseline.spy.mu.Lock()
 	baselineUSObserved, baselinePlaced := baseline.spy.observed["protection-us"], len(baseline.spy.calls)
 	baseline.spy.mu.Unlock()
+	// 전제(빈 표본 금지): US 기준 주기가 실제로 주문을 냈어야 「같다」 가 US dispatch 를 잼.
+	if baselineUS != nil || baselinePlaced < 1 || baselineUSObserved < 1 {
+		t.Fatalf("precondition: the US baseline err=%v placed=%d observed=%d — want a clean US dispatch ≥ 1", baselineUS, baselinePlaced, baselineUSObserved)
+	}
 
 	world := newA112ShadowWorld(t, true, strategyrouter.FamilyActivation{})
 	release := make(chan struct{})
@@ -315,9 +390,19 @@ func TestAStuckShadowStepNeitherLatchesNorRefreshesTheOtherMarket(t *testing.T) 
 		<-release
 		return strategyshadow.FamilyShadow{}, nil
 	}))
-	errKR := world.c.productionStrategyCycle(world.clk, StrategyMarketKR)(context.Background())
+	errKR := krWithoutDispatch(world)
 	if (errKR == nil) != (baselineKR == nil) {
 		t.Fatalf("KR cycle err=%v, baseline %v", errKR, baselineKR)
+	}
+	if strategyShadowStepsStartedForTest(world.lanes) < 1 {
+		// 단계가 적재기에 닿기 전일 수 있음 — 닿을 때까지 기다림(멈춘 단계가 있어야 이 시험이 무언가를 잼).
+		deadline := time.Now().Add(5 * time.Second)
+		for strategyShadowStepsStartedForTest(world.lanes) < 1 && time.Now().Before(deadline) {
+			time.Sleep(time.Millisecond)
+		}
+		if strategyShadowStepsStartedForTest(world.lanes) < 1 {
+			t.Fatal("precondition: the KR shadow step never reached its loader — nothing is stuck")
+		}
 	}
 	cached, cachedAt := world.c.strategyRefresh, world.c.strategyRefreshAt
 	errUS := world.c.productionStrategyCycle(world.clk, StrategyMarketUS)(context.Background())
@@ -579,5 +664,34 @@ func TestNeitherTheStepNorTheProjectionShadowsAnOnLane(t *testing.T) {
 	shadow := &strategyShadowObservation{wave: 1, outcome: strategyworker.ShadowWouldEmit}
 	if got := strategyLaneProjection(lane, on, true, shadow); got.Runtime != strategyprojection.LaneRuntimeUnobserved || got.ShadowOutcome != nil {
 		t.Fatalf("an ON observation was projected as %s/%v", got.Runtime, got.ShadowOutcome)
+	}
+}
+
+// 0.5 리뷰 유지#3: 투영의 OFF/OFF 재확인(strategy_lane_projection.go)은 단계의 ShadowEligible 뒤라 생산에서는 닿지 않고, 위 시험은
+// ON/ON 만 넣어 `Desired` 항을 지운 변이(M2)가 살아남았음. 직접 호출로 네 조합을 다 넣어 두 항을 각각 못 박음 —
+// desired ON · effective OFF(켜기로 했지만 아직 안 켜진 레인)도 SHADOW 가 아님. OFF/OFF 는 양성 대조(SHADOW 로 보여야 함).
+func TestTheProjectionShadowsOnlyAnOffOffObservation(t *testing.T) {
+	world := newA112ShadowWorld(t, true, strategyrouter.FamilyActivation{})
+	lane := world.lanes.lanesFor(StrategyMarketKR)[0]
+	shadow := &strategyShadowObservation{wave: 1, outcome: strategyworker.ShadowWouldEmit}
+	for _, tc := range []struct {
+		desired, effective strategyrouter.DesiredState
+		shadowed           bool
+	}{
+		{strategyrouter.StateOff, strategyrouter.StateOff, true},
+		{strategyrouter.StateOn, strategyrouter.StateOff, false},
+		{strategyrouter.StateOff, strategyrouter.StateOn, false},
+		{strategyrouter.StateOn, strategyrouter.StateOn, false},
+	} {
+		observation := strategyLaneObservation{Key: lane.Key(), Wave: 1, Trigger: strategyworker.TriggerDisabled,
+			Desired: tc.desired, Effective: tc.effective}
+		got := strategyLaneProjection(lane, observation, true, shadow)
+		isShadow := got.Runtime == strategyprojection.LaneRuntimeShadow && got.ShadowOutcome != nil
+		if isShadow != tc.shadowed {
+			t.Errorf("desired=%s effective=%s projected %s/%v, want shadowed=%v", tc.desired, tc.effective, got.Runtime, got.ShadowOutcome, tc.shadowed)
+		}
+		if !tc.shadowed && (got.Runtime != strategyprojection.LaneRuntimeUnobserved || got.ShadowOutcome != nil) {
+			t.Errorf("desired=%s effective=%s projected %s/%v, want UNOBSERVED with no outcome", tc.desired, tc.effective, got.Runtime, got.ShadowOutcome)
+		}
 	}
 }

@@ -1,0 +1,2442 @@
+diff --git a/internal/app/engine/strategy_entry_supervisor.go b/internal/app/engine/strategy_entry_supervisor.go
+index 6e8914d66..a051104a1 100644
+--- a/internal/app/engine/strategy_entry_supervisor.go
++++ b/internal/app/engine/strategy_entry_supervisor.go
+@@ -282,6 +282,9 @@ type StrategyEntryProductionAssembly struct {
+ 	// 스칼라 관측이라 활성화 세대를 담지 않는다. durable lane latch 의 복구
+ 	// 조건이 그 세대이므로(5.3.3), 권위를 그대로 들고 있어야 한다.
+ 	schedule strategyScheduleAuthorityPair
++	// shadow 는 a112 7.3.1 의 관문 앞 제안 묶음 짝이다 — proposals(주문 경로의 권한)와 **별개 필드**다. 시장 주기는 이 값을 evaluate 인자
++	// 한 자리로만 레인 런타임에 넘기고(값 보관), dispatch · worker · 결과 권한에는 닿지 않는다(census ②).
++	shadow strategyShadowPair
+ }
+ 
+ // NewPairedStrategyEntryProductionAssembly loads KR and US from one frozen
+@@ -321,7 +324,7 @@ func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context,
+ 	if err != nil {
+ 		return StrategyEntryProductionAssembly{}, err
+ 	}
+-	proposalAuthority := newStrategyProposalAuthorityLoader(c.Paths.ConfigDir, evidencePath, journalPath, c.AccountRef, os.Getenv).
++	proposalAuthority, shadowAuthority := newStrategyProposalAuthorityLoader(c.Paths.ConfigDir, evidencePath, journalPath, c.AccountRef, os.Getenv).
+ 		withStrategyLanes(lanes).
+ 		collect(ctx, scheduleAuthority, routeAuthority, fxAuthority)
+ 	resultAuthority := proposalAuthority.ResultAuthority()
+@@ -342,16 +345,10 @@ func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context,
+ 	if clk != nil {
+ 		dispatchCycle.now = clk.Now
+ 	}
++	// 재검증 = 수집(I/O) + drift 판정. 판정은 축마다 시험할 수 있게 순수 함수로 옮겼다(a112 6.3 — 의미 무변경 이동).
+ 	dispatchCycle.revalidateSchedule = func(checkCtx context.Context, market StrategyMarket, expected strategyScheduleMarketAuthority) error {
+ 		fresh := newStrategyScheduleAuthorityLoader(c.Paths.ConfigDir, clk, c.official, os.Getenv).collectMarket(checkCtx, market)
+-		if !fresh.snapshot.Ready || fresh.restore.Activation == nil || expected.restore.Activation == nil ||
+-			fresh.desired.Revision != expected.desired.Revision || fresh.calendar.Version != expected.calendar.Version ||
+-			fresh.snapshot.ActivationManifestDigest != expected.snapshot.ActivationManifestDigest ||
+-			fresh.restore.Activation.Generation() != expected.restore.Activation.Generation() ||
+-			!fresh.restore.Activation.ExpiresAt().Equal(expected.restore.Activation.ExpiresAt()) {
+-			return errors.New("engine: signed scheduler activation no longer matches dispatch admission")
+-		}
+-		return nil
++		return strategyScheduleStillMatchesAdmission(fresh, expected)
+ 	}
+ 	snapshot := StrategyEntryProductionSnapshot{
+ 		Clock:              clk,
+@@ -372,7 +369,7 @@ func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context,
+ 	assembly := StrategyEntryProductionAssembly{Supervisor: supervisor, Schedule: snapshot.Schedule,
+ 		Candidate: candidateAuthority.Snapshot(), Route: routeAuthority.Snapshot(), FX: fxAuthority.Snapshot(), Proposal: proposalAuthority.Snapshot(),
+ 		Risk: riskAuthority.Snapshot(), Account: accountAuthority.Snapshot(), firstLeg: firstLegBridge, dispatch: dispatchCycle,
+-		proposals: proposalAuthority, schedule: scheduleAuthority}
++		proposals: proposalAuthority, schedule: scheduleAuthority, shadow: shadowAuthority}
+ 	if err := c.publishStrategyRuntime(assembly); err != nil {
+ 		return StrategyEntryProductionAssembly{}, err
+ 	}
+@@ -398,9 +395,9 @@ func (c *Context) NewRefreshingPairedStrategyEntrySupervisor(clk clock.Clock) (*
+ 		market := market
+ 		workers = append(workers, StrategyMarketWorker{
+ 			Market: market, PollInterval: DefaultStrategyCycleLimit, RefreshesAuthority: true,
+-			Cycle: func(cycleCtx context.Context) error {
+-				return c.runProductionStrategyMarketCycle(cycleCtx, clk, market)
+-			},
++			// a112 7.3.1: 주기 함수를 부르고, nil 로 돌아온 **뒤**에만 shadow 단계를 비동기로 시작하는 클로저(productionStrategyCycle 하나 —
++			// 두 생산 자리가 같은 몸통을 쓴다). 반환값은 주기 함수의 오류 그대로다.
++			Cycle: c.productionStrategyCycle(clk, market),
+ 		})
+ 	}
+ 	supervisor, err := NewStrategyEntrySupervisor(StrategyEntrySupervisorOptions{
+@@ -425,8 +422,7 @@ func (c *Context) productionStrategyWorker(ctx context.Context, clk clock.Clock,
+ 	}
+ 	return buildProductionStrategyMarketWorker(ctx, clk, market,
+ 		c.Journal != nil && c.Gateway != nil && c.Guardian != nil && c.Automation.Verified,
+-		c.Gateway, schedule, candidate, route, fx, proposal, riskAuthority, account,
+-		func(cycleCtx context.Context) error { return c.runProductionStrategyMarketCycle(cycleCtx, clk, market) })
++		c.Gateway, schedule, candidate, route, fx, proposal, riskAuthority, account, c.productionStrategyCycle(clk, market))
+ }
+ 
+ func buildProductionStrategyMarketWorker(ctx context.Context, clk clock.Clock, market StrategyMarket, wiringReady bool,
+@@ -546,10 +542,14 @@ func (c *Context) runProductionStrategyMarketCycle(ctx context.Context, clk cloc
+ 	if err != nil {
+ 		return err
+ 	}
++	// a112 7.3.1(Manager 판정 (A)): 마지막 인자 하나가 이 물결의 shadow 묶음이다 — 레인 런타임이 파도 번호와 **같은 잠금**에서 값으로 보관할
++	// 뿐(dispatch 앞 shadow **일** 0: 적재 · 판정 · I/O 없음). shadow 단계는 이 함수가 돌아온 뒤 cycle 클로저가 시작한다. 이 함수 본문의
++	// shadow 타입 식은 이 인자 하나뿐이고 그 유일한 호출은 접근자 forMarket 이다(a112_shadow_structure_test.go 가 타입 규칙으로 못 박음).
+ 	if err := lanes.evaluate(ctx, market,
+ 		fresh.schedule.forMarket(market).restore.Activation.Generation(),
+ 		fresh.proposals.forMarket(market).familyActivation(),
+-		strategyLaneInputs(c.AccountRef, fresh.proposals.forMarket(market))); err != nil {
++		strategyLaneInputs(c.AccountRef, fresh.proposals.forMarket(market)),
++		fresh.shadow.forMarket(market)); err != nil {
+ 		return err
+ 	}
+ 	if fresh.dispatch == nil {
+diff --git a/internal/app/engine/strategy_family_activation.go b/internal/app/engine/strategy_family_activation.go
+index 2800653c4..a755658c9 100644
+--- a/internal/app/engine/strategy_family_activation.go
++++ b/internal/app/engine/strategy_family_activation.go
+@@ -154,6 +154,13 @@ func (loader *strategyProposalAuthorityLoader) familyGateFor(ctx context.Context
+ func (loader *strategyProposalAuthorityLoader) loadFamilyActivation(ctx context.Context, market StrategyMarket,
+ 	schedule strategyScheduleMarketAuthority, routes strategyRouteMarketAuthority, observedAt time.Time,
+ ) (strategyrouter.FamilyActivation, error) {
++	// env 를 읽을 수 없으면 핀이 비었는지조차 모른다 — 미선언이라고 답하면 선언된 시장을 기존 경로로 연다. 그래서 「선언됐는데 쓸 수 없음」
++	// (관문 되돌림)이다(a112 8.5 응답 로트 ② — codex r2 P2). 앞 판은 여기서 공황했고 collect 의 recover 가 같은 주기의 FX 미준비 사유를
++	// INTERNAL_FAILURE 로 덮었다. 생산 생성자는 nil 을 os.Getenv 로 채우므로 도달은 손으로 만든 적재기뿐이다.
++	// 맨 sentinel 을 돌려준다 — 이 경로의 호출은 읽기 전용 허용 목록(TestTheRollbackPathOnlyReads)으로 묶여 있고, 관문은 오류의 종류만 본다.
++	if loader.getenv == nil {
++		return strategyrouter.FamilyActivation{}, strategyrouter.ErrProductionFamilyActivationUnavailable
++	}
+ 	digestEnv := strategyFamilyActivationKRManifestDigestEnv
+ 	if market == StrategyMarketUS {
+ 		digestEnv = strategyFamilyActivationUSManifestDigestEnv
+diff --git a/internal/app/engine/strategy_lane_projection.go b/internal/app/engine/strategy_lane_projection.go
+index e3793597c..fade8b015 100644
+--- a/internal/app/engine/strategy_lane_projection.go
++++ b/internal/app/engine/strategy_lane_projection.go
+@@ -5,6 +5,7 @@ import (
+ 
+ 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
+ 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
+ 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker"
+ )
+ 
+@@ -32,30 +33,44 @@ func (runtime *strategyLaneRuntime) projection() []strategyprojection.LaneRuntim
+ 	if runtime == nil {
+ 		return nil
+ 	}
++	// a112 7.3.1 §5.1: shadow 관측은 판정 함수 하나(shadowObservationUsable — 파도 등식 ∧ 미만료 ∧ 나이 상한)로만 쓴다. 시계는 런타임 자기
++	// 시계다(호출자 서명 무변경) — 새 파도가 없어도 만료 · 나이가 관측을 끝낸다.
++	now := runtime.clk.Now()
+ 	runtime.mu.RLock()
+ 	defer runtime.mu.RUnlock()
+ 	values := make([]strategyprojection.LaneRuntimeProjection, 0, len(runtime.lanes))
+ 	for _, lane := range runtime.lanes {
+-		observation, seen := runtime.observed[lane.Key()]
+-		values = append(values, strategyLaneProjection(lane, observation, seen && observation.Wave > 0))
++		key := lane.Key()
++		observation, seen := runtime.observed[key]
++		var shadow *strategyShadowObservation
++		market := StrategyMarket(key.Market)
++		if value, ok := runtime.shadowObserved[market][key]; ok && shadowObservationUsable(now, runtime.waves[market], value) {
++			shadow = &value
++		}
++		values = append(values, strategyLaneProjection(lane, observation, seen && observation.Wave > 0, shadow))
+ 	}
+ 	return values
+ }
+ 
++// shadow(a112 7.3.1)는 쓸 수 있는 shadow 관측이다(없으면 nil). 관측된 레인이고 그 물결의 활성화가 OFF/OFF 로 둔 레인일 때만 runtime 을
++// SHADOW 로 올린다(validateLane 의 교차 규칙과 같은 조건) — desired/effective 는 그대로 관측 값이다(SHADOW 는 승격하지 않는다).
+ func strategyLaneProjection(lane *strategyworker.Lane, observation strategyLaneObservation, observed bool,
++	shadow *strategyShadowObservation,
+ ) strategyprojection.LaneRuntimeProjection {
+-	key, policy := lane.Key(), lane.Policy()
+-	health := strategyprojection.LaneHealth(lane.Health())
++	// a112 7.5 D2: 상태는 Lane.Status() **한 번**(한 잠금)으로 읽는다 — 접근자마다 잠금을 잡으면 그 사이 잠긴 레인이 「LATCHED 인데
++	// revision 0」 같은 찢긴 행으로 나온다. 열쇠 · 정책 · horizon · runtime 은 worker 값이라 레인 수명 동안 불변이다.
++	key, policy, row := lane.Key(), lane.Policy(), lane.Status()
++	health := strategyprojection.LaneHealth(row.Health)
+ 	version, deadline := policy.Version(), policy.CycleDeadline().Milliseconds()
+ 	value := strategyprojection.LaneRuntimeProjection{Market: strategyprojection.Market(key.Market), Family: string(key.Family),
+ 		LaneID: key.LaneID, LaneVersion: key.LaneVersion, Horizon: string(lane.Horizon()),
+ 		Desired: strategyprojection.StateOff, Effective: strategyprojection.StateOff,
+ 		Runtime: strategyprojection.LaneRuntime(lane.Runtime()), Health: &health,
+-		ConsecutiveFailures: lane.ConsecutiveFailures(), LatchRevision: lane.LatchRevision(),
+-		FirstFailure: strategyprojection.NormalizedText(lane.FirstFailure()),
+-		Pending:      lane.Pending(), Dropped: lane.Dropped(), Abandoned: lane.Abandoned(),
++		ConsecutiveFailures: row.ConsecutiveFailures, LatchRevision: row.LatchRevision,
++		FirstFailure: strategyprojection.NormalizedText(row.FirstFailure),
++		Pending:      row.Pending, Dropped: row.Dropped, Abandoned: row.Abandoned,
+ 		PolicyVersion: &version, CycleDeadlineMS: &deadline,
+-		NextDueAt: projectionTime(lane.NextDue()), RestartNotBefore: projectionTime(lane.RestartNotBefore())}
++		NextDueAt: projectionTime(row.NextDue), RestartNotBefore: projectionTime(row.RestartNotBefore)}
+ 	if !observed {
+ 		return value
+ 	}
+@@ -81,9 +96,24 @@ func strategyLaneProjection(lane *strategyworker.Lane, observation strategyLaneO
+ 	}
+ 	value.SnapshotDigest = projectionOptional(observation.SnapshotDigest)
+ 	value.EvidenceDigest = projectionOptional(observation.EvidenceDigest)
++	if shadow != nil && observation.Desired == strategyrouter.StateOff && observation.Effective == strategyrouter.StateOff {
++		outcome := strategyprojection.LaneShadowOutcome(shadow.outcome)
++		value.Runtime, value.ShadowOutcome = strategyprojection.LaneRuntimeShadow, &outcome
++	}
+ 	return value
+ }
+ 
++// strategyLanesWithoutShadow 는 그 시장 레인들의 SHADOW 를 지운다(R1 두 시계 — supervisor 가 그 시장의 평가를 abandon 으로 기록했으면 클로저의
++// 성공 판정과 갈렸을 수 있으므로 SHADOW 를 보이지 않는다). 읽기 전용 투영 값만 바꾼다.
++func strategyLanesWithoutShadow(lanes []strategyprojection.LaneRuntimeProjection, market StrategyMarket) []strategyprojection.LaneRuntimeProjection {
++	for index := range lanes {
++		if lanes[index].Market == strategyprojection.Market(market) && lanes[index].Runtime == strategyprojection.LaneRuntimeShadow {
++			lanes[index].Runtime, lanes[index].ShadowOutcome = strategyprojection.LaneRuntimeUnobserved, nil
++		}
++	}
++	return lanes
++}
++
+ // strategyCoordinatorProjection 은 한 시장의 제안 조정 스냅숏과 승인된 소유자 범위 전부다.
+ //
+ // selected 는 주문 경로(runProductionStrategyMarketCycle)와 **같은** handoff 목록(dispatchHandoffs)에서 승인되고 봉인이 유효한 범위다
+diff --git a/internal/app/engine/strategy_lane_runtime.go b/internal/app/engine/strategy_lane_runtime.go
+index 681c334de..627cbba09 100644
+--- a/internal/app/engine/strategy_lane_runtime.go
++++ b/internal/app/engine/strategy_lane_runtime.go
+@@ -85,6 +85,16 @@ type strategyLaneRuntime struct {
+ 	// unmatched 는 이 빌드에 없는 레인을 가리키는 기록이다. 버리지 않고 들고
+ 	// 있는 이유는 그것이 복구를 요청할 수 있는 유일한 손잡이이기 때문이다.
+ 	unmatched []journal.StrategyLaneLatch
++	// 아래는 a112 7.3.1 SHADOW 상태다(전부 mu 아래, 프로세스 수명 — 원장 · 파일에 쓰지 않으므로 재시작이 되살리지 않는다).
++	//   shadowCells: 시장별 칸 하나 {wave, batch, activation} — record 가 파도를 올리는 같은 임계 구역에서 덮어쓴다(누적 없음).
++	//   shadowEpochs: 실패한 주기마다 오르는 세대 — 게시는 시작 때 복사한 세대 · 파도와 같을 때만(CAS).
++	//   shadowObserved: 게시된 관측(시장 → 레인 열쇠). 투영은 shadowObservationUsable 하나로만 쓴다.
++	//   shadowInFlight · shadowSkipped: 시장당 단일 비행과 그때 건너뛴 물결 수(진단).
++	shadowCells    map[StrategyMarket]strategyShadowCell
++	shadowEpochs   map[StrategyMarket]uint64
++	shadowObserved map[StrategyMarket]map[strategyworker.Key]strategyShadowObservation
++	shadowInFlight map[StrategyMarket]bool
++	shadowSkipped  map[StrategyMarket]uint64
+ }
+ 
+ // newStrategyLaneRuntime 은 생산 레인 여덟을 세운다.
+@@ -97,9 +107,16 @@ func newStrategyLaneRuntime(clk clock.Clock, ledger strategyLaneLedger, accountR
+ 		return nil
+ 	}
+ 	lanes := strategyworker.ProductionLanes(clk)
++	// shadow 맵은 여기서 만든다 — nil 맵 대입은 panic 이고, 그 panic 이 주기 경로(record · 실패 폐기 defer)에서 나면 원래 오류를 덮는다
++	// (브리프 v3.3 N5).
+ 	return &strategyLaneRuntime{clk: clk, ledger: ledger, accountRef: accountRef, lanes: lanes,
+-		observed: make(map[strategyworker.Key]strategyLaneObservation, len(lanes)),
+-		latches:  map[strategyworker.Key]journal.StrategyLaneLatch{}}
++		observed:       make(map[strategyworker.Key]strategyLaneObservation, len(lanes)),
++		latches:        map[strategyworker.Key]journal.StrategyLaneLatch{},
++		shadowCells:    make(map[StrategyMarket]strategyShadowCell, 2),
++		shadowEpochs:   make(map[StrategyMarket]uint64, 2),
++		shadowObserved: make(map[StrategyMarket]map[strategyworker.Key]strategyShadowObservation, 2),
++		shadowInFlight: make(map[StrategyMarket]bool, 2),
++		shadowSkipped:  make(map[StrategyMarket]uint64, 2)}
+ }
+ 
+ // productionStrategyLanes 는 이 프로세스의 여덟 레인을 돌려준다. 없으면 만든다.
+@@ -196,8 +213,10 @@ func strategyFamilyLaneStep(lane *strategyworker.Lane,
+ //
+ // 자기 제안이 없는 레인도 사이클을 돈다. "이번 물결에 낼 것이 없었다"와
+ // "레인이 돌지 않았다"는 다른 뜻이고, 돌지 않은 레인은 관측에서 사라진다.
++//
++// shadow(a112 7.3.1)는 이 물결의 관문 앞 제안 묶음이다. 여기서는 record 로 넘기기만 한다 — 메서드 호출 · 순회 0(AST 핀 ④).
+ func (runtime *strategyLaneRuntime) evaluate(ctx context.Context, market StrategyMarket,
+-	activationGeneration uint64, promotion strategyrouter.FamilyActivation, inputs []strategyworker.Input,
++	activationGeneration uint64, promotion strategyrouter.FamilyActivation, inputs []strategyworker.Input, shadow strategyShadowBatch,
+ ) error {
+ 	if runtime == nil {
+ 		return nil
+@@ -209,8 +228,23 @@ func (runtime *strategyLaneRuntime) evaluate(ctx context.Context, market Strateg
+ 		return err
+ 	}
+ 	lanes := runtime.lanesFor(market)
+-	observations := make([]strategyLaneObservation, 0, len(lanes))
+-	for _, lane := range lanes {
++	// a112 7.5 D1: 레인 넷은 **동시에** 돌고 여기서 join 된다(시장 주기 안 — 분리된 레인 goroutine 금지, Manager 조건 ①).
++	//
++	// 왜: 순차로 돌면 앞 레인의 멈춤이 뒤 레인을 그 마감 시한만큼 세운다 — 설계 「느린 worker 때문에 다른 worker 가 기다리지 않게」와
++	// 스펙 「한 instance 의 wait · timeout 이 peer 의 evaluation cycle 을 바꾸지 않는다」를 어긴다. 동시에 돌면 이웃은 자기 지연으로
++	// 끝나고, 시장 주기의 지연은 합이 아니라 최댓값(각 레인이 RunBounded 마감 시한으로 끊기므로 ≤ 마감 시한 1 회)이다.
++	//
++	// 안전한 이유: 레인은 서로 상태를 공유하지 않고(Lane 주석 — 이웃 레인을 가리키는 필드 0), goroutine 하나가 레인 하나만 돌며, 관측은
++	// 자기 색인 칸에만 쓴다(레인 순서 그대로). 버려진 사이클의 step goroutine 수명은 strategyworker.invokeBounded 가 정한다 — step 이
++	// 돌아올 때까지 살고(순수 메모리 step 이라 곧 끝남), 비정상으로 레인이 즉시 잠기므로 레인당 최대 하나다(review 「7.5」 조건 ②).
++	//
++	// panic: 레인 goroutine 안의 panic(step 밖 — step 의 panic 은 invokeStep 이 이미 실패로 바꾼다)을 삼키지 않고 join 뒤 이 goroutine
++	// 에서 다시 던진다. 순차였을 때와 같이 시장 주기의 회복 경로(invokeStrategyCycle)가 받게 하려는 것이다 — 다른 goroutine 의 panic 은
++	// 그 경로가 잡을 수 없어 프로세스를 끝낸다.
++	observations := make([]strategyLaneObservation, len(lanes))
++	panics := make([]any, len(lanes))
++	var join sync.WaitGroup
++	for index, lane := range lanes {
+ 		input := strategyworker.Input{}
+ 		for _, candidate := range inputs {
+ 			if lane.Owns(candidate.Proposal) {
+@@ -218,9 +252,20 @@ func (runtime *strategyLaneRuntime) evaluate(ctx context.Context, market Strateg
+ 				break
+ 			}
+ 		}
+-		observations = append(observations, runtime.runLane(ctx, lane, promotion, input))
++		join.Add(1)
++		go func(index int, lane *strategyworker.Lane, input strategyworker.Input) {
++			defer join.Done()
++			defer func() { panics[index] = recover() }()
++			observations[index] = runtime.runLane(ctx, lane, promotion, input)
++		}(index, lane, input)
++	}
++	join.Wait()
++	for _, recovered := range panics {
++		if recovered != nil {
++			panic(recovered)
++		}
+ 	}
+-	runtime.record(market, observations)
++	runtime.record(market, observations, shadow, promotion)
+ 	// 남기지 못한 잠금은 오류다. 조용히 넘기면 다음 재시작이 잠긴 레인을 열고,
+ 	// 그것이 이 태스크가 없애려는 바로 그 동작이다.
+ 	if err := runtime.persistMarketLatches(ctx, market, activationGeneration, runtime.clk.Now()); err != nil {
+@@ -269,7 +314,10 @@ func (runtime *strategyLaneRuntime) runLane(ctx context.Context, lane *strategyw
+ 		observation.Health = lane.Health()
+ 		return observation
+ 	}
+-	bounded, start := lane.RunBounded(ctx, input, strategyFamilyLaneStep(lane, promotion))
++	// 레인 안에서 도는 일은 laneStepFor 하나다(a112 7.5 D1). 생산 빌드(태그 없음)의 정의는 strategyFamilyLaneStep 그대로이고 seam 은
++	// tossos_testseams 빌드에만 있다 — 생산 바이너리에 함수 필드를 두면 `*Context` 클로저가 레인 안으로 들어올 길이 열린다
++	// (TestOnlyThePackageLevelStepEverRunsInsideALane 가 자리 · 본문 · 태그를 못 박음).
++	bounded, start := lane.RunBounded(ctx, input, runtime.laneStepFor(lane, promotion))
+ 	observation.Start = start
+ 	observation.Outcome = bounded.Cycle.Outcome
+ 	observation.Detail = bounded.Cycle.Detail
+@@ -290,7 +338,12 @@ func (runtime *strategyLaneRuntime) runLane(ctx context.Context, lane *strategyw
+ //
+ // a112 7.3(판정 Q1=(B)): 이 시장의 물결 번호를 하나 올려 이번 관측들에 찍는다. 같은 잠금 안에서 올리고 찍어야 두 물결이 한 번호를
+ // 나눠 갖지 않는다. 관측이 없는 호출은 물결이 아니다(번호를 올리지 않음).
+-func (runtime *strategyLaneRuntime) record(market StrategyMarket, observations []strategyLaneObservation) {
++//
++// a112 7.3.1(⑤): 같은 잠금 · 파도 증가 바로 뒤에 그 시장의 shadow 칸 {wave, batch, activation} 을 한 번에 덮어쓴다 — 그래서 「파도」 는
++// 묶음을 실어 온 evaluate 의 파도 번호이고 묶음 · 파도 · 활성화는 구성으로 짝이다. 관측이 없는 호출은 칸도 건드리지 않는다.
++func (runtime *strategyLaneRuntime) record(market StrategyMarket, observations []strategyLaneObservation, shadow strategyShadowBatch,
++	activation strategyrouter.FamilyActivation,
++) {
+ 	if runtime == nil || len(observations) == 0 {
+ 		return
+ 	}
+@@ -302,6 +355,7 @@ func (runtime *strategyLaneRuntime) record(market StrategyMarket, observations [
+ 	if runtime.waves[market] < ^uint64(0) {
+ 		runtime.waves[market]++
+ 	}
++	runtime.shadowCells[market] = strategyShadowCell{wave: runtime.waves[market], batch: shadow, activation: activation}
+ 	for _, observation := range observations {
+ 		observation.Wave = runtime.waves[market]
+ 		runtime.observed[observation.Key] = observation
+diff --git a/internal/app/engine/strategy_lane_shadow.go b/internal/app/engine/strategy_lane_shadow.go
+new file mode 100644
+index 000000000..c49fa30fc
+--- /dev/null
++++ b/internal/app/engine/strategy_lane_shadow.go
+@@ -0,0 +1,214 @@
++package engine
++
++import (
++	"context"
++	"math"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker"
++)
++
++// a112 7.3.1 SHADOW 실행 자리 · 고장 격리 · 소거(브리프 v3.3 §5 · §5.1 — freeze 종결 2026-10-05).
++//
++// 무엇이 어디서 도는가:
++//   - 주기 경로(dispatch 앞)에서 하는 shadow 일은 **값 보관 하나**다: evaluate 인자로 받은 묶음을 record 가 파도 증가와 같은 잠금에서
++//     시장 칸 {wave, batch, activation} 에 덮어쓴다(strategy_lane_runtime.go).
++//   - 반사실 판정은 cycle 클로저가 주기 함수의 **nil 반환 뒤** 시작하는 비동기 단계다 — 시장당 단일 비행, 자체 상수 마감, 자가 recover,
++//     무오류. 단계가 읽는 것은 시작 때 복사한 칸 · 매니페스트 파일 · 시계뿐이다(공유 refresh 캐시 · 조립 · 활성화 적재를 부르지 않는다 —
++//     원격 I/O 0, 다른 시장의 권한 스냅숏 불변).
++//   - 실패한 주기(오류 · panic · 마감 경과)는 그 시장의 관측을 즉시 지우고 세대를 올린다. 게시는 시작 때 복사한 세대 · 파도와 같을 때만
++//     (CAS) — 실패 뒤 늦게 끝난 단계가 관측을 되살리지 못한다.
++
++const (
++	// strategyShadowStepDeadline 은 shadow 단계 하나의 상수 마감이다(레인 마감 · 주기 한도와 독립). 넘으면 그 물결은 「관측 없음」.
++	strategyShadowStepDeadline = 2 * time.Second
++	// strategyShadowObservationMaxAge 는 파도가 멈춘 채(실패 없음 — supervisor 정지 등) 철회 · 폐기가 가려지는 상한이다. 값은 세 상수에서
++	// 유도한다: 건강한 두 게시 사이 최대 간격 = 폴 간격 + 주기 한도 + 단계 마감(37s), 그 두 배(74s). 2×폴 간격(10s)은 10s 넘는 건강한
++	// 주기를 거부한다 — fail-closed 는 무엇을 거부하는지 말해야 한다(Manager 승인 2026-10-05).
++	strategyShadowObservationMaxAge = 2 * (DefaultStrategyCycleLimit + MaximumStrategyCycleLimit + strategyShadowStepDeadline)
++)
++
++// strategyShadowCell 은 한 시장의 마지막 물결이 evaluate 로 실어 온 값이다.
++type strategyShadowCell struct {
++	wave       uint64
++	batch      strategyShadowBatch
++	activation strategyrouter.FamilyActivation
++}
++
++// strategyShadowObservation 은 한 레인의 게시된 반사실 관측이다.
++type strategyShadowObservation struct {
++	wave       uint64
++	outcome    strategyworker.ShadowOutcome
++	expiresAt  time.Time
++	observedAt time.Time
++}
++
++// shadowObservationUsable 은 투영이 관측을 쓰는 **유일한** 판정이다: 파도 등식(최신 evaluate 물결) ∧ 매니페스트 미만료 ∧ 나이 상한 미만.
++// 등호 쪽이 거부다(만료 시각 정각 · 나이 정확히 상한).
++func shadowObservationUsable(now time.Time, latestWave uint64, observation strategyShadowObservation) bool {
++	return observation.wave == latestWave && now.Before(observation.expiresAt) && now.Sub(observation.observedAt) < strategyShadowObservationMaxAge
++}
++
++// productionStrategyCycle 은 두 생산 자리(새로 고침 supervisor · 조립 worker)가 쓰는 cycle 클로저다 — 주기 함수를 run 으로 넘긴다.
++func (c *Context) productionStrategyCycle(clk clock.Clock, market StrategyMarket) StrategyCycle {
++	return strategyCycleWithShadow(c, clk, market, func(cycleCtx context.Context) error {
++		return c.runProductionStrategyMarketCycle(cycleCtx, clk, market)
++	})
++}
++
++// strategyCycleWithShadow 는 run(시장 주기) 하나를 감싼다.
++//
++// 실패 판정은 **성공 플래그**다(recover 로 판정하지 않음 — panic 은 그대로 invokeStrategyCycle 의 회복 경로로 간다): run 이 nil 로 돌아오고
++// 경과가 MaximumStrategyCycleLimit 미만일 때만 성공이다. 경과가 한도 이상이면 supervisor 가 그 주기를 이미 버렸을 수 있으므로(감시견은
++// 주기의 ctx 를 취소하지 않는다) nil 이어도 실패로 친다. 실패면 defer 가 그 시장의 shadow 관측을 지우고 세대를 올린다 — 런타임은
++// strategyLanesMu 를 잡는 nil-안전 접근자로 얻는다(부팅 뒤 refresh 가 매번 실패하면 런타임이 없다). 반환값은 run 의 오류 그대로다.
++func strategyCycleWithShadow(c *Context, clk clock.Clock, market StrategyMarket, run StrategyCycle) StrategyCycle {
++	return func(cycleCtx context.Context) error {
++		var started time.Time
++		if clk != nil {
++			started = clk.Now()
++		}
++		returnedNil := false
++		defer func() {
++			if !returnedNil {
++				c.strategyLaneRuntimeIfAny().invalidateShadow(market)
++			}
++		}()
++		if err := run(cycleCtx); err != nil {
++			return err
++		}
++		if clk == nil || clk.Now().Sub(started) >= MaximumStrategyCycleLimit {
++			return nil
++		}
++		returnedNil = true
++		c.strategyLaneRuntimeIfAny().startShadowStep(cycleCtx, clk, market)
++		return nil
++	}
++}
++
++// strategyLaneRuntimeIfAny 는 이 프로세스의 레인 런타임을 만들지 않고 읽기만 한다(없으면 nil). 잠금 순서 strategyLanesMu → runtime.mu 는
++// productionStrategyLanes 와 같다.
++func (c *Context) strategyLaneRuntimeIfAny() *strategyLaneRuntime {
++	if c == nil {
++		return nil
++	}
++	c.strategyLanesMu.Lock()
++	defer c.strategyLanesMu.Unlock()
++	return c.strategyLanes
++}
++
++// invalidateShadow 는 그 시장의 shadow 관측을 지우고 세대를 올린다. nil 수신자 가드는 런타임의 기존 관례다.
++func (runtime *strategyLaneRuntime) invalidateShadow(market StrategyMarket) {
++	if runtime == nil {
++		return
++	}
++	runtime.mu.Lock()
++	defer runtime.mu.Unlock()
++	runtime.shadowEpochs[market]++
++	delete(runtime.shadowObserved, market)
++}
++
++// startShadowStep 은 그 시장의 칸 · 세대를 **지금 동기로** 복사하고(스탬프는 시작 시점) 단계를 비동기로 띄운다. 이전 단계가 아직 돌면
++// 이번 물결은 건너뛰고 센다(단일 비행). 칸이 부재 값이면(조정 앞 닫힘 · 계보 충돌) 아무것도 하지 않는다 — 신선도 규칙이 이전 관측을 버린다.
++func (runtime *strategyLaneRuntime) startShadowStep(ctx context.Context, clk clock.Clock, market StrategyMarket) {
++	if runtime == nil || clk == nil {
++		return
++	}
++	runtime.mu.Lock()
++	cell, epoch := runtime.shadowCells[market], runtime.shadowEpochs[market]
++	if runtime.shadowInFlight[market] {
++		if runtime.shadowSkipped[market] < math.MaxUint64 {
++			runtime.shadowSkipped[market]++
++		}
++		runtime.mu.Unlock()
++		return
++	}
++	if !cell.batch.observed {
++		runtime.mu.Unlock()
++		return
++	}
++	runtime.shadowInFlight[market] = true
++	runtime.mu.Unlock()
++	go runtime.superviseShadowStep(ctx, clk, market, cell, epoch)
++}
++
++// strategyShadowStepResult 는 단계 하나의 결과다. ok=false 는 「관측 없음」(panic).
++type strategyShadowStepResult struct {
++	ok           bool
++	observations map[strategyworker.Key]strategyShadowObservation
++}
++
++// superviseShadowStep 은 단계를 상수 마감으로 감싸고, 마감 안에 끝난 결과만 CAS 로 게시한다. 마감을 넘긴 결과는 버린다(관측 없음).
++// 단일 비행 표시는 단계 goroutine 이 **끝날 때** 내린다 — 멈춘 단계가 있으면 다음 물결은 건너뛴다(goroutine 이 쌓이지 않음).
++func (runtime *strategyLaneRuntime) superviseShadowStep(ctx context.Context, clk clock.Clock, market StrategyMarket,
++	cell strategyShadowCell, epoch uint64,
++) {
++	stepCtx, cancel := context.WithCancel(ctx)
++	defer cancel()
++	result := make(chan strategyShadowStepResult, 1)
++	go func() {
++		defer func() {
++			runtime.mu.Lock()
++			runtime.shadowInFlight[market] = false
++			runtime.mu.Unlock()
++		}()
++		result <- runtime.runShadowStep(stepCtx, clk, market, cell)
++	}()
++	deadline := make(chan error, 1)
++	go func() { deadline <- clk.Sleep(stepCtx, strategyShadowStepDeadline) }()
++	select {
++	case outcome := <-result:
++		if outcome.ok {
++			runtime.publishShadow(market, cell.wave, epoch, clk.Now(), outcome.observations)
++		}
++	case <-deadline:
++	}
++}
++
++// runShadowStep 은 매니페스트를 한 번 읽고 레인마다 반사실을 판정한다. 자기 panic 을 회복한다(그 물결 「관측 없음」). 판정 대상은
++// 매니페스트가 shadow 로 둔 레인 ∩ 같은 물결의 활성화가 OFF/OFF 로 둔 레인(술어 하나 — strategyworker.ShadowEligible).
++func (runtime *strategyLaneRuntime) runShadowStep(ctx context.Context, clk clock.Clock, market StrategyMarket,
++	cell strategyShadowCell,
++) (result strategyShadowStepResult) {
++	defer func() {
++		if recover() != nil {
++			result = strategyShadowStepResult{}
++		}
++	}()
++	config := cell.batch.config
++	config.ObservedAt = clk.Now()
++	shadow, err := runtime.loadShadow(ctx, config)
++	observations := map[strategyworker.Key]strategyShadowObservation{}
++	// 미선언(오늘 생산) · 쓸 수 없는 매니페스트는 빈 관측을 게시한다. 이전 물결의 관측은 이미 신선도 규칙(파도 등식)이 버리므로 결론은
++	// 게시하지 않는 것과 같다 — 변이 S21 은 그 이유로 동등(SURVIVED)이고, 지키는 쪽인 파도 등식은 변이 S25 가 잰다.
++	if err != nil || !shadow.Verified() {
++		return strategyShadowStepResult{ok: true, observations: observations}
++	}
++	for _, lane := range runtime.lanesFor(market) {
++		key := lane.Key()
++		if !shadow.Shadowed(key.Market, key.Family, key.LaneID, key.LaneVersion) || !lane.ShadowEligible(cell.activation) {
++			continue
++		}
++		observations[key] = strategyShadowObservation{wave: cell.wave, outcome: lane.ShadowOutcomeOver(cell.batch.inputs),
++			expiresAt: shadow.ExpiresAt()}
++	}
++	return strategyShadowStepResult{ok: true, observations: observations}
++}
++
++// publishShadow 는 CAS 게시다: 시작 때 복사한 세대와 파도가 지금도 그대로일 때만 그 시장의 관측을 바꾼다.
++func (runtime *strategyLaneRuntime) publishShadow(market StrategyMarket, wave, epoch uint64, now time.Time,
++	observations map[strategyworker.Key]strategyShadowObservation,
++) {
++	runtime.mu.Lock()
++	defer runtime.mu.Unlock()
++	if runtime.shadowEpochs[market] != epoch || runtime.shadowCells[market].wave != wave {
++		return
++	}
++	for key, observation := range observations {
++		observation.observedAt = now
++		observations[key] = observation
++	}
++	runtime.shadowObserved[market] = observations
++}
+diff --git a/internal/app/engine/strategy_lane_shadow_load.go b/internal/app/engine/strategy_lane_shadow_load.go
+new file mode 100644
+index 000000000..adfb58ebb
+--- /dev/null
++++ b/internal/app/engine/strategy_lane_shadow_load.go
+@@ -0,0 +1,15 @@
++//go:build !tossos_testseams
++
++package engine
++
++import (
++	"context"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow"
++)
++
++// loadShadow 는 shadow 단계가 매니페스트를 읽는 유일한 자리다(a112 7.3.1). 생산 빌드의 정의는 적재기 한 줄이고, 고장 주입 seam 은
++// strategy_lane_shadow_load_testseam.go(tossos_testseams 빌드)에만 있다 — 생산 바이너리에 함수 필드를 두지 않는다(lane step seam 과 같은 규칙).
++func (runtime *strategyLaneRuntime) loadShadow(ctx context.Context, config strategyshadow.Config) (strategyshadow.FamilyShadow, error) {
++	return strategyshadow.LoadProductionFamilyShadow(ctx, config)
++}
+diff --git a/internal/app/engine/strategy_lane_shadow_load_testseam.go b/internal/app/engine/strategy_lane_shadow_load_testseam.go
+new file mode 100644
+index 000000000..79cbd60ef
+--- /dev/null
++++ b/internal/app/engine/strategy_lane_shadow_load_testseam.go
+@@ -0,0 +1,31 @@
++//go:build tossos_testseams
++
++package engine
++
++import (
++	"context"
++	"sync"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow"
++)
++
++// a112 7.3.1 시험 seam — tossos_testseams 빌드에만 있다(생산 바이너리 밖).
++//
++// 생산 적재기는 파일만 읽어 「멈추는 단계」 · panic · 적재 오류를 만들 입력이 없다. 시험은 런타임 하나에 훅을 걸어 그 런타임의 shadow 적재를
++// 바꾼다. 훅이 없는 런타임은 생산과 같은 적재기를 돈다.
++var strategyShadowLoadHooks sync.Map // *strategyLaneRuntime → func(context.Context, strategyshadow.Config) (strategyshadow.FamilyShadow, error)
++
++func (runtime *strategyLaneRuntime) loadShadow(ctx context.Context, config strategyshadow.Config) (strategyshadow.FamilyShadow, error) {
++	if hook, ok := strategyShadowLoadHooks.Load(runtime); ok {
++		return hook.(func(context.Context, strategyshadow.Config) (strategyshadow.FamilyShadow, error))(ctx, config)
++	}
++	return strategyshadow.LoadProductionFamilyShadow(ctx, config)
++}
++
++// setStrategyShadowLoadHookForTest 는 런타임 하나에 shadow 적재 훅을 건다. 돌려준 함수가 훅을 걷는다(시험 Cleanup 용).
++func setStrategyShadowLoadHookForTest(runtime *strategyLaneRuntime,
++	hook func(context.Context, strategyshadow.Config) (strategyshadow.FamilyShadow, error),
++) func() {
++	strategyShadowLoadHooks.Store(runtime, hook)
++	return func() { strategyShadowLoadHooks.Delete(runtime) }
++}
+diff --git a/internal/app/engine/strategy_lane_step.go b/internal/app/engine/strategy_lane_step.go
+new file mode 100644
+index 000000000..ec10df7dd
+--- /dev/null
++++ b/internal/app/engine/strategy_lane_step.go
+@@ -0,0 +1,17 @@
++//go:build !tossos_testseams
++
++package engine
++
++import (
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker"
++)
++
++// laneStepFor 는 레인 안에서 도는 일이다 — 생산 빌드에서는 **언제나** strategyFamilyLaneStep 하나다(a112 7.5 D1).
++//
++// 이 본문은 한 줄이어야 한다. 레인 안에 무엇이 들어가는지가 이 패키지의 경계(레인 평가에 Journal · Gateway 없음)이고, 그 경계를 지키는
++// TestOnlyThePackageLevelStepEverRunsInsideALane 가 이 정의의 본문 · 빌드 태그 · 정의 수를 AST 로 못 박는다. 시험용 seam 은
++// strategy_lane_step_testseam.go(tossos_testseams 빌드)에만 있다.
++func (runtime *strategyLaneRuntime) laneStepFor(lane *strategyworker.Lane, promotion strategyrouter.FamilyActivation) strategyworker.Step {
++	return strategyFamilyLaneStep(lane, promotion)
++}
+diff --git a/internal/app/engine/strategy_lane_step_testseam.go b/internal/app/engine/strategy_lane_step_testseam.go
+new file mode 100644
+index 000000000..b7d0d87e4
+--- /dev/null
++++ b/internal/app/engine/strategy_lane_step_testseam.go
+@@ -0,0 +1,31 @@
++//go:build tossos_testseams
++
++package engine
++
++import (
++	"sync"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker"
++)
++
++// a112 7.5 D1 시험 seam — tossos_testseams 빌드에만 있다(생산 바이너리 밖).
++//
++// 생산 step 은 순수 메모리 평가라 「멈추는 레인」을 만들 입력이 없다. 시험은 런타임 하나에 훅을 걸어 그 런타임의 레인 step 을 바꾼다.
++// 훅이 없는 런타임은 생산과 같은 strategyFamilyLaneStep 을 돈다.
++var strategyLaneStepHooks sync.Map // *strategyLaneRuntime → func(*strategyworker.Lane, strategyrouter.FamilyActivation) strategyworker.Step
++
++func (runtime *strategyLaneRuntime) laneStepFor(lane *strategyworker.Lane, promotion strategyrouter.FamilyActivation) strategyworker.Step {
++	if hook, ok := strategyLaneStepHooks.Load(runtime); ok {
++		return hook.(func(*strategyworker.Lane, strategyrouter.FamilyActivation) strategyworker.Step)(lane, promotion)
++	}
++	return strategyFamilyLaneStep(lane, promotion)
++}
++
++// setStrategyLaneStepHookForTest 는 런타임 하나에 레인 step 훅을 건다. 돌려준 함수가 훅을 걷는다(시험 Cleanup 용).
++func setStrategyLaneStepHookForTest(runtime *strategyLaneRuntime,
++	hook func(*strategyworker.Lane, strategyrouter.FamilyActivation) strategyworker.Step,
++) func() {
++	strategyLaneStepHooks.Store(runtime, hook)
++	return func() { strategyLaneStepHooks.Delete(runtime) }
++}
+diff --git a/internal/app/engine/strategy_market_coordinator.go b/internal/app/engine/strategy_market_coordinator.go
+index 322081089..6beee24cb 100644
+--- a/internal/app/engine/strategy_market_coordinator.go
++++ b/internal/app/engine/strategy_market_coordinator.go
+@@ -56,11 +56,13 @@ type strategyMarketArbitration struct {
+ // 언제나 참이 되어 아무것도 잡지 못한다.
+ func coordinateMarketProposals(accountRef string, market StrategyMarket, routes []strategyRouteEntryAuthority,
+ 	batch strategyproposal.ProductionBatchAuthority, observedAt time.Time, gate strategyFamilyGate,
+-) (strategyMarketArbitration, int) {
++) (strategyMarketArbitration, int, strategyShadowBatch) {
+ 	routerMarket := strategyRouterMarket(market)
+ 	coordinator := strategycoordinator.NewMarketCoordinator(routerMarket, observedAt)
+ 	arbitration := strategyMarketArbitration{byIdentity: make(map[string]strategyProposalEntryAuthority, batch.Len())}
+ 	refused := 0
++	// a112 7.3.1 SHADOW: 관문 앞 제안 전부를 별도 묶음으로 모은다(authority 밖 — 조정 · admit · Submit 은 이 값을 보지 않는다).
++	shadow := strategyShadowBatch{observed: true}
+ 	for _, route := range routes {
+ 		lanes := batch.LanesFor(route.approved.Symbol())
+ 		if len(lanes) == 0 {
+@@ -88,6 +90,7 @@ func coordinateMarketProposals(accountRef string, market StrategyMarket, routes
+ 			// `else if` 를 쓰지 않는다. Go AST 는 `} else if` 를 **같은 좌표의
+ 			// else 와 if 두 노드**로 내므로, 좌표로 분기를 세는 이 change 의
+ 			// 열거표에서 두 줄이 구별되지 않는다.
++			shadow.collect(envelope.Proposal)
+ 			admitted, outcome, ok := gate.admit(strategyworker.Input{Scope: scope,
+ 				SnapshotDigest: lane.SnapshotDigest(), Proposal: envelope.Proposal})
+ 			if !ok {
+@@ -112,7 +115,9 @@ func coordinateMarketProposals(accountRef string, market StrategyMarket, routes
+ 				// 안 옮기면 이 경로만 "유실 0" 이라고 거짓으로 보고한다.
+ 				arbitration.collision = true
+ 				arbitration.outcome.Drops = coordinator.Drops()
+-				return arbitration, refused
++				// 루프 도중이라 모은 묶음은 뒤쪽 종목이 빠진 부분 묶음이다 — 싣지 않고 부재 값을 낸다(그 레인들을 NO_INPUT 으로 거짓
++				// 보고하지 않게, 브리프 §4 · Manager 판정 3). 조정 루프 순서는 그대로다.
++				return arbitration, refused, strategyShadowBatch{}
+ 			}
+ 			arbitration.byIdentity[result.Lineage.Identity] = strategyProposalEntryAuthority{route: route, authority: lane}
+ 		}
+@@ -121,7 +126,7 @@ func coordinateMarketProposals(accountRef string, market StrategyMarket, routes
+ 		}
+ 	}
+ 	arbitration.outcome = coordinator.Arbitrate()
+-	return arbitration, refused
++	return arbitration, refused, shadow
+ }
+ 
+ // entries 는 조정자가 고른 순서 그대로 레인 권한 목록을 만든다.
+diff --git a/internal/app/engine/strategy_proposal_authority.go b/internal/app/engine/strategy_proposal_authority.go
+index e2fb47a4e..8578ac80b 100644
+--- a/internal/app/engine/strategy_proposal_authority.go
++++ b/internal/app/engine/strategy_proposal_authority.go
+@@ -254,46 +254,59 @@ func newStrategyProposalAuthorityLoader(configDir, evidencePath, journalPath, ac
+ 		load: strategyproposal.LoadProductionAuthorityBatch}
+ }
+ 
+-func (loader *strategyProposalAuthorityLoader) collect(ctx context.Context, schedule strategyScheduleAuthorityPair, routes strategyRouteAuthorityPair, fx strategyFXAuthorityPair) strategyProposalAuthorityPair {
++// collect 는 두 시장의 제안 권한과, 그 옆의 shadow 묶음 짝(a112 7.3.1 — authority 밖 별도 값)을 돌려준다.
++func (loader *strategyProposalAuthorityLoader) collect(ctx context.Context, schedule strategyScheduleAuthorityPair, routes strategyRouteAuthorityPair, fx strategyFXAuthorityPair) (strategyProposalAuthorityPair, strategyShadowPair) {
+ 	if loader == nil || ctx == nil || schedule.observedAt.IsZero() || !schedule.observedAt.Equal(routes.observedAt) || !schedule.observedAt.Equal(fx.observedAt) {
+-		return failedStrategyProposalPair(schedule.observedAt, StrategyProposalInternalFailure)
++		return failedStrategyProposalPair(schedule.observedAt, StrategyProposalInternalFailure), strategyShadowPair{}
+ 	}
+ 	type outcome struct {
+ 		market StrategyMarket
+ 		value  strategyProposalMarketAuthority
++		shadow strategyShadowBatch
+ 	}
+ 	outcomes := make(chan outcome, 2)
+ 	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
+ 		market := market
+ 		go func() {
+ 			value := strategyProposalMarketAuthority{market: market, snapshot: StrategyProposalMarketSnapshot{Market: market, Reason: StrategyProposalInternalFailure}}
++			var shadow strategyShadowBatch
+ 			func() {
+ 				defer func() {
+ 					if recover() != nil {
+ 						value = strategyProposalMarketAuthority{market: market, snapshot: StrategyProposalMarketSnapshot{Market: market, Reason: StrategyProposalInternalFailure}}
++						// 고장 갈래는 관측 없음(부재 값)이다 — 고장 전에 대입된 묶음을 남기지 않는다.
++						shadow = strategyShadowBatch{}
+ 					}
+ 				}()
+-				value = loader.collectMarket(ctx, schedule.forMarket(market), routes.forMarket(market), fx.forMarket(market), schedule.observedAt)
++				value = loader.collectMarket(ctx, schedule.forMarket(market), routes.forMarket(market), fx.forMarket(market), schedule.observedAt, &shadow)
+ 			}()
+-			outcomes <- outcome{market: market, value: value}
++			outcomes <- outcome{market: market, value: value, shadow: shadow}
+ 		}()
+ 	}
+ 	pair := strategyProposalAuthorityPair{observedAt: schedule.observedAt}
++	var shadow strategyShadowPair
+ 	for range 2 {
+ 		result := <-outcomes
+ 		if result.market == StrategyMarketKR {
+-			pair.kr = result.value
++			pair.kr, shadow.kr = result.value, result.shadow
+ 		} else {
+-			pair.us = result.value
++			pair.us, shadow.us = result.value, result.shadow
+ 		}
+ 	}
+-	return pair
++	return pair, shadow
+ }
+ 
+-func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context, schedule strategyScheduleMarketAuthority, routes strategyRouteMarketAuthority, fx strategyFXMarketAuthority, observedAt time.Time) strategyProposalMarketAuthority {
++// collectMarket 의 shadow 는 a112 7.3.1 의 별도 운반 칸이다: 들어오자마자 부재 값으로 비우고(조정 앞 닫힘 일곱 = 「관측 없음」), 조정에
++// 닿은 주기만 조정자가 모은 관문 앞 묶음을 결속 설정과 함께 싣는다(조정 바로 뒤 대입 하나). 반환 갈래 열다섯은 바뀌지 않는다.
++func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context, schedule strategyScheduleMarketAuthority, routes strategyRouteMarketAuthority, fx strategyFXMarketAuthority, observedAt time.Time, shadow *strategyShadowBatch) strategyProposalMarketAuthority {
++	*shadow = strategyShadowBatch{}
+ 	market := routes.market
+ 	// gate 를 fail 보다 **먼저** 선언한다. 클로저가 참조로 잡으므로, 아래에서
+-	// 관문이 서는 순간 모든 닫힘 갈래가 그 활성화를 함께 싣게 된다.
++	// 관문이 계산된 **뒤의** 닫힘 갈래는 전부 그 시점의 활성화를 함께 싣는다. 정확히는 13 닫힘 중
++	// 첫째(ROUTE_NOT_READY — 관문 계산 전)만 영값을 싣고 나머지 열둘이 관문의 활성화를 싣는다
++	// (a112 8.8.4 항목 2). 관문은 두 번 계산된다(a112 8.5 응답 로트 ① — 아래 두 자리의 주석):
++	// 조정 앞 닫힘 여섯은 조기(진단) 값을, 조정 뒤 닫힘과 성공은 판정 값을 싣는다.
++	// 표는 TestTheThirteenProposalClosures… 가 못 박는다.
+ 	//
+ 	// 앞 판본은 반환값마다 `carry(...)` 를 부르게 했다. 그것은 이 change 가
+ 	// 반복해서 고쳐 온 **무시할 수 있는 답**이다 — 갈래 하나에서 빠뜨리면
+@@ -310,8 +323,18 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
+ 				GatedCount: gatedCount, GatedOutcomes: gatedOutcomes}}
+ 	}
+ 	if !routes.snapshot.Ready || len(routes.entries) == 0 || !schedule.snapshot.Ready || schedule.restore.Activation == nil {
++		// 영값을 싣는 유일한 닫힘이다(a112 8.8.4 항목 2): 경로 · 스케줄 권한이 준비되지 않은 주기에는 관문을 계산할 결속 값(경로 매니페스트
++		// digest · 보정 · 달력)이 없거나 믿을 수 없어, 관문 계산 **전**에 닫는다.
+ 		return fail(StrategyProposalRouteNotReady)
+ 	}
++	// 관문 **조기 계산**(진단 전용)은 결속 값이 서는 바로 이 자리다(a112 8.8.4 항목 2 — Manager 판정 Q-B2). 이 값은 아래 조정 **앞**
++	// 닫힘 여섯(FX · 설정 · 열쇠 · 중복 · 적재 · 고장)이 싣는 활성화로만 쓰인다 — 그 주기의 레인 관측이 관문과 같은 승격을 보게 하려는 것이다.
++	// 판정에는 쓰이지 않는다: 이 값은 제안 적재 시간만큼 낡으므로(적재 중 ctx 취소 · 매니페스트 철회가 안 보임 — 8.5 보이스 2 P1),
++	// 판정은 아래 조정 바로 앞에서 다시 계산한다. 잔여 비대칭(관측 전용): 적재 중 철회 경합에서 조정 앞 닫힘은 이 조기 값을 싣는다 —
++	// 그 갈래는 조정 · handoff 0 이라 주문 경로에 닿지 않는다. familyGateFor 는 읽기 전용이다(env · 매니페스트 파일 읽기와 검증, 레인
++	// 목록 조회 — 원장 · 브로커 · 토글 쓰기 0). 13 닫힘의 순서와 두 계산 자리는
++	// `TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness` 가 못 박는다.
++	gate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)
+ 	if !fx.snapshot.Ready || !fx.read.valid {
+ 		return fail(StrategyProposalFXNotReady)
+ 	}
+@@ -368,8 +391,14 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
+ 	// 4-가족 관문은 **조정 앞**에 선다. 뒤에 세우면 중재가 이미 한 범위의
+ 	// 승자를 골라 버렸고, 그 승자의 레인이 잠겨 있으면 그 범위는 이웃 가족이
+ 	// 이길 수 있었는데도 통째로 닫힌다.
++	//
++	// 관문 **판정 계산**은 조정 바로 앞, 제안 적재 **뒤**다(a112 8.5 응답 로트 ① — Manager 판정 Y). 위 조기 값을 그대로 쓰면 적재 중
++	// 일어난 ctx 취소 · 매니페스트 철회가 이 주기 판정에 보이지 않아 닫혀야 할 시장이 열린다(허용 방향 — 보이스 2 실측). 이 자리는
++	// 8.8.4 이전의 판정 자리와 같다 — 같은 함수 · 같은 순간이라 판정이 구성상 편집 전과 같다. 조정 뒤 닫힘과 성공은 이 값을 싣는다.
++	// 대가는 조정에 닿는 주기의 활성화 읽기 한 번 더(소형 로컬 파일, 핀이 선언된 시장만).
+ 	gate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)
+-	arbitration, refused := coordinateMarketProposals(loader.accountRef, market, routes.entries, batch, observedAt, gate)
++	arbitration, refused, collected := coordinateMarketProposals(loader.accountRef, market, routes.entries, batch, observedAt, gate)
++	*shadow = collected.boundTo(loader.shadowConfig(market, schedule, routes))
+ 	gatedCount, gatedOutcomes = len(arbitration.gated), distinctGatedOutcomes(arbitration.gated)
+ 	// 관문이 한 소유자 범위를 통째로 지웠으면 시장을 닫는다 (태스크 8.8.1).
+ 	//
+diff --git a/internal/app/engine/strategy_runtime_projection.go b/internal/app/engine/strategy_runtime_projection.go
+index ae6f274e9..917e6eb68 100644
+--- a/internal/app/engine/strategy_runtime_projection.go
++++ b/internal/app/engine/strategy_runtime_projection.go
+@@ -61,6 +61,11 @@ func (c *Context) Read(ctx context.Context) (strategyprojection.Snapshot, error)
+ 	}
+ 	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
+ 		worker, ok := supervisor.Snapshot(market)
++		// a112 7.3.1 R1(두 시계): 클로저는 경과로, supervisor 는 감시견 select 로 같은 주기의 실패를 따로 판정한다 — 경계에서 둘이 갈리면
++		// supervisor 가 버린 주기의 SHADOW 가 게시될 수 있다. abandon 이 기록된 시장(프로세스 수명 표시)은 SHADOW 를 보이지 않는다.
++		if ok && worker.AbandonedEvaluation {
++			snapshot.Lanes = strategyLanesWithoutShadow(snapshot.Lanes, market)
++		}
+ 		if !ok || !worker.Latched {
+ 			continue
+ 		}
+diff --git a/internal/app/engine/strategy_schedule_revalidation.go b/internal/app/engine/strategy_schedule_revalidation.go
+new file mode 100644
+index 000000000..bd24571a7
+--- /dev/null
++++ b/internal/app/engine/strategy_schedule_revalidation.go
+@@ -0,0 +1,23 @@
++package engine
++
++import "errors"
++
++// strategyScheduleStillMatchesAdmission 은 transport 직전 최종 검사가 쓰는 drift 판정이다(a112 6.3 — 「transport 전 digest/version drift 거절」).
++//
++// 방금 다시 수집한 일정 권한(fresh)이 dispatch admission 때 쓴 것(expected)과 **모든 축에서 같아야** 통과한다: 준비 · 서명 활성화 존재(양쪽) ·
++// desired revision · 달력 버전 · 활성화 매니페스트 digest · 활성화 세대 · 활성화 만료. 하나라도 다르면 사람이 서명한 일정이 바뀐 것이므로
++// 브로커 바이트 전에 멈춘다(게이트웨이가 이 오류에서 SUBMITTING 을 넘기지 않는다).
++//
++// 왜 순수 함수인가: 이 비교는 생산 조립(`NewPairedStrategyEntryProductionAssembly`)의 재검증 클로저 안에 있었고, 그 클로저는 설정 디렉터리 ·
++// 환경 · 공식 클라이언트를 읽으므로 축마다 시험할 수 없었다. 수집(I/O)과 판정을 갈라 판정만 여기로 **의미 무변경 이동**했다 — 조건식 철자는
++// 이동 전과 같다(영수증 `analysis/measurements/lot-6.3/move-receipt.txt`, 양쪽을 못 박는 시험 `TestTheScheduleDriftJudgementMovedVerbatim`).
++func strategyScheduleStillMatchesAdmission(fresh, expected strategyScheduleMarketAuthority) error {
++	if !fresh.snapshot.Ready || fresh.restore.Activation == nil || expected.restore.Activation == nil ||
++		fresh.desired.Revision != expected.desired.Revision || fresh.calendar.Version != expected.calendar.Version ||
++		fresh.snapshot.ActivationManifestDigest != expected.snapshot.ActivationManifestDigest ||
++		fresh.restore.Activation.Generation() != expected.restore.Activation.Generation() ||
++		!fresh.restore.Activation.ExpiresAt().Equal(expected.restore.Activation.ExpiresAt()) {
++		return errors.New("engine: signed scheduler activation no longer matches dispatch admission")
++	}
++	return nil
++}
+diff --git a/internal/app/engine/strategy_shadow_batch.go b/internal/app/engine/strategy_shadow_batch.go
+new file mode 100644
+index 000000000..5da67c2ec
+--- /dev/null
++++ b/internal/app/engine/strategy_shadow_batch.go
+@@ -0,0 +1,76 @@
++package engine
++
++import (
++	"strings"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker"
++)
++
++// a112 7.3.1 SHADOW 운반(브리프 v3.3 §4).
++//
++// 반사실 입력은 조정자 관문 **앞** 의 전체 제안이다 — 관문이 멈춘 OFF 가족의 제안이 바로 SHADOW 의 대상 모집단이기 때문이다. 그 묶음은
++// authority 구조체(주문 경로의 수신자)에 **넣지 않고** 나란히 가는 별도 값이다: 조정자 → collectMarket → collect → 조립 → evaluate.
++// 「관측 없음」 은 빈 묶음이 아니라 **부재 값**(observed=false)이다 — 빈 목록이면 OFF 레인 전부가 NO_INPUT 이 되어 거짓 보고가 된다.
++
++// 핀 env 는 시장마다 하나다(결정 63 — 활성화 핀과 같은 모양). 오늘 생산에서는 비어 있다(미선언 — 파일 I/O 0).
++const (
++	strategyFamilyShadowKRManifestDigestEnv = "TOSSOS_STRATEGY_FAMILY_SHADOW_KR_MANIFEST_SHA256"
++	strategyFamilyShadowUSManifestDigestEnv = "TOSSOS_STRATEGY_FAMILY_SHADOW_US_MANIFEST_SHA256"
++)
++
++// strategyShadowBatch 는 한 시장 한 물결의 관문 앞 제안 묶음과 그 shadow 매니페스트 결속 설정이다. 영값이 부재 값이다.
++type strategyShadowBatch struct {
++	observed bool
++	config   strategyshadow.Config
++	inputs   []strategyworker.ShadowInput
++}
++
++// collect 는 관문 앞 제안 하나를 묶음에 더한다. 조정 루프 안에서 불리므로 panic 거리가 없는 모양 하나(생성자 결과의 append)로 고정한다 —
++// 수신자는 조정 함수의 주소 지정 가능한 지역 값이다(브리프 §4 shape 핀).
++func (batch *strategyShadowBatch) collect(proposal strategyarbiter.Proposal) {
++	batch.inputs = append(batch.inputs, strategyworker.NewShadowInput(proposal))
++}
++
++// boundTo 는 관측된 묶음에 그 시장의 결속 설정을 붙인다. 부재 값은 부재 값으로 남는다.
++func (batch strategyShadowBatch) boundTo(config strategyshadow.Config) strategyShadowBatch {
++	if !batch.observed {
++		return strategyShadowBatch{}
++	}
++	batch.config = config
++	return batch
++}
++
++// strategyShadowPair 는 두 시장의 묶음이다(authority 짝 옆의 별도 짝).
++type strategyShadowPair struct {
++	kr, us strategyShadowBatch
++}
++
++// forMarket 은 형제 strategyProposalAuthorityPair.forMarket 과 같은 모양이다(시장 비교 · 필드 반환 · 호출 0). 주기 함수의 evaluate 인자
++// 자리에서 dispatch **앞**에 평가되므로 이 모양이 「dispatch 앞 shadow 일 0」 의 일부다(AST 핀).
++func (pair strategyShadowPair) forMarket(market StrategyMarket) strategyShadowBatch {
++	if market == StrategyMarketKR {
++		return pair.kr
++	}
++	if market == StrategyMarketUS {
++		return pair.us
++	}
++	return strategyShadowBatch{}
++}
++
++// shadowConfig 는 이 시장 shadow 매니페스트의 결속 설정이다 — 활성화 적재(loadFamilyActivation)와 **같은 원천**(같은 env 이름 · 같은
++// 보정 합의 · 같은 달력 · 같은 빌드)에서 읽는다. 파일은 읽지 않는다(env 와 이미 받은 권한 값뿐) — 매니페스트 적재는 shadow 단계가 한다.
++func (loader *strategyProposalAuthorityLoader) shadowConfig(market StrategyMarket, schedule strategyScheduleMarketAuthority,
++	routes strategyRouteMarketAuthority,
++) strategyshadow.Config {
++	digestEnv, riskPolicyEnv := strategyFamilyShadowKRManifestDigestEnv, strategyRiskKRManifestDigestEnv
++	if market == StrategyMarketUS {
++		digestEnv, riskPolicyEnv = strategyFamilyShadowUSManifestDigestEnv, strategyRiskUSManifestDigestEnv
++	}
++	calibration, _ := strategyMarketCalibrationDigest(routes)
++	return strategyshadow.Config{ConfigDir: loader.configDir, Market: strategyRouterMarket(market),
++		ManifestDigest: strings.TrimSpace(loader.getenv(digestEnv)), RouteManifestDigest: routes.snapshot.ManifestDigest,
++		CalibrationDigest: calibration, CalendarVersion: schedule.calendar.Version, BuildDigest: strategyRuntimeBuildDigest(),
++		RiskPolicyDigest: strings.TrimSpace(loader.getenv(riskPolicyEnv))}
++}
+diff --git a/internal/breakoutlane/machine.go b/internal/breakoutlane/machine.go
+index afa820a72..2030838fc 100644
+--- a/internal/breakoutlane/machine.go
++++ b/internal/breakoutlane/machine.go
+@@ -65,6 +65,11 @@ func evaluateFresh(snapshot EvidenceSnapshot, setup string) Decision {
+ 			state = phaseRetestWait
+ 			break
+ 		}
++		// a112 2.3 (b): 1.2 반사실 = 입장 문턱이 1.2 였다면 돌파였을 봉의 기록. 입장 봉은 위에서 break 하므로 여기는 입장 못 한 봉뿐이다 —
++		// close buffer · wick 을 통과하고 RVOL 만 문턱 아래인 봉. 기록 전용: 상태 · 전이 · 거절 · 수량 · 봉인에 닿지 않는다.
++		if BreakoutCloseQualifies(b.CloseMinor, resistance, v.ATRMinor, v.Config) && b.UpperWickRangePPM <= v.Config.value.UpperWickRangeMaxPPM && b.RVOLPPM >= 1_200_000 {
++			p.RVOLAt1200000 = true
++		}
+ 	}
+ 	if breakout < 0 {
+ 		d := newDecision(setup, snapshot, state, RefusalNone, p)
+diff --git a/internal/breakoutlane/types.go b/internal/breakoutlane/types.go
+index ea6f785ee..c7f5729b0 100644
+--- a/internal/breakoutlane/types.go
++++ b/internal/breakoutlane/types.go
+@@ -153,6 +153,11 @@ func FXSealDigest(input FXSealInput) string {
+ func NewFXSeal(input FXSealInput) (FXSeal, error) {
+ 	sameCurrency := input.AccountCurrency == input.InstrumentCurrency
+ 	if input.Direction == FXInstrumentToAccount && !sameCurrency {
++		// a112 B2: 호출자 digest 는 **주어진 모양 그대로** 먼저 검증한다. 앞 판은 정규화한 뒤 digest 를 덮어쓰고 자기와 비교해, 이 방향의
++		// 봉인은 digest 없이도 · 변조돼도 통과했다(공허 검사). 검증한 다음에만 정규형(account→instrument, 비율 뒤집기)으로 다시 봉인한다.
++		if input.Digest != FXSealDigest(input) {
++			return FXSeal{}, errors.New("invalid fx seal")
++		}
+ 		input.RateNum, input.RateDen = input.RateDen, input.RateNum
+ 		input.Direction = FXAccountToInstrument
+ 		input.Digest = FXSealDigest(input)
+diff --git a/internal/strategyprojection/lanes.go b/internal/strategyprojection/lanes.go
+index 4e30ce366..92b133805 100644
+--- a/internal/strategyprojection/lanes.go
++++ b/internal/strategyprojection/lanes.go
+@@ -58,11 +58,24 @@ const (
+ 	LaneOutcomeLatched LaneOutcome = "LATCHED"
+ )
+ 
+-// LaneRuntime 은 worker 의 runtime 상태다. 정의된 값은 골든의 UNOBSERVED 하나뿐이다(판정 Q3 — 골든 밖 어휘를 지어내지 않음).
+-// 관측된 사실은 health · trigger · start · outcome 이 나른다. SHADOW 같은 값은 태스크 7.3.1 의 몫이다.
++// LaneRuntime 은 레인의 runtime 상태다. 골든 기본값은 UNOBSERVED 이고, a112 7.3.1(브리프 v3.3 §7)이 SHADOW 를 **이 투영 어휘에만** 연다 —
++// router RuntimeState 는 시장 기록과 공유하므로 {UNOBSERVED} 그대로다. SHADOW 는 관측된 OFF/OFF 레인의 읽기 전용 반사실이고(validateLane 의
++// 교차 규칙), 승격이 아니다.
+ type LaneRuntime string
+ 
+-const LaneRuntimeUnobserved LaneRuntime = "UNOBSERVED"
++const (
++	LaneRuntimeUnobserved LaneRuntime = "UNOBSERVED"
++	LaneRuntimeShadow     LaneRuntime = "SHADOW"
++)
++
++// LaneShadowOutcome 은 SHADOW 레인의 반사실 판정이다(strategyworker.ShadowOutcome 과 같은 어휘 — census 시험이 대조).
++type LaneShadowOutcome string
++
++const (
++	LaneShadowWouldEmit   LaneShadowOutcome = "WOULD_EMIT"
++	LaneShadowNotThisLane LaneShadowOutcome = "NOT_THIS_LANE"
++	LaneShadowNoInput     LaneShadowOutcome = "NO_INPUT"
++)
+ 
+ // LaneRuntimeProjection 은 레인 하나의 읽기 전용 상태다.
+ //
+@@ -105,6 +118,8 @@ type LaneRuntimeProjection struct {
+ 	RestartNotBefore *time.Time `json:"restartNotBefore"`
+ 	SnapshotDigest   *string    `json:"snapshotDigest"`
+ 	EvidenceDigest   *string    `json:"evidenceDigest"`
++	// ShadowOutcome 은 runtime=SHADOW 일 때만 있다(그 밖에는 null — 언제나 직렬화된다). shadow 핀이 없는 오늘은 전부 null.
++	ShadowOutcome *LaneShadowOutcome `json:"shadowOutcome"`
+ }
+ 
+ // CoordinatorProjection 은 시장 하나의 제안 조정 결과다(골든 coordinator_key_fields=[market]).
+@@ -182,7 +197,7 @@ func defaultCoordinators() []CoordinatorProjection {
+ func LaneJSONFields() []string {
+ 	return []string{"abandoned", "abnormal", "consecutiveFailures", "cycleDeadlineMs", "cycleGeneration", "desired", "dropped", "effective",
+ 		"evidenceDigest", "family", "firstFailure", "health", "horizon", "laneId", "laneVersion", "latchRevision", "market", "nextDueAt",
+-		"outcome", "pending", "policyVersion", "refusal", "restartNotBefore", "runtime", "snapshotDigest", "start", "trigger"}
++		"outcome", "pending", "policyVersion", "refusal", "restartNotBefore", "runtime", "shadowOutcome", "snapshotDigest", "start", "trigger"}
+ }
+ 
+ func CoordinatorJSONFields() []string {
+@@ -194,6 +209,15 @@ func SelectedScopeJSONFields() []string {
+ 	return []string{"calibrationDigest", "campaignId", "configDigest", "laneId", "lineageIdentity", "scoreVersion", "symbol"}
+ }
+ 
++// LaneRuntimes · LaneShadowOutcomes 는 runtime · shadowOutcome 어휘다(OpenAPI enum 동기 시험이 문서와 대조 — a112 7.3.1).
++func LaneRuntimes() []string {
++	return []string{string(LaneRuntimeUnobserved), string(LaneRuntimeShadow)}
++}
++
++func LaneShadowOutcomes() []string {
++	return []string{string(LaneShadowWouldEmit), string(LaneShadowNotThisLane), string(LaneShadowNoInput)}
++}
++
+ // LaneTriggers · LaneStarts · LaneOutcomes · LaneHealths 는 받는 어휘다(census 시험이 strategyworker 상수 전부와 대조).
+ func LaneTriggers() []string {
+ 	return []string{string(LaneTriggerEnqueued), string(LaneTriggerDisabled), string(LaneTriggerFull)}
+@@ -272,9 +296,18 @@ func validateLanes(lanes []LaneRuntimeProjection) error {
+ }
+ 
+ func validateLane(lane LaneRuntimeProjection) error {
+-	if !validState(lane.Desired) || !validState(lane.Effective) || lane.Runtime != LaneRuntimeUnobserved {
++	if !validState(lane.Desired) || !validState(lane.Effective) || !member(string(lane.Runtime), LaneRuntimes()) {
+ 		return errors.New("invalid desired, effective or runtime")
+ 	}
++	// SHADOW 교차 규칙(a112 7.3.1 — strategyworker.ShadowEligible 과 같은 조건의 값 형태): SHADOW 는 관측된(health≠nil · cycleGeneration>0)
++	// OFF/OFF 레인에만, 그리고 shadowOutcome 은 SHADOW 일 때 정확히 그때만 있다. 잠긴 레인의 SHADOW 는 허용(관측만).
++	shadow := lane.Runtime == LaneRuntimeShadow
++	if shadow && (lane.Desired != StateOff || lane.Effective != StateOff || lane.Health == nil || lane.CycleGeneration == 0) {
++		return errors.New("SHADOW is only an observed OFF/OFF lane")
++	}
++	if (lane.ShadowOutcome != nil) != shadow || lane.ShadowOutcome != nil && !member(string(*lane.ShadowOutcome), LaneShadowOutcomes()) {
++		return errors.New("shadowOutcome must be a shadow outcome exactly when the runtime is SHADOW")
++	}
+ 	// 거절 코드는 REFUSED 결과에만 있고 REFUSED 결과에는 반드시 있다(판정 (A)). 결과와 무관하게 싣는 생산자는 여기서 거절된다.
+ 	refused := lane.Outcome != nil && *lane.Outcome == LaneOutcomeRefused
+ 	if (lane.Refusal != nil) != refused || lane.Refusal != nil && !member(*lane.Refusal, ArbitrationRefusals()) {
+@@ -411,6 +444,7 @@ func cloneLanes(lanes []LaneRuntimeProjection) []LaneRuntimeProjection {
+ 		lane.PolicyVersion, lane.CycleDeadlineMS = cloneString(lane.PolicyVersion), clonePointer(lane.CycleDeadlineMS)
+ 		lane.NextDueAt, lane.RestartNotBefore = cloneTime(lane.NextDueAt), cloneTime(lane.RestartNotBefore)
+ 		lane.SnapshotDigest, lane.EvidenceDigest = cloneString(lane.SnapshotDigest), cloneString(lane.EvidenceDigest)
++		lane.ShadowOutcome = clonePointer(lane.ShadowOutcome)
+ 		out[index] = lane
+ 	}
+ 	return out
+diff --git a/internal/strategyrouter/production_family_activation.go b/internal/strategyrouter/production_family_activation.go
+index 64a5683cc..e633a2988 100644
+--- a/internal/strategyrouter/production_family_activation.go
++++ b/internal/strategyrouter/production_family_activation.go
+@@ -5,6 +5,7 @@ import (
+ 	"context"
+ 	"encoding/json"
+ 	"errors"
++	"fmt"
+ 	"io"
+ 	"path/filepath"
+ 	"sort"
+@@ -225,12 +226,12 @@ type FamilyActivationDocument struct {
+ func (document FamilyActivationDocument) body() (productionFamilyActivationBody, error) {
+ 	want := productionRouteDescriptors(document.Market)
+ 	if len(want) == 0 {
+-		return productionFamilyActivationBody{}, ErrProductionFamilyActivationUnavailable
++		return productionFamilyActivationBody{}, fmt.Errorf("%w: market %q has no descriptor table", ErrProductionFamilyActivationUnavailable, document.Market)
+ 	}
+ 	on := map[Family]bool{}
+ 	for _, family := range document.On {
+ 		if !family.Known() {
+-			return productionFamilyActivationBody{}, ErrProductionFamilyActivationUnavailable
++			return productionFamilyActivationBody{}, fmt.Errorf("%w: on: unknown family %q", ErrProductionFamilyActivationUnavailable, family)
+ 		}
+ 		on[family] = true
+ 	}
+@@ -382,7 +383,8 @@ func (activation FamilyActivation) LeaseCeiling(now time.Time, ceiling time.Dura
+ // 시험을 통과시킨다.
+ func familyActivationRemaining(expires, now time.Time) (time.Duration, error) {
+ 	if !now.Before(expires) {
+-		return 0, ErrProductionFamilyActivationExpired
++		return 0, fmt.Errorf("%w: expires_at %s is not after %s", ErrProductionFamilyActivationExpired,
++			expires.UTC().Format(time.RFC3339Nano), now.UTC().Format(time.RFC3339Nano))
+ 	}
+ 	return expires.Sub(now), nil
+ }
+@@ -430,10 +432,10 @@ func LoadProductionFamilyActivation(ctx context.Context, config FamilyActivation
+ 	// 에 따라 "선언했는데 쓸 수 없다" 로 바뀌면, 엔진이 그 시장의 네 가족을 OFF 로
+ 	// 되돌려 기존 경로를 닫는다. 미배포 여부는 설정 사실 하나로만 정한다.
+ 	if strings.TrimSpace(config.ManifestDigest) == "" {
+-		return FamilyActivation{}, ErrProductionFamilyActivationUndeclared
++		return FamilyActivation{}, fmt.Errorf("%w: manifest_digest pin is empty", ErrProductionFamilyActivationUndeclared)
+ 	}
+ 	if ctx == nil {
+-		return FamilyActivation{}, ErrProductionFamilyActivationUnavailable
++		return FamilyActivation{}, fmt.Errorf("%w: context is nil", ErrProductionFamilyActivationUnavailable)
+ 	}
+ 	if err := ctx.Err(); err != nil {
+ 		return FamilyActivation{}, err
+@@ -442,28 +444,43 @@ func LoadProductionFamilyActivation(ctx context.Context, config FamilyActivation
+ 	config.ManifestDigest = strings.TrimSpace(config.ManifestDigest)
+ 	owner, ownerOK := productionRouteOwnerUID()
+ 	name := ProductionFamilyActivationFileName(config.Market)
+-	if !ownerOK || name == "" || !filepath.IsAbs(config.ConfigDir) || config.ObservedAt.IsZero() ||
+-		!productionRouteDigestValid(config.ManifestDigest) ||
+-		!productionRouteIdentity(config.CalibrationDigest) ||
+-		!productionRouteDigestValid(config.RouteManifestDigest) ||
+-		!productionRouteDigestValid(config.RiskPolicyDigest) ||
+-		!productionRouteIdentity(config.CalendarVersion) || !productionRouteIdentity(config.BuildDigest) {
+-		return FamilyActivation{}, ErrProductionFamilyActivationUnavailable
++	// 설정 결속(a112 8.8.4 항목 1, 판정 Q-B1=(c)): 분기는 하나 그대로이고, 그 안에서 결속 필드를 **전부** 비교해 어긋난 이름을 모은다.
++	// 각 항은 순수 비교 · 부작용 없는 검사라(단락 평가에 기대는 항 없음 — 2026-10-04 확인) 무조건 평가해도 판정이 같다.
++	if fields := failedFields(
++		fieldCheck{"owner_uid", !ownerOK},
++		fieldCheck{"market", name == ""},
++		fieldCheck{"config_dir", !filepath.IsAbs(config.ConfigDir)},
++		fieldCheck{"observed_at", config.ObservedAt.IsZero()},
++		fieldCheck{"manifest_digest", !productionRouteDigestValid(config.ManifestDigest)},
++		fieldCheck{"calibration_digest", !productionRouteIdentity(config.CalibrationDigest)},
++		fieldCheck{"route_manifest_digest", !productionRouteDigestValid(config.RouteManifestDigest)},
++		fieldCheck{"risk_policy_digest", !productionRouteDigestValid(config.RiskPolicyDigest)},
++		fieldCheck{"calendar_version", !productionRouteIdentity(config.CalendarVersion)},
++		fieldCheck{"build_digest", !productionRouteIdentity(config.BuildDigest)},
++	); len(fields) != 0 {
++		return FamilyActivation{}, fmt.Errorf("%w: config binding: %s", ErrProductionFamilyActivationUnavailable, strings.Join(fields, ", "))
+ 	}
+ 	data, err := readProductionRouteFile(filepath.Join(config.ConfigDir, name), owner, 0o400,
+ 		productionFamilyActivationMaximumBytes)
+-	if err != nil || productionRouteDigest(data) != config.ManifestDigest {
+-		return FamilyActivation{}, ErrProductionFamilyActivationUnavailable
++	// 읽기 결함과 핀 불일치는 다른 종류다(Manager 판정 2026-10-04): 결함을 불일치로 보이면 운영자가 I/O 장애를 매니페스트 오류로 읽는다.
++	// 읽기 결함은 읽기 함수의 오류를 **문장으로** 싣고(`%v`), 불일치만 필드 이름으로 말한다. 사슬에는 활성화 sentinel 하나만 둔다 —
++	// 둘째 `%w` 는 공유 읽기 함수의 sentinel(ErrProductionRouteUnavailable)까지 만족시켜 오류가 두 신원을 갖게 했다(a112 8.5 보이스 2 P2-1).
++	if err != nil {
++		return FamilyActivation{}, fmt.Errorf("%w: manifest file %s: %v", ErrProductionFamilyActivationUnavailable, name, err)
++	}
++	if productionRouteDigest(data) != config.ManifestDigest {
++		return FamilyActivation{}, fmt.Errorf("%w: manifest_digest: the pinned digest does not match the file bytes", ErrProductionFamilyActivationUnavailable)
+ 	}
++	// 해석 거절은 해석기가 이미 이유를 붙여 sentinel 로 감쌌다 — 그대로 돌려준다.
+ 	manifest, err := decodeProductionFamilyActivation(data)
+ 	if err != nil {
+-		return FamilyActivation{}, ErrProductionFamilyActivationUnavailable
++		return FamilyActivation{}, err
+ 	}
+ 	// 폐기와 만료를 핀·정규성 검사 **뒤에** 본다. 앞에서 보면 배포가 핀하지 않은
+ 	// 파일이 "폐기됐다" 는 답을 낼 수 있고, 그러면 운영자가 자기가 쓴 적 없는
+ 	// 결정을 보게 된다. (앞 판본은 이 자리가 서명 뒤였다 — 같은 이유였다.)
+ 	if manifest.Revoked {
+-		return FamilyActivation{}, ErrProductionFamilyActivationRevoked
++		return FamilyActivation{}, fmt.Errorf("%w: revoked=true", ErrProductionFamilyActivationRevoked)
+ 	}
+ 	state, err := validateProductionFamilyActivation(manifest, config)
+ 	if err != nil {
+@@ -491,20 +508,21 @@ func LoadProductionFamilyActivation(ctx context.Context, config FamilyActivation
+ // (`production_family_activation_golden_test.go`).
+ func decodeProductionFamilyActivation(data []byte) (productionFamilyActivationBody, error) {
+ 	if len(data) == 0 || len(data) > productionFamilyActivationMaximumBytes {
+-		return productionFamilyActivationBody{}, ErrProductionFamilyActivationUnavailable
++		return productionFamilyActivationBody{}, fmt.Errorf("%w: manifest size %d bytes is outside 1..%d", ErrProductionFamilyActivationUnavailable,
++			len(data), productionFamilyActivationMaximumBytes)
+ 	}
+ 	decoder := json.NewDecoder(bytes.NewReader(data))
+ 	decoder.DisallowUnknownFields()
+ 	var manifest productionFamilyActivationBody
+ 	if err := decoder.Decode(&manifest); err != nil {
+-		return productionFamilyActivationBody{}, err
++		return productionFamilyActivationBody{}, fmt.Errorf("%w: manifest json: %w", ErrProductionFamilyActivationUnavailable, err)
+ 	}
+ 	if err := decoder.Decode(&struct{}{}); err != io.EOF {
+-		return productionFamilyActivationBody{}, ErrProductionFamilyActivationUnavailable
++		return productionFamilyActivationBody{}, fmt.Errorf("%w: trailing data after the manifest document", ErrProductionFamilyActivationUnavailable)
+ 	}
+ 	canonical, err := json.Marshal(manifest)
+ 	if err != nil || !bytes.Equal(canonical, data) {
+-		return productionFamilyActivationBody{}, ErrProductionFamilyActivationUnavailable
++		return productionFamilyActivationBody{}, fmt.Errorf("%w: manifest bytes are not this build's canonical serialization", ErrProductionFamilyActivationUnavailable)
+ 	}
+ 	return manifest, nil
+ }
+@@ -522,23 +540,37 @@ func decodeProductionFamilyActivation(data []byte) (productionFamilyActivationBo
+ func validateProductionFamilyActivation(body productionFamilyActivationBody,
+ 	config FamilyActivationConfig,
+ ) (map[familyLaneKey]productionFamilyActivationDescriptor, error) {
+-	if body.SchemaVersion != productionFamilyActivationSchema || body.Domain != productionFamilyActivationDomain ||
+-		body.Generation == 0 || body.Market != config.Market || !validMarket(body.Market) ||
+-		body.RouteManifestDigest != config.RouteManifestDigest ||
+-		body.CalibrationDigest != config.CalibrationDigest || body.CalendarVersion != config.CalendarVersion ||
+-		body.BuildDigest != config.BuildDigest ||
+-		body.RiskPolicyDigest != config.RiskPolicyDigest ||
+-		body.ProtectionReadyMinGeneration == 0 ||
+-		!productionRouteIdentity(body.Actor) {
+-		return nil, ErrProductionFamilyActivationUnavailable
++	// 몸통 결속(복합 — 분기 하나, 어긋난 필드 전부를 모음; 항은 전부 값 필드의 순수 비교).
++	if fields := failedFields(
++		fieldCheck{"schema_version", body.SchemaVersion != productionFamilyActivationSchema},
++		fieldCheck{"domain", body.Domain != productionFamilyActivationDomain},
++		fieldCheck{"generation", body.Generation == 0},
++		fieldCheck{"market", body.Market != config.Market || !validMarket(body.Market)},
++		fieldCheck{"route_manifest_digest", body.RouteManifestDigest != config.RouteManifestDigest},
++		fieldCheck{"calibration_digest", body.CalibrationDigest != config.CalibrationDigest},
++		fieldCheck{"calendar_version", body.CalendarVersion != config.CalendarVersion},
++		fieldCheck{"build_digest", body.BuildDigest != config.BuildDigest},
++		fieldCheck{"risk_policy_digest", body.RiskPolicyDigest != config.RiskPolicyDigest},
++		fieldCheck{"protection_ready_min_generation", body.ProtectionReadyMinGeneration == 0},
++		fieldCheck{"actor", !productionRouteIdentity(body.Actor)},
++	); len(fields) != 0 {
++		return nil, fmt.Errorf("%w: body binding: %s", ErrProductionFamilyActivationUnavailable, strings.Join(fields, ", "))
+ 	}
+ 	approved, okApproved := productionRouteTime(body.ApprovedAt)
+ 	issued, okIssued := productionRouteTime(body.IssuedAt)
+ 	expires, okExpires := productionRouteTime(body.ExpiresAt)
+ 	now := config.ObservedAt.UTC()
+-	if !okApproved || !okIssued || !okExpires || issued.Before(approved) || issued.After(now) ||
+-		!issued.Before(expires) || expires.Sub(issued) > productionFamilyActivationMaximumLife {
+-		return nil, ErrProductionFamilyActivationUnavailable
++	// 수명(복합 — 같은 모양). 해석 실패한 시각은 영값이라 뒤 비교도 순수하다(공황 없음).
++	if fields := failedFields(
++		fieldCheck{"approved_at", !okApproved},
++		fieldCheck{"issued_at", !okIssued},
++		fieldCheck{"expires_at", !okExpires},
++		fieldCheck{"issued_at before approved_at", issued.Before(approved)},
++		fieldCheck{"issued_at after observed_at", issued.After(now)},
++		fieldCheck{"issued_at not before expires_at", !issued.Before(expires)},
++		fieldCheck{"lifetime over maximum", expires.Sub(issued) > productionFamilyActivationMaximumLife},
++	); len(fields) != 0 {
++		return nil, fmt.Errorf("%w: lifetime: %s", ErrProductionFamilyActivationUnavailable, strings.Join(fields, ", "))
+ 	}
+ 	// 만료 판정은 lease 상한과 같은 함수 하나다 (태스크 8.7.2).
+ 	if _, err := familyActivationRemaining(expires, now); err != nil {
+@@ -559,26 +591,51 @@ func validateProductionFamilyActivation(body productionFamilyActivationBody,
+ 	// 남은 둘은 서로 다른 성질이고 각각 다른 입력에서만 짐을 진다:
+ 	// 중복 거절은 `[c,r,w,b,b]`(다섯 중 넷이 다 있음)를, 완전성은 `[c,r,w]`를.
+ 	state := make(map[familyLaneKey]productionFamilyActivationDescriptor, len(want))
+-	for _, descriptor := range body.Descriptors {
++	// 서술자 거절은 위치(`descriptors[i]`)와 필드 이름만 말한다 — lane_id 원문은 싣지 않는다. 핀이 맞는 파일이라도 그 문자열은 매니페스트
++	// 작성자의 임의 값이고(개행 포함), 오류 문장은 로그 · 화면으로 간다(a112 8.5 응답 로트 ③ — codex r2 P2).
++	for index, descriptor := range body.Descriptors {
+ 		table, known := want[descriptor.LaneID]
+-		if !known || table.Family != descriptor.Family || table.Horizon != descriptor.Horizon ||
+-			table.LaneVersion != descriptor.LaneVersion ||
+-			!validDesiredState(descriptor.Desired) || !validDesiredState(descriptor.Effective) {
+-			return nil, ErrProductionFamilyActivationUnavailable
++		// 모르는 레인이면 표 값이 영값이라 표 대조 셋은 `known &&` 로 묶는다 — 판정은 앞 판(`!known || …`)과 같고 이름만 정확해진다.
++		if fields := failedFields(
++			fieldCheck{"lane_id", !known},
++			fieldCheck{"family", known && table.Family != descriptor.Family},
++			fieldCheck{"horizon", known && table.Horizon != descriptor.Horizon},
++			fieldCheck{"lane_version", known && table.LaneVersion != descriptor.LaneVersion},
++			fieldCheck{"desired", !validDesiredState(descriptor.Desired)},
++			fieldCheck{"effective", !validDesiredState(descriptor.Effective)},
++		); len(fields) != 0 {
++			return nil, fmt.Errorf("%w: descriptors[%d]: %s", ErrProductionFamilyActivationUnavailable, index, strings.Join(fields, ", "))
+ 		}
+ 		// effective ON 은 desired ON 없이 설 수 없다. 반대는 정당하다 —
+ 		// 사람이 켜기로 했지만 아직 서지 않은 상태다.
+ 		if descriptor.Effective == StateOn && descriptor.Desired != StateOn {
+-			return nil, ErrProductionFamilyActivationUnavailable
++			return nil, fmt.Errorf("%w: descriptors[%d]: effective ON without desired ON", ErrProductionFamilyActivationUnavailable, index)
+ 		}
+ 		key := familyLaneKey{family: descriptor.Family, laneID: descriptor.LaneID, laneVersion: descriptor.LaneVersion}
+ 		if _, duplicate := state[key]; duplicate {
+-			return nil, ErrProductionFamilyActivationUnavailable
++			return nil, fmt.Errorf("%w: descriptors[%d]: duplicate lane_id", ErrProductionFamilyActivationUnavailable, index)
+ 		}
+ 		state[key] = descriptor
+ 	}
+ 	if len(state) != len(want) {
+-		return nil, ErrProductionFamilyActivationUnavailable
++		return nil, fmt.Errorf("%w: descriptors: %d of %d lanes", ErrProductionFamilyActivationUnavailable, len(state), len(want))
+ 	}
+ 	return state, nil
+ }
++
++// fieldCheck · failedFields 는 복합 결속의 진단이다(a112 8.8.4 항목 1, Q-B1=(c)). 결속 판정은 호출자의 분기 하나(`len(fields) != 0`)가
++// 하고, 이 함수는 그 분기가 무엇 때문에 섰는지를 모든 어긋난 필드로 말한다 — 첫 실패만 말하면 운영자가 하나를 고치고 다음 거절을 또 만난다.
++type fieldCheck struct {
++	name   string
++	failed bool
++}
++
++func failedFields(checks ...fieldCheck) []string {
++	var fields []string
++	for _, check := range checks {
++		if check.failed {
++			fields = append(fields, check.name)
++		}
++	}
++	return fields
++}
+diff --git a/internal/strategyrouter/production_family_activation_testseam.go b/internal/strategyrouter/production_family_activation_testseam.go
+index d10079a19..2418a983d 100644
+--- a/internal/strategyrouter/production_family_activation_testseam.go
++++ b/internal/strategyrouter/production_family_activation_testseam.go
+@@ -67,3 +67,19 @@ func AllFourFamiliesForTest(market Market) map[string]bool {
+ 	}
+ 	return promoted
+ }
++
++// FamilyActivationDesiredOnlyForTest 는 desired ON · effective OFF(사람이 켜기로 했지만 아직 서지 않은 상태 — 검증기가 받는 정당한 서술자)를
++// 그 레인들에 둔 활성화다(a112 7.3.1: 「OFF 레인」 술어가 Desired ∧ Effective 둘 다를 보는지 재려면 두 값이 갈린 입력이 있어야 한다).
++func FamilyActivationDesiredOnlyForTest(market Market, generation uint64, desiredOnly map[string]bool) FamilyActivation {
++	activation := FamilyActivationForTest(market, generation, nil)
++	if !activation.Verified() {
++		return FamilyActivation{}
++	}
++	for key, descriptor := range activation.state {
++		if desiredOnly[key.laneID] {
++			descriptor.Desired = StateOn
++			activation.state[key] = descriptor
++		}
++	}
++	return activation
++}
+diff --git a/internal/strategyrouter/production_shared_export.go b/internal/strategyrouter/production_shared_export.go
+new file mode 100644
+index 000000000..227342c3a
+--- /dev/null
++++ b/internal/strategyrouter/production_shared_export.go
+@@ -0,0 +1,61 @@
++package strategyrouter
++
++import (
++	"os"
++	"sort"
++	"time"
++)
++
++// a112 7.3.1 SHADOW(브리프 v3.3 §3) — shadow 적재기(internal/strategyshadow)가 쓰는 **읽기 전용 중립 wrapper**.
++//
++// 왜 wrapper 인가: shadow 매니페스트는 활성화 매니페스트와 같은 파일 규칙(0400 · 소유자 · 크기 상한 · 정규 시각 · 식별자 · digest)과 같은
++// 서술자 표를 써야 한다. 그 규칙을 옮겨 적으면 두 사본이 갈릴 수 있고, 기존 함수를 고치면 활성화 적재기(주문 경로의 판정)가 흔들린다.
++// 그래서 기존 함수는 그대로 두고(무편집 — 편집 전후 본문 digest 대조), 그 함수를 부르기만 하는 한 줄 wrapper 를 이 새 파일에만 둔다.
++// 쓰기 wrapper 는 없다 — 이 파일의 export 목록과 각 본문의 호출은 a112_shared_export_test.go 가 이름으로 고정한다.
++//
++// 읽기 함수의 오류는 ErrProductionRouteUnavailable 을 그대로 돌려준다. 받는 쪽(shadow 적재기)은 그 오류를 `%v` 로 접어 자기 sentinel 하나로만
++// 감싼다 — 둘째 `%w` 는 오류가 두 신원을 갖게 한다(8.5 보이스 2 P2-1 과 같은 규칙).
++
++// SharedLaneDescriptor 는 서술자 표 한 행의 값 사본이다(표 자체는 productionRouteDescriptors 하나).
++type SharedLaneDescriptor struct {
++	Family      Family
++	Horizon     Horizon
++	LaneID      string
++	LaneVersion string
++}
++
++// SharedProductionRouteOwnerUID 는 매니페스트 파일이 가져야 할 소유자(현재 UID)다.
++func SharedProductionRouteOwnerUID() (uint32, bool) { return productionRouteOwnerUID() }
++
++// SharedReadProductionRouteFile 은 정규 파일 · 모드 · 소유자 · 크기 상한 · 열기 전후 동일성을 지킨 읽기다.
++func SharedReadProductionRouteFile(path string, owner uint32, mode os.FileMode, maximum int64) ([]byte, error) {
++	return readProductionRouteFile(path, owner, mode, maximum)
++}
++
++// SharedProductionRouteDigest 는 바이트의 `sha256:<hex>` digest 다.
++func SharedProductionRouteDigest(data []byte) string { return productionRouteDigest(data) }
++
++// SharedProductionRouteTime 은 UTC RFC3339Nano 정규 시각만 받는다.
++func SharedProductionRouteTime(raw string) (time.Time, bool) { return productionRouteTime(raw) }
++
++// SharedProductionRouteIdentity 는 식별자 규칙(비지 않음 · 앞뒤 공백 없음 · 256 바이트 · 제어 문자 없음)이다.
++func SharedProductionRouteIdentity(value string) bool { return productionRouteIdentity(value) }
++
++// SharedProductionRouteDigestValid 는 `sha256:` + 소문자 hex 64 자리 규칙이다.
++func SharedProductionRouteDigestValid(value string) bool { return productionRouteDigestValid(value) }
++
++// SharedProductionRouteDescriptors 는 그 시장의 서술자 표를 가족 순으로 돌려준다. 표를 복사하지 않고 같은 함수에서 읽어 행을 옮길 뿐이다.
++func SharedProductionRouteDescriptors(market Market) []SharedLaneDescriptor {
++	table := productionRouteDescriptors(market)
++	if len(table) == 0 {
++		return nil
++	}
++	lanes := make([]SharedLaneDescriptor, 0, len(table))
++	for laneID, descriptor := range table {
++		lanes = append(lanes, SharedLaneDescriptor{Family: descriptor.Family, Horizon: descriptor.Horizon, LaneID: laneID,
++			LaneVersion: descriptor.LaneVersion})
++	}
++	// 가족 순 — map 순회 순서에 기대면 같은 표가 실행마다 다른 순서로 나간다.
++	sort.Slice(lanes, func(i, j int) bool { return lanes[i].Family < lanes[j].Family })
++	return lanes
++}
+diff --git a/internal/strategyshadow/shadow.go b/internal/strategyshadow/shadow.go
+new file mode 100644
+index 000000000..f7542e62c
+--- /dev/null
++++ b/internal/strategyshadow/shadow.go
+@@ -0,0 +1,373 @@
++// Package strategyshadow 는 a112 태스크 7.3.1 의 **shadow 매니페스트**다: 어느 OFF 레인을 읽기 전용 반사실(SHADOW)로 관측할지.
++//
++// 왜 별도 패키지인가(브리프 v3.3 §2 — Manager 판정 ②). shadow 는 승격의 반대편이다 — 아무것도 켜지 않고, 주문 경로에 아무것도 넘기지
++// 않는다. 그 약속을 주석이 아니라 타입이 지키게 하려고 strategyrouter 밖에 둔다: 이 패키지는 strategyrouter 를 import 하지만
++// `strategyrouter.FamilyActivation` 의 필드가 전부 비공개라 활성화를 **만들 수 없다**(저장소 전체의 비영 literal 은 활성화 적재기 한 자리 —
++// guard_test.go 의 셈). 이 패키지의 생산 소스는 gofmt 정본 digest 로 동결된다(guard_test.go).
++//
++// 신뢰 앵커는 배포 digest 핀 하나다 [a112 결정 63 v3 — 61 의 (a)·(b) 를 적용]: 정규 바이트 등식은 바이트 동일성만 보장하고, 신뢰는 배포 핀을
++// 쓸 권한에서 오며, 생성기(`tools/a112-family-shadow`)만 만든다는 것은 운영 정책이다(기술 증명 아님).
++package strategyshadow
++
++import (
++	"bytes"
++	"context"
++	"encoding/json"
++	"errors"
++	"fmt"
++	"io"
++	"path/filepath"
++	"sort"
++	"strings"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
++)
++
++const (
++	productionFamilyShadowSchema = "strategy-four-family-shadow:v1"
++	// domain 은 **종류 표식**이다 — 활성화 매니페스트 바이트가 이 자리에 놓이면 이 값(과 서술자 모양)이 거절한다(교차 디코드).
++	productionFamilyShadowDomain       = "TossOS/strategy-four-family-shadow/sha256-pin/v1"
++	productionFamilyShadowMaximumBytes = 64 << 10
++	// 24시간은 활성화 매니페스트의 수명 상한과 같은 값이다 — 두 매니페스트의 상한이 다르면 사람이 둘 중 하나를 잊는다.
++	productionFamilyShadowMaximumLife = 24 * time.Hour
++)
++
++var (
++	// ErrProductionFamilyShadowUnavailable 은 「이 매니페스트로는 아무 레인도 shadow 할 수 없다」 다: 읽을 수 없음 · 핀 불일치 · 정규 아님 ·
++	// 결속 불일치 · 서술자 이상. 공유 읽기 함수의 오류는 문장(`%v`)으로만 싣는다 — 이 sentinel 하나가 유일한 신원이다.
++	ErrProductionFamilyShadowUnavailable = errors.New("strategyshadow: family shadow unavailable")
++	// ErrProductionFamilyShadowRevoked 는 사람이 폐기 표시를 한 매니페스트다.
++	ErrProductionFamilyShadowRevoked = errors.New("strategyshadow: family shadow revoked")
++	// ErrProductionFamilyShadowExpired 는 수명이 지난 매니페스트다.
++	ErrProductionFamilyShadowExpired = errors.New("strategyshadow: family shadow expired")
++	// ErrProductionFamilyShadowUndeclared 는 배포가 이 시장에 shadow 를 **선언하지 않았다**(핀 env 가 빔)는 뜻이다 — 오늘 생산의 값.
++	ErrProductionFamilyShadowUndeclared = errors.New("strategyshadow: family shadow undeclared")
++)
++
++// ShadowState 는 서술자 한 행의 shadow 여부다. desired/effective 필드는 **없다** — ON 을 값으로 표현할 자리가 0 이다.
++type ShadowState string
++
++const (
++	ShadowOn  ShadowState = "ON"
++	ShadowOff ShadowState = "OFF"
++)
++
++// ProductionFamilyShadowFileName 은 닫힌 대응이다(매니페스트나 호출자가 준 경로 조각을 받지 않는다).
++func ProductionFamilyShadowFileName(market strategyrouter.Market) string {
++	switch market {
++	case strategyrouter.MarketKR:
++		return "strategy-family-shadow-KR.json"
++	case strategyrouter.MarketUS:
++		return "strategy-family-shadow-US.json"
++	default:
++		return ""
++	}
++}
++
++// Config 는 읽기 전용 경로 · 신뢰 핀 · 결속 값이다. 결속은 활성화와 같은 다섯(경로 매니페스트 · 보정 · 달력 · 빌드 · 위험 정책) —
++// ProtectionReady 는 노출이 없는 shadow 에 결속하지 않는다(브리프 §1).
++type Config struct {
++	ConfigDir      string
++	Market         strategyrouter.Market
++	ManifestDigest string
++	ObservedAt     time.Time
++
++	RouteManifestDigest string
++	CalibrationDigest   string
++	CalendarVersion     string
++	BuildDigest         string
++	RiskPolicyDigest    string
++}
++
++type productionFamilyShadowDescriptor struct {
++	Family      strategyrouter.Family  `json:"family"`
++	Horizon     strategyrouter.Horizon `json:"horizon"`
++	LaneID      string                 `json:"lane_id"`
++	LaneVersion string                 `json:"lane_version"`
++	Shadow      ShadowState            `json:"shadow"`
++}
++
++type productionFamilyShadowBody struct {
++	SchemaVersion string                `json:"schema_version"`
++	Domain        string                `json:"domain"`
++	Generation    uint64                `json:"generation"`
++	Market        strategyrouter.Market `json:"market"`
++
++	RouteManifestDigest string `json:"route_manifest_digest"`
++	CalibrationDigest   string `json:"calibration_digest"`
++	CalendarVersion     string `json:"calendar_version"`
++	RiskPolicyDigest    string `json:"risk_policy_digest"`
++	BuildDigest         string `json:"build_digest"`
++
++	Actor      string `json:"actor"`
++	ApprovedAt string `json:"approved_at"`
++	IssuedAt   string `json:"issued_at"`
++	ExpiresAt  string `json:"expires_at"`
++	Revoked    bool   `json:"revoked"`
++
++	Descriptors []productionFamilyShadowDescriptor `json:"descriptors"`
++}
++
++// Document 는 사람이 채우는 값이다. 서술자는 받지 않는다 — shadow 할 **가족**만 받고 레인 ID · 버전 · 수평선은 검증기가 쓰는 바로 그 표
++// (strategyrouter.SharedProductionRouteDescriptors)에서 유도한다. 그래서 도구가 낸 바이트와 검증기가 아는 표는 갈릴 수 없다.
++type Document struct {
++	Market     strategyrouter.Market
++	Generation uint64
++
++	RouteManifestDigest string
++	CalibrationDigest   string
++	CalendarVersion     string
++	RiskPolicyDigest    string
++	BuildDigest         string
++
++	Actor      string
++	ApprovedAt time.Time
++	IssuedAt   time.Time
++	ExpiresAt  time.Time
++	Revoked    bool
++
++	// Shadow 는 shadow ON 으로 둘 가족이다. 비면 넷 다 OFF — 그것도 정당한 매니페스트다.
++	Shadow []strategyrouter.Family
++}
++
++// body 는 문서를 정규 몸통으로 옮긴다. 값의 의미는 검사하지 않는다(판정은 LoadProductionFamilyShadow 하나) — 모르는 가족 이름만 막는다.
++func (document Document) body() (productionFamilyShadowBody, error) {
++	table := strategyrouter.SharedProductionRouteDescriptors(document.Market)
++	if len(table) == 0 {
++		return productionFamilyShadowBody{}, fmt.Errorf("%w: market %q has no descriptor table", ErrProductionFamilyShadowUnavailable, document.Market)
++	}
++	shadowed := map[strategyrouter.Family]bool{}
++	for _, family := range document.Shadow {
++		if !family.Known() {
++			return productionFamilyShadowBody{}, fmt.Errorf("%w: shadow: unknown family %q", ErrProductionFamilyShadowUnavailable, family)
++		}
++		shadowed[family] = true
++	}
++	descriptors := make([]productionFamilyShadowDescriptor, 0, len(table))
++	for _, lane := range table {
++		state := ShadowOff
++		if shadowed[lane.Family] {
++			state = ShadowOn
++		}
++		descriptors = append(descriptors, productionFamilyShadowDescriptor{Family: lane.Family, Horizon: lane.Horizon,
++			LaneID: lane.LaneID, LaneVersion: lane.LaneVersion, Shadow: state})
++	}
++	// 표 wrapper 가 이미 가족 순이지만 정규 바이트의 정본성은 여기서 한 번 더 못 박는다(입력 · 표 순서와 무관한 바이트).
++	sort.Slice(descriptors, func(i, j int) bool { return descriptors[i].Family < descriptors[j].Family })
++	return productionFamilyShadowBody{SchemaVersion: productionFamilyShadowSchema, Domain: productionFamilyShadowDomain,
++		Generation: document.Generation, Market: document.Market,
++		RouteManifestDigest: document.RouteManifestDigest, CalibrationDigest: document.CalibrationDigest,
++		CalendarVersion: document.CalendarVersion, RiskPolicyDigest: document.RiskPolicyDigest, BuildDigest: document.BuildDigest,
++		Actor: document.Actor, ApprovedAt: document.ApprovedAt.UTC().Format(time.RFC3339Nano),
++		IssuedAt: document.IssuedAt.UTC().Format(time.RFC3339Nano), ExpiresAt: document.ExpiresAt.UTC().Format(time.RFC3339Nano),
++		Revoked: document.Revoked, Descriptors: descriptors}, nil
++}
++
++// EncodeProductionFamilyShadow 는 이 빌드가 받아들이는 정규 바이트를 낸다. 바이트는 아무것도 켜지 못한다 — 배포가
++// `TOSSOS_STRATEGY_FAMILY_SHADOW_<MARKET>_MANIFEST_SHA256` 을 그 바이트로 핀해야 shadow 가 선다. 부르는 자리는 도구 하나(guard_test.go).
++func EncodeProductionFamilyShadow(input Document) ([]byte, error) {
++	body, err := input.body()
++	if err != nil {
++		return nil, err
++	}
++	return json.Marshal(body)
++}
++
++type shadowLaneKey struct {
++	family      strategyrouter.Family
++	laneID      string
++	laneVersion string
++}
++
++// FamilyShadow 는 검증된 shadow 매니페스트다. **영값이 안전한 값이다** — 필드가 비공개라 이 패키지 밖에서는 영값만 만들 수 있고, 영값은
++// 아무 레인도 shadow 하지 않는다. 승격 · 활성화 · desired/effective 를 돌려주는 메서드는 없다.
++type FamilyShadow struct {
++	market     strategyrouter.Market
++	generation uint64
++	expiresAt  time.Time
++	shadowed   map[shadowLaneKey]bool
++}
++
++// Verified 는 이 값이 검증된 매니페스트에서 왔는지다(전부 OFF 인 검증 매니페스트도 Verified).
++func (shadow FamilyShadow) Verified() bool { return shadow.generation != 0 }
++
++func (shadow FamilyShadow) Market() strategyrouter.Market { return shadow.market }
++func (shadow FamilyShadow) Generation() uint64            { return shadow.generation }
++func (shadow FamilyShadow) ExpiresAt() time.Time          { return shadow.expiresAt.UTC() }
++
++// Shadowed 는 매니페스트가 이 레인을 shadow ON 으로 두었는지다. 시장을 인자로 받아 대조한다 — KR 매니페스트에 US 레인을 물으면 거짓.
++func (shadow FamilyShadow) Shadowed(market strategyrouter.Market, family strategyrouter.Family, laneID, laneVersion string) bool {
++	if !shadow.Verified() || market != shadow.market {
++		return false
++	}
++	return shadow.shadowed[shadowLaneKey{family: family, laneID: laneID, laneVersion: laneVersion}]
++}
++
++// LoadProductionFamilyShadow 는 한 시장의 shadow 매니페스트를 읽는다. 아무것도 쓰지 않는다.
++//
++// 검사 순서는 활성화 적재기(strategyrouter.LoadProductionFamilyActivation)와 같다 — 미선언 맨 앞 · ctx · 설정 결속 · 파일 읽기 · 핀 ·
++// 정규 · 폐기 · 결속 · 수명 · 서술자. 두 적재기의 순서는 양쪽 AST 로 못 박힌다(브리프 §3).
++func LoadProductionFamilyShadow(ctx context.Context, config Config) (FamilyShadow, error) {
++	// 미선언을 맨 먼저 본다 — 핀이 없는 시장(오늘 생산)의 답이 주기의 사정(취소된 ctx · 빈 결속 값)으로 바뀌지 않게.
++	if strings.TrimSpace(config.ManifestDigest) == "" {
++		return FamilyShadow{}, fmt.Errorf("%w: manifest_digest pin is empty", ErrProductionFamilyShadowUndeclared)
++	}
++	if ctx == nil {
++		return FamilyShadow{}, fmt.Errorf("%w: context is nil", ErrProductionFamilyShadowUnavailable)
++	}
++	if err := ctx.Err(); err != nil {
++		return FamilyShadow{}, err
++	}
++	config.ConfigDir = filepath.Clean(strings.TrimSpace(config.ConfigDir))
++	config.ManifestDigest = strings.TrimSpace(config.ManifestDigest)
++	owner, ownerOK := strategyrouter.SharedProductionRouteOwnerUID()
++	name := ProductionFamilyShadowFileName(config.Market)
++	// 설정 결속: 분기 하나, 어긋난 필드 전부를 모은다(각 항은 부작용 없는 순수 비교).
++	if fields := failedFields(
++		fieldCheck{"owner_uid", !ownerOK},
++		fieldCheck{"market", name == ""},
++		fieldCheck{"config_dir", !filepath.IsAbs(config.ConfigDir)},
++		fieldCheck{"observed_at", config.ObservedAt.IsZero()},
++		fieldCheck{"manifest_digest", !strategyrouter.SharedProductionRouteDigestValid(config.ManifestDigest)},
++		fieldCheck{"calibration_digest", !strategyrouter.SharedProductionRouteIdentity(config.CalibrationDigest)},
++		fieldCheck{"route_manifest_digest", !strategyrouter.SharedProductionRouteDigestValid(config.RouteManifestDigest)},
++		fieldCheck{"risk_policy_digest", !strategyrouter.SharedProductionRouteDigestValid(config.RiskPolicyDigest)},
++		fieldCheck{"calendar_version", !strategyrouter.SharedProductionRouteIdentity(config.CalendarVersion)},
++		fieldCheck{"build_digest", !strategyrouter.SharedProductionRouteIdentity(config.BuildDigest)},
++	); len(fields) != 0 {
++		return FamilyShadow{}, fmt.Errorf("%w: config binding: %s", ErrProductionFamilyShadowUnavailable, strings.Join(fields, ", "))
++	}
++	data, err := strategyrouter.SharedReadProductionRouteFile(filepath.Join(config.ConfigDir, name), owner, 0o400,
++		productionFamilyShadowMaximumBytes)
++	// 읽기 결함은 공유 읽기 함수의 오류를 문장으로(`%v`) 싣는다 — 경로 sentinel 을 사슬에 두면 오류가 두 신원을 갖는다.
++	if err != nil {
++		return FamilyShadow{}, fmt.Errorf("%w: manifest file %s: %v", ErrProductionFamilyShadowUnavailable, name, err)
++	}
++	if strategyrouter.SharedProductionRouteDigest(data) != config.ManifestDigest {
++		return FamilyShadow{}, fmt.Errorf("%w: manifest_digest: the pinned digest does not match the file bytes", ErrProductionFamilyShadowUnavailable)
++	}
++	manifest, err := decodeProductionFamilyShadow(data)
++	if err != nil {
++		return FamilyShadow{}, err
++	}
++	// 폐기는 핀 · 정규성 뒤에 본다 — 배포가 핀하지 않은 파일이 「폐기됐다」 는 답을 내지 않게.
++	if manifest.Revoked {
++		return FamilyShadow{}, fmt.Errorf("%w: revoked=true", ErrProductionFamilyShadowRevoked)
++	}
++	shadowed, expires, err := validateProductionFamilyShadow(manifest, config)
++	if err != nil {
++		return FamilyShadow{}, err
++	}
++	if err := ctx.Err(); err != nil {
++		return FamilyShadow{}, err
++	}
++	return FamilyShadow{market: manifest.Market, generation: manifest.Generation, expiresAt: expires, shadowed: shadowed}, nil
++}
++
++// decodeProductionFamilyShadow 는 바이트가 정확히 이 구조체의 정규 직렬화와 같기를 요구한다(unknown field · 중복 키 · 뒤 데이터 ·
++// 필드 순서 · 공백을 한 등식이 함께 거절). 활성화 바이트는 필드 모양이 달라 여기서 거절된다(교차 디코드).
++func decodeProductionFamilyShadow(data []byte) (productionFamilyShadowBody, error) {
++	if len(data) == 0 || len(data) > productionFamilyShadowMaximumBytes {
++		return productionFamilyShadowBody{}, fmt.Errorf("%w: manifest size %d bytes is outside 1..%d", ErrProductionFamilyShadowUnavailable,
++			len(data), productionFamilyShadowMaximumBytes)
++	}
++	decoder := json.NewDecoder(bytes.NewReader(data))
++	decoder.DisallowUnknownFields()
++	var manifest productionFamilyShadowBody
++	if err := decoder.Decode(&manifest); err != nil {
++		return productionFamilyShadowBody{}, fmt.Errorf("%w: manifest json: %v", ErrProductionFamilyShadowUnavailable, err)
++	}
++	if err := decoder.Decode(&struct{}{}); err != io.EOF {
++		return productionFamilyShadowBody{}, fmt.Errorf("%w: trailing data after the manifest document", ErrProductionFamilyShadowUnavailable)
++	}
++	canonical, err := json.Marshal(manifest)
++	if err != nil || !bytes.Equal(canonical, data) {
++		return productionFamilyShadowBody{}, fmt.Errorf("%w: manifest bytes are not this build's canonical serialization", ErrProductionFamilyShadowUnavailable)
++	}
++	return manifest, nil
++}
++
++// validateProductionFamilyShadow 는 결속 · 수명 · 서술자 집합을 본다. 서술자는 정확히 그 시장의 네 레인이어야 한다(개수 · 중복 · 미지 ·
++// 드리프트 · shadow 값 전부 거절).
++func validateProductionFamilyShadow(body productionFamilyShadowBody, config Config) (map[shadowLaneKey]bool, time.Time, error) {
++	if fields := failedFields(
++		fieldCheck{"schema_version", body.SchemaVersion != productionFamilyShadowSchema},
++		fieldCheck{"domain", body.Domain != productionFamilyShadowDomain},
++		fieldCheck{"generation", body.Generation == 0},
++		fieldCheck{"market", body.Market != config.Market},
++		fieldCheck{"route_manifest_digest", body.RouteManifestDigest != config.RouteManifestDigest},
++		fieldCheck{"calibration_digest", body.CalibrationDigest != config.CalibrationDigest},
++		fieldCheck{"calendar_version", body.CalendarVersion != config.CalendarVersion},
++		fieldCheck{"build_digest", body.BuildDigest != config.BuildDigest},
++		fieldCheck{"risk_policy_digest", body.RiskPolicyDigest != config.RiskPolicyDigest},
++		fieldCheck{"actor", !strategyrouter.SharedProductionRouteIdentity(body.Actor)},
++	); len(fields) != 0 {
++		return nil, time.Time{}, fmt.Errorf("%w: body binding: %s", ErrProductionFamilyShadowUnavailable, strings.Join(fields, ", "))
++	}
++	approved, okApproved := strategyrouter.SharedProductionRouteTime(body.ApprovedAt)
++	issued, okIssued := strategyrouter.SharedProductionRouteTime(body.IssuedAt)
++	expires, okExpires := strategyrouter.SharedProductionRouteTime(body.ExpiresAt)
++	now := config.ObservedAt.UTC()
++	if fields := failedFields(
++		fieldCheck{"approved_at", !okApproved},
++		fieldCheck{"issued_at", !okIssued},
++		fieldCheck{"expires_at", !okExpires},
++		fieldCheck{"issued_at before approved_at", issued.Before(approved)},
++		fieldCheck{"issued_at after observed_at", issued.After(now)},
++		fieldCheck{"issued_at not before expires_at", !issued.Before(expires)},
++		fieldCheck{"lifetime over maximum", expires.Sub(issued) > productionFamilyShadowMaximumLife},
++	); len(fields) != 0 {
++		return nil, time.Time{}, fmt.Errorf("%w: lifetime: %s", ErrProductionFamilyShadowUnavailable, strings.Join(fields, ", "))
++	}
++	// 만료는 경계 1ns 에서 등호 쪽이 만료다(`!now.Before(expires)`) — 활성화의 familyActivationRemaining 과 같은 규칙.
++	if !now.Before(expires) {
++		return nil, time.Time{}, fmt.Errorf("%w: expires_at %s is not after %s", ErrProductionFamilyShadowExpired,
++			expires.UTC().Format(time.RFC3339Nano), now.Format(time.RFC3339Nano))
++	}
++	want := map[string]strategyrouter.SharedLaneDescriptor{}
++	for _, lane := range strategyrouter.SharedProductionRouteDescriptors(body.Market) {
++		want[lane.LaneID] = lane
++	}
++	shadowed := make(map[shadowLaneKey]bool, len(want))
++	seen := make(map[shadowLaneKey]bool, len(want))
++	// 서술자 거절은 위치와 필드 이름만 말한다 — lane_id 원문은 매니페스트 작성자의 임의 값이라 싣지 않는다.
++	for index, descriptor := range body.Descriptors {
++		table, known := want[descriptor.LaneID]
++		if fields := failedFields(
++			fieldCheck{"lane_id", !known},
++			fieldCheck{"family", known && table.Family != descriptor.Family},
++			fieldCheck{"horizon", known && table.Horizon != descriptor.Horizon},
++			fieldCheck{"lane_version", known && table.LaneVersion != descriptor.LaneVersion},
++			fieldCheck{"shadow", descriptor.Shadow != ShadowOn && descriptor.Shadow != ShadowOff},
++		); len(fields) != 0 {
++			return nil, time.Time{}, fmt.Errorf("%w: descriptors[%d]: %s", ErrProductionFamilyShadowUnavailable, index, strings.Join(fields, ", "))
++		}
++		key := shadowLaneKey{family: descriptor.Family, laneID: descriptor.LaneID, laneVersion: descriptor.LaneVersion}
++		if seen[key] {
++			return nil, time.Time{}, fmt.Errorf("%w: descriptors[%d]: duplicate lane_id", ErrProductionFamilyShadowUnavailable, index)
++		}
++		seen[key] = true
++		shadowed[key] = descriptor.Shadow == ShadowOn
++	}
++	if len(seen) != len(want) {
++		return nil, time.Time{}, fmt.Errorf("%w: descriptors: %d of %d lanes", ErrProductionFamilyShadowUnavailable, len(seen), len(want))
++	}
++	return shadowed, expires, nil
++}
++
++// fieldCheck · failedFields 는 복합 결속의 진단이다 — 첫 실패만 말하면 운영자가 하나를 고치고 다음 거절을 또 만난다.
++type fieldCheck struct {
++	name   string
++	failed bool
++}
++
++func failedFields(checks ...fieldCheck) []string {
++	var fields []string
++	for _, check := range checks {
++		if check.failed {
++			fields = append(fields, check.name)
++		}
++	}
++	return fields
++}
+diff --git a/internal/strategyworker/lane.go b/internal/strategyworker/lane.go
+index 04d03ce3d..5547c1cc4 100644
+--- a/internal/strategyworker/lane.go
++++ b/internal/strategyworker/lane.go
+@@ -185,6 +185,12 @@ func (lane *Lane) RestartNotBefore() time.Time {
+ func (lane *Lane) Health() LaneHealth {
+ 	lane.mu.Lock()
+ 	defer lane.mu.Unlock()
++	return lane.healthLocked()
++}
++
++// healthLocked 는 Health 의 판정이다. Status 가 같은 잠금 안에서 같은 판정을 쓰도록 따로 두었다(a112 7.5 D2) — 판정을 두 벌 두면
++// 한 행의 건강과 개별 접근자의 건강이 갈린다. 호출자가 lane.mu 를 쥐고 있어야 한다.
++func (lane *Lane) healthLocked() LaneHealth {
+ 	if lane.latched {
+ 		return LaneLatched
+ 	}
+diff --git a/internal/strategyworker/lane_view.go b/internal/strategyworker/lane_view.go
+index f5addcbb6..836d078f1 100644
+--- a/internal/strategyworker/lane_view.go
++++ b/internal/strategyworker/lane_view.go
+@@ -1,6 +1,35 @@
+ package strategyworker
+ 
+-import "github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
++import (
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
++)
++
++// LaneStatus 는 레인 한 행의 상태를 **한 잠금 안에서** 읽은 값이다(a112 7.5 D2).
++//
++// 개별 접근자(Health · LatchRevision · FirstFailure …)는 각자 잠금을 잡으므로, 그 사이에 레인이 잠기면 「LATCHED 인데 revision 0」 같은
++// 찢긴 행이 나온다. 투영처럼 한 행을 보여 주는 쪽은 이것 하나만 읽어야 한다(엔진 시험이 AST 로 못 박음). 값이고 아무것도 바꾸지 않는다.
++type LaneStatus struct {
++	Health              LaneHealth
++	ConsecutiveFailures uint64
++	LatchRevision       uint64
++	FirstFailure        string
++	Pending             int
++	Dropped             uint64
++	Abandoned           uint64
++	NextDue             time.Time
++	RestartNotBefore    time.Time
++}
++
++// Status 는 레인 한 행을 한 잠금으로 읽는다.
++func (lane *Lane) Status() LaneStatus {
++	lane.mu.Lock()
++	defer lane.mu.Unlock()
++	return LaneStatus{Health: lane.healthLocked(), ConsecutiveFailures: lane.consecutiveFailures, LatchRevision: lane.latchRevision,
++		FirstFailure: lane.firstFailure, Pending: lane.pending, Dropped: lane.dropped, Abandoned: lane.abandonedCycles,
++		NextDue: lane.nextDue, RestartNotBefore: lane.restartNotBefore}
++}
+ 
+ // a112 태스크 7.3 — 투영이 레인 하나의 worker 서술을 읽는 접근자(Manager 판정: additive 읽기 접근자).
+ //
+diff --git a/internal/strategyworker/shadow.go b/internal/strategyworker/shadow.go
+new file mode 100644
+index 000000000..c2cc52563
+--- /dev/null
++++ b/internal/strategyworker/shadow.go
+@@ -0,0 +1,76 @@
++package strategyworker
++
++import (
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
++)
++
++// a112 7.3.1 SHADOW(브리프 v3.3 §4 · §6) — OFF 레인의 읽기 전용 반사실.
++//
++// SHADOW 는 「이 레인이 켜져 있었다면 이 입력에서 봉투를 냈을까」 를 **값**으로만 답한다. 봉투 · 승격 · 활성화를 만들지 않고, 입력은
++// opaque ShadowInput 이라 조정자에 들어가는 Input 과 섞일 수 없다(admit · Submit 은 Input 만 받는다).
++
++// ShadowOutcome 은 반사실 판정 하나다.
++type ShadowOutcome string
++
++const (
++	// ShadowWouldEmit 은 이 레인이 소유하는 봉인된 제안이 있었다는 뜻이다 — 켜져 있었다면 Run 이 봉투를 냈다.
++	ShadowWouldEmit ShadowOutcome = "WOULD_EMIT"
++	// ShadowNotThisLane 은 제안이 이 레인을 **주장**했지만 봉인 · 가족 유도가 성립하지 않았다는 뜻이다 — 켜져 있었어도 REFUSED.
++	ShadowNotThisLane ShadowOutcome = "NOT_THIS_LANE"
++	// ShadowNoInput 은 이 레인을 주장하는 제안이 이 물결에 없었다는 뜻이다.
++	ShadowNoInput ShadowOutcome = "NO_INPUT"
++)
++
++// ShadowOutcomes 는 판정 어휘 전부다(projection · OpenAPI 어휘와 시험으로 대조).
++func ShadowOutcomes() []ShadowOutcome {
++	return []ShadowOutcome{ShadowWouldEmit, ShadowNotThisLane, ShadowNoInput}
++}
++
++// ShadowInput 은 관문 앞 제안 하나의 opaque 사본이다(필드 비공개). 생성자는 NewShadowInput 하나이고, 받는 쪽은 ShadowVerdict 하나다.
++type ShadowInput struct {
++	proposal strategyarbiter.Proposal
++}
++
++// NewShadowInput 은 composite literal 하나다 — 호출 0 이라 조정 루프 안의 수집 helper 에 panic 거리가 없다(브리프 §4 shape 핀).
++func NewShadowInput(proposal strategyarbiter.Proposal) ShadowInput {
++	return ShadowInput{proposal: proposal}
++}
++
++// ShadowEligible 은 「OFF 레인」 술어 **하나**다: 같은 물결의 활성화가 이 레인을 Desired OFF ∧ Effective OFF 로 둘 때만 shadow 가 적용된다
++// (활성화 ON 레인은 shadow 가 아니다 — ON 이 우선). 투영 검증기(strategyprojection.validateLane)는 같은 조건을 값 형태로 건다.
++func ShadowEligible(activation strategyrouter.FamilyActivation, worker FamilyWorker) bool {
++	return worker.Desired(activation) == strategyrouter.StateOff && worker.Effective(activation) == strategyrouter.StateOff
++}
++
++// ShadowVerdict 는 입력 하나에 대한 반사실 판정이다. 활성화를 보지 않는다(OFF 레인의 「켜졌다면」 이므로) — 소유 판정은 Run 과 같은 owns 하나.
++func (worker FamilyWorker) ShadowVerdict(input ShadowInput) ShadowOutcome {
++	lineage := input.proposal.Result.Lineage
++	if lineage.Market != worker.key.Market || lineage.LaneID != worker.key.LaneID {
++		return ShadowNoInput
++	}
++	if !worker.owns(input.proposal) {
++		return ShadowNotThisLane
++	}
++	return ShadowWouldEmit
++}
++
++// ShadowEligible 은 레인 위임이다 — 판정은 위의 함수 하나(레인은 worker 를 숨기므로 엔진은 이 문으로만 묻는다).
++func (lane *Lane) ShadowEligible(activation strategyrouter.FamilyActivation) bool {
++	return ShadowEligible(activation, lane.worker)
++}
++
++// ShadowOutcomeOver 는 한 물결의 묶음 전체에 대한 이 레인의 판정이다: WOULD_EMIT > NOT_THIS_LANE > NO_INPUT. 잠금을 보지 않는다 —
++// 잠긴 레인도 관측한다(SHADOW 는 관측만, 브리프 §6). 레인 상태를 바꾸지 않는다.
++func (lane *Lane) ShadowOutcomeOver(inputs []ShadowInput) ShadowOutcome {
++	outcome := ShadowNoInput
++	for _, input := range inputs {
++		switch lane.worker.ShadowVerdict(input) {
++		case ShadowWouldEmit:
++			return ShadowWouldEmit
++		case ShadowNotThisLane:
++			outcome = ShadowNotThisLane
++		}
++	}
++	return outcome
++}
+diff --git a/internal/testenv/closure.go b/internal/testenv/closure.go
+new file mode 100644
+index 000000000..b128b470c
+--- /dev/null
++++ b/internal/testenv/closure.go
+@@ -0,0 +1,185 @@
++package testenv
++
++// closure.go — 의존 폐포 가드의 공용 부품(a112 8.2, Manager 판정 2026-10-04).
++//
++// 레인 · 증거 · worker 패키지가 「주문 변경자 · 쓰기 원장 · Guardian 발급 · 활성화/토글 쓰기」에 닿지 않는다는 약속은 패키지마다 시험이
++// 지킨다. 그 시험들이 각자 금지 목록을 베끼면 목록이 갈린다(8.2 census: strategyflow 의 목록은 client · hybrid · ops 를 빠뜨렸다). 그래서
++// **금지 목록은 여기 한 곳**이고, 걸음(`go list`)도 여기 한 곳이다 — 태그 뒤 시험까지 걷는 모드를 빠뜨리지 않게.
++
++import (
++	"encoding/json"
++	"errors"
++	"io"
++	"os/exec"
++	"sort"
++	"strings"
++	"testing"
++)
++
++// ModulePath 는 이 저장소의 Go 모듈 경로다.
++const ModulePath = "github.com/JungHoonGhae/tossinvest-cli/"
++
++// MutationCapability 는 금지 대상 패키지 하나와 그것이 품은 능력이다.
++type MutationCapability struct {
++	Path string // 모듈 안 경로(접두어 일치 — 하위 패키지 포함)
++	Why  string
++}
++
++// MutationCapabilities 는 이 모듈에서 스펙이 부른 네 능력(broker mutator · writable journal · Guardian issuer · activation/toggle writer)이
++// 실제로 사는 패키지다. 새 능력 패키지가 생기면 여기 한 줄을 더한다 — 모든 가드가 함께 본다.
++func MutationCapabilities() []MutationCapability {
++	return []MutationCapability{
++		{"internal/official", "공식 API 주문 변경자 — PlaceOrder · CancelOrder · ModifyOrder · 조건부 주문 3종"},
++		{"internal/hybrid", "공식 클라이언트가 없으면 WTS 로 주문을 흘린다"},
++		{"internal/client", "WTS 세션 주문 변경자"},
++		{"internal/trading", "Broker 인터페이스와 구현"},
++		{"internal/orderintent", "주문 의도 생성"},
++		{"internal/execgw", "실행 게이트웨이 — Guardian 발급"},
++		{"internal/strategydispatch", "전략 dispatch — Guardian 발급 경로"},
++		{"internal/journal", "원장 쓰기 · lease"},
++		{"internal/ops", "운영 토글 flip"},
++		{"internal/protectionofficial", "보호 주문 배치"},
++		{"internal/verifylive", "실계좌 검증 경로"},
++		{"internal/config", "운영 설정 쓰기"},
++		{"internal/app", "CLI · 엔진 배선 — 위를 전부 끌고 온다"},
++	}
++}
++
++// Capability 는 import 경로가 금지 능력 패키지(또는 그 하위)면 그 항목을 돌려준다.
++func Capability(importPath string) (MutationCapability, bool) {
++	for _, capability := range MutationCapabilities() {
++		full := ModulePath + capability.Path
++		if importPath == full || strings.HasPrefix(importPath, full+"/") {
++			return capability, true
++		}
++	}
++	return MutationCapability{}, false
++}
++
++// WalkMode 는 한 번의 `go list -deps` 걸음이다.
++type WalkMode struct {
++	Name  string
++	Tests bool   // -test: 그 패키지의 시험 이진 폐포까지
++	Tags  string // 빌드 태그(빈 값이면 무태그)
++}
++
++// WalkModes 는 가드가 돌아야 하는 네 걸음이다: 생산 · 시험 이진 각각을 무태그와 `tossos_testseams` 로. 태그 뒤 시험 파일은 무태그 걸음에
++// 보이지 않는다(8.2 census — 코디네이터 · 라우터의 태그 시험 폐포에 journal 이 있었는데 아무 걸음도 못 봤다).
++func WalkModes() []WalkMode {
++	return []WalkMode{
++		{Name: "deps", Tests: false},
++		{Name: "deps-test", Tests: true},
++		{Name: "deps-tagged", Tests: false, Tags: "tossos_testseams"},
++		{Name: "deps-test-tagged", Tests: true, Tags: "tossos_testseams"},
++	}
++}
++
++// ImportGraph 는 `go list -json -deps` 의 결과다: 걸음이 닿은 패키지 → 그 패키지의 import.
++type ImportGraph map[string][]string
++
++// ListDeps 는 dir(시험의 작업 디렉터리 기준 상대 경로, 보통 ".")의 패키지에서 mode 걸음을 돈다.
++func ListDeps(t *testing.T, dir string, mode WalkMode) ImportGraph {
++	t.Helper()
++	args := []string{"list", "-json", "-deps"}
++	if mode.Tests {
++		args = append(args, "-test")
++	}
++	if mode.Tags != "" {
++		args = append(args, "-tags", mode.Tags)
++	}
++	args = append(args, dir)
++	out, err := exec.Command("go", args...).Output()
++	if err != nil {
++		var exit *exec.ExitError
++		if errors.As(err, &exit) {
++			t.Fatalf("go %s: %v\n%s", strings.Join(args, " "), err, exit.Stderr)
++		}
++		t.Fatalf("go %s: %v", strings.Join(args, " "), err)
++	}
++	graph := ImportGraph{}
++	decoder := json.NewDecoder(strings.NewReader(string(out)))
++	for {
++		var entry struct {
++			ImportPath string
++			Imports    []string
++		}
++		if err := decoder.Decode(&entry); err != nil {
++			if errors.Is(err, io.EOF) {
++				break
++			}
++			t.Fatalf("decode go list output: %v", err)
++		}
++		graph[entry.ImportPath] = append(graph[entry.ImportPath], entry.Imports...)
++	}
++	if len(graph) == 0 {
++		t.Fatalf("go %s returned no packages — the walk read nothing", strings.Join(args, " "))
++	}
++	return graph
++}
++
++// Reachable 는 root 에서 출발해 닿는 패키지 집합이다. cut 에 든 패키지로는 들어가지 않는다(그 패키지 자신도 집합에 넣지 않음).
++// root 는 걸음에 나온 이름 그대로(시험 변형 `p [p.test]` 포함) 준다.
++func (graph ImportGraph) Reachable(roots []string, cut map[string]bool) map[string]bool {
++	seen := map[string]bool{}
++	stack := append([]string(nil), roots...)
++	for len(stack) > 0 {
++		next := stack[len(stack)-1]
++		stack = stack[:len(stack)-1]
++		// 잘라 낼 패키지는 시험 변형 이름(`p [q.test]`)으로 나와도 자른다.
++		base := next
++		if index := strings.Index(base, " ["); index > 0 {
++			base = base[:index]
++		}
++		if seen[next] || cut[next] || cut[base] {
++			continue
++		}
++		seen[next] = true
++		stack = append(stack, graph[next]...)
++	}
++	return seen
++}
++
++// Roots 는 걸음에서 대상 패키지(와 그 시험 변형)의 이름이다.
++func (graph ImportGraph) Roots(importPath string) []string {
++	var roots []string
++	for name := range graph {
++		if name == importPath || strings.HasPrefix(name, importPath+" [") || name == importPath+".test" ||
++			strings.HasPrefix(name, importPath+"_test") {
++			roots = append(roots, name)
++		}
++	}
++	sort.Strings(roots)
++	return roots
++}
++
++// ForbiddenIn 는 집합 안의 금지 능력 패키지를 「경로 — 이유」 로 정렬해 돌려준다. allowed 에 든 능력 경로(모듈 상대)는 뺀다 — 쓰는 쪽이
++// 왜 허용하는지 자기 시험에 적어야 한다.
++func ForbiddenIn(packages map[string]bool, allowed ...string) []string {
++	skip := map[string]bool{}
++	for _, path := range allowed {
++		skip[path] = true
++	}
++	var found []string
++	for name := range packages {
++		// 시험 변형 이름(`p [q.test]`)은 실제 import 경로로 줄인다.
++		path := name
++		if index := strings.Index(path, " ["); index > 0 {
++			path = path[:index]
++		}
++		if capability, ok := Capability(path); ok && !skip[capability.Path] {
++			found = append(found, path+" — "+capability.Why)
++		}
++	}
++	sort.Strings(found)
++	return dedupe(found)
++}
++
++func dedupe(sorted []string) []string {
++	out := sorted[:0]
++	for index, value := range sorted {
++		if index == 0 || value != sorted[index-1] {
++			out = append(out, value)
++		}
++	}
++	return out
++}
+diff --git a/internal/testenv/typecheck.go b/internal/testenv/typecheck.go
+new file mode 100644
+index 000000000..b955454f1
+--- /dev/null
++++ b/internal/testenv/typecheck.go
+@@ -0,0 +1,137 @@
++package testenv
++
++// typecheck.go — 심볼 census 의 공용 부품(a112 8.2). 「이 패키지가 저 패키지의 무엇을 쓰는가」를 철자가 아니라 **해소된 객체**로 센다:
++// import 별칭 · 점 import · 같은 이름의 지역 식별자는 철자 census 를 속이지만 타입 검사기의 Uses 표는 속이지 못한다.
++
++import (
++	"go/ast"
++	"go/build"
++	"go/importer"
++	"go/parser"
++	"go/token"
++	"go/types"
++	"os/exec"
++	"path/filepath"
++	"sort"
++	"strings"
++	"testing"
++)
++
++// CheckedPackage 는 타입 검사가 끝난 생산 파일 묶음이다.
++type CheckedPackage struct {
++	Files []*ast.File
++	Fset  *token.FileSet
++	Info  *types.Info
++}
++
++// TypeCheckProduction 은 dir 의 생산(.go, _test.go 제외) 파일을 tags 빌드 구성으로 골라 진짜 importer(소스 모드)로 타입 검사한다.
++// 태그 뒤 생산 파일(`*_testseam.go`)도 그 태그를 주면 함께 센다 — 생산 빌드에 없는 문도 census 에서 빠지지 않게.
++func TypeCheckProduction(t *testing.T, dir, importPath string, tags ...string) CheckedPackage {
++	t.Helper()
++	// `-trimpath` 시험 이진에서는 runtime.GOROOT() 가 비어 소스 importer 가 표준 패키지를 못 찾는다 — 그때만 go 도구에게 묻는다.
++	if build.Default.GOROOT == "" {
++		out, err := exec.Command("go", "env", "GOROOT").Output()
++		if err != nil {
++			t.Fatalf("GOROOT unavailable for the source importer: %v", err)
++		}
++		build.Default.GOROOT = strings.TrimSpace(string(out))
++	}
++	context := build.Default
++	context.BuildTags = append(append([]string(nil), context.BuildTags...), tags...)
++	names, err := filepath.Glob(filepath.Join(dir, "*.go"))
++	if err != nil {
++		t.Fatal(err)
++	}
++	fset := token.NewFileSet()
++	var files []*ast.File
++	for _, path := range names {
++		base := filepath.Base(path)
++		if strings.HasSuffix(base, "_test.go") {
++			continue
++		}
++		match, err := context.MatchFile(dir, base)
++		if err != nil {
++			t.Fatalf("match %s: %v", base, err)
++		}
++		if !match {
++			continue
++		}
++		file, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
++		if err != nil {
++			t.Fatalf("parse %s: %v", base, err)
++		}
++		files = append(files, file)
++	}
++	if len(files) == 0 {
++		t.Fatalf("no production file selected in %s — the census would read nothing", dir)
++	}
++	// Types · Defs 는 a112 7.3.1 census(본문 식 타입 「품는다」 걸음 · 선언 객체)가 읽는다 — 기록만 늘고 판정은 바뀌지 않는다.
++	info := &types.Info{Uses: map[*ast.Ident]types.Object{}, Selections: map[*ast.SelectorExpr]*types.Selection{},
++		Types: map[ast.Expr]types.TypeAndValue{}, Defs: map[*ast.Ident]types.Object{}}
++	config := types.Config{Importer: importer.ForCompiler(fset, "source", nil)}
++	if _, err := config.Check(importPath, fset, files, info); err != nil {
++		// 미해소를 허용하면 census 가 약해진다 — 타입 검사가 끝까지 서야 한다.
++		t.Fatalf("type-check %s with the real importer: %v", importPath, err)
++	}
++	return CheckedPackage{Files: files, Fset: fset, Info: info}
++}
++
++// SymbolUse 는 한 패키지 객체의 사용 한 건이다.
++type SymbolUse struct {
++	Object   types.Object
++	Position string
++}
++
++// UsesFrom 는 이 묶음이 pkgPath 패키지에서 쓰는 객체(함수 · 메서드 · 타입 · 필드 · 변수 · 상수) 전부를 위치 순으로 돌려준다.
++func (checked CheckedPackage) UsesFrom(pkgPath string) []SymbolUse {
++	var uses []SymbolUse
++	for ident, object := range checked.Info.Uses {
++		if object == nil || object.Pkg() == nil || object.Pkg().Path() != pkgPath {
++			continue
++		}
++		uses = append(uses, SymbolUse{Object: object, Position: checked.Fset.Position(ident.Pos()).String()})
++	}
++	sort.Slice(uses, func(i, j int) bool { return uses[i].Position < uses[j].Position })
++	return uses
++}
++
++// Describe 는 객체를 「종류 이름(수신자)」 꼴로 적는다 — 실패 메시지가 무엇을 썼는지 말하게.
++func Describe(object types.Object) string {
++	switch value := object.(type) {
++	case *types.Func:
++		if receiver := value.Type().(*types.Signature).Recv(); receiver != nil {
++			return "method " + types.TypeString(receiver.Type(), nil) + "." + value.Name()
++		}
++		return "func " + value.Name()
++	case *types.TypeName:
++		return "type " + value.Name()
++	case *types.Var:
++		if value.IsField() {
++			return "field " + value.Name()
++		}
++		return "var " + value.Name()
++	case *types.Const:
++		return "const " + value.Name()
++	}
++	return object.String()
++}
++
++// ReceiverNamed 는 메서드 수신자의 이름 붙은 타입 이름을 돌려준다(포인터 수신자 포함). 메서드가 아니면 "".
++func ReceiverNamed(object types.Object) string {
++	function, ok := object.(*types.Func)
++	if !ok {
++		return ""
++	}
++	receiver := function.Type().(*types.Signature).Recv()
++	if receiver == nil {
++		return ""
++	}
++	typ := receiver.Type()
++	if pointer, ok := typ.(*types.Pointer); ok {
++		typ = pointer.Elem()
++	}
++	if named, ok := typ.(*types.Named); ok {
++		return named.Obj().Name()
++	}
++	return ""
++}
+diff --git a/tools/a112-family-shadow/main.go b/tools/a112-family-shadow/main.go
+new file mode 100644
+index 000000000..288130f8d
+--- /dev/null
++++ b/tools/a112-family-shadow/main.go
+@@ -0,0 +1,172 @@
++// Command a112-family-shadow 는 SHADOW 매니페스트의 **정규 바이트**를 낸다(a112 태스크 7.3.1 — 결정 63 v3).
++//
++// 검증기(strategyshadow.LoadProductionFamilyShadow)는 파일 바이트가 이 빌드의 `json.Marshal` 출력과 한 바이트도 다르지 않기를 요구하므로
++// 에디터로 쓴 JSON 은 통과할 수 없다 — 사람은 값을 정하고 바이트는 이 도구가 만든다. 비밀을 갖지 않는다: 신뢰 앵커는 배포가 env 로 핀하는
++// SHA-256 하나이고, 사람이 그 digest 를 `TOSSOS_STRATEGY_FAMILY_SHADOW_<MARKET>_MANIFEST_SHA256` 에 핀해야만 shadow 가 선다.
++//
++// **SHADOW 는 노출을 열지 않는다.** 이 매니페스트는 어느 OFF 레인의 반사실을 투영에 보일지만 정한다 — desired/effective · 활성화 ·
++// dispatch 를 바꾸는 필드가 없다.
++//
++// 쓰는 법(결속 다섯을 어디서 읽는지는 docs/operations.md 의 같은 절):
++//
++//	go run ./tools/a112-family-shadow \
++//	  -market KR -generation 1 \
++//	  -route-manifest-digest sha256:… -calibration-digest … \
++//	  -calendar-version … -risk-policy-digest sha256:… -build-digest … \
++//	  -actor "이름" -approved-at … -issued-at … -expires-at … \
++//	  -shadow CONTINUATION,REVERSAL \
++//	  -out strategy-family-shadow-KR.json
++//
++// 파일을 `0400` 으로 **덮어쓰지 않고** 쓰고, 그 SHA-256 을 stdout 에 낸다 — 그 줄이 env 핀에 그대로 들어간다.
++package main
++
++import (
++	"crypto/sha256"
++	"encoding/hex"
++	"flag"
++	"fmt"
++	"os"
++	"strings"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow"
++)
++
++func main() {
++	if err := run(); err != nil {
++		fmt.Fprintln(os.Stderr, "a112-family-shadow:", err)
++		os.Exit(1)
++	}
++}
++
++type options struct {
++	market              string
++	generation          uint64
++	routeManifestDigest string
++	calibrationDigest   string
++	calendarVersion     string
++	riskPolicyDigest    string
++	buildDigest         string
++	actor               string
++	approvedAt          string
++	issuedAt            string
++	expiresAt           string
++	revoked             bool
++	shadow              string
++	out                 string
++}
++
++func run() error {
++	var opts options
++	flag.StringVar(&opts.market, "market", "", "KR 또는 US")
++	flag.Uint64Var(&opts.generation, "generation", 0, "이 shadow 매니페스트의 세대 (0 금지)")
++	flag.StringVar(&opts.routeManifestDigest, "route-manifest-digest", "", "이 시장의 서명된 경로 권한 digest")
++	flag.StringVar(&opts.calibrationDigest, "calibration-digest", "", "경로 권한이 말하는 보정 digest")
++	flag.StringVar(&opts.calendarVersion, "calendar-version", "", "공식 달력 버전")
++	flag.StringVar(&opts.riskPolicyDigest, "risk-policy-digest", "", "TOSSOS_RISK_BUCKET_<MARKET>_MANIFEST_SHA256 과 같은 값")
++	flag.StringVar(&opts.buildDigest, "build-digest", "", "엔진이 보고하는 BuildDigest")
++	flag.StringVar(&opts.actor, "actor", "", "승인한 사람")
++	flag.StringVar(&opts.approvedAt, "approved-at", "", "RFC3339, 예 2026-10-05T00:00:00Z")
++	flag.StringVar(&opts.issuedAt, "issued-at", "", "RFC3339, approved-at 이후")
++	flag.StringVar(&opts.expiresAt, "expires-at", "", "RFC3339, issued-at 로부터 24시간 이내")
++	flag.BoolVar(&opts.revoked, "revoked", false, "폐기 표시")
++	flag.StringVar(&opts.shadow, "shadow", "", "shadow 로 관측할 가족을 쉼표로. 비면 넷 다 OFF")
++	flag.StringVar(&opts.out, "out", "", "쓸 파일 경로")
++	flag.Parse()
++
++	document, err := opts.document()
++	if err != nil {
++		return err
++	}
++	data, err := strategyshadow.EncodeProductionFamilyShadow(document)
++	if err != nil {
++		return fmt.Errorf("정규 바이트를 만들지 못했다: %w", err)
++	}
++	if opts.out == "" {
++		return fmt.Errorf("-out 이 필요하다")
++	}
++	// 0400 으로, 덮어쓰지 않고 쓴다 — 살아 있는 매니페스트를 건드리기 전에 실패하게(활성화 도구와 같은 규칙).
++	file, err := os.OpenFile(opts.out, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o400)
++	if err != nil {
++		return fmt.Errorf("매니페스트 파일을 만들지 못했다 — 이미 있으면 덮어쓰지 않는다: %w", err)
++	}
++	if _, err := file.Write(data); err != nil {
++		file.Close()
++		return err
++	}
++	if err := file.Close(); err != nil {
++		return err
++	}
++	if err := os.Chmod(opts.out, 0o400); err != nil {
++		return err
++	}
++	digest := sha256.Sum256(data)
++	fmt.Printf("wrote %s (%d bytes)\n", opts.out, len(data))
++	fmt.Printf("TOSSOS_STRATEGY_FAMILY_SHADOW_%s_MANIFEST_SHA256=sha256:%s\n",
++		strings.ToUpper(string(document.Market)), hex.EncodeToString(digest[:]))
++	return nil
++}
++
++// document 는 문자열 인자를 문서로 옮긴다. 값의 의미는 검사하지 않는다(판정은 적재기 하나) — 옮길 수 없는 문자열만 막는다.
++func (opts options) document() (strategyshadow.Document, error) {
++	market, err := parseMarket(opts.market)
++	if err != nil {
++		return strategyshadow.Document{}, err
++	}
++	approved, err := parseTime("approved-at", opts.approvedAt)
++	if err != nil {
++		return strategyshadow.Document{}, err
++	}
++	issued, err := parseTime("issued-at", opts.issuedAt)
++	if err != nil {
++		return strategyshadow.Document{}, err
++	}
++	expires, err := parseTime("expires-at", opts.expiresAt)
++	if err != nil {
++		return strategyshadow.Document{}, err
++	}
++	families, err := parseFamilies(opts.shadow)
++	if err != nil {
++		return strategyshadow.Document{}, err
++	}
++	return strategyshadow.Document{Market: market, Generation: opts.generation,
++		RouteManifestDigest: opts.routeManifestDigest, CalibrationDigest: opts.calibrationDigest,
++		CalendarVersion: opts.calendarVersion, RiskPolicyDigest: opts.riskPolicyDigest, BuildDigest: opts.buildDigest,
++		Actor: opts.actor, ApprovedAt: approved, IssuedAt: issued, ExpiresAt: expires, Revoked: opts.revoked, Shadow: families}, nil
++}
++
++func parseMarket(value string) (strategyrouter.Market, error) {
++	switch strings.ToUpper(strings.TrimSpace(value)) {
++	case "KR":
++		return strategyrouter.MarketKR, nil
++	case "US":
++		return strategyrouter.MarketUS, nil
++	}
++	return "", fmt.Errorf("-market 은 KR 또는 US 여야 한다: %q", value)
++}
++
++func parseTime(name, value string) (time.Time, error) {
++	parsed, err := time.Parse(time.RFC3339, strings.TrimSpace(value))
++	if err != nil {
++		return time.Time{}, fmt.Errorf("-%s 를 RFC3339 로 읽지 못했다: %w", name, err)
++	}
++	return parsed.UTC(), nil
++}
++
++// parseFamilies 는 쉼표 목록을 가족들로 옮긴다 — 모르는 이름은 조용히 빠지지 않게 거절한다.
++func parseFamilies(value string) ([]strategyrouter.Family, error) {
++	trimmed := strings.TrimSpace(value)
++	if trimmed == "" {
++		return nil, nil
++	}
++	families := []strategyrouter.Family{}
++	for _, name := range strings.Split(trimmed, ",") {
++		family := strategyrouter.Family(strings.ToUpper(strings.TrimSpace(name)))
++		if !family.Known() {
++			return nil, fmt.Errorf("-shadow 에 모르는 가족이 있다: %q", name)
++		}
++		families = append(families, family)
++	}
++	return families, nil
++}

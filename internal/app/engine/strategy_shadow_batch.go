@@ -59,8 +59,10 @@ func (pair strategyShadowPair) forMarket(market StrategyMarket) strategyShadowBa
 	return strategyShadowBatch{}
 }
 
-// shadowConfig 는 이 시장 shadow 매니페스트의 결속 설정이다 — 활성화 적재(loadFamilyActivation)와 **같은 원천**(같은 env 이름 · 같은
-// 보정 합의 · 같은 달력 · 같은 빌드)에서 읽는다. 파일은 읽지 않는다(env 와 이미 받은 권한 값뿐) — 매니페스트 적재는 shadow 단계가 한다.
+// shadowConfig 는 이 시장 shadow 매니페스트의 결속 설정이다 — 결속 다섯(경로 digest · 보정 합의 · 달력 · 위험 정책 env · 빌드)은
+// 활성화 적재(loadFamilyActivation)와 **같은 원천**에서 읽고(a112_shadow_binding_test.go 가 생산 활성화 적재기로 대조), 매니페스트 핀만
+// shadow 전용 env(TOSSOS_STRATEGY_FAMILY_SHADOW_<MARKET>_MANIFEST_SHA256)다. 파일은 읽지 않는다(env 와 이미 받은 권한 값뿐) — 매니페스트
+// 적재는 shadow 단계가 한다.
 func (loader *strategyProposalAuthorityLoader) shadowConfig(market StrategyMarket, schedule strategyScheduleMarketAuthority,
 	routes strategyRouteMarketAuthority,
 ) strategyshadow.Config {

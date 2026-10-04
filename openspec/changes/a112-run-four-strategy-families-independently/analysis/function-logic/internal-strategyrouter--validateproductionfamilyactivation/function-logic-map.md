@@ -1,7 +1,7 @@
 # Function Logic Map: `validateProductionFamilyActivation`
 
 - Source: `internal/strategyrouter/production_family_activation.go`
-- Source SHA-256: `57123f814187d9201ec6999d6375adc649b579c89beb6c4731f36cc51243b005`
+- Source SHA-256: `bac16c04b38d49c479a381fb326d7dd066e5525997322619d8ceb496e3ddb0d8`
 - Signature: `validateProductionFamilyActivation(params=2, results=2)`
 - Source range: `540:1`–`624:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 8.5-R).
@@ -73,3 +73,5 @@
 ## Safety conclusion
 
 - 판정 · 수락 집합 불변 — 메시지 문자열만 바뀐다(sentinel 그대로, 배타성은 `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel` 가 모양마다 잰다).
+
+0.5 응답 로트: 같은 파일의 주석 · 한 글자 편집(본문 구조 불변)으로 파일 SHA 만 바뀜

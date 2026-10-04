@@ -1,0 +1,13 @@
+--- FAIL: TestActivationDecodeFaultCarriesOnlyTheUnavailableSentinel (0.00s)
+    --- FAIL: TestActivationDecodeFaultCarriesOnlyTheUnavailableSentinel/truncated (0.00s)
+        a112_activation_decode_identity_test.go:35: decode refusal wraps io.ErrUnexpectedEOF as a second identity: strategyrouter: four-family activation unavailable: manifest json: unexpected EOF
+    --- FAIL: TestActivationDecodeFaultCarriesOnlyTheUnavailableSentinel/syntax (0.00s)
+        a112_activation_decode_identity_test.go:39: decode refusal wraps *json.SyntaxError as a second identity: strategyrouter: four-family activation unavailable: manifest json: invalid character ',' looking for beginning of object key string
+    --- FAIL: TestActivationDecodeFaultCarriesOnlyTheUnavailableSentinel/type (0.00s)
+        a112_activation_decode_identity_test.go:43: decode refusal wraps *json.UnmarshalTypeError as a second identity: strategyrouter: four-family activation unavailable: manifest json: json: cannot unmarshal number into Go struct field productionFamilyActivationBody.market of type strategyrouter.Market
+    --- FAIL: TestActivationDecodeFaultCarriesOnlyTheUnavailableSentinel/unknown-key (0.00s)
+        a112_activation_decode_identity_test.go:47: decode refusal is a multi-wrap error (two %w): strategyrouter: four-family activation unavailable: manifest json: json: unknown field "no_such_key"
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	0.002s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow	0.003s
+FAIL

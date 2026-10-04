@@ -297,7 +297,7 @@ func (loader *strategyProposalAuthorityLoader) collect(ctx context.Context, sche
 }
 
 // collectMarket 의 shadow 는 a112 7.3.1 의 별도 운반 칸이다: 들어오자마자 부재 값으로 비우고(조정 앞 닫힘 일곱 = 「관측 없음」), 조정에
-// 닿은 주기만 조정자가 모은 관문 앞 묶음을 결속 설정과 함께 싣는다(조정 바로 뒤 대입 하나). 반환 갈래 열다섯은 바뀌지 않는다.
+// 닿은 주기만 조정자가 모은 관문 앞 묶음을 결속 설정과 함께 싣는다(조정 바로 뒤 대입 하나). 반환 갈래 열넷(닫힘 13 + 성공 1 — 함수 본문의 return 문, `fail` 클로저 안의 return 은 세지 않음)은 바뀌지 않는다.
 func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context, schedule strategyScheduleMarketAuthority, routes strategyRouteMarketAuthority, fx strategyFXMarketAuthority, observedAt time.Time, shadow *strategyShadowBatch) strategyProposalMarketAuthority {
 	*shadow = strategyShadowBatch{}
 	market := routes.market

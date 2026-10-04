@@ -1,7 +1,7 @@
 # Function Logic Map: `strategyLaneRuntime.runLane`
 
 - Source: `internal/app/engine/strategy_lane_runtime.go`
-- Source SHA-256: `333970fa5e15db9741cc10da836922c79763f4b1b87bf62ddbc1af2fba9c6462`
+- Source SHA-256: `0935960f05276aa2bf972734943b879a5c56b3525f2083aeed9f5b2e3855c620`
 - Signature: `strategyLaneRuntime.runLane(params=4, results=1)`
 - Source range: `305:1`–`335:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 7.5).
@@ -44,3 +44,5 @@
 - High-risk 인접(레인 런타임 동시성) — 주문 · 원장 · 활성화 쓰기 없음. 레인끼리 상태 공유 0(Lane 구조), goroutine 하나가 레인 하나, 관측은 자기 색인 칸에만. 생산 레인은 전부 DORMANT(서명 매니페스트 0).
 
 a112 7.3.1 SHADOW 로트 — 같은 파일의 다른 함수 편집으로 줄만 밀림(본문 불변)
+
+0.5 응답 로트: 같은 파일의 주석 · 한 글자 편집(본문 구조 불변)으로 파일 SHA 만 바뀜

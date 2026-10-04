@@ -1189,20 +1189,84 @@ SET_731S_TESTS = [
     ["go", "test", "-trimpath=false", "-count=1", "-run", "Shadow", "./internal/strategyprojection", "./internal/httpapi"],
     ["go", "test", "-trimpath=false", "-count=1", "-run", "Shared", "./internal/strategyrouter"],
 ]
+# a112 0.5 전체 diff 리뷰 응답 로트(2026-10-05) — 리뷰가 생존시킨 변이를 같은 모양으로 다시 넣어 격추를 확인한다.
+# A=단계 허용 목록(시험#2) · C=관문 함수 shadow 자리 핀(보안#1) · D=해석 오류 단일 신원(유지#4) · B=결속 대조(유지#1) · L=생산 loadShadow 핀(유지#2)
+# · P=투영 재확인(유지#3) · R=shadow 적재기 거절 사례(시험#5) · V=어휘 census(시험#8 · 유지#5) · T=작성 도구(시험#9)
+# · N=동작이 같은 지연(시험#3 · #4 — 대기 helper 가 감독 종료를 기다리므로 GREEN 이어야 한다) · S18D=S18 + 게시 지연(이제 잡혀야 한다).
+_MC = "internal/app/engine/strategy_market_coordinator.go"
+_PA = "internal/app/engine/strategy_proposal_authority.go"
+_SB = "internal/app/engine/strategy_shadow_batch.go"
+_LP = "internal/app/engine/strategy_lane_projection.go"
+_LL = "internal/app/engine/strategy_lane_shadow_load.go"
+_FA = "internal/strategyrouter/production_family_activation.go"
+_SH = "internal/strategyshadow/shadow.go"
+_PL = "internal/strategyprojection/lanes.go"
+_WS = "internal/strategyworker/shadow.go"
+_TOOL = "tools/a112-family-shadow/main.go"
+_PUBLISH = "\t\tif outcome.ok {\n\t\t\truntime.publishShadow("
+_PUBLISH_LATE = "\t\tif outcome.ok {\n\t\t\ttime.Sleep(10 * time.Millisecond)\n\t\t\truntime.publishShadow("
+SET_05R = [
+    ("A01 the step offers a trigger to every lane", _LS, "\t\tkey := lane.Key()\n\t\tif !shadow.Shadowed(", "\t\t_ = lane.Offer()\n\t\tkey := lane.Key()\n\t\tif !shadow.Shadowed("),
+    ("A02 the step fails every lane", _LS, "\t\tkey := lane.Key()\n\t\tif !shadow.Shadowed(", "\t\t_, _ = lane.Fail(\"shadow\", false)\n\t\tkey := lane.Key()\n\t\tif !shadow.Shadowed("),
+    ("C01 M4 the batch size lowers the gate", _MC, "\t\t\tshadow.collect(envelope.Proposal)\n", "\t\t\tshadow.collect(envelope.Proposal)\n\t\t\tif len(shadow.inputs) > 64 {\n\t\t\t\tgate = strategyFamilyGate{}\n\t\t\t}\n"),
+    ("C02 M2 the batch size counts as gated", _MC, "\t\t\tshadow.collect(envelope.Proposal)\n", "\t\t\tshadow.collect(envelope.Proposal)\n\t\t\tif len(shadow.inputs) > 1 {\n\t\t\t\tgatedInScope++\n\t\t\t}\n"),
+    ("C03 collectMarket reads the collected batch", _PA, "\t*shadow = collected.boundTo(loader.shadowConfig(market, schedule, routes))\n", "\t*shadow = collected.boundTo(loader.shadowConfig(market, schedule, routes))\n\tif len(collected.inputs) > 64 {\n\t\trefused = 0\n\t}\n"),
+    ("D01 the activation decode wraps the json error again", _FA, "manifest json: %v\", ErrProductionFamilyActivationUnavailable", "manifest json: %w\", ErrProductionFamilyActivationUnavailable"),
+    ("D02 the shadow decode wraps the json error", _SH, "manifest json: %v\", ErrProductionFamilyShadowUnavailable", "manifest json: %w\", ErrProductionFamilyShadowUnavailable"),
+    ("B01 the shadow calendar comes from the desired state", _SB, "CalendarVersion: schedule.calendar.Version, BuildDigest: strategyRuntimeBuildDigest(),", "CalendarVersion: schedule.desired.CalendarVersion, BuildDigest: strategyRuntimeBuildDigest(),"),
+    ("B02 US binds the KR risk policy", _SB, "digestEnv, riskPolicyEnv = strategyFamilyShadowUSManifestDigestEnv, strategyRiskUSManifestDigestEnv", "digestEnv, riskPolicyEnv = strategyFamilyShadowUSManifestDigestEnv, strategyRiskKRManifestDigestEnv"),
+    # B03 · B05 첫 판은 `calibration` 미사용으로 BUILD-FAIL — 같은 뜻(빈 보정)을 컴파일되는 철자로 다시 넣는다(B03b · B05b).
+    ("B03b the shadow calibration is empty", _SB, "CalibrationDigest: calibration, CalendarVersion: schedule.calendar.Version,", "CalibrationDigest: calibration[:0], CalendarVersion: schedule.calendar.Version,"),
+    ("B04 US reads the KR shadow pin", _SB, "digestEnv, riskPolicyEnv = strategyFamilyShadowUSManifestDigestEnv, strategyRiskUSManifestDigestEnv", "digestEnv, riskPolicyEnv = strategyFamilyShadowKRManifestDigestEnv, strategyRiskUSManifestDigestEnv"),
+    ("B05b M1 three binding fields at once", _SB,
+     ("CalibrationDigest: calibration, CalendarVersion: schedule.calendar.Version,", "digestEnv, riskPolicyEnv = strategyFamilyShadowUSManifestDigestEnv, strategyRiskUSManifestDigestEnv"),
+     ("CalibrationDigest: calibration[:0], CalendarVersion: schedule.desired.CalendarVersion,", "digestEnv, riskPolicyEnv = strategyFamilyShadowKRManifestDigestEnv, strategyRiskKRManifestDigestEnv")),
+    ("L01 M4 the production loadShadow is hollow", _LL, "return strategyshadow.LoadProductionFamilyShadow(ctx, config)", "return strategyshadow.FamilyShadow{}, nil"),
+    ("P01 M2 the projection drops the desired conjunct", _LP, "if shadow != nil && observation.Desired == strategyrouter.StateOff && observation.Effective == strategyrouter.StateOff {", "if shadow != nil && observation.Effective == strategyrouter.StateOff {"),
+    ("P02 the projection drops the effective conjunct", _LP, "if shadow != nil && observation.Desired == strategyrouter.StateOff && observation.Effective == strategyrouter.StateOff {", "if shadow != nil && observation.Desired == strategyrouter.StateOff {"),
+    ("R10 the shadow config binding never refuses", _SH, "); len(fields) != 0 {\n\t\treturn FamilyShadow{}, fmt.Errorf(\"%w: config binding", "); len(fields) != 0 && false {\n\t\treturn FamilyShadow{}, fmt.Errorf(\"%w: config binding"),
+    ("R11 an issue instant in the future passes", _SH, "issued.After(now)},", "issued.After(now) && false},"),
+    ("R12 an issue instant before the approval passes", _SH, "issued.Before(approved)},", "issued.Before(approved) && false},"),
+    ("R13 an empty actor passes", _SH, "!strategyrouter.SharedProductionRouteIdentity(body.Actor)},", "!strategyrouter.SharedProductionRouteIdentity(body.Actor) && false},"),
+    ("V01 a var joins the runtime vocabulary", _PL, "func LaneShadowOutcomes() []string {", "var LaneRuntimeLive LaneRuntime = \"LIVE\"\n\nfunc LaneShadowOutcomes() []string {"),
+    ("V02 an untyped constant mints a runtime value", _PL, "func LaneShadowOutcomes() []string {", "func laneRuntimeMintedForCensus() LaneRuntime { return \"LIVE\" }\n\nfunc LaneShadowOutcomes() []string {"),
+    ("V03 M3 the worker renames WOULD_EMIT", _WS, "ShadowWouldEmit ShadowOutcome = \"WOULD_EMIT\"", "ShadowWouldEmit ShadowOutcome = \"WOULD_FIRE\""),
+    ("T01 the tool accepts an unknown family", _TOOL, "\t\tif !family.Known() {", "\t\tif false && !family.Known() {"),
+    ("T02 the tool overwrites a live manifest", _TOOL, "os.O_WRONLY|os.O_CREATE|os.O_EXCL", "os.O_WRONLY|os.O_CREATE|os.O_TRUNC"),
+    ("T03 the tool leaves the manifest writable", _TOOL, "if err := os.Chmod(opts.out, 0o400); err != nil {", "if err := os.Chmod(opts.out, 0o600); err != nil {"),
+    ("N01 publish lands 10ms after the step returns", _LS, _PUBLISH, _PUBLISH_LATE),
+    ("N02 the watchdog delivers its deadline 50ms late", _LS, "\tgo func() { deadline <- clk.Sleep(stepCtx, strategyShadowStepDeadline) }()", "\tgo func() {\n\t\terr := clk.Sleep(stepCtx, strategyShadowStepDeadline)\n\t\ttime.Sleep(50 * time.Millisecond)\n\t\tdeadline <- err\n\t}()"),
+    ("S18D the step deadline never fires and publish is late", _LS,
+     ("clk.Sleep(stepCtx, strategyShadowStepDeadline)", _PUBLISH), ("clk.Sleep(stepCtx, 1000*strategyShadowStepDeadline)", _PUBLISH_LATE)),
+]
+SET_05R_TESTS = [
+    ["go", "test", "-trimpath=false", "-tags", "tossos_testseams", "-count=1", "-run",
+     "Shadow|TheRouterRuntimeStays|TheCoordinatorCarries|CollectMarketCarries|CollectReturnsTheShadowPair|TheCoordinatorCollectsWithOneStatement|TheMarketCycleCarries|TheLaneRuntimeOnlyStores|TheCycleClosureStarts|TheRemainingCarry|ALateNil|AFailedCycle|AFailingShadow|AStuckShadow|ARestartNever|TheNextWave|WithoutANewWave|TheGapBetween|AMarketWhoseEvaluation|OnlyOneShadow|NeitherTheStep|CentralIntegrityKeeps|OnlyTheAllowedFunctions|ALaunderingAccessor|TheProjectionShadowsOnly",
+     "./internal/app/engine"],
+    # 무태그: 생산 loadShadow(`!tossos_testseams`)가 컴파일되는 유일한 구성 — L01 은 여기서만 보인다.
+    ["go", "test", "-trimpath=false", "-count=1", "-run", "TheProductionLoadShadow|TheWorkerShadowVocabulary", "./internal/app/engine"],
+    ["go", "test", "-trimpath=false", "-count=1", "-skip", "TestTheShadowPackageSourceIsFrozen", "./internal/strategyshadow"],
+    ["go", "test", "-trimpath=false", "-tags", "tossos_testseams", "-count=1", "-run", "Shadow", "./internal/strategyworker"],
+    ["go", "test", "-trimpath=false", "-count=1", "-run", "Shadow", "./internal/strategyprojection", "./internal/httpapi"],
+    ["go", "test", "-trimpath=false", "-count=1", "-run", "Shared|DecodeFault", "./internal/strategyrouter"],
+    ["go", "test", "-trimpath=false", "-count=1", "./tools/a112-family-shadow"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS), "8.8.4-A": (SET_884A, SET_884A_TESTS), "8.8.4-B": (SET_884B, SET_884B_TESTS), "7.3.1-R2": (SET_731R2, SET_731R2_TESTS), "8.5-R": (SET_85R, SET_85R_TESTS), "8.5-R-full": (SET_85R_FULL, SET_85R_FULL_TESTS), "8.2-G": (SET_82G, SET_82G_TESTS), "3.8-4.5": (SET_3845, SET_3845_TESTS), "7.3.1-S": (SET_731S, SET_731S_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS), "8.8.4-A": (SET_884A, SET_884A_TESTS), "8.8.4-B": (SET_884B, SET_884B_TESTS), "7.3.1-R2": (SET_731R2, SET_731R2_TESTS), "8.5-R": (SET_85R, SET_85R_TESTS), "8.5-R-full": (SET_85R_FULL, SET_85R_FULL_TESTS), "8.2-G": (SET_82G, SET_82G_TESTS), "3.8-4.5": (SET_3845, SET_3845_TESTS), "7.3.1-S": (SET_731S, SET_731S_TESTS), "0.5-R": (SET_05R, SET_05R_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측
 MUTANTS, TESTS = SET_5621, SET_5621_TESTS
 
 def run_tests(copy: Path, env: dict) -> tuple[str, str]:
-    failed, notes, build = [], [], False
+    # 0.5 리뷰 시험#10: 실패 이름 없는 비영 종료(panic · 시험 시간 초과)는 RED=CAUGHT 가 아니라 CRASH 로 따로 적는다 — 어느 시험이
+    # 잡았는지 귀속이 안 되기 때문이다. panic 스택에서 시험 함수 이름(`.TestX(`)을 읽어 함께 적는다.
+    failed, notes, build, crashed = [], [], False, []
     for command in TESTS:
         result = subprocess.run(command, cwd=copy, env=env, capture_output=True, text=True)
         if result.returncode != 0:
@@ -1214,12 +1278,18 @@ def run_tests(copy: Path, env: dict) -> tuple[str, str]:
             names = [line.strip()[len("--- FAIL: "):].split(" ")[0] for line in out.splitlines() if line.strip().startswith("--- FAIL: ")]
             leaves = [n for n in names if not any(o != n and o.startswith(n + "/") for o in names)]
             failed.extend(leaves)
+            if "panic:" in out or "test timed out" in out:
+                where = re.findall(r"\.(Test[A-Za-z0-9_]+)\(", out)
+                crashed.append((where[0] if where else "unknown test") + ": " +
+                               next((l.strip() for l in out.splitlines() if l.startswith("panic:")), "panic")[:120])
             if not names:
                 notes.append(out.strip().splitlines()[-1][:160] if out.strip() else "no output")
     failed = list(dict.fromkeys(failed))  # 같은 시험이 두 명령(태그 · 무태그)에서 세어지지 않게(6.2 리뷰 보이스 B #11)
     why = f"{len(failed)} failing: " + ", ".join(failed[:8]) + (" …" if len(failed) > 8 else "") + (" | " + " | ".join(notes) if notes else "")
     if build:
         return "BUILD-FAIL", why
+    if crashed and not failed:
+        return "CRASH", why + " | crash in " + " ; ".join(crashed)
     if failed or notes:
         return "RED", why
     return "GREEN", ""

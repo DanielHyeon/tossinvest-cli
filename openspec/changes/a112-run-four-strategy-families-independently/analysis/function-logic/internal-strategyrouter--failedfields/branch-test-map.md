@@ -1,6 +1,6 @@
 # Branch Test Map: `failedFields (새 함수)`
 
-- Source SHA-256: `57123f814187d9201ec6999d6375adc649b579c89beb6c4731f36cc51243b005`; AST branch locations are authoritative.
+- Source SHA-256: `bac16c04b38d49c479a381fb326d7dd066e5525997322619d8ceb496e3ddb0d8`; AST branch locations are authoritative.
 - Revision: **modified (a112 8.8.4-B, 2026-10-01).** 새 함수(a112 8.8.4 로트 B) — 편집 전 없음. 복합 결속의 진단: 실패한 이름만 순서대로 모은다.
 - 편집 전 번들: `analysis/measurements/lot-8.8.4-B/pre-edit/internal-strategyrouter--failedfields/`. 변이 원장 `analysis/measurements/lot-8.8.4-B/mutation-8.8.4-B.tsv`.
 

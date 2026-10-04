@@ -1,6 +1,6 @@
 # Branch Test Map: `collect`
 
-- Source SHA-256: `2e2e7dd7ade2428ad72eddde648e1798c1e6c19b082052a61804c1c226a6dcf6`; AST branch locations are authoritative.
+- Source SHA-256: `a349829128400c6ae6845aa49d271b318d582b0151532d2fcbd62515debfffbf`; AST branch locations are authoritative.
 - Revision: **modified (a112 7.3.1 SHADOW, 2026-10-01).** 분기 불변(6). 두 번째 반환값 strategyShadowPair 를 더했다 — 시장 goroutine 이 자기 묶음을 싣고, recover 갈래는 묶음을 부재 값으로 되돌린다.
 - 편집 전 번들: `analysis/measurements/lot-7.3.1-shadow/pre-edit/internal-app-engine--strategyproposalauthorityloader.collect/`. 변이 원장 `analysis/measurements/lot-7.3.1-shadow/mutation-7.3.1-S.tsv`.
 

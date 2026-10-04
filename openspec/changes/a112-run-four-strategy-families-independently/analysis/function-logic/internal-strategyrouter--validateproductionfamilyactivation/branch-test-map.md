@@ -1,6 +1,6 @@
 # Branch Test Map: `validateProductionFamilyActivation`
 
-- Source SHA-256: `57123f814187d9201ec6999d6375adc649b579c89beb6c4731f36cc51243b005`; AST branch locations are authoritative.
+- Source SHA-256: `bac16c04b38d49c479a381fb326d7dd066e5525997322619d8ceb496e3ddb0d8`; AST branch locations are authoritative.
 - Revision: **modified (a112 8.5-R, 2026-10-01).** 분기 불변(8). 서술자 거절 셋(B5 · B6 · B7)의 메시지가 lane_id 원문 대신 위치 `descriptors[i]` 와 필드명만 싣는다(8.5 응답 로트 ③ — codex r2 P2: 매니페스트의 임의 문자열 · 개행이 오류 문장으로 새지 않음). 순회가 색인을 받는다(`for index, descriptor := range`).
 - 편집 전 번들: `analysis/measurements/lot-8.5-R/pre-edit/internal-strategyrouter--validateproductionfamilyactivation/`. 변이 원장 `analysis/measurements/lot-8.5-R/mutation-8.5-R.tsv`.
 

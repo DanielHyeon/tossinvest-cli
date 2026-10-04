@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_lane_runtime.go",
-  "source_sha256": "333970fa5e15db9741cc10da836922c79763f4b1b87bf62ddbc1af2fba9c6462",
+  "source_sha256": "0935960f05276aa2bf972734943b879a5c56b3525f2083aeed9f5b2e3855c620",
   "package": "engine",
   "function": "record",
   "receiver": "strategyLaneRuntime",

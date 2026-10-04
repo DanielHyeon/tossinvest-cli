@@ -4,6 +4,7 @@ package testenv
 // import 별칭 · 점 import · 같은 이름의 지역 식별자는 철자 census 를 속이지만 타입 검사기의 Uses 표는 속이지 못한다.
 
 import (
+	"fmt"
 	"go/ast"
 	"go/build"
 	"go/importer"
@@ -28,11 +29,21 @@ type CheckedPackage struct {
 // 태그 뒤 생산 파일(`*_testseam.go`)도 그 태그를 주면 함께 센다 — 생산 빌드에 없는 문도 census 에서 빠지지 않게.
 func TypeCheckProduction(t *testing.T, dir, importPath string, tags ...string) CheckedPackage {
 	t.Helper()
+	checked, err := TypeCheckProductionErr(dir, importPath, tags...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return checked
+}
+
+// TypeCheckProductionErr 는 TypeCheckProduction 의 오류 반환판임(a112 0.5 리뷰 성능#1). 같은 패키지를 여러 census 시험이 읽을 때
+// `sync.OnceValues` 로 한 번만 검사하려면 실패가 첫 시험의 t.Fatal 로 사라지지 않고 **값으로** 남아 모든 시험이 같은 오류로 실패해야 함.
+func TypeCheckProductionErr(dir, importPath string, tags ...string) (CheckedPackage, error) {
 	// `-trimpath` 시험 이진에서는 runtime.GOROOT() 가 비어 소스 importer 가 표준 패키지를 못 찾는다 — 그때만 go 도구에게 묻는다.
 	if build.Default.GOROOT == "" {
 		out, err := exec.Command("go", "env", "GOROOT").Output()
 		if err != nil {
-			t.Fatalf("GOROOT unavailable for the source importer: %v", err)
+			return CheckedPackage{}, fmt.Errorf("GOROOT unavailable for the source importer: %v", err)
 		}
 		build.Default.GOROOT = strings.TrimSpace(string(out))
 	}
@@ -40,7 +51,7 @@ func TypeCheckProduction(t *testing.T, dir, importPath string, tags ...string) C
 	context.BuildTags = append(append([]string(nil), context.BuildTags...), tags...)
 	names, err := filepath.Glob(filepath.Join(dir, "*.go"))
 	if err != nil {
-		t.Fatal(err)
+		return CheckedPackage{}, err
 	}
 	fset := token.NewFileSet()
 	var files []*ast.File
@@ -51,19 +62,19 @@ func TypeCheckProduction(t *testing.T, dir, importPath string, tags ...string) C
 		}
 		match, err := context.MatchFile(dir, base)
 		if err != nil {
-			t.Fatalf("match %s: %v", base, err)
+			return CheckedPackage{}, fmt.Errorf("match %s: %v", base, err)
 		}
 		if !match {
 			continue
 		}
 		file, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
 		if err != nil {
-			t.Fatalf("parse %s: %v", base, err)
+			return CheckedPackage{}, fmt.Errorf("parse %s: %v", base, err)
 		}
 		files = append(files, file)
 	}
 	if len(files) == 0 {
-		t.Fatalf("no production file selected in %s — the census would read nothing", dir)
+		return CheckedPackage{}, fmt.Errorf("no production file selected in %s — the census would read nothing", dir)
 	}
 	// Types · Defs 는 a112 7.3.1 census(본문 식 타입 「품는다」 걸음 · 선언 객체)가 읽는다 — 기록만 늘고 판정은 바뀌지 않는다.
 	info := &types.Info{Uses: map[*ast.Ident]types.Object{}, Selections: map[*ast.SelectorExpr]*types.Selection{},
@@ -71,9 +82,9 @@ func TypeCheckProduction(t *testing.T, dir, importPath string, tags ...string) C
 	config := types.Config{Importer: importer.ForCompiler(fset, "source", nil)}
 	if _, err := config.Check(importPath, fset, files, info); err != nil {
 		// 미해소를 허용하면 census 가 약해진다 — 타입 검사가 끝까지 서야 한다.
-		t.Fatalf("type-check %s with the real importer: %v", importPath, err)
+		return CheckedPackage{}, fmt.Errorf("type-check %s with the real importer: %v", importPath, err)
 	}
-	return CheckedPackage{Files: files, Fset: fset, Info: info}
+	return CheckedPackage{Files: files, Fset: fset, Info: info}, nil
 }
 
 // SymbolUse 는 한 패키지 객체의 사용 한 건이다.

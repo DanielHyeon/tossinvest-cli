@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_proposal_authority.go",
-  "source_sha256": "2e2e7dd7ade2428ad72eddde648e1798c1e6c19b082052a61804c1c226a6dcf6",
+  "source_sha256": "a349829128400c6ae6845aa49d271b318d582b0151532d2fcbd62515debfffbf",
   "package": "engine",
   "function": "ResultAuthority",
   "receiver": "strategyProposalAuthorityPair",

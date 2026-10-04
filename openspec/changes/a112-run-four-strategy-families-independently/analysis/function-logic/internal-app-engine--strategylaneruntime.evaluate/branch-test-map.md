@@ -1,6 +1,6 @@
 # Branch Test Map: `evaluate`
 
-- Source SHA-256: `333970fa5e15db9741cc10da836922c79763f4b1b87bf62ddbc1af2fba9c6462`; AST branch locations are authoritative.
+- Source SHA-256: `0935960f05276aa2bf972734943b879a5c56b3525f2083aeed9f5b2e3855c620`; AST branch locations are authoritative.
 - Revision: **modified (a112 7.3.1 SHADOW, 2026-10-01).** 분기 불변(8). 6번째 인자 shadow 를 받아 record 로 넘기기만 한다(④ — 호출 · 순회 0).
 - 편집 전 번들: `analysis/measurements/lot-7.3.1-shadow/pre-edit/internal-app-engine--strategylaneruntime.evaluate/`. 변이 원장 `analysis/measurements/lot-7.3.1-shadow/mutation-7.3.1-S.tsv`.
 

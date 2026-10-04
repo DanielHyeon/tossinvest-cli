@@ -1,7 +1,7 @@
 # Function Logic Map: `record`
 
 - Source: `internal/app/engine/strategy_lane_runtime.go`
-- Source SHA-256: `333970fa5e15db9741cc10da836922c79763f4b1b87bf62ddbc1af2fba9c6462`
+- Source SHA-256: `0935960f05276aa2bf972734943b879a5c56b3525f2083aeed9f5b2e3855c620`
 - Signature: `strategyLaneRuntime.record(params=4, results=0)`
 - Source range: `344:1`–`363:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 7.3.1 SHADOW).
@@ -39,3 +39,5 @@
 ## Safety conclusion
 
 - 레인 관측 기록(편집 전과 같음) + 값 보관.
+
+0.5 응답 로트: 같은 파일의 주석 · 한 글자 편집(본문 구조 불변)으로 파일 SHA 만 바뀜

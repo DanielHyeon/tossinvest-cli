@@ -184,7 +184,7 @@ func TestEveryUnusableShadowManifestIsRefusedWithItsOwnSentinel(t *testing.T) {
 			ErrProductionFamilyShadowUnavailable, "manifest file"},
 		{"three of four", run(marshal(threeOfFour), nil), ErrProductionFamilyShadowUnavailable, "3 of 4"},
 		{"duplicate lane", run(marshal(duplicate), nil), ErrProductionFamilyShadowUnavailable, "duplicate"},
-		{"unknown shadow state", run(marshal(unknownState), nil), ErrProductionFamilyShadowUnavailable, "shadow"},
+		{"unknown shadow state", run(marshal(unknownState), nil), ErrProductionFamilyShadowUnavailable, "descriptors[0]: shadow"},
 	} {
 		shadow, err := tc.load(t)
 		if shadow.Verified() || !errors.Is(err, tc.want) || err == nil || !strings.Contains(err.Error(), tc.field) {

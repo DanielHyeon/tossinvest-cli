@@ -1,7 +1,7 @@
 # Function Logic Map: `LoadProductionFamilyActivation`
 
 - Source: `internal/strategyrouter/production_family_activation.go`
-- Source SHA-256: `57123f814187d9201ec6999d6375adc649b579c89beb6c4731f36cc51243b005`
+- Source SHA-256: `bac16c04b38d49c479a381fb326d7dd066e5525997322619d8ceb496e3ddb0d8`
 - Signature: `LoadProductionFamilyActivation(params=2, results=2)`
 - Source range: `429:1`–`495:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 8.5-R).
@@ -76,3 +76,5 @@
 - 판정 · 수락 집합 불변 — 같은 입력이 같은 sentinel 로 거절된다(errors.Is 보존, `==` 비교 0 — grep). 메시지에 필드 이름만 더해진다.
 - 복합 결속은 분기 하나 그대로 두고 그 안에서 필드별 비교를 모은다(Q-B1=(c)); 항은 전부 순수 비교 · 부작용 없는 검사라 무조건 평가해도 판정이 같다(2026-10-04 단락 평가 전제 확인).
 - B5/B6 분리로 분기 하나가 늘었지만 둘 다 거절(같은 sentinel)이라 수락 집합 불변.
+
+0.5 응답 로트: 같은 파일의 주석 · 한 글자 편집(본문 구조 불변)으로 파일 SHA 만 바뀜
