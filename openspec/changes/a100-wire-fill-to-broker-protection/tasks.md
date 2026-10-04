@@ -137,8 +137,8 @@ worker construction/start와 broker mutation 도달 경로를 열지 않는다. 
     부패로 판정되어 exit 정책이 멈춘다.**
   - `internal/journal.Journal.OpenExitStates` — 워커의 대상 집합. 주석이 "deliberately not two
     functions"라고 못박았으므로 **별도 조회 함수를 만들지 않는다.**
-  - `internal/app/engine.ExitObserver.record` — a087 청산 경로의 취소 판정 지점.
-  - `internal/app/engine.ExitObserver.submit` — a087 매도 발행 지점.
+  - `internal/app/engine.ExitObserver.record` — 인프로세스 보호 청산 경로의 취소 판정 지점(R0 정정: 옛 판 「a087 청산 경로」 — a087 은 주문 유형 change 이고 Phase 2 미착지).
+  - `internal/app/engine.ExitObserver.submit` — 인프로세스 보호 매도 발행 지점(현재 LIMIT — R0 정정, 위와 같음).
   - `internal/protection.TestProtectionRemainsUnwired…` — 봉인 가드 본체.
   - `cmd/tossctl.engineRuntime` — interlock 이후 워커의 기동·취소·감독 지점.
   - `internal/protectionofficial.Gateway.adapt` — raw status·triggered child id 손실 지점.
@@ -275,7 +275,7 @@ worker construction/start와 broker mutation 도달 경로를 열지 않는다. 
   soak는 2026-08-05 이후 돌지 않았다. 그때까지 새 기록이 없으면 automation gate를 켠 엔진은
   **a100이 없어도** 뜨지 않는다. 0.10b-1이 이것을 함께 해소했다 — 성공 사이클 하나가
   기록됐고 15분 간격으로 계속 돈다. **다음 배포에서 자동으로 살아나는지가 a101의 남은 검증이다**
-  (a101 tasks 5.4).
+  (a101 tasks 5.4 — R0 대조 2026-10-04: 이 인용은 실제 a101(soak autostart)을 가리키며 정확하다; 5.4 완료, 아카이브 2026-08-30).
 - [ ] 0.11 **raw conditional status 보존과 판정표를 M-A 결과로 동결한다(D2).** raw status를
   도메인과 journal에 싣는 것은 선택이 아니라 필수다. `PAUSED`의 부재 관측은 무장 증명이 아니며,
   `WATCHING/PAUSED/ORDERING/ORDERED`를 같은 값으로 접는 현 어댑터는 수렴 증거가 될 수 없다.
@@ -533,7 +533,9 @@ worker construction/start와 broker mutation 도달 경로를 열지 않는다. 
   명시한다. **침묵한 생략은 금지다.**
 - [ ] 7.9 PM 동기화 — `STORY-TOS-a100.yaml`의 acceptance를 새 범위에 맞게 고치고 증거와 대조한다.
   **원안 acceptance는 `Wired` 생산을 포함하므로 그대로 두면 통과할 수 없다.**
-- [ ] 7.10 a105에 이관 항목을 기록한다(아래 「a105로 이관」 목록 전체).
+- [ ] 7.10 a105에 이관 항목을 기록한다(아래 「a105로 이관」 목록 전체). — **a105 등록 대기(Manager).**
+  2026-10-04 Manager 판정: 처분은 a105 신설(예약 번호 그대로 등록, 이관 목록 전체 + 진입 개방 전 flat 포지션
+  상주 주문 창 닫기를 선행 조건으로). proposal 작성은 Manager 몫(a112 게이트 뒤). 근거: `review.md` 「R0 — 2026-10-04」 (4).
 
 ## 8. 구현 로트별 독립 검토 원장
 
@@ -577,7 +579,7 @@ worker construction/start와 broker mutation 도달 경로를 열지 않는다. 
 
 ## 범위 밖 (확인용)
 
-- 레인 활성화(a105), threshold 승인(a101), 라이브 평가(a103), 사이징 역산(a104).
+- 레인 활성화(a105 — 예약 번호·미등록), threshold 승인 · 라이브 평가(소유 change 없음 — 옛 판의 a101 · a103 표기는 그 번호가 각각 soak autostart · rollback pin 으로 land 되어 낡았다, R0 정정 2026-10-04), 사이징 역산(a104 — 예약 번호·미등록).
 - 전략적 실계좌 주문 1회는 a106이다. 0절의 M-A는 전제 확인이며 별개다.
 - attestation 스키마·서명·키 수명·trusted-time floor는 a071이 만들었다. a100은 소비도 하지 않는다.
 - a071이 openspec `engine-safety`에서 MODIFY 중인 요구사항은 **건드리지 않는다.**

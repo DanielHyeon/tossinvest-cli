@@ -1,6 +1,6 @@
 # Function Logic Map: `ExitObserver.record`
 
-- Source: `internal/app/engine/exitloop.go` (1177-1303)
+- Source: `internal/app/engine/exitloop.go` (1232-1362)
 - AST evidence: `ast.json` — AST branches 16.
 
 ## Inputs and invariants

@@ -1,6 +1,6 @@
 # Function Logic Map: `runAuxiliaryBody`
 
-- Source: `internal/app/engine/auxiliary.go` (123-130)
+- Source: `internal/app/engine/auxiliary.go` (130-137)
 - AST evidence: `ast.json` — AST branches 1.
 
 ## Inputs and invariants

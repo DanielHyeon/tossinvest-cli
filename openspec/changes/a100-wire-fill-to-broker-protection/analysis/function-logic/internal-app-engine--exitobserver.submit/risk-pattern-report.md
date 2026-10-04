@@ -1,5 +1,7 @@
-# Risk Pattern Report: `ExitObserver.submit`
+# Risk Pattern Report: `internal/app/engine/exitloop.go`
 
-Source: `internal/app/engine/exitloop.go`.
+| Rule | Location | Message |
+|---|---|---|
+| go-panic | `internal/app/engine/exitloop.go:1925` | panic can bypass normal error and shutdown handling; map the recovery boundary. |
 
-Protective reduction submission intentionally does not wait for broker protection convergence. New waiting/gating here would violate immediate-stop behavior.
+> Findings are review candidates, not automatic defect verdicts.

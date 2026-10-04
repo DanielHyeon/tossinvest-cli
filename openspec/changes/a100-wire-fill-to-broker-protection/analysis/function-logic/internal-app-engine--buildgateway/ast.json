@@ -1,1 +1,445 @@
-{"file":"internal/app/engine/gateway.go","source_sha256":"cf4833845140eba8f7ca16de823d821985c3826c04b2e4f74c8c068ca61ff29d","package":"engine","function":"buildGateway","signature":"buildGateway(params=2, results=2)","start":{"line":234,"column":1},"end":{"line":355,"column":2},"branches":[{"id":"B1","kind":"if","at":{"line":239,"column":2}},{"id":"B2","kind":"if","at":{"line":261,"column":2}},{"id":"B3","kind":"if","at":{"line":269,"column":2}},{"id":"B4","kind":"if","at":{"line":293,"column":2}},{"id":"B5","kind":"if","at":{"line":317,"column":2}}]}
+{
+  "file": "internal/app/engine/gateway.go",
+  "source_sha256": "3d6dabe90a54dd3fb1f21bcec316ac44cfb1a006d44a72da5304effc0b98abcd",
+  "package": "engine",
+  "function": "buildGateway",
+  "signature": "buildGateway(params=2, results=2)",
+  "start": {
+    "line": 234,
+    "column": 1
+  },
+  "end": {
+    "line": 359,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 261,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 269,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 273,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 297,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 321,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 240,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 262,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 270,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 274,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 277,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 298,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 322,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 344,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 12
+      },
+      "text": "checkProjectionWired"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 11
+      },
+      "text": "execgw.NewEntryGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 12
+      },
+      "text": "tracker.Restore"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 12
+      },
+      "text": "restoreAlertEntryLatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 12
+      },
+      "text": "bindOperatingModeProjection"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 274,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 2
+      },
+      "text": "entry.SetAuthorityRefresh"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 277,
+        "column": 10
+      },
+      "text": "tracker.Refresh"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 277,
+        "column": 26
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 29
+      },
+      "text": "productionProtectionDigests"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 16
+      },
+      "text": "productionProtectionAssemblies"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 14
+      },
+      "text": "protectionreadiness.NewProductionProvider"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 296,
+        "column": 20
+      },
+      "text": "protection.NewPairedReadinessAdapter"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 296,
+        "column": 96
+      },
+      "text": "provider.RuntimeContracts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 298,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 300,
+        "column": 18
+      },
+      "text": "execgw.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 312,
+        "column": 13
+      },
+      "text": "in.official.BaseURL"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 26
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 14
+      },
+      "text": "newNotifier"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 328,
+        "column": 13
+      },
+      "text": "newRetrier"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 239,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 255,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 261,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 269,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 273,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 280,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 289,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 290,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 291,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 296,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 300,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 327,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 328,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 335,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 336,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 337,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 340,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

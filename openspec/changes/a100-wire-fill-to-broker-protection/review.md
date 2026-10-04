@@ -516,3 +516,118 @@ pre-write RoundTripper로 바꾸고 정확히 `POST /oauth2/token` 한 번만 tr
 부분 랜딩의 hard gate는 scoped tests/race/vet, strict OpenSpec, logic-map analysis, current CodeGraph
 `make sdd-check`, exact staged-path audit, final gstack P0/P1=0과 GitHub CI다. A100 전체 gate는 모든 제품
 lot이 실제 완료될 때만 통과시킨다.
+
+## R0 — 2026-10-04 (stale 번들 · 낡은 참조 · 7.10 처분 · T1 개정 초안 · base 후보)
+
+Manager 배정(2026-10-04). 공유 트리 편집은 이 디렉터리 한정이고 a112 디렉터리는 건드리지 않았다.
+`base-commit.txt` 는 **바꾸지 않았다**(재고정은 사람 승인 대상 — (6)).
+
+**A0 리뷰: not-applicable(경량화, Manager 판정 2026-10-04 — 비례 원칙).** R0 는 코드 변경 0 · 거동 주장 0 이고,
+번들 채택은 SHA · return 수 · 호출 목록의 기계 대조, 참조 정정은 원문 인용이라 Manager 대조로 족하다.
+D8 계약 1 (가)/(나)/(다) · T1 예외 · base 재고정은 Manager 가 사용자 보고로 묶는다 — 이 절은 그 자료이고 시행이 아니다.
+
+### (1) stale 편집 전 번들 7 → 0
+
+`tools/logic-map` 로 현재 소스를 다시 추출했다. 옛 · 새 AST 의 분기 (id · 종류) 목록이 같으면 좌표만 옮기고,
+다르면 그 함수를 마지막으로 바꾼 change 의 아카이브 번들을 채택했다(a112 재고정 선례). 도구:
+`analysis/harness/r0_refresh_bundle.py`.
+
+| 번들 | 처분 | 근거 |
+| --- | --- | --- |
+| `cmd-tossctl--engineruntime` | shift (491-578) → (649-739) | 분기 (id · 종류) 동일 |
+| `internal-app-engine--exitobserver.record` | shift (1177-1303) → (1232-1362) | 동일 |
+| `internal-app-engine--runauxiliarybody` | shift (123-130) → (130-137) | 동일 |
+| `internal-journal--journal.openexitstates` | shift (621-644) 그대로, 파일 SHA-256 만 | 동일 |
+| `internal-app-engine--buildgateway` | adopt ← a092 아카이브(2026-09-30) | 분기 변경. 아카이브 번들 SHA = 현재 소스 SHA(3d6dabe9…), 분기 · return 8 · 호출 목록 일치 |
+| `internal-app-engine--exitobserver.submit` | adopt ← a091 아카이브(2026-10-01) | 분기 변경. 아카이브 SHA = 현재(0733bd86…), return 10 · 호출 일치 |
+| `internal-app-engine--runtime.runauxiliary` | adopt ← a092 아카이브(2026-09-30) | 분기 변경. 아카이브 SHA = 현재(7d941fa5…), return 2 · 호출 일치 |
+
+옛 a100 ast 는 returns/calls 를 싣지 않던 추출기 판본이라 shift 판정은 분기 (id · 종류) 만 대조했다.
+shift 는 산문 · 시험 인용을 바꾸지 않는다. design D8 의 `L1117`·`L1142`·`L1145`, `exitloop.go:1207-1221`
+같은 줄 인용은 tasks 0.4 당시 좌표다 — 현재 좌표는 해당 번들의 `ast.json` 이 정본이다.
+`check_analysis`(base 882a0b49, R0 편집 적용): stale 0, missing 256(전부 타 change 귀속 — (6)).
+
+### (2) a087 참조와 D8 이중 매도 계약 전제 재대조
+
+- **사실.** a087 은 「보호 청산은 시장가 주문이다」이고 Phase 1 은 불구현 종결(68006e7a, 전제 반증)됐다.
+  남은 범위는 Phase 2(시장가 전환)뿐이며 §0.7 사람 실측(KR MARKET 매도 1회 · 세션 경계) 게이트 대기다.
+  현재 인프로세스 보호 매도는 **관측가 지정가(LIMIT)** 다 — `internal/app/engine/exitloop.go` `sellIntent`
+  주석("Automated orders are LIMIT only … a limit does not chase it").
+- **정정.** proposal What 6 · design D8 (ii) · tasks 0.4 의 `record`/`submit` 설명에서 「a087 의 인프로세스
+  시장가 매도」를 「`ExitObserver` 청산 경로의 인프로세스 보호 매도(현재 LIMIT)」로 고쳤다.
+- **계약 전제 대조.**
+  - 위험 자체(M13: 조건주문은 매도가능수량을 예약하지 않는다 → 두 매도 권한이 동시에 나가면 초과 매도)는
+    주문 유형과 무관하게 **그대로 성립**한다. 계약 2(인프로세스 매도 전 상주 주문 취소, 취소 실패가 매도를
+    막지 않음)와 계약 3(상주 주문이 먼저 채워져 flat 이면 시도 안 함 — a091 critical 오탐 회피)은 전제가
+    바뀌지 않는다.
+  - **계약 1 의 근거는 약해진다.** "인프로세스 보호 매도가 상위 권한 — 엔진이 살아 있으면 즉시성이 더
+    높다"는 시장가를 전제한 문장이다. LIMIT 인 현재는 인프로세스 매도가 가격을 쫓지 않고 거부될 수 있다
+    (a087 Why: 2026-08-05 9분간 5회 400). 계약 2 대로 상주 조건주문을 **먼저 취소**한 뒤 인프로세스 LIMIT 이
+    거부 · 미체결이면, 그 포지션은 그 시점에 상주 손절도 체결된 청산도 없다 — a100 이 얻은 보호를 손절선
+    돌파 순간에 내려놓는다. a100 이전(상주 주문 없음)보다 나빠지지는 않으므로 upstream 대비 §0-4 약화는
+    아니지만, "상위 권한" 근거는 a087 Phase 2 착지 전에는 성립하지 않는다.
+  - **R0 는 계약을 바꾸지 않는다**(High-risk 설계 결정). T4-A(4.5~4.6) 착수 전 결정 항목으로 올린다:
+    (가) a087 Phase 2 착지를 T4-A 선행 조건으로 둔다, (나) LIMIT 인 동안 계약 2 의 취소를 "인프로세스 매도
+    체결 확인 뒤"로 늦추고 초과 매도는 M13 창으로 수용한다, (다) 현행 유지하고 위 창을 운영 문서 6.4 에
+    명기한다. 판정은 Manager · 사용자.
+
+### (3) a101 · a103 · a104 · a105 참조
+
+- a101 · a103 은 이후 다른 내용으로 land 됐다(a101 = soak autostart, 아카이브 2026-08-30 · a103 = rollback
+  pin, 아카이브 2026-08-30). 「threshold 승인(a101) · 라이브 평가(a103)」 표기를 「소유 change 없음」으로
+  고쳤다(proposal Non-goals · design Non-Goals · tasks 「범위 밖」). a107 proposal 「번호에 관한 기록」과 같은 결론이다.
+- tasks 0.12 의 「a101 tasks 5.4」 인용은 실제 a101(soak autostart)을 가리키며 **정확하다**(5.4 완료). 대조 표기만 붙였다.
+- a104 · a105 · a106 은 a100 동결 문서가 예약한 번호이고 a107 이 비워 뒀다 — 「예약 번호 · 미등록」으로 표기했다.
+- review.md 앞 절(동결 리뷰 기록)은 고치지 않는다.
+
+### (4) 7.10 처분 제안 — a105 부재
+
+현재 a105 는 활성 · 아카이브 어디에도 없다. `Wired` 생산자도 코드에 없다(`internal/protectionreadiness` 는
+검증 측, a112 review 도 `Wired:false`/`UNWIRED` 를 기록). 선택지:
+
+| 안 | 내용 | 평가 |
+| --- | --- | --- |
+| 재지정 | 이관 목록을 다른 활성 change(a112 · a107 등)로 | **부적합.** a112 는 전략 레인 활성화(서명 매니페스트)이고 보호 supervisor/`Wired`/진입 개방이 아니다. a107 은 제2 보호 core 제거 |
+| 복귀 | a071 로 되돌림 | **불가.** a071 은 아카이브(2026-09-27) |
+| **신설(권장)** | a105 를 예약 번호 그대로 **등록만** 하는 change 로 연다 — proposal 에 「a105로 이관」 목록 전체와 "진입을 열기 전에 flat 포지션 상주 주문 창을 닫는다"를 선행 조건으로 싣고, 구현은 하지 않는다 | 이관 목록 중 안전 항목(flat 창)은 진입을 여는 change 가 소유해야 하고, a100 아카이브 뒤에 tasks.md 안에만 남으면 소유자 없이 고아가 된다 |
+
+Manager 판정(2026-10-04): **신설 방향 승인.** 등록(proposal 작성)은 Manager 가 a112 게이트 뒤에 한다 — 7.10 은 「a105 등록 대기(Manager)」로 갱신했다.
+
+### (5) T1 재동결 계약 개정 — **초안, 시행하지 않음**(사용자 승인 대기)
+
+현 계약(이 파일 tasks.md 재동결 절): 「M-A PASS와 0.11의 raw-status 판정표 동결 전에는 T1을 포함한 어떤 제품 구현 로트도 시작하지 않는다.」
+
+개정 문안 초안:
+
+> M-A PASS와 0.11의 raw-status 판정표 동결 전에는 제품 구현 로트를 시작하지 않는다. **단, T1(1.1~1.3)은
+> 예외로 먼저 시작할 수 있다.** 근거: (i) T1 은 `internal/protectionlifecycle` 순수 core 에 대한 시험 추가뿐이고
+> 프로덕션 조립을 바꾸지 않는다(1절 머리말), (ii) 대상 함수 `applyFill` · `prepareRegister` 를 담은
+> `internal/protectionlifecycle` 은 base 882a0b49 이후 커밋 0(`git log 882a0b49..6e8e3d54 -- internal/protectionlifecycle`
+> 빈 출력)이고 그 패키지를 import 하는 비시험 파일은 패키지 밖에 0이다, (iii) 9개 거부 분기는 M-A 결과와 무관하다 — 두 함수의
+> AST 호출 목록(a100 번들 `ast.json`: `applyFill` 8 · `prepareRegister` 7)에 raw conditional status 를 읽는 호출이 없다
+> (직접 호출 기준; 전이 폐포는 T1 착수 시 확인). `prepareRegister` B5(정확한 operation 조회 불가)는 capability 를
+> 입력으로 받는 거부 분기라 시험이 그 입력을 주입한다 — 실제 브로커가 그 capability 를 갖는지는 M-A 의 질문이고
+> 이 분기의 시험과는 별개다. **예외의 한계:** GREEN 이 core 로직 수정을
+> 요구하면 그 수정은 예외에 포함되지 않는다 — 수정 없이 RED 와 결함 기록만 남기고 Manager 에게 돌려준다.
+> T2-A 이후 로트의 순서 조건은 바뀌지 않는다.
+
+### (6) base 재고정 후보 실측 — 사람 승인 자료
+
+방법: 후보마다 버린 커밋으로 `base-commit.txt` 를 바꾸고 R0 편집을 적용한 상태에서
+`tools/logic-map/check_analysis.py --change a100-…` 실행(scratch 워크트리, 2026-10-04). 귀속은 누락 함수의 파일을
+`git log --full-history <후보>..6e8e3d54` 커밋 제목의 change 태그로 셌다(파일 단위).
+
+| 후보 | 위치 | required | missing | stale | a100 귀속 | 타 change 귀속(상위) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 882a0b49(현 base) | main 조상 | 299 | 256 | 0 | 0 파일(119 파일) | a112 49 · a109,a112,a113,a115 17 · a112,a127 15 · a065,a112 15 · a070,a112 14 · a092 13 · a066 12 · a064,a112 12 … |
+| 016da624(M0) | main 조상 | 261 | 256 | 0 | 0 파일 | 882a0b49 와 같은 집합 |
+| 62b35779(main tip) | main | 187 | 182 | 0 | 0 파일(95 파일) | a112 45 · a092 17 · a070,a112 17 · a066 13 · a094 11 · a066,a126 11 … |
+| 1e25b3a3(a112 base) | feat/a112 | 20 | 20 | 0 | 0 파일(14 파일) | a112 20 |
+| 6e8e3d54(HEAD) | feat/a112 | 0 | 0 | 0 | — | — (rc=0) |
+
+- **M0 016da624 귀속:** base 882a0b49 → 016da624 구간의 a100 자기 Go 커밋은 M0 하나이고, 그것이 바꾼 기존 함수
+  38개는 전부 a100 번들로 덮인다(882a0b49 required 299 − 016da624 required 261 = 38, 두 후보의 missing 집합 동일).
+  ⇒ WORKFLOW 「사람 승인 base 재고정」 조건 ① 첫째 갈래 변형(자기 Go 커밋 있음 · 그 변경 함수 전부 커버).
+- **016da624 이후 a100 Go 커밋은 0** — main tip · a112 base · HEAD 후보는 자기 커밋이 창 안에 없다.
+- 0/0 을 만드는 후보는 R0 착지 커밋의 부모(현재 6e8e3d54)뿐이다. feat/a112 가 계속 움직이므로 승인 시 실제 재고정은
+  착지 직전에 `capture_change_base.py` 로 잡고, 그 사이 들어온 Go 커밋의 귀속을 다시 센다.
