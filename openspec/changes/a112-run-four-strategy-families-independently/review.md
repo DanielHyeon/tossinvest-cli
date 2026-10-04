@@ -6372,3 +6372,26 @@ E3 fail 클로저가 활성화를 안 실음. 이름 결속 22/22 `named-8.8.4-B
 
 **잔여(활성화 로트 선행 — ROADMAP 행).** 활성화 실패 사유와 `SwallowedCycleErrors` 의 운영자 표면(snapshot/projection) 0 — 사유는 오류 사슬에만 있다; 공유 읽기 함수의
 OS 원인 접힘. 충돌 · 미해결 선택 두 닫힘(B11 · B14)은 입력으로 닿기 어려워 census 로만 잰다.
+
+## 2026-10-04 7.3.1 — SHADOW 브리프 · R2(빈 표본 통과 → 핀 통과)
+
+**브리프 결론(Manager 에 보고).** spec four-family-strategy-runtime :88-93 이 SHADOW 를 구속한다 — 경성 SHALL 하나(새 설치 · migration · 재시작은 OFF/OFF/UNOBSERVED)와
+허용 절(서명 shadow 매니페스트가 있을 때만 pure evaluation · counterfactual projection) · 금지 둘(ON 승격 · dispatch 소유 / 재시작 자동 복구). 코드에는 SHADOW 상태가 없다
+(`strategyrouter.RuntimeState` = {UNOBSERVED} types.go:40-42, 골든 runtime 여덟 다 UNOBSERVED, projection `LaneRuntime` 도 하나 — 7.3 판정 Q3). 그래서 허용 절과 금지 둘은
+빈 표본으로 성립하고, 재시작 시나리오(:91-93)는 존재하지 않는 상태를 전제한다. design :289 · :291 의 배포 계획(「dormant/shadow 로 배선」 · 「shadow 관측과 counterfactual 결과만
+수집」)과도 갈린다. 서명 shadow 매니페스트 코드는 0, 형제 활성화 매니페스트는 결정 61 로 서명을 뺐다(신뢰 앵커 = 외부 digest 핀).
+
+**판정(Manager).** R2 승인(이 로트 — 시험 전용) · R3 사용자 결정 큐 등재(게이트 차단; Manager 권고 = spec 델타의 SHADOW 허용 절 · 시나리오와 design :289/:291 을 후속 change
+계약으로 옮겨 정정 — spec/design 수정은 사용자 승인 뒤 Manager 몫) · R4 는 SHADOW 로트의 ROADMAP 선행 행에.
+
+**R2.** engine `a112_shadow_absent_restart_test.go`:
+- `TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten` — 앞 프로세스(검증 활성화 아래 KR 네 레인 ON 관측) → 같은 원장 · 새 Context(새 투영 저장소 ·
+  새 레인 런타임) → 여덟 다 OFF/OFF/UNOBSERVED, 원장 `strategy_dispatch_leases` · `strategy_lane_latches` · `strategy_lane_latch_recoveries` 0 행. 활성화는 원장이 아니라 핀한
+  파일에서 매 파도 다시 읽고 그 파일의 생산 작성자는 0(`TestOnlyTheAuthoringToolCanBuildActivationBytes`).
+- `TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt` — router `RuntimeState` · projection `LaneRuntime` 의 상수 집합(AST) = 정확히 {UNOBSERVED}.
+- `evaluate` 가 레인을 동시에 돌므로 race 목록 등재(8.8.4 항목 4 의 교훈).
+- 변이 `lot-7.3.1-R2/mutation-7.3.1-R2.tsv` 4/4 CAUGHT — S1 router SHADOW 상수 · S2 projection SHADOW 상수 · S3 미관측 레인 desired ON · S4 첫 물결 전 레인을 관측으로 투영
+  (첫 정의 BUILD-FAIL — 미사용 변수, 재정의 뒤 CAUGHT).
+- 7.3.1 은 열린 채(사용자 결정 대기) — tasks 에 상태 노트. ROADMAP 「SHADOW 런타임」 행(신뢰 앵커 서명 vs digest 핀 · 형식/생성기/골든/문서 · 골든 runtime 어휘 개정 · 재시작 비복구).
+
+**정리 하나.** 0b441270 이 tasks 8.5 의 2.3 노트 한가운데에 8.8.4 노트를 끼워 넣어 2.3 의 증거 줄이 뒤로 밀렸던 것을 바로잡았다(내용 무변경, 순서만).

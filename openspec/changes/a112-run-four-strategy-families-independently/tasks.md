@@ -553,6 +553,17 @@
   레인을 지금 상태로 읽기만 해서 덧씌움, 조정자 자식은 조립 발행 때(실패 갈래에서도). OpenAPI 세 스키마. 콘솔 template 무편집(화면 노출은 후속 콘솔 로트).
   계좌 원문 0(lineageIdentity 는 SHA-256). 변이 `lot-7.3/mutation-7.3.tsv`(동등 표기 둘 외 CAUGHT), 읽기 전용 불변 변이(Offer · Fail) CAUGHT. review 「7.3」 절.
 - [ ] 7.3.1 Distinguish `OFF/OFF/UNOBSERVED` from explicit read-only `SHADOW`: SHADOW may evaluate and project counterfactuals but cannot mint desired/effective/activation, own dispatch capability or survive restart without a server-owned signed shadow manifest.
+
+  **7.3.1 상태(2026-10-04 Manager 판정 — 열림, 사용자 결정 대기).** spec four-family-strategy-runtime :88-93 이 SHADOW 를 SHALL/MUST NOT 으로 구속한다(허용 절은
+  「서명 shadow 매니페스트가 있을 때만」, 금지 둘은 ON 승격 · dispatch 소유 · 재시작 자동 복구). 오늘은 SHADOW 상태가 없어(`strategyrouter.RuntimeState` = {UNOBSERVED},
+  골든 runtime 전부 UNOBSERVED) 빈 표본으로 성립한다 — **R2(이 로트)가 그것을 핀 통과로 바꿨다:** engine `a112_shadow_absent_restart_test.go`
+  `TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten`(앞 프로세스가 검증 활성화 아래 KR 네 레인 ON 관측 → 같은 원장으로 재시작 → 여덟 다
+  OFF/OFF/UNOBSERVED, 원장 dispatch lease · 레인 잠금 · 복구 기록 0) · `TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt`(router `RuntimeState` · projection
+  `LaneRuntime` 상수 = 정확히 {UNOBSERVED}); 기존 결속 `TestEveryProductionWorkerIsBornDormantAndEmitsNothing` · `TestDescriptorsShipKRAndUSTogetherDefaultOFF` ·
+  `TestDormantAndUnavailableSnapshotsCarryEightUnobservedLanesAndTwoCoordinators` · 활성화 파일 생산 작성자 0 `TestOnlyTheAuthoringToolCanBuildActivationBytes`. 변이
+  `lot-7.3.1-R2/mutation-7.3.1-R2.tsv` 4/4 CAUGHT. **남은 결정(R3 — 게이트 차단, Manager 가 사용자에게 보고):** SHADOW 를 a112 에서 만들 것인가 / 활성화 로트로 미룰 것인가 /
+  spec 델타의 SHADOW 허용 절 · 시나리오(:89 둘째 절 · :91-93)와 design :289 · :291 배포 계획을 후속 change 로 옮겨 정정할 것인가(Manager 권고 — spec/design 수정은 사용자 승인 뒤
+  Manager 몫). SHADOW 로트의 선행은 ROADMAP 행(신뢰 앵커 · 골든 개정).
 - [x] 7.4 Bound metrics cardinality by fixed market/family/lane/version/reason labels; keep symbol/setup/candidate identifiers in logs/journal queries rather than metric labels.
 
   **7.4 종결(2026-10-01 — 미착지).** 실측: 생산 메트릭 방출기 0(묶을 label 없음). Manager 판정 (A): 금지 명시 가드
@@ -574,10 +585,10 @@
 - [ ] 8.5 Complete independent adversarial review for owner uniqueness, score calibration, q_final monotonicity, evidence correction/replay, queue/failure isolation, API quota sharing, OFF defaults and safety-loop independence; resolve all P0/P1 findings.
 
   **8.5 명시 대상 추가(2026-10-01 Manager 판정).** 2.3 (b) 의 `breakoutlane.evaluateFresh` 편집(1.2 반사실 기록 갈래 B7 — High-risk 함수) — 착지 시점 독립 적대 리뷰는
-  비례 원칙으로 생략(기록 전용 · `decisionSeal` 무포함 · 입장 경로 바이트 동일 · 쌍둥이 비교 · 판정 변경 변이 CAUGHT)했으므로 이 리뷰에서 덮는다.
-  **8.5 명시 대상 추가(2026-10-04 Manager 판정 — 8.8.4 로트 B).** `strategyrouter` 활성화 적재의 필드명 래핑(LoadProductionFamilyActivation 분기 9 → 10 · validate · decode ·
-  body · familyActivationRemaining · 새 failedFields)과 `strategyProposalAuthorityLoader.collectMarket` 의 관문 계산 이동. 증거: review.md 「8.8.4 로트 B」, `measurements/lot-8.8.4-B/`. 증거: review.md 「2.3 (b)」 절,
+  비례 원칙으로 생략(기록 전용 · `decisionSeal` 무포함 · 입장 경로 바이트 동일 · 쌍둥이 비교 · 판정 변경 변이 CAUGHT)했으므로 이 리뷰에서 덮는다. 증거: review.md 「2.3 (b)」 절,
   `measurements/lot-2.3/`, `function-logic/internal-breakoutlane--evaluatefresh/`. 리터럴 `1_200_000` 두 자리는 변이 핀(CF-03/04 · CF-10)으로 수용(Manager).
+  **8.5 명시 대상 추가(2026-10-04 Manager 판정 — 8.8.4 로트 B).** `strategyrouter` 활성화 적재의 필드명 래핑(LoadProductionFamilyActivation 분기 9 → 10 · validate · decode ·
+  body · familyActivationRemaining · 새 failedFields)과 `strategyProposalAuthorityLoader.collectMarket` 의 관문 계산 이동. 증거: review.md 「8.8.4 로트 B」, `measurements/lot-8.8.4-B/`.
 - [ ] 8.6 If and only if current A100 ProtectionReady and all dependency gates are complete, build/deploy in dormant OFF/UNOBSERVED mode and verify lane/automation/autostart/LIVE approval remain unchanged. Otherwise perform build-only/shadow-fixture verification, record deployment as BLOCKED, and prove exposure-raising broker requests remain zero.
 - [x] 8.7.1 Build the mechanism that *requires* a separate human-approved operating activation: no lane may read effective ON without a verified signed four-family manifest binding the current calibration, market calendar, risk, build and ProtectionReady digests. **(Landed 2026-09-03.)**
 

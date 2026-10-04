@@ -953,13 +953,26 @@ SET_884B_TESTS = [
      "TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness|TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady|TestAClosedMarketStillCarriesTheGatesActivation|Undeclared|Declared",
      "./internal/app/engine"],
 ]
+# 7.3.1 R2(Manager 판정 2026-10-04) — SHADOW 부재를 빈 표본 통과에서 핀 통과로: 재시작 OFF/OFF/UNOBSERVED · runtime 어휘 census.
+SET_731R2 = [
+    ("S1 a SHADOW runtime state is added to the router vocabulary", "internal/strategyrouter/types.go",
+     'const RuntimeUnobserved RuntimeState = "UNOBSERVED"', 'const RuntimeUnobserved RuntimeState = "UNOBSERVED"\n\nconst RuntimeShadow RuntimeState = "SHADOW"'),
+    ("S2 a SHADOW lane runtime is added to the projection vocabulary", "internal/strategyprojection/lanes.go",
+     'const LaneRuntimeUnobserved LaneRuntime = "UNOBSERVED"', 'const LaneRuntimeUnobserved LaneRuntime = "UNOBSERVED"\n\nconst LaneRuntimeShadow LaneRuntime = "SHADOW"'),
+    ("S3 an unobserved lane (fresh process) projects desired ON", "internal/app/engine/strategy_lane_projection.go",
+     "\t\tDesired: strategyprojection.StateOff, Effective: strategyprojection.StateOff,", "\t\tDesired: strategyprojection.StateOn, Effective: strategyprojection.StateOff,"),
+    ("S4 the projection reports a lane as observed before its first wave (a fresh process inherits nothing, but would show observation fields)", "internal/app/engine/strategy_lane_projection.go",
+     "strategyLaneProjection(lane, observation, seen && observation.Wave > 0)", "strategyLaneProjection(lane, observation, seen || true)"),
+]
+SET_731R2_TESTS = [["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+    "TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten|TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt", "./internal/app/engine"]]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS), "8.8.4-A": (SET_884A, SET_884A_TESTS), "8.8.4-B": (SET_884B, SET_884B_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS), "8.8.4-A": (SET_884A, SET_884A_TESTS), "8.8.4-B": (SET_884B, SET_884B_TESTS), "7.3.1-R2": (SET_731R2, SET_731R2_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측
