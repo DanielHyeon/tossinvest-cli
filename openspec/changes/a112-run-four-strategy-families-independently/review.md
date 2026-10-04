@@ -6440,3 +6440,9 @@ carry 단언(E9 · E7) + BTM 에 선택자-대입 변이 한계 기록(B11 · B1
 핀이라 RED 없음이 기대값, 힘은 변이로). 편집 뒤 번들 넷(`harness/render_85r_bundles.py`) + 같은 파일 줄 밀림 번들 일곱 shift. 이름 결속 `named-8.5-R.log`(13/13 · 9/9 · 3/3).
 변이 `mutation-8.5-R.tsv`(아래 표). 검증 `verify-8.5-R.log`. check_analysis 정규화 집합 차: 위 shift 뒤 로트만의 줄 4 = 새 시험 파일이 미추적이라 「tracked file 에 없음」
 (커밋 뒤 사라짐 — 커밋 후 재측정 기록), HEAD 만의 줄 0.
+
+**착지 · 판정(2026-10-04).** 6f5b0df6 착지(62 파일) — 커밋 뒤 check_analysis 정규화 집합 178cc196 148 = 6f5b0df6 148(차 0). **Manager 8.5 최종 판정: SHIP**
+(Y 판정 자리를 a60f657b 와 직접 대조 — 조기 carry · 판정 재계산 구조 일치; 4판 생존 변이 전수 재판 격추, L556 은 태그 엔진 전체에서도; 판별 핀 편집 전 RED 기록).
+**6f5b0df6 별도 독립 리뷰 — not-applicable(Manager 판정):** 이 로트는 4판 독립 리뷰의 처방 자체를 구현했고 그 리뷰들의 생존 변이 · 판별 핀이 로트의 수락 기준이었다 —
+새 적대 표면이 없다. **(d) 4 적재기 취소 응답 — a112 범위 밖 이연(not-applicable in a112, Manager 판정):** 결함은 8.8.4 이전부터 route · proposal · risk · account
+적재기 공통이고 오늘 생산 노출 0(활성화 핀 0); ROADMAP 「권한 적재 파도의 취소 응답」 행(활성화 핀 선언 전 착지, 면제 불가)으로 넘긴다.

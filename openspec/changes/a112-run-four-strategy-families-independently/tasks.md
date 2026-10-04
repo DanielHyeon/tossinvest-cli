@@ -588,7 +588,7 @@
   호출 표 생성). 재고정 후보에서 요구될 a112 함수 `TestProductionWorkersAreExactlyTheEightTheGoldenFroze` 경량 번들 추가(편집 전 FLM 은 7e124a73 에서). 분류 영수증 ·
   창 영수증 · 재고정 모의 `measurements/gateprep-2026-10-04/`, 도구 `harness/gateprep_window_receipt.py` · `render_gateprep_bundles.py`. **남은 것:** base 재고정(사람 승인 —
   권고 1e25b3a3, 그 창 16 함수 전부 지금 FRESH → 승인 뒤 영수증 생성만) · 7.3.1 R3 · 8.5.
-- [ ] 8.5 Complete independent adversarial review for owner uniqueness, score calibration, q_final monotonicity, evidence correction/replay, queue/failure isolation, API quota sharing, OFF defaults and safety-loop independence; resolve all P0/P1 findings.
+- [x] 8.5 Complete independent adversarial review for owner uniqueness, score calibration, q_final monotonicity, evidence correction/replay, queue/failure isolation, API quota sharing, OFF defaults and safety-loop independence; resolve all P0/P1 findings.
 
   **8.5 명시 대상 추가(2026-10-01 Manager 판정).** 2.3 (b) 의 `breakoutlane.evaluateFresh` 편집(1.2 반사실 기록 갈래 B7 — High-risk 함수) — 착지 시점 독립 적대 리뷰는
   비례 원칙으로 생략(기록 전용 · `decisionSeal` 무포함 · 입장 경로 바이트 동일 · 쌍둥이 비교 · 판정 변경 변이 CAUGHT)했으므로 이 리뷰에서 덮는다. 증거: review.md 「2.3 (b)」 절,
@@ -597,7 +597,10 @@
   body · familyActivationRemaining · 새 failedFields)과 `strategyProposalAuthorityLoader.collectMarket` 의 관문 계산 이동. 증거: review.md 「8.8.4 로트 B」, `measurements/lot-8.8.4-B/`.
   **8.5 실행(2026-10-04) — 4판(codex r2 · 보이스 1 · 2 · 3), Manager 최종 판정 HOLD → 응답 로트 완료 · 재검증 시 SHIP.** P0 전판 0. 리뷰 기록 착지 178cc196
   (`analysis/review-8.5-2026-10/` — 합본 `combined-8.5.md`, 설계 브리프 `design-brief-B2-P1.md`). 응답 로트(생산 4 · 시험/증거 8)는 review.md 「8.5 응답 로트」 ·
-  `measurements/lot-8.5-R/`. ROADMAP 등재 2: 4 적재기 취소 응답((d), 「핀 선언 전 착지」 면제 불가 선행 · F1-x 후보) · 운영자 표면 행에 P2-g 합류. 8.5 체크는 재검증 판정 뒤.
+  `measurements/lot-8.5-R/`. ROADMAP 등재 2: 4 적재기 취소 응답((d), 「핀 선언 전 착지」 면제 불가 선행 · F1-x 후보) · 운영자 표면 행에 P2-g 합류.
+  **닫음(2026-10-04, Manager 최종 판정 SHIP):** 응답 로트 6f5b0df6(변이 23/23 + 엔진 태그 전체 5/5 CAUGHT, check_analysis 148 = 148) — 근거 `combined-8.5.md` · review.md
+  「8.5 응답 로트」 · 이 판정. 6f5b0df6 별도 리뷰 not-applicable(4판 처방의 구현 — 생존 변이 · 판별 핀이 수락 기준, 새 적대 표면 없음). (d) 는 a112 범위 밖 이연
+  (not-applicable in a112 — 기존 4 적재기 공통 결함, 오늘 노출 0; ROADMAP 행이 활성화 핀 선언 전 착지를 강제).
 - [ ] 8.6 If and only if current A100 ProtectionReady and all dependency gates are complete, build/deploy in dormant OFF/UNOBSERVED mode and verify lane/automation/autostart/LIVE approval remain unchanged. Otherwise perform build-only/shadow-fixture verification, record deployment as BLOCKED, and prove exposure-raising broker requests remain zero.
 - [x] 8.7.1 Build the mechanism that *requires* a separate human-approved operating activation: no lane may read effective ON without a verified signed four-family manifest binding the current calibration, market calendar, risk, build and ProtectionReady digests. **(Landed 2026-09-03.)**
 
