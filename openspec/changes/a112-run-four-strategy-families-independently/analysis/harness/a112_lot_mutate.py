@@ -867,13 +867,31 @@ SET_64_TESTS = [
      "./internal/app/engine"],
     ["go", "test", "-count=1", "./internal/strategyproposal"],
 ]
+# 6.5 · 6.6 (Manager 판정 2026-10-01 A65 · A66) — 보호 증명 세 모양 · reduce-only 지속 · crash 뒤 owner 인수 차단.
+PRD = "internal/protectionreadiness/dispatch.go"
+GWY = "internal/execgw/gateway.go"
+SDR = "internal/journal/strategy_dispatch_runtime.go"
+SET_6566 = [
+    ("P1 an attestation expiring exactly now is still accepted", PRD, "\tif !now.Before(provenance.ExpiresAt) {", "\tif now.After(provenance.ExpiresAt) {"),
+    ("P2 the attestation's account is not compared", PRD, "\tif provenance.AccountID != scope.AccountID || ", "\tif "),
+    ("P3 the expiry check is deleted", PRD, "\tif !now.Before(provenance.ExpiresAt) {\n\t\tdecision.Code = RefusalExpired\n\t\treturn decision\n\t}\n", ""),
+    ("P4 a sell is treated as exposure-raising (reductions wait on protection)", GWY,
+     "raisesExposure: strings.EqualFold(intent.Side, \"buy\"),", "raisesExposure: true,"),
+    ("C1 a new dispatch owner is granted while a SUBMITTING lease is live", SDR, "\tif activeSubmitting != 0 {\n\t\treturn StrategyDispatchOwner{}, ErrStrategyDispatchOwnerBusy",
+     "\tif false && activeSubmitting != 0 {\n\t\treturn StrategyDispatchOwner{}, ErrStrategyDispatchOwnerBusy"),
+]
+SET_6566_TESTS = [
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run", "TestEachProtectionAttestationFailureStopsBuysAndKeepsReductionsFlowing", "./internal/execgw"],
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
+     "TestAnExpiredProtectionAttestationStopsTheStrategyFirstLegBeforeTheBroker|TestADispatchCrashAtEveryStepNeitherDuplicatesTheOrderNorReleasesTheCapacity", "./internal/app/engine"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측

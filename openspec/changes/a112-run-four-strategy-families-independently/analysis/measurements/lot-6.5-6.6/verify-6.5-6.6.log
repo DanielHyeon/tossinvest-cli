@@ -1,0 +1,15 @@
+== scratch 8c31e63a on a60f657b (rerun 2026-10-04 after the scratchpad was cleared; lot bytes copied from the shared tree)
+make lint exit=0
+gofmt listed=0
+go test tagged engine+execgw exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	330.802s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	108.419s
+go test untagged execgw+engine exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	70.560s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	252.042s
+go test -race new engine tests exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	30.618s
+go test -race new execgw test exit=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	19.358s
+Change 'a112-run-four-strategy-families-independently' is valid
+== check_analysis --change a112: HEAD 173, lot 173, normalized set delta 0/0

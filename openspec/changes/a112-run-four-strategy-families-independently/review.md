@@ -6278,3 +6278,36 @@ census 불변(`phaseConsumed` 생산 자리 0), 골든 불변 — census 시험�
 더해져도 새 스냅숏 digest · 새 ProposalID 로 다시 PROPOSED → 서명 제안 입력 매니페스트가 새 CampaignID 를 실으면 journal 이 받아들임 → 같은 setup 둘째 첫 레그. 스펙:
 "Proposal replay, duplicate bar delivery, correction 또는 restart가 동일 setup/bar에서 두 번째 first-leg 권위를 만들면 안 되며 (MUST NOT)". 오늘 도달 불가(벽).
 **「ErrBreakoutEvidenceUnavailable 해제 로트는 B(SetupID 계보 결속) 또는 C(consumed-setup 원장 기록) 착지 전 해제 불가」** — 벽 핀 두 시험이 해제 편집에서 뒤집힌다.
+
+## 2026-10-01 6.5 · 6.6 — crash/retry · 선행 조건 회귀(판정 A65 · A66)
+
+**판정(Manager).** Q1: A65 승인, 「exact outcome reconciliation」 잔여는 면제 불가 활성화 선행. Q2: (g) = (i)+(ii) 독해(의존성 게이트 발명 금지), A66 (h) 승인.
+생산 변경 0. FLM/BTM `not-applicable`(편집한 생산 함수 0). 커버리지 감사는 별도 읽기 전용 에이전트(전수 grep · 표)로 했고 핵심 주장(:178 문장 · 복구 API
+생산 호출 0 · strategyruntime 생산 import 0)은 직접 재확인 — `lot-6.5-6.6/recovery-callers-grep.log`.
+
+**6.5 실측.** engine `a112_dispatch_crash_restart_test.go` — 네 crash 지점 × (원장 닫기 → 같은 파일 다시 열기 → 새 Guardian · 새 owner · 새 파도 → 재전달):
+
+| 지점 | crash 모양 | 재시작 뒤 브로커 | 원장(005930) |
+|---|---|---|---|
+| ① handoff 뒤 · admission 앞 | 진입 관문 관측 실패 | 1(정상 발급) | 결속 1 · 캠페인 1 · owner 1 · HELD 5 · lease CLAIMED 1 |
+| ② admission 커밋 뒤 · lease 앞 | `strategy_dispatch_leases` INSERT 에 RAISE 트리거(재시작 전 제거) | 0 | 결속 1 · HELD 5 · lease 0 — 사슬 재개 없음 |
+| ③ claim 뒤 · SUBMITTING 앞 | 송신 직전 멈춤 | 0 | lease CLAIMED · HELD 5 — 사슬 재개 없음 |
+| ④ SUBMITTING 중 | SUBMITTING CAS 뒤 멈춤(브로커가 받았을 수 있음 — 「maybe-sent」 1) | 추가 0 | lease SUBMITTING · HELD 5; lease 수명 동안 새 owner 거절(`ErrStrategyDispatchOwnerBusy` — 그 시장 전략 진입 전부 정지), 인수 유예(20s) 뒤 owner 는 서지만 복구 분류는 ATTESTED_OUTCOME_REQUIRED 하나 |
+
+모든 지점: 브로커 총합 ≤ 1 · RELEASED 0 · 결속/캠페인/owner 중복 0. **승인한 단언 집합과의 차이:** 제안서의 「①–③ 브로커 1」 은 ② · ③ 에서 틀렸다 — 재시작 뒤
+전달 몸통이 claim 된 캠페인을 건너뛰고(6.4 층 ①) 생산에 lease 발급 재개 · 복구 호출자가 없어 그 첫 레그는 영원히 나가지 않는다(안전 방향, 종목 막힘). ② 의 상태는
+lease 가 없어 `DiscoverStrategyDispatchRecovery` 열거에도 안 보인다. 시험은 실측값을 단언한다.
+
+**6.6.** (h) execgw `a112_protection_prerequisite_test.go`: 없음 · 불일치(계좌 · tool digest) · 만료(정확히 지금 · 1분 전) 각각 같은 시험 안에서 매수 브로커 0(사유 코드
+`missing_evidence` · `attestation_scope_mismatch` · `attestation_expired` 를 단언 — 모양이 원인임을 가름) + 매도 · 취소 · 축소 정정 브로커 도달; 양성 대조군(신선한 WIRED →
+매수 1). 엔진 수준 만료: engine `a112_protection_expired_strategy_test.go` — dispatch 주기의 보호 관측을 실제 게이트웨이(생산 어댑터)로 돌리고 송신만 스파이, 만료 → 0 ·
+대조군 → 1. (g)(i) 같은-시험 짝은 기존 `TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths`(a066 admission 없는 q_final 결정 → 버킷 불일치 거절 + 손실 잠금, 같은
+시험 안 손절 · 비상 청산 · 취소 · 대사 · 체결 감지 지속), (ii) DORMANT 는 `TestEveryProductionWorkerIsBornDormantAndEmitsNothing` · `TestDescriptorsShipKRAndUSTogetherDefaultOFF`
+— 활성화 없는 시장의 기존 단일 경로는 그대로 돈다(`TestWithoutAVerifiedActivationCoordinationIsUnchanged`)는 점을 tasks 에 명시.
+
+**변이 `lot-6.5-6.6/mutation-6.5-6.6.tsv` 5/5 CAUGHT** — P1 만료 경계 배타 · P2 계좌 대조 삭제 · P3 만료 검사 삭제 · P4 매도를 상승으로(축소가 보호를 기다림) ·
+C1 SUBMITTING 살아 있는데 새 owner 허용.
+
+**잔여(면제 불가 — tasks 6.5 · ROADMAP).** SUBMITTING 중 crash 는 브로커에 실주문이 있을 수 있는데 결과를 알아낼 경로가 0(`journal/strategy_dispatch_runtime.go:178`
+「No constructor for that authority exists in this build」, 복구 API 생산 호출 0, `internal/strategyruntime` 생산 import 0) — UNKNOWN_BROKER_STATE 가족의 실체, 활성화
+상태에서는 안전 문제. **「활성화 로트는 outcome reconciliation 착지 전 해제 불가」.** ② · ③ 의 사슬 미재개(그 종목 claim · HELD 영구)는 같은 경로 부재의 liveness 면.

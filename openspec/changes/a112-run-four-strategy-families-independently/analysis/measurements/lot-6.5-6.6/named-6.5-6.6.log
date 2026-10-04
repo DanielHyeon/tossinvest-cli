@@ -1,0 +1,18 @@
+$ go test -json -count=1 -tags tossos_testseams -run ^(TestA066StrategyLastMomentQFinalBarrierRefusesALockTakenAfterTheInitialCheck|TestEachProtectionAttestationFailureStopsBuysAndKeepsReductionsFlowing)$ ./internal/execgw
+exit=0 passed=2/2
+  PASS	TestEachProtectionAttestationFailureStopsBuysAndKeepsReductionsFlowing
+  PASS	TestA066StrategyLastMomentQFinalBarrierRefusesALockTakenAfterTheInitialCheck
+$ go test -json -count=1 -tags tossos_testseams -run ^(TestADispatchCrashAtEveryStepNeitherDuplicatesTheOrderNorReleasesTheCapacity|TestAnExpiredProtectionAttestationStopsTheStrategyFirstLegBeforeTheBroker|TestWithoutAVerifiedActivationCoordinationIsUnchanged)$ ./internal/app/engine
+exit=0 passed=3/3
+  PASS	TestAnExpiredProtectionAttestationStopsTheStrategyFirstLegBeforeTheBroker
+  PASS	TestADispatchCrashAtEveryStepNeitherDuplicatesTheOrderNorReleasesTheCapacity
+  PASS	TestWithoutAVerifiedActivationCoordinationIsUnchanged
+$ go test -json -count=1 -run ^(TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths)$ ./internal/execgw
+exit=0 passed=1/1
+  PASS	TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths
+$ go test -json -count=1 -tags tossos_testseams -run ^(TestEveryProductionWorkerIsBornDormantAndEmitsNothing)$ ./internal/strategyworker
+exit=0 passed=1/1
+  PASS	TestEveryProductionWorkerIsBornDormantAndEmitsNothing
+$ go test -json -count=1 -run ^(TestDescriptorsShipKRAndUSTogetherDefaultOFF)$ ./internal/strategyrouter
+exit=0 passed=1/1
+  PASS	TestDescriptorsShipKRAndUSTogetherDefaultOFF

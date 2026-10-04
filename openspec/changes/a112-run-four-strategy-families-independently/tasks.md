@@ -504,8 +504,30 @@
 
   **잔여(재생 수순 그대로).** 손절-종결 → 재시작 → 새 매니페스트 CampaignID → 같은 setup 둘째 첫 레그: 첫 레그 캠페인이 손절로 CLOSED 되고 claim 이 풀린다 → 재시작으로 레인 prior 를 잃는다(생산에서 `BreakoutRequest.Prior` 를 채우는 곳 0) → 같은 setup 이 봉 하나만 더해져도 새 스냅숏 digest · 새 ProposalID 로 다시 PROPOSED → 서명 제안 입력 매니페스트가 새 CampaignID 를 실으면 journal 은 FLAT/CLOSED · claim 없음 · 새 캠페인 PK 로 받아들인다 → 같은 setup 의 둘째 첫 레그. 스펙(breakout-retest-strategy-lane 「breakout v1 production 권위는 first-leg 하나로 제한된다」): "Proposal replay, duplicate bar delivery, correction 또는 restart가 동일 setup/bar에서 두 번째 first-leg 권위를 만들면 안 되며 (MUST NOT)".
   오늘 이 수순은 벽(`ErrBreakoutEvidenceUnavailable`) 뒤에 있어 도달 불가다. **면제 불가: 「ErrBreakoutEvidenceUnavailable 해제 로트는 B(SetupID 계보 결속) 또는 C(consumed-setup 원장 기록) 착지 전 해제 불가」.**
-- [ ] 6.5 Add crash/retry tests across coordinator handoff, owner/q_final admission, lease claim, SUBMITTING and exact outcome reconciliation without releasing or duplicating capacity incorrectly.
-- [ ] 6.6 Add prerequisite regression tests proving a066 incomplete owner/exit gate or a100 missing/mismatched/expired protection attestation yields exposure-raising broker request zero while reduce-only paths continue.
+- [x] 6.5 Add crash/retry tests across coordinator handoff, owner/q_final admission, lease claim, SUBMITTING and exact outcome reconciliation without releasing or duplicating capacity incorrectly.
+- [x] 6.6 Add prerequisite regression tests proving a066 incomplete owner/exit gate or a100 missing/mismatched/expired protection attestation yields exposure-raising broker request zero while reduce-only paths continue.
+
+  **6.5 종결(2026-10-01 Manager 판정 A65 — 미착지).** 생산 변경 0. engine `a112_dispatch_crash_restart_test.go`
+  `TestADispatchCrashAtEveryStepNeitherDuplicatesTheOrderNorReleasesTheCapacity` — 네 crash 지점마다 원장을 닫고 다시 열어 새 Guardian · 새 dispatch owner · 새 파도로
+  같은 제안을 재전달: ① handoff 뒤 · admission 앞 → 재시작 뒤 브로커 1 · 한 세트(결속 1 · 캠페인 1 · owner 1 · HELD 5 · lease CLAIMED 1); ② admission 커밋 뒤 · lease
+  앞(lease INSERT RAISE 트리거) → 브로커 0 · HELD 5 · lease 0; ③ claim 뒤 · SUBMITTING 앞 → 브로커 0 · lease CLAIMED · HELD 5; ④ SUBMITTING 중(전송 시작 뒤) → 추가
+  브로커 0 · lease SUBMITTING · HELD 5, 그리고 lease 수명 동안 새 owner 거절(`ErrStrategyDispatchOwnerBusy` — 그 시장 전략 진입 전부 정지), 인수 유예 뒤 owner 는 서지만
+  복구 분류는 ATTESTED_OUTCOME_REQUIRED 하나. 모든 지점에서 브로커 총합 ≤ 1 · 풀린 용량 0 · 중복 0. **승인한 단언 집합과의 차이(실측):** 제안은 「①–③ 브로커 1」 이었으나
+  ② · ③ 은 재시작 뒤 사슬이 이어지지 않아 0 이다 — 아래 잔여. 변이 `lot-6.5-6.6/mutation-6.5-6.6.tsv` C1 CAUGHT.
+
+  **6.6 종결(2026-10-01 Manager 판정 A66 — 미착지).** (h) execgw `a112_protection_prerequisite_test.go` `TestEachProtectionAttestationFailureStopsBuysAndKeepsReductionsFlowing`
+  — 없음(DefaultSnapshot · `missing_evidence`) · 불일치(다른 계좌 · 다른 tool digest · `attestation_scope_mismatch`) · 만료(지금 정확히 · 1분 전 · `attestation_expired`)
+  각각 같은 시험 안에서 매수 브로커 0 + 매도 · 취소 · 축소 정정 브로커 도달, 양성 대조군(신선한 WIRED → 매수 1). 엔진 수준 만료 1: engine
+  `a112_protection_expired_strategy_test.go` `TestAnExpiredProtectionAttestationStopsTheStrategyFirstLegBeforeTheBroker`(dispatch 주기의 보호 관측을 실제 게이트웨이로 —
+  만료 정확히 · 1분 전 → 송신 0, 대조군 신선 → 1). `failProtection` 이 세 모양을 못 가르는 현황은 게이트웨이 층에서 가름으로 해소(생산 변경 불요). (g) = (i)+(ii)
+  (Manager 판정 — 의존성 게이트 발명 금지): (i) a066 미완 세계(q_final 표식 · a066 admission 없음 → 버킷 불일치 거절, 손실 잠금) 상승 0 과 reduce-only 지속의 같은-시험 짝 —
+  execgw `TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths`(+ `TestA066StrategyLastMomentQFinalBarrierRefusesALockTakenAfterTheInitialCheck`);
+  (ii) 서명 4-가족 활성화 없음 → 여덟 레인 worker DORMANT(정상 입력에도 봉투 0, 대조군 켜진 worker 는 봉투) — strategyworker `TestEveryProductionWorkerIsBornDormantAndEmitsNothing`,
+  서술자 기본 OFF — strategyrouter `TestDescriptorsShipKRAndUSTogetherDefaultOFF`. (주의: 활성화 없는 시장의 기존 단일 경로 조정은 그대로 돈다 —
+  `TestWithoutAVerifiedActivationCoordinationIsUnchanged`; 그 경로의 상승 0 은 (i) 의 a066 관문 · 버킷 불일치와 서명 제안 입력 부재가 진다.) 변이 P1~P4 CAUGHT.
+
+  **잔여(6.5 — 면제 불가 활성화 선행).** 근거(④ 의 위험): SUBMITTING 중 crash 면 브로커에 실주문이 존재할 수 있는데 이 빌드에는 그 결과를 알아낼 경로가 0 이다 — `internal/journal/strategy_dispatch_runtime.go:178` 「No constructor for that authority exists in this build」(ATTESTED_OUTCOME_REQUIRED), `DiscoverStrategyDispatchRecovery` · `RecoverClaimedStrategyDispatchLease` 생산 호출 0 · `internal/strategyruntime`(모델 복구) 생산 import 0 (grep 영수증 `lot-6.5-6.6/recovery-callers-grep.log`). UNKNOWN_BROKER_STATE 가족의 실체이며 활성화 상태에서는 liveness 가 아니라 안전 문제다. 같은 경로 부재로 ② admission 커밋 뒤 · lease 앞, ③ claim 뒤 · SUBMITTING 앞 crash 도 재시작 뒤 이어지지 않는다(그 종목 claim · HELD 용량이 풀리지 않음 — ② 는 lease 가 없어 복구 열거에도 안 보인다).
+  **면제 불가: 「활성화 로트는 outcome reconciliation 착지 전 해제 불가」.**
 
 ## 7. Scheduler Observability and Operator Surfaces
 
