@@ -32,7 +32,7 @@ func TestStrategyProposalAuthorityLoadsKRUSConcurrently(t *testing.T) {
 	}
 	done := make(chan strategyProposalAuthorityPair, 1)
 	go func() {
-		done <- loader.collect(context.Background(), routeReadySchedulePair(now), proposalRoutePair(t, now), proposalFXPair(now))
+		done <- a112PairOnly(loader.collect(context.Background(), routeReadySchedulePair(now), proposalRoutePair(t, now), proposalFXPair(now)))
 	}()
 	seen := map[StrategyMarket]bool{<-started: true, <-started: true}
 	if !seen[StrategyMarketKR] || !seen[StrategyMarketUS] {
@@ -55,7 +55,7 @@ func TestStrategyProposalAuthorityKeepsMarketFailureLocal(t *testing.T) {
 		}
 		return testProposalBatch(t, config, targets, now), nil
 	}
-	pair := loader.collect(context.Background(), routeReadySchedulePair(now), proposalRoutePair(t, now), proposalFXPair(now))
+	pair, _ := loader.collect(context.Background(), routeReadySchedulePair(now), proposalRoutePair(t, now), proposalFXPair(now))
 	if pair.kr.snapshot.Ready || pair.kr.snapshot.Reason != StrategyProposalAuthorityInvalid {
 		t.Fatalf("KR=%+v", pair.kr.snapshot)
 	}

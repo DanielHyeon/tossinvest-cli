@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/a112_coordinator_test.go",
-  "source_sha256": "60d5adbcf550c3ff422046d010bfe037481c7fa39e5b1561afb5c1d19a1f2115",
+  "source_sha256": "8581d7275bae005df65081299b204c1eeecb6f2ad6234aa4b00748538f04ad73",
   "package": "engine",
   "function": "TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne",
   "signature": "TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne(params=1, results=0)",

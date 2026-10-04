@@ -1,0 +1,52 @@
+# RED a112 7.3.1 SHADOW — HEAD 9e5f3ccf + 시험만(생산 무편집, Makefile 무편집)
+# status:  M internal/app/engine/a112_shadow_absent_restart_test.go
+# status: ?? internal/app/engine/a112_shadow_carry_test.go
+# status: ?? internal/app/engine/a112_shadow_cycle_test.go
+# status: ?? internal/app/engine/a112_shadow_projection_test.go
+# status: ?? internal/app/engine/a112_shadow_structure_test.go
+# status: ?? internal/httpapi/a112_shadow_openapi_test.go
+# status: ?? internal/strategyprojection/a112_shadow_lane_test.go
+# status: ?? internal/strategyrouter/a112_shared_export_test.go
+# status: ?? internal/strategyshadow/
+# status: ?? internal/strategyworker/a112_shadow_verdict_test.go## ./internal/strategyworker/ (tossos_testseams)
+# github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker
+# [github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker]
+vet: internal/strategyworker/a112_shadow_verdict_test.go:30:19: worker.ShadowVerdict undefined (type FamilyWorker has no field or method ShadowVerdict)
+## ./internal/strategyprojection/ (tossos_testseams)
+# github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection
+# [github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection]
+vet: internal/strategyprojection/a112_shadow_lane_test.go:15:13: undefined: LaneShadowWouldEmit
+## ./internal/httpapi/ (tossos_testseams)
+# github.com/JungHoonGhae/tossinvest-cli/internal/httpapi
+# [github.com/JungHoonGhae/tossinvest-cli/internal/httpapi]
+vet: internal/httpapi/a112_shadow_openapi_test.go:52:52: undefined: strategyprojection.LaneRuntimes
+## ./internal/strategyrouter/ (tossos_testseams)
+# github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter [github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter.test]
+internal/strategyrouter/a112_shared_export_test.go:110:13: undefined: SharedProductionRouteDescriptors
+internal/strategyrouter/a112_shared_export_test.go:124:5: undefined: SharedProductionRouteDescriptors
+## ./internal/strategyshadow/ (tossos_testseams)
+# github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow
+# [github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow]
+vet: internal/strategyshadow/golden_test.go:27:35: undefined: Document
+## ./internal/app/engine/ (tossos_testseams)
+github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow: no non-test Go files in /mnt/D/Axipient/workspace/TossOS/internal/strategyshadow
+## untagged ./internal/strategyprojection ./internal/httpapi ./internal/strategyrouter ./internal/strategyshadow
+# github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection
+# [github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection]
+vet: internal/strategyprojection/a112_shadow_lane_test.go:15:13: undefined: LaneShadowWouldEmit
+# github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow
+# [github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow]
+vet: internal/strategyshadow/golden_test.go:27:35: undefined: Document
+# github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter [github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter.test]
+internal/strategyrouter/a112_shared_export_test.go:110:13: undefined: SharedProductionRouteDescriptors
+internal/strategyrouter/a112_shared_export_test.go:124:5: undefined: SharedProductionRouteDescriptors
+# github.com/JungHoonGhae/tossinvest-cli/internal/httpapi
+# [github.com/JungHoonGhae/tossinvest-cli/internal/httpapi]
+vet: internal/httpapi/a112_shadow_openapi_test.go:52:52: undefined: strategyprojection.LaneRuntimes
+
+## engine 어휘 census 반전(새 engine 시험 넷을 잠시 빼고 — 컴파일 차단 없이 행동 RED)
+--- FAIL: TestTheRouterRuntimeStaysUnobservedAndOnlyTheProjectionAddsShadow (0.13s)
+    a112_shadow_absent_restart_test.go:121: ../../strategyprojection LaneRuntime constants=[UNOBSERVED], want exactly [SHADOW,UNOBSERVED]
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.133s
+FAIL

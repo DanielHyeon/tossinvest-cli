@@ -1,0 +1,18 @@
+# a112 7.3.1 SHADOW — 분기 재번호 영수증(편집 전 HEAD 9e5f3ccf 사본 ↔ 편집 뒤 작업 트리, difflib 로 분기 종류+원문 줄 정렬)
+
+- Context.Read: 편집 전 8 → 뒤 9. (새) B7: if if ok && worker.AbandonedEvaluation {; B7→B8; B8→B9
+- strategyLaneRuntime.projection: 편집 전 2 → 뒤 3. (새) B3: if if value, ok := runtime.shadowObserved[market][key]; ok && shadowOb
+- strategyLaneProjection: 편집 전 5 → 뒤 6. (새) B6: if if shadow != nil && observation.Desired == strategyrouter.StateOff 
+- validateLane: 편집 전 15 → 뒤 17. (바뀜) B1→B1: 조건의 runtime 정확 일치를 어휘 member 로; (새) B2: SHADOW 교차 규칙; (새) B3: shadowOutcome ⇔ SHADOW; B2→B4; B3→B5; B4→B6; B5→B7; B6→B8; B7→B9; B8→B10; B9→B11; B10→B12; B11→B13; B12→B14; B13→B15; B14→B16; B15→B17
+- coordinateMarketProposals: 편집 전 8 → 뒤 8. ID 불변
+- strategyProposalAuthorityLoader.collectMarket: 편집 전 15 → 뒤 15. ID 불변
+- strategyProposalAuthorityLoader.collect: 편집 전 6 → 뒤 6. ID 불변
+- Context.NewPairedStrategyEntryProductionAssembly: 편집 전 8 → 뒤 8. ID 불변
+- Context.runProductionStrategyMarketCycle: 편집 전 4 → 뒤 4. ID 불변
+- Context.NewRefreshingPairedStrategyEntrySupervisor: 편집 전 4 → 뒤 4. ID 불변
+- Context.productionStrategyWorker: 편집 전 1 → 뒤 1. ID 불변
+- newStrategyLaneRuntime: 편집 전 1 → 뒤 1. ID 불변
+- strategyLaneRuntime.evaluate: 편집 전 8 → 뒤 8. ID 불변
+- strategyLaneRuntime.record: 편집 전 4 → 뒤 4. ID 불변
+
+(validateLane 줄은 difflib replace 블록의 길이 차(옛 1 · 새 3)를 손으로 풀어 적었다 — 나머지 줄은 스크립트 출력 그대로.)

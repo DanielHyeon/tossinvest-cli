@@ -5,6 +5,7 @@ import (
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker"
 )
 
@@ -32,17 +33,29 @@ func (runtime *strategyLaneRuntime) projection() []strategyprojection.LaneRuntim
 	if runtime == nil {
 		return nil
 	}
+	// a112 7.3.1 §5.1: shadow 관측은 판정 함수 하나(shadowObservationUsable — 파도 등식 ∧ 미만료 ∧ 나이 상한)로만 쓴다. 시계는 런타임 자기
+	// 시계다(호출자 서명 무변경) — 새 파도가 없어도 만료 · 나이가 관측을 끝낸다.
+	now := runtime.clk.Now()
 	runtime.mu.RLock()
 	defer runtime.mu.RUnlock()
 	values := make([]strategyprojection.LaneRuntimeProjection, 0, len(runtime.lanes))
 	for _, lane := range runtime.lanes {
-		observation, seen := runtime.observed[lane.Key()]
-		values = append(values, strategyLaneProjection(lane, observation, seen && observation.Wave > 0))
+		key := lane.Key()
+		observation, seen := runtime.observed[key]
+		var shadow *strategyShadowObservation
+		market := StrategyMarket(key.Market)
+		if value, ok := runtime.shadowObserved[market][key]; ok && shadowObservationUsable(now, runtime.waves[market], value) {
+			shadow = &value
+		}
+		values = append(values, strategyLaneProjection(lane, observation, seen && observation.Wave > 0, shadow))
 	}
 	return values
 }
 
+// shadow(a112 7.3.1)는 쓸 수 있는 shadow 관측이다(없으면 nil). 관측된 레인이고 그 물결의 활성화가 OFF/OFF 로 둔 레인일 때만 runtime 을
+// SHADOW 로 올린다(validateLane 의 교차 규칙과 같은 조건) — desired/effective 는 그대로 관측 값이다(SHADOW 는 승격하지 않는다).
 func strategyLaneProjection(lane *strategyworker.Lane, observation strategyLaneObservation, observed bool,
+	shadow *strategyShadowObservation,
 ) strategyprojection.LaneRuntimeProjection {
 	// a112 7.5 D2: 상태는 Lane.Status() **한 번**(한 잠금)으로 읽는다 — 접근자마다 잠금을 잡으면 그 사이 잠긴 레인이 「LATCHED 인데
 	// revision 0」 같은 찢긴 행으로 나온다. 열쇠 · 정책 · horizon · runtime 은 worker 값이라 레인 수명 동안 불변이다.
@@ -83,7 +96,22 @@ func strategyLaneProjection(lane *strategyworker.Lane, observation strategyLaneO
 	}
 	value.SnapshotDigest = projectionOptional(observation.SnapshotDigest)
 	value.EvidenceDigest = projectionOptional(observation.EvidenceDigest)
+	if shadow != nil && observation.Desired == strategyrouter.StateOff && observation.Effective == strategyrouter.StateOff {
+		outcome := strategyprojection.LaneShadowOutcome(shadow.outcome)
+		value.Runtime, value.ShadowOutcome = strategyprojection.LaneRuntimeShadow, &outcome
+	}
 	return value
+}
+
+// strategyLanesWithoutShadow 는 그 시장 레인들의 SHADOW 를 지운다(R1 두 시계 — supervisor 가 그 시장의 평가를 abandon 으로 기록했으면 클로저의
+// 성공 판정과 갈렸을 수 있으므로 SHADOW 를 보이지 않는다). 읽기 전용 투영 값만 바꾼다.
+func strategyLanesWithoutShadow(lanes []strategyprojection.LaneRuntimeProjection, market StrategyMarket) []strategyprojection.LaneRuntimeProjection {
+	for index := range lanes {
+		if lanes[index].Market == strategyprojection.Market(market) && lanes[index].Runtime == strategyprojection.LaneRuntimeShadow {
+			lanes[index].Runtime, lanes[index].ShadowOutcome = strategyprojection.LaneRuntimeUnobserved, nil
+		}
+	}
+	return lanes
 }
 
 // strategyCoordinatorProjection 은 한 시장의 제안 조정 스냅숏과 승인된 소유자 범위 전부다.

@@ -1,9 +1,9 @@
 # Function Logic Map: `strategyMarketArbitration.entries`
 
-- Source: `internal/app/engine/strategy_market_coordinator.go` (130-140)
+- Source: `internal/app/engine/strategy_market_coordinator.go` (135-145)
 - Function: `strategyMarketArbitration.entries` in package `engine`
 - Signature: `strategyMarketArbitration.entries(params=0, results=2)`
-- File SHA-256: `e9a4bde458176c4679f254d71b56439b348110fb6dc1ab2338cd7f2cf376f728`
+- File SHA-256: `590318d7267c1ffd5398c4c9878b9e70486633dc42033e19466e3474cf6da01b`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 2.
 - Risk scan: `risk-pattern-report.md`.
@@ -33,20 +33,20 @@ The signature above is the exhaustive input/result record; this map does not inf
   정확히 같다. 이 집합 밖의 테스트가 어느 arm 이든 들어갔다면 그 등식이 깨진다. 깨진 행은
   `ATTRIBUTION MISMATCH` 로 표시되며 아래에는 하나도 없다.
 
-Exact AST return positions: 135:4, 139:2.
+Exact AST return positions: 140:4, 144:2.
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | range | 132:2 | arm entered 44x (engine tagged suite); arm not entered (engine untagged suite); `TestALaneRefusesALineageThatRenamedItselfIntoAnotherLane`, `TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading`, `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff`, `TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt`, `TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestASelectionWithNoLaneToComeBackToClosesInsteadOfShrinkingTheList`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestEveryLaneStaysDormantOnAProposalItActuallyOwns`, `TestExactlyOneLaneOwnsEachSealedProposal`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope`, `TestTheGateSaysWhichKindOfStopItMade`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket`, `TestWithoutAVerifiedActivationCoordinationIsUnchanged` |
-| B2 | if | 134:3 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestASelectionWithNoLaneToComeBackToClosesInsteadOfShrinkingTheList` |
+| B1 | range | 137:2 | arm entered 44x (engine tagged suite); arm not entered (engine untagged suite); `TestALaneRefusesALineageThatRenamedItselfIntoAnotherLane`, `TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading`, `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff`, `TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt`, `TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestASelectionWithNoLaneToComeBackToClosesInsteadOfShrinkingTheList`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestEveryLaneStaysDormantOnAProposalItActuallyOwns`, `TestExactlyOneLaneOwnsEachSealedProposal`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope`, `TestTheGateSaysWhichKindOfStopItMade`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket`, `TestWithoutAVerifiedActivationCoordinationIsUnchanged` |
+| B2 | if | 139:3 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestASelectionWithNoLaneToComeBackToClosesInsteadOfShrinkingTheList` |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `make` | 131:12 |
-| `len` | 131:54 |
-| `append` | 137:12 |
+| `make` | 136:12 |
+| `len` | 136:54 |
+| `append` | 142:12 |
 
 ## State mutations and fallbacks
 
@@ -56,3 +56,5 @@ Exact AST return positions: 135:4, 139:2.
 
 못 찾은 자리를 건너뛰면 그 종목이 조용히 사라진 채 목록만 짧아진다. 사라진 종목은 아무 기록도
 남기지 않고, 남은 것들은 정상인 척 다음 관문을 통과한다. 그래서 건너뛰지 않고 `false` 를 돌려 시장을 닫는다.
+
+a112 7.3.1 SHADOW 로트 — 같은 파일의 다른 함수 편집으로 줄만 밀림(본문 불변)

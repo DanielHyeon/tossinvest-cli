@@ -1,13 +1,14 @@
 # Branch Test Map: `strategyLaneProjection`
 
-- Source SHA-256: `04dcd7ed4366c18c5ac8b8c0cc490b944f5287dee4db481c35cfec07e6173d70`; AST branch locations are authoritative.
-- Revision: **modified (a112 7.5, 2026-10-01).** 분기 불변(5). 레인 상태를 접근자별 잠금 아홉 번 대신 `lane.Status()` 한 번(한 잠금)으로 읽는다 — 찢긴 행 제거(D2).
-- 편집 전 번들: `analysis/measurements/lot-7.5/pre-edit/internal-app-engine--strategylaneprojection/`. 변이 원장 `analysis/measurements/lot-7.5/mutation-7.5.tsv`.
+- Source SHA-256: `713fd68268cb36340d9c990c2d213c56a3b9d72c1342f83e2b845f09254978ef`; AST branch locations are authoritative.
+- Revision: **modified (a112 7.3.1 SHADOW, 2026-10-01).** 편집 전 5 분기 → 6: 쓸 수 있는 shadow 관측 ∧ 관측 값 OFF/OFF 이면 runtime=SHADOW · shadowOutcome(B6 새).
+- 편집 전 번들: `analysis/measurements/lot-7.3.1-shadow/pre-edit/internal-app-engine--strategylaneprojection/`. 변이 원장 `analysis/measurements/lot-7.3.1-shadow/mutation-7.3.1-S.tsv`.
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 61:2 — 미관측 레인 → 관측 사실 없이 반환 | `a112_lane_coordinator_projection_test.go` `TestAProcessWithoutLanesProjectsTheEightUnobservedDefaults` 계열 | no — 이 로트가 바꾸지 않음 | yes |
-| B2 | if at 68:2 — 투입이 들어간 물결 → 시작 | `a112_lane_coordinator_projection_test.go` `TestTheCycleGenerationIsTheMarketWaveInWhichTheLaneWasLastObserved` | no — 이 로트가 바꾸지 않음 | yes |
-| B3 | if at 71:3 — 연 사이클 → 결과 · 비정상 | `a112_lane_coordinator_projection_test.go` `TestTheCycleGenerationIsTheMarketWaveInWhichTheLaneWasLastObserved` | no — 이 로트가 바꾸지 않음 | yes |
-| B4 | if at 73:4 — 결과 있음 | `a112_lane_coordinator_projection_test.go` `TestTheCycleGenerationIsTheMarketWaveInWhichTheLaneWasLastObserved` | no — 이 로트가 바꾸지 않음 | yes |
-| B5 | if at 79:4 — REFUSED 결과만 거절 코드 | `a112_lane_coordinator_projection_test.go` `TestTheLaneDesiredAndEffectiveAreTheActivationTheWaveRanWith` | no — 이 로트가 바꾸지 않음 | yes |
+| B1 | if at 74:2 — 미관측 레인 | `TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive`, `TestAFailingShadowStepChangesNothingButItsOwnObservation`, `TestALateNilCycleIsAFailureAtTheLimit`, `TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow`, `TestARestartNeverRestoresShadow`, `TestTheGapBetweenRecordAndPublishIsUnobservedByDesign` 외 4 | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | yes — shadow 시험 10개가 진입(측정); 패키지 합집합 진입=True |
+| B2 | if at 81:2 — 투입이 들어간 물결 | `TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive`, `TestAFailingShadowStepChangesNothingButItsOwnObservation`, `TestALateNilCycleIsAFailureAtTheLimit`, `TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow`, `TestARestartNeverRestoresShadow`, `TestTheGapBetweenRecordAndPublishIsUnobservedByDesign` 외 4 | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | yes — shadow 시험 10개가 진입(측정); 패키지 합집합 진입=True |
+| B3 | if at 84:3 — 연 사이클 | `TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive`, `TestAFailingShadowStepChangesNothingButItsOwnObservation`, `TestALateNilCycleIsAFailureAtTheLimit`, `TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow`, `TestARestartNeverRestoresShadow`, `TestTheGapBetweenRecordAndPublishIsUnobservedByDesign` 외 4 | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | yes — shadow 시험 10개가 진입(측정); 패키지 합집합 진입=True |
+| B4 | if at 86:4 — 결과 있음 | `TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive`, `TestAFailingShadowStepChangesNothingButItsOwnObservation`, `TestALateNilCycleIsAFailureAtTheLimit`, `TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow`, `TestARestartNeverRestoresShadow`, `TestTheGapBetweenRecordAndPublishIsUnobservedByDesign` 외 4 | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | yes — shadow 시험 10개가 진입(측정); 패키지 합집합 진입=True |
+| B5 | if at 92:4 — REFUSED 결과만 거절 코드 | `TestTheShadowPinLeavesTheDispatchTraceUnchanged` | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | yes — shadow 시험 1개가 진입(측정); 패키지 합집합 진입=True |
+| B6 | if at 99:2 — **(새)** SHADOW — 관측된 OFF/OFF 레인만 | `TestAFailedCycleDiscardsTheShadowAtOnceAndALateStepCannotRevive`, `TestALateNilCycleIsAFailureAtTheLimit`, `TestAMarketWhoseEvaluationWasAbandonedShowsNoShadow`, `TestARestartNeverRestoresShadow`, `TestTheGapBetweenRecordAndPublishIsUnobservedByDesign`, `TestTheNextWaveClearsAnUnusableShadow` 외 3 | yes — `analysis/measurements/lot-7.3.1-shadow/red-7.3.1-shadow.log`(편집 전 기호 없음 · 컴파일 RED) | yes — shadow 시험 9개가 진입(측정); 패키지 합집합 진입=True |

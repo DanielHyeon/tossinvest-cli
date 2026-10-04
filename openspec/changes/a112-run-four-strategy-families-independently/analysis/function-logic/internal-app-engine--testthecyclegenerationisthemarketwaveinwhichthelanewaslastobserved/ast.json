@@ -1,0 +1,333 @@
+{
+  "file": "internal/app/engine/a112_lane_coordinator_projection_test.go",
+  "source_sha256": "a1f16eb741b42836ad3606bcb3fdf6d1725ae56579ef6bbb03b9b43dc6ef42ee",
+  "package": "engine",
+  "function": "TestTheCycleGenerationIsTheMarketWaveInWhichTheLaneWasLastObserved",
+  "signature": "TestTheCycleGenerationIsTheMarketWaveInWhichTheLaneWasLastObserved(params=1, results=0)",
+  "start": {
+    "line": 80,
+    "column": 1
+  },
+  "end": {
+    "line": 121,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 88,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 90,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 93,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 99,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 102,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "range",
+      "at": {
+        "line": 105,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 107,
+        "column": 3
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 110,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 20
+      },
+      "text": "a112LaneProjectionContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 12
+      },
+      "text": "strategyworker.ProductionRuntimePolicy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 12
+      },
+      "text": "lanes.evaluate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 12
+      },
+      "text": "a112Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 11
+      },
+      "text": "uint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 2
+      },
+      "text": "fake.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 15
+      },
+      "text": "policy.Cadence"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 12
+      },
+      "text": "lanes.evaluate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 12
+      },
+      "text": "lanes.evaluate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 103,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 23
+      },
+      "text": "a112Read"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 11
+      },
+      "text": "uint64"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 56
+      },
+      "text": "policy.Version"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 60
+      },
+      "text": "Milliseconds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 60
+      },
+      "text": "policy.CycleDeadline"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 118,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 84,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 89,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 91,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 99,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 106,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 108,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

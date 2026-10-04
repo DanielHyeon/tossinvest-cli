@@ -1,0 +1,30 @@
+{
+  "file": "internal/strategyprojection/lanes.go",
+  "source_sha256": "fb4b35f5447efe634788c0e4ba572808ddc5a703777739b3a9e143c9e7c22bd7",
+  "package": "strategyprojection",
+  "function": "SelectedScopeJSONFields",
+  "signature": "SelectedScopeJSONFields(params=0, results=1)",
+  "start": {
+    "line": 193,
+    "column": 1
+  },
+  "end": {
+    "line": 195,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 194,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null,
+  "revision": "base"
+}

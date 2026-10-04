@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_lane_runtime.go",
-  "source_sha256": "95611377145456c4906da5ebb95eca97dd025df0c1fb255ebc443c1ce12d5d36",
+  "source_sha256": "333970fa5e15db9741cc10da836922c79763f4b1b87bf62ddbc1af2fba9c6462",
   "package": "engine",
   "function": "record",
   "receiver": "strategyLaneRuntime",
-  "signature": "strategyLaneRuntime.record(params=2, results=0)",
+  "signature": "strategyLaneRuntime.record(params=4, results=0)",
   "start": {
-    "line": 322,
+    "line": 344,
     "column": 1
   },
   "end": {
-    "line": 338,
+    "line": 363,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 323,
+        "line": 347,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 328,
+        "line": 352,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 331,
+        "line": 355,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "range",
       "at": {
-        "line": 334,
+        "line": 359,
         "column": 2
       }
     }
@@ -51,7 +51,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 324,
+        "line": 348,
         "column": 3
       }
     }
@@ -60,7 +60,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 323,
+        "line": 347,
         "column": 23
       },
       "text": "len"
@@ -68,7 +68,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 326,
+        "line": 350,
         "column": 2
       },
       "text": "runtime.mu.Lock"
@@ -76,7 +76,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 327,
+        "line": 351,
         "column": 8
       },
       "text": "runtime.mu.Unlock"
@@ -84,7 +84,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 329,
+        "line": 353,
         "column": 19
       },
       "text": "make"
@@ -92,7 +92,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 331,
+        "line": 355,
         "column": 30
       },
       "text": "uint64"
@@ -102,28 +102,35 @@
     {
       "kind": "=",
       "at": {
-        "line": 329,
+        "line": 353,
         "column": 3
       }
     },
     {
       "kind": "++",
       "at": {
-        "line": 332,
+        "line": 356,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 335,
+        "line": 358,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 360,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 336,
+        "line": 361,
         "column": 3
       }
     }
@@ -133,7 +140,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 327,
+        "line": 351,
         "column": 2
       },
       "text": "runtime.mu.Unlock"

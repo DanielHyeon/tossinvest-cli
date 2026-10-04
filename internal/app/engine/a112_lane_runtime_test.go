@@ -99,7 +99,7 @@ func TestTheLaneSetOutlivesTheRefreshThatAskedForIt(t *testing.T) {
 func TestEveryFamilyLaneIsDormantUntilASignedManifestPromotesIt(t *testing.T) {
 	runtime, _ := laneRuntimeFixture(t)
 	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
-		runtime.evaluate(context.Background(), market, 0, strategyrouter.FamilyActivation{}, nil)
+		runtime.evaluate(context.Background(), market, 0, strategyrouter.FamilyActivation{}, nil, strategyShadowBatch{})
 	}
 	observations := runtime.observations()
 	if len(observations) != len(runtime.lanes) {
@@ -146,18 +146,18 @@ func TestADroppedTriggerNeverDrivesACycle(t *testing.T) {
 	cadence := lane.Policy().Cadence()
 
 	// 1) 첫 주기는 들어가고 돈다. 다음 주기 시각이 정해진다.
-	runtime.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil)
+	runtime.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil, strategyShadowBatch{})
 	if got := lane.Dropped(); got != 0 {
 		t.Fatalf("첫 주기에 버린 수=%d, want 0", got)
 	}
 	// 2) 카덴스가 아직이라 투입은 칸에 남는다.
-	runtime.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil)
+	runtime.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil, strategyShadowBatch{})
 	if got, want := lane.Pending(), lane.Policy().QueueDepth(); got != want {
 		t.Fatalf("칸에 남은 투입=%d, want %d", got, want)
 	}
 	// 3) 이제 카덴스를 지나 보낸다. 칸은 여전히 차 있다.
 	fake.Advance(cadence)
-	runtime.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil)
+	runtime.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil, strategyShadowBatch{})
 
 	if got := lane.Dropped(); got == 0 {
 		t.Fatal("칸이 찼는데 버린 수가 0 이다 — 유실이 조용히 사라진다")

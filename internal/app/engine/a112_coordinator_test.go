@@ -126,7 +126,7 @@ func collectOverflowing(t *testing.T, now time.Time, symbols []string, configure
 	for _, change := range configure {
 		change(loader)
 	}
-	return loader.collect(context.Background(), routeReadySchedulePair(now), routes, proposalFXPair(now))
+	return a112PairOnly(loader.collect(context.Background(), routeReadySchedulePair(now), routes, proposalFXPair(now)))
 }
 
 // 고른 것을 되돌릴 자리를 못 찾으면 그 종목을 건너뛰지 않고 닫는다.

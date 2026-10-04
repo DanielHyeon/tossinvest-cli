@@ -1,12 +1,12 @@
-# Branch Test Map: `Context.NewRefreshingPairedStrategyEntrySupervisor`
+# Branch Test Map: `NewRefreshingPairedStrategyEntrySupervisor`
 
-- Source SHA-256: `6f1f6804cfd437116c16a48d1526327c28360433f09e0ba3567eb3537442ee5b`; AST branch locations are authoritative.
-- Revision: **modified (태스크 5.6.2.1, 2026-09-30).** (5.6.2.1) 새 B2 `if c.Entry == nil` — 진입 게이트 없는 Context 에서는 생산 감독자를 만들지 않는다(그 조립에서는 중앙 무결성 고장이 진입이 아니라 프로세스를 닫게 되므로). 감독자 옵션에 `EntryGate: c.Entry`. 편집 전 B2 · B3 → B3 · B4. 편집 전 번들은 `analysis/measurements/lot-5.6.2-5.2.2/pre-edit/`.
-- 측정: `analysis/measurements/lot-5.6.2-5.2.2/coverage-post-5.6.2.1-engine.json`(격리 사본, `./internal/app/engine` 시험 109개를 하나씩).
+- Source SHA-256: `9cb510c1c9c7f44ac109de5fd8ddac8e6c559adb4d654b1acd65dce19cc9e577`; AST branch locations are authoritative.
+- Revision: **modified (a112 7.3.1 SHADOW, 2026-10-01).** 분기 불변(4). worker 의 Cycle 클로저를 `c.productionStrategyCycle(clk, market)`(shadow 래퍼 — 성공 플래그 · 경과 판정 · 실패 폐기 defer · nil 뒤 비동기 시작)로 바꿨다.
+- 편집 전 번들: `analysis/measurements/lot-7.3.1-shadow/pre-edit/internal-app-engine--context.newrefreshingpairedstrategyentrysupervisor/`. 변이 원장 `analysis/measurements/lot-7.3.1-shadow/mutation-7.3.1-S.tsv`.
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 383:2 — nil Context · nil 시계 → 거절 | (측정 표본 0) | 해당 없음(분기 불변) | 측정 표본의 시험 0개(블록 좌표 없거나 미실행) |
-| B2 | if at 387:2 — (새) 진입 게이트 없음 → `ErrRuntimeUnavailable` | `TestTheProductionStrategySupervisorRefusesAContextWithoutAnEntryGate` | B2: `red-5.6.2.1.log`(`TestTheProductionStrategySupervisorRefusesAContextWithoutAnEntryGate` FAIL) · 변이 E07; 옵션 전달: `TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate` FAIL · 변이 E06 | yes (block 395.20-397.3, 시험 1개) |
-| B3 | range at 391:2 — KR · US 권한 갱신 전용 worker 둘 | `TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate` | 해당 없음(분기 불변) | yes (block 399.78-403.48, 시험 1개) |
-| B4 | if at 403:2 — 감독자 생성 실패 → 오류 | (측정 표본 0) | 해당 없음(분기 불변) | 측정 표본의 시험 0개(블록 좌표 없거나 미실행) |
+| B1 | if at 386:2 — Context · 시계 nil | 진입 없음 | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | no — 측정상 진입 0(커버리지 공백, 통과가 아님) |
+| B2 | if at 390:2 — 진입 관문 없음 | shadow 시험 밖의 패키지 시험(합집합 측정) | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | yes — 패키지 합집합 진입(측정) |
+| B3 | range at 394:2 — 시장 순회 | shadow 시험 밖의 패키지 시험(합집합 측정) | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | yes — 패키지 합집합 진입(측정) |
+| B4 | if at 406:2 — supervisor 생성 오류 | 진입 없음 | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | no — 측정상 진입 0(커버리지 공백, 통과가 아님) |

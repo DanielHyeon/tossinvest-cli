@@ -1,0 +1,164 @@
+{
+  "file": "internal/app/engine/a112_arbitration_test.go",
+  "source_sha256": "44c3a7a4270c2c5b5e965da58dadff94b51df649d3aaf90d786141b1b189bb78",
+  "package": "engine",
+  "function": "TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated",
+  "signature": "TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated(params=1, results=0)",
+  "start": {
+    "line": 281,
+    "column": 1
+  },
+  "end": {
+    "line": 297,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 290,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 293,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 285,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 9
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 283,
+        "column": 12
+      },
+      "text": "testStrategyProposalLoader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 285,
+        "column": 10
+      },
+      "text": "strategyproposal.ProductionBatchAuthorityMultiLaneForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 13
+      },
+      "text": "loader.collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 28
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 50
+      },
+      "text": "routeReadySchedulePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 3
+      },
+      "text": "arbitrationRoutePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 288,
+        "column": 32
+      },
+      "text": "familyScoresForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 3
+      },
+      "text": "proposalFXPair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 294,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 282,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 283,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 284,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 287,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

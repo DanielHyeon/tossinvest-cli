@@ -1,7 +1,7 @@
 # Branch Test Map: `proposalRoutePair`
 
 - Source: `internal/app/engine/strategy_proposal_authority_test.go`; file SHA-256
-  `4acb8506cc32d2cc5fd4eda1a5366152ba7dcf92e704d078ceced5fe268513ea`. AST branch positions are authoritative.
+  `d05d11be42f3538802baec08718c10782cea1007f608bac95ad206b16a9b57b0`. AST branch positions are authoritative.
 - Go 커버리지는 `_test.go` 를 계측하지 않으므로 이 함수의 행은 커버리지 카운트가 아니라
   그 분기를 실행한 것으로 관측된 run 을 적는다.
 - 관측 run: `go test -count=1 -tags tossos_testseams -run '^TestStrategyProposalAuthority' ./internal/app/engine/` (통과).

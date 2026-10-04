@@ -2627,9 +2627,9 @@
       },
       "StrategyRuntimeLaneRuntime": {
         "type": "object",
-        "description": "Read-only state of one family lane. health null means the lane is unobserved (no lane runtime yet, or the engine was unreachable); then only the key and the frozen defaults OFF/OFF/UNOBSERVED are present. cycleGeneration is the per-market evaluate wave in which this lane was last observed (process lifetime, 0 = not yet observed in this process); a lane whose value is below its market peers is stale. desired/effective are what the signed activation of that wave said for this lane. start is present only when trigger is ENQUEUED; outcome and abnormal only when start is ADMITTED; refusal only when outcome is REFUSED.",
+        "description": "Read-only state of one family lane. health null means the lane is unobserved (no lane runtime yet, or the engine was unreachable); then only the key and the frozen defaults OFF/OFF/UNOBSERVED are present. cycleGeneration is the per-market evaluate wave in which this lane was last observed (process lifetime, 0 = not yet observed in this process); a lane whose value is below its market peers is stale. desired/effective are what the signed activation of that wave said for this lane. start is present only when trigger is ENQUEUED; outcome and abnormal only when start is ADMITTED; refusal only when outcome is REFUSED. runtime is SHADOW only for an observed OFF/OFF lane that a valid digest-pinned shadow manifest names (a112 7.3.1 — a read-only counterfactual that never promotes); shadowOutcome is present exactly then.",
         "additionalProperties": false,
-        "required": ["market", "family", "laneId", "laneVersion", "horizon", "desired", "effective", "runtime", "health", "consecutiveFailures", "latchRevision", "firstFailure", "cycleGeneration", "trigger", "start", "outcome", "refusal", "abnormal", "pending", "dropped", "abandoned", "policyVersion", "cycleDeadlineMs", "nextDueAt", "restartNotBefore", "snapshotDigest", "evidenceDigest"],
+        "required": ["market", "family", "laneId", "laneVersion", "horizon", "desired", "effective", "runtime", "health", "consecutiveFailures", "latchRevision", "firstFailure", "cycleGeneration", "trigger", "start", "outcome", "refusal", "abnormal", "pending", "dropped", "abandoned", "policyVersion", "cycleDeadlineMs", "nextDueAt", "restartNotBefore", "snapshotDigest", "evidenceDigest", "shadowOutcome"],
         "properties": {
           "market": {"type": "string", "enum": ["KR", "US"]},
           "family": {"type": "string", "enum": ["CONTINUATION", "REVERSAL", "WEEKLY_VALUE", "BREAKOUT_RETEST"]},
@@ -2638,7 +2638,7 @@
           "horizon": {"type": "string", "enum": ["SHORT", "WEEKLY"]},
           "desired": {"$ref": "#/components/schemas/StrategyRuntimeState"},
           "effective": {"$ref": "#/components/schemas/StrategyRuntimeState"},
-          "runtime": {"type": "string", "enum": ["UNOBSERVED"]},
+          "runtime": {"type": "string", "enum": ["UNOBSERVED", "SHADOW"]},
           "health": {"type": ["string", "null"], "enum": ["HEALTHY", "DEGRADED", "LATCHED", null]},
           "consecutiveFailures": {"type": "integer", "minimum": 0},
           "latchRevision": {"type": "integer", "minimum": 0},
@@ -2657,7 +2657,8 @@
           "nextDueAt": {"type": ["string", "null"], "format": "date-time"},
           "restartNotBefore": {"type": ["string", "null"], "format": "date-time"},
           "snapshotDigest": {"type": ["string", "null"], "maxLength": 256},
-          "evidenceDigest": {"type": ["string", "null"], "maxLength": 256}
+          "evidenceDigest": {"type": ["string", "null"], "maxLength": 256},
+          "shadowOutcome": {"type": ["string", "null"], "description": "Counterfactual of a SHADOW lane for its latest evaluate wave: WOULD_EMIT (an owned sealed proposal - the lane would have emitted had it been ON), NOT_THIS_LANE (a proposal claimed this lane but its seal or family does not hold), NO_INPUT (no proposal claimed this lane). null whenever runtime is not SHADOW, including whenever no shadow pin is deployed.", "enum": ["WOULD_EMIT", "NOT_THIS_LANE", "NO_INPUT", null]}
         }
       },
       "StrategyRuntimeCoordinator": {

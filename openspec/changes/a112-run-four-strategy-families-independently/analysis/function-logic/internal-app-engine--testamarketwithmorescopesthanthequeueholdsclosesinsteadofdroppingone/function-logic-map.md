@@ -1,7 +1,7 @@
 # Function Logic Map: `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne (시험)`
 
 - Source: `internal/app/engine/a112_coordinator_test.go`
-- Source SHA-256: `60d5adbcf550c3ff422046d010bfe037481c7fa39e5b1561afb5c1d19a1f2115`
+- Source SHA-256: `8581d7275bae005df65081299b204c1eeecb6f2ad6234aa4b00748538f04ad73`
 - Signature: `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne(params=1, results=0)`
 - Source range: `44:1`–`80:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 repin-1e25b3a3).
@@ -63,3 +63,5 @@
 ## Safety conclusion
 
 - 시험 코드 — 생산 경로 없음.
+
+a112 7.3.1 SHADOW 로트 — 같은 파일의 다른 함수 편집으로 줄만 밀림(본문 불변)

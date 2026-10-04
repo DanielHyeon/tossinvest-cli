@@ -1115,13 +1115,87 @@ SET_3845_TESTS = [
      "TestProductionEvaluateAndProposeCarryExactBreakoutLineage|TestReversalAndWeeklyProposals|TestAWeeklyScopeWithout|TestABreakoutScopeIsAbsence|TestAPairedFourFamilyRouteManifestThatSaysOn",
      "./internal/strategyflow", "./internal/strategyproposal", "./internal/app/engine"],
 ]
+
+# a112 7.3.1 SHADOW 로트(브리프 v3.3 — freeze 종결 2026-10-05): 운반 · 보관 · 단계 · 소거 · 투영 · 적재기 · worker 판정 · 검증기 · wrapper.
+_MC = "internal/app/engine/strategy_market_coordinator.go"
+_PA = "internal/app/engine/strategy_proposal_authority.go"
+_ES = "internal/app/engine/strategy_entry_supervisor.go"
+_LR = "internal/app/engine/strategy_lane_runtime.go"
+_LS = "internal/app/engine/strategy_lane_shadow.go"
+_LP = "internal/app/engine/strategy_lane_projection.go"
+_RP = "internal/app/engine/strategy_runtime_projection.go"
+_SH = "internal/strategyshadow/shadow.go"
+_SW = "internal/strategyworker/shadow.go"
+_PL = "internal/strategyprojection/lanes.go"
+_SX = "internal/strategyrouter/production_shared_export.go"
+SET_731S = [
+    ("S01 the coordinator stops collecting pre-gate proposals", _MC, "\t\t\tshadow.collect(envelope.Proposal)\n", ""),
+    ("S02 the collision return carries the partial batch", _MC, "return arbitration, refused, strategyShadowBatch{}", "return arbitration, refused, shadow"),
+    ("S03 the normal return carries the absent value", _MC, "\treturn arbitration, refused, shadow\n}", "\treturn arbitration, refused, strategyShadowBatch{}\n}"),
+    ("S04 collectMarket no longer clears the slot on entry", _PA, "\t*shadow = strategyShadowBatch{}\n\tmarket := routes.market", "\tmarket := routes.market"),
+    ("S05 collectMarket drops the binding config", _PA, "*shadow = collected.boundTo(loader.shadowConfig(market, schedule, routes))", "*shadow = collected"),
+    ("S06 collect's recover keeps a stale batch", _PA, "\t\t\t\t\t\tshadow = strategyShadowBatch{}\n", ""),
+    ("S07 the assembly drops the shadow pair", _ES, "proposals: proposalAuthority, schedule: scheduleAuthority, shadow: shadowAuthority}", "proposals: proposalAuthority, schedule: scheduleAuthority}"),
+    ("S08 the cycle hands an empty batch to evaluate", _ES, "\t\tfresh.shadow.forMarket(market)); err != nil {", "\t\tstrategyShadowBatch{}); err != nil {"),
+    ("S09 record no longer keeps the cell", _LR, "\truntime.shadowCells[market] = strategyShadowCell{wave: runtime.waves[market], batch: shadow, activation: activation}", "\t_ = activation"),
+    ("S10 record stamps the previous wave", _LR, "strategyShadowCell{wave: runtime.waves[market], batch", "strategyShadowCell{wave: runtime.waves[market] - 1, batch"),
+    ("S11 a failed cycle no longer discards", _LS, "\t\t\tif !returnedNil {\n\t\t\t\tc.strategyLaneRuntimeIfAny().invalidateShadow(market)\n\t\t\t}\n", ""),
+    ("S12 a late nil starts the step", _LS, "if clk == nil || clk.Now().Sub(started) >= MaximumStrategyCycleLimit {", "if clk == nil {"),
+    ("S13 the limit itself is not a failure", _LS, "clk.Now().Sub(started) >= MaximumStrategyCycleLimit", "clk.Now().Sub(started) > MaximumStrategyCycleLimit"),
+    ("S14 the success flag starts true", _LS, "\t\treturnedNil := false\n", "\t\treturnedNil := true\n"),
+    ("S15 no single flight", _LS, "\tif runtime.shadowInFlight[market] {\n", "\tif false && runtime.shadowInFlight[market] {\n"),
+    ("S16 publish ignores the epoch", _LS, "if runtime.shadowEpochs[market] != epoch || runtime.shadowCells[market].wave != wave {", "if runtime.shadowCells[market].wave != wave {"),
+    ("S17 publish ignores the wave", _LS, "if runtime.shadowEpochs[market] != epoch || runtime.shadowCells[market].wave != wave {", "if runtime.shadowEpochs[market] != epoch {"),
+    ("S18 the step deadline never fires", _LS, "clk.Sleep(stepCtx, strategyShadowStepDeadline)", "clk.Sleep(stepCtx, 1000*strategyShadowStepDeadline)"),
+    ("S19 the step does not recover its own panic", _LS, "\tdefer func() {\n\t\tif recover() != nil {\n\t\t\tresult = strategyShadowStepResult{}\n\t\t}\n\t}()\n\tconfig := cell.batch.config", "\tconfig := cell.batch.config"),
+    ("S20 the step shadows ON lanes too", _LS, "|| !lane.ShadowEligible(cell.activation) {", "{"),
+    ("S21 an unusable manifest leaves the old observation", _LS, "\tif err != nil || !shadow.Verified() {\n\t\treturn strategyShadowStepResult{ok: true, observations: observations}\n\t}", "\tif err != nil || !shadow.Verified() {\n\t\treturn strategyShadowStepResult{}\n\t}"),
+    ("S22 usable ignores expiry", _LS, "observation.wave == latestWave && now.Before(observation.expiresAt) &&", "observation.wave == latestWave &&"),
+    ("S23 usable ignores age", _LS, " && now.Sub(observation.observedAt) < strategyShadowObservationMaxAge", ""),
+    ("S24 usable accepts the age limit itself", _LS, "now.Sub(observation.observedAt) < strategyShadowObservationMaxAge", "now.Sub(observation.observedAt) <= strategyShadowObservationMaxAge"),
+    ("S25 usable ignores the wave", _LS, "observation.wave == latestWave && now.Before", "now.Before"),
+    ("S26 the age limit is a copied number", _LS, "strategyShadowObservationMaxAge = 2 * (DefaultStrategyCycleLimit + MaximumStrategyCycleLimit + strategyShadowStepDeadline)", "strategyShadowObservationMaxAge = 10 * time.Second"),
+    ("S27 invalidate keeps the observation", _LS, "\truntime.shadowEpochs[market]++\n\tdelete(runtime.shadowObserved, market)\n", "\truntime.shadowEpochs[market]++\n"),
+    ("S28 invalidate keeps the epoch", _LS, "\truntime.shadowEpochs[market]++\n\tdelete(runtime.shadowObserved, market)\n", "\tdelete(runtime.shadowObserved, market)\n"),
+    ("S29 the accessor never finds the runtime", _LS, "\treturn c.strategyLanes\n}", "\treturn nil\n}"),
+    ("S30 the projection shadows an ON observation", _LP, "if shadow != nil && observation.Desired == strategyrouter.StateOff && observation.Effective == strategyrouter.StateOff {", "if shadow != nil {"),
+    ("S31 the abandoned market still shows SHADOW", _RP, "if ok && worker.AbandonedEvaluation {", "if false && worker.AbandonedEvaluation {"),
+    ("L01 the loader ignores revocation", _SH, "\tif manifest.Revoked {\n", "\tif false && manifest.Revoked {\n"),
+    ("L02 expiry boundary moves", _SH, "\tif !now.Before(expires) {\n", "\tif now.After(expires) {\n"),
+    ("L03 the build binding is dropped", _SH, "\t\tfieldCheck{\"build_digest\", body.BuildDigest != config.BuildDigest},\n", ""),
+    ("L04 duplicates pass", _SH, "\t\tif seen[key] {\n", "\t\tif false && seen[key] {\n"),
+    ("L05 the read error keeps the route sentinel", _SH, "%w: manifest file %s: %v\", ErrProductionFamilyShadowUnavailable, name, err)", "%w: manifest file %s: %w\", ErrProductionFamilyShadowUnavailable, name, err)"),
+    ("L06 the undeclared check is dropped", _SH, ("\tif strings.TrimSpace(config.ManifestDigest) == \"\" {\n\t\treturn FamilyShadow{}, fmt.Errorf(\"%w: manifest_digest pin is empty\", ErrProductionFamilyShadowUndeclared)\n\t}\n\tif ctx == nil {", ), ("\tif ctx == nil {",)),
+    ("W01 the verdict ignores the seal", _SW, "\tif !worker.owns(input.proposal) {\n", "\tif false && !worker.owns(input.proposal) {\n"),
+    ("W02 eligibility is OFF or OFF", _SW, "worker.Desired(activation) == strategyrouter.StateOff && worker.Effective(activation) == strategyrouter.StateOff", "worker.Desired(activation) == strategyrouter.StateOff || worker.Effective(activation) == strategyrouter.StateOff"),
+    ("W03 a broken seal outranks an owned input", _SW, "\t\tcase ShadowWouldEmit:\n\t\t\treturn ShadowWouldEmit\n", "\t\tcase ShadowWouldEmit:\n\t\t\toutcome = ShadowWouldEmit\n"),
+    ("V01 the validator lets SHADOW promote", _PL, "if shadow && (lane.Desired != StateOff || lane.Effective != StateOff || lane.Health == nil || lane.CycleGeneration == 0) {", "if shadow && (lane.Health == nil || lane.CycleGeneration == 0) {"),
+    ("V02 the validator lets an outcome stand alone", _PL, "if (lane.ShadowOutcome != nil) != shadow ||", "if false && (lane.ShadowOutcome != nil) != shadow ||"),
+    ("X01 the shared descriptors lose their order", _SX, "\tsort.Slice(lanes, func(i, j int) bool { return lanes[i].Family < lanes[j].Family })\n", ""),
+    # 첫 판 S07 · S11 · S12 는 쓰이지 않는 변수로 BUILD-FAIL(측정 아님) — 같은 결함을 컴파일되는 모양으로 다시 낸다.
+    ("S07b the assembly carries only the KR pair", _ES, "schedule: scheduleAuthority, shadow: shadowAuthority}", "schedule: scheduleAuthority, shadow: strategyShadowPair{kr: shadowAuthority.kr}}"),
+    ("S11b a failed cycle no longer discards", _LS, "\t\t\t\tc.strategyLaneRuntimeIfAny().invalidateShadow(market)\n", "\t\t\t\t_ = c.strategyLaneRuntimeIfAny()\n"),
+    ("S30b the projection shadows an ON observation", _LP, "if shadow != nil && observation.Desired == strategyrouter.StateOff && observation.Effective == strategyrouter.StateOff {", "if shadow != nil && (observation.Desired == strategyrouter.StateOff || true) {"),
+    ("X01b the shared descriptors lose their order", _SX, "func(i, j int) bool { return lanes[i].Family < lanes[j].Family }", "func(i, j int) bool { return false }"),
+    ("S12b a late nil starts the step", _LS, "clk.Now().Sub(started) >= MaximumStrategyCycleLimit {", "clk.Now().Sub(started) >= 1000*MaximumStrategyCycleLimit {"),
+]
+SET_731S_TESTS = [
+    ["go", "test", "-trimpath=false", "-tags", "tossos_testseams", "-count=1", "-run",
+     "Shadow|TheRouterRuntimeStays|TheCoordinatorCarries|CollectMarketCarries|CollectReturnsTheShadowPair|TheCoordinatorCollectsWithOneStatement|TheMarketCycleCarries|TheLaneRuntimeOnlyStores|TheCycleClosureStarts|TheRemainingCarry|ALateNil|AFailedCycle|AFailingShadow|AStuckShadow|ARestartNever|TheNextWave|WithoutANewWave|TheGapBetween|AMarketWhoseEvaluation|OnlyOneShadow|NeitherTheStep|CentralIntegrityKeeps|OnlyTheAllowedFunctions|ALaunderingAccessor",
+     "./internal/app/engine"],
+    # 소스 동결 시험은 뺀다 — 이 패키지의 어떤 변이도 동결이 잡아 원장이 「행동이 잡았다」 를 말하지 못하게 된다(동결은 따로 GREEN 확인).
+    ["go", "test", "-trimpath=false", "-count=1", "-skip", "TestTheShadowPackageSourceIsFrozen", "./internal/strategyshadow"],
+    ["go", "test", "-trimpath=false", "-tags", "tossos_testseams", "-count=1", "-run", "Shadow", "./internal/strategyworker"],
+    ["go", "test", "-trimpath=false", "-count=1", "-run", "Shadow", "./internal/strategyprojection", "./internal/httpapi"],
+    ["go", "test", "-trimpath=false", "-count=1", "-run", "Shared", "./internal/strategyrouter"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS), "8.8.4-A": (SET_884A, SET_884A_TESTS), "8.8.4-B": (SET_884B, SET_884B_TESTS), "7.3.1-R2": (SET_731R2, SET_731R2_TESTS), "8.5-R": (SET_85R, SET_85R_TESTS), "8.5-R-full": (SET_85R_FULL, SET_85R_FULL_TESTS), "8.2-G": (SET_82G, SET_82G_TESTS), "3.8-4.5": (SET_3845, SET_3845_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS), "8.8.4-A": (SET_884A, SET_884A_TESTS), "8.8.4-B": (SET_884B, SET_884B_TESTS), "7.3.1-R2": (SET_731R2, SET_731R2_TESTS), "8.5-R": (SET_85R, SET_85R_TESTS), "8.5-R-full": (SET_85R_FULL, SET_85R_FULL_TESTS), "8.2-G": (SET_82G, SET_82G_TESTS), "3.8-4.5": (SET_3845, SET_3845_TESTS), "7.3.1-S": (SET_731S, SET_731S_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측
@@ -1170,7 +1244,7 @@ def main() -> None:
     copy.mkdir(parents=True)
     # 사본은 HEAD 커밋 트리 + 이 로트가 넘긴 파일(own)뿐이다 — 병행 세션의 미커밋 편집이 사본에 섞이면 대조군부터
     # 깨지고(2026-09-30 실측: 남의 미커밋 journal 편집이 남의 미추적 파일을 참조), 섞인 채 GREEN 이면 무엇을 쟀는지 모른다.
-    archive = subprocess.run(["git", "archive", "HEAD", "go.mod", "go.sum", "internal", "cmd", "tools", "openspec"], cwd=ROOT,
+    archive = subprocess.run(["git", "archive", "HEAD", "go.mod", "go.sum", "internal", "cmd", "tools", "openspec", "docs/api"], cwd=ROOT,
                              capture_output=True, check=True).stdout
     subprocess.run(["tar", "-x", "-C", str(copy)], input=archive, check=True)
     for rel in own:

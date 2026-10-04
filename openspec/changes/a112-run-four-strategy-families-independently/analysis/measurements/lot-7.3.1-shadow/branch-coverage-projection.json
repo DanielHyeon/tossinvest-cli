@@ -1,0 +1,193 @@
+{
+ "package": "github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection",
+ "tests_run": 7,
+ "failed_tests": [],
+ "union_passed": true,
+ "failures": {},
+ "bundles": {
+  "internal-strategyprojection--validatelane": {
+   "B1": {
+    "kind": "if",
+    "line": 299,
+    "column": 2,
+    "block": "299.111-301.3",
+    "entered_by": [
+     "TestValidateRefusesMalformedLaneAndCoordinatorChildren",
+     "TestValidateRefusesShadowOutsideTheOneCrossRule"
+    ],
+    "union": true
+   },
+   "B2": {
+    "kind": "if",
+    "line": 305,
+    "column": 2,
+    "block": "305.123-307.3",
+    "entered_by": [
+     "TestValidateRefusesShadowOutsideTheOneCrossRule"
+    ],
+    "union": true
+   },
+   "B3": {
+    "kind": "if",
+    "line": 308,
+    "column": 2,
+    "block": "308.134-310.3",
+    "entered_by": [
+     "TestValidateRefusesShadowOutsideTheOneCrossRule"
+    ],
+    "union": true
+   },
+   "B4": {
+    "kind": "if",
+    "line": 313,
+    "column": 2,
+    "block": "313.110-315.3",
+    "entered_by": [
+     "TestValidateRefusesMalformedLaneAndCoordinatorChildren"
+    ],
+    "union": true
+   },
+   "B5": {
+    "kind": "if",
+    "line": 316,
+    "column": 2,
+    "block": "316.24-322.31",
+    "entered_by": [
+     "TestStorePublishesOnlyValidatedImmutablePairedSnapshots",
+     "TestValidateRefusesMalformedLaneAndCoordinatorChildren"
+    ],
+    "union": true
+   },
+   "B6": {
+    "kind": "if",
+    "line": 318,
+    "column": 3,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B7": {
+    "kind": "if",
+    "line": 327,
+    "column": 2,
+    "block": "327.50-329.3",
+    "entered_by": [
+     "TestValidateRefusesMalformedLaneAndCoordinatorChildren"
+    ],
+    "union": true
+   },
+   "B8": {
+    "kind": "if",
+    "line": 330,
+    "column": 2,
+    "block": "330.131-332.3",
+    "entered_by": [
+     "TestValidateRefusesMalformedLaneAndCoordinatorChildren"
+    ],
+    "union": true
+   },
+   "B9": {
+    "kind": "if",
+    "line": 333,
+    "column": 2,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B10": {
+    "kind": "if",
+    "line": 339,
+    "column": 2,
+    "block": "339.58-341.3",
+    "entered_by": [
+     "TestValidateRefusesMalformedLaneAndCoordinatorChildren"
+    ],
+    "union": true
+   },
+   "B11": {
+    "kind": "if",
+    "line": 342,
+    "column": 2,
+    "block": "342.25-344.59",
+    "entered_by": [],
+    "union": false
+   },
+   "B12": {
+    "kind": "if",
+    "line": 343,
+    "column": 3,
+    "block": null,
+    "entered_by": [],
+    "union": null
+   },
+   "B13": {
+    "kind": "if",
+    "line": 349,
+    "column": 2,
+    "block": "349.52-351.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B14": {
+    "kind": "if",
+    "line": 352,
+    "column": 2,
+    "block": "352.67-354.3",
+    "entered_by": [
+     "TestValidateRefusesMalformedLaneAndCoordinatorChildren"
+    ],
+    "union": true
+   },
+   "B15": {
+    "kind": "if",
+    "line": 355,
+    "column": 2,
+    "block": "355.69-357.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B16": {
+    "kind": "if",
+    "line": 359,
+    "column": 2,
+    "block": "359.57-361.3",
+    "entered_by": [
+     "TestValidateRefusesMalformedLaneAndCoordinatorChildren"
+    ],
+    "union": true
+   },
+   "B17": {
+    "kind": "if",
+    "line": 362,
+    "column": 2,
+    "block": "362.75-364.3",
+    "entered_by": [],
+    "union": false
+   }
+  },
+  "internal-strategyprojection--clonelanes": {
+   "B1": {
+    "kind": "if",
+    "line": 435,
+    "column": 2,
+    "block": "435.18-437.3",
+    "entered_by": [],
+    "union": false
+   },
+   "B2": {
+    "kind": "range",
+    "line": 439,
+    "column": 2,
+    "block": "439.33-449.3",
+    "entered_by": [
+     "TestCloneCarriesRuntimeIdentityWithoutSharingIt",
+     "TestCloneDeepCopiesLaneAndCoordinatorChildren",
+     "TestStorePublishesOnlyValidatedImmutablePairedSnapshots",
+     "TestTheShadowVocabularyAndTheWireShape",
+     "TestValidateRefusesMalformedLaneAndCoordinatorChildren"
+    ],
+    "union": true
+   }
+  }
+ }
+}

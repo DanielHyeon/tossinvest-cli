@@ -67,3 +67,19 @@ func AllFourFamiliesForTest(market Market) map[string]bool {
 	}
 	return promoted
 }
+
+// FamilyActivationDesiredOnlyForTest 는 desired ON · effective OFF(사람이 켜기로 했지만 아직 서지 않은 상태 — 검증기가 받는 정당한 서술자)를
+// 그 레인들에 둔 활성화다(a112 7.3.1: 「OFF 레인」 술어가 Desired ∧ Effective 둘 다를 보는지 재려면 두 값이 갈린 입력이 있어야 한다).
+func FamilyActivationDesiredOnlyForTest(market Market, generation uint64, desiredOnly map[string]bool) FamilyActivation {
+	activation := FamilyActivationForTest(market, generation, nil)
+	if !activation.Verified() {
+		return FamilyActivation{}
+	}
+	for key, descriptor := range activation.state {
+		if desiredOnly[key.laneID] {
+			descriptor.Desired = StateOn
+			activation.state[key] = descriptor
+		}
+	}
+	return activation
+}

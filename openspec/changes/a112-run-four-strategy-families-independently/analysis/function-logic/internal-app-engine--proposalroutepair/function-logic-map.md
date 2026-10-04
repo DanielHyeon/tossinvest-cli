@@ -3,7 +3,7 @@
 - Source: `internal/app/engine/strategy_proposal_authority_test.go` (84-110)
 - Function: `proposalRoutePair` in package `engine`
 - Signature: `proposalRoutePair(params=2, results=1)`
-- File SHA-256: `4acb8506cc32d2cc5fd4eda1a5366152ba7dcf92e704d078ceced5fe268513ea`
+- File SHA-256: `d05d11be42f3538802baec08718c10782cea1007f608bac95ad206b16a9b57b0`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file.
 - AST evidence: `ast.json` — AST branches 3.
 - Risk scan: `risk-pattern-report.md`.
@@ -89,3 +89,5 @@ Exact AST return positions: 107:3, 109:2.
 테스트 전용 픽스처다. production 동작을 만들지 않는다. 이 변경은 픽스처를 승인된
 매니페스트 계약에 맞춘 것이며, 픽스처를 느슨하게 해서 테스트를 통과시킨 것이 아니다 —
 반대로, 픽스처가 없던 요구(승인된 채점 권한)를 이제 갖춰야만 통과한다.
+
+a112 7.3.1 SHADOW 로트 — 같은 파일의 다른 함수 편집으로 줄만 밀림(본문 불변)

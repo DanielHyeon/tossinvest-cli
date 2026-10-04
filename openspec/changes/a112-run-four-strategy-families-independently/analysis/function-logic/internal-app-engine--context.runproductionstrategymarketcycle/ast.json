@@ -1,16 +1,16 @@
 {
   "file": "internal/app/engine/strategy_entry_supervisor.go",
-  "source_sha256": "6f1f6804cfd437116c16a48d1526327c28360433f09e0ba3567eb3537442ee5b",
+  "source_sha256": "9cb510c1c9c7f44ac109de5fd8ddac8e6c559adb4d654b1acd65dce19cc9e577",
   "package": "engine",
   "function": "runProductionStrategyMarketCycle",
   "receiver": "Context",
   "signature": "Context.runProductionStrategyMarketCycle(params=3, results=1)",
   "start": {
-    "line": 514,
+    "line": 516,
     "column": 1
   },
   "end": {
-    "line": 573,
+    "line": 579,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 516,
+        "line": 518,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 540,
+        "line": 542,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 543,
+        "line": 548,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 549,
+        "line": 555,
         "column": 2
       }
     }
@@ -51,35 +51,35 @@
     {
       "kind": "return",
       "at": {
-        "line": 517,
+        "line": 519,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 541,
+        "line": 543,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 547,
+        "line": 553,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 550,
+        "line": 556,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 572,
+        "line": 578,
         "column": 2
       }
     }
@@ -88,7 +88,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 515,
+        "line": 517,
         "column": 16
       },
       "text": "c.refreshPairedStrategyEntryProductionAssembly"
@@ -96,7 +96,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 539,
+        "line": 541,
         "column": 16
       },
       "text": "c.productionStrategyLanes"
@@ -104,7 +104,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 543,
+        "line": 548,
         "column": 12
       },
       "text": "lanes.evaluate"
@@ -112,7 +112,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 544,
+        "line": 549,
         "column": 3
       },
       "text": "restore.Activation.Generation"
@@ -120,7 +120,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 544,
+        "line": 549,
         "column": 3
       },
       "text": "fresh.schedule.forMarket"
@@ -128,7 +128,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 545,
+        "line": 550,
         "column": 3
       },
       "text": "familyActivation"
@@ -136,7 +136,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 545,
+        "line": 550,
         "column": 3
       },
       "text": "fresh.proposals.forMarket"
@@ -144,7 +144,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 546,
+        "line": 551,
         "column": 3
       },
       "text": "strategyLaneInputs"
@@ -152,7 +152,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 546,
+        "line": 551,
         "column": 36
       },
       "text": "fresh.proposals.forMarket"
@@ -160,7 +160,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 572,
+        "line": 552,
+        "column": 3
+      },
+      "text": "fresh.shadow.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 578,
         "column": 9
       },
       "text": "dispatchStrategyMarketHandoffs"
@@ -168,7 +176,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 572,
+        "line": 578,
         "column": 72
       },
       "text": "dispatchHandoffs"
@@ -176,7 +184,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 572,
+        "line": 578,
         "column": 72
       },
       "text": "fresh.proposals.forMarket"
@@ -186,21 +194,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 515,
+        "line": 517,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 539,
+        "line": 541,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 543,
+        "line": 548,
         "column": 5
       }
     }

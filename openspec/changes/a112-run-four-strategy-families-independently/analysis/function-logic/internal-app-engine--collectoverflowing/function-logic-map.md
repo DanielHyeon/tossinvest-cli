@@ -1,15 +1,15 @@
-# Function Logic Map: `collectOverflowing (시험 도우미)`
+# Function Logic Map: `collectOverflowing (시험)`
 
 - Source: `internal/app/engine/a112_coordinator_test.go`
-- Source SHA-256: `60d5adbcf550c3ff422046d010bfe037481c7fa39e5b1561afb5c1d19a1f2115`
+- Source SHA-256: `8581d7275bae005df65081299b204c1eeecb6f2ad6234aa4b00748538f04ad73`
 - Signature: `collectOverflowing(params=4, results=1)`
 - Source range: `85:1`–`130:2`
-- AST evidence: `ast.json` — **편집 뒤**(a112 repin-1e25b3a3).
+- AST evidence: `ast.json` — **편집 뒤**(a112 7.3.1 SHADOW).
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
-- KR 에 종목을 원하는 수만큼 두고 각 종목이 지속형 한 레인으로만 제안하게 하는 시험 도우미 — configure 는 수집 직전에만 적재기를 바꾼다.
+- 시험 코드 — 생산 판정 없음.
 
 ## Branches and early returns
 
@@ -17,12 +17,12 @@
 
 | Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
-| B1 | range | 90:2 | 종목마다 경로 항목 생성 |
-| B2 | if | 92:3 | 소유자 열쇠 생성 실패 → Fatal |
-| B3 | if | 98:3 | 후보 경로 픽스처 실패 → Fatal |
-| B4 | range | 115:3 | 제안 적재 스텁의 대상 순회 |
-| B5 | if | 119:4 | 수락 결과 픽스처 실패 → Fatal |
-| B6 | range | 126:2 | **(새)** configure 적용 |
+| B1 | range | 90:2 | 시험 자신의 갈래 |
+| B2 | if | 92:3 | 시험 자신의 갈래 |
+| B3 | if | 98:3 | 시험 자신의 갈래 |
+| B4 | range | 115:3 | 시험 자신의 갈래 |
+| B5 | if | 119:4 | 시험 자신의 갈래 |
+| B6 | range | 126:2 | 시험 자신의 갈래 |
 
 ## Calls and live bindings
 
@@ -53,15 +53,16 @@
 | `target.Approved.Symbol` | 122:11 |
 | `strategyproposal.ProductionBatchAuthorityMultiLaneForTest` | 124:10 |
 | `change` | 127:3 |
-| `loader.collect` | 129:9 |
-| `context.Background` | 129:24 |
-| `routeReadySchedulePair` | 129:46 |
-| `proposalFXPair` | 129:83 |
+| `a112PairOnly` | 129:9 |
+| `loader.collect` | 129:22 |
+| `context.Background` | 129:37 |
+| `routeReadySchedulePair` | 129:59 |
+| `proposalFXPair` | 129:96 |
 
 ## State mutations and fallbacks
 
-- 시험 코드.
+- 시험 fixture.
 
 ## Safety conclusion
 
-- 시험 코드 — 생산 경로 없음.
+- 시험 코드 — 실주문 · 원장 쓰기 없음(fixture 원장 · Gateway 스파이).

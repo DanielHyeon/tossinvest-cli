@@ -1,0 +1,118 @@
+{
+  "file": "internal/app/engine/strategy_lane_runtime.go",
+  "source_sha256": "95611377145456c4906da5ebb95eca97dd025df0c1fb255ebc443c1ce12d5d36",
+  "package": "engine",
+  "function": "strategyLaneInputs",
+  "signature": "strategyLaneInputs(params=2, results=1)",
+  "start": {
+    "line": 266,
+    "column": 1
+  },
+  "end": {
+    "line": 279,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 268,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 278,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 44
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 12
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 25
+      },
+      "text": "strategyRouterMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 25
+      },
+      "text": "entry.route.approved.Symbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 25
+      },
+      "text": "entry.route.route.Request"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 274,
+        "column": 20
+      },
+      "text": "entry.authority.SnapshotDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 275,
+        "column": 53
+      },
+      "text": "entry.authority.Proposal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 267,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 269,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

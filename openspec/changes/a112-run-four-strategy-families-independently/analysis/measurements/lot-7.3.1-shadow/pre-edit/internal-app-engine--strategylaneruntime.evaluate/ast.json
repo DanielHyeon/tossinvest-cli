@@ -1,0 +1,355 @@
+{
+  "file": "internal/app/engine/strategy_lane_runtime.go",
+  "source_sha256": "95611377145456c4906da5ebb95eca97dd025df0c1fb255ebc443c1ce12d5d36",
+  "package": "engine",
+  "function": "evaluate",
+  "receiver": "strategyLaneRuntime",
+  "signature": "strategyLaneRuntime.evaluate(params=5, results=1)",
+  "start": {
+    "line": 199,
+    "column": 1
+  },
+  "end": {
+    "line": 258,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 202,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 208,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 228,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 230,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 231,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 244,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 245,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 252,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 203,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 209,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 253,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 257,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 12
+      },
+      "text": "runtime.recoverMarketLanes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 11
+      },
+      "text": "runtime.lanesFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 18
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 50
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 12
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 24
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 7
+      },
+      "text": "lane.Owns"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 3
+      },
+      "text": "join.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 6
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 10
+      },
+      "text": "join.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 10
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 35
+      },
+      "text": "recover"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 26
+      },
+      "text": "runtime.runLane"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 2
+      },
+      "text": "join.Wait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 4
+      },
+      "text": "panic"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 2
+      },
+      "text": "runtime.record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 12
+      },
+      "text": "runtime.persistMarketLatches"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 76
+      },
+      "text": "runtime.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 9
+      },
+      "text": "runtime.staleLatchError"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 208,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 211,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 229,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 232,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 239,
+        "column": 19
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 240,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 252,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 237,
+        "column": 3
+      }
+    }
+  ],
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 238,
+        "column": 4
+      },
+      "text": "join.Done"
+    },
+    {
+      "kind": "defer",
+      "at": {
+        "line": 239,
+        "column": 4
+      }
+    }
+  ]
+}

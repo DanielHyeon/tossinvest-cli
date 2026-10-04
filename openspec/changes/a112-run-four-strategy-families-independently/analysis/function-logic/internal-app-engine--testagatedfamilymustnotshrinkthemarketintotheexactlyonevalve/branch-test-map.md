@@ -1,6 +1,6 @@
 # Branch Test Map: `TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve (시험)`
 
-- Source SHA-256: `53d84c5a06d2575f92e11247c98ef92cb4eba75f707bd21d2afa55840d73fe7c`; AST branch locations are authoritative.
+- Source SHA-256: `49511cdebc1ba5506737d375b775aa2a533b358701fb531f33f41051f2400fcf`; AST branch locations are authoritative.
 - Revision: **modified (a112 repin-1e25b3a3, 2026-10-01).** 편집 전 8 분기 → 9(B9 새로, 끝에 덧붙음). 8.5 응답 로트 ⑦: FAMILY_GATE_CLOSED 닫힘이 판정 활성화를 싣는지 단언(보이스 3 P2-1 — 변이 E9).
 - 편집 전 번들: `analysis/measurements/repin-1e25b3a3/pre-edit/internal-app-engine--testagatedfamilymustnotshrinkthemarketintotheexactlyonevalve/`. 변이 원장 `analysis/measurements/lot-8.5-R/mutation-8.5-R.tsv`.
 

@@ -1,0 +1,365 @@
+{
+  "file": "internal/app/engine/a112_lane_latch_durability_test.go",
+  "source_sha256": "bf27865d0f81e8a13f1443fa18f697676ed951c8054bffb5f2355da7aa1295de",
+  "package": "engine",
+  "function": "TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther",
+  "signature": "TestTwoMarketsEvaluateTheirOwnLanesConcurrentlyWithoutTreadingOnEachOther(params=1, results=0)",
+  "start": {
+    "line": 395,
+    "column": 1
+  },
+  "end": {
+    "line": 435,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 401,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 408,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "for",
+      "at": {
+        "line": 413,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 416,
+        "column": 5
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 426,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 429,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 432,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 418,
+        "column": 6
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 396,
+        "column": 13
+      },
+      "text": "laneLatchFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 397,
+        "column": 9
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 398,
+        "column": 13
+      },
+      "text": "mustProductionStrategyLanes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 8
+      },
+      "text": "runtime.lanesFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 400,
+        "column": 2
+      },
+      "text": "latchOneLane"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 401,
+        "column": 12
+      },
+      "text": "runtime.evaluate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 402,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 405,
+        "column": 11
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 406,
+        "column": 14
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 409,
+        "column": 3
+      },
+      "text": "wg.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 6
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 411,
+        "column": 10
+      },
+      "text": "wg.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 416,
+        "column": 15
+      },
+      "text": "runtime.evaluate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 423,
+        "column": 2
+      },
+      "text": "close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 424,
+        "column": 2
+      },
+      "text": "wg.Wait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 425,
+        "column": 2
+      },
+      "text": "close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 427,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 429,
+        "column": 5
+      },
+      "text": "Latched"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 429,
+        "column": 5
+      },
+      "text": "laneByKey"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 429,
+        "column": 27
+      },
+      "text": "kr.Key"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 430,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 432,
+        "column": 12
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 433,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 396,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 397,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 398,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 399,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 401,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 405,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 406,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 413,
+        "column": 8
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 413,
+        "column": 32
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 416,
+        "column": 8
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 432,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 410,
+        "column": 3
+      }
+    }
+  ],
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 411,
+        "column": 4
+      },
+      "text": "wg.Done"
+    }
+  ]
+}

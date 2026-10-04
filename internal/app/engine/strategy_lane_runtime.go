@@ -85,6 +85,16 @@ type strategyLaneRuntime struct {
 	// unmatched 는 이 빌드에 없는 레인을 가리키는 기록이다. 버리지 않고 들고
 	// 있는 이유는 그것이 복구를 요청할 수 있는 유일한 손잡이이기 때문이다.
 	unmatched []journal.StrategyLaneLatch
+	// 아래는 a112 7.3.1 SHADOW 상태다(전부 mu 아래, 프로세스 수명 — 원장 · 파일에 쓰지 않으므로 재시작이 되살리지 않는다).
+	//   shadowCells: 시장별 칸 하나 {wave, batch, activation} — record 가 파도를 올리는 같은 임계 구역에서 덮어쓴다(누적 없음).
+	//   shadowEpochs: 실패한 주기마다 오르는 세대 — 게시는 시작 때 복사한 세대 · 파도와 같을 때만(CAS).
+	//   shadowObserved: 게시된 관측(시장 → 레인 열쇠). 투영은 shadowObservationUsable 하나로만 쓴다.
+	//   shadowInFlight · shadowSkipped: 시장당 단일 비행과 그때 건너뛴 물결 수(진단).
+	shadowCells    map[StrategyMarket]strategyShadowCell
+	shadowEpochs   map[StrategyMarket]uint64
+	shadowObserved map[StrategyMarket]map[strategyworker.Key]strategyShadowObservation
+	shadowInFlight map[StrategyMarket]bool
+	shadowSkipped  map[StrategyMarket]uint64
 }
 
 // newStrategyLaneRuntime 은 생산 레인 여덟을 세운다.
@@ -97,9 +107,16 @@ func newStrategyLaneRuntime(clk clock.Clock, ledger strategyLaneLedger, accountR
 		return nil
 	}
 	lanes := strategyworker.ProductionLanes(clk)
+	// shadow 맵은 여기서 만든다 — nil 맵 대입은 panic 이고, 그 panic 이 주기 경로(record · 실패 폐기 defer)에서 나면 원래 오류를 덮는다
+	// (브리프 v3.3 N5).
 	return &strategyLaneRuntime{clk: clk, ledger: ledger, accountRef: accountRef, lanes: lanes,
-		observed: make(map[strategyworker.Key]strategyLaneObservation, len(lanes)),
-		latches:  map[strategyworker.Key]journal.StrategyLaneLatch{}}
+		observed:       make(map[strategyworker.Key]strategyLaneObservation, len(lanes)),
+		latches:        map[strategyworker.Key]journal.StrategyLaneLatch{},
+		shadowCells:    make(map[StrategyMarket]strategyShadowCell, 2),
+		shadowEpochs:   make(map[StrategyMarket]uint64, 2),
+		shadowObserved: make(map[StrategyMarket]map[strategyworker.Key]strategyShadowObservation, 2),
+		shadowInFlight: make(map[StrategyMarket]bool, 2),
+		shadowSkipped:  make(map[StrategyMarket]uint64, 2)}
 }
 
 // productionStrategyLanes 는 이 프로세스의 여덟 레인을 돌려준다. 없으면 만든다.
@@ -196,8 +213,10 @@ func strategyFamilyLaneStep(lane *strategyworker.Lane,
 //
 // 자기 제안이 없는 레인도 사이클을 돈다. "이번 물결에 낼 것이 없었다"와
 // "레인이 돌지 않았다"는 다른 뜻이고, 돌지 않은 레인은 관측에서 사라진다.
+//
+// shadow(a112 7.3.1)는 이 물결의 관문 앞 제안 묶음이다. 여기서는 record 로 넘기기만 한다 — 메서드 호출 · 순회 0(AST 핀 ④).
 func (runtime *strategyLaneRuntime) evaluate(ctx context.Context, market StrategyMarket,
-	activationGeneration uint64, promotion strategyrouter.FamilyActivation, inputs []strategyworker.Input,
+	activationGeneration uint64, promotion strategyrouter.FamilyActivation, inputs []strategyworker.Input, shadow strategyShadowBatch,
 ) error {
 	if runtime == nil {
 		return nil
@@ -246,7 +265,7 @@ func (runtime *strategyLaneRuntime) evaluate(ctx context.Context, market Strateg
 			panic(recovered)
 		}
 	}
-	runtime.record(market, observations)
+	runtime.record(market, observations, shadow, promotion)
 	// 남기지 못한 잠금은 오류다. 조용히 넘기면 다음 재시작이 잠긴 레인을 열고,
 	// 그것이 이 태스크가 없애려는 바로 그 동작이다.
 	if err := runtime.persistMarketLatches(ctx, market, activationGeneration, runtime.clk.Now()); err != nil {
@@ -319,7 +338,12 @@ func (runtime *strategyLaneRuntime) runLane(ctx context.Context, lane *strategyw
 //
 // a112 7.3(판정 Q1=(B)): 이 시장의 물결 번호를 하나 올려 이번 관측들에 찍는다. 같은 잠금 안에서 올리고 찍어야 두 물결이 한 번호를
 // 나눠 갖지 않는다. 관측이 없는 호출은 물결이 아니다(번호를 올리지 않음).
-func (runtime *strategyLaneRuntime) record(market StrategyMarket, observations []strategyLaneObservation) {
+//
+// a112 7.3.1(⑤): 같은 잠금 · 파도 증가 바로 뒤에 그 시장의 shadow 칸 {wave, batch, activation} 을 한 번에 덮어쓴다 — 그래서 「파도」 는
+// 묶음을 실어 온 evaluate 의 파도 번호이고 묶음 · 파도 · 활성화는 구성으로 짝이다. 관측이 없는 호출은 칸도 건드리지 않는다.
+func (runtime *strategyLaneRuntime) record(market StrategyMarket, observations []strategyLaneObservation, shadow strategyShadowBatch,
+	activation strategyrouter.FamilyActivation,
+) {
 	if runtime == nil || len(observations) == 0 {
 		return
 	}
@@ -331,6 +355,7 @@ func (runtime *strategyLaneRuntime) record(market StrategyMarket, observations [
 	if runtime.waves[market] < ^uint64(0) {
 		runtime.waves[market]++
 	}
+	runtime.shadowCells[market] = strategyShadowCell{wave: runtime.waves[market], batch: shadow, activation: activation}
 	for _, observation := range observations {
 		observation.Wave = runtime.waves[market]
 		runtime.observed[observation.Key] = observation

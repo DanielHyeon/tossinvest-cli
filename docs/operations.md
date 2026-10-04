@@ -380,6 +380,59 @@ automation을 쓴다.
 활성화를 승인했는가"는 이 필드가 아니라 **핀을 넣은 배포 이력**이 답한다 —
 매니페스트 바이트 자체는 승인자를 증명하지 않는다 [a112 결정 61].
 
+### KR/US SHADOW 관측 — 사람이 만들고 digest로 핀한다(노출을 열지 않는다)
+
+SHADOW는 **OFF 레인의 읽기 전용 반사실**이다: "이 레인이 켜져 있었다면 이번 물결에 봉투를
+냈을까"를 투영(`lanes[].runtime = SHADOW`, `lanes[].shadowOutcome`)에만 보인다
+[a112 7.3.1 · 결정 63 v3]. desired/effective·활성화·조정·dispatch·원장은 바꾸지 않는다 —
+**SHADOW 매니페스트로 주문이 나가는 길은 없다.** 핀이 없는 오늘은 여덟 레인 전부
+`runtime = UNOBSERVED`, `shadowOutcome = null`이다.
+
+각 시장은 config 디렉터리의 `strategy-family-shadow-KR.json`,
+`strategy-family-shadow-US.json`을 소비한다(service UID 소유 regular file, exact mode
+`0400`, non-symlink). 신뢰 핀은 시장마다 하나다.
+
+- `TOSSOS_STRATEGY_FAMILY_SHADOW_KR_MANIFEST_SHA256`
+- `TOSSOS_STRATEGY_FAMILY_SHADOW_US_MANIFEST_SHA256`
+
+바이트는 도구가 만든다(정규 직렬화 등식 — 손으로 쓴 JSON은 거절된다).
+
+```bash
+go run ./tools/a112-family-shadow \
+  -market KR -generation <이전보다 큰 수> \
+  -route-manifest-digest   "$TOSSOS_STRATEGY_LANE_KR_MANIFEST_SHA256" \
+  -calibration-digest      "<경로 권한 파일의 calibration_digest>" \
+  -calendar-version        "<공식 달력 버전>" \
+  -risk-policy-digest      "$TOSSOS_RISK_BUCKET_KR_MANIFEST_SHA256" \
+  -build-digest            "<엔진이 보고하는 BuildDigest>" \
+  -actor "<승인자>" \
+  -approved-at 2026-10-05T00:00:00Z \
+  -issued-at   2026-10-05T00:30:00Z \
+  -expires-at  2026-10-05T23:00:00Z \
+  -shadow CONTINUATION,REVERSAL \
+  -out ~/.config/tossctl/strategy-family-shadow-KR.json.new
+```
+
+결속 다섯(경로 매니페스트·보정·달력·위험 정책·빌드)의 출처는 위 활성화 절의 표와 같다.
+ProtectionReady 하한은 없다(노출이 없으므로). 수명 상한 24시간, 재발급은 위 활성화 절과 같은
+`.new` → 핀 교체 → 이름 바꾸기 → 재시작 순서다. `-shadow`를 비우면 넷 다 OFF다.
+
+언제 SHADOW로 보이나(엔진이 지키는 규칙):
+
+- 그 물결의 활성화가 그 레인을 **OFF/OFF**로 둘 때만이다. 활성화가 켠 레인은 SHADOW가 아니다.
+- 관측은 **그 물결의 것만** 쓴다. 다음 물결이 오면 새 shadow 결과가 게시되기 전까지 잠깐
+  `UNOBSERVED`로 보인다 — 의도된 간극이다(이전 물결을 보여 주면 철회가 늦게 반영된다).
+- 매니페스트 만료 시각이 지나거나, 관측 나이가 74초(=2×(폴 5초+주기 한도 30초+shadow 단계
+  마감 2초))를 넘으면 새 물결이 없어도 `UNOBSERVED`로 돌아간다.
+- 그 시장의 주기가 실패하면(오류·panic·주기 한도 경과) 그 시장의 SHADOW는 즉시 지워진다.
+  supervisor가 그 시장의 평가를 abandon으로 기록한 뒤에는 프로세스가 사는 동안 SHADOW를
+  보이지 않는다.
+- 재시작은 SHADOW를 되살리지 않는다 — 첫 물결 전에는 여덟 레인 전부 `UNOBSERVED`이고,
+  유효한 핀이 있으면 첫 물결에서 매니페스트를 다시 읽는다.
+
+**끄기:** 핀을 env에서 빼고 재시작하면 SHADOW가 사라진다. 이것은 진입·주문과 무관하다
+(SHADOW는 애초에 진입을 열지 않는다). 급히 끄려면 `-revoked` 매니페스트를 배포해도 된다.
+
 ### 교체·회수·복구
 
 - TLS 인증서는 같은 public host SAN을 유지해 교체하고 container를 재생성한다.

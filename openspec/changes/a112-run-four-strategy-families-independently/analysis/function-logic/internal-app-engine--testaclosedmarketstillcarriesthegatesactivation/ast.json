@@ -1,0 +1,326 @@
+{
+  "file": "internal/app/engine/a112_family_gate_test.go",
+  "source_sha256": "49511cdebc1ba5506737d375b775aa2a533b358701fb531f33f41051f2400fcf",
+  "package": "engine",
+  "function": "TestAClosedMarketStillCarriesTheGatesActivation",
+  "signature": "TestAClosedMarketStillCarriesTheGatesActivation(params=1, results=0)",
+  "start": {
+    "line": 260,
+    "column": 1
+  },
+  "end": {
+    "line": 295,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 265,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 266,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 286,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 289,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 292,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 274,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 280,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 25
+      },
+      "text": "familyGateFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 262,
+        "column": 9
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 264,
+        "column": 10
+      },
+      "text": "familyScoresForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 12
+      },
+      "text": "testStrategyProposalLoader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 274,
+        "column": 10
+      },
+      "text": "arbitrationBatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 13
+      },
+      "text": "collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 13
+      },
+      "text": "loader.withStrategyLanes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 55
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 282,
+        "column": 77
+      },
+      "text": "routeReadySchedulePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 283,
+        "column": 3
+      },
+      "text": "arbitrationRoutePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 284,
+        "column": 75
+      },
+      "text": "proposalFXPair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 285,
+        "column": 15
+      },
+      "text": "pair.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 287,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 6
+      },
+      "text": "Verified"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 289,
+        "column": 6
+      },
+      "text": "authority.familyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 290,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 292,
+        "column": 5
+      },
+      "text": "Generation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 292,
+        "column": 5
+      },
+      "text": "authority.familyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 292,
+        "column": 50
+      },
+      "text": "activation.Generation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 34
+      },
+      "text": "Generation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 34
+      },
+      "text": "authority.familyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 77
+      },
+      "text": "activation.Generation"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 261,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 262,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 264,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 267,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 270,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 271,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 277,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 282,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 285,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

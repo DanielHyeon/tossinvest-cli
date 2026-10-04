@@ -90,7 +90,9 @@ func TestSafetyLoopsKeepTheirCadenceThroughEveryEntryFailureKind(t *testing.T) {
 		}
 		// 레인 물결은 시장 주기처럼 따로 돈다 — 멈춘 레인 때문에 마감 시한(30 초)까지 끝나지 않는다.
 		laneWave := make(chan error, 1)
-		go func() { laneWave <- lanes.evaluate(ctx, StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil) }()
+		go func() {
+			laneWave <- lanes.evaluate(ctx, StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil, strategyShadowBatch{})
+		}()
 		synctest.Wait()
 		for index := range ticks {
 			ticks[index].Store(0)

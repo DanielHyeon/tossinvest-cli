@@ -6502,3 +6502,43 @@ build-only(`measurements/gate-8.1-8.3-2026-10-04/build-only-8.6.log`, go build �
 STALE 2(둘 다 착지에 함수 없음 — GONE) · MISSING 8(자기 커밋 아님: 82080177 a127 · 766a8456 a094 — 제목 grep 이 집은 것, 둘 다 새 base 의 조상).
 새 창 1e25b3a3 → HEAD: required 20, **FRESH 20**(게이트 준비 16 + 8.5 응답 로트가 편집한 시험 함수 셋 — 새 경량 번들 · loadFamilyActivation).
 격리 워크트리 게이트 모의 check_analysis rc=0. **단독 커밋**으로 base-commit.txt 를 옮긴다(다음 커밋). 영수증은 SHADOW 로트 착지 뒤 최종 갱신.
+
+## 2026-10-05 7.3.1 구현 로트 — SHADOW(브리프 v3.3 종결판 구현, 생산 편집)
+
+**판정 근거.** 사용자 결정(2026-10-04 선택지 1 — a112 안에서 구축) · 결정 63 v3(digest 핀) · freeze 6라운드 종결(2026-10-05 Manager 선언, 브리프
+`analysis/shadow-2026-10/design-brief.md` v3.3). 구현 단계 RED 후보 R1(두 시계)은 Manager 지시로 이 로트의 RED 에 넣었다.
+
+**순서 · 증거(`analysis/measurements/lot-7.3.1-shadow/`).** Pre-Edit `pre-edit/`(편집 대상 14 — 목록 13 + FLM 이 새로 잡은 `newStrategyLaneRuntime`, 무편집 기준 15,
+HEAD 9e5f3ccf) → RED `red-7.3.1-shadow.log`(컴파일 RED 6 패키지 + 엔진 어휘 census 반전의 행동 RED) → GREEN → 변이 → race `race-7.3.1-shadow.log`(7 패키지 + 엔진 이름 목록
+OK) → verify `verify-7.3.1-shadow.log`(무태그 7 · 태그 4 스위트 ok, FAIL 0, lint OK, race 가드 OK) → 이름 결속 `named-7.3.1-shadow.log` 51/51 → 편집 뒤 번들
+(`harness/render_731s_bundles.py` — 분기 행의 시험 칸은 손으로 고르지 않고 측정 `branch-coverage-*.json`, 측정 노트 `branch-coverage-note.md`) + 같은 파일 줄 밀림
+재기준 18(`shift-result.txt`) · `check-analysis-7.3.1-shadow.log` 통과 → 착지 직전 무편집 15 본문 digest 재대조 15/15 SAME(`no-edit-recheck-at-landing.log`).
+
+**구현.** `internal/strategyshadow`(새 패키지 — digest 핀 적재기 · 정규 바이트 · 0400/소유자/크기 · 24h · 폐기 · 결속 다섯 · 서술자 넷, 자기 sentinel 넷만, 골든 + 생성 함수
+재현 시험 + 소스 동결 + 두 적재기 가드 순서 AST 핀, 활성화 주조 census · 생산 폐포 unsafe/reflect 직접 import 0) · strategyrouter 읽기 전용 wrapper 새 파일
+(`production_shared_export.go`, 기존 함수 무편집) · strategyworker `ShadowInput`(opaque, 생성자 composite literal 하나) · `ShadowVerdict` · `ShadowEligible`(술어 하나) ·
+`Lane.ShadowOutcomeOver` · 엔진 운반(조정자 관문 앞 수집 문장 하나 · 계보 충돌 부재 값 · collectMarket/collect/조립 별도 값 · evaluate 인자 index 5 · record 같은 잠금 칸) ·
+shadow 단계(`strategy_lane_shadow.go` — 성공 플래그 · 경과 판정 · recover 없는 실패 폐기 defer · nil-안전 접근자 · epoch CAS · 단일 비행 · 상수 마감 2s · 자가 recover ·
+나이 상한 74s 유도식) · 투영(판정 함수 하나 · SHADOW 는 관측 OFF/OFF 만) · projection 어휘 {UNOBSERVED, SHADOW} + shadowOutcome · validateLane 교차 규칙 · OpenAPI ·
+도구 `tools/a112-family-shadow` · docs/operations.md 절 · race 목록.
+
+**변이 — 2단(`mutation-7.3.1-S.tsv`).** 정의 47.
+- 1회차: CAUGHT 35 · BUILD-FAIL 5(S07 · S11 · S12 · S30 · X01 — 쓰이지 않는 변수/import 로 컴파일 실패, 측정 아님) · SURVIVED 3(S21 · W02 · W03).
+- 2회차: BUILD-FAIL 다섯을 컴파일되는 같은 결함으로 재정의(S07b · S11b · S12b · S30b · X01b) → 5/5 CAUGHT. W02(술어 OFF∨OFF) · W03(접기 순서)는 시험 공백 —
+  desired ON/effective OFF 행(새 태그 seam `FamilyActivationDesiredOnlyForTest`) · 「소유 뒤 깨진 봉인」 순서 행을 더한 뒤 CAUGHT. S21(쓸 수 없는 매니페스트가 빈 관측 대신
+  아무것도 게시 안 함)은 **동등** — 이전 물결의 관측은 파도 등식이 이미 버리므로 결론이 같고, 그 대체 가드(파도 등식)는 S25 가 CAUGHT 로 못 박는다. 코드 주석을 그 사실로 정정.
+- 결론: 46/47 CAUGHT + S21 동등(대체 가드 S25 결속). 소스 동결 시험은 변이 실행에서 뺐다(어떤 변이든 동결이 잡아 「행동이 잡았다」 를 말하지 못하게 되므로).
+
+**설계 대비 편차 5.**
+1. collectMarket 은 반환 둘이 아니라 **out 인자** — 반환 갈래 열다섯을 손대지 않으려는 선택(High-risk 면적 최소), 운반이 authority 밖이라는 §4 는 그대로. 첫 문장에서 칸을
+   부재 값으로 비워 호출자 초기값과 무관하게 계약을 함수 안에서 닫는다(AST 핀).
+2. **R1 의 「abandon 기록」 은 supervisor 의 `AbandonedEvaluation`(프로세스 수명 고정 표시)이다** — 한 번 abandon 된 시장은 재시작 전까지 SHADOW 를 보이지 않는다(sticky
+   제한 — 표시 전용, 주문 무관). 정밀한 파도 단위 판정은 supervisor 편집이 필요해 택하지 않았다. 거부되는 정상 입력: abandon 뒤의 건강한 SHADOW 관측 전부(그 시장, 그 프로세스).
+3. **process 편차 — Context.Read 의 Pre-Edit 누락.** R1 구현이 `Context.Read`(High-risk 아님 — 읽기 전용 투영)를 편집했는데 Pre-Edit 목록에 없었다(목록 확정 뒤
+   RED 범위에 R1 이 들어온 결과). 편집 전 AST 는 HEAD 9e5f3ccf 사본에서 사후 렌더해 재번호 영수증 `renumber.txt` 로 남겼다(Read: B7 새 · 옛 B7/B8 → B8/B9).
+   같은 영수증이 projection(B3 새) · strategyLaneProjection(B6 새) · validateLane(B2 · B3 새, 뒤 열셋 +2)과 ID 불변 열을 적는다.
+4. 시험 seam 셋(전부 tossos_testseams 빌드): shadow 적재 훅(lane step seam 선례) · `FamilyActivationDesiredOnlyForTest` · testenv `TypeCheckProduction` 이 Types/Defs 도
+   기록(판정 불변, census 가 읽음).
+5. 변이 하네스가 사본에 `docs/api` 를 더 담는다(httpapi 시험이 OpenAPI 를 읽음 — 모든 집합에 무해).
+
+**남는 것.** 착지 뒤 재고정 영수증 최종 갱신 → 0.5 전체 diff gstack 리뷰 → 8.1 · 8.3 · 8.4 → make gate. 운영 shadow 수집은 활성화 로트의 몫(ROADMAP).

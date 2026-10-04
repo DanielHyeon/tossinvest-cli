@@ -1,6 +1,6 @@
 # Branch Test Map: `strategyProposalAuthorityPair.ResultAuthority`
 
-- Source SHA-256: `2c546898bc4178d0ee44238d51fb8e05a4c908cee721041ee24713c4c98ac385`; AST branch locations are authoritative.
+- Source SHA-256: `2e2e7dd7ade2428ad72eddde648e1798c1e6c19b082052a61804c1c226a6dcf6`; AST branch locations are authoritative.
 - Revision: **modified (a112 5.2.2.2, 2026-10-01).** 편집 전 1 분기 → 4: 시장 단위 handoff 하나(`dispatchHandoff().Single()`) 대신 주문 경로와 같은 목록(`dispatchHandoffs`)을 순회하고(B1), 하나라도 거절 · 무효면 시장 준비 안 됨(B2 — 편집 전 B1), 목록이 비면 준비 안 됨(B3), 범위가 둘 이상이거나 활성화 시장이면 범위별 결과를 싣는다(B4).
 - 편집 전 번들: `analysis/measurements/lot-5.2.2.2/pre-edit/internal-app-engine--strategyproposalauthoritypair.resultauthority/`. 변이 원장 `analysis/measurements/lot-5.2.2.2/mutation-5.2.2.2.tsv`.
 

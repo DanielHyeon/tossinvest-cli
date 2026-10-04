@@ -48,25 +48,25 @@ c.strategyRefreshAt = now
 
 ## Branches and early returns
 
-- Exact AST return nodes: `577:3, 585:3, 588:3, 592:2, 593:3`.
+- Exact AST return nodes: `583:3, 591:3, 594:3, 598:2, 599:3`.
 
 | Branch | AST kind | Source location | Test disposition |
 |---|---|---|---|
-| B1 | if— `c` 또는 시계가 없다 | 576:2 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestARefreshWithoutAClockRefusesBeforeItCanMintAWave` |
-| B2 | if— 창 안의 캐시가 있다 | 584:2 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
-| B3 | if— 지도자가 아니다 (파도에 합류) | 587:2 | arm entered 5x (engine tagged suite); arm entered 5x (engine untagged suite); `TestAFailedWaveCarriesNoAssemblyForEitherMarket`, `TestAFailedWaveReachesEveryMarketAndIsNeverCached`, `TestAMarketWaitingOnTheWaveLeavesWhenItsOwnCycleIsCancelled`, `TestAPanickingWaveNeverStrandsTheMarketsWaitingOnIt`, `TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns` |
+| B1 | if— `c` 또는 시계가 없다 | 582:2 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestARefreshWithoutAClockRefusesBeforeItCanMintAWave` |
+| B2 | if— 창 안의 캐시가 있다 | 590:2 | arm entered 1x (engine tagged suite); arm entered 1x (engine untagged suite); `TestTheMarketThatLeadsAWaveAlwaysPublishesIt` |
+| B3 | if— 지도자가 아니다 (파도에 합류) | 593:2 | arm entered 5x (engine tagged suite); arm entered 5x (engine untagged suite); `TestAFailedWaveCarriesNoAssemblyForEitherMarket`, `TestAFailedWaveReachesEveryMarketAndIsNeverCached`, `TestAMarketWaitingOnTheWaveLeavesWhenItsOwnCycleIsCancelled`, `TestAPanickingWaveNeverStrandsTheMarketsWaitingOnIt`, `TestTwoMarketsRideOneAuthorityWaveInsteadOfTakingTurns` |
 
 ## Calls and live bindings
 
 | Callee expression | Source location | Note |
 |---|---|---|
-| errors.New | 577:45 | B1 의 거절 |
-| UTC | 579:9 | 창을 재는 시각을 UTC 로 고정한다 |
-| clk.Now | 579:9 | 창을 재는 유일한 시각. 잠금 **밖**에서 읽는다 |
-| c.joinStrategyRefreshWave | 583:26 | 잠금 안에서 하는 일의 전부 |
-| awaitStrategyRefreshWave | 588:10 | 채널에서 기다린다 — `ctx` 를 함께 본다 |
-| c.collectStrategyRefreshWave | 592:9 | 지도자의 자리. 잠금 밖 |
-| c.NewPairedStrategyEntryProductionAssembly | 593:10 | 원격 파도 본체. 클로저 안이므로 `collect` 인자로 넘어간다 |
+| errors.New | 583:45 | B1 의 거절 |
+| UTC | 585:9 | 창을 재는 시각을 UTC 로 고정한다 |
+| clk.Now | 585:9 | 창을 재는 유일한 시각. 잠금 **밖**에서 읽는다 |
+| c.joinStrategyRefreshWave | 589:26 | 잠금 안에서 하는 일의 전부 |
+| awaitStrategyRefreshWave | 594:10 | 채널에서 기다린다 — `ctx` 를 함께 본다 |
+| c.collectStrategyRefreshWave | 598:9 | 지도자의 자리. 잠금 밖 |
+| c.NewPairedStrategyEntryProductionAssembly | 599:10 | 원격 파도 본체. 클로저 안이므로 `collect` 인자로 넘어간다 |
 
 ## State mutations and fallbacks
 
@@ -103,3 +103,5 @@ a112 5.2.2.2: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 �
 a112 5.2.2.2 리뷰 수리: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
 
 a112 6.3 (c) — 같은 파일 재검증 판정 이동(6 줄 감소)으로 줄만 밀림
+
+a112 7.3.1 SHADOW 로트 — 같은 파일의 다른 함수 편집으로 줄만 밀림(본문 불변)

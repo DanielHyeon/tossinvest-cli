@@ -185,8 +185,8 @@ func TestADeclaredActivationThatLapsesRollsItsMarketBackInsteadOfWidening(t *tes
 				t.Fatalf("오류=%v 인데 검증=%v", err, activation.Verified())
 			}
 
-			authority := loader.collect(context.Background(), routeReadySchedulePair(now), routes,
-				proposalFXPair(now)).forMarket(StrategyMarketKR)
+			authority := a112PairOnly(loader.collect(context.Background(), routeReadySchedulePair(now), routes,
+				proposalFXPair(now))).forMarket(StrategyMarketKR)
 			switch entry.want {
 			case legacy:
 				if got := selectedFamily(t, authority, "005930"); got != strategyrouter.FamilyReversal {
@@ -244,8 +244,8 @@ func TestRollingBackLeavesALatchedLaneLatched(t *testing.T) {
 		strategyFamilyActivationKRManifestDigestEnv: "sha256:" + strings.Repeat("c", 64),
 		strategyRiskKRManifestDigestEnv:             rollbackRiskDigest})
 	loader.configDir = probe.configDir
-	rolled := loader.collect(context.Background(), routeReadySchedulePair(now), rollbackRoutes(t, now),
-		proposalFXPair(now)).forMarket(StrategyMarketKR)
+	rolled := a112PairOnly(loader.collect(context.Background(), routeReadySchedulePair(now), rollbackRoutes(t, now),
+		proposalFXPair(now))).forMarket(StrategyMarketKR)
 	if rolled.snapshot.Ready || rolled.snapshot.Reason != StrategyProposalFamilyGateClosed {
 		t.Fatalf("되돌린 시장: ready=%v reason=%s", rolled.snapshot.Ready, rolled.snapshot.Reason)
 	}
@@ -405,8 +405,8 @@ func TestARolledBackGateClosesTheMarketEvenWithoutLanes(t *testing.T) {
 		strategyFamilyActivationKRManifestDigestEnv: "sha256:" + strings.Repeat("c", 64),
 		strategyRiskKRManifestDigestEnv:             rollbackRiskDigest})
 	loader.configDir = probe.configDir
-	authority := loader.collect(context.Background(), routeReadySchedulePair(now), rollbackRoutes(t, now),
-		proposalFXPair(now)).forMarket(StrategyMarketKR)
+	authority := a112PairOnly(loader.collect(context.Background(), routeReadySchedulePair(now), rollbackRoutes(t, now),
+		proposalFXPair(now))).forMarket(StrategyMarketKR)
 	if authority.snapshot.Ready || authority.snapshot.Reason != StrategyProposalFamilyGateClosed {
 		t.Fatalf("레인 없는 되돌림: ready=%v reason=%s — 기존 경로로 통과했다", authority.snapshot.Ready, authority.snapshot.Reason)
 	}

@@ -1,0 +1,232 @@
+{
+  "file": "internal/strategyrouter/production_family_activation.go",
+  "source_sha256": "57123f814187d9201ec6999d6375adc649b579c89beb6c4731f36cc51243b005",
+  "package": "strategyrouter",
+  "function": "decodeProductionFamilyActivation",
+  "signature": "decodeProductionFamilyActivation(params=1, results=2)",
+  "start": {
+    "line": 509,
+    "column": 1
+  },
+  "end": {
+    "line": 528,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 510,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 517,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 520,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 524,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 511,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 518,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 521,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 525,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 527,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 510,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 510,
+        "column": 23
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 511,
+        "column": 44
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 512,
+        "column": 4
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 514,
+        "column": 13
+      },
+      "text": "json.NewDecoder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 514,
+        "column": 29
+      },
+      "text": "bytes.NewReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 515,
+        "column": 2
+      },
+      "text": "decoder.DisallowUnknownFields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 517,
+        "column": 12
+      },
+      "text": "decoder.Decode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 518,
+        "column": 44
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 520,
+        "column": 12
+      },
+      "text": "decoder.Decode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 521,
+        "column": 44
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 523,
+        "column": 20
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 524,
+        "column": 20
+      },
+      "text": "bytes.Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 525,
+        "column": 44
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 514,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 517,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 520,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 523,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,6 +1,6 @@
 # Branch Test Map: `TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne (시험)`
 
-- Source SHA-256: `60d5adbcf550c3ff422046d010bfe037481c7fa39e5b1561afb5c1d19a1f2115`; AST branch locations are authoritative.
+- Source SHA-256: `8581d7275bae005df65081299b204c1eeecb6f2ad6234aa4b00748538f04ad73`; AST branch locations are authoritative.
 - Revision: **modified (a112 repin-1e25b3a3, 2026-10-01).** 편집 전 5 분기 → 7(B6 · B7 새로, 끝에 덧붙음 — 앞 다섯은 번호 그대로). 8.5 응답 로트 ⑦: 검증된 관문 아래에서 같은 넘침을 다시 돌려 QUEUE_OVERFLOW 닫힘이 판정 활성화를 싣는지 단언(보이스 3 P2-1 — 변이 E7).
 - 편집 전 번들: `analysis/measurements/repin-1e25b3a3/pre-edit/internal-app-engine--testamarketwithmorescopesthanthequeueholdsclosesinsteadofdroppingone/`. 변이 원장 `analysis/measurements/lot-8.5-R/mutation-8.5-R.tsv`.
 

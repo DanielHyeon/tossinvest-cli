@@ -75,7 +75,7 @@ func collectUnderLoad(t *testing.T, activation strategyrouter.FamilyActivation, 
 	) (strategyrouter.FamilyActivation, error) {
 		return activation, loadErr
 	}
-	pair := loader.withStrategyLanes(lanes).collect(context.Background(), routeReadySchedulePair(now),
+	pair, _ := loader.withStrategyLanes(lanes).collect(context.Background(), routeReadySchedulePair(now),
 		arbitrationRoutePair(t, now, familyScoresForTest(strategyrouter.MarketKR), symbol, laneIDs...),
 		proposalFXPair(now))
 	return pair.forMarket(StrategyMarketKR)
@@ -279,7 +279,7 @@ func TestAClosedMarketStillCarriesTheGatesActivation(t *testing.T) {
 	) (strategyrouter.FamilyActivation, error) {
 		return activation, nil
 	}
-	pair := loader.withStrategyLanes(runtime).collect(context.Background(), routeReadySchedulePair(now),
+	pair, _ := loader.withStrategyLanes(runtime).collect(context.Background(), routeReadySchedulePair(now),
 		arbitrationRoutePair(t, now, tied, "005930",
 			continuationlane.KRContinuationLaneID, reversallane.KRReversalLaneID), proposalFXPair(now))
 	authority := pair.forMarket(StrategyMarketKR)

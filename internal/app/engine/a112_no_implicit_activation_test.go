@@ -112,7 +112,7 @@ func TestAPairedFourFamilyRouteManifestThatSaysOnPromotesNoLaneWithoutAnActivati
 				market, gate.activation.Verified(), gate.rolledBack, gate.installed())
 		}
 		// ③ 그 관문으로 레인을 돌린다.
-		runtime.evaluate(context.Background(), market, 0, gate.activation, nil)
+		runtime.evaluate(context.Background(), market, 0, gate.activation, nil, strategyShadowBatch{})
 	}
 	observations := runtime.observations()
 	if len(observations) != 8 {

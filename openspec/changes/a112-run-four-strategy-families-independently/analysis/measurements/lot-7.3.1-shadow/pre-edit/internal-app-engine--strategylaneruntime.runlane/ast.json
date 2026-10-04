@@ -1,0 +1,241 @@
+{
+  "file": "internal/app/engine/strategy_lane_runtime.go",
+  "source_sha256": "95611377145456c4906da5ebb95eca97dd025df0c1fb255ebc443c1ce12d5d36",
+  "package": "engine",
+  "function": "runLane",
+  "receiver": "strategyLaneRuntime",
+  "signature": "strategyLaneRuntime.runLane(params=4, results=1)",
+  "start": {
+    "line": 286,
+    "column": 1
+  },
+  "end": {
+    "line": 316,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 294,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 310,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 296,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 315,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 46
+      },
+      "text": "lane.Key"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 67
+      },
+      "text": "lane.Desired"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 291,
+        "column": 103
+      },
+      "text": "lane.Effective"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 292,
+        "column": 57
+      },
+      "text": "strategyLaneEvidenceDigest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 24
+      },
+      "text": "lane.Offer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 295,
+        "column": 24
+      },
+      "text": "lane.Health"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 20
+      },
+      "text": "lane.RunBounded"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 48
+      },
+      "text": "runtime.laneStepFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 311,
+        "column": 25
+      },
+      "text": "bounded.Err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 313,
+        "column": 23
+      },
+      "text": "lane.Health"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 291,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 293,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 295,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 301,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 302,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 303,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 304,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 305,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 306,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 307,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 308,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 309,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 311,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 313,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 314,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

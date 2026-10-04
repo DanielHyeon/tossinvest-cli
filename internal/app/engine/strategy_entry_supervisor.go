@@ -282,6 +282,9 @@ type StrategyEntryProductionAssembly struct {
 	// 스칼라 관측이라 활성화 세대를 담지 않는다. durable lane latch 의 복구
 	// 조건이 그 세대이므로(5.3.3), 권위를 그대로 들고 있어야 한다.
 	schedule strategyScheduleAuthorityPair
+	// shadow 는 a112 7.3.1 의 관문 앞 제안 묶음 짝이다 — proposals(주문 경로의 권한)와 **별개 필드**다. 시장 주기는 이 값을 evaluate 인자
+	// 한 자리로만 레인 런타임에 넘기고(값 보관), dispatch · worker · 결과 권한에는 닿지 않는다(census ②).
+	shadow strategyShadowPair
 }
 
 // NewPairedStrategyEntryProductionAssembly loads KR and US from one frozen
@@ -321,7 +324,7 @@ func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context, 
 	if err != nil {
 		return StrategyEntryProductionAssembly{}, err
 	}
-	proposalAuthority := newStrategyProposalAuthorityLoader(c.Paths.ConfigDir, evidencePath, journalPath, c.AccountRef, os.Getenv).
+	proposalAuthority, shadowAuthority := newStrategyProposalAuthorityLoader(c.Paths.ConfigDir, evidencePath, journalPath, c.AccountRef, os.Getenv).
 		withStrategyLanes(lanes).
 		collect(ctx, scheduleAuthority, routeAuthority, fxAuthority)
 	resultAuthority := proposalAuthority.ResultAuthority()
@@ -366,7 +369,7 @@ func (c *Context) NewPairedStrategyEntryProductionAssembly(ctx context.Context, 
 	assembly := StrategyEntryProductionAssembly{Supervisor: supervisor, Schedule: snapshot.Schedule,
 		Candidate: candidateAuthority.Snapshot(), Route: routeAuthority.Snapshot(), FX: fxAuthority.Snapshot(), Proposal: proposalAuthority.Snapshot(),
 		Risk: riskAuthority.Snapshot(), Account: accountAuthority.Snapshot(), firstLeg: firstLegBridge, dispatch: dispatchCycle,
-		proposals: proposalAuthority, schedule: scheduleAuthority}
+		proposals: proposalAuthority, schedule: scheduleAuthority, shadow: shadowAuthority}
 	if err := c.publishStrategyRuntime(assembly); err != nil {
 		return StrategyEntryProductionAssembly{}, err
 	}
@@ -392,9 +395,9 @@ func (c *Context) NewRefreshingPairedStrategyEntrySupervisor(clk clock.Clock) (*
 		market := market
 		workers = append(workers, StrategyMarketWorker{
 			Market: market, PollInterval: DefaultStrategyCycleLimit, RefreshesAuthority: true,
-			Cycle: func(cycleCtx context.Context) error {
-				return c.runProductionStrategyMarketCycle(cycleCtx, clk, market)
-			},
+			// a112 7.3.1: 주기 함수를 부르고, nil 로 돌아온 **뒤**에만 shadow 단계를 비동기로 시작하는 클로저(productionStrategyCycle 하나 —
+			// 두 생산 자리가 같은 몸통을 쓴다). 반환값은 주기 함수의 오류 그대로다.
+			Cycle: c.productionStrategyCycle(clk, market),
 		})
 	}
 	supervisor, err := NewStrategyEntrySupervisor(StrategyEntrySupervisorOptions{
@@ -419,8 +422,7 @@ func (c *Context) productionStrategyWorker(ctx context.Context, clk clock.Clock,
 	}
 	return buildProductionStrategyMarketWorker(ctx, clk, market,
 		c.Journal != nil && c.Gateway != nil && c.Guardian != nil && c.Automation.Verified,
-		c.Gateway, schedule, candidate, route, fx, proposal, riskAuthority, account,
-		func(cycleCtx context.Context) error { return c.runProductionStrategyMarketCycle(cycleCtx, clk, market) })
+		c.Gateway, schedule, candidate, route, fx, proposal, riskAuthority, account, c.productionStrategyCycle(clk, market))
 }
 
 func buildProductionStrategyMarketWorker(ctx context.Context, clk clock.Clock, market StrategyMarket, wiringReady bool,
@@ -540,10 +542,14 @@ func (c *Context) runProductionStrategyMarketCycle(ctx context.Context, clk cloc
 	if err != nil {
 		return err
 	}
+	// a112 7.3.1(Manager 판정 (A)): 마지막 인자 하나가 이 물결의 shadow 묶음이다 — 레인 런타임이 파도 번호와 **같은 잠금**에서 값으로 보관할
+	// 뿐(dispatch 앞 shadow **일** 0: 적재 · 판정 · I/O 없음). shadow 단계는 이 함수가 돌아온 뒤 cycle 클로저가 시작한다. 이 함수 본문의
+	// shadow 타입 식은 이 인자 하나뿐이고 그 유일한 호출은 접근자 forMarket 이다(a112_shadow_structure_test.go 가 타입 규칙으로 못 박음).
 	if err := lanes.evaluate(ctx, market,
 		fresh.schedule.forMarket(market).restore.Activation.Generation(),
 		fresh.proposals.forMarket(market).familyActivation(),
-		strategyLaneInputs(c.AccountRef, fresh.proposals.forMarket(market))); err != nil {
+		strategyLaneInputs(c.AccountRef, fresh.proposals.forMarket(market)),
+		fresh.shadow.forMarket(market)); err != nil {
 		return err
 	}
 	if fresh.dispatch == nil {

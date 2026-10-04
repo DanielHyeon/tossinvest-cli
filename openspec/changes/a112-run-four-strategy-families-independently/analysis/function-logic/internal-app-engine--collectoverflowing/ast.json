@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/a112_coordinator_test.go",
-  "source_sha256": "60d5adbcf550c3ff422046d010bfe037481c7fa39e5b1561afb5c1d19a1f2115",
+  "source_sha256": "8581d7275bae005df65081299b204c1eeecb6f2ad6234aa4b00748538f04ad73",
   "package": "engine",
   "function": "collectOverflowing",
   "signature": "collectOverflowing(params=4, results=1)",
@@ -285,13 +285,21 @@
         "line": 129,
         "column": 9
       },
+      "text": "a112PairOnly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 22
+      },
       "text": "loader.collect"
     },
     {
       "kind": "call",
       "at": {
         "line": 129,
-        "column": 24
+        "column": 37
       },
       "text": "context.Background"
     },
@@ -299,7 +307,7 @@
       "kind": "call",
       "at": {
         "line": 129,
-        "column": 46
+        "column": 59
       },
       "text": "routeReadySchedulePair"
     },
@@ -307,7 +315,7 @@
       "kind": "call",
       "at": {
         "line": 129,
-        "column": 83
+        "column": 96
       },
       "text": "proposalFXPair"
     }

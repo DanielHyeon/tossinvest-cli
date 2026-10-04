@@ -276,7 +276,7 @@ func TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotRea
 					routes: arbitrationRoutePair(t, now, familyScoresForTest(strategyrouter.MarketKR), "005930", continuationlane.KRContinuationLaneID).forMarket(StrategyMarketKR),
 					fx:     proposalFXPair(now).forMarket(StrategyMarketKR)}
 				tc.mutate(&k)
-				got := k.loader.collectMarket(context.Background(), routeReadySchedulePair(now).forMarket(StrategyMarketKR), k.routes, k.fx, now)
+				got := k.loader.collectMarket(context.Background(), routeReadySchedulePair(now).forMarket(StrategyMarketKR), k.routes, k.fx, now, new(strategyShadowBatch))
 				if got.snapshot.Ready || got.snapshot.Reason != tc.reason {
 					t.Fatalf("reason=%s ready=%v, want closed with %s", got.snapshot.Reason, got.snapshot.Ready, tc.reason)
 				}

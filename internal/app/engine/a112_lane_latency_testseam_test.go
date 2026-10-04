@@ -47,7 +47,7 @@ func TestAHungLaneDoesNotDelayItsPeersInTheSameWave(t *testing.T) {
 			}
 		})()
 		deadline := strategyworker.ProductionRuntimePolicy().CycleDeadline()
-		if err := runtime.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil); err != nil {
+		if err := runtime.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil, strategyShadowBatch{}); err != nil {
 			t.Fatal(err)
 		}
 		// 시장 지연 = 최댓값 = 마감 시한 1 회(조건 ①). 순차였다면 멈춘 레인 둘의 마감 시한이 더해져 2 회다.
@@ -96,6 +96,6 @@ func TestAPanicOutsideALaneStepStillReachesTheMarketCycle(t *testing.T) {
 			t.Fatalf("recovered=%v, want the lane goroutine's panic re-raised on the market cycle goroutine", recovered)
 		}
 	}()
-	_ = runtime.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil)
+	_ = runtime.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil, strategyShadowBatch{})
 	t.Fatal("evaluate returned without re-raising the lane panic")
 }

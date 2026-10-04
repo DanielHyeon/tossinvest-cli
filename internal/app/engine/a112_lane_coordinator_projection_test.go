@@ -81,7 +81,7 @@ func TestTheCycleGenerationIsTheMarketWaveInWhichTheLaneWasLastObserved(t *testi
 	c, lanes, fake := a112LaneProjectionContext(t)
 	policy := strategyworker.ProductionRuntimePolicy()
 	ctx := context.Background()
-	if err := lanes.evaluate(ctx, StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil); err != nil {
+	if err := lanes.evaluate(ctx, StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil, strategyShadowBatch{}); err != nil {
 		t.Fatal(err)
 	}
 	before := a112Read(t, c)
@@ -96,10 +96,10 @@ func TestTheCycleGenerationIsTheMarketWaveInWhichTheLaneWasLastObserved(t *testi
 	}
 	// 카덴스가 지나야 둘째 물결이 사이클을 연다(안 지나면 TOO_SOON — 그것도 관측이지만 이 시험은 열린 사이클의 모양을 잰다).
 	fake.Advance(policy.Cadence())
-	if err := lanes.evaluate(ctx, StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil); err != nil {
+	if err := lanes.evaluate(ctx, StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil, strategyShadowBatch{}); err != nil {
 		t.Fatal(err)
 	}
-	if err := lanes.evaluate(ctx, StrategyMarketUS, 0, strategyrouter.FamilyActivation{}, nil); err != nil {
+	if err := lanes.evaluate(ctx, StrategyMarketUS, 0, strategyrouter.FamilyActivation{}, nil, strategyShadowBatch{}); err != nil {
 		t.Fatal(err)
 	}
 	for _, lane := range a112Read(t, c).Lanes {
@@ -124,7 +124,7 @@ func TestTheCycleGenerationIsTheMarketWaveInWhichTheLaneWasLastObserved(t *testi
 func TestTheLaneDesiredAndEffectiveAreTheActivationTheWaveRanWith(t *testing.T) {
 	c, lanes, _ := a112LaneProjectionContext(t)
 	activation := strategyrouter.FamilyActivationForTest(strategyrouter.MarketKR, 1, strategyrouter.AllFourFamiliesForTest(strategyrouter.MarketKR))
-	if err := lanes.evaluate(context.Background(), StrategyMarketKR, 1, activation, nil); err != nil {
+	if err := lanes.evaluate(context.Background(), StrategyMarketKR, 1, activation, nil, strategyShadowBatch{}); err != nil {
 		t.Fatal(err)
 	}
 	for _, lane := range a112Read(t, c).Lanes {
@@ -208,7 +208,7 @@ func a112LaneStates(runtime *strategyLaneRuntime) []a112LaneState {
 // 조건 ②: 투영은 읽기만 한다. 투입(Offer) · 실패(Fail) · 관측 기록 · 물결 번호 · 원장 잠금 어느 것도 Read 로 움직이지 않는다.
 func TestReadingTheLaneProjectionNeverChangesALane(t *testing.T) {
 	c, lanes, fake := a112LaneProjectionContext(t)
-	if err := lanes.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil); err != nil {
+	if err := lanes.evaluate(context.Background(), StrategyMarketKR, 0, strategyrouter.FamilyActivation{}, nil, strategyShadowBatch{}); err != nil {
 		t.Fatal(err)
 	}
 	fake.Advance(time.Hour) // 카덴스가 지나도 Read 는 사이클을 열지 않는다.

@@ -30,8 +30,8 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 (`1035:2`) | 종료 중이거나 nil 이거나 **잠겼거나** 사이클이 없거나 (dormant 이고 갱신자도 아님) | 없음 (RLock 만) | `(false, false)` (`895:3`) | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` |
-| B2 (`1039:2`) | 권한 갱신 worker | 없음 | `(true, false)` (`898:3`) | `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError` |
+| B1 (`1041:2`) | 종료 중이거나 nil 이거나 **잠겼거나** 사이클이 없거나 (dormant 이고 갱신자도 아님) | 없음 (RLock 만) | `(false, false)` (`895:3`) | `TestALatchedMarketSkipsTheTriggersAlreadySittingInItsQueue` |
+| B2 (`1045:2`) | 권한 갱신 worker | 없음 | `(true, false)` (`898:3`) | `TestTheOnlyWorkerProductionActuallyRunsSwallowsEveryCycleError` |
 | 본문 (`901:2`) | effective worker | 없음 | `(fresh, !fresh)` — 만료 여부가 두 번째 값 | `TestExpiredAuthorityLatchesBeforeEvaluation` |
 
 ## Calls and live bindings
@@ -40,12 +40,12 @@
 
 | Callee expression | Position | Why called / contract |
 |---|---|---|
-| `s.mu.RLock` | 1033:2 | 읽기 잠금 — 이 함수는 아무것도 바꾸지 않는다 |
-| `s.mu.RUnlock` | 1034:8 | `defer` |
-| `Before` | 1042:11 | 권한 신선도 비교 |
-| `s.clk.Now` | 1042:11 | 주입 시계 |
+| `s.mu.RLock` | 1039:2 | 읽기 잠금 — 이 함수는 아무것도 바꾸지 않는다 |
+| `s.mu.RUnlock` | 1040:8 | `defer` |
+| `Before` | 1048:11 | 권한 신선도 비교 |
+| `s.clk.Now` | 1048:11 | 주입 시계 |
 
-Exact AST return positions: 1037:3, 1040:3, 1043:2.
+Exact AST return positions: 1043:3, 1046:3, 1049:2.
 
 ## State mutations and fallbacks
 
@@ -73,3 +73,5 @@ a112 5.2.2.2: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 �
 a112 5.2.2.2 리뷰 수리: 같은 파일의 다른 함수 편집으로 줄만 이동(본문 불변)
 
 a112 6.3 (c) — 같은 파일 재검증 판정 이동으로 줄만 밀림(이 번들의 해시가 HEAD 파일과 같았음 — 앞 로트들과 같은 동기화)
+
+a112 7.3.1 SHADOW 로트 — 같은 파일의 다른 함수 편집으로 줄만 밀림(본문 불변)

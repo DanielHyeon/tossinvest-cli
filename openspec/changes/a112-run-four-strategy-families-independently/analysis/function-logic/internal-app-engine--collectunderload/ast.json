@@ -1,0 +1,176 @@
+{
+  "file": "internal/app/engine/a112_family_gate_test.go",
+  "source_sha256": "49511cdebc1ba5506737d375b775aa2a533b358701fb531f33f41051f2400fcf",
+  "package": "engine",
+  "function": "collectUnderLoad",
+  "signature": "collectUnderLoad(params=6, results=1)",
+  "start": {
+    "line": 62,
+    "column": 1
+  },
+  "end": {
+    "line": 82,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 71,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 76,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 2
+      },
+      "text": "t.Helper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 9
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 67,
+        "column": 12
+      },
+      "text": "testStrategyProposalLoader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 10
+      },
+      "text": "arbitrationBatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 13
+      },
+      "text": "collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 13
+      },
+      "text": "loader.withStrategyLanes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 53
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 75
+      },
+      "text": "routeReadySchedulePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 3
+      },
+      "text": "arbitrationRoutePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 79,
+        "column": 32
+      },
+      "text": "familyScoresForTest"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 80,
+        "column": 3
+      },
+      "text": "proposalFXPair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 9
+      },
+      "text": "pair.forMarket"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 68,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

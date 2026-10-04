@@ -1,0 +1,268 @@
+{
+  "file": "internal/app/engine/strategy_proposal_authority.go",
+  "source_sha256": "2c546898bc4178d0ee44238d51fb8e05a4c908cee721041ee24713c4c98ac385",
+  "package": "engine",
+  "function": "collect",
+  "receiver": "strategyProposalAuthorityLoader",
+  "signature": "strategyProposalAuthorityLoader.collect(params=4, results=1)",
+  "start": {
+    "line": 257,
+    "column": 1
+  },
+  "end": {
+    "line": 291,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 258,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 266,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 272,
+        "column": 6
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 282,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 284,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "else",
+      "at": {
+        "line": 286,
+        "column": 10
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 259,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 290,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 36
+      },
+      "text": "schedule.observedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 69
+      },
+      "text": "schedule.observedAt.Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 118
+      },
+      "text": "schedule.observedAt.Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 10
+      },
+      "text": "failedStrategyProposalPair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 14
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 6
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 4
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 271,
+        "column": 11
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 9
+      },
+      "text": "recover"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 13
+      },
+      "text": "loader.collectMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 39
+      },
+      "text": "schedule.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 67
+      },
+      "text": "routes.forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 276,
+        "column": 93
+      },
+      "text": "fx.forMarket"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 265,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 267,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 269,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 273,
+        "column": 7
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 276,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 281,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 283,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 285,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 287,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": [
+    {
+      "kind": "go",
+      "at": {
+        "line": 268,
+        "column": 3
+      }
+    }
+  ],
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 271,
+        "column": 5
+      }
+    }
+  ]
+}

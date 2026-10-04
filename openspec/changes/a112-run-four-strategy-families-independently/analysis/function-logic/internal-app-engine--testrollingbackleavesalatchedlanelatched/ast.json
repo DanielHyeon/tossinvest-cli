@@ -1,0 +1,413 @@
+{
+  "file": "internal/app/engine/a112_family_rollback_test.go",
+  "source_sha256": "c1b6888e6bccd1b9ca9e54c43abbae8063f5e9cf12178e98b9170634d4c73979",
+  "package": "engine",
+  "function": "TestRollingBackLeavesALatchedLaneLatched",
+  "signature": "TestRollingBackLeavesALatchedLaneLatched(params=1, results=0)",
+  "start": {
+    "line": 231,
+    "column": 1
+  },
+  "end": {
+    "line": 268,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 234,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 235,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 238,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 254,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 257,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 258,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 265,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 232,
+        "column": 9
+      },
+      "text": "time.Date"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 18
+      },
+      "text": "familyGateFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 23
+      },
+      "text": "runtime.lanesFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 6
+      },
+      "text": "lane.Key"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 238,
+        "column": 19
+      },
+      "text": "lane.Fail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 11
+      },
+      "text": "testStrategyProposalLoader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 12
+      },
+      "text": "rollbackLoader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 60
+      },
+      "text": "strings.Repeat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 12
+      },
+      "text": "forMarket"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 12
+      },
+      "text": "a112PairOnly"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 25
+      },
+      "text": "loader.collect"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 40
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 62
+      },
+      "text": "routeReadySchedulePair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 91
+      },
+      "text": "rollbackRoutes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 3
+      },
+      "text": "proposalFXPair"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 11
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 18
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 2
+      },
+      "text": "sort.Strings"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 5
+      },
+      "text": "strings.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 33
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 75
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 23
+      },
+      "text": "runtime.lanesFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 6
+      },
+      "text": "lane.Key"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 60
+      },
+      "text": "lane.Health"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 4
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 259,
+        "column": 71
+      },
+      "text": "lane.Health"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
+        "column": 15
+      },
+      "text": "collectUnderGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 12
+      },
+      "text": "selectedFamily"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 266,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 232,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 233,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 238,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 247,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 252,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 263,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 265,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

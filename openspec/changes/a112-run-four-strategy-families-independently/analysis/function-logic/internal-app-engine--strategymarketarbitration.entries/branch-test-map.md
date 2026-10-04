@@ -1,6 +1,6 @@
 # Branch Test Map: `strategyMarketArbitration.entries`
 
-- Source: `internal/app/engine/strategy_market_coordinator.go` (130-140); file SHA-256 `e9a4bde458176c4679f254d71b56439b348110fb6dc1ab2338cd7f2cf376f728`. AST branch positions are authoritative.
+- Source: `internal/app/engine/strategy_market_coordinator.go` (135-145); file SHA-256 `590318d7267c1ffd5398c4c9878b9e70486633dc42033e19466e3474cf6da01b`. AST branch positions are authoritative.
 - Rows carry measured counts from Go coverage profiles, count mode.
 
 - Measurement regime: Go coverage profiles, count mode.
@@ -20,7 +20,7 @@ M-E3 (`return nil, false` → `continue`) 가 이 메서드를 겨눈 mutation �
 
 | Branch | AST kind | Position | Measured disposition |
 |---|---|---|---|
-| B1 | range | 132:2 | arm entered 44x (engine tagged suite); arm not entered (engine untagged suite); `TestALaneRefusesALineageThatRenamedItselfIntoAnotherLane`, `TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading`, `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff`, `TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt`, `TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestASelectionWithNoLaneToComeBackToClosesInsteadOfShrinkingTheList`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestEveryLaneStaysDormantOnAProposalItActuallyOwns`, `TestExactlyOneLaneOwnsEachSealedProposal`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope`, `TestTheGateSaysWhichKindOfStopItMade`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket`, `TestWithoutAVerifiedActivationCoordinationIsUnchanged` |
-| B2 | if | 134:3 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestASelectionWithNoLaneToComeBackToClosesInsteadOfShrinkingTheList` |
+| B1 | range | 137:2 | arm entered 44x (engine tagged suite); arm not entered (engine untagged suite); `TestALaneRefusesALineageThatRenamedItselfIntoAnotherLane`, `TestALatchedLaneStopsItsFamilyAndItsPeersKeepTrading`, `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff`, `TestAPromotedLaneAdmitsItsFamilyWhileAnUnpromotedOneStopsIt`, `TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestASelectionWithNoLaneToComeBackToClosesInsteadOfShrinkingTheList`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestEveryLaneStaysDormantOnAProposalItActuallyOwns`, `TestExactlyOneLaneOwnsEachSealedProposal`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope`, `TestTheGateSaysWhichKindOfStopItMade`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket`, `TestWithoutAVerifiedActivationCoordinationIsUnchanged` |
+| B2 | if | 139:3 | arm entered 1x (engine tagged suite); arm not entered (engine untagged suite); `TestASelectionWithNoLaneToComeBackToClosesInsteadOfShrinkingTheList` |
 
 A row states what was measured, not what is intended. An arm recorded as not entered is a coverage gap, not a pass.

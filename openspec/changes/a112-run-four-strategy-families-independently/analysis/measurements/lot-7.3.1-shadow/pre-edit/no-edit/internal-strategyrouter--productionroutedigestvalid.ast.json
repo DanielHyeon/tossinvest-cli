@@ -1,0 +1,110 @@
+{
+  "file": "internal/strategyrouter/production.go",
+  "source_sha256": "617163a508030dea2768655db66006d52097f17be9c04bb7c9fc300d3adf8a21",
+  "package": "strategyrouter",
+  "function": "productionRouteDigestValid",
+  "signature": "productionRouteDigestValid(params=1, results=1)",
+  "start": {
+    "line": 760,
+    "column": 1
+  },
+  "end": {
+    "line": 766,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 761,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 762,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 765,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 761,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 761,
+        "column": 19
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 761,
+        "column": 52
+      },
+      "text": "strings.HasPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 764,
+        "column": 18
+      },
+      "text": "hex.DecodeString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 764,
+        "column": 35
+      },
+      "text": "strings.TrimPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 765,
+        "column": 23
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 765,
+        "column": 63
+      },
+      "text": "strings.ToLower"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 764,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

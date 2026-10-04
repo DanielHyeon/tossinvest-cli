@@ -65,7 +65,9 @@ func TypeCheckProduction(t *testing.T, dir, importPath string, tags ...string) C
 	if len(files) == 0 {
 		t.Fatalf("no production file selected in %s — the census would read nothing", dir)
 	}
-	info := &types.Info{Uses: map[*ast.Ident]types.Object{}, Selections: map[*ast.SelectorExpr]*types.Selection{}}
+	// Types · Defs 는 a112 7.3.1 census(본문 식 타입 「품는다」 걸음 · 선언 객체)가 읽는다 — 기록만 늘고 판정은 바뀌지 않는다.
+	info := &types.Info{Uses: map[*ast.Ident]types.Object{}, Selections: map[*ast.SelectorExpr]*types.Selection{},
+		Types: map[ast.Expr]types.TypeAndValue{}, Defs: map[*ast.Ident]types.Object{}}
 	config := types.Config{Importer: importer.ForCompiler(fset, "source", nil)}
 	if _, err := config.Check(importPath, fset, files, info); err != nil {
 		// 미해소를 허용하면 census 가 약해진다 — 타입 검사가 끝까지 서야 한다.

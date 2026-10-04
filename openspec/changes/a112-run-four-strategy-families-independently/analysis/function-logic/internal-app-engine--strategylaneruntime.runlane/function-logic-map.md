@@ -1,9 +1,9 @@
 # Function Logic Map: `strategyLaneRuntime.runLane`
 
 - Source: `internal/app/engine/strategy_lane_runtime.go`
-- Source SHA-256: `95611377145456c4906da5ebb95eca97dd025df0c1fb255ebc443c1ce12d5d36`
+- Source SHA-256: `333970fa5e15db9741cc10da836922c79763f4b1b87bf62ddbc1af2fba9c6462`
 - Signature: `strategyLaneRuntime.runLane(params=4, results=1)`
-- Source range: `286:1`–`316:2`
+- Source range: `305:1`–`335:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 7.5).
 - Risk scan: `risk-pattern-report.md`.
 
@@ -13,27 +13,27 @@
 
 ## Branches and early returns
 
-- Exact AST return nodes: `296:3, 315:2`.
+- Exact AST return nodes: `315:3, 334:2`.
 
 | Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
-| B1 | if | 294:2 | 투입 거절(DISABLED · FULL) → 건강만 싣고 반환 |
-| B2 | if | 310:2 | 유계 사이클 오류 → 실패 문장 |
+| B1 | if | 313:2 | 투입 거절(DISABLED · FULL) → 건강만 싣고 반환 |
+| B2 | if | 329:2 | 유계 사이클 오류 → 실패 문장 |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `lane.Key` | 291:46 |
-| `lane.Desired` | 291:67 |
-| `lane.Effective` | 291:103 |
-| `strategyLaneEvidenceDigest` | 292:57 |
-| `lane.Offer` | 293:24 |
-| `lane.Health` | 295:24 |
-| `lane.RunBounded` | 301:20 |
-| `runtime.laneStepFor` | 301:48 |
-| `bounded.Err.Error` | 311:25 |
-| `lane.Health` | 313:23 |
+| `lane.Key` | 310:46 |
+| `lane.Desired` | 310:67 |
+| `lane.Effective` | 310:103 |
+| `strategyLaneEvidenceDigest` | 311:57 |
+| `lane.Offer` | 312:24 |
+| `lane.Health` | 314:24 |
+| `lane.RunBounded` | 320:20 |
+| `runtime.laneStepFor` | 320:48 |
+| `bounded.Err.Error` | 330:25 |
+| `lane.Health` | 332:23 |
 
 ## State mutations and fallbacks
 
@@ -42,3 +42,5 @@
 ## Safety conclusion
 
 - High-risk 인접(레인 런타임 동시성) — 주문 · 원장 · 활성화 쓰기 없음. 레인끼리 상태 공유 0(Lane 구조), goroutine 하나가 레인 하나, 관측은 자기 색인 칸에만. 생산 레인은 전부 DORMANT(서명 매니페스트 0).
+
+a112 7.3.1 SHADOW 로트 — 같은 파일의 다른 함수 편집으로 줄만 밀림(본문 불변)

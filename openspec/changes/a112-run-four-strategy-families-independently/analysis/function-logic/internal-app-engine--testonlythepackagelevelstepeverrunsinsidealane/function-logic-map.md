@@ -1,7 +1,7 @@
 # Function Logic Map: `TestOnlyThePackageLevelStepEverRunsInsideALane (시험)`
 
 - Source: `internal/app/engine/a112_lane_runtime_test.go`
-- Source SHA-256: `406bd29b9c2ce881d31fe69f638c9f6aee89a442e0adbcd709d56aac4f6ab98d`
+- Source SHA-256: `c0eec4047bca78202787fdabf8d0ef78eaee26237ce64fb46fd65edf901a5779`
 - Signature: `TestOnlyThePackageLevelStepEverRunsInsideALane(params=1, results=0)`
 - Source range: `193:1`–`235:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 7.5).
@@ -53,3 +53,5 @@
 ## Safety conclusion
 
 - 시험 코드 — 생산 경로 없음.
+
+a112 7.3.1 SHADOW 로트 — 같은 파일의 다른 함수 편집으로 줄만 밀림(본문 불변)

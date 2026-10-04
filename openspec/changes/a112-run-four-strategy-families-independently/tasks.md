@@ -576,6 +576,16 @@
   **freeze 4판 → 설계 개정 → re-freeze(2026-10-04 Manager 합본 판정 12 항):** 브리프 v2(`analysis/shadow-2026-10/design-brief.md`, v1 보존) — 반사실 입력은 관문 · 중재 **앞** 배치에서 분기(닫힌 시장 = 관측 없음) · `internal/strategyshadow` 별도 패키지(FamilyActivation 주조 불가) · 활성화 적재기 무편집 + 사본 양쪽 AST 핀 · shadow 단계는 collect · 유계 step 밖, 무오류 · 자가 recover · OFF∧OFF 단일 술어 · SHADOW 값은 projection 어휘 · 관측에만(router RuntimeState {UNOBSERVED} 유지) · dispatch 는 차등 척도 · OpenAPI enum 동기 시험 · 재시작 핀 셋. v1 의 「Validate 가 모든 읽기 경로의 관문」 은 「외부 경계(RPC · httpapi · console)」 로 정정(Context.Read 는 재검증 없음). 리뷰 `analysis/review-shadow-freeze-2026-10/`.
   **freeze 종결(2026-10-05 Manager 선언):** 재검 6라운드 끝에 브리프 v3.3(종결판 — v1 · v2 · v3 · v3.1 · v3.2 는 `design-brief-v*.md` 로 보존) — 6라운드 codex(clean) PASS · 보이스 1 PASS(접기 다섯 전부 반영),
   P0 전 라운드 0, 발견 수렴 17 → 7 → 5 → 4 → 2 → 0. 구현 단계 RED 후보 R1(두 시계 경합 — 표시 전용)은 브리프 §13. 다음: Pre-Edit FLM(브리프 §4 목록) → RED → GREEN → 변이 · race · verify → 착지.
+  **구현 로트(2026-10-05 — 착지 대기, Manager 보고).** Pre-Edit `analysis/measurements/lot-7.3.1-shadow/pre-edit/`(편집 대상 14 + 무편집 기준 15, 본문 digest
+  재대조 15/15 SAME `no-edit-recheck.tsv`) → RED `red-7.3.1-shadow.log`(컴파일 RED 6 패키지 + 엔진 어휘 census 행동 RED) → GREEN: 새 패키지 `internal/strategyshadow`
+  (digest 핀 적재기 · 정규 바이트 · 골든 · 소스 동결 · 두 적재기 가드 순서 핀) · strategyrouter 읽기 전용 wrapper 새 파일 · strategyworker `ShadowInput`/`ShadowVerdict`/
+  `ShadowEligible` · 엔진 운반(조정자 → collectMarket → collect → 조립 → evaluate → record 칸) · shadow 단계(`strategy_lane_shadow.go` — 성공 플래그 · 경과 판정 · 실패 폐기
+  epoch CAS · 단일 비행 · 상수 마감 · 자가 recover) · 투영(판정 함수 하나 · R1 abandon 시장 SHADOW 지움) · projection 어휘 {UNOBSERVED, SHADOW} + shadowOutcome ·
+  validateLane 교차 규칙 · OpenAPI · 도구 `tools/a112-family-shadow` · docs/operations.md 절 · race 목록. 변이 `mutation-7.3.1-S.tsv`: 정의 47(1회차 BUILD-FAIL 다섯은
+  컴파일되는 모양으로 재정의) → CAUGHT 46 · SURVIVED 1(S21 — 동등: 이전 물결 관측은 파도 등식이 이미 버림, 지키는 쪽 S25 CAUGHT); 1회차 SURVIVED W02 · W03 는 시험 보강
+  (desired ON/effective OFF 행 · 접기 순서 행) 뒤 CAUGHT. 편집 뒤 번들 `harness/render_731s_bundles.py`(분기 행의 시험은 측정 — `branch-coverage-*.json`) +
+  같은 파일 줄 밀림 재기준 18 · `check_analysis` 통과. 브리프와 다른 구현 모양 하나: collectMarket 은 반환 둘이 아니라 out 인자(반환 갈래 열다섯 무편집 — §4 「운반은
+  authority 밖」 은 그대로).
 - [x] 7.4 Bound metrics cardinality by fixed market/family/lane/version/reason labels; keep symbol/setup/candidate identifiers in logs/journal queries rather than metric labels.
 
   **7.4 종결(2026-10-01 — 미착지).** 실측: 생산 메트릭 방출기 0(묶을 label 없음). Manager 판정 (A): 금지 명시 가드

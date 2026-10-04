@@ -30,7 +30,7 @@ import (
 func TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten(t *testing.T) {
 	c, lanes, fake := a112LaneProjectionContext(t)
 	activation := strategyrouter.FamilyActivationForTest(strategyrouter.MarketKR, 1, strategyrouter.AllFourFamiliesForTest(strategyrouter.MarketKR))
-	if err := lanes.evaluate(context.Background(), StrategyMarketKR, 1, activation, nil); err != nil {
+	if err := lanes.evaluate(context.Background(), StrategyMarketKR, 1, activation, nil, strategyShadowBatch{}); err != nil {
 		t.Fatal(err)
 	}
 	on := 0
@@ -73,7 +73,7 @@ func TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWri
 	}
 }
 
-func TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt(t *testing.T) {
+func TestTheRouterRuntimeStaysUnobservedAndOnlyTheProjectionAddsShadow(t *testing.T) {
 	census := func(dir, typeName string) []string {
 		t.Helper()
 		files, err := filepath.Glob(filepath.Join(dir, "*.go"))
@@ -111,13 +111,54 @@ func TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt(t *test
 		sort.Strings(values)
 		return values
 	}
-	for _, tc := range []struct{ dir, typeName string }{
-		{"../../strategyrouter", "RuntimeState"},
-		{"../../strategyprojection", "LaneRuntime"},
+	// a112 7.3.1 SHADOW 로트(브리프 v3.3 §7)가 이 census 의 주인이다: SHADOW 는 projection 어휘에만 열리고, router RuntimeState 는
+	// MarketRecord 와 공유하므로 {UNOBSERVED} 그대로다. 어휘는 타입을 가진 상수로만 세운다(변환식 `LaneRuntime("…")` 은 아래에서 0 으로 잰다).
+	for _, tc := range []struct{ dir, typeName, want string }{
+		{"../../strategyrouter", "RuntimeState", "UNOBSERVED"},
+		{"../../strategyprojection", "LaneRuntime", "SHADOW,UNOBSERVED"},
 	} {
-		if got := census(tc.dir, tc.typeName); strings.Join(got, ",") != "UNOBSERVED" {
-			t.Errorf("%s %s constants=%v, want exactly [UNOBSERVED] — adding SHADOW belongs to the shadow lot (spec permission clause, signed shadow manifest, golden amendment)",
-				tc.dir, tc.typeName, got)
+		if got := census(tc.dir, tc.typeName); strings.Join(got, ",") != tc.want {
+			t.Errorf("%s %s constants=%v, want exactly [%s]", tc.dir, tc.typeName, got, tc.want)
 		}
+	}
+	// 변환식 census: 생산 코드가 문자열을 LaneRuntime 으로 바꿔 새 값을 지어내지 않는다 — 엔진 투영의 worker runtime 변환 한 자리만.
+	conversions := 0
+	for _, dir := range []string{".", "../../strategyprojection"} {
+		files, err := filepath.Glob(filepath.Join(dir, "*.go"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, path := range files {
+			if strings.HasSuffix(path, "_test.go") {
+				continue
+			}
+			file, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
+			if err != nil {
+				t.Fatal(err)
+			}
+			ast.Inspect(file, func(node ast.Node) bool {
+				call, ok := node.(*ast.CallExpr)
+				if !ok || len(call.Args) != 1 {
+					return true
+				}
+				name := ""
+				switch fun := call.Fun.(type) {
+				case *ast.Ident:
+					name = fun.Name
+				case *ast.SelectorExpr:
+					name = fun.Sel.Name
+				}
+				if name == "LaneRuntime" {
+					conversions++
+					if _, literal := call.Args[0].(*ast.BasicLit); literal {
+						t.Errorf("%s converts a string literal into LaneRuntime — the vocabulary is the typed constants", path)
+					}
+				}
+				return true
+			})
+		}
+	}
+	if conversions != 1 {
+		t.Errorf("LaneRuntime conversions=%d, want exactly the one worker-runtime conversion in strategyLaneProjection", conversions)
 	}
 }

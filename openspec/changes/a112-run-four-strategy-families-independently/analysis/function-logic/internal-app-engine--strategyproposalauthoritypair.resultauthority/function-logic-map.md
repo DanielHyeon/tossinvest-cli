@@ -1,7 +1,7 @@
 # Function Logic Map: `strategyProposalAuthorityPair.ResultAuthority`
 
 - Source: `internal/app/engine/strategy_proposal_authority.go`
-- Source SHA-256: `2c546898bc4178d0ee44238d51fb8e05a4c908cee721041ee24713c4c98ac385`
+- Source SHA-256: `2e2e7dd7ade2428ad72eddde648e1798c1e6c19b082052a61804c1c226a6dcf6`
 - Signature: `strategyProposalAuthorityPair.ResultAuthority(params=0, results=1)`
 - Source range: `181:1`–`209:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 5.2.2.2).
@@ -52,3 +52,5 @@ a112 7.3 — 같은 파일 편집(관측 필드 · record 인자 / QueueDropCoun
 a112 8.8.4 로트 B: 같은 파일 collectMarket 편집(관문 계산 이동 · 주석)으로 줄만 밀림 — 본문 불변
 
 a112 8.5 응답 로트(2026-10-04): 같은 파일의 다른 함수 편집으로 줄만 밀림 — shift_same_file_bundles.py(구조 동일 확인 뒤 좌표 사상)
+
+a112 7.3.1 SHADOW 로트 — 같은 파일의 다른 함수 편집으로 줄만 밀림(본문 불변)

@@ -254,43 +254,52 @@ func newStrategyProposalAuthorityLoader(configDir, evidencePath, journalPath, ac
 		load: strategyproposal.LoadProductionAuthorityBatch}
 }
 
-func (loader *strategyProposalAuthorityLoader) collect(ctx context.Context, schedule strategyScheduleAuthorityPair, routes strategyRouteAuthorityPair, fx strategyFXAuthorityPair) strategyProposalAuthorityPair {
+// collect 는 두 시장의 제안 권한과, 그 옆의 shadow 묶음 짝(a112 7.3.1 — authority 밖 별도 값)을 돌려준다.
+func (loader *strategyProposalAuthorityLoader) collect(ctx context.Context, schedule strategyScheduleAuthorityPair, routes strategyRouteAuthorityPair, fx strategyFXAuthorityPair) (strategyProposalAuthorityPair, strategyShadowPair) {
 	if loader == nil || ctx == nil || schedule.observedAt.IsZero() || !schedule.observedAt.Equal(routes.observedAt) || !schedule.observedAt.Equal(fx.observedAt) {
-		return failedStrategyProposalPair(schedule.observedAt, StrategyProposalInternalFailure)
+		return failedStrategyProposalPair(schedule.observedAt, StrategyProposalInternalFailure), strategyShadowPair{}
 	}
 	type outcome struct {
 		market StrategyMarket
 		value  strategyProposalMarketAuthority
+		shadow strategyShadowBatch
 	}
 	outcomes := make(chan outcome, 2)
 	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
 		market := market
 		go func() {
 			value := strategyProposalMarketAuthority{market: market, snapshot: StrategyProposalMarketSnapshot{Market: market, Reason: StrategyProposalInternalFailure}}
+			var shadow strategyShadowBatch
 			func() {
 				defer func() {
 					if recover() != nil {
 						value = strategyProposalMarketAuthority{market: market, snapshot: StrategyProposalMarketSnapshot{Market: market, Reason: StrategyProposalInternalFailure}}
+						// 고장 갈래는 관측 없음(부재 값)이다 — 고장 전에 대입된 묶음을 남기지 않는다.
+						shadow = strategyShadowBatch{}
 					}
 				}()
-				value = loader.collectMarket(ctx, schedule.forMarket(market), routes.forMarket(market), fx.forMarket(market), schedule.observedAt)
+				value = loader.collectMarket(ctx, schedule.forMarket(market), routes.forMarket(market), fx.forMarket(market), schedule.observedAt, &shadow)
 			}()
-			outcomes <- outcome{market: market, value: value}
+			outcomes <- outcome{market: market, value: value, shadow: shadow}
 		}()
 	}
 	pair := strategyProposalAuthorityPair{observedAt: schedule.observedAt}
+	var shadow strategyShadowPair
 	for range 2 {
 		result := <-outcomes
 		if result.market == StrategyMarketKR {
-			pair.kr = result.value
+			pair.kr, shadow.kr = result.value, result.shadow
 		} else {
-			pair.us = result.value
+			pair.us, shadow.us = result.value, result.shadow
 		}
 	}
-	return pair
+	return pair, shadow
 }
 
-func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context, schedule strategyScheduleMarketAuthority, routes strategyRouteMarketAuthority, fx strategyFXMarketAuthority, observedAt time.Time) strategyProposalMarketAuthority {
+// collectMarket 의 shadow 는 a112 7.3.1 의 별도 운반 칸이다: 들어오자마자 부재 값으로 비우고(조정 앞 닫힘 일곱 = 「관측 없음」), 조정에
+// 닿은 주기만 조정자가 모은 관문 앞 묶음을 결속 설정과 함께 싣는다(조정 바로 뒤 대입 하나). 반환 갈래 열다섯은 바뀌지 않는다.
+func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context, schedule strategyScheduleMarketAuthority, routes strategyRouteMarketAuthority, fx strategyFXMarketAuthority, observedAt time.Time, shadow *strategyShadowBatch) strategyProposalMarketAuthority {
+	*shadow = strategyShadowBatch{}
 	market := routes.market
 	// gate 를 fail 보다 **먼저** 선언한다. 클로저가 참조로 잡으므로, 아래에서
 	// 관문이 계산된 **뒤의** 닫힘 갈래는 전부 그 시점의 활성화를 함께 싣는다. 정확히는 13 닫힘 중
@@ -388,7 +397,8 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 	// 8.8.4 이전의 판정 자리와 같다 — 같은 함수 · 같은 순간이라 판정이 구성상 편집 전과 같다. 조정 뒤 닫힘과 성공은 이 값을 싣는다.
 	// 대가는 조정에 닿는 주기의 활성화 읽기 한 번 더(소형 로컬 파일, 핀이 선언된 시장만).
 	gate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)
-	arbitration, refused := coordinateMarketProposals(loader.accountRef, market, routes.entries, batch, observedAt, gate)
+	arbitration, refused, collected := coordinateMarketProposals(loader.accountRef, market, routes.entries, batch, observedAt, gate)
+	*shadow = collected.boundTo(loader.shadowConfig(market, schedule, routes))
 	gatedCount, gatedOutcomes = len(arbitration.gated), distinctGatedOutcomes(arbitration.gated)
 	// 관문이 한 소유자 범위를 통째로 지웠으면 시장을 닫는다 (태스크 8.8.1).
 	//

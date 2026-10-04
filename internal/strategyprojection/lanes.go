@@ -58,11 +58,24 @@ const (
 	LaneOutcomeLatched LaneOutcome = "LATCHED"
 )
 
-// LaneRuntime 은 worker 의 runtime 상태다. 정의된 값은 골든의 UNOBSERVED 하나뿐이다(판정 Q3 — 골든 밖 어휘를 지어내지 않음).
-// 관측된 사실은 health · trigger · start · outcome 이 나른다. SHADOW 같은 값은 태스크 7.3.1 의 몫이다.
+// LaneRuntime 은 레인의 runtime 상태다. 골든 기본값은 UNOBSERVED 이고, a112 7.3.1(브리프 v3.3 §7)이 SHADOW 를 **이 투영 어휘에만** 연다 —
+// router RuntimeState 는 시장 기록과 공유하므로 {UNOBSERVED} 그대로다. SHADOW 는 관측된 OFF/OFF 레인의 읽기 전용 반사실이고(validateLane 의
+// 교차 규칙), 승격이 아니다.
 type LaneRuntime string
 
-const LaneRuntimeUnobserved LaneRuntime = "UNOBSERVED"
+const (
+	LaneRuntimeUnobserved LaneRuntime = "UNOBSERVED"
+	LaneRuntimeShadow     LaneRuntime = "SHADOW"
+)
+
+// LaneShadowOutcome 은 SHADOW 레인의 반사실 판정이다(strategyworker.ShadowOutcome 과 같은 어휘 — census 시험이 대조).
+type LaneShadowOutcome string
+
+const (
+	LaneShadowWouldEmit   LaneShadowOutcome = "WOULD_EMIT"
+	LaneShadowNotThisLane LaneShadowOutcome = "NOT_THIS_LANE"
+	LaneShadowNoInput     LaneShadowOutcome = "NO_INPUT"
+)
 
 // LaneRuntimeProjection 은 레인 하나의 읽기 전용 상태다.
 //
@@ -105,6 +118,8 @@ type LaneRuntimeProjection struct {
 	RestartNotBefore *time.Time `json:"restartNotBefore"`
 	SnapshotDigest   *string    `json:"snapshotDigest"`
 	EvidenceDigest   *string    `json:"evidenceDigest"`
+	// ShadowOutcome 은 runtime=SHADOW 일 때만 있다(그 밖에는 null — 언제나 직렬화된다). shadow 핀이 없는 오늘은 전부 null.
+	ShadowOutcome *LaneShadowOutcome `json:"shadowOutcome"`
 }
 
 // CoordinatorProjection 은 시장 하나의 제안 조정 결과다(골든 coordinator_key_fields=[market]).
@@ -182,7 +197,7 @@ func defaultCoordinators() []CoordinatorProjection {
 func LaneJSONFields() []string {
 	return []string{"abandoned", "abnormal", "consecutiveFailures", "cycleDeadlineMs", "cycleGeneration", "desired", "dropped", "effective",
 		"evidenceDigest", "family", "firstFailure", "health", "horizon", "laneId", "laneVersion", "latchRevision", "market", "nextDueAt",
-		"outcome", "pending", "policyVersion", "refusal", "restartNotBefore", "runtime", "snapshotDigest", "start", "trigger"}
+		"outcome", "pending", "policyVersion", "refusal", "restartNotBefore", "runtime", "shadowOutcome", "snapshotDigest", "start", "trigger"}
 }
 
 func CoordinatorJSONFields() []string {
@@ -192,6 +207,15 @@ func CoordinatorJSONFields() []string {
 
 func SelectedScopeJSONFields() []string {
 	return []string{"calibrationDigest", "campaignId", "configDigest", "laneId", "lineageIdentity", "scoreVersion", "symbol"}
+}
+
+// LaneRuntimes · LaneShadowOutcomes 는 runtime · shadowOutcome 어휘다(OpenAPI enum 동기 시험이 문서와 대조 — a112 7.3.1).
+func LaneRuntimes() []string {
+	return []string{string(LaneRuntimeUnobserved), string(LaneRuntimeShadow)}
+}
+
+func LaneShadowOutcomes() []string {
+	return []string{string(LaneShadowWouldEmit), string(LaneShadowNotThisLane), string(LaneShadowNoInput)}
 }
 
 // LaneTriggers · LaneStarts · LaneOutcomes · LaneHealths 는 받는 어휘다(census 시험이 strategyworker 상수 전부와 대조).
@@ -272,8 +296,17 @@ func validateLanes(lanes []LaneRuntimeProjection) error {
 }
 
 func validateLane(lane LaneRuntimeProjection) error {
-	if !validState(lane.Desired) || !validState(lane.Effective) || lane.Runtime != LaneRuntimeUnobserved {
+	if !validState(lane.Desired) || !validState(lane.Effective) || !member(string(lane.Runtime), LaneRuntimes()) {
 		return errors.New("invalid desired, effective or runtime")
+	}
+	// SHADOW 교차 규칙(a112 7.3.1 — strategyworker.ShadowEligible 과 같은 조건의 값 형태): SHADOW 는 관측된(health≠nil · cycleGeneration>0)
+	// OFF/OFF 레인에만, 그리고 shadowOutcome 은 SHADOW 일 때 정확히 그때만 있다. 잠긴 레인의 SHADOW 는 허용(관측만).
+	shadow := lane.Runtime == LaneRuntimeShadow
+	if shadow && (lane.Desired != StateOff || lane.Effective != StateOff || lane.Health == nil || lane.CycleGeneration == 0) {
+		return errors.New("SHADOW is only an observed OFF/OFF lane")
+	}
+	if (lane.ShadowOutcome != nil) != shadow || lane.ShadowOutcome != nil && !member(string(*lane.ShadowOutcome), LaneShadowOutcomes()) {
+		return errors.New("shadowOutcome must be a shadow outcome exactly when the runtime is SHADOW")
 	}
 	// 거절 코드는 REFUSED 결과에만 있고 REFUSED 결과에는 반드시 있다(판정 (A)). 결과와 무관하게 싣는 생산자는 여기서 거절된다.
 	refused := lane.Outcome != nil && *lane.Outcome == LaneOutcomeRefused
@@ -411,6 +444,7 @@ func cloneLanes(lanes []LaneRuntimeProjection) []LaneRuntimeProjection {
 		lane.PolicyVersion, lane.CycleDeadlineMS = cloneString(lane.PolicyVersion), clonePointer(lane.CycleDeadlineMS)
 		lane.NextDueAt, lane.RestartNotBefore = cloneTime(lane.NextDueAt), cloneTime(lane.RestartNotBefore)
 		lane.SnapshotDigest, lane.EvidenceDigest = cloneString(lane.SnapshotDigest), cloneString(lane.EvidenceDigest)
+		lane.ShadowOutcome = clonePointer(lane.ShadowOutcome)
 		out[index] = lane
 	}
 	return out

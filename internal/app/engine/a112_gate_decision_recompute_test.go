@@ -61,7 +61,7 @@ func a112CollectWithActivationAnswers(t *testing.T, ctx context.Context, lanes [
 		fx.snapshot.Ready = false
 	}
 	got := loader.collectMarket(ctx, routeReadySchedulePair(now).forMarket(StrategyMarketKR),
-		arbitrationRoutePair(t, now, familyScoresForTest(strategyrouter.MarketKR), "005930", lanes...).forMarket(StrategyMarketKR), fx, now)
+		arbitrationRoutePair(t, now, familyScoresForTest(strategyrouter.MarketKR), "005930", lanes...).forMarket(StrategyMarketKR), fx, now, new(strategyShadowBatch))
 	handed := 0
 	for _, handoff := range got.dispatchHandoffs() {
 		if _, ok := handoff.Single(); ok {
@@ -212,7 +212,7 @@ func TestANilEnvironmentReaderRollsTheGateBackInsteadOfPanicking(t *testing.T) {
 		loader.getenv = nil
 		fx := proposalFXPair(now)
 		fx.kr.snapshot.Ready = false
-		pair := loader.collect(context.Background(), schedule, routes, fx)
+		pair, _ := loader.collect(context.Background(), schedule, routes, fx)
 		if pair.kr.snapshot.Reason != StrategyProposalFXNotReady {
 			t.Fatalf("KR reason=%s, want %s (the activation load must not turn the cycle into an internal failure)", pair.kr.snapshot.Reason, StrategyProposalFXNotReady)
 		}

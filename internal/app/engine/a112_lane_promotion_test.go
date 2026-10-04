@@ -41,7 +41,7 @@ func TestAVerifiedPromotionLetsTheOwningLaneEmitThroughTheLaneRuntime(t *testing
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			runtime := laneRuntimeForDependency(t)
-			if err := runtime.evaluate(context.Background(), StrategyMarketKR, 1, tc.activation, inputs); err != nil {
+			if err := runtime.evaluate(context.Background(), StrategyMarketKR, 1, tc.activation, inputs, strategyShadowBatch{}); err != nil {
 				t.Fatal(err)
 			}
 			emitted := 0

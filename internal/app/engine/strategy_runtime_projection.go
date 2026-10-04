@@ -61,6 +61,11 @@ func (c *Context) Read(ctx context.Context) (strategyprojection.Snapshot, error)
 	}
 	for _, market := range []StrategyMarket{StrategyMarketKR, StrategyMarketUS} {
 		worker, ok := supervisor.Snapshot(market)
+		// a112 7.3.1 R1(두 시계): 클로저는 경과로, supervisor 는 감시견 select 로 같은 주기의 실패를 따로 판정한다 — 경계에서 둘이 갈리면
+		// supervisor 가 버린 주기의 SHADOW 가 게시될 수 있다. abandon 이 기록된 시장(프로세스 수명 표시)은 SHADOW 를 보이지 않는다.
+		if ok && worker.AbandonedEvaluation {
+			snapshot.Lanes = strategyLanesWithoutShadow(snapshot.Lanes, market)
+		}
 		if !ok || !worker.Latched {
 			continue
 		}

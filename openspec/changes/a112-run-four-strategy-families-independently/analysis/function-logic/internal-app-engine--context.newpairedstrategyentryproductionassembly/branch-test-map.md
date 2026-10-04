@@ -1,16 +1,16 @@
-# Branch Test Map: `Context.NewPairedStrategyEntryProductionAssembly`
+# Branch Test Map: `NewPairedStrategyEntryProductionAssembly`
 
-- Source SHA-256: `6f1f6804cfd437116c16a48d1526327c28360433f09e0ba3567eb3537442ee5b`; AST branch locations are authoritative.
-- Revision: **modified (a112 6.3, 2026-10-01).** 편집 전 9 분기 → 8: 재검증 클로저 안의 drift 판정 if(편집 전 B6 자리)를 순수 함수 `strategyScheduleStillMatchesAdmission`(`strategy_schedule_revalidation.go`)로 **의미 무변경 이동** — 클로저는 수집 한 문장 + 그 함수 호출 한 문장. 조건식 철자 동일(이동 영수증). 나머지 분기는 번호만 당겨졌다.
-- 편집 전 번들: `analysis/measurements/lot-6.3/pre-edit/internal-app-engine--context.newpairedstrategyentryproductionassembly/`. 변이 원장 `analysis/measurements/lot-6.3/mutation-6.3.tsv`.
+- Source SHA-256: `9cb510c1c9c7f44ac109de5fd8ddac8e6c559adb4d654b1acd65dce19cc9e577`; AST branch locations are authoritative.
+- Revision: **modified (a112 7.3.1 SHADOW, 2026-10-01).** 분기 불변(8). collect 의 둘째 값을 `shadowAuthority` 로 받아 조립 리터럴의 별개 필드 `shadow` 에 담는다 — dispatch · worker · 결과 권한에는 넘기지 않는다.
+- 편집 전 번들: `analysis/measurements/lot-7.3.1-shadow/pre-edit/internal-app-engine--context.newpairedstrategyentryproductionassembly/`. 변이 원장 `analysis/measurements/lot-7.3.1-shadow/mutation-7.3.1-S.tsv`.
 
 | Branch | Scenario anchor | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | if at 294:2 — nil Context → 오류 | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | yes |
-| B2 | if at 300:2 — 원장 경로 있음 → 후보 · 원장 경로 | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | yes |
-| B3 | if at 311:2 — 원장 경로 → 근거 경로 | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | yes |
-| B4 | if at 321:2 — 레인 세우기 실패 → 오류 | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | yes |
-| B5 | if at 342:2 — 시계 있음 → dispatch now 배선 | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | yes |
-| B6 | range at 358:2 — KR · US worker 만들기 | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | yes |
-| B7 | if at 363:2 — 감독자 생성 실패 → 오류 | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | yes |
-| B8 | if at 370:2 — 투영 발행 실패 → 오류 | 분기 불변 — 편집 전 번들 서술(`pre-edit/`) 그대로 | no — 이 로트가 바꾸지 않음 | yes |
+| B1 | if at 297:2 — Context nil | 진입 없음 | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | no — 측정상 진입 0(커버리지 공백, 통과가 아님) |
+| B2 | if at 303:2 — 원장 경로 | 진입 없음 | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | no — 측정상 진입 0(커버리지 공백, 통과가 아님) |
+| B3 | if at 314:2 — evidence 경로 | 진입 없음 | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | no — 측정상 진입 0(커버리지 공백, 통과가 아님) |
+| B4 | if at 324:2 — 레인 런타임 오류 | 진입 없음 | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | no — 측정상 진입 0(커버리지 공백, 통과가 아님) |
+| B5 | if at 345:2 — 시계 → dispatch now | shadow 시험 밖의 패키지 시험(합집합 측정) | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | yes — 패키지 합집합 진입(측정) |
+| B6 | range at 361:2 — 시장 worker 순회 | shadow 시험 밖의 패키지 시험(합집합 측정) | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | yes — 패키지 합집합 진입(측정) |
+| B7 | if at 366:2 — supervisor 생성 오류 | 진입 없음 | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | no — 측정상 진입 0(커버리지 공백, 통과가 아님) |
+| B8 | if at 373:2 — 투영 발행 오류 | 진입 없음 | no — 이 로트가 분기를 바꾸지 않음(편집 전 번들 `pre-edit/` 와 같은 조건) | no — 측정상 진입 0(커버리지 공백, 통과가 아님) |

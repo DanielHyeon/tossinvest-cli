@@ -1,0 +1,46 @@
+{
+  "file": "internal/strategyrouter/production_owner_unix.go",
+  "source_sha256": "82148967ee4ee42f648fb5a095aeb539669bb0b31f3f69a32eca56c02ea9650d",
+  "package": "strategyrouter",
+  "function": "productionRouteOwnerUID",
+  "signature": "productionRouteOwnerUID(params=0, results=2)",
+  "start": {
+    "line": 10,
+    "column": 1
+  },
+  "end": {
+    "line": 10,
+    "column": 84
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 10,
+        "column": 49
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 10,
+        "column": 56
+      },
+      "text": "uint32"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 10,
+        "column": 63
+      },
+      "text": "os.Geteuid"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

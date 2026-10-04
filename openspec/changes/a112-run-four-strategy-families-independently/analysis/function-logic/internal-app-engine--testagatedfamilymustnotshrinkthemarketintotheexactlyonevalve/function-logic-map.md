@@ -1,7 +1,7 @@
 # Function Logic Map: `TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve (시험)`
 
 - Source: `internal/app/engine/a112_family_gate_test.go`
-- Source SHA-256: `53d84c5a06d2575f92e11247c98ef92cb4eba75f707bd21d2afa55840d73fe7c`
+- Source SHA-256: `49511cdebc1ba5506737d375b775aa2a533b358701fb531f33f41051f2400fcf`
 - Signature: `TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve(params=1, results=0)`
 - Source range: `465:1`–`503:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 repin-1e25b3a3).
@@ -64,3 +64,5 @@
 ## Safety conclusion
 
 - 시험 코드 — 생산 경로 없음.
+
+a112 7.3.1 SHADOW 로트 — 같은 파일의 다른 함수 편집으로 줄만 밀림(본문 불변)
