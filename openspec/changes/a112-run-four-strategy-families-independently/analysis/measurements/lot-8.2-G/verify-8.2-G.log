@@ -1,0 +1,7 @@
+== lot 8.2-G verify (shared tree on 8f6f756b + lot files) 2026-10-04T18:26:16+09:00
+make lint exit=0
+go test untagged exit=0
+go test tagged exit=0
+make sdd-test exit=0
+untagged: Go test: 321 passed in 6 packages (rtk 요약 — 6 패키지: testenv · strategyproposal · strategyprojection · officialbars · strategyworker · strategyhandoff)
+tagged: Go test: 356 passed in 6 packages

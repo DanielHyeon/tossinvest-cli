@@ -579,7 +579,8 @@
 ## 8. Verification Rollout and Review
 
 - [ ] 8.1 Run focused unit/property/integration tests and race tests for breakout evidence/core, strategyflow, strategyrouter, strategyproposal, scheduler and engine worker/coordinator packages; attach RED-to-GREEN evidence to every Branch Test Map row.
-- [ ] 8.2 Run dependency/static guards proving lane/evidence/worker packages contain no WTS or broker mutator, writable journal, Guardian issuer, activation/toggle writer and tests cannot POST to a live hostname.
+- [x] 8.2 Run dependency/static guards proving lane/evidence/worker packages contain no WTS or broker mutator, writable journal, Guardian issuer, activation/toggle writer and tests cannot POST to a live hostname.
+  **닫음(2026-10-04, Manager 판정 결정 1 — a112 안에서 닫는다):** census `measurements/gate-8.1-8.3-2026-10-04/guard-census-8.2.md`(기존 15 가드 GREEN, `guards-8.2.log`) + 8.2 가드 로트(review.md 「8.2 가드 로트」, `measurements/lot-8.2-G/` 변이 13/13). 남는 한계(명기): 공식 클라이언트 기본 Transport 는 DefaultTransport 가드 밖 — officialbars 시험의 official.New 는 WithBaseURL + WithHTTPClient 강제로 막음; 시험 이진의 journal 은 router · coordinator 의 임시 실원장 픽스처에만(이름 예외).
 - [ ] 8.3 Run `openspec validate a112-run-four-strategy-families-independently --strict --no-interactive`, PM tracker generation/check, `make sdd-check`, `make test`, `make vet`, `make validate` and `make gate CHANGE=a112-run-four-strategy-families-independently`.
 - [ ] 8.4 Refresh all edited-function AST/FLM/BTM/risk reports after GREEN implementation and confirm every branch/risk row maps to an automated test or an explicit reviewed non-code control.
 

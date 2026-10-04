@@ -6446,3 +6446,25 @@ carry 단언(E9 · E7) + BTM 에 선택자-대입 변이 한계 기록(B11 · B1
 **6f5b0df6 별도 독립 리뷰 — not-applicable(Manager 판정):** 이 로트는 4판 독립 리뷰의 처방 자체를 구현했고 그 리뷰들의 생존 변이 · 판별 핀이 로트의 수락 기준이었다 —
 새 적대 표면이 없다. **(d) 4 적재기 취소 응답 — a112 범위 밖 이연(not-applicable in a112, Manager 판정):** 결함은 8.8.4 이전부터 route · proposal · risk · account
 적재기 공통이고 오늘 생산 노출 0(활성화 핀 0); ROADMAP 「권한 적재 파도의 취소 응답」 행(활성화 핀 선언 전 착지, 면제 불가)으로 넘긴다.
+
+## 2026-10-04 8.2 가드 로트 — 레인 · 증거 · worker 폐포 가드 공백 닫기(시험 전용, Manager 판정 결정 1)
+
+**입력.** 8.2 census(`measurements/gate-8.1-8.3-2026-10-04/guard-census-8.2.md`, 14 패키지 × 5 능력): 기존 가드 15 GREEN, 공백 — strategyproposal
+무가드(journal 직접 import) · strategyprojection 무가드 · officialbars 폐포에 official 주문 변경자(허용 목록 = 존재 검사) · (e) 시험 실호스트 가드 0 ·
+`go list` 걸음이 태그 뒤 시험을 안 봄. 생산 .go 0.
+
+**구현.** 공용 부품 `internal/testenv/closure.go`(금지 능력 목록 한 곳 — 기존 목록에 없던 strategydispatch 포함 · 걸음 넷 = 생산/시험 이진 × 무태그/태그 ·
+`ImportGraph.Reachable` 절단) · `typecheck.go`(소스 importer 타입 검사 → 해소 객체 census). ① strategyproposal: 폐포 넷에 journal 외 능력 0 + journal 사용이
+`OpenReadOnly` · `*ReadOnly` 메서드 · 값 타입 셋뿐(쓰기 핸들 1 회라도 실패, 빈 표본 실패). ② strategyprojection: 표준 라이브러리 10 이름 허용 목록 + 생산 폐포의
+모듈 패키지 = 자기 자신. ③ officialbars: official 을 잘라 낸 걸음에 능력 0 · 전체 걸음은 official 뒤 넷(official · trading · orderintent · config)뿐 + 생산이
+official 에서 쓰는 것은 읽기 응답 값 타입 다섯(분봉 · 호가 · 현재가 · RateBudget)과 그 필드 · 메서드뿐(Client 메서드 · 패키지 함수 0, 주문 변경자 이름 명시).
+④ officialbars `TestMain` 이 DefaultTransport 를 testenv.Guard 로(차단 1 건이면 패키지 실패) + 설치 확인 시험 + 시험 파일 census — official.New 는 반드시
+WithBaseURL + WithHTTPClient(공식 클라이언트는 자기 Transport 를 만들어 DefaultTransport 가드를 우회하므로 — 한계 명기) · 실호스트 리터럴 0 · 주문 변경자 이름 0.
+⑤ 태그 걸음: strategyworker · strategyhandoff 에 공용 걸음 넷 가드(기존 가드 함수는 손대지 않음 — 재고정 후보 1e25b3a3 에 있는 함수라 편집하면 FLM 대상),
+그리고 strategyworker `TestEveryLaneEvidenceAndWorkerPackageReachesNoMutationCapability` 가 11 패키지 × 걸음 넷(44, 병렬)을 한 규칙으로 — 예외는 이름과
+이유로만: 시험 이진(태그)에서 journal 을 들여오는 strategyrouter · strategycoordinator(외부 시험의 임시 실원장 픽스처), 예외가 더 쓰이지 않으면 실패.
+
+**증거.** 변이 `measurements/lot-8.2-G/mutation-8.2-G.tsv` **13/13 CAUGHT**(사본 = 8f6f756b + 로트 파일, 대조군 GREEN pass 321): G1 쓰기 핸들 · G2 ops import ·
+G3 net/http · G4 config · G5 PlaceOrder 이름 · G6 official 밖 경로의 journal · G7 WithHTTPClient 누락 · G8 TestMain 미설치 · G9 레인의 ops(자기 금지 목록은
+못 봄 — census 가 잡음) · G10 예외 삭제 · G11 태그 시험의 ops(무태그 걸음은 못 봄) · G12 목록에서 strategydispatch 탈락 · G13 절단 무력화.
+검증 `verify-8.2-G.log`: make lint · 6 패키지 무태그(321) · 태그(356) · make sdd-test 전부 exit 0. FLM: 새 파일 · 새 함수뿐(기존 함수 편집 0) — 번들 대상 아님(not-applicable).

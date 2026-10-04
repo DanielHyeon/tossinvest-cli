@@ -1044,13 +1044,51 @@ SET_85R_FULL_TESTS = [
     ["go", "test", "-trimpath=false", "-tags", "tossos_testseams", "-count=1", "./internal/strategyrouter"],
     ["go", "test", "-trimpath=false", "-tags", "tossos_testseams", "-count=1", "-timeout", "30m", "./internal/app/engine"],
 ]
+# a112 8.2 가드 로트(Manager 판정 2026-10-04): 새 가드마다 「금지 대상이 들어오면 실패」 를 사본에서 잰다.
+MOD = "github.com/JungHoonGhae/tossinvest-cli/internal/"
+SET_82G = [
+    ("G1 strategyproposal production uses the writable journal handle", "internal/strategyproposal/production.go",
+     "func (authority ProductionAuthority) WeeklyBinding()", "var _ = journal.Open\n\nfunc (authority ProductionAuthority) WeeklyBinding()"),
+    ("G2 strategyproposal production imports the ops toggle package", "internal/strategyproposal/production.go",
+     '\t"github.com/JungHoonGhae/tossinvest-cli/internal/journal"\n', '\t"github.com/JungHoonGhae/tossinvest-cli/internal/journal"\n\t_ "' + MOD + 'ops"\n'),
+    ("G3 strategyprojection production imports net/http", "internal/strategyprojection/registry.go",
+     "package strategyprojection\n", 'package strategyprojection\n\nimport _ "net/http"\n'),
+    ("G4 strategyprojection production imports the config writer", "internal/strategyprojection/registry.go",
+     "package strategyprojection\n", 'package strategyprojection\n\nimport _ "' + MOD + 'config"\n'),
+    ("G5 officialbars production names an order mutator of the official client", "internal/officialbars/quote.go",
+     "\tStrictLastPrice(ctx context.Context, market, symbol string) (official.StrictLastPrice, error)\n}",
+     "\tStrictLastPrice(ctx context.Context, market, symbol string) (official.StrictLastPrice, error)\n}\n\nvar _ = (*official.Client).PlaceOrder"),
+    ("G6 officialbars production reaches the journal by a path outside internal/official", "internal/officialbars/quote.go",
+     '\t"github.com/JungHoonGhae/tossinvest-cli/internal/official"\n', '\t"github.com/JungHoonGhae/tossinvest-cli/internal/official"\n\t_ "' + MOD + 'journal"\n'),
+    ("G7 an officialbars test builds an official client without WithHTTPClient (its own transport, past the DefaultTransport guard)",
+     "internal/officialbars/producer_test.go", "official.WithBaseURL(server.URL), official.WithHTTPClient(server.Client()))", "official.WithBaseURL(server.URL))"),
+    ("G8 officialbars TestMain stops installing the real-host guard", "internal/officialbars/a112_live_host_guard_test.go",
+     "func TestMain(m *testing.M) {\n\tprevious := http.DefaultTransport\n\thttp.DefaultTransport = &testenv.Guard{",
+     "func TestMain(m *testing.M) {\n\tprevious := http.DefaultTransport\n\t_ = &testenv.Guard{"),
+    ("G9 continuationlane production imports the ops toggle package (caught by the lane census, not by its own deny list)",
+     "internal/continuationlane/zz_a112_mut_ops.go", None, 'package continuationlane\n\nimport _ "' + MOD + 'ops"\n'),
+    ("G10 the coordinator's test-only journal exception is removed", "internal/strategyworker/a112_lane_closures_test.go",
+     'var a112TestOnlyJournalFixture = map[string]bool{"strategyrouter": true, "strategycoordinator": true}',
+     'var a112TestOnlyJournalFixture = map[string]bool{"strategyrouter": true}'),
+    ("G11 a tagged strategyhandoff test pulls in the ops toggle package (untagged walks cannot see it)",
+     "internal/strategyhandoff/zz_a112_mut_tagged_test.go", None,
+     '//go:build tossos_testseams\n\npackage strategyhandoff\n\nimport _ "' + MOD + 'ops"\n'),
+    ("G12 the shared capability list loses internal/strategydispatch", "internal/testenv/closure.go",
+     '\t\t{"internal/strategydispatch", "전략 dispatch — Guardian 발급 경로"},\n', ""),
+    ("G13 the officialbars cut walk stops cutting at internal/official (every capability then shows up)", "internal/testenv/closure.go",
+     "if seen[next] || cut[next] || cut[base] {", "if seen[next] {"),
+]
+SET_82G_TESTS = [
+    ["go", "test", "-trimpath=false", "-count=1", "./internal/testenv", "./internal/strategyproposal", "./internal/strategyprojection",
+     "./internal/officialbars", "./internal/strategyworker", "./internal/strategyhandoff"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS), "8.8.4-A": (SET_884A, SET_884A_TESTS), "8.8.4-B": (SET_884B, SET_884B_TESTS), "7.3.1-R2": (SET_731R2, SET_731R2_TESTS), "8.5-R": (SET_85R, SET_85R_TESTS), "8.5-R-full": (SET_85R_FULL, SET_85R_FULL_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS), "8.8.4-A": (SET_884A, SET_884A_TESTS), "8.8.4-B": (SET_884B, SET_884B_TESTS), "7.3.1-R2": (SET_731R2, SET_731R2_TESTS), "8.5-R": (SET_85R, SET_85R_TESTS), "8.5-R-full": (SET_85R_FULL, SET_85R_FULL_TESTS), "8.2-G": (SET_82G, SET_82G_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측
