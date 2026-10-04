@@ -1,0 +1,2 @@
+status comparison: identical (cmp exit 0)
+HEAD comparison: identical (cmp exit 0)

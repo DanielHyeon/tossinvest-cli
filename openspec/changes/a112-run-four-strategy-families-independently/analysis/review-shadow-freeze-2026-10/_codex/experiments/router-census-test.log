@@ -1,0 +1,13 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter [github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter.test]
+internal/strategyrouter/review_shadow_sketch_test.go:8:76: d.LaneID undefined (type productionLaneDescriptor has no field or method LaneID)
+internal/strategyrouter/review_shadow_sketch_test.go:14:95: d.LaneID undefined (type productionLaneDescriptor has no field or method LaneID)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter [build failed]
+=== RUN   TestReviewCensusAliasAndErasure
+    census_test.go:71: ShadowDirect carries=true
+    census_test.go:71: ShadowAlias carries=false
+    census_test.go:71: ShadowAny carries=false
+    census_test.go:71: ShadowInst carries=false
+--- PASS: TestReviewCensusAliasAndErasure (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/review-experiments	0.002s
+FAIL

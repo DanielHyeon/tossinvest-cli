@@ -1,0 +1,54 @@
+=== RUN   TestRecheckV2CarrierReachesDispatchReceiver
+    census_test.go:45: dispatchHandoffs receiver carries strategyShadowInputs=true (entries-only body does not remove possession)
+    census_test.go:45: attack receiver carries strategyShadowInputs=true (entries-only body does not remove possession)
+--- PASS: TestRecheckV2CarrierReachesDispatchReceiver (0.00s)
+=== RUN   TestRecheckV2AliasesAndErasure
+    census_test.go:55: Nested detected
+    census_test.go:55: Inst detected
+    census_test.go:57: any remains erased; source freeze is necessary, go/types alone is not a dataflow proof
+--- PASS: TestRecheckV2AliasesAndErasure (0.00s)
+=== RUN   TestRecheckV2RebindingAndFreeze
+    census_test.go:76: q.Submit resolved as MethodVal; worker.owns resolved as function FieldVal; frozen source edit rejected
+--- PASS: TestRecheckV2RebindingAndFreeze (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/review-recheck	0.003s
+?   	github.com/JungHoonGhae/tossinvest-cli/review-recheck/strategyshadow	[no test files]
+=== RUN   TestRecheckV2EligibilityAndDifferential
+    recheck_v2_test.go:39: off eligible=true WOULD_EMIT=1 Submit-depth(pin absent/present)=[0 0]
+    recheck_v2_test.go:39: on eligible=false WOULD_EMIT=0 Submit-depth(pin absent/present)=[1 1]
+--- PASS: TestRecheckV2EligibilityAndDifferential (0.00s)
+=== RUN   TestRecheckV2MixedDifferential
+    recheck_v2_test.go:58: mixed ON/OFF: Submit-depth=[1 1] WOULD_EMIT=1; worker-level only, no full-cycle gateway claim
+--- PASS: TestRecheckV2MixedDifferential (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.004s
+=== RUN   TestReviewShadowInputTap
+    recheck_v1_control_test.go:10: undeclared: reason=READY lane inputs=[000660:kr_short_flow_continuation_v1 005930:kr_short_absorption_reversal_v1]
+    recheck_v1_control_test.go:10: declared_closed: reason=FAMILY_GATE_CLOSED lane inputs=[]
+--- PASS: TestReviewShadowInputTap (0.00s)
+=== RUN   TestReviewReadValidationBoundary
+    recheck_v1_control_test.go:21: Context.Read returned nil error after dynamic overlay; explicit Validate rejected: strategy projection: lane kr_short_flow_continuation_v1: invalid desired, effective or runtime
+--- PASS: TestReviewReadValidationBoundary (0.26s)
+=== RUN   TestRecheckV2PreGateInputs
+    recheck_v2_input_test.go:44: partial-on=false pre-gate=3 selected=2 reversal-off-retained=1
+    recheck_v2_input_test.go:44: partial-on=true pre-gate=3 selected=2 reversal-off-retained=1
+--- PASS: TestRecheckV2PreGateInputs (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.274s
+=== RUN   TestRecheckV2Evidence
+    recheck_v2_evidence_test.go:15: validateLane
+    recheck_v2_evidence_test.go:15: strategyProposalMarketAuthority.dispatchHandoffs
+    recheck_v2_evidence_test.go:15: FamilyWorker.Run
+    recheck_v2_evidence_test.go:15: FamilyWorker.owns
+    recheck_v2_evidence_test.go:15: LoadProductionFamilyActivation
+    recheck_v2_evidence_test.go:15: coordinateMarketProposals
+    recheck_v2_evidence_test.go:15: strategyMarketArbitration.entries
+    recheck_v2_evidence_test.go:15: Context.Read
+    recheck_v2_evidence_test.go:15: strategyProposalAuthorityLoader.collectMarket
+    recheck_v2_evidence_test.go:15: strategyLaneRuntime.evaluate
+    recheck_v2_evidence_test.go:15: strategyLaneInputs
+    recheck_v2_evidence_test.go:15: strategyFamilyGate.admit
+    recheck_v2_evidence_test.go:15: strategyProposalAuthorityLoader.familyGateFor
+--- PASS: TestRecheckV2Evidence (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/logic-map	0.006s

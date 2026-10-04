@@ -560,10 +560,10 @@
   `scoreVersion` · `calibrationDigest`). `internal/strategyprojection` 은 import 0 잎 그대로(레인 표 · 어휘를 골든 · 생산 상수와 시험으로 대조), 엔진 `Read` 가
   레인을 지금 상태로 읽기만 해서 덧씌움, 조정자 자식은 조립 발행 때(실패 갈래에서도). OpenAPI 세 스키마. 콘솔 template 무편집(화면 노출은 후속 콘솔 로트).
   계좌 원문 0(lineageIdentity 는 SHA-256). 변이 `lot-7.3/mutation-7.3.tsv`(동등 표기 둘 외 CAUGHT), 읽기 전용 불변 변이(Offer · Fail) CAUGHT. review 「7.3」 절.
-- [ ] 7.3.1 Distinguish `OFF/OFF/UNOBSERVED` from explicit read-only `SHADOW`: SHADOW may evaluate and project counterfactuals but cannot mint desired/effective/activation, own dispatch capability or survive restart without a server-owned signed shadow manifest.
+- [ ] 7.3.1 Distinguish `OFF/OFF/UNOBSERVED` from explicit read-only `SHADOW`: SHADOW may evaluate and project counterfactuals but cannot mint desired/effective/activation, own dispatch capability or survive restart without a valid server-owned shadow manifest bound by its deployment digest pin `TOSSOS_STRATEGY_FAMILY_SHADOW_<MARKET>_MANIFEST_SHA256` (개정 2026-10-04 [a112 결정 63] — 원문 「signed shadow manifest」; 신뢰 앵커는 결정 61 과 같은 digest 핀).
 
   **7.3.1 상태(2026-10-04 Manager 판정 — 열림, 사용자 결정 대기).** spec four-family-strategy-runtime :88-93 이 SHADOW 를 SHALL/MUST NOT 으로 구속한다(허용 절은
-  「서명 shadow 매니페스트가 있을 때만」, 금지 둘은 ON 승격 · dispatch 소유 · 재시작 자동 복구). 오늘은 SHADOW 상태가 없어(`strategyrouter.RuntimeState` = {UNOBSERVED},
+  「서명 shadow 매니페스트가 있을 때만」 — 결정 63 뒤 「digest 핀으로 결속된 매니페스트가 있을 때만」, 금지 둘은 ON 승격 · dispatch 소유 · 재시작 자동 복구). 오늘은 SHADOW 상태가 없어(`strategyrouter.RuntimeState` = {UNOBSERVED},
   골든 runtime 전부 UNOBSERVED) 빈 표본으로 성립한다 — **R2(이 로트)가 그것을 핀 통과로 바꿨다:** engine `a112_shadow_absent_restart_test.go`
   `TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten`(앞 프로세스가 검증 활성화 아래 KR 네 레인 ON 관측 → 같은 원장으로 재시작 → 여덟 다
   OFF/OFF/UNOBSERVED, 원장 dispatch lease · 레인 잠금 · 복구 기록 0) · `TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt`(router `RuntimeState` · projection
@@ -572,6 +572,10 @@
   `lot-7.3.1-R2/mutation-7.3.1-R2.tsv` 4/4 CAUGHT. **남은 결정(R3 — 게이트 차단, Manager 가 사용자에게 보고):** SHADOW 를 a112 에서 만들 것인가 / 활성화 로트로 미룰 것인가 /
   spec 델타의 SHADOW 허용 절 · 시나리오(:89 둘째 절 · :91-93)와 design :289 · :291 배포 계획을 후속 change 로 옮겨 정정할 것인가(Manager 권고 — spec/design 수정은 사용자 승인 뒤
   Manager 몫). SHADOW 로트의 선행은 ROADMAP 행(신뢰 앵커 · 골든 개정).
+  **사용자 결정(2026-10-04): 선택지 1 — a112 안에서 SHADOW 구축.** 설계 브리프 `analysis/shadow-2026-10/design-brief.md` · Manager 판정: 신뢰 앵커 = digest 핀(결정 61 정렬, spec/design amendment 는 Manager) · 별도 매니페스트(shadow: ON|OFF 만) · 결속 = 활성화 다섯(ProtectionReady 제외) · **범위 좁힘: 반사실은 레인 단위만, 조정자 반사실 선택은 범위 밖** · 골든 무변 · OpenAPI 는 저장소 안 소비자 감사로(검증기 `validateLane` 이 모든 읽기 경로의 관문 — 로트 안에서 넓히고 SHADOW ⇒ OFF/OFF 교차 규칙) · 8.6 불재개.
+  **freeze 4판 → 설계 개정 → re-freeze(2026-10-04 Manager 합본 판정 12 항):** 브리프 v2(`analysis/shadow-2026-10/design-brief.md`, v1 보존) — 반사실 입력은 관문 · 중재 **앞** 배치에서 분기(닫힌 시장 = 관측 없음) · `internal/strategyshadow` 별도 패키지(FamilyActivation 주조 불가) · 활성화 적재기 무편집 + 사본 양쪽 AST 핀 · shadow 단계는 collect · 유계 step 밖, 무오류 · 자가 recover · OFF∧OFF 단일 술어 · SHADOW 값은 projection 어휘 · 관측에만(router RuntimeState {UNOBSERVED} 유지) · dispatch 는 차등 척도 · OpenAPI enum 동기 시험 · 재시작 핀 셋. v1 의 「Validate 가 모든 읽기 경로의 관문」 은 「외부 경계(RPC · httpapi · console)」 로 정정(Context.Read 는 재검증 없음). 리뷰 `analysis/review-shadow-freeze-2026-10/`.
+  **freeze 종결(2026-10-05 Manager 선언):** 재검 6라운드 끝에 브리프 v3.3(종결판 — v1 · v2 · v3 · v3.1 · v3.2 는 `design-brief-v*.md` 로 보존) — 6라운드 codex(clean) PASS · 보이스 1 PASS(접기 다섯 전부 반영),
+  P0 전 라운드 0, 발견 수렴 17 → 7 → 5 → 4 → 2 → 0. 구현 단계 RED 후보 R1(두 시계 경합 — 표시 전용)은 브리프 §13. 다음: Pre-Edit FLM(브리프 §4 목록) → RED → GREEN → 변이 · race · verify → 착지.
 - [x] 7.4 Bound metrics cardinality by fixed market/family/lane/version/reason labels; keep symbol/setup/candidate identifiers in logs/journal queries rather than metric labels.
 
   **7.4 종결(2026-10-01 — 미착지).** 실측: 생산 메트릭 방출기 0(묶을 label 없음). Manager 판정 (A): 금지 명시 가드

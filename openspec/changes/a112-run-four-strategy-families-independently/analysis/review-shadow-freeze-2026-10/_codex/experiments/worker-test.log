@@ -1,0 +1,6 @@
+=== RUN   TestReviewShadowStructure
+    review_shadow_sketch_test.go:45: same Shadow arguments: activation OFF=WOULD_EMIT, activation ON=WOULD_EMIT
+    review_shadow_sketch_test.go:53: attack: ShadowCycle has only string outcome; allowlist calls=1 accepted; coordinator depth=1; desired=OFF effective=OFF
+--- PASS: TestReviewShadowStructure (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	0.003s

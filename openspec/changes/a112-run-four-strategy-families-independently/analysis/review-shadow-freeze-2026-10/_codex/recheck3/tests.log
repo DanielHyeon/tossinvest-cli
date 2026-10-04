@@ -1,0 +1,29 @@
+=== RUN   TestV3SeparatedCarrierAndAccessorMutation
+    census_v3_test.go:59: collectMarket body use=true
+    census_v3_test.go:59: dispatchHandoffs body use=false
+    census_v3_test.go:59: authorityForOwnerScope body use=false
+    census_v3_test.go:59: shadowAccessor body use=true
+    census_v3_test.go:59: dispatchAttack body use=true
+    census_v3_test.go:59: dispatchMethodValue body use=true
+    census_v3_test.go:59: transportAlias body use=true
+    census_v3_test.go:59: transportErasure body use=true
+--- PASS: TestV3SeparatedCarrierAndAccessorMutation (0.00s)
+=== RUN   TestV3OpaqueInputRejectsForeignMintAndConversion
+    census_v3_test.go:75: expected rejection: attack.go:1:77: cannot refer to unexported field proposal in struct literal of type strategyworker.ShadowInput
+    census_v3_test.go:75: expected rejection: attack.go:1:126: cannot use s (variable of struct type strategyworker.ShadowInput) as strategyworker.Input value in argument to admit
+--- PASS: TestV3OpaqueInputRejectsForeignMintAndConversion (0.00s)
+=== RUN   TestV3WholeClosureBanConflictsWithRequiredRouter
+    census_v3_test.go:88: required strategyshadow -> strategyrouter -> encoding/json -> reflect; whole dependency closure ban cannot pass
+    census_v3_test.go:88: required strategyshadow -> strategyrouter -> encoding/json -> unsafe; whole dependency closure ban cannot pass
+--- PASS: TestV3WholeClosureBanConflictsWithRequiredRouter (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/review-recheck3	0.003s
+=== RUN   TestRecheck3Evidence
+    recheck3_evidence_test.go:11: Context.runProductionStrategyMarketCycle
+    recheck3_evidence_test.go:11: Context.NewRefreshingPairedStrategyEntrySupervisor
+    recheck3_evidence_test.go:11: Context.productionStrategyWorker
+    recheck3_evidence_test.go:11: invokeBoundedStrategyCycle
+    recheck3_evidence_test.go:11: productionRouteDescriptors
+--- PASS: TestRecheck3Evidence (0.01s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/logic-map	0.007s
