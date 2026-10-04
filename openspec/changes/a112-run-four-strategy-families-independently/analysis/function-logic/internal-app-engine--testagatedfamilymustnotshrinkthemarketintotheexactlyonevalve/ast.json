@@ -1,0 +1,338 @@
+{
+  "file": "internal/app/engine/a112_family_gate_test.go",
+  "source_sha256": "53d84c5a06d2575f92e11247c98ef92cb4eba75f707bd21d2afa55840d73fe7c",
+  "package": "engine",
+  "function": "TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve",
+  "signature": "TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve(params=1, results=0)",
+  "start": {
+    "line": 465,
+    "column": 1
+  },
+  "end": {
+    "line": 503,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 468,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 469,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 472,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 477,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 482,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 487,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 490,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 494,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 499,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 466,
+        "column": 25
+      },
+      "text": "familyGateFixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 23
+      },
+      "text": "runtime.lanesFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 469,
+        "column": 6
+      },
+      "text": "lane.Key"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 472,
+        "column": 19
+      },
+      "text": "lane.Fail"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 473,
+        "column": 4
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 478,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 480,
+        "column": 15
+      },
+      "text": "collectUnderGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 483,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 485,
+        "column": 68
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 488,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 491,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 21
+      },
+      "text": "Single"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 21
+      },
+      "text": "authority.dispatchHandoff"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 495,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 6
+      },
+      "text": "Verified"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 6
+      },
+      "text": "authority.familyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 49
+      },
+      "text": "Generation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 49
+      },
+      "text": "authority.familyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 499,
+        "column": 94
+      },
+      "text": "activation.Generation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 500,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 501,
+        "column": 4
+      },
+      "text": "Verified"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 501,
+        "column": 4
+      },
+      "text": "authority.familyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 501,
+        "column": 45
+      },
+      "text": "Generation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 501,
+        "column": 45
+      },
+      "text": "authority.familyActivation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 501,
+        "column": 88
+      },
+      "text": "activation.Generation"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 466,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 467,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 472,
+        "column": 6
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 475,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 480,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 494,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

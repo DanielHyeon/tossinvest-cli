@@ -6494,3 +6494,11 @@ reversal 을 KR 로 · P3 weekly 원장 미개방 · E1 미선언을 되돌림�
 닫는다(미구현 — 벽 해제 로트로; 체크는 게이트 계수용 처분이지 완료가 아님). 8.6 은 원문 else 갈래 그대로: 배포 BLOCKED(A100 ProtectionReady 미완 — a100 미완료 86, 실측) ·
 build-only(`measurements/gate-8.1-8.3-2026-10-04/build-only-8.6.log`, go build 무태그 · 태그 · cmd/tossctl exit 0) · 상승 0 핀 7 개 pass 사건 확인(같은 로그). 이미지 빌드 ·
 컨테이너 교체 0. **L1c 수락은 장중 사람 프로브 대기**(측정 1회 :774, 수락 아님) — 0.3 노트에 명시, 사람 큐는 Manager 가 보유.
+
+## 2026-10-04 base 재고정 aeeb209e → 1e25b3a3 — 사용자 승인(Manager 전달) · 귀속 실측 · 영수증
+
+**승인.** 사용자 결정(2026-10-04, Manager 전달): base 재고정 1e25b3a3 승인(게이트 준비 권고안). 같은 결정으로 7.3.1 = 선택지 1(a112 안에서 SHADOW 구축).
+**귀속 실측(WORKFLOW 「사람 승인 base 재고정」 1).** `measurements/repin-1e25b3a3/` — 자기 Go 커밋 62 가 만진 함수 301: FRESH 51 · NOT-REQUIRED 240 ·
+STALE 2(둘 다 착지에 함수 없음 — GONE) · MISSING 8(자기 커밋 아님: 82080177 a127 · 766a8456 a094 — 제목 grep 이 집은 것, 둘 다 새 base 의 조상).
+새 창 1e25b3a3 → HEAD: required 20, **FRESH 20**(게이트 준비 16 + 8.5 응답 로트가 편집한 시험 함수 셋 — 새 경량 번들 · loadFamilyActivation).
+격리 워크트리 게이트 모의 check_analysis rc=0. **단독 커밋**으로 base-commit.txt 를 옮긴다(다음 커밋). 영수증은 SHADOW 로트 착지 뒤 최종 갱신.

@@ -597,6 +597,7 @@
   호출 표 생성). 재고정 후보에서 요구될 a112 함수 `TestProductionWorkersAreExactlyTheEightTheGoldenFroze` 경량 번들 추가(편집 전 FLM 은 7e124a73 에서). 분류 영수증 ·
   창 영수증 · 재고정 모의 `measurements/gateprep-2026-10-04/`, 도구 `harness/gateprep_window_receipt.py` · `render_gateprep_bundles.py`. **남은 것:** base 재고정(사람 승인 —
   권고 1e25b3a3, 그 창 16 함수 전부 지금 FRESH → 승인 뒤 영수증 생성만) · 7.3.1 R3 · 8.5.
+  **재고정 집행(2026-10-04, 사용자 승인 — Manager 전달):** base aeeb209e → 1e25b3a3. 귀속 실측 · 새 창 영수증(required 20, FRESH 20) · 게이트 모의 rc=0 — `measurements/repin-1e25b3a3/`, review.md 「base 재고정」. base-commit.txt 단독 커밋. 영수증은 SHADOW 로트 착지 뒤 최종 갱신.
 - [x] 8.5 Complete independent adversarial review for owner uniqueness, score calibration, q_final monotonicity, evidence correction/replay, queue/failure isolation, API quota sharing, OFF defaults and safety-loop independence; resolve all P0/P1 findings.
 
   **8.5 명시 대상 추가(2026-10-01 Manager 판정).** 2.3 (b) 의 `breakoutlane.evaluateFresh` 편집(1.2 반사실 기록 갈래 B7 — High-risk 함수) — 착지 시점 독립 적대 리뷰는
