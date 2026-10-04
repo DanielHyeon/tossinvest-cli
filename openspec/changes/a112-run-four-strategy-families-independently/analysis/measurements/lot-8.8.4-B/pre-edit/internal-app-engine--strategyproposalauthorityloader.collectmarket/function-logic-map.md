@@ -9,6 +9,7 @@
 ## Inputs and invariants
 
 - 편집 계획: a112 8.8.4 로트 B 항목 2(Q-B2): gate 계산(familyGateFor)만 RouteNotReady 가드 직후로 옮긴다 — 실패 kind 판정 자리 · 우선순위 · FamilyGateClosed 판정 자리 불변, 옮긴 값은 닫힘 갈래가 싣는 활성화로만 쓰인다. RouteNotReady 는 zero-carry 유지.
+- **정정(a112 8.5 응답 로트 ①, 2026-10-04 — 원문은 기록으로 위에 그대로 둠):** 위 계획의 「판정 자리 불변 · 옮긴 값은 닫힘 갈래가 싣는 활성화로만 쓰인다」는 실제 편집(0b441270)에서 거짓이었다 — 옮긴 값이 조정 관문(판정 입력)으로도 쓰였고, 그 값은 제안 적재 시간만큼 낡아 적재 중 ctx 취소 · 매니페스트 철회가 판정에 안 보였다(8.5 보이스 2 P1 · 보이스 1 P2-1, `analysis/review-8.5-2026-10/combined-8.5.md` F1). 응답 로트가 판정 계산을 이 번들의 편집 전 자리(`coordinateMarketProposals` 바로 앞)에 되살려(Manager 판정 Y) 계획 문장이 비로소 참이 됐다: 조기 값은 조정 앞 닫힘 여섯의 진단 carry 전용. 현재 번들: `analysis/function-logic/internal-app-engine--strategyproposalauthorityloader.collectmarket/`.
 
 ## Branches and early returns
 

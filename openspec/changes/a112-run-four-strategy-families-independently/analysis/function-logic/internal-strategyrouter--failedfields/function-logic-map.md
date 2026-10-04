@@ -1,9 +1,9 @@
 # Function Logic Map: `failedFields (새 함수)`
 
 - Source: `internal/strategyrouter/production_family_activation.go`
-- Source SHA-256: `7842842bc1b1bf9d2be542624169502fcc846a4e60080841887f5072f4fb6507`
+- Source SHA-256: `57123f814187d9201ec6999d6375adc649b579c89beb6c4731f36cc51243b005`
 - Signature: `failedFields(params=1, results=1)`
-- Source range: `630:1`–`638:2`
+- Source range: `633:1`–`641:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 8.8.4-B).
 - Risk scan: `risk-pattern-report.md`.
 
@@ -13,18 +13,18 @@
 
 ## Branches and early returns
 
-- Exact AST return nodes: `637:2`.
+- Exact AST return nodes: `640:2`.
 
 | Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
-| B1 | range | 632:2 | 검사 순회 |
-| B2 | if | 633:3 | 실패한 검사의 이름을 모음 |
+| B1 | range | 635:2 | 검사 순회 |
+| B2 | if | 636:3 | 실패한 검사의 이름을 모음 |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `append` | 634:13 |
+| `append` | 637:13 |
 
 ## State mutations and fallbacks
 
@@ -33,3 +33,5 @@
 ## Safety conclusion
 
 - 판정 입력이다 — 변이 B3 이 그것을 잡는다.
+
+a112 8.5 응답 로트(2026-10-04): 같은 파일의 다른 함수 편집으로 줄만 밀림 — shift_same_file_bundles.py(구조 동일 확인 뒤 좌표 사상)

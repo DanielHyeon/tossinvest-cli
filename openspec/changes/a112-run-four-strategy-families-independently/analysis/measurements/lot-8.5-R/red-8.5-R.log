@@ -1,0 +1,134 @@
+== RED 1/3 strategyrouter (HEAD 178cc196 생산 코드 + 응답 로트 시험) 2026-10-04T15:22:47+09:00
+    a112_activation_error_fields_test.go:227: descriptors[0] fields=[] (message "strategyrouter: four-family activation unavailable: descriptors[lane_id=kr_unknown_v1]: lane_id"), want exactly ["lane_id"]
+    a112_activation_error_fields_test.go:244: activation refusal also satisfies ErrProductionRouteUnavailable (message "strategyrouter: four-family activation unavailable: manifest file strategy-family-activation-KR.json: strategyrouter: production route authority unavailable")
+    a112_activation_error_fields_test.go:227: descriptors[2] fields=[] (message "strategyrouter: four-family activation unavailable: descriptors[lane_id=kr_unknown\nINJECTED line]: lane_id"), want exactly ["lane_id"]
+    a112_activation_error_fields_test.go:227: descriptors[0] fields=[] (message "strategyrouter: four-family activation unavailable: descriptors[lane_id=kr_short_flow_continuation_v1]: horizon"), want exactly ["horizon"]
+    a112_activation_error_fields_test.go:227: descriptors[0] fields=[] (message "strategyrouter: four-family activation unavailable: descriptors[lane_id=kr_short_flow_continuation_v1]: effective"), want exactly ["effective"]
+    a112_activation_error_fields_test.go:232: message "strategyrouter: four-family activation unavailable: descriptors: duplicate lane_id kr_short_flow_continuation_v1" does not name "descriptors[1]: duplicate lane_id"
+    a112_activation_error_fields_test.go:232: message "strategyrouter: four-family activation unavailable: descriptors[lane_id=kr_short_flow_continuation_v1]: effective ON without desired ON" does not name "descriptors[0]: effective ON without desired ON"
+--- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel (0.01s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_issued_in_the_future (0.00s)
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_unknown_lane (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_unknown_market (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_empty_calendar (0.00s)
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/manifest_file_missing (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_calibration (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_route_manifest (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_expires_before_issued (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/expired (0.00s)
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_a_lane_id_carrying_a_newline_is_not_echoed (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_malformed_risk_policy_digest (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_domain (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_protection_floor (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_issued_before_approved (0.00s)
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_horizon_drift (0.00s)
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_effective_outside_the_enum (0.00s)
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_duplicate_lane (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_empty_calibration (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_empty_build (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/revoked (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_longer_than_the_ceiling (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_issued_at_not_a_canonical_instant (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_expires_at_not_a_canonical_instant (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_three_of_four (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_three_fields_at_once (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_approved_at_not_a_canonical_instant (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_issued_equals_expires (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_malformed_digest_pin (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_malformed_route_manifest_digest (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/pin_does_not_match_the_file_bytes (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_generation_zero (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_build (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_risk_policy (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_three_fields_at_once (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_two_faults_at_once (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/undeclared_pin (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_relative_config_dir (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_zero_observed_instant (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/bytes_not_canonical (0.01s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/trailing_data_after_the_document (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_schema (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_calendar (0.00s)
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_effective_without_desired (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/an_unknown_field (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_actor (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_market (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	0.015s
+FAIL
+
+== RED 2/3 engine -tags tossos_testseams (HEAD 178cc196 생산 코드 + 응답 로트 시험) 2026-10-04T15:26:39+09:00
+--- PASS: TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne (3.36s)
+--- PASS: TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve (0.00s)
+    a112_gate_decision_recompute_test.go:99: ready=true reason=READY, want closed with FAMILY_GATE_CLOSED — a cancel during the proposal load must reach the decision
+    a112_gate_decision_recompute_test.go:99: ready=true reason=READY, want closed with FAMILY_GATE_CLOSED — a cancel during the proposal load must reach the decision
+--- FAIL: TestACancelDuringTheProposalLoadClosesTheMarketAtTheDecision (0.00s)
+    --- FAIL: TestACancelDuringTheProposalLoadClosesTheMarketAtTheDecision/one_lane (0.00s)
+    --- FAIL: TestACancelDuringTheProposalLoadClosesTheMarketAtTheDecision/two_families (0.00s)
+    a112_gate_decision_recompute_test.go:128: ready=true reason=READY handed=2, want closed with FAMILY_GATE_CLOSED and nothing handed off
+    a112_gate_decision_recompute_test.go:144: carried generation=7 loads=1, want 8 (the decision gate's) and 2
+    a112_gate_decision_recompute_test.go:128: ready=true reason=READY handed=2, want closed with FAMILY_GATE_CLOSED and nothing handed off
+    a112_gate_decision_recompute_test.go:144: carried generation=7 loads=1, want 8 (the decision gate's) and 2
+--- FAIL: TestARevocationDuringTheProposalLoadClosesTheMarketAtTheDecision (0.00s)
+    --- FAIL: TestARevocationDuringTheProposalLoadClosesTheMarketAtTheDecision/one_lane/revoked_mid-load (0.00s)
+    --- FAIL: TestARevocationDuringTheProposalLoadClosesTheMarketAtTheDecision/one_lane/replaced_mid-load (0.00s)
+    --- FAIL: TestARevocationDuringTheProposalLoadClosesTheMarketAtTheDecision/two_families/revoked_mid-load (0.00s)
+    --- FAIL: TestARevocationDuringTheProposalLoadClosesTheMarketAtTheDecision/two_families/replaced_mid-load (0.00s)
+    --- PASS: TestARevocationDuringTheProposalLoadClosesTheMarketAtTheDecision/a_closure_before_arbitration_carries_the_diagnostic_value (0.00s)
+--- PASS: TestAnUndeclaredMarketCancelledDuringTheLoadKeepsTheLegacyPath (0.00s)
+    --- PASS: TestAnUndeclaredMarketCancelledDuringTheLoadKeepsTheLegacyPath/one_lane (0.00s)
+    --- PASS: TestAnUndeclaredMarketCancelledDuringTheLoadKeepsTheLegacyPath/two_families (0.00s)
+    a112_gate_decision_recompute_test.go:200: loadFamilyActivation panicked on a nil getenv: runtime error: invalid memory address or nil pointer dereference
+    a112_gate_decision_recompute_test.go:217: KR reason=INTERNAL_FAILURE, want FX_NOT_READY (the activation load must not turn the cycle into an internal failure)
+--- FAIL: TestANilEnvironmentReaderRollsTheGateBackInsteadOfPanicking (0.00s)
+    --- FAIL: TestANilEnvironmentReaderRollsTheGateBackInsteadOfPanicking/the_loader_answers_Unavailable (0.00s)
+    --- FAIL: TestANilEnvironmentReaderRollsTheGateBackInsteadOfPanicking/nil_getenv_and_FX_not_ready_report_FX_NOT_READY (0.00s)
+    a112_proposal_closure_carriage_test.go:122: collectMarket closure order:
+--- FAIL: TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness (0.00s)
+    a112_proposal_closure_carriage_test.go:284: activation loads=1, want 2
+    a112_proposal_closure_carriage_test.go:284: activation loads=1, want 2
+    a112_proposal_closure_carriage_test.go:284: activation loads=1, want 2
+--- FAIL: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady (0.01s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/route_not_ready (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/fx_not_ready (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/loader_misconfigured (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/proposal_public_key_invalid (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/duplicate_routed_symbol (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/proposal_load_failed (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/a_scope_lost_its_proposal (0.00s)
+    --- FAIL: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/verified/no_scope_accepted_(post-gate_control) (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/route_not_ready (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/fx_not_ready (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/loader_misconfigured (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/proposal_public_key_invalid (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/duplicate_routed_symbol (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/proposal_load_failed (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/a_scope_lost_its_proposal (0.00s)
+    --- FAIL: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/rolled_back_(declared_but_unusable)/no_scope_accepted_(post-gate_control) (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/route_not_ready (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/fx_not_ready (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/loader_misconfigured (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/proposal_public_key_invalid (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/duplicate_routed_symbol (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/proposal_load_failed (0.00s)
+    --- PASS: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/a_scope_lost_its_proposal (0.00s)
+    --- FAIL: TestEveryReachableProposalClosureCarriesTheGatesActivationExceptRouteNotReady/undeclared/no_scope_accepted_(post-gate_control) (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	3.412s
+FAIL
+
+== 3/3 breakoutlane (HEAD 생산 코드 — 시험 전용 핀 ⑨⑩, RED 없음이 기대값: 현 행동을 못 박는다; 힘은 변이 A4 · A5 · G1 로 잰다) 2026-10-04T15:30:32+09:00
+--- PASS: TestTheOnePointTwoCounterfactualCountsOnlyACloseBeyondTheATRBuffer (0.00s)
+    --- PASS: TestTheOnePointTwoCounterfactualCountsOnlyACloseBeyondTheATRBuffer/one_minor_unit_inside_the_buffer_(above_resistance) (0.00s)
+    --- PASS: TestTheOnePointTwoCounterfactualCountsOnlyACloseBeyondTheATRBuffer/exactly_at_the_buffer (0.00s)
+--- PASS: TestTheOnePointTwoCounterfactualSeesALaterBarNotOnlyTheFirst (0.00s)
+    --- PASS: TestTheOnePointTwoCounterfactualSeesALaterBarNotOnlyTheFirst/second_bar_RVOL_1.3 (0.00s)
+    --- PASS: TestTheOnePointTwoCounterfactualSeesALaterBarNotOnlyTheFirst/second_bar_RVOL_1.0_(control) (0.00s)
+--- PASS: TestTheOnePointTwoCounterfactualThresholdIsTheGoldensFirstEntry (0.00s)
+--- PASS: TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit (0.00s)
+    --- PASS: TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/RVOL_exactly_1.2,_close_and_wick_qualify (0.00s)
+    --- PASS: TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/RVOL_one_ppm_under_admission (0.00s)
+    --- PASS: TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/RVOL_one_ppm_under_1.2 (0.00s)
+    --- PASS: TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/wick_one_ppm_over_the_veto (0.00s)
+    --- PASS: TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/close_inside_the_buffer_(no_breakout_close) (0.00s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.005s

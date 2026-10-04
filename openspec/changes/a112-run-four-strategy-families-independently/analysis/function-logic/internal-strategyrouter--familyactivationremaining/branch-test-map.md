@@ -1,6 +1,6 @@
 # Branch Test Map: `familyActivationRemaining`
 
-- Source SHA-256: `7842842bc1b1bf9d2be542624169502fcc846a4e60080841887f5072f4fb6507`; AST branch locations are authoritative.
+- Source SHA-256: `57123f814187d9201ec6999d6375adc649b579c89beb6c4731f36cc51243b005`; AST branch locations are authoritative.
 - Revision: **modified (a112 8.8.4-B, 2026-10-01).** 분기 불변(1). 만료 반환에 `expires_at` 과 두 시각을 `%w` 로 붙였다(ErrProductionFamilyActivationExpired 보존).
 - 편집 전 번들: `analysis/measurements/lot-8.8.4-B/pre-edit/internal-strategyrouter--familyactivationremaining/`. 변이 원장 `analysis/measurements/lot-8.8.4-B/mutation-8.8.4-B.tsv`.
 

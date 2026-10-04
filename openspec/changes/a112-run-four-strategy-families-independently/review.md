@@ -6412,3 +6412,31 @@ OS 원인 접힘. 충돌 · 미해결 선택 두 닫힘(B11 · B14)은 입력으
 좌표로, a112 관례인 「Calls and live bindings」 호출 표를 ast.json 에서 생성(옮긴 직후 게이트가 그 표 부재 3 줄을 냈다 — 수리). a112 이전 판은 git 이력 좌표로 머리에 인용.
 골든 시험 경량 번들(`render_gateprep_bundles.py`, 편집 전 FLM 은 7e124a73 워크트리에서). 결과 173 → 150, 권고 base 1e25b3a3 창의 16 함수 전부 FRESH(window-1e25b3a3.tsv) —
 승인 뒤 남는 것은 a071 변형 둘째 갈래의 영수증 생성뿐. 창 영수증 도구의 귀속 대체 경로를 하나 고쳤다(-L 이 성공하고 커밋 0 이면 파일 이력으로) · 파일 없는 번들은 GONE.
+
+## 2026-10-04 8.5 응답 로트 — 4판 합본(HOLD → 응답 뒤 SHIP) 처분 일괄(생산 4 · 시험/증거 8)
+
+**판정(Manager, 4판 합본).** HOLD → 이 로트 완료 · 재검증 시 SHIP. P0 전판 0. 리뷰 기록 178cc196(`analysis/review-8.5-2026-10/` — `combined-8.5.md` 가 전행 · 처분 · 핀 표).
+F1 은 Y(판정 재계산), F2 는 별도 (d) 로트(ROADMAP 「핀 선언 전 착지」 면제 불가 선행).
+
+**생산 편집 넷.**
+① `collectMarket`(F1 — 보이스 2 P1 · 보이스 1 P2-1): 관문을 두 번 계산 — B1 뒤 조기 계산은 조정 앞 닫힘 여섯의 **진단** carry, 판정 계산을 편집 전(f473d815) 자리
+(`coordinateMarketProposals` 바로 앞)에 되살림. 판정이 편집 전과 같은 함수 · 같은 순간이라 동등성이 구성으로 선다. 분기 불변(15). 잔여 비대칭(관측 전용, 기록): 적재 중 철회
+경합에서 조정 앞 닫힘은 철회 전 조기 값을 싣는다 — 항목 0, 조정 · handoff 0. 대가: 조정 도달 주기 활성화 읽기 +1(핀 선언 시장만, 오늘 0).
+② `loadFamilyActivation`(P2-a — codex r2): getenv nil → 맨 `ErrProductionFamilyActivationUnavailable`(분기 2 → 3, B1 새로; 재번호 `renumber.txt`). 첫 판은 `fmt.Errorf`
+였고 변이 대조군의 엔진 전체 스위트가 `TestTheRollbackPathOnlyReads`(되돌림 경로 호출 허용 목록) 실패로 막았다 — 허용 목록을 넓히지 않고 맨 sentinel 로 고침.
+③ `validateProductionFamilyActivation`(P2-b — codex r2): 서술자 거절 셋이 `descriptors[i]` + 필드명만 — lane_id 원문(개행 포함) 배제. 분기 불변.
+④ `LoadProductionFamilyActivation`(P2-d — 보이스 2 P2-1): 읽기 결함 안쪽 `%w` → `%v` — 편집 전 `errors.Is` 사슬 복원. 분기 불변.
+
+**시험 · 증거.** ⑤ error-fields 표 모든 모양에 sentinel **배타성**(네 sentinel 을 모양마다 대조 — 보이스 3 P1-2 의 `%.0w` 변이 L556 · L572 · L604 · L613 격추) + 어느 거절도
+`ErrProductionRouteUnavailable` 를 만족하지 않음. ⑥ 실패 모양: effective 열거 밖(R4/m602 — 보이스 3 P1-1) · 발급 = 만료(m569) · 만료 < 발급. ⑦ B10 · B12 의 판정 활성화
+carry 단언(E9 · E7) + BTM 에 선택자-대입 변이 한계 기록(B11 · B14 census-only 유지). ⑧ 수명 비정규 둘(T565 · T566). ⑨ 반사실 ATR=50(buffer 5 — A4) · 비첫봉(A5).
+⑩ 골든 `rvol_counterfactual_ppm[0]` ↔ B7 행동 결속(G1); 입장 경로는 동등이라 결속 없음(FLM 기록 — 보이스 3 P2-4). ⑪ Load B10 BTM 행 「도달 불가 — census/검토」 정정
+(보이스 3 P2-5). ⑫ 설정 결속 market 항의 가림 가드 둘 + 닫아 두는 등식(`ProductionFamilyActivationFileName(m)=="" ⇔ !validMarket(m)`) FLM 기록(보이스 2 P2-2).
+새 시험 파일 `a112_gate_decision_recompute_test.go`(취소 · 철회/교체 · 미선언 + 취소 · nil getenv)와 `a112_rvol_counterfactual_edges_test.go`. census 는 관문 대입 2 와
+이웃 문장(조기 = 경로 가드 다음, 판정 = 조정 호출 바로 앞 · 관문 인자 `gate`)까지 못 박음. 엔진 새 시험 넷 `make test-race` 등재. 주장 정정 셋: BTM:4(번들 재렌더) ·
+`lot-8.8.4-B/pre-edit/…collectmarket/function-logic-map.md:11` 정정 줄(원문 보존) · 코드 주석(collectMarket 머리 · 두 계산 자리).
+
+**증거.** Pre-Edit `lot-8.5-R/pre-edit/`(넷, HEAD 178cc196). RED `red-8.5-R.log`(router 8 · 엔진 4 시험 실패 — 편집 전 READY · handoff 2 실측 포함; breakoutlane 은 시험 전용
+핀이라 RED 없음이 기대값, 힘은 변이로). 편집 뒤 번들 넷(`harness/render_85r_bundles.py`) + 같은 파일 줄 밀림 번들 일곱 shift. 이름 결속 `named-8.5-R.log`(13/13 · 9/9 · 3/3).
+변이 `mutation-8.5-R.tsv`(아래 표). 검증 `verify-8.5-R.log`. check_analysis 정규화 집합 차: 위 shift 뒤 로트만의 줄 4 = 새 시험 파일이 미추적이라 「tracked file 에 없음」
+(커밋 뒤 사라짐 — 커밋 후 재측정 기록), HEAD 만의 줄 0.

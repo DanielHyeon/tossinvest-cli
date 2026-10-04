@@ -61,11 +61,28 @@ func TestAMarketWithMoreScopesThanTheQueueHoldsClosesInsteadOfDroppingOne(t *tes
 	if pair.kr.snapshot.ArbitrationRefusal != "" {
 		t.Fatalf("overflow borrowed the arbitration code %q", pair.kr.snapshot.ArbitrationRefusal)
 	}
+	// 검증된 관문 아래에서도 같은 닫힘이고, 그 닫힘(B12 QUEUE_OVERFLOW)이 판정 관문의 활성화를 싣는다(8.8.4 항목 2 · 8.5 보이스 3 P2-1 —
+	// 위 실행은 관문 미선언이라 활성화가 영값이어서, 갈래 안에서 활성화를 버리는 변이 E7 을 볼 수 없었다).
+	runtime, activation := familyGateFixture(t)
+	gated := collectOverflowing(t, now, symbols, func(loader *strategyProposalAuthorityLoader) {
+		loader.withStrategyLanes(runtime)
+		loader.loadActivation = func(context.Context, StrategyMarket, strategyScheduleMarketAuthority, strategyRouteMarketAuthority, time.Time) (strategyrouter.FamilyActivation, error) {
+			return activation, nil
+		}
+	})
+	if gated.kr.snapshot.Reason != StrategyProposalQueueOverflow {
+		t.Fatalf("gated KR=%+v, want %q", gated.kr.snapshot, StrategyProposalQueueOverflow)
+	}
+	if !gated.kr.familyActivation().Verified() || gated.kr.familyActivation().Generation() != activation.Generation() {
+		t.Fatalf("QUEUE_OVERFLOW carried activation verified=%v gen=%d, want the gate's (gen %d)",
+			gated.kr.familyActivation().Verified(), gated.kr.familyActivation().Generation(), activation.Generation())
+	}
 }
 
 // collectOverflowing 는 KR 에 종목을 원하는 수만큼 두고 각 종목이 지속형
 // 한 레인으로만 제안하게 한다.
-func collectOverflowing(t *testing.T, now time.Time, symbols []string) strategyProposalAuthorityPair {
+// configure 는 수집 직전에 적재기를 바꾼다(관문 아래에서 같은 넘침을 돌릴 때 — 8.5 응답 로트).
+func collectOverflowing(t *testing.T, now time.Time, symbols []string, configure ...func(*strategyProposalAuthorityLoader)) strategyProposalAuthorityPair {
 	t.Helper()
 	scores := familyScoresForTest(strategyrouter.MarketKR)
 	evidenceDigest, configDigest := arbitrationLineageDigests(t, StrategyMarketKR, now)
@@ -105,6 +122,9 @@ func collectOverflowing(t *testing.T, now time.Time, symbols []string) strategyP
 			values[target.Approved.Symbol()] = []strategyflow.Result{result}
 		}
 		return strategyproposal.ProductionBatchAuthorityMultiLaneForTest(config.ManifestDigest, values), nil
+	}
+	for _, change := range configure {
+		change(loader)
 	}
 	return loader.collect(context.Background(), routeReadySchedulePair(now), routes, proposalFXPair(now))
 }

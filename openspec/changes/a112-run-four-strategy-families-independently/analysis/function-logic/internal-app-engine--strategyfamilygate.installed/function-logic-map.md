@@ -2,7 +2,7 @@
 
 - Source: `internal/app/engine/strategy_family_activation.go` (79-81)
 - Function: `strategyFamilyGate.installed` in package `engine`
-- File SHA-256: `230cc4c84bc3ff2bec2b98caaed10cdec7fd18e46181e3ce995899bbb0ee3492`
+- File SHA-256: `50c775155bc8a12a5844ddbc30785f72e49b4fab7380146071e458f815d4c377`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file (post-edit).
 - AST evidence: `ast.json` — AST branches 0.
 - Risk scan: `risk-pattern-report.md`.
@@ -46,3 +46,5 @@ _(AST 분기 0 — 반환식 하나. 행동은 아래 Inputs 의 불리언 식�
 - 되돌림 경로 census(`TestTheRollbackPathOnlyReads`)가 이 함수의 호출을 `gate.activation.Verified` 하나로 못 박는다.
 - 변이: M10(되돌림을 안 봄)·M11(8.7.1 의 레인 조건 복원)·M11b(되돌림에도 레인 조건) 전부 CAUGHT (`analysis/harness/a872_mutate.result.txt`).
 - High-risk impact: yes.
+
+a112 8.5 응답 로트(2026-10-04): 같은 파일의 다른 함수 편집으로 줄만 밀림 — shift_same_file_bundles.py(구조 동일 확인 뒤 좌표 사상)

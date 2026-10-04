@@ -1,20 +1,22 @@
 # Function Logic Map: `LoadProductionFamilyActivation`
 
 - Source: `internal/strategyrouter/production_family_activation.go`
-- Source SHA-256: `7842842bc1b1bf9d2be542624169502fcc846a4e60080841887f5072f4fb6507`
+- Source SHA-256: `57123f814187d9201ec6999d6375adc649b579c89beb6c4731f36cc51243b005`
 - Signature: `LoadProductionFamilyActivation(params=2, results=2)`
-- Source range: `429:1`–`494:2`
-- AST evidence: `ast.json` — **편집 뒤**(a112 8.8.4-B).
+- Source range: `429:1`–`495:2`
+- AST evidence: `ast.json` — **편집 뒤**(a112 8.5-R).
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
 - 미선언 판정이 맨 앞 — 엔진 `familyGateFor` 의 `errors.Is(err, ErrProductionFamilyActivationUndeclared)` 판별 불변.
 - 읽기 결함(공유 읽기 함수 `readProductionRouteFile` 의 오류)과 핀 불일치는 다른 메시지 · 다른 사슬. 그 읽기 함수는 OS 원인을 자기 sentinel 하나로 접는다 — OS 원인 노출은 이 로트 밖(잔여).
+- sentinel 배타성: 각 거절은 자기 sentinel 하나만 만족한다(`a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel` — 네 sentinel 전부를 모양마다 대조; 8.5 보이스 3 P1-2).
+- **설정 결속의 market 항(`name == ""`)은 판정을 바꾸지 못한다 — 기록(8.5 보이스 2 P2-2, 편집 전부터)**. 가림 가드 둘: (1) 디렉터리 읽기 실패 — 항이 없으면 `filepath.Join(dir, "")` 가 디렉터리를 가리켜 `readProductionRouteFile` 이 정규 0400 파일이 아니라고 거절(B5); (2) 몸통 결속 `body.Market != config.Market || !validMarket(body.Market)`(validateProductionFamilyActivation B1). 이 블록을 닫아 두는 등식: `ProductionFamilyActivationFileName(m) == "" ⇔ !validMarket(m)` (둘 다 {KR, US} 위의 닫힌 대응 — production_family_activation.go `ProductionFamilyActivationFileName` · types.go `validMarket`). 이 항의 유일한 핀은 메시지 시험 `a112_activation_error_fields_test.go` `TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel`(config binding: unknown market)이다.
 
 ## Branches and early returns
 
-- Exact AST return nodes: `435:3, 438:3, 441:3, 461:3, 468:3, 471:3, 476:3, 482:3, 486:3, 489:3, 492:2`.
+- Exact AST return nodes: `435:3, 438:3, 441:3, 461:3, 469:3, 472:3, 477:3, 483:3, 487:3, 490:3, 493:2`.
 
 | Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
@@ -22,12 +24,12 @@
 | B2 | if | 437:2 | ctx 가 nil → `%w: context is nil` |
 | B3 | if | 440:2 | ctx 취소 → ctx.Err() 그대로 |
 | B4 | if | 449:2 | 설정 결속(복합 — 분기 하나) → `%w: config binding: <어긋난 필드 전부>` |
-| B5 | if | 467:2 | 매니페스트 파일 읽기 결함 → `%w: manifest file …: %w(읽기 함수 오류)` — 불일치와 다른 종류 |
-| B6 | if | 470:2 | **(새)** 핀이 파일 바이트와 다름 → `%w: manifest_digest: …` |
-| B7 | if | 475:2 | 해석 거절 → 해석기가 붙인 이유 그대로(sentinel 포함) |
-| B8 | if | 481:2 | 폐기 → `%w(Revoked): revoked=true` |
-| B9 | if | 485:2 | 검증 거절 → 검증기 오류 그대로 |
-| B10 | if | 488:2 | 끝의 ctx 취소 재확인 |
+| B5 | if | 468:2 | 매니페스트 파일 읽기 결함 → `%w: manifest file …: %v(읽기 함수 오류 문장)` — 불일치와 다른 종류, 사슬에 활성화 sentinel 하나 |
+| B6 | if | 471:2 | **(새)** 핀이 파일 바이트와 다름 → `%w: manifest_digest: …` |
+| B7 | if | 476:2 | 해석 거절 → 해석기가 붙인 이유 그대로(sentinel 포함) |
+| B8 | if | 482:2 | 폐기 → `%w(Revoked): revoked=true` |
+| B9 | if | 486:2 | 검증 거절 → 검증기 오류 그대로 |
+| B10 | if | 489:2 | 끝의 ctx 취소 재확인 |
 
 ## Calls and live bindings
 
@@ -56,14 +58,14 @@
 | `strings.Join` | 461:109 |
 | `readProductionRouteFile` | 463:15 |
 | `filepath.Join` | 463:39 |
-| `fmt.Errorf` | 468:30 |
-| `productionRouteDigest` | 470:5 |
-| `fmt.Errorf` | 471:30 |
-| `decodeProductionFamilyActivation` | 474:19 |
-| `fmt.Errorf` | 482:30 |
-| `validateProductionFamilyActivation` | 484:16 |
-| `ctx.Err` | 488:12 |
-| `productionRouteTime` | 491:16 |
+| `fmt.Errorf` | 469:30 |
+| `productionRouteDigest` | 471:5 |
+| `fmt.Errorf` | 472:30 |
+| `decodeProductionFamilyActivation` | 475:19 |
+| `fmt.Errorf` | 483:30 |
+| `validateProductionFamilyActivation` | 485:16 |
+| `ctx.Err` | 489:12 |
+| `productionRouteTime` | 492:16 |
 
 ## State mutations and fallbacks
 

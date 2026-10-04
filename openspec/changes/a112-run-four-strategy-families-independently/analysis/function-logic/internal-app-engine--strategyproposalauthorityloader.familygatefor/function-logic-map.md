@@ -2,7 +2,7 @@
 
 - Source: `internal/app/engine/strategy_family_activation.go` (115-142)
 - Function: `strategyProposalAuthorityLoader.familyGateFor` in package `engine`
-- File SHA-256: `230cc4c84bc3ff2bec2b98caaed10cdec7fd18e46181e3ce995899bbb0ee3492`
+- File SHA-256: `50c775155bc8a12a5844ddbc30785f72e49b4fab7380146071e458f815d4c377`
 - Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file (post-edit).
 - AST evidence: `ast.json` — AST branches 4.
 - Risk scan: `risk-pattern-report.md`.
@@ -54,3 +54,5 @@ Exact AST return positions: 119:3, 133:3, 139:3, 141:2.
 - 변이 M8(모든 오류를 기존 경로로 — 편집 전 동작)·M9(되돌림 표식 빠짐)·M17(무오류·미검증을 기존 경로로)·RB3(취소 ctx 를 기존 경로로) 전부 CAUGHT.
 - census 가 호출을 `load`·`errors.Is`·`activation.Verified`·`loader.lanes.lanesFor` 로 못 박는다.
 - High-risk impact: yes.
+
+a112 8.5 응답 로트(2026-10-04): 같은 파일의 다른 함수 편집으로 줄만 밀림 — shift_same_file_bundles.py(구조 동일 확인 뒤 좌표 사상)

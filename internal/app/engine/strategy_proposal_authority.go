@@ -293,10 +293,11 @@ func (loader *strategyProposalAuthorityLoader) collect(ctx context.Context, sche
 func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context, schedule strategyScheduleMarketAuthority, routes strategyRouteMarketAuthority, fx strategyFXMarketAuthority, observedAt time.Time) strategyProposalMarketAuthority {
 	market := routes.market
 	// gate 를 fail 보다 **먼저** 선언한다. 클로저가 참조로 잡으므로, 아래에서
-	// 관문이 계산된 **뒤의** 닫힘 갈래는 전부 그 활성화를 함께 싣는다. 정확히는 13 닫힘 중
+	// 관문이 계산된 **뒤의** 닫힘 갈래는 전부 그 시점의 활성화를 함께 싣는다. 정확히는 13 닫힘 중
 	// 첫째(ROUTE_NOT_READY — 관문 계산 전)만 영값을 싣고 나머지 열둘이 관문의 활성화를 싣는다
-	// (a112 8.8.4 항목 2 정정 — 앞 판 이 주석은 「모든 닫힘」이라 했으나 관문 계산이 제안 적재 뒤라
-	// 일곱이 영값이었다; 표는 TestTheThirteenProposalClosures… 가 못 박는다).
+	// (a112 8.8.4 항목 2). 관문은 두 번 계산된다(a112 8.5 응답 로트 ① — 아래 두 자리의 주석):
+	// 조정 앞 닫힘 여섯은 조기(진단) 값을, 조정 뒤 닫힘과 성공은 판정 값을 싣는다.
+	// 표는 TestTheThirteenProposalClosures… 가 못 박는다.
 	//
 	// 앞 판본은 반환값마다 `carry(...)` 를 부르게 했다. 그것은 이 change 가
 	// 반복해서 고쳐 온 **무시할 수 있는 답**이다 — 갈래 하나에서 빠뜨리면
@@ -317,11 +318,13 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 		// digest · 보정 · 달력)이 없거나 믿을 수 없어, 관문 계산 **전**에 닫는다.
 		return fail(StrategyProposalRouteNotReady)
 	}
-	// 관문 **계산**은 결속 값이 서는 바로 이 자리다(a112 8.8.4 항목 2 — Manager 판정 Q-B2, 계산/판정 분리). 앞 판은 제안 적재 뒤에
-	// 계산해 그 앞 여섯 닫힘(FX · 설정 · 열쇠 · 중복 · 적재 · 고장)이 영값을 실었다 — 그 주기의 레인 관측이 관문과 다른 승격을 봤다.
-	// 판정(실패 kind · 우선순위 · FAMILY_GATE_CLOSED 의 자리)은 아래 제자리 그대로이고, 이 값은 닫힘 갈래가 싣는 활성화와 아래 조정
-	// 관문으로만 쓰인다. familyGateFor 는 읽기 전용이다(env · 매니페스트 파일 읽기와 검증, 레인 목록 조회 — 원장 · 브로커 · 토글 쓰기 0).
-	// 13 닫힘의 순서와 이 자리는 `TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness` 가 못 박는다.
+	// 관문 **조기 계산**(진단 전용)은 결속 값이 서는 바로 이 자리다(a112 8.8.4 항목 2 — Manager 판정 Q-B2). 이 값은 아래 조정 **앞**
+	// 닫힘 여섯(FX · 설정 · 열쇠 · 중복 · 적재 · 고장)이 싣는 활성화로만 쓰인다 — 그 주기의 레인 관측이 관문과 같은 승격을 보게 하려는 것이다.
+	// 판정에는 쓰이지 않는다: 이 값은 제안 적재 시간만큼 낡으므로(적재 중 ctx 취소 · 매니페스트 철회가 안 보임 — 8.5 보이스 2 P1),
+	// 판정은 아래 조정 바로 앞에서 다시 계산한다. 잔여 비대칭(관측 전용): 적재 중 철회 경합에서 조정 앞 닫힘은 이 조기 값을 싣는다 —
+	// 그 갈래는 조정 · handoff 0 이라 주문 경로에 닿지 않는다. familyGateFor 는 읽기 전용이다(env · 매니페스트 파일 읽기와 검증, 레인
+	// 목록 조회 — 원장 · 브로커 · 토글 쓰기 0). 13 닫힘의 순서와 두 계산 자리는
+	// `TestTheThirteenProposalClosuresKeepTheirOrderAndTheGateIsComputedRightAfterRouteReadiness` 가 못 박는다.
 	gate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)
 	if !fx.snapshot.Ready || !fx.read.valid {
 		return fail(StrategyProposalFXNotReady)
@@ -379,6 +382,12 @@ func (loader *strategyProposalAuthorityLoader) collectMarket(ctx context.Context
 	// 4-가족 관문은 **조정 앞**에 선다. 뒤에 세우면 중재가 이미 한 범위의
 	// 승자를 골라 버렸고, 그 승자의 레인이 잠겨 있으면 그 범위는 이웃 가족이
 	// 이길 수 있었는데도 통째로 닫힌다.
+	//
+	// 관문 **판정 계산**은 조정 바로 앞, 제안 적재 **뒤**다(a112 8.5 응답 로트 ① — Manager 판정 Y). 위 조기 값을 그대로 쓰면 적재 중
+	// 일어난 ctx 취소 · 매니페스트 철회가 이 주기 판정에 보이지 않아 닫혀야 할 시장이 열린다(허용 방향 — 보이스 2 실측). 이 자리는
+	// 8.8.4 이전의 판정 자리와 같다 — 같은 함수 · 같은 순간이라 판정이 구성상 편집 전과 같다. 조정 뒤 닫힘과 성공은 이 값을 싣는다.
+	// 대가는 조정에 닿는 주기의 활성화 읽기 한 번 더(소형 로컬 파일, 핀이 선언된 시장만).
+	gate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)
 	arbitration, refused := coordinateMarketProposals(loader.accountRef, market, routes.entries, batch, observedAt, gate)
 	gatedCount, gatedOutcomes = len(arbitration.gated), distinctGatedOutcomes(arbitration.gated)
 	// 관문이 한 소유자 범위를 통째로 지웠으면 시장을 닫는다 (태스크 8.8.1).

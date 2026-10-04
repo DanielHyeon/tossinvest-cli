@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/strategy_family_activation.go",
-  "source_sha256": "230cc4c84bc3ff2bec2b98caaed10cdec7fd18e46181e3ce995899bbb0ee3492",
+  "source_sha256": "50c775155bc8a12a5844ddbc30785f72e49b4fab7380146071e458f815d4c377",
   "package": "engine",
   "function": "installed",
   "receiver": "strategyFamilyGate",

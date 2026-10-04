@@ -1,6 +1,6 @@
 # Branch Test Map: `strategyFamilyGate.installed`
 
-- Source: `internal/app/engine/strategy_family_activation.go` (79-81); file SHA-256 `230cc4c84bc3ff2bec2b98caaed10cdec7fd18e46181e3ce995899bbb0ee3492`. AST branch positions are authoritative.
+- Source: `internal/app/engine/strategy_family_activation.go` (79-81); file SHA-256 `50c775155bc8a12a5844ddbc30785f72e49b4fab7380146071e458f815d4c377`. AST branch positions are authoritative.
 
 - Measurement regime: Go coverage profiles, count mode. arm = 분기 좌표 **뒤에서 처음 시작하는** 커버리지 블록(`if`/`range` 몸통)이며, "arm entered Nx" 는 그 몸통이 N 번 실행됐다는 뜻이다.
 - engine tagged suite (and the strategyrouter tagged suite for the two router bundles, same flags): `go test -c -tags tossos_testseams -covermode=count -coverpkg=./internal/app/engine,./internal/strategyrouter ./internal/app/engine/` 바이너리를 `systemd-run --user --scope -p MemoryMax=16G -p MemorySwapMax=0` 안에서 실행(-trimpath 없이 — 소스를 읽는 시험 둘이 깨진다). 스위트 전체 PASS.

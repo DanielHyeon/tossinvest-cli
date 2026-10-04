@@ -966,13 +966,91 @@ SET_731R2 = [
 ]
 SET_731R2_TESTS = [["go", "test", "-tags", "tossos_testseams", "-count=1", "-run",
     "TestARestartAfterAnObservedPromotionComesBackOffOffUnobservedWithNothingWritten|TestTheRuntimeVocabularyIsExactlyUnobservedUntilAShadowLotExtendsIt", "./internal/app/engine"]]
+# a112 8.5 응답 로트(Manager 최종 판정 2026-10-04): 이 로트의 생산 편집 넷(Y · V · D · P)과 4판 리뷰의 생존 변이 재판(L · R4 · m569 · T · E · A · G).
+SFA = "internal/app/engine/strategy_family_activation.go"
+DECISION = "\tgate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)\n\tarbitration, refused := coordinateMarketProposals("
+EARLY = "\tgate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)\n\tif !fx.snapshot.Ready"
+UND = "ErrProductionFamilyActivationUndeclared"
+SET_85R = [
+    ("Y1 the decision recompute is removed (arbitration uses the early, stale gate)", SPA, DECISION, "\tarbitration, refused := coordinateMarketProposals("),
+    ("Y2 the decision recompute moves before the proposal load (still stale by the load time)", SPA,
+     (DECISION, "\tbatch, err := loader.load(ctx,"),
+     ("\tarbitration, refused := coordinateMarketProposals(", "\tgate = loader.familyGateFor(ctx, market, schedule, routes, observedAt)\n\tbatch, err := loader.load(ctx,")),
+    ("Y3 the early (diagnostic) computation is removed (pre-arbitration closures carry zero)", SPA, EARLY, "\tif !fx.snapshot.Ready"),
+    ("Y4 the decision recompute ignores the cycle's context", SPA, DECISION,
+     "\tgate = loader.familyGateFor(context.Background(), market, schedule, routes, observedAt)\n\tarbitration, refused := coordinateMarketProposals("),
+    ("V1 the nil-getenv guard is removed (panic → INTERNAL_FAILURE again)", SFA, "\tif loader.getenv == nil {\n", "\tif false && loader.getenv == nil {\n"),
+    ("V2 a nil getenv answers Undeclared (opens the legacy path for a market whose pin cannot be read)", SFA,
+     "\t\treturn strategyrouter.FamilyActivation{}, strategyrouter.ErrProductionFamilyActivationUnavailable\n\t}\n\tdigestEnv",
+     "\t\treturn strategyrouter.FamilyActivation{}, strategyrouter.ErrProductionFamilyActivationUndeclared\n\t}\n\tdigestEnv"),
+    ("D1 the read fault wraps the reader's sentinel again (%w)", PFA,
+     '"%w: manifest file %s: %v", ErrProductionFamilyActivationUnavailable, name, err)', '"%w: manifest file %s: %w", ErrProductionFamilyActivationUnavailable, name, err)'),
+    ("P1 the descriptor field refusal echoes the raw lane id", PFA,
+     '"%w: descriptors[%d]: %s", ErrProductionFamilyActivationUnavailable, index, strings.Join(fields, ", "))',
+     '"%w: descriptors[%d]: %s: %s", ErrProductionFamilyActivationUnavailable, index, descriptor.LaneID, strings.Join(fields, ", "))'),
+    ("P2 the duplicate refusal echoes the raw lane id", PFA,
+     '"%w: descriptors[%d]: duplicate lane_id", ErrProductionFamilyActivationUnavailable, index)',
+     '"%w: descriptors[%d]: duplicate lane_id %s", ErrProductionFamilyActivationUnavailable, index, descriptor.LaneID)'),
+    ("P3 the descriptor position is dropped (index not named)", PFA,
+     '"%w: descriptors[%d]: %s", ErrProductionFamilyActivationUnavailable, index, strings.Join(fields, ", "))',
+     '"%w: descriptors[%d]: %s", ErrProductionFamilyActivationUnavailable, 0, strings.Join(fields, ", "))'),
+    # 4판 생존 변이 재판 — 보이스 3 P1-2(`%.0w` 로 미선언을 메시지 불변 · 보이지 않게 사슬에 추가).
+    ("L556 body binding also wraps Undeclared invisibly", PFA,
+     '"%w: body binding: %s", ErrProductionFamilyActivationUnavailable, strings.Join(fields, ", "))',
+     '"%w%.0w: body binding: %s", ErrProductionFamilyActivationUnavailable, ' + UND + ', strings.Join(fields, ", "))'),
+    ("L572 lifetime also wraps Undeclared invisibly", PFA,
+     '"%w: lifetime: %s", ErrProductionFamilyActivationUnavailable, strings.Join(fields, ", "))',
+     '"%w%.0w: lifetime: %s", ErrProductionFamilyActivationUnavailable, ' + UND + ', strings.Join(fields, ", "))'),
+    ("L604 descriptor field refusal also wraps Undeclared invisibly", PFA,
+     '"%w: descriptors[%d]: %s", ErrProductionFamilyActivationUnavailable, index, strings.Join(fields, ", "))',
+     '"%w%.0w: descriptors[%d]: %s", ErrProductionFamilyActivationUnavailable, ' + UND + ', index, strings.Join(fields, ", "))'),
+    ("L613 duplicate refusal also wraps Undeclared invisibly", PFA,
+     '"%w: descriptors[%d]: duplicate lane_id", ErrProductionFamilyActivationUnavailable, index)',
+     '"%w%.0w: descriptors[%d]: duplicate lane_id", ErrProductionFamilyActivationUnavailable, ' + UND + ', index)'),
+    ("R4 (m602 · T602) the effective validity term is dropped", PFA, '\t\t\tfieldCheck{"effective", !validDesiredState(descriptor.Effective)},\n', ""),
+    ("m569 (T569 · R3) the issued-not-before-expires term is dropped", PFA, '\t\tfieldCheck{"issued_at not before expires_at", !issued.Before(expires)},\n', ""),
+    # T565 · T566: 항 줄 삭제는 okIssued/okExpires 미사용으로 빌드가 깨진다(첫 판 BUILD-FAIL, 원장 기록) — 항을 무력화(`false &&`)로 다시 정의.
+    ("T565 the issued_at parse term never reports", PFA, 'fieldCheck{"issued_at", !okIssued}', 'fieldCheck{"issued_at", false && !okIssued}'),
+    ("T566 the expires_at parse term never reports", PFA, 'fieldCheck{"expires_at", !okExpires}', 'fieldCheck{"expires_at", false && !okExpires}'),
+    ("E7 the QUEUE_OVERFLOW closure drops the activation", SPA,
+     "\t\tresult := fail(StrategyProposalQueueOverflow)\n", "\t\tresult := fail(StrategyProposalQueueOverflow)\n\t\tresult.activation = strategyrouter.FamilyActivation{}\n"),
+    ("E9 the FAMILY_GATE_CLOSED closure drops the activation", SPA,
+     "\t\tresult := fail(StrategyProposalFamilyGateClosed)\n", "\t\tresult := fail(StrategyProposalFamilyGateClosed)\n\t\tresult.activation = strategyrouter.FamilyActivation{}\n"),
+    ("A4 the 1.2 counterfactual counts a close above resistance instead of beyond the buffer", BKM,
+     "if BreakoutCloseQualifies(b.CloseMinor, resistance, v.ATRMinor, v.Config) && b.UpperWickRangePPM <= v.Config.value.UpperWickRangeMaxPPM && b.RVOLPPM >= 1_200_000 {",
+     "if b.CloseMinor > resistance && b.UpperWickRangePPM <= v.Config.value.UpperWickRangeMaxPPM && b.RVOLPPM >= 1_200_000 {"),
+    ("A5 the 1.2 counterfactual looks only at the first post-range bar", BKM,
+     "if BreakoutCloseQualifies(b.CloseMinor, resistance, v.ATRMinor, v.Config) && b.UpperWickRangePPM <= v.Config.value.UpperWickRangeMaxPPM && b.RVOLPPM >= 1_200_000 {",
+     "if i == 0 && BreakoutCloseQualifies(b.CloseMinor, resistance, v.ATRMinor, v.Config) && b.UpperWickRangePPM <= v.Config.value.UpperWickRangeMaxPPM && b.RVOLPPM >= 1_200_000 {"),
+    ("G1 the B7 threshold drifts one ppm from the golden", BKM,
+     "b.UpperWickRangePPM <= v.Config.value.UpperWickRangeMaxPPM && b.RVOLPPM >= 1_200_000 {\n\t\t\tp.RVOLAt1200000 = true",
+     "b.UpperWickRangePPM <= v.Config.value.UpperWickRangeMaxPPM && b.RVOLPPM >= 1_200_001 {\n\t\t\tp.RVOLAt1200000 = true"),
+]
+SET_85R_ENGINE_RUN = ("TestACancelDuringTheProposalLoadClosesTheMarketAtTheDecision|TestARevocationDuringTheProposalLoadClosesTheMarketAtTheDecision|"
+                      "TestAnUndeclaredMarketCancelledDuringTheLoadKeepsTheLegacyPath|TestANilEnvironmentReaderRollsTheGateBackInsteadOfPanicking|"
+                      "TestTheThirteenProposalClosures|TestEveryReachableProposalClosureCarries|TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve|"
+                      "TestAMarketWithMoreScopesThanTheQueueHolds|TestAClosedMarketStillCarriesTheGatesActivation|Undeclared|Declared")
+SET_85R_TESTS = [
+    ["go", "test", "-count=1", "./internal/strategyrouter"],
+    ["go", "test", "-tags", "tossos_testseams", "-count=1", "-run", SET_85R_ENGINE_RUN, "./internal/app/engine"],
+    ["go", "test", "-trimpath=false", "-count=1", "./internal/breakoutlane"],
+]
+# 보이스 1 · 3 이 태그 엔진 **전체** 스위트로 재판하라고 한 셋(L556 · R4 · m569) + 같은 원인의 T565 · T566 — 집중 목록 밖의 시험이 우연히 막는지까지.
+SET_85R_FULL = [m for m in SET_85R if m[0].split(" ")[0] in {"L556", "R4", "m569", "T565", "T566"}]
+# -trimpath=false: 하네스 기본 GOFLAGS=-trimpath 는 runtime.Caller 로 소스를 읽는 엔진 시험(a111 둘)을 사본에서 깨 대조군을 가짜 RED 로 만든다
+# (첫 판 대조군 실측 — 보이스 3 도 같은 이유로 GOFLAGS 를 비웠다). 그 대조군은 진짜 결함 하나(TestTheRollbackPathOnlyReads)도 잡았다 — 원장 기록.
+SET_85R_FULL_TESTS = [
+    ["go", "test", "-trimpath=false", "-count=1", "./internal/strategyrouter"],
+    ["go", "test", "-trimpath=false", "-tags", "tossos_testseams", "-count=1", "./internal/strategyrouter"],
+    ["go", "test", "-trimpath=false", "-tags", "tossos_testseams", "-count=1", "-timeout", "30m", "./internal/app/engine"],
+]
 SETS = {"5.6.2.1": (SET_5621, SET_5621_TESTS), "5.2.2.1": (SET_5221, SET_5221_TESTS),
         "5.2.2.1-fix": (SET_5221_FIX, SET_5221_FIX_TESTS), "5.2.2.1-fix3": (SET_5221_FIX3, SET_5221_FIX3_TESTS),
         "5.2.2.1-fix4": (SET_5221_FIX4, [["go", "test", "-count=1", "./internal/strategyhandoff"]]),
         "6.2-seal": (SET_62_SEAL, SET_62_SEAL_TESTS), "5.2.2.2": (SET_5222, SET_5222_TESTS),
         "5.2.2.2-fix": (SET_5222_FIX, SET_5222_FIX_TESTS), "5.2.2.2-fix2": (SET_5222_FIX2, SET_5222_FIX_TESTS),
         "5.6.2.2": (SET_5622, SET_5622_TESTS), "6.1": (SET_61, SET_61_TESTS),
-        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS), "8.8.4-A": (SET_884A, SET_884A_TESTS), "8.8.4-B": (SET_884B, SET_884B_TESTS), "7.3.1-R2": (SET_731R2, SET_731R2_TESTS)}
+        "6.2": (SET_62, SET_62_TESTS), "7.1": (SET_71, SET_71_TESTS), "7.3": (SET_73, SET_73_TESTS), "7.4": (SET_74, SET_74_TESTS), "7.5": (SET_75, SET_75_TESTS), "6.3": (SET_63, SET_63_TESTS), "2.x": (SET_2X, SET_2X_TESTS), "B2": (SET_B2, SET_B2_TESTS), "BK2": (SET_BK2, SET_BK2_TESTS), "2.3": (SET_23, SET_BK2_TESTS), "6.4": (SET_64, SET_64_TESTS), "6.5-6.6": (SET_6566, SET_6566_TESTS), "8.8.4-A": (SET_884A, SET_884A_TESTS), "8.8.4-B": (SET_884B, SET_884B_TESTS), "7.3.1-R2": (SET_731R2, SET_731R2_TESTS), "8.5-R": (SET_85R, SET_85R_TESTS), "8.5-R-full": (SET_85R_FULL, SET_85R_FULL_TESTS)}
 # 리뷰 B #10(5.2.2.2): 대조군의 pass 사건 수를 고정한다 — 0 보다 큼만 보면 시험 일부가 조용히 빠져도 대조군이 GREEN 이다. 집합별 기대치는 그 집합을
 # 처음 돌린 대조군의 실측(원장 CONTROL 줄)이고, 시험을 더하면 여기를 같이 바꾼다(바꾸는 편집이 리뷰에 보인다).
 EXPECTED_PASSES = {"5.2.2.2-fix": [60, 8, 122]}  # 첫 대조군(2026-10-01) 실측

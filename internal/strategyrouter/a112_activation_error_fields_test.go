@@ -6,6 +6,12 @@ package strategyrouter
 //   - 복합 결속(설정 결속 · 몸통 결속 · 수명): 분기는 하나 그대로, 그 안에서 필드별 비교를 모아 **불일치 필드 전부**를 한 메시지에 싣는다.
 //   - 파일 읽기 결함과 digest 불일치는 다른 종류다 — 읽기 결함은 읽기 함수의 오류를 `%w` 사슬에 보존하고, 불일치만 필드명(manifest_digest)으로.
 //   - 모든 갈래에서 sentinel 동일성(errors.Is)은 그대로다 — 엔진의 판별(미선언만 기존 경로)이 그것에 기댄다.
+//
+// a112 8.5 응답 로트(Manager 최종 판정 2026-10-04):
+//   - sentinel 은 **배타적**이다(보이스 3 P1-2): 각 모양은 자기 sentinel 하나만 만족한다. 포함만 재면 거절 갈래가 미선언을 몰래 같이 감는
+//     변이(`%w%.0w`)가 살아남고, 그 변이는 엔진 판별(`errors.Is(err, Undeclared)` 하나)에서 선언된 시장을 기존 경로로 연다.
+//   - 읽기 결함은 공유 읽기 함수의 sentinel 을 사슬에 싣지 않는다(보이스 2 P2-1): 안쪽 오류는 `%v` — 편집 전 사슬과 같다.
+//   - 서술자 거절은 위치(`descriptors[i]`)와 필드명만 말하고 lane_id 원문을 싣지 않는다(codex r2 P2) — 매니페스트의 임의 문자열 · 개행이 오류로 새지 않음.
 
 import (
 	"bytes"
@@ -33,14 +39,13 @@ func a112FieldGroup(message, group string) []string {
 
 func TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel(t *testing.T) {
 	type shape struct {
-		body    func(*familyActivationFixture, *productionFamilyActivationBody)
-		config  func(*FamilyActivationConfig)
-		file    func(*testing.T, *familyActivationFixture)
-		want    error
-		group   string   // 복합 결속이면 그 묶음 이름 — 목록이 fields 와 정확히 같아야 한다
-		fields  []string // group 이 없으면 메시지에 들어 있어야 할 낱말
-		absent  []string // 메시지에 없어야 할 낱말(결함/불일치 구별)
-		readErr bool     // 파일 읽기 결함의 원래 오류(공유 읽기 함수의 ErrProductionRouteUnavailable)가 사슬에 남아야 하는가
+		body   func(*familyActivationFixture, *productionFamilyActivationBody)
+		config func(*FamilyActivationConfig)
+		file   func(*testing.T, *familyActivationFixture)
+		want   error
+		group  string   // 복합 결속이면 그 묶음 이름 — 목록이 fields 와 정확히 같아야 한다
+		fields []string // group 이 없으면 메시지에 들어 있어야 할 낱말
+		absent []string // 메시지에 없어야 할 낱말(결함/불일치 구별 · 서술자 원문 배제)
 	}
 	shapes := map[string]shape{
 		"undeclared pin": {config: func(c *FamilyActivationConfig) { c.ManifestDigest = "" },
@@ -73,7 +78,7 @@ func TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel(t *testing.T) {
 			if err := os.Remove(filepath.Join(f.dir, ProductionFamilyActivationFileName(MarketKR))); err != nil {
 				t.Fatal(err)
 			}
-		}, want: ErrProductionFamilyActivationUnavailable, fields: []string{"manifest file"}, absent: []string{"manifest_digest"}, readErr: true},
+		}, want: ErrProductionFamilyActivationUnavailable, fields: []string{"manifest file"}, absent: []string{"manifest_digest"}},
 		"pin does not match the file bytes": {config: func(c *FamilyActivationConfig) { c.ManifestDigest = "sha256:" + strings.Repeat("0", 64) },
 			want: ErrProductionFamilyActivationUnavailable, fields: []string{"manifest_digest"}, absent: []string{"manifest file"}},
 		// 바이트 형식.
@@ -136,6 +141,18 @@ func TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel(t *testing.T) {
 		"lifetime: longer than the ceiling": {body: func(f *familyActivationFixture, b *productionFamilyActivationBody) {
 			b.ExpiresAt = f.now.Add(productionFamilyActivationMaximumLife).Add(time.Hour + time.Nanosecond).Format(time.RFC3339Nano)
 		}, want: ErrProductionFamilyActivationUnavailable, group: "lifetime", fields: []string{"lifetime over maximum"}},
+		// 파싱 · 순서 항(보이스 3 P2-2 · 보이스 1 P2-2 m569): 이 항들이 빠지면 파생 거절(영값 비교 · 만료 판정)이 대신 막아 거절은 남지만 종류 · 필드명이
+		// 표류한다 — 정확한 필드 목록과 sentinel 이 그 항 자신을 못 박는다. 목록은 fixture 시각(승인 -2h · 발급 -1h · 만료 +1h · 상한 24h)에서 손으로 유도했다.
+		"lifetime: issued_at not a canonical instant": {body: func(_ *familyActivationFixture, b *productionFamilyActivationBody) { b.IssuedAt = "an hour ago" },
+			want: ErrProductionFamilyActivationUnavailable, group: "lifetime",
+			fields: []string{"issued_at", "issued_at before approved_at", "lifetime over maximum"}},
+		"lifetime: expires_at not a canonical instant": {body: func(_ *familyActivationFixture, b *productionFamilyActivationBody) { b.ExpiresAt = "in an hour" },
+			want: ErrProductionFamilyActivationUnavailable, group: "lifetime", fields: []string{"expires_at", "issued_at not before expires_at"}},
+		"lifetime: issued equals expires": {body: func(_ *familyActivationFixture, b *productionFamilyActivationBody) { b.ExpiresAt = b.IssuedAt },
+			want: ErrProductionFamilyActivationUnavailable, group: "lifetime", fields: []string{"issued_at not before expires_at"}},
+		"lifetime: expires before issued": {body: func(f *familyActivationFixture, b *productionFamilyActivationBody) {
+			b.ExpiresAt = f.now.Add(-90 * time.Minute).Format(time.RFC3339Nano)
+		}, want: ErrProductionFamilyActivationUnavailable, group: "lifetime", fields: []string{"issued_at not before expires_at"}},
 		"lifetime: two faults at once": {body: func(f *familyActivationFixture, b *productionFamilyActivationBody) {
 			b.ApprovedAt = f.now.Add(-time.Minute).Format(time.RFC3339Nano)
 			b.ExpiresAt = f.now.Add(productionFamilyActivationMaximumLife).Add(time.Hour + time.Nanosecond).Format(time.RFC3339Nano)
@@ -148,19 +165,28 @@ func TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel(t *testing.T) {
 		"descriptor: unknown lane": {body: func(_ *familyActivationFixture, b *productionFamilyActivationBody) {
 			b.Descriptors[0].LaneID = "kr_unknown_v1"
 		},
-			want: ErrProductionFamilyActivationUnavailable, group: "descriptors[lane_id=kr_unknown_v1]", fields: []string{"lane_id"}},
+			want: ErrProductionFamilyActivationUnavailable, group: "descriptors[0]", fields: []string{"lane_id"}, absent: []string{"kr_unknown_v1"}},
+		"descriptor: a lane id carrying a newline is not echoed": {body: func(_ *familyActivationFixture, b *productionFamilyActivationBody) {
+			b.Descriptors[2].LaneID = "kr_unknown\nINJECTED line"
+		},
+			want: ErrProductionFamilyActivationUnavailable, group: "descriptors[2]", fields: []string{"lane_id"}, absent: []string{"\n", "INJECTED", "kr_unknown"}},
 		"descriptor: horizon drift": {body: func(_ *familyActivationFixture, b *productionFamilyActivationBody) {
 			b.Descriptors[0].Horizon = HorizonWeekly
 		},
-			want: ErrProductionFamilyActivationUnavailable, group: "descriptors[lane_id=" + orderedLaneIDs(MarketKR)[0] + "]", fields: []string{"horizon"}},
+			want: ErrProductionFamilyActivationUnavailable, group: "descriptors[0]", fields: []string{"horizon"}, absent: []string{orderedLaneIDs(MarketKR)[0]}},
+		// effective 유효성 항(보이스 3 P1-1 · 보이스 1 m602): 이 항이 빠지면 열거 밖 effective 가 검증된 활성화로 수락된다.
+		"descriptor: effective outside the enum": {body: func(_ *familyActivationFixture, b *productionFamilyActivationBody) {
+			b.Descriptors[0].Desired, b.Descriptors[0].Effective = StateOn, "MAYBE"
+		},
+			want: ErrProductionFamilyActivationUnavailable, group: "descriptors[0]", fields: []string{"effective"}, absent: []string{"MAYBE"}},
 		"descriptor: effective without desired": {body: func(_ *familyActivationFixture, b *productionFamilyActivationBody) {
 			b.Descriptors[0].Desired = StateOff
 		},
-			want: ErrProductionFamilyActivationUnavailable, fields: []string{"effective ON without desired ON"}},
+			want: ErrProductionFamilyActivationUnavailable, fields: []string{"descriptors[0]: effective ON without desired ON"}, absent: []string{orderedLaneIDs(MarketKR)[0]}},
 		"descriptor: duplicate lane": {body: func(_ *familyActivationFixture, b *productionFamilyActivationBody) {
 			b.Descriptors[1] = b.Descriptors[0]
 		},
-			want: ErrProductionFamilyActivationUnavailable, fields: []string{"duplicate"}},
+			want: ErrProductionFamilyActivationUnavailable, fields: []string{"descriptors[1]: duplicate lane_id"}, absent: []string{orderedLaneIDs(MarketKR)[0]}},
 		"descriptor: three of four": {body: func(_ *familyActivationFixture, b *productionFamilyActivationBody) { b.Descriptors = b.Descriptors[:3] },
 			want: ErrProductionFamilyActivationUnavailable, fields: []string{"3 of 4"}},
 	}
@@ -186,8 +212,12 @@ func TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel(t *testing.T) {
 			if err == nil || activation.Verified() {
 				t.Fatalf("accepted: %v", err)
 			}
-			if !errors.Is(err, s.want) {
-				t.Fatalf("err=%v does not wrap %v", err, s.want)
+			// 배타성: 자기 sentinel 하나만 만족한다(포함만 재면 미선언을 몰래 같이 감는 거절이 산다 — 보이스 3 P1-2).
+			for _, sentinel := range []error{ErrProductionFamilyActivationUndeclared, ErrProductionFamilyActivationUnavailable,
+				ErrProductionFamilyActivationRevoked, ErrProductionFamilyActivationExpired} {
+				if errors.Is(err, sentinel) != (sentinel == s.want) {
+					t.Fatalf("err=%v: errors.Is(%v)=%v, want %v (each refusal satisfies exactly its own sentinel)", err, sentinel, errors.Is(err, sentinel), sentinel == s.want)
+				}
 			}
 			message := err.Error()
 			if s.group != "" {
@@ -208,10 +238,10 @@ func TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel(t *testing.T) {
 					t.Fatalf("message %q names %q — the two kinds are mixed", message, field)
 				}
 			}
-			// 읽기 결함만 공유 읽기 함수의 오류를 사슬에 싣는다 — 불일치 · 형식 · 결속 거절에는 없다(두 종류가 섞이지 않음).
-			// 그 함수는 OS 원인(없음 · 심링크 · 권한 · 소유자 · 크기)을 자기 sentinel 하나로 접는다 — OS 원인 노출은 이 로트 밖(잔여).
-			if errors.Is(err, ErrProductionRouteUnavailable) != s.readErr {
-				t.Fatalf("file read fault preserved=%v, want %v (message %q)", errors.Is(err, ErrProductionRouteUnavailable), s.readErr, message)
+			// 어느 거절도 공유 읽기 함수의 sentinel(ErrProductionRouteUnavailable)을 만족하지 않는다 — 읽기 결함도 그 오류를 `%v` 로 접는다
+			// (편집 전 사슬과 같음; 결함/불일치 구별은 위 메시지 낱말이 잰다). 그 함수가 OS 원인을 자기 sentinel 하나로 접는 것은 이 로트 밖(잔여).
+			if errors.Is(err, ErrProductionRouteUnavailable) {
+				t.Fatalf("activation refusal also satisfies ErrProductionRouteUnavailable (message %q)", message)
 			}
 		})
 	}

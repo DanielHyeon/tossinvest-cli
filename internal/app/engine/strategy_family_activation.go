@@ -154,6 +154,13 @@ func (loader *strategyProposalAuthorityLoader) familyGateFor(ctx context.Context
 func (loader *strategyProposalAuthorityLoader) loadFamilyActivation(ctx context.Context, market StrategyMarket,
 	schedule strategyScheduleMarketAuthority, routes strategyRouteMarketAuthority, observedAt time.Time,
 ) (strategyrouter.FamilyActivation, error) {
+	// env 를 읽을 수 없으면 핀이 비었는지조차 모른다 — 미선언이라고 답하면 선언된 시장을 기존 경로로 연다. 그래서 「선언됐는데 쓸 수 없음」
+	// (관문 되돌림)이다(a112 8.5 응답 로트 ② — codex r2 P2). 앞 판은 여기서 공황했고 collect 의 recover 가 같은 주기의 FX 미준비 사유를
+	// INTERNAL_FAILURE 로 덮었다. 생산 생성자는 nil 을 os.Getenv 로 채우므로 도달은 손으로 만든 적재기뿐이다.
+	// 맨 sentinel 을 돌려준다 — 이 경로의 호출은 읽기 전용 허용 목록(TestTheRollbackPathOnlyReads)으로 묶여 있고, 관문은 오류의 종류만 본다.
+	if loader.getenv == nil {
+		return strategyrouter.FamilyActivation{}, strategyrouter.ErrProductionFamilyActivationUnavailable
+	}
 	digestEnv := strategyFamilyActivationKRManifestDigestEnv
 	if market == StrategyMarketUS {
 		digestEnv = strategyFamilyActivationUSManifestDigestEnv

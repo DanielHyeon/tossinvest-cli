@@ -494,6 +494,12 @@ func TestAGatedFamilyMustNotShrinkTheMarketIntoTheExactlyOneValve(t *testing.T) 
 	if _, handedOff := authority.dispatchHandoff().Single(); handedOff {
 		t.Fatal("닫힌 시장이 공유 dispatch 경계에 값을 건넸다")
 	}
+	// 이 닫힘(B10 FAMILY_GATE_CLOSED)도 판정 관문의 활성화를 싣는다(8.8.4 항목 2 · 8.5 보이스 3 P2-1 — 이 단언이 없으면 갈래 안에서
+	// 활성화를 버리는 변이 E9 가 산다). 그 주기의 레인 관측이 관문과 같은 승격을 본다.
+	if !authority.familyActivation().Verified() || authority.familyActivation().Generation() != activation.Generation() {
+		t.Fatalf("FAMILY_GATE_CLOSED carried activation verified=%v gen=%d, want the gate's (gen %d)",
+			authority.familyActivation().Verified(), authority.familyActivation().Generation(), activation.Generation())
+	}
 }
 
 // 관문이 무엇을 왜 멈췄는지가 운영자에게 보여야 한다 (태스크 8.8.1).

@@ -1,55 +1,45 @@
 # Function Logic Map: `strategyProposalAuthorityLoader.loadFamilyActivation`
 
-- Source: `internal/app/engine/strategy_family_activation.go` (154-190)
-- Function: `strategyProposalAuthorityLoader.loadFamilyActivation` in package `engine`
-- File SHA-256: `230cc4c84bc3ff2bec2b98caaed10cdec7fd18e46181e3ce995899bbb0ee3492`
-- Pinned revision: `current` — the AST and the SHA-256 above are this worktree's file (post-edit).
-- AST evidence: `ast.json` — AST branches 2.
+- Source: `internal/app/engine/strategy_family_activation.go`
+- Source SHA-256: `50c775155bc8a12a5844ddbc30785f72e49b4fab7380146071e458f815d4c377`
+- Signature: `strategyProposalAuthorityLoader.loadFamilyActivation(params=5, results=2)`
+- Source range: `154:1`–`197:2`
+- AST evidence: `ast.json` — **편집 뒤**(a112 8.5-R).
 - Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
 
-**편집 뒤 (태스크 8.7.2, 2026-09-27).** 편집 전 번들은 커밋 `c1d1e295`(validate 는 `cb378a63`) 에 있다 — 이 파일은 GREEN 뒤 현재 소스의 AST 와 측정이다.
-
-편집: 보정 합의 실패 시 핀을 보기 전에 Unavailable 을 돌려주던 조기 반환(편집 전 B2 132:2)을 지웠다. 합의가 안 되면 빈 보정 값을
-넘기고, 판정은 strategyrouter 가 한다 — 미선언이 먼저, 빈 보정 값은 그다음 결속 형식 검사가 파일을 열기 전에 거절한다.
-막던 입력의 행방은 review.md 2026-09-27 절의 표.
+- env 를 읽을 수 없으면 핀이 비었는지 모른다 — 미선언(기존 경로)으로 답하지 않고 Unavailable(되돌림)로 답한다(더 닫힌 쪽).
+- 생산 생성자 `newStrategyProposalAuthorityLoader` 는 nil 을 `os.Getenv` 로 채운다 — B1 도달은 손으로 만든 적재기뿐.
 
 ## Branches and early returns
 
-- Measurement regime: Go coverage profiles, count mode. arm = 분기 좌표 **뒤에서 처음 시작하는** 커버리지 블록(`if`/`range` 몸통)이며, "arm entered Nx" 는 그 몸통이 N 번 실행됐다는 뜻이다.
-- engine tagged suite (and the strategyrouter tagged suite for the two router bundles, same flags): `go test -c -tags tossos_testseams -covermode=count -coverpkg=./internal/app/engine,./internal/strategyrouter ./internal/app/engine/` 바이너리를 `systemd-run --user --scope -p MemoryMax=16G -p MemorySwapMax=0` 안에서 실행(-trimpath 없이 — 소스를 읽는 시험 둘이 깨진다). 스위트 전체 PASS.
-- Per-test attribution set: 같은 바이너리의 **전체 시험 목록**을 `-test.run '^<Test>$'` 로 하나씩 돈 프로파일(하네스 `analysis/harness/a872_pertest_cover.sh`, 표 생성 `analysis/harness/a872_attribute.py`).
-- **귀속 완전성은 등식이다**: 모든 행에서 시험별 진입 수의 합 == 스위트 진입 수. 깨진 행은 `ATTRIBUTION MISMATCH` 로 찍히며 아래에는 하나도 없다.
-- 이 regime 은 **몸통 진입**을 센다. 같은 change 의 옛 번들 일부(예: dispatch 의 5.x 표)는 조건 평가를 센 값이라 수가 다르다 — 섞어 읽지 말 것.
+- Exact AST return nodes: `162:3, 190:2`.
 
-Exact AST return positions: 183:2.
-
-| Branch | AST kind | Position | Measured disposition |
+| Branch | AST kind | Source location | Meaning |
 |---|---|---|---|
-| B1 | if | 158:2 | arm entered 22x (engine tagged suite, post-edit); `TestADeclaredActivationThatLapsesRollsItsMarketBackInsteadOfWidening`, `TestALaneRefusesALineageThatRenamedItselfIntoAnotherLane`, `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff`, `TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestARolledBackGateClosesTheMarketEvenWithoutLanes`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestEveryLaneStaysDormantOnAProposalItActuallyOwns`, `TestExactlyOneLaneOwnsEachSealedProposal`, `TestRollingBackLeavesALatchedLaneLatched`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated`, `TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket` |
-| B2 | if | 180:2 | arm entered 22x (engine tagged suite, post-edit); `TestADeclaredActivationThatLapsesRollsItsMarketBackInsteadOfWidening`, `TestALaneRefusesALineageThatRenamedItselfIntoAnotherLane`, `TestAMarketWithTwoSelectedScopesNamesWhyNothingWasHandedOff`, `TestAProposalNoLaneOwnsIsStoppedRatherThanPassedThrough`, `TestARefusedArbitrationClosesTheWholeMarketRatherThanReleasingTheOtherSymbol`, `TestARolledBackGateClosesTheMarketEvenWithoutLanes`, `TestAnUncalibratedMarketRefusesEvenASingleProposal`, `TestEntriesComeBackInOwnerScopeOrderNotRouteOrder`, `TestEveryLaneStaysDormantOnAProposalItActuallyOwns`, `TestExactlyOneLaneOwnsEachSealedProposal`, `TestRollingBackLeavesALatchedLaneLatched`, `TestStrategyProposalAuthorityKeepsMarketFailureLocal`, `TestStrategyProposalAuthorityLoadsKRUSConcurrently`, `TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated`, `TestTheFamilyGateAndTheLegacyPathBuildTheSameEnvelope`, `TestTheLaneStageOnItsOwnCallsTheGatewayZeroTimes`, `TestThreeFamiliesOnOneSymbolNowSelectTheHighestScoreInsteadOfClosingTheMarket` |
-
-- B1 US 면 US 핀 이름. B2 US 면 US 위험 정책 env. (조기 반환이 사라져 분기가 셋에서 둘이 되었다.)
+| B1 | if | 161:2 | **(새)** getenv 가 nil → 맨 `ErrProductionFamilyActivationUnavailable` — 미선언이 아님(핀을 읽을 수 없음), 관문 되돌림(맨 sentinel 인 이유: 이 경로 호출은 `TestTheRollbackPathOnlyReads` 의 읽기 전용 허용 목록으로 묶임) |
+| B2 | if | 165:2 | US 시장이면 US 활성화 digest env |
+| B3 | if | 187:2 | US 시장이면 US 위험 정책 env |
 
 ## Calls and live bindings
 
 | Callee expression | Position |
 |---|---|
-| `strategyMarketCalibrationDigest` | 168:20 |
-| `strategyrouter.LoadProductionFamilyActivation` | 183:9 |
-| `strategyRouterMarket` | 184:40 |
-| `strings.TrimSpace` | 185:19 |
-| `loader.getenv` | 185:37 |
-| `strategyRuntimeBuildDigest` | 187:60 |
-| `strings.TrimSpace` | 188:21 |
-| `loader.getenv` | 188:39 |
+| `strategyMarketCalibrationDigest` | 175:20 |
+| `strategyrouter.LoadProductionFamilyActivation` | 190:9 |
+| `strategyRouterMarket` | 191:40 |
+| `strings.TrimSpace` | 192:19 |
+| `loader.getenv` | 192:37 |
+| `strategyRuntimeBuildDigest` | 194:60 |
+| `strings.TrimSpace` | 195:21 |
+| `loader.getenv` | 195:39 |
 
 ## State mutations and fallbacks
 
-없음. env 두 개를 읽고 strategyrouter 적재기를 부른다.
+- 상태 변경 없음 — env 읽기와 strategyrouter 적재 호출.
 
 ## Safety conclusion
 
-- 변이 M12(조기 반환 복원 → `TestAnUndeclaredMarketStaysUndeclaredWhateverItsCalibrationSays`)·M18(router 의 보정 형식 검사 삭제 → `TestADeclaredMarketWhoseCalibrationDoesNotAgreeIsRolledBack`) CAUGHT.
-- High-risk impact: yes.
+- B1 은 거절만 더한다(수락 집합 불변) — 공황 → 되돌림으로 바뀌어 같은 주기의 앞선 닫힘 사유(FX_NOT_READY 등)가 보존된다.
+- B1 은 새 호출을 더하지 않는다 — 되돌림 경로 읽기 전용 허용 목록(`TestTheRollbackPathOnlyReads`) 불변(첫 판의 `fmt.Errorf` 는 그 시험이 막았다 — 변이 대조군 전체 스위트 실측).

@@ -1,7 +1,7 @@
 # Function Logic Map: `familyActivationRemaining`
 
 - Source: `internal/strategyrouter/production_family_activation.go`
-- Source SHA-256: `7842842bc1b1bf9d2be542624169502fcc846a4e60080841887f5072f4fb6507`
+- Source SHA-256: `57123f814187d9201ec6999d6375adc649b579c89beb6c4731f36cc51243b005`
 - Signature: `familyActivationRemaining(params=2, results=2)`
 - Source range: `384:1`–`390:2`
 - AST evidence: `ast.json` — **편집 뒤**(a112 8.8.4-B).
@@ -38,3 +38,5 @@
 ## Safety conclusion
 
 - 판정 · 수락 집합 불변 — 같은 입력이 같은 sentinel 로 거절된다(errors.Is 보존, `==` 비교 0 — grep). 메시지에 필드 이름만 더해진다.
+
+a112 8.5 응답 로트(2026-10-04): 같은 파일의 다른 함수 편집으로 줄만 밀림 — shift_same_file_bundles.py(구조 동일 확인 뒤 좌표 사상)

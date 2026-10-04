@@ -595,6 +595,9 @@
   `measurements/lot-2.3/`, `function-logic/internal-breakoutlane--evaluatefresh/`. 리터럴 `1_200_000` 두 자리는 변이 핀(CF-03/04 · CF-10)으로 수용(Manager).
   **8.5 명시 대상 추가(2026-10-04 Manager 판정 — 8.8.4 로트 B).** `strategyrouter` 활성화 적재의 필드명 래핑(LoadProductionFamilyActivation 분기 9 → 10 · validate · decode ·
   body · familyActivationRemaining · 새 failedFields)과 `strategyProposalAuthorityLoader.collectMarket` 의 관문 계산 이동. 증거: review.md 「8.8.4 로트 B」, `measurements/lot-8.8.4-B/`.
+  **8.5 실행(2026-10-04) — 4판(codex r2 · 보이스 1 · 2 · 3), Manager 최종 판정 HOLD → 응답 로트 완료 · 재검증 시 SHIP.** P0 전판 0. 리뷰 기록 착지 178cc196
+  (`analysis/review-8.5-2026-10/` — 합본 `combined-8.5.md`, 설계 브리프 `design-brief-B2-P1.md`). 응답 로트(생산 4 · 시험/증거 8)는 review.md 「8.5 응답 로트」 ·
+  `measurements/lot-8.5-R/`. ROADMAP 등재 2: 4 적재기 취소 응답((d), 「핀 선언 전 착지」 면제 불가 선행 · F1-x 후보) · 운영자 표면 행에 P2-g 합류. 8.5 체크는 재검증 판정 뒤.
 - [ ] 8.6 If and only if current A100 ProtectionReady and all dependency gates are complete, build/deploy in dormant OFF/UNOBSERVED mode and verify lane/automation/autostart/LIVE approval remain unchanged. Otherwise perform build-only/shadow-fixture verification, record deployment as BLOCKED, and prove exposure-raising broker requests remain zero.
 - [x] 8.7.1 Build the mechanism that *requires* a separate human-approved operating activation: no lane may read effective ON without a verified signed four-family manifest binding the current calibration, market calendar, risk, build and ProtectionReady digests. **(Landed 2026-09-03.)**
 

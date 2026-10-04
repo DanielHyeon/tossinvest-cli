@@ -463,9 +463,10 @@ func LoadProductionFamilyActivation(ctx context.Context, config FamilyActivation
 	data, err := readProductionRouteFile(filepath.Join(config.ConfigDir, name), owner, 0o400,
 		productionFamilyActivationMaximumBytes)
 	// 읽기 결함과 핀 불일치는 다른 종류다(Manager 판정 2026-10-04): 결함을 불일치로 보이면 운영자가 I/O 장애를 매니페스트 오류로 읽는다.
-	// 읽기 결함은 읽기 함수의 오류를 사슬에 그대로 싣고, 불일치만 필드 이름으로 말한다.
+	// 읽기 결함은 읽기 함수의 오류를 **문장으로** 싣고(`%v`), 불일치만 필드 이름으로 말한다. 사슬에는 활성화 sentinel 하나만 둔다 —
+	// 둘째 `%w` 는 공유 읽기 함수의 sentinel(ErrProductionRouteUnavailable)까지 만족시켜 오류가 두 신원을 갖게 했다(a112 8.5 보이스 2 P2-1).
 	if err != nil {
-		return FamilyActivation{}, fmt.Errorf("%w: manifest file %s: %w", ErrProductionFamilyActivationUnavailable, name, err)
+		return FamilyActivation{}, fmt.Errorf("%w: manifest file %s: %v", ErrProductionFamilyActivationUnavailable, name, err)
 	}
 	if productionRouteDigest(data) != config.ManifestDigest {
 		return FamilyActivation{}, fmt.Errorf("%w: manifest_digest: the pinned digest does not match the file bytes", ErrProductionFamilyActivationUnavailable)
@@ -590,7 +591,9 @@ func validateProductionFamilyActivation(body productionFamilyActivationBody,
 	// 남은 둘은 서로 다른 성질이고 각각 다른 입력에서만 짐을 진다:
 	// 중복 거절은 `[c,r,w,b,b]`(다섯 중 넷이 다 있음)를, 완전성은 `[c,r,w]`를.
 	state := make(map[familyLaneKey]productionFamilyActivationDescriptor, len(want))
-	for _, descriptor := range body.Descriptors {
+	// 서술자 거절은 위치(`descriptors[i]`)와 필드 이름만 말한다 — lane_id 원문은 싣지 않는다. 핀이 맞는 파일이라도 그 문자열은 매니페스트
+	// 작성자의 임의 값이고(개행 포함), 오류 문장은 로그 · 화면으로 간다(a112 8.5 응답 로트 ③ — codex r2 P2).
+	for index, descriptor := range body.Descriptors {
 		table, known := want[descriptor.LaneID]
 		// 모르는 레인이면 표 값이 영값이라 표 대조 셋은 `known &&` 로 묶는다 — 판정은 앞 판(`!known || …`)과 같고 이름만 정확해진다.
 		if fields := failedFields(
@@ -601,16 +604,16 @@ func validateProductionFamilyActivation(body productionFamilyActivationBody,
 			fieldCheck{"desired", !validDesiredState(descriptor.Desired)},
 			fieldCheck{"effective", !validDesiredState(descriptor.Effective)},
 		); len(fields) != 0 {
-			return nil, fmt.Errorf("%w: descriptors[lane_id=%s]: %s", ErrProductionFamilyActivationUnavailable, descriptor.LaneID, strings.Join(fields, ", "))
+			return nil, fmt.Errorf("%w: descriptors[%d]: %s", ErrProductionFamilyActivationUnavailable, index, strings.Join(fields, ", "))
 		}
 		// effective ON 은 desired ON 없이 설 수 없다. 반대는 정당하다 —
 		// 사람이 켜기로 했지만 아직 서지 않은 상태다.
 		if descriptor.Effective == StateOn && descriptor.Desired != StateOn {
-			return nil, fmt.Errorf("%w: descriptors[lane_id=%s]: effective ON without desired ON", ErrProductionFamilyActivationUnavailable, descriptor.LaneID)
+			return nil, fmt.Errorf("%w: descriptors[%d]: effective ON without desired ON", ErrProductionFamilyActivationUnavailable, index)
 		}
 		key := familyLaneKey{family: descriptor.Family, laneID: descriptor.LaneID, laneVersion: descriptor.LaneVersion}
 		if _, duplicate := state[key]; duplicate {
-			return nil, fmt.Errorf("%w: descriptors: duplicate lane_id %s", ErrProductionFamilyActivationUnavailable, descriptor.LaneID)
+			return nil, fmt.Errorf("%w: descriptors[%d]: duplicate lane_id", ErrProductionFamilyActivationUnavailable, index)
 		}
 		state[key] = descriptor
 	}
