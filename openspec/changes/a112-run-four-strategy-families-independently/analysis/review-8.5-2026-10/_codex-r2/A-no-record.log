@@ -1,0 +1,8 @@
+--- FAIL: TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit (0.00s)
+    --- FAIL: TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/RVOL_exactly_1.2,_close_and_wick_qualify (0.00s)
+        a112_rvol_counterfactual_test.go:38: provenance={RVOLAdmission:false RVOLAt1200000:false RVOLAt2000000:false RVOLAt2500000:false ResistanceMinor:100 RangeLowMinor:90 Transitions:[DISCOVERED RANGE_LOCKED]}, want at1.2=true and no admission or higher counterfactual
+    --- FAIL: TestTheOnePointTwoCounterfactualRecordsABarThatOnlyTheLowerThresholdWouldAdmit/RVOL_one_ppm_under_admission (0.00s)
+        a112_rvol_counterfactual_test.go:38: provenance={RVOLAdmission:false RVOLAt1200000:false RVOLAt2000000:false RVOLAt2500000:false ResistanceMinor:100 RangeLowMinor:90 Transitions:[DISCOVERED RANGE_LOCKED]}, want at1.2=true and no admission or higher counterfactual
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.003s
+FAIL

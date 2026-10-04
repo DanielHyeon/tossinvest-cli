@@ -1,0 +1,14 @@
+# codex r2 artifacts left in scratch (too large or directories) — name, bytes, sha256
+A-golden-drift/	(dir — before/after source copy or experiment tree)
+A-golden-drift.jsonl	5040573	01c175a70edbb05832c579492fd306a01637456f2007d642cc1987e443da6b18
+A-golden-drift.jsonl.flags	180123	e28aba12662f873bfc52f40d57c44d7d09dd764503102696ea481e8a7ef45897
+A-post/	(dir — before/after source copy or experiment tree)
+A-post-verify.jsonl	5023973	0c79f48f735f51b4104bacb306719523066b3fdd4d7ebfd7e1651be60073ed40
+A-post-verify.jsonl.flags	179013	361a78bf2c7b675fb34a3d93d1afbb4c38b4b8d2a362e2d1c57375c2987dffa1
+A-post.jsonl	5040573	01c175a70edbb05832c579492fd306a01637456f2007d642cc1987e443da6b18
+A-post.jsonl.flags	180123	e28aba12662f873bfc52f40d57c44d7d09dd764503102696ea481e8a7ef45897
+A-pre/	(dir — before/after source copy or experiment tree)
+A-pre.jsonl	5040573	01c175a70edbb05832c579492fd306a01637456f2007d642cc1987e443da6b18
+A-pre.jsonl.flags	181564	1f954f78a516bfbe65ee729efbe780a5cb1f9415d48e6b186f2558c7c6c96cc7
+B-post/	(dir — before/after source copy or experiment tree)
+B-pre/	(dir — before/after source copy or experiment tree)

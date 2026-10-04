@@ -1,0 +1,186 @@
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_approved_at_not_a_canonical_instant
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_unknown_lane
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_issued_in_the_future
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_three_of_four
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_three_fields_at_once
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_generation_zero
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_build
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_risk_policy
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_effective_without_desired
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_duplicate_lane
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_malformed_risk_policy_digest
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/manifest_file_missing
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/bytes_not_canonical
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_domain
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_issued_before_approved
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_horizon_drift
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_zero_observed_instant
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/an_unknown_field
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_calendar
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/undeclared_pin
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_empty_calibration
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_malformed_route_manifest_digest
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_empty_calendar
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_empty_build
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/trailing_data_after_the_document
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_calibration
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_actor
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_unknown_market
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_schema
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_three_fields_at_once
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_longer_than_the_ceiling
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_two_faults_at_once
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/expired
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_malformed_digest_pin
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/pin_does_not_match_the_file_bytes
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_relative_config_dir
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/revoked
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_market
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_route_manifest
+=== RUN   TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_protection_floor
+--- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel (0.01s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_approved_at_not_a_canonical_instant (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_unknown_lane (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_issued_in_the_future (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_three_of_four (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_three_fields_at_once (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_generation_zero (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_build (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_risk_policy (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_effective_without_desired (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_duplicate_lane (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_malformed_risk_policy_digest (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/manifest_file_missing (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/bytes_not_canonical (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_domain (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_issued_before_approved (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/descriptor:_horizon_drift (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_zero_observed_instant (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/an_unknown_field (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_calendar (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/undeclared_pin (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_empty_calibration (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_malformed_route_manifest_digest (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_empty_calendar (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_empty_build (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/trailing_data_after_the_document (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_calibration (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_actor (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_unknown_market (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_schema (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_three_fields_at_once (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_longer_than_the_ceiling (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/lifetime:_two_faults_at_once (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/expired (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_malformed_digest_pin (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/pin_does_not_match_the_file_bytes (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/config_binding:_relative_config_dir (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/revoked (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_market (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_route_manifest (0.00s)
+    --- PASS: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_protection_floor (0.00s)
+=== RUN   TestTheDocumentPathNamesItsRefusalToo
+--- PASS: TestTheDocumentPathNamesItsRefusalToo (0.00s)
+=== RUN   TestTheCommittedGoldenManifestMatchesItsPinAndPromotesTheFourLanes
+--- PASS: TestTheCommittedGoldenManifestMatchesItsPinAndPromotesTheFourLanes (0.01s)
+=== RUN   TestTheAcceptedGoldenCarriesNoKeyAndNoSignature
+--- PASS: TestTheAcceptedGoldenCarriesNoKeyAndNoSignature (0.00s)
+=== RUN   TestGoldenBytesThatDriftFromThePinPromoteNothing
+--- PASS: TestGoldenBytesThatDriftFromThePinPromoteNothing (0.00s)
+=== RUN   TestTheAuthoringEncoderStillProducesTheCommittedGoldenBytes
+--- PASS: TestTheAuthoringEncoderStillProducesTheCommittedGoldenBytes (0.00s)
+=== RUN   TestTheAuthoringEncoderOrdersDescriptorsTheSameWayEveryRun
+--- PASS: TestTheAuthoringEncoderOrdersDescriptorsTheSameWayEveryRun (0.00s)
+=== RUN   TestAVerifiedFourFamilyActivationPromotesExactlyTheLanesItNames
+--- PASS: TestAVerifiedFourFamilyActivationPromotesExactlyTheLanesItNames (0.00s)
+=== RUN   TestTheZeroActivationIsNotVerifiedAndPromotesNothing
+--- PASS: TestTheZeroActivationIsNotVerifiedAndPromotesNothing (0.00s)
+=== RUN   TestWithNoActivationFileNothingIsPromoted
+--- PASS: TestWithNoActivationFileNothingIsPromoted (0.00s)
+=== RUN   TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing
+=== RUN   TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/partial_three_of_four_with_a_duplicate
+=== RUN   TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/an_unknown_lane_id
+=== RUN   TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/a_family_that_drifts_from_the_table
+=== RUN   TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/a_horizon_that_drifts_from_the_table
+=== RUN   TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/effective_ON_without_desired_ON
+=== RUN   TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/an_unknown_desired_state
+=== RUN   TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/legacy_three_families_(breakout_missing)
+=== RUN   TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/a_lane_version_that_drifts_from_the_table
+=== RUN   TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/a_fifth_descriptor
+--- PASS: TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing (0.00s)
+    --- PASS: TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/partial_three_of_four_with_a_duplicate (0.00s)
+    --- PASS: TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/an_unknown_lane_id (0.00s)
+    --- PASS: TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/a_family_that_drifts_from_the_table (0.00s)
+    --- PASS: TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/a_horizon_that_drifts_from_the_table (0.00s)
+    --- PASS: TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/effective_ON_without_desired_ON (0.00s)
+    --- PASS: TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/an_unknown_desired_state (0.00s)
+    --- PASS: TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/legacy_three_families_(breakout_missing) (0.00s)
+    --- PASS: TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/a_lane_version_that_drifts_from_the_table (0.00s)
+    --- PASS: TestAnActivationWhoseDescriptorSetIsNotExactlyTheFourPromotesNothing/a_fifth_descriptor (0.00s)
+=== RUN   TestTheOtherMarketsWholeManifestInThisMarketsFilePromotesNothing
+--- PASS: TestTheOtherMarketsWholeManifestInThisMarketsFilePromotesNothing (0.00s)
+=== RUN   TestAnActivationPromotesOnlyTheFamiliesItTurnsOn
+--- PASS: TestAnActivationPromotesOnlyTheFamiliesItTurnsOn (0.00s)
+=== RUN   TestAnActivationWhoseBindingsDoNotMatchPromotesNothing
+=== RUN   TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_digest_pin_that_does_not_match_the_bytes
+=== RUN   TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/the_other_market's_file_name
+=== RUN   TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/another_signing_domain
+=== RUN   TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/generation_zero
+=== RUN   TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_risk_policy_digest_the_deployment_disagrees_with
+=== RUN   TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/no_named_approver
+=== RUN   TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_calibration_digest_the_caller_did_not_bind
+=== RUN   TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_route_manifest_digest_the_caller_did_not_bind
+=== RUN   TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_schema_version_this_build_does_not_know
+=== RUN   TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_market_the_body_disagrees_with
+=== RUN   TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/no_protection-ready_floor_at_all
+=== RUN   TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/revoked_by_the_approver
+=== RUN   TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_calendar_version_the_caller_did_not_bind
+=== RUN   TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_build_digest_the_caller_did_not_bind
+--- PASS: TestAnActivationWhoseBindingsDoNotMatchPromotesNothing (0.00s)
+    --- PASS: TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_digest_pin_that_does_not_match_the_bytes (0.00s)
+    --- PASS: TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/the_other_market's_file_name (0.00s)
+    --- PASS: TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/another_signing_domain (0.00s)
+    --- PASS: TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/generation_zero (0.00s)
+    --- PASS: TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_risk_policy_digest_the_deployment_disagrees_with (0.00s)
+    --- PASS: TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/no_named_approver (0.00s)
+    --- PASS: TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_calibration_digest_the_caller_did_not_bind (0.00s)
+    --- PASS: TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_route_manifest_digest_the_caller_did_not_bind (0.00s)
+    --- PASS: TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_schema_version_this_build_does_not_know (0.00s)
+    --- PASS: TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_market_the_body_disagrees_with (0.00s)
+    --- PASS: TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/no_protection-ready_floor_at_all (0.00s)
+    --- PASS: TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/revoked_by_the_approver (0.00s)
+    --- PASS: TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_calendar_version_the_caller_did_not_bind (0.00s)
+    --- PASS: TestAnActivationWhoseBindingsDoNotMatchPromotesNothing/a_build_digest_the_caller_did_not_bind (0.00s)
+=== RUN   TestAnActivationOutsideItsApprovedLifetimePromotesNothing
+=== RUN   TestAnActivationOutsideItsApprovedLifetimePromotesNothing/a_timestamp_that_is_not_canonical_UTC
+=== RUN   TestAnActivationOutsideItsApprovedLifetimePromotesNothing/already_expired_at_the_observed_instant
+=== RUN   TestAnActivationOutsideItsApprovedLifetimePromotesNothing/issued_in_the_future
+=== RUN   TestAnActivationOutsideItsApprovedLifetimePromotesNothing/issued_before_it_was_approved
+=== RUN   TestAnActivationOutsideItsApprovedLifetimePromotesNothing/a_lifetime_longer_than_the_approved_ceiling
+--- PASS: TestAnActivationOutsideItsApprovedLifetimePromotesNothing (0.00s)
+    --- PASS: TestAnActivationOutsideItsApprovedLifetimePromotesNothing/a_timestamp_that_is_not_canonical_UTC (0.00s)
+    --- PASS: TestAnActivationOutsideItsApprovedLifetimePromotesNothing/already_expired_at_the_observed_instant (0.00s)
+    --- PASS: TestAnActivationOutsideItsApprovedLifetimePromotesNothing/issued_in_the_future (0.00s)
+    --- PASS: TestAnActivationOutsideItsApprovedLifetimePromotesNothing/issued_before_it_was_approved (0.00s)
+    --- PASS: TestAnActivationOutsideItsApprovedLifetimePromotesNothing/a_lifetime_longer_than_the_approved_ceiling (0.00s)
+=== RUN   TestBytesThatChangedAfterTheDeploymentPinnedThemPromoteNothing
+--- PASS: TestBytesThatChangedAfterTheDeploymentPinnedThemPromoteNothing (0.00s)
+=== RUN   TestAnActivationWhoseBytesAreNotCanonicalPromotesNothing
+=== RUN   TestAnActivationWhoseBytesAreNotCanonicalPromotesNothing/reordered_whitespace
+=== RUN   TestAnActivationWhoseBytesAreNotCanonicalPromotesNothing/an_unknown_field
+=== RUN   TestAnActivationWhoseBytesAreNotCanonicalPromotesNothing/trailing_JSON
+=== RUN   TestAnActivationWhoseBytesAreNotCanonicalPromotesNothing/a_duplicate_key
+--- PASS: TestAnActivationWhoseBytesAreNotCanonicalPromotesNothing (0.00s)
+    --- PASS: TestAnActivationWhoseBytesAreNotCanonicalPromotesNothing/reordered_whitespace (0.00s)
+    --- PASS: TestAnActivationWhoseBytesAreNotCanonicalPromotesNothing/an_unknown_field (0.00s)
+    --- PASS: TestAnActivationWhoseBytesAreNotCanonicalPromotesNothing/trailing_JSON (0.00s)
+    --- PASS: TestAnActivationWhoseBytesAreNotCanonicalPromotesNothing/a_duplicate_key (0.00s)
+=== RUN   TestAVerifiedActivationCarriesTheProtectionFloorTheOrderPathMustBind
+--- PASS: TestAVerifiedActivationCarriesTheProtectionFloorTheOrderPathMustBind (0.00s)
+=== RUN   TestACancelledContextPromotesNothing
+--- PASS: TestACancelledContextPromotesNothing (0.00s)
+=== RUN   TestEveryMarketWithAnActivationFileNameHasADescriptorTable
+--- PASS: TestEveryMarketWithAnActivationFileNameHasADescriptorTable (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	0.027s

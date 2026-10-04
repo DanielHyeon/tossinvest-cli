@@ -1,0 +1,6 @@
+--- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel (0.01s)
+    --- FAIL: TestEveryActivationRefusalNamesItsFieldAndKeepsItsSentinel/body_binding:_protection_floor (0.00s)
+        a112_activation_error_fields_test.go:187: accepted: <nil>
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	0.014s
+FAIL
