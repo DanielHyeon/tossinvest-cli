@@ -1,0 +1,17 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.444s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyflow	0.107s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyrouter	4.466s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyproposal	10.797s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/scheduler	3.234s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyworker	1.899s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategycoordinator	0.384s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyarbiter	0.008s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyhandoff	9.742s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/continuationlane	0.443s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reversallane	0.976s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/weeklyvaluelane	0.860s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyshadow	1.561s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/strategyprojection	1.199s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/httpapi	0.935s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a112-family-shadow	0.032s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	312.650s

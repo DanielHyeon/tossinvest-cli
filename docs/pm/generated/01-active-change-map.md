@@ -109,7 +109,7 @@
 | `a109-the-sibling-endpoints-recover-too` | STORY-TOS-a109 | archived |
 | `a110-only-the-same-dispute-becomes-permanent` | STORY-TOS-a110 | archived |
 | `a111-exit-lines-stay-actionable-with-flat-quotes` | STORY-TOS-a111 | archived |
-| `a112-run-four-strategy-families-independently` | STORY-TOS-a112 | in_progress |
+| `a112-run-four-strategy-families-independently` | STORY-TOS-a112 | implemented |
 | `a113-the-projection-probe-proves-death` | STORY-TOS-a113 | archived |
 | `a114-the-console-reattaches-its-lifecycle` | STORY-TOS-a114 | archived |
 | `a115-the-console-strategy-screen-reattaches` | STORY-TOS-a115 | archived |

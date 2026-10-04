@@ -1,0 +1,19 @@
+== worktree 2497427e00149bac92195cb38261daa225cfdcc1 2026-10-05T06:20:53+09:00
+81-untagged exit=0 (312s): go test -count=1 -timeout 30m ./internal/breakoutlane/... ./internal/strategyflow/... ./internal/strategyrouter/... ./internal/strategyproposal/... ./internal/scheduler/... ./internal/strategyworker/... ./internal/strategycoordinator/... ./internal/strategyarbiter/... ./internal/strategyhandoff/... ./internal/continuationlane/... ./internal/reversallane/... ./internal/weeklyvaluelane/... ./internal/strategyshadow/... ./internal/strategyprojection/... ./internal/httpapi/... ./tools/a112-family-shadow/... ./internal/app/engine/...
+81-tagged exit=0 (320s): go test -count=1 -timeout 30m -tags tossos_testseams ./internal/breakoutlane/... ./internal/strategyflow/... ./internal/strategyrouter/... ./internal/strategyproposal/... ./internal/scheduler/... ./internal/strategyworker/... ./internal/strategycoordinator/... ./internal/strategyarbiter/... ./internal/strategyhandoff/... ./internal/continuationlane/... ./internal/reversallane/... ./internal/weeklyvaluelane/... ./internal/strategyshadow/... ./internal/strategyprojection/... ./internal/httpapi/... ./tools/a112-family-shadow/... ./internal/app/engine/...
+81-race-pkgs exit=0 (40s): go test -race -count=1 -timeout 30m -tags tossos_testseams ./internal/breakoutlane/... ./internal/strategyflow/... ./internal/strategyrouter/... ./internal/strategyproposal/... ./internal/scheduler/... ./internal/strategyworker/... ./internal/strategycoordinator/... ./internal/strategyarbiter/... ./internal/strategyhandoff/... ./internal/continuationlane/... ./internal/reversallane/... ./internal/weeklyvaluelane/... ./internal/strategyshadow/... ./internal/strategyprojection/... ./internal/httpapi/... ./tools/a112-family-shadow/...
+83-make-test-race exit=0 (223s): make test-race
+83-make-test exit=0 (783s): make test
+83-make-test-seams exit=0 (840s): make test-seams
+83-make-vet exit=0 (2s): make vet
+83-make-lint exit=0 (3s): make lint
+83-make-validate exit=0 (1s): make validate
+83-openspec-validate exit=0 (2s): openspec validate a112-run-four-strategy-families-independently --strict --no-interactive
+83-pm-check exit=0 (0s): python3 tools/pm/generate_master_tracker.py --check
+== done 2026-10-05T07:02:59+09:00
+83-make-test ok-packages=101 fail-lines=0
+83-make-test-seams ok-packages=102 fail-lines=0
+83-make-test-race ok-packages=8 fail-lines=0
+81-untagged ok-packages=17 fail-lines=0
+81-tagged ok-packages=17 fail-lines=0
+81-race-pkgs ok-packages=16 fail-lines=0

@@ -21,7 +21,10 @@
   **닫음(2026-10-04, Manager 판정 — 기록 의무 이행):** 로트별 리뷰 사슬(RED → GREEN → 별도 적대 리뷰 → 수리 → 같은 리뷰어 재확인 → Manager 수락)이 review.md 에 있다 — L0 :42 · L1a :311(브리프) · :339(구현 보고) · :348(독립 리뷰) · :358(수락) · L1b :366 · :416 · :425 · :441 · :472(ACCEPTED) · L1c :483 · :542 · :753 · :774 · L2 :70(수락, P0/P1=0) · L3 :827 · :903 · :940 · :980 · :1242 · L4(코디네이터 · 중재 — 5.4.x · 7.1/7.2) :1540 · :1645 · :1731 · :1816 · :1933 · :5895 · L5 :1412 · :2008~:3451(5.5 와 fix 13 라운드) · :3452 · :3790 · :3925 · :4053 · :4166 · :4229 · :4335 · :5250~:5522 · :5658 · :5737 · :5821 · :5930 · :5996 · :6015 · L6 :5523 · :5605 · :5643 · :5851 · :5873 · :6070 · :6251 · :6282. 명령 · 소유 파일은 각 절과 `analysis/measurements/lot-*/`(RED · 변이 · verify 로그). **L1c 수락은 장중 사람 프로브 대기 — 기록상 측정 1회 존재(:774, 두 시장 마감 중 실행), 수락 아님**(사람 큐 항목, 이 체크와 독립).
 - [x] 0.4 Forbid a reviewer from editing the lot under review; reviewers report P0/P1/P2 and only P0/P1=0 may advance the dependency chain.
   **닫음(2026-10-04, Manager 판정 — 이행 완료):** 리뷰어는 읽기 전용으로 돌았다 — L1b 「Terra adversary (read-only, 61 `-overlay` mutants)」(review.md :428), 5.5 적대 리뷰 13 라운드(:2126~:3451), 8.5 4판(`analysis/review-8.5-2026-10/` — 프롬프트가 편집 금지 · 리뷰어 출력마다 저장소 무변경 실측, codex r2 는 아카이브 사본에서 workspace-write). P0/P1 이 0 이 아니면 전진하지 않았다 — 각 로트 수락 줄의 「reviewer P0/P1=0」 과 8.5 HOLD → 응답 로트 6f5b0df6 → SHIP(:6416 절).
-- [ ] 0.5 After L7, run one final gstack pre-landing review over the complete diff; fix and re-review every P0/P1 before Manager completion verification.
+- [x] 0.5 After L7, run one final gstack pre-landing review over the complete diff; fix and re-review every P0/P1 before Manager completion verification.
+  **닫음(2026-10-05, Manager 판정).** 4판 리뷰(testing · maintainability · security · performance, 좌표 1e25b3a3 → 4cbcfb36, `analysis/review-0.5-full-2026-10/voice*-output.md`) —
+  P0 0, P1 3(시험#1 · 시험#2 · 보안#1). 응답 로트 2497427e(처분 표 `disposition.md`, 변이 결함 26/26 CAUGHT · `lot-0.5-response/`) → P1 출처 리뷰어 표적 재검(좌표 2497427e,
+  `re-review-voice1-testing-output.md` · `re-review-voice3-security-output.md`): **3/3 반영**(P1#1 · P1#2 · P1#3), P0 0.
 - [x] 0.6 Treat build, dormant deployment and operating activation as three distinct gates. Missing A100 ProtectionReady permits build/shadow tests only and blocks container replacement and every exposure-raising dispatch.
   **닫음(2026-10-04, Manager 판정 — 증거 인용):** 세 관문이 따로 집행된다. ① 빌드: `measurements/gate-8.1-8.3-2026-10-04/build-only-8.6.log`(go build 무태그 · 태그 · cmd/tossctl exit 0). ② 휴면 배포: 사람 정책 — 이미지 빌드 · 컨테이너 교체는 사람이 `make image CHANGE=…`(docs/operations.md :415) · 운영 반영 승인(.claude/CLAUDE.md 안전 7 · docs/WORKFLOW.md :24); A100 ProtectionReady 미완(`openspec/changes/a100-wire-fill-to-broker-protection/tasks.md` 미완료 86, 2026-10-04 실측)이라 8.6 은 BLOCKED. ③ 운영 활성화: 서명된 4-가족 활성화 없이는 레인 effective ON 불가(8.7.1 · 8.7.2, 생산 핀 0) + ProtectionReady 증명 없이는 상승 0 — execgw `TestEachProtectionAttestationFailureStopsBuysAndKeepsReductionsFlowing` · engine `TestAnExpiredProtectionAttestationStopsTheStrategyFirstLegBeforeTheBroker`(6.6, review.md :6282).
 - [x] 0.7 Complete M-B0 and M-B1 before L1. A different Terra reviewer is read-only for each implementation/evidence lot, and SOL/Manager alone records M-B PASS in `review.md`. M-B0 or M-B1 completion MUST NOT itself mark task 0.7 complete.
@@ -560,7 +563,7 @@
   `scoreVersion` · `calibrationDigest`). `internal/strategyprojection` 은 import 0 잎 그대로(레인 표 · 어휘를 골든 · 생산 상수와 시험으로 대조), 엔진 `Read` 가
   레인을 지금 상태로 읽기만 해서 덧씌움, 조정자 자식은 조립 발행 때(실패 갈래에서도). OpenAPI 세 스키마. 콘솔 template 무편집(화면 노출은 후속 콘솔 로트).
   계좌 원문 0(lineageIdentity 는 SHA-256). 변이 `lot-7.3/mutation-7.3.tsv`(동등 표기 둘 외 CAUGHT), 읽기 전용 불변 변이(Offer · Fail) CAUGHT. review 「7.3」 절.
-- [ ] 7.3.1 Distinguish `OFF/OFF/UNOBSERVED` from explicit read-only `SHADOW`: SHADOW may evaluate and project counterfactuals but cannot mint desired/effective/activation, own dispatch capability or survive restart without a valid server-owned shadow manifest bound by its deployment digest pin `TOSSOS_STRATEGY_FAMILY_SHADOW_<MARKET>_MANIFEST_SHA256` (개정 2026-10-04 [a112 결정 63] — 원문 「signed shadow manifest」; 신뢰 앵커는 결정 61 과 같은 digest 핀).
+- [x] 7.3.1 Distinguish `OFF/OFF/UNOBSERVED` from explicit read-only `SHADOW`: SHADOW may evaluate and project counterfactuals but cannot mint desired/effective/activation, own dispatch capability or survive restart without a valid server-owned shadow manifest bound by its deployment digest pin `TOSSOS_STRATEGY_FAMILY_SHADOW_<MARKET>_MANIFEST_SHA256` (개정 2026-10-04 [a112 결정 63] — 원문 「signed shadow manifest」; 신뢰 앵커는 결정 61 과 같은 digest 핀).
 
   **7.3.1 상태(2026-10-04 Manager 판정 — 열림, 사용자 결정 대기).** spec four-family-strategy-runtime :88-93 이 SHADOW 를 SHALL/MUST NOT 으로 구속한다(허용 절은
   「서명 shadow 매니페스트가 있을 때만」 — 결정 63 뒤 「digest 핀으로 결속된 매니페스트가 있을 때만」, 금지 둘은 ON 승격 · dispatch 소유 · 재시작 자동 복구). 오늘은 SHADOW 상태가 없어(`strategyrouter.RuntimeState` = {UNOBSERVED},
@@ -586,6 +589,8 @@
   (desired ON/effective OFF 행 · 접기 순서 행) 뒤 CAUGHT. 편집 뒤 번들 `harness/render_731s_bundles.py`(분기 행의 시험은 측정 — `branch-coverage-*.json`) +
   같은 파일 줄 밀림 재기준 18 · `check_analysis` 통과. 브리프와 다른 구현 모양 하나: collectMarket 은 반환 둘이 아니라 out 인자(반환 갈래 열다섯 무편집 — §4 「운반은
   authority 밖」 은 그대로).
+  **닫음(2026-10-05, Manager 판정).** 사용자 결정(2026-10-04 선택지 1 — a112 안에서 구축) → freeze 6라운드 종결(9e5f3ccf, 브리프 v3.3) → 구현 착지 4cbcfb36(변이 46/47 CAUGHT +
+  S21 동등 — 대체 가드 S25) → 0.5 전체 diff 리뷰 + 응답 로트 2497427e + P1 출처 리뷰어 표적 재검 3/3 반영(위 0.5 노트).
 - [x] 7.4 Bound metrics cardinality by fixed market/family/lane/version/reason labels; keep symbol/setup/candidate identifiers in logs/journal queries rather than metric labels.
 
   **7.4 종결(2026-10-01 — 미착지).** 실측: 생산 메트릭 방출기 0(묶을 label 없음). Manager 판정 (A): 금지 명시 가드
@@ -600,11 +605,24 @@
 
 ## 8. Verification Rollout and Review
 
-- [ ] 8.1 Run focused unit/property/integration tests and race tests for breakout evidence/core, strategyflow, strategyrouter, strategyproposal, scheduler and engine worker/coordinator packages; attach RED-to-GREEN evidence to every Branch Test Map row.
+- [x] 8.1 Run focused unit/property/integration tests and race tests for breakout evidence/core, strategyflow, strategyrouter, strategyproposal, scheduler and engine worker/coordinator packages; attach RED-to-GREEN evidence to every Branch Test Map row.
+  **닫음(2026-10-05, 착지 2497427e — 7.3.1 SHADOW + 0.5 응답 로트 뒤).** 고정 워크트리 2497427e 에서 `harness/gate_suites.sh` → `measurements/gate-8.1-8.3-2026-10-05/suites-summary.log`:
+  81-untagged · 81-tagged(각 17 패키지 — 10-04 집합 13 + strategyshadow · strategyprojection · httpapi · tools/a112-family-shadow) · 81-race-pkgs(16) 전부 exit 0, FAIL 0.
+  BTM 행 증거는 8.4 census(아래)가 행마다 처분을 붙인다.
 - [x] 8.2 Run dependency/static guards proving lane/evidence/worker packages contain no WTS or broker mutator, writable journal, Guardian issuer, activation/toggle writer and tests cannot POST to a live hostname.
   **닫음(2026-10-04, Manager 판정 결정 1 — a112 안에서 닫는다):** census `measurements/gate-8.1-8.3-2026-10-04/guard-census-8.2.md`(기존 15 가드 GREEN, `guards-8.2.log`) + 8.2 가드 로트(review.md 「8.2 가드 로트」, `measurements/lot-8.2-G/` 변이 13/13). 남는 한계(명기): 공식 클라이언트 기본 Transport 는 DefaultTransport 가드 밖 — officialbars 시험의 official.New 는 WithBaseURL + WithHTTPClient 강제로 막음; 시험 이진의 journal 은 router · coordinator 의 임시 실원장 픽스처에만(이름 예외).
-- [ ] 8.3 Run `openspec validate a112-run-four-strategy-families-independently --strict --no-interactive`, PM tracker generation/check, `make sdd-check`, `make test`, `make vet`, `make validate` and `make gate CHANGE=a112-run-four-strategy-families-independently`.
-- [ ] 8.4 Refresh all edited-function AST/FLM/BTM/risk reports after GREEN implementation and confirm every branch/risk row maps to an automated test or an explicit reviewed non-code control.
+- [x] 8.3 Run `openspec validate a112-run-four-strategy-families-independently --strict --no-interactive`, PM tracker generation/check, `make sdd-check`, `make test`, `make vet`, `make validate` and `make gate CHANGE=a112-run-four-strategy-families-independently`.
+  **진행(2026-10-05, 2497427e — 미체크: `make gate` 는 Manager 판정과 함께).** 같은 summary: make test-race(8 ok, 엔진 목록 포함) · make test(101 ok) · make test-seams(102 ok) ·
+  make vet · make lint · make validate · openspec validate --strict · PM tracker --check 전부 exit 0, FAIL 0. 남은 것: `make sdd-sync` · `make sdd-check` · `make gate CHANGE=…`.
+  **체크 순서(관례 — gate 2단계는 이 줄 자신도 미완료로 센다):** 나머지 태스크가 전부 닫힌 뒤 이 줄을 먼저 체크하고 `make sdd-sync` → `make sdd-check` → `make gate` 를
+  돌려 결과를 이 아래에 적는다. gate 가 FAIL 이면 이 체크를 되돌린다.
+- [x] 8.4 Refresh all edited-function AST/FLM/BTM/risk reports after GREEN implementation and confirm every branch/risk row maps to an automated test or an explicit reviewed non-code control.
+  **닫음(2026-10-05, 2497427e).** `check_analysis` 통과(`lot-0.5-response/check-analysis-0.5-response-r2.log` — 7.3.1 로트 + 응답 로트 번들 재기준 뒤). BTM census 를 하네스로
+  다시 만듦(`harness/btm_census.py` — 10-04 census 머리 규칙을 코드로, fc0911f9 트리 재현에서 옛 census 가 굵은 글씨 `**no — …**` 4 행을 놓친 것을 찾음):
+  `gate-8.1-8.3-2026-10-05/btm-disposition-census.tsv` 번들 219, 생산 GAP 156(현존) · 2(삭제 함수). 그중 126 은 10-04 재측정(`btm-remeasure-prod.tsv`)의 처분 그대로이고(그 표의 128 중 runProductionStrategyMarketCycle B1 · B4 는 7.3.1
+  번들 재렌더로 GAP 이 아님), 그 뒤 생긴 30 행은 모듈 union 커버리지(`harness/btm_remeasure.py`, `btm-remeasure-new-gaps.tsv`)로 다시 잼: ENTERED 1 · R 22(실패-닫힘) · NB 5(블록 규칙 밖 구조) ·
+  W 2(생산 배선 경로 유도 — 원장 경로가 있을 때만, 잘못되면 열기 오류로 닫힘). 시험 함수 번들 GAP 95 는 10-04 와 같음(Go 커버리지는 _test.go 를 계측하지 않음 — 미계측 아티팩트).
+  비코드 대조로 남는 것: R · NB · W 와 10-04 표의 D · T · S 행(처분 열에 각자의 근거).
 
   **8.4 준비(2026-10-04 Manager 판정 — base 무관 로트, 미착지 체크 아님).** `check_analysis` 173 → 150(= 창 요약 2 + 타 change 소관 missing 148, stale 0). stale 15 번들(전부
   a127 82080177 이 낡게 함): 줄 이동 10 은 `shift_same_file_bundles.py`, 몸통 편집 · 구조 동일 2 는 `rebase_bundle.py`, 구조 변경 3 은 a127 아카이브 번들을 옮김(아카이브 좌표 ·

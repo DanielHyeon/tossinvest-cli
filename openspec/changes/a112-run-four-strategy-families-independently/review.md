@@ -6570,3 +6570,19 @@ exit 0 · race 목록 가드 8/8 · `named-0.5-response.log` 이름 결속 25/25
 (Pre-Edit 번들만 남김, BTM `not-applicable` — 도구는 a112 BTM 범위 밖). 시험 · seam 편집은 「비례 원칙」 대로 `not-applicable`(시험 + 변이 재확인이 대신함).
 
 **재확인의 한계.** P1 재확인은 리뷰어 자신의 재현 변이를 다시 넣은 것이다 — 새 리뷰어의 재검토는 아니다. 남은 위험 셋은 disposition.md 끝 절.
+
+## 2026-10-05 0.5 표적 재검(P1 출처 리뷰어 둘) + 8.1 · 8.3 · 8.4 실행(착지 2497427e)
+
+**표적 재검(Manager 판정 — 0.5 의 「re-review every P0/P1」 은 리뷰어 확인).** 좌표 2497427e 고정, freeze 6R 규격(자기 P1 만 · 이진 · 새 사냥 금지 · P0 예외). 원문은
+`analysis/review-0.5-full-2026-10/re-review-voice1-testing-output.md` · `re-review-voice3-security-output.md`.
+- 시험 보이스: **P1#1 반영 · P1#2 반영.** 부분 ON 궤적 placed 0 → 1(리뷰 때 넣었던 Logf 재현), 픽스처 줄을 지우면 새 전제가 「baseline dispatched 0 orders」 로 FAIL. A01 ·
+  A02 · 리뷰 때 원래 위치의 `lane.Offer` 셋 다 CAUGHT, 저자 원장과 실패 시험 이름까지 일치.
+- 보안 보이스: **P1#3 반영.** M4 · M2(두 철자) · C03 · C03b CAUGHT, 탐침 셋(`&shadow` · 클로저 안 사용 · 같은 이름 가리기)도 CAUGHT. 원장 · 처분 표와 일치.
+- 두 리뷰어 모두 저장소 무편집, `~/.codex` 0. status 차이로 보고한 새 미추적 파일은 이 절의 ③ 산출물(저자 것).
+
+**8.1 · 8.3 · 8.4.** 고정 워크트리 2497427e, 러너 `harness/gate_suites.sh`, 영수증 `measurements/gate-8.1-8.3-2026-10-05/`(명령별 로그 + `suites-summary.log`).
+- 8.1: 17 패키지 무태그 · 태그 · race(16) 전부 exit 0. 8.3(gate 제외): make test-race · test(101) · test-seams(102) · vet · lint · validate · openspec validate --strict ·
+  PM --check 전부 exit 0. 남은 것: sdd-sync · sdd-check · `make gate`.
+- 8.4: BTM census 를 코드로(`harness/btm_census.py`, `btm-disposition-census.tsv`) — 옛 census 규칙을 fc0911f9 트리에서 재현해 옛 표가 굵은 글씨 행 4 를 놓친 것을 찾음. 10-04
+  재측정 뒤 생긴 생산 GAP 30 을 모듈 union 커버리지로 다시 잼(`harness/btm_remeasure.py`, `btm-remeasure-new-gaps.tsv`, `module-union-coverage.log` ok 102): ENTERED 1 ·
+  R 22 · NB 5 · W 2. 처분 분류(R · NB · W)는 갈래 몸통을 읽고 붙였다 — 손 분류이며 근거는 표 머리 범례.
